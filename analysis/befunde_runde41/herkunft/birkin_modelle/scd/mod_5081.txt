@@ -1,0 +1,98 @@
+ROOM5081.RDT  101088 B
+header: nSprite=0 nCut=5 nOmodel=0 nItem=0 nDoor=0 nRoom_at=0 reverb=0
+main_scd=0x6F8 sub_scd=0x71C
+
+### main: 0x6F8..0x71C, 1 Regionen
+
+=== main00  [file 0x6FA..0x71C]  (34 B)
+  0x006FA (+0000) Door_aot_set     3b 00 02 31 00 00 b2 da 96 b5 84 03 d0 07 12 99 00 00 d4 9a 00 00 05 01 07 00 00 00 00 00 00 00  slot=0 sce=2 flags=0x31 floor=0 follow=0 rect=(-9550,-19050,900,2000)
+  0x0071A (+0020) Evt_end          01 00
+
+### sub: 0x71C..0x868, 5 Regionen
+
+=== sub00  [file 0x726..0x77E]  (88 B)
+  0x00726 (+0000) Ifel_ck          06 00 36 00
+  0x0072A (+0004) Ck               21 03 30 00  bank=3 bit=48 val=0
+  0x0072E (+0008) Aot_set          2c 01 03 31 00 00 5c 95 c8 b5 20 03 6c 07 ff 00 18 02 00 00  slot=1 sce=3 flags=0x31 floor=0 follow=0 rect=(-27300,-19000,800,1900)
+  0x00742 (+001C) Sce_em_set       44 00 30 33 00 00 00 ff 4c b9 20 ea c8 00 00 00 00 08 00 00
+  0x00756 (+0030) Sce_bgm_control  54 00 01 00 00 00
+  0x0075C (+0036) Else_ck          07 00 20 00
+  0x00760 (+003A) Aot_set          2c 01 01 31 00 00 5c 95 c8 b5 20 03 6c 07 03 00 ff ff 00 00  slot=1 sce=1 flags=0x31 floor=0 follow=0 rect=(-27300,-19000,800,1900)
+  0x00774 (+004E) Sce_bgm_control  54 00 01 00 00 00
+  0x0077A (+0054) Nop              00
+  0x0077B (+0055) Nop              00
+  0x0077C (+0056) Evt_end          01 00
+
+=== sub01  [file 0x77E..0x7A6]  (40 B)
+  0x0077E (+0000) Ifel_ck          06 00 22 00
+  0x00782 (+0004) Ck               21 05 1c 01  bank=5 bit=28 val=1
+  0x00786 (+0008) Set              22 05 1c 00  bank=5 bit=28 val=0
+  0x0078A (+000C) Set              22 03 30 01  bank=3 bit=48 val=1
+  0x0078E (+0010) Set              22 03 31 01  bank=3 bit=49 val=1
+  0x00792 (+0014) Sce_bgm_control  54 01 02 00 00 00
+  0x00798 (+001A) Sce_bgm_control  54 00 01 00 00 00
+  0x0079E (+0020) Evt_exec         04 ff 18 04  cond=0xFF type=0x18 sub=4
+  0x007A2 (+0024) Endif            08 00
+  0x007A4 (+0026) Evt_end          01 00
+
+=== sub02  [file 0x7A6..0x816]  (112 B)
+  0x007A6 (+0000) Message_on       2b 00 ff ff
+  0x007AA (+0004) Evt_next         02
+  0x007AB (+0005) Nop              00
+  0x007AC (+0006) Ifel_ck          06 00 64 00
+  0x007B0 (+000A) Ck               21 0c 1f 00  bank=12 bit=31 val=0
+  0x007B4 (+000E) Message_on       2b 01 ff ff
+  0x007B8 (+0012) Evt_next         02
+  0x007B9 (+0013) Nop              00
+  0x007BA (+0014) Aot_reset        46 00 01 31 02 00 ff ff 00 00  slot=0 sce=1 flags=0x31 p=(2,65535,0)
+  0x007C4 (+001E) Aot_reset        46 01 00 00 00 00 00 00 00 00  slot=1 sce=0 flags=0x00 p=(0,0,0)
+  0x007CE (+0028) Cut_chg          29 01
+  0x007D0 (+002A) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x007D4 (+002E) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x007D8 (+0032) Sce_bgm_control  54 00 02 00 00 00
+  0x007DE (+0038) Sce_bgm_control  54 01 01 00 00 00
+  0x007E4 (+003E) Evt_exec         04 ff 18 03  cond=0xFF type=0x18 sub=3
+  0x007E8 (+0042) Work_set         2e 01 00  kind=1 idx=0
+  0x007EB (+0045) Nop              00
+  0x007EC (+0046) Plc_dest         40 00 09 20 4c b9 78 ba
+  0x007F4 (+004E) Do               11 00 08 00
+  0x007F8 (+0052) Evt_next         02
+  0x007F9 (+0053) Nop              00
+  0x007FA (+0054) Edwhile          12 04
+  0x007FC (+0056) Ck               21 05 20 00  bank=5 bit=32 val=0
+  0x00800 (+005A) Sleep            09 0a 14 00
+  0x00804 (+005E) Set              22 01 1b 00  bank=1 bit=27 val=0
+  0x00808 (+0062) Set              22 02 07 00  bank=2 bit=7 val=0
+  0x0080C (+0066) Cut_chg          29 04
+  0x0080E (+0068) Cut_auto         3c 01
+  0x00810 (+006A) Plc_ret          42
+  0x00811 (+006B) Nop              00
+  0x00812 (+006C) Endif            08 00
+  0x00814 (+006E) Evt_end          01 00
+
+=== sub03  [file 0x816..0x83C]  (38 B)
+  0x00816 (+0000) Work_set         2e 02 00  kind=2 idx=0
+  0x00819 (+0003) Nop              00
+  0x0081A (+0004) Pos_set          32 00 4c b9 20 ea 78 ba
+  0x00822 (+000C) Sleep            09 0a 01 00
+  0x00826 (+0010) Speed_set        2f 01 90 01
+  0x0082A (+0014) For              0d 00 06 00 0e 00
+  0x00830 (+001A) Add_speed        30
+  0x00831 (+001B) Nop              00
+  0x00832 (+001C) Evt_next         02
+  0x00833 (+001D) Nop              00
+  0x00834 (+001E) Next             0e 00
+  0x00836 (+0020) Member_set       34 0c 13 00  member=0x0C val=19
+  0x0083A (+0024) Evt_end          01 00
+
+=== sub04  [file 0x83C..0x868]  (44 B)
+  0x0083C (+0000) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x00840 (+0004) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x00844 (+0008) Message_on       2b 03 ff ff
+  0x00848 (+000C) Evt_next         02
+  0x00849 (+000D) Nop              00
+  0x0084A (+000E) Aot_reset        46 00 02 31 12 99 00 00 d4 9a  slot=0 sce=2 flags=0x31 p=(39186,0,39636)
+  0x00854 (+0018) Aot_reset        46 01 01 31 03 00 ff ff 00 00  slot=1 sce=1 flags=0x31 p=(3,65535,0)
+  0x0085E (+0022) Set              22 01 1b 00  bank=1 bit=27 val=0
+  0x00862 (+0026) Set              22 02 07 00  bank=2 bit=7 val=0
+  0x00866 (+002A) Evt_end          01 00

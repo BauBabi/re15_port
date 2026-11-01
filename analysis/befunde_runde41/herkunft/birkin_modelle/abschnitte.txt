@@ -1,0 +1,140 @@
+D0    Disc CDEMD0 Typ 0x30 (Leon-TOC)
+      Laenge 226404 md5 68eea28c75157eed0efc24d466cb24c9 n=9
+      d0:4716:32f6dfae edd1:5520:c16499a8 emr2:76792:76d525a2 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:400:8fc366bc emr6:7688:0f564867 md1:31364:f0a735a7 tim:99872:a8a42989
+      Meshes 17 Tri 391 Quads 347 Verts 599 Knochen 16 Keyframes 912 je 84 Clips 21 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 3 Clips, 96 Bilder, Clip-Laengen [25, 66, 5]
+      Bank loco: 21 Clips, Clip-Laengen [29, 68, 27, 81, 81, 35, 20, 39, 41, 119, 47, 93, 119, 65, 23, 128, 59, 55, 29, 29, 171]
+D1    Disc CDEMD1 Typ 0x30 (Elza-TOC)
+      Laenge 226404 md5 a9b6dee68c759105274339077df29dd6 n=9
+      d0:4716:32f6dfae edd1:5520:c16499a8 emr2:76792:76d525a2 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:400:8fc366bc emr6:7688:c4675e33 md1:31364:f0a735a7 tim:99872:a8a42989
+      Meshes 17 Tri 391 Quads 347 Verts 599 Knochen 16 Keyframes 912 je 84 Clips 21 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 3 Clips, 96 Bilder, Clip-Laengen [25, 66, 5]
+      Bank loco: 21 Clips, Clip-Laengen [29, 68, 27, 81, 81, 35, 20, 39, 41, 119, 47, 93, 119, 65, 23, 128, 59, 55, 29, 29, 171]
+M0    Mod CDEMD0 Typ 0x30 (Leon-TOC)
+      Laenge 226404 md5 68eea28c75157eed0efc24d466cb24c9 n=9
+      d0:4716:32f6dfae edd1:5520:c16499a8 emr2:76792:76d525a2 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:400:8fc366bc emr6:7688:0f564867 md1:31364:f0a735a7 tim:99872:a8a42989
+      Meshes 17 Tri 391 Quads 347 Verts 599 Knochen 16 Keyframes 912 je 84 Clips 21 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 3 Clips, 96 Bilder, Clip-Laengen [25, 66, 5]
+      Bank loco: 21 Clips, Clip-Laengen [29, 68, 27, 81, 81, 35, 20, 39, 41, 119, 47, 93, 119, 65, 23, 128, 59, 55, 29, 29, 171]
+M1k   Mod CDEMD1 Sektor 1265, ohne TOC-Eintrag (alter Platz 0x30)
+      Laenge 226404 md5 a9b6dee68c759105274339077df29dd6 n=9
+      d0:4716:32f6dfae edd1:5520:c16499a8 emr2:76792:76d525a2 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:400:8fc366bc emr6:7688:c4675e33 md1:31364:f0a735a7 tim:99872:a8a42989
+      Meshes 17 Tri 391 Quads 347 Verts 599 Knochen 16 Keyframes 912 je 84 Clips 21 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 3 Clips, 96 Bilder, Clip-Laengen [25, 66, 5]
+      Bank loco: 21 Clips, Clip-Laengen [29, 68, 27, 81, 81, 35, 20, 39, 41, 119, 47, 93, 119, 65, 23, 128, 59, 55, 29, 29, 171]
+M1    Mod CDEMD1 Typ 0x30 (Elza-TOC) Sektor 2015
+      Laenge 228460 md5 819acc8c5ff8ddeb3c66a8235ec94cee n=9
+      d0:4716:32f6dfae edd1:5356:0df2bb9f emr2:73348:37c8846a edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:400:8fc366bc emr6:7688:c4675e33 md1:37028:dfc47fab tim:99872:ff05069b
+      Meshes 17 Tri 521 Quads 381 Verts 706 Knochen 16 Keyframes 871 je 84 Clips 21 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 3 Clips, 96 Bilder, Clip-Laengen [25, 66, 5]
+      Bank loco: 21 Clips, Clip-Laengen [29, 27, 27, 81, 81, 35, 20, 39, 41, 119, 47, 93, 119, 65, 23, 128, 59, 55, 29, 29, 171]
+M0x   Mod CDEMD0 Sektor 2012, ohne TOC-Eintrag
+      Laenge 228460 md5 b1810dd5def2162a6284be066fedc864 n=9
+      d0:4716:32f6dfae edd1:5356:0df2bb9f emr2:73348:37c8846a edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:400:8fc366bc emr6:7688:0f564867 md1:37028:dfc47fab tim:99872:ff05069b
+      Meshes 17 Tri 521 Quads 381 Verts 706 Knochen 16 Keyframes 871 je 84 Clips 21 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 3 Clips, 96 Bilder, Clip-Laengen [25, 66, 5]
+      Bank loco: 21 Clips, Clip-Laengen [29, 27, 27, 81, 81, 35, 20, 39, 41, 119, 47, 93, 119, 65, 23, 128, 59, 55, 29, 29, 171]
+D36   Disc Typ 0x36
+      Laenge 128600 md5 1cb4b13b34f97d0f2649b1df951a559b n=9
+      d0:3156:1f97e7a0 edd1:804:52f4ab4a emr2:10264:d96666d9 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:4:f1d3ff84 emr6:4:f1d3ff84 md1:14444:079a4177 tim:99872:e8d437b2
+      Meshes 16 Tri 235 Quads 114 Verts 275 Knochen 16 Keyframes 120 je 84 Clips 5 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank loco: 5 Clips, Clip-Laengen [30, 63, 69, 23, 10]
+M36   Mod Typ 0x36
+      Laenge 128600 md5 1cb4b13b34f97d0f2649b1df951a559b n=9
+      d0:3156:1f97e7a0 edd1:804:52f4ab4a emr2:10264:d96666d9 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:4:f1d3ff84 emr6:4:f1d3ff84 md1:14444:079a4177 tim:99872:e8d437b2
+      Meshes 16 Tri 235 Quads 114 Verts 275 Knochen 16 Keyframes 120 je 84 Clips 5 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank loco: 5 Clips, Clip-Laengen [30, 63, 69, 23, 10]
+Z0a   Mod CDEMD0 Sektor 1922, ohne TOC
+      Laenge 183328 md5 425c2fbcd853c70d7773e35af8606e92 n=9
+      d0:4:f1d3ff84 edd1:220:06e4cb21 emr2:4016:bcf2b953 edd3:4656:9c728bfb emr4:37856:e30e746b edd5:1704:d95ae6e5 emr6:28408:23f08a63 md1:39828:b8d35448 tim:66592:a3ba7ea5
+      Meshes 15 Tri 493 Quads 434 Verts 837 Knochen 15 Keyframes 48 je 80 Clips 0 TIM 256x256 CLUTs 2
+      Bank eigen: 43 Clips, 1120 Bilder, Clip-Laengen [14, 26, 30, 14, 26, 30, 4, 4, 4, 119, 119, 37, 1, 37, 1, 21, 21, 21, 4, 4, 1, 1, 44, 2, 1, 21, 99, 2, 21, 37, 4, 37, 1, 1, 21, 1, 21, 4, 4, 126, 126, 4, 4]
+      Bank opfer: 14 Clips, 411 Bilder, Clip-Laengen [14, 26, 20, 14, 21, 20, 65, 65, 19, 15, 49, 19, 15, 49]
+      Bank loco: 0 Clips, Clip-Laengen []
+Z1a   Mod CDEMD1 Sektor 1924, ohne TOC
+      Laenge 184676 md5 4644903177031b9f7a3135b781bc8a1f n=9
+      d0:4:f1d3ff84 edd1:220:06e4cb21 emr2:4016:bcf2b953 edd3:4656:9c728bfb emr4:37856:e30e746b edd5:1852:d6135e2e emr6:29608:6f875ffc md1:39828:b8d35448 tim:66592:a3ba7ea5
+      Meshes 15 Tri 493 Quads 434 Verts 837 Knochen 15 Keyframes 48 je 80 Clips 0 TIM 256x256 CLUTs 2
+      Bank eigen: 43 Clips, 1120 Bilder, Clip-Laengen [14, 26, 30, 14, 26, 30, 4, 4, 4, 119, 119, 37, 1, 37, 1, 21, 21, 21, 4, 4, 1, 1, 44, 2, 1, 21, 99, 2, 21, 37, 4, 37, 1, 1, 21, 1, 21, 4, 4, 126, 126, 4, 4]
+      Bank opfer: 14 Clips, 448 Bilder, Clip-Laengen [14, 25, 36, 14, 25, 34, 70, 70, 19, 15, 46, 19, 15, 46]
+      Bank loco: 0 Clips, Clip-Laengen []
+Z0c   Mod CDEMD0 Sektor 2124, ohne TOC
+      Laenge 166592 md5 557dc942de1bbd5d002273bf3d8e47f1 n=9
+      d0:4:f1d3ff84 edd1:3260:09a8a14d emr2:55776:275823c9 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:932:7c08cd1d emr6:17532:f5a6b969 md1:22444:8077d0a2 tim:66592:9be23084
+      Meshes 15 Tri 541 Quads 78 Verts 382 Knochen 15 Keyframes 695 je 80 Clips 28 TIM 256x256 CLUTs 2
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 5 Clips, 227 Bilder, Clip-Laengen [29, 18, 60, 30, 90]
+      Bank loco: 28 Clips, Clip-Laengen [49, 18, 30, 14, 14, 14, 18, 15, 30, 35, 35, 14, 42, 14, 44, 14, 27, 14, 50, 29, 17, 13, 20, 29, 18, 40, 30, 99]
+Z1c   Mod CDEMD1 Sektor 2127, ohne TOC
+      Laenge 166592 md5 a50a1762ed6aa36ccc51588f78051b1a n=9
+      d0:4:f1d3ff84 edd1:3260:09a8a14d emr2:55776:4c20cd37 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:932:7c08cd1d emr6:17532:db274aff md1:22444:8077d0a2 tim:66592:9be23084
+      Meshes 15 Tri 541 Quads 78 Verts 382 Knochen 15 Keyframes 695 je 80 Clips 28 TIM 256x256 CLUTs 2
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 5 Clips, 227 Bilder, Clip-Laengen [29, 18, 60, 30, 90]
+      Bank loco: 28 Clips, Clip-Laengen [49, 18, 30, 14, 14, 14, 18, 15, 30, 35, 35, 14, 42, 14, 44, 14, 27, 14, 50, 29, 17, 13, 20, 29, 18, 40, 30, 99]
+Z0d   Mod CDEMD0 Sektor 2206, ohne TOC
+      Laenge 213576 md5 13914098771e778db77708002b96d95c n=9
+      d0:4:f1d3ff84 edd1:1548:217df19a emr2:14256:746fe8de edd3:6592:27af5ade emr4:77288:b55346e1 edd5:1704:d95ae6e5 emr6:28408:23f08a63 md1:17140:6efe2883 tim:66592:ea0e0d95
+      Meshes 15 Tri 250 Quads 162 Verts 319 Knochen 15 Keyframes 176 je 80 Clips 6 TIM 256x256 CLUTs 2
+      Bank eigen: 43 Clips, 1604 Bilder, Clip-Laengen [14, 26, 30, 14, 21, 30, 3, 3, 3, 65, 65, 55, 1, 55, 1, 39, 39, 60, 98, 120, 5, 5, 159, 11, 1, 59, 99, 19, 15, 29, 14, 73, 1, 1, 69, 1, 57, 3, 3, 69, 82, 59, 28]
+      Bank opfer: 14 Clips, 411 Bilder, Clip-Laengen [14, 26, 20, 14, 21, 20, 65, 65, 19, 15, 49, 19, 15, 49]
+      Bank loco: 6 Clips, Clip-Laengen [75, 99, 50, 61, 38, 57]
+Z1d   Mod CDEMD1 Sektor 2209, ohne TOC
+      Laenge 213896 md5 3893d48d042081e915f2d0b14bd227b9 n=9
+      d0:4:f1d3ff84 edd1:1548:217df19a emr2:14256:746fe8de edd3:6596:1a82e980 emr4:76256:3fb9d3c9 edd5:1852:d6135e2e emr6:29608:6f875ffc md1:17140:6efe2883 tim:66592:ea0e0d95
+      Meshes 15 Tri 250 Quads 162 Verts 319 Knochen 15 Keyframes 176 je 80 Clips 6 TIM 256x256 CLUTs 2
+      Bank eigen: 43 Clips, 1605 Bilder, Clip-Laengen [14, 25, 18, 14, 25, 18, 3, 3, 3, 70, 70, 55, 1, 55, 1, 39, 39, 60, 98, 120, 5, 5, 159, 11, 1, 59, 99, 19, 15, 41, 14, 73, 1, 1, 69, 1, 57, 3, 3, 69, 82, 59, 28]
+      Bank opfer: 14 Clips, 448 Bilder, Clip-Laengen [14, 25, 36, 14, 25, 34, 70, 70, 19, 15, 46, 19, 15, 46]
+      Bank loco: 6 Clips, Clip-Laengen [75, 99, 50, 61, 38, 57]
+R30   RE2 kind 0x30 G1 (EMD Sektor 2788 152188 B, TIM Sektor 2739 99872 B)
+      Laenge 152188 md5 aa67358d9f8ecc7e4588c262b8d287ec n=8
+      d0:5596:2a0b4a0e edd1:5196:623efd3d emr2:84604:a17e8230 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:924:29fed5ed emr6:17528:c4fec43f md1:38292:3cb70d3c tim-extern:99872:e203e27c
+      Meshes 19 Tri 562 Quads 385 Verts 713 Knochen 16 Keyframes 1005 je 84 Clips 21 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 8 Clips, 222 Bilder, Clip-Laengen [24, 16, 10, 30, 25, 21, 30, 66]
+      Bank loco: 21 Clips, Clip-Laengen [30, 68, 70, 70, 76, 56, 94, 30, 40, 25, 25, 58, 68, 46, 59, 92, 100, 40, 156, 64, 10]
+R31   RE2 kind 0x31 G2 (EMD Sektor 2944 193124 B, TIM Sektor 2895 99872 B)
+      Laenge 193124 md5 9eaf491b7196a6f64e00dbb98fab8d1f n=8
+      d0:4772:152837d3 edd1:6260:92179858 emr2:130480:ca6e37aa edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:408:c3427bc1 emr6:8008:bca7fc5b md1:43148:8434e59c tim-extern:99872:e8a50cb1
+      Meshes 18 Tri 654 Quads 311 Verts 684 Knochen 18 Keyframes 1357 je 96 Clips 24 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 1 Clips, 100 Bilder, Clip-Laengen [100]
+      Bank loco: 24 Clips, Clip-Laengen [30, 49, 78, 25, 25, 30, 79, 40, 70, 90, 162, 44, 76, 73, 110, 107, 20, 5, 70, 101, 31, 20, 78, 127]
+R33   RE2 kind 0x33 G3 (EMD Sektor 3114 204968 B, TIM Sektor 3065 99872 B)
+      Laenge 204968 md5 043ae92f189c8270fdb59a049a0c5e43 n=8
+      d0:6172:0fce155e edd1:4456:6501604e emr2:127480:77286ef3 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:1136:9568da42 emr6:21848:cc40a9d6 md1:43828:0bdf6cab tim-extern:99872:39a1355f
+      Meshes 29 Tri 696 Quads 369 Verts 788 Knochen 29 Keyframes 883 je 144 Clips 21 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 7 Clips, 276 Bilder, Clip-Laengen [24, 16, 10, 30, 25, 21, 150]
+      Bank loco: 21 Clips, Clip-Laengen [35, 59, 82, 49, 40, 174, 40, 60, 50, 70, 70, 150, 20, 20, 25, 6, 20, 54, 30, 18, 20]
+R34   RE2 kind 0x34 G4 (EMD Sektor 3310 273812 B, TIM Sektor 3261 99872 B)
+      Laenge 273812 md5 034cb7b8b67df59c38fda499309fe9a5 n=8
+      d0:18776:caa1f4f4 edd1:5884:f7317684 emr2:176564:e9c37eb1 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:856:7bf5d189 emr6:15528:6a017dd1 md1:56156:1dfff4d7 tim-extern:99872:ad8ef7ca
+      Meshes 27 Tri 941 Quads 486 Verts 1031 Knochen 27 Keyframes 1296 je 136 Clips 29 TIM 384x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 3 Clips, 210 Bilder, Clip-Laengen [78, 84, 48]
+      Bank loco: 29 Clips, Clip-Laengen [18, 30, 59, 60, 50, 89, 20, 25, 30, 63, 126, 99, 161, 1, 1, 20, 25, 129, 100, 25, 23, 30, 30, 15, 2, 45, 35, 100, 30]
+R36   RE2 kind 0x36 G5 (EMD Sektor 3533 112340 B, TIM Sektor 3468 132640 B)
+      Laenge 112340 md5 3a49b091f8aded3c93540856349f5c5d n=8
+      d0:19112:ea985165 edd1:5488:b2d85236 emr2:32672:7b46e4fe edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:608:8d8cae6e emr6:12008:bc6ed557 md1:42404:09ef75dc tim-extern:132640:107d51bf
+      Meshes 7 Tri 358 Quads 605 Verts 878 Knochen 2 Keyframes 1360 je 24 Clips 11 TIM 512x256 CLUTs 3
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 1 Clips, 150 Bilder, Clip-Laengen [150]
+      Bank loco: 11 Clips, Clip-Laengen [100, 180, 150, 100, 180, 150, 100, 50, 50, 150, 150]
+R37   RE2 kind 0x37 Tentakel (EMD Sektor 3629 59376 B, TIM Sektor 3612 33312 B)
+      Laenge 59376 md5 22756bc25cfda5ce4233e2028fa5941a n=8
+      d0:4:f1d3ff84 edd1:4928:5ec7985c emr2:38676:cef6b640 edd3:4:f1d3ff84 emr4:4:f1d3ff84 edd5:612:fe589aee emr6:11448:9a5f523a md1:3660:198ba173 tim-extern:33312:5b3c08be
+      Meshes 4 Tri 5 Quads 63 Verts 78 Knochen 4 Keyframes 1207 je 32 Clips 24 TIM 128x256 CLUTs 1
+      Bank eigen: 1 Clips, 0 Bilder, Clip-Laengen [0]
+      Bank opfer: 6 Clips, 146 Bilder, Clip-Laengen [24, 16, 10, 25, 21, 50]
+      Bank loco: 24 Clips, Clip-Laengen [1, 1, 1, 1, 1, 1, 1, 100, 100, 100, 140, 120, 60, 120, 30, 30, 30, 50, 50, 50, 40, 75, 30, 75]

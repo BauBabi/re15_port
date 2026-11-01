@@ -57,7 +57,7 @@ Beim byte-true Reverse Engineering gelten diese Regeln verbindlich und überschr
 - `RE15_FUN_CATALOG.md` (Repo-Root) — kuratierter Katalog code-verifizierter `FUN_80xxxxxx`-Adressen mit Subsystem/Zweck/Evidence/Confidence. Vor manuellem RE IMMER hier prüfen (Skill: `ghidra-mapping`).
 
 **FEHLT etwas (auch in den Overlays nicht enthalten) → selbstständig ermitteln, niemals raten:**
-- Ghidra headless auf `info/Re1.5/PSX/BIN/STAGE{1..6}.BIN` (+ `DEBUG.BIN`/`TITLE.BIN`; 0x800-Byte-Header, Code lädt @`0x80100000`), PSX-Loader + PsyQ-Signaturen. (Der Decompile-Dump-Helfer lag im alten `reAi`-Repo unter `scripts/` und kam nicht mit — ggf. neu anlegen.)
+- Ghidra headless auf `info/Re1.5/PSX/BIN/STAGE{1..6}.BIN` (+ `DEBUG.BIN`/`TITLE.BIN`; kein Header, gemessen 2026-11-01 an der Disc, Code lädt @`0x80100000`), PSX-Loader + PsyQ-Signaturen. (Der Decompile-Dump-Helfer lag im alten `reAi`-Repo unter `scripts/` und kam nicht mit — ggf. neu anlegen.)
 - `stage_saves/` + DuckStation-Savestate-RAM-Dumps — live beobachten, was ein Wert (z.B. `entity[0x94]`) tatsächlich wird.
 
 ⛔ **Zwei Datenquellen im Repo sind NICHT der Auslieferungsstand — wer daraus misst, misst einen Mod:**

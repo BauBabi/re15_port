@@ -1,0 +1,16 @@
+UV-Abdeckung gesamt: 46343 von 98304 = 47.1%
+Wolverine-Rechteck x 301 323 y 7 29 abgedeckte Texel: 0 von 484
+mittlere Farbe Kachel [161.5 162.4 156.1]
+Index-Bytes Zeile 7 (TIM-Pixel): [116, 147, 243, 243, 243, 243, 153, 244, 244, 244, 244, 244, 244, 244, 244, 244, 244, 243, 243, 243, 129, 129]
+EM-Blob: TIM @ 128552 Pixel @ 130120  Texel (301,7) @ Blob 133109  = Archiv-Offset 0x40FFF5
+Beste Treffer Wolverine (mittl. Quadratfehler je Kanal):
+   0.0 Mod0 2012 (301, 7)
+   0.0 Mod1 2015 (301, 7)
+   3606.8 Mod0 639 (14, 214)
+   3606.8 Mod1 640 (14, 214)
+   3606.8 Disc0 637 (14, 214)
+   3606.8 Disc1 637 (14, 214)
+   3665.0 RE2 0x44 (186, 60)
+   3665.0 RE2 0x46 (186, 60)
+Kacheln 24x24, von Flaechen genutzt: {'G2s': 23, 'unbenutzt': 62, '?': 54, 'G1': 4, 'G2': 17}
+ok

@@ -1,0 +1,42 @@
+== D0-Meshes gegen alle RE2-G-Meshes (Anteil Vertices mit Partner <= 2 Einheiten)
+  D0[ 0] V 34 bester None 0%
+  D0[ 1] V 19 bester RE2 0x31[12] 63%
+  D0[ 2] V 32 bester RE2 0x30[11] 3%
+  D0[ 3] V 16 bester RE2 0x30[12] 100%
+  D0[ 4] V 19 bester RE2 0x31[15] 63%
+  D0[ 5] V 44 bester RE2 0x31[16] 2%
+  D0[ 6] V 16 bester RE2 0x30[15] 100%
+  D0[ 7] V 18 bester None 0%
+  D0[ 8] V 69 bester None 0%
+  D0[ 9] V 61 bester None 0%
+  D0[10] V 39 bester None 0%
+  D0[11] V 18 bester None 0%
+  D0[12] V 52 bester None 0%
+  D0[13] V 41 bester None 0%
+  D0[14] V 27 bester None 0%
+  D0[15] V 44 bester None 0%
+  D0[16] V 50 bester None 0%
+  TIM D0 gegen RE2 0x30: Kacheln gleicher Stelle <10: 0/384; Pixelindex gleich 0.3%
+  TIM D0 gegen RE2 0x31: Kacheln gleicher Stelle <10: 0/384; Pixelindex gleich 0.3%
+  TIM D0 gegen RE2 0x33: Kacheln gleicher Stelle <10: 1/384; Pixelindex gleich 0.4%
+  TIM D0 gegen RE2 0x34: Kacheln gleicher Stelle <10: 10/384; Pixelindex gleich 0.4%
+  TIM D0 gegen 0x36: Form (256, 510, 3) != (256, 384, 3)
+== D36 gegen D0 (Mesh exakt gleich: Vertices, Normalen, Flaechen, UV)
+  D36[ 0] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[ 1] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[ 2] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[ 3] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[ 4] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[ 5] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[ 6] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[ 7] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[ 8] V 69 T 77 Q 27 gleich D0 [8] (nur Vertices gleich [8])
+  D36[ 9] V 61 T 73 Q 18 gleich D0 [9] (nur Vertices gleich [9])
+  D36[10] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[11] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[12] V  3 T  1 Q  0 gleich D0 [] (nur Vertices gleich [])
+  D36[13] V 41 T 34 Q 22 gleich D0 [13] (nur Vertices gleich [13])
+  D36[14] V 27 T 24 Q 13 gleich D0 [14] (nur Vertices gleich [14])
+  D36[15] V 44 T 16 Q 34 gleich D0 [15] (nur Vertices gleich [15])
+D36 TIM gegen D0: Pixelindex gleich 2.3%, CLUT gleich 18/768
+D36 Skelett 16 [-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 8, 10, 11, 8, 13, 14] Rel gleich D0: True
