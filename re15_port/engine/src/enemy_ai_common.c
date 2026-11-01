@@ -48,7 +48,8 @@
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_affen3_r38.h"
 #include "re15_birkin_opfer.h"
-#include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Gore) */   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
+#include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Gore) */
+#include "re15_spinnengore_r41.h" /* Runde 41 Spur S: Spinnen-Platzen fuer beide Gehirne */   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
 #include "re15_brandzombie.h"   /* brennende Zombies (Flag Zone 1/31) */
 #include "re15_gegner_r39.h"   /* Runde 39 Spur E: Gorillas 0x27 (HP x2, Flinch-Schwelle; alle Raeume), Hunde-Riegel-Tick */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
@@ -11082,11 +11083,7 @@ static void re15_zgirl_ai_tick(int slot)
  * @0x801146d0-734 (Farbwort 0x207f60, +0x94 0, +0x96 -50, +0x98 0, +0x9a 3, +0x9c/+0x9e 0, Wort |= 0x4a). */
 static void re15_aspider_teil_platzt(int slot, int k)
 {
-    re15_teil_t *t = re15_teile(slot);
-    if (!t || k < 0 || k >= RE15_TEILE_MAX) return;
-    t[k].col = 0x207f60u; memset(t[k].h94, 0, sizeof t[k].h94);
-    t[k].h94[1] = (uint16_t)(int16_t)-50; t[k].h94[3] = 3; t[k].w |= 0x4a;
-    re15_teile_markieren(slot);
+    re15_spinnengore_teil_platzt(slot, k);   /* Runde 41 Spur S: ein Baustein fuer beide Gehirne (spinnengore_r41.c) */
 }
 /* Bein-Liste @0x80118f30 (Overlay-Daten, von allen Spinnen geteilt; Zaehler je Spinne +0x1de). */
 static uint8_t s_aspider_beine_weg[8];
@@ -11454,14 +11451,20 @@ static void re15_adult_spider_ai_tick(int slot)
         break;
 
     case 3:   /* DEATH 0x80113f40: entry kill-flag 0x8004ef90(0x800b1038,+0x1c6); collapse clip 1 + Se(5)
-               * -> CORPSE (state 7). The 2-stage gore (part-detach x2, phased FX) = OPEN (render). */
+               * -> CORPSE (state 7).
+               * Runde 41 Spur S: die Wurzel springt ueber +0x5 (Waffen-Id) in die Tabelle @0x80118f38 (`lbu v0,5(v0)`
+               * @0x80113fc0, `jalr v0` @0x80113fe0). 7,8,9,10,11,13,16,17,18,21 -> 0x80113ff8: Phase 0 @0x8011403c laesst
+               * die Spinne OHNE Krit- und Zufallstest platzen (Teile 0/19 gruen, alle Beine fliegen, Blut an 0/0/19).
+               * Der Rest -> 0x8011461c: Blut an Teil 0 (@0x80114654), Platzer nur mit Krit (`andi v0,v1,0x40`
+               * @0x801146b0; im Original nur ueber w20-Krit = PORT-WAHL Runde 35 erreichbar). Vorher pruefte der Port nur
+               * das Krit-Bit und warf keine Beine ab (Dossier S_spinnengore.md 2b). Der 4-Phasen-Ablauf von 0x8011461c
+               * (Clip 4, @0x80114b78-e04) bleibt die bisherige Verkuerzung (Clip 1). */
         if (e->sub_state_3 == 0) {
-            if (e->hit_react & 0x40) {                         /* 0x8011461c Krit `andi 0x40` @0x801146b0: Koerper platzt */
+            if (re15_spinnengore_platzwaffe(e->sub_state_1) || (e->hit_react & 0x40))
+                re15_spinnengore_platzen(e);                   /* @0x8011403c-52c bzw. @0x801146bc-b0c */
+            else {
                 static const int32_t null3[3] = { 0, 0, 0 };
-                re15_aspider_teil_platzt(slot, 0);             /* @0x801146d0-6f0 */
-                re15_aspider_teil_platzt(slot, 19);            /* +0xcc4 @0x80114708-734 */
-                re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* @0x8011474c */
-                re15_enemy_fx19700(e, 0x00082000u, 19, null3); /* a2 = +3332 @0x80114770 */
+                re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* 0x8011461c +0x7 == 0 @0x80114654 */
             }
             re15_aspider_clip(e, 1); re15_audio_room_se(5); e->hit_react |= 2;
             if (e->em_flag_id != 0xFF)

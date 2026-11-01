@@ -10555,9 +10555,12 @@ re_title:;
                 /* RE1.5-TEILSCHICHT (re15_teile_r15.h): Farbwort +0x68 multipliziert wie RE2 +0x70 (NCCT). */
                 re15_teil_t *r15_teile = re15_teile_an(npc_i) ? re15_teile(npc_i) : NULL;
                 if (r15_teile && !gore_on) {
+                    /* Runde 41 Spur S: neutrale Teile (0x808080 = FUN_8001ee68) behalten die RE2-Part-Tinte von oben
+                     * (Spinnen-Brand 0x202f2f @0x80104B44, Saeure 0x101f3f @0x80104BC0) — vorher ueberschrieb die
+                     * Teilschicht sie mit neutral. Fuer RE1.5-Typen ist gore_tint dort ohnehin neutral: gleiches Bild. */
                     tint_on = 1;
-                    for (int gi = 0; gi < RE15_EMD_MAX_BONES; gi++)
-                        gore_tint[gi] = (gi < RE15_TEILE_MAX) ? (r15_teile[gi].col & 0xFFFFFFu) : 0x808080u;
+                    for (int gi = 0; gi < RE15_EMD_MAX_BONES && gi < RE15_TEILE_MAX; gi++)
+                        if ((r15_teile[gi].col & 0xFFFFFFu) != 0x808080u) gore_tint[gi] = r15_teile[gi].col & 0xFFFFFFu;
                 }
 #define RE2_GORE_TINT(r_, g_, b_) do { if (tint_on && nbi < RE15_EMD_MAX_BONES) {      \
         uint32_t _t = gore_tint[nbi];                                                  \

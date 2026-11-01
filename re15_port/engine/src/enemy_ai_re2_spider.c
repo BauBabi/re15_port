@@ -90,6 +90,7 @@
 #include "re15_aot.h"        /* re15_aot_water_at (== FUN_800527B4, Wasser-Pull) */
 #include "re15_math.h"      /* re15_squareroot0 (== SquareRoot0 0x8008D2F4) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Spucken (Effekt 0x0d) + RE2-Spieler-Radius 450 */
+#include "re15_spinnengore_r41.h" /* Runde 41 Spur S: RE1.5-Platzen im RE2-Gehirn */
 
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
 
@@ -2193,7 +2194,7 @@ static void re2s_death_done_special(re15_actor_t *e)
     re2s_clip(e, 0x0007000du);                             /* @0x80104818 */
     (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 6u);   /* @0x80104828-30 */
     re2s_gore(e);                                          /* @0x80104840 */
-    re2s_gore(e);                                          /* FUN_80104890 @0x80104848 (Sprays) */
+    re2s_gore(e);                                          /* FUN_80104890 @0x80104848 (Hinterleib, s. @0x80104588) */
     re2s_word(e, 7u);                                      /* @0x80104854 */
     if (e->re2s_c23a < 0)                                  /* @0x80104864 */
         e->y = (int32_t)e->re2s_water10c + 70;             /* @0x80104878 */
@@ -2239,7 +2240,10 @@ static void re2s_death_row_special(re15_actor_t *e)
         e->re2s_c23a   = 1;                                /* +0x23A = 1 @0x80104574 */
         re2s_clip(e, 0x0007000cu);                         /* Clip 12, Rate 7 @0x80104578 */
         re2s_gore(e);                                      /* FUN_801056DC(self,19,1) @0x80104580 */
-        re2s_gore(e);                                      /* FUN_80104890(self) @0x80104588 */
+        re2s_gore(e);                                      /* FUN_80104890(self) @0x80104588 = Hinterleib Teil 19
+                                                            * |= 0x4a, +0x9a -240, +0x9e 15, Farbe 0x2f2f2f
+                                                            * (@0x801048c4-900) + 5x FUN_801056DC an Teil 19;
+                                                            * gezeichnet ueber re15_spinnengore_re2_tod */
         (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 6u);   /* @0x80104590-A4 */
     }
     int fw_wrapped = re2s_advance(e, 512);
@@ -2429,7 +2433,9 @@ static void re2s_sink_drive(re15_actor_t *e)
 static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
 {
     (void)pl;
-    if (e->sub_state_2 == 0) {
+    const int frisch = (e->sub_state_2 == 0);
+    const int waffe  = e->sub_state_1;                     /* RE1.5-Waffen-Id VOR der Uebersetzung (Runde 41 Spur S) */
+    if (frisch) {
         e->sub_state_1 = re2s_row_translate(e->sub_state_1);     /* PORT-ZUORDNUNG, s. HURT */
         e->re2s_row23c = e->sub_state_1;                   /* +0x23C @0x80103C9C-B4 */
     }
@@ -2448,6 +2454,10 @@ static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
      * (Der zweite Tail-Aufruf EXE 0x80018FB0 @0x80103D0C ist ein Render-Helfer ohne
      * Port-Kanal und bleibt OPEN.) */
     if (e->re2s_c23a < 0) re2s_sink_drive(e);              /* @0x80103D04 */
+    /* Runde 41 Spur S (PORT-WAHL Gore-Maximum, RE15_KEIN_80PROZENT_GORE): im frischen Takt der RE1.5-Komplett-Platzer
+     * (0x80113ff8 Phase 0 @0x8011403c) fuer RE1.5-Platzwaffen (@0x80118f38), Krit (@0x801146b0) und die RE2-Platzzeilen
+     * (FUN_80104890 @0x80104588 / Zeile 9 @0x80104A2C, Saeure Teil 19 @0x80104bcc), sonst Blut an Teil 0 (@0x80114654). */
+    if (frisch) re15_spinnengore_re2_tod(e, waffe, (int)e->re2s_row23c);
 }
 
 static void re2s_death_row_generic(re15_actor_t *e)
@@ -3104,8 +3114,13 @@ int re15_re2spider_tick(int slot)
     switch (e->state) {                                    /* @0x80100118, Tabelle @0x80106420 */
     case 0: re2s_init(e);              break;              /* @0x801001EC */
     case 1: re2s_active(e, pl);        break;              /* @0x801005AC */
-    case 2:
+    case 2: {
+        /* Runde 41 Spur S (PORT-WAHL Gore-Maximum, RE15_KEIN_80PROZENT_GORE): +0x220 vor dem Zeilen-Handler merken;
+         * jedes neu abgetrennte Bein und das RE1.5-Krit-Bein zeichnet re15_spinnengore_re2_treffer (spinnengore_r41.c). */
+        const uint8_t beine_vor = e->re2s_legs220;
+        const int     frisch    = (e->sub_state_2 == 0);   /* +0x6 == 0 = der Takt, an dem +0x23C gelatcht wird */
         re2s_hurt(e, pl);                                  /* @0x80102C78 */
+        re15_spinnengore_re2_treffer(e, beine_vor, frisch);
         /* ⛔ RESOLVER-LATCH-FREIGABE (+0x93 Bit 0) — dieselbe Familie wie beim RE2-Zombie und
          * -Hund (Nutzer-Blocker 2026-08-19, dort GEMESSEN: 1 statt 3-20 Treffer, +0x93 blieb
          * 0x01/0x03). Der flavor-blinde Resolver FUN_80011f50 setzt den Ein-Treffer-Latch
@@ -3122,6 +3137,7 @@ int re15_re2spider_tick(int slot)
          * abgearbeitet UND wieder ACTIVE = die Reaktion ist vorbei. */
         if (e->state == 1) e->hit_react &= (uint8_t)~1u;   /* andi 0xfe @0x80105fa4 */
         break;
+    }
     case 3: re2s_death(e, pl);         break;              /* @0x80103C80 */
     case 4: re2s_state4(e);            break;              /* @0x80104CF0 */
     case 7: re2s_corpse(e);            break;              /* @0x80104CF8 */
