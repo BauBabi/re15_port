@@ -235,6 +235,8 @@ static int satz_tuer(uint8_t *b, int n, int cap, int32_t x, int32_t y, int32_t z
 }
 
 static int wurf_gier(void);   /* Nachbesserung 2: Wahl/Bit 117/Messhaken, definiert bei der Wurfbahn */
+static void nenn_landung(int g, int32_t out[2]);   /* Runde 41 Spur G2: Messhaken RE15_K2080_RUECK_KANISTER */
+static int32_t isqrt64(int64_t q);
 static void hals_takt(void);  /* Nachtrag 26: RE2-Halsfuehrung, definiert vor dem Installer */
 
 static void baue_spawn(void)
@@ -336,6 +338,27 @@ static void baue_szene(void)
     /* FG-E4 (Orchestrator-Entscheid 2026-10-25 00:56): der Fall laeuft "von unten" in ROOM2090/2091 Cut 12 - mit dem Loslassen
      * der Raumwechsel (Tuer ohne Sequenz, 1 Bild), Leon zurueck auf seine Lage beim Ausloesen; die RE2-Folge danach (Warten auf
      * den Aufschlag @0x079C-07A4, Sleep 15 @0x07A8, Schnitt auf den Fangenden @0x07D4) laeuft in 2090 (baue_rueck). */
+#ifdef RE15_PLATFORM_PC
+    {   /* MESSHAKEN RE15_K2080_RUECK_KANISTER=1 (env-gegatet, KEIN Spielverhalten; Muster RE15_K2080_GATOR_HP): Runde 41 Spur G2 Punkt 8 - ohne Anschwimmen
+         * nimmt der Alligator den Kanister erst auf, wenn er bei ihm ankommt; der Spieler lockt ihn hin. Die exe-Riegel mit stehender Figur (Spur P/G:
+         * tragen, schluessel, kampf) stellen die Figur dafuer bei der Rueckkehr HINTER den Kanister: Nennlandung + 2500 auf der Linie Alligator (beim
+         * Ausloesen) -> Kanister, innerhalb der Aussenwaende mit 700 Rand. Die Verfolgung fuehrt den Alligator so ueber den Kanister. */
+        const char *rk = getenv("RE15_K2080_RUECK_KANISTER");
+        if (rk && *rk && *rk != '0') {
+            int32_t l[2]; nenn_landung(wurf_gier(), l);
+            const int64_t vx = (int64_t)l[0] - s_gator.x, vz = (int64_t)l[1] - s_gator.z;
+            const int32_t vl = (int32_t)isqrt64(vx * vx + vz * vz);
+            int32_t px = l[0] + (vl > 0 ? (int32_t)(vx * 2500 / vl) : 0), pz = l[1] + (vl > 0 ? (int32_t)(vz * 2500 / vl) : 0);
+            if (px < -8900 + 700) px = -8900 + 700;
+            if (px > 7200 - 700) px = 7200 - 700;
+            if (pz < -27000 + 700) pz = -27000 + 700;
+            if (pz > -5400 - 700) pz = -5400 - 700;
+            K_LOG("MESSHAKEN RE15_K2080_RUECK_KANISTER: Rueckkehr hinter den Kanister (%d,%d) statt (%d,%d) - Nennlandung (%d,%d)", (int)px, (int)pz,
+                  (int)s_leon[0], (int)s_leon[2], (int)l[0], (int)l[1]);
+            s_leon[0] = px; s_leon[2] = pz;
+        }
+    }
+#endif
     n = satz_tuer(b, n, cap, s_leon[0], s_leon[1], s_leon[2], s_leon[3], RE15_K2080_RAUM_BYTE_2090, RE15_K2080_CUT_FALL,
                   (uint8_t)s_leon_etage);
     PUT(s_prog_szene, n, OP_AOT_ON);
@@ -928,6 +951,9 @@ static int32_t isqrt64(int64_t q)
  * Kanister vor dem Maul liegt), sie kommt also erst, wenn sein Weg ihn zum Kanister fuehrt. Pruefhaken der Gegenprobe: re15_k2080_anschwimmen_alt_setzen. */
 static int s_anschw_alt = 0;
 void re15_k2080_anschwimmen_alt_setzen(int an) { s_anschw_alt = an; }
+int  re15_k2080_anschwimmen_alt(void) { return s_anschw_alt; }
+/* Runde 41 Spur G2: der Kanister im Becken ist der dieser Szene (Bit 116, in 2090/2091 gesetzt) - Spur-B-Fenster ab dem Kopf (gator_re2_r41.c) */
+static int kanister_der_szene(void) { return raum_2090((unsigned)g_current_room_id & 0xFFFFu) && s_set_2090 && bit(RE15_K2080_BIT_KANISTER); }
 static int anschwimm_lage(const re15_actor_t *e, int32_t c[2], int64_t *d2, int64_t *ab2)
 {
     if (!s_anschw_alt) return 0;
@@ -1083,6 +1109,7 @@ static void hals_takt(void)
 /* ---- Installer --------------------------------------------------------------------------------------------------------- */
 void re15_kanister2080_r41_install(uint16_t room_id)
 {
+    { extern int (*s_kan_szene_fn)(void); s_kan_szene_fn = kanister_der_szene; }   /* Runde 41 Spur G2 (Punkt 8) */
     const unsigned raum = (unsigned)room_id & 0xFFFFu;
     if (!raum_2090(raum) && s_set_2090) {                /* B's Kanister ist ein Port-Prop ohne Raumbindung */
         re15_gr2_kanister_entfernen();

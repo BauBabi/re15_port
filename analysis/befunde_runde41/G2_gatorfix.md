@@ -134,3 +134,10 @@ dem Anschwimmen und ist damit ebenfalls aus. Pruefhaken der Gegenprobe re15_k208
 **Messung nachher:** unit_r41_kanister2080_anschwimmen (nachgezogen): in den fuenf Lagen der Abnahme 1 kein Bild Anschwimmen (Spieler fern: der Gator
 verfolgt ihn); Spieler hinter dem Kanister (auf der Linie Gator -> Kanister): Aufnahme beim Ankommen in Bild 131/665/114/424/246; Gegenprobe N3:
 Aufnahme durch Anschwimmen in Bild 407.
+**Nachtrag Punkt 8 (Folge fuer die exe-Riegel):** ohne Anschwimmen fielen integration_r41_alligator2_tragen(_elza)/_schluessel*/kanister2080_kampf
+(stehende Figur, der Kanister liegt fern -> keine Aufnahme). (1) MESSHAKEN `RE15_K2080_RUECK_KANISTER=1` (env, PC, kein Spielverhalten): die
+Rueckkehr-Lage der Figur hinter den Kanister (Nennlandung + 2500 auf der Linie Alligator -> Kanister) - die Figur lockt ihn hin, wie der Nutzer es
+tut; in den fuenf Riegeln gesetzt. (2) Gemessen (tragen_elza, F1201): die Wurzel ging 25 neben dem Kanister vorbei, das RE2-Fenster (8601..8999 x
+Skala VOR der Wurzel, gator_re2_r41.c @0x80100ae4-ec) wurde nie getroffen, weil er den Kanister kreuzt statt laengs auf ihn zuzuschwimmen. Haken:
+fuer den Szenen-Kanister gilt das Fenster ab der Wurzel (laengs >= 0) bis zum RE2-Ende ("erst wenn er beim Kanister ankommt"); mit dem Pruefhaken N3
+das RE2-Fenster wie bisher. Riegel-Nachzug kanister2080_kampf: Tot-Bits 236..238, 3 von 3.

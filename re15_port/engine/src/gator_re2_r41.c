@@ -581,6 +581,8 @@ static void gr2_zielmodus_takt(gr2_t *g, const re15_actor_t *e, int im_chase)
                      (int)s_kan.stufe, (unsigned)g_engine.frame_count);
 }
 
+/* Runde 41 Spur G2: 1 = der liegende Kanister ist der der Marvin/John-Szene (kanister2080_r41.c), nicht ein Testhaken-Kanister der Spur B */
+int (*s_kan_szene_fn)(void) = NULL;
 static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
 {
     gr2_zielmodus_takt(g, e, im_chase);
@@ -597,6 +599,12 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         gr2_kan_vor(e, &laengs, &quer);
         int32_t ab = q12mul(RE15_GR2_KAN_FENSTER_AB, s), len = q12mul(RE15_GR2_KAN_FENSTER_LEN, s);
         int32_t qmax = (int32_t)e->hit_radius_min + 267;    /* Koerperradius (skaliert) + Kanisterradius (MD1) */
+        /* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 8 "erst wenn er beim Kanister ankommt, soll er ihn aufnehmen", Haken): ohne Anschwimmen kommt er
+         * nicht mehr laengs auf den Kanister zu (RE2: Korridorbahn, die ueber den Kanister fuehrt), er kreuzt ihn auf der Verfolgung. Gemessen
+         * (integration_r41_alligator2_tragen_elza, Lauf F1201): Wurzel 25 vom Kanister entfernt, das Fenster 8601..8999 voraus nie getroffen. Darum gilt
+         * das Fenster vom Kopf an (laengs >= 0, Wurzel) bis zu seinem RE2-Ende - der Kanister vor dem Maul, wenn er bei ihm ankommt. Mit dem
+         * Anschwimmen der N3 (Pruefhaken re15_k2080_anschwimmen_alt_setzen) das RE2-Fenster wie bisher. */
+        { extern int re15_k2080_anschwimmen_alt(void); if (!re15_k2080_anschwimmen_alt() && s_kan_szene_fn && s_kan_szene_fn()) { len += ab; ab = 0; } }
         if (laengs >= ab && laengs < ab + len && quer > -qmax && quer < qmax) {
             s_kan.stufe = 1;                                /* +0x226 = 1 @0x80100b08 */
             /* Nachbesserung 2 (Abnahme 1, M3): RE2 schaltet im selben Pre PADDELN (Sub 2) auf SCHWIMMEN (Sub 1):
