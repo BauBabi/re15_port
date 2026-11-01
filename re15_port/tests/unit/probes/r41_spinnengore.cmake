@@ -31,3 +31,11 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_spinnengore.cmake)
     set_tests_properties(integration_r41_spinnengore PROPERTIES TIMEOUT 900)
 endif()
+
+#   probe_r41_gore_inventur   MESSSONDE (kein ctest): Gore-Erreichbarkeit je Typ unter RE2- und RE1.5-KI (Dossier Inventur).
+add_executable(probe_r41_gore_inventur ${CMAKE_CURRENT_LIST_DIR}/../probe_r41_gore_inventur.c)
+target_link_libraries(probe_r41_gore_inventur PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r41_gore_inventur PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(probe_r41_gore_inventur PRIVATE m)
+endif()

@@ -177,6 +177,46 @@ static void test_alloc(void)
     CHECK(!re15_teile_an(5) && re15_teile(5)[0].w == 1, "I: neuer Aktor erbt geplatzte Teile");
 }
 
+/* J: RE2-Zombie, MC51 (RE2 Zeile 18) in der Beinzone -> Zelle 7438 (RE1.5 @0x8012010c[0] = 0x80108abc). */
+void re15_re2z_death_test(re15_actor_t *e, re15_actor_t *pl);
+int  re15_re2z_last_death_handler(void);
+int  re15_re2z_death_cell(unsigned row, unsigned col);
+int  re15_re2z_gore_active(const re15_actor_t *e);
+static void test_zombie_mc51(void)
+{
+    frisch(RE15_AI_FLAVOR_RE2);
+    CHECK(re15_re2z_death_cell(18, 0) == 1, "J: Rohtabelle @0x8010CEAC Spalte 0 ist nicht MAIN (%d)", re15_re2z_death_cell(18, 0));
+    re15_actor_t *e = &g_actors[3];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = 0x10; e->hp = -1; e->em_flag_id = 0xFF;
+    e->state = 3; e->sub_state_1 = 18; e->re2z_hits1d2 = 0; e->hit_react = 1;
+    for (int i = 0; i < 16; i++) { e->re2z_part_flags[i] = (i < 15) ? 1u : 0u; e->re2z_part_tint[i] = 0x00808080u; e->re2z_part_mesh[i] = (uint8_t)i; }
+    re15_re2z_death_test(e, PL);
+    CHECK(re15_re2z_last_death_handler() == 2, "J: MC51 Beinzone Zelle %d statt 7438 (2)", re15_re2z_last_death_handler());
+    e->state = 3; e->sub_state_1 = 18; e->re2z_hits1d2 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    re15_re2z_death_test(e, PL);
+    CHECK(re15_re2z_last_death_handler() == 1, "J: MC51 Rumpfzone Zelle %d statt MAIN", re15_re2z_last_death_handler());
+}
+
+/* K: RE2-Hund, Redhawk-Tod (Zeile 5, Router @0x801046EC): Teile-Wurf 0x80104440 -> Bruecke an, 7 Parts 0x4a. */
+static void test_hund(void)
+{
+    frisch(RE15_AI_FLAVOR_RE2);
+    re15_actor_t *e = &g_actors[S];
+    e->type = 0x20; e->state = 0;
+    re15_enemy_ai_run_all(1);
+    CHECK(!re15_re2z_gore_active(e), "K: Bruecke vor dem Wurf schon an");
+    e->hp = -1; e->state = 3; e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0; e->hit_react = 0x41;
+    for (int i = 0; i < 3; i++) re15_enemy_ai_run_all(1);
+    CHECK(re15_re2z_gore_active(e), "K: Bruecke nach dem Wurf aus");
+    static const int p[7] = { 2, 3, 4, 7, 8, 9, 10 };
+    for (int i = 0; i < 7; i++)
+        CHECK((e->re2z_part_flags[p[i]] & 0x4Bu) == 0x4Bu && e->re2z_part_w9c[p[i]] == 800,
+              "K: Part %d %04x w9c %d", p[i], e->re2z_part_flags[p[i]], e->re2z_part_w9c[p[i]]);
+    CHECK(e->re2z_part_flags[0] == 1u && e->re2z_part_tint[0] == 0x00808080u, "K: Seed Part 0 %04x %08x",
+          e->re2z_part_flags[0], e->re2z_part_tint[0]);
+}
+
 /* ---- Auswerter ---------------------------------------------------------------------------------------------- */
 static int pruef_log(const char *pfad, const char *art)
 {
@@ -219,6 +259,8 @@ int main(int argc, char **argv)
     test_re2();
     test_re15();
     test_alloc();
+    test_zombie_mc51();
+    test_hund();
     if (fails) { printf("%d Fehler\n", fails); return 1; }
     printf("OK unit_r41_spinnengore\n");
     return 0;

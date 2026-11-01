@@ -149,3 +149,32 @@ void re15_spinnengore_re2_tod(re15_actor_t *e, int weapon_id, int row)
     else
         re15_enemy_fx19700(e, 0x00082000u, 0, null3);
 }
+
+/* ===== Schritt 5: Hund 0x20 — der RE2-TEILE-WURF wird gezeichnet ==============================================
+ * RE2 EMD0G_MOD0.BIN 0x80104440 (selbst disassembliert, Dossier S_spinnengore.md Inventur): 7 Parts aus der Tabelle
+ * @0x80105680 = `02 03 04 07 08 09 0a`, je Part |= 0x4a (`ori v0,v0,0x4a` @0x801044a4), +0xa0 = 0, +0x9c = 800,
+ * +0x9a = -150, +0x9e = 10, +0xa4 = -100, Farbwort +0x70 = 0x101040, +0x98 = +0x76 (@0x801044b4-cc). Gerufen aus
+ * dem Tod-Router @0x801046EC fuer die Zeilen 5,6,9,17,19. Der Port fuehrte die Felder (re2d_teile_wurf), zeichnete sie
+ * aber nicht: re15_re2z_gore_active kannte Typ 0x20 nicht. Jetzt faehrt der Hund dieselbe Part-Bruecke wie Kraehe
+ * (Runde 36 Spur C) und Alligator (Runde 41 Spur B), geseedet erst beim Wurf: bis dahin bleibt der Zeichenweg des
+ * Hundes (C7-Tinte re15_pc_re2_part_tint, 17 Parts) unveraendert. Seed wie der Modell-Aufbau FUN_80028368: Bit 0 =
+ * Part vorhanden, Farbwort 0x808080 (eine schon gesetzte Tinte bleibt), Geometrie = eigener Slot, keine Setz-Blende. */
+void re15_gore_r41_hund_bruecke(re15_actor_t *e)
+{
+    if (!e || (e->re2z_part_flags[0] & 1u)) return;                 /* schon geseedet */
+    memset(e->re2z_part_v,    0, sizeof e->re2z_part_v);
+    memset(e->re2z_part_rot,  0, sizeof e->re2z_part_rot);
+    memset(e->re2z_part_m,    0, sizeof e->re2z_part_m);
+    memset(e->re2z_part_t,    0, sizeof e->re2z_part_t);
+    memset(e->re2z_part_grav, 0, sizeof e->re2z_part_grav);
+    memset(e->re2z_part_st86, 0, sizeof e->re2z_part_st86);
+    memset(e->re2z_part_life_draw, 0, sizeof e->re2z_part_life_draw);
+    e->re2z_part_burst_draw = 0u;
+    e->re2z_part_seeded = 0u; e->re2z_part_stepped = 0u; e->re2z_part_frame = 0u;
+    for (int i = 0; i < 16; i++) {
+        e->re2z_part_blend[i] = -1;
+        e->re2z_part_flags[i] = (uint16_t)(e->re2z_part_flags[i] | 1u);
+        if (e->re2z_part_tint[i] == 0u) e->re2z_part_tint[i] = 0x00808080u;
+        e->re2z_part_mesh[i] = (uint8_t)i;
+    }
+}

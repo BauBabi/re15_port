@@ -204,3 +204,107 @@ Skript `scratchpad/S_mess/cap.ps1` (Messkopie `re15_pc_r41S_bild.exe`, 10 Bilder
   unit_adult_spider_ai, unit_re2_hit_repeat_crow_spider, unit_re2_baby_spider_dmg), weitere 121 Unit-Tests
   `gore|teile|blut|montage|...|hund`, dazu integration_r38_spinnen_echtlauf (114,8 s) und
   integration_r41_spinnenanim (117,7 s).
+
+## Teil-Schritt 3/5: Gore-Inventur je Merkmal und je Typ
+
+Messung: Sonde `tests/unit/probe_r41_gore_inventur.c` (Ziel `probe_r41_gore_inventur`, kein ctest). Je Typ und Gehirn:
+INIT, toedlicher Treffer wie der Resolver (+0x5 Waffe, +0x6 Hoehe, +0x93 = 1|Krit; RE2-Besitz: +0x6 = 0 wie
+`re15_re2_stamp_hit`, RE2-Zombie: +0x5 = RE2-Zeile, +0x1D2 = Spalte wie `RE15_ZGORE_TEST`), 60 Takte
+`re15_enemy_ai_run_all`. Gemessen: Besitzer, RE1.5-Teilschicht (an/Masken), RE2-Part-Bruecke (an, neue 0x40-Parts),
+ESP-Hoechststand. **Grenze der Sonde:** bankfrei (wie die Unit-KI-Pins). Die RE2-Zombie-Phasen, die an EDD-Bildflags
+haengen, laufen dort nicht ganz durch. Fuer den RE2-Zombie gelten deshalb zusaetzlich die bestehenden Riegel
+(`unit_re2_gore80` u.a., alle gruen) als Messung.
+
+Ausgabe (Auszug, `RE2` = Standard-KI, `RE15` = `RE15_AI_FLAVOR=re15`; Hund/Spinne/MC51 = Stand nach Spur S):
+```
+Zombie w7 Mitte (Kopf)       RE2  owner=RE2   teile=0              | re2bridge=1 p40=00100 (Kopf Part 8)
+Zombie w7 Mitte (Kopf)       RE15 owner=RE1.5 teile=1 sh=04000     (Gore-Teil 14 platzt, 0x80106edc)
+Zombie w7 unten (Beine)      RE15 owner=RE1.5 teile=1 sh=0006c aus=00010 grid=81 hp=30 (Beine platzen -> Kriecher)
+Zombie w8 Mitte Krit         RE15 owner=RE1.5 teile=1 sh=04900 aus=03600 (Zerfetzen)
+Zombie w19 MC51 unten        RE2  st=7 hp=-1 (normaler Sturz, vor Spur S) | RE15 sh=0006c grid=81 (Beine platzen)
+Zombie w9 Granate            RE2  p40=01300 fx=32 (8BEC)        |  RE15 grid=81 hp=30 fx=37 (Gestaltung Oberkoerper)
+Wuergearm 0x1a w7            RE2 und RE15: owner=RE2, teile=0, bridge=0
+Hund w7                      RE2  p40=0079c (Teile-Wurf), bridge=0 vor Spur S | RE15 nichts
+Kraehe w7                    RE2  bridge=1 p40=01fff (13 Parts fliegen) | RE15 teile=0 (GIB versteckt nur)
+Spinne w7                    RE2  teile=1 sh=80001 fl=7fff8 (neu) | RE15 teile=1 sh=80001 fl=7fff8
+Gorilla 0x27 / 0x29          beide Flavors owner=RE1.5, kein Teil-Gore
+```
+
+### 3. Die Merkmale der Gore-Commits (Parallelzweig, alle in master)
+
+| Commit | Merkmal | Standard-KI (RE2) | RE1.5-KI | Warum nein / Stand nach Spur S |
+|---|---|---|---|---|
+| b2ca28b82 | Zombie-Treffer w5/6 (Clips 6-7-8 + Blut), w7/8 Rueckstoss, w19 Rutschen (0x80106290/6624/6048) | nein | ja (RE1.5-Zweig `re15_zgore_treffer`, enemy_ai_common.c:5196) | RE2 besitzt 0x10-0x13/0x16/0x18 (`re15_re2z_owns_type`) und hat eigene Treffer (MAIN/7438/7EF0/RAGDOLL). Treffer = RE2 nach Nutzerregel, kein Gore-Verlust |
+| b2ca28b82 | Zombie-Tod Magnum Mitte: Kopf platzt, 50 % kopflos weiter (0x80106edc/0x80107244) | ja, als RE2 92C4 P3/P4 (Sonde: Part 8 0x40) | ja (Sonde sh 0x04000) | — |
+| b2ca28b82 | Zombie-Tod Schrot Mitte Krit: Zerfetzen / Oberkoerper ab (0x80107ee0) | ja: Zerfetzen = 8cda79eca, Oberkoerper ab = RE2 66FC (`unit_re2_gore80` gruen) | ja (Sonde sh 0x04900) | — |
+| b2ca28b82 | Zombie-Tod nach unten: Beine platzen -> Kriecher (0x80108abc) fuer w7/w8/**w19** | w7/w8 ja (RE2 7438). **w19 nein** (Sonde: normaler Sturz) | ja (Sonde grid 0x81) | RE2-Zeile 18 hat in der Beinzone nur MAIN (@0x8010CEAC). **Behoben** (Abschnitt 5) |
+| 710c7dd18 | RE1.5-Teilschicht (Zeichner) | ja (Zeichner flavorblind; die Spinne nutzt sie jetzt) | ja | — |
+| 7950a6b04 | Messhaken RE15_ZGORE_TEST | ja (8cda79eca: auch RE2-Zombies) | ja | kein Spielmerkmal |
+| 5c41aeb22 | Granaten-Tod RE1.5 (Oberkoerper ab, kriecht; Gestaltung) | nein, dafuer 4b84afcc8 | ja (Sonde grid 0x81 hp 30) | RE2-Gehirn: Zeile 9 -> 8BEC (4b84afcc8) |
+| 661a36e59 | Wuergearm-Hand fliegt ab (0x8010D5D0) | **nein** | **nein** | 0x1A laeuft in JEDEM Flavor auf dem RE2-Zellenarm (`re15_ai_re2_for_type`, enemy_ai_re2_zombie.c:179, Runde 35 Spur H M1); nur der Test-Pin `re15_ai_writher_re15_pin` erreicht ihn. Sonde: owner=RE2 in beiden. RE2-Zellenarm hat keinen Teil-Wurf. **Offen** (Nutzerfrage) |
+| 661a36e59 | Spinne Beine bei Krit / Platzen bei Krit-Tod | **vorher nein, jetzt ja** | ja (jetzt byte-true ueber @0x80118f38 + fliegende Beine) | Teil-Schritt 4 |
+| c1469a3ab | Leons Koerperteile beim Birkin-Wurf-Tod (STAGE3 @0x8011b2f4-554) | ja | ja | Birkin 0x30/0x36 hat kein RE2-Gehirn (run_all-Zweig `t == 0x30 || t == 0x36`), der Spieler-Zeichner liest die Teilschicht flavorblind. Nicht gemessen (kein Birkin-Lauf in dieser Spur) |
+| c1469a3ab | Blut an Teil 0 beim Absturz von 0x29 (affen3_r38.c) | ja | ja | 0x29 ohne RE2-Gehirn (Sonde owner=RE1.5 in beiden) |
+| 53981ba5d | Zombie-Spawn-Varianten (@0x801008b0, 25 %) | ja (8cda79eca: im RE2-INIT, auf RE2-Slots umgesetzt) | ja | Zeichner liest Skala 0x400 und Vertex-Tinte 0x80 flavorblind (main.c:10795/10967) |
+| 4b84afcc8 | RE2-Granaten-Tod zerreisst (8BEC) | ja (Sonde Zeile 9: p40 0x01300, fx 32) | nur mit RE2-Import-Option (RE1.5 hat 5c41aeb22) | — |
+| 8cda79eca | Zerfetzen + Spawn-Variante im RE2-Gehirn | ja (`unit_re2_gore80`) | — | — |
+
+### 5. Je Typ mit RE2-Gehirn: RE1.5-Gore, RE2-Gore, Standard vorher, Stand nach Spur S
+
+| Typ | RE1.5-Gore (Disc) | RE2-Gore (Retail) | Standard vorher | Spur S | Am Modell gescheitert / offen |
+|---|---|---|---|---|---|
+| Zombie-Familie 0x10-0x13/0x16/0x18 | Kopf, kopflos, Zerfetzen, Oberkoerper, Beine (w7/8/19 nach unten), Spawn-Varianten | 92C4, 66FC, 7438, 8BEC, 9610, Arm-Abwurf, Brand/Saeure | alles ausser MC51-Beine | **MC51 nach unten -> 7438** (`re2z_death_zelle`, Zeile 18, Spalte % 3 == 0, Schalter RE15_KEIN_80PROZENT_GORE); Riegel J | Ganz-Zerplatzen durch Granate (Video Z08/Z11/Z24) hat weder RE1.5 noch RE2 als Mechanismus -> Gestaltung nach Bild, nicht gebaut (offen) |
+| Hund 0x20 | Blut/Lache (keine Teile; Sonde RE15 teile=0) | **Teile-Wurf 0x80104440**: 7 Parts {2,3,4,7,8,9,10} @0x80105680 driften dunkel weg (Zeilen 5,6,9,17,19) | Felder gesetzt, **nicht gezeichnet** (Bruecke kannte 0x20 nicht; Sonde bridge=0) | **Bruecke fuer 0x20**, beim Wurf geseedet (`re15_gore_r41_hund_bruecke`); Riegel K | RE2-Slots 7/10 haben kein RE1.5-Mesh (k_perm_dog -1): diese zwei Teile zeichnen nichts. Bild aus dem Fenster nicht gelungen (die Kamera zeigt den Tod nicht) -> offen |
+| Kraehe 0x21 | GIB 13 Knochen @0x80114a50 (versteckt nur) | GIB 0x80102CA0, 13 Parts fliegen (Bruecke seit R36) | ja (Sonde p40 0x01fff) | — | Feder-Sprite (Video K01) ohne Mechanismus in beiden -> offen |
+| Spinne 0x25 | Krit-Bein, Platzen (Waffentabelle), Beine fliegen | Bein ab (FUN_80105BF0), Hinterleib (FUN_80104890), Babys | nur Babys + ESP | **alles gehoben** (Teil-Schritt 4) | RE2-Partikel FUN_801056DC an Teil-Matrizen: der Port spawnt am Ursprung (`re2s_gore`) -> offen |
+| Babyspinne 0x26 (nur RE2-Spawns) | — (RE1.5-0x26 = Feuer-Emitter) | kein Teil-Gore im Modul | — | — | — |
+| Zellenarm 0x1A | Hand ab (0x8010D5D0) | keiner | nein | — | Hand-ab gibt es nur im RE1.5-Writher; der laeuft nie (Entscheidung R35 H M1) -> offen, Nutzerfrage |
+| Alligator 0x23 | (Spur B) | Kiefer platzt (R41 Spur B, Bruecke) | ja | nicht angefasst | — |
+| Gorilla 0x27, 0x29, Birkin 0x30/0x36 | eigenes RE1.5-Gore | kein RE2-Gehirn | ja (RE1.5 in beiden Flavors) | — | — |
+
+Hund, Byte-Beleg (RE2 EMD0G_MOD0.BIN, `re2_disasm.py dis 0x80104440 --bin EMD0G_MOD0.BIN`):
+```
+80104470: lbu v1,22144(at)   ; Tabelle @0x80105680 = 02 03 04 07 08 09 0a
+801044a4: ori v0,v0,0x4a / 801044a8: sw v0,0(v1)
+801044b4: sh zero,160(v1)  801044b8: sh t2(800),156(v1)  801044bc: sh t1(-150),154(v1)
+801044c0: sh t0(10),158(v1) 801044c4: sh a3(-100),164(v1) 801044c8: sw a2(0x101040),112(v1)
+801044cc: sh v0(+0x76),152(v1)   801044d0: sltiu v0,a1,0x7
+```
+MC51, Byte-Beleg (RE1.5 STAGE1.BIN, Mod = Disc, `read 0x8011feac 8 --rows 22 --rowstride 32`):
+```
+0x8011ff8c: [ 7] [0x80108abc, 0x80106edc, 0, 0, 0x80107634, 0x80107244, 0, 0]
+0x8011ffac: [ 8] [0x80108abc, 0x80107ee0, 0, 0, 0x80107634, 0x80107244, 0x80106c18, 0]
+0x8012010c: [19] [0x80108abc, 0x80106c18, 0, 0, 0x80107634, 0, 0, 0]
+```
+
+### 5b. Was die RE2-Gehirne ueber Angriff und Treffer hinaus ersetzen (nur berichtet, nicht umgebaut)
+
+| Typ | Ersetzt durch RE2 (RE1.5-Inhalt fehlt unter Standard-KI) | Beleg |
+|---|---|---|
+| Spinne 0x25 | **Klettern an Wand/Absatz/Decke** (Runde 42, 0x801118a8 + ACT 9/10/12/13) laeuft nur im RE1.5-Gehirn; die RE2-Oberflaechenmodi 1/2/3 sind unter den RE1.5-Raumdaten unerreichbar (beide Deskriptoren 0x00/0x41 -> Modus 0): unter Standard klettert die Spinne nie. Toene: RE1.5-Raum-SE 2/5 (Treffer/Tod) statt RE2-ENEMSE-Bank 11. HP-Tabelle RE1.5 (`s_aspider_hp_row`) statt RE2 @0x801062C4 (gemessen: RE2 110/111, RE1.5 80/129). Tod: RE1.5 Clip 4 bzw. 1 + Leichen-Verblassen statt RE2 Clip 12/13. | include/re15_spinne_r42.h:4; enemy_ai_re2_spider.c Block "WARUM NUR MODUS 0"; Messung Teil 1 |
+| Zombie-Familie | RE1.5-Trefferreaktionen je Waffe (b2ca28b82), RE1.5-Entscheidungszustaende (Tabelle @0x8011f840, u.a. Fressen/Schlafen) ausser dem Sitz-/Aufsteh-Import, RE1.5-Schritt-Toene (Raum-SE-Maske) statt ENEMSE. Brennende Zombies bleiben (`re15_brand_re2_takt`). | enemy_ai_common.c:10916-10926, :14855-14870 |
+| Hund 0x20 | alles ausser den Skript-Zustaenden 4/5/6 (Spawn-Drop, Kill-Maschinen), die bleiben RE1.5 | enemy_ai_common.c:7832-7845 |
+| Kraehe 0x21 | alles ausser Ereigniskraehe (R38 I) und Fensterkraehe ROOM1120 (R35 M, dort erzwungen RE2) | enemy_ai_common.c:6912-6926 |
+| Zellenarm 0x1A | in jedem Flavor RE2: der RE1.5-Writher (Bewegung, Hand-ab-Tod) ist ganz weg | enemy_ai_re2_zombie.c:172-179 |
+Die Spalte stammt aus dem Code und den Besitz-Toren; gemessen ist davon nur der Besitz (Sonde) und die HP der Spinne.
+
+### Bau Schritt 5 (zweiter Commit) und Riegel
+
+- `enemy_ai_re2_zombie.c re2z_death_zelle`: Zeile 18 (MC51), Beinzone (Spalte % 3 == 0) -> 7438, nur mit dem
+  80%-Schalter (RE15_KEIN_80PROZENT_GORE schaltet ab, wie die Granaten-Zeile 9).
+- `enemy_ai_re2_zombie.c re15_re2z_gore_active`: Typ 0x20 nimmt die Part-Bruecke, sobald Record 0 Bit 0 traegt;
+  `enemy_ai_re2_dog.c re2d_teile_wurf` seedet sie vor dem Wurf (`re15_gore_r41_hund_bruecke`, spinnengore_r41.c).
+  Nicht am Schalter: das ist RE2-eigenes Gore, das bisher nur nicht gezeichnet wurde (wie Kraehe R36 / Alligator R41 B).
+- Riegel `unit_r41_spinnengore` erweitert: J (Rohzelle @0x8010CEAC Spalte 0 = MAIN; Zelle mit Hebung = 7438;
+  Rumpfzone bleibt MAIN), K (RE2-Hund Redhawk-Tod: Bruecke vor dem Wurf aus, danach an, 7 Parts 0x4b, w9c 800,
+  Seed Part 0 = 1 / 0x808080).
+- **Gegenprobe ohne diesen Bau** (enemy_ai_re2_zombie.c, enemy_ai_re2_dog.c auf den Stand des ersten Commits):
+  **10 Fehler** (J: Zelle 1 statt 2; K: Bruecke aus, 7 Parts ohne Bit 0, kein Seed). Danach wiederhergestellt: OK.
+- Weitere Zielauswahl gruen: 80 Unit-Tests `dog|hund|re2_gore|zombie_gore|re2z|weapon_rows|r36_granate|
+  r34_reaktion|r35_redhawk|plattform|kraehe|crow`, integration_r35_redhawk (Hund + Redhawk, ESP-Zahl),
+  integration_r41_spinnengore.
+- Bildbeleg `S_belege/s04_re2ki_schrot_bein_platzt_2070_leon.jpg`: Remington, Aufnahmebild 117: Muendungsblitz,
+  gelbgruene Beinstuecke links an der Spinne, rotes Blut; 118-121 die Spinne laeuft mit einem Beinpaar weniger.
+  Gefunden ueber eine Pixelzaehlung (gelbgruen) ueber alle Aufnahmebilder: nur Bild 117 im Schrot-Lauf.
+- Hund: Bild aus dem echten Fenster **nicht** gelungen. Auf dem Weg des Riegels r35_redhawk (ROOM11D0, Leon
+  (-7000,-15900)) zeigt die Kamera den Tod nicht (die Hunde laufen aus dem Bild). Nur Unit-Beleg K und Sonde.

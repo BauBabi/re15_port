@@ -4641,6 +4641,9 @@ int re15_re2z_gore_active(const re15_actor_t *e)
     /* Runde 36 Spur C: auch die RE2-KRAEHE (0x21) faehrt die Part-Bruecke — ihr GIB 0x80102CA0 wirft
      * dieselben 13 Zeilen mit denselben Flagworten 0x4A/0x1062 (schuss_r36.c); Seed in re2c_init. */
     if (e->type == 0x21u) return re15_ai_re2_for_type(0x21u) && e->re2c_gib_parts != 0u;
+    /* Runde 41 Spur S: der RE2-HUND (0x20) wirft im Tod 7 Parts (0x80104440, Tabelle @0x80105680, Flagwort 0x4a
+     * @0x801044a4); den Block seedet erst dieser Wurf (re15_gore_r41_hund_bruecke), vorher bleibt die Bruecke aus. */
+    if (e->type == 0x20u) return re15_ai_re2_for_type(0x20u) && (e->re2z_part_flags[0] & 1u) != 0;
     if (!re15_re2z_owns_type(e->type)) return 0;
     if (!re15_ai_re2_for_type(e->type) &&
         !re15_re15_re2z_import_owns(e->type)) return 0;
@@ -7694,7 +7697,10 @@ static const uint8_t re2z_death_tbl[19][9] = {
 /* Zelle der DEATH-Tabelle mit der Spalten-Klemme (s. Dispatch) und der 80%-GESTALTUNG: die Granaten-Zeile 9
  * (GL Explosiv, Zeile @0x8010CD68) laeuft dort, wo das RE2-Original nur den normalen Sturz 0x80108530 hat
  * (Spalten 3..8), in den Zerreiss-Tod 0x80108BEC; Spalte 0 (7438 Beine/Kriecher) und 1/2 (8BEC) bleiben.
- * Video 3 8:10-8:22 (BEFUND.md 5.2): Zombie zerrissen, grosse Blutlachen. Zeilen 10/11
+ * Video 3 8:10-8:22 (BEFUND.md 5.2): Zombie zerrissen, grosse Blutlachen. ⛔ BELEG BERICHTIGT (Runde 41 Spur S,
+ * S_video_gore.md Abschnitt 3): 8:10-8:25 zeigt am Einzelbild KEINEN Abriss (der Zombie richtet sich zweimal auf,
+ * grosse Lache). Granaten-Zerplatzen zeigen B 3:31.4, 3:36.0 und 8:42.2 (Z08/Z11/Z24) — dort ist vom Koerper fast
+ * nichts mehr da, also MEHR als 8BEC (Rumpf bleibt). Zeilen 10/11
  * (Brand/Saeure) bleiben bei der Tabelle: ihr eigenes RE2-Gore (Verkohlung FUN_80106128 / Aetzen) haengt am
  * Sturz-Pfad (unit_r36_granate pinnt die Flammen). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1. */
 int re15_zgore_80prozent(void);   /* zombiegore_r15.c */
@@ -7764,6 +7770,12 @@ static uint8_t re2z_death_zelle(unsigned row, unsigned col)
     uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
     if (h == (uint8_t)RE2ZD_NULL && col != 1u && row < 19u) h = re2z_death_tbl[row][1];
     if (row == 9u && h == (uint8_t)RE2ZD_MAIN && re15_zgore_80prozent()) h = (uint8_t)RE2ZD_8BEC;
+    /* Runde 41 Spur S (Gore-Maximum, Schalter wie oben): MC51 nach unten. RE1.5 STAGE1 DEATH-Tabelle @0x8011feac
+     * [w*8 + Hoehe], Zeile w19 = @0x8012010c = {0x80108abc, 0x80106c18, ...}: Hoehe 0 -> 0x80108abc (Beine platzen,
+     * Kriecher), wie w7/w8 Hoehe 0 (@0x8011ff8c/@0x8011ffac; Mod-Baum = Disc). RE2 Zeile 18 (Gatling, MC51 =
+     * re2z_row_from_weapon[19]) hat in der Beinzone nur den Sturz (@0x8010CEAC). Die Beinzone (Spalte % 3 == 0,
+     * Zone 0 = Beine) bekommt deshalb die RE2-Beinzelle 7438 der Magnum-/Schrotzeilen (@0x8010CCD8/@0x8010CD20). */
+    if (row == 18u && (col % 3u) == 0u && h == (uint8_t)RE2ZD_MAIN && re15_zgore_80prozent()) h = (uint8_t)RE2ZD_7438;
     return h;
 }
 static int s_re2z_last_death_handler = 0;   /* Port-Diagnose (Tests) — 0 = keine Zelle gelaufen */

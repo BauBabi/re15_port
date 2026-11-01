@@ -49,4 +49,8 @@ void re15_spinnengore_bein_ab(re15_actor_t *e, int leg);/* Paar leg/leg+1 + Blut
 void re15_spinnengore_re2_treffer(re15_actor_t *e, uint8_t beine_vor, int frisch);
 void re15_spinnengore_re2_tod(re15_actor_t *e, int weapon_id, int row);
 
+/* Schritt 5 (Inventur je RE2-Gehirn): Hund 0x20 — Part-Bruecke beim RE2-Teile-Wurf 0x80104440 seeden, damit die
+ * 7 geworfenen Parts (@0x80105680) gezeichnet werden (re15_re2z_gore_active Typ 0x20). */
+void re15_gore_r41_hund_bruecke(re15_actor_t *e);
+
 #endif
