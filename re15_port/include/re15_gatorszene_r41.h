@@ -203,5 +203,9 @@ int  re15_gatorszene_r41_fress_kamera(int *frontal);
 
 /* Runde 41 Spur P (Nachbesserung 1, M6): Messhaken - Abstand Rumpfmitte der Leiche <-> Maullage (1750,-210) im Part-6-Rahmen x Zeichen-Skala; 1 = angehaengt und gemessen. */
 int re15_gatorszene_r41_leiche_sitz(int32_t *abw);
+/* Runde 41 Spur G2 (Punkte 1/2): Flug der Leiche (0 haengt / 1 fliegt / 2 gefangen / 3 weg), Clip-5-Bilder von Wurf/Fang/weg, hoechster Punkt der
+ * Rumpfmitte ueber der Maullage im Flug, Abstand Rumpfmitte <-> Maullage im Fangbild; Pruefhaken der Gegenprobe (1 = Leiche wie vor Spur G2). */
+int  re15_gatorszene_r41_leiche_flug(int *bild_wurf, int *bild_fang, int *bild_weg, int32_t *hoehe, int32_t *fang_abw);
+void re15_gatorszene_r41_g2_alt_setzen(int an);
 
 #endif /* RE15_GATORSZENE_R41_H */
