@@ -308,3 +308,41 @@ Die Spalte stammt aus dem Code und den Besitz-Toren; gemessen ist davon nur der 
   Gefunden ueber eine Pixelzaehlung (gelbgruen) ueber alle Aufnahmebilder: nur Bild 117 im Schrot-Lauf.
 - Hund: Bild aus dem echten Fenster **nicht** gelungen. Auf dem Weg des Riegels r35_redhawk (ROOM11D0, Leon
   (-7000,-15900)) zeigt die Kamera den Tod nicht (die Hunde laufen aus dem Bild). Nur Unit-Beleg K und Sonde.
+
+## Ergebnis Spur S (Stand 2026-11-01, Commits ebfd10c31 und 9fb1c73e2 auf r41/spinnengore)
+
+Antwort auf die Nutzerfrage: Der Gore-Zweig war vollstaendig in master (0 fehlende Commits, Merge b539a5337).
+Das Platzen der Spinne lag aber im RE1.5-Gehirn, und unter der Standard-KI besitzt das RE2-Gehirn jede 0x25.
+Gemessen: Das Krit-Bit kam an (+0x93 = 0x41), die Teilschicht blieb aus. Deshalb platzte die Spinne nicht.
+Jetzt platzt sie unter der Standard-KI bei jedem toedlichen Treffer mit Magnum, Schrot, SPAS, Granaten, Rakete und
+Krit, im RE1.5-Original belegt und dort ohne Zufall (Tabelle @0x80118f38 -> 0x80113ff8). Rumpf und Hinterleib
+zerplatzen gelbgruen, alle Beine fliegen, Blut kommt an Rumpf und Hinterleib. Beine fallen bei jedem
+Bein-Abtrennen von RE2 und bei Krit. Belegt mit Bildern aus dem Fenster (Leon, Elza, Gegenprobe).
+
+## Offen (benannt, nicht gedeutet)
+
+1. **Wuergearm 0x1A, Hand fliegt ab (661a36e59, 0x8010D5D0)**: Das ist in KEINEM Flavor erreichbar. 0x1A laeuft
+   immer auf dem RE2-Zellenarm (Entscheidung Runde 35 Spur H M1), der keinen Teil-Wurf hat. Ob die RE1.5-Hand in den
+   Zellenarm gehoben werden soll, ist eine Nutzerentscheidung. Teilnummern und Zeitpunkt (der RE2-Arm hat keinen
+   RE1.5-Tod) muessten neu belegt werden.
+2. **Zombie zerplatzt durch Granate ganz** (Video Z08/Z11/Z24): Kein Mechanismus in RE1.5 oder RE2 laesst den Rumpf
+   verschwinden. 8BEC (Rumpf bleibt) ist das Staerkste vorhandene. Ein Nachbau waere Gestaltung nach Bild. Nicht gebaut.
+3. **Spinne, Waffe in Video S01 (B 5:18.3)**: Pistole oder Magnum ist nicht zu erkennen. Mit Handfeuerwaffen platzt
+   die Spinne weder im RE1.5- noch im RE2-Original. Sollte das Video eine Pistole zeigen, waere das Platzen bei
+   Pistolen Gestaltung nach Bild. Nicht gebaut.
+4. **RE2-Partikel FUN_801056DC** (Spinne, alle `re2s_gore`-Stellen) sitzen im Port am Aktor-Ursprung statt an der
+   Teil-Matrix (+0x198 + 172*Teil). Die RE1.5-Blutsaetze der Hebung sitzen am Teil (`re15_enemy_fx19700`).
+5. **Hund-Teile-Wurf**: Bild aus dem echten Fenster fehlt (Kamera auf dem r35-Weg zeigt den Tod nicht). Unit K und
+   Sonde belegen den Mechanismus. RE2-Slots 7/10 haben kein RE1.5-Mesh (k_perm_dog -1).
+6. **Kraehe, Feder-Sprite** (Video K01): Mechanismus fehlt in beiden Quellen, offen wie in S_video_gore.md.
+7. **RE1.5-Spinnentod der schwachen Waffen** (0x8011461c, Clip 4, Phasen @0x80114b78-e04): Der Port nimmt weiter
+   Clip 1. Das ist eine vorbestehende Verkuerzung, kein Gore.
+8. **Beta-Eigenheit, nicht geaendert**: Fliegende Teile, die mit vy 160..167 auf y = 0 aufschlagen, verschwinden
+   (FUN_8001f024 @0x8001f104-134). Einige Oberschenkel verschwinden nach der Landung, die Unterschenkel bleiben.
+9. **Nutzerentscheidung 5b**: Was die RE2-Gehirne ueber Angriff/Treffer hinaus ersetzen (Tabelle 5b), vor allem
+   das Klettern der Spinne (Runde 42), das unter der Standard-KI nie laeuft.
+10. **Colt Python (w20) bei der Spinne**: Die RE2-Zeilenkarte der Spinne fuehrt w20 noch auf Zeile 13 (generisch),
+    die des Zombies seit Runde 35 auf 5 (Magnum). Das Gore deckt die Hebung ueber das Krit-Bit ab. Die Trefferzeile
+    ist nicht angeglichen.
+11. Nicht gemessen in dieser Spur: Birkin-Wurf-Teile (c1469a3ab) und Blut an Teil 0 bei 0x29 im Echtlauf. Belegt
+    ist nur der Besitz (kein RE2-Gehirn).
