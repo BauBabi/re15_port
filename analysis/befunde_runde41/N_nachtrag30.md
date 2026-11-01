@@ -257,7 +257,7 @@ ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_b$" --timeout 
 3. Die Schrank-Innenseite zeigt nach dem Einsetzen weiter Cut 6, nicht Cut 10: 89 von 12480 Bildpunkten der Schrankwand (Sicherung und Lampe). Die Einsetz-Ansicht zeigt den Wechsel Cut 8 -> Cut 9.
 4. Die Schranktuer ist nur unter Cut 3 zu sehen (M4). Der Fluegel stuende in Cut 4 im Bild, dafuer gibt es keine brauchbare Textur; der Hintergrund dort zeigt den Schrank geschlossen.
 5. `audio_pc.c` traegt 23 Zeilen statt eines Haken-Einzeilers: die Sirene braucht die statischen `ss_*`-Funktionen, Muster `re15_audio_r41_alarm` der Spur C.
-6. Neu aus der Integration, nicht behoben (Spur O, ausserhalb Mangel 1/2): zweite Sicherung aus ROOM1150 im Inventar, Sicherung steckt im Kasten, Tuer OFFEN: USE nimmt die steckende Sicherung stumm heraus (Laeufe r2_a, r2_b: `Set zone=9 idx=125 op=0`, kein Text). Grund: das Tor der Zeile in `k_stellen` prueft nur (3,108), nicht den Zustand des Kastens. Vorschlag: `re15_ventilkette_r41_kasten_fragt()` ins Tor der Stelle, dann gilt dort "You can't use it here." (RE2 @0x8006b248).
+6. ERLEDIGT in der Integration Q+R, Abschnitt "Integration Q+R: OFFEN 6". Befund war (Spur O, ausserhalb Mangel 1/2): zweite Sicherung aus ROOM1150 im Inventar, Sicherung steckt im Kasten, Tuer OFFEN: USE nimmt die steckende Sicherung stumm heraus (Laeufe r2_a, r2_b: `Set zone=9 idx=125 op=0`, kein Text). Grund: das Tor der Zeile in `k_stellen` prueft nur (3,108), nicht den Zustand des Kastens. Vorschlag: `re15_ventilkette_r41_kasten_fragt()` ins Tor der Stelle, dann gilt dort "You can't use it here." (RE2 @0x8006b248).
 
 ## Fuer den Nutzer
 
@@ -267,7 +267,7 @@ ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_b$" --timeout 
 **Notiz, Rechenweg:** §3.
 **Lautstaerke:** vorhandene `re15_options.cfg` behaelt ihren Wert; der wirkt jetzt quadratisch (20 -> 0,04). Ohne Datei gilt 50.
 
-**Bedienung Sicherung 2010:** vor dem Schrank START, ITEM, die Sicherung waehlen, USE. Das Inventar schliesst, der Schrank klappt auf (ist er offen, entfaellt das), dann wie in 2060: Cursor mit dem Steuerkreuz auf die Luecke in der dritten Reihe (ein Schritt nach rechts reicht), Aktionstaste. Einen Abbruch gibt es dort wie im Original nicht. Die Aktionstaste allein klappt den Schrank auf und zeigt nur "One of the fuses is missing..."; eine Frage gibt es nur noch mit vollem Inventar (Altstand, Spur O).
+**Bedienung Sicherung 2010:** vor dem Schrank START, ITEM, die Sicherung waehlen, USE. Das Inventar schliesst, der Schrank klappt auf (ist er offen, entfaellt das), dann wie in 2060: Cursor mit dem Steuerkreuz auf die Luecke in der dritten Reihe (ein Schritt nach rechts reicht), Aktionstaste. Einen Abbruch gibt es dort wie im Original nicht. Die Aktionstaste allein klappt den Schrank auf und zeigt nur "One of the fuses is missing..."; eine Frage gibt es nur noch mit vollem Inventar (Altstand, Spur O). Steckt die Sicherung schon oder sitzt sie im Generator, gilt USE dort nicht: "You can't use it here.", das Inventar bleibt offen (Integration Q+R).
 **Entscheid zur Frage aus Spur N (Orchestrator):** Der Wasserlauf bleibt in ROOM2000/2001, dort ist die Leiter. ROOM2010/2011 ist das Buero ohne Leiter und ohne Wasser.
 
 ## Nachbesserung 1 (nach Abnahme 0, N_abnahme_0.md; fortlaufend)
@@ -369,7 +369,7 @@ Merge c5d7ba18a, Fix 90df9edd7, Riegel 333e128cc. Messordner scratchpad `int_n/`
 **Dabei gefunden:**
 * Die erste Fassung ohne `kasten_fragt` hielt den Lauf auch in `2010_kasten_drin`/`_leer`. Zweite Sicherung aus ROOM1150, Tuer zu: Text 43 wurde als Ja verschluckt, `Set zone=9 idx=125 op=0` ohne Text (Lauf r_drin_fix; vorher echte Frage, r_drin_vorfix), in `_leer` fiel Text 40 aus (r_gen_fix). Jetzt Text 43 / Text 40 mit Bit 125 unberuehrt (r2_drin_zu, r2_gen_zu).
 * `unit_r41_keyitems_use` wurde mit Spur N rot (sechs Pruefungen, Raeume 2010 und 2011), in Abnahme 1 nicht genannt: der Riegel wartete ein Bild auf die Frage und setzte Bit 125 ohne Cursor-Schritt voraus. Nachgezogen und strenger: "USE-Lauf haelt, solange die Tuer faehrt", "die Frage faellt erst bei offener Tuer".
-* OFFEN 6: dieselbe zweite Sicherung bei offener Tuer, nicht behoben.
+* OFFEN 6: dieselbe zweite Sicherung bei offener Tuer, hier nicht behoben, erledigt in der Integration Q+R (unten).
 
 **Riegel:** `unit_r41_nachtrag30` Fall C2 (Leon, Elza; Takt wie das Spiel, Gegenproben). Mutationen: ohne Halten rot ("Lauf haelt bis die Tuer offen ist" und Folgen), ohne `kasten_fragt` rot ("Fall 0: Text 43 hinter der Tuer", "Bit 125 unberuehrt", "Fall 1: Text 40"). `integration_r41_nachtrag30_schrank_*`: Lauf u = USE ueber das Inventar am geschlossenen Schrank, Lauf b auf USE umgestellt (`RE15_USE_TEST=0x40@618`). `test_r41_ventilkette_weg.cmake` k1: USE auf dem Bild des alten Ja, Vorspann vor Text 40 geprueft.
 
@@ -386,3 +386,17 @@ integration_r41_ventilkette_weg_elza   Failed   578 s   <- Lauf v2a endete bei r
 ctest --test-dir re15_port/build -R "^integration_r41_ventilkette_weg_elza$" --timeout 3000      (einzeln wiederholt)
 100% tests passed, 0 tests failed out of 1      1690 s
 ```
+
+## Integration Q+R: OFFEN 6 (2026-10-31, Commit 0dd07032d)
+
+Entscheid des Orchestrators: `re15_ventilkette_r41_kasten_fragt()` ins Tor der Stelle, dann gilt dort "You can't use it here.", Bit 125 bleibt unberuehrt. Messordner scratchpad `int_qr/z1`.
+
+**Messung vorher (exe des Merges 6c34c132a, Laeufe a3 Leon, a3e Elza):** (3,108), (9,125), (9,53), zweite Sicherung per RE15_GIVE, Aktionstaste, Text 43 mit Nein, Tuer offen, START/ITEM/USE: `USE-Lauf ROOM201x Ereignis 20 Frage 41`, `Ck zone=12 idx=31 exp=0 got=0`, `WRITE Set zone=9 idx=125 op=0`, kein Text.
+
+**Beleg:** RE2 PSX.EXE @0x8006b220 `jal 0x80077360` Bit-Test, @0x8006b228 `beq v0,zero,0x8006b238`, @0x8006b244 `addiu a2,zero,7`, @0x8006b248 `jal 0x8002fe38` Text 7. Zustaende des Kastens wie ROOM2060 sub00 @0x0109E..@0x010DE.
+
+**Aenderung:** art-Bit `RE15_R41O_KASTEN` an der Zeile 2010, `tor_offen` fragt `re15_ventilkette_r41_kasten_fragt()`. Das gilt fuer Tuer zu und offen und auch fuer die im Generator sitzende Sicherung ((3,144)). Damit entfaellt die Zeile aus "Dabei gefunden" oben, nach der USE bei geschlossener Tuer Text 43 / Text 40 zeigte. Die Aktionstaste ist unveraendert. Die Bedingung `kasten_fragt` in `re15_keyitems_r41_tick` bleibt fuer den Messhaken RE15_USE_TEST, der am Tor vorbei startet.
+
+**Messung nachher (Laeufe n3, n3e):** `[keyitems] USE 0x40 ROOM201x: keine Stelle (You can't use it here.)`, kein USE-Lauf, keine Zeile `zone=9 idx=125 op=0`. Bilder F680/F700: Inventar offen, "You ca..." laeuft, Leon und Elza.
+
+**Riegel:** `unit_r41_nachtrag30` C2 neu gefasst (2010 und 2011, Fall 0 und 1, Tuer zu und offen, Aktionstaste bleibt), `integration_r41_nachtrag30_schrank_*` Lauf z1 (echter Weg). Gegenprobe ohne das Tor: Unit 8 x "USE gilt nicht", `_schrank_leon` und `_schrank_elza` rot.

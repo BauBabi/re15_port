@@ -9,12 +9,12 @@
 #   - Bild: zwischen der ersten und der letzten Verwerfung bleibt der Hintergrund stehen. Das erste Bild zaehlt nicht: dort liegt ein 393 breiter Quader UNTER der Grenze, den auch die Hardware zeichnet.
 #   - Bild: der Wassereffekt derselben Szene bleibt (fuenf Bilder hinter der letzten Verwerfung, kleine Quader id=15).
 #
-# Gemessen 2026-10-31, Mittel je Kanal in Zehntel Graustufen gegen das Bild fuenf vor der ersten Verwerfung, RE15_WINDOW_SCALE=1, Leon und Elza gleich (Laeufe int_qr/ve1, ne1):
+# Gemessen 2026-10-31, Mittel je Kanal in Zehntel Graustufen gegen das Bild fuenf vor der ersten Verwerfung, RE15_WINDOW_SCALE=1 (Elza Laeufe int_qr/ve1, ne1; Leon im Riegel je Wert hoechstens 1 daneben):
 #   ohne Grenze F756..F767: 294 410 440 703 694 692 326 722 307 327 243 253
 #   mit Grenze  F756..F767:  25  40  40  99  97  95 113  98  66  10  22  28
-#   Wasser F772 mit und ohne Grenze 94, Verwerfungen 34 in F755..F767.
+#   Wasser F772 mit und ohne Grenze 94, Verwerfungen 34 in F755..F767, Leon und Elza.
 #
-# Der Framedump liest ueber SDL_RenderReadPixels zurueck, derselbe Messweg wie alle Bild-Riegel; im echten Fenster gemessen ist dasselbe (Dossier N OFFEN 6 / Dossier Q OFFEN 1, Integration Q+R).
+# Der Framedump liest ueber SDL_RenderReadPixels zurueck, derselbe Messweg wie alle Bild-Riegel; gegen gdigrab auf das echte Fenster gemessen: Dossier Q_restpunkte.md, Abschnitt Integration Q+R.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_N30_WERKZEUG=<test_r41_nachtrag30> -DWORKDIR=<dir> -DFIGUR=<leon|elza> -P test_r41_restpunkte_effektquader.cmake
 # =============================================================================

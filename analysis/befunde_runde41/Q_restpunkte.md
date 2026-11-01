@@ -144,7 +144,7 @@ unit_r41_masken36_fern auf die neue Schranke gezogen (1188, Stage 6: 844). Alle 
 Die Masken-Gruppen a1..c3 liefen auf dem Stand vor der letzten Aenderung am Renderer (nur CPU-Rasterer-Schutz und Log); d1, d2 und die Teil-8-Szenen auf dem Endstand. Die 102 Unit-Tests liefen vor dieser Aenderung, sie beruehrt nur platform/pc.
 
 ## OFFEN
-1. **Nebenbefund fuer den Spieler, nicht behoben (Bild `Q_belege/n3_westgang_F753_F768.png`):** ROOM20B0 nach der Szene, Leon im Westgang, beschleunigter Renderer (Lauf vg1, direct3d): F755..F768 fuellen grobe grau-gruene Bloecke 50-90 % des Bildes (Helligkeit 41 -> 109). Es sind dieselben Effekt-Quader ESP 0x0f. Das Original baut sie als POLY_FT4 (`sb v0,7(t2)` @0x8005369c, Code 0x2C/0x2E), Mitte aus der GTE (`0x4a180001` RTPS @0x80053534), einzige Sperre SZ < 4 (`sra v0,a0,2` @0x80053578, `beq` @0x8005357c); danach greift die GPU-Grenze, Quader ueber 1023 x 511 zeichnet die Hardware nicht. Der Port zeichnet sie. Vorschlag: `re15_gpu_dreieck_verwerfen` auch fuer die ESP-Quader im beschleunigten Renderer (zwei Zeilen an main.c:589/591); ob die kleineren Quader danach dem Original entsprechen, braucht einen DuckStation-Vergleich desselben Wegs. Liegt ausserhalb der Spur Q, das Bild des Spielers ist hier unveraendert.
+1. **ERLEDIGT in der Integration Q+R, Abschnitt "Integration Q+R". Befund war: Nebenbefund fuer den Spieler (Bild `Q_belege/n3_westgang_F753_F768.png`):** ROOM20B0 nach der Szene, Leon im Westgang, beschleunigter Renderer (Lauf vg1, direct3d): F755..F768 fuellen grobe grau-gruene Bloecke 50-90 % des Bildes (Helligkeit 41 -> 109). Es sind dieselben Effekt-Quader ESP 0x0f. Das Original baut sie als POLY_FT4 (`sb v0,7(t2)` @0x8005369c, Code 0x2C/0x2E), Mitte aus der GTE (`0x4a180001` RTPS @0x80053534), einzige Sperre SZ < 4 (`sra v0,a0,2` @0x80053578, `beq` @0x8005357c); danach greift die GPU-Grenze, Quader ueber 1023 x 511 zeichnet die Hardware nicht. Der Port zeichnet sie. Vorschlag: `re15_gpu_dreieck_verwerfen` auch fuer die ESP-Quader im beschleunigten Renderer (zwei Zeilen an main.c:589/591); ob die kleineren Quader danach dem Original entsprechen, braucht einen DuckStation-Vergleich desselben Wegs. Liegt ausserhalb der Spur Q, das Bild des Spielers ist hier unveraendert.
 2. Geschlossen durch Nachbesserung 1: Abnahme-Stelle (-19912,-19720) 0 von 96 sichtbar.
 3. Geschlossen durch Nachbesserung 1: "zu fern" in 6010/6011 C5 0 + 0. Die fruehere Aussage "nicht weiter zu trennen" war falsch, der Fehler lag in der Ebene.
 4. Der Port setzt das Sperrbit beim Tod, RE2 beim Kampfbeginn: fliehen laesst den Alligator im Port leben, weil er den Water Key traegt (PORT-WAHL, Punkt 4).
@@ -157,7 +157,7 @@ Die Masken-Gruppen a1..c3 liefen auf dem Stand vor der letzten Aenderung am Rend
 - Treppenwange ROOM6010/6011 Kamera 5: Figuren hinter der Wange sind verdeckt, an allen gemessenen Stellen 0 Punkte auf dem Teil sichtbar (Leon und Elza). Im Spiel selbst steht an diesen Plaetzen nie Kamera 5 (Abnahme 0: Cut 7, Cut 13), die Aenderung sieht man nur mit RE15_FORCE_CUT=5; eine Figur auf der Treppe in dieser Kamera bleibt unberuehrt.
 - Freistellungs-Liste (Dossier M "Fuer den Nutzer") ist vollstaendig: 8 Stellen dazu, je mit Restbild, Teile-Bericht aus dem ausgelieferten Lauf. ROOM4040/4041 Kamera 12 hat keine HINTER-Stelle.
 - Assets fuer das Paket: nur geaenderte Dateien `shared_assets/PSX/MASKS/ROOM6010.MSK`, `ROOM6011.MSK` (Sektion 5 jetzt 126 statt 128 Rechtecke, Datei 40 Byte kuerzer), `ROOM6010_PRI05.TIM`, `ROOM6011_PRI05.TIM`. Keine neuen Dateien unter shared_assets/RE2, keine Sprachdateien, keine Bank-9-Bits (Bit 126 bleibt frei), keine Nachrichten-Ids. Neue Quelle `platform/pc/src/endgrund_r41_pc.c` (nur Windows, beim naechsten Configure erfasst).
-- Entscheidung: Soll die GPU-Grenze auch im Spiel fuer die Effekt-Quader gelten (OFFEN 1)? Dann verschwinden die Bloecke im Westgang von 20B0.
+- Entschieden: Die GPU-Grenze gilt auch im Spiel fuer die Effekt-Quader (OFFEN 1, Integration Q+R). Die schirmfuellenden Bloecke sind weg, Quader unter der Grenze bleiben im Bild.
 
 ## Nachbesserung 1 (Abnahme 0, Mangel M1, Weg (a): Teil 8 auf die Ebene der Wange)
 
@@ -239,3 +239,57 @@ Diese drei Szenen liegen in ROOM4040, 5020, 6000. Keiner dieser Raeume und keine
 ### Kleinkram aus Abnahme 0
 - H6: `PLAETZE` im Dossier auf 1060 berichtigt. Zeile `| 6010 | 5 | 132/40 | - |  |` in `M_masken36.md`: nachgemessen, Szene t6010_05 steht weiter bei 132 / 40 (`ct_end_d1.log`), sie misst eine andere Stelle, die Zeile bleibt. UEBERGABE §3b ist Datei des Orchestrators, nicht geaendert: Ursache der stillen Enden steht in diesem Dossier Punkt 3.
 - H7: erledigt, siehe Gegenprobe.
+
+## Integration Q+R (2026-10-31)
+
+Messordner scratchpad `int_qr`. Basis Merge 6c34c132a.
+
+### OFFEN 1: GPU-Grenze fuer die Effekt-Quader (Commit 746958956)
+
+Entscheid des Orchestrators: die Grenze gilt im Spiel, beide Renderer gleich. Berichtigt damit den Satz aus Punkt 3 "Das Bild des Spielers aendert sich dadurch nicht" und den Vorschlag aus OFFEN 1, `re15_gpu_dreieck_verwerfen` an die Quader zu setzen: die Funktion saettigt alle Ecken, das gilt nur fuer GTE-Ausgaben.
+
+**Original FUN_800534c4:** Mitte aus der GTE, RTPS @0x80053534, SXY2 @0x8005354c, @0x80053558 `sll s6,v1,16`. Ecken aus der CPU ohne Klemme, @0x800536b0 `addu a0,s6,a0`, @0x800536e0 `addu t1,s0,a0`, @0x800536e4/e8 `srl ..,16`, Paket @0x80053718-28. Sperre nur SZ3 < 4 @0x8005357c.
+**Hardware:** psx-spx graphicsprocessingunitgpu.md "Vertex": "0-10 X-coordinate (signed, -1024..+1023)", "11-15 Not used (usually sign-extension, but ignored by hardware)", Y ebenso; "Size Restriction" 1023 / 511. GTE ScrX/ScrY -400h..+3FFh.
+**Umsetzung:** `re15_gpu_vertex`, `re15_gpu_quad_verwerfen`, im Effekt-Zeichner main.c Mitte `re15_gte_saettigen`, Ecken 11 Bit, Grenze. render_pc.c und der Schutz des CPU-Rasterers bleiben, wie sie sind.
+
+**Messung im echten Fenster** (Skript `fenster.py`: direct3d, Standardfenster 960 x 720, gdigrab, kein Framedump, Video-Bilder 44..83, Anteil Bildpunkte mit Abweichung > 40 gegen das saubere Bild / mittlere Helligkeit):
+| | hoechster Anteil | Helligkeit |
+|---|---|---|
+| vorher (Lauf fv1) | 78 % | 114 |
+| nachher (Lauf fn1) | 21 % in einem Bild (F755), sonst hoechstens 13 % | 54 |
+Bilder `Q_belege/int_vorher.png`, `int_nachher.png`.
+
+**Framedump** (Elza, Laeufe ve1, ne1, Zehntel Graustufen gegen F750; Leon im Riegel je Wert hoechstens 1 daneben): F756..F767 vorher 294 410 440 703 694 692 326 722 307 327 243 253, nachher 25 40 40 99 97 95 113 98 66 10 22 28. F768, F770, F772, F774, F778 in beiden Laeufen 37 74 94 106 28: der gewollte Wassereffekt bleibt.
+
+**Log:** in 900 Bildern 2507 Quader (Lauf v1), Szene hoechstens 92 breit, 43 ueber 511, alle Effekt 0x0f sub 7 in F755..F767, bis 16815 breit. 34 werden verworfen, Leon und Elza gleich. Die uebrigen 9 wickeln mit 11 Bit unter die Grenze und werden gezeichnet wie auf der Hardware, im Bild liegen davon laut Rechnung zwei (F760 oben links 111 x 110, im Mitschnitt zu sehen, F762 22 x 21).
+
+**Bleibt im Bild:** Quader unter der Grenze. F755 einmal ein 393 breiter Quader fast ueber das ganze Bild, F756..F764 Quader 235..494 breit am unteren und linken Rand. Ein Beleg, dass das Original sie an dieser Stelle zeigt, fehlt: kein DuckStation-Vergleich dieses Wegs.
+
+**Riegel:** `unit_r41_restpunkte_gpu`, `integration_r41_restpunkte_effektquader(_elza)` (ohne RE15_SOFTWARE_RENDER). Gegenprobe (Verwerfung nur protokolliert, Quader gezeichnet): beide rot, Elza "Abweichung bis 842".
+
+**Ruecklese-Weg:** `render_pc.c`, `bildhalt_r41_pc.c`, keine `SDL_RenderReadPixels`-Zeile im Diff (`git diff 6c34c132a HEAD`). Die Framedump-Riegel laufen ueber denselben Weg wie vorher.
+
+### Flatternde Szenen d4040_07, d5020_06, d6000_05a
+
+**Ursache gemessen: das Paar A/B lag auf verschiedenen Renderer-Phasen der Maschine.** Spur Q und der Code sind es nicht.
+
+1. Die Maschine wechselt zwischen `direct3d` und `direct3d11`, und zwar baumuebergreifend in scharf begrenzten Phasen: 4397 debug.log aller Spurbaeume und Messordner dieses Tages (Skript `rzeit.py`), z.B. 18:24:56-18:28:27 direct3d, 18:28:42-18:30:19 direct3d11, 18:30:24-18:30:37 direct3d, ab 18:30:55 direct3d11. `SDL_CreateRenderer(win, -1, ...)` (render_pc.c) nimmt den ersten, der angeht. Das Bild weicht zwischen den Phasen ab: d4040_07 Variante A 290 Punkte, hoechstens 59, davon 8 > 24.
+2. Genau die drei Szenen hatten im Baum der Spur Q ein gemischtes Paar: d4040_07 Lauf 21e5e819 (A direct3d, B direct3d11, 18:30), d6000_05a bbdde5e1, d5020_06 c1e83636. Der Riegel-Vergleich auf den aufbewahrten Bildern ergibt dieselben Zahlen wie die roten Laeufe: S=1952 H=7, S=2648 H=2, S=1790 H=2. Paare aus einer Phase derselben Szene: H=0 (e0f8ab10, c8b18258).
+3. In allen drei roten Laeufen meldet der Laeufer davor `[<Szene> b] Versuch 1: Lauf ungueltig`. Das passt zu einem Wechsel mitten im Paar, gemessen ist nur das Zusammenfallen.
+4. Gegen den Stand ohne Spur Q (exe des Hauptbaums, master 1350e67d3): je Szene und exe 16 Laeufe, 8 gleichzeitig, halb mit, halb ohne Masken, dazu 12 Laeufe d4040_07 mit Spur Q: mit und ohne Spur Q je Szene dieselben zwei Bildhashes, keine Abweichung ueber 24 im Fenster.
+5. Nicht beantwortet: was die Phase ausloest. `SDL_RENDER_DRIVER=direct3d11` in der jetzigen Phase erzeugt das direct3d-Bild bytegleich und H=0 in allen Paarungen, der Unterschied liegt also nicht in der Schnittstelle allein, sondern im Zustand der Maschine dahinter (die Logs melden eine Remotedesktop-Sitzung; gemessen ist der Zusammenhang nicht).
+
+Vorschlag, nicht gebaut: der Laeufer vergleicht die Zeile `[render] SDL-Renderer` von A und B und wiederholt das Paar bei Ungleichheit.
+
+### Tests der Integration Q+R (Stand 746958956, keine volle Suite)
+
+```
+ctest -j 6 -R '^(unit_|prop_|probe_)' -E 'r35_android_bash|r38_releaseskript|r39_titelversion_huelle' --timeout 900
+100% tests passed, 0 tests failed out of 1051
+ctest -j 3 -R '^integration_r41_(restpunkte|ventilkette_kette|nachtrag30_(schrank|panel)|keyitems|gatorszene|alligator2|kanister2080|re2gator|wasser20b0)|^integration_r38_wasser|^integration_r36_granate|^integration_r34_plattform' --timeout 1500
+100% tests passed, 0 tests failed out of 62
+ctest -j 3 -R '^integration_.*(birkin|g5|tentakel|kollision|collision|nclip|5090|r20_|r21_|knock|griff|wand|push|schub)|^integration_r41_masken36|^integration_pri_masken|^integration_r41_ventilkette_weg' --timeout 3000
+100% tests passed, 0 tests failed out of 29
+```
+
+Darin integration_r41_ventilkette_kette(_elza) mit Spur N, Folge 09/02/01/08, und integration_r41_masken36_zelle/_zellen3d: gruen, die ganze Zeit eine Phase direct3d. Die vier Skripttests unit_r35_android_bash_mutanten, unit_r38_releaseskript_bausteine, unit_r38_releaseskript_trocken und unit_r39_titelversion_huelle liefen nicht zu Ende, sie gehoeren in den vollen Lauf vor dem Release.
