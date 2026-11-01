@@ -14,6 +14,9 @@ Baum `.claude/worktrees/r41_gatorfix`, Zweig `r41/gatorfix`, Basis master 789f6e
 
 ## Stand / Fortschritt
 (laufend unten)
+Abschluss 2026-11-01: Punkte 1-6 und 8 erfuellt, Punkt 7 teilweise (siehe dort "Offen"). Tests (Auswahl, PowerShell-ctest): Lauf aller G2-Riegel +
+der nachgezogenen Riegel der Spuren B/F/G/N/P "99% tests passed, 1 tests failed out of 104" (nur integration_r41_kanister2080_kampf, Pflichtzeile
+ANSCHWIMMEN), nach dem Nachzug "100% tests passed, 0 tests failed out of 1" (kampf, 1292 s).
 
 ## Messweg (alle Punkte)
 - Messkopien `re15_pc_g2_<lauf>.exe`, gdigrab auf das Fenster DIESES Prozesses (`-i hwnd=0x..`, Handle aus der eigenen Windows-PID), 30 Bilder/s,
