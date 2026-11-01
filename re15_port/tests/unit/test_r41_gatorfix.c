@@ -672,12 +672,169 @@ static void teil_schluessel_g2(int elza)
     re15_enemy_ai_set_paused(0);
 }
 
+/* ---- Werkzeug beckenkarte <raum hex> <aus.txt>: je 100er-Zelle x -11000..9000, z -29000..-3000: 1 = Wasser des Bosskampfs (re15_gr2_becken_draussen
+ *      == 0 mit Rand 0), 2 = Wasserzone re15_aot_water_at, 0 sonst ---- */
+static int beckenkarte(const char *raum_s, const char *aus)
+{
+    const uint16_t raum = (uint16_t)strtoul(raum_s, NULL, 16);
+    re15_game_state_init();
+    re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, 1);
+    if (room_boot(raum, -8200, 0, -25550, 0, 0) != 0) return 1;
+    if (!gator_bank()) return 1;
+    re15_actor_t *g = gator_setzen();
+    for (int f = 0; f < 3; f++) frame(0, 0);
+    (void)g;
+    FILE *o = fopen(aus, "w");
+    if (!o) return 1;
+    for (int z = -29000; z <= -3000; z += 100) {
+        for (int x = -11000; x <= 9000; x += 100) {
+            const int b = re15_gr2_becken_draussen(x, z, 0) == 0;
+            const int w = re15_aot_water_at(x, z) != 0;
+            fputc(b ? (w ? '3' : '1') : (w ? '2' : '0'), o);
+        }
+        fputc('\n', o);
+    }
+    fclose(o);
+    return 0;
+}
+
+/* ---- Werkzeug/Riegel Punkt 7: Haenger mit dem Kanister im Maul - echter Boss-Takt, die Spielfigur laeuft einen festen Weg durchs Becken
+ *      (West-Kanal und Nord-/Suedbecken, 25 Einheiten je Bild), der Alligator verfolgt sie mit bzw. ohne Kanister.
+ *      HAENGER = 30 Bilder Verfolgung (Phase CHASE), in denen die Wurzel netto < 300 vorankommt, obwohl die Figur > 4000 entfernt ist. ---- */
+#define G2_WEG_N 9
+static int32_t k_weg[G2_WEG_N][2] = { { -6500, -24000 }, { -6500, -9000 }, { 4000, -9000 }, { -6500, -9000 }, { -6500, -24000 }, { 4000, -24000 }, { -6500, -24000 },
+                                      { -6500, -24000 }, { -6500, -24000 } };
+/* zweiter Weg: die vier Ecken des Beckens (Aussenwaende x -8900..7200, z -27000..-5400, je 900 davor), dazwischen langsam */
+static const int32_t k_weg_ecken[G2_WEG_N][2] = { { -8000, -26100 }, { -8000, -6300 }, { 6300, -6300 }, { -8000, -6300 }, { -8000, -26100 }, { 6300, -26100 },
+                                                  { -8000, -26100 }, { -8000, -6300 }, { 6300, -6300 } };
+typedef struct { int bilder, verfolgt, haenger, haenger_bilder; int32_t lage[64][2]; int n_lage; int32_t weg_min; } g2_haeng_t;
+static void g2_weg_punkt(int t, int32_t *x, int32_t *z)
+{
+    int32_t rest = t * 25;
+    for (int i = 0; i + 1 < G2_WEG_N; i++) {
+        const int64_t dx = k_weg[i+1][0] - k_weg[i][0], dz = k_weg[i+1][1] - k_weg[i][1];
+        const int32_t l = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+        if (rest <= l) { *x = k_weg[i][0] + (int32_t)(dx * rest / l); *z = k_weg[i][1] + (int32_t)(dz * rest / l); return; }
+        rest -= l;
+    }
+    *x = k_weg[G2_WEG_N-1][0]; *z = k_weg[G2_WEG_N-1][1];
+}
+static int g2_haenger_lauf(int elza, int mit_kanister, int bilder, g2_haeng_t *m, int zeige)
+{
+    memset(m, 0, sizeof *m);
+    re15_actor_t *g = szene_bis_kampf(elza);
+    if (!g) return 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (mit_kanister) {   /* Kanister vor das Maul (Form trag_lauf der Spur P: 8800 x Skala voraus), Aufnahme abwarten */
+        const int32_t sk = g->render_scale_q12 ? g->render_scale_q12 : 4096;
+        const int gier = g->rot_y & 0xfff;
+        int32_t vx = (int32_t)(((int64_t)re15_cos_q12(gier) * 8800 * sk) >> 24), vz = (int32_t)(((int64_t)-re15_sin_q12(gier) * 8800 * sk) >> 24);
+        if (!re15_aot_water_at(g->x + vx, g->z + vz)) { vx = vz = 0; }
+        re15_gr2_kanister_setzen(g->x + vx, -1200, g->z + vz);
+        const int32_t x0 = g->x, z0 = g->z;
+        for (int f = 0; f < 300 && !re15_gr2_traegt(); f++) { g->x = x0; g->z = z0; g->rot_y = (int16_t)gier; pl->x = -8200; pl->z = -25550; pl->hp = 100; frame(0, 0); }
+        if (!re15_gr2_traegt()) return 0;
+    }
+    int32_t hist[30][2]; int hn = 0, stand = 0; int32_t sx0 = 0, sz0 = 0;
+    for (int t = 0; t < bilder && (!mit_kanister || re15_gr2_traegt()); t++) {
+        int32_t px, pz; g2_weg_punkt(t, &px, &pz);
+        pl->x = px; pl->z = pz; pl->hp = 100; pl->hit_react = 0;
+        frame(0, 0);
+        m->bilder++;
+        const int64_t dx = (int64_t)g->x - px, dz = (int64_t)g->z - pz;
+        const int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+        const int chase = re15_gator_boss_phase(g) == 2;
+        if (chase) m->verfolgt++;
+        hist[hn % 30][0] = g->x; hist[hn % 30][1] = g->z; hn++;
+        if (chase && d > 4000 && hn >= 30) {
+            const int32_t *a = hist[hn % 30];
+            const int64_t wx = (int64_t)g->x - a[0], wz = (int64_t)g->z - a[1];
+            const int32_t w = (int32_t)re15_squareroot0((uint32_t)(wx * wx + wz * wz));
+            if (w < 300) {
+                if (!stand) { stand = 1; m->haenger++; sx0 = g->x; sz0 = g->z;
+                    if (m->n_lage < 64) { m->lage[m->n_lage][0] = g->x; m->lage[m->n_lage][1] = g->z; m->n_lage++; }
+                    if (zeige) printf("      HAENGER t%d Gator (%d,%d) Gier %d Clip %d Phase %d, Figur (%d,%d) Abstand %d\n", t, g->x, g->z, (int)(g->rot_y & 0xfff),
+                                      (int)g->motion, re15_gator_boss_phase(g), px, pz, (int)d); }
+                m->haenger_bilder++;
+            } else stand = 0;
+        } else stand = 0;
+        (void)sx0; (void)sz0;
+    }
+    return 1;
+}
+static void teil_haenger(int elza)
+{
+    printf("== haenger%s (Punkt 7) ==\n", elza ? "_elza" : "");
+    g2_haeng_t mk, mo;
+    const int zeige = getenv("G2_ZEIGE") != NULL;
+    if (getenv("G2_ECKEN")) memcpy(k_weg, k_weg_ecken, sizeof k_weg);
+    const int ok1 = g2_haenger_lauf(elza, 1, 1500, &mk, zeige);
+    const int ok0 = g2_haenger_lauf(elza, 0, 1500, &mo, zeige);
+    printf("    mit Kanister: %d Bilder, %d verfolgt, %d Haenger (%d Bilder); ohne Kanister: %d Bilder, %d verfolgt, %d Haenger (%d Bilder)\n",
+           mk.bilder, mk.verfolgt, mk.haenger, mk.haenger_bilder, mo.bilder, mo.verfolgt, mo.haenger, mo.haenger_bilder);
+    PRUEF(ok1 && ok0 && mk.bilder >= 1000, "Laeufe gelaufen (%d Bilder mit Kanister)", mk.bilder);
+    PRUEF(mk.haenger_bilder <= mo.haenger_bilder + 30, "mit Kanister nicht mehr Haenger-Bilder als ohne (%d gegen %d)", mk.haenger_bilder, mo.haenger_bilder);
+}
+
+/* ---- Riegel Punkt 7: Ziel und Kopf-Klemme widersprechen sich nicht mehr ------------------------------------------------------
+ * Lage der Nutzer-Marke 1 (2026-11-01 F735, gator_boss.log F636..F1208: Wurzel (3191,-22595) Gier 1, Clip 1 Bild 20, Ziel (4450,-22600), Ueberstand
+ * (-207,0)) und dieselbe Lage gegen jede Aussenwand gedreht: der Alligator mit dem Kanister im Maul wird AUF sein Steuerziel gestellt (Gier =
+ * Ankunftsrichtung) und die Kopf-Klemme gemessen. Neu: Ueberstand 0 am verschobenen Ziel (er kommt an); Gegenprobe Ziel wie vor G2: Ueberstand > 0. */
+static int32_t g2_ueber_am_ziel(re15_actor_t *g, int slot, int32_t x0, int32_t z0, int32_t tx, int32_t tz, int alt, int32_t *zx, int32_t *zz)
+{
+    re15_gr2_kk_ziel_alt_setzen(alt);
+    g->x = x0; g->z = z0;
+    g->rot_y = (int16_t)(((int)re15_atan2_q12(tz - z0, tx - x0) - 1024) & 0xfff);
+    (void)re15_gr2_kk_ziel(g, &tx, &tz);
+    re15_gr2_kk_ziel_alt_setzen(0);
+    *zx = tx; *zz = tz;
+    g->rot_y = (int16_t)(((int)re15_atan2_q12(tz - z0, tx - x0) - 1024) & 0xfff);
+    g->x = tx; g->z = tz;
+    int32_t dx = 0, dz = 0;
+    re15_gr2_kopf_klemme(slot, g, &dx, &dz);
+    return (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+}
+static void teil_klemm(int elza)
+{
+    printf("== klemm%s (Punkt 7) ==\n", elza ? "_elza" : "");
+    re15_actor_t *g = szene_bis_kampf(elza);
+    if (!g) { PRUEF(0, "Szene bis zum Kampf"); return; }
+    const int slot = (int)(g - g_actors);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int32_t sk = g->render_scale_q12 ? g->render_scale_q12 : 4096;
+    const int gier0 = g->rot_y & 0xfff;
+    const int32_t vx = (int32_t)(((int64_t)re15_cos_q12(gier0) * 8800 * sk) >> 24), vz = (int32_t)(((int64_t)-re15_sin_q12(gier0) * 8800 * sk) >> 24);
+    re15_gr2_kanister_setzen(g->x + vx, -1200, g->z + vz);
+    const int32_t x0 = g->x, z0 = g->z;
+    for (int f = 0; f < 300 && !re15_gr2_traegt(); f++) { g->x = x0; g->z = z0; g->rot_y = (int16_t)gier0; pl->x = -8200; pl->z = -25550; pl->hp = 100; frame(0, 0); }
+    if (!re15_gr2_traegt()) { PRUEF(0, "Kanister aufgenommen"); return; }
+    g->motion = 1; g->anim_frame = 20; g->anim_frac = 0; g->anim_prev_valid = 0;   /* Clip 1 Bild 20 wie in der Marke */
+    static const int32_t fall[4][4] = { { 3191, -22595, 4450, -22600 },     /* Ost (Nutzer-Marke) */
+                                        { -4000, -22600, -7300, -22600 },  /* West */
+                                        { 3000, -20500, 3000, -25400 },    /* Sued */
+                                        { -4000, -10000, -4000, -7000 } }; /* Nord (Lauf k_tragen_leon: ziel z -7000) */
+    static const char *name[4] = { "Ost (Marke 1)", "West", "Sued", "Nord" };
+    int ok = 1, gegen = 1;
+    for (int i = 0; i < 4; i++) {
+        int32_t zx = 0, zz = 0, ax = 0, az = 0;
+        const int32_t u_neu = g2_ueber_am_ziel(g, slot, fall[i][0], fall[i][1], fall[i][2], fall[i][3], 0, &zx, &zz);
+        const int32_t u_alt = g2_ueber_am_ziel(g, slot, fall[i][0], fall[i][1], fall[i][2], fall[i][3], 1, &ax, &az);
+        printf("    %-14s Wurzel (%d,%d) Ziel (%d,%d): neu Ziel (%d,%d) Ueberstand %d | wie vor G2 Ziel (%d,%d) Ueberstand %d\n", name[i], fall[i][0], fall[i][1],
+               fall[i][2], fall[i][3], zx, zz, (int)u_neu, ax, az, (int)u_alt);
+        if (u_neu != 0) ok = 0;
+        if (u_alt <= 0) gegen = 0;
+    }
+    PRUEF(ok, "am Steuerziel greift die Kopf-Klemme nicht (alle vier Waende)");
+    PRUEF(gegen, "Gegenprobe Ziel wie vor G2: Kopf-Klemme greift am Ziel (Festdruecken der Nutzer-Marke)");
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     re15_door_seq_setze_laeufer(fang);
     if (!strcmp(teil, "projektion") && argc >= 5) return projektion(argc, argv);
     if (!strcmp(teil, "ganglog") && argc >= 4) return ganglog(argv[2], argv[3]);
+    if (!strcmp(teil, "beckenkarte") && argc >= 4) return beckenkarte(argv[2], argv[3]);
     if (!strcmp(teil, "maulgeo")) { if (!gator_bank()) return 1; maulgeo(argc > 2); return 0; }
     if (!strcmp(teil, "wurfkamera")) { if (!gator_bank()) return 1; wurfkamera(argc > 2); return 0; }
     if (!gator_bank()) { printf("RE2-EM23-Bank fehlt\n"); return 1; }
@@ -692,6 +849,10 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "marvin_elza"))  teil_marvin(1);
     if (alle || !strcmp(teil, "schluessel"))      teil_schluessel_g2(0);
     if (alle || !strcmp(teil, "schluessel_elza")) teil_schluessel_g2(1);
+    if (alle || !strcmp(teil, "haenger"))      teil_haenger(0);
+    if (alle || !strcmp(teil, "haenger_elza")) teil_haenger(1);
+    if (alle || !strcmp(teil, "klemm"))      teil_klemm(0);
+    if (alle || !strcmp(teil, "klemm_elza")) teil_klemm(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

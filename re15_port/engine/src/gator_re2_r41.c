@@ -2253,6 +2253,60 @@ static int gr2_kk_rechnen(const re15_actor_t *e, const re15_skel_pose_t *poses, 
     *dx = u[0] - u[1]; *dz = u[2] - u[3];
     return *dx != 0 || *dz != 0;
 }
+/* Runde 41 Spur G2 (Punkt 7 "Hat der Aligator den Kanister bleibt es staendig an verschiedenen Stellen haengen", Haken): das STEUERZIEL mit dem Kanister im
+ * Maul. Befund (befund.log/gator_boss.log der Nutzer-Sitzung 2026-11-01 19:54, Marke 1 F735; Lauf k3_tragen_leon): das Boss-Modul legt seine Ziele fuer die
+ * WURZEL (Belagerungs-Hop (4450,-22600), Klemmflaeche 1600 vor den Aussenwaenden); mit dem Kanister quer im Maul ragen Kopf und Kanister ~4200 vor die Wurzel,
+ * die Kopf-Klemme (oben, PORT-WAHL G-E5) schiebt den Gator jedes Bild zurueck, die Lenkung schiebt ihn wieder hin: F636..F1208 stand er bei (3191,-22595)
+ * Gier 1, KOPF-KLEMME Ueberstand (-207,0) im Takt, 50 PUTZ-Stoesse, NOTFREI ohne Wirkung. Ursache = Ziel und Klemme widersprechen sich.
+ * Abhilfe: das Ziel selbst wird um den Ueberstand verschoben, den die Kopf-Klemme an ihm messen wuerde - dieselben Punkte (gr2_kk_rechnen: Hals/Kopf/
+ * Kiefer + beide Kanister-Enden) und dieselben Aussenwaende GR2_KK_*, die Punkte als Versatz zur Wurzel aus der Pose ohne Ueberblendung, gedreht auf die
+ * Ankunftsrichtung (Wurzel -> Ziel). Am verschobenen Ziel greift die Klemme nicht: der Gator kommt an, statt gegen die Wand zu druecken.
+ * Rueckgabe 1 = verschoben. */
+static int s_kk_ziel_alt = 0;                                 /* Pruefhaken der Riegel (Gegenprobe, kein Spielweg): 1 = Ziel wie vor Spur G2 */
+void re15_gr2_kk_ziel_alt_setzen(int an) { s_kk_ziel_alt = an; }
+int re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    if (s_kk_ziel_alt || !e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7) return 0;
+    int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, -1, (uint32_t)e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    int32_t w[5][3], r[9], p[3], lok[5][2];
+    for (int k = 0; k < 3; k++) { gr2_part_welt(e, &poses[k_kk_bone[k]], r, p); w[k][0] = p[0]; w[k][1] = p[1]; w[k][2] = p[2]; }
+    gr2_part_welt(e, &poses[6], r, p);
+    const int32_t sk = gr2_scale(e);
+    const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+    for (int i = 0; i < 3; i++) {
+        w[3][i] = p[i] + (int32_t)(((int64_t)r[i*3] * l[0] + (int64_t)r[i*3+1] * l[1] + (int64_t)r[i*3+2] * l[2]) >> 12);
+        const int64_t ry = (int64_t)r[i*3] * s_kan.rel[1] + (int64_t)r[i*3+1] * s_kan.rel[4] + (int64_t)r[i*3+2] * s_kan.rel[7];
+        w[4][i] = w[3][i] + (int32_t)(((ry >> 12) * -2784) >> 12);
+    }
+    const int64_t c0 = re15_cos_q12((int)e->rot_y), s0 = re15_sin_q12((int)e->rot_y);
+    for (int k = 0; k < 5; k++) {                             /* Welt -> Gator-Rahmen: Umkehrung von x' = c x + s z, z' = -s x + c z */
+        const int64_t dx = (int64_t)w[k][0] - e->x, dz = (int64_t)w[k][2] - e->z;
+        lok[k][0] = (int32_t)((c0 * dx - s0 * dz) >> 12);
+        lok[k][1] = (int32_t)((s0 * dx + c0 * dz) >> 12);
+    }
+    const int64_t ax = (int64_t)*tx - e->x, az = (int64_t)*tz - e->z;
+    const int gier = (ax == 0 && az == 0) ? (int)(e->rot_y & 0xfff) : (((int)re15_atan2_q12((int32_t)az, (int32_t)ax) - 1024) & 0xfff);
+    const int64_t c = re15_cos_q12(gier), sn = re15_sin_q12(gier);
+    int verschoben = 0;
+    for (int it = 0; it < 2; it++) {                          /* 2 Durchgaenge: Ost/West und Nord/Sued koennen sich beide melden */
+        int32_t u[4] = { 0, 0, 0, 0 };
+        for (int k = 0; k < 5; k++) {
+            const int32_t q[3] = { *tx + (int32_t)((c * lok[k][0] + sn * lok[k][1]) >> 12), 0, *tz + (int32_t)((-sn * lok[k][0] + c * lok[k][1]) >> 12) };
+            gr2_kk_punkt(q, u);
+        }
+        const int32_t dx = u[0] - u[1], dz = u[2] - u[3];
+        if (!dx && !dz) break;
+        *tx += dx; *tz += dz; verschoben = 1;
+    }
+    return verschoben;
+}
 /* Pose ohne Ueberblendung (wie gr2_bone_welt) - fuer die R1-Vorausschau gr2_r1_pfad. */
 static int gr2_kk_takt(const re15_actor_t *e, int mit_kanister, int32_t *dx, int32_t *dz)
 {

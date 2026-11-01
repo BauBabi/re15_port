@@ -314,6 +314,7 @@ int  re15_k2080_kanister_lage(int32_t pos[3], int32_t rot[9]);
 
 /* ---- Pruefhaken ---------------------------------------------------------------------------------------------------- */
 int  re15_k2080_phase(void);
+void re15_k2080_anschwimmen_alt_setzen(int an);   /* Runde 41 Spur G2 (Punkt 8): Pruefhaken der Gegenprobe - 1 = Anschwimmen wie N3 */
 int  re15_k2080_zombie_lage(int i, int32_t *x, int32_t *z, int16_t *gier);
 int  re15_k2080_landepunkt(int32_t *x, int32_t *z);       /* 1 = Wurfbahn gerechnet (Lage im 2090-Becken) */
 void re15_k2080_bahn_rechnen(const int32_t start[3], int16_t gier, int32_t wasser_y, int32_t ende[3], int *bilder);

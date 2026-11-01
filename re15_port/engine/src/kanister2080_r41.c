@@ -920,8 +920,17 @@ static int32_t isqrt64(int64_t q)
 }
 /* 1 = DIESER Szenen-Kanister liegt in 2090/2091 (Bit 116, im Raum gesetzt) noch frei im Wasser (B-Stufe 0); c = Lage, d2/ab2 =
  * Abstandsquadrat Wurzel <-> Kanister und RE2-Zielmodus-Grenze 8880 x Zeichen-Skala (wie das Fenster, gator_re2_r41.c gr2_scale). */
+/* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 8 "Sobald Marvin den Kanister runter wirft, soll der Aligator nicht direkt froehlich zum Kanister laufen,
+ * sondern weiter seine Runde dem Spieler hinterher. Und erst wenn er beim Kanister ankommt, soll er ihn aufnehmen"): NUTZER-VORGABE gegen das Anschwimmen
+ * der Nachbesserung 2 (N3, RE2-Zielmodus +0x1C0 & 4 @0x80100a34-5c als Steuerziel). Befund (Lauf k_tragen_leon, debug.log): `F43 ANSCHWIMMEN an ...
+ * Abstand 10807` direkt nach der Rueckkehr, der Alligator liess den Spieler stehen und schwamm 100 Bilder zum Kanister (F143 Stufe 3). Jetzt: kein
+ * Anschwimmen - die Verfolgung (Spur B) bleibt beim Spieler; die Aufnahme selbst bleibt die RE2-Aufnahme der Spur B (Fenstertreffer Stufe 1, wenn der
+ * Kanister vor dem Maul liegt), sie kommt also erst, wenn sein Weg ihn zum Kanister fuehrt. Pruefhaken der Gegenprobe: re15_k2080_anschwimmen_alt_setzen. */
+static int s_anschw_alt = 0;
+void re15_k2080_anschwimmen_alt_setzen(int an) { s_anschw_alt = an; }
 static int anschwimm_lage(const re15_actor_t *e, int32_t c[2], int64_t *d2, int64_t *ab2)
 {
+    if (!s_anschw_alt) return 0;
     if (!e || !raum_2090((unsigned)g_current_room_id & 0xFFFFu) || !s_set_2090 || !bit(RE15_K2080_BIT_KANISTER)) return 0;
     if (re15_gr2_kanister_stufe() != 0) return 0;
     int32_t pos[3], rot[9];

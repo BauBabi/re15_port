@@ -22,8 +22,10 @@ endforeach()
 #                                     Musik-Eintrag 0xFF3C in 2080 waehrend der Szene und zurueck; Gegenprobe 2080 ohne Szene = Raumtabelle
 #   unit_r41_gatorfix_schluessel(_elza)  Punkt 6: gezeichnetes Modell 270 statt 180 (RE2-MD1 bytegleich), Bildkasten Ankunft Cut 0 und nach dem Tod
 #                                     >= 1,8 x die Flaeche mit dem RE2-Modell (Gegenprobe im selben Lauf)
+#   unit_r41_gatorfix_klemm(_elza)   Punkt 7: mit dem Kanister im Maul greift die Kopf-Klemme am Steuerziel nicht (Lage der Nutzer-Marke 1 + drei Waende);
+#                                     Gegenprobe Ziel wie vor G2 (Pruefhaken re15_gr2_kk_ziel_alt_setzen): Ueberstand 340 = Festdruecken
 #   integration_r41_gatorfix_gang_*   exe: Gang zur Leiter (Montage: alle fuenf >= 1000 naeher; Szene: naeher beim Tod, >= 2000 Rest, letzter Schuss <= F90)
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza)
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)

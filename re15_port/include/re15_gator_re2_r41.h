@@ -166,6 +166,10 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e);
  * z[-27000..-5400]; *dx/*dz = Verschiebung des ganzen Alligators nach innen (Aufruf re15_gator_boss_tick nach der Wurzel-Klemme,
  * vor re15_gr2_nachtakt). Messzeilen "KOPF-KLEMME an/aus" in gator_boss.log. */
 int  re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz);
+/* Runde 41 Spur G2 (Punkt 7, Haken): Steuerziel mit dem Kanister im Maul um den Ueberstand verschieben, den die Kopf-Klemme an ihm (Ankunftsrichtung
+ * Wurzel -> Ziel) messen wuerde; 1 = verschoben. Pruefhaken der Gegenprobe: _alt_setzen(1) = Ziel wie vor Spur G2. */
+int  re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);
+void re15_gr2_kk_ziel_alt_setzen(int an);
 /* Runde 41 Spur P (Abnahme G 4 O1): Bildschritt (ox,oz) -> (nx,nz) auf hoechstens 340 kuerzen (groesster authored Wurzelschritt, gator_re2_r41.c GR2_KK_SCHRITT). */
 void re15_gr2_kk_schritt(int32_t ox, int32_t oz, int32_t *nx, int32_t *nz);
 void re15_gr2_kk_hart_setzen(int an);   /* Pruefhaken (Gegenprobe der Riegel, kein Spielweg, kein Env-Schalter): 1 = Klemme wie bis Spur P */

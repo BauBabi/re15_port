@@ -101,3 +101,36 @@ Bildgroessen-Schwelle der Lagewahl GSZ_KEY_BILD_MIN10 mit derselben Skala - die 
 **Messung nachher** (n4_ank_leon / n_tod_leon, `p6_nachher_*`): Ankunft 15 x 18, nach dem Tod 32 x 27 (Harness), exe integration_r41_gatorszene_tod:
 Kasten 22 x 19, Quadrat 14,8 Bildpunkte. Riegel unit_r41_gatorfix_schluessel(_elza) (Flaeche >= 1,8 x die mit dem RE2-Modell im selben Lauf).
 Nachgezogen: unit_r41_gatorszene_schluessel (Mitte hoechstens sqrt(2) x 135 = 191 statt 127 ueber dem Wasser).
+
+## Punkt 7 - mit dem Kanister bleibt er haengen
+**Messung** (drei Quellen):
+- Nutzer-Sitzung 2026-11-01 19:54 (re15_port/build/platform/pc/befund.log Marke 1 F735, Bild befund_2090_F735_marke1.bmp; gator_boss.log der Sitzung,
+  nur gelesen): dritter Trag-Abschnitt ab `KANISTER angehaengt F139`; von F636 bis mindestens F1208 steht der Alligator bei (3191,-22595) Gier 1 Clip 1,
+  `KOPF-KLEMME an ... Ueberstand (-207,0)` je Takt, Steuerziel `ziel=(4450,-22600)` (Belagerungs-Hop zur Rampe, Spieler auf der Plattform
+  (5814,-13807)), 50 `PUTZ Stoss` gegen die Wand, `NOTFREI` ohne Wirkung - 19 s Festdruecken.
+- Lauf k_tragen_leon/k3_tragen_leon (natuerlicher Kampf mit Messhaken RE15_K2080_GATOR_HP, Messzeile RE15_G2_TRAG_LOG: Takt-Schritt gegen Schritt nach den
+  Klemmen): 27 % der Trag-Bilder Stillstand (30 Bilder < 300) gegen 10 % ohne Kanister (k3_ohne_leon); Bilder `scratchpad tragen_karte3.png`.
+- Harness `test_r41_gatorfix haenger` (Weg durchs Becken / Ecken, mit und ohne Kanister): Clip-0-Stillstaende gleich haeufig (6/6, 7/7) - die sind Spur-B-
+  Verfolgung und nicht kanisterbedingt.
+**Ursache:** die Steuerziele der Spur B (CHASE: Klemmflaeche 1600 vor den Aussenwaenden; GUARD: Belagerungs-Hops) gelten der WURZEL. Mit dem Kanister quer
+im Maul ragen Kopf und Kanister ~4200 vor die Wurzel; die Kopf-Klemme (Spur G/P, PORT-WAHL G-E5) schiebt den Gator jedes Bild hinter die Aussenwand
+zurueck, die Lenkung schiebt ihn wieder auf das Ziel - Ziel und Klemme widersprechen sich, er drueckt sich fest.
+**Aenderung** (gator_re2_r41.c `re15_gr2_kk_ziel`, Haken in enemy_ai_boss_gator.c CHASE und GUARD): mit dem Kanister im Maul wird das Steuerziel um den
+Ueberstand verschoben, den die Kopf-Klemme an ihm messen wuerde (dieselben Punkte Hals/Kopf/Kiefer + beide Kanister-Enden, dieselben Waende GR2_KK_*,
+Pose ohne Ueberblendung, auf die Ankunftsrichtung gedreht). Kein Zaehler, keine Zeitgrenze.
+**Messung nachher:** Riegel unit_r41_gatorfix_klemm(_elza): an der Lage der Nutzer-Marke und gegen West/Sued/Nord Ueberstand am Ziel 0 (Ost: Ziel
+(4450,-22600) -> (2563,-22600)); Gegenprobe Ziel wie vor G2: 340 (= Festdruecken). Harness-Lauf der Marken-Lage: wie vor G2 drueckt er mit Gier 13 nach
+Osten, neu kommt er an.
+**Offen (ehrlich):** steht der Spieler auf der Plattform, wartet der Gator mit Kanister am verschobenen Rampen-Hop (er drueckt sich nicht mehr fest, aber
+er belagert dort) - das Klettern ueber die Rampe mit Kanister ist Spur-B-Design und nicht Teil dieses Punkts. Ein exe-Lauf mit freier Spielerbewegung
+ueber den ganzen Kampf ist nicht als Riegel gebaut.
+
+## Punkt 8 - nach dem Wurf nicht zum Kanister schwimmen
+**Messung vorher** (Lauf k_tragen_leon debug.log): `F43 ANSCHWIMMEN an: Gator Slot 35 (-2860,-22691) ... Kanister (-6856,-12649) Abstand 10807`
+unmittelbar nach der Rueckkehr, der Alligator liess den Spieler und schwamm zum Kanister (`F143 ANSCHWIMMEN aus ... Stufe 3`).
+**Aenderung** (kanister2080_r41.c anschwimm_lage, NUTZER-VORGABE gegen N3): kein Anschwimmen; die Verfolgung bleibt beim Spieler, die RE2-Aufnahme der
+Spur B (Fenstertreffer, wenn der Kanister vor dem Maul liegt) kommt erst, wenn sein Weg ihn zum Kanister fuehrt. Hals-Zielmodus (Nachtrag 26) folgt
+dem Anschwimmen und ist damit ebenfalls aus. Pruefhaken der Gegenprobe re15_k2080_anschwimmen_alt_setzen.
+**Messung nachher:** unit_r41_kanister2080_anschwimmen (nachgezogen): in den fuenf Lagen der Abnahme 1 kein Bild Anschwimmen (Spieler fern: der Gator
+verfolgt ihn); Spieler hinter dem Kanister (auf der Linie Gator -> Kanister): Aufnahme beim Ankommen in Bild 131/665/114/424/246; Gegenprobe N3:
+Aufnahme durch Anschwimmen in Bild 407.

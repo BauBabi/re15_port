@@ -1271,6 +1271,7 @@ void re15_gator_boss_tick(int slot)
     int32_t ox = e->x, oz = e->z;
     gb_takt(slot);
     if (!re15_gator_boss_active(e)) return;
+    const int32_t g2_tx = e->x, g2_tz = e->z;   /* Runde 41 Spur G2 (Messzeile TRAG): Lage nach dem Takt, vor den Klemmen */
     if (g_room_rdt_ok && (e->x != ox || e->z != oz) && !gb_klemme_aus(&s_gb[slot])) {   /* (2) */
         int32_t nx = e->x, nz = e->z;
         re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
@@ -1298,6 +1299,18 @@ void re15_gator_boss_tick(int slot)
             e->x += kx; e->z += kz; e->anchor_x += kx; e->anchor_z += kz;
         }
     }
+#ifdef RE15_PLATFORM_PC
+    {   /* Runde 41 Spur G2 (Punkt 7, MESSZEILE env RE15_G2_TRAG_LOG, kein Spielverhalten): mit dem Kanister im Maul je Bild Takt-Schritt, Schritt nach
+         * der Wand-Klemme (2) und der Kopf-Klemme (2b), Phase, Clip - wer frisst die Bewegung, wenn er "haengt". */
+        static int s_tl = -1; if (s_tl < 0) s_tl = getenv("RE15_G2_TRAG_LOG") != NULL;
+        if (s_tl && re15_gr2_traegt()) {
+            FILE *f = fopen("gator_trag.log", "a");
+            if (f) { fprintf(f, "TRAG F%u ph=%d mo=%d af=%d gier=%d pos=(%d,%d) takt=(%d,%d) nach_klemmen=(%d,%d) spieler=(%d,%d)\n", (unsigned)g_engine.frame_count,
+                             (int)s_gb[slot].phase, (int)e->motion, (int)e->anim_frame, (int)(e->rot_y & 0xfff), e->x, e->z, g2_tx - ox, g2_tz - oz, e->x - ox, e->z - oz,
+                             g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z); fclose(f); }
+        }
+    }
+#endif
     re15_gr2_nachtakt(slot, e);                               /* (3) */
     re15_gatorszene_r41_nachtakt(slot, e);                    /* Runde 41 Spur F (Haken): Leiche im Maul = Kind der Part-6-Matrix */
     {   /* NB4 (Abnahme 3, M2) - MESSZEILE GIER-WACHE (gator_boss.log): je Bildpaar, dessen beide Takte in CHASE/GUARD enden, das
@@ -1826,6 +1839,7 @@ static void gb_takt(int slot)
         if (tx >  7200 - 1600)  tx =  7200 - 1600;
         if (tz < -27000 + 1600) tz = -27000 + 1600;
         if (tz >  -5400 - 1600) tz =  -5400 - 1600;
+        (void)re15_gr2_kk_ziel(e, &tx, &tz);   /* Runde 41 Spur G2 (Punkt 7): mit dem Kanister im Maul das Ziel, an dem die Kopf-Klemme nicht greift */
         g->dbg_tx = tx; g->dbg_tz = tz;
         {   /* Dreh-Telemetrie (Nutzer 2026-09-11: "dreht fast immer erst in
              * die entgegengesetzte Richtung bevor er Richtung Platform
@@ -2214,6 +2228,7 @@ static void gb_takt(int slot)
              * Grenz-Schwanken). */
             {
                 int uh = gb_kanten_umweg(e, &gx, &gz);
+                (void)re15_gr2_kk_ziel(e, &gx, &gz);   /* Runde 41 Spur G2 (Punkt 7): s. CHASE - auch der Belagerungs-Hop */
                 if (!s_gb_stumm) {
                     static FILE *s_gwl2 = NULL; static int s_gwc2 = 0;
                     if (!s_gwl2) s_gwl2 = fopen("gator_boss.log", "a");
