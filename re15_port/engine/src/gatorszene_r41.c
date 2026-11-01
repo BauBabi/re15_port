@@ -59,6 +59,7 @@ int re15_gatorszene_r41_spawn_weg(uint16_t room_id, uint8_t type, int16_t x, int
 #ifdef RE15_PLATFORM_PC
 #include <stdlib.h>
 #endif
+#include "re15_kanister2080_r41.h"   /* Runde 41 Spur G2 (Punkt 5): re15_k2080_phase - Musik in der Marvin-Szene */
 #include "re15_audio.h"   /* re15_audio_start_room_bgm (Musik-Weiche), re15_audio_re2_tuer_laden/_se (Knall), _door_se (Tor) */
 #include "re15_msg.h"
 #include "re15_inventory.h"
@@ -237,15 +238,22 @@ static const uint8_t k_p1[] = {
  * Port-Vorbild irons_tod_1150.c EM_1130_DURCH) - sie LAUFEN ("oberhalb von der Treppe laufen"), Ziel = der geparkte Spieler an
  * der Leiter; Kill-Flag 0xff = kein Tor (@0x80042128) - Szenenfiguren nur fuer diese Einstellung. Die Treppe betreten sie nicht
  * (Band-Vergleich FUN_8003b0a4 @0x8003b228-3c, Band 8 gegen die Treppen-Baender). */
+/* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 3 "Die herein laufenden Zombies waere gut wenn es nur 5 waeren, ausserdem waere es gut, wenn sie
+ * Richtung Leiter laufen"). Befund (Lauf v_ank_leon, state.log F1..F156 der Montage): die acht standen mit Blick auf den Treppenabsatz (Gier
+ * 1819..2698) und drehten 150 Bilder lang zum geparkten Spieler (Gier -6/Bild), Abstand zur Leiter 7000..10000 -> 6300..8300, zwei liefen an die
+ * Westwand x -13882. PORT-WAHL (Nutzerwunsch): fuenf, mit Blick zur Leiter (= Parkplatz GSZ_2080_PARK, ROOM2090 Tuer 0 @0x00996, Ziel der ENGAGE-
+ * Zombies) - die Gier setzt programm_bauen (gsz_gier_zur_leiter, Konvention atan2(-dz, dx) wie elzazombies_r39.c k_lagen_nach); Lagen = die fuenf
+ * noerdlichen der Spur G (k_zombies 3..7): nach dem gemessenen Weg der Montage (bis 3950 in 125 Bildern) stehen alle fuenf noch im Bild von Cut 2
+ * (Projektion test_r41_gatorfix projektion: Enden x 76..172 nach 2500 Einheiten, die drei suedlichen bei x 19..45 am Bildrand, die Leiter bei
+ * x -119 ausserhalb). */
+#define GSZ_2080_N_ZOMBIES 5
 #define GSZ_2080_ZOMBIES \
-    GSZ_EM(0, 0x16, 0x0d, 0x01, -12800, -14400, -19600, 8, 2698), \
-    GSZ_EM(1, 0x16, 0x0d, 0x01, -11400, -14400, -20000, 8, 2569), \
-    GSZ_EM(2, 0x16, 0x0d, 0x01, -10000, -14400, -19300, 8, 2392), \
-    GSZ_EM(3, 0x16, 0x0d, 0x01, -12300, -14400, -18300, 8, 2455), \
-    GSZ_EM(4, 0x16, 0x0d, 0x01, -10700, -14400, -17500, 8, 2204), \
-    GSZ_EM(5, 0x16, 0x0d, 0x01, -12700, -14400, -15800, 8, 1838), \
-    GSZ_EM(6, 0x16, 0x0d, 0x01, -11300, -14400, -15300, 8, 1833), \
-    GSZ_EM(7, 0x16, 0x0d, 0x01,  -9900, -14400, -14700, 8, 1819)
+    GSZ_EM(0, 0x16, 0x0d, 0x01, -12300, -14400, -18300, 8, 0), \
+    GSZ_EM(1, 0x16, 0x0d, 0x01, -10700, -14400, -17500, 8, 0), \
+    GSZ_EM(2, 0x16, 0x0d, 0x01, -12700, -14400, -15800, 8, 0), \
+    GSZ_EM(3, 0x16, 0x0d, 0x01, -11300, -14400, -15300, 8, 0), \
+    GSZ_EM(4, 0x16, 0x0d, 0x01,  -9900, -14400, -14700, 8, 0)
+#define GSZ_EM_LEN 20   /* Satzbreite Sce_em_set (s_opcode_sizes 0x44) */
 static const uint8_t k_p2[] = {
     GSZ_2080_ZOMBIES,                                    /* Raumaufbau: vor dem ersten Bild (Form EM_1130_DURCH) */
     GSZ_ABSCHNITT_ENDE, GSZ_RIEGEL,
@@ -317,9 +325,22 @@ static int programm_bauen(int nr)
     const int door_off = n - (GSZ_DOOR_LEN + 2 + 2);       /* Door_aot_set + Aot_on + Evt_end am Ende (Programme 1/2) */
     if (nr == 1)
         tuer_setzen(door_off, GSZ_2080_PARK_X, GSZ_2080_PARK_Y, GSZ_2080_PARK_Z, GSZ_2080_PARK_YAW, 0x08, GSZ_2080_CUT);
-    else if (nr == 2)
+    else if (nr == 2) {
         tuer_setzen(door_off, s_leon_x, s_leon_y, s_leon_z, s_leon_yaw, 0x09, GSZ_CUT_LEICHE);
+        for (int i = 0; i < GSZ_2080_N_ZOMBIES; i++) {   /* Spur G2 (Punkt 3): Blick zur Leiter (Sce_em_set +16/+17 = Gier, Satzform oben) */
+            uint8_t *r = s_prog + i * GSZ_EM_LEN;
+            const int32_t x = (int16_t)(r[8] | (r[9] << 8)), z = (int16_t)(r[12] | (r[13] << 8));
+            const int g = re15_gatorszene_r41_gier_zur_leiter(x, z);
+            r[16] = (uint8_t)(g & 0xff); r[17] = (uint8_t)((g >> 8) & 0xff);
+        }
+    }
     return 1;
+}
+/* Mesh-Gier von (x,z) zur Leiter-Ankunft in ROOM2080/2081 (GSZ_2080_PARK = ROOM2090 Tuer 0 @0x00996 Nutzlast): math-atan2(-dz, dx) =
+ * re15_atan2_q12(dz, dx) - 1024 (re15_actor.h, Gier 0 = +X, Vorwaerts (cos,-sin)); dieselbe Gier wie k_zombies "atan2(-dz, dx)". */
+int re15_gatorszene_r41_gier_zur_leiter(int32_t x, int32_t z)
+{
+    return ((int)re15_atan2_q12(GSZ_2080_PARK_Z - z, GSZ_2080_PARK_X - x) - 1024) & 0xfff;
 }
 static const uint8_t *tor_druck(uint16_t room_id);   /* Abschnitt 5 */
 const uint8_t *re15_gatorszene_r41_ereignis(uint16_t room_id, uint8_t event_id)
@@ -2059,6 +2080,15 @@ int re15_gatorszene_r41_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t
 static int s_bgm_stand = 0;                 /* letzte Auskunft an die Audio-Schicht: 1 = 0xFF3C */
 static int musik_soll(void)
 {
+    /* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 5 "Die Musik darf sich in Marvins Cutscene nicht von der Kampf Musik gegen den Aligator aendern").
+     * Befund (Lauf v_marvin_leon, RE15_AUDIO_CAP_SYNC): Kampf 2090 `entry=FF3C -> MAIN3C`, mit dem Ausloeser 2080 `entry=042E -> MAIN2E` (Raumtabelle
+     * UNK_80074828 Stage 1 Raum 8, SS_BGMTBL audio_pc.c), zurueck 2090 wieder `FF3C` = Neustart des Stuecks. Waehrend der Marvin-/John-Szene (Spur G
+     * Phase NACH_2080/IN_2080/RUECK_2090) bleibt der Eintrag 0xFF3C: FUN_80044210 vergleicht MAIN/SUB mit dem Cache und tut bei Gleichheit nichts
+     * (@0x80044278-80 -> @0x800443B0, audio_pc.c re15_audio_start_room_bgm "[unveraendert, laeuft durch]"). */
+    if ((g_current_room_id & 0xFFFEu) == 0x2080u) {
+        const int ph = re15_k2080_phase();
+        return (ph == RE15_K2080_NACH_2080 || ph == RE15_K2080_IN_2080 || ph == RE15_K2080_RUECK_2090) && !gator_tot();
+    }
     if ((g_current_room_id & 0xFFFEu) != RE15_GSZ_RAUM) return 0;
     if (!re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)) return 0;
     if (gator_tot()) return 0;

@@ -104,9 +104,15 @@
 #define RE15_K2080_TUER_SLOT       21    /* AOT-Slot der Raumwechsel (frei in 2080 0..4 und 2090 0..5; Montage nutzt 20) */
 
 /* ---- Zombies (P1) -------------------------------------------------------------------------------------------------- */
-#define RE15_K2080_N_ZOMBIES       8
+/* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 4 "Bei der Szene wo Marvin rein kommt, reduziere es gerne auf 3 Zombies - es geht ja nur um den
+ * Effekt"): PORT-WAHL 3 statt 8 (P1 und Szene sind dieselben Zombies, Tot-Bits RE15_K2080_TOT0 + i). */
+#define RE15_K2080_N_ZOMBIES       3
 #define RE15_K2080_ZOMBIE_TYP      0x16  /* STAGE2-Zombie (ROOM2020 sub00 @0x008F6, ROOM2000 @0x017CC) */
 #define RE15_K2080_ZOMBIE_GRID     0x02  /* Steher (ROOM2020 @0x008F6 pc[3]; ROOM10E1 Else-Zweig @0x00DBE) */
+/* Runde 41 Spur G2 (Punkt 4 "... sondern weiter Richtung Leiter Laufen"): in der Szene LAUFEN sie - grid 0x0d = ENGAGE ab INIT wie die Montage der
+ * Spur F (STAGE1.BIN `ori v0,zero,0x201` / `sw v0,4(v1)` @0x80100f40-44; Raum-Records ROOM1040 main00 @0x011FC; irons_tod_1150.c EM_1130_DURCH),
+ * Ziel = der Spieler, geparkt an der Leiter (RE15_K2080_LEITER_*), Blick zur Leiter (re15_gatorszene_r41_gier_zur_leiter). */
+#define RE15_K2080_ZOMBIE_GRID_SZENE 0x0d
 #define RE15_K2080_ETAGE           8     /* oberer Laufgang: Tuer Slot 1 nfloor 8, SCA floor-Byte 0x88 (@0x534..0x5C4) */
 #define RE15_K2080_Y               (-14400)  /* = -8 * 1800 (Sce_em_set +0x1ba @0x800421d4-8004220c) */
 #define RE15_K2080_TOT0            236   /* Zone-7-Tot-Bits 236..243 (Zensus Dossier 1.6: frei im Original und im Port) */
@@ -258,6 +264,18 @@
 #define RE15_K2080_PARK_Y          (-9000)
 #define RE15_K2080_PARK_Z          (-16700)
 #define RE15_K2080_PARK_ETAGE      5
+/* Runde 41 Spur G2 (Punkt 4): bis zum Schnitt auf den Kanister (Cut 5) steht der Spieler an der Leiter-Ankunft = Ziel der laufenden Zombies (wie die
+ * Montage der Spur F: ROOM2090 Tuer 0 @0x00996 `22 d9 c0 c7 9c 9b 00 08` (-9950,-14400,-25700), BLK-Zone 0 @0x0B6C); in Cut 2 und 5 nicht im Bild
+ * (Projektion (-119,224) / (611,292)), in Cut 7 schon (70,59) - darum mit dem Schnitt auf Cut 5 zurueck auf RE15_K2080_PARK_*. */
+#define RE15_K2080_LEITER_X        (-9950)
+#define RE15_K2080_LEITER_Y        (-14400)
+#define RE15_K2080_LEITER_Z        (-25700)
+#define RE15_K2080_LEITER_ETAGE    8
+/* Runde 41 Spur G2 (Punkt 4 "Auch die Zeitdauer bis sie erschossen werden, ist viel zu lang, das muss schneller Gehen"): PORT-WAHL - statt der
+ * ROOM1021-Wartezeiten (Sleep 110 nach dem Anlegen @0x020CA, Sleep 30 nach jedem Schuss @0x020D2) die Laenge der Clips selbst: Anlegen = Eigen c6
+ * (10 Bilder), Feuern = Eigen c7 (16 Bilder) der EDD 0x40/0x49 (Dossier G 1.8), dazu das Nachdrehen 0xC8/Bild (@0x80033f90) auf jedes Ziel. */
+#define RE15_K2080_ZIELEN_BILDER   10
+#define RE15_K2080_FEUER_BILDER    16
 
 /* ---- Ablauf (nur RAM) ---------------------------------------------------------------------------------------------- */
 #define RE15_K2080_AUS             0

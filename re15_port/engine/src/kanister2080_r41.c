@@ -30,6 +30,7 @@
 #include "re15_gator_re2_r41.h"
 #include "re15_boss_gator.h"
 #include "re15_anim_select.h"   /* re15_actor_playback_slot (Rueckwaerts-Clip, @0x8001f34c-54) */
+#include "re15_collision.h"     /* Runde 41 Spur G2: re15_collision_set_band beim Umparken */
 #include "re15_math.h"          /* re15_squareroot0 (Nachtrag 26: Hals-Neigung wie FUN_8001820c / FUN_8003790c) */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
@@ -59,10 +60,15 @@ void (*re15_k2080_schuss_hook)(void)  = NULL;
  * Laufgang Band 8 zwischen Treppenabsatz (Westen) und Balkon (Osten): je >= 700 von einer Band-8-Wandzelle (Radius 400),
  * paarweise >= 1393 (>= 800 = zwei Radien, +0x78-Satz +6 FUN_8003a31c), alle mit Fuss UND Kopf im Bild von Cut 2 und Cut 7.
  * Blick auf den Treppenabsatz (Marvins Start): Gier = atan2(-dz, dx) in 4096tel (Form elzazombies_r39.c k_lagen_nach). */
-static const struct { int16_t x, z, gier; } k_zombies[RE15_K2080_N_ZOMBIES] = {
-    { -12800, -19600, 2698 }, { -11400, -20000, 2569 }, { -10000, -19300, 2392 }, { -12300, -18300, 2455 },
-    { -10700, -17500, 2204 }, { -12700, -15800, 1838 }, { -11300, -15300, 1833 }, {  -9900, -14700, 1819 },
+/* Runde 41 Spur G2 (Punkt 4): drei Lagen statt acht - die drei noerdlichen der Spur G (vorher Satz 5..7) mit dem laengsten Weg zur Leiter (10300..11000,
+ * "mit noch ein bisschen Weg dahin, bevor sie erschossen werden"); Gier zur Leiter (re15_gatorszene_r41_gier_zur_leiter) statt zum Treppenabsatz
+ * ("nicht ... Richtung Marvin schauen"). Vorher: { -12800,-19600,2698 } { -11400,-20000,2569 } { -10000,-19300,2392 } { -12300,-18300,2455 }
+ * { -10700,-17500,2204 } { -12700,-15800,1838 } { -11300,-15300,1833 } { -9900,-14700,1819 }. */
+static const struct { int16_t x, z; } k_zombies[RE15_K2080_N_ZOMBIES] = {
+    { -12700, -15800 }, { -11300, -15300 }, {  -9900, -14700 },
 };
+extern int re15_gatorszene_r41_gier_zur_leiter(int32_t x, int32_t z);   /* gatorszene_r41.c (Spur G2) */
+static int16_t zombie_gier(int i) { return (int16_t)re15_gatorszene_r41_gier_zur_leiter(k_zombies[i].x, k_zombies[i].z); }
 
 /* ---- Opcode-Formen (Satzbreiten = s_opcode_sizes, scd_vm.c). Vorbild je Zeile: -------------------------------------------
  *   Sce_em_set  `44 ss tt gg ee 00 p6 kk xx xx yy yy zz zz 00 00 rr rr 00 00`  ROOM2020 sub00 @0x008F6 (Zombie), ROOM2000
@@ -170,7 +176,7 @@ int  re15_k2080_zombie_lage(int i, int32_t *x, int32_t *z, int16_t *gier)
     if (i < 0 || i >= RE15_K2080_N_ZOMBIES) return 0;
     if (x) *x = k_zombies[i].x;
     if (z) *z = k_zombies[i].z;
-    if (gier) *gier = k_zombies[i].gier;
+    if (gier) *gier = zombie_gier(i);
     return 1;
 }
 int re15_k2080_landepunkt(int32_t *x, int32_t *z)
@@ -208,13 +214,13 @@ static int lebende_zombies(void)
     return n;
 }
 /* Die 8 Saetze (der Tot-Bit-Gate @0x80042128-38 laesst erledigte Zombies aus). */
-static int saetze_zombies(uint8_t *b, int n, int cap)
+static int saetze_zombies(uint8_t *b, int n, int cap, uint8_t grid)
 {
     for (int i = 0; i < RE15_K2080_N_ZOMBIES && n >= 0; i++) {
-        const uint8_t s[20] = { 0x44, (uint8_t)i, RE15_K2080_ZOMBIE_TYP, RE15_K2080_ZOMBIE_GRID, RE15_K2080_ETAGE, 0x00,
+        const uint8_t s[20] = { 0x44, (uint8_t)i, RE15_K2080_ZOMBIE_TYP, grid, RE15_K2080_ETAGE, 0x00,
                                 0x01, (uint8_t)(RE15_K2080_TOT0 + i),
                                 LE16(k_zombies[i].x), LE16(RE15_K2080_Y), LE16(k_zombies[i].z), 0x00, 0x00,
-                                LE16(k_zombies[i].gier), 0x00, 0x00 };
+                                LE16(zombie_gier(i)), 0x00, 0x00 };
         n = put(b, n, cap, s, 20);
     }
     return n;
@@ -234,7 +240,7 @@ static void hals_takt(void);  /* Nachtrag 26: RE2-Halsfuehrung, definiert vor de
 static void baue_spawn(void)
 {
     int n = 0;
-    n = saetze_zombies(s_prog_spawn, n, (int)sizeof s_prog_spawn);
+    n = saetze_zombies(s_prog_spawn, n, (int)sizeof s_prog_spawn, RE15_K2080_ZOMBIE_GRID);   /* P1: Steher */
     PUT(s_prog_spawn, n, OP_END);
     s_prog_spawn_n = n;
 }
@@ -251,7 +257,7 @@ static void baue_szene(void)
                                 LE16(0), 0x00, 0x00 };
         n = put(b, n, cap, s, 20);
     }
-    n = saetze_zombies(b, n, cap);
+    n = saetze_zombies(b, n, cap, RE15_K2080_ZOMBIE_GRID_SZENE);         /* Spur G2 (Punkt 4): sie laufen zur Leiter */
     PUT(s_prog_szene, n, OP_SLEEP(1));                                   /* Abschnittsende (irons_tod_1150.c OP_ABSCHNITT_ENDE) */
     PUT(s_prog_szene, n, OP_RIEGEL);                                     /* ROOM2080 sub02 @0x0CB6/@0x0CBA */
     PUT(s_prog_szene, n, OP_CUT(RE15_K2080_CUT_SCHUSS));
@@ -261,9 +267,13 @@ static void baue_szene(void)
      * Zusammenhang (dort nach Message_on). */
     PUT(s_prog_szene, n, OP_WORK(2, RE15_K2080_NPC_SLOT));
     if (schuesse > 0) {
+        PUT(s_prog_szene, n, OP_SET(RE15_K2080_SIG_BANK, RE15_K2080_SIG_AUSGERICHTET, 0));
         PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_ZIEL));               /* erstes Ziel waehrend des Anlegens */
         PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN));      /* ROOM1021 @0x020C6 */
-        PUT(s_prog_szene, n, OP_SLEEP(110));                             /* ROOM1021 @0x020CA */
+        /* Spur G2 (Punkt 4, "viel zu lang"): Anlegen = Clip-Laenge Eigen c6 statt Sleep 110 (ROOM1021 @0x020CA), dann wie jedes weitere Ziel bis das
+         * Nachdrehen (0xC8/Bild @0x80033f90) steht - die Zombies laufen ja weiter. */
+        PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_ZIELEN_BILDER));
+        PUT(s_prog_szene, n, OP_POLL(RE15_K2080_SIG_AUSGERICHTET));
         for (int i = 0; i < schuesse; i++) {
             if (i > 0) {   /* Nachbesserung 1 (M5): statt Sleep 10 warten, bis das Nachdrehen (0xC8/Bild @0x80033f90) am Ziel ist */
                 PUT(s_prog_szene, n, OP_SET(RE15_K2080_SIG_BANK, RE15_K2080_SIG_AUSGERICHTET, 0));
@@ -272,7 +282,7 @@ static void baue_szene(void)
             }
             PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_FEUER));   /* ROOM1021 @0x020CE */
             PUT(s_prog_szene, n, OP_SIG(RE15_K2080_SIG_SCHUSS));
-            PUT(s_prog_szene, n, OP_SLEEP(30));                          /* ROOM1021 @0x020D2 */
+            PUT(s_prog_szene, n, OP_SLEEP(RE15_K2080_FEUER_BILDER));     /* Spur G2: Clip-Laenge Eigen c7 statt Sleep 30 (ROOM1021 @0x020D2) */
         }
         PUT(s_prog_szene, n, OP_MOTION(2, RE15_K2080_CLIP_ZIELEN), OP_FLG_REV);   /* ROOM1021 @0x020EA/@0x020EE */
         PUT(s_prog_szene, n, OP_SLEEP(20));                              /* ROOM1021 @0x020F2 */
@@ -337,8 +347,9 @@ static void baue_start(void)
 {
     int n = 0; const int cap = (int)sizeof s_prog_start;
     PUT(s_prog_start, n, OP_RIEGEL);
-    n = satz_tuer(s_prog_start, n, cap, RE15_K2080_PARK_X, RE15_K2080_PARK_Y, RE15_K2080_PARK_Z, 0,
-                  RE15_K2080_RAUM_BYTE_2080, RE15_K2080_CUT_SCHUSS, RE15_K2080_PARK_ETAGE);
+    /* Spur G2 (Punkt 4): Ankunft an der Leiter = Ziel der laufenden Zombies (RE15_K2080_LEITER_*), Blick wie die Leiter-Ankunft (Montage GSZ_2080_PARK_YAW 2048) */
+    n = satz_tuer(s_prog_start, n, cap, RE15_K2080_LEITER_X, RE15_K2080_LEITER_Y, RE15_K2080_LEITER_Z, 2048,
+                  RE15_K2080_RAUM_BYTE_2080, RE15_K2080_CUT_SCHUSS, RE15_K2080_LEITER_ETAGE);
     PUT(s_prog_start, n, OP_AOT_ON);
     PUT(s_prog_start, n, OP_END);
     s_prog_start_n = n;
@@ -817,6 +828,15 @@ void re15_kanister2080_r41_tick(void)
             s_kopf_ab |= (1ull << s); s_zaehler[2]++;
             K_LOG("Kopf ab: Slot %d (Part 8 Flagwort 0x%X, RE2 FUN_801092C4 @0x80109460-98), %d von %d", s,
                   (unsigned)e->re2z_part_flags[8], s_zaehler[2], s_ziel_n);
+        }
+    }
+    {   /* Spur G2 (Punkt 4): mit dem Schnitt auf den Kanister (Cut 5) zurueck auf den alten Parkplatz - in Cut 7 laege die Leiter im Bild (70,59) */
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        if (g_scd.cam_id == RE15_K2080_CUT_KANISTER && pl->x == RE15_K2080_LEITER_X && pl->z == RE15_K2080_LEITER_Z) {
+            pl->x = RE15_K2080_PARK_X; pl->y = RE15_K2080_PARK_Y; pl->z = RE15_K2080_PARK_Z; pl->floor = RE15_K2080_PARK_ETAGE;
+            re15_collision_set_band(RE15_K2080_PARK_ETAGE);
+            K_LOG("Spieler von der Leiter auf den Parkplatz (%d,%d,%d) Band %d (Schnitt Cut %d)", RE15_K2080_PARK_X, RE15_K2080_PARK_Y,
+                  RE15_K2080_PARK_Z, RE15_K2080_PARK_ETAGE, RE15_K2080_CUT_KANISTER);
         }
     }
     if (n && sig(RE15_K2080_SIG_ZIEL)) { sig_setzen(RE15_K2080_SIG_ZIEL, 0); ziel_waehlen(n); }

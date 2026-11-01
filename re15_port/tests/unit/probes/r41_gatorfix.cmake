@@ -17,3 +17,24 @@ foreach(_teil maul maul_elza wurf wurf_elza)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
+#   unit_r41_gatorfix_montage(_elza)  Punkt 3: fuenf Zombies in der Montage, Blick zur Leiter (Gang: integration_r41_gatorfix_gang_montage*)
+#   unit_r41_gatorfix_marvin(_elza)   Punkte 4 + 5: drei Zombies, Blick zur Leiter, alle erschossen <= 90 Bilder, beim Tod >= 2000 von der Leiter;
+#                                     Musik-Eintrag 0xFF3C in 2080 waehrend der Szene und zurueck; Gegenprobe 2080 ohne Szene = Raumtabelle
+#   integration_r41_gatorfix_gang_*   exe: Gang zur Leiter (Montage: alle fuenf >= 1000 naeher; Szene: naeher beim Tod, >= 2000 Rest, letzter Schuss <= F90)
+foreach(_teil montage montage_elza marvin marvin_elza)
+    add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
+endforeach()
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
+    foreach(_teil gang_montage gang_montage_elza gang_szene gang_szene_elza)
+        add_test(NAME integration_r41_gatorfix_${_teil}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_TOOL=$<TARGET_FILE:test_r41_gatorfix>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_gatorfix_${_teil}_wd
+                         -DTEIL=${_teil}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
+        set_tests_properties(integration_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 900)
+    endforeach()
+endif()

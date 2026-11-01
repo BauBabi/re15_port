@@ -402,10 +402,204 @@ static void wurfkamera(int elza)
                s_bx0[c], s_by0[c], s_bx1[c], s_by1[c]);
 }
 
+/* ---- Werkzeug projektion <raum hex> <cut> x,y,z ... : Bildpunkte (320x240) wie der Zeichner (gr2_im_bild) ---- */
+static int projektion(int argc, char **argv)
+{
+    const uint16_t raum = (uint16_t)strtoul(argv[2], NULL, 16);
+    const int cut = atoi(argv[3]);
+    if (rdt_laden(raum) != 0) { printf("ROOM%04X nicht ladbar\n", raum); return 1; }
+    g_room_rdt_ok = 1;
+    for (int i = 4; i < argc; i++) {
+        int32_t p[3] = { 0, 0, 0 };
+        if (sscanf(argv[i], "%d,%d,%d", &p[0], &p[1], &p[2]) != 3) continue;
+        int sx = -1, sy = -1;
+        const int im = re15_gr2_im_bild_cut(cut, p, &sx, &sy);
+        printf("ROOM%04X Cut %d (%d,%d,%d) -> (%d,%d) %s\n", raum, cut, p[0], p[1], p[2], sx, sy, im ? "im Bild" : "draussen");
+    }
+    return 0;
+}
+
+/* ---- Riegel Punkt 3: Montage 2080 - fuenf Zombies, die zur Leiter laufen --------------------------------------------------- */
+#include "re15_kanister2080_r41.h"
+#define G2_LEITER_X (-9950)   /* Leiter-Ankunft ROOM2080 = ROOM2090 Tuer 0 @0x00996 Nutzlast (-9950,-14400,-25700) */
+#define G2_LEITER_Z (-25700)
+static int32_t g2_leiter_abstand(const re15_actor_t *a)
+{
+    const int64_t dx = (int64_t)a->x - G2_LEITER_X, dz = (int64_t)a->z - G2_LEITER_Z;
+    return (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+}
+/* Gier-Abweichung der Blickrichtung zur Richtung Leiter (|d| in 4096tel) */
+static int g2_blick_ab(const re15_actor_t *a)
+{
+    const int soll = ((int)re15_atan2_q12(G2_LEITER_Z - a->z, G2_LEITER_X - a->x) - 1024) & 0xfff;
+    int d = ((((int)a->rot_y - soll) + 0x800) & 0xfff) - 0x800;
+    return d < 0 ? -d : d;
+}
+/* Zombie-Bank 0x16 wie im Spiel (RE2-Flavor Standard, enemy_ai_re2_zombie.c s_flavor; main.c laedt sie aus shared_assets/RE2/CDEMD0.EMS) -
+ * ohne Bank laufen die Zombies im Harness nicht (kein Wurzelversatz). Form gator_bank. */
+static int g2_zombie_bank(void)
+{
+    static uint8_t *ems = NULL; static size_t ems_sz = 0;
+    if (!ems) ems = slurp(RE15_ASSET_RE2_DIR "/CDEMD0.EMS", &ems_sz);
+    if (!ems) return 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(0x16u);
+    if (eb && eb->ok) return 1;
+    if (!eb) eb = re15_enemy_alloc(0x16u);
+    if (!eb) return 0;
+    if (re2_ems_load_bank(ems, ems_sz, 0x16, eb, NULL) == 0) { eb->buf = NULL; eb->ok = 1; return 1; }
+    eb->type = 0; return 0;
+}
+static void teil_montage(int elza)
+{
+    printf("== montage%s (Punkt 3) ==\n", elza ? "_elza" : "");
+    const uint16_t r2090 = (uint16_t)(0x2090 + elza), r2080 = (uint16_t)(0x2080 + elza);
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    if (room_boot(r2090, -8200, 0, -25550, 0, 0) != 0) return;
+    for (int f = 0; f < 600 && !g_room_change.pending; f++) frame(0, 0);
+    if (!g2_zombie_bank()) { PRUEF(0, "Zombie-Bank 0x16 (RE2 CDEMD0.EMS)"); return; }
+    if (room_boot(r2080, g_room_change.x, g_room_change.y, g_room_change.z, g_room_change.yaw_4096, g_room_change.target_cut) != 0) return;
+    int n = 0; int32_t ab0[RE15_ACTOR_MAX] = { 0 }, ab1[RE15_ACTOR_MAX] = { 0 }; int blick_max = 0, bilder = 0;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++)
+        if (g_actors[i].active && g_actors[i].type == 0x16) { n++; ab0[i] = g2_leiter_abstand(&g_actors[i]); const int b = g2_blick_ab(&g_actors[i]); if (b > blick_max) blick_max = b; }
+    for (int f = 0; f < 600 && !g_room_change.pending; f++) { frame(0, 0); bilder++; }
+    int naeher = 0; int32_t weg_min = 0x7fffffff, weg_max = 0;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        if (!g_actors[i].active || g_actors[i].type != 0x16 || !ab0[i]) continue;
+        ab1[i] = g2_leiter_abstand(&g_actors[i]);
+        const int32_t w = ab0[i] - ab1[i];
+        if (w > 0) naeher++;
+        if (w < weg_min) weg_min = w;
+        if (w > weg_max) weg_max = w;
+        printf("    Slot %d: Abstand zur Leiter %d -> %d (%+d) in %d Bildern, Lage (%d,%d) Gier %d\n", i, (int)ab0[i], (int)ab1[i], (int)-w, bilder,
+               g_actors[i].x, g_actors[i].z, (int)g_actors[i].rot_y);
+    }
+    printf("    %d Zombies, Start-Blick hoechstens %d von der Leiter-Richtung, %d naeher an der Leiter, Weg zur Leiter %d..%d\n", n, blick_max, naeher, (int)weg_min, (int)weg_max);
+    PRUEF(n == 5, "fuenf Zombies in der Montage (%d; vorher 8)", n);
+    PRUEF(blick_max <= 2, "Start-Blick zur Leiter (Abweichung hoechstens %d/4096; vorher Blick auf den Treppenabsatz, 1819..2698)", blick_max);
+    /* Der Gang selbst (Wurzelversatz aus den Clip-Bildern, die der PC-NPC-Pass vorschiebt) laeuft nur in der exe: Riegel integration_r41_gatorfix_gang. */
+    (void)naeher; (void)weg_min;
+}
+
+/* ---- Riegel Punkte 4 und 5: Marvin-/John-Szene - drei Zombies laufen zur Leiter, schnell erschossen; Kampfmusik bleibt ---------- */
+static void teil_marvin(int elza)
+{
+    printf("== marvin%s (Punkte 4 + 5) ==\n", elza ? "_elza" : "");
+    const uint16_t r2090 = (uint16_t)(0x2090 + elza), r2080 = (uint16_t)(0x2080 + elza);
+    re15_k2080_reset();
+    re15_actor_t *g = szene_bis_kampf(elza);
+    if (!g) { PRUEF(0, "Szene bis zum Kampf"); return; }
+    const int gslot = (int)(g - g_actors);
+    int bgm_kampf = -2;
+    int ausgeloest = 0;
+    for (int f = 0; f < 1500 && !g_room_change.pending; f++) {
+        g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 100;
+        if (!ausgeloest && re15_gator_boss_verfolgt(g)) {   /* ein echter Treffer unter die RE2-Schwelle (HURT-Selektor @0x80101ebc-dc) */
+            g->hp = 24990; re15_gr2_hurt_reaktion(gslot, g, &g_actors[RE15_ACTOR_SLOT_PLAYER], 0); ausgeloest = 1;
+            bgm_kampf = re15_gatorszene_r41_bgm_eintrag(1, 9);   /* Musik im Kampf beim Ausloesen */
+        }
+        frame(0, 0);
+    }
+    if (!g_room_change.pending || (g_room_change.room_id & 0xFFFEu) != 0x2080u) { PRUEF(0, "Ausloeser -> Raumwechsel nach 2080 (Phase %d)", re15_k2080_phase()); return; }
+    if (!g2_zombie_bank()) { PRUEF(0, "Zombie-Bank 0x16 (RE2 CDEMD0.EMS)"); return; }
+    if (room_boot(r2080, g_room_change.x, g_room_change.y, g_room_change.z, g_room_change.yaw_4096, g_room_change.target_cut) != 0) return;
+    const int bgm_szene = re15_gatorszene_r41_bgm_eintrag(1, 8);
+    frame(0, 0);                                            /* erster VM-Lauf: Sce_em_set der Szene (Abschnitt 1) */
+    int n = 0; int32_t ab0[RE15_ACTOR_MAX] = { 0 }, ab_tod[RE15_ACTOR_MAX] = { 0 }; int blick_max = 0, tod_bild[RE15_ACTOR_MAX];
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) tod_bild[i] = -1;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++)
+        if (g_actors[i].active && g_actors[i].type == 0x16) { n++; ab0[i] = g2_leiter_abstand(&g_actors[i]); const int b = g2_blick_ab(&g_actors[i]); if (b > blick_max) blick_max = b; }
+    int letzter = -1, bilder = 0, bgm_max_abw = 0;
+    for (int f = 0; f < 2000 && !g_room_change.pending; f++) {
+        frame(0, 0); bilder++;
+        if (re15_gatorszene_r41_bgm_eintrag(1, 8) != bgm_szene) bgm_max_abw++;
+        for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+            const re15_actor_t *z = &g_actors[i];
+            if (!ab0[i] || tod_bild[i] >= 0 || z->type != 0x16) continue;
+            if (!z->active || z->hp < 0 || z->state == 3 || z->state == 7) { tod_bild[i] = f; ab_tod[i] = g2_leiter_abstand(z); if (f > letzter) letzter = f; }
+        }
+    }
+    int naeher = 0, tot = 0; int32_t weg_min = 0x7fffffff, rest_min = 0x7fffffff;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        if (!ab0[i]) continue;
+        if (tod_bild[i] >= 0) tot++;
+        const int32_t w = ab0[i] - ab_tod[i];
+        if (tod_bild[i] >= 0 && w > 0) naeher++;
+        if (w < weg_min) weg_min = w;
+        if (ab_tod[i] && ab_tod[i] < rest_min) rest_min = ab_tod[i];
+        printf("    Slot %d: Abstand zur Leiter %d -> %d beim Tod in Bild %d\n", i, (int)ab0[i], (int)ab_tod[i], tod_bild[i]);
+    }
+    int bgm_rueck = -2;
+    if (g_room_change.pending && (g_room_change.room_id & 0xFFFEu) == 0x2090u &&
+        room_boot(r2090, g_room_change.x, g_room_change.y, g_room_change.z, g_room_change.yaw_4096, g_room_change.target_cut) == 0) {
+        g_actors[gslot].active = 1;   /* FG-E3: derselbe Alligator liegt schon (gator_zuruecklegen) */
+        bgm_rueck = re15_gatorszene_r41_bgm_eintrag(1, 9);
+    }
+    re15_k2080_reset();
+    const int bgm_frei = (room_boot(r2080, -9950, -14400, -25700, 2048, 2) == 0) ? re15_gatorszene_r41_bgm_eintrag(1, 8) : -2;
+    printf("    %d Zombies, Start-Blick hoechstens %d von der Leiter, %d tot, letzter Tod Bild %d der Szene, %d naeher an der Leiter (kleinster Weg %d), kleinster Rest %d; "
+           "Musik-Eintrag Kampf 0x%04X / 2080 in der Szene 0x%04X (%d Bilder anders) / zurueck 0x%04X / 2080 ohne Szene %d\n", n, blick_max, tot, letzter, naeher,
+           (int)weg_min, (int)rest_min, bgm_kampf & 0xffff, bgm_szene & 0xffff, bgm_max_abw, bgm_rueck & 0xffff, bgm_frei);
+    PRUEF(n == 3 && tot == 3, "drei Zombies in der Szene, alle erschossen (%d / %d; vorher 8)", n, tot);
+    PRUEF(blick_max <= 2, "Blick zur Leiter statt zu Marvin/John (Abweichung hoechstens %d/4096)", blick_max);
+    PRUEF(rest_min >= 2000, "beim Tod noch >= 2000 von der Leiter (%d) - den Gang misst integration_r41_gatorfix_gang an der exe", (int)rest_min);
+    PRUEF(letzter >= 0 && letzter <= 90, "alle erschossen nach %d Bildern (<= 90 = Anlegen 10 + 3 x Feuern 16 + Nachdrehen; vorher 351 mit 8 Zombies)", letzter);
+    PRUEF(bgm_kampf == 0xFF3C && bgm_szene == 0xFF3C && bgm_max_abw == 0 && bgm_rueck == 0xFF3C, "Kampfmusik (Eintrag 0xFF3C) durch die ganze Szene und zurueck");
+    PRUEF(bgm_frei < 0, "Gegenprobe: 2080 ohne Szene spielt seine Raum-Musik (Eintrag %d = Tabelle)", bgm_frei);
+}
+
+/* ---- Auswerter ganglog <state.log> <montage|szene> (exe-Riegel integration_r41_gatorfix_gang): Zombies (Typ 0x16) in den Bildern, in denen der
+ *      Spieler an der Leiter-Ankunft steht (PL(-9950,-25700): Montage-Parkplatz GSZ_2080_PARK bzw. Szenen-Ankunft RE15_K2080_LEITER) ----
+ * montage: je Zombie Abstand zur Leiter im ersten und letzten solchen Bild, alle >= 1000 naeher (Nutzer Punkt 3 "Richtung Leiter laufen").
+ * szene:   je Zombie Abstand im ersten Bild und im Bild seines Todes (st=3 oder hp < 0): naeher (> 0) und noch >= 2000 entfernt (Punkt 4 "weiter Richtung
+ *          Leiter Laufen - mit noch ein bisschen Weg dahin, bevor sie erschossen werden"). */
+static int ganglog(const char *pfad, const char *modus)
+{
+    FILE *f = fopen(pfad, "r");
+    if (!f) { printf("ganglog: %s fehlt\n", pfad); return 1; }
+    static char z[16384];
+    int32_t ab0[64], ab1[64]; int da[64], tot[64], n_bilder = 0;
+    for (int i = 0; i < 64; i++) { ab0[i] = ab1[i] = -1; da[i] = 0; tot[i] = 0; }
+    const int szene = !strcmp(modus, "szene");
+    while (fgets(z, sizeof z, f)) {
+        if (!strstr(z, "PL(-9950,-25700,")) continue;
+        n_bilder++;
+        for (char *p = strstr(z, " ["); p; p = strstr(p + 2, " [")) {
+            int slot = -1, st = 0; unsigned t = 0; int x = 0, zz = 0, hp = 0;
+            if (sscanf(p, " [%d t=%x st=%d", &slot, &t, &st) != 3 || t != 0x16 || slot < 0 || slot >= 64) continue;
+            const char *at = strstr(p, "@("); const char *h = strstr(p, "] hp=");
+            if (!at || !h || sscanf(at, "@(%d,%d", &x, &zz) != 2 || sscanf(h, "] hp=%d", &hp) != 1) continue;
+            const int64_t dx = (int64_t)x - G2_LEITER_X, dz = (int64_t)zz - G2_LEITER_Z;
+            const int32_t ab = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+            if (ab0[slot] < 0) ab0[slot] = ab;
+            da[slot] = 1;
+            if (szene && !tot[slot] && (st == 3 || hp < 0)) { tot[slot] = 1; ab1[slot] = ab; }
+            if (!szene) ab1[slot] = ab;
+        }
+    }
+    fclose(f);
+    int n = 0, gut = 0; int32_t weg_min = 0x7fffffff, rest_min = 0x7fffffff;
+    for (int i = 0; i < 64; i++) {
+        if (!da[i]) continue;
+        n++;
+        const int32_t w = (ab1[i] >= 0) ? ab0[i] - ab1[i] : -1;
+        if (w < weg_min) weg_min = w;
+        if (ab1[i] >= 0 && ab1[i] < rest_min) rest_min = ab1[i];
+        const int ok = szene ? (tot[i] && w > 0 && ab1[i] >= 2000) : (w >= 1000);
+        if (ok) gut++;
+        printf("ganglog %s: Slot %d Abstand zur Leiter %d -> %d (%s), Weg %d\n", modus, i, (int)ab0[i], (int)ab1[i], szene ? (tot[i] ? "beim Tod" : "nicht tot") : "Ende", (int)w);
+    }
+    printf("ganglog %s: %d Bilder an der Leiter, %d Zombies, %d gut, kleinster Weg %d, kleinster Rest %d\n", modus, n_bilder, n, gut, (int)weg_min, (int)rest_min);
+    const int soll = szene ? 3 : 5;
+    return (n == soll && gut == soll) ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     re15_door_seq_setze_laeufer(fang);
+    if (!strcmp(teil, "projektion") && argc >= 5) return projektion(argc, argv);
+    if (!strcmp(teil, "ganglog") && argc >= 4) return ganglog(argv[2], argv[3]);
     if (!strcmp(teil, "maulgeo")) { if (!gator_bank()) return 1; maulgeo(argc > 2); return 0; }
     if (!strcmp(teil, "wurfkamera")) { if (!gator_bank()) return 1; wurfkamera(argc > 2); return 0; }
     if (!gator_bank()) { printf("RE2-EM23-Bank fehlt\n"); return 1; }
@@ -414,6 +608,10 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "maul_elza")) teil_maul_riegel(1);
     if (alle || !strcmp(teil, "wurf"))      teil_wurf(0);
     if (alle || !strcmp(teil, "wurf_elza")) teil_wurf(1);
+    if (alle || !strcmp(teil, "montage"))      teil_montage(0);
+    if (alle || !strcmp(teil, "montage_elza")) teil_montage(1);
+    if (alle || !strcmp(teil, "marvin"))       teil_marvin(0);
+    if (alle || !strcmp(teil, "marvin_elza"))  teil_marvin(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

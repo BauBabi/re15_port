@@ -57,3 +57,35 @@ Kino-Balken (144 von 189 Kennpunkten sichtbar); Cut 3 ist durch die Masken ganz 
 den Alligator klein hinter der Maschine (Lauf k6_ank_leon), Cut 0 zu nah (k0_ank_leon). Cut 1 bleibt die beste Einstellung; die
 Leiche ist in Cut 1 im ganzen Flug zu 97 % zwischen den Balken.
 Nachgezogen (Spur P): unit_r41_alligator2_leiche(_elza) "weg mit dem Clip-5-Ende" -> "weg mit Clip 5 Bild 77" und >= 50 Haltebilder statt > 100.
+
+## Punkt 3 - Montage: 5 Zombies, Richtung Leiter
+**Messung vorher** (v_ank_leon state.log F1..F156, Bild `G2_belege/p3_vorher_leon_8zombies.jpg`): 8 Zombies (GSZ_2080_ZOMBIES, grid 0x0d) mit
+Blick auf den Treppenabsatz (Gier 1819..2698), sie drehten 150 Bilder lang (Gier -6/Bild) zum an der Leiter geparkten Spieler; Weg zur Leiter
+-452..4384, nur 4 von 8 >= 1000 naeher (ganglog montage), zwei an der Westwand x -13882.
+**Aenderung** (gatorszene_r41.c, PORT-WAHL Nutzerwunsch): 5 Saetze (die noerdlichen k_zombies 3..7 der Spur G - nach dem gemessenen Weg bleiben
+alle fuenf in Cut 2 im Bild, Projektion `test_r41_gatorfix projektion`: Enden x 76..172, die suedlichen bei x 19..45, die Leiter bei x -119),
+Gier zur Leiter-Ankunft `re15_gatorszene_r41_gier_zur_leiter` (= GSZ_2080_PARK = ROOM2090 Tuer 0 @0x00996; atan2(-dz,dx) wie k_zombies).
+**Messung nachher** (n3_ank_leon, `G2_belege/p3_nachher_leon_5zombies_zur_leiter.jpg`): 5 Zombies, Weg zur Leiter 2476..3786 in 156 Bildern.
+Riegel unit_r41_gatorfix_montage(_elza) (5, Blick-Abweichung 0) + integration_r41_gatorfix_gang_montage(_elza) (alle >= 1000 naeher; der alte Bau
+faellt durch: 4 von 8).
+
+## Punkt 4 - Marvin/John-Szene: 3 Zombies, laufen zur Leiter, schneller erschossen
+**Messung vorher** (v_marvin_leon: Kampf 2090 mit Messhaken RE15_K2080_GATOR_HP=24990, Bild `G2_belege/p4_vorher_leon_8zombies_15s.jpg`):
+8 Steher (grid 0x02) mit Blick auf den Treppenabsatz = zu Marvin, Spieler am Treppenfuss; Schuesse F118, F152, ... F351 (ROOM1021-Form:
+Sleep 110 nach dem Anlegen @0x020CA, Sleep 30 nach jedem Schuss @0x020D2).
+**Aenderung** (kanister2080_r41.c / re15_kanister2080_r41.h): RE15_K2080_N_ZOMBIES 3 (die drei noerdlichen Lagen, 10200..11000 von der Leiter),
+Gier zur Leiter; in der Szene grid 0x0d (ENGAGE wie die Montage, STAGE1.BIN @0x80100f40-44) und der Spieler an der Leiter-Ankunft geparkt
+(RE15_K2080_LEITER_*, Ziel der Zombies; in Cut 2 und 5 nicht im Bild, in Cut 7 schon -> mit dem Schnitt auf Cut 5 zurueck auf den alten
+Parkplatz); Wartezeiten = Clip-Laengen statt ROOM1021: Anlegen Eigen c6 10 Bilder, Feuern Eigen c7 16 Bilder (Dossier G 1.8), jedes Ziel erst
+nach dem Nachdrehen 0xC8/Bild (@0x80033f90).
+**Messung nachher** (n_marvin_leon, `G2_belege/p4_nachher_leon_3zombies_2s.jpg`): Schuesse F19 / F36 / F53, Abstand zur Leiter beim Tod
+10136 / 9660 / 10240 (vorher 10240 / 10442 / 10980), Blick 843..1035 (zur Leiter). Riegel unit_r41_gatorfix_marvin(_elza) und
+integration_r41_gatorfix_gang_szene(_elza) (3 Treffer, letzter <= F90, jeder naeher beim Tod und >= 2000 entfernt).
+
+## Punkt 5 - Kampfmusik bleibt in der Szene
+**Messung vorher** (v_marvin_leon, RE15_AUDIO_CAP_SYNC, debug.log `[bgm]`): Kampf 2090 `entry=FF3C -> MAIN3C`; Ausloeser -> 2080
+`entry=042E -> MAIN2E` (Raumtabelle UNK_80074828); zurueck 2090 `entry=FF3C -> MAIN3C` (Neustart des Stuecks).
+**Aenderung** (gatorszene_r41.c musik_soll): in 2080/2081 waehrend der Spur-G-Phasen NACH_2080/IN_2080/RUECK_2090 bleibt der Eintrag 0xFF3C;
+FUN_80044210 vergleicht MAIN/SUB mit dem Cache und tut bei Gleichheit nichts (@0x80044278-80 -> @0x800443B0).
+**Messung nachher** (n_marvin_leon): `[bgm] stage=1 room=08 entry=FF3C -> MAIN3C ... [unveraendert, laeuft durch]`, zurueck ebenso. Riegel
+unit_r41_gatorfix_marvin(_elza): Eintrag 0xFF3C beim Ausloesen, in jedem Szenenbild und zurueck; Gegenprobe 2080 ohne Szene = Raumtabelle (-1).
