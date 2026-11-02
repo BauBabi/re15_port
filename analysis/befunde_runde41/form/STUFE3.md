@@ -13,11 +13,17 @@ weitermacht, liest zuerst Abschnitt 0.
 | 2 Gerippe pruefen | erledigt (Abschnitt 2): alle Teile haben Knochen, keine Aenderung an Form/Textur noetig |
 | 3 Clips | gebaut (Abschnitt 3), Asset `stufe3/asset/BAHNSTEIG_FORM.EMD` = `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` |
 | 4 Angriffsmuster | Tick auf die neuen Clips umgestellt, Flucht 5080, Sturz 5090 (Abschnitt 4) |
-| 5 Einbau, Tests | Lader, Paket-Gate, Tests angepasst; unit_birkin_bahnsteig/szenen gruen (Abschnitt 5) |
-| 6 Sichtbelege | laeuft (Kontaktblaetter, Spiel 5080/5090) |
+| 5 Einbau, Tests | Lader, Paket-Gate, Tests angepasst (Abschnitt 5). Mit dem Endstand (Bau `re15_port/build_s3`): unit_birkin_bahnsteig, unit_birkin_szenen gruen, integration_r41_birkin_pistole gruen (Leon + Elza: keine Mutation, Form-HP 150 bis 0, Rueckstoss, Sturz, G5, G5 faellt) |
+| 6 Sichtbelege | erledigt: `stufe3/kontakt/` (00_uebersicht + 12 Clips), `stufe3/spiel/` (7 Blaetter, echtes Fenster) |
+| Voller ctest | Lauf in `re15_port/build` (Stand Commit 0e10882f9, Asset waehrend des Laufs getauscht): siehe Abschnitt 8 |
 
-Generator dieser Stufe: `stufe3/gen/` (`s3_rig.py` Gerippe/Posen/IK, `s3_g4.py` G4-Clipdaten, `s3_blatt.py` Kontaktblaetter,
-`s3_lesen.py` Gerippe-Ausgabe). Zwischenbilder unter `stufe3/roh/` (nicht fuer den Nutzer).
+Commits dieser Stufe: 8423920d4 (Sichern), f89159cf4 (Merge master), a7f9922d4 / 79aefb203 (Generator WIP), 0e10882f9 (Einbau,
+Tests), 072d1d3f7 (Sichtbelege, Pistolen-Test nachgezogen), 6200b3d35 (Asset-Nachschliff, Uebergabepunkt G5).
+
+Generator dieser Stufe: `stufe3/gen/` (`s3_rig.py` Gerippe/Posen/IK, `s3_clips.py` Asset, `s3_angriffe.py` Clips, `s3_g4.py`
+G4-Clipdaten, `s3_pruef.py`/`s3_dreh.py`/`s3_reichweite.py` Zahlenpruefung, `s3_testkopf.py` Testreferenz, `s3_kontakt.py`/
+`s3_uebersicht.py`/`s3_blatt.py` Kontaktblaetter, `s3_spielfolge.sh`/`s3_folge_blatt.py` Spielbilder). Zwischenbilder unter
+`stufe3/roh/` (nicht versioniert, nicht fuer den Nutzer).
 
 ## 1. Bestand vor dieser Stufe (gemessen im Quelltext nach dem Merge)
 
