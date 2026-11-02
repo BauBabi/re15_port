@@ -534,8 +534,8 @@ static int kletterkarte(const char *raum_s)
 
 /* ---- Auswerter traglog <laufordner> (exe-Riegel integration_r41_gatorfix_frei*, Punkt 7 / NB1 M1+M3, E1): freies Spiel mit dem Kanister im Maul.
  * Masse wie die Abnahme 1 (still_state.py): je Bild der letzten 2090-Folge in state.log Wurzel/Gier/Clip des Alligators (Slot 35) und die Figur;
- * STILLSTAND = Wurzel kommt in 30 Bildern netto < 300 voran; FERN = Kopf (Wurzel + 4200 voraus) > 2500 von der Figur und nicht RE2-Dash (Clip 2/3);
- * dazu ohne Biss-Reichweite (Wurzel < 3200 = Spur-B-Bisstor `dist < 3200`, enemy_ai_boss_gator.c CHASE). WANDREIBEN = Stillstand, waehrend die Kopf-Klemme
+ * OHNE FORTSCHRITT = Wurzel kommt in 30 Bildern netto < 300 voran; NB2 (Abnahme 2 M5): KEINE Ausnahme (auch nicht Dash-Clips oder Kopf nahe der Figur) ausser
+ * einem laufenden Biss (Phase 3/8) am Spieler (Wurzel < 3200 oder Kopf < 2400). WANDREIBEN = ohne Fortschritt, waehrend die Kopf-Klemme
  * greift (gator_boss.log "KOPF-KLEMME an/aus"), fern und ausserhalb der Biss-Reichweite; Spanne der Klemm-Bilder je Stillstands-Folge. E1: Bilder vom Aufschlag (debug.log "Kanister im Becken") bis "KANISTER angehaengt". */
 typedef struct { int f; int32_t px, pz, gx, gz; int rot, mo; } g2_tl_t;
 static g2_tl_t s_tl[20000];
@@ -582,7 +582,15 @@ static int traglog(const char *dir)
         s_tl[n++] = r;
     }
     fclose(f);
-    int trag = 0, still = 0, fern = 0, fern_b = 0, ep = 0, ep_max = 0, rub = -1, rub_letzt = -1, rub_max = 0, ep_f = -1, rub_f = -1;
+    /* NB2 (M5 der Abnahme 2: "Fortschritt messen, keine Ausnahmen ... ausser bei gerade laufendem Biss am Spieler"): Phase je Bild aus gator_trag.log */
+    static int8_t ph_von[40000];
+    memset(ph_von, -1, sizeof ph_von);
+    snprintf(pf, sizeof pf, "%s/gator_trag.log", dir);
+    if ((f = fopen(pf, "r")) != NULL) {
+        while (fgets(z, sizeof z, f)) { int fr = -1, ph = -1; if (sscanf(z, "TRAG F%d ph=%d", &fr, &ph) == 2 && fr >= 0 && fr < 40000) ph_von[fr] = (int8_t)ph; }
+        fclose(f);
+    }
+    int trag = 0, still = 0, biss = 0, ep = 0, ep_max = 0, ep_f = -1, rub = -1, rub_letzt = -1, rub_max = 0, rub_f = -1;
     static uint8_t st[20000];
     memset(st, 0, sizeof st);
     for (int i = 0; i + 30 < n; i++) {
@@ -590,6 +598,18 @@ static int traglog(const char *dir)
         const int64_t dx = (int64_t)s_tl[i+30].gx - s_tl[i].gx, dz = (int64_t)s_tl[i+30].gz - s_tl[i].gz;
         if (dx * dx + dz * dz < 300LL * 300) for (int k = i; k <= i + 30; k++) st[k] = 1;
     }
+    /* Orchestrator NB2: "kein Zeitfenster > 2 s ohne Fortschritt" - Fenster 60 Bilder, Weg der Wurzel < 300, ausser Fenster mit Biss am Spieler */
+    static uint8_t st2[20000];
+    memset(st2, 0, sizeof st2);
+    for (int i = 0; i + 60 < n; i++) {                     /* Fortschritt = die Wurzel entfernt sich im Fenster >= 300 vom Fensteranfang */
+        if (s_tl[i+60].f - s_tl[i].f != 60 || auf < 0 || s_tl[i].f < auf) continue;
+        double w = 0.0;                                    /* weitester Abstand vom Fensteranfang: Zappeln/Wandreiben/Wende auf der Stelle bleibt darunter, Kreisen nicht */
+        for (int k = i + 1; k <= i + 60; k++) { const double ax = (double)s_tl[k].gx - s_tl[i].gx, az = (double)s_tl[k].gz - s_tl[i].gz; const double d = sqrt(ax * ax + az * az); if (d > w) w = d; }
+        if (w < 300.0) st2[i] = 1;
+    }
+    int fenster2 = 0, fenster2_f = -1;
+    static uint8_t bs[20000];
+    memset(bs, 0, sizeof bs);
     for (int i = 0; i < n; i++) {
         const g2_tl_t *r = &s_tl[i];
         if (auf < 0 || r->f < auf) continue;
@@ -597,25 +617,35 @@ static int traglog(const char *dir)
         const double th = r->rot * 2.0 * 3.14159265358979 / 4096.0;
         const double hx = r->gx + 4200.0 * cos(th) - r->px, hz = r->gz - 4200.0 * sin(th) - r->pz;
         const double wx = (double)r->gx - r->px, wz = (double)r->gz - r->pz;
-        const int ist_fern = st[i] && sqrt(hx * hx + hz * hz) > 2500.0 && r->mo != 2 && r->mo != 3;
-        const int ist_fb = ist_fern && sqrt(wx * wx + wz * wz) >= 3200.0;
-        if (st[i]) still++;
-        if (ist_fern) fern++;
-        if (ist_fb) { fern_b++; if (++ep > ep_max) { ep_max = ep; ep_f = r->f; } } else ep = 0;
-        /* Wandreiben: innerhalb einer Stillstands-Folge (fern, ohne Biss-Reichweite) die Spanne der Bilder mit greifender Kopf-Klemme; Luecken bis 26 Bilder
-         * (= ein Paddel-Zyklus Clip 1, die Klemme meldet sich je Zyklus neu an) gehoeren dazu */
+        const int oben = (r->px > -1700 && r->px < 1850 && r->pz > -20000 && r->pz < -12450) || (r->px > 1850 && r->px < 7200 && r->pz > -18100 && r->pz < -14500);
+        const int ph = (r->f >= 0 && r->f < 40000) ? ph_von[r->f] : -1;
+        /* einzige Ausnahme: laufender Biss (Phase 3 LUNGE / 8 FRESSEN) am Spieler im Wasser (Wurzel < 3200 = Spur-B-Bisstor oder Kopf < 2400 = Maul-Tor) */
+        const int am_spieler = (ph == 3 || ph == 8) && (sqrt(wx * wx + wz * wz) < 3200.0 || sqrt(hx * hx + hz * hz) < 2400.0); (void)oben;   /* auch Hochbiss am Spieler oben */
+        const int ohne = st[i] && !am_spieler;
+        if (st[i] && am_spieler) biss++;
+        bs[i] = (uint8_t)am_spieler;
+        if (ohne) { still++; if (++ep > ep_max) { ep_max = ep; ep_f = r->f; } } else ep = 0;
+        /* Wandreiben: in einer Folge ohne Fortschritt die Spanne der Bilder mit greifender Kopf-Klemme (Luecken <= 26 = ein Paddel-Zyklus) */
         const int kk = r->f >= 0 && r->f < (int)sizeof s_tl_kk && s_tl_kk[r->f];
-        if (!ist_fb) rub = -1;
+        int ohne_weg = 0;                                      /* NB2: Wandreiben nur ohne Weg (2-s-Fenster ab diesem oder einem der 60 Bilder davor) */
+        for (int k = i; k >= 0 && k > i - 60; k--) if (st2[k]) ohne_weg = 1;
+        if (!ohne || !ohne_weg) rub = -1;
         else if (kk) {
             if (rub < 0 || r->f - rub_letzt > 26) rub = r->f;
             rub_letzt = r->f;
             if (rub_letzt - rub + 1 > rub_max) { rub_max = rub_letzt - rub + 1; rub_f = r->f; }
         }
     }
+    for (int i = 0; i + 60 < n; i++) {                     /* 2-s-Fenster ohne Fortschritt; ausgenommen nur Fenster mit einem Biss am Spieler darin */
+        if (!st2[i]) continue;
+        int b = 0;
+        for (int k = i; k <= i + 60 && k < n; k++) if (bs[k]) b = 1;
+        if (!b) { fenster2++; if (fenster2_f < 0) fenster2_f = s_tl[i].f; }
+    }
     const int auf_bilder = (land >= 0 && auf >= 0) ? auf - land : -1;
-    printf("traglog: %d Bilder 2090, Aufschlag F%d, angehaengt F%d (%d Bilder = %.1f s), %d Trag-Bilder: Stillstand %d (%d %%), fern %d (%d %%), fern ohne Biss-Reichweite %d (%d %%), "
-           "laengster fern ohne Biss-Reichweite %d Bilder (bis F%d), laengstes Wandreiben %d Bilder (bis F%d)\n", n, land, auf, auf_bilder, auf_bilder / 30.0, trag,
-           still, trag ? 100 * still / trag : 0, fern, trag ? 100 * fern / trag : 0, fern_b, trag ? 100 * fern_b / trag : 0, ep_max, ep_f, rub_max, rub_f);
+    printf("traglog: %d Bilder 2090, Aufschlag F%d, angehaengt F%d (%d Bilder = %.1f s), %d Trag-Bilder: ohne Fortschritt %d (%d %%), davon keine Ausnahme ausser Biss am Spieler "
+           "(%d Bilder), laengste Folge ohne Fortschritt %d Bilder (bis F%d), laengstes Wandreiben %d Bilder (bis F%d), 2-s-Fenster ohne Fortschritt %d (erstes F%d)\n", n, land, auf, auf_bilder,
+           auf_bilder / 30.0, trag, still, trag ? 100 * still / trag : 0, biss, ep_max, ep_f, rub_max, rub_f, fenster2, fenster2_f);
     return trag > 0 ? 0 : 1;
 }
 /* ---- Werkzeug projektion <raum hex> <cut> x,y,z ... : Bildpunkte (320x240) wie der Zeichner (gr2_im_bild) ---- */
@@ -1066,7 +1096,7 @@ static void teil_klemm(int elza)
  * fernsten von fuenf Beckenlagen, echter Boss-Takt G2_FZ_BILDER Bilder. Masse wie die Abnahme (haenger.py/still_state.py): STILLSTAND = Wurzel
  * kommt in 30 Bildern netto < 300 voran, Kopf (Wurzel + 4200 voraus) > 2500 von der Figur, Phase Verfolgung/Belagerung; WANDREIBEN = Stillstand
  * und die Kopf-Klemme griff in den letzten 30 Bildern (re15_gr2_kk_aktiv). Gegenproben ueber re15_gr2_kk_ziel_alt_setzen: 1 = vor G2, 2 = G2 vor NB1. */
-#define G2_FZ_BILDER 450
+#define G2_FZ_BILDER 900   /* NB2: 30 s je Lage (Schleifen der Abnahme 2: Periode 266-440 Bilder) */
 typedef struct { const char *name; int32_t x, y, z; } g2_lage_t;
 static const g2_lage_t k_fuzz[] = {
     { "W1", -8400, 0, -25000 }, { "W2", -8400, 0, -20000 }, { "W3", -8400, 0, -15000 }, { "W4", -8400, 0, -10000 },
@@ -1076,9 +1106,12 @@ static const g2_lage_t k_fuzz[] = {
     { "NW", -8400, 0, -5900 }, { "NO", 6700, 0, -5900 }, { "SO", 6700, 0, -26500 }, { "SW", -8400, 0, -26500 },
     { "P-mitte", 0, -1800, -16000 }, { "P-west", -1400, -1800, -16000 }, { "P-nord", 0, -1800, -12800 }, { "P-sued", 0, -1800, -19700 },
     { "Rampe", 4500, -1800, -16300 }, { "Leiter", -8200, 0, -25550 },
+    /* NB2: die Lagen der Abnahme 2 (G2_abnahme_2.md Abschnitt 2/4) */
+    { "A2-Leiterecke", -8437, 0, -26507 }, { "A2-NW-Ecke", -8432, 0, -5868 }, { "A2-Ostnische", 7668, 0, -16257 }, { "A2-NO-Ecke", 6732, 0, -5868 },
+    { "A2-RampeWest", 2318, -1800, -16685 },
 };
 static const int32_t k_fz_start[5][2] = { { -5000, -23000 }, { -5000, -9000 }, { 4000, -9000 }, { 4000, -23000 }, { -5500, -16000 } };
-typedef struct { int bilder, still, rub_max, still_max, vorbei; } g2_fz_t;
+typedef struct { int bilder, still, rub_max, still_max, vorbei, fenster2; } g2_fz_t;
 static int g2_kanister_ins_maul(re15_actor_t *g, re15_actor_t *pl)
 {
     const int32_t sk = g->render_scale_q12 ? g->render_scale_q12 : 4096;
@@ -1099,29 +1132,42 @@ static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, 
         if (dx * dx + dz * dz > bd) { bd = dx * dx + dz * dz; bi = i; }
     }
     g->x = k_fz_start[bi][0]; g->z = k_fz_start[bi][1];
-    int32_t hist[30][2]; uint8_t kk[30]; int hn = 0, still_lauf = 0, rub_lauf = 0;
+    int32_t hist[30][2], h60[60][2]; uint8_t kk[30], bs60[60]; int hn = 0, still_lauf = 0, rub_lauf = 0;
+    memset(bs60, 0, sizeof bs60);
+    int32_t schritt[60]; for (int k = 0; k < 60; k++) schritt[k] = 1000;
     for (int t = 0; t < G2_FZ_BILDER && re15_gr2_traegt(); t++) {
         pl->x = L->x; pl->y = L->y; pl->z = L->z; pl->hp = 100; pl->hit_react = 0;
         frame(0, 0);
         m->bilder++;
+        int64_t weit = 0;                                  /* weitester Abstand der letzten 60 Lagen von der aeltesten (Fensteranfang) */
+        {   const int32_t *a0 = h60[hn % 60];
+            for (int k = 0; k < 60; k++) { const int64_t ax = (int64_t)h60[k][0] - a0[0], az = (int64_t)h60[k][1] - a0[1]; if (ax * ax + az * az > weit) weit = ax * ax + az * az; }
+            const int64_t ax = (int64_t)g->x - a0[0], az = (int64_t)g->z - a0[1]; if (ax * ax + az * az > weit) weit = ax * ax + az * az; }
+        const int fenster2 = hn >= 60 && weit < 300LL * 300;
+        h60[hn % 60][0] = g->x; h60[hn % 60][1] = g->z;
         hist[hn % 30][0] = g->x; hist[hn % 30][1] = g->z; kk[hn % 30] = (uint8_t)re15_gr2_kk_aktiv(); hn++;
         const int ph = re15_gator_boss_phase(g);
         const int th = g->rot_y & 0xfff;
         const int64_t hx = (int64_t)g->x + ((4200LL * re15_cos_q12(th)) >> 12) - L->x, hz = (int64_t)g->z - ((4200LL * re15_sin_q12(th)) >> 12) - L->z;
         const int32_t kopf = (int32_t)re15_squareroot0((uint32_t)(hx * hx + hz * hz > 0xffffffffLL ? 0xffffffffLL : hx * hx + hz * hz));
         int still = 0, rub = 0;
-        if (hn >= 30 && (ph == 2 || ph == 5) && kopf > 2500) {
+        /* NB2 (M5): ohne Ausnahme ausser laufendem Biss (Phase 3/8) am Spieler im Wasser (Wurzel < 3200 oder Kopf < 2400) */
+        const int64_t wx0 = (int64_t)g->x - L->x, wz0 = (int64_t)g->z - L->z;
+        const int am_spieler = (ph == 3 || ph == 8) && (wx0 * wx0 + wz0 * wz0 < 3200LL * 3200 || kopf < 2400);   /* auch Hochbiss an der Figur oben */
+        if (hn >= 30 && !am_spieler) {
             const int32_t *a = hist[hn % 30];
             const int64_t wx = (int64_t)g->x - a[0], wz = (int64_t)g->z - a[1];
-            if (wx * wx + wz * wz < 300LL * 300) {
-                still = 1;
-                for (int k = 0; k < 30; k++) if (kk[k]) rub = 1;
-            }
+            if (wx * wx + wz * wz < 300LL * 300) still = 1;
         }
         if (still) { m->still++; still_lauf++; if (still_lauf > m->still_max) m->still_max = still_lauf; } else still_lauf = 0;
+        bs60[(hn - 1) % 60] = (uint8_t)am_spieler;
+        int biss_im_fenster = 0;
+        for (int k = 0; k < 60; k++) if (bs60[k]) biss_im_fenster = 1;
+        if (fenster2 && !biss_im_fenster) { m->fenster2++; if (zeige) printf("        %s t%d FENSTER Gator (%d,%d) Gier %d Clip %d Phase %d Trag %d\n", L->name, t, g->x, g->z, th, (int)g->motion, ph, re15_gr2_trag_modus((int)(g - g_actors))); }
+        if (fenster2 && !biss_im_fenster && re15_gr2_kk_aktiv()) rub = 1;   /* NB2: Wandreiben = Kopf-Klemme ohne Weg (2-s-Fenster) */
         if (rub) { rub_lauf++; if (rub_lauf > m->rub_max) m->rub_max = rub_lauf; } else rub_lauf = 0;
         if (zeige && still && (still_lauf == 1 || still_lauf % 60 == 0))
-            printf("        %s t%d STILL Gator (%d,%d) Gier %d Clip %d Phase %d Klemme %d Kopf-Abstand %d\n", L->name, t, g->x, g->z, th, (int)g->motion, ph,
+            printf("        %s t%d STILL Gator (%d,%d) Gier %d Clip %d Phase %d Trag %d Klemme %d Kopf-Abstand %d\n", L->name, t, g->x, g->z, th, (int)g->motion, ph, re15_gr2_trag_modus((int)(g - g_actors)),
                    re15_gr2_kk_aktiv(), (int)kopf);
     }
 }
@@ -1131,6 +1177,7 @@ static void teil_fuzz(int elza)
     const int zeige = getenv("G2_ZEIGE") != NULL;
     const char *nur = getenv("G2_FZ_NUR");
     int still[3] = { 0, 0, 0 }, bilder[3] = { 0, 0, 0 }, rub[3] = { 0, 0, 0 }, smax[3] = { 0, 0, 0 };
+    int f2[3] = { 0, 0, 0 };
     const char *rub_wo[3] = { "-", "-", "-" };
     const int nl = (int)(sizeof k_fuzz / sizeof k_fuzz[0]);
     for (int alt = 0; alt <= 2; alt++) {
@@ -1145,8 +1192,9 @@ static void teil_fuzz(int elza)
             still[alt] += m.still; bilder[alt] += m.bilder;
             if (m.rub_max > rub[alt]) { rub[alt] = m.rub_max; rub_wo[alt] = k_fuzz[i].name; }
             if (m.still_max > smax[alt]) smax[alt] = m.still_max;
-            printf("    %s %-7s: %3d Bilder, Stillstand %3d (laengster %3d), Wandreiben laengstes %3d%s\n", alt == 0 ? "neu  " : alt == 1 ? "vorG2" : "G2v1 ",
-                   k_fuzz[i].name, m.bilder, m.still, m.still_max, m.rub_max, re15_gr2_traegt() ? "" : " [Kanister weg]");
+            printf("    %s %-7s: %3d Bilder, Stillstand %3d (laengster %3d), Wandreiben laengstes %3d, 2-s-Fenster ohne Fortschritt %3d%s\n", alt == 0 ? "neu  " : alt == 1 ? "vorG2" : "G2v1 ",
+                   k_fuzz[i].name, m.bilder, m.still, m.still_max, m.rub_max, m.fenster2, re15_gr2_traegt() ? "" : " [Kanister weg]");
+            f2[alt] += m.fenster2;
         }
         re15_gr2_kk_ziel_alt_setzen(0);
     }
@@ -1155,9 +1203,11 @@ static void teil_fuzz(int elza)
                bilder[alt], still[alt], bilder[alt] ? 100 * still[alt] / bilder[alt] : 0, smax[alt], rub[alt], rub_wo[alt]);
     PRUEF(bilder[0] >= nl * G2_FZ_BILDER * 9 / 10, "Fuzz gelaufen (%d Bilder mit Kanister)", bilder[0]);
     PRUEF(rub[0] <= 30, "kein Wandreiben > 1 s mit dem Kanister (laengstes %d Bilder bei %s)", rub[0], rub_wo[0]);
+    printf("    Etappen ohne Annaeherung (abgebrochen): %d\n", re15_gr2_trag_ohne_annaeherung());
+    PRUEF(f2[0] == 0, "NB2 (M5): kein Zeitfenster von 2 s (60 Bilder), in dem die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (%d Fenster; laengste 30-Bilder-Folge %d)", f2[0], smax[0]);
     if (!getenv("G2_FZ_NEU")) {
         PRUEF((int64_t)still[0] * bilder[1] <= (int64_t)still[1] * bilder[0], "Stillstand mit Kanister hoechstens wie vor G2 (%d / %d gegen %d / %d)", still[0], bilder[0], still[1], bilder[1]);
-        PRUEF(rub[2] > 30, "Gegenprobe G2 vor NB1: Wandreiben %d Bilder (rot ohne den Bau)", rub[2]);
+        PRUEF(rub[2] > 30 || f2[2] > 0, "Gegenprobe G2 vor NB1: Wandreiben %d / 2-s-Fenster ohne Fortschritt %d (rot ohne den Bau)", rub[2], f2[2]);
     }
 }
 

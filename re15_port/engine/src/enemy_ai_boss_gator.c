@@ -1690,7 +1690,8 @@ static void gb_takt(int slot)
             /* Nachbesserung 2 (Abnahme 1 M2): statt der Laengs-Probe gb_seg_frei die bone-genaue Bahn der RE2-Wende
              * (gator_re2_r41.c gr2_dash_planen: Kopf/Rumpf im Wasser, Wurzel ausserhalb der Klemmzone, Ende auf Leon) */
             if (re15_gr2_dash_zonenwechsel(slot, e, gb_zone(e->z), gb_zone(pl->z), zv)
-                && re15_gr2_dash_planen(slot, e, pl, zv)) {
+                && re15_gr2_dash_planen(slot, e, pl, zv)
+                && re15_gr2_trag_dash_erlaubt(slot)) {   /* Runde 41 Spur G2 NB2 (M1'): mit Kanister hoechstens einmal (RE2-Zonenbyte @0x801009a8/@0x801009ec) */
                 re15_gr2_dash_start(slot, e, pl);
                 g->phase = GBP_RE2_DASH; g->timer = 0;
                 break;
@@ -1746,6 +1747,9 @@ static void gb_takt(int slot)
                      * behaelt +2000 Praeferenz ("direkt drueber klettern"
                      * gilt, wenn sie wirklich der direkte Weg ist). */
                     g->route = (g->cross_cd == 0 && kr <= kw + 2000) ? 2 : 1;
+                    if (re15_gr2_traegt() && !re15_gr2_kk_ziel_alt()) g->route = 1;   /* Runde 41 Spur G2 NB2 (M1'): mit dem Kanister quer im Maul kein
+                                                * Rampen-Uebergang - der Anlauf-Wegpunkt an der Rampenkante liegt fuer Kopf + Kanister hinter der Ostwand (Fuzz NB2 O2/O3: Pendel
+                                                * im Suedbecken, 176 2-s-Fenster); RE2 klettert nicht (Korridor). Westumlauf. */
                     g->route_zwang = (int8_t)(g->cross_cd > 0);
                     g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
                 }
@@ -1839,7 +1843,7 @@ static void gb_takt(int slot)
         if (tx >  7200 - 1600)  tx =  7200 - 1600;
         if (tz < -27000 + 1600) tz = -27000 + 1600;
         if (tz >  -5400 - 1600) tz =  -5400 - 1600;
-        (void)re15_gr2_trag_ziel(slot, e, pl, &tx, &tz, tx, tz);   /* Verfolgung: Hop-Regel aus (Routenwahl/CROSS-Anlauf der Spur B; Fuzz NB1: am Hop-Wegpunkt stand er vor der Rampe) */   /* Runde 41 Spur G2 (Punkt 7, Nachbesserung 1 M1): mit dem Kanister im Maul das Ziel, an dem
+        (void)re15_gr2_trag_ziel(slot, e, pl, &tx, &tz, tx, tz, 0);   /* Verfolgung: Hop-Regel aus (Routenwahl/CROSS-Anlauf der Spur B; Fuzz NB1: am Hop-Wegpunkt stand er vor der Rampe) */   /* Runde 41 Spur G2 (Punkt 7, Nachbesserung 1 M1): mit dem Kanister im Maul das Ziel, an dem
                                                          * die Kopf-Klemme nicht greift, und am Ende kein Stehen - Vorbei-Etappe (gator_re2_r41.c) */
         g->dbg_tx = tx; g->dbg_tz = tz;
         {   /* Dreh-Telemetrie (Nutzer 2026-09-11: "dreht fast immer erst in
@@ -2241,7 +2245,7 @@ static void gb_takt(int slot)
             {
                 const int32_t tr_nx = gx, tr_nz = gz;   /* Runde 41 Spur G2 NB1: Endziel vor dem Kanten-Umweg */
                 int uh = gb_kanten_umweg(e, &gx, &gz);
-                (void)re15_gr2_trag_ziel(slot, e, pl, &gx, &gz, uh >= 0 ? tr_nx : gx, uh >= 0 ? tr_nz : gz);   /* Runde 41 Spur G2 (Punkt 7, NB1 M1/M3): s. CHASE - auch der Belagerungs-Hop */
+                (void)re15_gr2_trag_ziel(slot, e, pl, &gx, &gz, uh >= 0 ? tr_nx : gx, uh >= 0 ? tr_nz : gz, 1);   /* Runde 41 Spur G2 (Punkt 7, NB1 M1/M3): s. CHASE - auch der Belagerungs-Hop */
                 if (!s_gb_stumm) {
                     static FILE *s_gwl2 = NULL; static int s_gwc2 = 0;
                     if (!s_gwl2) s_gwl2 = fopen("gator_boss.log", "a");

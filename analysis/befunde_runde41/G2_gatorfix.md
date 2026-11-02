@@ -226,3 +226,57 @@ dafuer um), spaetestens nach 600 Bildern; geschwommen im Bogen (Slew 0x30, keine
 
 ### Abschluss Nachbesserung 1
 Tests (PowerShell-ctest, Auswahl wie die Abnahme `r41_gatorszene|r41_kanister2080|r41_alligator2|r41_re2gator|r41_gatorfix`, -j3): **100% tests passed, 0 tests failed out of 110** (2271 s), darin neu unit_r41_gatorfix_fuzz(_elza) und integration_r41_gatorfix_frei/_frei_elza/_rampe/_rampe_elza. Endstand der exe-Riegel (traglog): frei Leon fern 7 %, laengste Folge 39, Wandreiben 8, Aufnahme 582 Bilder; frei Elza fern 5 % (ohne Biss-Reichweite 4 %), 31, 16, 489; Rampe Leon 0 %, Rampe Elza 1 % (16 Bilder), Wandreiben 0.
+
+## Nachbesserung 2 (Abnahme 2: analysis/befunde_runde41/G2_abnahme_2.md, M1', M3', M4, M5)
+Laeufe scratchpad `g2nb1/runs/n8_*` (Eingabe und Umgebung der Abnahme-2-Laeufe `G2abn2/runs/<lauf>/env.txt`, eigene exe-Kopie, gdigrab, kein AUTOSHOT/
+SOFTWARE_RENDER). "Vorher" = die Abnahme-2-Laeufe selbst (Bau e7d0510c7).
+
+### M5 - Mass ehrlich
+`test_r41_gatorfix traglog` und Fuzz zaehlen jetzt **2-s-Fenster ohne Fortschritt**: 60 Bilder, in denen die Wurzel nicht 300 vom Fensteranfang wegkommt
+(Zappeln, Wandreiben, Wende/Dash/Schnappen auf der Stelle bleiben darunter; Kreisen nicht). Einzige Ausnahme: ein Fenster, in dem ein Biss (Phase 3/8) am
+Spieler laeuft (Wurzel < 3200 oder Kopf < 2400). Keine Ausnahme mehr fuer Dash-Clips oder "Kopf < 2500". Dazu weiter: Anteil der 30-Bilder-Fenster mit
+< 300 netto (Mass der Abnahme), Wandreiben (Klemme greift in einem Fenster ohne Fortschritt).
+Gegenrechnung der Abnahme-2-Laeufe (vorher) mit dem neuen Mass: rampe_nat_leon 969 Fenster, w_elza 852, plat7_leon 3904, plat8_elza 3953, ecken_leon 224,
+w_leon 107, plat_leon 6; plat2_leon (offenes Wasser) 0 - das Mass trennt.
+
+### M1' - Schleifen an unerreichbaren Lagen
+RE2 (EM23_OVL_0000.BIN, Disasm G2abn1/re2/em23.dis): Sub 1 schwimmt ohne Ziel weiter (`jal 0x8001a330` Clip 0 Blend 32 @0x80100c34-40); der Dash (Routine
+0x301 `addiu v0,zero,769` @0x801009ac/@0x801009f4) kommt nur mit dem Zonenbyte +0x21A, das nur hochgezaehlt wird (`sb v0,538(s0)` = 1 @0x801009a8 bei
+x < -17877 `slti v0,v0,-17877` @0x80100998, = 2 @0x801009ec bei z < -7322 @0x801009e0) - jeder Dash hoechstens einmal; Biss-Sperre `lbu v0,568(s0) / bne`
+@0x80100b5c-64. Kein Ziel-Pendel, kein wiederholter Dash.
+Aenderungen (gator_re2_r41.c NB2-Block, enemy_ai_boss_gator.c):
+- mit dem Kanister kein Zonen-Dash (`re15_gr2_trag_dash_erlaubt`; der Port-Dash = 3,9 s Vordrehung auf der Stelle) und kein Rampen-Uebergang (Westumlauf;
+  der Anlauf-Wegpunkt an der Rampenkante liegt fuer Kopf + Kanister hinter der Ostwand).
+- gekuerztes SPIELER-Ziel in Reichweite (< 2 R): UMKREISEN eines Mittelpunkts R = 2000 (Wenderadius beim Paddeln: 149 je Bild / Slew 0x30 = 2025) von der
+  kuerzenden Wand weg, Karotte 45 Grad voraus, bis das Ziel wieder passt oder der Spieler > R wandert.
+- Wegpunkte der Routenwahl (nicht der Spieler, > 1500 daneben): am gekuerzten Wegpunkt weiter zum Wegpunkt, den der Umweg von dort waehlt (kein Kreisen).
+- kein Ziel in den um den Wurzel-Rand (hit_radius_min + 180) aufgeblasenen Bloecken Plattform/Rampe (auch nach dem Kuerzen); Etappe, der die Wurzel in 60
+  Bildern nicht 200 naeher kommt, wird abgebrochen (Zeile `TRAG ETAPPE ohne Annaeherung`, im Fuzz gezaehlt: 15).
+| Lauf (Eingabe der Abnahme 2) | vorher 2-s-Fenster | nachher 2-s-Fenster | nachher 30-B.-Anteil (Mass Abnahme) | Wandreiben | Aufnahme |
+|---|---|---|---|---|---|
+| rampe_nat_leon (Leiter-Ecke SW) | 969 | 0 | 0 % | 0 | 877 |
+| w_elza (NW-Ecke, Ost-Nische) | 852 | 0 | 7 % | 0 | 121 |
+| plat_leon (Nordbecken/NO-Ecke) | 6 | 0 (n9) | 59 % (Clip-0-Kreisen, s. u.) | 0 | 477 |
+| ecken_leon (Waende/Leiter) | 224 | 0 | 29 % | 0 | 754 |
+| w_leon (Wand-Tour) | 107 | 0 | 4 % | 0 | 711 |
+Ehrlich: Im Nordbecken (Spieler an der NO-Ecke, mit Kanister nicht erreichbar) kreist er ~6000 vom Spieler in Clip 0 (RE2-Sub 1, in der Kanister-Zone
+eingefroren @0x80100ab8-c8, ~25 je Bild mit Gleitbildern) - 30-Bilder-Fenster netto < 300 in 59 %, aber kein 2-s-Fenster ohne Fortschritt.
+Fuzz unit_r41_gatorfix_fuzz(_elza), 31 Lagen x 900 Bilder (dazu die fuenf Lagen der Abnahme 2): 0 Fenster, Wandreiben 0, 30-B.-Anteil 3 %; vor G2 1032
+Fenster, G2 v1 (Gegenprobe) rot. Karten `G2_belege/nb2_karte_nachher_<lauf>.jpg`, Fenster Leiter-Ecke `nb2_m1_nachher_leiterecke_leon_10s.jpg`.
+
+### M3' - Rampe West
+Belagerung mit dem Kanister: Umkreisen um die Kante unter dem Spieler (Spur-B-Endziel vor dem Umweg, Kreis ganz ausserhalb der aufgeblasenen Bloecke), aus
+der Ferne direkt hin, wenn die Strecke frei ist; keine 600er-Ruhezone. Fensterbeleg ohne starre Kamera: Messhaken `RE15_K2080_RUECK_LAGE=x,z,gier,cut` -
+der 4. Wert setzt den Rueckschnitt (@0x07D4 = Cut beim Ausloesen) auf die Kamera der neuen Lage (ROOM2090 Cut 2 sieht Rampe West, Sued- und Nordbecken,
+`test_r41_gatorfix projektion`); state.log n8_plat7_leon/n8_plat8_elza: `cam=2`.
+| Lauf | vorher | nachher: 2-s-Fenster / 30-B.-Anteil / Belagerung mit Kanister / Kamera |
+|---|---|---|
+| plat7_leon (Rampe x 2318) | 94,7 %, 3904 Fenster | 0 / 0 % / 7278 Bilder / cam=2 |
+| plat8_elza (Rampe x 2318) | 94,6 %, 3953 Fenster | 0 / 0 % / 7432 Bilder / cam=2 |
+Ehrlich: Er bleibt in Bewegung, kreist aber im Nordbecken bei (-4000,-10500) (Karte `nb2_karte_nachher_plat7_leon.jpg`), also ~9000 von der Figur und
+ausserhalb des Bildes von Cut 2 (`nb2_m3_nachher_rampe_west_{leon,elza}_cut2_15s.jpg`: Figur auf der Rampe, Gator nicht im Bild). "Patrouille wie auf dem
+Ostteil" (Pendel unter der Figur) ist das nicht - offen.
+
+### M4 - Leiche ueber dem Oberkiefer nach dem Zubeissen
+Nicht bearbeitet (Budget). Der Riegel maul misst 0 Scheitel ausserhalb des Kopf-Bandes (Part-6-Rahmen, x/y) - die Lage quer (Part-6-z) ragt seitlich ueber
+den Kopf hinaus; ob Clip 5 Bild 1-11 den Kopf rollt (Leiche zeigt dann nach oben) oder die Zeichenreihenfolge, ist nicht bestimmt. Offen.

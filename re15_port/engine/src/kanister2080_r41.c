@@ -370,8 +370,14 @@ static void baue_szene(void)
          * Lage im Wasser (Riegel: an die Suedkante der Rampe, Blick nach Norden), von der die Figur ueber die Kletterzellen der Rampe (Bodentypwort Bit 0,
          * climb_common.c @0x8002d530-50; ROOM2090 nur die Rampe, test_r41_gatorfix kletterkarte) auf Rampe und Plattform steigt. */
         const char *rl = getenv("RE15_K2080_RUECK_LAGE");
-        int lx = 0, lz = 0, lg = 0;
-        if (rl && sscanf(rl, "%d,%d,%d", &lx, &lz, &lg) == 3) {
+        int lx = 0, lz = 0, lg = 0, lc = -1;
+        const int nw = rl ? sscanf(rl, "%d,%d,%d,%d", &lx, &lz, &lg, &lc) : 0;
+        if (nw == 4 && lc >= 0) {   /* NB2 (Abnahme 2 Abschnitt 4: "der Messhaken haelt die Kamera auf Cut 0"): der Rueckschnitt @0x07D4 geht auf den Cut
+                                     * beim Ausloesen - mit dem 4. Wert der der neuen Lage (ROOM2090 Cut 2 sieht Rampe West, Sued- und Nordbecken: test_r41_gatorfix projektion) */
+            K_LOG("MESSHAKEN RE15_K2080_RUECK_LAGE: Rueckschnitt auf Cut %d statt %d", lc, (int)s_leon_cut);
+            s_leon_cut = (uint8_t)lc;
+        }
+        if (nw >= 3) {
             K_LOG("MESSHAKEN RE15_K2080_RUECK_LAGE: Rueckkehr nach (%d,%d) Gier %d statt (%d,%d) Gier %d", lx, lz, lg, (int)s_leon[0], (int)s_leon[2], (int)s_leon[3]);
             s_leon[0] = lx; s_leon[1] = 0; s_leon[2] = lz; s_leon[3] = lg & 0xfff;
         }

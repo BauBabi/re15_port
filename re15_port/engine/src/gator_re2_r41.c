@@ -2459,35 +2459,188 @@ int re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
     if (s_kan.stufe != 7 || !gr2_tr_huelle(e)) return 0;   /* erst getragen (Stufe 7): in Stufe 3-6 wandert die Lokallage noch vom Fenster ins Maul */
     return gr2_tr_fit(e, tx, tz) != 0;
 }
-static struct { int8_t an, dir; int16_t t; int32_t qx, qz; } s_tr[RE15_ACTOR_MAX];
+static struct { int8_t an, dir; int16_t t; int32_t qx, qz; int8_t kreis, kdir, dash; int32_t cx, cz, sx, sz, d0; } s_tr[RE15_ACTOR_MAX];
+static int s_tr_ohne_annaeherung = 0;   /* Messzeile: Etappen, die ohne Annaeherung endeten */
+int re15_gr2_trag_ohne_annaeherung(void) { return s_tr_ohne_annaeherung; }
+/* ==== Runde 41 Spur G2 Nachbesserung 2 (Abnahme 2 M1'/M3'): UMKREISEN statt Pendel, Zonen-Dash nur einmal, Ziele ausserhalb der Bloecke ================
+ * Befund Abnahme 2 (G2_abnahme_2.md Abschnitt 2/4): an Spielerlagen, die der Kopf mit dem Kanister nicht erreicht, liefen deterministische Schleifen -
+ * Leiter-Ecke `TRAG VORBEI ... Etappe laengs z` (18 x) -> ueber die Zonenlinie -> RE2-Zonen-Dash Clip 2/3 (21 x, je 3,9 s) -> zurueck; NW-Ecke/Ost-Nische
+ * dasselbe (57 % Dash); Nordbecken 75 Pendel-Stopps (Wende in Clip 0); Rampe West: Etappenziel (1673,-11900) 934 hinter der Plattform-Nordkante, 130 Bilder
+ * paddelnd an (1673,-10966).
+ * RE2 (EM23_OVL_0000.BIN): kein Ziel, keine Lenkung - Sub 1 schwimmt `jal 0x8001a330` (Clip 0, Blend 32) @0x80100c34-40 weiter; der Dash (Routine 0x301 =
+ * `addiu v0,zero,769` @0x801009ac/@0x801009f4) kommt nur mit dem Zonenbyte +0x21A, und das wird nur hochgezaehlt (`sb v0,538(s0)` mit 1 @0x801009a8 bei x <
+ * -17877, mit 2 @0x801009ec bei z < -7322) - jeder Dash hoechstens einmal; die Biss-Sperre +0x238 (`lbu v0,568(s0) / bne` @0x80100b5c-64) haelt den Biss.
+ * PORT-WAHL: (1) mit dem Kanister kein Zonen-Dash (die RE2-Zonenfolge ist einmalig, der Port-Dash steht 3,9 s auf der Stelle);
+ * (2) ist das Ziel gekuerzt und die Wurzel in 2 R des gekuerzten Ziels, umkreist er einen Mittelpunkt R von dort weg von der kuerzenden Wand (Karotte 45 Grad
+ * voraus auf dem Kreis, Drehsinn gehalten) - ohne Wende, die Wurzel kommt in 30 Bildern nie unter 300 voran; R = GR2_TR_KREIS 2000 = Wenderadius beim Paddeln
+ * (Clip 1: 5798/26 x 2731/4096 = 149 je Bild, Slew 0x30 = 0,0736 rad je Bild -> 2025); vorbei, sobald das Ziel wieder passt oder der Spieler weiter als 2 R
+ * vom Mittelpunkt ist; (3) jedes Ziel der Trag-Lenkung liegt ausserhalb der um den Wurzel-Rand (hit_radius_min + 60 + 120 = Slab-Ausgang der Spur B)
+ * aufgeblasenen Bloecke Plattform/Rampe (SCA ROOM2090, GB_PLAT_X0.. / GB_RAMP_X0..). */
+#define GR2_TR_KREIS   2000
+#define GR2_PLAT_X0    (-1700)
+#define GR2_PLAT_X1    1850
+#define GR2_PLAT_Z0    (-20000)
+#define GR2_PLAT_Z1    (-12450)
+#define GR2_RAMP_X0    1850
+#define GR2_RAMP_X1    7200
+#define GR2_RAMP_Z0    (-18100)
+#define GR2_RAMP_Z1    (-14500)
+static int gr2_tr_im_block(int32_t x, int32_t z, int32_t m)
+{
+    return (x > GR2_PLAT_X0 - m && x < GR2_PLAT_X1 + m && z > GR2_PLAT_Z0 - m && z < GR2_PLAT_Z1 + m)
+        || (x > GR2_RAMP_X0 - m && x < GR2_RAMP_X1 + m && z > GR2_RAMP_Z0 - m && z < GR2_RAMP_Z1 + m);
+}
+static void gr2_tr_frei_r(const re15_actor_t *e, int32_t *x, int32_t *z, int32_t extra);
+static void gr2_tr_frei(const re15_actor_t *e, int32_t *x, int32_t *z) { gr2_tr_frei_r(e, x, z, 0); }
+static void gr2_tr_frei_r(const re15_actor_t *e, int32_t *x, int32_t *z, int32_t extra)
+{
+    const int32_t m = (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60 + 120 + extra;
+    if (!gr2_tr_im_block(*x, *z, m)) return;
+    int32_t bx = *x, bz = *z; int64_t bd = -1;
+    const int32_t kx[4] = { GR2_PLAT_X0 - m, GR2_PLAT_X1 + m, GR2_RAMP_X0 - m, GR2_RAMP_X1 + m };
+    const int32_t kz[4] = { GR2_PLAT_Z0 - m, GR2_PLAT_Z1 + m, GR2_RAMP_Z0 - m, GR2_RAMP_Z1 + m };
+    for (int i = 0; i < 8; i++) {
+        int32_t qx = *x, qz = *z;
+        if (i < 4) qx = kx[i]; else qz = kz[i - 4];
+        if (qx < GR2_KK_X0 + 1600 || qx > GR2_KK_X1 - 1600 || qz < GR2_KK_Z0 + 1600 || qz > GR2_KK_Z1 - 1600 || gr2_tr_im_block(qx, qz, m)) continue;
+        const int64_t d = (int64_t)(qx - *x) * (qx - *x) + (int64_t)(qz - *z) * (qz - *z);
+        if (bd < 0 || d < bd) { bd = d; bx = qx; bz = qz; }
+    }
+    *x = bx; *z = bz;
+}
+int re15_gr2_trag_dash_erlaubt(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || s_kk_ziel_alt || !s_kan.aktiv || s_kan.stufe != 7) return 1;
+    if (!s_tr[slot].dash) re15_gr2_log("TRAG DASH F%u: kein Zonen-Dash mit dem Kanister im Maul", (unsigned)g_engine.frame_count);
+    s_tr[slot].dash = 1;
+    return 0;   /* Fuzz NB2 N2: auch der eine Dash = 3,9 s Vordrehung auf der Stelle (Clip 2/3) ohne Weg - mit dem Kanister keiner */
+}
 extern void re15_gator_boss_steuerziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);   /* Spur B: Kanten-Umweg + Klemmflaeche 1600 */
 static int32_t gr2_tr_ab(const re15_actor_t *e, int32_t x, int32_t z)
 {
     const int64_t dx = (int64_t)x - e->x, dz = (int64_t)z - e->z, d2 = dx * dx + dz * dz;
     return (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
 }
-static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz);
+static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern);
 static int8_t s_tr_modus[RE15_ACTOR_MAX];   /* letzte Rueckgabe je Slot: 0 Ziel unveraendert, 1 gekuerzt, 2 Vorbei-Etappe */
 int re15_gr2_trag_modus(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_tr_modus[slot] : 0; }
-int re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz)
+int re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern)
 {
-    const int r = gr2_trag_ziel_innen(slot, e, pl, tx, tz, nx, nz);
+    const int r = gr2_trag_ziel_innen(slot, e, pl, tx, tz, nx, nz, belagern);
     if (slot >= 0 && slot < RE15_ACTOR_MAX) s_tr_modus[slot] = (int8_t)r;
     return r;
 }
-static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz)
+static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
     if (s_kk_ziel_alt) return re15_gr2_kk_ziel(e, tx, tz);
-    if (!s_kan.aktiv || !s_kan.angehaengt || s_kan.stufe != 7) { s_tr[slot].an = 0; s_tr[slot].dir = 0; return 0; }   /* Stufe 7 = getragen (s. re15_gr2_kk_ziel) */
+    if (!s_kan.aktiv || !s_kan.angehaengt || s_kan.stufe != 7) { s_tr[slot].an = 0; s_tr[slot].dir = 0; s_tr[slot].kreis = 0; s_tr[slot].dash = 0; return 0; }   /* Stufe 7 = getragen (s. re15_gr2_kk_ziel) */
     if (!gr2_tr_huelle(e)) return 0;
     const int32_t ox = *tx, oz = *tz;
-    const int hop = (nx != *tx || nz != *tz);
+    int hop = (nx != *tx || nz != *tz);
+    if (belagern) {
+        /* NB2 (M3'): Belagerung mit dem Kanister = Umkreisen um die Kante unter dem Spieler (Endziel der Spur B vor dem Kanten-Umweg), Kreis ganz ausserhalb
+         * der aufgeblasenen Bloecke; aus groesserer Entfernung (> 2 R) der Weg der Spur B (Umweg/Hops, Ziele aus den Bloecken geschoben). Abnahme 2 Lauf
+         * plat7_leon: der Hop (1673,-11900) lag 934 hinter der Plattform-Nordkante, 26 Zyklen mit je ~4,3 s Paddeln gegen die Kante. */
+        int32_t cx = nx, cz = nz;
+        gr2_tr_frei_r(e, &cx, &cz, GR2_TR_KREIS);
+        const int64_t mx = (int64_t)e->x - cx, mz = (int64_t)e->z - cz;
+        if (mx * mx + mz * mz < 4LL * GR2_TR_KREIS * GR2_TR_KREIS) {
+            if (!s_tr[slot].kreis || gr2_tr_ab(e, s_tr[slot].cx, s_tr[slot].cz) > 3 * GR2_TR_KREIS
+                || (int64_t)(s_tr[slot].cx - cx) * (s_tr[slot].cx - cx) + (int64_t)(s_tr[slot].cz - cz) * (s_tr[slot].cz - cz) > (int64_t)GR2_TR_KREIS * GR2_TR_KREIS) {
+                const int th = e->rot_y & 0xfff;
+                const int64_t kr = (int64_t)(e->x - cx) * (-re15_sin_q12(th)) - (int64_t)(e->z - cz) * re15_cos_q12(th);
+                s_tr[slot].kreis = 1; s_tr[slot].kdir = (int8_t)(kr >= 0 ? 1 : -1); s_tr[slot].cx = cx; s_tr[slot].cz = cz; s_tr[slot].an = 0;
+                re15_gr2_log("TRAG KREISEN an F%u (Belagerung): Wurzel (%d,%d), Kante (%d,%d) -> Mittelpunkt (%d,%d) R %d", (unsigned)g_engine.frame_count,
+                             e->x, e->z, (int)nx, (int)nz, (int)cx, (int)cz, GR2_TR_KREIS);
+            }
+            const int a = (int)re15_atan2_q12(e->z - s_tr[slot].cz, e->x - s_tr[slot].cx);
+            const int a2 = (a + s_tr[slot].kdir * 512) & 0xfff;
+            int32_t qx = s_tr[slot].cx + (int32_t)(((int64_t)re15_cos_q12(a2) * GR2_TR_KREIS) >> 12);
+            int32_t qz = s_tr[slot].cz + (int32_t)(((int64_t)re15_sin_q12(a2) * GR2_TR_KREIS) >> 12);
+            gr2_tr_frei(e, &qx, &qz);
+            (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
+            *tx = qx; *tz = qz;
+            return 3;
+        }
+        s_tr[slot].kreis = 0;
+        {   /* weiter weg: ist die Strecke Wurzel -> Mittelpunkt frei von den aufgeblasenen Bloecken (nur Wurzel-Rand, nicht der 2600er-Schatten der Spur B),
+             * direkt hin - der Umweg der Spur B pendelte im Fuzz NB2 (P-west) zwischen dem NW-Hop und der NO-Ecke */
+            const int32_t m = (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60 + 120;
+            const int64_t dx = (int64_t)cx - e->x, dz = (int64_t)cz - e->z, d2 = dx * dx + dz * dz;
+            const int32_t d = (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
+            int frei = 1;
+            for (int32_t t = 0; t <= d && frei; t += 500)
+                if (gr2_tr_im_block(e->x + (int32_t)(dx * t / (d ? d : 1)), e->z + (int32_t)(dz * t / (d ? d : 1)), m)) frei = 0;
+            if (frei) {
+                int32_t qx = cx, qz = cz;
+                (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
+                *tx = qx; *tz = qz;
+                return 2;
+            }
+        }
+    } else if (pl) {
+        /* NB2 (M1'): Ziel der Verfolgung, das NICHT der Spieler ist (Ring-/Umlauf-Wegpunkt der Routenwahl, Fuzz NB2: Kreisen um gekuerzte Wegpunkte vor der
+         * Plattform) - wie ein Hop: am gekuerzten Wegpunkt weiter zum Wegpunkt, den der Umweg von dort zum Spieler waehlt; kein Kreisen. */
+        const int32_t sx = pl->x < GR2_KK_X0 + 1600 ? GR2_KK_X0 + 1600 : pl->x > GR2_KK_X1 - 1600 ? GR2_KK_X1 - 1600 : pl->x;
+        const int32_t sz = pl->z < GR2_KK_Z0 + 1600 ? GR2_KK_Z0 + 1600 : pl->z > GR2_KK_Z1 - 1600 ? GR2_KK_Z1 - 1600 : pl->z;
+        if (ox - sx < -1500 || ox - sx > 1500 || oz - sz < -1500 || oz - sz > 1500) { hop = 1; nx = sx; nz = sz; }   /* 1500: das Spur-B-Ziel weicht
+                                                                 * vom Spieler ab (Anlauf/Maul-Ziel, Fuzz S4: 480), Ring-Wegpunkte liegen >= GB_RING_M 2600 vom Block */
+    }
+    gr2_tr_frei(e, tx, tz);                                /* NB2: kein Ziel in den aufgeblasenen Bloecken (Wurzel kommt nicht hin) */
     const int seiten = gr2_tr_fit(e, tx, tz);
+    gr2_tr_frei(e, tx, tz);                                /* NB2: auch das gekuerzte Ziel nicht in den Bloecken (Fuzz O2: (1658,-12000) vor der Plattform) */
     if (s_tr[slot].an) {
-        if (gr2_tr_ab(e, s_tr[slot].qx, s_tr[slot].qz) < GR2_TR_ERREICHT || ++s_tr[slot].t > GR2_TR_HALTEN) {
+        const int32_t dq = gr2_tr_ab(e, s_tr[slot].qx, s_tr[slot].qz);
+        ++s_tr[slot].t;
+        /* NB2: eine Etappe, der die Wurzel in 60 Bildern nicht 200 naeher kommt (Ecke Plattform/Wand, Fuzz NB2 P-west), ist nicht erreichbar - naechste */
+        const int ohne = s_tr[slot].t >= 60 && (s_tr[slot].t % 60) == 0 && s_tr[slot].d0 - dq < 200;
+        if (s_tr[slot].t % 60 == 0) s_tr[slot].d0 = dq;
+        if (ohne) { s_tr_ohne_annaeherung++; re15_gr2_log("TRAG ETAPPE ohne Annaeherung F%u: Wurzel (%d,%d) Etappe (%d,%d) Abstand %d", (unsigned)g_engine.frame_count,
+                                                          e->x, e->z, (int)s_tr[slot].qx, (int)s_tr[slot].qz, (int)dq); }
+        if (dq < GR2_TR_ERREICHT || s_tr[slot].t > GR2_TR_HALTEN || ohne) {
             s_tr[slot].an = 0; s_tr[slot].dir = (int8_t)-s_tr[slot].dir;
         } else { *tx = s_tr[slot].qx; *tz = s_tr[slot].qz; return 2; }
+    }
+    if (!belagern && !hop) {                               /* NB2: Umkreisen nur um den gekuerzten SPIELER (s. GR2_TR_KREIS) */
+        if (s_tr[slot].kreis) {
+            /* vorbei, wenn das (ungekuerzte) Spielerziel um mehr als R vom Ziel beim Beginn wandert - nicht am gekuerzten Ziel gemessen, das haengt von der
+             * Lage auf dem Kreis ab (Fuzz NB2 N2: Kreisen an/aus im Wechsel, dazwischen Vorbei-Etappen mit Wende) */
+            const int64_t ax = (int64_t)ox - s_tr[slot].sx, az = (int64_t)oz - s_tr[slot].sz;
+            if (!seiten || ax * ax + az * az > (int64_t)GR2_TR_KREIS * GR2_TR_KREIS) {
+                s_tr[slot].kreis = 0;
+                re15_gr2_log("TRAG KREISEN aus F%u: %s", (unsigned)g_engine.frame_count, seiten ? "Spieler weiter weg" : "Ziel passt wieder");
+            }
+        }
+        if (!s_tr[slot].kreis && seiten && gr2_tr_ab(e, *tx, *tz) < 2 * GR2_TR_KREIS) {
+            int32_t vx = 0, vz = 0;
+            if (seiten & 1) vx += 4096;
+            if (seiten & 2) vx -= 4096;
+            if (seiten & 4) vz += 4096;
+            if (seiten & 8) vz -= 4096;
+            const int32_t vl = (int32_t)re15_squareroot0((uint32_t)((int64_t)vx * vx + (int64_t)vz * vz));
+            int32_t cx = *tx, cz = *tz;
+            if (vl > 0) { cx += (int32_t)((int64_t)vx * GR2_TR_KREIS / vl); cz += (int32_t)((int64_t)vz * GR2_TR_KREIS / vl); }
+            gr2_tr_frei_r(e, &cx, &cz, GR2_TR_KREIS);           /* der ganze Kreis ausserhalb der aufgeblasenen Bloecke */
+            const int th = e->rot_y & 0xfff;                /* Drehsinn = der, in den er schon schwimmt: Kreuzprodukt (Wurzel - M) x Schwimmrichtung (cos, -sin) */
+            const int64_t kr = (int64_t)(e->x - cx) * (-re15_sin_q12(th)) - (int64_t)(e->z - cz) * re15_cos_q12(th);
+            s_tr[slot].kreis = 1; s_tr[slot].kdir = (int8_t)(kr >= 0 ? 1 : -1); s_tr[slot].cx = cx; s_tr[slot].cz = cz; s_tr[slot].an = 0;
+            s_tr[slot].sx = ox; s_tr[slot].sz = oz;
+            re15_gr2_log("TRAG KREISEN an F%u: Wurzel (%d,%d) Gier %d, Ziel (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Mittelpunkt (%d,%d) R %d Drehsinn %d",
+                         (unsigned)g_engine.frame_count, e->x, e->z, th, (int)ox, (int)oz, (int)*tx, (int)*tz, seiten, (int)cx, (int)cz, GR2_TR_KREIS,
+                         (int)s_tr[slot].kdir);
+        }
+        if (s_tr[slot].kreis) {
+            const int a = (int)re15_atan2_q12(e->z - s_tr[slot].cz, e->x - s_tr[slot].cx);
+            const int a2 = (a + s_tr[slot].kdir * 512) & 0xfff;   /* Karotte 45 Grad voraus */
+            int32_t qx = s_tr[slot].cx + (int32_t)(((int64_t)re15_cos_q12(a2) * GR2_TR_KREIS) >> 12);
+            int32_t qz = s_tr[slot].cz + (int32_t)(((int64_t)re15_sin_q12(a2) * GR2_TR_KREIS) >> 12);
+            gr2_tr_frei(e, &qx, &qz);
+            (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
+            *tx = qx; *tz = qz;
+            return 3;
+        }
+        return seiten != 0;
     }
     if (!seiten || gr2_tr_ab(e, *tx, *tz) >= GR2_TR_ERREICHT) return seiten != 0;
     if (hop) {
@@ -2498,9 +2651,10 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
         am_hop.x = ox; am_hop.z = oz;
         int32_t qx = nx, qz = nz;
         re15_gator_boss_steuerziel(&am_hop, &qx, &qz);
-        (void)gr2_tr_fit(e, &qx, &qz);
+        gr2_tr_frei(e, &qx, &qz);                          /* NB2 (M3'): nicht hinter die Plattform-Kante (Lauf plat7_leon: (1673,-11900)) */
+        (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
         if (gr2_tr_ab(e, qx, qz) >= GR2_TR_PLATZ) {
-            s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz;
+            s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz; s_tr[slot].d0 = gr2_tr_ab(e, qx, qz);
             re15_gr2_log("TRAG VORBEI F%u: Wurzel (%d,%d) Gier %d, Hop (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Etappe zum Wegpunkt nach dem Hop (%d,%d), Endziel (%d,%d)",
                          (unsigned)g_engine.frame_count, e->x, e->z, (int)(e->rot_y & 0xfff), (int)ox, (int)oz, (int)*tx, (int)*tz, seiten, (int)qx, (int)qz,
                          (int)nx, (int)nz);
@@ -2524,10 +2678,11 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
             if (seiten & 4) qz += GR2_TR_ETAPPE; else if (seiten & 8) qz -= GR2_TR_ETAPPE;
         }
         re15_gator_boss_steuerziel(e, &qx, &qz);
-        (void)gr2_tr_fit(e, &qx, &qz);
+        gr2_tr_frei(e, &qx, &qz);
+        (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
         if (gr2_tr_ab(e, qx, qz) < GR2_TR_PLATZ) continue;
         if (v == 1) s_tr[slot].dir = (int8_t)-s_tr[slot].dir;
-        s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz;
+        s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz; s_tr[slot].d0 = gr2_tr_ab(e, qx, qz);
         re15_gr2_log("TRAG VORBEI F%u: Wurzel (%d,%d) Gier %d, Ziel (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Etappe %s nach (%d,%d)", (unsigned)g_engine.frame_count,
                      e->x, e->z, (int)(e->rot_y & 0xfff), (int)ox, (int)oz, (int)*tx, (int)*tz, seiten,
                      v == 2 ? "von der Wand weg" : (laengs_z ? "laengs z" : "laengs x"), (int)qx, (int)qz);

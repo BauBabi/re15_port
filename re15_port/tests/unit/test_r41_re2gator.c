@@ -1536,6 +1536,8 @@ static int teil_sitz(void)
     /* (d) mit UEBERBLENDUNG: der tragende Gator wechselt ins Nordbecken, in dem Leon ist -> RE2-Zonen-Dash mit Clip 2 und
      *     Blend 16 (@0x80100dac-b4); RE2-Gewicht 4096/(n+1) @0x8001a37c-ac, Abbau -1 je Bild @0x800299c0-cc - 16 Bilder, in
      *     denen die gezeichnete Pose eine Mischung aus Vorbild und Keyframe ist. */
+    re15_gr2_kk_ziel_alt_setzen(1);   /* Runde 41 Spur G2 NB2: mit dem Kanister gibt es im Spiel keinen Zonen-Dash mehr (re15_gr2_trag_dash_erlaubt);
+                                      * gemessen wird hier der Sitz unter der Dash-Ueberblendung - Dash ueber den Pruefhaken (Stand vor G2) */
     e->x = 3000; e->z = -9000; e->rot_y = 0x800;
     int n_bl = 0, frac_max = 0; int32_t m_bl = 0;
     for (int f = 0; f < 70; f++) {
@@ -1549,6 +1551,7 @@ static int teil_sitz(void)
     }
     CHECK(n_bl >= 15 && frac_max == 16, "Ueberblendung nicht abgedeckt: %d Bilder, groesster Zaehler %d (Dash-Blend 16 erwartet)", n_bl, frac_max);
     CHECK(m_bl == 0, "Ueberblendung: Kanister %d neben Part6(Bild) x lokal", m_bl);
+    re15_gr2_kk_ziel_alt_setzen(0);
     CHECK(fx_falsch == 0, "Effekt-Quelle Part 6 in %d Bildern nicht die gezeichnete Part-6-Matrix", fx_falsch);
     printf("sitz: (d) Ueberblendung %d Bilder (Zaehler bis %d), groesster Abstand %d; Effekt-Quelle Part 6 falsch in %d Bildern\n",
            n_bl, frac_max, m_bl, fx_falsch);
