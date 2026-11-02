@@ -162,3 +162,12 @@ Neue Nutzer-Teile (Alpha-Ausschnitte in Version_80%/, nicht auf voller Leinwand)
 - Krallen: Nutzer-Teile right_arm_front (Klauenhand unten links) und left_arm_front (Klaue unten rechts) aus Screenshot 2; Lesung in K.md Abschnitt 2.
 
 Folgen: Variante K (varianten/K_alligator) baut auf J nur Kopf, Kiefer, Zaehne und Krallen neu; Rumpf, Beine, Arme, Schwanz und die Textur H2 (Seiten 0-2, CLUT-Zeilen 0-2) bleiben. Nachtrag Nutzer (Loecher zwischen Bein und Oberkoerper) wird in K mit erledigt (Gelenkkoerper, K.md).
+
+## E21 (2026-11-02, uebermittelt im Auftrag "Nachbesserung 1 der Stufe 3"): Kopfvariante K3
+
+Der Nutzer hat aus Variante K (E20, varianten/K_alligator) die Kopfvariante K3 (bester Fit, kurze, vorn breite Schnauze) gewaehlt; der beige
+Unterkiefer ohne Raumlicht bleibt (im Spiel macht Licht und Videofilter daraus das rote Band von Screenshot 2, K.md Abschnitt 6).
+Folgen: K3 wird ins Spiel-Asset RE2/BAHNSTEIG_FORM.EMD/.TIM eingebaut (Ober-/Unterkiefer an Knochen 22/23, Krallen an den Klauenknochen,
+Gelenkkoerper), Kiefer im Stehen/Gehen/Ruhe zu, Posen-Pins mit den K3-Kopfwinkeln; Loecher zwischen Bein und Oberkoerper in keiner Pose
+sichtbar (Nutzerbefund zu E20).
+Nachtrag Orchestrator (abends): Kopf-Nachformung "Schildkroete statt Alligator" ist zurueckgestellt; erst Klaerungsblatt im echten Fenster.
