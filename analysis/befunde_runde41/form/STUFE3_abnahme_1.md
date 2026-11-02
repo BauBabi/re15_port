@@ -2,7 +2,8 @@
 
 Pruefer: unabhaengig (nicht der Autor). Gegenstand: Kopf 4dd925edd (r41/form), Arbeitsbaum .claude/worktrees/r41_form.
 Bilder: stufe3/abnahme1/. Laeufe (Logs, Einzelbilder): re15_port/build/abn1_spiel/<lauf>/ (nicht versioniert).
-Bindend: NUTZER_ENTSCHEIDE.md E1-E20. Kopf-/Krallenform (E20, Variante K) wird hier NICHT als Mangel gewertet.
+Bindend: NUTZER_ENTSCHEIDE.md E1-E20. Kopf-/Krallenform (E20, Variante K) wird hier NICHT als Mangel gewertet; der Nutzer hat
+Kopfvariante K3 gewaehlt (varianten/K_alligator/), sie kommt mit der Nachbesserung (Abschnitt 6 gilt dafuer).
 
 ## 0. Urteil und Stand
 
@@ -15,7 +16,7 @@ in der Form (M7).
 |---|---|
 | Bau re15_port/build (local_build.sh configure + build) | OK, 818/818 Ziele, 2026-11-02 14:19, Kopf 4dd925edd |
 | Gezielte Birkin-/Form-Tests (19 Tests, Liste 5.1) | 19/19 gruen |
-| Voller ctest -j 6 --timeout 900 (1408 Tests) | siehe Abschnitt 5 |
+| Voller ctest -j 6 --timeout 900 (1408 Tests) | auf Anweisung des Orchestrators abgebrochen: Teilstand 153/1408, 0 rot (Abschnitt 5.3) |
 | Sichtlaeufe echtes Fenster, Leon und Elza, 5080/5081/5090/5091 | erledigt (Abschnitt 1) |
 | Tick gegen RE2-G4 (Stichproben im Overlay) | erledigt, alle Stichproben stimmen (Abschnitt 3) |
 | Code, Paket-Gate, BAHNSTEIG_G4 | erledigt (Abschnitt 4) |
@@ -59,7 +60,7 @@ Leon und Elza gleich.
 | M5 | **Rueckstoss gleitet.** Phase 1 schiebt die Form 147 Einheiten je Bild rueckwaerts (F649 x 5994 -> F700 x -1525), waehrend Clip 8 (Zucken, Fuesse stehen) im Kreis laeuft: rund 4400 Einheiten je Sekunde Gleiten auf stehenden Fuessen. Vorher Spur R, gilt jetzt fuer die Riesenform. | l5090_feuer state.log F646-F754 | mittel | Rueckwaerts-Taumeln als Clip mit eigener Spur (Fuesse verriegelt wie im Gehen) oder Vortrieb aus der Clip-Spur statt fester Rate. |
 | M6 | **Auf der Stelle laufen an der Wand.** 5080/5081: nach dem Griff steht die Form 8 s (F1158-F1408) bei x -25785..-25670, z -18707 (Wandklemme des Westarms), Weichen (Sub 8, Clip 5 rueckwaerts) und Gehen (Sub 3) wechseln, die Wurzel bewegt sich nicht. Die Beine laufen, der Koerper steht. Flucht: im Gebruell dreht die Form mit 128 je Bild (16 Bilder = 180 Grad) auf stehenden Fuessen. | l5080_leon/e5081 state.log; 5081_elza_kampf_flucht.png Bild 156-192 | mittel | Weichen abbrechen, wenn die Wurzel klemmt (Weg je Bild < Schwelle), und auf Gehen/Angriff wechseln; Drehen in der Flucht ueber Schritte im Clip oder kleinere Rate. |
 | M7 | **Spieler in der Form, Glieder in Wand/Gelaender.** Die Form ist breit (Ruhe quer -2258..2162, Hiebe bis +-2964, eigene Messung aus dem Asset), Gaenge 3500 (5090 zwischen den Regalen, SCA z -25200..-21700) bzw. 3200 (5080 Westarm). Klauen stecken in Regalen/hinter dem Gelaender, die Klaue ragt ueber die Bahnsteigkante (5081 Bild 166-181). Elza steht 8 s unter dem Bauch der Form, nur ihre Beine sind zu sehen (5081 Bild 156-192); beim Abdrehen der Flucht laeuft der Schwanz durch Leon/Elza. Koerperzylinder ist der des 0x30 (r 1000). | 5081_elza_unter_form.png, 5081_elza_kampf_flucht.png | mittel | Koerperradius/-kasten der Riesenform an die Form anpassen (Abstand Spieler-Brust >= Kopf-/Brustlaenge), Weichen/Flucht so, dass der Schwanz nicht durch den Spieler schwenkt; in engen Gaengen die Arme enger fuehren. |
-| M8 | Kleinere Punkte: (a) Gore: das Treffer-Blut (4 Spawns an Teil 10 je Treffer, @0x80107454-f8) ist in Cut 12 meist hinter dem Spieler verdeckt, an der Form selbst kaum sichtbar (Blutlachen am Boden sichtbar). (b) Der Todeszweig schreibt im Original vor dem Flag noch [*0x800ac784]+0x9c = 300 und +7 = 3 (@0x8011aeb8-d0); die Flucht setzt nur das Flag - ob diese Schreiber in 5080 noetig sind, ist nicht geklaert. (c) tools/birkin_bahnsteig.py schreibt weiter BAHNSTEIG_G4.* nach shared_assets (beim Aufruf entsteht ein verwaistes Asset). (d) Bodenausnahmen bestaetigt: Rennen Bild 11 334, Drohen 242 unter dem Boden. | Abschnitt 1, 3 | niedrig | (a) bei Treffern einen zweiten Ankerpunkt vorn am Kopf/an der Brustvorderseite; (b) nachlesen, wem 0x800ac784 gehoert; (c) Ausgabe des Werkzeugs auf eine Zwischenablage umstellen. |
+| M8 | Kleinere Punkte: (a) Gore: das Treffer-Blut (4 Spawns an Teil 10 je Treffer, @0x80107454-f8) ist in Cut 12 meist hinter dem Spieler verdeckt, an der Form selbst kaum sichtbar (Blutlachen am Boden sichtbar). (b) Der Todeszweig schreibt im Original vor dem Flag noch [*0x800ac784]+0x9c = 300 und +7 = 3 (@0x8011aeb8-d0); die Flucht setzt nur das Flag - ob diese Schreiber in 5080 noetig sind, ist nicht geklaert. (c) tools/birkin_bahnsteig.py schreibt weiter BAHNSTEIG_G4.* nach shared_assets (beim Aufruf entsteht ein verwaistes Asset). (d) Bodenausnahmen bestaetigt: Rennen Bild 11 334, Drohen 242 unter dem Boden (s3_pruef.py selbst gelaufen). (e) Spruenge je Bild (wahre Knochendrehung, eigene Messung): Rennen Bild 15->16 linker Fuss (Kn 25) 106 Grad, Bild 10->11 linker Unterarm (Kn 12) 57 Grad (Einstieg in Pose Bild 1), Drohen Bild 30->31 rechter Fuss (Kn 27) 54 Grad, Hiebe/Nachhieb/Griff Krallen 40-51 Grad. | Abschnitt 1, 3 | niedrig | (a) bei Treffern einen zweiten Ankerpunkt vorn am Kopf/an der Brustvorderseite; (b) nachlesen, wem 0x800ac784 gehoert; (c) Ausgabe des Werkzeugs auf eine Zwischenablage umstellen; (e) Zwischenbilder einfuegen bzw. Pose Bild 1 ueber 2-3 Bilder ein- und ausleiten. |
 
 ## 3. Tick gegen RE2-G4 (Stichproben, selbst disassembliert)
 
@@ -100,9 +101,14 @@ unit_r41_birkin_wand_rein/_g5/_griff, unit_g5_boss/_morph/_tentakel, probe_p2_bi
 unit_r17_birkin_1zu1_pin, unit_r18_birkin_restluecken_pin, unit_r20_birkin_push_pin, unit_r30_birkin_frost,
 unit_r30_n_room5080_birkin_wand: **19/19 gruen**.
 
-5.2 Voller ctest: (wird nachgetragen)
+5.2 integration_r41_birkin_pistole im vollen Lauf: **gruen** (252,8 s; Leon und Elza: keine Mutation, Form HP 150, Rueckstoss, Sturz Clip 12, G5, G5 faellt).
 
-## 6. Was ein Alligator-Kopf mit offenem Maul (E20, Variante K) fuer Clips und Tick bedeutet
+5.3 Voller ctest (Bau 4dd925edd, `ctest -j 6 --timeout 900`, Start 14:22, unter Last von drei parallelen Suiten): nach 3 h auf
+Anweisung des Orchestrators abgebrochen (nur der eigene Prozessbaum, PID 12484). **Teilstand 153 von 1408 gelaufen, 153 gruen,
+0 rot, 0 Timeout.** Gelaufen sind zuerst die langen integration_*-Tests (Kostenplanung von ctest), darunter
+integration_r41_birkin_pistole. Protokoll: stufe3/abnahme1/ctest_teilstand.log. Die Nachbesserung laesst die volle Suite neu laufen.
+
+## 6. Was ein Alligator-Kopf mit offenem Maul (E20, Variante K/K3) fuer Clips und Tick bedeutet
 
 - Knochen: 32 von 32 belegt (RE15_EMD_MAX_BONES). Oberkiefer/Zaehne muessen an Knochen 22 (Kopf), Unterkiefer an 23 haengen,
   Krallen an den vorhandenen Klauenknochen 14/15/28/30 bzw. 19/20/29/31; neue Knochen gehen nicht.
