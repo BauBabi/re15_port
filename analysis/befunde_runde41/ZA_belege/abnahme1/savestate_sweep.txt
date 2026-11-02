@@ -1,0 +1,30 @@
+boot_16.sav ERR no sig
+stage_saves\doorB2_walkin.sav                    exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\doorB_walkin.sav                     exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\equip_test.sav                       exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\inv_states\psx_inv_check.sav         exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\inv_states\psx_inv_cmd.sav           exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\inv_states\psx_inv_file.sav          exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\inv_states\psx_inv_filedoc.sav       exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\inv_states\psx_inv_grid.sav          exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\inv_states\psx_inv_idle_fresh.sav    exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\inv_states\psx_inv_map.sav           exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\lamp_1170_stage1.sav                 exe=mod  stage=1 room=00 zombies=3 s0/t10/var[]/wX s1/t10/var[]/wX s2/t10/var[4, 5]/w1
+stage_saves\mzd_blood_decals_hp30.sav            exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_death_cmd5_struggle.sav          exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_death_cmd6_collapse.sav          exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_death_cmd7_youdied.sav           exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_demo\mzd_stage2_room.sav         exe=mod  stage=2 room=00 zombies=2 s2/t16/var[4, 5]/w1 s3/t16/var[4, 5]/w1
+stage_saves\mzd_inv_open.sav                     exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_stage1_briefing.sav              exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_stage1_briefing_live.sav         exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_stage1_combat_death.sav          exe=mod  stage=1 room=25 zombies=7 s0/t10/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t10/var[4, 5]/w1 s4/t11/var[]/w1 s5/t11/var[]/w1 s6/t11/var[]/w1
+stage_saves\mzd_stage1_engage_live.sav           exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_stage1_hit_effect.sav            exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_stage1_walked.sav                exe=mod  stage=1 room=00 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\mzd_title_after_death.sav            exe=mod  stage=1 room=00 zombies=5 s0/t16/var[]/wX s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\parity_turn_R2.sav                   exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+stage_saves\room1140_entry.sav                   exe=mod  stage=1 room=14 zombies=5 s0/t16/var[4, 5]/w1 s1/t10/var[4, 5]/w1 s2/t10/var[4, 5]/w1 s3/t11/var[4, 5]/w1 s4/t11/var[]/w1
+.claude\worktrees\r41_zombiearm\analysis\befunde_runde41\ZA_belege\abnahme1\disc40_room11e0_HASH-DD767256674230B3_1.sav exe=disc stage=1 room=1e zombies=4 s0/t10/var[]/w1 s1/t10/var[8, 9]/w1 s2/t10/var[]/w1 s3/t10/var[]/w1
+SAVES mit aktiven Zombies: 27 Zombie-Eintraege: 131 mit Varianten-Rest: 99 mit Bit 0x400/0x80/0x2000 in einem Teil-Wort: 3
+Arm-Varianten (Teile 8/9/12): [('disc40_room11e0_HASH-DD767256674230B3_1.sav', 'disc', 1, 16, [8, 9], ['1', '1'])]
