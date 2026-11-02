@@ -48,6 +48,7 @@
 #include "re15_aufschliessen_r36.h"   /* Runde 36 Spur G: RE2-Aufschliess-Toene (engine/src/aufschliessen_r36.c) */
 #include "re15_audio.h"     /* re15_audio_core_se — Cursor-Raetsel-Bestaetigung (Nutzer) */
 #include "re15_panel_zeiger.h" /* RE2-ANGLEICHUNG: Abnahme erst bei stehendem Zeiger (op_evt_exec) */
+#include "re15_story80_r41.h" /* Runde 41 Spur ST80-T: Szenen 30C1 / 6030 nach Nutzerentscheid (op_evt_exec, story80_r41.c) */
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 #include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
 #include "re15_ventilkette_r41.h"   /* Runde 41 Spur C: Ereignis-Kette + Strahlen 20B0 (ventilkette_r41.c) */
@@ -1257,6 +1258,10 @@ static int op_evt_exec(scd_thread_t *t)
                 return 1;       /* PC steht bereits hinter dem Opcode */
     }
     const uint8_t *target_pc = s_current_rdt->sub_scd[sub_id];
+    /* Runde 41 Spur ST80-T: ROOM30C1 sub00 @0x00C02 -> sub03, ROOM6030 sub01 @0x00D70 -> sub02, sub07 @0x010E8 -> sub08
+     * (Nutzerentscheide Story-Abgleich; Programme aus Original-Bytes, re15_story80_r41.h). */
+    target_pc = re15_story80_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
+
     /* Runde 38 Spur F: ROOM1141 sub00 @0x00B02 Evt_exec sub02 -> Klopf-Schleife in Phase H (re15_dining_r38.h). */
     target_pc = re15_dining_r38_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
     /* Runde 39 Spur O: ROOM11C0 sub01 @0x01824/@0x01842 Evt_exec sub02/sub03 -> Tuersperre an/aus (re15_parkplatz_r39.h). */

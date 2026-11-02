@@ -36,6 +36,7 @@
 #include "re15_hebetisch_cursor.h"
 #include "re15_story_r36.h"
 #include "re15_stimmen_r39.h"
+#include "re15_story80_r41.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,6 +61,7 @@ static int                s_bild = 0;
 /* Protokoll je Bild: neu geoeffnete Texte (Id + Wortlaut) und eingereihte Stimmen. */
 #define PROT_N 64
 static int  s_prot_id[PROT_N];
+static int  s_prot_bild[PROT_N];
 static char s_prot_text[PROT_N][192];
 static int  s_prot_n = 0;
 static int  s_stimme[PROT_N];
@@ -121,6 +123,7 @@ static void protokoll(void)
     if (offen && (!s_offen_vorher || id != s_id_vorher) && s_prot_n < PROT_N) {
         const char *t = re15_msg_get_text(id);
         s_prot_id[s_prot_n] = id;
+        s_prot_bild[s_prot_n] = s_bild;
         snprintf(s_prot_text[s_prot_n], sizeof s_prot_text[0], "%s", t ? t : "");
         s_prot_n++;
     }
@@ -265,11 +268,213 @@ static void teil_hebetisch1151(uint16_t raum)
     }
 }
 
+/* ================================================ Nutzerliste ================================================== */
+/* Jede neue/geaenderte Zeile mit Wortlaut (re15_msg_decode_text-Form: Zeilenumbruch = Leerzeichen) und Stimmen-Datei.
+ * Quelle: Nutzerentscheide (analysis/story80/TEXTE_UMSETZUNG.md). Die Datei ist main<Id>.wav (audio_pc.c), es sei denn
+ * stimmen_r39 leitet um — fuer diese Ids nicht (Teil stimmen). */
+typedef struct { uint16_t raum; int id; const char *text; } zeile_t;
+static const zeile_t k_liste[] = {
+    { 0x30E1,  2, "John: This is bad... those monsters have us surrounded!" },
+    { 0x30E1,  3, "John: ...Damn it, there's no place around here to hide..." },
+    { 0x30C1,  1, "Elza: Who are you?" },
+    { 0x30C1,  2, "Officer: Marvin Branagh, RPD." },
+    { 0x30C1,  3, "Elza: Are there any others still alive?" },
+    { 0x30C1,  4, "Marvin: A few. There are other survivors out there." },
+    { 0x30C1,  5, "Elza: Then I hope they make it out." },
+    { 0x6030,  0, "Leon: Hang on, Marvin. We're getting out of here." },
+    { 0x6030,  1, "Leon: Who are you two?" },
+    { 0x6030, 21, "John: Name's John. This is Sherry. We made it down here with a girl named Elza." },
+    { 0x6030,  2, "Sherry: She's out there fighting the monsters!" },
+    { 0x6030,  3, "John: She's trying to keep the outside clear so we can escape." },
+    { 0x6030, 22, "John: She said she'd catch up with us." },
+    { 0x6030,  4, "Leon: Why aren't you out there?" },
+    { 0x6030,  5, "John: She told me to stay with the kid... and look after your friend here." },
+    { 0x6030,  6, "Leon: Where's Annette?" },
+    { 0x6030,  7, "John: The woman in the lab coat? Up front, trying to start the train." },
+    { 0x6030, 23, "Sherry: A lab coat...? Is it Mom?!" },
+    { 0x6030, 24, "John: Easy, kid. Stay with me." },
+    { 0x6030,  8, "Leon: I'll find out. Stay here." },
+    { 0x6030, 11, "Annette: Is everyone aboard?" },
+    { 0x6030, 12, "Leon: Everyone we could find. There's a little girl in the back... Sherry." },
+    { 0x6030, 25, "Annette: Sherry...? My daughter is on this train? ...Thank God." },
+    { 0x6030, 26, "Leon: Can you start this thing?" },
+    { 0x6030, 13, "Annette: Certainly." },
+};
+#define LISTE_N ((int)(sizeof k_liste / sizeof k_liste[0]))
+
+static const char *soll_text(uint16_t raum, int id)
+{
+    for (int i = 0; i < LISTE_N; i++) if (k_liste[i].raum == raum && k_liste[i].id == id) return k_liste[i].text;
+    return NULL;
+}
+
+/* Zeilenbreite wie tools/r36_p/texte_bauen.py: sichtbare Glyphen je 0x08-Zeile, Kopf (Sprecher + ':' + ' ') zaehlt in
+ * Zeile 1 mit (Steuercodes 04/05 mit Argument zeichnen nicht), Breite = include/font_width.h (DEBUG.BIN[0x4416+code]). */
+#include "font_width.h"
+static int max_zeilenbreite(const unsigned char *b, int n, int *zeilen)
+{
+    int w = 0, mx = 0, z = 1;
+    for (int i = 0; i < n; i++) {
+        const unsigned char c = b[i];
+        if (c == 0x01) break;
+        if (c == 0x02 || c == 0x04 || c == 0x05 || c == 0x06 || c == 0x09 || c == 0x0A || c == 0x0B) { i++; continue; }
+        if (c == 0x03 || c == 0x07) continue;
+        if (c == 0x08) { if (w > mx) mx = w; w = 0; z++; continue; }
+        w += re15_font_width[c];
+    }
+    if (w > mx) mx = w;
+    if (zeilen) *zeilen = z;
+    return mx;
+}
+
+static void teil_texte(void)
+{
+    printf("== texte ==\n");
+    static const uint16_t k_raeume[] = { 0x30E1, 0x30C1, 0x6030 };
+    for (unsigned r = 0; r < sizeof k_raeume / sizeof k_raeume[0]; r++) {
+        if (rdt_laden(k_raeume[r]) != 0) { PRUEF(0, "ROOM%04X ladbar", k_raeume[r]); continue; }
+        g_current_room_id = k_raeume[r];
+        re15_msg_clear_room_block();
+        re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+        for (int i = 0; i < LISTE_N; i++) {
+            if (k_liste[i].raum != k_raeume[r]) continue;
+            const char *t = re15_msg_get_text(k_liste[i].id);
+            int len = 0, z = 0;
+            const unsigned char *raw = re15_msg_get_raw(k_liste[i].id, &len);
+            const int px = raw ? max_zeilenbreite(raw, len, &z) : -1;
+            PRUEF(t && strcmp(t, k_liste[i].text) == 0 && raw && len <= 128 && px > 0 && px <= 271 && z <= 3,
+                  "ROOM%04X msg %2d (%d B, %d Zeilen, max %d px <= 271): \"%s\"", k_liste[i].raum, k_liste[i].id, len, z,
+                  px, t ? t : "(fehlt)");
+        }
+    }
+}
+
+/* ================================================ Szenen ======================================================= */
+static int faden_im_programm(const uint8_t *p, int n)
+{
+    for (int i = 0; i < SCD_THREAD_COUNT; i++) {
+        const scd_thread_t *t = &g_scd.threads[i];
+        if (t->active && t->pc >= p && t->pc < p + n) return i;
+    }
+    return -1;
+}
+
+/* Laeuft die Szene bis zum Ende des Programms (Faden verlaesst es) und vergleicht die Text- und Stimmen-Folge. */
+static void szene_pruefen(int p, uint16_t raum, int max_bilder, int *bilder_out)
+{
+    int pn = 0, fn = 0;
+    const uint8_t *prog = re15_story80_programm(p, &pn);
+    const uint8_t *folge = re15_story80_folge(p, &fn);
+    /* Ende = der Faden, der das Programm betrat, ist nicht mehr aktiv (Evt_end @Programmende). Gosub (sub04/05,
+     * Warteschleifen) laeuft im selben Faden ausserhalb des Programms und zaehlt nicht als Ende. */
+    int start = -1, ende = -1, slot = -1;
+    for (int f = 0; f < max_bilder; f++) {
+        frame();
+        if (start < 0) { slot = faden_im_programm(prog, pn); if (slot >= 0) start = s_bild; }
+        else if (!g_scd.threads[slot].active) { ende = s_bild; break; }
+    }
+    if (bilder_out) *bilder_out = (start >= 0 && ende >= 0) ? ende - start : -1;
+    PRUEF(start >= 0 && ende > start, "ROOM%04X Programm %d lief von Bild %d bis %d (%d Bilder)", raum, p, start, ende,
+          ende - start);
+    printf("   Texte (%d):", s_prot_n);
+    for (int i = 0; i < s_prot_n; i++) printf(" %d", s_prot_id[i]);
+    printf("\n   Stimmen (%d):", s_stimme_n);
+    for (int i = 0; i < s_stimme_n; i++) printf(" %d", s_stimme[i]);
+    printf("\n");
+    int folge_ok = (s_prot_n == fn), stimme_ok = (s_stimme_n == fn), text_ok = 1;
+    for (int i = 0; i < fn && i < s_prot_n; i++) if (s_prot_id[i] != folge[i]) folge_ok = 0;
+    for (int i = 0; i < fn && i < s_stimme_n; i++) if (s_stimme[i] != folge[i]) stimme_ok = 0;
+    for (int i = 0; i < s_prot_n; i++) {
+        const char *soll = soll_text(raum, s_prot_id[i]);
+        printf("   %2d. Bild %4d msg %2d \"%s\"%s\n", i + 1, s_prot_bild[i], s_prot_id[i], s_prot_text[i],
+               (soll && strcmp(soll, s_prot_text[i]) != 0) ? "  <- WEICHT AB" : "");
+        if (soll && strcmp(soll, s_prot_text[i]) != 0) text_ok = 0;
+    }
+    PRUEF(folge_ok, "ROOM%04X: genau %d Zeilen in der Soll-Folge (gemessen %d)", raum, fn, s_prot_n);
+    PRUEF(stimme_ok, "ROOM%04X: Stimmen-Ids = Message-Ids in derselben Folge (%d)", raum, s_stimme_n);
+    PRUEF(text_ok, "ROOM%04X: jeder angezeigte Wortlaut = Nutzerliste", raum);
+}
+
+static void teil_ablauf30c1(void)
+{
+    printf("== ablauf30c1 ==\n");
+    re15_game_state_init();
+    re15_inv_init();
+    re15_game_flag_set(3, 0x39, 1);   /* sub00 @0x00BEA Ck(3,0x39)=1 -> Sce_em_set Marvin, @0x00C02 Evt_exec sub03 */
+    static const uint8_t k_banken[] = { 0x40 };
+    for (int i = 0; i < RE15_S80_P_N; i++) g_re15_story80_umleitungen[i] = 0;
+    if (room_boot(0x30C1, -6400, -400, 0, 1, k_banken, 1) != 0) return;
+    int bilder = 0;
+    szene_pruefen(RE15_S80_P_30C1, 0x30C1, 6000, &bilder);
+    PRUEF(g_re15_story80_umleitungen[RE15_S80_P_30C1] == 1, "sub03 genau einmal umgeleitet (%u)",
+          g_re15_story80_umleitungen[RE15_S80_P_30C1]);
+    int msg678 = 0;
+    for (int i = 0; i < s_prot_n; i++) if (s_prot_id[i] >= 6 && s_prot_id[i] <= 8) msg678 = 1;
+    PRUEF(!msg678, "msg 6..8 (Leon/Ada/'tell them'/'See you soon') laufen nicht");
+    for (int f = 0; f < 60; f++) frame();
+    /* Marvins Abgang wie Original: sub03 @0x00E4C Cut_chg 3, @0x00E4E/@0x00E52 Sperren (2,7)/(1,27) wieder 0 */
+    PRUEF(g_scd.cam_id == 3 && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27) && !re15_game_flag_get(3, 0x39),
+          "nach der Szene: Cut %u (soll 3), Pad-Sperre (2,7)=%d, Letterbox (1,27)=%d, (3,0x39)=%d (sub03 @0x00C2C Set 0)",
+          (unsigned)g_scd.cam_id, re15_game_flag_get(2, 7), re15_game_flag_get(1, 27), re15_game_flag_get(3, 0x39));
+}
+
+static void teil_ablauf6030(void)
+{
+    printf("== ablauf6030 Wagen ==\n");
+    re15_game_state_init();
+    re15_inv_init();
+    static const uint8_t k_banken[] = { 0x49, 0x40, 0x4B, 0x4D };   /* sub06 @0x0101C/@0x01030/@0x01044, sub07 @0x010D4 */
+    for (int i = 0; i < RE15_S80_P_N; i++) g_re15_story80_umleitungen[i] = 0;
+    /* Eintritt Cut 6 (sub00 @0x00D3C Case 6 -> Gosub sub06), Leon in der Marke Slot 5 (-19730,-25570,1600,6300) */
+    if (room_boot(0x6030, -18930, -22420, 0, 6, k_banken, 4) != 0) return;
+    int bilder = 0;
+    const re15_actor_t *sherry = NULL;
+    for (int i = 0; i < RE15_ACTOR_MAX; i++)
+        if (g_actors[i].active && g_actors[i].type == 0x4B) sherry = &g_actors[i];
+    const int16_t sherry_rot0 = sherry ? sherry->rot_y : 0;
+    szene_pruefen(RE15_S80_P_WAGEN, 0x6030, 9000, &bilder);
+    PRUEF(g_re15_story80_umleitungen[RE15_S80_P_WAGEN] == 1, "sub02 genau einmal umgeleitet (%u)",
+          g_re15_story80_umleitungen[RE15_S80_P_WAGEN]);
+    PRUEF(sherry && sherry->rot_y != sherry_rot0, "Sherry hat sich zu Leon gedreht (Gier %d -> %d)", sherry_rot0,
+          sherry ? sherry->rot_y : 0);
+    for (int f = 0; f < 60; f++) frame();
+    PRUEF(g_scd.cam_id == 12 && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27) && re15_game_flag_get(3, 22),
+          "nach der Szene: Cut %u (soll 12, sub02 @0x00FE0), Sperren (2,7)=%d (1,27)=%d, (3,22)=%d (@0x00D7A)",
+          (unsigned)g_scd.cam_id, re15_game_flag_get(2, 7), re15_game_flag_get(1, 27), re15_game_flag_get(3, 22));
+
+    printf("== ablauf6030 Fuehrerstand ==\n");
+    re15_game_state_init();
+    re15_inv_init();
+    /* Eintritt Cut 0 (sub00 @0x00D2C Case 0 -> Gosub sub07; @0x010D0 Ck(4,23)=0 -> Annette + Evt_exec sub08) */
+    if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
+    szene_pruefen(RE15_S80_P_PULT, 0x6030, 9000, &bilder);
+    PRUEF(g_re15_story80_umleitungen[RE15_S80_P_PULT] == 1, "sub08 genau einmal umgeleitet (%u)",
+          g_re15_story80_umleitungen[RE15_S80_P_PULT]);
+    PRUEF(re15_game_flag_get(4, 23), "(4,23)=1 nach der Szene (sub08 @0x0113A)");
+}
+
+static void teil_stimmen(void)
+{
+    printf("== stimmen ==\n");
+    for (int i = 0; i < LISTE_N; i++) {
+        char st[24] = "";
+        const int r = re15_stimmen_r39_stamm(k_liste[i].raum, k_liste[i].id, st, sizeof st);
+        const char *sd = re15_elza_stimme_datei(k_liste[i].raum, k_liste[i].id);
+        PRUEF(r == 0 && sd == NULL && k_liste[i].id < 64,
+              "synchro/STAGE%u/room%04X/main%02d.wav (keine Umleitung, Id < VOICE_MAX_MSG 64)",
+              (unsigned)(k_liste[i].raum >> 12), k_liste[i].raum, k_liste[i].id);
+    }
+}
+
 /* ================================================ main ========================================================= */
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
     if (!strcmp(teil, "hebetisch1151") || !strcmp(teil, "alle")) { teil_hebetisch1151(0x1151); teil_hebetisch1151(0x1150); }
+    if (!strcmp(teil, "texte")         || !strcmp(teil, "alle")) teil_texte();
+    if (!strcmp(teil, "ablauf30c1")    || !strcmp(teil, "alle")) teil_ablauf30c1();
+    if (!strcmp(teil, "ablauf6030")    || !strcmp(teil, "alle")) teil_ablauf6030();
+    if (!strcmp(teil, "stimmen")       || !strcmp(teil, "alle")) teil_stimmen();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;
 }

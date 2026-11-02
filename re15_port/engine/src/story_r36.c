@@ -162,12 +162,14 @@ void re15_story_r36_texte(uint16_t room_id)
     int n = 0;
     for (int i = 0; i < N_TEXTE; i++) {
         const re15_story_r36_text_t *t = &k_s36_texte[i];
-        if (t->raum != room_id || t->off_alt == 0) continue;   /* nur Overrides bestehender Ids */
+        /* Overrides bestehender Ids + neue Dialog-Ids (Runde 41 ST80-T); die Text-Platz-Ids (P2/P3) legt
+         * re15_story_r36_install mit ihrem Platz ab. */
+        if (t->raum != room_id || t->art == RE15_S36_ART_PLATZ) continue;
         ablegen(t);
         n++;
     }
 #ifdef RE15_PLATFORM_PC
-    if (n) fprintf(stderr, "[story36] ROOM%04X: %d Nachrichten umgeschrieben (nie begegnet)\n",
+    if (n) fprintf(stderr, "[story36] ROOM%04X: %d Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)\n",
                    (unsigned)room_id, n);
 #else
     (void)n;

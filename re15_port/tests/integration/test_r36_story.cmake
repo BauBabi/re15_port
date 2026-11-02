@@ -15,16 +15,19 @@
 #   P1b roy strom CONTINUE in ROOM1020 mit (4,0xF3): "Roy liegt da"; Aktionstaste vor Roy -> msg 0 Roy-Text
 #   P2a zelle     CONTINUE in ROOM1210: Aktionstaste im Gang vor der Zelle -> msg 20 "The cell door is open..."
 #   P2b vor1210   ROOM11E0 -> Tuer -> ROOM1210: Text-Platz Slot 9 angelegt; RE15_FIRE_AOT Slot 9 -> msg 20
-#   P4a vor6030   ROOM6000 -> Tuer -> ROOM6030 (Cut 6), 3 s vorwaerts in die Marke: Wagen-Szene msg 0..8 mit
-#                 neuem msg 1/2, kein "Where's Elza"
-#   P4b zug_leon  CONTINUE in ROOM6030 (Cut 0): Annette-Szene ZUERST, msg 12 neu, kein "Keeping the monsters"
+#   P4a vor6030   ROOM6000 -> Tuer -> ROOM6030 (Cut 6), 3 s vorwaerts in die Marke: Wagen-Szene; seit Runde 41 ST80-T
+#                 das Programm k_s80_6030_sub02 mit 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8), kein "Where's Elza"
+#   P4b zug_leon  CONTINUE in ROOM6030 (Cut 0): Annette-Szene ZUERST; seit Runde 41 ST80-T msg 11/12 neu und 25/26
+#                 vor "Certainly." (k_s80_6030_sub08), kein "biker girl", kein "Keeping the monsters"
 #   P4c annette   CONTINUE in ROOM6000: Treffen mit Annette msg 0..3 mit neuem msg 0/3
 #   P4d ada       CONTINUE in ROOM50B0: Adas Szene, msg 1 neu
 # TEIL=elza:
 #   P3a schuppen  CONTINUE in ROOM1091 (Elza): Aktionstaste vor dem Schuppen -> msg 20 "It's a burnt-out shed..."
 #   P3b vor1091   ROOM1051 -> Tuer -> ROOM1091 (Elza): Text-Platz Slot 5 angelegt; RE15_FIRE_AOT Slot 5 -> msg 20
 #   P4e vor6031   ROOM6001 -> Tuer -> ROOM6031 (Cut 6), Drehung + 4 s vorwaerts: Wagen-Szene msg 0..2 mit neuem 0/1
-#   P4f marvin    CONTINUE in ROOM30C1 mit (3,0x39): Marvin-Szene msg 1..8 mit neuem msg 3/4/7
+#   P4f marvin    CONTINUE in ROOM30C1 mit (3,0x39): Marvin-Szene, seit Runde 41 ST80-T kurze Fassung msg 1..5
+#                 (k_s80_30c1_sub03), msg 6..8 nie
+#   P4g john30e1  CONTINUE in ROOM30E1 (Cut 0) mit (3,0xB5): Elza trifft John, msg 2/3 nach A1 (Runde 41 ST80-T)
 #
 # RE15_SOFTWARE_RENDER=1 dient nur der Robustheit des Testhakens; SDL_AUDIODRIVER=dummy.
 # Die Zeitachse des Eingabeskripts (Basis "spiel") beginnt in JEDEM Raum neu (gemessen: "[input-script]
@@ -138,17 +141,28 @@ if(TEIL STREQUAL "leon")
     muss(p2b "${_d}" "[msgtext] room=1210 id=20 \"The cell door is open...Whoever was locked up here is gone.\"")
 
     # --- P4a: Tuer ROOM6000 -> ROOM6030 (Cut 6), vorwaerts in die Marke: Wagen-Szene ----------------------
-    lauf(p4a "vor6030" 6000 "A0.3,W8,U3,W40" "2600#6030" _d)
-    muss(p4a "${_d}" "[story36] ROOM6030: 3 Nachrichten umgeschrieben")
-    muss(p4a "${_d}" "[msgtext] room=6030 id=1 \"Leon: Is anyone else with you?\"")
-    muss(p4a "${_d}" "[msgtext] room=6030 id=2 \"Sherry: Elza is out there fighting the monsters!\"")
-    muss(p4a "${_d}" "[msgtext] room=6030 id=8 \"Leon: I see. Thanks.\"")
+    lauf(p4a "vor6030" 6000 "A0.3,W8,U3,W40" "3600#6030" _d)
+    muss(p4a "${_d}" "[story36] ROOM6030: 13 Nachrichten umgeschrieben/neu")
+    muss(p4a "${_d}" "[story80] ROOM6030 Evt_exec sub02 -> Programm")
+    muss(p4a "${_d}" "[msgtext] room=6030 id=1 \"Leon: Who are you two?\"")
+    muss(p4a "${_d}" "[msgtext] room=6030 id=21 \"John: Name's John. This is Sherry. We made it down here with a girl named Elza.\"")
+    muss(p4a "${_d}" "[msgtext] room=6030 id=2 \"Sherry: She's out there fighting the monsters!\"")
+    muss(p4a "${_d}" "[msgtext] room=6030 id=22 \"John: She said she'd catch up with us.\"")
+    muss(p4a "${_d}" "[msgtext] room=6030 id=23 \"Sherry: A lab coat...? Is it Mom?!\"")
+    muss(p4a "${_d}" "[msgtext] room=6030 id=24 \"John: Easy, kid. Stay with me.\"")
+    muss(p4a "${_d}" "[msgtext] room=6030 id=8 \"Leon: I'll find out. Stay here.\"")
     darf_nicht(p4a "${_d}" "Where's Elza")
+    darf_nicht(p4a "${_d}" "I see. Thanks.")
 
     # --- P4b: CONTINUE in ROOM6030 (Cut 0): Annette-Szene ZUERST ------------------------------------------
     lauf(p4b "zug_leon" 6030 "W30" "1500#6030" _d)
-    muss(p4b "${_d}" "[msgtext] room=6030 id=11 \"Annette: Where's that biker girl?\"")
-    muss(p4b "${_d}" "[msgtext] room=6030 id=12 \"Leon: I've never met her. Can you start this thing?\"")
+    muss(p4b "${_d}" "[story80] ROOM6030 Evt_exec sub08 -> Programm")
+    muss(p4b "${_d}" "[msgtext] room=6030 id=11 \"Annette: Is everyone aboard?\"")
+    muss(p4b "${_d}" "[msgtext] room=6030 id=12 \"Leon: Everyone we could find. There's a little girl in the back... Sherry.\"")
+    muss(p4b "${_d}" "[msgtext] room=6030 id=25 \"Annette: Sherry...? My daughter is on this train? ...Thank God.\"")
+    muss(p4b "${_d}" "[msgtext] room=6030 id=26 \"Leon: Can you start this thing?\"")
+    muss(p4b "${_d}" "[msgtext] room=6030 id=13 \"Annette: Certainly.\"")
+    darf_nicht(p4b "${_d}" "biker girl")
     darf_nicht(p4b "${_d}" "Keeping the monsters at bay")
 
     # --- P4c: CONTINUE in ROOM6000: Treffen mit Annette --------------------------------------------------
@@ -176,7 +190,7 @@ elseif(TEIL STREQUAL "elza")
     #     Elzas Marke liegt westlicher als Leons: ROOM6031 main00 @0x00CC6 Rechteck (-25130,-25270,1660,5200)
     #     gegen ROOM6030 (-19730,-25570,1600,6300); R0.45 dreht von 1100 auf ~2444 (gemessen), U4 laeuft hinein.
     lauf(p4e "vor6031" 6001 "A0.3,W8,R0.45,U4,W40" "1800#6031" _d)
-    muss(p4e "${_d}" "[story36] ROOM6031: 2 Nachrichten umgeschrieben")
+    muss(p4e "${_d}" "[story36] ROOM6031: 2 Nachrichten umgeschrieben/neu")
     muss(p4e "${_d}" "[msgtext] room=6031 id=0 \"Elza: Sherry! Is anyone else here?\"")
     muss(p4e "${_d}" "[msgtext] room=6031 id=1 \"Sherry: A policeman! He's fighting off monsters. He wants us to start the train.\"")
     muss(p4e "${_d}" "[msgtext] room=6031 id=2 \"Elza: I'll do it!\"")
@@ -184,13 +198,24 @@ elseif(TEIL STREQUAL "elza")
 
     # --- P4f: CONTINUE in ROOM30C1 mit (3,0x39): Marvin-Szene ---------------------------------------------
     lauf(p4f "marvin" 30c1 "W60" "2600#30c1" _d)
-    muss(p4f "${_d}" "[msgtext] room=30c1 id=2 \"Officer: I'm Marvin Branagh, RPD. I'm here with Leon Kennedy.\"")
-    muss(p4f "${_d}" "[msgtext] room=30c1 id=3 \"Elza: Leon? I don't know him. I never ran into him at the RPD.\"")
-    muss(p4f "${_d}" "[msgtext] room=30c1 id=4 \"Marvin: He's a rookie, and he's helping me and Ada escape the city.\"")
-    muss(p4f "${_d}" "[msgtext] room=30c1 id=7 \"Elza: Will you tell them that me and John and Sherry are here and we're all right?\"")
-    muss(p4f "${_d}" "[msgtext] room=30c1 id=8 \"Marvin: Will do. See you soon!\"")
+    muss(p4f "${_d}" "[story80] ROOM30C1 Evt_exec sub03 -> Programm")
+    muss(p4f "${_d}" "[msgtext] room=30c1 id=1 \"Elza: Who are you?\"")
+    muss(p4f "${_d}" "[msgtext] room=30c1 id=2 \"Officer: Marvin Branagh, RPD.\"")
+    muss(p4f "${_d}" "[msgtext] room=30c1 id=3 \"Elza: Are there any others still alive?\"")
+    muss(p4f "${_d}" "[msgtext] room=30c1 id=4 \"Marvin: A few. There are other survivors out there.\"")
+    muss(p4f "${_d}" "[msgtext] room=30c1 id=5 \"Elza: Then I hope they make it out.\"")
+    darf_nicht(p4f "${_d}" "[msgtext] room=30c1 id=6 ")
+    darf_nicht(p4f "${_d}" "[msgtext] room=30c1 id=7 ")
+    darf_nicht(p4f "${_d}" "[msgtext] room=30c1 id=8 ")
+    darf_nicht(p4f "${_d}" "Leon Kennedy")
     darf_nicht(p4f "${_d}" "separated")
-    darf_nicht(p4f "${_d}" "How is he")
+
+    # --- P4g: CONTINUE in ROOM30E1 (Cut 0) mit (3,0xB5): Elza trifft John (Runde 41 ST80-T, A1) ------------
+    lauf(p4g "john30e1;cut=0" 30e1 "W30" "1500#30e1" _d)
+    muss(p4g "${_d}" "[msgtext] room=30e1 id=2 \"John: This is bad... those monsters have us surrounded!\"")
+    muss(p4g "${_d}" "[msgtext] room=30e1 id=3 \"John: ...Damn it, there's no place around here to hide...\"")
+    darf_nicht(p4g "${_d}" "bit me")
+    darf_nicht(p4g "${_d}" "medical supplies")
 else()
     message(FATAL_ERROR "r36_story: TEIL '${TEIL}' unbekannt (leon|elza)")
 endif()

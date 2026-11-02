@@ -74,7 +74,21 @@ typedef struct {
     uint32_t       off_alt;   /* RDT-Byte-Offset der ersetzten Original-Nachricht (0 = neue Id)        */
     const char    *alt;       /* dekodierter Original-Wortlaut ("" = neue Id)                          */
     const char    *neu;       /* dekodierter neuer Wortlaut (re15_msg_decode_text-Form)                */
+    uint8_t        art;       /* RE15_S36_ART_* (Runde 41 ST80-T)                                       */
+    uint8_t        vorlage;   /* Id der Original-Nachricht, deren Kopf/Schwanz uebernommen ist (0xFF = keine) */
 } re15_story_r36_text_t;
+
+/* Arten der Tabellenzeilen (tools/r36_p/texte_bauen.py):
+ *   UMSCHREIBEN  bestehende Dialog-Id, Kopf/Schwanz = Original derselben Id          (re15_story_r36_texte)
+ *   PLATZ        neue Untersuchungs-Id an einem Port-Text-Platz (P2/P3, Id 20)       (re15_story_r36_install)
+ *   DIALOG_NEU   neue Dialog-Id hinter den RDT-Nachrichten, Kopf/Schwanz = Original der Vorlage-Id DESSELBEN Raums
+ *                (Runde 41 ST80-T, ROOM6030 msg 21..26; gerufen von den Szenen in gen/story80_szenen.inc)
+ *                                                                                    (re15_story_r36_texte)
+ *   UNTERSUCHEN  bestehende Untersuchungs-Id, Kopf/Trenner/Schwanz = Original         (re15_story_r36_texte) */
+#define RE15_S36_ART_UMSCHREIBEN  0
+#define RE15_S36_ART_PLATZ        1
+#define RE15_S36_ART_DIALOG_NEU   2
+#define RE15_S36_ART_UNTERSUCHEN  3
 
 /* P1-P3 beim Raumaufbau, NACH dem Init-Lauf von main00 (Leiche/Platz stehen dann im Pool).
  * Gerufen am Ende des Installer-Blocks von scd_room_reenter (scd_room_setup.c) und im Boot-/
@@ -83,7 +97,7 @@ typedef struct {
 void re15_story_r36_install(uint16_t room_id);
 
 /* P4 am ENDE von re15_msg_load_room_block (msg_common.c): ersetzt die Nachrichten des Raums laut
- * Tabelle (Text + Dauer). Muss NACH dem Laden laufen — der Tuer-Weg laedt die Tabelle erst nach
+ * Tabelle (Text + Dauer); seit Runde 41 ST80-T legt sie auch die neuen Dialog-Ids (DIALOG_NEU) ab. Muss NACH dem Laden laufen — der Tuer-Weg laedt die Tabelle erst nach
  * scd_room_reenter (room_common.c Schritt 7 vs. 11) und ueberschreibt dabei die Ids 0..n-1. */
 void re15_story_r36_texte(uint16_t room_id);
 
