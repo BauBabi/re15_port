@@ -75,8 +75,19 @@ enum { BB_AUFTRITT = 0, BB_HIEB = 2, BB_GEHEN = 3, BB_RENNEN = 4, BB_WEICHEN = 8
 #define BB_C_STEHEN    2
 #define BB_C_FLUCHT   11
 #define BB_C_STURZ    12
+/* Nachbesserung 1, M5 (PORT-WAHL): Rueckwaerts-Taumeln unter Beschuss, 40 Bilder, Spur -80 je Bild (alle vier Fuesse in der Welt
+ * verriegelt, Generator stufe3/gen/s3_angriffe.py taumeln); ersetzt das Gleiten der Rueckstoss-Szene (147 je Bild auf Clip 8). */
+#define BB_C_TAUMELN  13
 
 #define BB_TEIL_RUMPF 10     /* Teil +0x198 + 10*0xac: `addiu a0,a0,1792` = +0x700 = Teil 10 + 0x48 @0x80102ed0 */
+/* Nachbesserung 1, Kopf K3 (PORT-WAHL, kein G4-Wert): Unterkiefer = Teil 23 des Assets; Bisspunkt im Kieferraum = 228 hinter
+ * der Kieferspitze (Mesh 23 vorderste Ecke (1139,-75,0), gelesen aus RE2/BAHNSTEIG_FORM.EMD). Biss-Entscheid 0xce4 (@0x80102434-54)
+ * + 1700 = 5000: die K3-Schnauze reicht 1640-1690 weiter vor als der G4-Bisspunkt Teil 10 + 1400 (Messung Asset-Spur, D). */
+#define BB_TEIL_KIEFER  23
+#define BB_TEIL_KOPF    22
+#define BB_BISS_X      911
+#define BB_BISS_Y      (-75)
+#define BB_BISS_ENTSCHEID (BB_L(0xce4) + 1700)
 
 /* EDD-Wort eines Bildes (FUN_80016028 @0x80016034-54: Bit 27 = Ton, Id = Wort >> 28; Bit 16 = Trefferbild,
  * `lui v1,1` + `and` @0x80101cb8-bc / @0x80104f58-5c). */
@@ -105,6 +116,12 @@ static struct {
     uint8_t  s_state, s_sub, s_ph2, s_ph3;   /* +0x1fc Sicherung (Treffer setzt fort @0x80107180-8c) */
     uint8_t  gesichert;
     int32_t  flucht_x, flucht_z;   /* Stufe 3: Ziel der Flucht (vom Spieler weg) */
+    /* Nachbesserung 1 M6 (PORT-WAHL): Wandklemme erkennen. vor_x/vor_z = Wurzel nach dem letzten Tick (vor der Klemme der Wurzel),
+     * vor_tempo = Spur-Tempo dieses Ticks; klemm = Bilder in Folge, in denen die Wurzel weniger als die Haelfte davon kam. */
+    int32_t  vor_x, vor_z, vor_tempo;
+    uint8_t  klemm;
+    uint8_t  weich_sperre;         /* Bilder ohne Weichen nach einer Klemme */
+    uint8_t  phase_uhr;            /* Flucht: Bilder in der laufenden Phase */
 } s_bb = { .slot = -1 };
 
 static int s_bb_blut = 0;       /* Testhaken: Treffer-Blutspawns seit dem letzten re15_bb_reset */
@@ -125,11 +142,13 @@ static void bb_se(int id)
     if (s_se_fn)   s_se_fn(id, 0);
 }
 
+static int s_bb_schrei;
 void re15_bb_reset(void)
 {
     memset(&s_bb, 0, sizeof s_bb);
     s_bb.slot = -1;
     s_bb_blut = 0;
+    s_bb_schrei = 0;
 }
 
 int re15_bb_zaehler(void) { return s_bb.meter; }
@@ -177,16 +196,27 @@ static int bb_anim(re15_actor_t *e, uint32_t a3)
     if (rueck) e->anim_flags |= 0x80u; else e->anim_flags &= (uint16_t)~0x80u;
     {
         const int ende = re15_r38_birkin_anim(e);
-        if (ende && e->motion != BB_C_GEHEN && e->motion != BB_C_RENNEN)
+        if (ende && e->motion != BB_C_GEHEN && e->motion != BB_C_RENNEN && e->motion != BB_C_TAUMELN)
             e->anim_frame = (uint8_t)(re15_r38_birkin_fc(e) - 1);
         return ende;
     }
 }
 
-/* FUN_80016028: Ton des gezeichneten Bildes, Bit 27 / Wort >> 28 (Aufruf @0x801004ec). */
+/* FUN_80016028: Ton des gezeichneten Bildes, Bit 27 / Wort >> 28 (Aufruf @0x801004ec).
+ * Nachbesserung 1, M3 (Abnahme 1: "Gebruell stumm"): ENEMSE-Bank 24 (ENEMSE.VBS EDT @0x1d8000, SE-Karte 32 Worte, erste
+ * Haelfte = G4, Paar-Tabelle @0x800a7400 Zeile 24 = {0x26,0x00}, also kein +0x10 nach FUN_8005bd6c) traegt hoerbar nur die
+ * Ids 0-4, 6, 8 (Id 5/7 = VAG 1 mit 48 Byte, Attrappe); die Ids 9-15 sind FFFFFFFF (gelesen, Nachbesserung 1 N3). Die
+ * G4-EDD-Ids 9-12 der Gebruelle (Clip 10 Bild 30/51/81/113, Clip 27 Bild 36/60, Clip 11 Bild 5 und Clip 12 Bild 2) sind also
+ * auch in RE2 stumm. PORT-WAHL: dort spielt die Form den Birkin-Schrei des Raums, Raum-Ton 10 (STAGE5 @0x8011af58-5c
+ * `jal 0x800453d0` / `ori a0,zero,0xa`, Todesphase des 0x30 bei Bild 0x3c; vor Stufe 3 schon der Ton am Wagenende).
+ * Die EDD-Daten bleiben G4-gleich. Testhaken: re15_bb_ton_zaehler. */
+static int s_bb_schrei = 0;
+int re15_bb_ton_zaehler(void) { return s_bb_schrei; }
 static void bb_bild_ton(void)
 {
-    if (s_bb.wort & BB_FL_TON) bb_se((int)(s_bb.wort >> 28));
+    if (!(s_bb.wort & BB_FL_TON)) return;
+    if ((s_bb.wort >> 28) >= 9u) { s_bb_schrei++; re15_audio_room_se(10); return; }
+    bb_se((int)(s_bb.wort >> 28));
 }
 
 /* FUN_80015614: 1 = Ziel im Kegel +-halb um die Blickrichtung. Peilung wie re15_enemy_steer_point. */
@@ -289,7 +319,11 @@ static void bb_entscheiden(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
         /* HIEB ist RE2-Phase-1 (A[1] @0x80101780-c8: Kegel 512, dist < 0xfa0, +0x21e == 0). Hier dieselbe Regel
          * in der Nabe, weil Clip 2 entfaellt; Rangfolge durch die Reichweite: Hieb weit, Biss nah, Griff zuletzt. */
         if (k512 && dist < BB_L(0xfa0) && s_bb.cd_nah == 0) neu = BB_HIEB;
-        if (k824 && dist < BB_L(0xce4) && s_bb.cd_nah == 0) {          /* @0x80102434-54 */
+        /* Biss: G4 dist < 0xce4 (@0x80102434-54). K3 reicht mit der Schnauze 1700 weiter (BB_BISS_ENTSCHEID); damit die Rangfolge
+         * "Hieb weit, Biss nah" und der Hieb ueberhaupt bleiben, gilt der Zuwachs nur jenseits der Hieb-Reichweite 0xfa0:
+         * Biss bei dist < 0xce4 wie G4 oder 0xfa0 <= dist < 5000 (PORT-WAHL). Ohne das Band verdraengte der Biss jeden Hieb. */
+        if (k824 && s_bb.cd_nah == 0 &&
+            (dist < BB_L(0xce4) || (dist >= BB_L(0xfa0) && dist < BB_BISS_ENTSCHEID))) {
             neu = BB_BISS;                                             /* sw 0xe01 @0x80102464 */
             if (s_bb.biss_rest) s_bb.biss_rest--;                      /* @0x80102468-6c */
         }
@@ -306,7 +340,7 @@ static void bb_entscheiden(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
     }
     if (dist >= BB_L(0x1f41) && s_bb.cd_lauf == 0 && neu < 0)          /* @0x801026a8 / @0x80102724-48 */
         neu = BB_RENNEN;
-    if (neu < 0 && k1024 && dist < BB_L(0x7d0))                        /* Sub 8 aus A[1] @0x801017cc-e0 */
+    if (neu < 0 && k1024 && dist < BB_L(0x7d0) && !s_bb.weich_sperre)  /* Sub 8 aus A[1] @0x801017cc-e0; Sperre: Nachbesserung 1 M6 */
         neu = BB_WEICHEN;
     if (neu >= 0) bb_setze(e, neu);
 }
@@ -326,6 +360,9 @@ static void bb_gehen(re15_actor_t *e, re15_actor_t *pl)
     /* Port: RE2 dreht aus dieser Lage ueber den Wandsprung (Sub 5/16). Im Wagen fehlt er, deshalb die Rate aus
      * B[1] @0x801018ec-908: ausserhalb des 824er-Kegels 32 je Bild. */
     if (!bb_kegel(e, pl->x, pl->z, 824)) re15_enemy_steer_point(e, pl->x, pl->z, 32);
+    /* Nachbesserung 1 M6 (PORT-WAHL): klemmt der Gang 10 Bilder (Wand), dreht die Form mit der Rate 32 (@0x801018ec-908) zum Spieler
+     * statt auf der Stelle weiterzulaufen. */
+    if (s_bb.klemm >= 10) re15_enemy_steer_point(e, pl->x, pl->z, 32);
     if (bb_anim(e, 0x100)) bb_se(11);                  /* a3 @0x80102a34, Clip-Ende: se(11) @0x80102a40 */
     bb_schieben(e);                                    /* @0x80102a4c */
 }
@@ -334,8 +371,18 @@ static void bb_gehen(re15_actor_t *e, re15_actor_t *pl)
  * (root_delta a3 = 1 @0x80104248, anim_step a3 = 0x10080 @0x80104280: rueckwaerts, Gewicht 0x80), Uhr 40 @0x801041f0;
  * RE2 faehrt Clip 2, im Port Clip 5 (s. Kopf). A[8] @0x80104130-58: zwischen 2501 und 4000 wieder der Hieb.
  * Solange +0x14e >= 21 laeuft die Form mit halbem Tempo an (`sltiu v0,v0,0x15` / `sra v0,v0,0x11` @0x80104254-70). */
+static void bb_gehen(re15_actor_t *e, re15_actor_t *pl);
 static void bb_weichen(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
 {
+    /* Nachbesserung 1, M6 (PORT-WAHL): Abnahme 1 sah die Form in 5080 8 s an der Westwand zwischen Weichen und Gehen wechseln, die
+     * Wurzel stand (Beine liefen, Koerper nicht). Klemmt die Wurzel 6 Bilder in Folge (s_bb.klemm), bricht das Weichen ab, und fuer
+     * 90 Bilder entscheidet die Nabe ohne Weichen (Hieb/Biss/Griff oder Gehen mit Drehen). */
+    if (s_bb.klemm >= 6) {
+        s_bb.klemm = 0; s_bb.weich_sperre = 90;
+        bb_zu_gehen(e);
+        bb_gehen(e, pl);
+        return;
+    }
     if (e->sub_state_2 == 0) {
         bb_clip(e, BB_C_GEHEN, 0, 0x1f);               /* Blende 31 @0x801041e4 */
         e->sub_state_2 = 1;
@@ -451,7 +498,10 @@ static void bb_biss(re15_actor_t *e, re15_actor_t *pl)
     }
     if (s_bb.wort & BB_FL_TREFFER) {                   /* @0x80104f4c-60 */
         re15_enemy_steer_point(e, pl->x, pl->z, 16);   /* @0x80104f7c */
-        if (pl->hit_react == 0 && bb_nah(e, pl, BB_TEIL_RUMPF, BB_L(1400), 0, BB_L(1500))) {   /* @0x80104f88-a4 */
+        /* Nachbesserung 1 (Kopf K3, Entscheid Orchestrator Weg a): G4 misst den Biss an Teil 10 + (1400,0,0), Radius 1500
+         * (@0x80104f88-a4). Die K3-Schnauze liegt 1640-1690 vor diesem Punkt; die Probe sitzt deshalb am Kiefer selbst,
+         * Teil 23 + (911,-75,0) = 228 hinter der Kieferspitze (Mesh 23 vorn bei x 1139, y -75; PORT-WAHL), Radius 1500 von G4. */
+        if (pl->hit_react == 0 && bb_nah(e, pl, BB_TEIL_KIEFER, BB_BISS_X, BB_BISS_Y, BB_L(1500))) {   /* Radius @0x80104f88-a4 */
             bb_schlag(pl, 10, 6, 0);                   /* se(6) @0x801050a0 */
             s_bb.getroffen = 1;
         }
@@ -561,6 +611,15 @@ static void bb_auftritt(re15_actor_t *e, re15_actor_t *pl)
  * 824er-Kegels (@0x801018ec-908). Am Clip-Ende setzt sie den Fortschritts-Schalter wie der Birkin-Tod (Flag (5,0x1c),
  * `func_0x8004ef90(0x800b1028,0x1c)` @0x8011aecc STAGE5), den ROOM5080 sub01 @0x0078A abfragt, und verlaesst den Raum
  * (Aktor aus). Treffer aendern an der Flucht nichts mehr (TREFFER setzt sie fort, s. re15_bb_tick). */
+/* Nachbesserung 1, M6/M7 (Abnahme 1: 180 Grad mit 128 je Bild auf stehenden Fuessen, der Schwanz schwenkte durch Leon/Elza):
+ * die Flucht hat jetzt drei Phasen in e->sub_state_2, alle PORT-WAHL:
+ *   1 ZURUECK  steht der Spieler naeher als BB_FLUCHT_ABSTAND (6000 = Schwanz 3520 hinter der Huefte + Spieler 450 + 2000 Luft),
+ *              weicht die Form wie im Weichen (Clip 5 rueckwaerts, a3 0x10080 @0x8010427c-84, Lenken 32 zum Spieler @0x80104204), bis
+ *              der Abstand reicht, sie klemmt (Wand, s_bb.klemm) oder 60 Bilder um sind;
+ *   2 DREHEN   Clip 5 vorwaerts, Lenken 32 je Bild auf das Fluchtziel (@0x801018ec-908) - die Drehung macht der Gang mit Schritten -,
+ *              bis das Ziel im 256er-Kegel liegt oder 96 Bilder um sind;
+ *   3 FORT     Clip 11 (Gebruell, Galopp, Sprung), Lenken 32. */
+#define BB_FLUCHT_ABSTAND 6000
 static void bb_flucht(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {
@@ -570,13 +629,36 @@ static void bb_flucht(re15_actor_t *e, re15_actor_t *pl)
         if (d < 1) { dx = 1; d = 1; }
         s_bb.flucht_x = e->x + (int32_t)(dx * 20000 / d);
         s_bb.flucht_z = e->z + (int32_t)(dz * 20000 / d);
-        bb_clip(e, BB_C_FLUCHT, 0, 7);
-        e->sub_state_2 = 1;
         e->hp = 1;
+        s_bb.phase_uhr = 0; s_bb.klemm = 0;
+        if (re15_enemy_player_dist(e, pl) < BB_FLUCHT_ABSTAND) { bb_clip(e, BB_C_GEHEN, 0, 0x1f); e->sub_state_2 = 1; }
+        else { bb_clip(e, BB_C_GEHEN, 0, 0xf); e->sub_state_2 = 2; }
     }
-    /* Gestaltung: im Gebruell (Bild 0-15, Clip 11 steht) schnell abdrehen, 128 je Bild = halbe Drehung in 16 Bildern, danach
-     * die Rate 32 des Lenkens ausserhalb des 824er-Kegels (@0x801018ec-908) */
-    re15_enemy_steer_point(e, s_bb.flucht_x, s_bb.flucht_z, e->anim_frame < 16 ? 128 : 32);
+    if (s_bb.phase_uhr < 255) s_bb.phase_uhr++;
+    if (e->sub_state_2 == 1) {
+        if (re15_enemy_player_dist(e, pl) >= BB_FLUCHT_ABSTAND || s_bb.klemm >= 6 || s_bb.phase_uhr > 60) {
+            bb_clip(e, BB_C_GEHEN, 0, 0xf); e->sub_state_2 = 2; s_bb.phase_uhr = 0; s_bb.klemm = 0;
+        } else {
+            re15_enemy_steer_point(e, pl->x, pl->z, 32);
+            bb_spur(e, 1);
+            if (e->anim_frac >= 0x15) s_bb.tempo >>= 1;
+            (void)bb_anim(e, BB_A3_RUECK | 0x80u);
+            bb_schieben(e);
+            return;
+        }
+    }
+    if (e->sub_state_2 == 2) {
+        if (bb_kegel(e, s_bb.flucht_x, s_bb.flucht_z, 256) || s_bb.phase_uhr > 96) {
+            bb_clip(e, BB_C_FLUCHT, 0, 7); e->sub_state_2 = 3; s_bb.phase_uhr = 0;
+        } else {
+            re15_enemy_steer_point(e, s_bb.flucht_x, s_bb.flucht_z, 32);
+            bb_spur(e, 0);
+            (void)bb_anim(e, 0x100);
+            bb_schieben(e);
+            return;
+        }
+    }
+    re15_enemy_steer_point(e, s_bb.flucht_x, s_bb.flucht_z, 32);   /* @0x801018ec-908 */
     bb_spur(e, 0);
     if (bb_anim(e, 0x200)) {                           /* Gewicht 0x200 wie Auftritt/Griff (a3 @0x801015d4 / @0x801053b0); Clip-Ende: fort */
         re15_game_flag_set(5, 0x1c, 1);                /* @0x8011aecc (STAGE5), wie der Tod des 0x30 */
@@ -598,10 +680,13 @@ static void bb_flucht(re15_actor_t *e, re15_actor_t *pl)
  * re15_damage.c @0x80012438-50). Skala 0x17d0 + (rng & 0xff) * 8 @0x80107430-34; der Rueckstoss von Punkt 1 um
  * (rng & 0x3f) - 0x40 @0x80107464-7c gilt fuer Spawn 2, derselbe Schritt vor Spawn 4 @0x801074c8-e0 trifft wieder Punkt 1
  * und ist tot (Rest im Original). Effekt 0 = Blut in beiden Engines (s. enemy_ai_boss_g5.c). */
+static int32_t s_bb_blut_pos[3];
+void re15_bb_blut_letzte(int32_t out[3]) { out[0] = s_bb_blut_pos[0]; out[1] = s_bb_blut_pos[1]; out[2] = s_bb_blut_pos[2]; }
 static void bb_blut_spawn(uint8_t sub, const int32_t p[3], int16_t winkel)
 {
     uint16_t skala = (uint16_t)(0x17d0 + (re15_engine_rand8() & 0xffu) * 8u);
     s_bb_blut++;
+    s_bb_blut_pos[0] = p[0]; s_bb_blut_pos[1] = p[1]; s_bb_blut_pos[2] = p[2];   /* Testhaken M8a */
     re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0u, sub, skala, p[0], p[1], p[2], winkel);
 }
 
@@ -615,7 +700,10 @@ static void bb_treffer_blut(const re15_actor_t *e, const re15_actor_t *pl, unsig
         p1[0] = 150; p1[1] = 800;
         p2[0] = s_bb.tempo * 2 + 150; p2[1] = 700;
     }
-    (void)re15_enemy_part_point(e, BB_TEIL_RUMPF, null3, t);
+    /* Nachbesserung 1, M8a (PORT-WAHL): Anker Kopf (Teil 22) statt Teil 10. Die K3-Brust liegt 2070 hoch hinter Hals und Kopf; das
+     * Blut entstand dort in der Form bzw. auf der Linie Kamera 12 - Spieler - Brust und war hinter Leon verdeckt (Abnahme 1 M8a). Der
+     * Kopf ist der vorderste Teil (1600-2800 hoch, ueber Leons Kopf); die Versaetze unten bleiben die des Overlays. */
+    (void)re15_enemy_part_point(e, BB_TEIL_KOPF, null3, t);
     re15_skel_bone_to_world(p1, winkel, t[0], t[1], t[2], a);
     re15_skel_bone_to_world(p2, winkel, t[0], t[1], t[2], b);
     bb_blut_spawn(1u, a, winkel);                      /* `lui a0,1` @0x80107438, jal @0x80107454 */
@@ -625,6 +713,65 @@ static void bb_treffer_blut(const re15_actor_t *e, const re15_actor_t *pl, unsig
     (void)re15_engine_rand8();                         /* toter Schritt @0x801074c0 */
     bb_blut_spawn(0u, b, winkel);                      /* @0x801074f8 */
 }
+
+/* ---- Nachbesserung 1, M7 und D: Koerper, Kasten, Schatten der Riesenform (PORT-WAHL) ------------------------------- *
+ * Abnahme 1 M7: Elza stand 8 s unter dem Bauch, Leon in der Form; geschoben wurde nur mit dem 0x30-Zylinder r 1000
+ * (re15_enemy_apply_hitbox, Kasten @0x8011ee64) um Wurzel + 800. Die K3-Form ist in der Ruhe von Huefte bis Schnauze x -880..4340 lang,
+ * Rumpf bis 3070, Schulterbreite +-1470, Haende +-1590, Kopf 1620-2790 hoch (gemessen am Asset, Clip 2 Bild 0).
+ * G4 selbst schiebt mit zwei Segmenten (+0x1e8 = 2 @0x80100714, FUN_80034d0c, Aufruf im Wurzel-Schwanz @0x80100520-2c); die Form
+ * ebenso mit zwei und deren Massen (Feldfolge wie G5 @0x80100530-88: +0x94/+0xb4 x, +0x9a/+0xba r, +0x9e/+0xbe Halbhoehe), aber am
+ * Gerippe der gezeichneten Pose statt fest an der Wurzel (G4: x 400 @0x8010071c und x 0 @0x80100798): Huefte (Teil 0) r 1100
+ * (+0x9a = 0x44c @0x8010076c), Brust (Teil 10) r 1000 (+0xba = 0x3e8 @0x80100784), Halbhoehe 2000 (+0x9e/+0xbe = 0x7d0 @0x80100770 /
+ * @0x801007a4). Der Spieler bleibt so >= 1450 von der Rumpfachse, vorn >= 2720 von der Wurzel. Ein drittes Segment am Kopf (probiert) hielt ihn vorn >= 4150 fern: dann kein Hieb (0xfa0) und kein Griff
+ * (0xed8) mehr - verworfen. Spieler r 450, Mitte y -1530, Halbhoehe 1530 (Spieler-Ctor @0x8003bdc0-ec, wie RE15_G5_PL_*). Beide
+ * Richtungen wie G4: die Form weicht in ihrem Tick (FUN_80034d0c bewegt den zweiten), der Spieler-Pass schiebt den Spieler
+ * (re15_body_push_player). Das Griff-Paar schiebt nicht (Opferlage gilt). */
+#define BB_SEG_N        2
+#define BB_PL_R       450   /* @0x8003bdc0-c4 */
+#define BB_PL_Y     (-1530) /* @0x8003bde0-e4 */
+#define BB_PL_H      1530   /* @0x8003bde8-ec */
+static int bb_segmente(const re15_actor_t *e, int32_t p[BB_SEG_N][3], int32_t r[BB_SEG_N], int32_t h[BB_SEG_N])
+{
+    static const int32_t null3[3] = { 0, 0, 0 };
+    if (!re15_enemy_part_point(e, 0, null3, p[0])) return 0;
+    if (!re15_enemy_part_point(e, BB_TEIL_RUMPF, null3, p[1])) return 0;
+    r[0] = 1100; r[1] = 1000;                          /* +0x9a = 0x44c @0x8010076c, +0xba = 0x3e8 @0x80100784 */
+    h[0] = 2000; h[1] = 2000;                          /* +0x9e = 0x7d0 @0x80100770 */
+    return BB_SEG_N;
+}
+
+int re15_bb_koerper_schub(re15_actor_t *e, re15_actor_t *pl, int form_weicht)
+{
+    int32_t p[BB_SEG_N][3], r[BB_SEG_N], h[BB_SEG_N];
+    int n, k, kontakt = 0;
+    if (!e || !pl || !e->active || e->no_draw || !pl->active || pl->hp < 0) return 0;
+    if (!re15_bb_bank_da(e)) return 0;
+    if (re15_player_is_grabbed() || re15_bk_opfer_cmd()) return 0;
+    n = bb_segmente(e, p, r, h);
+    for (k = 0; k < n; k++) {
+        const int32_t rs = r[k] + BB_PL_R, hs = h[k] + BB_PL_H;
+        int32_t dx = pl->x - p[k][0], dz = pl->z - p[k][2], dist, over, dy;
+        if (dx > rs || dx < -rs || dz > rs || dz < -rs) continue;
+        dist = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+        over = rs - dist;
+        if (over <= 0) continue;
+        dy = (pl->y + BB_PL_Y) - p[k][1];
+        if (!(-hs < dy && dy < hs)) continue;
+        if (form_weicht) { e->x -= dx * over / (dist + 1); e->z -= dz * over / (dist + 1); }
+        else             { pl->x += dx * over / (dist + 1); pl->z += dz * over / (dist + 1); }
+        kontakt++;
+    }
+    return kontakt;
+}
+
+/* Wandklemme der Wurzel: 0x30-Kasten r 1000 (@0x8011ee64) liess die Glieder (Haende +-1590) in Waende und Gelaender ragen (Gaenge 3200
+ * im 5080-Westarm, 3500 zwischen den Regalen in 5090). PORT-WAHL r 1500: die Wurzel haelt 1500 von der Wand, im 3200er Gang bleiben
+ * 200 Spiel. */
+int32_t re15_bb_klemme_r(const re15_actor_t *e) { (void)e; return 1500; }
+
+/* Schatten: G4 2300 x 1300 um die Wurzel (@0x801002cc / @0x80100300) deckte die Schnauze (bis x 4340) nicht. PORT-WAHL fuer K3:
+ * Rechteck von x -1300 (hinter der Huefte) bis +4000 (Schnauze), quer +-1500. */
+void re15_bb_schatten(int32_t *x0, int32_t *x1, int32_t *hz) { *x0 = -1300; *x1 = 4000; *hz = 1500; }
 
 /* ---- Wurzel ---------------------------------------------------------------------------------- */
 void re15_bb_tick(int slot)
@@ -637,8 +784,11 @@ void re15_bb_tick(int slot)
         memset(&s_bb, 0, sizeof s_bb);
         s_bb.slot = slot;
         /* Kasten: Wurzel = Becken, die Masse sitzt davor (Gestaltung; RE2-Kaesten +0x90/+0xb0 @0x80100718-a4
-         * tragen x 400 bei Halbmassen 1100/1000). */
-        e->hit_offset_x = (int16_t)BB_L(800);
+         * tragen x 400 bei Halbmassen 1100/1000). Nachbesserung 1 (D, PORT-WAHL): fuer K3 Mitte zwischen Huefte (-880) und
+         * Schnauze (4340) = 1700, laengs 2600, quer 1600 (Haende +-1590); vorher 800 / r 1000 (0x30-Kasten @0x8011ee64). */
+        e->hit_offset_x = (int16_t)1700;
+        e->hit_radius_min = 2600;
+        e->hit_radius_max = 1600;
         /* Eigene HP der neuen Form: RE2 schreibt sie im Ctor (+0x156 = 1000/900/1100 je Schwierigkeit @0x8010067c-b8), wie
          * der G5 (@0x801003fc, re15_bf_morph_zu_g5). Port-Mass: die 0x96 der Mutation @0x80118094-98, mit der die 0x30-Waffen
          * rechnen. Ohne das kam die Form unter Dauerfeuer mit dem Mutationsrest an: gemessen HP 30, tot nach 49 Bildern
@@ -665,6 +815,14 @@ void re15_bb_tick(int slot)
     } else s_bb.meter_uhr--;
     if (e->birkin_hurt_cd > 0 && --e->birkin_hurt_cd == 0)   /* 0x30-Riegel +0x1de @0x801163c8-400, damit der */
         e->hit_react = (uint8_t)(e->hit_react & ~1u);        /* Port-Trefferpfad wieder annimmt */
+    if (s_bb.weich_sperre) s_bb.weich_sperre--;              /* Nachbesserung 1 M6 */
+    {   /* M6: kam die Wurzel im letzten Tick weniger als halb so weit, wie die Spur schob (Wandklemme der Wurzel)? */
+        int64_t mx = (int64_t)e->x - s_bb.vor_x, mz = (int64_t)e->z - s_bb.vor_z, q = mx * mx + mz * mz;
+        int32_t weg = (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q));
+        if (s_bb.vor_tempo > 16 && weg * 2 < s_bb.vor_tempo) { if (s_bb.klemm < 255) s_bb.klemm++; }
+        else s_bb.klemm = 0;
+        s_bb.vor_x = e->x; s_bb.vor_z = e->z; s_bb.vor_tempo = 0;
+    }
 
     dist = re15_enemy_player_dist(e, pl);              /* +0x1f0 */
     e->dog_dist = (int16_t)dist;
@@ -748,6 +906,8 @@ void re15_bb_tick(int slot)
             break;
         }
         bb_bild_ton();
+        if (e->sub_state_1 == BB_GEHEN || e->sub_state_1 == BB_WEICHEN || e->sub_state_1 == BB_FLUCHT)   /* M6: Schub dieses Ticks */
+            s_bb.vor_tempo = abs(s_bb.tempo) + abs(s_bb.quer);
     }
     s_bb.s_state = e->state; s_bb.s_sub = e->sub_state_1;   /* +0x1fc Sicherung */
     s_bb.s_ph2 = e->sub_state_2; s_bb.s_ph3 = e->sub_state_3;
@@ -783,6 +943,25 @@ void re15_bb_wartet(int slot)
     if (e->motion != BB_C_STEHEN) { e->motion = BB_C_STEHEN; e->anim_frame = 0; e->anim_frac = 0; }
     e->anim_blend_rate = 0x100; e->anim_flags &= (uint16_t)~0x80u;   /* Gewicht 0x100 wie der Gang (a3 @0x80102a34) */
     (void)re15_r38_birkin_anim(e);
+}
+
+/* Rueckstoss-Szene Phase 1 (birkin_formen.c, PORT-WAHL, Nachbesserung 1 M5): die Form taumelt unter dem Beschuss rueckwaerts,
+ * Clip 13 im Kreis, Vortrieb aus der Clip-Spur (bb_spur/bb_schieben wie jeder Tick-Clip) statt fester Rate. Die Gier setzt die
+ * Szene (Ruecken zum Ausgang). Gewicht 0x100 wie der Gang (a3 @0x80102a34). */
+void re15_bb_taumeln_start(int slot)
+{
+    re15_actor_t *e = &g_actors[slot];
+    bb_clip(e, BB_C_TAUMELN, 0, 7);
+    e->anim_flags &= (uint16_t)~0x80u;
+}
+
+void re15_bb_taumeln_tick(int slot)
+{
+    re15_actor_t *e = &g_actors[slot];
+    if (e->motion != BB_C_TAUMELN) re15_bb_taumeln_start(slot);
+    bb_spur(e, 0);
+    (void)bb_anim(e, 0x100);
+    bb_schieben(e);
 }
 
 /* Sturz aus dem Wagen am Ende der Rueckstoss-Szene (birkin_formen.c Phase 3, PORT-WAHL): Clip 12 einmal, ein Bild je Tick,

@@ -111,7 +111,8 @@ static void test_asset(void)
     CHECK(re2_emd_parse_bank(s_emd, s_emd_n, &fo) == 0, "BAHNSTEIG_FORM.EMD parst nicht");
     CHECK(fo.skel.bone_count == 32 && fo.md1.mesh_count == 32 && fo.anim.clip_count == 28,
           "Knochen %d Meshes %d Clips %d (J: 32/32, Stufe 3: 28 Clips)", fo.skel.bone_count, fo.md1.mesh_count, fo.anim.clip_count);
-    /* Formtreue: MD1 und TIM bytegleich mit J, die drei Posen von J als Keyframes (Ruhe, Bild 1, Bild 2) */
+    /* Formtreue: MD1 und TIM bytegleich mit der Referenz (seit Nachbesserung 1: J mit Kopf K3, varianten/K_alligator/K3_fit), die
+     * drei Posen als Keyframes (Ruhe = Ruhe von J mit Kiefer zu, Bild 1/Bild 2 mit den Kopfwinkeln von K3; form_j_posen.h) */
     {
         uint32_t dir = rd32(s_emd), md1 = rd32(s_emd + dir + 7u * 4u);
         size_t md1_n = (size_t)dir - md1;
@@ -190,6 +191,20 @@ static void test_asset(void)
         CHECK(fo.anim.clips[11].frame_count >= 30 && y < -5000, "Flucht: %d Bilder, Wurzel am Ende y %d", fo.anim.clips[11].frame_count, y);
         (void)re15_emd_get_keyframe_position(&fo.skel, kf_von(&fo, 12, fo.anim.clips[12].frame_count - 1), &x, &y, &z);
         CHECK(fo.anim.clips[12].frame_count >= 30 && y > 2000, "Sturz: %d Bilder, Wurzel am Ende y %d", fo.anim.clips[12].frame_count, y);
+        /* Sturz im Wagen (Nachbesserung 1, M1): bis Bild 30 traegt die Spur die Form rund 3200 rueckwaerts (Tuer x -5683 bei Start x -2500) */
+        (void)re15_emd_get_keyframe_speed(&fo.skel, kf_von(&fo, 12, 30), &x, &y, &z);
+        CHECK(fo.anim.clips[12].frame_count > 30 && x <= -3000 && x >= -3500, "Sturz: Spur bis Bild 30 %d (Soll rund -3200)", x);
+    }
+    /* Taumeln Clip 13 (Nachbesserung 1, M5, PORT-WAHL): Rueckstoss-Schleife, 40 Bilder, Spur -80 je Bild rueckwaerts (Tick schiebt sie
+     * in Rueckstoss-Phase 1, birkin_formen.c) */
+    {
+        int alt = 0, gleich = 1;
+        CHECK(fo.anim.clips[13].frame_count == 40, "Taumeln: %d Bilder (40)", fo.anim.clips[13].frame_count);
+        for (int f = 0; f < fo.anim.clips[13].frame_count; f++) {
+            int16_t x, y, z; (void)re15_emd_get_keyframe_speed(&fo.skel, kf_von(&fo, 13, f), &x, &y, &z);
+            gleich &= (x - alt == -80) && z == 0; alt = x;
+        }
+        CHECK(gleich, "Taumeln: Spur nicht -80 je Bild");
     }
 }
 
@@ -218,8 +233,9 @@ static void test_masse(void)
     static re15_enemy_bank_t fo;
     CHECK(re2_emd_parse_bank(s_emd, s_emd_n, &fo) == 0, "Parse");
     /* Boden: alle Tick-Clips. Ausnahmen mit Grund (STUFE3.md): Rennen Bild 11 = Pose Bild 1 von J (der linke Fuss liegt dort
-     * 334 unter der Ebene, so wie die Kamera von Bild 1 es verlangt, varianten/VARIANTEN.md Abschnitt 12), Drohen Bild 33-38
-     * (Hinterbeine auf dem Weg in die Hocke von Bild 2, Schienbein streift bis 250 unter die Ebene, gemessen 242). */
+     * 334 unter der Ebene, so wie die Kamera von Bild 1 es verlangt, varianten/VARIANTEN.md Abschnitt 12), Drohen Bild 31-60
+     * (Hinterbeine auf dem Weg in die Hocke von Bild 2 und zurueck; seit Nachbesserung 1 hebt die Bodenkorrektur zuerst den
+     * Unterschenkel, Rest bis 70 unter die Ebene, gemessen 67 in Bild 55; vorher Bild 33-38 bis 250, gemessen 242). */
     int32_t max_unten = 0, max_schweben = 0;
     for (unsigned c = 0; c < sizeof k_tick_clips / sizeof k_tick_clips[0]; c++) {
         const int clip = k_tick_clips[c];
@@ -228,7 +244,7 @@ static void test_masse(void)
             int32_t o, u;
             pose_grenzen(&fo, (int)(fo.anim.frames[cl->first_frame + f] & 0xFFFu), &o, &u, NULL);
             if (clip == 0 && f == 11) { CHECK(u <= 340, "Rennen Bild 11 (Pose Bild 1): %d unter y=0", u); continue; }
-            if (clip == 10 && f >= 33 && f <= 38) { CHECK(u <= 250, "Drohen Bild %d: %d unter y=0", f, u); continue; }
+            if (clip == 10 && f >= 31 && f <= 60) { CHECK(u <= 70, "Drohen Bild %d: %d unter y=0", f, u); continue; }
             if (u > max_unten) max_unten = u;
             if (-u > max_schweben) max_schweben = -u;
         }
@@ -259,6 +275,10 @@ static uint8_t *raum_laden(const char *rel, unsigned id)
     size_t sz = 0;
     char p[512]; snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/%s", rel);
     uint8_t *buf = slurp(p, &sz);
+    /* Nachbesserung 1: g_room_rdt traegt nach test_sub10_tor/test_r2_koerper Zeiger in den schon freigegebenen Puffer des vorigen
+     * Raums (nur _ok wurde 0); die NPC-Wandklemme (re15_npc_wall_clamp -> re15_collision_constrain_contact_band) las ihn trotzdem.
+     * Mit dem groesseren Asset K3 lag der Puffer anders im Speicher -> SIGSEGV in test_m5_takt. Je Raumladung leeren. */
+    memset(&g_room_rdt, 0, sizeof g_room_rdt); g_room_rdt_ok = 0;
     if (!buf || re15_rdt_parse(buf, sz, &s_rdt) != 0) return NULL;
     extern void scd_register_current_rdt(const re15_rdt_t *);
     scd_register_current_rdt(NULL);
@@ -393,16 +413,34 @@ static void test_ablauf(unsigned raum, const char *rdt)
     for (int i = 0; i < 3; i++) { stelle(b, pl, 7000); b->state = 2; b->sub_state_1 = 3; b->sub_state_2 = 1; tick(1); }
     CHECK(b->motion == 8, "kein Zucken nach vier Pistolentreffern (Clip %d)", b->motion);
 
-    /* Tod: Rueckstoss-Szene mit Clip 8, dann G5 */
+    /* Tod: Rueckstoss-Szene, dann G5. Nachbesserung 1 M5: Phase 1 taumelt mit Clip 13 (Spur -80 je Bild) statt auf Clip 8 zu
+     * gleiten (vorher 147 je Bild); Clip 8 nur noch am Platz an der Sturzgrenze. M1: der Sturz (Phase 3) beginnt im Wagen bei
+     * x <= -2500, nicht erst hinter der Tuer (-6283). */
     beruhigen(b, pl, 30);
+    b->x = 6000; b->z = -23400; pl->x = b->x + 7000; pl->z = b->z;   /* Kampflage wie im Lauf l5090_feuer (Form x 5994 bei HP 0) */
     b->hp = -1; b->state = 3; b->sub_state_3 = 0;
     {
-        int f, szene = 0;
-        for (f = 0; f < 900 && b->type == 0x30u; f++) {
+        int f, szene = 0, taumel = 0, sturz_x_ok = -1;
+        int32_t schritt_max = 0;
+        for (f = 0; f < 1200 && b->type == 0x30u; f++) {
+            const int ph0 = re15_bf_rueckstoss_phase();
+            const int32_t x0 = b->x, z0 = b->z;
             tick(1);
-            if (re15_bf_rueckstoss_phase() == 1) { szene = 1; CHECK(b->motion == 8, "Rueckstoss: Clip %d", b->motion); }
+            if (re15_bf_rueckstoss_phase() == 1) {
+                szene = 1;
+                CHECK(b->motion == 13 || b->motion == 8, "Rueckstoss: Clip %d", b->motion);
+                if (b->motion == 13) {
+                    int32_t dx = b->x - x0, dz = b->z - z0, s = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+                    taumel++;
+                    if (s > schritt_max) schritt_max = s;
+                }
+            }
+            if (ph0 == 1 && re15_bf_rueckstoss_phase() == 3) sturz_x_ok = (b->x <= -2500 && b->x > -3500);
         }
         CHECK(szene, "keine Rueckstoss-Szene");
+        CHECK(taumel > 20, "Rueckstoss: kaum Taumeln (%d Bilder Clip 13)", taumel);
+        CHECK(schritt_max <= 100, "Rueckstoss: Schritt %d je Bild (Gleiten wie vorher 147?)", schritt_max);
+        CHECK(sturz_x_ok == 1, "Rueckstoss: Sturz nicht im Wagen begonnen (%d)", sturz_x_ok);
         CHECK(b->type == 0x36u && b->grid_id == 0x13u, "kein G5 (Typ 0x%02X)", b->type);
         fprintf(stderr, "%s: Rueckstoss + G5 nach %d Ticks\n", rdt, f);
     }
@@ -1225,21 +1263,179 @@ static void test_flucht(unsigned raum, const char *rdt)
     CHECK(b->motion == 10, "Flucht %s: kein Auftritt (Clip %d)", rdt, b->motion);
     b->hp = -1; b->state = 3; b->sub_state_3 = 0;
     tick(1);
-    CHECK(b->active && b->motion == 11 && b->sub_state_1 == 21, "Flucht %s: Tod statt Flucht (Clip %d sub %d)", rdt, b->motion, b->sub_state_1);
+    /* Nachbesserung 1 M6: Spieler 5000 voraus (< BB_FLUCHT_ABSTAND 6000) -> zuerst zurueckweichen (Clip 5 rueckwaerts, Phase 1),
+     * dann mit Schritten drehen (Clip 5, Phase 2), erst dann Clip 11. Vorher: Clip 11 sofort, 128 je Bild auf stehenden Fuessen. */
+    CHECK(b->active && b->motion == 5 && b->sub_state_1 == 21 && b->sub_state_2 == 1 && (b->anim_flags & 0x80u),
+          "Flucht %s: Tod statt Flucht oder kein Zurueckweichen (Clip %d sub %d ph %d)", rdt, b->motion, b->sub_state_1, b->sub_state_2);
     CHECK(re15_game_flag_get(5, 0x1c) == 0, "Flucht %s: Schalter schon beim Fluchtbeginn", rdt);
     {
-        int32_t d0 = re15_enemy_player_dist(b, pl);
-        int f, getroffen = 0;
-        for (f = 0; f < 200 && b->active; f++) {
+        int32_t d0 = re15_enemy_player_dist(b, pl), schwanz_min = 0x7fffffff;
+        int f, getroffen = 0, drehen = 0, clip11 = 0, dreh_max = 0, dreh11_max = 0, alt = b->rot_y;
+        for (f = 0; f < 400 && b->active; f++) {
             pl->x = -13100; pl->z = -17800; pl->hit_react = 0;
             if (f == 10 || f == 20) { treffer(b, 3); getroffen++; }   /* Pistole: Flucht laeuft weiter */
             tick(1);
-            if (f == 25) CHECK(b->motion == 11, "Flucht %s: Treffer bricht die Flucht ab (Clip %d)", rdt, b->motion);
+            if (!b->active) break;
+            {
+                int d = ((int)b->rot_y - alt) & 0xfff; if (d > 0x800) d = 0x1000 - d;
+                alt = b->rot_y;
+                if (b->sub_state_2 == 2) { drehen++; if (d > dreh_max) dreh_max = d; CHECK(b->motion == 5, "Flucht %s: Drehen ohne Gang (Clip %d)", rdt, b->motion); }
+                if (b->motion == 11) { clip11++; if (d > dreh11_max) dreh11_max = d; }
+            }
+            {   /* Schwanz (Glieder 4-6) nie im Spieler (r 450) */
+                static const int32_t n3[3] = { 0, 0, 0 };
+                for (int k = 4; k <= 6; k++) {
+                    int32_t w[3];
+                    if (re15_enemy_part_point(b, k, n3, w)) {
+                        int32_t dx = w[0] - pl->x, dz = w[2] - pl->z, s = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+                        if (s < schwanz_min) schwanz_min = s;
+                    }
+                }
+            }
+            if (f == 25) CHECK(b->sub_state_1 == 21, "Flucht %s: Treffer bricht die Flucht ab (sub %d)", rdt, b->sub_state_1);
             if (f == 25) CHECK(re15_enemy_player_dist(b, pl) > d0, "Flucht %s: entfernt sich nicht (%d -> %d)", rdt, d0, re15_enemy_player_dist(b, pl));
         }
         CHECK(!b->active, "Flucht %s: Aktor nach %d Ticks noch da", rdt, f);
         CHECK(re15_game_flag_get(5, 0x1c) == 1, "Flucht %s: Schalter (5,0x1c) fehlt", rdt);
-        fprintf(stderr, "%s: Flucht nach %d Ticks fort, Treffer %d\n", rdt, f, getroffen);
+        CHECK(drehen > 0 && dreh_max <= 40, "Flucht %s: Drehen %d Bilder, groesster Gierschritt %d (Rate 32)", rdt, drehen, dreh_max);
+        CHECK(clip11 > 0 && dreh11_max <= 40, "Flucht %s: Clip 11 dreht %d je Bild (vorher 128)", rdt, dreh11_max);
+        CHECK(schwanz_min > 900, "Flucht %s: Schwanz %d am Spieler vorbei (r 450)", rdt, schwanz_min);
+        fprintf(stderr, "%s: Flucht nach %d Ticks fort, Treffer %d, Drehen %d Bilder (max %d je Bild), Clip 11 %d Bilder, Schwanz min %d\n",
+                rdt, f, getroffen, drehen, dreh_max, clip11, schwanz_min);
+    }
+    free(buf);
+}
+
+/* ---- Nachbesserung 1 (Abnahme 1 der Stufe 3, M3/M6/M7/M8a, Kopf-Folgen D) ------------------------------------------- */
+
+/* D: Biss am Kiefer (Teil 23 + (911,-75,0), Radius 1500 @0x80104f88-a4). Gegenprobe: am alten Brustpunkt Teil 10 + (1400,0,0) haette
+ * der Spieler getroffen werden muessen, am Kiefer nicht -> kein Treffer. Und: Spieler an der gezeichneten Kieferspitze -> Treffer. */
+static int biss_lauf(re15_actor_t *b, re15_actor_t *pl, int32_t abstand, int32_t *kiefer_min, int32_t *brust_min)
+{
+    static const int32_t spitze[3] = { 911, -75, 0 }, brust[3] = { 1400, 0, 0 };
+    int hp0, f, getroffen = 0;
+    beruhigen(b, pl, 30);
+    stelle(b, pl, abstand);
+    pl->hp = 100; hp0 = pl->hp;
+    b->state = 1; b->sub_state_1 = 14; b->sub_state_2 = 0; b->sub_state_3 = 0;
+    *kiefer_min = *brust_min = 0x7fffffff;
+    for (f = 0; f < 34 && !getroffen; f++) {
+        int32_t w[3], dx, dz, s;
+        pl->x = b->x + abstand; pl->z = b->z; pl->hit_react = 0;
+        tick(1);
+        if (pl->hp < hp0) getroffen = 1;
+        if (b->motion == 26 && b->anim_frame >= 16 && b->anim_frame <= 31) {
+            if (re15_enemy_part_point(b, 23, spitze, w)) {
+                dx = w[0] - pl->x; dz = w[2] - pl->z; s = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+                if (s < *kiefer_min) *kiefer_min = s;
+            }
+            if (re15_enemy_part_point(b, 10, brust, w)) {
+                dx = w[0] - pl->x; dz = w[2] - pl->z; s = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+                if (s < *brust_min) *brust_min = s;
+            }
+        }
+    }
+    re15_player_clear_hit_guard(pl);
+    return getroffen;
+}
+
+static void test_n1_biss_kiefer(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int nah_ok = 0, fern_ok = 0;
+    if (!b) return;
+    for (int32_t a = 2600; a <= 6400; a += 200) {
+        int32_t km, bm;
+        const int t = biss_lauf(b, pl, a, &km, &bm);
+        if (t) CHECK(km < 1500, "D %s: Biss trifft bei %d, Kiefer aber %d entfernt", rdt, a, km);
+        if (!t && bm < 1500) fern_ok++;                         /* Gegenprobe: alter Brustpunkt haette getroffen, der Kiefer nicht */
+        if (t && km < 1500) nah_ok++;
+        fprintf(stderr, "%s D: Abstand %d Treffer %d Kiefer-min %d Brustpunkt-min %d\n", rdt, a, t, km, bm);
+    }
+    CHECK(nah_ok > 0, "D %s: Biss trifft nie am Kiefer", rdt);
+    CHECK(fern_ok > 0, "D %s: keine Gegenprobe (alter Brustpunkt haette getroffen, Kiefer nicht)", rdt);
+    free(buf);
+}
+
+/* M3: G4-EDD-Ids 9-15 (Bank 24 FFFFFFFF) -> Raum-Ton 10; Clip 10 traegt Id 11/10/12/11 in Bild 30/51/81/113 (G4-Daten). */
+static void test_n1_gebruell(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    stelle(b, pl, 9000);
+    b->state = 1; b->sub_state_1 = 0; b->sub_state_2 = 0;
+    {
+        const int n0 = re15_bb_ton_zaehler();
+        for (int f = 0; f < 130 && b->sub_state_1 == 0; f++) { pl->x = b->x + 9000; pl->z = b->z; tick(1); }
+        CHECK(re15_bb_ton_zaehler() - n0 == 4, "M3 %s: Auftritt %d Gebruelle (Raum-Ton 10) statt 4", rdt, re15_bb_ton_zaehler() - n0);
+    }
+    free(buf);
+}
+
+/* M7: der Spieler steht nicht unter dem Bauch. Spieler auf Brust und Huefte gesetzt -> Spieler-Pass schiebt ihn hinaus. */
+static void test_n1_koerper(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    static const int32_t n3[3] = { 0, 0, 0 };
+    if (!b) return;
+    beruhigen(b, pl, 30);
+    for (int teil = 0; teil <= 10; teil += 10) {
+        int32_t w[3], dx, dz, s;
+        stelle(b, pl, 7000);
+        b->state = 1; b->sub_state_1 = 3;
+        (void)re15_enemy_part_point(b, teil, n3, w);
+        pl->x = w[0] + 200; pl->z = w[2] + 300; pl->y = 0;
+        for (int i = 0; i < 4; i++) re15_body_push_player();
+        (void)re15_enemy_part_point(b, teil, n3, w);
+        dx = pl->x - w[0]; dz = pl->z - w[2]; s = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+        CHECK(s >= 1400, "M7 %s: Spieler %d von Teil %d (Rumpf r 1000/1100 + 450)", rdt, s, teil);
+    }
+    CHECK(b->hit_offset_x == 1700 && b->hit_radius_min == 2600 && b->hit_radius_max == 1600, "D %s: Kasten %d/%d/%d", rdt,
+          b->hit_offset_x, b->hit_radius_min, b->hit_radius_max);
+    CHECK(re15_bb_klemme_r(b) == 1500, "M7 %s: Wandklemme r %d", rdt, re15_bb_klemme_r(b));
+    {
+        int32_t x0, x1, hz;
+        re15_bb_schatten(&x0, &x1, &hz);
+        CHECK(x0 <= -1000 && x1 >= 4000 && hz >= 1500, "D %s: Schatten %d..%d +-%d deckt Huefte bis Schnauze nicht", rdt, x0, x1, hz);
+    }
+    free(buf);
+}
+
+/* M6: klemmt die Wurzel im Weichen (Wand), bricht es ab, statt 8 s auf der Stelle zu laufen. Wand hier: die Lage wird nach jedem
+ * Tick zurueckgesetzt (wie eine Wandklemme, die den Schub ganz nimmt). */
+static void test_n1_weichen_klemme(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int f, weichen_bilder = 0;
+    if (!b) return;
+    beruhigen(b, pl, 30);
+    stelle(b, pl, 1600);
+    b->state = 1; b->sub_state_1 = 8; b->sub_state_2 = 0;
+    for (f = 0; f < 120; f++) {
+        const int32_t x0 = b->x, z0 = b->z;
+        pl->x = b->x + 600; pl->z = b->z + 1500; pl->hit_react = 0;
+        tick(1);
+        b->x = x0; b->z = z0;                               /* Wand: Wurzel kommt nicht weg */
+        if (b->sub_state_1 == 8) weichen_bilder++;
+        if (re15_bk_opfer_cmd()) { re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl); }
+    }
+    CHECK(weichen_bilder <= 30, "M6 %s: %d Bilder Weichen an der Wand (vorher Wechsel Weichen/Gehen 8 s)", rdt, weichen_bilder);
+    free(buf);
+}
+
+/* M8a: Treffer-Blut am Kopf (Teil 22), ueber Leons Kopfhoehe, nicht an der Brust hinter ihm. */
+static void test_n1_blut_kopf(unsigned raum, const char *rdt)
+{
+    uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b) return;
+    beruhigen(b, pl, 30);
+    stelle(b, pl, 7000);
+    treffer(b, 3); tick(1);
+    {
+        int32_t p[3];
+        re15_bb_blut_letzte(p);
+        CHECK(p[1] < -1500, "M8a %s: Blut auf Hoehe %d (Kopf liegt 1600-2800 hoch)", rdt, -p[1]);
+        CHECK(p[0] - b->x > 1800, "M8a %s: Blut %d vor der Wurzel (Kopf ab 1900)", rdt, p[0] - b->x);
     }
     free(buf);
 }
@@ -1310,6 +1506,11 @@ int main(void)
         test_m12_waffe(id, rdt);
         test_m13_blut(id, rdt);
         test_m14_tod(id, rdt);
+        test_n1_biss_kiefer(id, rdt);
+        test_n1_gebruell(id, rdt);
+        test_n1_koerper(id, rdt);
+        test_n1_weichen_klemme(id, rdt);
+        test_n1_blut_kopf(id, rdt);
         test_m15_griff_hinten(id, rdt);
     }
     test_flucht(0x5080u, "STAGE5/ROOM5080.RDT");
