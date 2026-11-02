@@ -5,7 +5,7 @@ von Birkin aus dem Zug, sollst du die letzte Stufe GENAUSO machen wie bei Reside
 eine Grossaufnahme an seitlich der offenen Stelle des Zuges, und dann kommen da zunaechst die Tentakel vom finalen Birkin G5, und
 der zieht ihn dann rein. Schau es dir an!"
 
-Stand: laufend (Dossier wird fortlaufend geschrieben). Belege: `G5_belege/`.
+Stand: gebaut, im Fenster geprueft (Leon und Elza), Tests gruen. Belege: `G5_belege/`.
 
 ## 1. Was RE2 tut (selbst gelesen)
 
@@ -202,6 +202,20 @@ steht.
   statt 14 (die Szene setzt Leon selbst). Die Abnahme-2-Gestaltung (Freigabe mit [T2] fuer den frei laufenden Spieler) ist damit ersetzt.
 - **geaendert** `integration_r41_birkin_pistole`: `RE15_EXIT_AT` 3100 -> 4200. Gemessen im Fensterlauf: G5-HP 600 bis zum Szenenende F2720,
   dann 540 (F2800), 405 (F3000), 270 (F3200), 135 (F3400) - der Spieler kann 1162 Bilder nicht schiessen.
+- Laeufe (ctest, `build/`): `unit_r41_g5auftritt`, `unit_birkin_szenen`, `unit_birkin_bahnsteig`, `unit_birkin_formen` gruen.
+  `integration_r41_birkin_pistole` gruen (381 s; Leon und Elza: Rueckstoss 1, G5 1, G5 tot 1), `integration_r41_g5_tod` gruen (458 s; HP 0,
+  Tod bei HP 0, Titel), `integration_r41_g5_westen` gruen (321 s; 0 Bildenden in fester Zelle). ⛔ Der Weg-Riegel von g5_westen ("Eingabe wirkt,
+  Weg ab F1600 >= 300") misst jetzt in allen drei Laeufen 4955 - das ist die Versetzung der Szene (6500 -> 13873), nicht die Eingabe: F1600 liegt
+  heute in der gesperrten Szene. Der Riegel ist damit fuer seinen Zweck leer; er muesste ab dem Szenenende messen und die Tastenfolge um
+  1162 Bilder spaeter setzen (Spur R, nicht geaendert).
+- Gegenprobe gruen (19/19): `unit_r17_birkin_1zu1_pin`, `unit_r18_birkin_restluecken_pin`, `unit_r20_birkin_push_pin`,
+  `integration_r35_zgirl_5090` (alle mit RE15_ENDKAMPF_NUR_G5, ohne Rueckstoss, die Szene laeuft dort nicht), `unit_birkin_ai`,
+  `unit_birkin_opfer`, `unit_r41_birkin_wand_*`, `unit_sld_atlas`, `unit_pri_*`.
+
+## 5. Commits (Zweig r41/g5auftritt)
+
+- `6d8e65214` feat(r41-g5auftritt): Szene, Szenen-Schnitte 16/17, RE2-Daten, Riegel, Dossier, Belege.
+- Folge-Commit: Dossier-Nachtrag (Testlaeufe, Riegel g5_westen).
 
 ## 6. Offen
 
