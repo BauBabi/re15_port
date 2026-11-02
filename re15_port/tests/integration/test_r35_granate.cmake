@@ -17,7 +17,7 @@
 #               aendert sich um > 600 in 10 Bildern), erreicht Zustand 7 (Leiche) bis Bild X+80,
 #           (d) RE2-SE genau einmal, (e) exe bis EXIT_AT.
 #   gator   ROOM2090 (Gator-Boss, Modul enemy_ai_boss_gator.c), RE15_FORCE_EXPLOSION=2@<bild>:<slot> am Alligator:
-#           HP faellt um 1000 (GB_HP 3000 -> 2000, Art 2 @0x8006f41c, 0x23 ohne RE2-Modell), Zustand 2 im
+#           HP faellt um 250 (Runde 41 GR NB3: Boss-Regel 25300 - 25000 - 50; vorher 1000 @0x8006f41c), Zustand 2 im
 #           Explosionsbild, exe laeuft bis EXIT_AT (kein Haenger), RE15_FORCE_EXPLOSION-Zeile "Treffer=1".
 #   birkin  ROOM5090 (G5 EM36, Modul enemy_ai_boss_g5.c), ARMIERT ueber RE15_DEBUG_SUB=4@255 (sub04 = Kampfstart:
 #           grid 0x33 -> 0x13, Lage (-9000,-23400); Vorspann bis ~Bild 346, danach kriecht er), RE15_FORCE_EXPLOSION
@@ -393,7 +393,7 @@ endfunction()
 
 r35_laeuft(gator _an)
 if(_an)
-    # Gator-Boss 0x23 in ROOM2090: GB_HP 3000 (enemy_ai_boss_gator.c, DESIGN), RE1.5 Art 2 = 1000 (@0x8006f41c).
+    # Gator-Boss 0x23 in ROOM2090: GB_HP = RE15_GR2_HP_INIT 25300 (Runde 41 Spur B), Art 2 = 250 (Runde 41 GR NB3, vorher 1000 @0x8006f41c).
     # Runde 41 Spur A (Nachbesserung 2, M3): der Platz folgt RE15_ACTOR_MAX (include/re15_actor.h; seit Runde 41 36 -> Slot 35,
     # main.c Rueckwaertssuche ab RE15_ACTOR_MAX-1) statt fest 20.
     file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/../../include/re15_actor.h" _am REGEX "^#define RE15_ACTOR_MAX +[0-9]+")
@@ -401,7 +401,9 @@ if(_an)
         r35_fehler(gator "RE15_ACTOR_MAX nicht in include/re15_actor.h gefunden")
     endif()
     math(EXPR _gator_slot "${CMAKE_MATCH_1} - 1")
-    r35_boss(gator 2090 ${_gator_slot} 23 60 1000)   # Slot RE15_ACTOR_MAX-1 (Runde 36 Spur E, s. Kopf)
+    # Runde 41 Spur GR, Nachbesserung 3 (Nutzer F4 "nicht einfach mit einer Granate beenden"): Boss-Regel wie der Alligator,
+    # 25300 - 25000 (Schwaeche slti 25000 @0x80101ec4) - Rest 50 = 250 (engine/src/re15_damage.c re15_granate_schaden).
+    r35_boss(gator 2090 ${_gator_slot} 23 60 250)    # Slot RE15_ACTOR_MAX-1 (Runde 36 Spur E, s. Kopf)
 endif()
 # Felder g (grid) und af eines Gegners <slot> (CMake kennt nur 9 Fanggruppen -> eigener Auswerter).
 function(r35_gegner_g _zeile _slot _p)

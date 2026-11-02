@@ -187,7 +187,7 @@ static void test_bahnsteig(void)
     }
     CHECK(mut_clip, "Mutations-Clip 0x14 nicht gespielt");
     CHECK(!re15_bf_mutation_offen(), "Mutation endet nicht (%d Ticks)", m);
-    CHECK(b->hp == 150 && b->type == 0x30u, "nach Mutation hp %d type 0x%02X", b->hp, b->type);
+    CHECK(b->hp == RE15_BIRKIN_HP_MUTATION && b->type == 0x30u, "nach Mutation hp %d type 0x%02X", b->hp, b->type);   /* 0x96 @0x80118094 x Faktor (GR NB3) */
     CHECK(re15_bf_emd_datei(0x30u) == NULL && re15_bf_bahnsteig_bank_faellig(0x30u), "nach Mutation keine Bahnsteig-Form");
     fprintf(stderr, "Bahnsteig: Mutation Original->Form nach %d Ticks\n", m);
     CHECK(bank_form_laden(), "Bank der Bahnsteig-Form");
@@ -195,8 +195,8 @@ static void test_bahnsteig(void)
     b->x = 1200; b->z = -23350; b->grid_id = 0x13;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = 300; pl->z = -23400; pl->hp = 100;
-    re15_enemy_ai_run_all(0);                            /* erster Formen-Tick: Ctor-Teil, eigene HP 150 */
-    CHECK(b->hp == 150, "Form kommt mit HP %d statt 150", b->hp);
+    re15_enemy_ai_run_all(0);                            /* erster Formen-Tick: Ctor-Teil, eigene HP RE15_BB_FORM_HP */
+    CHECK(b->hp == RE15_BB_FORM_HP, "Form kommt mit HP %d statt %d (G4-Ctor @0x8010067c, GR NB3)", b->hp, RE15_BB_FORM_HP);
     b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
     int f, gefeuert = 0, versteckt = 0, zonen_an = 0;
     int32_t x_min = b->x;

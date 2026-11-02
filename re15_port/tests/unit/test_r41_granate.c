@@ -25,7 +25,8 @@
  *   [4] aus      — eigener Prozess mit RE15_KEIN_80PROZENT_GORE=1: keine Zerfetzung (RE2 0x80108BEC wie vorher), der
  *                  Schaden bleibt 1000 (PORT-WAHL Staerke haengt nicht am Gore-Schalter).
  * Rueckgabe 0 = gruen, sonst die Nummer der ersten fehlgeschlagenen Pruefung.
- * Aufruf: test_r41_granate [schaden|zerfetzt|r15|hund|boss|alle|aus]
+ *   [7] g3080    — NACHBESSERUNG 3: ROOM3080 gemessen (Szene oder Kampf, Spieler-Kontrolle, Schaden jeder Waffe am 0x36).
+ * Aufruf: test_r41_granate [schaden|zerfetzt|r15|hund|boss|g3080|alle|aus]
  */
 #include "re15_esp.h"
 #include "re15_granate_r35.h"
@@ -50,6 +51,9 @@
 #include "re15_boss_gator.h"
 #include "re15_gator_re2_r41.h"
 #include "re15_birkin_formen.h"
+#include "re15_ems.h"
+#include "re15_emd.h"
+#include "re15_fade.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -234,7 +238,7 @@ static int schaden_an(re15_ai_flavor_t fl, uint8_t typ, int16_t hp, uint8_t art,
  * @0x8004716c-a4, re15_re2_gl_kandidat) den Gegner annimmt: die Kaesten liegen je Typ verschieden hoch (Kraehe unter
  * RE1.5-KI, RE2-Babyspinne, G5 lagen bei P.y = -500 ausserhalb). Geprueft wird der SCHADEN, nicht die Trefferflaeche;
  * ein Fehlversuch aendert nichts am Gegner. Rueckgabe: Zahl der Treffer. */
-static int granate_treffer(re15_actor_t *e)
+static int granate_treffer_art(re15_actor_t *e, uint8_t art)
 {
     static const int32_t dy[] = { -500, 0, -1000, -1500, -2000, -3000, 500, -250, -750 };
     /* Kastenmitte: 300 neben der Wurzel; G5 +0x94 = -2000 (`addiu v0,zero,-2000` @0x80100534, bei Gier 0 auf x) */
@@ -242,11 +246,12 @@ static int granate_treffer(re15_actor_t *e)
     for (unsigned j = 0; j < sizeof dxz / sizeof dxz[0]; j++)
         for (unsigned i = 0; i < sizeof dy / sizeof dy[0]; i++) {
             const int32_t p[3] = { e->x + dxz[j][0], e->y + dy[i], e->z + dxz[j][1] };
-            int n = re15_granate_r35_explosion(p, 0, 2);
+            int n = re15_granate_r35_explosion(p, 0, art);
             if (n) return n;
         }
     return 0;
 }
+static int granate_treffer(re15_actor_t *e) { return granate_treffer_art(e, 2); }
 static void abschnitt_schaden(void)
 {
     re15_re2_damage_model_set(1);
@@ -320,7 +325,11 @@ static void abschnitt_schaden(void)
  *     ECHTEN Hitscan (re15_player_weapon_fire) und die ECHTE Explosion (re15_granate_r35_explosion, Art 2):
  *     Pistolenschaden (Waffe 3), Schrotflintenschaden (Waffe 8), Form-HP aus dem INIT der KI, Schuesse ohne Granate,
  *     Schuesse nach EINER Granate. Pruefungen: keine Form stirbt an einer Granate, Granate + N Schuesse toeten,
- *     Gorilla N kleiner als Birkin/Alligator N; G5 und Gator-Boss unveraendert.
+ *     Gorilla N kleiner als Birkin/Alligator N; G5 unveraendert.
+ *     NACHBESSERUNG 3 (Nutzer F1/F2/F4): Birkin-HP-Skala x 2 (re15_birkin_formen.h RE15_BIRKIN_HP_*), Bahnsteig-/Riesenform
+ *     1000 (G4-Ctor @0x8010067c) ueber den ECHTEN Eintritt re15_bb_tick (G4-Bank wie der Plattform-Haken), Gator-Boss nach der
+ *     Boss-Regel (1 Granate + 8 Schuss bis zur Schwaeche hp < 25000 @0x80101ec4); ohne Granate braucht jeder Birkin-Kampf
+ *     und der Gator-Boss mehr Pistolenschuesse als der Gorilla.
  * ================================================================================================ */
 extern int     re15_player_weapon_fire(int weapon_id);
 extern int16_t re15_atan2_q12(int32_t, int32_t);
@@ -382,50 +391,90 @@ static int boss_schuesse_bis(re15_actor_t *e, int ende)
     return 999;
 }
 
+/* G4-Bank der Bahnsteig-Form wie der Plattform-Haken (platform/pc/main.c, RE2/BAHNSTEIG_G4.EMD + Opfer-Bank von EM30), damit
+ * der ECHTE Eintritt von re15_bb_tick laeuft (HP-Zuweisung RE15_BB_FORM_HP). Muster: test_birkin_bahnsteig.c form_bank. */
+static uint8_t *s_g4_emd = NULL, *s_em30 = NULL;
+static size_t   s_g4_emd_n = 0, s_em30_n = 0;
+static void g4_dateien(void)
+{
+    static int versucht = 0;
+    if (versucht) return;
+    versucht = 1;
+    s_g4_emd = slurp(RE15_ASSET_PSX_DIR "/../RE2/BAHNSTEIG_G4.EMD", &s_g4_emd_n);
+    size_t esz = 0, off = 0, len = 0;
+    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &esz);
+    if (ems && re15_ems_get_entry(ems, esz, re15_ems_index_for_type(0x30), &off, &len) == 0) {
+        s_em30 = (uint8_t *)malloc(len); memcpy(s_em30, ems + off, len); s_em30_n = len;
+    }
+    free(ems);
+}
+static void g4_haken(uint8_t type)
+{
+    if (type != 0x30u || !s_g4_emd || !s_em30) return;
+    re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+    if (!eb) eb = re15_enemy_alloc(0x30u);
+    if (!eb) return;
+    { uint8_t typ = eb->type; memset(eb, 0, sizeof *eb); eb->type = typ; }
+    if (re2_emd_parse_bank(s_g4_emd, s_g4_emd_n, eb) != 0) { eb->type = 0; return; }
+    eb->re2_rig = 1; eb->ok = 1; eb->buf = NULL;
+    eb->victim_ok = re15_emd_parse_victim_bank(s_em30, s_em30_n, &eb->skel_victim, &eb->anim_victim) == 0;
+}
+
 typedef enum { BF_GORILLA, BF_ALLIGATOR, BF_BIRKIN, BF_FORM1, BF_MUTATION, BF_NACH_MUT, BF_BAHNSTEIG, BF_G5, BF_GATOR } bform_t;
 typedef struct { const char *name; uint16_t raum; uint8_t typ, grid; bform_t art; int ende; } bfall_t;
-/* Den Boss in seine Form bringen: Form 1 -> Mutation ueber das echte Wurzel-Tor (hp < 100 @0x8011667c -> 0x601) und die
- * echte Mutation (HP 150 @0x80118094); nach der Mutation bis zu ihrem Ende (sub 6 Phase 2 @0x8011888c). */
+/* Den Boss in seine Form bringen: Form 1 -> Mutation ueber das echte Wurzel-Tor (hp < RE15_BIRKIN_HP_MUT_TOR = `slti 100`
+ * @0x8011667c x 2 -> 0x601) und die echte Mutation (HP RE15_BIRKIN_HP_MUTATION = 0x96 @0x80118094 x 2); nach der Mutation bis
+ * zu ihrem Ende (sub 6 Phase 2 @0x8011888c). Bahnsteig-Form: am Mutationsende laedt der Haken die G4-Bank, der naechste
+ * KI-Takt laeuft durch den Eintritt von re15_bb_tick. */
 static re15_actor_t *boss_aufstellen(const bfall_t *f)
 {
     boss_welt(f->raum);
+    re15_bf_modell_hook(f->art == BF_BAHNSTEIG ? g4_haken : NULL);
     re15_actor_t *e = boss_neu(f->typ, f->grid);
     if (f->art == BF_G5)    { e->hp = 600; }                           /* Ctor @0x801003fc (enemy_ai_boss_g5.c) */
     if (f->art == BF_GATOR) { e->hp = RE15_GR2_HP_INIT; }              /* 25300 @0x80100518-580 (gator_re2_r41.c) */
     if (f->art == BF_MUTATION || f->art == BF_NACH_MUT || f->art == BF_BAHNSTEIG) {
         e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
-        e->hp = 90;                                                     /* unter das Tor 100 */
+        e->hp = RE15_BIRKIN_HP_MUT_TOR - 10;                            /* unter das Tor */
         int n = 0;
         while (n++ < 400) {
             re15_enemy_ai_run_all(1);
             if (f->art == BF_MUTATION && (e->birkin_flags & 0x8)) break;
             if (f->art != BF_MUTATION && (e->grid_id & 0x10) && !(e->birkin_flags & 0x8) && e->sub_state_1 != 6) break;
         }
+        if (f->art == BF_BAHNSTEIG) re15_enemy_ai_run_all(1);           /* erster Formen-Takt: Eintritt re15_bb_tick */
         e->hit_react = 0;
-        e->state = 1;
+        if (f->art != BF_BAHNSTEIG) e->state = 1;
     }
+    re15_bf_modell_hook(NULL);
     return e;
 }
 static void abschnitt_boss(void)
 {
-    static const bfall_t fall[] = {
+    g4_dateien();
+    static bfall_t fall[] = {
         { "Gorilla 0x27 (1141)",                         0x1141, 0x27, 0x10, BF_GORILLA,   0 },
         { "Alligator 0x23 RE1.5-KI (ausserhalb 2090)",   0x2080, 0x23, 0x00, BF_ALLIGATOR, 0 },
         { "Birkin 0x30 Mensch 3070 (grid 0x10)",         0x3070, 0x30, 0x10, BF_BIRKIN,    0 },
         { "Birkin 0x30 5080 (grid 0x13)",                0x5080, 0x30, 0x13, BF_BIRKIN,    0 },
         { "Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10)",  0x50A0, 0x30, 0x10, BF_BIRKIN,    0 },
         { "Birkin 0x30 Labor 50E0 (grid 0x10)",          0x50E0, 0x30, 0x10, BF_BIRKIN,    0 },
-        { "Birkin 0x30 Form 1 3071 (grid 0x01)",         0x3071, 0x30, 0x01, BF_FORM1,   100 },
-        { "Birkin 0x30 Form 1 5090 (grid 0x13)",         0x5090, 0x30, 0x13, BF_FORM1,   100 },
+        { "Birkin 0x30 Form 1 3071 (grid 0x01)",         0x3071, 0x30, 0x01, BF_FORM1,    -1 },
+        { "Birkin 0x30 Form 1 5090 (grid 0x13)",         0x5090, 0x30, 0x13, BF_FORM1,    -1 },
         { "Birkin 0x30 waehrend der Mutation (3071)",    0x3071, 0x30, 0x01, BF_MUTATION,  0 },
         { "Birkin 0x30 nach der Mutation 3071",          0x3071, 0x30, 0x01, BF_NACH_MUT,  0 },
-        { "Bahnsteig-Form 5090 (nach der Mutation)",     0x5090, 0x30, 0x13, BF_BAHNSTEIG, 0 },
+        { "Bahnsteig-/Riesenform 5090 (G4-Eintritt)",    0x5090, 0x30, 0x13, BF_BAHNSTEIG, 0 },
         { "G5 0x36 5090",                                0x5090, 0x36, 0x13, BF_G5,        0 },
-        { "Gator-Boss 0x23 2090",                        0x2090, 0x23, 0x00, BF_GATOR,     0 },
+        { "Gator-Boss 0x23 2090 (bis zur Schwaeche)",    0x2090, 0x23, 0x00, BF_GATOR,    -2 },
     };
     const unsigned NF = sizeof fall / sizeof fall[0];
-    int n_gorilla = -1, n_min_stark = 1 << 30;
-    printf("   %-44s | Form-HP | Ende | Pistole | Schrot | Granate | Rest | Schuesse nach 1 Granate | ohne Granate\n", "Boss");
+    for (unsigned i = 0; i < NF; i++) {
+        if (fall[i].ende == -1) fall[i].ende = RE15_BIRKIN_HP_MUT_TOR;  /* `slti v0,v0,100` @0x8011667c x 2 */
+        if (fall[i].ende == -2) fall[i].ende = RE15_GR2_HP_SOCKEL;      /* `slti v0,v0,25000` @0x80101ec4 */
+    }
+    int n_gorilla = -1, n_min_stark = 1 << 30, n_gorilla_ohne = -1;
+    int ohne[16];
+    printf("   %-44s | Form-HP | Ende  | Pistole | Schrot | Granate | Rest  | Schuesse nach 1 Granate | ohne Granate\n", "Boss");
     for (unsigned i = 0; i < NF; i++) {
         const bfall_t *f = &fall[i];
         re15_actor_t *e = boss_aufstellen(f);
@@ -434,7 +483,7 @@ static void abschnitt_boss(void)
         e = boss_aufstellen(f);
         int ds = boss_schuss(e, 8);
         int n_ohne = -2;
-        if (f->art != BF_MUTATION && f->art != BF_GATOR) { e = boss_aufstellen(f); n_ohne = boss_schuesse_bis(e, f->ende); }
+        if (f->art != BF_MUTATION) { e = boss_aufstellen(f); n_ohne = boss_schuesse_bis(e, f->ende); }
         e = boss_aufstellen(f);
         int g = boss_granate(e);
         int rest = e->hp;
@@ -449,33 +498,216 @@ static void abschnitt_boss(void)
             lebt = (e->state != 3) && e->hp > 0;
         }
         int n_nach = -2;
-        if (lebt && f->art != BF_MUTATION && f->art != BF_GATOR) n_nach = boss_schuesse_bis(e, f->ende);
+        if (lebt && f->art != BF_MUTATION) n_nach = boss_schuesse_bis(e, f->ende);
         int ende_ok = 1;
         if (f->art == BF_FORM1 && n_nach > 0) { re15_enemy_ai_run_all(1); ende_ok = (e->sub_state_1 == 6); }
-        printf("   %-44s | %7d | %4d | %7d | %6d | %7d | %4d | %23d | %d\n", f->name, hp0, f->ende, dp, ds, g, rest, n_nach, n_ohne);
+        ohne[i] = n_ohne;
+        printf("   %-44s | %7d | %5d | %7d | %6d | %7d | %5d | %23d | %d\n", f->name, hp0, f->ende, dp, ds, g, rest, n_nach, n_ohne);
         switch (f->art) {
         case BF_G5:
             PRUEF(70 + (int)i, g == 80 && lebt, "%s: unveraendert 80 (E16 @0x800A5F7C), lebt (Rest %d)", f->name, rest);
             break;
-        case BF_GATOR:
-            PRUEF(70 + (int)i, g == 1000 && lebt, "%s: unveraendert 1000 (nur ueber den Kanister toedlich), Rest %d", f->name, rest);
-            break;
         case BF_MUTATION:
-            PRUEF(70 + (int)i, g > 0 && lebt, "%s: eine Granate (%d) toetet nicht, Rest %d", f->name, g, rest);
+            PRUEF(70 + (int)i, hp0 == RE15_BIRKIN_HP_MUTATION && g > 0 && lebt,
+                  "%s: HP %d (soll %d = 0x96 @0x80118094 x 2), eine Granate (%d) toetet nicht, Rest %d", f->name, hp0,
+                  RE15_BIRKIN_HP_MUTATION, g, rest);
             break;
         default: {
             int soll = (f->art == BF_GORILLA) ? 4 : 8;
-            PRUEF(70 + (int)i, g > 0 && lebt && n_nach == soll && ende_ok,
-                  "%s: eine Granate (%d) beendet die Form nicht (Rest %d), danach %d Pistolenschuesse (soll %d)%s",
-                  f->name, g, rest, n_nach, soll, ende_ok ? "" : " - Mutation startet nicht");
-            if (f->art == BF_GORILLA) n_gorilla = n_nach;
+            int hp_soll = -1;
+            if (f->art == BF_BIRKIN || f->art == BF_FORM1) hp_soll = RE15_BIRKIN_HP_INIT;
+            if (f->art == BF_NACH_MUT)  hp_soll = RE15_BIRKIN_HP_MUTATION;
+            if (f->art == BF_BAHNSTEIG) hp_soll = RE15_BB_FORM_HP;
+            if (f->art == BF_GATOR)     hp_soll = RE15_GR2_HP_INIT;
+            PRUEF(70 + (int)i, g > 0 && lebt && n_nach == soll && ende_ok && (hp_soll < 0 || hp0 == hp_soll),
+                  "%s: Form-HP %d%s, eine Granate (%d) beendet die Form nicht (Rest %d), danach %d Pistolenschuesse (soll %d)%s",
+                  f->name, hp0, (hp_soll < 0 || hp0 == hp_soll) ? "" : " (FALSCH)", g, rest, n_nach, soll,
+                  ende_ok ? "" : " - Mutation startet nicht");
+            if (f->art == BF_GORILLA) { n_gorilla = n_nach; n_gorilla_ohne = n_ohne; }
             else if (n_nach > 0 && n_nach < n_min_stark) n_min_stark = n_nach;
         }
         }
     }
     PRUEF(90, n_gorilla > 0 && n_gorilla < n_min_stark,
-          "Gorilla braucht nach einer Granate weniger Schuesse (%d) als jede Birkin-Form und der Alligator (min %d)",
+          "Gorilla braucht nach einer Granate weniger Schuesse (%d) als jede Birkin-Form, der Alligator und der Gator-Boss (min %d)",
           n_gorilla, n_min_stark);
+    /* NACHBESSERUNG 3 (Nutzer N2 "die an sich schon staerker sein muessen als der Gorilla", F1 "ja"): OHNE Granate braucht
+     * jeder Birkin-KAMPF mehr Pistolenschuesse als der Gorilla. Kampf = alle Formen, die der Spieler nacheinander
+     * niederschiessen muss: Leon 3070/5080/50A0/50E0 = die INIT-Form; Elza 3071 = Form 1 bis zur Mutation + Form nach der
+     * Mutation; Endkampf 5090 = Form 1 + Bahnsteig-/Riesenform + G5. Gator-Boss = bis zur Schwaeche (Kanister-Szene). */
+    {
+        static const struct { const char *name; int teile[3]; } kampf[] = {
+            { "Leon 3070 (INIT-Form)",                     { 2, -1, -1 } },
+            { "5080",                                      { 3, -1, -1 } },
+            { "Hangar/Sichel 50A0",                        { 4, -1, -1 } },
+            { "Labor 50E0/50F1",                           { 5, -1, -1 } },
+            { "Elza 3071 (Form 1 + nach der Mutation)",    { 6,  9, -1 } },
+            { "Endkampf 5090 (Form 1 + Riesenform + G5)",  { 7, 10, 11 } },
+            { "Gator-Boss 2090 bis zur Schwaeche",         { 12, -1, -1 } },
+        };
+        int ok = 0;
+        const int NK = (int)(sizeof kampf / sizeof kampf[0]);
+        for (int k = 0; k < NK; k++) {
+            int summe = 0, gueltig = 1;
+            for (int t = 0; t < 3; t++) {
+                int ix = kampf[k].teile[t];
+                if (ix < 0) continue;
+                if (ohne[ix] <= 0 || ohne[ix] >= 999) gueltig = 0; else summe += ohne[ix];
+            }
+            printf("   ohne Granate: %-44s %3d Pistolenschuesse (Gorilla %d)\n", kampf[k].name, summe, n_gorilla_ohne);
+            if (gueltig && summe > n_gorilla_ohne) ok++;
+        }
+        PRUEF(91, n_gorilla_ohne > 0 && ok == NK, "ohne Granate braucht jeder Birkin-Kampf und der Gator-Boss mehr "
+              "Pistolenschuesse als der Gorilla (%d): %d/%d", n_gorilla_ohne, ok, NK);
+    }
+}
+
+/* ================================================================================================
+ * [7] ROOM3080 (Nachbesserung 3, Nutzer F3 "huh, wie jetzt das ist doch ein Boss fight. Warum soll die Granate nicht
+ *     wirken?"): MESSUNG, was im Port in 3080 passiert - Raum laden, SCD (main00 + sub00) hochfahren wie
+ *     probe_r30_birkin_frost, Spieler auf das Tuerziel (ROOM3070 Door_aot_set @0x03302), Bilder wie der Hauptlauf
+ *     (Szenen-Rahmen (1,27)/(2,7) -> player_mode 2). Gemessen: Spawn 0x36 grid 0x24 (sub00 @0x007D4), Szenenmodus nach
+ *     Member_set(0x0c,4) @0x00934, ob der Spieler in IRGENDEINEM Bild mit dem 0x36 Kontrolle hat, ob der 0x36 angreift, wann
+ *     die Tuer (Aot_on @0x00A22) den Raum verlaesst; dazu am lebenden 0x36 der Schaden JEDER Spielerwaffe (Hitscan, Zeile
+ *     @0x8006f360) und jeder Explosionsart 2..9 (DAT_8006f418).
+ * ================================================================================================ */
+static int s3080_cine_war = 0, s3080_gezeigt = 0;
+static void frame3080(uint16_t pad)
+{
+    const unsigned char *raw; int len, id;
+    scd_vm_tick();
+    re15_actor_step_all_walkers();
+    {
+        int cine = re15_game_flag_get(1, 27) || re15_game_flag_get(2, 7);
+        re15_letterbox_tick(re15_game_flag_get(1, 27));
+        if (cine) { g_scd.player_mode = 2; g_scd.letterbox_countdown = -1; }
+        else if (s3080_cine_war) { g_scd.letterbox_countdown = 15; }
+        s3080_cine_war = cine;
+        if (g_scd.letterbox_countdown > 0 && --g_scd.letterbox_countdown == 0) g_scd.player_mode = 0;
+    }
+    re15_msg_tick(&raw, &len, &id);
+    if (re15_cam_present_tick()) s3080_gezeigt = (int)g_scd.cam_id;
+    s_ctx.active_cut = s3080_gezeigt;
+    s_ctx.pad_current = pad; s_ctx.pad_pressed = pad;
+    re15_game_step(&s_ctx);
+    s_bild++;
+}
+static int lade_re15_bank(uint8_t typ)
+{
+    size_t n = 0, off = 0, len = 0;
+    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &n);
+    if (!ems) return 0;
+    int idx = re15_ems_index_for_type(typ), ok = 0;
+    re15_enemy_bank_t *eb = re15_enemy_find(typ);
+    if (!eb) eb = re15_enemy_alloc(typ);
+    if (eb && idx >= 0 && re15_ems_get_entry(ems, n, idx, &off, &len) == 0) {
+        uint8_t *kopie = (uint8_t *)malloc(len);
+        memcpy(kopie, ems + off, len);
+        re15_tim_t tim; memset(&tim, 0, sizeof tim);
+        if (re15_emd_parse_container(kopie, len, &eb->md1, &eb->skel, &eb->anim, &tim) == 0) { eb->buf = NULL; eb->ok = 1; ok = 1; }
+    }
+    free(ems);
+    return ok;
+}
+static void start3080(re15_ai_flavor_t fl)
+{
+    re15_ai_flavor_set(fl);
+    memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
+    s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
+    re15_game_state_init();
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0); re15_bf_reset();
+    re15_player_cmd_reset(); re15_player_aim_reset(); re15_esp_fx_reset();
+    re15_damage_seed_rng(0x0badf00du);
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1; g_current_room_id = 0x3080; g_room_change.pending = 0;
+    lade_re15_bank(0x36);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->motion = 0; pl->floor = 0;
+    pl->x = -25850; pl->y = 0; pl->z = -25900; pl->rot_y = 930;          /* Tuerziel ROOM3070 Door_aot_set @0x03302 */
+    re15_player_apply_hitbox(pl);
+    re15_collision_set_band(0);
+    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+    scd_register_room_events(&s_rdt);
+    scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
+    g_scd.cut_auto_enabled = 1;
+    s3080_cine_war = 0; s3080_gezeigt = 0;
+}
+static int finde36(void)
+{
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == 0x36u) return s;
+    return -1;
+}
+/* Schaden am 0x36 ohne Nebenwirkung auf den Ablauf: Zustand sichern, schiessen/sprengen, zurueck. */
+static int schaden36(int slot, int waffe, int art)
+{
+    re15_actor_t sich_e = g_actors[slot], sich_p = g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *e = &g_actors[slot];
+    e->hit_react = 0;
+    int d;
+    if (waffe > 0) d = boss_schuss(e, waffe);
+    else { int16_t vor = e->hp; int n = granate_treffer_art(e, (uint8_t)art); d = n ? (int)vor - (int)e->hp : -1; }
+    g_actors[slot] = sich_e; g_actors[RE15_ACTOR_SLOT_PLAYER] = sich_p;
+    return d;
+}
+static void abschnitt_3080(void)
+{
+    if (room_load(0x3080, "STAGE3") != 0) { PRUEF(100, 0, "ROOM3080 fehlt"); return; }
+    static const struct { re15_ai_flavor_t fl; const char *name; } kis[2] = {
+        { RE15_AI_FLAVOR_RE2, "RE2-KI (Vorgabe)" }, { RE15_AI_FLAVOR_RE15, "RE1.5-KI" } };
+    for (int k = 0; k < 2; k++) {
+        start3080(kis[k].fl);
+        s_bild = 0;
+        int slot = -1, spawn_bild = -1, szene_bild = -1, max_phase = -1, grid0 = -1, hp0 = -1, bank = 0;
+        int mit36 = 0, kontrolle = 0, angriff = 0, tuer = -1, schaden_bild = -1;
+        int dmg_waffe[22], dmg_art[10];
+        for (int i = 0; i < 22; i++) dmg_waffe[i] = -9;
+        for (int i = 0; i < 10; i++) dmg_art[i] = -9;
+        for (int f = 0; f < 3000 && tuer < 0; f++) {
+            uint16_t pad = (g_scd.message_active && (f & 7) == 0) ? 0x8000u : 0u;   /* Texte bestaetigen */
+            frame3080(pad);
+            if (slot < 0) {
+                slot = finde36();
+                if (slot >= 0) { spawn_bild = (int)s_bild; grid0 = g_actors[slot].grid_id; hp0 = g_actors[slot].hp;
+                                 bank = re15_enemy_find(0x36u) != NULL; }
+            }
+            if (g_room_change.pending) { tuer = (int)s_bild; break; }
+            if (slot < 0 || !g_actors[slot].active) continue;
+            re15_actor_t *e = &g_actors[slot];
+            mit36++;
+            if (g_scd.player_mode != 2) kontrolle++;
+            if (g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 100) angriff++;
+            /* Freigabe: Member_set(0x0c,4) @0x00934 loescht das Frost-Bit 0x20 (grid 0x24 -> 0x04, Wurzel-Tor @0x80116274) */
+            if (e->grid_id == 0x04 && szene_bild < 0) szene_bild = (int)s_bild;
+            if (szene_bild >= 0 && (int)e->sub_state_2 > max_phase) max_phase = e->sub_state_2;
+            if (szene_bild >= 0 && schaden_bild < 0 && (int)s_bild == szene_bild + 30) {
+                schaden_bild = (int)s_bild;
+                for (int w = 1; w < 22; w++) dmg_waffe[w] = schaden36(slot, w, 0);
+                for (int a = 2; a <= 9; a++) dmg_art[a] = schaden36(slot, 0, a);
+            }
+        }
+        printf("   %s: 0x36 Slot %d gespawnt Bild %d grid 0x%02x HP %d (Bank %d); Freigabe grid 0x04 (Szenenmodus Nibble 4) Bild %d, "
+               "hoechste Phase %d; %d Bilder mit dem 0x36, davon %d mit Spieler-Kontrolle (player_mode != 2), %d mit "
+               "Spieler-HP < 100; Tuer/Raumwechsel Bild %d\n", kis[k].name, slot, spawn_bild, grid0, hp0, bank,
+               szene_bild, max_phase, mit36, kontrolle, angriff, tuer);
+        printf("   %s: Schaden am 0x36 im Bild %d - Waffen (Hitscan, Zeile @0x8006f360, -1 = kein Treffer):", kis[k].name, schaden_bild);
+        for (int w = 1; w < 22; w++) printf(" w%d=%d", w, dmg_waffe[w]);
+        printf("\n   %s: Explosionsarten (DAT_8006f418):", kis[k].name);
+        for (int a = 2; a <= 9; a++) printf(" art%d=%d", a, dmg_art[a]);
+        printf("\n");
+        int waffen_null = 1, waffen_treffer = 0;
+        for (int w = 1; w < 22; w++) { if (dmg_waffe[w] > 0) waffen_null = 0; if (dmg_waffe[w] >= 0) waffen_treffer++; }
+        PRUEF(100 + 3 * k, slot >= 0 && grid0 == 0x24 && szene_bild > 0 && tuer > szene_bild && max_phase == 14,
+              "%s: 3080 ist eine Szene - 0x36 grid 0x24 (sub00 @0x007D4), Freigabe Bild %d (Member_set(0x0c,4) @0x00934), "
+              "Szene laeuft bis Phase %d (ACT 0x80118d00, [14] @0x8011935c steht), Raum endet ueber die Tuer Bild %d (Aot_on @0x00A22)",
+              kis[k].name, szene_bild, max_phase, tuer);
+        PRUEF(101 + 3 * k, mit36 > 0 && kontrolle == 0 && angriff == 0,
+              "%s: kein Kampf - in %d Bildern mit dem 0x36 hat der Spieler %d-mal Kontrolle (Rahmen (1,27)/(2,7) sub02 "
+              "@0x007FE/@0x00802 bis zum Raumwechsel), %d Bilder mit Treffer am Spieler", kis[k].name, mit36, kontrolle, angriff);
+        PRUEF(102 + 3 * k, waffen_null && waffen_treffer > 0 && dmg_art[2] == 1000,
+              "%s: alle Spielerwaffen 0 Schaden (Zeile 0x36 @0x8006f360 = 22 x 0, %d Waffen trafen), Handgranate unveraendert "
+              "1000 (@0x8006f41c), Werfer-Arten 6..9 = %d/%d/%d/%d (DAT_8006f418)", kis[k].name, waffen_treffer,
+              dmg_art[6], dmg_art[7], dmg_art[8], dmg_art[9]);
+    }
 }
 
 /* ================================================================================================
@@ -740,6 +972,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "r15"))      { printf("[3] RE1.5-KI\n");           abschnitt_r15(); }
     if (alle || strstr(teil, "hund"))     { printf("[5] Hund\n");               abschnitt_hund(); }
     if (alle || strstr(teil, "boss"))     { printf("[6] Bosse\n");              abschnitt_boss(); }
+    if (alle || strstr(teil, "g3080"))    { printf("[7] ROOM3080\n");           abschnitt_3080(); }
     if (strcmp(teil, "aus") == 0)         { printf("[4] Schalter aus\n");       abschnitt_aus(); }
 
     free(buf);

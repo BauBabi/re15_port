@@ -15,6 +15,7 @@
 #include "re15_actor.h"
 #include "re15_enemy_ai.h"
 #include "re15_damage.h"
+#include "re15_birkin_formen.h"   /* Runde 41 GR NB3: RE15_BIRKIN_HP_* (HP-Skala x 2, PORT-WAHL) */
 
 extern int16_t re15_atan2_q12(int32_t, int32_t);
 
@@ -55,7 +56,7 @@ int main(void)
      * der INIT hier ueber run_all mit grid 0x33 — das war die fehlende Schranke. */
     re15_enemy_spawn_root(BS);
     if (e->state != 1)      { fprintf(stderr, "FAIL(1): INIT->BRAIN expected state 1, got %d\n", e->state); fail = 1; }
-    if (e->hp != 300)       { fprintf(stderr, "FAIL(1): boss HP must be 300 (hardcoded @0x8011690c), got %d\n", e->hp); fail = 1; }
+    if (e->hp != RE15_BIRKIN_HP_INIT) { fprintf(stderr, "FAIL(1): boss HP must be %d (0x12c @0x8011690c x RE15_BIRKIN_HP_FAKTOR), got %d\n", RE15_BIRKIN_HP_INIT, e->hp); fail = 1; }
     if (e->motion != 0)     { fprintf(stderr, "FAIL(1): INIT idle clip must be 0, got %d\n", e->motion); fail = 1; }
     if (e->sub_state_1 != 9){ fprintf(stderr, "FAIL(1): grid 0x33 (nibble 3) -> sub 9, got %d\n", e->sub_state_1); fail = 1; }
     if (e->grid_id != 0x33) { fprintf(stderr, "FAIL(1): Sce_em_set setzt Bit 0x20 zurueck (@0x80042604/08), grid 0x%02x\n", e->grid_id); fail = 1; }
@@ -180,11 +181,11 @@ int main(void)
     re15_enemy_apply_hitbox(e, 0x30);
     re15_enemy_ai_run_all(0);                          /* INIT -> BRAIN */
     e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* force HUB */
-    e->hp = 90;                                        /* drop below the 100 mutation threshold */
+    e->hp = RE15_BIRKIN_HP_MUT_TOR - 10;               /* drop below the mutation threshold (slti 100 @0x8011667c x Faktor) */
     int mutated = 0;
     for (int f = 0; f < 80; f++) {
         re15_enemy_ai_run_all(0);
-        if ((e->grid_id & 0x10) && e->hp == 150) { mutated = 1; break; }
+        if ((e->grid_id & 0x10) && e->hp == RE15_BIRKIN_HP_MUTATION) { mutated = 1; break; }
     }
     if (!mutated)                { fprintf(stderr, "FAIL(5): HP<100 form-1 must MUTATE (grid|=0x10, HP=150); grid=0x%02x hp=%d sub=%d\n", e->grid_id, e->hp, e->sub_state_1); fail = 1; }
     if (!(e->birkin_flags & 8))  { fprintf(stderr, "FAIL(5): mutation must set the revive-guard +0x1dd&8\n"); fail = 1; }
@@ -198,7 +199,7 @@ int main(void)
     e->birkin_flags |= 8;                              /* mid-mutation (revive-guard armed) */
     e->hp = -5; e->state = 3; e->sub_state_3 = 0;      /* a lethal hit landed (as re15_damage would set it) */
     re15_enemy_ai_run_all(0);
-    if (e->hp != 50)   { fprintf(stderr, "FAIL(5b): a lethal hit during mutation must REVIVE HP=50, got %d\n", e->hp); fail = 1; }
+    if (e->hp != RE15_BIRKIN_HP_REVIVE) { fprintf(stderr, "FAIL(5b): a lethal hit during mutation must REVIVE HP=%d (0x32 @0x8011a534 x Faktor), got %d\n", RE15_BIRKIN_HP_REVIVE, e->hp); fail = 1; }
     if (e->state != 1) { fprintf(stderr, "FAIL(5b): the revive must RESUME the saved action (state 1), got %d\n", e->state); fail = 1; }
     printf("  (5b) MUTATION-REVIVE: lethal-during-mutation -> HP=%d, resumed state=%d sub=%d\n", e->hp, e->state, e->sub_state_1);
 
@@ -227,7 +228,7 @@ int main(void)
     e5->grid_id = 0x13;                                 /* sub04-Kampfstart @ROOM5090 0x130A */
     re15_enemy_ai_run_all(0);
     if (e5->state != 1)       { fprintf(stderr, "FAIL(4): form-5 INIT->BRAIN expected state 1, got %d\n", e5->state); fail = 1; }
-    if (e5->hp != 300)        { fprintf(stderr, "FAIL(4): form-5 must share the boss brain (HP 300), got %d\n", e5->hp); fail = 1; }
+    if (e5->hp != RE15_BIRKIN_HP_INIT) { fprintf(stderr, "FAIL(4): form-5 must share the boss brain (HP %d), got %d\n", RE15_BIRKIN_HP_INIT, e5->hp); fail = 1; }
     if (e5->sub_state_1 != 9) { fprintf(stderr, "FAIL(4): form-5 grid 0x13 (nib 3) -> sub 9, got %d\n", e5->sub_state_1); fail = 1; }
     printf("  (4) FORM-5 (0x36): friert auf 0x33, Kampfstart 0x13 -> state=%d hp=%d sub=%d\n", e5->state, e5->hp, e5->sub_state_1);
 

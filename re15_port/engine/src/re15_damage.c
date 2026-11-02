@@ -39,7 +39,8 @@
 #include "re15_spinnen_r38.h"  /* Runde 38 Integration: Schachtspinne ohne Band (@0x800120e4-ec), Latch im Schacht */
 #include "re15_birkin_formen.h" /* Runde 41 Spur GR NB2: re15_bf_granate_form (Bossschaden der Handgranate) */
 #include "re15_gegner_r39.h"    /* Runde 41 Spur GR NB2: re15_r39_affen_regel (Gorilla-HP x2) */
-#include "re15_boss_gator.h"    /* Runde 41 Spur GR NB2: re15_gator_boss_active (Gator-Boss bleibt unveraendert) */
+#include "re15_boss_gator.h"    /* Runde 41 Spur GR NB2: re15_gator_boss_active */
+#include "re15_gator_re2_r41.h"  /* Runde 41 Spur GR NB3: RE15_GR2_HP_INIT / RE15_GR2_HP_SOCKEL (Gator-Boss nach der Boss-Regel) */
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
 static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3]);
@@ -3129,11 +3130,19 @@ static int re15_e4_modell(const re15_actor_t *e)
  *                                                                     50-8*7 < 0
  *     Form-HP: Gorilla 180 (STAGE1 @0x8011f514, alle 16 Spalten, INIT `sh v0,154(a1)` @0x80117104) x 2 (Runde 39 Spur E,
  *     re15_r39_affen_regel) = 360; Alligator 300 (STAGE2 @0x801175dc, alle 16 Spalten, `sh v0,154(a1)` @0x8010c6d4);
- *     Birkin je Form re15_bf_granate_form (300 @0x8011690c bis hp < 0 bzw. bis hp < 100 @0x8011667c = Mutation;
- *     150 @0x80118094 bzw. Bahnsteig-Form). Ergebnis: Gorilla 320, Alligator 250, Birkin 190 / 90 / 40 - keine Form stirbt
- *     an EINER Granate (es bleibt R >= 0 bzw. >= 100 vor der Mutation); die HP selbst sind nicht angefasst.
- * (3) UNVERAENDERT: G5 (0x36 in 5090/5091, E16-Block unten: 80), Gator-Boss 2090/2091 (Modul enemy_ai_boss_gator.c, Treffer
- *     nur ueber den Kanister; 1000 wie bisher), 0x36 ausserhalb 5090 (ROOM3080-Szene, waffen-immun @0x8006f360).
+ *     Birkin je Form re15_bf_granate_form. NACHBESSERUNG 3 (Nutzer F1/F2 "ja", re15_birkin_formen.h): die Birkin-HP-Skala
+ *     laeuft x 2 - 600 (0x12c @0x8011690c x 2) bis hp < 0 bzw. bis hp < 200 (`slti 100` @0x8011667c x 2) = Mutation; 300
+ *     (0x96 @0x80118094 x 2) waehrend/nach der Mutation; Bahnsteig-Form 1000 (G4-Ctor @0x8010067c). Ergebnis: Gorilla 320,
+ *     Alligator 250, Birkin 490 / 290 / 190 / Bahnsteig-Form 890 - keine Form stirbt an EINER Granate (es bleibt R >= 0
+ *     bzw. >= 200 vor der Mutation).
+ * (3) GATOR-BOSS 2090/2091 (NACHBESSERUNG 3, Nutzer F4: "nicht einfach mit einer Granate beenden"): seine "Form" ist der
+ *     Abstand Sockel -> Schwaeche: Start 25300 (RE15_GR2_HP_INIT, INIT @0x80100518-580), Ende hp < 25000 (`slti v0,v0,25000`
+ *     @0x80101ec4 -> +0x218 |= 0x20 @0x80101ed8-dc, loest die Kanister-Szene aus). Die Luecke 300 ist genau die HP des
+ *     RE1.5-Alligators (@0x801175dc), der Pistolenschaden derselbe (7 @0x8006ece4): dieselbe Boss-Regel wie der Alligator,
+ *     R = 50, N = 8 -> 25300 - 25000 - 50 = 250. Vorher 1000 (eine Granate 25300 -> 24300 = sofort geschwaecht). Toedlich
+ *     bleibt nur der Kanister.
+ * (4) UNVERAENDERT: G5 (0x36 in 5090/5091, E16-Block unten: 80), 0x36 ausserhalb 5090 (ROOM3080-Szene, waffen-immun
+ *     @0x8006f360, Spieler in der ganzen Szene gesperrt (1,27)/(2,7) - Nutzerfrage im Dossier N3).
  * Haengt NICHT am Schalter RE15_KEIN_80PROZENT_GORE (Schaden ist Nutzerentscheid, kein 80%-Gore). */
 #define GR_REST_GORILLA     40
 #define GR_REST_BIRKIN     110
@@ -3150,7 +3159,8 @@ int re15_granate_schaden(const re15_actor_t *e)
         return hp0 - GR_REST_GORILLA;
     }
     case 0x23:
-        if (re15_gator_boss_active(e)) return voll;                /* Gator-Boss: unveraendert */
+        if (re15_gator_boss_active(e))                             /* Gator-Boss (3): 25300 - 25000 - 50 = 250 */
+            return RE15_GR2_HP_INIT - RE15_GR2_HP_SOCKEL - GR_REST_ALLIGATOR;
         return GR_HP_ALLIGATOR - GR_REST_ALLIGATOR;
     case 0x30: {
         int hp0, ende;
