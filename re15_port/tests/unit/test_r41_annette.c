@@ -10,7 +10,10 @@
  *   szene        ganzer Ablauf mit Riesenform- und Annette-Bank ueber VM + KI-Takt: Warten (Form unsichtbar) -> Sturz
  *                (y -5600, 14 Bilder) -> Drohen -> Hieb (Treffer im Bild 14 von Clip 4, Hand nahe) -> Reaktion -> Schnitt
  *                weg, liegt (RE2-Versatz), Schrei nur Ton -> Kampfstart sub04 (Form frei), einmalig.
- *   zugstart     6030: Wagentuer nach 5090 = msg 10 bis zum Zugstart; Fuehrerstand: Zugstart einmal, Toene, Abgang.
+ *   zugstart     6030: Wagentuer nach 5090 = msg 10 und Ausgang = Tuer (main00 @0x00C72) bis zum Zugstart, danach
+ *                Ausgang = msg 20 (sub06 @0x01098); Fuehrerstand: Zugstart einmal, Toene, Abgang.
+ *   Blut (NB2)   RE2-Emitter FUN_80104C24: 15 Bilder ab dem Trefferbild je 2 Aufrufe 0/1/0x2000 an den Klauen 14/28,
+ *                Plaetze = Zeilen der Bank, Lage = Klaue im Spawnbild, Lebensdauer der Wolke gemessen.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -31,6 +34,7 @@
 #include "re15_room.h"
 #include "re15_birkin_formen.h"
 #include "re15_annette_r41.h"
+#include "re15_esp.h"
 #include "re2_ems.h"
 
 static int fails = 0;
@@ -212,6 +216,24 @@ static void test_programm_zug(void)
     fprintf(stderr, "Zugstart: %d Segmente, %d Byte Original (ROOM6030), %d Byte Port-Befehle\n", segs, orig, port);
     if (!p) return;
     CHECK(p[0] == 0x22 && p[1] == RE15_AN_ZUG_BANK && p[2] == RE15_AN_ZUG_BIT && p[3] == 1, "Zugstart setzt (9,133) nicht zuerst");
+    /* NB2 Punkt 3: der Port setzt keine Musik. Der Wechsel beim Tor ist Original (ROOM6030 sub06 @0x01092 / sub07 @0x0112C
+     * `54 00 01 00 00 00` hinter Ck(3,89)=1 @0x0108E / @0x01128) - in keinem der drei Port-Programme steht Sce_bgm_control. */
+    {
+        int lp = 0, lt = 0, bgm = 0;
+        const uint8_t *prog[3] = { p, re15_annette_r41_programm(&lp), re15_annette_r41_programm_tuer(&lt) };
+        const int plen[3] = { len, lp, lt };
+        for (int k = 0; k < 3; k++)
+            for (int i = 0; prog[k] && i < plen[k];) {
+                const int l = scd_opcode_size_at(prog[k] + i);
+                if (l <= 0) break;
+                if (prog[k][i] == 0x54) bgm++;
+                i += l;
+            }
+        CHECK(bgm == 0, "Port-Programm setzt Musik (%d x Sce_bgm_control 0x54)", bgm);
+        CHECK(memcmp(s_rdt6030 + 0x1092, "\x54\x00\x01\x00\x00\x00", 6) == 0 && memcmp(s_rdt6030 + 0x112C, "\x54\x00\x01\x00\x00\x00", 6) == 0 &&
+              memcmp(s_rdt6030 + 0x108E, "\x21\x03\x59\x01", 4) == 0 && memcmp(s_rdt6030 + 0x1128, "\x21\x03\x59\x01", 4) == 0,
+              "ROOM6030: Musikwechsel bei (3,89)=1 nicht an @0x0108E/@0x01092 und @0x01128/@0x0112C");
+    }
     int ms[8], nm = 0, fahrt = 0, ende = 0, em = 0;
     for (int i = 0; i < len;) {
         const int l = scd_opcode_size_at(p + i);
@@ -238,8 +260,9 @@ static void test_programm_zug(void)
     }
     int lt = 0;
     const uint8_t *t = re15_annette_r41_programm_tuer(&lt);
-    CHECK(t && lt == 12 && memcmp(t, s_rdt6030 + 0x106A, 10) == 0 && memcmp(t + 10, s_rdt6030 + 0x10CA, 2) == 0,
-          "Tuer-Programm nicht = sub06 @0x0106A + Evt_end @0x010CA");
+    CHECK(t && lt == 44 && memcmp(t, s_rdt6030 + 0x0C72, 32) == 0 && memcmp(t + 32, s_rdt6030 + 0x106A, 10) == 0 &&
+          memcmp(t + 42, s_rdt6030 + 0x10CA, 2) == 0,
+          "Tuer-Programm nicht = main00 @0x00C72 (Ausgang Slot 2) + sub06 @0x0106A + Evt_end @0x010CA (%d Byte)", lt);
 }
 
 static uint8_t *s_an_emd[2];
@@ -315,10 +338,37 @@ static int form_bank(void)
 
 static int cut_jetzt(void) { return (int)g_scd.work_vars[0x0A]; }
 
+static uint32_t rd32le(const uint8_t *p) { return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24; }
+
+/* ESP-Plaetze des Annette-Bluts (Effekt 0, Skala 0x2000; andere Effekte in 5090 = Feuer) */
+static int blut_plaetze_aktiv(void)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *x = re15_esp_fx_get(i);
+        if (x && x->effect_id == 0 && x->scale16 == 0x2000) n++;
+    }
+    return n;
+}
+
 static void test_szene(void)
 {
     flags(1, 0, 1); zug(1);
     re15_annette_r41_reset();
+    /* NB2: ESP-Baenke wie im Spiel (Raumbank ROOM5090 + CORE00.ESP), damit Plaetze und Lebensdauer messbar sind */
+    static re15_esp_t esp5090, gesp;
+    size_t rsz = 0, gsz = 0;
+    static uint8_t *raw5090, *core;
+    if (!raw5090) raw5090 = slurp(RE15_ASSET_PSX_DIR "/STAGE5/ROOM5090.RDT", &rsz);
+    if (!core) core = slurp(RE15_ASSET_PSX_DIR "/DATA/CORE00.ESP", &gsz);
+    CHECK(raw5090 && re15_esp_parse(raw5090, rsz, rd32le(raw5090 + 0x4C), rd32le(raw5090 + 0x50), rd32le(raw5090 + 0x54),
+                                    rd32le(raw5090 + 0x58), &esp5090) == 0, "ESP-Bank ROOM5090");
+    CHECK(core && re15_esp_parse_global(core, gsz, &gesp) == 0, "CORE00.ESP");
+    re15_esp_set_room_bank(&esp5090);
+    re15_esp_set_global_bank(&gesp);
+    re15_esp_fx_reset();
+    const int zeilen = re15_esp_fx_spawn_rows(&esp5090, 0, 1, 0x2000, 0, 0, 0, 0, 0);   /* Zeilen je Aufruf (aus der Bank) */
+    re15_esp_fx_reset();
     uint8_t *b = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u, 13);
     CHECK(b != NULL, "ROOM5090");
     if (!b) return;
@@ -338,10 +388,37 @@ static void test_szene(void)
     int sturz_y0 = 1, sturz_bilder = -1, treffer_bild = -1, treffer_clip = -1;
     int32_t treffer_abstand = -1, steh_x = 0, steh_z = 0;
     int kampf = 0;
+    int blut_erst = -1, blut_letzt = -1, blut_n = 0, wolke_weg = -1, wolke_max = 0, lage_ok = 0, lage_n = 0, pool_max = 0;
     for (f = 0; f < 3000; f++) {
         re15_game_flag_set(5, 0x20, 1);                  /* Plc_dest-Ankunft (Spieler-Laufmaschine, hier nicht im Takt) */
         scd_vm_tick();
         re15_enemy_ai_run_all(0);
+        if (re15_annette_r41_blut() != blut_n) {
+            blut_n = re15_annette_r41_blut();
+            if (blut_erst < 0) {
+                blut_erst = f;
+                /* Lage im Spawnbild = Weltlage der Klauen 14 / 28 (Einheitsanker + Teil-T, RE2 @0x80105950-78) */
+                int32_t k14[3], k28[3];
+                re15_enemy_bone_world_pos(&g_actors[fs], 14, k14);
+                re15_enemy_bone_world_pos(&g_actors[fs], 28, k28);
+                for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+                    const re15_esp_fx_t *x = re15_esp_fx_get(i);
+                    if (!x || x->effect_id != 0 || x->scale16 != 0x2000) continue;
+                    lage_n++;
+                    if ((x->x == k14[0] && x->y == k14[1] && x->z == k14[2]) || (x->x == k28[0] && x->y == k28[1] && x->z == k28[2]))
+                        lage_ok++;
+                }
+                fprintf(stderr, "Blut F%d: Klaue 14 (%d,%d,%d), 28 (%d,%d,%d), Annette (%d,%d), %d/%d Plaetze an den Klauen\n", f,
+                        (int)k14[0], (int)k14[1], (int)k14[2], (int)k28[0], (int)k28[1], (int)k28[2], (int)g_actors[as].x,
+                        (int)g_actors[as].z, lage_ok, lage_n);
+            }
+            blut_letzt = f;
+        }
+        re15_esp_fx_tick(re15_esp_room_bank());
+        {   const int w = blut_plaetze_aktiv();
+            if (w > wolke_max) wolke_max = w;
+            if (re15_esp_fx_count() > pool_max) pool_max = re15_esp_fx_count();
+            if (blut_erst >= 0 && w == 0 && wolke_weg < 0 && f > blut_letzt) wolke_weg = f; }
         const int ph = re15_annette_r41_phase();
         {   static int b21 = -1; const int b = re15_game_flag_get(5, 0x21);
             if (getenv("AN_DIAG") && b != b21) fprintf(stderr, "F%d (5,0x21)=%d Annette (%d,%d) ss1 %d\n", f, b,
@@ -392,7 +469,25 @@ static void test_szene(void)
     CHECK(treffer_clip == 4 && treffer_bild == 15, "Treffer nicht im Hieb-Clip 4 Bild 14 (Clip %d, Bild nach dem Vorschub %d)",
           treffer_clip, treffer_bild);
     CHECK(treffer_abstand >= 0 && treffer_abstand < 1500, "Hand links beim Treffer %d von ihr entfernt", (int)treffer_abstand);
-    CHECK(re15_annette_r41_blut() >= 8, "Blut %d < 8 (4 beim Treffer, je 2 nach 6/12 Bildern)", re15_annette_r41_blut());
+    /* NB2 Blut = RE2 FUN_80104C24: +0x16B = 15 @0x80104D10 ab dem Trefferbild, je Bild 2 x FUN_801058BC @0x80104D38/4C */
+    fprintf(stderr, "Blut: %d Aufrufe in F%d..F%d (Treffer F%d), %d Zeilen je Aufruf, %d Plaetze belegt, Wolke max %d, "
+            "weg ab F%d (%d Bilder nach dem ersten Spawn), Pool max %d/%d\n", re15_annette_r41_blut(), blut_erst, blut_letzt,
+            ph_bild[RE15_AN_REAKTION], zeilen, re15_annette_r41_blut_plaetze(), wolke_max, wolke_weg,
+            wolke_weg >= 0 ? wolke_weg - blut_erst : -1, pool_max, RE15_ESP_FX_MAX);
+    CHECK(re15_annette_r41_blut() == 30, "Blut-Aufrufe %d statt 15 Bilder x 2 Klauen (@0x80104D10, @0x80104D38/4C)",
+          re15_annette_r41_blut());
+    CHECK(blut_erst == ph_bild[RE15_AN_REAKTION] && blut_letzt - blut_erst == 14,
+          "Blut-Bilder F%d..F%d statt ab dem Trefferbild F%d 15 Bilder", blut_erst, blut_letzt, ph_bild[RE15_AN_REAKTION]);
+    /* Pool voll: das Original verliert den Rest (FUN_8001B910 @0x8001B98C-98 `j 0x8001bc1c` / v0 = 0xFF); 5090 haelt dazu
+     * die Feuer (main00) im selben 96er-Pool */
+    CHECK(zeilen > 0 && (re15_annette_r41_blut_plaetze() == 30 * zeilen ||
+                         (re15_annette_r41_blut_plaetze() < 30 * zeilen && pool_max == RE15_ESP_FX_MAX)),
+          "Blut-Plaetze %d statt 30 x %d Zeilen ohne vollen Pool (Pool max %d)", re15_annette_r41_blut_plaetze(), zeilen,
+          pool_max);
+    /* Groesse gegen RE2: RAM e22 (71,54 s) hielt 60 Plaetze 0/1/0x2000 gleichzeitig (10 Gruppen zu 6) */
+    CHECK(wolke_max >= 60, "Blutwolke hoechstens %d Plaetze gleichzeitig, RE2 e22: 60", wolke_max);
+    CHECK(lage_n == 2 * zeilen && lage_ok == lage_n, "Blut im ersten Bild: %d/%d Plaetze an den Klauen 14/28", lage_ok, lage_n);
+    CHECK(wolke_weg > blut_letzt, "Blutwolke verschwindet nicht nach dem letzten Spawn (F%d)", wolke_weg);
     CHECK(re15_annette_r41_ton(RE15_AN_SE_KRACH) == 1 && re15_annette_r41_ton(RE15_AN_SE_STURZ) == 1 &&
           re15_annette_r41_ton(RE15_AN_SE_BRUELL) == 1, "Toene Krach/Sturz/Bruellen nicht je einmal");
     CHECK(re15_annette_r41_schrei() == 1, "Schrei (Stimme 41 ohne Text) %d mal", re15_annette_r41_schrei());
@@ -428,14 +523,26 @@ static void test_zugstart(void)
     re15_annette_r41_reset();
     uint8_t *b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 6);
     CHECK(b != NULL, "ROOM6030");
-    fprintf(stderr, "6030 Wagen ohne Zugstart: Slot 3 Typ %d Ereignis %d\n", g_aot.slots[3].type, g_aot.slots[3].event_id);
+    fprintf(stderr, "6030 Wagen ohne Zugstart: Slot 2 Typ %d Ereignis %d Ziel %u/%u, Slot 3 Typ %d Ereignis %d\n",
+            g_aot.slots[2].type, g_aot.slots[2].event_id, g_aot.door_params[2].dest_stage, g_aot.door_params[2].dest_room,
+            g_aot.slots[3].type, g_aot.slots[3].event_id);
     CHECK(b && g_aot.slots[3].type == RE15_AOT_TYPE_MESSAGE, "6030 Wagen vor dem Zugstart: Tuer nach 5090 offen (Typ %d)",
           g_aot.slots[3].type);
+    /* NB2: der Zug steht -> Ausgang Slot 2 ist die Tuer aus main00 @0x00C72 (Ziel Stage-Byte 5 Raum 0 = ROOM6000), nicht
+     * msg 20 "You can't get off the train right now." (@0x01098) */
+    CHECK(b && g_aot.slots[2].type == RE15_AOT_TYPE_DOOR && g_aot.door_params[2].dest_stage == 5 &&
+          g_aot.door_params[2].dest_room == 0, "6030 Wagen vor dem Zugstart: Ausgang Slot 2 Typ %d Ziel %u/%u statt Tuer nach 6000",
+          g_aot.slots[2].type, g_aot.door_params[2].dest_stage, g_aot.door_params[2].dest_room);
     free(b);
     zug(1);
     b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 6);
+    fprintf(stderr, "6030 Wagen nach Zugstart: Slot 2 Typ %d Ereignis %d, Slot 3 Typ %d\n", g_aot.slots[2].type,
+            g_aot.slots[2].event_id, g_aot.slots[3].type);
     CHECK(b && g_aot.slots[3].type == RE15_AOT_TYPE_DOOR, "6030 Wagen nach dem Zugstart: Tuer nach 5090 zu (Typ %d)",
           g_aot.slots[3].type);
+    CHECK(b && g_aot.slots[2].type == RE15_AOT_TYPE_MESSAGE && g_aot.slots[2].event_id == 20,
+          "6030 Wagen nach dem Zugstart: Ausgang Slot 2 nicht msg 20 (@0x01098): Typ %d Ereignis %d", g_aot.slots[2].type,
+          g_aot.slots[2].event_id);
     free(b);
     /* Fuehrerstand (Eintritt Cut 0): Zugstart einmal */
     zug(0);

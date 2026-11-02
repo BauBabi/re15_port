@@ -22,8 +22,8 @@
 #include "re15_actor.h"
 #include "re15_enemy.h"
 #include "re15_emd.h"
-#include "re15_damage.h"        /* re15_enemy_bone_world_pos, re15_engine_rand8 */
-#include "re15_esp.h"           /* re15_esp_fx_spawn_ex, re15_esp_room_bank (Blut wie bb_blut_spawn) */
+#include "re15_damage.h"        /* re15_enemy_bone_world_pos */
+#include "re15_esp.h"           /* re15_esp_fx_spawn_rows, re15_esp_room_bank, re15_esp_fx_count (Blut, RE2 FUN_80104C24) */
 #include "re15_msg.h"
 #include "re15_scd.h"
 #include "re15_room.h"
@@ -94,10 +94,33 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define AN_FA_STURZ_BODEN    12
 #define AN_KIPP_WINKEL     (-683)   /* 60 Grad nach hinten (Kontaktblatt liegen.png) */
 #define AN_KIPP_HEBEN      (-480)   /* Clip 6 Bild 12 um -60 Grad gekippt reicht bis y +482 unter den Ursprung (Gerippe gemessen) */
-/* Blut: RE2 zeigt ab dem Treffer (71,09 s) eine wachsende Blutwolke bis zum Schnitt (72,13 s = 26 PAL-Spielbilder,
- * re2c_12b_hieb_dicht.jpg). Port: 4 Spritzer im Trefferbild (wie bisher), dazu je 2 nach 6 und 12 Bildern (PORT-WAHL). */
-#define AN_BLUT_NACH1         6
-#define AN_BLUT_NACH2        12
+/* Blut (Nachbesserung 2): der Emitter der RE2-Szene selbst. Claire-Disc SLES-10972, Birkin-Overlay (Typ 0x33, im RAM
+ * @0x80100000, Savestate e22 aus analysis/befunde_runde41/AN_belege/re2_claire/), Routinen-Tabelle @0x80106584: [2] =
+ * FUN_80104C24 (Member_set 0x17=2 @0x01142 -> Routine 2 @0x80104BE4-F8). Dort, NACH dem Bildvorschub @0x80104C9C-A8:
+ *   @0x80104CD4-E8  Bildwort & 0x10000 (EDD-Trefferbit): `lw v0,0x178(s0)` `lw v0,0(v0)` `lui v1,1` `and v0,v0,v1`
+ *   @0x80104CF0-F8  nur einmal (+7): `lbu v0,7(s0)` / `bnez`; @0x80104D04-0C `sb v0,7(s0)`, `jal 0x80057690` (a0 = 3)
+ *   @0x80104D10-14  `addiu v0,zero,0xf` / `sb v0,0x16b(s0)`             -> 15 Bilder Blut, ab diesem Bild
+ *   @0x80104D18-60  solange +0x16B: `jal 0x801058bc` (e, [0x80106330]+1, 1) @0x80104D38 und (e, [0x80106330]+3, 1)
+ *                   @0x80104D4C, dann +0x16B - 1; [0x80106330] = 13 (RAM e22) -> Teile 14 und 16
+ *   FUN_801058BC    Beschreiber 0x801065B8 + 6 * 1 = `00 01 00 00 00 20` (@0x801058D0-E4, Packung @0x80105994-B4) =
+ *                   Effekt 0, sub 1, Skala 0x2000; Bit 0x80 = 0 -> Anker Einheitsmatrix 0x80095F68 (T = 0), a3 = Weltlage
+ *                   des Teils (+0x5C/+0x60/+0x64 @0x80105950-78) = Blut bleibt, wo die Klaue in DIESEM Bild war;
+ *                   Winkel a1 = FUN_80014E4C(e.x, e.z, Spieler.x, Spieler.z) @0x801058F0-908 (= Leon FUN_800154AC)
+ *   FUN_8001B910    (= Leon FUN_8001BF10, Pool 96 @0x8001B910 `addiu t2,zero,0x60`): 3 Zeilen je Aufruf.
+ * Gemessen (RAM e22, 71,54 s): 60 Plaetze 0/1/0x2000 in 10 Gruppen zu 6 (2 Teile x 3 Zeilen), Gruppen eines Bildes
+ * wandern mit der Klaue; e23 (6 Spielbilder spaeter) noch 4 Gruppen. RAM e22: Teile 14/15/16 in einer Reihe (je ~195
+ * auseinander, je ~600 von Teil 13) = die drei Klauen der Hand 13, 14 und 16 die aeusseren.
+ * Port: dieselbe Kette auf dem vorhandenen RE2->RE1.5-Dekoder (enemy_ai_re2_zombie.c re2z_gore_fx_core: RE2-Effekt 0 ->
+ * RE1.5-Blut 0, sub und Skala durchgereicht, re15_esp_fx_spawn_rows). Teile -> Knochen der Riesenform: die linke Hand 13
+ * (Hieb links, AN_HAND_LINKS) traegt in BAHNSTEIG_FORM.EMD die Klauen 14 (729,30,-228), 15 (782,30,83), 28 (684,30,258)
+ * und den Daumen 30 -> die aeusseren 14 und 28 (PORT-WAHL der Zuordnung, Form ist kein RE2-Modell). Die 8 Spritzer
+ * vorher (4 an Annette im Trefferbild, je 2 nach 6/12 Bildern) hatten fuer Lage und Zeitpunkt keinen Beleg: entfallen. */
+#define AN_BLUT_BILDER       15     /* @0x80104D10 `addiu v0,zero,0xf` */
+#define AN_BLUT_KLAUE_A      14     /* RE2 Teil [0x80106330]+1 = 14 (@0x80104D2C `addiu a1,s1,1`) */
+#define AN_BLUT_KLAUE_B      28     /* RE2 Teil [0x80106330]+3 = 16 (@0x80104D44 `addiu a1,s1,3`) */
+#define AN_BLUT_EFFEKT        0     /* 0x801065BE `00` (Bit 0x80 = 0: Einheitsanker) */
+#define AN_BLUT_SUB           1     /* 0x801065BF `01` + u16 0x801065C0 `00 00` */
+#define AN_BLUT_SKALA    0x2000     /* u16 0x801065C2 `00 20` */
 
 /* ---- 5090: Programm --------------------------------------------------------------------------------------------------
  * Opcode-Formen mit Vorbild (Laengen = s_opcode_sizes, scd_vm.c):
@@ -235,11 +258,19 @@ static const an_seg_t k_zug_seg[] = {
 };
 #define AN_N_ZUG_SEG ((int)(sizeof k_zug_seg / sizeof k_zug_seg[0]))
 
-/* Wagen-Eintritt (sub06 @0x010C4 Evt_exec sub05) solange der Zugstart nicht lief: Tuer Slot 3 nach 5090 zeigt den
- * Original-Text msg 10 "I have to get this thing moving first!" - genau der (3,89)=0-Zweig sub06 @0x0106A; die
- * Licht-Schleife sub05 ("Fahrt") startet erst nach dem Zugstart. */
-static const uint8_t k_tuer[] = { 0x46, 0x03, 0x01, 0x31, 0x0a, 0x00, 0xff, 0xff, 0x00, 0x00,   /* @0x0106A */
-                                  0x01, 0x00 };                                                /* @0x010CA */
+/* Wagen-Eintritt (sub06 @0x010C4 Evt_exec sub05) solange der Zugstart nicht lief = der Zug steht noch. Beide Wagentueren
+ * wie im Original vor dem Start, also wie im (3,89)=0-Zweig von sub06:
+ *   Slot 2 (Ausgang zur Bahnsteighalle ROOM6000) ist wieder die Tuer aus main00 @0x00C72 (Door_aot_set, 32 Byte). Der
+ *     (3,89)=1-Zweig hat sie davor mit @0x01098 `46 02 01 31 14 00` auf msg 20 "You can't get off the train right now."
+ *     gestellt; der (3,89)=0-Zweig (@0x0105C..@0x01088) fasst Slot 2 nicht an. Nachbesserung 2 (Orchestrator-Entscheid):
+ *     msg 20 erst, wenn der Zug faehrt - nach dem Zugstart laeuft sub06 unveraendert und @0x01098 gilt.
+ *   Slot 3 (nach 5090) zeigt den Original-Text msg 10 "I have to get this thing moving first!" = sub06 @0x0106A.
+ * Die Licht-Schleife sub05 ("Fahrt") startet erst nach dem Zugstart. */
+static const uint8_t k_tuer[] = { 0x3b, 0x02, 0x02, 0x31, 0x00, 0x00, 0xf4, 0xb6, 0xc0, 0xae, 0xdc, 0x05, 0xb0, 0x04,
+                                  0x9d, 0x06, 0xf0, 0xf1, 0xba, 0xd8, 0x00, 0x0c, 0x05, 0x00, 0x03, 0x02, 0x00, 0x00,
+                                  0x00, 0x00, 0x00, 0x00,                                      /* main00 @0x00C72 */
+                                  0x46, 0x03, 0x01, 0x31, 0x0a, 0x00, 0xff, 0xff, 0x00, 0x00,   /* sub06 @0x0106A */
+                                  0x01, 0x00 };                                                /* sub06 @0x010CA */
 
 static uint8_t s_zug_prog[512];
 static int     s_zug_len = 0;
@@ -273,14 +304,16 @@ static struct {
     int phase, t;
     int form, frau;               /* Slots, -1 = keiner */
     int luft;                     /* Add_speed-Schritte des Sturzes (5080 sub03 For 14) */
-    int blut;                     /* Blutspawns (Testzaehler) */
+    int blut;                     /* Blut-Aufrufe FUN_801058BC (Testzaehler) */
+    int blut_plaetze;             /* davon belegte ESP-Plaetze (Zeilen) */
+    int blut_rest;                /* +0x16B: Blut-Bilder uebrig (@0x80104D10..60) */
     int blut_textur;              /* Textur mit Blut geladen */
     int treffer;                  /* Hieb hat getroffen */
     int zug;                      /* Zugstart-Programme seit Raumeintritt */
     int toene[RE15_AN_SE_N];
     int schrei;
     unsigned raum;
-} s_an = { RE15_AN_AUS, 0, -1, -1, 0, 0, 0, 0, 0, { 0 }, 0, 0 };
+} s_an = { RE15_AN_AUS, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, { 0 }, 0, 0 };
 
 static void (*s_modell_fn)(uint8_t) = 0;
 static void (*s_se_fn)(int, int) = 0;
@@ -305,13 +338,14 @@ static void ton(int satz)
 void re15_annette_r41_reset(void)
 {
     s_an.phase = RE15_AN_AUS; s_an.t = 0; s_an.form = s_an.frau = -1;
-    s_an.luft = 0; s_an.blut = 0; s_an.blut_textur = 0; s_an.treffer = 0;
+    s_an.luft = 0; s_an.blut = 0; s_an.blut_plaetze = 0; s_an.blut_rest = 0; s_an.blut_textur = 0; s_an.treffer = 0;
     s_an.zug = 0; memset(s_an.toene, 0, sizeof s_an.toene); s_an.schrei = 0;
 }
 
 int re15_annette_r41_phase(void) { return s_an.phase; }
 int re15_annette_r41_slot(int form) { return form ? s_an.form : s_an.frau; }
 int re15_annette_r41_blut(void) { return s_an.blut; }
+int re15_annette_r41_blut_plaetze(void) { return s_an.blut_plaetze; }
 int re15_annette_r41_zug_szene(void) { return s_an.zug; }
 int re15_annette_r41_ton(int satz) { return (satz >= 0 && satz < RE15_AN_SE_N) ? s_an.toene[satz] : 0; }
 int re15_annette_r41_schrei(void) { return s_an.schrei; }
@@ -436,12 +470,31 @@ static int vor(re15_actor_t *e, int halten)
     return re15_r38_birkin_anim(e);
 }
 
-static void blut(const int32_t p[3], int16_t winkel, uint8_t sub)
+/* Ein Bild Blut von FUN_80104C24 (@0x80104D18-60): je ein FUN_801058BC-Aufruf an den beiden aeusseren Klauen, Lage = Welt-
+ * lage des Knochens in diesem Bild (Einheitsanker 0x80095F68 + a3 = Teil-T @0x80105950-78), Winkel = Peilung Form -> Spieler
+ * (FUN_80014E4C @0x80105908 = Leon FUN_800154AC; Port-Zwilling wie re2z_bearing_to), Boden = Aktor-y wie
+ * re2z_gore_fx_core. Rueckgabe der Zeilen-Spawns = belegte Plaetze (Pool voll: das Original verliert den Aufruf,
+ * @0x8001B98C-98 `j 0x8001bc1c` / `addiu v0,zero,0xff`). */
+static void blut_bild(const re15_actor_t *f)
 {
-    /* wie bb_blut_spawn (birkin_bahnsteig.c): Effekt 0 = Blut, Skala 0x17d0 + (rng & 0xff) * 8 @0x80107430-34 */
-    const uint16_t skala = (uint16_t)(0x17d0 + (re15_engine_rand8() & 0xffu) * 8u);
-    s_an.blut++;
-    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0u, sub, skala, p[0], p[1], p[2], winkel);
+    static const int k_klaue[2] = { AN_BLUT_KLAUE_A, AN_BLUT_KLAUE_B };   /* Reihenfolge @0x80104D38, @0x80104D4C */
+    if (s_an.blut_rest <= 0) return;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int16_t w = blick(f, pl->x, pl->z);
+    for (int i = 0; i < 2; i++) {
+        int32_t p[3];
+        re15_enemy_bone_world_pos(f, k_klaue[i], p);
+        s_an.blut++;
+        s_an.blut_plaetze += re15_esp_fx_spawn_rows(re15_esp_room_bank(), AN_BLUT_EFFEKT, AN_BLUT_SUB, AN_BLUT_SKALA,
+                                                    p[0], p[1], p[2], f->y, w);
+    }
+    s_an.blut_rest--;                                    /* @0x80104D54-60 `addiu v0,v0,-1` / `sb v0,0x16b(s0)` */
+#ifdef RE15_PLATFORM_PC
+    if (s_an.blut_rest == AN_BLUT_BILDER - 1 || s_an.blut_rest == 0)
+        fprintf(stderr, "[annette] F%u Blut %d/%d: %d Aufrufe, %d Plaetze, Pool %d/%d\n", (unsigned)g_engine.frame_count,
+                AN_BLUT_BILDER - s_an.blut_rest, AN_BLUT_BILDER, s_an.blut, s_an.blut_plaetze, re15_esp_fx_count(),
+                RE15_ESP_FX_MAX);
+#endif
 }
 
 static void meldungen_einsetzen(uint16_t room_id)
@@ -468,7 +521,8 @@ static const uint8_t *zug_evt_exec(uint8_t sub_id, const uint8_t *target)
     /* sub00 @0x00D28 Switch(Cut) Case 0 -> sub07 (Fuehrerstand), Case 6/8/12 -> sub06 (Wagen). */
     if (g_scd.work_vars[0x0A] != 0) {
 #ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[annette] ROOM6030 Wagen (Cut %d): Zugstart nicht gelaufen -> Tuer nach 5090 = msg 10 (sub06 @0x0106A)\n",
+        fprintf(stderr, "[annette] ROOM6030 Wagen (Cut %d): Zugstart nicht gelaufen -> Ausgang = Tuer (main00 @0x00C72), "
+                "Tuer nach 5090 = msg 10 (sub06 @0x0106A)\n",
                 (int)g_scd.work_vars[0x0A]);
 #endif
         return k_tuer;
@@ -514,7 +568,8 @@ const uint8_t *re15_annette_r41_evt_exec(uint16_t room_id, uint8_t sub_id, const
         return target;
     }
     for (unsigned b = RE15_AN_SIG_SCHLAG; b <= RE15_AN_SIG_BRUELL; b++) re15_game_flag_set(5, b, 0);
-    s_an.phase = RE15_AN_WARTEN; s_an.t = 0; s_an.blut = 0; s_an.luft = 0; s_an.treffer = 0;
+    s_an.phase = RE15_AN_WARTEN; s_an.t = 0; s_an.blut = 0; s_an.blut_plaetze = 0; s_an.blut_rest = 0; s_an.luft = 0;
+    s_an.treffer = 0;
     re15_actor_t *f = &g_actors[s_an.form], *a = &g_actors[s_an.frau];
     f->no_draw = 1;                                      /* bis zum Sturz unsichtbar (RE2: geparkt auf y -9000, @0x00C82) */
     a->x = AN_A0_X; a->y = 0; a->z = AN_A0_Z; a->rot_x = a->rot_z = 0;   /* PORT-WAHL A0 (s. oben); vorher in Cut 13 nicht im Bild */
@@ -561,11 +616,8 @@ static void hieb_ausrichten(re15_actor_t *f, const re15_actor_t *a)
 
 static void treffer(re15_actor_t *f, re15_actor_t *a)
 {
-    int32_t h[3], p[3];
-    const int16_t w = blick(f, a->x, a->z);
-    re15_enemy_bone_world_pos(f, AN_HAND_LINKS, h);
-    p[0] = a->x; p[1] = -1500; p[2] = a->z;              /* Brusthoehe der Frau (Modellhoehe 2785, Ansichtsblatt) */
-    blut(p, w, 1u); blut(p, w, 0u); blut(h, w, 0u); blut(h, w, 0u);
+    (void)f;
+    s_an.blut_rest = AN_BLUT_BILDER;                     /* @0x80104D10-14 (Blut ab diesem Bild, blut_bild im Takt) */
     a->hp = -1;                                          /* NPC-Familie: unverwundbar, kein Treffer-Kandidat (re15_damage.c) */
     s_an.blut_textur = 1;
     if (s_modell_fn) s_modell_fn(RE15_AN_TYP);           /* Kittel mit Blut (ANNETTE_4D_BLUT.EMD = RE2 EM049-Textur) */
@@ -646,17 +698,12 @@ void re15_annette_r41_tick(void)
         vor(f, 1);
         if (re15_game_flag_get(5, RE15_AN_SIG_LIEGT)) {   /* Schnitt weg vor dem Trefferbild: Treffer nachholen */
             if (!s_an.treffer) treffer(f, a);
-            s_an.phase = RE15_AN_REAKTION; s_an.t = AN_BLUT_NACH2 + 1;
+            s_an.phase = RE15_AN_REAKTION; s_an.t = 0;
         }
         break;
     case RE15_AN_REAKTION:
         vor(a, 1);
         if (f->motion == AN_FC_HIEB) { if (vor(f, 1)) clip(f, AN_FC_STEHEN); } else vor(f, 0);
-        if (s_an.t == AN_BLUT_NACH1 || s_an.t == AN_BLUT_NACH2) {
-            int32_t p[3] = { a->x, -1300, a->z };
-            const int16_t w = blick(f, a->x, a->z);
-            blut(p, w, 0u); blut(p, w, 1u);
-        }
         if (re15_game_flag_get(5, RE15_AN_SIG_LIEGT)) {
             re15_game_flag_set(5, RE15_AN_SIG_LIEGT, 0);
             liegen(f, a);
@@ -677,4 +724,7 @@ void re15_annette_r41_tick(void)
         a->y = AN_KIPP_HEBEN;
         break;
     }
+    /* Blut wie FUN_80104C24: nach dem Bildvorschub (@0x80104C9C-A8) und dem Trefferbild (@0x80104CD4-14) je Bild an den
+     * Klauen, 15 Bilder lang, unabhaengig vom Schnitt (Routine der Form, nicht des Skripts). */
+    if (s_an.phase >= RE15_AN_HIEB) blut_bild(f);
 }

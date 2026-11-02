@@ -47,6 +47,9 @@ Ventil-Sicherungskasten 2010, nachgetragen von Spur C nach AUFTRAG.md Nachtrag 1
 (Szene gesehen 110, Schluessel liegt 111, Schluessel genommen 112), **G = 114-119**, **E = 120** (nur wenn kein
 Original-Flag reicht), **J/K = 121-124** bei Bedarf, 125-133 vergibt der Orchestrator. Jedes neu belegte Bit traegt
 die Spur in `tests/unit/test_r36_kartenbits.c` k_port[] ein (eine Zeile) — 104/105 sind Original!
+**AN** (Orchestrator-Entscheid 2026-11-02, Nachbesserung 2 der Spur AN): **133** = Zugstart-Szene 6030 gesehen
+(`RE15_AN_ZUG_BIT`, `include/re15_annette_r41.h`; gesetzt vom Zugstart-Programm in `annette_r41.c`), in k_port[]
+eingetragen. Zensus `bank9_zensus.py` 2026-11-02: im Original frei.
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)
 Port-Ids liegen hinter den Original-Nachrichten eines Raums (ab 40; vorhandene per grep `MSG_ID`/Ids in include/ und

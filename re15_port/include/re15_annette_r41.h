@@ -19,7 +19,10 @@
  *     analysis/befunde_runde41/AN_belege/re2_claire/), Kameras auf die RE1.5-Schnitte 12/15/11/13 von 5090 abgebildet;
  *   - Nachbesserung 1: Zugstart-Szene im Fuehrerstand 6030 nach dem Tor (Nutzer-Idee): ROOM6030 sub07 @0x01132
  *     Evt_exec sub05 -> Port-Programm, einmalig ueber (9,133); solange sie nicht lief, bleibt die Wagentuer nach 5090
- *     beim Original-Text msg 10 (Form von sub06 @0x0106A);
+ *     beim Original-Text msg 10 (Form von sub06 @0x0106A) und der Ausgang Slot 2 die Tuer aus main00 @0x00C72
+ *     (Nachbesserung 2: msg 20 "You can't get off the train right now." @0x01098 erst, wenn der Zug faehrt);
+ *   - Nachbesserung 2: Blut beim Hieb = der Emitter der RE2-Szene (Birkin-Overlay FUN_80104C24 @0x80104CD4-60, 15 Bilder
+ *     Effekt 0/1/0x2000 an zwei Klauen), Belege in annette_r41.c AN_BLUT_*;
  *   - Takt der Figuren (Riesenform, Annette) in re15_annette_r41_tick, Signale ueber Bank 5 (Raum-Scratch);
  *   - Aussehen: RE2-Annette (CDEMD0.EMS kind 0x47/0x49) auf dem 0x4D-Gerippe, shared_assets/RE2/ANNETTE_4D*.EMD
  *     (tools/r41_annette/annette_modell.py).
@@ -41,7 +44,8 @@
 #define RE15_AN_KAMPF_BIT     42u       /* (3,0x2A): ROOM5090 sub01 @0x0129A `22 03 2a 01` */
 /* Port-Bit "Zugstart-Szene 6030 gesehen" (Nachbesserung 1): Bank 9 (mit g_game.flags gespeichert). Zensus
  * tools/r36_kartenbits/bank9_zensus.py 2026-11-02: 133 im Original frei (Block 110..133, 240 RDTs, 0 Desync), in keinem
- * r41-Zweig vergeben; VERTRAG Runde 41 1.1: 125-133 vergibt der Orchestrator -> zur Bestaetigung gemeldet. */
+ * r41-Zweig vergeben; VERTRAG Runde 41 1.1: 125-133 vergibt der Orchestrator -> bestaetigt 2026-11-02 (Nachbesserung 2),
+ * eingetragen in tests/unit/test_r36_kartenbits.c k_port[] und VERTRAG.md 1.1. */
 #define RE15_AN_ZUG_BANK      9u
 #define RE15_AN_ZUG_BIT       133u
 
@@ -102,7 +106,7 @@ void re15_annette_r41_stimme_hook(void (*fn)(uint16_t room, int voice_id));     
 /* Fuer Tests */
 const uint8_t *re15_annette_r41_programm(int *out_len);
 const uint8_t *re15_annette_r41_programm_zug(int *out_len);     /* 6030 Fuehrerstand */
-const uint8_t *re15_annette_r41_programm_tuer(int *out_len);    /* 6030 Wagen: Tuer nach 5090 noch zu (msg 10) */
+const uint8_t *re15_annette_r41_programm_tuer(int *out_len);    /* 6030 Wagen: Ausgang Tuer, Tuer nach 5090 zu (msg 10) */
 const uint8_t *re15_annette_r41_meldung_raum(uint16_t room_id, int msg_id, int *out_len);
 int  re15_annette_r41_zug_szene(void);           /* Zugstart-Programme seit Raumeintritt (Testzaehler) */
 int  re15_annette_r41_ton(int satz);             /* gespielte Saetze seit reset (Testzaehler) */
@@ -110,7 +114,8 @@ int  re15_annette_r41_schrei(void);              /* Schrei-Stimmen seit reset (T
 const uint8_t *re15_annette_r41_meldung(int msg_id, int *out_len);
 int  re15_annette_r41_phase(void);
 int  re15_annette_r41_slot(int form);           /* 1 = Riesenform, 0 = Annette; -1 = keiner */
-int  re15_annette_r41_blut(void);               /* Blutspawns seit Szenenstart */
+int  re15_annette_r41_blut(void);               /* Blut-Aufrufe (RE2 FUN_801058BC, 2 je Bild x 15) seit Szenenstart */
+int  re15_annette_r41_blut_plaetze(void);       /* davon belegte ESP-Plaetze (Zeilen je Aufruf) */
 void re15_annette_r41_reset(void);
 
 #endif
