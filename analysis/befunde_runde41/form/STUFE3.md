@@ -197,3 +197,16 @@ fuellt den Wagen fast aus.
   sie aus dem Bild nimmt (5080 gemessen: von z -22553 bis -14139).
 - Integration in master und Abgleich mit Spur SF (r41/sichel: Mutation am Ende der Sichel-Form, Effekte) stehen aus; beide Zweige aendern
   birkin_formen.c, main.c, test_birkin_szenen.c.
+
+## 8. Testlage (gemessen 2026-11-02)
+
+- Voller ctest in `re15_port/build` (Bau von Commit 0e10882f9, `-j 6`, Start 09:55): bei Redaktionsschluss 12:55 **1402 von 1408
+  gelaufen, 1401 gruen, 1 rot**: `integration_r41_birkin_pistole`. Ursache gemessen: die Anpassung dieses Tests aus 0e10882f9 war nicht
+  im Commit (Patch lief im Hintergrund ohne Wirkung), der Lauf pruefte noch "Mutation erwartet 1" / "27 Meshes". Nachgezogen in
+  072d1d3f7; mit dem Endstand (Bau `re15_port/build_s3`, Asset 6200b3d35) **gruen**: Leon und Elza je Mutationen 0, Form-HP 150 bis 0,
+  Rueckstoss 1, Sturz 1, G5 1, G5 tot 1. Die 6 noch offenen Tests sind die seriellen `integration_r41_ventilkette_*` (je rund 12 min,
+  andere Raeume, von dieser Stufe nicht beruehrt).
+- Mit dem Endstand neu gebaut und gelaufen (`build_s3`): `unit_birkin_bahnsteig` OK, `unit_birkin_szenen` OK.
+- Gruen im vollen Lauf u. a. alle Birkin-/G5-Tests (`unit_birkin_*`, `unit_r41_birkin_wand_*`, `probe_p2_birkin_g5`, `unit_g5_*`,
+  `unit_r30_n_room5080_birkin_wand`, `integration_r35_zgirl_5090`) und die Raumlaeufe `integration_r37_elzaems_leon5080`, `_elza5081`,
+  `_elza5091`, `unit_r41_form_emd`.
