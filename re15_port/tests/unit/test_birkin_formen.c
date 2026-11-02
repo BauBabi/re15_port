@@ -13,7 +13,7 @@
  *     Sichel 15 nur CLUT); Meshes 16-22 zeigen nur in ihre eigenen Arrays,
  *   - Runde 41 SF Nachbesserung 1: Oberschenkel 1/4 an y 360 geteilt (kurze Hose; jedes alte Dreieck bleibt, jedes
  *     geteilte Viereck wird zu zwei, neue Ecken liegen hinter den alten), Haut-CLUTs 480-482 umgefaerbt (Jeans-Eintraege
- *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22) und 484 (Sichel, Mesh 15),
+ *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  */
 #include <stdint.h>
@@ -65,6 +65,7 @@ static int geteilt(int m)        /* birkin_formen.py FORMEN['hangar'] teilen (ku
 }
 #define CLUT_SCHWANZ (483u << 6)  /* birkin_formen.py schwanz_kette uv clut */
 #define CLUT_SICHEL  (484u << 6)  /* birkin_formen.py umtexturieren Mesh 15 */
+#define CLUT_KOPF    (485u << 6)  /* birkin_formen.py umtexturieren Mesh 9 (N1.10) */
 
 static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
 {
@@ -168,6 +169,13 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                  !memcmp(a->quad_uvs, b->quad_uvs, sizeof *a->quad_uvs * (size_t)a->quad_count));
             if (umtexturiert(m)) { CHECK(!uv_gleich, "%s: Mesh %d nicht umtexturiert", name, m); uv_neu++; }
             else CHECK(uv_gleich, "%s: Mesh %d UVs weichen ab", name, m);
+            if (m == 9) {                /* N1.10: Kopf auf eigener CLUT-Zeile */
+                int kopf = 0;
+                for (int q = 0; q < b->quad_count; q++) kopf += b->quad_uvs[q].clut == CLUT_KOPF;
+                for (int t = 0; t < b->triangle_count; t++) kopf += b->triangle_uvs[t].clut == CLUT_KOPF;
+                CHECK(kopf == b->quad_count + b->triangle_count, "%s: Kopf (Mesh 9) nur %d/%d Teile auf CLUT 485",
+                      name, kopf, b->quad_count + b->triangle_count);
+            }
             if (m == 15) {
                 int sichel = 0;
                 for (int q = 0; q < b->quad_count; q++) sichel += b->quad_uvs[q].clut == CLUT_SICHEL;
@@ -200,11 +208,11 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         }
     }
     CHECK(geaendert > 0, "%s: keine einzige Vertex-Aenderung gegenueber EM30", name);
-    /* CLUT-Block (N1.4/N1.5/N1.7): 3 EM30-Zeilen + 2 Zusatzzeilen; Haut umgefaerbt, blaue Eintraege (Jeans) gleich. */
-    CHECK(s_basis.tim.clut_entries == 3 * 256 && s_form.tim.clut_entries == 5 * 256 &&
-          s_form.tim.clut_y == s_basis.tim.clut_y, "%s: CLUT %d Eintraege (Soll 5 x 256) ab y %d", name,
+    /* CLUT-Block (N1.4/N1.5/N1.7): 3 EM30-Zeilen + 3 Zusatzzeilen; Haut umgefaerbt, blaue Eintraege (Jeans) gleich. */
+    CHECK(s_basis.tim.clut_entries == 3 * 256 && s_form.tim.clut_entries == 6 * 256 &&
+          s_form.tim.clut_y == s_basis.tim.clut_y, "%s: CLUT %d Eintraege (Soll 6 x 256) ab y %d", name,
           s_form.tim.clut_entries, s_form.tim.clut_y);
-    if (s_form.tim.clut_entries == 5 * 256) {
+    if (s_form.tim.clut_entries == 6 * 256) {
         int blau_anders = 0, haut_anders = 0;
         for (int i = 0; i < 3 * 256; i++) {
             const uint16_t c = s_basis.tim.clut[i], d = s_form.tim.clut[i];
@@ -214,7 +222,7 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         }
         CHECK(blau_anders == 0, "%s: %d blaue CLUT-Eintraege (Jeans) umgefaerbt", name, blau_anders);
         CHECK(haut_anders > 200, "%s: nur %d Haut-Eintraege umgefaerbt", name, haut_anders);
-        fprintf(stderr, "%s: %d Haut-CLUT-Eintraege umgefaerbt, 2 Zusatzzeilen\n", name, haut_anders);
+        fprintf(stderr, "%s: %d Haut-CLUT-Eintraege umgefaerbt, 3 Zusatzzeilen\n", name, haut_anders);
     }
     fprintf(stderr, "%s: %d Meshes, %d Knochen, %d Clips, %ld Tri-Vertices umgeformt, %ld Teile umtexturiert\n",
             name, s_form.md1.mesh_count, s_form.skel.bone_count, s_form.anim.clip_count, geaendert, uv_neu);

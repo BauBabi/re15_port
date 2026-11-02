@@ -108,8 +108,9 @@ FORMEN = {
             # der Schulter (TPage 128, CLUT 0, u 66-126 v 4-90)
             dict(meshes=(3, 6), page=128, clut=30720, u=(66, 126), v=(4, 90)),
             # T6 Kopf: kein blondes Menschengesicht im Video (vorn 1460-1500: rotes Fleisch oben in der
-            # Mitte) -> dasselbe Wundfleisch
-            dict(meshes=(9,), page=128, clut=30720, u=(66, 126), v=(4, 90)),
+            # Mitte) -> dasselbe Wundfleisch; Runde 41 SF N1.10 (Nutzer: "Kopf ... noch nicht ganz akkurat"): eigene
+            # CLUT-Zeile 485 (Kopf heller und weniger gesaettigt, rosa Lichter wie im Video, cluts unten).
+            dict(meshes=(9,), page=128, clut=485 << 6, u=(66, 126), v=(4, 90)),
         ],
         # Runde 41 SF N1.4/N1.5/N1.7: CLUT-Arbeit (nur Farben der Paletten, Texel unveraendert; Werte = Videomessung,
         # abgeglichen an der Buehne tools/r41_sichel/farbmass.py, die das Port-Fenster nachweislich trifft).
@@ -128,7 +129,14 @@ FORMEN = {
             # die Flanke steht dort im Licht -> helle Farbe x0,78, Rot satter; Lauf n6 (Schwellen 48/56): Farben getroffen
             # (88,50,50) / (142,96,96), aber nur 42 % rot (Video 63 %) -> Schwellen 52/58.
             zusatz=[dict(aus=2, l0=52, l1=58, dunkel=(96, 44, 46), hell=(140, 100, 100)),
-                    dict(aus=2, l0=20, l1=90, dunkel=(40, 40, 35), hell=(84, 81, 72))],
+                    dict(aus=2, l0=20, l1=90, dunkel=(40, 40, 35), hell=(84, 81, 72)),
+                    # Zeile 485 Kopf aus Zeile 480 (Wundfleisch, L-Quantile 30/70 = 93/126): Video h108-h132 Kopfbereich
+                    # Median r/g ~1,5, 40-50 % kraeftig rot, Lichter rosa (p90 ~(104-123,77-104,77-105)), 1,3x so hell
+                    # wie der Rumpf; vorher im Fenster (Lauf n10) r/g 2,0, 72 % kraeftig rot, so hell wie der Rumpf.
+                    # Erster Stand (110,62,60)/(200,165,160), Schwellen 93/126: im Fenster blassrosa (Lauf k1). Gittersuche an der
+                    # Buehne (Gang Clip 1 B34, Kopf = Differenz mit/ohne Mesh 9): (120,60,58)/(175,135,132) 109/140 -> r/g 1,55,
+                    # 42 % kraeftig rot, Kopf/Rumpf 1,41; x0,85 fuer Kopf/Rumpf ~1,2 wie das Video.
+                    dict(aus=0, l0=109, l1=140, dunkel=(102, 51, 49), hell=(149, 115, 112))],
         ),
     ),
 }

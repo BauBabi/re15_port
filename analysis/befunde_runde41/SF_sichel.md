@@ -296,3 +296,30 @@ Bau:
   Gegenseite nach 2 Takten bei schlagartiger Freigabe).
   Vorher (7f2ea1b7d) war der Schwanz h18-h28 hinter dem Koerper (nicht sichtbar) und hing ab h34 starr rechts.
   Bildfolge Video | vorher | nachher: SF_belege/nb1/schwanz_h18-h66_video_vorher_nachher.jpg (Lauf n7).
+
+### N1.10 Kopf (Nutzerbefund 2026-11-02 ueber den Orchestrator: "der Kopf von Birkin mit Tail ist noch nicht ganz akkurat")
+
+Vergleichsblatt nur Kopf, mehrere Ansichten (Video 4 | Port vorher n10 | Port nachher k2, Kopf-Mesh-9-Umriss tuerkis):
+SF_belege/nb1/kopf_video_vorher_nachher.jpg - h0 (n1350, 3/4 von vorn links), h46 (n1396, Halten), h100/h116/h124/h132
+(n1450-n1482, Gang zur Kamera, von vorn). Labor/Steg (n361-n660): Birkin klein, gruen und dunkel (n400/n430/n520 in
+SF_belege/nb1 nicht abgelegt, Ausschnitte scratch) - Kopf dort nicht messbar.
+Messung (tools/r41_sichel/kopfmass.py; Video: Kopfbereich x 372-402 y 165-215 von 640x480 = rotes Fleisch oben in der
+Mitte; Port: Maske = nur Mesh 9 an der Pose der Messzeile offline gezeichnet und auf die Fensteraufnahme gelegt; Kopf/Rumpf
+= Luma Kopf / Luma Rumpfkasten im selben Bild):
+| h | Video: Median, p90, r/g, kraeftig rot, Kopf/Rumpf | Port vorher (n10) | Port nachher (k2) |
+|---|---|---|---|
+| 116 | (70,46,45) (122,96,97) 1,51 0,43 1,28 | (90,60,57) (125,102,98) 1,39 0,33 1,19 | (102,59,58) (127,104,100) 1,55 0,45 1,25 |
+| 124 | (64,38,38) (104,77,77) 1,62 0,52 1,22 | (94,56,54) (152,89,86) 1,77 0,55 1,17 | (104,57,57) (134,95,94) 1,67 0,58 1,23 |
+| 132 | (53,33,33) (87,67,68) 1,44 0,35 1,11 | (92,56,53) (151,84,82) 1,69 0,54 1,11 | (103,56,55) (131,95,94) 1,65 0,54 1,18 |
+Befund: vorher ein gesaettigt roter Ball (Lichter p90 r = g + 63..67, Wundfleisch der Schulter, T6); im Video sind die
+Lichter rosa-weisslich (p90 r = g + 20..26) bei sonst aehnlichem Rotgrad und Kopf/Rumpf 1,1-1,3.
+Korrektur: eigene CLUT-Zeile 485 fuer Mesh 9 (aus Zeile 480, Schwellen 109/140, dunkel (102,51,49), hell (149,115,112);
+Gittersuche an der Buehne im Gang, dann x0,85). Erster Versuch (110,62,60)/(200,165,160) 93/126 war im Fenster blassrosa
+(Lauf k1: Median (125,92,89), r/g 1,33, Kopf/Rumpf 1,70) -> verworfen. Nachher Lichter p90 r = g + 23..39.
+Form, Groesse, Lage, Neigung: NICHT geaendert, weil das Video sie nicht trennbar zeigt. Port-Kopf im Gang 16 x 23
+PSX-Bildpunkte (Mesh-9-Maske), Kopfmitte 48 ueber dem Hosenbund; Video-Kopfbereich ~15 x 25, Mitte ~45 ueber dem Bund -
+im Rahmen gleich. Die Seitenlage liess sich nicht messen: der Rot-Schwerpunkt der Kopfzeilen trifft im Port nicht den
+Kopf (Maske x 177-181), sondern die Brustadern (x 186-192) - dieselbe Methode ist im Video also nicht kopfgenau.
+Gesicht/Haare: im Video keins (Fleisch, h108-h132), im Port seit T6 keins. Im 3/4-Bild h0-h6 wirkt die Kopfvorderseite im
+Video dunkel unter einer roten Kappe (n1350-n1356); ob Schatten oder Gesicht, ist bei 320x240 nicht entscheidbar ->
+keine Formaenderung.
