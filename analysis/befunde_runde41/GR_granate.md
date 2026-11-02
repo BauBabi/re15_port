@@ -212,3 +212,31 @@ Original-Torso, Grenze (1) im Code-Kopf von 0x80108BEC).
 * Gelaufen: Zielauswahl 101 Tests (`granate|gore|zgore|re2z|ztear|teardeath|r34_schaden|r34_reaktion|zombie_death|
   corpse|deathgetup|werfer|weapon_rows|dog|hund|crow|kraehe|spider|spinne`, ohne integration) 101/101 gruen;
   integration_r34_granaten, integration_r35_granate, integration_r36_granate 3/3 gruen (528 s).
+* Volle Unit-/Prop-/Probe-Suite im Baum (`ctest -E ^integration_ -j 8`, 2026-11-02): **1076/1076 gruen** (1023 s).
+* Gegenprobe RE2-Modelle (Menue "RE2 AI + Model", ohne `RE15_AI_MODELS`): derselbe Wurf, vier `[gr]`-Zeilen, Bild
+  `GR_belege/port/p04_leon_1140_re2modelle_nachher.jpg` (Rumpf traegt dort das RE2-Stumpf-Mesh 16).
+
+## 8. Fuer den Nutzer (Kurzfassung)
+
+1. **Welche Granate:** die normale Handgranate = Item 0x09 (nicht Saeure 0x0A / Brand 0x0B, nicht der Granatwerfer).
+2. **Video:** In den 80%-Videos wird keine Handgranate geworfen. Die Zombie-Explosionen (B 3:31, 3:36, 8:05, 8:42) kommen
+   aus Elzas Granatwerfer (Muendungsblitz an der Huefte, Einschlag 0,2-0,5 s spaeter). Dort zerplatzt der Zombie in einer
+   roten Saeule, uebrig bleiben Lache und Fleischhaufen. Genau das macht jetzt die Handgranate (und die
+   Granatwerfer-Explosivrunde, die dieselbe RE2-Zeile 9 nimmt).
+3. **Staerke:** Die Handgranate macht an Zombies wieder ihre eigenen 1000 Schaden aus dem RE1.5-Original statt der 200 der
+   RE2-Granatwerfer-Zeile. Die dicken Zombies (Typ 0x11, 250 HP) ueberlebten bisher mit 50 HP; jetzt sterben alle Zombies
+   im Wirkradius. Hund, Kraehe, Spinne, Gorilla und Bosse: unveraendert.
+4. **Zerfetzen:** Kopf, Oberarme und Oberschenkel fliegen weg, Unterarme, Unterschenkel und Fuesse platzen in rote
+   Scherben, die Haende sind weg, Rumpf und Becken bleiben verrusst in einer grossen Lache liegen. Alles aus vorhandenen
+   RE2-/RE1.5-Mechanismen zusammengesetzt, die Zusammenstellung ist Gestaltung nach dem Video.
+
+## 9. Offen
+
+1. Elza am dicken Zombie im echten Fenster: kein Elza-Raum mit beim Eintritt erreichbarem 0x11 gefunden (§6.4). Logik
+   figurunabhaengig und im Riegel; ein Bild Elza + 0x11 braucht einen Spielstand mitten im Elza-Ablauf.
+2. Saeure-/Brandgranate (w10/w11) im RE1.5-Gehirn behalten die alte Gestaltung "Oberkoerper ab, kriecht weiter", deren
+   Videobeleg (BEFUND 5.2, 8:10-8:22) laut Spur S nicht traegt. Nicht Teil dieses Auftrags.
+3. 0x18 mit dem Einzel-HP-Wert 1058 (@0x8011f33a) ueberlebt die 1000 nur ohne RE2-Modell (Import-Option aus + RE1.5-KI,
+   nicht die Vorgabe) — wie im Original.
+4. Der Rumpf verschwindet nicht ganz (Video 3:31.6/3:36.3: Koerper fast weg). Keine Quelle hat ein Rumpf-Platzen fuer
+   Zombies; der Haufen in der Lache entspricht 8:42.5. Ein Rumpf-Platzen waere reine Erfindung.
