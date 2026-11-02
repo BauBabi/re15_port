@@ -2499,9 +2499,8 @@ static void gr2_tr_frei_r(const re15_actor_t *e, int32_t *x, int32_t *z, int32_t
     int32_t bx = *x, bz = *z; int64_t bd = -1;
     const int32_t kx[4] = { GR2_PLAT_X0 - m, GR2_PLAT_X1 + m, GR2_RAMP_X0 - m, GR2_RAMP_X1 + m };
     const int32_t kz[4] = { GR2_PLAT_Z0 - m, GR2_PLAT_Z1 + m, GR2_RAMP_Z0 - m, GR2_RAMP_Z1 + m };
-    for (int i = 0; i < 8; i++) {
-        int32_t qx = *x, qz = *z;
-        if (i < 4) qx = kx[i]; else qz = kz[i - 4];
+    for (int i = 0; i < 25; i++) {                         /* NB3: auch Ecken (x und z verschoben) - an der Fuge Plattform/Rampe passt keine Achse allein */
+        const int32_t qx = (i % 5) ? kx[i % 5 - 1] : *x, qz = (i / 5) ? kz[i / 5 - 1] : *z;
         if (qx < GR2_KK_X0 + 1600 || qx > GR2_KK_X1 - 1600 || qz < GR2_KK_Z0 + 1600 || qz > GR2_KK_Z1 - 1600 || gr2_tr_im_block(qx, qz, m)) continue;
         const int64_t d = (int64_t)(qx - *x) * (qx - *x) + (int64_t)(qz - *z) * (qz - *z);
         if (bd < 0 || d < bd) { bd = d; bx = qx; bz = qz; }
@@ -2553,7 +2552,10 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
         /* NB2 (M3'): Belagerung mit dem Kanister = Umkreisen um die Kante unter dem Spieler (Endziel der Spur B vor dem Kanten-Umweg), Kreis ganz ausserhalb
          * der aufgeblasenen Bloecke; aus groesserer Entfernung (> 2 R) der Weg der Spur B (Umweg/Hops, Ziele aus den Bloecken geschoben). Abnahme 2 Lauf
          * plat7_leon: der Hop (1673,-11900) lag 934 hinter der Plattform-Nordkante, 26 Zyklen mit je ~4,3 s Paddeln gegen die Kante. */
-        int32_t cx = nx, cz = nz;
+        /* NB3 (Abnahme-Nachtrag M3': "naechster erreichbarer Wasserpunkt zum Spieler, Umkreisen dort mit R 2000"): Mittelpunkt = die Figur, aus den um Wurzel-Rand
+         * + R aufgeblasenen Bloecken auf den naechsten Punkt geschoben (Kreis ganz im Wasser), nicht die Spur-B-Kante (Rampe: x >= 4450, Lauf n8_plat7_leon:
+         * Kreis bei (-4000,-10500), 9000 von der Figur) */
+        int32_t cx = pl ? pl->x : nx, cz = pl ? pl->z : nz;
         gr2_tr_frei_r(e, &cx, &cz, GR2_TR_KREIS);
         const int64_t mx = (int64_t)e->x - cx, mz = (int64_t)e->z - cz;
         if (mx * mx + mz * mz < 4LL * GR2_TR_KREIS * GR2_TR_KREIS) {
@@ -2583,12 +2585,11 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
             int frei = 1;
             for (int32_t t = 0; t <= d && frei; t += 500)
                 if (gr2_tr_im_block(e->x + (int32_t)(dx * t / (d ? d : 1)), e->z + (int32_t)(dz * t / (d ? d : 1)), m)) frei = 0;
-            if (frei) {
-                int32_t qx = cx, qz = cz;
-                (void)gr2_tr_fitfrei(e, &qx, &qz);
-                *tx = qx; *tz = qz;
-                return 2;
-            }
+            int32_t qx = cx, qz = cz;
+            if (!frei) re15_gator_boss_steuerziel(e, &qx, &qz);   /* NB3: sonst ueber den Kanten-Umweg der Spur B zum Mittelpunkt (nicht zur Spur-B-Kante) */
+            (void)gr2_tr_fitfrei(e, &qx, &qz);
+            *tx = qx; *tz = qz;
+            return 2;
         }
     } else if (pl) {
         /* NB2 (M1'): Ziel der Verfolgung, das NICHT der Spieler ist (Ring-/Umlauf-Wegpunkt der Routenwahl, Fuzz NB2: Kreisen um gekuerzte Wegpunkte vor der

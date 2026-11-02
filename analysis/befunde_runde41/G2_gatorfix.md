@@ -283,3 +283,23 @@ den Kopf hinaus; ob Clip 5 Bild 1-11 den Kopf rollt (Leiche zeigt dann nach oben
 
 ### Abschluss Nachbesserung 2
 Nachgezogen nach dem ersten Testlauf (integration_r41_gatorfix_frei/_elza rot: Wandreiben 59/74 an der Nordwand): Ziele werden nach dem Schieben aus den Bloecken noch einmal gekuerzt, und eine gehaltene Etappe wird je Bild mit der aktuellen Anschwimm-Gier neu gekuerzt. Tests (PowerShell-ctest, Auswahl `r41_gatorszene|r41_kanister2080|r41_alligator2|r41_re2gator|r41_gatorfix`, -j3): **100% tests passed, 0 tests failed out of 117** (2294 s). exe-Riegel (traglog, Endstand): frei 30-B. 12 %/Wandreiben 0/0 Fenster, frei_elza 10 %/2/0, rampe(_elza) 1 %/0/0, abn2_leiterecke 0 %/0/0, abn2_wand_elza 16 %/0/0, abn2_nordbecken 60 %/0/0, abn2_rampe_west(_elza) 0 %/0/0, abn2_ecken 33 %/5/0, abn2_wand 9 %/0/0; Aufnahme 121-877 Bilder nach dem Aufschlag.
+
+## Nachbesserung 3 (Orchestrator: M3' Rampe West nahe der Figur, Hochklettern ohne Messhaken, M4)
+### M3' - Patrouille im naechsten erreichbaren Wasser
+Belagerung mit dem Kanister: Kreis-Mittelpunkt = die Figur selbst, auf den naechsten Wasserpunkt geschoben, an dem der ganze Kreis (R 2000) ausserhalb der um den
+Wurzel-Rand aufgeblasenen Bloecke liegt (jetzt auch Eckpunkte x+z, die Fuge Plattform/Rampe); Anfahrt direkt oder ueber den Kanten-Umweg ZUM Mittelpunkt (nicht zur
+Spur-B-Kante x >= 4450). Gemessen (traglog, Kamera aus state.log `cam=`): Rampe West Leon Kopf-Abstand mittel 9539 -> 6143, Elza 9639 -> 6276, Gator im Bild der
+Spielerkamera (Cut 2) 91-92 % (n10_plat7_leon/n10_plat8_elza; Fenster `G2_belege/nb3_m3_nachher_rampe_west_leon_cut2_5s.jpg`: Gator unter der Figur im Bild,
+vorher `nb2_m3_nachher_rampe_west_leon_cut2_15s.jpg` ohne Gator). Fuzz (zweite Haelfte je Lage = Patrouille): P-nord 3467, P-sued 4262, Rampe West 6168,
+P-west 7061, Leiter 6976, P-mitte 7794, Rampe Mitte 8319 - die Grenze ist die Geometrie (Rampe 3600 tief: Mitte 1800 + Rand 1646 + R zum Mittelpunkt).
+Riegel: Fuzz <= 8500; exe abn2_rampe_west(_elza) mit Rueckschnitt Cut 2: Kopf-Abstand <= 7000 und >= 80 % im Bild.
+### Hochklettern ohne Messhaken
+Gemessen (Lauf n10_klettern_leon, ohne Alligator RE15_KEIN_GATOR=1, echte Kamera): Figur laeuft von (2318,-19700) an die Rampen-Suedkante, Aktionstaste ->
+climb.log `sub=9` T375 Band 0 -> T426 Band 1, y -1800, dann zu Fuss auf die Rampe bis (2318,-15002). Hochklettern geht im freien Spiel (Bild
+`nb3_m3_klettern_rampe_west_ohne_messhaken.jpg`); mit dem Alligator in der Naehe druecken die Bisse die Figur weg (Abnahme 2), kein eigener Fehler.
+### M4 - Ursache bestimmt, nicht behoben
+`test_r41_gatorfix leichenachse`: KOPFROLLEN. Von Clip 4 Bild 10 bis Clip 5 Bild 12 ist der Unterkiefer (Part 6 = Anker der Leiche) um die Kieferachse gerollt,
+seine Querachse z hat Welt-y -2141..-3326 von 4096 (31-54 Grad nach oben), ab Bild 14 waagerecht (-676..367). Die quer gehaltene Leiche zeigt mit nach oben und
+liegt im Bild ueber der Schaedel-Oberkante (Bild 4-12: Leiche ab y 53-76, Schaedel-Oberkante 41-86). Versuch: Halte-Relation um die Kieferachse zuruekdrehen
+(Laengsachse waagerecht, Anteil 1 / 1/2 / 1/3) - im Bild dann unter dem Schaedel, aber 94-186 Scheitel unter dem Unterkiefer (Riegel maul rot): Zielkonflikt
+"nicht oben raus" gegen "nicht unten raus" waehrend der Rolle; nicht eingebaut. Offen.
