@@ -1,0 +1,201 @@
+Spur GR - Abnahme 2 - Log-Auszuege (echtes Fenster, eigene exe-Kopie re15_pc_abn2gr.exe = Bau 22:00 auf 78ad377d2, gdigrab hwnd, beschleunigter Renderer)
+Werkzeug hp.py: HP-/Zustandswechsel je Slot aus RE15_STATE_LOG (Spielbilder nach dem Debug-Sprung).
+
+== s2_2030_re2_wurf
+[input-script] RE15_INPUT_SCRIPT="M0.6,MA0.2,M2.5,W8" -> 339 ticks @ 30 fps, start frame 270
+[equip] W-bank -> W09 (Clips 13, Rueckstoss-Clip7 fc=35)
+[debug-menu] AUTO-JUMP -> ROOM2030 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (6550,2000) rot=3072 band=3
+[flow] EXIT_AT: Bild 560 in Raum 2030 erreicht -> exit
+T=558 EV resolver art=2 P=(7208,-7908,2365) r=2000 eingriffe=1
+ F1  mg=5 plhp=100 slot=1 t=25 st=0 ss1=0 ss2=0 g=00 mo=0 hp=0 d=0 @(6550,5250)
+ F1  mg=5 plhp=100 slot=2 t=25 st=0 ss1=0 ss2=0 g=00 mo=0 hp=0 d=0 @(-2100,9250)
+ F1  mg=5 plhp=100 slot=3 t=25 st=0 ss1=0 ss2=0 g=00 mo=0 hp=0 d=0 @(-3350,-9700)
+ F6  mg=5 plhp=100 slot=1 t=25 st=1 ss1=0 ss2=0 g=00 mo=1 hp=110 d=3248 @(6918,5250)
+ F6  mg=5 plhp=100 slot=2 t=25 st=1 ss1=0 ss2=0 g=00 mo=1 hp=111 d=11264 @(-2100,8982)
+ F6  mg=5 plhp=100 slot=3 t=25 st=1 ss1=0 ss2=0 g=00 mo=1 hp=109 d=15324 @(-3350,-9332)
+ F312  mg=4 plhp=71 slot=1 t=25 st=3 ss1=9 ss2=0 g=00 mo=4 hp=-890 d=1448 @(6918,2791)
+ F324  mg=4 plhp=71 slot=1 t=25 st=7 ss1=0 ss2=0 g=00 mo=12 hp=-890 d=1453 @(6918,2791)
+
+== d1_1230_re2_wurf
+[input-script] RE15_INPUT_SCRIPT="M0.6,MA0.2,M2.5,W5" -> 249 ticks @ 30 fps, start frame 1
+[equip] W-bank -> W09 (Clips 13, Rueckstoss-Clip7 fc=35)
+[debug-menu] AUTO-JUMP -> ROOM1230 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-172,9800) rot=3072 band=-1
+[gr] Hund Slot 1 Waffe 9: ZERFETZT (Teile-Maske 0x079c, HP -904)
+[flow] EXIT_AT: Bild 330 in Raum 1230 erreicht -> exit
+T=288 EV resolver art=2 P=(234,-2454,10636) r=2000 eingriffe=1
+ F1  mg=5 plhp=100 slot=1 t=20 st=0 ss1=0 ss2=0 g=00 mo=0 hp=0 d=0 @(-1558,13400)
+ F1  mg=5 plhp=100 slot=2 t=20 st=0 ss1=0 ss2=0 g=00 mo=0 hp=0 d=0 @(3800,17000)
+ F6  mg=5 plhp=100 slot=1 t=20 st=1 ss1=0 ss2=0 g=00 mo=1 hp=96 d=3857 @(-1558,13400)
+ F6  mg=5 plhp=100 slot=2 t=20 st=1 ss1=0 ss2=0 g=00 mo=1 hp=71 d=8192 @(3800,17000)
+ F42  mg=4 plhp=100 slot=1 t=20 st=3 ss1=9 ss2=0 g=00 mo=1 hp=-904 d=3298 @(-1491,12829)
+ F64  mg=4 plhp=100 slot=1 t=20 st=7 ss1=0 ss2=0 g=00 mo=18 hp=-904 d=5538 @(-2623,14786)
+ F65  mg=4 plhp=100 slot=1 t=20 st=7 ss1=1 ss2=0 g=00 mo=18 hp=-1 d=5538 @(-2623,14786)
+
+== g5_11c0_haken
+[input-script] RE15_INPUT_SCRIPT="M1.0,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6,MA0.1,M0.6" 
+[equip] W-bank -> W03 (Clips 14, Rueckstoss-Clip7 fc=23)
+[debug-menu] AUTO-JUMP -> ROOM11C0 (Frame 240)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-6729,-12800) rot=1486 band=-1
+[harness] RE15_FORCE_GRANATE F300 slot=2 t=27 P=(-8795,-500,-12506) Treffer=1
+[flow] EXIT_AT: Bild 900 in Raum 11c0 erreicht -> exit
+messhaken RE15_R39_MESS_SPIELER_HP=100 aktiv (nur Messlauf)
+affen init slot=2 raum=11c0 typ=27 hp=360 (tabelle 180 @0x8011f514, regel 1)
+affen init slot=3 raum=11c0 typ=27 hp=360 (tabelle 180 @0x8011f514, regel 1)
+affen treffer F301 slot=2 raum=11c0 hp=40 akku=320 -> FLINCH (Schwelle 36)
+affen treffer F382 slot=2 raum=11c0 hp=28 akku=12 -> OHNE ZUCKEN (zurueck in 1/3/1/0)
+affen treffer F404 slot=2 raum=11c0 hp=16 akku=24 -> OHNE ZUCKEN (zurueck in 1/5/1/0)
+affen treffer F444 slot=2 raum=11c0 hp=4 akku=36 -> FLINCH (Schwelle 36)
+affen treffer F740 slot=3 raum=11c0 hp=348 akku=12 -> OHNE ZUCKEN (zurueck in 1/3/1/0)
+ F1  mg=15 plhp=100 slot=2 t=27 st=1 ss1=0 ss2=0 g=10 mo=0 hp=360 d=0 @(-9013,-15461)
+ F1  mg=15 plhp=100 slot=3 t=27 st=1 ss1=0 ss2=0 g=10 mo=0 hp=360 d=0 @(9434,2189)
+ F300  mg=15 plhp=100 slot=2 t=27 st=2 ss1=9 ss2=1 g=10 mo=18 hp=40 d=0 @(-8795,-12506)
+ F361  mg=14 plhp=100 slot=2 t=27 st=1 ss1=3 ss2=0 g=10 mo=17 hp=40 d=0 @(-8835,-12466)
+ F382  mg=13 plhp=100 slot=2 t=27 st=1 ss1=3 ss2=1 g=10 mo=5 hp=28 d=0 @(-8388,-12526)
+ F404  mg=12 plhp=100 slot=2 t=27 st=1 ss1=5 ss2=1 g=10 mo=18 hp=16 d=0 @(-8295,-12128)
+ F444  mg=11 plhp=100 slot=2 t=27 st=2 ss1=3 ss2=1 g=10 mo=7 hp=4 d=0 @(-8052,-12669)
+ F456  mg=11 plhp=100 slot=2 t=27 st=1 ss1=7 ss2=0 g=10 mo=7 hp=4 d=0 @(-8058,-12669)
+ F466  mg=10 plhp=100 slot=2 t=27 st=3 ss1=3 ss2=1 g=10 mo=14 hp=-8 d=0 @(-8036,-12649)
+ F536  mg=8 plhp=100 slot=2 t=27 st=7 ss1=0 ss2=0 g=10 mo=14 hp=-8 d=0 @(-8321,-12196)
+ F740  mg=3 plhp=100 slot=3 t=27 st=1 ss1=3 ss2=1 g=10 mo=5 hp=348 d=0 @(-5051,-15070)
+
+== b7_5090_leon_riesen
+[input-script] RE15_INPUT_SCRIPT="A0.1,W1,U8.5,W9,MD0.6,MDA0.2,MD2.5,W0.5,S0.1,W1.5,A0.1,W1,A0.1,W1,A0.1,W1.5,S0.1,W1.5,MA4,MA4,MA4,W0.5,S0.1,W1.5,A0.1,W1,D0.1,W0.5,A0.1,W1,A0.1,W1.5,S0.1,W1.5,MD0.6,MDA0.2,MD2.5,W3,W0.5,S0.1,W1.5,A0.1,W1,A0.1,W1,A0.1,W1.5,S0.1
+[equip] W-bank -> W09 (Clips 13, Rueckstoss-Clip7 fc=35)
+[debug-menu] AUTO-JUMP -> ROOM5090 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+[equip] W-bank -> W03 (Clips 14, Rueckstoss-Clip7 fc=23)
+[equip] W-bank -> W09 (Clips 13, Rueckstoss-Clip7 fc=35)
+[equip] W-bank -> W03 (Clips 14, Rueckstoss-Clip7 fc=23)
+[flow] EXIT_AT: Bild 2700 in Raum 5090 erreicht -> exit
+T=1017 EV resolver art=2 P=(5786,-480,-22760) r=2000 eingriffe=1
+T=1570 EV resolver art=2 P=(5792,-480,-22782) r=2000 eingriffe=1
+ F1  mg=5 plhp=100 slot=2 t=30 st=1 ss1=9 ss2=0 g=33 mo=0 hp=600 d=0 @(-14700,-23350)
+ F954  mg=255 plhp=100 slot=2 t=30 st=2 ss1=9 ss2=1 g=10 mo=4 hp=310 d=0 @(5929,-23054)
+ F955  mg=255 plhp=100 slot=2 t=30 st=1 ss1=4 ss2=1 g=10 mo=4 hp=310 d=0 @(5929,-23054)
+ F991  mg=254 plhp=100 slot=2 t=30 st=1 ss1=4 ss2=1 g=10 mo=4 hp=295 d=0 @(5929,-23054)
+ F1013  mg=253 plhp=100 slot=2 t=30 st=1 ss1=4 ss2=1 g=10 mo=4 hp=280 d=0 @(5929,-23054)
+ F1035  mg=252 plhp=100 slot=2 t=30 st=1 ss1=4 ss2=1 g=10 mo=4 hp=265 d=0 @(5929,-23054)
+ F1057  mg=251 plhp=100 slot=2 t=30 st=1 ss1=4 ss2=1 g=10 mo=4 hp=250 d=0 @(5929,-23054)
+ F1079  mg=250 plhp=100 slot=2 t=30 st=1 ss1=4 ss2=1 g=10 mo=4 hp=235 d=0 @(5929,-23054)
+ F1101  mg=249 plhp=100 slot=2 t=30 st=1 ss1=4 ss2=1 g=10 mo=4 hp=220 d=0 @(5929,-23054)
+ F1123  mg=248 plhp=100 slot=2 t=30 st=1 ss1=4 ss2=1 g=10 mo=4 hp=205 d=0 @(5929,-23054)
+ F1145  mg=247 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=0 g=10 mo=4 hp=190 d=0 @(5929,-23054)
+ F1146  mg=247 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=300 d=0 @(5929,-23054)
+ F1167  mg=246 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=285 d=0 @(5929,-23054)
+ F1189  mg=245 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=270 d=0 @(5929,-23054)
+ F1211  mg=244 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=255 d=0 @(5929,-23054)
+ F1233  mg=243 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=240 d=0 @(5929,-23054)
+ F1255  mg=242 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=225 d=0 @(5929,-23054)
+ F1277  mg=241 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=210 d=0 @(5929,-23054)
+ F1299  mg=240 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=195 d=0 @(5929,-23054)
+ F1321  mg=239 plhp=100 slot=2 t=30 st=1 ss1=6 ss2=1 g=10 mo=20 hp=180 d=0 @(5929,-23054)
+ F1326  mg=239 plhp=100 slot=2 t=30 st=1 ss1=0 ss2=1 g=10 mo=10 hp=1000 d=0 @(5929,-23054)
+ F1703  mg=3 plhp=100 slot=2 t=30 st=2 ss1=9 ss2=1 g=10 mo=27 hp=110 d=0 @(5941,-23077)
+ F1704  mg=3 plhp=100 slot=2 t=30 st=1 ss1=15 ss2=1 g=10 mo=27 hp=110 d=0 @(5941,-23077)
+ F2008  mg=238 plhp=100 slot=2 t=30 st=1 ss1=8 ss2=1 g=10 mo=5 hp=95 d=0 @(8142,-23010)
+ F2030  mg=237 plhp=100 slot=2 t=30 st=1 ss1=8 ss2=1 g=10 mo=5 hp=80 d=0 @(7379,-22923)
+ F2052  mg=236 plhp=100 slot=2 t=30 st=1 ss1=3 ss2=1 g=10 mo=5 hp=65 d=0 @(7512,-22814)
+ F2074  mg=235 plhp=100 slot=2 t=30 st=1 ss1=8 ss2=1 g=10 mo=5 hp=50 d=0 @(8125,-22729)
+ F2096  mg=234 plhp=100 slot=2 t=30 st=1 ss1=20 ss2=1 g=10 mo=8 hp=35 d=0 @(7773,-22782)
+ F2118  mg=233 plhp=100 slot=2 t=30 st=1 ss1=20 ss2=1 g=10 mo=8 hp=20 d=0 @(7773,-22782)
+ F2170  mg=232 plhp=100 slot=2 t=30 st=1 ss1=3 ss2=1 g=10 mo=5 hp=5 d=0 @(8227,-22758)
+ F2192  mg=231 plhp=100 slot=2 t=30 st=3 ss1=3 ss2=1 g=10 mo=8 hp=1 d=0 @(8606,-22714)
+ F2193  mg=231 plhp=100 slot=2 t=30 st=2 ss1=3 ss2=1 g=10 mo=8 hp=1 d=0 @(8436,-22722)
+ F2349  mg=224 plhp=100 slot=2 t=36 st=0 ss1=0 ss2=0 g=13 mo=1 hp=600 d=0 @(-9000,-23400)
+ F2610  mg=212 plhp=100 slot=2 t=36 st=2 ss1=3 ss2=1 g=13 mo=1 hp=585 d=0 @(-2144,-23400)
+ F2632  mg=211 plhp=100 slot=2 t=36 st=2 ss1=3 ss2=1 g=13 mo=3 hp=570 d=0 @(-1986,-23400)
+ F2654  mg=210 plhp=100 slot=2 t=36 st=2 ss1=3 ss2=1 g=13 mo=3 hp=555 d=0 @(-1986,-23400)
+ F2676  mg=209 plhp=100 slot=2 t=36 st=2 ss1=3 ss2=1 g=13 mo=8 hp=540 d=0 @(-1986,-23400)
+ F2698  mg=208 plhp=100 slot=2 t=36 st=2 ss1=3 ss2=1 g=13 mo=8 hp=525 d=0 @(-1842,-23400)
+
+== a2_2090_gator
+[input-script] RE15_INPUT_SCRIPT="W6.0,MD0.6,MDA0.2,MD2.5,W1,W0.5,S0.1,W1.5,A0.1,W1,A0.1,W1,A0.1,W1.5,S0.1,W1.5,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0
+[equip] W-bank -> W09 (Clips 13, Rueckstoss-Clip7 fc=35)
+[debug-menu] AUTO-JUMP -> ROOM2090 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-6000,-17500) rot=3072 band=-1
+[equip] W-bank -> W03 (Clips 14, Rueckstoss-Clip7 fc=23)
+[k2080] F1230 AUSLOESER geschwaecht (RE2 +0x218&0x20 @0x80101ebc-dc), Treffer 11: Spieler (-8444,0,-13025) Gier 3893 Cut 0 -> ROOM2080 (Programm START Faden 12)
+[flow] EXIT_AT: Bild 2600 in Raum 2090 erreicht -> exit
+T=545 EV resolver art=2 P=(-4578,-480,-19856) r=2000 eingriffe=1
+ F1  mg=5 plhp=100 slot=35 t=23 st=0 ss1=0 ss2=0 g=00 mo=0 hp=0 d=0 @(-5300,-16300)
+ F6  mg=5 plhp=100 slot=35 t=23 st=1 ss1=0 ss2=0 g=00 mo=6 hp=25300 d=0 @(5482,-19709)
+ F299  mg=4 plhp=100 slot=35 t=23 st=2 ss1=9 ss2=1 g=00 mo=0 hp=25050 d=0 @(-2634,-22754)
+ F300  mg=4 plhp=100 slot=35 t=23 st=1 ss1=9 ss2=1 g=00 mo=0 hp=25050 d=0 @(-2634,-22754)
+ F616  mg=254 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=2 hp=25043 d=0 @(-6250,-18229)
+ F679  mg=253 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=2 hp=25036 d=0 @(-7113,-17461)
+ F742  mg=252 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=2 hp=25029 d=0 @(-7282,-16002)
+ F805  mg=251 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=3 hp=25022 d=0 @(-7406,-16108)
+ F868  mg=250 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=3 hp=25015 d=0 @(-7131,-14521)
+ F931  mg=249 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=2 hp=25008 d=0 @(-5949,-12956)
+ F994  mg=248 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=2 hp=25001 d=0 @(-5753,-11849)
+ F1057  mg=247 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=2 hp=24994 d=0 @(-4597,-10963)
+ F1120  mg=246 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=3 hp=24987 d=0 @(-4752,-10956)
+ F1183  mg=245 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=3 hp=24980 d=0 @(-3312,-10287)
+ F199  mg=244 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=0 g=00 mo=9 hp=24973 d=0 @(-4315,-13111)
+
+== a3_2090_gator_vorher
+[input-script] RE15_INPUT_SCRIPT="W6.0,MD0.6,MDA0.2,MD2.5,W1,W0.5,S0.1,W1.5,A0.1,W1,A0.1,W1,A0.1,W1.5,S0.1,W1.5,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,M0.6,MA0.1,M0
+[equip] W-bank -> W09 (Clips 13, Rueckstoss-Clip7 fc=35)
+[debug-menu] AUTO-JUMP -> ROOM2090 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-6000,-17500) rot=3072 band=-1
+[k2080] F301 AUSLOESER geschwaecht (RE2 +0x218&0x20 @0x80101ebc-dc), Treffer 1: Spieler (-6288,0,-17993) Gier 459 Cut 0 -> ROOM2080 (Programm START Faden 12)
+[equip] W-bank -> W03 (Clips 14, Rueckstoss-Clip7 fc=23)
+[flow] EXIT_AT: Bild 1300 in Raum 2090 erreicht -> exit
+T=545 EV resolver art=2 P=(-4578,-480,-19856) r=2000 eingriffe=1
+ F1  mg=5 plhp=100 slot=35 t=23 st=0 ss1=0 ss2=0 g=00 mo=0 hp=0 d=0 @(-5300,-16300)
+ F6  mg=5 plhp=100 slot=35 t=23 st=1 ss1=0 ss2=0 g=00 mo=6 hp=25300 d=0 @(5482,-19709)
+ F299  mg=4 plhp=100 slot=35 t=23 st=2 ss1=9 ss2=1 g=00 mo=0 hp=24300 d=0 @(-2634,-22754)
+ F300  mg=4 plhp=100 slot=35 t=23 st=1 ss1=9 ss2=1 g=00 mo=0 hp=24300 d=0 @(-2634,-22754)
+ F553  mg=254 plhp=100 slot=35 t=23 st=1 ss1=3 ss2=1 g=00 mo=9 hp=24293 d=0 @(-4860,-14769)
+
+== p3_3070
+[equip] W-bank -> W09 (Clips 13, Rueckstoss-Clip7 fc=35)
+[debug-menu] AUTO-JUMP -> ROOM3070 (Frame 250)
+[flow] EXIT_AT: Bild 600 in Raum 3070 erreicht -> exit
+ F1  mg=5 plhp=100 slot=1 t=30 st=1 ss1=0 ss2=0 g=10 mo=0 hp=600 d=0 @(-23860,-12720)
+
+== p4_3070_vorher
+[input-script] RE15_INPUT_SCRIPT="M0.6,MA0.2,M2.0,W0.5,S0.1,W3" -> 192 ticks @ 30 fps, start frame 60
+[equip] W-bank -> W09 (Clips 13, Rueckstoss-Clip7 fc=35)
+[debug-menu] AUTO-JUMP -> ROOM3070 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-17000,-13500) rot=3072 band=-1
+[flow] EXIT_AT: Bild 300 in Raum 3070 erreicht -> exit
+ F1  mg=5 plhp=100 slot=1 t=30 st=1 ss1=0 ss2=0 g=10 mo=0 hp=300 d=0 @(-23860,-12720)
+
+== b5_5090_ohne_granate2 / b6_5090_griff_ohne_menue (Nebenbefund Griff + START): Spieler/Form je Bild
+-- b5_5090_ohne_granate2
+F1650 pad=0000 PL(8243,-22151,rot=1809,hp=100) mo=210 ac=6 mg=4 gr=0  Form: st=1 ss1=15 mo=27 af=1 hp=1000 
+F1699 pad=0008 PL(10054,-22151,rot=1801,hp=100) mo=0 ac=6 mg=4 gr=1  Form: st=1 ss1=15 mo=27 af=50 hp=1000 
+F1700 pad=0008 PL(10054,-22151,rot=1801,hp=100) mo=0 ac=6 mg=4 gr=1  Form: st=1 ss1=15 mo=27 af=51 hp=1000 
+F1750 pad=0000 PL(10054,-22151,rot=1801,hp=100) mo=11 ac=6 mg=4 gr=0  Form: st=1 ss1=15 mo=27 af=94 hp=1000 
+F1800 pad=0000 PL(10054,-22151,rot=1801,hp=100) mo=11 ac=6 mg=4 gr=0  Form: st=1 ss1=15 mo=27 af=94 hp=1000 
+F1900 pad=0000 PL(10054,-22151,rot=1801,hp=100) mo=11 ac=6 mg=4 gr=0  Form: st=1 ss1=15 mo=27 af=94 hp=1000 
+F2000 pad=8800 PL(10054,-22151,rot=1801,hp=100) mo=11 ac=6 mg=239 gr=0  Form: st=1 ss1=15 mo=27 af=94 hp=1000 
+-- b6_5090_griff_ohne_menue
+F1650 pad=0000 PL(8243,-22151,rot=1809,hp=100) mo=210 ac=6 mg=4 gr=0  Form: st=1 ss1=15 mo=27 af=1 hp=1000 
+F1699 pad=0000 PL(10054,-22151,rot=1801,hp=100) mo=0 ac=6 mg=4 gr=1  Form: st=1 ss1=15 mo=27 af=50 hp=1000 
+F1700 pad=0000 PL(10054,-22151,rot=1801,hp=100) mo=0 ac=6 mg=4 gr=1  Form: st=1 ss1=15 mo=27 af=51 hp=1000 
+F1750 pad=0000 PL(10054,-22151,rot=1801,hp=100) mo=211 ac=6 mg=4 gr=0  Form: st=1 ss1=3 mo=5 af=1 hp=1000 
+F1800 pad=0000 PL(10054,-22151,rot=1801,hp=100) mo=211 ac=6 mg=4 gr=0  Form: st=1 ss1=3 mo=5 af=51 hp=1000 
+F1900 pad=0000 PL(10054,-22151,rot=1801,hp=100) mo=211 ac=6 mg=4 gr=0  Form: st=1 ss1=8 mo=5 af=8 hp=1000 
+F2000 pad=0000 PL(10522,-22151,rot=1801,hp=100) mo=212 ac=6 mg=4 gr=0  Form: st=1 ss1=2 mo=9 af=20 hp=1000 
+
+== Volle Suite (ctest -E integration_|df-Tests, -j 4, Timeout 1200)
+   2/1070 Test #1061: unit_r41_birkin_wand_griff ..............***Timeout 360.01 sec
+99% tests passed, 1 tests failed out of 1070
+	1061 - unit_r41_birkin_wand_griff (Timeout)
+-- unit_r41_birkin_wand_griff direkt (ohne ctest-Zeitlimit):
+griff STAGE5/ROOM5081.RDT: 358 Lagen, 2864 Griffe, 1432 Wuerfe, Wand-Griffe 1140, Bildenden in fester Zelle 0 (Folge 0), eingekeilt 0, groesster Weg 1318
+griff STAGE3/ROOM3070.RDT: 478 Lagen, 3824 Griffe, 0 Wuerfe, Wand-Griffe 1376, Bildenden in fester Zelle 0 (Folge 0), eingekeilt 0, groesster Weg 1769
+griff STAGE3/ROOM3071.RDT: 478 Lagen, 3824 Griffe, 0 Wuerfe, Wand-Griffe 1360, Bildenden in fester Zelle 0 (Folge 0), eingekeilt 0, groesster Weg 1790
+test_r41_birkin_wand griff: OK
+
+real	8m11.696s
+user	0m0.000s
+sys	0m0.077s
+rc=0
+
+== Integration
+4/4 Test #1383: integration_r41_birkin_pistole ...   Passed  424.93 sec
