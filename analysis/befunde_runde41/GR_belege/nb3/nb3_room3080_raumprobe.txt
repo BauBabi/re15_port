@@ -1,0 +1,13 @@
+   RE2-KI (Vorgabe): 0x36 Slot 3 gespawnt Bild 1 grid 0x24 HP 600 (Bank 1); Freigabe grid 0x04 (Szenenmodus Nibble 4) Bild 367, hoechste Phase 14; 906 Bilder mit dem 0x36, davon 0 mit Spieler-Kontrolle (player_mode != 2), 0 mit Spieler-HP < 100; Tuer/Raumwechsel Bild 907
+   RE2-KI (Vorgabe): Schaden am 0x36 im Bild 397 - Waffen (Hitscan, Zeile @0x8006f360, -1 = kein Treffer): w1=0 w2=0 w3=0 w4=0 w5=0 w6=0 w7=0 w8=0 w9=0 w10=0 w11=0 w12=0 w13=0 w14=0 w15=0 w16=0 w17=0 w18=0 w19=0 w20=0 w21=0
+   RE2-KI (Vorgabe): Explosionsarten (DAT_8006f418): art2=1000 art3=1000 art4=1000 art5=50 art6=100 art7=200 art8=300 art9=1000
+ok   100: RE2-KI (Vorgabe): 3080 ist eine Szene - 0x36 grid 0x24 (sub00 @0x007D4), Freigabe Bild 367 (Member_set(0x0c,4) @0x00934), Szene laeuft bis Phase 14 (ACT 0x80118d00, [14] @0x8011935c steht), Raum endet ueber die Tuer Bild 907 (Aot_on @0x00A22)
+ok   101: RE2-KI (Vorgabe): kein Kampf - in 906 Bildern mit dem 0x36 hat der Spieler 0-mal Kontrolle (Rahmen (1,27)/(2,7) sub02 @0x007FE/@0x00802 bis zum Raumwechsel), 0 Bilder mit Treffer am Spieler
+ok   102: RE2-KI (Vorgabe): alle Spielerwaffen 0 Schaden (Zeile 0x36 @0x8006f360 = 22 x 0, 21 Waffen trafen), Handgranate unveraendert 1000 (@0x8006f41c), Werfer-Arten 6..9 = 100/200/300/1000 (DAT_8006f418)
+   RE1.5-KI: 0x36 Slot 3 gespawnt Bild 1 grid 0x24 HP 600 (Bank 1); Freigabe grid 0x04 (Szenenmodus Nibble 4) Bild 367, hoechste Phase 14; 906 Bilder mit dem 0x36, davon 0 mit Spieler-Kontrolle (player_mode != 2), 0 mit Spieler-HP < 100; Tuer/Raumwechsel Bild 907
+   RE1.5-KI: Schaden am 0x36 im Bild 397 - Waffen (Hitscan, Zeile @0x8006f360, -1 = kein Treffer): w1=0 w2=0 w3=0 w4=0 w5=0 w6=0 w7=0 w8=0 w9=0 w10=0 w11=0 w12=0 w13=0 w14=0 w15=0 w16=0 w17=0 w18=0 w19=0 w20=0 w21=0
+   RE1.5-KI: Explosionsarten (DAT_8006f418): art2=1000 art3=1000 art4=1000 art5=50 art6=100 art7=200 art8=300 art9=1000
+ok   103: RE1.5-KI: 3080 ist eine Szene - 0x36 grid 0x24 (sub00 @0x007D4), Freigabe Bild 367 (Member_set(0x0c,4) @0x00934), Szene laeuft bis Phase 14 (ACT 0x80118d00, [14] @0x8011935c steht), Raum endet ueber die Tuer Bild 907 (Aot_on @0x00A22)
+ok   104: RE1.5-KI: kein Kampf - in 906 Bildern mit dem 0x36 hat der Spieler 0-mal Kontrolle (Rahmen (1,27)/(2,7) sub02 @0x007FE/@0x00802 bis zum Raumwechsel), 0 Bilder mit Treffer am Spieler
+ok   105: RE1.5-KI: alle Spielerwaffen 0 Schaden (Zeile 0x36 @0x8006f360 = 22 x 0, 21 Waffen trafen), Handgranate unveraendert 1000 (@0x8006f41c), Werfer-Arten 6..9 = 100/200/300/1000 (DAT_8006f418)
+test_r41_granate: ALLE PRUEFUNGEN GRUEN

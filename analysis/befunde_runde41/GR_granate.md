@@ -3,6 +3,232 @@
 Zweig `r41/granate`, Baum `.claude/worktrees/r41_granate`, Basis `r41/spinnengore` 2f886e91a.
 Dossier wird FORTLAUFEND geschrieben (Sitzungslimit-Schutz).
 
+## N3. NACHBESSERUNG 3 (2026-11-02) — Birkin-HP x 2, Riesenform 1000, Gator-Boss nach der Boss-Regel, ROOM3080 gemessen
+
+> Nutzer auf F1-F5: "1. ja, 2. ja, 3. huh, wie jetzt das ist doch ein Boss fight. Warum soll die Granate nicht wirken ?...
+> zu 4. Ja, nicht einfach mit einer Granate beenden."
+
+Zuordnung (Orchestrator): 1 = F1 Birkin-HP x 2 (300 -> 600); 2 = F2 Riesenform/Bahnsteig-Form auf RE2-G4-Niveau; 3 = G-Form 0x36 in
+ROOM3080 (im Dossier N2.7 als F4 gefuehrt); 4 = Gator-Boss 2090 (N2.7 F5) - eine Granate darf den Kampf nicht beenden.
+
+### N3.1 Belege (selbst disassembliert, vor jeder Zeile Code)
+
+Birkin-Wurzel 0x80116230 (STAGE3.BIN, `re15_disasm.py dis ... --bin STAGE3.BIN`):
+
+| Stelle | Bytes / Instruktion | Bedeutung |
+|---|---|---|
+| @0x801164fc | `slti v0,v0,200` (nach `lh v0,154(v1)` @0x801164f4) | Verwundet-Tor: +0x1dd ^= 4 (DECIDE-Mutationstor) |
+| @0x8011667c-688 | `slti v0,v0,100` / `beq` / `ori v0,zero,0x601` / `sw v0,4(v1)` | Mutation bei hp < 100 (nur Form 1) |
+| @0x8011690c-910 | `ori v0,zero,0x12c` / `sh v0,154(v1)` | INIT HP 300, unbedingt |
+| @0x80118094-098 | `ori v0,zero,0x96` / `sh v0,154(v1)` | HP in der Mutation 150 |
+| @0x8011a530-534 | `ori v0,zero,0x32` / `sh v0,154(v1)` | Revive-Waechter: toedlicher Treffer in der Mutation -> 50 |
+| @0x8011a134-138 | `addiu v0,v0,5` / `sh v0,154(v1)` | Fern-Rueckgabe +5 je Treffer ab Abstand 0xfa1 (bleibt, s. N3.2) |
+
+STAGE5.BIN (Raeume 50xx) traegt dieselben Werte um +0x814 versetzt: `slti 200` @0x80116d10, `slti 100` @0x80116e90, `ori 0x12c`
+@0x80117120, `ori 0x96` @0x801188a8, `ori 0x32` @0x8011ad44 (gelesen).
+
+RE2-G4-Ctor (CDEMD0.EMS rec 1, Sektor 3238, 0xB2D4 Byte, gelinkt @0x80100000; Werkzeug `GR_belege/nb3/werkzeuge/g4dis.py`):
+`andi v0,v0,0x40` @0x80100670, `beq v0,zero,0x8010069c` @0x80100674, Verzoegerung `addiu v0,zero,1000` @0x80100678,
+`sh v0,342(s1)` @0x8010067c; `andi v0,v0,0x20` @0x80100688, `beq` @0x8010068c, `addiu v0,zero,900` @0x80100690 / `sh` @0x80100698;
+Zweig ohne 0x40: `addiu v0,zero,1100` @0x8010069c, mit 0x20 `addiu v0,zero,1000` @0x801006b4. Bit 0x40 des RE2-Spielworts
+0x800CFB74 ist im ausgelieferten RE2 immer gesetzt, 0x20 nie (Schreiber-Zensus, re15_damage.c "START-HP AUS DEN RE2-EM-MODULEN")
+-> erreichbar ist genau **1000**.
+
+RE2-Alligator (EM23_OVL_0000.BIN): `lh v0,342(s0)` @0x80101ebc, `slti v0,v0,25000` @0x80101ec4, `beq` @0x80101ec8,
+`ori v0,v0,0x20` / `sh v0,536(s0)` @0x80101ed8-dc = Schwaeche bei hp < 25000 (loest im Port die Kanister-Szene aus).
+
+Waffenzeile 0x36 (PSX.EXE `read 0x8006f360 22 --w 2 --stride 4`): **22 x 0** (alle Spielerwaffen). Explosionsarten
+DAT_8006f418 (`read 0x8006f418 11 --w 2 --signed`): [10, 20, 1000, 1000, 1000, 50, 100, 200, 300, 1000, 0].
+
+### N3.2 Regel (PORT-WAHL, Nutzerentscheide)
+
+* **F1 Birkin x 2:** die GANZE HP-Skala der EM30-Wurzel mal `RE15_BIRKIN_HP_FAKTOR` 2 (`include/re15_birkin_formen.h`):
+  INIT 600, Verwundet-Tor < 400, Mutations-Tor < 200, HP in der Mutation 300, Revive 100. Begruendung: der Nutzer bejahte
+  "wie beim Gorilla x 2"; die Tore haengen an den HP, ohne Mitziehen kaeme die Mutation erst nach 500 von 600 Schaden (5/6 statt
+  2/3) und die Form nach der Mutation haette nur ein Viertel der Start-HP. Mit dem Faktor bleiben alle Verhaeltnisse des Originals
+  (Tor 1/3, Verwundet 2/3, Mutations-HP 1/2, Revive 1/3 der Mutations-HP). NICHT skaliert: die Fern-Rueckgabe +5 (@0x8011a134) -
+  sie gehoert zum Schaden je Treffer, der unveraendert bleibt. Gilt auch fuer die Hangar-Form (birkin_formen.c setzt beim Aufbau
+  denselben INIT-Wert) und fuer den 0x36 in ROOM3080 (gleiche Wurzel, dort waffen-immun und in einer Szene, ohne Wirkung).
+* **F2 Riesenform 1000:** `RE15_BB_FORM_HP` 150 -> 1000 (G4-Ctor, N3.1). Nur die HP-Stelle im Eintritt von re15_bb_tick
+  (birkin_bahnsteig.c) und die Sichtpruef-Zuweisung daneben; sonst nichts an der Form (Zweig r41/form arbeitet dort).
+* **Granate an den Birkin-Formen:** unveraenderte Boss-Regel aus N2 (eine Granate aus voller Form-HP laesst R = 110, danach genau
+  8 Pistolenschuesse): 600 -> 490, Form 1 600 - 200 - 110 = 290, Mutation/nach der Mutation 300 -> 190, Riesenform 1000 -> 890.
+* **F4 Gator-Boss:** dieselbe Boss-Regel wie der Alligator (R = 50, N = 8): die "Form" des Gator-Bosses ist der Abstand Sockel ->
+  Schwaeche, 25300 - 25000 = 300 - genau die HP des RE1.5-Alligators (@0x801175dc) bei demselben Pistolenschaden 7 (@0x8006ece4).
+  Granate = 25300 - 25000 - 50 = **250**; eine Granate laesst 25050 stehen, danach toeten (schwaechen) genau 8 Pistolenschuesse.
+  ABWEICHUNG vom Orchestrator-Vorschlag 100 ("1/3 der Luecke, 3 Granaten oder 43 Treffer"): 3 x 100 = 300 bringt 25300 nur auf
+  25000, und die Schwelle ist `slti 25000` = hp < 25000 - es braeuchte 4 Granaten oder 3 Granaten + 1 Schuss. Vor allem waere
+  der Gator-Boss dann der einzige Boss, an dem eine Granate nur 14 Pistolentreffer wert ist (100 / 7), waehrend sie ueberall sonst
+  "Form-HP minus 8 Schuss" traegt; der Nutzer hatte in N2 "Gorilla, Handgranate und ein paar Schuss, und ja auch Birkin und
+  Aligator" fuer die Regel bejaht. Wer 100 will: eine Zahl in `re15_granate_schaden` (re15_damage.c), Test `[6]` Fall 82.
+* **F3 ROOM3080:** nicht geaendert - Befund N3.4, Nutzerfrage N3.9.
+
+### N3.3 Boss-Tabelle (gemessen, `GR_belege/nb3/nb3_boss_tabelle_unit_r41_granate.txt`; "alt" = Stand 5670d7cab, N2.2)
+
+Schaden ueber den echten Hitscan (re15_player_weapon_fire, Waffe 3 BROWNING HP) und die echte Explosion (re15_granate_r35_explosion,
+Art 2), Form-HP aus dem echten INIT bzw. dem echten Eintritt (Riesenform: G4-Bank ueber den Plattform-Haken, erster Formen-Takt).
+
+| Boss / Form | HP alt -> neu | Pistolenschaden | Granate alt -> neu | Schuesse nach 1 Granate | ohne Granate alt -> neu |
+|---|---|---|---|---|---|
+| Gorilla 0x27 (11C0/1141) | 360 (unveraendert) | 12 @0x8006ee44 | 320 | 4 | 31 |
+| Alligator 0x23 RE1.5-KI (nur Messhilfe) | 300 | 7 @0x8006ece4 | 250 | 8 | 43 |
+| Birkin 3070 / 5080 / Hangar-Sichel 50A0 / Labor 50E0+50F1 | 300 -> **600** | 15 @0x8006f15c | 190 -> **490** | 8 | 21 -> **41** |
+| Birkin Form 1 bis zur Mutation (3071, 5090) | 300 bis < 100 -> **600 bis < 200** | 15 | 90 -> **290** | 8 (bis zur Mutation) | 14 -> **27** |
+| Birkin waehrend der Mutation | 150 -> **300** (Revive 50 -> 100) | 15 | 40 -> **190** | — (stirbt in der Mutation nie) | — |
+| Birkin nach der Mutation (3071) | 150 -> **300** | 15 | 40 -> **190** | 8 | 11 -> **21** |
+| Bahnsteig-/Riesenform (5090) | 150 -> **1000** | 15 | 40 -> **890** | 8 | 11 -> **67** |
+| G5 0x36 (5090) | 600 (unveraendert) | 15 | 80 (E16) | 35 | 41 |
+| Gator-Boss 0x23 (2090), bis zur Schwaeche | 25300, Schwaeche < 25000 | 7 | 1000 -> **250** | **8** (vorher: 1 Granate = sofort geschwaecht) | 43 |
+
+Ganze Kaempfe ohne Granate (Pruefung 91, Gorilla 31):
+
+| Kampf | Pistolenschuesse alt -> neu |
+|---|---|
+| Leon 3070, 5080, Hangar/Sichel 50A0, Labor 50E0/50F1 | 21 -> **41** |
+| Elza 3071 (Form 1 + nach der Mutation) | 14 + 11 = 25 -> 27 + 21 = **48** |
+| Endkampf 5090 (Form 1 + Riesenform + G5) | 14 + 11 + 41 = 66 -> 27 + 67 + 41 = **135** |
+| Gator-Boss bis zur Schwaeche | 43 (unveraendert) |
+
+Mit je EINER Granate pro Form: Leon 3070 = 1 + 8; Elza 3071 = (1 + 8) + (1 + 8); 5090 = (1 + 8) + (1 + 8 Riesenform) + G5 (1 + 35);
+Gator-Boss 1 + 8 bis zur Kanister-Szene. Der Gorilla bleibt mit 4 Schuss nach der Granate der schwaechste Boss (Pruefung 90).
+
+### N3.4 Befund ROOM3080 (F3): eine Szene, kein Kampf - im Original wie im Port
+
+Gemessen auf zwei Wegen, dazu die 40%-Disc gelesen.
+
+1. **Raumprobe** (`unit_r41_granate [7] g3080`, `GR_belege/nb3/nb3_room3080_raumprobe.txt`): ROOM3080 geladen, SCD wie im Hauptlauf
+   (Rahmen (1,27)/(2,7) -> player_mode 2), Spieler auf dem Tuerziel aus ROOM3070 (Door_aot_set @0x03302), Texte bestaetigt; unter
+   RE2-KI (Vorgabe) und RE1.5-KI gleich:
+   * sub00 setzt den 0x36 mit grid 0x24 (Sce_em_set @0x007D4) und startet sub02 (Evt_exec @0x007E8); sub02 setzt sofort Set(4,96)
+     @0x007FA, **Set(2,7) @0x007FE und Set(1,27) @0x00802** (Szenenrahmen) und loescht beide bis zum Raumende nie.
+   * Bild 1 Spawn (HP 600 nach NB3), Bild 367 Freigabe grid 0x24 -> 0x04 (Member_set(0x0c,4) @0x00934), danach der
+     Szenenmodus Nibble 4 (BRAIN @0x80116d98 -> Tabelle @0x8011eea4[4] = 0x80116e48, DECIDE 0x80118cf8 = `jr ra`, ACT 0x80118d00)
+     bis Phase 14 (@0x8011935c, steht), Bild 907 Raumwechsel ueber die Tuer (Aot_on @0x00A22, Door_aot_set @0x0072A -> ROOM4000).
+   * **906 Bilder mit dem 0x36, in 0 davon hat der Spieler Kontrolle (player_mode 2), 0 Treffer am Spieler.**
+   * Schaden am lebenden 0x36 (Bild 397, Zustand gesichert und zurueckgesetzt): **alle 21 Spielerwaffen treffen und machen 0**
+     (Zeile @0x8006f360); Explosionsarten 2..9 = 1000/1000/1000/50/100/200/300/1000 (DAT_8006f418, die Explosion geht nicht ueber
+     die Waffenzeile).
+2. **Echte exe** (eigene Kopie, eigene PID; `RE15_DEBUG_JUMP=3080@250`, Handgranate ausgeruestet `RE15_GIVE=9:5 RE15_EQUIP=9`,
+   Skript haelt Zielen + Feuer `MA4` x 12 ab Spielbild 260; Auswertung `GR_belege/nb3/nb3_room3080_echte_exe_auswertung.txt`, Werkzeug `GR_belege/nb3/werkzeuge/ana3080.py`):
+   0x36 in 912 Bildern, grid 0x24 -> 0x04 im Bild 372, Phase bis 14; **in allen 912 Bildern pm = 2**, in 623 davon war die
+   Feuer-Eingabe gedrueckt, der Zielclip blieb 6 (kein Zielen), **die 5 Granaten blieben im Inventar**, HP des 0x36 blieb 600,
+   Spieler-HP 100; danach ROOM4000 (Ziel der Aufzugstuer; das weiterlaufende Skript fuehrte noch nach ROOM4010).
+3. **40%-Disc** (`Version_40%/PSX/STAGE3/ROOM3080.RDT`, nur gelesen): derselbe Spawn 0x36 grid 0x24 (@0x0078C), Member_set(0x0c,4)
+   @0x00AD6; sub02 setzt (2,7)/(1,27) @0x00804/@0x00808 und loescht sie erst UNMITTELBAR vor dem Aot_on (@0x00892/@0x00896/@0x0089A).
+   Auch dort ist 3080 eine Zwischensequenz in der Aufzugsfahrt.
+
+Ergebnis: ROOM3080 ist im ausgelieferten Stand, auf der 40%-Disc und im Port eine **Szene ohne Kampf** - der Spieler hat keine
+Kontrolle, solange die G-Form da ist, die G-Form greift nicht an, keine Waffe des Spielers macht ihr Schaden (Original-Zeile 22 x 0).
+Eine Granate "wirken lassen" hat dort keinen Ansatzpunkt: sie kann nicht geworfen werden. Nach dem Auftrag ("Falls die anderen
+Waffen dort gar keinen Schaden machen ... NICHT eigenmaechtig aendern") ist nichts geaendert; Frage N3.9 F3.
+
+### N3.5 Pistolen-Integrationslauf (integration_r41_birkin_pistole) mit Form-HP 1000
+
+Auftrag: "Pruefe, ob die Form mit 1000 HP mit der Pistole im Pistolen-Integrationslauf noch besiegbar ist (Munition im
+Raum/Inventar), sonst melden." Echte exe (eigene Kopie, eigene PID), Ablauf des Tests: Debug-Sprung 5090/5091, Zielen + Feuer
+gehalten (Pistole alle 22 Bilder), keine Bewegung, keine Heilung. Drei Laeufe, Bildnummern aus state.log:
+
+| Lauf | Form 1 (600) | Riesenform (1000) | Rueckstoss / G5 | Ergebnis |
+|---|---|---|---|---|
+| 1 ohne Haken, `RE15_GIVE=3:400` (Leon) | F406 - Mutation F1274, 33 Schuss | ab F1455, Griff F1608 (Spieler 80 -> 45), Hiebe/Biss | — | **Spieler tot F2100 bei Form-HP 700**, danach Game over / Neustart ROOM1240 (Auszug `GR_belege/nb3/nb3_pistolenlauf_auszug.txt`) |
+| 2 Messhaken `RE15_R39_MESS_SPIELER_HP=100`, 3:400 (Leon + Elza) | wie 1 | F1455 - F3430, 67 Schuss in 1975 Bildern (66 s Dauerfeuer) | Rueckstoss F3431, G5 F3594 | **Waffe leer F4356 bei G5-HP 330** - `RE15_GIVE=3:400` lud nur 144 Schuss (Menge ist ein Byte: 400 & 0xff), der Skript-Schuetze laedt nicht nach  |
+| 3 Haken + `RE15_GIVE=3:255` (Leon + Elza, bildgleich) | wie 1 | wie 2 | Rueckstoss F3431, G5 F3594, **G5 tot F4706** | gruen; 255 -> 89 Schuss = **166 Schuss** fuer den ganzen Endkampf  |
+
+Antwort: Die Riesenform mit 1000 HP IST mit der Pistole besiegbar - 67 Treffer, gut eine Minute Dauerfeuer -, aber NICHT von
+einem stehenden Schuetzen ohne Ausweichen und Heilen (Lauf 1). Munition: der ganze Endkampf mit der Pistole allein kostet 166
+Schuss (Form 1 bis zur Mutation 33, Mutation 8, Riesenform 67, Rueckstoss-Szene 7, G5 51). Handfeuerwaffen-Patronen (0x15) liegen
+im Repo-Baum an 38 Stellen, ALLE in STAGE1 (Leon 19 Stellen = 405 Schuss, Elza 19 Stellen = 405 Schuss; Zensus
+`tools/discard_zensus.py`, Item_aot_set 0x50, `GR_belege/nb3/nb3_item_zensus_discard_zensus.json`); in STAGE2-5 und in 5090 liegt keine.
+Kein Item_aot_set legt Handgranaten (0x09) aus. Ob ein Spieler mit 166 Pistolenpatronen in 5090 ankommt, haengt am Verbrauch
+vorher - mit je einer Granate pro Form sind es 8 + 8 + 35 Pistolentreffer plus 3 Granaten (Tabelle N3.3, ohne Fehlschuesse
+und ohne die Schuesse in Mutation und Rueckstoss-Szene).
+
+Der Integrationstest (`integration_r41_birkin_pistole`) laeuft deshalb mit dem Messhaken der Runde 39 (Spieler-HP am Kopf jedes
+KI-Bildes auf 100; negative HP hebt er nicht, das Fressen des G5 setzt -1 - Pruefung 5 aus Abnahme 2 bleibt scharf) und 255
+Schuss; neu geprueft: Form 1 startet mit 600, die Riesenform mit 1000; Endbild 5400 (G5 tot F4706), Zeitlimit 600 s je Lauf,
+ctest 1300 s.
+
+### N3.6 Umsetzung
+
+* `include/re15_birkin_formen.h`: `RE15_BIRKIN_HP_FAKTOR` 2 und `RE15_BIRKIN_HP_INIT/_VERWUNDET/_MUT_TOR/_MUTATION/_REVIVE`
+  (je Adresse), `RE15_BB_FORM_HP` 1000 (G4-Beleg).
+* `engine/src/enemy_ai_common.c` (re15_birkin_root): INIT @0x8011690c, Mutations-HP @0x80118094, Revive @0x8011a534, Tore
+  @0x801164fc / @0x8011667c ueber die Makros.
+* `engine/src/birkin_formen.c`: `re15_bf_granate_form` ueber die Makros (Kopfkommentar mit den neuen Zahlen), Hangar-Aufbau
+  `RE15_BIRKIN_HP_INIT`.
+* `engine/src/birkin_bahnsteig.c`: Eintritt `e->hp = RE15_BB_FORM_HP` (vorher 150) und die Sichtpruef-Zuweisung daneben.
+* `engine/src/re15_damage.c` `re15_granate_schaden`: Gator-Boss 250 (RE15_GR2_HP_INIT - RE15_GR2_HP_SOCKEL - 50), Kopfblock
+  (3)/(4) neu; Include `re15_gator_re2_r41.h`.
+
+### N3.7 Tests
+
+* `unit_r41_granate` (`tests/unit/test_r41_granate.c`):
+  * `[6] boss` neu gefasst: Form-HP je Fall gegen die Makros (600 / 300 / Riesenform 1000 / Gator 25300), die Riesenform ueber den
+    ECHTEN Eintritt von re15_bb_tick (G4-Bank wie der Plattform-Haken, `g4_haken`, Muster test_birkin_bahnsteig.c form_bank) statt
+    des Mutationsrests, der Gator-Boss bis zur Schwaeche (Ende 25000, 1 Granate + 8 Schuss, Pruefung 82; vorher "unveraendert
+    1000"), neue Pruefung 91 "ohne Granate braucht jeder Birkin-Kampf und der Gator-Boss mehr Pistolenschuesse als der Gorilla
+    (31)" ueber die Kampf-Summen (N3.3) - 7/7. Ergebnis 70-82, 90, 91 gruen (`GR_belege/nb3/nb3_boss_tabelle_unit_r41_granate.txt`).
+  * `[7] g3080` neu: ROOM3080 unter RE2-KI und RE1.5-KI (Pruefungen 100-105, N3.4) - gruen.
+* HP-Pins ueber die Makros statt fester Zahlen: `test_birkin_ai.c` (INIT 600, Mutation 300, Revive 100, Form-5 600),
+  `test_birkin_szenen.c` (nach der Mutation 300, Form 1000), `test_birkin_bahnsteig.c` M3 (Form kommt mit 1000, Vorbedingung
+  < 300). `tests/integration/test_r35_granate.cmake` Lauf gator: -250 statt -1000.
+* Gezielt (`ctest -R "birkin|granate|gator|bahnsteig|r34_schaden|r34_wurf|r34_reaktion|g5|5090|3070|3071|50a0|50e0|hangar|werfer|form"
+  -E ^integration_`): **80/80 gruen**.
+* Volle Unit-/Prop-/Probe-Suite (`ctest -E "^integration_|releaseskript|titelversion_ablauf" -j 4 --timeout 1200`, Stand
+  2fb07b019): **1069/1069 gruen** (1185 s). Ausgenommen die 8 Release-Skript-Tests (unit_r38_releaseskript_* x 7,
+  unit_r39_titelversion_ablauf): das Skript prueft den freien Platz mit `df -Pk`, und `df.exe` haengt auf dieser Maschine
+  weiter (N2.4; ein eigenes `timeout 10 df -Pk /c/workspace/git/reAi_v2` kam auch jetzt nicht zurueck, die haengenden
+  df-Prozesse dieses Baums aus N2 stehen noch). Die Tests beruehren keine Engine-Datei. Gesondert mit 150 s
+  Zeitlimit: unit_r38_releaseskript_bausteine (4,7 s) und _version (30,4 s) gruen; _trocken, _ablauf, _fehler_bau,
+  _fehler_umfeld, _cmd und unit_r39_titelversion_ablauf haengen an `df.exe -Pk .../fx_*/repo` (Prozessliste), ctest setzt das
+  Zeitlimit nicht durch, weil df nicht beendbar ist; Lauf abgebrochen. BEKANNT (N2.4), keine Regression dieser Aenderung.
+* Integration (`-j 3`): `integration_r34_granaten` 446 s, `integration_r35_granate` 366 s, `integration_r36_granate` 204 s -
+  **3/3 gruen**. Im r35-Lauf gator (echte exe, `RE15_FORCE_EXPLOSION=2@60:35`): F59 HP 25300 -> F60 **25050** (Zustand 2),
+  F61 Zustand 1 - nach einer Granate liegt er mit 25050 ueber der Schwaeche-Schwelle (hp < 25000 @0x80101ec4).
+* `integration_r41_birkin_pistole` (neue Fassung, ctest, Zeitlimit 1300): **gruen** (463 s) - Leon und Elza: Mutation F1274,
+  Form 1 HP 600, Riesenform 1000 ab F1455, Rueckstoss F3431, G5 F3594, G5 tot F4706, 166 Schuss.
+* VERSEHEN beim Abbrechen der haengenden Release-Tests: der Filter `ctest.exe` mit "releaseskript" in der Befehlszeile traf
+  ausser dem eigenen Lauf (PID 81412) auch einen FREMDEN ctest (PID 111104, `--test-dir re15_port/build -R
+  ^(unit_r35_android_bash_mutanten|unit_r38_releaseskript_*|unit_r39_titelversion_ablauf)$ -j 3`, Baum unbekannt); er ist
+  beendet und muss von seinem Besitzer wiederholt werden.
+
+### N3.8 Integrationshinweise fuer Zweig r41/form (Spur Form, Worktree r41_form)
+
+r41/form (Kopf d8eab158b, Basis aa88a1b6a vor GR-N2) baut die Riesenform um (Stufe 3: keine Mutation mehr in 5090, Riesenform ab
+der Raumladung, auch 5080/5081 ueber `re15_bf_riesenform_raum`, Asset `RE2/BAHNSTEIG_FORM.EMD` statt `BAHNSTEIG_G4.EMD`). Beim
+Zusammenfuehren:
+
+1. `engine/src/birkin_bahnsteig.c`: r41/form hat `e->hp = 150;` im Eintritt (dort Zeile ~646) und in der Sichtpruefung (~721)
+   unveraendert - beide auf `RE15_BB_FORM_HP` (= 1000, re15_birkin_formen.h) setzen; die neuen `e->hp = 1;` der Rueckstoss-/
+   Sturz-Szene bleiben.
+2. `include/re15_birkin_formen.h`: beide Zweige aendern den Kopf; `RE15_BB_FORM_HP 1000` mit G4-Beleg und die
+   `RE15_BIRKIN_HP_*`-Makros uebernehmen, `re15_bf_granate_form` (aus GR-N2) behalten.
+3. `tests/integration/test_r41_birkin_pistole.cmake`: r41/form erwartet `_form_hp EQUAL 150` ("Form kommt mit HP 150 und
+   laeuft", "Form-HP 150 bis 0") -> **1000**; die GR-Pruefung "Form 1 hat hoechstens HP 600" entfaellt dort (keine Form 1 mehr in
+   5090; dann stattdessen pruefen, dass die Riesenform ab der Raumladung 1000 traegt). Endbild/Zeitlimit, Messhaken
+   `RE15_R39_MESS_SPIELER_HP=100` und `RE15_GIVE=3:255` aus GR uebernehmen (N3.5) - mit 1000 HP stirbt der stehende Schuetze sonst.
+4. `tests/unit/test_birkin_bahnsteig.c` (r41/form +270 Zeilen) und `tests/unit/test_birkin_szenen.c` (r41/form +39): die
+   Pruefungen "Form kommt mit HP 150", "b->hp < 150" (M3) und "nach Mutation hp 150" laufen bei GR ueber `RE15_BB_FORM_HP` /
+   `RE15_BIRKIN_HP_MUTATION`; in der r41/form-Fassung dieselben Stellen umstellen (M3 entfaellt dort ggf. mit der Mutation).
+5. `tests/unit/test_r41_granate.c [6]`: die Faelle "Birkin 0x30 5080", "Form 1 5090" und "Bahnsteig-/Riesenform 5090" setzen den
+   alten Ablauf voraus (5080 = EM30 600, 5090 Form 1 -> Mutation -> G4-Bank aus `BAHNSTEIG_G4.EMD` ueber `g4_haken`). Mit Stufe 3:
+   5080 und 5090 tragen die Riesenform (1000, Granate 890, 8 Schuss), `g4_dateien` auf `BAHNSTEIG_FORM.EMD` umstellen, der
+   Kampf "Endkampf 5090" in Pruefung 91 wird Riesenform + G5 = 67 + 41 = 108 Schuss (> 31 Gorilla, bleibt gruen).
+6. Tests aus GR, die r41/form nicht kennt: `test_birkin_ai.c` (INIT/Mutation/Revive ueber die Makros) - konfliktfrei.
+
+### N3.9 Offene Nutzerfragen
+
+* **F3 ROOM3080:** 3080 ist im ausgelieferten Stand und auf der 40%-Disc eine Zwischensequenz in der Aufzugsfahrt (N3.4): Spieler
+  gesperrt, die G-Form greift nicht an, alle Spielerwaffen 0 Schaden (Original-Zeile @0x8006f360 = 22 x 0). Soll der Port dort einen KAMPF bekommen (dann: Spieler freigeben, G-Form mit
+  Angriffen, eigene HP/Waffenzeile - ein eigener Bauauftrag, kein Granaten-Schalter), oder bleibt 3080 die Szene?
+* **F4 Gator-Boss:** umgesetzt ist die Boss-Regel 250 (1 Granate + 8 Schuss bis zur Kanister-Szene), nicht der Vorschlag 100
+  (N3.2). Recht so?
+* **Endkampf 5090 mit der Pistole:** ohne Granate jetzt 135 Treffer (N3.3); ein stehender Schuetze ueberlebt die Riesenform nicht
+  (N3.5). Handfeuerwaffen-Patronen liegen im Repo-Baum nur in STAGE1 (N3.5). So gewollt (Granate/andere Waffen noetig), oder
+  Riesenform-HP niedriger?
+
+---
+
 ## N2. NACHBESSERUNG 2 (2026-11-02) — Schaden der Handgranate: normale Gegner 1000, Bosse nach Form (Nutzerentscheide)
 
 > "Naja, die Granate hat halt einen Schaden, sind die Gegner damit tot, sind sie tot. Der Gorilla ist ein Endgegner, wenn

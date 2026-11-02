@@ -1,0 +1,53 @@
+# Lauf 1 ohne Haken (Leon, RE15_GIVE=3:400 = 144 Schuss): Auszug ana_state.py F1400-F2120
+F1440 PL(7546,-22151) hp=80 mo=215 mg=104 | slot 2 t=30 st=1 ss1=6 ss2=1 ss3=0 g=10 mo=20 af=159 hp=195
+F1454 PL(7546,-22151) hp=80 mo=215 mg=103 | slot 2 t=30 st=1 ss1=1 ss2=0 ss3=0 g=10 mo=20 af=0 hp=180
+F1455 PL(7546,-22151) hp=80 mo=215 mg=103 | slot 2 t=30 st=1 ss1=0 ss2=1 ss3=0 g=10 mo=10 af=1 hp=1000
+F1500 PL(7546,-22151) hp=80 mo=215 mg=101 | slot 2 t=30 st=1 ss1=0 ss2=1 ss3=0 g=10 mo=10 af=46 hp=970
+F1560 PL(7546,-22151) hp=80 mo=215 mg=98 | slot 2 t=30 st=1 ss1=0 ss2=1 ss3=0 g=10 mo=10 af=106 hp=925
+F1580 PL(7546,-22151) hp=80 mo=215 mg=98 | slot 2 t=30 st=1 ss1=3 ss2=0 ss3=0 g=10 mo=10 af=125 hp=925
+F1581 PL(7546,-22151) hp=80 mo=215 mg=98 | slot 2 t=30 st=1 ss1=3 ss2=1 ss3=0 g=10 mo=5 af=1 hp=925
+F1582 PL(7546,-22151) hp=80 mo=215 mg=97 | slot 2 t=30 st=1 ss1=20 ss2=1 ss3=0 g=10 mo=8 af=6 hp=910
+F1606 PL(7546,-22151) hp=80 mo=215 mg=96 | slot 2 t=30 st=1 ss1=3 ss2=0 ss3=0 g=10 mo=8 af=29 hp=895
+F1607 PL(7546,-22151) hp=80 mo=215 mg=96 | slot 2 t=30 st=1 ss1=3 ss2=1 ss3=0 g=10 mo=5 af=1 hp=895
+F1608 PL(7546,-22151) hp=80 mo=215 mg=96 | slot 2 t=30 st=1 ss1=15 ss2=1 ss3=0 g=10 mo=27 af=1 hp=895
+F1620 PL(9258,-22151) hp=45 mo=15 mg=96 | slot 2 t=30 st=1 ss1=15 ss2=1 ss3=0 g=10 mo=27 af=13 hp=895
+F1680 PL(9258,-22151) hp=45 mo=11 mg=96 | slot 2 t=30 st=1 ss1=15 ss2=1 ss3=0 g=10 mo=27 af=73 hp=895
+F1707 PL(9258,-22151) hp=45 mo=215 mg=96 | slot 2 t=30 st=1 ss1=3 ss2=0 ss3=0 g=10 mo=27 af=99 hp=895
+F1708 PL(9258,-22151) hp=45 mo=215 mg=96 | slot 2 t=30 st=1 ss1=3 ss2=1 ss3=0 g=10 mo=5 af=1 hp=895
+F1740 PL(9258,-22151) hp=45 mo=215 mg=94 | slot 2 t=30 st=1 ss1=3 ss2=1 ss3=0 g=10 mo=5 af=33 hp=865
+F1765 PL(9258,-22151) hp=45 mo=215 mg=93 | slot 2 t=30 st=1 ss1=8 ss2=1 ss3=0 g=10 mo=5 af=1 hp=850
+F1800 PL(9258,-22151) hp=45 mo=215 mg=91 | slot 2 t=30 st=1 ss1=8 ss2=1 ss3=0 g=10 mo=5 af=36 hp=820
+F1805 PL(9258,-22151) hp=45 mo=215 mg=91 | slot 2 t=30 st=1 ss1=3 ss2=0 ss3=0 g=10 mo=5 af=41 hp=820
+F1821 PL(9258,-22151) hp=45 mo=215 mg=90 | slot 2 t=30 st=1 ss1=20 ss2=1 ss3=0 g=10 mo=8 af=6 hp=805
+F1845 PL(9258,-22151) hp=45 mo=215 mg=89 | slot 2 t=30 st=1 ss1=3 ss2=0 ss3=0 g=10 mo=8 af=29 hp=790
+F1846 PL(9258,-22151) hp=45 mo=215 mg=89 | slot 2 t=30 st=1 ss1=3 ss2=1 ss3=0 g=10 mo=5 af=1 hp=790
+F1857 PL(9258,-22151) hp=45 mo=215 mg=89 | slot 2 t=30 st=1 ss1=14 ss2=1 ss3=0 g=10 mo=26 af=1 hp=790
+F1860 PL(9258,-22151) hp=45 mo=215 mg=89 | slot 2 t=30 st=1 ss1=14 ss2=1 ss3=0 g=10 mo=26 af=4 hp=790
+F1891 PL(9738,-22151) hp=35 mo=8 mg=88 | slot 2 t=30 st=1 ss1=3 ss2=0 ss3=0 g=10 mo=26 af=34 hp=775
+F1892 PL(9738,-22151) hp=35 mo=8 mg=88 | slot 2 t=30 st=1 ss1=3 ss2=1 ss3=0 g=10 mo=5 af=1 hp=775
+F1906 PL(9738,-22151) hp=35 mo=215 mg=87 | slot 2 t=30 st=1 ss1=14 ss2=1 ss3=0 g=10 mo=26 af=1 hp=760
+F1920 PL(9738,-22151) hp=35 mo=215 mg=87 | slot 2 t=30 st=1 ss1=14 ss2=1 ss3=0 g=10 mo=26 af=15 hp=760
+F1940 PL(10219,-22151) hp=25 mo=8 mg=87 | slot 2 t=30 st=1 ss1=3 ss2=0 ss3=0 g=10 mo=26 af=34 hp=760
+F1941 PL(10219,-22151) hp=25 mo=8 mg=87 | slot 2 t=30 st=1 ss1=3 ss2=1 ss3=0 g=10 mo=5 af=1 hp=760
+F1958 PL(10219,-22151) hp=25 mo=215 mg=86 | slot 2 t=30 st=1 ss1=14 ss2=1 ss3=0 g=10 mo=26 af=1 hp=745
+F1980 PL(10700,-22151) hp=15 mo=8 mg=86 | slot 2 t=30 st=1 ss1=14 ss2=1 ss3=0 g=10 mo=26 af=23 hp=745
+F1992 PL(10700,-22151) hp=15 mo=8 mg=86 | slot 2 t=30 st=1 ss1=3 ss2=0 ss3=0 g=10 mo=26 af=34 hp=745
+F1993 PL(10700,-22151) hp=15 mo=8 mg=86 | slot 2 t=30 st=1 ss1=3 ss2=1 ss3=0 g=10 mo=5 af=1 hp=745
+F2016 PL(10700,-22151) hp=15 mo=215 mg=85 | slot 2 t=30 st=1 ss1=8 ss2=1 ss3=0 g=10 mo=5 af=1 hp=730
+F2040 PL(10700,-22151) hp=15 mo=215 mg=84 | slot 2 t=30 st=1 ss1=8 ss2=1 ss3=0 g=10 mo=5 af=25 hp=715
+F2044 PL(10700,-22151) hp=15 mo=215 mg=84 | slot 2 t=30 st=1 ss1=2 ss2=0 ss3=0 g=10 mo=5 af=28 hp=715
+F2045 PL(10700,-22151) hp=15 mo=215 mg=84 | slot 2 t=30 st=1 ss1=2 ss2=1 ss3=0 g=10 mo=4 af=1 hp=715
+F2063 PL(11181,-22151) hp=5 mo=8 mg=83 | slot 2 t=30 st=1 ss1=2 ss2=1 ss3=0 g=10 mo=3 af=20 hp=700
+F2100 PL(11181,-22151) hp=-1 mo=7 mg=83 | slot 2 t=30 st=1 ss1=2 ss2=1 ss3=0 g=10 mo=3 af=57 hp=700
+F2104 PL(11181,-22151) hp=-1 mo=7 mg=83 | slot 2 t=30 st=1 ss1=2 ss2=3 ss3=0 g=10 mo=9 af=1 hp=700
+
+# Lauf 2 Messhaken, 144 Schuss: Zusammenfassung
+-- r41_birkin_pistole leon: Mutationen 1 (F1274), Form 1 HP max 600, Form-HP 1000 (F1455) bis 10, Rueckstoss 1 (F3431), G5 1 (F3594), G5 tot 0 (F-1), mg am Ende 0
+-- r41_birkin_pistole elza: Mutationen 1 (F1274), Form 1 HP max 600, Form-HP 1000 (F1455) bis 10, Rueckstoss 1 (F3431), G5 1 (F3594), G5 tot 0 (F-1), mg am Ende 0
+CMake Error at tests/integration/test_r41_birkin_pistole.cmake:213 (message):
+  r41_birkin_pistole: FEHLER
+
+# Lauf 3 Messhaken, RE15_GIVE=3:255: Zusammenfassung
+-- r41_birkin_pistole leon: Mutationen 1 (F1274), Form 1 HP max 600, Form-HP 1000 (F1455) bis 10, Rueckstoss 1 (F3431), G5 1 (F3594), G5 tot 1 (F4706), Patronen in der Waffe 255 -> 89 beim G5-Tod, am Ende 31
+-- r41_birkin_pistole elza: Mutationen 1 (F1274), Form 1 HP max 600, Form-HP 1000 (F1455) bis 10, Rueckstoss 1 (F3431), G5 1 (F3594), G5 tot 1 (F4706), Patronen in der Waffe 255 -> 89 beim G5-Tod, am Ende 31
+-- r41_birkin_pistole: alle Pruefungen gruen
