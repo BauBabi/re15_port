@@ -2522,6 +2522,17 @@ static int32_t gr2_tr_ab(const re15_actor_t *e, int32_t x, int32_t z)
     return (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
 }
 static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern);
+/* NB2: Ziel kuerzen (Kopf + Kanister in den Waenden), aus den aufgeblasenen Bloecken schieben und noch einmal kuerzen - sonst lag ein aus der Plattform
+ * geschobenes Ziel fuer den Kopf hinter der Nordwand (Riegel integration_r41_gatorfix_frei F3676-F3839: Etappe (788,-8191), 59 Bilder Wandreiben) */
+static int gr2_tr_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz);
+static void gr2_tr_frei(const re15_actor_t *e, int32_t *x, int32_t *z);
+static int gr2_tr_fitfrei(const re15_actor_t *e, int32_t *x, int32_t *z)
+{
+    int seiten = gr2_tr_fit(e, x, z);
+    gr2_tr_frei(e, x, z);
+    seiten |= gr2_tr_fit(e, x, z);
+    return seiten;
+}
 static int8_t s_tr_modus[RE15_ACTOR_MAX];   /* letzte Rueckgabe je Slot: 0 Ziel unveraendert, 1 gekuerzt, 2 Vorbei-Etappe */
 int re15_gr2_trag_modus(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_tr_modus[slot] : 0; }
 int re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern)
@@ -2559,7 +2570,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
             int32_t qx = s_tr[slot].cx + (int32_t)(((int64_t)re15_cos_q12(a2) * GR2_TR_KREIS) >> 12);
             int32_t qz = s_tr[slot].cz + (int32_t)(((int64_t)re15_sin_q12(a2) * GR2_TR_KREIS) >> 12);
             gr2_tr_frei(e, &qx, &qz);
-            (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
+            (void)gr2_tr_fitfrei(e, &qx, &qz);
             *tx = qx; *tz = qz;
             return 3;
         }
@@ -2574,7 +2585,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
                 if (gr2_tr_im_block(e->x + (int32_t)(dx * t / (d ? d : 1)), e->z + (int32_t)(dz * t / (d ? d : 1)), m)) frei = 0;
             if (frei) {
                 int32_t qx = cx, qz = cz;
-                (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
+                (void)gr2_tr_fitfrei(e, &qx, &qz);
                 *tx = qx; *tz = qz;
                 return 2;
             }
@@ -2588,10 +2599,13 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
                                                                  * vom Spieler ab (Anlauf/Maul-Ziel, Fuzz S4: 480), Ring-Wegpunkte liegen >= GB_RING_M 2600 vom Block */
     }
     gr2_tr_frei(e, tx, tz);                                /* NB2: kein Ziel in den aufgeblasenen Bloecken (Wurzel kommt nicht hin) */
-    const int seiten = gr2_tr_fit(e, tx, tz);
-    gr2_tr_frei(e, tx, tz);                                /* NB2: auch das gekuerzte Ziel nicht in den Bloecken (Fuzz O2: (1658,-12000) vor der Plattform) */
+    const int seiten = gr2_tr_fitfrei(e, tx, tz);                                /* NB2: auch das gekuerzte Ziel nicht in den Bloecken (Fuzz O2: (1658,-12000) vor der Plattform) */
     if (s_tr[slot].an) {
-        const int32_t dq = gr2_tr_ab(e, s_tr[slot].qx, s_tr[slot].qz);
+        /* NB2: die Etappe je Bild mit der Gier, mit der er jetzt hinschwimmt, neu kuerzen (Riegel frei F3680-F3843: Etappe (-1116,-8474) beim Anlegen fuer die
+         * Gier nach Nordwest gekuerzt, angeschwommen dann nach Norden - Kopf an der Nordwand) */
+        int32_t lqx = s_tr[slot].qx, lqz = s_tr[slot].qz;
+        (void)gr2_tr_fitfrei(e, &lqx, &lqz);
+        const int32_t dq = gr2_tr_ab(e, lqx, lqz);
         ++s_tr[slot].t;
         /* NB2: eine Etappe, der die Wurzel in 60 Bildern nicht 200 naeher kommt (Ecke Plattform/Wand, Fuzz NB2 P-west), ist nicht erreichbar - naechste */
         const int ohne = s_tr[slot].t >= 60 && (s_tr[slot].t % 60) == 0 && s_tr[slot].d0 - dq < 200;
@@ -2600,7 +2614,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
                                                           e->x, e->z, (int)s_tr[slot].qx, (int)s_tr[slot].qz, (int)dq); }
         if (dq < GR2_TR_ERREICHT || s_tr[slot].t > GR2_TR_HALTEN || ohne) {
             s_tr[slot].an = 0; s_tr[slot].dir = (int8_t)-s_tr[slot].dir;
-        } else { *tx = s_tr[slot].qx; *tz = s_tr[slot].qz; return 2; }
+        } else { *tx = lqx; *tz = lqz; return 2; }
     }
     if (!belagern && !hop) {                               /* NB2: Umkreisen nur um den gekuerzten SPIELER (s. GR2_TR_KREIS) */
         if (s_tr[slot].kreis) {
@@ -2636,7 +2650,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
             int32_t qx = s_tr[slot].cx + (int32_t)(((int64_t)re15_cos_q12(a2) * GR2_TR_KREIS) >> 12);
             int32_t qz = s_tr[slot].cz + (int32_t)(((int64_t)re15_sin_q12(a2) * GR2_TR_KREIS) >> 12);
             gr2_tr_frei(e, &qx, &qz);
-            (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
+            (void)gr2_tr_fitfrei(e, &qx, &qz);
             *tx = qx; *tz = qz;
             return 3;
         }
@@ -2652,7 +2666,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
         int32_t qx = nx, qz = nz;
         re15_gator_boss_steuerziel(&am_hop, &qx, &qz);
         gr2_tr_frei(e, &qx, &qz);                          /* NB2 (M3'): nicht hinter die Plattform-Kante (Lauf plat7_leon: (1673,-11900)) */
-        (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
+        (void)gr2_tr_fitfrei(e, &qx, &qz);
         if (gr2_tr_ab(e, qx, qz) >= GR2_TR_PLATZ) {
             s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz; s_tr[slot].d0 = gr2_tr_ab(e, qx, qz);
             re15_gr2_log("TRAG VORBEI F%u: Wurzel (%d,%d) Gier %d, Hop (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Etappe zum Wegpunkt nach dem Hop (%d,%d), Endziel (%d,%d)",
@@ -2679,7 +2693,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
         }
         re15_gator_boss_steuerziel(e, &qx, &qz);
         gr2_tr_frei(e, &qx, &qz);
-        (void)gr2_tr_fit(e, &qx, &qz); gr2_tr_frei(e, &qx, &qz);
+        (void)gr2_tr_fitfrei(e, &qx, &qz);
         if (gr2_tr_ab(e, qx, qz) < GR2_TR_PLATZ) continue;
         if (v == 1) s_tr[slot].dir = (int8_t)-s_tr[slot].dir;
         s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz; s_tr[slot].d0 = gr2_tr_ab(e, qx, qz);

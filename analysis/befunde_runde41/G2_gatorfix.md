@@ -280,3 +280,6 @@ Ostteil" (Pendel unter der Figur) ist das nicht - offen.
 ### M4 - Leiche ueber dem Oberkiefer nach dem Zubeissen
 Nicht bearbeitet (Budget). Der Riegel maul misst 0 Scheitel ausserhalb des Kopf-Bandes (Part-6-Rahmen, x/y) - die Lage quer (Part-6-z) ragt seitlich ueber
 den Kopf hinaus; ob Clip 5 Bild 1-11 den Kopf rollt (Leiche zeigt dann nach oben) oder die Zeichenreihenfolge, ist nicht bestimmt. Offen.
+
+### Abschluss Nachbesserung 2
+Nachgezogen nach dem ersten Testlauf (integration_r41_gatorfix_frei/_elza rot: Wandreiben 59/74 an der Nordwand): Ziele werden nach dem Schieben aus den Bloecken noch einmal gekuerzt, und eine gehaltene Etappe wird je Bild mit der aktuellen Anschwimm-Gier neu gekuerzt. Tests (PowerShell-ctest, Auswahl `r41_gatorszene|r41_kanister2080|r41_alligator2|r41_re2gator|r41_gatorfix`, -j3): **100% tests passed, 0 tests failed out of 117** (2294 s). exe-Riegel (traglog, Endstand): frei 30-B. 12 %/Wandreiben 0/0 Fenster, frei_elza 10 %/2/0, rampe(_elza) 1 %/0/0, abn2_leiterecke 0 %/0/0, abn2_wand_elza 16 %/0/0, abn2_nordbecken 60 %/0/0, abn2_rampe_west(_elza) 0 %/0/0, abn2_ecken 33 %/5/0, abn2_wand 9 %/0/0; Aufnahme 121-877 Bilder nach dem Aufschlag.
