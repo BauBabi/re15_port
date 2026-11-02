@@ -195,7 +195,8 @@ static void abschnitt_feuer(void)
                lauf, fl_max, fx_max, hdl, teile, (unsigned)e->re2z_part_tint[0], gate, e->state);
         if (fl_max > he_max) he_max = fl_max;
         if (fl_max == 0) he_ok++;
-        if ((hdl == 5 || hdl == 6) && teile >= 1 && fx_max > 0) he_gore++;
+        /* Runde 41 Spur GR: Zeile 9 zerfetzt (re2z_granate_zerfetzen, Teile 0x4A/0x1062) -> Sturz 0x80108530 (1). */
+        if (hdl == 1 && teile >= 1 && fx_max > 0) he_gore++;
         if (e->re2z_part_tint[0] == 0x00404040u) he_tint++;     /* Russ-Tinte Part 0 `sw a0,112` @0x8010648c */
         if (gate >= 1u) he_gate++;
 
@@ -223,7 +224,7 @@ static void abschnitt_feuer(void)
           he_ok, LAEUFE, he_max);
     PRUEF(104, he_gate == LAEUFE, "HE: der Spreng-Russ FUN_8010640C wurde erreicht und seine Flammen @0x80106418-44/@0x80106450-74 unterdrueckt (%d/%d)",
           he_gate, LAEUFE);
-    PRUEF(105, he_gore == LAEUFE, "HE: Zerreissen bleibt — Handler 0x80108BEC/0x80109610, abplatzende Teile (0x4A), Effekte im Pool (%d/%d)",
+    PRUEF(105, he_gore == LAEUFE, "HE: zerfetzt (Runde 41 GR) — Sturz 0x80108530, abplatzende Teile (0x4A), Effekte im Pool (%d/%d)",
           he_gore, LAEUFE);
     PRUEF(106, he_tint == LAEUFE, "HE: Russ-Tinte Part 0 = 0x404040 (@0x8010648c) bleibt (%d/%d)", he_tint, LAEUFE);
     PRUEF(107, brand_ok == LAEUFE, "Brand (Art 4, Zeile 10): Flammen-Slots (Id 8) > 0 in %d/%d Laeufen (min %d) — Feuer unveraendert",

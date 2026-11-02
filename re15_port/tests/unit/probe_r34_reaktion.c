@@ -356,13 +356,15 @@ static void teil_ausgang(void)
              * Zerreissen (Port 5) bzw. ueber dessen Zeile-9-Wuerfe 0x80109610 Wegschleudern (6); Ausgang Leiche. */
             if (e->state != 3 || e->re2z_hits1d2 != 1) spalte_ok = 0;
             int ende = ausgang_lauf(e);
-            { int h = re15_re2z_last_death_handler(); if (h != 5 && h != 6) zelle_ok = 0; }
+            /* Runde 41 Spur GR (GR_granate.md): Zeile 9 wird zerfetzt (re2z_granate_zerfetzen), danach der Sturz
+             * 0x80108530 (Port RE2ZD_MAIN = 1) statt 0x80108BEC/0x80109610. */
+            { int h = re15_re2z_last_death_handler(); if (h != 1) zelle_ok = 0; }
             laeufe++;
             if (ende == 7 && e->hp < 0) leiche++;
             else if (ende == 1 && e->hp == 10 && (e->re2z_f10e & 1u)) kriecher++;
         }
         CHECK(220, laeufe == 8 && leiche == 8 && kriecher == 0 && spalte_ok && zelle_ok,
-              "HE an stehendem 0x10: %d Laeufe, Leiche %d (8), Kriecher %d (0), Spalte 1 %d, DEATH-Zelle 0x80108BEC/0x80109610 %d",
+              "HE an stehendem 0x10: %d Laeufe, Leiche %d (8), Kriecher %d (0), Spalte 1 %d, zerfetzt + Sturz 0x80108530 %d",
               laeufe, leiche, kriecher, spalte_ok, zelle_ok);
     }
     /* (221) NEGATIV-KONTROLLE: derselbe Treffer, die Spalte von Hand auf 0 (der Stand VOR der
@@ -375,8 +377,11 @@ static void teil_ausgang(void)
         explosion_bei(e, 300, 2);
         e->re2z_hits1d2 = 0;
         int ende = ausgang_lauf(e);
-        CHECK(221, ende == 1 && e->hp == 10 && e->re2z_f10e == 0x2001u && re15_re2z_last_death_handler() == 2,
-              "Spalte 0 von Hand: Ende %d (1), hp %d (10), f10e 0x%04X (0x2001), Zelle %d (2 = 0x80107438)", ende,
+        /* Runde 41 Spur GR: die Zerfetzung (Zeile 9) laeuft in JEDEM Zweig vor der Zelle; auch Spalte 0 endet
+         * deshalb als Leiche ohne Kriecher (vorher 0x80107438 -> Kriecher HP 10). Spalte 0 hat fuer die Handgranate
+         * keinen Produzenten (Zone fest 1, A_granate.md par.3.5). */
+        CHECK(221, ende == 7 && e->hp < 0 && !(e->re2z_f10e & 1u) && re15_re2z_last_death_handler() == 1,
+              "Spalte 0 von Hand: Ende %d (7), hp %d (<0), f10e 0x%04X (kein Bit 0), Zelle %d (1 = 0x80108530)", ende,
               e->hp, e->re2z_f10e, re15_re2z_last_death_handler());
     }
     /* (222) Brad 0x11 (HP 250) UEBERLEBT HE (-200): Spalte 3 -> HURT[9][3] = 0x80105438 (Haupt-Treffer,
@@ -395,10 +400,12 @@ static void teil_ausgang(void)
         const int sp_br = e->re2z_hits1d2;
         frame();
         const int h_br = re15_re2z_last_hit_handler();
-        /* Runde 35 Spur A: HE-Spalte 1 -> HURT[9][1] = 0x80105BC0 Taumeln (RE2ZH_STAGGER = 2). */
-        CHECK(222, st_he == 2 && sp_he == 1 && h_he == 2 && sp_br == 0 && h_br == 2,
-              "Brad HE: st %d (2) Spalte %d (1) Handler %d (2 = 0x80105BC0); Brand: Spalte %d (0) Handler %d (2)",
-              st_he, sp_he, h_he, sp_br, h_br);
+        /* Runde 35 Spur A: HE-Spalte 1. Runde 41 Spur GR: Brad (dicker Zombie) STIRBT jetzt an HE (250 - 1000
+         * @0x8006f41c) -> Zustand 3, kein HURT; Brand (200) laesst ihn weiter in HURT[10][0] = 0x80105BC0. */
+        (void)h_he;
+        CHECK(222, st_he == 3 && sp_he == 1 && sp_br == 0 && h_br == 2,
+              "Brad HE: st %d (3) Spalte %d (1); Brand: Spalte %d (0) Handler %d (2 = 0x80105BC0)",
+              st_he, sp_he, sp_br, h_br);
     }
 }
 

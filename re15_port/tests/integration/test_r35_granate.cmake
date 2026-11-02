@@ -296,7 +296,9 @@ if(_an)
     r35_exe(zombie "${_dir}" 240 ${_env_basis}
         RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=-1676,-18070,1076" RE15_AI_FLAVOR=re2 RE15_GIVE=9:5 RE15_EQUIP=9
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=MD0.6,MDA0.2,MD2.5,W5"
-        "RE15_EXIT_AT=320#1140")
+        "RE15_EXIT_AT=320#1140" RE15_GR_LOG=1)
+    # Runde 41 Spur GR: RE15_GR_LOG=1 -> debug.log "[gr] RE2 Slot N Typ 0xTT Zeile 9: ZERFETZT" je Zerfetzung
+    # (enemy_ai_re2_zombie.c re2z_granate_zerfetzen); geprueft unten statt Zerreissen/Wegschleudern.
     # Runde 37 Spur L: EXIT_AT 260 -> 320 und Leichen-Fenster X+80 -> X+180 (s.u.): Zeile 9 waehlt per Wurf zwischen Bersten
     # und Zerreissen (`beq s0,zero` @0x80108d10, s = (r1 >> (r2 & 7)) & 3, 1 von 4 Zerreissen); das Zerreissen braucht P1
     # (Clip 3/4) + P5/P6 ((rand & 0x1f) + 15 @0x80109214-1C) + P3 (Clip 1): gemessen 139 Bilder (Gegner 3, g9_re2-Aufstellung).
@@ -325,7 +327,8 @@ if(_an)
         if("${_V_HP}" STREQUAL "" OR "${_X_HP}" STREQUAL "")
             continue()
         endif()
-        if(NOT _X_HP LESS _V_HP OR NOT "${_X_T}" STREQUAL "10")
+        # Runde 41 Spur GR: auch die dicken Zombies 0x11 (vorher HP 250 - 200 -> ueberlebt) sterben und werden zerfetzt.
+        if(NOT _X_HP LESS _V_HP OR NOT ("${_X_T}" STREQUAL "10" OR "${_X_T}" STREQUAL "11"))
             continue()
         endif()
         math(EXPR _getroffen "${_getroffen} + 1")
@@ -335,22 +338,12 @@ if(_an)
         r35_gegner("${_Z_${_xn}}" ${_s} _N)
         r35_gegner("${_Z_${_x10}}" ${_s} _N10)
         r35_gegner("${_Z_${_x80}}" ${_s} _N80)
-        if("${_N_MO}" STREQUAL "1")
-            r35_fehler(zombie "Zombie ${_s}: Clip 1 im Bild X+1 = Sturz-Tod 0x80108530 (Spalte 3, vorher) statt Zerreissen 0x80108BEC")
-        endif()
-        if(NOT "${_N10_Z}" STREQUAL "" AND NOT "${_X_Z}" STREQUAL "")
-            math(EXPR _dz "${_N10_Z} - ${_X_Z}")
-            math(EXPR _dx "${_N10_X} - ${_X_X}")
-            if(_dz LESS 0)
-                math(EXPR _dz "0 - ${_dz}")
-            endif()
-            if(_dx LESS 0)
-                math(EXPR _dx "0 - ${_dx}")
-            endif()
-            math(EXPR _d "${_dx} + ${_dz}")
-            if(_d GREATER 600)
-                math(EXPR _gore "${_gore} + 1")
-            endif()
+        # Runde 41 Spur GR (GR_granate.md): statt Zerreissen 0x80108BEC / Wegschleudern 0x80109610 die Zerfetzung
+        # re2z_granate_zerfetzen, genau einmal je getroffenem Zombie (debug.log-Zeile des Slots).
+        file(STRINGS "${_dir}/debug.log" _zf REGEX "\\[gr\\] RE2 Slot ${_s} Typ 0x1[01] Zeile 9: ZERFETZT")
+        list(LENGTH _zf _zfn)
+        if(_zfn EQUAL 1)
+            math(EXPR _gore "${_gore} + 1")
         endif()
         if("${_N80_ST}" STREQUAL "7")
             math(EXPR _leichen "${_leichen} + 1")
@@ -360,13 +353,13 @@ if(_an)
         r35_fehler(zombie "nur ${_getroffen} Zombies 0x10 verlieren im Explosionsbild HP (soll >= 2)")
     endif()
     if(NOT _gore EQUAL _getroffen)
-        r35_fehler(zombie "${_gore}/${_getroffen} getroffene Zombies weggeschleudert (> 600 in 10 Bildern, re2z_death_rip)")
+        r35_fehler(zombie "${_gore}/${_getroffen} getroffene Zombies genau einmal zerfetzt (re2z_granate_zerfetzen, Runde 41 GR)")
     endif()
     if(NOT _leichen EQUAL _getroffen)
         r35_fehler(zombie "${_leichen}/${_getroffen} getroffene Zombies in Zustand 7 (Leiche) bis Bild X+180 — Wiederbelebung?")
     endif()
     r35_pruef_toene("${_dir}/wf.log" zombie)
-    message(STATUS "${_tag} [zombie]: ok — X=${_G_X}, ${_getroffen} Zombies zerrissen, ${_G_EINGRIFFE} Eingriffe")
+    message(STATUS "${_tag} [zombie]: ok — X=${_G_X}, ${_getroffen} Zombies zerfetzt, ${_G_EINGRIFFE} Eingriffe")
 endif()
 
 # ---------------------------------------------------------------------------------------------------

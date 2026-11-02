@@ -7706,7 +7706,9 @@ static const uint8_t re2z_death_tbl[19][9] = {
  * grosse Lache). Granaten-Zerplatzen zeigen B 3:31.4, 3:36.0 und 8:42.2 (Z08/Z11/Z24) — dort ist vom Koerper fast
  * nichts mehr da, also MEHR als 8BEC (Rumpf bleibt). Zeilen 10/11
  * (Brand/Saeure) bleiben bei der Tabelle: ihr eigenes RE2-Gore (Verkohlung FUN_80106128 / Aetzen) haengt am
- * Sturz-Pfad (unit_r36_granate pinnt die Flammen). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1. */
+ * Sturz-Pfad (unit_r36_granate pinnt die Flammen). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1.
+ * Runde 41 Spur GR: im DEATH-Dispatch geht Zeile 9 bei eingeschaltetem Schalter nicht mehr in diese Zelle, sondern
+ * vorher durch re2z_granate_zerfetzen (Block unten) und dann in den Sturz 0x80108530. */
 int re15_zgore_80prozent(void);   /* zombiegore_r15.c */
 
 /* ---- 80%-GORE IM RE2-GEHIRN: DAS ZERFETZEN (Nutzer-Auftrag 2026-10-30) -----------------------------------------
@@ -7769,6 +7771,153 @@ static void re2z_80_zerfetzen(re15_actor_t *e, re15_actor_t *pl)
     re2z_80_arm(e, 12, slot);                                           /* RE1.5 11/12/13 */
     re2z_se(2);                                                         /* wie @0x801094C4 */
 }
+/* ---- RUNDE 41 SPUR GR: DIE EXPLOSION ZERFETZT DEN ZOMBIE (Nutzer-Auftrag 2026-11-02) ----------------------------
+ * ⛔ GESTALTUNG / PORT-WAHL (Gore = Maximum aus RE1.5, RE2 und den 80%-Videos; Dossier
+ * analysis/befunde_runde41/GR_granate.md). Die 80%-Videos zeigen die Explosivgranate (Elzas Granatwerfer,
+ * Muendungsblitz an der Huefte) B 3:31.4 / 3:36.1 / 8:42.3: rote Saeule ueber dem GANZEN Koerper, danach ist der
+ * Koerper weg, es bleiben Lache, Brocken, ein Fleischhaufen. Keine Quelle nimmt alles auf einmal: RE2 Zeile 9
+ * (DEATH[9][1..2] = 0x80108BEC) Kopf + Arm(e), RE1.5 ZERFETZEN (0x80107ee0) Kopf + Arme, RE1.5 BEINE WEG
+ * (0x80108abc) die Beine. Hier die Vereinigung; jedes Teil nimmt einen belegten Einzelmechanismus. Teilnummern =
+ * RE2-Slots (Parser-Bindlaengen im Block ueber re2z_perm_for: 2-4/5-7 Beine, 8 Kopf, 9-11/12-14 Arme), die
+ * RE1.5-Teile sind ueber re2_hybrid_perm umgesetzt (RE1.5 1..6 -> RE2 2..7, 8..13 -> 9..14).
+ *   Kopf 8          fliegt: Drift 0x4A, Felder 0x80108BEC @0x80108DD4-E3C, Effekt 3000 @0x80108E18
+ *   Oberarme 9/12   fliegen: Wurf 0x1062, Felder @0x80108E54-E98 bzw. @0x80108F10-F70 (RE2 wirft Arm B nur zu
+ *                   50 %, `andi 0x1 / bne` @0x80108F04-08 -> hier immer)
+ *   Unterarme 10/13 platzen: RE1.5 FUN_80108d04 (@0x80108d04-6c), wie ZERFETZEN @0x8010818c / @0x80108224
+ *   Haende 11/14    weg: RE1.5 Teil-Wort 0 (@0x801081d0 / @0x8010826c)
+ *   Oberschenkel 2/5 fliegen: Wurf 0x1062 mit den RE2-Beinwurf-Feldern @0x80105384-C0
+ *   Unterschenkel/Fuesse 3/4/6/7 platzen: RE1.5 BEINE WEG @0x80108ba0 / @0x80108bb8 / @0x80108bd0 / @0x80108be8
+ *   Rumpf 0 + Becken 1 bleiben liegen: Spreng-Russ FUN_8010640C (Zeile 9, @0x80108CEC), Stumpf-Marker Part 0
+ *                   (@0x80108F98-B4), Rumpf-Stumpf-Geometrie Record 16 (@0x80108FB8-FDC, nur RE2-MD1)
+ *   Blut/Brocken: FUN_80109610 P0 (Wolken 8096/6096, Fleischbrocken 0x0902xxxx @0x801096E8-0x801097B8), Brocken
+ *                   0x0800xxxx + Wolke 8000 (@0x80108FF0-0x80109054), Fontaene 0x00021F40 (@0x80109428-38), je
+ *                   platzendem Teil Blut 0x2000 (@0x80108d04), die grosse Lache (Video, wie bisher).
+ * Farbwort der platzenden Teile: RE1.5 +0x68 = 0x8f (`sw` in FUN_80108d04) — der Zeichner nimmt bei aktiver
+ * RE2-Bruecke das RE2-Farbwort +0x70 (main.c, gore_on), deshalb steht derselbe Wert dort (beide multiplizieren
+ * das NCCT-Ergebnis). Bereits fehlende Teile (Kriecher, Arm-Abwurf) bleiben unberuehrt (Bit 0 bzw. 0x40).
+ * Danach der normale Sturz 0x80108530 (wie re2z_80_zerfetzen). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1. */
+static int re2z_gr_teil_frei(const re15_actor_t *e, int p)
+{
+    return (e->re2z_part_flags[p] & 0x41u) == 0x01u;                    /* vorhanden, nicht schon abgeloest */
+}
+static void re2z_gr_platzt(re15_actor_t *e, int slot, int p)
+{
+    static const int32_t ofs_016c[3] = { 200, 0, 0 };                   /* a3 @0x8012016c (RE1.5 STAGE1) */
+    if (!re2z_gr_teil_frei(e, p)) return;
+    re15_enemy_fx19700(e, 0x2000u, p, ofs_016c);                         /* `ori a0,zero,0x2000` FUN_80108d04 */
+    re15_teil_t *t = re15_teile(slot);
+    if (t) {
+        t[p].col = 0x8fu;                                                /* +0x68 = 0x8f */
+        memset(t[p].h94, 0, sizeof t[p].h94);                            /* +0x94..+0x9e = 0 */
+        t[p].w |= 0x4au;                                                 /* Wort |= 0x4a (0x40 Matrix, 0x08 Scherben) */
+        re15_teile_markieren(slot);
+    }
+    e->re2z_part_tint[p] = 0x0000008Fu;                                  /* Port-Mapping +0x68 -> +0x70, s.o. */
+}
+static void re2z_gr_weg(re15_actor_t *e, int slot, int p)
+{
+    re15_teil_t *t = re15_teile(slot);
+    if (!t || !re2z_gr_teil_frei(e, p)) return;
+    t[p].w = 0;                                                          /* `sw zero` @0x801081d0 / @0x8010826c */
+    re15_teile_markieren(slot);
+}
+static void re2z_gr_arm_wurf(re15_actor_t *e, int p)                     /* 0x80108BEC @0x80108E54-E98 */
+{
+    if (!re2z_gr_teil_frei(e, p)) return;
+    e->re2z_part_flags[p] |= 0x1062u;                                    /* `ori 0x1062` @0x80108E5C */
+    e->re2z_part_v   [p][2] = 100;                                       /* +0x3C @0x80108E6C */
+    e->re2z_part_st86[p]    = 0;                                         /* +0x86 @0x80108E74 */
+    e->re2z_part_v   [p][1] = 0;                                         /* +0x3A @0x80108E78 */
+    e->re2z_part_grav[p]    = 30;                                        /* +0x79 @0x80108E7C */
+    e->re2z_part_rot [p][0] = 0;                                         /* +0x3E @0x80108E80 */
+    e->re2z_part_v   [p][0] = (int16_t)((e->rot_y + 2048) & 0xfff);      /* +0x38 @0x80108E88 */
+    e->re2z_part_rot [p][2] = 1024;                                      /* +0x42 @0x80108E94 */
+    e->re2z_part_rot [p][1] = (int16_t)e->rot_y;                         /* +0x40 @0x80108E98 */
+}
+static void re2z_gr_bein_wurf(re15_actor_t *e, int p)                    /* Beinwurf @0x80105384-C0 */
+{
+    if (!re2z_gr_teil_frei(e, p)) return;
+    e->re2z_part_flags[p] |= 0x1062u;                                    /* `ori 0x1062` @0x8010537C-80 */
+    e->re2z_part_v   [p][2] = 10;                                        /* +0x3C @0x80105388-8C */
+    e->re2z_part_v   [p][1] = -200;                                      /* +0x3A @0x80105390-94 */
+    e->re2z_part_st86[p]    = 0;                                         /* +0x86 @0x8010539C */
+    e->re2z_part_grav[p]    = 50;                                        /* +0x79 @0x80105398/A0 */
+    e->re2z_part_rot [p][0] = 0;                                         /* +0x3E @0x801053A4 */
+    e->re2z_part_v   [p][0] = (int16_t)(e->rot_y + 2048);                /* +0x38 @0x801053A8-AC */
+    e->re2z_part_rot [p][2] = 1024;                                      /* +0x42 @0x801053B4-B8 */
+    e->re2z_part_rot [p][1] = (int16_t)e->rot_y;                         /* +0x40 @0x801053B0/C0 */
+    re2z_gore_fx(e, p, 7000u);                                           /* Effekt 7000 am Teil @0x801053CC */
+}
+static unsigned s_re2z_gr_zerfetzt = 0;   /* Port-Diagnose (Tests): Zahl der Zerfetzungen seit Programmstart */
+unsigned re15_re2z_granate_zerfetzt_zahl(void) { return s_re2z_gr_zerfetzt; }
+static void re2z_granate_zerfetzen(re15_actor_t *e, re15_actor_t *pl)
+{
+    int slot = (int)(e - g_actors);
+    int bear = re2z_bearing_to(e, pl);
+    s_re2z_gr_zerfetzt++;
+    if (!(e->re2z_f10e & 0x80u)) re2z_gore_soot(e);                      /* Zeile 9 @0x80108CD8-EC */
+    /* Blut und Brocken am Rumpf: FUN_80109610 P0 (Zeile != 12) */
+    {   static const int32_t a3_8096[3] = { 0, -300, 0 };                /* @0x801096F8-704 */
+        static const int32_t a3_6096[3] = { 0, -100, 0 };                /* @0x80109720-2C */
+        re2z_gore_fx_a3(e, 0, 8096u, (int16_t)bear, a3_8096);            /* @0x801096E8 / @0x80109710 */
+        re2z_gore_fx_a3(e, 0, 6096u, (int16_t)bear, a3_6096);            /* @0x80109718 / @0x80109734 */
+        unsigned n = (re2z_rand() & 3u) + 1u;                             /* `andi 0x3 / addiu 1` @0x801096D0-D4 */
+        for (;;) {
+            n--;
+            int32_t a3[3];
+            a3[0] = 256 - 2 * (int32_t)re2z_rand();                       /* @0x80109744-50 */
+            a3[1] = 56  - 2 * (int32_t)re2z_rand();                       /* @0x80109754-64 */
+            a3[2] = 256 - 2 * (int32_t)re2z_rand();                       /* @0x80109768-74 */
+            uint32_t r4 = re2z_rand();                                    /* @0x80109778-88 */
+            uint32_t r5 = re2z_rand();                                    /* @0x80109784 */
+            int ang = bear - (int)((r5 * 4u) - 512u);                     /* @0x80109798-A8 */
+            re2z_gore_fx_a3(e, 0, 0x09020000u | (r4 * 4u + 1536u), (int16_t)ang, a3);   /* @0x801097A4 */
+            if (n == 0u) break;                                           /* `beq s4,zero` @0x801097AC */
+        }
+    }
+    {   static const int32_t a3r[3] = { 0, -500, 0 };                    /* @0x80108FE4-F4 */
+        uint32_t r1 = re2z_rand(), r2 = re2z_rand();                      /* @0x80108FF0 / @0x80108FF8 */
+        re2z_gore_fx_a3(e, 0, 8000u, (int16_t)((int)e->rot_y + (int)(r1 * 16u) - (int)(r2 * 16u)), a3r);   /* @0x80109024 */
+        uint32_t r3 = re2z_rand(), r4 = re2z_rand();                      /* @0x8010902C-4C */
+        re2z_gore_fx_a3(e, 0, 0x08000000u | ((r3 + 4000u) * 4u), (int16_t)(r4 * 16u), a3r);           /* @0x80109054 */
+    }
+    /* Kopf (8BEC @0x80108DD4-E3C) + Fontaene am Hals (92C4 @0x80109428-38) */
+    if (re2z_gr_teil_frei(e, 8)) {
+        int32_t a3m[3];
+        re2z_blood_a3(e, 1, 0, -100, a3m);                                /* (P8.x, P8.y - 100, P8.z) @0x80109414-24 */
+        re2z_gore_fx_a3(e, 0, 0x00021F40u, (int16_t)e->rot_y, a3m);      /* @0x80109438 */
+        e->re2z_part_flags[8] |= 0x4Au;
+        e->re2z_part_w9c  [8]  = 400;
+        e->re2z_part_w9a  [8]  = -100;
+        e->re2z_part_life [8]  = 0;
+        e->re2z_part_w9e  [8]  = 10;
+        e->re2z_part_wa4  [8]  = -50;
+        e->re2z_part_tint [8]  = 0x00101030u;
+        e->re2z_part_yaw98[8]  = (int16_t)((e->rot_y + 2048) & 0xfff);
+        re2z_gore_fx_ex(e, 8, 3000u, (int16_t)(re2z_rand() * 16u), 0, 0, 0);   /* @0x80108E18-28 */
+    }
+    /* Arme: Oberarm fliegt, Unterarm platzt, Hand weg */
+    re2z_gr_platzt(e, slot, 10);  re2z_gr_weg(e, slot, 11);  re2z_gr_arm_wurf(e, 9);
+    re2z_gr_platzt(e, slot, 13);  re2z_gr_weg(e, slot, 14);  re2z_gr_arm_wurf(e, 12);
+    /* Beine: Unterschenkel + Fuss platzen, Oberschenkel fliegt */
+    re2z_gr_platzt(e, slot, 3);   re2z_gr_platzt(e, slot, 4);  re2z_gr_bein_wurf(e, 2);
+    re2z_gr_platzt(e, slot, 6);   re2z_gr_platzt(e, slot, 7);  re2z_gr_bein_wurf(e, 5);
+    /* Rumpf bleibt liegen: Stumpf-Marker Part 0 (@0x80108F98-B4) + Rumpf-Stumpf (@0x80108FB8-FDC) */
+    e->re2z_part_yaw98[0] = 32; e->re2z_part_w9a[0] = 0; e->re2z_part_w9c[0] = 32; e->re2z_part_w9e[0] = 0;
+    e->re2z_part_flags[0] |= 0x80u;
+    e->re2z_part_mesh[0] = 16u;
+    e->re2z_flags21a |= 0x60u;                /* Teile 9/12 schon ab (Bits 0x20/0x40 wie @0x801052F4/@0x801052E4, Gates
+                                               * @0x80108E40-4C / @0x80108EF0-F4): kein zweiter Abriss */
+    e->re2z_self1d3 |= 0x80u;                                             /* @0x80108DCC */
+    /* grosse Lache (Video B 3:36.3 / 8:42.5, wie der fruehere Zeile-9-Zusatz) */
+    re15_esp_fx_splatter(re15_esp_room_bank(), 0, 16, e->x, e->y - 900, e->z, e->y);
+    re15_esp_fx_splatter(re15_esp_room_bank(), 0, 16, e->x, e->y - 300, e->z, e->y);
+    re2z_se(2);                                                           /* @0x8010905C-60 */
+    if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
+        fprintf(stderr, "[gr] RE2 Slot %d Typ 0x%02x Zeile %u: ZERFETZT (HP %d)\n", slot, (unsigned)e->type,
+                (unsigned)e->sub_state_1, (int)e->hp);
+}
+
 static uint8_t re2z_death_zelle(unsigned row, unsigned col)
 {
     uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
@@ -8202,6 +8351,14 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
     /* `lbu v0,6(s0) / bne -> 0x801083B0` @0x80108328-34: nur in Phase 0 werden fuenf
      * Modell-Flagwoerter |= 0x8000 gesetzt (@0x80108338-AC) — Praesentation, PORT-OPEN. */
 
+    /* Runde 41 Spur GR (GESTALTUNG, Block ueber re2z_granate_zerfetzen): der Explosionstod (Zeile 9 = Handgranate
+     * w9 und Granatwerfer-Explosivrunde w15, re2z_row_from_weapon) zerfetzt den Zombie in JEDEM Zweig der Wurzel
+     * (stehend, liegend, Kriecher) einmal; Zweig 4 faehrt danach den normalen Sturz. */
+    if (e->sub_state_1 == 9u && !(e->zg_9f & 0x08) && re15_zgore_80prozent()) {
+        e->zg_9f |= 0x08;
+        re2z_granate_zerfetzen(e, pl);
+    }
+
     if (e->re2z_f10e & 1u) {                                       /* ZWEIG 1 @0x801083B0-BC */
         s_re2z_last_death_handler = -1;                            /* 1D-Tabelle @0x8010CECC */
         re2z_death_crawler(e);
@@ -8242,6 +8399,7 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
                         (e->zg_9f & 0x20) ? "ZERFETZT" : "Halbieren 66FC");
         }
         if (e->zg_9f & 0x20) h = (uint8_t)RE2ZD_MAIN;     /* zerfetzt -> normaler Sturz 0x80108530 */
+        if (e->zg_9f & 0x08) h = (uint8_t)RE2ZD_MAIN;     /* Runde 41 Spur GR: von der Explosion zerfetzt -> Sturz */
         if (row == 9u && h == (uint8_t)RE2ZD_8BEC && !(e->zg_9f & 0x40)) {
             /* GESTALTUNG Video 3: grosse Blutlachen beim Granaten-Zerreissen (einmal je Tod). */
             e->zg_9f |= 0x40;

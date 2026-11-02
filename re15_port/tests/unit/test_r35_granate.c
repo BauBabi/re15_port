@@ -291,9 +291,10 @@ static void abschnitt_reichweite(void)
         PRUEF(nr, getroffen == faelle[i].soll && n == faelle[i].soll,
               "%s: getroffen %d, Rueckgabe %d (soll %d); hp %d", faelle[i].was, getroffen, n, faelle[i].soll, d->hp);
         if (getroffen)
-            /* Zombie 0x10 steht unter dem RE2-Schadensmodell (E4): Zeile 9 K0 = 200 (@0x800A41CC), nicht 1000. */
-            PRUEF(nr, d->hp == 100 - 200 && d->state == 3 && d->sub_state_1 == 9,
-                  "   Schaden E4 (RE2-Record Zeile 9 K0 = 200 @0x800A41CC): hp %d, Zustand %u, +0x5 %u (soll -100/3/9)",
+            /* Runde 41 Spur GR (PORT-WAHL, GR_granate.md par.4): die Handgranate traegt an der Zombie-Familie wieder ihre
+             * eigene Zahl DAT_8006f418[2] = 1000 (@0x8006f41c) statt E4 (Zeile 9 K0 = 200 @0x800A41CC). */
+            PRUEF(nr, d->hp == 100 - 1000 && d->state == 3 && d->sub_state_1 == 9,
+                  "   Schaden 1000 (@0x8006f41c, Runde 41 GR): hp %d, Zustand %u, +0x5 %u (soll -900/3/9)",
                   d->hp, d->state, d->sub_state_1);
     }
     /* Mehrere Gegner in einer Explosion: alle im Quadrat werden getroffen (Hitcode-Bit 0x10000 "alle"). */
@@ -500,7 +501,8 @@ static void abschnitt_gore(void)
         }
         int hdl = re15_re2z_last_death_handler();
         if (hdl >= 0 && hdl < 6) handler[hdl]++;
-        if (hdl == 5 || hdl == 6) gore_laeufe++;
+        /* Runde 41 Spur GR: Zeile 9 wird zerfetzt (re2z_granate_zerfetzen), danach Sturz 0x80108530 (Handler 1). */
+        if (hdl == 1) gore_laeufe++;
         if (ausgang == 7) leichen++;
         if (ausgang == 1) wiederbelebt++;
         int teile = 0;
@@ -510,8 +512,8 @@ static void abschnitt_gore(void)
                lauf, e->re2z_hits1d2, hdl, ausgang, teile);
     }
     PRUEF(172, spalte_ok == LAEUFE, "RE2-Stempel Spalte 1 (K0 + Zone 1, PORT-WAHL) in %d/%d Laeufen", spalte_ok, LAEUFE);
-    PRUEF(173, gore_laeufe == LAEUFE, "Todes-Handler 0x80108BEC/0x80109610 (5/6) in %d/%d Laeufen (Sturz 1: %d)",
-          gore_laeufe, LAEUFE, handler[1]);
+    PRUEF(173, gore_laeufe == LAEUFE, "zerfetzt + Sturz 0x80108530 (Handler 1, Runde 41 GR) in %d/%d Laeufen (8BEC 5: %d)",
+          gore_laeufe, LAEUFE, handler[5]);
     PRUEF(174, leichen == LAEUFE && wiederbelebt == 0, "Leiche (Zustand 7) in %d/%d, Wiederbelebung %d (0)", leichen, LAEUFE, wiederbelebt);
     PRUEF(175, teile_ok == LAEUFE, "abplatzende Teile (Part-Flags 0x4A) in %d/%d Laeufen", teile_ok, LAEUFE);
 }
@@ -795,8 +797,8 @@ static void abschnitt_strecke(void)
           unsigned r0 = re15_esp_granate_resolver_calls(); int32_t py = 0;
           for (int k = 0; k < 20 && re15_esp_granate_resolver_calls() == r0; k++) re15_esp_fx_tick(NULL);
           for (int i = 0; i < s_re2se_n; i++) if (s_re2se_code[i] == RE15_GRANATE_R35_SE_EXPLOSION) py = s_re2se_pos[i][1];
-          PRUEF(234, d->hp == 100 - 200 && py < -3100 && py > -4000,
-                "HOCH-Wandzuendung bei P.y %d (ueber der ersten Pruefhoehe -3100, unter -4000): stehender Zombie 700 vor der Wand getroffen, hp %d (-100)",
+          PRUEF(234, d->hp == 100 - 1000 && py < -3100 && py > -4000,   /* Runde 41 GR: 1000 @0x8006f41c */
+                "HOCH-Wandzuendung bei P.y %d (ueber der ersten Pruefhoehe -3100, unter -4000): stehender Zombie 700 vor der Wand getroffen, hp %d (-900)",
                 (int)py, d->hp);
           g_actors[1].active = 0; }
 

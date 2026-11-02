@@ -154,16 +154,29 @@ static void test_beine(void)
     CHECK(e->grid_id == 0x81 && e->hp == 30, "Beine ab: kein Kriecher (grid 0x%x hp %d)", e->grid_id, e->hp);
 }
 
-/* Gestaltung Video 3: Granaten-Tod -> Oberkoerper ab, kriecht weiter (immer, ohne Krit-Bit). */
+/* Runde 41 Spur GR (GR_granate.md, zombiegore_r15.c z_granate): die HANDGRANATE (w9) zerfetzt — Kopf, Arme,
+ * Unterschenkel/Fuesse platzen (0x80107ee0 ZERFETZEN + 0x80108abc BEINE WEG), kein Kriecher, Leiche.
+ * Saeure/Brand (w10/w11) behalten die fruehere Gestaltung (Oberkoerper ab, kriecht weiter). */
 static void test_granate(void)
 {
     re15_damage_seed_rng(11);
     re15_actor_t *e = zombie(3, 9, 1, 1);
     re15_enemy_ai_live_death(Z);
     re15_teil_t *t = re15_teile(Z);
-    CHECK((t[7].w & 0x40) && e->sub_state_3 == 1, "Granate: Oberkoerper nicht ab (w7 0x%x ph %d)", t[7].w, e->sub_state_3);
-    for (int n = 0; n < 400 && e->grid_id != 0x81; n++) { t[7].fest = 1; takt(re15_enemy_ai_live_death); }
-    CHECK(e->grid_id == 0x81 && e->hp == 30, "Granate: kein Kriecher");
+    CHECK((t[14].w & 0x4a) == 0x4a && (t[2].w & 0x4a) == 0x4a && (t[6].w & 0x4a) == 0x4a && t[10].w == 0 && t[13].w == 0
+          && !(t[7].w & 0x40) && e->sub_state_3 == 3,
+          "Granate w9: nicht zerfetzt (w14 0x%x w2 0x%x w7 0x%x ph %d)", t[14].w, t[2].w, t[7].w, e->sub_state_3);
+    int n;
+    for (n = 0; n < 400 && e->state == 3; n++) takt(re15_enemy_ai_live_death);
+    CHECK(e->state == RE15_AI_STATE_CORPSE && e->grid_id != 0x81, "Granate w9: keine Leiche / Kriecher (st %d grid 0x%x)",
+          e->state, e->grid_id);
+    re15_damage_seed_rng(11);
+    e = zombie(3, 10, 1, 1);
+    re15_enemy_ai_live_death(Z);
+    t = re15_teile(Z);
+    CHECK((t[7].w & 0x40) && e->sub_state_3 == 1, "Saeure w10: Oberkoerper nicht ab (w7 0x%x ph %d)", t[7].w, e->sub_state_3);
+    for (n = 0; n < 400 && e->grid_id != 0x81; n++) { t[7].fest = 1; takt(re15_enemy_ai_live_death); }
+    CHECK(e->grid_id == 0x81 && e->hp == 30, "Saeure w10: kein Kriecher");
 }
 
 static void test_beretta(void)

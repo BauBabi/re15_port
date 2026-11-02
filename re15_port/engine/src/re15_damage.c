@@ -3141,6 +3141,18 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
      * 15/16/17/18 @0x8006f436-39; Aufrufer im Port: RE2-Ops 15/24/47 ueber den Applier). */
     if (((type >= 2u && type <= 4u) || (type >= 6u && type <= 9u)) && re15_e4_modell(e))
         dmg = (int16_t)re15_enemy_dmg_row(e)[re15_react_table[type]];
+    /* ⛔ RUNDE 41 SPUR GR — PORT-WAHL (Nutzer 2026-11-02: "noch zu schwach, die sollte auch die dicken Zombies
+     * zerfetzen"; Dossier analysis/befunde_runde41/GR_granate.md §4): die HANDGRANATE (Art 2) traegt an der
+     * Zombie-Familie (re15_re2z_owns_type: 0x10/0x11/0x12/0x13/0x16/0x18) wieder ihre EIGENE Zahl
+     * DAT_8006f418[2] = 1000 (`e8 03` @0x8006f41c, Disc = Mod; Aufruf FUN_80012d60(500,&P,2) @0x80018598-bc),
+     * nicht die RE2-Granatwerfer-Zeile 9 Klammer 0 (200 @0x800A41CC, Typ 0x16: 80 @0x800A4348), die E4 (Runde 34)
+     * als Ersatz zuordnete. RE2 hat keine Handgranate (BAUPLAN Runde 34 E1: Musterscan 0 Treffer) — die Zeile 9 war
+     * eine Zuordnung, die 1000 ist der Wert des Gegenstands selbst. Folge: jeder Zombie im Wirkradius stirbt —
+     * RE2-HP hoechstens 250 (Brad = dicker Zombie 0x11, `addiu v1,zero,250` @0x801008C8; sonst 128 + 15
+     * @0x8010C670 / @0x80100810), RE1.5-HP hoechstens 111 ausser dem Einzelwert 1058 der Zeile 0x18 (@0x8011f33a, nur
+     * ohne RE2-Modell). Saeure/Brand (Art 3/4), Werfer (6..9) und alle Nicht-Zombies bleiben bei E4/E16. */
+    if (type == 2u && re15_re2z_owns_type(e->type))
+        dmg = re15_damage_table[2];
     /* ⛔ NACHBESSERUNG M1 — das Bodenfeuer (RE2-GL-Applier, O-VB4 Art 5) an einem RE1.5-KI-Typ
      * UNTER DEM RE2-MODELL (Import-Zombies im RE1.5-Flavor = Vorgabe): RE2-HP gegen die RE1.5-Zahl
      * 50 (@0x8006f422) waere dieselbe verbotene Haelften-Mischung wie oben. Er bekommt deshalb den
