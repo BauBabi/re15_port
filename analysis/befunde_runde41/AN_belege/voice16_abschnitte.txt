@@ -1,0 +1,17 @@
+== Kanal 9: 810432 Samples = 21.440 s = 201 Sektoren je 4032
+        0- 152775   0.000- 4.042 s  Sektor   0.0- 37.9  r=0.881  leon/VOICE16.XAS[9]_1.wav
+   152774- 299249   4.042- 7.917 s  Sektor  37.9- 74.2  r=1.000  Clair/VOICE16.XAS[9]_2.wav
+   299249- 447299   7.917-11.833 s  Sektor  74.2-110.9  r=1.000  Anette/VOICE16.XAS[9]_3.wav
+   348323- 434948   9.215-11.507 s  Sektor  86.4-107.9  r=0.129  Anette/VOICE16.XAS[9]_5.wav
+   447299- 598499  11.833-15.833 s  Sektor 110.9-148.4  r=1.000  Clair/VOICE16.XAS[9]_4.wav
+   685124- 732374  18.125-19.375 s  Sektor 169.9-181.6  r=1.000  Sherry/VOICE16.XAS[9]_6.wav
+   732374- 809549  19.375-21.417 s  Sektor 181.6-200.8  r=1.000  Clair/VOICE16.XAS[9]_7.wav
+== Kanal 12: 516096 Samples = 13.653 s = 128 Sektoren je 4032
+        0-  45675   0.000- 1.208 s  Sektor   0.0- 11.3  r=0.989  Sherry/VOICE16.XAS[12]_1.wav
+    45674- 102374   1.208- 2.708 s  Sektor  11.3- 25.4  r=1.000  Anette/VOICE16.XAS[12]_2.wav
+   102374- 151199   2.708- 4.000 s  Sektor  25.4- 37.5  r=1.000  Clair/VOICE16.XAS[12]_3.wav
+   151199- 321299   4.000- 8.500 s  Sektor  37.5- 79.7  r=1.000  Anette/VOICE16.XAS[12]_4.wav
+   321299- 398474   8.500-10.542 s  Sektor  79.7- 98.8  r=1.000  Clair/VOICE16.XAS[12]_5.wav
+   398474- 431549  10.542-11.417 s  Sektor  98.8-107.0  r=1.000  Anette/VOICE16.XAS[12]_6.wav
+   431549- 491399  11.417-13.000 s  Sektor 107.0-121.9  r=1.000  Clair/VOICE16.XAS[12]_7.wav
+   491399- 515024  13.000-13.625 s  Sektor 121.9-127.7  r=1.000  Anette/VOICE16.XAS[12]_8.wav

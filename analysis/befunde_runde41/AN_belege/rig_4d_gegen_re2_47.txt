@@ -1,0 +1,32 @@
+RE1.5 EM4D bones 15 clips 24 frames 358
+    0 parent -1 rel (0, -1709, 0)  mesh tv 95
+    1 parent  0 rel (0, 0, 0)  mesh tv 12
+    2 parent  1 rel (-25, 199, -140)  mesh tv 16
+    3 parent  2 rel (-22, 609, -9)  mesh tv 17
+    4 parent  3 rel (-12, 815, -3)  mesh tv 14
+    5 parent  1 rel (-25, 199, 139)  mesh tv 16
+    6 parent  5 rel (-22, 609, 9)  mesh tv 17
+    7 parent  6 rel (-12, 815, 3)  mesh tv 14
+    8 parent  0 rel (-21, -623, 0)  mesh tv 90
+    9 parent  0 rel (-40, -571, -285)  mesh tv 16
+   10 parent  9 rel (0, 406, -60)  mesh tv 18
+   11 parent 10 rel (14, 360, -61)  mesh tv 26
+   12 parent  0 rel (-40, -571, 285)  mesh tv 16
+   13 parent 12 rel (0, 406, 60)  mesh tv 18
+   14 parent 13 rel (14, 360, 61)  mesh tv 26
+RE2 EM47 bones 15 clips 8 frames 221
+    0 parent -1 rel (0, -1709, 0)  mesh tv 72
+    1 parent  0 rel (0, 0, 0)  mesh tv 12
+    2 parent  1 rel (-25, 199, -140)  mesh tv 16
+    3 parent  2 rel (-22, 609, -9)  mesh tv 17
+    4 parent  3 rel (-12, 815, -3)  mesh tv 14
+    5 parent  1 rel (-25, 199, 139)  mesh tv 16
+    6 parent  5 rel (-22, 609, 9)  mesh tv 17
+    7 parent  6 rel (-12, 815, 3)  mesh tv 14
+    8 parent  0 rel (-21, -623, 0)  mesh tv 90
+    9 parent  0 rel (-40, -571, -285)  mesh tv 16
+   10 parent  9 rel (0, 406, -55)  mesh tv 18
+   11 parent 10 rel (14, 360, -46)  mesh tv 26
+   12 parent  0 rel (-40, -571, 285)  mesh tv 16
+   13 parent 12 rel (0, 406, 55)  mesh tv 18
+   14 parent 13 rel (14, 360, 46)  mesh tv 26
