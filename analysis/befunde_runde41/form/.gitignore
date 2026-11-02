@@ -47,3 +47,6 @@
 !/stufe3/**
 
 /varianten/_probe/
+
+# Stufe 3: Arbeitsbilder (nachbaubar mit stufe3/gen)
+/stufe3/roh/
