@@ -1,0 +1,354 @@
+﻿id;quelle;zeit;ort;ortsbeleg;szenario/spielfigur;figuren;text_im_bild;herkunft
+A#000;Video A;0:00.00–0:00.80;Titelbild BIOHAZARD 2;S;-;-;Logo, Menü unleserlich;Vorarbeit video_a.md §9
+A#001;Video A;0:00.80–0:01.60;102 Büro, Cut 1;D49 M45;Elza;Elza;;Vorarbeit video_a.md §9
+A#002;Video A;0:01.60–0:02.40;104 Gang, Cut 5;D6 E1.34;Elza;Elza;;Vorarbeit video_a.md §9
+A#003;Video A;0:02.40–0:03.20;104, Cut 6;E1.29;Elza;Elza, Zombie;;Vorarbeit video_a.md §9
+A#004;Video A;0:03.20–0:04.00;104, Cut 6;E1.29;Elza;Elza, Zombie;;Vorarbeit video_a.md §9
+A#005;Video A;0:04.00–0:04.80;104, Cut 6 (schwach);E0.92;Elza;Elza, Blutwolke;;Vorarbeit video_a.md §9
+A#006;Video A;0:04.80–0:05.61;110, Cut 0;E1.35;Elza;Elza, 2 Gegner in blauen Hemden;;Vorarbeit video_a.md §9
+A#007;Video A;0:05.61–0:06.41;offen, Tür mit Fenster, ähnlich #085;-;Elza;Elza, blasse Gestalt;;Vorarbeit video_a.md §9
+A#008;Video A;0:06.41–0:07.21;offen, Stage 1, Wegweiser-Schild;-;Elza;Elza;Door-Einblendung;Vorarbeit video_a.md §9
+A#009;Video A;0:07.21–0:08.01;offen, rote Tür;-;Elza;Elza;;Vorarbeit video_a.md §9
+A#010;Video A;0:08.01–0:08.81;110, Cut 1;E1.27;Elza;Elza, Leichen;;Vorarbeit video_a.md §9
+A#011;Video A;0:08.81–0:09.61;offen, Aushangwand;-;Elza;Elza, liegender Gegner;;Vorarbeit video_a.md §9
+A#012;Video A;0:09.61–0:10.41;"114 Konferenzraum (Tisch, Doppeltür; nicht auf Disc)";S;Elza;Elza, John;エルザ！屋上に行っちゃダメだ！ / [ヤ]バイ怪物がいやがる;Vorarbeit video_a.md §9
+A#013;Video A;0:10.41–0:11.21;offen, wohl 114;-;Elza;dunkelrotes Riesenwesen, Elza klein;;Vorarbeit video_a.md §9
+A#014;Video A;0:11.21–0:12.01;119 Schießstand, Cut 5;D21 M16;Elza;-;;Vorarbeit video_a.md §9
+A#015;Video A;0:12.01–0:12.81;117 Dach, Cut 2;D8 M8;Elza;Elza klein;;Vorarbeit video_a.md §9
+A#016;Video A;0:12.81–0:13.61;115 Chefbüro, Cut 7 (Kamera wie #089);E0.81;Elza;Elza von hinten, Liegender auf dem Sofa;…レオン;Vorarbeit video_a.md §9
+A#017;Video A;0:13.61–0:14.41;115, Cut 1;D14 M15;Elza;Elza;;Vorarbeit video_a.md §9
+A#018;Video A;0:14.41–0:15.22;114, Cut 0 (schwach, plus Sicht);E0.83;Elza;Elza, John, rotes Wesen als Haufen;;Vorarbeit video_a.md §9
+A#019;Video A;0:15.22–0:16.02;119, Cut 2;D21 M18;Elza;Elza;;Vorarbeit video_a.md §9
+A#020;Video A;0:16.02–0:16.82;10A, Cut 2;E0.98;Elza;Elza;Door-Einblendung;Vorarbeit video_a.md §9
+A#021;Video A;0:16.82–0:17.62;11B Garage, Cut 0/7/13 (bildgleich);E1.50;Elza;Elza;;Vorarbeit video_a.md §9
+A#022;Video A;0:17.62–0:18.42;11A, Cut 0;D11 M7;Elza;Elza, dunkle Gestalt vorn rechts;;Vorarbeit video_a.md §9
+A#023;Video A;0:18.42–0:19.22;123, Cut 6;E1.03;Elza;Elza;;Vorarbeit video_a.md §9
+A#024;Video A;0:19.22–0:20.02;offen, Ziegelgang;-;Elza;Elza überstrahlt;;Vorarbeit video_a.md §9
+A#025;Video A;0:20.02–0:20.82;offen, Ziegelwand;-;Elza;Elza überstrahlt, 2 rote Hunde;;Vorarbeit video_a.md §9
+A#026;Video A;0:20.82–0:21.62;102, Cut 11 (Kamera des Roy-Ereignisses @0x1D7A);D7 M7;Elza;Elza;;Vorarbeit video_a.md §9
+A#027;Video A;0:21.62–0:22.42;blaue Ecke, kein Hintergrund;S;Elza;Elza kniet, Mann sitzt (nicht Leon);;Vorarbeit video_a.md §9
+A#028;Video A;0:22.42–0:23.22;blaue Ecke, andere Kamera;S;Elza;Mann allein (Weste, nackte Unterarme);;Vorarbeit video_a.md §9
+A#029;Video A;0:23.22–0:24.02;offen;-;Elza;Elza überstrahlt;;Vorarbeit video_a.md §9
+A#030;Video A;0:24.02–0:24.82;102, Cut 0;D36 M29;Elza;Elza, Blutlache;;Vorarbeit video_a.md §9
+A#031;Video A;0:24.82–0:25.63;103, Cut 6, plus Debug-Menü;M7;Elza;-;UTILITY MENU, Zeit 0:15:47;Vorarbeit video_a.md §9
+A#032;Video A;0:25.63–0:26.43;10B Zufahrt, Cut 7;E1.25;Elza;John, Elza;[..]内に女の子がいるの / 戻らなきゃ;Vorarbeit video_a.md §9
+A#033;Video A;0:26.43–0:27.23;10B, Cut 8;D11 M7;Elza;John (Rücken), Elza klein am Leiterfuß;;Vorarbeit video_a.md §9
+A#034;Video A;0:27.23–0:28.03;10B, Cut 1;E1.45;Elza;Elza, Lieferwagen RACCOON POLICE;;Vorarbeit video_a.md §9
+A#035;Video A;0:28.03–0:28.83;109, Cut 8;M6;Elza;Elza;Door-Einblendung;Vorarbeit video_a.md §9
+A#036;Video A;0:28.83–0:29.63;200 Kanal, Cut 11;E1.17;Elza;Elza, Sherry;;Vorarbeit video_a.md §9
+A#037;Video A;0:29.63–0:30.43;200, Cut 11;D9 M7;Elza;Elza kniet, Sherry;…まあ 大きな時計ね！;Vorarbeit video_a.md §9
+A#038;Video A;0:30.43–0:31.23;offen, Stage 2 oder 20B;-;Elza;Elza;;Vorarbeit video_a.md §9
+A#039;Video A;0:31.23–0:32.03;200, Cut 13;D29 M25;Elza;Elza fern, dunkle Großfigur vorn;;Vorarbeit video_a.md §9
+A#040;Video A;0:32.03–0:32.83;200, Cut 13;D28 M29;Elza;Elza fern, dunkle Großfigur vorn;;Vorarbeit video_a.md §9
+A#041;Video A;0:32.83–0:33.63;11B, Cut 5;D7 E1.47;Elza;Elza;;Vorarbeit video_a.md §9
+A#042;Video A;0:33.63–0:34.43;offen;-;Elza;Elza;;Vorarbeit video_a.md §9
+A#043;Video A;0:34.43–0:35.24;207 Cut 1/10 oder 20B Cut 12 (bildnah);E1.11 E1.12;Elza;Elza;;Vorarbeit video_a.md §9
+A#044;Video A;0:35.24–0:36.04;300 Fabrikhof, Cut 0;D16 M13;Elza;Elza am Boden, John;;Vorarbeit video_a.md §9
+A#045;Video A;0:36.04–0:36.84;offen, Gang mit Blutspur;-;Elza;Elza;;Vorarbeit video_a.md §9
+A#046;Video A;0:36.84–0:37.64;20A, Cut 15;E0.92;Elza;kleine Figur an Leiter;;Vorarbeit video_a.md §9
+A#047;Video A;0:37.64–0:38.44;offen, Laufsteg;-;Elza;Elza;;Vorarbeit video_a.md §9
+A#048;Video A;0:38.44–0:39.24;300, Cut 1;E0.94;Elza;Lkw, Leichen;[使]われてないはずだ;Vorarbeit video_a.md §9
+A#049;Video A;0:39.24–0:40.04;306 Hinterhof, Cut 5;D14 M7;Elza;John, Sherry, Elza;…エルザ / 私 ヒミツの入り口を知ってるの;Vorarbeit video_a.md §9
+A#050;Video A;0:40.04–0:40.84;309, Cut 6;E1.33;Elza-Lauf, Spielfigur Sherry;Sherry allein;;Vorarbeit video_a.md §9
+A#051;Video A;0:40.84–0:41.64;309, Cut 10;D11 M12;Elza-Lauf, Spielfigur Sherry;Sherry allein, Kiste;電げんがある / 電げ[..];Vorarbeit video_a.md §9
+A#052;Video A;0:41.64–0:42.44;309, Cut 8;D12 M9;Elza-Lauf, Spielfigur Sherry;Sherry allein;;Vorarbeit video_a.md §9
+A#053;Video A;0:42.44–0:43.24;30C, Cut 10 (nicht auf Disc);M33;Elza-Lauf, Spielfigur Sherry;Sherry allein;;Vorarbeit video_a.md §9
+A#054;Video A;0:43.24–0:44.04;309, Cut 7;D26 M18;Elza-Lauf, Spielfigur Sherry;Sherry allein;;Vorarbeit video_a.md §9
+A#055;Video A;0:44.04–0:44.84;309, Cut 5;D17 M17;Elza-Lauf, Spielfigur Sherry;Sherry allein;;Vorarbeit video_a.md §9
+A#056;Video A;0:44.84–0:45.65;30E, Cut 9;M13;Elza;Elza;;Vorarbeit video_a.md §9
+A#057;Video A;0:45.65–0:46.45;303, Cut 0;D8 M8;Elza;Elza überstrahlt;;Vorarbeit video_a.md §9
+A#058;Video A;0:46.45–0:47.25;30C, Cut 9, Tresen (nicht auf Disc);E0.98;Elza;Elza, Marvin;;Vorarbeit video_a.md §9
+A#059;Video A;0:47.25–0:48.05;309, Cut 15;D6 E0.78;Elza;Elza, John, Sherry;はあ、はあ…間一ぱつってヤツだな！ / [..]ツにくいつかれてた所だぜ;Vorarbeit video_a.md §9
+A#060;Video A;0:48.05–0:48.85;305, Cut 0;M14;Elza;Elza;;Vorarbeit video_a.md §9
+A#061;Video A;0:48.85–0:49.65;305, Cut 15;E0.99;Elza;Rechner nah;;Vorarbeit video_a.md §9
+A#062;Video A;0:49.65–0:50.45;304, Cut 4;E1.01;Elza;Elza, Zombies;;Vorarbeit video_a.md §9
+A#063;Video A;0:50.45–0:51.25;304, Cut 2;E1.11;Elza;Elza;;Vorarbeit video_a.md §9
+A#064;Video A;0:51.25–0:52.05;304, Cut 0;E1.14;Elza;Elza;;Vorarbeit video_a.md §9
+A#065;Video A;0:52.05–0:52.85;305, Cut 10, Vollbild-Rechner;M12;Elza;-;Now Running… (7×), Break, [シス]テムエラー;Vorarbeit video_a.md §9
+A#066;Video A;0:52.85–0:53.65;304, Cut 6;M25;Elza;Elza, Gore;;Vorarbeit video_a.md §9
+A#067;Video A;0:53.65–0:54.45;30A, Cut 0;M8;Elza;Elza;;Vorarbeit video_a.md §9
+A#068;Video A;0:54.45–0:55.26;301, Cut 8;D34 M26;Elza;Figur am Rand;;Vorarbeit video_a.md §9
+A#069;Video A;0:55.26–0:56.06;301, Cut 3;D24 M21;Elza;Elza, Zombie;;Vorarbeit video_a.md §9
+A#070;Video A;0:56.06–0:56.86;302/30D, Cut 5 (bildgleich);E0.97;Elza;Elza;;Vorarbeit video_a.md §9
+A#071;Video A;0:56.86–0:57.66;302/30D, Cut 1;M6 E1.19;Elza;Elza, Streifenwagen;;Vorarbeit video_a.md §9
+A#072;Video A;0:57.66–0:58.46;30A, Cut 4/5;E0.87 M9 E0.77;Elza;Elza;;Vorarbeit video_a.md §9
+A#073;Video A;0:58.46–0:59.26;307, Cut 8;D6 M8;Elza;Birkin im Tor;;Vorarbeit video_a.md §9
+A#074;Video A;0:59.26–1:00.06;307, Cut 8;D8 M8;Elza;Birkin im Tor;;Vorarbeit video_a.md §9
+A#075;Video A;1:00.06–1:00.86;307, Cut 9;D13 M14;Elza;Elza an der Kontrollbox;エレベーター[?];Vorarbeit video_a.md §9
+A#076;Video A;1:00.86–1:01.66;307, Cut 0;D17 M18;Elza;Elza am Boden;;Vorarbeit video_a.md §9
+A#077;Video A;1:01.66–1:02.46;307, Cut 10;D8 M6;Elza;Birkin nah;;Vorarbeit video_a.md §9
+A#078;Video A;1:02.46–1:03.26;Inventar;S;Elza;Porträt;Door-Einblendung;Vorarbeit video_a.md §9
+A#079;Video A;1:03.26–1:04.06;307, Cut 12;D25 M24;Elza;Birkin, Elza;;Vorarbeit video_a.md §9
+A#080;Video A;1:04.06–1:04.86;307, Cut 1;D9 M7;Elza;Figur, Blitz;;Vorarbeit video_a.md §9
+A#081;Video A;1:04.86–1:05.67;307, Cut 12;D20 M15;Elza;Birkin, Elza;;Vorarbeit video_a.md §9
+A#082;Video A;1:05.67–1:06.47;117 Dach, Cut 4;E1.03;Leon;Leon;;Vorarbeit video_a.md §9
+A#083;Video A;1:06.47–1:07.27;117, Cut 5 (schwach);E0.75;Leon;Leon;そうだ！[..]にこの[..]報告しないと;Vorarbeit video_a.md §9
+A#084;Video A;1:07.27–1:08.07;offen;-;Leon;hockender Mann mit Ärmelabzeichen;みんなゾンビに[..] / それとも、ゾンビになっているかだよ。;Vorarbeit video_a.md §9
+A#085;Video A;1:08.07–1:08.87;offen, Tür mit Fenster;-;Leon;Leon, breiter Mann mit dunklem Kopf (wohl Marvin);;Vorarbeit video_a.md §9
+A#086;Video A;1:08.87–1:09.67;offen;-;Leon;Figur von hinten;;Vorarbeit video_a.md §9
+A#087;Video A;1:09.67–1:10.47;115, Cut 5;E1.41;Leon;Leon;;Vorarbeit video_a.md §9
+A#088;Video A;1:10.47–1:11.27;110, Cut 1;E1.27;Leon;Leon;;Vorarbeit video_a.md §9
+A#089;Video A;1:11.27–1:12.07;115, Cut 7;E0.91;Leon;Leon von hinten (Stern), Liegender;;Vorarbeit video_a.md §9
+A#090;Video A;1:12.07–1:12.87;119, Cut 4;D9 M6;Leon;Figur am Rand;;Vorarbeit video_a.md §9
+A#091;Video A;1:12.87–1:13.67;102, Cut 0;D18 M13;Leon;Leon;;Vorarbeit video_a.md §9
+A#092;Video A;1:13.67–1:14.47;107, Cut 0;D14 M7;Leon;Leon;;Vorarbeit video_a.md §9
+A#093;Video A;1:14.47–1:15.28;Inventar;S;Leon;Karte Leon S. Kennedy;;Vorarbeit video_a.md §9
+A#094;Video A;1:15.28–1:16.08;11B, Cut 0/13;D9 E1.51;Leon;Leon;;Vorarbeit video_a.md §9
+A#095;Video A;1:16.08–1:16.88;104, Cut 0;D6 M7;Leon;Leon;;Vorarbeit video_a.md §9
+A#096;Video A;1:16.88–1:17.68;109, Cut 0/8;E1.35;Leon;Leon;;Vorarbeit video_a.md §9
+A#097;Video A;1:17.68–1:18.48;121, Cut 4;D7 E1.05;Leon;Leon, Arme am Gitter;;Vorarbeit video_a.md §9
+A#098;Video A;1:18.48–1:19.28;122, Cut 0;D7 M9;Leon;Leon, Leiche;Door-Einblendung;Vorarbeit video_a.md §9
+A#099;Video A;1:19.28–1:20.08;offen, blauer Gang;-;Leon;Leon;;Vorarbeit video_a.md §9
+A#100;Video A;1:20.08–1:20.88;109, Cut 2/10;E1.41 E1.40;Leon;Leon;;Vorarbeit video_a.md §9
+A#101;Video A;1:20.88–1:21.68;offen, blauer Gang;-;Leon;Leon;;Vorarbeit video_a.md §9
+A#102;Video A;1:21.68–1:22.48;offen;-;Leon;Leon, Kiste;;Vorarbeit video_a.md §9
+A#103;Video A;1:22.48–1:23.28;200, Cut 15;D6 M7;Leon;Ada, Marvin, Leon;;Vorarbeit video_a.md §9
+A#104;Video A;1:23.28–1:24.08;200, Cut 11;D7 M7;Leon;Ada, Marvin, Leon;;Vorarbeit video_a.md §9
+A#105;Video A;1:24.08–1:24.88;200, Cut 11;D8 M7;Leon;Ada, Marvin, Leon;マーヴィン[..];Vorarbeit video_a.md §9
+A#106;Video A;1:24.88–1:25.69;offen, roter Raum;-;Leon;Leon, stacheliger Körper;;Vorarbeit video_a.md §9
+A#107;Video A;1:25.69–1:26.49;10B, Cut 5;D12 M8;Leon;Leon;;Vorarbeit video_a.md §9
+A#108;Video A;1:26.49–1:27.29;offen, Leiter wie #046;-;Leon;weiße Spritzer;;Vorarbeit video_a.md §9
+A#109;Video A;1:27.29–1:28.09;offen;-;Leon;Leon am Boden;;Vorarbeit video_a.md §9
+A#110;Video A;1:28.09–1:28.89;offen;-;Leon;Leon, Zahnbogen vorn;;Vorarbeit video_a.md §9
+A#111;Video A;1:28.89–1:29.69;offen;-;Leon;Leon, Riesenkörper vorn;;Vorarbeit video_a.md §9
+A#112;Video A;1:29.69–1:30.49;offen;-;Leon;Leon, Stachelkörper vorn;;Vorarbeit video_a.md §9
+A#113;Video A;1:30.49–1:31.29;304, Cut 6;M26;Leon;Leon, Gore;;Vorarbeit video_a.md §9
+A#114;Video A;1:31.29–1:32.09;304, Cut 4;M14;Leon;Leon (Stern, RPD), Gore-Wesen;;Vorarbeit video_a.md §9
+A#115;Video A;1:32.09–1:32.89;302/30D, Cut 4;E1.15;Leon;Leon, zweite Figur;;Vorarbeit video_a.md §9
+A#116;Video A;1:32.89–1:33.69;306 Hinterhof, Cut 4;D14 M10;Leon;Leon, Marvin;;Vorarbeit video_a.md §9
+A#117;Video A;1:33.69–1:34.49;307, Cut 9;D18 M21;Leon;Leon;;Vorarbeit video_a.md §9
+A#118;Video A;1:34.49–1:35.30;300 Fabrikhof, Cut 0;D16 M19;Leon;Leon, hockender Mann (nicht zuzuordnen);みんな ラクー[..] / [unlesbar];Vorarbeit video_a.md §9
+A#119;Video A;1:35.30–1:36.10;11C Parkgarage, Cut 3;D12 M8;Leon;Ada, Leon;;Vorarbeit video_a.md §9
+A#120;Video A;1:36.10–1:36.90;11C, Cut 3;D19 M12;Leon;-;;Vorarbeit video_a.md §9
+A#121;Video A;1:36.90–1:37.70;11C, Cut 11;D14 M13;Leon;Leon;;Vorarbeit video_a.md §9
+A#122;Video A;1:37.70–1:38.50;11C, Cut 8;D34 M22;Leon;Leon;;Vorarbeit video_a.md §9
+A#123;Video A;1:38.50–1:39.30;11C, Cut 7;D15 M12;Leon;Leon kniet;;Vorarbeit video_a.md §9
+A#124;Video A;1:39.30–1:40.10;11C, Cut 6, Umbrella-Lkw;D22 M16;Leon;-;;Vorarbeit video_a.md §9
+A#125;Video A;1:40.10–1:40.90;11C, Cut 4;D8 M8;Leon;rote Gorillas;;Vorarbeit video_a.md §9
+A#126;Video A;1:40.90–1:41.70;11C, Cut 12;S;Leon;roter Gorilla;;Vorarbeit video_a.md §9
+A#127;Video A;1:41.70–1:42.50;11C, Cut 13;S;Leon;Leon, Ada;会わなかったのか？;Vorarbeit video_a.md §9
+A#128;Video A;1:42.50–1:43.30;11C, Cut 13;S;Leon;Leon, Ada;;Vorarbeit video_a.md §9
+A#129;Video A;1:43.30–1:44.10;11C, Cut 0;D28 M21;Leon;Leon;;Vorarbeit video_a.md §9
+A#130;Video A;1:44.10–1:44.90;120 Leichenhalle, Cut 1;E1.16;Leon;Leon, Leiche;;Vorarbeit video_a.md §9
+A#131;Video A;1:44.90–1:45.71;120, Cut 2;D6 M7;Leon;Figur, Leiche;;Vorarbeit video_a.md §9
+A#132;Video A;1:45.71–1:46.51;120, Cut 1;E1.06;Leon;Leon, Leiche;;Vorarbeit video_a.md §9
+A#133;Video A;1:46.51–1:47.31;120, Cut 3;D20 M17;Leon;Leon, Leiche;;Vorarbeit video_a.md §9
+A#134;Video A;1:47.31–1:48.11;120, Cut 0;E1.15;Leon;Leon schießt, rotes Feuer;;Vorarbeit video_a.md §9
+A#135;Video A;1:48.11–1:48.91;11E, Cut 5;E1.20;Leon;Leon, brennendes Wesen;;Vorarbeit video_a.md §9
+A#136;Video A;1:48.91–1:49.71;11E, Cut 3;D13 M11;Leon;Leon;;Vorarbeit video_a.md §9
+A#137;Video A;1:49.71–1:50.51;offen, Schaltschrank;-;Leon;Leon;;Vorarbeit video_a.md §9
+A#138;Video A;1:50.51–1:51.31;offen, große Tür;-;Leon;Leon;;Vorarbeit video_a.md §9
+A#139;Video A;1:51.31–1:52.11;30C Cut 3 = 30D Cut 10, Tresen (nicht auf Disc);E1.28;Leon;Leon;;Vorarbeit video_a.md §9
+A#140;Video A;1:52.11–1:52.91;307, Cut 9;D18 M17;Leon;Leon;ホール[..];Vorarbeit video_a.md §9
+A#141;Video A;1:52.91–1:53.71;307, Cut 5;D13 M12 E0.99;Leon;Figur, Birkin, Blitz;;Vorarbeit video_a.md §9
+A#142;Video A;1:53.71–1:54.51;307, Cut 4;D12 M6 E1.22;Leon;helle Stehfigur, hockende Figur, helle Großfigur;;Vorarbeit video_a.md §9
+A#143;Video A;1:54.51–1:55.32;Bahnsteig, orange Halle, Kamera in keinem Bestand;S;Leon;Leon, riesiges dunkles Wesen, roter Zug;;Vorarbeit video_a.md §9
+A#144;Video A;1:55.32–1:56.12;509, Cut 1;M24;Leon;Leon;;Vorarbeit video_a.md §9
+A#145;Video A;1:56.12–1:56.92;509, Cut 11, roter Gang;E0.95;Leon;Frau im Kittel, dunkles Riesenwesen, Feuer;;Vorarbeit video_a.md §9
+A#146;Video A;1:56.92–1:57.72;603 Führerstand, Cut 1;D7 E1.12;Leon;Frau im Kittel, Leon;;Vorarbeit video_a.md §9
+A#147;Video A;1:57.72–1:58.52;603, Cut 0;D7 M9 E1.07;Leon;Frau im Kittel am Pult, Leon;;Vorarbeit video_a.md §9
+A#148;Video A;1:58.52–1:59.32;Disc 604 Cut 2 (= Mod 603 Cut 8), plus Debug-Menü;E0.99;Leon;-;…YOKUSHITSU, Zeit 0:09:01;Vorarbeit video_a.md §9
+A#149;Video A;1:59.32–2:00.12;601, Cut 1 (nicht auf Disc);M30;Leon;Leon;;Vorarbeit video_a.md §9
+A#150;Video A;2:00.12–2:00.92;Halle wie #143;S;Leon;Leon;;Vorarbeit video_a.md §9
+A#151;Video A;2:00.92–2:01.72;Disc 604 Cut 0 (= Mod 603 Cut 6);D22 M16 E1.36;Leon;Leon;Door: 2.5;Vorarbeit video_a.md §9
+A#152;Video A;2:01.72–2:02.52;600 Bahnsteig, Cut 3 (nicht auf Disc);M8 E1.33;Leon;Leon, schlanke Frau im Weiß;;Vorarbeit video_a.md §9
+A#153;Video A;2:02.52–2:03.32;600, Cut 4;M15 E1.30;Leon;Leon;;Vorarbeit video_a.md §9
+A#154;Video A;2:03.32–2:04.12;600, Cut 1;E1.13;Leon;blonde Frau im Weiß, Leon;;Vorarbeit video_a.md §9
+A#155;Video A;2:04.12–2:04.92;50B, Cut 2;M13 E1.17;Leon;helle Figur;;Vorarbeit video_a.md §9
+A#156;Video A;2:04.92–2:05.73;514, Cut 12;D14 M15;Leon;Leon;;Vorarbeit video_a.md §9
+A#157;Video A;2:05.73–2:06.53;514, Cut 4;D13 M11;Leon;brennender Zombie;;Vorarbeit video_a.md §9
+A#158;Video A;2:06.53–2:07.33;514, Cut 1;D8 M8;Leon;Leon;;Vorarbeit video_a.md §9
+A#159;Video A;2:07.33–2:08.13;roter Gang, plus Debug-Menü;S;Leon;-;…CORRIDOR 2-A, Zeit 0:06:37, Door;Vorarbeit video_a.md §9
+A#160;Video A;2:08.13–2:08.93;503, Cut 0;D12 M9 E1.47;Leon;Figur;Door-Einblendung;Vorarbeit video_a.md §9
+A#161;Video A;2:08.93–2:09.73;501, Cut 0;D14 M9 E1.44;Leon;Leon;Door-Einblendung;Vorarbeit video_a.md §9
+A#162;Video A;2:09.73–2:10.53;50C, Cut 3;E1.17;Leon;Figur;;Vorarbeit video_a.md §9
+A#163;Video A;2:10.53–2:11.33;50C, Cut 0;D12 M10;Leon;Leon;;Vorarbeit video_a.md §9
+A#164;Video A;2:11.33–2:12.13;400, Cut 0;D9 E1.23;Leon;Figur fern;;Vorarbeit video_a.md §9
+A#165;Video A;2:12.13–2:12.93;offen;-;Leon;zwei blaue Figuren, Figur im Kittel;;Vorarbeit video_a.md §9
+A#166;Video A;2:12.93–2:13.73;308, Cut 0;E1.10;Leon;kleine Figur, helles Objekt;;Vorarbeit video_a.md §9
+A#167;Video A;2:13.73–2:14.53;308, Cut 3 (schwach);E0.81;Leon;blasse Gestalten;;Vorarbeit video_a.md §9
+A#168;Video A;2:14.53–2:15.34;509, Cut 4/9/14;E1.52 E1.47;Leon;kleine Figur an Konsole;;Vorarbeit video_a.md §9
+A#169;Video A;2:15.34–2:16.14;11B, Cut 1 (Disc) = Cut 14 (Mod);D18 M13;Leon;Marvin, Leon, Ada;上のさわぎは何だ？;Vorarbeit video_a.md §9
+A#170;Video A;2:16.14–2:16.94;11B, Cut 5;D9;Leon;Leon, Marvin, Ada;地下に逃げるってのはどうだ？;Vorarbeit video_a.md §9
+A#171;Video A;2:16.94–2:17.74;11B, Cut 6;S;Leon;Leon, Marvin;;Vorarbeit video_a.md §9
+A#172;Video A;2:17.74–2:18.54;11B, Cut 6;S;Leon;Leon, Marvin, Ada;下に何かいるかも知れないしー / こんな言　があるだろ？;Vorarbeit video_a.md §9
+A#173;Video A;2:18.54–2:19.34;109, Cut 2/10, Wasserzeichen SURVIVHOR;E0.85 E0.84;Elza;Elza;;Vorarbeit video_a.md §9
+B 0:00.0;Video B;0:00.0-0:09.5;Vorspann, kein Spielbild;video_b.md §4;–;keine;Katzenauge mit BIOHAZARD 2 / PROTOTYPE / AKA / RESIDENT EVIL 1.5;Vorarbeit video_b.md §4
+B 0:09.5;Video B;0:09.5-0:10.5;Feuer-Wischblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 0:10.5;Video B;0:10.5-0:18.8;Spielerwahl;video_b.md §4;Menü;Leon, Elza (Menü, je eigene Bildhälfte);"PLEASE SELECT MAIN CAST / Leon,S,Kennedy / Elza Walker / PROFILE 178 Cm 21 A / 169 Cm 19 0 52.4 Kg; Einblendung BIOHAZARD 1.5, WWW.BIOFLAMES.COM";Vorarbeit video_b.md §4
+B 0:18.8;Video B;0:18.8-0:24.0;117 Cut 4, Dach;video_b.md §4;Leon;Leon;"UT おい, Wort unsicher, ！ bis 0:21.6; UT …クソッ なんてこった！ ab 0:21.9; beide nicht auf der Disc";Vorarbeit video_b.md §4
+B 0:24.0;Video B;0:24.0-0:30.5;117 Cut 3, 2, 1;video_b.md §4;Leon;Leon;;Vorarbeit video_b.md §4
+B 0:30.5;Video B;0:30.5-0:36.5;118 Cut 2, 1 Gang;video_b.md §4;Leon;Leon, 2 Zombies;;Vorarbeit video_b.md §4
+B 0:36.5;Video B;0:36.5-0:41.0;11E Cut 13;video_b.md §4;Leon;Leon, 2 Zombies, Blutlache;;Vorarbeit video_b.md §4
+B 0:41.0;Video B;0:41.0-0:48.5;107 Cut 6 Büro;video_b.md §4;Elza;Elza, 3 Zombies;;Vorarbeit video_b.md §4
+B 0:48.5;Video B;0:48.5-0:50.0;107 Cut 2;video_b.md §4;Elza;Elza;;Vorarbeit video_b.md §4
+B 0:50.0;Video B;0:50.0-0:54.0;104 Cut 1;video_b.md §4;Elza;Elza, kriechendes Wesen;Rolltor halb offen, dann zu, grosse Blutlache;Vorarbeit video_b.md §4
+B 0:54.0;Video B;0:54.0-0:59.5;119 Cut 6 Schießstand;video_b.md §4;Leon;Leon;UT スイッチがある おしますか？ ▸Yes No (119 #0);Vorarbeit video_b.md §4
+B 0:59.5;Video B;0:59.5-1:03.0;103 Cut 6;video_b.md §4;Elza;Elza, Zombies hinter dem Gitter;Gitter intakt;Vorarbeit video_b.md §4
+B 1:03.0;Video B;1:03.0-1:08.5;120 Cut 2 Leichenhalle;video_b.md §4;Leon;Leon mit Flammenwerfer;;Vorarbeit video_b.md §4
+B 1:08.5;Video B;1:08.5-1:16.0;117 Cut 3;video_b.md §4;Elza;Elza, Krähen;;Vorarbeit video_b.md §4
+B 1:16.0;Video B;1:16.0-1:20.6;10B Cut 1, 2, 8;video_b.md §4;Leon;Leon, klein (blau, rotbraunes Haar bei 1:20);Schrift RACCOON POLICE gehört zum Hintergrund;Vorarbeit video_b.md §4
+B 1:20.6;Video B;1:20.6-1:22.5;Weißblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 1:22.5;Video B;1:22.5-1:31.3;117 Cut 0, 1, 0;video_b.md §4;Leon;Leon, Krähen;;Vorarbeit video_b.md §4
+B 1:31.3;Video B;1:31.3-1:33.5;Schwarz;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 1:33.5;Video B;1:33.5-1:44.4;120 Cut 2, 1, 0;video_b.md §4;Leon;Leon, RPD-Zombies;;Vorarbeit video_b.md §4
+B 1:44.4;Video B;1:44.4-1:46.4;Schwarz;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 1:46.4;Video B;1:46.4-1:56.4;11E Cut 5;video_b.md §4;Elza;Elza, Zombies;;Vorarbeit video_b.md §4
+B 1:56.4;Video B;1:56.4-1:58.9;Schwarz;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 1:58.9;Video B;1:58.9-2:05.5;307 Cut 3, 12, 4;video_b.md §4;Elza;Elza;;Vorarbeit video_b.md §4
+B 2:05.5;Video B;2:05.5-2:08.0;307 Cut 8;video_b.md §4;–;Birkin hinter dem Tor;;Vorarbeit video_b.md §4
+B 2:08.0;Video B;2:08.0-2:12.8;Rotblende, Logo;video_b.md §4;–;keine;BIOHAZARD 2;Vorarbeit video_b.md §4
+B 2:12.8;Video B;2:12.8-2:21.7;103 Cut 12, 11;video_b.md §4;–;Zombies brechen durch das Gitter;Spielfigur nicht im Bild. Kamerafolge wie ROOM1030 sub08;Vorarbeit video_b.md §4
+B 2:21.7;Video B;2:21.7-2:33.0;103 Cut 5, 11, 1, 9, 1;video_b.md §4;Leon;Leon, Zombie;Kopf platzt 2:25.6;Vorarbeit video_b.md §4
+B 2:33.0;Video B;2:33.0-2:39.5;107 Cut 4, 7;video_b.md §4;Leon;Leon, Zombie;;Vorarbeit video_b.md §4
+B 2:39.5;Video B;2:39.5-2:48.5;104 Cut 4, 5;video_b.md §4;Leon;Leon, Zombie;Kopf platzt 2:45.7;Vorarbeit video_b.md §4
+B 2:48.5;Video B;2:48.5-2:57.5;115 Cut 1, 2, 3, 5, 3 Chefbüro;video_b.md §4;Elza;Elza;;Vorarbeit video_b.md §4
+B 2:57.5;Video B;2:57.5-3:06.5;119 Cut 1, 0, 3, 5;video_b.md §4;Elza;Elza, Hunde;;Vorarbeit video_b.md §4
+B 3:06.5;Video B;3:06.5-3:11.0;104 Cut 6, 3;video_b.md §4;Elza;Elza, Leiche;;Vorarbeit video_b.md §4
+B 3:11.0;Video B;3:11.0-3:12.5;307 Cut 10;video_b.md §4;–;Birkin nah;;Vorarbeit video_b.md §4
+B 3:12.5;Video B;3:12.5-3:18.0;120 Cut 2;video_b.md §4;Elza;Elza, RPD-Zombies;;Vorarbeit video_b.md §4
+B 3:18.0;Video B;3:18.0-3:19.5;Weißblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 3:19.5;Video B;3:19.5-3:30.5;306 Cut 5 Hinterhof;video_b.md §4;Elza;Elza, Sherry, John;"UT …エルザ / 私 ヒミツの入り口を知ってるの; ヒミツの入り口？; ここよ この中から入れるの; シェリー！ 待って！ (306 #3-6)";Vorarbeit video_b.md §4
+B 3:30.5;Video B;3:30.5-3:35.5;300 Cut 2;video_b.md §4;Elza;Elza, Zombies;;Vorarbeit video_b.md §4
+B 3:35.5;Video B;3:35.5-3:46.0;301 Cut 4, 3, 2, 0;video_b.md §4;Elza;Elza, Zombies;;Vorarbeit video_b.md §4
+B 3:46.0;Video B;3:46.0-3:51.5;306 Cut 3;video_b.md §4;Elza;Elza, Zombie;;Vorarbeit video_b.md §4
+B 3:51.5;Video B;3:51.5-3:54.0;307 Cut 9 Konsole;video_b.md §4;Elza;Elza;;Vorarbeit video_b.md §4
+B 3:54.0;Video B;3:54.0-4:03.5;307 Cut 8, 10;video_b.md §4;–;Birkin;Tor bricht;Vorarbeit video_b.md §4
+B 4:03.5;Video B;4:03.5-4:05.5;Weißblende, Schwarz;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 4:05.5;Video B;4:05.5-5:03.5;Rippen-Tunnel, 3 Kameras;video_b.md §4;Leon;Leon, Zombies in Khaki;"Nicht auf der Disc; Geometrie wie Fan-Raum 202 der Mod";Vorarbeit video_b.md §4
+B 5:03.5;Video B;5:03.5-5:04.5;Schwarz;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 5:04.5;Video B;5:04.5-5:14.5;200 oder 20B, Cut 2, Kanal;video_b.md §4;Leon;Leon, Marvin (hellblaues Hemd), Ada (weiss);Ada im Wasser zur Leiter, Marvin folgt. Kein Text;Vorarbeit video_b.md §4
+B 5:14.5;Video B;5:14.5-5:19.0;Maschinenraum mit rotem Rad;video_b.md §4;Leon;Leon, Spinne;Nicht auf der Disc;Vorarbeit video_b.md §4
+B 5:19.0;Video B;5:19.0-5:24.5;Tunnel mit oranger Tür;video_b.md §4;Leon;Leon rechts hinten, Zombies in Khaki;Nicht auf der Disc;Vorarbeit video_b.md §4
+B 5:24.5;Video B;5:24.5-5:30.5;200 Cut 13;video_b.md §4;Leon;Leon, Zombies;;Vorarbeit video_b.md §4
+B 5:30.5;Video B;5:30.5-5:40.0;20B Cut 11-14, dann Cut 7, grauer Gang;video_b.md §4;Leon;Leon, Spinne, weiße Wolke hinter ihm;"Disc-Bilder; in der Mod als 207 Cut 0-3 geführt";Vorarbeit video_b.md §4
+B 5:40.0;Video B;5:40.0-5:41.0;Schwarz;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 5:41.0;Video B;5:41.0-6:01.0;207 Cut 1, 3-7 (Disc-Moosgang);video_b.md §4;Elza;Elza, Spinnen;"Disc-Treffer 0,84-0,93, in BEFUND nicht zugeordnet; keine ROOM2071 auf der Disc";Vorarbeit video_b.md §4
+B 6:01.0;Video B;6:01.0-6:36.0;104 Cut 6, 2;video_b.md §4;Leon;Leon, Zombies;;Vorarbeit video_b.md §4
+B 6:36.0;Video B;6:36.0-6:46.0;104 Cut 1;video_b.md §4;Leon;Leon;Rolltor offen;Vorarbeit video_b.md §4
+B 6:46.0;Video B;6:46.0-6:55.5;104 Cut 4;video_b.md §4;Leon;Leon;UT ボタンがある / 押しますか？ ▸Yes No (104 #0);Vorarbeit video_b.md §4
+B 6:55.5;Video B;6:55.5-6:58.0;104 Cut 1;video_b.md §4;Leon;Leon, Zombie;Rolltor zu;Vorarbeit video_b.md §4
+B 6:58.0;Video B;6:58.0-6:59.5;Weißblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 6:59.5;Video B;6:59.5-7:03.5;11E Cut 4, 3, 2;video_b.md §4;Leon;Leon;Einblendung 画面は開発中のものです。;Vorarbeit video_b.md §4
+B 7:03.5;Video B;7:03.5-7:05.2;118 Cut 5;video_b.md §4;wohl Leon;Spielfigur von hinten, 2 Zombies;Blau, kein Rot;Vorarbeit video_b.md §4
+B 7:05.2;Video B;7:05.2-7:06.9;20B Cut 13, grauer Gang;video_b.md §4;Elza;Elza, Spinne;Disc-Bild, in der Mod 207 Cut 2;Vorarbeit video_b.md §4
+B 7:06.9;Video B;7:06.9-7:08.0;Tunnel;video_b.md §4;Leon;Leon klein, Klauenzombie;Nicht auf der Disc;Vorarbeit video_b.md §4
+B 7:08.0;Video B;7:08.0-7:10.5;504 Cut 1, 2;video_b.md §4;Elza;Elza, Zombies;;Vorarbeit video_b.md §4
+B 7:10.5;Video B;7:10.5-7:14.0;307 Cut 8, 4, 10;video_b.md §4;Elza;Birkin, Elza (Cut 4);;Vorarbeit video_b.md §4
+B 7:14.0;Video B;7:14.0-7:16.0;Rotblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 7:16.0;Video B;7:16.0-7:20.0;107 Cut 2;video_b.md §4;offen;3 dunkle Figuren, eine fällt;"Keine Elza; Figur links unklar";Vorarbeit video_b.md §4
+B 7:20.0;Video B;7:20.0-7:26.5;300 Cut 1;video_b.md §4;Elza;Elza, Zombies, Leichen;;Vorarbeit video_b.md §4
+B 7:26.5;Video B;7:26.5-7:31.0;Tunnel;video_b.md §4;Leon;Leon, Zombies;Nicht auf der Disc;Vorarbeit video_b.md §4
+B 7:31.0;Video B;7:31.0-7:39.0;506 Cut 6, 5;video_b.md §4;Elza;Elza, Zombie;;Vorarbeit video_b.md §4
+B 7:39.0;Video B;7:39.0-7:43.0;20B Cut 14, grauer Gang;video_b.md §4;Leon;Leon, Spinne;Disc-Bild, in der Mod 207 Cut 3;Vorarbeit video_b.md §4
+B 7:43.0;Video B;7:43.0-7:47.3;514 Cut 6, 7;video_b.md §4;Elza;Elza, brennender Zombie;;Vorarbeit video_b.md §4
+B 7:47.3;Video B;7:47.3-7:49.0;Negativ-Blende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 7:49.0;Video B;7:49.0-8:03.7;103 Cut 11, 1, 11;video_b.md §4;offen;Zombies, Explosionen;Gitter zerstört, Spielfigur nicht erkennbar;Vorarbeit video_b.md §4
+B 8:03.7;Video B;8:03.7-8:05.0;Orangeblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 8:05.0;Video B;8:05.0-8:44.0;107 Cut 3, 7;video_b.md §4;Elza;Elza, Zombies;Granaten, Zombies zerfallen in Ober- und Unterkoerper;Vorarbeit video_b.md §4
+B 8:44.0;Video B;8:44.0-8:45.3;Orangeblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 8:45.3;Video B;8:45.3-9:10.3;119 Cut 4, 5, 3;video_b.md §4;Leon;Leon, Hunde;;Vorarbeit video_b.md §4
+B 9:10.3;Video B;9:10.3-9:11.7;Orangeblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 9:11.7;Video B;9:11.7-9:31.5;512 Cut 2, 3, 6, 3, 4 rot;video_b.md §4;Elza;Elza, brennender Zombie;BEFUND nennt Leon;Vorarbeit video_b.md §4
+B 9:31.5;Video B;9:31.5-9:33.2;Negativ-Blende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 9:33.2;Video B;9:33.2-9:36.0;Trailer-Tafel;video_b.md §4;–;keine;あの惨劇から / 2か月後;Vorarbeit video_b.md §4
+B 9:36.0;Video B;9:36.0-9:38.0;Trailer: 103 Cut 9, 0;video_b.md §4;offen;4 Silhouetten in Uniform;Keine Zuordnung;Vorarbeit video_b.md §4
+B 9:38.0;Video B;9:38.0-9:40.4;Trailer: 103 Cut 5 Wandkarte;video_b.md §4;offen;Uniformierte in hellen Hemden von hinten, Blut, mehrere Figuren rechts;Keine Zuordnung;Vorarbeit video_b.md §4
+B 9:40.4;Video B;9:40.4-9:42.5;Trailer-Tafel;video_b.md §4;–;keine;ラクーンシティ 全土に;Vorarbeit video_b.md §4
+B 9:42.5;Video B;9:42.5-9:44.8;Trailer: 115 Cut 0;video_b.md §4;wohl Leon;Leon-Modell (rotbraunes Haar, Weste) schießt, Zombies;Trefferwolke am Zombie im Vordergrund;Vorarbeit video_b.md §4
+B 9:44.8;Video B;9:44.8-9:49.0;Trailer-Tafel, Rotblende;video_b.md §4;–;keine;真の悪夢が 始まった;Vorarbeit video_b.md §4
+B 9:49.0;Video B;9:49.0-9:51.0;Trailer: grüner Gang mit Gitter;video_b.md §4;wohl Leon;Figur in Weste und Jeans, Zombies;Raum nicht zugeordnet;Vorarbeit video_b.md §4
+B 9:51.0;Video B;9:51.0-9:53.5;Trailer: blauer Gang;video_b.md §4;wohl Leon;"Figur mit dunkler Weste, Jeans, nach Kleidung Leon-Modell; Zombie";Raum nicht zugeordnet;Vorarbeit video_b.md §4
+B 9:53.5;Video B;9:53.5-9:56.0;Trailer: 115 Cut 2;video_b.md §4;wohl Leon;"Figur hinter dem Schreibtisch schießt, nach Kleidung Leon-Modell; 2 Zombies";;Vorarbeit video_b.md §4
+B 9:56.0;Video B;9:56.0-9:58.0;Trailer: 104 Cut 4;video_b.md §4;offen;Figur wird gebissen, Zombie;Keine Zuordnung;Vorarbeit video_b.md §4
+B 9:58.0;Video B;9:58.0-9:58.5;Trailer: 104 Cut 1;video_b.md §4;Leon;Leon-Modell, Zombie;;Vorarbeit video_b.md §4
+B 9:58.5;Video B;9:58.5-10:00.0;Trailer: 115 Cut 3;video_b.md §4;wohl Leon;Leon-Modell links (Jeans) schießt, Zombies;;Vorarbeit video_b.md §4
+B 10:00.0;Video B;10:00.0-10:01.6;Trailer: 104 Cut 5;video_b.md §4;Leon;Leon-Modell, Zombie;;Vorarbeit video_b.md §4
+B 10:01.6;Video B;10:01.6-10:02.8;Trailer: gelbe Wand, Gitterboden;video_b.md §4;Leon;Leon-Modell, grosse Kreatur mit grüner Stelle;Raum nicht zugeordnet;Vorarbeit video_b.md §4
+B 10:02.8;Video B;10:02.8-10:05.8;Trailer: Moosgang;video_b.md §4;offen;Kleine Figur;"Tafel 恐怖再び; Raum nicht zugeordnet";Vorarbeit video_b.md §4
+B 10:05.8;Video B;10:05.8-10:07.5;Trailer: violetter Grund;video_b.md §4;Leon;Leon-Modell mit langer Waffe;;Vorarbeit video_b.md §4
+B 10:07.5;Video B;10:07.5-10:09.0;118 Cut 5 (Survivhor);video_b.md §4;wohl Leon;wie 7:03.5;Wiederholung;Vorarbeit video_b.md §4
+B 10:09.0;Video B;10:09.0-10:10.7;20B Cut 13;video_b.md §4;Elza;Elza, Spinne;Wiederholung von 7:05;Vorarbeit video_b.md §4
+B 10:10.7;Video B;10:10.7-10:12.0;Tunnel;video_b.md §4;Leon;Leon klein, Klauenzombie;Wiederholung, länger;Vorarbeit video_b.md §4
+B 10:12.0;Video B;10:12.0-10:14.5;504 Cut 1, 2;video_b.md §4;Elza;Elza, Zombies;Wiederholung;Vorarbeit video_b.md §4
+B 10:14.5;Video B;10:14.5-10:18.5;107 Cut 2;video_b.md §4;offen;3 dunkle Figuren;Wiederholung von 7:16;Vorarbeit video_b.md §4
+B 10:18.5;Video B;10:18.5-10:25.0;300 Cut 1;video_b.md §4;Elza;Elza, Zombies;Wiederholung von 7:20;Vorarbeit video_b.md §4
+B 10:25.0;Video B;10:25.0-10:33.0;506 Cut 6, 5;video_b.md §4;Elza;Elza, Zombie;Wiederholung von 7:31;Vorarbeit video_b.md §4
+B 10:33.0;Video B;10:33.0-10:37.5;20B Cut 14;video_b.md §4;Leon;Leon, Spinne;Wiederholung von 7:39;Vorarbeit video_b.md §4
+B 10:37.5;Video B;10:37.5-10:43.5;514 Cut 6, 7;video_b.md §4;Elza;Elza, brennender Zombie;Wiederholung, länger;Vorarbeit video_b.md §4
+B 10:43.5;Video B;10:43.5-11:25.5;506 Cut 1, 2, 3, 4, 7, 5, 6, 5;video_b.md §4;Elza;Elza, Zombie;"Rotlicht ab 10:54; 11:12.5-11:25 wie 7:31-7:39";Vorarbeit video_b.md §4
+B 11:25.5;Video B;11:25.5-11:26.0;Schwarz;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 11:26.0;Video B;11:26.0-12:21.5;107 Cut 1, 2, 1, 5, 4, 7, 3, 7, 3, 2;video_b.md §4;Leon;Leon, RPD-Zombies;"BEFUND nennt auch Elza; keine Elza im Bild";Vorarbeit video_b.md §4
+B 12:21.5;Video B;12:21.5-12:23.0;Negativ-Blende, Rosa;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 12:23.0;Video B;12:23.0-12:25.0;50C Cut 4, 3;video_b.md §4;Leon;Leon;;Vorarbeit video_b.md §4
+B 12:25.0;Video B;12:25.0-12:29.0;50B Cut 2 Maschinenhalle;video_b.md §4;Leon;Leon;Nicht auf der Disc;Vorarbeit video_b.md §4
+B 12:29.0;Video B;12:29.0-12:38.0;50E Cut 8, 5;video_b.md §4;Leon;Leon, braune Kreatur;Nicht auf der Disc;Vorarbeit video_b.md §4
+B 12:38.0;Video B;12:38.0-12:47.0;408 Cut 1, 2;video_b.md §4;Elza;Elza, dunkelrotes Wesen;Disc: nur Rohbau-Bild, keine RDT;Vorarbeit video_b.md §4
+B 12:47.0;Video B;12:47.0-12:52.5;504 Cut 1, 2;video_b.md §4;Elza;Elza, Zombies;;Vorarbeit video_b.md §4
+B 12:52.5;Video B;12:52.5-12:59.5;514 Cut 4, 5, 6;video_b.md §4;Leon;Leon, brennende Zombies;In BEFUND ohne Figur;Vorarbeit video_b.md §4
+B 12:59.5;Video B;12:59.5-13:03.0;512 Cut 6;video_b.md §4;Elza;Elza, brennender Zombie;BEFUND nennt 5140;Vorarbeit video_b.md §4
+B 13:03.0;Video B;13:03.0-13:07.3;50A Cut 12 Hangar C-2;video_b.md §4;–;Birkin, Spider-Man;Disc: Rohfassung des Bildes;Vorarbeit video_b.md §4
+B 13:07.3;Video B;13:07.3-13:09.0;Weißblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 13:09.0;Video B;13:09.0-13:28.5;307 Cut 1, 2, 3, 12, 4, 9, 4;video_b.md §4;Leon;Leon, Konsole;;Vorarbeit video_b.md §4
+B 13:28.5;Video B;13:28.5-13:49.3;307 Cut 3, 4;video_b.md §4;Leon;Leon, Birkin;"BEFUND nennt Marvin; nicht im Bild";Vorarbeit video_b.md §4
+B 13:49.3;Video B;13:49.3-13:56.9;307 Cut 5;video_b.md §4;Leon;Leon, Birkin;;Vorarbeit video_b.md §4
+B 13:56.9;Video B;13:56.9-13:58.5;Weißblende;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 13:58.5;Video B;13:58.5-14:10.2;103 Cut 7, 8 blau gefaerbt;video_b.md §4;offen;Zombiepulk um eine Figur;In BEFUND nicht zugeordnet;Vorarbeit video_b.md §4
+B 14:10.2;Video B;14:10.2-14:11.4;Weiß;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 14:11.4;Video B;14:11.4-14:15.0;Todes-Einschnitte, Lichtkegel;video_b.md §4;wohl Leon;Liegende Figur, 2 Zombies;Figur nicht sicher erkennbar, keine rote Hose;Vorarbeit video_b.md §4
+B 14:15.0;Video B;14:15.0-14:16.5;Orange;video_b.md §4;–;keine;;Vorarbeit video_b.md §4
+B 14:16.5;Video B;14:16.5-14:19.1;Logo;video_b.md §4;–;keine;BIOHAZARD 2 mit Katzenauge;Vorarbeit video_b.md §4
+F1-01;Complete-Disc-Film 1 (480p);"0:00.0-0:07.0 (= B 0:17.1; 360p +6,6 s)";117 Cut 4, Dach;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F1-02;Complete-Disc-Film 1 (480p);"0:07.0-0:10.9 (= B 0:24.1; 360p +6,6 s)";117 Cut 3, 2, 1;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F1-03;Complete-Disc-Film 1 (480p);"0:10.9-0:12.2 (= B 0:28.0; 360p +6,6 s)";117 Cut 3, 2, 1;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F1-04;Complete-Disc-Film 1 (480p);"0:12.2-0:13.2 (= B 0:29.3; 360p +6,6 s)";117 Cut 3, 2, 1;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F1-05;Complete-Disc-Film 1 (480p);"0:13.2-0:15.4 (= B 0:30.3; 360p +6,6 s)";118 Cut 2, 1 Gang;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, 2 Zombies;;eigen
+F1-06;Complete-Disc-Film 1 (480p);"0:15.4-0:19.4 (= B 0:32.5; 360p +6,6 s)";118 Cut 2, 1 Gang;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, 2 Zombies;;eigen
+F1-07;Complete-Disc-Film 1 (480p);"0:19.4-0:24.0 (= B 0:36.5; 360p +6,6 s)";11E Cut 13;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, 2 Zombies, Blutlache;;eigen
+F1-08;Complete-Disc-Film 1 (480p);"0:24.0-0:31.5 (= B 0:41.1; 360p +6,6 s)";107 Cut 6 Büro;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, 3 Zombies;;eigen
+F1-09;Complete-Disc-Film 1 (480p);"0:31.5-0:32.8 (= B 0:48.6; 360p +6,6 s)";107 Cut 2;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza;;eigen
+F1-10;Complete-Disc-Film 1 (480p);"0:32.8-0:37.0 (= B 0:49.9; 360p +6,6 s)";104 Cut 1;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, kriechendes Wesen;;eigen
+F1-11;Complete-Disc-Film 1 (480p);"0:37.0-0:42.6 (= B 0:54.1; 360p +6,6 s)";119 Cut 6 Schießstand;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F1-12;Complete-Disc-Film 1 (480p);"0:42.6-0:45.9 (= B 0:59.7; 360p +6,6 s)";103 Cut 6;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombies hinter dem Gitter;;eigen
+F1-13;Complete-Disc-Film 1 (480p);"0:45.9-0:51.6 (= B 1:03.0; 360p +6,6 s)";120 Cut 2 Leichenhalle;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon mit Flammenwerfer;;eigen
+F1-14;Complete-Disc-Film 1 (480p);"0:51.6-0:59.1 (= B 1:08.7; 360p +6,6 s)";117 Cut 3;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Krähen;;eigen
+F1-15;Complete-Disc-Film 1 (480p);"0:59.1-1:00.9 (= B 1:16.2; 360p +6,6 s)";10B Cut 1, 2, 8;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, klein (blau, rotbraunes Haar bei 1:20);;eigen
+F1-16;Complete-Disc-Film 1 (480p);"1:00.9-1:03.6 (= B 1:18.0; 360p +6,6 s)";10B Cut 1, 2, 8;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, klein (blau, rotbraunes Haar bei 1:20);;eigen
+F1-17;Complete-Disc-Film 1 (480p);"1:03.6-1:07.0 (= B 1:20.7; 360p +6,6 s)";Weißblende;ueber Video B (Bildkorrelation r>=0,93) und Sicht;–;keine;;eigen
+F2-01;Complete-Disc-Film 2 (480p);"0:00.0-0:10.6 (= B 5:03.6; 360p +6,6 s)";200 oder 20B, Cut 2, Kanal;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, Marvin (hellblaues Hemd), Ada (weiss);;eigen
+F2-02;Complete-Disc-Film 2 (480p);"0:10.6-0:15.6 (= B 5:14.2; 360p +6,6 s)";Maschinenraum mit rotem Rad;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, Spinne;;eigen
+F2-03;Complete-Disc-Film 2 (480p);"0:15.6-0:17.6 (= B 5:19.2; 360p +6,6 s)";Tunnel mit oranger Tür;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon rechts hinten, Zombies in Khaki;;eigen
+F2-04;Complete-Disc-Film 2 (480p);"0:17.6-0:21.1 (= B 5:21.2; 360p +6,6 s)";Tunnel mit oranger Tür;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon rechts hinten, Zombies in Khaki;;eigen
+F2-05;Complete-Disc-Film 2 (480p);"0:21.1-0:27.1 (= B 5:24.7; 360p +6,6 s)";200 Cut 13;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, Zombies;;eigen
+F2-06;Complete-Disc-Film 2 (480p);"0:27.1-0:30.3 (= B 5:30.7; 360p +6,6 s)";20B Cut 11-14, dann Cut 7, grauer Gang;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, Spinne, weiße Wolke hinter ihm;;eigen
+F2-07;Complete-Disc-Film 2 (480p);"0:30.3-0:32.1 (= B 5:33.9; 360p +6,6 s)";20B Cut 11-14, dann Cut 7, grauer Gang;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, Spinne, weiße Wolke hinter ihm;;eigen
+F2-08;Complete-Disc-Film 2 (480p);"0:32.1-0:34.3 (= B 5:35.7; 360p +6,6 s)";20B Cut 11-14, dann Cut 7, grauer Gang;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, Spinne, weiße Wolke hinter ihm;;eigen
+F2-09;Complete-Disc-Film 2 (480p);"0:34.3-0:34.8 (= B 5:37.9; 360p +6,6 s)";20B Cut 11-14, dann Cut 7, grauer Gang;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, Spinne, weiße Wolke hinter ihm;;eigen
+F2-10;Complete-Disc-Film 2 (480p);"0:34.8-0:37.5 (= B 5:38.4; 360p +6,6 s)";20B Cut 11-14, dann Cut 7, grauer Gang;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, Spinne, weiße Wolke hinter ihm;;eigen
+F3-01;Complete-Disc-Film 3 (480p);"0:00.0-0:12.8 (= B 3:17.9; 360p +6,6 s)";306 Cut 5 Hinterhof;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Sherry, John;;eigen
+F3-02;Complete-Disc-Film 3 (480p);"0:12.8-0:17.7 (= B 3:30.7; 360p +6,6 s)";300 Cut 2;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombies;;eigen
+F3-03;Complete-Disc-Film 3 (480p);"0:17.7-0:20.0 (= B 3:35.6; 360p +6,6 s)";301 Cut 4, 3, 2, 0;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombies;;eigen
+F3-04;Complete-Disc-Film 3 (480p);"0:20.0-0:21.6 (= B 3:37.9; 360p +6,6 s)";301 Cut 4, 3, 2, 0;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombies;;eigen
+F3-05;Complete-Disc-Film 3 (480p);"0:21.6-0:25.1 (= B 3:39.5; 360p +6,6 s)";301 Cut 4, 3, 2, 0;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombies;;eigen
+F3-06;Complete-Disc-Film 3 (480p);"0:25.1-0:28.3 (= B 3:43.0; 360p +6,6 s)";301 Cut 4, 3, 2, 0;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombies;;eigen
+F3-07;Complete-Disc-Film 3 (480p);"0:28.3-0:33.6 (= B 3:46.2; 360p +6,6 s)";306 Cut 3;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombie;;eigen
+F3-08;Complete-Disc-Film 3 (480p);"0:33.6-0:36.3 (= B 3:51.5; 360p +6,6 s)";307 Cut 9 Konsole;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza;;eigen
+F3-09;Complete-Disc-Film 3 (480p);"0:36.3-0:42.8 (= B 3:54.2; 360p +6,6 s)";307 Cut 8, 10;ueber Video B (Bildkorrelation r>=0,93) und Sicht;–;Birkin;;eigen
+F3-10;Complete-Disc-Film 3 (480p);"0:42.8-0:47.4 (= B 4:00.7; 360p +6,6 s)";307 Cut 8, 10;ueber Video B (Bildkorrelation r>=0,93) und Sicht;–;Birkin;;eigen
+F4-01;Complete-Disc-Film 4 (480p);"0:00.0-0:03.1 (= B 12:18.1; 360p +6,6 s)";50C Cut 4, 3 (Sicht);ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F4-02;Complete-Disc-Film 4 (480p);"0:03.1-0:04.5 (= B 12:21.2; 360p +6,6 s)";50C Cut 4, 3 (Sicht);ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F4-03;Complete-Disc-Film 4 (480p);"0:04.5-0:05.7 (= B 12:22.6; 360p +6,6 s)";50C Cut 4, 3 (Sicht);ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F4-04;Complete-Disc-Film 4 (480p);"0:05.7-0:07.0 (= B 12:23.8; 360p +6,6 s)";50C Cut 4, 3 (Sicht);ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F4-05;Complete-Disc-Film 4 (480p);"0:07.0-0:10.7 (= B 12:25.1; 360p +6,6 s)";50C Cut 4, 3 (Sicht);ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon;;eigen
+F4-06;Complete-Disc-Film 4 (480p);"0:10.7-0:15.6 (= B 12:28.8; 360p +6,6 s)";50E Cut 8, 5;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, braune Kreatur;;eigen
+F4-07;Complete-Disc-Film 4 (480p);"0:15.6-0:19.7 (= B 12:33.7; 360p +6,6 s)";50E Cut 8, 5;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, braune Kreatur;;eigen
+F4-08;Complete-Disc-Film 4 (480p);"0:19.7-0:21.5 (= B 12:37.8; 360p +6,6 s)";408 Cut 1, 2;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, dunkelrotes Wesen;;eigen
+F4-09;Complete-Disc-Film 4 (480p);"0:21.5-0:23.9 (= B 12:39.6; 360p +6,6 s)";408 Cut 1, 2;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, dunkelrotes Wesen;;eigen
+F4-10;Complete-Disc-Film 4 (480p);"0:23.9-0:28.7 (= B 12:42.0; 360p +6,6 s)";408 Cut 1, 2;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, dunkelrotes Wesen;;eigen
+F4-11;Complete-Disc-Film 4 (480p);"0:28.7-0:29.6 (= B 12:46.8; 360p +6,6 s)";504 Cut 1, 2;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombies;;eigen
+F4-12;Complete-Disc-Film 4 (480p);"0:29.6-0:34.4 (= B 12:47.7; 360p +6,6 s)";504 Cut 1, 2;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, Zombies;;eigen
+F4-13;Complete-Disc-Film 4 (480p);"0:34.4-0:37.6 (= B 12:52.5; 360p +6,6 s)";514 Cut 4, 5, 6;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, brennende Zombies;;eigen
+F4-14;Complete-Disc-Film 4 (480p);"0:37.6-0:38.8 (= B 12:55.7; 360p +6,6 s)";514 Cut 4, 5, 6;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, brennende Zombies;;eigen
+F4-15;Complete-Disc-Film 4 (480p);"0:38.8-0:41.5 (= B 12:56.9; 360p +6,6 s)";514 Cut 4, 5, 6;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Leon;Leon, brennende Zombies;;eigen
+F4-16;Complete-Disc-Film 4 (480p);"0:41.5-0:45.0 (= B 12:59.6; 360p +6,6 s)";512 Cut 6;ueber Video B (Bildkorrelation r>=0,93) und Sicht;Elza;Elza, brennender Zombie;;eigen
+F4-17;Complete-Disc-Film 4 (480p);"0:45.0-0:51.3 (= B 13:03.1; 360p +6,6 s)";50A Cut 12 Hangar C-2;ueber Video B (Bildkorrelation r>=0,93) und Sicht;–;Birkin, Spider-Man;;eigen
