@@ -83,13 +83,21 @@ static void teil_tore(void)
     CHECK(12, e->hp == 180 && (e->hit_react & 3u) == 3u && n == 1,
           "Bit-0-Riegel: hp=%d (180) hit_react=0x%02X (&3==3) n=%d (1)", e->hp, e->hit_react, n);
 
-    /* (13) NEGATIV-KONTROLLE: frei -> 1000 Schaden (@0x8006f41c), +0x5 = 9 (@0x8006f432). */
+    /* (13) NEGATIV-KONTROLLE: frei -> Schaden, +0x5 = 9 (@0x8006f432). Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL,
+     *      Nutzerentscheid): der Gorilla 0x27 ist Boss - die Handgranate traegt an ihm Form-HP 360 - Rest 40 = 320
+     *      (re15_granate_schaden, re15_damage.c); der Tabellenwert 1000 (@0x8006f41c) gilt fuer jeden normalen Gegner
+     *      (Gegenprobe 13b mit dem kleinen Affen 0x29). Die Tor-Mechanik dieses Teils ist davon unberuehrt. */
     re15_actor_init(); pl_far();
     e = mk(1, 0x27, 300, 0, 0, 180);
     n = re15_resolve_attack(&b, 2, -1);
-    CHECK(13, e->hp == 180 - 1000 && e->state == 3 && e->sub_state_1 == 9 && e->sub_state_2 == 1 && n == 1,
-          "freier Gegner: hp=%d state=%d +5=%d +6=%d n=%d", e->hp, e->state, e->sub_state_1,
+    CHECK(13, e->hp == 180 - 320 && e->state == 3 && e->sub_state_1 == 9 && e->sub_state_2 == 1 && n == 1,
+          "freier Gegner (Gorilla, Bossschaden 320): hp=%d state=%d +5=%d +6=%d n=%d", e->hp, e->state, e->sub_state_1,
           e->sub_state_2, n);
+    re15_actor_init(); pl_far();
+    e = mk(1, 0x29, 300, 0, 0, 180);
+    n = re15_resolve_attack(&b, 2, -1);
+    CHECK(13, e->hp == 180 - 1000 && e->state == 3 && e->sub_state_1 == 9 && n == 1,
+          "13b normaler Gegner 0x29: hp=%d (-820, 1000 @0x8006f41c) state=%d n=%d", e->hp, e->state, n);
 
     /* (14) NPC 0x45 mit HP -1 300 neben P -> kein Kandidat (E7). */
     re15_actor_init(); pl_far();

@@ -10,6 +10,9 @@
 #                          + Nutzer-Entscheid "Teile bleiben liegen"): sieben Stuecke fliegen (Wurf 0x1062), liegen nach 150
 #                          Bildern am Boden, Scheitel gegen die Zielhoehe, gestreut, alles weiter gezeichnet, Rauch-Nachlauf;
 #                          [3] RE1.5-Gehirn z_granate (dieselben Stuecke); [5] Hund RE2/RE1.5: 7 Parts fliegen und liegen.
+#                          [6] Nachbesserung 2 (Nutzerentscheid 2026-11-02): 1000 an allen normalen Gegnern unter jeder KI;
+#                          Bosse je Form gemessen (echter Hitscan + echte Explosion): keine Form stirbt an einer Granate,
+#                          Granate + 4 Pistolenschuesse = Gorilla, Granate + 8 = Birkin-Formen/Alligator; G5/Gator-Boss alt.
 #   unit_r41_granate_aus   eigener Prozess mit RE15_KEIN_80PROZENT_GORE=1: keine Zerfetzung (RE2 0x80108BEC), Schaden 1000.
 add_executable(test_r41_granate
     ${CMAKE_CURRENT_LIST_DIR}/../test_r41_granate.c)

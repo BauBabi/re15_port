@@ -54,9 +54,14 @@ int re15_bf_mutation_offen(void) { return re15_bf_bahnsteig_aktiv() && !s_bf_mut
 static void (*s_bf_modell_hook)(uint8_t) = 0;
 void re15_bf_modell_hook(void (*fn)(uint8_t type)) { s_bf_modell_hook = fn; }
 
+/* Runde 41 Spur GR, Nachbesserung 2: Merker "diese 0x30 hat ihre Mutation hinter sich" je Slot (auch ausserhalb 5090:
+ * ROOM3071 gibt den Form-1-Birkin mit grid 0x21 -> 0x01 frei, Member_set(0x0C,1) @0x03645). Gesetzt am Mutationsende
+ * (sub 6 Phase 2 @0x8011888c ruft re15_bf_mutation_fertig fuer jeden Raum), geloescht beim Raumwechsel (re15_bf_reset). */
+static uint8_t s_bf_nach_mutation[RE15_ACTOR_MAX];
+
 void re15_bf_mutation_fertig(int slot)
 {
-    (void)slot;
+    if (slot >= 1 && slot < RE15_ACTOR_MAX) s_bf_nach_mutation[slot] = 1;
     if (!re15_bf_bahnsteig_aktiv() || s_bf_mutiert) return;
     s_bf_mutiert = 1;
     if (s_bf_modell_hook) s_bf_modell_hook(0x30u);      /* Plattform laedt die 0x30-Bank neu (jetzt Bahnsteig-Form) */
@@ -70,6 +75,34 @@ int re15_bf_bahnsteig_aktiv(void)
 int re15_bf_hangar_aktiv(void)
 {
     return (g_current_room_id & 0xFFFEu) == 0x50A0u && !getenv("RE15_KEIN_HANGAR_BIRKIN");
+}
+
+/* Runde 41 Spur GR, Nachbesserung 2 (Kopf: re15_birkin_formen.h): Start-HP und Ende der LAUFENDEN Form eines 0x30.
+ *   Bahnsteig-Form (G4-Bank oder 5090 nach der Mutation)  150 bis hp < 0   (birkin_bahnsteig.c Eintritt `e->hp = 150`)
+ *   Mutation laeuft (+0x1dd & 8)                           150 bis hp < 0   (`ori v0,zero,0x96` @0x80118094; ein toedlicher
+ *                                                                            Treffer wird hier ohnehin zu HP 50 @0x8011a534)
+ *   nach der Mutation (Merker, ausserhalb 5090)            150 bis hp < 0   (dieselbe Zuweisung; der Merker gilt nur, solange
+ *                                                                            hp <= 150 - ein neuer INIT schreibt 300)
+ *   Form 1, Mutation offen (Wurzel-Tor wie unten)          300 bis hp < 100 (`ori v0,zero,0x12c` @0x8011690c, Tor
+ *                                                                            `slti v0,v0,100` @0x8011667c -> 0x601)
+ *   sonst (Form-2-Bit vom Spawn, z.B. 3070 grid 0x10)      300 bis hp < 0   (INIT @0x8011690c, Tod `bltz` am Applier)
+ * Das Wurzel-Tor ist das von enemy_ai_common.c (re15_birkin_root, Abnahme 1 M3):
+ * `!(grid & 0x10)` (`andi 0x10` @0x801164e8) oder 5090 vor dem Mutationsstart. */
+#define BF_HP_INIT      300    /* @0x8011690c (STAGE3/STAGE5 INIT, unbedingt) */
+#define BF_HP_MUTATION  150    /* @0x80118094-98 */
+#define BF_HP_MUT_TOR   100    /* @0x8011667c */
+void re15_bf_granate_form(const re15_actor_t *e, int *form_hp, int *ende)
+{
+    int slot = e ? (int)(e - g_actors) : -1;
+    *form_hp = BF_HP_INIT; *ende = 0;
+    if (!e) return;
+    if (re15_bb_bank_da(e) || re15_bf_bahnsteig_bank_faellig(e->type)) { *form_hp = RE15_BB_FORM_HP; return; }
+    if (e->birkin_flags & 0x8) { *form_hp = BF_HP_MUTATION; return; }
+    if (slot >= 1 && slot < RE15_ACTOR_MAX && s_bf_nach_mutation[slot]) {
+        if (e->hp <= BF_HP_MUTATION) { *form_hp = BF_HP_MUTATION; return; }
+        s_bf_nach_mutation[slot] = 0;                    /* HP ueber 150 = neuer INIT im selben Slot */
+    }
+    if (!(e->grid_id & 0x10) || re15_bf_mutation_offen()) *ende = BF_HP_MUT_TOR;
 }
 
 /* ---- Bahnsteig: Uebergabe an den G5 -------------------------------------------------------
@@ -139,6 +172,7 @@ static void bf_zucken(re15_actor_t *e);
 void re15_bf_reset(void)
 {
     s_bf_mutiert = 0; s_kam_g5 = 0;
+    memset(s_bf_nach_mutation, 0, sizeof s_bf_nach_mutation);   /* Runde 41 Spur GR NB2 */
     re15_bb_reset();
     s_rs.slot = -1; s_rs.phase = 0; s_rs.t = 0;
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = 0; s_h.t = 0; s_h.birkin_start = 0;

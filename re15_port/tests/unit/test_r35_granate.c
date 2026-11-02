@@ -246,8 +246,10 @@ static void abschnitt_wand(void)
     PRUEF(110, geo == 1, "RE2-Kontaktgeometrie (@0x80010900, Band @0x8004716c-a4) meldet den Gegner 600 vor dem Spawn: %d (1)", geo);
     PRUEF(111, nw == 1 && ne == 1 && bild_x3 >= 3,
           "Flug geht weiter bis zur Wand: Wand %u, Explosionen %u, Explosionsbild %d (>= 3, nicht beim Kontakt)", nw, ne, bild_x3);
-    PRUEF(112, d->hp == 180 - 1000 && d->state == 3 && d->sub_state_1 == 9,
-          "Gegner 0x27 ueber die Reichweite der Wandexplosion getroffen: hp %d (-820), Zustand %u (3), +0x5 %u (9)",
+    /* Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL, Nutzerentscheid): 0x27 = Gorilla = Boss, Handgranate an ihm 360 - 40 =
+     * 320 (re15_granate_schaden) statt 1000 (@0x8006f41c); die Reichweite der Wandexplosion ist das Thema dieser Pruefung. */
+    PRUEF(112, d->hp == 180 - 320 && d->state == 3 && d->sub_state_1 == 9,
+          "Gegner 0x27 ueber die Reichweite der Wandexplosion getroffen: hp %d (-140), Zustand %u (3), +0x5 %u (9)",
           d->hp, d->state, d->sub_state_1);
     g_actors[1].active = 0;
     g_room_rdt_ok = 0;

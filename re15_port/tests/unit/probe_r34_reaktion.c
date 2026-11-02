@@ -850,6 +850,10 @@ static void teil_re15(void)
     /* ---- 0x23 Alligator (Land, grid ungerade): Clip 13, Leiche nach Bild 20 ---- */
     {
         re15_actor_t *e = re15_arena(0x23, 1);
+        /* Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL, Nutzerentscheid): Bosse sterben nicht mehr an EINER Granate aus
+         * voller HP (Alligator 300 - 250 = 50 bleibt, re15_granate_schaden). Geprueft wird der Todesablauf nach Zeile 9 ->
+         * angeschlagener Alligator (HP 100 < 250), die Granate bleibt der toedliche Treffer. */
+        e->hp = 100;
         explosion_rel(e, 300, 2);
         const int st = e->state;
         int clip = -1, bild_vor_leiche = -1;
@@ -888,6 +892,8 @@ static void teil_re15(void)
     {
         re15_actor_t *e = re15_arena(0x30, 0x13);
         e->birkin_flags = 0; e->birkin_grab = 0;                  /* kein Mutations-Riegel (+0x1dd & 8) wie test_birkin_ai (3) */
+        e->hp = 100;   /* Runde 41 Spur GR NB2: 300-Form, Handgranate 190 (re15_granate_schaden) -> angeschlagen, damit
+                        * die Granate der toedliche Treffer bleibt (Thema: Todes-Schwanz, nicht der Schaden) */
         explosion_rel(e, 300, 2);
         const int st = e->state;
         int max_p1 = -1, af3 = -1, halt3 = 1, max_p5 = -1, af6 = -1, clip3 = -1;

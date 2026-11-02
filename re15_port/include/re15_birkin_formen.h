@@ -42,6 +42,12 @@ int  re15_bf_mutation_offen(void);
 void re15_bf_mutation_fertig(int slot);
 void re15_bf_modell_hook(void (*fn)(uint8_t type));
 
+/* Runde 41 Spur GR, Nachbesserung 2 (Bossschaden der Handgranate, re15_damage.c): Start-HP und Ende (hp < ende) der
+ * laufenden Form eines 0x30 - 300/0 (Form-2-Bit vom Spawn), 300/100 (Form 1 bis zur Mutation), 150/0 (Mutation laeuft,
+ * danach, Bahnsteig-Form). RE15_BB_FORM_HP = die Zuweisung im Eintritt von re15_bb_tick (birkin_bahnsteig.c). */
+#define RE15_BB_FORM_HP 150
+void re15_bf_granate_form(const re15_actor_t *e, int *form_hp, int *ende);
+
 /* Birkin (0x30) in 5090 nach Todesphase 2 an den G5 uebergeben (Typwechsel 0x30 -> 0x36). */
 void re15_bf_morph_zu_g5(int slot);
 

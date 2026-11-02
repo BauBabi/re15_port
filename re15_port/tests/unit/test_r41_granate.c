@@ -6,8 +6,13 @@
  *
  *   [1] schaden  — Explosion (re15_granate_r35_explosion, Art 2) an der Zombie-Familie 0x10/0x11/0x12/0x13/0x16/0x18
  *                  mit der hoechsten RE2-HP (Brad 0x11 = 250 @0x801008C8, sonst 128 + 15) und der RE1.5-HP: Tod,
- *                  Schaden 1000. Saeure/Brand (Art 3/4) bleiben bei E4 (200). Nicht-Zombies unveraendert (Hund 300,
- *                  Kraehe 60, Spinne 60, G5 80, Alligator/Gorilla/Kakerlake 1000).
+ *                  Schaden 1000. Saeure/Brand (Art 3/4) bleiben bei E4 (200). NACHBESSERUNG 2: JEDER normale Gegner
+ *                  (Zombies, Hund, Kraehe, Spinne, RE2-Babyspinne, kleiner Affe, Tyrant, Zellenarm) bekommt unter
+ *                  RE2-KI, RE1.5-KI und MIXED 1000 (vorher unter dem RE2-Modell Hund 300, Kraehe/Spinne/Baby 60).
+ *   [6] boss     — NACHBESSERUNG 2 (Nutzerentscheid): je Boss und Form ueber den echten Hitscan und die echte Explosion
+ *                  gemessen (Form-HP, Pistole, Schrotflinte, Granate, Schuesse mit/ohne Granate): keine Form stirbt an
+ *                  EINER Granate; Granate + 4 Pistolenschuesse toeten den Gorilla, Granate + 8 jede Birkin-Form und den
+ *                  RE1.5-Alligator; G5 (80) und Gator-Boss (1000, nur Kanister toedlich) unveraendert.
  *   [2] zerfetzt — RE2-Gehirn (Standard-KI), Zombies aus ROOM1140 (0x10, 0x11 dick, 0x16) und umgetypt 0x12/0x13/0x18
  *                  (Nachbesserung 1, Video CD2 19,25-21,1 s + Nutzer-Entscheid "Teile bleiben liegen"): die Zerfetzung
  *                  laeuft genau einmal, sieben Stuecke (Rumpf, Becken, Kopf, Oberarme, Oberschenkel) fliegen mit dem Wurf
@@ -20,7 +25,7 @@
  *   [4] aus      — eigener Prozess mit RE15_KEIN_80PROZENT_GORE=1: keine Zerfetzung (RE2 0x80108BEC wie vorher), der
  *                  Schaden bleibt 1000 (PORT-WAHL Staerke haengt nicht am Gore-Schalter).
  * Rueckgabe 0 = gruen, sonst die Nummer der ersten fehlgeschlagenen Pruefung.
- * Aufruf: test_r41_granate [schaden|zerfetzt|r15|hund|alle|aus]
+ * Aufruf: test_r41_granate [schaden|zerfetzt|r15|hund|boss|alle|aus]
  */
 #include "re15_esp.h"
 #include "re15_granate_r35.h"
@@ -42,6 +47,9 @@
 #include "re15_teile_r15.h"
 #include "re2_ems.h"
 #include "re2_fx.h"
+#include "re15_boss_gator.h"
+#include "re15_gator_re2_r41.h"
+#include "re15_birkin_formen.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -222,6 +230,23 @@ static int schaden_an(re15_ai_flavor_t fl, uint8_t typ, int16_t hp, uint8_t art,
     *hp_nach = e->hp; *st_nach = e->state;
     return n;
 }
+/* Explosion 300 neben dem Gegner. Die Hoehe P.y probiert die Lagen durch, bis der Kandidatentest (Band
+ * @0x8004716c-a4, re15_re2_gl_kandidat) den Gegner annimmt: die Kaesten liegen je Typ verschieden hoch (Kraehe unter
+ * RE1.5-KI, RE2-Babyspinne, G5 lagen bei P.y = -500 ausserhalb). Geprueft wird der SCHADEN, nicht die Trefferflaeche;
+ * ein Fehlversuch aendert nichts am Gegner. Rueckgabe: Zahl der Treffer. */
+static int granate_treffer(re15_actor_t *e)
+{
+    static const int32_t dy[] = { -500, 0, -1000, -1500, -2000, -3000, 500, -250, -750 };
+    /* Kastenmitte: 300 neben der Wurzel; G5 +0x94 = -2000 (`addiu v0,zero,-2000` @0x80100534, bei Gier 0 auf x) */
+    static const int32_t dxz[][2] = { { 300, 0 }, { -2000, 0 }, { 0, -2000 } };
+    for (unsigned j = 0; j < sizeof dxz / sizeof dxz[0]; j++)
+        for (unsigned i = 0; i < sizeof dy / sizeof dy[0]; i++) {
+            const int32_t p[3] = { e->x + dxz[j][0], e->y + dy[i], e->z + dxz[j][1] };
+            int n = re15_granate_r35_explosion(p, 0, 2);
+            if (n) return n;
+        }
+    return 0;
+}
 static void abschnitt_schaden(void)
 {
     re15_re2_damage_model_set(1);
@@ -254,24 +279,203 @@ static void abschnitt_schaden(void)
         schaden_an(RE15_AI_FLAVOR_RE2, 0x11, 250, 4, &h4, &s4);
         PRUEF(3, h3 == 50 && h4 == 50, "Saeure/Brand an 0x11 unveraendert 200 (E4): HP %d / %d (50)", h3, h4);
     }
-    /* Nicht-Zombies: unveraendert (RE2-Records Zeile 9 K0 bzw. RE1.5 1000) */
-    static const struct { uint8_t typ; int16_t hp; int16_t soll; const char *name; } nz[] = {
-        { 0x20, 2000, 300,  "Hund 0x20 (Z9 K0 300 @0x800A44C4)" },
-        { 0x21, 2000, 60,   "Kraehe 0x21 (Z9 K0 60 @0x800A4640)" },
-        { 0x25, 2000, 60,   "Spinne 0x25 (Z9 K0 60 @0x800A4C30)" },
-        { 0x27, 2000, 1000, "Gorilla/Made 0x27 (RE1.5 1000 @0x8006f41c)" },
-        { 0x29, 2000, 1000, "Kakerlake 0x29 (RE1.5 1000)" },
-        { 0x23, 2000, 1000, "Alligator 0x23 (RE1.5 1000)" },
+    /* NACHBESSERUNG 2 (Nutzer 2026-11-02 "die Granate hat halt einen Schaden, sind die Gegner damit tot, sind sie tot"):
+     * JEDER normale Gegner bekommt unter JEDER KI 1000 (@0x8006f41c) - vorher unter dem RE2-Modell die Werferzeile 9
+     * (Hund 300 @0x800A44C4, Kraehe 60 @0x800A4640, Spinne 60 @0x800A4C30). HP so gross, dass der Schaden sichtbar wird. */
+    static const struct { uint8_t typ; const char *name; } nz[] = {
+        { 0x10, "Zombie 0x10" }, { 0x11, "dicker Zombie 0x11" }, { 0x16, "Zombie 0x16" },
+        { 0x20, "Hund 0x20 (RE2 vorher 300)" }, { 0x21, "Kraehe 0x21 (RE2 vorher 60)" },
+        { 0x25, "Spinne 0x25 (RE2 vorher 60)" }, { 0x26, "Babyspinne 0x26 (RE2-Baby, vorher 60)" },
+        { 0x29, "kleiner Affe 0x29" }, { 0x2B, "Tyrant 0x2B" }, { 0x1A, "Zellenarm 0x1A" },
     };
+    static const struct { re15_ai_flavor_t fl; const char *name; } kis[3] = {
+        { RE15_AI_FLAVOR_RE2, "RE2-KI" }, { RE15_AI_FLAVOR_RE15, "RE1.5-KI" }, { RE15_AI_FLAVOR_MIXED, "MIXED" } };
+    const unsigned NNZ = sizeof nz / sizeof nz[0];
     int nok = 0;
-    for (unsigned i = 0; i < sizeof nz / sizeof nz[0]; i++) {
-        int16_t h; uint8_t st;
-        int n = schaden_an(RE15_AI_FLAVOR_RE2, nz[i].typ, nz[i].hp, 2, &h, &st);
-        int d = nz[i].hp - h;
-        printf("   %s: Treffer %d Schaden %d (soll %d)\n", nz[i].name, n, d, nz[i].soll);
-        if (n == 1 && d == nz[i].soll) nok++;
+    for (unsigned k = 0; k < 3; k++) {
+        for (unsigned i = 0; i < NNZ; i++) {
+            int16_t h; uint8_t st;
+            re15_ai_flavor_set(kis[k].fl);
+            re15_actor_init(); re15_enemy_reset();
+            re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 30000; pl->y = 0; pl->z = 30000;
+            re15_player_apply_hitbox(pl);
+            g_room_rdt_ok = 0; g_current_room_id = 0x1140;
+            re15_actor_t *e = dummy(1, nz[i].typ, 2000);
+            if (nz[i].typ == 0x26u) e->re2s_baby_spawned = 1;          /* RE2-Baby nach Herkunft (re15_re2spider_baby_owns) */
+            int n = granate_treffer(e);
+            h = e->hp; st = e->state; (void)st;
+            int d = 2000 - h;
+            printf("   %s %s: Treffer %d Schaden %d (soll 1000)\n", kis[k].name, nz[i].name, n, d);
+            if (n == 1 && d == 1000) nok++;
+        }
     }
-    PRUEF(4, nok == 6, "Nicht-Zombies: Granatenschaden unveraendert %d/6", nok);
+    PRUEF(4, nok == (int)(3 * NNZ), "Handgranate an allen normalen Gegnern 1000 unter RE2-KI, RE1.5-KI und MIXED: %d/%u",
+          nok, 3 * NNZ);
+}
+
+/* ================================================================================================
+ * [6] BOSSE (Nachbesserung 2, Nutzer 2026-11-02 "Gorilla, Handgranate und ein paar Schuss, und ja auch Birkin und
+ *     Aligator, wobei die an sich schon staerker sein muessen als der Gorilla"): je Boss und Form gemessen ueber den
+ *     ECHTEN Hitscan (re15_player_weapon_fire) und die ECHTE Explosion (re15_granate_r35_explosion, Art 2):
+ *     Pistolenschaden (Waffe 3), Schrotflintenschaden (Waffe 8), Form-HP aus dem INIT der KI, Schuesse ohne Granate,
+ *     Schuesse nach EINER Granate. Pruefungen: keine Form stirbt an einer Granate, Granate + N Schuesse toeten,
+ *     Gorilla N kleiner als Birkin/Alligator N; G5 und Gator-Boss unveraendert.
+ * ================================================================================================ */
+extern int     re15_player_weapon_fire(int weapon_id);
+extern int16_t re15_atan2_q12(int32_t, int32_t);
+
+static void boss_welt(uint16_t raum)
+{
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);                          /* Vorgabe-KI; die Bosse sind unter jeder KI RE1.5 */
+    re15_actor_init(); re15_enemy_reset(); re15_bf_reset();
+    re15_enemy_ai_set_paused(0);
+    re15_player_cmd_reset(); re15_player_aim_reset();
+    re15_esp_fx_reset();
+    g_room_rdt_ok = 0; g_room_change.pending = 0; g_current_room_id = raum;
+    re15_damage_seed_rng(0x1234u);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 0; pl->y = 0; pl->z = 20000; pl->floor = 0;
+    re15_player_apply_hitbox(pl);
+}
+/* Boss in Slot 1 mit dem INIT seiner KI (Spawn-Wurzelaufruf wie Sce_em_set @0x8004259c bzw. ein KI-Takt). */
+static re15_actor_t *boss_neu(uint8_t typ, uint8_t grid)
+{
+    re15_actor_t *e = &g_actors[1];
+    memset(e, 0, sizeof *e);
+    e->active = 1; e->type = typ; e->grid_id = grid; e->state = 0; e->em_flag_id = 0xFF;
+    e->x = 0; e->y = 0; e->z = 0; e->rot_y = 0;
+    re15_enemy_apply_hitbox(e, typ);
+    if (typ == 0x27u || typ == 0x30u) re15_enemy_spawn_root(1);
+    else if (typ == 0x23u && !re15_gator_boss_active(e)) re15_enemy_ai_run_all(1);   /* RE1.5-Alligator INIT */
+    e->hit_react = 0;
+    return e;
+}
+/* Ein Schuss ueber den echten Hitscan: Spieler 2000 vor dem Boss, Blick auf ihn, Gorilla am Boden (Band LEVEL, wie der
+ * Stempel des ACTIVE-Schwanzes @0x80117380-e8). Der Treffer-Riegel +0x93 Bit 0 wird vorher frei gemacht (im Spiel loest ihn
+ * der Ausgang der Trefferreaktion). Rueckgabe: abgezogene HP, -1 = kein Treffer. */
+static int boss_schuss(re15_actor_t *e, int waffe)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = e->x - 2000; pl->z = e->z; pl->y = e->y;
+    pl->rot_y = (int16_t)(((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0xfff);
+    e->hit_react = (uint8_t)(e->hit_react & ~3u);
+    if (e->type == 0x27u) { e->aim_band = 2; e->mag_airborne = 0; }
+    int16_t vor = e->hp;
+    int r = re15_player_weapon_fire(waffe);
+    return (r == (int)(e - g_actors) + 1) ? (int)vor - (int)e->hp : -1;
+}
+static int boss_granate(re15_actor_t *e)
+{
+    e->hit_react = (uint8_t)(e->hit_react & ~3u);
+    int16_t vor = e->hp;
+    int n = granate_treffer(e);                                         /* P.y = Liegestelle - 500 @0x800185a8 zuerst */
+    return n ? (int)vor - (int)e->hp : -1;
+}
+/* Pistolenschuesse bis zum Ende der Form (hp < ende); Rueckgabe Zahl, -1 = Fehlschuss, 999 = kein Ende nach 400. */
+static int boss_schuesse_bis(re15_actor_t *e, int ende)
+{
+    for (int n = 1; n <= 400; n++) {
+        if (boss_schuss(e, 3) < 0) return -1;
+        if (e->hp < ende) return n;
+    }
+    return 999;
+}
+
+typedef enum { BF_GORILLA, BF_ALLIGATOR, BF_BIRKIN, BF_FORM1, BF_MUTATION, BF_NACH_MUT, BF_BAHNSTEIG, BF_G5, BF_GATOR } bform_t;
+typedef struct { const char *name; uint16_t raum; uint8_t typ, grid; bform_t art; int ende; } bfall_t;
+/* Den Boss in seine Form bringen: Form 1 -> Mutation ueber das echte Wurzel-Tor (hp < 100 @0x8011667c -> 0x601) und die
+ * echte Mutation (HP 150 @0x80118094); nach der Mutation bis zu ihrem Ende (sub 6 Phase 2 @0x8011888c). */
+static re15_actor_t *boss_aufstellen(const bfall_t *f)
+{
+    boss_welt(f->raum);
+    re15_actor_t *e = boss_neu(f->typ, f->grid);
+    if (f->art == BF_G5)    { e->hp = 600; }                           /* Ctor @0x801003fc (enemy_ai_boss_g5.c) */
+    if (f->art == BF_GATOR) { e->hp = RE15_GR2_HP_INIT; }              /* 25300 @0x80100518-580 (gator_re2_r41.c) */
+    if (f->art == BF_MUTATION || f->art == BF_NACH_MUT || f->art == BF_BAHNSTEIG) {
+        e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->hp = 90;                                                     /* unter das Tor 100 */
+        int n = 0;
+        while (n++ < 400) {
+            re15_enemy_ai_run_all(1);
+            if (f->art == BF_MUTATION && (e->birkin_flags & 0x8)) break;
+            if (f->art != BF_MUTATION && (e->grid_id & 0x10) && !(e->birkin_flags & 0x8) && e->sub_state_1 != 6) break;
+        }
+        e->hit_react = 0;
+        e->state = 1;
+    }
+    return e;
+}
+static void abschnitt_boss(void)
+{
+    static const bfall_t fall[] = {
+        { "Gorilla 0x27 (1141)",                         0x1141, 0x27, 0x10, BF_GORILLA,   0 },
+        { "Alligator 0x23 RE1.5-KI (ausserhalb 2090)",   0x2080, 0x23, 0x00, BF_ALLIGATOR, 0 },
+        { "Birkin 0x30 Mensch 3070 (grid 0x10)",         0x3070, 0x30, 0x10, BF_BIRKIN,    0 },
+        { "Birkin 0x30 5080 (grid 0x13)",                0x5080, 0x30, 0x13, BF_BIRKIN,    0 },
+        { "Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10)",  0x50A0, 0x30, 0x10, BF_BIRKIN,    0 },
+        { "Birkin 0x30 Labor 50E0 (grid 0x10)",          0x50E0, 0x30, 0x10, BF_BIRKIN,    0 },
+        { "Birkin 0x30 Form 1 3071 (grid 0x01)",         0x3071, 0x30, 0x01, BF_FORM1,   100 },
+        { "Birkin 0x30 Form 1 5090 (grid 0x13)",         0x5090, 0x30, 0x13, BF_FORM1,   100 },
+        { "Birkin 0x30 waehrend der Mutation (3071)",    0x3071, 0x30, 0x01, BF_MUTATION,  0 },
+        { "Birkin 0x30 nach der Mutation 3071",          0x3071, 0x30, 0x01, BF_NACH_MUT,  0 },
+        { "Bahnsteig-Form 5090 (nach der Mutation)",     0x5090, 0x30, 0x13, BF_BAHNSTEIG, 0 },
+        { "G5 0x36 5090",                                0x5090, 0x36, 0x13, BF_G5,        0 },
+        { "Gator-Boss 0x23 2090",                        0x2090, 0x23, 0x00, BF_GATOR,     0 },
+    };
+    const unsigned NF = sizeof fall / sizeof fall[0];
+    int n_gorilla = -1, n_min_stark = 1 << 30;
+    printf("   %-44s | Form-HP | Ende | Pistole | Schrot | Granate | Rest | Schuesse nach 1 Granate | ohne Granate\n", "Boss");
+    for (unsigned i = 0; i < NF; i++) {
+        const bfall_t *f = &fall[i];
+        re15_actor_t *e = boss_aufstellen(f);
+        int hp0 = e->hp;
+        int dp = boss_schuss(e, 3);
+        e = boss_aufstellen(f);
+        int ds = boss_schuss(e, 8);
+        int n_ohne = -2;
+        if (f->art != BF_MUTATION && f->art != BF_GATOR) { e = boss_aufstellen(f); n_ohne = boss_schuesse_bis(e, f->ende); }
+        e = boss_aufstellen(f);
+        int g = boss_granate(e);
+        int rest = e->hp;
+        int lebt = (e->state != 3) && (e->hp >= f->ende);
+        if (f->art == BF_FORM1) {                                       /* das echte Wurzel-Tor entscheidet ueber die Mutation */
+            re15_enemy_ai_run_all(1);
+            lebt = lebt && e->sub_state_1 != 6;
+            e->state = 1; e->hit_react = 0;
+        }
+        if (f->art == BF_MUTATION) {                                    /* der Revive-Waechter @0x8011a43c laeuft im KI-Takt */
+            re15_enemy_ai_run_all(1);
+            lebt = (e->state != 3) && e->hp > 0;
+        }
+        int n_nach = -2;
+        if (lebt && f->art != BF_MUTATION && f->art != BF_GATOR) n_nach = boss_schuesse_bis(e, f->ende);
+        int ende_ok = 1;
+        if (f->art == BF_FORM1 && n_nach > 0) { re15_enemy_ai_run_all(1); ende_ok = (e->sub_state_1 == 6); }
+        printf("   %-44s | %7d | %4d | %7d | %6d | %7d | %4d | %23d | %d\n", f->name, hp0, f->ende, dp, ds, g, rest, n_nach, n_ohne);
+        switch (f->art) {
+        case BF_G5:
+            PRUEF(70 + (int)i, g == 80 && lebt, "%s: unveraendert 80 (E16 @0x800A5F7C), lebt (Rest %d)", f->name, rest);
+            break;
+        case BF_GATOR:
+            PRUEF(70 + (int)i, g == 1000 && lebt, "%s: unveraendert 1000 (nur ueber den Kanister toedlich), Rest %d", f->name, rest);
+            break;
+        case BF_MUTATION:
+            PRUEF(70 + (int)i, g > 0 && lebt, "%s: eine Granate (%d) toetet nicht, Rest %d", f->name, g, rest);
+            break;
+        default: {
+            int soll = (f->art == BF_GORILLA) ? 4 : 8;
+            PRUEF(70 + (int)i, g > 0 && lebt && n_nach == soll && ende_ok,
+                  "%s: eine Granate (%d) beendet die Form nicht (Rest %d), danach %d Pistolenschuesse (soll %d)%s",
+                  f->name, g, rest, n_nach, soll, ende_ok ? "" : " - Mutation startet nicht");
+            if (f->art == BF_GORILLA) n_gorilla = n_nach;
+            else if (n_nach > 0 && n_nach < n_min_stark) n_min_stark = n_nach;
+        }
+        }
+    }
+    PRUEF(90, n_gorilla > 0 && n_gorilla < n_min_stark,
+          "Gorilla braucht nach einer Granate weniger Schuesse (%d) als jede Birkin-Form und der Alligator (min %d)",
+          n_gorilla, n_min_stark);
 }
 
 /* ================================================================================================
@@ -535,6 +739,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "zerfetzt")) { printf("[2] Zerfetzt (RE2-KI)\n");  abschnitt_zerfetzt(); }
     if (alle || strstr(teil, "r15"))      { printf("[3] RE1.5-KI\n");           abschnitt_r15(); }
     if (alle || strstr(teil, "hund"))     { printf("[5] Hund\n");               abschnitt_hund(); }
+    if (alle || strstr(teil, "boss"))     { printf("[6] Bosse\n");              abschnitt_boss(); }
     if (strcmp(teil, "aus") == 0)         { printf("[4] Schalter aus\n");       abschnitt_aus(); }
 
     free(buf);
