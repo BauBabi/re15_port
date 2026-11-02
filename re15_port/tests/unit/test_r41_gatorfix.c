@@ -621,7 +621,9 @@ static int traglog(const char *dir)
         const int oben = (r->px > -1700 && r->px < 1850 && r->pz > -20000 && r->pz < -12450) || (r->px > 1850 && r->px < 7200 && r->pz > -18100 && r->pz < -14500);
         const int ph = (r->f >= 0 && r->f < 40000) ? ph_von[r->f] : -1;
         /* einzige Ausnahme: laufender Biss (Phase 3 LUNGE / 8 FRESSEN) am Spieler im Wasser (Wurzel < 3200 = Spur-B-Bisstor oder Kopf < 2400 = Maul-Tor) */
-        const int am_spieler = (ph == 3 || ph == 8) && (sqrt(wx * wx + wz * wz) < 3200.0 || sqrt(hx * hx + hz * hz) < 2400.0); (void)oben;   /* auch Hochbiss am Spieler oben */
+        /* auch der Hochbiss der Belagerung (Phase 5, Biss-Clip 4) an der Figur oben: Kopf unter dem 4200er-Aufricht-Gate der Spur B (enemy_ai_boss_gator.c GUARD) */
+        const int am_spieler = ((ph == 3 || ph == 8) && (sqrt(wx * wx + wz * wz) < 3200.0 || sqrt(hx * hx + hz * hz) < 2400.0))
+                             || (ph == 5 && r->mo == 4 && oben && sqrt(hx * hx + hz * hz) < 4200.0);
         const int ohne = st[i] && !am_spieler;
         if (st[i] && am_spieler) biss++;
         bs[i] = (uint8_t)am_spieler;
@@ -1232,7 +1234,8 @@ static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, 
         int still = 0, rub = 0;
         /* NB2 (M5): ohne Ausnahme ausser laufendem Biss (Phase 3/8) am Spieler im Wasser (Wurzel < 3200 oder Kopf < 2400) */
         const int64_t wx0 = (int64_t)g->x - L->x, wz0 = (int64_t)g->z - L->z;
-        const int am_spieler = (ph == 3 || ph == 8) && (wx0 * wx0 + wz0 * wz0 < 3200LL * 3200 || kopf < 2400);   /* auch Hochbiss an der Figur oben */
+        const int am_spieler = ((ph == 3 || ph == 8) && (wx0 * wx0 + wz0 * wz0 < 3200LL * 3200 || kopf < 2400))
+                             || (ph == 5 && g->motion == 4 && L->y != 0 && kopf < 4200);   /* Hochbiss der Belagerung (Aufricht-Gate 4200) */
         if (hn >= 30 && !am_spieler) {
             const int32_t *a = hist[hn % 30];
             const int64_t wx = (int64_t)g->x - a[0], wz = (int64_t)g->z - a[1];
