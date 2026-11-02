@@ -79,7 +79,11 @@ int  re15_g5a_vorlauf(void);   /* Vorlaufbild seit dem Start (RE2 Schnitt 9 vor 
 const re15_camera_cut_t *re15_g5a_schnitt(int cut);
 /* RE2-Schnittnummer (9/10) eines Szenen-Schnitts in ROOM5090/5091, sonst -1 (Dateinamen RE15_G5A_DATEI_FORM). */
 int  re15_g5a_re2_schnitt(int cut);
-/* Lichtsatz fuer einen Schnitt: 16/17 -> 11 (PORT-WAHL, s. g5auftritt_r41.c), sonst `cut`. */
+/* Lichtsatz fuer einen Schnitt: 16/17 -> derselbe Index (RE2 room7040 Lichtsatz 9/10, von re15_g5a_licht_einsetzen auf 16/17
+ * gelegt), sonst `cut`. */
 int  re15_g5a_licht_schnitt(int cut);
+/* Nach jedem Lichtsatz-Parse des Raums: in ROOM5090/5091 RE2 room7040 Lichtsatz 9 und 10 (ROOM7040.RDT @0x668/@0x690) auf die
+ * Indizes 16/17 legen und cut_count auf 18 heben; jeder andere Raum: nichts. */
+void re15_g5a_licht_einsetzen(void *licht_satz /* re15_light_set_t* */);
 
 #endif /* RE15_G5AUFTRITT_R41_H */

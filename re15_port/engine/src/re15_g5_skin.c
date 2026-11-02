@@ -31,6 +31,7 @@
 #include "re15_g5_skin.h"
 #include "re15_md1.h"
 #include "re15_skeleton.h"
+#include "re15_emd.h"
 
 #include "gen/g5_skin_tables.inc"
 
@@ -338,6 +339,134 @@ int16_t re15_g5_track_tick(re15_g5_track_t *t, int fwd, int16_t e_yaw, int16_t r
         if (d >= 2049) d -= 4095;
         return (int16_t)d;
     }
+}
+
+/* ---- RE2-ANIM-SCHRITT FUN_80029614 (Nachbesserung G5 2, Punkte 3/4) --------------------------------------------------
+ * RE2 posiert G5 (EM036) und Arme (EM037) NUR im Anim-Schritt und haelt die Part-Winkel (+0x68/+0x6A/+0x6C je Part,
+ * Stride 172) und die Wurzel (+0x2C/+0x30/+0x34) bis zum naechsten Schritt; Zuschlaege der Overlays (Einrollen sub9/sub11
+ * @0x801023d4-24, Kopf-Tracking @0x80100354) schreiben DIREKT in diese Felder, der naechste Schritt mischt von dort aus.
+ * Selbst disassembliert (info/re2leon/PSX.EXE):
+ *   Wurzel:  kf-Wort 0 -> x = s16 (`sll 16/sra 16` @0x80029674/84, `sw v1,44(s0)` @0x80029688), y = (Wort0 >> 16) * e+0x1DE
+ *            >> 12 (`sra t1,v1,16` @0x80029664, `lh v0,478(s2)` @0x80029660, `sra v0,t1,12` @0x80029690, `sw v0,48(s0)`),
+ *            z = s16 kf+4 (`lh v0,4(a2)` @0x80029698, `sw v0,52(s0)` @0x800296a0). e+0x1DE = 4096 (RE2-RAM s04/s13, G5 und Arme).
+ *   Stufen +0x14E (`lbu t3,334(s2)` @0x800296a8, `beq t3,zero` @0x800296b0); Gewicht w = (a3 & 0xffff) * Stufen
+ *            (`andi v0,a3,0xffff` / `mult v0,t3` @0x800296b8-bc) mit dem Stand VOR dem Abbau.
+ *   Wurzel mit Stufen: IR0 = 4096 - w, GPF auf die neue Wurzel (@0x800296e4-70c `4b98003d`), IR0 = w, GPL mit der alten
+ *            Wurzel +0x38/+0x3A/+0x3C (@0x80029710-72c `4ba8003e`), Ablage +0x2C.. (`swc2` @0x80029730-38);
+ *            danach alte Wurzel = neue (`sh` +0x38/+0x3A/+0x3C @0x8002974c-54).
+ *   Winkel: entpackt nach +124/+126/+128 (@0x80029758ff, 12 Bit ohne Vorzeichen). Ohne Stufen: kopiert (`sw v0,104(t0)` /
+ *            `sh v1,108(t0)` @0x800299a8-ac). Mit Stufen: Stufen - 1 (`addiu v0,v0,-1` / `sb v0,334(s2)` @0x800299c8-cc); je
+ *            Part alt &= 0xfff (`and` 0x0fff0fff / `andi a1,a1,0xfff` @0x800299e0-ec), neu += -+4096, wenn neu - alt + 2048
+ *            ausserhalb 0..4096 liegt (`sltiu 0x1001` / `andi 0x8000` @0x80029a40-a9c), GPF IR0 = w auf alt (@0x800299f0-a3c),
+ *            GPL IR0 = 4096 - w auf neu (@0x80029aac-ad8), Ergebnis IR1..3 -> +104.. (`mfc2` / `sh` @0x80029ae0-af4).
+ * Ergebnis = (alt*w >> 12) + (neu*(4096-w) >> 12) (GPF schneidet vor dem GPL ab), IR-Saettigung auf s16.
+ * Gemessen gegen RE2-RAM s12 (Arm 0 Speer, sub9 ph6): 29 Schritte Clip 0 ohne Stufen, 4 Schritte Clip 2 mit 31..28 Stufen,
+ * a3 128 -> Basis rz (0,133,164,112), dann sub9-ph5-Einrollen mit Abbruch auf der Winkelsumme -> (356,-223,-192,-66) = RAM. */
+typedef struct {
+    uint8_t  an;                                  /* 1 = Pose gesetzt (Ctor-Schritt gelaufen)                        */
+    int32_t  wurzel[3];                           /* +0x2C/+0x30/+0x34                                               */
+    int16_t  alt[3];                              /* +0x38/+0x3A/+0x3C                                               */
+    int16_t  w[RE15_EMD_MAX_BONES][3];            /* +0x68/+0x6A/+0x6C je Part                                       */
+    int      nb;
+} g5_pose_t;
+static g5_pose_t s_pose[RE15_ACTOR_MAX];
+
+static int16_t ir16(int32_t v) { return (int16_t)(v < -32768 ? -32768 : (v > 32767 ? 32767 : v)); }
+static int32_t asr12(int64_t v) { return (int32_t)(v >> 12); }
+
+void re15_g5_pose_aus(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    memset(&s_pose[slot], 0, sizeof s_pose[slot]);
+}
+
+int re15_g5_pose_schritt(re15_actor_t *e, const re15_emd_skeleton_t *sk, int kf, int a3)
+{
+    g5_pose_t *ps;
+    int slot, b, nb, stufen, mischen;
+    int32_t w;
+    int16_t px = 0, py = 0, pz = 0;
+    if (!e || !sk) return -1;
+    slot = (int)(e - g_actors);
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return -1;
+    ps = &s_pose[slot];
+    nb = sk->bone_count;
+    if (nb <= 0 || nb > RE15_EMD_MAX_BONES) return -1;
+    if (!re15_emd_get_keyframe_position(sk, kf, &px, &py, &pz)) return -1;
+    stufen = (int)e->anim_frac;                                       /* +0x14E */
+    mischen = (stufen != 0 && ps->an);                                /* ohne gehaltene Pose gibt es nichts zu mischen */
+    w = (int32_t)(a3 & 0xffff) * stufen;
+    {   /* Wurzel */
+        int32_t neu[3];
+        int k;
+        neu[0] = px; neu[1] = (int32_t)(((int32_t)py * 4096) >> 12); neu[2] = pz;   /* e+0x1DE = 4096 */
+        if (mischen) {
+            for (k = 0; k < 3; k++) {
+                int32_t mac = asr12((int64_t)ir16(neu[k]) * (4096 - w));          /* GPF IR0 = 4096 - w */
+                mac = asr12(((int64_t)mac << 12) + (int64_t)ps->alt[k] * w);      /* GPL IR0 = w        */
+                ps->wurzel[k] = mac;
+            }
+        } else {
+            for (k = 0; k < 3; k++) ps->wurzel[k] = neu[k];
+        }
+        for (k = 0; k < 3; k++) ps->alt[k] = (int16_t)ps->wurzel[k];
+    }
+    if (stufen != 0) e->anim_frac = (uint8_t)(stufen - 1);             /* @0x800299c8-cc */
+    for (b = 0; b < nb; b++) {
+        int16_t a[3];
+        int k;
+        re15_emd_get_keyframe_angles(sk, kf, b, &a[0], &a[1], &a[2]);
+        for (k = 0; k < 3; k++) {
+            int32_t neu = (int32_t)((uint16_t)a[k] & 0xfff);              /* 12-Bit-Feld ohne Vorzeichen */
+            if (mischen) {
+                int32_t alt = (int32_t)((uint16_t)ps->w[b][k] & 0xfff);   /* @0x800299e0-ec */
+                int32_t d = neu - alt + 2048;
+                int32_t mac;
+                if ((uint32_t)d >= 0x1001u) neu += (d & 0x8000) ? 4096 : -4096;      /* @0x80029a40-a9c */
+                mac = asr12((int64_t)alt * w);                                      /* GPF IR0 = w */
+                mac = asr12(((int64_t)mac << 12) + (int64_t)ir16(neu) * (4096 - w)); /* GPL IR0 = 4096 - w */
+                ps->w[b][k] = ir16(mac);
+            } else {
+                ps->w[b][k] = (int16_t)neu;
+            }
+        }
+    }
+    ps->nb = nb;
+    ps->an = 1;
+    return 0;
+}
+
+int re15_g5_pose_winkel(int slot, int bone, int16_t w[3])
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !s_pose[slot].an || bone < 0 || bone >= s_pose[slot].nb) return 0;
+    w[0] = s_pose[slot].w[bone][0]; w[1] = s_pose[slot].w[bone][1]; w[2] = s_pose[slot].w[bone][2];
+    return 1;
+}
+
+int re15_g5_pose_wurzel(int slot, int32_t r[3])
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !s_pose[slot].an) return 0;
+    r[0] = s_pose[slot].wurzel[0]; r[1] = s_pose[slot].wurzel[1]; r[2] = s_pose[slot].wurzel[2];
+    return 1;
+}
+
+void re15_g5_pose_winkel_add(int slot, int bone, int dx, int dy, int dz)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !s_pose[slot].an || bone < 0 || bone >= s_pose[slot].nb) return;
+    s_pose[slot].w[bone][0] = (int16_t)(s_pose[slot].w[bone][0] + dx);   /* lhu / addu / sh wie @0x801023d4-e4 */
+    s_pose[slot].w[bone][1] = (int16_t)(s_pose[slot].w[bone][1] + dy);
+    s_pose[slot].w[bone][2] = (int16_t)(s_pose[slot].w[bone][2] + dz);
+}
+
+/* Pose-Haken fuer re15_skel_compute_pose (g_anim_pose_override): bone -1 = Wurzel (r), sonst Winkel (w). 1 = ersetzt. */
+int re15_g5_pose_haken(const void *actor, int bone, int16_t w[3], int32_t r[3])
+{
+    const re15_actor_t *a = (const re15_actor_t *)actor;
+    int slot;
+    if (!a || (a->type != 0x36u && a->type != 0x37u)) return 0;
+    slot = (int)(a - g_actors);
+    if (bone < 0) return r ? re15_g5_pose_wurzel(slot, r) : 0;
+    return w ? re15_g5_pose_winkel(slot, bone, w) : 0;
 }
 
 /* ---- Bone-Winkel-Zuschlaege je Aktor-Slot ---------------------------------------------- */

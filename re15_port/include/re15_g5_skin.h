@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include "re15_md1.h"
 #include "re15_skeleton.h"
+#include "re15_actor.h"
+#include "re15_emd.h"
 
 /* 2-Bone-Skinning-Tabelle (FUN_80019628 / FUN_800197f4; Format Dossier 2.2b):
  * Vertex v der Paarliste wird zu  w*(R_a*(v+off_a)+t_a) + (4096-w)*(R_b*(v+off_b)+t_b) >> 12
@@ -88,5 +90,16 @@ void re15_g5_bone_angle_hook(const void *actor, int bone, int16_t *ay, int16_t *
 /* Zuschlaege je Aktor-Slot (vom G5-/Tentakel-Tick gesetzt, vom Haken gelesen). */
 void re15_g5_bone_add_set(int slot, int bone, int16_t ay, int16_t az);
 void re15_g5_bone_add_clear(int slot);
+
+/* ---- RE2-Anim-Schritt FUN_80029614 (Nachbesserung G5 2): gehaltene Pose je Aktor-Slot ------------------------------
+ * re15_g5_pose_schritt posiert Keyframe `kf` mit dem Gewicht a3 je Stufe (e->anim_frac = +0x14E, im Schritt -1) und haelt
+ * Winkel und Wurzel bis zum naechsten Schritt; re15_skel_compute_pose nimmt sie ueber g_anim_pose_override statt
+ * Keyframe + Crossfade. Adressen: re15_g5_skin.c. */
+void re15_g5_pose_aus(int slot);
+int  re15_g5_pose_schritt(re15_actor_t *e, const re15_emd_skeleton_t *sk, int kf, int a3);
+int  re15_g5_pose_winkel(int slot, int bone, int16_t w[3]);
+int  re15_g5_pose_wurzel(int slot, int32_t r[3]);
+void re15_g5_pose_winkel_add(int slot, int bone, int dx, int dy, int dz);
+int  re15_g5_pose_haken(const void *actor, int bone, int16_t w[3], int32_t r[3]);
 
 #endif /* RE15_G5_SKIN_H */

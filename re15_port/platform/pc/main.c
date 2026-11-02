@@ -3270,7 +3270,7 @@ static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
 
         /* BE-round: switch lighting tint to the new cut. */
         if (g_re15_room_lights_ok) {
-            re15_light_apply_cut(&g_re15_room_lights, re15_g5a_licht_schnitt(active_cut_idx));   /* Runde 41: Schnitte 16/17 -> Lichtsatz 11 */
+            re15_light_apply_cut(&g_re15_room_lights, re15_g5a_licht_schnitt(active_cut_idx));   /* Runde 41: Schnitte 16/17 -> RE2-Lichtsatz 9/10 */
             fprintf(stderr,
                     "[light] cut %d tint=(%u,%u,%u)\n",
                     active_cut_idx,
@@ -4721,6 +4721,7 @@ re_title:;
     if (g_room_rdt_ok && g_room_rdt.lights &&
         re15_light_parse(g_room_rdt.lights, (size_t)g_room_rdt.lights_size, &g_re15_room_lights) == 0) {
         g_re15_room_lights_ok = 1;
+        re15_g5a_licht_einsetzen(&g_re15_room_lights);   /* Runde 41 G5-Auftritt: RE2 Lichtsatz 9/10 auf die Szenen-Schnitte 16/17 */
         re15_light_apply_cut(&g_re15_room_lights, 0);
         fprintf(stderr, "[light] RDT: %d cuts, cut 0 tint=(%u,%u,%u)\n",
                 g_re15_room_lights.cut_count,
@@ -10483,6 +10484,18 @@ re_title:;
                         (int32_t)npc->y,
                         (int32_t)npc->z
                     };
+                    /* RE2-ENTITAETEN G5/Arme (Typ 0x36/0x37 im RE2-Modul, ROOM5090/5091; Nachbesserung G5 2, Punkt 5): RE2 wertet
+                     * die Punktlichter an der WELTLAGE VON TEIL 0 aus, nicht am Entity-Ursprung - FUN_80027160 `jal 0x80076f88`
+                     * @0x80027330 mit `addiu a0,s2,92` @0x80027334 (s2 = Teile, +92 = Teil-0-Welttranslation); FUN_80076f88 rechnet
+                     * (Teil0 - Licht) >> 4 inkl. Y und die XZ-Daempfung wie RE1.5 FUN_80053fc0, FUN_80077200 dieselben Zeilen
+                     * (-Skala * VectorNormal, Farbe << 4). Fuer den G5 liegt Teil 0 auf der Wurzel-y (-3205..-4534): das orange
+                     * Bodenlicht von RE2 Schnitt 9 (-2200,0,-23500) faellt von UNTEN auf die Masse, nicht waagerecht. */
+                    if ((npc->type == 0x36u || npc->type == 0x37u) && (g_current_room_id & 0xFFFEu) == 0x5090u) {
+                        const int32_t *t0 = npc_poses[0].trans;
+                        npc_pos_w[0] += (int32_t)(((int64_t)nyaw[0] * t0[0] + (int64_t)nyaw[1] * t0[1] + (int64_t)nyaw[2] * t0[2]) >> 12);
+                        npc_pos_w[1] += (int32_t)(((int64_t)nyaw[3] * t0[0] + (int64_t)nyaw[4] * t0[1] + (int64_t)nyaw[5] * t0[2]) >> 12);
+                        npc_pos_w[2] += (int32_t)(((int64_t)nyaw[6] * t0[0] + (int64_t)nyaw[7] * t0[1] + (int64_t)nyaw[8] * t0[2]) >> 12);
+                    }
                     re15_light_setup_actor(
                         &g_re15_room_lights.cuts[g_re15_active_cut],
                         npc_pos_w, NULL, &lctx_npc_world);

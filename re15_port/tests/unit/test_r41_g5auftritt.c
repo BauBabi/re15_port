@@ -33,6 +33,7 @@
 #include "re15_xa.h"
 #include "re15_emd.h"
 #include "re15_player.h"
+#include "re15_math.h"           /* re15_squareroot0 (Speer-Reichweite) */
 
 extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
 extern int re15_g5_tentakel_zustand(int idx, int *sub, int *ph, int *ankermodus, int32_t *scale_x, uint16_t *kontakt);
@@ -249,21 +250,26 @@ static void takt(void)
     re15_enemy_ai_run_all(0);                               /* game_step: Gegner-KI (bf_raumtick -> G5-Szene, G5, Arme) */
 }
 
-/* Gezeichnete Wurzel-y des G5 (Clip/Bild aus re15_g5_zeichenbild, kf-y wie FUN_80029614 @0x80029664). 0 = keine Angabe. */
+/* Gezeichnete Wurzel-y des G5 = Teil0+0x30 der gehaltenen Pose (Nachbesserung G5 2: re15_g5_pose_schritt = FUN_80029614 mit den
+ * +0x14E-Stufen; vorher das rohe Keyframe-y des Zeichenbilds). 0 = keine Angabe. */
 extern int re15_g5_zeichenbild(const re15_actor_t *e, int *clip, int *bild);
 extern int re15_g5_tentakel_gelenke(int idx, int32_t out[4][3]);
+extern int re15_g5_tentakel_teilwinkel(int idx, int part, int16_t w[3]);
+extern int re15_g5_pose_wurzel(int slot, int32_t r[3]);
 static int g5_wurzel_y(const re15_actor_t *e, int32_t *y)
 {
-    re15_enemy_bank_t *b = re15_enemy_find(0x36u);
-    int c = 0, f = 0;
-    int16_t px = 0, py = 0, pz = 0;
-    if (!b || !b->ok || !re15_g5_zeichenbild(e, &c, &f) || c < 0 || c >= b->anim.clip_count) return 0;
-    if (b->anim.clips[c].frame_count <= 0) return 0;
-    if (!re15_emd_get_keyframe_position(&b->skel, (int)(b->anim.frames[b->anim.clips[c].first_frame + f % b->anim.clips[c].frame_count] & 0xFFFu),
-                                        &px, &py, &pz)) return 0;
-    *y = py;
+    int32_t r[3];
+    if (!re15_g5_pose_wurzel((int)(e - g_actors), r)) return 0;
+    *y = r[1];
     return 1;
 }
+
+/* RE2-RAM Speer (Nachbesserung G5 2, Punkt 3), Teil-Winkel rz parts+i*172+108 (Lesewerkzeug G5_belege/nb1/werkzeug/tent_ss3.py):
+ *   s12 = sub9 ph6 (Wort 0x00060901): Arm 0 (356,-223,-192,-66), Arm 1 (302,-169,-138,-39)
+ *   s13 = sub9 ph7 nach dem Ausrollen tt<10 (Wort 0x00070901): Arm 0 (266,-133,-102,-21), Arm 1 (212,-79,-48,6); Arm 0 |p3-p0| 8170. */
+static const int16_t k_re2_speer_s12[2][4] = { { 356, -223, -192, -66 }, { 302, -169, -138, -39 } };
+static const int16_t k_re2_speer_s13[2][4] = { { 266, -133, -102, -21 }, { 212, -79, -48, 6 } };
+static int16_t winkel12(int v) { v &= 0xfff; return (int16_t)(v >= 2048 ? v - 4096 : v); }
 
 /* Kamera-z eines Weltpunkts in einem Schnitt (re15_camera_build_view, wie im_bild). */
 static int64_t kamera_z(const re15_camera_cut_t *c, int32_t x, int32_t y, int32_t z)
@@ -348,6 +354,10 @@ static void test_ablauf(const char *rdt, unsigned raum)
     int frau_sichtbar_re2 = 0, frau_ok_cut12 = 1, sprung_max = 0, sprung_bild = -1, pfosten_vor = 0, pfosten_n = 0;
     int32_t g5x_129 = 0, g5x_270 = 0, g5x_800 = 0, plx_437 = 0, plx_806 = 0, plx_807 = 0, plx_1161 = 0, y_alt = 0;
     int y_alt_ok = 0, arme_ok = 0, arme_n = 0;
+    int sprung_kampf = 0, sprung_kampf_bild = -1;
+    int speer_ph6[2] = { 0, 0 }, speer_ph7_n[2] = { 0, 0 }, speer_ok6[2] = { 0, 0 }, speer_ok7[2] = { 0, 0 };
+    int16_t speer_w6[2][4] = { { 0 } }, speer_w7[2][4] = { { 0 } };
+    int32_t speer_laenge = -1;
     int32_t arme_abw_max = 0;
     int32_t x_alt = e->x;
     const int xa_n0 = g_test_re2xa_count;
@@ -409,14 +419,44 @@ static void test_ablauf(const char *rdt, unsigned raum)
         if (b == 129) g5x_129 = e->x;
         if (b == 270) g5x_270 = e->x;
         if (b == 800) g5x_800 = e->x;
-        /* M4b: gezeichnete Wurzel-y je Bild ohne Sprung, im Intro (Sub 2). Der Uebergang in den Kampf (Sub 1, ~Bild 1122) wechselt in
-         * RE2 mit Clip-Wort-Ueberblendung, die der Port fuer den G5 nicht fuehrt (Dossier Nachbesserung 1, offen) - nicht hier gemessen. */
+        /* M4b: gezeichnete Wurzel-y je Bild ohne Sprung - im Intro (Sub 2) UND ueber den Uebergang in den Kampf (Nachbesserung G5 2,
+         * Punkt 4: [T14] Clip 0 -> sub1 Clip-Wort 0x1F0005 @0x80100dd8 mischt 31 Stufen mit a3 128 @0x80100fac; vorher 125 bei Bild 1123). */
         {   int32_t y = 0; int gsub = -1;
             (void)re15_g5_boss_zustand(&gsub, NULL, NULL);
-            if (gsub == 2 && g5_wurzel_y(e, &y)) {
-                if (y_alt_ok) { int d = (int)(y - y_alt); if (d < 0) d = -d; if (d > sprung_max) { sprung_max = d; sprung_bild = b; } }
+            if (g5_wurzel_y(e, &y)) {
+                if (y_alt_ok) {
+                    int d = (int)(y - y_alt); if (d < 0) d = -d;
+                    if (gsub == 2 && d > sprung_max) { sprung_max = d; sprung_bild = b; }
+                    if (gsub != 2 && d > sprung_kampf) { sprung_kampf = d; sprung_kampf_bild = b; }
+                }
                 y_alt = y; y_alt_ok = 1;
             } else y_alt_ok = 0; }
+        /* M5 Speer (Punkt 3): Teil-Winkel der Arme 0/1 beim Eintritt in sub9 ph6 (= RE2 s12) und nach 20 Bildern ph7 (= s13) */
+        for (int k = 0; k < 2; k++) {
+            int sub = -1, ph = -1; int16_t w[3];
+            if (re15_g5_tentakel_zustand(k, &sub, &ph, NULL, NULL, NULL) != 0 || sub != 9) continue;
+            if (ph == 6 && !speer_ph6[k]) {
+                speer_ph6[k] = 1; speer_ok6[k] = 1;
+                for (int pp = 0; pp < 4; pp++) {
+                    if (re15_g5_tentakel_teilwinkel(k, pp, w) != 0) { speer_ok6[k] = 0; continue; }
+                    speer_w6[k][pp] = winkel12(w[2]);
+                    if (speer_w6[k][pp] != k_re2_speer_s12[k][pp]) speer_ok6[k] = 0;
+                }
+            }
+            if (ph == 7 && ++speer_ph7_n[k] == 20) {
+                speer_ok7[k] = 1;
+                for (int pp = 0; pp < 4; pp++) {
+                    if (re15_g5_tentakel_teilwinkel(k, pp, w) != 0) { speer_ok7[k] = 0; continue; }
+                    speer_w7[k][pp] = winkel12(w[2]);
+                    if (speer_w7[k][pp] != k_re2_speer_s13[k][pp]) speer_ok7[k] = 0;
+                }
+                if (k == 0) { int32_t g[4][3];
+                    if (re15_g5_tentakel_gelenke(0, g) == 0) {
+                        int64_t dx = g[3][0] - g[0][0], dy = g[3][1] - g[0][1], dz = g[3][2] - g[0][2];
+                        speer_laenge = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dy * dy + dz * dz));
+                    } }
+            }
+        }
         /* M2: Gelenklagen der Arme gegen RE2 s04 (Arme gehalten: sub8 ph4..ph7, Bild 80..120) */
         if (b >= 80 && b <= 120) {
             for (int k = 0; k < 3; k++) {
@@ -500,6 +540,19 @@ static void test_ablauf(const char *rdt, unsigned raum)
     CHECK(g5x_800 >= 1150 && g5x_800 <= 1170, "%04X: M3 G5 x %d bei Bild 800 statt 1160 (RE2-RAM s17..s26)", raum, (int)g5x_800);
     /* M4b: kein Ein-Bild-Sprung der gezeichneten Wurzel (Port vorher: 1329 bei Bild 270, -1329 bei 651) */
     CHECK(sprung_max <= 120, "%04X: M4b Wurzel-y springt im Intro um %d bei Bild %d", raum, sprung_max, sprung_bild);
+    fprintf(stderr, "%04X: M4b Uebergang Kampf: groesster Wurzel-y-Schritt %d bei Bild %d (vorher 125 bei 1123)\n", raum, sprung_kampf, sprung_kampf_bild);
+    CHECK(sprung_kampf <= 60, "%04X: Punkt 4 Wurzel-y springt im Kampfbeginn um %d bei Bild %d (Clip-Wort 0x1F0005 @0x80100dd8 mischt)", raum,
+          sprung_kampf, sprung_kampf_bild);
+    for (int k = 0; k < 2; k++) {
+        fprintf(stderr, "%04X: M5 Speer Arm %d ph6 (%d,%d,%d,%d) RE2 s12 (%d,%d,%d,%d); ph7+20 (%d,%d,%d,%d) RE2 s13 (%d,%d,%d,%d)\n", raum, k,
+                speer_w6[k][0], speer_w6[k][1], speer_w6[k][2], speer_w6[k][3], k_re2_speer_s12[k][0], k_re2_speer_s12[k][1], k_re2_speer_s12[k][2],
+                k_re2_speer_s12[k][3], speer_w7[k][0], speer_w7[k][1], speer_w7[k][2], speer_w7[k][3], k_re2_speer_s13[k][0], k_re2_speer_s13[k][1],
+                k_re2_speer_s13[k][2], k_re2_speer_s13[k][3]);
+        CHECK(speer_ph6[k] && speer_ok6[k], "%04X: Punkt 3 Arm %d Teil-Winkel in sub9 ph6 != RE2 s12", raum, k);
+        CHECK(speer_ph7_n[k] >= 20 && speer_ok7[k], "%04X: Punkt 3 Arm %d Teil-Winkel in sub9 ph7 != RE2 s13", raum, k);
+    }
+    fprintf(stderr, "%04X: M5 Speer Arm 0 |p3-p0| %d (RE2 s13 8170, vorher 6080)\n", raum, (int)speer_laenge);
+    CHECK(speer_laenge >= 8170 - 250 && speer_laenge <= 8170 + 250, "%04X: Punkt 3 Arm 0 Reichweite %d statt RE2 s13 8170", raum, (int)speer_laenge);
     /* M4: die Masse links im Bild liegt hinter der Pfostenmaske (depth 100, RE2-Regel) */
     CHECK(pfosten_n == 0 || pfosten_vor == pfosten_n, "%04X: M4 Masse in %d von %d Bildern vor dem Pfosten", raum, pfosten_n - pfosten_vor, pfosten_n);
     CHECK(frau_sichtbar_re2 == 0 && frau_ok_cut12, "%04X: M6 Frau in 16/17 %d Bilder sichtbar, Cut 12 wie vorher %d", raum, frau_sichtbar_re2, frau_ok_cut12);

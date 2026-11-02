@@ -128,7 +128,6 @@ typedef struct {
     int      getroffen;     /* Treffer-Sperre je Angriff                            */
     int16_t  zb_clip;       /* +0x178: Clip des ZULETZT POSIERTEN Bilds (s. tent_anim) */
     uint16_t zb_bild;       /* +0x178: dessen Bild (+0x14D VOR dem Vorschub)        */
-    uint8_t  schritt;       /* 1 = im letzten Takt lief der Anim-Schritt (+0x14E-Abbau) */
 } tent_t;
 
 static tent_t s_tent[TENT_N];
@@ -184,6 +183,7 @@ void re15_g5_tentakel_phase_alle(unsigned ph)
 }
 
 /* ---- Spawn beim Kampfstart (Port-Entscheidung 1) ---------------------------------------- */
+static void tent_posieren(re15_actor_t *e, int clip, int bild, int a3);
 void re15_g5_tentakel_spawn(const re15_actor_t *g5)
 {
     int i;
@@ -203,6 +203,8 @@ void re15_g5_tentakel_spawn(const re15_actor_t *g5)
             /* Ctor: `sw zero,332(s1)` @0x801006e0 im Verzoegerungsplatz von `jal 0x8002959c` @0x801006dc -> die
              * erste posierte Pose ist Clip 0 Bild 0 (RE2-RAM s02: +0x178 aller Arme = EDD+0x60 = Clip 0 Bild 0). */
             s_tent[i].zb_clip = 0; s_tent[i].zb_bild = 0;
+            re15_g5_pose_aus(slot);
+            tent_posieren(e, 0, 0, 0);             /* Nachbesserung G5 2: gehaltene Ctor-Pose (Clip 0 Bild 0, ohne Stufen) */
             e->rot_x = 0; e->rot_z = 0;
             e->rot_y = g5 ? g5->rot_y : 0;
             e->render_scale_q12 = 0;               /* Streckung laeuft ueber das Skinning */
@@ -509,6 +511,24 @@ static void tent_anker(tent_t *t, int idx, const re15_actor_t *g5, re15_actor_t 
 
 int re15_g5_tentakel_zeichenbild(const re15_actor_t *e, int *clip, int *bild);
 
+/* Keyframe von Bild `bild` des Clips `clip` der EM037-Bank (`andi v0,v0,0xfff` @0x80029638); -1 = keins. */
+static int tent_kf_bild(int clip, int bild)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
+    if (!b || !b->ok || clip < 0 || clip >= b->anim.clip_count) return -1;
+    {   const re15_emd_clip_t *c = &b->anim.clips[clip];
+        if (c->frame_count <= 0) return -1;
+        return (int)(b->anim.frames[c->first_frame + (bild % c->frame_count)] & 0xFFFu);
+    }
+}
+/* Anim-Schritt-Pose (re15_g5_skin.c re15_g5_pose_schritt = FUN_80029614): Bild (clip, bild) mit a3 je +0x14E-Stufe. */
+static void tent_posieren(re15_actor_t *e, int clip, int bild, int a3)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
+    int kf = tent_kf_bild(clip, bild);
+    if (b && b->ok && kf >= 0) (void)re15_g5_pose_schritt(e, &b->skel, kf, a3);
+}
+
 /* ---- Posen / Weltpositionen der Kette ------------------------------------------------------
  * Pose im QUERY-Modus (Crossfade unangetastet), aber MIT dem Bone-Winkel-Haken (die
  * +0x6C-Zuschlaege gehoeren zur Kette). Entity-Matrix = RotMatrix(rx, ry, rz) wie
@@ -602,6 +622,16 @@ int re15_g5_tentakel_gelenke(int idx, int32_t out[4][3])
         if (p > 0) re15_g5_tentakel_stretch_point(&poses[0], s_tent[idx].scale_x, m);
         tent_welt(&g_actors[s_tent[idx].slot], E, m, out[p]);
     }
+    return 0;
+}
+
+/* Diagnose/Test (Nachbesserung G5 2): Teil-Winkel wie RE2 parts+i*172+104/106/108 = gehaltene Pose + noch nicht gefaltete
+ * Einroll-Zuschlaege. 0 = ok, -1 = kein Arm/keine Pose. */
+int re15_g5_tentakel_teilwinkel(int idx, int part, int16_t w[3])
+{
+    if (idx < 0 || idx >= TENT_N || part < 0 || part > 3 || s_tent[idx].slot < 0) return -1;
+    if (!re15_g5_pose_winkel(s_tent[idx].slot, part, w)) return -1;
+    w[2] = (int16_t)(w[2] + s_tent[idx].part_rz[part]);
     return 0;
 }
 
@@ -755,11 +785,14 @@ static int tent_anim(re15_actor_t *e, tent_t *t, int rate)
 {
     extern int re15_actor_clip_len(const re15_actor_t *a);
     int fc = re15_actor_clip_len(e);
+    int k;
+    /* Nachbesserung G5 2: die Einroll-Zuschlaege stehen in RE2 IN den Teil-Winkeln (`sh` +108/+280/+452/+624 @0x801023e4-24);
+     * der Schritt mischt von dort aus (alt = +104.. @0x800299d8-ec). Darum zuerst falten, dann posieren. */
+    for (k = 0; k < 4; k++) if (t->part_rz[k]) re15_g5_pose_winkel_add(t->slot, k, 0, 0, t->part_rz[k]);
     memset(t->part_rz, 0, sizeof t->part_rz);
     t->zb_clip = e->motion;                     /* +0x178 = Bild VOR dem Vorschub (@0x800295e8-f8) */
     t->zb_bild = (uint16_t)e->anim_frame;
-    e->anim_blend_rate = (uint16_t)rate;        /* a3 (@0x800296b8) */
-    t->schritt = 1;                             /* +0x14E-- nach dem Mischen (@0x800299c0-cc): im naechsten Takt, s. tent_tick */
+    tent_posieren(e, (int)e->motion, (int)e->anim_frame, rate);   /* a3 der Aufrufstelle, +0x14E-Abbau im Schritt */
     if (fc <= 0) fc = 1;
     if ((int)e->anim_frame + 1 >= fc) { e->anim_frame = 0; return 1; }   /* @0x80029b3c-4c */
     e->anim_frame++;
@@ -808,7 +841,14 @@ static void tent_einroll_schritt(re15_actor_t *e, tent_t *t)
     t->rate = (int16_t)(t->rate - 2 * t->dir);              /* 15A -= 2*16A */
     if ((int16_t)t->rate == 0) t->timer = 0;
     {
-        int32_t sum = ((int32_t)e->rot_z + t->part_rz[0] + t->part_rz[1] + t->part_rz[2] +
+        /* Summe = Rot_z + die VIER TEIL-WINKEL rz (`lh v0,120(s1)`, `lh a1,108(s2)`, `lh v1,280(s2)`, `lh a0,624(s2)`, `lh v1,452(s2)`
+         * @0x8010245c-74, `andi 0xfff` @0x80102484). ⛔ HIER STANDEN nur die Zuschlaege: ohne die gemischte Grundpose (Speer sub9:
+         * rz 0/133/164/112 aus Clip 2 mit 31..28 Stufen) brach das Einrollen spaeter ab, der Arm rollte sich staerker ein
+         * (Nachbesserung G5 2, Punkt 3; RE2-RAM s12 Arm 0 (356,-223,-192,-66)). */
+        int32_t teil = 0;
+        int k;
+        for (k = 0; k < 4; k++) { int16_t w[3]; if (re15_g5_pose_winkel(t->slot, k, w)) teil += w[2]; }
+        int32_t sum = ((int32_t)e->rot_z + teil + t->part_rz[0] + t->part_rz[1] + t->part_rz[2] +
                        t->part_rz[3]) & 0xfff;
         if ((uint32_t)(sum - 2049) < 0x7ffu) {
             r = t->rate;
@@ -902,9 +942,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     if (t->slot < 0 || t->slot >= RE15_ACTOR_MAX) return;
     e = &g_actors[t->slot];
     if (!e->active) return;
-    /* +0x14E-Abbau NACH dem Mischen (@0x800299c0-cc): das Bild des Schritts zeigt die volle Stufe n, der naechste Takt n-1
-     * (wie re15_gator_boss_tick (1)). Ohne Schritt kein Abbau - RE2 zaehlt nur in FUN_80029614. */
-    if (t->schritt) { if (e->anim_frac > 0) e->anim_frac--; t->schritt = 0; }
+    /* +0x14E-Abbau: im Schritt selbst (re15_g5_pose_schritt, @0x800299c0-cc); ohne Schritt kein Abbau. */
 
     /* KIND-KOLLISION jeden Frame VOR dem Zustand (Main 0x801001a0-c8: das Kind laeuft als
      * eigener Entity-Tick; +0x220 &= ~6, dann |= 6*r @0x80105078-a4). Nur mit sichtbarer

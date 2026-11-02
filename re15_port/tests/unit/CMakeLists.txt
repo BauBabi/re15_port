@@ -4117,7 +4117,7 @@ if(TARGET re15_pc)
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
-    set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 640)
+    set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 900)   # G5-Auftritt NB2: 2 Laeufe a 5400 Bilder
     # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
     add_test(NAME integration_r41_g5_westen
              COMMAND "${CMAKE_COMMAND}"

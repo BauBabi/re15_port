@@ -57,6 +57,8 @@
 #include "re15_skeleton.h"     /* re15_cos_q12 / re15_sin_q12 */
 #include "re15_engine.h"        /* g_engine.frame_count (Protokollzeile) */
 #include "re15_audio.h"         /* re15_audio_re2_xa / _stop (Abnahme 1 M5) */
+#include "re15_light.h"         /* re15_light_parse (Lichtsatz der Szenen-Schnitte) */
+#include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -122,7 +124,7 @@ static const re15_camera_cut_t k_re2_schnitt10 = {
  * ⛔ PORT-WAHL: RE2-Schnitte 5 (14220,-1854,-24606)->(3582,..) und 6 (21042,-882,-24390)->(11898,..) sind Spielkameras; RE1.5s Kamera
  * desselben Blicks ist Cut 12 (18526,-2656,-24660)->(1496,1514,-20370) (RID @0x60 + 12*32), fuer beide. */
 #define G5A_SCHNITT5_RE15   0x0C
-#define G5A_LICHT_RE15      0x0B   /* Lichtsatz des Wagenendes (Cut 11 = RE2-Spielkamera 4 am selben Ort) */
+#define G5A_LICHT_RE15      0x0B   /* Rueckfall ohne RE2-Lichtsatz: Cut 11 (= RE2-Spielkamera 4 am selben Ort) */
 
 enum { G5A_VL_SCHLAF = 0, G5A_VL_LAUF, G5A_VL_BLICK, G5A_SZENE };
 
@@ -153,9 +155,46 @@ int re15_g5a_re2_schnitt(int cut)
     return cut == RE15_G5A_SCHNITT9 ? 9 : (cut == RE15_G5A_SCHNITT10 ? 10 : -1);
 }
 
-/* ⛔ PORT-WAHL: RE2s Lichtsaetze von Schnitt 9/10 (light.lit @0x500 + n*40) beleuchten RE2-Figuren. Im Port stehen in diesen Bildern
- * die RE1.5-Spielfigur und der G5 desselben Wagenendes, das Cut 11 beleuchtet; der Lichtsatz ist der von Cut 11. */
-int re15_g5a_licht_schnitt(int cut) { return re15_g5a_re2_schnitt(cut) >= 0 ? G5A_LICHT_RE15 : cut; }
+/* LICHT der Szenen-Schnitte (Nachbesserung G5 2, Punkt 5). Der Lichtsatz gehoert zur KAMERA, nicht zur Figur: RE2 laedt je Schnitt
+ * einen 40-Byte-Satz aus dem LIT-Abschnitt (ROOM7040.RDT Kopf [9] = 0x500, Format = RE1.5 re15_light_parse: Skala, 3 Typbytes,
+ * 3 Farben, Umgebung, 3 Lagen, 3 Helligkeiten) und beleuchtet damit G5, Arme und Leon. Schnitt 9 @0x668:
+ *   `01 00 00 00 a8 a8 a8 be 8c 32 ff ff ff 49 49 49 ac 0d 6c ee 98 a4 68 f7 00 00 34 a4 e4 f3 00 00 fc bd f8 2a 10 27 40 1f`
+ *   = drei Punktlichter: grau (168,168,168) bei (3500,-4500,-23400) Hell 11000, ORANGE (190,140,50) am Boden vor der Tuer
+ *   (-2200,0,-23500) Hell 10000, weiss (255,255,255) bei (-3100,0,-16900) Hell 8000; Umgebung (73,73,73).
+ * Schnitt 10 @0x690: dieselben zwei ersten Lichter, drittes aus, Umgebung (74,73,73).
+ * ⛔ HIER STAND die PORT-WAHL "Lichtsatz von Cut 11" (RE1.5 ROOM5090 LIT @0x55c + 11*40: Skala 2, alle drei Farben (0,0,0), nur
+ * Umgebung (83,78,78)) - die Masse und ihre Stacheln blieben flach braun, in RE2 gluehen sie im orangen Bodenlicht (Vergleich
+ * nb1/vergleich_re2_leon_elza_nb1_1.jpg Bild 180/240). */
+static const uint8_t k_re2_licht9[40] = {
+    0x01, 0x00, 0x00, 0x00, 0xa8, 0xa8, 0xa8, 0xbe, 0x8c, 0x32, 0xff, 0xff, 0xff, 0x49, 0x49, 0x49,
+    0xac, 0x0d, 0x6c, 0xee, 0x98, 0xa4, 0x68, 0xf7, 0x00, 0x00, 0x34, 0xa4, 0xe4, 0xf3, 0x00, 0x00,
+    0xfc, 0xbd, 0xf8, 0x2a, 0x10, 0x27, 0x40, 0x1f };
+static const uint8_t k_re2_licht10[40] = {
+    0x01, 0x00, 0x00, 0x00, 0xa8, 0xa8, 0xa8, 0xbe, 0x8c, 0x32, 0x00, 0x00, 0x00, 0x4a, 0x49, 0x49,
+    0xac, 0x0d, 0x6c, 0xee, 0x98, 0xa4, 0x68, 0xf7, 0x00, 0x00, 0x34, 0xa4, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xf8, 0x2a, 0x10, 0x27, 0x00, 0x00 };
+static int s_g5a_licht_da = 0;
+
+void re15_g5a_licht_einsetzen(void *licht_satz)
+{
+    re15_light_set_t *ls = (re15_light_set_t *)licht_satz;
+    re15_light_set_t tmp;
+    uint8_t roh[80];
+    s_g5a_licht_da = 0;
+    if (!ls || !raum_5090() || RE15_LIGHT_MAX_CUTS < RE15_G5A_SCHNITT10 + 1) return;
+    memcpy(roh, k_re2_licht9, 40); memcpy(roh + 40, k_re2_licht10, 40);
+    if (re15_light_parse(roh, sizeof roh, &tmp) != 0 || tmp.cut_count != 2) return;
+    ls->cuts[RE15_G5A_SCHNITT9]  = tmp.cuts[0];
+    ls->cuts[RE15_G5A_SCHNITT10] = tmp.cuts[1];
+    if (ls->cut_count < RE15_G5A_SCHNITT10 + 1) ls->cut_count = RE15_G5A_SCHNITT10 + 1;
+    s_g5a_licht_da = 1;
+}
+
+int re15_g5a_licht_schnitt(int cut)
+{
+    if (re15_g5a_re2_schnitt(cut) < 0) return cut;
+    return s_g5a_licht_da ? cut : G5A_LICHT_RE15;      /* ohne eingesetzten RE2-Satz (kein Parse) bleibt der alte Satz 11 */
+}
 
 int re15_g5a_laeuft(void)  { return s_g5a.laeuft; }
 int re15_g5a_bild(void)    { return (s_g5a.laeuft && s_g5a.phase == G5A_SZENE) ? s_g5a.bild : -1; }

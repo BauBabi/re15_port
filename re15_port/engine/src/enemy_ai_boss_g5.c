@@ -309,15 +309,21 @@ static void g5_schiebe(re15_actor_t *e, int32_t du, int32_t dz)
     e->z += dz * v;
 }
 
-/* Clip setzen (Clip-Wort +0x14C; +0x14E-Blendstaerke traegt der Port als anim_frac-Naeherung:
- * 0x1F = harter Schnitt, 0x07 = weicher Crossfade — FUN_80029614 IR0-Lerp a3*flag/4096). */
+/* CLIP-WORT `sw X,332(s)` = +0x14C Clip, +0x14D Bild 0, +0x14E Ueberblendstufen (Nachbesserung G5 2, Punkt 4). Jede Store-Stelle
+ * in CDEMD0_EM36_ai0.BIN (Zensus aller `sw rt,332(base)`) schreibt das ganze Wort, auch wenn der Clip schon laeuft:
+ *   0x1F: [T0] 0x1F0001 @0x8010116c, [T3] 0x1F0003 @0x8010138c, [T6] 0x1F0004 @0x801014f8, [T7] 0x1F0002 @0x801015d0,
+ *         [T9] 0x1F0000 @0x80101618, [T11] 0x1F0002 @0x80101710, [T13] 0x1F0000 @0x80101770, sub0 0x1F0000 @0x801009a8,
+ *         sub1 0x1F0005 @0x80100dd8 / 0x1F0002 @0x80101000, sub3 0x1F0002 @0x8010186c, Zucken 0x1F0008 @0x80102b28,
+ *         Tod 0x1F0006 @0x8010306c / 0x1F0007 @0x801031e4 / 0x1F0006 @0x80103430 / 0x1F0008 @0x80103444;
+ *   7 (weich): Fressen 0x70009 @0x80101aec+@0x80101b14 / 0x70002 @0x80101ca0-b0.
+ * ⛔ HIER STAND `if (motion != clip)` und `anim_frac = weich ? 7 : 0`: kein Store bei gleichem Clip (Bild lief weiter) und
+ * keine Ueberblendung an den 0x1F-Stellen - der Uebergang Intro -> Kampf ([T14] Clip 0 -> sub1 Clip 5) sprang die Wurzel um
+ * 125 in einem Bild (Szenenbild 1123). Die Stufen mischt re15_g5_pose_schritt (re15_g5_skin.c) im Anim-Schritt. */
 static void g5_clip(re15_actor_t *e, int clip, int weich)
 {
-    if ((int)e->motion != clip) {
-        e->motion = (int16_t)clip;
-        e->anim_frame = 0;
-        e->anim_frac = weich ? 7 : 0;
-    }
+    e->motion = (int16_t)clip;
+    e->anim_frame = 0;
+    e->anim_frac = weich ? 7 : 0x1F;
 }
 
 /* Clip-Laenge der EM036-Bank. */
@@ -345,36 +351,50 @@ static int g5_clip_len(re15_actor_t *e)
 static int16_t  s_g5_zb_clip = -1;                     /* -1 = kein Merker: Zeichner nimmt motion/anim_frame */
 static uint16_t s_g5_zb_bild = 0;
 
-/* Wurzel-y (kf-Bytes 2..3, FUN_80029614 `sra t1,v1,0x10` @0x80029664 -> Teil0+0x30 @0x80029694) von Bild `bild`
- * des Clips `clip` der EM36-Bank; 0 = keine Bank. */
-static int g5_kf_wurzel_y(const re15_actor_t *e, int clip, int bild, int32_t *y)
-{
-    re15_enemy_bank_t *b = re15_enemy_find(e->type);
-    int16_t px = 0, py = 0, pz = 0;
-    if (!b || !b->ok || clip < 0 || clip >= b->anim.clip_count) return 0;
-    {
-        const re15_emd_clip_t *c = &b->anim.clips[clip];
-        if (c->frame_count <= 0) return 0;
-        if (!re15_emd_get_keyframe_position(&b->skel,
-                (int)(b->anim.frames[c->first_frame + (bild % c->frame_count)] & 0xFFFu), &px, &py, &pz)) return 0;
-    }
-    *y = py;
-    return 1;
-}
 /* Baseline der Intro-Kopplung: Teil0-y beim [T0] (`lw v0,0x30(a3)` @0x801011f4, `sh v0,0x5bb0(at)` @0x80101200) =
  * Ctor-Pose Clip 0 Bild 0 (`sw zero,0x14c(s0)` @0x80100590, `jal 0x8002959c` @0x801005a8); RE2-RAM 0x80105bb0 = -4534. */
 static int32_t s_g5_w1_basis;
 static int     s_g5_w1_ok;
 
-/* Anim-Schritt: Rueckgabe 1 am Clip-Ende (0x8002959C-Semantik). */
-static int g5_anim(re15_actor_t *e)
+/* Anim-Schritt FUN_8002959c(e, +0x17C, +0x108, a3): posiert Bild +0x14D VOR dem Vorschub (re15_g5_pose_schritt, gehaltene
+ * Pose mit den +0x14E-Stufen), Rueckgabe 1 am Clip-Ende. a3 = 128 an allen G5-Stellen ausser dem Fressen (512):
+ *   128: sub0 @0x80100a98, sub1 @0x80100fac / @0x80101020, [T2] @0x80101310, [T4] @0x801013a0, [T5] @0x8010142c,
+ *        [T6] @0x80101554, [T10] @0x8010163c, [T8]/[T12] @0x8010174c, [T14] @0x801017a8, sub3 @0x8010195c,
+ *        Zucken @0x80102b78, Tod @0x801031d0 / @0x8010341c / @0x80103654;
+ *   512: Fressen @0x80101c8c / @0x80101cd8. */
+static int g5_kf_bild(const re15_actor_t *e, int clip, int bild)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok || clip < 0 || clip >= b->anim.clip_count) return -1;
+    {   const re15_emd_clip_t *c = &b->anim.clips[clip];
+        if (c->frame_count <= 0) return -1;
+        return (int)(b->anim.frames[c->first_frame + (bild % c->frame_count)] & 0xFFFu);   /* `andi v0,v0,0xfff` @0x80029638 */
+    }
+}
+static void g5_posieren(re15_actor_t *e, int a3)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    int kf = g5_kf_bild(e, (int)e->motion, (int)e->anim_frame);
+    if (b && b->ok && kf >= 0) (void)re15_g5_pose_schritt(e, &b->skel, kf, a3);
+}
+static int g5_anim_a3(re15_actor_t *e, int a3)
 {
     int fc = g5_clip_len(e);
     s_g5_zb_clip = e->motion;                          /* posiert wird +0x14D VOR dem Vorschub (@0x800295f8) */
     s_g5_zb_bild = e->anim_frame;
+    g5_posieren(e, a3);
     if ((int)e->anim_frame + 1 >= fc) { e->anim_frame = 0; return 1; }   /* @0x80029b28-4c */
     e->anim_frame++;
     return 0;
+}
+static int g5_anim(re15_actor_t *e) { return g5_anim_a3(e, 128); }
+/* Wurzel-y der gehaltenen Pose (Teil0+0x30, nach dem Schritt dieses Takts); 0 = keine Pose. */
+static int g5_wurzel_y(const re15_actor_t *e, int32_t *y)
+{
+    int32_t r[3];
+    if (!re15_g5_pose_wurzel((int)(e - g_actors), r)) return 0;
+    *y = r[1];
+    return 1;
 }
 
 /* Fuer den Zeichner (platform/pc/main.c): Clip und Bild der Pose, die RE2 in diesem Takt zeigt. */
@@ -749,7 +769,7 @@ static void g5_intro_tick(re15_actor_t *e)
     switch (g->ph) {
     case 0:                                            /* [T0/T-Armierung]: Clip 1, SE 10 */
         memset(g->gewicht, 0, sizeof g->gewicht);
-        s_g5_w1_ok = g5_kf_wurzel_y(e, 0, 0, &s_g5_w1_basis);   /* Baseline @0x801011f4/@0x80101200 */
+        s_g5_w1_ok = g5_wurzel_y(e, &s_g5_w1_basis);            /* Baseline = Teil0+0x30 der Ctor-Pose @0x801011f4/@0x80101200 */
         g5_clip(e, 1, 0); g5_se(10);
         g->ph = 1; g->timer = 0;
         g->blob = 3; g->blob_ph = 0;                   /* Vorkampf-Puls an */
@@ -781,11 +801,14 @@ static void g5_intro_tick(re15_actor_t *e)
          * anim_frame vor g5_anim. RE2-RAM: s05 (Bild 38, y -4271) w1 566, s06 (Bild 74, y -3191) 2895,
          * s08 2865. Die alte lineare Rampe (anim_frame*2895/179) gab 614 / 1196 / 2797. Die 0x1F-Ueberblendung
          * der ersten 31 Bilder (s. g5_clip) aendert Teil0.y dort um hoechstens 3 w1-Einheiten. */
+        /* Nachbesserung G5 2: der Schritt @0x8010130c laeuft VOR der Kopplung @0x80101338; Teil0+0x30 ist die gemischte Wurzel
+         * (0x1F-Stufen aus [T0], re15_g5_pose_schritt). */
         {   int32_t y;
-            if (s_g5_w1_ok && g5_kf_wurzel_y(e, (int)e->motion, (int)e->anim_frame, &y))
+            const int ende = g5_anim(e);
+            if (s_g5_w1_ok && g5_wurzel_y(e, &y))
                 g->gewicht[1] = (int32_t)(int16_t)(((y - s_g5_w1_basis) * 4415) >> 11);
+            if (ende) g->ph = 3;
         }
-        if (g5_anim(e)) g->ph = 3;
         break;
     case 3:                                            /* [T3] */
         g5_clip(e, 3, 0); g5_se(9); g->ph = 4; g->timer = 0;
@@ -821,7 +844,13 @@ static void g5_intro_tick(re15_actor_t *e)
         if (g->timer == 56) { g5_tentakel_cmd(3, 0x901u); g5_se(0); }
         g->timer++;
         if (g->timer >= 110) { g5_clip(e, 4, 0); g->ph = 6; g5_se(11);
-                               g5_root_motion(e, 1, 4096, 0); }
+                               g5_root_motion(e, 1, 4096, 0);
+                               /* Nachbesserung G5 2, Punkt 3: im selben Zweig setzt RE2 alle vier Arme auf Phase 7 (Ausrollen/Zittern
+                                * sub9 ph7 @0x80102508): `addiu v0,zero,7` @0x80101500, `sb v0,6(a2)` @0x80101504/@0x80101510/
+                                * @0x8010151c/@0x8010152c mit a2 = *(s3+15416..15428) = Arm-Slots 0x800d3c38..0x800d3c44. RE2-RAM s13
+                                * (G5 [T6] Clip 4 Bild 9): alle vier Arme Wort 0x00070901. ⛔ Fehlte im Port - die Arme blieben in ph6
+                                * eingerollt stehen (Szenenbild 440..520 gemessen). */
+                               g5_tentakel_phase_alle(7); }
         break;
     case 6:                                            /* [T6] Clip 4: +3946 Root-Spur */
         g5_root_motion(e, 0, 4096, 0);
@@ -832,10 +861,11 @@ static void g5_intro_tick(re15_actor_t *e)
              * Ohne die 0x1F-Ueberblendung (Port: anim_frac 0) liegt w1 in den ersten 31 Bildern bis ~15 daneben
              * (s13 Bild 8: RAM 2865, rohes kf-y -3198 -> 2880). */
             int32_t y;
-            if (s_g5_w1_ok && g5_kf_wurzel_y(e, (int)e->motion, (int)e->anim_frame, &y))
+            const int ende = g5_anim(e);                  /* Schritt @0x80101550 vor der Kopplung @0x8010157c */
+            if (s_g5_w1_ok && g5_wurzel_y(e, &y))
                 g->gewicht[1] = (int32_t)(int16_t)(((y - s_g5_w1_basis) * 8830) >> 12);
+            if (ende) g->ph = 7;
         }
-        if (g5_anim(e)) g->ph = 7;
         break;
     case 7:                                            /* [T7] */
         g5_clip(e, 2, 0); g->gewicht[1] = 0; g->ph = 8; g5_se(10);
@@ -1404,10 +1434,10 @@ static void g5_augen_und_kopf(re15_actor_t *e, re15_actor_t *pl)
         int16_t root_ay = 0, head_ay = 0, ax, az;
         int32_t hw[3];
         int32_t tx, tz;
-        if (b && b->ok) {
-            int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
-            re15_emd_get_keyframe_angles(&b->skel, kf, 0, &ax, &root_ay, &az);
-            re15_emd_get_keyframe_angles(&b->skel, kf, 1, &ax, &head_ay, &az);
+        int16_t w0[3], w1[3];
+        (void)ax; (void)az;
+        if (b && b->ok && re15_g5_pose_winkel(s_g5_slot, 0, w0) && re15_g5_pose_winkel(s_g5_slot, 1, w1)) {
+            root_ay = w0[1]; head_ay = w1[1];          /* Teil0+0x6A / Teil1+0x6A der gehaltenen Pose (Nachbesserung G5 2) */
         }
         re15_enemy_bone_world_pos(e, 1, hw);           /* part1+0x5C/+0x64 */
         tx = pl->x; tz = pl->z;
@@ -1415,7 +1445,10 @@ static void g5_augen_und_kopf(re15_actor_t *e, re15_actor_t *pl)
                                            e->rot_y, root_ay, head_ay,
                                            hw[0], hw[2], tx, tz);
     }
-    re15_g5_bone_add_set(s_g5_slot, 1, g->head_delta, 0);   /* part1+0x6A += delta @0x80100354 */
+    /* part1+0x6A += delta @0x80100354: RE2 schreibt in das Teil-Winkelfeld selbst (Nachbesserung G5 2: gehaltene Pose), der
+     * naechste Anim-Schritt ueberschreibt bzw. mischt von dort aus. Der Zeichner-Zuschlag bleibt 0. */
+    if (g->head_delta) re15_g5_pose_winkel_add(s_g5_slot, 1, 0, g->head_delta, 0);
+    re15_g5_bone_add_set(s_g5_slot, 1, 0, 0);
 }
 
 /* Der Boss hat sich selbst platziert und laeuft sein Intro: solange darf das RE1.5-Skript
@@ -1672,7 +1705,7 @@ static void g5_fressen_tick(re15_actor_t *e, re15_actor_t *pl)
         g->ph = 1;
     } else if (g->ph == 1) {
         if (e->anim_frame == 10) g5_se(7);
-        if (g5_anim(e)) { g5_clip(e, 2, 1); g5_se(10); g->ph = 2; g->timer = 150; }
+        if (g5_anim_a3(e, 512)) { g5_clip(e, 2, 1); g5_se(10); g->ph = 2; g->timer = 150; }   /* a3 @0x80101c8c */
     } else {
         g5_anim(e);
         /* Ende-Gate Gewicht[0] < 6000 @0x80101d04-14 nach den 150 Bildern @0x80101cdc-fc. Das Original schaltet hier NUR den
@@ -1719,6 +1752,10 @@ void re15_g5_boss_tick(int slot)
         /* M4b: der Ctor posiert Clip 0 Bild 0 (`sw zero,0x14c(s0)` @0x80100590, `jal 0x8002959c` @0x801005a8);
          * diese Pose steht bis zum ersten Schritt in [T2] (RAM s01..s04: +0x178 = EDD+0x2C = Clip 0 Bild 0). */
         s_g5_zb_clip = 0; s_g5_zb_bild = 0;
+        e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;     /* Clip-Wort 0 @0x80100590 */
+        re15_g5_pose_aus(slot);
+        g_anim_pose_override = re15_g5_pose_haken;
+        g5_posieren(e, 0);                                        /* Schritt @0x801005a8 ohne Stufen: Clip 0 Bild 0 */
         g->hitbox_b = 2200;
         s_g5_slot = slot;
         /* Ctor-Werte des Kopf-Trackings + Augen (birkin-g5.md 2.2c/d). */
@@ -1730,6 +1767,11 @@ void re15_g5_boss_tick(int slot)
         g_anim_bone_angle_hook = re15_g5_bone_angle_hook;
         e->hp = 600;                                   /* @0x801003fc-418 (easy 400: das
                                                         * RE1.5-Spiel kennt kein easy-Bit) */
+        /* RICHTUNG (Nachbesserung G5 2): der Ctor schreibt +0x76 = 0, `sh zero,118(s0)` @0x8010044c (Bytes 76 00 00 a6);
+         * Zensus aller `sh/sw/sb rt,0x74|0x76|0x78(base)` in CDEMD0_EM36_ai0.BIN: nur dieser und @0x80103a24 `sh v1,118(s1)`
+         * (s1 = Spieler im Fressen, s.u. s_devour_ziel_yaw). RE2-RAM s03..s26: G5 +0x76 = 0. Yaw 0 = +X = die Wagenachse,
+         * die der 5090-Kampfstreifen 1:1 mit RE2 teilt (s. g5_dx). */
+        e->rot_y = 0;
     }
 
     /* KAMPFSTART-Armierung (+0x1D4-Bit-0-Analogon): sub04-Member_set(0x0c,0x13)
@@ -1774,12 +1816,11 @@ void re15_g5_boss_tick(int slot)
             g->vor = (int8_t)((g5_dx(e) >= 0) ? 1 : -1);
             g->track_flags = (uint8_t)(g->track_flags & 0xFDu);   /* [T0] andi 0xfd @0x80101178 */
             re15_g5_tentakel_spawn(e);     /* vier 0x37-Arme (Port-Entscheidung, s. Modul) */
-            /* Yaw EINMALIG auf den Spieler (danach konstant - RE2 dreht G5 im
-             * Kampf nie, @0x8010044c ist der einzige Schreiber). OFFEN (Nachbesserung G5 1): RE2 schreibt dort `sh zero,118(s0)`,
-             * also 0 (RE2-RAM s03..s26 0/0/0); im Arena-Fall steht Leon oestlich, der Port kommt auf 0..11 (gemessen 11, ~1 Grad
-             * Armdrehung). Mit 0 fielen die RE2-Granatentreffer von unit_r35_granate (Trefferzentrum o94/o96 wechselt an Bit 0x400
-             * der Richtung, re15_damage.c re15_re2_gl_kandidat) - Folgespur. */
-            e->rot_y = (int16_t)((re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
+            /* ⛔ HIER STAND `e->rot_y = atan2(Spieler) - 0x400`: der Port richtete den G5 bei [T0] auf den Spieler (Arena 0..11,
+             * bei Spieler-z > G5-z aber 0xFF5.. mit Bit 0x400 gesetzt -> Trefferzentrum o94/o96 vertauscht, re15_re2_gl_kandidat).
+             * RE2 schreibt die Richtung nur im Ctor (oben, 0 @0x8010044c) und nie wieder; [T0] @0x80101164-0x801011e4 hat keinen
+             * Store auf +0x76. */
+            e->rot_y = 0;
         } else {
             /* ⛔ HIER STAND `e->x = -32000; e->z = -32000;`. Genau dieser Park lag im
              * Sleep(1)-Fenster @0x1306 - also GENAU zwischen dem Pos_set @0x12FE und
@@ -1890,9 +1931,11 @@ void re15_g5_boss_tick(int slot)
     }
 
     if (g->sub == 0xF) {                               /* FLINCH: Clip 8 (50 F), SE 12/9 */
-        if (g->ph == 0) { g5_clip(e, 8, 0); g5_se(12); g->ph = 1;
-                          g5_root_motion(e, 1, 4096, 0); }
-        else {
+        /* Nachbesserung G5 2: ph0 @0x80102b18-34 (Clip-Wort 0x1F0008 @0x80102b28, SE 12 @0x80102b30, ph 1 im Verzoegerungsplatz
+         * @0x80102b34) laeuft ohne Sprung in den ph1-Koerper @0x80102b38 (SE 9 bei Bild 15, Spur @0x80102b60, Schritt @0x80102b74):
+         * Clip 8 Bild 0 wird im Eintrittstakt posiert. ⛔ HIER STAND ein else - der Eintrittstakt posierte nichts. */
+        if (g->ph == 0) { g5_clip(e, 8, 0); g5_se(12); g->ph = 1; }
+        {
             if (e->anim_frame == 15) g5_se(9);
             g5_root_motion(e, 0, 4096, 0);
             if (g5_anim(e)) { g->sub = 0; g->ph = 0; }
@@ -2001,9 +2044,12 @@ void re15_g5_boss_tick(int slot)
              * (@0x80100fa8-c0 / @0x80100fd0-e4). */
             g5_root_motion(e, 0, 6144, 12000);
             if (g5_anim(e)) g->ph = 2;
-        } else if (g->ph == 2) {
-            g5_clip(e, 2, 0); g5_se(10); g->ph = 3;    /* @0x80101000-0c */
         } else {
+            if (g->ph == 2) {
+                /* @0x80100ff0-100c: Clip-Wort 0x1F0002, SE 10, ph 3 - und ohne Sprung weiter in den ph3-Koerper @0x80101010
+                 * (Schritt @0x8010101c). ⛔ HIER STAND ein eigener Zweig ohne Schritt. */
+                g5_clip(e, 2, 0); g5_se(10); g->ph = 3;
+            }
             uint32_t f = e->anim_frame;
             /* @0x80101024-e4: Bild 85 -> sub0; Bild 25 -> 0x90B01 (sub11 ph9 = loslassen)
              * an [0]+[2] + SE 9; Bild 15 -> 0x90B01 an [1]+[3]. */

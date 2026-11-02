@@ -15,6 +15,15 @@
 #   5  Abnahme 2: der G5 faellt unter derselben Pistole (HP < 0), der Spieler lebt dabei noch. Bis zur Nachbesserung frass er den
 #      gesunden Spieler bei F2879 kurz vor dem Ziel (Polaritaet `bgtz` @0x801008e0 / @0x80103e80).
 #
+# G5-AUFTRITT NACHBESSERUNG 2 (analysis/befunde_runde41/G5_auftritt.md Abschnitt 8): nach der G5-Szene geht der Spieler ZURUECK
+# (Taste unten, 12 s ab F2548; wirkt erst mit der Freigabe am Szenenende) und schiesst dann weiter. Der Test fuehrte den Spieler bis
+# Nachbesserung 1 im G5-Kampf STEHEND - das trug nur, weil ihn das Szenenende 715 neben der RE2-Linie liess (z -22855 statt Pos_set
+# -23570 @0x0196C `32 00 02 3a 00 00 ee a3`) und die Arme ihn danach aus dem Bissbogen schoben. Auf RE2s Linie beisst der G5 jeden
+# Spieler, der innerhalb 6000 vor ihm steht (`sltiu 0x1770` @0x80103e08, Bogen 128 @0x80103e2c-3c, 40 Schaden a0 @0x80104118), und
+# frisst ihn bei HP 0 (@0x80103e78-ec4) - Halbierung (Dossier 8.1): jede Kombination der NB1-Aenderungen ausser "alle aus" endet so.
+# Der Zug bringt den G5 nur bis X < 12000 (@0x80100fd0-e4), der Biss-Vorstoss nur bis 12000 (@0x80104060-94): wer hinter X 18000
+# steht, wird nie gebissen. Der Spieltest misst also weiter "Pistole besiegt den G5", mit dem Abstand, den RE2 dafuer vorsieht.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_birkin_pistole.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -46,18 +55,24 @@ function(ein_lauf _name _raum)
     if(_raum STREQUAL "5091")
         set(_extra "RE15_TITLE_SHOT_CHAR=1")
     endif()
-    # Zielen + Feuer gehalten (R1 + Quadrat), 100 x 4 s; die Pistole schiesst damit alle 22 Bilder.
+    # Zielen + Feuer gehalten (R1 + Quadrat) bis F2548, dann 12 s zurueck (D), danach wieder Zielen + Feuer; die Pistole schiesst
+    # alle 22 Bilder. Gemessen (Nachbesserung 2): Szenenende F2775, Spieler 13873 -> 23113, G5 600 -> 15 bis F3774 ohne Treffer am
+    # Spieler, 40 Schuesse a 15.
     set(_skript "A0.1,W1,U8.5")
-    foreach(_i RANGE 1 100)
+    foreach(_i RANGE 1 18)
         string(APPEND _skript ",MA4")
     endforeach()
-    re15_start_spiel(_rv 300
+    string(APPEND _skript ",D12")
+    foreach(_i RANGE 1 60)
+        string(APPEND _skript ",MA4")
+    endforeach()
+    re15_start_spiel(_rv 420
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_extra}
         RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=${_skript}"
         RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log "RE15_GIVE=3:400,21:250" RE15_EQUIP=3
-        "RE15_EXIT_AT=4200#${_raum}"   # Runde 41 G5-Auftritt: RE2-Szene sperrt den Spieler 1162 Bilder (vorher 3100)
+        "RE15_EXIT_AT=5400#${_raum}"   # G5-Auftritt NB2: Szene 1162 + Vorlauf + Rueckzug, G5 stirbt ~F3800 (vorher 4200)
         "${_exe_kopie}")
     set(_g "")
     if(NOT EXISTS "${WORKDIR}/debug.log" OR NOT EXISTS "${WORKDIR}/state.log")
@@ -82,6 +97,7 @@ function(ein_lauf _name _raum)
     set(_clip10 0)
     set(_clip5 0)
     set(_g5_tot 0)
+    set(_pl_hp_tod -999)
     foreach(_z IN LISTS _zeilen)
         string(REGEX MATCH "t=(3[06]) st=([0-9]+) ss1=([0-9]+) ss2=([0-9]+) ss3=[0-9]+ g=[0-9a-f]+ mo=([0-9]+) [^]]*\\] hp=(-?[0-9]+)" _m "${_z}")
         if(NOT _m)
@@ -96,8 +112,12 @@ function(ein_lauf _name _raum)
         if(_typ STREQUAL "36")
             if(_hp GREATER 0)
                 set(_g5 1)
-            elseif(_g5 AND _hp LESS 0)
+            elseif(_g5 AND _hp LESS 0 AND NOT _g5_tot)
                 set(_g5_tot 1)
+                # Spieler-HP im selben Bild (state.log PL(x,z,rot=..,hp=..)): er muss den Tod des G5 erleben
+                if(_z MATCHES "PL\\(-?[0-9]+,-?[0-9]+,rot=[0-9]+,hp=(-?[0-9]+)\\)")
+                    set(_pl_hp_tod "${CMAKE_MATCH_1}")
+                endif()
             endif()
             continue()
         endif()
@@ -141,9 +161,11 @@ function(ein_lauf _name _raum)
         string(APPEND _g "\n ${_name}: kein G5 (Typ 0x36)")
     endif()
     if(NOT _g5_tot)
-        string(APPEND _g "\n ${_name}: G5 faellt unter der Pistole nicht bis F3100")
+        string(APPEND _g "\n ${_name}: G5 faellt unter der Pistole nicht bis F5400")
+    elseif(NOT _pl_hp_tod GREATER 0)
+        string(APPEND _g "\n ${_name}: Spieler-HP ${_pl_hp_tod} im Bild, in dem der G5 faellt (der Spieler muss leben)")
     endif()
-    message(STATUS "r41_birkin_pistole ${_name}: Mutationen ${_mut}, Form-HP ${_form_hp} bis ${_form_min}, Rueckstoss ${_rueck}, G5 ${_g5}, G5 tot ${_g5_tot}")
+    message(STATUS "r41_birkin_pistole ${_name}: Mutationen ${_mut}, Form-HP ${_form_hp} bis ${_form_min}, Rueckstoss ${_rueck}, G5 ${_g5}, G5 tot ${_g5_tot}, Spieler-HP dabei ${_pl_hp_tod}")
     set(_f "${_f}${_g}" PARENT_SCOPE)
 endfunction()
 

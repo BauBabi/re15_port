@@ -237,7 +237,11 @@ int main(void)
             pl->x = 0; pl->z = -23350; pl->y = 0; pl->hp = 200; pl->hit_react = 0;
             int32_t d_min = 400; int treffer0 = 0;
             int32_t x_max = e3->x, x_wachs_nach_kappe = 0;
-            for (int t = 0; t < 2500; t++) {
+            /* 8000 statt 2500 Takte (Nachbesserung G5 2): ob die Kappe erreicht wird, haengt am Wuerfel - ab X >= 9001 zieht sich der
+             * Boss mit 50 % zurueck (`andi v0,v0,0x1` / `bne` @0x80100c8c-b4, 2500 rueckwaerts), und jedes Ausrollen sub9 ph7
+             * (@0x80102508, seit dem [T5]->[T6]-Phasenschreiber @0x80101500-2c im Intro) zieht je Bild drei Wuerfe. 2500 Takte =
+             * Intro (1126) + ~4 Entscheidungen; gemessen: Zug 1160 -> 5166 -> 9172, Rueckzug, Zug 10678, Rueckzug, Ende. */
+            for (int t = 0; t < 8000; t++) {
                 pl->x = 0; pl->z = -23350;           /* Leon steht - nur der Boss bewegt sich */
                 pl->hp = 200; pl->hit_react = 0;
                 re15_g5_boss_tick(slot_a);

@@ -50,7 +50,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define RE15_LIGHT_MAX_CUTS 16
+/* 16 RDT-Schnitte (RDT+0x2c, nCut*40 Byte, rdt_common.c) + 2 Szenen-Schnitte des G5-Auftritts in ROOM5090/5091 (Runde 41,
+ * re15_g5a_licht_einsetzen: RE2 room7040 Lichtsatz 9/10 auf Index 16/17). Der Parser liest nie mehr als nCut Saetze. */
+#define RE15_LIGHT_MAX_CUTS 18
 
 typedef struct {
     uint8_t  global_scale;       /* byte +0x00 */
