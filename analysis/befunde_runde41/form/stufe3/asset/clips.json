@@ -1,0 +1,331 @@
+[
+ {
+  "clip": 0,
+  "name": "rennen",
+  "bilder": 18,
+  "quelle": "G4 Clip 0: Laenge, Spur, Ton; Bild 11 = Pose Bild 1",
+  "treffer": [],
+  "ton": [
+   [
+    17,
+    1
+   ]
+  ]
+ },
+ {
+  "clip": 1,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 2,
+  "name": "stehen",
+  "bilder": 60,
+  "quelle": "PORT-WAHL; Bild 0 = Ruhe J",
+  "treffer": [],
+  "ton": []
+ },
+ {
+  "clip": 3,
+  "name": "hieb_rechts",
+  "bilder": 60,
+  "quelle": "G4 Clip 3: Laenge, Spur, Treffer, Toene",
+  "treffer": [
+   26,
+   27,
+   28,
+   29,
+   30
+  ],
+  "ton": [
+   [
+    25,
+    1
+   ],
+   [
+    32,
+    0
+   ]
+  ]
+ },
+ {
+  "clip": 4,
+  "name": "hieb_links",
+  "bilder": 50,
+  "quelle": "G4 Clip 4: Laenge, Spur, Treffer, Toene",
+  "treffer": [
+   14,
+   15,
+   16,
+   17
+  ],
+  "ton": [
+   [
+    13,
+    1
+   ],
+   [
+    19,
+    0
+   ]
+  ]
+ },
+ {
+  "clip": 5,
+  "name": "gehen",
+  "bilder": 89,
+  "quelle": "G4 Clip 5: Laenge, Spur, Toene",
+  "treffer": [],
+  "ton": [
+   [
+    43,
+    0
+   ],
+   [
+    73,
+    0
+   ]
+  ]
+ },
+ {
+  "clip": 6,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 7,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 8,
+  "name": "zucken",
+  "bilder": 30,
+  "quelle": "G4 Clip 8: Laenge, Spur",
+  "treffer": [],
+  "ton": []
+ },
+ {
+  "clip": 9,
+  "name": "nachhieb",
+  "bilder": 63,
+  "quelle": "G4 Clip 9: Laenge, Spur, Toene",
+  "treffer": [],
+  "ton": [
+   [
+    1,
+    0
+   ],
+   [
+    24,
+    6
+   ]
+  ]
+ },
+ {
+  "clip": 10,
+  "name": "drohen",
+  "bilder": 126,
+  "quelle": "G4 Clip 10: Laenge, Spur, Toene; Bild 45-52 = Pose Bild 2",
+  "treffer": [],
+  "ton": [
+   [
+    30,
+    11
+   ],
+   [
+    51,
+    10
+   ],
+   [
+    74,
+    1
+   ],
+   [
+    79,
+    0
+   ],
+   [
+    81,
+    12
+   ],
+   [
+    113,
+    11
+   ],
+   [
+    114,
+    1
+   ]
+  ]
+ },
+ {
+  "clip": 11,
+  "name": "flucht",
+  "bilder": 57,
+  "quelle": "PORT-WAHL (Galoppteil = Clip 0)",
+  "treffer": [],
+  "ton": [
+   [
+    5,
+    10
+   ],
+   [
+    37,
+    1
+   ]
+  ]
+ },
+ {
+  "clip": 12,
+  "name": "sturz",
+  "bilder": 56,
+  "quelle": "PORT-WAHL; Bild 0 = Pose Bild 2",
+  "treffer": [],
+  "ton": [
+   [
+    2,
+    10
+   ]
+  ]
+ },
+ {
+  "clip": 13,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 14,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 15,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 16,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 17,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 18,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 19,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 20,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 21,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 22,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 23,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 24,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 25,
+  "name": "frei (Ruhe)",
+  "bilder": 1,
+  "quelle": "Platzhalter, vom Tick nicht benutzt"
+ },
+ {
+  "clip": 26,
+  "name": "biss",
+  "bilder": 35,
+  "quelle": "G4 Clip 26: Laenge, Treffer, Toene",
+  "treffer": [
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30
+  ],
+  "ton": [
+   [
+    19,
+    5
+   ],
+   [
+    27,
+    5
+   ]
+  ]
+ },
+ {
+  "clip": 27,
+  "name": "griff",
+  "bilder": 100,
+  "quelle": "G4 Clip 27: Laenge, Spur (Opfer-Spur), Toene",
+  "treffer": [],
+  "ton": [
+   [
+    14,
+    8
+   ],
+   [
+    36,
+    9
+   ],
+   [
+    60,
+    9
+   ],
+   [
+    82,
+    7
+   ]
+  ]
+ }
+]
