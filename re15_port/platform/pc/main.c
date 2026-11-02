@@ -130,6 +130,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Water Key (Prop-Lader, Icon, Bild) + 2090-Ankunftsszene */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
+#include "re15_schwanz_r41.h"  /* Runde 41 SF N1.9: Feder-Kette des Schwanzes der Sichel-Form */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
 #include "re15_spinnenanim_r41.h" /* Runde 41 Spur L: Zeichnen der Adultspinne (Drehung, Bild, Massstab) */
@@ -10371,6 +10372,7 @@ re_title:;
                  * gezeichnet wird nichts. */
                 if (npc_region_culled) continue;
                 (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
+                (void)re15_schwanz_r41_pose(npc, npc_skel, npc_poses);   /* Runde 41 SF N1.9: Schwanzkette 16-22 der Sichel-Form schwingt nach (PORT-WAHL, re15_schwanz_r41.h) */
                 /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
                  * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
                 {

@@ -4102,6 +4102,14 @@ target_compile_definitions(test_birkin_szenen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_birkin_szenen COMMAND test_birkin_szenen)
 set_tests_properties(unit_birkin_szenen PROPERTIES TIMEOUT 60)
+# --- Runde 41 Spur SF N1.9: Feder-Kette des Schwanzes der Sichel-Form (PORT-WAHL, re15_schwanz_r41.h).
+add_executable(test_schwanz_r41 test_schwanz_r41.c)
+target_link_libraries(test_schwanz_r41 PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_schwanz_r41 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_schwanz_r41 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_schwanz_r41 COMMAND test_schwanz_r41)
+set_tests_properties(unit_schwanz_r41 PROPERTIES TIMEOUT 30)
 if(TARGET re15_pc)
     # Abnahme 1 Spur R: Pistole, Dauerbeschuss, EM30 -> Mutation -> Form -> G5, Leon und Elza, kein Messhaken.
     add_test(NAME integration_r41_birkin_pistole

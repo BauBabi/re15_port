@@ -137,3 +137,158 @@ geaendert sind Teile; ein zweiter Name haette Lader, Tests und Paket doppelt geb
   (Zoom 2,1-2,5 statt 2,0).
 - Der Schwanz kann sich nur in den Keyframes bewegen (kein Laufzeit-Nachschwingen); bei Clip-Wechseln springt er wie
   der Koerper (Ueberblendung des Ports gilt fuer alle Knochen).
+
+## Nachbesserung 1 (Auftrag 2026-11-02, fortlaufend)
+
+Auftrag: Modell gegen Video 4 nachbessern (Haut, Hose, Sichel, Schwanz), r41/hangar mergen, Widerspruch "welche Hand
+haelt den Spider-Man" klaeren, Schwanz und Ansprung im echten Fenster pruefen, Labor/Tests/Paket-Gate.
+Bildnummern: n = Datei-Bild von Video 4 (480p, f%04d.png, n bei (n-1)/29,97 s), h = n - 1350 (Schnitt in den Hangar bei
+n1350 = 45,01 s; Helligkeitssprung 54,8 -> 77,0 zwischen n1349 und n1350). h ist dieselbe Zaehlung wie in H_hangar.md.
+
+### N1.1 Merge r41/hangar (Commit 7f2ea1b7d)
+
+Keine textuellen Konflikte; die vier gemeinsamen Dateien (birkin_formen.c, re15_birkin_formen.h, main.c,
+test_birkin_szenen.c) haben getrennte Hunks, alle gelesen und beide Seiten erhalten (Beleg im Merge-Text). Bau
+LOCAL-BUILD-OK, ctest -R "birkin|hangar|50a|spiderman|formen|r38_birkin|room50|sichel" 20/20 gruen.
+
+### N1.2 Welche Hand haelt den Spider-Man (Video entscheidet)
+
+Ergebnis: die SICHEL-Hand (rechter Arm, Knochen 13-15) haelt ihn, und zwar ab h16 durchgehend bis zum Wurf (h70).
+Das rot-weiss gebaenderte Glied, das h18-h28 Bild-links bis zum Boden haengt, ist NICHT die Sichel, sondern der Schwanz.
+Damit irrten SF Abschnitt 2 Punkt 2 (las 1367-1376 als Sichelarm) und H 6.4 ("Sichel unten links") in derselben Sache;
+die Seitenzuordnung Sichel = rechts (Abschnitt 2 Punkte 1, 3, 4) bleibt.
+Belege (SF_belege/nb1/hand_h12-h58.jpg, Messung der roten Flecken unterhalb der Huefte je 2 Bilder, Schwelle
+r > 80, r > 1,35 g, r > 1,3 b, Bild 640x480, Wandschild x151-169 ausgenommen):
+1. Das rote Glied wandert in EINEM Zug von Bild-links durch die Mitte nach Bild-rechts: h18-h24 x 270-331 y 258-349
+   (Spitze am Boden h22/h24 x 223-250 y 342-399), h26-h28 x 230-263 y 300-329, h30-h34 x 327-374 y 338-369 (zwischen den
+   Knien), h38-h48 x 402-430 y 289-326 (Bild-rechts auf Hufthoehe), h60-h70 x 425-533 y 320-413 (Bild-rechts bis zum Boden).
+   Ein Arm der Bild-linken Schulter kann nicht zwischen die Knie und weiter auf die Bild-rechte Seite; ein Schwanz von der
+   Brust-Rueckseite (Kette an Knochen 8) kann das - und genau dort zeigt ihn SF T7 (1408-1420 = h58-h70).
+2. Das Glied setzt h20/h24 NICHT an der Schulter an: die helle Bild-linke Schulter liegt bei y ~190-240, das Rot beginnt
+   erst bei y ~258 seitlich am Rumpf (SF_belege/nb1/v_schulter.jpg: Ausschnitt x200-440 y100-340, h16/20/24/28/32/40).
+3. Ueber der Bild-linken Schulter steht ab h16 ein dunkler (verschatteter) Oberarm schraeg nach oben zum Spider-Man, in
+   h16, h20, h24, h28, h32 und h40 gleich (v_schulter.png); h20 und h28 ragt oben eine helle Spitze hinter dem Spider-Man
+   heraus (h20 x~355 y~100, h28 x~360 y~120) - die Sichelspitze.
+4. Der Spider-Man steht von h16 bis h70 an fast derselben Stelle oben links (Mitte Bild ~(110-136, 42-48) PSX, gelbe
+   Bildpunkte h40-h65); es gibt keinen Wechsel des Halte-Mechanismus bei h29-h31.
+5. Die Klaue (linker Arm) haengt Bild-rechts: h36 (n1386) rote Klaue auf Hufthoehe (Fleck x 402-413 y 296-315 ab h38).
+Folge fuer die Szene: Knochen 15 (Sichelhand) ist richtig; der seitliche Versatz BF_HALTE_SEITE war nur noetig, weil die
+Hand allein nicht weit genug links lag. Umsetzung N1.3.
+
+### N1.3 Haltepunkt ohne seitlichen Versatz (birkin_formen.c, PORT-WAHL nach Videomessung)
+
+- Vorher (Spur H): Spider-Man-Aktor = Knochen 15 + 1200 nach unten + 1000 seitlich (BF_HALTE_DY/BF_HALTE_SEITE); er hing
+  neben der Hand. Die Hand allein (Becken auf der Hand) haette ihn 30-40 Bildpunkte zu tief gesetzt: EM2B-Koerper reicht
+  von y -2960 bis 78, Mitte = Becken (-1795); die Hand liegt in B10-B36 bei Bild-y 72-81, das Video zeigt den Spider-Man
+  oben am Bildrand (Bild-y 21 = Letterbox, Rumpf ~40-65).
+- Jetzt: Griffknochen EM2B 20 (Knie der Beinkette 19-20-21; Clip 7 rel (859,-1045,-369)) liegt jeden Takt GENAU auf
+  Birkins Knochen 15 (bf_klauenziel: Hand - (Knie - Wurzel)). Der Rumpf steht damit ueber der Hand und von Birkin weg.
+  Kein Versatz mehr; BF_HALTE_DY/BF_HALTE_SEITE entfallen.
+- Pendel nur noch B10..28 (k_birkin_bild {17,10},{35,28},{51,12},{66,27}): Hand-Bild-x je Bild (Gier Bezug-1270,
+  tools/r41_sichel/hand.py) B10-24 131-136, B28 143, B34 154, B37 158; Video Spider-Man x 113 (h40) -> 136 (h60).
+- Messung echtes Fenster (Lauf n1/n3 gegen vorher, Spider-Man-Kasten per Hintergrund-Differenz, tools/r41_sichel):
+  vorher h40 Kasten y 62-129, nachher oben am Bildrand wie das Video (Blatt SF_belege/nb1/halten_video_vorher_nachher.jpg).
+
+### N1.4 Ansprung (birkin_formen.c bf_anlauf/bf_bogen, Gestaltung nach Videomessung)
+
+Video (Spider-Man-Mitte je Bild, Hintergrund-Differenz gegen h112, PSX): x 28 28 28 35 43 59 74 92 111 (h0-h8),
+y 141 139 131 110 110 115 118 117 114: hebt h2->h3 in EINEM Bild ab, fliegt dann fast eben mit 16-19 Bildpunkten je Bild.
+Vorher (smoothstep): x 36 35 33 35 41 47 57 70 83 99 105 - langsamer Start, Abbremsen vor dem Aufprall, Rueckzug h10->h11
+(105 -> 95) und zwei gleiche Bilder. Nachher (Anlauf 30 % quadratisch, dann gleichmaessig; Bogen 27/4 u (1-u)^2, Scheitel
+bei 1/3, BF_BOGEN 1000): x 36 35 33 36 42 53 65 86 100 114 (n3), y 161 161 144 131 119 112 109 105 104 101.
+x liegt h3-h7 auf 1-9 Bildpunkte am Video; der Port-Spider-Man hockt h0 20 Bildpunkte tiefer (EM2B-Hockpose).
+Groesster Schritt im Unit-Riegel 678 (Grenze 700, Video h4..8 ~600 je Bild).
+Bildfolge Video | vorher | nachher h1-h12: SF_belege/nb1/ansprung_h1-h12_video_vorher_nachher.jpg (echtes Fenster, gdigrab
+30 Bilder/s, p0 per tools/r41_sichel/p0.py; einzelne doppelte Aufnahmebilder sind gdigrab, nicht das Spiel).
+
+### N1.5 Schwanz rot-weiss gebaendert (birkin_formen.py schwanz_kette uv, CLUT-Zeile 483)
+
+Video (2-Mittel ueber die Schwanz-Bildpunkte h20-h24 und h64-h68, rote Flecken + Nachbarschaft): dunkel (92,54,55) 63 %,
+hell (137,90,91), p90 hell (163,112,113). SFs alter Wert (138,85,87)/(185,145,141) stammt aus denselben Bildern
+(1370/1373 = h20/h23), war aber der Sichel zugeschrieben.
+Modell vorher: Fleischtextur mit Adern (TPage 128 u 4-60 v 4-124). Nachher: Bandstreifen TPage 130 u 0-42 v 92-130
+(senkrechte hellere Streifen, Spalten-L 41..63, drei Gipfel u 6/24/35), Laenge auf u -> drei helle Ringe, eigene
+CLUT-Zeile 483 (band_zeile). Abgleich im echten Fenster (Schwanz h20-h26 Bild-links, Differenz gegen einen Lauf ohne
+Feder-Kette, 2-Mittel):
+| Stand | rot | Anteil rot | hell |
+|---|---|---|---|
+| Video 4 (h20-h24, h64-h68) | (92,54,55) | 63 % | (137,90,91) |
+| n5: Schwellen 44/52, (100,52,54)/(180,128,128) | (99,66,66) | 41 % | (176,128,128) |
+| n6: 48/56, (96,44,46)/(140,100,100) | (88,50,50) | 42 % | (142,96,96) |
+| n7 (Endstand): 52/58, (96,44,46)/(140,100,100) | (93,52,52) | 52 % | (142,95,95) |
+Die Buehne (Licht von vorn) misst den Schwanz dunkler als das Fenster (dort steht seine Flanke im Licht); abgeglichen
+wurde am Fenster.
+
+### N1.6 Kurze Hose (birkin_formen.py teilen + umtexturieren)
+
+Video h120-h132 (Blau-/Hautprofil der Beinspalten x 160-215, PSX): Jeans y 136..157, Haut 157..178 -> Hosenende bei 62 %
+von Bund bis Knie. Port vorher (n1): Jeans 145..187, Knie (Knochen 2, Projektion) 187 - die T3-Regel y_ab 520 traf nur
+das Kniedreieck (Oberschenkel-Mesh 1/4 hat Ringe bei y ~-124, ~76, ~818 + Spitze 951; das Viereck 76..818 blieb ganz Jeans).
+Jetzt: teile_quer schneidet die Vierecke 76..818 bei y 360 (Ecken auf den alten Kanten, Form gleich), der untere Teil
+wird Beinhaut. Nachher (n3, h124): Jeans enden bei Bild-y ~171 (Soll 145 + 0,62 x 42 = 171).
+
+### N1.7 Sichel dunkel statt rot-weiss (CLUT-Zeile 484) - Abweichung vom Auftragstext
+
+Der Auftrag nannte fuer die Sichel "rot mit weissen Baendern (138,85,87)/(185,145,141)". Nach N1.2 ist das der Schwanz.
+Wo das Video die Sichel zeigt (Gang zur Kamera h92-h146, Bild-links langer Bogen bis zum Boden,
+SF_belege/nb1/v_gang.jpg), ist sie DUNKEL: Hintergrund-Differenz gegen h0 im Streifen x 255-300: h128 (23,23,19),
+h132 (21,23,18), L 25 gegen Haut-L 42-45 in denselben Bildern = 0,58; nur am Ellbogen rotgrau (55,43,46) (h96-h100).
+Keine Farbe erfunden: Mesh 15 bekommt eine dunkle, fast unbunte Zeile 484 (band_zeile (40,40,35) / (84,81,72)); der
+Gruenstich der Videowerte ist Kompression (Torbogen daneben (14,16,16)). Lauf n2 mit olivem Ton (38,46,32)/(76,90,64)
+wirkte im Fenster gruen -> verworfen. Buehne: Sichel (30,30,27), 0,56 der Hauthelligkeit (Video 0,58).
+Der Unterarm (Mesh 14) traegt wieder die EM30-Haut (T5 zurueckgenommen).
+
+### N1.8 Haut dunkler und roter gefleckt (CLUT-Zeilen 480-482)
+
+Mass (Kasten PSX x150-240 y95-150, Haut = r > g+8 und r > b+4, L = Luma, rot = r > 1,5 g; Video h40/46/52/58/64):
+| | L | Rotanteil | hell (Median) | rot (Median) |
+|---|---|---|---|---|
+| Video 4 | 66,0 | 0,328 | (78,62,61) | (72,40,40) |
+| Port vorher (n1, echtes Fenster) | 92,9 | 0,174 | (116,92,89) | (73,34,34) |
+| Port nachher (n3, echtes Fenster) | 63,6 | 0,342 | (83,65,63) | (70,35,36) |
+haut_zeile je Eintrag: q = r/g; blass x0,63; ab q 1,2 bis 1,6 linear zur roten Fassung (r x0,95, g/b x0,95 x0,82); Eintraege
+mit b > r (Jeans) unveraendert (Unit-Test prueft: 0 blaue Eintraege geaendert, 628 Haut-Eintraege). Parameter per
+Gittersuche an der Buehne (deren Mass trifft das Fenster: vorher Buehne 93,9/0,158/(115,91,87) gegen Fenster 92,9/0,174/
+(116,92,89)). Grenze: im Gang zur Kamera wird das Video noch dunkler (L 42), der Port nicht (Licht, nicht Textur).
+
+Belege: SF_belege/nb1/modell_video_vorher_nachher.jpg (Video | vorher | nachher, h0/h22/h64/h100/h124, echtes Fenster).
+
+### N1.9 Schwanz mit eigenem Schwung (engine/src/schwanz_r41.c, PORT-WAHL)
+
+Befund vorher (echtes Fenster, Lauf "vorher" = 7f2ea1b7d): der Schwanz haengt in der ganzen Halte-Phase h16-h70
+Bild-rechts von der Huefte zum Boden und bewegt sich nur mit den Clip-Keyframes (Pendel B10->34->22->37); h18-h28, wo
+das Video ihn Bild-links bis zum Boden zeigt und ihn danach durch die Knie nach rechts schwingt, ist er im Port hinter
+dem Koerper unsichtbar. Bei Clip-/Bild-/Gierwechseln springt er mit dem Koerper (SF Abschnitt 6).
+Bau:
+- Feder-Kette im Weltraum, ein Schritt je Spieltakt (g_engine.frame_count): Ziel = Keyframe-Gelenke 16..22 + Spitze;
+  Erhalt 0,85 der Geschwindigkeit, Feder 0,34 (Wurzel) .. 0,11 (Spitze), Durchhang 3 je Takt, feste Gliedlaengen
+  (Keyframe), Boden y = Aktor-y, Wurzel fest am Rumpf, Sprung > 3000 = neu auf das Ziel. Knochen 16-22 werden danach
+  neu gedreht (Keyframe-Lokaldrehung, dann kleinste Drehung auf das simulierte Glied), Knochen 0-15 bleiben. Nur Typ 0x30
+  mit genau 23 Knochen und Kette 8-16-..-22 (EM30 mit 16 Knochen unberuehrt). Aufruf im Zeichner direkt nach
+  re15_skel_compute_pose (main.c, neben re15_bissarm_r37_handkontakt).
+- Endstand der Feder: Erhalt 0,88, Feder 0,22 (Wurzel) .. 0,07 (Spitze), keine Schwerkraft (Ruhe = Keyframe). Erster
+  Stand (0,85; 0,34..0,11; Durchhang 3) wechselte die Seite im Unit-Test in 3 Takten und hing in Ruhe 74 neben dem
+  Keyframe -> verworfen.
+- Die Posenmatrizen des Ports sind nicht normiert (Spaltenlaengen 0,996 an Knochen 15 bis 0,94 an Knochen 22, gemessen):
+  die Kette orthonormiert fuer die Drehrechnung und bringt den Massstab wieder an (sonst schrumpften die Glieder um bis
+  zu 5 %, erster Testlauf "Glied 21 Laenge 403 statt 424").
+- Hangar-Szene (birkin_formen.c k_schwanz_seite): Seitenvorgabe an der Spitze 0 (h11) -> 4000 nach rechts (h16..h27)
+  -> 0 (h30) -> -900 (h36, Schwung) -> 0 (h46), zur Spitze quadratisch gewichtet. In Clip 0x0B liegt die Spitze sonst
+  links (Modell z +1500..+1850). 3200 erreichte nur z -721 (Kette gestreckt); linear gewichtet (Lauf n4) stand der
+  Schwanz h22-h26 waagerecht in Hufthoehe ab, quadratisch (n5) haengt er von der Huefte zum Boden wie im Video.
+- Unit-Test unit_schwanz_r41: Ruhe (Spitze < 60 vom Keyframe, Knochen 0-15 unveraendert), 45-Grad-Drehung in einem Takt
+  (Nachlauf max 1657, nach 120 Takten 5), Glieder so lang wie im Keyframe (+-3), kein Gelenk unter dem Boden,
+  Vorgabe 4000 -> Spitze z < -800, Freigabe -> Mitte nach 1-3, Gegenseite nach 3-4 Takten (schlagartig freigegeben; die
+  Szene gibt ueber 3 Bilder frei), EM30 mit 16 Knochen unberuehrt.
+- Messung echtes Fenster (Lauf n8, tools/r41_sichel/schwanzbahn.py: Video = groesster roter Fleck unter der Huefte,
+  Port = Schwanzspitze aus der Messzeile, durch die Cut-12-Kamera projiziert; PSX-Bildpunkte):
+| h | Video Fleck x | Port Spitze x | |
+|---|---|---|---|
+| 18-24 | 134-164 | 155 -> 110 | Bild-links bis zum Boden, wie Video |
+| 26-28 | 114-130 | 111-115 | Spitze links oben |
+| 30 | 162-172 | 166 | Mitte |
+| 32-34 | 172-186 | 212-241 | Port schwingt zu weit nach rechts (Vorgabe -900 bei h36 + Federueberschwung) |
+| 38-48 | 200-214 | 273 -> 219 | dito, ab h48 wieder am Video |
+| 58-70 | 211-238 | 222-238 | Bild-rechts bis zum Boden, wie Video |
+  Vorher (7f2ea1b7d) war der Schwanz h18-h28 hinter dem Koerper (nicht sichtbar) und hing ab h34 starr rechts.
+  Bildfolge Video | vorher | nachher: SF_belege/nb1/schwanz_h18-h66_video_vorher_nachher.jpg (Lauf n7).

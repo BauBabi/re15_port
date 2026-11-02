@@ -20,7 +20,8 @@
  *     vorher gibt es die Figuren nicht (birkin_formen.c Kopf "Spur H", Dossier analysis/befunde_runde41/H_hangar.md).
  *     Ablauf Bild fuer Bild nach dem 80%-Video (Complete Disc 4, 45.0 s): Ansprung, Halten, Wurf, Spider-Man flieht
  *     rechts an der Kamera vorbei, Birkin geht auf die Kamera zu; danach 0x30-KI.
- *     Modell-Voraussetzungen (jedes EM30-Ersatzmodell): Knochen 15 = Klaue, Clip 0 (Stand, INIT), Clip 0x0B (Griff/Wurf,
+ *     Modell-Voraussetzungen (jedes EM30-Ersatzmodell): Knochen 15 = haltende Hand (Sichelhand,
+ *     Runde 41 SF N1.2), Clip 0 (Stand, INIT), Clip 0x0B (Griff/Wurf,
  *     mindestens 0x2D Bilder), Clip 1 (Gang der KI); Spider-Man EM2B: Clips 0, 7, 0x0A, 0x0C.
  *   BAHNSTEIG (5090/5091): zuerst der Original-Birkin mit der RE1.5-0x30-KI (Auslieferungsspawn sub00 @0x0124A,
  *     Kampfstart sub04 Pos_set @0x12FE / Member_set(0x0c,0x13) @0x130A); nach seiner Mutation die Bahnsteig-Form

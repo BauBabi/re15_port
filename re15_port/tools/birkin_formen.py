@@ -124,7 +124,10 @@ FORMEN = {
             haut_zeilen=(0, 1, 2),
             haut=dict(dunkel=0.63, q0=1.2, q1=1.6, rot_hell=0.95, satt=0.82),
             # Schwanz: Schwellen 44/52 = Tal/Gipfel der Streifen (Spalten-L des Bandstreifens 41..63) -> klare Baender
-            zusatz=[dict(aus=2, l0=44, l1=52, dunkel=(100, 52, 54), hell=(180, 128, 128)),
+            # Lauf n5 (echtes Fenster, Schwanz h20-h26 Bild-links): (99,66,66) 41 % / (176,128,128) - heller als das Video,
+            # die Flanke steht dort im Licht -> helle Farbe x0,78, Rot satter; Lauf n6 (Schwellen 48/56): Farben getroffen
+            # (88,50,50) / (142,96,96), aber nur 42 % rot (Video 63 %) -> Schwellen 52/58.
+            zusatz=[dict(aus=2, l0=52, l1=58, dunkel=(96, 44, 46), hell=(140, 100, 100)),
                     dict(aus=2, l0=20, l1=90, dunkel=(40, 40, 35), hell=(84, 81, 72))],
         ),
     ),
