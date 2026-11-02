@@ -288,6 +288,99 @@ static const struct { int arm, clip, bild; int32_t d[3][3]; } k_re2_s04[3] = {
     { 3, 15, 29, { { 3565,   724,  -895 }, { 6397,  -251,  -998 }, { 6583, -1727,  -774 } } },
 };
 
+/* ---- Nachbesserung G5 3: was der ZEICHNER von der Masse bekommt -------------------------------------------------------------------
+ * M1 (Abnahme G5 2): im Fenster zeichnete das Spiel die Masse in Schnitt 16/17 ohne Gewicht 1 ("Aufbaeumen"), dieser Test sah es nicht,
+ * weil er die EM36-Bank VOR dem Ctor lud. main.c laedt sie erst im Render-Durchgang nach dem KI-Takt, in dem der Typwechsel und der Ctor
+ * laufen (gemessen F1558 "Ctor ... bank 0 pose 0"). Der Ablauf unten bildet das nach (banken_wie_main_c) und prueft die Gewichte und
+ * die Vertices, die main.c dem Zeichner fuer Teil 2 uebergibt (re15_g5_morph_verts(0x36, nmi 2), main.c "G5-BLOB"), gegen RE2-RAM.
+ * RE2-RAM-Gewichte (Teil2+0x88 +12/+16, Blob +0x219; Lesewerkzeug G5_belege/abnahme2/werkzeug/re2_g5_masse.py), Szenenbild aus dem
+ * [T1]-Zeitgeber +0x158 (s03 31, s04 80) bzw. der Abnahme-Zuordnung; w0 folgt dem Vorkampf-Puls @0x801044FC (M2), w1 der Intro-Kopplung
+ * [T2] @0x80101334-68 / [T6] @0x8010157c-b4 gegen die Ctor-Basis @0x80101200. */
+extern int re15_g5_blob_zustand(int *blob, int *ph, int32_t *gewicht0);
+static const struct { const char *ss; int bild; int32_t w0, w1; int ph; } k_re2_gewichte[8] = {
+    { "s03",  31,  3078,    0, 1 }, { "s04",  80, 10296,    0, 1 }, { "s05", 129,  5796,  566, 2 }, { "s06", 165,  -184, 2895, 7 },
+    { "s08", 264,  9440, 2865, 7 }, { "s09", 313, -4168, 2865, 7 }, { "s13", 479,  8000, 2865, 6 }, { "s17", 677,  3152,    0, 7 },
+};
+/* RE2-RAM Vertexpuffer 0x80132be0 (Mesh 2 nach FUN_8004bf90, 635 Vertices): Bbox aller und jeder 10. Vertex. Erzeugt von
+ * analysis/befunde_runde41/G5_belege/nb3/werkzeug/re2_morph_tabelle.py aus den RAM-Abzuegen der Abnahme G5 2. */
+static const struct { const char *ss; int bild; int16_t w[4]; int16_t bb[6]; int16_t v[64][3]; } k_re2_masse[4] = {
+    { "s06", 165, { -184, 2895, 0, 0 }, { -3600, 3687, -4224, -1327, -2359, 2357 }, {
+        {3241,-2300,-903}, {243,-1391,1966}, {-680,-1519,2184}, {-1033,-1741,2315}, {-3600,-2433,2066}, {-2548,-2653,2267}, {-2913,-3227,2036}, {-3264,-3496,-1822},
+        {-2169,-2938,-2225}, {-2548,-2310,-2314}, {-1401,-2009,-2356}, {-665,-1710,-2310}, {-286,-1507,-2188}, {-688,-1407,-1941}, {2490,-1980,-257}, {2074,-1332,-403},
+        {3069,-1387,0}, {3029,-1598,185}, {2507,-1954,172}, {1847,-1329,1572}, {2986,-1428,1583}, {2983,-1629,1533}, {2478,-1679,1898}, {1216,-1878,2220},
+        {-154,-2232,2282}, {3188,-1719,-947}, {1809,-2369,1408}, {623,-2793,2038}, {-2169,-3207,2108}, {1484,-2732,1310}, {-945,-3222,1889}, {1697,-2683,563},
+        {-135,-3386,1610}, {1775,-2485,155}, {57,-3411,1294}, {-3600,-4224,1067}, {-72,-3366,887}, {-1103,-3835,769}, {1545,-2875,132}, {-761,-3681,-644},
+        {1682,-2711,-87}, {-741,-3676,-941}, {1687,-2695,-169}, {-302,-3416,-1272}, {3361,-1392,-1236}, {611,-3332,-1390}, {-2171,-3445,-1940}, {1286,-2936,-1190},
+        {-408,-2937,-1994}, {1820,-2522,-426}, {1414,-2655,-1618}, {-15,-2543,-2170}, {1919,-2368,-244}, {2228,-2236,-1170}, {1876,-1871,-2078}, {807,-1657,-2257},
+        {925,-1476,-2159}, {991,-3140,1379}, {2056,-2879,-214}, {1973,-2413,-900}, {2966,-2253,-642}, {2373,-2042,191}, {2916,-2226,-124}, {3526,-1883,-342},
+    } },
+    { "s09", 313, { -4168, 2865, 0, 0 }, { -3601, 3677, -4224, -1313, -2372, 2369 }, {
+        {3232,-2241,-1021}, {197,-1377,1977}, {-716,-1506,2196}, {-1068,-1730,2328}, {-3601,-2428,2077}, {-2554,-2649,2280}, {-2915,-3226,2046}, {-3266,-3497,-1830},
+        {-2184,-2935,-2237}, {-2554,-2304,-2328}, {-1434,-2000,-2370}, {-702,-1699,-2323}, {-325,-1494,-2201}, {-724,-1394,-1952}, {2504,-1934,-272}, {2019,-1318,-404},
+        {3038,-1366,0}, {3010,-1552,194}, {2520,-1909,182}, {1797,-1315,1581}, {2966,-1404,1616}, {2970,-1583,1611}, {2467,-1652,1949}, {1180,-1867,2235},
+        {-195,-2225,2295}, {3176,-1653,-1016}, {1789,-2347,1496}, {596,-2788,2049}, {-2182,-3206,2120}, {1468,-2731,1391}, {-972,-3220,1898}, {1685,-2683,609},
+        {-145,-3385,1617}, {1829,-2488,165}, {52,-3410,1298}, {-3601,-4224,1067}, {-80,-3365,889}, {-1103,-3835,770}, {1545,-2890,141}, {-762,-3681,-644},
+        {1714,-2716,-93}, {-744,-3676,-943}, {1717,-2698,-181}, {-310,-3414,-1276}, {3342,-1369,-1259}, {611,-3331,-1397}, {-2181,-3445,-1949}, {1277,-2947,-1251},
+        {-444,-2934,-2004}, {1838,-2511,-458}, {1394,-2650,-1707}, {-54,-2536,-2183}, {1967,-2360,-259}, {2216,-2195,-1263}, {1866,-1859,-2098}, {753,-1646,-2269},
+        {872,-1463,-2171}, {989,-3154,1424}, {2094,-2884,-252}, {1955,-2387,-976}, {2957,-2187,-731}, {2386,-2000,203}, {2953,-2148,-144}, {3515,-1795,-381},
+    } },
+    { "s13", 479, { 8000, 2865, 0, 0 }, { -3601, 3677, -4224, -1313, -2372, 2370 }, {
+        {3232,-2389,-678}, {332,-1377,1977}, {-606,-1506,2196}, {-963,-1730,2328}, {-3601,-2428,2077}, {-2539,-2649,2280}, {-2906,-3226,2046}, {-3262,-3497,-1830},
+        {-2139,-2935,-2237}, {-2539,-2304,-2327}, {-1334,-2000,-2370}, {-591,-1699,-2323}, {-206,-1494,-2201}, {-614,-1394,-1952}, {2429,-2041,-227}, {2153,-1318,-404},
+        {3098,-1389,0}, {3037,-1656,170}, {2446,-2015,153}, {1928,-1315,1581}, {3005,-1437,1542}, {2986,-1683,1400}, {2483,-1698,1825}, {1281,-1868,2231},
+        {-72,-2225,2295}, {3181,-1818,-818}, {1832,-2393,1250}, {676,-2788,2049}, {-2143,-3206,2120}, {1509,-2715,1166}, {-891,-3220,1899}, {1707,-2668,480},
+        {-116,-3385,1617}, {1642,-2459,139}, {70,-3409,1298}, {-3601,-4224,1067}, {-53,-3365,889}, {-1103,-3835,769}, {1534,-2832,115}, {-762,-3681,-644},
+        {1598,-2686,-76}, {-732,-3676,-942}, {1609,-2672,-148}, {-283,-3414,-1276}, {3371,-1399,-1210}, {611,-3328,-1391}, {-2150,-3445,-1949}, {1298,-2899,-1081},
+        {-334,-2934,-2004}, {1764,-2526,-370}, {1446,-2649,-1462}, {64,-2536,-2182}, {1796,-2360,-217}, {2231,-2298,-1001}, {1887,-1865,-2076}, {908,-1646,-2269},
+        {1023,-1463,-2171}, {990,-3103,1301}, {1961,-2840,-141}, {1991,-2442,-760}, {2957,-2359,-471}, {2313,-2098,169}, {2810,-2353,-83}, {3515,-2029,-266},
+    } },
+    { "s17", 677, { 3152, 0, 0, 0 }, { -3600, 2693, -4224, 23, -3648, 3646 }, {
+        {2424,-1422,-1092}, {200,-79,3042}, {-583,-299,3379}, {-941,-681,3583}, {-3600,-1943,3196}, {-2535,-2260,3505}, {-2905,-3144,3046}, {-3260,-3565,-2575},
+        {-2130,-2679,-3420}, {-2536,-1697,-3579}, {-1314,-1161,-3645}, {-568,-617,-3571}, {-213,-273,-3385}, {-590,-111,-3003}, {1414,-1109,-355}, {1245,16,-621},
+        {2110,-94,0}, {2054,-502,266}, {1418,-1067,241}, {1305,19,2432}, {2263,-167,2383}, {2234,-546,2185}, {1973,-577,2827}, {1047,-854,3433},
+        {-74,-1448,3531}, {2219,-748,-1288}, {1357,-1689,1960}, {635,-2322,3134}, {-2135,-3077,3188}, {1200,-2227,1788}, {-875,-3042,2790}, {1218,-2156,749},
+        {-109,-3261,2225}, {907,-1814,218}, {74,-3294,1680}, {-3600,-4224,1068}, {-48,-3257,1155}, {-1103,-3835,770}, {1134,-2427,170}, {-762,-3681,-644},
+        {1014,-2188,-116}, {-729,-3659,-1176}, {1024,-2164,-228}, {-278,-3313,-1648}, {2401,-108,-1868}, {610,-3162,-1823}, {-2143,-3428,-2830}, {1087,-2520,-1559},
+        {-313,-2582,-3033}, {1115,-1918,-582}, {1196,-2114,-2282}, {60,-1931,-3356}, {982,-1644,-340}, {1554,-1514,-1578}, {1521,-843,-3195}, {735,-504,-3489},
+        {788,-214,-3339}, {916,-2826,1802}, {1401,-2072,-232}, {1395,-1766,-1201}, {2110,-1385,-763}, {1313,-1199,266}, {1875,-1379,-137}, {2543,-943,-425},
+    } },
+};
+/* Bank-Reihenfolge wie main.c: die RE2-Banken fehlen im Takt des Typwechsels (re15_enemy_find == NULL, wie "bank 0" im Fensterlauf) und
+ * sind ab dem naechsten Bild da (pc_enemy_load_ex im Render-Durchgang desselben Bilds). */
+static void banken_wie_main_c(int da)
+{
+    for (int k = 0x36; k <= 0x37; k++)
+        for (int i = 0; i < RE15_ENEMY_MAX; i++)
+            if (g_enemy[i].type == (uint8_t)k) g_enemy[i].ok = (uint8_t)(da ? 1 : 0);
+}
+/* Vergleich der Zeichner-Vertices (Teil 2) mit RE2-RAM: max. Abweichung je Koordinate ueber die 64 Stichproben und die Bbox. */
+static int masse_abweichung(int k, int *bb_abw)
+{
+    const re15_md1_vertex_t *v = re15_g5_morph_verts(0x36u, 2);   /* main.c: nbi 2 -> nmi 2 (gemessen, Sonde RE15_G5_MORPH_SONDE) */
+    const re15_enemy_bank_t *eb = re15_enemy_find(0x36u);
+    int abw = 0, n;
+    *bb_abw = 99999;
+    if (!v || !eb || !eb->morph_ok) return 99999;
+    n = (int)eb->morph[2].nverts;
+    if (n != 635) return 99999;
+    for (int i = 0; i < 64; i++)
+        for (int a = 0; a < 3; a++) {
+            const int16_t p = a == 0 ? v[i * 10].x : (a == 1 ? v[i * 10].y : v[i * 10].z);
+            int d = (int)p - (int)k_re2_masse[k].v[i][a];
+            if (d < 0) d = -d;
+            if (d > abw) abw = d;
+        }
+    {   int bb[6] = { 32767, -32768, 32767, -32768, 32767, -32768 };
+        for (int i = 0; i < n; i++) {
+            const int c[3] = { v[i].x, v[i].y, v[i].z };
+            for (int a = 0; a < 3; a++) { if (c[a] < bb[2 * a]) bb[2 * a] = c[a]; if (c[a] > bb[2 * a + 1]) bb[2 * a + 1] = c[a]; }
+        }
+        *bb_abw = 0;
+        for (int j = 0; j < 6; j++) { int d = bb[j] - (int)k_re2_masse[k].bb[j]; if (d < 0) d = -d; if (d > *bb_abw) *bb_abw = d; }
+    }
+    return abw;
+}
+
 static void test_ablauf(const char *rdt, unsigned raum)
 {
     uint8_t *buf = raum_laden(rdt, raum);
@@ -315,6 +408,7 @@ static void test_ablauf(const char *rdt, unsigned raum)
     CHECK(k16 && k17 && k12, "%04X: Szenenkameras/Cut 12 fehlen", raum);
     if (!k16 || !k17 || !k12) { free(buf); return; }
 
+    banken_wie_main_c(0);                                         /* NB3 M1: Bank fehlt im Takt des Typwechsels (main.c) */
     re15_bf_g5_auftritt_start(bs);                                /* die SCHNITTSTELLE */
     /* ---- VORLAUF (M7): RE2 sub06 @0x0187C..@0x018D6 ---- */
     CHECK(re15_g5a_laeuft() && re15_g5a_bild() == -1 && re15_g5a_vorlauf() == 0, "%04X: Szene startet nicht mit dem Vorlauf", raum);
@@ -328,6 +422,7 @@ static void test_ablauf(const char *rdt, unsigned raum)
     int vl = 0, vl_armiert = 0, vl_frau_sichtbar = 0, vl_spieler_im_bild = 0;
     for (vl = 1; vl <= 200 && re15_g5a_bild() < 0; vl++) {
         takt();
+        if (vl == 1) banken_wie_main_c(1);                        /* ... und ist ab dem naechsten Bild geladen */
         if (re15_g5a_bild() < 0) {
             if (e->grid_id == 0x13u || e->x != -32000) vl_armiert++;
             if (g_scd.cam_id != RE15_G5A_SCHNITT) vl_armiert++;
@@ -359,6 +454,9 @@ static void test_ablauf(const char *rdt, unsigned raum)
     int16_t speer_w6[2][4] = { { 0 } }, speer_w7[2][4] = { { 0 } };
     int32_t speer_laenge = -1;
     int32_t arme_abw_max = 0;
+    int32_t gew_ist[8][2] = { { 0 } };
+    int gew_ph[8] = { 0 }, gew_ok0 = 0, gew_ok1 = 0;
+    int masse_abw[4] = { 99999, 99999, 99999, 99999 }, masse_bb_abw[4] = { 99999, 99999, 99999, 99999 };
     int32_t x_alt = e->x;
     const int xa_n0 = g_test_re2xa_count;
     int xa_alt = xa_n0, xa_bild[2] = { -1, -1 }, xa_lese[2] = { 0, 0 };
@@ -419,6 +517,20 @@ static void test_ablauf(const char *rdt, unsigned raum)
         if (b == 129) g5x_129 = e->x;
         if (b == 270) g5x_270 = e->x;
         if (b == 800) g5x_800 = e->x;
+        /* NB3 M1/M2: Gewichte gegen RE2-RAM, Zeichner-Vertices der Masse gegen den RE2-Vertexpuffer */
+        for (int k = 0; k < 8; k++) {
+            if (b != k_re2_gewichte[k].bild) continue;
+            int32_t w[4] = { 0, 0, 0, 0 }; int gu = 0, gm = -1, w1ok = 0, blob = -1, bph = -1;
+            (void)re15_g5_morph_zustand(w, &gu, &gm, &w1ok);
+            (void)re15_g5_blob_zustand(&blob, &bph, NULL);
+            gew_ist[k][0] = w[0]; gew_ist[k][1] = w[1]; gew_ph[k] = bph;
+            if (w[0] == k_re2_gewichte[k].w0 && bph == k_re2_gewichte[k].ph) gew_ok0++;
+            if (w[1] == k_re2_gewichte[k].w1) gew_ok1++;
+        }
+        for (int k = 0; k < 4; k++) {
+            if (b != k_re2_masse[k].bild) continue;
+            masse_abw[k] = masse_abweichung(k, &masse_bb_abw[k]);
+        }
         /* M4b: gezeichnete Wurzel-y je Bild ohne Sprung - im Intro (Sub 2) UND ueber den Uebergang in den Kampf (Nachbesserung G5 2,
          * Punkt 4: [T14] Clip 0 -> sub1 Clip-Wort 0x1F0005 @0x80100dd8 mischt 31 Stufen mit a3 128 @0x80100fac; vorher 125 bei Bild 1123). */
         {   int32_t y = 0; int gsub = -1;
@@ -553,6 +665,23 @@ static void test_ablauf(const char *rdt, unsigned raum)
     }
     fprintf(stderr, "%04X: M5 Speer Arm 0 |p3-p0| %d (RE2 s13 8170, vorher 6080)\n", raum, (int)speer_laenge);
     CHECK(speer_laenge >= 8170 - 250 && speer_laenge <= 8170 + 250, "%04X: Punkt 3 Arm 0 Reichweite %d statt RE2 s13 8170", raum, (int)speer_laenge);
+    /* NB3 M2: Vorkampf-Puls @0x801044FC - w0 und Phase bitgleich mit RE2-RAM. NB3 M1: Gewicht 1 = RE2-RAM (Ctor-Basis trotz spaeter Bank) */
+    for (int k = 0; k < 8; k++) {
+        fprintf(stderr, "%04X: NB3 Bild %3d %s w0 %6d (RE2 %6d) ph %d (RE2 %d) w1 %5d (RE2 %5d)\n", raum, k_re2_gewichte[k].bild,
+                k_re2_gewichte[k].ss, (int)gew_ist[k][0], (int)k_re2_gewichte[k].w0, gew_ph[k], k_re2_gewichte[k].ph,
+                (int)gew_ist[k][1], (int)k_re2_gewichte[k].w1);
+    }
+    CHECK(gew_ok0 == 8, "%04X: NB3 M2 Puls-Gewicht 0 / Phase nur %d von 8 Bildern gleich RE2-RAM (@0x801044FC)", raum, gew_ok0);
+    CHECK(gew_ok1 == 8, "%04X: NB3 M1 Gewicht 1 nur %d von 8 Bildern gleich RE2-RAM (Ctor-Basis @0x80101200, Kopplung @0x80101334/@0x8010157c)",
+          raum, gew_ok1);
+    /* NB3 M1 ZEICHNER: die Vertices, die main.c fuer Teil 2 an den Zeichner gibt, liegen auf dem RE2-Vertexpuffer (RE2-Morph = Port-Morph
+     * auf 3 Einheiten, Abnahme G5 2 3.1). Vorher (Gewicht 1 = 0) wich die Grundform um bis zu ~1300 ab (Bbox y max 23 statt -1313). */
+    for (int k = 0; k < 4; k++) {
+        fprintf(stderr, "%04X: NB3 Zeichner-Vertices Teil 2 Bild %d gegen RE2-RAM %s: max %d, Bbox %d\n", raum, k_re2_masse[k].bild,
+                k_re2_masse[k].ss, masse_abw[k], masse_bb_abw[k]);
+        CHECK(masse_abw[k] <= 4 && masse_bb_abw[k] <= 4, "%04X: NB3 M1 gezeichnete Masse Bild %d weicht von RE2-RAM %s um %d (Bbox %d) ab",
+              raum, k_re2_masse[k].bild, k_re2_masse[k].ss, masse_abw[k], masse_bb_abw[k]);
+    }
     /* M4: die Masse links im Bild liegt hinter der Pfostenmaske (depth 100, RE2-Regel) */
     CHECK(pfosten_n == 0 || pfosten_vor == pfosten_n, "%04X: M4 Masse in %d von %d Bildern vor dem Pfosten", raum, pfosten_n - pfosten_vor, pfosten_n);
     CHECK(frau_sichtbar_re2 == 0 && frau_ok_cut12, "%04X: M6 Frau in 16/17 %d Bilder sichtbar, Cut 12 wie vorher %d", raum, frau_sichtbar_re2, frau_ok_cut12);

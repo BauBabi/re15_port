@@ -10926,6 +10926,26 @@ re_title:;
                     if (npc->type == 0x36u) {
                         const re15_md1_vertex_t *mv = re15_g5_morph_verts(npc->type, nmi);
                         if (mv) { nmv = mv; nmq = mv; }
+                        {   /* MESS-SONDE NB3 (RE15_G5_MORPH_SONDE=<datei>): was der Zeichner fuer den G5 je Teil bekommt. */
+                            static FILE *s_ms_fp = NULL; static int s_ms_an = -1;
+                            if (s_ms_an < 0) { const char *p = getenv("RE15_G5_MORPH_SONDE"); s_ms_an = 0;
+                                               if (p && *p) { s_ms_fp = fopen(p, "w"); s_ms_an = s_ms_fp ? 1 : 0; } }
+                            if (s_ms_an) {
+                                int32_t ww[4] = {0,0,0,0}; int gu = 0, gm = -1, w1ok = 0;
+                                int mnx = 99999, mxx = -99999, mny = 99999, mxy = -99999, mnz = 99999, mxz = -99999;
+                                (void)re15_g5_morph_zustand(ww, &gu, &gm, &w1ok);
+                                for (int vi = 0; vi < nm->tri_vertex_count; vi++) {
+                                    const re15_md1_vertex_t *q = &nmv[vi];
+                                    if (q->x < mnx) mnx = q->x; if (q->x > mxx) mxx = q->x;
+                                    if (q->y < mny) mny = q->y; if (q->y > mxy) mxy = q->y;
+                                    if (q->z < mnz) mnz = q->z; if (q->z > mxz) mxz = q->z;
+                                }
+                                fprintf(s_ms_fp, "F%u slot %d nbi %d nmi %d nv %d mv %d gueltig %d mesh %d w1ok %d w %d %d %d %d cut %d bb x %d..%d y %d..%d z %d..%d\n",
+                                        (unsigned)g_engine.frame_count, npc_i, nbi, nmi, nm->tri_vertex_count, mv ? 1 : 0, gu, gm, w1ok,
+                                        (int)ww[0], (int)ww[1], (int)ww[2], (int)ww[3], active_cut_idx, mnx, mxx, mny, mxy, mnz, mxz);
+                                fflush(s_ms_fp);
+                            }
+                        }
                     }
                     if (g5_skin_v && nmi == 0) {   /* geskinntes Mesh 0 (s. oben) */
                         nmv = g5_skin_v; nmq = g5_skin_v;

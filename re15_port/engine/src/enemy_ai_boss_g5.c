@@ -83,6 +83,7 @@
 #include "re15_math.h"
 #include "re15_esp.h"        /* Blut-Spawns der Trefferroutine (Runde 18, §Blut)   */
 #include "re15_rumble.h"     /* die zwei RE2-Rumble-Ringe    (Runde 18, §Rumble)   */
+#include "re15_engine.h"     /* g_engine.frame_count (Sonde NB3) */
 
 /* re15_enemy_player_dist / re15_ai_arc_test / re15_engine_rand8 /
  * re15_player_equipped_weapon kommen aus re15_damage.h. Spieler-Schaden laeuft
@@ -204,7 +205,8 @@ typedef struct {
     int32_t  blob_timer;
     int32_t  hitbox_b;       /* +0xB4 Biss-Hitbox-Breite 2200..3700 */
     int32_t  biss_cd;        /* +0x229 Cooldown */
-    int32_t  blut_serie;     /* +0x21B */
+    int32_t  blut_serie;     /* +0x21B (Blob 1: Blutserie; Blob 3: Tempo-Spitze/Wiederholzaehler, dasselbe Byte 539) */
+    int8_t   blob_welle;     /* +0x220 Blob 3 Ph 6/7: Index in die Wellentabelle @0x80105ad4 (`lb v0,544(s0)` @0x801047d8) */
     int32_t  tod_timer;
     int32_t  absink_t;       /* [T20]-Rampe t (Gewicht[2]) */
     uint8_t  gestartet;      /* Kampfstart gesehen (grid==0x13) */
@@ -655,17 +657,94 @@ static void g5_blob_tick(re15_actor_t *e, re15_actor_t *pl)
         }
         break;
     }
-    case 3: {   /* VORKAMPF-Puls (0x801044FC) — vereinfachte Puls-Variante mit den
-                 * Original-Schwellen 8501/-1048; Konvulsions-/Wellen-Zyklen folgen
-                 * mit dem Morph-Renderer (rein optisch, Dossier §4). */
-        if (g->blob_ph == 0) { g->blob_speed = 6; g->blob_ph = 1; }
-        else if (g->blob_ph == 1) {
-            g->gewicht[0] += g->blob_speed;
-            if (g->gewicht[0] > 8501) g->blob_ph = 2;
-        } else {
-            g->gewicht[0] -= g->blob_speed;
-            if (g->gewicht[0] < -1048) g->blob_ph = 1;
+    case 3: {   /* VORKAMPF-PULS @0x801044FC (Nachbesserung G5 3, M2; CDEMD0_EM36_ai0.BIN selbst disassembliert, Datei-Offset =
+                 * Adresse - 0x80100000). Eingang [T0]: Blob 3 `sb v0,536(a1)` @0x80101208, Phase 0 `sb zero,537(a1)` @0x80101210.
+                 * Phase +0x219 `lbu v1,537(s0)` @0x80104510, `sltiu v0,v1,0x8` @0x80104518, Sprungtabelle Datei-Offset 0x84 (Link
+                 * 0x8010d084) = 0x80104540 / 0x80104564 / 0x80104634 / 0x80104720 / 0x80104740 / 0x8010477c / 0x801047cc / 0x801047d8.
+                 * Gewichte lhu/sh 16 Bit (Teil2+0x88 +12 = w0, +24 = w3), Tempo +0x21E, Zeitgeber +0x21C, +0x21B, Wellenindex +0x220.
+                 * HIER STAND eine "vereinfachte Puls-Variante": Tempo fest 6, nur Ph 1/2 - w0 lief 774 -> 2820 statt RE2-RAM s03 3078,
+                 * s04 10296, s05 5796, s06 -184 (Abnahme G5 2, M2). Nachgerechnet (G5_belege/nb3/werkzeug/puls_sim.py) trifft dieser
+                 * Ablauf RE2-RAM bitgleich: Bild 31 3078/162, 80 10296/66, 129 5796/192 Ph 2, 165 -184 Ph 7, 264 9440, 313 -4168,
+                 * 479 8000 Ph 6, 677 3152. */
+        int16_t w0 = (int16_t)g->gewicht[0], sp = (int16_t)g->blob_speed;
+        switch (g->blob_ph) {
+        case 0:                                        /* @0x80104540: Ph 1 `sb v0,537(s0)` @0x80104548 (Verzoegerungsplatz) */
+            g->blob_ph = 1;
+            g->blob_timer = 30 + (int32_t)(re15_engine_rand8() & 0x1Fu);   /* `jal 0x80015fe8` @0x80104544, `andi 0x1f` / `addiu 30` /
+                                                                            * `sh v0,540(s0)` @0x8010454c-54 */
+            sp = 6;                                    /* @0x80104558-5c */
+            g->blut_serie = 0;                         /* +0x21B = 0 @0x80104560; faellt in Ph 1 (kein Sprung) */
+            /* fall through */
+        case 1:                                        /* @0x80104564 ANSCHWELLEN */
+            if ((int16_t)g->gewicht[3] != 0)           /* `lhu v0,24(v1)` / `sll 16` / `beq` / `sra v0,v0,17` @0x8010456c-80 */
+                g->gewicht[3] = (int32_t)((int16_t)g->gewicht[3] >> 1);
+            w0 = (int16_t)(w0 + sp);                   /* `lhu v0,12(a0)` / `addu` / `sh v0,12(a0)` @0x8010458c-98 */
+            if (sp < 162 && (int8_t)g->blut_serie == 0) {          /* `slti v0,v0,162` @0x801045a8, `lb v0,539` @0x801045b4 */
+                sp = (int16_t)(sp + 6);                             /* @0x801045c0-c4 */
+                if (sp >= 162) { g->blut_serie = 1; sp = 162; }     /* @0x801045d0-e4 */
+            }
+            if (w0 >= 8501) {                          /* `lh v0,12(v0)` / `slti v0,v0,8501` @0x801045f0-fc */
+                sp = (int16_t)(sp - 6);                /* @0x80104604-10 */
+                if (sp < 0) { g->blob_ph = 2; sp = 8; g->blut_serie = 0; }   /* `bgez` @0x80104618, @0x80104620-30 */
+            }
+            break;
+        case 2:                                        /* @0x80104634 ABSCHWELLEN */
+            w0 = (int16_t)(w0 - sp);                   /* `subu` / `sh v0,12(a0)` @0x80104644-48 */
+            if (sp < 192 && (int8_t)g->blut_serie == 0) {          /* `slti v0,v0,192` @0x80104658, `lb v0,539` @0x80104664 */
+                sp = (int16_t)(sp + 8);                             /* @0x80104670-74 */
+                if (sp >= 192) { g->blut_serie = 1; sp = 192; }     /* @0x80104680-94 */
+            }
+            if (w0 < -1048) {                          /* `slti v0,v0,-1048` @0x801046a8 */
+                sp = (int16_t)(sp - 8);                /* @0x801046b4-c0 */
+                if (sp < 0) { g->blob_ph = 1; sp = 6; g->blut_serie = 0; }   /* `bgez` @0x801046c8, @0x801046d0-dc */
+            }
+            if ((uint32_t)((uint16_t)w0) - 1u < 0x7FFu) g->blob_ph = 6;     /* `lhu`/`addiu -1`/`sltiu 0x7ff` @0x801046e8-f4, @0x80104700 */
+            if ((int16_t)g->blob_timer != 0) g->blob_timer = (int16_t)(g->blob_timer - 1);   /* @0x80104704-1c */
+            break;
+        case 3:                                        /* @0x80104720: +0x21B = 7 + rnd&3 @0x80104720-30, Ph 4, Tempo 0. In
+                                                        * CDEMD0_EM36_ai0.BIN setzt niemand Ph 3 (Zensus aller `sb ..,537`). */
+            g->blut_serie = 7 + (int32_t)(re15_engine_rand8() & 3u);
+            g->blob_ph = 4; sp = 0;                    /* @0x80104734-3c, faellt in Ph 4 */
+            /* fall through */
+        case 4:                                        /* @0x80104740: w0 -= 2136, Zaehler +0x21E */
+            w0 = (int16_t)(w0 - 2136);                 /* `addiu v0,v0,-2136` @0x80104750 */
+            {   const int16_t alt = sp;
+                sp = (int16_t)(sp - 1);                /* @0x80104758-68 */
+                if (alt == 0) { sp = 2; g->blob_ph = 5; } }         /* @0x8010476c-74, `sb v0=5,537` @0x8010482c */
+            break;
+        case 5:                                        /* @0x8010477c: w0 += 712 */
+            w0 = (int16_t)(w0 + 712);                  /* `addiu v0,v0,712` @0x8010478c */
+            {   const int16_t alt = sp;
+                sp = (int16_t)(sp - 1);                /* @0x80104794-a4 */
+                if (alt == 0) {
+                    const int8_t n = (int8_t)g->blut_serie;          /* `lbu v0,539` @0x801047a8 */
+                    g->blob_ph = 4; sp = 0;                          /* @0x801047b0-b4 */
+                    g->blut_serie = (int8_t)(n - 1);                 /* @0x801047b8-c0 */
+                    if (n == 0) g->blob_ph = 0;                      /* `sb zero,537` @0x801047c8 */
+                } }
+            break;
+        case 6:                                        /* @0x801047cc: +0x220 = 0, Ph 7, faellt in Ph 7 */
+            g->blob_welle = 0; g->blob_ph = 7;
+            /* fall through */
+        case 7: {                                      /* @0x801047d8 WELLE: w0 = 8000 - 24 * Tabelle[+0x220] */
+            /* Tabelle @0x80105ad4, 110 x s16 (Datei-Offset 0x5ad4, `lh v0,0x2ad4(at)` @0x801047ec nach `lui at,0x8011` (Link)). */
+            static const int16_t k_welle[110] = {
+                -15, -30, -50, -70, -60, -30, 0, 31, 64, 99, 136, 175, 215, 257, 301, 341, 384, 414, 440, 460, 467, 473,
+                478, 482, 478, 490, 483, 497, 488, 503, 492, 506, 493, 508, 493, 509, 494, 511, 496, 512, 497, 511, 497, 511,
+                496, 510, 495, 510, 495, 509, 494, 508, 493, 507, 492, 506, 491, 505, 490, 504, 489, 503, 488, 502, 487, 500,
+                485, 473, 461, 449, 437, 425, 410, 400, 390, 380, 370, 358, 344, 330, 315, 300, 285, 270, 256, 240, 222, 202,
+                183, 168, 150, 135, 110, 95, 80, 65, 50, 38, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            const int i = (int)g->blob_welle;
+            const int16_t t = (i >= 0 && i < 110) ? k_welle[i] : 0;          /* PORT-SICHERUNG: der Index laeuft nur 0..109 */
+            w0 = (int16_t)(8000 - (int32_t)t * 24);    /* `sll 1`/`addu`/`sll 3` = *24 @0x801047f4-fc, `addiu 8000`/`subu` @0x80104800-08 */
+            g->blob_welle = (int8_t)(g->blob_welle + 1);                      /* @0x8010480c-18 */
+            if (g->blob_welle == 110) g->blob_ph = 6;  /* `addiu v1,zero,110` / `bne` @0x80104810/@0x80104824, Ph 6 @0x8010482c */
+            break;
         }
+        default: break;                                /* `sltiu v0,v1,0x8` / `beq` @0x80104518-1c: Phase >= 8 tut nichts */
+        }
+        g->gewicht[0] = w0;
+        g->blob_speed = sp;
         break;
     }
     case 4: {   /* DEVOUR-Blob (0x80104848): Kompress, dann Kauen mit SE 14/6. */
@@ -770,6 +849,7 @@ static void g5_intro_tick(re15_actor_t *e)
     case 0:                                            /* [T0/T-Armierung]: Clip 1, SE 10 */
         memset(g->gewicht, 0, sizeof g->gewicht);
         s_g5_w1_ok = g5_wurzel_y(e, &s_g5_w1_basis);            /* Baseline = Teil0+0x30 der Ctor-Pose @0x801011f4/@0x80101200 */
+        if (getenv("RE15_G5_MORPH_SONDE")) fprintf(stderr, "[g5sonde] F%u T0 w1_ok %d basis %d\n", (unsigned)g_engine.frame_count, s_g5_w1_ok, (int)s_g5_w1_basis);
         g5_clip(e, 1, 0); g5_se(10);
         g->ph = 1; g->timer = 0;
         g->blob = 3; g->blob_ph = 0;                   /* Vorkampf-Puls an */
@@ -1656,6 +1736,16 @@ int re15_g5_blob_zustand(int *blob, int *ph, int32_t *gewicht0)
     return s_g5.aktiv ? 1 : 0;
 }
 
+/* Diagnose (Sonden/Riegel): die vier Morph-Gewichte (Teil2+0x88 +12..+24) und der Stand des Morph-Puffers. Nur Messung. */
+int re15_g5_morph_zustand(int32_t w[4], int *gueltig, int *mesh, int *w1_ok)
+{
+    if (w) { w[0] = s_g5.gewicht[0]; w[1] = s_g5.gewicht[1]; w[2] = s_g5.gewicht[2]; w[3] = s_g5.gewicht[3]; }
+    if (gueltig) *gueltig = s_g5_morph_gueltig;
+    if (mesh)    *mesh    = s_g5_morph_mesh;
+    if (w1_ok)   *w1_ok   = s_g5_w1_ok;
+    return s_g5.aktiv ? 1 : 0;
+}
+
 int16_t re15_g5_head_delta(void) { return s_g5.head_delta; }
 int     re15_g5_track_akku(void) { return (int)s_g5.track.akku; }
 unsigned re15_g5_track_flags(void) { return s_g5.track_flags; }
@@ -1756,6 +1846,9 @@ void re15_g5_boss_tick(int slot)
         re15_g5_pose_aus(slot);
         g_anim_pose_override = re15_g5_pose_haken;
         g5_posieren(e, 0);                                        /* Schritt @0x801005a8 ohne Stufen: Clip 0 Bild 0 */
+        if (getenv("RE15_G5_MORPH_SONDE")) { int32_t yy = 0; re15_enemy_bank_t *bb = re15_enemy_find(e->type);
+            fprintf(stderr, "[g5sonde] F%u Ctor slot %d typ %02X bank %d ok %d pose %d\n", (unsigned)g_engine.frame_count, slot,
+                    (unsigned)e->type, bb ? 1 : 0, bb ? (int)bb->ok : -1, g5_wurzel_y(e, &yy)); }
         g->hitbox_b = 2200;
         s_g5_slot = slot;
         /* Ctor-Werte des Kopf-Trackings + Augen (birkin-g5.md 2.2c/d). */
@@ -1772,6 +1865,29 @@ void re15_g5_boss_tick(int slot)
          * (s1 = Spieler im Fressen, s.u. s_devour_ziel_yaw). RE2-RAM s03..s26: G5 +0x76 = 0. Yaw 0 = +X = die Wagenachse,
          * die der 5090-Kampfstreifen 1:1 mit RE2 teilt (s. g5_dx). */
         e->rot_y = 0;
+    }
+
+    /* CTOR-POSE NACHHOLEN (Nachbesserung G5 3, M1). RE2 posiert im Ctor Clip 0 Bild 0: Clip-Wort 0 `sw zero,332(s0)` @0x80100590
+     * (Bytes 4c 01 00 ae), Anim-Schritt `jal 0x8002959c` @0x801005a8 (Bytes 67 a5 00 0c); die EM36-Bank ist dort immer resident.
+     * [T0] liest daraus die Basis der Intro-Kopplung, ohne eigenen Schritt davor: `lw v0,48(a3)` @0x801011f4 (Teil0+0x30),
+     * `sh v0,0x5bb0(at)` @0x80101200 (RAM `10 80 01 3c b0 5b 22 a4`, Datei relokiert `b0 2b 22 a4`). RE2-RAM: @0x80105bb0 = 0 in s01/s02 (vor [T0]), -4534 ab s03 =
+     * Teil0.y der Ctor-Pose (s01/s02 Teil0.y -4534, Clip-Wort 0x100); [T2] @0x80101334-68 und [T6] @0x8010157c-b4 rechnen Gewicht 1
+     * gegen diese Basis (s06 2895, s08..s13 2865).
+     * Der Port laedt die Bank aber erst im Render-Durchgang nach dem KI-Takt (main.c pc_enemy_load_ex): der Typwechsel
+     * re15_bf_morph_zu_g5 und der Ctor laufen im selben Takt, `re15_enemy_find(0x36)` ist dort NULL. Gemessen im Fensterlauf (Sonde
+     * RE15_G5_MORPH_SONDE, Kopf 77479f1f2): "F1558 Ctor slot 2 typ 36 bank 0 pose 0", "F1613 T0 w1_ok 0 basis 0" - Gewicht 1 blieb in
+     * Schnitt 16/17 auf 0, die Masse wurde ohne Aufbaeumen gezeichnet. Deshalb hier: fehlt die Pose noch und hat der Boss seit dem Ctor
+     * keinen Schritt getan (Sub 2 Phase 0 = vor [T0]), wird der Ctor-Schritt mit derselben Bank nachgeholt, sobald sie da ist. */
+    if (g->sub == 2 && g->ph == 0) {
+        int32_t r[3];
+        if (!re15_g5_pose_wurzel(slot, r)) {
+            const int16_t  m = e->motion;
+            const uint16_t f = e->anim_frame;
+            const uint8_t  q = e->anim_frac;
+            e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;   /* Clip-Wort 0 @0x80100590 */
+            g5_posieren(e, 0);                                    /* Schritt @0x801005a8 ohne Stufen */
+            e->motion = m; e->anim_frame = f; e->anim_frac = q;
+        }
     }
 
     /* KAMPFSTART-Armierung (+0x1D4-Bit-0-Analogon): sub04-Member_set(0x0c,0x13)
