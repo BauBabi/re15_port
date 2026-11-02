@@ -1380,19 +1380,20 @@ static int fit_leiche_scheitel(void)
 }
 static int32_t fit_isqrt(int64_t q) { return g2_isqrt64(q); }
 /* Kopf-Band an einem Leichen-x (beide Rahmen): oberster/unterster Kopf-Scheitel im Fenster +-GSZ_FIT_FENSTER, x am Kopf-Ende geklemmt (g2_band_bei) */
-static void fit_band(int nk, int32_t x0, int32_t x1, int32_t x, int32_t b[4])
+static void fit_band_f(int nk, int32_t x0, int32_t x1, int32_t x, int32_t b[4], int32_t fe)
 {
-    if (x < x0 + GSZ_FIT_FENSTER) x = x0 + GSZ_FIT_FENSTER;
-    if (x > x1 - GSZ_FIT_FENSTER) x = x1 - GSZ_FIT_FENSTER;
+    if (x < x0 + fe) x = x0 + fe;
+    if (x > x1 - fe) x = x1 - fe;
     b[0] = 0x7fffffff; b[1] = -0x7fffffff; b[2] = 0x7fffffff; b[3] = -0x7fffffff;
     for (int i = 0; i < nk; i++) {
-        if (s_fk_x[i] < x - GSZ_FIT_FENSTER || s_fk_x[i] > x + GSZ_FIT_FENSTER) continue;
+        if (s_fk_x[i] < x - fe || s_fk_x[i] > x + fe) continue;
         if (s_fk_ya[i] < b[0]) b[0] = s_fk_ya[i];
         if (s_fk_ya[i] > b[1]) b[1] = s_fk_ya[i];
         if (s_fk_yb[i] < b[2]) b[2] = s_fk_yb[i];
         if (s_fk_yb[i] > b[3]) b[3] = s_fk_yb[i];
     }
 }
+static void fit_band(int nk, int32_t x0, int32_t x1, int32_t x, int32_t b[4]) { fit_band_f(nk, x0, x1, x, b, GSZ_FIT_FENSTER); }
 /* Einpassung eines Bildes: r6/p6 = gezeichnete Part-6-Matrix, rs = Halte-Relation, mt = Maullage (Part-6-Rahmen); setzt s_fit. */
 static void fit_rechnen(const re15_actor_t *e, const int32_t r6[9], const int32_t p6[3], const int32_t rs[9], const int32_t mt[3])
 {
@@ -1484,6 +1485,161 @@ static void fit_rechnen(const re15_actor_t *e, const int32_t r6[9], const int32_
     s_fit.an = 1;
 }
 #endif
+/* ==== Runde 41 Spur G2 Nachbesserung 5 (Abnahme 3 M1 "Leiche ragt im Rollfenster oben / beim Fang unten aus dem Maul"): KLEMMEN JE SCHEITEL =================
+ * Befund NB4/Abnahme 3: im erlaubten Raum der Einpassung (Rollanteil, Laengsskala 1..0,6, Versatz) bleiben in Clip 5 Bild 3-11 bis 24 von 306 Scheiteln
+ * ueber dem Schaedel; die Fangbilder 74-76 (Kopf 70 Grad hoch, Einpassung aus) haben 12/23 unter dem Kiefer - im Fenster ~0,3 s oben und ~0,1 s unten
+ * sichtbar. Nutzer: "Es soll quasi im Maul sein ohne oben oder unten raus zu clippen."
+ * PORT-WAHL (Gestaltung, Vorschlag des Orchestrators NB5): jeder Scheitel der GEZEICHNETEN Leiche, der nach dem Einpassen ausserhalb des Kopf-Bandes liegt
+ * (dasselbe Mass wie Einpassung und Riegel maul: Scheitel von Unterkiefer Part 6 + Schaedel Part 7 im Laengsfenster +-GSZ_FIT_FENSTER, A = Kieferrahmen,
+ * B = waagerechter Rahmen, je oben/unten), wird auf die naechste Innenflaeche geschoben, GSZ_KLEMM_RAND innerhalb des Bandes (in den Kopf, vom Kiefer
+ * verdeckt): zuerst Kiefer-y in den Schnitt der Baender A und B; ist der leer, Kiefer-y in A und quer (Kiefer-z) so weit, dass B passt. Scheitel innerhalb
+ * bleiben unberuehrt (bitgleich). Fenster: Clip 4 ab Bild 7 (der Kiefer geht ueber die Leiche, Riegel maul) bis zum Wurf (Clip 5 Bild GSZ_WURF_BILD) und vom
+ * letzten Flugbild vor dem Fang (GSZ_FANG_BILD - 1) bis zum Verschlingen - im Flug dazwischen fliegt sie absichtlich ueber dem Maul (Punkt 2).
+ * Gezeichnet ueber den Haken re15_gatorszene_r41_leiche_scheitel (platform/pc/main.c, Prop-Zeichner: Ersatzfeld je Mesh). Nur PC-Bau.
+ * Pruefhaken der Gegenprobe re15_gatorszene_r41_klemm_alt_setzen(1) = Stand NB4 (ohne Klemmen). */
+#define GSZ_KLEMM_RAND 40          /* PORT-WAHL: so weit innerhalb des Kopf-Bandes (Welt-Einheiten), dass der Scheitel unter der Kopf-Oberflaeche liegt */
+#define GSZ_KLEMM_KANTE 20         /* Laengsfenster des Bandes beim Klemmen um so viel enger: das Band ist dann eine Teilmenge des Riegel-Bandes (ein Kopf-Scheitel
+                                    * am Fensterrand zaehlte sonst bei der Engine mit, beim Riegel nicht - gemessen 12 Einheiten, Clip 5 Bild 9) */
+#define GSZ_KLEMM_TOL  16          /* geklemmt wird, was nicht mindestens so weit innen liegt: Band aus der gezeichneten Pose (Q12) gegen das Band des Riegels
+                                    * (Gleitkomma) gemessen bis 5 Einheiten verschieden (Riegel maul, Clip 5 Bild 5-10) */
+static int s_klemm_alt = 0;
+void re15_gatorszene_r41_klemm_alt_setzen(int an) { s_klemm_alt = an; }
+#ifdef RE15_PLATFORM_PC
+static struct { int ok, nk; int32_t r6[9], p6[3], Y[3], YA[3], x0, x1, m[9], minv[9], t[3]; } s_kl;
+/* Kopf-Scheitel (Part 6 + 7 der gezeichneten Pose) in A/B wie fit_rechnen, Leichen-Matrix (Drehung x Laengsskala) und ihre Umkehrung */
+static int klemm_vorbereiten(const re15_actor_t *e)
+{
+    s_kl.ok = 0;
+    re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+    int32_t r7[9], p7[3];
+    const int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
+    if (k < 0 || !bk || !bk->ok || bk->md1.mesh_count <= 7 || !re15_gr2_part6_gezeichnet(s_kl.r6, s_kl.p6) || !re15_gr2_part7_gezeichnet(r7, p7)) return 0;
+    const int32_t *r6 = s_kl.r6, *p6 = s_kl.p6;
+    const int32_t X[3] = { r6[0], r6[3], r6[6] };
+    int32_t Y[3] = { -q12m(X[1], X[0]), 4096 - q12m(X[1], X[1]), -q12m(X[1], X[2]) };
+    const int32_t ly = fit_isqrt((int64_t)Y[0] * Y[0] + (int64_t)Y[1] * Y[1] + (int64_t)Y[2] * Y[2]);
+    if (ly <= 0) return 0;
+    for (int i = 0; i < 3; i++) s_kl.Y[i] = (int32_t)(((int64_t)Y[i] << 12) / ly);
+    for (int i = 0; i < 3; i++) s_kl.YA[i] = (int32_t)(((int64_t)r6[0*3+i] * s_kl.Y[0] + (int64_t)r6[1*3+i] * s_kl.Y[1] + (int64_t)r6[2*3+i] * s_kl.Y[2]) >> 12);
+    static int16_t kv[GSZ_FIT_KOPF_MAX][3];
+    const int32_t sk = ga_scale(e);
+    int nk = 0; int32_t x0 = 0x7fffffff, x1 = -0x7fffffff;
+    for (int part = 6; part <= 7; part++) {
+        const int32_t *rb = part == 6 ? r6 : r7, *pb = part == 6 ? p6 : p7;
+        const int n = fit_md1_scheitel(&bk->md1, part, kv, GSZ_FIT_KOPF_MAX - nk);
+        for (int i = 0; i < n; i++) {
+            const int32_t v[3] = { q12m(kv[i][0], sk), q12m(kv[i][1], sk), q12m(kv[i][2], sk) };
+            int32_t d[3];
+            for (int r = 0; r < 3; r++)
+                d[r] = pb[r] + (int32_t)(((int64_t)rb[r*3] * v[0] + (int64_t)rb[r*3+1] * v[1] + (int64_t)rb[r*3+2] * v[2]) >> 12) - p6[r];
+            const int32_t lx = (int32_t)(((int64_t)r6[0] * d[0] + (int64_t)r6[3] * d[1] + (int64_t)r6[6] * d[2]) >> 12);
+            s_fk_x[nk] = lx;
+            s_fk_ya[nk] = (int32_t)(((int64_t)r6[1] * d[0] + (int64_t)r6[4] * d[1] + (int64_t)r6[7] * d[2]) >> 12);
+            s_fk_yb[nk] = (int32_t)(((int64_t)s_kl.Y[0] * d[0] + (int64_t)s_kl.Y[1] * d[1] + (int64_t)s_kl.Y[2] * d[2]) >> 12);
+            if (lx < x0) x0 = lx;
+            if (lx > x1) x1 = lx;
+            nk++;
+        }
+    }
+    s_kl.nk = nk; s_kl.x0 = x0; s_kl.x1 = x1;
+    int32_t r[9];                                          /* Leiche: Weltmatrix m = R x diag(s,1,1), Umkehrung diag(1/s,1,1) x R^T */
+    prop_matrix(g_scd.props[k].rot_x, g_scd.props[k].rot_y, g_scd.props[k].rot_z, r);
+    int32_t sq = 4096;
+    if (!re15_gatorszene_r41_leiche_skala(k, &sq)) sq = 4096;
+    memcpy(s_kl.m, r, sizeof r);
+    for (int i = 0; i < 3; i++) s_kl.m[i*3] = q12m(r[i*3], sq);
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++) s_kl.minv[i*3+j] = r[j*3+i];
+    for (int j = 0; j < 3; j++) s_kl.minv[j] = (int32_t)(((int64_t)s_kl.minv[j] << 12) / (sq > 0 ? sq : 4096));
+    s_kl.t[0] = g_scd.props[k].x; s_kl.t[1] = g_scd.props[k].y; s_kl.t[2] = g_scd.props[k].z;
+    s_kl.ok = nk > 0;
+    return s_kl.ok;
+}
+static int32_t klemm_in(int32_t v, int32_t lo, int32_t hi)
+{
+    if (hi - lo < 2 * GSZ_KLEMM_RAND) { const int32_t mi = (lo + hi) / 2; return mi; }
+    lo += GSZ_KLEMM_RAND; hi -= GSZ_KLEMM_RAND;
+    return v < lo ? lo : v > hi ? hi : v;
+}
+/* ein Modell-Scheitel: 1 = verschoben (*o = neuer Modell-Scheitel), 0 = innerhalb (unberuehrt) */
+static int klemm_scheitel(const int16_t v[3], int16_t o[3])
+{
+    const int32_t *m = s_kl.m, *r6 = s_kl.r6;
+    int32_t w[3];
+    for (int r = 0; r < 3; r++) w[r] = s_kl.t[r] + (int32_t)(((int64_t)m[r*3] * v[0] + (int64_t)m[r*3+1] * v[1] + (int64_t)m[r*3+2] * v[2]) >> 12) - s_kl.p6[r];
+    int32_t l[3];
+    for (int c = 0; c < 3; c++) l[c] = (int32_t)(((int64_t)r6[0*3+c] * w[0] + (int64_t)r6[1*3+c] * w[1] + (int64_t)r6[2*3+c] * w[2]) >> 12);
+    int32_t b[4]; fit_band_f(s_kl.nk, s_kl.x0, s_kl.x1, l[0], b, GSZ_FIT_FENSTER - GSZ_KLEMM_KANTE);
+    if (b[0] > b[1] || b[2] > b[3]) return 0;              /* kein Kopf-Scheitel im Fenster */
+    const int32_t *YA = s_kl.YA;
+    const int32_t yb = (int32_t)(((int64_t)YA[0] * l[0] + (int64_t)YA[1] * l[1] + (int64_t)YA[2] * l[2]) >> 12);
+    if (l[1] >= b[0] + GSZ_KLEMM_TOL && l[1] <= b[1] - GSZ_KLEMM_TOL && yb >= b[2] + GSZ_KLEMM_TOL && yb <= b[3] - GSZ_KLEMM_TOL) return 0;
+    const int32_t alo = klemm_in(b[0], b[0], b[1]), ahi = klemm_in(b[1], b[0], b[1]);
+    const int32_t blo = klemm_in(b[2], b[2], b[3]), bhi = klemm_in(b[3], b[2], b[3]);
+    int32_t ny = l[1], nz = l[2];
+    const int64_t c = (int64_t)YA[0] * l[0] + (int64_t)YA[2] * l[2];
+    int geschafft = 0;
+    if (YA[1] > 256) {                                     /* Band B als Intervall fuer Kiefer-y bei festem Kiefer-z */
+        const int32_t ylo = (int32_t)((((int64_t)blo << 12) - c) / YA[1]), yhi = (int32_t)((((int64_t)bhi << 12) - c) / YA[1]);
+        const int32_t lo = alo > ylo ? alo : ylo, hi = ahi < yhi ? ahi : yhi;
+        if (lo <= hi) { ny = ny < lo ? lo : ny > hi ? hi : ny; geschafft = 1; }
+    }
+    if (!geschafft) {                                      /* Schnitt leer: Kiefer-y in A, quer so weit, dass B passt */
+        ny = ny < alo ? alo : ny > ahi ? ahi : ny;
+        const int32_t yb2 = (int32_t)(((int64_t)YA[0] * l[0] + (int64_t)YA[1] * ny + (int64_t)YA[2] * l[2]) >> 12);
+        const int32_t ziel = yb2 < blo ? blo : yb2 > bhi ? bhi : yb2;
+        if (ziel != yb2 && (YA[2] > 256 || YA[2] < -256)) nz = l[2] + (int32_t)(((int64_t)(ziel - yb2) << 12) / YA[2]);
+    }
+    l[1] = ny; l[2] = nz;
+    for (int r = 0; r < 3; r++) w[r] = s_kl.p6[r] + (int32_t)(((int64_t)r6[r*3] * l[0] + (int64_t)r6[r*3+1] * l[1] + (int64_t)r6[r*3+2] * l[2]) >> 12) - s_kl.t[r];
+    for (int r = 0; r < 3; r++) {
+        int32_t q = (int32_t)(((int64_t)s_kl.minv[r*3] * w[0] + (int64_t)s_kl.minv[r*3+1] * w[1] + (int64_t)s_kl.minv[r*3+2] * w[2]) >> 12);
+        o[r] = (int16_t)(q < -32768 ? -32768 : q > 32767 ? 32767 : q);
+    }
+    return 1;
+}
+#endif
+/* im Klemm-Fenster? (s. oben) */
+static int klemm_fenster(const re15_actor_t *e)
+{
+    const int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
+    if (s_klemm_alt || s_m4_alt || s_g2_alt || !e || k < 0 || !g_scd.props[k].active || s_ga.leiche_weg) return 0;
+    const int f = (int)e->anim_frame;
+    return (e->motion == 4 && f >= 7) || (e->motion == 5 && (f < GSZ_WURF_BILD || f >= GSZ_FANG_BILD - 1));
+}
+/* Zeichner-Haken (platform/pc/main.c Prop-Zeichner): Ersatzfeld der n Scheitel v (Tri- oder Quad-Feld eines Mesh der Leiche) mit geklemmten Scheiteln;
+ * NULL = unveraendert zeichnen. Das Feld gilt bis zum naechsten Aufruf mit derselben Art (quad 0/1). */
+const re15_md1_vertex_t *re15_gatorszene_r41_leiche_scheitel(int slot, const re15_md1_vertex_t *v, int n, int quad)
+{
+#ifdef RE15_PLATFORM_PC
+    static re15_md1_vertex_t buf[2][GSZ_FIT_LEICHE_MAX];
+    const re15_actor_t *e = gator_aktor();
+    if (prop_slot(RE15_GSZ_LEICHE_OBJ) != slot || n <= 0 || n > GSZ_FIT_LEICHE_MAX || !klemm_fenster(e) || !klemm_vorbereiten(e)) return NULL;
+    int geaendert = 0;
+    re15_md1_vertex_t *o = buf[quad ? 1 : 0];
+    for (int i = 0; i < n; i++) {
+        o[i] = v[i];
+        const int16_t a[3] = { v[i].x, v[i].y, v[i].z }; int16_t b[3];
+        if (klemm_scheitel(a, b)) { o[i].x = b[0]; o[i].y = b[1]; o[i].z = b[2]; geaendert++; }
+    }
+    return geaendert ? o : NULL;
+#else
+    (void)slot; (void)v; (void)n; (void)quad;
+    return NULL;
+#endif
+}
+/* Messhaken (Riegel maul): einen Modell-Scheitel der Leiche so liefern, wie der Zeichner ihn in diesem Bild zeichnet; 1 = geklemmt */
+int re15_gatorszene_r41_leiche_klemm(const int16_t v[3], int16_t o[3])
+{
+    o[0] = v[0]; o[1] = v[1]; o[2] = v[2];
+#ifdef RE15_PLATFORM_PC
+    const re15_actor_t *e = gator_aktor();
+    if (!klemm_fenster(e) || !klemm_vorbereiten(e)) return 0;
+    return klemm_scheitel(v, o);
+#else
+    return 0;
+#endif
+}
 /* Halte-Lage mit der Einpassung: rs/lokal = Halte-Relation/Lokallage (Part-6-Rahmen) -> Weltdrehung rw (ohne Skala) und Weltlage pa des Prop-Ursprungs,
  * so dass Modell-Punkt v bei pa + rw x S x v liegt (S = Skala auf Modell-x, re15_gatorszene_r41_leiche_skala). Ohne Einpassung: rw = R6 rs, pa = p6 + R6 lokal. */
 static void fit_anwenden(const re15_actor_t *e, const int32_t r6[9], const int32_t p6[3], const int32_t rs[9], const int32_t lokal[3], int suchen,

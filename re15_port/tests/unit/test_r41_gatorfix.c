@@ -295,19 +295,31 @@ static void g2_ab_band(const g2_ab_t *k, double x, double b[4])
     }
 }
 /* gezeichnete Leiche (re15_gatorszene_r41_leiche_matrix = Drehung x Laengsskala): Scheitel draussen in A (na) und B (nb) */
+static int s_kl_bild = 0, s_kl_bild_max = 0; static double s_kl_weg_max = 0;   /* NB5: geklemmte Scheitel im Bild / hoechstens, groesster Weg */
 static int g2_ab_jetzt(const g2_ab_t *k, int *na, int *nb)
 {
+    s_kl_bild = 0;
     int32_t m[9], t[3];
     if (!re15_gatorszene_r41_leiche_matrix(m, t)) return 0;
     *na = 0; *nb = 0;
     for (int i = 0; i < s_ln; i++) {
         double w[3];
-        for (int r = 0; r < 3; r++) w[r] = t[r] + (m[r*3] * (double)s_lv[i][0] + m[r*3+1] * (double)s_lv[i][1] + m[r*3+2] * (double)s_lv[i][2]) / 4096.0 - k->p6[r];
+        /* NB5 (M1): der Scheitel, wie der Zeichner ihn zeichnet (Klemmen je Scheitel, re15_gatorszene_r41_leiche_klemm; ausserhalb des Fensters unveraendert) */
+        const int16_t v0[3] = { (int16_t)s_lv[i][0], (int16_t)s_lv[i][1], (int16_t)s_lv[i][2] }; int16_t v[3];
+        if (re15_gatorszene_r41_leiche_klemm(v0, v)) {   /* NB5: Zahl und Weg der geklemmten Scheitel (Welt-Einheiten) */
+            s_kl_bild++;
+            double d2 = 0; for (int r = 0; r < 3; r++) { const double dd = (m[r*3] * (double)(v[0] - v0[0]) + m[r*3+1] * (double)(v[1] - v0[1]) + m[r*3+2] * (double)(v[2] - v0[2])) / 4096.0; d2 += dd * dd; }
+            if (sqrt(d2) > s_kl_weg_max) s_kl_weg_max = sqrt(d2);
+        }
+        for (int r = 0; r < 3; r++) w[r] = t[r] + (m[r*3] * (double)v[0] + m[r*3+1] * (double)v[1] + m[r*3+2] * (double)v[2]) / 4096.0 - k->p6[r];
         double l[3]; for (int c = 0; c < 3; c++) l[c] = k->R6[0*3+c] * w[0] + k->R6[1*3+c] * w[1] + k->R6[2*3+c] * w[2];
         const double yb = w[0] * k->Y[0] + w[1] * k->Y[1] + w[2] * k->Y[2];
         double b[4]; g2_ab_band(k, l[0], b);
         *na += (l[1] < b[0] || l[1] > b[1]);
         *nb += (yb < b[2] || yb > b[3]);
+        if (getenv("G2_KL") && (l[1] < b[0] || l[1] > b[1] || yb < b[2] || yb > b[3]))
+            printf("        KL Scheitel %d Modell (%d,%d,%d) -> (%d,%d,%d) Kiefer (%.0f,%.0f,%.0f) A [%.0f,%.0f] yB %.0f B [%.0f,%.0f] YA (%.3f,%.3f,%.3f)\n", i, s_lv[i][0], s_lv[i][1], s_lv[i][2],
+                   v[0], v[1], v[2], l[0], l[1], l[2], b[0], b[1], yb, b[2], b[3], k->YA[0], k->YA[1], k->YA[2]);
     }
     return 1;
 }
@@ -422,12 +434,13 @@ static int s_m4_zeige = 0;
  *      Bilder, in denen der Stand vor NB4 (Pruefhaken re15_gatorszene_r41_m4_alt_setzen) Scheitel draussen hat; dort je Bild gegen das erreichbare
  *      Minimum (g2_ab_minimum), sonst 0. ---- */
 #define G2_M4_SPIEL 4   /* Nachlauf der Schrittgrenze je Bild (Einpassung hoechstens 2/16 Rollanteil, 0,1 Skala, 80/100 Versatz je Bild) */
-typedef struct { int bilder, fenster, max_n, max_min, max_ueber, f_ueber, summe, summe_min, aussen_max, aussen_f, sprung, ruhe_vor_wurf; int n[2][128]; } g2_m4_t;
+typedef struct { int bilder, fenster, max_n, max_min, max_ueber, f_ueber, summe, summe_min, aussen_max, aussen_f, sprung, ruhe_vor_wurf, fang_bilder; int n[2][128]; } g2_m4_t;
 static void teil_maul_m4(int elza, int alt, const g2_m4_t *ref, g2_m4_t *o)
 {
     memset(o, 0, sizeof *o);
     o->ruhe_vor_wurf = -1;
     re15_gatorszene_r41_m4_alt_setzen(alt);
+    if (getenv("G2_KL")) printf("      LAUF m4 alt=%d ref=%d\n", alt, ref != NULL);
     re15_actor_t *g = g2_szene_start(elza);
     int pa = -1; int32_t ps = 0, pd[3] = { 0, 0, 0 };
     for (int f = 0; g && f < 2000 && re15_gatorszene_r41_zustand() != RE15_GSZ_KAMPF; f++) {
@@ -435,7 +448,8 @@ static void teil_maul_m4(int elza, int alt, const g2_m4_t *ref, g2_m4_t *o)
         const int clip = (int)g->motion, bild = (int)g->anim_frame;
         int32_t a = 0;
         const int sitzt = re15_gatorszene_r41_leiche_sitz(&a);
-        const int halt = (clip == 4 && bild >= 7) || (clip == 5 && bild < 57);   /* Halte-Bilder bis zum Wurf (Fang: Punkt 2, Riegel wurf) */
+        const int halt = (clip == 4 && bild >= 7) || (clip == 5 && bild < 57)    /* Halte-Bilder bis zum Wurf */
+                         || (clip == 5 && bild >= 74);                             /* NB5 (M1): letztes Flugbild vor dem Fang (75) bis zum Verschlingen (77) */
         (void)sitzt;
         const int k = prop_von(RE15_GSZ_LEICHE_OBJ);
         if (!halt || k < 0 || !g_scd.props[k].active || (clip != 4 && clip != 5) || bild >= 128) continue;
@@ -444,7 +458,9 @@ static void teil_maul_m4(int elza, int alt, const g2_m4_t *ref, g2_m4_t *o)
         g2_ab_t kk; int na = 0, nb = 0;
         if (!g2_ab_kopf(g, ps_, &kk) || !g2_ab_jetzt(&kk, &na, &nb)) continue;
         const int n = na + nb;
+        if (s_kl_bild > s_kl_bild_max) s_kl_bild_max = s_kl_bild;
         o->bilder++;
+        if (clip == 5 && bild >= 74) o->fang_bilder++;   /* NB5 (M1) */
         o->n[clip - 4][bild] = n;
         if (n > o->max_n) o->max_n = n;
         o->summe += n;
@@ -480,9 +496,20 @@ static void teil_maul_riegel(int elza)
     teil_maul(elza, 0, &n_nb1, &b_nb1);
     re15_gatorszene_r41_nb1_alt_setzen(0);
     /* NB4 (M4): das Rollfenster misst teil_maul_m4 ohne Ausnahme (Kiefer- UND waagerechter Rahmen); ausserhalb gilt weiter 0 */
-    g2_m4_t m4alt, m4;
+    g2_m4_t m4alt, m4, m4nb4;
     teil_maul_m4(elza, 1, NULL, &m4alt);
+    s_kl_bild_max = 0; s_kl_weg_max = 0;
     teil_maul_m4(elza, 0, &m4alt, &m4);
+    const int kl_max = s_kl_bild_max; const double kl_weg = s_kl_weg_max;
+    re15_gatorszene_r41_klemm_alt_setzen(1);   /* NB5 (M1): Gegenprobe Stand NB4 (Einpassung ohne Klemmen je Scheitel) */
+    teil_maul_m4(elza, 0, &m4alt, &m4nb4);
+    re15_gatorszene_r41_klemm_alt_setzen(0);
+    int fang_nb4 = 0, fang = 0, roll_nb4 = 0;
+    for (int i = 74; i < 128; i++) { fang_nb4 += m4nb4.n[1][i]; fang += m4.n[1][i]; }
+    for (int i = 0; i < 12; i++) roll_nb4 += m4nb4.n[1][i];
+    printf("    NB5 (M1) %s: %d Bilder gemessen (Biss Clip 4 Bild 7 .. Wurf Clip 5 Bild 56, Fang Clip 5 Bild 74 .. weg), draussen hoechstens %d (Summe %d, Fangbilder %d); "
+           "Stand NB4: hoechstens %d (Summe %d, Clip 5 Bild 0-11 %d, Fangbilder %d); geklemmt je Bild hoechstens %d von %d Scheiteln, groesster Weg %.0f\n", elza ? "Elza" : "Leon", m4.bilder, m4.max_n, m4.summe, fang, m4nb4.max_n, m4nb4.summe, roll_nb4, fang_nb4,
+           kl_max, s_ln, kl_weg);
     int fenster_alt = 0;
     for (int c = 0; c < 2; c++) for (int i = 0; i < 128; i++) fenster_alt += m4alt.n[c][i] > 0;
     printf("    NB4 (M4) %s: %d Bilder im Maul, Rollfenster %d Bilder (vorher %d): draussen hoechstens %d (vorher %d), Summe %d (vorher %d, erreichbar %d), "
@@ -492,6 +519,8 @@ static void teil_maul_riegel(int elza)
     PRUEF(b >= 34 + 26 + 6 && m4.bilder + 2 >= b, "Leiche im Maul: %d Bilder (Biss Clip 4 Bild 7..12, Koppelbild, Clip 5 Bild 0..56 + 75..76), NB4 ohne Spur-P-Mass gemessen bis zum Wurf: %d (+ Fang 75/76 im Riegel wurf)", b, m4.bilder);
     PRUEF(m4alt.max_n >= 100, "Gegenprobe Stand vor NB4: im Rollfenster bis %d von %d Scheiteln ueber dem Schaedel / unter dem Kiefer (Kiefer- + waagerechter Rahmen) (rot ohne den Bau)", m4alt.max_n, s_ln);
     PRUEF(m4.fenster == fenster_alt && m4.max_ueber <= G2_M4_SPIEL, "Rollfenster ohne Ausnahme: %d von %d Bildern gemessen, je Bild hoechstens %d ueber dem erreichbaren Minimum (%d, Rollanteil x Skala 1..0,6 x Versatz)", m4.fenster, fenster_alt, m4.max_ueber, G2_M4_SPIEL);
+    PRUEF(m4.max_n == 0 && m4.bilder - m4.fang_bilder >= 60 && m4.fang_bilder >= 2, "NB5 (M1): in KEINEM Bild von Biss bis Wurf und Fang bis Verschlingen ein Leichen-Scheitel ueber dem Schaedel oder unter dem Unterkiefer (Kiefer- + waagerechter Rahmen, gezeichnete Scheitel): hoechstens %d in %d Bildern (davon %d Fangbilder)", m4.max_n, m4.bilder, m4.fang_bilder);
+    PRUEF(m4nb4.max_n > 0 && fang_nb4 > 0, "Gegenprobe Stand NB4 (ohne Klemmen je Scheitel): bis %d Scheitel draussen, Fangbilder %d (rot ohne den Bau)", m4nb4.max_n, fang_nb4);
     PRUEF(m4.aussen_max == 0, "ausserhalb des Rollfensters kein Scheitel ueber dem Schaedel oder unter dem Unterkiefer (Kiefer- + waagerechter Rahmen: %d, F%d)", m4.aussen_max, m4.aussen_f);
     PRUEF(m4.sprung == 0 && m4.ruhe_vor_wurf == 1, "Einpassung glatt (%d Spruenge ueber 2/16 Roll, 0,1 Skala, 80/100 Versatz je Bild) und vor dem Wurf in Ruhelage (%d)", m4.sprung, m4.ruhe_vor_wurf);
     PRUEF(b_alt >= 40 && n_alt >= 50, "Gegenprobe Leiche wie vor G2: %d Scheitel ausserhalb (rot ohne den Bau)", n_alt);

@@ -11255,6 +11255,13 @@ re_title:;
                         int32_t bm[9], bt[3];   /* Q12 view×bone — byte-true integer RTPS (was float) */
                         for (int i = 0; i < 9; i++) bm[i] = comb_rot[i];
                         for (int i = 0; i < 3; i++) bt[i] = comb_trans[i];
+                        /* Runde 41 Spur G2 NB5 (M1, PORT-WAHL): Scheitel der gefressenen Leiche ins Kopf-Band des Alligators geklemmt (gatorszene_r41.c
+                         * KLEMMEN JE SCHEITEL); sonst die MD1-Felder unveraendert */
+                        const re15_md1_vertex_t *prop_tv = hm->tri_vertices, *prop_qv = hm->quad_vertices;
+                        { const re15_md1_vertex_t *kt = re15_gatorszene_r41_leiche_scheitel(pi, hm->tri_vertices, hm->tri_vertex_count, 0);
+                          if (kt) prop_tv = kt;
+                          const re15_md1_vertex_t *kq = re15_gatorszene_r41_leiche_scheitel(pi, hm->quad_vertices, hm->quad_vertex_count, 1);
+                          if (kq) prop_qv = kq; }
 
                         /* Textured rendering using bound prop TIM slot. */
                         for (int ti = 0; ti < hm->triangle_count; ti++) {
@@ -11264,9 +11271,9 @@ re_title:;
                             if (tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
                             int ax[3], ay[3], wz_avg = 0;
                             const re15_md1_vertex_t *vp[3] = {
-                                &hm->tri_vertices[tr->v0],
-                                &hm->tri_vertices[tr->v1],
-                                &hm->tri_vertices[tr->v2],
+                                &prop_tv[tr->v0],
+                                &prop_tv[tr->v1],
+                                &prop_tv[tr->v2],
                             };
                             /* Runde 38 Spur W: RTPT + NCLIP (@0x80022fec/@0x80025580) + OTZ<64 (@0x80023044/@0x80025654)
                              * + GPU-Groessengrenze, gesaettigte SXY (objpoly_r38.c) statt Port-Ausschnitt `_vz < 64`. */
@@ -11317,10 +11324,10 @@ re_title:;
                             if (qd->v3 >= (uint32_t)hm->quad_vertex_count) continue;
                             int ax[4], ay[4], wz_avg = 0;
                             const re15_md1_vertex_t *vp[4] = {
-                                &hm->quad_vertices[qd->v0],
-                                &hm->quad_vertices[qd->v1],
-                                &hm->quad_vertices[qd->v2],
-                                &hm->quad_vertices[qd->v3],
+                                &prop_qv[qd->v0],
+                                &prop_qv[qd->v1],
+                                &prop_qv[qd->v2],
+                                &prop_qv[qd->v3],
                             };
                             /* Runde 38 Spur W: RTPT/RTPS + NCLIP (@0x80023168/@0x80025798) + OTZ<64 (@0x80023224/@0x800258b0)
                              * + GPU-Groessengrenze je Dreieck (0,1,2)/(1,2,3) (objpoly_r38.c) statt `_vz < 64`. */

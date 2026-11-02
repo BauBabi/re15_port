@@ -449,3 +449,19 @@ auf der Bahn, Riegel `bahn` (gefahrene Bahn gegen Plan) + Erkennbarkeit (projizi
   Silhouette 1850-2200 = 24-29 % des Bezugs.
 - Riegel kamera (NB4) laeuft jetzt 1800 Bilder je Lage (zweite Haelfte = nach der Anfahrt); alle 20 Unit-Riegel der Spur gruen.
 Offen: Fensterbelege (gdigrab, Cut 2/3, Leon/Elza, Normalhelligkeit) und exe-Riegel; Verfolgungs-Kreis (kreis 1, Leiter) nur Spiegel-Fix, nicht geplant.
+
+### NB5 M1 - Leiche ragt kurz aus dem Maul: KLEMMEN JE SCHEITEL (gatorszene_r41.c, PORT-WAHL Gestaltung = Vorschlag des Orchestrators)
+- Befund (Abnahme 3): Rollfenster Clip 5 Bild 3-11 oben ueber dem Schaedel (~0,3 s), Fang Bild 74-76 Kopf unter dem Unterkiefer (~0,1 s); im erlaubten Raum der
+  NB4-Einpassung (Roll, Laengsskala 1..0,6, Versatz) nicht auf 0 zu bringen (Minimum bis 24/306).
+- Aenderung: jeder Scheitel der GEZEICHNETEN Leiche, der nach dem Einpassen nicht mindestens GSZ_KLEMM_TOL 16 innerhalb des Kopf-Bandes liegt (Mass von
+  Einpassung und Riegel: Part 6 + Part 7, Kieferrahmen A und waagerechter Rahmen B, je oben/unten; Laengsfenster beim Klemmen 150 - GSZ_KLEMM_KANTE 20, damit
+  das Band eine Teilmenge des Riegel-Bandes ist), wird GSZ_KLEMM_RAND 40 innerhalb auf die naechste Innenflaeche geschoben: Kiefer-y in den Schnitt von A und B,
+  ist der leer, Kiefer-y in A und quer (Kiefer-z) bis B passt; Scheitel innerhalb bleiben bitgleich. Fenster: Clip 4 ab Bild 7 bis Wurf (Clip 5 Bild 57) und
+  ab dem letzten Flugbild vor dem Fang (74) bis zum Verschlingen (77); im Flug dazwischen nicht (Punkt 2: sie fliegt sichtbar ueber dem Maul).
+  Zeichner-Haken `re15_gatorszene_r41_leiche_scheitel` (platform/pc/main.c Prop-Zeichner: Ersatzfeld je Mesh-Feld), Messhaken `re15_gatorszene_r41_leiche_klemm`,
+  Pruefhaken `re15_gatorszene_r41_klemm_alt_setzen` (Stand NB4). Nur PC-Bau.
+- Messung (Riegel unit_r41_gatorfix_maul / _elza, Teil NB5): 67 Bilder (Biss Clip 4 Bild 7 .. Clip 5 Bild 56 und 3 Fangbilder 74-76): **0 Scheitel draussen
+  in jedem Bild** (Leon und Elza). **Vorher** (Gegenprobe Stand NB4): hoechstens 26 (Summe 227; Clip 5 Bild 0-11: 175; Fangbilder 42). Geklemmt je Bild
+  hoechstens 40 von 306 Scheiteln, groesster Weg 584 Einheiten. Erste Fassung (Band der Engine mit vollem Fenster, ohne Toleranz) liess 1-2 Scheitel 1-12
+  Einheiten draussen (Rechen-/Fensterrand-Unterschied Engine Q12 gegen Riegel Gleitkomma) - daher TOL 16 und das engere Fenster.
+Offen: Fensterbelege (Rollfenster und Fang, Leon/Elza, Normalhelligkeit).

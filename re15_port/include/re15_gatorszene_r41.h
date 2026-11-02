@@ -228,4 +228,11 @@ int  re15_gatorszene_r41_leiche_fit(int *a16, int32_t *s_q12, int32_t d[3], int 
 void re15_gatorszene_r41_m4_alt_setzen(int an);
 /* NB5 (Abnahme 3, Haken): Pruefhaken der Gegenprobe - 1 = Einpassung beim Raumaufbau NICHT leeren (Stand vor NB5). */
 void re15_gatorszene_r41_fit_reset_alt_setzen(int an);
+/* NB5 (Abnahme 3 M1): Klemmen je Scheitel der Leiche ins Kopf-Band (gatorszene_r41.c KLEMMEN JE SCHEITEL). _leiche_scheitel: Zeichner-Haken (Prop-Zeichner
+ * platform/pc/main.c) - Ersatzfeld der n Scheitel eines Mesh-Feldes (quad 0 = Tri-, 1 = Quad-Feld) oder NULL; _leiche_klemm: Messhaken (Riegel maul) fuer
+ * einen Modell-Scheitel, 1 = geklemmt; _klemm_alt_setzen(1): Pruefhaken der Gegenprobe (Stand NB4, kein Klemmen). */
+#include "re15_md1.h"
+const re15_md1_vertex_t *re15_gatorszene_r41_leiche_scheitel(int slot, const re15_md1_vertex_t *v, int n, int quad);
+int  re15_gatorszene_r41_leiche_klemm(const int16_t v[3], int16_t o[3]);
+void re15_gatorszene_r41_klemm_alt_setzen(int an);
 #endif /* RE15_GATORSZENE_R41_H */
