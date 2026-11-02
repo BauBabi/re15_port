@@ -12,9 +12,12 @@
  *      Leiter bleibt gesperrt; mit Bit 100 oder 103 nichts; 20B0 nichts; ROOM2010 hat keine Leiter
  *   E  Sirene: an mit dem Zaehler (nach der Ansage), aus mit der Flut, dem Tod und dem Verlassen des Raums
  *   F  Notiz + Plakat: FILE31 (FNV der Seiten), Loesung {5,1,0,4} = 09/02/01/08
+ *   G  (Spur PF) Beschriftung Panel 2030 = 8x8-Spielschrift aus TEX.TIM Texel fuer Texel (FUN_80029214), Gegenprobe um 1 Bildpunkt versetzt
+ *   Q  (Spur PF) Ja/Nein-Auswahl: keine Glyphe einer Port-Frage auf Cursor/"Yes"/"No" (Zeile 0xb4 + 0x10), Gegenprobe alte Id 40
  * Werkzeug: "bild <ppm> <x0> <y0> <x1> <y1>" = mittlere Helligkeit, "diff <a.ppm> <b.ppm> <x0> <y0> <x1> <y1>" = mittlere Abweichung, "endstufe <cap_a> <cap_b> <q>" = Endstufe bitgleich,
  * "fluss <ordner> <von> <bis> <x0> <y0> <x1> <y1>" = Bewegung in Bildern f_<n>.ppm: je Abstand 1..3 Bilder die beste Verschiebung in x des Bildes ohne sein Zeitmittel, Korrelation dort und bei 0, dazu Bildpunkte, die sich je 6 Bilder aendern,
- * "luecke <cap_a> <cap_b> <an> <aus> <schwelle>" = laengste Folge leiser Takte, "karte <datei> <raum-hex> <x> <y> <z> <gier> [bank:bit ...]" = Spielstand fuer den Lade-Weg (RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0; Muster probe_r36_elza_karte.c, mit y:
+ * "luecke <cap_a> <cap_b> <an> <aus> <schwelle>" = laengste Folge leiser Takte, (Spur PF) "etikett <ppm>" = Beschriftung im Framedump gegen die Spielschrift,
+ * "kasten <ppm> <innen|tuer>" = Seitenverhaeltnis des Schranks 2010 Cut 3 gegen ROOM2060 Cut 6, "karte <datei> <raum-hex> <x> <y> <z> <gier> [bank:bit ...]" = Spielstand fuer den Lade-Weg (RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0; Muster probe_r36_elza_karte.c, mit y:
  * das Band folgt beim Laden aus y, re15_savedata.c @re15_collision_band_from_y; der Ring von 2030 liegt auf y -5400).
  */
 #include "re15_rdt.h"
@@ -23,6 +26,7 @@
 #include "re15_aot.h"
 #include "re15_room.h"
 #include "re15_msg.h"
+#include "re15_msg_select.h"
 #include "re15_inventory.h"
 #include "re15_esp.h"
 #include "re15_fade.h"
@@ -628,6 +632,386 @@ static void fall_f(void)
     free(d);
 }
 
+/* ---- PF: Spur "panelfix" (Runde 41, Dossier analysis/befunde_runde41/PF_panelfix.md) -------------------------------------------
+ * G  Beschriftung Panel 2030: jede Glyphe im Vollbild ist Texel fuer Texel die 8x8-Spielschrift aus TEX.TIM (FUN_80029214 @0x80029214: u = ((c-0x20) & 0x1f) * 8,
+ *    v = ((c-0x20) & 0xe0) >> 5 * 8 ab Texel x 256) in ihrer CLUT; Gegenprobe: um einen Bildpunkt versetzt stimmt weniger als die Haelfte.
+ * Q  Ja/Nein-Auswahl: auf der Frageseite JEDER Port-Frage (2000/2010/2030/2050/2070/20B0) beruehrt keine Glyphe den Cursor (0xa0 @0x80028650 / +0x46) oder
+ *    "Yes"/"No" (0xae @0x80028680) in Zeile 0xb4 + 0x10 (@0x80027f14 / @0x80028674); Gegenprobe: die alte Id 40 (zweite Zeile bis x 218) ueberdeckt. */
+static uint8_t s_tex_font[32][256];    /* TEX.TIM Texel x 256..511, Zeilen 0..31: 4-bit-Index */
+static int     s_tex_font_ok = -1;
+static uint8_t s_breite[256];          /* DEBUG.BIN @0x4416 = RAM 0x800c4416 (Vorschub je Glyphe, render_pc.c s_msgfont_w) */
+static int     s_breite_ok = -1;
+
+static int tex_font_laden(void)
+{
+    if (s_tex_font_ok >= 0) return s_tex_font_ok;
+    long n = 0;
+    uint8_t *d = slurp(RE15_ASSET_PSX_DIR "/DATA/TEX.TIM", &n);
+    s_tex_font_ok = 0;
+    if (d && n > 20 && (d[4] & 8)) {
+        const uint32_t clen = (uint32_t)d[8] | ((uint32_t)d[9] << 8) | ((uint32_t)d[10] << 16) | ((uint32_t)d[11] << 24);
+        const uint8_t *im = d + 8 + clen;
+        const int iw = im[8] | (im[9] << 8), ih = im[10] | (im[11] << 8);
+        if ((long)(8 + clen + 12) + (long)iw * 2 * ih <= n && iw * 4 >= 512 && ih >= 32) {
+            for (int y = 0; y < 32; y++)
+                for (int x = 0; x < 256; x++) {
+                    const int t = 256 + x;
+                    const uint8_t b = im[12 + y * iw * 2 + t / 2];
+                    s_tex_font[y][x] = (uint8_t)((t & 1) ? (b >> 4) : (b & 15));
+                }
+            s_tex_font_ok = 1;
+        }
+    }
+    free(d);
+    return s_tex_font_ok;
+}
+
+static uint32_t farbe15(uint16_t v)    /* wie panel2030_r41.c farbe(): 5 -> 8 Bit mit voller Spanne, RGBA8888 */
+{
+    const uint32_t r = v & 31u, g = (v >> 5) & 31u, b = (v >> 10) & 31u;
+    return (((r << 3) | (r >> 2)) << 24) | (((g << 3) | (g >> 2)) << 16) | (((b << 3) | (b >> 2)) << 8) | 0xFFu;
+}
+
+/* Glyphen der Beschriftung gegen ein Bild (rgba, 320 x 240): gesetzte Texel gesamt / gleich / gleich bei Versatz dx. */
+static void etiketten_vergleich(const uint32_t *rgba, int dx, long *gesamt, long *gleich)
+{
+    *gesamt = 0; *gleich = 0;
+    const int n = re15_panel2030_r41_glyphe(-1, NULL, NULL, NULL, NULL);
+    for (int i = 0; i < n; i++) {
+        int code = 0, x = 0, y = 0;
+        const uint16_t *clut = NULL;
+        re15_panel2030_r41_glyphe(i, &code, &x, &y, &clut);
+        const int g = code - 0x20, u = (g & 0x1f) * 8, v = ((g & 0xe0) >> 5) * 8;   /* FUN_80029214 */
+        for (int gy = 0; gy < 8; gy++)
+            for (int gx = 0; gx < 8; gx++) {
+                const uint8_t k = s_tex_font[v + gy][u + gx];
+                if (!k || !clut[k]) continue;                                       /* Index 0 / CLUT 0 = durchsichtig */
+                const int px = x + gx + dx, py = y + gy;
+                if ((unsigned)px >= 320u || (unsigned)py >= 240u) continue;
+                (*gesamt)++;
+                if ((rgba[py * 320 + px] & 0xFFFFFF00u) == (farbe15(clut[k]) & 0xFFFFFF00u)) (*gleich)++;
+            }
+    }
+}
+
+static void fall_g(void)
+{
+    PRUEFE(tex_font_laden() == 1, "TEX.TIM: 8x8-Schrift geladen");
+    if (s_tex_font_ok != 1) return;
+    const int n = re15_panel2030_r41_glyphe(-1, NULL, NULL, NULL, NULL);
+    PRUEFE(n == 42, "Beschriftung: 42 Glyphen (A 100, B 50, C 30, 80, BRIDGE, SET 80, CAUTION, HIGH PRESSURE) (%d)", n);
+    re15_panel2030_r41_oeffnen();
+    re15_panel2030_r41_cursor_setzen(300, 200);           /* Cursor weg von den Schildern */
+    const uint32_t *b = re15_panel2030_r41_rgba();
+    PRUEFE(b != NULL, "Panel-Bild steht");
+    if (!b) return;
+    long ges = 0, gl = 0, ges1 = 0, gl1 = 0;
+    etiketten_vergleich(b, 0, &ges, &gl);
+    etiketten_vergleich(b, 1, &ges1, &gl1);
+    PRUEFE(ges > 600 && gl == ges, "Beschriftung = Spielschrift Texel fuer Texel: %ld von %ld gleich", gl, ges);
+    PRUEFE(gl1 * 2 < ges1, "Gegenprobe um 1 Bildpunkt versetzt: %ld von %ld gleich (< Haelfte)", gl1, ges1);
+    printf("G Beschriftung: %d Glyphen, %ld von %ld Texeln gleich der Spielschrift, um 1 Bildpunkt versetzt %ld von %ld\n", n, gl, ges, gl1, ges1);
+    re15_panel2030_r41_reset();
+}
+
+static int debug_breiten(void)
+{
+    if (s_breite_ok >= 0) return s_breite_ok;
+    long n = 0;
+    uint8_t *d = slurp(RE15_ASSET_PSX_DIR "/BIN/DEBUG.BIN", &n);
+    s_breite_ok = (d && n >= 0x4416 + 256) ? 1 : 0;
+    if (s_breite_ok) memcpy(s_breite, d + 0x4416, 256);
+    free(d);
+    return s_breite_ok;
+}
+
+typedef struct { int n, ueber; int x0, x1, y; } frage_lage_t;
+static frage_lage_t *s_fl;
+static int sel_x0[3], sel_x1[3], sel_y;
+static int breite_cb(unsigned char g, void *ctx) { (void)ctx; return s_breite[g]; }
+static void glyphe_cb(int penx, int peny, unsigned char g, int attr, void *ctx)
+{
+    (void)attr; (void)ctx;
+    const int x0 = penx, x1 = penx + s_breite[g];
+    s_fl->n++;
+    for (int k = 0; k < 3; k++)
+        if (peny < sel_y + 16 && peny + 16 > sel_y && x0 < sel_x1[k] && x1 > sel_x0[k]) { s_fl->ueber++; break; }
+}
+
+/* Anzahl der Glyphen der Frageseite, die Cursor / "Yes" / "No" beruehren (beide Cursor-Zellen). */
+static int frage_ueberdeckt(const uint8_t *b, int n, int *glyphen)
+{
+    int start = 0;                                     /* letzte Seite: hinter dem letzten `02 xx` (FSM message_page) */
+    for (int i = 0; i < n && b[i] != 0x01 && b[i] != 0x03; ) {
+        const uint8_t c = b[i];
+        if (c == 0x02) { start = i + 2; i += 2; continue; }
+        if (c == 0x04 || c == 0x05 || c == 0x06 || c == 0x09 || c == 0x0A || c == 0x0B) { i += 2; continue; }
+        i++;
+    }
+    re15_msg_select_t s0, s1;
+    re15_msg_select_layout(0, 0x18, &s0);
+    re15_msg_select_layout(1, 0x18, &s1);
+    sel_y = s0.cursor_y;
+    int w = 0;
+    for (int k = 0; k < s0.opt[0].len; k++) w += s_breite[s0.opt[0].glyphs[k]];
+    sel_x0[0] = s0.opt[0].x; sel_x1[0] = s0.opt[0].x + w;
+    w = 0;
+    for (int k = 0; k < s0.opt[1].len; k++) w += s_breite[s0.opt[1].glyphs[k]];
+    sel_x0[1] = s0.opt[1].x; sel_x1[1] = s0.opt[1].x + w;
+    sel_x0[2] = s0.cursor_x; sel_x1[2] = s1.cursor_x + s_breite[0x02];   /* Cursor-Glyphe 0x02 (render_pc.c re15_render_pc_cursor) an 160 und 230 */
+    frage_lage_t fl = { 0, 0, 0, 0, 0 };
+    s_fl = &fl;
+    re15_msg_layout(0x22, 0xb4, b + start, n - start, glyphe_cb, breite_cb, NULL);   /* Box-Ursprung @0x80027eec / @0x80027f14 */
+    if (glyphen) *glyphen = fl.n;
+    return fl.ueber;
+}
+
+static void fall_q(void)
+{
+    PRUEFE(debug_breiten() == 1, "DEBUG.BIN: Breiten @0x4416");
+    if (s_breite_ok != 1) return;
+    static const uint16_t raeume[] = { 0x2000, 0x2010, 0x2030, 0x2050, 0x2070, 0x20B0 };
+    int fragen = 0, schlecht = 0;
+    for (int r = 0; r < (int)(sizeof raeume / sizeof raeume[0]); r++)
+        for (int id = 0; id < 64; id++) {
+            int n = 0;
+            const uint8_t *t = re15_ventilkette_r41_text(raeume[r], (uint8_t)id, &n);
+            if (!t || n <= 0 || !memchr(t, 0x03, (size_t)n)) continue;
+            int gl = 0;
+            const int u = frage_ueberdeckt(t, n, &gl);
+            fragen++;
+            if (u) { schlecht++; printf("   ROOM%04X Id %d: %d von %d Glyphen auf der Auswahl\n", raeume[r], id, u, gl); }
+        }
+    PRUEFE(fragen >= 10 && schlecht == 0, "Port-Fragen: %d gefunden, %d ueberdecken die Ja/Nein-Auswahl", fragen, schlecht);
+    int n40 = 0, gl = 0;
+    const uint8_t *t40 = re15_ventilkette_r41_text(0x2030, RE15_R41C_MSG_PANEL_FRAGE, &n40);
+    PRUEFE(t40 && frage_ueberdeckt(t40, n40, &gl) == 0 && gl > 20, "Id 40: Frageseite frei (%d Glyphen)", gl);
+    /* Gegenprobe: Id 40 vor Spur PF ("... the bridge." 0x08 "Will you operate the panel?" auf EINER Seite) */
+    static const uint8_t alt40[65] = {
+        0x04,0x02,0x1d,0x00,0x3f,0x4b,0x4a,0x50,0x4e,0x4b,0x48,0x00,0x4c,0x3d,0x4a,0x41,0x48,0x00,0x42,0x4b,0x4e,0x00,0x50,0x44,
+        0x41,0x00,0x3e,0x4e,0x45,0x40,0x43,0x41,0x57,0x08,0x33,0x45,0x48,0x48,0x00,0x55,0x4b,0x51,0x00,0x4b,0x4c,0x41,0x4e,0x3d,
+        0x50,0x41,0x00,0x50,0x44,0x41,0x00,0x4c,0x3d,0x4a,0x41,0x48,0x1b,0x03,0x02,0x01,0x00 };
+    const int ua = frage_ueberdeckt(alt40, (int)sizeof alt40, &gl);
+    PRUEFE(ua >= 4, "Gegenprobe alte Id 40: %d Glyphen auf der Auswahl", ua);
+    printf("Q Ja/Nein: %d Port-Fragen, %d ueberdecken; Id 40 neu frei, alte Id 40 %d Glyphen auf der Auswahl\n", fragen, schlecht, ua);
+}
+
+/* Werkzeug "etikett <ppm>" (Riegel integration_r41_nachtrag30_panel_*): Beschriftung im Framedump gegen die Spielschrift. */
+static int etikett_werkzeug(const char *pfad)
+{
+    if (tex_font_laden() != 1) { printf("FEHLER: TEX.TIM\n"); return 2; }
+    long n = 0;
+    uint8_t *d = slurp(pfad, &n);
+    if (!d || n < 230415) { printf("FEHLER: %s\n", pfad); free(d); return 2; }
+    static uint32_t rgba[320 * 240];
+    for (int i = 0; i < 320 * 240; i++)
+        rgba[i] = ((uint32_t)d[15 + 3 * i] << 24) | ((uint32_t)d[16 + 3 * i] << 16) | ((uint32_t)d[17 + 3 * i] << 8) | 0xFFu;
+    free(d);
+    long ges = 0, gl = 0, ges1 = 0, gl1 = 0;
+    etiketten_vergleich(rgba, 0, &ges, &gl);
+    etiketten_vergleich(rgba, 1, &ges1, &gl1);
+    printf("ETIKETT %ld %ld VERSETZT %ld %ld\n", gl, ges, gl1, ges1);
+    return 0;
+}
+
+/* Werkzeug "kasten <ppm> <innen|tuer>" (Riegel integration_r41_nachtrag30_schrank_*): Seitenverhaeltnis des Schranks im Framedump (Cut 3 ROOM2010) gegen
+ * ROOM2060 Cut 6 (BG06, fuse_box.bmp). Beide Flaechen werden auf gleichmaessige Weltkoordinaten entzerrt (20 Einheiten je Bildpunkt): die Port-Flaeche ueber die
+ * Kamera Cut 3 @0xC0 (Projektion H = fov >> 7), die Vorlage ueber die Homographie Viereck -> Rechteck mit ihrem Welt-Seitenverhaeltnis (innen 0,453: Rueckwand-Ebene
+ * z 4500, Unterkante auf dem Boden y 0, 1581 x 3487; Fluegel 0,511). Gesucht wird der Massstab (sx, sy), mit dem die Kanten der Vorlage am besten (NCC) passen;
+ * sx/sy = 1 heisst unverzerrt. GEGENPROBE: dieselbe Suche auf der Port-Flaeche, waagrecht auf 80 % gestaucht. */
+#include "re15_bss.h"
+static uint8_t *bss_rgb_pf(const char *pfad)
+{
+    long sz = 0;
+    uint8_t *d = slurp(pfad, &sz);
+    if (!d || sz < 0x10000) { free(d); return NULL; }
+    re15_bss_chunk_t ch;
+    uint8_t *aus = NULL;
+    if (re15_bss_parse_chunk(d, 0x10000, &ch) && re15_bss_chunk_has_video(&ch)) {
+        size_t cap = ((size_t)ch.run_length_words + 2) * 8 + 4096;
+        int16_t *co = (int16_t *)malloc(cap * sizeof(int16_t));
+        uint8_t *rgb = (uint8_t *)malloc((size_t)RE15_BSS_FRAME_WIDTH * RE15_BSS_FRAME_HEIGHT * 3);
+        if (co && rgb) {
+            int k = re15_bss_vlc_decode(ch.vlc_payload, ch.vlc_payload_size, ch.run_length_words, ch.quant, ch.version, co, cap);
+            if (k >= 0 && re15_bss_mdec_decode(co, (size_t)k, RE15_BSS_FRAME_WIDTH, RE15_BSS_FRAME_HEIGHT, rgb) == 0) { aus = rgb; rgb = NULL; }
+        }
+        free(co); free(rgb);
+    }
+    free(d);
+    return aus;
+}
+
+static float grau_bilinear(const uint8_t *rgb, float x, float y)   /* Bildpunkt-Mitten bei .5 */
+{
+    x -= 0.5f; y -= 0.5f;
+    int x0 = (int)floorf(x), y0 = (int)floorf(y);
+    const float fx = x - (float)x0, fy = y - (float)y0;
+    float s = 0;
+    for (int j = 0; j < 2; j++)
+        for (int i = 0; i < 2; i++) {
+            int xx = x0 + i, yy = y0 + j;
+            if (xx < 0) xx = 0; if (xx > 319) xx = 319; if (yy < 0) yy = 0; if (yy > 239) yy = 239;
+            const uint8_t *p = rgb + 3 * (yy * 320 + xx);
+            const float g = 0.299f * p[0] + 0.587f * p[1] + 0.114f * p[2];
+            s += g * (i ? fx : 1 - fx) * (j ? fy : 1 - fy);
+        }
+    return s;
+}
+
+static int loese8(double a[8][9], double *x)       /* Gauss mit Spaltenpivot */
+{
+    for (int c = 0; c < 8; c++) {
+        int p = c;
+        for (int r = c + 1; r < 8; r++) if (fabs(a[r][c]) > fabs(a[p][c])) p = r;
+        if (fabs(a[p][c]) < 1e-12) return -1;
+        for (int k = 0; k < 9; k++) { const double t = a[c][k]; a[c][k] = a[p][k]; a[p][k] = t; }
+        for (int r = 0; r < 8; r++) {
+            if (r == c) continue;
+            const double f = a[r][c] / a[c][c];
+            for (int k = c; k < 9; k++) a[r][k] -= f * a[c][k];
+        }
+    }
+    for (int c = 0; c < 8; c++) x[c] = a[c][8] / a[c][c];
+    return 0;
+}
+
+/* Homographie Rechteck (0,0)-(w,h) -> Viereck q (oben links, oben rechts, unten rechts, unten links). */
+static int homographie(const float q[4][2], float w, float h, double m[9])
+{
+    const float r[4][2] = { { 0, 0 }, { w, 0 }, { w, h }, { 0, h } };
+    double a[8][9];
+    for (int i = 0; i < 4; i++) {
+        const double X = r[i][0], Y = r[i][1], u = q[i][0], v = q[i][1];
+        double z0[9] = { X, Y, 1, 0, 0, 0, -u * X, -u * Y, u }, z1[9] = { 0, 0, 0, X, Y, 1, -v * X, -v * Y, v };
+        memcpy(a[2 * i], z0, sizeof z0); memcpy(a[2 * i + 1], z1, sizeof z1);
+    }
+    if (loese8(a, m) != 0) return -1;
+    m[8] = 1;
+    return 0;
+}
+
+static void sobel(const float *g, int w, int h, float *e)
+{
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++) {
+            if (x == 0 || y == 0 || x == w - 1 || y == h - 1) { e[y * w + x] = 0; continue; }
+#define G(i, j) g[(y + (j)) * w + x + (i)]
+            const float gx = G(1, -1) + 2 * G(1, 0) + G(1, 1) - G(-1, -1) - 2 * G(-1, 0) - G(-1, 1);
+            const float gy = G(-1, 1) + 2 * G(0, 1) + G(1, 1) - G(-1, -1) - 2 * G(0, -1) - G(1, -1);
+#undef G
+            e[y * w + x] = sqrtf(gx * gx + gy * gy);
+        }
+}
+
+/* Bestes (NCC, sx, sy): Vorlage tg (tw x th) skaliert, mittig auf die Port-Groesse beschnitten, ueber alle Lagen in pe (pw x ph). */
+static void suche(const float *pe, int pw, int ph, const float *tg, int tw, int th, double *best, double *bsx, double *bsy)
+{
+    *best = -2; *bsx = 0; *bsy = 0;
+    float *t = (float *)malloc(sizeof(float) * (size_t)(tw * 2) * (size_t)(th * 2)), *te = (float *)malloc(sizeof(float) * (size_t)(tw * 2) * (size_t)(th * 2));
+    for (int iy = 0; iy <= 18; iy++)
+        for (int ix = 0; ix <= 40; ix++) {
+            const double sy = 0.84 + 0.02 * iy, sx = 0.50 + 0.02 * ix;
+            const int w = (int)(tw * sx), h = (int)(th * sy);
+            for (int y = 0; y < h; y++)                                   /* Flaechenmittel je Zielpunkt (Verkleinerung) bzw. bilinear */
+                for (int x = 0; x < w; x++) {
+                    const double fx0 = x / sx, fx1 = (x + 1) / sx, fy0 = y / sy, fy1 = (y + 1) / sy;
+                    double s = 0, a = 0;
+                    for (int yy = (int)fy0; yy < (int)ceil(fy1) && yy < th; yy++)
+                        for (int xx = (int)fx0; xx < (int)ceil(fx1) && xx < tw; xx++) {
+                            const double ox = fmin(fx1, xx + 1) - fmax(fx0, xx), oy = fmin(fy1, yy + 1) - fmax(fy0, yy);
+                            if (ox > 0 && oy > 0) { s += tg[yy * tw + xx] * ox * oy; a += ox * oy; }
+                        }
+                    t[y * w + x] = (float)(a > 0 ? s / a : 0);
+                }
+            sobel(t, w, h, te);
+            const int cw = w < pw - 4 ? w : pw - 4, ch = h < ph - 4 ? h : ph - 4;
+            const int x0 = (w - cw) / 2 + 2, y0 = (h - ch) / 2 + 2, nw = cw - 4, nh = ch - 4;
+            if (nw < 20 || nh < 20) continue;
+            double ms = 0, mq = 0;
+            for (int y = 0; y < nh; y++) for (int x = 0; x < nw; x++) { const double v = te[(y0 + y) * w + x0 + x]; ms += v; mq += v * v; }
+            const double nn = (double)nw * nh, mt = ms / nn, st = sqrt(fmax(mq / nn - mt * mt, 1e-9));
+            const int oxm = (pw - nw) / 2, oym = (ph - nh) / 2;            /* Lage nahe der Mitte (+-6), beide Flaechen sind mittig ausgerichtet */
+            for (int oy = oym - 6 < 0 ? 0 : oym - 6; oy <= oym + 6 && oy + nh <= ph; oy++)
+                for (int ox = oxm - 6 < 0 ? 0 : oxm - 6; ox <= oxm + 6 && ox + nw <= pw; ox++) {
+                    double sp = 0, sq = 0, sk = 0;
+                    for (int y = 0; y < nh; y++)
+                        for (int x = 0; x < nw; x++) {
+                            const double p = pe[(oy + y) * pw + ox + x], v = te[(y0 + y) * w + x0 + x];
+                            sp += p; sq += p * p; sk += p * v;
+                        }
+                    const double mp = sp / nn, spp = sqrt(fmax(sq / nn - mp * mp, 1e-9));
+                    const double ncc = (sk / nn - mp * mt) / (spp * st);
+                    if (ncc > *best) { *best = ncc; *bsx = sx; *bsy = sy; }
+                }
+        }
+    free(t); free(te);
+}
+
+static int kasten_werkzeug(const char *ppm, const char *teil)
+{
+    long n = 0;
+    uint8_t *d = slurp(ppm, &n);
+    uint8_t *bg = bss_rgb_pf(RE15_ASSET_PSX_DIR "/BSS/ROOM2060/BG06.BSS");
+    uint8_t *rdt = slurp(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2010.RDT", &n);
+    if (!d || !bg || !rdt) { printf("FEHLER: Eingabe\n"); return 2; }
+    const int innen = strcmp(teil, "tuer") != 0;
+    /* Kamera Cut 3: RDT+0x24 -> Kamera-Tabelle, Satz 3 je 0x20 B: fov (u16 @+2), Auge @+4, Ziel @+16 */
+    const uint32_t kt = (uint32_t)rdt[0x24] | ((uint32_t)rdt[0x25] << 8) | ((uint32_t)rdt[0x26] << 16) | ((uint32_t)rdt[0x27] << 24);
+    const uint8_t *k = rdt + kt + 3 * 0x20;
+    int32_t w6[6];
+    memcpy(w6, k + 4, sizeof w6);
+    const double H = (double)((k[2] | (k[3] << 8)) >> 7);
+    double p[3] = { w6[0], w6[1], w6[2] }, z[3] = { w6[3] - p[0], w6[4] - p[1], w6[5] - p[2] };
+    double l = sqrt(z[0] * z[0] + z[1] * z[1] + z[2] * z[2]);
+    for (int i = 0; i < 3; i++) z[i] /= l;
+    double x[3] = { z[2], 0, -z[0] };
+    l = sqrt(x[0] * x[0] + x[2] * x[2]); x[0] /= l; x[2] /= l;
+    const double y[3] = { z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0] };
+    /* Port-Flaeche 65 x 180 (1300 x 3600 Welt, 20 je Bildpunkt) */
+    enum { PW = 65, PH = 180, E = 20 };
+    static float pg[PW * PH], pe[PW * PH], ps[PW * PH], pse[PW * PH];
+    for (int v = 0; v < PH; v++)
+        for (int u = 0; u < PW; u++) {
+            const double wy = -3650 + (v + 0.5) * E;
+            double w[3];
+            if (innen) { w[0] = 5400; w[1] = wy; w[2] = -2000 - (u + 0.5) * E; }        /* links Angel z -2000 .. rechts z -3300 */
+            else       { w[0] = 4100 + (u + 0.5) * E; w[1] = wy; w[2] = -2000; }         /* offene Tuer: freier Rand x 4100 links .. Angel rechts */
+            const double dd[3] = { w[0] - p[0], w[1] - p[1], w[2] - p[2] };
+            const double cz = dd[0] * z[0] + dd[1] * z[1] + dd[2] * z[2];
+            const double sx = 160 + H * (dd[0] * x[0] + dd[1] * x[1] + dd[2] * x[2]) / cz, sy = 120 + H * (dd[0] * y[0] + dd[1] * y[1] + dd[2] * y[2]) / cz;
+            pg[v * PW + u] = grau_bilinear(d + 15, (float)sx, (float)sy);
+        }
+    sobel(pg, PW, PH, pe);
+    /* Gegenprobe: waagrecht auf 80 % gestaucht (Mitte bleibt), Rand = Randwert */
+    for (int v = 0; v < PH; v++)
+        for (int u = 0; u < PW; u++) {
+            float s = (float)((u + 0.5 - PW / 2.0) / 0.8 + PW / 2.0 - 0.5);
+            if (s < 0) s = 0; if (s > PW - 1) s = PW - 1;
+            const int s0 = (int)s; const float f = s - (float)s0;
+            ps[v * PW + u] = pg[v * PW + s0] * (1 - f) + pg[v * PW + (s0 + 1 < PW ? s0 + 1 : s0)] * f;
+        }
+    sobel(ps, PW, PH, pse);
+    /* Vorlage: Viereck aus ROOM2060 Cut 6 (schrank_bild.py Q_INNEN / Q_TUER) auf sein Welt-Seitenverhaeltnis */
+    const float qi[4][2] = { { 48, 26 }, { 122, 28 }, { 126, 165 }, { 62, 186 } }, qt[4][2] = { { 0, 28 }, { 48, 42 }, { 60, 182 }, { 22, 236 } };
+    const double a = innen ? 0.453 : 0.511;
+    const int th = 174, tw = (int)lround(a * th);               /* 3487 / 20 */
+    double m[9];
+    if (homographie(innen ? qi : qt, (float)tw, (float)th, m) != 0) { printf("FEHLER: Homographie\n"); return 2; }
+    float *tg = (float *)malloc(sizeof(float) * (size_t)(tw * th));
+    for (int v = 0; v < th; v++)
+        for (int u = 0; u < tw; u++) {
+            const double X = u + 0.5, Y = v + 0.5, ww = m[6] * X + m[7] * Y + m[8];
+            tg[v * tw + u] = grau_bilinear(bg, (float)((m[0] * X + m[1] * Y + m[2]) / ww), (float)((m[3] * X + m[4] * Y + m[5]) / ww));
+        }
+    double ncc, sx, sy, ncc2, sx2, sy2;
+    suche(pe, PW, PH, tg, tw, th, &ncc, &sx, &sy);
+    suche(pse, PW, PH, tg, tw, th, &ncc2, &sx2, &sy2);
+    printf("KASTEN %s NCC %d SX %d SY %d VERHAELTNIS %d GEGENPROBE %d\n", innen ? "innen" : "tuer", (int)lround(ncc * 1000), (int)lround(sx * 100), (int)lround(sy * 100),
+           (int)lround(sx / sy * 1000), (int)lround(sx2 / sy2 * 1000));
+    free(tg); free(d); free(bg); free(rdt);
+    return 0;
+}
+
 /* ---- Werkzeuge -------------------------------------------------------------------------------------------------------- */
 static uint8_t *ppm_lesen(const char *p)
 {
@@ -729,6 +1113,8 @@ int main(int argc, char **argv)
 {
     if (argc >= 8 && !strcmp(argv[1], "karte")) return karte(argc, argv);
     if (argc >= 9 && !strcmp(argv[1], "fluss")) return fluss(argv);
+    if (argc >= 3 && !strcmp(argv[1], "etikett")) return etikett_werkzeug(argv[2]);      /* Spur PF */
+    if (argc >= 4 && !strcmp(argv[1], "kasten")) return kasten_werkzeug(argv[2], argv[3]); /* Spur PF */
     if (argc >= 7 && !strcmp(argv[1], "bild")) {
         uint8_t *d = ppm_lesen(argv[2]);
         if (!d) { printf("kein Bild\n"); return 2; }
@@ -789,6 +1175,8 @@ int main(int argc, char **argv)
     /* Mechanik */
     fall_a();
     fall_f();
+    fall_g();   /* Spur PF */
+    fall_q();   /* Spur PF */
     for (int v = 0; v < 2; v++) {
         fall_b((uint16_t)(0x2030 + v));
         fall_c((uint16_t)(0x2010 + v));

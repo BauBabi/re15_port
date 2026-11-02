@@ -211,7 +211,7 @@ _lauf(f 240 ${_leon}
       "RE15_EXIT_AT=1000#2030")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Bruecke obj 0 oben y -5400, Zelle 12 gesperrt" f "Bruecke oben")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 24 -> Port-Programm 2030_panel_ein" f "Aktion am Pult ohne Druck")
-_muss("${_dbg}" "[msgtext] room=2030 id=40 \"A control panel for the bridge. Will you operate the panel?\"" f "Frage 40")
+_muss("${_dbg}" "[msgtext] room=2030 id=40 \"A control panel for the bridge.Will you operate the panel?\"" f "Frage 40 (Spur PF: Frage allein auf Seite 2)")
 _muss("${_dbg}" "[panel2030] offen: A 100 B 0 C 0" f "Panel offen")
 _muss("${_dbg}" "[panel2030] Abbruch" f "CROSS verlaesst")
 _darf_nicht("${_dbg}" "Cut_chg(4)" f "keine Fahrt-Kamera ohne Druck")

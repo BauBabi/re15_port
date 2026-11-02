@@ -110,7 +110,8 @@ if("${TEIL}" STREQUAL "panel")
           RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=${_skript}"
           "RE15_FRAMEDUMP=780-900/120:f_" "RE15_EXIT_AT=1420#203${S}")
     _muss("${_dbg}" "[ventilkette41] ROOM203${S} Ereignis 24 -> Port-Programm 2030_panel_ein" "Pult ohne Druck oeffnet das Panel")
-    _muss("${_dbg}" "[msgtext] room=203${S} id=40 \"A control panel for the bridge. Will you operate the panel?\"" "Frage 40")
+    # Spur PF: die Frage steht allein auf Seite 2 (ROOM2060 msg 0 @0x1766), die Ja/Nein-Auswahl in Zeile 0xb4 + 0x10 (@0x80028674) bleibt frei (unit_r41_nachtrag30 Q)
+    _muss("${_dbg}" "[msgtext] room=203${S} id=40 \"A control panel for the bridge.Will you operate the panel?\"" "Frage 40")
     _danach("${_dbg}" "[panel2030] offen: A 100 B 0 C 0" "[msgtext] room=203${S} id=41 \"The pressure gauge reads 100.Pick a tank to drain, then a tank to fill.\"" "Text 41 im Panel")
     _danach("${_dbg}" "[panel2030] Tank A: Quelle" "[panel2030] Tank B: umgefuellt -> A 50 B 50 C 0" "A nach B")
     _danach("${_dbg}" "[panel2030] Tank B: Quelle" "[panel2030] Tank C: umgefuellt -> A 50 B 20 C 30" "B nach C")
@@ -134,6 +135,20 @@ if("${TEIL}" STREQUAL "panel")
     _wert("bild;${_a};142;92;153;116" "^BILD ([0-9]+)" _b_leer)
     _wert("bild;${_b};142;92;153;116" "^BILD ([0-9]+)" _b_voll)
     message(STATUS "r41_nachtrag30[panel ${FIGUR}]: Fenster Tank B leer ${_b_leer}, voll ${_b_voll}")
+    # Spur PF: die Beschriftung im Bild ist Texel fuer Texel die 8x8-Spielschrift (TEX.TIM, FUN_80029214) in ihrer CLUT, kein Weichzeichnen; Gegenprobe um 1 Bildpunkt versetzt < Haelfte.
+    # Vor Spur PF (Arial 4,6..8,2 Bildpunkte + JPEG-Kette): 0 von 1334 (Messlauf p_vorher, gdigrab), Zwischentoene je Schild 57..73 %.
+    foreach(_f ${_a} ${_b})
+        _wert("etikett;${_f}" "^ETIKETT ([0-9]+ [0-9]+ VERSETZT [0-9]+ [0-9]+)" _e)
+        string(REPLACE " " ";" _e "${_e}")
+        list(GET _e 0 _gl)
+        list(GET _e 1 _ges)
+        list(GET _e 3 _gl1)
+        message(STATUS "r41_nachtrag30[panel ${FIGUR}]: Beschriftung ${_f}: ${_gl} von ${_ges} Texeln = Spielschrift, versetzt ${_gl1}")
+        math(EXPR _halb "${_ges} / 2")
+        if(_ges LESS 1000 OR NOT _gl EQUAL _ges OR NOT _gl1 LESS _halb)
+            _fehler(": Beschriftung nicht scharf in der Spielschrift (${_gl} von ${_ges}, versetzt ${_gl1})")
+        endif()
+    endforeach()
     math(EXPR _d "${_b_voll} - ${_b_leer}")
     if(_d LESS 60)
         _fehler(": Tank B fuellt sich im Bild nicht (leer ${_b_leer}, voll ${_b_voll})")
@@ -280,6 +295,23 @@ ENDE
     if(NOT _m OR CMAKE_MATCH_2 LESS 95)
         _fehler(": offene Tuer steht in Cut 4 im Bild: ${_o}")
     endif()
+    # Spur PF (Nutzer: "der Kasten ist bei der Kamerasicht irgendwie komisch gestaucht"): Tuer auf, Texte weg, die Figur geht nach links aus dem Schrank (Takte 30 je Sekunde ab F330:
+    # Text-Seiten bis F570, Weg F570..F645), F720 Cut 3 ohne Figur und Text vor dem Schrank. Werkzeug "kasten": Rueckwand und Fluegel auf Weltmass entzerrt gegen ROOM2060 Cut 6,
+    # Seitenverhaeltnis sx/sy in Promille (vor Spur PF innen 717, Fluegel 740: Texturen auf 1300:3600 gezogen + EIN affines Viereck je Flaeche). GEGENPROBE = dieselbe Flaeche auf 80 % gestaucht.
+    _lauf(pf 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2010@250 "RE15_PLAYER_POS=4300,-2770,0,0" RE15_FORCE_CUT=3 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330
+          "RE15_INPUT_SCRIPT=A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W1.5,A0.1,W1,D2.5,W8" "RE15_FRAMEDUMP=720:f.ppm" "RE15_EXIT_AT=740#201${S}")
+    _muss("${_dbg}" "[schrank2010] Tuer auf (rot_y 1024)" "Lauf pf: Tuer offen")
+    foreach(_fl innen tuer)
+        execute_process(COMMAND "${RE15_N30_WERKZEUG}" kasten "${WORKDIR}/f.ppm" ${_fl} OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
+        string(STRIP "${_o}" _o)
+        message(STATUS "r41_nachtrag30[schrank ${FIGUR}]: Seitenverhaeltnis ${_o}")
+        if(NOT _r EQUAL 0 OR NOT _o MATCHES "NCC ([0-9]+) SX [0-9]+ SY [0-9]+ VERHAELTNIS ([0-9]+) GEGENPROBE ([0-9]+)")
+            _fehler(": kasten ${_fl}: ${_o}")
+        endif()
+        if(CMAKE_MATCH_1 LESS 600 OR CMAKE_MATCH_2 LESS 940 OR CMAKE_MATCH_2 GREATER 1060 OR CMAKE_MATCH_3 GREATER 880)
+            _fehler(": ${_fl} verzerrt gegen ROOM2060 Cut 6 (NCC ${CMAKE_MATCH_1}, sx/sy ${CMAKE_MATCH_2} Promille, Gegenprobe ${CMAKE_MATCH_3})")
+        endif()
+    endforeach()
     # Klick von Norden: der Platz reicht bis unter Cut 4 (Lauf wk): Cut_chg 3, die Tuer klappt im Bild auf, Cut_old zurueck nach Cut 4
     file(WRITE "${_basis}_plan_n.txt" "RAUM 201${S}
 WARTE 30

@@ -231,8 +231,9 @@ TEXTE = [
     # (Raumgruppe, Id, Name, Seiten, frage, gruen, Herkunft)
     ("2000", 40, "leiter", [["I cannot climb up the ladder", "because of the water pressure."]], False, None,
      "NUTZER-VORGABE (AUFTRAG.md: \"I cannot climb up the ladder because of the water pressure\")"),
-    ("2030", 40, "panel_frage", [["A control panel for the bridge.", "Will you operate the panel"]], True, None,
-     "PORT-WAHL (Spur N, Nachtrag 37, Entwurf A \"Will you operate the panel?\"), Frageform ROOM2050 msg 0 @0x2446"),
+    ("2030", 40, "panel_frage", [["A control panel for the bridge."], ["Will you operate the panel"]], True, None,
+     "PORT-WAHL (Spur N, Nachtrag 37, Entwurf A \"Will you operate the panel?\"); Spur PF: Frage allein auf Seite 2 wie ROOM2060 msg 0 "
+     "@0x1766 (Nutzer: Text ueberlappte die Ja/Nein-Auswahl, Pruefung frage_frei)"),
     ("2030", 41, "panel_start", [["The pressure gauge reads 100."], ["Pick a tank to drain,", "then a tank to fill."]], False, None,
      "PORT-WAHL (Spur N, Entwurf A)"),
     ("2030", 42, "panel_leer", [["The tank is empty."]], False, None, "PORT-WAHL (Spur N, Entwurf A)"),
@@ -314,6 +315,36 @@ def zusammensetzen(teile):
     return bytes(out), frage
 
 
+# Ja/Nein-Auswahl (Spur PF): FUN_80028134 Zustand 4 zeichnet Cursor und "Yes No" in Zeile DAT_800b8536 + 0x10 (@0x80028624/@0x80028630,
+# @0x8002866c/@0x80028674), DAT_800b8536 = 0xb4 (@0x80027f14) und wird nur in FUN_80027e68 geschrieben (@0x80027f1c/f60/fa0/fd8): die
+# Auswahl steht IMMER auf der zweiten Textzeile der Box (y 196), der Cursor ab x 0xa0 = 160 (@0x80028650), "Yes" ab 0xae = 174 (@0x80028680).
+# Darum darf die Frageseite hoechstens zwei Zeilen haben, und eine zweite Zeile muss vor x 160 enden. Box-Ursprung x 0x22 = 34 (@0x80027eec).
+# Gemessen an allen 90 Original-Fragen der RDTs (Nachricht mit 0x03): 61 einzeilig, 29 zweizeilig mit Zeilenende x 34..147, keine mit drei.
+AUSWAHL_X = 0xA0          # @0x80028650
+BOX_X = 0x22              # @0x80027eec
+
+
+def frage_frei(b):
+    """Breiten der Zeilen auf der Frageseite (die Seite, auf der 0x03 steht); AssertionError, wenn die Auswahl Text ueberdeckt."""
+    seite = zeilenbreiten(b)
+    i = 0                                      # nur die letzte Seite: Zeilen nach dem letzten `02 xx`
+    zeilen_je_seite = [0]
+    while i < len(b) and b[i] not in (0x01, 0x03):
+        c = b[i]
+        if c == 0x02:
+            zeilen_je_seite.append(0); i += 2; continue
+        if c in (0x04, 0x05, 0x06, 0x09, 0x0A, 0x0B):
+            i += 2; continue
+        if c == 0x08:
+            zeilen_je_seite[-1] += 1
+        i += 1
+    letzte = seite[len(seite) - (zeilen_je_seite[-1] + 1):]
+    assert len(letzte) <= 2, ("Frageseite mit %d Zeilen: die Auswahl (Zeile 2) liegt auf Text" % len(letzte), letzte)
+    if len(letzte) == 2:
+        assert BOX_X + letzte[1] < AUSWAHL_X, ("zweite Zeile endet bei x %d, Cursor ab %d" % (BOX_X + letzte[1], AUSWAHL_X), letzte)
+    return letzte
+
+
 # Zeilenbreite: Vorschub je Glyphe = DEBUG.BIN @0x4416 (RAM 0x800c4416, FUN_80028868; render_pc.c s_msgfont_w).
 # Grenze 286 px = breiteste Zeile aller Original-Nachrichten (ROOM1070/1071 msg 1, gemessen ueber 2435 Zeilen).
 BREITE_MAX = 286
@@ -358,6 +389,8 @@ def texte():
         sym = "re15_r41c_msg_%s_%d_%s" % (raum, mid, name)
         br = zeilenbreiten(b)
         assert max(br) <= BREITE_MAX, (name, br)
+        if frage:
+            frage_frei(b)
         zeilen.append("/* ROOM%s Id %d \"%s\" - %s (Zeilen %s px <= %d) */" % (raum, mid, soll, herkunft,
                                                                                 "/".join(str(x) for x in br), BREITE_MAX))
         zeilen.append(inc_array(sym, b, 24))
@@ -370,6 +403,8 @@ def texte():
         assert txt == soll and f == frage, (name, txt, soll, f, frage)
         br = zeilenbreiten(b)
         assert max(br) <= BREITE_MAX, (name, br)
+        if frage:
+            frage_frei(b)
         sym = "re15_r41c_msg_%s_%d_%s" % (raum, mid, name)
         zeilen.append("/* ROOM%s Id %d \"%s\" - %s (Zeilen %s px <= %d) */" % (raum, mid, soll, herkunft,
                                                                                 "/".join(str(x) for x in br), BREITE_MAX))

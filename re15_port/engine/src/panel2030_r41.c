@@ -151,6 +151,25 @@ int  re15_panel2030_r41_ziel_erreicht(void) { return s_ziel; }
 void re15_panel2030_r41_cursor(int *x, int *y) { if (x) *x = s_cx_q8 >> 8; if (y) *y = s_cy_q8 >> 8; }
 void re15_panel2030_r41_cursor_setzen(int x, int y) { s_cx_q8 = x << 8; s_cy_q8 = y << 8; }
 
+/* ---- Beschriftung (Spur PF): Glyphen + CLUT fuer die Riegel ------------------------------------------------------------- */
+int re15_panel2030_r41_glyphe(int i, int *code, int *x, int *y, const uint16_t **clut)
+{
+#ifdef RE15_PLATFORM_PC
+    const int n = (int)(sizeof re15_r41n_panel_glyphen / sizeof re15_r41n_panel_glyphen[0]);
+    if (i >= 0 && i < n) {
+        const re15_r41n_glyphe_t *g = &re15_r41n_panel_glyphen[i];
+        if (code) *code = g->code;
+        if (x) *x = g->x;
+        if (y) *y = g->y;
+        if (clut) *clut = re15_r41n_panel_clut[g->clut];
+    }
+    return n;
+#else
+    (void)i; (void)code; (void)x; (void)y; (void)clut;
+    return 0;
+#endif
+}
+
 /* ---- Bild --------------------------------------------------------------------------------------------------------------- */
 #ifdef RE15_PLATFORM_PC
 static uint32_t s_rgba[RE15_R41N_PANEL_W * RE15_R41N_PANEL_H];
@@ -232,7 +251,7 @@ const uint32_t *re15_panel2030_r41_rgba(void)
     }
     if (s_nachricht)                                                        /* Band hinter dem Text (Text = Glyphen ohne Kasten) */
         for (int y = RE15_R41N_NACHRICHT_Y0; y < RE15_R41N_NACHRICHT_Y1; y++)
-            for (int x = RE15_R41N_X_MIN; x < RE15_R41N_X_MAX; x++) punkt_mischen(x, y, 0, 0, 0, 170);
+            for (int x = RE15_R41N_X_MIN; x < RE15_R41N_X_MAX; x++) punkt_mischen(x, y, 0, 0, 0, RE15_R41N_NACHRICHT_DECKUNG);
     return s_rgba;
 }
 #else
