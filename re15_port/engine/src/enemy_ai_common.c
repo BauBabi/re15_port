@@ -2088,13 +2088,8 @@ void re15_enemy_ai_live_init(int slot)
      * re15_enemy_ai_live_tick keeps it mirroring the player (RAM-arbitrated, see there). */
     e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
     e->steer_z = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z;
-    /* (GEBAUT unten nach dem HP-Wurf) the original INIT additionally rolls a 25%
-     * spawn-VARIANT (@0x801008b0-8f0: `jal rng; andi 3; bne zero,skip` else `jal rng; andi 7;
-     * lw @0x8011f7ec[v0]; jalr` — table {0x80101058,0x80101008,0x801010a8,0x801010a8,0x80101008,
-     * 0x8010118c,0x8010113c,0x8010118c}). The variant fns write MODEL-POOL render fields (e.g.
-     * 0x80101008: pool+0x158|=0x480, +0x1e0/+0x1e4=0x7e8, +0x1e2=0x1000, +0x1ec=0x80,
-     * +0x1f0=0x8080e0 — per-instance render/tint variants) which the port render path does not
-     * model — NOT implemented rather than faked; tracked as open in RE15_ENEMY_AI_AUDIT.md. */
+    /* Die SPAWN-VARIANTE des Original-INIT (@0x801008b0-8ec, Tabelle @0x8011f7ec) steht unten nach dem HP-Wurf —
+     * ABGESCHALTET, weil sie im Original nie sichtbar wird (Runde 41 Spur ZA, Begruendung dort). */
     /* seed the per-spawn HURT stagger clip (FUN_80100688 @0x80100774-9c): +0x1d4 =
      * seed_table[rng()&7], table @0x8011f7e4 = {2,3,4,5,2,3,4,5} -> a random clip in {2,3,4,5}. */
     {
@@ -2120,12 +2115,31 @@ void re15_enemy_ai_live_init(int slot)
         }
         if (row >= 0) e->hp = (int16_t)z_hp[row][re15_engine_rand8() & 0xf];   /* +0x9a @0x801007f4 */
     }
-    /* SPAWN-VARIANTE (@0x801008b0-8ec): 25 % (`andi 3` / bne @0x801008bc-c0), dann Tabelle @0x8011f7ec[rng&7] =
-     * {58,08,a8,a8,08,18c,13c,18c}: ein oder zwei Gliedmassen abgemagert (Teil-Wort |= 0x400|0x80, Skala Q12 auf
-     * x/z) und verfaerbt (Tinten 0x80 / 0x8080e0) — RE1.5-Teilschicht. Liegt NACH HP/Stagger-Clip wie im Original. */
+    /* ⛔ SPAWN-VARIANTE ABGESCHALTET — fuer ALLE Zombie-Typen (Runde 41 Spur ZA, analysis/befunde_runde41/
+     * ZA_zombiearm.md). Nutzer 2026-11-02: "Die sollen schon den original Arm haben"; Regel: behalten nur bei
+     * 100-%-Beleg, dass das Original die duennen Glieder SICHTBAR zeigt. Der Beleg gelingt nicht, das Gegenteil
+     * ist gemessen:
+     *   Code (STAGE1.BIN, byte-gleich Version_40%): `jal rng` @0x801008b0, `andi v0,v0,0x3` @0x801008bc,
+     *   `bne v0,zero` @0x801008c0; bei 0 `jal rng` @0x801008c8, `andi v0,v0,0x7` @0x801008d0, `lw v0,@0x8011f7ec`
+     *   @0x801008e4, `jalr v0` @0x801008ec. Routinen 0x80101058 (Teil 12), 0x80101008 (Teil 2), 0x801010a8
+     *   (Teile 8+9), 0x8010113c (Teil 5), 0x8010118c (Teile 4+5): Teil-Wort |= 0x400 und 0x80, Skala x/z 0x5f4
+     *   bzw. 0x7e8, Tinten +0x94 = 0x80 / +0x98 = 0x8080e0.
+     *   Sichtbar nur mit Bit 0x400: `andi v0,v0,0x400` @0x8001ebb0 -> ScaleMatrix @0x8001ebdc (Zeichner FUN_8001e9ec).
+     *   GEMESSEN in 26 sauberen Savestates mit Zombies (ROOM1140, STAGE2 u.a.): Skala und Tinte der Routine
+     *   0x8010118c stehen in den Teilen 4/5 jedes Zombies in Slot 0..3 — das Teil-Wort steht aber ueberall auf
+     *   0x00000001. Die Bits sind weg, der Zeichner skaliert nicht, die Glieder sind normal (Bild ZA_belege).
+     *   Dazu: rng FUN_8001af20 hasht das a0-Register (Memory reai-v2-rng-determinism), hier a0 = Entity-Zeiger
+     *   (`lw a0` @0x80100840-44). Slots 0..3 waehlen so immer 0x8010118c (ein Bein), ab Slot 4 nie; ein ARM
+     *   kaeme im Original nie dran.
+     * Port: die beiden Wuerfe bleiben (Zufallsstrom wie im Original, Riegel unit_za_spawnvariante), angewandt wird
+     * nichts. Der Teil-Reset bildet FUN_8001e5b0 ab (Wort 1 je Teil @0x8001e758, Aufruf in Sce_em_set @0x80042530
+     * vor der Wurzel @0x8004259c). */
     {
         int zslot = (int)(e - g_actors);
         re15_teile_reset(zslot);
+        if ((re15_engine_rand8() & 3) == 0)        /* @0x801008b0-c0 */
+            (void)re15_engine_rand8();             /* @0x801008c8 (Index `andi 7` @0x801008d0), Routine nicht angewandt */
+#if 0   /* ABGESCHALTET (Spur ZA): die Anwendung der Routinen — im Original unsichtbar, siehe oben. */
         if ((re15_engine_rand8() & 3) == 0) {
             static const struct { int8_t a, b; int16_t sa, sb; } var[8] = {
                 { 12, -1, 0x5f4, 0 },      /* 0x80101058: Teil 12 (+0x810) */
@@ -2149,6 +2163,7 @@ void re15_enemy_ai_live_init(int slot)
             }
             re15_teile_markieren(zslot);
         }
+#endif
     }
     /* BRENNENDE ZOMBIES (@0x801008f4-0x80100c14, direkt hinter der Spawn-Variante): nur bei Flag Zone 1/31
      * (DAT_800aca3c & 1) — Arm, Zeitzaehler, acht Flammen. include/re15_brandzombie.h. */
