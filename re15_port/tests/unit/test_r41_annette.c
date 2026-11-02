@@ -1,18 +1,22 @@
 /* test_r41_annette.c — Runde 41 Spur AN: Annette-Szene ROOM5090 (include/re15_annette_r41.h,
  * Dossier analysis/befunde_runde41/AN_annette.md).
  *
- *   bedingungen  Spawn der Frau im Kittel: 5090 nur bei (3,89)=1 und (3,42)=0 (PORT-WAHL), 6030 nach dem Original
+ *   bedingungen  Spawn der Frau im Kittel: 5090 nur bei (3,89)=1, (9,133)=1 und (3,42)=0 (PORT-WAHL), 6030 nach dem Original
  *                (sub07 @0x010F8 spawnt bei (4,23)=1 nur, solange (3,89)=0) - beide Raeume mit dem echten RDT-Skript.
- *   programm     Bytecode aus Original-Opcodes: Sperre, Cut 11, Texte 40/41/42 mit Wortlaut, Ende Evt_exec sub04.
+ *   programm     Bytecode aus Original-Opcodes, Ablauf der RE2-Szene ROOM6141 sub02: Schnittfolge 15/11/15/11/13,
+ *                RE2-Sleeps, Texte 43/40/42 mit Wortlaut, 41 ohne Text, Sturz-Werte = ROOM5080 sub03, Ende sub04.
+ *   programm_zug 6030-Zugstart: jedes Original-Segment bytegleich mit ROOM6030, Texte 27-30, Tuer-Programm.
  *   modell       ANNETTE_4D*.EMD: Gerippe/Clips = RE1.5-0x4D-Blob dir[0..6] bytegleich, MD1 + TIM = RE2 kind 0x47 / 0x49.
- *   szene        ganzer Ablauf mit Riesenform- und Annette-Bank ueber VM + KI-Takt: Drohen -> Weichen -> Hieb (Treffer im
- *                Bild 14 von Clip 4, Hand nahe) -> Flug -> liegt -> Kampfstart sub04 (Form frei, Annette bleibt Leiche),
- *                einmalig.
+ *   szene        ganzer Ablauf mit Riesenform- und Annette-Bank ueber VM + KI-Takt: Warten (Form unsichtbar) -> Sturz
+ *                (y -5600, 14 Bilder) -> Drohen -> Hieb (Treffer im Bild 14 von Clip 4, Hand nahe) -> Reaktion -> Schnitt
+ *                weg, liegt (RE2-Versatz), Schrei nur Ton -> Kampfstart sub04 (Form frei), einmalig.
+ *   zugstart     6030: Wagentuer nach 5090 = msg 10 bis zum Zugstart; Fuehrerstand: Zugstart einmal, Toene, Abgang.
  */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -60,8 +64,10 @@ static uint8_t *raum_laden(const char *rel, unsigned id, int cut)
     re15_aot_init();
     /* Flags ueberleben scd_vm_init nicht: sichern und zuruecksetzen wie ein Spielstand */
     int f89 = re15_game_flag_get(3, 89), f42 = re15_game_flag_get(3, 42), f423 = re15_game_flag_get(4, 23);
+    int f133 = re15_game_flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT);
     scd_vm_init();
     re15_game_flag_set(3, 89, f89); re15_game_flag_set(3, 42, f42); re15_game_flag_set(4, 23, f423);
+    re15_game_flag_set(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, f133);
     re15_annette_r41_install((uint16_t)id);
     /* Raum-Init wie FUN_8003ef6c: RDT angemeldet (Gosub/Evt_exec aus sub00, ROOM6030 sub00 `18 07`), aber ohne den
      * sub01-Reseed des Spieltakts (scd_vm_set_room_init, scd_vm.c). */
@@ -86,45 +92,54 @@ static void flags(int f89, int f42, int f423)
 {
     re15_game_flag_set(3, 89, f89); re15_game_flag_set(3, 42, f42); re15_game_flag_set(4, 23, f423);
 }
+static void zug(int v) { re15_game_flag_set(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, v); }
 
 static void test_bedingungen(void)
 {
-    static const struct { int f89, f42, soll; } k5090[] = { { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 }, { 0, 1, 0 } };
+    /* 5090: Annette nur bei Tor (3,89), Zugstart gesehen (9,133) und noch nicht begonnenem Kampf (3,42) */
+    static const struct { int f89, z, f42, soll; } k5090[] = {
+        { 0, 0, 0, 0 }, { 1, 0, 0, 0 }, { 1, 1, 0, 1 }, { 1, 1, 1, 0 }, { 0, 1, 0, 0 }, { 0, 1, 1, 0 } };
     for (unsigned i = 0; i < sizeof k5090 / sizeof k5090[0]; i++) {
-        flags(k5090[i].f89, k5090[i].f42, 1);
-        CHECK(re15_annette_r41_spawn_weg(0x5090u, 0x4Du) == !k5090[i].soll, "spawn_weg 5090 (3,89)=%d (3,42)=%d",
-              k5090[i].f89, k5090[i].f42);
+        flags(k5090[i].f89, k5090[i].f42, 1); zug(k5090[i].z);
+        CHECK(re15_annette_r41_spawn_weg(0x5090u, 0x4Du) == !k5090[i].soll, "spawn_weg 5090 (3,89)=%d (9,133)=%d (3,42)=%d",
+              k5090[i].f89, k5090[i].z, k5090[i].f42);
         uint8_t *b = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u, 12);
         CHECK(b != NULL, "ROOM5090 nicht ladbar");
         const int s = slot_vom_typ(0x4Du);
-        CHECK((s > 0) == (k5090[i].soll != 0), "5090 (3,89)=%d (3,42)=%d: Frau im Kittel %s erwartet, Slot %d",
-              k5090[i].f89, k5090[i].f42, k5090[i].soll ? "" : "nicht", s);
+        CHECK((s > 0) == (k5090[i].soll != 0), "5090 (3,89)=%d (9,133)=%d (3,42)=%d: Frau im Kittel %s erwartet, Slot %d",
+              k5090[i].f89, k5090[i].z, k5090[i].f42, k5090[i].soll ? "" : "nicht", s);
         if (s > 0) CHECK(g_actors[s].x == 600 && g_actors[s].z == -25300, "5090 Lage (%d,%d) statt Spawn @0x0122A (600,-25300)",
                          (int)g_actors[s].x, (int)g_actors[s].z);
         CHECK(slot_vom_typ(0x30u) > 0 || k5090[i].f42, "5090: kein 0x30 (Riesenform) bei (3,42)=0");
         free(b);
     }
+    zug(0);
     /* Andere Raeume und Typen bleiben unberuehrt */
     flags(0, 0, 1);
     CHECK(!re15_annette_r41_spawn_weg(0x5091u, 0x4Du) && !re15_annette_r41_spawn_weg(0x6030u, 0x4Du) &&
           !re15_annette_r41_spawn_weg(0x5090u, 0x30u), "spawn_weg greift ausserhalb 5090/0x4D");
-    /* 6030 Fuehrerstand (Eintritt Cut 0 -> sub00 Case 0 -> sub07): Original-Verhalten, kein Port-Eingriff */
+    /* 6030 Fuehrerstand vor dem Tor (Eintritt Cut 0 -> sub00 Case 0 -> sub07): Original-Verhalten, kein Port-Eingriff */
     flags(0, 0, 1);
+    re15_annette_r41_reset();
     uint8_t *b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 0);
     CHECK(b && slot_vom_typ(0x4Du) > 0, "6030 vor dem Tor: Frau am Pult fehlt (sub07 @0x010F8)");
     if (slot_vom_typ(0x4Du) > 0)
         CHECK(g_actors[slot_vom_typ(0x4Du)].x == -1790 && g_actors[slot_vom_typ(0x4Du)].z == -22272, "6030 Lage");
-    free(b);
-    flags(1, 0, 1);
-    b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 0);
-    CHECK(b && slot_vom_typ(0x4Du) < 0, "6030 nach dem Tor (3,89)=1: Frau am Pult darf nicht mehr da sein");
+    CHECK(re15_annette_r41_zug_szene() == 0, "6030 vor dem Tor: Zugstart darf nicht laufen");
     free(b);
     /* Elza 5091: keine Frau im Kittel auf der Disc */
-    flags(1, 0, 1);
+    flags(1, 0, 1); zug(1);
     b = raum_laden("STAGE5/ROOM5091.RDT", 0x5091u, 12);
     CHECK(b && slot_vom_typ(0x4Du) < 0, "5091 hat eine 0x4D");
     free(b);
+    zug(0);
 }
+
+/* Laenge eines Opcodes (scd_vm.c s_opcode_sizes, exportiert fuer r21_discard). */
+extern int scd_opcode_size_at(const uint8_t *pc);
+
+static uint8_t *s_rdt5080, *s_rdt6030;
+static size_t s_n5080, s_n6030;
 
 static void test_programm(void)
 {
@@ -134,23 +149,97 @@ static void test_programm(void)
     if (!p) return;
     CHECK(p[0] == 0x22 && p[1] == 2 && p[2] == 7 && p[3] == 1 && p[4] == 0x22 && p[5] == 1 && p[6] == 27 && p[7] == 1,
           "Programmkopf: Sperre/Balken wie sub04 @0x012F2/@0x012F6");
-    CHECK(p[8] == 0x29 && p[9] == 11, "Programm: Cut 11 (#145) fehlt");
     CHECK(n >= 6 && p[n - 6] == 0x04 && p[n - 5] == 0xff && p[n - 4] == 0x18 && p[n - 3] == 4 && p[n - 2] == 0x01,
           "Programmende: Evt_exec sub04 + Evt_end");
-    int msgs = 0;
-    for (int i = 0; i + 3 < n; i++)
-        if (p[i] == 0x2b && (p[i + 1] == 40 || p[i + 1] == 41 || p[i + 1] == 42) && p[i + 2] == 0 && p[i + 3] == 0) msgs++;
-    CHECK(msgs == 3, "Programm: %d von 3 Message_on 40/41/42", msgs);
-    static const char *soll[3] = { "Annette: W-William! You're alive!", "Annette: Aaaah!", "Leon: Annette!" };
-    for (int id = 40; id <= 42; id++) {
-        int len = 0;
-        const uint8_t *m = re15_annette_r41_meldung(id, &len);
-        char txt[256] = { 0 };
-        CHECK(m && len > 0, "Meldung %d fehlt", id);
+    /* Opcode-Gang: Schnitte, Sleeps, Message_on in der Reihenfolge der RE2-Szene (ROOM6141 sub02 @0x01024..) */
+    int cuts[16], nc = 0, sl[32], ns = 0, ms[8], nm = 0, sturz = -1, ende = 0;
+    for (int i = 0; i < n;) {
+        const int len = scd_opcode_size_at(p + i);
+        if (len <= 0 || i + len > n) { CHECK(0, "Programm: Opcode 0x%02X @%d ohne Laenge", p[i], i); break; }
+        if (p[i] == 0x29 && nc < 16) cuts[nc++] = p[i + 1];
+        if (p[i] == 0x09 && ns < 32) sl[ns++] = p[i + 2] | p[i + 3] << 8;
+        if (p[i] == 0x2b && nm < 8) ms[nm++] = p[i + 1];
+        if (p[i] == 0x32 && sturz < 0) sturz = i;
+        if (p[i] == 0x01) ende = (i + len == n);
+        i += len;
+    }
+    CHECK(ende, "Programm endet nicht genau mit Evt_end");
+    static const int k_cuts[] = { 15, 11, 15, 11, 13 };    /* RE2 Cut 2, 0x0A, 0x0B, 0x0A, 6 */
+    CHECK(nc == 5 && memcmp(cuts, k_cuts, sizeof k_cuts) == 0, "Schnittfolge (%d Schnitte) nicht 15/11/15/11/13", nc);
+    /* RE2-Sleeps @0x0104C 25, @0x01072 36, @0x01076 1, Xa 0x30 35, @0x010FE 30, @0x01110 60, @0x01116 1,
+     * 30+Xa 0x31 = 118, @0x01146 45, @0x0114C 1, Xa 0x32 42, dazu 60 nach Leons Ruf. */
+    static const int k_sl[] = { 25, 36, 1, 35, 30, 60, 1, 118, 45, 1, 42, 60 };
+    CHECK(ns == (int)(sizeof k_sl / sizeof k_sl[0]) && memcmp(sl, k_sl, sizeof k_sl) == 0, "Sleep-Folge weicht ab (%d Sleeps)", ns);
+    static const int k_ms[] = { RE15_AN_MSG_WILLIAM, RE15_AN_MSG_SATZ, RE15_AN_MSG_LEON };
+    CHECK(nm == 3 && memcmp(ms, k_ms, sizeof k_ms) == 0, "Message_on-Folge %d Stueck (43, 40, 42 erwartet)", nm);
+    /* Der Sturz laeuft im Takt (kein Pos_set im Programm, sonst blockiert er das Warten auf den Ankunfts-Puls); seine
+     * Werte = ROOM5080 sub03: Pos_set y -5600 @0x00822 (`20 ea` @0x826), Speed_set(1,400) @0x0082E, For 14 @0x00832. */
+    CHECK(sturz < 0, "Programm traegt einen Pos_set");
+    CHECK(s_rdt5080 && s_rdt5080[0x826] == 0x20 && s_rdt5080[0x827] == 0xea && s_rdt5080[0x82E] == 0x2f &&
+          s_rdt5080[0x830] == 0x90 && s_rdt5080[0x831] == 0x01 && s_rdt5080[0x836] == 0x0e, "ROOM5080 sub03 Sturz-Bytes");
+    static const struct { int id; const char *t; } soll[] = {
+        { 40, "Annette: W-William! You're alive!" }, { 42, "Leon: Annette!" }, { 43, "Annette: William." } };
+    for (unsigned k = 0; k < sizeof soll / sizeof soll[0]; k++) {
+        int len = 0; char txt[256] = { 0 };
+        const uint8_t *m = re15_annette_r41_meldung(soll[k].id, &len);
+        CHECK(m && len > 0, "Meldung %d fehlt", soll[k].id);
         if (!m) continue;
         re15_msg_decode_text(m, (size_t)len, txt, sizeof txt);
-        CHECK(strstr(txt, soll[id - 40]) != NULL, "Meldung %d lautet '%s' statt '%s'", id, txt, soll[id - 40]);
+        CHECK(strstr(txt, soll[k].t) != NULL, "Meldung %d lautet '%s' statt '%s'", soll[k].id, txt, soll[k].t);
     }
+    int l41 = -1;
+    CHECK(re15_annette_r41_meldung(RE15_AN_MSG_SCHREI, &l41) == NULL && l41 == 0, "Schrei (41) hat einen Text (Nutzer F9: nur Ton)");
+}
+
+extern int re15_annette_r41_zug_segment(int i, const uint8_t **b, int *n, int *rdt);
+
+static void test_programm_zug(void)
+{
+    CHECK(s_rdt6030 != NULL, "ROOM6030.RDT");
+    if (!s_rdt6030) return;
+    int segs = 0, orig = 0, port = 0;
+    const uint8_t *b; int n, rdt;
+    for (int i = 0; re15_annette_r41_zug_segment(i, &b, &n, &rdt); i++, segs++) {
+        if (rdt) {
+            orig += n;
+            CHECK((size_t)rdt + (size_t)n <= s_n6030 && memcmp(b, s_rdt6030 + rdt, (size_t)n) == 0,
+                  "Zugstart-Segment %d (%d Byte) nicht bytegleich mit ROOM6030 @0x%05X", i, n, rdt);
+        } else port += n;
+    }
+    int len = 0;
+    const uint8_t *p = re15_annette_r41_programm_zug(&len);
+    CHECK(p && len == orig + port, "Zugstart-Programm %d Byte statt %d", len, orig + port);
+    fprintf(stderr, "Zugstart: %d Segmente, %d Byte Original (ROOM6030), %d Byte Port-Befehle\n", segs, orig, port);
+    if (!p) return;
+    CHECK(p[0] == 0x22 && p[1] == RE15_AN_ZUG_BANK && p[2] == RE15_AN_ZUG_BIT && p[3] == 1, "Zugstart setzt (9,133) nicht zuerst");
+    int ms[8], nm = 0, fahrt = 0, ende = 0, em = 0;
+    for (int i = 0; i < len;) {
+        const int l = scd_opcode_size_at(p + i);
+        if (l <= 0 || i + l > len) { CHECK(0, "Zugstart: Opcode 0x%02X @%d ohne Laenge", p[i], i); break; }
+        if (p[i] == 0x2b && nm < 8) ms[nm++] = p[i + 1];
+        if (p[i] == 0x04 && p[i + 3] == 5) fahrt++;
+        if (p[i] == 0x44 && p[i + 2] == 0x4d) em++;
+        if (p[i] == 0x01) ende = (i + l == len);
+        i += l;
+    }
+    static const int k_ms[] = { 27, 28, 29, 30 };
+    CHECK(nm == 4 && memcmp(ms, k_ms, sizeof k_ms) == 0, "Zugstart: Message_on-Folge (%d) nicht 27..30", nm);
+    CHECK(fahrt == 1 && em == 1 && ende, "Zugstart: Licht-Schleife %d, Sce_em_set 0x4D %d, Ende %d", fahrt, em, ende);
+    static const struct { int id; const char *t; } soll[] = {
+        { 27, "Annette: There! The train's moving." }, { 28, "Annette: What was that? ...Sherry is back there!" },
+        { 29, "Leon: I'll check it out." }, { 30, "Annette: No. She's my daughter. Stay here and keep an eye on the controls." } };
+    for (unsigned k = 0; k < sizeof soll / sizeof soll[0]; k++) {
+        int l = 0; char txt[256] = { 0 };
+        const uint8_t *m = re15_annette_r41_meldung_raum(0x6030u, soll[k].id, &l);
+        CHECK(m && l > 0, "6030 Meldung %d fehlt", soll[k].id);
+        if (!m) continue;
+        re15_msg_decode_text(m, (size_t)l, txt, sizeof txt);
+        CHECK(strstr(txt, soll[k].t) != NULL, "6030 Meldung %d lautet '%s' statt '%s'", soll[k].id, txt, soll[k].t);
+    }
+    int lt = 0;
+    const uint8_t *t = re15_annette_r41_programm_tuer(&lt);
+    CHECK(t && lt == 12 && memcmp(t, s_rdt6030 + 0x106A, 10) == 0 && memcmp(t + 10, s_rdt6030 + 0x10CA, 2) == 0,
+          "Tuer-Programm nicht = sub06 @0x0106A + Evt_end @0x010CA");
 }
 
 static uint8_t *s_an_emd[2];
@@ -224,9 +313,12 @@ static int form_bank(void)
     return 1;
 }
 
+static int cut_jetzt(void) { return (int)g_scd.work_vars[0x0A]; }
+
 static void test_szene(void)
 {
-    flags(1, 0, 1);
+    flags(1, 0, 1); zug(1);
+    re15_annette_r41_reset();
     uint8_t *b = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u, 13);
     CHECK(b != NULL, "ROOM5090");
     if (!b) return;
@@ -238,38 +330,80 @@ static void test_szene(void)
     CHECK(fs > 0 && as > 0, "Riesenform %d / Annette %d", fs, as);
     if (fs <= 0 || as <= 0) { free(b); return; }
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    pl->x = 13000; pl->z = -23550; pl->hp = 100;
+    pl->x = 13775; pl->z = -23550; pl->hp = 100;         /* Ausloeser-Lage im Fensterlauf (debug.log Runde 41) */
     /* Kampfstart-Ausloeser wie im Spiel: Cut 12 in Wagen C (sub01 @0x01290 Cmp(0x0A,12)) */
     g_scd.work_vars[0x0A] = 12; g_scd.cam_id = 12;
-    int phase_max = 0, treffer_bild = -1, treffer_ok = 0, sub04 = 0, f;
-    int32_t treffer_abstand = -1;
-    int reihenfolge_ok = 1, vorher = 0;
-    for (f = 0; f < 1500; f++) {
+    int ph_bild[8], cut_folge[16], ncut = 0, f, vorher = 0, reihenfolge_ok = 1, versteckt_ok = 1;
+    for (int i = 0; i < 8; i++) ph_bild[i] = -1;
+    int sturz_y0 = 1, sturz_bilder = -1, treffer_bild = -1, treffer_clip = -1;
+    int32_t treffer_abstand = -1, steh_x = 0, steh_z = 0;
+    int kampf = 0;
+    for (f = 0; f < 3000; f++) {
         re15_game_flag_set(5, 0x20, 1);                  /* Plc_dest-Ankunft (Spieler-Laufmaschine, hier nicht im Takt) */
         scd_vm_tick();
         re15_enemy_ai_run_all(0);
         const int ph = re15_annette_r41_phase();
-        if (ph < vorher) reihenfolge_ok = 0;
-        vorher = ph;
-        if (ph > phase_max) phase_max = ph;
-        if (ph == RE15_AN_FLUG && treffer_bild < 0) {
+        {   static int b21 = -1; const int b = re15_game_flag_get(5, 0x21);
+            if (getenv("AN_DIAG") && b != b21) fprintf(stderr, "F%d (5,0x21)=%d Annette (%d,%d) ss1 %d\n", f, b,
+                                                       (int)g_actors[as].x, (int)g_actors[as].z, g_actors[as].sub_state_1);
+            b21 = b; }
+        if (ph < vorher && ph != RE15_AN_AUS) reihenfolge_ok = 0;
+        if (ph != vorher && ph >= 0 && ph < 8 && ph_bild[ph] < 0) ph_bild[ph] = f;
+        if (ph == RE15_AN_WARTEN && !g_actors[fs].no_draw) versteckt_ok = 0;
+        if (ph == RE15_AN_STURZ && sturz_y0 > 0) sturz_y0 = (int)g_actors[fs].y;
+        if (ph == RE15_AN_DROHEN && sturz_bilder < 0) sturz_bilder = f - ph_bild[RE15_AN_STURZ];
+        if (ph == RE15_AN_HIEB && vorher != RE15_AN_HIEB) { steh_x = g_actors[as].x; steh_z = g_actors[as].z; }
+        if (ph == RE15_AN_REAKTION && treffer_bild < 0) {
             int32_t h[3];
-            treffer_bild = (int)g_actors[fs].anim_frame;
+            treffer_bild = (int)g_actors[fs].anim_frame; treffer_clip = g_actors[fs].motion;
             re15_enemy_bone_world_pos(&g_actors[fs], 13, h);
             const int64_t dx = h[0] - g_actors[as].x, dz = h[2] - g_actors[as].z;
             treffer_abstand = (int32_t)(dx < 0 ? -dx : dx) + (int32_t)(dz < 0 ? -dz : dz);
-            treffer_ok = g_actors[fs].motion == 4;
         }
-        if (ph == RE15_AN_FREI) { sub04 = 1; break; }
+        if (ncut == 0 || cut_folge[ncut - 1] != cut_jetzt()) { if (ncut < 16) cut_folge[ncut++] = cut_jetzt(); }
+        vorher = ph;
+        if (ph == RE15_AN_FREI) { kampf = 1; break; }
     }
-    fprintf(stderr, "Szene: Phase bis %d nach %d Bildern, Treffer Clip-4-Bild %d Hand-Abstand %d, Blut %d, Annette (%d,%d,%d) rot_z %d\n",
-            phase_max, f, treffer_bild, (int)treffer_abstand, re15_annette_r41_blut(), (int)g_actors[as].x, (int)g_actors[as].y,
-            (int)g_actors[as].z, (int)g_actors[as].rot_z);
+    fprintf(stderr, "Szene: Phasen-Bilder W%d S%d D%d H%d R%d L%d F%d, Sturz ab y %d in %d Bildern, Annette stand (%d,%d), "
+            "Treffer Clip %d Bild %d Hand %d, Blut %d, Leiche (%d,%d,%d) rot_z %d, Toene K%d S%d B%d, Schrei %d, Schnitte",
+            ph_bild[1], ph_bild[2], ph_bild[3], ph_bild[4], ph_bild[5], ph_bild[6], ph_bild[7], sturz_y0, sturz_bilder,
+            (int)steh_x, (int)steh_z, treffer_clip, treffer_bild, (int)treffer_abstand, re15_annette_r41_blut(),
+            (int)g_actors[as].x, (int)g_actors[as].y, (int)g_actors[as].z, (int)g_actors[as].rot_z,
+            re15_annette_r41_ton(RE15_AN_SE_KRACH), re15_annette_r41_ton(RE15_AN_SE_STURZ), re15_annette_r41_ton(RE15_AN_SE_BRUELL),
+            re15_annette_r41_schrei());
+    for (int i = 0; i < ncut; i++) fprintf(stderr, " %d", cut_folge[i]);
+    fprintf(stderr, "\n");
+    if (!kampf)
+        fprintf(stderr, "Haenger: Annette st %d ss1 0x%02X ss2 %d Clip %d Bild %d Ziel (%d,%d) Bit 0x%02X=%d\n",
+                g_actors[as].state, g_actors[as].sub_state_1, g_actors[as].sub_state_2, g_actors[as].motion,
+                (int)g_actors[as].anim_frame, (int)g_actors[as].steer_x, (int)g_actors[as].steer_z, g_actors[as].walk_flag_bit,
+                re15_game_flag_get(5, g_actors[as].walk_flag_bit));
     CHECK(reihenfolge_ok, "Phasen laufen rueckwaerts");
-    CHECK(sub04, "Szene endet nicht mit dem Kampfstart (Phase %d)", phase_max);
-    CHECK(treffer_ok && treffer_bild == 15, "Treffer nicht im Hieb-Clip 4 Bild 14 (Clip-Bild nach dem Vorschub %d)", treffer_bild);
+    CHECK(kampf, "Szene endet nicht mit dem Kampfstart");
+    for (int k = RE15_AN_WARTEN; k <= RE15_AN_FREI; k++) CHECK(ph_bild[k] >= 0, "Phase %d nie erreicht", k);
+    CHECK(versteckt_ok, "Form vor dem Sturz sichtbar");
+    CHECK(sturz_y0 <= -5200 && sturz_y0 >= -5600, "Sturz beginnt nicht bei y -5600 (5080 @0x00822): %d", sturz_y0);
+    CHECK(sturz_bilder >= 13 && sturz_bilder <= 16, "Sturz %d Bilder statt 14 x Add_speed (5080 @0x00832)", sturz_bilder);
+    /* Schnitte: 12 (Ausloeser) 15 11 15 11 13, danach sub04 (15, 12) */
+    static const int k_cut[] = { 12, 15, 11, 15, 11, 13 };
+    CHECK(ncut >= 6 && memcmp(cut_folge, k_cut, sizeof k_cut) == 0, "Schnittfolge der Szene weicht ab");
+    CHECK(abs(steh_x - 4131) + abs(steh_z - (-23573)) < 600, "Annette steht beim Hieb bei (%d,%d) statt (4131,-23573)",
+          (int)steh_x, (int)steh_z);
+    CHECK(treffer_clip == 4 && treffer_bild == 15, "Treffer nicht im Hieb-Clip 4 Bild 14 (Clip %d, Bild nach dem Vorschub %d)",
+          treffer_clip, treffer_bild);
     CHECK(treffer_abstand >= 0 && treffer_abstand < 1500, "Hand links beim Treffer %d von ihr entfernt", (int)treffer_abstand);
-    CHECK(re15_annette_r41_blut() >= 6, "Blut %d < 6 (4 beim Treffer, 2 beim Aufschlag)", re15_annette_r41_blut());
+    CHECK(re15_annette_r41_blut() >= 8, "Blut %d < 8 (4 beim Treffer, je 2 nach 6/12 Bildern)", re15_annette_r41_blut());
+    CHECK(re15_annette_r41_ton(RE15_AN_SE_KRACH) == 1 && re15_annette_r41_ton(RE15_AN_SE_STURZ) == 1 &&
+          re15_annette_r41_ton(RE15_AN_SE_BRUELL) == 1, "Toene Krach/Sturz/Bruellen nicht je einmal");
+    CHECK(re15_annette_r41_schrei() == 1, "Schrei (Stimme 41 ohne Text) %d mal", re15_annette_r41_schrei());
+    {   /* RE2 @0x01162: 1203 von der Form weg, 299 seitlich -> Abstand zum Standort sqrt(1203^2+299^2) = 1240 */
+        const double dx = (double)g_actors[as].x - steh_x, dz = (double)g_actors[as].z - steh_z;
+        const double ux = steh_x - 500.0, uz = steh_z + 22600.0, ul = sqrt(ux * ux + uz * uz);
+        const double weg = (dx * ux + dz * uz) / ul;
+        CHECK(fabs(sqrt(dx * dx + dz * dz) - 1240.0) < 40.0 && fabs(weg - 1203.0) < 40.0,
+              "Leiche nicht 1203 von der Form weg / 299 seitlich (RE2 @0x01162): (%d,%d), weg %.0f", (int)g_actors[as].x,
+              (int)g_actors[as].z, weg);
+    }
     CHECK(re15_game_flag_get(3, 42), "(3,42) nach dem Kampfstart nicht gesetzt (sub01 @0x0129A)");
     CHECK(g_actors[as].hp == -1 && g_actors[as].rot_z == -683 && g_actors[as].y == -480 && g_actors[as].motion == 6,
           "Leiche: hp %d rot_z %d y %d Clip %d", g_actors[as].hp, g_actors[as].rot_z, (int)g_actors[as].y, g_actors[as].motion);
@@ -283,14 +417,72 @@ static void test_szene(void)
     static const uint8_t dummy[2] = { 1, 0 };
     CHECK(re15_annette_r41_evt_exec(0x5090u, 4, dummy) == dummy, "Szene startet ein zweites Mal");
     free(b);
+    zug(0);
+}
+
+/* 6030: Zugstart nach dem Tor, einmalig; vorher bleibt die Wagentuer nach 5090 beim Original-Text msg 10. */
+static void test_zugstart(void)
+{
+    /* Wagen (Eintritt Cut 6, sub06): Tuer Slot 3 = Text msg 10, solange der Zugstart nicht lief */
+    flags(1, 0, 1); zug(0);
+    re15_annette_r41_reset();
+    uint8_t *b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 6);
+    CHECK(b != NULL, "ROOM6030");
+    fprintf(stderr, "6030 Wagen ohne Zugstart: Slot 3 Typ %d Ereignis %d\n", g_aot.slots[3].type, g_aot.slots[3].event_id);
+    CHECK(b && g_aot.slots[3].type == RE15_AOT_TYPE_MESSAGE, "6030 Wagen vor dem Zugstart: Tuer nach 5090 offen (Typ %d)",
+          g_aot.slots[3].type);
+    free(b);
+    zug(1);
+    b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 6);
+    CHECK(b && g_aot.slots[3].type == RE15_AOT_TYPE_DOOR, "6030 Wagen nach dem Zugstart: Tuer nach 5090 zu (Typ %d)",
+          g_aot.slots[3].type);
+    free(b);
+    /* Fuehrerstand (Eintritt Cut 0): Zugstart einmal */
+    zug(0);
+    re15_annette_r41_reset();
+    if (s_an_emd[0]) bank_aus(0x4Du, s_an_emd[0], s_an_len[0]);
+    b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 0);
+    CHECK(b != NULL, "ROOM6030 Cut 0");
+    if (!b) return;
+    CHECK(re15_annette_r41_zug_szene() == 1, "Zugstart-Programm %d mal gestartet", re15_annette_r41_zug_szene());
+    CHECK(re15_game_flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT), "(9,133) nicht gesetzt");
+    const int as = slot_vom_typ(0x4Du);
+    CHECK(as > 0, "6030 Zugstart: Annette nicht am Pult (Sce_em_set @0x010F8)");
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -3873; pl->z = -23487; pl->hp = 100;          /* Tuer Slot 1 main00 @0x00C52 Ziel */
+    int ende = -1, ton_an = -1, ton_krach = -1, f;
+    for (f = 0; f < 3000; f++) {
+        re15_game_flag_set(5, 0x20, 1);                  /* Plc_dest-Ankunft Leon */
+        scd_vm_tick();
+        re15_enemy_ai_run_all(0);
+        if (ton_an < 0 && re15_annette_r41_ton(RE15_AN_SE_ZUG_AN)) ton_an = f;
+        if (ton_krach < 0 && re15_annette_r41_ton(RE15_AN_SE_KRACH)) ton_krach = f;
+        if (f > 30 && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27)) { ende = f; break; }
+    }
+    fprintf(stderr, "Zugstart: Ton an F%d, Krach F%d, Ende F%d, Annette (%d,%d,%d)\n", ton_an, ton_krach, ende,
+            as > 0 ? (int)g_actors[as].x : 0, as > 0 ? (int)g_actors[as].y : 0, as > 0 ? (int)g_actors[as].z : 0);
+    CHECK(ende > 0, "Zugstart endet nicht (Sperren (2,7)/(1,27) bleiben)");
+    CHECK(ton_an >= 0 && ton_krach > ton_an, "Toene: Zug an F%d, Krach F%d", ton_an, ton_krach);
+    if (as > 0) CHECK(g_actors[as].z == 8646 && g_actors[as].x == -10507, "Annette nach dem Abgang nicht versteckt (6000 @0x0100A)");
+    /* Wiedereintritt: kein zweiter Zugstart, keine Annette */
+    free(b);
+    b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 0);
+    CHECK(b && re15_annette_r41_zug_szene() == 1 && slot_vom_typ(0x4Du) < 0, "6030 Wiedereintritt: Zugstart %d, Annette-Slot %d",
+          re15_annette_r41_zug_szene(), slot_vom_typ(0x4Du));
+    free(b);
+    zug(0);
 }
 
 int main(void)
 {
+    s_rdt5080 = slurp(RE15_ASSET_PSX_DIR "/STAGE5/ROOM5080.RDT", &s_n5080);
+    s_rdt6030 = slurp(RE15_ASSET_PSX_DIR "/STAGE6/ROOM6030.RDT", &s_n6030);
     test_bedingungen();
     test_programm();
+    test_programm_zug();
     test_modell();
     test_szene();
+    test_zugstart();
     if (fails) { fprintf(stderr, "test_r41_annette: %d Fehler\n", fails); return 1; }
     printf("test_r41_annette: OK\n");
     return 0;

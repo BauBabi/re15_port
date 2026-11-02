@@ -1264,7 +1264,8 @@ static int op_evt_exec(scd_thread_t *t)
     target_pc = re15_parkplatz_r39_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
     /* Runde 39 Spur P: ROOM10B1 sub01 @0x01824 Evt_exec sub04 bei gesperrtem Deckel -> SZENE10B1 (re15_tuersperre_r39.h). */
     target_pc = re15_tuersperre_r39_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
-    /* Runde 41 Spur AN: ROOM5090 sub01 @0x01296 Evt_exec sub04 -> Annette-Szene davor (re15_annette_r41.h). */
+    /* Runde 41 Spur AN: ROOM5090 sub01 @0x01296 Evt_exec sub04 -> Annette-Szene davor; ROOM6030 sub07 @0x01132 /
+     * sub06 @0x010C4 Evt_exec sub05 -> Zugstart-Szene bzw. Tuer nach 5090 noch zu (re15_annette_r41.h). */
     target_pc = re15_annette_r41_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
     if (!target_pc) return 1;   /* no such sub → drop */
 
