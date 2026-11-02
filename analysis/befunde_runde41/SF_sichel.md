@@ -323,3 +323,25 @@ Kopf (Maske x 177-181), sondern die Brustadern (x 186-192) - dieselbe Methode is
 Gesicht/Haare: im Video keins (Fleisch, h108-h132), im Port seit T6 keins. Im 3/4-Bild h0-h6 wirkt die Kopfvorderseite im
 Video dunkel unter einer roten Kappe (n1350-n1356); ob Schatten oder Gesicht, ist bei 320x240 nicht entscheidbar ->
 keine Formaenderung.
+
+### N1.11 Stand, Tests, offen
+
+Commits: 7f2ea1b7d (Merge r41/hangar), 91e2508c2 (Modell: Haut, Hose, Schwanz-, Sichelfarbe), f4066042c (Szene: Sichelhand,
+Ansprung, Feder-Kette), 05ab73e0f (Schwanz-Ueberschwung), f852c1ff9 (Kopf).
+Labor 50E0/50F1 laedt dieselbe Datei (re15_bf_labor_aktiv, unveraendert); die Feder-Kette greift dort ebenso (Typ 0x30 mit
+23 Knochen). Paket-Gate release/make_package.sh prueft EMD/EM30_HANGAR.EMD (vorhanden, nicht leer, bytegleich) - die
+neuen CLUT-Zeilen stecken in der Datei, das Gate deckt sie mit ab.
+Tests (PowerShell, msys64 vorn): unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41 (neu), integration_r41_sichel_form,
+integration_r41_birkin_pistole und alle Birkin-/Spider-Man-/G5-Tests: -R "birkin|hangar|50a|spiderman|formen|r38_birkin|
+room50|sichel|schwanz". Endstand f852c1ff9: 21/21 gruen (494 s).
+Offen:
+1. Sichelfarbe weicht vom Auftragstext ab (dunkel statt rot-weiss) - begruendet in N1.7 (rot-weiss ist der Schwanz).
+2. Schwanz schwingt nach der Freigabe noch ~40 Bildpunkte weiter nach rechts als das Video (h38-h44); die Seitenvorgabe
+   ist Szenen-Gestaltung nur fuer den Hangar, im Kampf schwingt die Kette nur aus der Koerperbewegung.
+3. Haltepose: die Hand liegt im Clip 0x0B hoechstens bei Bild-x 131; der Spider-Man steht mit dem Knie-Griff oben links,
+   bleibt aber 10-20 Bildpunkte rechts vom Video (Video Mitte x 113-136).
+4. Birkin selbst ist im Video in h0-h40 geduckt mit gespreizten Beinen, im Port aufrecht (EM30-Clips) - Spur H.
+5. Kopf: nur die Farbe ist belegt korrigiert; Lage/Form im Video nicht trennbar messbar (N1.10).
+6. Im Gang zur Kamera wird das Video deutlich dunkler (Haut L 42), der Port nicht (L 60) - Licht, nicht Textur.
+7. PSX-Plattform: Feder-Kette nur im PC-Zeichner (main.c) eingehaengt; die zusaetzlichen CLUT-Zeilen 483-485 sind auf der
+   PSX nicht geprueft.
