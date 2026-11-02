@@ -18,6 +18,14 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 WURZEL = os.path.abspath(os.path.join(HIER, '../../../../..'))
 FORM_DIR = os.path.join(WURZEL, 'analysis/befunde_runde41/form')
 J_DIR = os.path.join(FORM_DIR, 'varianten/J_dicker')
+# Nachbesserung 1 (E20/E21): Kopf K3 (Alligator-Kopf, offenes Maul in Bild 2, Krallen-Ton, Gelenkkoerper). Meshes, Textur
+# (512 x 256, CLUT-Zeile 3) und die Posen Bild 1/Bild 2 mit den Kopfwinkeln von K3 kommen aus K3_fit; Knochen und Versaetze sind
+# die von J (geprueft beim Laden). Die Ruhe ist die Ruhe von J mit geschlossenem Kiefer (K3-Kiefer liegt bei az 0 am Gaumen).
+K3_DIR = os.path.join(FORM_DIR, 'varianten/K_alligator/K3_fit')
+# Basis des Spiel-Assets: K3_fit mit neuer Textur-UV der 31 Gelenkkoerper und geklemmter Kopfnaht (stufe3/gen/s3_n1_textur.py bauen
+# ../basis_n1; Nutzerbefund "Texturen kaputt": Schachbrett aus gedrehten Fleckstuecken an Hals, Schulter, Gelenken)
+BASIS_DIR = os.path.join(FORM_DIR, 'stufe3/basis_n1')
+RUHE_KIEFER = [0, 0, 0]
 sys.path.insert(0, os.path.join(WURZEL, 're15_port/tools'))
 import form_emd as FE           # noqa: E402
 import emd_ansichtsblatt as EA  # noqa: E402
@@ -120,16 +128,26 @@ def slerp_m(a, b, t):
 
 # ═══════════════════════════════════════════════════ Rig
 class Rig:
-    def __init__(self, emd_pfad=None):
-        self.emd_pfad = emd_pfad or os.path.join(J_DIR, 'FORM.EMD')
+    def __init__(self, emd_pfad=None, ruhe_von_j=True):
+        self.emd_pfad = emd_pfad or os.path.join(BASIS_DIR, 'FORM.EMD')
         self.form = FE.lese_emd(open(self.emd_pfad, 'rb').read())
+        self.form_j = FE.lese_emd(open(os.path.join(J_DIR, 'FORM.EMD'), 'rb').read())
+        if [k['versatz'] for k in self.form['knochen']] != [k['versatz'] for k in self.form_j['knochen']] or            [k['eltern'] for k in self.form['knochen']] != [k['eltern'] for k in self.form_j['knochen']]:
+            raise SystemExit('Gerippe von %s weicht von J ab' % self.emd_pfad)
         self.eltern = [k['eltern'] for k in self.form['knochen']]
         self.versatz = [np.array(k['versatz'], float) for k in self.form['knochen']]
         self.kinder = {i: [j for j in range(N) if self.eltern[j] == i] for i in range(N)}
         self.ecken = [np.array(m['ecken'], float) if m['ecken'] else np.zeros((0, 3)) for m in self.form['meshes']]
-        # Die drei Posen von J: Clip 0 = Bild 1, Clip 1 = Bild 2, Clip 2 = Ruhe (form.json)
+        # Die drei Posen der Basis: Clip 0 = Bild 1, Clip 1 = Bild 2, Clip 2 = Ruhe (form.json)
         self.pose_j = [self.aus_keyframe(self.form['pool'][c['bilder'][0]['kf']]) for c in self.form['clips']]
         self.ruhe, self.bild1, self.bild2 = self.pose_j[2], self.pose_j[0], self.pose_j[1]
+        if ruhe_von_j:
+            # Ruhe = Ruhe von J (Wurzel, Hals, Kopf), Kiefer zu (RUHE_KIEFER); die Ruhe der Basis K3 (Kopf 13 Grad tiefer, Kiefer
+            # 5 Grad offen) war nur fuer das Rundumblatt (K.md Abschnitt 4).
+            kj = self.form_j['pool'][self.form_j['clips'][2]['bilder'][0]['kf']]
+            kj = dict(kj, winkel=[list(a) for a in kj['winkel']])
+            kj['winkel'][KIEFER] = list(RUHE_KIEFER)
+            self.ruhe = self.aus_keyframe(kj)
 
     # Pose = dict(w=[3x3]*N lokale Drehungen, wurzel=np[3], spur=np[3], roh=[[ax,ay,az]]*N oder None)
     def aus_keyframe(self, k):

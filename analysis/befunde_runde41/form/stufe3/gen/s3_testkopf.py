@@ -2,9 +2,10 @@
 
     python s3_testkopf.py
 
-Aus varianten/J_dicker/FORM.EMD (vom Nutzer abgenommen, E19): die drei Posen von J (Wurzel + 32 Winkeltripel) und
-CRC32/Laenge von MD1 und TIM. Der Test prueft damit, dass das Spiel-Asset Gestalt, Textur und die Screenshot-Posen von J
-unveraendert traegt. Kein RE-Wert.
+Seit Nachbesserung 1 (E20/E21): Referenz ist die Basis des Rigs, stufe3/basis_n1/FORM.EMD/.TIM = varianten/K_alligator/K3_fit (J mit
+Alligator-Kopf K3, Krallen-Ton, Gelenkkoerpern; Gerippe gleich J) mit neuer Textur-UV der Gelenkkoerper (s3_n1_textur.py): CRC32/Laenge von MD1 und TIM, dazu die drei Posen des Rigs (Wurzel + 32 Winkeltripel):
+Bild 1 und Bild 2 aus K3 (Kopfwinkel von K3), Ruhe = Ruhe von J mit geschlossenem Kiefer (s3_rig.RUHE_KIEFER). Der Test prueft damit,
+dass das Spiel-Asset Gestalt, Textur und die Screenshot-Posen unveraendert traegt. Die Makronamen FORM_J_* bleiben. Kein RE-Wert.
 """
 import os, sys, zlib
 HIER = os.path.dirname(os.path.abspath(__file__))
@@ -16,18 +17,19 @@ AUS = os.path.join(S.WURZEL, 're15_port', 'tests', 'unit', 'form_j_posen.h')
 
 
 def main():
-    emd = open(os.path.join(S.J_DIR, 'FORM.EMD'), 'rb').read()
-    tim = open(os.path.join(S.J_DIR, 'FORM.TIM'), 'rb').read()
-    f = FE.lese_emd(emd)
+    emd = open(os.path.join(S.BASIS_DIR, 'FORM.EMD'), 'rb').read()
+    tim = open(os.path.join(S.BASIS_DIR, 'FORM.TIM'), 'rb').read()
     md1 = FE.sektionen(emd)['md1']
+    r = S.Rig()
     namen = {0: 'BILD1', 1: 'BILD2', 2: 'RUHE'}
     z = ['/* form_j_posen.h - ERZEUGT von analysis/befunde_runde41/form/stufe3/gen/s3_testkopf.py, nicht von Hand aendern.',
-         ' * Referenz Formtreue: Variante J (varianten/J_dicker/FORM.EMD, Nutzer-Entscheid E19). Kein RE-Wert. */',
+         ' * Referenz Formtreue: Variante J mit Kopf K3 (stufe3/basis_n1 = K3_fit mit Gelenkkoerper-UV neu, Nutzer-Entscheide E19-E21): MD1/TIM,',
+         ' * Posen Bild 1/Bild 2 von K3, Ruhe = Ruhe von J mit Kiefer zu. Makronamen FORM_J_* wie bisher. Kein RE-Wert. */',
          '#ifndef FORM_J_POSEN_H', '#define FORM_J_POSEN_H', '#include <stdint.h>', '',
          '#define FORM_J_MD1_LEN %du' % len(md1), '#define FORM_J_MD1_CRC 0x%08xu' % (zlib.crc32(md1) & 0xffffffff),
          '#define FORM_J_TIM_LEN %du' % len(tim), '#define FORM_J_TIM_CRC 0x%08xu' % (zlib.crc32(tim) & 0xffffffff), '']
-    for ci, c in enumerate(f['clips']):
-        k = f['pool'][c['bilder'][0]['kf']]
+    for ci in range(3):
+        k = r.keyframe((r.bild1, r.bild2, r.ruhe)[ci])
         n = namen[ci]
         z.append('static const int16_t FORM_J_%s_WURZEL[3] = { %d, %d, %d };' % (n, *k['wurzel']))
         z.append('static const int16_t FORM_J_%s_WINKEL[32][3] = {' % n)
@@ -36,7 +38,6 @@ def main():
         z.append('};')
     # Hoehe im Gehen (Clip 5, jedes 4. Bild, hoechster Punkt ueber dem Boden), am Spiel-Asset gemessen wie der Test
     spiel = FE.lese_emd(open(os.path.join(S.WURZEL, 're15_port', 'shared_assets', 'RE2', 'BAHNSTEIG_FORM.EMD'), 'rb').read())
-    r = S.Rig()
     hs = []
     for i, b in enumerate(spiel['clips'][5]['bilder']):
         if i % 4:

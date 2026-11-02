@@ -1,0 +1,671 @@
+{
+ "quelle": "varianten/K_alligator/K3_fit (Meshes, TIM, Posen), nur UV/Seite/CLUT der 31 Gelenkkoerper neu",
+ "koerper": {
+  "Bein l - Huefte": {
+   "mesh": 0,
+   "seite": 0,
+   "clut_zeile": 0,
+   "rechteck": [
+    4,
+    26,
+    21,
+    12
+   ],
+   "farbe_mittel": [
+    51,
+    48,
+    55
+   ],
+   "median_umgebung": [
+    52,
+    48,
+    56
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Bein r - Huefte": {
+   "mesh": 0,
+   "seite": 1,
+   "clut_zeile": 0,
+   "rechteck": [
+    10,
+    12,
+    19,
+    12
+   ],
+   "farbe_mittel": [
+    55,
+    48,
+    61
+   ],
+   "median_umgebung": [
+    56,
+    48,
+    64
+   ],
+   "flaechen_umgebung": 7
+  },
+  "Schwanz - Becken": {
+   "mesh": 0,
+   "seite": 0,
+   "clut_zeile": 0,
+   "rechteck": [
+    71,
+    26,
+    23,
+    12
+   ],
+   "farbe_mittel": [
+    47,
+    40,
+    43
+   ],
+   "median_umgebung": [
+    48,
+    40,
+    40
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Wirbel - Huefte": {
+   "mesh": 0,
+   "seite": 0,
+   "clut_zeile": 0,
+   "rechteck": [
+    5,
+    34,
+    32,
+    29
+   ],
+   "farbe_mittel": [
+    52,
+    49,
+    56
+   ],
+   "median_umgebung": [
+    56,
+    48,
+    56
+   ],
+   "flaechen_umgebung": 10
+  },
+  "Arm l - Brust": {
+   "mesh": 10,
+   "seite": 1,
+   "clut_zeile": 0,
+   "rechteck": [
+    39,
+    61,
+    21,
+    12
+   ],
+   "farbe_mittel": [
+    52,
+    50,
+    56
+   ],
+   "median_umgebung": [
+    56,
+    48,
+    56
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Arm r - Brust": {
+   "mesh": 10,
+   "seite": 1,
+   "clut_zeile": 0,
+   "rechteck": [
+    111,
+    91,
+    16,
+    10
+   ],
+   "farbe_mittel": [
+    58,
+    55,
+    61
+   ],
+   "median_umgebung": [
+    48,
+    48,
+    56
+   ],
+   "flaechen_umgebung": 9
+  },
+  "Hals - Brust": {
+   "mesh": 10,
+   "seite": 1,
+   "clut_zeile": 0,
+   "rechteck": [
+    10,
+    66,
+    32,
+    20
+   ],
+   "farbe_mittel": [
+    47,
+    45,
+    50
+   ],
+   "median_umgebung": [
+    48,
+    48,
+    48
+   ],
+   "flaechen_umgebung": 6
+  },
+  "Kopf - Hals": {
+   "mesh": 21,
+   "seite": 0,
+   "clut_zeile": 0,
+   "rechteck": [
+    46,
+    208,
+    29,
+    13
+   ],
+   "farbe_mittel": [
+    53,
+    49,
+    55
+   ],
+   "median_umgebung": [
+    56,
+    48,
+    56
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Muffe Hals - Brust": {
+   "mesh": 21,
+   "seite": 0,
+   "clut_zeile": 0,
+   "rechteck": [
+    44,
+    199,
+    24,
+    19
+   ],
+   "farbe_mittel": [
+    53,
+    50,
+    55
+   ],
+   "median_umgebung": [
+    48,
+    48,
+    48
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Brust - Wirbel": {
+   "mesh": 7,
+   "seite": 0,
+   "clut_zeile": 0,
+   "rechteck": [
+    0,
+    64,
+    32,
+    32
+   ],
+   "farbe_mittel": [
+    51,
+    49,
+    54
+   ],
+   "median_umgebung": [
+    48,
+    48,
+    56
+   ],
+   "flaechen_umgebung": 8
+  },
+  "Knie l": {
+   "mesh": 8,
+   "seite": 1,
+   "clut_zeile": 2,
+   "rechteck": [
+    45,
+    169,
+    12,
+    12
+   ],
+   "farbe_mittel": [
+    64,
+    67,
+    81
+   ],
+   "median_umgebung": [
+    64,
+    68,
+    80
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Muffe Bein l - Huefte": {
+   "mesh": 8,
+   "seite": 1,
+   "clut_zeile": 2,
+   "rechteck": [
+    14,
+    156,
+    13,
+    19
+   ],
+   "farbe_mittel": [
+    64,
+    58,
+    64
+   ],
+   "median_umgebung": [
+    64,
+    56,
+    64
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Knie r": {
+   "mesh": 9,
+   "seite": 2,
+   "clut_zeile": 2,
+   "rechteck": [
+    92,
+    118,
+    14,
+    12
+   ],
+   "farbe_mittel": [
+    40,
+    40,
+    49
+   ],
+   "median_umgebung": [
+    40,
+    40,
+    48
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Muffe Bein r - Huefte": {
+   "mesh": 9,
+   "seite": 2,
+   "clut_zeile": 2,
+   "rechteck": [
+    96,
+    100,
+    15,
+    19
+   ],
+   "farbe_mittel": [
+    70,
+    73,
+    86
+   ],
+   "median_umgebung": [
+    92,
+    92,
+    104
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Ellbogen l": {
+   "mesh": 11,
+   "seite": 1,
+   "clut_zeile": 1,
+   "rechteck": [
+    94,
+    124,
+    29,
+    16
+   ],
+   "farbe_mittel": [
+    47,
+    46,
+    48
+   ],
+   "median_umgebung": [
+    48,
+    48,
+    48
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Ellbogen r": {
+   "mesh": 16,
+   "art": "projektion",
+   "flaechen": 40
+  },
+  "Muffe Arm r - Brust": {
+   "mesh": 16,
+   "seite": 1,
+   "clut_zeile": 1,
+   "rechteck": [
+    4,
+    104,
+    28,
+    26
+   ],
+   "farbe_mittel": [
+    50,
+    48,
+    51
+   ],
+   "median_umgebung": [
+    64,
+    56,
+    64
+   ],
+   "flaechen_umgebung": 6
+  },
+  "Fuss l": {
+   "mesh": 24,
+   "seite": 0,
+   "clut_zeile": 2,
+   "rechteck": [
+    80,
+    160,
+    12,
+    12
+   ],
+   "farbe_mittel": [
+    69,
+    72,
+    81
+   ],
+   "median_umgebung": [
+    72,
+    72,
+    80
+   ],
+   "flaechen_umgebung": 11
+  },
+  "Fuss r": {
+   "mesh": 26,
+   "seite": 0,
+   "clut_zeile": 2,
+   "rechteck": [
+    24,
+    172,
+    12,
+    12
+   ],
+   "farbe_mittel": [
+    43,
+    46,
+    55
+   ],
+   "median_umgebung": [
+    44,
+    48,
+    56
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Hand l": {
+   "mesh": 12,
+   "seite": 0,
+   "clut_zeile": 1,
+   "rechteck": [
+    19,
+    129,
+    12,
+    12
+   ],
+   "farbe_mittel": [
+    56,
+    56,
+    57
+   ],
+   "median_umgebung": [
+    56,
+    56,
+    56
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Hand r": {
+   "mesh": 17,
+   "seite": 2,
+   "clut_zeile": 1,
+   "rechteck": [
+    37,
+    104,
+    16,
+    12
+   ],
+   "farbe_mittel": [
+    37,
+    38,
+    43
+   ],
+   "median_umgebung": [
+    40,
+    40,
+    40
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Schwanz 1-2": {
+   "mesh": 1,
+   "seite": 2,
+   "clut_zeile": 2,
+   "rechteck": [
+    52,
+    28,
+    22,
+    12
+   ],
+   "farbe_mittel": [
+    32,
+    22,
+    24
+   ],
+   "median_umgebung": [
+    32,
+    24,
+    24
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Muffe Schwanz - Becken": {
+   "mesh": 1,
+   "seite": 2,
+   "clut_zeile": 2,
+   "rechteck": [
+    62,
+    12,
+    18,
+    20
+   ],
+   "farbe_mittel": [
+    41,
+    35,
+    39
+   ],
+   "median_umgebung": [
+    40,
+    36,
+    40
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Schwanz 2-3": {
+   "mesh": 2,
+   "seite": 0,
+   "clut_zeile": 2,
+   "rechteck": [
+    6,
+    225,
+    22,
+    12
+   ],
+   "farbe_mittel": [
+    43,
+    28,
+    31
+   ],
+   "median_umgebung": [
+    40,
+    32,
+    32
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Schwanz 3-4": {
+   "mesh": 3,
+   "seite": 2,
+   "clut_zeile": 2,
+   "rechteck": [
+    63,
+    202,
+    17,
+    12
+   ],
+   "farbe_mittel": [
+    39,
+    32,
+    37
+   ],
+   "median_umgebung": [
+    40,
+    32,
+    40
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Schwanz 4-5": {
+   "mesh": 4,
+   "seite": 1,
+   "clut_zeile": 2,
+   "rechteck": [
+    83,
+    196,
+    12,
+    12
+   ],
+   "farbe_mittel": [
+    35,
+    31,
+    38
+   ],
+   "median_umgebung": [
+    40,
+    32,
+    48
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Schwanz 5-6": {
+   "mesh": 5,
+   "seite": 1,
+   "clut_zeile": 2,
+   "rechteck": [
+    76,
+    189,
+    13,
+    12
+   ],
+   "farbe_mittel": [
+    45,
+    40,
+    48
+   ],
+   "median_umgebung": [
+    48,
+    40,
+    48
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Kiefer - Kopf": {
+   "mesh": 22,
+   "seite": 3,
+   "clut_zeile": 3,
+   "rechteck": [
+    0,
+    38,
+    16,
+    12
+   ],
+   "farbe_mittel": [
+    119,
+    107,
+    101
+   ],
+   "median_umgebung": [
+    136,
+    128,
+    104
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Muffe Kopf - Hals": {
+   "mesh": 22,
+   "seite": 3,
+   "clut_zeile": 3,
+   "rechteck": [
+    30,
+    11,
+    29,
+    26
+   ],
+   "farbe_mittel": [
+    53,
+    50,
+    56
+   ],
+   "median_umgebung": [
+    56,
+    48,
+    56
+   ],
+   "flaechen_umgebung": 12
+  },
+  "Muffe Hand l": {
+   "mesh": 13,
+   "seite": 1,
+   "clut_zeile": 1,
+   "rechteck": [
+    16,
+    203,
+    12,
+    12
+   ],
+   "farbe_mittel": [
+    54,
+    53,
+    56
+   ],
+   "median_umgebung": [
+    56,
+    56,
+    56
+   ],
+   "flaechen_umgebung": 8
+  },
+  "Muffe Hand r": {
+   "mesh": 18,
+   "seite": 2,
+   "clut_zeile": 1,
+   "rechteck": [
+    29,
+    85,
+    12,
+    10
+   ],
+   "farbe_mittel": [
+    54,
+    55,
+    57
+   ],
+   "median_umgebung": [
+    48,
+    56,
+    64
+   ],
+   "flaechen_umgebung": 12
+  },
+  "_uv_geklemmt": 30
+ }
+}

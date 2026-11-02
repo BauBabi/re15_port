@@ -21,10 +21,16 @@ import form_emd as FE    # noqa: E402
 
 D = math.radians
 AUS = os.path.join(HIER, '..', 'asset')
+# Bodenkorrektur eines freien Glieds: erst das untere Glied (Unterschenkel/Unterarm) bis 70 Grad, dann das obere bis 50 Grad
+# (Nachbesserung 1; vorher oben 70 / unten 50: an einem fast senkrechten Bein hebt die Huefte den Fuss nur mit 1 - cos, die Suche
+# drehte den Oberschenkel dann 40-69 Grad weg, Drohen Bild 31/45/53). Gestaltung.
+GLIED_REIHE = lambda kette: [(kette[1], 70.0), (kette[0], 50.0)]
+KIEFER_K3 = 0.65    # Gestaltung (Nachbesserung 1): Kieferwinkel J -> K3, s. Bau.kopf
 
 # Clip-Nummern: die Tick-Clips (birkin_bahnsteig.c BB_C_*) behalten ihre Nummer, die neuen liegen dazwischen.
 C_RENNEN, C_STEHEN, C_HIEB0, C_HIEB1, C_GEHEN = 0, 2, 3, 4, 5
 C_ZUCKEN, C_NACHHIEB, C_DROHEN, C_FLUCHT, C_STURZ = 8, 9, 10, 11, 12
+C_TAUMELN = 13                     # Nachbesserung 1 (M5): Rueckstoss-Taumeln, PORT-WAHL (vorher Platzhalter)
 C_BISS, C_GRIFF = 26, 27
 N_CLIPS = 28
 # G4-Clip je Form-Clip (gleiche Nummer = gleiche Rolle im Tick, R_bahnsteig.md 3.1)
@@ -84,7 +90,14 @@ class Bau:
         self.r.dreh_eltern(p, S.HALS, S.rx(D(roll * hals_anteil)) @ S.ry(D(gier * hals_anteil)) @ S.rz(D(nick * hals_anteil)))
         self.r.dreh_eltern(p, S.KOPF, S.rx(D(roll * (1 - hals_anteil))) @ S.ry(D(gier * (1 - hals_anteil))) @ S.rz(D(nick * (1 - hals_anteil))))
         if kiefer:
-            self.r.dreh_eltern(p, S.KIEFER, S.rz(D(kiefer)))   # + = Kiefer nach unten auf
+            # Die Kieferwerte der Clips sind fuer den Kiefer von J gesetzt; der K3-Kiefer ist 1089 lang, bei gleichem Winkel stuende
+            # die Spitze rund 1,5-mal so weit offen (K.md Abschnitt 8 Punkt 2). KIEFER_K3 bringt die Spaltweite an der Spitze zurueck
+            # (Gestaltung). Der Kiefer schliesst hoechstens bis an den Gaumen (az >= 0).
+            k = kiefer * KIEFER_K3
+            az = S.matrix_euler(p['w'][S.KIEFER])[2] * 360.0 / 4096.0
+            k = max(k, -az)
+            if k:
+                self.r.dreh_eltern(p, S.KIEFER, S.rz(D(k)))   # + = Kiefer nach unten auf
         return p
 
     def schwanz(self, p, gier=0.0, nick=0.0, phase=0.0, lauf=0.7, hebung=0.0):
@@ -216,8 +229,7 @@ class Bau:
         R, T = self.r.fk(p)
         for g, kette in self.glieder.items():
             if abs(T[kette[2]][1] - self.neutral[g][1]) > 25 or g in p.get('glieder_frei', ()):   # Glied frei
-                reihe.append((kette[0], 70.0))
-                reihe.append((kette[1], 50.0))
+                reihe += GLIED_REIHE(kette)
         for b, grenze in reihe:
             if vorgabe is not None:
                 w = vorgabe.get(b, 0.0)
@@ -300,7 +312,7 @@ class Bau:
 
 # ═══════════════════════════════════════════════════ Gang (Clip 5): Fuss-IK gegen die G4-Spur
 def gang(bau, n, spur_x, zyklen, tritt_phase, last=0.72, hub=(260, 260, 360, 360), bob=40.0, schwanz_gier=7.0,
-         vorwaerts=True, spur_voll=None):
+         vorwaerts=True, spur_voll=None, extra=None):
     """Seitenfolge-Gang. A(f) = Spur (Aktor laeuft um A weiter); ein stehender Fuss ist in der WELT fest, im Aktorraum
     wandert er also um -A. tritt_phase: Phase je Glied (Anteil am Zyklus). Hub je Glied: Hoehe der Schwungkurve."""
     r = bau.r
@@ -325,8 +337,10 @@ def gang(bau, n, spur_x, zyklen, tritt_phase, last=0.72, hub=(260, 260, 360, 360
         bau.koerper(p, nick=1.2 * math.sin(2 * ph + 0.4), roll=2.2 * math.sin(ph), gier=1.5 * math.sin(ph + 0.6),
                     hoch=-bob * (0.5 + 0.5 * math.cos(2 * ph)))
         bau.ruecken(p, gier=-3.0 * math.sin(ph + 0.6), roll=-2.0 * math.sin(ph), nick=-1.0 * math.sin(2 * ph + 0.4))
-        bau.kopf(p, nick=-2.5 * math.sin(2 * ph + 1.2), gier=2.0 * math.sin(ph + 1.5), kiefer=4 + 3 * welle(f / T * 2))
+        bau.kopf(p, nick=-2.5 * math.sin(2 * ph + 1.2), gier=2.0 * math.sin(ph + 1.5))   # Kiefer zu (Nachbesserung 1, K3)
         bau.schwanz(p, gier=schwanz_gier, nick=3.0, phase=ph)
+        if extra is not None:
+            extra(p, f)                       # Zusatzbewegung des Rumpfs vor der Fuss-IK (Taumeln, Nachbesserung 1)
         for gi, g in enumerate(namen):
             phi = tritt_phase[g]
             u = f / T - phi
@@ -362,7 +376,7 @@ def gang(bau, n, spur_x, zyklen, tritt_phase, last=0.72, hub=(260, 260, 360, 360
 
 
 def stehen(bau, n=60):
-    """Clip 2 Stehen/Atmen, Bild 0 = Ruhepose von J unveraendert (form.json ruhe = Clip 2 Bild 0)."""
+    """Clip 2 Stehen/Atmen, Bild 0 = Ruhepose (Ruhe von J, Kiefer zu; form.json ruhe = Clip 2 Bild 0)."""
     out = []
     for f in range(n):
         if f == 0:
@@ -373,7 +387,7 @@ def stehen(bau, n=60):
         p = bau.p()
         bau.koerper(p, hoch=22 * math.sin(ph) ** 2, nick=-0.8 * math.sin(ph))
         bau.ruecken(p, nick=-1.6 * math.sin(ph), gier=1.2 * math.sin(ph * 0.5 + 0.3) * math.sin(ph))
-        bau.kopf(p, nick=-3 * math.sin(ph), gier=4 * math.sin(ph) * math.sin(ph * 0.5), kiefer=5 * (math.sin(ph) ** 2))
+        bau.kopf(p, nick=-3 * math.sin(ph), gier=4 * math.sin(ph) * math.sin(ph * 0.5))   # Kiefer zu (Nachbesserung 1, K3)
         bau.schwanz(p, gier=4 * math.sin(ph), nick=1.5, phase=ph, lauf=0.5)
         bau.boden_halten(p)
         out.append(p)
@@ -414,7 +428,9 @@ def bauen(aus, nur=None):
              (C_BISS, 'biss', lambda: AN.biss(bau), 'G4 Clip 26: Laenge, Treffer, Toene'),
              (C_GRIFF, 'griff', lambda: AN.griff(bau), 'G4 Clip 27: Laenge, Spur (Opfer-Spur), Toene'),
              (C_FLUCHT, 'flucht', lambda: AN.flucht(bau, renn), 'PORT-WAHL (Galoppteil = Clip 0)'),
-             (C_STURZ, 'sturz', lambda: AN.sturz(bau), 'PORT-WAHL; Bild 0 = Pose Bild 2')]
+             (C_STURZ, 'sturz', lambda: AN.sturz(bau), 'PORT-WAHL; Bild 0 = Pose Bild 2'),
+             (C_TAUMELN, 'taumeln', lambda: AN.taumeln(bau, gang), 'PORT-WAHL (Nachbesserung 1, M5): Rueckstoss-Taumeln, Schleife, '
+              'Spur -80 je Bild')]
     for c, name, fn, quelle in tafel:
         if soll(c):
             p, w = fn()
@@ -487,7 +503,7 @@ def schreiben(bau, clips, aus):
     os.makedirs(aus, exist_ok=True)
     emd = FE.schreibe_emd(form)
     open(os.path.join(aus, 'BAHNSTEIG_FORM.EMD'), 'wb').write(emd)
-    open(os.path.join(aus, 'BAHNSTEIG_FORM.TIM'), 'wb').write(open(os.path.join(S.J_DIR, 'FORM.TIM'), 'rb').read())
+    open(os.path.join(aus, 'BAHNSTEIG_FORM.TIM'), 'wb').write(open(os.path.join(S.BASIS_DIR, 'FORM.TIM'), 'rb').read())
     with open(os.path.join(aus, 'clips.json'), 'w', encoding='utf-8') as f:
         json.dump(tabelle, f, indent=1)
     return emd, tabelle
