@@ -63,8 +63,13 @@ function(ein_lauf _name _raum)
         string(APPEND _skript ",MA4")
     endforeach()
     string(APPEND _skript ",D12")
+    # Nachbesserung G5 3: nach jedem 4-s-Abschnitt R1 kurz los (W0.2), damit das naechste Heben neu zielt. Die Zielhilfe laeuft nur im
+    # Heben (Latch FUN_8003703c rundum, Radius 0x7530 @0x80032fac, Drehung FUN_8001a8f8 0xC8 @0x80032fe0-ec, player_common.c RAISE).
+    # Gemessen (Lauf mit RE2-Vorkampf-Puls, eine Zufallsziehung @0x80104544 mehr): ein Arm peitscht den Spieler bei x 23113 (F3576 HP
+    # 45 -> 38, F3618 -> 31), der Blick dreht 2055 -> 640; bei durchgehend gehaltenem R1 zielte er danach bis F5400 ins Leere, G5 blieb
+    # bei 150 HP. NB2 8.9 hatte genau diese Annahme ("kein Treffer bei 23113") als ungemessen offen gelassen.
     foreach(_i RANGE 1 60)
-        string(APPEND _skript ",MA4")
+        string(APPEND _skript ",MA4,W0.2")
     endforeach()
     re15_start_spiel(_rv 420
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
