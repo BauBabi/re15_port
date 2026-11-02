@@ -496,3 +496,14 @@ Figur nicht oben = Verfolgung) rot; alle anderen bis dahin (71 von 123) gruen. U
 die Trag-Kuerzung dort ebenso zerlegt. Die Verfolgung nimmt wieder die NB4-Karotte (`gr2_tr_karotte(..., verfolgung = 1)`; das freie Spiel war in Abnahme 3
 bestanden), die Belagerung die Bahn. Danach beide gruen (295 s / 308 s), dazu unit bahn/kamera/fuzz. **Offen:** der Verfolgungs-Kreis kreiselt weiter am
 Fixpunkt der gespiegelten Karotte (Abnahme 3: "kreist sichtbar vor Leon ... schnappt", angenommen); eine Bahn wie in der Belagerung waere der naechste Schritt.
+
+### Abschluss Nachbesserung 5
+Commits: 81c1e0edd (M2a/M2b Bahn + Haken), 4ea2322a4 (M1 Klemmen je Scheitel), 1de58649d (Verfolgung wie NB4, Fensterbelege), dae772f5a (Wandmaske der Kopf-Klemme
+nur waehrend der Bahn). Tests (PowerShell, `C:\msys64\mingw64\bin` vorn, SDL_ASSERT=always_ignore, eigener Testbaum build_t5 gebaut mit local_build.sh):
+Auswahl `r41_gatorszene|r41_kanister2080|r41_alligator2|r41_re2gator|r41_gatorfix` -j3 auf 1de58649d: **100% tests passed, 0 tests failed out of 123** (3107,66 s;
+neu unit_r41_gatorfix_bahn(_elza), _haken(_elza)). Nach dae772f5a: unit_r41_gatorfix* + integration_r41_gatorfix_rampe(_elza), _abn2_rampe_west(_elza) 24/24.
+**Offen:** (1) M1 seitlich: Fussspitze hinter dem Nacken (2-3 Bilder) und Kopf der Leiche neben/vor dem Unterkiefer im Fangbild - seitlicher Ueberstand der
+Quer-Haltung, Band-Mass 0; die Grenze "seitlich bis zu den Kieferraendern" ist nicht eingebaut (Weg s. Fensterbelege). (2) Verfolgungs-Kreis (kreis 1) unveraendert
+NB4 (Kreisel am Fixpunkt der gespiegelten Karotte, Abnahme 3 bestanden). (3) Cut 3 nur im Riegel (Klettern von Norden im exe-Lauf nicht moeglich). (4) PSX-Bau:
+Bahn und Klemmen nur PC (PSX wie NB4); Bahn-Suche je Kamera auf PC in 71 Teilschritten (~1-3 ms je Bild). (5) Die Bahn haengt nur von der Kamera ab, nicht von
+der Lage der Figur auf der Rampe (Cut 2: immer das Stadion vor der Kamera, 4000-7000 von der Figur).
