@@ -1,0 +1,147 @@
+RE2-RAM G5 Slot 0: Blob +0x218, Phase +0x219, +0x21B, +0x21C, Geschwindigkeit +0x21E, Gewichte = Morph-Record (part2+0x88) u16 @+12/+16/+20/+24
+s02 Schnitt  9 Wort 00000201 t158   0 | blob 0 ph 1 21b 0 21c 204 speed 12 | w [6, 0, 0, 0]
+s03 Schnitt  9 Wort 00010201 t158  31 | blob 3 ph 1 21b 1 21c 58 speed 162 | w [3078, 0, 0, 0]
+s04 Schnitt  9 Wort 00010201 t158  80 | blob 3 ph 1 21b 1 21c 58 speed 66 | w [10296, 0, 0, 0]
+s05 Schnitt  9 Wort 00020201 t158  90 | blob 3 ph 2 21b 1 21c 21 speed 192 | w [5796, 566, 0, 0]
+s06 Schnitt  9 Wort 00020201 t158  90 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-184, 2895, 0, 0]
+s07 Schnitt  9 Wort 00020201 t158  90 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-4000, 2862, 0, 0]
+s08 Schnitt  9 Wort 00020201 t158  90 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [9440, 2865, 0, 0]
+s09 Schnitt  9 Wort 00040201 t158  43 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-4168, 2865, 0, 0]
+s10 Schnitt  9 Wort 00050201 t158   3 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [8000, 2865, 0, 0]
+s11 Schnitt  9 Wort 00050201 t158  52 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-3928, 2865, 0, 0]
+s12 Schnitt 10 Wort 00050201 t158  81 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-2200, 2865, 0, 0]
+s13 Schnitt 10 Wort 00060201 t158   0 | blob 3 ph 6 21b 1 21c 1 speed 192 | w [8000, 2865, 0, 0]
+s14 Schnitt 10 Wort 00060201 t158   0 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-4216, 3074, 0, 0]
+s15 Schnitt 10 Wort 00060201 t158   0 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [7520, 2235, 0, 0]
+s16 Schnitt 10 Wort 00060201 t158   0 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-3904, 355, 0, 0]
+s17 Schnitt 10 Wort 00080201 t158   0 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [3152, 0, 0, 0]
+s18 Schnitt 10 Wort 00080201 t158   0 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-3928, 0, 0, 0]
+s19 Schnitt 10 Wort 00080201 t158   0 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-880, 0, 0, 0]
+s20 Schnitt  5 Wort 000a0201 t158  12 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [9200, 0, 0, 0]
+s21 Schnitt  5 Wort 000a0201 t158  54 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-3904, 0, 0, 0]
+s22 Schnitt  5 Wort 000a0201 t158 104 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [6080, 0, 0, 0]
+s23 Schnitt  5 Wort 000c0201 t158 110 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-4192, 0, 0, 0]
+s24 Schnitt  5 Wort 000c0201 t158 110 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [1160, 0, 0, 0]
+s25 Schnitt  5 Wort 000c0201 t158 110 | blob 3 ph 7 21b 1 21c 1 speed 192 | w [-3472, 0, 0, 0]
+s26 Schnitt  5 Wort 000e0201 t158  19 | blob 0 ph 1 21b 1 21c 209 speed 162 | w [728, 0, 0, 0]
+; build/extracted/re2_ems\CDEMD0_EM36_ai0.BIN  @0x801044fc (120 instr)
+  801044fc: addiu sp,sp,-56                    
+  80104500: sw s0,40(sp)                       
+  80104504: addu s0,a0,zero                    
+  80104508: sw ra,48(sp)                       
+  8010450c: sw s1,44(sp)                       
+  80104510: lbu v1,537(s0)                     
+  80104514: nop                                
+  80104518: sltiu v0,v1,0x8                    
+  8010451c: beq v0,zero,0x80104830             
+  80104520: addu s1,a1,zero                    
+  80104524: sll v0,v1,2                        
+  80104528: lui at,0x8011                      
+  8010452c: addu at,at,v0                      
+  80104530: lw v0,-12156(at)                   0x8010d084
+  80104534: nop                                
+  80104538: jr v0                              
+  8010453c: nop                                
+  80104540: addiu v0,zero,1                    
+  80104544: jal 0x80015fe8                     
+  80104548: sb v0,537(s0)                      
+  8010454c: andi v0,v0,0x1f                    
+  80104550: addiu v0,v0,30                     
+  80104554: sh v0,540(s0)                      
+  80104558: addiu v0,zero,6                    
+  8010455c: sh v0,542(s0)                      
+  80104560: sb zero,539(s0)                    
+  80104564: lw v1,136(s1)                      
+  80104568: nop                                
+  8010456c: lhu v0,24(v1)                      
+  80104570: nop                                
+  80104574: sll v0,v0,16                       
+  80104578: beq v0,zero,0x80104584             
+  8010457c: sra v0,v0,17                       
+  80104580: sh v0,24(v1)                       
+  80104584: lw a0,136(s1)                      
+  80104588: lhu v1,542(s0)                     
+  8010458c: lhu v0,12(a0)                      
+  80104590: nop                                
+  80104594: addu v0,v0,v1                      
+  80104598: sh v0,12(a0)                       
+  8010459c: lh v0,542(s0)                      
+  801045a0: nop                                
+  801045a4: addu v1,v0,zero                    
+  801045a8: slti v0,v0,162                     
+  801045ac: beq v0,zero,0x801045e8             
+  801045b0: nop                                
+  801045b4: lb v0,539(s0)                      
+  801045b8: nop                                
+  801045bc: bne v0,zero,0x801045e8             
+  801045c0: addiu v0,v1,6                      
+  801045c4: sh v0,542(s0)                      
+  801045c8: sll v0,v0,16                       
+  801045cc: sra v0,v0,16                       
+  801045d0: slti v0,v0,162                     
+  801045d4: bne v0,zero,0x801045e8             
+  801045d8: addiu v0,zero,1                    
+  801045dc: sb v0,539(s0)                      
+  801045e0: addiu v0,zero,162                  
+  801045e4: sh v0,542(s0)                      
+  801045e8: lw v0,136(s1)                      
+  801045ec: nop                                
+  801045f0: lh v0,12(v0)                       
+  801045f4: nop                                
+  801045f8: slti v0,v0,8501                    
+  801045fc: bne v0,zero,0x80104830             
+  80104600: nop                                
+  80104604: lhu v0,542(s0)                     
+  80104608: nop                                
+  8010460c: addiu v0,v0,-6                     
+  80104610: sh v0,542(s0)                      
+  80104614: sll v0,v0,16                       
+  80104618: bgez v0,0x80104830                 
+  8010461c: addiu v0,zero,2                    
+  80104620: sb v0,537(s0)                      
+  80104624: addiu v0,zero,8                    
+  80104628: sh v0,542(s0)                      
+  8010462c: j 0x80111830                       
+  80104630: sb zero,539(s0)                    
+  80104634: lw a0,136(s1)                      
+  80104638: lhu v1,542(s0)                     
+  8010463c: lhu v0,12(a0)                      
+  80104640: nop                                
+  80104644: subu v0,v0,v1                      
+  80104648: sh v0,12(a0)                       
+  8010464c: lh v0,542(s0)                      
+  80104650: nop                                
+  80104654: addu v1,v0,zero                    
+  80104658: slti v0,v0,192                     
+  8010465c: beq v0,zero,0x80104698             
+  80104660: nop                                
+  80104664: lb v0,539(s0)                      
+  80104668: nop                                
+  8010466c: bne v0,zero,0x80104698             
+  80104670: addiu v0,v1,8                      
+  80104674: sh v0,542(s0)                      
+  80104678: sll v0,v0,16                       
+  8010467c: sra v0,v0,16                       
+  80104680: slti v0,v0,192                     
+  80104684: bne v0,zero,0x80104698             
+  80104688: addiu v0,zero,1                    
+  8010468c: sb v0,539(s0)                      
+  80104690: addiu v0,zero,192                  
+  80104694: sh v0,542(s0)                      
+  80104698: lw v0,136(s1)                      
+  8010469c: nop                                
+  801046a0: lh v0,12(v0)                       
+  801046a4: nop                                
+  801046a8: slti v0,v0,-1048                   
+  801046ac: beq v0,zero,0x801046e0             
+  801046b0: nop                                
+  801046b4: lhu v0,542(s0)                     
+  801046b8: nop                                
+  801046bc: addiu v0,v0,-8                     
+  801046c0: sh v0,542(s0)                      
+  801046c4: sll v0,v0,16                       
+  801046c8: bgez v0,0x801046e0                 
+  801046cc: addiu v0,zero,1                    
+  801046d0: sb v0,537(s0)                      
+  801046d4: addiu v0,zero,6                    
+  801046d8: sh v0,542(s0)                      

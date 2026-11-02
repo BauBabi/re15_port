@@ -1,0 +1,60 @@
+== s03 Schnitt 9 Leon x 5736 | G5 (-9000,0,-23400) rot(0,0,0) Wort 00010201 t158 31 clip 1 bild 0 178 192 14e 31
+   p0 ang(0,0,0) welt(-9000,-4534,-23400) flags 0000
+   p1 ang(0,0,0) welt(-6854,-3727,-23400) flags 0000
+   p2 ang(0,0,0) welt(-7200,-34,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [3078, 0, 0, 0]
+== s05 Schnitt 9 Leon x 20066 | G5 (-9525,0,-23400) rot(0,0,0) Wort 00020201 t158 90 clip 1 bild 39 178 232 14e 0
+   p0 ang(0,0,63) welt(-9525,-4271,-23400) flags 0000
+   p1 ang(0,0,38) welt(-7468,-3261,-23400) flags 0000
+   p2 ang(0,0,0) welt(-8168,380,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [5796, 566, 0, 0]
+== s06 Schnitt 9 Leon x 20066 | G5 (-5126,0,-23400) rot(0,0,0) Wort 00020201 t158 90 clip 1 bild 75 178 120 14e 0
+   p0 ang(0,0,0) welt(-5126,-3191,-23400) flags 0000
+   p1 ang(4068,4070,3855) welt(-2980,-2384,-23400) flags 0000
+   p2 ang(0,0,0) welt(-3326,1309,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [-184, 2895, 0, 0]
+== s08 Schnitt 9 Leon x 20066 | G5 (-2825,0,-23400) rot(0,0,0) Wort 00020201 t158 90 clip 1 bild 174 178 4 14e 0
+   p0 ang(0,0,0) welt(-2825,-3205,-23400) flags 0000
+   p1 ang(16,35,3940) welt(-679,-2398,-23400) flags 0000
+   p2 ang(0,0,0) welt(-1025,1295,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [9440, 2865, 0, 0]
+== s09 Schnitt 9 Leon x 20066 | G5 (-2786,0,-23400) rot(0,0,0) Wort 00040201 t158 43 clip 3 bild 43 178 32 14e 0
+   p0 ang(0,0,4091) welt(-2786,-3215,-23400) flags 0000
+   p1 ang(0,0,3) welt(-636,-2422,-23400) flags 0000
+   p2 ang(0,0,0) welt(-959,1274,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [-4168, 2865, 0, 0]
+== s10 Schnitt 9 Leon x 20066 | G5 (-2786,0,-23400) rot(0,0,0) Wort 00050201 t158 3 clip 3 bild 93 178 232 14e 0
+   p0 ang(0,0,0) welt(-2786,-3204,-23400) flags 0000
+   p1 ang(0,0,4084) welt(-640,-2397,-23400) flags 0000
+   p2 ang(0,0,0) welt(-986,1296,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [8000, 2865, 0, 0]
+== s11 Schnitt 9 Leon x 20066 | G5 (-2786,0,-23400) rot(0,0,0) Wort 00050201 t158 52 clip 3 bild 42 178 28 14e 0
+   p0 ang(0,0,4091) welt(-2786,-3217,-23400) flags 0000
+   p1 ang(0,0,6) welt(-636,-2424,-23400) flags 0000
+   p2 ang(0,0,0) welt(-959,1272,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [-3928, 2865, 0, 0]
+== s12 Schnitt 10 Leon x 6565 | G5 (-2786,0,-23400) rot(0,0,0) Wort 00050201 t158 81 clip 3 bild 71 178 144 14e 0
+   p0 ang(0,0,4094) welt(-2786,-3200,-23400) flags 0000
+   p1 ang(0,0,4050) welt(-639,-2397,-23400) flags 0000
+   p2 ang(0,0,0) welt(-980,1297,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [-2200, 2865, 0, 0]
+== s13 Schnitt 10 Leon x 7715 | G5 (-2779,0,-23400) rot(0,0,0) Wort 00060201 t158 0 clip 4 bild 9 178 40 14e 22
+   p0 ang(0,0,0) welt(-2779,-3205,-23400) flags 0000
+   p1 ang(0,1,15) welt(-633,-2398,-23400) flags 0000
+   p2 ang(0,0,0) welt(-979,1295,-23400) flags 0000
+   Morph-Record @801212f8 Gewichte [8000, 2865, 0, 0]
+== s15 Schnitt 10 Leon x 10496 | G5 (-789,0,-23400) rot(0,0,0) Wort 00060201 t158 0 clip 4 bild 108 178 180 14e 0
+   p0 ang(0,1,4089) welt(-789,-3497,-23400) flags 0000
+   p1 ang(3977,3998,3735) welt(1364,-2710,-23404) flags 0000
+   p2 ang(0,0,0) welt(1052,986,-23403) flags 0000
+   Morph-Record @801212f8 Gewichte [7520, 2235, 0, 0]
+== s17 Schnitt 10 Leon x 13267 | G5 (1160,0,-23400) rot(0,0,0) Wort 00080201 t158 0 clip 2 bild 27 178 136 14e 4
+   p0 ang(4089,14,4092) welt(1160,-4474,-23400) flags 0000
+   p1 ang(4059,3994,77) welt(3309,-3677,-23454) flags 0000
+   p2 ang(0,0,0) welt(2979,17,-23481) flags 0000
+   Morph-Record @801212f8 Gewichte [3152, 0, 0, 0]
+== s19 Schnitt 10 Leon x 16038 | G5 (1160,0,-23400) rot(0,0,0) Wort 00080201 t158 0 clip 2 bild 126 178 20 14e 0
+   p0 ang(4091,15,4093) welt(1160,-4510,-23400) flags 0000
+   p1 ang(85,4079,3908) welt(3307,-3710,-23455) flags 0000
+   p2 ang(0,0,0) welt(2972,-16,-23469) flags 0000
+   Morph-Record @801212f8 Gewichte [-880, 0, 0, 0]
