@@ -5,7 +5,8 @@ von Birkin aus dem Zug, sollst du die letzte Stufe GENAUSO machen wie bei Reside
 eine Grossaufnahme an seitlich der offenen Stelle des Zuges, und dann kommen da zunaechst die Tentakel vom finalen Birkin G5, und
 der zieht ihn dann rein. Schau es dir an!"
 
-Stand: gebaut, im Fenster geprueft (Leon und Elza), Tests gruen. Belege: `G5_belege/`.
+Stand: Nachbesserung 1 nach Abnahme 1 (Abschnitt 7; ersetzt in 2.1/2.2/3/4 "Leon steht", die Spielerlagen 1400/13873 im Cut-12-Teil
+und "XA-Ton nicht gebaut"). Belege: `G5_belege/`, `G5_belege/nb1/`.
 
 ## 1. Was RE2 tut (selbst gelesen)
 
@@ -229,3 +230,94 @@ steht.
   RE2-Wagen zwischen den orangen RE1.5-Bildern.
 - **Kampfbeginn naeher als RE2:** Spieler am Ende 13873 statt 14850 (977 naeher am G5), s. 2.2.
 - **PSX-Bau:** die Szenen-Schnitte 16/17 laedt nur die PC-Plattform (bg_pc.c); der PSX-Zweig haette keinen Hintergrund (bekannte PSX-Luecke).
+
+## 7. Nachbesserung 1 (Abnahme 1: NICHT BESTANDEN, Massstab = echte RE2-Aufnahme)
+
+Abnahme: `G5_abnahme_1.md`. RE2-Referenz: echte Aufnahme + 26 Savestates der Abnahme (Spieler `*(0x800cfe14)`, Gegner-Slot i
+`*(0x800cfe1c+4i)`, Lage +0x38/+0x3C/+0x40, Routinewort +0x04, Clip +0x14C, Bild +0x14D, Blende +0x14E, Flags +0x1CC, gezeichnetes Bild
++0x178; Arm-Parts `*(e+0x198)`, Stride 172, Winkel +104, Weltlage +92/96/100). Lesewerkzeuge: `G5_belege/nb1/werkzeug/` (re2ss.py,
+tent_ss3.py, tent_kf.py, leon_ss.py, edd37.py, pl00_spur.py). EM37-Overlay liegt im RAM ab 0x8010D000 (Datei `CDEMD0_EM37_ai0.BIN`,
+Bytes ab +0x200 gleich); Adressen hier wie im ganzen Dossier = Link-Adressen @0x8010xxxx.
+
+### 7.1 Je Mangel: Ursache, Behebung, Messung
+
+| Mangel | Ursache (Adresse/Bytes) | Behebung | vorher -> nachher |
+|---|---|---|---|
+| M1 Figur in der Grossaufnahme | Port stellte Leon 437 Bilder auf 1400 (Pose Stehen). RE2: @0x018EA `3f 00 0f 80` Plc_motion = Szenenbank +0x190 Clip 15 (12 Bilder, Wurzelspur 0, gelesen RAM s04), @0x01906 `3f 0c 01 04` = Spieler-Routine 4 Sub 0x0C (Tabelle @0x800a8d90[12] = 0x80066498 -> FUN_80066dec(e,+0x180,+0x184)) Clip 1 = Lauf (20 Bilder, Spur 189 -> 4336 = 216,8/Bild); RAM s03/s04/s05 x 5736 / 16308 / 20066 (Ostwand). Schnitt 10: @0x01940 `3f 0b 01 54` = Sub 0x0B (0x80066478 -> FUN_80066dec(e,+0x108,+0x17C) Basisbank) Clip 1 = Rueckwaertsgang (34 Bilder, Spur -65 -> -1908), Flags 0x54: 0x10 Halbtakt (@0x80065d28-3c `andi 0x10`/`andi 0x20`, Kippen @0x80065d6c-78 `xori 0x20`), 0x04 Schleife, 0x40 ohne Blende; Weg aus der Spur (`jal 0x80015e7c` @0x80066e68/@0x80066ed4, `jal 0x80015350` @0x80066f3c/@0x80066f54); RAM s12..s19 6565 -> 16038 (27,5/Bild) | Bild 1..11 steht Leon (PORT-WAHL: Szenenclip ohne RE1.5-Gegenstueck), Bild 12 RE1.5-Plc_dest Lauf (Modus 5, W01 Clip 0, Tempo 200 @0x80073f24) bis zur RE2-Endlage 20066 (PORT-WAHL); Bild 437 Pos_set 6500/Dir 0x800 + Plc_motion(0x0B,1,0x54) mit RE1.5 PL00 Clip 1 (Bytes = RE2-Basisclip 1: 34 Bilder, Spur -65 .. -1908, PL00.PLD dir[0]/dir[1]), Halbtakt ueber den vorhandenen Spieler-Takt (@0x80030670-80), Weg aus der Wurzelspur wie FUN_80015e7c (Vorwert 0 bei Bild 0 @0x80015f04-1c); Cut 12 ab 15646 (PORT-WAHL: RE2-Abstand 14220-11340 = 2880 vor dem Auge, auf Cut 12 x 18526 uebertragen) | Leon in Schnitt 16 bis Bild 436 im Bild -> zuletzt Bild 29 (RE2: aus dem Bild 0,57 s nach der Armierung); Schnitt 17: stand 370 Bilder -> geht rueckwaerts hinaus, zuletzt im Bild 479 (42 Bilder = 1,4 s, RE2 "1-2 s"), x 6500 -> 16964 bis Bild 806 (RE2 s19 16038); Cut 12: hinaus bis Bild 877 |
+| M2 gerade Tentakel | Port zeichnete (motion, anim_frame). RE2 zeigt die Pose des letzten Anim-Schritts: FUN_8002959c `sw a2,376(a0)` @0x800295f8 (+0x178 = Bild +0x14D vor dem Vorschub), Vorschub erst @0x80029b28-4c; Austritt sub8: Schritt nur ph2 @0x80101DB8 (a3 0x100) und ph8 @0x80101FB4 (a3 0x200), ph4 @0x80101E24-88 und ph6 @0x80101E94-F9C ohne Schritt (Phasentabelle @0x8010004C). ph3 @0x80101E04-08 `lui v0,0x7`/`sw v0,332(s1)` setzt Clip 0 + 7 Blendstufen, posiert aber nicht. RAM s04/s06: Arm 0 +0x178 -> EDD+0xC80 = Clip 14 Bild 29 = kf 776, Part-Winkel == kf 776 (part2 (343,-41,-1095), part3 (366,289,-634)); Clip 0 = kf 0 = alle Winkel 0 = gerade Stange. Dazu: Port lief 0x37 auch im globalen Advancer (Doppelschritt), Blendstufen (Wort-Byte 2 / a3) fehlten, Kind-Kollision und Spitze nahmen UNGESTRECKTE Part-Lagen (RAM s12 Arm 3 scaleX 2400: \|p3-p0\| = 4833 = 8249*2400/4096 -> gestreckt) | Zeichenbild-Merker (+0x178) im Arm-Schritt, Zeichner und Kettenrechnung nehmen ihn (main.c, tent_posen); kein Schritt in sub8 ph4/ph6; ph3 faellt in ph4 durch (kein Sprung @0x80101E20); Clip-Wort-Blende an allen 21 Store-Stellen, a3 an allen 22 Schritt-Stellen (Adressen im Code); +0x14E-Abbau nach dem Mischen (@0x800299c0-cc); 0x37 in re15_type_self_advances_anim; gestreckte Kind-Kollision/Spitze | Gelenklagen relativ zu Part 0 gegen RE2 s04 (Arme 0/2/3, 123 Vergleiche Bild 80..120): vorher gerade Stange (Clip 0), nachher max. Abweichung 116 Einheiten (mit G5-Richtung 0 waeren es 12, s. 7.5); Leon in Schnitt 17 vorher bis 2400 seitlich geschoben, nachher 233 (RE2 s12->s13: 57) |
+| M3 G5 800 zu weit oestlich | (Agent-Befund, nachgeprueft) FUN_80015e7c setzt den Vorwert bei Bild 0 auf 0 (`lbu v0,333(t0)` @0x80015f04 `4d 01 02 91`, `sw zero,524(t0)` @0x80015f14, `sh zero,528(t0)` @0x80015f1c); Clip 1 Bild 0 traegt speed.x -800. Port "verankerte" den Vorwert auf diese -800 | Anker weg, Vorwert 0 bei Bild 0 | Bild 129: -9000 -> -9525 (RE2 s05 -9525), Bild 270: -1986 -> -2786 (RE2 -2786), nach [T6]: 1960 -> 1160 (RE2 1160) |
+| M4 Pfosten verdeckt nicht | RE2: Figuren-OT-Index = otz>>3 (@0x80027d60 `srl v0,v0,1` + @0x80027d64 `andi 0xffc`), Masken auf Index = depth (@0x80049dac `sll a0,a0,2`), Masken vor den Figuren eingehaengt (@0x80026770 `jal 0x80049ca8` vor @0x8002689c `jal 0x80027160`), ZSF3 341 (@0x8008d29c). Port nahm die RE1.5-Regel (otz>>4, Figur oben) | RE2-Schluessel depth*32768/1023 fuer die R704-Masken (re15_pri_mask_camera_z_re2, render_pc.c Schalter) | Pfostenmaske depth 100 verdeckt ab vz 3204 statt 6471; Masse links im Bild in 15 von 15 Messbildern hinter dem Pfosten |
+| M4b Ein-Bild-Sprung | (Agent-Befund, nachgeprueft) Zeichner posierte nach dem Vorschub: am Clipende anim_frame 0 mit altem Clip; [T3]/[T7]/[T9]/[T11]/[T13] fallen in RE2 im selben Takt in die naechste Phase | G5-Zeichenbild-Merker (+0x178), Durchfaelle | Wurzel-y-Sprung Bild 270: 1329 -> groesster Schritt im Intro 56 |
+| M5 Ton | Xa_on @0x01920/@0x01946, Tabelle STAGE7.BIN @0x186/@0x18C, rohe Sektoren `info/re2leon/PL0/VOICE/VOICE07.XAS` (bytegleich Disc). Sce_bgm_control @0x018F4..: Handler @0x80057e20 -> FUN_8005b6f0, wirkt auf MAIN11 Programme 0/1 (Lautstaerke 127 -> 79, RAM s02->s03 genau 4 Bytes), der dritte ist No-op (SUB-Platz 0xFF @0x8005b74c) - kein Stueckwechsel, in der Aufnahme nicht hoerbar | Xa 0x0B Bild 132, Xa 0x0C Bild 438 aus R704_XA0B/0C.XAS (Kanal 4 / 1 bytegleich geschnitten, tools/r41_g5auftritt/re2_xa_schnitt.py), mono-Dekoder; Musik: PORT-WAHL keine Aenderung (RE1.5 spielt SUB_17, MAIN11 laeuft im Port nicht) | Birkin-Laute hoerbar ab Bild 132 / 438 (RE2: +4,44 s / mit Schnitt 10) |
+| M6 Frau/Feuer | - | PORT-WAHL: 0x4D in 16/17 no_draw, ab Cut 12 wie vorher; Raum-ESP (17 Sce_espr_on main00 @0x0110E..@0x0120E) in 16/17 nicht gezeichnet (main.c pc_draw_effects) | Frau in 16/17 0 Bilder sichtbar |
+| M7 Vorlauf | RE2 sub06 @0x0187C Pos_set(-3800), @0x01884 Dir_set 0, @0x01892 Cut_chg(9), @0x018A2 Plc_neck, @0x018AC Sleep 20, @0x018B0 `40 00 05 20 78 05 ee a3` Plc_dest, @0x018B8-C3 Warten auf Ck(5,0x20), @0x018C7 Plc_motion, @0x018CC Plc_neck, @0x018D6 Sleep 11 | Vorlauf vor der Armierung: Schnitt 16, Leon von -3800 per RE1.5-Plc_dest (dieselben Bytes) nach 1400, Nacken wie RE2, Sleep 11; G5 bis dahin Typ 0x36 unarmiert auf dem RE2-Parkplatz (-32000,0,-32000) (@0x011AC) | Vorlauf 0 -> 59 Bilder (RE2 61,47 -> 63,80 s = 70 Bilder) |
+| M8 Laenge | RE2 echt 15,84/13,12 s = Bildzahl + CD-Standbilder (1,10 s vor Schnitt 10, 0,74 s vor Schnitt 5, Agent-Messung) | Bildzahlen 437/807/1162 bleiben (Lesefenster); Vorlauf +59 Bilder | Gesamtdauer ab Schnitt 9: s. 7.3 |
+| M9 Paket-Gate | `release/make_package.sh` | R704_CUT09.BSS/.PRI/_PRI.TIM, R704_CUT10.BSS/.PRI, R704_XA0B/0C.XAS in der Pflicht-/cmp-Liste | - |
+| M10 Lesen hinter der RID-Tabelle | main.c `[pri]`-Zeile und `[F1700-leon-root]` lasen active_cuts[16/17] | Szenenschnitt -> RE2-Satz bzw. 0 | `pri_offset=0x26DE0E74` -> 0 "(RE2-Szenenschnitt)" |
+| M11 g5_westen zweckentleert | Messung ab F1600 lag in der Szene | Messung ab Szenenende (state.log pm 2 -> !=2), Tasten 41 s spaeter, EXIT_AT 3540 | s. 7.4 |
+| M12 PSX | bg_pc.c laedt 16/17 nur auf PC | unveraendert, offen | - |
+
+### 7.2 PORT-WAHLEN (neu oder geaendert, alle im Code markiert)
+
+| Punkt | Wahl | Grund |
+|---|---|---|
+| Bild 1..11 | Leon steht | RE2-Szenenbank-Clip 15 (Bank +0x190 = RDT, 12 Bilder, ohne Weg) hat kein RE1.5-Gegenstueck |
+| Lauf ab Bild 12 | RE1.5-Plc_dest Lauf bis x 20066 | RE2-Lauf ist Bank +0x180 Clip 1 mit Wurzelspur; RE1.5 W01 Clip 0 laeuft auf der Stelle mit Tempo 200 (@0x80073f24). Ziel = RE2-RAM-Endlage s05..s11 |
+| Cut-12-Teil ab Bild 807 | x 15646 | RE2-Abstand vor Kamera 5 (2880) auf Cut 12 uebertragen, Leon verlaesst das Bild nach derselben Zeit |
+| Szenenende | x 13873 (unveraendert) | Abnahme 1: vertretbar |
+| Frau / Raumfeuer | in 16/17 unsichtbar | RE2 zeigt dort niemanden ausser Leon |
+| Musik | keine Aenderung | RE2s Befehle wirken nur auf MAIN11 (Lautstaerke zweier Programme), die der Port hier nicht spielt; in der Aufnahme kein hoerbarer Wechsel |
+
+
+### 7.3 Sichtbeleg (echtes Fenster, kein AUTOSHOT/SOFTWARE_RENDER)
+
+Laeufe: `G5_belege/nb1/werkzeug/run_port.sh` (eigene exe-Kopie, gdigrab `hwnd=` der eigenen PID, 20 B/s, Eingabe wie
+integration_r41_birkin_pistole, EXIT_AT 3000). Protokoll beider Laeufe: `F1558 Vorlauf, Schnitt 16`, `F1613 Armierung nach 55
+Vorlaufbildern, Spieler x 1208`, `F2775 Szenenende Bild 1162: G5 Sub 1 Ph 1, Spieler x 13873, Cut 12`. Zuordnung Videozeit <-> Spielbild
+ueber die Schnittkanten (Farbstich RE1.5 orange / RE2 grau; `zeitachse2.py`, Kante 16 -> 17 vorhergesagt und im Video getroffen).
+RE2-Zeit: Bild 0 = 63,48 s (nicht 63,80 s wie in Abnahme 1.2): RE2-RAM s03 (G5 +0x158 = 31 -> Bild 32) Leon x 5736 = 1400 + 20 * 216,8,
+also Laufbeginn Bild 12 (@0x01906); er verlaesst das Bild bei 64,37 s mit x ~4600 -> Bild 27 -> Bild 0 = 63,48 s. Der in Abnahme 1 bei
+63,80 s gesehene "Laufbeginn" ist Bild 12. Schnitt 10/5 nach den gemessenen Kanten 79,64 / 92,76 s.
+
+| Datei | Inhalt |
+|---|---|
+| `G5_belege/nb1/vergleich_re2_leon_elza_nb1_1.jpg` | RE2 echt / Port Leon / Port Elza an Bild -40 (Vorlauf), 0, 12, 30, 45, 100, 180, 240 |
+| `G5_belege/nb1/vergleich_re2_leon_elza_nb1_2.jpg` | Bild 265, 271, 360, 470 und 560 (Schnitt 10/17), 840 und 1000 (Schnitt 5/Cut 12) |
+| `G5_belege/nb1/leiste_bild0030.jpg` .. `leiste_bild0840.jpg` | Einzelleisten |
+| `G5_belege/nb1/port_leon_szene_mit_ton.mp4` | Port Leon, Spielbild 1538 .. 2815 (Vorlauf bis Szenenende), Bild auf Spielzeit umgerechnet, Ton bildgenau aus RE15_AUDIO_CAP_SYNC (eigener Lauf, gleiche Spielbilder) |
+
+Zu sehen: Vorlauf leere Tuer (RE2 zeigt Leon dort schon am linken Rand, Port erst ab ~Bild -25); Bild 0 Leon/Elza in der Mitte;
+Bild 30 leer wie RE2; Bild 45/100 drei eingerollte Arme an Rahmen, Decke und Boden wie RE2 (vorher gerade Stangen); Bild 180/240 Masse
+links unten hinter dem Pfosten; Bild 265/271 kein Sprung; kein Feuer und keine Frau in 16/17; Schnitt 17 Leon/Elza rechts vorn von
+hinten, rueckwaerts hinaus; Cut 12 Figur von hinten, rueckwaerts auf die Kamera zu.
+Ton: Kreuzkorrelation des Mitschnitts mit den RE2-Strecken (`ton_versatz.py`): Xa 0x0B beginnt genau bei Spielbild F_arm+132,
+Xa 0x0C bei F_arm+438 (Korrelation 0,950 / 0,917).
+
+### 7.4 Tests
+
+| Lauf | Ergebnis |
+|---|---|
+| `unit_r41_g5auftritt` (neu gebaut: Bildtakt wie main.c, Walker + Spieler-Takt + KI) | gruen, 5090 und 5091: Vorlauf 59 Bilder, Armierung bei x 1200; M1 Leon zuletzt in Schnitt 16 bei Bild 29 (Riegel < 45), Schnitt 17 hinaus bei 479 (Riegel < 527), x 6500 -> 16928 (Riegel 8000..12000 Weg), Cut 12 hinaus bei 877; M2 123 Gelenkvergleiche gegen RE2 s04, max. 116 (Riegel 250); M3 G5 Bild 129 -9525, 270 -2786, 800 1160 (Riegel +-10); M4b groesster Wurzel-y-Schritt im Intro 56 (Riegel 120; vorher 1329); M4 Masse in 15/15 Bildern hinter der Pfostenmaske; M6 Frau 0 Bilder in 16/17, Cut 12 wie vorher; Xa bei 132/438 |
+| Alle Nicht-Integrationstests (-j 8) | 1073/1074 mit G5-Richtung 0; einziger Fehlschlag unit_r35_granate -> Richtung zurueckgenommen (7.5), danach Granate gruen und die 31 G5/Birkin/Tentakel/Granate-Tests gruen |
+| Geaenderte fremde Riegel | probe_g5_tentakel (Spieler an Part 3 statt an die Spitze; Treffer hing an der rng-Variante), probe_p2_birkin_g5 (Intro-Ende 1160), probe_r20_birkin_push (Arm-Kind-Kollision getrennt gezaehlt, Begehbarkeit weiter fuer alle Bilder), test_r41_birkin_wand (Laufprobe nach 10 statt 30 Kontaktbildern), test_birkin_szenen / test_birkin_bahnsteig (Vorlauf vor der Armierung) |
+| Integration (build/, -j 3) | gruen: integration_r41_g5_tod (279 s), integration_r41_g5_westen (446 s, neu ab Szenenende gemessen), integration_r35_zgirl_5090, integration_pri_masken, integration_r36_pri_schatten. **ROT: integration_r41_birkin_pistole** - Szene, Rueckstoss, Mutation, Form-HP wie vorher, aber Leon (45 HP am Szenenende, steht und feuert) stirbt bei ~F3550, der G5 steht dann bei 105 HP (600 -> 510 F2908 -> 300 F3208 -> 120 F3508). Gegenprobe mit 0x37 wieder im globalen Advancer: ebenfalls rot (Tod ~F3400) - der Doppelschritt ist nicht die Ursache. Offen, s. 7.5 |
+
+### 7.5 Offen
+
+- **integration_r41_birkin_pistole rot** (7.4): mit der Nachbesserung ueberlebt der stehende Spieler den Kampf nicht mehr bis zum Tod
+  des G5. Kandidaten (nicht getrennt gemessen): gestreckte Kind-Kollision (Arme fahren ihre Segmente beim Strecken durch den Spieler),
+  gehaltene Einroll-Posen/Blenden, G5-Lage 800 westlicher (M3), [T14]-Wechsel 4 Bilder frueher. Naechster Schritt: je Aenderung einzeln
+  gegen den Lauf pruefen und den Kampf gegen einen RE2-Kampf-Savestate messen.
+- **G5-Richtung:** RE2 schreibt sie nur im Ctor, `sh zero,118(s0)` @0x8010044c (RAM 0). Der Port richtet den G5 bei [T0] auf den
+  Spieler (im Arena-Fall 0..11, ~1 Grad). Mit 0 lag die Armform bei max. 12 statt 116 Abweichung, aber unit_r35_granate verlor ihre
+  RE2-Granatentreffer (Trefferzentrum o94/o96 wechselt an Bit 0x400 der Richtung, re15_damage.c re15_re2_gl_kandidat). Zurueckgenommen,
+  Folgespur (Granatentest gegen RE2 pruefen).
+- **Speer-Phase (Schnitt 17):** RE2 s13 (Bild ~472) Arm 0 \|p3-p0\| 8170, Part-Winkel p0 rz 266, p3 rz -21; Port 6080 - die Port-Arme
+  rollen sich in sub9 staerker ein, einer liegt nah vor der Kamera 17 und erscheint breit. Einroll-Rechnung (sub9 ph5, part_rz) gegen
+  RE2 nachrechnen.
+- **Uebergang Intro -> Kampf:** ein Wurzel-y-Schritt von 125 bei Bild 1123 (G5-Clipwort-Blende 0x1F im Port nicht gefuehrt).
+- **Vorlauf-Ton/Beben:** RE2 sub04 (@0x0169E: Se_on Bank 2 Satz 12, 9x Sce_shake_on) und sub09/11/12 (vorbeiziehende Tunnellichter) nicht
+  uebertragen. Vorlauf Port 55 Bilder, RE2 ~70 (RE2-Lauf -3800 -> 1400 mit 216,8/Bild, Port 200 + Ankunftsradius 300).
+- **Musik:** RE2s Sce_bgm_control wirkt auf MAIN11; im Port laeuft RE1.5 SUB_17 weiter (PORT-WAHL, s. 7.2).
+- **PSX-Bau:** Szenen-Schnitte 16/17, XA-Strecken und Zeichenbild-Merker nur auf PC (bg_pc.c, audio_pc.c, main.c).
+- **Laenge:** Port 55 + 1162 Bilder; RE2 zusaetzlich 1,10 s + 0,74 s + 0,28 s CD-Standbilder (nicht nachgebildet).
