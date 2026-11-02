@@ -223,3 +223,6 @@ unit_r41_gatorfix_marvin(_elza) erster Tod >= 30 (Harness 32; Gegenprobe ohne La
 **Aenderung** (kanister2080_r41.c, PORT-WAHL): liegt der Kanister 450 Bilder (15 s) frei, wird er Wegpunkt seiner Runde, sobald er VOR ihm liegt (er dreht nicht
 dafuer um), spaetestens nach 600 Bildern; geschwommen im Bogen (Slew 0x30, keine Wende auf der Stelle) bis zur Aufnahme; Zeile `RUNDE zum Kanister an`.
 **Nachher**: Aufnahme 582 (Leon, vorher 3619) / 489 (Elza) Bilder nach dem Aufschlag = 19,4 / 16,3 s; Rampen-Lauf 637 Bilder.
+
+### Abschluss Nachbesserung 1
+Tests (PowerShell-ctest, Auswahl wie die Abnahme `r41_gatorszene|r41_kanister2080|r41_alligator2|r41_re2gator|r41_gatorfix`, -j3): **100% tests passed, 0 tests failed out of 110** (2271 s), darin neu unit_r41_gatorfix_fuzz(_elza) und integration_r41_gatorfix_frei/_frei_elza/_rampe/_rampe_elza. Endstand der exe-Riegel (traglog): frei Leon fern 7 %, laengste Folge 39, Wandreiben 8, Aufnahme 582 Bilder; frei Elza fern 5 % (ohne Biss-Reichweite 4 %), 31, 16, 489; Rampe Leon 0 %, Rampe Elza 1 % (16 Bilder), Wandreiben 0.
