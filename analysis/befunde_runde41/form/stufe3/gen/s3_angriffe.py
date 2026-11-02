@@ -440,9 +440,9 @@ def biss(bau):
     def vor(kiefer, gier=0.0):
         p = bau.p()
         p['wurzel'][0] += 520
-        bau.koerper(p, nick=12, hoch=-120)
-        bau.ruecken(p, nick=10, gier=gier * 0.3)
-        bau.kopf(p, nick=14, kiefer=kiefer, gier=gier)
+        bau.koerper(p, nick=5, hoch=-40)          # Biss in Brusthoehe des Spielers, nicht am Boden
+        bau.ruecken(p, nick=4, gier=gier * 0.3)
+        bau.kopf(p, nick=-2, kiefer=kiefer, gier=gier)
         bau.schwanz(p, hebung=-4, gier=gier * 0.5, phase=0.3)
         bau.boden_halten(p)
         return p

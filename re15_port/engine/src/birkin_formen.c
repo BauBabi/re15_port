@@ -407,6 +407,18 @@ uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed)
     return (uint16_t)(0x0800u | 0x8000u);                /* RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, keine Richtung */
 }
 
+/* UEBERGABEPUNKT Riesenform -> G5 (Stufe 3, analysis/befunde_runde41/form/STUFE3.md Abschnitt 4).
+ * Wird genau einmal aufgerufen, wenn die Form den Wagen verlassen hat: mit der Riesenform am Ende ihres Sturz-Clips 12, ohne sie
+ * (EM30 per RE15_BIRKIN_FORM=original) am Wagenende. Danach laeuft unveraendert Phase 2 (Pause hinter dem Zug) und
+ * re15_bf_morph_zu_g5 + s_kam_g5. Der G5-Auftritt selbst (Kamera, Tentakel, enemy_ai_boss_g5.c) gehoert NICHT zu dieser Stufe,
+ * er wird im Zweig r41/g5auftritt neu gebaut und soll hier ansetzen. */
+static void bf_rs_form_ist_draussen(re15_actor_t *e, int mit_gebruell)
+{
+    s_rs.phase = 2; s_rs.t = 0;
+    e->no_draw = 1;
+    if (mit_gebruell) re15_audio_room_se(10);            /* Gebruell (Birkin-Todes-SE 10, @0x8011a744) */
+}
+
 static void bf_rueckstoss_tick(void)
 {
     if (s_rs.slot < 0) return;
@@ -433,20 +445,13 @@ static void bf_rueckstoss_tick(void)
             if (re15_bb_bank_da(e)) {                    /* Riesenform: faellt rueckwaerts aus dem Wagen (Clip 12, Stufe 3) */
                 s_rs.phase = 3;
                 re15_bb_sturz_start(s_rs.slot);
-            } else {
-                s_rs.phase = 2;
-                e->no_draw = 1;
-                re15_audio_room_se(10);                  /* Gebruell (Birkin-Todes-SE 10, @0x8011a744) */
-            }
+            } else bf_rs_form_ist_draussen(e, 1);
         }
         break;
     }
     case 3:                                              /* PORT-WAHL: Sturz-Clip am Zugende, Blick Cut 11 (= Bild 2) */
         bf_kamera(0x0B);
-        if (re15_bb_sturz_tick(s_rs.slot)) {
-            s_rs.phase = 2; s_rs.t = 0;
-            e->no_draw = 1;
-        }
+        if (re15_bb_sturz_tick(s_rs.slot)) bf_rs_form_ist_draussen(e, 0);   /* Gebruell traegt Clip 12 Bild 2 */
         break;
     case 2:
         bf_kamera(0x0B);

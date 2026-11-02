@@ -2,6 +2,11 @@
 
 Die Figur selbst wird hier NICHT gestaltet. Commits auf r41/form: 93df3679a, 612f1453e, 40d9793e3, 84f88d080.
 
+⛔ Stand seit Stufe 3 (STUFE3.md): das Spiel laedt `RE2/BAHNSTEIG_FORM.EMD/.TIM` (Riesenform J mit eigenen Clips), `BAHNSTEIG_G4.*`
+ist aus dem Repo entfernt; `form_emd.py rundlauf`, `form_spiel.sh` und das Paket-Gate arbeiten mit dem neuen Namen. Die Messungen
+unten (Abschnitt 2 und 4) sind am G4-Muster entstanden und bleiben als Formatbeleg stehen. Die Festwerte aus Abschnitt 3 bedient die
+Form (Clipnummern, Laengen, Bit 16, Spur aus G4), die Tests pruefen das (`test_birkin_bahnsteig.c test_asset`).
+
 Werkzeuge in `re15_port/tools/`: `form_emd.py` (Bibliothek + Befehle), `form_buehne.py` (Offline-Buehne),
 `form_spiel.sh` + `form_fensterbild.ps1` (echtes Spiel), Test `re15_port/tests/unit/test_r41_form_emd.c` (`unit_r41_form_emd`).
 

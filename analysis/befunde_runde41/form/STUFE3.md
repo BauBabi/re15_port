@@ -105,7 +105,7 @@ Dieses Tempo liegt jetzt in Bild 53-60, die Summe (47) ist die von G4. Der Auftr
 (Gleiten <= 8 je Bild), Fuss rollt ab, Schwanz als Welle. Rennen = Sprunggalopp, Glieder je Bild per IK ueber Stuetzpunkte, Basis Pose
 Bild 1. Hiebe: Arm hoch und weit zur Seite, dann quer nach vorn unten; der Einstieg des Doppelschlags (Clip 3 Bild 20, Clip 4 Bild 7)
 liegt ausserhalb der Trefferprobe (Teil 13/18 Radius 1700, Versatz (0,600,0) Radius 1500, Spieler 2600 voraus, `s3_reichweite.py`),
-getroffen wird in Bild 28-30 bzw. 15-17. Biss: Kopf zurueck, Maul auf, Vorstoss, Schuetteln. Griff: beide Arme greifen (Krallen zu in
+getroffen wird in Bild 28-30 bzw. 15-17. Biss: Kopf zurueck, Maul auf, Vorstoss in Brusthoehe des Spielers (Kiefer bei y -1460), Schuetteln. Griff: beide Arme greifen (Krallen zu in
 Bild 8), Schleudern, Bruellen mit wechselnden Armen. Drohen: Hocke, Gebruell, Pose Bild 2, Aufbaeumen mit beiden Armen.
 
 **Grenzen, gemessen (`s3_pruef.py`):** tiefster Punkt <= 25 unter dem Boden ausser Rennen Bild 11 (Pose Bild 1 selbst: linker Fuss 334
@@ -129,6 +129,14 @@ Neu in Stufe 3 (PORT-WAHL nach E5/E6/E17; RE-Zahlen nur, wo genannt):
 
 Unveraendert: Schatten 2300 x 1300 (G4 @0x801002cc / @0x80100300) und Kastenversatz 800 (Gestaltung Spur R); die Form ist ohne Schwanz
 rund 3600 lang, Haende bei z +-1590. Opfer-Bank EM30. Teile 10/13/18 = Brust / Hand links / Hand rechts.
+
+**Uebergabe an den G5 (Abgrenzung zur Spur r41/g5auftritt, Vorgabe Orchestrator).** Diese Stufe baut in 5090 die Riesenform bis
+einschliesslich ihres Sturzes aus dem Zug. Der Uebergabepunkt ist EINE Funktion in birkin_formen.c:
+`bf_rs_form_ist_draussen(e, mit_gebruell)` - aufgerufen genau einmal, wenn die Form den Wagen verlassen hat (Riesenform: Ende von
+Sturz-Clip 12 in Rueckstoss-Phase 3; ohne Riesenform, z. B. `RE15_BIRKIN_FORM=original`: am Wagenende wie bisher, mit Gebruell). Sie
+setzt Phase 2 (Form unsichtbar, Pause `BF_RS_PAUSE`), danach laufen unveraendert `re15_bf_morph_zu_g5` und die Szenenkamera `s_kam_g5`.
+Nicht angefasst: G5-Auftritt, G5-Kamera, `enemy_ai_boss_g5.c`. Wer den neuen G5-Auftritt baut, setzt an `bf_rs_form_ist_draussen` an.
+Ablauf der Phasen in 5090: 1 Beschuss/Zurueckdraengen (Clip 8 im Kreis) -> 3 Sturz (Clip 12, Kamera Cut 11) -> Uebergabe -> 2 Pause -> G5.
 
 ## 5. Einbau und Tests
 
