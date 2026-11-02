@@ -307,3 +307,16 @@ Nachtrag NB3: Im ersten Testlauf fielen integration_r41_gatorfix_rampe/_elza (70
 
 ### Abschluss Nachbesserung 3
 Tests (PowerShell-ctest, Auswahl wie die Abnahme, -j3): 100% tests passed, 0 tests failed out of 117
+
+## Entscheide des Orchestrators nach NB3 und Stand (Uebergabe)
+1. Hochbiss nach oben = "Biss am Spieler" (Kopf < 4200): bestaetigt, so in traglog/Fuzz (f11aa6d98).
+2. M4 (Leiche je Bild ins Maulvolumen FITTEN: Drehung, Versatz, Laengsskala bis 0,6, glatt, PORT-WAHL) - NICHT umgesetzt (Kontextbudget dieser Spur erschoepft).
+   Vorbereitet/gemessen: Ursache Kopfrollen Clip 4 Bild 10 - Clip 5 Bild 12 (`test_r41_gatorfix leichenachse`), reine Drehung scheitert (94-186 Punkte unten).
+   Weg fuer die Fortsetzung: (a) Laengsskala braucht einen Zeichner-Haken - pc_prop_world (platform/pc/main.c) nimmt die Prop-Matrix als allgemeine 3x3
+   (wie der Spur-J-Haken re15_superobj_r41_welt), ein eigener Haken re15_gatorszene_r41_leiche_welt(slot, r, t) kann Drehung x Skala liefern; (b) das Maul-
+   volumen je Bild wie im Riegel (g2_band: Kopf-Scheitel Part 6/7 im Part-6-Rahmen, y-Band je x, Fenster +-150) in die Engine holen, Suche ueber
+   Rollanteil {0..1} x Skala {1..0,6} x y-Versatz, Kosten = Punkte draussen + Glaettung zum Vorbild; (c) Riegel maul ohne Ausnahme fuer das Fenster,
+   Gegenprobe = Stand NB2 (Pruefhaken nb1_alt / neuer Haken).
+3. Rampe Nordteil (12 % im Bild) / Kreispunkt in der Spielerkamera - NICHT umgesetzt. Das Harness-Mass waehlt die Kamera per Projektion (Bildmitte) und
+   trifft die Zonenkamera des Spiels nicht (Rampe West: Harness Cut 3, Spiel Cut 2); fuer "im Bild je Lage" muss die Kamerazone (RVD-Zonen, cam_from) im
+   Harness nachgebildet oder die Lagen als exe-Laeufe gemessen werden (traglog misst "im Bild" schon mit state.log cam=).
