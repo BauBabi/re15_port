@@ -1,0 +1,374 @@
+{
+ "STAGE1/room1170/main05.wav": {
+  "sr": 22050,
+  "dauer_s": 2.9,
+  "whisper-large-v3-turbo": "Hey! Hey, wait! Down here!",
+  "whisper-medium.en": "Hey! Hey, wait! Down here!"
+ },
+ "STAGE1/room1170/main06.wav": {
+  "sr": 22050,
+  "dauer_s": 3.4,
+  "whisper-large-v3-turbo": "Oh, that's just freakin' great!",
+  "whisper-medium.en": "Oh, that's just freaking great."
+ },
+ "STAGE1/room1170/main07.wav": {
+  "sr": 22050,
+  "dauer_s": 1.86,
+  "whisper-large-v3-turbo": "Now what am I gonna do?",
+  "whisper-medium.en": "Now what am I gonna do?"
+ },
+ "STAGE1/room1170/main13.wav": {
+  "sr": 22050,
+  "dauer_s": 3.08,
+  "whisper-large-v3-turbo": "Damn it. There must be another way out of here.",
+  "whisper-medium.en": "Damn it. There must be another way out of here."
+ },
+ "STAGE1/room1170/main14.wav": {
+  "sr": 22050,
+  "dauer_s": 2.54,
+  "whisper-large-v3-turbo": "If only I could contact the outside.",
+  "whisper-medium.en": "If only I could contact the outside."
+ },
+ "STAGE1/room1170/main16.wav": {
+  "sr": 22050,
+  "dauer_s": 3.04,
+  "whisper-large-v3-turbo": "That's right. I have to report this to the Chief.",
+  "whisper-medium.en": "That's right. I have to report this to the Chief."
+ },
+ "STAGE3/room3061/main01.wav": {
+  "sr": 32000,
+  "dauer_s": 2.14,
+  "whisper-large-v3-turbo": "Sherry, come back!",
+  "whisper-medium.en": "Sherry, come back!"
+ },
+ "STAGE3/room3061/main02.wav": {
+  "sr": 32000,
+  "dauer_s": 2.65,
+  "whisper-large-v3-turbo": "What's wrong? Why did you start running?",
+  "whisper-medium.en": "What's wrong? Why did you start running?"
+ },
+ "STAGE3/room3061/main03.wav": {
+  "sr": 32000,
+  "dauer_s": 2.82,
+  "whisper-large-v3-turbo": "Elsa, I know a secret way in.",
+  "whisper-medium.en": "Elsa, I know a secret way in."
+ },
+ "STAGE3/room3061/main04.wav": {
+  "sr": 32000,
+  "dauer_s": 1.83,
+  "whisper-large-v3-turbo": "A secret entrance?",
+  "whisper-medium.en": "A secret entrance?"
+ },
+ "STAGE3/room3061/main05.wav": {
+  "sr": 32000,
+  "dauer_s": 2.86,
+  "whisper-large-v3-turbo": "It's here! I can get inside through this hole!",
+  "whisper-medium.en": "It's here! I can get inside through this hole!"
+ },
+ "STAGE3/room3061/main06.wav": {
+  "sr": 32000,
+  "dauer_s": 1.87,
+  "whisper-large-v3-turbo": "Sherry, wait!",
+  "whisper-medium.en": "Sherry, wait!"
+ },
+ "STAGE3/room3061/main07.wav": {
+  "sr": 32000,
+  "dauer_s": 2.65,
+  "whisper-large-v3-turbo": "I'll unlock the back door from the other side.",
+  "whisper-medium.en": "I'll unlock the back door from the other side."
+ },
+ "STAGE3/room3061/main08.wav": {
+  "sr": 32000,
+  "dauer_s": 2.35,
+  "whisper-large-v3-turbo": "Just wait by the door, okay?",
+  "whisper-medium.en": "Just wait by the door, okay?"
+ },
+ "STAGE3/room3061/main09.wav": {
+  "sr": 32000,
+  "dauer_s": 4.02,
+  "whisper-large-v3-turbo": "Hey, you brat! That's dangerous! Get back here!",
+  "whisper-medium.en": "Hey, you brat! That's dangerous! Get back here!"
+ },
+ "STAGE3/room30C1/main02.wav": {
+  "sr": 32000,
+  "dauer_s": 4.63,
+  "whisper-large-v3-turbo": "I'm Marvin Branagh, RPD. I'm here with Leon Kennedy.",
+  "whisper-medium.en": "I'm Marvin Brenna, RPD. I'm here with Leon Kennedy."
+ },
+ "STAGE3/room30C1/main03.wav": {
+  "sr": 32000,
+  "dauer_s": 4.76,
+  "whisper-large-v3-turbo": "Leon! How is he? We got separated back at the RPD.",
+  "whisper-medium.en": "Leon! How is he? We got separated back at the RPD."
+ },
+ "STAGE3/room30C1/main04.wav": {
+  "sr": 32000,
+  "dauer_s": 3.63,
+  "whisper-large-v3-turbo": "He's alright, and he's helping me and Ada escape the city.",
+  "whisper-medium.en": "He's alright, and he's helping me and Ada escape the city."
+ },
+ "STAGE3/room30C1/main07.wav": {
+  "sr": 32000,
+  "dauer_s": 3.63,
+  "whisper-large-v3-turbo": "Will you tell him that me and John and Sherry are here and we're all right?",
+  "whisper-medium.en": "Will you tell him that me and John and Sherry are here and we're all right?"
+ },
+ "STAGE6/room6030/main01.wav": {
+  "sr": 32000,
+  "dauer_s": 0.93,
+  "whisper-large-v3-turbo": "Where's Elsa?",
+  "whisper-medium.en": "Where's Elza?"
+ },
+ "STAGE6/room6030/main02.wav": {
+  "sr": 32000,
+  "dauer_s": 2.52,
+  "whisper-large-v3-turbo": "She's out there fighting the monsters.",
+  "whisper-medium.en": "She's out there fighting the monsters!"
+ },
+ "STAGE6/room6030/main11.wav": {
+  "sr": 32000,
+  "dauer_s": 2.09,
+  "whisper-large-v3-turbo": "Where's that biker girl?",
+  "whisper-medium.en": "Where's that biker girl?"
+ },
+ "STAGE6/room6030/main12.wav": {
+  "sr": 32000,
+  "dauer_s": 3.51,
+  "whisper-large-v3-turbo": "Keeping the monsters at bay. Can you start this thing?",
+  "whisper-medium.en": "Keeping the monsters at bay. Can you start this thing?"
+ },
+ "STAGE6/room6031/main00.wav": {
+  "sr": 32000,
+  "dauer_s": 1.23,
+  "whisper-large-v3-turbo": "Where's Leon?",
+  "whisper-medium.en": "Where's Leon?"
+ },
+ "STAGE6/room6031/main01.wav": {
+  "sr": 32000,
+  "dauer_s": 3.76,
+  "whisper-large-v3-turbo": "He's fighting off monsters. He wants you to start the train.",
+  "whisper-medium.en": "He's fighting off monsters. He wants you to start the train."
+ },
+ "STAGE5/room50B0/main10.wav": {
+  "sr": 32000,
+  "dauer_s": 2.96,
+  "whisper-large-v3-turbo": "Ada, why did you set the reactor to blow up?",
+  "whisper-medium.en": "Ada, why did you set the reactor to blow up?"
+ },
+ "STAGE5/room50B0/main11.wav": {
+  "sr": 32000,
+  "dauer_s": 4.41,
+  "whisper-large-v3-turbo": "So I can destroy this place. You've seen what's in here.",
+  "whisper-medium.en": "So I can destroy this place. You've seen what's in here."
+ },
+ "STAGE6/room6000/main00.wav": {
+  "sr": 32000,
+  "dauer_s": 3.34,
+  "whisper-large-v3-turbo": "You must be that cop. Your friends are already here.",
+  "whisper-medium.en": "You must be that cop. Your friends are already here."
+ },
+ "STAGE6/room6000/main03.wav": {
+  "sr": 32000,
+  "dauer_s": 3.89,
+  "whisper-large-v3-turbo": "Come on, let's join your friends and get out of here.",
+  "whisper-medium.en": "Come on, let's join your friends and get out of here."
+ },
+ "STAGE5/room5011/main23.wav": {
+  "sr": 32000,
+  "dauer_s": 1.23,
+  "whisper-large-v3-turbo": "What's wrong?",
+  "whisper-medium.en": "What's wrong?"
+ },
+ "STAGE5/room5011/main29.wav": {
+  "sr": 32000,
+  "dauer_s": 3.55,
+  "whisper-large-v3-turbo": "It seems like that beast broke the place's power core.",
+  "whisper-medium.en": "It seems like that beast broke the place's power core."
+ },
+ "STAGE5/room5011/main30.wav": {
+  "sr": 32000,
+  "dauer_s": 3.04,
+  "whisper-large-v3-turbo": "And fire's starting to spread all over the place.",
+  "whisper-medium.en": "and fires starting to spread all over the place."
+ },
+ "STAGE3/room30E1/main02.wav": {
+  "sr": 32000,
+  "dauer_s": 4.79,
+  "whisper-large-v3-turbo": "This is bad. One of those monsters bit me as I tried to get away.",
+  "whisper-medium.en": "This is bad. One of those monsters bit me as I tried to get away."
+ },
+ "STAGE3/room30E1/main03.wav": {
+  "sr": 32000,
+  "dauer_s": 5.1,
+  "whisper-large-v3-turbo": "And there doesn't seem to be a place with any medical supplies here.",
+  "whisper-medium.en": "And there doesn't seem to be a place with any medical supplies here."
+ },
+ "STAGE3/room30E1/main14.wav": {
+  "sr": 32000,
+  "dauer_s": 5.18,
+  "whisper-large-v3-turbo": "Anyway, there are too many walking corpses outside. We can't really turn back.",
+  "whisper-medium.en": "Anyway, there are too many walking corpses outside. We can't really turn back."
+ },
+ "STAGE3/room30E1/main15.wav": {
+  "sr": 32000,
+  "dauer_s": 2.57,
+  "whisper-large-v3-turbo": "We have no choice but to go inside.",
+  "whisper-medium.en": "We have no choice but to go inside."
+ },
+ "STAGE3/room30E1/main16.wav": {
+  "sr": 32000,
+  "dauer_s": 4.14,
+  "whisper-large-v3-turbo": "But that beast might still be in there, right?",
+  "whisper-medium.en": "But that beast might still be in there, right?"
+ },
+ "STAGE3/room30E1/main17.wav": {
+  "sr": 32000,
+  "dauer_s": 3.63,
+  "whisper-large-v3-turbo": "We can probably deal with it if we stay alert. Let's go.",
+  "whisper-medium.en": "We can probably deal with it if we stay alert. Let's go."
+ },
+ "STAGE3/room30E0/main03.wav": {
+  "sr": 32000,
+  "dauer_s": 4.84,
+  "whisper-large-v3-turbo": "Yeah, Marvin is out in the hall. He can't get out because of all the monsters outside.",
+  "whisper-medium.en": "Yeah, Marvin is out in the hall. He can't get out because of all the monsters outside."
+ },
+ "STAGE3/room30E0/main05.wav": {
+  "sr": 32000,
+  "dauer_s": 3.94,
+  "whisper-large-v3-turbo": "And what happened in that tunnel? What's with all the police officer corpses?",
+  "whisper-medium.en": "And what happened in that tunnel? What's with all the police officer corpses?"
+ },
+ "STAGE3/room3070/main00.wav": {
+  "sr": 32000,
+  "dauer_s": 2.86,
+  "whisper-large-v3-turbo": "Get on the lift. It's our only option.",
+  "whisper-medium.en": "Get on the lift. It's our only option."
+ },
+ "STAGE3/room3070/main01.wav": {
+  "sr": 32000,
+  "dauer_s": 3.42,
+  "whisper-large-v3-turbo": "This... thing? But where will it take us?",
+  "whisper-medium.en": "This thing? But where will it take us?"
+ },
+ "STAGE3/room3070/main02.wav": {
+  "sr": 32000,
+  "dauer_s": 5.02,
+  "whisper-large-v3-turbo": "Underground. Though we might be better off staying here and get eaten by those things.",
+  "whisper-medium.en": "Underground, though we might be better off staying here and get eaten by those things."
+ },
+ "STAGE3/room3070/main03.wav": {
+  "sr": 32000,
+  "dauer_s": 0.8,
+  "whisper-large-v3-turbo": "What?",
+  "whisper-medium.en": "What?"
+ },
+ "STAGE3/room3070/main04.wav": {
+  "sr": 32000,
+  "dauer_s": 1.83,
+  "whisper-large-v3-turbo": "Hurry up! They're coming!",
+  "whisper-medium.en": "Hurry up! They're coming!"
+ },
+ "STAGE1/room1150/main15.wav": {
+  "sr": 32000,
+  "dauer_s": 0.72,
+  "whisper-large-v3-turbo": "Sir!",
+  "whisper-medium.en": "Sir!"
+ },
+ "STAGE1/room1150/main16.wav": {
+  "sr": 32000,
+  "dauer_s": 5.75,
+  "whisper-large-v3-turbo": "Sir, the communication system can't be fixed. We're going to use the patrol car to get out of here.",
+  "whisper-medium.en": "Sir, the communication system can't be fixed. We're going to use the patrol car to get out of here."
+ },
+ "STAGE1/room1150/main17.wav": {
+  "sr": 32000,
+  "dauer_s": 2.18,
+  "whisper-large-v3-turbo": "I came to get you. Come with me.",
+  "whisper-medium.en": "I came to get you. Come with me."
+ },
+ "STAGE1/room1150/main18.wav": {
+  "sr": 32000,
+  "dauer_s": 6.05,
+  "whisper-large-v3-turbo": "Leon... I... I'm proud to have an officer as dependable as you.",
+  "whisper-medium.en": "Leon I I'm proud to have an officer as dependable as you"
+ },
+ "STAGE1/room1150/main19.wav": {
+  "sr": 32000,
+  "dauer_s": 5.22,
+  "whisper-large-v3-turbo": "But... I... I'm not going to make it. I'm sorry.",
+  "whisper-medium.en": "But... I... I'm not going to make it. I'm sorry."
+ },
+ "STAGE1/room1150/main20.wav": {
+  "sr": 32000,
+  "dauer_s": 6.05,
+  "whisper-large-v3-turbo": "Please, one last favor. Look after yourself and the others who survived.",
+  "whisper-medium.en": "Please, one last favour. Look after yourself and the others who survived."
+ },
+ "STAGE1/room1150/main21.wav": {
+  "sr": 32000,
+  "dauer_s": 2.6,
+  "whisper-large-v3-turbo": "Get them out of here, Leon.",
+  "whisper-medium.en": "Get them out of here, Leon."
+ },
+ "STAGE1/room1150/main22.wav": {
+  "sr": 32000,
+  "dauer_s": 2.22,
+  "whisper-large-v3-turbo": "Sir! Sir!",
+  "whisper-medium.en": "Sir! Sir!"
+ },
+ "STAGE5/room50B0/main01.wav": {
+  "sr": 32000,
+  "dauer_s": 2.39,
+  "whisper-large-v3-turbo": "Your other friends are down there with her too.",
+  "whisper-medium.en": "Your other friends are down there with her too."
+ },
+ "STAGE5/room50B0/main12.wav": {
+  "sr": 32000,
+  "dauer_s": 4.38,
+  "whisper-large-v3-turbo": "You've seen what they can do. I had to do it, understand? It's...",
+  "whisper-medium.en": "You've seen what they can do. I had to do it. Understand? It's..."
+ },
+ "STAGE5/room5011/main35.wav": {
+  "sr": 32000,
+  "dauer_s": 2.22,
+  "whisper-large-v3-turbo": "The second shelter should be open.",
+  "whisper-medium.en": "The second shelter should be open."
+ },
+ "STAGE3/room30E0/main10.wav": {
+  "sr": 32000,
+  "dauer_s": 3.94,
+  "whisper-large-v3-turbo": "That wound. Did those things get you? How careless.",
+  "whisper-medium.en": "That wound. Did those things get you? How careless."
+ },
+ "STAGE3/room3071/main06.wav": {
+  "sr": 32000,
+  "dauer_s": 4.11,
+  "whisper-large-v3-turbo": "No. It looks like it can be operated only from the inside.",
+  "whisper-medium.en": "No. It looks like it can be operated only from the inside."
+ },
+ "STAGE3/room3071/main08.wav": {
+  "sr": 32000,
+  "dauer_s": 2.9,
+  "whisper-large-v3-turbo": "Sherry? What are you talking about?",
+  "whisper-medium.en": "Sherry? What are you talking about?"
+ },
+ "STAGE3/room30E1/main12.wav": {
+  "sr": 32000,
+  "dauer_s": 4.71,
+  "whisper-large-v3-turbo": "Yes, I think so. But I believe it got scared and hid when it was attacked.",
+  "whisper-medium.en": "Yes, I think so, but I believe it got scared and hid when it was attacked."
+ },
+ "STAGE3/room30E1/main01.wav": {
+  "sr": 32000,
+  "dauer_s": 3.22,
+  "whisper-large-v3-turbo": "Elza! So this is where you were?",
+  "whisper-medium.en": "Elza! So this is where you were?"
+ },
+ "STAGE3/room30E1/main04.wav": {
+  "sr": 32000,
+  "dauer_s": 4.54,
+  "whisper-large-v3-turbo": "Elza, how are things on your end? Did you find any tasty food or something?",
+  "whisper-medium.en": "Elza, how are things on your end? Did you find any tasty food or something?"
+ }
+}
