@@ -56,6 +56,7 @@
 #include "re15_spinnenanim_r41.h" /* Runde 41 Spur L: Zeichnen der Adultspinne (spinnenanim_r41.c) */
 #include "re15_ventilkette_r41.h" /* Runde 41 Spur C: STAGE2-Ventilkette (ventilkette_r41.c) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: 2090-Ankunftsszene, Montage 2080, Schluessel (gatorszene_r41.c) */
+#include "re15_annette_r41.h"   /* Runde 41 Spur AN */
 
 extern scd_vm_t g_scd;
 
@@ -523,6 +524,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_spinnenanim_r41_reset();                               /* Runde 41 Spur L: Zeichen-Merker der Spinne je Raum loeschen (re15_spinnenanim_r41.h) */
     re15_ventilkette_r41_install((uint16_t)g_current_room_id, rdt); /* Runde 41 Spur C: Leiter 2000, Bruecke/Ventile 2030, 20B0, Pult 2050, Strom -> Relinghoehe 2030 (re15_ventilkette_r41.h) */
     re15_gatorszene_r41_install((uint16_t)g_current_room_id);   /* Runde 41 Spur F: 2090/2091 Ankunftsszene + Montage 2080/2081 (re15_gatorszene_r41.h) */
+    re15_annette_r41_install((uint16_t)g_current_room_id);      /* Runde 41 Spur AN: 5090 Texte 40-42, Zustand je Raum (re15_annette_r41.h) */
     { extern void re15_kanister2080_r41_install(uint16_t); re15_kanister2080_r41_install((uint16_t)g_current_room_id); }   /* Runde 41 Spur G: 2080 Knall (Knall-Bank Satz 0) + Zombies / Kanister-Szene, 2090 Kanister im Becken (re15_kanister2080_r41.h) */
     { extern void re15_keyitems_r41_raum(uint16_t); re15_keyitems_r41_raum((uint16_t)g_current_room_id); }   /* Runde 41 Spur O: USE-Lauf und Flanken-Merker je Raum */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
