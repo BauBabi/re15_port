@@ -217,4 +217,13 @@ int  re15_gatorszene_r41_gier_zur_leiter(int32_t x, int32_t z);
 /* Runde 41 Spur G2 NB1 (M2): Zuschlag auf vz je Bone fuer die Kopfhaltung beim Wurf (enemy_ai_boss_gator.c re15_gator_spine_arc_vz) */
 int re15_gatorszene_r41_kopf_vz(const void *aktor, int bone);   /* aktor = re15_actor_t * */
 void re15_gatorszene_r41_nb1_alt_setzen(int an);   /* Pruefhaken: Stand G2 vor der Nachbesserung 1 (Gegenproben der Riegel) */
+/* Runde 41 Spur G2 NB4 (Abnahme 2 M4): Einpassung der Leiche in das Maulvolumen (gatorszene_r41.c, Abschnitt EINPASSEN; nur PC-Bau).
+ * _leiche_skala: Zeichner-Haken (platform/pc/main.c pc_prop_world) - Laengsskala (Modell-x, Q12) des Prop-Slots, 1 = gestaucht zeichnen.
+ * _leiche_matrix: Messhaken - Weltmatrix wie gezeichnet (Drehung x Skala) und Lage der Leiche. _leiche_fit: Messhaken - Rollanteil (1/16),
+ * Skala (Q12), Versatz (Part-6-Rahmen), Scheitel draussen (Kopf-Band Kiefer- + waagerechter Rahmen) jetzt und in Ruhelage (-1 = nicht gerechnet),
+ * Rollwinkel (4096tel); 1 = Einpassung laeuft. _m4_alt_setzen: Pruefhaken der Gegenprobe (1 = Stand vor NB4, keine Einpassung). */
+int  re15_gatorszene_r41_leiche_skala(int slot, int32_t *s_q12);
+int  re15_gatorszene_r41_leiche_matrix(int32_t m[9], int32_t t[3]);
+int  re15_gatorszene_r41_leiche_fit(int *a16, int32_t *s_q12, int32_t d[3], int *aus, int *aus_ruhe, int *beta);
+void re15_gatorszene_r41_m4_alt_setzen(int an);
 #endif /* RE15_GATORSZENE_R41_H */

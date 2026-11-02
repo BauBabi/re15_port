@@ -655,6 +655,17 @@ static struct { int phase; int t; int32_t p0[3]; int32_t q0[4]; int32_t hoehe_mi
  * Bild GSZ_VORGRIFF_AB zieht das offene Maul die Leiche in GSZ_VORGRIFF_BILDER Bildern in die Halte-Lage (Lage linear, Drehung nlerp), bevor der
  * Kiefer ueber sie geht - im Koppelbild liegt sie schon quer im Maul, die Drehung danach ist leer. */
 static struct { int an, k; int32_t p0[3], q0[4]; } s_vg;
+/* Runde 41 Spur G2 NB4 (M4): Zustand der Einpassung der Leiche (Abschnitt EINPASSEN, s. fit_rechnen) */
+static int s_m4_alt = 0;           /* Pruefhaken der Gegenprobe (Riegel maul): 1 = Stand vor NB4 (keine Einpassung) */
+static struct {
+    int     an;                    /* 1 = Einpassung laeuft (Halte-Lage erreicht, nicht im Flug) */
+    int     a;                     /* Rollanteil in 1/GSZ_FIT_ROLL_N */
+    int     ks;                    /* Skala-Stufe: s = 4096 - ks x GSZ_FIT_SKALA_SCHRITT */
+    int32_t dy, dz;                /* Versatz im Part-6-Rahmen */
+    int     aus, aus_a, aus_b;     /* Scheitel draussen (A + B) im zuletzt gerechneten Bild */
+    int     aus_ruhe;              /* dasselbe ohne Einpassung (Ruhelage) */
+    int16_t beta;                  /* Rollwinkel (4096tel) */
+} s_fit;
 static int s_nb1_alt;
 /* Nachbesserung 5 (M1/M3/M4): Messgroessen der Szene (nur RAM, Pruefhaken re15_gatorszene_r41_kampfbeginn/_kontakt/_fress_kamera). */
 static int      s_fress_cut = -1, s_fress_frontal = 0;    /* FINISHER-Schnitt der Spur B und sein Frontalwert (gr2_frontal-Form) */
@@ -1016,6 +1027,7 @@ static void ga_start(int slot, re15_actor_t *e, const re15_enemy_bank_t *bk)
     s_fress_cut = -1; s_fress_frontal = 0; s_kb_ok = 0; s_kb_takt = 0; s_kontakt = -1;   /* Nachbesserung 5 (Messgroessen) */
     memset(&s_flug, 0, sizeof s_flug);                       /* Runde 41 Spur G2: Flug der Leiche neu */
     memset(&s_vg, 0, sizeof s_vg);                           /* Runde 41 Spur G2 NB1: Vorgriff neu */
+    memset(&s_fit, 0, sizeof s_fit);                         /* Runde 41 Spur G2 NB4: Einpassung neu */
     ga_buehne(e, bk);
     e->y = -1200;                                             /* GB_WATER_Y = Wasser-INIT-Y der 0x23-KI @0x8010c65c */
     ga_clip(e, 6, 0, 0);                                      /* Clip 6 (0) @0x801008ac-b8 */
@@ -1269,6 +1281,234 @@ static void mat_mul(const int32_t a[9], const int32_t b[9], int32_t c[9])
         for (int k = 0; k < 3; k++)
             c[r*3+k] = (int32_t)(((int64_t)a[r*3] * b[k] + (int64_t)a[r*3+1] * b[3+k] + (int64_t)a[r*3+2] * b[6+k]) >> 12);
 }
+/* ==== Runde 41 Spur G2 Nachbesserung 4 (Abnahme 2 M4 "~10 Bilder Leiche sichtbar quer ueber Oberkiefer/Hals (Clip 5 Bild ~1-11)"): EINPASSEN ===========
+ * Befund (NB3, test_r41_gatorfix leichenachse / leichenfit): von Clip 4 Bild 8 bis Clip 5 Bild 14 rollt der Unterkiefer (Part 6, Anker der Leiche) um seine
+ * Laengsachse - der Winkel, um den die Part-6-Querachse aus der Waagerechten kippt, erreicht -55 Grad (Clip 4 Bild 13 .. Clip 5 Bild 2). Die quer gehaltene
+ * Leiche rollt mit: im Kieferrahmen bleibt sie im Kopf-Band (Riegel maul: 0 Scheitel draussen), im waagerechten Rahmen ragt ein Ende ueber den Schaedel, das
+ * andere unter den Kiefer (Stand vor NB4: bis 154 von 306 Scheiteln, Clip 5 Bild 7/8).
+ * MASS (Orchestrator-Entscheid nach NB3: "Leichenpunkte ausserhalb von Kopf- und Kieferhuelle oben UND unten zusammen minimal"): das Kopf-Band des Riegels
+ * maul (g2_band: Scheitel von Unterkiefer Part 6 + Schaedel Part 7, je Leichen-Scheitel das Laengsfenster +-GSZ_FIT_FENSTER um sein x, x am Kopf-Ende
+ * geklemmt) in ZWEI Rahmen, jeweils oben und unten:
+ *   A  Kieferrahmen (Part 6; x laengs, y unten)                                    = der Riegel maul ("nicht unten durch den Kiefer")
+ *   B  waagerechter Rahmen (x = Kieferachse, y = Welt-Senkrechte ohne x-Anteil)    = was ueber den Schaedel / unter den Kiefer ragt, wie man es sieht
+ * Kosten = Scheitel draussen in A + in B.
+ * PORT-WAHL (Gestaltung; RE2 haelt sein Opfer mit eigener Opfer-Animation, nicht als Objekt - es gibt kein Original fuer diese Lage): je Bild wird die
+ * Halte-Lage (leiche_rel_soll + Maullage) angepasst durch
+ *   Rollanteil a (0..1 in 1/GSZ_FIT_ROLL_N): Drehung um die Part-6-x-Achse um a x Rollwinkel zurueck Richtung waagerecht,
+ *   Laengsskala s (1 .. GSZ_FIT_SKALA_MIN = 0,6, Orchestrator-Entscheid "als waere sie eingeklemmt"): Modell-x (Kopf -> Fuesse) um die Rumpfmitte gestaucht,
+ *   Versatz (dy, dz) im Part-6-Rahmen (hoch/runter, quer). KEIN Laengsversatz dx: gemessen (leichenfit, Ruhelage sonst) liegen bei dx 100..500 in den
+ *   Haltebildern nach der Rolle 1..24 Scheitel draussen, bei dx 0 keiner - die Suche blieb bei dx 400 haengen (Rueckweg ueber dx 300 = 9..13 draussen).
+ * Suche: lokal um die Werte des Vorbilds, je Bild hoechstens zwei Schritte a / s / dy / dz (= glatter Verlauf); Kosten 64 je Scheitel
+ * draussen + 1 je Schritt weg von der Ruhelage (zieht zurueck, sobald nichts mehr herausragt). Das Minimum ueber den ganzen erlaubten Raum (Werkzeug
+ * leichenfit, Gitter Rollanteil x Skala x dy x dz) ist in Clip 5 Bild 3-11 nicht 0 (bis 24 von 306) - der Riegel maul misst die Einpassung gegen dieses
+ * Minimum je Bild.
+ * Gezeichnet wird die Skala ueber den Haken re15_gatorszene_r41_leiche_skala (platform/pc/main.c pc_prop_world; Muster re15_superobj_r41_welt der Spur J).
+ * Nur PC-Bau: ~1 Mio. Rechenschritte je Bild - nicht im PSX-Laufzeitbudget, und der PSX-Zeichner hat keinen Skala-Haken. */
+#define GSZ_FIT_FENSTER    150     /* = Riegel maul G2_FENSTER (Laengsfenster des Kopf-Bandes) */
+#define GSZ_FIT_ROLL_N     16      /* Rollanteil in 1/16 (PORT-WAHL Aufloesung; Suche +-2 Stufen je Bild) */
+#define GSZ_FIT_SKALA_MIN  2456    /* 0,6 in Q12 auf dem Stufenraster (4096 - 8 x 205; Orchestrator-Entscheid "Laengsskala 1 bis 0,6") */
+#define GSZ_FIT_SKALA_SCHRITT 205  /* 0,05 je Stufe (PORT-WAHL); Suche +-2 Stufen = +-0,1 je Bild */
+#define GSZ_FIT_DY_SCHRITT 40      /* PORT-WAHL Versatz-Stufen (Part-6-Rahmen, Welt-Einheiten) und Bereiche */
+#define GSZ_FIT_DY_MAX     480
+#define GSZ_FIT_DZ_SCHRITT 50
+#define GSZ_FIT_DZ_MAX     800
+#define GSZ_FIT_KOPF_MAX   1024    /* Scheitel Part 6 + Part 7 der RE2-EM23-Bank: 338 + 412 */
+#define GSZ_FIT_LEICHE_MAX 512     /* Scheitel des Leichen-MD1 (obj 2): 306 */
+void re15_gatorszene_r41_m4_alt_setzen(int an) { s_m4_alt = an; memset(&s_fit, 0, sizeof s_fit); }
+static int32_t fit_skala(void) { return 4096 - s_fit.ks * GSZ_FIT_SKALA_SCHRITT; }
+int re15_gatorszene_r41_leiche_fit(int *a16, int32_t *s_q12, int32_t d[3], int *aus, int *aus_ruhe, int *beta)
+{
+    if (a16) *a16 = s_fit.a;
+    if (s_q12) *s_q12 = fit_skala();
+    if (d) { d[0] = 0; d[1] = s_fit.dy; d[2] = s_fit.dz; }
+    if (aus) *aus = s_fit.aus;
+    if (aus_ruhe) *aus_ruhe = s_fit.aus_ruhe;
+    if (beta) *beta = s_fit.beta;
+    return s_fit.an;
+}
+/* Zeichner-Haken (pc_prop_world): Laengsskala der Leiche (Modell-x), 1 = gestaucht zu zeichnen. */
+int re15_gatorszene_r41_leiche_skala(int slot, int32_t *s_q12)
+{
+    const int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
+    if (k < 0 || slot != k || s_fit.ks == 0 || s_m4_alt) return 0;
+    if (s_q12) *s_q12 = fit_skala();
+    return 1;
+}
+/* Messhaken (Riegel): Weltmatrix (Drehung x Skala, wie gezeichnet) und Lage der Leiche. */
+int re15_gatorszene_r41_leiche_matrix(int32_t m[9], int32_t t[3])
+{
+    const int k = prop_slot(RE15_GSZ_LEICHE_OBJ);
+    if (k < 0) return 0;
+    prop_matrix(g_scd.props[k].rot_x, g_scd.props[k].rot_y, g_scd.props[k].rot_z, m);
+    int32_t s = 4096;
+    if (re15_gatorszene_r41_leiche_skala(k, &s)) { m[0] = q12m(m[0], s); m[3] = q12m(m[3], s); m[6] = q12m(m[6], s); }
+    t[0] = g_scd.props[k].x; t[1] = g_scd.props[k].y; t[2] = g_scd.props[k].z;
+    return 1;
+}
+#ifdef RE15_PLATFORM_PC
+static int32_t s_fk_x[GSZ_FIT_KOPF_MAX], s_fk_ya[GSZ_FIT_KOPF_MAX], s_fk_yb[GSZ_FIT_KOPF_MAX];
+static int16_t s_fl_v[GSZ_FIT_LEICHE_MAX][3];
+static int     s_fl_n = -1;
+static const uint8_t *s_fl_quelle = NULL;
+static int fit_md1_scheitel(const re15_md1_t *m, int mesh, int16_t (*out)[3], int cap)
+{
+    int n = 0;
+    if (mesh < 0 || mesh >= m->mesh_count) return 0;
+    const re15_md1_mesh_t *ms = &m->meshes[mesh];
+    for (int i = 0; i < ms->tri_vertex_count && n < cap; i++) { out[n][0] = ms->tri_vertices[i].x; out[n][1] = ms->tri_vertices[i].y; out[n][2] = ms->tri_vertices[i].z; n++; }
+    for (int i = 0; i < ms->quad_vertex_count && n < cap; i++) { out[n][0] = ms->quad_vertices[i].x; out[n][1] = ms->quad_vertices[i].y; out[n][2] = ms->quad_vertices[i].z; n++; }
+    return n;
+}
+/* Leichen-Scheitel (alle Meshes des Raum-MD1 obj RE15_GSZ_LEICHE_OBJ, Tri + Quad wie der Riegel), einmal je geladenem RDT */
+static int fit_leiche_scheitel(void)
+{
+    const int obj = RE15_GSZ_LEICHE_OBJ;
+    if (!g_room_rdt_ok || obj >= RE15_RDT_MAX_PROPS || !g_room_rdt.prop_md1[obj]) return 0;
+    if (s_fl_quelle == g_room_rdt.prop_md1[obj] && s_fl_n >= 0) return s_fl_n;
+    static re15_md1_t m;
+    s_fl_quelle = g_room_rdt.prop_md1[obj]; s_fl_n = 0;
+    if (re15_md1_parse(g_room_rdt.prop_md1[obj], g_room_rdt.prop_md1_size[obj], &m) != 0) return 0;
+    for (int k = 0; k < m.mesh_count; k++) s_fl_n += fit_md1_scheitel(&m, k, s_fl_v + s_fl_n, GSZ_FIT_LEICHE_MAX - s_fl_n);
+    return s_fl_n;
+}
+static int32_t fit_isqrt(int64_t q) { return g2_isqrt64(q); }
+/* Kopf-Band an einem Leichen-x (beide Rahmen): oberster/unterster Kopf-Scheitel im Fenster +-GSZ_FIT_FENSTER, x am Kopf-Ende geklemmt (g2_band_bei) */
+static void fit_band(int nk, int32_t x0, int32_t x1, int32_t x, int32_t b[4])
+{
+    if (x < x0 + GSZ_FIT_FENSTER) x = x0 + GSZ_FIT_FENSTER;
+    if (x > x1 - GSZ_FIT_FENSTER) x = x1 - GSZ_FIT_FENSTER;
+    b[0] = 0x7fffffff; b[1] = -0x7fffffff; b[2] = 0x7fffffff; b[3] = -0x7fffffff;
+    for (int i = 0; i < nk; i++) {
+        if (s_fk_x[i] < x - GSZ_FIT_FENSTER || s_fk_x[i] > x + GSZ_FIT_FENSTER) continue;
+        if (s_fk_ya[i] < b[0]) b[0] = s_fk_ya[i];
+        if (s_fk_ya[i] > b[1]) b[1] = s_fk_ya[i];
+        if (s_fk_yb[i] < b[2]) b[2] = s_fk_yb[i];
+        if (s_fk_yb[i] > b[3]) b[3] = s_fk_yb[i];
+    }
+}
+/* Einpassung eines Bildes: r6/p6 = gezeichnete Part-6-Matrix, rs = Halte-Relation, mt = Maullage (Part-6-Rahmen); setzt s_fit. */
+static void fit_rechnen(const re15_actor_t *e, const int32_t r6[9], const int32_t p6[3], const int32_t rs[9], const int32_t mt[3])
+{
+    re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+    int32_t r7[9], p7[3];
+    const int nl = fit_leiche_scheitel();
+    if (!bk || !bk->ok || bk->md1.mesh_count <= 7 || nl <= 0 || !re15_gr2_part7_gezeichnet(r7, p7)) { s_fit.an = 0; return; }
+    /* Rahmen B: Y = Welt-unten (0,1,0) ohne Anteil der Kieferachse X, normiert; in Part-6-Koordinaten YA */
+    const int32_t X[3] = { r6[0], r6[3], r6[6] };
+    int32_t Y[3] = { -q12m(X[1], X[0]), 4096 - q12m(X[1], X[1]), -q12m(X[1], X[2]) };
+    const int32_t ly = fit_isqrt((int64_t)Y[0] * Y[0] + (int64_t)Y[1] * Y[1] + (int64_t)Y[2] * Y[2]);
+    if (ly <= 0) { s_fit.an = 0; return; }
+    for (int i = 0; i < 3; i++) Y[i] = (int32_t)(((int64_t)Y[i] << 12) / ly);
+    int32_t YA[3];
+    for (int i = 0; i < 3; i++) YA[i] = (int32_t)(((int64_t)r6[0*3+i] * Y[0] + (int64_t)r6[1*3+i] * Y[1] + (int64_t)r6[2*3+i] * Y[2]) >> 12);
+    /* Rollwinkel: Drehung um x, die die Part-6-y-Achse auf Y bringt (math-atan2(YA_z, YA_y) = re15_atan2_q12(-YA_z, YA_y) - 1024, euler_aus_matrix) */
+    const int beta = ((((int)re15_atan2_q12(-YA[2], YA[1]) - 1024) + 2048) & 0xfff) - 2048;
+    s_fit.beta = (int16_t)beta;
+    /* Kopf-Scheitel (Part 6 + 7, Zeichen-Skala) in A (x, y) und B (y) */
+    static int16_t kv[GSZ_FIT_KOPF_MAX][3];
+    const int32_t sk = ga_scale(e);
+    int nk = 0; int32_t x0 = 0x7fffffff, x1 = -0x7fffffff;
+    for (int part = 6; part <= 7; part++) {
+        const int32_t *rb = part == 6 ? r6 : r7, *pb = part == 6 ? p6 : p7;
+        const int n = fit_md1_scheitel(&bk->md1, part, kv, GSZ_FIT_KOPF_MAX - nk);
+        for (int i = 0; i < n; i++) {
+            const int32_t v[3] = { q12m(kv[i][0], sk), q12m(kv[i][1], sk), q12m(kv[i][2], sk) };
+            int32_t d[3];
+            for (int r = 0; r < 3; r++)
+                d[r] = pb[r] + (int32_t)(((int64_t)rb[r*3] * v[0] + (int64_t)rb[r*3+1] * v[1] + (int64_t)rb[r*3+2] * v[2]) >> 12) - p6[r];
+            const int32_t lx = (int32_t)(((int64_t)r6[0] * d[0] + (int64_t)r6[3] * d[1] + (int64_t)r6[6] * d[2]) >> 12);
+            s_fk_x[nk] = lx;
+            s_fk_ya[nk] = (int32_t)(((int64_t)r6[1] * d[0] + (int64_t)r6[4] * d[1] + (int64_t)r6[7] * d[2]) >> 12);
+            s_fk_yb[nk] = (int32_t)(((int64_t)Y[0] * d[0] + (int64_t)Y[1] * d[1] + (int64_t)Y[2] * d[2]) >> 12);
+            if (lx < x0) x0 = lx;
+            if (lx > x1) x1 = lx;
+            nk++;
+        }
+    }
+    /* Leichen-Scheitel relativ zur Rumpfmitte (Modell), Halte-Relation zeilenweise */
+    const int32_t m[3] = { GSZ_LEICHE_MITTE_X, GSZ_LEICHE_MITTE_Y, GSZ_LEICHE_MITTE_Z };
+    static int32_t lx[GSZ_FIT_LEICHE_MAX];                /* x (Part 6) je Leichen-Scheitel */
+    static int32_t band[GSZ_FIT_LEICHE_MAX][4];           /* Kopf-Band A oben/unten, B oben/unten */
+    static int32_t ya[GSZ_FIT_LEICHE_MAX], za[GSZ_FIT_LEICHE_MAX];
+    for (int i = 0; i < nl; i++) {
+        const int32_t d1 = s_fl_v[i][1] - m[1], d2 = s_fl_v[i][2] - m[2];
+        /* Part-6-x haengt nicht an Skala (Modell-x: rs[0] = 0, leiche_rel_soll) und nicht am Rollen (Drehung um x) */
+        lx[i] = (int32_t)(((int64_t)rs[1] * d1 + (int64_t)rs[2] * d2) >> 12) + mt[0];
+        fit_band(nk, x0, x1, lx[i], band[i]);
+    }
+    s_fit.aus_ruhe = -1;                                   /* nur gesetzt, wenn die Ruhelage in der Nachbarschaft liegt */
+    int best = 0x7fffffff, b_a = s_fit.a, b_ks = s_fit.ks, b_aus = 0, b_aa = 0, b_ab = 0; int32_t b_dy = s_fit.dy, b_dz = s_fit.dz;
+    for (int ja = -2; ja <= 2; ja++) {
+        const int a = s_fit.a + ja;
+        if (a < 0 || a > GSZ_FIT_ROLL_N) continue;
+        const int g = beta * a / GSZ_FIT_ROLL_N;
+        const int32_t c = re15_cos_q12(g), sn = re15_sin_q12(g);
+        for (int jk = -2; jk <= 2; jk++) {
+            const int ks = s_fit.ks + jk;
+            const int32_t s = 4096 - ks * GSZ_FIT_SKALA_SCHRITT;
+            if (ks < 0 || s < GSZ_FIT_SKALA_MIN) continue;
+            for (int i = 0; i < nl; i++) {
+                const int32_t d0 = q12m(s_fl_v[i][0] - m[0], s), d1 = s_fl_v[i][1] - m[1], d2 = s_fl_v[i][2] - m[2];
+                const int32_t y0 = (int32_t)(((int64_t)rs[3] * d0 + (int64_t)rs[4] * d1 + (int64_t)rs[5] * d2) >> 12);
+                const int32_t z0 = (int32_t)(((int64_t)rs[6] * d0 + (int64_t)rs[7] * d1 + (int64_t)rs[8] * d2) >> 12);
+                ya[i] = (int32_t)(((int64_t)c * y0 - (int64_t)sn * z0) >> 12) + mt[1];   /* Rx(g): y' = c y - s z, z' = s y + c z */
+                za[i] = (int32_t)(((int64_t)sn * y0 + (int64_t)c * z0) >> 12) + mt[2];
+            }
+            for (int jy = -2; jy <= 2; jy++)
+            for (int jz = -2; jz <= 2; jz++) {
+                const int32_t dy = s_fit.dy + jy * GSZ_FIT_DY_SCHRITT, dz = s_fit.dz + jz * GSZ_FIT_DZ_SCHRITT;
+                if (dy < -GSZ_FIT_DY_MAX || dy > GSZ_FIT_DY_MAX || dz < -GSZ_FIT_DZ_MAX || dz > GSZ_FIT_DZ_MAX) continue;
+                int na = 0, nb = 0;
+                for (int i = 0; i < nl; i++) {
+                    const int32_t y = ya[i] + dy, z = za[i] + dz;
+                    const int32_t yB = (int32_t)(((int64_t)YA[0] * lx[i] + (int64_t)YA[1] * y + (int64_t)YA[2] * z) >> 12);
+                    const int32_t *b = band[i];
+                    na += (y < b[0] || y > b[1]);
+                    nb += (yB < b[2] || yB > b[3]);
+                }
+                const int k = 64 * (na + nb) + a + ks + abs(dy) / GSZ_FIT_DY_SCHRITT + abs(dz) / GSZ_FIT_DZ_SCHRITT;
+                if (k < best) { best = k; b_a = a; b_ks = ks; b_dy = dy; b_dz = dz; b_aus = na + nb; b_aa = na; b_ab = nb; }
+                if (a == 0 && ks == 0 && dy == 0 && dz == 0) s_fit.aus_ruhe = na + nb;
+            }
+        }
+    }
+    s_fit.a = b_a; s_fit.ks = b_ks; s_fit.dy = b_dy; s_fit.dz = b_dz;
+    s_fit.aus = b_aus; s_fit.aus_a = b_aa; s_fit.aus_b = b_ab;
+    s_fit.an = 1;
+}
+#endif
+/* Halte-Lage mit der Einpassung: rs/lokal = Halte-Relation/Lokallage (Part-6-Rahmen) -> Weltdrehung rw (ohne Skala) und Weltlage pa des Prop-Ursprungs,
+ * so dass Modell-Punkt v bei pa + rw x S x v liegt (S = Skala auf Modell-x, re15_gatorszene_r41_leiche_skala). Ohne Einpassung: rw = R6 rs, pa = p6 + R6 lokal. */
+static void fit_anwenden(const re15_actor_t *e, const int32_t r6[9], const int32_t p6[3], const int32_t rs[9], const int32_t lokal[3], int suchen,
+                         int32_t rw[9], int32_t pa[3])
+{
+    int32_t rel[9], l[3];
+    memcpy(rel, rs, sizeof rel); memcpy(l, lokal, sizeof l);
+#ifdef RE15_PLATFORM_PC
+    if (!s_m4_alt && !s_g2_alt) {
+        int32_t mt[3]; maul_lokal(ga_scale(e), mt);
+        if (suchen) fit_rechnen(e, r6, p6, rs, mt);
+        if (s_fit.an && (s_fit.a || s_fit.ks || s_fit.dy || s_fit.dz)) {
+            const int g = s_fit.beta * s_fit.a / GSZ_FIT_ROLL_N;
+            const int32_t c = re15_cos_q12(g), sn = re15_sin_q12(g);
+            for (int col = 0; col < 3; col++) {                                   /* rel = Rx(g) x rs */
+                rel[3 + col] = (int32_t)(((int64_t)c * rs[3 + col] - (int64_t)sn * rs[6 + col]) >> 12);
+                rel[6 + col] = (int32_t)(((int64_t)sn * rs[3 + col] + (int64_t)c * rs[6 + col]) >> 12);
+            }
+            const int32_t s = fit_skala();
+            const int32_t sm[3] = { q12m(GSZ_LEICHE_MITTE_X, s), GSZ_LEICHE_MITTE_Y, GSZ_LEICHE_MITTE_Z };
+            const int32_t dv[3] = { 0, s_fit.dy, s_fit.dz };
+            for (int r = 0; r < 3; r++)                                           /* lokal = Maullage + Versatz - rel x S x Rumpfmitte */
+                l[r] = mt[r] + dv[r] - (int32_t)(((int64_t)rel[r*3] * sm[0] + (int64_t)rel[r*3+1] * sm[1] + (int64_t)rel[r*3+2] * sm[2]) >> 12);
+        }
+    }
+#else
+    (void)e; (void)suchen;
+#endif
+    mat_mul(r6, rel, rw);
+    for (int r = 0; r < 3; r++)
+        pa[r] = p6[r] + (int32_t)(((int64_t)r6[r*3] * l[0] + (int64_t)r6[r*3+1] * l[1] + (int64_t)r6[r*3+2] * l[2]) >> 12);
+}
 /* Messhaken (Riegel unit_r41_alligator2_leiche, Messzeile der Szene): Abstand Rumpfmitte der Leiche <-> Maullage in der GEZEICHNETEN Pose; 1 = gemessen (angehaengt). */
 int re15_gatorszene_r41_leiche_sitz(int32_t *abw)
 {
@@ -1277,16 +1517,17 @@ int re15_gatorszene_r41_leiche_sitz(int32_t *abw)
     const re15_actor_t *e = gator_aktor();
     if (k < 0 || !e || !s_sitz_ok || !s_ga.leiche_dran || !g_scd.props[k].active || !re15_gr2_part6_gezeichnet(r6, p6)) return 0;
     if (s_flug.phase == 1) return 0;                          /* Spur G2: im Flug sitzt sie nicht */
-    prop_matrix(g_scd.props[k].rot_x, g_scd.props[k].rot_y, g_scd.props[k].rot_z, ro);
+    int32_t tp[3]; re15_gatorszene_r41_leiche_matrix(ro, tp);   /* NB4 (M4): gezeichnete Matrix (Drehung x Laengsskala) */
     const int32_t sk = ga_scale(e);
     const int32_t m[3] = { GSZ_LEICHE_MITTE_X, GSZ_LEICHE_MITTE_Y, GSZ_LEICHE_MITTE_Z };
     int32_t t[3]; maul_lokal(sk, t);
+    if (s_fit.an && !s_m4_alt) { t[1] += s_fit.dy; t[2] += s_fit.dz; }   /* NB4 (M4): Soll = Maullage + Versatz der Einpassung */
     const int32_t c[3] = { g_scd.props[k].x + (int32_t)(((int64_t)ro[0] * m[0] + (int64_t)ro[1] * m[1] + (int64_t)ro[2] * m[2]) >> 12),
                            g_scd.props[k].y + (int32_t)(((int64_t)ro[3] * m[0] + (int64_t)ro[4] * m[1] + (int64_t)ro[5] * m[2]) >> 12),
                            g_scd.props[k].z + (int32_t)(((int64_t)ro[6] * m[0] + (int64_t)ro[7] * m[1] + (int64_t)ro[8] * m[2]) >> 12) };
-    const int32_t s[3] = { p6[0] + (int32_t)(((int64_t)r6[0] * t[0] + (int64_t)r6[1] * t[1]) >> 12),
-                           p6[1] + (int32_t)(((int64_t)r6[3] * t[0] + (int64_t)r6[4] * t[1]) >> 12),
-                           p6[2] + (int32_t)(((int64_t)r6[6] * t[0] + (int64_t)r6[7] * t[1]) >> 12) };
+    const int32_t s[3] = { p6[0] + (int32_t)(((int64_t)r6[0] * t[0] + (int64_t)r6[1] * t[1] + (int64_t)r6[2] * t[2]) >> 12),
+                           p6[1] + (int32_t)(((int64_t)r6[3] * t[0] + (int64_t)r6[4] * t[1] + (int64_t)r6[5] * t[2]) >> 12),
+                           p6[2] + (int32_t)(((int64_t)r6[6] * t[0] + (int64_t)r6[7] * t[1] + (int64_t)r6[8] * t[2]) >> 12) };
     const int64_t dx = c[0] - s[0], dy = c[1] - s[1], dz = c[2] - s[2];
     if (abw) *abw = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dy * dy + dz * dz));
     return 1;
@@ -1362,6 +1603,7 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
                 lz[r] = t[r] - (int32_t)(((int64_t)rs[r*3] * m[0] + (int64_t)rs[r*3+1] * m[1] + (int64_t)rs[r*3+2] * m[2]) >> 12);
             for (int r = 0; r < 3; r++)
                 pz[r] = p6v[r] + (int32_t)(((int64_t)r6v[r*3] * lz[0] + (int64_t)r6v[r*3+1] * lz[1] + (int64_t)r6v[r*3+2] * lz[2]) >> 12);
+            if (s_vg.k >= GSZ_VORGRIFF_BILDER) fit_anwenden(e, r6v, p6v, rs, lz, 1, rz, pz);   /* NB4 (M4): Einpassung ab der Halte-Lage */
             q_aus_matrix(rz, qz);
             q_nlerp(s_vg.q0, qz, s_vg.k, GSZ_VORGRIFF_BILDER, q);
             q_zu_matrix(q, rw);
@@ -1419,12 +1661,10 @@ void re15_gatorszene_r41_nachtakt(int slot, void *gator_actor)
             s_lokal[r] = ga_annaehern(s_lokal[r], ziel, r == 1 ? GSZ_MAUL_SCHRITT_Y : GSZ_MAUL_SCHRITT_XZ);
         }
     }
-    int32_t rw[9];
-    mat_mul(r6, s_rel, rw);
+    int32_t rw[9], pa[3];
+    /* NB4 (M4): Einpassung in das Maulvolumen, gesucht nur in der Halte-Lage vor dem Wurf (danach bleiben die Werte stehen) */
+    fit_anwenden(e, r6, p6, s_rel, s_lokal, s_flug.phase == 0 && !(e->motion == 5 && (int)e->anim_frame >= GSZ_WURF_BILD), rw, pa);
     s_sitz_ok = 1;                                            /* Messhaken re15_gatorszene_r41_leiche_sitz */
-    int32_t pa[3] = { p6[0] + (int32_t)(((int64_t)r6[0] * s_lokal[0] + (int64_t)r6[1] * s_lokal[1] + (int64_t)r6[2] * s_lokal[2]) >> 12),
-                      p6[1] + (int32_t)(((int64_t)r6[3] * s_lokal[0] + (int64_t)r6[4] * s_lokal[1] + (int64_t)r6[5] * s_lokal[2]) >> 12),
-                      p6[2] + (int32_t)(((int64_t)r6[6] * s_lokal[0] + (int64_t)r6[7] * s_lokal[1] + (int64_t)r6[8] * s_lokal[2]) >> 12) };
     /* Spur G2 (Punkt 2): Wurf in Clip 5 Bild GSZ_WURF_BILD, Fang in GSZ_FANG_BILD (Bahn relativ zur Maullage, s. GSZ_WURF_A) */
     if (!s_g2_alt && e->motion == 5) {
         const int f = (int)e->anim_frame, T = GSZ_FANG_BILD - GSZ_WURF_BILD;
@@ -2087,6 +2327,7 @@ void re15_gatorszene_r41_tick(void)
     if (basis == RE15_GSZ_RAUM && s_zustand == RE15_GSZ_RUECKKEHR && re15_game_flag_get(5, RE15_GSZ_SIG_GATOR)) {
         re15_game_flag_set(5, RE15_GSZ_SIG_GATOR, 0);
         memset(&s_ga, 0, sizeof s_ga);
+        memset(&s_fit, 0, sizeof s_fit);                     /* Runde 41 Spur G2 NB4 */
         s_rel_ok = 0;
         s_zustand = RE15_GSZ_GATOR;
         folge('S', 0, 0);

@@ -761,6 +761,10 @@ static void pc_prop_world(int slot, int32_t rot_q12[9], int32_t pos[3])
     int32_t r[9], t[3];
     pc_prop_rot_q12(g_scd.props[slot].rot_x, g_scd.props[slot].rot_y,
                     g_scd.props[slot].rot_z, r);
+    /* Runde 41 Spur G2 NB4 (M4, PORT-WAHL): Laengsskala der gefressenen Leiche (Modell-x) - Weltmatrix = Drehung x diag(s, 1, 1) */
+    { extern int re15_gatorszene_r41_leiche_skala(int s, int32_t *q); int32_t sq = 4096;
+      if (re15_gatorszene_r41_leiche_skala(slot, &sq))
+          for (int k = 0; k < 3; k++) r[k*3] = (int32_t)(((int64_t)r[k*3] * sq) >> 12); }
     t[0] = g_scd.props[slot].x; t[1] = g_scd.props[slot].y; t[2] = g_scd.props[slot].z;
     int cur = slot, tiefe = 0;
     while (tiefe++ < 4) {
@@ -773,6 +777,9 @@ static void pc_prop_world(int slot, int32_t rot_q12[9], int32_t pos[3])
         int32_t pr[9], pt[3];
         pc_prop_rot_q12(g_scd.props[pslot].rot_x, g_scd.props[pslot].rot_y,
                         g_scd.props[pslot].rot_z, pr);
+        /* Runde 41 Spur G2 NB4 (M4): Kind einer gestauchten Leiche (Schluessel auf dem Ruecken) - seine Lage wird mitgestaucht, seine Form nicht */
+        { extern int re15_gatorszene_r41_leiche_skala(int s, int32_t *q); int32_t sq = 4096;
+          if (re15_gatorszene_r41_leiche_skala(pslot, &sq)) t[0] = (int32_t)(((int64_t)t[0] * sq) >> 12); }
         /* Die Eltern-Translation traegt IHRE eigene Typ-4-Absenkung, weil das Original die
          * -900 auf die Weltmatrix des Elternteils schreibt, BEVOR ein spaeterer Kind-Eintrag
          * sie liest (FUN_8002c18c, Schleifenreihenfolge = Pool-Reihenfolge). */

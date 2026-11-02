@@ -322,6 +322,7 @@ enum { GR2_FXM_TEIL6, GR2_FXM_TEIL7, GR2_FXM_KANISTER, GR2_FXM_N };
 static uint8_t s_fx_mtx[GR2_FXM_N][32];
 static int     s_fx_ok;          /* Nachbesserung 4: Part-6/7-Puffer stammen aus einer gezeichneten Pose (re15_gr2_nachtakt) */
 static int32_t s_p6_rot[9], s_p6_pos[3];   /* Messhaken: Part-6-Weltmatrix der letzten gezeichneten Pose */
+static int32_t s_p7_rot[9], s_p7_pos[3];   /* Runde 41 Spur G2 NB4: Part 7 (Schaedel) derselben Pose (Einpassung der Leiche) */
 static int gr2_fx(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t ofs[4])
 {
     return re2fx_spawn_sofort(a0, a1, mtx, ofs);             /* FUN_8001bf10 = sofort lebendig */
@@ -2507,6 +2508,80 @@ static void gr2_tr_frei_r(const re15_actor_t *e, int32_t *x, int32_t *z, int32_t
     }
     *x = bx; *z = bz;
 }
+/* ==== Runde 41 Spur G2 Nachbesserung 4 (Orchestrator nach NB3, Punkt 2): KREISPUNKT IN DER SPIELERKAMERA ============================================
+ * Befund NB3: der Mittelpunkt der Belagerung (Figur oben/an der Leiter, mit dem Kanister nicht erreichbar) ist der naechste freie Wasserpunkt zur Figur - auf
+ * der Rampe West liegt der Alligator so zu 91 % im Bild der Spielerkamera (Cut 2), auf dem Nordteil der Rampe nur zu 12 %.
+ * Die Kamera waehlt das Spiel ueber die RVD-Zonen (aot_common.c re15_aot_scan, Zone mit cam_from == laufender Cut, Lage im Viereck -> cam_to, FUN_80014230);
+ * g_scd.cam_id ist die Kamera, in der die Figur steht. In ROOM2090 haengt sie am Weg (Zonenstreifen 2 <-> 3 bei z -14500..-13500 / -19000..-18000: auf der
+ * Rampe Cut 2, wer von Sueden heraufklettert, Cut 3 von Norden; Werkzeug test_r41_gatorfix kamerazone).
+ * PORT-WAHL (Gestaltung, kein Original - RE2 kreist nicht): Mittelpunkt = der freie Punkt im Raster GR2_TR_SICHT_RASTER (ganzer Kreis R in der Wurzel-
+ * Klemmflaeche = Aussenwaende - 1600 und euklidisch >= Wurzel-Rand + R von Plattform und Rampe), dessen Kreis (GR2_TR_SICHT_N Punkte auf Wurzelhoehe -1200 =
+ * GB_WATER_Y) zu mindestens GR2_TR_SICHT_MIN / GR2_TR_SICHT_N im Bild der laufenden Kamera liegt (zwischen den Kino-Balken y 24..216 wie das Mass traglog),
+ * der Figur am naechsten. Gilt fuer den Kreis der Belagerung (Rampe) und den Kreis der Verfolgung um das gekuerzte Ziel (Leiter). Gibt es keinen (kein
+ * sichtbares Wasser in dieser Kamera): wie NB3. Gerechnet je Kamera und Figur-Zelle (GR2_TR_SICHT_RASTER) einmal. Riegel unit_r41_gatorfix_kamera. */
+#define GR2_TR_SICHT_RASTER 250
+#define GR2_TR_SICHT_N      16
+#define GR2_TR_SICHT_MIN    12      /* 12/16 = 75 % (Orchestrator: Gator mindestens 70 % im Bild) */
+static int s_sicht_alt = 0;         /* Pruefhaken der Gegenprobe (Riegel kamera): 1 = Mittelpunkt wie NB3 */
+static struct { int ok, cam, gefunden, vis; int32_t px, pz, cx, cz; } s_sk;
+void re15_gr2_kreis_kamera_alt_setzen(int an) { s_sicht_alt = an; s_sk.ok = 0; }
+/* Abstand (euklidisch) eines Punkts zum Rechteck [x0,x1] x [z0,z1], 0 innen */
+static int64_t gr2_tr_rect_ab2(int32_t x, int32_t z, int32_t x0, int32_t x1, int32_t z0, int32_t z1)
+{
+    const int64_t dx = x < x0 ? (int64_t)x0 - x : x > x1 ? (int64_t)x - x1 : 0, dz = z < z0 ? (int64_t)z0 - z : z > z1 ? (int64_t)z - z1 : 0;
+    return dx * dx + dz * dz;
+}
+static int gr2_tr_kreis_sicht(const re15_camera_view_t *v, int32_t cx, int32_t cz)
+{
+    int n = 0;
+    for (int k = 0; k < GR2_TR_SICHT_N; k++) {
+        const int a = k * 4096 / GR2_TR_SICHT_N;
+        const int64_t px = cx + (int32_t)(((int64_t)re15_cos_q12(a) * GR2_TR_KREIS) >> 12), py = -1200,
+                      pz = cz + (int32_t)(((int64_t)re15_sin_q12(a) * GR2_TR_KREIS) >> 12);
+        const int32_t vx = (int32_t)(((int64_t)v->rot[0]*px + (int64_t)v->rot[1]*py + (int64_t)v->rot[2]*pz) >> 12) + v->trans[0];
+        const int32_t vy = (int32_t)(((int64_t)v->rot[3]*px + (int64_t)v->rot[4]*py + (int64_t)v->rot[5]*pz) >> 12) + v->trans[1];
+        const int32_t vz = (int32_t)(((int64_t)v->rot[6]*px + (int64_t)v->rot[7]*py + (int64_t)v->rot[8]*pz) >> 12) + v->trans[2];
+        if (vz <= 0) continue;
+        const int x = 160 + (int)(((int64_t)vx * v->fov_screen_dist) / vz), y = 120 + (int)(((int64_t)vy * v->fov_screen_dist) / vz);
+        n += (x >= 0 && x < 320 && y >= 24 && y < 216);
+    }
+    return n;
+}
+int re15_gr2_kreis_sicht(int cam, int32_t cx, int32_t cz)   /* Messhaken: Kreispunkte (von GR2_TR_SICHT_N) im Bild der Kamera cam */
+{
+    re15_camera_view_t v;
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cam < 0 || cam >= g_room_rdt.cut_count || re15_camera_build_view(&g_room_rdt.cuts[cam], &v) != 0) return -1;
+    return gr2_tr_kreis_sicht(&v, cx, cz);
+}
+int re15_gr2_kreis_kamera(int cam, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *cx, int32_t *cz, int *vis)
+{
+    if (!e || !g_room_rdt_ok || !g_room_rdt.cuts || cam < 0 || cam >= g_room_rdt.cut_count) return 0;
+    if (s_sk.ok && s_sk.cam == cam && (px - s_sk.px) / GR2_TR_SICHT_RASTER == 0 && (pz - s_sk.pz) / GR2_TR_SICHT_RASTER == 0) {
+        if (s_sk.gefunden) { *cx = s_sk.cx; *cz = s_sk.cz; }
+        if (vis) *vis = s_sk.vis;
+        return s_sk.gefunden;
+    }
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[cam], &v) != 0) return 0;
+    const int32_t m = (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60 + 120 + GR2_TR_KREIS;
+    int64_t bd = -1; int32_t bx = 0, bz = 0; int bv = 0;
+    /* ganzer Kreis in der Wurzel-Klemmflaeche (Aussenwaende - 1600, s. re15_gr2_kk_ziel): sonst schiebt die Klemme ihn vom Kreis (Leiter-Ecke) */
+    for (int32_t x = GR2_KK_X0 + 1600 + GR2_TR_KREIS; x <= GR2_KK_X1 - 1600 - GR2_TR_KREIS; x += GR2_TR_SICHT_RASTER)
+        for (int32_t z = GR2_KK_Z0 + 1600 + GR2_TR_KREIS; z <= GR2_KK_Z1 - 1600 - GR2_TR_KREIS; z += GR2_TR_SICHT_RASTER) {
+            const int64_t d = (int64_t)(x - px) * (x - px) + (int64_t)(z - pz) * (z - pz);
+            /* ganzer Kreis mindestens um den Wurzel-Rand neben Plattform und Rampe: euklidischer Abstand zum Block >= Rand + R (der Kasten-Test
+             * gr2_tr_im_block sperrt die Ecken mit, dort lag fuer Cut 2 das ganze sichtbare Suedwasser unter der Rampe) */
+            if ((bd >= 0 && d >= bd) || gr2_tr_rect_ab2(x, z, GR2_PLAT_X0, GR2_PLAT_X1, GR2_PLAT_Z0, GR2_PLAT_Z1) < (int64_t)m * m
+                || gr2_tr_rect_ab2(x, z, GR2_RAMP_X0, GR2_RAMP_X1, GR2_RAMP_Z0, GR2_RAMP_Z1) < (int64_t)m * m) continue;
+            const int n = gr2_tr_kreis_sicht(&v, x, z);
+            if (n < GR2_TR_SICHT_MIN) continue;
+            bd = d; bx = x; bz = z; bv = n;
+        }
+    s_sk.ok = 1; s_sk.cam = cam; s_sk.px = px; s_sk.pz = pz; s_sk.gefunden = bd >= 0; s_sk.cx = bx; s_sk.cz = bz; s_sk.vis = bv;
+    if (bd >= 0) { *cx = bx; *cz = bz; }
+    if (vis) *vis = bv;
+    return bd >= 0;
+}
 int re15_gr2_trag_dash_erlaubt(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX || s_kk_ziel_alt || !s_kan.aktiv || s_kan.stufe != 7) return 1;
@@ -2533,6 +2608,13 @@ static int gr2_tr_fitfrei(const re15_actor_t *e, int32_t *x, int32_t *z)
     return seiten;
 }
 static int8_t s_tr_modus[RE15_ACTOR_MAX];   /* letzte Rueckgabe je Slot: 0 Ziel unveraendert, 1 gekuerzt, 2 Vorbei-Etappe */
+int re15_gr2_trag_kreis(int slot, int32_t *cx, int32_t *cz)   /* Messhaken NB4: laufender Kreis (1 Verfolgung, 2 Belagerung, 0 keiner) und Mittelpunkt */
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    if (cx) *cx = s_tr[slot].cx;
+    if (cz) *cz = s_tr[slot].cz;
+    return s_tr[slot].kreis;
+}
 int re15_gr2_trag_modus(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_tr_modus[slot] : 0; }
 int re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern)
 {
@@ -2556,14 +2638,16 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
          * + R aufgeblasenen Bloecken auf den naechsten Punkt geschoben (Kreis ganz im Wasser), nicht die Spur-B-Kante (Rampe: x >= 4450, Lauf n8_plat7_leon:
          * Kreis bei (-4000,-10500), 9000 von der Figur) */
         int32_t cx = pl ? pl->x : nx, cz = pl ? pl->z : nz;
-        gr2_tr_frei_r(e, &cx, &cz, GR2_TR_KREIS);
+        /* NB4 (Punkt 2): im sichtbaren Wasser der laufenden Kamera (s. re15_gr2_kreis_kamera), sonst wie NB3 */
+        if (s_sicht_alt || !pl || !re15_gr2_kreis_kamera((int)g_scd.cam_id, e, pl->x, pl->z, &cx, &cz, NULL))
+            gr2_tr_frei_r(e, &cx, &cz, GR2_TR_KREIS);
         const int64_t mx = (int64_t)e->x - cx, mz = (int64_t)e->z - cz;
         if (mx * mx + mz * mz < 4LL * GR2_TR_KREIS * GR2_TR_KREIS) {
             if (!s_tr[slot].kreis || gr2_tr_ab(e, s_tr[slot].cx, s_tr[slot].cz) > 3 * GR2_TR_KREIS
                 || (int64_t)(s_tr[slot].cx - cx) * (s_tr[slot].cx - cx) + (int64_t)(s_tr[slot].cz - cz) * (s_tr[slot].cz - cz) > (int64_t)GR2_TR_KREIS * GR2_TR_KREIS) {
                 const int th = e->rot_y & 0xfff;
                 const int64_t kr = (int64_t)(e->x - cx) * (-re15_sin_q12(th)) - (int64_t)(e->z - cz) * re15_cos_q12(th);
-                s_tr[slot].kreis = 1; s_tr[slot].kdir = (int8_t)(kr >= 0 ? 1 : -1); s_tr[slot].cx = cx; s_tr[slot].cz = cz; s_tr[slot].an = 0;
+                s_tr[slot].kreis = 2; s_tr[slot].kdir = (int8_t)(kr >= 0 ? 1 : -1); s_tr[slot].cx = cx; s_tr[slot].cz = cz; s_tr[slot].an = 0;   /* NB4: 2 = Kreis der Belagerung */
                 re15_gr2_log("TRAG KREISEN an F%u (Belagerung): Wurzel (%d,%d), Kante (%d,%d) -> Mittelpunkt (%d,%d) R %d", (unsigned)g_engine.frame_count,
                              e->x, e->z, (int)nx, (int)nz, (int)cx, (int)cz, GR2_TR_KREIS);
             }
@@ -2618,6 +2702,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
         } else { *tx = lqx; *tz = lqz; return 2; }
     }
     if (!belagern && !hop) {                               /* NB2: Umkreisen nur um den gekuerzten SPIELER (s. GR2_TR_KREIS) */
+        if (s_tr[slot].kreis == 2) s_tr[slot].kreis = 0;   /* NB4: der Kreis der Belagerung endet mit ihr (sonst kreiste er an der Leiter weiter um den Rampen-Mittelpunkt, Riegel kamera) */
         if (s_tr[slot].kreis) {
             /* vorbei, wenn das (ungekuerzte) Spielerziel um mehr als R vom Ziel beim Beginn wandert - nicht am gekuerzten Ziel gemessen, das haengt von der
              * Lage auf dem Kreis ab (Fuzz NB2 N2: Kreisen an/aus im Wechsel, dazwischen Vorbei-Etappen mit Wende) */
@@ -2637,6 +2722,16 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
             int32_t cx = *tx, cz = *tz;
             if (vl > 0) { cx += (int32_t)((int64_t)vx * GR2_TR_KREIS / vl); cz += (int32_t)((int64_t)vz * GR2_TR_KREIS / vl); }
             gr2_tr_frei_r(e, &cx, &cz, GR2_TR_KREIS);           /* der ganze Kreis ausserhalb der aufgeblasenen Bloecke */
+            /* NB4 (Punkt 2, Leiterlagen): liegt dieser Kreis nicht zu >= GR2_TR_SICHT_MIN/16 im Bild der laufenden Kamera, dann der Mittelpunkt im
+             * sichtbaren Wasser, der Figur am naechsten (re15_gr2_kreis_kamera) - die Kuerzung legte den Kreis an der Leiter bis (929,-23646), 9000 von der
+             * Figur und in Cut 0 zu 0..2/16 im Bild (Riegel kamera). Ein sichtbarer Kreis bleibt (freies Spiel unveraendert, Riegel frei), ebenso ein
+             * sichtbarer Mittelpunkt weiter als 3 R von der Figur (exe-Riegel abn2_nordbecken: Figur NO-Ecke, Kamera 0, sichtbares Wasser erst bei
+             * (-5300,-20650) - der Weg dorthin endete an der Plattform-Westkante in 2-s-Fenstern ohne Fortschritt). */
+            if (!s_sicht_alt && pl && re15_gr2_kreis_sicht((int)g_scd.cam_id, cx, cz) < GR2_TR_SICHT_MIN) {
+                int32_t kx = 0, kz = 0;
+                if (re15_gr2_kreis_kamera((int)g_scd.cam_id, e, pl->x, pl->z, &kx, &kz, NULL)
+                    && (int64_t)(kx - pl->x) * (kx - pl->x) + (int64_t)(kz - pl->z) * (kz - pl->z) <= 9LL * GR2_TR_KREIS * GR2_TR_KREIS) { cx = kx; cz = kz; }
+            }
             const int th = e->rot_y & 0xfff;                /* Drehsinn = der, in den er schon schwimmt: Kreuzprodukt (Wurzel - M) x Schwimmrichtung (cos, -sin) */
             const int64_t kr = (int64_t)(e->x - cx) * (-re15_sin_q12(th)) - (int64_t)(e->z - cz) * re15_cos_q12(th);
             s_tr[slot].kreis = 1; s_tr[slot].kdir = (int8_t)(kr >= 0 ? 1 : -1); s_tr[slot].cx = cx; s_tr[slot].cz = cz; s_tr[slot].an = 0;
@@ -2783,6 +2878,7 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e)
     gr2_part_welt(e, &poses[6], r6, p6);
     gr2_part_welt(e, &poses[7], r7, p7);
     memcpy(s_p6_rot, r6, sizeof s_p6_rot); memcpy(s_p6_pos, p6, sizeof s_p6_pos);
+    memcpy(s_p7_rot, r7, sizeof s_p7_rot); memcpy(s_p7_pos, p7, sizeof s_p7_pos);
     if (s_kan.aktiv && s_kan.anhaengen) {
         /* FUN_8002d030(Part-6-Matrix, Kanister-Matrix) @0x801018f0: rel = R6^T * Rk, lokal = R6^T * (p - p6) / s
          * (Lokallage `sw v0,56(s2) / sw v1,60(s2) / sw a3,64(s2)` @0x80101910-18) */
@@ -3469,6 +3565,12 @@ int re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3])
 {
     if (!s_fx_ok) return 0;
     memcpy(rot, s_p6_rot, sizeof s_p6_rot); memcpy(pos, s_p6_pos, sizeof s_p6_pos);
+    return 1;
+}
+int re15_gr2_part7_gezeichnet(int32_t rot[9], int32_t pos[3])
+{
+    if (!s_fx_ok) return 0;
+    memcpy(rot, s_p7_rot, sizeof s_p7_rot); memcpy(pos, s_p7_pos, sizeof s_p7_pos);
     return 1;
 }
 int re15_gr2_fx_quelle(int i, uint8_t m[32])

@@ -176,6 +176,12 @@ int  re15_gr2_kk_aktiv(void);         /* Messhaken: Kopf-Klemme griff im letzten
 /* Runde 41 Spur G2 Nachbesserung 1 (M1/M3): Steuerziel mit dem Kanister im Maul - gekuerztes Ziel, am Ende VORBEI-Etappen (gator_re2_r41.c).
  * Rueckgabe 0 = unveraendert, 1 = gekuerzt, 2 = Vorbei-Etappe. */
 int  re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern);
+/* Runde 41 Spur G2 NB4 (Punkt 2): Mittelpunkt der Belagerung im sichtbaren Wasser der Kamera cam (freier Punkt, Kreis R 2000 zu >= 12/16 im Bild),
+ * der Figur (px,pz) am naechsten; 1 = gefunden (*cx/*cz, *vis = Kreispunkte im Bild), 0 = kein sichtbares Wasser. Pruefhaken: 1 = Mittelpunkt wie NB3. */
+int  re15_gr2_kreis_kamera(int cam, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *cx, int32_t *cz, int *vis);
+void re15_gr2_kreis_kamera_alt_setzen(int an);
+int  re15_gr2_trag_kreis(int slot, int32_t *cx, int32_t *cz);   /* Messhaken: laufender Kreis (1 Verfolgung, 2 Belagerung) und Mittelpunkt */
+int  re15_gr2_kreis_sicht(int cam, int32_t cx, int32_t cz);   /* Messhaken: Kreispunkte (von 16) im Bild der Kamera cam, -1 = keine Kamera */
 int  re15_gr2_trag_dash_erlaubt(int slot);
 int  re15_gr2_trag_ohne_annaeherung(void);   /* Messzeile: Etappen ohne Annaeherung (Riegel zaehlt sie) */   /* NB2: mit Kanister hoechstens ein Zonen-Dash je Tragen, keiner beim Umkreisen */   /* nx/nz = Endziel vor dem Kanten-Umweg */
 /* Runde 41 Spur P (Abnahme G 4 O1): Bildschritt (ox,oz) -> (nx,nz) auf hoechstens 340 kuerzen (groesster authored Wurzelschritt, gator_re2_r41.c GR2_KK_SCHRITT). */
@@ -185,6 +191,7 @@ int  re15_gr2_kk_hart(void);
 /* Messhaken (Riegel unit_r41_re2gator_sitz): Part-6-Weltmatrix der letzten re15_gr2_nachtakt-Pose (Rotation ohne Skala, Lage
  * mit Zeichen-Skala) und die Effekt-Quellpuffer (0 = Part 6, 1 = Part 7, 2 = Kanister; 32-Byte-MATRIX-Abbild). 0 = keine. */
 int  re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3]);
+int  re15_gr2_part7_gezeichnet(int32_t rot[9], int32_t pos[3]);   /* Runde 41 Spur G2 NB4: Part 7 (Schaedel) derselben Pose */
 /* Messhaken (PC-Zeichner nach dem NPC-Pass): Kanister-Sitz gegen die gezeichnete Pose aus dem Ueberblend-Schnappschuss;
  * 1 = gemessen (angehaengt), *abw = |Part6(gezeichnet) x Lokallage - Kanister-Weltlage|. Ohne Wirkung auf den Aktor. */
 int  re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw);
