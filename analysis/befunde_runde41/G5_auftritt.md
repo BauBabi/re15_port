@@ -5,8 +5,10 @@ von Birkin aus dem Zug, sollst du die letzte Stufe GENAUSO machen wie bei Reside
 eine Grossaufnahme an seitlich der offenen Stelle des Zuges, und dann kommen da zunaechst die Tentakel vom finalen Birkin G5, und
 der zieht ihn dann rein. Schau es dir an!"
 
-Stand: Nachbesserung 1 nach Abnahme 1 (Abschnitt 7; ersetzt in 2.1/2.2/3/4 "Leon steht", die Spielerlagen 1400/13873 im Cut-12-Teil
-und "XA-Ton nicht gebaut"). Belege: `G5_belege/`, `G5_belege/nb1/`.
+Stand: Nachbesserung 2 (Abschnitt 8; ersetzt in 2.2 die PORT-WAHL "Lichtsatz 16/17 = Cut 11" durch RE2-Lichtsatz 9/10 und in 7.5 die
+offenen Punkte Pistolenlauf, G5-Richtung, Speer-Phase, Uebergang Kampf). Davor Nachbesserung 1 nach Abnahme 1 (Abschnitt 7; ersetzt in
+2.1/2.2/3/4 "Leon steht", die Spielerlagen 1400/13873 im Cut-12-Teil und "XA-Ton nicht gebaut"). Belege: `G5_belege/`, `G5_belege/nb1/`,
+`G5_belege/nb2/`.
 
 ## 1. Was RE2 tut (selbst gelesen)
 
@@ -146,7 +148,7 @@ Bild 0 ist das KI-Bild der Armierung (RE2 sub06 @0x018DE); der G5 laeuft in dies
 | Schnitte 9 und 10 | RE2-Kamera mit RE2-Hintergrund und RE2-Masken als Szenen-Schnitte 16/17 | RE1.5 hat keine Kamera dieser Art; RE2 fuehrt beide nur fuer die Szene (RVD nur Ankerzone). Der Wagen ist an der Stelle zellengleich (SCA [21]/[25] = [2]/[4], Kamera und Masken passen zur Geometrie). Erster Versuch Schnitt 10 = Cut 11: Leon auf RE2s 6500 lag 1126 vor der Kamera rechts ausser Bild, der G5 fuellte das Bild ab Bild ~630 ganz (Lauf leon, Abschnitt 3). Folge: zwei Einstellungen im grauen RE2-Wagen zwischen den orangen RE1.5-Bildern. |
 | Schnitte 5 und 6 | RE1.5 Cut 12 | RE2s Spielkameras; Cut 12 (18526 -> Westen) ist RE1.5s Kamera desselben Blicks. |
 | Spielerlage ab Bild 807 und am Ende | 13873 statt 11340 (Kamera 5) / 14850 (Kamera 6) | Eine RE1.5-Kamera fuer beide RE2-Einstellungen; 14850 laege im Zonenstreifen 12 -> 13 (RVD @0x4CC) und die Kampfkamera sprange nach Osten. 13873 = Ostkante RVD @0x4F4 (13 -> 12). Zweite Setzung am Ende wie RE2 @0x0196C: sie nimmt zurueck, was Arme und Koerper in den 355 Bildern verschoben haben (gemessen bis 14957). |
-| Lichtsatz 16/17 | der von Cut 11 | RE2s Lichtsaetze sind fuer RE2-Figuren; Cut 11 beleuchtet dasselbe Wagenende. |
+| Lichtsatz 16/17 | ~~der von Cut 11~~ -> RE2 Lichtsatz 9/10 (Nachbesserung 2, 8.5) | ~~RE2s Lichtsaetze sind fuer RE2-Figuren~~ - der Satz gehoert zur Kamera; Cut 11 hat keine Lichter (nur Umgebung). |
 | Spieler-Gesten | Leon steht (Pose 200) | RE2s Plc_motion/Plc_neck/Plc_cnt (@0x018E7..@0x01912, @0x01940) sind PL0-Clips von RE2-Leon. |
 | Teil vor der Armierung | entfaellt | Deckenplatte (sub03), Dach-Tentakel (Slot 1, sub15 Clip 13), Lauf aus dem Hinterwagen: im Port die Rueckstoss-Szene der Form-Spur. |
 | Pause vor dem Typwechsel | entfaellt (vorher 45 Bilder BF_RS_PAUSE) | RE2 hat zwischen dem Verschwinden der Masse und der Armierung keine Pause. |
@@ -321,3 +323,178 @@ Xa 0x0C bei F_arm+438 (Korrelation 0,950 / 0,917).
 - **Musik:** RE2s Sce_bgm_control wirkt auf MAIN11; im Port laeuft RE1.5 SUB_17 weiter (PORT-WAHL, s. 7.2).
 - **PSX-Bau:** Szenen-Schnitte 16/17, XA-Strecken und Zeichenbild-Merker nur auf PC (bg_pc.c, audio_pc.c, main.c).
 - **Laenge:** Port 55 + 1162 Bilder; RE2 zusaetzlich 1,10 s + 0,74 s + 0,28 s CD-Standbilder (nicht nachgebildet).
+
+## 8. Nachbesserung 2 (Auftrag nach NB1: roter Pistolenlauf, G5-Richtung, Speer-Arme, Uebergang Kampf, Licht)
+
+Belege: `G5_belege/nb2/` (Werkzeuge `nb2/werkzeug/`). RE2-Code: `info/re2leon/PSX.EXE` und `build/extracted/re2_ems/CDEMD0_EM36_ai0.BIN` /
+`CDEMD0_EM37_ai0.BIN` (Link-Adressen @0x8010xxxx wie oben), Disassembler `.claude/skills/re15-psx-disasm/scripts/re2_disasm.py`.
+RE2-RAM: Savestates s01..s26 der Abnahme 1 (Lesewerkzeuge `nb1/werkzeug/`).
+
+### 8.1 Punkt 1: integration_r41_birkin_pistole rot - Halbierung, Ursache, Behebung
+
+**Halbierung** (Schalter `nb2/werkzeug/halbierung_schalter.py` auf 58d3213a6, je NB1-Aenderung ein Bit in `RE15_NB2_AUS`, Leon-Lauf wie der
+Test, Kampfprotokoll je Bild; Ergebnis `nb2/halbierung_ergebnis.txt`, Werkzeug `halbierung_auswert.py`):
+
+| aus | Aenderung | Ausgang (Leon, 45 HP bei Kampfbeginn) |
+|---|---|---|
+| - | NB1 komplett | Peitsche 7 (n1745), Biss 20 (n1781, Abstand 4910, Bogen 0), Biss 18 -> 0 (n1917), gefressen n1940; G5 105 HP |
+| 0x01 | gestreckte Kind-Kollision/Spitze (4833) | zwei Bisse (n1509/n1629), Spieler 5 HP, G5 15 HP bei Exit - G5 faellt nicht |
+| 0x02 | gehaltene Einroll-Pose (+0x178) in der Kette | tot (wie NB1) |
+| 0x04 | kein Schritt in sub8 ph4/ph6, ph3-Durchfall | tot (Bisse n1521/n1645/n1761) |
+| 0x08 | Clip-Wort-Blendstufen der Arme | tot (wie NB1) |
+| 0x10 | -800-Anker der G5-Wurzelspur | tot (HP 0, G5 15) |
+| 0x20 | [T14]-Wechsel / Durchfaelle [T3]..[T13] | tot |
+| 0x40 | Skriptlage (Nachklemme) | tot (wie NB1) |
+| 0x80 | w1-Kopplung aus der Wurzel | tot (wie NB1) |
+| 0x100 | Vorlauf (Szenendauer +55) | tot (wie NB1) |
+| 0x200 | Spieler laeuft/geht rueckwaerts (M1, Lagen 20066/15646) | tot (wie NB1) |
+| 0x400 | 0x37 nur Eigenschritt | tot |
+| 0x1000 | G5-Richtung 0 (Punkt 2) | tot |
+| 0x7FF | alle NB1-Aenderungen aus (~NB0) | Spieler 45 HP, kein Treffer; Spieler steht bei z -22151 |
+
+Keine einzelne Aenderung kippt den Ausgang. Gemeinsamer Mechanismus aller roten Laeufe: der stehende Spieler steht im Bissbogen des G5 -
+Abstand < 6000 und `arc_test == 0` - und wird gebissen, bis HP 0, dann gefressen. Der einzige gruene Lauf (alle aus) gewann, weil der Spieler
+bei z -22151 stand: Bogen 1249 neben der Achse, `arc_test(128) != 0`, kein Biss im ganzen Kampf.
+
+**Woher -22151:** NB0 liess den Spieler am Szenenende nicht auf RE2s Linie. RE2 setzt ihn mit Pos_set @0x0196C `32 00 02 3a 00 00 ee a3`
+auf z -23570; im NB0-Lauf (Abnahme 1) sprang er nach der Freigabe auf (13564,-22855) - der G5 hatte die gesperrte Figur in der Szene
+verschoben und die Nachklemme nahm die Pos_set-Lage zurueck (NB1 M1/re15_player_skriptlage hat beides behoben). Die Arme des ersten Zugs
+schoben ihn dann auf -22151. In NB1 steht er RE2-gemaess auf -23570, der Zug schiebt ihn nur noch in x.
+
+**Was RE2 tut (selbst disassembliert, CDEMD0_EM36_ai0.BIN):**
+- Biss-Ausloeser jeden Takt im Puls (Blob 0): `lw v0,496(s0)` @0x80103e00 (Abstand), `sltiu v0,v0,0x1770` @0x80103e08 (Bytes `70 17 42 2c`,
+  < 6000), Sperre +0x229 @0x80103e14-1c, `jal 0x80015614` @0x80103e34 mit a3 = 128 @0x80103e38, `bne v0,zero` @0x80103e3c (weg, wenn der
+  Spieler AUSSERHALB des Bogens steht). Schaden 40 (a0 @0x80104118, a1 = 1: toetet nie, klemmt auf 0), Fressen bei HP <= 0 @0x80103e78-ec4.
+- Der G5 kommt nicht weiter als X 12000: Zug `slti a0,a0,12000` @0x80100fd0 / `beq a0,zero` @0x80100fd4 vor `jal 0x800152c8` @0x80100fe0;
+  Biss-Vorstoss nur solange <= 12000 (@0x80104060-94).
+Ein Spieler, der auf RE2s Linie vor dem G5 stehen bleibt, wird also gebissen und gefressen - in RE2 wie im Port. Der Test schrieb mit "stehen
+und feuern" eine Annahme fest, die RE2 widerspricht und nur durch den NB0-Lagefehler gruen war.
+
+**Behebung (Test, nicht Code):** `tests/integration/test_r41_birkin_pistole.cmake` misst weiter "Pistole besiegt den G5", mit dem Abstand,
+den RE2 dafuer laesst: bis F2548 Zielen + Feuer, dann 12 s Taste unten (wirkt erst mit der Freigabe am Szenenende F2775, Spieler geht
+rueckwaerts 13873 -> 23113, also hinter X 18000 = 12000 + 6000), dann wieder Zielen + Feuer. Neu geprueft: Spieler-HP im Bild, in dem der
+G5 faellt, muss > 0 sein (vorher nur "G5 tot"). EXIT_AT 5400 (G5 faellt bei F3775), Lauf-Zeitlimit 420 s, Test 900 s.
+Gemessen (ctest): Leon und Elza "Mutationen 1, Form-HP 150 bis 0, Rueckstoss 1, G5 1, G5 tot 1, Spieler-HP dabei 45"; G5 600 -> -1 in 40
+Schuessen a 15, kein Treffer am Spieler. Gegenprobe Endstand stehend (`kampf_lauf.sh`, RUECK 0): Biss 20 bei Abstand 5442, Tod n1933 - wie
+oben, also kein Codefehler, sondern RE2s Biss.
+
+### 8.2 Punkt 2: G5-Blickrichtung
+
+RE2: Ctor `sh zero,118(s0)` @0x8010044c (Bytes `76 00 00 a6`). Zensus aller `sb/sh/sw rt,0x74|0x76|0x78(base)` in CDEMD0_EM36_ai0.BIN: nur
+dieser und @0x80103a24 `sh v1,118(s1)` (s1 = Spieler beim Fressen). [T0] @0x80101164-0x801011e4 schreibt +0x76 nicht. RAM s03..s26: 0.
+Port vorher: [T0] `rot_y = atan2(Spieler) - 0x400` (Arena 0..11; liegt der Spieler bei groesserem z, 0xFF5.. mit Bit 0x400).
+Jetzt: Ctor setzt 0, [T0] setzt 0 (enemy_ai_boss_g5.c).
+
+**unit_r35_granate** (fiel in NB1 mit Richtung 0): der Test rief `re15_granate_r35_explosion(p, 0, 2)` - Gier 0 = Wurf VOM Boss weg. RE2s
+Explosionskasten liegt in Wurfrichtung: FUN_80041EF8 dreht (Box0, -Box1 - 4*Box3) mit RotMatrix(0,Gier,0) (`sh a1,162(sp)` @0x80041f44,
+`jal 0x8008e1f4` @0x80041f74), Box {-2000,0,1000,500} + r1ee/4 -> bei Gier 0 reicht der Kasten von P nur 2000 nach -X. Das G5-Trefferzentrum
+liegt bei X + (+0x94 = -2000, @0x80100534/@0x80100538) - mit Richtung 0 also 300 bzw. 1500 + 2000 hinter P, ausserhalb. Getroffen hatte nur
+die Port-Richtung 0xC00 (Spieler im Test bei +Z), die mit Bit 0x400 das Zentrum auf (0,-2000) vertauscht. Behebung: der Test wirft wie ein
+Werfer vor dem Boss auf ihn zu (Gier 0x800 = Westen, RE2-RAM s12 "Richtung 2048"), fuer alle fuenf Bosse. Gemessen: 184/185 RE15+RE2
+"Treffer 1, hp 600 -> 520", ganzer Test gruen; mit Gier 0 und Richtung 0 vorher 4 Fehler (184/185).
+Gewinn fuer M2 (unit_r41_g5auftritt, Gelenke gegen RE2 s04): max. Abweichung 116 -> 12.
+
+### 8.3 Punkt 3: Speer-Phase Schnitt 17 (Arme zu stark eingerollt, Reichweite 6080 statt 8170)
+
+Drei Ursachen, alle gemessen gegen RE2-RAM s12 (sub9 ph6) / s13 (sub9 ph7):
+
+1. **Mischen nur im Anim-Schritt (FUN_80029614, RE2 PSX.EXE).** RE2 posiert die Teil-Winkel (+0x68/+0x6A/+0x6C je Teil, Stride 172) und die
+   Wurzel (+0x2C..) nur im Schritt und haelt sie bis zum naechsten. Mit Stufen +0x14E (`lbu t3,334(s2)` @0x800296a8): Gewicht
+   w = (a3 & 0xffff) * Stufen (@0x800296b8-bc), Stufen - 1 (@0x800299c8-cc), je Teil alt &= 0xfff (@0x800299e0-ec), neu +-4096 auf den kurzen
+   Weg (`sltiu 0x1001` / `andi 0x8000` @0x80029a40-a9c), GPF IR0 = w auf alt (@0x800299f0-a3c), GPL IR0 = 4096 - w auf neu (@0x80029aac-ad8),
+   Ablage @0x80029ae0-af4; Wurzel ebenso mit der alten Wurzel +0x38 (@0x800296b8-754). Der Port mischte im Zeichner JEDES Bild gegen das
+   rohe Zielbild - in sub9 ph3..ph7 (kein Schritt) lief die Pose so gegen das volle Clip-2-Bild (rz 0/483/597/410), RE2 bleibt bei 4 Schritten
+   mit 31..28 Stufen und a3 128 (@0x801021D0) auf (0,133,164,112).
+   Neu: `re15_g5_pose_schritt` (engine/src/re15_g5_skin.c) haelt die Pose je Slot, `g_anim_pose_override` (skeleton_common.c) setzt sie im
+   Pose-Builder ein (Zeichner UND Ketten-/Kollisionsrechnung); `tent_anim` faltet die Einroll-Zuschlaege vor dem Schritt in die Pose
+   (`sh` +108/+280/+452/+624 @0x801023e4-24 schreiben in die Teil-Winkel).
+2. **Abbruch des Einrollens auf der Winkelsumme der TEIL-WINKEL**, nicht der Zuschlaege: `lh v0,120(s1)`, `lh a1,108(s2)`, `lh v1,280(s2)`,
+   `lh a0,624(s2)`, `lh v1,452(s2)` @0x8010245c-74, `andi 0xfff` @0x80102484, Fenster `addiu -2049` / `sltiu 0x7ff` @0x80102488-8c.
+   Nachgerechnet in Python aus den RAM-Keyframes (EMR @0x801512f0, kf 0 / kf 2): 7 Einrollbilder, Ergebnis (356,-223,-192,-66) = RAM s12.
+3. **Phase 7 fehlte:** [T5] -> [T6] setzt RE2 alle vier Arme auf +0x06 = 7 (Ausrollen/Zittern): `addiu v0,zero,7` @0x80101500,
+   `sb v0,6(a2)` @0x80101504/@0x80101510/@0x8010151c/@0x8010152c (Bytes ab @0x80101500 `07 00 02 24 06 00 c2 a0 3c 3c 66 8e ...`), RAM s13
+   alle Arme Wort 0x00070901. Im Port blieben die Arme in ph6 stehen (Szenenbild 440..520 gemessen).
+
+Gemessen (unit_r41_g5auftritt, neu M5, 5090 und 5091):
+
+| | RE2 | Port vorher | Port jetzt |
+|---|---|---|---|
+| Arm 0 sub9 ph6 rz (p0..p3) | s12 (356,-223,-192,-66) | - | (356,-223,-192,-66) |
+| Arm 1 sub9 ph6 | s12 (302,-169,-138,-39) | - | (302,-169,-138,-39) |
+| Arm 0 sub9 ph7 (+20 Bilder) | s13 (266,-133,-102,-21) | Arm blieb in ph6 | (266,-133,-102,-21) |
+| Arm 1 sub9 ph7 | s13 (212,-79,-48,6) | - | (212,-79,-48,6) |
+| Arm 0 \|p3 - p0\| | s13 8170 | 6080 | 8143 |
+
+Bild: `nb2/vergleich_nb2_schnitt17_speer.jpg` (Bild 450/472/520/600): die Arme stehen als lange Speere wie in RE2, kein breiter Arm mehr vor
+der Kamera.
+
+### 8.4 Punkt 4: Uebergang Intro -> Kampf (Wurzelschritt 125 bei Bild 1123)
+
+RE2 schreibt das Clip-Wort an jeder Stelle ganz, auch bei gleichem Clip, mit Stufen 0x1F (Zensus aller `sw rt,332(base)` in
+CDEMD0_EM36_ai0.BIN: [T0] @0x8010116c, [T3] @0x8010138c, [T6] @0x801014f8, [T7] @0x801015d0, [T9] @0x80101618, [T11] @0x80101710,
+[T13] @0x80101770, sub0 @0x801009a8, sub1 @0x80100dd8 / @0x80101000, sub3 @0x8010186c, Zucken @0x80102b28, Tod @0x8010306c / @0x801031e4 /
+@0x80103430 / @0x80103444; nur das Fressen 7: @0x80101aec+@0x80101b14 und @0x80101ca0-b0). Die Schritte mischen mit a3 128 (sub0 @0x80100a98,
+sub1 @0x80100fac/@0x80101020, Intro @0x80101310..@0x801017a8, sub3 @0x8010195c, Zucken @0x80102b78) bzw. 512 (Fressen @0x80101c8c/@0x80101cd8).
+Port vorher: `g5_clip` nur bei anderem Clip und Stufen 0 statt 0x1F -> keine Ueberblendung, [T14] Clip 0 -> sub1 Clip 5 sprang die Wurzel um
+125. Jetzt: `g5_clip` schreibt immer (Stufen 0x1F, Fressen 7), `g5_anim_a3` posiert ueber `re15_g5_pose_schritt` (a3 je Stelle), Ctor-Pose
+Clip 0 Bild 0 (@0x80100590/@0x801005a8). Mitgezogen, weil die Kopplung die gemischte Wurzel liest: w1 aus Teil0+0x30 NACH dem Schritt
+([T2] Schritt @0x8010130c vor Kopplung @0x80101338, [T6] @0x80101550 vor @0x8010157c), Kopf-Tracking aus den gehaltenen Teil-Winkeln und
+der Zuschlag direkt in Teil1+0x6A (@0x80100354). Zwei Durchfaelle wie M4b: Zucken ph0 @0x80102b18-34 -> ph1-Koerper @0x80102b38 und sub1 ph2
+@0x80100ff0-100c -> ph3-Koerper @0x80101010 (Schritt im Eintrittstakt).
+Gemessen (unit_r41_g5auftritt): groesster Wurzel-y-Schritt im Kampfbeginn 125 (Bild 1123) -> 14 (Bild 1127); im Intro weiter 56 (Bild 129).
+Riegel neu: <= 60. Bild: `nb2/vergleich_nb2_uebergang_kampf.jpg` (Bild 1100..1150, ohne Sprung).
+Gegenprobe probe_g5_boss "Zug-Kappe": X 10997 nach 2500 Takten - der Wuerfel (Rueckzug 50 % ab X >= 9001, `andi v0,v0,0x1` @0x80100c8c-b4)
+zog zweimal zurueck, weil das Ausrollen (Punkt 3) je Bild drei Wuerfe nimmt. Lauf auf 8000 Takte verlaengert (Begruendung im Test): X 12092.
+
+### 8.5 Punkt 5: Licht der Masse in Schnitt 16
+
+1. **Lichtsatz der Kamera:** RE2 ROOM7040.RDT Kopf [9] = LIT @0x500, 40 Byte je Schnitt im RE1.5-Format. Schnitt 9 @0x668
+   `01 00 00 00 a8 a8 a8 be 8c 32 ff ff ff 49 49 49 ac 0d 6c ee 98 a4 68 f7 00 00 34 a4 e4 f3 00 00 fc bd f8 2a 10 27 40 1f`: grau (168,168,168)
+   bei (3500,-4500,-23400) Hell 11000, ORANGE (190,140,50) am Boden vor der Tuer (-2200,0,-23500) Hell 10000, weiss bei (-3100,0,-16900) Hell
+   8000; Umgebung (73,73,73). Schnitt 10 @0x690: die ersten beiden, drittes aus. Die PORT-WAHL "Lichtsatz von Cut 11" nahm RE1.5 ROOM5090
+   LIT @0x55c + 11*40: Skala 2, alle Farben 0, nur Umgebung (83,78,78) - flach. Jetzt: `re15_g5a_licht_einsetzen` legt RE2-Satz 9/10 auf die
+   Indizes 16/17 (5090/5091, nach jedem Licht-Parse in main.c / room_common.c; RE15_LIGHT_MAX_CUTS 18), `re15_g5a_licht_schnitt` gibt 16/17.
+2. **Auswertepunkt:** RE2 wertet die Punktlichter an der Welttranslation von TEIL 0 aus: FUN_80027160 `jal 0x80076f88` @0x80027330 mit
+   `addiu a0,s2,92` @0x80027334 (s2 = Teile); FUN_80076f88 = (Teil0 - Licht) >> 4 inkl. Y, XZ-Daempfung wie RE1.5; FUN_80077200 dieselben Zeilen
+   (-Skala * VectorNormal, Farbe << 4). Fuer den G5 liegt Teil 0 auf der Wurzel-y (-3205..-4534) - das Bodenlicht faellt von unten. Port
+   (main.c, nur 0x36/0x37 in 5090/5091): Auswertepunkt = Entity + Matrix * Teil-0-Translation statt Entity-Ursprung.
+Gemessen (`nb2/werkzeug/licht_mass.py`, mittlere Farbe unten links in Schnitt 16, `nb2/licht_messung.txt`):
+
+| Bild | RE2 echt | Port NB1 | Port NB2 |
+|---|---|---|---|
+| 180 | R 40 G 20 B 11, orange-hell 1,2 % | R 21 G 11 B 7, 0,0 % | R 46 G 22 B 12, 1,4 % |
+| 240 | R 39 G 20 B 11, 1,1 % | R 19 G 10 B 7, 0,0 % | R 48 G 23 B 13, 1,6 % |
+
+(Nur mit Schritt 1, Auswertung am Ursprung: R 61-65, orange-hell 4-5 % - zu hell, das Licht kam waagerecht.)
+Bild: `nb2/vergleich_nb2_schnitt16_licht.jpg` (Bild 100/180/240/271).
+
+### 8.6 Punkt 6 (optional): nicht gebaut
+
+Vorlauf-Ton (sub04 @0x0169E Se_on Bank 2 Satz 12), Beben (9x Sce_shake_on) und Tunnellichter (sub09/11/12): nicht uebertragen, offen wie 7.5.
+
+### 8.7 Tests (build/, ctest)
+
+| Lauf | Ergebnis |
+|---|---|
+| unit_r41_g5auftritt (neu: M4b ueber den Kampfbeginn, M5 Speer gegen s12/s13, Reichweite) | gruen 5090/5091 |
+| G5/Birkin/Tentakel/Granate/PRI-Gruppe (27 Tests) | 27/27 gruen |
+| integration_r41_birkin_pistole (neu gestaltet, 8.1) | gruen, 399 s (Endstand; Leon und Elza "G5 tot 1, Spieler-HP dabei 45") |
+| integration_r41_g5_tod / _g5_westen / r35_zgirl_5090 / pri_masken / r36_pri_schatten | gruen (Endstand, -j 3; westen 411 s, zgirl 148 s, pri_schatten 36 s) |
+| Alle Nicht-Integrationstests (unit/prop/probe/sonstige, -j 8) | 1068/1074; rot nur unit_r38_releaseskript_{trocken,ablauf,fehler_bau,fehler_umfeld,cmd} und unit_r39_titelversion_ablauf - je Zeitlimit 1200 s, alle haengen in `df -Pk <pfad>` (release_alles.sh); `df -Pk C:/workspace` haengt auf der Maschine auch allein (> 10 s, gemessen), release/ ist in diesem Zweig unberuehrt. NB1 hatte sie gruen. |
+
+### 8.8 Sichtbeleg (echtes Fenster, gdigrab, kein AUTOSHOT/SOFTWARE_RENDER)
+
+`nb2/werkzeug/run_port.sh` (eigene exe-Kopie, hwnd der eigenen PID, 20 B/s), Zeitachse `zeitachse2.py` (Schnittkanten), Leisten
+`leisten_nb2.py`: `nb2/vergleich_nb2_schnitt16_licht.jpg`, `nb2/vergleich_nb2_schnitt17_speer.jpg`, `nb2/vergleich_nb2_uebergang_kampf.jpg`
+(je Zeile RE2 echt | Port 5090 Leon | Port 5091 Elza). Protokoll beider Laeufe wie NB1: Armierung F1613, Szenenende F2775 Bild 1162.
+
+### 8.9 Offen
+
+- **Masse in Schnitt 16/17 anders gedreht/hoeher:** Bild 180..271 zeigt die Stacheln im Port frontal, in RE2 schraeg nach rechts; in Schnitt 17
+  (Bild 450..520) steht der Kopf im Port hoeher und die Masse groesser. Lage (M3) und Wurzel stimmen; Kandidaten Morph-Gewichte w0/w3 in [T3]..[T5]
+  bzw. Teil-Winkel der Masse - nicht gemessen.
+- **sub3 (Rueckzug):** RE2 ph0 @0x8010185c-a4 wuerfelt +0x16B (`jal 0x80015fe8`, `sb s0,363(s2)` @0x801018a4) und faellt in ph1 @0x801018a8;
+  der Port-Zweig ist vereinfacht (Dreiecksrampe). Nicht angefasst.
+- **Spieltest-Strategie:** der Pistolen-Test zieht sich hinter X 18000 zurueck; ob die Arme (Reichweite bis ~X 24700) einen Spieler dort im
+  RE2-Zufall treffen koennen, ist nicht gemessen - in beiden Laeufen kein Treffer.
+- Punkt 6 (Vorlauf-Ton/Beben/Tunnellichter), Musik MAIN11, PSX-Bau (Szenen-Schnitte, RE2-Licht nur PC-Plattform main.c), CD-Standbilder - wie 7.5.
