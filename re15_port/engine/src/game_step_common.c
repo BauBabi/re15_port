@@ -520,6 +520,15 @@ int re15_birkin_klemme_aktiv(void)
     return 0;
 }
 
+/* SKRIPT-LAGE (Runde 41 G5-Auftritt, Nachbesserung 1): RE2s Pos_set laeuft im SCD-Faden VOR der Entity-Schleife und ist keine Bewegung
+ * (op 0x32, kein Klemmaufruf). Die G5-Szene (g5auftritt_r41.c) setzt ihre Pos_set-Lagen im Gegner-Pass; ohne diesen Abgleich nahm
+ * re15_player_nachklemme den Sprung (z.B. 9258 -> -3800, @0x0187C) als Schub und verwarf ihn ganz (gemessen: Fensterlauf F1558-F1597
+ * Lage unveraendert 9258). */
+void re15_player_skriptlage(int32_t x, int32_t z)
+{
+    s_klemme_ende.x = x; s_klemme_ende.z = z;
+}
+
 static void spieler_klemme(const re15_rdt_t *rdt, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z)
 {
     if (re15_birkin_klemme_aktiv()) re15_collision_constrain_re2(rdt, alt_x, alt_z, x, z);   /* FUN_8003567c */

@@ -6,8 +6,9 @@
  *
  *  A) AUFTRITT: Kampfstart setzt den Boss auf (-9000, -23400) (RE2 [T0] @0x801011d0/d8); die
  *     Massenfront (Ursprung + 4494) liegt ab Bild 0 im Cut-12-Viereck, der Ursprung ab Bild <= 160
- *     (gemessen 151); Intro-Ende (erster Clip 5) mit Ursprung 1960 +-60 (RE2: -9000 + 7014 + 3946 =
- *     1960); die Front ueberholt den Spieler im Intro NIE.
+ *     (gemessen 151); Intro-Ende (erster Clip 5) mit Ursprung 1160 +-60 (RE2-RAM s17..s26 G5 +0x38 = 1160: -9000 + 6214 (Clip 1,
+ *     Bild 0 bucht speed.x -800 @0x80015f04-1c) + 3946; Abnahme G5 1 M3 - die alten 1960 waren der Port-Anker); die Front ueberholt
+ *     den Spieler im Intro NIE.
  *  B) GESICHT: 2-Bone-Skinning von Mesh 0 — Kopf-Vertices (Gewicht 4096) liegen exakt auf
  *     R1*(v+off_a)+t1, Rumpf-Vertices (Gewicht 0) auf R0*v+t0 (FUN_800197f4); Augen-Wanderer
  *     bleibt in [-15,15] und bewegt sich in >= 1 von 16 Bildern; Kopf-Tracking nach dem Intro an
@@ -253,7 +254,7 @@ int main(int argc, char **argv)
            first_in_q, first_front_in_q, first_clip5, (int)x_end, (int)pl->x, (int)dx_end, (int)pl_x_gate, first_front_past, (int)dx_min);
     PIN(first_front_in_q == 0, "Massenfront ab Bild 0 im Cut-12-Viereck (ist ab %d)", first_front_in_q);
     PIN(first_in_q >= 0 && first_in_q <= 160, "Ursprung bis Bild 160 im Viereck (gemessen 151; ist %d)", first_in_q);
-    PIN(first_clip5 > 0 && x_end >= 1900 && x_end <= 2020, "Intro-Ende Ursprung 1960 +-60 = RE2 -9000+7014+3946 (ist %d bei Bild %d)", (int)x_end, first_clip5);
+    PIN(first_clip5 > 0 && x_end >= 1100 && x_end <= 1220, "Intro-Ende Ursprung 1160 +-60 = RE2-RAM s17..s26 (ist %d bei Bild %d)", (int)x_end, first_clip5);
     PIN(first_front_past < 0, "Front ueberholt den Spieler IM INTRO nie (ist Bild %d)", first_front_past);
 
     /* ---------------- B) GESICHT -------------------------------------------------------- */

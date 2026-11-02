@@ -297,6 +297,14 @@ typedef struct { int src_x, src_y, dst_x, dst_y, w, h, depth; } re15_pri_rect_t;
 #define RE15_PRI_RECTS_MAX RE15_PRI_MAX_MASKS_PER_CUT  /* = 105, the data maximum */
 static re15_pri_rect_t s_pri_rects[RE15_PRI_RECTS_MAX];
 static int             s_pri_rect_count = 0;
+/* Runde 41 G5-Auftritt M4: 1 = die aktive Maskenliste ist RE2-Form (Szenen-Schnitt 16 = RE2 room7040 Schnitt 9). RE2 vergleicht
+ * depth mit otz>>3 (@0x80027d60-64) und haengt die Masken vor den Figuren ein (@0x80026770 vor @0x8002689c), RE1.5 mit otz>>4
+ * (@0x8002565c) und danach (@0x8001ce54) - s. re15_pri_mask_camera_z_re2. Gesetzt von main.c nach re15_render_pc_set_pri_rects. */
+static int             s_pri_re2 = 0;
+static float pc_mask_key(int depth)
+{
+    return s_pri_re2 ? re15_pri_mask_camera_z_re2(depth) : re15_pri_mask_camera_z(depth);
+}
 /* Player screen position + camera-space Z (set per frame). A mask is skipped ONLY if
  * it is BEHIND the player (mask camera-Z = depth<<4 >= player_z, since the sprite.pri
  * depth is the original otz>>4 = camera-Z>>4) AND it OVERLAPS the player on screen — so a
@@ -1024,7 +1032,7 @@ static void pc_masken_schatten_flush(int *mi, int mask_n, const int *mask_order,
 {
     for (;;) {
         int m_due = (*mi < mask_n) &&
-                    (ende || re15_pri_mask_camera_z(s_pri_rects[mask_order[*mi]].depth) > tri_depth);
+                    (ende || pc_mask_key(s_pri_rects[mask_order[*mi]].depth) > tri_depth);   /* M4: RE2-Form @0x80027d60 */
         int s_due = 0, sb = 0, sp = 0;
         if (*si < sh_n) {
             int k = sh_order[*si];
@@ -1204,9 +1212,9 @@ void re15_render_end_frame(void)
           re15_entladen_bild(mask_n, re15_render_pc_pri_gen()); }
         for (int i = 1; i < mask_n; i++) {
             int k  = mask_order[i];
-            float kd = re15_pri_mask_camera_z(s_pri_rects[k].depth);
+            float kd = pc_mask_key(s_pri_rects[k].depth);
             int j  = i - 1;
-            while (j >= 0 && re15_pri_mask_camera_z(s_pri_rects[mask_order[j]].depth) < kd) {
+            while (j >= 0 && pc_mask_key(s_pri_rects[mask_order[j]].depth) < kd) {
                 mask_order[j + 1] = mask_order[j];
                 j--;
             }
@@ -1235,7 +1243,7 @@ void re15_render_end_frame(void)
                         if (d < dmin) dmin = d;
                         if (d > dmax) dmax = d;
                         /* Original-Regel (re15_pri.h): verdeckt gdw. vz >= Schluessel. */
-                        if (re15_pri_mask_camera_z(d) <= md) verdeckend++;
+                        if (pc_mask_key(d) <= md) verdeckend++;
                     }
                     fprintf(lf, "Raum %04X Cut %d | Spieler (%d,%d,%d) | Figur-Tiefe %.0f..%.0f Mitte %.0f | Atlas %d Sektion %d | %d Masken Tiefe %d..%d (Schwelle %d..%d) | verdeckend %d\n",
                             (unsigned)g_current_room_id, re15_pri_log_cut(),
@@ -1244,8 +1252,8 @@ void re15_render_end_frame(void)
                             (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
                             lo, hi, md, s_pri_log_fg, s_pri_log_n, mask_n,
                             mask_n ? dmin : -1, mask_n ? dmax : -1,
-                            mask_n ? (int)re15_pri_mask_camera_z(dmin) : -1,
-                            mask_n ? (int)re15_pri_mask_camera_z(dmax) : -1, verdeckend);
+                            mask_n ? (int)pc_mask_key(dmin) : -1,
+                            mask_n ? (int)pc_mask_key(dmax) : -1, verdeckend);
                     fclose(lf);
                 }
             }
@@ -1288,7 +1296,7 @@ void re15_render_end_frame(void)
                 uint8_t s  = (i < s_textri_count) ? s_textri_slot [order[i]] : 0xFF;
                 uint8_t bl = (i < s_textri_count) ? s_textri_blend[order[i]] : 0;
                 int mask_due = (mi < mask_n) &&
-                    (re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) > tri_depth);
+                    (pc_mask_key(s_pri_rects[mask_order[mi]].depth) > tri_depth);   /* M4: RE2-Form @0x80027d60 */
                 /* Runde 36 Spur O: ein Schatten ist faellig, sobald das naechste Dreieck UEBER ihm liegt. */
                 int shadow_due = (si < sh_n) && (i == s_textri_count ||
                     re15_schatten_dreieck_darueber((long)tri_depth,
@@ -2334,6 +2342,7 @@ int re15_render_pc_tim_slot_anzahl(void) { return RE15_TIM_SLOT_MAX; }
 void re15_render_pc_entladen_raum(void)
 {
     s_pri_rect_count = 0;                                   /* Maskenliste (Arena @0x800399cc) */
+    s_pri_re2 = 0;                                          /* M4: Tiefenregel mit der Liste zuruecksetzen */
     s_pri_atlas_w = s_pri_atlas_h = 0;
     if (s_pri_atlas_tex) s_pri_atlas_frei = 1;
     for (int slot = 0; slot < RE15_TIM_SLOT_MAX; slot++)
@@ -2392,6 +2401,7 @@ void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
 {
     if (count > RE15_PRI_RECTS_MAX) count = RE15_PRI_RECTS_MAX;
     s_pri_rect_count = count;
+    s_pri_re2 = 0;                                          /* M4: jede neue Liste ist RE1.5-Form, bis main.c RE2 meldet */
     if (count > 0) s_pri_rects_gen = g_re15_entladen_gen;   /* Runde 35 Spur I */
     for (int i = 0; i < count; i++) {
         s_pri_rects[i].src_x = src_x[i];
@@ -2402,6 +2412,13 @@ void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
         s_pri_rects[i].h     = h[i];
         s_pri_rects[i].depth = depth ? depth[i] : 0;
     }
+}
+
+/* Runde 41 G5-Auftritt M4: die aktive Maskenliste in RE2-Tiefenregel vergleichen (re15_pri_mask_camera_z_re2: RE2 otz>>3
+ * @0x80027d60-64, Masken vor den Figuren @0x80026770). Nach re15_render_pc_set_pri_rects aufrufen; die setzt auf RE1.5 zurueck. */
+void re15_render_pc_set_pri_re2(int on)
+{
+    s_pri_re2 = (on && s_pri_rect_count > 0) ? 1 : 0;
 }
 
 /* MEASUREMENT PROBE: copy the active cut's mask depths out for the [pocc] trace. */

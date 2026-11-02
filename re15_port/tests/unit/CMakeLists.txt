@@ -4124,7 +4124,7 @@ if(TARGET re15_pc)
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_westen_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_westen.cmake)
-    set_tests_properties(integration_r41_g5_westen PROPERTIES TIMEOUT 640)
+    set_tests_properties(integration_r41_g5_westen PROPERTIES TIMEOUT 1500)   # Abnahme G5 1 M11: 3 Laeufe a 3540 Bilder
     # Abnahme 2 Spur R: G5 frisst den Spieler, YOU DIED, Titel, Leon und Elza, kein Messhaken.
     add_test(NAME integration_r41_g5_tod
              COMMAND "${CMAKE_COMMAND}"

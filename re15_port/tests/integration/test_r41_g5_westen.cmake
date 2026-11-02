@@ -8,7 +8,11 @@
 # Original: RE2-Klemme FUN_8003567c, Bytes am Kopf von re15_collision_constrain_re2. Kein Messhaken: Rakete bis zum G5, dann die Eingaben der Abnahme.
 # Geprueft aus state.log, an JEDEM Bildende:
 #   1  Der Spieler-Mittelpunkt liegt in keiner der Zellen #22, #23, #28, #29, #30
-#   2  Zum Schluss wirkt die Eingabe: ab Bild 1600 bewegt sich der Spieler um mindestens 300 Einheiten
+#   2  Zum Schluss wirkt die Eingabe: ab dem Ende der G5-Szene (state.log pm=2 -> pm!=2 nach F1500, g5auftritt_r41.c @0x01983/@0x01987)
+#      bewegt sich der Spieler um mindestens 300 Einheiten.
+# Abnahme G5 1 M11: die G5-Szene sperrt den Spieler seit Runde 41 Vorlauf + 1162 Bilder (RE2 room7040 sub06); "ab F1600" lag mitten in der
+# Szene und mass die Versetzung 6500 -> 13873 statt der Eingabe. Die Tasten kommen darum 41 s (1230 Bilder) spaeter, gemessen wird ab dem
+# Szenenende.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_g5_westen.cmake
 # =============================================================================
@@ -40,13 +44,13 @@ function(ein_lauf _name _raum _skript)
     if(_raum STREQUAL "5091")
         set(_extra "RE15_TITLE_SHOT_CHAR=1")
     endif()
-    re15_start_spiel(_rv 300
+    re15_start_spiel(_rv 480
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_extra}
         RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=${_skript}"
         RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log RE15_GIVE=18:200 RE15_EQUIP=18
-        "RE15_EXIT_AT=2300#${_raum}"
+        "RE15_EXIT_AT=3540#${_raum}"
         "${_exe_kopie}")
     set(_g "")
     if(NOT EXISTS "${WORKDIR}/state.log")
@@ -62,6 +66,8 @@ function(ein_lauf _name _raum _skript)
     set(_minz 999999)
     set(_maxz -999999)
     set(_raum_an 0)
+    set(_szene 0)
+    set(_ende "")
     foreach(_z IN LISTS _zeilen)
         if(NOT _z MATCHES "^F([0-9]+) .*PL\\((-?[0-9]+),(-?[0-9]+),rot=")
             continue()
@@ -69,6 +75,15 @@ function(ein_lauf _name _raum _skript)
         set(_b "${CMAKE_MATCH_1}")
         set(_x "${CMAKE_MATCH_2}")
         set(_zz "${CMAKE_MATCH_3}")
+        set(_pm "")
+        if(_z MATCHES " pm=([0-9]+) ")
+            set(_pm "${CMAKE_MATCH_1}")
+        endif()
+        if(_b GREATER_EQUAL 1500 AND _pm STREQUAL "2")
+            set(_szene 1)
+        elseif(_szene AND NOT _ende AND NOT _pm STREQUAL "2")
+            set(_ende "${_b}")
+        endif()
         # erst ab dem Sprung in den Raum (Spieler auf dem Bahnsteig)
         if(_zz GREATER -30000 AND _zz LESS -17000)
             set(_raum_an 1)
@@ -100,7 +115,7 @@ function(ein_lauf _name _raum _skript)
                 set(_erste "F${_b} (${_x},${_zz}) ${_fest}")
             endif()
         endif()
-        if(_b GREATER_EQUAL 1600)
+        if(_ende AND _b GREATER_EQUAL _ende)
             if(_x LESS _minx)
                 set(_minx "${_x}")
             endif()
@@ -121,16 +136,21 @@ function(ein_lauf _name _raum _skript)
     if(_wand GREATER 0)
         string(APPEND _g "\n ${_name}: ${_wand} Bildenden in fester Zelle, erstes ${_erste}")
     endif()
-    math(EXPR _weg "${_maxx} - ${_minx} + ${_maxz} - ${_minz}")
-    if(_weg LESS 300)
-        string(APPEND _g "\n ${_name}: Eingabe wirkt nicht mehr, Weg ab F1600 nur ${_weg}")
+    if(NOT _ende)
+        string(APPEND _g "\n ${_name}: kein Ende der G5-Szene im Protokoll (pm=2 -> !=2 nach F1500)")
+        set(_weg 0)
+    else()
+        math(EXPR _weg "${_maxx} - ${_minx} + ${_maxz} - ${_minz}")
     endif()
-    message(STATUS "r41_g5_westen ${_name}: ${_n} Bilder, in fester Zelle ${_wand}, Weg ab F1600 ${_weg}")
+    if(_weg LESS 300)
+        string(APPEND _g "\n ${_name}: Eingabe wirkt nicht mehr, Weg ab Szenenende F${_ende} nur ${_weg}")
+    endif()
+    message(STATUS "r41_g5_westen ${_name}: ${_n} Bilder, in fester Zelle ${_wand}, Szenenende F${_ende}, Weg danach ${_weg}")
     set(_f "${_f}${_g}" PARENT_SCOPE)
 endfunction()
 
 # Eingaben der Abnahme: z_w4 (Leon im Westen ohne Feuer) und z_fern (Suedwand im Armbereich), danach laufen, drehen, rennen
-set(_tasten ",W15.5,U2,W1,D2,W1,L0.5,U2,R1.1,XU2,W10")
+set(_tasten ",W56.5,U2,W1,D2,W1,L0.5,U2,R1.1,XU2,W10")
 ein_lauf(leon_w4 5090 "A0.1,W1,U8.5,MA7.2,W4.2,XU1.9${_tasten}")
 ein_lauf(elza_w4 5091 "A0.1,W1,U8.5,MA7.2,W4.2,XU2.2${_tasten}")
 ein_lauf(leon_fern 5090 "A0.1,W1,U8.5,MA7.2,W4.2,R1.08,XU2.4${_tasten}")

@@ -1453,6 +1453,9 @@ static int re15_type_self_advances_anim(uint8_t t)
     case 0x1a: case 0x20: case 0x21: case 0x23: case 0x24:
     case 0x25: case 0x27: case 0x29: case 0x2b: case 0x2d: case 0x30:
     case 0x36: case 0x40:
+    /* 0x37 G5-Tentakel (Abnahme G5 1, M2): RE2 EM37 schiebt +0x14D NUR in seinen eigenen FUN_8002959c-Aufrufen vor
+     * (40 Stellen, z.B. sub8 ph2 @0x80101DB8 / ph8 @0x80101FB4; ph4/ph6 ohne Schritt) - tent_anim ist der einzige Stepper. */
+    case 0x37:
         return 1;
     default:
         return 0;

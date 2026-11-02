@@ -315,6 +315,14 @@ static void test_ablauf(unsigned raum, const char *rdt)
             if (re15_bf_rueckstoss_phase() == 1) { szene = 1; CHECK(b->motion == 8, "Rueckstoss: Clip %d", b->motion); }
         }
         CHECK(szene, "keine Rueckstoss-Szene");
+        /* G5-Auftritt Nachbesserung 1 (M7): erst RE2s Vorlauf (Leon laeuft per Plc_dest-Walker von -3800 nach 1400, sub06 @0x018B0),
+         * dann die Armierung @0x018DE (grid 0x13). Der Walker laeuft in main.c vor dem Spielschritt, der Szenenmodus kommt aus
+         * flag(1,27)||flag(2,7). */
+        for (int v = 0; v < 200 && b->type == 0x36u && b->grid_id != 0x13u; v++) {
+            if (re15_cine_active()) g_scd.player_mode = 2;
+            re15_actor_step_all_walkers();
+            tick(1);
+        }
         CHECK(b->type == 0x36u && b->grid_id == 0x13u, "kein G5 (Typ 0x%02X)", b->type);
         fprintf(stderr, "%s: Rueckstoss + G5 nach %d Ticks\n", rdt, f);
     }

@@ -46,6 +46,26 @@
 #define RE15_G5A_BILD_SCHNITT5    807    /* + 1 @0x01944 + 337 Xa @0x01946 + 32 @0x0194C -> @0x01950 Cut_chg(5) */
 #define RE15_G5A_BILD_ENDE        1162   /* + 355 @0x0195E -> @0x01962 Cut_chg(6) .. @0x01987 Set(1,0x1B,0): Kampf */
 
+/* Ton der Szene (Abnahme 1 M5). RE2-XA: Xa_on (0x59, Handler @0x80058028 -> FUN_800129b4) mit Wsleep/Wsleeping @0x80053ac0-d0.
+ *   Xa 0x0B @0x01920 `59 00 0b 00`: 1 @0x018E6 + 11 @0x018F0 + 60 @0x0190A + 60 @0x0191C = Bild 132
+ *   Xa 0x0C @0x01946 `59 00 0c 00`: Cut_chg(10) @0x0193A (Bild 437) + Evt_next @0x01944 = Bild 438
+ * Datei VOICE07.XAS (Stage-Tabelle @0x80010818[7] = 0x34A -> Satz @0x800988a4 + 0x34A*8: LBA 105782, 4447744 Byte = Disc
+ * PL0/VOICE/VOICE07.XAS;1), Kanal/Block/Laenge aus STAGE7.BIN @0x186 `04 00 00 00 54 00` und @0x18C `01 00 00 00 6b 00`.
+ * Lesefenster = Ende - Start = (Block+Laenge)*16 - 0x1E (FUN_800129b4 @0x80012af4-b10): 84*16-30 = 1314, 107*16-30 = 1682
+ * (Laufzeit: Savestates der Abnahme-1-Aufnahme s06 Start/Ende 105786/107100, s12 105783/107465).
+ * Gemessen in der RE2-Aufnahme (re2_g5_run1.mp4, Armierung 63,80 s): Xa 0x0B setzt bei 68,239 s ein (+4,44 s; Bild 132 = 4,40 s),
+ * Xa 0x0C bei 79,6245 s, im selben Bild wie Schnitt 10 (79,626 s); beide laufen ohne Drift in Echtzeit. */
+#define RE15_G5A_BILD_XA0B        132
+#define RE15_G5A_BILD_XA0C        438
+#define RE15_G5A_XA0B_DATEI       "R704_XA0B.XAS"   /* Kanal 4, Sektoren 4..1316 von VOICE07.XAS (tools/r41_g5auftritt/re2_xa_schnitt.py) */
+#define RE15_G5A_XA0C_DATEI       "R704_XA0C.XAS"   /* Kanal 1, Sektoren 1..1681 */
+#define RE15_G5A_XA0B_LESE        1314
+#define RE15_G5A_XA0C_LESE        1682
+
+/* VORLAUF (Abnahme 1 M7): re15_bf_g5_auftritt_start beginnt mit RE2s Schnitt 9 VOR der Armierung (sub06 @0x0187C..@0x018D6: leere Tuer,
+ * Leon laeuft von -3800 nach 1400 herein, schaut zur Tuer, Sleep 11); die Armierung (Bild 0) folgt danach. Bis dahin ist der Slot
+ * schon Typ 0x36, aber unarmiert und geparkt (RE2 Sce_em_set @0x011AC). */
+
 /* SCHNITTSTELLE (s. Kopf). */
 void re15_bf_g5_auftritt_start(int slot);
 
@@ -53,6 +73,7 @@ void re15_g5a_tick(void);      /* je KI-Tick aus re15_bf_raumtick (vor der Gegne
 void re15_g5a_reset(void);     /* Raumwechsel (re15_bf_reset) */
 int  re15_g5a_laeuft(void);    /* 1 = Szene aktiv */
 int  re15_g5a_bild(void);      /* Bild seit der Armierung, -1 = aus */
+int  re15_g5a_vorlauf(void);   /* Vorlaufbild seit dem Start (RE2 Schnitt 9 vor der Armierung, Abnahme 1 M7), -1 = kein Vorlauf */
 
 /* RID-Satz eines Szenen-Schnitts (16/17) in ROOM5090/5091, sonst NULL (jeder andere Raum, jeder andere Index). */
 const re15_camera_cut_t *re15_g5a_schnitt(int cut);

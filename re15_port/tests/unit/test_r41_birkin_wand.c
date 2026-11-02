@@ -360,7 +360,10 @@ static void test_g5(const char *rel, unsigned id)
             bild(0);
             if (kontakt) n_kontakt++;
             if (fest(pl->x, pl->z)) n_wand++;
-            if (kontakt && ++geduld >= 30) {
+            /* G5-Auftritt Nachbesserung 1 (M2): die Intro-Arme halten jetzt RE2s eingerollte letzte Austritts-Pose (sub8 ph4..ph7 ohne
+             * Anim-Schritt, +0x178 = Clip 14/16/15 Bild 29) statt der geraden Clip-0-Stange; an dieser Lage liegen sie 13 statt >= 30
+             * Bilder auf Leon. Die Laufprobe startet darum nach 10 Kontaktbildern (vorher 30). */
+            if (kontakt && ++geduld >= 10) {
                 /* der Arm liegt: laufen. Vorher warf die Klemme jede Eingabe auf die Lage in der Wand zurueck. */
                 const int32_t sx = pl->x, sz = pl->z;
                 pl->rot_y = 0;

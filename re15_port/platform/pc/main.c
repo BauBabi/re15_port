@@ -321,6 +321,9 @@ FILE *pc_fx_log_handle(void)
     return s_fxlog;
 }
 
+/* 1 = der angezeigte Schnitt ist ein RE2-Szenenschnitt der G5-Szene (16/17, re15_g5a_re2_schnitt), s. pc_draw_effects. */
+static int s_fx_g5a_re2_schnitt = 0;
+
 /* `has_region`/`rxs`/`rzs` = das Region-Quad des AKTIVEN Cuts (DAT_800ac790). Effekte werden
  * damit genauso gecullt wie Spieler/NPCs/Props — siehe den Beleg am Test unten. */
 static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
@@ -370,6 +373,13 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * GLOBAL bank CORE00.ESP, whose sheets live only in VRAM -> the byte-true extracted TIMs.
          * Global ids have per-id sheets (0 blood / 2 muzzle / 3 smoke / 4 shell) in slots 20-23. */
         const re15_esp_t *bank = f->bank;
+        /* ⛔ PORT-WAHL (Abnahme G5 1, M6): in den RE2-Szenenschnitten 16/17 (room7040 Schnitt 9/10) zeichnet der Port das
+         * RE1.5-Feuer von ROOM5090/5091 nicht - 17 Sce_espr_on main00 @0x0110E..@0x0120E `3a 00 08 02 ..` = Effekt-Id 0x08 (pc[2],
+         * Flammen der GLOBAL-Bank CORE00) - und keine Raum-Effekte; es verdeckte dort die offene Tuer, RE2 hat in diesen
+         * Einstellungen kein Feuer. Uebrige globale Effekte (Blut/Muendung) bleiben. In Cut 12 brennt es wieder wie vorher (die
+         * Partikel laufen weiter, nur das Zeichnen entfaellt). Gemessen im Fensterlauf: der erste Filter nur auf die Raum-Bank
+         * liess die Flammen stehen (sie sind Id 0x08 der Global-Bank). */
+        if (s_fx_g5a_re2_schnitt && ((bank && bank != global_bank) || f->effect_id == 0x08u)) continue;
         int slot = RE15_TIM_SLOT_EFFECT;
         int clut_wort = 0;   /* CLUT-Wort an den Zeichner (0 = erste Palette des Blatts, Altweg) */
         if (bank && bank == global_bank) {
@@ -626,6 +636,7 @@ extern void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
                                          const int *dst_x, const int *dst_y,
                                          const int *w, const int *h,
                                          const int *depth, int count);
+extern void re15_render_pc_set_pri_re2(int on);   /* Runde 41 M4: RE2-Tiefenregel (re15_pri_mask_camera_z_re2) */
 extern void re15_render_pc_set_pri_player(int sx, int sy, int z);
 
 /* PC data-driven per-room prop set (parity with PSX re15_load_room_props): loads
@@ -6186,6 +6197,7 @@ re_title:;
                  * overdraw disabled for this cut. */
                 re15_pri_cut_t pri = {0};
                 int pri_n = 0;
+                int pri_re2 = 0;   /* Runde 41 M4: 1 = RE2-Masken -> RE2-Tiefenregel (otz>>3 @0x80027d60, Masken zuerst @0x80026770) */
                 if (rdt_ok && rdt_buf && active_cut_idx >= 0
                     && active_cut_idx < active_cut_count) {
                     pri_n = re15_pri_parse_section(rdt_buf, (size_t)rdt_size,
@@ -6194,6 +6206,7 @@ re_title:;
                 } else if (re15_g5a_schnitt(active_cut_idx)) {   /* Runde 41: RE2 room7040 Schnitt 9/10 (bg_pc.c re15_bg_g5a_pri) */
                     extern int re15_bg_g5a_pri(int cut_idx, re15_pri_cut_t *out);
                     pri_n = re15_bg_g5a_pri(active_cut_idx, &pri);
+                    pri_re2 = (pri_n > 0);
                 }
                 /* NACHGEZEICHNETE MASKEN (s. re15_pri.h, Container "R15M").
                  * Der Prototyp hat die Maskenarbeit nur zu ~1/3 fertiggestellt; wo die
@@ -6252,12 +6265,16 @@ re_title:;
                         pz[m] = pri.masks[m].depth;
                     }
                     re15_render_pc_set_pri_rects(sx, sy, dx, dy, pw, ph, pz, n);
+                    re15_render_pc_set_pri_re2(pri_re2);   /* nach set_pri_rects (setzt auf RE1.5 zurueck) */
                 } else {
                     re15_render_pc_set_pri_rects(NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0);
                 }
-                fprintf(stderr, "[pri] cut=%d pri_offset=0x%X masks=%d fg_atlas=%d\n",
+                /* Abnahme G5 1 M10: die Szenen-Schnitte 16/17 liegen HINTER der RID-Tabelle (cut_count 16) - dort nicht lesen
+                 * (gemessen vorher: `cut=16 pri_offset=0x26DE0E74`). Andere Indizes klemmt Zeile ~3224 auf die Tabelle. */
+                fprintf(stderr, "[pri] cut=%d pri_offset=0x%X masks=%d fg_atlas=%d%s\n",
                         active_cut_idx,
-                        (unsigned)active_cuts[active_cut_idx].pri_offset, pri_n, has_fg);
+                        (unsigned)(re15_g5a_schnitt(active_cut_idx) ? 0u : active_cuts[active_cut_idx].pri_offset), pri_n, has_fg,
+                        re15_g5a_schnitt(active_cut_idx) ? " (RE2-Szenenschnitt, eigene PRI-Datei)" : "");
             }
             re15_camera_view_t cam_view;
             /* BYTE-TRUE DEATH-CAMERA ORBIT (per-frame FUN_80015850 + init FUN_80015284, RE'd
@@ -9381,6 +9398,10 @@ re_title:;
                                 g_engine.frame_count == 1750 ||
                                 g_engine.frame_count == 1800)) {
                     int32_t cr[9], ct[3];
+                    /* Abnahme G5 1 M10: Schnitt 16/17 = RE2-Kamera hinter der RID-Tabelle -> deren Satz statt active_cuts[16/17]
+                     * (gemessen vorher: cam_pos=(-81857914,753726086,743864200)). */
+                    const re15_camera_cut_t *lr_cut = re15_g5a_schnitt(active_cut_idx);
+                    if (!lr_cut) lr_cut = &active_cuts[active_cut_idx];
                     re15_camera_compose_view_bone(&cam_view, yawed_rot, bone_world_trans,
                                                   cr, ct);
                     float _proj = (cam_view.fov_screen_dist > 0 && ct[2] > 1)
@@ -9394,12 +9415,8 @@ re_title:;
                         (int)ct[0], (int)ct[1], (int)ct[2],
                         (int)cam_view.fov_screen_dist,
                         (float)cx + ct[0] * _proj, (float)cy + ct[1] * _proj,
-                        (int)active_cuts[active_cut_idx].pos_x,
-                        (int)active_cuts[active_cut_idx].pos_y,
-                        (int)active_cuts[active_cut_idx].pos_z,
-                        (int)active_cuts[active_cut_idx].target_x,
-                        (int)active_cuts[active_cut_idx].target_y,
-                        (int)active_cuts[active_cut_idx].target_z,
+                        (int)lr_cut->pos_x, (int)lr_cut->pos_y, (int)lr_cut->pos_z,
+                        (int)lr_cut->target_x, (int)lr_cut->target_y, (int)lr_cut->target_z,
                         active_cut_idx, player_visible);
                     fflush(stderr);
                 }
@@ -10365,8 +10382,26 @@ re_title:;
                     ? (uint32_t)npc->anim_frame
                     : ((uint32_t)npc->anim_frame >> 1);
                 re15_spinnenanim_r41_zeichnen_beginn(npc, &ncur, target_fps);   /* Runde 41 Spur L: posiertes Bild/+0x8f VOR dem Vorschub (FUN_8001f3bc) */
+                int npc_clip_ov = av.clip_override;
+                {   /* G5 (Abnahme G5 1, M4b): RE2 posiert das Bild VOR dem Vorschub (FUN_8002959c `sw a2,0x178(a0)`
+                     * @0x800295f8, Vorschub @0x80029b28-48); Merker aus enemy_ai_boss_g5.c g5_anim. */
+                    extern int re15_g5_zeichenbild(const re15_actor_t *e, int *clip, int *bild);
+                    int zc = 0, zb = 0;
+                    if (npc->type == 0x36u && av.clip_override < 0 && re15_g5_zeichenbild(npc, &zc, &zb)) {
+                        npc_clip_ov = zc;
+                        ncur = (target_fps == 30) ? (uint32_t)zb : ((uint32_t)zb >> 1);   /* dieselbe 30/60-Regel wie oben */
+                    }
+                    /* G5-Tentakel (Abnahme G5 1, M2): dieselbe Regel, +0x178 = Pose des letzten Schritts; ohne Schritt bleibt sie stehen
+                     * (sub8 ph4/ph6: eingerollter Arm statt Clip 0 = gerade Stange). Merker: enemy_ai_tentakel_g5.c tent_anim. */
+                    {   extern int re15_g5_tentakel_zeichenbild(const re15_actor_t *e, int *clip, int *bild);
+                        if (npc->type == 0x37u && av.clip_override < 0 && re15_g5_tentakel_zeichenbild(npc, &zc, &zb)) {
+                            npc_clip_ov = zc;
+                            ncur = (target_fps == 30) ? (uint32_t)zb : ((uint32_t)zb >> 1);
+                        }
+                    }
+                }
                 int npc_kf = re15_compute_actor_kf(npc_anim, npc_skel, npc,
-                                                   av.clip_override, ncur);
+                                                   npc_clip_ov, ncur);
                 re15_skel_pose_t npc_poses[RE15_EMD_MAX_BONES];
                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
                 int npc_pose_rc = re15_skel_compute_pose(npc_skel, npc_kf, npc_poses);
@@ -11407,6 +11442,7 @@ re_title:;
              * projizierten die Effekte im Anforderungsbild schon mit dem neuen H (Runde 30,
              * cut-blitz). */
             pc_fx_set_camf(rdt_buf, (size_t)rdt_size, active_cut_idx);
+            s_fx_g5a_re2_schnitt = (re15_g5a_re2_schnitt(active_cut_idx) >= 0);   /* Abnahme G5 1 M6, s. pc_draw_effects */
             pc_draw_effects(&cam_view, cx, cy,
                             cam_has_region, cam_region_xs, cam_region_zs);
             /* Runde 34 C4: die RE2-FX-Plaetze (Saeure-/Brand-Aufschlag, Bodenflammen) im selben
