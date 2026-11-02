@@ -17,6 +17,7 @@ haben und dann die G5 Form."
 | Phase 1: Port-Zustaende | erledigt (Abschnitt 2). Die drei Bedingungen sind zusammen das Flag (3,89); die Disc setzt Annette ab da schon aus 603 heraus. |
 | Phase 1: Plan | Abschnitte 3 bis 6, offene Fragen Abschnitt 7 |
 | Phase 2: Bau | erledigt (Abschnitt 8), Tests gruen (Abschnitt 9), Sichtbelege (Abschnitt 10). Der Bau weicht vom Plan in Abschnitt 3/4 an drei Stellen ab (8.2). Offen: Abschnitt 11. |
+| Nachbesserung 1 (2026-11-02) | erledigt (Abschnitt N1): RE2-Szene auf der Claire-Disc gefunden und im Emulator aufgenommen, 5090-Szene danach umgebaut, Zugstart-Szene 6030, Toene (ANNETTE_SE.VBS), F7-Recherche. Offen: N1.10. Abschnitte 1.2, 3, 5, 7, 8.2 sind dadurch teils ueberholt (N1 gilt). |
 
 Belege dieser Spur: `analysis/befunde_runde41/AN_belege/` (Werkzeuge unter `werkzeug/`).
 
@@ -304,3 +305,244 @@ diese Szene (Hinweis an die Form-Spur, Abschnitt 11).
 - Stimmen: `synchro/STAGE5/room5090/main40.wav`, `main41.wav`, `main42.wav` fehlen (Nutzer). Vorlagen: RE2 Claire-Disc
   `info/re2leon/PL0/VOICE/Anette/VOICE16.XAS[9]_3.wav` (Satz), `Anette/VOICE16.XAS[12]_2.wav` (Schrei).
 - Hinweis an die Form-Spur: Kampfstart sub04 Cut 15 mit der Riesenform zeigt nur ihre Haut (Abschnitt 10).
+
+## N1. Nachbesserung 1 (2026-11-02)
+
+Auftrag: RE2-Szene belegen und die 5090-Szene angleichen; Zugstart-Szene 6030 (Nutzer-Idee, Story-Nachtrag "Sherry ist im
+Zug", Ids 27-30 nach Absprache mit ST80-T); F7 recherchieren (nur Dossier). Nutzerantworten: F1 Claire-Daten ergaenzt
+(`info/re2clair/`, dazu das Abbild `Downloads/ePSXe2018/Resident Evil 2 Claire.cue`), F2/F8 ok, F9 Schrei nur Ton.
+
+### N1.1 Die RE2-Szene (Claire-Disc)
+
+**Disc:** `Resident Evil 2 Claire.cue` = SLES-10972 (SYSTEM.CNF `BOOT = cdrom:SLES_109.72;1`), europaeische PAL-Fassung, nicht
+DualShock. Werkzeuge `AN_belege/werkzeug/n1/` (iso.py liest das Abbild nur, c_scd.py SCD-Dump der Claire-RDTs, c_xa.py
+Xa-Tabelle, c_msg.py Nachrichten).
+
+**Raum:** `PL1/RDT/ROOM6141.RDT` (Stage 6, Raum 0x14; Typ-Zensus aller 125 Claire-RDTs: nur 6141 hat 0x49 und eine
+Birkin-Form 0x33). Skript MAIN sub02 @0x00E32..@0x01192:
+
+- Ausloeser: MAIN sub00 @0x00C58 Ck(1,1)=0, @0x00C60 Ck(0x22,0x2B)=1, @0x00C68 Ck(3,0x42)=0 -> @0x00C6C Sce_em_set Slot 0
+  Typ 0x49 (Annette) auf (-22710,0,-22970), @0x00C82 Slot 1 Typ 0x33 (Birkin) geparkt auf (-6600,-9000,-14800), @0x00D0E
+  Evt_exec sub02: die Szene beginnt beim Raumeintritt. Ende @0x01186 Set(5,0x0C), @0x0118A Set(3,0x42), @0x0118E gosub
+  sub08 (Plc_ret, Sperren auf, Cut_auto). sub03 ist das spaetere Sterbegespraech mit Claire.
+- Stimmen: Xa-Tabelle der Claire-STAGE6.BIN (Zeiger nach 0x800c611c, STAGE6.BIN @0x34..@0x3C `0c 80 01 3c 1c 61 22 ac`;
+  Tabelle 0x8011A4D4 = Datei 0x4D4, je Eintrag {Kanal, Block, Laenge}); VOICE16.XAS von der Disc dekodiert und erkannt
+  (Whisper medium.en): Xa 0x30 Kanal 10 Block 138 Laenge 11 = 1,17 s "William."; Xa 0x31 Kanal 8 Block 37 Laenge 37 = 3,95 s
+  "W-William! You're alive!"; Xa 0x32 Kanal 10 Block 102 Laenge 13 = 1,39 s Schrei. (Die frueher genannten Kanal 9/12 aus
+  `info/re2leon/PL0/VOICE` sind eine andere Fassung.)
+- Untertitel: die Nachrichten von ROOM6141 (Block @0x1620) sind leer (`fa 00 fa 02` und Pausen `fd nn`): RE2 zeigt in dieser
+  Szene keinen Text. Der Port behaelt Untertitel fuer gesprochene Zeilen (Port-Regel), der Schrei hat keinen (F9).
+- Kameras (RID @0x64, 32 Byte je Schnitt): Cut 7 weit auf beide, Cut 8/9 Schuss/Gegenschuss Annette/Claire, Cut 2 Gang von
+  hinter Williams Landestelle, Cut 0x0A tief von Annettes Seite auf William, Cut 0x0B hoch von Williams Seite auf Annette,
+  Cut 6 weg von der Tat (Claire vor dem Labor).
+
+**Echte Aufnahme** (Unteragent, DuckStation, neues Spiel Claire, Einstieg per Tuer-Patch im RAM; Weg, PAL-Adressen,
+Zeitachse und 97 Savestates: `AN_belege/re2_claire/zeitachse.md`, `ram_reihe_voll.md`, Bildleisten `re2c_*.jpg`, Clip
+`re2c_szene_320.mp4` mit Ton). Rate: PAL 25 Spielbilder/s (VSync-Teiler 2 @0x8002ade8 `90847662`); die Sleeps im Skript
+sind Spielbilder, der Port rechnet sie mit 30/s (Takt des Ports).
+
+| Schritt | RE2-Skript | Aufnahme (Lauf 1) |
+|---|---|---|
+| Cut 7, Musik, Krach | @0x01024, @0x0103A, Se_on(3,0x0B) @0x01040 | Krach 49,40 s |
+| 25 Bilder, beide sehen hin, 36+1 Bilder | @0x0104C, Plc_neck @0x0105A/@0x01068, @0x01072/@0x01076 | |
+| "William." | Xa 0x30 @0x0107A, Wsleep @0x01084 | 52,93 s |
+| sie geht (3 Strecken), Cut 2 nach Strecke 1 | Plc_dest @0x010A2/@0x010B8/@0x010DE, Cut 2 @0x010B2 | Cut 2 57,47 s |
+| Birkin faellt herein, Se_on(2,0x0A) | Member_set 0x17=1 @0x010CA, @0x010CE | 58,7-59,6 s (y -9000 -> 0) |
+| sie bleibt stehen, 30 Bilder | Plc_motion 0x0C @0x010F9, @0x010FE | Annette (-11097,-15001), Birkin (-6600,-14800) |
+| Cut 0x0A, Se_on(2,0x0C), 60 Bilder | @0x01102, @0x01104, @0x01110 | 61,17 s |
+| Cut 0x0B, "W-William! You're alive!", 30 + Xa-Ende | @0x01114, Xa 0x31 @0x0111A, @0x01132, @0x01136 | 64,20-68,14 s |
+| Annette Clip 2, Cut 0x0A, Hieb, 45 Bilder | @0x01138, @0x0113C, Member_set 0x17=2 @0x01142, @0x01146 | Hieb 70,2-71,1 s, Blut ab 71,09 s, Vorstoss 1397 |
+| Cut 6 (Claire), Schrei aus dem Off, Annette liegend gesetzt | @0x0114A, Xa 0x32 @0x01150, Pos_set (-12300,900,-15300) @0x01162 | 72,23 s; liegend nie im Bild |
+
+### N1.2 Port 5090 nach RE2 (angeglichen)
+
+Ablauf jetzt (Programm `k_prog`, `annette_r41.c`; jede Bildzahl mit RE2-Adresse im Code):
+
+| RE2 | Port | Kamera Port (RE1.5-Schnitte 5090) | Beleg / PORT-WAHL |
+|---|---|---|---|
+| Cut 7 + Krach | Ausloeser wie bisher (erster Cut 12, sub01 @0x01296), Krach = ANNETTE_SE Satz 0 | Cut 12 (weit, Leon vorn) | Ton RE2 belegt (an_se.md); Kamera PORT-WAHL |
+| 25 / 36+1 Bilder, beide sehen hin | Sleep 25; Leon Plc_dest Modus 9 (Form sub04 @0x01320), Annette Modus 9 Bit 0x21 (Form 6030 sub08 @0x01160); Sleep 36+1 | Cut 12 | RE2-Bildzahlen |
+| "William." | msg 43 (neu, RE2 woertlich), Sleep 35 (= Xa-Laenge 11 Sektoren) | Cut 12 | RE2 |
+| 3 Strecken, Cut 2 nach Strecke 1 | Plc_dest Modus 4 (Form 6000 sub02 @0x00FB0) ueber W1/W2 nach S, Teilung 47 %/76 % wie RE2 | Cut 15 nach W1 | Kamera PORT-WAHL (Cut 15 = Auge hinter der Landestelle, wie RE2 Cut 2) |
+| Birkin faellt | Riesenform faellt mit dem ORIGINAL-Sturz von 5080 sub03 (Pos_set y -5600 @0x00822, 1 Bild halten @0x0082A, 14 x 400 @0x0082E/@0x00832), Satz 1 | Cut 15 | RE1.5-Werte statt RE2 (andere Figur); im Takt, siehe unten |
+| 30 Bilder, Cut 0x0A + Bruellen + 60 | Sleep 30, Cut 11 + Satz 2, Drohen-Clip 10, Sleep 60 | Cut 11 (von Annettes Seite) | RE2 |
+| Cut 0x0B + Satz | Cut 15, Sleep 1, msg 40, Sleep 118 (30 + Xa 0x31) | Cut 15 (Form links, Annette rechts) | RE2 |
+| Clip 2 + Hieb + 45 | Annette 0x4D-Clip 4 (Arme hoch) an Ort und Stelle, Form Hieb links Clip 4 (Treffer Bild 14), Blut 4 + 2 + 2 | Cut 11 | Clip-Wahl PORT-WAHL (naechster 0x4D-Clip zu RE2 M02) |
+| Cut 6 + Schrei + liegend | Cut 13 (nur Leon), Schrei als Stimme `synchro/STAGE5/room5090/main41.wav` ohne Untertitel, Annette 1203 von der Form weg / 299 seitlich (RE2-Versatz e07 -> e23) liegend | Cut 13 | RE2 |
+| (Steuerung zurueck) | msg 42 "Leon: Annette!" (F8), Sleep 60, dann sub04 wie bisher | Cut 13, dann sub04 | PORT-WAHL (vom Nutzer freigegeben) |
+
+Entfallen gegen Phase 2: Zurueckweichen, Flug, Aufschlag und Kippen im Bild (RE2 zeigt Annette liegend nie), Untertitel des
+Schreis.
+
+Lagen (PORT-WAHL, gemessen; Werkzeuge `werkzeug/n1/proj5090.py`, `lage2.py`, `lagesuche.py`):
+- Landestelle L (500,-22600), Haltepunkt S (4131,-23573), Abstand 3759 (Trefferfenster des Hiebs lokal x 3685..3864, 8.2).
+  In Cut 15 liegt die Form links (Bild-x bis 155), Annette rechts (259..302). Der erste Fensterlauf mit L (1000,-22800) zeigte
+  beim Satz nur die Haut der Form und Annette zwischen ihren Beinen.
+- Start A0 (8000,-24250): in Cut 12 bei Bild-x 117 neben Leon (156; mit A0 (9500,-22900) stand sie genau hinter ihm),
+  1614 vom naechsten Bodenfeuer (main00 @0x0110E..@0x0120E, (9900,-24500)), Weg A0 -> S mindestens 1035 von allen Feuern.
+- Sturz im Takt statt im Programm: Bank 5 Wort 1 (Bits 0x20..0x3F) wird jedes Bild gewischt (scd_vm.c, FUN_8003ebf4), die
+  Ankunft (5,0x21) ist also wie im Original ein Ein-Bild-Puls; eine For-Schleife im Programm blockierte das Warten und
+  verpasste ihn (Test: Puls F175, Schleife bis F176, Szene hing). Jetzt wartet das Programm wie RE2 (gosub sub10) waehrend
+  des Sturzes.
+
+### N1.3 Zugstart 6030 (Nutzer-Idee, Wortlaut = Vorschlag)
+
+Ausloeser: ROOM6030 sub00 @0x00D28 Switch(Cut) Case 0 -> sub07; bei (3,89)=1 spawnt sub07 sie nicht mehr und ruft @0x01132
+Evt_exec sub05 (Licht-Schleife). Der Haken (`re15_annette_r41_evt_exec`, scd_vm.c op_evt_exec) leitet genau diesen Aufruf
+um, wenn (9,133)=0 und keine 0x4D im Raum steht (sonst lief beim ersten Besuch nach dem Tor sub08; dann kommt der Zugstart
+beim naechsten Eintritt). Wagen-Eintritt (Cut 6/8/12, sub06 @0x010C4 Evt_exec sub05) vor dem Zugstart: die Tuer nach 5090
+bleibt beim Original-Text msg 10 "I have to get this thing moving first!" (Aot_reset-Bytes sub06 @0x0106A), die
+Licht-Schleife startet erst danach. So steht Annette in 5090 erst nach dem Zugstart (Spawn-Tor 5090 = (3,89) und (9,133) und
+nicht (3,42)).
+
+Programm (38 Segmente, 290 Byte Original aus ROOM6030, 68 Byte Port-Befehle in Original-Form; der Riegel vergleicht jedes
+Original-Segment mit der RDT):
+
+| Schritt | Bytes |
+|---|---|
+| Set(9,133,1) | Port (Set-Form) |
+| Sperre + Balken | @0x0113E |
+| Annette am Pult | Sce_em_set @0x010F8 |
+| Sleep 1, Cut 1, Leon dreht sich zu ihr, Sleep 10 | @0x01146..@0x0115B |
+| Work_set Annette, Cut 3, Pult-Clip 0x12, Sleep 80 | @0x011CC, @0x011F6 |
+| Zug-an-Ton (Satz 3) | Port (Set(5,0x10)) |
+| Pultlicht Set(1,28), Cut 4, 2 x Sleep 15, Set(1,28,0) | @0x01210, @0x01216, @0x01220 (ohne Cut 5 = rotes WARNING des gescheiterten Starts, im Fensterlauf gesehen; PORT-WAHL) |
+| Cut 1, Sleep 60; Licht-Schleife (Fahrt) | @0x01254, Evt_exec sub05 @0x01132 |
+| msg 27 + Gesten Annette | Port Message_on, Gestenblock @0x0129A (nach msg 16) |
+| Krach (Satz 0), Sleep 25 | Port; RE2 @0x0104C |
+| beide drehen sich zur Wagentuer, Sleep 36 | @0x0125A + Plc_dest (Form @0x01150) + @0x01358; @0x012E2 + Plc_dest (Form @0x01160) + @0x0128A; RE2 @0x01072 |
+| msg 28 + Gesten Annette | Gestenblock @0x01178 (nach msg 11) |
+| msg 29 + Gesten Leon | @0x0125A, Gestenblock @0x01262 (nach msg 15) |
+| msg 30 + Gesten Annette | @0x012E2, Gestenblock @0x012EA (nach msg 18) |
+| sie geht zur Tuer, versteckt | Plc_dest Modus 4 (Form 6000 sub02 @0x00FFA) auf (-3873,-22550), Warten @0x0128A, Pos_set-Bytes 6000 sub02 @0x0100A |
+| Sleep 30, Sperren auf, Cut_auto, Plc_ret, Evt_end | @0x0125A, @0x01364, @0x01374 |
+
+Tuer-Ziel (-3873,-22550): die Wagentuer Slot 0 (rect x -5100..-4200) liegt in der Wand SCA #13 (x -5941..-4341, ROOM6030
+SCA @0x708); erreichbar ist die Wandflaeche x -3873 (= Ziel der Tuer Slot 1 @0x00C52). Erster Fensterlauf mit x -4800: sie
+blieb an der Wand stehen und kam nie an.
+
+Zeilen (Vorschlag, PORT-WAHL; der Nutzer kann den Wortlaut aendern, Generator `tools/r41_annette/texte_bauen.py`):
+
+| Id | Zeile | Stimme |
+|---|---|---|
+| 27 | Annette: There! The train's moving. | `synchro/STAGE6/room6030/main27.wav` |
+| 28 | Annette: What was that? / ...Sherry is back there! | `synchro/STAGE6/room6030/main28.wav` |
+| 29 | Leon: I'll check it out. | `synchro/STAGE6/room6030/main29.wav` |
+| 30 | Annette: No. She's my daughter. / Stay here and keep an eye on / the controls. | `synchro/STAGE6/room6030/main30.wav` |
+
+5090 dazu: Id 43 "Annette: William." -> `synchro/STAGE5/room5090/main43.wav`; 40 / 41 (nur Ton) / 42 wie bisher.
+
+Toene (`AN_belege/an_se.md`, Unteragent): Satz 0 KRACH = RE2 Se_on(3,0x0B) ROOM6141 @0x01040 = ENEMSE-Bank 64 Satz 0x0B
+(Lader und RAM belegt, Gegenprobe gegen die Aufnahme r = 0,988); Satz 1 STURZ = Se_on(2,0x0A) @0x010CE; Satz 2 BRUELL =
+Se_on(2,0x0C) @0x01104; Satz 3 ZUG_AN = RE2 ROOM7020 sub04 @0x014AA Se_on(2,0x0C) (Hochfahren nach Set(4,0x88) "Strom fuer den
+Zug"). Im Zugstart ist das Krachen aus dem hinteren Wagen derselbe Satz 0 (PORT-WAHL: der RE2-Ton der Szene, auf die es
+hinauslaeuft).
+
+**Flag:** Bank 9 Bit 133 "Zugstart gesehen". Zensus `tools/r36_kartenbits/bank9_zensus.py` (240 RDTs, 0 Desync): frei im
+Original; in keinem r41-Zweig vergeben; VERTRAG 1.1 "125-133 vergibt der Orchestrator" -> **bitte bestaetigen** (noch nicht in
+`test_r36_kartenbits.c` k_port[] eingetragen, weil die Zuteilung beim Orchestrator liegt).
+
+**Integration mit ST80-T** (`.claude/worktrees/r41_story80/analysis/story80/TEXTE_UMSETZUNG.md` Abschnitt 5): ST80-T leitet in
+6030 sub02 (von sub01 @0x00D70) und sub08 (von sub07 @0x010E8) um, diese Spur nur sub05 (von sub07 @0x01132 und sub06
+@0x010C4). Beide Haken pruefen nur ihre eigene Sub-Nummer; Ids 21-26 (ST80-T) / 27-30 (AN). Keine Kollision; beim
+Zusammenfuehren beide Haken-Zeilen in op_evt_exec behalten.
+
+### N1.4 Bestehende 6030-Zeilen gegen den neuen Ablauf (nicht umgeschrieben, zur Entscheidung)
+
+1. msg 20 "You can't get off the train right now." (Ausgang, sub06 @0x01098 ab (3,89)=1) erscheint jetzt auch vor dem
+   Zugstart, wenn der Zug noch steht.
+2. sub06 @0x01092 wechselt die Musik schon bei (3,89)=1, also vor dem Zugstart.
+3. ST80-T: Sherry sitzt im Wagen von 6030 (sub06 @0x01044 Sce_em_set 0x4B, unbedingt). Annette laeuft nach msg 30 nach hinten
+   und muesste auf dem Weg nach 5090 an Sherry vorbei; ihre Sorge "Sherry is back there!" und dass sie dann in Wagen C (5090)
+   steht, setzt voraus, dass sie Sherry dort nicht findet oder weitergeht. Ein Satz dazu waere neuer Text.
+4. msg 18 "I'll be ready to start the train when you do!" und msg 10 "I have to get this thing moving first!" passen zum neuen
+   Ablauf (kein Widerspruch).
+5. RE2-Satz "W-William! You're alive!" setzt weiter voraus, dass sie ihn fuer tot hielt (F4 aus Abschnitt 7, unbeantwortet).
+
+### N1.5 F7 (fuer spaeter, nicht gebaut): die Szene "das Monster ist William"
+
+- **Leon-Disc** (SLUS-00748): `PL0/RDT/ROOM4090.RDT` MAIN sub02 (Kanalisation, Annette und Ada; Stimmen VOICE04 vom Abbild
+  `re2leon.bin` dekodiert, Whisper medium.en, nicht von Hand gegengehoert): @0x0271E Annette "Annette Birkin. My husband is the
+  man responsible for the creation of the T-virus. William Birkin." @0x0278C "It's capable of creating the ultimate
+  bioweapon. Its potential is even greater than that of the T-Virus." @0x027A6 Ada "Then that must mean the creature in the
+  police department is..." **@0x027BA Annette "Precisely, my husband, William."** @0x027D4 "And it's all Umbrella's fault. None
+  of this would have happened if they hadn't tried to steal his research away from him." **@0x02818 `6f 0b` Movie_on**, danach
+  @0x0283C "So those rats were the carriers of the virus." @0x0284C "As a result of his virus-induced transmutation, William
+  should have lost any prior memories he had as a human by now." @0x02866 "Even worse, every G-virus bioweapon, including
+  William, has the ability to implant embryos into other creatures."
+- **Claire-Disc**: `PL1/RDT/ROOM4081.RDT` MAIN sub03 (Annette und Claire, VOICE14): Xa 0x11 @0x02D50 "That's impossible. I told
+  her to go to the police station. What's she doing here? William will be after her." Xa 0x12 Claire "William?" **Xa 0x13
+  @0x02D92 "That's right. The creature that's been causing all this destruction is none other than my own husband."** Xa 0x15
+  "As a result of his virus induced transmutation, William should have lost any prior memories he had as a human by now." Xa
+  0x16 "I tried to save him, but I'm afraid it's already too late."; Movie_on 0x0B dort in sub08 @0x036A2.
+- **FMV:** Movie_on 0x0B in beiden Raeumen; Datei je Szenario nach Raumnamen: Leon `PL0/ZMOVIE/R409.STR` (50 142 240 Byte,
+  4293 Bilder MDEC 0x3800 Version 2, 320x160, XA Stereo 37,8 kHz coding 0x01, 143,1 s bei 30 Bildern/s), Claire
+  `PL1/ZMOVIE/R408.STR` (44 011 520 Byte). Inhalt R409 (Stichbilder alle 10 s aus `info/re2leon/PL0/ZMOVIE/R409.STR[0].avi`):
+  USS-Soldaten, William im Labor, Annette, der angeschossene William, die Mutation, HUNK. Die Zuordnung Index 0x0B -> Datei
+  steht nicht als Text in den EXEs (kein "R409"/".STR" in SLUS_007.48 / SLES_109.72); belegt sind nur Raum-Aufruf und Name.
+- **Port:** re15_str.c erkennt Videosektoren nur an der Magic 0x0160 (re15_str.c:38; R409 hat Submode 0x42 statt 0x48 wie
+  CAPCOM.STR, das stoert nicht), dekodiert MDEC 0x3800 Version 2 ueber die BSS-Kette (wie CAPCOM.STR) und XA Stereo 37,8 kHz
+  (re15_xa.c, wie CAPCOM.STR). Fehlen wuerden: Ausgabe 320x160 mittig in 320x240 (der Spieler zeigt 1:1 Vollbild), ein
+  Ausloeser (Movie_on 0x6F ist in scd_vm ein Durchlauf) und die Datei unter shared_assets. Abspielbar also mit kleinem Umbau.
+
+### N1.6 Tests
+
+| Test | Inhalt | Ergebnis |
+|---|---|---|
+| `unit_r41_annette` | Spawn 5090 je (3,89)/(9,133)/(3,42); 6030 vor dem Tor Original; Programm 5090: Schnittfolge 15/11/15/11/13, RE2-Sleeps, Message_on 43/40/42, kein Text fuer 41, kein Pos_set (Sturzwerte gegen ROOM5080-Bytes); Zugstart: jedes Original-Segment bytegleich mit ROOM6030, Ids 27-30 mit Wortlaut, Tuer-Programm = @0x0106A + @0x010CA; Szene 5090 ueber VM + KI-Takt (Sturz 1+14 Bilder ab y -5600, Schnitte 12 15 11 15 11 13, Annette steht bei S, Treffer Clip 4 Bild 14 Hand 87, Blut 8, Toene je 1, Schrei 1, Leiche RE2-Versatz, sub04 frei, einmalig); Zugstart 6030 (Tuer msg 10 vorher, Tuer danach, Programm einmal, (9,133), Toene Zug an vor Krach, Annette versteckt, Wiedereintritt ohne Szene) | gruen |
+| `unit_r41_annette_se_*` (3, Unteragent) | ANNETTE_SE.VBS Bank/Toene/Lagen | gruen |
+| `integration_r41_annette` (4 Laeufe, echte exe) | leon_tor (Schritte und Toene in Reihenfolge, beide Modelle, Form g=13, hp -1), leon_ohne_zug (0x4D verworfen), elza 5091, zug6030 (Zugstart, Toene 3 vor 0, Annette versteckt) | gruen (222 s) |
+| Suite unit/prop/probe, `integration_r41_birkin_pistole`, `integration_r35_zgirl_5090` | Bestand | siehe N1.9 |
+
+### N1.7 Sichtbelege (echtes Fenster, gdigrab hwnd=, eigene exe-Kopie, Renderer des Nutzers)
+
+Laeufe `tools/r41_annette/an_lauf.sh leon 5090 12 36 10 "A0.1,W1,U8.5,W60" RE15_SET_FLAG=3:89,9:133` und
+`an_lauf.sh zug6030 6030 8 34 10 W1 RE15_SET_FLAG=3:89,4:23 RE15_PLAYER_POS=-3873,-23487,0,0` (Debug-Sprung = Eintritt Cut 0).
+Ablage `AN_belege/spiel_n1/`:
+
+| Datei | Inhalt |
+|---|---|
+| `vergleich_re2_port_5090_1.jpg`, `_2.jpg` | neun Schritte RE2 (echte Aufnahme) neben dem Port |
+| `leon_5090_szene_n1.jpg`, `.mp4` | Port 5090 Bildleiste und Video (10 Bilder/s, ohne Ton) |
+| `leon_6030_zugstart.jpg`, `.mp4` | Port 6030 Zugstart |
+
+RE2-Seite mit Ton: `AN_belege/re2_claire/re2c_szene_320.mp4` und Bildleisten `re2c_*.jpg`.
+
+Gesehen: Cut 12 zeigt Annette links neben Leon beim Krach und bei "William."; Cut 15 sie auf die Kamera zu, dann faellt die
+Form links ins Bild (wie RE2 Cut 2); Cut 11 Anstarren; Cut 15 Satz mit Annette rechts frei im Bild; Cut 11 Hieb, Blut und
+Kittel mit Blut ab Bild 266; Cut 13 nur Leon, Schrei ohne Untertitel, "Leon: Annette!". Unterschied zu RE2: RE2s Blutwolke
+ist deutlich groesser als die acht Port-Spritzer. Zugstart: Pult (Cut 3), Pult ohne WARNING (Cut 4), Dialog 27-30 in Cut 1,
+Annette geht zur Wagentuer, Steuerung zurueck.
+
+### N1.8 Dateien
+
+Neu/geaendert: `engine/src/annette_r41.c`, `include/re15_annette_r41.h`, `engine/src/gen/annette_r41_texte.inc`,
+`tools/r41_annette/texte_bauen.py`, `tests/unit/test_r41_annette.c`, `tests/integration/test_r41_annette.cmake`,
+`tests/unit/probes/r41_annette.cmake`, Haken-Kommentare `scd_vm.c`/`scd_room_setup.c`, `platform/pc/main.c` (2 Zeilen:
+ANNETTE_SE.VBS, Stimme ohne Text). Unteragent Toene: `tools/r41_annette/an_se_cut.py`, `shared_assets/RE2/ANNETTE_SE.VBS`,
+`engine/src/gen/re2_annette_se_bank.inc`, `platform/pc/src/annette_se_pc.c`, `tests/unit/probe_r41_annette_se.c`,
+`tests/unit/probes/r41_annette_se.cmake`, `release/make_package.sh` (Paket-Gate), `AN_belege/an_se.md`. Belege
+`AN_belege/re2_claire/` (Aufnahme), `AN_belege/spiel_n1/`, `AN_belege/werkzeug/n1/`.
+
+### N1.9 Testlage und Commits
+
+- Bau `bash re15_port/tools/local_build.sh build`: LOCAL-BUILD-OK.
+- `unit_r41_annette`, `unit_r41_annette_se_bank/_toene/_lagen`: gruen. `integration_r41_annette` (4 Laeufe): gruen, 222 s.
+- Suite `^unit_|^prop_|^probe_` ohne die Umgebungs-Skripttests (`-E "releaseskript|android|r37_masken36_ausschluss|paket"`;
+  sie hingen im ersten Lauf je bis zum Zeitlimit 900 s, wie von ST80-T gemeldet "Skript-Riegel haengen in df -Pk"), `-j 4`:
+  1046/1048 gruen. Rot nur Zeitlimits: `unit_r41_birkin_wand_griff` (360 s unter Last; einzeln wiederholt gruen, 138 s) und
+  `unit_r39_titelversion_ablauf` (1200 s; startet das echte `release_alles.sh`, dieselbe Skript-Familie, nicht diese Spur).
+- `integration_r41_birkin_pistole` gruen (247 s), `integration_r35_zgirl_5090` gruen (147 s).
+- Commits: 9c3654e6a (Code, Toene, Tests), Doku-Commit mit diesem Abschnitt und den Belegen.
+
+### N1.10 Offen
+
+- Bank-9-Bit 133 vom Orchestrator bestaetigen und in `test_r36_kartenbits.c` k_port[] eintragen.
+- Stimmen (Nutzer): `synchro/STAGE5/room5090/main40..43.wav`, `synchro/STAGE6/room6030/main27..30.wav`.
+- N1.4 Punkte 1-3 (Text/Story), F4.
+- ZUG_AN-Alternative laut an_se.md: das eigentliche Anfahren des RE2-Zuges liegt in ROOM7030 sub12 (Hebel- und Schlagtoene,
+  ohne Hochlaufen); gebaut ist ROOM7020 0x0C.
+- RE2-Bildzahlen sind Spielbilder der PAL-Fassung (25/s); ob eine NTSC-Claire-Disc dieselben Sleeps hat, ist ohne diese Disc
+  nicht pruefbar.
+- Kampfstart sub04 Cut 15 zeigt weiter nur die Haut der Form (Hinweis an die Form-Spur, Abschnitt 10).
+- F7 nach Nutzerwunsch spaeter (N1.5).
