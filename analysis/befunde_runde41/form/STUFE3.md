@@ -153,7 +153,7 @@ unter dem Rumpf, der in Bild 1/2 sichtbar waere.
 
 - Gezielt (re15_port/build, Stand fbef4bcc7): unit_birkin_ai, _bahnsteig, _formen, _opfer, _szenen, unit_r41_form_emd,
   unit_r41_birkin_wand_rein/_g5/_griff, unit_g5_boss/_morph/_tentakel, probe_p2_birkin_g5, probe_p3_birkin_rest, unit_r17/18/20/30-Birkin-Pins,
-  unit_r30_n_room5080_birkin_wand: 19/19 gruen; integration_r41_birkin_pistole s. unten (vorher rot: erwartete Clip 8 in der Rueckstoss-Szene,
+  unit_r30_n_room5080_birkin_wand: 19/19 gruen; integration_r41_birkin_pistole gruen (N12; vorher rot: erwartete Clip 8 in der Rueckstoss-Szene,
   jetzt Clip 13 oder 8).
 - Neu/angepasst in test_birkin_bahnsteig.c: Rueckstoss (Clip 13, Schritt <= 100 je Bild, Sturz im Wagen x -2500..-3500), Flucht (Phasen,
   Gier <= 40 je Bild, Schwanz > 900 vom Spieler, gemessen 2721), test_n1_biss_kiefer, test_n1_gebruell, test_n1_koerper,
@@ -193,6 +193,19 @@ Griff, Flucht ab HP 0 (zurueck, Drehen, Clip 11), Raumtext msg 3; Leon und Elza 
   aendert in 5090 den Kampfstart-Schnitt (Auftritt in Cut 11 bis Clip 10 Bild 60), den Bisszweig der Nabe und den Koerper-Schub; Clip 4
   (Nummer, Bildzahl, Trefferbits 14-17) ist unveraendert, Trefferbild im Asset jetzt 16-17 statt 15-17 (Reichweite).
 - Voller ctest (Unit/Prop/Probe): s. N12.
+
+### N12. Testlage Endstand (re15_port/build, Stand fbef4bcc7)
+
+- Gezielt: unit_birkin_bahnsteig, _szenen, _formen, unit_r41_form_emd gruen; integration_r41_birkin_pistole gruen (269 s): Leon und Elza je
+  "Mutationen 0, Form-HP 150 bis 0, Rueckstoss 1, Sturz 1, G5 1, G5 tot 1".
+- Unit/Prop/Probe voll (`ctest -R "^(unit|prop|probe)_" -j 8 --timeout 900`, 1945 s): **1054 von 1061 gruen**, 7 rot, alle
+  Bau-Umgebungs-Skripttests ohne Spielcode: unit_r38_releaseskript_trocken/_ablauf/_fehler_bau/_fehler_umfeld/_cmd und
+  unit_r39_titelversion_ablauf (Timeout 1200 s), unit_r35_android_bash_mutanten (rot nach 1444 s). Ursache der Timeouts gemessen: die Tests
+  haengen in `df -Pk <Wegwerf-Repo>` (Platz-Pruefung von release_alles.sh) - Git-df.exe kehrt auf dieser Maschine seit dem Abend nicht
+  zurueck (auch ein eigenes `df -h /c` um 19:5x hing); dieselben Tests haengen gleichzeitig in r41_moosgang (18:41), r41_gatorfix (19:42) und
+  r41_sichel (20:27) an derselben Stelle. Diese Nachbesserung aendert nichts unter release/, android/ oder an diesen Tests (git diff leer).
+  Wiederholung mit -j 3 brach mitsamt ctest ab; die haengenden eigenen Testprozesse (40 bash/df, nur Pfade unter r41_form) per PID beendet,
+  8 df.exe-Leichen lassen sich nicht beenden (Kernelwarten).
 
 Auftrag (Orchestrator, nach E19): J bekommt Gerippe-Pruefung, eigene Clips nach dem Muster RE2-G4, das G4-Verhalten aus Spur R auf die
 neuen Clips, Einbau in 5080 und 5090 unter eigenem Asset-Namen, Tests, Sichtbelege. Bindend: `NUTZER_ENTSCHEIDE.md` E1-E19.
