@@ -1,4 +1,4 @@
-# Aufnahmeliste Runde 41 (Stand 2026-11-02)
+# Aufnahmeliste Runde 41 (Stand 2026-11-03)
 
 Alle Pfade liegen unter `synchro/`. Dateiname = `main<Id>.wav`. „neu“ = neu aufnehmen. Der Text entspricht dem Untertitel im Spiel.
 Bis zur Neuaufnahme spielt das Spiel die alte Datei (falls vorhanden) unter dem neuen Untertitel; fehlende Dateien bleiben stumm.
@@ -56,19 +56,20 @@ Bis zur Neuaufnahme spielt das Spiel die alte Datei (falls vorhanden) unter dem 
 
 `main13`–`main19` bleiben.
 
-## 5. Zugstart nach dem Tor – ROOM6030 (Nummern folgen, voraussichtlich main27–main30)
+## 5. Zugstart nach dem Tor – ROOM6030
 
 | Datei | Sprecher | Text | |
 |---|---|---|---|
-| folgt | Annette | There! The train's moving. | neu |
-| folgt | Annette | What was that? ...Sherry is back there! | neu |
-| folgt | Leon | I'll check it out. | neu |
-| folgt | Annette | No. She's my daughter. Stay here and keep an eye on the controls. | neu |
+| `STAGE6/room6030/main27.wav` | Annette | There! The train's moving. | neu |
+| `STAGE6/room6030/main28.wav` | Annette | What was that? ...Sherry is back there! | neu |
+| `STAGE6/room6030/main29.wav` | Leon | I'll check it out. | neu |
+| `STAGE6/room6030/main30.wav` | Annette | No. She's my daughter. Stay here and keep an eye on the controls. | neu |
 
 ## 6. Annettes Tod – ROOM5090
 
 | Datei | Sprecher | Text | |
 |---|---|---|---|
+| `STAGE5/room5090/main43.wav` | Annette | William. (vor dem Satz, RE2 woertlich) | neu |
 | `STAGE5/room5090/main40.wav` | Annette | W-William! You're alive! | neu |
 | `STAGE5/room5090/main41.wav` | Annette | (Schrei, ohne Untertitel) | neu |
 | `STAGE5/room5090/main42.wav` | Leon | Annette! | neu |
