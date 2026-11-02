@@ -24,6 +24,7 @@
 #include "re15_room.h"
 #include "re15_birkin_formen.h"
 #include "re2_ems.h"
+#include "re15_g5auftritt_r41.h"   /* Runde 41: G5-Auftritt nach RE2 room7040 sub06 */
 
 extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
 extern int re15_g5_blut_zaehler(int idx);
@@ -218,10 +219,12 @@ static void test_bahnsteig(void)
     CHECK(b->type == 0x36u, "kein Morph zum G5 nach %d Ticks (state %d ph3 %d)", f, b->state, b->sub_state_3);
     CHECK(b->grid_id == 0x13u, "G5 nicht armiert (grid 0x%02X)", b->grid_id);
     CHECK(!b->no_draw, "G5 bleibt unsichtbar");
-    CHECK(g_scd.cam_id == 0x0B, "G5-Auftritt nicht auf Cut 11 (Zugende), cam %d", g_scd.cam_id);
+    /* Runde 41 G5-Auftritt: RE2 room7040 Schnitt 9 (Szenen-Schnitt 16), nicht mehr Cut 11 (Dossier G5_auftritt.md). */
+    CHECK(g_scd.cam_id == RE15_G5A_SCHNITT, "G5-Auftritt nicht auf dem Szenen-Schnitt %d (RE2 Schnitt 9), cam %d", RE15_G5A_SCHNITT, g_scd.cam_id);
     CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Tod der Form gesetzt");
-    /* M9 + Abnahme 2: bis zum Ende von [T2] haelt die Szene Cut 11 mit Zonen aus, danach Zonen an, Schnitt aus der Spielerlage.
-     * Leon steht weit im Osten: ein fester Cut 12 liesse ihn ausser Bild und ohne Zone. */
+    /* M9: die Szene haelt die Zonen aus, danach Zonen an, Schnitt aus der Spielerlage (Leon weit im Osten: Cut 14).
+     * ⛔ Runde 41 G5-Auftritt: die Freigabe kommt jetzt wie in RE2 am Szenenende @0x01981 (Bild 1162, nach Sub 2), mit gesperrtem
+     * Spieler; die Abnahme-2-Gestaltung "Freigabe mit [T2]" galt dem frei laufenden Spieler und ist ersetzt. */
     {
         int zonen_im_auftritt = 0, frei = -1, sub = 2, ph = 0, n, sub_bei_frei = -1;
         for (n = 0; n < 1500 && frei < 0; n++) {
@@ -232,8 +235,11 @@ static void test_bahnsteig(void)
         }
         CHECK(zonen_im_auftritt == 0, "M9: Kamerazonen in %d Auftritts-Bildern an", zonen_im_auftritt);
         CHECK(frei >= 0, "M9: Kamerazonen nach dem Hereinziehen nicht wieder an (%d Ticks, Sub %d Ph %d)", n, sub, ph);
-        CHECK(sub_bei_frei == 2, "Szenenkamera endet erst mit Sub 2 (Freigabe in Sub %d), sperrt 37,5 s", sub_bei_frei);
-        CHECK(g_scd.cam_id == 0x0E, "Leon bei x 20748: Cut %d statt 14 nach dem Szenenende", g_scd.cam_id);
+        CHECK(frei == RE15_G5A_BILD_ENDE - 1, "Zonen frei nach %d Bildern statt am Szenenende Bild %d (@0x01981)", frei + 1, RE15_G5A_BILD_ENDE);
+        (void)sub_bei_frei;
+        /* Runde 41 G5-Auftritt: die Szene setzt Leon am Ende selbst (RE2 Pos_set @0x0196C, Port-Lage 13873), der Schnitt folgt dieser
+         * Lage (Cut 12), nicht mehr der Lage, in der er vor der Szene stand (hier 20748, frueher Cut 14). */
+        CHECK(g_scd.cam_id == 0x0C, "Szenenende: Cut %d statt 12 (Spielerlage 13873 nach @0x0196C)", g_scd.cam_id);
         fprintf(stderr, "Bahnsteig: Kamerazonen %d Ticks nach dem Morph wieder an, Cut %d\n", frei, g_scd.cam_id);
     }
     fprintf(stderr, "Bahnsteig: Rueckstoss + Morph nach %d Ticks (min x %d)\n", f, x_min);

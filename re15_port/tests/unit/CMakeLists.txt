@@ -4102,6 +4102,14 @@ target_compile_definitions(test_birkin_szenen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_birkin_szenen COMMAND test_birkin_szenen)
 set_tests_properties(unit_birkin_szenen PROPERTIES TIMEOUT 60)
+# --- Runde 41 G5-Auftritt: RE2 room7040 sub06 ab der Armierung (Schnitt 9 -> 10 -> 5 -> 6), Daten + Ablauf 5090/5091 ---
+add_executable(test_r41_g5auftritt test_r41_g5auftritt.c)
+target_link_libraries(test_r41_g5auftritt PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_r41_g5auftritt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r41_g5auftritt PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r41_g5auftritt COMMAND test_r41_g5auftritt)
+set_tests_properties(unit_r41_g5auftritt PROPERTIES TIMEOUT 120)
 if(TARGET re15_pc)
     # Abnahme 1 Spur R: Pistole, Dauerbeschuss, EM30 -> Mutation -> Form -> G5, Leon und Elza, kein Messhaken.
     add_test(NAME integration_r41_birkin_pistole

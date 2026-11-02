@@ -37,6 +37,8 @@
 #include "re15_sld.h"    /* Laufzeit-Auszug des Vordergrundatlas aus dem BSS-Chunk */
 #include "re15_entladen.h"   /* Runde 35 Spur I: Generation des SLD-Auszugs */
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
+#include "re15_g5auftritt_r41.h"   /* Runde 41: Szenen-Schnitte 16/17 ROOM5090/5091 = RE2 room7040 Schnitt 9/10 */
+#include "re15_pri.h"          /* re15_pri_parse_section fuer die RE2-Masken des Szenen-Schnitts */
 
 extern int re15_fade_log_on(void);   /* fade_common.c — Messlauf-Log-Gate */
 
@@ -346,12 +348,64 @@ int re15_bg_load_test_asset(void)
     return -100;  /* couldn't find asset */
 }
 
+/* Runde 41 G5-Auftritt (re15_g5auftritt_r41.h): die Szenen-Schnitte 16/17 in ROOM5090/5091 sind RE2 room7040 Schnitt 9/10. Der
+ * Hintergrund kommt aus dem RE2-Chunk (derselbe MDEC-Kopf wie RE1.5, Decoder unten), der Masken-Atlas als entpacktes RE2-TIM (RE2 packt
+ * ihn mit FUN_80010084, nicht mit RE1.5s FUN_800c47e8; Schnitt 10 hat keinen). Er wird wie der SLD-Auszug des Raum-Laders abgelegt;
+ * re15_pri_load_cut_atlas_ex veroeffentlicht ihn ueber denselben Weg. Rueckgabe 1 = nicht dieser Schnitt. */
+static int bg_g5a_laden(int cut_idx)
+{
+    const int n = re15_g5a_re2_schnitt(cut_idx);
+    if (n < 0) return 1;
+    char datei[32], atlas[32];
+    snprintf(datei, sizeof datei, RE15_G5A_DATEI_FORM, n, ".BSS");
+    snprintf(atlas, sizeof atlas, RE15_G5A_DATEI_FORM, n, "_PRI.TIM");
+    int sz = 0;
+    uint8_t *buf = re15_pc_read_re2(datei, &sz);
+    if (!buf) {
+        fprintf(stderr, "[g5auftritt] RE2/%s fehlt - Schnitt %d ohne Hintergrund\n", datei, cut_idx);
+        return -100;
+    }
+    int rv = re15_bg_load_from_bss(buf, (size_t)sz);
+    free(buf);
+    s_pri_tim_len = 0; s_pri_tim_room = -1; s_pri_tim_cut = -1;
+    int tn = 0;
+    uint8_t *tim = re15_pc_read_re2(atlas, &tn);           /* Schnitt 10: keine Datei, kein Atlas */
+    if (tim && tn > 0 && tn <= (int)sizeof s_pri_tim) {
+        memcpy(s_pri_tim, tim, (size_t)tn);
+        s_pri_tim_len = tn; s_pri_tim_room = (int)g_current_room_id; s_pri_tim_cut = cut_idx;
+        s_pri_tim_gen = g_re15_entladen_gen;
+    }
+    free(tim);
+    if (rv == 0) snprintf(s_bg_tag, sizeof s_bg_tag, "re2:room704#%02d", n);
+    fprintf(stderr, "[g5auftritt] Schnitt %d: Hintergrund RE2/%s rv=%d, Masken-Atlas %d Byte\n", cut_idx, datei, rv, s_pri_tim_len);
+    return rv;
+}
+
+/* Runde 41 G5-Auftritt: sprite.pri-Abschnitt von RE2 room7040 Schnitt 9/10 (R704_CUTnn.PRI) fuer die Szenen-Schnitte 16/17, in RE2-Form
+ * gelesen (re15_pri_parse_section_re2, Groessenfeld nach RE2 FUN_80049b1c). 0 = keine Masken (Schnitt 10: Abschnitt 0xFFFFFFFF). */
+int re15_bg_g5a_pri(int cut_idx, re15_pri_cut_t *out)
+{
+    static uint8_t *s_g5a_pri[2] = { NULL, NULL };
+    static int      s_g5a_pri_n[2] = { 0, 0 };
+    const int n = re15_g5a_re2_schnitt(cut_idx);
+    if (!out || n < 9 || n > 10) return 0;
+    const int k = n - 9;
+    if (!s_g5a_pri[k]) {
+        char datei[32];
+        snprintf(datei, sizeof datei, RE15_G5A_DATEI_FORM, n, ".PRI");
+        s_g5a_pri[k] = re15_pc_read_re2(datei, &s_g5a_pri_n[k]);
+        if (!s_g5a_pri[k]) { s_g5a_pri_n[k] = 0; return 0; }
+    }
+    return re15_pri_parse_section_re2(s_g5a_pri[k], (size_t)s_g5a_pri_n[k], 0u, out);
+}
+
 /* Phase 4.5.10 / 4.5.12: load per-cut BG for the active room.
  * room_prefix is the basename ("room1100" or "room1170") used in the
  * file pattern <prefix>_bgNN.bss. Old API kept as a thin wrapper. */
 int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
 {
     if (!room_prefix) return -11;
+    { int g5a = bg_g5a_laden(cut_idx); if (g5a != 1) return g5a; }   /* Runde 41: Szenen-Schnitte 16/17 (s. bg_g5a_laden) */
     /* Cut cap raised 13→64 (globalization 2026-06-13): room1170 has 13 cuts but other
      * rooms have many more (ROOM5011=46, ROOM4010=44). The real bound is "does the
      * per-cut file exist" — a missing cut just fails the open below and the caller

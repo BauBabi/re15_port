@@ -11,6 +11,7 @@
 #include "re15_scd.h"           /* g_scd.work_vars[0x0A] = angezeigter Cut, re15_game_flag_set */
 #include "re15_room.h"          /* g_current_room_id */
 #include "re15_audio.h"        /* re15_audio_room_se */
+#include "re15_g5auftritt_r41.h"  /* Runde 41: G5-Auftritt nach RE2 room7040 sub06, Schnittstelle re15_bf_g5_auftritt_start */
 #include <stdlib.h>
 #include <string.h>
 
@@ -130,7 +131,6 @@ static struct {
 } s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0 };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
-static int s_kam_g5 = 0;       /* G5-Auftritt: Kamera aufs Zugende halten (Slot+1, 0 = aus) */
 static void bf_kamera(int cut);
 static void bf_kamera_setzen(int cut);
 static void bf_kamera_frei(void);
@@ -138,7 +138,8 @@ static void bf_zucken(re15_actor_t *e);
 
 void re15_bf_reset(void)
 {
-    s_bf_mutiert = 0; s_kam_g5 = 0;
+    s_bf_mutiert = 0;
+    re15_g5a_reset();                                    /* Runde 41: G5-Auftritt (g5auftritt_r41.c) */
     re15_bb_reset();
     s_rs.slot = -1; s_rs.phase = 0; s_rs.t = 0;
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = 0; s_h.t = 0; s_h.birkin_start = 0;
@@ -210,20 +211,10 @@ void re15_bf_raumtick(void)
                       g_actors[i].hp = 0; g_actors[i].state = 3; g_actors[i].sub_state_3 = 0; }   /* = Todes-Commit nach Treffer */
       } }
     bf_rueckstoss_tick();
-    /* G5-AUFTRITT (wie RE2): die Kamera bleibt aufs Zugende gerichtet, waehrend zuerst die vier Tentakel
-     * hereingreifen ([T1] @0x80101214-2e0) und dann den Koerper nachziehen ([T2] Root-Spur +7014).
-     * GESTALTUNG (Abnahme 2): die Szenenkamera endet mit [T2], nicht mit Sub 2. Sub 2 dauert ohne Treffer 1126 Bilder
-     * (37,5 s), der Spieler hat dabei volle Kontrolle und sah sich oft nicht, ab [T6] (+3946) fuellte der Koerper Cut 11
-     * ganz. Ab [T3] laufen die Zonen wieder, der Schnitt kommt aus der Spielerlage (bf_schnitt_aus_lage). */
-    if (s_kam_g5) {
-        int sub = -1, ph = 0;
-        if (!re15_bf_bahnsteig_aktiv()) { bf_kamera_frei(); s_kam_g5 = 0; }
-        else if (re15_g5_boss_zustand(&sub, &ph, NULL) && (sub != 2 || ph >= 3)) {
-            bf_kamera_setzen(re15_bf_schnitt_aus_lage(g_actors[RE15_ACTOR_SLOT_PLAYER].x));
-            bf_kamera_frei(); s_kam_g5 = 0;
-        }
-        else bf_kamera(0x0B);
-    }
+    /* G5-AUFTRITT (Runde 41, RE2 room7040 sub06 ab der Armierung @0x018DE): Grossaufnahme der offenen Wagentuer (RE2-Schnitt 9),
+     * zuerst die Tentakel ([T1]), dann zieht sich der Koerper herein ([T2]), danach RE2-Schnitte 10/5/6 bis zum Kampf.
+     * Kamera, Spielersperre und Ablauf: g5auftritt_r41.c. (Hier stand bis Runde 41 die Szenenkamera Cut 11 bis [T2].) */
+    re15_g5a_tick();
     if (!re15_bf_hangar_aktiv()) { if (s_h.raum) re15_bf_reset(); return; }
     if (s_h.raum != g_current_room_id) {
         re15_bf_reset();
@@ -424,16 +415,15 @@ static void bf_rueckstoss_tick(void)
         }
         break;
     }
-    case 2:
-        bf_kamera(0x0B);
-        if (s_rs.t >= BF_RS_PAUSE) {
-            int slot = s_rs.slot;
-            s_rs.slot = -1; s_rs.phase = 0;
-            e->no_draw = 0;
-            re15_bf_morph_zu_g5(slot);
-            s_kam_g5 = slot + 1;                         /* Auftritt auf Cut 11 zeigen (bf_g5_kamera_tick) */
-        }
+    case 2: {                                            /* die Form ist aus dem Zug: ab hier die G5-Szene (re15_g5auftritt_r41.h) */
+        /* SCHNITTSTELLE zur Form-Spur: re15_bf_g5_auftritt_start = RE2 sub06 @0x018DE (Armierung). RE2 hat zwischen dem Verschwinden
+         * der Masse und der Armierung keine Pause; die Pause BF_RS_PAUSE vor dem Typwechsel ist damit weg. */
+        int slot = s_rs.slot;
+        s_rs.slot = -1; s_rs.phase = 0;
+        e->no_draw = 0;
+        re15_bf_g5_auftritt_start(slot);
         break;
+    }
     default: break;
     }
 }

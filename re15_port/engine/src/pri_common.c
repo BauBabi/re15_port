@@ -172,3 +172,62 @@ uint32_t re15_pri_msk_section_offset(const uint8_t *blob, size_t size, int cut_i
     if (off == 0u || (size_t)off + 4u > size) return 0u;
     return off;
 }
+
+/* RE2-FORM des sprite.pri-Abschnitts (Runde 41 G5-Auftritt: RE2 room7040 Schnitt 9 als Szenen-Schnitt 16, re15_g5auftritt_r41.h).
+ * Gruppenkopf, Ankeraddition und Zaehlkopf sind dieselben wie in RE1.5; anders ist allein das Groessenfeld u16 @+6 der Maske.
+ * RE2 FUN_80049b1c, selbst gelesen:
+ *   80049c10  lhu  v1,-0x2(a2)        Groessenfeld
+ *   80049c18  bne  v1,zero,0x80049c3c  != 0: Quadrat
+ *   80049c20  lhu  a1,0x2(a2) / 80049c24 lhu v1,0x0(a2) / 80049c28 addiu a2,a2,0xc   == 0: Rechteck, Breite/Hoehe folgen, 12 Byte
+ *   80049c3c  sll  v0,v1,0x10 / 80049c40 or a1,v0,v1 / 80049c44 addiu a2,a2,0x8    Quadrat: Seite = das ganze Feld, 8 Byte
+ * RE1.5 FUN_800392d4 dagegen: Rechteck nur bei (Feld & 0xF000) == 0, Quadratseite (Feld >> 12) * 8 (re15_pri_parse_section oben).
+ * Die RE2-Daten mit der RE1.5-Regel gelesen ergaben 30 statt 32 Masken (Riegel test_r41_g5auftritt). */
+int re15_pri_parse_section_re2(const uint8_t *data, size_t data_size,
+                               uint32_t offset, re15_pri_cut_t *out)
+{
+    if (!out) return 0;
+    memset(out, 0, sizeof(*out));
+    if (!data || (size_t)offset + 4 > data_size) return 0;
+    const uint8_t *p = data + offset;
+    uint16_t group_count     = read_u16_le(p + 0);
+    uint16_t mask_count_decl = read_u16_le(p + 2);
+    if (group_count == 0xFFFF && mask_count_decl == 0xFFFF) return 0;   /* `*(int *)puVar14 == -1` (FUN_80049b1c) */
+    if (group_count == 0 || mask_count_decl == 0 || group_count > 256) return 0;
+    if ((size_t)offset + 4u + (size_t)group_count * 8u > data_size) return 0;
+    const uint8_t *gp = p + 4;
+    const uint8_t *mp = gp + (size_t)group_count * 8u;
+    int out_count = 0;
+    for (int g = 0; g < (int)group_count; g++, gp += 8) {
+        uint16_t n  = read_u16_le(gp + 0);
+        int16_t  gx = read_s16_le(gp + 4);
+        int16_t  gy = read_s16_le(gp + 6);
+        for (int i = 0; i < (int)n; i++) {
+            if ((size_t)(mp - data) + 8u > data_size) goto fertig;
+            uint8_t  sx = mp[0], sy = mp[1], dx = mp[2], dy = mp[3];
+            uint16_t depth = read_u16_le(mp + 4);
+            uint16_t feld  = read_u16_le(mp + 6);
+            uint16_t w, h;
+            mp += 8;
+            if (feld == 0) {
+                if ((size_t)(mp - data) + 4u > data_size) goto fertig;
+                w = read_u16_le(mp + 0);
+                h = read_u16_le(mp + 2);
+                mp += 4;
+            } else {
+                w = h = feld;
+            }
+            if (out_count < RE15_PRI_MAX_MASKS_PER_CUT) {
+                re15_pri_mask_t *m = &out->masks[out_count++];
+                m->srcX = sx; m->srcY = sy;
+                m->dstX = (uint16_t)(int16_t)((int)dx + (int)gx);
+                m->dstY = (uint16_t)(int16_t)((int)dy + (int)gy);
+                m->depth = depth; m->width = w; m->height = h;
+            }
+        }
+    }
+fertig:
+    out->mask_count = out_count;
+    out->draw_count = (int)(mask_count_decl & 0xFF);                    /* `*DAT_800ce324 = header >> 16` */
+    if (out->draw_count > out_count) out->draw_count = out_count;
+    return out_count;
+}

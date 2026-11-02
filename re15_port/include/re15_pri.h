@@ -143,6 +143,10 @@ static inline float re15_pri_mask_camera_z(int depth) {
  * number of masks parsed (0 if NULL section / parse failure). */
 int re15_pri_parse_section(const uint8_t *data, size_t data_size,
                            uint32_t offset, re15_pri_cut_t *out);
+/* Dasselbe fuer einen RE2-Abschnitt (Groessenfeld @+6: 0 = Rechteck mit Breite/Hoehe, sonst Quadratseite; RE2 FUN_80049b1c
+ * @0x80049c10-48). Runde 41 G5-Auftritt, pri_common.c. */
+int re15_pri_parse_section_re2(const uint8_t *data, size_t data_size,
+                               uint32_t offset, re15_pri_cut_t *out);
 
 /* ------------------------------------------------------------------------
  * NACHGEZEICHNETE MASKEN (Seitendaten-Container "R15M").

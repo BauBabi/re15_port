@@ -57,7 +57,7 @@ function(ein_lauf _name _raum)
         RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=${_skript}"
         RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log "RE15_GIVE=3:400,21:250" RE15_EQUIP=3
-        "RE15_EXIT_AT=3100#${_raum}"
+        "RE15_EXIT_AT=4200#${_raum}"   # Runde 41 G5-Auftritt: RE2-Szene sperrt den Spieler 1162 Bilder (vorher 3100)
         "${_exe_kopie}")
     set(_g "")
     if(NOT EXISTS "${WORKDIR}/debug.log" OR NOT EXISTS "${WORKDIR}/state.log")

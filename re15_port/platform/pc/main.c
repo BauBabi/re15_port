@@ -78,6 +78,7 @@ static inline int RNDI(float f) {
 #include "re15_ai_flavor.h"
 #include "re15_blink_r41.h"   /* Runde 41 Spur D: Helligkeitspuls aufnehmbarer Port-Gegenstaende */
 #include "re15_pri.h"
+#include "re15_g5auftritt_r41.h"   /* Runde 41: Szenen-Schnitte 16/17 ROOM5090/5091 (RE2 room7040 Schnitt 9/10) */
 #include "re15_pri_schatten_r36.h"   /* Runde 36 Spur O: Schatten-Tag fuer die OT-Ordnung */
 #include "re15_nclip_r38.h"          /* Runde 38 Spur A: Rueckseiten-Verwurf der Objekt-Zeichner */
 #include "re15_collision.h"
@@ -3219,7 +3220,7 @@ static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
      * Hintergrund und Kamera schalten aber auch hier im SELBEN Zug (Kopfkommentar). */
     if (re15_cam_present_tick()) {
         active_cut_idx = (int)g_scd.cam_id;
-        if (active_cut_idx >= active_cut_count)
+        if (active_cut_idx >= active_cut_count && !re15_g5a_schnitt(active_cut_idx))   /* Runde 41: Szenen-Schnitte 16/17 (re15_g5auftritt_r41.h) */
             active_cut_idx = active_cut_count - 1;
         /* Runde 34 Nacht G2: Cut-Apply FUN_80021bbc baut die Masken-Sichtbarkeit neu auf
          * (FUN_800392d4 @0x80021c28). Dieser Zweig bildet die Dirty-1-Setzer @0x8001d5c8 (Laden),
@@ -3258,7 +3259,7 @@ static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
 
         /* BE-round: switch lighting tint to the new cut. */
         if (g_re15_room_lights_ok) {
-            re15_light_apply_cut(&g_re15_room_lights, active_cut_idx);
+            re15_light_apply_cut(&g_re15_room_lights, re15_g5a_licht_schnitt(active_cut_idx));   /* Runde 41: Schnitte 16/17 -> Lichtsatz 11 */
             fprintf(stderr,
                     "[light] cut %d tint=(%u,%u,%u)\n",
                     active_cut_idx,
@@ -6190,6 +6191,9 @@ re_title:;
                     pri_n = re15_pri_parse_section(rdt_buf, (size_t)rdt_size,
                                                    active_cuts[active_cut_idx].pri_offset,
                                                    &pri);
+                } else if (re15_g5a_schnitt(active_cut_idx)) {   /* Runde 41: RE2 room7040 Schnitt 9/10 (bg_pc.c re15_bg_g5a_pri) */
+                    extern int re15_bg_g5a_pri(int cut_idx, re15_pri_cut_t *out);
+                    pri_n = re15_bg_g5a_pri(active_cut_idx, &pri);
                 }
                 /* NACHGEZEICHNETE MASKEN (s. re15_pri.h, Container "R15M").
                  * Der Prototyp hat die Maskenarbeit nur zu ~1/3 fertiggestellt; wo die
@@ -6272,7 +6276,8 @@ re_title:;
              * (-rot_y - 0xd2c) & 0xfff (=710·forward(rot_y), verified 3/3 death saves) and swings at
              * 900/frame for 3 frames before settling, so the cut + fly-in spin + orbit are all byte-true. Replaces the old fabricated {0x1f4,0xbb8,0x1f4}+drift glide. */
             re15_camera_cut_t death_cut;
-            const re15_camera_cut_t *view_cut = &active_cuts[active_cut_idx];
+            const re15_camera_cut_t *view_cut = re15_g5a_schnitt(active_cut_idx);   /* Runde 41: Szenen-Schnitte 16/17 = RE2-Kameras */
+            if (!view_cut) view_cut = &active_cuts[active_cut_idx];
             {
                 static int s_dc_on = 0, s_dc_updates = 0;
                 static re15_camera_cut_t s_dc;
@@ -6968,7 +6973,8 @@ re_title:;
              * @0x80045830, ALL in the SE path, none on a SsSeq volume) — likewise the
              * `player_mode != 2` hard-mute, which had no original counterpart. re15_rotor_drive
              * stays wired (shared with the PSX main loop) but no longer touches the BGM master. */
-            re15_rotor_drive(&active_cuts[active_cut_idx]);
+            { const re15_camera_cut_t *rc_g5a = re15_g5a_schnitt(active_cut_idx);   /* Runde 41: Schnitte 16/17 liegen hinter der RID-Tabelle */
+              re15_rotor_drive(rc_g5a ? rc_g5a : &active_cuts[active_cut_idx]); }
 
             /* Shadow orientation is built PER-ACTOR at each shadow draw below via
              * re15_camera_yaw_matrix_angle(actor.rot_y) — byte-true RotMatrixY(actor rot_y), the
