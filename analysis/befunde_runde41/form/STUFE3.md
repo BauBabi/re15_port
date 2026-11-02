@@ -93,8 +93,10 @@ vergleicht jedes Bild (Clip 10 ausgenommen, s.u.). Damit gelten im Tick unveraen
 | 27 | Griff (Packen Bild 8, Schleudern, Bruellen) | 100 | - | 14: 8, 36: 9, 60: 9, 82: 7 | G4 Clip 27 |
 
 Die Posen von J stehen bytegleich im Asset (Wurzel + 32 Winkel; Test `pose_gleich`): Ruhe = Clip 2 Bild 0, Bild 1 = Clip 0 Bild 11
-(auch zweimal in der Flucht, die den Galopp wiederholt), Bild 2 = Clip 10 Bild 45-52 und Clip 12 Bild 0. Fuer diese Bilder liefert
-`form_pruefung.py` also genau den Bericht von J (Pruefpunkte 31/31 und 7/7, IoU 0,948 / 0,935).
+(auch zweimal in der Flucht, die den Galopp wiederholt), Bild 2 = Clip 10 Bild 45-52 und Clip 12 Bild 0. **Formpruefung von J am
+Spiel-Asset gelaufen** (`stufe3/formpruefung.json` -> `stufe3/formpruefung/bericht.txt`, `form_pruefung.py pruefe`): Bild 1 IoU 0,948,
+Pruefpunkte 31/31, Boden/Verdeckung 5/7; Bild 2 IoU 0,935, Pruefpunkte 7/7, Boden/Verdeckung 9/9 - Zahl fuer Zahl der Bericht von J;
+`FE.pruefe` jetzt 0 Fehler, 0 Warnungen (J hatte die Warnung "Tick erwartet Clips, die fehlen").
 
 Abweichung von G4 mit Grund, **Clip 10 Spur**: Pose Bild 2 steht in Bild 45-52 still; G4 bewegt die Figur dort um zusammen rund -400.
 Dieses Tempo liegt jetzt in Bild 53-60, die Summe (47) ist die von G4. Der Auftritt bedient keine Schwelle des Ticks.
@@ -107,7 +109,7 @@ getroffen wird in Bild 28-30 bzw. 15-17. Biss: Kopf zurueck, Maul auf, Vorstoss,
 Bild 8), Schleudern, Bruellen mit wechselnden Armen. Drohen: Hocke, Gebruell, Pose Bild 2, Aufbaeumen mit beiden Armen.
 
 **Grenzen, gemessen (`s3_pruef.py`):** tiefster Punkt <= 25 unter dem Boden ausser Rennen Bild 11 (Pose Bild 1 selbst: linker Fuss 334
-unter der Ebene, so wurde J an Bild 1 gefittet) und Drohen Bild 33-38 (Schienbein streift auf dem Weg in die Hocke bis 190). Schweben bis
+unter der Ebene, so wurde J an Bild 1 gefittet) und Drohen Bild 33-38 (Schienbein streift auf dem Weg in die Hocke bis 242, Bild 35-38; je Bein eigenes Faltfenster, damit der Rueckweg nicht ueber den Boden schleift: Gleiten 245 -> 23). Schweben bis
 90 im Ausfall der Hiebe und im Aufbaeumen. Groesste Drehung je Bild: Gehen 12 Grad, Rennen bis 106 Grad (Fuss beim Abheben). Flucht und
 Sturz verlassen absichtlich den Boden.
 
@@ -142,3 +144,42 @@ rund 3600 lang, Haende bei z +-1590. Opfer-Bank EM30. Teile 10/13/18 = Brust / H
   Arrays von 27 auf 32 Knochen.
 - `tests/unit/test_birkin_szenen.c`: `test_bahnsteig` ohne EM30-Mutation, prueft den Sturz-Clip; `test_modellwahl` mit 5080/5081/5091/50A0.
 - `tests/integration/test_r41_birkin_pistole.cmake`: 32 Meshes, keine Mutation, Sturz (Clip 12) zwischen Rueckstoss und G5.
+
+## 6. Sichtbelege (fuer den Nutzer)
+
+**Kontaktblaetter je Clip** `stufe3/kontakt/clip_NN_name.png` (`stufe3/gen/s3_kontakt.py`, Offline-Buehne `form_buehne.py`, Textur und
+Gouraud ohne Raumlicht): Zeilen = rechte Seite, schraeg vorn links, schraeg hinten rechts; Spalten = Bilder des Clips; die Figur laeuft um
+ihre Spur weiter, die Kamera folgt, das Bodenraster steht in der Welt (Gleiten waere sichtbar). Marken unter dem Bild: T = Trefferbild,
+S<n> = Ton-Id. Flucht und Sturz mit fester Kamera.
+
+**Spiel, echtes Fenster** (`stufe3/gen/s3_spielfolge.sh`: eigene exe-Kopie, Renderer des Nutzers, kein AUTOSHOT, kein SOFTWARE_RENDER,
+ffmpeg gdigrab `hwnd=` auf das eigene Fenster, nur die eigene PID beendet; Blaetter mit `s3_folge_blatt.py`) unter `stufe3/spiel/`:
+
+| Blatt | Lauf | Inhalt |
+|---|---|---|
+| `5090_leon_1_auftritt_angriffe.png` | Debug-Sprung 5090, Leon laeuft in den Wagen, 10 s ohne Feuer | Auftritt (Drohen) im Gang, Gang, Doppelhieb, Nachhieb, Griff |
+| `5090_leon_2_rueckstoss_sturz_g5.png` | danach Zielen + Feuer gehalten (Pistole) | Rueckstoss-Szene, Sturz aus dem Wagenende in Cut 11 (Kamera von Bild 2), RE2-G5 kommt herein |
+| `5080_leon_1_fall_kampf.png` | Debug-Sprung 5080, Generator-Folge (Skript lauf1 aus Runde 30) | Riesenform faellt nach dem Generator herab, Auftritt, Angriffe an Leon |
+| `5080_leon_2_flucht.png` | Messhaken `RE15_BIRKIN_HP_AT=1100` (HP 0 statt langem Beschuss) | Flucht: abdrehen, Galopp aus dem Bild, danach Raumtext msg 3 wie nach dem Birkin-Tod |
+| `5091_elza_uebersicht.png`, `5081_elza_uebersicht.png` | dieselben Laeufe mit Elza (`RE15_TITLE_SHOT_CHAR=1`) | gleicher Ablauf |
+
+Gemessen in diesen Laeufen (birkin_dbg.log, state.log je Lauf unter `re15_port/build/s3_spiel/<name>/`): debug.log `Bahnsteig-Form: 32
+Meshes, 32 Knochen, 28 Clips` in allen vier Raeumen. 5090/5091: Auftritt 126 Bilder, Gang, Hieb 3 -> Doppel 4 -> Nachhieb 9, Griff (Leon
+fliegt), Treffer bis HP 0, Rueckstoss (Clip 8, HP 1), Sturz (Clip 12 bei x -6290 -> -15320), G5 (Typ 0x36). 5080/5081: nach der Generator-
+Folge (msg 0/1 F247/F500) Fall vom Dach, Auftritt, Rennen, Weichen, Griff, Biss, Hieb; Flucht (Sub 21, Clip 11) bei F1694, fort bei
+F1749, msg 3 bei F1751 (sub04 nach Flag (5,0x1c)). Elza 5081 und 5091 identisch.
+
+Beobachtet: In Cut 12 (Kamera vor Leon) ist die Form im Nahkampf meist nur angeschnitten (sie kommt von hinter der Kamera); im Gang
+(Cut 14/15) und am Generator ist sie ganz zu sehen. Die Form ist so gross, wie J nach den Screenshots ist (Hoehe im Gehen 3126); sie
+fuellt den Wagen fast aus.
+
+## 7. Offen
+
+- Sturz-Clip 12 nach dem ersten Spiellauf ueberarbeitet (stand auf der Schwanzspitze senkrecht, weil Pose Bild 2 schon 52 Grad aufgerichtet
+  ist): jetzt hoechstens 22 Grad dazu, Fall mit Fallkurve. Im Spiel neu zu sehen (Abschnitt 0).
+- Drohen Bild 33-38: Schienbein streift bis 242 unter den Boden (Bild 35-38) (Weg in die Hocke von Bild 2), Rennen Bild 11 = Pose Bild 1 mit Fuss 334
+  unter der Ebene (so an Bild 1 gefittet). Beides im Test als begruendete Ausnahme.
+- Die Flucht laeuft vom Spieler weg; die Wandklemme der Wurzel bleibt an, an einer Wand rutscht die Form seitlich weiter, bis der Sprung
+  sie aus dem Bild nimmt (5080 gemessen: von z -22553 bis -14139).
+- Integration in master und Abgleich mit Spur SF (r41/sichel: Mutation am Ende der Sichel-Form, Effekte) stehen aus; beide Zweige aendern
+  birkin_formen.c, main.c, test_birkin_szenen.c.

@@ -406,17 +406,18 @@ def drohen(bau):
     sp = sp2
     posen = mit_spur(bau.zeitleiste(n, keys), sp)
     # Beine ziehen auf dem Weg in die Hocke von Bild 2 und zurueck an (Knie beugt staerker), sonst streifen sie durch den Boden
-    for (f0, f1) in ((30, 44), (53, 67)):
-        for f in range(f0 + 1, f1):
-            w = (f - f0) / float(f1 - f0)
-            for kn, ver in ((24, 0.0), (26, 0.25)):
-                u = min(1.0, max(0.0, (w - ver * 0.5) / (1 - ver * 0.5)))
+    # je Bein eigenes Fenster: links zuerst, rechts versetzt; auf dem Rueckweg bis Bild 72, damit der rechte Fuss nicht ueber den
+    # Boden schleift (gemessen: Bild 63-67 rund 600 Einheiten Gleiten bei gemeinsamem Fenster)
+    for kn, fenster in ((24, ((30, 41), (53, 67))), (26, ((33, 44), (58, 72)))):
+        for (f0, f1) in fenster:
+            for f in range(f0 + 1, f1):
+                u = (f - f0) / float(f1 - f0)
                 r.dreh_lokal(posen[f], kn, S.rz(D(KNIE_FALTE * math.sin(math.pi * u))))
-    for f in list(range(31, a)) + list(range(b + 1, 67)):
+    for f in list(range(31, a)) + list(range(b + 1, 72)):
         posen[f]['glieder_frei'] = ('LH', 'RH')         # Beine im Uebergang: Bodenfreiheit auch am Knie
     fest = set(range(a, b + 1))
     um_b2 = (32, 62)
-    fuesse_auto(bau, posen, [s[0] for s in sp], glieder=('LH', 'RH'), fest=fest, frei={'LH': [(31, 66)], 'RH': [(31, 66)]})
+    fuesse_auto(bau, posen, [s[0] for s in sp], glieder=('LH', 'RH'), fest=fest, frei={'LH': [(31, 66)], 'RH': [(31, 72)]})
     fuesse_auto(bau, posen, [s[0] for s in sp], glieder=('LV', 'RV'), fest=fest,
                 frei={'LV': [um_b2, (72, 92)], 'RV': [um_b2, (72, 92)]})
     return posen, worte_g4(bau, C_DROHEN)
@@ -587,24 +588,30 @@ def sturz(bau):
         return p
 
     def kippen(t, fall):
+        # t 0..1 = Kippen nach hinten, fall = Wurzel sinkt (hinter dem Wagenende). Pose Bild 2 ist schon 52 Grad aufgerichtet
+        # (Huefte az -587); dazu hoechstens 22 Grad, sonst steht die Form senkrecht auf der Schwanzspitze.
         p = bau.p(r.bild2)
         p['wurzel'][1] = r.ruhe['wurzel'][1]
-        bau.koerper(p, nick=-(40 + 50 * t), hoch=600 - fall, roll=-14 * t)
-        bau.ruecken(p, nick=-16, gier=6)
+        bau.koerper(p, nick=-(4 + 18 * t), hoch=500 * min(1.0, t * 2) - fall, roll=-14 * t)
+        bau.ruecken(p, nick=-12 * t, gier=6)
         bau.kopf(p, nick=-20, kiefer=44, gier=-8 * t)
-        bau.schwanz(p, hebung=-30 * t, gier=8, phase=1.0)
-        bau.arm_frei(p, 'R', schulter=(-30, 0, -70 - 60 * t), ellbogen=-20)
-        bau.arm_frei(p, 'L', schulter=(35, 0, -60 - 55 * t), ellbogen=-30)
-        bau.bein_frei(p, 'L', huefte=(0, 0, -30 * t), knie=20 * t)
-        bau.bein_frei(p, 'R', huefte=(0, 0, -45 * t), knie=10 * t)
+        bau.schwanz(p, hebung=25 * t, gier=10, phase=1.0 + 2 * t)
+        bau.arm_frei(p, 'R', schulter=(-30, 0, -60 - 50 * t), ellbogen=-20)
+        bau.arm_frei(p, 'L', schulter=(35, 0, -50 - 45 * t), ellbogen=-30)
+        bau.bein_frei(p, 'L', huefte=(0, 0, -25 * t), knie=20 * t)
+        bau.bein_frei(p, 'R', huefte=(0, 0, -35 * t), knie=10 * t)
         return p
-    keys = [(0, exakt(r, r.bild2)), (8, wanken(1.0)), (16, wanken(1.1)), (26, kippen(0.2, 0)), (36, kippen(0.7, 1800)),
-            (n - 1, kippen(1.0, 6000))]
-    posen = bau.zeitleiste(n, keys)
+    # 0 Pose Bild 2, 0-16 wankt unter dem Beschuss zurueck, 16-30 kippt nach hinten ueber die Wagenkante,
+    # ab 30 faellt sie: Wurzel sinkt beschleunigt (Fallkurve 6000 * u^2), waehrend sie weiter nach hinten treibt.
+    keys = [(0, exakt(r, r.bild2)), (8, wanken(1.0)), (16, wanken(1.1)), (24, kippen(0.35, 0)), (30, kippen(0.6, 0))]
+    posen = bau.zeitleiste(31, keys)
+    for f in range(31, n):
+        u = (f - 30) / float(n - 31)
+        posen.append(kippen(0.6 + 0.4 * u, 6500 * u * u))
     for f, p in enumerate(posen):
         if f >= 24:
             p['boden_frei'] = False          # faellt rueckwaerts aus dem Wagen, darf unter y = 0
-    tempo = [0] * 3 + [-90] * 13 + [-160] * 12 + [-220] * (n - 28)
+    tempo = [0] * 3 + [-90] * 13 + [-150] * 14 + [-200] * (n - 30)
     acc = 0
     for f, p in enumerate(posen):
         acc += tempo[f]

@@ -578,7 +578,7 @@ static void bb_flucht(re15_actor_t *e, re15_actor_t *pl)
      * die Rate 32 des Lenkens ausserhalb des 824er-Kegels (@0x801018ec-908) */
     re15_enemy_steer_point(e, s_bb.flucht_x, s_bb.flucht_z, e->anim_frame < 16 ? 128 : 32);
     bb_spur(e, 0);
-    if (bb_anim(e, 0x200)) {                           /* Clip-Ende: fort */
+    if (bb_anim(e, 0x200)) {                           /* Gewicht 0x200 wie Auftritt/Griff (a3 @0x801015d4 / @0x801053b0); Clip-Ende: fort */
         re15_game_flag_set(5, 0x1c, 1);                /* @0x8011aecc (STAGE5), wie der Tod des 0x30 */
         bb_setze(e, BB_WEG);
         e->no_draw = 1;
@@ -777,8 +777,11 @@ void re15_bb_tick(int slot)
 void re15_bb_wartet(int slot)
 {
     re15_actor_t *e = &g_actors[slot];
+    /* Der Spawn-Aufruf der Wurzel (Sce_em_set @0x8004259c, Bit 0x20 geloescht) hat den Auftritt schon begonnen; er soll erst
+     * mit der Freigabe (Member_set 0x0C) von vorn laufen, nicht im Stehen verbraucht werden. */
+    if (e->state == 1 && e->sub_state_1 == BB_AUFTRITT) e->sub_state_2 = 0;
     if (e->motion != BB_C_STEHEN) { e->motion = BB_C_STEHEN; e->anim_frame = 0; e->anim_frac = 0; }
-    e->anim_blend_rate = 0x100; e->anim_flags &= (uint16_t)~0x80u;
+    e->anim_blend_rate = 0x100; e->anim_flags &= (uint16_t)~0x80u;   /* Gewicht 0x100 wie der Gang (a3 @0x80102a34) */
     (void)re15_r38_birkin_anim(e);
 }
 
@@ -796,7 +799,7 @@ int re15_bb_sturz_tick(int slot)
     re15_actor_t *e = &g_actors[slot];
     if (e->motion != BB_C_STURZ) re15_bb_sturz_start(slot);
     bb_spur(e, 0);
-    if (bb_anim(e, 0x200)) return 1;
+    if (bb_anim(e, 0x200)) return 1;                   /* Gewicht 0x200 wie das Zucken (a3 @0x80107244) */
     bb_bild_ton();
     bb_schieben(e);
     return 0;

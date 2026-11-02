@@ -49,7 +49,8 @@ def render(mo, tex, kf, lage, gier, kam, breite=640, hoehe=480):
     return ziel, m
 
 
-def clip_blatt(emd, tim, clip, ansichten, schritt, aus, titel='', mitlaufen=True, max_spalten=12, ab_bild=0, bis_bild=None):
+def clip_blatt(emd, tim, clip, ansichten, schritt, aus, titel='', mitlaufen=True, max_spalten=12, ab_bild=0, bis_bild=None,
+               kamera_folgt=True):
     mo = FE.modell(emd, tim)
     tex = FB.Textur(tim)
     f0, n = mo.clips[clip]
@@ -75,7 +76,8 @@ def clip_blatt(emd, tim, clip, ansichten, schritt, aus, titel='', mitlaufen=True
     for a in ansichten:
         zeile = []
         for i in bilder:
-            kam = S.kamera_seite(a, ziel_x=int(lage_x[i]) if mitlaufen else 0)
+            kam = S.kamera_seite(a, ziel_x=int(lage_x[i] if kamera_folgt else mitte) if mitlaufen else 0,
+                                 abstand=11000 if kamera_folgt else 15000)
             kf = mo.frames[f0 + i] & 0xFFF
             lage = (int(lage_x[i]) if mitlaufen else 0, 0, 0)
             r, m = render(mo, tex, kf, lage, 0, kam)
