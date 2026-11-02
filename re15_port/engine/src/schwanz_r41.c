@@ -13,12 +13,13 @@
 #define SW_J    (SW_N + 1)    /* Gelenke: Wurzel (Knochen 16) .. Spitze */
 
 /* Feder je Gelenk 1..7 zum Keyframe-Ziel (Anteil des Abstands je Takt): Wurzel steifer, Spitze weich -> Peitsche.
- * Mit Erhalt 0,88 der Geschwindigkeit und k ~0,1 schwingt die Kette mit ~20 Takten Periode: eine schlagartig
- * freigegebene Seitenlage kreuzt die Mitte nach ~5 Takten und liegt nach ~10 auf der anderen Seite (Video: Schwanz
- * h28 links oben, h30-h34 zwischen den Knien, ab h38 Bild-rechts). Erster Versuch k 0,34..0,11 / 0,85: Seitenwechsel
+ * Mit k ~0,1 schwingt die Kette mit ~20 Takten Periode: eine freigegebene Seitenlage kreuzt die Mitte nach wenigen
+ * Takten und liegt nach ~10 auf der anderen Seite (Video: Schwanz h28 links oben, h30-h34 zwischen den Knien, ab h38
+ * Bild-rechts). Erster Versuch k 0,34..0,11 / 0,85: Seitenwechsel
  * in 3 Takten (Unit-Test), zu hart. Keine Schwerkraft: die Keyframes haengen den Schwanz schon (Ruhe = Keyframe). */
 static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.08f, 0.07f };
-#define SW_ERHALT   0.88f     /* Geschwindigkeit, die je Takt erhalten bleibt */
+#define SW_ERHALT   0.80f     /* Geschwindigkeit, die je Takt erhalten bleibt (0,88: Lauf n8/n9 schwang die Spitze nach
+                                 * der Freigabe bis Bild-x 260-276 statt ~205-214 wie das Video h38-h48 -> 0,80) */
 #define SW_SPRUNG   3000.0f   /* Wurzel springt weiter (Teleport, Raumwechsel): Kette neu auf das Ziel */
 
 static struct {

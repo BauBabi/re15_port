@@ -290,5 +290,9 @@ Bau:
 | 32-34 | 172-186 | 212-241 | Port schwingt zu weit nach rechts (Vorgabe -900 bei h36 + Federueberschwung) |
 | 38-48 | 200-214 | 273 -> 219 | dito, ab h48 wieder am Video |
 | 58-70 | 211-238 | 222-238 | Bild-rechts bis zum Boden, wie Video |
+  Nachbesserung (Laeufe n9/n10): Vorgabe -900 bei h36 gestrichen (n9: Spitze h38 260), Erhalt 0,88 -> 0,80 (n10).
+  n10 (Endstand): h18-h28 148 -> 116 (Video 114-164), h30 162 (162-172), h32-h34 201-223 (172-186), h38-h44 250-239
+  (200-214, Rest-Ueberschwung ~40), h48-h70 226-239 (205-238). Unit-Test unveraendert gruen (Rest 4, Mitte nach 1,
+  Gegenseite nach 2 Takten bei schlagartiger Freigabe).
   Vorher (7f2ea1b7d) war der Schwanz h18-h28 hinter dem Koerper (nicht sichtbar) und hing ab h34 starr rechts.
   Bildfolge Video | vorher | nachher: SF_belege/nb1/schwanz_h18-h66_video_vorher_nachher.jpg (Lauf n7).

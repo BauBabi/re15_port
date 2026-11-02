@@ -198,9 +198,10 @@ static const int16_t k_birkin_gier[][2] = {
  * bis zum Boden. Birkin steht zur Kamera: Bild-links = seine rechte Seite. In Clip 0x0B liegt die Schwanzspitze auf der
  * linken Seite (Modell z +1500..+1850, B5..B28) -> Vorgabe 4000 nach rechts ab dem Aufprall (die Kette ist dann gestreckt,
  * Spitze gemessen z < -800, test_schwanz_r41; 3200 erreichte nur -721), ab h27 zurueck,
- * Mitte bei h30, kurz ueber die Ruhelage hinaus (Schwung), ab h46 frei. Werte in Einheiten an der Spitze. */
+ * Mitte bei h30, dann frei (die Feder schwingt selbst ueber). Werte in Einheiten an der Spitze. Lauf n8 mit zusaetzlicher
+ * Vorgabe -900 bei h36: Spitze h36-h44 bei Bild-x 261-276, Video 200-214 -> gestrichen. */
 static const int16_t k_schwanz_seite[][2] = {
-    { 11, 0 }, { 16, 4000 }, { 27, 4000 }, { 30, 0 }, { 36, -900 }, { 46, 0 } };
+    { 11, 0 }, { 16, 4000 }, { 27, 4000 }, { 30, 0 }, { 46, 0 } };
 
 /* ---- Runde 41 Spur H "hangar": Ausloeser, Riegel, Kamera ----------------------------------------
  * GEMESSEN (Dossier analysis/befunde_runde41/H_hangar.md 1.2): Cut 12 ist in ROOM50A0/50A1 (beide RDT bytegleich) NICHT
@@ -509,7 +510,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     const int h = s_h.t - BF_VORLAUF;                    /* Videobild */
     int32_t k[3];
     s_h.t++;
-    re15_schwanz_r41_seite(s_h.birkin, bf_tab(k_schwanz_seite, 6, h));
+    re15_schwanz_r41_seite(s_h.birkin, bf_tab(k_schwanz_seite, 5, h));
     /* --- Birkin: Clip, Gier ------------------------------------------------------------------------------------- */
     if (h < BF_H_GANG) {
         if (h < k_birkin_bild[0][0]) re15_r38_birkin_anim(b);             /* Stand, Clip 0 laeuft */
