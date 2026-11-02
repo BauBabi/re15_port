@@ -1,0 +1,5 @@
+Rueckwand vorher (Q_INNEN stumpf)    B/H   -   | V 0.799 (0.782..0.816) | Port-Senkrechte -1.3 (-1.8..-0.9) | Port-Waagrechte +4.2 (+3.8..+4.7) Grad
+Rueckwand nachher (Q_INNEN, PF)      B/H 0.460 | V 1.016 (0.996..1.037) | Port-Senkrechte -1.3 (-1.7..-1.0) | Port-Waagrechte +4.2 (+3.8..+4.7) Grad
+Rueckwand mit Ecken nach Horizont    B/H 0.516 | V 1.021 (1.002..1.041) | Port-Senkrechte -1.3 (-1.5..-1.0) | Port-Waagrechte +0.4 (-0.4..+1.1) Grad
+Fluegel vorher (Q_TUER stumpf)       B/H   -   | V 0.718 (0.706..0.731) | Port-Senkrechte +6.0 (+5.6..+6.5) | Port-Waagrechte -0.2 (-0.2..-0.2) Grad
+Fluegel nachher (Q_TUER, PF)         B/H 0.511 | V 1.017 (0.999..1.034) | Port-Senkrechte +6.0 (+5.7..+6.3) | Port-Waagrechte -0.2 (-0.2..-0.2) Grad
