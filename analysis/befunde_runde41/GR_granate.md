@@ -82,7 +82,7 @@ Handgranate (`RE15_GIVE=9:5`, `RE15_EQUIP=9`), TIEF-Wurf `MD0.6,MDA0.2,MD2.5,W5`
 Schaden = 200 = RE2-Granatwerfer-Zeile 9 Klammer 0 (`0x00a0c8c8` @0x800A41CC), seit Runde 34 E4 als Ersatz fuer die
 RE1.5-Zahl. Brad/dicker Zombie 0x11 hat RE2-HP 250 (`addiu v1,zero,250` @0x801008C8) -> ueberlebt jeden Wurf mit 50.
 Typ 0x16 bekommt sogar nur 80 (@0x800A4348) bei HP bis 143 -> ueberlebt meist ebenfalls.
-Bild: `GR_belege/port/p01_leon_1140_vorher.jpg` — die zwei dicken Zombies (weisse Hemden) stehen nach der Explosion
+Bild: `GR_belege/port/p01_leon_1140_wurf_vorher_nachher.jpg` (obere Zeile) — die zwei dicken Zombies (weisse Hemden) stehen nach der Explosion
 weiter und gehen auf Leon los; die zwei normalen fallen (Sturz bzw. Zerreissen, Rumpf ganz).
 
 ## 4. Staerke — Herleitung (PORT-WAHL)
@@ -141,3 +141,74 @@ ganzen Koerper weg und Reste in der Lache. Gebaut ist die Vereinigung, je Teil e
 * Nicht gebaut / nicht erfunden: das Verschwinden des Rumpfes (keine Quelle hat es; der Rumpf bleibt als Brocken in der
   Lache — Video 8:42.5 zeigt genau so einen Haufen). Die fliegenden RE2-Teile verschwinden nach dem zweiten
   Bodenkontakt (Kaskade @0x80028CA0), die RE1.5-Scherben nach 0x1d Bildern (@0x8001f208-214) — beides Original.
+
+## 6. Messung NACHHER (echte exe, Messkopie `re15_pc_r41GR_nachher.exe` = Stand dieses Commits)
+
+### 6.1 Leon, ROOM1140, echter TIEF-Wurf (gleiche Aufstellung wie §3, Lauf `v1_leon_nachher`)
+
+`state.log` nach dem Sprung, Explosion F119 (gr.log `resolver art=2 ... eingriffe=4`), `debug.log` (RE15_GR_LOG=1):
+
+| Slot | Typ | HP vor -> nach | F120 | F180 | debug.log |
+|---|---|---|---|---|---|
+| 2 | 0x10 | 50 -> -950 | Zustand 3, Sturz (mo 2) | 7 Leiche | `[gr] RE2 Slot 2 Typ 0x10 Zeile 9: ZERFETZT (HP -950)` |
+| 3 | 0x10 | 80 -> -920 | 3, Sturz (mo 1) | 7 | `... Slot 3 Typ 0x10 ... ZERFETZT (HP -920)` |
+| 4 | **0x11 dick** | **250 -> -750** | 3, Sturz | **7 Leiche** | `... Slot 4 Typ 0x11 ... ZERFETZT (HP -750)` |
+| 5 | **0x11 dick** | **250 -> -750** | 3, Sturz | **7 Leiche** | `... Slot 5 Typ 0x11 ... ZERFETZT (HP -750)` |
+
+Slot 1 (0x16, liegt seit Raumstart in seiner Lache, g=88) liegt ausserhalb von Band/Tor und bleibt unberuehrt —
+wie vorher. Bild (gdigrab, eigene PID): `GR_belege/port/p01_leon_1140_wurf_vorher_nachher.jpg` untere Zeile —
+Explosion, rote Scherben fliegen strahlenfoermig, Arme/Beine/Kopf fliegen weg, ab ~1 s liegen nur noch Rumpfe in
+grossen Lachen; die dicken Zombies stehen nicht mehr auf.
+
+### 6.2 Explosion direkt am dicken Zombie (Messhaken `RE15_FORCE_EXPLOSION=2@100:4`, Slot 4 = 0x11)
+
+`[harness] RE15_FORCE_EXPLOSION F100 art=2 slot=4 t=11 P=(-48,-500,-20878) Treffer=4`.
+Vorher (`v2_dick_vorher`): beide 0x11 bleiben stehen und packen Leon (Bilder #303-#324). Nachher (`v2_dick_nachher`):
+alle vier zerfetzt (vier `[gr]`-Zeilen, HP -950/-920/-750/-750). Bild: `GR_belege/port/p02_leon_1140_dicke_zombies_vorher_nachher.jpg`.
+
+### 6.3 Video gegen Port
+
+`GR_belege/vergleich_video_80_gegen_port_nachher.jpg`: oben 80%-Video B 3:35.9-3:36.8 (3010) und 8:42.1-8:43.5 (1070),
+unten Port nachher. Gleich: Einschlag als rote Wolke ueber dem ganzen Koerper, der Koerper ist danach nicht mehr als
+Figur da, es bleibt ein Rest in einer grossen Lache. Anders (benannt): im Port fliegen sichtbare Glieder und rote
+Scherben (RE2-Wurf + RE1.5-Scherben), das Video zeigt bei 320x240 nur Wolke und Brocken; der Rumpf bleibt im Port als
+erkennbarer Torso liegen (RE2-Stumpf-Mesh 16 nur mit RE2-Modellen; mit den RE1.5-Modellen der Nutzer-Sitzung der
+Original-Torso, Grenze (1) im Code-Kopf von 0x80108BEC).
+
+### 6.4 Elza
+
+* Gleicher Weg wie Leon: Waffen-Id 9 und Art 2, kein Figurenbezug im Schadens- und Todespfad (re15_damage.c,
+  enemy_ai_re2_zombie.c, zombiegore_r15.c lesen keine Figur); die Wurfbank PL04W09 hat dieselben Cliplaengen
+  (Runde 36 D §6.8).
+* Gemessen (echte exe, echte Spielerwahl Elza `RE15_PSELECT_AUTO_SWITCH`, `RE15_DEBUG_JUMP=1041@250`, Elza
+  (-23500,-1000) Blick 3259, Wurf ab Bild 60): `resolver art=2 P=(-24194,-729,-1190) r=2000 eingriffe=2`,
+  `[gr] RE2 Slot 1 Typ 0x16 ... ZERFETZT (HP -921)`, `[gr] RE2 Slot 2 Typ 0x16 ... ZERFETZT (HP -950)`, beide ab
+  Bild 180 Leiche (Zustand 7). Vorher derselbe Lauf: beide sterben (HP 79/50 - 80 = -1/-30) ohne Zerfetzung.
+  Die Granate zuendet hier ueber Elza selbst (Wandzelle im Wurfbild, Runde 35 N1.2 Wurfbild-Regel), kein Spielerzweig.
+  Bild `GR_belege/port/p03_elza_1041_wurf_vorher_nachher.jpg` + `p03_elza_1041_log_auszug.txt`: die Kamera dieses
+  Schnitts zeigt nur Elza am Rand und die roten Scherben (#294-#306), die Zombies liegen ausserhalb des Bildes —
+  als Bildbeleg schwach, als Logbeleg vollstaendig.
+* Dicker Zombie mit Elza: in keinem der geprueften Elza-Raeume ist beim Eintritt ein 0x11 erreichbar (Zensus
+  1001/1011/1021/1031/1041/1061/1071/1081/1091/10D1/10E1/1101/11E1/1201; 0x11 nur in 1021/1071/1091, dort im
+  Ruhezustand ohne Treffer, `RE15_FORCE_EXPLOSION ... Treffer=0`). Der dicke Zombie ist deshalb mit Leon belegt (§6.1,
+  §6.2) und fuer beide Figuren im Riegel (unit_r41_granate [1]/[2], figurunabhaengig).
+
+## 7. Tests
+
+* NEU `unit_r41_granate` (tests/unit/test_r41_granate.c, probes/r41_granate.cmake): [1] Schaden 1000 an
+  0x10/0x11/0x12/0x13/0x16/0x18 (dick 0x11 mit 250 -> -750, Tod), RE1.5-KI-Dicker (107 -> -893), Saeure/Brand bleiben
+  200, Nicht-Zombies unveraendert (Hund 300, Kraehe 60, Spinne 60, Gorilla/Kakerlake/Alligator 1000); [2] RE2-Gehirn,
+  sechs Typen (0x10/0x11/0x16 aus ROOM1140, 0x12/0x13/0x18 umgetypt): Zerfetzung genau einmal, Kopf/Oberarme/
+  Oberschenkel fliegen, Unterarme/Unterschenkel/Fuesse platzen, Haende weg, Sturz 0x80108530, Leiche, kein Kriecher,
+  mit nachgefahrenem Zeichengang (Teilstufe + Part-Matrix wie main.c) nach 150 Bildern nur Rumpf + Becken gezeichnet;
+  [3] RE1.5-Gehirn z_granate, Leiche ohne Kriecher.
+* NEU `unit_r41_granate_aus` (eigener Prozess, `RE15_KEIN_80PROZENT_GORE=1`): keine Zerfetzung (RE2 0x80108BEC wie
+  vorher), Schaden bleibt 1000.
+* Verhaltensbedingt angepasst (alte Pins der schwaecheren Granate / des Zerreissens): probe_r34_schaden 31/34/35/38/99,
+  probe_r34_reaktion 220/221/222, test_r35_granate 120-130/173/234, test_r36_granate 105, test_re2_gore PIN 8
+  (Latch vorbelegt, misst weiter den Russ allein), test_zombie_gore (w9 zerfetzt, w10 behaelt Oberkoerper/Kriecher),
+  integration_r35_granate und integration_r36_granate (Zerfetzung je getroffenem Slot ueber RE15_GR_LOG statt
+  "weggeschleudert > 600"; 0x11 mitgezaehlt).
+* Gelaufen: Zielauswahl 101 Tests (`granate|gore|zgore|re2z|ztear|teardeath|r34_schaden|r34_reaktion|zombie_death|
+  corpse|deathgetup|werfer|weapon_rows|dog|hund|crow|kraehe|spider|spinne`, ohne integration) 101/101 gruen;
+  integration_r34_granaten, integration_r35_granate, integration_r36_granate 3/3 gruen (528 s).
