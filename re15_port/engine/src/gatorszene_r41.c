@@ -571,9 +571,11 @@ static void tor_sperren(uint16_t room_id);   /* Abschnitt 5 */
 static int s_einst_slot;   /* Einstellung auf den Schluessel (Abschnitt "Schluessel nach dem Tod") */
 static int s_r1_cut = -1;  /* Nachbesserung 3: Cut im ersten R1-Takt (Abschnitt "Schluessel-Schnitt statt R1-Rueckschnitt") */
 static int s_r1_lief = 0;  /* Nachbesserung 3: R1 lief in DIESEM Raumbesuch (key_tod_pruefen) */
+static void fit_raumwechsel(void);   /* Runde 41 Spur G2 NB5 (Abnahme 3, Haken): Einpassung beim Laden jedes Raums leeren (Abschnitt EINPASSEN) */
 void re15_gatorszene_r41_install(uint16_t room_id)
 {
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
+    fit_raumwechsel();                                      /* NB5: vor jedem Ausstieg - der Stauch-Haken (pc_prop_world, obj_id 2) galt sonst im naechsten Raum weiter */
     s_einst_slot = -1;                                      /* Nachbesserung 2: Raumaufbau setzt die SCD-Faeden neu */
     s_r1_cut = -1; s_r1_lief = 0;                           /* Nachbesserung 3: kein R1 im neuen Raum */
     /* RE15_GATOR_ORIGINAL: die ganze Szene (Ankunft, Montage 2080, Water-Key-Tor) gehoert zum Bosskampf-Design; der
@@ -666,6 +668,11 @@ static struct {
     int     aus_ruhe;              /* dasselbe ohne Einpassung (Ruhelage) */
     int16_t beta;                  /* Rollwinkel (4096tel) */
 } s_fit;
+/* NB5 (Abnahme 3 "Code gelesen": s_fit wurde nur bei ga_start und Szenenstart geleert, nicht beim Raumwechsel - ein Raumwechsel mitten im Halten liess
+ * re15_gatorszene_r41_leiche_skala jeden Prop mit obj_id 2 im naechsten Raum gestaucht zeichnen). Pruefhaken der Gegenprobe (Riegel haken): 1 = ohne Leeren. */
+static int s_fit_reset_alt = 0;
+void re15_gatorszene_r41_fit_reset_alt_setzen(int an) { s_fit_reset_alt = an; }
+static void fit_raumwechsel(void) { if (!s_fit_reset_alt) memset(&s_fit, 0, sizeof s_fit); }
 static int s_nb1_alt;
 /* Nachbesserung 5 (M1/M3/M4): Messgroessen der Szene (nur RAM, Pruefhaken re15_gatorszene_r41_kampfbeginn/_kontakt/_fress_kamera). */
 static int      s_fress_cut = -1, s_fress_frontal = 0;    /* FINISHER-Schnitt der Spur B und sein Frontalwert (gr2_frontal-Form) */

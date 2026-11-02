@@ -181,6 +181,18 @@ int  re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl,
 int  re15_gr2_kreis_kamera(int cam, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *cx, int32_t *cz, int *vis);
 void re15_gr2_kreis_kamera_alt_setzen(int an);
 int  re15_gr2_trag_kreis(int slot, int32_t *cx, int32_t *cz);   /* Messhaken: laufender Kreis (1 Verfolgung, 2 Belagerung) und Mittelpunkt */
+void re15_gr2_karotte_alt_setzen(int an);   /* Pruefhaken NB5 (Gegenprobe Riegel bahn): 1 = Kreis-Karotte wie NB4 (gespiegelt) */
+int  re15_gr2_huelle_ausdehnung(const re15_actor_t *e, int clip, int32_t a[8]);   /* Messhaken NB5: Kopf/Kanister-Ausdehnung je Clip (Gator-Rahmen) */
+/* Runde 41 Spur G2 NB5 (Abnahme 3 M2a/M2b): Bahn der Belagerung (Stadion A/B/R/Drehsinn, gator_re2_r41.c BAHN DER BELAGERUNG). b[0..6] = ax, az, bx, bz, r, kdir,
+ * Umfang. _bahn: laufende Bahn des Slots; _plan_mess: Bahn fuer Kamera/Figur planen; _punkt_mess: Stuetzpunkt bei Bogenlaenge s; _naechst_mess: naechster
+ * Stuetzpunkt (Bogenlaenge) zu (x,z) und Abstand. _alt_setzen(1): Pruefhaken der Gegenprobe = Kreis wie NB4. */
+int  re15_gr2_bahn(int slot, int32_t b[7]);
+int  re15_gr2_bahn_plan_mess(int cam, const re15_actor_t *e, int32_t px, int32_t pz, int32_t b[7], int *vis);
+void re15_gr2_bahn_punkt_mess(const int32_t b[7], int32_t s, int32_t *x, int32_t *z);
+int32_t re15_gr2_bahn_naechst_mess(const int32_t b[7], int32_t x, int32_t z, int32_t *ab);
+void re15_gr2_bahn_alt_setzen(int an);
+int  re15_gr2_bahn_bewerten_mess(int cam, const re15_actor_t *e, const int32_t b[7], int *vis, int *kopf);
+int  re15_gr2_tr_kasten_mess(const re15_actor_t *e, int gier, int32_t k[4]);   /* Messhaken NB5: Wurzel-Kasten der Trag-Lenkung je Gier */
 int  re15_gr2_kreis_sicht(int cam, int32_t cx, int32_t cz);   /* Messhaken: Kreispunkte (von 16) im Bild der Kamera cam, -1 = keine Kamera */
 int  re15_gr2_trag_dash_erlaubt(int slot);
 int  re15_gr2_trag_ohne_annaeherung(void);   /* Messzeile: Etappen ohne Annaeherung (Riegel zaehlt sie) */   /* NB2: mit Kanister hoechstens ein Zonen-Dash je Tragen, keiner beim Umkreisen */   /* nx/nz = Endziel vor dem Kanten-Umweg */

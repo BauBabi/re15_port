@@ -30,7 +30,12 @@ endforeach()
 #                                     Wandreiben <= 30 Bilder, Stillstand hoechstens wie vor G2; Gegenprobe G2 vor NB1 (Pruefhaken): Wandreiben > 30
 #   unit_r41_gatorfix_kamera(_elza)  NB4 Punkt 2: mit Kanister - je Lage (Rampe, Leiter; die Plattform ist nicht betretbar) und Kamera der Figur (RVD-Zonen
 #                                     entlang des Wegs von Sueden/Norden) kreist er zu >= 70 % im Bild, wo die Kamera sichtbares Wasser zeigt; Gegenprobe NB3
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza kamera kamera_elza)
+#   unit_r41_gatorfix_haken(_elza)   NB5 (Abnahme 3, Haken): nach dem Raumaufbau des naechsten Raums staucht der Leichen-Haken keinen Prop mehr;
+#                                     Gegenprobe Pruefhaken _fit_reset_alt_setzen(1): Haken bleibt an
+#   unit_r41_gatorfix_bahn(_elza)    NB5 (Abnahme 3 M2a/M2b): Belagerung mit Kanister je Rampenlage und Kamera - die GEFAHRENE Bahn folgt dem Plan (Abstand,
+#                                     Umlaufzeit, Schwerpunkt) und der Alligator ist im Bild erkennbar (Silhouette >= 50 % der Verfolgung an der Leiter in Cut 0);
+#                                     Gegenprobe Stand NB4 (Kreis R 2000, gespiegelte Karotte): rot
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza kamera kamera_elza haken haken_elza bahn bahn_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)

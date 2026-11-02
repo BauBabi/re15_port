@@ -226,4 +226,6 @@ int  re15_gatorszene_r41_leiche_skala(int slot, int32_t *s_q12);
 int  re15_gatorszene_r41_leiche_matrix(int32_t m[9], int32_t t[3]);
 int  re15_gatorszene_r41_leiche_fit(int *a16, int32_t *s_q12, int32_t d[3], int *aus, int *aus_ruhe, int *beta);
 void re15_gatorszene_r41_m4_alt_setzen(int an);
+/* NB5 (Abnahme 3, Haken): Pruefhaken der Gegenprobe - 1 = Einpassung beim Raumaufbau NICHT leeren (Stand vor NB5). */
+void re15_gatorszene_r41_fit_reset_alt_setzen(int an);
 #endif /* RE15_GATORSZENE_R41_H */

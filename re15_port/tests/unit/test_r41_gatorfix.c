@@ -14,6 +14,7 @@
  */
 #define main gsz_haupt
 #include <math.h>
+#include <time.h>
 #include "test_r41_gatorszene.c"
 #undef main
 
@@ -495,6 +496,40 @@ static void teil_maul_riegel(int elza)
     PRUEF(m4.sprung == 0 && m4.ruhe_vor_wurf == 1, "Einpassung glatt (%d Spruenge ueber 2/16 Roll, 0,1 Skala, 80/100 Versatz je Bild) und vor dem Wurf in Ruhelage (%d)", m4.sprung, m4.ruhe_vor_wurf);
     PRUEF(b_alt >= 40 && n_alt >= 50, "Gegenprobe Leiche wie vor G2: %d Scheitel ausserhalb (rot ohne den Bau)", n_alt);
     PRUEF(n_nb1 > 0, "Gegenprobe Stand vor NB1 (ohne Vorgriff): %d Scheitel ausserhalb im Biss (rot ohne den Bau)", n_nb1);
+}
+
+/* ---- Riegel NB5 (Abnahme 3, Haken): der Stauch-Haken der Leiche (re15_gatorszene_r41_leiche_skala, pc_prop_world, obj_id 2) gilt nach einem Raumwechsel
+ *      nicht weiter. Szene bis zum ersten gestauchten Haltebild, dann der Raumaufbau des naechsten Raums (re15_gatorszene_r41_install wie scd_room_setup.c)
+ *      - danach meldet der Haken fuer den Leichen-Slot und jeden Slot nichts mehr. Gegenprobe Pruefhaken _fit_reset_alt_setzen(1): Haken bleibt an. ---- */
+static int g2_haken_lauf(int elza, int alt, int *bild, int32_t *sq)
+{
+    re15_gatorszene_r41_fit_reset_alt_setzen(alt);
+    re15_actor_t *g = g2_szene_start(elza);
+    int k = -1, an = 0;
+    *bild = -1; *sq = 4096;
+    for (int f = 0; g && f < 2000 && re15_gatorszene_r41_zustand() != RE15_GSZ_KAMPF; f++) {
+        frame(0, 0);
+        k = prop_von(RE15_GSZ_LEICHE_OBJ);
+        int32_t s = 4096;
+        if (k >= 0 && re15_gatorszene_r41_leiche_skala(k, &s)) { *bild = f; *sq = s; break; }
+    }
+    if (*bild >= 0) {
+        re15_gatorszene_r41_install((uint16_t)(0x2080 + elza));   /* Raumaufbau 2080 (Leiter hinauf), wie scd_room_setup.c */
+        for (int i = 0; i < RE15_SCD_MAX_PROPS; i++) { int32_t s = 4096; if (re15_gatorszene_r41_leiche_skala(i, &s)) an = 1; }
+    }
+    re15_gatorszene_r41_fit_reset_alt_setzen(0);
+    return an;
+}
+static void teil_haken(int elza)
+{
+    printf("== haken%s (NB5) ==\n", elza ? "_elza" : "");
+    int b = -1, b_alt = -1; int32_t s = 0, s_alt = 0;
+    const int an = g2_haken_lauf(elza, 0, &b, &s);
+    const int an_alt = g2_haken_lauf(elza, 1, &b_alt, &s_alt);
+    printf("    gestaucht ab Szenenbild %d (Skala %d/4096); nach dem Raumaufbau 2080 Haken an: %d (Gegenprobe ohne Leeren: Bild %d, Haken an %d)\n", b, (int)s, an, b_alt, an_alt);
+    PRUEF(b >= 0 && s < 4096, "Szene erreicht ein gestauchtes Haltebild (Bild %d, Skala %d)", b, (int)s);
+    PRUEF(an == 0, "nach dem Raumwechsel staucht der Haken keinen Prop mehr (%d)", an);
+    PRUEF(b_alt >= 0 && an_alt == 1, "Gegenprobe ohne Leeren beim Raumaufbau: Haken bleibt an (%d) (rot ohne den Bau)", an_alt);
 }
 
 /* NB1 (M2): im Bild der laufenden Einstellung (Kino-Balken 0..24 / 216..240, render_pc.c): Schnauzenspitze (Part-6-x 2500) und Bildkasten der Leiche */
@@ -1414,6 +1449,8 @@ static void teil_klemm(int elza)
  * kommt in 30 Bildern netto < 300 voran, Kopf (Wurzel + 4200 voraus) > 2500 von der Figur, Phase Verfolgung/Belagerung; WANDREIBEN = Stillstand
  * und die Kopf-Klemme griff in den letzten 30 Bildern (re15_gr2_kk_aktiv). Gegenproben ueber re15_gr2_kk_ziel_alt_setzen: 1 = vor G2, 2 = G2 vor NB1. */
 #define G2_FZ_BILDER 900   /* NB2: 30 s je Lage (Schleifen der Abnahme 2: Periode 266-440 Bilder) */
+/* NB5: Lauflaenge je Lage (Riegel kamera 1800: die Anfahrt zur Bahn der Belagerung ueber den Westkanal dauert bis ~640 Bilder, Riegel bahn) */
+static int s_fz_bilder = G2_FZ_BILDER;
 typedef struct { const char *name; int32_t x, y, z; } g2_lage_t;
 static const g2_lage_t k_fuzz[] = {
     { "W1", -8400, 0, -25000 }, { "W2", -8400, 0, -20000 }, { "W3", -8400, 0, -15000 }, { "W4", -8400, 0, -10000 },
@@ -1468,7 +1505,7 @@ static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, 
     int32_t hist[30][2], h60[60][2]; uint8_t kk[30], bs60[60]; int hn = 0, still_lauf = 0, rub_lauf = 0;
     memset(bs60, 0, sizeof bs60);
     int32_t schritt[60]; for (int k = 0; k < 60; k++) schritt[k] = 1000;
-    for (int t = 0; t < G2_FZ_BILDER && re15_gr2_traegt(); t++) {
+    for (int t = 0; t < s_fz_bilder && re15_gr2_traegt(); t++) {
         pl->x = L->x; pl->y = L->y; pl->z = L->z; pl->hp = 100; pl->hit_react = 0;
         if (s_fz_cam >= 0) { g_scd.cam_id = (uint8_t)s_fz_cam;   /* NB4: die Figur steht in dieser Kamera */
             re15_collision_set_band(re15_collision_band_from_y(L->y)); }   /* NB4: Kollisionsband der Lage wie nach dem Klettern (climb_common.c @0x800384bc) - sonst
@@ -1484,6 +1521,14 @@ static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, 
         hist[hn % 30][0] = g->x; hist[hn % 30][1] = g->z; kk[hn % 30] = (uint8_t)re15_gr2_kk_aktiv(); hn++;
         const int ph = re15_gator_boss_phase(g);
         const int th = g->rot_y & 0xfff;
+        if (getenv("G2_BAHN")) {   /* NB5: Bahn je Bild (Werkzeug, Auswertung scratchpad) */
+            static FILE *bf = NULL; if (!bf) bf = fopen(getenv("G2_BAHN"), "a");
+            int32_t kx = 0, kz = 0; const int kr = re15_gr2_trag_kreis((int)(g - g_actors), &kx, &kz);
+            int32_t bb[7] = { 0, 0, 0, 0, 0, 0, 0 }, ab = -1, sb = -1; const int bo = re15_gr2_bahn((int)(g - g_actors), bb);
+            if (bo) sb = re15_gr2_bahn_naechst_mess(bb, g->x, g->z, &ab);
+            if (bf) fprintf(bf, "%s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", L->name, m->cam, t, g->x, g->z, th, ph, (int)g->motion, re15_gr2_trag_modus((int)(g - g_actors)), re15_gr2_kk_aktiv(), kr, kx, kz,
+                            bo, bb[0], bb[1], bb[2], bb[3], bb[4], bb[5], bb[6], sb, ab);
+        }
         if (getenv("G2_SPUR") && t % 60 == 0) printf("        %s t%d Gator (%d,%d) Gier %d Phase %d Trag %d Clip %d Cut %d Figur (%d,%d,%d) Band %d\n", L->name, t, g->x, g->z, th, ph, re15_gr2_trag_modus((int)(g - g_actors)), (int)g->motion, (int)g_scd.cam_id, pl->x, pl->y, pl->z, re15_collision_debug_band());
         const int64_t hx = (int64_t)g->x + ((4200LL * re15_cos_q12(th)) >> 12) - L->x, hz = (int64_t)g->z - ((4200LL * re15_sin_q12(th)) >> 12) - L->z;
         const int32_t kopf = (int32_t)re15_squareroot0((uint32_t)(hx * hx + hz * hz > 0xffffffffLL ? 0xffffffffLL : hx * hx + hz * hz));
@@ -1501,10 +1546,10 @@ static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, 
         bs60[(hn - 1) % 60] = (uint8_t)am_spieler;
         int biss_im_fenster = 0;
         for (int k = 0; k < 60; k++) if (bs60[k]) biss_im_fenster = 1;
-        if (t >= G2_FZ_BILDER / 2) { m->kopf_summe += kopf; m->n2++; m->kreis2 += re15_gr2_trag_modus((int)(g - g_actors)) == 3; m->biss2 += am_spieler; m->phase5 += ph == 5;
+        if (t >= s_fz_bilder / 2) { m->kopf_summe += kopf; m->n2++; m->kreis2 += re15_gr2_trag_modus((int)(g - g_actors)) == 3; m->biss2 += am_spieler; m->phase5 += ph == 5;
             int32_t kx = 0, kz = 0;   /* NB4: Kreispunkte (von 16) des laufenden Kreises im Bild der Spielerkamera, kleinster Wert */
             if (m->cam >= 0 && re15_gr2_trag_kreis((int)(g - g_actors), &kx, &kz)) { const int v = re15_gr2_kreis_sicht(m->cam, kx, kz); if (m->kreis_vis_min < 0 || v < m->kreis_vis_min) m->kreis_vis_min = v; } }   /* NB3: Mittel ueber die zweite Haelfte (angekommen, Patrouille) */
-        if (m->cam >= 0 && t >= G2_FZ_BILDER / 2) { const int32_t w[3] = { g->x, -1200, g->z }; int sx = 0, sy = 0; if (re15_gr2_im_bild_cut(m->cam, w, &sx, &sy) && sy >= 24 && sy < 216) m->im_bild++; }
+        if (m->cam >= 0 && t >= s_fz_bilder / 2) { const int32_t w[3] = { g->x, -1200, g->z }; int sx = 0, sy = 0; if (re15_gr2_im_bild_cut(m->cam, w, &sx, &sy) && sy >= 24 && sy < 216) m->im_bild++; }
         if (fenster2 && !biss_im_fenster) { m->fenster2++; if (zeige) printf("        %s t%d FENSTER Gator (%d,%d) Gier %d Clip %d Phase %d Trag %d\n", L->name, t, g->x, g->z, th, (int)g->motion, ph, re15_gr2_trag_modus((int)(g - g_actors))); }
         if (fenster2 && !biss_im_fenster && re15_gr2_kk_aktiv()) rub = 1;   /* NB2: Wandreiben = Kopf-Klemme ohne Weg (2-s-Fenster) */
         if (rub) { rub_lauf++; if (rub_lauf > m->rub_max) m->rub_max = rub_lauf; } else rub_lauf = 0;
@@ -1572,6 +1617,7 @@ static int g2_lage_kamera(const g2_lage_t *L, int von)
 static void teil_kamera(int elza)
 {
     printf("== kamera%s (NB4 Punkt 2) ==\n", elza ? "_elza" : "");
+    s_fz_bilder = 2 * G2_FZ_BILDER;   /* NB5: zweite Haelfte = nach der Anfahrt zur Bahn (s. s_fz_bilder) */
     const int zeige = getenv("G2_ZEIGE") != NULL;
     const char *nur = getenv("G2_FZ_NUR");
     const int nl = (int)(sizeof k_kam / sizeof k_kam[0]);
@@ -1612,12 +1658,189 @@ static void teil_kamera(int elza)
         }
     }
     re15_gr2_kreis_kamera_alt_setzen(0);
+    s_fz_bilder = G2_FZ_BILDER;
     printf("    neu: %d Laeufe, %d mit sichtbarem Wasser, davon %d >= %d %% (kleinster %d %% bei %s), %d ohne sichtbares Wasser; Gegenprobe NB3: %d von %d unter %d %%\n",
            laeufe, ok + schlecht, ok, G2_KAM_MIN, min_neu, min_wo, ohne, alt_unter, alt_laeufe, G2_KAM_MIN);
     PRUEF(laeufe >= 30 && schlecht == 0, "Belagerung mit Kanister: in jeder Lage und Kamera mit sichtbarem Wasser kreist er zu >= %d %% im Bild (%d von %d, kleinster %d %% bei %s)",
           G2_KAM_MIN, ok, ok + schlecht, min_neu, min_wo);
     PRUEF(fenster == 0, "kein 2-s-Fenster ohne Fortschritt (ausser Biss am Spieler): %d", fenster);
     PRUEF(alt_unter > 0, "Gegenprobe Mittelpunkt wie NB3: %d von %d Lagen/Kameras unter %d %% oder Kreis unter 12/16 im Bild (rot ohne den Bau)", alt_unter, alt_laeufe, G2_KAM_MIN);
+}
+/* ---- Riegel NB5 (Abnahme 3 M2a/M2b): die GEFAHRENE Bahn der Belagerung gegen den Plan, und die Erkennbarkeit im Bild der Spielerkamera ----
+ * Je Rampenlage (k_kam) und Kamera des Wegs (Sued Cut 2 / Nord Cut 3) G2_BAHN_BILDER Bilder Belagerung mit dem Kanister (g2_fuzz_lage). Ab dem ersten Bild
+ * auf der Bahn (Abstand zur geplanten Bahn < 200): Abstand je Bild (p95, max), Fortschritt der Bogenlaenge (Runden, Umlaufzeit gegen Plan = Umfang /
+ * Median-Schritt), Schwerpunkt gegen Plan-Mitte, Kopf-Klemme. ERKENNBAR: Silhouette des Alligators im Bild der Spielerkamera = Vereinigung der projizierten
+ * konvexen Huellen je Part (EMD-Scheitel, Pose dieses Bildes, Kamera wie der Zeichner, Kino-Balken 24..216), in Bildpunkten (320 x 192); Bezug = derselbe
+ * Wert fuer die Verfolgung an der Leiter in Cut 0 (Abnahme 3: dort klar erkennbar, bewegte Flaeche 12,8 %). Gegenprobe Stand NB4 (Pruefhaken
+ * re15_gr2_bahn_alt_setzen + re15_gr2_karotte_alt_setzen): Kreis (3450,-9150) R 2000 wird nicht gefahren, in Cut 2 klein. */
+#define G2_BAHN_BILDER 1800
+static int gr2_test_pkt_cmp(const void *x, const void *y)
+{
+    const int32_t *a = (const int32_t *)x, *b = (const int32_t *)y;
+    return a[0] != b[0] ? (a[0] < b[0] ? -1 : 1) : (a[1] < b[1] ? -1 : a[1] > b[1]);
+}
+static int g2_cmp_dbl(const double *a, const double *b) { return *a < *b ? -1 : *a > *b; }
+static uint8_t s_sil[240][320];
+static int g2_sil_flaeche(re15_actor_t *g, int cam)
+{
+    re15_enemy_bank_t *gb = re15_enemy_find(0x23u);
+    re15_camera_view_t v;
+    if (!gb || cam < 0 || cam >= g_room_rdt.cut_count || re15_camera_build_view(&g_room_rdt.cuts[cam], &v) != 0) return -1;
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!g2_pose(g, ps)) return -1;
+    static int32_t pv[4096][3];
+    memset(s_sil, 0, sizeof s_sil);
+    const int32_t sk = g->render_scale_q12 ? g->render_scale_q12 : 4096;
+    const int np = gb->skel.bone_count < gb->md1.mesh_count ? gb->skel.bone_count : gb->md1.mesh_count;
+    for (int part = 0; part < np; part++) {
+        int32_t rb[9], pb[3]; g2_part_welt(g, &ps[part], rb, pb);
+        const int n = g2_scheitel(&gb->md1, part, pv, 4096);
+        static int32_t q[4096][2]; int m = 0;
+        for (int i = 0; i < n; i++) {
+            const int32_t vv[3] = { g2_q12(pv[i][0], sk), g2_q12(pv[i][1], sk), g2_q12(pv[i][2], sk) };
+            const int64_t wx = pb[0] + (((int64_t)rb[0] * vv[0] + (int64_t)rb[1] * vv[1] + (int64_t)rb[2] * vv[2]) >> 12);
+            const int64_t wy = pb[1] + (((int64_t)rb[3] * vv[0] + (int64_t)rb[4] * vv[1] + (int64_t)rb[5] * vv[2]) >> 12);
+            const int64_t wz = pb[2] + (((int64_t)rb[6] * vv[0] + (int64_t)rb[7] * vv[1] + (int64_t)rb[8] * vv[2]) >> 12);
+            const int32_t vx = (int32_t)((v.rot[0]*wx + v.rot[1]*wy + v.rot[2]*wz) >> 12) + v.trans[0];
+            const int32_t vy = (int32_t)((v.rot[3]*wx + v.rot[4]*wy + v.rot[5]*wz) >> 12) + v.trans[1];
+            const int32_t vz = (int32_t)((v.rot[6]*wx + v.rot[7]*wy + v.rot[8]*wz) >> 12) + v.trans[2];
+            if (vz <= 16) continue;
+            q[m][0] = 160 + (int32_t)(((int64_t)vx * v.fov_screen_dist) / vz); q[m][1] = 120 + (int32_t)(((int64_t)vy * v.fov_screen_dist) / vz); m++;
+        }
+        if (m < 3) continue;
+        /* konvexe Huelle (monotone Kette) und Zeilenfuellung */
+        qsort(q, (size_t)m, sizeof q[0], gr2_test_pkt_cmp);
+        static int32_t h[8192][2]; int k = 0;
+        for (int i = 0; i < m; i++) { while (k >= 2 && (int64_t)(h[k-1][0]-h[k-2][0])*(q[i][1]-h[k-2][1]) - (int64_t)(h[k-1][1]-h[k-2][1])*(q[i][0]-h[k-2][0]) <= 0) k--; h[k][0] = q[i][0]; h[k][1] = q[i][1]; k++; }
+        for (int i = m - 2, u = k + 1; i >= 0; i--) { while (k >= u && (int64_t)(h[k-1][0]-h[k-2][0])*(q[i][1]-h[k-2][1]) - (int64_t)(h[k-1][1]-h[k-2][1])*(q[i][0]-h[k-2][0]) <= 0) k--; h[k][0] = q[i][0]; h[k][1] = q[i][1]; k++; }
+        if (k > 1) k--;
+        int32_t y0 = 0x7fffffff, y1 = -0x7fffffff;
+        for (int i = 0; i < k; i++) { if (h[i][1] < y0) y0 = h[i][1]; if (h[i][1] > y1) y1 = h[i][1]; }
+        if (y0 < 24) y0 = 24;
+        if (y1 > 215) y1 = 215;
+        for (int32_t y = y0; y <= y1; y++) {
+            double xa = 1e9, xb = -1e9;
+            for (int i = 0; i < k; i++) {
+                const int32_t *a = h[i], *b = h[(i + 1) % k];
+                if ((a[1] <= y && b[1] >= y) || (b[1] <= y && a[1] >= y)) {
+                    double x = a[1] == b[1] ? a[0] : a[0] + (double)(b[0] - a[0]) * (y - a[1]) / (double)(b[1] - a[1]);
+                    if (a[1] == b[1]) { if (b[0] < xa) xa = b[0]; if (b[0] > xb) xb = b[0]; }
+                    if (x < xa) xa = x;
+                    if (x > xb) xb = x;
+                }
+            }
+            for (int x = xa < 0 ? 0 : (int)ceil(xa); x <= (xb > 319 ? 319 : (int)floor(xb)); x++) s_sil[y][x] = 1;
+        }
+    }
+    int a = 0;
+    for (int y = 24; y < 216; y++) for (int x = 0; x < 320; x++) a += s_sil[y][x];
+    return a;
+}
+typedef struct { int auf, bilder, f_an; double ab_p95, ab_max, runden, umlauf, umlauf_plan, sx, sz, mx, mz; int kk; int sil_med, sil_n, sil_sicht; int32_t b[7]; } g2_bahn_m_t;
+static int g2_cmp_int(const void *a, const void *b) { return *(const int *)a - *(const int *)b; }
+static void g2_bahn_lauf(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, int cam, g2_bahn_m_t *o, int alt)
+{
+    memset(o, 0, sizeof *o); o->f_an = -1;
+    const int slot = (int)(g - g_actors);
+    static int ab[G2_BAHN_BILDER], sil[G2_BAHN_BILDER]; static int32_t xs[G2_BAHN_BILDER], zs[G2_BAHN_BILDER], ss[G2_BAHN_BILDER];
+    int n = 0, ns = 0;
+    int bi = 0; int64_t bd = -1;
+    for (int i = 0; i < 5; i++) { const int64_t dx = k_fz_start[i][0] - L->x, dz = k_fz_start[i][1] - L->z; if (dx * dx + dz * dz > bd) { bd = dx * dx + dz * dz; bi = i; } }
+    g->x = k_fz_start[bi][0]; g->z = k_fz_start[bi][1];
+    for (int t = 0; t < G2_BAHN_BILDER && re15_gr2_traegt(); t++) {
+        pl->x = L->x; pl->y = L->y; pl->z = L->z; pl->hp = 100; pl->hit_react = 0;
+        g_scd.cam_id = (uint8_t)cam; re15_collision_set_band(re15_collision_band_from_y(L->y));
+        frame(0, 0);
+        int32_t b[7], d = 0, s = 0, kx = 0, kz = 0;
+        if (!alt) {
+            if (!re15_gr2_bahn(slot, b)) continue;
+            s = re15_gr2_bahn_naechst_mess(b, g->x, g->z, &d);
+            if (o->f_an < 0 && d < 200) { o->f_an = t; memcpy(o->b, b, sizeof b); }   /* angekommen: Abstand zur Bahn < 200 */
+        } else {                                           /* Gegenprobe NB4: Abstand zum geplanten Kreis R 2000 */
+            if (re15_gr2_trag_kreis(slot, &kx, &kz) != 2) continue;
+            const double dd = hypot((double)g->x - kx, (double)g->z - kz);
+            d = (int32_t)fabs(dd - 2000); s = (int32_t)(atan2((double)g->z - kz, (double)g->x - kx) * 2000);
+            if (o->f_an < 0 && d < 2000) { o->f_an = t; o->b[0] = o->b[2] = kx; o->b[1] = o->b[3] = kz; o->b[4] = 2000; o->b[6] = (int32_t)(2 * 3.14159265 * 2000); }
+        }
+        if (o->f_an < 0) continue;
+        ab[n] = d; xs[n] = g->x; zs[n] = g->z; ss[n] = s; o->kk += re15_gr2_kk_aktiv(); n++;
+        if ((t & 3) == 0) { const int a = g2_sil_flaeche(g, cam); if (a >= 0) { sil[ns++] = a; o->sil_sicht += a > 0; } }
+    }
+    o->bilder = n; o->sil_n = ns;
+    if (n < 30) return;
+    int *tmp = (int *)malloc(sizeof(int) * (size_t)n); memcpy(tmp, ab, sizeof(int) * (size_t)n); qsort(tmp, (size_t)n, sizeof(int), g2_cmp_int);
+    o->ab_p95 = tmp[(n * 95) / 100]; o->ab_max = tmp[n - 1]; free(tmp);
+    double prog = 0, step_sum = 0; static double steps[G2_BAHN_BILDER];
+    const double U = o->b[6];
+    for (int i = 1; i < n; i++) {
+        double ds = ss[i] - ss[i-1];
+        if (alt) { ds = ds / 2000.0; ds = fmod(ds + 3.14159265 * 3, 2 * 3.14159265) - 3.14159265; ds *= 2000; }
+        else ds = fmod(ds + U * 1.5, U) - U / 2;
+        prog += ds;
+        steps[i-1] = hypot((double)xs[i] - xs[i-1], (double)zs[i] - zs[i-1]); step_sum += steps[i-1];
+    }
+    qsort(steps, (size_t)(n - 1), sizeof(double), (int (*)(const void *, const void *))g2_cmp_dbl);
+    const double v = steps[(n - 1) / 2];
+    o->runden = fabs(prog) / U; o->umlauf = o->runden > 0 ? (n - 1) / o->runden : 1e9; o->umlauf_plan = v > 0 ? U / v : 1e9;
+    for (int i = 0; i < n; i++) { o->sx += xs[i]; o->sz += zs[i]; }
+    o->sx /= n; o->sz /= n; o->mx = (o->b[0] + o->b[2]) / 2.0; o->mz = (o->b[1] + o->b[3]) / 2.0;
+    if (ns > 0) { qsort(sil, (size_t)ns, sizeof(int), g2_cmp_int); o->sil_med = sil[ns / 2]; }
+}
+static int s_bahn_ref_sil = -1;   /* Bezug: Silhouette der Verfolgung an der Leiter (Cut 0), Median */
+static void teil_bahn(int elza)
+{
+    printf("== bahn%s (NB5 M2a/M2b) ==\n", elza ? "_elza" : "");
+    const char *nur = getenv("G2_FZ_NUR");
+    const int nl = (int)(sizeof k_kam / sizeof k_kam[0]);
+    int laeufe = 0, ok_bahn = 0, ok_sicht = 0, alt_rot = 0, alt_n = 0, ref = -1;
+    double schlecht_ab = 0, min_sicht_q = 1e9; const char *wo_ab = "-", *wo_sicht = "-";
+    for (int alt = 0; alt <= 1; alt++) {
+        re15_gr2_bahn_alt_setzen(alt); re15_gr2_karotte_alt_setzen(alt);
+        re15_actor_t *g = szene_bis_kampf(elza);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    alt %d: kein Tragen\n", alt); continue; }
+        if (!alt) {                                        /* Bezug: Verfolgung an der Leiter, Cut 0, zweite Haelfte von G2_FZ_BILDER */
+            const g2_lage_t *Lt = &k_kam[nl - 2];
+            int sil[G2_FZ_BILDER]; int ns = 0;
+            for (int t = 0; t < G2_FZ_BILDER && re15_gr2_traegt(); t++) {
+                pl->x = Lt->x; pl->y = Lt->y; pl->z = Lt->z; pl->hp = 100; pl->hit_react = 0; g_scd.cam_id = 0;
+                frame(0, 0);
+                if (t >= G2_FZ_BILDER / 2 && (t & 3) == 0) { const int a = g2_sil_flaeche(g, 0); if (a >= 0) sil[ns++] = a; }
+            }
+            if (ns) { qsort(sil, (size_t)ns, sizeof(int), g2_cmp_int); ref = sil[ns / 2]; }
+            s_bahn_ref_sil = ref;
+            printf("    Bezug Verfolgung an der Leiter (Cut 0): Silhouette Median %d Bildpunkte (%d Bilder gemessen)\n", ref, ns);
+            if (!re15_gr2_traegt() && !g2_kanister_ins_maul(g, pl)) break;
+        }
+        for (int i = 0; i < nl - 2; i++) {
+            if (nur && strcmp(nur, k_kam[i].name)) continue;
+            for (int von = 0; von < 2; von++) {
+                const int cam = g2_lage_kamera(&k_kam[i], von);
+                if (cam < 0) continue;
+                if (!re15_gr2_traegt() && !g2_kanister_ins_maul(g, pl)) break;
+                g2_bahn_m_t m; g2_bahn_lauf(g, pl, &k_kam[i], cam, &m, alt);
+                const double q = ref > 0 ? (double)m.sil_med / ref : 0;
+                printf("    %s %-8s %s Cut %d: Plan A (%d,%d) B (%d,%d) R %d Umfang %d | auf der Bahn ab Bild %d, %d Bilder: Abstand p95 %.0f max %.0f, %.2f Runden, Umlauf %.0f Bilder (Plan %.0f), "
+                       "Schwerpunkt (%.0f,%.0f) Plan-Mitte (%.0f,%.0f), Klemme %d Bilder | Silhouette Median %d (%.0f %% des Bezugs), im Bild %d/%d\n",
+                       alt ? "NB4" : "neu", k_kam[i].name, von ? "Nord" : "Sued", cam, m.b[0], m.b[1], m.b[2], m.b[3], m.b[4], m.b[6], m.f_an, m.bilder, m.ab_p95, m.ab_max, m.runden,
+                       m.umlauf, m.umlauf_plan, m.sx, m.sz, m.mx, m.mz, m.kk, m.sil_med, 100 * q, m.sil_sicht, m.sil_n);
+                if (alt) { alt_n++; if (m.bilder < 300 || m.ab_p95 > 300 || m.umlauf > 1.25 * m.umlauf_plan || m.umlauf < 0.75 * m.umlauf_plan || (cam == 2 && q < 0.5)) alt_rot++; continue; }
+                laeufe++;
+                const int bahn_ok = m.bilder >= 300 && m.ab_p95 <= 300 && m.ab_max <= 450 && m.umlauf <= 1.25 * m.umlauf_plan && m.umlauf >= 0.75 * m.umlauf_plan
+                                    && hypot(m.sx - m.mx, m.sz - m.mz) <= 300 && m.kk * 20 <= m.bilder;
+                if (bahn_ok) ok_bahn++; else if (m.ab_p95 >= schlecht_ab) { schlecht_ab = m.ab_p95; wo_ab = k_kam[i].name; }
+                const int sicht_ok = q >= 0.5 && m.sil_sicht * 3 >= m.sil_n * 2;
+                if (sicht_ok) ok_sicht++;
+                if (q < min_sicht_q) { min_sicht_q = q; wo_sicht = k_kam[i].name; }
+            }
+        }
+    }
+    re15_gr2_bahn_alt_setzen(0); re15_gr2_karotte_alt_setzen(0);
+    PRUEF(laeufe >= 20 && ok_bahn == laeufe, "M2a: gefahrene Bahn = Plan in %d von %d Lagen/Kameras (auf der Bahn >= 300 Bilder, Abstand p95 <= 300 / max <= 450, Umlauf 0,75..1,25 x Plan, Schwerpunkt <= 300 von der Plan-Mitte, Klemme <= 5 %%; schlechteste %s p95 %.0f)",
+          ok_bahn, laeufe, wo_ab, schlecht_ab);
+    PRUEF(ref > 0 && ok_sicht == laeufe, "M2b: erkennbar in %d von %d Lagen/Kameras (Silhouette Median >= 50 %% des Bezugs Leiter/Cut 0 = %d Bildpunkte, in >= 2/3 der Bilder im Bild; kleinster %.0f %% bei %s)",
+          ok_sicht, laeufe, ref, 100 * min_sicht_q, wo_sicht);
+    PRUEF(alt_n > 0 && alt_rot == alt_n, "Gegenprobe Stand NB4 (Kreis R 2000, gespiegelte Karotte): %d von %d Laeufen faehrt er den Plan nicht oder ist in Cut 2 nicht erkennbar (rot ohne den Bau)", alt_rot, alt_n);
 }
 static void teil_fuzz(int elza)
 {
@@ -1672,6 +1895,60 @@ static void teil_fuzz(int elza)
     }
 }
 
+/* ---- Werkzeug NB5 (M2a/M2b): bahnpruef [elza] [cam ax az bx bz r kdir ...] - Plan je Kamera 0..7 und Bewertung gegebener Bahnen ---- */
+static int bahnpruef_werkzeug(int argc, char **argv)
+{
+    const int elza = argc > 2 && !strcmp(argv[2], "elza");
+    re15_actor_t *g = szene_bis_kampf(elza);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!g || !g2_kanister_ins_maul(g, pl)) { printf("kein Tragen\n"); return 1; }
+    int i0 = elza ? 3 : 2;
+    if (argc <= i0) {
+        for (int c = 0; c < 8 && c < g_room_rdt.cut_count; c++) {
+            int32_t b[7]; int vis = 0;
+            const clock_t t0 = clock();
+            const int ok = re15_gr2_bahn_plan_mess(c, g, 4500, -16300, b, &vis);
+            const double ms = 1000.0 * (double)(clock() - t0) / CLOCKS_PER_SEC;
+            int v2 = 0, kopf = 0;
+            if (ok) re15_gr2_bahn_bewerten_mess(c, g, b, &v2, &kopf);
+            printf("    Cut %d: %s A (%d,%d) B (%d,%d) R %d Drehsinn %d Umfang %d, %d/48 im Bild, Kopflaenge %d Bildpunkte (%.0f ms)\n", c, ok ? "Bahn" : "keine",
+                   b[0], b[1], b[2], b[3], b[4], b[5], b[6], v2, kopf, ms);
+        }
+        return 0;
+    }
+    for (int i = i0; i + 6 < argc; i += 7) {
+        int32_t b[7] = { atoi(argv[i+1]), atoi(argv[i+2]), atoi(argv[i+3]), atoi(argv[i+4]), atoi(argv[i+5]), atoi(argv[i+6]), 0 };
+        int vis = 0, kopf = 0;
+        const int ok = re15_gr2_bahn_bewerten_mess(atoi(argv[i]), g, b, &vis, &kopf);
+        printf("    Cut %s A (%d,%d) B (%d,%d) R %d Drehsinn %d: %s, %s %d, Kopflaenge %d\n", argv[i], b[0], b[1], b[2], b[3], b[4], b[5], ok > 0 ? "zulaessig" : "UNZULAESSIG",
+               ok > 0 ? "im Bild" : "erster Stuetzpunkt", vis, kopf);
+    }
+    return 0;
+}
+/* ---- Werkzeug NB5 (M2a): Wurzel-Kasten der Trag-Lenkung je Schwimmrichtung (Kopf + Kanister in den Aussenwaenden) ---- */
+static int kasten_werkzeug(int elza)
+{
+    re15_actor_t *g = szene_bis_kampf(elza);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!g || !g2_kanister_ins_maul(g, pl)) { printf("kein Tragen\n"); return 1; }
+    for (int c = 0; c < g_room_rdt.cut_count; c++) {
+        const re15_camera_cut_t *k = &g_room_rdt.cuts[c];
+        printf("    Cut %d: Kamera (%d,%d,%d) Blick (%d,%d,%d) fov %u\n", c, k->pos_x, k->pos_y, k->pos_z, k->target_x, k->target_y, k->target_z, (unsigned)k->fov);
+    }
+    for (int c = 0; c < 12; c++) {
+        int32_t a8[8];
+        if (!re15_gr2_huelle_ausdehnung(g, c, a8)) continue;
+        printf("    Clip %2d: Kopf vorn %5d hinten %5d rechts %5d links %5d | Kanister vorn %5d hinten %5d rechts %5d links %5d\n", c, a8[1], a8[0], a8[2], a8[3], a8[5], a8[4], a8[6], a8[7]);
+    }
+    for (int a = 0; a < 4096; a += 256) {   /* a = Schwimmrichtung atan2(dz,dx) */
+        const int gier = (a - 1024) & 0xfff;
+        int32_t k[4];
+        if (!re15_gr2_tr_kasten_mess(g, gier, k)) { printf("keine Huelle\n"); return 1; }
+        printf("    Richtung %4d (dx %5d dz %5d) Gier %4d: Wurzel x [%6d,%6d] z [%6d,%6d]\n", a, re15_cos_q12(a), re15_sin_q12(a), gier, k[0], k[1], k[2], k[3]);
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -1693,6 +1970,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "wurfkamera")) { if (!gator_bank()) return 1; wurfkamera(argc > 2); return 0; }
     if (!strcmp(teil, "leichenachse")) { if (!gator_bank()) return 1; leichenachse(argc > 2); return 0; }
     if (!strcmp(teil, "kopfwinkel")) { if (!gator_bank()) return 1; kopfwinkel(argc > 2); return 0; }
+    if (!strcmp(teil, "bahnpruef")) { if (!gator_bank()) return 1; return bahnpruef_werkzeug(argc, argv); }
+    if (!strcmp(teil, "kasten")) { if (!gator_bank()) return 1; return kasten_werkzeug(argc > 2); }
     if (!strcmp(teil, "leichenfit")) { if (!gator_bank()) return 1; leichenfit(argc > 2); return 0; }
     if (!gator_bank()) { printf("RE2-EM23-Bank fehlt\n"); return 1; }
     const int alle = !strcmp(teil, "alle");
@@ -1712,6 +1991,10 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "klemm_elza")) teil_klemm(1);
     if (alle || !strcmp(teil, "fuzz"))      teil_fuzz(0);
     if (alle || !strcmp(teil, "fuzz_elza")) teil_fuzz(1);
+    if (alle || !strcmp(teil, "haken"))      teil_haken(0);
+    if (alle || !strcmp(teil, "haken_elza")) teil_haken(1);
+    if (alle || !strcmp(teil, "bahn"))      teil_bahn(0);
+    if (alle || !strcmp(teil, "bahn_elza")) teil_bahn(1);
     if (alle || !strcmp(teil, "kamera"))      teil_kamera(0);
     if (alle || !strcmp(teil, "kamera_elza")) teil_kamera(1);
     re15_door_seq_setze_laeufer(NULL);

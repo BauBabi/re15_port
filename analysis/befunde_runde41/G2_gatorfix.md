@@ -398,3 +398,54 @@ sichtbare Wasser hinter der Figur im Nordbecken - der Alligator ist immer im Bil
 Suedwasser vor der Kamera (gross, zeitweise am unteren Rand draussen, 85 %) - Gestaltungsfrage fuer den Orchestrator. Rampe von Norden nur im Riegel
 (Klettern an der Nordkante im exe-Lauf vom Alligator verhindert). PSX-Bau: Einpassung nur PC; die Kreispunkt-Suche laeuft auch im PSX-Bau (je Kamera und
 Figur-Zelle 250 einmal, bis ~2000 Kandidaten x 16 Projektionen) - nicht im PSX-Laufzeitbudget gemessen.
+
+## Nachbesserung 5 (Abnahme 3: analysis/befunde_runde41/G2_abnahme_3.md, M1 Leiche ragt im Rollfenster/Fang aus dem Maul, M2a Kreisel R ~535 statt Kreis, M2b Cut 2 nicht erkennbar, Haken zuruecksetzen)
+Stand: begonnen 2026-11-02 auf 85863d687. Laufordner scratchpad `g2nb5/` (nicht im Baum). Reihenfolge: M2a (Ursache) -> M2b -> Haken -> M1.
+
+### NB5 Haken (Abnahme 3 Abschnitt 3 "Code gelesen") - erledigt
+`s_fit` (Einpassung, Stauch-Haken `re15_gatorszene_r41_leiche_skala` in pc_prop_world fuer obj_id 2) wird jetzt in `re15_gatorszene_r41_install` (Aufruf bei JEDEM
+Raumaufbau, scd_room_setup.c) geleert (`fit_raumwechsel`, vor jedem Ausstieg der Funktion). Riegel unit_r41_gatorfix_haken(_elza): Szene bis zum ersten
+gestauchten Haltebild (Szenenbild 76, Skala 3686/4096), dann Raumaufbau 2080 -> Haken fuer keinen Slot mehr an; Gegenprobe Pruefhaken
+`re15_gatorszene_r41_fit_reset_alt_setzen(1)` -> Haken bleibt an (rot ohne den Bau).
+
+### NB5 M2a - Ursache des Drehens (gemessen, Harness `test_r41_gatorfix kamera` mit `G2_BAHN=<datei>` = Bahn je Bild, Auswerter scratchpad `g2nb5/tools/bahn.py`)
+1. **Spiegel-Fehler der Karotte**: `a = re15_atan2_q12(dz,dx)` liefert die Port-Konvention (0 = +Z, 1024 = +X; actor_locomotion.c atan2_q12 = FUN_8001a6d4 + 0x400),
+   die Karotte setzte `a` in Standard-cos/sin ein -> Punkt R(sin t, cos t) = Spiegelbild der Gator-Lage an der 45-Grad-Diagonale; Fixpunkt SW des Mittelpunkts
+   (3450-1414,-9150-1414) = (2036,-10564) - dort die gemessene Schleife (Abnahme (2232,-10500), Harness R-2318s Cut 2 Fit (1627,-10023) R 520, 6,5 Runden in 15 s).
+   Behoben (`gr2_tr_karotte`, Drehung des Einheitsvektors um kdir x 45 Grad; Pruefhaken `re15_gr2_karotte_alt_setzen`).
+2. **Danach dreht er trotzdem**: Fit (2140,-10488) R 503 - die Trag-Kuerzung `gr2_tr_fitfrei` zieht jede Karotte auf dem Ost-/Suedteil des Kreises neben die
+   Wurzel. Ohne die Kuerzung (Experiment) drueckt ihn die Kopf-Klemme an die Nordwand: Klemme 100 %, 610 2-s-Fenster (= Festdruecken der Abnahme 1).
+3. **Geometrie** (Werkzeug `test_r41_gatorfix kasten`): Wurzel-Kasten der Trag-Lenkung je Schwimmrichtung: nach Osten nur x <= 1850, nach Westen x >= -3550,
+   nach Norden z <= -10750, nach Sueden z >= -21650. Ausdehnung je Clip (`re15_gr2_huelle_ausdehnung`): Clip 0 Kopf-Bones 3236 vor, Kanister-Enden 4589..4666 vor,
+   von 237 rechts bis 2694 links (Clip 1: 5010 vor, 2839 links). Der KANISTER bestimmt die Huelle. Wurzel-Kollision an Plattform/Rampe = hit_radius_min 1466
+   (enemy_ai_boss_gator.c re15_collision_constrain_enemy). Folge: ein Kreis R 2000 ist NIRGENDS im Becken befahrbar, ohne dass Kanister/Kopf durch eine
+   Aussenwand ragen (Kreis braucht alle Richtungen; Mittelpunkt muesste >= ~5000 von jeder Wand liegen = auf der Plattform). Befahrbar sind nur enge Bahnen in
+   Streifen: west der Plattform (x ~ -3900), nord (z ~ -10200), sued (z ~ -22200, x <= ~2500) - z.B. ein Stadion (zwei Halbkreise R ~650) suedlich der Plattform
+   direkt vor der Cut-2-Kamera (Kamera Cut 2 (2484,-3132,-25956) Blick Nord; Cut 3 (2484,-3132,-6516) Blick Sued).
+Naechster Schritt: Bahn-Planer (Stadion/Kreis je Kamera, Zulaessigkeit aus der Clip-0-Huelle + Wurzel-Kollision, Ziel Erkennbarkeit in der Kamera), Karotte
+auf der Bahn, Riegel `bahn` (gefahrene Bahn gegen Plan) + Erkennbarkeit (projizierte Flaeche).
+
+### NB5 M2a/M2b - Aenderung (gator_re2_r41.c Abschnitt BAHN DER BELAGERUNG, PORT-WAHL Gestaltung; RE2 kreist nicht)
+- **Bahn = Stadion** (zwei Halbkreise R um A/B, gerade Stuecke; A = B = Kreis). Planer `gr2_runde_planen` je Kamera (Cache), Suche Raster 250 ueber Mitte x
+  Lage (x/z) x Laenge 0..3000 x R {2000,1500,1000,800,650} x Drehsinn, dann Verfeinerung je 50; in 71 Teilschritten (ein Schritt je Bild, ~1-3 ms; ganze Suche
+  gemessen 60-150 ms je Kamera), bis dahin wie NB4. Nur PC-Bau (`RE15_PLATFORM_PC`), PSX wie NB4.
+- **Zulaessig** je Stuetzpunkt (48) mit der Tangente als Gier: Wurzel >= hit_radius_min + 60 (= Spur-B-Slab, Kollision re15_collision_constrain_enemy mit
+  hit_radius_min) von Plattform/Rampe; die Clip-0-Huelle (Hals/Kopf/Kiefer + Kanister-Enden, Tafel je Gier in 1024 Stufen) mit 60 Abstand in den Aussenwaenden,
+  die IM BILD der laufenden Kamera liegen (`gr2_runde_waende_sichtbar`: Wandpunkte je 250, y -3000..0 im Bild zwischen den Kino-Balken). Cut 2 sieht Ost+Nord
+  (Maske 10), Cut 3 West+Ost (6), Cut 0 13. Grund: der ferne Kanisterpunkt liegt 5388 von der Wurzel; vor der Cut-2-Kamera bliebe fuer eine Schleife nur
+  86 Einheiten - die Suedwand liegt dort aber HINTER der Kamera. Waehrend der Bahn prueft die Kopf-Klemme dieselben Waende (`s_kk_waende`), sonst alle vier.
+- **Erkennbar**: Ziel = groesste mittlere sichtbare Bildlaenge Wurzel -> Kopf (3236 vor, am Bildrand abgeschnitten), mindestens 32/48 Stuetzpunkte im Bild
+  ("ueberwiegend"; zeitweise unten aus dem Bild ist erlaubt).
+- **Karotte** auf der Bahn pi R/4 voraus, ohne Trag-Kuerzung (die Bahn ist zulaessig). **Anfahrt** (Abstand > R): naechster Bahnpunkt, Weg ueber die
+  Westkanal-Knoten (Mitte zwischen Westwand und Plattform, z Mitte Nord-/Suedbecken; Plattform+Rampe reichen bis an die Ostwand), sonst Kanten-Umweg Spur B.
+  Vorher (Lauf R-2318s Cut 2) sprang der Spur-B-Umweg zwischen (2279,-9867) und (-3888,-9862) und er pendelte im Nordbecken.
+- Geplant (Leon = Elza): **Cut 2 A (1800,-22200) B (2800,-22200) R 650** (Suedwasser vor der Kamera, mittlere Kopflaenge 92 Bildpunkte, NB4-Kreis 22),
+  **Cut 3 A (1800,-10250) B (2800,-10250) R 650** (Nordwasser vor der Kamera, 81). Werkzeug `test_r41_gatorfix bahnpruef [cam ax az bx bz r kdir ...]`.
+- **Messung nachher** (Riegel unit_r41_gatorfix_bahn / _elza, 15 Rampenlagen x Cut 2/3, je 1800 Bilder, ab Ankunft Abstand < 200): gefahrene Bahn = Plan in
+  30/30 (Abstand zur Bahn p95 160, max 175-198; Umlauf 110 Bilder gegen Plan 127 = Umfang 6082 / 48 je Bild - er schneidet die Halbkreise ~120 innen; 10,5-13,4
+  Runden; Schwerpunkt <= 36 von der Plan-Mitte; Kopf-Klemme 0 Bilder). Silhouette (Vereinigung der projizierten Part-Huellen, 320 x 192) Median 20 270-22 400
+  Bildpunkte = 265-295 % des Bezugs Verfolgung an der Leiter in Cut 0 (7585). **Vorher** (Gegenprobe Stand NB4, Pruefhaken `re15_gr2_bahn_alt_setzen` +
+  `re15_gr2_karotte_alt_setzen`): Kreis R 2000 nie gefahren (0,03-0,16 Runden, Abstand p95 506-1255, Schwerpunkt (2190,-10465) statt (3450,-9150)),
+  Silhouette 1850-2200 = 24-29 % des Bezugs.
+- Riegel kamera (NB4) laeuft jetzt 1800 Bilder je Lage (zweite Haelfte = nach der Anfahrt); alle 20 Unit-Riegel der Spur gruen.
+Offen: Fensterbelege (gdigrab, Cut 2/3, Leon/Elza, Normalhelligkeit) und exe-Riegel; Verfolgungs-Kreis (kreis 1, Leiter) nur Spiegel-Fix, nicht geplant.
