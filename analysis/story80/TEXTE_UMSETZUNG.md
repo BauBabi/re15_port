@@ -183,6 +183,16 @@ neuen Ids. Berührungspunkte beim Zusammenführen:
 | `integration_r36_story_leon` | echte exe: P4a Tür 6000 -> 6030, alle 13 Wagenzeilen im `[msgtext]`-Protokoll, kein „Where's Elza“, kein „I see. Thanks.“; P4b Führerstand 11, 12, 25, 26, 13, kein „biker girl“ | grün (482 s) |
 | `integration_r36_story_elza` | echte exe: P4f 30C1 msg 1..5, keine msg 6..8, kein „Leon Kennedy“; P4g (neu) 30E1 msg 2/3 nach A1, kein „bit me“/„medical supplies“ | grün (364 s) |
 
+**Volle Suite ohne integration_*** (`ctest -E "^integration_" -j 6`, 1078 Tests, 2668 s): 1070 grün. Rot waren:
+`unit_r37_sperre1050_elza50b1` (Folge dieser Spur, angepasst, Abschnitt 6.3, danach grün) und sieben Skript-Riegel
+ohne Bezug zur Spur: `unit_r35_android_bash_mutanten` (unter Last 1498 s gegen Deckel 1500, einzeln wiederholt: grün in
+1041 s), `unit_r38_releaseskript_trocken/_ablauf/_fehler_bau/_fehler_umfeld/_cmd` und `unit_r39_titelversion_ablauf`
+(je Deckel 1200 s). Ursache der sechs gemessen: Das Release-Skript hängt nach „Container-Engine bereit: Attrappe“ in
+`df -Pk <fixture>/repo` (Git `df.exe`); dieselben hängenden `df.exe` liefen zur selben Zeit in den Arbeitsbäumen
+r41_moosgang, r41_gatorfix und r41_granate, und die Prozesse lassen sich nicht beenden (taskkill: „keine Instanz“).
+Umgebungsfehler (WSL/Docker-Desktop-Mounts), keine Datei unter `release/` geändert.
+Dazu echte exe: `integration_r34n_b_cursor` (Hebetisch, 174 s) und `integration_r38_kleinkram_irons` (37 s) grün.
+
 ### 6.2 Bildleisten (echtes Fenster)
 
 `tools/r41_story80/s80_lauf.sh`: eigene exe-Kopie, Renderer des Nutzers (kein AUTOSHOT, kein SOFTWARE_RENDER),
