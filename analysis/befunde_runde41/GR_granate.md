@@ -3,6 +3,179 @@
 Zweig `r41/granate`, Baum `.claude/worktrees/r41_granate`, Basis `r41/spinnengore` 2f886e91a.
 Dossier wird FORTLAUFEND geschrieben (Sitzungslimit-Schutz).
 
+## N2. NACHBESSERUNG 2 (2026-11-02) — Schaden der Handgranate: normale Gegner 1000, Bosse nach Form (Nutzerentscheide)
+
+> "Naja, die Granate hat halt einen Schaden, sind die Gegner damit tot, sind sie tot. Der Gorilla ist ein Endgegner, wenn
+> der mit einer Granate stirbt ist das etwas schwach."
+> Auf den Vorschlag (1000 fuer alle normalen Gegner unabhaengig von der KI, Bosse weniger): "Ja, ist gut. Gorilla,
+> Handgranate und ein paar Schuss, und ja auch Birkin und Aligator, wobei die an sich schon staerker sein muessen als der
+> Gorilla."
+
+### N2.1 Messung VORHER (Stand d8d847a93, echter Hitscan + echte Explosion)
+
+Werkzeug: neuer Abschnitt `[6] boss` in `tests/unit/test_r41_granate.c`, gegen die Engine VOR der Aenderung gebaut (Engine-
+Dateien per `git stash` zurueckgenommen, Test unveraendert), Ausgabe `scratchpad/GR3/boss_vorher.txt`. Je Boss frisch
+aufgestellt, INIT ueber die echte KI (Spawn-Wurzelaufruf `re15_enemy_spawn_root` = Sce_em_set @0x8004259c bzw. ein KI-Takt);
+Schuss ueber `re15_player_weapon_fire` (Waffe 3 = BROWNING HP, Spieler 2000 davor), Granate ueber `re15_granate_r35_explosion`
+(Art 2, Liegestelle 300 daneben). Formende: Tod (`hp < 0`) bzw. bei Form 1 `hp < 100` + ein KI-Takt -> Mutation (sub 6).
+
+| Boss / Form | Form-HP (Beleg) | Pistole | Schrot | Granate vorher | Schuesse ohne Granate |
+|---|---|---|---|---|---|
+| Gorilla 0x27 (11C0/1141) | 360 = 180 (STAGE1 @0x8011f514, 16 x 180; INIT `sh v0,154(a1)` @0x80117104) x 2 (Runde 39 Spur E) | 12 (`0c 00` @0x8006ee44) | 38 (`26 00` @0x8006ee58) | 1000 -> tot | 31 |
+| Alligator 0x23, RE1.5-KI | 300 (STAGE2 @0x801175dc, 16 x 300; `sh v0,154(a1)` @0x8010c6d4) | 7 (`07 00` @0x8006ece4) | 30 (`1e 00` @0x8006ecf8) | 1000 -> tot | 43 |
+| Birkin 0x30, Form-2-Bit vom Spawn (3070 Leon grid 0x10, 5080 grid 0x13, Hangar/Sichel 50A0, Labor 50E0/50F1) | 300 (`ori v0,zero,0x12c` @0x8011690c), Tod bei hp < 0 | 15 (`0f 00` @0x8006f15c) | 40 (`28 00` @0x8006f170) | 1000 -> tot | 21 |
+| Birkin 0x30 Form 1 (3071 Elza grid 0x21 -> 0x01 per Member_set(0x0C,1) @0x03645; 5090 vor der Mutation) | 300 bis hp < 100 (`slti v0,v0,100` @0x8011667c -> `ori v0,zero,0x601` @0x80116684) | 15 | 40 | 1000 -> Mutation sofort | 14 |
+| Birkin waehrend der Mutation | 150 (`ori v0,zero,0x96` @0x80118094); toedlicher Treffer -> HP 50 (`ori v0,zero,0x32` @0x8011a530) | 15 | 40 | 1000 -> HP 50 (Revive-Waechter) | — |
+| Birkin nach der Mutation (3071) | 150 (@0x80118094) | 15 | 40 | 1000 -> tot | 11 |
+| Bahnsteig-/Riesenform (5090 nach der Mutation) | 150 (Eintritt re15_bb_tick, birkin_bahnsteig.c; Port-Mass = die 0x96 der Mutation) | 15 | 40 | 1000 -> tot | 11 |
+| G5 0x36 (5090/5091) | 600 (Ctor @0x801003fc) | 15 (0x30-Zeile im Endkampf) | 40 | 80 (E16, `0x05014050` @0x800A5F7C) | 41 |
+| Gator-Boss 0x23 (2090) | 25300 (`RE15_GR2_HP_INIT`, @0x80100518-580) | 7 | 30 | 1000 -> 24300 | — (nur Kanister toedlich) |
+
+Normale Gegner unter dem RE2-Modell (vorher, gemessen in `[1]`): Hund 300 (RE2 Zeile 9 K0 `0x00a0c92c` @0x800A44C4), Kraehe 60
+(`0x00f0f03c` @0x800A4640), Spinne und RE2-Babyspinne 60 (`0x0140f03c` @0x800A4C30) — RE2-Granatwerfer-Zeile, obwohl RE2 keine
+Handgranate hat. Unter RE1.5-KI und MIXED (ausser Hund) schon 1000.
+
+### N2.2 Regel (PORT-WAHL, Nutzerentscheid) und Boss-Tabelle NACHHER
+
+* **Normale Gegner:** die Handgranate (Art 2) traegt an JEDEM normalen Gegner unter JEDER KI ihre eigene Zahl 1000
+  (`e8 03` @0x8006f41c, Aufruf FUN_80012d60(500,&P,2) @0x80018598-bc). Dieselbe Begruendung wie fuer die Zombie-Familie (Spur GR
+  §4): die RE2-Zeile 9 war eine Zuordnung, die 1000 ist der Wert des Gegenstands. Werfer-Explosivrunde (Art 6, Zeile 9),
+  Saeure/Brand (Art 3/4) unveraendert.
+* **Bosse:** eine Granate aus VOLLER Form-HP laesst einen Rest R stehen, danach toeten genau N Pistolenschuesse:
+  Schaden = Form-HP - Formende - R. Gorilla N = 4 (Nutzer "ein paar Schuss"): R = 40 (40 - 3 x 12 = 4 >= 0, 40 - 4 x 12 < 0).
+  Birkin und Alligator "an sich staerker als der Gorilla" -> N = 8 (Faktor 2): Birkin R = 110 (110 - 7 x 15 = 5,
+  110 - 8 x 15 < 0), Alligator R = 50 (50 - 7 x 7 = 1, 50 - 8 x 7 < 0). Die HP selbst sind NICHT angefasst.
+* **Unveraendert:** G5 (80), Gator-Boss 2090 (1000; Treffer nur ueber den Kanister toedlich), 0x36 ausserhalb 5090 (Szene
+  ROOM3080, waffen-immun `00 00` @0x8006f36c; siehe Frage F4).
+
+| Boss | HP (Form) | Pistolenschaden | Granatenschaden neu | Schuesse nach 1 Granate | Schuesse ohne Granate |
+|---|---|---|---|---|---|
+| Gorilla 0x27 | 360 | 12 @0x8006ee44 | **320** (vorher 1000) | **4** | 31 |
+| Alligator 0x23 (RE1.5-KI) | 300 | 7 @0x8006ece4 | **250** (vorher 1000) | **8** | 43 |
+| Birkin 300-Form (3070, 5080, Hangar/Sichel 50A0, Labor 50E0/50F1) | 300 | 15 @0x8006f15c | **190** (vorher 1000) | **8** | 21 |
+| Birkin Form 1 bis zur Mutation (3071, 5090) | 300 -> Mutation bei < 100 | 15 | **90** (vorher 1000 = sofort Mutation) | **8** bis zur Mutation | 14 |
+| Birkin waehrend der Mutation | 150 (Revive-Waechter) | 15 | **40** (vorher 1000 -> HP 50) | — (stirbt in der Mutation nie) | — |
+| Birkin nach der Mutation (3071) | 150 | 15 | **40** (vorher 1000) | **8** | 11 |
+| Bahnsteig-/Riesenform (5090) | 150 | 15 | **40** (vorher 1000) | **8** | 11 |
+| G5 0x36 (5090) | 600 | 15 | 80 (unveraendert) | 35 | 41 |
+| Gator-Boss 0x23 (2090) | 25300 | 7 | 1000 (unveraendert) | — (Kanister) | — |
+
+Alle Zahlen gemessen (`scratchpad/GR3/boss_nachher.txt`), nicht gerechnet. Ganze Kaempfe mit je EINER Granate pro Form:
+Leon 3070 = 1 Granate + 8 Schuss; Elza 3071 = (1 Granate + 8 Schuss bis zur Mutation) + (1 Granate + 8 Schuss); 5090 =
+(1 + 8 bis zur Mutation) + (1 + 8 Bahnsteig-Form) + G5 (1 + 35).
+
+### N2.3 Umsetzung
+
+* `re15_damage.c re15_granate_schaden(e)` (Block "RUNDE 41 SPUR GR, NACHBESSERUNG 2", jede Konstante mit Adresse): 1000 fuer
+  jeden Typ ausser Gorilla (Form-HP 180 x Faktor der Runde-39-Regel - 40), Alligator ohne Boss-Modul (300 - 50), Birkin
+  (Form-HP - Ende - 110). Aufruf im Gegnerzweig an der Stelle der frueheren Zombie-Regel (`if (type == 2u) dmg = ...`); der
+  E16-Block fuer den G5 (80) steht unveraendert danach. Haengt nicht am Gore-Schalter.
+* `birkin_formen.c re15_bf_granate_form(e, &form_hp, &ende)`: Bahnsteig-Form (G4-Bank oder 5090 nach der Mutation) 150/0;
+  Mutation laeuft (+0x1dd & 8) 150/0; nach der Mutation (Merker je Slot, gesetzt in re15_bf_mutation_fertig = sub 6 Phase 2
+  @0x8011888c, geloescht beim Raumwechsel; gilt nur bei hp <= 150) 150/0; Form 1 (Wurzel-Tor `andi v0,v0,0x10` @0x801164e8
+  bzw. 5090 vor dem Mutationsstart) 300/100; sonst 300/0. `RE15_BB_FORM_HP` (re15_birkin_formen.h) = 150 der Bahnsteig-Form.
+* Zerfetzen unveraendert wie N1 (nur Tod durch Explosivgranate an Zombie/Hund; Bosse werden nicht zerfetzt).
+
+### N2.4 Tests
+
+* `unit_r41_granate` erweitert: `[1]` Handgranate an ALLEN normalen Typen (0x10, 0x11, 0x16, Hund 0x20, Kraehe 0x21, Spinne 0x25,
+  RE2-Babyspinne 0x26, kleiner Affe 0x29, Tyrant 0x2B, Zellenarm 0x1A) unter RE2-KI, RE1.5-KI und MIXED = 1000: **30/30**
+  (vorher 25/30 — Hund/Kraehe/Spinne/Baby unter RE2-KI 300/60/60/60, Hund unter MIXED 300). Die Explosionshoehe P.y wird je Typ
+  durchprobiert, bis der Kandidatentest (Band @0x8004716c-a4) greift (Kraehe RE1.5, Babyspinne, G5 lagen bei -500 daneben);
+  geprueft ist der Schaden, nicht die Trefferflaeche. NEU `[6] boss`: 13 Boss-/Formfaelle (Tabelle N2.2) ueber echten Hitscan
+  und echte Explosion; je Form "eine Granate beendet die Form nicht" + "danach genau N Pistolenschuesse" (Gorilla 4, sonst 8),
+  bei Form 1 entscheidet ein echter KI-Takt (Wurzel-Tor) ueber die Mutation; Gorilla N < min(Birkin, Alligator) (Pruefung 90);
+  G5 80 und Gator-Boss 1000 unveraendert. Vorher-Lauf (Engine d8d847a93, gleicher Test): 12 Fehler; nachher: alle gruen.
+* Verhaltensbedingt angepasst (alte Pins "Granate toetet den Boss"): `probe_r34_schaden` (13: Gorilla-Dummy 180 - 320 = -140,
+  neu 13b: normaler Gegner 0x29 = 1000 @0x8006f41c), `probe_r34_wurf` (24: Dummy 0x27 -140), `test_r35_granate` (112: 0x27
+  -140), `probe_r34_reaktion` + `_ohne80` (187 Alligator, 197 Birkin: angeschlagen auf HP 100, damit die Granate der toedliche
+  Treffer bleibt — Thema der Pruefungen ist der Todesablauf nach Zeile 9).
+* Volle Unit-/Prop-/Probe-Suite (`ctest -E ^integration_ -j 5`, 2400 s): 1066 gruen; rot waren die 5 obigen Pins (angepasst,
+  danach 7/7 gruen inkl. unit_r41_granate/_aus) und 6 Bash-/Release-Tests mit Timeout 1200 s unter Last (unit_r38_releaseskript_*
+  x5, unit_r39_titelversion_ablauf). Ursache gemessen, NICHT diese Aenderung: das Release-Skript prueft den freien Platz mit
+  `df -Pk <repo>` (`--min-frei-gb`), und `df.exe` haengt auf dieser Maschine zur Zeit ganz — auch ein eigenes
+  `timeout 15 df -Pk /c/workspace/git/reAi_v2` kam nach 120 s nicht zurueck, die df-Prozesse lassen sich nicht beenden;
+  dieselben Tests hingen gleichzeitig in den Baeumen r41_moosgang und r41_story80. Die Wiederholung (19:17) haengte
+  wieder an `df.exe -Pk .../fx_ablauf/repo` und wurde abgebrochen. Die sechs Tests beruehren keine Engine-Datei.
+* Integration `integration_r34_granaten` / `integration_r35_granate` / `integration_r36_granate` (`-j 3`, nach den Pin-Anpassungen): **3/3 gruen** (415 / 323 / 190 s); darin unveraendert G5 HP -80 (E16) und Gator-Boss -1000.
+
+### N2.5 Sichtlaeufe im echten Fenster (gdigrab am eigenen Fenster, eigene PID, beschleunigter Renderer, echter Titel + Spielerwahl)
+
+Werkzeug `scratchpad/GR3/cap.ps1` (Kopie des Abnahme-Werkzeugs), Bildleisten `stripc.py` (Ausschnitt, Bildsuche ueber
+POS_FRAMES), Logs `nb2_sichtlaeufe_log_auszug.txt`. Je Lauf dieselbe Eingabe mit der exe vorher (d8d847a93, Kopie
+`re15_pc_nb1_vorher.exe`) und nachher.
+
+1. **Spinne ROOM2030, RE2-KI (Vorgabe), ECHTER Wurf** (Aufstellung wie Abnahme 1 s3: `RE15_PLAYER_POS=6550,2000,3072,3`,
+   Handgranate, Wurf ab Spielbild 288): erste Explosion T=558 `resolver art=2 ... eingriffe=1` in beiden Laeufen.
+   VORHER Raumbild F312 HP 110 -> 50 (Zustand 2, lebt; erst der zweite Wurf F471 -> -10). NACHHER F312 HP 110 -> **-890**
+   (Zustand 3, +0x5 = 9), im Folgebild der RE2-Tod (Clip 12) mit den Babyspinnen; im Bild fliegen die gelb-braunen Splitter ab
+   +0,1 s, ab +0,8 s steht am Ort keine Spinne mehr, nach 4 s liegen nur Reste.
+   Bild: `GR_belege/nb2/nb2_spinne2030_re2ki_eine_handgranate_vorher_oben_neu_unten.jpg` (oben vorher: die Spinne steht nach dem
+   Feuerball weiter, unten nachher: sie platzt).
+2. **Gorilla ROOM11C0 (Leon, Pistole)**: `RE15_SET_FLAG=4:0x40 RE15_DEBUG_JUMP=11C0@240 RE15_PLAYER_POS=-6729,-12800,1486
+   RE15_FORCE_CUT=5` (Kamera, die den Kampfplatz zeigt; ohne den Haken blieb Cut 0 = leere Gasse), Granate ueber den
+   Mess-Haken `RE15_FORCE_GRANATE=300:2` (echte Explosion der Routine 31, Wurf auf einen springenden Gorilla ist nicht
+   wiederholbar; danach braucht Leon die Pistole, ein Waffenwechsel ist im Skript nicht moeglich), dann echte Pistolenschuesse
+   `M1.0` + 16 x `MA0.1,M0.6` ab Spielbild 390, `RE15_R39_MESS_SPIELER_HP=100`.
+   VORHER: F300 HP 360 -> **-640**, Zustand 3, Leiche ab F341 — der Gorilla stirbt an der Granate.
+   NACHHER (gegner_r39.log): `F301 hp=40 akku=320 -> FLINCH`, `F390 hp=28`, `F453 hp=16`, `F516 hp=4 -> FLINCH`, F538 HP **-8**
+   Zustand 3 (vierter Schuss), Leiche ab F608 — er ueberlebt die Granate, wird umgeworfen, steht wieder auf und stirbt nach
+   vier Pistolentreffern.
+   Bild: `GR_belege/nb2/nb2_gorilla11c0_granate_dann_pistole_vorher_oben_neu_unten.jpg` (Zeit relativ zum Feuerball:
+   vorher liegt er ab +1 s tot, ab +8 s kommt der zweite Gorilla; nachher wird er umgeworfen (+1 / +3 s), steht ab +5,1 s
+   wieder an Leon, der Todes-Commit liegt bei +7,93 s (F538), ab +8,3 s faellt er).
+
+### N2.6 Berichtigungen aus Abnahme 1
+
+1. **Kanal ROOM2000 (Mangel 1):** die Explosion WIRD gezeichnet. Berichtigt in N1.5 (Lauf ROOM2000), in der Bildunterschrift von
+   `n1/n1_vergleich_video_cd2_gegen_port_2000_kanal_0x16.jpg` und in N1.8 Punkt 3: im Haken-Lauf (Cut 6,
+   `RE15_FORCE_GRANATE=100:4`) lag der Feuerball ausserhalb des Bildausschnitts (Mitte sx=2 sy=341 bei 320x240,
+   `GR_belege/abnahme1/a1_kanal2000_fxlog_projektion.txt`); beim echten Wurf ist er in allen drei exe-Staenden zu sehen.
+2. **Spinne unter RE2-KI (Mangel 2):** durch N2 entschieden — 1000 an jedem normalen Gegner, eine Granate toetet sie (N2.5).
+3. **Schalter `RE15_KEIN_80PROZENT_GORE=1` (Mangel 3), vollstaendig:**
+   * AUS damit (Stand vor Spur GR): das Zerfetzen der Zombie-Familie (RE2-Gehirn `re2z_granate_zerfetzen`, Latch zg_9f 0x08;
+     RE1.5-Gehirn `z_granate`, w9/w15) — es laeuft wieder RE2 DEATH[9][1] = 0x80108BEC bzw. der Standard-Tod; der Teile-Wurf
+     des Hundes (`re15_re2d_granate_teile`, RE2-Zeile 9 und RE1.5 `case 3`) — RE2 wieder 0x4A-Drift, +0x1D2 >= 3 nur der Kern;
+     der w15-Platzer der RE1.5-Spinne (`re15_spinnengore_an`, Schalter der Spur S). Mit dem Zerfetzen entfallen auch alles, was
+     nur von dort ausgeloest wird: die liegenden Stuecke (Maske `re2z_part_gr`, Boden-/Wandtest, kein Kaskaden-Ausloeser), die
+     Spritzer 2 x 2 und der Rauch-Nachlauf (`re15_esp_granate_rauch_nachlauf`).
+   * BLEIBT AN (haengt nicht am Schalter): der Schaden der Handgranate (1000 bzw. die Bosswerte aus N2 — Nutzerentscheid, kein
+     80%-Gore); der Vorrang der Explosionskinder vor Blutteilchen (`esp_granate_kind`, re15_esp.c: bei vollem Pool, 96 Plaetze
+     `sltiu v0,t3,0x60` @0x8001978c, raeumt ein Blutteilchen fuer die Kinder 0x03195000/0x030B5400/0x030B5800 der Routine 31
+     den Platz — dieselbe PORT-WAHL wie fuer den Wurfkoerper, Runde 36 Spur D Punkt 2b); der Mess-Haken `RE15_FORCE_GRANATE`
+     (kein Spielverhalten, nur mit Env).
+4. **`GR_RAUCH_MAX` 8 und Abstand 1000 (Mangel 3), begruendet — beides GESTALTUNG, keine Original-Werte:**
+   * `GR_RAUCH_MAX 8` = Zahl gleichzeitiger Rauch-Nachlaeufe. Die meisten Leichen EINER gemessenen Explosion sind 4 (ROOM1140,
+     echter TIEF-Wurf, vier `[gr] ZERFETZT`); 8 ist das Doppelte, damit auch zwei Wuerfe kurz hintereinander jede Stelle bedienen.
+     Ein Nachlauf setzt je 8 Takte EIN Kind; bei 8 Nachlaeufen sind das hoechstens 8 Plaetze je Rastertakt von 96 im ESP-Pool
+     (@0x8001978c) — der Pool bleibt fuer Blut und Explosion frei. Ist das Feld voll, bekommt eine weitere Stelle nur den Rauch
+     der Routine 31 (kein Absturz, kein Speicher-Wachstum).
+   * Abstand 1000 = "dieselbe Stelle": zwei Leichen, deren Koerper sich beruehren, liegen bis 2 x 400 = 800 auseinander
+     (Trefferradius des Zombies hbdata+6 = 400, re15_damage.c Kegeltest FUN_800127FC); im Video steigt an der Stelle EINES
+     Zombies EINE Saeule auf (CD2 #590-#598). 1000 = 800 + Spielraum: ein Haufen nah beieinander liegender Leichen bekommt
+     eine Saeule statt einer doppelt so dichten.
+   * Die Zufallsmasken des Teile-Wurfs (`rand & 0x3f`, `rand * 2`, `(rand & 0xff) - 128`) sind Streuung der GESTALTUNG ohne
+     Original-Vorbild (Video CD2 #577-#592: Teile streuen bis an beide Waende) — nur so benannt, nicht als Beleg verkauft.
+
+### N2.7 Offene Nutzerfragen
+
+* **F1 Birkin "an sich staerker als der Gorilla" gilt fuer die HP nicht:** ohne Granate braucht die 300-Form (3070 Leon, 5080,
+  Hangar/Sichel 50A0, Labor 50E0/50F1) **21** Pistolenschuesse, der Gorilla **31** (360 HP = 180 x 2 aus Runde 39; Pistole 15
+  gegen 12). HP anheben (Vorschlag: wie beim Gorilla x 2 = 600 -> 41 Schuss, Granate dann 490 fuer 8 Schuss)? Nicht geaendert.
+* **F2 Bahnsteig-/Riesenform zu schwach:** 150 HP = **11** Pistolenschuesse ohne Granate. 150 ist ein Port-Mass (die 0x96 der
+  Mutation @0x80118094); der RE2-G4, dessen Ablaeufe die Form traegt, hat 1000/900/1100 (Ctor @0x8010067c-b8). Anheben?
+* **F3 Elzas Birkin 3071 (Form 1 + Form 2):** 14 Schuss bis zur Mutation + 11 danach = 25 < 31 Gorilla. Mit F1/F2 zu entscheiden.
+* **F4 G-Form 0x36 in ROOM3080** (Szene, Nibble 4, waffen-immun `00 00` @0x8006f36c): die Handgranate traegt dort unveraendert
+  1000 und wuerde sie toeten (Todesmaschine, Fortschritts-Flag z5:0x1C @0x8011a6b8). Soll eine Granate in der Szene ueberhaupt
+  wirken? Nicht angefasst.
+* **F5 Gator-Boss 2090:** unveraendert 1000 je Handgranate — eine Granate senkt 25300 auf 24300 < 25000 und loest damit sofort
+  die RE2-Schwaeche (+0x218 & 0x20, @0x80101ebc-dc) und die Kanister-Szene aus (mit der Pistole 7 je Schuss: 43 Treffer). So
+  lassen?
+* **F6 RE1.5-Alligator (HP 300, Granate jetzt 250):** laeuft im Port nur mit `RE15_GATOR_ORIGINAL=1` (Messhilfe; Nutzer-Entscheid
+  2026-11-01: der RE1.5-Alligator wird nicht ausgebaut) — der spielbare Alligator ist der Gator-Boss (F5).
+
+---
+
 ## N1. NACHBESSERUNG 1 (2026-11-02) — Berichtigung nach Nutzer-Korrektur
 
 > 1. "Das stimmt nicht, bei complete disc video 2 bei 15 Sekunden wirft Leon eine Granate. Und auch die Hunde und andere
@@ -101,7 +274,7 @@ fuer Nicht-Zombies keinen Video-Beleg des Granaten-Zerfetzens; die Quelle fuer H
 | 0x37, 0x40-0x4D | Tentakel, NPCs | -1 | — | kein Kandidat | — | — | — |
 | 0x24, 0x2D, 0x22 | FX-Emitter, Efeu, Stub | — | nicht geprueft | — | — | — | — |
 
-**Typen, die an EINER Granate nicht sterben (Schaden NICHT geaendert, zur Entscheidung):** Werfer-Explosivrunde an 0x11 (Rest 50
+**⛔ Durch Nachbesserung 2 (N2) entschieden: Handgranate = 1000 an jedem normalen Gegner unter jeder KI (auch Spinne/Hund/Kraehe unter RE2-KI), Bosse nach Form. Werfer-Explosivrunde unveraendert.** Stand N1: **Typen, die an EINER Granate nicht sterben (Schaden NICHT geaendert, zur Entscheidung):** Werfer-Explosivrunde an 0x11 (Rest 50
 bzw. 200), 0x16 (bis 63 bzw. 93), allen Zombies bei reiner Explosion K1 = 50 (stirbt nur, wer weniger als 50 HP hat), Hund
 (RE2, Explosion K1 50: Rest 19-82), Gorilla 0x27, Alligator 0x23, Birkin; **die Spinne unter RE2-KI an der Handgranate UND am
 Werfer (60 gegen 99..132)**; G5, Gator-Boss, Zellenarm (setzt HP zurueck).
@@ -147,7 +320,7 @@ die Part-Bruecke (Spur S) ist fuer den RE1.5-Hund nach dem Wurf aktiv (re15_re2z
 **Spinne (RE1.5-Gehirn, enemy_ai_common.c Spinnen-Tod):** +0x5 = 15 platzt wie die Handgranate (Tabelle @0x80118f38[9] =
 0x80113ff8; Original [15] = 0x8011461c), danach +0x5 = 9 (Muster @0x80114b1c-20).
 
-Alles haengt an `RE15_KEIN_80PROZENT_GORE=1` (aus = Stand vor Spur GR, Schaden bleibt 1000).
+Alles haengt an `RE15_KEIN_80PROZENT_GORE=1` (aus = Stand vor Spur GR, Schaden bleibt 1000). ⛔ VOLLSTAENDIG in N2.7: der Schalter nimmt Zerfetzen, Teile-Wurf, Liegenbleiben, Rauch-Nachlauf und den w15-Platzer der RE1.5-Spinne weg; Schaden und der Vorrang der Explosionskinder (`esp_granate_kind`) bleiben.
 
 **Mess-Haken (kein Spielverhalten) `RE15_FORCE_GRANATE="<bild>:<slot>[,...]"`** (fx_plattform_pc.c): eine liegende Handgranate
 zuendet am Gegner mit der Zuender-Folge der Routine 31 (Licht-Latch, Resolver, Kind 0x03195000, SE; 5 Takte spaeter
@@ -165,9 +338,13 @@ Auswertung `scratchpad/GR2/teil_check.py`).
   Zombies steht nichts mehr. Fluglog: alle 28 Stuecke kommen nach 21-32 Bildern am Boden zur Ruhe (st 2 -> 1, y = Boden 0).
 - **ROOM2000 (Kanal, Typ 0x16, liegender Zombie wie im Video)**, Kamera Cut 6 (`RE15_FORCE_CUT=6`), `RE15_FORCE_GRANATE=100:4`:
   zwei `[gr] ... Typ 0x16 ... ZERFETZT`, die Stuecke fliegen, Blutwolke; gr.log: Explosionskinder jetzt alle mit Platz
-  (vorher n=0), Rauch-Nachlauf 6 Kinder je Leiche. ⛔ In ROOM2000 werden die RE1.5-Explosionseffekte (Kind 0x03195000 /
-  Rauch 0x030B5800) NICHT gezeichnet, obwohl sie Plaetze bekommen — auch beim echten Wurf; in ROOM1140/1230 sind sie da.
-  Ursache offen (vermutlich Textur/Bank im Kanal-Raum), N1.8.
+  (vorher n=0), Rauch-Nachlauf 6 Kinder je Leiche. ⛔ BERICHTIGT (Nachbesserung 2, Abnahme 1 §3): ~~In ROOM2000 werden die
+  RE1.5-Explosionseffekte NICHT gezeichnet~~ — sie WERDEN gezeichnet. Beim echten Wurf in ROOM2000 zeigen 8492d3594,
+  2f886e91a und die master-exe denselben Feuerball (weiss -> orange) und Rauch ~0,6 s. In diesem Haken-Lauf lag die
+  Explosionsmitte nur ausserhalb des erzwungenen Bildausschnitts: Kind `id=3 sub=25` besteht den Regionstest und laeuft
+  durch den Zeichner, projiziert aber auf sx=2 sy=341 bei 320x240 (unten links ausserhalb; Cut 6 sieht den liegenden
+  Zombie von ganz nah, P.y = Spieler-y - 500 liegt unter der Bildkante). Gleiches Bild mit RE15_KEIN_80PROZENT_GORE=1.
+  Beleg `GR_belege/abnahme1/a1_kanal2000_*` und `a1_kanal2000_fxlog_projektion.txt`.
 - **ROOM1230, Hund (RE2-KI)**, Cut 6, `RE15_FORCE_GRANATE=45:1`: `[gr] Hund Slot 1 Waffe 9: ZERFETZT (Teile-Maske 0x079c)`;
   Blitz, Feuerball, ein Bein fliegt hoch, Rauch +0,5..+1,7 s, danach rote Teile und Lache am Boden, nach 12 s unveraendert.
   Fluglog: 7 Parts, Scheitel 2349..2672 ueber dem Boden, Ruhe nach 27-30 Bildern. Bild
@@ -182,7 +359,9 @@ Auswertung `scratchpad/GR2/teil_check.py`).
 - `GR_belege/n1/n1_port_1140_vorher_nachher_liegen.jpg` — vorher vier Zombies, +11 s nur noch verstreute Stuecke in Blut.
 - `GR_belege/n1/n1_vergleich_video_cd2_gegen_port_2000_kanal_0x16.jpg` — derselbe Typ 0x16 wie im Video, liegend, im Kanal.
   Das RE1.5-Modell 0x16 der Mod ist weiss-grau (nicht khaki). Die Stuecke steigen ueber den Bildausschnitt der hohen Kamera und
-  landen im dunklen Kanal; Explosions- und Rauch-Sprites fehlen in diesem Raum (N1.8).
+  landen im dunklen Kanal. ⛔ BERICHTIGT (Nachbesserung 2): ~~Explosions- und Rauch-Sprites fehlen in diesem Raum~~ — der
+  Feuerball liegt in diesem Haken-Lauf (Cut 6, `RE15_FORCE_GRANATE=100:4`) ausserhalb des Bildausschnitts (Mitte sx=2 sy=341
+  bei 320x240, Abnahme 1 §3); beim echten Wurf in ROOM2000 ist er zu sehen (`GR_belege/abnahme1/a1_kanal2000_echterwurf_neu_vorher_master.jpg`).
 - `GR_belege/n1/n1_port_hund_1230_explosivgranate.jpg` — Hund RE2-KI (kein Video-Vorbild).
 - `GR_belege/n1/n1_port_hund_1230_re15ki.jpg` — Hund RE1.5-KI (`RE15_AI_FLAVOR=re15`): `[gr] Hund Slot 1 Waffe 9: ZERFETZT`,
   Fluglog 7 Parts, Scheitel 2229..2690, Ruhe nach 25-28 Bildern; Explosion, Rauch, danach liegen die Teile in Blut (+7,8 s).
@@ -231,13 +410,14 @@ Auswertung `scratchpad/GR2/teil_check.py`).
 1. Dunkle Flecken an Wand/Decke (CD2 19,75-21,1 s): der Port hat keine Wand-Abziehbilder (Spur S Z28) — nicht gebaut.
 2. Der Blitz: Port = RE1.5-Explosion weiss -> orange (Original-Kind der Disc), Video weiss-gruenlich ohne Orange — nicht
    angepasst (Original-Effekt; die 80%-Fassung hat offenbar einen anderen Explosions-Effekt).
-3. In ROOM2000 (Kanal) werden die Explosions- und Rauch-Sprites (Kinder 0x03195000/0x030B5400/0x030B5800) nicht gezeichnet,
-   obwohl sie Plaetze bekommen (gr.log n=1) — in ROOM1140/1230 sind sie da. Ursache nicht untersucht (eigene Spur).
+3. ⛔ BERICHTIGT (Nachbesserung 2, Abnahme 1 §3) — KEIN Fehler: die Explosions- und Rauch-Sprites werden in ROOM2000 gezeichnet
+   (echter Wurf, drei exe-Staende gleich). Im Haken-Lauf mit Cut 6 lag die Explosionsmitte ausserhalb des Bildes (sx=2 sy=341
+   bei 320x240). Die fruehere Aussage "nicht gezeichnet, vermutlich Textur/Bank" war falsch.
 4. RE1.5-Gehirn OHNE RE2-Modellblock (RE15_RE15_RE2Z_IMPORT=0): Glieder platzen in Scherben, keine liegenden Teile (die RE1.5-
    Flugphysik FUN_8001f024 laesst ein ruhendes Teil bei y == 0 verschwinden, @0x8001f104-134).
 5. Kraehe: der GIB laeuft wie bisher (RE2 0x80102CA0 / RE1.5 @0x801149c4), ihre Teile verschwinden nach dem Original-Ablauf —
    nicht auf "liegen bleiben" umgestellt (Federn/Fetzen; Entscheidung des Nutzers offen).
-6. Spinne unter RE2-KI stirbt an keiner Granate (Schaden nicht eigenmaechtig geaendert, N1.3).
+6. ~~Spinne unter RE2-KI stirbt an keiner Granate~~ — erledigt in Nachbesserung 2 (N2): 1000 an jedem normalen Gegner.
 7. Das rote/orange Glimmen in der Kanalrinne CD2 15,6-17,4 s: Ursache vor dem Schnitt, nicht im Material.
 8. Elza: figurunabhaengig (kein Figurbezug im Pfad, wie §6.4) — kein eigener Sichtlauf in N1.
 
