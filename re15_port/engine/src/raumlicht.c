@@ -35,7 +35,8 @@ static const re15_raumlicht_t s_container[] = {
  *     drei Aot_set @0x014C6/@0x014DA/@0x014EE sind sce 8. Nur dort stimmt "kein Effekt auf dem Kanalwasser".
  *   - Port: die Tropfen haengen bei y -10018..-10000 (RE15_FX_LOG). Grund: Die Sammelklemme floor_y = Spawn-y in
  *     re15_esp.c esp_fx_spawn_rows_one haelt sie fest, und Routine 13 hat in esp_fx_dispatch keinen Fall (default).
- *   Ob der Port die Tropfen bauen soll, entscheidet der Nutzer (Dossier OFFEN 4). Mit dem Raumlicht haben sie nichts zu tun.
+ *   OFFEN 4 ist entschieden, Variante B wie Version_40%: tropfen_r41.c laesst den Evt_exec @0x0177C aus, und die Schleife
+ *     startet nicht (include/re15_tropfen_r41.h). Mit dem Raumlicht haben die Tropfen nichts zu tun.
  * Die Wasserflaechen (Obj_model_set Typ 3 @0x016E6/@0x01708/@0x0172A) und der Wasserlauf der Spur N bleiben. */
 
 int re15_raumlicht_liste(unsigned room, uint32_t frame, re15_raumlicht_t *out, int max)

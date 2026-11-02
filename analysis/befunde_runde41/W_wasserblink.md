@@ -13,6 +13,8 @@ Werkzeuge (alle unter `W_werkzeug/`):
 * `w_flacker.py` — zaehlt Bildwechsel mit Aenderung > 8 Graustufen ausserhalb der Leon-Spalte (x 130..210 von 640).
 * `w_scd.py`, `w_scd_liste.py` — linearer SCD-Durchlauf (Laengen Skill scd-disassembly).
 * `w_cuts.sh` — je Cut ein Lauf mit `RE15_RAUMLICHT_LOG`, zaehlt die projizierten Glanzpunkte.
+* `tropfen/wt_batch.py`, `tropfen/wt_liste.json`, `tropfen/wt_vergleich.py` — OFFEN 4 (Abschnitt 6): Messreihe vorher/nachher
+  im echten Fenster mit FX_LOG und EVT_TRACE, Vergleich je Lauf-Paar.
 
 Weg zur Marke: Debug-Menue-Sprung `RE15_DEBUG_JUMP=2000@250` (dieselbe Install-Sequenz wie eine Tuer),
 `RE15_PLAYER_POS=-7000,-25659,1976,1`. Der Sprung setzt Cut 0 (Sprungtabelle); in Cut 0/1 liegt Leon in den RVD-Zonen
@@ -292,6 +294,133 @@ berichtigten Kommentare beziehen. Bilder:
   * Der Port haelt die Tropfen auch durch die Sammelklemme `floor_y = y` fest, nicht nur, weil Routine 13 fehlt (§2.1 (d)).
   * Das 80%-Video werte ich als schwachen Gegenbeleg, nicht als "kein Gegenbeleg" (OFFEN 4).
 
+## 6. OFFEN 4 entschieden: Variante B, wie die 40%-Disc
+
+**Entscheid des Orchestrators (2026-11-01):** Variante B. Grund ist die Nutzerregel "Mod-Inhalt nur mit 80%-Beleg".
+Die Tropfen-Schleife startet nur der Repo-Baum (Fan-Mod). Auf der Disc Version_40% startet nichts sub03. Das 80%-Video
+zeigt in rund 9 s ROOM2000 Cut 2 keinen fallenden Tropfen, ein 80%-Beleg fehlt also. Damit verschwindet zugleich der
+Port-Fehler aus `W_abnahme_2.md` H1: Der haengende Tropfen pulsierte als Bildpunkt in Cut 2 (83,0..1), Cut 5 (193,1..2) und
+Cut 7 (169,15).
+
+### 6.1 Bytes, selbst nachgeprueft (`W_werkzeug/abnahme2/wa2_scd.py`, Laengen aus `scd_vm.c`)
+
+* Repo-Baum ROOM2000: main00 laeuft von @0x0161E bis @0x01784. Nach den drei 0x0B @0x0174C/@0x0175C/@0x0176C folgen
+  @0x0177C `04 ff 18 07` (Evt_exec sub07) und @0x01780 `01 00`. ROOM2001 hat an derselben Stelle `04 ff 18 08`.
+  Ziel ist sub07 @0x01B06 bzw. sub08 @0x01D32, erste Zeile jeweils `3a 00 06 00 00 00 00 10`.
+* Wer sub07/sub08 sonst noch starten koennte (Zensus der Opcodes 0x04 und 0x18 ueber alle Programme):
+  * ROOM2000: Evt_exec stehen nur in main00 @0x0177C (sub07), sub00 @0x0179C (sub02) und sub02 @0x01A32 (sub03).
+    Die Gosubs zielen auf 04, 05 und 06.
+  * ROOM2001: Evt_exec stehen nur in main00 @0x0177C (sub08), sub00 @0x017C6/@0x0181E (sub02/sub05) und sub02 @0x018DA (sub03).
+    Die Gosubs zielen auf 06 und 07. sub07 von 2001 ist @0x01D24 `11 00 08 00 …` und enthaelt keine Tropfen.
+  * Die Aot_set in 2000 (@0x016BE/@0x016D2) sind sce 8, also Wasserzonen. In 2001 kommen @0x017B2/@0x017EA mit Ereignis `18 04`
+    dazu, das ist sub04.
+  * Ergebnis: sub07/sub08 startet allein main00 @0x0177C. Effekt 6 Sub 0 steht nur in sub07 (@0x01B06..@0x01B94) bzw.
+    sub08 (@0x01D32..@0x01DC0), je achtmal.
+* Version_40% ROOM2000 ist per `cmp` gleich ROOM2001. main00 laeuft von @0x01426 bis @0x0159C und endet @0x01598 mit `01 00`.
+  In main00 und sub00..sub03 steht kein Opcode 0x04 und kein 0x18. sub03 @0x015B6 beginnt mit `3a 00 06 00 00 00 00 10`
+  und wird nie gestartet.
+
+### 6.2 Code
+
+* `engine/src/tropfen_r41.c` und `include/re15_tropfen_r41.h` sind neu. `re15_tropfen_r41_evt_exec_gestrichen(room, pc, rdt)`
+  liefert nur dann 1, wenn alles zutrifft:
+  * Raum 0x2000 mit sub07 oder 0x2001 mit sub08;
+  * main00 beginnt bei 0x0161E, und pc liegt in main00 bei 0x0177C;
+  * die Bytes dort sind `04 ff 18 07` bzw. `04 ff 18 08`;
+  * das Ziel liegt bei 0x01B06 bzw. 0x01D32 und beginnt mit `3a 00 06 00 00 00 00 10`.
+  Greift der Haken, schreibt er die Zeile `[tropfen41] ROOM200x main00 @0x0177C Evt_exec sub0x … ausgelassen` ins debug.log.
+* `engine/src/scd_vm.c` `op_evt_exec`: Der Aufruf steht hinter dem Panel-Haken und vor dem Vorruecken des Zeigers
+  (byte-true @0x8003f2b8). Bei 1 gilt: pc += 4, `SCD_R_CONTINUE`, also dasselbe wie nach einem Evt_exec ohne Start. Danach
+  beendet @0x01780 `01 00` main00, genau wie @0x01598 auf der 40%-Disc.
+* Unveraendert bleiben Effekt 6 allgemein (der Wasserlauf setzt Effekt 6 Sub 5, die Watspritzer `wasser_r38.c` ebenso), die
+  Gitterstrahlen 0x0B, der Wasserlauf der Spur N, 20B0/20B1 und `re15_esp.c`. Die Klemme `floor_y` und die fehlende
+  Routine 13 bleiben bestehen, wirken in 2000/2001 aber nicht mehr, weil dort kein Effekt 6 Sub 0 mehr entsteht.
+* Kommentare nachgezogen: `raumlicht.c`, `re15_raumlicht.h`, `test_raumlicht.c` und der Kopf von `test_r41_wasserblink.cmake`.
+
+### 6.3 Messung vorher und nachher (echtes Fenster)
+
+Werkzeug `W_werkzeug/tropfen/wt_batch.py` mit der Liste `wt_liste.json`. Es nutzt `abnahme2/wa2_lauf.py` (eigene PID,
+gdigrab `hwnd=`, 30 Bilder/s, beschleunigter Renderer, **kein AUTOSHOT, kein SOFTWARE_RENDER**, `SDL_ASSERT=always_ignore`)
+und `abnahme2/wa2_blitz.py`. Jeder Lauf setzt zusaetzlich `RE15_FX_LOG` und `RE15_EVT_TRACE`. Der Vergleich laeuft mit
+`wt_vergleich.py`.
+
+* Messkopie vorher: `re15_wt_vorher.exe` = HEAD 5a4b2f251, md5 `f72618bb…` (gleich der Fix-exe von `W_abnahme_2.md`).
+* Messkopie nachher: `re15_wt_nachher.exe`, Bau 2026-11-01 22:59, md5 `f6b5186d…`.
+* Beide Messkopien sind nach den Laeufen geloescht.
+* Laufweg: `RE15_DEBUG_JUMP=2000@90`, fuer Elza zusaetzlich `RE15_PSELECT_AUTO_SWITCH=1` (das laedt ROOM2001).
+  * Cuts 2/5/7/10 mit `RE15_FORCE_CUT`, 34 s Aufnahme.
+  * Marke: Zonenweg wie §1 (`RE15_PLAYER_POS=-7000,-25659,1976,1`, `U1.6`), 40 s Aufnahme.
+  * 20B0: Ankunftsszene ohne FORCE_CUT.
+* Ausgewertet sind 29,5..37,2 s im Raum. Jeder Lauf erreicht Raumbild F921..F1140 (befund.log), also weit ueber F545, ab dem
+  Punkt 7 erscheint.
+
+| Lauf | Fleck des Tropfens: Wechselzahl vorher -> nachher | fx.log Effekt 6 Sub 0, Zeilen | Wechsel > 8 ausserhalb Figur | Rest des Bildes |
+|---|---|---|---|---|
+| Leon 2000 Cut 2 | (83,1) **97 -> 0** | 1920 -> **0** | 102/917 -> **0/932** | Median ausserhalb Fleck und Figur gleich (max \|d\| 0) |
+| Leon 2000 Cut 5 | (193,1) **100 -> 0** | 4522 -> **0** | 199/914 -> **0/916** | gleich (0); 0x0B (id=11) 49913 -> 49859 Zeilen |
+| Leon 2000 Cut 7 | (169,15) **98 -> 0** | 4563 -> **0** | 103/920 -> **0/920** | gleich (0) |
+| Elza 2001 Cut 2 | (83,1) **100 -> 0** | 1971 -> **0** | 105/925 -> **0/926** | gleich (0) |
+| Elza 2001 Cut 5 | (193,1) **102 -> 0** | 4599 -> **0** | 204/923 -> **0/935** | gleich (0) |
+| Elza 2001 Cut 7 | (169,15) **100 -> 0** | 4617 -> **0** | 105/923 -> **0/884** | gleich (0) |
+| Leon Marke (Zonen 0 -> 1 -> 2) | (83,1) **103 -> 0** | 2039 -> **0** | 108/940 -> **0/1115** | gleich (0) |
+| Elza Marke | (83,1) **104 -> 0** | 2059 -> **0** | 109/943 -> **0/943** | gleich (0) |
+| Leon 2000 Cut 10 (Leiter) | — (am Rand y 0..19 nichts) | 1312 -> **0** | 864/920 -> 854/920 | Wasserlauf und Gitterstrahlen gleich, siehe unten |
+| Elza 2001 Cut 10 (Leiter) | — | 1316 -> **0** | 866/923 -> 859/923 | ebenso |
+| Leon 20B0 Ankunft | — | 0 -> 0, `[tropfen41]` 0 | 220/923 -> 228/926 | Flut gleich, siehe unten |
+| Elza 20B1 Ankunft | — | 0 -> 0, `[tropfen41]` 0 | 178/923 -> 186/925 | ebenso |
+
+* `[tropfen41]` steht in allen acht Laeufen nachher in 2000/2001 genau einmal und in keinem Lauf vorher. In 20B0/20B1 steht
+  es weder vorher noch nachher. `RE15_EVT_TRACE` zeigt vorher `F90 room=2000 Evt_exec sub=7` bzw. `room=2001 … sub=8`,
+  nachher fehlt diese Zeile.
+* Blitze und unruhige Flecken ausserhalb der Figur (wa2_blitz.py) sind in Cut 2/5/7 und an der Marke nachher 0. Vorher waren
+  es in Cut 5 je 1/1, das ist der Tropfen-Punkt. Die Wechselzahl am oberen Rand (y 0..19) ausserhalb der Figur faellt von 97..104
+  auf **0**.
+* Leiter Cut 10: Effekt 0x0B (id=11) hat vorher 50625 und nachher 50733 Zeilen (Elza 50733 und 50841), Effekt 6 mit anderem
+  Sub (Wasserlauf-Ringe) 1103 und 1107. Die Wechselzahl-Karten korrelieren mit 1,000, Jaccard 1,00. Das Medianbild weicht nur
+  in 49 Bildpunkten im Kasten x 71..121, y 150..176 ab. Dort liegt der Wasserlauf, und jeder dieser Punkte wechselt 177 bis 700
+  Mal in 920 Bildern; das ist die Phase des Laufs. Ausserhalb des Kastens ist der groesste Unterschied 4 bzw. 6.
+* 20B0/20B1: Der Haken kann dort nicht greifen (Raumpruefung, `[tropfen41]` 0). Die Wechselzahl-Karten korrelieren mit 0,997,
+  Jaccard 0,97/0,99, das Medianbild ausserhalb der Figur weicht hoechstens um 6 ab. Das ist die Streuung zweier Laeufe, wie
+  `W_abnahme_2.md` §3 sie fuer zwei Laeufe derselben exe misst (Jaccard 0,98..1,00).
+
+### 6.4 Riegel
+
+* **`unit_r41_tropfen`** (neu, `tests/unit/test_r41_tropfen.c`, `probes/r41_tropfen.cmake`): echte RDTs 2000 (Leon) und 2001 (Elza),
+  Raumstart ueber `scd_room_reenter`, dann 700 Takte mit `scd_vm_tick` und `re15_esp_fx_tick`. Geprueft wird:
+  * der Haken greift einmal;
+  * in keinem Takt ist ein Effekt 6 Sub 0 im Pool;
+  * kein Faden steht in sub07/sub08;
+  * die drei Gitterstrahlen 0x0B (-23900/-23300/-22700, -5300, 11200) stehen;
+  * Eingrenzung: andere Raeume, andere Stellen, vertauschte Daten, eine Kopie mit `04 ff 18 06` und eine Kopie mit Effekt 7
+    im Ziel greifen nicht.
+  Ergebnis: 33 Pruefungen, OK.
+  **Gegenprobe:** Mit `scd_vm.c` ohne den Aufruf (`if (0 && …)`, nur gebaut und wieder zurueckgesetzt) ist der Riegel rot:
+  Haken 0-mal, Effekt 6 Sub 0 hoechstens 11 zugleich, Faden 10 ab Takt 0 in der Schleife, bei Leon und Elza.
+* **`integration_r41_wasserblink_tropfen_leon` / `_elza`** (neu, `test_r41_wasserblink.cmake`): echte exe, Weg auf Cut 2 bis Bild 625.
+  Verlangt werden:
+  * die Zeile `[tropfen41]`;
+  * fx.log ohne `id=6 sub=0`;
+  * am oberen Bildrand (x 76..92, y 0..5) in F560..F619 kein Wechsel > 8;
+  * ein Kontrolllauf Cut 10 (Bild 200) mit Effekt 0x0B im fx.log, aber ohne Effekt 6 Sub 0.
+  Ergebnis mit dem neuen Bau, Leon und Elza:
+  * Rand: 0 von 59 Wechseln, groesster Sprung 0;
+  * Kontrolle: 10125 Zeilen 0x0B und 0 Zeilen Effekt 6 Sub 0.
+  **Gegenprobe** mit `re15_wt_vorher.exe` (cmake -P direkt): Leon und Elza sind rot, und zwar in allen vier Pruefungen:
+  * die Zeile `[tropfen41]` fehlt;
+  * fx.log hat 787 Zeilen Effekt 6 Sub 0;
+  * am Rand gibt es 15 von 59 Wechseln mit Sprung 48 bei (83,1), alle 4 Bilder (F563, F567, …);
+  * der Kontrolllauf hat 201 Zeilen Effekt 6 Sub 0.
+* ctest aus PowerShell (`C:\msys64\mingw64\bin` vorn, `-R "unit_raumlicht|unit_r41_tropfen|r41_wasserblink" -j 3`):
+  **8/8 gruen**, "100% tests passed, 0 tests failed out of 8" (208 s). Darunter sind unit_raumlicht,
+  unit_r41_wasserblink_werkzeug, unit_r41_tropfen und integration_r41_wasserblink_leon/_elza/_gegen/_tropfen_leon/_tropfen_elza.
+  Die Laeufe leon/elza zeigen weiter "flacker: 120 Bilder, 0 von 119 Wechseln > 8".
+* Nachbarschaft (Wasser, STAGE2; ctest `-R "r41_ventilkette|nachtrag30|wasser20b0|r38_wasser|wasserlauf|wassersprung|stage2|room2000"`
+  `-j 3`, 45 Tests). Beim Commit waren **43/45 gruen, keiner rot**. Darunter sind unit_r41_ventilkette (ROOM2000-Strahlen,
+  Leiter), integration_r41_nachtrag30_wasser/_laden/_schrank/_panel (Leon und Elza), integration_r41_wasser20b0 und _npc,
+  integration_r38_wasser/_wasserzombie, integration_r41_masken36_stage2, integration_r41_ventilkette/_b/_alarm/_kette/_weg
+  sowie alle unit_r38_wasser_* und unit_r41_wasser20b0_*. Die beiden letzten, integration_r41_ventilkette_weg_elza und _sperre
+  (RUN_SERIAL, je bis 1700 s), liefen beim Commit noch.
+
 ## Fuer den Nutzer
 
 Das Blinken im Kanal war ein ausgedachter Effekt des Ports: weisse Glanzpunkte, die an sechs festen Stellen des Kanals
@@ -305,8 +434,12 @@ Berichtigung (Nachbesserung 1): Dass "das Original keinen Effekt auf das Kanalwa
 40%-Disc. In den Raumdaten, die der Port laedt (Repo-Baum, Mod), faellt alle 19,5 s eine Runde Wassertropfen von der
 Decke und spritzt am Boden auf. In der Kamera deiner Marke sind es drei Tropfen: einer in den Kanal, einer auf den rechten
 Sims, einer hinten auf den linken Steg. Auf der 40%-Disc steht dieselbe Tropfen-Schleife im Skript, wird aber nie gestartet.
-Der Port laesst die Tropfen derzeit nicht fallen, sie haengen an der Decke. Einer davon ist als winziger Punkt am oberen
-Bildrand zu sehen. Ob die Tropfen kommen sollen, entscheidest du (OFFEN 4).
+Der Port liess die Tropfen nicht fallen, sie hingen an der Decke. Einer davon war als winziger pulsierender Punkt zu sehen,
+in drei Kameras von 2000/2001.
+
+Entscheidung (OFFEN 4, Variante B): Der Port macht es jetzt wie die echte 40%-Disc und startet die Tropfen-Schleife nicht.
+Fuer die Tropfen gibt es keinen Beleg aus dem 80%-Video. Damit ist auch der pulsierende Punkt weg, bei Leon und bei Elza.
+Wasser, Wasserlauf an der Leiter, Gitterstrahlen und die Flut in 20B0 sind unveraendert (Abschnitt 6).
 
 ## OFFEN
 
@@ -318,8 +451,19 @@ Bildrand zu sehen. Ob die Tropfen kommen sollen, entscheidest du (OFFEN 4).
    NPC-Weg Spur A Punkt 2), ist hier nicht gemessen — in der Marke steht "Gegner im Raum: keine".
 3. **BEFUND.md G4** (`analysis/video_80prozent/BEFUND.md` Zeile 43) nennt fuer 2000 noch "zu pruefen"; Ergebnis dieser Spur:
    Schritt-Spritzer der Zombies (Abschnitt 2.3). Die Datei ist nicht angefasst (gemeinsame Datei).
-4. **Deckentropfen Effekt 6 Sub 0, ENTSCHEIDUNG BEIM NUTZER** (ersetzt "ob das Original sie fallen laesst, ist nicht
-   geprueft"; Befund `W_abnahme_1.md` §3.2, hier nachgemessen in Abschnitt 2.1 und 5):
+4. **Deckentropfen Effekt 6 Sub 0 — ENTSCHIEDEN: Variante B, wie die 40%-Disc** (Orchestrator 2026-11-01, Abschnitt 6;
+   vorher "Entscheidung beim Nutzer"; Befund `W_abnahme_1.md` §3.2, nachgemessen in Abschnitt 2.1 und 5):
+   * **Entscheid und Umsetzung:** Die Schleife sub07/sub08 laeuft in 2000/2001 nicht. `engine/src/tropfen_r41.c` laesst genau den
+     Evt_exec main00 @0x0177C `04 ff 18 07` / `04 ff 18 08` aus, der Haken sitzt in `scd_vm.c` `op_evt_exec`.
+     Begruendung: Nutzerregel "Mod-Inhalt nur mit 80%-Beleg". Den Start gibt es nur im Repo-Baum; Version_40% endet in main00
+     @0x01598 mit `01 00`; im 80%-Video ist in 9 s kein Tropfen zu sehen.
+     Messung (Abschnitt 6.3, echtes Fenster, Leon und Elza):
+     * Der pulsierende Punkt ist in Cut 2 (83,1), Cut 5 (193,1) und Cut 7 (169,15) weg, Wechselzahl 97..104 -> 0.
+     * fx.log hat 0 statt 1920..4617 Zeilen Effekt 6 Sub 0.
+     * Sonst bleibt das Bild gleich (Medianbild ausserhalb Fleck und Figur max |d| 0).
+     * Wasserlauf, Gitterstrahlen 0x0B und die Flut in 20B0 sind unveraendert.
+     Riegel unit_r41_tropfen und integration_r41_wasserblink_tropfen_leon/_elza, beide mit Gegenprobe rot (Abschnitt 6.4).
+   Der Befund, wie er zur Entscheidung vorlag:
    * **Was es ist:** Ein fallender Deckentropfen mit Aufschlag-Spritzer, Routine 13 @0x80017990, accel (0,10,0) @0x14A64,
      Bodentest room_coll `jal 0x8001c6e8` @0x800179c4, Aufschlag-Anim 0x26 @0x80017a28.
      Acht Punkte bei y -10000, ein Umlauf dauert 585 Bilder (19,5 s).
@@ -338,17 +482,21 @@ Bildrand zu sehen. Ob die Tropfen kommen sollen, entscheidest du (OFFEN 4).
      Raumeintritt, und der liegt vor dem Schnitt des Videos. Der Gegenbeleg ist aber schwach: Das Video ist ein
      DivX-Mitschnitt, und wie gross der Tropfen im Bild ist, ist nicht gemessen. Der Port zeigt ihn am Bildrand nur
      1 bis 2 Bildpunkte gross, allerdings angeschnitten.
-   * **Regel:** "Mod-Inhalt nur mit 80%-Beleg". Ein 80%-Beleg fehlt. Ohne Entscheidung des Nutzers baut der Port die Tropfen nicht.
-   * **Was der Port heute tut** (Port-Fehler, unabhaengig von der Entscheidung): Die drei Tropfen in Cut 2 haengen bei
+   * **Regel:** "Mod-Inhalt nur mit 80%-Beleg". Ein 80%-Beleg fehlt.
+   * **Was der Port bis zum Entscheid tat** (Port-Fehler): Die drei Tropfen in Cut 2 haengen bei
      y -10018..-10000 (Abschnitt 5.1). Ursache sind die Sammelklemme `floor_y = y` in `re15_esp.c`
      `esp_fx_spawn_rows_one` und das Fehlen von Routine 13 in `esp_fx_dispatch`. Punkt 7 zeichnet der Port ab F545 als
      1 bis 2 Bildpunkte grossen, pulsierenden Fleck bei (83,0..1) am oberen Bildrand
-     (`W_belege/wb1_port_tropfen7_bildrand.png`). Punkte 3 und 5 liegen bei y -10000 ueber dem Bild.
-   * **Zur Wahl:**
+     (`W_belege/wb1_port_tropfen7_bildrand.png`). Punkte 3 und 5 liegen bei y -10000 ueber dem Bild. Dazu kamen Cut 5 (193,1..2)
+     und Cut 7 (169,15), siehe `W_abnahme_2.md` H1.
+   * **Zur Wahl stand** (gewaehlt: B):
      * (A) Tropfen bauen wie im Repo-Baum. Dafuer braucht es Routine 13 mit room_coll statt der Sammelklemme fuer
        Effekt 6 und die Aufschlag-Anim 0x26. Der Riegel `integration_r41_wasserblink_leon/_elza` ist dann anzupassen,
        weil Punkt 5 in sein Kanal-Fenster faellt.
      * (B) Wie die 40%-Disc: Die Schleife sub07/sub08 in 2000/2001 laeuft nicht. Damit verschwindet auch der Fleck am Bildrand.
      * (C) Bleibt wie jetzt: Die Tropfen haengen, und der Fleck am Bildrand bleibt. Das ist kein Originalverhalten.
-     Dieser Befund gilt auch fuer andere Raeume. Zeilen mit Routine 13 stehen in 28 Repo-RDTs (Abschnitt 2.1 (e)).
-     Ob deren Skripte sie starten, ist nicht geprueft.
+5. **Routine-13-Zeilen in den 28 anderen Repo-RDTs** (aus OFFEN 4 herausgeloest, NICHT Teil des Entscheids B, unveraendert offen):
+   Zeilen mit Routine 13 stehen in 28 Repo-RDTs (Abschnitt 2.1 (e): 11A0/11A1, 1260/1261, STAGE2 2000..20B1; Version_40%: 2000,
+   2001, 2030, 2070, 20B0, 20B1). Ob deren Skripte den Effekt starten, ist nicht geprueft. Wo sie es tun, haengt der Tropfen im
+   Port ebenso (`re15_esp.c` Klemme `floor_y`, keine Routine 13 in `esp_fx_dispatch`). Der Haken `tropfen_r41.c` greift nur
+   in 2000/2001 an @0x0177C.

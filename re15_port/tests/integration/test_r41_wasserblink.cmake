@@ -3,10 +3,12 @@
 #
 # Dossier analysis/befunde_runde41/W_wasserblink.md. Nutzer 2026-11-01: "Das blinken im Wasser ist auf jeden Fall
 # fehlerhaft und quatsch" (Marke ROOM2000 Cut 2, F444). Ursache: engine/src/raumlicht.c Fall 0x2000 (Commit 4100d2aed),
-# ausgedachte Glanzpunkte im 4-Bild-Takt. Die Raumdaten setzen im Kanal kein Licht. Der Deckentropfen Effekt 6 Sub 0
-# (Routine 13 @0x80017990; Start nur im Repo-Baum, main00 @0x0177C `04 ff 18 07`) ist ein ESP-Effekt und haengt im
-# Port bei y -10000 (raumlicht.c, Dossier OFFEN 4), ausserhalb des Kanal-Fensters unten. Laesst der Port die Tropfen
-# fallen, faellt Punkt 5 (-14476,-23171) bei x 118..125 in dieses Fenster, und der Riegel ist anzupassen. Fall 0x2000 entfernt.
+# ausgedachte Glanzpunkte im 4-Bild-Takt. Die Raumdaten setzen im Kanal kein Licht. Fall 0x2000 entfernt.
+# Der Deckentropfen Effekt 6 Sub 0 (Routine 13 @0x80017990) ist ein ESP-Effekt, kein Raumlicht. Seit OFFEN 4 (Variante B,
+# wie Version_40%, dort endet main00 @0x01598 mit `01 00`) startet der Port die Schleife nicht mehr: tropfen_r41.c laesst
+# den Evt_exec in main00 @0x0177C `04 ff 18 07` (2000) / `04 ff 18 08` (2001) aus (include/re15_tropfen_r41.h).
+# Vorher hing der Tropfen bei y -10000, und Punkt 7 pulsierte am oberen Bildrand von Cut 2 bei (83,0..1).
+# Das pruefen TEIL=tropfen_leon und tropfen_elza.
 #
 #   TEIL=leon / elza   Debug-Sprung 2000 (Elza -> 2001), Spawn (-7000,-25659) Band 1: die RVD-Zonen 0->1 (@0x0028C) und
 #                      1->2 (@0x002C8) bringen die Kamera auf Cut 2 = Blick der Marke. Bildserie F300..F419:
@@ -17,6 +19,14 @@
 #   TEIL=gegen         Gegenprobe: ROOM50B0 Cut 2 traegt den Raumlicht-Schein weiter; Bild F150 mit und ohne
 #                      RE15_KEIN_RAUMLICHT unterscheidet sich im Bodenband x 0..130, y 165..200 um >= 20 — der Messweg
 #                      (RE15_FRAMEDUMP) sieht, was der Raumlicht-Pfad zeichnet.
+#   TEIL=tropfen_leon / tropfen_elza   Deckentropfen (OFFEN 4, Variante B). Derselbe Weg auf Cut 2 bis Bild 625, RE15_FX_LOG:
+#                      - debug.log "[tropfen41] ROOM200x main00 @0x0177C Evt_exec sub07/sub08 ... ausgelassen",
+#                      - fx.log ohne "id=6 sub=0" (vorher ab F185 die Punkte 3, 5 und 7 aus sub07 @0x01B40/@0x01B6A/@0x01B94),
+#                      - oberer Bildrand x 76..92, y 0..5 in F560..F619 ohne Wechsel > 8 (vorher pulsierte Punkt 7 ab F545
+#                        bei (83,0..1) im 8-Bilder-Takt),
+#                      - Kontrolllauf Cut 10 (RE15_FORCE_CUT, Bild 200): fx.log zeigt Effekt 0x0B ("id=11", Gitterstrahlen und
+#                        Wasserlauf der Spur N), aber kein "id=6 sub=0". Der FX_LOG-Weg sieht also Effekte.
+#                      Gegenprobe: mit der exe vor tropfen_r41.c (5a4b2f251) sind beide Teile rot (Dossier OFFEN 4).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_TOOL=<test_r41_wasserblink> -DTEIL=<leon|elza|gegen> -DWORKDIR=<dir>
 #               -P test_r41_wasserblink.cmake
@@ -112,6 +122,67 @@ if("${TEIL}" STREQUAL "leon" OR "${TEIL}" STREQUAL "elza")
         else()
             set(_fehler "${_fehler}\n[aus] kein Bild F360")
         endif()
+    endif()
+elseif("${TEIL}" STREQUAL "tropfen_leon" OR "${TEIL}" STREQUAL "tropfen_elza")
+    if("${TEIL}" STREQUAL "tropfen_elza")
+        set(_fig RE15_PSELECT_AUTO_SWITCH=1)
+        set(_raum 2001)
+        set(_sub 08)
+    else()
+        set(_fig "")
+        set(_raum 2000)
+        set(_sub 07)
+    endif()
+    set(_ort RE15_DEBUG_JUMP=2000@250 "RE15_PLAYER_POS=-7000,-25659,1976,1")
+
+    _lauf(tropfen 400 ${_fig} ${_ort} RE15_FX_LOG=fx.log "RE15_FRAMEDUMP=560-619/1:t_" "RE15_EXIT_AT=625#${_raum}")
+    set(_dir_t "${WORKDIR}")
+    _muss("${_dbg}" "loaded room${_raum}.rdt" "[tropfen] Raum")
+    _muss("${_dbg}" "[pri] cut=2 " "[tropfen] Kamera Cut 2 ueber die RVD-Zonen")
+    _muss("${_dbg}" "[tropfen41] ROOM${_raum} main00 @0x0177C Evt_exec sub${_sub}" "[tropfen] Evt_exec ausgelassen")
+    _muss("${_dbg}" "EXIT_AT: Bild 625 in Raum ${_raum}" "[tropfen] Lauf zu Ende")
+    if("${TEIL}" STREQUAL "tropfen_elza")
+        _muss("${_dbg}" "Spieler-Familie PL04" "[tropfen] Elza gewaehlt")
+    endif()
+    set(_fx "")
+    if(EXISTS "${_dir_t}/fx.log")
+        file(READ "${_dir_t}/fx.log" _fx)
+    endif()
+    string(REGEX MATCHALL "id=6 sub=0 [^\n]*" _tropfen "${_fx}")
+    list(LENGTH _tropfen _nt)
+    if(_nt GREATER 0)
+        list(GET _tropfen 0 _t0)
+        set(_fehler "${_fehler}\n[tropfen] fx.log: ${_nt} Zeilen Effekt 6 Sub 0, erste: ${_t0}")
+    endif()
+    file(GLOB _bilder "${_dir_t}/t_*.ppm")
+    list(LENGTH _bilder _n)
+    if(_n LESS 60)
+        set(_fehler "${_fehler}\n[tropfen] nur ${_n} von 60 Bildern")
+    else()
+        list(SORT _bilder)
+        execute_process(COMMAND "${RE15_TOOL}" flacker 76 92 0 5 8 0 ${_bilder}
+                        TIMEOUT 120 RESULT_VARIABLE _r4 OUTPUT_VARIABLE _o4)
+        message(STATUS "r41_wasserblink[${TEIL} rand]:\n${_o4}")
+        if(NOT _r4 EQUAL 0)
+            set(_fehler "${_fehler}\n[rand] am oberen Bildrand pulsiert ein Punkt (haengender Tropfen):\n${_o4}")
+        endif()
+    endif()
+
+    _lauf(kontrolle 300 ${_fig} RE15_DEBUG_JUMP=2000@250 RE15_FORCE_CUT=10 RE15_FX_LOG=fx.log "RE15_EXIT_AT=200#${_raum}")
+    set(_fx "")
+    if(EXISTS "${WORKDIR}/fx.log")
+        file(READ "${WORKDIR}/fx.log" _fx)
+    endif()
+    string(REGEX MATCHALL "id=11 sub=" _strahl "${_fx}")
+    list(LENGTH _strahl _ns)
+    string(REGEX MATCHALL "id=6 sub=0 " _tropfen "${_fx}")
+    list(LENGTH _tropfen _nt)
+    message(STATUS "r41_wasserblink[${TEIL} kontrolle]: Cut 10 fx.log ${_ns} Zeilen Effekt 0x0B, ${_nt} Zeilen Effekt 6 Sub 0")
+    if(_ns EQUAL 0)
+        set(_fehler "${_fehler}\n[kontrolle] Cut 10 ohne Effekt 0x0B im fx.log, der FX_LOG-Weg ist blind")
+    endif()
+    if(_nt GREATER 0)
+        set(_fehler "${_fehler}\n[kontrolle] Cut 10: ${_nt} Zeilen Effekt 6 Sub 0")
     endif()
 elseif("${TEIL}" STREQUAL "gegen")
     _lauf(mit 300 RE15_DEBUG_JUMP=50B0@250 RE15_FORCE_CUT=2 "RE15_FRAMEDUMP=150:g.ppm" "RE15_EXIT_AT=160#50B0")

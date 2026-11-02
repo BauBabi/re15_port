@@ -3,7 +3,7 @@
  * 2000/2001: NICHTS in keinem Bild (Runde 41 Spur W, analysis/befunde_runde41/W_wasserblink.md: die Glanzpunkte im Kanal
  * waren ausgedacht, die Raumdaten setzen dort kein Licht; Commit 4100d2aed lieferte in 3000 Bildern Licht.
  * Der Deckentropfen Effekt 6 Sub 0 (Routine 13 @0x80017990, Start nur im Repo-Baum main00 @0x0177C) ist ein
- * ESP-Effekt und kein Raumlicht, siehe raumlicht.c);
+ * ESP-Effekt und kein Raumlicht, siehe raumlicht.c; seit OFFEN 4 Variante B startet ihn der Port nicht, Riegel unit_r41_tropfen);
  * alle anderen Raeume: nichts. */
 #include <stdio.h>
 #include "re15_raumlicht.h"

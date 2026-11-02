@@ -7,12 +7,15 @@
 #   integration_r41_wasserblink_elza    dasselbe fuer Elza ROOM2001
 #   integration_r41_wasserblink_gegen   Gegenprobe: ROOM50B0 Cut 2 zeigt den Raumlicht-Schein (Rot-Zuwachs gegen KEIN_RAUMLICHT),
 #                                       der Messweg sieht also, was der Raumlicht-Pfad zeichnet
+#   integration_r41_wasserblink_tropfen_leon / _elza   OFFEN 4, Variante B (engine/src/tropfen_r41.c): main00 @0x0177C ausgelassen,
+#                                       fx.log bis Bild 625 ohne Effekt 6 Sub 0, oberer Rand von Cut 2 in F560..F619 ruhig,
+#                                       Kontrolllauf Cut 10 mit Effekt 0x0B im fx.log (Mechanik-Riegel: probes/r41_tropfen.cmake)
 add_executable(test_r41_wasserblink ${CMAKE_CURRENT_LIST_DIR}/../test_r41_wasserblink.c)
 add_test(NAME unit_r41_wasserblink_werkzeug COMMAND test_r41_wasserblink)
 set_tests_properties(unit_r41_wasserblink_werkzeug PROPERTIES WILL_FAIL TRUE TIMEOUT 30)   # ohne Argumente: Rueckgabe 2
 
 if(TARGET re15_pc)
-    foreach(_teil leon elza gegen)
+    foreach(_teil leon elza gegen tropfen_leon tropfen_elza)
         add_test(NAME integration_r41_wasserblink_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

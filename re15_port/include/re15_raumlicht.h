@@ -9,7 +9,8 @@
  *   ROOM2000/2001: entfernt (Runde 41 Spur W, Dossier analysis/befunde_runde41/W_wasserblink.md) — die
  *   "Glanzpunkte" waren im Video Spritzer watender Zombies. Die Raumdaten setzen im Kanal kein Licht; als Effekt
  *   faellt dort nur ein Deckentropfen (Effekt 6 Sub 0, Routine 13 @0x80017990), und den startet nur der Repo-Baum
- *   (main00 @0x0177C `04 ff 18 07`). Version_40% startet ihn nicht. Einzelheiten stehen in raumlicht.c.
+ *   (main00 @0x0177C `04 ff 18 07`). Version_40% startet ihn nicht, und seit OFFEN 4 (Variante B) auch der Port nicht
+ *   (include/re15_tropfen_r41.h). Einzelheiten stehen in raumlicht.c.
  * RE15_KEIN_RAUMLICHT=1 schaltet alles ab.
  */
 #ifndef RE15_RAUMLICHT_H
