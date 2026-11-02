@@ -60,7 +60,7 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define AN_TON_BIT   0x08000000u    /* Bild-Ton: Bit 27, Id = Wort >> 28 (FUN_80016028, birkin_bahnsteig.c bb_bild_ton) */
 #define AN_TON_BANK          24     /* G4-Bank, wie bb_se */
 /* Clips der Frau (0x4D-Bank, 24 Clips, Kontaktblatt AN_belege) */
-#define AN_FA_STEHEN          0     /* Stehen */
+#define AN_FA_STEHEN         22     /* Stehen mit Handgeste beim Sprechen (Clip 0/1 sind Gehen, Clip 2 Klettern; Kontaktblatt) */
 #define AN_FA_WEICHEN         4     /* zurueckweichen, Arme gehoben */
 #define AN_FA_STURZ           6     /* faellt zu Boden (Bild 12 = am Boden) */
 #define AN_FA_STURZ_BODEN    12
