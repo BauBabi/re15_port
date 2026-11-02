@@ -304,3 +304,6 @@ liegt im Bild ueber der Schaedel-Oberkante (Bild 4-12: Leiche ab y 53-76, Schaed
 (Laengsachse waagerecht, Anteil 1 / 1/2 / 1/3) - im Bild dann unter dem Schaedel, aber 94-186 Scheitel unter dem Unterkiefer (Riegel maul rot): Zielkonflikt
 "nicht oben raus" gegen "nicht unten raus" waehrend der Rolle; nicht eingebaut. Offen.
 Nachtrag NB3: Im ersten Testlauf fielen integration_r41_gatorfix_rampe/_elza (707 2-s-Fenster): der Alligator kommt jetzt an die Figur heran und schnappt mit dem Hochbiss der Belagerung (Phase 5, Clip 4, Spur-B-Design) nach oben - ein Biss am Spieler; Mass und Fuzz nehmen ihn jetzt aus wie den Biss im Wasser (Kopf unter dem 4200er-Aufricht-Gate). Danach 0 Fenster (1289/1280 Bilder Hochbiss). Rampe Nordteil x 2602: Gator im Bild der Spielerkamera nur 12 %.
+
+### Abschluss Nachbesserung 3
+Tests (PowerShell-ctest, Auswahl wie die Abnahme, -j3): 100% tests passed, 0 tests failed out of 117
