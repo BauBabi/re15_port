@@ -52,3 +52,13 @@
 /stufe3/roh/
 /stufe3/**/__pycache__/
 *.pyc
+
+# Variante K (E20): Kontaktblaetter, Modelle, Berichte versioniert; Arbeitslaeufe (_lauf) und Pruefbilder je Variante nachbaubar (generator/k_variante.sh)
+!/varianten/K_alligator/*.png
+!/varianten/K_alligator/blaetter/*.png
+!/varianten/K_alligator/K*_*/FORM.EMD
+!/varianten/K_alligator/K*_*/FORM.TIM
+!/varianten/K_alligator/K*_*/seite3.png
+/varianten/K_alligator/_lauf/
+/varianten/K_alligator/*.npy
+/varianten/K_alligator/generator/__pycache__/
