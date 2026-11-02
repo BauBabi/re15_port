@@ -465,3 +465,34 @@ Offen: Fensterbelege (gdigrab, Cut 2/3, Leon/Elza, Normalhelligkeit) und exe-Rie
   hoechstens 40 von 306 Scheiteln, groesster Weg 584 Einheiten. Erste Fassung (Band der Engine mit vollem Fenster, ohne Toleranz) liess 1-2 Scheitel 1-12
   Einheiten draussen (Rechen-/Fensterrand-Unterschied Engine Q12 gegen Riegel Gleitkomma) - daher TOL 16 und das engere Fenster.
 Offen: Fensterbelege (Rollfenster und Fang, Leon/Elza, Normalhelligkeit).
+
+### NB5 Fensterbelege (gdigrab auf das hwnd des eigenen Prozesses, 30 Bilder/s, RE15_WINDOW_SCALE=2, kein AUTOSHOT/SOFTWARE_RENDER; Skript `G2_belege/nb5/werkzeug/lauf.sh`
+= Abnahme-3-Skript mit eigenem Laufordner scratchpad `g2nb5/runs/<lauf>`, Stapel `batch_fenster.sh`; exe md5 90e257cd... = Stand 4ea2322a4)
+- **M2a/M2b Cut 2 (Eingabe und Umgebung der Abnahme-Laeufe west_leon/west_elza: Rueckkehr-Lage 3000,-18800 bzw. 5600,-18700, Cut 2, Kletterfolge):**
+  climb.log sub=9 (Figur oben), state.log 3350 Bilder cam=2. Auswerter `werkzeug/bahn_exe.py` (Plan aus `TRAG BAHN an`, Wurzel aus gator_trag.log):
+  | Lauf | Plan | ab Ankunft | Abstand zur Bahn Median/p95/max | Runden | Umlauf (Plan) | Schwerpunkt | Clips | bewegte Flaeche (sicht.py, t 57-124) |
+  |---|---|---|---|---|---|---|---|---|
+  | west_leon | A (1800,-22200) B (2800,-22200) R 650 | F1165, 2136 Bilder | 117 / 159 / 198 | 19,4 | 110 (127) | (2286,-22213) | nur 0 | Median **7069** (Abnahme 3: 286) |
+  | west_elza | dieselbe | F1076, 2225 Bilder | 117 / 159 / 182 | 20,2 | 110 (127) | (2281,-22208) | nur 0 | Median **6551** (Abnahme 3: 482) |
+  Bezug Abnahme 3: Cut 0 frei 8833. p7.py (Abnahme-Auswerter) west_elza: 0 2-s-Fenster ohne Fortschritt, 30-B.-Fenster netto < 300: 0 %.
+  Bilder bei Normalhelligkeit: `G2_belege/nb5/m2b_west_leon_cut2_normal_4s.jpg`, `m2b_west_leon_cut2_t90-93_2fps_normal.jpg`, `m2b_west_elza_cut2_normal_4s.jpg` -
+  der Alligator schwimmt gross im Vordergrund vor der Kamera (Schuppen, Beine, Kopf, gelber Kanister erkennbar), die Figur bleibt oben im Bild frei; in den
+  Anfahrtssekunden (Westkanal) ist er nicht im Bild.
+- **Cut 3**: exe-Lauf nord_leon (Rueckkehr-Lage 3000,-13700, Cut 3) - die Figur klettert an der Rampen-Nordkante nicht hinauf (climb.log ohne sub=9, wie NB4),
+  keine Belagerung. Cut 3 nur im Riegel bahn (gefahrene Bahn = Plan, Silhouette 275-295 %).
+- **M1 (Szene, Laeufe ank_leon/ank_elza, Eingabe der Abnahme)**: Bilder stark aufgehellt (Y x 4) zum Finden: `m1_leon_biss_bis_rollanfang_t35.93_30fps_hell4x.jpg`,
+  `m1_leon_rollfenster_t36.17_30fps_hell4x.jpg`, `m1_leon_fang_t38.45_30fps_hell4x.jpg`, `m1_elza_halten_t46.62_30fps_hell4x.jpg`, `m1_elza_fang_t48.95_30fps_hell4x.jpg`
+  (Zuordnung: Wurfbild F145 im Video, F53 = Schnitt auf Cut 1). Gegen `G2_abnahme_3/p1_leon_rollfenster_C5B3-11_leiche_ueber_schaedel_30fps_hell.jpg`: der
+  Rumpf liegt im Rollfenster nicht mehr ueber Schaedel/Oberkiefer, die Leiche liegt quer im Maul auf dem Unterkiefer. **Ehrlich, nicht 0 im Bild:** (a) in 2-3
+  Bildern beim Uebergang Clip 4 -> 5 ragt eine Fussspitze hinter dem Nacken nach oben rechts; (b) im Fangbild liegt der Kopf der Leiche links NEBEN/vor dem
+  Unterkiefer (Kamera schraeg von vorn), die Beine ragen seitlich heraus. Beides ist seitlicher Ueberstand der Quer-Haltung (in Abnahme 3 beim Halten
+  "quer im Maul ... In Ordnung") - das Band-Mass (oben/unten im Kiefer- und waagerechten Rahmen) ist dort 0. Die seitliche Grenze "bis zu den Kieferraendern"
+  aus dem Auftrag ist NICHT eingebaut: sie wuerde die angenommene Quer-Haltung (Bild 12-56) auf Kieferbreite zusammenschieben. Weg dafuer: z-Band (seitliche
+  Ausdehnung der Kopf-Scheitel je x) nur im Rollfenster und in den Fangbildern, mit Ein-/Ausblenden ueber einige Bilder, sonst springt die Haltung.
+
+### NB5 Nachzug - Verfolgungs-Kreis (kreis 1) wie NB4
+Erster Gruppenlauf (Testbaum build_t5, Stand 81c1e0edd): integration_r41_gatorfix_abn2_nordbecken (2) und _abn2_ecken (6 Zeitfenster von 2 s ohne Fortschritt,
+Figur nicht oben = Verfolgung) rot; alle anderen bis dahin (71 von 123) gruen. Ursache: die korrigierte Karotte galt auch fuer den NB2-Kreis der Verfolgung, den
+die Trag-Kuerzung dort ebenso zerlegt. Die Verfolgung nimmt wieder die NB4-Karotte (`gr2_tr_karotte(..., verfolgung = 1)`; das freie Spiel war in Abnahme 3
+bestanden), die Belagerung die Bahn. Danach beide gruen (295 s / 308 s), dazu unit bahn/kamera/fuzz. **Offen:** der Verfolgungs-Kreis kreiselt weiter am
+Fixpunkt der gespiegelten Karotte (Abnahme 3: "kreist sichtbar vor Leon ... schnappt", angenommen); eine Bahn wie in der Belagerung waere der naechste Schritt.

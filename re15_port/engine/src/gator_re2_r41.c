@@ -2671,10 +2671,12 @@ int re15_gr2_trag_kreis(int slot, int32_t *cx, int32_t *cz)   /* Messhaken NB4: 
  * Pruefhaken der Gegenprobe re15_gr2_karotte_alt_setzen(1) = Karotte wie NB4 (Riegel unit_r41_gatorfix_bahn). */
 static int s_karotte_alt = 0;
 void re15_gr2_karotte_alt_setzen(int an) { s_karotte_alt = an; }
-static void gr2_tr_karotte(int slot, const re15_actor_t *e, int32_t *qx, int32_t *qz)
+static void gr2_tr_karotte(int slot, const re15_actor_t *e, int32_t *qx, int32_t *qz, int verfolgung)
 {
     const int32_t cx = s_tr[slot].cx, cz = s_tr[slot].cz;
-    if (s_karotte_alt) {
+    /* verfolgung: Kreis der Verfolgung (kreis 1, Leiter/Waende) bleibt wie NB4 - mit der korrigierten Karotte fielen die exe-Riegel des freien Spiels
+     * integration_r41_gatorfix_abn2_nordbecken (2) und _abn2_ecken (6 Zeitfenster von 2 s ohne Fortschritt); das freie Spiel war in Abnahme 3 bestanden. */
+    if (s_karotte_alt || verfolgung) {
         const int a = (int)re15_atan2_q12(e->z - cz, e->x - cx);
         const int a2 = (a + s_tr[slot].kdir * 512) & 0xfff;
         *qx = cx + (int32_t)(((int64_t)re15_cos_q12(a2) * GR2_TR_KREIS) >> 12);
@@ -3170,7 +3172,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
                              e->x, e->z, (int)nx, (int)nz, (int)cx, (int)cz, GR2_TR_KREIS);
             }
             int32_t qx, qz;
-            gr2_tr_karotte(slot, e, &qx, &qz);
+            gr2_tr_karotte(slot, e, &qx, &qz, 0);
             gr2_tr_frei(e, &qx, &qz);
             (void)gr2_tr_fitfrei(e, &qx, &qz);
             *tx = qx; *tz = qz;
@@ -3258,7 +3260,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
         }
         if (s_tr[slot].kreis) {
             int32_t qx, qz;
-            gr2_tr_karotte(slot, e, &qx, &qz);   /* Karotte 45 Grad voraus (NB5: ohne Spiegelung, s. gr2_tr_karotte) */
+            gr2_tr_karotte(slot, e, &qx, &qz, 1);   /* Karotte 45 Grad voraus (NB5: Verfolgung wie NB4, s. gr2_tr_karotte) */
             gr2_tr_frei(e, &qx, &qz);
             (void)gr2_tr_fitfrei(e, &qx, &qz);
             *tx = qx; *tz = qz;
