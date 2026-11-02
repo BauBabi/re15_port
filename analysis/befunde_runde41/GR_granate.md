@@ -183,7 +183,9 @@ Auswertung `scratchpad/GR2/teil_check.py`).
 - `GR_belege/n1/n1_vergleich_video_cd2_gegen_port_2000_kanal_0x16.jpg` — derselbe Typ 0x16 wie im Video, liegend, im Kanal.
   Das RE1.5-Modell 0x16 der Mod ist weiss-grau (nicht khaki). Die Stuecke steigen ueber den Bildausschnitt der hohen Kamera und
   landen im dunklen Kanal; Explosions- und Rauch-Sprites fehlen in diesem Raum (N1.8).
-- `GR_belege/n1/n1_port_hund_1230_explosivgranate.jpg` — Hund (kein Video-Vorbild).
+- `GR_belege/n1/n1_port_hund_1230_explosivgranate.jpg` — Hund RE2-KI (kein Video-Vorbild).
+- `GR_belege/n1/n1_port_hund_1230_re15ki.jpg` — Hund RE1.5-KI (`RE15_AI_FLAVOR=re15`): `[gr] Hund Slot 1 Waffe 9: ZERFETZT`,
+  Fluglog 7 Parts, Scheitel 2229..2690, Ruhe nach 25-28 Bildern; Explosion, Rauch, danach liegen die Teile in Blut (+7,8 s).
 - Pruefpunkte aus dem Auftrag: kein heiler Koerper bleibt stehen (alle drei Laeufe), nichts haengt in der Luft (Fluglog: jedes
   der 7 Parts je Gegner endet mit st 2 -> 1 auf y = Boden; Unit [2]/[3]/[5]), keine Teile durch Waende (Wandtest; im Bild keine
   Teile in Wand-/Moebel-Flaechen), kein Flackern (Folgebilder 30 B/s ohne Springen; die gezeichneten Stuecke bleiben ueber 11 s
@@ -200,8 +202,11 @@ Auswertung `scratchpad/GR2/teil_check.py`).
 - `unit_zombie_gore` Granate: w9 UND w15 (RE1.5-Gehirn), RE2-Block bzw. Teilschicht je nach Import-Option.
 - `unit_r34_reaktion` 121/122/152/220/221 schalterabhaengig; NEU `unit_r34_reaktion_ohne80` (RE15_KEIN_80PROZENT_GORE=1)
   pinnt das RE2-Original (Hund Zeile 9: 0x4A-Drift, 1D2 >= 3 nur Kern; Zombie 8BEC/9610, Spalte 0 Kriecher 0x80107438).
-- Gelaufen: Zielauswahl 151 Tests (granate|gore|hund|dog|spinn|spider|zgore|re2z|crow|kraehe|werfer|teardeath|ztear|corpse|
-  r34_schaden|r34_reaktion|zombie_death|deathgetup|weapon_rows|alligator|gator|esp|wurf) 151/151 gruen.
+- Gelaufen (Stand f95dd987a): volle Unit-/Prop-/Probe-Suite `ctest -E ^integration_ -j 6` **1077 Tests, 1074 im ersten Lauf
+  gruen**; die drei uebrigen (unit_r39_titelversion_cmake "git fehlt", unit_r38_releaseskript_fehler_umfeld Timeout 1200 s,
+  unit_r35_android_bash_mutanten) lagen an meinem Mess-PATH ohne git bzw. an der Last und sind im Wiederholungslauf mit git im
+  PATH **3/3 gruen** -> **1077/1077**. Granaten-Integration integration_r34_granaten / integration_r35_granate /
+  integration_r36_granate **3/3 gruen** (359 / 212 / 186 s).
 
 ### N1.7 Fuer den Nutzer (Kurzfassung N1)
 
