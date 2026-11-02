@@ -18,6 +18,7 @@ haben und dann die G5 Form."
 | Phase 1: Plan | Abschnitte 3 bis 6, offene Fragen Abschnitt 7 |
 | Phase 2: Bau | erledigt (Abschnitt 8), Tests gruen (Abschnitt 9), Sichtbelege (Abschnitt 10). Der Bau weicht vom Plan in Abschnitt 3/4 an drei Stellen ab (8.2). Offen: Abschnitt 11. |
 | Nachbesserung 1 (2026-11-02) | erledigt (Abschnitt N1): RE2-Szene auf der Claire-Disc gefunden und im Emulator aufgenommen, 5090-Szene danach umgebaut, Zugstart-Szene 6030, Toene (ANNETTE_SE.VBS), F7-Recherche. Offen: N1.10. Abschnitte 1.2, 3, 5, 7, 8.2 sind dadurch teils ueberholt (N1 gilt). |
+| Nachbesserung 2 (2026-11-02/03) | erledigt (Abschnitt N2): Bit 133 eingetragen, Ausgang 6030 vor dem Zugstart = Tuer (msg 20 erst danach), Musikwechsel als Original belegt, Blut = RE2-Emitter FUN_80104C24, Sherry vermerkt. Offen: N2.8. |
 
 Belege dieser Spur: `analysis/befunde_runde41/AN_belege/` (Werkzeuge unter `werkzeug/`).
 
@@ -546,3 +547,186 @@ ANNETTE_SE.VBS, Stimme ohne Text). Unteragent Toene: `tools/r41_annette/an_se_cu
   nicht pruefbar.
 - Kampfstart sub04 Cut 15 zeigt weiter nur die Haut der Form (Hinweis an die Form-Spur, Abschnitt 10).
 - F7 nach Nutzerwunsch spaeter (N1.5).
+
+## N2. Nachbesserung 2 (2026-11-02/03)
+
+Auftrag: fuenf Entscheide des Orchestrators zu N1.4 / N1.10. Je Punkt Beleg, Bau, Nachweis.
+
+### N2.1 Bank 9 Bit 133 "Zugstart gesehen" (Entscheid 1: bestaetigt)
+
+- `tests/unit/test_r36_kartenbits.c`: Include `re15_annette_r41.h`, k_port[]-Zeile `RE15_AN_ZUG_BANK/RE15_AN_ZUG_BIT`.
+- `analysis/befunde_runde41/VERTRAG.md` 1.1: Zeile **AN** (133 = Zugstart-Szene 6030 gesehen).
+- Kopf `include/re15_annette_r41.h`: "bestaetigt 2026-11-02".
+- `unit_r36_kartenbits`: `ok: Bit 133 RE15_AN_ZUG_BIT ... im Original frei`, `ok: 61 Port-Bits gegen 85 Original-Bits: 0
+  Kollision(en)`. Hinweis fuer die Integration: teil_p sammelt die Bits in `unsigned alle[64]`; mit 56 k_port-Zeilen + 5
+  Lageplan-Bits sind 61 belegt, 3 frei. Kommen beim Zusammenfuehren weitere Spur-Bits dazu, muss das Feld groesser werden.
+
+### N2.2 msg 20 erst, wenn der Zug faehrt (Entscheid 2)
+
+Was das Original im Wagen tut (ROOM6030 sub06 = Eintritt mit Cut 6/8/12, sub00 @0x00D38):
+
+| Zweig | Bytes | Wirkung |
+|---|---|---|
+| (3,89)=0 @0x0105C..@0x01088 | @0x01064 `54 01 01 00 00 00`, @0x0106A `46 03 01 31 0a 00 ff ff 00 00`, @0x01074..@0x01084 Sca_id_set 0..4 | Slot 3 (nach 5090) = msg 10; **Slot 2 bleibt die Tuer aus main00 @0x00C72** |
+| (3,89)=1 @0x0108A..@0x010C8 | @0x01092 `54 00 01 00 00 00`, @0x01098 `46 02 01 31 14 00 ff ff 00 00`, @0x010A2 Obj_model_set, @0x010C4 Evt_exec sub05 | Slot 2 = msg 20 "You can't get off the train right now.", Slot 3 bleibt die Tuer nach 5090 |
+
+main00 @0x00C72 (Slot 2, Ausgang): `3b 02 02 31 00 00 f4 b6 c0 ae dc 05 b0 04 9d 06 f0 f1 ba d8 00 0c 05 00 03 02 00 00 00 00
+00 00` = Rechteck (-18700,-20800, 1500 x 1200), Ziel Stage-Byte 5 Raum 0 = ROOM6000, (1693,-3600,-10054), Richtung 0x0C00, Cut 3.
+
+Port bis NB1: bei (3,89)=1 ohne Zugstart lief @0x01098 (Slot 2 = msg 20), danach leitete der Haken sub05 auf das Tuer-Programm um
+(Slot 3 = msg 10) - beide Wagentueren zu, obwohl der Zug noch steht.
+
+Jetzt (`annette_r41.c` k_tuer, 44 Byte, nur Original-Bytes): main00 @0x00C72 (Slot 2 wieder die Tuer nach 6000) + sub06 @0x0106A
+(Slot 3 msg 10) + Evt_end @0x010CA. Vor dem Zugstart verhaelt sich der Ausgang also wie im Original vor dem Start; kein neuer
+Text. Nach dem Zugstart ((9,133)=1) leitet der Haken nicht mehr um, sub06 laeuft unveraendert, @0x01098 gilt: msg 20.
+
+Warum das Zugstart-Programm selbst kein Aot_reset braucht: Fuehrerstand (Cut 0, sub07) und Wagen (sub06) trennt die Wand SCA #13
+(N1.3); hinueber geht es nur durch die Tuer Slot 0 (main00 @0x00C32, Ziel `05 03 08` = ROOM6030 Cut 8), die den Raum neu laedt
+und damit sub06 laufen laesst. Der Ausgang (x -18700..-17200) liegt im Wagen.
+
+Riegel `unit_r41_annette`: Tuer-Programm bytegleich mit @0x00C72 / @0x0106A / @0x010CA; Wagen vor dem Zugstart: Slot 2 Tuer,
+Ziel 5/0, Slot 3 msg 10; nach dem Zugstart: Slot 2 msg 20 (Ereignis 20), Slot 3 Tuer.
+
+Fenster (gdigrab hwnd=, eigene exe-Kopie): `spiel_n2/tuer_6030_ausgang_vor_nach.jpg`, `tuer_6030_vor.mp4`, `tuer_6030_nach.mp4`.
+Weg: `an_lauf.sh tuer_vor 6000 6 46 4 "W8,A1,W2,R0.5,W1,A1,W12" RE15_SET_FLAG=3:89,4:23,3:100,3:239
+RE15_PLAYER_POS=1763,-9700,1024,2` (nachher dasselbe mit `,9:133`). (3,100)/(3,239) markieren die beiden 6000-Szenen
+(sub00 @0x00F40 / @0x00F22) als gelaufen, sonst haelt die Annette-Szene in 6000 den Spieler fest (erster Versuch). Leon geht durch
+6000 Tuer Slot 3 (main00 @0x00DDA) in den Wagen (Cut 6, (-17970,-20380)), dreht (Gier 1100 -> 2540), Aktion am Ausgang:
+- vorher: `[aot] DOOR FIRE slot=2 rect=(-17950,-20200,hw=750,hh=600) target_cut=3 spawn=(1693,-3600,-10054)`, Tuerfahrt,
+  ROOM6000;
+- nachher: kein DOOR FIRE, "You can't get off the train right now." ab Bild 142, Leon bleibt im Wagen.
+
+### N2.3 Musikwechsel beim Tor (Entscheid 3): kommt aus dem Original-Skript, unveraendert
+
+- ROOM6030 sub06: @0x0105C Ifel / @0x01060 Ck(3,89)=0 `21 03 59 00` -> @0x01064 `54 01 01 00 00 00`; @0x0108A Ifel / @0x0108E
+  Ck(3,89)=1 `21 03 59 01` -> @0x01092 `54 00 01 00 00 00`. Dasselbe in sub07 (Fuehrerstand): @0x01118 Ck(3,89)=0 -> @0x0111C
+  `54 01 01 ...`, @0x01128 Ck(3,89)=1 -> @0x0112C `54 00 01 ...`.
+- Sce_bgm_control (scd_vm.c op_sce_bgm_control, Handler FUN_80044da4): Byte 1 = Sequenz-Slot (0 MAIN, 1 SUB), Byte 2 = 1 =
+  SsSeqSetVol + SsSeqPlay. Ab (3,89)=1 spielt beim Eintritt die MAIN- statt der SUB-Sequenz.
+- (3,89) setzt ROOM6000 sub07 @0x011B4 `22 03 59 01` (Tor).
+- Der Port setzt keine Musik: keines der drei Port-Programme (5090-Szene, Zugstart, Tuer) enthaelt Opcode 0x54. Riegel in
+  `unit_r41_annette` (Opcode-Lauf ueber alle drei, dazu die Bytes @0x0108E/@0x01092/@0x01128/@0x0112C gegen die RDT).
+- Damit nach Entscheid 3 unveraendert.
+
+### N2.4 Blut bei Annettes Tod = der Emitter der RE2-Szene (Entscheid 4)
+
+**Wo RE2 das Blut erzeugt** (Claire PAL SLES-10972, RAM-Abzuege der Aufnahme lauf3 e19..e24; Disasm und Platz-Abzug
+`AN_belege/re2_claire/blut_emitter_ram.txt`, Werkzeuge `AN_belege/werkzeug/n2/`):
+
+1. FX-Spawn: RE2 Leon FUN_8001BF10 = Claire PAL **FUN_8001B910** (maskierter Codevergleich `exe_map.py find 8001bf10 24`, Kopf
+   `240a0060 addiu t2,zero,0x60` / `00047602 srl t6,a0,0x18`). Pool **0x800D07D0**, 0x7C je Platz (@0x8001B99C-A4), +0x18 = 0xA003
+   belegt, +0x1C = (sub<<16)|Effekt, +0x38 = a0<<16 (Skala), +0x2C/+0x30 = *a3, +0x6C = Anker a2; Pool voll -> `j 0x8001bc1c` /
+   `addiu v0,zero,0xff` @0x8001B994-98 (Aufruf verloren).
+2. RAM e22 (71,54 s, 0,45 s nach dem ersten Blut): **60 Plaetze Effekt 0 / sub 1 / Skala 0x2000**, Anker 0x80095F68 =
+   Einheitsmatrix (T = 0), also Lage = a3; 10 Gruppen zu 6 = 2 Lagen x 3 Zeilen; +0x20 je Gruppe 1280 .. 3328 in 256er-Schritten.
+   e23 (6 Spielbilder spaeter, Birkin M07/45 -> /51): nur noch die 4 juengsten Gruppen; e24: keine. Je Gruppe ~10 Spielbilder
+   Leben, Wolke ~15 + 10 = 25 Spielbilder = 1,0 s PAL (Aufnahme: 71,09 s bis ueber den Schnitt 72,23 s).
+3. Wer ruft: 100 `jal 0x8001b910` im Overlay (`jal.py`). Die beiden Lagen einer Gruppe liegen 393 auseinander = Abstand der
+   Birkin-Teile 14 und 16 (RAM e21: 393, e22: 393; Teile 14/15/16 in einer Reihe je ~195, je ~600 von Teil 13 = die drei Klauen
+   der Hand 13). Emitter **FUN_801058BC**(e, Teil, Index): Beschreiber 0x801065B8 + 6 * Index, **Index 1 = `00 01 00 00 00 20`** =
+   Effekt 0, sub 1, Skala 0x2000; Bit 0x80 = 0 -> Anker 0x80095F68, a3 = Weltlage des Teils (`lw` +0x5C/+0x60/+0x64
+   @0x80105950-78); a1 = FUN_80014E4C(e.x, e.z, Spieler.x, Spieler.z) @0x801058F0-908 (= Leon FUN_800154AC, Peilung zum
+   Spieler). Index-1-Aufrufer mit den Teilen 14/16: **FUN_80104C24** @0x80104D38/@0x80104D4C und @0x801031E8/F8 (Angriff auf den
+   Spieler: Zaehler 3, dazu Blut am Spieler Teil 8 mit Index 0).
+4. FUN_80104C24 ist Routine 2 der Birkin-Tabelle @0x80106584 (`80104a18 80104a7c 80104c24 80104d88`); Routine 1 (FUN_80104A7C)
+   wechselt nach 2, wenn +0x1D4 (Member 0x17) = 2 (@0x80104BE4 `lh v0,0x1d4(s0)` / `bne v0,s3` / `sb v0,5(s0)`) = RE2 ROOM6141
+   @0x01142 Member_set 0x17=2. RAM: e20/e21 +5=2 +7=0, e22/e23 +7=1 und +0x16B=0 (15 Bilder vorbei), e24 Routine 3.
+
+FUN_80104C24, nach dem Bildvorschub (@0x80104C9C-A8 `jal 0x800289e8`):
+
+```
+80104cd4: 8e020178  lw   v0,0x178(s0)        ; Bildwort
+80104ce0: 3c030001  lui  v1,1
+80104ce4: 00431024  and  v0,v0,v1            ; EDD-Trefferbit 0x10000
+80104cf0: 92020007  lbu  v0,7(s0)            ; nur einmal
+80104d08: 0c015da4  jal  0x80057690          ; a0 = 3
+80104d0c: a2020007  sb   v0,7(s0)
+80104d10: 2402000f  addiu v0,zero,0xf        ; 15 Bilder
+80104d14: a202016b  sb   v0,0x16b(s0)
+80104d18: 3c118010  lui  s1,0x8010
+80104d1c: 86316330  lh   s1,0x6330(s1)       ; = 13
+80104d2c: 26250001  addiu a1,s1,1            ; Teil 14
+80104d38: 0c04162f  jal  0x801058bc          ; a2 = 1
+80104d44: 26250003  addiu a1,s1,3            ; Teil 16
+80104d4c: 0c04162f  jal  0x801058bc          ; a2 = 1
+80104d5c: 2442ffff  addiu v0,v0,-1
+80104d60: a202016b  sb   v0,0x16b(s0)
+```
+
+**Port** (`annette_r41.c` blut_bild, Konstanten AN_BLUT_* mit diesen Adressen):
+- Trefferbild (Clip 4 Bild 14, EDD-Bit 16 wie bisher) setzt den Zaehler auf 15; je Bild, nach dem Bildvorschub, zwei
+  `re15_esp_fx_spawn_rows(Raumbank, 0, 1, 0x2000, ...)` an der Weltlage der Knochen **14 und 28** der Riesenform, Boden = Aktor-y,
+  Winkel = Peilung Form -> Spieler; dann Zaehler - 1. Laeuft ueber den Schnitt weg (Routine der Form, nicht des Skripts).
+- RE2-Effekt 0 -> RE1.5-Blut 0 ist der vorhandene Dekoder der RE2-Gehirne (`enemy_ai_re2_zombie.c` re2z_gore_fx_core; Runde 4
+  gore-vollausbau.md: "0 -> 0 Blut; die Subs 0-3 tragen dieselben Klassen").
+- PORT-WAHL der Teile: die Riesenform (BAHNSTEIG_FORM.EMD) ist kein RE2-Modell. Ihre linke Hand 13 (Hieb links) traegt die Klauen
+  14 (729,30,-228), 15 (782,30,83), 28 (684,30,258) und den Daumen 30; RE2 nimmt die aeusseren Klauen -> 14 und 28.
+- Entfallen: die 8 Spritzer aus NB1 (4 im Trefferbild an Annettes Brust und an der Hand, je 2 nach 6 und 12 Bildern); Lage und
+  Zeitpunkt hatten keinen Beleg. Die Blut-Textur des Kittels (RE2 EM049) bleibt.
+
+**Gemessen** (`unit_r41_annette` mit Raumbank ROOM5090 + CORE00.ESP, Takt wie im Spiel):
+- 30 Aufrufe in F400..F414, Treffer F400 (RE2: 15 Bilder x 2).
+- RE1.5-Blut 0/1 hat 4 Zeilen je Aufruf (RE2: 3); 99 von 120 Plaetzen belegt: der 96er-Pool ist voll, 25 Plaetze halten die
+  Bodenfeuer von 5090 schon vorher; der Rest geht wie im Original verloren.
+- hoechstens 79 Blutplaetze gleichzeitig (RE2 e22: 60), Wolke weg 27 Bilder nach dem ersten Spawn (RE2 ~25 Spielbilder).
+- im ersten Bild 8/8 Plaetze genau an den Klauen.
+- echter Lauf (`build/an_lauf/leon_nb2/debug.log`): `F681 Treffer`, `F681 Blut 1/15: 2 Aufrufe, 8 Plaetze, Pool 25/96`,
+  `F695 Blut 15/15: 30 Aufrufe, 99 Plaetze, Pool 96/96`.
+
+**Sicht**: `spiel_n2/vergleich_re2_port_blut.jpg` (RE2 | Port, Zeilen im gleichen Abstand zum ersten Blut, -0,18 .. +1,2 s),
+`spiel_n2/leon_5090_blut_n2.mp4` (Port 10 Bilder/s, Bild 236..275). Port: rote Wolke ab Bild 254 vor Annettes Beinen (die Klaue
+steht zwischen Kamera und Annette), 0,9 s sichtbar, deutlich groesser als die 8 Spritzer aus NB1 (`spiel_n1/vergleich_re2_port_5090_2.jpg`
+Zeile 3).
+
+Unterschiede, die bleiben (offen, N2.8):
+- RE2 zeigt die Wolke viel groesser im Bild: RE2 Schnitt 0x0A steht dicht vor der Klaue, Port-Schnitt 11 (PORT-WAHL N1.2, Auge (7626,-3256,-25360)) rund 3800
+  von der Klaue (4742,-1123,-24049) entfernt. Zahl, Skala, Dauer und Lage sind die von RE2; eine groessere Bildwirkung ginge
+  nur ueber die Kamera.
+- RE2s Plaetze wachsen an Ort und Stelle (+0x20 +256 je Bild bis ~0xD00), die RE1.5-Zeilen 0/1 fallen und zerspritzen am Boden.
+  Die RE2-FX-Zeilen selbst sind im Port nicht portiert (enemy_ai_re2_dog.c:51).
+
+### N2.5 Sherry im 6030-Wagen (Entscheid 5): nichts geaendert
+
+Vermerk: Sherry sitzt im Wagen von 6030 (Original sub06 @0x01044 Sce_em_set Typ 0x4B, unbedingt; von ST80-T genutzt). Nach
+Entscheid gilt: Annette geht nach msg 30 nach hinten zu Sherry und weiter zum Krach. Der Port zeigt diesen Weg nicht; sie
+verschwindet durch die Wagentuer (6000 sub02 @0x0100A-Bytes) und steht beim naechsten 5090-Eintritt in Wagen C. N1.4 Punkt 3 ist
+damit entschieden, ohne neuen Text.
+
+### N2.6 Tests
+
+Bau `bash re15_port/tools/local_build.sh build`: LOCAL-BUILD-OK.
+
+| Test | Inhalt (neu in NB2) | Ergebnis |
+|---|---|---|
+| `unit_r41_annette` | Tuer-Programm = @0x00C72 + @0x0106A + @0x010CA; Wagen vor dem Zugstart Slot 2 Tuer (5/0) + Slot 3 msg 10, danach Slot 2 msg 20 + Slot 3 Tuer; kein 0x54 in den Port-Programmen, Musik-Bytes @0x0108E/@0x01092/@0x01128/@0x0112C; Blut mit Raumbank 5090 + CORE00.ESP: 30 Aufrufe F400..F414 ab dem Trefferbild, 4 Zeilen je Aufruf, 99 Plaetze (Pool 96/96), Wolke max 79 (>= 60 wie RE2 e22), weg 27 Bilder nach dem ersten Spawn, 8/8 Plaetze an den Klauen | gruen |
+| `unit_r36_kartenbits` | Bit 133 im Original frei, 61 Port-Bits, 0 Kollisionen | gruen |
+| `unit_r41_annette_se_bank/_toene/_lagen` | unveraendert | gruen |
+| `integration_r41_annette` (echte exe, 4 Laeufe) | unveraendert | gruen (212 s) |
+| `integration_r41_birkin_pistole` | Bestand | gruen (259 s) |
+| `integration_r35_zgirl_5090` | Bestand | gruen (147 s) |
+| Suite `^unit_\|^prop_\|^probe_` ohne `releaseskript\|android\|r37_masken36_ausschluss\|paket\|titelversion`, `-j 4` | Bestand | **1039/1039 gruen** (283 s) |
+
+Ausgeschlossen (26 Tests, Umgebungsproblem wie in N1.9 und von ST80-T gemeldet: die Skript-Riegel haengen in `df -Pk`, der
+Titelversion-Ablauf startet das echte `release_alles.sh`): probe_r16_objekte_paket, unit_r30_android_* (3), unit_r35_android_* (5),
+unit_r37_masken36_ausschluss, unit_r38_releaseskript_* (7), unit_r39_titelversion_* (9). Nicht von dieser Spur beruehrt.
+Fensterlaeufe nur mit eigener exe-Kopie, beendet per eigener PID (an_lauf.sh); danach kein `re15_pc_an*` mehr aktiv.
+
+### N2.7 Dateien und Commits
+
+- Code: `re15_port/engine/src/annette_r41.c` (blut_bild, AN_BLUT_*, k_tuer), `re15_port/include/re15_annette_r41.h` (Kopf,
+  re15_annette_r41_blut_plaetze), `re15_port/tests/unit/test_r41_annette.c` (Tuer vor/nach, Musik-Riegel, Blut-Kette),
+  `re15_port/tests/unit/test_r36_kartenbits.c` (Bit 133).
+- Doku: `analysis/befunde_runde41/VERTRAG.md` 1.1, dieses Dossier.
+- Belege: `AN_belege/spiel_n2/` (vergleich_re2_port_blut.jpg, leon_5090_blut_n2.mp4, tuer_6030_ausgang_vor_nach.jpg,
+  tuer_6030_vor.mp4, tuer_6030_nach.mp4), `AN_belege/re2_claire/blut_emitter_ram.txt`, `AN_belege/werkzeug/n2/`.
+- Commits: e2c85f4ab (Code, Tests, VERTRAG), Doku-Commit mit diesem Abschnitt und den Belegen.
+
+### N2.8 Offen
+
+- Stimmen (Nutzer): `synchro/STAGE5/room5090/main40..43.wav`, `synchro/STAGE6/room6030/main27..30.wav` (unveraendert aus N1.10).
+- Blut: Bildwirkung kleiner als RE2 wegen der Kamera (N2.4); RE2-FX-Zeilen (Wachsen statt Fallen) nicht portiert.
+- RE2 spielt im Trefferbild zusaetzlich FUN_80057690(3, e) (@0x80104D08); der Port spielt die Bildtoene der Form wie bisher
+  (vor(), Bit 27 des Bildworts). Ob 0x80057690 ein Ton ist, ist nicht belegt.
+- F4 (Annette hielt William fuer tot), F7 (spaeter), ZUG_AN-Alternative 7030, NTSC-Bildzahlen, Haut der Form beim Kampfstart:
+  wie N1.10.
+- `alle[64]` in test_r36_kartenbits.c teil_p: 61/64 belegt (N2.1).
