@@ -3354,6 +3354,7 @@ int re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz)
 {
     *dx = *dz = 0;
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
+    if (s_tr[slot].kreis != 2) s_kk_waende = 15;            /* NB5: Wandmaske nur waehrend der Bahn der Belagerung (sonst galt sie nach einem Takt ohne Lenkung weiter) */
     const int traegt = s_kan.aktiv && s_kan.angehaengt;
     int hat = 0;
     if (traegt || s_g[slot].r1_phase != 0) {
