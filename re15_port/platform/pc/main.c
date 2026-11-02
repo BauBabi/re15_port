@@ -10519,8 +10519,11 @@ re_title:;
                 int gore_on = re15_re2z_gore_resolve(npc, npc_skel->bone_parent, npc_bones,
                                                      gore_draw, gore_tint, gore_mesh);
                 /* BIRKIN-ROHR (Typ 0x30): Teil 15 traegt die Geometrie von Mesh 16 (Hand mit Rohr), s. birkin_rohr
-                 * in re15_actor.h (@0x80116980-9e4 / @0x80116c28-8c / @0x80119754-7b8). */
-                int bk_rohr = (npc->type == 0x30u && npc->birkin_rohr && npc_md1->mesh_count > 16 && npc_bones > 15 &&
+                 * in re15_actor.h (@0x80116980-9e4 / @0x80116c28-8c / @0x80119754-7b8). Nur beim Capcom-EM30 mit genau
+                 * 16 Knochen ist Mesh 16 das knochenlose Rohr-Teil. PORT-ERGAENZUNG Runde 41 Spur SF: die Hangar-/Labor-Form
+                 * (tools/birkin_formen.py, EM30_HANGAR.EMD) haengt eine Schwanzkette als Knochen 16-22 an; dort ist Mesh 16
+                 * das erste Schwanzglied und darf nicht auf Teil 15 getauscht werden (das Video zeigt kein Rohr). */
+                int bk_rohr = (npc->type == 0x30u && npc->birkin_rohr && npc_md1->mesh_count > 16 && npc_bones == 16 &&
                                !getenv("RE15_KEIN_BIRKIN_ROHR"));   /* Mess-Schalter A/B */
                 /* Runde 34 C7 (O-VB3 geklaert, Belege fx_plattform_pc.h): RE2 faerbt JEDE Entity
                  * ueber denselben Part-Zeichner (Entity-Schleife `jal 0x80027160` @0x8002689c,

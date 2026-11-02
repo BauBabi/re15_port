@@ -248,6 +248,23 @@ static void test_modellwahl(void)
     CHECK(re15_bf_emd_datei(0x29u) != NULL, "4081: kein roter Affe");
     g_current_room_id = 0x50A0u;
     CHECK(re15_bf_emd_datei(0x29u) == NULL, "50A0: Affe darf Auslieferung bleiben");
+    /* Runde 41 Spur SF (Nutzer E17): Labor-Kampf 50E0 (Leon) / 50F1 (Elza) traegt dieselbe Form wie der Hangar,
+     * mit Schwanzkette (Knochen 16-22, tools/birkin_formen.py). */
+    static const uint16_t labor[] = {0x50E0u, 0x50F1u};
+    for (int i = 0; i < 2; i++) {
+        g_current_room_id = labor[i];
+        CHECK(re15_bf_emd_datei(0x30u) && strstr(re15_bf_emd_datei(0x30u), "HANGAR"),
+              "%04X Labor: nicht die Hangar-Form", labor[i]);
+    }
+    g_current_room_id = 0x50E0u;
+    re15_enemy_reset();
+    CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)), "50E0: EM30_HANGAR-Bank");
+    {
+        re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+        CHECK(eb && eb->skel.bone_count == 23 && eb->md1.mesh_count == 23,
+              "50E0: Form ohne Schwanzkette (Knochen %d, Meshes %d)", eb ? eb->skel.bone_count : -1,
+              eb ? eb->md1.mesh_count : -1);
+    }
     g_current_room_id = 0x3070u;
     CHECK(re15_bf_emd_datei(0x30u) == NULL, "3070: Birkin muss EM30 bleiben");
     CHECK(!re15_bf_bahnsteig_aktiv() && !re15_bf_hangar_aktiv(), "3070: Formen aktiv");

@@ -5,7 +5,7 @@
     python re15_port/tools/birkin_formen.py --blatt DIR     # + Ansichtsblaetter nach DIR
 
 Ausgabe (vom PC-Port ueber RE15_BIRKIN_FORM geladen, platform/pc/main.c):
-    re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD     RE15_BIRKIN_FORM=hangar
+    re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD     Hangar 50A0/50A1 und Labor 50E0/50F1 (RE15_BIRKIN_FORM=hangar)
 
 ⛔ KEIN BYTE-TRUE-ASSET. Diese Form existiert auf der ausgelieferten Disc nicht. Sie ist NUR aus
 Beta-Screenshots bekannt (Hangar C-2: Birkin packt Elza und schleudert sie). Jede Zahl in FORMEN
@@ -23,14 +23,18 @@ Byte-true geerbt (unveraendert aus CDEMD0.EMS Blob 16 = EM30):
       3. EMR-Bindoffsets          - Kindgelenk mit der Skalierung des Elternmeshes mitgezogen,
                                     damit die Glieder verbunden bleiben
       4. (faerbe_tim: CLUT-Einfaerbung, derzeit von keiner Form genutzt)
-      5. Hangar: Schwanz als ANGEHAENGTE Geometrie an Mesh 8 (MD1 waechst, TIM-Offset und
-         Verzeichnis verschieben sich; die EM30-Faces bleiben ein unveraendertes Praefix)
+      5. Hangar (Runde 41 Spur SF): Schwanz als eigene Knochenkette 16-22 an Knochen 8 (schwanz_kette): EMR-Bank 0
+         bekommt 7 Knochen und je Keyframe 7 x 36 Bit dahinter (die ersten 84 Byte jedes Keyframes bleiben EM30),
+         Mesh 16 (knochenlose Hand mit Rohr) entfaellt, Meshes 16-22 = Glieder. Sektionen und Verzeichnis werden
+         neu gerechnet. Vorher (bis Runde 41) war der Schwanz starre Geometrie an Mesh 8.
+      6. Hangar: Umtexturieren einzelner Teile (umtexturieren: nur UV/CLUT/TPage, vorhandene Texel)
     Der MD1-Serializer schreibt unveraendertes EM30 byte-gleich zurueck (Assert in main), und
     re15_emd_parse_container liest die Datei ohne Aenderung (tests/unit/test_birkin_formen.c).
 
 Knochen von EM30 (aus dem EMR gelesen, Parent in Klammern):
     0 Becken (Wurzel)   1-3 Bein rechts  4-6 Bein links   7 Bauch (0)   8 Brust (7)
-    9 Kopf (8)          10-12 Arm links (8)               13-15 Arm rechts mit Klaue (8)
+    9 Kopf (8)          10-12 Arm links (8)               13-15 Arm rechts mit Sichel/Klaue (8)
+    16-22 Schwanzkette (8, dann je Vorglied) - nur EM30_HANGAR
 """
 import argparse, os, struct, sys
 import numpy as np
@@ -64,19 +68,41 @@ FORMEN = {
         rel={9: (60, 170, 0)},
         tint=None,
         # Nutzerhinweis 2026-10-30: "Die Hangar-Form hat auch direkt einen Tail am Ruecken."
-        # EM30 hat keinen freien Knochen (EMR-Keyframe = 12 + 16*36 Bit = 84 Byte, ein 17.
-        # Knochen passt nicht ohne alle 912 Keyframes umzuschreiben) -> der Schwanz wird als
-        # Zusatzgeometrie an Mesh 8 (Brust) gehaengt und bewegt sich starr mit dem Oberkoerper.
-        # Mittellinie im Mesh-8-Raum (X vorn, Y unten), Radius je Stuetzpunkt.
-        schwanz=dict(
+        # Runde 41 Spur SF, Nutzerurteil 2026-11-02 "Der Schwanz ist viel zu starr": der Schwanz ist jetzt eine
+        # eigene Kette aus 7 Knochen (16-22), angehaengt an Knochen 8 (Brust), Lage der Ruhegestalt wie bisher
+        # (Mittellinie im Knochen-8-Raum, X vorn, Y unten). Gegen Complete Disc Video 4 geprueft (Teil T7 im
+        # Dossier): in Clip 0x0B Bild 20 liegt er dort, wo Bild 1408-1420 das rot-weisse Glied zeigt (rechts
+        # neben der Huefte bis zum Boden), von vorn haengt er zwischen den Beinen (1484-1500). Die Winkel je
+        # Keyframe rechnet schwanz_bewegung (Nachschwingen aus der Rumpfbewegung, Gestaltung).
+        schwanz_kette=dict(
             knochen=8,
             punkte=[(-380, 120, 0), (-760, 420, 60), (-1150, 860, 120), (-1500, 1380, 90),
                     (-1760, 1880, -20), (-1900, 2280, -120), (-1960, 2520, -160)],
             radien=[300, 260, 215, 170, 125, 80, 34],
-            seiten=7, unterteilung=3,
-            # Fleischtextur links oben (TPage 128, CLUT-Zeile 0 wie der Rumpf, u<128)
+            glieder=7, seiten=8, ueberlapp=0.45,
+            # Fleischtextur links oben (TPage 128, CLUT-Zeile 0 wie der Rumpf, u<128), laeuft ueber alle Glieder durch
             uv=dict(clut=30720, page=128, u=(4, 60), v=(4, 124)),
+            # Nachschwingen (schwanz_bewegung): Feder und Nachlauf Wurzel -> Spitze, Daempfung je Bild, Schwere, Grenzwinkel
+            bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.004, grenze=55),
         ),
+        # Umtexturieren (nur UV/CLUT/TPage, vorhandene Texel, keine neuen Farben). Quelle der UVs = die
+        # Ausdehnung der gewaehlten Faces; Ziel = Rechteck im TIM. Teile T3-T6 im Dossier.
+        umtexturieren=[
+            # T5 Sichelarm: Unterarm rechts (Mesh 14) rot-weiss gebaendert wie die Klaue; im Video ist der
+            # ganze Arm ab dem Ellbogen eine rot-weisse Sichel (1367-1376, rote Pixel ab y 270 = Ellbogen)
+            dict(meshes=(14,), page=130, clut=30848, u=(2, 42), v=(92, 166)),
+            # T3 Kurze Hose: Jeans am Schienbein (Mesh 2/5, TPage 129) und am Oberschenkel unterhalb 70 %
+            # (Mesh 1/4, Vertex-y >= 520 von 747) -> Beinhaut wie der untere Schienbeinteil (TPage 128,
+            # CLUT 0, u 19-55 v 55-115). Video: Hose endet ~15 px ueber dem Knie (1470, Huefte 290 / Knie 345)
+            dict(meshes=(2, 5), nur_page=129, page=128, clut=30720, u=(19, 55), v=(55, 115)),
+            dict(meshes=(1, 4), y_ab=520, page=128, clut=30720, u=(19, 55), v=(55, 115)),
+            # T4 Fuesse rot statt schwarzer Schuhe (alle Hangar-Bilder; 1355/1470 rote Fuesse) -> Wundfleisch
+            # der Schulter (TPage 128, CLUT 0, u 66-126 v 4-90)
+            dict(meshes=(3, 6), page=128, clut=30720, u=(66, 126), v=(4, 90)),
+            # T6 Kopf: kein blondes Menschengesicht im Video (vorn 1460-1500: rotes Fleisch oben in der
+            # Mitte) -> dasselbe Wundfleisch
+            dict(meshes=(9,), page=128, clut=30720, u=(66, 126), v=(4, 90)),
+        ],
     ),
 }
 
@@ -257,6 +283,299 @@ def haenge_schwanz_an(meshes, sw):
         m['tuv'].append([u_(k), uv['v'][1], uv['clut'], u_(k+1), uv['v'][1], uv['page'],
                          (u_(k)+u_(k+1))//2, uv['v'][1], 0])
     assert v0 == n0
+    return meshes
+
+
+# ═══════════════════════════════════════════════════ Schwanzkette (eigene Knochen, Runde 41 Spur SF)
+# Nutzerurteil 2026-11-02: "Der Schwanz ist viel zu starr". Statt starrer Geometrie an Mesh 8 bekommt der
+# Schwanz eine eigene Knochenkette, ANGEHAENGT an den Knochenbaum (Knochen 16 .. 16+N-1), damit die Indizes
+# 0-15 (KI, Szene Knochen 15, Clips) unveraendert bleiben. Jedes Glied hat sein Mesh (Mesh i == Knochen i),
+# laeuft entlang seiner lokalen +Y und reicht mit einer Manschette (ueberlapp) in das vorige Glied, damit die
+# Gelenke bei Biegung keine Luecke zeigen (E9 Bahnsteig-Form: optisch aus einem Stueck). Die Schwanzwinkel
+# jedes Keyframes kommen aus einer Nachschwing-Rechnung ueber die Rumpfbewegung je Clip (schwanz_bewegung).
+# Alle Zahlen hier sind Gestaltung nach dem Video (keine RE-Werte).
+
+def _min_rot(a, b):
+    """Kleinste Drehung, die Einheitsvektor a auf b dreht (Rodrigues)."""
+    a = a / np.linalg.norm(a); b = b / np.linalg.norm(b)
+    v = np.cross(a, b); c = float(a @ b); s = np.linalg.norm(v)
+    if s < 1e-9:
+        if c > 0:
+            return np.eye(3)
+        q = np.cross(a, [1.0, 0, 0]) if abs(a[0]) < 0.9 else np.cross(a, [0, 1.0, 0])
+        q /= np.linalg.norm(q)
+        return 2 * np.outer(q, q) - np.eye(3)
+    k = v / s
+    K = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
+    return np.eye(3) + s * K + (1 - c) * (K @ K)
+
+
+def _quant(L):
+    """Lokale Drehung so, wie der Port sie aus dem Keyframe liest (12-Bit-Winkel, RotMatrix @0x80068130)."""
+    return EA.mat_euler(*_zerlege(L)).astype(float) / 4096.0
+
+
+def kette_ruhe(sw):
+    """Ruhegestalt: Gelenkpunkte im Raum des Ankerknochens (gleichlange Abschnitte auf der Catmull-Rom-Linie),
+    Gliedlaengen, Ruhe-Lokaldrehungen (quantisiert) und Bindversaetze der neuen Knochen."""
+    linie = np.array(_catmull(sw['punkte'], 24))
+    seg = np.linalg.norm(np.diff(linie, axis=0), axis=1)
+    s = np.r_[0, np.cumsum(seg)]
+    n = sw['glieder']
+    ziel = np.linspace(0, s[-1], n + 1)
+    p = np.array([np.interp(ziel, s, linie[:, k]) for k in range(3)]).T
+    L = np.linalg.norm(np.diff(p, axis=0), axis=1)
+    lokal, W = [], np.eye(3)
+    for i in range(n):
+        d = W.T @ (p[i+1] - p[i])
+        Li = _quant(_min_rot(np.array([0.0, 1.0, 0.0]), d))
+        lokal.append(Li)
+        W = W @ Li
+    rel = [tuple(int(round(c)) for c in p[0])] + [(0, int(round(L[i-1])), 0) for i in range(1, n)]
+    rad = np.interp(ziel, np.linspace(0, s[-1], len(sw['radien'])), sw['radien'])
+    return dict(p=p, L=[int(round(x)) for x in L], lokal=lokal, rel=rel, radien=rad, s=ziel / s[-1])
+
+
+def kette_meshes(sw, ruhe):
+    """Je Glied ein Rohr-Mesh im Knochenraum (Y = Laengsachse): Manschette bei -ueberlapp, Ringe bei 0, L/2, L;
+    das letzte Glied endet in einer Spitze. Normalen radial in Laenge 4096, Windung wie haenge_schwanz_an."""
+    S, uv = sw['seiten'], sw['uv']
+    out = []
+    n = sw['glieder']
+    for i in range(n):
+        Li, r0, r1 = ruhe['L'][i], ruhe['radien'][i], ruhe['radien'][i+1]
+        s0, s1 = ruhe['s'][i], ruhe['s'][i+1]
+        ue = sw['ueberlapp'] * r0 if i > 0 else 0.0
+        ringe_y = ([-ue] if ue else []) + [0.0, Li / 2.0, float(Li)]
+        ringe_r = ([r0] if ue else []) + [r0, (r0 + r1) / 2.0, r1]
+        ringe_s = ([s0] if ue else []) + [s0, (s0 + s1) / 2.0, s1]
+        m = dict(v=[], n=[], tf=[], tuv=[], qf=[], quv=[])
+        ringe = []
+        for y, r in zip(ringe_y, ringe_r):
+            ring = []
+            for k in range(S):
+                w = 2 * np.pi * k / S
+                nx, nz = np.cos(w), np.sin(w)
+                ring.append(len(m['v']))
+                m['v'].append([int(round(nx * r)), int(round(y)), int(round(nz * r)), 0])
+                m['n'].append([int(round(nx * 4096)), 0, int(round(nz * 4096)), 0])
+            ringe.append(ring)
+        if i == n - 1:
+            sv = len(m['v'])
+            m['v'].append([0, int(round(Li + 2.5 * r1)), 0, 0])
+            m['n'].append([0, 4096, 0, 0])
+
+        def u_(k):  return int(round(uv['u'][0] + (uv['u'][1] - uv['u'][0]) * k / S))
+        def v_(t):  return int(round(uv['v'][0] + (uv['v'][1] - uv['v'][0]) * t))
+
+        def orient(ia, ib, ic):
+            P = [np.array(m['v'][j][:3], float) for j in (ia, ib, ic)]
+            N = sum(np.array(m['n'][j][:3], float) for j in (ia, ib, ic))
+            return np.cross(P[1] - P[0], P[2] - P[0]) @ N < 0
+        for j in range(len(ringe) - 1):
+            for k in range(S):
+                k2 = (k + 1) % S
+                a, b = ringe[j][k], ringe[j][k2]
+                c, d = ringe[j+1][k], ringe[j+1][k2]
+                uvs = [(u_(k), v_(ringe_s[j])), (u_(k+1), v_(ringe_s[j])),
+                       (u_(k), v_(ringe_s[j+1])), (u_(k+1), v_(ringe_s[j+1]))]
+                if not orient(a, b, c):
+                    a, b, c, d = b, a, d, c
+                    uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
+                m['qf'].append([a, a, b, b, c, c, d, d])
+                m['quv'].append([uvs[0][0], uvs[0][1], uv['clut'], uvs[1][0], uvs[1][1], uv['page'],
+                                 uvs[2][0], uvs[2][1], 0, uvs[3][0], uvs[3][1], 0])
+        if i == n - 1:
+            letzte = ringe[-1]
+            for k in range(S):
+                a, b = letzte[k], letzte[(k + 1) % S]
+                if not orient(a, b, sv):
+                    a, b = b, a
+                m['tf'].append([a, a, b, b, sv, sv])
+                m['tuv'].append([u_(k), uv['v'][1], uv['clut'], u_(k+1), uv['v'][1], uv['page'],
+                                 (u_(k) + u_(k+1)) // 2, uv['v'][1], 0])
+        out.append(m)
+    return out
+
+
+def emr_mit_kette(emr, sw, ruhe, winkel):
+    """EMR-Bank 0 mit N angehaengten Knochen neu schreiben. Knochen 0-15: Bindversaetze, Kinderlisten und
+    Keyframe-Bits unveraendert (16 x 36 Bit = 72 Byte, byteweise kopiert); Knochen 16 haengt am Anker,
+    16+i am Vorgaenger. winkel[kf] = Liste von N (ax, ay, az) im 12-Bit-Format."""
+    s = EA.emr_parse(bytes(emr))
+    nb0, n = s.bone_count, sw['glieder']
+    nb = nb0 + n
+    tab0 = u16(emr, 0)
+    kinder = []
+    for b in range(nb0):
+        cc, co = u16(emr, tab0 + b*4), u16(emr, tab0 + b*4 + 2)
+        kinder.append(list(emr[tab0 + co:tab0 + co + cc]) if cc else [])
+    kinder[sw['knochen']].append(nb0)
+    for i in range(n):
+        kinder.append([nb0 + i + 1] if i < n - 1 else [])
+    rel = list(s.rel) + list(ruhe['rel'])
+    tab = (8 + 6 * nb + 3) & ~3
+    kb = bytearray()
+    eintraege = []
+    for b in range(nb):
+        eintraege.append((len(kinder[b]), (4 * nb + len(kb)) if kinder[b] else 0))
+        kb += bytes(kinder[b])
+    kf_off = (tab + 4 * nb + len(kb) + 3) & ~3
+    alt_ks = s.kf_size
+    assert (nb0 * 36) % 8 == 0 and alt_ks == 12 + nb0 * 36 // 8, 'Altknochen nicht byteweise kopierbar'
+    ks = 12 + (((nb * 36 + 7) // 8 + 3) & ~3)
+    out = bytearray(kf_off + ks * s.kf_count)
+    struct.pack_into('<4H', out, 0, tab, kf_off, nb, ks)
+    for b, (x, y, z) in enumerate(rel):
+        struct.pack_into('<3h', out, 8 + b*6, x, y, z)
+    for b, (cc, co) in enumerate(eintraege):
+        struct.pack_into('<HH', out, tab + b*4, cc, co)
+    out[tab + 4*nb:tab + 4*nb + len(kb)] = kb
+    for k in range(s.kf_count):
+        alt = s.kf_data[k*alt_ks:(k+1)*alt_ks]
+        o = kf_off + k*ks
+        out[o:o + alt_ks] = alt
+        for i, w in enumerate(winkel[k]):
+            for j in range(3):
+                _bits_schreiben(out, o + 12, (nb0 + i)*36 + j*12, w[j] & 0xFFF)
+    return bytes(out)
+
+
+def _exp(w):
+    """Drehvektor -> Matrix (Rodrigues)."""
+    t = np.linalg.norm(w)
+    if t < 1e-12:
+        return np.eye(3)
+    k = w / t
+    K = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
+    return np.eye(3) + np.sin(t) * K + (1 - np.cos(t)) * (K @ K)
+
+
+def _log(R):
+    """Matrix -> Drehvektor."""
+    c = np.clip((np.trace(R) - 1) / 2, -1.0, 1.0)
+    t = np.arccos(c)
+    if t < 1e-9:
+        return np.zeros(3)
+    w = np.array([R[2, 1] - R[1, 2], R[0, 2] - R[2, 0], R[1, 0] - R[0, 1]])
+    return w * (t / (2 * np.sin(t))) if t < np.pi - 1e-6 else w / max(np.linalg.norm(w), 1e-9) * t
+
+
+def schwanz_bewegung(emr, edd, sw, ruhe):
+    """Nachschwing-Rechnung je Clip, Gelenk fuer Gelenk im Winkelraum ("Wackelknochen"): jedes Glied hat eine
+    Abweichung th (Drehvektor, lokal hinter seiner Ruhedrehung) und eine Winkelgeschwindigkeit om. Dreht sich das
+    Vorglied (bzw. die Brust), behaelt das Glied zum Anteil 'traeg' seine Weltlage (Nachlauf), die Feder 'steif'
+    zieht es zur Ruhe zurueck, 'daempfung' nimmt die Schwingung heraus, 'schwere' zieht die Glieder nach unten.
+    Weil jedes Glied am TATSAECHLICHEN Vorglied haengt, laeuft die Verzoegerung zur Spitze hin auf (Peitsche beim
+    Angriff, Schwingen beim Gehen, Folgebewegung beim Werfen). Kreisende Clips (erstes ~ letztes Bild) laufen
+    dreimal, gespeichert wird der letzte Umlauf; sonst Start in Ruhe. Rueckgabe: winkel[kf] = N x (ax, ay, az)
+    12 Bit; ein Keyframe, den mehrere Bilder nutzen, nimmt das erste Bild."""
+    mo = EA.Modell.__new__(EA.Modell)
+    mo.skel = EA.emr_parse(bytes(emr))
+    clips, frames = EA.edd_parse(bytes(edd))
+    n, A = sw['glieder'], sw['knochen']
+    dyn = sw['bewegung']
+    k = np.linspace(dyn['steif'][0], dyn['steif'][1], n)
+    f = np.linspace(dyn['traeg'][0], dyn['traeg'][1], n)
+    grenze = np.radians(dyn['grenze'])
+    unten = np.array([0.0, 1.0, 0.0])
+    winkel = {}
+    ruhe_w = [_zerlege(Li) for Li in ruhe['lokal']]
+    posen = {}
+
+    rel0 = np.array(ruhe['rel'][0], float)
+    rad = ruhe['radien']
+
+    def anker(kf):
+        if kf not in posen:
+            R, T = mo.pose(kf)
+            posen[kf] = (R[A].astype(float) / 4096.0, T[A].astype(float))
+        return posen[kf][0]
+
+    def boden(kf, i, P, W, basis):
+        """Glied i von P aus; liegt sein Ende unter y = -0,5 Radius (Boden, Y unten), in der Senkrechten
+        hochdrehen (schleift auf dem Boden). Rueckgabe: neue Weltdrehung oder None."""
+        d = W @ np.array([0.0, 1.0, 0.0])
+        Li = ruhe['L'][i]
+        grenze_y = -0.5 * rad[i + 1]
+        if P[1] + Li * d[1] <= grenze_y:
+            return None
+        dy = np.clip((grenze_y - P[1]) / Li, -1.0, 1.0)
+        h = d - d[1] * unten
+        h = h / np.linalg.norm(h) if np.linalg.norm(h) > 1e-6 else np.array([-1.0, 0.0, 0.0])
+        d2 = h * np.sqrt(max(0.0, 1 - dy * dy)) + unten * dy
+        return _min_rot(d, d2) @ W
+
+    for c, (f0, nf) in enumerate(clips):
+        kfs = [frames[f0 + i] & 0xFFF for i in range(nf)]
+        kreis = nf > 8 and np.linalg.norm(anker(kfs[0]) - anker(kfs[-1])) < 0.15
+        th, om = np.zeros((n, 3)), np.zeros((n, 3))
+        welt_alt = None
+        for u in range(3 if kreis else 1):
+            for kf in kfs:
+                W = anker(kf)
+                P = W @ rel0 + posen[kf][1]
+                welt = []
+                for i in range(n):
+                    basis = W @ ruhe['lokal'][i]
+                    if welt_alt is not None:     # Nachlauf: Anteil f der alten Weltlage behalten
+                        th_traeg = _log(basis.T @ welt_alt[i])
+                        th[i] = th[i] + f[i] * (th_traeg - th[i])
+                    # Schwere: Drehmoment zur Senkrechten, im Gliedraum
+                    achse = basis @ _exp(th[i]) @ np.array([0.0, 1.0, 0.0])
+                    om[i] = dyn['daempfung'] * om[i] - k[i] * th[i] + dyn['schwere'] * (basis.T @ np.cross(achse, unten))
+                    th[i] = th[i] + om[i]
+                    t = np.linalg.norm(th[i])
+                    if t > grenze:
+                        th[i] *= grenze / t; om[i] *= 0.5
+                    W = basis @ _exp(th[i])
+                    W2 = boden(kf, i, P, W, basis)
+                    if W2 is not None:
+                        W = W2
+                        th[i] = _log(basis.T @ W)
+                        om[i] *= 0.3
+                    P = P + W @ np.array([0.0, ruhe['L'][i], 0.0])
+                    welt.append(W)
+                welt_alt = welt
+                if u == (2 if kreis else 0) and kf not in winkel:
+                    Wp, w = anker(kf), []
+                    for i in range(n):
+                        Li = Wp.T @ welt[i]
+                        w.append(_zerlege(Li))
+                        Wp = Wp @ _quant(Li)
+                    winkel[kf] = w
+    return [winkel.get(kk, ruhe_w) for kk in range(mo.skel.kf_count)]
+
+
+def umtexturieren(meshes, regeln):
+    """Faces auf ein anderes TIM-Rechteck legen: UVs der gewaehlten Faces linear von ihrer eigenen
+    Ausdehnung auf (u, v) des Ziels abbilden, CLUT und TPage setzen. Filter je Regel:
+    nur_page = nur Faces dieser TPage; y_ab = nur Faces, deren Vertices alle Mesh-lokal y >= y_ab haben."""
+    for r in regeln:
+        for b in r['meshes']:
+            m = meshes[b]
+            wahl = []                     # (Liste, Index, Eckenzahl)
+            for art, fl, ul, n in (('t', m['tf'], m['tuv'], 3), ('q', m['qf'], m['quv'], 4)):
+                for i, (f, uv) in enumerate(zip(fl, ul)):
+                    if 'nur_page' in r and uv[5] != r['nur_page']:
+                        continue
+                    if 'y_ab' in r and min(m['v'][f[2*k+1]][1] for k in range(n)) < r['y_ab']:
+                        continue
+                    wahl.append((ul, i, n))
+            if not wahl:
+                continue
+            us = [ul[i][3*k] for ul, i, n in wahl for k in range(n)]
+            vs = [ul[i][3*k+1] for ul, i, n in wahl for k in range(n)]
+            su, sv = (min(us), max(us)), (min(vs), max(vs))
+
+            def abb(x, s, t):
+                return int(round(t[0] + (x - s[0]) * (t[1] - t[0]) / max(1, s[1] - s[0])))
+            for ul, i, n in wahl:
+                uv = list(ul[i])
+                for k in range(n):
+                    uv[3*k], uv[3*k+1] = abb(uv[3*k], su, r['u']), abb(uv[3*k+1], sv, r['v'])
+                uv[2], uv[5] = r['clut'], r['page']
+                ul[i] = uv
     return meshes
 
 
@@ -448,8 +767,9 @@ def lade_em30():
 
 
 def baue(blob, form):
-    """Blob = [u32 dir_off][u32 n=9][Sektionen dir[0..8]][Verzeichnis n*4]. Nur MD1 darf
-    durch den Schwanz wachsen; danach verschieben sich TIM-Offset und Verzeichnis."""
+    """Blob = [u32 dir_off][u32 n=9][Sektionen dir[0..8]][Verzeichnis n*4]. MD1 waechst durch den Schwanz,
+    mit Schwanzkette auch die EMR-Bank 0 (dir[2]); alle folgenden Sektionen verschieben sich, das Verzeichnis
+    wird aus den Sektionslaengen neu gerechnet."""
     d = EA.emd_dir(blob)
     dir_off, n = u32(blob, 0), u32(blob, 4)
     assert dir_off + n*4 == len(blob) and d[0] == 8 and n == 9
@@ -461,13 +781,31 @@ def baue(blob, form):
     md1 = skaliere_md1(blob[md1_a:md1_e], form['skal'])
     if form.get('haltung'):
         umhalten(vor, d, md1, form['haltung'])
-    if form.get('schwanz'):
-        md1 = md1_schreiben(haenge_schwanz_an(md1_lesen(md1), form['schwanz']))
+    emr0 = bytes(vor[emr_a:emr_e])
+    kette = form.get('schwanz_kette')
+    if form.get('schwanz') or form.get('umtexturieren') or kette:
+        meshes = md1_lesen(md1)
+        if form.get('umtexturieren'):
+            umtexturieren(meshes, form['umtexturieren'])
+        if form.get('schwanz'):
+            haenge_schwanz_an(meshes, form['schwanz'])
+        if kette:
+            # Mesh 16 (Hand mit Rohr, ohne Knochen) entfaellt: Mesh 16.. = Glieder der Kette (Mesh i == Knochen i).
+            # Der Port tauscht Teil 15 nur bei genau 16 Knochen gegen Mesh 16 (main.c bk_rohr).
+            ruhe = kette_ruhe(kette)
+            meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes(kette, ruhe)
+            emr0 = emr_mit_kette(emr0, kette, ruhe, schwanz_bewegung(emr0, blob[d[1]:d[2]], kette, ruhe))
+        md1 = md1_schreiben(meshes)
     tim = faerbe_tim(blob[md1_e:dir_off], form['tint'])
-    delta = len(md1) - (md1_e - md1_a)
-    assert delta % 4 == 0
-    neu_dir = d[:8] + [d[8] + delta]
-    neu = bytes(vor[8:]) + md1 + tim
+    sek = [bytes(vor[d[i]:d[i+1]]) for i in range(7)]
+    sek[2] = emr0
+    sek += [md1, tim]
+    neu_dir, o = [], 8
+    for x in sek:
+        assert len(x) % 4 == 0
+        neu_dir.append(o)
+        o += len(x)
+    neu = b''.join(sek)
     kopf = struct.pack('<II', 8 + len(neu), n)
     return kopf + neu + struct.pack('<%dI' % n, *neu_dir)
 

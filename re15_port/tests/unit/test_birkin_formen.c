@@ -1,15 +1,16 @@
-/* test_birkin_formen.c — Formpruefung der Hangar-Nachbildung (Bahnsteig-Form: test_birkin_bahnsteig.c).
+/* test_birkin_formen.c — Formpruefung der Hangar-/Labor-Nachbildung (Bahnsteig-Form: test_birkin_bahnsteig.c).
  *
  * EM30_HANGAR.EMD (re15_port/tools/birkin_formen.py) ist KEIN Original-Asset, sondern aus
- * EM30 (CDEMD0.EMS, Typ 0x30) abgeleitete Gestaltung. Der Generator verspricht, dass nur
- * MD1-Vertices/-Normalen, EMR-Bindoffsets und TIM-CLUTs anders sind. Dieser Test haelt das
- * fest, damit die Datei im Port (RE15_BIRKIN_FORM, platform/pc/main.c) mit den unveraenderten
- * EM30-Clips und der EM30-KI laeuft:
+ * EM30 (CDEMD0.EMS, Typ 0x30) abgeleitete Gestaltung. Seit Runde 41 Spur SF (Nutzer: "Der Schwanz ist viel zu
+ * starr") haengt der Schwanz als eigene Knochenkette 16-22 an Knochen 8; Mesh i == Knochen i, das knochenlose
+ * Rohr-Mesh 16 des Capcom-Modells entfaellt. Der Test haelt fest, damit die Datei im Port mit den EM30-Clips,
+ * der EM30-KI und der Hangar-Szene (Knochen 15) laeuft:
  *   - re15_emd_parse_container liest die Datei,
- *   - Mesh-/Knochen-/Clip-/Keyframe-Zahlen und Hierarchie sind gleich wie bei EM30,
- *   - EDD und Keyframes sind byte-gleich,
- *   - die EM30-Topologie (Dreiecke/Quads, UVs) ist ein byte-gleiches Praefix; die Hangar-
- *     Form haengt ihren Schwanz nur an (Mesh 8) und jede Zusatz-Face zeigt in die Arrays,
+ *   - Knochen 0-15 haben dieselben Eltern wie EM30, 16-22 bilden eine Kette ab Knochen 8,
+ *   - Clip-Zahl und EDD sind byte-gleich; jeder Keyframe beginnt mit dem EM30-Keyframe (Wurzel, Spur,
+ *     16 x 36 Bit), die Schwanzwinkel haengen dahinter und bewegen sich,
+ *   - Meshes 0-15: Topologie gleich, UVs gleich ausser den umtexturierten Teilen (Beine 1-6, Kopf 9,
+ *     Unterarm 14); Meshes 16-22 zeigen nur in ihre eigenen Arrays,
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  */
 #include <stdint.h>
@@ -50,7 +51,13 @@ typedef struct {
 
 static modell_t s_basis, s_form;
 
-static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len, int umgehalten)
+#define KETTE 7                  /* Schwanzglieder, birkin_formen.py FORMEN['hangar'] schwanz_kette glieder */
+static int umtexturiert(int m)   /* birkin_formen.py FORMEN['hangar'] umtexturieren */
+{
+    return (m >= 1 && m <= 6) || m == 9 || m == 14;
+}
+
+static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
 {
     char pfad[512];
     snprintf(pfad, sizeof pfad, RE15_ASSET_PSX_DIR "/EMD/%s", name);
@@ -65,92 +72,93 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len, i
     CHECK(rc == 0, "%s: re15_emd_parse_container rc=%d", name, rc);
     if (rc != 0) { free(blob); return; }
 
-    CHECK(s_form.md1.mesh_count == s_basis.md1.mesh_count, "%s: Meshes %d != %d",
-          name, s_form.md1.mesh_count, s_basis.md1.mesh_count);
-    CHECK(s_form.skel.bone_count == s_basis.skel.bone_count, "%s: Knochen %d != %d",
-          name, s_form.skel.bone_count, s_basis.skel.bone_count);
+    const int nb0 = s_basis.skel.bone_count;
+    CHECK(nb0 == 16, "EM30: %d Knochen statt 16", nb0);
+    CHECK(s_form.skel.bone_count == nb0 + KETTE, "%s: Knochen %d != %d", name, s_form.skel.bone_count, nb0 + KETTE);
+    CHECK(s_form.md1.mesh_count == nb0 + KETTE, "%s: Meshes %d != %d (Mesh i == Knochen i)",
+          name, s_form.md1.mesh_count, nb0 + KETTE);
     CHECK(s_form.anim.clip_count == s_basis.anim.clip_count, "%s: Clips %d != %d",
           name, s_form.anim.clip_count, s_basis.anim.clip_count);
     CHECK(s_form.tim.width == s_basis.tim.width && s_form.tim.height == s_basis.tim.height,
           "%s: TIM %dx%d != %dx%d", name, s_form.tim.width, s_form.tim.height,
           s_basis.tim.width, s_basis.tim.height);
-    for (int b = 0; b < s_basis.skel.bone_count; b++)
+    for (int b = 0; b < nb0; b++)
         CHECK(s_form.skel.bone_parent[b] == s_basis.skel.bone_parent[b],
               "%s: Parent von Knochen %d %d != %d", name, b,
               s_form.skel.bone_parent[b], s_basis.skel.bone_parent[b]);
-    CHECK(memcmp(s_form.anim.frames, s_basis.anim.frames,
+    for (int b = nb0; b < s_form.skel.bone_count; b++)
+        CHECK(s_form.skel.bone_parent[b] == (b == nb0 ? 8 : b - 1),
+              "%s: Schwanzknochen %d haengt an %d", name, b, s_form.skel.bone_parent[b]);
+    CHECK(s_form.anim.frame_count == s_basis.anim.frame_count &&
+          memcmp(s_form.anim.frames, s_basis.anim.frames,
                  sizeof(uint32_t) * (size_t)s_basis.anim.frame_count) == 0,
           "%s: EDD-Frames weichen von EM30 ab", name);
-    /* nur die Keyframes, die das EDD referenziert: keyframe_count/-data_size reichen beim
-     * Container-Parse bis zum Blobende und umfassen damit auch die (geaenderte) MD1/TIM.
-     * Hangar: byte-gleich. Bahnsteig: umgehalten (birkin_formen.py umhalten, Vierbein-
-     * Haltung) -> Wurzel-X/Z und die NICHT umgehaltenen Knochen 0/3/6/8 byte-gleich. */
+    /* Keyframes: die ersten 84 Byte (Wurzel + Spur + 16 x 36 Bit) byte-gleich mit EM30, dahinter die
+     * Schwanzwinkel. Nur die vom EDD referenzierten Keyframes (keyframe_count reicht bis zum Blobende). */
     {
-        int kn = s_basis.anim.last_keyframe_index + 1, ks = s_basis.skel.keyframe_size_bytes;
-        if (!umgehalten) {
-            CHECK(memcmp(s_form.skel.keyframe_data, s_basis.skel.keyframe_data,
-                         (size_t)kn * (size_t)ks) == 0, "%s: Keyframes weichen von EM30 ab", name);
-        } else {
-            static const int fest[] = {0, 3, 6, 8};   /* 11/14 = Ellbogen: Vierbein-Gang (birkin_formen.py gang) */
-            int abw = 0, y_neu = 0;
-            for (int k = 0; k < kn; k++) {
-                const uint8_t *a = s_basis.skel.keyframe_data + (size_t)k * ks;
-                const uint8_t *b = s_form.skel.keyframe_data + (size_t)k * ks;
-                abw += memcmp(a, b, 2) != 0 || memcmp(a + 4, b + 4, 2) != 0;
-                y_neu += memcmp(a + 2, b + 2, 2) != 0;
-                for (int i = 0; i < (int)(sizeof fest / sizeof fest[0]); i++)
-                    for (int bit = fest[i] * 36; bit < fest[i] * 36 + 36; bit++)
-                        abw += ((a[12 + bit / 8] ^ b[12 + bit / 8]) >> (bit & 7)) & 1;
-            }
-            CHECK(abw == 0, "%s: %d Abweichungen in Wurzel-X/Z bzw. festen Knochen", name, abw);
-            CHECK(y_neu > 0, "%s: Haltung ohne Wirkung (keine Wurzelhoehe geaendert)", name);
+        int kn = s_basis.anim.last_keyframe_index + 1;
+        int ka = s_basis.skel.keyframe_size_bytes, kb = s_form.skel.keyframe_size_bytes;
+        CHECK(kb >= 12 + (s_form.skel.bone_count * 36 + 7) / 8 && kb % 4 == 0,
+              "%s: Keyframe-Groesse %d zu klein fuer %d Knochen", name, kb, s_form.skel.bone_count);
+        int abw = 0, bewegt = 0;
+        const uint8_t *k0 = s_form.skel.keyframe_data;
+        for (int k = 0; k < kn; k++) {
+            const uint8_t *a = s_basis.skel.keyframe_data + (size_t)k * ka;
+            const uint8_t *b = s_form.skel.keyframe_data + (size_t)k * kb;
+            abw += memcmp(a, b, (size_t)ka) != 0;
+            bewegt += memcmp(b + ka, k0 + ka, (size_t)(kb - ka)) != 0;
         }
+        CHECK(abw == 0, "%s: %d Keyframes weichen in Knochen 0-15 von EM30 ab", name, abw);
+        CHECK(bewegt > kn / 2, "%s: Schwanz starr (%d von %d Keyframes anders als Keyframe 0)", name, bewegt, kn);
+        fprintf(stderr, "%s: %d von %d Keyframes mit bewegtem Schwanz\n", name, bewegt, kn);
     }
 
-    long geaendert = 0, zusatz = 0;
-    for (int m = 0; m < s_basis.md1.mesh_count; m++) {
-        const re15_md1_mesh_t *a = &s_basis.md1.meshes[m], *b = &s_form.md1.meshes[m];
-        /* Zusatzgeometrie (Hangar-Schwanz an Mesh 8) wird nur ANGEHAENGT: die EM30-Faces,
-         * -UVs und Vertex-Indizes bleiben ein unveraendertes Praefix. */
-        CHECK(b->triangle_count >= a->triangle_count && b->quad_count >= a->quad_count &&
-              b->tri_vertex_count >= a->tri_vertex_count &&
-              b->quad_vertex_count >= a->quad_vertex_count,
-              "%s: Mesh %d hat weniger Elemente als EM30", name, m);
-        if (b->triangle_count >= a->triangle_count && a->triangle_count > 0) {
-            CHECK(!memcmp(a->triangles, b->triangles, sizeof *a->triangles * (size_t)a->triangle_count) &&
-                  !memcmp(a->triangle_uvs, b->triangle_uvs, sizeof *a->triangle_uvs * (size_t)a->triangle_count),
-                  "%s: Mesh %d Dreieckstopologie/UVs weichen ab", name, m);
+    long geaendert = 0, uv_neu = 0;
+    for (int m = 0; m < s_form.md1.mesh_count; m++) {
+        const re15_md1_mesh_t *b = &s_form.md1.meshes[m];
+        if (m < nb0) {
+            const re15_md1_mesh_t *a = &s_basis.md1.meshes[m];
+            CHECK(b->triangle_count == a->triangle_count && b->quad_count == a->quad_count &&
+                  b->tri_vertex_count == a->tri_vertex_count && b->quad_vertex_count == a->quad_vertex_count,
+                  "%s: Mesh %d Elementzahlen weichen von EM30 ab", name, m);
+            if (b->triangle_count != a->triangle_count || b->quad_count != a->quad_count) continue;
+            if (a->triangle_count > 0)
+                CHECK(!memcmp(a->triangles, b->triangles, sizeof *a->triangles * (size_t)a->triangle_count),
+                      "%s: Mesh %d Dreieckstopologie weicht ab", name, m);
+            if (a->quad_count > 0)
+                CHECK(!memcmp(a->quads, b->quads, sizeof *a->quads * (size_t)a->quad_count),
+                      "%s: Mesh %d Quadtopologie weicht ab", name, m);
+            int uv_gleich =
+                (a->triangle_count == 0 ||
+                 !memcmp(a->triangle_uvs, b->triangle_uvs, sizeof *a->triangle_uvs * (size_t)a->triangle_count)) &&
+                (a->quad_count == 0 ||
+                 !memcmp(a->quad_uvs, b->quad_uvs, sizeof *a->quad_uvs * (size_t)a->quad_count));
+            if (umtexturiert(m)) { CHECK(!uv_gleich, "%s: Mesh %d nicht umtexturiert", name, m); uv_neu++; }
+            else CHECK(uv_gleich, "%s: Mesh %d UVs weichen ab", name, m);
+            for (int v = 0; v < a->tri_vertex_count; v++)
+                geaendert += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
+        } else {
+            CHECK(b->quad_count > 0, "%s: Schwanzglied-Mesh %d leer", name, m);
+            for (int q = 0; q < b->quad_count; q++) {
+                const re15_md1_quad_t *f = &b->quads[q];
+                CHECK(f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count &&
+                      f->v2 < b->quad_vertex_count && f->v3 < b->quad_vertex_count &&
+                      f->n0 < b->quad_normal_count && f->n1 < b->quad_normal_count &&
+                      f->n2 < b->quad_normal_count && f->n3 < b->quad_normal_count,
+                      "%s: Mesh %d Quad %d zeigt ausserhalb", name, m, q);
+            }
+            for (int t = 0; t < b->triangle_count; t++) {
+                const re15_md1_triangle_t *f = &b->triangles[t];
+                CHECK(f->v0 < b->tri_vertex_count && f->v1 < b->tri_vertex_count &&
+                      f->v2 < b->tri_vertex_count && f->n0 < b->tri_normal_count &&
+                      f->n1 < b->tri_normal_count && f->n2 < b->tri_normal_count,
+                      "%s: Mesh %d Dreieck %d zeigt ausserhalb", name, m, t);
+            }
         }
-        if (b->quad_count >= a->quad_count && a->quad_count > 0) {
-            CHECK(!memcmp(a->quads, b->quads, sizeof *a->quads * (size_t)a->quad_count) &&
-                  !memcmp(a->quad_uvs, b->quad_uvs, sizeof *a->quad_uvs * (size_t)a->quad_count),
-                  "%s: Mesh %d Quadtopologie/UVs weichen ab", name, m);
-        }
-        zusatz += (b->quad_count - a->quad_count) + (b->triangle_count - a->triangle_count);
-        /* jede neue Face muss auf existierende Vertices/Normalen des Meshes zeigen */
-        for (int q = a->quad_count; q < b->quad_count; q++) {
-            const re15_md1_quad_t *f = &b->quads[q];
-            CHECK(f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count &&
-                  f->v2 < b->quad_vertex_count && f->v3 < b->quad_vertex_count &&
-                  f->n0 < b->quad_normal_count && f->n1 < b->quad_normal_count &&
-                  f->n2 < b->quad_normal_count && f->n3 < b->quad_normal_count,
-                  "%s: Mesh %d Zusatz-Quad %d zeigt ausserhalb", name, m, q);
-        }
-        for (int t = a->triangle_count; t < b->triangle_count; t++) {
-            const re15_md1_triangle_t *f = &b->triangles[t];
-            CHECK(f->v0 < b->tri_vertex_count && f->v1 < b->tri_vertex_count &&
-                  f->v2 < b->tri_vertex_count && f->n0 < b->tri_normal_count &&
-                  f->n1 < b->tri_normal_count && f->n2 < b->tri_normal_count,
-                  "%s: Mesh %d Zusatz-Dreieck %d zeigt ausserhalb", name, m, t);
-        }
-        for (int v = 0; v < a->tri_vertex_count && v < b->tri_vertex_count; v++)
-            geaendert += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
     }
     CHECK(geaendert > 0, "%s: keine einzige Vertex-Aenderung gegenueber EM30", name);
-    if (!strcmp(name, "EM30_HANGAR.EMD"))
-        CHECK(zusatz > 0, "%s: Schwanz-Geometrie fehlt", name);
-    fprintf(stderr, "%s: %d Meshes, %d Knochen, %d Clips, %ld Tri-Vertices umgeformt, %ld Zusatz-Faces\n",
-            name, s_form.md1.mesh_count, s_form.skel.bone_count, s_form.anim.clip_count, geaendert, zusatz);
+    fprintf(stderr, "%s: %d Meshes, %d Knochen, %d Clips, %ld Tri-Vertices umgeformt, %ld Teile umtexturiert\n",
+            name, s_form.md1.mesh_count, s_form.skel.bone_count, s_form.anim.clip_count, geaendert, uv_neu);
     free(blob);
 }
 
@@ -169,7 +177,7 @@ int main(void)
                                       &s_basis.anim, &s_basis.tim);
     CHECK(rc == 0, "EM30: re15_emd_parse_container rc=%d", rc);
     if (rc == 0) {
-        vergleiche("EM30_HANGAR.EMD", ems + off, len, 0);
+        vergleiche("EM30_HANGAR.EMD", ems + off, len);
     }
     free(ems);
     if (fails) { fprintf(stderr, "test_birkin_formen: %d Fehler\n", fails); return 1; }

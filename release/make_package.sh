@@ -306,6 +306,13 @@ check_tree() {           # $1 = fertiger Paketordner
         n_msk=$((n_msk + 1))
     done
     echo "  check_tree: $n_msk Masken-Dateien bytegleich"
+    # Seit Runde 41 Spur SF: Hangar-/Labor-Birkin EMD/EM30_HANGAR.EMD (tools/birkin_formen.py, mit Schwanzkette Knochen 16-22).
+    # Fehlt die Datei oder ist sie alt, laden 50A0/50A1/50E0/50F1 still das Capcom-EM30 bzw. den starren Schwanz
+    # (re15_bf_emd_datei -> pc_enemy_read_re15_emd faellt ohne Datei auf CDEMD0 zurueck) - Gate statt Stille, wie BAHNSTEIG_G4.
+    for pf in EMD/EM30_HANGAR.EMD; do
+        [[ -s "$out/shared_assets/PSX/$pf" ]] || die "PSX-Asset fehlt/leer im Paket: shared_assets/PSX/$pf (Hangar-/Labor-Birkin fiele auf EM30 zurueck)"
+        cmp -s "$ASSETS/$pf" "$out/shared_assets/PSX/$pf" || die "PSX-Asset im Paket weicht vom Quellbaum ab: shared_assets/PSX/$pf"
+    done
     # Seit Runde 36 (Spur O, PRI): die Masken-Erzeugnisse der Nutzer-PRIs fuer ROOM10F0 Cut 2 (Absperrung) und ROOM1100
     # (Wandfuss) liegen im kopierten PSX-Baum (shared_assets/PSX/MASKS); fehlen sie, verdeckt die Absperrung Marvin nicht.
     for rs in MASKS/ROOM10F0.MSK MASKS/ROOM10F0_PRI02.TIM MASKS/ROOM1100.MSK MASKS/ROOM1100_PRI01.TIM MASKS/ROOM1100_PRI02.TIM; do

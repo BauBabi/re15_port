@@ -36,6 +36,7 @@ const char *re15_bf_emd_datei(uint8_t type)
         if (!strcmp(form, "bahnsteig")) return NULL;     /* eigene Bank: re15_bf_bahnsteig_bank_faellig */
     }
     if (re15_bf_hangar_aktiv())    return "EMD/EM30_HANGAR.EMD";
+    if (re15_bf_labor_aktiv())     return "EMD/EM30_HANGAR.EMD";
     return NULL;
 }
 
@@ -70,6 +71,16 @@ int re15_bf_bahnsteig_aktiv(void)
 int re15_bf_hangar_aktiv(void)
 {
     return (g_current_room_id & 0xFFFEu) == 0x50A0u && !getenv("RE15_KEIN_HANGAR_BIRKIN");
+}
+
+/* Labor-Kampf (Mod: ROOM50E0 Leon, ROOM50F1 Elza, Sce_em_set Typ 0x30 aus CDEMD0, Dossier herkunft/birkin_modelle.md 1.2).
+ * Nutzer 2026-11-02 (NUTZER_ENTSCHEIDE E17): der Birkin im Labor ist derselbe wie im Hangar (Complete Disc Video 4: Labor
+ * 12-22 s, Hangar 45-51 s) -> dieselbe Form. Die Labor-Kameras des Videos sind ROOM50E0 Schnitt 8 (Pult) und 5 (Steg),
+ * gemessen per Gradienten-Korrelation 0,60 / 0,65 gegen die BSS-Bilder (Dossier SF_sichel.md). */
+int re15_bf_labor_aktiv(void)
+{
+    uint16_t r = (uint16_t)(g_current_room_id & 0xFFFEu);
+    return r == 0x50E0u || r == 0x50F0u;
 }
 
 /* ---- Bahnsteig: Uebergabe an den G5 -------------------------------------------------------

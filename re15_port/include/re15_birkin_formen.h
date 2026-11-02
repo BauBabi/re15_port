@@ -6,7 +6,8 @@
  * Auftritte gibt es nur im 80%-Material; jede Zahl, die hier NICHT mit @0x… belegt ist, ist aus dem Video gemessen
  * (Rueckprojektion durch die RID-Kamera) oder Gestaltung, und als solche markiert.
  *
- * Modelle: EMD/EM30_HANGAR.EMD (tools/birkin_formen.py): Clips, Hierarchie und KI von EM30 / Typ 0x30.
+ * Modelle: EMD/EM30_HANGAR.EMD (tools/birkin_formen.py): Clips, Knochen 0-15 und KI von EM30 / Typ 0x30, dazu eine
+ * Schwanzkette (Knochen 16-22, Runde 41 Spur SF), traegt der Birkin im Hangar 50A0/50A1 UND im Labor 50E0/50F1.
  * RE2/BAHNSTEIG_G4.EMD + .TIM (tools/birkin_bahnsteig.py, Runde 41 Spur R): RE2-G4 kind 0x34 umgeformt, 27 Knochen,
  * eigene Clips, eigener Tick (engine/src/birkin_bahnsteig.c). Gewaehlt vom PC-Lader (re15_bf_emd_datei bzw.
  * re15_bf_bahnsteig_bank_faellig).
@@ -35,6 +36,7 @@ int  re15_bf_bahnsteig_bank_faellig(uint8_t type);
 
 int  re15_bf_bahnsteig_aktiv(void);      /* ROOM5090/5091 und nicht RE15_ENDKAMPF_NUR_G5 */
 int  re15_bf_hangar_aktiv(void);         /* ROOM50A0/50A1 und nicht RE15_KEIN_HANGAR_BIRKIN */
+int  re15_bf_labor_aktiv(void);          /* ROOM50E0/50E1/50F0/50F1: Labor-Kampf, dieselbe Form wie im Hangar */
 
 /* 5090 Original -> Bahnsteig-Form: bis zur ersten Mutation gilt der Spawn als Form 1 (Mutations-Tor @0x801164e8);
  * am Ende der Mutation (sub 6 Phase 2 @0x8011888c) wechselt das Modell ueber den Plattform-Haken. */
