@@ -14,6 +14,13 @@
  *   HANGAR (50A0/50A1, Cut 12, V1 4:36-4:40): Birkin packt einen anspringenden Spider-Man (Typ 0x2B), stemmt
  *     ihn ueber den Kopf und schmettert ihn vor sich auf den Boden (Birkin-Clip 0x0B = GRAB-THROW, Wurf bei
  *     Bild 0x2C wie im Original @0x80117d30), dann greift er den Spieler an (Uebergabe an die 0x30-KI).
+ *     Runde 41 Spur H: Cut 12 ist im Raum unerreichbar (keine RVD-Zone, kein Cut_chg) - die Szene ist deshalb eine
+ *     Zwischensequenz mit Riegel und Letterbox, ausgeloest vom ersten angeforderten Schnitt, der eine der Figuren zeigt;
+ *     vorher gibt es die Figuren nicht (birkin_formen.c Kopf "Spur H", Dossier analysis/befunde_runde41/H_hangar.md).
+ *     Ablauf Bild fuer Bild nach dem 80%-Video (Complete Disc 4, 45.0 s): Ansprung, Halten, Wurf, Spider-Man flieht
+ *     rechts an der Kamera vorbei, Birkin geht auf die Kamera zu; danach 0x30-KI.
+ *     Modell-Voraussetzungen (jedes EM30-Ersatzmodell): Knochen 15 = Klaue, Clip 0 (Stand, INIT), Clip 0x0B (Griff/Wurf,
+ *     mindestens 0x2D Bilder), Clip 1 (Gang der KI); Spider-Man EM2B: Clips 0, 7, 0x0A, 0x0C.
  *   BAHNSTEIG (5090/5091): zuerst der Original-Birkin mit der RE1.5-0x30-KI (Auslieferungsspawn sub00 @0x0124A,
  *     Kampfstart sub04 Pos_set @0x12FE / Member_set(0x0c,0x13) @0x130A); nach seiner Mutation die Bahnsteig-Form
  *     mit den G4-Ablaeufen (re15_bb_tick). Wo das Original nach dem Tod in Phase 3 auf den Raum-Morph wartet
@@ -73,8 +80,15 @@ int  re15_bb_cd_lauf_test(int setzen);
 int  re15_bb_pose_aktiv(void);
 void re15_bb_pose_tick(void);
 
-/* Diagnose fuer Tests: Szenenphase (0 = wartet, 1 = Sprung, 2 = Griff, 3 = Sturz, 4 = liegt, 5 = vorbei). */
+/* Diagnose fuer Tests: Szenenphase (0 = wartet auf den Ausloeser, keine Figuren; 1 = Vorlauf in Cut 12; 2 = Sprung;
+ * 3 = Griff/Halten; 4 = Wurf; 5 = am Boden und Flucht; 6 = Abgang (Gang auf die Kamera zu, Zeitplan); 7 = frei). */
 int  re15_bf_hangar_phase(void);
 int  re15_bf_hangar_slot(int birkin);    /* 1 = Birkin-Slot, 0 = Spider-Man-Slot, -1 = keiner */
+int  re15_bf_hangar_riegel(void);        /* 1 = die Szene haelt Set(2,7)/Set(1,27) */
+void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen (Prozess-Merker) */
+/* 1 = der Schnitt `cut` des aktuellen Raums zeigt eine Szenenfigur (Anker-Viereck + Bild), = Ausloeser-Bedingung. */
+int  re15_bf_szene_im_schnitt(int cut);
+/* Region-Cull-Ausnahme (Zeichner): 1 = `a` ist eine Figur der Hangar-Szene und die Szene haelt Cut 12. */
+int  re15_bf_szene_zeigt(const re15_actor_t *a);
 
 #endif

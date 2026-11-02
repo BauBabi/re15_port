@@ -9933,7 +9933,8 @@ re_title:;
                 int npc_region_culled = 0;
                 if (cam_has_region &&
                     !re15_aot_point_in_quad(npc->x, npc->z,
-                                            cam_region_xs, cam_region_zs)) {
+                                            cam_region_xs, cam_region_zs) &&
+                    !re15_bf_szene_zeigt(npc)) {   /* Runde 41 Spur H: Hangar-Szene in Cut 12 (Anker = Platzhalter rvd 39 @0x564) */
                     /* G5-ENDKAMPF (Phase 2, birkin-g5.md 4.1.2 + Skeptiker #9): der Boss
                      * startet wie in RE2 bei X=-9000 (@0x801011d0), sein URSPRUNG liegt
                      * damit die ersten 151 Bilder ausserhalb des Cut-12-Ankervierecks
