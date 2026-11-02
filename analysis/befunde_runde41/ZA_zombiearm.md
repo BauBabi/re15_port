@@ -163,3 +163,10 @@ getroffen wird (grep `re15_teile_markieren`, `.scale[`, `re15_bf_emd_datei`, Mod
 
 Bilder Port gegen Original: nur fuer Punkt 1 erstellt (Abschnitt 4). Kein weiterer Punkt ist ein Stummel-artiger
 Geometriefehler; 2-7 sind bewusste Port-Optionen/Nachbildungen und werden nur gemeldet.
+
+## 7. Berichtigung nach Abnahme 1 (Orchestrator, 2026-11-02)
+
+Abnahme 1 (`ZA_abnahme_1.md`) bestanden. Zwei Aussagen dieses Dossiers waren falsch und sind im Code-Kommentar berichtigt (enemy_ai_common.c Spawn-Variante und Liege-Zweig); die Bytes habe ich auf `Version_40%` selbst nachgemessen:
+- Abschnitt 2a "ein Arm kaeme im Original nie dran" gilt nur fuer den Mod. Die Disc liest den RNG-Zustand: `94440000` = `lhu a0,0(v0)` @0x8001af28 (Mod `94490000` = `lhu t1`), Startwert `340201c3` @0x8003162c. Ein Arm kann also gewuerfelt werden.
+- Wer die Bits loescht: FUN_8001ee68 am Ende jedes Zombie-INIT, `34130001` @0x8001ef04, `ae330000` @0x8001ef14, Aufruf `0c007b9a` @0x80100fe0, `14430019` @0x80100f70 springt fuer nicht liegende Zombies auf 0x80100fd8, der Liege-Zweig faellt durch. Nicht "nur im Liege-Zweig".
+Am Verhalten aendert das nichts: die Variante wird im selben INIT gesetzt und wieder geloescht, bevor ein Bild entsteht.

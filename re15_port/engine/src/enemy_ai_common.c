@@ -2128,12 +2128,18 @@ void re15_enemy_ai_live_init(int slot)
      *   GEMESSEN in 26 sauberen Savestates mit Zombies (ROOM1140, STAGE2 u.a.): Skala und Tinte der Routine
      *   0x8010118c stehen in den Teilen 4/5 jedes Zombies in Slot 0..3 — das Teil-Wort steht aber ueberall auf
      *   0x00000001. Die Bits sind weg, der Zeichner skaliert nicht, die Glieder sind normal (Bild ZA_belege).
-     *   Dazu: rng FUN_8001af20 hasht das a0-Register (Memory reai-v2-rng-determinism), hier a0 = Entity-Zeiger
-     *   (`lw a0` @0x80100840-44). Slots 0..3 waehlen so immer 0x8010118c (ein Bein), ab Slot 4 nie; ein ARM
-     *   kaeme im Original nie dran.
+     *   Wurf: Nur im Mod (info/Re1.5) hasht rng FUN_8001af20 das a0-Register (`lhu t1` @0x8001af28, hier
+     *   a0 = Entity-Zeiger `lw a0` @0x80100840-44, Slots 0..3 waehlen immer 0x8010118c). Die 40%-Disc liest
+     *   den Zustand (`lhu a0` @0x8001af28 = 94440000, Startwert 0x1c3 je Raum @0x8003162c), dort kann auch
+     *   ein ARM gewuerfelt werden (Savestate disc40_room11e0: Teile 8/9 Skala 0x5f4, Teil-Wort 1).
+     *   Unsichtbar bleibt es trotzdem: FUN_8001ee68 loescht die Bits am Ende JEDES Zombie-INIT
+     *   (`ori s3,zero,1` @0x8001ef04, `sw s3,0(s1)` @0x8001ef14 je Teil, Skala/Tinte unberuehrt; Aufruf
+     *   `jal 0x8001ee68` @0x80100fe0, erreicht von allen: `bne v0,v1,0x80100fd8` @0x80100f70 fuer nicht
+     *   liegende, der Liege-Zweig faellt durch). ZA_abnahme_1.md.
      * Port: die beiden Wuerfe bleiben (Zufallsstrom wie im Original, Riegel unit_za_spawnvariante), angewandt wird
-     * nichts. Der Teil-Reset bildet FUN_8001e5b0 ab (Wort 1 je Teil @0x8001e758, Aufruf in Sce_em_set @0x80042530
-     * vor der Wurzel @0x8004259c). */
+     * nichts. re15_teile_reset hier bildet den Reset FUN_8001e5b0 VOR der Variante ab (Wort 1 je Teil @0x8001e758,
+     * Aufruf in Sce_em_set @0x80042530 vor der Wurzel @0x8004259c); der Nach-Reset FUN_8001ee68 ist damit
+     * im Ergebnis schon erfuellt. */
     {
         int zslot = (int)(e - g_actors);
         re15_teile_reset(zslot);
@@ -2181,7 +2187,7 @@ void re15_enemy_ai_live_init(int slot)
         } else if (sel == 0x0d) {       /* pre-engaged: +0x4=0x201 + grid=0 @0x80100f40-54 */
             e->sub_state_1 = 0x02; e->grid_id = 0; e->motion = 0x27;
         } else if (sel == 0x0e) {
-            re15_teile_reset((int)(e - g_actors));   /* FUN_8001ee68 @0x80100fe0: nur in diesem Zweig — die Variante verfaellt */
+            re15_teile_reset((int)(e - g_actors));   /* FUN_8001ee68 @0x80100fe0 laeuft im Original fuer ALLE Zombies (bne @0x80100f70), nicht nur liegende; hier wirkungsgleich, weil oben schon fuer alle zurueckgesetzt wurde */
             /* SLEEPING-LYING (byte-true @0x80100f64-fd4, analysis/zombie_lyer_10d0.md D1
              * CONFIRMED — der alte "pose-only"-Kommentar war falsch): +0x94=0x2A (sb @0x80100f78),
              * +0x95=0 (@0x80100f88), +0x8f=0 (@0x80100f98), Word +0x4=0x1201 (@0x80100fc0-c4 =
