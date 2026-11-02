@@ -214,7 +214,7 @@ def rennen(bau):
                 rw = S.slerp_m(bau.ende_R[g], R1[bau.glieder[g][2]], w)
             else:
                 rw = R1[bau.glieder[g][2]] if steht else S.rz(D(25 * min(1.0, hub / 300.0))) @ R1[bau.glieder[g][2]]
-            bau.glied_ziel(p, g, ziel, ende_welt=rw)
+            bau.glied_ziel_boden(p, g, ziel, ende_welt=rw)
         posen.append(p)
     return mit_spur(posen, sp), worte_g4(bau, C_RENNEN)
 
@@ -233,7 +233,9 @@ def hieb(bau, seite):
         bau.ruecken(p, nick=-8 * t, gier=10 * sg * t, roll=-6 * sg * t)
         bau.kopf(p, nick=-14 * t, gier=-10 * sg * t, kiefer=22 * t)
         bau.schwanz(p, hebung=10 * t)
-        bau.arm_frei(p, seite, schulter=(-35 * sg * t, 0, -125 * t), ellbogen=-50 * t, hand=(0, 0, -20 * t))
+        # Arm hoch und weit zur Seite: ausserhalb der Trefferprobe (Teil 13/18 Radius 1700 bzw. (0,600,0) Radius 1500 bei
+        # Spieler 2600 voraus), damit der Einstieg des Doppelschlags (Clip 3 Bild 20 / Clip 4 Bild 7) nicht schon trifft
+        bau.arm_frei(p, seite, schulter=(-90 * sg * t, 0, -50 * t), ellbogen=-20 * t, hand=(0, 0, -20 * t))
         bau.klauen(p, seite, -18 * t)
         return p
 
@@ -244,8 +246,8 @@ def hieb(bau, seite):
         bau.ruecken(p, nick=10 * t - 8 * u, gier=-16 * sg * t + 10 * sg * u, roll=6 * sg * t)
         bau.kopf(p, nick=10 * t - 14 * u, gier=8 * sg * t, kiefer=26)
         bau.schwanz(p, hebung=6, gier=10 * sg, phase=1.5)
-        bau.arm_frei(p, seite, schulter=(-35 * sg * u + 30 * sg * t, 18 * sg * t, -125 * u - 55 * t),
-                     ellbogen=-50 * u + 10 * t, hand=(0, 0, -20 * u + 30 * t))
+        bau.arm_frei(p, seite, schulter=(-90 * sg * u + 25 * sg * t, 15 * sg * t, -50 * u - 65 * t),
+                     ellbogen=-20 * u + 5 * t, hand=(0, 0, -20 * u + 30 * t))
         bau.klauen(p, seite, -18 * u + 10 * t)
         return p
     if seite == 'R':
@@ -389,6 +391,19 @@ def drohen(bau):
     keys = [(0, bau.p()), (18, duck(0.6, 6)), (30, duck(1.0, 40)), (a, exakt(r, r.bild2)), (b, exakt(r, r.bild2)),
             (66, duck(0.8, 20)), (80, auf(1.0)), (86, auf(1.02, 44)), (96, duck(0.9, 14)), (110, duck(0.4, 26)),
             (125, bau.p())]
+    # Spur: in Bild 45-52 steht Pose Bild 2 still; das G4-Tempo dieser Bilder (zusammen rund -400) wandert in Bild 53-60,
+    # die Summe des Clips bleibt die von G4 (PORT-WAHL, das Tempo im Auftritt bedient keine Schwelle des Ticks).
+    tempo = [sp[0][0]] + [sp[i][0] - sp[i - 1][0] for i in range(1, n)]
+    rest = sum(tempo[a:b + 1])
+    for f in range(a, b + 1):
+        tempo[f] = 0
+    for f in range(b + 1, b + 9):
+        tempo[f] += rest / 8.0
+    acc, sp2 = 0.0, []
+    for f in range(n):
+        acc += tempo[f]
+        sp2.append(np.array([round(acc), sp[f][1], sp[f][2]], float))
+    sp = sp2
     posen = mit_spur(bau.zeitleiste(n, keys), sp)
     # Beine ziehen auf dem Weg in die Hocke von Bild 2 und zurueck an (Knie beugt staerker), sonst streifen sie durch den Boden
     for (f0, f1) in ((30, 44), (53, 67)):
@@ -397,6 +412,8 @@ def drohen(bau):
             for kn, ver in ((24, 0.0), (26, 0.25)):
                 u = min(1.0, max(0.0, (w - ver * 0.5) / (1 - ver * 0.5)))
                 r.dreh_lokal(posen[f], kn, S.rz(D(KNIE_FALTE * math.sin(math.pi * u))))
+    for f in list(range(31, a)) + list(range(b + 1, 67)):
+        posen[f]['glieder_frei'] = ('LH', 'RH')         # Beine im Uebergang: Bodenfreiheit auch am Knie
     fest = set(range(a, b + 1))
     um_b2 = (32, 62)
     fuesse_auto(bau, posen, [s[0] for s in sp], glieder=('LH', 'RH'), fest=fest, frei={'LH': [(31, 66)], 'RH': [(31, 66)]})

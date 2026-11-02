@@ -15061,8 +15061,11 @@ static void re15_birkin_root(int s)
 {
     re15_actor_t *e = &g_actors[s];
     if (s_ai_paused || (g_re15_pauseflags & RE15_PAUSE_AI)) return;   /* @0x80116a68 / @0x80116254 */
-    if (e->grid_id & 0x20) return;                     /* @0x80116a7c-a88 / @0x80116268-274:
+    if (e->grid_id & 0x20) {                           /* @0x80116a7c-a88 / @0x80116268-274:
                                                         * -> nur FUN_8001b064 (Schatten, Renderer) */
+        if (re15_bb_bank_da(e)) re15_bb_wartet(s);     /* Stufe 3 PORT-WAHL: Riesenform atmet statt Standbild */
+        return;
+    }
     int32_t bk_ox = e->x, bk_oz = e->z;
     if (re15_bb_bank_da(e)) {                          /* Runde 41 Spur R: Bahnsteig-Form, eigene G4-Ablaeufe */
         re15_bb_tick(s);

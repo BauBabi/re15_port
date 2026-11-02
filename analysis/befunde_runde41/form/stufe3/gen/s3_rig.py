@@ -138,8 +138,9 @@ class Rig:
 
     def kopie(self, p):
         q = dict(w=[m.copy() for m in p['w']], wurzel=p['wurzel'].copy(), spur=p['spur'].copy(), roh=None)
-        if 'boden_frei' in p:
-            q['boden_frei'] = p['boden_frei']
+        for k in ('boden_frei', 'glieder_frei'):
+            if k in p:
+                q[k] = p[k]
         return q
 
     def fk(self, p):

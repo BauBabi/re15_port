@@ -50,3 +50,5 @@
 
 # Stufe 3: Arbeitsbilder (nachbaubar mit stufe3/gen)
 /stufe3/roh/
+/stufe3/**/__pycache__/
+*.pyc

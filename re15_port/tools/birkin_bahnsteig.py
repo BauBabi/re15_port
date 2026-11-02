@@ -7,6 +7,8 @@
 Ausgabe (RE2-Format: 8 Verzeichnis-Eintraege, TIM getrennt; geladen vom PC-Port, platform/pc/main.c):
     re15_port/shared_assets/RE2/BAHNSTEIG_G4.EMD
     re15_port/shared_assets/RE2/BAHNSTEIG_G4.TIM
+    ⛔ Seit Stufe 3 der Bahnsteig-Form NICHT mehr im Spiel und nicht mehr im Repo: der Port laedt RE2/BAHNSTEIG_FORM.EMD
+    (Riesenform J, Generator analysis/befunde_runde41/form/stufe3/gen). Dieses Werkzeug bleibt als Beleg von Spur R.
 
 ⛔ KEIN BYTE-TRUE-ASSET. Die Form gibt es auf keiner Disc, nur als zwei Standbilder in
 "Biohazard 1.5 Final Build.mp4" (1:54.8 Bahnsteig, 1:56.3 roter Gang = ROOM5090 Cut 11).

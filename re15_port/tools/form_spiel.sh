@@ -4,7 +4,7 @@
 #   bash re15_port/tools/form_spiel.sh --emd X.EMD --tim X.TIM --pose x,z,gier,clip,bild,schnitt --aus bild.png
 #
 # Ablauf: eigene exe-Kopie mit eigenem Namen unter re15_port/build/form_spiel/<id>/, Kandidat als
-# BAHNSTEIG_G4.EMD/.TIM in ein privates Verzeichnis (RE15_RE2_ASSET_ROOT, alle anderen RE2-Dateien fallen auf
+# BAHNSTEIG_FORM.EMD/.TIM in ein privates Verzeichnis (RE15_RE2_ASSET_ROOT, alle anderen RE2-Dateien fallen auf
 # shared_assets/RE2 zurueck), Debug-Sprung in den Raum, Haken RE15_BB_POSE haelt Lage, Clip und Schnitt
 # (engine/src/birkin_bahnsteig.c), gdigrab per Fenster-Handle (Skill re15-port-visual-verify), Ende nur der eigenen PID.
 # Kein AUTOSHOT, kein SOFTWARE_RENDER. Das Skript beendet nie fremde Prozesse.
@@ -22,7 +22,7 @@
 #   --zeit SEKUNDEN           Hoechstdauer des Laufs, Standard 150
 #   --bilder N                N Fensterbilder im Sekundenabstand (--aus wird zu _1.png .. _N.png), Standard 1
 #   --einsetzen               Kandidat zusaetzlich nach shared_assets/RE2 kopieren (im Arbeitsbaum, versioniert)
-#   --zuruecksetzen           BAHNSTEIG_G4.EMD/.TIM aus git wiederherstellen und enden
+#   --zuruecksetzen           BAHNSTEIG_FORM.EMD/.TIM aus git wiederherstellen und enden
 #   --env "A=1 B=2"           weitere Umgebungsvariablen fuer die exe
 #
 # Ausgabe: Pfad des Bilds, Zeile "[enemy] Bahnsteig-Form: ..." aus debug.log, Lagezeile aus bb_pose.log.
@@ -52,8 +52,8 @@ while [ $# -gt 0 ]; do
         --einsetzen) EINSETZEN=1; shift ;;
         --env) ZUSATZ="$2"; shift 2 ;;
         --zuruecksetzen)
-            git -C "$BAUM" checkout -- re15_port/shared_assets/RE2/BAHNSTEIG_G4.EMD re15_port/shared_assets/RE2/BAHNSTEIG_G4.TIM
-            echo "shared_assets/RE2/BAHNSTEIG_G4.EMD/.TIM aus git wiederhergestellt"; exit $? ;;
+            git -C "$BAUM" checkout -- re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD re15_port/shared_assets/RE2/BAHNSTEIG_FORM.TIM
+            echo "shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM aus git wiederhergestellt"; exit $? ;;
         *) echo "unbekannte Option $1" >&2; exit 2 ;;
     esac
 done
@@ -72,10 +72,10 @@ NAME="re15_pc_form_$ID"
 mkdir -p "$LAUF/re2"
 cp "$EXE" "$LAUF/$NAME.exe" || exit 2
 if [ -n "$EMD" ]; then
-    cp "$EMD" "$LAUF/re2/BAHNSTEIG_G4.EMD"; cp "$TIM" "$LAUF/re2/BAHNSTEIG_G4.TIM"
+    cp "$EMD" "$LAUF/re2/BAHNSTEIG_FORM.EMD"; cp "$TIM" "$LAUF/re2/BAHNSTEIG_FORM.TIM"
     if [ "$EINSETZEN" = 1 ]; then
-        cp "$EMD" "$RE2/BAHNSTEIG_G4.EMD"; cp "$TIM" "$RE2/BAHNSTEIG_G4.TIM"
-        echo "eingesetzt: $RE2/BAHNSTEIG_G4.EMD/.TIM (zuruecksetzen: --zuruecksetzen)"
+        cp "$EMD" "$RE2/BAHNSTEIG_FORM.EMD"; cp "$TIM" "$RE2/BAHNSTEIG_FORM.TIM"
+        echo "eingesetzt: $RE2/BAHNSTEIG_FORM.EMD/.TIM (zuruecksetzen: --zuruecksetzen)"
     fi
 fi
 

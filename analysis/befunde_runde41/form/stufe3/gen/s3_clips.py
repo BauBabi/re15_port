@@ -114,6 +114,18 @@ class Bau:
         p['roh'] = None
         return p
 
+    def glied_ziel_boden(self, p, glied, ziel, ende_welt=None):
+        """Wie glied_ziel, danach liegt kein Teil des Endknochens (Fuss/Hand samt Krallen) unter y = 0: Ziel so weit anheben."""
+        ziel = np.array(ziel, float).copy()
+        for _ in range(3):
+            self.glied_ziel(p, glied, ziel, ende_welt=ende_welt)
+            k = self.glieder[glied][2]
+            unter = self._tiefster_baum(p, k)
+            if unter <= 10.0:
+                break
+            ziel[1] -= unter
+        return p
+
     def arm_frei(self, p, seite, schulter=(0, 0, 0), ellbogen=0.0, hand=(0, 0, 0)):
         """Arm ohne IK: Oberarm im Brustraum drehen (rx, ry, rz in Grad), Ellbogen beugen, Hand drehen."""
         o, u, h = S.ARM_R if seite == 'R' else S.ARM_L
@@ -203,8 +215,9 @@ class Bau:
         reihe = [(b, 22.0) for b in S.SCHWANZ] + [(S.HALS, 30.0), (S.KOPF, 20.0)]
         R, T = self.r.fk(p)
         for g, kette in self.glieder.items():
-            if abs(T[kette[2]][1] - self.neutral[g][1]) > 25:   # Glied ist frei (steht nicht am Boden)
+            if abs(T[kette[2]][1] - self.neutral[g][1]) > 25 or g in p.get('glieder_frei', ()):   # Glied frei
                 reihe.append((kette[0], 70.0))
+                reihe.append((kette[1], 50.0))
         for b, grenze in reihe:
             if vorgabe is not None:
                 w = vorgabe.get(b, 0.0)
@@ -287,7 +300,7 @@ class Bau:
 
 # ═══════════════════════════════════════════════════ Gang (Clip 5): Fuss-IK gegen die G4-Spur
 def gang(bau, n, spur_x, zyklen, tritt_phase, last=0.72, hub=(260, 260, 360, 360), bob=40.0, schwanz_gier=7.0,
-         vorwaerts=True):
+         vorwaerts=True, spur_voll=None):
     """Seitenfolge-Gang. A(f) = Spur (Aktor laeuft um A weiter); ein stehender Fuss ist in der WELT fest, im Aktorraum
     wandert er also um -A. tritt_phase: Phase je Glied (Anteil am Zyklus). Hub je Glied: Hoehe der Schwungkurve."""
     r = bau.r
@@ -343,7 +356,7 @@ def gang(bau, n, spur_x, zyklen, tritt_phase, last=0.72, hub=(260, 260, 360, 360
             bau.glied_ziel(p, g, ziel, ende_dreh=dreh)
         if not vorwaerts:
             pass
-        p['spur'] = np.array([spur_x[f], 0, 0], float)
+        p['spur'] = np.array([spur_x[f], 0, 0], float) if spur_voll is None else np.array(spur_voll[f], float)
         out.append(p)
     return out
 
@@ -386,7 +399,7 @@ def bauen(aus, nur=None):
     # Clip 5 GEHEN: G4 89 Bilder, G4-Spur, G4-Toene (Bild 43/73 Id 0)
     sp5 = bau.g4_spur(C_GEHEN)
     clips[C_GEHEN] = dict(name='gehen', posen=gang(bau, len(sp5), [s[0] for s in sp5], 2,
-                                                 dict(LH=0.0, LV=0.25, RH=0.5, RV=0.75)),
+                                                 dict(LH=0.0, LV=0.25, RH=0.5, RV=0.75), spur_voll=sp5),
                           worte=AN.worte_g4(bau, C_GEHEN), quelle='G4 Clip 5: Laenge, Spur, Toene')
     clips[C_STEHEN] = dict(name='stehen', posen=stehen(bau), worte=None, quelle='PORT-WAHL; Bild 0 = Ruhe J')
     renn, w = AN.rennen(bau)

@@ -1,9 +1,14 @@
 /*
  * RE1.5 Rebuilt — Bahnsteig-Birkin: eigene Bewegungsablaeufe der Beta-Form (Kopf: include/re15_birkin_formen.h).
  *
- * ⛔ PORT-ERGAENZUNG, KEIN AUSLIEFERUNGSCODE (Runde 41 Spur R, Nachtrag 38). Modell: tools/birkin_bahnsteig.py
- * (RE2-G4 kind 0x34, umgeformt). Abfolge und Clips stammen aus dem G4-Overlay, CDEMD0.EMS rec 1 (Sektor 3238,
- * 0xB2D4 Byte, gelinkt @0x80100000); alle @0x8010xxxx unten sind Adressen darin.
+ * ⛔ PORT-ERGAENZUNG, KEIN AUSLIEFERUNGSCODE (Runde 41 Spur R, Nachtrag 38; Stufe 3 der Bahnsteig-Form). Abfolge und
+ * Clipnummern stammen aus dem G4-Overlay, CDEMD0.EMS rec 1 (Sektor 3238, 0xB2D4 Byte, gelinkt @0x80100000); alle
+ * @0x8010xxxx unten sind Adressen darin.
+ * MODELL seit Stufe 3: RE2/BAHNSTEIG_FORM.EMD + .TIM = die Riesenform J nach den zwei 80%-Screenshots (Generator
+ * analysis/befunde_runde41/form/stufe3/gen, Dossier form/STUFE3.md). Ihre Tick-Clips tragen dieselbe Nummer, Bildzahl,
+ * Spur (Keyframe +6/+10) und dieselben EDD-Treffer-/Tonbits wie die G4-Clips (Daten aus CDEMD0.EMS kind 0x34 rec 3,
+ * Sektor 3310); deshalb gelten alle Bildfenster und Tempo-Schwellen unten unveraendert. Die Posen sind PORT-WAHL.
+ * Teile: 10 = Brust (BB_TEIL_RUMPF), 13 = linke Hand, 18 = rechte Hand, wie beim G4.
  *
  * Dispatch im Original: Hauptzustand +0x04 @0x8010af60 {0x8010062c Ctor, 0x80100bbc AKTIV, 0x80106d3c TREFFER,
  * 0x801076ec TOD}; AKTIV verteilt +0x05 auf Entscheiden @0x8010b020[sub] und Ausfuehren @0x8010b068[sub].
@@ -53,7 +58,8 @@ unsigned re15_re2z_weapon_id(unsigned w);                                       
 /* FORM.skala aus tools/birkin_bahnsteig.py (Gestaltung, muss mit dem Asset uebereinstimmen): 1.0 = G4-Originalgroesse. */
 #define BB_L(x)  ((int32_t)(x))
 
-enum { BB_AUFTRITT = 0, BB_HIEB = 2, BB_GEHEN = 3, BB_RENNEN = 4, BB_WEICHEN = 8, BB_BISS = 14, BB_GRIFF = 15, BB_ZUCKEN = 20 };
+enum { BB_AUFTRITT = 0, BB_HIEB = 2, BB_GEHEN = 3, BB_RENNEN = 4, BB_WEICHEN = 8, BB_BISS = 14, BB_GRIFF = 15, BB_ZUCKEN = 20,
+       BB_FLUCHT = 21, BB_WEG = 22 };   /* 21/22 Port-Nummern (Stufe 3): Flucht am Ende von 5080, danach fort */
 
 /* Clips (Zensus der Schreiber von +0x14c): */
 #define BB_C_RENNEN    0     /* @0x80102b10 */
@@ -64,6 +70,11 @@ enum { BB_AUFTRITT = 0, BB_HIEB = 2, BB_GEHEN = 3, BB_RENNEN = 4, BB_WEICHEN = 8
 #define BB_C_DROHEN   10     /* @0x8010153c */
 #define BB_C_BISS     26     /* @0x80104e84 */
 #define BB_C_GRIFF    27     /* @0x80105254 */
+/* Stufe 3, PORT-WAHL (keine G4-Clips): Stehen/Atmen (Bild 0 = Ruhepose J), Flucht (Ende 5080), Sturz (Ende 5090, Bild 0 =
+ * Pose Bild 2). Laengen und Spur aus dem Generator (stufe3/gen/s3_angriffe.py), nicht aus RE2. */
+#define BB_C_STEHEN    2
+#define BB_C_FLUCHT   11
+#define BB_C_STURZ    12
 
 #define BB_TEIL_RUMPF 10     /* Teil +0x198 + 10*0xac: `addiu a0,a0,1792` = +0x700 = Teil 10 + 0x48 @0x80102ed0 */
 
@@ -93,6 +104,7 @@ static struct {
     int32_t  tempo, quer;    /* +0x144 / +0x148 */
     uint8_t  s_state, s_sub, s_ph2, s_ph3;   /* +0x1fc Sicherung (Treffer setzt fort @0x80107180-8c) */
     uint8_t  gesichert;
+    int32_t  flucht_x, flucht_z;   /* Stufe 3: Ziel der Flucht (vom Spieler weg) */
 } s_bb = { .slot = -1 };
 
 static int s_bb_blut = 0;       /* Testhaken: Treffer-Blutspawns seit dem letzten re15_bb_reset */
@@ -542,6 +554,40 @@ static void bb_auftritt(re15_actor_t *e, re15_actor_t *pl)
     bb_schieben(e);
 }
 
+/* ---- Stufe 3: Flucht (5080/5081) ---------------------------------------------------------------- *
+ * PORT-WAHL nach Nutzer-Entscheid E5/E6 ("ebenso endet der Bahnsteig-Kampf mit seiner Flucht, damit er im Zug wiederkommt"):
+ * wo das Original den Birkin sterben laesst, dreht die Riesenform vom Spieler weg, galoppiert und springt nach oben aus dem
+ * Bild (Clip 11). Ziel 20000 Einheiten vom Spieler weg (Gestaltung), Drehrate 32 je Bild wie das Lenken ausserhalb des
+ * 824er-Kegels (@0x801018ec-908). Am Clip-Ende setzt sie den Fortschritts-Schalter wie der Birkin-Tod (Flag (5,0x1c),
+ * `func_0x8004ef90(0x800b1028,0x1c)` @0x8011aecc STAGE5), den ROOM5080 sub01 @0x0078A abfragt, und verlaesst den Raum
+ * (Aktor aus). Treffer aendern an der Flucht nichts mehr (TREFFER setzt sie fort, s. re15_bb_tick). */
+static void bb_flucht(re15_actor_t *e, re15_actor_t *pl)
+{
+    if (e->sub_state_2 == 0) {
+        int64_t dx = (int64_t)e->x - pl->x, dz = (int64_t)e->z - pl->z;
+        int64_t q = dx * dx + dz * dz;
+        int32_t d = (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q));
+        if (d < 1) { dx = 1; d = 1; }
+        s_bb.flucht_x = e->x + (int32_t)(dx * 20000 / d);
+        s_bb.flucht_z = e->z + (int32_t)(dz * 20000 / d);
+        bb_clip(e, BB_C_FLUCHT, 0, 7);
+        e->sub_state_2 = 1;
+        e->hp = 1;
+    }
+    /* Gestaltung: im Gebruell (Bild 0-15, Clip 11 steht) schnell abdrehen, 128 je Bild = halbe Drehung in 16 Bildern, danach
+     * die Rate 32 des Lenkens ausserhalb des 824er-Kegels (@0x801018ec-908) */
+    re15_enemy_steer_point(e, s_bb.flucht_x, s_bb.flucht_z, e->anim_frame < 16 ? 128 : 32);
+    bb_spur(e, 0);
+    if (bb_anim(e, 0x200)) {                           /* Clip-Ende: fort */
+        re15_game_flag_set(5, 0x1c, 1);                /* @0x8011aecc (STAGE5), wie der Tod des 0x30 */
+        bb_setze(e, BB_WEG);
+        e->no_draw = 1;
+        e->active = 0;
+        return;
+    }
+    bb_schieben(e);
+}
+
 /* Treffer-Blut der Form. Sie spielt die Bodenphase (+0x10e = 1 @0x8010154c im Eintritt T0[6]), also Handler 2 @0x80107280
  * der Tabelle @0x8010b110, vier FUN_8001bf10 @0x80107454/94/b8/f8 (Packung a0: Effekt << 24 | Sub << 16 | Skala,
  * a1 = Winkel, a2 = 0x8009db44 = Einheitsmatrix, a3 = Weltpunkt). Anker Teil 10 (+0x714/+0x718/+0x71c @0x80107390-b8,
@@ -633,6 +679,11 @@ void re15_bb_tick(int slot)
         const unsigned zone  = e->sub_state_2;
         uint8_t sub = s_bb.gesichert ? s_bb.s_sub : (uint8_t)BB_GEHEN;
         e->birkin_hurt_cd = 9;                         /* +0x1de = 9 @0x8011a0c4 (0x30-Riegel, s.o.) */
+        if (sub == BB_FLUCHT || sub == BB_WEG) {       /* Stufe 3: die Flucht laeuft unter Beschuss weiter */
+            e->state = 1; e->sub_state_1 = sub; e->sub_state_2 = s_bb.s_ph2; e->sub_state_3 = s_bb.s_ph3;
+            e->hp = 1;
+            break;
+        }
         /* Blut und Ton nicht bei +5 == 0x10 / 0xc @0x80107414-1c, Ton nicht bei +5 == 1 @0x80107500-08. Handler 2 spielt
          * se(0xd) @0x8010750c, in Bank 24 ist Id 13 leer (FFFFFFFF); hoerbar ist se(2) des Handlers 1 @0x80107058. */
         if (waffe != 0x10u && waffe != 0x0cu) {
@@ -657,6 +708,16 @@ void re15_bb_tick(int slot)
     }
     case 3:                                            /* Port: statt Clip 17 @0x80107b3c die Rueckstoss-Szene */
         if (re15_bf_bahnsteig_aktiv()) { re15_bf_rueckstoss_start(slot); return; }
+        if (re15_bf_flucht_raum() || (s_bb.gesichert && (s_bb.s_sub == BB_FLUCHT || s_bb.s_sub == BB_WEG))) {
+            /* Stufe 3: 5080/5081 endet mit der Flucht (bb_flucht); Riegel wie im Todeszweig des 0x30 (+0x1de = 9
+             * @0x8011a458, +0x93 &= 0xfe @0x8011a54c-50), sonst bliebe Bit 0 des tragenden Treffers stehen */
+            e->hp = 1; e->state = 1;
+            if (!(s_bb.gesichert && (s_bb.s_sub == BB_FLUCHT || s_bb.s_sub == BB_WEG))) bb_setze(e, BB_FLUCHT);
+            else { e->sub_state_1 = s_bb.s_sub; e->sub_state_2 = s_bb.s_ph2; e->sub_state_3 = s_bb.s_ph3; }
+            e->birkin_hurt_cd = 9;
+            e->hit_react = (uint8_t)(e->hit_react & ~1u);
+            break;
+        }
         e->hp = 150; e->state = 1; bb_setze(e, BB_ZUCKEN);   /* RE15_BIRKIN_FORM ausserhalb 5090: nur Sichtpruefung */
         e->birkin_hurt_cd = 9;
         break;
@@ -674,6 +735,8 @@ void re15_bb_tick(int slot)
         case BB_WEICHEN:  bb_weichen(e, pl, dist); break;
         case BB_BISS:     bb_biss(e, pl); break;
         case BB_GRIFF:    bb_griff(e, pl, dist); break;
+        case BB_FLUCHT:   bb_flucht(e, pl); if (!e->active) return; break;
+        case BB_WEG:      e->no_draw = 1; e->active = 0; return;
         case BB_ZUCKEN:                                /* @0x8010721c-68 */
             if (e->sub_state_2 == 0) { bb_clip(e, BB_C_ZUCKEN, 5, 7); e->sub_state_2 = 1; }
             if (bb_anim(e, 0x200)) bb_zu_gehen(e);     /* a3 @0x80107244; 0x101 @0x8010724c; Bodenphase: Sub 3 */
@@ -705,6 +768,38 @@ void re15_bb_tick(int slot)
             }
         }
     }
+}
+
+/* ---- Stufe 3: Stehen und Sturz ------------------------------------------------------------------ *
+ * re15_bb_wartet: solange grid & 0x20 die Wurzel einfriert (re15_birkin_root, @0x80116a7c-a88), zeigt die Riesenform den
+ * Stehen-Clip im Kreis statt eines eingefrorenen Bildes (PORT-WAHL: in 5090 steht sie vor dem Kampfstart sichtbar im Wagen,
+ * in 5080 faellt sie so vom Dach). Kein Zustand, kein Vortrieb. */
+void re15_bb_wartet(int slot)
+{
+    re15_actor_t *e = &g_actors[slot];
+    if (e->motion != BB_C_STEHEN) { e->motion = BB_C_STEHEN; e->anim_frame = 0; e->anim_frac = 0; }
+    e->anim_blend_rate = 0x100; e->anim_flags &= (uint16_t)~0x80u;
+    (void)re15_r38_birkin_anim(e);
+}
+
+/* Sturz aus dem Wagen am Ende der Rueckstoss-Szene (birkin_formen.c Phase 3, PORT-WAHL): Clip 12 einmal, ein Bild je Tick,
+ * die Spur (rueckwaerts) schiebt die Form aus dem Wagenende; Bild 0 ist Pose Bild 2 (Front, ROOM5090 Cut 11). */
+void re15_bb_sturz_start(int slot)
+{
+    re15_actor_t *e = &g_actors[slot];
+    bb_clip(e, BB_C_STURZ, 0, 7);
+    e->anim_flags &= (uint16_t)~0x80u;
+}
+
+int re15_bb_sturz_tick(int slot)
+{
+    re15_actor_t *e = &g_actors[slot];
+    if (e->motion != BB_C_STURZ) re15_bb_sturz_start(slot);
+    bb_spur(e, 0);
+    if (bb_anim(e, 0x200)) return 1;
+    bb_bild_ton();
+    bb_schieben(e);
+    return 0;
 }
 
 /* ---- Messhaken der Sichtpruefung ------------------------------------------------------------- *

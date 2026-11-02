@@ -1099,19 +1099,20 @@ void pc_gator_se_re15(int se_id, int flag2000)
     re15_audio_re2_enemy_se(se_id, flag2000);
 }
 
-/* BAHNSTEIG-FORM (Runde 41 Spur R, re15_birkin_formen.h): RE2-G4 umgeformt, tools/birkin_bahnsteig.py. RE2-Format
- * (8 Verzeichnis-Eintraege, TIM getrennt), liegt deshalb unter shared_assets/RE2/. Die Spieler-Haken der
+/* BAHNSTEIG-FORM (Runde 41, re15_birkin_formen.h): seit Stufe 3 die Riesenform J nach den zwei 80%-Screenshots mit eigenen
+ * Clips (RE2/BAHNSTEIG_FORM.EMD/.TIM, Generator analysis/befunde_runde41/form/stufe3/gen; vorher RE2-G4 umgeformt,
+ * BAHNSTEIG_G4.EMD). RE2-Format (8 Verzeichnis-Eintraege, TIM getrennt), liegt deshalb unter shared_assets/RE2/. Die Spieler-Haken der
  * Birkin-Treffer (birkin_opfer.c) sind auf die Opfer-Bank von EM30 zugeschnitten (3 Clips 25/66/5 Bilder, dir[5]/[6]);
  * die G4-Bank fuehrt unter denselben Nummern andere Ablaeufe (78/84/48), also bleibt die Opfer-Bank die von EM30. */
 static int pc_enemy_load_bahnsteig(uint8_t type, re15_enemy_bank_t *eb)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     int esz = 0, tsz = 0;
-    uint8_t *emd = re15_pc_read_re2("BAHNSTEIG_G4.EMD", &esz);
-    uint8_t *tb  = re15_pc_read_re2("BAHNSTEIG_G4.TIM", &tsz);
+    uint8_t *emd = re15_pc_read_re2("BAHNSTEIG_FORM.EMD", &esz);
+    uint8_t *tb  = re15_pc_read_re2("BAHNSTEIG_FORM.TIM", &tsz);
     if (!emd || !tb || re2_emd_parse_bank(emd, (size_t)esz, eb) != 0) {
         free(emd); free(tb);
-        fprintf(stderr, "[enemy] Bahnsteig-Form: RE2/BAHNSTEIG_G4.EMD/.TIM fehlt oder defekt -> Auslieferungsmodell\n");
+        fprintf(stderr, "[enemy] Bahnsteig-Form: RE2/BAHNSTEIG_FORM.EMD/.TIM fehlt oder defekt -> Auslieferungsmodell\n");
         memset(eb, 0, sizeof *eb); eb->type = type; eb->pc_tex_slot = -1; eb->pc_tex_slot_gore = -1;
         return 0;
     }
@@ -1411,8 +1412,8 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
 /* Default: der RE2-Zweig darf greifen (unveraendertes Verhalten fuer alle Typen ausser 0x26,
  * dessen Aufrufer die Herkunft mitgeben — s. Block ueber pc_enemy_load_ex). */
 static void pc_enemy_load(uint8_t type) { pc_enemy_load_ex(type, 1); }
-/* BETA-FORMEN (re15_birkin_formen.h): Bank eines Typs mitten im Raum neu laden - der 5090-Birkin wechselt
- * nach seiner Mutation vom Original-EM30 auf die Bahnsteig-Form (RE2/BAHNSTEIG_G4.EMD). */
+/* BETA-FORMEN (re15_birkin_formen.h): Bank eines Typs mitten im Raum neu laden (Haken re15_bf_modell_hook; der 5090-Wechsel
+ * EM30 -> Bahnsteig-Form nach der Mutation entfaellt seit Stufe 3, die Form ist dort ab der Raumladung geladen). */
 static void pc_enemy_modell_neu(uint8_t type)
 {
     re15_enemy_bank_t *eb = re15_enemy_find(type);

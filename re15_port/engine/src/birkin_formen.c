@@ -39,17 +39,28 @@ const char *re15_bf_emd_datei(uint8_t type)
     return NULL;
 }
 
-/* 5090: der Original-Birkin (EM30, Auslieferung) kaempft zuerst; erst nach seiner Mutation (Clip 0x14, sub 6
- * @0x80117f80) traegt er die Bahnsteig-Form (RE2/BAHNSTEIG_G4.EMD, Lader platform/pc/main.c). */
+/* Riesenform (Bahnsteig-Form J, RE2/BAHNSTEIG_FORM.EMD, Lader platform/pc/main.c) in 5080/5081 und 5090/5091 ab der
+ * Raumladung. PORT-WAHL nach den Nutzer-Entscheiden E5/E6/E17 (analysis/befunde_runde41/form/NUTZER_ENTSCHEIDE.md):
+ * Bahnsteig Riesenform -> Flucht, Zug Riesenform -> aus dem Zug geschossen -> G5; die Mutation zur Riesenform liegt am
+ * Ende des letzten Sichel-Form-Kampfs VOR dem Bahnsteig. Bis Stufe 3 (form/STUFE3.md) kaempfte in 5090 zuerst der EM30
+ * und mutierte (Clip 0x14, sub 6 @0x80117f80); diese Runde gibt es in 5090 nicht mehr, re15_bf_mutation_offen ist 0. */
+int re15_bf_riesenform_raum(void)
+{
+    const unsigned r = g_current_room_id & 0xFFFEu;
+    return r == 0x5080u || re15_bf_bahnsteig_aktiv();
+}
+
+int re15_bf_flucht_raum(void) { return (g_current_room_id & 0xFFFEu) == 0x5080u; }
+
 int re15_bf_bahnsteig_bank_faellig(uint8_t type)
 {
     if (type != 0x30u) return 0;
     const char *form = getenv("RE15_BIRKIN_FORM");
     if (form) return !strcmp(form, "bahnsteig");
-    return re15_bf_bahnsteig_aktiv() && s_bf_mutiert;
+    return re15_bf_riesenform_raum();
 }
 
-int re15_bf_mutation_offen(void) { return re15_bf_bahnsteig_aktiv() && !s_bf_mutiert; }
+int re15_bf_mutation_offen(void) { return 0; }
 
 static void (*s_bf_modell_hook)(uint8_t) = 0;
 void re15_bf_modell_hook(void (*fn)(uint8_t type)) { s_bf_modell_hook = fn; }
@@ -198,7 +209,7 @@ void re15_bf_raumtick(void)
      * nie; RE15_BIRKIN_CUT=<n> stellt beim Raumeintritt den Schnitt (12 = Kampfstart sub01 @0x1290). Stumm im Normalpfad. */
     { static int at = -2; static unsigned raum = 0; static int t = 0;
       if (at == -2) { const char *v = getenv("RE15_BIRKIN_HP_AT"); at = v ? atoi(v) : -1; }
-      if (at >= 0 && re15_bf_bahnsteig_aktiv()) {
+      if (at >= 0 && re15_bf_riesenform_raum()) {
           if (raum != g_current_room_id) {
               const char *c = getenv("RE15_BIRKIN_CUT");
               raum = g_current_room_id; t = 0;
@@ -418,12 +429,25 @@ static void bf_rueckstoss_tick(void)
         /* rueckwaerts: Gesicht zum Spieler */
         e->rot_y = bf_blick(e, g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z);
         if (e->x <= BF_RS_AUSGANG_X - 600 && s_rs.t >= BF_RS_MIN_TICKS) {
-            s_rs.phase = 2; s_rs.t = 0;
-            e->no_draw = 1;
-            re15_audio_room_se(10);                      /* Gebruell (Birkin-Todes-SE 10, @0x8011a744) */
+            s_rs.t = 0;
+            if (re15_bb_bank_da(e)) {                    /* Riesenform: faellt rueckwaerts aus dem Wagen (Clip 12, Stufe 3) */
+                s_rs.phase = 3;
+                re15_bb_sturz_start(s_rs.slot);
+            } else {
+                s_rs.phase = 2;
+                e->no_draw = 1;
+                re15_audio_room_se(10);                  /* Gebruell (Birkin-Todes-SE 10, @0x8011a744) */
+            }
         }
         break;
     }
+    case 3:                                              /* PORT-WAHL: Sturz-Clip am Zugende, Blick Cut 11 (= Bild 2) */
+        bf_kamera(0x0B);
+        if (re15_bb_sturz_tick(s_rs.slot)) {
+            s_rs.phase = 2; s_rs.t = 0;
+            e->no_draw = 1;
+        }
+        break;
     case 2:
         bf_kamera(0x0B);
         if (s_rs.t >= BF_RS_PAUSE) {
