@@ -8466,6 +8466,15 @@ static void re15_dog_ai_tick(int slot)
 
     case 3: { /* DEATH dispatcher FUN_80110dc0 -> rows @0x80121070 (audit #5 + verified detour claim) */
         re15_dog_fall_physics(e);
+        {   /* Runde 41 Spur GR N1 (GESTALTUNG / PORT-WAHL, Block re15_re2d_granate_teile in enemy_ai_re2_dog.c): auch der
+             * RE1.5-Hund zerfetzt bei Tod durch eine Explosivgranate (+0x5 = 9 Handgranate, 15 Werfer-Explosivrunde) —
+             * das RE1.5-Gehirn hat keine Teile-Mechanik (Luft-Tod FUN_80110eb0: nur Blut an Bone 0), die Teile kommen aus
+             * RE2 0x80104440 und fahren ueber die Part-Bruecke der Spur S. Einmal je Tod (re2z_part_gr). */
+            extern void re15_re2d_granate_teile(re15_actor_t *e);
+            extern int  re15_zgore_80prozent(void);
+            if ((e->sub_state_1 == 9 || e->sub_state_1 == 15) && !e->re2z_part_gr && re15_zgore_80prozent())
+                re15_re2d_granate_teile(e);
+        }
         if (!re15_dog_row_airborne(e->sub_state_1)) {
             /* GROUNDED death FUN_80111120 */
             switch (e->sub_state_3) {
@@ -11463,7 +11472,14 @@ static void re15_adult_spider_ai_tick(int slot)
         if (e->sub_state_3 == 0) {
             if (re15_spinnengore_platzwaffe(e->sub_state_1))
                 re15_spinnengore_platzen(e);                   /* @0x8011403c-52c */
-            else if (e->hit_react & 0x40) {
+            else if (e->sub_state_1 == 15 && re15_spinnengore_an()) {
+                /* Runde 41 Spur GR N1 (GESTALTUNG / PORT-WAHL, Nutzer 2026-11-02 "alle Gegner, die zerfetzen koennen, bei
+                 * Tod durch eine Granate"): die Werfer-Explosivrunde (+0x5 = 15) laesst die Spinne platzen wie die
+                 * Handgranate (Tabelle @0x80118f38[9] = 0x80113ff8); im Original zeigt [15] auf 0x8011461c. Danach +0x5 = 9,
+                 * damit die Wurzel den Platzweg nimmt (Muster der Krit-Zeile unten, @0x80114b1c-20). */
+                re15_spinnengore_platzen(e);                   /* @0x8011403c-52c */
+                e->sub_state_1 = 9;
+            } else if (e->hit_react & 0x40) {
                 re15_spinnengore_platzen(e);                   /* @0x801146bc-b0c */
                 e->sub_state_1 = 7;                            /* Nachbesserung 2: +0x5 = 7 `ori v0,zero,0x7` / `sb v0,5(v1)`
                                                                 * @0x80114b1c-20 -> die Wurzel nimmt danach den Platzweg

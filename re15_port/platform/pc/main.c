@@ -7975,6 +7975,9 @@ re_title:;
                                 /* Runde 35 Spur A: P.y = Spieler-Boden - 500 (fx_plattform_pc.c) */
                     }
                 }
+                /* Runde 41 Spur GR N1 — MESS-HAKEN RE15_FORCE_GRANATE (fx_plattform_pc.c, kein Spielverhalten) */
+                {   extern void re15_pc_force_granate_takt(unsigned bild);
+                    if (re15_pc_fx_takt_frei()) re15_pc_force_granate_takt((unsigned)g_engine.frame_count); }
                 {   /* Runde 34 C3 — MESS-HAKEN RE15_FORCE_LICHT="<bild>[,<bild>...]" (kein
                      * Spielverhalten): setzt den Latch 0x800b5358 in genau diesen Spielbildern, wie
                      * es Routine 31 (@0x8001857c) bzw. Routine 9 (@0x80017694) im ESP-Tick tun —

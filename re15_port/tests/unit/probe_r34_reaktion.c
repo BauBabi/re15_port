@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+int re15_zgore_80prozent(void);   /* zombiegore_r15.c (Runde 41 Spur GR N1: Lauf mit/ohne 80%-Gore) */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -358,7 +359,8 @@ static void teil_ausgang(void)
             int ende = ausgang_lauf(e);
             /* Runde 41 Spur GR (GR_granate.md): Zeile 9 wird zerfetzt (re2z_granate_zerfetzen), danach der Sturz
              * 0x80108530 (Port RE2ZD_MAIN = 1) statt 0x80108BEC/0x80109610. */
-            { int h = re15_re2z_last_death_handler(); if (h != 1) zelle_ok = 0; }
+            { int h = re15_re2z_last_death_handler();
+              if (re15_zgore_80prozent() ? (h != 1) : (h != 5 && h != 6)) zelle_ok = 0; }   /* aus: 0x80108BEC/0x80109610 */
             laeufe++;
             if (ende == 7 && e->hp < 0) leiche++;
             else if (ende == 1 && e->hp == 10 && (e->re2z_f10e & 1u)) kriecher++;
@@ -380,8 +382,14 @@ static void teil_ausgang(void)
         /* Runde 41 Spur GR: die Zerfetzung (Zeile 9) laeuft in JEDEM Zweig vor der Zelle; auch Spalte 0 endet
          * deshalb als Leiche ohne Kriecher (vorher 0x80107438 -> Kriecher HP 10). Spalte 0 hat fuer die Handgranate
          * keinen Produzenten (Zone fest 1, A_granate.md par.3.5). */
+        if (re15_zgore_80prozent())
         CHECK(221, ende == 7 && e->hp < 0 && !(e->re2z_f10e & 1u) && re15_re2z_last_death_handler() == 1,
               "Spalte 0 von Hand: Ende %d (7), hp %d (<0), f10e 0x%04X (kein Bit 0), Zelle %d (1 = 0x80108530)", ende,
+              e->hp, e->re2z_f10e, re15_re2z_last_death_handler());
+        else   /* Lauf unit_r34_reaktion_ohne80 (Spur GR N1): ohne 80%-Gore der RE2-Kriecher 0x80107438 wie vor Spur GR;
+                * HP -990 statt 10, weil die Handgranate 1000 macht (haengt nicht am Schalter) */
+        CHECK(221, ende == 1 && (e->re2z_f10e & 1u) && re15_re2z_last_death_handler() == 2,
+              "Spalte 0 von Hand (80%%-Gore aus): Ende %d (1), hp %d, f10e 0x%04X (Bit 0), Zelle %d (2 = 0x80107438)", ende,
               e->hp, e->re2z_f10e, re15_re2z_last_death_handler());
     }
     /* (222) Brad 0x11 (HP 250) UEBERLEBT HE (-200): Spalte 3 -> HURT[9][3] = 0x80105438 (Haupt-Treffer,
@@ -500,17 +508,35 @@ static void teil_hund(void)
         const int16_t gier = e->rot_y;
         frame();                                           /* DEATH-P0 */
         int fl_ok = 1, feld_ok = 1;
-        for (int p = 0; p < 17; p++) {
-            const int soll = in_teile(p);
-            if (((e->re2z_part_flags[p] & 0x4Au) == 0x4Au) != soll) fl_ok = 0;
-            if (soll && !(e->re2z_part_tint[p] == 0x00101040u && e->re2z_part_w9c[p] == 800 &&
-                          e->re2z_part_w9a[p] == -150 && e->re2z_part_w9e[p] == 10 &&
-                          e->re2z_part_wa4[p] == -100 && e->re2z_part_life[p] == 0 &&
-                          e->re2z_part_yaw98[p] == gier)) feld_ok = 0;
+        if (!re15_zgore_80prozent()) {
+            /* Original RE2 (Lauf unit_r34_reaktion_ohne80, RE15_KEIN_80PROZENT_GORE=1) */
+            for (int p = 0; p < 17; p++) {
+                const int soll = in_teile(p);
+                if (((e->re2z_part_flags[p] & 0x4Au) == 0x4Au) != soll) fl_ok = 0;
+                if (soll && !(e->re2z_part_tint[p] == 0x00101040u && e->re2z_part_w9c[p] == 800 &&
+                              e->re2z_part_w9a[p] == -150 && e->re2z_part_w9e[p] == 10 &&
+                              e->re2z_part_wa4[p] == -100 && e->re2z_part_life[p] == 0 &&
+                              e->re2z_part_yaw98[p] == gier)) feld_ok = 0;
+            }
+            CHECK(121, fl_ok, "Zeile 9: Flags |= 0x4A genau an Parts {2,3,4,7,8,9,10} (@0x80105680, @0x801044a4-a8)");
+            CHECK(122, feld_ok, "Teile-Felder +0x9C 800/+0x9A -150/+0x9E 10/+0xA4 -100/+0xA0 0, Farbe 0x00101040, "
+                                "+0x98 = Gier (@0x801044b4-cc)");
+        } else {
+            /* Runde 41 Spur GR N1 (Vorgabe, 80%-Gore an): dieselben 7 Parts fliegen mit dem Wurf FUN_80028AD8
+             * (Flagwort 0x1062) und bleiben liegen (re2z_part_gr), Farbwort 0x00101040 (@0x801044c8) */
+            for (int p = 0; p < 17; p++) {
+                const int soll = in_teile(p);
+                if (((e->re2z_part_flags[p] & 0x1062u) == 0x1062u) != soll) fl_ok = 0;
+                if (soll && !(e->re2z_part_tint[p] == 0x00101040u && e->re2z_part_grav[p] == 40 &&
+                              e->re2z_part_st86[p] == 0 && e->re2z_part_v[p][2] >= 30 && e->re2z_part_v[p][2] <= 93 &&
+                              e->re2z_part_w9a[p] >= 2400 && e->re2z_part_w9a[p] <= 2910)) feld_ok = 0;
+            }
+            CHECK(121, fl_ok && e->re2z_part_gr == 0x079Cu,
+                  "Zeile 9 (Spur GR N1): Wurf 0x1062 genau an Parts {2,3,4,7,8,9,10}, Liegen-Maske 0x%04X (0x079C)",
+                  (unsigned)e->re2z_part_gr);
+            CHECK(122, feld_ok, "Teile-Felder Spur GR N1: Farbe 0x00101040, +0x79 = 40, +0x86 = 0, waagrecht 30..93, "
+                                "Zielhoehe 2400..2910");
         }
-        CHECK(121, fl_ok, "Zeile 9: Flags |= 0x4A genau an Parts {2,3,4,7,8,9,10} (@0x80105680, @0x801044a4-a8)");
-        CHECK(122, feld_ok, "Teile-Felder +0x9C 800/+0x9A -150/+0x9E 10/+0xA4 -100/+0xA0 0, Farbe 0x00101040, "
-                            "+0x98 = Gier (@0x801044b4-cc)");
         const unsigned b0 = e->re2d_budget21f;
         CHECK(123, b0 == 15 && fxz(0) == 3 && fxz(1) + fxz(2) == 1 && fxz(7) <= 1 && s_se7 == 0,
               "P0-Bild: +0x21F = %u (18 - 3 Router-Effekte = 15), FX0 %u (Kern 1 + Router 2), FX1/2 %u (1), "
@@ -581,9 +607,15 @@ static void teil_hund(void)
         int keine = 1;
         for (int p = 0; p < 17; p++) if (e->re2z_part_flags[p] & 0x4Au) keine = 0;
         for (int f = 0; f < 6; f++) frame();
+        if (!re15_zgore_80prozent())
         CHECK(152, r != 0 && e->sub_state_1 == 9 && keine && s_se7 == 1 && fxz(0) == 1 && fxz(1) + fxz(2) == 0,
               "Zeile 9 bei 1D2 >= 3 (@0x801046b8-cc): nur der Kern, Schrei SE7 %d (1), kein Teile-Wurf %d, "
               "kein Blut (FX0 %u = Kern, FX1/2 %u)", s_se7, keine, fxz(0), fxz(1) + fxz(2));
+        else   /* Spur GR N1: auch die Werfer-Explosion (1D2 >= 3) zerfetzt — Gore-Zweig stumm, Router-Blut wie 124 */
+        CHECK(152, r != 0 && e->sub_state_1 == 9 && e->re2z_part_gr == 0x079Cu && s_se7 == 0 && fxz(0) == 13 &&
+                   fxz(1) + fxz(2) == 6,
+              "Zeile 9 bei 1D2 >= 3 (Spur GR N1): zerfetzt, Maske 0x%04X (0x079C), SE7 %d (0), FX0 %u (13), FX1/2 %u (6)",
+              (unsigned)e->re2z_part_gr, s_se7, fxz(0), fxz(1) + fxz(2));
         /* (153) Zeile 16 (Waffe 14) ignoriert die Klammer (`bne v1,v0(=16)` @0x801047a0-a8):
          *       Treffer-Stempel wie der Applier (Wort-`sw` 3 + `sb` Zeile), 1D2 = 3. */
         e = hund_arena(30);

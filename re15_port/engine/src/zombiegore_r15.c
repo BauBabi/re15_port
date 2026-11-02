@@ -405,48 +405,46 @@ static void z_beine(re15_actor_t *e)
     }
 }
 
-/* Runde 41 Spur GR — die HANDGRANATE (w9) zerfetzt den Zombie (GESTALTUNG / PORT-WAHL, Gore-Maximum, Dossier
- * analysis/befunde_runde41/GR_granate.md; Gegenstueck im RE2-Gehirn: re2z_granate_zerfetzen). Die Zelle
- * DEATH[9][Hoehe] @0x8011feac ist im Auslieferungsstand 0 (jalr 0 -> Haenger). Die 80%-Videos zeigen die
- * Explosivgranate (Granatwerfer) B 3:31.4 / 3:36.1 / 8:42.3: der Koerper ist weg, es bleiben Lache, Brocken,
- * ein Fleischhaufen — der fruehere Oberkoerper-Zweig (Beleg BEFUND 5.2) traegt die Zeitmarke nicht (S_video_gore.md
- * Abschnitt 3). Vereinigung der zwei RE1.5-Zerleger dieses Overlays, ohne ihre Muenzwuerfe zwischen den Zweigen:
- *   0x80107ee0 ZERFETZEN (@0x8010800c-0x8010826c): Stuempfe 7/0, Blut 0x2800 an Teil 0, SE 9, Kopf zerplatzt, je Arm
- *              (rng&1) Oberarm duenn + Unterarm platzt ODER Oberarm platzt + Unterarm weg, Hand weg, +0x8c = 200,
- *              Phase 3 (Rutschen) -> Leiche @0x80108a74;
- *   0x80108abc BEINE WEG (@0x80108ba0-c50): Unterschenkel + Fuesse platzen, Stuempfe 1/4, (rng&1) Oberschenkel 4 weg.
- * Der Muenzwurf ZERFETZEN/OBERKOERPER (@0x801080c8-d4) entfaellt (immer ZERFETZEN), kein Kriecher-Uebergang. Grosse
- * Lache wie der fruehere Granaten-Zweig. Arm-Teile der Zombie-Maedchen-Familie (Gore-Teil 8): 9..14 statt 8..13. */
+/* Runde 41 Spur GR — die EXPLOSIVGRANATE (Handgranate w9, Granatwerfer-Explosivrunde w15) zerfetzt den Zombie GANZ
+ * (GESTALTUNG / PORT-WAHL, Gore-Maximum, Nachbesserung 1; Dossier analysis/befunde_runde41/GR_granate.md §5N; Gegenstueck
+ * im RE2-Gehirn: re2z_granate_zerfetzen mit dem Video-Kopf). Die Zelle DEATH[9][Hoehe] @0x8011feac ist im
+ * Auslieferungsstand 0 (jalr 0 -> Haenger). Vorlage: der Handgranatenwurf im 80%-Video CD2 19,25-21,1 s — vom Zombie
+ * bleibt kein Koerper stehen, Teile fliegen bis unter die Decke, Blutwolke, Rauch, Lache.
+ *   Mit RE2-Modellblock (Port-Option re15_re15_re2z_import, Vorgabe an): re15_re2z_granate_teile_r15 — Kopf, Oberarme,
+ *   Oberschenkel fliegen mit ihren Kindern (RE2-Wurf FUN_80028AD8), Rumpf + Becken zerplatzen (FUN_80108d04).
+ *   Mit Block fliegen sieben Stuecke und BLEIBEN LIEGEN (Nutzer-Entscheid 2026-11-02, enemy_ai_re2_zombie.c).
+ *   Ohne Block (RE15_RE15_RE2Z_IMPORT=0, nicht die Vorgabe): die Glieder zerplatzen in Scherben (FUN_80108d04
+ *   @0x80108d04-6c je Teil), Wurzel + Rumpf sind weg (Teil-Wort 0 @0x801081d0) — KEINE liegenden Teile: die
+ *   RE1.5-Flugphysik FUN_8001f024 laesst ein ruhendes Teil bei y == 0 verschwinden (@0x8001f104-134). OFFEN.
+ * Dazu wie bisher: Blut 0x2800 an Teil 0 (@0x801080b8), SE 9, Phase 3 / Clip wie ZERFETZEN (@0x801080d8), +0x8c = 200,
+ * Lache, Totenflag. Danach Phase 3 (Rutschen) -> Leiche @0x80108a74, ohne Kriecher-Uebergang. */
+int re15_re2z_granate_teile_r15(re15_actor_t *e);   /* enemy_ai_re2_zombie.c */
 static void z_granate(re15_actor_t *e, int slot)
 {
     if (e->sub_state_3 != 0) { z_schrot(e, slot, 1); return; }          /* Phase 3 Rutschen / Leiche */
     e->hit_react |= 1; e->sub_state_3 = 3;                                /* Phase 3 wie @0x801080d8 */
     e->motion = (uint8_t)(13 - 2 * bit7(e)); e->anim_frame = (uint16_t)(re15_engine_rand8() & 3); e->anim_frac = 0xf;
     e->anim_flags &= (uint16_t)~0x04u;
-    stumpf(e, 7); stumpf(e, 0);                                           /* @0x8010800c-54 */
     fx(e, 0x2800, 0, OFS_016C);                                           /* @0x801080b8 */
     re15_audio_room_se(9);
-    int g = gore_teil(e);
-    int a = (g == 14) ? 8 : 9;                                            /* erster Arm-Teil (Kopf 14 -> Arme 8..13) */
-    zerplatzen(e, g, 0, 0);                                               /* @0x80108134 */
-    if (re15_engine_rand8() & 1) { skala(e, a, 0x5f4, 0xc18, 0x5f4); zerplatzen(e, a + 1, 0, 0); }   /* @0x8010818c */
-    else { zerplatzen(e, a, 0, 0); wort_null(e, a + 1); }                 /* @0x8010819c / @0x801081b8 */
-    wort_null(e, a + 2);                                                  /* @0x801081d0 */
-    if (re15_engine_rand8() & 1) { skala(e, a + 3, 0x5f4, 0xc18, 0x5f4); zerplatzen(e, a + 4, 0, 0); }   /* @0x80108224 */
-    else { zerplatzen(e, a + 3, 0, 0); wort_null(e, a + 4); }             /* @0x80108250 */
-    wort_null(e, a + 5);                                                  /* @0x8010826c */
-    zerplatzen(e, 2, 0, 0); zerplatzen(e, 3, 0, 0);                       /* @0x80108ba0 / @0x80108bb8 */
-    zerplatzen(e, 5, 0, 0); zerplatzen(e, 6, 0, 0);                       /* @0x80108bd0 / @0x80108be8 */
-    stumpf(e, 1); stumpf(e, 4);                                           /* @0x80108c00-c50 */
-    if (re15_engine_rand8() & 1) wort_null(e, 4);                         /* @0x80108c48-50 */
-    {   int32_t p[3]; re15_enemy_part_point(e, 7, OFS_016C, p);           /* grosse Lache (Video B 3:36.3 / 8:42.5) */
-        re15_esp_fx_splatter(re15_esp_room_bank(), 0, 16, p[0], p[1], p[2], e->y);
-        re15_esp_fx_splatter(re15_esp_room_bank(), 0, 16, e->x, e->y - 300, e->z, e->y);
+    if (!re15_re2z_granate_teile_r15(e)) {
+        for (int k = 1; k < 15; k++) if (k != 7) zerplatzen(e, k, 0, 0); /* FUN_80108d04 je Glied */
+        wort_null(e, 0); wort_null(e, 7);                                 /* Wurzel + Rumpf weg (`sw zero` @0x801081d0) */
+        {   extern void re15_esp_granate_rauch_nachlauf(const int32_t p[3], int16_t gier);
+            int32_t rp[3] = { e->x, e->y - 500, e->z };
+            re15_esp_granate_rauch_nachlauf(rp, (int16_t)e->rot_y); }
+        if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
+            fprintf(stderr, "[gr] RE1.5 Slot %d Typ 0x%02x Waffe %d: ZERFETZT (RE1.5-Teilschicht, HP %d)\n", slot,
+                    (unsigned)e->type, (int)e->sub_state_1, (int)e->hp);
+    }
+    {   int32_t p[3]; re15_enemy_part_point(e, 7, OFS_016C, p);           /* Spritzer (CD2 20,15 s): 0x2000 ZWEIMAL wie der
+                                                                           * RE1.5-Gore-Aufbau; 2 x 16 der ersten Fassung
+                                                                           * fuellten den ESP-Pool (enemy_ai_re2_zombie.c) */
+        re15_esp_fx_splatter(re15_esp_room_bank(), 0, 2, p[0], p[1], p[2], e->y);
+        re15_esp_fx_splatter(re15_esp_room_bank(), 0, 2, e->x, e->y - 300, e->z, e->y);
     }
     e->speed_h = 200;                                                     /* +0x8c = 200 */
     kill_flag(e);
-    if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
-        fprintf(stderr, "[gr] RE1.5 Slot %d Typ 0x%02x Waffe 9: ZERFETZT (HP %d)\n", slot, (unsigned)e->type, (int)e->hp);
 }
 
 int re15_zgore_80prozent(void)
@@ -469,7 +467,8 @@ int re15_zgore_tod(re15_actor_t *e, int slot)
      * (DEATH[9..11][1] @0x8011feac = 0 -> jalr 0). Das Video zeigt Ober- und Unterkoerper getrennt, der Oberkoerper
      * kriecht weiter, grosse Blutlachen — genau der Oberkoerper-Zweig von 0x80107ee0. Abschaltbar:
      * RE15_KEIN_80PROZENT_GORE=1 (dann Standard-Tod wie bisher). */
-    if (w == 9 && re15_zgore_80prozent()) { z_granate(e, slot); return 1; }   /* Runde 41 Spur GR, Block z_granate */
+    if ((w == 9 || w == 15) && re15_zgore_80prozent()) { z_granate(e, slot); return 1; }   /* Runde 41 Spur GR (N1: auch die
+                                                                  * Werfer-Explosivrunde +0x5 = 15), Block z_granate */
     if (w >= 9 && w <= 11 && re15_zgore_80prozent()) { z_schrot(e, slot, 1); return 1; }
     return 0;                                                     /* uebrige Zellen: Standard-Tod 0x80106c18 */
 }

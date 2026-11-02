@@ -8,17 +8,19 @@
  *                  mit der hoechsten RE2-HP (Brad 0x11 = 250 @0x801008C8, sonst 128 + 15) und der RE1.5-HP: Tod,
  *                  Schaden 1000. Saeure/Brand (Art 3/4) bleiben bei E4 (200). Nicht-Zombies unveraendert (Hund 300,
  *                  Kraehe 60, Spinne 60, G5 80, Alligator/Gorilla/Kakerlake 1000).
- *   [2] zerfetzt — RE2-Gehirn (Standard-KI), Zombies aus ROOM1140 (0x10, 0x11 dick, 0x16) und umgetypt 0x12/0x13/0x18:
- *                  Explosion -> die Zerfetzung laeuft genau einmal, Kopf/Oberarme/Oberschenkel fliegen (0x4A/0x1062),
- *                  Unterarme/Unterschenkel/Fuesse platzen (RE1.5-Teilwort 0x4a), Haende weg, Handler = Sturz 0x80108530,
- *                  Leiche (Zustand 7). Mit Zeichengang-Nachbau (Teilstufe + Part-Matrix je Bild, wie main.c): nach dem
- *                  Ausflug bleiben nur Rumpf (0) und Becken (1) gezeichnet.
- *   [3] r15      — RE1.5-Gehirn (Flavor re15): Waffe 9 -> z_granate: Kopf/Arme/Unterschenkel/Fuesse platzen, kein
- *                  Kriecher (grid 0x81 nie), Leiche.
+ *   [2] zerfetzt — RE2-Gehirn (Standard-KI), Zombies aus ROOM1140 (0x10, 0x11 dick, 0x16) und umgetypt 0x12/0x13/0x18
+ *                  (Nachbesserung 1, Video CD2 19,25-21,1 s + Nutzer-Entscheid "Teile bleiben liegen"): die Zerfetzung
+ *                  laeuft genau einmal, sieben Stuecke (Rumpf, Becken, Kopf, Oberarme, Oberschenkel) fliegen mit dem Wurf
+ *                  0x1062, die Kinder bleiben dran, keine RE1.5-Scherben, Sturz 0x80108530, Leiche; mit Zeichengang-
+ *                  Nachbau (Physik am Zeichner): alle Stuecke liegen nach 150 Bildern am Boden, Scheitel 1800..3200,
+ *                  Ruhe nach <= 45 Bildern, gestreut, alles weiter gezeichnet, Rauch-Nachlauf 6 Kinder.
+ *   [3] r15      — RE1.5-Gehirn (Flavor re15, Import-Option an): z_granate -> dieselben sieben Stuecke, liegen, Leiche,
+ *                  kein Kriecher.
+ *   [5] hund     — RE2- und RE1.5-Hund (ROOM11D0): 7 Parts @0x80105680 fliegen 0x1062, Farbe 0x101040, liegen.
  *   [4] aus      — eigener Prozess mit RE15_KEIN_80PROZENT_GORE=1: keine Zerfetzung (RE2 0x80108BEC wie vorher), der
  *                  Schaden bleibt 1000 (PORT-WAHL Staerke haengt nicht am Gore-Schalter).
  * Rueckgabe 0 = gruen, sonst die Nummer der ersten fehlgeschlagenen Pruefung.
- * Aufruf: test_r41_granate [schaden|zerfetzt|r15|alle|aus]
+ * Aufruf: test_r41_granate [schaden|zerfetzt|r15|hund|alle|aus]
  */
 #include "re15_esp.h"
 #include "re15_granate_r35.h"
@@ -59,6 +61,7 @@ extern int  re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_par
 extern int  re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame, int32_t rot[9], int32_t trans[3]);
 extern void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3]);
 extern void re15_re2_damage_model_set(int on);
+extern int  re15_re2z_gore_active(const re15_actor_t *e);
 
 static int s_erste = 0, s_fehler = 0;
 #define PRUEF(nr, cond, ...) do { if (!(cond)) { \
@@ -272,8 +275,54 @@ static void abschnitt_schaden(void)
 }
 
 /* ================================================================================================
- * [2] ZERFETZT — RE2-Gehirn
+ * [2] ZERFETZT — RE2-Gehirn (Nachbesserung 1: der ganze Zombie zerfliegt, die Stuecke bleiben liegen)
  * ================================================================================================ */
+extern unsigned re15_esp_granate_rauch_kinder(void);
+static const int k_stueck[7] = { 0, 1, 2, 5, 8, 9, 12 };   /* Rumpf, Becken, Oberschenkel, Kopf, Oberarme */
+#define K_STUECK_MASKE 0x1327u
+/* Liegen alle geworfenen Stuecke (Maske) nach `bilder` Bildern am Boden? Zeichengang je Bild (Physik haengt am Zeichner).
+ * Gemessen: hoechster Scheitel ueber dem Boden, Bilder bis zum Liegen, Streuung (waagrechter Abstand vom Koerper). */
+typedef struct { int liegen, scheitel_min, scheitel_max, bilder_max, gestreut, gezeichnet_alle, kaskade_weg, ziel_fehl; } flug_t;
+static flug_t flug_messen(re15_actor_t *e, uint16_t maske, int bilder, int n_teile)
+{
+    flug_t r; memset(&r, 0, sizeof r);
+    r.scheitel_min = 1 << 30;
+    int32_t hoch[16], h0[16]; int ruh[16];
+    for (int p = 0; p < 16; p++) { hoch[p] = 0; ruh[p] = -1; h0[p] = -1; }
+
+    int16_t ziel[16];
+    for (int p = 0; p < 16; p++) ziel[p] = e->re2z_part_w9a[p];          /* Zielhoehe beim Wurf abgelegt (+0x9A) */
+    uint8_t gz[16] = { 0 }; int nb = 0;
+    for (int f = 0; f < bilder; f++) {
+        frame();
+        re15_esp_fx_tick(NULL);                                          /* ESP-Takt wie fx_plattform_pc.c (Rauch-Nachlauf) */
+        zeichengang(e, gz, &nb);
+        for (int p = 0; p < 16; p++) {
+            if (!((maske >> p) & 1u)) continue;
+            if (!(e->re2z_part_seeded & (1u << p))) continue;
+            int32_t h = (int32_t)e->y - e->re2z_part_t[p][1];
+            if (h0[p] < 0) h0[p] = h;                                    /* Lage beim Einfrieren der Matrix */
+            if (h > hoch[p]) hoch[p] = h;
+            if (ruh[p] < 0 && e->re2z_part_st86[p] == 1) ruh[p] = f;
+        }
+    }
+    r.liegen = 1; r.gestreut = 0; r.gezeichnet_alle = 1; r.kaskade_weg = 0;
+    for (int p = 0; p < 16; p++) {
+        if (!((maske >> p) & 1u)) continue;
+        if (ruh[p] < 0 || !(e->re2z_part_flags[p] & 1u) || e->re2z_part_t[p][1] != e->y) r.liegen = 0;
+        if (hoch[p] < r.scheitel_min) r.scheitel_min = hoch[p];
+        {   /* Soll-Scheitel = max(Zielhoehe, Startlage + GR_STEIG_MIN 600); der Wurf faellt diskret um ~v/2 kuerzer */
+            int32_t soll = ziel[p]; if (h0[p] + 600 > soll) soll = h0[p] + 600;
+            if (hoch[p] < soll - 350 || hoch[p] > soll + 50) r.ziel_fehl |= 1 << p;
+        }
+        if (hoch[p] > r.scheitel_max) r.scheitel_max = hoch[p];
+        if (ruh[p] > r.bilder_max) r.bilder_max = ruh[p];
+        int32_t dx = e->re2z_part_t[p][0] - e->x, dz = e->re2z_part_t[p][2] - e->z;
+        if (dx * dx + dz * dz > 300 * 300) r.gestreut++;
+    }
+    for (int i = 0; i < n_teile && i < nb; i++) if (!gz[i]) { r.gezeichnet_alle = 0; r.kaskade_weg |= 1 << i; }
+    return r;
+}
 static void abschnitt_zerfetzt(void)
 {
     if (room_load(0x1140, "STAGE1") != 0) { PRUEF(20, 0, "ROOM1140 fehlt"); return; }
@@ -281,13 +330,15 @@ static void abschnitt_zerfetzt(void)
         { 0x10, 0x10 }, { 0x11, 0x11 }, { 0x16, 0x16 }, { 0x10, 0x12 }, { 0x10, 0x13 }, { 0x10, 0x18 },
     };
     const int N = (int)(sizeof fall / sizeof fall[0]);
-    int tot = 0, einmal = 0, flug = 0, platzt = 0, weg = 0, sturz = 0, leiche = 0, rest = 0, krieche = 0;
+    int tot = 0, einmal = 0, wurf = 0, kinder = 0, keine_scherben = 0, sturz = 0, leiche = 0, liegen = 0, hoehe = 0,
+        zeit = 0, streu = 0, alle = 0, rauch = 0, krieche = 0;
     for (int k = 0; k < N; k++) {
         re15_actor_t *e = zombie_arena(RE15_AI_FLAVOR_RE2, fall[k].quelle, fall[k].typ);
         if (!e) { PRUEF(20, 0, "kein Zombie 0x%02x in ROOM1140", fall[k].quelle); return; }
         int slot = (int)(e - g_actors);
         e->hp = (fall[k].typ == 0x11) ? 250 : 143;
         unsigned z0 = re15_re2z_granate_zerfetzt_zahl();
+        unsigned r0 = re15_esp_granate_rauch_kinder();
         re15_damage_seed_rng(0x4100u + (uint32_t)k * 7919u);
         const int32_t p[3] = { e->x + 300, e->y - 500, e->z };
         int n = re15_granate_r35_explosion(p, 0, 2);
@@ -295,81 +346,153 @@ static void abschnitt_zerfetzt(void)
         frame();                                                   /* erster DEATH-Takt */
         int hdl = re15_re2z_last_death_handler();
         if (re15_re2z_granate_zerfetzt_zahl() == z0 + 1u) einmal++;
-        int f_ok = (e->re2z_part_flags[8] & 0x4Au) == 0x4Au;
-        static const int wurf[4] = { 2, 5, 9, 12 };
-        for (int i = 0; i < 4; i++) f_ok &= (e->re2z_part_flags[wurf[i]] & 0x1062u) == 0x1062u;
-        if (f_ok) flug++;
+        int w_ok = (e->re2z_part_gr == K_STUECK_MASKE);
+        for (int i = 0; i < 7; i++) w_ok &= (e->re2z_part_flags[k_stueck[i]] & 0x1062u) == 0x1062u;
+        if (w_ok) wurf++;
+        static const int kind[8] = { 3, 4, 6, 7, 10, 11, 13, 14 };
+        int c_ok = 1;
+        for (int i = 0; i < 8; i++) c_ok &= (e->re2z_part_flags[kind[i]] == 1u);
+        if (c_ok) kinder++;
         re15_teil_t *t = re15_teile(slot);
-        static const int pl_[6] = { 3, 4, 6, 7, 10, 13 };
-        int p_ok = re15_teile_an(slot) && t;
-        for (int i = 0; p_ok && i < 6; i++) p_ok &= (t[pl_[i]].w & 0x4au) == 0x4au;
-        if (p_ok) platzt++;
-        if (t && t[11].w == 0 && t[14].w == 0) weg++;
+        int s_ok = 1;                                              /* keine RE1.5-Scherben (Riesendreiecke der 1. Messung) */
+        for (int i = 0; t && re15_teile_an(slot) && i < 15; i++) if (t[i].w & 0x08u) s_ok = 0;
+        if (s_ok) keine_scherben++;
         if (hdl == 1) sturz++;
-        /* Zeichengang je Bild, bis 150 Bilder (Leiche + Ausflug der Teile) */
-        uint8_t gz[16] = { 0 }; int nb = 0;
-        int war7 = 0;
-        for (int f = 0; f < 150; f++) {
-            frame();
-            zeichengang(e, gz, &nb);
-            if (e->state == 7) war7 = 1;
-            if (e->grid_id == 0x81 || (e->re2z_f10e & 1u)) krieche++;
-        }
-        if (war7) leiche++;
-        int r_ok = gz[0] && gz[1];
-        int sonst = 0;
-        for (int i = 2; i < nb; i++) if (gz[i]) sonst |= (1 << i);
-        if (r_ok && !sonst) rest++;
-        printf("   Typ 0x%02x (Quelle 0x%02x, Slot %d): Treffer %d HP %d Zeile %u Handler %d Zerfetzung %u Flug %d "
-               "Platzen %d Haende %d Leiche %d | gezeichnet Rumpf %d Becken %d sonst 0x%04x (n %d)\n",
-               fall[k].typ, fall[k].quelle, slot, n, e->hp, e->sub_state_1, hdl,
-               re15_re2z_granate_zerfetzt_zahl() - z0, f_ok, p_ok, t ? (t[11].w == 0 && t[14].w == 0) : -1,
-               war7, gz[0], gz[1], (unsigned)sonst, nb);
+        flug_t fl = flug_messen(e, K_STUECK_MASKE, 150, 15);
+        if (e->state == 7) leiche++;
+        if (e->grid_id == 0x81 || (e->re2z_f10e & 1u)) krieche++;
+        if (fl.liegen) liegen++;
+        if (fl.ziel_fehl == 0 && fl.scheitel_min >= 1800) hoehe++;
+        if (fl.bilder_max <= 45) zeit++;
+        if (fl.gestreut >= 5) streu++;
+        if (fl.gezeichnet_alle) alle++;
+        if (re15_esp_granate_rauch_kinder() - r0 == 6u) rauch++;
+        printf("   Typ 0x%02x (Quelle 0x%02x, Slot %d): Treffer %d HP %d Zeile %u Handler %d Zerfetzung %u Maske 0x%04x "
+               "Kinder %d Scherben-frei %d | liegen %d Scheitel %d..%d Bilder bis Ruhe %d gestreut %d/7 alle gezeichnet %d "
+               "(fehlend 0x%04x) Rauch %u Zustand %d\n",
+               fall[k].typ, fall[k].quelle, slot, n, e->hp, e->sub_state_1, hdl, re15_re2z_granate_zerfetzt_zahl() - z0,
+               (unsigned)e->re2z_part_gr, c_ok, s_ok, fl.liegen, fl.scheitel_min, fl.scheitel_max, fl.bilder_max,
+               fl.gestreut, fl.gezeichnet_alle, (unsigned)fl.kaskade_weg, re15_esp_granate_rauch_kinder() - r0, e->state);
     }
     PRUEF(21, tot == N, "Explosion toetet jeden Zombie (Zustand 3, Zeile 9) %d/%d", tot, N);
     PRUEF(22, einmal == N, "Zerfetzung genau einmal je Tod %d/%d", einmal, N);
-    PRUEF(23, flug == N, "Kopf (0x4A, @0x80108DD4-E3C) + Oberarme/Oberschenkel (0x1062, @0x80108E54 / @0x80105384) fliegen %d/%d", flug, N);
-    PRUEF(24, platzt == N, "Unterarme/Unterschenkel/Fuesse platzen (RE1.5 0x4a, FUN_80108d04) %d/%d", platzt, N);
-    PRUEF(25, weg == N, "Haende weg (Teilwort 0 @0x801081d0/@0x8010826c) %d/%d", weg, N);
+    PRUEF(23, wurf == N, "sieben Stuecke (Rumpf 0, Becken 1, Kopf 8, Oberarme 9/12, Oberschenkel 2/5) fliegen mit dem Wurf "
+                         "0x1062 (FUN_80028AD8, `ori 0x1062` @0x80108E5C), Liegen-Maske 0x1327 %d/%d", wurf, N);
+    PRUEF(24, kinder == N, "Unterarme/Haende/Unterschenkel/Fuesse bleiben am Eltern-Stueck (Flagwort 1) %d/%d", kinder, N);
+    PRUEF(25, keine_scherben == N, "keine RE1.5-Scherben (0x08) am Zombie %d/%d", keine_scherben, N);
     PRUEF(26, sturz == N, "danach der normale Sturz 0x80108530 (Handler 1) %d/%d", sturz, N);
-    PRUEF(27, leiche == N && krieche == 0, "Leiche (Zustand 7) %d/%d, kein Kriecher (%d Bilder)", leiche, N, krieche);
-    PRUEF(28, rest == N, "nach dem Ausflug bleiben nur Rumpf + Becken gezeichnet %d/%d", rest, N);
+    PRUEF(27, leiche == N && krieche == 0, "Leiche (Zustand 7) %d/%d, kein Kriecher (%d)", leiche, N, krieche);
+    PRUEF(28, liegen == N, "alle sieben Stuecke liegen nach 150 Bildern AM BODEN (st 1, Bit 0 steht, y = Boden) %d/%d", liegen, N);
+    PRUEF(29, hoehe == N, "Scheitel = max(Zielhoehe 2400..2910, Startlage + 600) -350..+50 (GR_DECKE, CD2 19,55-19,69 s), "
+                          "mindestens 1800 ueber dem Boden %d/%d", hoehe, N);
+    PRUEF(30, zeit == N, "in Ruhe nach hoechstens 45 Bildern (CD2: Landung 20,02 s / letztes Teil 20,62 s) %d/%d", zeit, N);
+    PRUEF(31, streu == N, "mindestens 5 von 7 Stuecken > 300 vom Koerper gestreut %d/%d", streu, N);
+    PRUEF(32, alle == N, "alle 15 Teile werden weiter gezeichnet (nichts verschwindet, kein heiler Koerper am Ort) %d/%d", alle, N);
+    PRUEF(33, rauch == N, "Rauch-Nachlauf: 6 Kinder 0x030B5800 (@0x80018698-a8) je Zombie %d/%d", rauch, N);
 }
 
 /* ================================================================================================
- * [3] R15 — RE1.5-Gehirn
+ * [3] R15 — RE1.5-Gehirn (Import-Option an = Vorgabe: derselbe RE2-Modellblock)
  * ================================================================================================ */
 static void abschnitt_r15(void)
 {
-    if (room_load(0x1140, "STAGE1") != 0) { PRUEF(30, 0, "ROOM1140 fehlt"); return; }
+    if (room_load(0x1140, "STAGE1") != 0) { PRUEF(40, 0, "ROOM1140 fehlt"); return; }
     static const uint8_t typen[2] = { 0x10, 0x11 };
-    int ok = 0, leiche = 0, krieche = 0;
+    int ok = 0, leiche = 0, krieche = 0, liegen = 0;
     for (int k = 0; k < 2; k++) {
         re15_actor_t *e = zombie_arena(RE15_AI_FLAVOR_RE15, typen[k], typen[k]);
-        if (!e) { PRUEF(30, 0, "kein Zombie 0x%02x (RE1.5)", typen[k]); return; }
-        int slot = (int)(e - g_actors);
+        if (!e) { PRUEF(40, 0, "kein Zombie 0x%02x (RE1.5)", typen[k]); return; }
         e->hp = 107;
         const int32_t p[3] = { e->x + 300, e->y - 500, e->z };
         int n = re15_granate_r35_explosion(p, 0, 2);
         frame();
-        re15_teil_t *t = re15_teile(slot);
-        int g = 14;                                                  /* Gore-Teil 0x10/0x11 (@0x8011f794) */
-        int t_ok = t && re15_teile_an(slot) && (t[g].w & 0x4au) == 0x4au
-                   && (t[2].w & 0x4au) == 0x4au && (t[3].w & 0x4au) == 0x4au
-                   && (t[5].w & 0x4au) == 0x4au && (t[6].w & 0x4au) == 0x4au
-                   && t[10].w == 0 && t[13].w == 0;
-        int war7 = 0;
-        for (int f = 0; f < 150; f++) {
-            frame();
-            if (e->state == 7) war7 = 1;
-            if (e->grid_id == 0x81) krieche++;
-        }
-        printf("   RE1.5 Typ 0x%02x: Treffer %d Zeile %u Teile ok %d Leiche %d\n", typen[k], n, e->sub_state_1, t_ok, war7);
-        if (n == 1 && t_ok) ok++;
-        if (war7) leiche++;
+        int w_ok = (e->re2z_part_gr == K_STUECK_MASKE);
+        for (int i = 0; i < 7; i++) w_ok &= (e->re2z_part_flags[k_stueck[i]] & 0x1062u) == 0x1062u;
+        flug_t fl = flug_messen(e, K_STUECK_MASKE, 150, 15);
+        printf("   RE1.5 Typ 0x%02x: Treffer %d Waffe %u Maske 0x%04x liegen %d Scheitel %d..%d Zustand %d grid 0x%02x\n",
+               typen[k], n, e->sub_state_1, (unsigned)e->re2z_part_gr, fl.liegen, fl.scheitel_min, fl.scheitel_max,
+               e->state, e->grid_id);
+        if (n == 1 && w_ok) ok++;
+        if (fl.liegen) liegen++;
+        if (e->state == 7) leiche++;
+        if (e->grid_id == 0x81) krieche++;
     }
-    PRUEF(31, ok == 2, "RE1.5-KI: Kopf/Unterschenkel/Fuesse platzen, Haende weg (z_granate) %d/2", ok);
-    PRUEF(32, leiche == 2 && krieche == 0, "RE1.5-KI: Leiche %d/2, kein Kriecher-Uebergang (%d)", leiche, krieche);
+    PRUEF(41, ok == 2, "RE1.5-KI (Import an): dieselben sieben Stuecke fliegen (z_granate -> re15_re2z_granate_teile_r15) %d/2", ok);
+    PRUEF(42, liegen == 2, "RE1.5-KI: die Stuecke liegen nach 150 Bildern am Boden %d/2", liegen);
+    PRUEF(43, leiche == 2 && krieche == 0, "RE1.5-KI: Leiche %d/2, kein Kriecher-Uebergang (%d)", leiche, krieche);
+}
+
+/* ================================================================================================
+ * [5] HUND — RE2-Gehirn und RE1.5-Gehirn, ROOM11D0 (freier Hunde-Satz Flag 3:152, wie probe_r34_reaktion)
+ * ================================================================================================ */
+extern unsigned re15_re2d_granate_zahl(void);
+static re15_actor_t *hund_arena(re15_ai_flavor_t fl)
+{
+    re15_ai_flavor_set(fl);
+    re15_game_state_init();
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    load_re2_bank(0x20);
+    re15_player_cmd_reset(); re15_player_aim_reset();
+    re15_esp_fx_reset();
+    re15_teile_reset_alle();
+    re15_damage_seed_rng(0x0badf00du);
+    g_room_rdt_ok = 0; g_room_change.pending = 0;
+    { extern void scd_register_current_rdt(const re15_rdt_t *rdt); scd_register_current_rdt(NULL); }
+    re15_game_flag_set(3, 152, 1);
+    if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);
+    if (s_rdt.sub_scd[0]) scd_thread_start(1, s_rdt.sub_scd[0]);
+    for (int i = 0; i < 120; i++) scd_vm_tick();
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    re15_collision_set_band(0);
+    re15_player_set_aim_clip_len(12);
+    for (int f = 0; f < 30; f++) frame();
+    int slot = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == 0x20) { slot = s; break; }
+    if (slot < 0) return NULL;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (s != slot) g_actors[s].active = 0;
+    re15_actor_t *e = &g_actors[slot];
+    if (e->state != 1) re15_ai_set_state_word(e, 0x100);
+    e->grid_id = 0; e->re2z_f10e = 0; e->re2z_self1d3 = 0; e->hit_react = 0;
+    pl->x = e->x - 8000; pl->z = e->z; pl->y = e->y;
+    for (int f = 0; f < 3; f++) frame();
+    e->re2z_self1d3 = 0; e->hit_react = 0;
+    e->hp = 60;                                                   /* jede Explosivgranate toetet (RE2 300 / RE1.5 1000) */
+    return e;
+}
+static void abschnitt_hund(void)
+{
+    if (room_load(0x11D0, "STAGE1") != 0) { PRUEF(50, 0, "ROOM11D0 fehlt"); return; }
+    static const re15_ai_flavor_t fls[2] = { RE15_AI_FLAVOR_RE2, RE15_AI_FLAVOR_RE15 };
+    static const char *namen[2] = { "RE2-KI", "RE1.5-KI" };
+    int ok = 0, liegen = 0, aktiv = 0;
+    for (int k = 0; k < 2; k++) {
+        re15_actor_t *e = hund_arena(fls[k]);
+        if (!e) { PRUEF(50, 0, "kein Hund 0x20 in ROOM11D0 (%s)", namen[k]); return; }
+        unsigned h0 = re15_re2d_granate_zahl();
+        const int32_t p[3] = { e->x + 300, e->y - 500, e->z };
+        int n = re15_granate_r35_explosion(p, 0, 2);
+        frame();
+        int w_ok = (e->re2z_part_gr == 0x079Cu) && re15_re2d_granate_zahl() == h0 + 1u;
+        static const int teile[7] = { 2, 3, 4, 7, 8, 9, 10 };      /* @0x80105680 */
+        for (int i = 0; i < 7; i++) w_ok &= (e->re2z_part_flags[teile[i]] & 0x1062u) == 0x1062u &&
+                                           e->re2z_part_tint[teile[i]] == 0x00101040u;
+        int g_ok = re15_re2z_gore_active(e);
+        flug_t fl = flug_messen(e, 0x079Cu, 150, 17);
+        printf("   %s Hund Slot %d: Treffer %d Zustand %d Waffe %u Maske 0x%04x Bruecke %d liegen %d Scheitel %d..%d "
+               "Bilder %d gestreut %d/7\n", namen[k], (int)(e - g_actors), n, e->state, e->sub_state_1,
+               (unsigned)e->re2z_part_gr, g_ok, fl.liegen, fl.scheitel_min, fl.scheitel_max, fl.bilder_max, fl.gestreut);
+        if (n == 1 && w_ok) ok++;
+        if (fl.liegen) liegen++;
+        if (g_ok) aktiv++;
+    }
+    PRUEF(51, ok == 2, "Hund zerfetzt unter beiden KIs: 7 Parts {2,3,4,7,8,9,10} (@0x80105680) fliegen 0x1062, Farbe 0x101040 "
+                       "(@0x801044c8), einmal je Tod %d/2", ok);
+    PRUEF(52, aktiv == 2, "Part-Bruecke aktiv (RE2-KI und RE1.5-KI nach dem Wurf) %d/2", aktiv);
+    PRUEF(53, liegen == 2, "die Hund-Teile liegen nach 150 Bildern am Boden %d/2", liegen);
 }
 
 /* ================================================================================================
@@ -377,17 +500,17 @@ static void abschnitt_r15(void)
  * ================================================================================================ */
 static void abschnitt_aus(void)
 {
-    if (room_load(0x1140, "STAGE1") != 0) { PRUEF(40, 0, "ROOM1140 fehlt"); return; }
+    if (room_load(0x1140, "STAGE1") != 0) { PRUEF(60, 0, "ROOM1140 fehlt"); return; }
     re15_actor_t *e = zombie_arena(RE15_AI_FLAVOR_RE2, 0x11, 0x11);
-    if (!e) { PRUEF(40, 0, "kein Zombie 0x11"); return; }
+    if (!e) { PRUEF(60, 0, "kein Zombie 0x11"); return; }
     e->hp = 250;
     unsigned z0 = re15_re2z_granate_zerfetzt_zahl();
     const int32_t p[3] = { e->x + 300, e->y - 500, e->z };
     int n = re15_granate_r35_explosion(p, 0, 2);
     frame();
     int hdl = re15_re2z_last_death_handler();
-    PRUEF(41, n == 1 && e->hp == 250 - 1000, "Schalter aus: Schaden bleibt 1000 (HP %d)", e->hp);
-    PRUEF(42, re15_re2z_granate_zerfetzt_zahl() == z0 && hdl == 5, "Schalter aus: keine Zerfetzung, RE2-Zelle 0x80108BEC (Handler %d)", hdl);
+    PRUEF(61, n == 1 && e->hp == 250 - 1000, "Schalter aus: Schaden bleibt 1000 (HP %d)", e->hp);
+    PRUEF(62, re15_re2z_granate_zerfetzt_zahl() == z0 && hdl == 5, "Schalter aus: keine Zerfetzung, RE2-Zelle 0x80108BEC (Handler %d)", hdl);
 }
 
 int main(int argc, char **argv)
@@ -411,6 +534,7 @@ int main(int argc, char **argv)
     if (alle || strstr(teil, "schaden"))  { printf("[1] Schaden\n");            abschnitt_schaden(); }
     if (alle || strstr(teil, "zerfetzt")) { printf("[2] Zerfetzt (RE2-KI)\n");  abschnitt_zerfetzt(); }
     if (alle || strstr(teil, "r15"))      { printf("[3] RE1.5-KI\n");           abschnitt_r15(); }
+    if (alle || strstr(teil, "hund"))     { printf("[5] Hund\n");               abschnitt_hund(); }
     if (strcmp(teil, "aus") == 0)         { printf("[4] Schalter aus\n");       abschnitt_aus(); }
 
     free(buf);

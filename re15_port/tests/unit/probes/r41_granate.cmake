@@ -6,9 +6,10 @@
 # enemy_ai_re2_zombie.c re2z_granate_zerfetzen, zombiegore_r15.c z_granate.
 #
 #   unit_r41_granate       [1] Schaden 1000 an 0x10/0x11/0x12/0x13/0x16/0x18 (auch der dicke 0x11 mit 250 stirbt),
-#                          Saeure/Brand und Nicht-Zombies unveraendert; [2] RE2-Gehirn: Zerfetzung einmal je Tod, Teile
-#                          fliegen/platzen/weg, Sturz 0x80108530, Leiche, nach dem Ausflug nur Rumpf + Becken gezeichnet
-#                          (Zeichengang wie main.c nachgefahren); [3] RE1.5-Gehirn z_granate, kein Kriecher.
+#                          Saeure/Brand und Nicht-Zombies unveraendert; [2] RE2-Gehirn (Nachbesserung 1, Video CD2 19,25 s
+#                          + Nutzer-Entscheid "Teile bleiben liegen"): sieben Stuecke fliegen (Wurf 0x1062), liegen nach 150
+#                          Bildern am Boden, Scheitel gegen die Zielhoehe, gestreut, alles weiter gezeichnet, Rauch-Nachlauf;
+#                          [3] RE1.5-Gehirn z_granate (dieselben Stuecke); [5] Hund RE2/RE1.5: 7 Parts fliegen und liegen.
 #   unit_r41_granate_aus   eigener Prozess mit RE15_KEIN_80PROZENT_GORE=1: keine Zerfetzung (RE2 0x80108BEC), Schaden 1000.
 add_executable(test_r41_granate
     ${CMAKE_CURRENT_LIST_DIR}/../test_r41_granate.c)
