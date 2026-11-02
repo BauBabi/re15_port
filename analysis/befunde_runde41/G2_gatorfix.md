@@ -320,3 +320,81 @@ Tests (PowerShell-ctest, Auswahl wie die Abnahme, -j3): 100% tests passed, 0 tes
 3. Rampe Nordteil (12 % im Bild) / Kreispunkt in der Spielerkamera - NICHT umgesetzt. Das Harness-Mass waehlt die Kamera per Projektion (Bildmitte) und
    trifft die Zonenkamera des Spiels nicht (Rampe West: Harness Cut 3, Spiel Cut 2); fuer "im Bild je Lage" muss die Kamerazone (RVD-Zonen, cam_from) im
    Harness nachgebildet oder die Lagen als exe-Laeufe gemessen werden (traglog misst "im Bild" schon mit state.log cam=).
+
+## Nachbesserung 4 (Orchestrator nach NB3: M4 einpassen, Kreispunkt in der Spielerkamera)
+Laeufe scratchpad `m4/runs/<lauf>` (Skript `m4/lauf.sh`: eigene exe-Kopie `re15_pc_g2nb4_<lauf>.exe`, gdigrab auf das hwnd des eigenen Prozesses, 30 Bilder/s,
+RE15_WINDOW_SCALE=2, kein AUTOSHOT/SOFTWARE_RENDER, SDL_ASSERT=always_ignore, nur eigene PIDs). "Vorher"-exe = derselbe Quelltext mit dem Pruefhaken
+`s_m4_alt = 1` als Vorgabe gebaut (`m4/re15_pc_vorher_nb4.exe`, md5 58ca6684...; Einpassung aus, Kreispunkt wie NB3) = Verhalten von b7ae18e89.
+
+### M4 - Leiche in das Maulvolumen eingepasst
+**Mass** (Orchestrator: "Leichenpunkte ausserhalb von Kopf- und Kieferhuelle oben UND unten zusammen"): das Kopf-Band des Riegels maul (g2_band: Scheitel
+Part 6 + Part 7, je Leichen-Scheitel das Laengsfenster +-150) in zwei Rahmen, je oben und unten: A = Kieferrahmen (Part 6, = bisheriger Riegel), B = waagerechter
+Rahmen (x = Kieferachse, y = Welt-Senkrechte ohne x-Anteil). A allein sieht die Rolle nicht (die Leiche rollt mit dem Kiefer: 0 draussen), B zeigt sie.
+**Messung vorher** (`test_r41_gatorfix leichenfit`, Pruefhaken m4_alt): Rollwinkel des Unterkiefers bis -55 Grad (Clip 4 Bild 13 .. Clip 5 Bild 2); A 0, B bis
+154 von 306 Scheiteln (Clip 5 Bild 7/8, ein Ende ueber dem Schaedel, das andere unter dem Kiefer); Rollfenster (Bilder mit Scheiteln draussen) 42 Bilder,
+Summe 2671.
+**Was erreichbar ist** (Gitter Rollanteil 0..1 in 1/16 x Laengsskala 1..0,6 in 0,05 x dy +-480/40 x dz +-800/50, A+B): in Clip 5 Bild 3-11 nicht 0, bis 24.
+Laengsversatz dx gemessen und verworfen: global bis 17 (dx 400), aber in den Haltebildern nach der Rolle liegen bei dx 100..500 in Ruhelage 1..24 Scheitel
+draussen, bei dx 0 keiner - die Suche blieb bei dx 400 haengen. A = 0 hart: B bis 75.
+**Aenderung** (gatorszene_r41.c Abschnitt EINPASSEN, PORT-WAHL; RE2 haelt sein Opfer mit Opfer-Animation, es gibt kein Original fuer die Lage): je Haltebild
+(Vorgriff fertig bis vor dem Wurf Clip 5 Bild 57) lokale Suche um die Werte des Vorbilds (je Bild hoechstens 2/16 Roll, 0,1 Skala, 80 dy, 100 dz = glatter
+Verlauf; Kosten 64 je Scheitel draussen + 1 je Stufe weg von der Ruhelage), Drehung = Rx(Rollanteil x Rollwinkel) x Halte-Relation, Laengsskala auf Modell-x
+um die Rumpfmitte, Versatz im Part-6-Rahmen. Gezeichnet ueber den Haken `re15_gatorszene_r41_leiche_skala` in pc_prop_world (Spalte 0 der Prop-Matrix x s,
+Muster Spur J; der Schluessel als Kind: Lage mitgestaucht, Form nicht). Part-7-Matrix `re15_gr2_part7_gezeichnet`. Nur PC-Bau (~1 Mio. Schritte je Bild).
+Messhaken `_leiche_matrix` (gezeichnete Matrix), `_leiche_fit`; `_leiche_sitz` misst gegen Maullage + Versatz mit der gestauchten Matrix.
+**Messung nachher** (Riegel unit_r41_gatorfix_maul / _elza, neu teil_maul_m4): Rollfenster ohne Ausnahme 42 von 42 Bildern gemessen (auch ohne das Spur-P-Mass
+a <= 40), draussen hoechstens 26 (vorher 154), Summe 185 (vorher 2671, erreichbar 171), je Bild hoechstens 2 ueber dem erreichbaren Minimum (Riegel: <= 4),
+ausserhalb des Rollfensters 0, keine Spruenge, vor dem Wurf in Ruhelage. Gegenprobe Stand vor NB4: 154 (rot). Leon und Elza gleich.
+**Fenster** (gdigrab, 15 Bilder/s, Ausschnitt hell gezogen, oben vorher, unten nachher): `G2_belege/nb4_m4_leon_vorher_oben_nachher_unten_15fps.jpg`, `_elza`
+(Laeufe v_ank_*/n_ank_*). Vorher liegt die Leiche schraeg ueber Oberkiefer und Hals, die Fuesse ragen ueber den Kopf; nachher kuerzer und flacher im offenen
+Maul, die Fuesse bleiben in Kopfhoehe.
+**Offen (ehrlich):** Ziel 0 ist im erlaubten Raum nicht erreichbar (Minimum bis 24 von 306 in Clip 5 Bild 6-9). Die Fangbilder 75/76 haben im waagerechten
+Rahmen 12/23 Scheitel draussen (unveraendert; Einpassung im Wurf aus, Kopf 70 Grad hoch). PSX-Bau ohne Einpassung.
+
+### Punkt 2 - Kreispunkt im sichtbaren Wasser der Spielerkamera
+**Wie das Spiel die Kamera waehlt** (Werkzeug `test_r41_gatorfix kamerazone 2090`): RVD-Zonen ROOM2090 = Ring 0 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 0 aus
+Streifen (je Gruppe ist die erste Zone der Anker, den der Scan nicht prueft - rdt_common.c / FUN_80014230); an keiner Rampen- oder Leiterlage liegt eine Zone,
+die Kamera haengt also am Weg: wer von Sueden auf die Rampe klettert (Zone 5, Cut 1 -> 2), steht in Cut 2, wer von Norden kommt (Westkanal Cut 7/6/5,
+Nordbecken Zone 16 -> 4, Zone 13 -> 3), in Cut 3. Der Riegel baut genau das nach (g2_weg_kamera: Weg von der Leiter, je 50 Einheiten ein Scan-Schritt).
+**Harness-Fehler gefunden und behoben:** die Fuzz-Lagen "oben" setzten nur y = -1800; das Kollisionsband blieb 0, die Spieler-Kollision schob die Figur in
+jedem Bild von der Rampe ((4500,-16300) -> (4500,-14032)), der Alligator war nie in der Belagerung (Phase 2 statt 5). Jetzt `re15_collision_set_band` wie
+nach dem Klettern (climb_common.c @0x800384bc). **Plattform:** fuer die Figur nicht betretbar (Werkzeug `begehbar 2090 1`: (0,-17500) -> (-2168,-17500),
+(1600,-16000) -> (2318,-16000); Kletterzellen nur auf der Rampe) - es gibt keine Plattformlagen; Rampen-Nordrand begehbar bis z -14968.
+**Messung vorher** (Riegel kamera, Pruefhaken `re15_gr2_kreis_kamera_alt_setzen(1)` = NB3): der naechste freie Punkt zur Figur liegt in Cut 2 suedlich der
+Rampe - dessen Kreis ist nur zu 10/16 im Bild (15 von 32 Lage/Kamera-Paaren), Anteil der Wurzel im Bild 69-100 %. Der NB3-Wert "Rampe Nordteil 12 %" stammt
+aus einem exe-Lauf; im Harness stand die Figur dort vor der Band-Korrektur gar nicht oben.
+**Aenderung** (gator_re2_r41.c Abschnitt KREISPUNKT IN DER SPIELERKAMERA, PORT-WAHL): `re15_gr2_kreis_kamera` waehlt im Raster 250 den der Figur naechsten
+Mittelpunkt, dessen Kreis (R 2000, 16 Punkte auf y -1200) zu >= 12/16 im Bild der laufenden Kamera g_scd.cam_id liegt (Kino-Balken 24..216), ganz in der
+Klemmflaeche (Aussenwaende - 1600) und euklidisch >= Wurzel-Rand + R von Plattform und Rampe (der Kasten-Test sperrte die Ecken mit und damit das sichtbare
+Wasser an der Rampe). Gilt fuer die Belagerung (Rampe) und fuer das Kreisen der Verfolgung (NB2-Kreis um das gekuerzte Ziel), dort nur, wenn dessen Kreis
+nicht zu >= 12/16 im Bild liegt (Leiter: (929,-23646), 0..2/16 in Cut 0) - die erste Fassung ersetzte ihn immer und brach den exe-Riegel frei (6
+2-s-Fenster: Biss-Clip an der Plattform-Westkante, x geklemmt, Figur 9000 entfernt) - und nur, wenn der sichtbare Mittelpunkt hoechstens 3 R von der
+Figur liegt (exe-Riegel abn2_nordbecken: Figur NO-Ecke, Kamera 0 durch den Messhaken, sichtbares Wasser erst bei (-5300,-20650): 2 Fenster). Der Kreis der
+Belagerung endet mit ihr (`kreis == 2`), sonst kreiste er an der Leiter weiter um den Rampen-Mittelpunkt. Ohne sichtbares Wasser: wie NB3.
+**Fuzz nachgezogen:** die Fuzz-Lagen oben/Leiter laufen jetzt in der Kamera des Wegs von Sueden und mit dem Kollisionsband der Lage (vorher stand die Figur
+nie oben, die Kamera war die zufaellig laufende); Schranke Kopf-Abstand 8500 (NB3: naechster freier Punkt) -> 9000 (NB4: naechster sichtbarer Mittelpunkt bis
+8930 von der Figur, R-6500n in Cut 3). Gemessen: hoechstens 7769 (Leon). Die Plattform-Lagen P-* bleiben im Fuzz als Wasser-Lagen am Plattformrand.
+**Messung nachher** (Riegel unit_r41_gatorfix_kamera / _elza, je Lage 900 Bilder, Mass wie traglog, zweite Haelfte): 15 Rampenlagen x Cut 2 (Sued) und
+Cut 3 (Nord) + Leiter + Leiter-Ecke (Cut 0) = 32 Paare, alle mit sichtbarem Wasser, alle 100 % im Bild, Kreis jedes Laufs 16/16 im Bild, kein 2-s-Fenster
+ohne Fortschritt; Kopf-Abstand 4600-8900 (Leiter 4600-5100, dort 28 % Biss am Spieler). Mittelpunkte: Cut 2 (3450,-9150) noerdlich der Rampe, Cut 3
+(3200..3450,-23400) suedlich, Cut 0 (-5300,-23400) vor der Leiter. Gegenprobe NB3: 15 von 32 Paaren mit Kreis unter 12/16 im Bild (rot). Lagen ohne
+sichtbares Wasser: keine.
+**Fenster (exe, gdigrab, Eingabe und Umgebung des Riegels abn2_rampe_west, Rueckkehr-Messhaken mit Cut 2 = die Kamera, die der Weg von Sueden ergibt):**
+(exe-Stand vor der Verengung des Verfolgungs-Kreises; die Belagerung ist davon nicht beruehrt) Leon Rampe West vorher (v_west_leon) traglog: Figur oben 2604 Bilder, Kopf-Abstand mittel 6276, Gator im Bild der Spielerkamera 85 %; nachher (n_west_leon):
+6940, **95 %**, 0 2-s-Fenster; Elza vorher (v_west_elza) 6397 / 85 %, nachher (n_west_elza) 6841 / **95 %**, 0 2-s-Fenster. Bilder
+`G2_belege/nb4_p2_rampe_west_cut2_vorher_oben_nachher_unten_hell_10s.jpg` und `nb4_p2_rampe_west_elza_cut2_*` (hell gezogen, alle 10 s): vorher liegt der
+Alligator im Suedwasser zwischen Kamera und Rampe, gross am unteren Bildrand und zeitweise ganz draussen; nachher kreist er im Nordbecken hinter der Figur -
+immer im Bild, aber klein (in Normalhelligkeit kaum zu erkennen). Versuch "Rampe Nordteil von Norden" (Messhaken an der Nordkante (2602,-13800), Cut 3):
+die Figur klettert dort nicht hinauf, der Alligator packt sie vorher (climb.log ohne sub=9, vorher wie nachher) - Nordlagen nur im Riegel.
+
+### Abschluss Nachbesserung 4
+Tests (PowerShell, `C:\msys64\mingw64\bin` vorn im PATH, SDL_ASSERT=always_ignore, Auswahl `r41_gatorszene|r41_kanister2080|r41_alligator2|r41_re2gator|r41_gatorfix`,
+-j3, Bau nur ueber local_build.sh): **100% tests passed, 0 tests failed out of 119** (2296.83 s), darin neu unit_r41_gatorfix_kamera / _kamera_elza.
+exe-Riegel Rampe West (Cut 2, Endstand): Leon 98 % im Bild / Kopf-Abstand 6814, Elza 98 % / 6686 (NB3-Riegel: >= 80 %, <= 7000).
+Zwischenlaeufe (abgebrochen und behoben): integration_r41_gatorfix_frei (6 Fenster, Verfolgungs-Kreis immer ersetzt) und _abn2_nordbecken (2 Fenster,
+sichtbarer Mittelpunkt 16900 von der Figur) - siehe Punkt 2.
+**Offen:** M4 Ziel 0 im erlaubten Raum nicht erreichbar (bis 24/306 in Clip 5 Bild 6-9); Fangbilder 75/76 unveraendert 12/23. Punkt 2: in Cut 2 liegt das
+sichtbare Wasser hinter der Figur im Nordbecken - der Alligator ist immer im Bild, aber klein; die Alternative (Schwelle 10/16 statt 12/16) waere das
+Suedwasser vor der Kamera (gross, zeitweise am unteren Rand draussen, 85 %) - Gestaltungsfrage fuer den Orchestrator. Rampe von Norden nur im Riegel
+(Klettern an der Nordkante im exe-Lauf vom Alligator verhindert). PSX-Bau: Einpassung nur PC; die Kreispunkt-Suche laeuft auch im PSX-Bau (je Kamera und
+Figur-Zelle 250 einmal, bis ~2000 Kandidaten x 16 Projektionen) - nicht im PSX-Laufzeitbudget gemessen.
