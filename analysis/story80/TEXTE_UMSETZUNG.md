@@ -196,13 +196,21 @@ eigene PID beendet. Leisten mit `tools/r41_story80/s80_blatt.py`:
 | `belege/6030_wagen.jpg` | 6030 Wagen: alle 13 Zeilen; Bild 140 Sherry zu Leon gedreht |
 | `belege/6030_fuehrerstand.jpg` | 6030 Führerstand: a, b, c, d (neu), „Certainly.“ |
 
-Alle Untertitel lesbar, keine Zeile über den Rand. msg 21 (drei Zeilen) setzt die dritte Zeile wie die Original-Dreizeiler
-(ROOM10D0 msg 17) auf den unteren Kinobalken; sie steht ganz im Fenster und bleibt bis zu ihrem eigenen Ende stehen
-(Bild 66..72 bei 2 Bildern/s), msg 2 folgt danach.
+Alle Untertitel lesbar, keine Zeile über den Rand. Bei msg 21 (drei Zeilen) liegt die dritte Zeile auf dem unteren
+Kinobalken (Ausschnitt Bild 68 vergrößert geprüft), ganz im Fenster und lesbar; der Text bleibt bis zu seinem eigenen
+Ende stehen (Bild 66..72 bei 2 Bildern/s), msg 2 folgt danach. Dreizeiler gibt es auch im Original (28 Dialoge, z. B.
+ROOM10D0 msg 17); wie diese dort liegen, ist nicht gemessen.
 
-Die Szenendauer wächst durch die Zeilen: 30C1 876 Bilder (vorher acht Zeilen), 6030 Wagen 1809 Bilder (vorher neun Zeilen),
-Führerstand 1824 Bilder. Mit den künftigen Aufnahmen wartet jede nächste Zeile ohnehin auf das Ende der laufenden
+Szenendauer im Riegel (VM-Bilder vom Programmstart bis Evt_end): 30C1 876, 6030 Wagen 1809, Führerstand 1824. Mit den künftigen Aufnahmen wartet jede nächste Zeile ohnehin auf das Ende der laufenden
 Aufnahme (`op_message_on`, Stimmen-Riegel).
+
+### 6.3 Folgeanpassung ausserhalb der Spur
+
+- `unit_r37_sperre1050_elza50b1`: Der Sweep aller Elza-RDTs erwartete „Ada“ genau zweimal (30C1 msg 4 Marvin, msg 5
+  „Elza: Ada?“). Die kurze Fassung nennt Ada nicht mehr, Elza hört den Namen nie; erwartet jetzt 0. Das stützt 50B1
+  „It's a woman. She's dead.“ (Runde 37 #5): Elza kann die Tote nicht kennen.
+- PSX: `story80_r41.c`, `story_r36.c`, `hebetisch_cursor_1150.c` mit `mipsel-none-elf-gcc -fsyntax-only -DPSN00BSDK`
+  (PSn00bSDK 0.24) ohne Fehler; die neuen Ids 21..26 liegen unter `MSG_TABLE_N` 32.
 
 ## 7. Offen
 
@@ -210,9 +218,3 @@ Aufnahme (`op_message_on`, Stimmen-Riegel).
   unter den neuen Untertiteln: 30E1 main02/03, 30C1 main02..05, 6030 main01, main03, main05, main07, main08, main11,
   main12. Für 6030 main21..26 gibt es noch keine Datei (die Zeilen bleiben stumm, `[voice] ... keine Aufnahme`).
 - r41/annette: Integrationsstelle Abschnitt 5.
-
-### 6.3 Folgeanpassung ausserhalb der Spur
-
-- `unit_r37_sperre1050_elza50b1`: Der Sweep aller Elza-RDTs erwartete „Ada“ genau zweimal (30C1 msg 4 Marvin, msg 5
-  „Elza: Ada?“). Die kurze Fassung nennt Ada nicht mehr, Elza hört den Namen nie; erwartet jetzt 0. Das stützt 50B1
-  „It's a woman. She's dead.“ (Runde 37 #5): Elza kann die Tote nicht kennen.
