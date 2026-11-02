@@ -14,6 +14,7 @@
 #include "re15_camera.h"       /* Runde 41 Spur H: re15_camera_build_view (Sichttest des Ausloesers) */
 #include "re15_rdt.h"          /* Runde 41 Spur H: re15_rdt_get_region_quad (Anker-Viereck = FUN_80014324) */
 #include "re15_aot.h"          /* Runde 41 Spur H: re15_aot_point_in_quad (FUN_80014368) */
+#include "re15_math.h"         /* Runde 41 SF N2: re15_squareroot0 (Schrittgrenze Spider-Man) */
 #include "re15_enemy_ai.h"     /* Runde 41 Spur H: re15_player_is_grabbed */
 #include "re15_skeleton.h"     /* Runde 41 Spur H: re15_cos_q12 / re15_sin_q12 (Gang auf die Kamera zu) */
 #include "re15_engine.h"       /* Runde 41 Spur H: g_engine.frame_count (nur Messzeile RE15_HANGAR_LOG) */
@@ -163,6 +164,8 @@ void re15_bf_morph_zu_g5(int slot)
  * und prallt bei h10..11 an. Waagerecht: kurzes Anlaufen (erste 30 % quadratisch), dann gleichmaessig bis zur Hand
  * (kein Abbremsen vor dem Aufprall, vorher smoothstep; Lauf n1 mit 20 %: Bild-x h4 57 statt 43, zu frueh -> 30 %);
  * senkrecht: Bogen mit fruehem Scheitel bei 1/3 der Bahn. */
+#define BF_SM_SCHRITT     600        /* Gestaltung (N2): groesster Schritt des gehaltenen Spider-Man je Takt bis zum Wurf (h66),
+                                       * Video-Ansprung h4..8 ~600 je Bild (N1.4) */
 #define BF_BOGEN         1000        /* Gestaltung: Scheitel ueber der Geraden (Video h3..h8 Mitte ~25 Bildpunkte ueber h0) */
 /* Zeitplan, h = Videobild (0 = erstes Bild in Cut 12). */
 #define BF_H_SPRUNG_AB    2
@@ -201,7 +204,8 @@ static const int16_t k_birkin_gier[][2] = {
  * Mitte bei h30, dann frei (die Feder schwingt selbst ueber). Werte in Einheiten an der Spitze. Lauf n8 mit zusaetzlicher
  * Vorgabe -900 bei h36: Spitze h36-h44 bei Bild-x 261-276, Video 200-214 -> gestrichen. */
 static const int16_t k_schwanz_seite[][2] = {
-    { 11, 0 }, { 16, 4000 }, { 27, 4000 }, { 30, 0 }, { 46, 0 } };
+    { 11, 0 }, { 16, 3300 }, { 27, 3300 }, { 30, 0 }, { 31, 0 }, { 34, 1700 }, { 39, 1700 }, { 43, 0 } };
+#define BF_SCHWANZ_N ((int)(sizeof k_schwanz_seite / sizeof k_schwanz_seite[0]))
 
 /* ---- Runde 41 Spur H "hangar": Ausloeser, Riegel, Kamera ----------------------------------------
  * GEMESSEN (Dossier analysis/befunde_runde41/H_hangar.md 1.2): Cut 12 ist in ROOM50A0/50A1 (beide RDT bytegleich) NICHT
@@ -510,7 +514,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     const int h = s_h.t - BF_VORLAUF;                    /* Videobild */
     int32_t k[3];
     s_h.t++;
-    re15_schwanz_r41_seite(s_h.birkin, bf_tab(k_schwanz_seite, 5, h));
+    re15_schwanz_r41_seite(s_h.birkin, bf_tab(k_schwanz_seite, BF_SCHWANZ_N, h));
     /* --- Birkin: Clip, Gier ------------------------------------------------------------------------------------- */
     if (h < BF_H_GANG) {
         if (h < k_birkin_bild[0][0]) re15_r38_birkin_anim(b);             /* Stand, Clip 0 laeuft */
@@ -573,9 +577,18 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         else re15_r38_birkin_anim(m);                                     /* Zappeln: Clip 7 laeuft im Kreis */
         m->rot_y = bf_blick(m, b->x, b->z);
         bf_klauenziel(b, m, k);
-        m->x = bf_mix(m->x, k[0], 2048);                                  /* folgt der Hand geglaettet (halber Abstand je Takt) */
-        m->y = bf_mix(m->y, k[1], 2048);
-        m->z = bf_mix(m->z, k[2], 2048);
+        {   /* folgt der Hand geglaettet (halber Abstand je Takt). Runde 41 SF N2: bis zum Wurf hoechstens BF_SM_SCHRITT je
+             * Takt - mit der geduckten Haltung wandert die Sichelhand beim Zugreifen (Clip 0x0B B3->B5) 860 statt 750 und der
+             * Griffknochen wechselt mit Clip 7 die Lage; ohne Grenze sprang der Spider-Man bei h13 803 Einheiten zurueck. */
+            int32_t d[3] = { (int32_t)(((int64_t)(k[0] - m->x) * 2048) >> 12), (int32_t)(((int64_t)(k[1] - m->y) * 2048) >> 12),
+                             (int32_t)(((int64_t)(k[2] - m->z) * 2048) >> 12) };
+            const int64_t q = (int64_t)d[0] * d[0] + (int64_t)d[1] * d[1] + (int64_t)d[2] * d[2];
+            if (h < k_birkin_bild[4][0] && q > (int64_t)BF_SM_SCHRITT * BF_SM_SCHRITT) {
+                const int32_t l = (int32_t)re15_squareroot0((uint32_t)(q > 0xFFFFFFFFll ? 0xFFFFFFFFll : q));
+                for (int i = 0; i < 3; i++) d[i] = (int32_t)((int64_t)d[i] * BF_SM_SCHRITT / (l > 0 ? l : 1));
+            }
+            m->x += d[0]; m->y += d[1]; m->z += d[2];
+        }
         if (m->y > 0) m->y = 0;                                           /* Hand tief im Wurf: nicht unter den Boden */
     } else if (h < BF_H_AUFSPRINGEN) {                                    /* Aufschlag + am Boden (Video h74..81) */
         if (h == BF_H_AUFSCHLAG - 2) { bf_clip(m, BF_SM_LIEGT); s_h.lx = m->x; s_h.lz = m->z; }
