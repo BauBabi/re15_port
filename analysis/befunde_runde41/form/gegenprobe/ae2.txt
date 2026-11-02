@@ -1,0 +1,106 @@
+--- Winkelgrenzen (Rand unter 0.5 Grad oder drueber)
+('bild1', 'unterarm_l', 'x', -12.4, -12, 12, -0.4)
+('bild1', 'unterarm_r', 'z', 2.1, -155, 2, -0.1)
+('bild1', 'kiefer', 'z', 0.0, 0, 50, 0.0)
+('bild1', 'unterschenkel_r', 'x', 12.1, -12, 12, -0.1)
+('bild1', 'klaue_l3', 'y', -30.1, -30, 30, -0.1)
+('bild2', 'oberschenkel_r', 'x', 30.1, -50, 30, -0.1)
+('bild2', 'klaue_l1', 'y', 32.0, -30, 30, -2.0)
+('bild2', 'klaue_r1', 'y', -31.1, -30, 30, -1.1)
+('bild2', 'hals', 'y', 59.9, -60, 60, 0.1)
+('bild2', 'unterschenkel_l', 'x', 12.0, -12, 12, -0.0)
+('bild2', 'fuss_l', 'y', -40.1, -40, 40, -0.1)
+('bild2', 'unterschenkel_r', 'x', -12.1, -12, 12, -0.1)
+('bild2', 'fuss_r', 'y', 40.2, -40, 40, -0.2)
+('bild2', 'klaue_r3', 'y', 30.8, -30, 30, -0.8)
+=== Pose 1
+--- Boden: tiefste Oberflaeche je Glied (Hoehe ueber Boden, positiv = schwebt)
+  hand_r           tief     95  hoch    655  Vol   0.2
+  klaue_r1         tief     55  hoch    375  Vol   0.0
+  klaue_r2         tief     15  hoch    375  Vol   0.0
+  klaue_r3         tief     15  hoch    375  Vol   0.0
+  hand_l           tief     15  hoch    575  Vol   0.2
+  klaue_l1         tief     55  hoch    375  Vol   0.0
+  klaue_l2         tief     55  hoch    415  Vol   0.0
+  klaue_l3         tief     55  hoch    495  Vol   0.0
+  fuss_r           tief     15  hoch    615  Vol   0.1
+  fuss_l           tief     15  hoch    615  Vol   0.1
+  schwanz6         tief    255  hoch    815  Vol   0.1
+  unterschenkel_r  tief    295  hoch   1015  Vol   0.1
+  unterschenkel_l  tief    175  hoch   1055  Vol   0.1
+  niedrigster Punkt Figur Hoehe 15, hoechster 2935
+--- Durchdringung: Anteil des Knochen-Volumens im Rumpf / Kopf (Voxel 40)
+  schwanz1         im Rumpf  14.6 %  im Kopf   0.0 %
+  oberarm_l        im Rumpf   8.2 %  im Kopf   0.0 %
+  unterarm_l       im Rumpf   4.8 %  im Kopf   0.0 %
+  hals             im Rumpf  46.9 %  im Kopf   0.0 %
+  kopf             im Rumpf   4.3 %  im Kopf   0.0 %
+  Bein l - Schwanz                0.0 Mio Einh3  (0.0 % von A)
+  Bein r - Schwanz                0.0 Mio Einh3  (0.0 % von A)
+  Bein l - Bein r                 0.0 Mio Einh3  (0.0 % von A)
+  Arm l - Arm r                   0.0 Mio Einh3  (0.0 % von A)
+  Arm l - Kopf                    0.0 Mio Einh3  (0.0 % von A)
+  Arm r - Kopf                    0.0 Mio Einh3  (0.0 % von A)
+  Arm l - Bein l                  0.0 Mio Einh3  (0.0 % von A)
+  Arm r - Bein r                  0.0 Mio Einh3  (0.0 % von A)
+  Kopf - Rumpf                  339.1 Mio Einh3  (19.3 % von A)
+--- Gelenke
+  Ellbogen l Beugung  12.5 Grad; Knie l Beugung  10.8 Grad
+    Hand zu Unterarm 119.4 Grad; Hand Nick  -3.2 Grad; Fuss Nick   1.3 Grad
+  Ellbogen r Beugung  10.6 Grad; Knie r Beugung  19.4 Grad
+    Hand zu Unterarm 110.5 Grad; Hand Nick -15.4 Grad; Fuss Nick  -4.2 Grad
+  oberarm_r Richtung im Brustraum (vorn -0.84, unten 0.53, links -0.14)
+  oberarm_l Richtung im Brustraum (vorn -0.80, unten 0.57, links -0.19)
+  oberschenkel_r Richtung im Hueftraum (vorn -0.64, unten 0.61, links -0.47)
+  oberschenkel_l Richtung im Hueftraum (vorn -0.62, unten 0.71, links -0.34)
+  huefte Achse Welt (0.99 0.03 -0.12) Nick -1.6 Grad
+  wirbel Achse Welt (0.99 0.13 -0.07) Nick -7.2 Grad
+  brust Achse Welt (0.91 -0.42 0.03) Nick 25.1 Grad
+  hals Achse Welt (0.99 0.16 0.02) Nick -9.0 Grad
+  kopf Achse Welt (0.84 0.55 0.02) Nick -33.3 Grad
+=== Pose 2
+--- Boden: tiefste Oberflaeche je Glied (Hoehe ueber Boden, positiv = schwebt)
+  hand_r           tief     63  hoch    663  Vol   0.2
+  klaue_r1         tief    143  hoch    743  Vol   0.0
+  klaue_r2         tief    143  hoch    743  Vol   0.0
+  klaue_r3         tief    143  hoch    703  Vol   0.0
+  hand_l           tief     63  hoch    583  Vol   0.2
+  klaue_l1         tief     23  hoch    383  Vol   0.0
+  klaue_l2         tief     23  hoch    343  Vol   0.0
+  klaue_l3         tief     23  hoch    383  Vol   0.0
+  fuss_r           tief     23  hoch    583  Vol   0.1
+  fuss_l           tief     23  hoch    583  Vol   0.1
+  schwanz6         tief     23  hoch    583  Vol   0.1
+  unterschenkel_r  tief    183  hoch   1023  Vol   0.1
+  unterschenkel_l  tief    223  hoch   1183  Vol   0.1
+  niedrigster Punkt Figur Hoehe 23, hoechster 3103
+--- Durchdringung: Anteil des Knochen-Volumens im Rumpf / Kopf (Voxel 40)
+  schwanz1         im Rumpf  11.0 %  im Kopf   0.0 %
+  oberschenkel_l   im Rumpf   3.5 %  im Kopf   0.0 %
+  oberschenkel_r   im Rumpf   5.2 %  im Kopf   0.0 %
+  oberarm_r        im Rumpf   3.0 %  im Kopf  11.0 %
+  hals             im Rumpf  69.1 %  im Kopf   0.0 %
+  kopf             im Rumpf  15.5 %  im Kopf   0.0 %
+  Bein l - Schwanz                0.0 Mio Einh3  (0.0 % von A)
+  Bein r - Schwanz                0.0 Mio Einh3  (0.0 % von A)
+  Bein l - Bein r                 0.0 Mio Einh3  (0.0 % von A)
+  Arm l - Arm r                   0.0 Mio Einh3  (0.0 % von A)
+  Arm l - Kopf                    0.0 Mio Einh3  (0.0 % von A)
+  Arm r - Kopf                   35.4 Mio Einh3  (4.6 % von A)
+  Arm l - Bein l                  0.0 Mio Einh3  (0.0 % von A)
+  Arm r - Bein r                  0.0 Mio Einh3  (0.0 % von A)
+  Kopf - Rumpf                  502.0 Mio Einh3  (28.1 % von A)
+--- Gelenke
+  Ellbogen l Beugung  36.9 Grad; Knie l Beugung  73.5 Grad
+    Hand zu Unterarm  71.3 Grad; Hand Nick -10.4 Grad; Fuss Nick   0.7 Grad
+  Ellbogen r Beugung  62.3 Grad; Knie r Beugung  74.0 Grad
+    Hand zu Unterarm  69.7 Grad; Hand Nick  20.4 Grad; Fuss Nick   1.0 Grad
+  oberarm_r Richtung im Brustraum (vorn -0.05, unten 0.98, links 0.20)
+  oberarm_l Richtung im Brustraum (vorn -0.38, unten 0.92, links -0.11)
+  oberschenkel_r Richtung im Hueftraum (vorn 0.83, unten 0.54, links -0.15)
+  oberschenkel_l Richtung im Hueftraum (vorn 0.75, unten 0.37, links 0.54)
+  huefte Achse Welt (0.86 -0.47 0.22) Nick 27.8 Grad
+  wirbel Achse Welt (0.83 -0.46 0.31) Nick 27.6 Grad
+  brust Achse Welt (0.95 -0.09 0.30) Nick 5.0 Grad
+  hals Achse Welt (0.65 -0.35 -0.67) Nick 20.2 Grad
+  kopf Achse Welt (0.77 -0.14 -0.63) Nick 8.0 Grad

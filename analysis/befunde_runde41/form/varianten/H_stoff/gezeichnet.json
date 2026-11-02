@@ -1,0 +1,104 @@
+{
+ "G": {
+  "gleich": 0.55,
+  "hart": 0.028,
+  "gerade": 8.1,
+  "toene8": 8.0,
+  "spektrum": 0.108,
+  "mittel_y": 53.3,
+  "spiel_fein": {
+   "bild1": {
+    "render": 0.0052,
+    "screenshot": 0.0091
+   },
+   "bild2": {
+    "render": 0.0046,
+    "screenshot": 0.0048
+   }
+  }
+ },
+ "H1": {
+  "gleich": 0.197,
+  "hart": 0.057,
+  "gerade": 38.7,
+  "toene8": 13.0,
+  "spektrum": 0.144,
+  "mittel_y": 53.6,
+  "spiel_fein": {
+   "bild1": {
+    "render": 0.0047,
+    "screenshot": 0.0091
+   },
+   "bild2": {
+    "render": 0.0038,
+    "screenshot": 0.0048
+   }
+  }
+ },
+ "H2": {
+  "gleich": 0.273,
+  "hart": 0.112,
+  "gerade": 39.7,
+  "toene8": 16.0,
+  "spektrum": 0.163,
+  "mittel_y": 53.5,
+  "spiel_fein": {
+   "bild1": {
+    "render": 0.0058,
+    "screenshot": 0.0091
+   },
+   "bild2": {
+    "render": 0.0046,
+    "screenshot": 0.0048
+   }
+  }
+ },
+ "RE2 G2 0x31": {
+  "gleich": 0.295,
+  "hart": 0.104,
+  "gerade": 50.0,
+  "toene8": 19.0,
+  "spektrum": 0.189,
+  "mittel_y": 72.1
+ },
+ "RE2 G3 0x33": {
+  "gleich": 0.329,
+  "hart": 0.091,
+  "gerade": 38.2,
+  "toene8": 18.0,
+  "spektrum": 0.146,
+  "mittel_y": 59.8
+ },
+ "RE2 G4 0x34": {
+  "gleich": 0.346,
+  "hart": 0.119,
+  "gerade": 34.3,
+  "toene8": 17.0,
+  "spektrum": 0.138,
+  "mittel_y": 51.3
+ },
+ "RE2 Zombie 0x10": {
+  "gleich": 0.353,
+  "hart": 0.093,
+  "gerade": 37.0,
+  "toene8": 17.0,
+  "spektrum": 0.149,
+  "mittel_y": 72.3
+ },
+ "RE2 Hund 0x20": {
+  "gleich": 0.418,
+  "hart": 0.145,
+  "gerade": 47.2,
+  "toene8": 13.0,
+  "spektrum": 0.173,
+  "mittel_y": 30.6
+ },
+ "RE1.5 Zombie 0x10": {
+  "gleich": 0.246,
+  "hart": 0.085,
+  "gerade": 44.8,
+  "toene8": 22.0,
+  "spektrum": 0.231,
+  "mittel_y": 79.8
+ }
+}

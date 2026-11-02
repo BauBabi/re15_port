@@ -1,0 +1,6 @@
+a [{'clip': 0, 'becken_kipp': 0.0, 'rumpf_kipp': 0.0, 'becken_gier': -0.0}, {'clip': 1, 'becken_kipp': 2.5, 'rumpf_kipp': 3.4, 'becken_gier': -16.8}, {'clip': 2, 'becken_kipp': 0.0, 'rumpf_kipp': 0.0, 'becken_gier': -0.0}]
+b [{'clip': 0, 'becken_kipp': 0.0, 'rumpf_kipp': 0.0, 'becken_gier': -0.0}, {'clip': 1, 'becken_kipp': 5.4, 'rumpf_kipp': 5.4, 'becken_gier': -0.7}, {'clip': 2, 'becken_kipp': 0.0, 'rumpf_kipp': 0.0, 'becken_gier': -0.0}]
+c [{'clip': 0, 'becken_kipp': 0.0, 'rumpf_kipp': 0.0, 'becken_gier': -0.0}, {'clip': 1, 'becken_kipp': 0.0, 'rumpf_kipp': 0.0, 'becken_gier': -0.0}, {'clip': 2, 'becken_kipp': 0.0, 'rumpf_kipp': 0.0, 'becken_gier': -0.0}]
+b 10 Grad: Lochpixel 545 je Richtung [362, 30, 15, 2, 24, 8, 29, 38, 4, 1, 3, 7, 3, 19] groesste Einzelsicht in Einheiten^2: 87164
+c 10 Grad: Lochpixel 521 je Richtung [10, 1, 5, 3, 1, 8, 7, 1, 1, 2, 84, 33, 332, 33] groesste Einzelsicht in Einheiten^2: 82636
+a 10 Grad: Lochpixel 213 je Richtung [1, 4, 3, 157, 5, 1, 26, 0, 3, 7, 1, 3, 1, 1] groesste Einzelsicht in Einheiten^2: 41102

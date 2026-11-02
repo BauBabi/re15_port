@@ -1,0 +1,1141 @@
+{
+ "meta": {
+  "linse": "Boden und Tiefe",
+  "quellen": [
+   "bild1.png",
+   "bild2.png"
+  ],
+  "einheit": "Spieleinheiten, 2750 = 1 Mensch",
+  "grundriss": "X rechts, Z vom Kamerafußpunkt weg, Kamera bei 0/0"
+ },
+ "kalibrierung": {
+  "bild1": {
+   "horizont_y": 243,
+   "horizont_sigma": 8,
+   "f": 440,
+   "f_sigma": 15,
+   "kamerahoehe": 1983,
+   "kamerahoehe_sigma": 139,
+   "leon": {
+    "kopf_y": 197,
+    "fuss_y": 362,
+    "px": 165
+   },
+   "fluchtpunkte": {
+    "zug": [
+     482,
+     243
+    ],
+    "rechts": [
+     104,
+     250
+    ],
+    "rueckwand": [
+     -812,
+     230
+    ],
+    "senkrechte": [
+     317,
+     4261
+    ]
+   },
+   "gegenprobe_methode": "ROOM5080 Cut 3: gemessen (530,171), wahr (534,173)",
+   "raum": "Zugbahnsteig, ähnelt ROOM5080 (Zug, Gitterturm, gestreiftes Dach), kein Cut passt; Kamera nur aus dem Bild",
+   "projektion": "x=320+440*X/Z, y=243+440*(1983-h)/Z"
+  },
+  "bild2": {
+   "raum": "ROOM5090 Cut 11",
+   "P": [
+    7626,
+    -3256,
+    -25360
+   ],
+   "T": [
+    -1504,
+    -986,
+    -21970
+   ],
+   "H": 208,
+   "horizont_y": 142,
+   "vp_gang_gemessen": [
+    162,
+    142
+   ],
+   "vp_gang_cut11": [
+    161,
+    143
+   ],
+   "bildmassstab": "1,00 bis 1,06",
+   "bodenkante": "helle Leiste liegt auf z=-21954 bis -21991, Kollisionszelle z=-21990",
+   "projektion": "x=(2*sx-320)*1.03+320, y=(2*sy-240)*1.03+240, sx/sy nach geom.py (H=208)"
+  }
+ },
+ "verdeckungen": {
+  "bild1": [
+   {
+    "id": "V1",
+    "px": [
+     [
+      285,
+      368
+     ],
+     [
+      325,
+      345
+     ]
+    ],
+    "aussage": "Untere Kante von L2: Figurteil liegt vor dem Boden",
+    "sicherheit": "sicher"
+   },
+   {
+    "id": "V2",
+    "px": [
+     [
+      225,
+      345
+     ],
+     [
+      240,
+      341
+     ],
+     [
+      250,
+      350
+     ],
+     [
+      252,
+      365
+     ]
+    ],
+    "aussage": "Heller Rand des Klumpens läuft ungebrochen vor Glied A",
+    "sicherheit": "wahrscheinlich"
+   },
+   {
+    "id": "V3",
+    "px": [
+     [
+      300,
+      312
+     ],
+     [
+      325,
+      345
+     ]
+    ],
+    "aussage": "Glied B liegt vor dem Boden, rechte Kante von L2",
+    "sicherheit": "sicher"
+   },
+   {
+    "id": "V4",
+    "px": [
+     [
+      380,
+      297
+     ],
+     [
+      416,
+      297
+     ]
+    ],
+    "aussage": "Kegel endet mit harter Unterkante über der Stütze",
+    "sicherheit": "wahrscheinlich"
+   },
+   {
+    "id": "V5",
+    "px": [
+     [
+      318,
+      348
+     ],
+     [
+      340,
+      358
+     ]
+    ],
+    "aussage": "Heller Querbalken zwischen Glied B und Masse, Reihenfolge nicht erkennbar",
+    "sicherheit": "offen"
+   },
+   {
+    "id": "V6",
+    "px": [
+     [
+      287,
+      415
+     ],
+     [
+      278,
+      465
+     ]
+    ],
+    "aussage": "Dunkler Strich trennt Block und Rotfeld, Reihenfolge nicht erkennbar",
+    "sicherheit": "offen"
+   }
+  ],
+  "bild2": [
+   {
+    "id": "W1",
+    "px": [
+     [
+      335,
+      322
+     ],
+     [
+      262,
+      385
+     ]
+    ],
+    "aussage": "Gliederband liegt auf der Unterkante der Masse, darunter folgt Boden",
+    "sicherheit": "wahrscheinlich"
+   },
+   {
+    "id": "W2",
+    "px": [
+     [
+      207,
+      228
+     ]
+    ],
+    "aussage": "Bogen links endet an der Schulter der Frau; davor oder dahinter nicht erkennbar",
+    "sicherheit": "offen"
+   },
+   {
+    "id": "W4",
+    "px": [
+     [
+      361,
+      302
+     ]
+    ],
+    "aussage": "Heller Fleck (354-368,295-310) liegt auf dunklem Grund",
+    "sicherheit": "wahrscheinlich"
+   },
+   {
+    "id": "W5",
+    "px": [
+     [
+      212,
+      400
+     ],
+     [
+      279,
+      430
+     ]
+    ],
+    "aussage": "Dunkle Fläche liegt dort, wo die Füße der Frau sein müssten; Kuppel oder Hintergrund",
+    "sicherheit": "offen"
+   }
+  ]
+ },
+ "tiefenfolge_bild1": [
+  "Masse, Block, Klumpen (Z 4175-4615)",
+  "Glied A und B",
+  "Rumpf",
+  "Stütze rechts und Kegel (Z 6658)",
+  "Leon (Z 7335)"
+ ],
+ "masse": {
+  "bild1": {
+   "seitlich": 3219,
+   "tiefe": 2481,
+   "hoehe": [
+    2590,
+    2791
+   ],
+   "in_leonhoehen": {
+    "seitlich": 1.17,
+    "tiefe": 0.9,
+    "hoehe": [
+     0.94,
+     1.01
+    ]
+   },
+   "stuetze": {
+    "hoehe_kegelspitze": 1468,
+    "dicke_px": 33,
+    "dicke": 500,
+    "fuss_px": [
+     380,
+     424
+    ],
+    "fuss": 670
+   },
+   "bauchkante": [
+    787,
+    1077
+   ]
+  },
+  "bild2": {
+   "seitlich_mit_bogen": 2950,
+   "seitlich_ohne_bogen": 2200,
+   "hoehe": [
+    2963,
+    3052
+   ],
+   "in_menschhoehen": {
+    "hoehe": [
+     1.08,
+     1.11
+    ],
+    "seitlich": 1.07
+   }
+  }
+ },
+ "kantenbreiten_bild1": {
+  "modellkanten_px": {
+   "stuetze_rechts": 4.7,
+   "leon_bein": 3.7,
+   "klumpen_links": 4.3,
+   "klumpen_oben": 6.6
+  },
+  "schattenkanten_px": {
+   "rechts_y405": 20.2,
+   "rechts_y390": 19.6,
+   "unten_x320": 16.8,
+   "unten_x335": 19.8,
+   "links_y412": 25.8
+  },
+  "masse_diagonal_px": 6.5
+ },
+ "nicht_erkennbar": [
+  "Vierter Bodenkontakt in Bild 1",
+  "Sicherer Bodenkontakt in Bild 2",
+  "Füße der Frau",
+  "Natur der weißen Lappen (160-228,330-388) in Bild 2",
+  "Natur des Rotfelds (252-283,425-478) in Bild 1",
+  "Blickrichtung der Figur",
+  "Obere Kante zwischen x=250 und x=320 in Bild 1 (dunkler Pfeiler dahinter)"
+ ],
+ "bild1": {
+  "kontakte": [
+   {
+    "id": "K1",
+    "name": "Stütze rechts, Fuß",
+    "px": [
+     398,
+     374
+    ],
+    "spx": [
+     3,
+     2
+    ],
+    "sicherheit": "sicher",
+    "beleg": "Dunkle Säule endet mit Fußverbreiterung x=380-424 auf hellem Boden, Unterkante y=375 bei x=394-402 (G<120)",
+    "plan": {
+     "X": 1181,
+     "Z": 6656,
+     "sX": 161,
+     "sZ": 286,
+     "cov": [
+      [
+       25845.76098671796,
+       5500.503861848005
+      ],
+      [
+       5500.503861848005,
+       81668.73461311361
+      ]
+     ]
+    }
+   },
+   {
+    "id": "K2",
+    "name": "Klumpen links, Unterkante",
+    "px": [
+     232,
+     433
+    ],
+    "spx": [
+     10,
+     7
+    ],
+    "sicherheit": "wahrscheinlich",
+    "beleg": "Unterkante nur bis y=437 lesbar, dort beginnt das Wasserzeichen; links davon weiche Schattenzone",
+    "plan": {
+     "X": -915,
+     "Z": 4589,
+     "sX": 154,
+     "sZ": 274,
+     "cov": [
+      [
+       23775.598636925264,
+       -9588.135579383574
+      ],
+      [
+       -9588.135579383574,
+       74892.15749733528
+      ]
+     ]
+    }
+   },
+   {
+    "id": "K3",
+    "name": "Heller Block, Unterkante",
+    "px": [
+     312,
+     452
+    ],
+    "spx": [
+     10,
+     6
+    ],
+    "sicherheit": "wahrscheinlich",
+    "beleg": "Hellere Fläche (288-330,405-452) mit Querstreifen, darunter weicher Übergang zum Boden",
+    "plan": {
+     "X": -75,
+     "Z": 4175,
+     "sX": 134,
+     "sZ": 236,
+     "cov": [
+      [
+       18012.081967333637,
+       -423.25714871529055
+      ],
+      [
+       -423.25714871529055,
+       55766.535365665295
+      ]
+     ]
+    }
+   },
+   {
+    "id": "K4",
+    "name": "Masse vorn, Außenkante",
+    "px": [
+     352,
+     432
+    ],
+    "spx": [
+     8,
+     6
+    ],
+    "sicherheit": "wahrscheinlich",
+    "beleg": "Harte Kante (372,412)-(335,448), Übergang 6,5 px; liegt auf oder knapp über dem Boden",
+    "plan": {
+     "X": 336,
+     "Z": 4613,
+     "sX": 135,
+     "sZ": 260,
+     "cov": [
+      [
+       18340.33735154743,
+       3493.092942750822
+      ],
+      [
+       3493.092942750822,
+       67646.83105688612
+      ]
+     ]
+    }
+   },
+   {
+    "id": "K5",
+    "name": "Glied A, Fuß verdeckt",
+    "px": [
+     258,
+     395
+    ],
+    "spx": [
+     15,
+     20
+    ],
+    "sicherheit": "offen",
+    "beleg": "Rechte Kante von Glied A reicht bis mindestens y=368; Fuß selbst hinter Klumpen und Masse nicht erkennbar",
+    "plan": {
+     "X": -804,
+     "Z": 5733,
+     "sX": 268,
+     "sZ": 858,
+     "cov": [
+      [
+       71834.01185214499,
+       -97692.48128572221
+      ],
+      [
+       -97692.48128572221,
+       735516.9371421817
+      ]
+     ]
+    }
+   }
+  ],
+  "leon": {
+   "px_fuss": [
+    127,
+    362
+   ],
+   "px_kopf": [
+    125,
+    197
+   ],
+   "plan": {
+    "X": -3216,
+    "Z": 7334,
+    "sX": 202,
+    "sZ": 346,
+    "cov": [
+     [
+      40793.69354805495,
+      -24124.084163766565
+     ],
+     [
+      -24124.084163766565,
+      119781.45069095069
+     ]
+    ]
+   }
+  },
+  "schatten": {
+   "mitte_plan": [
+    -457,
+    5043
+   ],
+   "radius": 1112,
+   "mitte_px": [
+    280,
+    416
+   ],
+   "sicherheit": "wahrscheinlich",
+   "rand_px": [
+    [
+     370,
+     380,
+     "rechts"
+    ],
+    [
+     368,
+     385,
+     "rechts"
+    ],
+    [
+     374,
+     390,
+     "rechts"
+    ],
+    [
+     376,
+     395,
+     "rechts"
+    ],
+    [
+     374,
+     400,
+     "rechts"
+    ],
+    [
+     371,
+     405,
+     "rechts"
+    ],
+    [
+     367,
+     410,
+     "rechts"
+    ],
+    [
+     371,
+     415,
+     "rechts"
+    ],
+    [
+     368,
+     420,
+     "rechts"
+    ],
+    [
+     295,
+     467,
+     "unten"
+    ],
+    [
+     300,
+     469,
+     "unten"
+    ],
+    [
+     305,
+     462,
+     "unten"
+    ],
+    [
+     310,
+     462,
+     "unten"
+    ],
+    [
+     315,
+     464,
+     "unten"
+    ],
+    [
+     320,
+     467,
+     "unten"
+    ],
+    [
+     325,
+     468,
+     "unten"
+    ],
+    [
+     330,
+     467,
+     "unten"
+    ],
+    [
+     335,
+     462,
+     "unten"
+    ],
+    [
+     340,
+     443,
+     "unten"
+    ],
+    [
+     345,
+     438,
+     "unten"
+    ],
+    [
+     350,
+     434,
+     "unten"
+    ],
+    [
+     355,
+     432,
+     "unten"
+    ],
+    [
+     360,
+     432,
+     "unten"
+    ],
+    [
+     365,
+     432,
+     "unten"
+    ],
+    [
+     195,
+     400,
+     "links"
+    ],
+    [
+     192,
+     405,
+     "links"
+    ],
+    [
+     193,
+     410,
+     "links"
+    ],
+    [
+     195,
+     415,
+     "links"
+    ],
+    [
+     214,
+     420,
+     "links"
+    ],
+    [
+     215,
+     425,
+     "links"
+    ],
+    [
+     190,
+     430,
+     "links"
+    ]
+   ]
+  },
+  "freier_boden": {
+   "L1": {
+    "px": [
+     [
+      345,
+      345
+     ],
+     [
+      352,
+      330
+     ],
+     [
+      375,
+      329
+     ],
+     [
+      378,
+      345
+     ],
+     [
+      378,
+      368
+     ],
+     [
+      345,
+      358
+     ]
+    ],
+    "plan": [
+     [
+      486,
+      8556
+     ],
+     [
+      730,
+      10031
+     ],
+     [
+      1268,
+      10147
+     ],
+     [
+      1128,
+      8556
+     ],
+     [
+      920,
+      6981
+     ],
+     [
+      431,
+      7588
+     ]
+    ]
+   },
+   "L2": {
+    "px": [
+     [
+      295,
+      327
+     ],
+     [
+      300,
+      327
+     ],
+     [
+      325,
+      345
+     ],
+     [
+      283,
+      368
+     ],
+     [
+      288,
+      345
+     ],
+     [
+      290,
+      330
+     ]
+    ],
+    "plan": [
+     [
+      -590,
+      10389
+     ],
+     [
+      -472,
+      10389
+     ],
+     [
+      97,
+      8556
+     ],
+     [
+      -587,
+      6981
+     ],
+     [
+      -622,
+      8556
+     ],
+     [
+      -684,
+      10031
+     ]
+    ]
+   }
+  },
+  "hoehen": {
+   "buckel_oben": {
+    "px_y": 190,
+    "annahme_bodenzeile": [
+     373,
+     416
+    ],
+    "hoehe": [
+     2590,
+     2791
+    ],
+    "sicherheit": "wahrscheinlich"
+   },
+   "kegelspitze": {
+    "px_y": 277,
+    "annahme_bodenzeile": [
+     374,
+     374
+    ],
+    "hoehe": [
+     1468,
+     1468
+    ],
+    "sicherheit": "sicher"
+   },
+   "bauchkante_luecke1": {
+    "px_y": 322,
+    "annahme_bodenzeile": [
+     374,
+     416
+    ],
+    "hoehe": [
+     787,
+     1077
+    ],
+    "sicherheit": "wahrscheinlich"
+   }
+  },
+  "abstaende": {
+   "K1-K2": 2944,
+   "K1-K3": 2781,
+   "K1-K4": 2211,
+   "K2-K3": 936,
+   "K2-K4": 1251,
+   "K3-K4": 601
+  },
+  "ausdehnung": {
+   "links_px": [
+    197,
+    400
+   ],
+   "links_plan": [
+    -1554,
+    5558
+   ],
+   "rechts_px": [
+    430,
+    374
+   ],
+   "rechts_plan": [
+    1665,
+    6662
+   ],
+   "breite_seitlich": 3219,
+   "tiefe": 2481
+  },
+  "kamera": {
+   "horizont_y": 243.0,
+   "f": 440.0,
+   "hoehe": 1983,
+   "hoehe_s": 139,
+   "leon_px": 165
+  }
+ },
+ "bild2": {
+  "kontakte": [
+   {
+    "id": "F1",
+    "name": "Unterkante dunkle Masse rechts",
+    "px": [
+     370,
+     368
+    ],
+    "spx": [
+     20,
+     8
+    ],
+    "sicherheit": "wahrscheinlich",
+    "beleg": "Rotkanal springt zwischen y=355 und y=380 von rund 95 auf 195 (x=340-400); Grenze Körper oder Schatten gegen Boden, kein Kontaktpunkt",
+    "plan": {
+     "X": 728,
+     "Z": 5692,
+     "sX": 303,
+     "sZ": 261,
+     "welt_x": 2534,
+     "welt_z": -22679,
+     "cov": [
+      [
+       91673.37618593147,
+       7222.043116092252
+      ],
+      [
+       7222.043116092252,
+       68380.52038984856
+      ]
+     ]
+    }
+   },
+   {
+    "id": "F2",
+    "name": "Dunkelband rechts, Unterende",
+    "px": [
+     398,
+     378
+    ],
+    "spx": [
+     8,
+     8
+    ],
+    "sicherheit": "offen",
+    "beleg": "Dunkle Spalte x=385-405 (R 68-111) von y=290 bis y=375, geht unten in den Bodenstreifen über; Bein oder Schatten nicht unterscheidbar",
+    "plan": {
+     "X": 1092,
+     "Z": 5414,
+     "sX": 133,
+     "sZ": 244,
+     "welt_x": 2923,
+     "welt_z": -22430,
+     "cov": [
+      [
+       17577.826577776443,
+       8883.5779261298
+      ],
+      [
+       8883.5779261298,
+       59696.358827524055
+      ]
+     ]
+    }
+   },
+   {
+    "id": "F3",
+    "name": "Feinstab, Spitze",
+    "px": [
+     275,
+     398
+    ],
+    "spx": [
+     5,
+     5
+    ],
+    "sicherheit": "offen",
+    "beleg": "Dünner heller Strich (292,362)-(275,398) endet über dem hellen Balken; ob er den Boden berührt, ist nicht erkennbar",
+    "plan": {
+     "X": -584,
+     "Z": 4941,
+     "sX": 84,
+     "sZ": 154,
+     "welt_x": 2781,
+     "welt_z": -24169,
+     "cov": [
+      [
+       7040.003703311856,
+       -1388.87287053489
+      ],
+      [
+       -1388.87287053489,
+       23613.710733416632
+      ]
+     ]
+    }
+   },
+   {
+    "id": "F4",
+    "name": "Kuppel unten, Unterkante",
+    "px": [
+     245,
+     450
+    ],
+    "spx": [
+     18,
+     12
+    ],
+    "sicherheit": "offen",
+    "beleg": "Dunkle Rundform (212-280,385-445+), nicht in Cut 11; Unterkante vom Wasserzeichen verdeckt; Zugehörigkeit zur Figur nicht belegt",
+    "plan": {
+     "X": -807,
+     "Z": 3986,
+     "sX": 202,
+     "sZ": 204,
+     "welt_x": 3599,
+     "welt_z": -24710,
+     "cov": [
+      [
+       40884.77144472533,
+       -6266.3091627134945
+      ],
+      [
+       -6266.3091627134945,
+       41581.433993771294
+      ]
+     ]
+    }
+   }
+  ],
+  "frau": {
+   "kopf_px": [
+    170,
+    187
+   ],
+   "varianten": [
+    {
+     "hoehe": 2600,
+     "fuss_px": [
+      184.3,
+      353.4
+     ],
+     "welt": [
+      1125,
+      -25217
+     ],
+     "vz": 6721
+    },
+    {
+     "hoehe": 2680,
+     "fuss_px": [
+      186.5,
+      379.5
+     ],
+     "welt": [
+      1923,
+      -25232
+     ],
+     "vz": 5987
+    },
+    {
+     "hoehe": 2750,
+     "fuss_px": [
+      189.0,
+      408.2
+     ],
+     "welt": [
+      2621,
+      -25246
+     ],
+     "vz": 5345
+    }
+   ],
+   "schulterbreite_px": 62,
+   "plan": {
+    "X": -1682,
+    "Z": 4883,
+    "sX": 151,
+    "sZ": 409,
+    "welt_x": 2457,
+    "welt_z": -25222,
+    "cov": [
+     [
+      22795.555668252564,
+      -48048.94056804676
+     ],
+     [
+      -48048.94056804676,
+      167127.27146180667
+     ]
+    ]
+   },
+   "sicherheit": "offen",
+   "beleg": "Füße nicht lesbar; y=385-440 aus Kopfpunkt und angenommener Hoehe"
+  },
+  "bogen_oben": {
+   "px": [
+    320,
+    160
+   ],
+   "hoehe_bei_abstand": {
+    "4500": 3052,
+    "5500": 3007,
+    "6500": 2963
+   },
+   "sicherheit": "wahrscheinlich"
+  },
+  "unterkante_345_350_hoehe": {
+   "abstaende": [
+    4500,
+    5000,
+    5500,
+    6000
+   ],
+   "hoehe": [
+    912,
+    652,
+    392,
+    132
+   ],
+   "sicherheit": "offen"
+  },
+  "ausdehnung": {
+   "px": [
+    225,
+    425
+   ],
+   "seitlich_bei_kameraz": {
+    "6000": 2801,
+    "6800": 3174,
+    "7500": 3501
+   }
+  },
+  "kamera": {
+   "raum": "ROOM5090",
+   "cut": 11,
+   "P": [
+    7626,
+    -3256,
+    -25360
+   ],
+   "T": [
+    -1504,
+    -986,
+    -21970
+   ],
+   "H": 208,
+   "horizont_y": 142,
+   "vp_gang": [
+    162,
+    142
+   ],
+   "bildmassstab": [
+    1.0,
+    1.06
+   ]
+  },
+  "sichtbarer_boden_grenze": [
+   {
+    "px": [
+     340,
+     372
+    ],
+    "plan": [
+     286,
+     5585
+    ]
+   },
+   {
+    "px": [
+     360,
+     373
+    ],
+    "plan": [
+     574,
+     5559
+    ]
+   },
+   {
+    "px": [
+     380,
+     366
+    ],
+    "plan": [
+     877,
+     5761
+    ]
+   },
+   {
+    "px": [
+     400,
+     384
+    ],
+    "plan": [
+     1095,
+     5278
+    ]
+   }
+  ]
+ }
+}

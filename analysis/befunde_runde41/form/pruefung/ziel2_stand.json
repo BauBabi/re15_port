@@ -1,0 +1,132 @@
+{
+ "bild1": {
+  "weiss": 33511,
+  "grau": 25452,
+  "schwarz": 248237,
+  "teile": {
+   "left_leg": {
+    "flaeche": 4345,
+    "logo": 92,
+    "auf_altem_schwarz": 86
+   },
+   "part_of_Body": {
+    "flaeche": 7293,
+    "logo": 0,
+    "auf_altem_schwarz": 4
+   },
+   "right_arm": {
+    "flaeche": 4299,
+    "logo": 0,
+    "auf_altem_schwarz": 0
+   },
+   "right_leg": {
+    "flaeche": 6896,
+    "logo": 0,
+    "auf_altem_schwarz": 73
+   },
+   "tail": {
+    "flaeche": 13644,
+    "logo": 1278,
+    "auf_altem_schwarz": 10
+   }
+  },
+  "zonen": {
+   "L1": {
+    "flaeche": 1586,
+    "weiss": 85,
+    "grau": 532,
+    "schwarz": 969
+   },
+   "L2": {
+    "flaeche": 1204,
+    "weiss": 136,
+    "grau": 439,
+    "schwarz": 629
+   },
+   "SCH": {
+    "flaeche": 1120,
+    "weiss": 0,
+    "grau": 441,
+    "schwarz": 679
+   },
+   "SOCKEL": {
+    "flaeche": 589,
+    "weiss": 0,
+    "grau": 0,
+    "schwarz": 589
+   }
+  }
+ },
+ "bild2": {
+  "weiss": 45465,
+  "grau": 47706,
+  "schwarz": 214029,
+  "teile": {
+   "face_and_upper_body": {
+    "flaeche": 29990,
+    "logo": 0,
+    "auf_altem_schwarz": 6
+   },
+   "left_arm_front": {
+    "flaeche": 5607,
+    "logo": 0,
+    "auf_altem_schwarz": 679
+   },
+   "right_arm_front": {
+    "flaeche": 12314,
+    "logo": 2371,
+    "auf_altem_schwarz": 2069
+   }
+  },
+  "zonen": {
+   "BO": {
+    "flaeche": 915,
+    "weiss": 74,
+    "grau": 0,
+    "schwarz": 841
+   },
+   "FUGE": {
+    "flaeche": 885,
+    "weiss": 2,
+    "grau": 0,
+    "schwarz": 883
+   },
+   "A13 Boden": {
+    "flaeche": 14013,
+    "weiss": 403,
+    "grau": 0,
+    "schwarz": 13610
+   },
+   "Tuerplatte": {
+    "flaeche": 2806,
+    "weiss": 145,
+    "grau": 372,
+    "schwarz": 2289
+   },
+   "Kisten": {
+    "flaeche": 18600,
+    "weiss": 0,
+    "grau": 0,
+    "schwarz": 18600
+   },
+   "Feuer 1": {
+    "flaeche": 4416,
+    "weiss": 1023,
+    "grau": 3393,
+    "schwarz": 0
+   },
+   "Feuer 2": {
+    "flaeche": 3648,
+    "weiss": 273,
+    "grau": 3375,
+    "schwarz": 0
+   },
+   "Feuer 3": {
+    "flaeche": 8281,
+    "weiss": 1572,
+    "grau": 6692,
+    "schwarz": 17
+   }
+  }
+ }
+}

@@ -1,0 +1,78 @@
+
+=========== Rohbau A
+Querschnitt je Glied in Knochenraum: Mitte (s=.5). Tiefe = Achse X oder Y quer, Breite = Z. Gerippe 2a/2b in Klammern. L und R, Verhaeltnis L/R. Volumen.
+  unterarm       L  602 x  545  R  654 x  503  (Gerippe  530 x  530)  Verhaeltnis quer 1.11/1.30  L/R Tiefe 0.92 Breite 1.08 Volumen 0.93  Laenge L/R 1200/1200
+  oberarm        L  993 x  919  R  920 x  845  (Gerippe  600 x  600)  Verhaeltnis quer 1.08/1.09  L/R Tiefe 1.08 Breite 1.09 Volumen 1.16  Laenge L/R  890/ 890
+  oberschenkel   L  533 x  338  R  542 x  361  (Gerippe  416 x  416)  Verhaeltnis quer 1.58/1.50  L/R Tiefe 0.98 Breite 0.93 Volumen 0.93  Laenge L/R 1050/1050
+  unterschenkel  L  480 x  374  R  380 x  300  (Gerippe  330 x  330)  Verhaeltnis quer 1.28/1.27  L/R Tiefe 1.27 Breite 1.25 Volumen 1.52  Laenge L/R  930/ 930
+  fuss           L  461 x  474  R  377 x  394  (Gerippe  426 x  384)  Verhaeltnis quer 0.97/0.96  L/R Tiefe 1.22 Breite 1.20 Volumen 1.45  Laenge L/R 1345/1345
+  hand           L  343 x  772  R  476 x 1000  (Gerippe  366 x  758)  Verhaeltnis quer 0.44/0.48  L/R Tiefe 0.72 Breite 0.77 Volumen 0.65  Laenge L/R  760/ 760
+Fingerlaengen (groesster Abstand Ecke zum Gelenk): l1 740 l2 775 l3 916 l4 642 r1 740 r2 775 r3 916 r4 642
+Sichtbreite gegen Tiefe je Glied im Blick (Einheiten, quer zur Gliedachse, in Bildmitte Glied). Hoher Unterschied = Scheibe zur Kamera:
+  Bild 1: oberarm_r  719/ 825=0.87  oberschenkel_l  332/ 446=0.74  oberschenkel_r  322/ 433=0.74  unterschenkel_l  362/ 452=0.80  unterschenkel_r  312/ 319=0.98
+  Bild 2: oberarm_r  744/ 693=1.07  oberschenkel_l  454/ 325=1.40  oberschenkel_r  354/ 429=0.82  unterschenkel_l  450/ 361=1.25  unterschenkel_r  289/ 362=0.80
+Gesamtdrehung lokal in Grad (Achsenwinkel, nimmt die Euler-Doppeldeutigkeit weg):
+  Pose 1: OS_l 49, OS_r 53, US_l 10, US_r 21, fuss_l 51, fuss_r 73, OA_l 61, OA_r 64, UA_l 19, UA_r 10, hand_l 35, hand_r 29, hals 18, kopf 13
+  Pose 2: OS_l 79, OS_r 71, US_l 74, US_r 95, fuss_l 41, fuss_r 51, OA_l 21, OA_r 96, UA_l 39, UA_r 72, hand_l 43, hand_r 65, hals 63, kopf 22
+  Ruhe: OS_l 32, OS_r 32, US_l 64, US_r 64, fuss_l 34, fuss_r 34, OA_l 30, OA_r 30, UA_l 15, UA_r 15, hand_l 0, hand_r 0, hals 18, kopf 3
+Handgelenk/Knoechel: Drehung um Gliedachse (Unterarm/Unterschenkel +Y):
+  Pose 1: hand_l Schwenk 34 Dreh -10; hand_r Schwenk 28 Dreh +7; fuss_l Schwenk 48 Dreh -18; fuss_r Schwenk 56 Dreh -49
+  Pose 2: hand_l Schwenk 30 Dreh +32; hand_r Schwenk 28 Dreh -59; fuss_l Schwenk 10 Dreh -39; fuss_r Schwenk 37 Dreh +36
+Durchdringung: Anteil Oberflaeche der Zeilengruppe in Spaltengruppe (nur >= 0.03)
+  Pose 1: rumpf in arm_l 0.03; arm_l in rumpf 0.09; bein_r in rumpf 0.04
+  Pose 2: kopf in arm_r 0.04; arm_l in rumpf 0.06
+  Ruhe: arm_l in rumpf 0.05
+Linker Arm Pose 1 im Bild: Schulter (302,275) Ellbogen (315,310) Handgelenk (320,378); Hoehen 1580 1058 157
+Kopf Pose 1 im Bild: Hals (350,266) Kopf (352,263) Kiefer (353,286)
+
+=========== Rohbau B
+Querschnitt je Glied in Knochenraum: Mitte (s=.5). Tiefe = Achse X oder Y quer, Breite = Z. Gerippe 2a/2b in Klammern. L und R, Verhaeltnis L/R. Volumen.
+  unterarm       L  528 x  657  R  528 x  657  (Gerippe  530 x  530)  Verhaeltnis quer 0.80/0.80  L/R Tiefe 1.00 Breite 1.00 Volumen 1.00  Laenge L/R 1186/1186
+  oberarm        L  741 x  699  R  741 x  699  (Gerippe  600 x  600)  Verhaeltnis quer 1.06/1.06  L/R Tiefe 1.00 Breite 1.00 Volumen 1.00  Laenge L/R  948/ 948
+  oberschenkel   L  665 x  471  R  665 x  471  (Gerippe  416 x  416)  Verhaeltnis quer 1.41/1.41  L/R Tiefe 1.00 Breite 1.00 Volumen 1.00  Laenge L/R 1068/1068
+  unterschenkel  L  476 x  338  R  476 x  338  (Gerippe  330 x  330)  Verhaeltnis quer 1.41/1.41  L/R Tiefe 1.00 Breite 1.00 Volumen 1.00  Laenge L/R  890/ 890
+  fuss           L  319 x  496  R  319 x  496  (Gerippe  426 x  384)  Verhaeltnis quer 0.64/0.64  L/R Tiefe 1.00 Breite 1.00 Volumen 1.00  Laenge L/R 1220/1220
+  hand           L  421 x  861  R  421 x  861  (Gerippe  366 x  758)  Verhaeltnis quer 0.49/0.49  L/R Tiefe 1.00 Breite 1.00 Volumen 1.00  Laenge L/R  720/ 720
+Fingerlaengen (groesster Abstand Ecke zum Gelenk): l1 573 l2 573 l3 446 l4 968 r1 446 r2 573 r3 573 r4 968
+Sichtbreite gegen Tiefe je Glied im Blick (Einheiten, quer zur Gliedachse, in Bildmitte Glied). Hoher Unterschied = Scheibe zur Kamera:
+  Bild 1: oberarm_r  594/ 721=0.82  unterarm_r  611/ 489=1.25  unterarm_l  616/ 493=1.25  oberschenkel_l  444/ 625=0.71  oberschenkel_r  449/ 620=0.73  unterschenkel_l  332/ 467=0.71  unterschenkel_r  376/ 386=0.98
+  Bild 2: oberarm_r  679/ 610=1.11  unterarm_r  514/ 552=0.93  unterarm_l  491/ 614=0.80  oberschenkel_l  450/ 633=0.71  oberschenkel_r  487/ 583=0.83  unterschenkel_l  331/ 466=0.71  unterschenkel_r  332/ 467=0.71
+Gesamtdrehung lokal in Grad (Achsenwinkel, nimmt die Euler-Doppeldeutigkeit weg):
+  Pose 1: OS_l 49, OS_r 53, US_l 12, US_r 22, fuss_l 42, fuss_r 59, OA_l 95, OA_r 57, UA_l 24, UA_r 14, hand_l 81, hand_r 28, hals 34, kopf 24
+  Pose 2: OS_l 68, OS_r 91, US_l 105, US_r 138, fuss_l 95, fuss_r 123, OA_l 22, OA_r 96, UA_l 60, UA_r 65, hand_l 77, hand_r 69, hals 69, kopf 29
+  Ruhe: OS_l 65, OS_r 62, US_l 108, US_r 105, fuss_l 75, fuss_r 51, OA_l 85, OA_r 83, UA_l 126, UA_r 105, hand_l 67, hand_r 40, hals 14, kopf 8
+Handgelenk/Knoechel: Drehung um Gliedachse (Unterarm/Unterschenkel +Y):
+  Pose 1: hand_l Schwenk 80 Dreh -15; hand_r Schwenk 27 Dreh +5; fuss_l Schwenk 31 Dreh -29; fuss_r Schwenk 45 Dreh -39
+  Pose 2: hand_l Schwenk 29 Dreh +72; hand_r Schwenk 62 Dreh -31; fuss_l Schwenk 62 Dreh +76; fuss_r Schwenk 38 Dreh -120
+Durchdringung: Anteil Oberflaeche der Zeilengruppe in Spaltengruppe (nur >= 0.03)
+  Pose 1: rumpf in arm_l 0.08; arm_l in rumpf 0.77; arm_r in rumpf 0.07; bein_l in rumpf 0.07; bein_r in rumpf 0.07
+  Pose 2: kopf in arm_r 0.10; arm_l in rumpf 0.07; arm_r in rumpf 0.05; arm_r in kopf 0.07; bein_l in rumpf 0.12; bein_r in rumpf 0.11
+  Ruhe: arm_l in rumpf 0.07; arm_r in rumpf 0.06; bein_l in rumpf 0.11; bein_r in rumpf 0.09
+Linker Arm Pose 1 im Bild: Schulter (297,260) Ellbogen (307,280) Handgelenk (326,300); Hoehen 1826 1505 1295
+Kopf Pose 1 im Bild: Hals (342,256) Kopf (347,259) Kiefer (350,289)
+
+=========== Rohbau C
+Querschnitt je Glied in Knochenraum: Mitte (s=.5). Tiefe = Achse X oder Y quer, Breite = Z. Gerippe 2a/2b in Klammern. L und R, Verhaeltnis L/R. Volumen.
+  unterarm       L  510 x  527  R  387 x  495  (Gerippe  530 x  530)  Verhaeltnis quer 0.97/0.78  L/R Tiefe 1.32 Breite 1.06 Volumen 1.47  Laenge L/R 1220/1220
+  oberarm        L  725 x  677  R  604 x  560  (Gerippe  600 x  600)  Verhaeltnis quer 1.07/1.08  L/R Tiefe 1.20 Breite 1.21 Volumen 1.44  Laenge L/R  950/ 950
+  oberschenkel   L  631 x  472  R  653 x  490  (Gerippe  416 x  416)  Verhaeltnis quer 1.34/1.33  L/R Tiefe 0.97 Breite 0.96 Volumen 0.93  Laenge L/R 1110/1110
+  unterschenkel  L  433 x  335  R  565 x  435  (Gerippe  330 x  330)  Verhaeltnis quer 1.29/1.30  L/R Tiefe 0.77 Breite 0.77 Volumen 0.65  Laenge L/R  930/ 930
+  fuss           L  357 x  285  R  529 x  424  (Gerippe  426 x  384)  Verhaeltnis quer 1.25/1.25  L/R Tiefe 0.67 Breite 0.67 Volumen 0.61  Laenge L/R 1324/1324
+  hand           L  354 x  587  R  483 x  798  (Gerippe  366 x  758)  Verhaeltnis quer 0.60/0.60  L/R Tiefe 0.73 Breite 0.73 Volumen 0.52  Laenge L/R  750/ 750
+Fingerlaengen (groesster Abstand Ecke zum Gelenk): l1 775 l2 809 l3 966 l4 707 r1 763 r2 804 r3 961 r4 712
+Sichtbreite gegen Tiefe je Glied im Blick (Einheiten, quer zur Gliedachse, in Bildmitte Glied). Hoher Unterschied = Scheibe zur Kamera:
+  Bild 1: oberarm_r  483/ 518=0.93  unterarm_r  485/ 388=1.25  unterarm_l  503/ 501=1.01  oberschenkel_l  454/ 580=0.78  oberschenkel_r  458/ 573=0.80  unterschenkel_l  305/ 383=0.80  unterschenkel_r  469/ 455=1.03
+  Bild 2: oberarm_r  474/ 477=0.99  unterarm_r  347/ 438=0.79  unterarm_l  499/ 501=1.00  oberschenkel_l  574/ 450=1.28  oberschenkel_r  464/ 589=0.79  unterschenkel_l  371/ 298=1.25  unterschenkel_r  418/ 511=0.82
+Gesamtdrehung lokal in Grad (Achsenwinkel, nimmt die Euler-Doppeldeutigkeit weg):
+  Pose 1: OS_l 49, OS_r 52, US_l 12, US_r 19, fuss_l 46, fuss_r 63, OA_l 56, OA_r 66, UA_l 13, UA_r 12, hand_l 38, hand_r 50, hals 21, kopf 12
+  Pose 2: OS_l 78, OS_r 78, US_l 75, US_r 80, fuss_l 38, fuss_r 59, OA_l 21, OA_r 98, UA_l 36, UA_r 62, hand_l 25, hand_r 81, hals 66, kopf 12
+  Ruhe: OS_l 49, OS_r 52, US_l 12, US_r 19, fuss_l 46, fuss_r 63, OA_l 56, OA_r 66, UA_l 13, UA_r 12, hand_l 38, hand_r 50, hals 11, kopf 5
+Handgelenk/Knoechel: Drehung um Gliedachse (Unterarm/Unterschenkel +Y):
+  Pose 1: hand_l Schwenk 35 Dreh -16; hand_r Schwenk 48 Dreh -16; fuss_l Schwenk 38 Dreh -27; fuss_r Schwenk 52 Dreh -38
+  Pose 2: hand_l Schwenk 22 Dreh +13; hand_r Schwenk 66 Dreh -49; fuss_l Schwenk 3 Dreh -38; fuss_r Schwenk 48 Dreh +35
+Durchdringung: Anteil Oberflaeche der Zeilengruppe in Spaltengruppe (nur >= 0.03)
+  Pose 1: bein_l in rumpf 0.04
+  Pose 2: arm_r in kopf 0.07; bein_l in rumpf 0.07; bein_r in rumpf 0.05
+  Ruhe: bein_l in rumpf 0.03
+Linker Arm Pose 1 im Bild: Schulter (305,263) Ellbogen (308,300) Handgelenk (325,355); Hoehen 1765 1123 311
+Kopf Pose 1 im Bild: Hals (350,259) Kopf (355,258) Kiefer (360,280)

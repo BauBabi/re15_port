@@ -1,0 +1,51 @@
+
+==== A Beine, 60 Grad
+  huefte_r    neue Lochpixel     3  Zerfall 0
+  fr_ober     neue Lochpixel    13  Zerfall 0
+  fr_unter    neue Lochpixel     0  Zerfall 0
+  fr_fuss     neue Lochpixel     0  Zerfall 0
+  huefte_l    neue Lochpixel     9  Zerfall 0
+  fl_ober     neue Lochpixel     4  Zerfall 0
+  fl_unter    neue Lochpixel     0  Zerfall 0
+  fl_fuss     neue Lochpixel     1  Zerfall 0
+  nl_ober     neue Lochpixel   207  Zerfall 0
+  nl_unter    neue Lochpixel     0  Zerfall 0
+  nl_hand     neue Lochpixel     0  Zerfall 0
+  nr_ober     neue Lochpixel     2  Zerfall 0
+  nr_unter    neue Lochpixel    10  Zerfall 0
+  nr_hand     neue Lochpixel     0  Zerfall 0
+  hals        neue Lochpixel   166  Zerfall 0
+  kopf        neue Lochpixel    29  Zerfall 0
+
+==== B Beine, 60 Grad
+  fr_ober     neue Lochpixel     2  Zerfall 6
+  fr_unter    neue Lochpixel     0  Zerfall 0
+  fr_fuss     neue Lochpixel     0  Zerfall 0
+  fl_ober     neue Lochpixel     1  Zerfall 0
+  fl_unter    neue Lochpixel     7  Zerfall 0
+  fl_fuss     neue Lochpixel     1  Zerfall 0
+  nl_ober     neue Lochpixel     8  Zerfall 0
+  nl_unter    neue Lochpixel     0  Zerfall 0
+  nl_faust    neue Lochpixel     0  Zerfall 0
+  nr_ober     neue Lochpixel     1  Zerfall 0
+  nr_unter    neue Lochpixel     1  Zerfall 0
+  nr_faust    neue Lochpixel     3  Zerfall 0
+  maul_l      neue Lochpixel     1  Zerfall 0
+  maul_r      neue Lochpixel     2  Zerfall 0
+
+==== C Beine, 60 Grad
+  fr_huefte   neue Lochpixel     4  Zerfall 4
+  fr_bein     neue Lochpixel     7  Zerfall 0
+  fr_fuss     neue Lochpixel     0  Zerfall 0
+  fl_huefte   neue Lochpixel    13  Zerfall 0
+  fl_bein     neue Lochpixel    21  Zerfall 0
+  fl_fuss     neue Lochpixel    11  Zerfall 0
+  nl_ober     neue Lochpixel     2  Zerfall 0
+  nl_kugel_o  neue Lochpixel     5  Zerfall 0
+  nl_kugel_u  neue Lochpixel     3  Zerfall 0
+  nr_ober     neue Lochpixel     0  Zerfall 0
+  nr_unter    neue Lochpixel     3  Zerfall 0
+  nr_hand     neue Lochpixel     0  Zerfall 0
+  hals        neue Lochpixel     2  Zerfall 0
+  vorsprung   neue Lochpixel     3  Zerfall 0
+FERTIG

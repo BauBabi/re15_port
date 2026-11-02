@@ -1,0 +1,97 @@
+
+================== Kandidat C
+Geschlossenheit (offene Kanten, nicht-mannigfaltig, Komponenten, Dreiecke):
+  0 rumpf_h     rand  54  nm   0  komp  1  tri 282
+  1 fr_huefte   rand   0  nm   0  komp  1  tri 168
+  2 fr_bein     rand   0  nm   0  komp  1  tri  96
+  3 fr_fuss     rand   0  nm   0  komp  1  tri  96
+  4 fr_zeh      rand   0  nm   0  komp  1  tri  48
+  5 fl_huefte   rand   0  nm   0  komp  1  tri 168
+  6 fl_bein     rand   0  nm   0  komp  1  tri  96
+  7 fl_fuss     rand   0  nm   0  komp  1  tri  96
+  8 fl_zeh      rand   0  nm   0  komp  1  tri  48
+  9 rumpf_m     rand  94  nm   0  komp  1  tri 524
+ 10 rumpf_v     rand  39  nm   0  komp  1  tri 451
+ 11 nr_ober     rand   0  nm   0  komp  1  tri 140
+ 12 nr_unter    rand   0  nm   0  komp  1  tri 120
+ 13 nr_hand     rand   0  nm   0  komp  1  tri 140
+ 14 hals        rand   0  nm   0  komp  1  tri 120
+ 15 vorsprung   rand   0  nm   0  komp  1  tri 120
+ 16 nl_ober     rand   0  nm   0  komp  1  tri 140
+ 17 nl_kugel_o  rand   0  nm   0  komp  1  tri 100
+ 18 nl_kugel_u  rand   0  nm   0  komp  1  tri 100
+ 19 nl_unter    rand   0  nm   0  komp  1  tri 112
+ 20 kiefer      rand   0  nm   0  komp  1  tri  96
+ Summe offene Kanten 187 Meshes offen 3 Komponenten 21
+Normalen {'median': 25.3, 'mittel': 27.5, 'p90': 49.0, 'ueber30': 0.383, 'ueber60': 0.005, 'ueber90': 0.001}
+Transparenz {'farben': 246, 'loch_indizes': [], 'anteil': 0.0}
+Versenkt je Knochen (Anteil der Oberflaeche im Rest, ohne Eltern und Kinder): Clip 0 / 1 / 2
+  0 rumpf_h     0.00 0.00 0.00
+  1 fr_huefte   0.00 0.00 0.00
+  2 fr_bein     0.00 0.00 0.00
+  3 fr_fuss     0.00 0.00 0.00
+  4 fr_zeh      0.00 0.00 0.00
+  5 fl_huefte   0.19 0.20 0.20
+  6 fl_bein     0.00 0.00 0.00
+  7 fl_fuss     0.00 0.00 0.00
+  8 fl_zeh      0.00 0.00 0.00
+  9 rumpf_m     0.05 0.06 0.05
+ 10 rumpf_v     0.00 0.01 0.00
+ 11 nr_ober     0.23 0.22 0.23
+ 12 nr_unter    0.00 0.00 0.00
+ 13 nr_hand     0.00 0.00 0.00
+ 14 hals        0.00 0.00 0.00
+ 15 vorsprung   0.00 0.00 0.00
+ 16 nl_ober     0.00 0.00 0.00
+ 17 nl_kugel_o  0.00 0.00 0.00
+ 18 nl_kugel_u  0.00 0.00 0.00
+ 19 nl_unter    0.00 0.00 0.00
+ 20 kiefer      0.00 0.08 0.00
+Gruppen-Durchstossung (Anteil Oberflaeche, tiefster Punkt):
+ Clip 0 {'TORSO in FR': (0.007, 118.0), 'TORSO in FL': (0.035, 302.0), 'TORSO in NL': (0.013, 184.0), 'TORSO in NR': (0.026, 156.0), 'KOPF in TORSO': (0.009, 50.0), 'FR in TORSO': (0.026, 128.0), 'FL in TORSO': (0.212, 446.0), 'NL in TORSO': (0.062, 214.0), 'NR in TORSO': (0.087, 155.0)}
+ Clip 1 {'TORSO in KOPF': (0.005, 35.0), 'TORSO in FR': (0.039, 258.0), 'TORSO in FL': (0.039, 304.0), 'TORSO in NL': (0.017, 190.0), 'TORSO in NR': (0.026, 158.0), 'KOPF in TORSO': (0.034, 53.0), 'FR in TORSO': (0.13, 259.0), 'FL in TORSO': (0.205, 424.0), 'NL in TORSO': (0.071, 202.0), 'NR in TORSO': (0.086, 161.0)}
+ Clip 2 {'TORSO in FR': (0.009, 122.0), 'TORSO in FL': (0.037, 309.0), 'TORSO in NL': (0.014, 197.0), 'TORSO in NR': (0.025, 157.0), 'KOPF in TORSO': (0.013, 46.0), 'FR in TORSO': (0.029, 130.0), 'FL in TORSO': (0.209, 442.0), 'NL in TORSO': (0.071, 216.0), 'NR in TORSO': (0.081, 158.0)}
+Sichtbare Pixel je Knochen (Z-Puffer): Bild 1, Bild 2, verdeckt in beiden = beide 0
+  0 rumpf_h        563   7555
+  1 fr_huefte     2492   4092
+  2 fr_bein       1608    867
+  3 fr_fuss        646    779
+  4 fr_zeh          98    181
+  5 fl_huefte        0      0
+  6 fl_bein          0    415
+  7 fl_fuss          0    615
+  8 fl_zeh           0      2
+  9 rumpf_m       3580  10524
+ 10 rumpf_v       8164   4711
+ 11 nr_ober       1241   1285
+ 12 nr_unter      2012   1233
+ 13 nr_hand       1942   2826
+ 14 hals          1256   1128
+ 15 vorsprung      557   1258
+ 16 nl_ober       2707    231
+ 17 nl_kugel_o    1777    143
+ 18 nl_kugel_u    1246    159
+ 19 nl_unter      1955    527
+ 20 kiefer        1664   1149
+Dicke: quer, Tiefe (Bild1) | quer, Tiefe (Bild2) | Hauptachsen
+  0 rumpf_h     [1779, 1721]  1354 | [1290, 1865]  1771 | [2329, 1894, 1222]
+  1 fr_huefte   [963, 1168]   646 | [748, 1030]  1087 | [1611, 962, 687]
+  2 fr_bein     [615, 1088]   322 | [363, 1084]   953 | [1512, 728, 351]
+  3 fr_fuss     [640, 457]   407 | [476, 492]   596 | [728, 600, 449]
+  4 fr_zeh      [317, 189]   159 | [193, 183]   290 | [444, 181, 174]
+  5 fl_huefte   [882, 1168]   744 | [643, 1165]  1017 | [1611, 962, 687]
+  6 fl_bein     [494, 978]   376 | [355, 1025]   713 | [1361, 654, 316]
+  7 fl_fuss     [456, 485]   473 | [363, 452]   533 | [665, 530, 382]
+  8 fl_zeh      [250, 169]   207 | [139, 161]   277 | [401, 160, 154]
+  9 rumpf_m     [2060, 1745]  1511 | [1383, 1969]  1862 | [2816, 2063, 1241]
+ 10 rumpf_v     [2051, 1733]  1402 | [1284, 1939]  1861 | [2579, 2036, 1074]
+ 11 nr_ober     [652, 738]   864 | [789, 841]   662 | [1303, 706, 596]
+ 12 nr_unter    [792, 738]   385 | [525, 703]   677 | [1026, 709, 394]
+ 13 nr_hand     [805, 444]  1066 | [889, 476]  1048 | [1482, 693, 437]
+ 14 hals        [585, 587]   584 | [584, 578]   619 | [805, 641, 569]
+ 15 vorsprung   [332, 409]   507 | [486, 393]   337 | [584, 446, 311]
+ 16 nl_ober     [790, 892]   514 | [493, 910]   836 | [1250, 854, 546]
+ 17 nl_kugel_o  [547, 628]   358 | [327, 615]   585 | [792, 590, 381]
+ 18 nl_kugel_u  [531, 563]   343 | [304, 633]   475 | [756, 492, 359]
+ 19 nl_unter    [540, 941]   334 | [504, 860]   721 | [1346, 561, 360]
+ 20 kiefer      [525, 561]   330 | [547, 356]   509 | [723, 540, 353]

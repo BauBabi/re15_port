@@ -1,0 +1,8 @@
+1 tail                 iou 0.89 deck 0.98 alle 1.00 innen 0.91
+1 left_leg             iou 0.79 deck 0.96 alle 0.98 innen 0.82
+1 right_leg            iou 0.88 deck 0.95 alle 0.99 innen 0.93
+1 right_arm            iou 0.81 deck 0.91 alle 0.95 innen 0.88
+1 part_of_Body         iou 0.70 deck 0.79 alle 0.97 innen 0.85
+2 face_and_upper_body  iou 0.79 deck 0.84 alle 0.98 innen 0.93
+2 left_arm_front       iou 0.69 deck 0.89 alle 0.98 innen 0.75
+2 right_arm_front      iou 0.77 deck 0.88 alle 0.91 innen 0.86

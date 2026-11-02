@@ -1,0 +1,6144 @@
+{
+ "linse": "Zeichnung",
+ "lesehilfen": "Eigene Ausschnitte unter lesehilfen/: z_ und e_ Vergrößerungen, h_ Mess- und Raumbilder, p_ Vorlage neben Raum",
+ "stand": "Bestand fertig; Bild 1 ohne Raumvorlage, Bild 2 gegen ROOM50911 geprüft",
+ "koordinaten": "Originalbild 640x480; ausrichtung_grad: 0 = waagerecht, +45 = steigt nach rechts, -45 = fällt nach rechts",
+ "kernaussagen": [
+  "Bild 1 zeigt eine dunkle Figur mit vielen hellen Einzelstrukturen. Die meisten dürften Licht sein; als eigene Farbe lesbar ist nur A01 (rosa, wahrscheinlich).",
+  "Violett, Lavendel und Blau sind keine Figurfarben. Die Grundfläche ist vom Bildschwarz kaum zu trennen, Leon trägt dieselben Töne, und in Bild 2 hat der weiße Kittel denselben Lavendelton wie die Bänder.",
+  "Eine gleichmäßige Ringelung der Glieder gibt es nicht: Gipfelabstände 28, 60, 16 px auf der mittleren Stütze, rechte Stütze unterhalb des Dreiecks ganz ohne Band.",
+  "Querbänder sitzen an den Gliedenden: A03/A04 und A12 oben, A14 unten. Nur A14/A15/A16 bilden ein paralleles Trio.",
+  "Bild 2: B06 ist keine Randlinie, sie liegt 21 px innerhalb der gemessenen Oberkante. Für die Bögen vor der schwarzen Tür ist die Lage zur Kante nicht messbar.",
+  "Bild 2: Die weißen Lappen gehören wahrscheinlich nicht zur Figur."
+ ],
+ "bildtechnik": {
+  "farbaufloesung": "Chroma auf 2x2-Blöcke quantisiert, oberhalb 0,1 Perioden/px im Rauschen; Farbgrenzen nur auf rund 5–10 px genau. Luma trägt bis etwa 0,3 Perioden/px.",
+  "kante_referenz_10_90_px": {
+   "bild1": "beste 3,25–3,75, Median 4,5",
+   "bild2": "beste 3,75–4,0, Median 5,1",
+   "wasserzeichen": "3,25 bzw. 4,0"
+  },
+  "kante_urteil_regel": "hart <= 5,0 px; mittel <= 7,0 px; weich > 7,0 px. Schärfer als rund 3,3 px kann nichts erscheinen.",
+  "ueberstrahlung_reichweite_px": {
+   "bild1_p90": 8.0,
+   "bild2_p90": 8.5
+  },
+  "breitenhinweis": "Breiten unter rund 4 px sind Obergrenzen. laenge_px und breite_px sind Halbwertsmaße der Helligkeit, der Farbhof ist größer."
+ },
+ "farb_eichung": {
+  "schwarz_bild1": {
+   "hintergrund_oben": [
+    16,
+    13,
+    23
+   ],
+   "figur": [
+    29,
+    22,
+    44
+   ],
+   "leon_hose": [
+    25,
+    31,
+    61
+   ]
+  },
+  "schwarz_bild2": {
+   "tuer": [
+    32,
+    7,
+    10
+   ],
+   "figur": [
+    41,
+    7,
+    17
+   ]
+  },
+  "leon_bild1": {
+   "gesicht_H346": [
+    208,
+    130,
+    147
+   ],
+   "brust_H252": [
+    160,
+    148,
+    209
+   ],
+   "schulter_H288": [
+    134,
+    107,
+    141
+   ],
+   "tuerkis_H212": [
+    104,
+    141,
+    181
+   ],
+   "bein_H212": [
+    24,
+    82,
+    148
+   ]
+  },
+  "frau_bild2": {
+   "aermel_H306": [
+    204,
+    155,
+    199
+   ],
+   "schulter_H2": [
+    211,
+    139,
+    136
+   ],
+   "gesicht_H20": [
+    222,
+    151,
+    114
+   ]
+  },
+  "kittel_y_bild2": {
+   "p50": 124,
+   "p90": 157,
+   "max": 194
+  },
+  "folgerung": "Farbton streut am weißen Kittel um rund 60°, über Leons Kleidungsteile um rund 80°. Farbtöne sind nur grob als Klasse lesbar."
+ },
+ "raumvergleich_bild2": {
+  "raum": "ROOM50911, FFT-Treffer 0,597 gegen nächstbesten 0,383; ECC 0,386, aus vier Startwerten stabil; Rohr und Türkanten decken sich im Kantenbild",
+  "abbildung_vorlage_nach_raum": [
+   [
+    0.94723,
+    -0.0544,
+    24.62371
+   ],
+   [
+    0.04582,
+    0.8006,
+    26.03995
+   ]
+  ],
+  "tonkurve": "steil: Raum-G 35→64, 66→210; Raum-B 35→89, 66→227; schon mittlere Helligkeiten brennen zu Weiß aus",
+  "oberkante_figur": {
+   "punkte": [
+    [
+     352,
+     158
+    ],
+    [
+     358,
+     163
+    ],
+    [
+     364,
+     166
+    ],
+    [
+     370,
+     177
+    ],
+    [
+     376,
+     181
+    ],
+    [
+     382,
+     187
+    ],
+    [
+     388,
+     187
+    ],
+    [
+     411,
+     205
+    ]
+   ],
+   "gerade": "y = 0,81x − 125,7",
+   "winkel_grad": -39.0,
+   "rest_max_px": 3.4,
+   "beleg": "Beginn der Pfostenverdeckung je Spalte, letzter Punkt Ende des Rohrs. Das zweite Rohr bei x≈423 endet 7–12 px über dieser Geraden, dort stimmt sie nicht genau.",
+   "sicherheit": "wahrscheinlich"
+  },
+  "rotstreifen": "Der Türboden-Rotstreifen ist von x=234 bis 306 bei y≈307–319 vollständig verdeckt (R≈45 statt ≈212).",
+  "figur_vor_tuer": "Der obere Teil der Figur steht vor der schwarzen Türöffnung (x≈166–350), daher dort fast keine Kontur.",
+  "grenze": "Der Raumbestand ist nicht zwingend dieselbe Fassung wie im Video."
+ },
+ "bild1_raum": "Kein Raumhintergrund gefunden: bester Wert 0,371 über 1119 Hintergründe, kein Ausreißer; die 40-%-Disc enthält ROOM508/509 nicht. Figur gegen Boden ist in Bild 1 nur aus dem Bild selbst geschätzt.",
+ "baender_zu_gliedern": {
+  "achsen_bild1": {
+   "rechte_stuetze": {
+    "von": [
+     398,
+     292
+    ],
+    "bis": [
+     402,
+     362
+    ],
+    "breite_px": "30–38"
+   },
+   "mittlere_stuetze": {
+    "von": [
+     330,
+     318
+    ],
+    "bis": [
+     330,
+     350
+    ],
+    "breite_px": "28–43"
+   }
+  },
+  "grenze": "Nur diese zwei Glieder stehen frei. In den großen Massen ist keine Gliedachse belastbar; dort keine Quer/Längs-Aussage.",
+  "quer": [
+   "A03",
+   "A04",
+   "A12",
+   "A14",
+   "A15",
+   "A02 (schräger, 58°)"
+  ],
+  "laengs": [
+   "A13",
+   "G2 Dreierreihe (kurze Längsstriche, Glied dort nicht abgrenzbar)"
+  ],
+  "an_gelenken": "A12 am oberen Ende der rechten Stütze, A03/A04 am oberen Ansatz der mittleren Stütze, A14 am unteren Ende ihres freien Abschnitts. Ob dort tatsächlich Gelenke sitzen: wahrscheinlich, nicht sichtbar.",
+  "regelmaessig": "Nein. Gipfel entlang der mittleren Stütze bei 28, 60, 16 px Abstand; rechte Stütze über 98 px nur ein Gipfel. Einzige Ausnahme ist G4 (16 und 20 px).",
+  "lichtrichtung": "Bild 1: A03, A04, A12 oben hart und unten weich, A01 rechts hart und links weich; Spitzen von A01, A03, A04 liegen 3–4 px rechts und 2–4 px über dem Schwerpunkt. Licht wahrscheinlich von rechts oben.",
+  "bild2": "Keine Glieder abgrenzbar, keine Quer/Längs-Aussage möglich."
+ },
+ "zuordnung_zwischen_den_bildern": "Kein einziges Merkmal ist zwischen beiden Bildern als dasselbe belegbar: anderer Blickwinkel, anderes Licht, Figur in Bild 2 fast schwarz.",
+ "nicht_erkennbar": [
+  "Grundfarbe der dunklen Fläche.",
+  "Oberflächenart (glatt, Fell, Haut, Panzer) und jede Textur unter rund 4 px.",
+  "Ob A10, B10–B12 Augen, Nieten oder bloße Lichtpunkte sind.",
+  "Zugehörigkeit von A30 und G1.",
+  "Rosa-Stellen in Bild 2: im Rotlicht nicht von Rot trennbar.",
+  "Alles an der Figur in Bild 2 links von x≈262 außer dem Haken: schwarz auf schwarz."
+ ],
+ "merkmale": [
+  {
+   "id": "A01",
+   "name": "pink_linse",
+   "bild": 1,
+   "polygon": [
+    [
+     325,
+     224
+    ],
+    [
+     321,
+     225
+    ],
+    [
+     314,
+     232
+    ],
+    [
+     314,
+     234
+    ],
+    [
+     310,
+     238
+    ],
+    [
+     310,
+     241
+    ],
+    [
+     314,
+     241
+    ],
+    [
+     316,
+     239
+    ],
+    [
+     318,
+     241
+    ],
+    [
+     316,
+     243
+    ],
+    [
+     320,
+     249
+    ],
+    [
+     323,
+     249
+    ],
+    [
+     326,
+     236
+    ],
+    [
+     329,
+     233
+    ],
+    [
+     329,
+     227
+    ]
+   ],
+   "punkt": [
+    321.1,
+    235.3
+   ],
+   "form": "Spindel, oben rechts spitz gerundet, nach unten links auslaufend; Farbfläche gesamt bbox (300,220)-(339,259), Achse +53°, 50 px lang; heller Kern nur 26×14 px um (325,231)",
+   "laenge_px": 26.1,
+   "breite_px": 13.6,
+   "ausrichtung_grad": 68.7,
+   "farbe_roh_rgb": [
+    215,
+    167,
+    199
+   ],
+   "farbe_roh_rgb_median": [
+    175,
+    112,
+    158
+   ],
+   "farbton_grad": 320,
+   "kante_10_90_px": {
+    "oben": 8.5,
+    "rechts": 4.9,
+    "unten": 8.1,
+    "links": 10.6
+   },
+   "kante_urteil": "weich",
+   "art": "Oberflaechenfarbe",
+   "deutung": "Rosa Fläche, einzige Struktur der Figur mit Rot-Überschuss (R>B>G). Farbton H 312–322 liegt am nächsten an Leons Gesicht (H 346), B/R 0,89 gegen 0,71; Leons Kleidung geht bis H 294, die Hauptlichter der Figur liegen bei H 224–264. Y fällt entlang der Achse glatt 190→158→119→91→75, also Licht auf gewölbter Fläche über einer rosa Grundfarbe. Keine Überstrahlung: nächster heller Nachbar 31 px.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "liegt in der Furche zwischen linker und rechter dunkler Masse, nicht an einem frei stehenden Glied; Gliedbezug nicht belegbar"
+  },
+  {
+   "id": "A02",
+   "name": "querband_oben",
+   "bild": 1,
+   "polygon": [
+    [
+     304,
+     255
+    ],
+    [
+     303,
+     261
+    ],
+    [
+     308,
+     265
+    ],
+    [
+     313,
+     266
+    ],
+    [
+     322,
+     274
+    ],
+    [
+     326,
+     274
+    ],
+    [
+     328,
+     276
+    ],
+    [
+     330,
+     275
+    ],
+    [
+     331,
+     271
+    ],
+    [
+     328,
+     266
+    ],
+    [
+     323,
+     264
+    ],
+    [
+     315,
+     258
+    ],
+    [
+     308,
+     257
+    ],
+    [
+     307,
+     255
+    ]
+   ],
+   "punkt": [
+    317.4,
+    265.3
+   ],
+   "form": "Schräges Band, zwei Farbzonen: oben links lavendel, unten rechts blau",
+   "laenge_px": 33.6,
+   "breite_px": 9.1,
+   "ausrichtung_grad": -31.5,
+   "farbe_roh_rgb": [
+    161,
+    144,
+    201
+   ],
+   "farbe_roh_rgb_median": [
+    135,
+    122,
+    177
+   ],
+   "farbton_grad": 258,
+   "kante_10_90_px": {
+    "oben": 4.9,
+    "rechts": 7.1,
+    "unten": 6.0,
+    "links": 9.8
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Beleuchtetes Band; Lavendel/Blau ist kein Figurton, Leons Lichter zeigen dieselben Töne (160,148,209) und (104,141,181). Oberkante 4,9 px hart, linke Kante 9,8 px weich. Unklar bleibt, ob darunter eine helle Grundfarbe liegt.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "quer über die Achse der mittleren Stütze, 58° gegen die Achse, oberstes der Bänder"
+  },
+  {
+   "id": "A03",
+   "name": "weissfleck",
+   "bild": 1,
+   "polygon": [
+    [
+     334,
+     290
+    ],
+    [
+     330,
+     286
+    ],
+    [
+     325,
+     285
+    ],
+    [
+     316,
+     291
+    ],
+    [
+     316,
+     294
+    ],
+    [
+     319,
+     297
+    ],
+    [
+     319,
+     299
+    ],
+    [
+     315,
+     301
+    ],
+    [
+     330,
+     301
+    ],
+    [
+     335,
+     296
+    ]
+   ],
+   "punkt": [
+    325.8,
+    293.4
+   ],
+   "form": "Rundlicher Fleck, breiter als hoch, hellste Stelle der Figur (Y bis 221)",
+   "laenge_px": 22.9,
+   "breite_px": 13.1,
+   "ausrichtung_grad": 23.3,
+   "farbe_roh_rgb": [
+    214,
+    217,
+    231
+   ],
+   "farbe_roh_rgb_median": [
+    157,
+    167,
+    194
+   ],
+   "farbton_grad": 230,
+   "kante_10_90_px": {
+    "oben": 4.6,
+    "rechts": 5.0,
+    "unten": 13.8,
+    "links": 10.2
+   },
+   "kante_urteil": "weich",
+   "art": "Glanzlicht",
+   "deutung": "Licht auf nach oben weisender Fläche: Oberkante 4,6 und rechte Kante 5,0 px hart, Unterkante 13,8 px weich, Spitze 4 px rechts und 2 px über dem Schwerpunkt. Nahezu neutral (214,217,231); Eigenfarbe nur als \"hell\" lesbar.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "quer am oberen Ansatz der mittleren Stütze (rund 67° gegen die Achse), wahrscheinlich Gelenkbereich"
+  },
+  {
+   "id": "A04",
+   "name": "lavendelband_unter_weiss",
+   "bild": 1,
+   "polygon": [
+    [
+     311,
+     305
+    ],
+    [
+     313,
+     308
+    ],
+    [
+     323,
+     307
+    ],
+    [
+     332,
+     300
+    ],
+    [
+     314,
+     300
+    ],
+    [
+     312,
+     301
+    ]
+   ],
+   "punkt": [
+    320.3,
+    303.0
+   ],
+   "form": "Flaches Band direkt unter A03, läuft nach links unten aus",
+   "laenge_px": 22.6,
+   "breite_px": 8.1,
+   "ausrichtung_grad": 10.9,
+   "farbe_roh_rgb": [
+    154,
+    168,
+    212
+   ],
+   "farbe_roh_rgb_median": [
+    134,
+    137,
+    186
+   ],
+   "farbton_grad": 226,
+   "kante_10_90_px": {
+    "oben": 3.8,
+    "rechts": null,
+    "unten": 8.0,
+    "links": 11.2
+   },
+   "kante_urteil": "weich",
+   "art": "Glanzlicht",
+   "deutung": "Unterer Auslauf von A03 oder eigenes Querband; die Senke zwischen beiden ist nur 13 % des Kontrasts, also keine sichere Trennung. Oberkante 3,8 px hart, Unterkante 8,0 px.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "quer am oberen Ansatz der mittleren Stütze, etwa 79° gegen die Achse"
+  },
+  {
+   "id": "A05",
+   "name": "fleck_300_281",
+   "bild": 1,
+   "polygon": [
+    [
+     305,
+     277
+    ],
+    [
+     303,
+     276
+    ],
+    [
+     301,
+     277
+    ],
+    [
+     298,
+     283
+    ],
+    [
+     303,
+     282
+    ]
+   ],
+   "punkt": [
+    301.9,
+    279.7
+   ],
+   "form": "Kleiner schwacher Fleck",
+   "laenge_px": 10.1,
+   "breite_px": 4.6,
+   "ausrichtung_grad": 49.0,
+   "farbe_roh_rgb": [
+    55,
+    63,
+    93
+   ],
+   "farbe_roh_rgb_median": [
+    46,
+    53,
+    83
+   ],
+   "farbton_grad": 228,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 3.2,
+    "unten": null,
+    "links": 4.8
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Zu klein und zu dunkel für eine Einordnung.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A06",
+   "name": "punkt_291_300",
+   "bild": 1,
+   "polygon": [
+    [
+     288,
+     297
+    ],
+    [
+     288,
+     300
+    ],
+    [
+     290,
+     301
+    ],
+    [
+     293,
+     300
+    ],
+    [
+     292,
+     297
+    ],
+    [
+     290,
+     296
+    ]
+   ],
+   "punkt": [
+    290.5,
+    298.8
+   ],
+   "form": "Kleiner runder Punkt",
+   "laenge_px": 6.8,
+   "breite_px": 5.5,
+   "ausrichtung_grad": -23.5,
+   "farbe_roh_rgb": [
+    69,
+    72,
+    94
+   ],
+   "farbe_roh_rgb_median": [
+    56,
+    57,
+    79
+   ],
+   "farbton_grad": 232,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": null,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Klar über dem Rauschen, Art nicht bestimmbar. Größe liegt nahe der Auflösungsgrenze.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A07",
+   "name": "streifen_272_282",
+   "bild": 1,
+   "polygon": [
+    [
+     269,
+     276
+    ],
+    [
+     268,
+     283
+    ],
+    [
+     271,
+     289
+    ],
+    [
+     276,
+     290
+    ],
+    [
+     277,
+     289
+    ],
+    [
+     277,
+     284
+    ]
+   ],
+   "punkt": [
+    272.4,
+    284.2
+   ],
+   "form": "Kurzer Strich, oben lavendel, unten kräftig blau",
+   "laenge_px": 16.6,
+   "breite_px": 6.0,
+   "ausrichtung_grad": -59.0,
+   "farbe_roh_rgb": [
+    112,
+    108,
+    173
+   ],
+   "farbe_roh_rgb_median": [
+    94,
+    75,
+    135
+   ],
+   "farbton_grad": 244,
+   "kante_10_90_px": {
+    "oben": 5.9,
+    "rechts": 5.2,
+    "unten": 7.5,
+    "links": 4.9
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Lichtstrich auf dunkler Fläche; Blau wie Leons Hosenbein, also kein Figurton.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "rechtes Glied der Dreierreihe auf Höhe y≈285"
+  },
+  {
+   "id": "A08",
+   "name": "streifen_254_285",
+   "bild": 1,
+   "polygon": [
+    [
+     255,
+     280
+    ],
+    [
+     253,
+     280
+    ],
+    [
+     250,
+     286
+    ],
+    [
+     251,
+     290
+    ],
+    [
+     255,
+     288
+    ],
+    [
+     256,
+     284
+    ]
+   ],
+   "punkt": [
+    253.0,
+    285.2
+   ],
+   "form": "Kurzer schwacher Strich",
+   "laenge_px": 11.7,
+   "breite_px": 5.4,
+   "ausrichtung_grad": 71.8,
+   "farbe_roh_rgb": [
+    64,
+    59,
+    87
+   ],
+   "farbe_roh_rgb_median": [
+    55,
+    49,
+    78
+   ],
+   "farbton_grad": 250,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 3.8,
+    "unten": null,
+    "links": 3.2
+   },
+   "kante_urteil": "hart",
+   "art": "Glanzlicht",
+   "deutung": "Wie A07, nur dunkler. Breite an der Auflösungsgrenze.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "mittleres Glied der Dreierreihe auf Höhe y≈285"
+  },
+  {
+   "id": "A09",
+   "name": "randoval_241_290",
+   "bild": 1,
+   "polygon": [
+    [
+     242,
+     283
+    ],
+    [
+     238,
+     285
+    ],
+    [
+     238,
+     291
+    ],
+    [
+     240,
+     293
+    ],
+    [
+     244,
+     293
+    ],
+    [
+     244,
+     286
+    ]
+   ],
+   "punkt": [
+    241.1,
+    288.6
+   ],
+   "form": "Hochkantes Oval am linken Rand der Figur",
+   "laenge_px": 11.2,
+   "breite_px": 6.6,
+   "ausrichtung_grad": -81.8,
+   "farbe_roh_rgb": [
+    175,
+    172,
+    208
+   ],
+   "farbe_roh_rgb_median": [
+    136,
+    134,
+    169
+   ],
+   "farbton_grad": 244,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 5.5,
+    "unten": null,
+    "links": 5.0
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Eigenständiger heller Fleck, keine Überstrahlung der weißen Leisten links: zwischen beiden fällt Y auf 56, Senke 79 % des Kontrasts. Spannt zudem über die dunkle Lücke zwischen den zwei Leisten hinweg, ist also auch nicht deren Fortsetzung.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "linkes Glied der Dreierreihe auf Höhe y≈285"
+  },
+  {
+   "id": "A10",
+   "name": "punkt_290_208",
+   "bild": 1,
+   "polygon": [
+    [
+     290,
+     205
+    ],
+    [
+     288,
+     207
+    ],
+    [
+     289,
+     210
+    ],
+    [
+     292,
+     211
+    ],
+    [
+     294,
+     209
+    ],
+    [
+     294,
+     207
+    ],
+    [
+     292,
+     205
+    ]
+   ],
+   "punkt": [
+    291.2,
+    207.9
+   ],
+   "form": "Kleiner runder grauer Punkt im oberen Teil, teal-Schimmer darunter",
+   "laenge_px": 7.3,
+   "breite_px": 6.1,
+   "ausrichtung_grad": -76.3,
+   "farbe_roh_rgb": [
+    75,
+    74,
+    90
+   ],
+   "farbe_roh_rgb_median": [
+    61,
+    62,
+    77
+   ],
+   "farbton_grad": 244,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": null,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Isoliert in dunkler Fläche, 34 px von hellen Nachbarn. Der Teal-Schimmer ist Farbunschärfe. Ob Punkt der Oberfläche oder Einzelheit wie Auge oder Niete: nicht erkennbar.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A11",
+   "name": "blau_rueckenrand",
+   "bild": 1,
+   "polygon": [
+    [
+     380,
+     241
+    ],
+    [
+     388,
+     246
+    ],
+    [
+     391,
+     245
+    ],
+    [
+     391,
+     243
+    ],
+    [
+     393,
+     241
+    ]
+   ],
+   "punkt": [
+    386.8,
+    242.6
+   ],
+   "form": "Kurzes flaches blaues Band unter der hellen Kante am rechten oberen Rücken",
+   "laenge_px": 13.9,
+   "breite_px": 5.2,
+   "ausrichtung_grad": -7.5,
+   "farbe_roh_rgb": [
+    116,
+    128,
+    162
+   ],
+   "farbe_roh_rgb_median": [
+    92,
+    102,
+    147
+   ],
+   "farbton_grad": 224,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": null,
+    "unten": 6.2,
+    "links": null
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Lichtkante, keine Überstrahlung: 11 px vom hellen Hintergrund und blau statt gelb. Liegt innerhalb der Silhouette.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "am Rücken, kein freies Glied"
+  },
+  {
+   "id": "A12",
+   "name": "dreieck_kern",
+   "bild": 1,
+   "polygon": [
+    [
+     391,
+     285
+    ],
+    [
+     393,
+     287
+    ],
+    [
+     395,
+     286
+    ],
+    [
+     406,
+     286
+    ],
+    [
+     408,
+     288
+    ],
+    [
+     412,
+     287
+    ],
+    [
+     407,
+     285
+    ],
+    [
+     400,
+     278
+    ],
+    [
+     396,
+     278
+    ],
+    [
+     392,
+     280
+    ]
+   ],
+   "punkt": [
+    399.0,
+    282.8
+   ],
+   "form": "Flaches Dreieck, Spitze oben (398,277), Kern x 384–415 / y 276–292; Basis auf Y>60 31 px breit, dünne Fortsetzung nach links bis x≈366 nur in lokal gestreckter Ansicht",
+   "laenge_px": 22.4,
+   "breite_px": 7.1,
+   "ausrichtung_grad": -13.1,
+   "farbe_roh_rgb": [
+    171,
+    177,
+    199
+   ],
+   "farbe_roh_rgb_median": [
+    125,
+    126,
+    155
+   ],
+   "farbton_grad": 228,
+   "kante_10_90_px": {
+    "oben": 4.6,
+    "rechts": null,
+    "unten": 9.8,
+    "links": 5.2
+   },
+   "kante_urteil": "hart",
+   "art": "Glanzlicht",
+   "deutung": "Licht auf nach oben weisender Fläche: Oberkante 4,6 px hart, Unterkante 9,8 px weich. Über die Eigenfarbe sagt das nichts. Unterhalb gibt es auf der rechten Stütze keine zweite Struktur: Profil über 98 px hat nur diesen einen Gipfel.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "quer am oberen Ende der rechten Stütze, etwa 74° gegen die Achse, Basis ungefähr so breit wie die Stütze (30–38 px); wahrscheinlich Gelenkbereich"
+  },
+  {
+   "id": "A13",
+   "name": "blau_tuerkis_347_326",
+   "bild": 1,
+   "polygon": [
+    [
+     357,
+     319
+    ],
+    [
+     346,
+     326
+    ],
+    [
+     346,
+     329
+    ],
+    [
+     348,
+     331
+    ],
+    [
+     353,
+     332
+    ],
+    [
+     352,
+     336
+    ],
+    [
+     358,
+     328
+    ],
+    [
+     356,
+     330
+    ],
+    [
+     353,
+     329
+    ],
+    [
+     353,
+     326
+    ],
+    [
+     357,
+     322
+    ]
+   ],
+   "punkt": [
+    351.5,
+    327.0
+   ],
+   "form": "Schmaler Streifen längs an der rechten Seite der mittleren Stütze, blau bis türkis",
+   "laenge_px": 18.6,
+   "breite_px": 5.5,
+   "ausrichtung_grad": 66.7,
+   "farbe_roh_rgb": [
+    70,
+    144,
+    190
+   ],
+   "farbe_roh_rgb_median": [
+    66,
+    123,
+    165
+   ],
+   "farbton_grad": 204,
+   "kante_10_90_px": {
+    "oben": 10.0,
+    "rechts": 2.8,
+    "unten": 5.0,
+    "links": 7.5
+   },
+   "kante_urteil": "mittel",
+   "art": "offen",
+   "deutung": "Lichtkante oder Bodenreflex. Farbton H 204 liegt zwischen Boden (H 178–196) und Leons Blau (H 212) und entscheidet nichts. Keine einfache Überstrahlung: Senke 43 % zum Boden hin.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "längs an der mittleren Stütze"
+  },
+  {
+   "id": "A14",
+   "name": "querband_unten_333_354",
+   "bild": 1,
+   "polygon": [
+    [
+     320,
+     347
+    ],
+    [
+     320,
+     351
+    ],
+    [
+     329,
+     355
+    ],
+    [
+     338,
+     355
+    ],
+    [
+     336,
+     350
+    ]
+   ],
+   "punkt": [
+    328.9,
+    351.3
+   ],
+   "form": "Gerades Querband zwischen den beiden Bodenlücken",
+   "laenge_px": 20.5,
+   "breite_px": 6.4,
+   "ausrichtung_grad": -15.9,
+   "farbe_roh_rgb": [
+    156,
+    161,
+    186
+   ],
+   "farbe_roh_rgb_median": [
+    120,
+    132,
+    168
+   ],
+   "farbton_grad": 230,
+   "kante_10_90_px": {
+    "oben": 4.5,
+    "rechts": null,
+    "unten": 5.0,
+    "links": 5.0
+   },
+   "kante_urteil": "hart",
+   "art": "Oberflaechenfarbe",
+   "deutung": "Beidseitig scharf begrenzt (Oberkante 4,5, Unterkante 5,0 px), daher eher abgesetzte helle Fläche als auslaufendes Licht; die großen Lichtflecken A03, A04 und A12 sind unten weich. Keine Überstrahlung: Senke 56 % zur Bodenlücke.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "quer am unteren Ende des frei stehenden Abschnitts der mittleren Stütze, 74° gegen die Achse; oberstes Band des Trios A14/A15/A16"
+  },
+  {
+   "id": "A15",
+   "name": "band_lavendel_322_367",
+   "bild": 1,
+   "polygon": [
+    [
+     312,
+     361
+    ],
+    [
+     312,
+     363
+    ],
+    [
+     315,
+     366
+    ],
+    [
+     325,
+     369
+    ],
+    [
+     327,
+     371
+    ],
+    [
+     328,
+     370
+    ],
+    [
+     331,
+     373
+    ],
+    [
+     334,
+     370
+    ],
+    [
+     329,
+     365
+    ],
+    [
+     321,
+     364
+    ],
+    [
+     319,
+     360
+    ],
+    [
+     317,
+     359
+    ],
+    [
+     314,
+     359
+    ]
+   ],
+   "punkt": [
+    322.2,
+    365.7
+   ],
+   "form": "Gerades Querband, lavendelblau, dunkler als A14",
+   "laenge_px": 24.7,
+   "breite_px": 6.4,
+   "ausrichtung_grad": -24.8,
+   "farbe_roh_rgb": [
+    72,
+    75,
+    135
+   ],
+   "farbe_roh_rgb_median": [
+    69,
+    64,
+    119
+   ],
+   "farbton_grad": 238,
+   "kante_10_90_px": {
+    "oben": 4.8,
+    "rechts": 5.2,
+    "unten": 4.2,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Parallel zu A14 und A16, Kanten 4,2–5,2 px hart. Grundfarbe oder Licht nicht trennbar.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "quer, mittleres Band des Trios, 16 px unter A14; rund 65° gegen die Achse"
+  },
+  {
+   "id": "A16",
+   "name": "band_tuerkis_312_385",
+   "bild": 1,
+   "polygon": [
+    [
+     304,
+     381
+    ],
+    [
+     305,
+     385
+    ],
+    [
+     313,
+     385
+    ],
+    [
+     320,
+     391
+    ],
+    [
+     322,
+     391
+    ],
+    [
+     322,
+     384
+    ],
+    [
+     320,
+     379
+    ],
+    [
+     313,
+     379
+    ]
+   ],
+   "punkt": [
+    314.3,
+    383.8
+   ],
+   "form": "Gerades Querband, türkisblau, dunkelstes des Trios",
+   "laenge_px": 21.0,
+   "breite_px": 7.3,
+   "ausrichtung_grad": -15.6,
+   "farbe_roh_rgb": [
+    48,
+    71,
+    96
+   ],
+   "farbe_roh_rgb_median": [
+    37,
+    60,
+    89
+   ],
+   "farbton_grad": 212,
+   "kante_10_90_px": {
+    "oben": 4.5,
+    "rechts": 5.2,
+    "unten": 4.8,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Parallel zu A14/A15, 20 px unter A15. Kanten 4,5–5,2 px hart. Türkiston wie Boden, könnte auch Bodenreflex sein.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "bezug_zum_glied": "quer, unterstes Band des Trios; Achse hier nicht mehr belastbar (Masse 56 px breit)"
+  },
+  {
+   "id": "A17",
+   "name": "blaupunkt_304_371",
+   "bild": 1,
+   "polygon": [
+    [
+     307,
+     369
+    ],
+    [
+     304,
+     368
+    ],
+    [
+     302,
+     370
+    ],
+    [
+     302,
+     373
+    ],
+    [
+     306,
+     373
+    ]
+   ],
+   "punkt": [
+    304.6,
+    370.7
+   ],
+   "form": "Blauer Punkt am oberen rechten Ende der Dünnlinie A18",
+   "laenge_px": 7.4,
+   "breite_px": 5.2,
+   "ausrichtung_grad": 46.6,
+   "farbe_roh_rgb": [
+    58,
+    88,
+    133
+   ],
+   "farbe_roh_rgb_median": [
+    49,
+    74,
+    121
+   ],
+   "farbton_grad": 216,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": null,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "mittel",
+   "art": "Fremdkoerper",
+   "deutung": "Teil der Linie A19-A18-A17, siehe Gruppe G1.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A18",
+   "name": "duennlinie_300_380",
+   "bild": 1,
+   "polygon": [
+    [
+     294,
+     389
+    ],
+    [
+     308,
+     373
+    ],
+    [
+     304,
+     371
+    ],
+    [
+     290,
+     387
+    ]
+   ],
+   "punkt": [
+    299.0,
+    380.0
+   ],
+   "form": "Sehr dünne gerade Linie, blass lavendelblau, von (292,388) bis (306,372)",
+   "laenge_px": 21.3,
+   "breite_px": 4,
+   "ausrichtung_grad": 48.8,
+   "farbe_roh_rgb": [
+    66,
+    70,
+    110
+   ],
+   "farbe_roh_rgb_median": [
+    60,
+    61,
+    96
+   ],
+   "farbton_grad": 214,
+   "kante_10_90_px": null,
+   "kante_urteil": "an der Aufloesungsgrenze, Breite ist Obergrenze",
+   "art": "Fremdkoerper",
+   "deutung": "Dünnste Struktur der Figur: Breite FWHM 3,5–6 px, also nahe der Auflösungsgrenze, echte Breite eher ≤4 px. Steht schräg zu allen Bändern ringsum. Liegt kollinear (±1 px) mit A31, siehe Gruppe G1.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A19",
+   "name": "knoten_286_390",
+   "bild": 1,
+   "polygon": [
+    [
+     283,
+     388
+    ],
+    [
+     284,
+     391
+    ],
+    [
+     289,
+     390
+    ],
+    [
+     289,
+     387
+    ],
+    [
+     284,
+     387
+    ]
+   ],
+   "punkt": [
+    286.2,
+    389.0
+   ],
+   "form": "Kleiner heller Knoten am unteren linken Ende von A18, grünlich weiß",
+   "laenge_px": 7.1,
+   "breite_px": 5.1,
+   "ausrichtung_grad": 4.0,
+   "farbe_roh_rgb": [
+    83,
+    119,
+    127
+   ],
+   "farbe_roh_rgb_median": [
+    69,
+    101,
+    110
+   ],
+   "farbton_grad": 190,
+   "kante_10_90_px": {
+    "oben": 3.8,
+    "rechts": null,
+    "unten": 3.2,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "Fremdkoerper",
+   "deutung": "Teil der Linie A19-A18-A17, siehe Gruppe G1. Farbton H 190 wie Boden.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A20",
+   "name": "bogen_oben_240_346",
+   "bild": 1,
+   "polygon": [
+    [
+     233,
+     340
+    ],
+    [
+     232,
+     345
+    ],
+    [
+     238,
+     344
+    ],
+    [
+     241,
+     347
+    ],
+    [
+     245,
+     355
+    ],
+    [
+     247,
+     356
+    ],
+    [
+     249,
+     352
+    ],
+    [
+     247,
+     345
+    ],
+    [
+     243,
+     341
+    ]
+   ],
+   "punkt": [
+    241.5,
+    345.8
+   ],
+   "form": "Bogen über der linken unteren Rundung, blauweiß",
+   "laenge_px": 22.2,
+   "breite_px": 7.4,
+   "ausrichtung_grad": -38.3,
+   "farbe_roh_rgb": [
+    102,
+    122,
+    172
+   ],
+   "farbe_roh_rgb_median": [
+    87,
+    99,
+    147
+   ],
+   "farbton_grad": 222,
+   "kante_10_90_px": {
+    "oben": 3.8,
+    "rechts": 4.2,
+    "unten": 5.4,
+    "links": 5.4
+   },
+   "kante_urteil": "hart",
+   "art": "Glanzlicht",
+   "deutung": "Lichtkante auf der Oberseite der Rundung: Oberkante 3,8 px hart. Boden liegt links, die dunkle Zone über dem Bogen trennt ihn vom Boden, daher keine Überstrahlung.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "folgt dem oberen Umriss der Rundung"
+  },
+  {
+   "id": "A21",
+   "name": "blaupatch_264_358",
+   "bild": 1,
+   "polygon": [
+    [
+     262,
+     352
+    ],
+    [
+     261,
+     353
+    ],
+    [
+     262,
+     360
+    ],
+    [
+     260,
+     362
+    ],
+    [
+     265,
+     361
+    ],
+    [
+     267,
+     363
+    ],
+    [
+     272,
+     364
+    ],
+    [
+     271,
+     358
+    ],
+    [
+     265,
+     352
+    ]
+   ],
+   "punkt": [
+    266.2,
+    358.0
+   ],
+   "form": "Dreieckiger Fleck, oben rosa Spitze, unten blau",
+   "laenge_px": 16.6,
+   "breite_px": 7.0,
+   "ausrichtung_grad": -45.6,
+   "farbe_roh_rgb": [
+    92,
+    105,
+    165
+   ],
+   "farbe_roh_rgb_median": [
+    72,
+    86,
+    138
+   ],
+   "farbton_grad": 230,
+   "kante_10_90_px": {
+    "oben": 5.0,
+    "rechts": 5.0,
+    "unten": 6.5,
+    "links": 7.5
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Lichtfleck; die Rosa-Spitze bei (263,350) ist zu klein für eine Aussage zur Farbe (Farbauflösung rund 10 px).",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A22",
+   "name": "streifen_252_370",
+   "bild": 1,
+   "polygon": [
+    [
+     250,
+     363
+    ],
+    [
+     248,
+     363
+    ],
+    [
+     248,
+     369
+    ],
+    [
+     244,
+     373
+    ],
+    [
+     244,
+     379
+    ],
+    [
+     251,
+     377
+    ],
+    [
+     251,
+     364
+    ]
+   ],
+   "punkt": [
+    248.0,
+    372.4
+   ],
+   "form": "Hochkanter heller Strich, oberer Teil des Zickzacks",
+   "laenge_px": 18.0,
+   "breite_px": 4.8,
+   "ausrichtung_grad": 74.5,
+   "farbe_roh_rgb": [
+    130,
+    149,
+    198
+   ],
+   "farbe_roh_rgb_median": [
+    105,
+    113,
+    161
+   ],
+   "farbton_grad": 224,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 4.2,
+    "unten": 5.5,
+    "links": 5.2
+   },
+   "kante_urteil": "hart",
+   "art": "Glanzlicht",
+   "deutung": "Lichtkante, Kanten 4,2–5,5 px hart. Zusammen mit A23 ein geknicktes Band, siehe Gruppe G3.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A23",
+   "name": "band_242_386",
+   "bild": 1,
+   "polygon": [
+    [
+     233,
+     384
+    ],
+    [
+     234,
+     388
+    ],
+    [
+     243,
+     387
+    ],
+    [
+     251,
+     392
+    ],
+    [
+     250,
+     388
+    ],
+    [
+     244,
+     383
+    ],
+    [
+     245,
+     380
+    ],
+    [
+     250,
+     379
+    ],
+    [
+     248,
+     376
+    ],
+    [
+     241,
+     377
+    ],
+    [
+     235,
+     381
+    ]
+   ],
+   "punkt": [
+    241.9,
+    382.7
+   ],
+   "form": "Breiteres flaches Band, unterer Teil des Zickzacks",
+   "laenge_px": 19.6,
+   "breite_px": 9.7,
+   "ausrichtung_grad": 17.2,
+   "farbe_roh_rgb": [
+    99,
+    117,
+    161
+   ],
+   "farbe_roh_rgb_median": [
+    73,
+    92,
+    134
+   ],
+   "farbton_grad": 222,
+   "kante_10_90_px": {
+    "oben": 4.8,
+    "rechts": 8.0,
+    "unten": 5.0,
+    "links": 5.8
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Wie A22, dunkler.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A24",
+   "name": "tuerkisbalken_251_402",
+   "bild": 1,
+   "polygon": [
+    [
+     253,
+     397
+    ],
+    [
+     250,
+     397
+    ],
+    [
+     247,
+     400
+    ],
+    [
+     245,
+     404
+    ],
+    [
+     246,
+     406
+    ],
+    [
+     252,
+     403
+    ],
+    [
+     254,
+     399
+    ]
+   ],
+   "punkt": [
+    249.5,
+    401.3
+   ],
+   "form": "Kurzer Balken, türkisweiß",
+   "laenge_px": 12.4,
+   "breite_px": 5.6,
+   "ausrichtung_grad": 48.7,
+   "farbe_roh_rgb": [
+    122,
+    164,
+    180
+   ],
+   "farbe_roh_rgb_median": [
+    93,
+    127,
+    147
+   ],
+   "farbton_grad": 196,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 4.2,
+    "unten": 4.5,
+    "links": 3.9
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Lichtkante oder Boden durch einen schmalen Spalt: H 196 entspricht dem Boden. Kanten 3,9–4,5 px hart. Nicht entscheidbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A25",
+   "name": "streifen_265_390",
+   "bild": 1,
+   "polygon": [
+    [
+     263,
+     383
+    ],
+    [
+     261,
+     385
+    ],
+    [
+     263,
+     388
+    ],
+    [
+     263,
+     396
+    ],
+    [
+     266,
+     397
+    ],
+    [
+     268,
+     395
+    ],
+    [
+     268,
+     390
+    ],
+    [
+     266,
+     384
+    ]
+   ],
+   "punkt": [
+    264.8,
+    390.4
+   ],
+   "form": "Schwacher senkrechter Strich",
+   "laenge_px": 15.3,
+   "breite_px": 6.1,
+   "ausrichtung_grad": -81.0,
+   "farbe_roh_rgb": [
+    62,
+    54,
+    77
+   ],
+   "farbe_roh_rgb_median": [
+    55,
+    44,
+    73
+   ],
+   "farbton_grad": 260,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 6.2,
+    "unten": null,
+    "links": 4.4
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Art nicht bestimmbar.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A26",
+   "name": "punkt_281_410",
+   "bild": 1,
+   "polygon": [
+    [
+     279,
+     408
+    ],
+    [
+     277,
+     412
+    ],
+    [
+     280,
+     414
+    ],
+    [
+     283,
+     413
+    ],
+    [
+     284,
+     411
+    ],
+    [
+     283,
+     409
+    ]
+   ],
+   "punkt": [
+    280.5,
+    410.9
+   ],
+   "form": "Runder Punkt, rosa-lavendel",
+   "laenge_px": 8.0,
+   "breite_px": 5.5,
+   "ausrichtung_grad": 0.7,
+   "farbe_roh_rgb": [
+    124,
+    102,
+    151
+   ],
+   "farbe_roh_rgb_median": [
+    100,
+    77,
+    125
+   ],
+   "farbton_grad": 266,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 4.8,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Art nicht bestimmbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A27",
+   "name": "fleck_246_415",
+   "bild": 1,
+   "polygon": [
+    [
+     240,
+     414
+    ],
+    [
+     241,
+     417
+    ],
+    [
+     243,
+     418
+    ],
+    [
+     247,
+     418
+    ],
+    [
+     250,
+     416
+    ],
+    [
+     249,
+     415
+    ],
+    [
+     250,
+     414
+    ],
+    [
+     248,
+     413
+    ],
+    [
+     241,
+     413
+    ]
+   ],
+   "punkt": [
+    244.6,
+    415.2
+   ],
+   "form": "Flacher schwacher Fleck, türkisgrau",
+   "laenge_px": 11.1,
+   "breite_px": 6.0,
+   "ausrichtung_grad": -1.7,
+   "farbe_roh_rgb": [
+    45,
+    66,
+    86
+   ],
+   "farbe_roh_rgb_median": [
+    41,
+    55,
+    73
+   ],
+   "farbton_grad": 210,
+   "kante_10_90_px": {
+    "oben": 2.8,
+    "rechts": null,
+    "unten": 4.1,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Art nicht bestimmbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A28",
+   "name": "lavendel_tuerkis_305_418",
+   "bild": 1,
+   "polygon": [
+    [
+     290,
+     411
+    ],
+    [
+     294,
+     415
+    ],
+    [
+     296,
+     422
+    ],
+    [
+     303,
+     426
+    ],
+    [
+     315,
+     429
+    ],
+    [
+     314,
+     427
+    ],
+    [
+     315,
+     426
+    ],
+    [
+     315,
+     416
+    ],
+    [
+     306,
+     414
+    ],
+    [
+     297,
+     407
+    ],
+    [
+     294,
+     407
+    ]
+   ],
+   "punkt": [
+    303.7,
+    417.8
+   ],
+   "form": "Breiter Fleck, oben lavendel, unten türkis",
+   "laenge_px": 31.8,
+   "breite_px": 12.4,
+   "ausrichtung_grad": -33.8,
+   "farbe_roh_rgb": [
+    145,
+    161,
+    207
+   ],
+   "farbe_roh_rgb_median": [
+    102,
+    138,
+    177
+   ],
+   "farbton_grad": 224,
+   "kante_10_90_px": {
+    "oben": 5.8,
+    "rechts": 5.8,
+    "unten": 12.5,
+    "links": 7.6
+   },
+   "kante_urteil": "weich",
+   "art": "Hintergrund",
+   "deutung": "Wahrscheinlich Boden in einer Lücke der dunklen Masse: Helligkeit und Türkis passen zum Boden, Fläche 331 px ist für einen Lichtfleck groß. Keine Raumvorlage für Bild 1, daher nicht belegt.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A29",
+   "name": "pinkband_272_427",
+   "bild": 1,
+   "polygon": [
+    [
+     259,
+     428
+    ],
+    [
+     259,
+     431
+    ],
+    [
+     281,
+     431
+    ],
+    [
+     282,
+     430
+    ],
+    [
+     280,
+     426
+    ],
+    [
+     273,
+     423
+    ],
+    [
+     270,
+     423
+    ],
+    [
+     270,
+     425
+    ],
+    [
+     273,
+     429
+    ],
+    [
+     272,
+     430
+    ]
+   ],
+   "punkt": [
+    272.4,
+    428.5
+   ],
+   "form": "Flaches pinkes Band am oberen Rand des Keils",
+   "laenge_px": 24.1,
+   "breite_px": 5.1,
+   "ausrichtung_grad": 5.2,
+   "farbe_roh_rgb": [
+    181,
+    108,
+    173
+   ],
+   "farbe_roh_rgb_median": [
+    146,
+    86,
+    147
+   ],
+   "farbton_grad": 306,
+   "kante_10_90_px": {
+    "oben": 6.0,
+    "rechts": null,
+    "unten": 4.9,
+    "links": 5.0
+   },
+   "kante_urteil": "mittel",
+   "art": "Oberflaechenfarbe",
+   "deutung": "Oberer Abschluss von A30, keine Trennung: Senke nur 3 %. H 306, Rosa-Familie wie A01.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A30",
+   "name": "rotweiss_keil_268_450",
+   "bild": 1,
+   "polygon": [
+    [
+     265,
+     432
+    ],
+    [
+     265,
+     436
+    ],
+    [
+     267,
+     440
+    ],
+    [
+     270,
+     443
+    ],
+    [
+     275,
+     445
+    ],
+    [
+     278,
+     438
+    ],
+    [
+     277,
+     433
+    ]
+   ],
+   "punkt": [
+    272.0,
+    437.7
+   ],
+   "form": "Rot-weiß-rosa Keil am unteren Bildrand, x 255–285, y 425–480, wird unten vom Bildrand abgeschnitten",
+   "laenge_px": 17.0,
+   "breite_px": 9.6,
+   "ausrichtung_grad": -37.4,
+   "farbe_roh_rgb": [
+    238,
+    225,
+    234
+   ],
+   "farbe_roh_rgb_median": [
+    208,
+    183,
+    199
+   ],
+   "farbton_grad": 318,
+   "kante_10_90_px": {
+    "oben": 5.2,
+    "rechts": 6.0,
+    "unten": 5.4,
+    "links": 6.5
+   },
+   "kante_urteil": "mittel",
+   "art": "offen",
+   "deutung": "Rosa-Familie (H 318–338), damit neben A01 die zweite rötliche Stelle. Ob Körperteil, Fremdkörper oder Bodenmarke: nicht erkennbar; stößt ans Wasserzeichen und an den Bildrand.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A31",
+   "name": "duennlinie_245_433",
+   "bild": 1,
+   "polygon": [
+    [
+     238,
+     441
+    ],
+    [
+     253,
+     426
+    ],
+    [
+     251,
+     424
+    ],
+    [
+     236,
+     439
+    ]
+   ],
+   "punkt": [
+    244.5,
+    432.5
+   ],
+   "form": "Dünne gerade lavendelfarbene Linie von (237,440) bis (252,425)",
+   "laenge_px": 21.2,
+   "breite_px": 4,
+   "ausrichtung_grad": 45.0,
+   "farbe_roh_rgb": [
+    138,
+    115,
+    163
+   ],
+   "farbe_roh_rgb_median": [
+    83,
+    71,
+    114
+   ],
+   "farbton_grad": 266,
+   "kante_10_90_px": null,
+   "kante_urteil": "an der Aufloesungsgrenze, Breite ist Obergrenze",
+   "art": "Fremdkoerper",
+   "deutung": "Kollinear (±1 px) mit A18, siehe Gruppe G1. Die Messmaske ist vom Wasserzeichen beeinflusst; Lage aus dem Querprofil.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A32",
+   "name": "fleck_213_407",
+   "bild": 1,
+   "polygon": [
+    [
+     204,
+     403
+    ],
+    [
+     204,
+     405
+    ],
+    [
+     207,
+     405
+    ],
+    [
+     212,
+     411
+    ],
+    [
+     213,
+     411
+    ],
+    [
+     213,
+     406
+    ],
+    [
+     214,
+     405
+    ],
+    [
+     215,
+     406
+    ],
+    [
+     217,
+     403
+    ],
+    [
+     214,
+     400
+    ]
+   ],
+   "punkt": [
+    211.1,
+    404.2
+   ],
+   "form": "Lavendelfleck links unten",
+   "laenge_px": 14.1,
+   "breite_px": 6.6,
+   "ausrichtung_grad": 5.9,
+   "farbe_roh_rgb": [
+    99,
+    101,
+    155
+   ],
+   "farbe_roh_rgb_median": [
+    94,
+    92,
+    141
+   ],
+   "farbton_grad": 238,
+   "kante_10_90_px": {
+    "oben": 4.0,
+    "rechts": 3.4,
+    "unten": 8.5,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Art nicht bestimmbar, könnte Boden in einer Lücke sein.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A33",
+   "name": "bogen_220_368",
+   "bild": 1,
+   "polygon": [
+    [
+     214,
+     367
+    ],
+    [
+     214,
+     371
+    ],
+    [
+     215,
+     370
+    ],
+    [
+     220,
+     372
+    ],
+    [
+     224,
+     371
+    ],
+    [
+     222,
+     367
+    ],
+    [
+     220,
+     366
+    ],
+    [
+     215,
+     366
+    ]
+   ],
+   "punkt": [
+    218.5,
+    368.8
+   ],
+   "form": "Schwacher kurzer Bogen auf der linken Rundung",
+   "laenge_px": 11.7,
+   "breite_px": 6.4,
+   "ausrichtung_grad": -17.2,
+   "farbe_roh_rgb": [
+    58,
+    62,
+    91
+   ],
+   "farbe_roh_rgb_median": [
+    52,
+    53,
+    85
+   ],
+   "farbton_grad": 232,
+   "kante_10_90_px": {
+    "oben": 2.8,
+    "rechts": 6.5,
+    "unten": 4.6,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "Glanzlicht",
+   "deutung": "Schwache Lichtkante; Senke zum Boden nur 28 %, Überstrahlung nicht ausgeschlossen.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A34",
+   "name": "tuerkis_210_423",
+   "bild": 1,
+   "polygon": [
+    [
+     198,
+     416
+    ],
+    [
+     198,
+     425
+    ],
+    [
+     205,
+     425
+    ],
+    [
+     213,
+     427
+    ],
+    [
+     216,
+     424
+    ],
+    [
+     216,
+     422
+    ],
+    [
+     212,
+     419
+    ],
+    [
+     207,
+     419
+    ],
+    [
+     204,
+     417
+    ]
+   ],
+   "punkt": [
+    206.0,
+    421.7
+   ],
+   "form": "Heller blauer Fleck am linken unteren Rand",
+   "laenge_px": 20.2,
+   "breite_px": 8.3,
+   "ausrichtung_grad": -11.5,
+   "farbe_roh_rgb": [
+    144,
+    178,
+    204
+   ],
+   "farbe_roh_rgb_median": [
+    124,
+    156,
+    180
+   ],
+   "farbton_grad": 206,
+   "kante_10_90_px": {
+    "oben": 4.8,
+    "rechts": 6.2,
+    "unten": 7.9,
+    "links": 5.8
+   },
+   "kante_urteil": "mittel",
+   "art": "Hintergrund",
+   "deutung": "Farbe wie der Boden (122,177,197); Senke zum Boden nur 21 %.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A35",
+   "name": "violettfleck_340_222",
+   "bild": 1,
+   "polygon": [
+    [
+     334,
+     218
+    ],
+    [
+     332,
+     220
+    ],
+    [
+     332,
+     230
+    ],
+    [
+     336,
+     229
+    ],
+    [
+     337,
+     230
+    ],
+    [
+     336,
+     231
+    ],
+    [
+     337,
+     231
+    ],
+    [
+     337,
+     228
+    ],
+    [
+     335,
+     227
+    ],
+    [
+     337,
+     226
+    ],
+    [
+     339,
+     222
+    ],
+    [
+     337,
+     218
+    ]
+   ],
+   "punkt": [
+    334.8,
+    223.6
+   ],
+   "form": "Violetter Hof rechts neben A01",
+   "laenge_px": 14.0,
+   "breite_px": 6.2,
+   "ausrichtung_grad": 81.5,
+   "farbe_roh_rgb": [
+    91,
+    39,
+    85
+   ],
+   "farbe_roh_rgb_median": [
+    82,
+    36,
+    72
+   ],
+   "farbton_grad": 306,
+   "kante_10_90_px": {
+    "oben": 7.0,
+    "rechts": 11.6,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "weich",
+   "art": "Rand-Ueberstrahlung",
+   "deutung": "Farbsaum von A01: liegt innerhalb der Farbunschärfe von rund 10 px, kein eigenes Helligkeitsmerkmal.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A36",
+   "name": "gelbgruener_rand_336_203",
+   "bild": 1,
+   "polygon": [
+    [
+     338,
+     196
+    ],
+    [
+     339,
+     200
+    ],
+    [
+     344,
+     204
+    ]
+   ],
+   "punkt": [
+    340.7,
+    200.2
+   ],
+   "form": "Gelbgrüner Saum an der oberen Figurkante",
+   "laenge_px": 11.0,
+   "breite_px": 2.4,
+   "ausrichtung_grad": -50.6,
+   "farbe_roh_rgb": [
+    155,
+    135,
+    92
+   ],
+   "farbe_roh_rgb_median": [
+    148,
+    128,
+    87
+   ],
+   "farbton_grad": 40,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": null,
+    "unten": null,
+    "links": 12.9
+   },
+   "kante_urteil": "weich",
+   "art": "Rand-Ueberstrahlung",
+   "deutung": "Überstrahlung des hellen Hintergrunds: 4 px neben ihm, H 40 ist kein Figurton, Kante 12,8 px weich.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A37",
+   "name": "rosa_randfleck_251_251",
+   "bild": 1,
+   "polygon": [
+    [
+     243,
+     245
+    ],
+    [
+     240,
+     245
+    ],
+    [
+     240,
+     254
+    ],
+    [
+     245,
+     252
+    ],
+    [
+     246,
+     249
+    ]
+   ],
+   "punkt": [
+    242.4,
+    249.2
+   ],
+   "form": "Heller Fleck auf der orangen Wand links der Figur",
+   "laenge_px": 10.3,
+   "breite_px": 6.2,
+   "ausrichtung_grad": 83.0,
+   "farbe_roh_rgb": [
+    159,
+    108,
+    120
+   ],
+   "farbe_roh_rgb_median": [
+    141,
+    87,
+    98
+   ],
+   "farbton_grad": 346,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 4.8,
+    "unten": null,
+    "links": 6.5
+   },
+   "kante_urteil": "mittel",
+   "art": "Hintergrund",
+   "deutung": "Liegt nach Lage noch auf der Wand, 30 px von hellen Nachbarn; eigener Wandglanz.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "A38",
+   "name": "grauschliere_413_250",
+   "bild": 1,
+   "polygon": [
+    [
+     407,
+     236
+    ],
+    [
+     410,
+     239
+    ],
+    [
+     410,
+     245
+    ],
+    [
+     413,
+     249
+    ],
+    [
+     415,
+     257
+    ],
+    [
+     419,
+     261
+    ],
+    [
+     421,
+     260
+    ],
+    [
+     417,
+     250
+    ],
+    [
+     415,
+     249
+    ],
+    [
+     416,
+     244
+    ],
+    [
+     413,
+     240
+    ],
+    [
+     412,
+     236
+    ]
+   ],
+   "punkt": [
+    414.3,
+    248.8
+   ],
+   "form": "Lange dünne graubraune Schliere am rechten Figurrand",
+   "laenge_px": 28.7,
+   "breite_px": 5.1,
+   "ausrichtung_grad": -68.3,
+   "farbe_roh_rgb": [
+    82,
+    72,
+    67
+   ],
+   "farbe_roh_rgb_median": [
+    79,
+    63,
+    53
+   ],
+   "farbton_grad": 20,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 3.0,
+    "unten": null,
+    "links": 3.8
+   },
+   "kante_urteil": "hart",
+   "art": "Hintergrund",
+   "deutung": "Farbe H 20 wie Wand, gerade und scharf (3,0–3,8 px); vermutlich Bauteil dahinter. Keine Raumvorlage.",
+   "sicherheit": "offen",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "offen"
+  },
+  {
+   "id": "A39",
+   "name": "grauband_396_267",
+   "bild": 1,
+   "polygon": [
+    [
+     388,
+     268
+    ],
+    [
+     388,
+     271
+    ],
+    [
+     393,
+     276
+    ],
+    [
+     402,
+     276
+    ],
+    [
+     393,
+     274
+    ],
+    [
+     395,
+     272
+    ],
+    [
+     395,
+     268
+    ],
+    [
+     397,
+     266
+    ],
+    [
+     397,
+     263
+    ],
+    [
+     395,
+     262
+    ]
+   ],
+   "punkt": [
+    393.4,
+    270.0
+   ],
+   "form": "Schwaches lavendelgraues Band über dem Dreieck",
+   "laenge_px": 16.6,
+   "breite_px": 6.8,
+   "ausrichtung_grad": -67.5,
+   "farbe_roh_rgb": [
+    62,
+    59,
+    90
+   ],
+   "farbe_roh_rgb_median": [
+    53,
+    51,
+    80
+   ],
+   "farbton_grad": 246,
+   "kante_10_90_px": {
+    "oben": 5.0,
+    "rechts": 7.8,
+    "unten": null,
+    "links": 6.5
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Schwache Lichtfläche auf der Figur oberhalb von A12.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "B01",
+   "name": "bogen_links_oben",
+   "bild": 2,
+   "polygon": [
+    [
+     291,
+     169
+    ],
+    [
+     288,
+     169
+    ],
+    [
+     286,
+     171
+    ],
+    [
+     283,
+     179
+    ],
+    [
+     283,
+     184
+    ],
+    [
+     278,
+     188
+    ],
+    [
+     279,
+     197
+    ],
+    [
+     283,
+     197
+    ],
+    [
+     285,
+     193
+    ],
+    [
+     291,
+     187
+    ],
+    [
+     292,
+     182
+    ],
+    [
+     292,
+     171
+    ]
+   ],
+   "punkt": [
+    285.8,
+    183.3
+   ],
+   "form": "Heller Bogenabschnitt links oben, rosa-lavendel",
+   "laenge_px": 31.4,
+   "breite_px": 9.5,
+   "ausrichtung_grad": 68.7,
+   "farbe_roh_rgb": [
+    129,
+    59,
+    99
+   ],
+   "farbe_roh_rgb_median": [
+    115,
+    49,
+    85
+   ],
+   "farbton_grad": 326,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 5.6,
+    "unten": null,
+    "links": 6.0
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Liegt vor der schwarzen Türöffnung (Raum Y=0, Rest +69), daher weder Raumstruktur noch Überstrahlung: nächster heller Nachbar 69 px. Farbton H 326 liegt in der Spanne des weißen Kittels (H 306 bis 8), also heller Figurteil unter demselben Modell-Licht, nicht violette Eigenfarbe.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "keine Glieder abgrenzbar; verläuft längs des linken oberen Umrisses",
+   "raum_rest_y": 69.1
+  },
+  {
+   "id": "B02",
+   "name": "bogen_links_unten",
+   "bild": 2,
+   "polygon": [
+    [
+     284,
+     200
+    ],
+    [
+     274,
+     200
+    ],
+    [
+     274,
+     204
+    ],
+    [
+     272,
+     206
+    ],
+    [
+     271,
+     204
+    ],
+    [
+     270,
+     206
+    ],
+    [
+     270,
+     215
+    ],
+    [
+     272,
+     215
+    ],
+    [
+     278,
+     210
+    ],
+    [
+     280,
+     210
+    ],
+    [
+     283,
+     206
+    ]
+   ],
+   "punkt": [
+    276.7,
+    206.0
+   ],
+   "form": "Fortsetzung von B01 nach links unten, dunkler, verliert sich bei etwa (265,235)",
+   "laenge_px": 21.5,
+   "breite_px": 9.5,
+   "ausrichtung_grad": 47.8,
+   "farbe_roh_rgb": [
+    79,
+    21,
+    40
+   ],
+   "farbe_roh_rgb_median": [
+    70,
+    17,
+    40
+   ],
+   "farbton_grad": 340,
+   "kante_10_90_px": {
+    "oben": 5.2,
+    "rechts": 7.8,
+    "unten": 9.5,
+    "links": 7.0
+   },
+   "kante_urteil": "weich",
+   "art": "Glanzlicht",
+   "deutung": "Wie B01, Rest +25.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 24.9
+  },
+  {
+   "id": "B03",
+   "name": "kopfblob_blau",
+   "bild": 2,
+   "polygon": [
+    [
+     318,
+     165
+    ],
+    [
+     320,
+     166
+    ],
+    [
+     320,
+     171
+    ],
+    [
+     324,
+     175
+    ],
+    [
+     328,
+     175
+    ],
+    [
+     332,
+     171
+    ],
+    [
+     335,
+     171
+    ],
+    [
+     335,
+     168
+    ],
+    [
+     332,
+     164
+    ],
+    [
+     324,
+     163
+    ]
+   ],
+   "punkt": [
+    326.8,
+    168.3
+   ],
+   "form": "Blauvioletter runder Fleck am Scheitel",
+   "laenge_px": 18.5,
+   "breite_px": 10.1,
+   "ausrichtung_grad": -5.3,
+   "farbe_roh_rgb": [
+    72,
+    27,
+    72
+   ],
+   "farbe_roh_rgb_median": [
+    66,
+    22,
+    59
+   ],
+   "farbton_grad": 300,
+   "kante_10_90_px": {
+    "oben": 8.5,
+    "rechts": 9.0,
+    "unten": 6.9,
+    "links": 10.8
+   },
+   "kante_urteil": "weich",
+   "art": "offen",
+   "deutung": "Blauanteil höher als bei allen anderen Stellen (R=B), Rest +29. Liegt an der Oberkante der Figur. Kante 9 px weich. Art nicht bestimmbar.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 29.3
+  },
+  {
+   "id": "B04",
+   "name": "innenbogen_rot_308_188",
+   "bild": 2,
+   "polygon": [
+    [
+     323,
+     178
+    ],
+    [
+     320,
+     178
+    ],
+    [
+     319,
+     180
+    ],
+    [
+     316,
+     180
+    ],
+    [
+     315,
+     178
+    ],
+    [
+     306,
+     178
+    ],
+    [
+     304,
+     180
+    ],
+    [
+     303,
+     184
+    ],
+    [
+     299,
+     186
+    ],
+    [
+     296,
+     185
+    ],
+    [
+     296,
+     187
+    ],
+    [
+     301,
+     192
+    ],
+    [
+     302,
+     195
+    ],
+    [
+     311,
+     195
+    ],
+    [
+     319,
+     187
+    ],
+    [
+     320,
+     184
+    ],
+    [
+     323,
+     183
+    ]
+   ],
+   "punkt": [
+    309.5,
+    186.0
+   ],
+   "form": "Rötliche breite Fläche unter dem Scheitel, x 296–340",
+   "laenge_px": 29.2,
+   "breite_px": 12.6,
+   "ausrichtung_grad": 26.5,
+   "farbe_roh_rgb": [
+    104,
+    17,
+    43
+   ],
+   "farbe_roh_rgb_median": [
+    92,
+    17,
+    40
+   ],
+   "farbton_grad": 342,
+   "kante_10_90_px": {
+    "oben": 8.5,
+    "rechts": 11.2,
+    "unten": 10.2,
+    "links": 8.2
+   },
+   "kante_urteil": "weich",
+   "art": "Oberflaechenfarbe",
+   "deutung": "Figurfläche im Rotlicht: G sehr niedrig (104,17,43), anders als die lavendelfarbenen Bänder; Rest +32 vor schwarzer Tür.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 31.6
+  },
+  {
+   "id": "B05",
+   "name": "innenband_330_210",
+   "bild": 2,
+   "polygon": [
+    [
+     318,
+     208
+    ],
+    [
+     318,
+     211
+    ],
+    [
+     330,
+     216
+    ],
+    [
+     335,
+     215
+    ],
+    [
+     336,
+     218
+    ],
+    [
+     338,
+     217
+    ],
+    [
+     341,
+     218
+    ],
+    [
+     341,
+     216
+    ],
+    [
+     343,
+     215
+    ],
+    [
+     339,
+     208
+    ],
+    [
+     332,
+     208
+    ],
+    [
+     331,
+     210
+    ],
+    [
+     327,
+     210
+    ],
+    [
+     325,
+     208
+    ],
+    [
+     321,
+     207
+    ]
+   ],
+   "punkt": [
+    332.3,
+    212.2
+   ],
+   "form": "Sehr schwaches Band",
+   "laenge_px": 26.8,
+   "breite_px": 6.9,
+   "ausrichtung_grad": -9.3,
+   "farbe_roh_rgb": [
+    62,
+    2,
+    24
+   ],
+   "farbe_roh_rgb_median": [
+    56,
+    6,
+    22
+   ],
+   "farbton_grad": 338,
+   "kante_10_90_px": {
+    "oben": 8.8,
+    "rechts": 8.4,
+    "unten": 7.8,
+    "links": null
+   },
+   "kante_urteil": "weich",
+   "art": "offen",
+   "deutung": "Rest nur +8, an der Messgrenze. Nur im gestreckten Rotkanal sichtbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 8.2
+  },
+  {
+   "id": "B06",
+   "name": "bogen_rechts_375_205",
+   "bild": 2,
+   "polygon": [
+    [
+     364,
+     191
+    ],
+    [
+     368,
+     195
+    ],
+    [
+     368,
+     199
+    ],
+    [
+     372,
+     202
+    ],
+    [
+     372,
+     207
+    ],
+    [
+     376,
+     211
+    ],
+    [
+     380,
+     210
+    ],
+    [
+     384,
+     219
+    ],
+    [
+     386,
+     217
+    ],
+    [
+     386,
+     215
+    ],
+    [
+     381,
+     210
+    ],
+    [
+     379,
+     205
+    ],
+    [
+     373,
+     199
+    ],
+    [
+     373,
+     196
+    ]
+   ],
+   "punkt": [
+    375.4,
+    204.8
+   ],
+   "form": "Dünne gerade Linie, 35 px lang, Breite 4,6 px an der Auflösungsgrenze, Kanten 3,8–5,6 px hart",
+   "laenge_px": 35.4,
+   "breite_px": 4.6,
+   "ausrichtung_grad": -53.9,
+   "farbe_roh_rgb": [
+    86,
+    49,
+    76
+   ],
+   "farbe_roh_rgb_median": [
+    68,
+    37,
+    58
+   ],
+   "farbton_grad": 316,
+   "kante_10_90_px": {
+    "oben": 3.8,
+    "rechts": 3.8,
+    "unten": 5.6,
+    "links": 5.0
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Keine Randlinie: liegt 21 px (lotrecht) INNERHALB der gemessenen Verdeckungskante. Innenlinie auf der Figur; ob Farbstreifen oder beleuchteter Grat, ist nicht trennbar. Raum hat dort nichts in dieser Richtung (Rest +27).",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "sicher",
+   "bezug_zum_glied": "keine Glieder abgrenzbar; läuft etwa parallel zur Oberkante (15° Abweichung)",
+   "raum_rest_y": 27.0
+  },
+  {
+   "id": "B07",
+   "name": "randband_rechts_410_218",
+   "bild": 2,
+   "polygon": [
+    [
+     399,
+     207
+    ],
+    [
+     402,
+     212
+    ],
+    [
+     412,
+     221
+    ],
+    [
+     412,
+     223
+    ],
+    [
+     418,
+     229
+    ],
+    [
+     424,
+     229
+    ],
+    [
+     424,
+     226
+    ],
+    [
+     421,
+     225
+    ],
+    [
+     414,
+     218
+    ],
+    [
+     413,
+     214
+    ],
+    [
+     408,
+     209
+    ],
+    [
+     401,
+     206
+    ]
+   ],
+   "punkt": [
+    410.7,
+    216.9
+   ],
+   "form": "Schräges Band rechts, Spitze am oberen Ende (403,210), läuft zur Lampe hin",
+   "laenge_px": 34.2,
+   "breite_px": 6.0,
+   "ausrichtung_grad": -45.3,
+   "farbe_roh_rgb": [
+    154,
+    105,
+    132
+   ],
+   "farbe_roh_rgb_median": [
+    121,
+    76,
+    106
+   ],
+   "farbton_grad": 326,
+   "kante_10_90_px": {
+    "oben": 7.2,
+    "rechts": 7.0,
+    "unten": 5.2,
+    "links": 5.4
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Lichtkante dicht an der Silhouette: 8 px lotrecht innerhalb der Verdeckungskante, parallel zu ihr (6° Abweichung). Keine Überstrahlung der weißen Fläche: Hellpunkt 31 px entfernt, Senke 48 %.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "bezug_zum_glied": "keine Glieder abgrenzbar",
+   "raum_rest_y": 37.4
+  },
+  {
+   "id": "B08",
+   "name": "haken_oben_230_220",
+   "bild": 2,
+   "polygon": [
+    [
+     241,
+     219
+    ],
+    [
+     239,
+     217
+    ],
+    [
+     224,
+     218
+    ],
+    [
+     222,
+     219
+    ],
+    [
+     222,
+     223
+    ],
+    [
+     233,
+     223
+    ],
+    [
+     237,
+     226
+    ],
+    [
+     235,
+     225
+    ],
+    [
+     237,
+     223
+    ],
+    [
+     240,
+     223
+    ]
+   ],
+   "punkt": [
+    231.5,
+    220.4
+   ],
+   "form": "Waagerechter oberer Schenkel des Hakens",
+   "laenge_px": 20.1,
+   "breite_px": 6.1,
+   "ausrichtung_grad": 2.0,
+   "farbe_roh_rgb": [
+    94,
+    63,
+    89
+   ],
+   "farbe_roh_rgb_median": [
+    80,
+    48,
+    73
+   ],
+   "farbton_grad": 310,
+   "kante_10_90_px": {
+    "oben": 4.8,
+    "rechts": 8.2,
+    "unten": 6.0,
+    "links": null
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Heller Rand einer gefüllten Fläche, siehe Gruppe G5.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 58.4
+  },
+  {
+   "id": "B09",
+   "name": "haken_rechts_236_240",
+   "bild": 2,
+   "polygon": [
+    [
+     237,
+     226
+    ],
+    [
+     236,
+     226
+    ],
+    [
+     236,
+     232
+    ],
+    [
+     234,
+     234
+    ],
+    [
+     233,
+     239
+    ],
+    [
+     227,
+     243
+    ],
+    [
+     226,
+     247
+    ],
+    [
+     228,
+     249
+    ],
+    [
+     225,
+     250
+    ],
+    [
+     224,
+     255
+    ],
+    [
+     228,
+     253
+    ],
+    [
+     229,
+     248
+    ],
+    [
+     235,
+     249
+    ],
+    [
+     237,
+     248
+    ],
+    [
+     240,
+     243
+    ],
+    [
+     241,
+     230
+    ]
+   ],
+   "punkt": [
+    234.2,
+    241.1
+   ],
+   "form": "Absteigender rechter Schenkel des Hakens, unten nach links biegend",
+   "laenge_px": 32.7,
+   "breite_px": 7.3,
+   "ausrichtung_grad": 61.2,
+   "farbe_roh_rgb": [
+    102,
+    58,
+    81
+   ],
+   "farbe_roh_rgb_median": [
+    87,
+    44,
+    68
+   ],
+   "farbton_grad": 328,
+   "kante_10_90_px": {
+    "oben": 8.2,
+    "rechts": 6.0,
+    "unten": 7.6,
+    "links": 7.2
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Wie B08.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 57.8
+  },
+  {
+   "id": "B10",
+   "name": "punkt_280_276",
+   "bild": 2,
+   "polygon": [
+    [
+     277,
+     274
+    ],
+    [
+     277,
+     276
+    ],
+    [
+     279,
+     278
+    ],
+    [
+     283,
+     278
+    ],
+    [
+     284,
+     276
+    ],
+    [
+     283,
+     273
+    ],
+    [
+     280,
+     272
+    ]
+   ],
+   "punkt": [
+    280.4,
+    275.3
+   ],
+   "form": "Kleiner Punkt in der Türöffnung",
+   "laenge_px": 8.3,
+   "breite_px": 6.1,
+   "ausrichtung_grad": -11.3,
+   "farbe_roh_rgb": [
+    77,
+    31,
+    47
+   ],
+   "farbe_roh_rgb_median": [
+    69,
+    24,
+    39
+   ],
+   "farbton_grad": 340,
+   "kante_10_90_px": {
+    "oben": 4.6,
+    "rechts": null,
+    "unten": 5.0,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Nicht im Raum: Türinneres schwarz, Rest +30. Art nicht bestimmbar.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 30.3
+  },
+  {
+   "id": "B11",
+   "name": "punkt_257_262",
+   "bild": 2,
+   "polygon": [
+    [
+     256,
+     260
+    ],
+    [
+     255,
+     265
+    ],
+    [
+     259,
+     265
+    ],
+    [
+     261,
+     263
+    ],
+    [
+     260,
+     260
+    ]
+   ],
+   "punkt": [
+    257.8,
+    262.6
+   ],
+   "form": "Sehr schwacher Punkt",
+   "laenge_px": 8.0,
+   "breite_px": 5.6,
+   "ausrichtung_grad": 52.2,
+   "farbe_roh_rgb": [
+    55,
+    25,
+    40
+   ],
+   "farbe_roh_rgb_median": [
+    52,
+    22,
+    37
+   ],
+   "farbton_grad": 330,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": null,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Rest +18, klar über dem Rauschen (Standardabweichung 2). Art nicht bestimmbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 18.4
+  },
+  {
+   "id": "B12",
+   "name": "punkt_217_274",
+   "bild": 2,
+   "polygon": [
+    [
+     216,
+     271
+    ],
+    [
+     215,
+     276
+    ],
+    [
+     219,
+     277
+    ],
+    [
+     220,
+     273
+    ],
+    [
+     219,
+     271
+    ]
+   ],
+   "punkt": [
+    217.3,
+    274.0
+   ],
+   "form": "Sehr schwacher Punkt unterhalb des Hakens",
+   "laenge_px": 7.1,
+   "breite_px": 5.6,
+   "ausrichtung_grad": -87.2,
+   "farbe_roh_rgb": [
+    58,
+    24,
+    33
+   ],
+   "farbe_roh_rgb_median": [
+    53,
+    21,
+    33
+   ],
+   "farbton_grad": 344,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": null,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "offen",
+   "deutung": "Rest +19. Könnte das Ende des Hakens sein, nicht belegbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 18.9
+  },
+  {
+   "id": "B13",
+   "name": "glanzpunkt_366_303",
+   "bild": 2,
+   "polygon": [
+    [
+     364,
+     297
+    ],
+    [
+     361,
+     301
+    ],
+    [
+     362,
+     304
+    ],
+    [
+     364,
+     306
+    ],
+    [
+     370,
+     308
+    ],
+    [
+     371,
+     307
+    ],
+    [
+     370,
+     302
+    ]
+   ],
+   "punkt": [
+    366.1,
+    302.8
+   ],
+   "form": "Kleiner länglicher, fast weißer Fleck, Achse −47°, dunkelblauer Hof links oben",
+   "laenge_px": 13.1,
+   "breite_px": 6.7,
+   "ausrichtung_grad": -47.0,
+   "farbe_roh_rgb": [
+    220,
+    196,
+    207
+   ],
+   "farbe_roh_rgb_median": [
+    186,
+    143,
+    157
+   ],
+   "farbton_grad": 332,
+   "kante_10_90_px": {
+    "oben": 6.0,
+    "rechts": 5.6,
+    "unten": 5.0,
+    "links": 4.8
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Hellster Punkt im Figurinneren, heller als jede Stelle des weißen Kittels (Y 208 gegen 194). Nicht im Raum (Rest +139). Liegt am unteren Ende der Linie B14. Glanz auf kleiner harter Fläche oder eine Spitze; das Bild trennt das nicht. Der Hof dürfte Nachschärfung sein.",
+   "sicherheit": "offen",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 139.3
+  },
+  {
+   "id": "B14",
+   "name": "strang_375_275",
+   "bild": 2,
+   "polygon": [
+    [
+     377,
+     277
+    ],
+    [
+     374,
+     276
+    ],
+    [
+     369,
+     278
+    ],
+    [
+     362,
+     290
+    ],
+    [
+     368,
+     292
+    ],
+    [
+     371,
+     287
+    ],
+    [
+     371,
+     284
+    ],
+    [
+     374,
+     281
+    ],
+    [
+     376,
+     281
+    ]
+   ],
+   "punkt": [
+    368.8,
+    284.3
+   ],
+   "form": "Schwacher Strang vom Glanzpunkt nach rechts oben",
+   "laenge_px": 20.5,
+   "breite_px": 6.6,
+   "ausrichtung_grad": 51.7,
+   "farbe_roh_rgb": [
+    63,
+    23,
+    52
+   ],
+   "farbe_roh_rgb_median": [
+    66,
+    26,
+    45
+   ],
+   "farbton_grad": 316,
+   "kante_10_90_px": {
+    "oben": 7.1,
+    "rechts": 8.0,
+    "unten": 5.5,
+    "links": 8.5
+   },
+   "kante_urteil": "weich",
+   "art": "Glanzlicht",
+   "deutung": "Dünne Lichtlinie auf der Figur, die hier den Türpfosten verdeckt (Rest −51).",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": -51.3
+  },
+  {
+   "id": "B15",
+   "name": "band_rechts_390_240",
+   "bild": 2,
+   "polygon": [
+    [
+     382,
+     237
+    ],
+    [
+     383,
+     241
+    ],
+    [
+     389,
+     243
+    ],
+    [
+     393,
+     246
+    ],
+    [
+     390,
+     249
+    ],
+    [
+     394,
+     250
+    ],
+    [
+     396,
+     247
+    ],
+    [
+     399,
+     247
+    ],
+    [
+     402,
+     244
+    ],
+    [
+     403,
+     245
+    ],
+    [
+     404,
+     243
+    ],
+    [
+     404,
+     238
+    ],
+    [
+     398,
+     238
+    ],
+    [
+     395,
+     236
+    ],
+    [
+     392,
+     236
+    ],
+    [
+     389,
+     232
+    ],
+    [
+     387,
+     233
+    ],
+    [
+     388,
+     234
+    ],
+    [
+     387,
+     235
+    ],
+    [
+     383,
+     235
+    ]
+   ],
+   "punkt": [
+    393.3,
+    240.5
+   ],
+   "form": "Breites schwaches Band auf Höhe einer Pfostenleiste",
+   "laenge_px": 23.8,
+   "breite_px": 10.8,
+   "ausrichtung_grad": -19.1,
+   "farbe_roh_rgb": [
+    74,
+    30,
+    55
+   ],
+   "farbe_roh_rgb_median": [
+    70,
+    24,
+    48
+   ],
+   "farbton_grad": 326,
+   "kante_10_90_px": {
+    "oben": 6.5,
+    "rechts": 8.5,
+    "unten": 10.2,
+    "links": 10.1
+   },
+   "kante_urteil": "weich",
+   "art": "offen",
+   "deutung": "Lage fällt mit einer Raumleiste zusammen (Rest +5), die Farbe B/R 0,74 ist aber lavendel statt rot. Nicht entscheidbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 5.1
+  },
+  {
+   "id": "B16",
+   "name": "fleck_370_334",
+   "bild": 2,
+   "polygon": [
+    [
+     380,
+     331
+    ],
+    [
+     377,
+     328
+    ],
+    [
+     368,
+     333
+    ],
+    [
+     376,
+     337
+    ],
+    [
+     380,
+     334
+    ]
+   ],
+   "punkt": [
+    375.2,
+    332.5
+   ],
+   "form": "Roter flacher Fleck rechts unten",
+   "laenge_px": 13.2,
+   "breite_px": 6.6,
+   "ausrichtung_grad": 7.5,
+   "farbe_roh_rgb": [
+    180,
+    59,
+    68
+   ],
+   "farbe_roh_rgb_median": [
+    158,
+    44,
+    53
+   ],
+   "farbton_grad": 356,
+   "kante_10_90_px": {
+    "oben": 6.2,
+    "rechts": 4.8,
+    "unten": 7.8,
+    "links": null
+   },
+   "kante_urteil": "mittel",
+   "art": "offen",
+   "deutung": "Nicht im Raum (Rest +60), Farbe rot wie Umgebung (B/R 0,38). Art nicht bestimmbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 59.8
+  },
+  {
+   "id": "B17",
+   "name": "unterstreifen_spitze_332_323",
+   "bild": 2,
+   "polygon": [
+    [
+     338,
+     321
+    ],
+    [
+     336,
+     319
+    ],
+    [
+     328,
+     318
+    ],
+    [
+     327,
+     319
+    ],
+    [
+     327,
+     324
+    ],
+    [
+     322,
+     330
+    ],
+    [
+     322,
+     332
+    ],
+    [
+     334,
+     332
+    ],
+    [
+     339,
+     324
+    ]
+   ],
+   "punkt": [
+    330.7,
+    326.0
+   ],
+   "form": "Oberes rechtes Ende des Unterstreifens, lavendel",
+   "laenge_px": 20.1,
+   "breite_px": 9.5,
+   "ausrichtung_grad": 45.2,
+   "farbe_roh_rgb": [
+    203,
+    118,
+    166
+   ],
+   "farbe_roh_rgb_median": [
+    177,
+    87,
+    131
+   ],
+   "farbton_grad": 326,
+   "kante_10_90_px": {
+    "oben": 5.9,
+    "rechts": 4.8,
+    "unten": 5.4,
+    "links": 9.2
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Teil von Gruppe G6. Farbton H 326 wie B01 und Kittel. Nicht im Raum (Rest +116).",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 116.2
+  },
+  {
+   "id": "B18",
+   "name": "unterstreifen_325_335",
+   "bild": 2,
+   "polygon": [
+    [
+     335,
+     328
+    ],
+    [
+     324,
+     329
+    ],
+    [
+     315,
+     337
+    ],
+    [
+     316,
+     339
+    ],
+    [
+     319,
+     339
+    ],
+    [
+     320,
+     337
+    ],
+    [
+     324,
+     339
+    ],
+    [
+     327,
+     339
+    ]
+   ],
+   "punkt": [
+    325.3,
+    333.6
+   ],
+   "form": "Abschnitt des Unterstreifens, rosa-lavendel",
+   "laenge_px": 22.9,
+   "breite_px": 5.9,
+   "ausrichtung_grad": 26.8,
+   "farbe_roh_rgb": [
+    208,
+    137,
+    171
+   ],
+   "farbe_roh_rgb_median": [
+    194,
+    101,
+    128
+   ],
+   "farbton_grad": 332,
+   "kante_10_90_px": {
+    "oben": 5.5,
+    "rechts": 6.5,
+    "unten": 8.5,
+    "links": 4.5
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Teil von Gruppe G6, Rest +129.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 128.6
+  },
+  {
+   "id": "B19",
+   "name": "unterstreifen_308_350",
+   "bild": 2,
+   "polygon": [
+    [
+     311,
+     343
+    ],
+    [
+     308,
+     343
+    ],
+    [
+     304,
+     345
+    ],
+    [
+     303,
+     350
+    ],
+    [
+     300,
+     352
+    ],
+    [
+     299,
+     351
+    ],
+    [
+     300,
+     362
+    ],
+    [
+     301,
+     359
+    ],
+    [
+     309,
+     357
+    ],
+    [
+     314,
+     353
+    ],
+    [
+     315,
+     347
+    ]
+   ],
+   "punkt": [
+    306.9,
+    351.3
+   ],
+   "form": "Abschnitt des Unterstreifens, lachsfarben",
+   "laenge_px": 22.2,
+   "breite_px": 10.2,
+   "ausrichtung_grad": 42.8,
+   "farbe_roh_rgb": [
+    198,
+    112,
+    118
+   ],
+   "farbe_roh_rgb_median": [
+    190,
+    93,
+    93
+   ],
+   "farbton_grad": 356,
+   "kante_10_90_px": {
+    "oben": 7.1,
+    "rechts": 8.2,
+    "unten": 6.8,
+    "links": 5.4
+   },
+   "kante_urteil": "weich",
+   "art": "Glanzlicht",
+   "deutung": "Teil von Gruppe G6, Rest +83.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 82.5
+  },
+  {
+   "id": "B20",
+   "name": "unterstreifen_hell_293_354",
+   "bild": 2,
+   "polygon": [
+    [
+     299,
+     353
+    ],
+    [
+     294,
+     349
+    ],
+    [
+     290,
+     350
+    ],
+    [
+     286,
+     355
+    ],
+    [
+     289,
+     360
+    ],
+    [
+     289,
+     364
+    ],
+    [
+     287,
+     366
+    ],
+    [
+     284,
+     366
+    ],
+    [
+     296,
+     366
+    ],
+    [
+     298,
+     365
+    ],
+    [
+     298,
+     359
+    ],
+    [
+     300,
+     356
+    ]
+   ],
+   "punkt": [
+    292.9,
+    357.5
+   ],
+   "form": "Hellster Abschnitt des Unterstreifens, fast weiß",
+   "laenge_px": 18.6,
+   "breite_px": 11.0,
+   "ausrichtung_grad": 86.4,
+   "farbe_roh_rgb": [
+    221,
+    180,
+    189
+   ],
+   "farbe_roh_rgb_median": [
+    201,
+    140,
+    140
+   ],
+   "farbton_grad": 346,
+   "kante_10_90_px": {
+    "oben": 5.0,
+    "rechts": 8.9,
+    "unten": 8.2,
+    "links": 5.2
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Teil von Gruppe G6, Y 201, heller als der Kittel (194). Rest +73.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 73.0
+  },
+  {
+   "id": "B21",
+   "name": "gabel_ast_287_385",
+   "bild": 2,
+   "polygon": [
+    [
+     296,
+     372
+    ],
+    [
+     290,
+     372
+    ],
+    [
+     281,
+     392
+    ],
+    [
+     282,
+     397
+    ],
+    [
+     285,
+     395
+    ],
+    [
+     284,
+     394
+    ],
+    [
+     285,
+     391
+    ],
+    [
+     289,
+     387
+    ],
+    [
+     290,
+     384
+    ],
+    [
+     292,
+     383
+    ]
+   ],
+   "punkt": [
+    288.0,
+    383.0
+   ],
+   "form": "Fortsetzung des Unterstreifens nach links unten, lachsrot",
+   "laenge_px": 29.6,
+   "breite_px": 5.9,
+   "ausrichtung_grad": 62.5,
+   "farbe_roh_rgb": [
+    230,
+    125,
+    126
+   ],
+   "farbe_roh_rgb_median": [
+    217,
+    113,
+    107
+   ],
+   "farbton_grad": 0,
+   "kante_10_90_px": {
+    "oben": 6.5,
+    "rechts": 6.2,
+    "unten": null,
+    "links": 7.5
+   },
+   "kante_urteil": "mittel",
+   "art": "Glanzlicht",
+   "deutung": "Teil von Gruppe G6, Rest +66. Keine Bodenleiste: deren Richtung ist +16°, hier +62°.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "ja",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 66.1
+  },
+  {
+   "id": "B22",
+   "name": "gabel_ast_282_365",
+   "bild": 2,
+   "polygon": [
+    [
+     286,
+     356
+    ],
+    [
+     289,
+     361
+    ],
+    [
+     289,
+     363
+    ],
+    [
+     284,
+     366
+    ],
+    [
+     287,
+     373
+    ],
+    [
+     294,
+     370
+    ]
+   ],
+   "punkt": [
+    288.4,
+    367.3
+   ],
+   "form": "Kreuzungsstelle bei (288,367)",
+   "laenge_px": 18.0,
+   "breite_px": 5.6,
+   "ausrichtung_grad": -84.6,
+   "farbe_roh_rgb": [
+    227,
+    126,
+    119
+   ],
+   "farbe_roh_rgb_median": [
+    206,
+    115,
+    107
+   ],
+   "farbton_grad": 4,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 12.5,
+    "unten": 3.8,
+    "links": 5.2
+   },
+   "kante_urteil": "mittel",
+   "art": "Hintergrund",
+   "deutung": "Teils Bodenleiste: Raum sagt hier mehr Helligkeit voraus als vorhanden (Rest −32). Keine sichere Figurstruktur.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": -32.2
+  },
+  {
+   "id": "B23",
+   "name": "oval_256_384",
+   "bild": 2,
+   "polygon": [
+    [
+     252,
+     379
+    ],
+    [
+     251,
+     380
+    ],
+    [
+     252,
+     384
+    ],
+    [
+     256,
+     390
+    ],
+    [
+     259,
+     392
+    ],
+    [
+     262,
+     391
+    ],
+    [
+     262,
+     383
+    ],
+    [
+     258,
+     379
+    ]
+   ],
+   "punkt": [
+    257.2,
+    384.7
+   ],
+   "form": "Schräges rosa Oval",
+   "laenge_px": 16.5,
+   "breite_px": 8.5,
+   "ausrichtung_grad": -55.8,
+   "farbe_roh_rgb": [
+    203,
+    105,
+    138
+   ],
+   "farbe_roh_rgb_median": [
+    184,
+    79,
+    113
+   ],
+   "farbton_grad": 340,
+   "kante_10_90_px": {
+    "oben": 6.5,
+    "rechts": 5.5,
+    "unten": 6.9,
+    "links": 6.2
+   },
+   "kante_urteil": "mittel",
+   "art": "offen",
+   "deutung": "Rest −2 nur wegen der Bodenleiste am selben Ort; Achse weicht 72° von ihr ab und Farbe ist rosa statt rot, also eher Objekt. Nicht belegt.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": -2.2
+  },
+  {
+   "id": "B24",
+   "name": "punkt_265_397",
+   "bild": 2,
+   "polygon": [
+    [
+     264,
+     395
+    ],
+    [
+     263,
+     399
+    ],
+    [
+     267,
+     400
+    ],
+    [
+     267,
+     396
+    ]
+   ],
+   "punkt": [
+    264.9,
+    397.7
+   ],
+   "form": "Kleiner roter Fleck",
+   "laenge_px": 6.8,
+   "breite_px": 4.2,
+   "ausrichtung_grad": -66.8,
+   "farbe_roh_rgb": [
+    217,
+    86,
+    98
+   ],
+   "farbe_roh_rgb_median": [
+    203,
+    73,
+    85
+   ],
+   "farbton_grad": 354,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 4.5,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "mittel",
+   "art": "offen",
+   "deutung": "Art nicht bestimmbar.",
+   "sicherheit": "offen",
+   "auf_figur": "offen",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 51.7
+  },
+  {
+   "id": "B25",
+   "name": "punkt_410_361",
+   "bild": 2,
+   "polygon": [
+    [
+     411,
+     356
+    ],
+    [
+     410,
+     360
+    ],
+    [
+     413,
+     363
+    ],
+    [
+     415,
+     361
+    ],
+    [
+     415,
+     357
+    ]
+   ],
+   "punkt": [
+    412.8,
+    359.0
+   ],
+   "form": "Kleiner lachsfarbener Punkt",
+   "laenge_px": 8.2,
+   "breite_px": 5.6,
+   "ausrichtung_grad": -84.0,
+   "farbe_roh_rgb": [
+    210,
+    141,
+    135
+   ],
+   "farbe_roh_rgb_median": [
+    180,
+    110,
+    104
+   ],
+   "farbton_grad": 4,
+   "kante_10_90_px": {
+    "oben": 4.5,
+    "rechts": null,
+    "unten": null,
+    "links": null
+   },
+   "kante_urteil": "hart",
+   "art": "Fremdkoerper",
+   "deutung": "Gleiche Größe und Farbfamilie wie B29–B32 (H 4–26). Nicht im Raum (Rest +79).",
+   "sicherheit": "offen",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 78.7
+  },
+  {
+   "id": "B26",
+   "name": "wlappen_A",
+   "bild": 2,
+   "polygon": [
+    [
+     175,
+     330
+    ],
+    [
+     172,
+     333
+    ],
+    [
+     171,
+     338
+    ],
+    [
+     162,
+     347
+    ],
+    [
+     162,
+     355
+    ],
+    [
+     166,
+     361
+    ],
+    [
+     176,
+     366
+    ],
+    [
+     188,
+     366
+    ],
+    [
+     189,
+     346
+    ],
+    [
+     186,
+     350
+    ],
+    [
+     187,
+     352
+    ],
+    [
+     187,
+     362
+    ],
+    [
+     184,
+     365
+    ],
+    [
+     182,
+     364
+    ],
+    [
+     181,
+     358
+    ],
+    [
+     179,
+     356
+    ],
+    [
+     179,
+     350
+    ],
+    [
+     182,
+     347
+    ],
+    [
+     183,
+     339
+    ],
+    [
+     180,
+     332
+    ]
+   ],
+   "punkt": [
+    174.5,
+    349.6
+   ],
+   "form": "Weißer Lappen links, L-förmig, 37×20 px",
+   "laenge_px": 37.3,
+   "breite_px": 19.5,
+   "ausrichtung_grad": -88.5,
+   "farbe_roh_rgb": [
+    229,
+    228,
+    228
+   ],
+   "farbe_roh_rgb_median": [
+    215,
+    207,
+    206
+   ],
+   "farbton_grad": 0,
+   "kante_10_90_px": {
+    "oben": 5.0,
+    "rechts": 4.2,
+    "unten": 8.0,
+    "links": 6.2
+   },
+   "kante_urteil": "mittel",
+   "art": "Fremdkoerper",
+   "deutung": "Siehe Gruppe G7.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 147.8
+  },
+  {
+   "id": "B27",
+   "name": "wlappen_B",
+   "bild": 2,
+   "polygon": [
+    [
+     196,
+     342
+    ],
+    [
+     192,
+     343
+    ],
+    [
+     187,
+     351
+    ],
+    [
+     187,
+     359
+    ],
+    [
+     188,
+     360
+    ],
+    [
+     187,
+     361
+    ],
+    [
+     187,
+     374
+    ],
+    [
+     190,
+     377
+    ],
+    [
+     191,
+     382
+    ],
+    [
+     193,
+     384
+    ],
+    [
+     200,
+     383
+    ],
+    [
+     203,
+     373
+    ],
+    [
+     204,
+     372
+    ],
+    [
+     209,
+     372
+    ],
+    [
+     208,
+     366
+    ],
+    [
+     205,
+     368
+    ],
+    [
+     202,
+     364
+    ],
+    [
+     201,
+     358
+    ],
+    [
+     199,
+     356
+    ],
+    [
+     199,
+     348
+    ],
+    [
+     200,
+     347
+    ],
+    [
+     198,
+     343
+    ]
+   ],
+   "punkt": [
+    195.0,
+    364.4
+   ],
+   "form": "Weißer Lappen Mitte, 43×13 px",
+   "laenge_px": 43.0,
+   "breite_px": 13.1,
+   "ausrichtung_grad": -84.5,
+   "farbe_roh_rgb": [
+    230,
+    228,
+    229
+   ],
+   "farbe_roh_rgb_median": [
+    220,
+    219,
+    215
+   ],
+   "farbton_grad": 330,
+   "kante_10_90_px": {
+    "oben": 6.1,
+    "rechts": 6.2,
+    "unten": 7.0,
+    "links": 5.9
+   },
+   "kante_urteil": "mittel",
+   "art": "Fremdkoerper",
+   "deutung": "Siehe Gruppe G7.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 192.0
+  },
+  {
+   "id": "B28",
+   "name": "wlappen_C",
+   "bild": 2,
+   "polygon": [
+    [
+     205,
+     329
+    ],
+    [
+     202,
+     332
+    ],
+    [
+     203,
+     345
+    ],
+    [
+     207,
+     350
+    ],
+    [
+     208,
+     355
+    ],
+    [
+     211,
+     357
+    ],
+    [
+     215,
+     357
+    ],
+    [
+     217,
+     355
+    ],
+    [
+     217,
+     344
+    ],
+    [
+     218,
+     343
+    ],
+    [
+     217,
+     338
+    ],
+    [
+     210,
+     329
+    ]
+   ],
+   "punkt": [
+    210.0,
+    342.2
+   ],
+   "form": "Weißer Lappen rechts, 31×12 px",
+   "laenge_px": 30.7,
+   "breite_px": 12.4,
+   "ausrichtung_grad": -74.2,
+   "farbe_roh_rgb": [
+    229,
+    227,
+    227
+   ],
+   "farbe_roh_rgb_median": [
+    220,
+    213,
+    211
+   ],
+   "farbton_grad": 0,
+   "kante_10_90_px": {
+    "oben": 6.1,
+    "rechts": 5.0,
+    "unten": 6.2,
+    "links": 4.8
+   },
+   "kante_urteil": "mittel",
+   "art": "Fremdkoerper",
+   "deutung": "Siehe Gruppe G7.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich",
+   "raum_rest_y": 197.6
+  },
+  {
+   "id": "B29",
+   "name": "punkt_185_320",
+   "bild": 2,
+   "polygon": [
+    [
+     184,
+     318
+    ],
+    [
+     184,
+     322
+    ],
+    [
+     186,
+     324
+    ],
+    [
+     189,
+     324
+    ],
+    [
+     190,
+     320
+    ],
+    [
+     186,
+     317
+    ]
+   ],
+   "punkt": [
+    186.9,
+    320.8
+   ],
+   "form": "Kleiner lachsfarbener Punkt über den Lappen",
+   "laenge_px": 8.8,
+   "breite_px": 6.7,
+   "ausrichtung_grad": -47.6,
+   "farbe_roh_rgb": [
+    226,
+    148,
+    134
+   ],
+   "farbe_roh_rgb_median": [
+    208,
+    118,
+    113
+   ],
+   "farbton_grad": 10,
+   "kante_10_90_px": {
+    "oben": null,
+    "rechts": 4.2,
+    "unten": null,
+    "links": 3.8
+   },
+   "kante_urteil": "hart",
+   "art": "Fremdkoerper",
+   "deutung": "Wie B25.",
+   "sicherheit": "offen",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 59.5
+  },
+  {
+   "id": "B30",
+   "name": "punkt_226_355",
+   "bild": 2,
+   "polygon": [
+    [
+     222,
+     349
+    ],
+    [
+     220,
+     350
+    ],
+    [
+     219,
+     353
+    ],
+    [
+     218,
+     352
+    ],
+    [
+     218,
+     356
+    ],
+    [
+     219,
+     354
+    ],
+    [
+     220,
+     357
+    ],
+    [
+     222,
+     359
+    ],
+    [
+     224,
+     359
+    ],
+    [
+     227,
+     356
+    ],
+    [
+     227,
+     351
+    ]
+   ],
+   "punkt": [
+    223.1,
+    353.8
+   ],
+   "form": "Kleiner heller Punkt, orangeweiß",
+   "laenge_px": 11.2,
+   "breite_px": 9.1,
+   "ausrichtung_grad": -81.4,
+   "farbe_roh_rgb": [
+    234,
+    213,
+    197
+   ],
+   "farbe_roh_rgb_median": [
+    195,
+    162,
+    153
+   ],
+   "farbton_grad": 26,
+   "kante_10_90_px": {
+    "oben": 6.8,
+    "rechts": 4.6,
+    "unten": 6.5,
+    "links": 4.0
+   },
+   "kante_urteil": "mittel",
+   "art": "Fremdkoerper",
+   "deutung": "Wie B25, heller. Nicht im Raum (Rest +187).",
+   "sicherheit": "offen",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 187.0
+  },
+  {
+   "id": "B31",
+   "name": "punkt_219_376",
+   "bild": 2,
+   "polygon": [
+    [
+     212,
+     368
+    ],
+    [
+     212,
+     374
+    ],
+    [
+     216,
+     378
+    ],
+    [
+     219,
+     378
+    ],
+    [
+     220,
+     376
+    ],
+    [
+     219,
+     371
+    ],
+    [
+     214,
+     370
+    ]
+   ],
+   "punkt": [
+    216.1,
+    373.6
+   ],
+   "form": "Kleiner heller Punkt, orangeweiß",
+   "laenge_px": 13.0,
+   "breite_px": 6.7,
+   "ausrichtung_grad": -45.4,
+   "farbe_roh_rgb": [
+    250,
+    205,
+    180
+   ],
+   "farbe_roh_rgb_median": [
+    213,
+    167,
+    146
+   ],
+   "farbton_grad": 22,
+   "kante_10_90_px": {
+    "oben": 7.5,
+    "rechts": 5.5,
+    "unten": 6.5,
+    "links": null
+   },
+   "kante_urteil": "mittel",
+   "art": "Fremdkoerper",
+   "deutung": "Wie B30.",
+   "sicherheit": "offen",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 177.4
+  },
+  {
+   "id": "B32",
+   "name": "punkt_212_368",
+   "bild": 2,
+   "polygon": [
+    [
+     205,
+     367
+    ],
+    [
+     205,
+     372
+    ],
+    [
+     214,
+     372
+    ],
+    [
+     211,
+     367
+    ],
+    [
+     209,
+     366
+    ]
+   ],
+   "punkt": [
+    208.8,
+    369.5
+   ],
+   "form": "Kleiner heller Punkt",
+   "laenge_px": 11.0,
+   "breite_px": 6.3,
+   "ausrichtung_grad": -14.4,
+   "farbe_roh_rgb": [
+    233,
+    201,
+    191
+   ],
+   "farbe_roh_rgb_median": [
+    207,
+    175,
+    166
+   ],
+   "farbton_grad": 14,
+   "kante_10_90_px": {
+    "oben": 5.2,
+    "rechts": 6.8,
+    "unten": 7.2,
+    "links": null
+   },
+   "kante_urteil": "mittel",
+   "art": "Fremdkoerper",
+   "deutung": "Wie B30.",
+   "sicherheit": "offen",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "offen",
+   "raum_rest_y": 175.7
+  },
+  {
+   "id": "W1",
+   "name": "weisse_stelle_440_263",
+   "bild": 2,
+   "polygon": [
+    [
+     431,
+     227
+    ],
+    [
+     427,
+     230
+    ],
+    [
+     428,
+     241
+    ],
+    [
+     423,
+     261
+    ],
+    [
+     428,
+     268
+    ],
+    [
+     423,
+     278
+    ],
+    [
+     423,
+     292
+    ],
+    [
+     433,
+     298
+    ],
+    [
+     445,
+     298
+    ],
+    [
+     451,
+     292
+    ],
+    [
+     451,
+     277
+    ],
+    [
+     444,
+     266
+    ],
+    [
+     454,
+     260
+    ],
+    [
+     454,
+     258
+    ],
+    [
+     450,
+     257
+    ],
+    [
+     450,
+     252
+    ],
+    [
+     455,
+     249
+    ],
+    [
+     456,
+     242
+    ],
+    [
+     450,
+     241
+    ],
+    [
+     450,
+     231
+    ]
+   ],
+   "punkt": [
+    440.0,
+    263.0
+   ],
+   "form": "Weiße lappige Fläche, bbox [423, 227, 457, 299], 1828 px",
+   "farbe_roh_rgb": [
+    216,
+    214,
+    214
+   ],
+   "art": "Fremdkoerper",
+   "deutung": "Nicht im Raum (Raum Y≈15) und nicht Figur: gehört zur Gruppe G7.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "W2",
+   "name": "weisse_stelle_479_361",
+   "bild": 2,
+   "polygon": [
+    [
+     424,
+     324
+    ],
+    [
+     424,
+     327
+    ],
+    [
+     430,
+     333
+    ],
+    [
+     426,
+     343
+    ],
+    [
+     428,
+     353
+    ],
+    [
+     435,
+     357
+    ],
+    [
+     444,
+     368
+    ],
+    [
+     464,
+     387
+    ],
+    [
+     473,
+     392
+    ],
+    [
+     483,
+     403
+    ],
+    [
+     491,
+     405
+    ],
+    [
+     498,
+     397
+    ],
+    [
+     515,
+     398
+    ],
+    [
+     511,
+     391
+    ],
+    [
+     517,
+     387
+    ],
+    [
+     524,
+     391
+    ],
+    [
+     527,
+     391
+    ],
+    [
+     530,
+     387
+    ],
+    [
+     534,
+     388
+    ],
+    [
+     534,
+     378
+    ],
+    [
+     529,
+     378
+    ],
+    [
+     522,
+     371
+    ],
+    [
+     508,
+     374
+    ],
+    [
+     504,
+     382
+    ],
+    [
+     498,
+     386
+    ],
+    [
+     490,
+     381
+    ],
+    [
+     488,
+     372
+    ],
+    [
+     493,
+     366
+    ],
+    [
+     500,
+     364
+    ],
+    [
+     504,
+     359
+    ],
+    [
+     500,
+     343
+    ],
+    [
+     495,
+     343
+    ],
+    [
+     491,
+     352
+    ],
+    [
+     484,
+     352
+    ],
+    [
+     477,
+     346
+    ],
+    [
+     471,
+     334
+    ],
+    [
+     457,
+     329
+    ],
+    [
+     452,
+     322
+    ],
+    [
+     451,
+     316
+    ],
+    [
+     429,
+     317
+    ]
+   ],
+   "punkt": [
+    479.5,
+    361.0
+   ],
+   "form": "Weiße lappige Fläche, bbox [424, 316, 535, 406], 4335 px",
+   "farbe_roh_rgb": [
+    219,
+    218,
+    218
+   ],
+   "art": "Fremdkoerper",
+   "deutung": "Nicht im Raum (Raum Y≈23) und nicht Figur: gehört zur Gruppe G7.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "W3",
+   "name": "weisse_stelle_591_246",
+   "bild": 2,
+   "polygon": [
+    [
+     546,
+     232
+    ],
+    [
+     548,
+     235
+    ],
+    [
+     555,
+     235
+    ],
+    [
+     576,
+     244
+    ],
+    [
+     592,
+     247
+    ],
+    [
+     594,
+     252
+    ],
+    [
+     578,
+     253
+    ],
+    [
+     578,
+     255
+    ],
+    [
+     591,
+     255
+    ],
+    [
+     591,
+     258
+    ],
+    [
+     579,
+     258
+    ],
+    [
+     577,
+     261
+    ],
+    [
+     605,
+     259
+    ],
+    [
+     613,
+     260
+    ],
+    [
+     623,
+     265
+    ],
+    [
+     631,
+     263
+    ],
+    [
+     630,
+     256
+    ],
+    [
+     634,
+     251
+    ],
+    [
+     635,
+     243
+    ],
+    [
+     630,
+     239
+    ],
+    [
+     615,
+     237
+    ],
+    [
+     614,
+     244
+    ],
+    [
+     610,
+     246
+    ],
+    [
+     601,
+     238
+    ],
+    [
+     585,
+     231
+    ],
+    [
+     549,
+     227
+    ]
+   ],
+   "punkt": [
+    591.0,
+    246.5
+   ],
+   "form": "Weiße lappige Fläche, bbox [546, 227, 636, 266], 1563 px",
+   "farbe_roh_rgb": [
+    214,
+    212,
+    210
+   ],
+   "art": "Fremdkoerper",
+   "deutung": "Nicht im Raum (Raum Y≈26) und nicht Figur: gehört zur Gruppe G7.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "W4",
+   "name": "weisse_stelle_48_300",
+   "bild": 2,
+   "polygon": [
+    [
+     37,
+     288
+    ],
+    [
+     39,
+     307
+    ],
+    [
+     51,
+     310
+    ],
+    [
+     52,
+     312
+    ],
+    [
+     58,
+     311
+    ],
+    [
+     58,
+     305
+    ],
+    [
+     44,
+     305
+    ],
+    [
+     42,
+     303
+    ],
+    [
+     40,
+     290
+    ]
+   ],
+   "punkt": [
+    48.5,
+    300.5
+   ],
+   "form": "Weiße lappige Fläche, bbox [37, 288, 60, 313], 201 px",
+   "farbe_roh_rgb": [
+    222,
+    213,
+    213
+   ],
+   "art": "Fremdkoerper",
+   "deutung": "Nicht im Raum (Raum Y≈26) und nicht Figur: gehört zur Gruppe G7.",
+   "sicherheit": "wahrscheinlich",
+   "auf_figur": "nein",
+   "auf_figur_sicherheit": "wahrscheinlich"
+  }
+ ],
+ "gruppen": [
+  {
+   "id": "G1",
+   "name": "gerade_duennlinie",
+   "bild": 1,
+   "teile": [
+    "A31",
+    "A19",
+    "A18",
+    "A17"
+   ],
+   "linie": [
+    [
+     237,
+     440
+    ],
+    [
+     308,
+     368
+    ]
+   ],
+   "winkel_grad": 45.4,
+   "laenge_px": 101,
+   "deutung": "Zwei sichtbare Abschnitte (Querprofil s=-10..15 und s=60..95) liegen auf einer Geraden, Abweichung höchstens 1 px. Dazwischen (s=20..55, 35 px) kein Grat, die dunkle Masse verdeckt dort also oder die Kollinearität ist Zufall. Eine Bodenfuge wäre möglich, dagegen spricht, dass die sichtbaren Fugen rechts dunkel sind und diese Linie hell ist. Fremdkörper, Figurteil oder Boden: nicht entschieden.",
+   "sicherheit": "offen"
+  },
+  {
+   "id": "G2",
+   "name": "dreierreihe",
+   "bild": 1,
+   "teile": [
+    "A09",
+    "A08",
+    "A07"
+   ],
+   "deutung": "Drei kurze, annähernd senkrechte Striche nebeneinander auf einer Höhe (y≈285–289, x=241/253/272, Abstände 12 und 19 px). Längsstriche, quer zueinander aufgereiht. Ob Teil einer gegliederten Fläche: nicht erkennbar.",
+   "sicherheit": "offen"
+  },
+  {
+   "id": "G3",
+   "name": "zickzack",
+   "bild": 1,
+   "teile": [
+    "A22",
+    "A23"
+   ],
+   "deutung": "Geknicktes helles Band in der unteren linken Masse, Knick bei (249,381), Schenkel +74° und +17°.",
+   "sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "G4",
+   "name": "quertrio",
+   "bild": 1,
+   "teile": [
+    "A14",
+    "A15",
+    "A16"
+   ],
+   "deutung": "Drei parallele Querbänder (−16°, −25°, −16°), Abstände lotrecht 16 und 20 px, Helligkeit nach unten fallend (Y 165, 82, 68). Einzige regelmäßig wirkende Stelle der Figur.",
+   "sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "G5",
+   "name": "haken",
+   "bild": 2,
+   "teile": [
+    "B08",
+    "B09"
+   ],
+   "deutung": "Schmale helle Linie rund 60 px lang, oben waagerecht, rechts herum nach unten links, nach links offen. Rand einer gefüllten Fläche, kein dünner Draht: innen (70,9,34), die Tür daneben (34,5,11). Bloom der Kittelärmel reicht nicht so weit (13–27 px). Vom Körperbogen B02 durch 17 px Schwarz getrennt. Das linke Ende liegt nur rund 7 px vor der Kittelschulter, eine Verbindung dorthin ist nicht auszuschließen; beide Arme der Frau sind aber als eigene Formen sichtbar. Ob Glied der Figur: wahrscheinlich, nicht belegt.",
+   "sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "G6",
+   "name": "unterstreifen",
+   "bild": 2,
+   "teile": [
+    "B17",
+    "B18",
+    "B19",
+    "B20",
+    "B21"
+   ],
+   "linie": [
+    [
+     336,
+     318
+    ],
+    [
+     322,
+     334
+    ],
+    [
+     306,
+     350
+    ],
+    [
+     294,
+     358
+    ],
+    [
+     290,
+     372
+    ],
+    [
+     284,
+     398
+    ]
+   ],
+   "laenge_px": 100,
+   "deutung": "Gesamtlänge 100 px, geknickt: oben +45°, unten +62°. Unterkante der dunklen Figur, nach oben links scharf gegen sie begrenzt. Farbe wandert von lavendel (oben) über fast weiß nach lachsrot (unten). Gipfel entlang der Achse bei 12, 24, 14, 34 px Abstand, also keine regelmäßige Perlung. Keine Bodenleiste. Beleuchteter heller Figurteil.",
+   "sicherheit": "wahrscheinlich"
+  },
+  {
+   "id": "G7",
+   "name": "weisse_stellen",
+   "bild": 2,
+   "teile": [
+    "B26",
+    "B27",
+    "B28",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "B25",
+    "B29",
+    "B30",
+    "B31",
+    "B32"
+   ],
+   "deutung": "Keine Figurzeichnung. Weiße lappige Flächen, im Raum nicht vorhanden, heller als der weiße Kittel (Y 229 gegen höchstens 194), verteilt über das ganze Bild von x=37 bis x=636, teils weit weg von der Figur. Dazu kleine Punkte gleicher Farbfamilie um die Lappen. Am ehesten Effekt oder Lichtquelle; ob etwa Feuer, Dampf oder ältere Raumfassung: nicht erkennbar. Die Lappen allein könnten ein Körperteil sein, Verteilung und Helligkeit sprechen dagegen.",
+   "sicherheit": "wahrscheinlich"
+  }
+ ]
+}

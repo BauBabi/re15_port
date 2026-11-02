@@ -1,0 +1,9 @@
+exe re15_pc_form_29720_141805 PID 74332 Fenster 5907824
+gdigrab: leeres Bild, Sitzung: > mjoedicke 1 Getr. 
+PrintWindow=True Fenster=656x519 Innen=640x480 Versatz=8,31Verfahren: PrintWindow
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/werkzeug/belege/probe_spiel_cut12.png
+exe beendet
+[enemy] Bahnsteig-Form: 3 Meshes, 3 Knochen, 2 Clips -> Slot 12
+t451 slot2 typ 0x30 st 1/9 pos (9000,0,-23000) gier 700 clip 1 bild 24 grid 0x13 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/29720_141805
+SPIEL_EXIT=0

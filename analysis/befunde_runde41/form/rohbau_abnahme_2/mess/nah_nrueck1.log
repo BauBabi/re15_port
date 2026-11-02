@@ -1,0 +1,15 @@
+C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\a2_ton.py:31: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  m.use_nodes = True
+C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\a2_ton.py:44: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  w = bpy.data.worlds.new('w'); s.world = w; w.use_nodes = True
+C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\a2_ton.py:49: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  ma = bpy.data.materials.new('b'); ma.use_nodes = True
+00:04.687  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\nrueck1_c1_az090_el20.png'
+00:07.047  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\nrueck1_c1_az135_el35.png'
+00:09.219  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\nrueck1_c1_az180_el30.png'
+00:11.390  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\nrueck1_c1_az225_el30.png'
+TON-FERTIG
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip1.obj' took 2.02 ms
+
+Blender quit

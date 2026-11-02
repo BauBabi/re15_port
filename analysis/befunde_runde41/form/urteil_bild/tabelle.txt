@@ -1,0 +1,23 @@
+Teil gleiche Zuordnung, streng = Oberkoerper ohne Bein / bein = rechtes Bein zaehlt mit
+--- streng  IoU / Deck / Innen / Verdeckt
+A T0.896 m0.735 | tail 0.86/0.89/0.97/0.00 | l_leg 0.60/0.89/0.65/0.11 | r_leg 0.82/0.92/0.89/0.13 | r_arm 0.66/0.91/0.71/0.02 | body 0.73/0.88/0.81/0.42 | T0.824 m0.704 | face 0.77/0.82/0.93/0.02 | l_arm_f 0.68/0.85/0.78/0.17 | r_arm_f 0.66/0.83/0.76/0.06
+B T0.951 m0.827 | tail 0.89/0.98/0.91/0.01 | l_leg 0.78/0.95/0.82/0.26 | r_leg 0.90/0.96/0.93/0.05 | r_arm 0.78/0.89/0.87/0.14 | body 0.78/0.93/0.83/0.49 | T0.868 m0.751 | face 0.82/0.87/0.94/0.03 | l_arm_f 0.69/0.88/0.76/0.15 | r_arm_f 0.74/0.86/0.85/0.11
+C T0.958 m0.867 | tail 0.91/0.97/0.93/0.02 | l_leg 0.90/0.94/0.95/0.24 | r_leg 0.86/0.97/0.88/0.06 | r_arm 0.84/0.91/0.91/0.05 | body 0.83/0.96/0.87/0.43 | T0.830 m0.797 | face 0.76/0.79/0.95/0.01 | l_arm_f 0.82/0.88/0.92/0.08 | r_arm_f 0.81/0.91/0.89/0.02
+--- bein  IoU / Deck / Innen / Verdeckt
+A T0.896 m0.735 | tail 0.86/0.89/0.97/0.00 | l_leg 0.60/0.89/0.65/0.11 | r_leg 0.82/0.92/0.89/0.13 | r_arm 0.66/0.91/0.71/0.02 | body 0.73/0.88/0.81/0.42 | T0.856 m0.709 | face 0.79/0.87/0.90/0.06 | l_arm_f 0.68/0.85/0.78/0.17 | r_arm_f 0.66/0.83/0.76/0.06
+B T0.951 m0.827 | tail 0.89/0.98/0.91/0.01 | l_leg 0.78/0.95/0.82/0.26 | r_leg 0.90/0.96/0.93/0.05 | r_arm 0.78/0.89/0.87/0.14 | body 0.78/0.93/0.83/0.49 | T0.916 m0.768 | face 0.87/0.94/0.93/0.03 | l_arm_f 0.69/0.88/0.76/0.15 | r_arm_f 0.74/0.86/0.85/0.11
+C T0.958 m0.867 | tail 0.91/0.97/0.93/0.02 | l_leg 0.90/0.94/0.95/0.24 | r_leg 0.86/0.97/0.88/0.06 | r_arm 0.84/0.91/0.91/0.05 | body 0.83/0.96/0.87/0.43 | T0.926 m0.840 | face 0.89/0.94/0.94/0.02 | l_arm_f 0.82/0.88/0.92/0.08 | r_arm_f 0.81/0.91/0.89/0.02
+--- Loecher im Umriss (eingeschlossene Nicht-Figur-Flecken ab 12 px, Bildlage)
+Bild 1 A Flaeche 39234 1664 px um (290,353); 18 px um (251,348); 369 px um (250,387); 32 px um (248,425); 19 px um (239,436)
+Bild 1 B Flaeche 37727 1497 px um (293,356)
+Bild 1 C Flaeche 36768 1050 px um (293,340)
+Bild 2 A Flaeche 48672 556 px um (245,310)
+Bild 2 B Flaeche 50140 26 px um (261,324); 34 px um (243,364)
+Bild 2 C Flaeche 48761 609 px um (359,312)
+--- NCC Luma je Teil, Sigma 3 (Formen und Flecken), Einsatz gegen Original
+Bild 1 A tail 0.83 (Y 42/67, Streu 34/59) | l_leg 0.60 (Y 63/59, Streu 31/28) | r_leg 0.50 (Y 61/84, Streu 32/52) | r_arm 0.29 (Y 53/61, Streu 28/40) | body 0.83 (Y 56/75, Streu 35/51)
+Bild 1 B tail 0.56 (Y 42/47, Streu 34/32) | l_leg 0.60 (Y 63/46, Streu 31/19) | r_leg 0.70 (Y 61/67, Streu 32/41) | r_arm 0.60 (Y 53/67, Streu 28/43) | body 0.85 (Y 56/72, Streu 35/53)
+Bild 1 C tail 0.80 (Y 42/43, Streu 34/34) | l_leg 0.61 (Y 63/55, Streu 31/29) | r_leg 0.54 (Y 61/71, Streu 32/53) | r_arm 0.59 (Y 53/66, Streu 28/51) | body 0.83 (Y 56/62, Streu 35/53)
+Bild 2 A face 0.77 (Y 24/23, Streu 12/13) | l_arm_f 0.72 (Y 63/43, Streu 27/23) | r_arm_f 0.60 (Y 63/40, Streu 33/25)
+Bild 2 B face 0.74 (Y 24/22, Streu 12/12) | l_arm_f 0.78 (Y 63/37, Streu 27/23) | r_arm_f 0.76 (Y 63/40, Streu 33/28)
+Bild 2 C face 0.80 (Y 24/17, Streu 12/9) | l_arm_f 0.81 (Y 63/37, Streu 27/24) | r_arm_f 0.65 (Y 63/30, Streu 33/21)

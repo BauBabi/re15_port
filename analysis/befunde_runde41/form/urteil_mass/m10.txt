@@ -1,0 +1,17 @@
+Bild 1: Kantenpixel 23160. Abstand Umriss zur naechsten Bildkante: Mittel, Median, 90 %, Laenge
+   Nutzer-Soll        3.48 2.00 9.80 1362
+   Soll +7 px rechts  4.97 4.00 10.59 1365
+   Rohbau A           3.72 2.80 7.99 1237
+   Rohbau B           3.74 2.20 9.99 1164
+   Rohbau C           3.35 2.00 8.79 1128
+Bild 2: Kantenpixel 15597. Abstand Umriss zur naechsten Bildkante: Mittel, Median, 90 %, Laenge
+   Nutzer-Soll        5.65 2.20 17.97 1082
+   Soll +7 px rechts  6.91 5.00 17.79 1091
+   Rohbau A           10.57 7.19 26.59 1051
+   Rohbau B           8.52 5.39 22.46 1043
+   Rohbau C           6.94 4.20 18.98 1110
+O3 Keil links dunkle Pixel ausserhalb aller Teile: 1720  gedeckt: A 0.87 B 0.54 C 0.17
+O1 rechts neben Arm dunkle Pixel ausserhalb aller Teile: 756  gedeckt: A 0.57 B 0.00 C 0.04
+Bild 2, B, Ausschnitt (208-232,300-320): {'oberschenkel_r': 136, 'unterschenkel_r': 344}
+Bild 1: Modellpixel ausserhalb aller Teile plus 3 px Saum: A 3151 B 1146 C 797
+Bild 2: Modellpixel ausserhalb aller Teile plus 3 px Saum: A 3939 B 2956 C 1978

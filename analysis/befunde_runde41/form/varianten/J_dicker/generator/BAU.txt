@@ -1,0 +1,13 @@
+Variante J (E18, dicker), aus varianten/gen (liest C_mitte/FORM.EMD fuer die Wurzelhoehe, H_stoff/h2 fuer die Anpassung, J_dicker/_g/textur.png):
+  python vm_beine_j.py zw/beine_J_neu.json   (Anpassung wie fuer die Abgabe gelaufen, Ergebnis zum Vergleich; die Abgabe liest zw/beine_J.json)
+  PYTHONIOENCODING=utf-8 python vm_bau.py --farbe C --schwanz e9 --treu --beine --dicker --aus ../J_dicker/_g --name J_g --ohne-pruefung
+  PYTHONIOENCODING=utf-8 python vm_bau.py --farbe C --schwanz e9 --stoff h2 --beine --dicker --g-textur ../J_dicker/_g/textur.png --aus ../J_dicker --name J_dicker
+  python vm_breite.py ../J_dicker/breite.json "I=../I_fuesse/form.json" "J=../J_dicker/form.json"
+  python vm_beinblatt.py ../J_dicker/form.json ../J_dicker "I=../I_fuesse/form.json"
+  python vm_nebeneinander.py ../J_dicker/beine_rundum_I_J.png --unter "I=../I_fuesse/beine_rundum.png" "J=../J_dicker/beine_rundum.png"
+  python vm_vergleich.py ../J_dicker/vergleich_I_J.png "I=../I_fuesse/form.json" "J=../J_dicker/form.json"
+  python vm_stil.py ../J_dicker/stil.png "J dicker=../J_dicker/form.json" "I Fuesse=../I_fuesse/form.json"
+  bash vm_spiel.sh J_dicker; python vm_nebeneinander.py ../J_dicker/spiel_I_J.png "I=../I_fuesse/spiel_I_fuesse.png" "J=../J_dicker/spiel_J_dicker.png"
+Neu fuer J: vm_beine.py (DICKER, Ringfaktoren J, Breitenterm zu_schmal, Schluessel 'oben' je Seite), vm_form.py (--dicker: BREITE_FAKTOR Unterarm/Hand links 1,05,
+BEINE_DATEI beine_J.json), vm_bau.py (--dicker), vm_breite.py (Breitenmass), vm_beine_j.py (Anpassung), vm_nebeneinander.py (Blaetter). I bleibt aus zw/beine_I.json.
+Kein RE-Wert: Form nach Nutzermasken, kein Original-Asset.

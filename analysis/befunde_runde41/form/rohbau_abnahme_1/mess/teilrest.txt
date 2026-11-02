@@ -1,0 +1,43 @@
+Bild 1: Maskenpixel ohne jedes Modell, Flecken ab 40 px, Y = Mittel im Original
+  left_leg               83 px  x 196-220  y 430-448  Mitte (208,440)  Y  64
+  part_of_Body          407 px  x 361-381  y 283-318  Mitte (371,300)  Y  35
+  part_of_Body           40 px  x 340-356  y 304-311  Mitte (345,307)  Y  31
+  right_arm             104 px  x 377-412  y 366-376  Mitte (392,372)  Y 103
+  right_arm              97 px  x 411-419  y 308-337  Mitte (413,320)  Y  49
+  right_leg             187 px  x 288-332  y 429-462  Mitte (311,451)  Y  60
+  right_leg             109 px  x 294-307  y 311-338  Mitte (301,321)  Y  84
+  right_leg              79 px  x 330-343  y 366-406  Mitte (336,386)  Y  39
+  right_leg              78 px  x 340-346  y 307-338  Mitte (343,320)  Y  53
+  tail                   63 px  x 269-285  y 456-478  Mitte (277,464)  Y  90
+  tail                   59 px  x 280-284  y 332-362  Mitte (282,349)  Y  63
+Bild 2: Maskenpixel ohne jedes Modell, Flecken ab 40 px, Y = Mittel im Original
+  face_and_upper_body   323 px  x 236-255  y 176-215  Mitte (245,194)  Y  14
+  face_and_upper_body   237 px  x 236-254  y 350-371  Mitte (242,361)  Y  30
+  face_and_upper_body   198 px  x 415-426  y 215-255  Mitte (420,237)  Y  82
+  face_and_upper_body   152 px  x 201-219  y 252-306  Mitte (206,275)  Y  66
+  face_and_upper_body   100 px  x 361-384  y 167-188  Mitte (373,179)  Y  18
+  face_and_upper_body    58 px  x 308-346  y 142-154  Mitte (326,145)  Y  16
+  left_arm_front        152 px  x 452-469  y 385-418  Mitte (459,399)  Y 102
+  left_arm_front        123 px  x 410-420  y 290-351  Mitte (414,323)  Y  82
+  left_arm_front        113 px  x 432-449  y 395-419  Mitte (436,404)  Y 107
+  right_arm_front       195 px  x 157-180  y 403-437  Mitte (164,425)  Y  40
+  right_arm_front       168 px  x 223-236  y 351-374  Mitte (229,363)  Y  51
+  right_arm_front       148 px  x 272-288  y 390-444  Mitte (276,416)  Y 119
+  right_arm_front       112 px  x 198-215  y 374-390  Mitte (206,381)  Y 108
+  right_arm_front        91 px  x 296-315  y 353-380  Mitte (305,363)  Y  80
+  right_arm_front        76 px  x 245-260  y 430-442  Mitte (253,435)  Y  48
+  right_arm_front        70 px  x 168-187  y 366-379  Mitte (176,370)  Y 118
+  right_arm_front        68 px  x 143-154  y 357-375  Mitte (148,364)  Y  54
+  right_arm_front        59 px  x 185-196  y 426-436  Mitte (191,430)  Y  29
+  right_arm_front        46 px  x 209-217  y 441-455  Mitte (212,448)  Y  66
+Farbproben Bild 1
+  Fenster links (352-362,304-314)    RGB  22  31  51  Y  31
+  Fenster mitte (362-372,302-312)    RGB  25  23  41  Y  26
+  Fenster rechts (372-380,304-314)   RGB  35  21  45  Y  28
+  Band im Fenster (364-376,288-298)  RGB  51  41  62  Y  46
+  Figur Arm (390-410,310-340)        RGB  29  28  47  Y  30
+  Figur Schwanz (262-280,280-320)    RGB  37  32  66  Y  37
+  Raum rechts vom Arm, gleiche Zeilen RGB 158 149 147  Y 152
+  Raum rechts, Band y 286-296        RGB  91  66  61  Y  73
+  Raum links, gleiche Zeilen         RGB 153 107  80  Y 118
+  Boden im Spalt (360-378,330-345)   RGB 177 195 205  Y 191

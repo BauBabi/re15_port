@@ -1,0 +1,145 @@
+=== b1blick_pose1 raum 5080 pose -20711,-15984,756,0,0,1 11:19:27
+exe re15_pc_form_33658_111928 PID 36056 Fenster 550373458
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/b1blick_pose1.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 756 clip 0 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/33658_111928
+rc=0
+=== rund_ruhe_0 raum 5080 pose -20711,-15984,756,2,0,1 11:19:49
+exe re15_pc_form_33737_111949 PID 7312 Fenster 550438994
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_ruhe_0.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 756 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/33737_111949
+rc=0
+=== rund_ruhe_1 raum 5080 pose -20711,-15984,1268,2,0,1 11:20:11
+exe re15_pc_form_33820_112011 PID 68052 Fenster 195366002
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_ruhe_1.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 1268 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/33820_112011
+rc=0
+=== rund_ruhe_2 raum 5080 pose -20711,-15984,1780,2,0,1 11:20:33
+exe re15_pc_form_33899_112033 PID 105376 Fenster 195431538
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_ruhe_2.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 1780 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/33899_112033
+rc=0
+=== rund_ruhe_3 raum 5080 pose -20711,-15984,2292,2,0,1 11:20:54
+exe re15_pc_form_33981_112055 PID 53460 Fenster 90836104
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_ruhe_3.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 2292 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/33981_112055
+rc=0
+=== rund_ruhe_4 raum 5080 pose -20711,-15984,2804,2,0,1 11:21:16
+exe re15_pc_form_34060_112116 PID 80492 Fenster 65798920
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_ruhe_4.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 2804 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34060_112116
+rc=0
+=== rund_ruhe_5 raum 5080 pose -20711,-15984,3316,2,0,1 11:21:38
+exe re15_pc_form_34139_112138 PID 60492 Fenster 208210250
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_ruhe_5.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 3316 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34139_112138
+rc=0
+=== rund_ruhe_6 raum 5080 pose -20711,-15984,3828,2,0,1 11:21:59
+exe re15_pc_form_34221_112159 PID 66552 Fenster 196544464
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_ruhe_6.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 3828 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34221_112159
+rc=0
+=== rund_ruhe_7 raum 5080 pose -20711,-15984,244,2,0,1 11:22:21
+exe re15_pc_form_34304_112221 PID 36904 Fenster 195759218
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_ruhe_7.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 244 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34304_112221
+rc=0
+=== rund_pose1_1 raum 5080 pose -20711,-15984,1780,0,0,1 11:22:42
+exe re15_pc_form_34383_112242 PID 115872 Fenster 208406858
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_pose1_1.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 1780 clip 0 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34383_112242
+rc=0
+=== rund_pose1_2 raum 5080 pose -20711,-15984,2804,0,0,1 11:23:04
+exe re15_pc_form_34462_112304 PID 42164 Fenster 208472394
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_pose1_2.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 2804 clip 0 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34462_112304
+rc=0
+=== rund_pose1_3 raum 5080 pose -20711,-15984,3828,0,0,1 11:23:25
+exe re15_pc_form_34541_112326 PID 40292 Fenster 195955826
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_pose1_3.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 3828 clip 0 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34541_112326
+rc=0
+=== rund_pose2_0 raum 5080 pose -20711,-15984,756,1,0,1 11:23:47
+exe re15_pc_form_34630_112347 PID 50260 Fenster 39452786
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_pose2_0.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 756 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34630_112347
+rc=0
+=== rund_pose2_1 raum 5080 pose -20711,-15984,1780,1,0,1 11:24:09
+exe re15_pc_form_34713_112409 PID 65760 Fenster 208669002
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_pose2_1.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 1780 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34713_112409
+rc=0
+=== rund_pose2_2 raum 5080 pose -20711,-15984,2804,1,0,1 11:24:30
+exe re15_pc_form_34796_112431 PID 117408 Fenster 196152434
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_pose2_2.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 2804 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34796_112431
+rc=0
+=== rund_pose2_3 raum 5080 pose -20711,-15984,3828,1,0,1 11:24:52
+exe re15_pc_form_34875_112452 PID 59196 Fenster 196217970
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_abnahme_1/spiel2/rund_pose2_3.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 3828 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34875_112452
+rc=0
+FERTIG

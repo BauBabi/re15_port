@@ -1,0 +1,32 @@
+00:05.437  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\vorher_c0_az090_el10.png'
+00:05.484  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\vorher_c0_az270_el10.png'
+00:05.547  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\vorher_c0_az225_el40.png'
+FERTIG 3
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip0.obj' took 3.53 ms
+
+Blender quit
+00:03.812  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\probe_c0_az090_el10.png'
+00:03.891  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\probe_c0_az270_el10.png'
+00:03.937  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\probe_c0_az225_el40.png'
+FERTIG 3
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip0.obj' took 2.11 ms
+
+Blender quit
+00:04.329  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\vorher_c2_az090_el10.png'
+00:04.407  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\vorher_c2_az270_el10.png'
+00:04.454  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\vorher_c2_az225_el40.png'
+FERTIG 3
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip2.obj' took 2.13 ms
+
+Blender quit
+00:04.234  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\probe_c2_az090_el10.png'
+00:04.297  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\probe_c2_az270_el10.png'
+00:04.375  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\probe\probe_c2_az225_el40.png'
+FERTIG 3
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip2.obj' took 2.18 ms
+
+Blender quit

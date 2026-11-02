@@ -1,0 +1,3 @@
+Keil links Bild 1 (dunkel, in keinem Teil) A 1567 von 1816 (86 %)  B 981 von 1816 (54 %)  C 343 von 1816 (19 %)
+Keil rechts Bild 1 A 305 von 807 (38 %)  B 248 von 807 (31 %)  C 782 von 807 (97 %)
+Dunkelzone Bild 2 zwischen den Armen A 1685 von 4830 (35 %)  B 1596 von 4830 (33 %)  C 1307 von 4830 (27 %)

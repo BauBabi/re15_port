@@ -1,0 +1,39 @@
+Bild 1 Gelenke (Bildlage, Tiefe)
+  Huefte         ( 305, 262)  Tiefe   5804  Hoehe  1887
+  Brust          ( 340, 269)  Tiefe   7026  Hoehe  1714
+  Schulter r     ( 397, 267)  Tiefe   7631  Hoehe  1720
+  Ellbogen r     ( 401, 290)  Tiefe   6894  Hoehe  1396
+  Handgelenk r   ( 394, 360)  Tiefe   6545  Hoehe   338
+  Schulter l     ( 308, 257)  Tiefe   7931  Hoehe  1874
+  Ellbogen l     ( 316, 294)  Tiefe   7509  Hoehe  1225
+  Handgelenk l   ( 327, 353)  Tiefe   6860  Hoehe   342
+  Huefte r       ( 323, 299)  Tiefe   5160  Hoehe  1462
+  Knie r         ( 321, 367)  Tiefe   4425  Hoehe   834
+  Knoechel r     ( 295, 441)  Tiefe   3760  Hoehe   341
+  Huefte l       ( 251, 288)  Tiefe   5471  Hoehe  1564
+  Knie l         ( 237, 353)  Tiefe   4800  Hoehe   865
+  Knoechel l     ( 222, 426)  Tiefe   4239  Hoehe   235
+  Hals           ( 354, 261)  Tiefe   7942  Hoehe  1806
+  Kopf           ( 366, 270)  Tiefe   8349  Hoehe  1617
+  Kiefer         ( 357, 293)  Tiefe   8659  Hoehe  1116
+Bild 2 Gelenke (Bildlage, Tiefe)
+  Huefte         ( 265, 284)  Tiefe   6949  Hoehe  1109
+  Brust          ( 311, 223)  Tiefe   6372  Hoehe  2084
+  Schulter r     ( 286, 254)  Tiefe   5292  Hoehe  1943
+  Ellbogen r     ( 319, 308)  Tiefe   5577  Hoehe  1256
+  Handgelenk r   ( 274, 379)  Tiefe   5747  Hoehe   321
+  Schulter l     ( 397, 221)  Tiefe   6260  Hoehe  2137
+  Ellbogen l     ( 382, 276)  Tiefe   6529  Hoehe  1363
+  Handgelenk l   ( 403, 350)  Tiefe   6702  Hoehe   302
+  Huefte r       ( 231, 328)  Tiefe   6683  Hoehe   564
+  Knie r         ( 258, 351)  Tiefe   5902  Hoehe   586
+  Knoechel r     ( 286, 358)  Tiefe   6619  Hoehe   179
+  Huefte l       ( 289, 320)  Tiefe   7406  Hoehe   409
+  Knie l         ( 344, 324)  Tiefe   7069  Hoehe   492
+  Knoechel l     ( 346, 364)  Tiefe   6359  Hoehe   238
+  Hals           ( 354, 240)  Tiefe   5653  Hoehe  2022
+  Kopf           ( 333, 226)  Tiefe   5253  Hoehe  2256
+  Kiefer         ( 322, 262)  Tiefe   4753  Hoehe  2003
+Kopf 22,23: Rahmen x 263-386 y 182-327; Bogenpunkte: (262, 225) aussen 5; (290, 172) aussen 18; (345, 189) innen 3; (372, 201) aussen 4; (388, 236) aussen 4
+Kopf und Hals 21,22,23: Rahmen x 263-404 y 182-327; Bogenpunkte: (262, 225) aussen 5; (290, 172) aussen 18; (345, 189) innen 4; (372, 201) innen 1; (388, 236) innen 11
+Brust 10: Rahmen x 256-381 y 144-268; Bogenpunkte: (262, 225) innen 2; (290, 172) innen 11; (345, 189) innen 29; (372, 201) innen 8; (388, 236) aussen 16

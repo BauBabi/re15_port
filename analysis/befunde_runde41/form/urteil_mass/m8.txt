@@ -1,0 +1,28 @@
+a streng    Umriss 0.914/0.917 Schwarz 917/53 L1 192 L2 104 SCH 62 Punkte 20/31 5/7 Flaechen 0/3 6/9 | mIoU 0.735/0.686 | left_leg 0.60 part_of_B 0.73 right_arm 0.66 right_leg 0.82 tail 0.86 face_and_ 0.72 left_arm_ 0.68 right_arm 0.66
+b streng    Umriss 0.962/0.951 Schwarz 245/93 L1 32 L2 39 SCH 0 Punkte 22/31 7/7 Flaechen 1/3 8/9 | mIoU 0.827/0.742 | left_leg 0.78 part_of_B 0.78 right_arm 0.78 right_leg 0.90 tail 0.89 face_and_ 0.79 left_arm_ 0.69 right_arm 0.74
+c streng    Umriss 0.972/0.963 Schwarz 112/87 L1 29 L2 25 SCH 0 Punkte 25/31 7/7 Flaechen 1/3 9/9 | mIoU 0.867/0.790 | left_leg 0.90 part_of_B 0.83 right_arm 0.84 right_leg 0.86 tail 0.91 face_and_ 0.74 left_arm_ 0.82 right_arm 0.81
+b_arm_c     Umriss 0.952/0.951 Schwarz 635/93 L1 131 L2 324 SCH 9 Punkte 19/31 7/7 Flaechen 0/3 8/9 | mIoU 0.827/0.742 | left_leg 0.78 part_of_B 0.78 right_arm 0.78 right_leg 0.90 tail 0.89 face_and_ 0.79 left_arm_ 0.69 right_arm 0.74
+b_arm_ger   Umriss 0.955/0.951 Schwarz 530/93 L1 164 L2 192 SCH 0 Punkte 19/31 7/7 Flaechen 1/3 8/9 | mIoU 0.827/0.742 | left_leg 0.78 part_of_B 0.78 right_arm 0.78 right_leg 0.90 tail 0.89 face_and_ 0.79 left_arm_ 0.69 right_arm 0.74
+  Paar oberschenkel_l/oberschenkel_r: Zuordnung Median 14, max 91
+  Paar unterschenkel_l/unterschenkel_r: Zuordnung Median 34, max 69
+  Paar fuss_l/fuss_r: Zuordnung Median 30, max 102
+  Paar oberarm_l/oberarm_r: Zuordnung Median 26, max 187
+  Paar unterarm_l/unterarm_r: Zuordnung Median 25, max 171
+  Paar hand_l/hand_r: Zuordnung Median 47, max 172
+  Paar klaue_l1/klaue_r3: Zuordnung Median 82, max 180
+  Paar klaue_l2/klaue_r2: Zuordnung Median 32, max 66
+  Paar klaue_l3/klaue_r1: Zuordnung Median 76, max 180
+  Paar klaue_l4/klaue_r4: Zuordnung Median 15, max 32
+a_sym       Umriss 0.914/0.907 Schwarz 916/43 L1 182 L2 119 SCH 41 Punkte 19/31 5/7 Flaechen 0/3 4/9 | mIoU 0.730/0.665 | left_leg 0.59 part_of_B 0.72 right_arm 0.66 right_leg 0.81 tail 0.86 face_and_ 0.71 left_arm_ 0.67 right_arm 0.61
+  Paar oberschenkel_l/oberschenkel_r: Zuordnung Median 107, max 281
+  Paar unterschenkel_l/unterschenkel_r: Zuordnung Median 82, max 206
+  Paar fuss_l/fuss_r: Zuordnung Median 64, max 139
+  Paar oberarm_l/oberarm_r: Zuordnung Median 126, max 235
+  Paar unterarm_l/unterarm_r: Zuordnung Median 217, max 537
+  Paar hand_l/hand_r: Zuordnung Median 86, max 195
+  Paar klaue_l1/klaue_r1: Zuordnung Median 51, max 142
+  Paar klaue_l2/klaue_r2: Zuordnung Median 98, max 349
+  Paar klaue_l3/klaue_r3: Zuordnung Median 84, max 138
+  Paar klaue_l4/klaue_r4: Zuordnung Median 197, max 346
+c_sym       Umriss 0.946/0.909 Schwarz 437/204 L1 29 L2 143 SCH 0 Punkte 17/31 7/7 Flaechen 1/3 8/9 | mIoU 0.816/0.675 | left_leg 0.77 part_of_B 0.83 right_arm 0.76 right_leg 0.81 tail 0.91 face_and_ 0.74 left_arm_ 0.65 right_arm 0.64
+c_hand_l    Umriss 0.969/0.957 Schwarz 204/551 L1 67 L2 79 SCH 0 Punkte 23/31 7/7 Flaechen 1/3 8/9 | mIoU 0.867/0.741 | left_leg 0.90 part_of_B 0.83 right_arm 0.84 right_leg 0.86 tail 0.91 face_and_ 0.74 left_arm_ 0.67 right_arm 0.81

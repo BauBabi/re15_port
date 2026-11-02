@@ -1,0 +1,196 @@
+
+================= Kandidat A
+Knochen 23 Meshes 23 Wurzeln [0] Clips 3 [1, 1, 1]
+Sektionen Bytes {'morph': 12, 'edd1': 28, 'emr1': 612, 'edd2': 4, 'emr2': 4, 'edd3': 4, 'emr3': 4, 'md1': 75356}
+Clip 0 wurzel [-454, -1887, -17] spur [0, 0, 0]
+Clip 1 wurzel [-454, -1889, -17] spur [0, 0, 0]
+Clip 2 wurzel [-454, -1887, -17] spur [0, 0, 0]
+
+Knochen: name eltern versatz |versatz| ecken flaechen
+ 0 becken      eltern -           versatz [0, 0, 0]                   0  E 134  F 187
+ 1 huefte_r    eltern becken      versatz [-856, 50, 638]          1069  E  49  F  58
+ 2 huefte_l    eltern becken      versatz [-813, -7, -632]         1030  E  35  F  38
+ 3 fr_ober     eltern huefte_r    versatz [-87, 238, 20]            254  E  40  F  47
+ 4 fr_unter    eltern fr_ober     versatz [-4, 351, -32]            352  E  44  F  60
+ 5 fr_fuss     eltern fr_unter    versatz [-23, 964, -9]            964  E  54  F  71
+ 6 fl_ober     eltern huefte_l    versatz [94, 278, -10]            294  E  28  F  34
+ 7 fl_unter    eltern fl_ober     versatz [37, 380, 28]             383  E  28  F  33
+ 8 fl_fuss     eltern fl_unter    versatz [-60, 936, 10]            938  E  35  F  50
+ 9 rumpf_mitte eltern becken      versatz [318, -87, 15]            330  E  96  F 146
+10 rumpf       eltern rumpf_mitte versatz [403, 5, 8]               403  E 163  F 245
+11 nl_ober     eltern rumpf       versatz [471, 470, -561]          870  E  58  F  67
+12 nl_unter    eltern nl_ober     versatz [103, 512, -78]           528  E  63  F  81
+13 nl_hand     eltern nl_unter    versatz [376, 367, -131]          542  E  63  F  80
+14 nl_innen    eltern nl_unter    versatz [87, 36, 151]             178  E  40  F  59
+15 nl_daumen   eltern nl_hand     versatz [119, 400, 70]            423  E  28  F  31
+16 nr_ober     eltern rumpf       versatz [361, 559, 217]           700  E  54  F  62
+17 nr_unter    eltern nr_ober     versatz [-14, 648, -4]            648  E  73  F  98
+18 nr_hand     eltern nr_unter    versatz [393, 336, 345]           622  E  73  F  91
+19 nr_daumen   eltern nr_hand     versatz [223, 260, -18]           343  E  35  F  44
+20 hals        eltern rumpf       versatz [421, 117, 82]            445  E  63  F  46
+21 kopf        eltern hals        versatz [213, -207, 245]          385  E 124  F 160
+22 kiefer      eltern kopf        versatz [100, 79, 47]             136  E  63  F  74
+
+Masse je Pose (Aktorraum, x laengs, z quer, h = -y):
+ Clip 0: x  -1795..  1627 ( 3422)  z  -1393..  1218 ( 2611)  h     -0..  2948
+ Clip 1: x  -2020..  1719 ( 3739)  z  -1374..  1195 ( 2569)  h     -0..  2948
+ Clip 2: x  -1795..  1627 ( 3422)  z  -1393..  1218 ( 2611)  h     -0..  2948
+
+Fussboden je Pose: Hoehe des tiefsten Punkts je Bein (0 = Boden, + schwebt, - steckt im Boden), Lage x,z im Aktorraum
+ Clip 0: FR    -0 ( -1400,   696)  FL    +2 ( -1029,  -430)  NL   +13 (  1296,  -735)  NR   +10 (  1024,   607)  NL_innen   +40 (  1090,  -164)
+ Clip 1: FR    +7 ( -1790,   109)  FL    +8 (  -512,  -610)  NL    -0 (  1392,  -219)  NR    +5 (   769,   858)  NL_innen   +17 (  1024,   293)
+ Clip 2: FR    -0 ( -1400,   696)  FL    +2 ( -1029,  -430)  NL   +13 (  1296,  -735)  NR   +10 (  1024,   607)  NL_innen   +40 (  1090,  -164)
+
+Gelenke: Drehung lokal gegen Clip 0 (Grad)  Clip1  Clip2 | Betrag gegen Bindpose Clip0 Clip1 Clip2
+  0 becken       P1>P2   17.0   P1>Ruhe    0.0   | Bind    0.0   17.0    0.0
+  1 huefte_r     P1>P2    1.7   P1>Ruhe    0.0   | Bind    0.0    1.7    0.0
+  2 huefte_l     P1>P2    8.9   P1>Ruhe    0.0   | Bind    0.0    8.9    0.0
+  3 fr_ober      P1>P2    2.4   P1>Ruhe    0.0   | Bind    0.0    2.4    0.0
+  4 fr_unter     P1>P2    3.9   P1>Ruhe    0.0   | Bind    0.0    3.9    0.0
+  5 fr_fuss      P1>P2    4.2   P1>Ruhe    0.0   | Bind    0.0    4.2    0.0
+  6 fl_ober      P1>P2    7.7   P1>Ruhe    0.0   | Bind    0.0    7.7    0.0
+  7 fl_unter     P1>P2    5.2   P1>Ruhe    0.0   | Bind    0.0    5.2    0.0
+  8 fl_fuss      P1>P2   11.8   P1>Ruhe    0.0   | Bind    0.0   11.8    0.0
+  9 rumpf_mitte  P1>P2    3.9   P1>Ruhe    0.0   | Bind    0.0    3.9    0.0
+ 10 rumpf        P1>P2    3.8   P1>Ruhe    0.0   | Bind    0.0    3.8    0.0
+ 11 nl_ober      P1>P2    2.9   P1>Ruhe    0.0   | Bind    0.0    2.9    0.0
+ 12 nl_unter     P1>P2    6.7   P1>Ruhe    0.0   | Bind    0.0    6.7    0.0
+ 13 nl_hand      P1>P2    6.7   P1>Ruhe    0.0   | Bind    0.0    6.7    0.0
+ 14 nl_innen     P1>P2    5.2   P1>Ruhe    0.0   | Bind    0.0    5.2    0.0
+ 15 nl_daumen    P1>P2   10.7   P1>Ruhe    0.0   | Bind    0.0   10.7    0.0
+ 16 nr_ober      P1>P2   29.2   P1>Ruhe    0.0   | Bind    0.0   29.2    0.0
+ 17 nr_unter     P1>P2   24.2   P1>Ruhe    0.0   | Bind    0.0   24.2    0.0
+ 18 nr_hand      P1>P2    8.1   P1>Ruhe    0.0   | Bind    0.0    8.1    0.0
+ 19 nr_daumen    P1>P2    5.5   P1>Ruhe    0.0   | Bind    0.0    5.5    0.0
+ 20 hals         P1>P2   39.6   P1>Ruhe   64.9   | Bind    0.0   39.6   64.9
+ 21 kopf         P1>P2   40.5   P1>Ruhe    0.4   | Bind    0.0   40.5    0.4
+ 22 kiefer       P1>P2    3.1   P1>Ruhe    0.4   | Bind    0.0    3.1    0.4
+ Summe Gelenkdrehung P1>P2 253, Median 6.7, Knochen ueber 15 Grad: 5, ueber 40 Grad: 1
+
+================= Kandidat B
+Knochen 21 Meshes 21 Wurzeln [0] Clips 3 [1, 1, 1]
+Sektionen Bytes {'morph': 12, 'edd1': 28, 'emr1': 564, 'edd2': 4, 'emr2': 4, 'edd3': 4, 'emr3': 4, 'md1': 108820}
+Clip 0 wurzel [-940, -2111, -100] spur [0, 0, 0]
+Clip 1 wurzel [-940, -2183, -100] spur [0, 0, 0]
+Clip 2 wurzel [-940, -2111, -100] spur [0, 0, 0]
+
+Knochen: name eltern versatz |versatz| ecken flaechen
+ 0 rumpf_f     eltern -           versatz [0, 0, 0]                   0  E 654  F 157
+ 1 fl_ober     eltern rumpf_f     versatz [-334, -3, -686]          763  E  45  F  62
+ 2 fl_unter    eltern fl_ober     versatz [80, 978, -103]           987  E  57  F  55
+ 3 fl_fuss     eltern fl_unter    versatz [197, 678, 281]           760  E  42  F  40
+ 4 fl_zeh      eltern fl_fuss     versatz [102, 166, -22]           196  E  33  F  43
+ 5 fr_ober     eltern rumpf_f     versatz [-358, 27, 757]           838  E 132  F 130
+ 6 fr_unter    eltern fr_ober     versatz [119, 969, 37]            977  E  52  F  50
+ 7 fr_fuss     eltern fr_unter    versatz [-61, 643, -3]            646  E  58  F  56
+ 8 fr_zeh      eltern fr_fuss     versatz [-176, 181, -74]          263  E  36  F  44
+ 9 rumpf_m     eltern rumpf_f     versatz [520, -20, 0]             520  E 654  F 294
+10 rumpf       eltern rumpf_m     versatz [0, 0, 0]                   0  E 654  F 302
+11 nl_ober     eltern rumpf_m     versatz [528, -224, -607]         835  E  78  F  76
+12 nl_unter    eltern nl_ober     versatz [830, 1080, 141]         1369  E  77  F  75
+13 nl_faust    eltern nl_unter    versatz [84, 411, -288]           509  E  89  F  87
+14 nl_innen    eltern nl_unter    versatz [0, 0, 0]                   0  E  59  F  57
+15 maul_l      eltern rumpf       versatz [761, 99, -114]           776  E  43  F  63
+16 nr_ober     eltern rumpf_m     versatz [401, -39, 489]           634  E  51  F  49
+17 nr_unter    eltern nr_ober     versatz [778, 1127, -67]         1371  E  53  F  51
+18 nr_faust    eltern nr_unter    versatz [435, 184, 189]           509  E  79  F  77
+19 nr_innen    eltern nr_unter    versatz [435, 184, 189]           509  E  49  F  47
+20 maul_r      eltern rumpf       versatz [728, 142, 111]           750  E  46  F  75
+
+Masse je Pose (Aktorraum, x laengs, z quer, h = -y):
+ Clip 0: x  -1728..  1598 ( 3326)  z  -1456..  1232 ( 2688)  h     -0..  2971
+ Clip 1: x  -1807..  1439 ( 3246)  z  -1335..  1656 ( 2992)  h     -0..  2990
+ Clip 2: x  -1728..  1676 ( 3404)  z  -1462..  1232 ( 2694)  h     -0..  2971
+
+Fussboden je Pose: Hoehe des tiefsten Punkts je Bein (0 = Boden, + schwebt, - steckt im Boden), Lage x,z im Aktorraum
+ Clip 0: FR    -0 ( -1354,   340)  FL  +104 (  -952,  -583)  NL  +252 (  1442,  -589)  NR  +122 (   821,   767)  NL_innen  +131 (   940,  -406)  NR_innen  +544 (  1297,   566)
+ Clip 1: FR  +127 ( -1429,  1083)  FL  +469 (  -391,  -677)  NL  +149 (  1187,  -672)  NR    -0 (   500,   653)  NL_innen   +82 (   657,  -171)  NR_innen  +353 (  1133,   211)
+ Clip 2: FR    -0 ( -1354,   340)  FL  +139 ( -1356,  -921)  NL  +252 (  1442,  -589)  NR  +188 (  1572,   358)  NL_innen  +131 (   940,  -406)  NR_innen  +418 (   945,   402)
+
+Gelenke: Drehung lokal gegen Clip 0 (Grad)  Clip1  Clip2 | Betrag gegen Bindpose Clip0 Clip1 Clip2
+  0 rumpf_f      P1>P2    5.4   P1>Ruhe    0.0   | Bind    0.0    5.4    0.0
+  1 fl_ober      P1>P2   55.1   P1>Ruhe   20.6   | Bind    0.0   55.1   20.6
+  2 fl_unter     P1>P2   47.1   P1>Ruhe   32.3   | Bind    0.0   47.1   32.3
+  3 fl_fuss      P1>P2   39.9   P1>Ruhe   99.2   | Bind    0.0   39.9   99.2
+  4 fl_zeh       P1>P2   16.4   P1>Ruhe   75.5   | Bind    0.0   16.4   75.5
+  5 fr_ober      P1>P2   12.5   P1>Ruhe    0.0   | Bind    0.0   12.5    0.0
+  6 fr_unter     P1>P2   11.3   P1>Ruhe    0.0   | Bind    0.0   11.3    0.0
+  7 fr_fuss      P1>P2    3.2   P1>Ruhe    0.0   | Bind    0.0    3.2    0.0
+  8 fr_zeh       P1>P2    3.0   P1>Ruhe    0.0   | Bind    0.0    3.0    0.0
+  9 rumpf_m      P1>P2    0.0   P1>Ruhe    0.0   | Bind    0.0    0.0    0.0
+ 10 rumpf        P1>P2    0.0   P1>Ruhe    0.0   | Bind   14.8   14.8   14.8
+ 11 nl_ober      P1>P2    4.9   P1>Ruhe    0.0   | Bind    0.0    4.9    0.0
+ 12 nl_unter     P1>P2    3.2   P1>Ruhe    0.0   | Bind    0.0    3.2    0.0
+ 13 nl_faust     P1>P2    4.3   P1>Ruhe    0.0   | Bind    0.0    4.3    0.0
+ 14 nl_innen     P1>P2    4.1   P1>Ruhe    0.0   | Bind    0.0    4.1    0.0
+ 15 maul_l       P1>P2    0.4   P1>Ruhe    0.0   | Bind    0.0    1.0    0.0
+ 16 nr_ober      P1>P2    5.6   P1>Ruhe   25.5   | Bind    0.0    5.6   25.5
+ 17 nr_unter     P1>P2    5.1   P1>Ruhe   76.6   | Bind    0.0    5.1   76.6
+ 18 nr_faust     P1>P2    3.2   P1>Ruhe   89.8   | Bind    0.0    3.2   89.8
+ 19 nr_innen     P1>P2    2.7   P1>Ruhe    9.6   | Bind    0.0    2.7    9.6
+ 20 maul_r       P1>P2    0.4   P1>Ruhe    0.0   | Bind    0.0    1.0    0.0
+ Summe Gelenkdrehung P1>P2 228, Median 4.3, Knochen ueber 15 Grad: 4, ueber 40 Grad: 2
+
+================= Kandidat C
+Knochen 21 Meshes 21 Wurzeln [0] Clips 3 [1, 1, 1]
+Sektionen Bytes {'morph': 12, 'edd1': 28, 'emr1': 456, 'edd2': 4, 'emr2': 4, 'edd3': 4, 'emr3': 4, 'md1': 84940}
+Clip 0 wurzel [-520, -1900, 0] spur [0, 0, 0]
+Clip 1 wurzel [-520, -1892, 0] spur [0, 0, 0]
+Clip 2 wurzel [-520, -1900, 0] spur [0, 0, 0]
+
+Knochen: name eltern versatz |versatz| ecken flaechen
+ 0 rumpf_h     eltern -           versatz [-520, -1900, 0]         1970  E 169  F 141
+ 1 fr_huefte   eltern rumpf_h     versatz [-630, -250, 660]         946  E  86  F  96
+ 2 fr_bein     eltern fr_huefte   versatz [-138, 881, 24]           892  E  50  F  56
+ 3 fr_fuss     eltern fr_bein     versatz [-159, 880, -68]          897  E  50  F  56
+ 4 fr_zeh      eltern fr_fuss     versatz [-154, 206, 292]          389  E  26  F  30
+ 5 fl_huefte   eltern rumpf_h     versatz [-210, -250, -540]        631  E  86  F  96
+ 6 fl_bein     eltern fl_huefte   versatz [-138, 881, -24]          892  E  50  F  56
+ 7 fl_fuss     eltern fl_bein     versatz [-159, 880, 68]           897  E  50  F  56
+ 8 fl_zeh      eltern fl_fuss     versatz [-154, 206, -292]         389  E  26  F  30
+ 9 rumpf_m     eltern rumpf_h     versatz [400, 0, 0]               400  E 309  F 294
+10 rumpf_v     eltern rumpf_m     versatz [440, 0, 40]              442  E 246  F 241
+11 nr_ober     eltern rumpf_v     versatz [-364, 546, -112]         666  E  72  F  80
+12 nr_unter    eltern nr_ober     versatz [428, 578, 235]           757  E  62  F  70
+13 nr_hand     eltern nr_unter    versatz [177, 546, 167]           598  E  72  F  80
+14 hals        eltern rumpf_v     versatz [540, 160, 220]           605  E  62  F  70
+15 vorsprung   eltern hals        versatz [140, -340, 70]           374  E  62  F  70
+16 nl_ober     eltern rumpf_v     versatz [646, 368, -552]          926  E  72  F  80
+17 nl_kugel_o  eltern nl_ober     versatz [316, 569, -169]          672  E  52  F  60
+18 nl_kugel_u  eltern nl_kugel_o  versatz [72, 394, -43]            403  E  52  F  60
+19 nl_unter    eltern nl_ober     versatz [-21, 630, 120]           642  E  58  F  64
+20 kiefer      eltern hals        versatz [161, -95, 254]           315  E  50  F  56
+
+Masse je Pose (Aktorraum, x laengs, z quer, h = -y):
+ Clip 0: x  -1671..  1550 ( 3221)  z  -1125..  1197 ( 2322)  h     -0..  2966
+ Clip 1: x  -1402..  1440 ( 2842)  z  -1330..   969 ( 2299)  h     -0..  2958
+ Clip 2: x  -1671..  1550 ( 3221)  z  -1125..  1197 ( 2322)  h     -0..  2966
+
+Fussboden je Pose: Hoehe des tiefsten Punkts je Bein (0 = Boden, + schwebt, - steckt im Boden), Lage x,z im Aktorraum
+ Clip 0: FR    -0 ( -1499,   458)  FL    -0 ( -1075,  -348)  NL   +64 (  1423,  -764)  NR   +20 (  1095,   552)  NL_innen    -0 (   855,  -467)
+ Clip 1: FR  +189 (  -995,  -334)  FL    -0 (  -882,  -728)  NL  +115 (   917, -1193)  NR   +12 (  1095,   552)  NL_innen   +60 (   607,  -648)
+ Clip 2: FR    -0 ( -1499,   458)  FL    -0 ( -1075,  -348)  NL   +64 (  1423,  -764)  NR   +20 (  1095,   552)  NL_innen    -0 (   855,  -467)
+
+Gelenke: Drehung lokal gegen Clip 0 (Grad)  Clip1  Clip2 | Betrag gegen Bindpose Clip0 Clip1 Clip2
+  0 rumpf_h      P1>P2    0.0   P1>Ruhe    0.0   | Bind    0.0    0.0    0.0
+  1 fr_huefte    P1>P2   56.6   P1>Ruhe    0.0   | Bind    0.0   56.6    0.0
+  2 fr_bein      P1>P2   22.5   P1>Ruhe    0.0   | Bind    0.0   22.5    0.0
+  3 fr_fuss      P1>P2   48.4   P1>Ruhe    0.0   | Bind    0.0   48.4    0.0
+  4 fr_zeh       P1>P2    3.1   P1>Ruhe    0.0   | Bind    0.0    3.1    0.0
+  5 fl_huefte    P1>P2   13.2   P1>Ruhe    0.0   | Bind    0.0   13.2    0.0
+  6 fl_bein      P1>P2    5.1   P1>Ruhe    0.0   | Bind    0.0    5.1    0.0
+  7 fl_fuss      P1>P2   16.1   P1>Ruhe    0.0   | Bind    0.0   16.1    0.0
+  8 fl_zeh       P1>P2    2.5   P1>Ruhe    0.0   | Bind    0.0    2.5    0.0
+  9 rumpf_m      P1>P2    0.0   P1>Ruhe    0.0   | Bind    0.0    0.0    0.0
+ 10 rumpf_v      P1>P2    0.0   P1>Ruhe    0.0   | Bind    0.0    0.0    0.0
+ 11 nr_ober      P1>P2    0.0   P1>Ruhe    0.0   | Bind    0.0    0.0    0.0
+ 12 nr_unter     P1>P2    0.0   P1>Ruhe    0.0   | Bind    0.0    0.0    0.0
+ 13 nr_hand      P1>P2    0.0   P1>Ruhe    0.0   | Bind    0.0    0.0    0.0
+ 14 hals         P1>P2    0.0   P1>Ruhe    0.0   | Bind    0.0    0.0    0.0
+ 15 vorsprung    P1>P2   35.0   P1>Ruhe    0.0   | Bind    0.0   35.0    0.0
+ 16 nl_ober      P1>P2   46.6   P1>Ruhe    0.0   | Bind    0.0   46.6    0.0
+ 17 nl_kugel_o   P1>P2    4.0   P1>Ruhe    0.0   | Bind    0.0    4.0    0.0
+ 18 nl_kugel_u   P1>P2    1.5   P1>Ruhe    0.0   | Bind    0.0    1.5    0.0
+ 19 nl_unter     P1>P2   13.4   P1>Ruhe    0.0   | Bind    0.0   13.4    0.0
+ 20 kiefer       P1>P2   78.0   P1>Ruhe    0.0   | Bind    0.0   78.0    0.0
+ Summe Gelenkdrehung P1>P2 346, Median 4.0, Knochen ueber 15 Grad: 7, ueber 40 Grad: 4

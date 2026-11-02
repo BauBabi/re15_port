@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Endstand: Nahreihe wie a2_nah2.sh, dazu Kerbe E3 (Pose 1, rechter Arm von hinten aussen) und Ruhe von vorn.
+cd "$(dirname "$0")"
+B="C:/Program Files/Blender Foundation/Blender 5.2/blender.exe"
+Z="$(pwd -W)/netz"
+r() { "$B" -b --python-exit-code 3 -P a2_ton.py -- "$1" "$2" "$Z" "ziel:$3" "tag:$4" > mess/nah_$4.log 2>&1; echo "$4 rc=$?"; }
+r 2 "270,12;225,12;180,12;135,20"  "-0.4,-0.9,0.6,3.0"  nfuss2
+r 0 "180,10;225,10;270,10;135,15"  "-1.4,-0.2,0.7,3.2" nfuss0
+r 2 "0,8;45,8;90,8;315,20"         "3.3,0.0,1.6,2.6"   nkopf2
+r 1 "135,35;180,30;225,30;90,20"   "1.0,0.0,2.2,4.0"   nkopf1
+r 0 "270,10;315,10;225,10;0,15"    "1.9,-1.0,0.6,2.6"  nhand0
+r 0 "270,20;225,30;180,35;90,20"   "-0.3,0.0,2.2,3.8"  nrueck0
+r 2 "90,20;135,30;180,30;225,30"   "0.8,0.0,2.0,4.0"   nrueck2
+r 2 "0,35;45,35;90,35;315,35"      "1.6,0.0,0.6,6.0"   nhaende2
+r 0 "180,15;225,15;270,15;315,15"  "1.87,-0.92,1.3,2.6"  nkerbe0
+echo NAHREIHE-FERTIG

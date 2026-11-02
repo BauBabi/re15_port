@@ -1,0 +1,15 @@
+y 336  Original dunkel ab x 229  Nutzermaske ab x 227  Modell ab x 226
+y 344  Original dunkel ab x 246  Nutzermaske ab x 221  Modell ab x 221
+y 352  Original dunkel ab x 215  Nutzermaske ab x 214  Modell ab x 215
+y 360  Original dunkel ab x 212  Nutzermaske ab x 213  Modell ab x 210
+y 368  Original dunkel ab x 212  Nutzermaske ab x 210  Modell ab x 207
+y 376  Original dunkel ab x 205  Nutzermaske ab x 203  Modell ab x 205
+y 384  Original dunkel ab x 203  Nutzermaske ab x 200  Modell ab x 203
+y 392  Original dunkel ab x 201  Nutzermaske ab x 198  Modell ab x 196
+y 400  Original dunkel ab x 199  Nutzermaske ab x 193  Modell ab x 193
+y 408  Original dunkel ab x 197  Nutzermaske ab x 195  Modell ab x 194
+y 416  Original dunkel ab x 208  Nutzermaske ab x 195  Modell ab x 195
+y 424  Original dunkel ab x 218  Nutzermaske ab x 196  Modell ab x 196
+y 432  Original dunkel ab x 193  Nutzermaske ab x 197  Modell ab x 198
+Original Aussenkante: Abweichung von der Geraden -8.1 bis 22.8, Hub 30.9 px
+Modell Aussenkante: Abweichung von der Geraden -6.5 bis 8.6, Hub 15.1 px

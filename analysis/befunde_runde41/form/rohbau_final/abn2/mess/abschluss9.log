@@ -1,0 +1,41 @@
+hand_r Hoehe -3
+fuss_r Hoehe -1
+hand_l Hoehe -1
+fuss_l Hoehe -1
+   klaue_r1 Hoehe -3
+Runde 4 Z1 60/63 Z2 58/37 Z3 73/75 Z4 63/72 Z5 57/58 Z6a 56/48 Z6b 34/36 Z6c 28/31 Z7 47/49 Z8 55/57 Z9 32/35 Xa 47/50 Xb 63/65 Xc 47/43 Q2 29/24 Qa 26/29 Qb 27/28 Qc 27/29 Q1 46/42 Q3 36/32 Q4 57/42 H8 40/18 H9 42/21 Gg 62/26 Gr 76/37 P 66/68
+{'Z1': 1.06, 'Z2': 1.4, 'Z3': 1.03, 'Z4': 1.06, 'Z5': 0.91, 'Z6a': 1.25, 'Z6b': 0.67, 'Z6c': 0.55, 'Z7': 1.43, 'Z8': 1.2, 'Z9': 0.86, 'Xa': 0.54, 'Xb': 0.76, 'Xc': 1.6, 'Q2': 1.25, 'Qa': 0.79, 'Qb': 1.56, 'Qc': 1.3, 'Q1': 1.5, 'Q3': 1.5, 'Q4': 1.4, 'H8': 1.5, 'H9': 1.5, 'Gr': 1.6, 'P': 1.56}
+Dichte 0.0268 Flaechen 1900
+Farben 31
+C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_r
+Oberschenkel   Volumen links/rechts 1.00
+Unterschenkel  Volumen links/rechts 1.00
+Fuss           Volumen links/rechts 1.00
+Oberarm        Volumen links/rechts 1.00
+Unterarm       Volumen links/rechts 1.00
+Hand           Volumen links/rechts 0.44
+Finger innen   Volumen links/rechts 0.44
+Finger Mitte   Volumen links/rechts 0.44
+Finger aussen  Volumen links/rechts 0.44
+Daumen         Volumen links/rechts 0.44
+Abgabe aus C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_final\lauf\ende
+71e7f298a42a1c0a9779f4160d5f2c49 *FORM.EMD
+748dbe7c558ade3662d6ee42f682c362 *FORM.TIM
+Verfahren: PrintWindow (Versuch 1)
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 12
+t601 slot2 typ 0x30 st 1/9 pos (941,0,-23776) gier 3874 clip 1 bild 0 grid 0x33 kein_bild 0
+Verfahren: PrintWindow (Versuch 1)
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t601 slot1 typ 0x30 st 1/9 pos (-18564,0,-18386) gier 80 clip 0 bild 0 grid 0x33 kein_bild 0
+Verfahren: PrintWindow (Versuch 1)
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t601 slot1 typ 0x30 st 1/9 pos (-18564,0,-18386) gier 80 clip 2 bild 0 grid 0x33 kein_bild 0
+Verfahren: PrintWindow (Versuch 1)
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 3 Clips -> Slot 11
+t601 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 756 clip 0 bild 0 grid 0x33 kein_bild 0
+o1_blatt.png
+ABSCHLUSS FERTIG
+
+real	6m28.195s
+user	0m3.446s
+sys	0m4.391s

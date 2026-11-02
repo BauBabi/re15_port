@@ -1,0 +1,266 @@
+{
+"texel_einheit": 34.5,
+"karten": [
+{
+"name": "huefte",
+"x": 152,
+"y": 2,
+"b": 135,
+"h": 82,
+"umfang": 4608,
+"laenge": 2785
+},
+{
+"name": "wirbel",
+"x": 2,
+"y": 105,
+"b": 77,
+"h": 54,
+"umfang": 4441,
+"laenge": 3067
+},
+{
+"name": "brust",
+"x": 2,
+"y": 2,
+"b": 146,
+"h": 101,
+"umfang": 4996,
+"laenge": 3434
+},
+{
+"name": "schwanz1",
+"x": 2,
+"y": 161,
+"b": 59,
+"h": 40,
+"umfang": 1964,
+"laenge": 1339
+},
+{
+"name": "schwanz2",
+"x": 138,
+"y": 147,
+"b": 61,
+"h": 41,
+"umfang": 2044,
+"laenge": 1366
+},
+{
+"name": "schwanz3",
+"x": 326,
+"y": 159,
+"b": 50,
+"h": 39,
+"umfang": 1660,
+"laenge": 1293
+},
+{
+"name": "schwanz4",
+"x": 66,
+"y": 200,
+"b": 35,
+"h": 34,
+"umfang": 1171,
+"laenge": 1136
+},
+{
+"name": "schwanz5",
+"x": 204,
+"y": 188,
+"b": 34,
+"h": 35,
+"umfang": 1115,
+"laenge": 1148
+},
+{
+"name": "schwanz6",
+"x": 206,
+"y": 144,
+"b": 40,
+"h": 42,
+"umfang": 1336,
+"laenge": 1401
+},
+{
+"name": "oberschenkel_l",
+"x": 84,
+"y": 105,
+"b": 49,
+"h": 53,
+"umfang": 1620,
+"laenge": 1776
+},
+{
+"name": "unterschenkel_l",
+"x": 346,
+"y": 71,
+"b": 35,
+"h": 42,
+"umfang": 1147,
+"laenge": 1411
+},
+{
+"name": "fuss_l",
+"x": 300,
+"y": 200,
+"b": 26,
+"h": 32,
+"umfang": 1178,
+"laenge": 1461
+},
+{
+"name": "zeh",
+"x": 106,
+"y": 200,
+"b": 10,
+"h": 11,
+"umfang": 413,
+"laenge": 541
+},
+{
+"name": "oberschenkel_r",
+"x": 272,
+"y": 132,
+"b": 49,
+"h": 53,
+"umfang": 1620,
+"laenge": 1776
+},
+{
+"name": "unterschenkel_r",
+"x": 346,
+"y": 115,
+"b": 35,
+"h": 42,
+"umfang": 1147,
+"laenge": 1411
+},
+{
+"name": "fuss_r",
+"x": 330,
+"y": 200,
+"b": 26,
+"h": 32,
+"umfang": 1178,
+"laenge": 1461
+},
+{
+"name": "oberarm_l",
+"x": 84,
+"y": 160,
+"b": 42,
+"h": 38,
+"umfang": 2086,
+"laenge": 1870
+},
+{
+"name": "unterarm_l",
+"x": 292,
+"y": 71,
+"b": 49,
+"h": 59,
+"umfang": 1649,
+"laenge": 1968
+},
+{
+"name": "schuppe",
+"x": 44,
+"y": 213,
+"b": 10,
+"h": 8,
+"umfang": 206,
+"laenge": 167
+},
+{
+"name": "hand_l",
+"x": 250,
+"y": 187,
+"b": 46,
+"h": 37,
+"umfang": 1830,
+"laenge": 1483
+},
+{
+"name": "finger",
+"x": 224,
+"y": 226,
+"b": 25,
+"h": 23,
+"umfang": 965,
+"laenge": 881
+},
+{
+"name": "oberarm_r",
+"x": 206,
+"y": 86,
+"b": 62,
+"h": 56,
+"umfang": 2086,
+"laenge": 1870
+},
+{
+"name": "unterarm_r",
+"x": 152,
+"y": 86,
+"b": 49,
+"h": 59,
+"umfang": 1649,
+"laenge": 1968
+},
+{
+"name": "hand_r",
+"x": 130,
+"y": 190,
+"b": 46,
+"h": 37,
+"umfang": 1830,
+"laenge": 1483
+},
+{
+"name": "hals",
+"x": 180,
+"y": 225,
+"b": 39,
+"h": 28,
+"umfang": 2840,
+"laenge": 1983
+},
+{
+"name": "kopf",
+"x": 292,
+"y": 2,
+"b": 88,
+"h": 67,
+"umfang": 2973,
+"laenge": 2254
+},
+{
+"name": "wange",
+"x": 360,
+"y": 200,
+"b": 12,
+"h": 11,
+"umfang": 737,
+"laenge": 634
+},
+{
+"name": "kiefer",
+"x": 2,
+"y": 203,
+"b": 37,
+"h": 32,
+"umfang": 1611,
+"laenge": 1356
+},
+{
+"name": "zahn",
+"x": 44,
+"y": 203,
+"b": 10,
+"h": 8,
+"umfang": 270,
+"laenge": 280
+}
+]
+}

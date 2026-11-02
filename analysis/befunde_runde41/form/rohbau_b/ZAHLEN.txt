@@ -1,0 +1,34 @@
+(g) Kennzahlen: 1876 Flaechen (542 Dreiecke, 1334 Vierecke), 32 Knochen, 32 Meshes, Textur 384x256 8 bpp, 1 CLUT-Zeilen, 3 Clips, Bilder je Clip [1, 1, 1]
+Rahmen: alles eingehalten
+(a) Umriss gegen ziel2_bild1.png, auf nicht-grauen Pixeln: IoU 0.962, Weiss gedeckt 0.969, Schwarz getroffen 245 px, Render 37727 px, davon auf Grau 4996
+(b) Pruefpunkte 22/31 bestanden  (+ = rechts/unten vom Soll; kontur: + = Soll ausserhalb, Render zu klein)
+   5 NEIN b1.scheitel_x300       Oberkante tail                 Soll (300,187)  Abstand   -4.5  Grenze  3.7
+   6 NEIN b1.scheitel_x305       Oberkante tail                 Soll (305,187)  Abstand   -6.5  Grenze  3.6
+   9 NEIN b1.scheitel_x322       Oberkante tail                 Soll (322,187)  Abstand  +13.5  Grenze  8.6
+  11 NEIN b1.flanke_2            Kante part_of_Body             Soll (366,215)  Abstand   +3.1  Grenze  2.6
+  15 NEIN b1.rand_links_y242     Kante links tail               Soll (247,242)  Abstand   -4.5  Grenze  4.0
+  16 NEIN b1.rand_rechts         Kante rechts neben right_arm   Soll (429,272)  Abstand  -26.5  Grenze  3.6
+  17 NEIN b1.fr_y324_links       right_arm Kante links          Soll (381,324)  Abstand   -3.5  Grenze  3.0
+  20 NEIN b1.fr_y344_rechts      right_arm Kante rechts         Soll (418,344)  Abstand   +4.5  Grenze  3.6
+  29 NEIN b1.nl_y342_links       left_leg Kante links           Soll (226,342)  Abstand   -8.5  Grenze  3.2
+(c) Boden frei, Verdeckung 1/3
+  NEIN L1    Boden frei L1                                  Treffer 32 von 969 px, Eindringen 2.8 px
+  NEIN L2    Boden frei L2                                  Treffer 39 von 629 px, Eindringen 2.8 px
+(d) Zeichnung 8/9, Anteil = Sollflaeche mit passendem Material, Y = Mittel im Video gegen gefilterten Render
+  NEIN Z9   z9                  Material 0.00  Figur 0.00  Groesse 0.00  Lage 15.7  Y  55/ 88
+(a) Umriss gegen ziel2_bild2.png, auf nicht-grauen Pixeln: IoU 0.951, Weiss gedeckt 0.953, Schwarz getroffen 93 px, Render 50140 px, davon auf Grau 6725
+(b) Pruefpunkte 7/7 bestanden  (+ = rechts/unten vom Soll; kontur: + = Soll ausserhalb, Render zu klein)
+(c) Boden frei, Verdeckung 8/9
+  NEIN BO    Boden frei (345-405,382-396)                   Treffer 5 von 841 px, Eindringen 1.4 px
+(d) Zeichnung 6/7, Anteil = Sollflaeche mit passendem Material, Y = Mittel im Video gegen gefilterten Render
+  NEIN P    weisskerne          Material 0.26  Figur 0.82  Groesse 0.04  Lage 7.4  Y 116/ 28
+--- Bild 1: Anteil aller Nutzerpixel, die der richtige Teil deckt 0.951, mittlere IoU 0.827
+  left_leg             8,24,25             4169  0.78  0.95  0.99  0.82  0.92  0.26  0.02  -2,+6 (6.8)          2 Grad +0 px  168/172   40/39
+  part_of_Body         0,7,10              6109  0.78  0.93  0.96  0.83  0.91  0.49  0.04  +2,-8 (8.2)          23 Grad +0 px 112/111   136/84
+  right_arm            16,17,18,19,20,2    4299  0.78  0.89  0.96  0.87  0.96  0.14  0.09  -1,-2 (2.3)          1 Grad +1 px  127/129   44/41
+  right_leg            9,26,27             6718  0.90  0.96  1.00  0.93  0.99  0.05  0.03  -1,-1 (1.3)          1 Grad +1 px  172/171   52/50
+  tail                 1,2,3,4,5,6        12216  0.89  0.98  1.00  0.91  0.97  0.01  0.01  -2,+2 (2.5)          1 Grad +1 px  289/285   67/66
+--- Bild 2: Anteil aller Nutzerpixel, die der richtige Teil deckt 0.848, mittlere IoU 0.742
+  face_and_upper_body  0,7,10,11,21,22,   29965  0.79  0.84  0.85  0.94  0.97  0.05  0.03  +11,-12 (16.7)       1 Grad +0 px  175/220   171/160
+  left_arm_front       12,13,14,15,28,3    5561  0.69  0.88  0.95  0.76  0.84  0.15  0.06  +5,+7 (8.5)          9 Grad -2 px  138/153   64/52
+  right_arm_front      17,18,19,20,29,3    9939  0.74  0.86  0.94  0.85  0.90  0.11  0.11  +0,-3 (3.1)          6 Grad +3 px  165/188   114/110

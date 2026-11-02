@@ -1,0 +1,18 @@
+Flaechen 1900
+A   0 L 4.2525 tail 0.021/0.043 left_ 0.054/0.101 right 0.029/0.051 right 0.028/0.121 part_ 0.055/0.100 verst 6.000/106.000 face_ 0.094/0.015 left_ 0.047/0.116 right 0.092/0.151 verst 1815.000/3789.000 kopf 0.063/0.366
+      boden hr -0 hl 4 fr 3 fl 2 | hr 3 hl 3 fr 2 fl 2 reg 0.015 0.008 2.099 2.188 0.004 0.000 0.102  1s
+A  39 L 4.0796 tail 0.024/0.041 left_ 0.061/0.077 right 0.031/0.048 right 0.029/0.114 part_ 0.055/0.094 verst 27.000/93.000 face_ 0.093/0.015 left_ 0.051/0.109 right 0.090/0.149 verst 1800.000/3640.000 kopf 0.054/0.351
+      boden hr 1 hl 3 fr 1 fl -1 | hr 2 hl -2 fr 4 fl -3 reg 0.015 0.008 2.099 2.188 0.004 2.169 0.170  28s
+      innen 1 obers_l 0.08
+      innen 2 oberarm_r 0.03 obers_r 0.08 fuss_r 0.05 obers_l 0.08
+e   0 L 3.6739 tail 0.021/0.024 left_ 0.071/0.034 right 0.030/0.027 right 0.036/0.066 part_ 0.061/0.061 verst 25.000/104.000 face_ 0.099/0.011 left_ 0.061/0.055 right 0.094/0.123 verst 1930.000/3677.000 kopf 0.052/0.324
+      boden hr -1 hl 3 fr 2 fl 1 | hr 5 hl -3 fr 6 fl -2 reg 0.015 0.008 2.099 2.188 0.004 2.207 0.172  1s
+e 100 L 2.2137 tail 0.017/0.026 left_ 0.050/0.049 right 0.028/0.033 right 0.030/0.074 part_ 0.062/0.058 verst 6.000/89.000 face_ 0.116/0.011 left_ 0.053/0.060 right 0.096/0.129 verst 1559.000/3623.000 kopf 0.024/0.049
+      boden hr 0 hl 4 fr 3 fl 2 | hr 3 hl 3 fr 2 fl 2 reg 0.017 0.006 2.324 2.253 0.004 0.979 0.103  79s
+e 200 L 2.2003 tail 0.017/0.026 left_ 0.054/0.046 right 0.030/0.031 right 0.032/0.074 part_ 0.063/0.056 verst 5.000/114.000 face_ 0.109/0.011 left_ 0.054/0.057 right 0.098/0.129 verst 1550.000/3772.000 kopf 0.021/0.050
+      boden hr -0 hl 4 fr 2 fl 2 | hr 3 hl 4 fr 2 fl 2 reg 0.019 0.006 2.389 2.255 0.003 0.916 0.086  159s
+e 219 L 2.1647 tail 0.017/0.026 left_ 0.056/0.045 right 0.029/0.032 right 0.031/0.074 part_ 0.062/0.058 verst 9.000/88.000 face_ 0.115/0.011 left_ 0.053/0.058 right 0.096/0.128 verst 1485.000/3672.000 kopf 0.021/0.049
+      boden hr -0 hl 4 fr 2 fl 2 | hr 3 hl 3 fr 3 fl 2 reg 0.018 0.006 2.390 2.271 0.003 0.968 0.102  173s
+      innen 1 
+      innen 2 
+fertig zw/s13.json

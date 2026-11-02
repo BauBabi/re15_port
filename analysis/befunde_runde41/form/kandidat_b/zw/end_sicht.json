@@ -1,0 +1,99 @@
+[
+ {
+  "sicht": "Flanke",
+  "gier": 996,
+  "lage": [
+   2350,
+   -23550
+  ],
+  "weiss_fehlt": 1729,
+  "schwarz": 708,
+  "haken": 0.7,
+  "naht_sichtbar": "10/10",
+  "Y_video_naht": [
+   32,
+   27,
+   28,
+   22,
+   18,
+   18,
+   19,
+   39,
+   19,
+   18
+  ],
+  "Q_in_Bild1": "113/146",
+  "Y_Bild1": 57
+ },
+ {
+  "sicht": "Flanke+",
+  "gier": 1000,
+  "lage": [
+   2275,
+   -23525
+  ],
+  "weiss_fehlt": 1974,
+  "schwarz": 549,
+  "haken": 0.69,
+  "naht_sichtbar": "10/10",
+  "Y_video_naht": [
+   34,
+   28,
+   30,
+   23,
+   18,
+   18,
+   18,
+   28,
+   19,
+   18
+  ],
+  "Q_in_Bild1": "103/145",
+  "Y_Bild1": 59
+ },
+ {
+  "sicht": "Ende",
+  "gier": 2065,
+  "lage": [
+   2142,
+   -23762
+  ],
+  "weiss_fehlt": 532,
+  "schwarz": 1030,
+  "haken": 0.92,
+  "naht_sichtbar": "0/10",
+  "Y_video_naht": [],
+  "Q_in_Bild1": "0/150",
+  "Y_Bild1": null
+ },
+ {
+  "sicht": "Ende+",
+  "gier": 2130,
+  "lage": [
+   2100,
+   -23700
+  ],
+  "weiss_fehlt": 878,
+  "schwarz": 490,
+  "haken": 0.87,
+  "naht_sichtbar": "0/10",
+  "Y_video_naht": [],
+  "Q_in_Bild1": "0/150",
+  "Y_Bild1": null
+ },
+ {
+  "sicht": "Gegenflanke",
+  "gier": 3000,
+  "lage": [
+   2500,
+   -23350
+  ],
+  "weiss_fehlt": 2097,
+  "schwarz": 406,
+  "haken": 1.0,
+  "naht_sichtbar": "0/10",
+  "Y_video_naht": [],
+  "Q_in_Bild1": "0/154",
+  "Y_Bild1": null
+ }
+]

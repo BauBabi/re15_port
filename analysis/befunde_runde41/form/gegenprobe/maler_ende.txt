@@ -1,0 +1,10 @@
+1 tail {'iou': 0.865, 'decke': 0.952, 'alle': 0.97, 'ueber': 1371, 'fl': 13644}
+1 left_leg {'iou': 0.754, 'decke': 0.903, 'alle': 0.904, 'ueber': 860, 'fl': 4345}
+1 right_leg {'iou': 0.81, 'decke': 0.841, 'alle': 0.914, 'ueber': 268, 'fl': 6896}
+1 right_arm {'iou': 0.788, 'decke': 0.91, 'alle': 0.932, 'ueber': 661, 'fl': 4299}
+1 part_of_Body {'iou': 0.706, 'decke': 0.788, 'alle': 0.972, 'ueber': 848, 'fl': 7293}
+1 _aussen_px 1463
+2 face_and_upper_body {'iou': 0.76, 'decke': 0.803, 'alle': 0.935, 'ueber': 1719, 'fl': 29990}
+2 left_arm_front {'iou': 0.713, 'decke': 0.887, 'alle': 0.953, 'ueber': 1370, 'fl': 5607}
+2 right_arm_front {'iou': 0.545, 'decke': 0.625, 'alle': 0.635, 'ueber': 1786, 'fl': 12314}
+2 _aussen_px 2502

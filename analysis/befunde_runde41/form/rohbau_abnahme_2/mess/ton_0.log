@@ -1,0 +1,27 @@
+C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\a2_ton.py:31: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  m.use_nodes = True
+C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\a2_ton.py:44: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  w = bpy.data.worlds.new('w'); s.world = w; w.use_nodes = True
+C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\a2_ton.py:49: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  ma = bpy.data.materials.new('b'); ma.use_nodes = True
+00:03.438  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az000_el08.png'
+00:05.016  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az045_el08.png'
+00:06.641  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az090_el08.png'
+00:08.469  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az135_el08.png'
+00:10.000  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az180_el08.png'
+00:11.641  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az225_el08.png'
+00:13.235  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az270_el08.png'
+00:14.907  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az315_el08.png'
+00:16.625  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az000_el35.png'
+00:18.344  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az045_el35.png'
+00:20.078  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az090_el35.png'
+00:21.969  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az135_el35.png'
+00:23.782  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az180_el35.png'
+00:25.532  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az225_el35.png'
+00:27.360  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az270_el35.png'
+00:29.157  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\netz\ton_c0_az315_el35.png'
+TON-FERTIG
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip0.obj' took 1.89 ms
+
+Blender quit

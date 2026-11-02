@@ -1,0 +1,11 @@
+
+=========== Rohbau FINAL
+  Pose 1 Abstand zur Gerippe-Pose in Grad: hand_r 65, oberarm_r 62, hals 22, hand_l 22, unterarm_r 18, unterarm_l 17, kopf 17
+     Wurzel: [-9, -1907, -22] gegen [0, -1882, 0]
+  Pose 2 Abstand zur Gerippe-Pose in Grad: unterschenkel_r 45, fuss_l 39, hand_r 33, brust 28
+     Wurzel: [112, -1113, -148] gegen [0, -1543, 0]
+  Pose 1: brust-oberarm_r Abstand 4, innen 0.00; brust-oberarm_l Abstand 8, innen 0.00; huefte-oberschenkel_l Abstand 19, innen 0.00; huefte-oberschenkel_r Abstand 2, innen 0.00; huefte-schwanz1 Abstand 5, innen 0.42; brust-hals Abstand 4, innen 0.19
+  Pose 2: brust-oberarm_r Abstand 3, innen 0.02; brust-oberarm_l Abstand 82, innen 0.00; huefte-oberschenkel_l Abstand 34, innen 0.00; huefte-oberschenkel_r Abstand 36, innen 0.00; huefte-schwanz1 Abstand 3, innen 0.36; brust-hals Abstand 4, innen 0.26
+  Ruhe: brust-oberarm_r Abstand 98, innen 0.00; brust-oberarm_l Abstand 81, innen 0.00; huefte-oberschenkel_l Abstand 4, innen 0.10; huefte-oberschenkel_r Abstand 4, innen 0.10; huefte-schwanz1 Abstand 1, innen 0.40; brust-hals Abstand 3, innen 0.21
+  Kopf Bild 2: Kreis (325,245) r62 zu 1.00 vom Kopf gedeckt; vom Kopf liegen 0.84 im Kreis, 2309 px ausserhalb
+  Bild 1 hand_l Tiefe 6816;  Bild 1 hand_r Tiefe 6398;  Bild 2 hand_l Tiefe 6595;  Bild 2 hand_r Tiefe 5540;

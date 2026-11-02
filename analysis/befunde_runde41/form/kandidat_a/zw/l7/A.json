@@ -1,0 +1,25 @@
+{
+ "name": "A",
+ "emd": "FORM.EMD",
+ "tim": "FORM.TIM",
+ "ruhe": {
+  "clip": 2,
+  "bild": 0
+ },
+ "bild1": {
+  "lage": [
+   -18532,
+   0,
+   -18678
+  ],
+  "gier": 2153
+ },
+ "bild2": {
+  "lage": [
+   2462,
+   0,
+   -23415
+  ],
+  "gier": 931
+ }
+}

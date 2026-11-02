@@ -1,0 +1,7 @@
+Z5     Y>=110   Orig 98 px, 15x9, x391-405 y278-286 | F 178 px, 23x10, x388-410 y278-287
+Z1     Y>=110   Orig 290 px, 20x26, x310-329 y224-249 | F 299 px, 21x25, x309-329 y221-245
+Z3/4   Y>=130   Orig 308 px, 23x21, x313-335 y286-306 | F 300 px, 22x21, x311-332 y286-306
+X      Y>=130   Orig 911 px, 40x50, x240-279 y429-478 | F 967 px, 38x54, x240-277 y425-478
+--- Unterarm Bild 2: Streifen um die Linie (333,322)-(268,392), Breite 30 px, Anteil der Laenge mit Y>=70 und R-Mittel
+Orig  Laenge mit Y>=70: 100 %, obere Haelfte 100 %, untere Haelfte 100 %, Rot-Mittel 157
+F     Laenge mit Y>=70: 43 %, obere Haelfte 10 %, untere Haelfte 75 %, Rot-Mittel 86

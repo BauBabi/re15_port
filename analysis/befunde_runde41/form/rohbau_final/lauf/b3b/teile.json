@@ -1,0 +1,1117 @@
+{
+ "bild1": {
+  "zuordnung": {
+   "0": "part_of_Body",
+   "1": "tail",
+   "2": "tail",
+   "3": "tail",
+   "4": "tail",
+   "5": "tail",
+   "6": "tail",
+   "7": "part_of_Body",
+   "8": "left_leg",
+   "9": "right_leg",
+   "10": "part_of_Body",
+   "11": "face_and_upper_body",
+   "12": "left_arm_front",
+   "13": "left_arm_front",
+   "14": "left_arm_front",
+   "15": "left_arm_front",
+   "16": "right_arm",
+   "17": "right_arm",
+   "18": "right_arm",
+   "19": "right_arm",
+   "20": "right_arm",
+   "21": "face_and_upper_body",
+   "22": "face_and_upper_body",
+   "23": "face_and_upper_body",
+   "24": "left_leg",
+   "25": "left_leg",
+   "26": "right_leg",
+   "27": "right_leg",
+   "28": "left_arm_front",
+   "29": "right_arm",
+   "30": "left_arm_front",
+   "31": "right_arm"
+  },
+  "knochen": {
+   "left_leg": [
+    8,
+    24,
+    25
+   ],
+   "part_of_Body": [
+    0,
+    7,
+    10
+   ],
+   "right_arm": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    29,
+    31
+   ],
+   "right_leg": [
+    9,
+    26,
+    27
+   ],
+   "tail": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "face_and_upper_body": [
+    11,
+    21,
+    22,
+    23
+   ],
+   "left_arm_front": [
+    12,
+    13,
+    14,
+    15,
+    28,
+    30
+   ]
+  },
+  "warnungen": [],
+  "teile": [
+   {
+    "teil": "left_leg",
+    "knochen": [
+     8,
+     24,
+     25
+    ],
+    "maske_px": 4253,
+    "wertung_px": 4224,
+    "logo_px": 92,
+    "geteilt": {
+     "tail": 90
+    },
+    "treffer_px": 4022,
+    "iou": 0.66,
+    "fremd": {
+     "tail": 0.003
+    },
+    "leer": 0.045,
+    "merkmale": [],
+    "render_px": 5893,
+    "allein_px": 7035,
+    "deckung": 0.952,
+    "kern_deckung": 0.998,
+    "innen": 0.683,
+    "innen_saum": 0.758,
+    "verdeckt": 0.159,
+    "verdeckt_von": {
+     "tail": 0.159
+    },
+    "schwerpunkt": {
+     "soll": [
+      225.0,
+      362.4
+     ],
+     "ist": [
+      227.9,
+      374.6
+     ],
+     "dx": 2.9,
+     "dy": 12.2,
+     "abstand": 12.5
+    },
+    "achse": {
+     "soll_grad": 105.6,
+     "ist_grad": 99.6,
+     "abweichung_grad": 6.0,
+     "quer_px": -6.1,
+     "laengs_px": 10.9,
+     "laenge": [
+      166.0,
+      172.5
+     ],
+     "breite": [
+      52.3,
+      39.4
+     ],
+     "streckung_soll": 4.76
+    },
+    "enden": [
+     {
+      "name": "oben",
+      "soll": [
+       242,
+       264
+      ],
+      "ist": [
+       238,
+       268
+      ],
+      "dx": -4,
+      "dy": 4,
+      "abstand": 5.7,
+      "sichtbar": true,
+      "unter_logo": false
+     },
+     {
+      "name": "Fuss",
+      "soll": [
+       208,
+       447
+      ],
+      "ist": [
+       208,
+       441
+      ],
+      "dx": 0,
+      "dy": -6,
+      "abstand": 6.0,
+      "sichtbar": true,
+      "unter_logo": true
+     }
+    ],
+    "spitzen": [
+     {
+      "soll": [
+       203,
+       447
+      ],
+      "unter_logo": true,
+      "ist": [
+       208,
+       441
+      ],
+      "abstand": 7.8,
+      "sichtbar": true
+     }
+    ]
+   },
+   {
+    "teil": "part_of_Body",
+    "knochen": [
+     0,
+     7,
+     10
+    ],
+    "maske_px": 7293,
+    "wertung_px": 6421,
+    "logo_px": 0,
+    "geteilt": {
+     "right_leg": 1316
+    },
+    "treffer_px": 5585,
+    "iou": 0.802,
+    "fremd": {
+     "right_arm": 0.013,
+     "right_leg": 0.018,
+     "tail": 0.019,
+     "face_and_upper_body": 0.071
+    },
+    "leer": 0.008,
+    "merkmale": [],
+    "render_px": 6131,
+    "allein_px": 11595,
+    "deckung": 0.87,
+    "kern_deckung": 0.909,
+    "innen": 0.911,
+    "innen_saum": 0.95,
+    "verdeckt": 0.471,
+    "verdeckt_von": {
+     "right_leg": 0.079,
+     "tail": 0.392
+    },
+    "schwerpunkt": {
+     "soll": [
+      337.4,
+      266.7
+     ],
+     "ist": [
+      334.4,
+      257.1
+     ],
+     "dx": -3.0,
+     "dy": -9.5,
+     "abstand": 10.0
+    },
+    "achse": {
+     "soll_grad": 107.6,
+     "ist_grad": 115.7,
+     "abweichung_grad": 8.1,
+     "quer_px": 5.8,
+     "laengs_px": -8.2,
+     "laenge": [
+      110.7,
+      110.7
+     ],
+     "breite": [
+      78.8,
+      84.5
+     ],
+     "streckung_soll": 1.4
+    },
+    "enden": [
+     {
+      "name": "oben",
+      "soll": [
+       363,
+       212
+      ],
+      "ist": [
+       367,
+       288
+      ],
+      "dx": 4,
+      "dy": 76,
+      "abstand": 76.1,
+      "sichtbar": true,
+      "unter_logo": false
+     },
+     {
+      "name": "unten",
+      "soll": [
+       300,
+       314
+      ],
+      "ist": [
+       247,
+       234
+      ],
+      "dx": -53,
+      "dy": -80,
+      "abstand": 96.0,
+      "sichtbar": false,
+      "unter_logo": false
+     }
+    ],
+    "spitzen": []
+   },
+   {
+    "teil": "right_arm",
+    "knochen": [
+     16,
+     17,
+     18,
+     19,
+     20,
+     29,
+     31
+    ],
+    "maske_px": 4299,
+    "wertung_px": 4299,
+    "logo_px": 0,
+    "geteilt": {},
+    "treffer_px": 4090,
+    "iou": 0.671,
+    "fremd": {},
+    "leer": 0.049,
+    "merkmale": [],
+    "render_px": 5888,
+    "allein_px": 5886,
+    "deckung": 0.951,
+    "kern_deckung": 0.985,
+    "innen": 0.695,
+    "innen_saum": 0.818,
+    "verdeckt": 0.0,
+    "verdeckt_von": {},
+    "schwerpunkt": {
+     "soll": [
+      396.8,
+      313.0
+     ],
+     "ist": [
+      399.2,
+      302.9
+     ],
+     "dx": 2.4,
+     "dy": -10.2,
+     "abstand": 10.5
+    },
+    "achse": {
+     "soll_grad": 85.4,
+     "ist_grad": 90.5,
+     "abweichung_grad": 5.1,
+     "quer_px": -3.2,
+     "laengs_px": -10.0,
+     "laenge": [
+      131.2,
+      128.7
+     ],
+     "breite": [
+      49.2,
+      41.4
+     ],
+     "streckung_soll": 3.65
+    },
+    "enden": [
+     {
+      "name": "Schulter",
+      "soll": [
+       380,
+       242
+      ],
+      "ist": [
+       411,
+       238
+      ],
+      "dx": 31,
+      "dy": -4,
+      "abstand": 31.3,
+      "sichtbar": true,
+      "unter_logo": false
+     },
+     {
+      "name": "Hand",
+      "soll": [
+       425,
+       363
+      ],
+      "ist": [
+       384,
+       374
+      ],
+      "dx": -41,
+      "dy": 11,
+      "abstand": 42.4,
+      "sichtbar": true,
+      "unter_logo": false
+     }
+    ],
+    "spitzen": [
+     {
+      "soll": [
+       425,
+       363
+      ],
+      "unter_logo": false,
+      "ist": [
+       384,
+       374
+      ],
+      "abstand": 42.4,
+      "sichtbar": true
+     }
+    ]
+   },
+   {
+    "teil": "right_leg",
+    "knochen": [
+     9,
+     26,
+     27
+    ],
+    "maske_px": 6896,
+    "wertung_px": 6314,
+    "logo_px": 0,
+    "geteilt": {
+     "part_of_Body": 1316,
+     "tail": 190
+    },
+    "treffer_px": 6115,
+    "iou": 0.816,
+    "fremd": {
+     "tail": 0.0,
+     "face_and_upper_body": 0.0,
+     "left_arm_front": 0.0
+    },
+    "leer": 0.03,
+    "merkmale": [],
+    "render_px": 7294,
+    "allein_px": 9284,
+    "deckung": 0.968,
+    "kern_deckung": 1.0,
+    "innen": 0.838,
+    "innen_saum": 0.9,
+    "verdeckt": 0.214,
+    "verdeckt_von": {
+     "tail": 0.215
+    },
+    "schwerpunkt": {
+     "soll": [
+      316.8,
+      369.8
+     ],
+     "ist": [
+      314.8,
+      373.6
+     ],
+     "dx": -2.0,
+     "dy": 3.9,
+     "abstand": 4.4
+    },
+    "achse": {
+     "soll_grad": 95.8,
+     "ist_grad": 97.1,
+     "abweichung_grad": 1.3,
+     "quer_px": 1.6,
+     "laengs_px": 4.1,
+     "laenge": [
+      175.8,
+      170.9
+     ],
+     "breite": [
+      52.1,
+      49.9
+     ],
+     "streckung_soll": 4.01
+    },
+    "enden": [
+     {
+      "name": "oben",
+      "soll": [
+       329,
+       285
+      ],
+      "ist": [
+       323,
+       278
+      ],
+      "dx": -6,
+      "dy": -7,
+      "abstand": 9.2,
+      "sichtbar": true,
+      "unter_logo": false
+     },
+     {
+      "name": "Fuss",
+      "soll": [
+       290,
+       459
+      ],
+      "ist": [
+       278,
+       456
+      ],
+      "dx": -12,
+      "dy": -3,
+      "abstand": 12.4,
+      "sichtbar": false,
+      "unter_logo": false
+     }
+    ],
+    "spitzen": [
+     {
+      "soll": [
+       290,
+       459
+      ],
+      "unter_logo": false,
+      "ist": [
+       278,
+       456
+      ],
+      "abstand": 12.4,
+      "sichtbar": false
+     }
+    ]
+   },
+   {
+    "teil": "tail",
+    "knochen": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ],
+    "maske_px": 12366,
+    "wertung_px": 12257,
+    "logo_px": 1278,
+    "geteilt": {
+     "left_leg": 90,
+     "right_leg": 190
+    },
+    "treffer_px": 11781,
+    "iou": 0.876,
+    "fremd": {
+     "left_leg": 0.001,
+     "part_of_Body": 0.029,
+     "right_leg": 0.004
+    },
+    "leer": 0.005,
+    "merkmale": [
+     {
+      "name": "X Schwanzspitze",
+      "flaeche": 1473,
+      "gedeckt": 0.866
+     }
+    ],
+    "render_px": 12978,
+    "allein_px": 15048,
+    "deckung": 0.961,
+    "kern_deckung": 0.981,
+    "innen": 0.908,
+    "innen_saum": 0.961,
+    "verdeckt": 0.043,
+    "verdeckt_von": {
+     "left_leg": 0.0,
+     "part_of_Body": 0.043,
+     "right_leg": 0.0
+    },
+    "schwerpunkt": {
+     "soll": [
+      273.0,
+      315.5
+     ],
+     "ist": [
+      273.9,
+      315.2
+     ],
+     "dx": 0.9,
+     "dy": -0.3,
+     "abstand": 1.0
+    },
+    "achse": {
+     "soll_grad": 94.9,
+     "ist_grad": 96.3,
+     "abweichung_grad": 1.4,
+     "quer_px": -0.9,
+     "laengs_px": -0.3,
+     "laenge": [
+      288.1,
+      285.1
+     ],
+     "breite": [
+      83.5,
+      66.0
+     ],
+     "streckung_soll": 5.49
+    },
+    "enden": [
+     {
+      "name": "Ansatz",
+      "soll": [
+       307,
+       185
+      ],
+      "ist": [
+       319,
+       187
+      ],
+      "dx": 12,
+      "dy": 2,
+      "abstand": 12.2,
+      "sichtbar": true,
+      "unter_logo": false
+     },
+     {
+      "name": "Spitze",
+      "soll": [
+       251,
+       477
+      ],
+      "ist": [
+       204,
+       479
+      ],
+      "dx": -47,
+      "dy": 2,
+      "abstand": 47.0,
+      "sichtbar": true,
+      "unter_logo": true
+     }
+    ],
+    "spitzen": []
+   }
+  ],
+  "trefferquote": 0.943,
+  "iou_mittel": 0.765
+ },
+ "bild2": {
+  "zuordnung": {
+   "0": "face_and_upper_body",
+   "1": "tail",
+   "2": "tail",
+   "3": "tail",
+   "4": "tail",
+   "5": "tail",
+   "6": "tail",
+   "7": "face_and_upper_body",
+   "8": "left_leg",
+   "9": "right_leg",
+   "10": "face_and_upper_body",
+   "11": "face_and_upper_body",
+   "12": "left_arm_front",
+   "13": "left_arm_front",
+   "14": "left_arm_front",
+   "15": "left_arm_front",
+   "16": "right_arm",
+   "17": "right_arm_front",
+   "18": "right_arm_front",
+   "19": "right_arm_front",
+   "20": "right_arm_front",
+   "21": "face_and_upper_body",
+   "22": "face_and_upper_body",
+   "23": "face_and_upper_body",
+   "24": "left_leg",
+   "25": "left_leg",
+   "26": "right_leg",
+   "27": "right_leg",
+   "28": "left_arm_front",
+   "29": "right_arm_front",
+   "30": "left_arm_front",
+   "31": "right_arm_front"
+  },
+  "knochen": {
+   "face_and_upper_body": [
+    0,
+    7,
+    10,
+    11,
+    21,
+    22,
+    23
+   ],
+   "left_arm_front": [
+    12,
+    13,
+    14,
+    15,
+    28,
+    30
+   ],
+   "right_arm_front": [
+    17,
+    18,
+    19,
+    20,
+    29,
+    31
+   ],
+   "tail": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "left_leg": [
+    8,
+    24,
+    25
+   ],
+   "right_leg": [
+    9,
+    26,
+    27
+   ],
+   "right_arm": [
+    16
+   ]
+  },
+  "warnungen": [],
+  "teile": [
+   {
+    "teil": "face_and_upper_body",
+    "knochen": [
+     0,
+     7,
+     10,
+     11,
+     21,
+     22,
+     23
+    ],
+    "maske_px": 29990,
+    "wertung_px": 29965,
+    "logo_px": 0,
+    "geteilt": {
+     "left_arm_front": 48,
+     "right_arm_front": 27
+    },
+    "treffer_px": 25841,
+    "iou": 0.816,
+    "fremd": {
+     "right_arm_front": 0.044,
+     "tail": 0.0,
+     "left_leg": 0.001,
+     "right_leg": 0.043,
+     "right_arm": 0.006
+    },
+    "leer": 0.043,
+    "merkmale": [],
+    "render_px": 27555,
+    "allein_px": 28017,
+    "deckung": 0.862,
+    "kern_deckung": 0.891,
+    "innen": 0.938,
+    "innen_saum": 0.961,
+    "verdeckt": 0.016,
+    "verdeckt_von": {
+     "left_arm_front": 0.0,
+     "right_arm_front": 0.002,
+     "tail": 0.001,
+     "right_leg": 0.011,
+     "right_arm": 0.003
+    },
+    "schwerpunkt": {
+     "soll": [
+      305.7,
+      249.5
+     ],
+     "ist": [
+      316.7,
+      243.0
+     ],
+     "dx": 11.0,
+     "dy": -6.5,
+     "abstand": 12.8
+    },
+    "achse": {
+     "soll_grad": 132.3,
+     "ist_grad": 157.3,
+     "abweichung_grad": 25.0,
+     "quer_px": -3.7,
+     "laengs_px": -12.2,
+     "laenge": [
+      213.0,
+      219.8
+     ],
+     "breite": [
+      159.6,
+      160.3
+     ],
+     "streckung_soll": 1.41
+    },
+    "enden": [
+     {
+      "name": "oben",
+      "soll": [
+       340,
+       150
+      ],
+      "ist": [
+       428,
+       225
+      ],
+      "dx": 88,
+      "dy": 75,
+      "abstand": 115.6,
+      "sichtbar": true,
+      "unter_logo": false
+     },
+     {
+      "name": "unten",
+      "soll": [
+       236,
+       374
+      ],
+      "ist": [
+       206,
+       284
+      ],
+      "dx": -30,
+      "dy": -90,
+      "abstand": 94.9,
+      "sichtbar": true,
+      "unter_logo": false
+     }
+    ],
+    "spitzen": []
+   },
+   {
+    "teil": "left_arm_front",
+    "knochen": [
+     12,
+     13,
+     14,
+     15,
+     28,
+     30
+    ],
+    "maske_px": 5607,
+    "wertung_px": 5559,
+    "logo_px": 0,
+    "geteilt": {
+     "face_and_upper_body": 48
+    },
+    "treffer_px": 4509,
+    "iou": 0.737,
+    "fremd": {
+     "face_and_upper_body": 0.125,
+     "left_leg": 0.014
+    },
+    "leer": 0.05,
+    "merkmale": [],
+    "render_px": 5064,
+    "allein_px": 6274,
+    "deckung": 0.811,
+    "kern_deckung": 0.872,
+    "innen": 0.89,
+    "innen_saum": 0.962,
+    "verdeckt": 0.193,
+    "verdeckt_von": {
+     "face_and_upper_body": 0.193
+    },
+    "schwerpunkt": {
+     "soll": [
+      409.6,
+      344.2
+     ],
+     "ist": [
+      414.7,
+      356.3
+     ],
+     "dx": 5.2,
+     "dy": 12.1,
+     "abstand": 13.1
+    },
+    "achse": {
+     "soll_grad": 66.4,
+     "ist_grad": 59.3,
+     "abweichung_grad": 7.1,
+     "quer_px": 0.1,
+     "laengs_px": 13.1,
+     "laenge": [
+      138.8,
+      153.0
+     ],
+     "breite": [
+      48.4,
+      52.4
+     ],
+     "streckung_soll": 3.26
+    },
+    "enden": [
+     {
+      "name": "Schulter",
+      "soll": [
+       406,
+       260
+      ],
+      "ist": [
+       380,
+       263
+      ],
+      "dx": -26,
+      "dy": 3,
+      "abstand": 26.2,
+      "sichtbar": false,
+      "unter_logo": false
+     },
+     {
+      "name": "Klaue",
+      "soll": [
+       468,
+       417
+      ],
+      "ist": [
+       465,
+       415
+      ],
+      "dx": -3,
+      "dy": -2,
+      "abstand": 3.6,
+      "sichtbar": true,
+      "unter_logo": false
+     }
+    ],
+    "spitzen": [
+     {
+      "soll": [
+       468,
+       417
+      ],
+      "unter_logo": false,
+      "ist": [
+       465,
+       415
+      ],
+      "abstand": 3.6,
+      "sichtbar": true
+     },
+     {
+      "soll": [
+       439,
+       418
+      ],
+      "unter_logo": false,
+      "ist": null,
+      "abstand": null,
+      "sichtbar": null
+     }
+    ]
+   },
+   {
+    "teil": "right_arm_front",
+    "knochen": [
+     17,
+     18,
+     19,
+     20,
+     29,
+     31
+    ],
+    "maske_px": 9943,
+    "wertung_px": 9943,
+    "logo_px": 2371,
+    "geteilt": {
+     "face_and_upper_body": 27
+    },
+    "treffer_px": 7847,
+    "iou": 0.669,
+    "fremd": {
+     "left_leg": 0.009,
+     "right_leg": 0.007,
+     "right_arm": 0.002
+    },
+    "leer": 0.193,
+    "merkmale": [
+     {
+      "name": "Y Hand",
+      "flaeche": 4280,
+      "gedeckt": 0.863
+     }
+    ],
+    "render_px": 9634,
+    "allein_px": 12316,
+    "deckung": 0.789,
+    "kern_deckung": 0.875,
+    "innen": 0.815,
+    "innen_saum": 0.873,
+    "verdeckt": 0.123,
+    "verdeckt_von": {
+     "face_and_upper_body": 0.114,
+     "right_arm": 0.01
+    },
+    "schwerpunkt": {
+     "soll": [
+      229.1,
+      396.5
+     ],
+     "ist": [
+      240.1,
+      388.8
+     ],
+     "dx": 11.0,
+     "dy": -7.7,
+     "abstand": 13.4
+    },
+    "achse": {
+     "soll_grad": 162.7,
+     "ist_grad": 150.6,
+     "abweichung_grad": 12.1,
+     "quer_px": 4.1,
+     "laengs_px": -12.8,
+     "laenge": [
+      186.3,
+      188.1
+     ],
+     "breite": [
+      110.1,
+      109.6
+     ],
+     "streckung_soll": 1.91
+    },
+    "enden": [
+     {
+      "name": "Schulter",
+      "soll": [
+       332,
+       315
+      ],
+      "ist": [
+       310,
+       281
+      ],
+      "dx": -22,
+      "dy": -34,
+      "abstand": 40.5,
+      "sichtbar": false,
+      "unter_logo": false
+     },
+     {
+      "name": "Klauenhand",
+      "soll": [
+       145,
+       353
+      ],
+      "ist": [
+       139,
+       352
+      ],
+      "dx": -6,
+      "dy": -1,
+      "abstand": 6.1,
+      "sichtbar": true,
+      "unter_logo": false
+     }
+    ],
+    "spitzen": [
+     {
+      "soll": [
+       145,
+       353
+      ],
+      "unter_logo": false,
+      "ist": [
+       139,
+       352
+      ],
+      "abstand": 6.1,
+      "sichtbar": true
+     },
+     {
+      "soll": [
+       197,
+       476
+      ],
+      "unter_logo": true,
+      "ist": [
+       179,
+       474
+      ],
+      "abstand": 18.1,
+      "sichtbar": true
+     },
+     {
+      "soll": [
+       222,
+       475
+      ],
+      "unter_logo": true,
+      "ist": [
+       218,
+       472
+      ],
+      "abstand": 5.0,
+      "sichtbar": true
+     },
+     {
+      "soll": [
+       274,
+       443
+      ],
+      "unter_logo": false,
+      "ist": [
+       268,
+       441
+      ],
+      "abstand": 6.3,
+      "sichtbar": true
+     },
+     {
+      "soll": null,
+      "unter_logo": false,
+      "ist": [
+       165,
+       444
+      ],
+      "abstand": null,
+      "sichtbar": true
+     }
+    ]
+   }
+  ],
+  "trefferquote": 0.84,
+  "iou_mittel": 0.741
+ }
+}

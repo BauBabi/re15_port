@@ -1,0 +1,34 @@
+--- Bild 1: Soll-Umriss als Render, 29 Umrisspunkte
+  Versatz  +0, +0: 29/29 Punkte, 3/3 Flaechen, IoU 1.000, Schwarz     0  
+  Versatz  +3, +0: 23/29 Punkte, 3/3 Flaechen, IoU 1.000, Schwarz     3  
+  Versatz  -3, +0: 24/29 Punkte, 2/3 Flaechen, IoU 0.998, Schwarz    36  
+  Versatz  +0, +3: 27/29 Punkte, 2/3 Flaechen, IoU 1.000, Schwarz     5  
+  Versatz  +0, -3: 27/29 Punkte, 2/3 Flaechen, IoU 0.999, Schwarz    15  
+  Versatz  +6, +0: 12/29 Punkte, 1/3 Flaechen, IoU 0.971, Schwarz   256  
+  Versatz  -6, +0: 12/29 Punkte, 0/3 Flaechen, IoU 0.971, Schwarz   546  
+  Versatz  +0, +6: 22/29 Punkte, 1/3 Flaechen, IoU 0.991, Schwarz    92  
+  Versatz  +0, -6: 21/29 Punkte, 2/3 Flaechen, IoU 0.989, Schwarz   162  
+  Versatz +10, +0:  9/29 Punkte, 0/3 Flaechen, IoU 0.898, Schwarz   996  
+  Versatz -10, +0: 10/29 Punkte, 0/3 Flaechen, IoU 0.905, Schwarz  1569  
+  Versatz  +0,+10: 15/29 Punkte, 0/3 Flaechen, IoU 0.964, Schwarz   363  
+  Versatz  +0,-10: 17/29 Punkte, 0/3 Flaechen, IoU 0.953, Schwarz   653  
+--- Bild 2: Soll-Umriss als Render, 7 Umrisspunkte
+  Versatz  +0, +0:  7/ 7 Punkte, 8/9 Flaechen, IoU 1.000, Schwarz     0  V5
+  Versatz  +3, +0:  7/ 7 Punkte, 7/9 Flaechen, IoU 1.000, Schwarz     1  
+  Versatz  -3, +0:  7/ 7 Punkte, 7/9 Flaechen, IoU 1.000, Schwarz     0  
+  Versatz  +0, +3:  7/ 7 Punkte, 8/9 Flaechen, IoU 1.000, Schwarz     0  
+  Versatz  +0, -3:  7/ 7 Punkte, 6/9 Flaechen, IoU 1.000, Schwarz     7  
+  Versatz  +6, +0:  6/ 7 Punkte, 7/9 Flaechen, IoU 0.971, Schwarz     8  
+  Versatz  -6, +0:  6/ 7 Punkte, 5/9 Flaechen, IoU 0.979, Schwarz     0  
+  Versatz  +0, +6:  5/ 7 Punkte, 7/9 Flaechen, IoU 0.982, Schwarz     0  
+  Versatz  +0, -6:  5/ 7 Punkte, 6/9 Flaechen, IoU 0.975, Schwarz    52  
+  Versatz +10, +0:  4/ 7 Punkte, 4/9 Flaechen, IoU 0.929, Schwarz    51  
+  Versatz -10, +0:  5/ 7 Punkte, 4/9 Flaechen, IoU 0.949, Schwarz     0  
+  Versatz  +0,+10:  3/ 7 Punkte, 7/9 Flaechen, IoU 0.953, Schwarz     0  
+  Versatz  +0,-10:  4/ 7 Punkte, 3/9 Flaechen, IoU 0.939, Schwarz   186  
+Bild 1 Hintergrund durch Filter gegen Original: fern MAE 5.7, Ring 8-28 px um die Figur MAE 5.7, mittlere Abweichung -0.8
+  harte Kanten, 14 Stellen: Filter gegen Original Median +0.1, |Betrag| Median 0.8, max 3.1 px
+  Verschiebung durch Filter gegen saubere Kante, + = zur hellen Seite: Median +0.8, Spanne -0.2..+1.6 px
+Bild 2 Hintergrund durch Filter gegen Original: fern MAE 19.2, Ring 8-28 px um die Figur MAE 28.7, mittlere Abweichung -5.6
+  harte Kanten, 1 Stellen: Filter gegen Original Median -6.0, |Betrag| Median 6.0, max 6.0 px
+  Verschiebung durch Filter gegen saubere Kante, + = zur hellen Seite: Median +8.2, Spanne +8.2..+8.2 px

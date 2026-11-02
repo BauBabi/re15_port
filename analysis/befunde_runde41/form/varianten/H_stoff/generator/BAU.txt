@@ -1,0 +1,3 @@
+H braucht ../G_treu/textur.png relativ zum Generator (gen/ liegt eine Ebene unter varianten/). Aus varianten/gen:
+  PYTHONIOENCODING=utf-8 python vm_bau.py --farbe C --schwanz e9 --stoff h1 --aus ../H_stoff/h1 --name H_h1
+  PYTHONIOENCODING=utf-8 python vm_bau.py --farbe C --schwanz e9 --stoff h2 --aus ../H_stoff/h2 --name H_h2

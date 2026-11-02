@@ -1,0 +1,2 @@
+Aus diesem Ordner (Generator-Kopie von varianten/gen, FORM wird ueber formblatt.json gefunden):
+  PYTHONIOENCODING=utf-8 python vm_bau.py --farbe A --schwanz e9 --aus .. --name A_rueckrechnung --eichen

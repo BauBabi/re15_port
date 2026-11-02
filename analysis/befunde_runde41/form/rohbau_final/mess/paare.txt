@@ -1,0 +1,10 @@
+Oberschenkel   Volumen links/rechts 1.00
+Unterschenkel  Volumen links/rechts 1.00
+Fuss           Volumen links/rechts 1.00
+Oberarm        Volumen links/rechts 1.00
+Unterarm       Volumen links/rechts 1.00
+Hand           Volumen links/rechts 0.44
+Finger innen   Volumen links/rechts 0.44
+Finger Mitte   Volumen links/rechts 0.44
+Finger aussen  Volumen links/rechts 0.44
+Daumen         Volumen links/rechts 0.44

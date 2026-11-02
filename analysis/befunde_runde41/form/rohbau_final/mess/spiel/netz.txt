@@ -1,0 +1,35 @@
+F {'knochen': 32, 'flaechen': 1900, 'drei': 616, 'vier': 1284, 'ecken': 1684, 'offen': 0, 'nonman': 0, 'inseln': 58, 'einzel': 0, 'teile_mehr': 14, 'entartet': 0, 'split': 5, 'norm_med': 2.9, 'norm_p90': 10.0, 'flaeche_cv': 0.82, 'kante': 246.3, 'split_ant': 0.002}
+    0 huefte           elt -1  fl 110  offen   0  nonman  0  teile  1  inseln  1
+    1 schwanz1         elt  0  fl  56  offen   0  nonman  0  teile  1  inseln  1
+    2 schwanz2         elt  1  fl  40  offen   0  nonman  0  teile  1  inseln  1
+    3 schwanz3         elt  2  fl  40  offen   0  nonman  0  teile  1  inseln  1
+    4 schwanz4         elt  3  fl  40  offen   0  nonman  0  teile  1  inseln  1
+    5 schwanz5         elt  4  fl  32  offen   0  nonman  0  teile  1  inseln  1
+    6 schwanz6         elt  5  fl  40  offen   0  nonman  0  teile  1  inseln  1
+    7 wirbel           elt  0  fl 100  offen   0  nonman  0  teile  1  inseln  1
+    8 oberschenkel_l   elt  0  fl  64  offen   0  nonman  0  teile  1  inseln  1
+    9 oberschenkel_r   elt  0  fl  64  offen   0  nonman  0  teile  1  inseln  1
+   10 brust            elt  7  fl 100  offen   0  nonman  0  teile  1  inseln  1
+   11 oberarm_l        elt 10  fl  64  offen   0  nonman  0  teile  1  inseln  1
+   12 unterarm_l       elt 11  fl  80  offen   0  nonman  0  teile  1  inseln  1
+   13 hand_l           elt 12  fl  80  offen   0  nonman  0  teile  2  inseln  2
+   14 klaue_l1         elt 13  fl  30  offen   0  nonman  0  teile  1  inseln  1
+   15 klaue_l2         elt 13  fl  30  offen   0  nonman  0  teile  1  inseln  1
+   16 oberarm_r        elt 10  fl  64  offen   0  nonman  0  teile  1  inseln  1
+   17 unterarm_r       elt 16  fl  80  offen   0  nonman  0  teile  1  inseln  1
+   18 hand_r           elt 17  fl  80  offen   0  nonman  0  teile  2  inseln  2
+   19 klaue_r1         elt 18  fl  30  offen   0  nonman  0  teile  1  inseln  1
+   20 klaue_r2         elt 18  fl  30  offen   0  nonman  0  teile  1  inseln  1
+   21 hals             elt 10  fl  32  offen   0  nonman  0  teile  1  inseln  1
+   22 kopf             elt 21  fl 150  offen   0  nonman  0  teile  5  inseln 11
+   23 kiefer           elt 22  fl  64  offen   0  nonman  0  teile  3  inseln  9
+   24 unterschenkel_l  elt  8  fl  56  offen   0  nonman  0  teile  1  inseln  1
+   25 fuss_l           elt 24  fl  84  offen   0  nonman  0  teile  4  inseln  4
+   26 unterschenkel_r  elt  9  fl  56  offen   0  nonman  0  teile  1  inseln  1
+   27 fuss_r           elt 26  fl  84  offen   0  nonman  0  teile  4  inseln  4
+   28 klaue_l3         elt 13  fl  30  offen   0  nonman  0  teile  1  inseln  1
+   29 klaue_r3         elt 18  fl  30  offen   0  nonman  0  teile  1  inseln  1
+   30 klaue_l4         elt 13  fl  30  offen   0  nonman  0  teile  1  inseln  1
+   31 klaue_r4         elt 18  fl  30  offen   0  nonman  0  teile  1  inseln  1
+K34 {'knochen': 27, 'flaechen': 1427, 'drei': 941, 'vier': 486, 'ecken': 1031, 'offen': 19, 'nonman': 0, 'inseln': 145, 'einzel': 6, 'teile_mehr': 8, 'entartet': 0, 'split': 55, 'norm_med': 9.4, 'norm_p90': 27.0, 'flaeche_cv': 0.99, 'kante': 256.6, 'split_ant': 0.029}
+K28 {'knochen': 23, 'flaechen': 913, 'drei': 539, 'vier': 374, 'ecken': 710, 'offen': 49, 'nonman': 0, 'inseln': 87, 'einzel': 7, 'teile_mehr': 3, 'entartet': 0, 'split': 7, 'norm_med': 7.6, 'norm_p90': 20.7, 'flaeche_cv': 0.89, 'kante': 242.2, 'split_ant': 0.005}

@@ -1,0 +1,7 @@
+Dreiecke 3208, offene Kanten 0, Kanten mit ungleicher Windung 0
+Clip 0 Hoehe tiefster Punkt je Glied: Hand r -0, Hand l 19, Fuss r 25, Fuss l 23, Schwanz 367; Spanne [7132 2965 2767]; hoechster Punkt 2965
+Clip 1 Hoehe tiefster Punkt je Glied: Hand r 2, Hand l 1, Fuss r -0, Fuss l 4, Schwanz 15; Spanne [6859 3105 4134]; hoechster Punkt 3105
+Clip 2 Hoehe tiefster Punkt je Glied: Hand r 8, Hand l 0, Fuss r 25, Fuss l 25, Schwanz 433; Spanne [8185 2685 3126]; hoechster Punkt 2685
+pose1: Durchblick ueber 24 Blicke 0 px
+pose2: Durchblick ueber 24 Blicke 0 px
+ruhe: Durchblick ueber 24 Blicke 0 px

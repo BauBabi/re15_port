@@ -1,0 +1,36 @@
+
+=========== Rohbau A
+Offene Randkanten gesamt: 0; Knochen mit Rand: 
+  Pose 1: frei liegende Randkanten (Kante nicht in anderem Teil): keine
+  Pose 1: Eltern-Kind ohne Ueberlappung und Abstand > 40: keine
+  Pose 2: frei liegende Randkanten (Kante nicht in anderem Teil): keine
+  Pose 2: Eltern-Kind ohne Ueberlappung und Abstand > 40: keine
+  Ruhe: frei liegende Randkanten (Kante nicht in anderem Teil): keine
+  Ruhe: Eltern-Kind ohne Ueberlappung und Abstand > 40: keine
+Schwanz Querschnitte (Hoehe x Breite) je Abschnitt s=.5, Gerippe 2a=2b:
+   schwanz1(0.5)  463 x  475; schwanz2(0.5)  505 x  534; schwanz3(0.5)  467 x  505; schwanz4(0.5)  293 x  278; schwanz5(0.5)  223 x  230; schwanz6(0.5)  367 x  819; schwanz6(0.9)  362 x  384
+Textur: Indizes genutzt 13, Index 0 (durchsichtig bei Wort 0): 0 Texel, CLUT[0]=0
+
+=========== Rohbau B
+Offene Randkanten gesamt: 174; Knochen mit Rand: unterarm_l 18, hand_l 8, klaue_l1 6, klaue_l2 6, unterarm_r 18, hand_r 8, klaue_r1 6, klaue_r2 6, kopf 32, kiefer 18, fuss_l 12, fuss_r 12, klaue_l3 6, klaue_r3 6, klaue_l4 6, klaue_r4 6
+  Pose 1: frei liegende Randkanten (Kante nicht in anderem Teil): unterarm_r 16/18, hand_r 5/8, klaue_r1 3/6, klaue_r2 1/6, kopf 32/32, kiefer 16/18, fuss_l 12/12, fuss_r 12/12, klaue_r3 2/6, klaue_l4 6/6, klaue_r4 5/6
+  Pose 1: Eltern-Kind ohne Ueberlappung und Abstand > 40: keine
+  Pose 2: frei liegende Randkanten (Kante nicht in anderem Teil): unterarm_l 15/18, hand_l 4/8, klaue_l1 1/6, klaue_l2 2/6, unterarm_r 15/18, hand_r 5/8, klaue_r1 1/6, klaue_r2 1/6, kopf 31/32, kiefer 18/18, fuss_l 12/12, fuss_r 12/12, klaue_l3 2/6, klaue_r3 1/6, klaue_l4 6/6, klaue_r4 2/6
+  Pose 2: Eltern-Kind ohne Ueberlappung und Abstand > 40: keine
+  Ruhe: frei liegende Randkanten (Kante nicht in anderem Teil): unterarm_l 12/18, hand_l 3/8, klaue_l1 1/6, klaue_l2 1/6, unterarm_r 8/18, hand_r 1/8, klaue_r1 3/6, klaue_r2 1/6, kopf 30/32, kiefer 18/18, fuss_l 12/12, fuss_r 12/12, klaue_l3 2/6, klaue_r3 1/6, klaue_l4 4/6, klaue_r4 4/6
+  Ruhe: Eltern-Kind ohne Ueberlappung und Abstand > 40: keine
+Schwanz Querschnitte (Hoehe x Breite) je Abschnitt s=.5, Gerippe 2a=2b:
+   schwanz1(0.5)  680 x  694; schwanz2(0.5)  703 x  745; schwanz3(0.5)  601 x  620; schwanz4(0.5)  421 x  430; schwanz5(0.5)  376 x  407; schwanz6(0.5)  381 x  642; schwanz6(0.9)  358 x  367
+Textur: Indizes genutzt 9, Index 0 (durchsichtig bei Wort 0): 0 Texel, CLUT[0]=0
+
+=========== Rohbau C
+Offene Randkanten gesamt: 91; Knochen mit Rand: kopf 37, kiefer 24, fuss_l 15, fuss_r 15
+  Pose 1: frei liegende Randkanten (Kante nicht in anderem Teil): kopf 23/37, kiefer 8/24, fuss_l 15/15, fuss_r 15/15
+  Pose 1: Eltern-Kind ohne Ueberlappung und Abstand > 40: keine
+  Pose 2: frei liegende Randkanten (Kante nicht in anderem Teil): kopf 24/37, kiefer 9/24, fuss_l 15/15, fuss_r 15/15
+  Pose 2: Eltern-Kind ohne Ueberlappung und Abstand > 40: brust-oberarm_r Abstand 89
+  Ruhe: frei liegende Randkanten (Kante nicht in anderem Teil): kopf 23/37, kiefer 8/24, fuss_l 15/15, fuss_r 15/15
+  Ruhe: Eltern-Kind ohne Ueberlappung und Abstand > 40: keine
+Schwanz Querschnitte (Hoehe x Breite) je Abschnitt s=.5, Gerippe 2a=2b:
+   schwanz1(0.5)  859 x  669; schwanz2(0.5)  708 x  631; schwanz3(0.5)  551 x  537; schwanz4(0.5)  420 x  410; schwanz5(0.5)  364 x  353; schwanz6(0.5)  432 x  419; schwanz6(0.9)  288 x  281
+Textur: Indizes genutzt 10, Index 0 (durchsichtig bei Wort 0): 0 Texel, CLUT[0]=0

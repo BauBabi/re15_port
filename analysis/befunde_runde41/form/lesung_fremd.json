@@ -1,0 +1,1615 @@
+{
+ "linse": "fremdkoerper",
+ "koordinaten": "Originalbild 640x480",
+ "sicherheit": [
+  "sicher",
+  "wahrscheinlich",
+  "offen"
+ ],
+ "masken": {
+  "bild1": "maske_bild1.png",
+  "bild2": "maske_bild2.png",
+  "werte": {
+   "255": "sicher Figur",
+   "128": "vielleicht",
+   "0": "sicher nicht"
+  },
+  "pixel": {
+   "bild1": {
+    "weiss": 34484,
+    "grau": 9543,
+    "schwarz": 263173
+   },
+   "bild2": {
+    "weiss": 24766,
+    "grau": 8980,
+    "schwarz": 273454
+   }
+  }
+ },
+ "grundlage": {
+  "bild2": {
+   "hintergrund": "ROOM509.BSS Chunk 11",
+   "dekoder": "tests/unit/probe_bg_dump.c",
+   "homographie_hintergrund640_nach_bild2": [
+    [
+     0.9871983027442771,
+     0.0582425886266705,
+     -19.308979968344406
+    ],
+    [
+     -0.03512485040066067,
+     1.1258373224720677,
+     -24.915091875704324
+    ],
+    [
+     -0.00021481464543037334,
+     0.00018017552237353787,
+     1.0
+    ]
+   ],
+   "passpunkte": 24,
+   "linien": 3,
+   "residuum_px": {
+    "median": 4.9,
+    "mittel": 5.5,
+    "max": 18.3
+   },
+   "gegenproben": {
+    "mittelnaht": "Rot-Minimum bei Versatz 0..+5 px",
+    "querleiste": "Richtung passt, 13 px Versatz, nur Hinweis",
+    "textur_ncc": {
+     "frei": 0.518,
+     "weiss": -0.052,
+     "grau": 0.062
+    }
+   },
+   "offen": "Beta-Kamera kann minimal von Cut 11 abweichen"
+  },
+  "bild1": {
+   "hintergrund": null,
+   "hinweis": "Keiner der 6 Chunks von ROOM508.BSS zeigt diese Kamera (Sichtpruefung, wahrscheinlich)"
+  }
+ },
+ "bild1": [
+  {
+   "id": "dunkle_bahn",
+   "box": [
+    250,
+    150,
+    300,
+    190
+   ],
+   "urteil": "Hintergrund",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Y bei x=250-270 von y=0 bis y=215 stetig 9 auf 22, keine Stufe"
+   ]
+  },
+  {
+   "id": "helle_stange",
+   "box": [
+    272,
+    130,
+    283,
+    190
+   ],
+   "urteil": "Hintergrund",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Bricht bei y~190 ab (62 auf 27)"
+   ]
+  },
+  {
+   "id": "kuppeloberkante",
+   "box": [
+    248,
+    188,
+    378,
+    237
+   ],
+   "urteil": "Figur",
+   "sicherheit": "wahrscheinlich",
+   "maske": "rand_grau",
+   "belege": [
+    "Warme Wand endet bei x=320-340 auf y~205",
+    "Bei x=250-275 dunkel auf dunkel"
+   ]
+  },
+  {
+   "id": "gegenstand_rosa_weiss",
+   "box": [
+    250,
+    420,
+    288,
+    479
+   ],
+   "urteil": "offen",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "Nicht Logo (sicher): Schrift endet x~253",
+    "Kein fester Bildfehler (sicher): NCC 0.37/0.21/-0.19 unter 95%-Grenze",
+    "Nicht Boden (sicher): Cr +46 gegen -9..-33",
+    "Oben dreiseitig koerperfarben eingefasst: Kappe (97,55,110), Band (46,28,53)",
+    "Laeuft unten aus dem Bild"
+   ]
+  },
+  {
+   "id": "lavendelstrich",
+   "box": [
+    228,
+    423,
+    250,
+    447
+   ],
+   "urteil": "offen",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "(78,62,107), fehlt in Bild 2"
+   ]
+  },
+  {
+   "id": "tuerkis_guertel",
+   "box": [
+    305,
+    355,
+    372,
+    455
+   ],
+   "urteil": "Fremdfarbe auf dunklem Koerper",
+   "sicherheit": "wahrscheinlich",
+   "maske": "weiss_rand_grau",
+   "belege": [
+    "Einbluten: G-R +24..+7 neben Cyan, -2..-5 neben Neutral",
+    "Aussen Koerperviolett (45,33,88), harte Kante (354,429)",
+    "Rechts bei y=392 weich: Kantenlage offen"
+   ]
+  },
+  {
+   "id": "bodenflecken",
+   "box": [
+    283,
+    325,
+    378,
+    375
+   ],
+   "urteil": "Boden",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Y 224-230, neutral, Kanten 5-8 px"
+   ]
+  },
+  {
+   "id": "lavendelspitze",
+   "box": [
+    286,
+    309,
+    304,
+    328
+   ],
+   "urteil": "Figur",
+   "sicherheit": "wahrscheinlich",
+   "maske": "grau",
+   "belege": [
+    "(111,103,150), G-R -9"
+   ]
+  },
+  {
+   "id": "fleck_gelaenderhoehe",
+   "box": [
+    310,
+    285,
+    336,
+    309
+   ],
+   "urteil": "offen",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "Glanzform gegen geklipptes Weiss 9 % und Gelaenderhoehe"
+   ]
+  },
+  {
+   "id": "fleck_gelaenderende",
+   "box": [
+    237,
+    280,
+    248,
+    295
+   ],
+   "urteil": "offen",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "Blaeulich, direkt am Gelaenderende"
+   ]
+  },
+  {
+   "id": "dreieck",
+   "box": [
+    391,
+    278,
+    410,
+    287
+   ],
+   "urteil": "Figur",
+   "sicherheit": "wahrscheinlich",
+   "maske": "grau",
+   "belege": [
+    "Nicht auf Gelaenderhoehe (rechts y~303)"
+   ]
+  },
+  {
+   "id": "rumpfglanz",
+   "box": [
+    305,
+    218,
+    335,
+    278
+   ],
+   "urteil": "Figur",
+   "sicherheit": "sicher",
+   "maske": "weiss",
+   "belege": [
+    "Innerhalb des Umrisses; Rosa nicht als Eigenfarbe lesen"
+   ]
+  },
+  {
+   "id": "tuerkisfleck",
+   "box": [
+    291,
+    407,
+    315,
+    428
+   ],
+   "urteil": "offen",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "Glanz oder Boden durch Luecke"
+   ]
+  },
+  {
+   "id": "band_rechts",
+   "box": [
+    404,
+    250,
+    425,
+    285
+   ],
+   "urteil": "dunkle Masse",
+   "sicherheit": "wahrscheinlich",
+   "maske": "weiss",
+   "belege": [
+    "Harte Kante x~425 (Y 38 auf 75)"
+   ]
+  },
+  {
+   "id": "fussleiste_links",
+   "box": [
+    232,
+    262,
+    248,
+    276
+   ],
+   "urteil": "nicht erkennbar",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "Keine Grenze zur Figur"
+   ]
+  },
+  {
+   "id": "fussleiste_rechts",
+   "box": [
+    430,
+    288,
+    640,
+    300
+   ],
+   "urteil": "Hintergrund",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Blaeulich dunkel, laeuft bis weit rechts"
+   ]
+  },
+  {
+   "id": "logo",
+   "box": [
+    0,
+    436,
+    253,
+    480
+   ],
+   "urteil": "Logo",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Minimum beider Bilder"
+   ]
+  }
+ ],
+ "bild2": [
+  {
+   "id": "aussenkante_oben",
+   "box": [
+    268,
+    156,
+    397,
+    215
+   ],
+   "urteil": "Figur",
+   "sicherheit": "sicher",
+   "maske": "weiss",
+   "belege": [
+    "Links Hintergrund (0,0,0), Rand violett B-G +26",
+    "Bei x=365 R 159 (y=156) auf 44 (y=177)"
+   ]
+  },
+  {
+   "id": "randstrich",
+   "box": [
+    397,
+    207,
+    418,
+    225
+   ],
+   "urteil": "Figur",
+   "sicherheit": "sicher",
+   "maske": "weiss",
+   "belege": [
+    "Kreuzt senkrechtes Rohr diagonal, B-G +26"
+   ]
+  },
+  {
+   "id": "rote_scheibe",
+   "box": [
+    350,
+    112,
+    395,
+    172
+   ],
+   "urteil": "Raum",
+   "sicherheit": "wahrscheinlich",
+   "maske": "schwarz",
+   "belege": [
+    "Sicher nicht Figur",
+    "Kanten decken sich mit Platte x~345, x~395, y~113",
+    "Unterkante ist Aussenkante der Figur"
+   ]
+  },
+  {
+   "id": "tuerplatte_rechts",
+   "box": [
+    345,
+    172,
+    398,
+    290
+   ],
+   "urteil": "Figur davor",
+   "sicherheit": "sicher",
+   "maske": "weiss",
+   "belege": [
+    "R flach 43-52, Hintergrund 34-96",
+    "Kante x~360 R 96 fehlt",
+    "Spiegelgitter links R 143 Streuung 38, rechts R 51 Streuung 9.8",
+    "Querband y=229-235 unsichtbar, Korrelation 0.06"
+   ]
+  },
+  {
+   "id": "inneres_tuerschwarz",
+   "box": [
+    262,
+    205,
+    345,
+    285
+   ],
+   "urteil": "Figur",
+   "sicherheit": "sicher",
+   "maske": "weiss",
+   "belege": [
+    "Gleicher Abstand 40-80 px: leere Tuer B 6.8 R 27, Inneres B 16 R 40",
+    "Trennmass 2.43",
+    "y=258-286 nur durch Einschluss"
+   ]
+  },
+  {
+   "id": "lichtbalken",
+   "box": [
+    222,
+    286,
+    293,
+    299
+   ],
+   "urteil": "Figur davor",
+   "sicherheit": "sicher",
+   "maske": "weiss",
+   "belege": [
+    "Hintergrund (202,65,16), Video (45,9,16)",
+    "Deckenlampe (197,11,8) wird im Video (206,182,178)"
+   ]
+  },
+  {
+   "id": "dunkle_bodenmasse",
+   "box": [
+    230,
+    300,
+    300,
+    360
+   ],
+   "urteil": "Figur, kein Schatten",
+   "sicherheit": "sicher",
+   "maske": "weiss",
+   "belege": [
+    "Bodenleiste Kontrast 27.3 frei, 0.7 in der Masse"
+   ]
+  },
+  {
+   "id": "streifen_oben",
+   "box": [
+    318,
+    316,
+    338,
+    338
+   ],
+   "urteil": "Figur",
+   "sicherheit": "sicher",
+   "maske": "weiss",
+   "belege": [
+    "B-G +29..+49, Cb -0.4..+9.2",
+    "Steigung -1.28 gegen Boden -0.13"
+   ]
+  },
+  {
+   "id": "streifen_mitte_knoten",
+   "box": [
+    285,
+    338,
+    320,
+    360
+   ],
+   "urteil": "Figur",
+   "sicherheit": "wahrscheinlich",
+   "maske": "weiss",
+   "belege": [
+    "Cb -3, Rand derselben Kante"
+   ]
+  },
+  {
+   "id": "streifen_unten_v",
+   "box": [
+    263,
+    355,
+    304,
+    399
+   ],
+   "urteil": "offen",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "Keine Naht (sicher): Naht dunkel, 10-40 px daneben",
+    "Cb -17 kein Beleg wegen Einbluten"
+   ]
+  },
+  {
+   "id": "fleck_links",
+   "box": [
+    245,
+    372,
+    263,
+    394
+   ],
+   "urteil": "offen",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "(204,106,139), B-G +33"
+   ]
+  },
+  {
+   "id": "bogen",
+   "box": [
+    205,
+    215,
+    245,
+    262
+   ],
+   "urteil": "Figur",
+   "sicherheit": "wahrscheinlich",
+   "maske": "grau",
+   "belege": [
+    "Nicht Raum (sicher): Hintergrund (0,0,0)",
+    "Nicht Feuer (sicher): B-G +14..+29",
+    "Kein Geisterbild (sicher): Kopf erwartet +42, G=5; Rohr +38, G=6",
+    "Nicht Kittel (wahrscheinlich): B 30-67 gegen 134-172"
+   ]
+  },
+  {
+   "id": "spitze",
+   "box": [
+    356,
+    290,
+    376,
+    315
+   ],
+   "urteil": "Figur",
+   "sicherheit": "wahrscheinlich",
+   "maske": "grau",
+   "belege": [
+    "Nicht Raum (sicher): Hintergrund (27,8,0)",
+    "Spitze (217,193,204), B-G +11, Funken -3..-26",
+    "Darueber Violett B-G +21..+29"
+   ]
+  },
+  {
+   "id": "rechter_rand",
+   "box": [
+    398,
+    225,
+    415,
+    298
+   ],
+   "urteil": "nicht erkennbar",
+   "sicherheit": "offen",
+   "maske": "grau",
+   "belege": [
+    "Feuerschein liegt ueber der Kante"
+   ]
+  },
+  {
+   "id": "feuer_F1",
+   "box": [
+    160,
+    325,
+    225,
+    375
+   ],
+   "urteil": "Feuer",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "R=G=B bis 224, Saum warm"
+   ]
+  },
+  {
+   "id": "feuer_F2",
+   "box": [
+    415,
+    225,
+    462,
+    300
+   ],
+   "urteil": "Feuer",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Linkskante x~415-421: ob abgeschnitten offen"
+   ]
+  },
+  {
+   "id": "feuer_F3",
+   "box": [
+    415,
+    310,
+    505,
+    400
+   ],
+   "urteil": "Feuer",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Weiss saturiert, Saum warm"
+   ]
+  },
+  {
+   "id": "feuer_F4",
+   "box": [
+    270,
+    395,
+    450,
+    475
+   ],
+   "urteil": "Feuer",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Weiss saturiert"
+   ]
+  },
+  {
+   "id": "roter_boden",
+   "box": [
+    235,
+    360,
+    420,
+    395
+   ],
+   "urteil": "Raum",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Naht und Bodenleiste sichtbar"
+   ]
+  },
+  {
+   "id": "kisten_rechts",
+   "box": [
+    540,
+    265,
+    640,
+    450
+   ],
+   "urteil": "Raum",
+   "sicherheit": "sicher",
+   "maske": "schwarz",
+   "belege": [
+    "Form deckt sich mit den Kisten; zwei Kanten in der Anpassung, keine unabhaengige Probe"
+   ]
+  }
+ ],
+ "bildkette": {
+  "farbeinbluten": {
+   "abstand_px": [
+    "1-5",
+    "5-10",
+    "10-15",
+    "15-20",
+    "20-30",
+    "30-45"
+   ],
+   "gr_neben_cyan": [
+    23.7,
+    11.7,
+    7.2,
+    5.8,
+    6.9,
+    -0.3
+   ],
+   "gr_neben_neutral": [
+    -1.9,
+    -2.8,
+    -3.8,
+    -3.1,
+    -0.2,
+    -5.0
+   ]
+  },
+  "farbversatz_px": [
+   -1,
+   2
+  ],
+  "helligkeitskante_px": [
+   5,
+   8
+  ],
+  "hinweis": "Silhouette Bild 1 nur aus Helligkeit; Farbe nur an grossen oder hellen Teilen"
+ },
+ "nicht_als_form": [
+  "rote_scheibe",
+  "tuerkis_guertel",
+  "dunkle_bahn",
+  "bodenflecken",
+  "feuer"
+ ],
+ "verworfen": [
+  "ECC-Registrierung",
+  "Begrenzte Eckensuche",
+  "Kantenbreiten Helligkeit gegen Farbe",
+  "Tuerlinie als Verdeckungsprobe",
+  "Port-Feuer als Lagehilfe (4966/16418)"
+ ],
+ "maskenbau": {
+  "bild1": {
+   "regel": "Y<100, Glaettung 1.2, innerhalb Huelle",
+   "huelle": [
+    [
+     248,
+     250
+    ],
+    [
+     248,
+     212
+    ],
+    [
+     254,
+     205
+    ],
+    [
+     266,
+     198
+    ],
+    [
+     277,
+     191
+    ],
+    [
+     290,
+     188
+    ],
+    [
+     306,
+     189
+    ],
+    [
+     316,
+     198
+    ],
+    [
+     326,
+     206
+    ],
+    [
+     342,
+     207
+    ],
+    [
+     352,
+     210
+    ],
+    [
+     362,
+     215
+    ],
+    [
+     371,
+     225
+    ],
+    [
+     378,
+     237
+    ],
+    [
+     390,
+     242
+    ],
+    [
+     398,
+     246
+    ],
+    [
+     410,
+     254
+    ],
+    [
+     418,
+     262
+    ],
+    [
+     426,
+     270
+    ],
+    [
+     431,
+     285
+    ],
+    [
+     427,
+     300
+    ],
+    [
+     426,
+     345
+    ],
+    [
+     436,
+     358
+    ],
+    [
+     432,
+     372
+    ],
+    [
+     405,
+     382
+    ],
+    [
+     385,
+     382
+    ],
+    [
+     376,
+     386
+    ],
+    [
+     376,
+     412
+    ],
+    [
+     362,
+     432
+    ],
+    [
+     345,
+     442
+    ],
+    [
+     338,
+     462
+    ],
+    [
+     296,
+     468
+    ],
+    [
+     288,
+     450
+    ],
+    [
+     288,
+     420
+    ],
+    [
+     250,
+     420
+    ],
+    [
+     240,
+     428
+    ],
+    [
+     225,
+     434
+    ],
+    [
+     205,
+     426
+    ],
+    [
+     192,
+     412
+    ],
+    [
+     186,
+     395
+    ],
+    [
+     192,
+     372
+    ],
+    [
+     203,
+     352
+    ],
+    [
+     214,
+     344
+    ],
+    [
+     228,
+     340
+    ],
+    [
+     228,
+     318
+    ],
+    [
+     240,
+     312
+    ],
+    [
+     245,
+     300
+    ],
+    [
+     248,
+     262
+    ]
+   ],
+   "rumpf": [
+    [
+     303,
+     258
+    ],
+    [
+     306,
+     240
+    ],
+    [
+     314,
+     224
+    ],
+    [
+     328,
+     218
+    ],
+    [
+     337,
+     226
+    ],
+    [
+     333,
+     250
+    ],
+    [
+     336,
+     276
+    ],
+    [
+     304,
+     278
+    ],
+    [
+     300,
+     262
+    ]
+   ],
+   "grau": {
+    "gegenstand_rosa": [
+     [
+      250,
+      420
+     ],
+     [
+      288,
+      420
+     ],
+     [
+      288,
+      445
+     ],
+     [
+      285,
+      479
+     ],
+     [
+      250,
+      479
+     ],
+     [
+      250,
+      460
+     ],
+     [
+      254,
+      446
+     ]
+    ],
+    "lavendelstrich": [
+     [
+      226,
+      450
+     ],
+     [
+      235,
+      432
+     ],
+     [
+      247,
+      420
+     ],
+     [
+      255,
+      422
+     ],
+     [
+      246,
+      437
+     ],
+     [
+      235,
+      450
+     ]
+    ],
+    "kuppel_oben_unsicher": [
+     [
+      250,
+      211
+     ],
+     [
+      262,
+      196
+     ],
+     [
+      277,
+      185
+     ],
+     [
+      290,
+      182
+     ],
+     [
+      306,
+      183
+     ],
+     [
+      306,
+      190
+     ],
+     [
+      290,
+      190
+     ],
+     [
+      277,
+      193
+     ],
+     [
+      266,
+      200
+     ],
+     [
+      254,
+      207
+     ]
+    ],
+    "links_nicht_erkennbar": [
+     [
+      232,
+      262
+     ],
+     [
+      248,
+      262
+     ],
+     [
+      248,
+      300
+     ],
+     [
+      240,
+      300
+     ],
+     [
+      232,
+      298
+     ]
+    ],
+    "fleck_lage_gelaender": [
+     [
+      307,
+      282
+     ],
+     [
+      339,
+      282
+     ],
+     [
+      339,
+      311
+     ],
+     [
+      300,
+      312
+     ]
+    ],
+    "lavendelspitze_bodenfleck": [
+     [
+      286,
+      309
+     ],
+     [
+      304,
+      309
+     ],
+     [
+      306,
+      328
+     ],
+     [
+      284,
+      328
+     ]
+    ],
+    "tuerkisfleck": [
+     [
+      289,
+      404
+     ],
+     [
+      319,
+      404
+     ],
+     [
+      319,
+      430
+     ],
+     [
+      289,
+      430
+     ]
+    ]
+   }
+  },
+  "bild2": {
+   "haupt": [
+    [
+     268,
+     215
+    ],
+    [
+     278,
+     190
+    ],
+    [
+     290,
+     170
+    ],
+    [
+     300,
+     162
+    ],
+    [
+     320,
+     156
+    ],
+    [
+     345,
+     160
+    ],
+    [
+     365,
+     170
+    ],
+    [
+     380,
+     177
+    ],
+    [
+     390,
+     195
+    ],
+    [
+     397,
+     207
+    ],
+    [
+     404,
+     222
+    ],
+    [
+     402,
+     240
+    ],
+    [
+     400,
+     262
+    ],
+    [
+     398,
+     284
+    ],
+    [
+     392,
+     298
+    ],
+    [
+     378,
+     300
+    ],
+    [
+     358,
+     294
+    ],
+    [
+     345,
+     301
+    ],
+    [
+     338,
+     316
+    ],
+    [
+     322,
+     330
+    ],
+    [
+     305,
+     344
+    ],
+    [
+     285,
+     352
+    ],
+    [
+     262,
+     360
+    ],
+    [
+     243,
+     371
+    ],
+    [
+     233,
+     362
+    ],
+    [
+     230,
+     350
+    ],
+    [
+     228,
+     330
+    ],
+    [
+     224,
+     290
+    ],
+    [
+     240,
+     282
+    ],
+    [
+     262,
+     262
+    ],
+    [
+     262,
+     232
+    ]
+   ],
+   "randstrich": [
+    [
+     394,
+     203
+    ],
+    [
+     402,
+     204
+    ],
+    [
+     421,
+     222
+    ],
+    [
+     417,
+     229
+    ],
+    [
+     408,
+     223
+    ],
+    [
+     396,
+     213
+    ]
+   ],
+   "streifen_oben": [
+    [
+     338,
+     315
+    ],
+    [
+     342,
+     324
+    ],
+    [
+     334,
+     338
+    ],
+    [
+     318,
+     346
+    ],
+    [
+     302,
+     356
+    ],
+    [
+     290,
+     360
+    ],
+    [
+     284,
+     350
+    ],
+    [
+     300,
+     340
+    ],
+    [
+     316,
+     328
+    ],
+    [
+     326,
+     317
+    ]
+   ],
+   "grau": {
+    "lobus_links_bogen": [
+     [
+      206,
+      218
+     ],
+     [
+      216,
+      214
+     ],
+     [
+      240,
+      213
+     ],
+     [
+      250,
+      221
+     ],
+     [
+      262,
+      232
+     ],
+     [
+      262,
+      262
+     ],
+     [
+      240,
+      282
+     ],
+     [
+      224,
+      290
+     ],
+     [
+      228,
+      330
+     ],
+     [
+      214,
+      322
+     ],
+     [
+      209,
+      300
+     ],
+     [
+      207,
+      262
+     ]
+    ],
+    "streifen_unten": [
+     [
+      263,
+      355
+     ],
+     [
+      302,
+      356
+     ],
+     [
+      304,
+      368
+     ],
+     [
+      297,
+      399
+     ],
+     [
+      275,
+      399
+     ],
+     [
+      268,
+      372
+     ]
+    ],
+    "fleck_links": [
+     [
+      245,
+      372
+     ],
+     [
+      263,
+      372
+     ],
+     [
+      264,
+      394
+     ],
+     [
+      246,
+      394
+     ]
+    ],
+    "spitze": [
+     [
+      355,
+      290
+     ],
+     [
+      372,
+      293
+     ],
+     [
+      376,
+      312
+     ],
+     [
+      366,
+      315
+     ],
+     [
+      356,
+      301
+     ]
+    ],
+    "rand_rechts_feuer": [
+     [
+      404,
+      222
+     ],
+     [
+      415,
+      224
+     ],
+     [
+      420,
+      232
+     ],
+     [
+      416,
+      262
+     ],
+     [
+      413,
+      290
+     ],
+     [
+      402,
+      298
+     ],
+     [
+      392,
+      298
+     ],
+     [
+      398,
+      284
+     ],
+     [
+      400,
+      262
+     ],
+     [
+      402,
+      240
+     ]
+    ],
+    "unterkante_links": [
+     [
+      228,
+      330
+     ],
+     [
+      230,
+      350
+     ],
+     [
+      233,
+      362
+     ],
+     [
+      243,
+      371
+     ],
+     [
+      240,
+      376
+     ],
+     [
+      228,
+      366
+     ],
+     [
+      222,
+      348
+     ],
+     [
+      220,
+      330
+     ]
+    ]
+   },
+   "feuer": {
+    "F1_links": [
+     [
+      158,
+      322
+     ],
+     [
+      232,
+      322
+     ],
+     [
+      232,
+      380
+     ],
+     [
+      158,
+      380
+     ]
+    ],
+    "F2_saeule": [
+     [
+      421,
+      222
+     ],
+     [
+      466,
+      222
+     ],
+     [
+      466,
+      303
+     ],
+     [
+      417,
+      303
+     ]
+    ],
+    "F3_rechts": [
+     [
+      417,
+      306
+     ],
+     [
+      508,
+      306
+     ],
+     [
+      508,
+      404
+     ],
+     [
+      417,
+      404
+     ]
+    ],
+    "F4_boden": [
+     [
+      262,
+      402
+     ],
+     [
+      460,
+      386
+     ],
+     [
+      462,
+      480
+     ],
+     [
+      255,
+      480
+     ]
+    ]
+   },
+   "frau": [
+    [
+     138,
+     185
+    ],
+    [
+     186,
+     183
+    ],
+    [
+     208,
+     222
+    ],
+    [
+     208,
+     262
+    ],
+    [
+     212,
+     310
+    ],
+    [
+     150,
+     320
+    ],
+    [
+     136,
+     290
+    ]
+   ]
+  },
+  "grauer_rand_px": 4
+ }
+}

@@ -1,0 +1,8 @@
+Primitive 124 Pixel [25170, 33576] {'hand2': 'boden', 'zwang': {'gier2': 21.0, 'kopfx2': 325.0, 'kopfy2': 235.0}}
+0 Stufe 1 Kosten [499.7300109863281] 1 s GPU 0.6 GB
+300 Stufe 1 Kosten [6.340000152587891] 45 s GPU 0.6 GB
+600 Stufe 1 Kosten [5.980000019073486] 87 s GPU 0.6 GB
+900 Stufe 1 Kosten [5.900000095367432] 129 s GPU 0.6 GB
+999 Stufe 1 Kosten [5.889999866485596] 143 s GPU 0.6 GB
+fertig [6.880000114440918]
+daten [1.0080000162124634]

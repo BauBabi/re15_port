@@ -1,0 +1,80 @@
+{
+ "bild": "bild2.png",
+ "standbild": "Video Version_80%/Biohazard 1.5 Final Build.mp4, Standbild 145, 116.12-116.88 s",
+ "raum": "ROOM5090",
+ "cut": 11,
+ "quelle": "RID ROOM5090.RDT Datei-Offset 0x1C0 (flag 0, fov 26684, pri 0x808), Lesung siehe kamera.md",
+ "sicherheit": "sicher: Auge, Ziel, H aus der Disc; B gemessen",
+ "auge": [
+  7626.0,
+  -3256.0,
+  -25360.0
+ ],
+ "ziel": [
+  -1504.0,
+  -986.0,
+  -21970.0
+ ],
+ "fov_rid": 26684,
+ "H": 208.0,
+ "port_groesse": [
+  320,
+  240
+ ],
+ "port_mitte": [
+  160,
+  120
+ ],
+ "bild_groesse": [
+  640,
+  480
+ ],
+ "bodenebene_y": 0.0,
+ "abbildung_port_nach_bild": {
+  "art": "Homographie, (x,y,1) ~ B*(u,w,1)",
+  "B": [
+   [
+    1.9827948673059161,
+    0.14111439323324979,
+    -21.56526387510582
+   ],
+   [
+    -0.08858715154727823,
+    2.3330056221906963,
+    -27.48994068762261
+   ],
+   [
+    -0.0004184597767300965,
+    0.00035940960141506433,
+    1.0
+   ]
+  ]
+ },
+ "formeln": [
+  "v = R*(welt-auge), R = Blickmatrix aus auge/ziel (form_kamera.blickmatrix, FUN_80053ca4)",
+  "u = 160+H*v.x/v.z, w = 120+H*v.y/v.z",
+  "(x,y,1) ~ B*(u,w,1)"
+ ],
+ "brennweite_bild_px": {
+  "fx": 451.1,
+  "fy": 478.4,
+  "hauptpunkt": [
+   320.2,
+   244.1
+  ]
+ },
+ "restfehler": {
+  "lokale_versaetze_px": {
+   "stellen": 7,
+   "median": 1.2,
+   "rms": 2.4,
+   "max": 5.1
+  },
+  "kantenabstand_median_px": 2.8,
+  "kantenabstand_median_bei_12px_verschoben": 5.0,
+  "frau_gegen_spawn_px": [
+   8,
+   15
+  ]
+ }
+}

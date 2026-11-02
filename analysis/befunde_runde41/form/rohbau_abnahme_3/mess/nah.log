@@ -1,0 +1,83 @@
+00:04.938  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c0_az090_el15_w.png'
+00:04.985  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c0_az270_el15_w.png'
+00:05.031  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c0_az135_el35_w.png'
+00:05.094  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c0_az225_el35_w.png'
+00:05.125  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c0_az180_el50_w.png'
+FERTIG 5
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip0.obj' took 1.99 ms
+
+Blender quit
+00:03.422  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c2_az090_el15_w.png'
+00:03.454  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c2_az270_el15_w.png'
+00:03.500  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c2_az135_el35_w.png'
+00:03.547  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c2_az225_el35_w.png'
+00:03.594  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\wurzel_c2_az180_el50_w.png'
+FERTIG 5
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip2.obj' took 1.85 ms
+
+Blender quit
+00:03.625  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\handr_c0_az000_el10_h.png'
+00:03.657  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\handr_c0_az270_el10_h.png'
+00:03.703  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\handr_c0_az315_el25_h.png'
+00:03.750  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\handr_c0_az225_el20_h.png'
+FERTIG 4
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip0.obj' took 1.90 ms
+
+Blender quit
+00:03.375  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c0_az180_el15_f.png'
+00:03.422  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c0_az135_el15_f.png'
+00:03.468  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c0_az225_el15_f.png'
+FERTIG 3
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip0.obj' took 1.67 ms
+
+Blender quit
+00:03.328  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c1_az180_el15_f.png'
+00:03.375  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c1_az135_el15_f.png'
+00:03.421  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c1_az225_el15_f.png'
+FERTIG 3
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip1.obj' took 1.91 ms
+
+Blender quit
+00:03.391  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c2_az180_el15_f.png'
+00:03.453  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c2_az135_el15_f.png'
+00:03.484  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\fuss_c2_az225_el15_f.png'
+FERTIG 3
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip2.obj' took 2.08 ms
+
+Blender quit
+00:03.640  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c0_az000_el10_k.png'
+00:03.687  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c0_az045_el20_k.png'
+00:03.750  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c0_az315_el20_k.png'
+00:03.797  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c0_az180_el45_k.png'
+00:03.843  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c0_az090_el10_k.png'
+FERTIG 5
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip0.obj' took 2.12 ms
+
+Blender quit
+00:03.562  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c1_az000_el10_k.png'
+00:03.625  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c1_az045_el20_k.png'
+00:03.671  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c1_az315_el20_k.png'
+00:03.718  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c1_az180_el45_k.png'
+00:03.750  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c1_az090_el10_k.png'
+FERTIG 5
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip1.obj' took 2.19 ms
+
+Blender quit
+00:03.687  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c2_az000_el10_k.png'
+00:03.734  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c2_az045_el20_k.png'
+00:03.781  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c2_az315_el20_k.png'
+00:03.812  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c2_az180_el45_k.png'
+00:03.859  render           | Saved: 'C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_3\bild\nah\kopf_c2_az090_el10_k.png'
+FERTIG 5
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+OBJ import of 'clip2.obj' took 2.05 ms
+
+Blender quit

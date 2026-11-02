@@ -1,0 +1,10 @@
+Bild 1: Figur 40339 px, ohne s1 39336 px, nur s1 sichtbar beigetragen 1003 px, s1 allein 3409 px
+  davon im Ziel Figur (255) 654, frei (0) 0, grau 349; im Nutzerumriss tail 648
+  Lage der fehlenden Pixel: x 280-340, y 185-212
+  Spalte x 290: Oberkante mit s1 y 187, ohne s1 y 199, Ziel Figur ab y 187
+  Spalte x 300: Oberkante mit s1 y 185, ohne s1 y 205, Ziel Figur ab y 184
+  Spalte x 305: Oberkante mit s1 y 185, ohne s1 y 206, Ziel Figur ab y 185
+  Spalte x 311: Oberkante mit s1 y 187, ohne s1 y 208, Ziel Figur ab y 187
+  Spalte x 316: Oberkante mit s1 y 188, ohne s1 y 210, Ziel Figur ab y 191
+  Spalte x 322: Oberkante mit s1 y 189, ohne s1 y 212, Ziel Figur ab y 202
+  Spalte x 330: Oberkante mit s1 y 193, ohne s1 y 212, Ziel Figur ab y 215

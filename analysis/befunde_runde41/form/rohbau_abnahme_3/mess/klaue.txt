@@ -1,0 +1,2 @@
+Spitze (439,418): naechstes Render-Pixel 7.1 px, Maske dort True
+Spitze (468,417): naechstes Render-Pixel 6.7 px, Maske dort True

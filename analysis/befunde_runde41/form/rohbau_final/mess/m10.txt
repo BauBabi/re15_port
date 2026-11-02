@@ -1,0 +1,18 @@
+Bild 1: Kantenpixel 23160. Abstand Umriss zur naechsten Bildkante: Mittel, Median, 90 %, Laenge
+   Nutzer-Soll        3.44 2.00 9.79 1390
+   Soll +7 px rechts  4.83 4.00 10.20 1393
+   Rohbau FINAL           2.70 1.40 7.00 930
+Bild 2: Kantenpixel 15597. Abstand Umriss zur naechsten Bildkante: Mittel, Median, 90 %, Laenge
+   Nutzer-Soll        5.65 2.20 17.97 1082
+   Soll +7 px rechts  6.91 5.00 17.79 1091
+   Rohbau FINAL           6.68 4.20 16.78 1087
+O3 Keil links dunkle Pixel ausserhalb aller Teile: 1720  gedeckt: FINAL 1.00
+O1 rechts neben Arm dunkle Pixel ausserhalb aller Teile: 182  gedeckt: FINAL 0.56
+Traceback (most recent call last):
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_final\mess\m10_kanten.py", line 75, in <module>
+    main()
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_final\mess\m10_kanten.py", line 62, in main
+    kn = np.load(F + '/rohbau_final/mess/kn_b_2.npy')
+  File "C:\Python310\lib\site-packages\numpy\lib\npyio.py", line 427, in load
+    fid = stack.enter_context(open(os_fspath(file), "rb"))
+FileNotFoundError: [Errno 2] No such file or directory: 'C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/rohbau_final/mess/kn_b_2.npy'

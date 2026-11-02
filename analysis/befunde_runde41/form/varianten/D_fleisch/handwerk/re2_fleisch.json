@@ -1,0 +1,158 @@
+{
+ "31": {
+  "wunde": {
+   "anteil": 0.198,
+   "farben15": 340,
+   "Y_p10_50_90": [
+    57,
+    86,
+    126
+   ],
+   "chroma_p50_90": [
+    40,
+    71
+   ],
+   "hue_streu": 8.6,
+   "hell_ab180": 0.001,
+   "dunkel_unter25": 0.0
+  },
+  "haut": {
+   "anteil": 0.802,
+   "farben15": 332,
+   "Y_p10_50_90": [
+    29,
+    57,
+    130
+   ],
+   "chroma_p50_90": [
+    9,
+    25
+   ],
+   "hue_streu": 60.9,
+   "hell_ab180": 0.027,
+   "dunkel_unter25": 0.072,
+   "ton": {
+    "neutral": 0.24,
+    "kuehl": 0.29,
+    "warm": 0.47
+   }
+  }
+ },
+ "33": {
+  "wunde": {
+   "anteil": 0.221,
+   "farben15": 359,
+   "Y_p10_50_90": [
+    54,
+    78,
+    124
+   ],
+   "chroma_p50_90": [
+    34,
+    65
+   ],
+   "hue_streu": 6.6,
+   "hell_ab180": 0.002,
+   "dunkel_unter25": 0.0
+  },
+  "haut": {
+   "anteil": 0.779,
+   "farben15": 276,
+   "Y_p10_50_90": [
+    27,
+    44,
+    91
+   ],
+   "chroma_p50_90": [
+    7,
+    21
+   ],
+   "hue_streu": 48.1,
+   "hell_ab180": 0.008,
+   "dunkel_unter25": 0.068,
+   "ton": {
+    "neutral": 0.25,
+    "kuehl": 0.35,
+    "warm": 0.4
+   }
+  }
+ },
+ "34": {
+  "wunde": {
+   "anteil": 0.209,
+   "farben15": 335,
+   "Y_p10_50_90": [
+    53,
+    80,
+    124
+   ],
+   "chroma_p50_90": [
+    46,
+    71
+   ],
+   "hue_streu": 8.9,
+   "hell_ab180": 0.0,
+   "dunkel_unter25": 0.0
+  },
+  "haut": {
+   "anteil": 0.791,
+   "farben15": 318,
+   "Y_p10_50_90": [
+    17,
+    33,
+    85
+   ],
+   "chroma_p50_90": [
+    5,
+    23
+   ],
+   "hue_streu": 73.0,
+   "hell_ab180": 0.012,
+   "dunkel_unter25": 0.337,
+   "ton": {
+    "neutral": 0.63,
+    "kuehl": 0.12,
+    "warm": 0.25
+   }
+  }
+ },
+ "36": {
+  "wunde": {
+   "anteil": 0.199,
+   "farben15": 262,
+   "Y_p10_50_90": [
+    55,
+    80,
+    117
+   ],
+   "chroma_p50_90": [
+    32,
+    55
+   ],
+   "hue_streu": 5.3,
+   "hell_ab180": 0.0,
+   "dunkel_unter25": 0.0
+  },
+  "haut": {
+   "anteil": 0.801,
+   "farben15": 337,
+   "Y_p10_50_90": [
+    13,
+    48,
+    132
+   ],
+   "chroma_p50_90": [
+    18,
+    29
+   ],
+   "hue_streu": 14.6,
+   "hell_ab180": 0.015,
+   "dunkel_unter25": 0.256,
+   "ton": {
+    "neutral": 0.11,
+    "kuehl": 0.0,
+    "warm": 0.89
+   }
+  }
+ }
+}

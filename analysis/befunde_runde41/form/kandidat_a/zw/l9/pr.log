@@ -1,0 +1,106 @@
+Kandidat A
+
+(g) Kennzahlen: 1976 Flaechen (1265 Dreiecke, 711 Vierecke), 23 Knochen, 23 Meshes, Textur 384x256 8 bpp, 1 CLUT-Zeilen, 3 Clips, Bilder je Clip [1, 1, 1]
+Rahmen: 1976 Flaechen, Rahmen rund 1900
+Boden je Pose, tiefster Punkt y: [0.0, 0.4, 0.0]
+FE.pruefe: 0 Fehler, 1 Warnungen
+  Warnung Tick der Form erwartet Clips, die fehlen (Modulo in re15_compute_actor_kf): 3 BB_C_HIEB, 4 BB_C_HIEB+1, 5 BB_C_GEHEN, 8 BB_C_ZUCKEN, 9 BB_C_NACHHIEB, 10 BB_C_DROHEN, 26 BB_C_BISS, 27 BB_C_GRIFF
+
+=== Bild 1, Lage [-18490, 0, -18698] Gier 2155 Clip 0 Bild 0, Licht mess k=[1.061, 0.953, 0.825]
+(a) Umriss auf nicht-grauen Pixeln: IoU 1.000, Weiss gedeckt 1.000, Schwarz getroffen 10 px, Render 33938 px, davon auf Grau 10997
+    Weiss fehlt (Pixel, x0,y0,x1,y1): []
+    Schwarz getroffen: [[3, 325, 349, 326, 350], [2, 337, 354, 338, 354], [2, 333, 353, 334, 354]]
+(b) Pruefpunkte 30/33 bestanden  (+ = rechts/unten vom Soll; kontur: + = Soll ausserhalb, Render zu klein)
+   1 ok   b1.sohle_fr            Sohle Bein FR                  Soll (398,374)  Abstand   -0.5  Grenze  6.8
+   2 NEIN b1.kappe_spitze        Kappe Spitze                   Soll (400,277)  Abstand   +4.5  Grenze  2.8
+   3 ok   b1.kappe_basis         Kappe Basis                    Soll (398,296)  Abstand   -1.5  Grenze 13.3
+   4 ok   b1.schulterkuppe       Schulterkuppe                  Soll (405,238)  Abstand   +1.5  Grenze 11.6
+   5 ok   b1.scheitel_x300       Scheitel                       Soll (300,187)  Abstand   +1.5  Grenze  3.7
+   6 ok   b1.scheitel_x305       Scheitel                       Soll (305,187)  Abstand   +1.5  Grenze  3.6
+   7 ok   b1.scheitel_x311       Scheitel                       Soll (311,187)  Abstand   +0.5  Grenze  6.9
+   8 ok   b1.scheitel_x316       Scheitel                       Soll (316,187)  Abstand   -0.5  Grenze  7.1
+   9 ok   b1.scheitel_x322       Scheitel                       Soll (322,187)  Abstand   +2.5  Grenze  8.6
+  10 ok   b1.flanke_1            Flanke rechts                  Soll (348,205)  Abstand   +0.5  Grenze  6.3
+  11 ok   b1.flanke_2            Flanke rechts                  Soll (366,215)  Abstand   +0.9  Grenze  2.6
+  12 ok   b1.flanke_3            Flanke rechts                  Soll (378,233)  Abstand   +2.7  Grenze  9.1
+  13 ok   b1.rand_links_y224     Rand links                     Soll (247,224)  Abstand   +0.5  Grenze  5.0
+  14 ok   b1.rand_links_y233     Rand links                     Soll (247,233)  Abstand   -0.5  Grenze  6.9
+  15 ok   b1.rand_links_y242     Rand links                     Soll (247,242)  Abstand   -1.5  Grenze  4.0
+  16 ok   b1.rand_rechts         Rand rechts                    Soll (429,272)  Abstand   -3.5  Grenze  3.6
+  17 ok   b1.fr_y324_links       Bein FR Kante links            Soll (381,324)  Abstand   -1.5  Grenze  3.0
+  18 ok   b1.fr_y324_rechts      Bein FR Kante rechts           Soll (414,324)  Abstand   -2.5  Grenze  2.8
+  19 ok   b1.fr_y344_links       Bein FR Kante links            Soll (381,344)  Abstand   -0.5  Grenze  3.2
+  20 ok   b1.fr_y344_rechts      Bein FR Kante rechts           Soll (418,344)  Abstand   -3.5  Grenze  3.6
+  21 ok   b1.nr_y322_links       Bein NR Kante links            Soll (300,322)  Abstand   +0.5  Grenze  2.8
+  22 ok   b1.nr_y322_rechts      Bein NR Kante rechts           Soll (347,322)  Abstand   -2.5  Grenze  5.8
+  23 ok   b1.nr_y346_links       Bein NR Kante links            Soll (308,346)  Abstand   +2.5  Grenze  3.2
+  24 ok   b1.nr_y346_rechts      Bein NR Kante rechts           Soll (344,346)  Abstand   -1.5  Grenze  2.6
+  25 ok   b1.nl_y318_links       Bein NL Kante links            Soll (226,318)  Abstand   -0.5  Grenze  3.6
+  26 ok   b1.nl_y318_rechts      Bein NL Kante rechts           Soll (287,318)  Abstand   -2.5  Grenze  3.2
+  27 ok   b1.nl_y330_links       Bein NL Kante links            Soll (226,330)  Abstand   -1.5  Grenze  2.8
+  28 NEIN b1.nl_y330_rechts      Bein NL Kante rechts           Soll (287,330)  Abstand   -3.5  Grenze  3.3
+  29 ok   b1.nl_y342_links       Bein NL Kante links            Soll (226,342)  Abstand   -1.5  Grenze  3.2
+  30 NEIN b1.nl_y342_rechts      Bein NL Kante rechts           Soll (287,342)  Abstand   -5.5  Grenze  3.9
+  31 ok   b1.rundling_1          Rundling linke Kante           Soll (306,405)  Abstand   +1.5  Grenze  7.5
+  32 ok   b1.rundling_2          Rundling linke Kante           Soll (312,414)  Abstand   +0.5  Grenze  3.2
+  33 ok   b1.stange              Stange sichtbar bis            Soll (280,191)  Abstand   -0.5  Grenze  3.2
+(c) Boden frei, Verdeckung 2/3
+  ok   L1    Boden frei L1                                  Treffer 0 von 969 px, Eindringen 0.0 px
+  NEIN L2    Boden frei L2                                  Treffer 1 von 633 px, Eindringen 1.0 px
+  ok   SCH   Boden frei (345-378,362-402)                   Treffer 0 von 679 px, Eindringen 0.0 px
+(d) Zeichnung 8/9, Anteil = Sollflaeche mit passendem Material, Y = Mittel im Video gegen gefilterten Render
+  ok   Z1   rosa_stelle         Material 1.00  Figur 1.00  Groesse 0.96  Lage 0.5  Y 142/132
+  ok   Z2   helle_baender       Material 1.00  Figur 1.00  Groesse 0.97  Lage 1.3  Y 130/ 88
+  ok   Z3   weisskerne          Material 0.99  Figur 1.00  Groesse 0.95  Lage 2.2  Y 172/190
+  ok   Z4   helle_baender       Material 1.00  Figur 1.00  Groesse 0.88  Lage 1.8  Y 141/ 81
+  ok   Z5   helle_baender       Material 1.00  Figur 1.00  Groesse 0.77  Lage 1.5  Y  75/ 61
+  ok   Z6a  helle_baender       Material 1.00  Figur 1.00  Groesse 1.11  Lage 4.5  Y 134/160
+  ok   Z6b  helle_baender       Material 1.00  Figur 1.00  Groesse 0.68  Lage 6.5  Y  72/125  zaehlt nicht
+  ok   Z6c  helle_baender       Material 0.98  Figur 1.00  Groesse 0.79  Lage 4.0  Y  56/116  zaehlt nicht
+  NEIN Z7   feine_linien        Material 0.53  Figur 0.50  Groesse 0.56  Lage 12.4  Y 101/153
+  ok   Z8   feine_linien        Material 0.99  Figur 0.92  Groesse 0.90  Lage 3.5  Y  96/ 81
+  ok   Z9   z9                  Material 0.95  Figur 0.77  Groesse 0.80  Lage 1.4  Y  55/ 71
+  ok   N2   Bein FR unter Z5 ohne Band (384-411,302-354): heller Anteil 0.000
+Bild im Original gegen Filter: MAE in Weiss 12.5, NCC in Weiss 0.758
+
+=== Bild 2, Lage [2320, 0, -23467] Gier 1283 Clip 1 Bild 0, Licht mess k=[1.198, 1.119, 1.004]
+(a) Umriss auf nicht-grauen Pixeln: IoU 0.973, Weiss gedeckt 0.997, Schwarz getroffen 582 px, Render 43706 px, davon auf Grau 19546
+    Weiss fehlt (Pixel, x0,y0,x1,y1): [[67, 321, 325, 331, 341], [8, 343, 340, 346, 342]]
+    Schwarz getroffen: [[574, 401, 382, 449, 407], [4, 421, 301, 423, 302], [3, 426, 224, 428, 224]]
+(b) Pruefpunkte 7/7 bestanden  (+ = rechts/unten vom Soll; kontur: + = Soll ausserhalb, Render zu klein)
+   1 ok   b2.kante_1             Kante belegt                   Soll (354,161)  Abstand   +0.5  Grenze  6.4
+   2 ok   b2.kante_2             Kante belegt                   Soll (362,165)  Abstand   +1.5  Grenze  4.1
+   3 ok   b2.kante_3             Kante belegt                   Soll (370,171)  Abstand   +0.9  Grenze  4.2
+   4 ok   b2.kante_4             Kante belegt                   Soll (378,175)  Abstand   +1.5  Grenze  9.5
+   5 ok   b2.kante_5             Kante belegt                   Soll (390,181)  Abstand   +3.1  Grenze 11.0
+   6 ok   b2.kante_6             Kante belegt                   Soll (394,187)  Abstand   +1.7  Grenze 11.6
+   7 ok   b2.kante_7             Kante belegt                   Soll (411,206)  Abstand   +0.5  Grenze  2.5
+   8 ok   b2.gelesen_1           Kante gelesen, nur Anhalt      Soll (258,215)  Abstand   +0.5  Grenze  5.3  zaehlt nicht
+   9 ok   b2.gelesen_2           Kante gelesen, nur Anhalt      Soll (268,205)  Abstand   -0.5  Grenze  5.3  zaehlt nicht
+  10 ok   b2.gelesen_3           Kante gelesen, nur Anhalt      Soll (278,190)  Abstand   +0.5  Grenze  3.4  zaehlt nicht
+  11 ok   b2.gelesen_4           Kante gelesen, nur Anhalt      Soll (290,170)  Abstand   +0.5  Grenze  4.8  zaehlt nicht
+  12 ok   b2.gelesen_5           Kante gelesen, nur Anhalt      Soll (300,162)  Abstand   +0.5  Grenze 13.1  zaehlt nicht
+  13 ok   b2.gelesen_6           Kante gelesen, nur Anhalt      Soll (320,156)  Abstand   +1.5  Grenze  7.2  zaehlt nicht
+  14 ok   b2.gelesen_7           Kante gelesen, nur Anhalt      Soll (345,160)  Abstand   +0.5  Grenze  8.7  zaehlt nicht
+(c) Boden frei, Verdeckung 8/9
+  NEIN BO    Boden frei (345-405,382-396)                   Treffer 55 von 915 px, Eindringen 5.0 px
+  ok   FUGE  Fuge x>=278, y 402-416                         Treffer 0 von 885 px, Eindringen 0.0 px
+  ok   V1    Lichtbalken ganz verdeckt                      gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[8.0, 6.4]
+  ok   V2    Bodenlinie ganz verdeckt                       gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[8.0, 4.2]
+  ok   V3    Bodenlinie ohne Kontrast: R 0 bis +14 statt +2 gedeckt 0.920, innen 1.000, Luecke 0 px, Enden +-[8.0, 8.0]
+  ok   V4    Rohr fehlt: Video R 68-94, Raum 140-194        gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[6.2, 8.0]
+  ok   V6    Rohr endet: R 194 bei y=204, 117 bei y=208, Ka Kante Abstand 0.5, Grenze 2.5
+  --   V5    Querfuge ohne Kontrast: 0 +-5 statt +114 bis + gedeckt 0.000, innen 0.000, Luecke 24 px, Enden +-[5.8, 8.0]  zaehlt nicht
+  ok   HAKEN Haken gefuellt (205-245,215-262)               gedeckt 1.000
+  ok   RAND413 Rand rechts mindestens x=413 bei y 225-262     kleinstes x 433
+(d) Zeichnung 6/7, Anteil = Sollflaeche mit passendem Material, Y = Mittel im Video gegen gefilterten Render
+  NEIN Q1   feine_linien        Material 0.35  Figur 0.89  Groesse 0.15  Lage 11.2  Y  58/ 16
+  ok   Q2   rotbraun_mittelton  Material 0.76  Figur 0.99  Groesse 0.40  Lage 2.9  Y  32/ 22
+  ok   Q3   feine_linien        Material 0.90  Figur 1.00  Groesse 1.26  Lage 9.4  Y  50/ 28
+  ok   Q4   helle_baender       Material 0.97  Figur 1.00  Groesse 0.70  Lage 2.2  Y  96/ 45
+  ok   Q5   feine_linien        Material 0.89  Figur 1.00  Groesse 0.75  Lage 5.6  Y  34/ 42
+  ok   G    untere_streifen     Material 0.82  Figur 0.85  Groesse 0.85  Lage 8.7  Y 113/ 84
+  ok   P    weisskerne          Material 0.96  Figur 1.00  Groesse 0.93  Lage 1.8  Y 116/121
+  ok   N1   Rumpfinneres ohne Zeichnung (290-340,225-280): heller Anteil 0.031
+Bild im Original gegen Filter: MAE in Weiss 9.3, NCC in Weiss 0.719
+

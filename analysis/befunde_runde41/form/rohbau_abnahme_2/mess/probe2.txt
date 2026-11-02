@@ -1,0 +1,13 @@
+Spitze (1240,547): P1 Spitze x 1303 Hoehe 2560 Rumpf dort 2747 | Ruhe Spitze x 1175 Hoehe 2192 Rumpf dort 2682 | P2 Spitze x 676 Hoehe 2116 Rumpf dort 3054
+Rueckenlinie Pose 1 Schwanz/Rumpf  0: 2912/2640  200: 2910/2627  400: 2942/2570  600: 2399/2573  800: -/2630  1000: -/2674  1200: 2560/2747
+Rueckenlinie Ruhe Schwanz/Rumpf  0: 2472/2200  200: 2516/2159  400: 2179/2263  600: -/2416  800: -/2540  1000: -/2682  1200: 2192/2682
+Bild 1: Maske alt 40250 neu 40300, verschieden 50 px
+    Fleck 45 px x 218-231 y 437-444, neu
+    Fleck 3 px x 280-283 y 457-458, neu
+    Fleck 2 px x 289-291 y 458-459, neu
+    alt {'iou': 0.9782, 'weiss_gedeckt': 0.983}
+    neu {'iou': 0.9784, 'weiss_gedeckt': 0.9831}
+Bild 2: Maske alt 48860 neu 48860, verschieden 0 px
+    alt {'iou': 0.9246, 'weiss_gedeckt': 0.9277}
+    neu {'iou': 0.9246, 'weiss_gedeckt': 0.9277}
+fertig

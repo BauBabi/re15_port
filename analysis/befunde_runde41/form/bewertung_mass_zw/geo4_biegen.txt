@@ -1,0 +1,75 @@
+
+========= A
+Ausgang Clip 2: Lochpixel 186 Zerfall 0 Massstab 0.062
+  1 huefte_r    +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  2 huefte_l    +-30 Grad: neue Lochpixel      4  zerfallene Richtungen  0
+  3 fr_ober     +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  4 fr_unter    +-30 Grad: neue Lochpixel      1  zerfallene Richtungen  0
+  5 fr_fuss     +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  6 fl_ober     +-30 Grad: neue Lochpixel      3  zerfallene Richtungen  0
+  7 fl_unter    +-30 Grad: neue Lochpixel      4  zerfallene Richtungen  0
+  8 fl_fuss     +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  9 rumpf_mitte +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+ 10 rumpf       +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+ 11 nl_ober     +-30 Grad: neue Lochpixel     29  zerfallene Richtungen  0
+ 12 nl_unter    +-30 Grad: neue Lochpixel      4  zerfallene Richtungen  0
+ 13 nl_hand     +-30 Grad: neue Lochpixel      3  zerfallene Richtungen  0
+ 14 nl_innen    +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+ 15 nl_daumen   +-30 Grad: neue Lochpixel      1  zerfallene Richtungen  0
+ 16 nr_ober     +-30 Grad: neue Lochpixel      9  zerfallene Richtungen  0
+ 17 nr_unter    +-30 Grad: neue Lochpixel      6  zerfallene Richtungen  0
+ 18 nr_hand     +-30 Grad: neue Lochpixel      4  zerfallene Richtungen  0
+ 19 nr_daumen   +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+ 20 hals        +-30 Grad: neue Lochpixel     50  zerfallene Richtungen  0
+ 21 kopf        +-30 Grad: neue Lochpixel     18  zerfallene Richtungen  0
+ 22 kiefer      +-30 Grad: neue Lochpixel      1  zerfallene Richtungen  0
+ Summe neue Lochpixel 141 Gelenke mit ueber 100: 0 Gelenke mit Zerfall: 0
+
+========= B
+Ausgang Clip 2: Lochpixel 31 Zerfall 0 Massstab 0.064
+  1 fl_ober     +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  2 fl_unter    +-30 Grad: neue Lochpixel      3  zerfallene Richtungen  0
+  3 fl_fuss     +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+  4 fl_zeh      +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+  5 fr_ober     +-30 Grad: neue Lochpixel      3  zerfallene Richtungen  6
+  6 fr_unter    +-30 Grad: neue Lochpixel      3  zerfallene Richtungen  0
+  7 fr_fuss     +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  8 fr_zeh      +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  9 rumpf_m     +-30 Grad: neue Lochpixel   3091  zerfallene Richtungen  0
+ 10 rumpf       +-30 Grad: neue Lochpixel   3740  zerfallene Richtungen  0
+ 11 nl_ober     +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+ 12 nl_unter    +-30 Grad: neue Lochpixel      3  zerfallene Richtungen  0
+ 13 nl_faust    +-30 Grad: neue Lochpixel      1  zerfallene Richtungen  0
+ 14 nl_innen    +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+ 15 maul_l      +-30 Grad: neue Lochpixel      1  zerfallene Richtungen  0
+ 16 nr_ober     +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+ 17 nr_unter    +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+ 18 nr_faust    +-30 Grad: neue Lochpixel      1  zerfallene Richtungen  0
+ 19 nr_innen    +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+ 20 maul_r      +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+ Summe neue Lochpixel 6858 Gelenke mit ueber 100: 2 Gelenke mit Zerfall: 1
+
+========= C
+Ausgang Clip 2: Lochpixel 35 Zerfall 0 Massstab 0.063
+  1 fr_huefte   +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  2 fr_bein     +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+  3 fr_fuss     +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+  4 fr_zeh      +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+  5 fl_huefte   +-30 Grad: neue Lochpixel     28  zerfallene Richtungen  0
+  6 fl_bein     +-30 Grad: neue Lochpixel     23  zerfallene Richtungen  0
+  7 fl_fuss     +-30 Grad: neue Lochpixel     21  zerfallene Richtungen  0
+  8 fl_zeh      +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+  9 rumpf_m     +-30 Grad: neue Lochpixel   2656  zerfallene Richtungen  0
+ 10 rumpf_v     +-30 Grad: neue Lochpixel   2857  zerfallene Richtungen  0
+ 11 nr_ober     +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+ 12 nr_unter    +-30 Grad: neue Lochpixel      3  zerfallene Richtungen  0
+ 13 nr_hand     +-30 Grad: neue Lochpixel      0  zerfallene Richtungen  0
+ 14 hals        +-30 Grad: neue Lochpixel      4  zerfallene Richtungen  0
+ 15 vorsprung   +-30 Grad: neue Lochpixel      5  zerfallene Richtungen  0
+ 16 nl_ober     +-30 Grad: neue Lochpixel      3  zerfallene Richtungen  0
+ 17 nl_kugel_o  +-30 Grad: neue Lochpixel      4  zerfallene Richtungen  0
+ 18 nl_kugel_u  +-30 Grad: neue Lochpixel      1  zerfallene Richtungen  0
+ 19 nl_unter    +-30 Grad: neue Lochpixel      5  zerfallene Richtungen  0
+ 20 kiefer      +-30 Grad: neue Lochpixel      2  zerfallene Richtungen  0
+ Summe neue Lochpixel 5620 Gelenke mit ueber 100: 2 Gelenke mit Zerfall: 0
+FERTIG

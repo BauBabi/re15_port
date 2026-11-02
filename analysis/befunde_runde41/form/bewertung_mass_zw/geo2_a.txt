@@ -1,0 +1,105 @@
+
+================== Kandidat A
+Geschlossenheit (offene Kanten, nicht-mannigfaltig, Komponenten, Dreiecke):
+  0 becken      rand   8  nm   0  komp  1  tri 258
+  1 huefte_r    rand   3  nm   0  komp  1  tri  93
+  2 huefte_l    rand   9  nm   0  komp  1  tri  59
+  3 fr_ober     rand   3  nm   0  komp  1  tri  75
+  4 fr_unter    rand   0  nm   0  komp  1  tri  84
+  5 fr_fuss     rand   5  nm   0  komp  1  tri 101
+  6 fl_ober     rand   3  nm   0  komp  1  tri  51
+  7 fl_unter    rand   5  nm   0  komp  1  tri  49
+  8 fl_fuss     rand   4  nm   0  komp  1  tri  64
+  9 rumpf_mitte rand   0  nm   0  komp  1  tri 188
+ 10 rumpf       rand   9  nm   0  komp  1  tri 313
+ 11 nl_ober     rand  10  nm   0  komp  1  tri  96
+ 12 nl_unter    rand  15  nm   4  komp  1  tri 111
+ 13 nl_hand     rand   3  nm   0  komp  1  tri 121
+ 14 nl_innen    rand   0  nm   0  komp  1  tri  76
+ 15 nl_daumen   rand   3  nm   0  komp  1  tri  51
+ 16 nr_ober     rand  12  nm   0  komp  1  tri  90
+ 17 nr_unter    rand   3  nm   0  komp  1  tri 141
+ 18 nr_hand     rand   8  nm   0  komp  1  tri 136
+ 19 nr_daumen   rand   8  nm   0  komp  1  tri  60
+ 20 hals        rand  15  nm   0  komp  1  tri  71
+ 21 kopf        rand   7  nm   0  komp  1  tri 241
+ 22 kiefer      rand   6  nm   0  komp  1  tri 118
+ Summe offene Kanten 139 Meshes offen 20 Komponenten 23
+Normalen {'median': 22.3, 'mittel': 26.8, 'p90': 54.6, 'ueber30': 0.358, 'ueber60': 0.065, 'ueber90': 0.002}
+Transparenz {'farben': 210, 'loch_indizes': [], 'anteil': 0.0}
+Versenkt je Knochen (Anteil der Oberflaeche im Rest, ohne Eltern und Kinder): Clip 0 / 1 / 2
+  0 becken      0.08 0.08 0.07
+  1 huefte_r    0.00 0.00 0.00
+  2 huefte_l    0.03 0.04 0.03
+  3 fr_ober     0.00 0.00 0.00
+  4 fr_unter    0.00 0.00 0.00
+  5 fr_fuss     0.00 0.00 0.00
+  6 fl_ober     0.41 0.44 0.42
+  7 fl_unter    0.20 0.19 0.18
+  8 fl_fuss     0.00 0.00 0.00
+  9 rumpf_mitte 0.00 0.05 0.01
+ 10 rumpf       0.03 0.03 0.03
+ 11 nl_ober     0.09 0.10 0.13
+ 12 nl_unter    0.01 0.01 0.01
+ 13 nl_hand     0.00 0.00 0.00
+ 14 nl_innen    0.36 0.33 0.34
+ 15 nl_daumen   0.02 0.03 0.04
+ 16 nr_ober     0.12 0.14 0.04
+ 17 nr_unter    0.05 0.02 0.05
+ 18 nr_hand     0.00 0.00 0.00
+ 19 nr_daumen   0.15 0.12 0.12
+ 20 hals        0.21 0.15 0.22
+ 21 kopf        0.31 0.24 0.21
+ 22 kiefer      0.52 0.61 0.48
+Gruppen-Durchstossung (Anteil Oberflaeche, tiefster Punkt):
+ Clip 0 {'TORSO in KOPF': (0.017, 213.0), 'TORSO in FR': (0.015, 229.0), 'TORSO in FL': (0.033, 227.0), 'TORSO in NL': (0.013, 279.0), 'TORSO in NR': (0.011, 189.0), 'KOPF in TORSO': (0.463, 287.0), 'KOPF in NL': (0.016, 47.0), 'KOPF in NR': (0.046, 196.0), 'FR in TORSO': (0.106, 273.0), 'FL in TORSO': (0.31, 239.0), 'NL in TORSO': (0.08, 330.0), 'NL in KOPF': (0.007, 77.0), 'NL in NR': (0.006, 49.0), 'NR in TORSO': (0.122, 311.0), 'NR in KOPF': (0.044, 236.0), 'NR in NL': (0.01, 52.0)}
+ Clip 1 {'TORSO in KOPF': (0.017, 203.0), 'TORSO in FR': (0.015, 238.0), 'TORSO in FL': (0.04, 235.0), 'TORSO in NL': (0.013, 281.0), 'TORSO in NR': (0.022, 165.0), 'KOPF in TORSO': (0.386, 323.0), 'KOPF in NL': (0.005, 59.0), 'KOPF in NR': (0.027, 143.0), 'FR in TORSO': (0.107, 273.0), 'FL in TORSO': (0.321, 217.0), 'NL in TORSO': (0.08, 326.0), 'NL in KOPF': (0.004, 37.0), 'NR in TORSO': (0.169, 272.0), 'NR in KOPF': (0.019, 151.0)}
+ Clip 2 {'TORSO in KOPF': (0.017, 207.0), 'TORSO in FR': (0.015, 236.0), 'TORSO in FL': (0.032, 238.0), 'TORSO in NL': (0.014, 285.0), 'TORSO in NR': (0.012, 205.0), 'KOPF in TORSO': (0.339, 327.0), 'KOPF in NL': (0.045, 91.0), 'KOPF in NR': (0.014, 158.0), 'FR in TORSO': (0.11, 272.0), 'FL in TORSO': (0.3, 255.0), 'NL in TORSO': (0.079, 310.0), 'NL in KOPF': (0.018, 93.0), 'NL in NR': (0.006, 53.0), 'NR in TORSO': (0.126, 287.0), 'NR in KOPF': (0.015, 195.0), 'NR in NL': (0.01, 56.0)}
+Sichtbare Pixel je Knochen (Z-Puffer): Bild 1, Bild 2, verdeckt in beiden = beide 0
+  0 becken          16   2948
+  1 huefte_r      1439   3763
+  2 huefte_l         0      0
+  3 fr_ober        934   1840
+  4 fr_unter      2071   3731
+  5 fr_fuss        498    722
+  6 fl_ober          0      0
+  7 fl_unter         7   1557
+  8 fl_fuss          0    565
+  9 rumpf_mitte    352   9936
+ 10 rumpf         9530   7611
+ 11 nl_ober       3727    175
+ 12 nl_unter      1704    387
+ 13 nl_hand       1538    458
+ 14 nl_innen      2287   1178
+ 15 nl_daumen      634    249
+ 16 nr_ober       1020   1851
+ 17 nr_unter      2305   1823
+ 18 nr_hand       2346   1591
+ 19 nr_daumen      111      0
+ 20 hals          2294   1616
+ 21 kopf          1791    905
+ 22 kiefer         704     15
+Dicke: quer, Tiefe (Bild1) | quer, Tiefe (Bild2) | Hauptachsen
+  0 becken      [2007, 1908]  1282 | [1234, 1972]  2015 | [2412, 2140, 1301]
+  1 huefte_r    [878, 834]   832 | [774, 877]   895 | [1210, 929, 875]
+  2 huefte_l    [937, 954]   849 | [878, 964]   967 | [1270, 1060, 1017]
+  3 fr_ober     [855, 789]   836 | [814, 810]   925 | [1147, 910, 893]
+  4 fr_unter    [648, 1261]   783 | [796, 1218]   782 | [1778, 829, 789]
+  5 fr_fuss     [779, 586]   741 | [738, 590]   711 | [926, 819, 681]
+  6 fl_ober     [863, 1064]   844 | [888, 1019]   846 | [1338, 1009, 994]
+  7 fl_unter    [687, 1584]   824 | [954, 1558]   740 | [2341, 837, 826]
+  8 fl_fuss     [668, 556]   728 | [677, 603]   676 | [899, 760, 691]
+  9 rumpf_mitte [2243, 1988]  1696 | [1351, 2154]  2377 | [3170, 2577, 1504]
+ 10 rumpf       [2228, 1949]  1510 | [1163, 2068]  2310 | [2703, 2274, 1321]
+ 11 nl_ober     [1001, 1276]   961 | [976, 1249]  1013 | [1681, 1128, 1028]
+ 12 nl_unter    [862, 823]   825 | [918, 738]   834 | [1234, 871, 686]
+ 13 nl_hand     [703, 709]   621 | [572, 725]   704 | [897, 772, 666]
+ 14 nl_innen    [552, 1149]   791 | [720, 1202]   560 | [1668, 690, 617]
+ 15 nl_daumen   [463, 446]   606 | [593, 449]   470 | [762, 541, 524]
+ 16 nr_ober     [685, 1273]   817 | [1127, 1054]   748 | [1589, 834, 757]
+ 17 nr_unter    [843, 756]   943 | [909, 804]   824 | [1163, 962, 736]
+ 18 nr_hand     [724, 605]   687 | [671, 645]   716 | [917, 730, 675]
+ 19 nr_daumen   [325, 366]   405 | [398, 380]   333 | [502, 451, 346]
+ 20 hals        [878, 1135]  1161 | [1136, 1180]   838 | [1696, 1007, 896]
+ 21 kopf        [535, 575]   681 | [583, 568]   669 | [843, 648, 612]
+ 22 kiefer      [447, 473]   479 | [432, 465]   487 | [610, 509, 504]
