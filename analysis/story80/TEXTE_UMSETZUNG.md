@@ -210,3 +210,9 @@ Aufnahme (`op_message_on`, Stimmen-Riegel).
   unter den neuen Untertiteln: 30E1 main02/03, 30C1 main02..05, 6030 main01, main03, main05, main07, main08, main11,
   main12. Für 6030 main21..26 gibt es noch keine Datei (die Zeilen bleiben stumm, `[voice] ... keine Aufnahme`).
 - r41/annette: Integrationsstelle Abschnitt 5.
+
+### 6.3 Folgeanpassung ausserhalb der Spur
+
+- `unit_r37_sperre1050_elza50b1`: Der Sweep aller Elza-RDTs erwartete „Ada“ genau zweimal (30C1 msg 4 Marvin, msg 5
+  „Elza: Ada?“). Die kurze Fassung nennt Ada nicht mehr, Elza hört den Namen nie; erwartet jetzt 0. Das stützt 50B1
+  „It's a woman. She's dead.“ (Runde 37 #5): Elza kann die Tote nicht kennen.

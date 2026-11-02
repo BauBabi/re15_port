@@ -97,8 +97,9 @@ typedef struct {
 void re15_story_r36_install(uint16_t room_id);
 
 /* P4 am ENDE von re15_msg_load_room_block (msg_common.c): ersetzt die Nachrichten des Raums laut
- * Tabelle (Text + Dauer); seit Runde 41 ST80-T legt sie auch die neuen Dialog-Ids (DIALOG_NEU) ab. Muss NACH dem Laden laufen — der Tuer-Weg laedt die Tabelle erst nach
- * scd_room_reenter (room_common.c Schritt 7 vs. 11) und ueberschreibt dabei die Ids 0..n-1. */
+ * Tabelle (Text + Dauer); seit Runde 41 ST80-T legt sie auch die neuen Dialog-Ids (DIALOG_NEU) ab.
+ * Muss NACH dem Laden laufen — der Tuer-Weg laedt die Tabelle erst nach scd_room_reenter
+ * (room_common.c Schritt 7 vs. 11) und ueberschreibt dabei die Ids 0..n-1. */
 void re15_story_r36_texte(uint16_t room_id);
 
 /* Tabelle (Tests/Abnahme). */

@@ -14,7 +14,8 @@
  *   luke       die Luecke selbst (Original-Daten): Gitter ROOM10F0 Slot 1 -> ROOM1090 Band 5, Absprung-Zelle
  *              ROOM1090 @0x01E3C Typwort 0x530E unter dem Steg, Hof-Tuer -> ROOM1050
  *   elza50b1   ROOM50B1 msg 0 nach dem Laden = neuer Text (Kopf/Trenner/Schwanz/Dauer = Original, Zeilen wie das
- *              Original); Sweep aller Elza-RDTs: "Ada" nur noch in ROOM30C1 msg 4 (Marvin) und msg 5 ("Elza: Ada?")
+ *              Original); Sweep aller Elza-RDTs: "Ada" in keiner Elza-Nachricht (bis Runde 40 nur ROOM30C1 msg 4/5;
+ *              seit Runde 41 ST80-T nennt die kurze Fassung von 30C1 Ada nicht mehr)
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -449,7 +450,9 @@ static void teil_elza50b1(void)
             free(r.buf);
         }
     PRUEF(raeume >= 90, "Sweep: %d Elza-RDTs geladen (Port-Lader + Overrides)", raeume);
-    PRUEF(treffer == 2 && unerlaubt == 0, "Sweep: \"Ada\" %d mal, nur ROOM30C1 msg 4 (Marvin) und msg 5 (Elza fragt nach)",
+    /* Runde 41 Spur ST80-T: die kurze Fassung von 30C1 (Nutzerentscheid) nennt Ada nicht mehr — msg 4 ist "A few. There are
+     * other survivors out there.", msg 5 "Then I hope they make it out." (re15_story80_r41.h). Elza hoert den Namen nie. */
+    PRUEF(treffer == 0 && unerlaubt == 0, "Sweep: \"Ada\" %d mal in Elza-Nachrichten (seit Runde 41 ST80-T keinmal)",
           treffer);
     PRUEF(alt_text == 0, "Sweep: \"It's Ada\" in keiner Elza-Nachricht mehr");
 }
