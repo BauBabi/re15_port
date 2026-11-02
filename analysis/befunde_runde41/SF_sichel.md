@@ -345,3 +345,168 @@ Offen:
 6. Im Gang zur Kamera wird das Video deutlich dunkler (Haut L 42), der Port nicht (L 60) - Licht, nicht Textur.
 7. PSX-Plattform: Feder-Kette nur im PC-Zeichner (main.c) eingehaengt; die zusaetzlichen CLUT-Zeilen 483-485 sind auf der
    PSX nicht geprueft.
+
+## Nachbesserung 2 (Auftrag 2026-11-02, fortlaufend)
+
+Auftrag: Haltung (geduckt statt aufrecht) und Kopf gegen Video 4, Schwanz-Ueberschwingen h38-h44, Tests, Paket-Gate,
+Fensterbelege Leon/Elza. Nutzer: "Ich glaube der Kopf von Birkin mit Tail ist noch nicht ganz akkurat im Vergleich zum Video".
+Basis 3799d7e94 (Datei EM30_HANGAR.EMD md5 371d431c...). Werkzeuge tools/r41_sichel/nb2/, Belege SF_belege/nb2/.
+
+### N2.1 Messgrundlage Umriss
+
+- Die automatische Trennung Figur/Hintergrund (BSS 50A Schnitt 12 per ECC-Homographie, Differenz, GrabCut) traegt nur fuer den
+  hellen Oberkoerper; die Beine im Schatten vor dem dunklen Tor und der grosse Bodenschatten sind davon nicht zu trennen
+  (Versuche seg1-seg4: Tor oder Schatten liefen in die Maske, Beine fehlten). Deshalb: Video-Umriss VON HAND nachgezeichnet
+  (tools/r41_sichel/nb2/spur.py: Videobild + verschiebungstolerante Hintergrund-Differenz nebeneinander, Lineale), Punkte in
+  SF_belege/nb2/umrisse_video.json fuer h0, h40, h64, h100, h116, h124 (n1350/1390/1414/1450/1466/1474). Unsicherheit an den
+  Beinen im Schatten ~5 Bildpunkte (640x480). h132 (n1482) liegt schon in der Abblende - nicht nachgezeichnet.
+- Port-Umriss: tools/r41_sichel/nb2/portmaske.py (Buehne birkin_buehne, Pose der Messzeile) bzw. schnell.py (nur Umriss,
+  fillConvexPoly je Dreieck; IoU gegen die Buehnenmaske 0,91-0,93, Unterschied = Rueckseiten/transparente Texel).
+- Mass (messung.py): IoU, Hoehe x Breite, H/B; in den Haltebildern h40/h64 nur y >= 160 (oben haengt der Spider-Man).
+- Vorher (EM30_HANGAR 3799d7e94, Posen aus Lauf k2 = Szene wie gespielt):
+
+| h | IoU | IoU verschoben (dx,dy) | Video H x B (H/B) | Port H x B (H/B) |
+|---|---|---|---|---|
+| 0 | 0,354 | 0,493 (34,14) | 278 x 139 (2,00) | 295 x 223 (1,32) |
+| 40 | 0,394 | 0,498 (-40,-12) | 273 x 157 (1,74) | 287 x 255 (1,13) |
+| 64 | 0,399 | 0,496 (-40,-14) | 278 x 233 (1,19) | 285 x 249 (1,14) |
+| 100 | 0,294 | 0,406 (34,20) | 259 x 140 (1,85) | 301 x 241 (1,25) |
+| 116 | 0,389 | 0,420 (40,0) | 283 x 154 (1,84) | 325 x 257 (1,26) |
+| 124 | 0,461 | 0,474 (20,-14) | 300 x 191 (1,57) | 328 x 255 (1,29) |
+
+  Befund: der Port ist 10-40 Bildpunkte HOEHER und 20-100 Bildpunkte BREITER als das Video. Die Orchestrator-Lesart
+  "niedriger UND breiter" stimmt nur halb: niedriger ja, aber der Video-Umriss ist SCHMALER (H/B 1,6-2,0 gegen 1,1-1,3) -
+  Arme/Sichel/Klaue haengen im Video nah am Koerper, im Port stehen sie seitlich ab; nur die Beine stehen im Video breiter.
+
+### N2.2 Haltung (birkin_formen.py ducken(), GESTALTUNG nach Video 4)
+
+Video (von Hand abgelesen, spur.py/lupe.py; 640x480): h0 Fuesse x 345/430 (Abstand 85), Knie ~362/428, Hose y 283-318, oben 163;
+h40 Fuesse 308/430 (122), linkes Bein weit nach links gestreckt (Ausfallschritt zum Spider-Man), Hose schraeg 298-333;
+h64 Fuesse 291/429 (138); h100 Fuesse 346/431, Knie 360/422, Oberkoerper stark vorgebeugt, Kopf oben vorn; h116/h124 von
+vorn: Fuesse 356/433 bzw. 368/437, Knie weit, Schienbeine fast senkrecht, Arme nah am Rumpf. Port vorher: Fuesse 373/414
+(Abstand 41), Knie 378/412 gerade, Arme und Sichel stehen seitlich ab.
+Bau: ducken() auf ALLE Keyframes der EMR-Bank 0 (21 Clips: Stand, Gang, Angriffe, Griff/Wurf, Treffer; Baenke 1/2 sind
+Opfer-Clips des Spielers), gewichtet mit der Rumpf-Aufrichtung (liegend unveraendert): Becken tiefer, Fussgelenke behalten ihre
+Lage (+ Spreizung nach aussen) per Zwei-Glied-IK, Knie nach aussen, Bauch/Brust nach vorn, Oberarme halten anteilig ihre
+Weltdrehung und ruecken zur Mitte. Schwanz-Ruhelinie um denselben Winkel zurueckgedreht (haengt in der Welt wie vorher).
+Werte per Koordinatensuche (anpassen.py: Umriss-IoU nach Verschiebung gegen umrisse_video.json, Lage aus dem Video-Fusspunkt,
+Clip-Bild/Gier je Bild frei): becken 110, spreiz 340, knie_aussen 0,2, rumpf 3, brust 20, arm_halten 0,575, arm_innen 20.
+Breite (N2.2b): mit Haltung blieb Hoehe/Breite 1,47 gegen Video 1,70 -> Brust quer 1,30 -> 1,15, Arme in der Dicke 0,57 der
+alten Verdickung (Gitter: IoU gleich 0,667/0,665, H/B 1,65). Clip-Katalog aller 21 Clips vorher/nachher: keine kaputte Pose
+(Liegen/Aufstehen unveraendert). Fussgelenke: hoechstens 342 vom EM30-Ort (Spreizung 340), unit_birkin_formen prueft das.
+
+Messung (gleiche Kamera Schnitt 12; Port-Umriss = Buehne an der gespielten Pose der Messzeile, exakt; vorher Lauf v1 =
+exe 3799d7e94 + EMD 3799d7e94, nachher Lauf n2; Endstand-Laeufe v3/n6 messen dasselbe):
+
+| h | IoU vorher | IoU nachher | IoU verschoben vorher -> nachher | H/B Video | H/B vorher | H/B nachher |
+|---|---|---|---|---|---|---|
+| 0 | 0,354 | 0,699 | 0,493 -> 0,720 | 2,00 | 1,32 | 1,64 |
+| 40 | 0,394 | 0,479 | 0,498 -> 0,594 | 1,74 | 1,13 | 1,26 |
+| 64 | 0,399 | 0,478 | 0,496 -> 0,590 | 1,19 | 1,14 | 1,28 |
+| 100 | 0,294 | 0,558 | 0,406 -> 0,574 | 1,85 | 1,25 | 1,49 |
+| 116 | 0,389 | 0,577 | 0,420 -> 0,631 | 1,84 | 1,26 | 1,46 |
+| 124 | 0,461 | 0,547 | 0,474 -> 0,674 | 1,57 | 1,29 | 1,44 |
+| Mittel | 0,382 | 0,556 | 0,464 -> 0,630 | 1,70 | 1,23 | 1,43 |
+
+Hoehe x Breite (Bildpunkte 640x480) vorher 285-328 x 223-257, nachher 289-318 x 179-231, Video 259-300 x 139-233.
+Gegenprobe im echten Fenster (fenstermass.py: Fensterbild gegen den Engine-Hintergrund, Umriss verrauscht durch
+hautfarbene Teile vor der hellen Wand): Leon v3 -> n6 IoU 0,410 -> 0,483 (verschoben 0,475 -> 0,545), Elza e_v -> e2
+0,400 -> 0,499 (0,460 -> 0,554).
+Rest: in den Haltebildern h40/h64 steht Birkin im Video im weiten Ausfallschritt NACH LINKS (Fussmitte 25-30 Bildpunkte links
+vom Stand h0); das ist Lage/Schritt der Szene (Spur H), keine Haltung - im Port steht er weiter am Fusspunkt von h0.
+
+### N2.3 Spider-Man-Schrittgrenze (birkin_formen.c BF_SM_SCHRITT 600, PORT-WAHL)
+
+Mit der neuen Haltung wandert die Sichelhand beim Zugreifen (Clip 0x0B B3->B5) 860 statt 750 Einheiten; zusammen mit dem
+Griffknochen-Wechsel auf Clip 7 sprang der Spider-Man bei h13 803 Einheiten zurueck (unit_birkin_szenen: Grenze 700).
+Jetzt folgt er der Hand bis zum Wurf (h66) mit hoechstens 600 je Takt (Video-Ansprung h4..8 ~600 je Bild, N1.4); groesster
+Schritt im Unit-Riegel 600. Haltelage h16-h64 (Mitte der Hintergrund-Differenz oben links, PSX; spiderman.py, Laeufe v3/n6):
+Video x 108-143, vorher 129-141 (mittlerer Abstand 10,4), nachher 124-136 (9,7); y Video 53-64, vorher 59-74, nachher 62-75.
+
+### N2.4 Kopf (Nutzer: "der Kopf von Birkin mit Tail ist noch nicht ganz akkurat")
+
+Was das Video zeigt (Lupe 2-4x, kopfblatt.py; h0-h6 3/4 von vorn, h84-h100 Drehung, h104-h140 Gang zur Kamera):
+- h0/h3 (n1350/n1353): runde rote Kappe OBEN auf der Masse, x 355-390, y 163-185 (640x480), Median (107,55,58), p90
+  (149,82,86), r/g ~1,95; darunter ein dunkles Band, dann helle Schultern. h6 schon schwaecher (68,51,49).
+- h100 (n1450, Birkin dreht zur Kamera): rote Kuppe oben vorn, x 398-418, y 176-188, (109,59,64) / p90 (157,97,102).
+- h116/h124 (von vorn): helle Kuppe oben Mitte (x 386-400, y 152-172, (74-81,59-68,58-68), p90 (127-140,110-122,110-124)),
+  darunter roter senkrechter Streifen bis y ~235 ((65,37,35), r/g 1,85) = gesenktes Gesicht vor der Brust.
+- Messgroessen (kopfmass2.py, Port = sichtbare Bildpunkte von Mesh 9, Lage/Gier/Clip-Bild wie die Umriss-Anpassung):
+
+| | Video | Port vorher | Port nachher |
+|---|---|---|---|
+| Kopf-Oberkante unter Umriss-Oberkante (h0/h100/h116/h124) | 2 / 0 / 3 / 5 | 14 / 19 / 25 / 19 | 6 / 9 / 6 / 8 |
+| sichtbare Kopfbreite | 20-30 | 20-23 | 25-29 |
+| sichtbare Kopfflaeche (Bildpunkte) | - | 660-860 | 1200-1400 |
+| Kopf/Rumpf-Helligkeit (Gang h100-h124, Buehne) | 1,16-1,28 (N1.10) | 1,21-1,23 | 1,18-1,21 |
+
+Begruendung je Groesse:
+- LAGE (geaendert): in allen vier Ansichten sitzt die Kopfkuppe an der Oberkante des Umrisses; der Port hatte den Kopf 170
+  tief zwischen die Schultern gesetzt (Beta-Screenshots) - mit der geduckten Haltung waere er 31-39 Bildpunkte unter der
+  Oberkante verschwunden. Jetzt rel[9] (60, -180, 0) statt (60, 170, 0): 350 hoeher im Brustraum (Gitter ueber vor/hoch,
+  kopfmass2.py; nach vorn schieben senkt ihn wegen des vorgebeugten Rumpfs nur weiter ab).
+- GROESSE (nicht geaendert): sichtbare Breite im Video 20-30, im Port 20-29 - im Rahmen gleich; ein groesserer Kopf ist im
+  Video nicht belegt. Er wirkt jetzt groesser, weil er nicht mehr in der Brust steckt (sichtbare Flaeche ~1,7x).
+- FORM (nicht geaendert): bei 320x240 nicht trennbar (Kappe/Kuppe oben, Gesicht als roter Streifen) - keine neue Form erfunden.
+- FARBE: Zeile 485 x1,12 (114,57,55)/(167,129,125), weil der hoeher sitzende Kopf an der Buehne dunkler gegen den Rumpf wurde
+  (1,07-1,09); jetzt 1,18-1,21 wie in N1.10 abgeglichen.
+- Unsicher: ob die rote Kappe in h0 der Kopf oder die Wunde der rechten Schulter ist, ist bei 320x240 nicht entscheidbar; der
+  Befund "Kopf an der Oberkante" stuetzt sich deshalb auch auf h100 und die Vorderansichten h116/h124.
+Blatt: SF_belege/nb2/kopf_buehne_video_vorher_nachher.jpg (Buehne, Kopf-Mesh tuerkis) und die Fensterblaetter (N2.7).
+
+### N2.5 Schwanz: Ueberschwingen h38-h44 (birkin_formen.c k_schwanz_seite, PORT-WAHL nach Videomessung)
+
+schwanzbahn.py (Video = groesster roter Fleck unter der Huefte, Port = Schwanzspitze der Messzeile, PSX-x):
+
+| h | Video | vorher (v1) | nur Haltung (n2) | Endstand (n5) |
+|---|---|---|---|---|
+| 18-24 | 134-164 | 148 -> 115 | 135 -> 101 | 153 -> 120 |
+| 26-28 | 114-130 | 115-116 | 103-106 | 121-123 |
+| 30-34 | 162-186 | 162 / 201 / 223 | 152 / 184 / 215 | 158 / 181 / 204 |
+| 36-44 | 184-214 | 241 / 250 / 251 / 247 / 239 | 238 / 248 / 246 / 237 / 226 | 217 / 214 / 203 / 194 / 191 |
+| 46-48 | 205-213 | 232 / 226 | 216 / 209 | 195 / 203 |
+| 58-70 | 211-238 | 222-239 | 209-233 | 213-230 |
+
+Aenderung: Gegenvorgabe 1700 (zur Bild-linken Seite) h31-h43 ({30,0},{31,0},{34,1700},{39,1700},{43,0}) faengt den
+Federschwung nach der Freigabe ab; Vorgabe h16-h27 4000 -> 3300, weil die geduckte Haltung die Spitze 13-14 Bildpunkte weiter
+nach links brachte (n2) - damit liegt h18-h28 wieder bei vorher. Ueberschwingen h38-h44 von ~40 auf hoechstens 9 (h38 214 gegen
+205), danach h42-h46 bis 14 links vom Fleck. Lauf n3 (1800 ab h37) setzte zu spaet ein (h38 236) und schwang h44 auf 176.
+
+### N2.6 Labor 50E0/50F1
+
+Dieselbe Datei (re15_bf_labor_aktiv unveraendert), also dieselbe Haltung in allen Kampf-Clips. Video: am Pult (n440-n465)
+fuellt Birkin das Bild gruen und dunkel - massiger, nach vorn gebeugter Oberkoerper, nur qualitativ; auf dem Steg (n480-n590)
+~45 x 90 Bildpunkte, Beine als zwei helle Striche ab n540 auseinander, Arme nah am Rumpf. Blatt (Buehne, ROOM50E0 Schnitt 5,
+Clip 1 Bild 10, Lage = Rueckprojektion der Sohlen +-10 Bildpunkte, Kamera der 80%-Fassung weicht ab, N1 Abschnitt 1):
+SF_belege/nb2/labor_steg_buehne_video_vorher_nachher.jpg - nachher schmaler, Arme innen, Beine gespreizt wie im Video;
+Groesse/Lage nur grob vergleichbar. Echtes Fenster im Labor weiter nicht moeglich (Birkin wartet ausserhalb bis zum Pult).
+
+### N2.7 Echtes Fenster (Skill re15-port-visual-verify: eigene exe-Kopie, gdigrab hwnd der eigenen PID, kein AUTOSHOT /
+SOFTWARE_RENDER), Blaetter Video | vorher | nachher
+
+vorher = exe aus 3799d7e94 (git archive, eigener Bau im Scratch) + EMD 3799d7e94 (RE15_CD_ROOT auf eine Kopie), nachher =
+d287fce53-Stand. Laeufe Leon v3/n6 (50A0, 34 s inkl. Kampf), Elza e_v/e2 (50A1, RE15_TITLE_SHOT_CHAR=1).
+- ganzkoerper_leon_video_vorher_nachher.jpg, ganzkoerper_elza_video_vorher_nachher.jpg (h0/22/40/64/100/124)
+- szene_h0-h132_leon_video_vorher_nachher.jpg (jedes 6. Bild), kopf_leon_video_vorher_nachher.jpg (h0/46/100-132)
+- schwanz_h18-h66_leon_video_vorher_nachher.jpg, kampf_leon_vorher_nachher.jpg (KI-Kampf nach der Szene, gleiche Stelle
+  vor dem Schnitt 4->3: Gang/Angriff geduckt, keine kaputte Pose)
+- Buehne/Mass: umrisse_video_vorher_nachher.jpg (gelb Video von Hand, rot vorher, tuerkis nachher),
+  kopf_buehne_video_vorher_nachher.jpg, ganzkoerper_buehne_video_vorher_nachher.jpg, labor_steg_buehne_video_vorher_nachher.jpg
+- Daten: umrisse_video.json (Video-Umrisse), stoergroessen.json (Clip-Bild/Gier/Lage je Bild der Anpassung)
+
+### N2.8 Tests, Commits, offen
+
+Tests (PowerShell, msys64 vorn): -R "birkin|hangar|50a|spiderman|formen|r38_birkin|room50|sichel|schwanz" 21/21 gruen (601 s),
+darin unit_birkin_formen (neuer Keyframe-Vertrag), unit_birkin_szenen (groesster Schritt 600), unit_schwanz_r41,
+integration_r41_sichel_form, integration_r41_birkin_pistole.
+Paket-Gate: release/make_package.sh prueft EM30_HANGAR.EMD zusaetzlich gegen den Pin release/em30_hangar.sha256 (Gegenprobe mit
+der 3799d7e94-Datei: die). Generator deterministisch (zweimal erzeugt, gleiche sha256 d6932b22...).
+Commits: 41112385c (Modell/Haltung/Kopf/Test/Gate), d287fce53 (Szene: Schwanz, Spider-Man-Schritt), Dossier/Werkzeuge danach.
+Offen:
+1. Haltebilder h40/h64: im Video ein weiter Ausfallschritt nach links (Fussmitte 25-30 Bildpunkte links); Port steht am Fleck
+   (Lage/Schritt der Szene, kein Haltungs-Parameter) - IoU dort 0,48 statt 0,55-0,70.
+2. H/B nachher 1,43 gegen Video 1,70: die Sichel haengt im Port weiter seitlich als im Video; Sichel-Laenge/Haltung nicht
+   geaendert (T2 im Rahmen bestaetigt), ein staerkeres arm_innen kostete IoU.
+3. Kopfform/Gesicht bei 320x240 nicht bestimmbar (N2.4); ob die rote Kappe in h0 Kopf oder Schulterwunde ist, offen.
+4. Schwanz h42-h46 jetzt bis 14 Bildpunkte links vom Video-Fleck (vorher bis 40 rechts).
+5. Labor nur an der Buehne (N2.6); PSX-Plattform ungeprueft (Feder-Kette und CLUT-Zeilen nur PC, wie N1).
