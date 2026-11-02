@@ -58,15 +58,28 @@ FORMEN = {
     'hangar': dict(
         datei='EM30_HANGAR.EMD',
         titel='Birkin Hangar-Form',
+        # Runde 41 SF N2: Brust quer (z) 1,30 -> 1,15 und Arme in der Dicke 1,30-1,40 -> 1,17-1,23 (Anteil 0,57 der alten
+        # Verdickung). Video 4 (von Hand nachgezeichnete Umrisse, SF_belege/nb2) ist schmaler als die Form: Hoehe/Breite
+        # Video 1,70 im Mittel (h0/40/64/100/116/124), Port mit Haltung 1,47; Gittersuche (tools/r41_sichel/nb2/anpassen.py
+        # form_variante): IoU gleich (0,667 -> 0,665), H/B 1,65. Schultern/Arme stehen im Video nicht seitlich ab.
         skal={
             7:  (1.15, 1.10, 1.15),
-            8:  (1.30, 1.25, 1.30),
+            8:  (1.30, 1.25, 1.15),
             9:  (1.05, 1.05, 1.05),
-            10: (1.35, 1.12, 1.35), 11: (1.40, 1.12, 1.40), 12: (1.30, 1.15, 1.30),
-            13: (1.35, 1.12, 1.35), 14: (1.40, 1.12, 1.40), 15: (1.30, 1.15, 1.30),
+            10: (1.20, 1.12, 1.20), 11: (1.229, 1.12, 1.229), 12: (1.171, 1.15, 1.171),
+            13: (1.20, 1.12, 1.20), 14: (1.229, 1.12, 1.229), 15: (1.171, 1.15, 1.171),
         },
-        rel={9: (60, 170, 0)},
+        # Runde 41 SF N2 (Kopf): vorher (60, 170, 0) = Kopf 170 tiefer zwischen die Schultern (Beta-Screenshots). Video 4
+        # zeigt die rote/helle Kopfkuppe AN der Oberkante des Umrisses (h0 2, h100 0, h116 3, h124 5 Bildpunkte darunter;
+        # Port vorher 14-25, mit der geduckten Haltung 31-39) -> Kopf 350 hoeher im Brustraum (Gittersuche
+        # tools/r41_sichel/nb2/kopfmass2.py: dy -1/8/8/4). Groesse unveraendert (sichtbare Breite Video 20-30, Port 19-23).
+        rel={9: (60, -180, 0)},
         tint=None,
+        # Runde 41 SF N2 (Haltung): geduckt, breitbeinig, Oberkoerper vor, Arme naeher am Koerper - fuer ALLE Clips der Bank 0
+        # (ducken()). Werte = Koordinatensuche gegen die von Hand nachgezeichneten Video-Umrisse h0/h40/h64/h100/h116/h124
+        # (SF_belege/nb2/umrisse_video.json; tools/r41_sichel/nb2/anpassen.py, Lage aus dem Video-Fusspunkt, Clip-Bild/Gier je
+        # Bild frei): IoU nach Verschiebung 0,585 -> 0,667. GESTALTUNG, keine RE-Werte.
+        ducken=dict(becken=110, spreiz=340, knie_aussen=0.2, rumpf=3, brust=20, kopf=0, arm_halten=0.575, arm_innen=20),
         # Nutzerhinweis 2026-10-30: "Die Hangar-Form hat auch direkt einen Tail am Ruecken."
         # Runde 41 Spur SF, Nutzerurteil 2026-11-02 "Der Schwanz ist viel zu starr": der Schwanz ist jetzt eine
         # eigene Kette aus 7 Knochen (16-22), angehaengt an Knochen 8 (Brust), Lage der Ruhegestalt wie bisher
@@ -136,7 +149,9 @@ FORMEN = {
                     # Erster Stand (110,62,60)/(200,165,160), Schwellen 93/126: im Fenster blassrosa (Lauf k1). Gittersuche an der
                     # Buehne (Gang Clip 1 B34, Kopf = Differenz mit/ohne Mesh 9): (120,60,58)/(175,135,132) 109/140 -> r/g 1,55,
                     # 42 % kraeftig rot, Kopf/Rumpf 1,41; x0,85 fuer Kopf/Rumpf ~1,2 wie das Video.
-                    dict(aus=0, l0=109, l1=140, dunkel=(102, 51, 49), hell=(149, 115, 112))],
+                    # Runde 41 SF N2: Kopf 350 hoeher -> Kopf/Rumpf an der Buehne (Gang h100-h124) 1,07-1,09 statt 1,2 (Video
+                    # 1,11-1,28) -> beide Farben x1,12.
+                    dict(aus=0, l0=109, l1=140, dunkel=(114, 57, 55), hell=(167, 129, 125))],
         ),
     ),
 }
@@ -803,6 +818,92 @@ def _welt(skel, rel, lokal, wurzel):
     return R, T
 
 
+def _rx(grad):
+    a = np.radians(grad)
+    return np.array([[1, 0, 0], [0, np.cos(a), -np.sin(a)], [0, np.sin(a), np.cos(a)]])
+
+
+def _beine_ik(H, A, L1, L2, pol):
+    """Zwei-Glied-IK: Huefte H, Ziel A (Fussgelenk), Laengen L1/L2, Knie zur Seite pol. Rueckgabe Knie, Ziel (geklemmt)."""
+    d_vec = A - H
+    d = float(np.linalg.norm(d_vec))
+    d_kl = float(np.clip(d, abs(L1 - L2) + 1.0, L1 + L2 - 1.0))
+    u = d_vec / max(d, 1e-9)
+    A = H + u * d_kl
+    a = (L1 * L1 - L2 * L2 + d_kl * d_kl) / (2 * d_kl)
+    h = np.sqrt(max(0.0, L1 * L1 - a * a))
+    w = pol - (pol @ u) * u
+    w = w / max(np.linalg.norm(w), 1e-9)
+    return H + u * a + w * h, A
+
+
+def ducken(emr, p):
+    """Runde 41 SF Nachbesserung 2 (GESTALTUNG nach Video 4, keine RE-Werte): geduckte, breitbeinige Haltung fuer ALLE
+    Keyframes der EMR-Bank 0 (Stand, Gang, Angriffe, Griff/Wurf; die Baenke 1/2 sind Opfer-Clips des Spielers und bleiben).
+    Je Keyframe, gewichtet mit der Aufrichtung des Rumpfs a = R7[1,1] (Anteil w = (a - 0,35)/0,45 in [0,1]; liegend -> 0,
+    damit Niederschlag/Tod/Aufstehen nicht durch den Boden knicken):
+      Becken     um becken*w tiefer (Wurzel-Y des Keyframes, Y zeigt nach unten)
+      Beine      Fussgelenke behalten ihre Lage im Modellraum (Gangbild, Bodenkontakt) und ruecken je spreiz*w nach aussen
+                 (Beckenquerachse waagerecht); Oberschenkel/Schienbein per Zwei-Glied-IK, Knie zur Seite des alten Knies
+                 + knie_aussen x Aussenrichtung; Fuss behaelt seine Weltdrehung (flach wie im Clip)
+      Rumpf      Bauch (7) um rumpf*w Grad, Brust (8) um brust*w Grad nach vorn (Drehung um Z im Elternraum)
+      Kopf       (9) um kopf*w Grad (Z, im Brustraum)
+      Arme       Oberarme (10, 13) behalten zum Anteil arm_halten ihre alte Weltdrehung (haengen trotz vorgebeugtem Rumpf)
+                 und ruecken um arm_innen*w Grad zur Koerpermitte (Drehung um X im Brustraum)."""
+    emr = bytearray(emr)
+    s = EA.emr_parse(bytes(emr))
+    nb, ks, kf_off = s.bone_count, s.kf_size, u16(emr, 2)
+    rel = [np.array(r, float) for r in s.rel]
+    L1, L2 = float(np.linalg.norm(rel[2])), float(np.linalg.norm(rel[3]))
+    beine = ((1, 2, 3, -1.0), (4, 5, 6, 1.0))         # Knochen 1-3 rechts (rel z -229), 4-6 links
+    for k in range(s.kf_count):
+        o = kf_off + k * ks
+        sk = EA.Skel(); sk.kf_size, sk.kf_data = ks, bytes(emr[o:o + ks])
+        lokal = [EA.mat_euler(*EA.kf_angles(sk, 0, b)).astype(float) / 4096 for b in range(nb)]
+        wurzel = np.array(EA.kf_pos(sk, 0), float)
+        R0, T0 = _welt(s, rel, lokal, wurzel)
+        w = float(np.clip((R0[7][1, 1] - 0.35) / 0.45, 0.0, 1.0))
+        if w <= 0.0:
+            continue
+        neu = list(lokal)
+        wurzel1 = wurzel + np.array([0.0, p['becken'] * w, 0.0])
+        # Rumpf, Kopf
+        neu[7] = _rz(p['rumpf'] * w) @ neu[7]
+        neu[8] = _rz(p['brust'] * w) @ neu[8]
+        neu[9] = _rz(p.get('kopf', 0.0) * w) @ neu[9]
+        # Beine
+        quer = R0[0][:, 2].copy(); quer[1] = 0.0
+        quer = quer / max(np.linalg.norm(quer), 1e-9)
+        vorn = R0[0][:, 0].copy()
+        R1, T1 = _welt(s, rel, neu, wurzel1)
+        for hb, kb, fb, seite in beine:
+            H = T1[hb]
+            A = T0[fb] + quer * seite * p['spreiz'] * w
+            u0 = T0[fb] - T0[hb]; u0 = u0 / max(np.linalg.norm(u0), 1e-9)
+            pol0 = (T0[kb] - T0[hb]) - ((T0[kb] - T0[hb]) @ u0) * u0
+            pol0 = pol0 / np.linalg.norm(pol0) if np.linalg.norm(pol0) > 1e-3 * L1 else vorn
+            pol = pol0 + quer * seite * p['knie_aussen'] * w
+            K, A = _beine_ik(H, A, L1, L2, pol)
+            ey = np.array([0.0, 1.0, 0.0])
+            Wo = _min_rot(R0[hb] @ ey, K - H) @ R0[hb]
+            Wu = _min_rot(R0[kb] @ ey, A - K) @ R0[kb]
+            neu[hb] = R1[0].T @ Wo
+            neu[kb] = Wo.T @ Wu
+            neu[fb] = Wu.T @ R0[fb]
+        # Arme: Weltdrehung zum Anteil arm_halten behalten, dann zur Mitte
+        R1, T1 = _welt(s, rel, neu, wurzel1)
+        for ab, innen in ((10, -1.0), (13, 1.0)):     # 10 links (rel z +), 13 rechts (rel z -)
+            folgt = R1[8] @ lokal[ab]
+            alt = R0[8] @ lokal[ab]
+            W = folgt @ _exp(p['arm_halten'] * _log(folgt.T @ alt))
+            neu[ab] = _rx(innen * p['arm_innen'] * w) @ (R1[8].T @ W)
+        struct.pack_into('<h', emr, o + 2, int(max(-32768, min(32767, round(wurzel1[1])))))
+        for b in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13):
+            for i, wi in enumerate(_zerlege(neu[b])):
+                _bits_schreiben(emr, o + 12, b * 36 + i * 12, wi)
+    return bytes(emr)
+
+
 def _tiefster_punkt(R, T, verts):
     """Groesstes Y (Y zeigt nach unten) ueber alle Mesh-Vertices = Bodenkontakt."""
     return max(float((v @ R[b].T + T[b])[:, 1].max()) for b, v in verts.items())
@@ -927,7 +1028,15 @@ def baue(blob, form):
     if form.get('haltung'):
         umhalten(vor, d, md1, form['haltung'])
     emr0 = bytes(vor[emr_a:emr_e])
+    if form.get('ducken'):
+        emr0 = ducken(emr0, form['ducken'])
     kette = form.get('schwanz_kette')
+    if kette and form.get('ducken'):
+        # Runde 41 SF N2: die Ruhegestalt des Schwanzes haengt im Brustraum; Rumpf+Brust kippen um (rumpf+brust) Grad nach
+        # vorn -> Ruhelinie um denselben Winkel zurueckdrehen (um den Ansatz), damit er in der Welt haengt wie vorher.
+        g = -(form['ducken']['rumpf'] + form['ducken']['brust'])
+        p0 = np.array(kette['punkte'][0], float)
+        kette = dict(kette, punkte=[tuple(p0 + _rz(g) @ (np.array(q, float) - p0)) for q in kette['punkte']])
     if form.get('schwanz') or form.get('umtexturieren') or kette:
         meshes = md1_lesen(md1)
         if form.get('teilen'):

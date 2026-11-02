@@ -7,8 +7,9 @@
  * der EM30-KI und der Hangar-Szene (Knochen 15) laeuft:
  *   - re15_emd_parse_container liest die Datei,
  *   - Knochen 0-15 haben dieselben Eltern wie EM30, 16-22 bilden eine Kette ab Knochen 8,
- *   - Clip-Zahl und EDD sind byte-gleich; jeder Keyframe beginnt mit dem EM30-Keyframe (Wurzel, Spur,
- *     16 x 36 Bit), die Schwanzwinkel haengen dahinter und bewegen sich,
+ *   - Clip-Zahl und EDD sind byte-gleich; Keyframes: Nachbesserung 2 duckt Knochen 1-10/13 und senkt die Wurzel
+ *     (Becken 0, Unterarme/Haende 11/12/14/15, Wurzel x/z, Spur wie EM30, Fussgelenke bleiben bis auf die Spreizung),
+ *     die Schwanzwinkel haengen dahinter und bewegen sich,
  *   - Meshes 0-15: Topologie gleich, UVs gleich ausser den umtexturierten Teilen (Beine 1-6, Kopf 9,
  *     Sichel 15 nur CLUT); Meshes 16-22 zeigen nur in ihre eigenen Arrays,
  *   - Runde 41 SF Nachbesserung 1: Oberschenkel 1/4 an y 360 geteilt (kurze Hose; jedes alte Dreieck bleibt, jedes
@@ -16,6 +17,7 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  */
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +26,7 @@
 #include "re15_emd.h"
 #include "re15_ems.h"
 #include "re15_md1.h"
+#include "re15_skeleton.h"
 #include "re15_tim.h"
 
 static int fails = 0;
@@ -103,24 +106,78 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
           memcmp(s_form.anim.frames, s_basis.anim.frames,
                  sizeof(uint32_t) * (size_t)s_basis.anim.frame_count) == 0,
           "%s: EDD-Frames weichen von EM30 ab", name);
-    /* Keyframes: die ersten 84 Byte (Wurzel + Spur + 16 x 36 Bit) byte-gleich mit EM30, dahinter die
-     * Schwanzwinkel. Nur die vom EDD referenzierten Keyframes (keyframe_count reicht bis zum Blobende). */
+    /* Keyframes (Runde 41 SF Nachbesserung 2, birkin_formen.py ducken(): geduckte Haltung nach Video 4):
+     *   - Wurzel x/z und Spur (Byte 6-11) byte-gleich mit EM30; Wurzel-Y nur tiefer (0..BECKEN, Y nach unten),
+     *   - Becken (0), Unterarme/Haende (11, 12, 14, 15) mit EM30-Winkeln (Klaue, Sichel, Griffpunkt Knochen 15),
+     *   - Fussgelenke (Ursprung Knochen 3/6, Modellraum) bleiben bis auf die Spreizung (<= SPREIZ + 40) liegen
+     *     -> Bodenkontakt und Gangbild der EM30-Clips bleiben,
+     *   - mehr als die Haelfte der Keyframes ist tatsaechlich geduckt (Wurzel >= 50 tiefer),
+     *   - dahinter die Schwanzwinkel, die sich bewegen.
+     * Nur die vom EDD referenzierten Keyframes (keyframe_count reicht bis zum Blobende). */
     {
+        enum { BECKEN = 110, SPREIZ = 340 };   /* birkin_formen.py FORMEN['hangar'] ducken becken/spreiz */
         int kn = s_basis.anim.last_keyframe_index + 1;
         int ka = s_basis.skel.keyframe_size_bytes, kb = s_form.skel.keyframe_size_bytes;
         CHECK(kb >= 12 + (s_form.skel.bone_count * 36 + 7) / 8 && kb % 4 == 0,
               "%s: Keyframe-Groesse %d zu klein fuer %d Knochen", name, kb, s_form.skel.bone_count);
-        int abw = 0, bewegt = 0;
+        int bewegt = 0, geduckt = 0, wurzel_abw = 0, winkel_abw = 0, fuss_weg = 0;
+        double fuss_max = 0;
         const uint8_t *k0 = s_form.skel.keyframe_data;
+        static const int fest[] = { 0, 11, 12, 14, 15 };
         for (int k = 0; k < kn; k++) {
             const uint8_t *a = s_basis.skel.keyframe_data + (size_t)k * ka;
             const uint8_t *b = s_form.skel.keyframe_data + (size_t)k * kb;
-            abw += memcmp(a, b, (size_t)ka) != 0;
+            int16_t ax, ay, az, bx, by, bz;
+            re15_emd_get_keyframe_position(&s_basis.skel, k, &ax, &ay, &az);
+            re15_emd_get_keyframe_position(&s_form.skel, k, &bx, &by, &bz);
+            wurzel_abw += (ax != bx || az != bz || by < ay || by > ay + BECKEN || memcmp(a + 6, b + 6, 6) != 0);
+            geduckt += by >= ay + 50;
+            for (size_t i = 0; i < sizeof fest / sizeof fest[0]; i++) {
+                int16_t w0[3], w1[3];
+                re15_emd_get_keyframe_angles(&s_basis.skel, k, fest[i], &w0[0], &w0[1], &w0[2]);
+                re15_emd_get_keyframe_angles(&s_form.skel, k, fest[i], &w1[0], &w1[1], &w1[2]);
+                winkel_abw += memcmp(w0, w1, sizeof w0) != 0;
+            }
+            /* Fussgelenke im Modellraum: Wurzel + R0 (rel1 + R1 (rel2 + R2 rel3)) mit der Port-RotMatrix */
+            for (int bein = 0; bein < 2; bein++) {
+                double p[2][3];
+                for (int s = 0; s < 2; s++) {
+                    const re15_emd_skeleton_t *sk = s ? &s_form.skel : &s_basis.skel;
+                    int16_t px, py, pz; re15_emd_get_keyframe_position(sk, k, &px, &py, &pz);
+                    double R[9] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 }, t[3] = { px, py, pz };
+                    const int kette[4] = { 0, 1 + 3 * bein, 2 + 3 * bein, 3 + 3 * bein };
+                    for (int j = 0; j < 4; j++) {
+                        int bb = kette[j];
+                        if (j > 0) for (int r = 0; r < 3; r++)
+                            t[r] += R[r * 3] * sk->bone_relative_pos[bb][0] + R[r * 3 + 1] * sk->bone_relative_pos[bb][1] +
+                                    R[r * 3 + 2] * sk->bone_relative_pos[bb][2];
+                        if (j == 3) break;
+                        int16_t ex, ey, ez; int32_t m[9]; double M[9];
+                        re15_emd_get_keyframe_angles(sk, k, bb, &ex, &ey, &ez);
+                        re15_skel_euler_matrix(ex, ey, ez, m);
+                        double Rn[9];
+                        for (int q = 0; q < 9; q++) M[q] = m[q] / 4096.0;
+                        for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++)
+                            Rn[r * 3 + c] = R[r * 3] * M[c] + R[r * 3 + 1] * M[3 + c] + R[r * 3 + 2] * M[6 + c];
+                        memcpy(R, Rn, sizeof R);
+                    }
+                    memcpy(p[s], t, sizeof t);
+                }
+                double dx = p[1][0] - p[0][0], dy = p[1][1] - p[0][1], dz = p[1][2] - p[0][2];
+                double d = sqrt(dx * dx + dy * dy + dz * dz);
+                if (d > fuss_max) fuss_max = d;
+                fuss_weg += d > SPREIZ + 40;
+            }
             bewegt += memcmp(b + ka, k0 + ka, (size_t)(kb - ka)) != 0;
         }
-        CHECK(abw == 0, "%s: %d Keyframes weichen in Knochen 0-15 von EM30 ab", name, abw);
+        CHECK(wurzel_abw == 0, "%s: %d Keyframes mit Wurzel x/z/Spur anders oder Becken ausserhalb 0..%d", name, wurzel_abw,
+              BECKEN);
+        CHECK(winkel_abw == 0, "%s: %d Winkel der Knochen 0/11/12/14/15 weichen von EM30 ab", name, winkel_abw);
+        CHECK(fuss_weg == 0, "%s: %d Fussgelenke mehr als %d vom EM30-Ort (max %.0f)", name, fuss_weg, SPREIZ + 40, fuss_max);
+        CHECK(geduckt > kn / 2, "%s: nur %d von %d Keyframes geduckt", name, geduckt, kn);
         CHECK(bewegt > kn / 2, "%s: Schwanz starr (%d von %d Keyframes anders als Keyframe 0)", name, bewegt, kn);
-        fprintf(stderr, "%s: %d von %d Keyframes mit bewegtem Schwanz\n", name, bewegt, kn);
+        fprintf(stderr, "%s: %d von %d Keyframes geduckt, Fussgelenk max %.0f vom EM30-Ort, %d mit bewegtem Schwanz\n",
+                name, geduckt, kn, fuss_max, bewegt);
     }
 
     long geaendert = 0, uv_neu = 0;

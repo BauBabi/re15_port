@@ -4066,7 +4066,7 @@ endforeach()
 #     Nachbildung aus tools/birkin_formen.py (nicht byte-true). Der Test haelt fest, dass Knochen 0-15,
 #     EDD und Keyframe-Anfaenge gleich EM30 sind und die Schwanzkette (Knochen 16-22, Runde 41 Spur SF) sich bewegt.
 add_executable(test_birkin_formen test_birkin_formen.c)
-target_link_libraries(test_birkin_formen PRIVATE re15_engine m)
+target_link_libraries(test_birkin_formen PRIVATE re15_engine re15_test_support m)   # re15_skel_euler_matrix (Fussgelenk-Pruefung N2)
 target_include_directories(test_birkin_formen PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_birkin_formen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
