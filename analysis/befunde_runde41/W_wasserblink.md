@@ -415,11 +415,11 @@ und `abnahme2/wa2_blitz.py`. Jeder Lauf setzt zusaetzlich `RE15_FX_LOG` und `RE1
   unit_r41_wasserblink_werkzeug, unit_r41_tropfen und integration_r41_wasserblink_leon/_elza/_gegen/_tropfen_leon/_tropfen_elza.
   Die Laeufe leon/elza zeigen weiter "flacker: 120 Bilder, 0 von 119 Wechseln > 8".
 * Nachbarschaft (Wasser, STAGE2; ctest `-R "r41_ventilkette|nachtrag30|wasser20b0|r38_wasser|wasserlauf|wassersprung|stage2|room2000"`
-  `-j 3`, 45 Tests). Beim Commit waren **43/45 gruen, keiner rot**. Darunter sind unit_r41_ventilkette (ROOM2000-Strahlen,
+  `-j 3`, 45 Tests): **45/45 gruen**, "100% tests passed, 0 tests failed out of 45" (8173 s). Darunter sind unit_r41_ventilkette (ROOM2000-Strahlen,
   Leiter), integration_r41_nachtrag30_wasser/_laden/_schrank/_panel (Leon und Elza), integration_r41_wasser20b0 und _npc,
   integration_r38_wasser/_wasserzombie, integration_r41_masken36_stage2, integration_r41_ventilkette/_b/_alarm/_kette/_weg
-  sowie alle unit_r38_wasser_* und unit_r41_wasser20b0_*. Die beiden letzten, integration_r41_ventilkette_weg_elza und _sperre
-  (RUN_SERIAL, je bis 1700 s), liefen beim Commit noch.
+  sowie alle unit_r38_wasser_* und unit_r41_wasser20b0_*. Zuletzt liefen integration_r41_ventilkette_weg_elza (1829 s) und
+  _sperre (324 s), beide gruen. Der Code-Commit 9fceaa57b nennt noch den Zwischenstand 43/45.
 
 ## Fuer den Nutzer
 
