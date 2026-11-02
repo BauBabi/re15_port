@@ -42,7 +42,9 @@ set(_fehler "")
 function(laut_mitschnitt _name _prozent)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
-    file(WRITE "${WORKDIR}/opt.cfg" "volume=${_prozent}\nsound=stereo\n")
+    if(NOT "${_prozent}" STREQUAL "fehlt")    # Spur N, N-E2: "fehlt" = Options-Datei angegeben, aber nicht da -> Standard 50
+        file(WRITE "${WORKDIR}/opt.cfg" "volume=${_prozent}\nsound=stereo\n")
+    endif()
     re15_start_spiel(_rv 400
         SDL_ASSERT=always_ignore RE15_WINDOW_SCALE=1 RE15_NO_INTRO=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
@@ -68,14 +70,18 @@ endfunction()
 
 laut_mitschnitt(v100 100)
 laut_mitschnitt(v50 50)
+laut_mitschnitt(vfehlt fehlt)
 if(EXISTS "${_basis}_v100/cap.raw" AND EXISTS "${_basis}_v50/cap.raw")
-    # RMS(50)/RMS(100) in Promille: soll 500 +- 5 (Integer-Shift >> 15, gleiche Sample-Zahl).
-    execute_process(COMMAND "${RE15_TOOL}" rms_vergleich "${_basis}_v100/cap.raw" "${_basis}_v50/cap.raw" 500 5
-                    WORKING_DIRECTORY "${_basis}_v100" TIMEOUT 300 RESULT_VARIABLE _rp OUTPUT_VARIABLE _op)
-    message(STATUS "r41_kleinkram_a_lautstaerke: ${_op}")
-    if(NOT _rp EQUAL 0)
-        set(_fehler "${_fehler}\n[rms] ${_op}")
-    endif()
+    # Spur N, N-E2: Verstaerkung (Wert/100)^2 -> RMS(50)/RMS(100) = 0,25 in Promille: soll 250 +- 5 (Integer-Shift >> 15, gleiche
+    # Sample-Zahl). Ohne Options-Datei (angegeben, aber nicht da, also kein Messhaken) dasselbe: Standard 50.
+    foreach(_v v50 vfehlt)
+        execute_process(COMMAND "${RE15_TOOL}" rms_vergleich "${_basis}_v100/cap.raw" "${_basis}_${_v}/cap.raw" 250 5
+                        WORKING_DIRECTORY "${_basis}_v100" TIMEOUT 300 RESULT_VARIABLE _rp OUTPUT_VARIABLE _op)
+        message(STATUS "r41_kleinkram_a_lautstaerke ${_v}: ${_op}")
+        if(NOT _rp EQUAL 0)
+            set(_fehler "${_fehler}\n[rms ${_v}] ${_op}")
+        endif()
+    endforeach()
     # Mindestpegel: ein Mitschnitt ohne Ton waere trivial halbiert.
     execute_process(COMMAND "${RE15_TOOL}" rms "${_basis}_v100/cap.raw"
                     WORKING_DIRECTORY "${_basis}_v100" TIMEOUT 300 RESULT_VARIABLE _rr OUTPUT_VARIABLE _or)

@@ -23,7 +23,7 @@
 #   E3 Gegenprobe: dasselbe mit Bit 106 (Pult geloest) -> Original sub02: Frage msg 0 -> Ja -> Kisten obj 1 m0 -17700
 #      (@0x02244), Cut 4 (@0x02270), obj 5 y -5000 (@0x02290) = das Kisten-Raetsel bleibt nach dem Pult loesbar.
 #   E4 Elza (ROOM2051): E2 mit Elza.
-#   F  Punkt 2 vorher: Bruecken-Pult 2030 (Ring (350,-9500) Blick -z) ohne Bit 101 -> 2030_pult_ohne, Text 40, keine
+#   F  Punkt 2 vorher: Bruecken-Pult 2030 (Ring (350,-9500) Blick -z) ohne Bit 101 -> 2030_panel_ein, Frage 40, Panel, CROSS verlaesst (Spur N, Nachtrag 37), keine
 #      Fahrt (kein Cut_chg(4), kein Member_set der Planke obj 0). Spinnen als "schon getoetet" ueber ihre Kill-Bits
 #      (Sce_em_set pc[7] 0x9b/0x9c/0x9d @0x01C18/@0x01C2C/@0x01C40, EM-Status-Gate FUN_800420a0 @0x80042120-38).
 #   G  Punkt 4: ROOM20B0 nach der Szene ((3,235) = Set @0x01FBC) mit Bits 103 + 100 -> Leiter Slot 4 (@0x019E2) ist die
@@ -204,16 +204,18 @@ _muss("${_dbg}" "Spieler-Familie PL04" e4 "Elza gewaehlt")
 _muss("${_dbg}" "loaded room2051.rdt" e4 "ROOM2051 geladen")
 _kisten_gesperrt(e4 2051)
 
-# ---- F: Bruecken-Pult 2030 ohne Ventil 13 = Text 40, keine Fahrt ----------------------------------------------
+# ---- F: Bruecken-Pult 2030 ohne Druck (Bit 101) = Frage 40 -> Panel-Raetsel (Spur N, Nachtrag 37), CROSS verlaesst, keine Fahrt ------
 _lauf(f 240 ${_leon}
       RE15_DEBUG_JUMP=2030@240 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157"
-      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W4,A0.1,W4,A0.1,W3"
-      "RE15_EXIT_AT=700#2030")
+      RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,X0.1,W2"
+      "RE15_EXIT_AT=1000#2030")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Bruecke obj 0 oben y -5400, Zelle 12 gesperrt" f "Bruecke oben")
-_muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 24 -> Port-Programm 2030_pult_ohne" f "Aktion am Pult ohne Ventil 13")
-_muss("${_dbg}" "[msgtext] room=2030 id=40" f "Text 40 (Druck null, Ventil 13 zu)")
-_darf_nicht("${_dbg}" "Cut_chg(4)" f "keine Fahrt-Kamera ohne Ventil 13")
-_darf_nicht("${_dbg}" "obj=0x00 m=1" f "keine Endlage der Planke ohne Ventil 13")
+_muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 24 -> Port-Programm 2030_panel_ein" f "Aktion am Pult ohne Druck")
+_muss("${_dbg}" "[msgtext] room=2030 id=40 \"A control panel for the bridge. Will you operate the panel?\"" f "Frage 40")
+_muss("${_dbg}" "[panel2030] offen: A 100 B 0 C 0" f "Panel offen")
+_muss("${_dbg}" "[panel2030] Abbruch" f "CROSS verlaesst")
+_darf_nicht("${_dbg}" "Cut_chg(4)" f "keine Fahrt-Kamera ohne Druck")
+_darf_nicht("${_dbg}" "obj=0x00 m=1" f "keine Endlage der Planke ohne Druck")
 _muss("${_dbg}" "EXIT_AT: Bild" f "Endbild erreicht")
 
 # ---- G: 20B0 nach der Szene: Leiter -> 2050 -----------------------------------------------------------------

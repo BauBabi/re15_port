@@ -1,0 +1,73 @@
+163 Modelle
+=== M1 mesh 0: V=86 T=14 Q=72 Box [-248. -839. -583.]..[831. 361. 417.]
+   Abstand   274.2 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | RE2 k31 mesh 1 V=76 T=80 Q=30
+   Abstand   323.1 | Anteil M1 nahe 0.12 | Anteil Kand. nahe 0.56 | RE2 k31 mesh 0 V=18 T=6 Q=13
+   Abstand   351.9 | Anteil M1 nahe 0.02 | Anteil Kand. nahe 0.11 | RE2 k30 mesh 0 V=18 T=6 Q=13
+   Abstand   360.2 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | RE2 k3A mesh 1 V=94 T=45 Q=48
+   Abstand   365.0 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc0 S1263 mesh 0 V=34 T=6 Q=29
+   Abstand   365.0 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc1 S1266 mesh 0 V=34 T=6 Q=29
+   Abstand   365.0 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Mod0 S1261 mesh 0 V=34 T=6 Q=29
+   Abstand   365.0 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Mod1 S1265 mesh 0 V=34 T=6 Q=29
+   hoechste Teilabdeckung (Anteil M1 < 6 Einheiten an einem Kandidaten):
+   Anteil 0.12 Gegenanteil 0.56 | RE2 k31 mesh 0 V=18 T=6 Q=13
+   Anteil 0.02 Gegenanteil 0.11 | RE2 k30 mesh 0 V=18 T=6 Q=13
+   Anteil 0.01 Gegenanteil 0.05 | Disc0 S1521 mesh 5 V=21 T=8 Q=9
+   Anteil 0.01 Gegenanteil 0.05 | Disc1 S1524 mesh 5 V=21 T=8 Q=9
+   Anteil 0.01 Gegenanteil 0.05 | Disc0 S1521 mesh 2 V=21 T=8 Q=9
+   Anteil 0.01 Gegenanteil 0.05 | Disc1 S1524 mesh 2 V=21 T=8 Q=9
+   Anteil 0.00 Gegenanteil 0.00 | RE2 k31 mesh 1 V=76 T=80 Q=30
+   Anteil 0.00 Gegenanteil 0.00 | RE2 k3A mesh 1 V=94 T=45 Q=48
+=== M1 mesh 7: V=3 T=1 Q=0 Box [0. 0. 0.]..[0. 0. 0.]
+   Abstand     3.5 | Anteil M1 nahe 1.00 | Anteil Kand. nahe 1.00 | Mod0 S1922 mesh 1 V=3 T=1 Q=0
+   Abstand     3.5 | Anteil M1 nahe 1.00 | Anteil Kand. nahe 1.00 | Mod0 S1922 mesh 2 V=3 T=1 Q=0
+   Abstand     3.5 | Anteil M1 nahe 1.00 | Anteil Kand. nahe 1.00 | Mod0 S1922 mesh 3 V=3 T=1 Q=0
+   Abstand     3.5 | Anteil M1 nahe 1.00 | Anteil Kand. nahe 1.00 | Mod0 S1922 mesh 4 V=3 T=1 Q=0
+   Abstand     3.5 | Anteil M1 nahe 1.00 | Anteil Kand. nahe 1.00 | Mod0 S1922 mesh 5 V=3 T=1 Q=0
+   Abstand     3.5 | Anteil M1 nahe 1.00 | Anteil Kand. nahe 1.00 | Mod0 S1922 mesh 6 V=3 T=1 Q=0
+   Abstand     3.5 | Anteil M1 nahe 1.00 | Anteil Kand. nahe 1.00 | Mod1 S1924 mesh 1 V=3 T=1 Q=0
+   Abstand     3.5 | Anteil M1 nahe 1.00 | Anteil Kand. nahe 1.00 | Mod1 S1924 mesh 2 V=3 T=1 Q=0
+   hoechste Teilabdeckung (Anteil M1 < 6 Einheiten an einem Kandidaten):
+   Anteil 1.00 Gegenanteil 1.00 | Mod0 S1922 mesh 1 V=3 T=1 Q=0
+   Anteil 1.00 Gegenanteil 1.00 | Mod0 S1922 mesh 2 V=3 T=1 Q=0
+   Anteil 1.00 Gegenanteil 1.00 | Mod0 S1922 mesh 3 V=3 T=1 Q=0
+   Anteil 1.00 Gegenanteil 1.00 | Mod0 S1922 mesh 4 V=3 T=1 Q=0
+   Anteil 1.00 Gegenanteil 1.00 | Mod0 S1922 mesh 5 V=3 T=1 Q=0
+   Anteil 1.00 Gegenanteil 1.00 | Mod0 S1922 mesh 6 V=3 T=1 Q=0
+   Anteil 1.00 Gegenanteil 1.00 | Mod1 S1924 mesh 1 V=3 T=1 Q=0
+   Anteil 1.00 Gegenanteil 1.00 | Mod1 S1924 mesh 2 V=3 T=1 Q=0
+=== M1 mesh 15: V=84 T=74 Q=40 Box [-346.    3. -197.]..[ 497. 2041.  483.]
+   Abstand   197.1 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | RE2 k31 mesh 5 V=61 T=58 Q=30
+   Abstand   272.5 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc0 S1263 mesh 12 V=52 T=32 Q=26
+   Abstand   272.5 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc1 S1266 mesh 12 V=52 T=32 Q=26
+   Abstand   272.5 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Mod0 S1261 mesh 12 V=52 T=32 Q=26
+   Abstand   272.5 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Mod1 S1265 mesh 12 V=52 T=32 Q=26
+   Abstand   275.9 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc0 S1263 mesh 14 V=27 T=24 Q=13
+   Abstand   275.9 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc0 S1374 mesh 14 V=27 T=24 Q=13
+   Abstand   275.9 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc1 S1266 mesh 14 V=27 T=24 Q=13
+   hoechste Teilabdeckung (Anteil M1 < 6 Einheiten an einem Kandidaten):
+   Anteil 0.01 Gegenanteil 0.06 | Disc0 S105 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Disc0 S210 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Disc1 S105 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Disc1 S210 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Mod0 S105 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Mod0 S210 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Mod1 S105 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Mod1 S210 mesh 11 V=17 T=6 Q=11
+=== M1 mesh 16: V=84 T=74 Q=40 Box [-346.    3. -197.]..[ 497. 2041.  483.]
+   Abstand   197.1 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | RE2 k31 mesh 5 V=61 T=58 Q=30
+   Abstand   272.5 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc0 S1263 mesh 12 V=52 T=32 Q=26
+   Abstand   272.5 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc1 S1266 mesh 12 V=52 T=32 Q=26
+   Abstand   272.5 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Mod0 S1261 mesh 12 V=52 T=32 Q=26
+   Abstand   272.5 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Mod1 S1265 mesh 12 V=52 T=32 Q=26
+   Abstand   275.9 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc0 S1263 mesh 14 V=27 T=24 Q=13
+   Abstand   275.9 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc0 S1374 mesh 14 V=27 T=24 Q=13
+   Abstand   275.9 | Anteil M1 nahe 0.00 | Anteil Kand. nahe 0.00 | Disc1 S1266 mesh 14 V=27 T=24 Q=13
+   hoechste Teilabdeckung (Anteil M1 < 6 Einheiten an einem Kandidaten):
+   Anteil 0.01 Gegenanteil 0.06 | Disc0 S105 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Disc0 S210 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Disc1 S105 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Disc1 S210 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Mod0 S105 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Mod0 S210 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Mod1 S105 mesh 11 V=17 T=6 Q=11
+   Anteil 0.01 Gegenanteil 0.06 | Mod1 S210 mesh 11 V=17 T=6 Q=11

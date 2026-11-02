@@ -10,12 +10,12 @@
 #   A  ROOM2030 per Debug-Sprung, RE15_PLAYER_POS (-2650,7280) Blick +z Band 1 = am Sued-Landeplatz vor Ventil 09, mit
 #      gesenkter Bruecke + Sicherung im Ventilkasten 2010 (Bits 101/102 + (9,125) = Bedingung der Nachtraege 9/16; (3,108)
 #      dazu, weil die Sicherung vorher aufgehoben wurde). Nachbesserung 5: nach jedem Ja die RE2-Dreh-Animation (RE2 ROOM1080
-#      sub08, 345 Takte) -> Wartezeit 450 statt 90; Zaehlerstart ~F4500, Ost-Tuer F4700. Nachbesserung 4
-#      (Nachtrag 13): die richtige Folge 09/07/02/01 zu Fuss (RE15_WEGPLAN, Plan _ventile unten: Sued, Sued, Steg, Nord, Nord),
-#      nach der vierten Drehung "RICHTIG" -> Ereignis 26 -> Warnung 46 -> Marker -> Zaehler. F4700 RE15_FIRE_AOT=0 (die
+#      sub08, 345 Takte) -> Wartezeit 450 statt 90; Zaehlerstart ~F4696, Ost-Tuer F4896. Nachbesserung 4
+#      (Nachtrag 13): die richtige Folge 09/02/01/08 zu Fuss (RE15_WEGPLAN, Plan _ventile unten: Sued, Sued, Steg, Nord, Nord),
+#      nach der vierten Drehung "RICHTIG" -> Ereignis 26 -> Warnung 46 -> Marker -> Zaehler. F4896 RE15_FIRE_AOT=0 (die
 #      umgelenkte Ost-Tuer feuert ueber den echten Tuerpfad) -> ROOM20B0 geladen, "Zaehler lief beim Verlassen" (Bits 103 +
 #      100), Ende 60 Bilder nach der Ankunft in 20B0 (der Bildzaehler g_engine.frame_count beginnt je Raum neu - Wegplan-Log
-#      und RE15_EXIT_AT "#raum" zaehlen je Raum; die Framedumps F4440/F4560/F4680 liegen darum in 2030 und werden in 20B0
+#      und RE15_EXIT_AT "#raum" zaehlen je Raum; die Framedumps F4636/F4756/F4876 liegen darum in 2030 und werden in 20B0
 #      nicht ueberschrieben). Gemessen 2026-10-24 (Messlauf nb5 v2bc, Plan wie _ventile):
 #      die Wegplan-WARTE ruht waehrend der Animation (player_mode 2: je Ja 795 statt 450 Bilder), Warnung zu F4483, Countdown
 #      sichtbar ab F4500 (Bildausschnitt x 230..286 y 20..36 Mittel Rot 68 statt 15 davor).
@@ -32,7 +32,7 @@
 #      Schliessen, Tod 125 +- 2 Bilder nach dem Flutbeginn, Blende, Wasser -6300 / Spieler -5400.
 #      Nachbesserung 1 (Abnahme 0, M4): C laeuft im BESCHLEUNIGTEN Renderer (direct3d/opengl, wie beim Nutzer), weil SDLs
 #      Software-Renderer die subtraktive Blende ABR 2 nicht kann. Die Farbe der Bildmitte wird an Framedumps je 6 Bilder im
-#      Fenster F6300..F6594 gemessen (das Todesbild haengt vom Weg ab; Nachbesserung 4 F3650, Nachbesserung 5 F6408): der letzte Dump <= Tod - 4 und der erste >= Tod + 5
+#      Fenster F6497..F6791 gemessen (das Todesbild haengt vom Weg ab; Nachbesserung 4 F3650, Nachbesserung 5 F6408, Spur N F6605): der letzte Dump <= Tod - 4 und der erste >= Tod + 5
 #      (Werkzeug test_r41_ventilkette ppm): vorher Rot und Gruen >= 15 (unverschleiert), nachher Rot und Gruen <= 4 und
 #      Blau >= 20 (Rot+Gruen abgezogen, Blau bleibt).
 #
@@ -97,18 +97,11 @@ function(_darf_nicht _text _wort _name _was)
     endif()
 endfunction()
 
-# Plan der richtigen Folge 09/07/02/01 (Kopf re15_ventilkette_r41.h "Ventil-RAEDER"; Spieler z 7280 Blick +z vor der
+# Plan der richtigen Folge 09/02/01/08 (Kopf re15_ventilkette_r41.h "Ventil-RAEDER"; Spieler z 7280 Blick +z vor der
 # Suedwand, z -7880 Blick -z vor der Nordwand; Steg ueber x -1050). Endet nach dem Wegdruecken der Warnung.
 set(_ventile "RAUM 2030
 WARTE 30
 GEHE -2650 7280 100
-BLICK 3072
-WARTE 10
-AKTION
-WARTE 150
-AKTION
-WARTE 450
-GEHE 2600 7280 100
 BLICK 3072
 WARTE 10
 AKTION
@@ -133,6 +126,17 @@ AKTION
 WARTE 150
 AKTION
 WARTE 450
+GEHE -1050 -7400 100
+GEHE -1050 -6400
+GEHE -1050 6000
+GEHE -1050 6900 100
+GEHE 400 7280 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 450
 AKTION
 WARTE 30
 ")
@@ -149,8 +153,8 @@ re15_start_spiel(_rva 600
     "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
     "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
     RE15_MSG_LOG=1
-    "RE15_FIRE_AOT=0@4700#2030"
-    "RE15_FRAMEDUMP=4440-4680/120:${WORKDIR}/f_"
+    "RE15_FIRE_AOT=0@4896#2030"
+    "RE15_FRAMEDUMP=4636-4876/120:${WORKDIR}/f_"
     "RE15_EXIT_AT=60#20B0"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -161,7 +165,7 @@ _muss("${_dbg}" "JUMP -> 203 TREATMENT POOL (ROOM2030)" a "Sprung nach 2030")
 _darf_nicht("${_dbg}" "[ventilkette41] ROOM2030: Bruecke obj 0 oben" a "mit Bit 102 steht die Bruecke unten")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 22 -> Port-Programm 2030_ventil_09" a "Aktion an Ventil 09 startet seine Frage")
 _muss("${_dbg}" "[msg] room=2030 id=55" a "Frage 55 (Ventil 09)")
-_muss("${_dbg}" "[ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut" a "richtige Folge nach der vierten Drehung")
+_muss("${_dbg}" "[ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehler, Flut" a "richtige Folge nach der vierten Drehung")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_flut" a "Ereignis 26 vom C-Takt")
 _muss("${_dbg}" "[msg] room=2030 id=46" a "Warnung 46")
 _muss("${_dbg}" "[msgtext] room=2030 id=46 \"WARNING: The water will rise in one minute. Please leave the room immediately!\"" a "Warnung 46 im Wortlaut des Nachtrags 19")
@@ -176,7 +180,7 @@ _muss("${_dbg}" "EXIT_AT: Bild" a "Endbild in ROOM20B0 erreicht")
 # Countdown der 60 s (Nachtrag 18 Punkt 4) in der Form der RE2-Anzeige (Nachbesserung 6, Abnahme 5 Mangel 2, Nachtrag 25 (p);
 # include/re15_ventilkette_r41.h "Countdown"): Bildvergleich RE2 <-> Port. Das Werkzeug "re2cd" baut RE2s Zeichner FUN_800318a4
 # EIGENSTAENDIG aus der RE2-TEX.TIM nach (14x14-Felder uv (c%18*14, c/18*14), x 104 + 14 i, y 32, CLUT 480 + 2*Farbe) und
-# verlangt, dass JEDES deckende Texel des Kandidaten im Framedump steht. F4440 (Warnung noch offen) = kein Treffer; F4560/F4680
+# verlangt, dass JEDES deckende Texel des Kandidaten im Framedump steht. F4636 (Warnung noch offen) = kein Treffer; F4756/F4876
 # = Treffer in Farbe 2 (Rot, unter 60 s @0x800260ec) mit genau dem Text, den RE2s Zaehler fuer dieses Bild zeigt: Bild k =
 # Framedump - erstes Countdown-Bild (Log "Countdown RE2-Form Bild 0 ... F<n>"), Sekunde 59 - k/30, dann 9 - (k%30)/3 und
 # 8 - 3*(k%3) (@0x800260b8..@0x800260d8, @0x80026188, @0x8002634c..@0x80026360). Gemessen 2026-10-25 (Messlauf nb6
@@ -218,12 +222,12 @@ function(_cd_soll _bild _out)
     endif()
     set(${_out} " 0^${_sek}=${_z}${_e}" PARENT_SCOPE)
 endfunction()
-_re2cd(4440 "")
-_cd_soll(4560 _t1)
-_cd_soll(4680 _t2)
-_re2cd(4560 "${_t1}")
-_re2cd(4680 "${_t2}")
-message(STATUS "r41_ventilkette[a]: RE2-Countdown erstes Bild F${_cd_f0}, F4560 \"${_t1}\", F4680 \"${_t2}\" (Bildvergleich RE2-Zeichner <-> Port gleich)")
+_re2cd(4636 "")
+_cd_soll(4756 _t1)
+_cd_soll(4876 _t2)
+_re2cd(4756 "${_t1}")
+_re2cd(4876 "${_t2}")
+message(STATUS "r41_ventilkette[a]: RE2-Countdown erstes Bild F${_cd_f0}, F4756 \"${_t1}\", F4876 \"${_t2}\" (Bildvergleich RE2-Zeichner <-> Port gleich)")
 
 # ---- B: 2000 Leiter = Sperrtext, kein Raumwechsel ------------------------------------------------------------
 set(WORKDIR "${_basis}_b")
@@ -252,7 +256,11 @@ _muss("${_dbgb}" "EXIT_AT: Bild" b "Endbild in ROOM2000 erreicht")
 # ---- C: 2030 Zaehler abgelaufen -> Flut ueber die Ringebene -> Ertrinken --------------------------------------
 set(WORKDIR "${_basis}_c")
 file(MAKE_DIRECTORY "${WORKDIR}")
-file(WRITE "${WORKDIR}/plan.txt" "${_ventile}GEHE -1900 -7700 80
+file(WRITE "${WORKDIR}/plan.txt" "${_ventile}GEHE -1050 6900 100
+GEHE -1050 6000
+GEHE -1050 -6400
+GEHE -1050 -7400 100
+GEHE -1900 -7700 80
 BLICK 2048
 WARTE 20
 AKTION
@@ -271,15 +279,15 @@ re15_start_spiel(_rvc 720
     "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
     "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
     RE15_MSG_LOG=1 RE15_FADE_LOG=1 RE15_STATE_LOG=state.txt
-    "RE15_FRAMEDUMP=6300-6594/6:${WORKDIR}/f_"
-    "RE15_EXIT_AT=6600#2030"
+    "RE15_FRAMEDUMP=6497-6791/6:${WORKDIR}/f_"
+    "RE15_EXIT_AT=6797#2030"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r41_ventilkette[c]: kein debug.log (exit=${_rvc}, ${WORKDIR})")
 endif()
 file(READ "${WORKDIR}/debug.log" _dbgc)
 _muss("${_dbgc}" "ABR2 (B-F) ok" c "Renderer mit subtraktiver Blende (ABR 2) - der Software-Renderer zeichnet die Ertrink-Blende deckend gelb (Nachbesserung 1, M4)")
-_muss("${_dbgc}" "[ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut" c "richtige Folge zu Fuss")
+_muss("${_dbgc}" "[ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehler, Flut" c "richtige Folge zu Fuss")
 _muss("${_dbgc}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_flut" c "Programm gestartet")
 _muss("${_dbgc}" "[msg] room=2030 id=46" c "Warnung 46 (Ja gewaehlt)")
 _muss("${_dbgc}" "[ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt" c "Zaehler gestartet")
@@ -350,15 +358,15 @@ function(_mittel _bild _out)
     endif()
     set(${_out} "${CMAKE_MATCH_1};${CMAKE_MATCH_2};${CMAKE_MATCH_3}" PARENT_SCOPE)
 endfunction()
-# Dumps je 6 Bilder ab F6300: der letzte <= Tod - 4 und der erste >= Tod + 5. Nachbesserung 5: vier Drehungen mit der RE2-
+# Dumps je 6 Bilder ab F6497: der letzte <= Tod - 4 und der erste >= Tod + 5. Nachbesserung 5: vier Drehungen mit der RE2-
 # Animation (je 345 Takte) verschieben alles um ~2760 Bilder. Gemessen 2026-10-25 00:24 (Riegel-Lauf lauf_da6c18d5_c):
 # Warnung zu F4482, Flut F6283 (+1801), Tod F6408 (+125); vorher (Nachbesserung 4, lauf_a8685a18_c) Tod F3650, Titel nach
-# F3911 (Tod + 261) -> Schranken wie damals Tod - 60 .. Tod + 180, Ende F6600 = obere Schranke + 12 (vor dem Titel).
-if(_f_tot LESS 6348 OR _f_tot GREATER 6588)
-    message(FATAL_ERROR "r41_ventilkette[c]: Todesbild F${_f_tot} ausserhalb F6348..F6588 (Dump-Fenster F6300..F6594, Ende F6600 vor dem Titel; Weg oder Zaehler veraendert?)")
+# F3911 (Tod + 261) -> Schranken wie damals Tod - 60 .. Tod + 180, Ende F6797 = obere Schranke + 12 (vor dem Titel).
+if(_f_tot LESS 6545 OR _f_tot GREATER 6785)
+    message(FATAL_ERROR "r41_ventilkette[c]: Todesbild F${_f_tot} ausserhalb F6545..F6785 (Dump-Fenster F6497..F6791, Ende F6797 vor dem Titel; Weg oder Zaehler veraendert?)")
 endif()
-math(EXPR _bild_vor "((${_f_tot} - 4 - 6300) / 6) * 6 + 6300")
-math(EXPR _bild_nach "((${_f_tot} + 5 - 6300 + 5) / 6) * 6 + 6300")
+math(EXPR _bild_vor "((${_f_tot} - 4 - 6497) / 6) * 6 + 6497")
+math(EXPR _bild_nach "((${_f_tot} + 5 - 6497 + 5) / 6) * 6 + 6497")
 _mittel(${_bild_vor} _rgb_vor)
 _mittel(${_bild_nach} _rgb_nach)
 list(GET _rgb_vor 0 _vr)
@@ -402,15 +410,11 @@ _darf_nicht("${_dbgd}" "[msg] room=2030 id=46" d "keine Warnung ohne Sicherung")
 _muss("${_dbgd}" "EXIT_AT: Bild" d "Endbild erreicht")
 
 # ---- E: Plakat waehrend des Zaehlers gesperrt, die Flut-Sperre bleibt bis zum Tod (Abnahme 4 Mangel 2) -------------
-# Ende F6450: Warnung zu ~F4482 und Flut ~F6283 wie C (gleicher Plan bis zur Warnung), Tod auf dem Landeplatz (y -1800) ~61
+# Ende F6647: Warnung zu ~F4679 und Flut ~F6480 wie C (gleicher Plan bis zur Warnung), Tod auf dem Landeplatz (y -1800) ~61
 # Bilder nach dem Flutbeginn (Abnahme 4 Lauf pk: Flut F3524 -> ERTRUNKEN F3585), Titel erst ~260 Bilder nach dem Tod.
 set(WORKDIR "${_basis}_e")
 file(MAKE_DIRECTORY "${WORKDIR}")
 file(WRITE "${WORKDIR}/plan.txt" "${_ventile}FLAG 5 29
-GEHE -1050 -7400 100
-GEHE -1050 -6400
-GEHE -1050 6000
-GEHE -1050 6900 100
 GEHE -3650 7280 100
 BLICK 3072
 WARTE 10
@@ -427,7 +431,7 @@ re15_start_spiel(_rve 720
     "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
     "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
     RE15_MSG_LOG=1
-    "RE15_EXIT_AT=6450#2030"
+    "RE15_EXIT_AT=6647#2030"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r41_ventilkette[e]: kein debug.log (exit=${_rve}, ${WORKDIR})")
@@ -459,4 +463,4 @@ _muss("${_dbge}" "EXIT_AT: Bild" e "Endbild erreicht")
 
 file(REMOVE "${_exe_kopie}")
 message(STATUS "r41_ventilkette: E (Plakat waehrend des Zaehlers gesperrt, Flut-Sperre bis zum Tod) bestanden")
-message(STATUS "r41_ventilkette: A (2030 richtige Folge 09/07/02/01 zu Fuss mit RE2-Dreh-Animation -> Warnung 46 (Nachtrag 19) -> Zaehler -> Ost-Tuer -> 20B0, Bits 103+100), B (Leiter 2000 = Text 40), C (Zaehler ${_d_zaehler} -> Flut -> tot nach ${_d_tod}, Blende ${_rgb_vor} -> ${_rgb_nach}) und D (ohne Kasten-Sicherung Text 49 \"It's locked.\", kein Zaehler) bestanden")
+message(STATUS "r41_ventilkette: A (2030 richtige Folge 09/02/01/08 zu Fuss mit RE2-Dreh-Animation -> Warnung 46 (Nachtrag 19) -> Zaehler -> Ost-Tuer -> 20B0, Bits 103+100), B (Leiter 2000 = Text 40), C (Zaehler ${_d_zaehler} -> Flut -> tot nach ${_d_tod}, Blende ${_rgb_vor} -> ${_rgb_nach}) und D (ohne Kasten-Sicherung Text 49 \"It's locked.\", kein Zaehler) bestanden")

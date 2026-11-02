@@ -163,6 +163,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: Hochziehen der Wasserzombies (Bank, Pose, Schatten) */
 #include "re15_gegner_r39.h"       /* Runde 39 Spur E: Gorilla-/Affen-Schatten auf +0x1ba (@0x80116f30 / @0x80110c78) */
 #include "re15_inventar_r39.h"  /* Runde 39 Spur C: Spind 1000, Stapeln, Status-Bild, Messschiene RE15_INV_LOG */
+#include "re15_gpu_grenze_r41.h"  /* Integration Q+R, Z2: GPU-Grenze fuer die ESP-Quader */
 #include "re15_parkplatz_r39.h" /* Runde 39 Spur O: Tuersperre ROOM11C0 (Boot-/CONTINUE-Weg, Messhaken RE15_R39O_*) */
 #include "re15_rbj_binder_r41.h" /* Runde 41 Spur J: Spieler-Record des RBJ-Marker-Binders FUN_8001b3f8 */
 
@@ -563,15 +564,25 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
             default: re15_render_pc_set_tri_alpha(128); break;   /* ABR0 = 0.5*B + 0.5*F */
             }
         }
+        /* Integration Q+R, Z2 (Dossier Q OFFEN 1, Entscheid des Orchestrators; Belege re15_gpu_grenze_r41.h): die Mitte ist die GTE-Ausgabe SXY2 (RTPS @0x80053534, SWC2 @0x8005354c, s6 = SX<<16
+         * @0x80053558), also gesaettigt auf -400h..+3FFh; die Ecken rechnet die CPU ohne Klemme. */
+        const int sx_gte = re15_gte_saettigen(sx), sy_gte = re15_gte_saettigen(sy);
         for (int q = 0; q < nspr; q++) {
             re15_esp_coord_t c;
             if (!bank || f->eff_idx < 0 ||
                 re15_esp_coord(bank, f->eff_idx, cstart + q, &c) != 0) break;
-            int x0 = sx + (int)(((int64_t)(int8_t)c.w * stepX) >> 16);
-            int y0 = sy + (int)(((int64_t)(int8_t)c.h * stepY) >> 16);
-            int x1 = sx + (int)((((int64_t)(int8_t)c.w * stepX) + w16) >> 16);
-            int y1 = sy + (int)((((int64_t)(int8_t)c.h * stepY) + h16) >> 16);
+            int x0 = sx_gte + (int)(((int64_t)(int8_t)c.w * stepX) >> 16);
+            int y0 = sy_gte + (int)(((int64_t)(int8_t)c.h * stepY) >> 16);
+            int x1 = sx_gte + (int)((((int64_t)(int8_t)c.w * stepX) + w16) >> 16);
+            int y1 = sy_gte + (int)((((int64_t)(int8_t)c.h * stepY) + h16) >> 16);
             if (x1 <= x0 || y1 <= y0) continue;
+            /* Z2: die GPU liest 11 Bit je Koordinate und zeichnet nichts ueber 1023 x 511 (psx-spx "Vertex", "Size Restriction"), in beiden Renderern gleich. ROOM20B0 F755..F767: Effekt 0x0f sub 7 kurz vor
+             * der Kamera, bis 16815 breit (Lauf int_qr/v1). */
+            if (re15_gpu_quad_verwerfen(&x0, &y0, &x1, &y1)) {
+                FILE *fg = pc_fx_log_handle();
+                if (fg) fprintf(fg, "   -> gpu-grenze q=%d (%d,%d) (%d,%d) verworfen F=%u\n", q, x0, y0, x1, y1, (unsigned)g_engine.frame_count);
+                continue;
+            }
             int u0 = c.u, v0 = c.v, u1 = c.u + S - ute, v1 = c.v + S - vte;
             /* clut_wort waehlt im Seiten-Slot die Palette (render_pc.c: Zeile - clut_base_y =
              * Stapel-Index); 0 = erste Palette (Altweg der Ein-Paletten-Blaetter).
@@ -3373,6 +3384,9 @@ int main(int argc, char *argv[])
     /* Phase 4.5.10-J: redirect stderr to debug.log so user can read
      * exact numerical state. */
     freopen("debug.log", "w", stderr);
+#if defined(_WIN32) && !defined(__ANDROID__)
+    { extern void re15_endgrund_r41_einrichten(void); re15_endgrund_r41_einrichten(); }   /* Runde 41 Spur Q: Absturz im debug.log (endgrund_r41_pc.c) */
+#endif
     setvbuf(stderr, NULL, _IONBF, 0);   /* unbuffered for live tail */
 
 #if defined(__ANDROID__)
@@ -7777,11 +7791,13 @@ re_title:;
                  * dritte, leere Wasserzone (Slot 4: x[-8900..-1700] z[-18100..-14500]),
                  * Spawn in deren Mitte. grid_id 0 (gerade) = Wasser-Start der byte-true
                  * KI-INIT (default water sub6, +0x1e0=1, Y=-1200 setzt die KI selbst);
-                 * em_flag_id 0xFF = kein Persist-Gate (Boss erscheint je Betreten).
+                 * em_flag_id 0xFF = kein Persist-Gate; bis Runde 41 erschien der Boss je Betreten, seit Spur Q nur,
+                 * solange er lebt (re15_gatorszene_r41_gator_kommt, Form RE2 ROOM40A0 @0x0054 / sub02 @0x00AE).
                  * Der Slot wird RUECKWAERTS gesucht, damit kein Script-Slot des Raums
                  * kollidiert; die RL-4-Schleife direkt darunter laedt die Bank mit
                  * (Typ 0x23 -> RE2-EM23-Modell, s. pc_enemy_load_ex). */
-                if (!getenv("RE15_KEIN_GATOR") && (g_current_room_id & 0xFFFEu) == 0x2090u) {
+                if (!getenv("RE15_KEIN_GATOR") && (g_current_room_id & 0xFFFEu) == 0x2090u &&
+                    re15_gatorszene_r41_gator_kommt()) {   /* Runde 41 Spur Q: tot bleibt tot */
                     int _hat = 0, _frei = -1;
                     for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
                         if (g_actors[_pi].active && g_actors[_pi].type == 0x23u) _hat = 1;
@@ -11115,6 +11131,8 @@ re_title:;
                 if (re15_itemorte_r38_verdeckt((uint16_t)g_current_room_id, active_cut_idx,
                                                (int)g_scd.props[pi].obj_id))
                     continue;   /* Runde 38 Spur K: Port-Gegenstand hinter maskenlosem Vordergrund (re15_itemorte_r38.h) */
+                { extern int re15_schrank2010_r41_verdeckt(uint16_t, int, int);   /* Runde 41 Spur N: Schrank 2010 nur unter Cut 3 (re15_schrank2010_r41.h) */
+                  if (re15_schrank2010_r41_verdeckt((uint16_t)g_current_room_id, active_cut_idx, (int)g_scd.props[pi].obj_id)) continue; }
                 int oid = (int)g_scd.props[pi].obj_id;
 #ifdef RE15_PROP_TRACE
                 { static int pn=0; if((pn++%60)==0)
@@ -11204,6 +11222,8 @@ re_title:;
                     } else {
                         memset(&lctx_prop, 0, sizeof(lctx_prop));
                     }
+                    { extern void re15_schrank2010_r41_licht(uint16_t, int, re15_actor_lightctx_t *);   /* Runde 41 Spur N: Schrank 2010 traegt sein Licht in der Textur */
+                      re15_schrank2010_r41_licht((uint16_t)g_current_room_id, oid, &lctx_prop); }
                     re15_blink_r41_lichtctx((uint16_t)g_current_room_id, oid, (unsigned)g_engine.frame_count, &lctx_prop);   /* Runde 41 Spur D: Helligkeitspuls aufnehmbarer Port-Gegenstaende (include/re15_blink_r41.h) */
 
                     /* ⛔ TIEFEN-KLEMME — PORT-ZUSATZ OHNE ORIGINAL-GEGENSTUECK (Runde 30, E2).

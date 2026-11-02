@@ -1,0 +1,785 @@
+ROOM3071.RDT  243908 B
+header: nSprite=0 nCut=13 nOmodel=4 nItem=0 nDoor=0 nRoom_at=0 reverb=0
+main_scd=0x3308 sub_scd=0x3404
+
+### main: 0x3308..0x3404, 1 Regionen
+
+=== main00  [file 0x330A..0x3404]  (250 B)
+  0x0330A (+0000) Door_aot_set     3b 00 02 31 00 00 f8 94 a4 ca b0 04 48 0d 06 9b 00 00 d4 9a a2 03 02 08 00 00 00 00 00 00 00 00  slot=0 sce=2 flags=0x31 floor=0 follow=0 rect=(-27400,-13660,1200,3400)
+  0x0332A (+0020) Door_aot_set     3b 01 02 31 00 00 44 cb 0c b3 98 08 b0 04 c4 9b 00 00 8e a9 80 01 02 0e 05 00 00 00 00 00 00 00  slot=1 sce=2 flags=0x31 floor=0 follow=0 rect=(-13500,-19700,2200,1200)
+  0x0334A (+0040) Ifel_ck          06 00 4c 00
+  0x0334E (+0044) Ck               21 04 4b 00  bank=4 bit=75 val=0
+  0x03352 (+0048) Obj_model_set    2d 00 00 00 01 00 8a 00 00 00 e6 97 82 fb 0e ca c0 0d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  obj=0x00 type=0 band=1 pos=(-26650,-1150,-13810) rot=(3520,0,0) box=c(0,0,0)h(0,0,0)
+  0x03374 (+006A) Obj_model_set    2d 01 00 00 01 00 8a 00 00 00 e6 97 36 f7 20 d1 00 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  obj=0x01 type=0 band=1 pos=(-26650,-2250,-12000) rot=(1280,0,0) box=c(0,0,0)h(0,0,0)
+  0x03396 (+008C) Else_ck          07 00 28 00
+  0x0339A (+0090) Obj_model_set    2d 00 00 00 01 00 08 00 00 00 72 9b 00 00 0e ca e0 0b 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  obj=0x00 type=0 band=1 pos=(-25742,0,-13810) rot=(3040,0,0) box=c(0,0,0)h(0,0,0)
+  0x033BC (+00B2) Nop              00
+  0x033BD (+00B3) Nop              00
+  0x033BE (+00B4) Obj_model_set    2d 02 00 00 01 00 08 00 00 00 88 96 e6 f1 3e d1 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  obj=0x02 type=0 band=1 pos=(-27000,-3610,-11970) rot=(0,0,0) box=c(0,0,0)h(0,0,0)
+  0x033E0 (+00D6) Obj_model_set    2d 03 00 00 01 00 08 00 00 00 88 96 0a 00 3e d1 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  obj=0x03 type=0 band=1 pos=(-27000,10,-11970) rot=(2048,0,0) box=c(0,0,0)h(0,0,0)
+  0x03402 (+00F8) Evt_end          01 00
+
+### sub: 0x3404..0x3E24, 18 Regionen
+
+=== sub00  [file 0x3428..0x350A]  (226 B)
+  0x03428 (+0000) Ifel_ck          06 00 42 00
+  0x0342C (+0004) Ck               21 04 4b 00  bank=4 bit=75 val=0
+  0x03430 (+0008) Set              22 01 00 00  bank=1 bit=0 val=0
+  0x03434 (+000C) Sce_em_set       44 00 30 21 00 00 00 ff b8 8e 00 00 b6 d1 00 00 00 00 00 00
+  0x03448 (+0020) Set              22 01 00 01  bank=1 bit=0 val=1
+  0x0344C (+0024) Aot_set          2c 02 03 31 00 00 6e 97 ca db ce 04 f6 04 ff 00 18 02 00 00  slot=2 sce=3 flags=0x31 floor=0 follow=0 rect=(-26770,-9270,1230,1270)
+  0x03460 (+0038) Aot_reset        46 00 01 31 0f 00 ff ff 00 00  slot=0 sce=1 flags=0x31 p=(15,65535,0)
+  0x0346A (+0042) Else_ck          07 00 9e 00
+  0x0346E (+0046) Ifel_ck          06 00 34 00
+  0x03472 (+004A) Ck               21 04 ef 00  bank=4 bit=239 val=0
+  0x03476 (+004E) Set              22 01 00 00  bank=1 bit=0 val=0
+  0x0347A (+0052) Sce_em_set       44 00 30 10 00 00 00 ff cc a2 00 00 50 ce 00 00 00 00 00 00
+  0x0348E (+0066) Set              22 01 00 01  bank=1 bit=0 val=1
+  0x03492 (+006A) Aot_reset        46 00 01 31 0f 00 ff ff 00 00  slot=0 sce=1 flags=0x31 p=(15,65535,0)
+  0x0349C (+0074) Sce_bgm_control  54 00 01 00 00 00
+  0x034A2 (+007A) Else_ck          07 00 64 00
+  0x034A6 (+007E) Ifel_ck          06 00 5a 00
+  0x034AA (+0082) Ck               21 03 b4 01  bank=3 bit=180 val=1
+  0x034AE (+0086) Sce_em_set       44 00 49 40 00 01 00 ff 62 cb 00 00 4c be 00 00 04 01 00 00
+  0x034C2 (+009A) Sce_em_set       44 01 4b 40 00 01 00 ff 0e ca 00 00 e4 c1 00 00 2c 01 00 00
+  0x034D6 (+00AE) Aot_set          2c 03 03 41 00 00 4a b1 ca e5 b0 04 94 11 ff 00 18 0b 00 00  slot=3 sce=3 flags=0x41 floor=0 follow=0 rect=(-20150,-6710,1200,4500)
+  0x034EA (+00C2) Aot_reset        46 00 01 31 0f 00 ff ff 00 00  slot=0 sce=1 flags=0x31 p=(15,65535,0)
+  0x034F4 (+00CC) Ifel_ck          06 00 0a 00
+  0x034F8 (+00D0) Ck               21 03 d7 00  bank=3 bit=215 val=0
+  0x034FC (+00D4) Evt_exec         04 ff 18 05  cond=0xFF type=0x18 sub=5
+  0x03500 (+00D8) Endif            08 00
+  0x03502 (+00DA) Endif            08 00
+  0x03504 (+00DC) Nop              00
+  0x03505 (+00DD) Nop              00
+  0x03506 (+00DE) Nop              00
+  0x03507 (+00DF) Nop              00
+  0x03508 (+00E0) Evt_end          01 00
+
+=== sub01  [file 0x350A..0x356C]  (98 B)
+  0x0350A (+0000) Ifel_ck          06 00 22 00
+  0x0350E (+0004) Ck               21 05 1c 01  bank=5 bit=28 val=1
+  0x03512 (+0008) Set              22 05 1c 00  bank=5 bit=28 val=0
+  0x03516 (+000C) Set              22 03 b5 01  bank=3 bit=181 val=1
+  0x0351A (+0010) Set              22 04 ef 01  bank=4 bit=239 val=1
+  0x0351E (+0014) Aot_reset        46 01 03 31 ff 00 18 11 00 00  slot=1 sce=3 flags=0x31 p=(255,4376,0)
+  0x03528 (+001E) Sce_bgm_control  54 00 02 00 00 00
+  0x0352E (+0024) Endif            08 00
+  0x03530 (+0026) Ifel_ck          06 00 36 00
+  0x03534 (+002A) Ck               21 05 03 00  bank=5 bit=3 val=0
+  0x03538 (+002E) Switch           13 0a 2c 00
+  0x0353C (+0032) Case             14 00 24 00 09 00
+  0x03542 (+0038) Col_chg_set      45 02 00
+  0x03545 (+003B) Col_chg_set      45 03 00
+  0x03548 (+003E) Col_chg_set      45 04 00
+  0x0354B (+0041) Col_chg_set      45 05 00
+  0x0354E (+0044) Col_chg_set      45 06 00
+  0x03551 (+0047) Col_chg_set      45 07 00
+  0x03554 (+004A) Col_chg_set      45 08 00
+  0x03557 (+004D) Col_chg_set      45 09 00
+  0x0355A (+0050) Col_chg_set      45 0a 00
+  0x0355D (+0053) Col_chg_set      45 0b 00
+  0x03560 (+0056) Col_chg_set      45 0c 00
+  0x03563 (+0059) Nop              00
+  0x03564 (+005A) Break            1a 00
+  0x03566 (+005C) Eswitch          16 00
+  0x03568 (+005E) Endif            08 00
+  0x0356A (+0060) Evt_end          01 00
+
+=== sub02  [file 0x356C..0x36B7]  (331 B)
+  0x0356C (+0000) Set              22 04 4b 01  bank=4 bit=75 val=1
+  0x03570 (+0004) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x03574 (+0008) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x03578 (+000C) Aot_reset        46 02 00 00 00 00 00 00 00 00  slot=2 sce=0 flags=0x00 p=(0,0,0)
+  0x03582 (+0016) Cut_chg          29 09
+  0x03584 (+0018) Work_set         2e 01 00  kind=1 idx=0
+  0x03587 (+001B) Nop              00
+  0x03588 (+001C) Pos_set          32 00 22 9d 00 00 22 de
+  0x03590 (+0024) Dir_set          33 00 00 00 00 08 00 00
+  0x03598 (+002C) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x0359C (+0030) Sleep            09 0a 50 00
+  0x035A0 (+0034) Plc_motion       3f 00 18 00  a=0 b=24 c=0
+  0x035A4 (+0038) Sleep            09 0a 50 00
+  0x035A8 (+003C) Plc_motion       3f 00 18 00  a=0 b=24 c=0
+  0x035AC (+0040) Plc_flg          43 00 80 00
+  0x035B0 (+0044) Sleep            09 0a 50 00
+  0x035B4 (+0048) Plc_neck         41 01 72 98 00 00 0e d9 64 00
+  0x035BE (+0052) Set              22 05 03 01  bank=5 bit=3 val=1
+  0x035C2 (+0056) Col_chg_set      45 0c 01
+  0x035C5 (+0059) Sleep            09 0a 14 00
+  0x035C9 (+005D) Col_chg_set      45 0c 00
+  0x035CC (+0060) Col_chg_set      45 0b 01
+  0x035CF (+0063) Sleep            09 0a 14 00
+  0x035D3 (+0067) Col_chg_set      45 0b 00
+  0x035D6 (+006A) Col_chg_set      45 0a 01
+  0x035D9 (+006D) Sleep            09 0a 14 00
+  0x035DD (+0071) Col_chg_set      45 0a 00
+  0x035E0 (+0074) Col_chg_set      45 09 01
+  0x035E3 (+0077) Sleep            09 0a 14 00
+  0x035E7 (+007B) Col_chg_set      45 09 00
+  0x035EA (+007E) Col_chg_set      45 08 01
+  0x035ED (+0081) Sleep            09 0a 14 00
+  0x035F1 (+0085) Col_chg_set      45 08 00
+  0x035F4 (+0088) Col_chg_set      45 07 01
+  0x035F7 (+008B) Sleep            09 0a 14 00
+  0x035FB (+008F) Col_chg_set      45 07 00
+  0x035FE (+0092) Col_chg_set      45 06 01
+  0x03601 (+0095) Sleep            09 0a 14 00
+  0x03605 (+0099) Col_chg_set      45 06 00
+  0x03608 (+009C) Col_chg_set      45 05 01
+  0x0360B (+009F) Sleep            09 0a 14 00
+  0x0360F (+00A3) Col_chg_set      45 05 00
+  0x03612 (+00A6) Col_chg_set      45 04 01
+  0x03615 (+00A9) Sleep            09 0a 14 00
+  0x03619 (+00AD) Col_chg_set      45 04 00
+  0x0361C (+00B0) Col_chg_set      45 03 01
+  0x0361F (+00B3) Sleep            09 0a 14 00
+  0x03623 (+00B7) Col_chg_set      45 03 00
+  0x03626 (+00BA) Col_chg_set      45 02 01
+  0x03629 (+00BD) Sleep            09 0a 14 00
+  0x0362D (+00C1) Sce_bgm_control  54 00 01 00 00 00
+  0x03633 (+00C7) Cut_chg          29 08
+  0x03635 (+00C9) Evt_exec         04 ff 18 03  cond=0xFF type=0x18 sub=3
+  0x03639 (+00CD) Evt_exec         04 ff 18 04  cond=0xFF type=0x18 sub=4
+  0x0363D (+00D1) Sleep            09 0a 28 00
+  0x03641 (+00D5) Work_set         2e 02 00  kind=2 idx=0
+  0x03644 (+00D8) Nop              00
+  0x03645 (+00D9) Member_set       34 0c 01 00  member=0x0C val=1
+  0x03649 (+00DD) Sleep            09 0a 46 00
+  0x0364D (+00E1) While            0f 04 08 00
+  0x03651 (+00E5) Ck               21 05 1f 00  bank=5 bit=31 val=0
+  0x03655 (+00E9) Evt_next         02
+  0x03656 (+00EA) Nop              00
+  0x03657 (+00EB) Ewhile           10 00
+  0x03659 (+00ED) Evt_exec         04 ff 18 07  cond=0xFF type=0x18 sub=7
+  0x0365D (+00F1) Evt_exec         04 ff 18 06  cond=0xFF type=0x18 sub=6
+  0x03661 (+00F5) Sleep            09 0a 64 00
+  0x03665 (+00F9) While            0f 04 08 00
+  0x03669 (+00FD) Ck               21 05 1e 00  bank=5 bit=30 val=0
+  0x0366D (+0101) Evt_next         02
+  0x0366E (+0102) Nop              00
+  0x0366F (+0103) Ewhile           10 00
+  0x03671 (+0105) Evt_exec         04 ff 18 08  cond=0xFF type=0x18 sub=8
+  0x03675 (+0109) Sleep            09 0a 64 00
+  0x03679 (+010D) Evt_exec         04 ff 18 09  cond=0xFF type=0x18 sub=9
+  0x0367D (+0111) Evt_exec         04 ff 18 0a  cond=0xFF type=0x18 sub=10
+  0x03681 (+0115) Cut_chg          29 0a
+  0x03683 (+0117) Sleep            09 0a 64 00
+  0x03687 (+011B) Cut_chg          29 04
+  0x03689 (+011D) Work_set         2e 01 00  kind=1 idx=0
+  0x0368C (+0120) Nop              00
+  0x0368D (+0121) Plc_neck         41 00 00 00 00 00 00 00 64 00
+  0x03697 (+012B) Dir_set          33 00 00 00 00 06 00 00
+  0x0369F (+0133) Plc_dest         40 00 08 00 2a a4 c6 e4
+  0x036A7 (+013B) Gosub            18 0e
+  0x036A9 (+013D) Plc_ret          42
+  0x036AA (+013E) Nop              00
+  0x036AB (+013F) Cut_auto         3c 01
+  0x036AD (+0141) Set              22 02 07 00  bank=2 bit=7 val=0
+  0x036B1 (+0145) Set              22 01 1b 00  bank=1 bit=27 val=0
+  0x036B5 (+0149) Evt_end          01 00
+
+=== sub03  [file 0x36B7..0x36F9]  (66 B)
+  0x036B7 (+0000) Work_set         2e 03 02  kind=3 idx=2
+  0x036BA (+0003) Nop              00
+  0x036BB (+0004) Speed_set        2f 01 fe ff
+  0x036BF (+0008) For              0d 00 04 00 03 00
+  0x036C5 (+000E) Add_speed        30
+  0x036C6 (+000F) Evt_next         02
+  0x036C7 (+0010) Next             0e 00
+  0x036C9 (+0012) Speed_set        2f 01 02 00
+  0x036CD (+0016) For              0d 00 04 00 03 00
+  0x036D3 (+001C) Add_speed        30
+  0x036D4 (+001D) Evt_next         02
+  0x036D5 (+001E) Next             0e 00
+  0x036D7 (+0020) Speed_set        2f 01 fb ff
+  0x036DB (+0024) Add_speed        30
+  0x036DC (+0025) Evt_next         02
+  0x036DD (+0026) Speed_set        2f 01 f6 ff
+  0x036E1 (+002A) Add_speed        30
+  0x036E2 (+002B) Evt_next         02
+  0x036E3 (+002C) Speed_set        2f 01 f1 ff
+  0x036E7 (+0030) Add_speed        30
+  0x036E8 (+0031) Evt_next         02
+  0x036E9 (+0032) Speed_set        2f 01 e7 ff
+  0x036ED (+0036) For              0d 00 04 00 4b 00
+  0x036F3 (+003C) Add_speed        30
+  0x036F4 (+003D) Evt_next         02
+  0x036F5 (+003E) Next             0e 00
+  0x036F7 (+0040) Evt_end          01 00
+
+=== sub04  [file 0x36F9..0x373B]  (66 B)
+  0x036F9 (+0000) Work_set         2e 03 03  kind=3 idx=3
+  0x036FC (+0003) Nop              00
+  0x036FD (+0004) Speed_set        2f 01 02 00
+  0x03701 (+0008) For              0d 00 04 00 03 00
+  0x03707 (+000E) Add_speed        30
+  0x03708 (+000F) Evt_next         02
+  0x03709 (+0010) Next             0e 00
+  0x0370B (+0012) Speed_set        2f 01 fe ff
+  0x0370F (+0016) For              0d 00 04 00 03 00
+  0x03715 (+001C) Add_speed        30
+  0x03716 (+001D) Evt_next         02
+  0x03717 (+001E) Next             0e 00
+  0x03719 (+0020) Speed_set        2f 01 05 00
+  0x0371D (+0024) Add_speed        30
+  0x0371E (+0025) Evt_next         02
+  0x0371F (+0026) Speed_set        2f 01 0a 00
+  0x03723 (+002A) Add_speed        30
+  0x03724 (+002B) Evt_next         02
+  0x03725 (+002C) Speed_set        2f 01 0f 00
+  0x03729 (+0030) Add_speed        30
+  0x0372A (+0031) Evt_next         02
+  0x0372B (+0032) Speed_set        2f 01 19 00
+  0x0372F (+0036) For              0d 00 04 00 4b 00
+  0x03735 (+003C) Add_speed        30
+  0x03736 (+003D) Evt_next         02
+  0x03737 (+003E) Next             0e 00
+  0x03739 (+0040) Evt_end          01 00
+
+=== sub05  [file 0x373B..0x3801]  (198 B)
+  0x0373B (+0000) Set              22 03 d7 01  bank=3 bit=215 val=1
+  0x0373F (+0004) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x03743 (+0008) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x03747 (+000C) Work_set         2e 02 00  kind=2 idx=0
+  0x0374A (+000F) Nop              00
+  0x0374B (+0010) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x0374F (+0014) Sleep            09 0a 05 00
+  0x03753 (+0018) Plc_neck         41 01 c0 d1 00 00 24 b9 64 00
+  0x0375D (+0022) Sleep            09 0a 01 00
+  0x03761 (+0026) Work_set         2e 01 00  kind=1 idx=0
+  0x03764 (+0029) Nop              00
+  0x03765 (+002A) Plc_neck         41 01 62 cb 00 00 4c be 64 00
+  0x0376F (+0034) Sleep            09 0a 14 00
+  0x03773 (+0038) Message_on       2b 00 00 00
+  0x03777 (+003C) Plc_motion       3f 00 12 00  a=0 b=18 c=0
+  0x0377B (+0040) Sleep            09 0a 19 00
+  0x0377F (+0044) Plc_motion       3f 00 12 00  a=0 b=18 c=0
+  0x03783 (+0048) Plc_flg          43 00 80 00
+  0x03787 (+004C) Sleep            09 0a 19 00
+  0x0378B (+0050) Plc_motion       3f 00 10 00  a=0 b=16 c=0
+  0x0378F (+0054) Sleep            09 0a 19 00
+  0x03793 (+0058) Plc_motion       3f 00 10 00  a=0 b=16 c=0
+  0x03797 (+005C) Plc_flg          43 00 80 00
+  0x0379B (+0060) Sleep            09 0a 19 00
+  0x0379F (+0064) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x037A3 (+0068) Sleep            09 0a 14 00
+  0x037A7 (+006C) Message_on       2b 01 00 00
+  0x037AB (+0070) Work_set         2e 02 00  kind=2 idx=0
+  0x037AE (+0073) Nop              00
+  0x037AF (+0074) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x037B3 (+0078) Sleep            09 0a 19 00
+  0x037B7 (+007C) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x037BB (+0080) Plc_flg          43 00 80 00
+  0x037BF (+0084) Sleep            09 0a 19 00
+  0x037C3 (+0088) Plc_motion       3f 00 11 00  a=0 b=17 c=0
+  0x037C7 (+008C) Sleep            09 0a 33 00
+  0x037CB (+0090) Plc_neck         41 00 00 00 00 00 00 00 64 00
+  0x037D5 (+009A) Plc_ret          42
+  0x037D6 (+009B) Nop              00
+  0x037D7 (+009C) Sleep            09 0a 01 00
+  0x037DB (+00A0) Work_set         2e 02 01  kind=2 idx=1
+  0x037DE (+00A3) Nop              00
+  0x037DF (+00A4) Plc_ret          42
+  0x037E0 (+00A5) Nop              00
+  0x037E1 (+00A6) Sleep            09 0a 01 00
+  0x037E5 (+00AA) Work_set         2e 01 00  kind=1 idx=0
+  0x037E8 (+00AD) Nop              00
+  0x037E9 (+00AE) Plc_neck         41 00 00 00 00 00 00 00 64 00
+  0x037F3 (+00B8) Plc_ret          42
+  0x037F4 (+00B9) Nop              00
+  0x037F5 (+00BA) Cut_auto         3c 01
+  0x037F7 (+00BC) Set              22 02 07 00  bank=2 bit=7 val=0
+  0x037FB (+00C0) Set              22 01 1b 00  bank=1 bit=27 val=0
+  0x037FF (+00C4) Evt_end          01 00
+
+=== sub06  [file 0x3801..0x383B]  (58 B)
+  0x03801 (+0000) Work_set         2e 03 00  kind=3 idx=0
+  0x03804 (+0003) Nop              00
+  0x03805 (+0004) For              0d 00 2e 00 02 00
+  0x0380B (+000A) Speed_set        2f 00 ff ff
+  0x0380F (+000E) Speed_set        2f 01 ff ff
+  0x03813 (+0012) Speed_set        2f 02 ff ff
+  0x03817 (+0016) For              0d 00 04 00 0f 00
+  0x0381D (+001C) Add_speed        30
+  0x0381E (+001D) Evt_next         02
+  0x0381F (+001E) Next             0e 00
+  0x03821 (+0020) Speed_set        2f 00 01 00
+  0x03825 (+0024) Speed_set        2f 01 01 00
+  0x03829 (+0028) Speed_set        2f 02 01 00
+  0x0382D (+002C) For              0d 00 04 00 0f 00
+  0x03833 (+0032) Add_speed        30
+  0x03834 (+0033) Evt_next         02
+  0x03835 (+0034) Next             0e 00
+  0x03837 (+0036) Next             0e 00
+  0x03839 (+0038) Evt_end          01 00
+
+=== sub07  [file 0x383B..0x3875]  (58 B)
+  0x0383B (+0000) Work_set         2e 03 01  kind=3 idx=1
+  0x0383E (+0003) Nop              00
+  0x0383F (+0004) For              0d 00 2e 00 02 00
+  0x03845 (+000A) Speed_set        2f 00 fd ff
+  0x03849 (+000E) Speed_set        2f 01 fc ff
+  0x0384D (+0012) Speed_set        2f 02 fc ff
+  0x03851 (+0016) For              0d 00 04 00 0f 00
+  0x03857 (+001C) Add_speed        30
+  0x03858 (+001D) Evt_next         02
+  0x03859 (+001E) Next             0e 00
+  0x0385B (+0020) Speed_set        2f 00 03 00
+  0x0385F (+0024) Speed_set        2f 01 04 00
+  0x03863 (+0028) Speed_set        2f 02 04 00
+  0x03867 (+002C) For              0d 00 04 00 0f 00
+  0x0386D (+0032) Add_speed        30
+  0x0386E (+0033) Evt_next         02
+  0x0386F (+0034) Next             0e 00
+  0x03871 (+0036) Next             0e 00
+  0x03873 (+0038) Evt_end          01 00
+
+=== sub08  [file 0x3875..0x3961]  (236 B)
+  0x03875 (+0000) Work_set         2e 03 01  kind=3 idx=1
+  0x03878 (+0003) Nop              00
+  0x03879 (+0004) Pos_set          32 00 30 75 00 00 30 75
+  0x03881 (+000C) Work_set         2e 03 00  kind=3 idx=0
+  0x03884 (+000F) Nop              00
+  0x03885 (+0010) Speed_set        2f 03 ec ff
+  0x03889 (+0014) Speed_set        2f 00 28 00
+  0x0388D (+0018) Speed_set        2f 01 32 00
+  0x03891 (+001C) Add_speed        30
+  0x03892 (+001D) Nop              00
+  0x03893 (+001E) Evt_next         02
+  0x03894 (+001F) Nop              00
+  0x03895 (+0020) Speed_set        2f 03 ce ff
+  0x03899 (+0024) Speed_set        2f 01 4b 00
+  0x0389D (+0028) Add_speed        30
+  0x0389E (+0029) Nop              00
+  0x0389F (+002A) Evt_next         02
+  0x038A0 (+002B) Nop              00
+  0x038A1 (+002C) Speed_set        2f 03 9c ff
+  0x038A5 (+0030) Speed_set        2f 01 64 00
+  0x038A9 (+0034) Add_speed        30
+  0x038AA (+0035) Nop              00
+  0x038AB (+0036) Evt_next         02
+  0x038AC (+0037) Nop              00
+  0x038AD (+0038) Speed_set        2f 03 6a ff
+  0x038B1 (+003C) Speed_set        2f 01 7d 00
+  0x038B5 (+0040) Add_speed        30
+  0x038B6 (+0041) Nop              00
+  0x038B7 (+0042) Evt_next         02
+  0x038B8 (+0043) Nop              00
+  0x038B9 (+0044) Speed_set        2f 03 38 ff
+  0x038BD (+0048) Speed_set        2f 01 c8 00
+  0x038C1 (+004C) Add_speed        30
+  0x038C2 (+004D) Nop              00
+  0x038C3 (+004E) Evt_next         02
+  0x038C4 (+004F) Nop              00
+  0x038C5 (+0050) Speed_set        2f 03 06 ff
+  0x038C9 (+0054) Speed_set        2f 01 2c 01
+  0x038CD (+0058) Add_speed        30
+  0x038CE (+0059) Nop              00
+  0x038CF (+005A) Evt_next         02
+  0x038D0 (+005B) Nop              00
+  0x038D1 (+005C) Speed_set        2f 03 78 00
+  0x038D5 (+0060) Speed_set        2f 01 32 00
+  0x038D9 (+0064) Add_speed        30
+  0x038DA (+0065) Nop              00
+  0x038DB (+0066) Evt_next         02
+  0x038DC (+0067) Nop              00
+  0x038DD (+0068) Speed_set        2f 03 96 00
+  0x038E1 (+006C) Speed_set        2f 01 28 00
+  0x038E5 (+0070) Add_speed        30
+  0x038E6 (+0071) Nop              00
+  0x038E7 (+0072) Evt_next         02
+  0x038E8 (+0073) Nop              00
+  0x038E9 (+0074) Speed_set        2f 03 be 00
+  0x038ED (+0078) Speed_set        2f 01 1e 00
+  0x038F1 (+007C) Add_speed        30
+  0x038F2 (+007D) Nop              00
+  0x038F3 (+007E) Evt_next         02
+  0x038F4 (+007F) Nop              00
+  0x038F5 (+0080) Speed_set        2f 03 88 ff
+  0x038F9 (+0084) Speed_set        2f 01 1e 00
+  0x038FD (+0088) Add_speed        30
+  0x038FE (+0089) Nop              00
+  0x038FF (+008A) Evt_next         02
+  0x03900 (+008B) Nop              00
+  0x03901 (+008C) Speed_set        2f 03 6a ff
+  0x03905 (+0090) Speed_set        2f 01 1e 00
+  0x03909 (+0094) Add_speed        30
+  0x0390A (+0095) Nop              00
+  0x0390B (+0096) Evt_next         02
+  0x0390C (+0097) Nop              00
+  0x0390D (+0098) Speed_set        2f 03 50 00
+  0x03911 (+009C) Speed_set        2f 00 3c 00
+  0x03915 (+00A0) Speed_set        2f 01 1e 00
+  0x03919 (+00A4) Add_speed        30
+  0x0391A (+00A5) Nop              00
+  0x0391B (+00A6) Evt_next         02
+  0x0391C (+00A7) Nop              00
+  0x0391D (+00A8) Speed_set        2f 03 64 00
+  0x03921 (+00AC) Speed_set        2f 01 1e 00
+  0x03925 (+00B0) Add_speed        30
+  0x03926 (+00B1) Nop              00
+  0x03927 (+00B2) Evt_next         02
+  0x03928 (+00B3) Nop              00
+  0x03929 (+00B4) Speed_set        2f 03 c4 ff
+  0x0392D (+00B8) Speed_set        2f 01 1e 00
+  0x03931 (+00BC) Add_speed        30
+  0x03932 (+00BD) Nop              00
+  0x03933 (+00BE) Evt_next         02
+  0x03934 (+00BF) Nop              00
+  0x03935 (+00C0) Speed_set        2f 03 ec ff
+  0x03939 (+00C4) Speed_set        2f 01 1e 00
+  0x0393D (+00C8) Add_speed        30
+  0x0393E (+00C9) Nop              00
+  0x0393F (+00CA) Evt_next         02
+  0x03940 (+00CB) Nop              00
+  0x03941 (+00CC) Speed_set        2f 00 3c 00
+  0x03945 (+00D0) Speed_set        2f 06 f9 ff
+  0x03949 (+00D4) Speed_set        2f 01 00 00
+  0x0394D (+00D8) Speed_set        2f 03 00 00
+  0x03951 (+00DC) For              0d 00 08 00 08 00
+  0x03957 (+00E2) Add_aspeed       31
+  0x03958 (+00E3) Nop              00
+  0x03959 (+00E4) Add_speed        30
+  0x0395A (+00E5) Nop              00
+  0x0395B (+00E6) Evt_next         02
+  0x0395C (+00E7) Nop              00
+  0x0395D (+00E8) Next             0e 00
+  0x0395F (+00EA) Evt_end          01 00
+
+=== sub09  [file 0x3961..0x3995]  (52 B)
+  0x03961 (+0000) Work_set         2e 03 02  kind=3 idx=2
+  0x03964 (+0003) Nop              00
+  0x03965 (+0004) Speed_set        2f 01 0a 00
+  0x03969 (+0008) Add_speed        30
+  0x0396A (+0009) Evt_next         02
+  0x0396B (+000A) Speed_set        2f 01 0f 00
+  0x0396F (+000E) Add_speed        30
+  0x03970 (+000F) Evt_next         02
+  0x03971 (+0010) Speed_set        2f 01 19 00
+  0x03975 (+0014) For              0d 00 04 00 4b 00
+  0x0397B (+001A) Add_speed        30
+  0x0397C (+001B) Evt_next         02
+  0x0397D (+001C) Next             0e 00
+  0x0397F (+001E) For              0d 00 0e 00 03 00
+  0x03985 (+0024) Speed_set        2f 01 03 00
+  0x03989 (+0028) Add_speed        30
+  0x0398A (+0029) Evt_next         02
+  0x0398B (+002A) Speed_set        2f 01 ff ff
+  0x0398F (+002E) Add_speed        30
+  0x03990 (+002F) Evt_next         02
+  0x03991 (+0030) Next             0e 00
+  0x03993 (+0032) Evt_end          01 00
+
+=== sub10  [file 0x3995..0x39C9]  (52 B)
+  0x03995 (+0000) Work_set         2e 03 03  kind=3 idx=3
+  0x03998 (+0003) Nop              00
+  0x03999 (+0004) Speed_set        2f 01 f6 ff
+  0x0399D (+0008) Add_speed        30
+  0x0399E (+0009) Evt_next         02
+  0x0399F (+000A) Speed_set        2f 01 f1 ff
+  0x039A3 (+000E) Add_speed        30
+  0x039A4 (+000F) Evt_next         02
+  0x039A5 (+0010) Speed_set        2f 01 e7 ff
+  0x039A9 (+0014) For              0d 00 04 00 4b 00
+  0x039AF (+001A) Add_speed        30
+  0x039B0 (+001B) Evt_next         02
+  0x039B1 (+001C) Next             0e 00
+  0x039B3 (+001E) For              0d 00 0e 00 03 00
+  0x039B9 (+0024) Speed_set        2f 01 fd ff
+  0x039BD (+0028) Add_speed        30
+  0x039BE (+0029) Evt_next         02
+  0x039BF (+002A) Speed_set        2f 01 01 00
+  0x039C3 (+002E) Add_speed        30
+  0x039C4 (+002F) Evt_next         02
+  0x039C5 (+0030) Next             0e 00
+  0x039C7 (+0032) Evt_end          01 00
+
+=== sub11  [file 0x39C9..0x3D4F]  (902 B)
+  0x039C9 (+0000) Set              22 03 b4 00  bank=3 bit=180 val=0
+  0x039CD (+0004) Aot_reset        46 03 00 00 00 00 00 00 00 00  slot=3 sce=0 flags=0x00 p=(0,0,0)
+  0x039D7 (+000E) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x039DB (+0012) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x039DF (+0016) Cut_chg          29 04
+  0x039E1 (+0018) Work_set         2e 01 00  kind=1 idx=0
+  0x039E4 (+001B) Nop              00
+  0x039E5 (+001C) Pos_set          32 00 4e b7 00 00 ca ea
+  0x039ED (+0024) Member_set       34 04 00 08  member=0x04 val=2048
+  0x039F1 (+0028) Plc_dest         40 00 04 00 a6 aa 3a d5
+  0x039F9 (+0030) Gosub            18 0e
+  0x039FB (+0032) Plc_dest         40 00 04 00 a4 a7 46 d3
+  0x03A03 (+003A) Evt_exec         04 ff 18 0c  cond=0xFF type=0x18 sub=12
+  0x03A07 (+003E) Sleep            09 0a 0a 00
+  0x03A0B (+0042) Evt_exec         04 ff 18 0d  cond=0xFF type=0x18 sub=13
+  0x03A0F (+0046) Gosub            18 0e
+  0x03A11 (+0048) Plc_dest         40 00 09 00 68 98 46 d3
+  0x03A19 (+0050) Gosub            18 0e
+  0x03A1B (+0052) Cut_chg          29 07
+  0x03A1D (+0054) Message_on       2b 02 00 00
+  0x03A21 (+0058) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03A25 (+005C) Sleep            09 0a 19 00
+  0x03A29 (+0060) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03A2D (+0064) Plc_flg          43 00 80 00
+  0x03A31 (+0068) Sleep            09 0a 19 00
+  0x03A35 (+006C) Plc_motion       3f 00 10 00  a=0 b=16 c=0
+  0x03A39 (+0070) Sleep            09 0a 19 00
+  0x03A3D (+0074) Plc_motion       3f 00 10 00  a=0 b=16 c=0
+  0x03A41 (+0078) Plc_flg          43 00 80 00
+  0x03A45 (+007C) Sleep            09 0a 19 00
+  0x03A49 (+0080) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x03A4D (+0084) Sleep            09 0a 14 00
+  0x03A51 (+0088) Plc_neck         41 01 d0 a8 00 00 e8 db 64 00
+  0x03A5B (+0092) Sleep            09 0a 01 00
+  0x03A5F (+0096) Work_set         2e 02 00  kind=2 idx=0
+  0x03A62 (+0099) Nop              00
+  0x03A63 (+009A) Plc_neck         41 01 a4 a7 00 00 46 d3 64 00
+  0x03A6D (+00A4) Sleep            09 0a 01 00
+  0x03A71 (+00A8) Message_on       2b 03 00 00
+  0x03A75 (+00AC) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03A79 (+00B0) Sleep            09 0a 19 00
+  0x03A7D (+00B4) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03A81 (+00B8) Plc_flg          43 00 80 00
+  0x03A85 (+00BC) Sleep            09 0a 19 00
+  0x03A89 (+00C0) Plc_motion       3f 00 11 00  a=0 b=17 c=0
+  0x03A8D (+00C4) Sleep            09 0a 33 00
+  0x03A91 (+00C8) Message_on       2b 04 00 00
+  0x03A95 (+00CC) Plc_motion       3f 00 10 00  a=0 b=16 c=0
+  0x03A99 (+00D0) Sleep            09 0a 32 00
+  0x03A9D (+00D4) Plc_motion       3f 00 10 00  a=0 b=16 c=0
+  0x03AA1 (+00D8) Plc_flg          43 00 80 00
+  0x03AA5 (+00DC) Sleep            09 0a 33 00
+  0x03AA9 (+00E0) Message_on       2b 05 00 00
+  0x03AAD (+00E4) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x03AB1 (+00E8) Sleep            09 0a 32 00
+  0x03AB5 (+00EC) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x03AB9 (+00F0) Plc_flg          43 00 80 00
+  0x03ABD (+00F4) Sleep            09 0a 32 00
+  0x03AC1 (+00F8) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x03AC5 (+00FC) Sleep            09 0a 14 00
+  0x03AC9 (+0100) Message_on       2b 06 00 00
+  0x03ACD (+0104) Work_set         2e 01 00  kind=1 idx=0
+  0x03AD0 (+0107) Nop              00
+  0x03AD1 (+0108) Plc_neck         41 00 00 00 00 00 00 00 64 00
+  0x03ADB (+0112) Sleep            09 0a 01 00
+  0x03ADF (+0116) Plc_neck         41 04 03 00 00 00 00 00 3c 00
+  0x03AE9 (+0120) Sleep            09 0a 32 00
+  0x03AED (+0124) Plc_neck         41 01 d0 a8 00 00 e8 db 64 00
+  0x03AF7 (+012E) Sleep            09 0a 01 00
+  0x03AFB (+0132) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x03AFF (+0136) Sleep            09 0a 19 00
+  0x03B03 (+013A) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x03B07 (+013E) Plc_flg          43 00 80 00
+  0x03B0B (+0142) Sleep            09 0a 19 00
+  0x03B0F (+0146) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x03B13 (+014A) Sleep            09 0a 14 00
+  0x03B17 (+014E) Work_set         2e 02 01  kind=2 idx=1
+  0x03B1A (+0151) Nop              00
+  0x03B1B (+0152) Plc_dest         40 00 05 02 22 9d 4a de
+  0x03B23 (+015A) Gosub            18 10
+  0x03B25 (+015C) Work_set         2e 01 00  kind=1 idx=0
+  0x03B28 (+015F) Nop              00
+  0x03B29 (+0160) Plc_neck         41 01 22 9d 00 00 4a de 64 00
+  0x03B33 (+016A) Sleep            09 0a 01 00
+  0x03B37 (+016E) Work_set         2e 02 00  kind=2 idx=0
+  0x03B3A (+0171) Nop              00
+  0x03B3B (+0172) Plc_neck         41 01 22 9d 00 00 4a de 64 00
+  0x03B45 (+017C) Sleep            09 0a 01 00
+  0x03B49 (+0180) Message_on       2b 07 00 00
+  0x03B4D (+0184) Sleep            09 0a 64 00
+  0x03B51 (+0188) Cut_chg          29 08
+  0x03B53 (+018A) Evt_exec         04 ff 18 03  cond=0xFF type=0x18 sub=3
+  0x03B57 (+018E) Evt_exec         04 ff 18 04  cond=0xFF type=0x18 sub=4
+  0x03B5B (+0192) Sleep            09 0a 3c 00
+  0x03B5F (+0196) Cut_chg          29 07
+  0x03B61 (+0198) Work_set         2e 02 01  kind=2 idx=1
+  0x03B64 (+019B) Nop              00
+  0x03B65 (+019C) Plc_dest         40 00 09 02 a4 a7 46 d3
+  0x03B6D (+01A4) Gosub            18 10
+  0x03B6F (+01A6) Message_on       2b 08 00 00
+  0x03B73 (+01AA) Work_set         2e 01 00  kind=1 idx=0
+  0x03B76 (+01AD) Nop              00
+  0x03B77 (+01AE) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03B7B (+01B2) Sleep            09 0a 19 00
+  0x03B7F (+01B6) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03B83 (+01BA) Plc_flg          43 00 80 00
+  0x03B87 (+01BE) Sleep            09 0a 19 00
+  0x03B8B (+01C2) Plc_motion       3f 00 10 00  a=0 b=16 c=0
+  0x03B8F (+01C6) Sleep            09 0a 19 00
+  0x03B93 (+01CA) Plc_motion       3f 00 10 00  a=0 b=16 c=0
+  0x03B97 (+01CE) Plc_flg          43 00 80 00
+  0x03B9B (+01D2) Sleep            09 0a 19 00
+  0x03B9F (+01D6) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x03BA3 (+01DA) Sleep            09 0a 14 00
+  0x03BA7 (+01DE) Plc_neck         41 01 d0 a8 00 00 e8 db 64 00
+  0x03BB1 (+01E8) Sleep            09 0a 01 00
+  0x03BB5 (+01EC) Message_on       2b 09 00 00
+  0x03BB9 (+01F0) Work_set         2e 02 00  kind=2 idx=0
+  0x03BBC (+01F3) Nop              00
+  0x03BBD (+01F4) Plc_neck         41 01 a4 a7 00 00 46 d3 64 00
+  0x03BC7 (+01FE) Sleep            09 0a 01 00
+  0x03BCB (+0202) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03BCF (+0206) Sleep            09 0a 19 00
+  0x03BD3 (+020A) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03BD7 (+020E) Plc_flg          43 00 80 00
+  0x03BDB (+0212) Sleep            09 0a 19 00
+  0x03BDF (+0216) Plc_motion       3f 00 14 00  a=0 b=20 c=0
+  0x03BE3 (+021A) Sleep            09 0a 19 00
+  0x03BE7 (+021E) Plc_motion       3f 00 14 00  a=0 b=20 c=0
+  0x03BEB (+0222) Plc_flg          43 00 80 00
+  0x03BEF (+0226) Sleep            09 0a 1a 00
+  0x03BF3 (+022A) Message_on       2b 0a 00 00
+  0x03BF7 (+022E) Plc_motion       3f 00 11 00  a=0 b=17 c=0
+  0x03BFB (+0232) Sleep            09 0a 64 00
+  0x03BFF (+0236) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x03C03 (+023A) Sleep            09 0a 14 00
+  0x03C07 (+023E) Message_on       2b 0b 00 00
+  0x03C0B (+0242) Work_set         2e 01 00  kind=1 idx=0
+  0x03C0E (+0245) Nop              00
+  0x03C0F (+0246) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x03C13 (+024A) Sleep            09 0a 32 00
+  0x03C17 (+024E) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x03C1B (+0252) Plc_flg          43 00 80 00
+  0x03C1F (+0256) Sleep            09 0a 33 00
+  0x03C23 (+025A) Message_on       2b 0c 00 00
+  0x03C27 (+025E) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03C2B (+0262) Sleep            09 0a 19 00
+  0x03C2F (+0266) Plc_motion       3f 00 0f 00  a=0 b=15 c=0
+  0x03C33 (+026A) Plc_flg          43 00 80 00
+  0x03C37 (+026E) Sleep            09 0a 19 00
+  0x03C3B (+0272) Plc_motion       3f 00 11 00  a=0 b=17 c=0
+  0x03C3F (+0276) Sleep            09 0a 32 00
+  0x03C43 (+027A) Plc_motion       3f 00 17 00  a=0 b=23 c=0
+  0x03C47 (+027E) Sleep            09 0a 14 00
+  0x03C4B (+0282) Message_on       2b 0d 00 00
+  0x03C4F (+0286) Work_set         2e 02 00  kind=2 idx=0
+  0x03C52 (+0289) Nop              00
+  0x03C53 (+028A) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x03C57 (+028E) Sleep            09 0a 32 00
+  0x03C5B (+0292) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x03C5F (+0296) Plc_flg          43 00 80 00
+  0x03C63 (+029A) Sleep            09 0a 33 00
+  0x03C67 (+029E) Message_on       2b 0e 00 00
+  0x03C6B (+02A2) Plc_motion       3f 00 12 00  a=0 b=18 c=0
+  0x03C6F (+02A6) Sleep            09 0a 19 00
+  0x03C73 (+02AA) Plc_motion       3f 00 12 00  a=0 b=18 c=0
+  0x03C77 (+02AE) Plc_flg          43 00 80 00
+  0x03C7B (+02B2) Sleep            09 0a 19 00
+  0x03C7F (+02B6) Plc_motion       3f 00 14 00  a=0 b=20 c=0
+  0x03C83 (+02BA) Sleep            09 0a 19 00
+  0x03C87 (+02BE) Plc_motion       3f 00 14 00  a=0 b=20 c=0
+  0x03C8B (+02C2) Plc_flg          43 00 80 00
+  0x03C8F (+02C6) Sleep            09 0a 3c 00
+  0x03C93 (+02CA) Sca_id_set       37 00 11 00
+  0x03C97 (+02CE) Sca_id_set       37 01 11 00
+  0x03C9B (+02D2) Sca_id_set       37 02 11 00
+  0x03C9F (+02D6) Sca_id_set       37 03 11 00
+  0x03CA3 (+02DA) Sca_id_set       37 04 11 00
+  0x03CA7 (+02DE) Work_set         2e 02 01  kind=2 idx=1
+  0x03CAA (+02E1) Nop              00
+  0x03CAB (+02E2) Plc_dest         40 00 05 02 c3 9c 3a d5
+  0x03CB3 (+02EA) Sleep            09 0a 0a 00
+  0x03CB7 (+02EE) Work_set         2e 02 00  kind=2 idx=0
+  0x03CBA (+02F1) Nop              00
+  0x03CBB (+02F2) Plc_neck         41 00 00 00 00 00 00 00 64 00
+  0x03CC5 (+02FC) Sleep            09 0a 01 00
+  0x03CC9 (+0300) Plc_dest         40 00 05 01 b3 8e 20 d1
+  0x03CD1 (+0308) Sleep            09 0a 0a 00
+  0x03CD5 (+030C) Work_set         2e 02 01  kind=2 idx=1
+  0x03CD8 (+030F) Nop              00
+  0x03CD9 (+0310) Plc_dest         40 00 05 02 b3 8e 3a d5
+  0x03CE1 (+0318) Sleep            09 0a 0a 00
+  0x03CE5 (+031C) Work_set         2e 01 00  kind=1 idx=0
+  0x03CE8 (+031F) Nop              00
+  0x03CE9 (+0320) Plc_neck         41 00 00 00 00 00 00 00 64 00
+  0x03CF3 (+032A) Sleep            09 0a 01 00
+  0x03CF7 (+032E) Plc_dest         40 00 05 00 b3 8e a2 cc
+  0x03CFF (+0336) Sleep            09 0a 32 00
+  0x03D03 (+033A) Cut_chg          29 08
+  0x03D05 (+033C) Work_set         2e 01 00  kind=1 idx=0
+  0x03D08 (+033F) Nop              00
+  0x03D09 (+0340) Plc_dest         40 00 09 00 ef 9d a2 cc
+  0x03D11 (+0348) Sleep            09 0a 05 00
+  0x03D15 (+034C) Work_set         2e 02 00  kind=2 idx=0
+  0x03D18 (+034F) Nop              00
+  0x03D19 (+0350) Plc_dest         40 00 09 01 ef 9d 20 d1
+  0x03D21 (+0358) Sleep            09 0a 05 00
+  0x03D25 (+035C) Work_set         2e 02 01  kind=2 idx=1
+  0x03D28 (+035F) Nop              00
+  0x03D29 (+0360) Plc_dest         40 00 09 02 ef 9d 3a d5
+  0x03D31 (+0368) Sleep            09 0a 14 00
+  0x03D35 (+036C) Evt_exec         04 ff 18 09  cond=0xFF type=0x18 sub=9
+  0x03D39 (+0370) Evt_exec         04 ff 18 0a  cond=0xFF type=0x18 sub=10
+  0x03D3D (+0374) Sleep            09 0a 64 00
+  0x03D41 (+0378) Aot_reset        46 00 02 31 3c 9c 00 00 58 a8  slot=0 sce=2 flags=0x31 p=(39996,0,43096)
+  0x03D4B (+0382) Aot_on           47 00
+  0x03D4D (+0384) Evt_end          01 00
+
+=== sub12  [file 0x3D4F..0x3D7F]  (48 B)
+  0x03D4F (+0000) Work_set         2e 02 00  kind=2 idx=0
+  0x03D52 (+0003) Nop              00
+  0x03D53 (+0004) Pos_set          32 00 4e b7 00 00 80 ee
+  0x03D5B (+000C) Member_set       34 04 00 08  member=0x04 val=2048
+  0x03D5F (+0010) Plc_dest         40 00 04 01 ee ad 22 ed
+  0x03D67 (+0018) Gosub            18 0f
+  0x03D69 (+001A) Plc_dest         40 00 04 01 d0 a8 e8 db
+  0x03D71 (+0022) Gosub            18 0f
+  0x03D73 (+0024) Plc_dest         40 00 09 01 94 99 e8 db
+  0x03D7B (+002C) Gosub            18 0f
+  0x03D7D (+002E) Evt_end          01 00
+
+=== sub13  [file 0x3D7F..0x3DAF]  (48 B)
+  0x03D7F (+0000) Work_set         2e 02 01  kind=2 idx=1
+  0x03D82 (+0003) Nop              00
+  0x03D83 (+0004) Pos_set          32 00 4e b7 00 00 d2 f1
+  0x03D8B (+000C) Member_set       34 04 00 08  member=0x04 val=2048
+  0x03D8F (+0010) Plc_dest         40 00 04 02 ee ad 10 f0
+  0x03D97 (+0018) Gosub            18 10
+  0x03D99 (+001A) Plc_dest         40 00 04 02 86 ac 94 df
+  0x03DA1 (+0022) Gosub            18 10
+  0x03DA3 (+0024) Plc_dest         40 00 09 02 4a 9d 94 df
+  0x03DAB (+002C) Gosub            18 10
+  0x03DAD (+002E) Evt_end          01 00
+
+=== sub14  [file 0x3DAF..0x3DC1]  (18 B)
+  0x03DAF (+0000) Set              22 05 00 00  bank=5 bit=0 val=0
+  0x03DB3 (+0004) While            0f 04 08 00
+  0x03DB7 (+0008) Ck               21 05 00 00  bank=5 bit=0 val=0
+  0x03DBB (+000C) Evt_next         02
+  0x03DBC (+000D) Nop              00
+  0x03DBD (+000E) Ewhile           10 00
+  0x03DBF (+0010) Evt_end          01 00
+
+=== sub15  [file 0x3DC1..0x3DD3]  (18 B)
+  0x03DC1 (+0000) Set              22 05 01 00  bank=5 bit=1 val=0
+  0x03DC5 (+0004) While            0f 04 08 00
+  0x03DC9 (+0008) Ck               21 05 01 00  bank=5 bit=1 val=0
+  0x03DCD (+000C) Evt_next         02
+  0x03DCE (+000D) Nop              00
+  0x03DCF (+000E) Ewhile           10 00
+  0x03DD1 (+0010) Evt_end          01 00
+
+=== sub16  [file 0x3DD3..0x3DE5]  (18 B)
+  0x03DD3 (+0000) Set              22 05 02 00  bank=5 bit=2 val=0
+  0x03DD7 (+0004) While            0f 04 08 00
+  0x03DDB (+0008) Ck               21 05 02 00  bank=5 bit=2 val=0
+  0x03DDF (+000C) Evt_next         02
+  0x03DE0 (+000D) Nop              00
+  0x03DE1 (+000E) Ewhile           10 00
+  0x03DE3 (+0010) Evt_end          01 00
+
+=== sub17  [file 0x3DE5..0x3E24]  (63 B)
+  0x03DE5 (+0000) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x03DE9 (+0004) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x03DED (+0008) Work_set         2e 02 00  kind=2 idx=0
+  0x03DF0 (+000B) Nop              00
+  0x03DF1 (+000C) Member_set       34 0c 12 00  member=0x0C val=18
+  0x03DF5 (+0010) Sleep            09 0a 0a 00
+  0x03DF9 (+0014) Work_set         2e 01 00  kind=1 idx=0
+  0x03DFC (+0017) Nop              00
+  0x03DFD (+0018) Plc_dest         40 00 09 00 c2 cf 36 c5
+  0x03E05 (+0020) Gosub            18 0e
+  0x03E07 (+0022) Sleep            09 0a 64 00
+  0x03E0B (+0026) Plc_dest         40 00 09 00 c2 cf e6 b0
+  0x03E13 (+002E) Gosub            18 0e
+  0x03E15 (+0030) Aot_reset        46 01 02 31 3c 9c 00 00 58 a8  slot=1 sce=2 flags=0x31 p=(39996,0,43096)
+  0x03E1F (+003A) Aot_on           47 01
+  0x03E21 (+003C) Evt_end          01 00

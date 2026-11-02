@@ -1,0 +1,44 @@
+RE2 G2: EMD Sektor 2944 193124 TIM Sektor 2895 99872
+== 1 Abschnitte (md5[:8], Laenge)
+  D0 0:4716:32f6dfae 1:5520:c16499a8 2:76792:76d525a2 3:4:f1d3ff84 4:4:f1d3ff84 5:400:8fc366bc 6:7688:0f564867 7:31364:f0a735a7 8:99872:a8a42989
+  D1 0:4716:32f6dfae 1:5520:c16499a8 2:76792:76d525a2 3:4:f1d3ff84 4:4:f1d3ff84 5:400:8fc366bc 6:7688:c4675e33 7:31364:f0a735a7 8:99872:a8a42989
+  M1 0:4716:32f6dfae 1:5356:0df2bb9f 2:73348:37c8846a 3:4:f1d3ff84 4:4:f1d3ff84 5:400:8fc366bc 6:7688:c4675e33 7:37028:dfc47fab 8:99872:ff05069b
+  M0x 0:4716:32f6dfae 1:5356:0df2bb9f 2:73348:37c8846a 3:4:f1d3ff84 4:4:f1d3ff84 5:400:8fc366bc 6:7688:0f564867 7:37028:dfc47fab 8:99872:ff05069b
+== 2 Meshes M1 gegen D0 (gleich = Vertices+Normalen+Flaechen+UV identisch)
+  M1[ 0] V 86 T 14 Q 72 | D0[0] V 34 -> anders
+  M1[ 1] V 37 T  6 Q 32 | D0[1] V 19 -> anders
+  M1[ 2] V 21 T 25 Q  6 | D0[2] V 32 -> anders
+  M1[ 3] V 16 T  4 Q 12 | D0[3] V 16 -> anders
+  M1[ 4] V 31 T  6 Q 26 | D0[4] V 19 -> anders
+  M1[ 5] V 21 T 25 Q  6 | D0[5] V 44 -> anders
+  M1[ 6] V 16 T  4 Q 12 | D0[6] V 16 -> anders
+  M1[ 7] V  3 T  1 Q  0 | D0[7] V 18 -> anders
+  M1[ 8] V 69 T 77 Q 27 | D0[8] V 69 -> GLEICH
+  M1[ 9] V 61 T 73 Q 18 | D0[9] V 61 -> GLEICH
+  M1[10] V 39 T 30 Q 22 | D0[10] V 39 -> GLEICH
+  M1[11] V 18 T 18 Q  7 | D0[11] V 18 -> GLEICH
+  M1[12] V 52 T 32 Q 26 | D0[12] V 52 -> GLEICH
+  M1[13] V 41 T 34 Q 22 | D0[13] V 41 -> GLEICH
+  M1[14] V 27 T 24 Q 13 | D0[14] V 27 -> GLEICH
+  M1[15] V 84 T 74 Q 40 | D0[15] V 44 -> anders
+  M1[16] V 84 T 74 Q 40 | D0[16] V 50 -> anders
+== 3 Beine M1[1..6] gegen G2[12..17]: Punktmengen, 1:1-Zuordnung (Ungarisch), max |d| je Achse
+  M1[1] G2[12] n=37 max|d| [2, 2, 2] exakt gleiche Punkte 5, in gleicher Reihenfolge 0; T/Q M1 6/32 G2 6/32
+  M1[2] G2[13] n=21 max|d| [2, 2, 2] exakt gleiche Punkte 3, in gleicher Reihenfolge 0; T/Q M1 25/6 G2 25/6
+  M1[3] G2[14] n=16 max|d| [1, 0, 1] exakt gleiche Punkte 6, in gleicher Reihenfolge 6; T/Q M1 4/12 G2 4/12
+  M1[4] G2[15] n=31 max|d| [2, 2, 2] exakt gleiche Punkte 9, in gleicher Reihenfolge 0; T/Q M1 6/26 G2 6/26
+  M1[5] G2[16] n=21 max|d| [2, 2, 2] exakt gleiche Punkte 4, in gleicher Reihenfolge 1; T/Q M1 25/6 G2 25/6
+  M1[6] G2[17] n=16 max|d| [1, 0, 1] exakt gleiche Punkte 6, in gleicher Reihenfolge 6; T/Q M1 4/12 G2 4/12
+== 4 Skelett und Keyframes
+  D0: Knochen 16 kf_size 84 kf 912 Eltern [-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 8, 10, 11, 8, 13, 14]
+  M1: Knochen 16 kf_size 84 kf 871 Eltern [-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 8, 10, 11, 8, 13, 14]
+  G2: Knochen 18 kf_size 96 kf 1357 Eltern [-1, 0, 1, 2, 2, 4, 5, 5, 5, 2, 9, 10, 0, 12, 13, 0, 15, 16]
+  EMR-Kopf+Rel D0==M1: True
+  M1-Keyframes, die bytegleich in D0 vorkommen: 871 / 871
+  Clips D0 (Start,Bilder): [(0, 29), (29, 68), (97, 27), (124, 81)] ...
+  Clips M1 (Start,Bilder): [(0, 29), (29, 27), (56, 27), (83, 81)] ...
+== 5 TIM
+  M1 gegen D0: TIM-Kopf gleich True, Pixelindex gleich 0.5%, CLUT-Eintraege gleich 0/768
+  M1 gegen G2: TIM-Kopf gleich True, Pixelindex gleich 5.8%, CLUT-Eintraege gleich 3/768
+  RGB 16x16-Kacheln an GLEICHER Stelle M1~G2: <1 45, <10 105 von 380 nichtschwarzen
+  RGB 16x16-Kacheln an GLEICHER Stelle M1~D0: <1 0, <10 0 von 380 nichtschwarzen

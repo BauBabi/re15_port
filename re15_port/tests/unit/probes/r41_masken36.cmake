@@ -93,7 +93,9 @@ endif()
 # Gemessen NB5: gesamt 3 360 = Stage 3 2 (ROOM3040/3041 C4 Rechteck 118, neues Teil auf Zelle @0x009C0: je 1 Figurpunkt an der Streifenkante),
 # Stage 4 72 / Stage 5 270 (unveraendert NB3), Stage 6 3 016 (ROOM6010/6011 C5 Rechtecke 113..117, neues Teil 8 auf Zelle @0x0092C: Resthoehle
 # HINTER einem neu gezeichneten Teil - vor NB5 waren diese Figurpunkte ohne jede Maske sichtbar; Platz im Cut 128/128 erschoepft, Dossier NB5).
-add_test(NAME unit_r41_masken36_fern COMMAND test_r37_masken36 fern 3360 2 72 270 3016 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+# Runde 41 Spur Q: Stage 6 und Summe nach Teil 8 6010/6011 C5 (je OT-Stufe ein Rechteck, tools/maske/stufen_r41.py): 3016 -> 844, 3360 -> 1188.
+# Nachbesserung 1 (Abnahme 0 Mangel M1): Teil 8 auf der Ebene der Wange x -20591 (Koerper bis zu ihr, tools/maske/wange_r41.py): Stage 6 844 -> 0, Summe 1188 -> 344.
+add_test(NAME unit_r41_masken36_fern COMMAND test_r37_masken36 fern 344 2 72 270 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(unit_r41_masken36_fern PROPERTIES TIMEOUT 1500)
 #   integration_r41_masken36_fern  echte exe (Leon und Elza): hinter der Buero-Trennwand ROOM30A0 Cut 0/1 an den Spielstellen der Abnahme 2
 #                             im Fenster der Trennwand KEIN Figurpunkt im Endbild sichtbar (Art Z, V == 0, probe_r41_masken36_sicht mit

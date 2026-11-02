@@ -1,0 +1,48 @@
+1270; Datei 4 B, uebersprungen
+1271; Datei 4 B, uebersprungen
+20C0; Datei 4 B, uebersprungen
+20C1; Datei 4 B, uebersprungen
+20D0; Datei 4 B, uebersprungen
+20D1; Datei 4 B, uebersprungen
+20E0; Datei 4 B, uebersprungen
+20E1; Datei 4 B, uebersprungen
+20F0; Datei 4 B, uebersprungen
+20F1; Datei 4 B, uebersprungen
+3070; sub00; 0x33CE; slot 0; typ 0x30; pose 0x33; xyz 30000,0,30000; 44 00 30 33 00 00 00 ff 30 75 00 00 30 75 00 00 00 08 00 00 2c 02
+3070; sub00; 0x340C; slot 0; typ 0x30; pose 0x10; xyz -23860,0,-12720; 44 00 30 10 00 00 00 ff cc a2 00 00 50 ce 00 00 00 00 00 00 46 00
+3071; sub00; 0x3434; slot 0; typ 0x30; pose 0x21; xyz -29000,0,-11850; 44 00 30 21 00 00 00 ff b8 8e 00 00 b6 d1 00 00 00 00 00 00 22 01
+3071; sub00; 0x347A; slot 0; typ 0x30; pose 0x10; xyz -23860,0,-12720; 44 00 30 10 00 00 00 ff cc a2 00 00 50 ce 00 00 00 00 00 00 22 01
+3080; sub00; 0x7D4; slot 2; typ 0x36; pose 0x24; xyz -20000,0,-26000; 44 02 36 24 00 00 00 ff e0 b1 00 00 70 9a 00 00 00 08 00 00 04 ff
+30F0; Datei 4 B, uebersprungen
+30F1; Datei 4 B, uebersprungen
+4060; Datei 4 B, uebersprungen
+4061; Datei 4 B, uebersprungen
+40C0; Datei 4 B, uebersprungen
+40C1; Datei 4 B, uebersprungen
+40D0; Datei 4 B, uebersprungen
+40D1; Datei 4 B, uebersprungen
+40E0; Datei 4 B, uebersprungen
+40E1; Datei 4 B, uebersprungen
+40F0; Datei 4 B, uebersprungen
+40F1; Datei 4 B, uebersprungen
+5080; sub00; 0x746; slot 0; typ 0x30; pose 0x33; xyz -18100,-5600,200; 44 00 30 33 00 00 00 ff 4c b9 20 ea c8 00 00 00 00 08 00 00 22 01
+5081; sub00; 0x742; slot 0; typ 0x30; pose 0x33; xyz -18100,-5600,200; 44 00 30 33 00 00 00 ff 4c b9 20 ea c8 00 00 00 00 08 00 00 54 00
+5090; sub00; 0x124A; slot 1; typ 0x30; pose 0x33; xyz -14700,0,-23350; 44 01 30 33 00 00 00 ff 94 c6 00 00 ca a4 00 00 00 00 00 00 22 01
+5091; sub00; 0x1232; slot 0; typ 0x30; pose 0x33; xyz -14700,0,-23350; 44 00 30 33 00 00 00 ff 94 c6 00 00 ca a4 00 00 00 00 00 00 54 00
+50E0; sub00; 0xACE; slot 0; typ 0x30; pose 0x33; xyz -15000,-5600,12200; 44 00 30 33 00 00 00 ff 68 c5 20 ea a8 2f 00 00 00 04 00 00 07 00
+50E0; sub00; 0xAEE; slot 0; typ 0x30; pose 0x10; xyz -15000,0,-16300; 44 00 30 10 00 00 00 ff 68 c5 00 00 54 c0 00 00 00 0c 00 00 54 00
+50F1; sub00; 0x9AC; slot 0; typ 0x30; pose 0x33; xyz -12100,-5600,-31500; 44 00 30 33 00 00 00 ff bc d0 20 ea f4 84 00 00 00 0c 00 00 22 01
+50F1; sub00; 0x9D4; slot 0; typ 0x30; pose 0x10; xyz -12100,0,-15550; 44 00 30 10 00 00 00 ff bc d0 00 00 42 c3 00 00 00 04 00 00 22 01
+5150; Datei 4 B, uebersprungen
+5151; Datei 4 B, uebersprungen
+5160; Datei 4 B, uebersprungen
+5161; Datei 4 B, uebersprungen
+5170; Datei 4 B, uebersprungen
+5171; Datei 4 B, uebersprungen
+6050; Datei 4 B, uebersprungen
+6051; Datei 4 B, uebersprungen
+6060; Datei 4 B, uebersprungen
+6061; Datei 4 B, uebersprungen
+6070; Datei 4 B, uebersprungen
+6071; Datei 4 B, uebersprungen
+Summe 13 Lauf-Abbrueche 18

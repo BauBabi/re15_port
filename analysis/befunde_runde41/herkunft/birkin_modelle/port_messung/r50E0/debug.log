@@ -1,0 +1,84 @@
+[asset] exe-dir: C:/workspace/git/reAi_v2/re15_port/build/platform/pc
+[asset] cd-root: C:/workspace/git/reAi_v2/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[render] SDL-Renderer direct3d, Videotreiber windows, ABR2 (B-F) ok
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] kein Controller gefunden (Tastatur bleibt aktiv)
+[titel_r39] alte Beschriftung entfernt: 929 Pixel; neu "Ver.0.8.29 dev" (RE15_VERSION "v0.8.29 dev") Spalten 200..283
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE5/ROOM50E0.RDT (101604 bytes)
+[rdt] nCut=10 nDoor=0 nItem=0 zones=24 main_scd=34B sub=5 props=0
+[esp] room 50E0: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 17 meshes
+[w01] PL00W01 weapon-track: 15 bones, 14 clips, 222 kf
+[w03] PL00W03 gun-track: 15 bones, 14 clips, 248 kf
+[wpn] loaded 21/21 PL00W** in-hand meshes (textured from body-skin slot 0)
+[skel] PL00: 15 bones, 24 clips, 712 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM50E0.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 222 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 248 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL00W**.PLW
+[messer] Startinventar Charakter 0: 03 x15 15 x50 | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 10 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM50E0 = (-25450,0,-14700) yaw=0
+[scd] thread start slot=0 first_op=0x3B
+[save] CONTINUE: resumed in room 50e0 (hp=100)
+[scd] thread start slot=1 first_op=0x06
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x514 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[enemy] EM30 loaded: 17 meshes, 16 bones, 21 clips -> slot 11
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(-9950,0,-18200) rot=2048
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[enemy-diag] actor1 type=0x30 model=enemy-bank slot=11 motion=0 anim_frame=16 clips=21
+[gator-fx] F0 Kern-Zeilen 485..498 (RE2 TEX.TIM) Slot 56 ok - spielweit ab dem Start (G-E4)
+[walk] F30 cut=0 mo=200 af=30 frz=0 | pl pos=(-9950,0,-18200) rot=2048
+[walk] F60 cut=0 mo=200 af=60 frz=0 | pl pos=(-9950,0,-18200) rot=2048
+[bone]  0: rel=(0,-1810,0) world=(-9950,-1810,-18200)
+[F60] cut=0 sd=208
+  cut.pos=(-19130,-11864,-9394)
+  cut.target=(-24340,6970,-17306)
+  cut.fov=26684
+  VT=(-10851,21870,2356)
+  VR0=(-3433,0,2260) VR1=(2028,1842,3080) VR2=(-1017,3676,-1544)
+  Player=(-9950,0,-18200) rot_y=2048
+  pose[0].trans=(0,-1810,0)
+  bone_world=(-9950,-1810,-18200)
+  combined_trans=(-12554,2444,10062)
+  combined_rot[0..2]=(3433,0,-2260)
+  proj sx=-100 sy=171
+[bone]  1: rel=(-29,-1829,0) world=(-9921,-1829,-18200)
+[bone]  2: rel=(-28,-1709,-192) world=(-9922,-1709,-18008)
+[bone]  3: rel=(-15,-972,-216) world=(-9935,-972,-17984)
+[bone]  4: rel=(-71,-159,-255) world=(-9879,-159,-17945)
+[bone]  5: rel=(-26,-1704,191) world=(-9924,-1704,-18391)
+[bone]  6: rel=(-13,-967,221) world=(-9937,-967,-18421)
+[bone]  7: rel=(-67,-159,257) world=(-9883,-159,-18457)
+[bone]  8: rel=(-98,-2514,0) world=(-9852,-2514,-18200)
+[bone]  9: rel=(-59,-2502,-369) world=(-9891,-2502,-17831)
+[bone] 10: rel=(-122,-2083,-413) world=(-9828,-2083,-17787)
+[bone] 11: rel=(-12,-1692,-452) world=(-9938,-1692,-17748)
+[bone] 12: rel=(-59,-2502,369) world=(-9891,-2502,-18569)
+[bone] 13: rel=(-122,-2083,406) world=(-9828,-2083,-18606)
+[bone] 14: rel=(-11,-1691,439) world=(-9939,-1691,-18639)
+[walk] F90 cut=0 mo=200 af=90 frz=0 | pl pos=(-9950,0,-18200) rot=2048
+[walk] F120 cut=0 mo=211 af=13 frz=0 | pl pos=(-9950,0,-18200) rot=2048
+[walk] F150 cut=0 mo=211 af=43 frz=0 | pl pos=(-9950,0,-18200) rot=2048
+[flow] EXIT_AT: Bild 150 in Raum 50e0 erreicht -> exit

@@ -1,0 +1,23 @@
+ROOM50F0.RDT  100988 B
+header: nSprite=0 nCut=10 nOmodel=0 nItem=0 nDoor=0 nRoom_at=0 reverb=0
+main_scd=0x94C sub_scd=0x970
+
+### main: 0x94C..0x970, 1 Regionen
+
+=== main00  [file 0x94E..0x970]  (34 B)
+  0x0094E (+0000) Door_aot_set     3b 00 02 31 00 00 38 9b 00 9c 84 03 a0 0f 10 f5 00 00 9a c5 00 08 04 0d 07 00 00 00 00 00 00 00  slot=0 sce=2 flags=0x31 floor=0 follow=0 rect=(-25800,-25600,900,4000)
+  0x0096E (+0020) Evt_end          01 00
+
+### sub: 0x970..0x98C, 2 Regionen
+
+=== sub00  [file 0x974..0x988]  (20 B)
+  0x00974 (+0000) Switch           13 0a 0c 00
+  0x00978 (+0004) Case             14 00 04 00 00 00
+  0x0097E (+000A) Cut_chg          29 01
+  0x00980 (+000C) Break            1a 00
+  0x00982 (+000E) Eswitch          16 00
+  0x00984 (+0010) Cut_auto         3c 01
+  0x00986 (+0012) Evt_end          01 00
+
+=== sub01  [file 0x988..0x98C]  (4 B)
+  0x00988 (+0000) Evt_end          01 00

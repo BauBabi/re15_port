@@ -9,11 +9,15 @@ Dossier: analysis/befunde_runde41/C_ventilkette.md §0e (B4-2..B4-5, §7 zur Fre
 1. NAHAUFNAHME (Port-Bild 320 x 240; seit Nachbesserung 5 / Nachtrag 18 Punkt 1 im Stil des Spiels, 8 bpp, 256 Farben, Herleitung
    bei nahaufnahme_spielstil; die Fassung der Nachbesserung 4 (4 bpp, Flaechenfarben, Blockziffern) bleibt nur als "vorher"-Bild
    C_belege/nb4_plakat.png): ein Blatt an der Wand mit der Reihenfolge Farbe + Nummer - genau so
-   falsch, wie das Dokument es beschreibt (Nutzer-Text: "They mixed up black, green, and red, and swapped the numbers for
-   black!"). Wahre Loesung (PORT-WAHL, Vorschlag zur Freigabe): 09 rot, 07 schwarz, 02 gruen, 01 schwarz. Auf dem Plakat:
-   Farben zyklisch vertauscht (rot -> "GREEN", gruen -> "BLACK", schwarz -> "RED"), die zwei schwarzen Nummern getauscht
-   (07 <-> 01) -> "1 GREEN 09 / 2 RED 01 / 3 BLACK 02 / 4 RED 07". Schrift = die RE2-Dokumentschrift (Atlas aus
-   re2_doc_satz.atlas_bauen, dieselbe wie FILE31), Ziffernschilder weiss auf schwarz wie die Schilder im Raum.
+   falsch, wie das Dokument es beschreibt. SEIT RUNDE 41 SPUR N (AUFTRAG.md Nachtrag 30/30b/30d, Nutzer-Wahl per Auswahl
+   2026-10-25 17:23): Notiz-Satz "They mixed up green and red, and on top of that they swapped the numbers of "black" and
+   "green"!" -> zwei Regeln: (1) Gruen und Rot sind auf dem Plakat vertauscht, Schwarz stimmt; (2) die Nummern der Zeilen
+   "GREEN" und "BLACK" sind vertauscht. Plakat NEU (Nachtrag 30d woertlich): "1. GREEN 01 - 2. RED 02 - 3. BLACK 09 -
+   4. RED 08" -> Loesung 09 rot, 02 gruen, 01 schwarz, 08 gruen (jede berichtigte Zeile = ein echtes Rad: 09 rot / 02 gruen /
+   01 schwarz / 08 gruen, Kopf re15_ventilkette_r41.h "Ventil-RAEDER"). Vorher (Nachtrag 15, Spur C): Farben zyklisch
+   vertauscht + schwarze Nummern getauscht -> "1 GREEN 09 / 2 RED 01 / 3 BLACK 02 / 4 RED 07", Loesung 09-07-02-01.
+   Schrift = die RE2-Dokumentschrift (Atlas aus re2_doc_satz.atlas_bauen, dieselbe wie FILE31), Ziffernschilder weiss auf
+   schwarz wie die Schilder im Raum.
 2. AUSHANG im Raum (Weltmodell obj 7): EIN Viereck in der MD1-Form der Wasserflaeche (gen_r41_ventilkette.py
    reling_netz: Kopf 12 B + 14 Worte, Ecken, eine Normale, Viereck, UV-Satz), senkrecht in der x/y-Ebene, Normale
    (0,0,-4096) zur Kamera (Blick +z auf die Suedwand), 700 x 816 (Seitenverhaeltnis des Blatts 192 x 224); TIM 8 bpp 64 x 64
@@ -41,14 +45,28 @@ import re2_doc_satz as R  # noqa: E402
 
 REPO = os.path.abspath(os.path.join(HIER, "..", "..", ".."))
 GEN = os.path.join(REPO, "re15_port", "engine", "src", "gen")
-BELEGE = os.path.join(REPO, "analysis", "befunde_runde41", "C_belege")
+BELEGE = os.path.join(REPO, "analysis", "befunde_runde41", "N_belege")   # seit Runde 41 Spur N (vorher C_belege/nb4_/nb5_*)
 RE2 = os.path.join(REPO, "info", "re2leon", "PL0", "RDT")
 
-# ---- Inhalt (PORT-WAHL, Vorschlag zur Freigabe; Ableitung im Dossier §7) ----------------------------------------------
-LOESUNG = [("09", "red"), ("07", "black"), ("02", "green"), ("01", "black")]
-FARBE_AUF_PLAKAT = {"red": "GREEN", "green": "BLACK", "black": "RED"}          # zyklisch vertauscht
-SCHWARZ_TAUSCH = {"07": "01", "01": "07"}                                       # Nummern der Schwarzen getauscht
-PLAKAT = [(FARBE_AUF_PLAKAT[f], SCHWARZ_TAUSCH.get(n, n) if f == "black" else n) for (n, f) in LOESUNG]
+# ---- Inhalt: NUTZER-VORGABE Nachtrag 30d (AUFTRAG.md 2026-10-25 17:23; Dossier N_nachtrag30.md §3) ------------------------
+LOESUNG = [("09", "red"), ("02", "green"), ("01", "black"), ("08", "green")]
+FARBE_AUF_PLAKAT = {"red": "GREEN", "green": "RED", "black": "BLACK"}          # Regel 1: Gruen <-> Rot vertauscht, Schwarz stimmt
+
+
+def _plakat_aus_loesung(loesung):
+    """Regel 1 (Farben) je Zeile, dann Regel 2: die Nummern der Zeilen "GREEN" und "BLACK" tauschen (je genau eine Zeile)."""
+    z = [[FARBE_AUF_PLAKAT[f], n] for (n, f) in loesung]
+    ig = [i for i, (fw, _) in enumerate(z) if fw == "GREEN"]
+    ib = [i for i, (fw, _) in enumerate(z) if fw == "BLACK"]
+    assert len(ig) == 1 and len(ib) == 1, (ig, ib)
+    z[ig[0]][1], z[ib[0]][1] = z[ib[0]][1], z[ig[0]][1]
+    return [tuple(t) for t in z]
+
+
+PLAKAT = _plakat_aus_loesung(LOESUNG)
+PLAKAT_30D = [("GREEN", "01"), ("RED", "02"), ("BLACK", "09"), ("RED", "08")]   # Nachtrag 30d woertlich
+assert PLAKAT == PLAKAT_30D, PLAKAT
+PLAKAT_VORHER = [("GREEN", "09"), ("RED", "01"), ("BLACK", "02"), ("RED", "07")]  # Nachtrag 15 (Spur C), nur Vergleichsbild
 TITEL = ["VALVE OPERATION", "FLOOD GATES - POOL"]
 FUSS = ["Turn the valves", "in this order."]
 
@@ -378,7 +396,8 @@ def _weich(maske, sigma):
     return np.array(im).astype(np.float32) / 255.0
 
 
-def nahaufnahme_spielstil(font):
+def nahaufnahme_spielstil(font, plakat=None):
+    plakat = PLAKAT if plakat is None else plakat
     rng = np.random.default_rng(2030)               # fester Keim: reproduzierbar
     W2, H2 = W * S2, H * S2
     yy, xx = np.mgrid[0:H2, 0:W2].astype(np.float32)
@@ -439,7 +458,7 @@ def nahaufnahme_spielstil(font):
     linie = np.zeros((3, x1 - x0 - 56), np.float32) + 1
     _auftragen(bild, _weich(np.pad(linie, 2), 0.8), x0 + 26, y + 2, tinte, 0.8)
     y0z = y + 24
-    for k, (farbwort, nummer) in enumerate(PLAKAT):
+    for k, (farbwort, nummer) in enumerate(plakat):
         yy0 = y0z + k * 62
         zeile("%d." % (k + 1), yy0 + 6, 2, fett=True, x=x0 + 22)
         # gedruckter Farbpunkt mit Druckstruktur
@@ -494,7 +513,7 @@ def aushang_tim_rgb(klein):
 
 def vergleichsbogen(vorher, nachher, nah_dir, ziel):
     from PIL import ImageDraw
-    bilder = [(vorher, "vorher (Nachbesserung 4)"), (nachher, "nachher (Nachbesserung 5)")]
+    bilder = [(vorher, "vorher (Nachtrag 15: GREEN 09 / RED 01 / BLACK 02 / RED 07)"), (nachher, "nachher (Nachtrag 30d: GREEN 01 / RED 02 / BLACK 09 / RED 08)")]
     if nah_dir:
         for name, was in (("ROOM11D12.ppm", "RE1.5 ROOM11D0 Cut 12 (Zwinger-Pult)"), ("ROOM11F12.ppm", "RE1.5 ROOM11F0 Cut 12 (Notstrom)")):
             p = os.path.join(nah_dir, name)
@@ -516,9 +535,8 @@ def main():
     ap.add_argument("--nah-dir", default=None)
     args = ap.parse_args()
     font = atlas(args)
-    alt = nahaufnahme(font)                         # Fassung der Nachbesserung 4 (nur fuer den Vergleich)
-    vorher = Image.new("RGB", (W, H))
-    vorher.putdata([PAL[v] for row in alt for v in row])
+    qv, _, _ = nahaufnahme_spielstil(font, PLAKAT_VORHER)   # Fassung vor Nachtrag 30d (nur fuer den Vergleich)
+    vorher = qv.convert("RGB")
     q, pal, klein = nahaufnahme_spielstil(font)
     pix8 = bytes(q.getdata())
     tim, nfarben = aushang_tim_rgb(klein)
@@ -527,7 +545,8 @@ def main():
     bm = aushang_md1(500, 700)
     kopf = ("/* AUTOMATISCH ERZEUGT von re15_port/tools/r41_ventilkette/plakat.py - nicht von Hand aendern.\n"
             " * Runde 41 Spur C, Nachbesserung 4 (Nachtrag 13) + 5 (Nachtrag 18 Punkt 1, Stil des Spiels): Plakat mit der FALSCHEN\n"
-            " * Ventil-Anleitung + Weltmodelle. Plakat (Reihenfolge wie gedruckt): %s; wahre Loesung %s.\n"
+            " * Ventil-Anleitung + Weltmodelle. Inhalt seit Runde 41 Spur N = Nachtrag 30d (Gruen <-> Rot, Nummern\n"
+            " * der Zeilen GREEN/BLACK getauscht). Plakat (Reihenfolge wie gedruckt): %s; wahre Loesung %s.\n"
             " * Nahaufnahme 320 x 240, 8 bpp (1 Byte je Pixel), Palette 256 x RGB; md5 %s.\n"
             " * Aushang: MD1 1 Viereck 700 x 816 (md5 %s), TIM 8 bpp 64 x 64, %d Farben (md5 %s).\n"
             " * Dokument-Zettel (Nachbesserung 5): MD1 1 Viereck 500 x 700 (Aushang-Form), TIM 8 bpp 64 x 64 (md5 %s). */\n"
@@ -544,9 +563,8 @@ def main():
     ziel = os.path.join(GEN, "ventilkette_r41_plakat.inc")
     open(ziel, "w", newline="\n").write("\n".join(teile) + "\n")
     os.makedirs(BELEGE, exist_ok=True)
-    q.convert("RGB").resize((W * 2, H * 2), Image.NEAREST).save(os.path.join(BELEGE, "nb5_plakat.png"))
-    vergleichsbogen(vorher, q.convert("RGB"), args.nah_dir, os.path.join(BELEGE, "nb5_plakat_vergleich.png"))
-    notiz.resize((256, 256), Image.NEAREST).save(os.path.join(BELEGE, "nb5_dokument_zettel_tex.png"))
+    q.convert("RGB").resize((W * 2, H * 2), Image.NEAREST).save(os.path.join(BELEGE, "n_plakat_30d.png"))
+    vergleichsbogen(vorher, q.convert("RGB"), args.nah_dir, os.path.join(BELEGE, "n_plakat_vorher_nachher.png"))
     print("geschrieben:", ziel, "Plakat %s" % (PLAKAT,), "Aushang-TIM %d Farben" % nfarben)
 
 

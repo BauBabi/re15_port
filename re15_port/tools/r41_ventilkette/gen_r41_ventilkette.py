@@ -96,6 +96,7 @@ ZELLE = 1800   # Gitterschritt des Originals (ROOM2080 MD1: x 0..21600, z 0..162
 
 def reling_netz(org):
     """Netz der Relinghoehe in der MD1-Form von ROOM2080 Prop 0 (org = die 4572 Original-Bytes)."""
+    rechtecke = RELING_RECHTECKE
     laenge, unbek, oc = struct.unpack_from("<III", org, 0)
     h = struct.unpack_from("<14I", org, 12)
     assert oc == 2 and h[5] == 0 and h[10] == 1 and h[12] == 108, (oc, h)
@@ -116,10 +117,10 @@ def reling_netz(org):
             n = -(-(e - a) // ZELLE)
             aus += [a + ((e - a) * i) // n for i in range(n)]
         return aus + [g[-1]]
-    xs = teile([v for r in RELING_RECHTECKE for v in r[0:2]])
-    zs = teile([v for r in RELING_RECHTECKE for v in r[2:4]])
+    xs = teile([v for r in rechtecke for v in r[0:2]])
+    zs = teile([v for r in rechtecke for v in r[2:4]])
     def drin(x, z):
-        return any(r[0] <= x <= r[1] and r[2] <= z <= r[3] for r in RELING_RECHTECKE)
+        return any(r[0] <= x <= r[1] and r[2] <= z <= r[3] for r in rechtecke)
     ecken, vier, index = [], [], {}
     def ecke(x, z):
         if (x, z) not in index:
@@ -149,7 +150,7 @@ def reling_netz(org):
     k = ("/* Netz der Relinghoehe fuer ROOM2030/2031 (Nachbesserung 3, Nachtrag 8): MD1-Form von ROOM2080 Prop 0 (oben),\n"
          " * %d Ecken, %d Vierecke (<= %d x %d), Normale und UV-Satz (%s) Byte fuer Byte aus dem Original, Ursprung = Weltursprung\n"
          " * von ROOM2030; Rechtecke (x0,x1,z0,z1) %s. md5 %s */\n"
-         % (nv, nq, ZELLE, ZELLE, uv.hex(), RELING_RECHTECKE, hashlib.md5(bytes(b)).hexdigest()))
+         % (nv, nq, ZELLE, ZELLE, uv.hex(), rechtecke, hashlib.md5(bytes(b)).hexdigest()))
     return bytes(b), k
 
 
@@ -230,13 +231,11 @@ TEXTE = [
     # (Raumgruppe, Id, Name, Seiten, frage, gruen, Herkunft)
     ("2000", 40, "leiter", [["I cannot climb up the ladder", "because of the water pressure."]], False, None,
      "NUTZER-VORGABE (AUFTRAG.md: \"I cannot climb up the ladder because of the water pressure\")"),
-    ("2030", 40, "pult_ohne_druck", [["A control panel for the bridge.", "The pressure gauge reads zero."],
-                                      ["Intake valve 13 is closed."]], False, None,
-     "PORT-WAHL (Nutzer: \"Pult meldet zu wenig Druck / Zulaufventil 13 geschlossen\")"),
-    ("2030", 41, "ventil13_frage", [["Intake valve 13.", "Will you open it"]], True, None,
-     "PORT-WAHL, Frageform ROOM2050 msg 0 @0x2446"),
-    ("2030", 42, "ventil13_offen", [["You've opened valve 13.", "The pressure is rising."]], False, None,
-     "PORT-WAHL, Form ROOM2030 msg 3 @0x20AC"),
+    ("2030", 40, "panel_frage", [["A control panel for the bridge.", "Will you operate the panel"]], True, None,
+     "PORT-WAHL (Spur N, Nachtrag 37, Entwurf A \"Will you operate the panel?\"), Frageform ROOM2050 msg 0 @0x2446"),
+    ("2030", 41, "panel_start", [["The pressure gauge reads 100."], ["Pick a tank to drain,", "then a tank to fill."]], False, None,
+     "PORT-WAHL (Spur N, Entwurf A)"),
+    ("2030", 42, "panel_leer", [["The tank is empty."]], False, None, "PORT-WAHL (Spur N, Entwurf A)"),
     ("2030", 43, "bruecke_frage", [["The pressure gauge reads 80.", "Lower the bridge"]], True, None,
      "NUTZER-VORGABE \"Lower the bridge?\" (AUFTRAG.md)"),
     ("2030", 44, "bruecke_unten", [["The bridge is down."]], False, None,
@@ -248,7 +247,7 @@ TEXTE = [
      "NUTZER-VORGABE Nachtrag 19 (AUFTRAG.md 2026-10-24 19:55) woertlich: \"WARNING: The water will rise in one minute. "
      "Please leave the room immediately!\" - nur umbrochen: drei Zeilen auf EINER Seite wie ROOM10D0 msg 17 @0x21BD (zwei "
      "0x08 in einer Seite), jede Zeile <= 286 px = breiteste Original-Zeile (ROOM1070 msg 1, Breiten DEBUG.BIN @0x4416)"),
-    ("2030", 47, "ventil13_zustand", [["Intake valve 13 is open."]], False, None, "PORT-WAHL, Zustandssatz"),
+    ("2030", 47, "panel_voll", [["The tank is full."]], False, None, "PORT-WAHL (Spur N, Entwurf A)"),
     ("2030", 48, "treppe_flut", [["I cannot go down the stairs", "because of the water."]], False, None,
      "PORT-WAHL (Nachbesserung 3, Nachtrag 8: unterer Bereich nach dem Strom geflutet und gesperrt), Form der Leiter-Vorgabe Id 40"),
     ("2030", 50, "ventil_01", [["Valve 01, black wheel.", "Will you turn it"]], True, None,

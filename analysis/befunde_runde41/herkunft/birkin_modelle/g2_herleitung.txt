@@ -1,0 +1,107 @@
+== 1) Beine, vertexweise
+M1[1] G2[12] n=37 gleiche Reihenfolge, Differenz je Achse min [-358 -939 -310] max [435 743 348]; Anteil Vertices exakt 0.00
+    x: bei G2<0 Differenzen {163: 1, 48: 1, -33: 1, -9: 1, 187: 1, 49: 1, 278: 1, 266: 1, 156: 1, 203: 1, 73: 1, -31: 1, 80: 1, -2: 1, 225: 1, -92: 1, 273: 1, 435: 1}  bei G2>=0 {-80: 1, -223: 1, -82: 1, -55: 1, -100: 1, -358: 1, -355: 1, 55: 1, 97: 1, 25: 1, 81: 1, -49: 1, 49: 1, -273: 1, -335: 1, 17: 1, -75: 1, -286: 2}
+    y: bei G2<0 Differenzen {200: 2, 514: 1, 515: 1, 1: 1, 2: 1}  bei G2>=0 {-97: 1, -1: 1, 98: 1, 0: 1, 743: 1, 741: 2, 391: 1, -387: 1, -2: 1, -198: 1, -939: 1, -742: 1, -354: 1, -552: 1, 46: 2, -125: 1, -46: 1, -511: 1, -709: 1, -151: 1, -152: 1, -114: 1, -74: 1, 198: 2, 151: 1, 114: 1, 115: 1, 152: 1}
+    z: bei G2<0 Differenzen {-89: 1, 93: 1, 198: 1, 264: 1, 163: 1, -163: 1, -95: 1, 0: 1, -3: 1, -157: 1, -56: 1, 103: 1, 1: 2, 327: 1, 17: 1, 118: 2, 192: 1, 348: 1, 44: 1, 174: 1, 4: 1, 7: 1, 5: 1}  bei G2>=0 {-97: 1, -310: 1, -208: 1, -212: 1, 2: 1, -98: 1, -275: 1, -116: 1, 36: 1, -73: 1, -21: 1, -192: 1}
+M1[2] G2[13] n=21 gleiche Reihenfolge, Differenz je Achse min [-317 -945 -285] max [231 804 361]; Anteil Vertices exakt 0.00
+    x: bei G2<0 Differenzen {4: 1, -60: 1, -28: 1, 211: 1, -1: 1, 30: 1, 19: 1, 231: 1, 43: 1, 204: 1, 105: 1, 119: 1, 132: 1}  bei G2>=0 {-213: 1, 14: 1, 0: 1, -230: 1, -21: 1, -317: 1, 87: 1, -303: 1}
+    y: bei G2<0 Differenzen {397: 1}  bei G2>=0 {-601: 1, -421: 1, -431: 1, 0: 1, 541: 1, 554: 1, 804: 1, -437: 1, 432: 1, 272: 1, -207: 1, -198: 1, -536: 1, -483: 1, -172: 1, 466: 1, 165: 1, 483: 1, 319: 1, -945: 1}
+    z: bei G2<0 Differenzen {-97: 1, -68: 1, 2: 1, 1: 1, 290: 1, 97: 1, 35: 1, 361: 1, 7: 1, 13: 1}  bei G2>=0 {-184: 1, -215: 1, -83: 1, -44: 1, 40: 1, -60: 1, -40: 1, -285: 1, 172: 1, 89: 1, -11: 1}
+M1[3] G2[14] n=16 gleiche Reihenfolge, Differenz je Achse min [0 0 0] max [1 0 1]; Anteil Vertices exakt 0.38
+    x: bei G2<0 Differenzen {1: 4}  bei G2>=0 {0: 12}
+    y: bei G2<0 Differenzen {}  bei G2>=0 {0: 16}
+    z: bei G2<0 Differenzen {1: 8}  bei G2>=0 {0: 8}
+M1[4] G2[15] n=31 gleiche Reihenfolge, Differenz je Achse min [-429 -826 -326] max [328 830 324]; Anteil Vertices exakt 0.00
+    x: bei G2<0 Differenzen {163: 1, 48: 1, 38: 1, -80: 1, 187: 1, 17: 1, 328: 1, 192: 1, 181: 1, 203: 1, 73: 1, -28: 1, -3: 1, 99: 1, 225: 1}  bei G2>=0 {-80: 1, -81: 1, -224: 1, -55: 1, -100: 1, -326: 1, -355: 1, 100: 1, 47: 1, 0: 1, 81: 1, -49: 1, 49: 1, -190: 1, -429: 1, -1: 1}
+    y: bei G2<0 Differenzen {200: 2, 829: 1, 830: 1, 1: 1, 2: 1}  bei G2>=0 {-97: 1, 97: 1, 0: 8, 743: 1, 741: 2, 554: 1, -186: 1, -198: 2, -743: 1, -742: 1, -555: 1, -753: 1, 73: 1, -826: 1, -628: 1, -73: 1}
+    z: bei G2<0 Differenzen {107: 1, 312: 1, 324: 1, 100: 1, 98: 1, 2: 1, 273: 1, 118: 1, 76: 1, -35: 1}  bei G2>=0 {91: 1, -99: 2, -196: 1, -262: 1, -161: 1, 2: 2, 97: 1, 165: 1, 5: 1, -2: 1, 53: 1, 162: 1, -325: 1, -15: 1, -116: 2, -173: 1, -326: 1, -42: 1}
+M1[5] G2[16] n=21 gleiche Reihenfolge, Differenz je Achse min [-303 -945 -359] max [231 804 287]; Anteil Vertices exakt 0.05
+    x: bei G2<0 Differenzen {-22: 1, -15: 1, -28: 1, 190: 1, -1: 1, -116: 1, 19: 1, 231: 1, 43: 1, 204: 1, 105: 1, 119: 1, 132: 1}  bei G2>=0 {-187: 1, 14: 1, 0: 2, -275: 1, -171: 1, 87: 1, -303: 1}
+    y: bei G2<0 Differenzen {397: 1}  bei G2>=0 {-426: 1, -596: 1, -431: 1, 0: 2, 555: 1, 540: 1, 804: 1, -5: 1, 272: 1, -35: 1, -370: 1, -536: 1, -483: 1, -172: 1, 466: 1, 165: 1, 483: 1, 319: 1, -945: 1}
+    z: bei G2<0 Differenzen {186: 1, 79: 1, 223: 1, 6: 1, 2: 1, 62: 1, 42: 1, 287: 1, -170: 1, -87: 1, 13: 1}  bei G2>=0 {76: 1, 93: 1, 0: 1, 1: 1, -206: 1, -177: 1, -33: 1, -359: 1, -5: 1, -11: 1}
+M1[6] G2[17] n=16 gleiche Reihenfolge, Differenz je Achse min [0 0 0] max [1 0 1]; Anteil Vertices exakt 0.38
+    x: bei G2<0 Differenzen {1: 4}  bei G2>=0 {0: 12}
+    y: bei G2<0 Differenzen {}  bei G2>=0 {0: 16}
+    z: bei G2<0 Differenzen {1: 8}  bei G2>=0 {0: 8}
+
+== Flaechen-Indizes der Beine: gleich?
+M1[1] G2[12]: Tri-Indizes gleich False, Quad-Indizes gleich False, Tri-Satz gleich False; UV gleich T 2/6 Q 12/32
+    haeufigster TIM-Versatz (dx,dy): [((2, 161), 16), ((0, 0), 14), ((9, -1), 8)]
+M1[2] G2[13]: Tri-Indizes gleich False, Quad-Indizes gleich False, Tri-Satz gleich False; UV gleich T 0/25 Q 0/6
+    haeufigster TIM-Versatz (dx,dy): [((114, -110), 3), ((67, -66), 3), ((102, -122), 3), ((87, -70), 2)]
+M1[3] G2[14]: Tri-Indizes gleich True, Quad-Indizes gleich True, Tri-Satz gleich True; UV gleich T 4/4 Q 12/12
+    haeufigster TIM-Versatz (dx,dy): [((0, 0), 16)]
+M1[4] G2[15]: Tri-Indizes gleich False, Quad-Indizes gleich False, Tri-Satz gleich False; UV gleich T 4/6 Q 12/26
+    haeufigster TIM-Versatz (dx,dy): [((0, 0), 19), ((2, 160), 8), ((2, 162), 4), ((5, 1), 1)]
+M1[5] G2[16]: Tri-Indizes gleich False, Quad-Indizes gleich False, Tri-Satz gleich False; UV gleich T 0/25 Q 0/6
+    haeufigster TIM-Versatz (dx,dy): [((114, -110), 3), ((67, -66), 3), ((101, -122), 3), ((87, -71), 2)]
+M1[6] G2[17]: Tri-Indizes gleich True, Quad-Indizes gleich True, Tri-Satz gleich True; UV gleich T 4/4 Q 12/12
+    haeufigster TIM-Versatz (dx,dy): [((0, 0), 16)]
+
+== 2) Klaue
+  G2[4] n=95 Box [-252 -647 -264]..[379 802 291]  T=76 Q=55
+  G2[5] n=61 Box [-375   39 -201]..[474 846 160]  T=58 Q=30
+  G2[6] n=8 Box [ -70 -113  -73]..[  80 1330  237]  T=6 Q=3
+  G2[7] n=8 Box [-125 -119  -64]..[ 80 954 485]  T=6 Q=3
+  G2[8] n=11 Box [ -65 -121 -169]..[ 123 1192  280]  T=6 Q=6
+M1[15] Box [-346    3 -197] [ 497 2041  483]
+M1[15]==M1[16] Vertices: True Flaechen True True UV True True
+D0[15]==D0[16]? Vertexzahlen 44 50
+beste Verschiebung (Raster 4) G2-gebacken -> M1[15]: [((-6, 9, -1), 21), ((-8, 9, 0), 16), ((-6, 9, 0), 12)]
+Anteil M1[15] innerhalb 6 Einheiten nach Verschiebung: 0.39285714285714285  Anteil G2-gebacken: 0.375
+je G2-Teil Abdeckung:
+   G2[5]: 33/61
+   G2[6]: 0/8
+   G2[7]: 0/8
+   G2[8]: 0/11
+
+== 3) Rumpf M1[0]
+M1[0] n 86 Box [-248 -839 -583] [831 361 417] Tri 14 Quad 72
+ G2[0] Box [-253  -99 -358] [253 363 358]
+   beste Verschiebung [((0, 0, 0), 3), ((-2, 0, 0), 2), ((-2, 0, -2), 2)]
+   bei [2 2 2]: Anteil M1 nahe 0.03, Anteil G2 nahe 0.17
+   bei [-6  2  2]: Anteil M1 nahe 0.03, Anteil G2 nahe 0.17
+ G2[1] Box [-214 -727 -464] [622  29 489]
+   beste Verschiebung [((87, -127, 78), 1), ((108, -94, 77), 1), ((61, -124, 33), 1)]
+   bei [ 350 -506  314]: Anteil M1 nahe 0.01, Anteil G2 nahe 0.01
+   bei [ 434 -374  310]: Anteil M1 nahe 0.01, Anteil G2 nahe 0.01
+ G2[2] Box [-559 -775 -828] [435 347 708]
+   beste Verschiebung [((136, -135, -15), 1), ((135, -136, 6), 1), ((125, -194, -13), 1)]
+   bei [ 546 -538  -58]: Anteil M1 nahe 0.01, Anteil G2 nahe 0.01
+   bei [ 542 -542   26]: Anteil M1 nahe 0.01, Anteil G2 nahe 0.01
+
+== 4) Normalen
+  M1[0] Normalen 87; gleich D0[0]: False; Satz-Treffer 0
+  M1[1] Normalen 37; gleich D0[1]: False; Satz-Treffer 0
+  M1[2] Normalen 21; gleich D0[2]: False; Satz-Treffer 0
+  M1[3] Normalen 16; gleich D0[3]: False; Satz-Treffer 0
+  M1[4] Normalen 31; gleich D0[4]: False; Satz-Treffer 0
+  M1[5] Normalen 21; gleich D0[5]: False; Satz-Treffer 0
+  M1[6] Normalen 16; gleich D0[6]: False; Satz-Treffer 0
+  M1[7] Normalen 1; gleich D0[7]: False; Satz-Treffer 0
+  M1[8] Normalen 69; gleich D0[8]: True; Satz-Treffer 69
+  M1[9] Normalen 61; gleich D0[9]: True; Satz-Treffer 61
+  M1[10] Normalen 39; gleich D0[10]: True; Satz-Treffer 39
+  M1[11] Normalen 18; gleich D0[11]: True; Satz-Treffer 18
+  M1[12] Normalen 57; gleich D0[12]: True; Satz-Treffer 56
+  M1[13] Normalen 41; gleich D0[13]: True; Satz-Treffer 41
+  M1[14] Normalen 30; gleich D0[14]: True; Satz-Treffer 30
+  M1[15] Normalen 85; gleich D0[15]: False; Satz-Treffer 0
+  M1[16] Normalen 85; gleich D0[16]: False; Satz-Treffer 0
+  M1[1] gegen G2[12]: exakt 0/37, max Abw. 8160
+  M1[2] gegen G2[13]: exakt 0/21, max Abw. 8036
+  M1[3] gegen G2[14]: exakt 2/16, max Abw. 1
+  M1[4] gegen G2[15]: exakt 0/31, max Abw. 6309
+  M1[5] gegen G2[16]: exakt 0/21, max Abw. 8036
+  M1[6] gegen G2[17]: exakt 2/16, max Abw. 1
+
+== MD1-Layout
+D0 Kopf (21120, 0, 34)
+   Mesh 0-2: [(952, 34, 5744, 34, 10864, 6, 21108, 952, 34, 5744, 34, 10936, 29, 21180), (1224, 19, 6016, 19, 11400, 6, 21644, 1224, 19, 6016, 19, 11472, 14, 21716), (1376, 32, 6168, 56, 11696, 10, 21940, 1376, 32, 6168, 56, 11816, 24, 22060)]
+   tvo==qvo aller Meshes: True  tno==qno: True
+M1 Kopf (24680, 0, 34)
+   Mesh 0-2: [(952, 86, 6600, 87, 12320, 14, 24668, 952, 86, 6600, 87, 12488, 72, 24836), (1640, 37, 7296, 37, 13640, 6, 25988, 1640, 37, 7296, 37, 13712, 32, 26060), (1936, 21, 7592, 21, 14224, 25, 26572, 1936, 21, 7592, 21, 14524, 6, 26872)]
+   tvo==qvo aller Meshes: True  tno==qno: True
+G2 Kopf (30324, 0, 36)
+   Mesh 0-2: [(1008, 18, 6480, 18, 17488, 6, 30312, 1008, 18, 6480, 18, 17560, 13, 30384), (1152, 76, 6624, 76, 17768, 80, 30592, 1152, 76, 6624, 76, 18728, 30, 31552), (1760, 135, 7232, 750, 19208, 222, 32032, 1760, 135, 7232, 750, 21872, 21, 34696)]
+   tvo==qvo aller Meshes: True  tno==qno: True

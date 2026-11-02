@@ -1,0 +1,4666 @@
+80100000: jalr zero
+80100004: lb s0,5476(zero)
+80100008: lb s0,5060(zero)
+8010000c: lb s0,5076(zero)
+80100010: lb s0,5144(zero)
+80100014: lb s0,5256(zero)
+80100018: lb s0,5368(zero)
+8010001c: nop
+80100020: nop
+80100024: lb s0,7056(zero)
+80100028: lb s0,6204(zero)
+8010002c: lb s0,6240(zero)
+80100030: lb s0,6512(zero)
+80100034: lb s0,6620(zero)
+80100038: lb s0,6756(zero)
+8010003c: lb s0,6892(zero)
+80100040: lb s0,7000(zero)
+80100044: lb s0,7832(zero)
+80100048: lb s0,7552(zero)
+8010004c: lb s0,7592(zero)
+80100050: lb s0,7628(zero)
+80100054: lb s0,7676(zero)
+80100058: lb s0,7776(zero)
+8010005c: lb s0,9972(zero)
+80100060: lb s0,10064(zero)
+80100064: lb s0,10204(zero)
+80100068: lb s0,10268(zero)
+8010006c: lb s0,10512(zero)
+80100070: nop
+80100074: lb s0,12476(zero)
+80100078: lb s0,12552(zero)
+8010007c: lb s0,12624(zero)
+80100080: lb s0,12644(zero)
+80100084: lb s0,12744(zero)
+80100088: nop
+8010008c: lb s0,12856(zero)
+80100090: lb s0,12932(zero)
+80100094: lb s0,13020(zero)
+80100098: lb s0,13172(zero)
+8010009c: lb s0,13020(zero)
+801000a0: lb s0,13044(zero)
+801000a4: lb s0,13120(zero)
+801000a8: .word 0xf5100000(op3d)
+801000ac: nop
+801000b0: .word 0xf7cc012c(op3d)
+801000b4: nop
+801000b8: .word 0xfd440000(op3f)
+801000bc: nop
+801000c0: nop
+801000c4: .word 0x0000012c(fn2c)
+801000c8: .word 0xfa880000(op3e)
+801000cc: .word 0x0000ff38(fn38)
+801000d0: .word 0xfe70fe0c(op3f)
+801000d4: jr zero
+801000d8: nop
+801000dc: j 0x81400000
+801000e0: sllv zero,zero,zero
+801000e4: nop
+801000e8: bltz gp,0x801000ec
+801000ec: .word 0x00000007(fn07)
+801000f0: sll zero,t0,0
+801000f4: bgez t1,0x801000f8
+801000f8: jalr zero
+801000fc: sll zero,t0,0
+80100100: bgez t1,0x80100104
+80100104: sra zero,zero,0
+80100108: sll zero,t4,0
+8010010c: bgez t9,0x80100110
+80100110: srl zero,zero,0
+80100114: sll zero,t0,0
+80100118: jal 0x8f080000
+8010011c: .word 0x00000005(fn05)
+80100120: .word 0xfe0cfed4(op3f)
+80100124: j 0x87980320
+80100128: .word 0x00000001(fn01)
+8010012c: nop
+80100130: jal 0x88c80320
+80100134: jalr zero
+80100138: .word 0x0258ff38(fn38)
+8010013c: bgez t7,0x80100780
+80100140: srl zero,zero,0
+80100144: lb s0,15180(zero)
+80100148: lb s0,14896(zero)
+8010014c: lb s0,14896(zero)
+80100150: lb s0,14908(zero)
+80100154: lb s0,14924(zero)
+80100158: lb s0,14924(zero)
+8010015c: lb s0,14936(zero)
+80100160: lb s0,14956(zero)
+80100164: lb s0,15136(zero)
+80100168: lb s0,15136(zero)
+8010016c: lb s0,14976(zero)
+80100170: lb s0,15180(zero)
+80100174: lb s0,15028(zero)
+80100178: lb s0,15040(zero)
+8010017c: lb s0,15084(zero)
+80100180: lb s0,15136(zero)
+80100184: lb s0,15136(zero)
+80100188: lb s0,15096(zero)
+8010018c: lb s0,15136(zero)
+80100190: addiu sp,sp,-56
+80100194: sw s0,40(sp)
+80100198: addu s0,a0,zero
+8010019c: sw s1,44(sp)
+801001a0: lui s1,0x800d
+801001a4: addiu s1,s1,-1060
+801001a8: lui v1,0x2000
+801001ac: sw ra,52(sp)
+801001b0: sw s2,48(sp)
+801001b4: lw v0,0(s1)
+801001b8: lw s2,408(s0)
+801001bc: and v0,v0,v1
+801001c0: bne v0,zero,0x801004c4
+801001c4: addiu v0,zero,5
+801001c8: lbu v1,467(s0)
+801001cc: sb v0,449(s0)
+801001d0: andi v0,v1,0x7f
+801001d4: beq v0,zero,0x801001e0
+801001d8: addiu v0,v1,-1
+801001dc: sb v0,467(s0)
+801001e0: lbu v0,4(s0)
+801001e4: lw a1,264(s0)
+801001e8: lw a2,380(s0)
+801001ec: sll v0,v0,2
+801001f0: lui at,0x8010
+801001f4: addu at,at,v0
+801001f8: lw v0,17948(at)
+801001fc: nop
+80100200: jalr v0
+80100204: addu a0,s0,zero
+80100208: lw a1,544(s0)
+8010020c: jal 0x8001a308
+80100210: addu a0,s0,zero
+80100214: lw v1,4(s0)
+80100218: addiu v0,s1,28
+8010021c: sw v0,436(s0)
+80100220: sw v1,544(s0)
+80100224: lw v0,1296(s2)
+80100228: nop
+8010022c: sw v0,16(sp)
+80100230: lw v0,1300(s2)
+80100234: nop
+80100238: sw v0,20(sp)
+8010023c: lw v0,1304(s2)
+80100240: lui v1,0x200
+80100244: sw v0,24(sp)
+80100248: addiu v0,s2,1276
+8010024c: sw v0,128(s0)
+80100250: lw v0,0(s0)
+80100254: lhu a0,116(s0)
+80100258: or v0,v0,v1
+8010025c: sw v0,0(s0)
+80100260: sh a0,32(sp)
+80100264: lhu v0,118(s0)
+80100268: addiu a1,sp,16
+8010026c: sh v0,34(sp)
+80100270: lhu v0,120(s0)
+80100274: addu a0,s0,zero
+80100278: sh v0,36(sp)
+8010027c: sh zero,116(s0)
+80100280: sh zero,118(s0)
+80100284: jal 0x80035408
+80100288: sh zero,120(s0)
+8010028c: lhu v0,32(sp)
+80100290: lui v1,0xfdff
+80100294: sh v0,116(s0)
+80100298: lhu v0,34(sp)
+8010029c: ori v1,v1,0xffff
+801002a0: sh v0,118(s0)
+801002a4: lw v0,0(s0)
+801002a8: lhu a0,36(sp)
+801002ac: and v0,v0,v1
+801002b0: sw v0,0(s0)
+801002b4: lui v0,0x800a
+801002b8: addiu v0,v0,-9404
+801002bc: sw v0,128(s0)
+801002c0: addiu v0,zero,255
+801002c4: sb v0,13(s0)
+801002c8: sh a0,120(s0)
+801002cc: lui v0,0x800d
+801002d0: lw v0,-7372(v0)
+801002d4: addiu s1,s1,568
+801002d8: beq v0,s1,0x80100320
+801002dc: nop
+801002e0: lw a0,0(s1)
+801002e4: nop
+801002e8: beq s0,a0,0x8010030c
+801002ec: nop
+801002f0: lw v0,0(a0)
+801002f4: nop
+801002f8: andi v0,v0,0x1
+801002fc: beq v0,zero,0x8010030c
+80100300: nop
+80100304: jal 0x80034d0c
+80100308: addu a1,s0,zero
+8010030c: lui v0,0x800d
+80100310: lw v0,-7372(v0)
+80100314: addiu s1,s1,4
+80100318: bne s1,v0,0x801002e0
+8010031c: nop
+80100320: jal 0x801017c4
+80100324: addu a0,s0,zero
+80100328: jal 0x80101388
+8010032c: addu a0,s0,zero
+80100330: lhu v0,536(s0)
+80100334: nop
+80100338: andi v0,v0,0x4
+8010033c: beq v0,zero,0x80100378
+80100340: nop
+80100344: lbu v0,448(s0)
+80100348: nop
+8010034c: andi v0,v0,0x4
+80100350: beq v0,zero,0x8010036c
+80100354: nop
+80100358: lh a1,118(s0)
+8010035c: jal 0x800177c0
+80100360: addu a0,s0,zero
+80100364: j 0x8010037c
+80100368: addiu a0,s2,1136
+8010036c: lh a1,118(s0)
+80100370: jal 0x80017d98
+80100374: addu a0,s0,zero
+80100378: addiu a0,s2,1136
+8010037c: lhu v0,1140(s2)
+80100380: lhu v1,554(s0)
+80100384: addiu a1,s2,1056
+80100388: addu v0,v0,v1
+8010038c: jal 0x8008e1f4
+80100390: sh v0,1140(s2)
+80100394: lhu v0,1140(s2)
+80100398: lhu v1,554(s0)
+8010039c: addiu a0,s2,1308
+801003a0: subu v0,v0,v1
+801003a4: sh v0,1140(s2)
+801003a8: lhu v0,1312(s2)
+801003ac: lhu v1,552(s0)
+801003b0: addiu a1,s2,1228
+801003b4: addu v0,v0,v1
+801003b8: jal 0x8008e1f4
+801003bc: sh v0,1312(s2)
+801003c0: lhu v0,1312(s2)
+801003c4: lhu v1,552(s0)
+801003c8: nop
+801003cc: subu v0,v0,v1
+801003d0: sh v0,1312(s2)
+801003d4: lhu v0,536(s0)
+801003d8: nop
+801003dc: andi v0,v0,0x2
+801003e0: bne v0,zero,0x801003f0
+801003e4: nop
+801003e8: jal 0x801016d8
+801003ec: addu a0,s0,zero
+801003f0: lw v0,376(s0)
+801003f4: lui s1,0xf800
+801003f8: lw v0,0(v0)
+801003fc: lui v1,0x2800
+80100400: and v0,v0,s1
+80100404: bne v0,v1,0x80100410
+80100408: addiu v0,zero,1
+8010040c: sb v0,551(s0)
+80100410: jal 0x80101d44
+80100414: addu a0,s0,zero
+80100418: lw v0,376(s0)
+8010041c: nop
+80100420: lw v0,0(v0)
+80100424: lui v1,0x4800
+80100428: and v0,v0,s1
+8010042c: bne v0,v1,0x80100438
+80100430: addiu v0,zero,55
+80100434: sb v0,562(s0)
+80100438: jal 0x80016028
+8010043c: addu a0,s0,zero
+80100440: lbu v0,562(s0)
+80100444: nop
+80100448: beq v0,zero,0x80100454
+8010044c: addiu v0,v0,-1
+80100450: sb v0,562(s0)
+80100454: lbu v0,556(s0)
+80100458: nop
+8010045c: beq v0,zero,0x80100468
+80100460: addiu v0,v0,-1
+80100464: sb v0,556(s0)
+80100468: lw v0,564(s0)
+8010046c: nop
+80100470: beq v0,zero,0x80100480
+80100474: nop
+80100478: jalr v0
+8010047c: addu a0,s0,zero
+80100480: lbu v0,563(s0)
+80100484: nop
+80100488: beq v0,zero,0x80100494
+8010048c: addiu v0,v0,-1
+80100490: sb v0,563(s0)
+80100494: lbu v0,558(s0)
+80100498: nop
+8010049c: beq v0,zero,0x801004a8
+801004a0: addiu v0,v0,-1
+801004a4: sb v0,558(s0)
+801004a8: lbu v0,568(s0)
+801004ac: nop
+801004b0: beq v0,zero,0x801004bc
+801004b4: addiu v0,v0,-1
+801004b8: sb v0,568(s0)
+801004bc: addiu v0,zero,6
+801004c0: sb v0,449(s0)
+801004c4: lw ra,52(sp)
+801004c8: lw s2,48(sp)
+801004cc: lw s1,44(sp)
+801004d0: lw s0,40(sp)
+801004d4: addiu sp,sp,56
+801004d8: jr ra
+801004dc: nop
+801004e0: addiu sp,sp,-32
+801004e4: sw s0,24(sp)
+801004e8: addu s0,a0,zero
+801004ec: sw ra,28(sp)
+801004f0: lw a0,408(s0)
+801004f4: lui v0,0x8010
+801004f8: addiu v0,v0,11528
+801004fc: lui at,0x800d
+80100500: sw v0,-7284(at)
+80100504: addiu v0,zero,1
+80100508: sw v0,4(s0)
+8010050c: sh zero,464(s0)
+80100510: sh zero,460(s0)
+80100514: sh zero,456(s0)
+80100518: lui v1,0x800d
+8010051c: lw v1,-1164(v1)
+80100520: nop
+80100524: andi v0,v1,0x40
+80100528: beq v0,zero,0x80100558
+8010052c: andi v0,v1,0x20
+80100530: beq v0,zero,0x80100548
+80100534: nop
+80100538: lui v0,0x8010
+8010053c: lhu v0,17900(v0)
+80100540: j 0x80100580
+80100544: addiu v0,v0,25000
+80100548: lui v0,0x8010
+8010054c: lhu v0,17902(v0)
+80100550: j 0x80100580
+80100554: addiu v0,v0,25000
+80100558: beq v0,zero,0x80100570
+8010055c: nop
+80100560: lui v0,0x8010
+80100564: lhu v0,17852(v0)
+80100568: j 0x80100580
+8010056c: addiu v0,v0,25000
+80100570: lui v0,0x8010
+80100574: lhu v0,17854(v0)
+80100578: nop
+8010057c: addiu v0,v0,25000
+80100580: sh v0,342(s0)
+80100584: addu a3,zero,zero
+80100588: lw v1,408(s0)
+8010058c: addiu v0,zero,5
+80100590: sb v0,449(s0)
+80100594: lui v0,0x800d
+80100598: addiu v0,v0,-1032
+8010059c: sw v0,440(s0)
+801005a0: addiu v0,zero,20
+801005a4: sb zero,448(s0)
+801005a8: sh v0,1016(v1)
+801005ac: sh v0,1018(v1)
+801005b0: addiu v0,zero,560
+801005b4: sh v0,1020(v1)
+801005b8: addiu v0,zero,312
+801005bc: sh zero,1012(v1)
+801005c0: sh zero,1014(v1)
+801005c4: sh v0,1022(v1)
+801005c8: lw v0,0(a0)
+801005cc: addiu a3,a3,1
+801005d0: ori v0,v0,0x9000
+801005d4: sw v0,0(a0)
+801005d8: sltiu v0,a3,0x16
+801005dc: bne v0,zero,0x801005c8
+801005e0: addiu a0,a0,172
+801005e4: lw v0,392(s0)
+801005e8: addu a0,s0,zero
+801005ec: lui at,0x800d
+801005f0: sw v0,-640(at)
+801005f4: lw v0,396(s0)
+801005f8: addiu a3,zero,256
+801005fc: lui at,0x800d
+80100600: sw v0,-636(at)
+80100604: addiu v0,zero,1
+80100608: jal 0x8002959c
+8010060c: sw v0,332(s0)
+80100610: addiu a0,s0,364
+80100614: addu a1,zero,zero
+80100618: addu a2,zero,zero
+8010061c: addu a3,zero,zero
+80100620: addiu v0,zero,3
+80100624: sw v0,488(s0)
+80100628: addiu v0,zero,450
+8010062c: sh v0,180(s0)
+80100630: addiu v0,zero,1450
+80100634: addiu t0,zero,2000
+80100638: sh v0,176(s0)
+8010063c: sh v0,186(s0)
+80100640: sh v0,178(s0)
+80100644: sh v0,188(s0)
+80100648: lw v0,0(s0)
+8010064c: addiu v1,zero,-2200
+80100650: sh zero,536(s0)
+80100654: sb zero,538(s0)
+80100658: sh zero,542(s0)
+8010065c: sh zero,540(s0)
+80100660: sw zero,544(s0)
+80100664: sb zero,548(s0)
+80100668: sb zero,549(s0)
+8010066c: sb zero,550(s0)
+80100670: sb zero,551(s0)
+80100674: sh zero,552(s0)
+80100678: sh zero,554(s0)
+8010067c: sb zero,556(s0)
+80100680: sb zero,557(s0)
+80100684: sb zero,558(s0)
+80100688: sb zero,559(s0)
+8010068c: sb zero,560(s0)
+80100690: sb zero,561(s0)
+80100694: sw zero,564(s0)
+80100698: sb zero,563(s0)
+8010069c: sb zero,568(s0)
+801006a0: sh zero,468(s0)
+801006a4: sh zero,184(s0)
+801006a8: sh zero,182(s0)
+801006ac: sh t0,190(s0)
+801006b0: sh v1,244(s0)
+801006b4: ori v0,v0,0x4c
+801006b8: sw v0,0(s0)
+801006bc: addiu v0,zero,2800
+801006c0: sh zero,248(s0)
+801006c4: sh v0,240(s0)
+801006c8: sh v0,250(s0)
+801006cc: sh v0,242(s0)
+801006d0: sh v0,252(s0)
+801006d4: addiu v0,zero,1900
+801006d8: sh v0,212(s0)
+801006dc: addiu v0,zero,950
+801006e0: sh v0,208(s0)
+801006e4: sh v0,218(s0)
+801006e8: sh v0,210(s0)
+801006ec: sh v0,220(s0)
+801006f0: addiu v0,zero,3000
+801006f4: sh v0,148(s0)
+801006f8: addiu v0,zero,600
+801006fc: sh v0,144(s0)
+80100700: sh v0,154(s0)
+80100704: sh v0,146(s0)
+80100708: sh v0,156(s0)
+8010070c: addiu v0,zero,1100
+80100710: sh v0,494(s0)
+80100714: lw v0,0(s0)
+80100718: lui v1,0x1c00
+8010071c: sh zero,246(s0)
+80100720: sh t0,254(s0)
+80100724: sh zero,216(s0)
+80100728: sh zero,214(s0)
+8010072c: sh t0,222(s0)
+80100730: sh zero,152(s0)
+80100734: sh zero,150(s0)
+80100738: sh t0,158(s0)
+8010073c: or v0,v0,v1
+80100740: sw v0,0(s0)
+80100744: addiu v0,s0,56
+80100748: jal 0x80016480
+8010074c: sw v0,16(sp)
+80100750: lw ra,28(sp)
+80100754: lw s0,24(sp)
+80100758: addiu sp,sp,32
+8010075c: jr ra
+80100760: nop
+80100764: addiu sp,sp,-32
+80100768: sw s0,16(sp)
+8010076c: addu s0,a0,zero
+80100770: sw s1,20(sp)
+80100774: addu s1,a1,zero
+80100778: sw ra,28(sp)
+8010077c: sw s2,24(sp)
+80100780: lbu v0,5(s0)
+80100784: nop
+80100788: sll v0,v0,2
+8010078c: lui at,0x8010
+80100790: addu at,at,v0
+80100794: lw v0,17980(at)
+80100798: nop
+8010079c: jalr v0
+801007a0: addu s2,a2,zero
+801007a4: lw a1,544(s0)
+801007a8: jal 0x8001a308
+801007ac: addu a0,s0,zero
+801007b0: addu a0,s0,zero
+801007b4: addu a1,s1,zero
+801007b8: lbu v0,5(a0)
+801007bc: lw v1,4(a0)
+801007c0: sll v0,v0,2
+801007c4: sw v1,544(a0)
+801007c8: lui at,0x8010
+801007cc: addu at,at,v0
+801007d0: lw v0,18012(at)
+801007d4: nop
+801007d8: jalr v0
+801007dc: addu a2,s2,zero
+801007e0: lw ra,28(sp)
+801007e4: lw s2,24(sp)
+801007e8: lw s1,20(sp)
+801007ec: lw s0,16(sp)
+801007f0: addiu sp,sp,32
+801007f4: jr ra
+801007f8: nop
+801007fc: jr ra
+80100800: nop
+80100804: addiu sp,sp,-24
+80100808: sw s0,16(sp)
+8010080c: addu s0,a0,zero
+80100810: sw ra,20(sp)
+80100814: lbu a0,6(s0)
+80100818: addiu v0,zero,1
+8010081c: andi v1,a0,0xff
+80100820: beq v1,v0,0x8010086c
+80100824: slti v0,v1,2
+80100828: beq v0,zero,0x80100840
+8010082c: nop
+80100830: beq v1,zero,0x80100854
+80100834: nop
+80100838: j 0x80100950
+8010083c: nop
+80100840: addiu v0,zero,2
+80100844: beq v1,v0,0x801008e4
+80100848: addu a0,s0,zero
+8010084c: j 0x80100950
+80100850: nop
+80100854: lh v0,468(s0)
+80100858: nop
+8010085c: beq v0,zero,0x80100950
+80100860: addiu v0,a0,1
+80100864: j 0x80100950
+80100868: sb v0,6(s0)
+8010086c: lui v1,0x800d
+80100870: addiu v1,v1,-1064
+80100874: lw v0,0(v1)
+80100878: nop
+8010087c: ori v0,v0,0x110
+80100880: sw v0,0(v1)
+80100884: lhu v0,536(s0)
+80100888: lbu v1,333(s0)
+8010088c: ori v0,v0,0x2
+80100890: sh v0,536(s0)
+80100894: addiu v0,zero,70
+80100898: bne v1,v0,0x801008ac
+8010089c: addu a0,s0,zero
+801008a0: jal 0x8002c7ac
+801008a4: addu a0,zero,zero
+801008a8: addu a0,s0,zero
+801008ac: addiu a1,zero,6
+801008b0: addu a2,zero,zero
+801008b4: jal 0x8001a330
+801008b8: addu a3,zero,zero
+801008bc: beq v0,zero,0x80100950
+801008c0: nop
+801008c4: jal 0x8002c7ac
+801008c8: addiu a0,zero,1
+801008cc: lbu v0,6(s0)
+801008d0: addiu v1,zero,-21212
+801008d4: sw v1,64(s0)
+801008d8: addiu v0,v0,1
+801008dc: j 0x80100950
+801008e0: sb v0,6(s0)
+801008e4: addiu a1,zero,3
+801008e8: addu a2,zero,zero
+801008ec: jal 0x8001a330
+801008f0: addu a3,zero,zero
+801008f4: beq v0,zero,0x80100950
+801008f8: addiu v1,zero,-17
+801008fc: lui a0,0x800d
+80100900: addiu a0,a0,-1064
+80100904: lw v0,0(a0)
+80100908: nop
+8010090c: and v0,v0,v1
+80100910: addiu v1,zero,-257
+80100914: and v0,v0,v1
+80100918: sw v0,0(a0)
+8010091c: addiu v0,zero,110
+80100920: sb v0,568(s0)
+80100924: lhu v0,536(s0)
+80100928: addiu v1,zero,257
+8010092c: sw v1,4(s0)
+80100930: andi v0,v0,0xfffd
+80100934: sh v0,536(s0)
+80100938: lhu v0,118(s0)
+8010093c: lhu v1,536(s0)
+80100940: addiu v0,v0,1024
+80100944: ori v1,v1,0x4
+80100948: sh v0,118(s0)
+8010094c: sh v1,536(s0)
+80100950: lw ra,20(sp)
+80100954: lw s0,16(sp)
+80100958: addiu sp,sp,24
+8010095c: jr ra
+80100960: nop
+80100964: addiu sp,sp,-32
+80100968: sw s0,16(sp)
+8010096c: addu s0,a0,zero
+80100970: sw ra,24(sp)
+80100974: jal 0x801012fc
+80100978: sw s1,20(sp)
+8010097c: lbu v0,538(s0)
+80100980: lui s1,0x800d
+80100984: addiu s1,s1,1308
+80100988: bne v0,zero,0x801009c8
+8010098c: nop
+80100990: lw v0,56(s0)
+80100994: nop
+80100998: slti v0,v0,-17877
+8010099c: beq v0,zero,0x801009c8
+801009a0: addiu v0,zero,1
+801009a4: lw v1,56(s0)
+801009a8: sb v0,538(s0)
+801009ac: addiu v0,zero,769
+801009b0: sw v0,4(s0)
+801009b4: addiu v0,zero,-17877
+801009b8: sh zero,542(s0)
+801009bc: subu v0,v0,v1
+801009c0: j 0x80100c08
+801009c4: sh v0,540(s0)
+801009c8: lbu v1,538(s0)
+801009cc: addiu v0,zero,1
+801009d0: bne v1,v0,0x80100b20
+801009d4: nop
+801009d8: lw v0,64(s0)
+801009dc: nop
+801009e0: slti v0,v0,-7322
+801009e4: bne v0,zero,0x80100a0c
+801009e8: addiu v0,zero,2
+801009ec: sb v0,538(s0)
+801009f0: lw v0,64(s0)
+801009f4: addiu v1,zero,769
+801009f8: sh zero,540(s0)
+801009fc: sw v1,4(s0)
+80100a00: addiu v0,v0,7323
+80100a04: j 0x80100c08
+80100a08: sh v0,542(s0)
+80100a0c: lbu v0,556(s0)
+80100a10: nop
+80100a14: bne v0,zero,0x80100c08
+80100a18: nop
+80100a1c: lui a0,0x800d
+80100a20: addiu a0,a0,18548
+80100a24: jal 0x80077360
+80100a28: addiu a1,zero,1
+80100a2c: beq v0,zero,0x80100a74
+80100a30: nop
+80100a34: lbu v0,550(s0)
+80100a38: nop
+80100a3c: sltiu v0,v0,0x2
+80100a40: beq v0,zero,0x80100a74
+80100a44: nop
+80100a48: lbu v0,448(s0)
+80100a4c: lw a0,56(s0)
+80100a50: lw v1,60(s0)
+80100a54: ori v0,v0,0x4
+80100a58: addiu v1,v1,-800
+80100a5c: sb v0,448(s0)
+80100a60: sh a0,368(s0)
+80100a64: sh v1,370(s0)
+80100a68: lw v0,64(s1)
+80100a6c: nop
+80100a70: sh v0,372(s0)
+80100a74: lui v0,0x800d
+80100a78: lw v0,1372(v0)
+80100a7c: lw v1,64(s0)
+80100a80: nop
+80100a84: subu v0,v0,v1
+80100a88: addiu v0,v0,-9000
+80100a8c: slti v0,v0,-120
+80100a90: beq v0,zero,0x80100ab8
+80100a94: nop
+80100a98: lbu v0,550(s0)
+80100a9c: nop
+80100aa0: bne v0,zero,0x80100ab8
+80100aa4: nop
+80100aa8: lbu v0,448(s0)
+80100aac: nop
+80100ab0: andi v0,v0,0xfb
+80100ab4: sb v0,448(s0)
+80100ab8: lui a0,0x800d
+80100abc: addiu a0,a0,18548
+80100ac0: jal 0x80077360
+80100ac4: addu a1,zero,zero
+80100ac8: beq v0,zero,0x80100b20
+80100acc: nop
+80100ad0: lui v0,0x800d
+80100ad4: lw v0,1372(v0)
+80100ad8: lw v1,64(s0)
+80100adc: nop
+80100ae0: subu v0,v0,v1
+80100ae4: addiu v0,v0,-8601
+80100ae8: sltiu v0,v0,0x18f
+80100aec: beq v0,zero,0x80100c08
+80100af0: nop
+80100af4: lbu v0,550(s0)
+80100af8: nop
+80100afc: bne v0,zero,0x80100c08
+80100b00: addiu v0,zero,1
+80100b04: lbu v1,5(s0)
+80100b08: sb v0,550(s0)
+80100b0c: addiu v0,zero,2
+80100b10: bne v1,v0,0x80100c08
+80100b14: addiu v0,zero,257
+80100b18: j 0x80100c04
+80100b1c: nop
+80100b20: lbu a0,550(s0)
+80100b24: nop
+80100b28: beq a0,zero,0x80100b38
+80100b2c: addiu v0,zero,7
+80100b30: bne a0,v0,0x80100c08
+80100b34: nop
+80100b38: lbu v1,5(s0)
+80100b3c: addiu v0,zero,1
+80100b40: bne v1,v0,0x80100bb8
+80100b44: nop
+80100b48: lbu v0,556(s0)
+80100b4c: nop
+80100b50: beq v0,zero,0x80100b5c
+80100b54: addiu v0,zero,513
+80100b58: sw v0,4(s0)
+80100b5c: lbu v0,568(s0)
+80100b60: nop
+80100b64: bne v0,zero,0x80100c08
+80100b68: nop
+80100b6c: lhu v0,536(s0)
+80100b70: nop
+80100b74: andi v0,v0,0x20
+80100b78: beq v0,zero,0x80100b9c
+80100b7c: nop
+80100b80: lw v0,496(s0)
+80100b84: nop
+80100b88: sltiu v0,v0,0x65
+80100b8c: bne v0,zero,0x80100c08
+80100b90: addiu v0,zero,513
+80100b94: j 0x80100c08
+80100b98: sw v0,4(s0)
+80100b9c: lw v0,496(s0)
+80100ba0: nop
+80100ba4: sltiu v0,v0,0x65
+80100ba8: bne v0,zero,0x80100c08
+80100bac: addiu v0,zero,513
+80100bb0: j 0x80100c08
+80100bb4: sw v0,4(s0)
+80100bb8: lbu v0,556(s0)
+80100bbc: nop
+80100bc0: bne v0,zero,0x80100c08
+80100bc4: nop
+80100bc8: beq a0,zero,0x80100bdc
+80100bcc: addiu v0,zero,7
+80100bd0: beq a0,v0,0x80100bdc
+80100bd4: addiu v0,zero,257
+80100bd8: sw v0,4(s0)
+80100bdc: lw v0,496(s0)
+80100be0: nop
+80100be4: sltiu v0,v0,0x5a
+80100be8: beq v0,zero,0x80100bf4
+80100bec: addiu v0,zero,257
+80100bf0: sw v0,4(s0)
+80100bf4: lbu v0,568(s0)
+80100bf8: nop
+80100bfc: beq v0,zero,0x80100c08
+80100c00: addiu v0,zero,257
+80100c04: sw v0,4(s0)
+80100c08: lw ra,24(sp)
+80100c0c: lw s1,20(sp)
+80100c10: lw s0,16(sp)
+80100c14: addiu sp,sp,32
+80100c18: jr ra
+80100c1c: nop
+80100c20: addiu sp,sp,-24
+80100c24: sw ra,16(sp)
+80100c28: lbu v0,6(a0)
+80100c2c: nop
+80100c30: bne v0,zero,0x80100c44
+80100c34: addu a1,zero,zero
+80100c38: addiu a2,zero,32
+80100c3c: jal 0x8001a330
+80100c40: addu a3,zero,zero
+80100c44: lw ra,16(sp)
+80100c48: addiu sp,sp,24
+80100c4c: jr ra
+80100c50: nop
+80100c54: addiu sp,sp,-24
+80100c58: sw s0,16(sp)
+80100c5c: sw ra,20(sp)
+80100c60: jal 0x801012fc
+80100c64: addu s0,a0,zero
+80100c68: lbu v1,538(s0)
+80100c6c: addiu v0,zero,1
+80100c70: bne v1,v0,0x80100c9c
+80100c74: nop
+80100c78: lui v0,0x800d
+80100c7c: lw v0,1372(v0)
+80100c80: lw v1,64(s0)
+80100c84: nop
+80100c88: subu v0,v0,v1
+80100c8c: slti v0,v0,9500
+80100c90: beq v0,zero,0x80100c9c
+80100c94: addiu v0,zero,257
+80100c98: sw v0,4(s0)
+80100c9c: lw v0,496(s0)
+80100ca0: nop
+80100ca4: sltiu v0,v0,0x5a
+80100ca8: beq v0,zero,0x80100cb4
+80100cac: addiu v0,zero,257
+80100cb0: sw v0,4(s0)
+80100cb4: lbu v0,568(s0)
+80100cb8: nop
+80100cbc: beq v0,zero,0x80100cc8
+80100cc0: addiu v0,zero,257
+80100cc4: sw v0,4(s0)
+80100cc8: lw ra,20(sp)
+80100ccc: lw s0,16(sp)
+80100cd0: addiu sp,sp,24
+80100cd4: jr ra
+80100cd8: nop
+80100cdc: addiu sp,sp,-24
+80100ce0: sw s0,16(sp)
+80100ce4: addu s0,a0,zero
+80100ce8: sw ra,20(sp)
+80100cec: lbu v0,6(s0)
+80100cf0: nop
+80100cf4: bne v0,zero,0x80100d14
+80100cf8: addiu a1,zero,1
+80100cfc: addiu a2,zero,4
+80100d00: jal 0x8001a330
+80100d04: addu a3,zero,zero
+80100d08: beq v0,zero,0x80100d14
+80100d0c: addiu v0,zero,513
+80100d10: sw v0,4(s0)
+80100d14: lw ra,20(sp)
+80100d18: lw s0,16(sp)
+80100d1c: addiu sp,sp,24
+80100d20: jr ra
+80100d24: nop
+80100d28: jr ra
+80100d2c: nop
+80100d30: addiu sp,sp,-32
+80100d34: sw s1,20(sp)
+80100d38: addu s1,a0,zero
+80100d3c: sw ra,24(sp)
+80100d40: jal 0x801012fc
+80100d44: sw s0,16(sp)
+80100d48: lbu v1,6(s1)
+80100d4c: addiu v0,zero,1
+80100d50: beq v1,v0,0x80100d9c
+80100d54: slti v0,v1,2
+80100d58: beq v0,zero,0x80100d70
+80100d5c: nop
+80100d60: beq v1,zero,0x80100d84
+80100d64: addiu a0,zero,4
+80100d68: j 0x80100ee8
+80100d6c: nop
+80100d70: addiu v0,zero,2
+80100d74: beq v1,v0,0x80100e10
+80100d78: nop
+80100d7c: j 0x80100ee8
+80100d80: nop
+80100d84: jal 0x8005bd6c
+80100d88: addu a1,s1,zero
+80100d8c: lbu v0,6(s1)
+80100d90: nop
+80100d94: addiu v0,v0,1
+80100d98: sb v0,6(s1)
+80100d9c: lbu v0,556(s1)
+80100da0: nop
+80100da4: beq v0,zero,0x80100ddc
+80100da8: addu a0,s1,zero
+80100dac: addiu a1,zero,2
+80100db0: addiu a2,zero,16
+80100db4: jal 0x8001a330
+80100db8: addu a3,zero,zero
+80100dbc: addu a0,s1,zero
+80100dc0: addiu a1,zero,2
+80100dc4: addiu a2,zero,16
+80100dc8: addu a3,zero,zero
+80100dcc: jal 0x8001a330
+80100dd0: addu s0,v0,zero
+80100dd4: j 0x80100df0
+80100dd8: addu s0,s0,v0
+80100ddc: addiu a1,zero,2
+80100de0: addiu a2,zero,16
+80100de4: jal 0x8001a330
+80100de8: addu a3,zero,zero
+80100dec: addu s0,v0,zero
+80100df0: lbu v0,6(s1)
+80100df4: beq s0,zero,0x80100e00
+80100df8: nop
+80100dfc: addiu v0,v0,1
+80100e00: sb v0,6(s1)
+80100e04: addiu v0,zero,1
+80100e08: j 0x80100ee8
+80100e0c: sb v0,549(s1)
+80100e10: lbu v0,556(s1)
+80100e14: nop
+80100e18: beq v0,zero,0x80100e50
+80100e1c: addu a0,s1,zero
+80100e20: addiu a1,zero,3
+80100e24: addu a2,zero,zero
+80100e28: jal 0x8001a330
+80100e2c: addu a3,zero,zero
+80100e30: addu a0,s1,zero
+80100e34: addiu a1,zero,3
+80100e38: addu a2,zero,zero
+80100e3c: addu a3,zero,zero
+80100e40: jal 0x8001a330
+80100e44: addu s0,v0,zero
+80100e48: j 0x80100e64
+80100e4c: addu s0,s0,v0
+80100e50: addiu a1,zero,3
+80100e54: addu a2,zero,zero
+80100e58: jal 0x8001a330
+80100e5c: addu a3,zero,zero
+80100e60: addu s0,v0,zero
+80100e64: lbu v1,538(s1)
+80100e68: addiu v0,zero,2
+80100e6c: bne v1,v0,0x80100ea8
+80100e70: addiu v0,zero,3
+80100e74: lbu v1,332(s1)
+80100e78: nop
+80100e7c: bne v1,v0,0x80100ea8
+80100e80: nop
+80100e84: lbu v0,333(s1)
+80100e88: nop
+80100e8c: sltiu v0,v0,0x72
+80100e90: bne v0,zero,0x80100ea8
+80100e94: nop
+80100e98: lhu v0,536(s1)
+80100e9c: nop
+80100ea0: ori v0,v0,0x10
+80100ea4: sh v0,536(s1)
+80100ea8: beq s0,zero,0x80100ee8
+80100eac: nop
+80100eb0: lhu v0,118(s1)
+80100eb4: lbu v1,538(s1)
+80100eb8: sb zero,549(s1)
+80100ebc: addiu v0,v0,1024
+80100ec0: sh v0,118(s1)
+80100ec4: addiu v0,zero,2
+80100ec8: bne v1,v0,0x80100ee4
+80100ecc: addiu v0,zero,257
+80100ed0: addiu v0,zero,1793
+80100ed4: sw v0,4(s1)
+80100ed8: addiu v0,zero,255
+80100edc: j 0x80100ee8
+80100ee0: sb v0,558(s1)
+80100ee4: sw v0,4(s1)
+80100ee8: lh v0,540(s1)
+80100eec: nop
+80100ef0: blez v0,0x80100f10
+80100ef4: nop
+80100ef8: lw v0,56(s1)
+80100efc: lhu v1,540(s1)
+80100f00: addiu v0,v0,6
+80100f04: addiu v1,v1,-6
+80100f08: sw v0,56(s1)
+80100f0c: sh v1,540(s1)
+80100f10: lh v0,542(s1)
+80100f14: nop
+80100f18: blez v0,0x80100f38
+80100f1c: nop
+80100f20: lw v0,64(s1)
+80100f24: lhu v1,542(s1)
+80100f28: addiu v0,v0,-6
+80100f2c: addiu v1,v1,-6
+80100f30: sw v0,64(s1)
+80100f34: sh v1,542(s1)
+80100f38: lw ra,24(sp)
+80100f3c: lw s1,20(sp)
+80100f40: lw s0,16(sp)
+80100f44: addiu sp,sp,32
+80100f48: jr ra
+80100f4c: nop
+80100f50: jr ra
+80100f54: nop
+80100f58: addiu sp,sp,-32
+80100f5c: sw s0,16(sp)
+80100f60: addu s0,a0,zero
+80100f64: sw s1,20(sp)
+80100f68: addu s1,a1,zero
+80100f6c: sw s2,24(sp)
+80100f70: sw ra,28(sp)
+80100f74: lbu v1,6(s0)
+80100f78: addiu v0,zero,1
+80100f7c: beq v1,v0,0x801010e8
+80100f80: addu s2,a2,zero
+80100f84: slti v0,v1,2
+80100f88: beq v0,zero,0x80100fa0
+80100f8c: nop
+80100f90: beq v1,zero,0x80100fbc
+80100f94: lui v1,0x4000
+80100f98: j 0x801011e8
+80100f9c: nop
+80100fa0: addiu v0,zero,2
+80100fa4: beq v1,v0,0x80101168
+80100fa8: addiu v0,zero,3
+80100fac: beq v1,v0,0x801011c4
+80100fb0: addu a0,s0,zero
+80100fb4: j 0x801011e8
+80100fb8: nop
+80100fbc: lui a0,0x800d
+80100fc0: addiu a0,a0,-1064
+80100fc4: lw v0,0(a0)
+80100fc8: nop
+80100fcc: ori v0,v0,0x100
+80100fd0: sw v0,0(a0)
+80100fd4: and v0,v0,v1
+80100fd8: beq v0,zero,0x80100ff0
+80100fdc: addiu a0,a0,20052
+80100fe0: jal 0x80077360
+80100fe4: addiu a1,zero,16
+80100fe8: bne v0,zero,0x80100ff4
+80100fec: addiu a0,zero,14
+80100ff0: addiu a0,zero,7
+80100ff4: jal 0x8002c7ac
+80100ff8: nop
+80100ffc: addiu v0,zero,1
+80101000: lui at,0x800e
+80101004: sb v0,-997(at)
+80101008: lui at,0x800d
+8010100c: sw zero,1308(at)
+80101010: lhu v0,536(s0)
+80101014: lui at,0x800d
+80101018: sh zero,-1026(at)
+8010101c: ori v0,v0,0x2
+80101020: sh v0,536(s0)
+80101024: addiu v0,zero,5
+80101028: lui at,0x800d
+8010102c: sb v0,-1028(at)
+80101030: addiu v0,zero,-1
+80101034: lui at,0x800d
+80101038: sb zero,-1027(at)
+8010103c: lui at,0x800d
+80101040: sh v0,-690(at)
+80101044: lhu v1,536(s0)
+80101048: addiu v0,zero,-23078
+8010104c: sw v0,56(s0)
+80101050: sh zero,554(s0)
+80101054: sh zero,552(s0)
+80101058: sb zero,548(s0)
+8010105c: andi v1,v1,0xfffb
+80101060: sh v1,536(s0)
+80101064: lui at,0x800d
+80101068: sw s0,-596(at)
+8010106c: lw v0,56(s0)
+80101070: addiu v1,zero,-915
+80101074: lui at,0x800d
+80101078: sw v1,-968(at)
+8010107c: addiu v0,v0,10643
+80101080: lui at,0x800d
+80101084: sw v0,-976(at)
+80101088: lw v0,392(s0)
+8010108c: lui at,0x800d
+80101090: sw v0,-640(at)
+80101094: lw v0,396(s0)
+80101098: lui at,0x800d
+8010109c: sw v0,-636(at)
+801010a0: lw v0,0(s0)
+801010a4: nop
+801010a8: ori v0,v0,0x100a
+801010ac: sw v0,0(s0)
+801010b0: lui v0,0x800d
+801010b4: lw v0,-1032(v0)
+801010b8: lui v1,0x800d
+801010bc: lbu v1,-565(v1)
+801010c0: ori v0,v0,0x1008
+801010c4: ori v1,v1,0x80
+801010c8: lui at,0x800d
+801010cc: sw v0,-1032(at)
+801010d0: lui at,0x800d
+801010d4: sb v1,-565(at)
+801010d8: lbu v0,6(s0)
+801010dc: nop
+801010e0: addiu v0,v0,1
+801010e4: sb v0,6(s0)
+801010e8: addu a0,s0,zero
+801010ec: addiu a1,zero,4
+801010f0: addu a2,zero,zero
+801010f4: jal 0x8001a330
+801010f8: addu a3,zero,zero
+801010fc: lbu v1,333(s0)
+80101100: addiu v0,zero,13
+80101104: bne v1,v0,0x801011e8
+80101108: lui t0,0x400
+8010110c: ori t0,t0,0x100
+80101110: lui v1,0x800d
+80101114: addiu v1,v1,-1164
+80101118: addiu a0,v1,132
+8010111c: addu a1,s1,zero
+80101120: addu a2,s2,zero
+80101124: lw v0,0(v1)
+80101128: addu a3,zero,zero
+8010112c: or v0,v0,t0
+80101130: jal 0x80015b94
+80101134: sw v0,0(v1)
+80101138: lbu v0,6(s0)
+8010113c: nop
+80101140: addiu v0,v0,1
+80101144: sb v0,6(s0)
+80101148: addiu v0,zero,1
+8010114c: lui at,0x800d
+80101150: sh v0,-688(at)
+80101154: lhu v0,118(s0)
+80101158: lui at,0x800d
+8010115c: sh v0,-914(at)
+80101160: j 0x801011e8
+80101164: nop
+80101168: addu a0,s0,zero
+8010116c: addu a1,s1,zero
+80101170: addu a2,s2,zero
+80101174: jal 0x80015cb8
+80101178: addu a3,zero,zero
+8010117c: addu a0,s0,zero
+80101180: addiu a1,zero,5
+80101184: addu a2,zero,zero
+80101188: jal 0x8001a330
+8010118c: addu a3,zero,zero
+80101190: beq v0,zero,0x801011e8
+80101194: lui v1,0x8
+80101198: lui a0,0x800d
+8010119c: addiu a0,a0,-1032
+801011a0: lw v0,0(a0)
+801011a4: nop
+801011a8: or v0,v0,v1
+801011ac: sw v0,0(a0)
+801011b0: lbu v0,6(s0)
+801011b4: nop
+801011b8: addiu v0,v0,1
+801011bc: j 0x801011e8
+801011c0: sb v0,6(s0)
+801011c4: addu a1,s1,zero
+801011c8: addu a2,s2,zero
+801011cc: jal 0x80015cb8
+801011d0: addu a3,zero,zero
+801011d4: addu a0,s0,zero
+801011d8: addiu a1,zero,11
+801011dc: addu a2,zero,zero
+801011e0: jal 0x8001a240
+801011e4: addu a3,zero,zero
+801011e8: lw ra,28(sp)
+801011ec: lw s2,24(sp)
+801011f0: lw s1,20(sp)
+801011f4: lw s0,16(sp)
+801011f8: addiu sp,sp,32
+801011fc: jr ra
+80101200: nop
+80101204: jr ra
+80101208: nop
+8010120c: jr ra
+80101210: nop
+80101214: jr ra
+80101218: nop
+8010121c: jr ra
+80101220: nop
+80101224: jr ra
+80101228: nop
+8010122c: addiu sp,sp,-24
+80101230: sw s0,16(sp)
+80101234: addu s0,a0,zero
+80101238: sw ra,20(sp)
+8010123c: lbu v1,6(s0)
+80101240: nop
+80101244: beq v1,zero,0x8010125c
+80101248: addiu v0,zero,1
+8010124c: beq v1,v0,0x801012ac
+80101250: nop
+80101254: j 0x801012e8
+80101258: nop
+8010125c: jal 0x801012fc
+80101260: addu a0,s0,zero
+80101264: addu a0,s0,zero
+80101268: addiu v0,zero,255
+8010126c: addu a1,zero,zero
+80101270: addiu a2,zero,32
+80101274: addu a3,zero,zero
+80101278: jal 0x8001a330
+8010127c: sb v0,558(s0)
+80101280: lhu v0,536(s0)
+80101284: lbu v1,333(s0)
+80101288: ori v0,v0,0x10
+8010128c: sltiu v1,v1,0x43
+80101290: bne v1,zero,0x801012e8
+80101294: sh v0,536(s0)
+80101298: lbu v0,6(s0)
+8010129c: nop
+801012a0: addiu v0,v0,1
+801012a4: j 0x801012e8
+801012a8: sb v0,6(s0)
+801012ac: lhu v0,536(s0)
+801012b0: nop
+801012b4: ori v0,v0,0x2
+801012b8: andi v1,v0,0xffef
+801012bc: sh v1,536(s0)
+801012c0: lui v0,0x800d
+801012c4: lh v0,-690(v0)
+801012c8: nop
+801012cc: bgez v0,0x801012dc
+801012d0: ori v0,v1,0x4
+801012d4: j 0x801012e4
+801012d8: addiu v0,zero,1537
+801012dc: sh v0,536(s0)
+801012e0: addiu v0,zero,1025
+801012e4: sw v0,4(s0)
+801012e8: lw ra,20(sp)
+801012ec: lw s0,16(sp)
+801012f0: addiu sp,sp,24
+801012f4: jr ra
+801012f8: nop
+801012fc: lui v0,0x800d
+80101300: lhu v0,-1018(v0)
+80101304: nop
+80101308: beq v0,zero,0x80101380
+8010130c: nop
+80101310: lui v0,0x800d
+80101314: lw v0,-1064(v0)
+80101318: nop
+8010131c: andi v0,v0,0x10
+80101320: bne v0,zero,0x80101380
+80101324: nop
+80101328: lui v0,0x800d
+8010132c: lbu v0,-565(v0)
+80101330: nop
+80101334: bne v0,zero,0x80101380
+80101338: nop
+8010133c: lb v0,548(a0)
+80101340: nop
+80101344: bne v0,zero,0x80101380
+80101348: nop
+8010134c: lbu v0,448(a0)
+80101350: nop
+80101354: andi v0,v0,0x4
+80101358: bne v0,zero,0x80101380
+8010135c: nop
+80101360: lbu v1,550(a0)
+80101364: nop
+80101368: beq v1,zero,0x80101378
+8010136c: addiu v0,zero,7
+80101370: bne v1,v0,0x80101380
+80101374: nop
+80101378: addiu v0,zero,1
+8010137c: sb v0,548(a0)
+80101380: jr ra
+80101384: nop
+80101388: addiu sp,sp,-32
+8010138c: sw s0,24(sp)
+80101390: addu s0,a0,zero
+80101394: sw ra,28(sp)
+80101398: lb v1,548(s0)
+8010139c: nop
+801013a0: sltiu v0,v1,0x6
+801013a4: beq v0,zero,0x80101564
+801013a8: sll v0,v1,2
+801013ac: lui at,0x8010
+801013b0: addu at,at,v0
+801013b4: lw v0,4(at)
+801013b8: nop
+801013bc: jr v0
+801013c0: nop
+801013c4: lbu v0,548(s0)
+801013c8: sh zero,344(s0)
+801013cc: addiu v0,v0,1
+801013d0: sb v0,548(s0)
+801013d4: addiu a0,zero,4
+801013d8: lhu v0,344(s0)
+801013dc: addiu a2,zero,20
+801013e0: addiu v0,v0,1
+801013e4: sll a1,v0,16
+801013e8: sra a1,a1,16
+801013ec: jal 0x80101bac
+801013f0: sh v0,344(s0)
+801013f4: addiu a0,zero,4
+801013f8: addiu a2,zero,-100
+801013fc: lhu v1,554(s0)
+80101400: lh a1,344(s0)
+80101404: addu v1,v1,v0
+80101408: jal 0x80101bac
+8010140c: sh v1,554(s0)
+80101410: j 0x80101454
+80101414: nop
+80101418: addiu a0,zero,4
+8010141c: lhu v0,344(s0)
+80101420: addiu a2,zero,20
+80101424: addiu v0,v0,1
+80101428: sll a1,v0,16
+8010142c: sra a1,a1,16
+80101430: jal 0x80101c74
+80101434: sh v0,344(s0)
+80101438: addiu a0,zero,4
+8010143c: addiu a2,zero,-100
+80101440: lhu v1,554(s0)
+80101444: lh a1,344(s0)
+80101448: addu v1,v1,v0
+8010144c: jal 0x80101c74
+80101450: sh v1,554(s0)
+80101454: lhu v1,552(s0)
+80101458: nop
+8010145c: addu v1,v1,v0
+80101460: sh v1,552(s0)
+80101464: lh v1,344(s0)
+80101468: addiu v0,zero,4
+8010146c: bne v1,v0,0x80101564
+80101470: nop
+80101474: lbu v0,548(s0)
+80101478: sh zero,344(s0)
+8010147c: addiu v0,v0,1
+80101480: j 0x80101564
+80101484: sb v0,548(s0)
+80101488: addiu a0,zero,3
+8010148c: lhu v0,344(s0)
+80101490: addiu a2,zero,-20
+80101494: addiu v0,v0,1
+80101498: sll a1,v0,16
+8010149c: sra a1,a1,16
+801014a0: jal 0x80101bac
+801014a4: sh v0,344(s0)
+801014a8: addiu a0,zero,3
+801014ac: addiu a2,zero,100
+801014b0: lhu v1,554(s0)
+801014b4: lh a1,344(s0)
+801014b8: addu v1,v1,v0
+801014bc: jal 0x80101bac
+801014c0: sh v1,554(s0)
+801014c4: lhu v1,552(s0)
+801014c8: nop
+801014cc: addu v1,v1,v0
+801014d0: sh v1,552(s0)
+801014d4: lh v1,344(s0)
+801014d8: addiu v0,zero,3
+801014dc: bne v1,v0,0x8010155c
+801014e0: nop
+801014e4: lbu v0,548(s0)
+801014e8: sh zero,344(s0)
+801014ec: addiu v0,v0,1
+801014f0: j 0x8010155c
+801014f4: sb v0,548(s0)
+801014f8: addiu a0,zero,3
+801014fc: lhu v0,344(s0)
+80101500: addiu a2,zero,-20
+80101504: addiu v0,v0,1
+80101508: sll a1,v0,16
+8010150c: sra a1,a1,16
+80101510: jal 0x80101c74
+80101514: sh v0,344(s0)
+80101518: addiu a0,zero,3
+8010151c: addiu a2,zero,100
+80101520: lhu v1,554(s0)
+80101524: lh a1,344(s0)
+80101528: addu v1,v1,v0
+8010152c: jal 0x80101c74
+80101530: sh v1,554(s0)
+80101534: lhu v1,552(s0)
+80101538: nop
+8010153c: addu v1,v1,v0
+80101540: sh v1,552(s0)
+80101544: lh v1,344(s0)
+80101548: addiu v0,zero,3
+8010154c: bne v1,v0,0x8010155c
+80101550: nop
+80101554: sh zero,344(s0)
+80101558: sb zero,548(s0)
+8010155c: jal 0x80101578
+80101560: addu a0,s0,zero
+80101564: lw ra,28(sp)
+80101568: lw s0,24(sp)
+8010156c: addiu sp,sp,32
+80101570: jr ra
+80101574: nop
+80101578: addiu sp,sp,-32
+8010157c: lui a1,0x800d
+80101580: addiu a1,a1,-1018
+80101584: sw ra,24(sp)
+80101588: sw s1,20(sp)
+8010158c: sw s0,16(sp)
+80101590: lhu v0,0(a1)
+80101594: nop
+80101598: beq v0,zero,0x801016c0
+8010159c: addu s1,a0,zero
+801015a0: lui v0,0x800d
+801015a4: lbu v0,-565(v0)
+801015a8: nop
+801015ac: bne v0,zero,0x801016c0
+801015b0: addiu s0,a1,-14
+801015b4: addiu v0,zero,517
+801015b8: lui at,0x800d
+801015bc: sw s1,-596(at)
+801015c0: lui at,0x800d
+801015c4: sw v0,-1028(at)
+801015c8: jal 0x80015910
+801015cc: addu a1,s0,zero
+801015d0: beq v0,zero,0x801015f0
+801015d4: nop
+801015d8: lui v0,0x800d
+801015dc: lbu v0,-1027(v0)
+801015e0: nop
+801015e4: addiu v0,v0,1
+801015e8: lui at,0x800d
+801015ec: sb v0,-1027(at)
+801015f0: lw v0,64(s1)
+801015f4: nop
+801015f8: slti v0,v0,-8999
+801015fc: bne v0,zero,0x80101628
+80101600: addu a0,s1,zero
+80101604: jal 0x80015910
+80101608: addu a1,s0,zero
+8010160c: beq v0,zero,0x8010161c
+80101610: addu a1,zero,zero
+80101614: j 0x80101684
+80101618: addu a0,s0,zero
+8010161c: addu a0,s0,zero
+80101620: j 0x80101684
+80101624: addiu a1,zero,2048
+80101628: lw v0,56(s1)
+8010162c: nop
+80101630: slti v0,v0,-15599
+80101634: bne v0,zero,0x80101664
+80101638: nop
+8010163c: addu a0,s1,zero
+80101640: jal 0x80015910
+80101644: addu a1,s0,zero
+80101648: beq v0,zero,0x80101658
+8010164c: addiu a1,zero,2048
+80101650: j 0x80101684
+80101654: addu a0,s0,zero
+80101658: addu a0,s0,zero
+8010165c: j 0x80101684
+80101660: addu a1,zero,zero
+80101664: jal 0x80015910
+80101668: addu a1,s0,zero
+8010166c: beq v0,zero,0x8010167c
+80101670: addiu a1,zero,3072
+80101674: j 0x80101684
+80101678: addu a0,s0,zero
+8010167c: addu a0,s0,zero
+80101680: addiu a1,zero,1024
+80101684: jal 0x8001569c
+80101688: addiu a2,zero,1536
+8010168c: lhu v0,536(s1)
+80101690: nop
+80101694: andi v0,v0,0x20
+80101698: beq v0,zero,0x801016a4
+8010169c: addiu a0,zero,60
+801016a0: addiu a0,zero,30
+801016a4: jal 0x801038e4
+801016a8: nop
+801016ac: addu a0,s1,zero
+801016b0: addiu v0,zero,70
+801016b4: sb v0,568(a0)
+801016b8: jal 0x80103d80
+801016bc: sb zero,561(a0)
+801016c0: lw ra,24(sp)
+801016c4: lw s1,20(sp)
+801016c8: lw s0,16(sp)
+801016cc: addiu sp,sp,32
+801016d0: jr ra
+801016d4: nop
+801016d8: addiu sp,sp,-32
+801016dc: sw s0,16(sp)
+801016e0: addu s0,a0,zero
+801016e4: sw s1,20(sp)
+801016e8: lui s1,0x800d
+801016ec: addiu s1,s1,-565
+801016f0: sw ra,24(sp)
+801016f4: lbu v0,0(s1)
+801016f8: lw a0,408(s0)
+801016fc: bne v0,zero,0x801017ac
+80101700: nop
+80101704: lui v0,0x800d
+80101708: lw v0,-976(v0)
+8010170c: lw v1,92(a0)
+80101710: nop
+80101714: subu v0,v0,v1
+80101718: mult v0,v0
+8010171c: lui v0,0x800d
+80101720: lw v0,-968(v0)
+80101724: lw v1,100(a0)
+80101728: mflo a1
+8010172c: subu v0,v0,v1
+80101730: nop
+80101734: mult v0,v0
+80101738: mflo v1
+8010173c: jal 0x8008d2f4
+80101740: addu a0,a1,v1
+80101744: slti v0,v0,5200
+80101748: beq v0,zero,0x801017ac
+8010174c: addiu v1,zero,8
+80101750: lhu v0,536(s0)
+80101754: sb v1,556(s0)
+80101758: ori v0,v0,0x2
+8010175c: sh v0,536(s0)
+80101760: lui at,0x800d
+80101764: sw s0,-596(at)
+80101768: lw v0,0(s0)
+8010176c: addiu v1,zero,261
+80101770: lui at,0x800d
+80101774: sw v1,-1028(at)
+80101778: ori v0,v0,0x100a
+8010177c: sw v0,0(s0)
+80101780: addiu v0,zero,-1
+80101784: lui at,0x800d
+80101788: sh v0,-690(at)
+8010178c: lui v0,0x800d
+80101790: lw v0,-1032(v0)
+80101794: lbu v1,0(s1)
+80101798: ori v0,v0,0x1008
+8010179c: ori v1,v1,0x80
+801017a0: lui at,0x800d
+801017a4: sw v0,-1032(at)
+801017a8: sb v1,0(s1)
+801017ac: lw ra,24(sp)
+801017b0: lw s1,20(sp)
+801017b4: lw s0,16(sp)
+801017b8: addiu sp,sp,32
+801017bc: jr ra
+801017c0: nop
+801017c4: addiu sp,sp,-96
+801017c8: sw s1,84(sp)
+801017cc: addu s1,a0,zero
+801017d0: sw ra,92(sp)
+801017d4: sw s2,88(sp)
+801017d8: sw s0,80(sp)
+801017dc: lw s0,408(s1)
+801017e0: lui a1,0x8010
+801017e4: addiu a1,a1,28
+801017e8: .word 0x88a20003(op22)
+801017ec: .word 0x98a20000(op26)
+801017f0: .word 0x88a30007(op22)
+801017f4: .word 0x98a30004(op26)
+801017f8: .word 0xaba20043(op2a)
+801017fc: .word 0xbba20040(op2e)
+80101800: .word 0xaba30047(op2a)
+80101804: .word 0xbba30044(op2e)
+80101808: lbu v1,550(s1)
+8010180c: lui s2,0x800d
+80101810: addiu s2,s2,1308
+80101814: sltiu v0,v1,0x8
+80101818: beq v0,zero,0x80101b90
+8010181c: nop
+80101820: sll v0,v1,2
+80101824: lui at,0x8010
+80101828: addu at,at,v0
+8010182c: lw v0,36(at)
+80101830: nop
+80101834: jr v0
+80101838: nop
+8010183c: lui a0,0x800d
+80101840: addiu a0,a0,18548
+80101844: addiu a1,zero,29
+80101848: jal 0x8007730c
+8010184c: sh zero,346(s1)
+80101850: lbu v0,550(s1)
+80101854: nop
+80101858: addiu v0,v0,1
+8010185c: sb v0,550(s1)
+80101860: addiu a0,zero,13
+80101864: lh a1,346(s1)
+80101868: jal 0x80101bac
+8010186c: addiu a2,zero,240
+80101870: addiu a0,zero,13
+80101874: addiu a2,zero,-320
+80101878: lhu v1,554(s1)
+8010187c: lh a1,346(s1)
+80101880: addu v1,v1,v0
+80101884: jal 0x80101bac
+80101888: sh v1,554(s1)
+8010188c: lhu a0,346(s1)
+80101890: lhu v1,552(s1)
+80101894: addiu a0,a0,1
+80101898: addu v1,v1,v0
+8010189c: sh v1,552(s1)
+801018a0: sh a0,346(s1)
+801018a4: lw v0,64(s2)
+801018a8: lw v1,64(s1)
+801018ac: nop
+801018b0: subu v0,v0,v1
+801018b4: slti v0,v0,8100
+801018b8: beq v0,zero,0x801018c4
+801018bc: addiu v0,v1,8100
+801018c0: sw v0,64(s2)
+801018c4: lh v1,346(s1)
+801018c8: addiu v0,zero,13
+801018cc: bne v1,v0,0x80101b90
+801018d0: addiu a0,s0,1104
+801018d4: addiu s0,s2,84
+801018d8: addu a1,s0,zero
+801018dc: sh zero,346(s1)
+801018e0: sw a0,128(s2)
+801018e4: lbu v0,448(s1)
+801018e8: addiu a2,sp,16
+801018ec: andi v0,v0,0xfb
+801018f0: jal 0x8002d030
+801018f4: sb v0,448(s1)
+801018f8: addiu a0,s2,56
+801018fc: addiu a1,s2,116
+80101900: lw v0,36(sp)
+80101904: lw v1,40(sp)
+80101908: lw a3,44(sp)
+8010190c: addu a2,s0,zero
+80101910: sw v0,56(s2)
+80101914: sw v1,60(s2)
+80101918: sw a3,64(s2)
+8010191c: lw v0,16(sp)
+80101920: lw v1,20(sp)
+80101924: lw a3,24(sp)
+80101928: lw t0,28(sp)
+8010192c: sw v0,84(s2)
+80101930: sw v1,88(s2)
+80101934: sw a3,92(s2)
+80101938: sw t0,96(s2)
+8010193c: lw v0,32(sp)
+80101940: lw v1,36(sp)
+80101944: lw a3,40(sp)
+80101948: lw t0,44(sp)
+8010194c: sw v0,100(s2)
+80101950: sw v1,104(s2)
+80101954: sw a3,108(s2)
+80101958: sw t0,112(s2)
+8010195c: jal 0x8007746c
+80101960: addiu a3,sp,64
+80101964: lbu v0,550(s1)
+80101968: j 0x80101b50
+8010196c: addiu v0,v0,1
+80101970: addiu a0,zero,6
+80101974: lh a1,346(s1)
+80101978: jal 0x80101bac
+8010197c: addiu a2,zero,-140
+80101980: addiu a0,zero,6
+80101984: addiu a2,zero,-60
+80101988: lhu v1,554(s1)
+8010198c: lh a1,346(s1)
+80101990: addu v1,v1,v0
+80101994: jal 0x80101bac
+80101998: sh v1,554(s1)
+8010199c: lhu a0,346(s1)
+801019a0: lhu v1,552(s1)
+801019a4: addiu a0,a0,1
+801019a8: addu v1,v1,v0
+801019ac: sh v1,552(s1)
+801019b0: sh a0,346(s1)
+801019b4: lw v1,56(s2)
+801019b8: addiu v0,zero,1750
+801019bc: beq v1,v0,0x801019d0
+801019c0: addiu a0,s2,56
+801019c4: addiu a1,zero,1750
+801019c8: jal 0x8001a1e0
+801019cc: addiu a2,zero,70
+801019d0: lh v1,346(s1)
+801019d4: j 0x80101b3c
+801019d8: addiu v0,zero,6
+801019dc: addiu a0,zero,6
+801019e0: lh a1,346(s1)
+801019e4: jal 0x80101c74
+801019e8: addiu a2,zero,-140
+801019ec: addiu a0,zero,6
+801019f0: addiu a2,zero,-60
+801019f4: lhu v1,554(s1)
+801019f8: lh a1,346(s1)
+801019fc: addu v1,v1,v0
+80101a00: jal 0x80101c74
+80101a04: sh v1,554(s1)
+80101a08: lhu a0,346(s1)
+80101a0c: lhu v1,552(s1)
+80101a10: addiu a0,a0,1
+80101a14: addu v1,v1,v0
+80101a18: sh v1,552(s1)
+80101a1c: sh a0,346(s1)
+80101a20: lw v1,56(s2)
+80101a24: addiu v0,zero,1750
+80101a28: beq v1,v0,0x80101a3c
+80101a2c: addiu a0,s2,56
+80101a30: addiu a1,zero,1750
+80101a34: jal 0x8001a1e0
+80101a38: addiu a2,zero,145
+80101a3c: lw v1,60(s2)
+80101a40: addiu v0,zero,-210
+80101a44: beq v1,v0,0x80101a58
+80101a48: addiu a0,s2,60
+80101a4c: addiu a1,zero,-210
+80101a50: jal 0x8001a1e0
+80101a54: addiu a2,zero,25
+80101a58: lh v1,346(s1)
+80101a5c: j 0x80101b3c
+80101a60: addiu v0,zero,6
+80101a64: addiu a0,zero,7
+80101a68: lh a1,346(s1)
+80101a6c: jal 0x80101bac
+80101a70: addiu a2,zero,75
+80101a74: addiu a0,zero,7
+80101a78: addiu a2,zero,100
+80101a7c: lhu v1,554(s1)
+80101a80: lh a1,346(s1)
+80101a84: addu v1,v1,v0
+80101a88: jal 0x80101bac
+80101a8c: sh v1,554(s1)
+80101a90: lhu a0,346(s1)
+80101a94: lhu v1,552(s1)
+80101a98: addiu a0,a0,1
+80101a9c: addu v1,v1,v0
+80101aa0: sh v1,552(s1)
+80101aa4: sh a0,346(s1)
+80101aa8: lw v1,56(s2)
+80101aac: addiu v0,zero,1750
+80101ab0: beq v1,v0,0x80101ac4
+80101ab4: addiu a0,s2,56
+80101ab8: addiu a1,zero,1750
+80101abc: jal 0x8001a1e0
+80101ac0: addiu a2,zero,100
+80101ac4: lw v1,60(s2)
+80101ac8: addiu v0,zero,-210
+80101acc: beq v1,v0,0x80101ae0
+80101ad0: addiu a0,s2,60
+80101ad4: addiu a1,zero,-210
+80101ad8: jal 0x8001a1e0
+80101adc: addiu a2,zero,55
+80101ae0: lh v1,346(s1)
+80101ae4: j 0x80101b3c
+80101ae8: addiu v0,zero,7
+80101aec: addiu a0,zero,7
+80101af0: lh a1,346(s1)
+80101af4: jal 0x80101c74
+80101af8: addiu a2,zero,75
+80101afc: addiu a0,zero,7
+80101b00: addiu a2,zero,100
+80101b04: lhu v1,554(s1)
+80101b08: lh a1,346(s1)
+80101b0c: addu v1,v1,v0
+80101b10: jal 0x80101c74
+80101b14: sh v1,554(s1)
+80101b18: lhu a0,552(s1)
+80101b1c: lhu v1,346(s1)
+80101b20: addu a0,a0,v0
+80101b24: addiu v1,v1,1
+80101b28: sh v1,346(s1)
+80101b2c: sll v1,v1,16
+80101b30: sra v1,v1,16
+80101b34: addiu v0,zero,7
+80101b38: sh a0,552(s1)
+80101b3c: bne v1,v0,0x80101b90
+80101b40: nop
+80101b44: lbu v0,550(s1)
+80101b48: sh zero,346(s1)
+80101b4c: addiu v0,v0,1
+80101b50: j 0x80101b90
+80101b54: sb v0,550(s1)
+80101b58: lw v1,56(s2)
+80101b5c: addiu v0,zero,1750
+80101b60: beq v1,v0,0x80101b74
+80101b64: addiu a0,s2,56
+80101b68: addiu a1,zero,1750
+80101b6c: jal 0x8001a1e0
+80101b70: addiu a2,zero,100
+80101b74: lw v1,60(s2)
+80101b78: addiu v0,zero,-210
+80101b7c: beq v1,v0,0x80101b90
+80101b80: addiu a0,s2,60
+80101b84: addiu a1,zero,-210
+80101b88: jal 0x8001a1e0
+80101b8c: addiu a2,zero,30
+80101b90: lw ra,92(sp)
+80101b94: lw s2,88(sp)
+80101b98: lw s1,84(sp)
+80101b9c: lw s0,80(sp)
+80101ba0: addiu sp,sp,96
+80101ba4: jr ra
+80101ba8: nop
+80101bac: beq a1,zero,0x80101c68
+80101bb0: mult a2,a1
+80101bb4: mflo v1
+80101bb8: nop
+80101bbc: nop
+80101bc0: mult v1,a1
+80101bc4: mflo v1
+80101bc8: nop
+80101bcc: nop
+80101bd0: mult a0,a0
+80101bd4: mflo v0
+80101bd8: nop
+80101bdc: nop
+80101be0: div v1,v0
+80101be4: bne v0,zero,0x80101bf0
+80101be8: nop
+80101bec: .word 0x0007000d(fn0d)
+80101bf0: addiu at,zero,-1
+80101bf4: bne v0,at,0x80101c08
+80101bf8: lui at,0x8000
+80101bfc: bne v1,at,0x80101c08
+80101c00: nop
+80101c04: .word 0x0006000d(fn0d)
+80101c08: mflo a0
+80101c0c: addiu v1,a1,-1
+80101c10: nop
+80101c14: mult a2,v1
+80101c18: mflo t0
+80101c1c: nop
+80101c20: nop
+80101c24: mult t0,v1
+80101c28: mflo v1
+80101c2c: nop
+80101c30: nop
+80101c34: div v1,v0
+80101c38: bne v0,zero,0x80101c44
+80101c3c: nop
+80101c40: .word 0x0007000d(fn0d)
+80101c44: addiu at,zero,-1
+80101c48: bne v0,at,0x80101c5c
+80101c4c: lui at,0x8000
+80101c50: bne v1,at,0x80101c5c
+80101c54: nop
+80101c58: .word 0x0006000d(fn0d)
+80101c5c: mflo v0
+80101c60: j 0x80101c6c
+80101c64: subu v0,a0,v0
+80101c68: addu v0,zero,zero
+80101c6c: jr ra
+80101c70: nop
+80101c74: beq a1,zero,0x80101d38
+80101c78: subu v1,a0,a1
+80101c7c: addiu a1,v1,1
+80101c80: mult a2,a1
+80101c84: mflo t0
+80101c88: nop
+80101c8c: nop
+80101c90: mult t0,a1
+80101c94: mflo a1
+80101c98: nop
+80101c9c: nop
+80101ca0: mult a0,a0
+80101ca4: mflo v0
+80101ca8: nop
+80101cac: nop
+80101cb0: div a1,v0
+80101cb4: bne v0,zero,0x80101cc0
+80101cb8: nop
+80101cbc: .word 0x0007000d(fn0d)
+80101cc0: addiu at,zero,-1
+80101cc4: bne v0,at,0x80101cd8
+80101cc8: lui at,0x8000
+80101ccc: bne a1,at,0x80101cd8
+80101cd0: nop
+80101cd4: .word 0x0006000d(fn0d)
+80101cd8: mflo a0
+80101cdc: nop
+80101ce0: nop
+80101ce4: mult a2,v1
+80101ce8: mflo t0
+80101cec: nop
+80101cf0: nop
+80101cf4: mult t0,v1
+80101cf8: mflo v1
+80101cfc: nop
+80101d00: nop
+80101d04: div v1,v0
+80101d08: bne v0,zero,0x80101d14
+80101d0c: nop
+80101d10: .word 0x0007000d(fn0d)
+80101d14: addiu at,zero,-1
+80101d18: bne v0,at,0x80101d2c
+80101d1c: lui at,0x8000
+80101d20: bne v1,at,0x80101d2c
+80101d24: nop
+80101d28: .word 0x0006000d(fn0d)
+80101d2c: mflo v0
+80101d30: j 0x80101d3c
+80101d34: subu v0,a0,v0
+80101d38: addu v0,a2,zero
+80101d3c: jr ra
+80101d40: nop
+80101d44: addiu sp,sp,-24
+80101d48: sw s0,16(sp)
+80101d4c: addu s0,a0,zero
+80101d50: sw ra,20(sp)
+80101d54: lbu v1,551(s0)
+80101d58: nop
+80101d5c: sltiu v0,v1,0x6
+80101d60: beq v0,zero,0x80101e98
+80101d64: sll v0,v1,2
+80101d68: lui at,0x8010
+80101d6c: addu at,at,v0
+80101d70: lw v0,68(at)
+80101d74: nop
+80101d78: jr v0
+80101d7c: nop
+80101d80: addiu a0,zero,10
+80101d84: addiu a1,zero,120
+80101d88: addiu a2,zero,50
+80101d8c: jal 0x800395b8
+80101d90: addu a3,zero,zero
+80101d94: lbu v0,551(s0)
+80101d98: addiu v1,zero,2
+80101d9c: sb v1,362(s0)
+80101da0: addiu v0,v0,1
+80101da4: sb v0,551(s0)
+80101da8: lbu v0,362(s0)
+80101dac: nop
+80101db0: addiu v0,v0,-1
+80101db4: sb v0,362(s0)
+80101db8: sll v0,v0,24
+80101dbc: beq v0,zero,0x80101e4c
+80101dc0: nop
+80101dc4: j 0x80101e98
+80101dc8: nop
+80101dcc: addiu v0,zero,5
+80101dd0: lui v1,0x800d
+80101dd4: addiu v1,v1,-1064
+80101dd8: sb v0,362(s0)
+80101ddc: lw v0,0(v1)
+80101de0: nop
+80101de4: ori v0,v0,0x4
+80101de8: sw v0,0(v1)
+80101dec: lbu v0,551(s0)
+80101df0: nop
+80101df4: addiu v0,v0,1
+80101df8: sb v0,551(s0)
+80101dfc: lbu v0,362(s0)
+80101e00: nop
+80101e04: addiu v0,v0,-1
+80101e08: sb v0,362(s0)
+80101e0c: sll v0,v0,24
+80101e10: bne v0,zero,0x80101e98
+80101e14: addiu a0,zero,8
+80101e18: addiu a1,zero,85
+80101e1c: addiu a2,zero,40
+80101e20: addu a3,zero,zero
+80101e24: addiu v0,zero,10
+80101e28: jal 0x800395b8
+80101e2c: sb v0,362(s0)
+80101e30: lui a0,0x800d
+80101e34: addiu a0,a0,-1064
+80101e38: lw v0,0(a0)
+80101e3c: addiu v1,zero,-5
+80101e40: and v0,v0,v1
+80101e44: ori v0,v0,0x8
+80101e48: sw v0,0(a0)
+80101e4c: lbu v0,551(s0)
+80101e50: nop
+80101e54: addiu v0,v0,1
+80101e58: j 0x80101e98
+80101e5c: sb v0,551(s0)
+80101e60: lbu v0,362(s0)
+80101e64: nop
+80101e68: addiu v0,v0,-1
+80101e6c: sb v0,362(s0)
+80101e70: sll v0,v0,24
+80101e74: bne v0,zero,0x80101e98
+80101e78: addiu a0,zero,-9
+80101e7c: lui v0,0x800d
+80101e80: addiu v0,v0,-1064
+80101e84: lw v1,0(v0)
+80101e88: nop
+80101e8c: and v1,v1,a0
+80101e90: sw v1,0(v0)
+80101e94: sb zero,551(s0)
+80101e98: lw ra,20(sp)
+80101e9c: lw s0,16(sp)
+80101ea0: addiu sp,sp,24
+80101ea4: jr ra
+80101ea8: nop
+80101eac: addiu sp,sp,-24
+80101eb0: sw s0,16(sp)
+80101eb4: addu s0,a0,zero
+80101eb8: sw ra,20(sp)
+80101ebc: lh v0,342(s0)
+80101ec0: nop
+80101ec4: slti v0,v0,25000
+80101ec8: beq v0,zero,0x80101ee0
+80101ecc: nop
+80101ed0: lhu v0,536(s0)
+80101ed4: nop
+80101ed8: ori v0,v0,0x20
+80101edc: sh v0,536(s0)
+80101ee0: lui v0,0x800d
+80101ee4: lh v0,-690(v0)
+80101ee8: nop
+80101eec: bltz v0,0x80101fd8
+80101ef0: addiu v0,zero,7
+80101ef4: lbu v1,550(s0)
+80101ef8: nop
+80101efc: bne v1,v0,0x80101f1c
+80101f00: addiu v0,zero,1
+80101f04: lbu v1,560(s0)
+80101f08: nop
+80101f0c: beq v1,v0,0x80101fd8
+80101f10: addiu v0,zero,1
+80101f14: j 0x80101fdc
+80101f18: sb v0,466(s0)
+80101f1c: lhu v0,536(s0)
+80101f20: nop
+80101f24: andi v0,v0,0x10
+80101f28: beq v0,zero,0x80101f8c
+80101f2c: addiu v0,zero,8
+80101f30: lui v1,0x800d
+80101f34: lh v1,18464(v1)
+80101f38: nop
+80101f3c: bne v1,v0,0x80101f8c
+80101f40: nop
+80101f44: lh v0,342(s0)
+80101f48: nop
+80101f4c: slti v0,v0,25000
+80101f50: beq v0,zero,0x80101f8c
+80101f54: lui v1,0x4000
+80101f58: lui v0,0x800d
+80101f5c: lw v0,-1064(v0)
+80101f60: nop
+80101f64: and v0,v0,v1
+80101f68: beq v0,zero,0x80101f7c
+80101f6c: addiu v0,zero,3
+80101f70: sh zero,552(s0)
+80101f74: j 0x80101f80
+80101f78: sh zero,554(s0)
+80101f7c: addiu v0,zero,2
+80101f80: sb zero,548(s0)
+80101f84: j 0x80101fdc
+80101f88: sb v0,466(s0)
+80101f8c: lb v0,549(s0)
+80101f90: nop
+80101f94: bne v0,zero,0x80101fd8
+80101f98: nop
+80101f9c: lbu v0,558(s0)
+80101fa0: nop
+80101fa4: bne v0,zero,0x80101fd8
+80101fa8: nop
+80101fac: jal 0x80015fe8
+80101fb0: nop
+80101fb4: andi v0,v0,0x3
+80101fb8: bne v0,zero,0x80101fd8
+80101fbc: addiu v0,zero,4
+80101fc0: jal 0x80015fe8
+80101fc4: sb v0,466(s0)
+80101fc8: andi v0,v0,0x3f
+80101fcc: addiu v0,v0,120
+80101fd0: j 0x80101fdc
+80101fd4: sb v0,558(s0)
+80101fd8: sb zero,466(s0)
+80101fdc: lw ra,20(sp)
+80101fe0: lw s0,16(sp)
+80101fe4: addiu sp,sp,24
+80101fe8: jr ra
+80101fec: nop
+80101ff0: addiu sp,sp,-32
+80101ff4: sw s0,16(sp)
+80101ff8: addu s0,a0,zero
+80101ffc: sw s1,20(sp)
+80102000: addu s1,a1,zero
+80102004: sw s2,24(sp)
+80102008: sw ra,28(sp)
+8010200c: lbu a1,5(s0)
+80102010: addiu v0,zero,255
+80102014: andi v1,a1,0xff
+80102018: beq v1,v0,0x8010204c
+8010201c: addu s2,a2,zero
+80102020: addiu v0,zero,255
+80102024: sb a1,560(s0)
+80102028: jal 0x80101eac
+8010202c: sb v0,5(s0)
+80102030: lbu v1,333(s0)
+80102034: nop
+80102038: sltiu v0,v1,0x2
+8010203c: bne v0,zero,0x80102050
+80102040: addu a0,s0,zero
+80102044: addiu v0,v1,-2
+80102048: sb v0,333(s0)
+8010204c: addu a0,s0,zero
+80102050: lbu v0,466(s0)
+80102054: addu a1,s1,zero
+80102058: sll v0,v0,2
+8010205c: lui at,0x8010
+80102060: addu at,at,v0
+80102064: lw v0,18044(at)
+80102068: nop
+8010206c: jalr v0
+80102070: addu a2,s2,zero
+80102074: lw ra,28(sp)
+80102078: lw s2,24(sp)
+8010207c: lw s1,20(sp)
+80102080: lw s0,16(sp)
+80102084: addiu sp,sp,32
+80102088: jr ra
+8010208c: nop
+80102090: addiu sp,sp,-32
+80102094: sw s0,16(sp)
+80102098: addu s0,a0,zero
+8010209c: sw s1,20(sp)
+801020a0: addu s1,a1,zero
+801020a4: sw s2,24(sp)
+801020a8: sw ra,28(sp)
+801020ac: lw v0,560(s0)
+801020b0: lui v1,0xffff
+801020b4: and v0,v0,v1
+801020b8: bne v0,zero,0x801020cc
+801020bc: addu s2,a2,zero
+801020c0: addiu a0,zero,5
+801020c4: jal 0x8005bd6c
+801020c8: addu a1,s0,zero
+801020cc: jal 0x801039ec
+801020d0: addu a0,s0,zero
+801020d4: lw v0,508(s0)
+801020d8: nop
+801020dc: sw v0,4(s0)
+801020e0: lbu v1,4(s0)
+801020e4: addiu v0,zero,1
+801020e8: bne v1,v0,0x8010213c
+801020ec: nop
+801020f0: lbu v0,5(s0)
+801020f4: nop
+801020f8: sll v0,v0,2
+801020fc: lui at,0x8010
+80102100: addu at,at,v0
+80102104: lw v0,17980(at)
+80102108: nop
+8010210c: jalr v0
+80102110: addu a0,s0,zero
+80102114: addu a0,s0,zero
+80102118: lbu v0,5(a0)
+8010211c: addu a1,s1,zero
+80102120: sll v0,v0,2
+80102124: lui at,0x8010
+80102128: addu at,at,v0
+8010212c: lw v0,18012(at)
+80102130: nop
+80102134: jalr v0
+80102138: addu a2,s2,zero
+8010213c: lw ra,28(sp)
+80102140: lw s2,24(sp)
+80102144: lw s1,20(sp)
+80102148: lw s0,16(sp)
+8010214c: addiu sp,sp,32
+80102150: jr ra
+80102154: nop
+80102158: addiu sp,sp,-80
+8010215c: sw s1,60(sp)
+80102160: addu s1,a0,zero
+80102164: sw ra,72(sp)
+80102168: sw s3,68(sp)
+8010216c: sw s2,64(sp)
+80102170: sw s0,56(sp)
+80102174: lw s3,408(s1)
+80102178: lui a1,0x8010
+8010217c: addiu a1,a1,28
+80102180: .word 0x88a20003(op22)
+80102184: .word 0x98a20000(op26)
+80102188: .word 0x88a30007(op22)
+8010218c: .word 0x98a30004(op26)
+80102190: .word 0xaba20013(op2a)
+80102194: .word 0xbba20010(op2e)
+80102198: .word 0xaba30017(op2a)
+8010219c: .word 0xbba30014(op2e)
+801021a0: lui s2,0x800d
+801021a4: addiu s2,s2,1308
+801021a8: lbu v1,6(s1)
+801021ac: addiu v0,zero,1
+801021b0: beq v1,v0,0x80102488
+801021b4: slti v0,v1,2
+801021b8: beq v0,zero,0x801021d0
+801021bc: nop
+801021c0: beq v1,zero,0x801021ec
+801021c4: addiu a0,zero,4
+801021c8: j 0x80102698
+801021cc: nop
+801021d0: addiu v0,zero,2
+801021d4: beq v1,v0,0x80102638
+801021d8: addiu v0,zero,3
+801021dc: beq v1,v0,0x80102654
+801021e0: addiu a0,s2,17240
+801021e4: j 0x80102698
+801021e8: nop
+801021ec: jal 0x8005bd6c
+801021f0: addu a1,s1,zero
+801021f4: jal 0x80018fb0
+801021f8: addu a0,s1,zero
+801021fc: lui v0,0x800d
+80102200: lw v0,-1064(v0)
+80102204: lui v1,0x800d
+80102208: lh v1,18464(v1)
+8010220c: ori v0,v0,0x100
+80102210: lui at,0x800d
+80102214: sw v0,-1064(at)
+80102218: addiu v0,zero,6
+8010221c: beq v1,v0,0x8010222c
+80102220: addiu v0,zero,13
+80102224: bne v1,v0,0x80102284
+80102228: nop
+8010222c: lw v0,64(s1)
+80102230: nop
+80102234: slti v0,v0,-13300
+80102238: beq v0,zero,0x80102284
+8010223c: lui v1,0x8
+80102240: lhu v0,536(s1)
+80102244: ori v1,v1,0x400
+80102248: ori v0,v0,0x40
+8010224c: sh v0,536(s1)
+80102250: lui v0,0x800d
+80102254: lw v0,-1032(v0)
+80102258: nop
+8010225c: or v0,v0,v1
+80102260: lui at,0x800d
+80102264: sw v0,-1032(at)
+80102268: jal 0x8002c7ac
+8010226c: addiu a0,zero,5
+80102270: addiu v0,zero,1
+80102274: lui at,0x800e
+80102278: sb v0,-997(at)
+8010227c: j 0x80102298
+80102280: addiu a0,s2,56
+80102284: lhu v0,536(s1)
+80102288: nop
+8010228c: andi v0,v0,0xffbf
+80102290: sh v0,536(s1)
+80102294: addiu a0,s2,56
+80102298: addiu a1,s2,116
+8010229c: addiu a2,s2,84
+801022a0: lui v1,0x800d
+801022a4: addiu v1,v1,-1064
+801022a8: lw v0,0(v1)
+801022ac: addiu a3,sp,16
+801022b0: ori v0,v0,0x4
+801022b4: sw v0,0(v1)
+801022b8: addiu v0,zero,13
+801022bc: sb v0,550(s1)
+801022c0: lhu v0,536(s1)
+801022c4: addiu v1,zero,3678
+801022c8: sh v1,374(s1)
+801022cc: lbu v1,467(s1)
+801022d0: addiu s0,zero,1
+801022d4: sb s0,551(s1)
+801022d8: sh zero,554(s1)
+801022dc: sh zero,552(s1)
+801022e0: sb zero,548(s1)
+801022e4: ori v0,v0,0x2
+801022e8: sh v0,536(s1)
+801022ec: lw v0,0(s1)
+801022f0: ori v1,v1,0x80
+801022f4: sb v1,467(s1)
+801022f8: ori v0,v0,0x80a
+801022fc: sw v0,0(s1)
+80102300: lw v1,104(s2)
+80102304: lw t0,108(s2)
+80102308: lw t1,112(s2)
+8010230c: lui v0,0x800a
+80102310: addiu v0,v0,-9404
+80102314: sw v0,128(s2)
+80102318: sw v1,56(s2)
+8010231c: sw t0,60(s2)
+80102320: jal 0x8007746c
+80102324: sw t1,64(s2)
+80102328: addiu a0,zero,8
+8010232c: jal 0x8003947c
+80102330: addiu a1,zero,3
+80102334: addiu a0,zero,50
+80102338: addiu a1,zero,255
+8010233c: addu a2,zero,zero
+80102340: jal 0x800395b8
+80102344: addu a3,zero,zero
+80102348: jal 0x80036eb4
+8010234c: addu a0,s2,zero
+80102350: addu a0,s1,zero
+80102354: jal 0x80104318
+80102358: addiu a1,s3,1204
+8010235c: addiu v0,zero,4
+80102360: lui at,0x800e
+80102364: sb v0,-998(at)
+80102368: jal 0x80103eb4
+8010236c: addu a0,s1,zero
+80102370: addu a0,s1,zero
+80102374: jal 0x8010338c
+80102378: addu a1,zero,zero
+8010237c: lui a0,0x20f
+80102380: ori a0,a0,0x1
+80102384: jal 0x8005ba28
+80102388: addiu a1,s1,56
+8010238c: lh v1,118(s1)
+80102390: addiu v0,zero,9
+80102394: sb v0,363(s1)
+80102398: sb s0,557(s1)
+8010239c: addiu v1,v1,160
+801023a0: lui at,0x8010
+801023a4: sw v1,18620(at)
+801023a8: lh v1,118(s1)
+801023ac: addiu v0,zero,3072
+801023b0: bne v1,v0,0x80102444
+801023b4: nop
+801023b8: lw v0,64(s1)
+801023bc: nop
+801023c0: slti v0,v0,-2999
+801023c4: bne v0,zero,0x801023d0
+801023c8: addiu v0,zero,-3000
+801023cc: sw v0,64(s1)
+801023d0: lbu v1,332(s1)
+801023d4: addiu v0,zero,2
+801023d8: bne v1,v0,0x80102410
+801023dc: addiu v0,zero,3
+801023e0: lui v1,0x1b4e
+801023e4: lbu v0,333(s1)
+801023e8: ori v1,v1,0x81b5
+801023ec: sll v0,v0,9
+801023f0: mult v0,v1
+801023f4: lhu v0,118(s1)
+801023f8: mfhi t2
+801023fc: sra v1,t2,4
+80102400: addu v0,v0,v1
+80102404: sh v0,118(s1)
+80102408: lbu v1,332(s1)
+8010240c: addiu v0,zero,3
+80102410: bne v1,v0,0x80102444
+80102414: lui v1,0x1b4e
+80102418: lbu v0,333(s1)
+8010241c: ori v1,v1,0x81b5
+80102420: sll v0,v0,9
+80102424: mult v0,v1
+80102428: lhu v1,118(s1)
+8010242c: nop
+80102430: addiu v1,v1,512
+80102434: mfhi t2
+80102438: sra v0,t2,4
+8010243c: addu v0,v0,v1
+80102440: sh v0,118(s1)
+80102444: lw v0,56(s1)
+80102448: nop
+8010244c: slti v0,v0,-23294
+80102450: bne v0,zero,0x80102468
+80102454: nop
+80102458: lw v0,64(s1)
+8010245c: nop
+80102460: addiu v0,v0,-1000
+80102464: sw v0,64(s1)
+80102468: lbu v0,6(s1)
+8010246c: addiu v1,zero,-500
+80102470: sh v1,324(s1)
+80102474: addiu v0,v0,1
+80102478: sb v0,6(s1)
+8010247c: addiu v0,zero,40
+80102480: lui at,0x8010
+80102484: sh v0,18624(at)
+80102488: addu a0,s1,zero
+8010248c: addiu a1,zero,9
+80102490: addu a2,zero,zero
+80102494: jal 0x8001a330
+80102498: addu a3,zero,zero
+8010249c: beq v0,zero,0x8010252c
+801024a0: nop
+801024a4: lhu v1,536(s1)
+801024a8: nop
+801024ac: andi v0,v1,0x40
+801024b0: beq v0,zero,0x8010251c
+801024b4: andi v0,v1,0xffbf
+801024b8: lui a0,0x800d
+801024bc: addiu a0,a0,-1064
+801024c0: sh v0,536(s1)
+801024c4: lw v0,0(a0)
+801024c8: lui v1,0x4000
+801024cc: and v0,v0,v1
+801024d0: beq v0,zero,0x801024e8
+801024d4: addiu a0,a0,20052
+801024d8: jal 0x80077360
+801024dc: addiu a1,zero,16
+801024e0: bne v0,zero,0x801024ec
+801024e4: addiu a0,zero,13
+801024e8: addiu a0,zero,6
+801024ec: jal 0x8002c7ac
+801024f0: nop
+801024f4: lui a1,0xfff7
+801024f8: ori a1,a1,0xfbff
+801024fc: lui a0,0x800d
+80102500: addiu a0,a0,-1032
+80102504: lw v0,0(a0)
+80102508: addiu v1,zero,1
+8010250c: lui at,0x800e
+80102510: sb v1,-997(at)
+80102514: and v0,v0,a1
+80102518: sw v0,0(a0)
+8010251c: lbu v0,6(s1)
+80102520: nop
+80102524: addiu v0,v0,1
+80102528: sb v0,6(s1)
+8010252c: lbu v1,333(s1)
+80102530: addiu v0,zero,31
+80102534: bne v1,v0,0x8010255c
+80102538: nop
+8010253c: lui v0,0x800d
+80102540: addiu v0,v0,-1064
+80102544: lw v1,0(v0)
+80102548: nop
+8010254c: ori v1,v1,0x4
+80102550: sw v1,0(v0)
+80102554: addiu v0,zero,1
+80102558: sb v0,551(s1)
+8010255c: lb v0,363(s1)
+80102560: nop
+80102564: blez v0,0x80102578
+80102568: addu v1,v0,zero
+8010256c: addiu v0,v1,-1
+80102570: j 0x8010257c
+80102574: sb v0,363(s1)
+80102578: sw zero,0(s2)
+8010257c: lhu v0,324(s1)
+80102580: lui v1,0x8010
+80102584: lhu v1,18624(v1)
+80102588: nop
+8010258c: addu v0,v0,v1
+80102590: beq v1,zero,0x801025a4
+80102594: sh v0,324(s1)
+80102598: addiu v0,v1,-2
+8010259c: lui at,0x8010
+801025a0: sh v0,18624(at)
+801025a4: addu a0,s1,zero
+801025a8: jal 0x800152c8
+801025ac: addiu a1,zero,2048
+801025b0: lui v1,0x8010
+801025b4: lw v1,18620(v1)
+801025b8: addiu v0,zero,3232
+801025bc: bne v1,v0,0x801025dc
+801025c0: addiu v0,zero,600
+801025c4: lw v1,56(s1)
+801025c8: addiu v0,zero,-25800
+801025cc: beq v1,v0,0x801025f8
+801025d0: addiu a0,s1,56
+801025d4: j 0x801025f0
+801025d8: addiu a1,zero,-25800
+801025dc: lw v1,64(s1)
+801025e0: nop
+801025e4: beq v1,v0,0x801025f8
+801025e8: addiu a0,s1,64
+801025ec: addiu a1,zero,600
+801025f0: jal 0x8001a1e0
+801025f4: addiu a2,zero,200
+801025f8: addu a0,s1,zero
+801025fc: lui a1,0x8010
+80102600: lh a1,18620(a1)
+80102604: jal 0x8001569c
+80102608: addiu a2,zero,75
+8010260c: lh v0,374(s1)
+80102610: nop
+80102614: addu v1,v0,zero
+80102618: slti v0,v0,3479
+8010261c: bne v0,zero,0x80102630
+80102620: addiu v0,zero,3478
+80102624: addiu v0,v1,-20
+80102628: j 0x80102698
+8010262c: sh v0,374(s1)
+80102630: j 0x80102698
+80102634: sh v0,374(s1)
+80102638: lbu v1,6(s1)
+8010263c: lhu v0,536(s1)
+80102640: addiu v1,v1,1
+80102644: andi v0,v0,0xfffb
+80102648: sh v0,536(s1)
+8010264c: j 0x80102698
+80102650: sb v1,6(s1)
+80102654: lhu v0,270(s1)
+80102658: addiu a1,zero,30
+8010265c: ori v0,v0,0x4000
+80102660: jal 0x8007730c
+80102664: sh v0,270(s1)
+80102668: addiu v0,zero,2
+8010266c: sh zero,554(s1)
+80102670: sh zero,552(s1)
+80102674: sb zero,548(s1)
+80102678: lui at,0x800e
+8010267c: sb v0,-998(at)
+80102680: lui v0,0x800d
+80102684: lw v0,-1064(v0)
+80102688: addiu v1,zero,-257
+8010268c: and v0,v0,v1
+80102690: lui at,0x800d
+80102694: sw v0,-1064(at)
+80102698: lw ra,72(sp)
+8010269c: lw s3,68(sp)
+801026a0: lw s2,64(sp)
+801026a4: lw s1,60(sp)
+801026a8: lw s0,56(sp)
+801026ac: addiu sp,sp,80
+801026b0: jr ra
+801026b4: nop
+801026b8: addiu sp,sp,-24
+801026bc: sw s0,16(sp)
+801026c0: addu s0,a0,zero
+801026c4: sw ra,20(sp)
+801026c8: lbu v1,6(s0)
+801026cc: nop
+801026d0: sltiu v0,v1,0x5
+801026d4: beq v0,zero,0x80102910
+801026d8: sll v0,v1,2
+801026dc: lui at,0x8010
+801026e0: addu at,at,v0
+801026e4: lw v0,92(at)
+801026e8: nop
+801026ec: jr v0
+801026f0: nop
+801026f4: lui a1,0x800d
+801026f8: addiu a1,a1,-1064
+801026fc: lw a0,0(a1)
+80102700: lui v1,0x100
+80102704: ori v0,a0,0x10
+80102708: sw v0,0(a1)
+8010270c: lui v0,0x800d
+80102710: lw v0,-1060(v0)
+80102714: ori a0,a0,0x110
+80102718: or v0,v0,v1
+8010271c: lui at,0x800d
+80102720: sw v0,-1060(at)
+80102724: sw a0,0(a1)
+80102728: lbu a0,6(s0)
+8010272c: lbu v0,467(s0)
+80102730: lhu v1,536(s0)
+80102734: addiu a0,a0,1
+80102738: ori v0,v0,0x80
+8010273c: ori v1,v1,0x2
+80102740: sb v0,467(s0)
+80102744: sh v1,536(s0)
+80102748: j 0x80102910
+8010274c: sb a0,6(s0)
+80102750: lui v0,0x800d
+80102754: lw v0,-1064(v0)
+80102758: nop
+8010275c: andi v0,v0,0x80
+80102760: bne v0,zero,0x80102910
+80102764: lui v1,0x8
+80102768: ori v1,v1,0x400
+8010276c: lui v0,0x800d
+80102770: lw v0,-1032(v0)
+80102774: nop
+80102778: or v0,v0,v1
+8010277c: lui at,0x800d
+80102780: sw v0,-1032(at)
+80102784: jal 0x8002c7ac
+80102788: addiu a0,zero,9
+8010278c: addiu v0,zero,1
+80102790: lui at,0x800e
+80102794: sb v0,-997(at)
+80102798: lb v0,549(s0)
+8010279c: nop
+801027a0: beq v0,zero,0x801027bc
+801027a4: addiu v0,zero,-20125
+801027a8: sw v0,56(s0)
+801027ac: addiu v0,zero,-904
+801027b0: sw v0,64(s0)
+801027b4: j 0x801027c8
+801027b8: addiu v0,zero,3072
+801027bc: lhu v0,118(s0)
+801027c0: nop
+801027c4: addiu v0,v0,-1024
+801027c8: sh v0,118(s0)
+801027cc: lbu v0,6(s0)
+801027d0: nop
+801027d4: addiu v0,v0,1
+801027d8: sb v0,6(s0)
+801027dc: addu a0,s0,zero
+801027e0: addiu a1,zero,7
+801027e4: addu a2,zero,zero
+801027e8: jal 0x8001a330
+801027ec: addu a3,zero,zero
+801027f0: beq v0,zero,0x80102910
+801027f4: lui a0,0x20e
+801027f8: ori a0,a0,0x1
+801027fc: lbu v0,6(s0)
+80102800: addiu a1,s0,56
+80102804: sb zero,363(s0)
+80102808: addiu v0,v0,1
+8010280c: jal 0x8005ba28
+80102810: sb v0,6(s0)
+80102814: j 0x80102910
+80102818: nop
+8010281c: addu a0,s0,zero
+80102820: addiu a1,zero,1
+80102824: addiu a2,zero,7
+80102828: jal 0x8001a330
+8010282c: addu a3,zero,zero
+80102830: lbu v1,363(s0)
+80102834: nop
+80102838: addu v1,v1,v0
+8010283c: sb v1,363(s0)
+80102840: sll v1,v1,24
+80102844: sra v1,v1,24
+80102848: addiu v0,zero,4
+8010284c: bne v1,v0,0x80102864
+80102850: nop
+80102854: lhu v0,536(s0)
+80102858: nop
+8010285c: ori v0,v0,0x8
+80102860: sh v0,536(s0)
+80102864: lb v1,363(s0)
+80102868: addiu v0,zero,5
+8010286c: bne v1,v0,0x80102910
+80102870: addiu a0,zero,8
+80102874: lbu v0,6(s0)
+80102878: nop
+8010287c: addiu v0,v0,1
+80102880: jal 0x8002c7ac
+80102884: sb v0,6(s0)
+80102888: lui t0,0xfeff
+8010288c: ori t0,t0,0xffff
+80102890: lui t1,0xfff7
+80102894: ori t1,t1,0xfbff
+80102898: addu a0,s0,zero
+8010289c: addiu a1,zero,8
+801028a0: addiu v0,zero,1
+801028a4: lui a3,0x800d
+801028a8: addiu a3,a3,-1064
+801028ac: addiu v1,zero,-257
+801028b0: lui at,0x800e
+801028b4: sb v0,-997(at)
+801028b8: lw v0,0(a3)
+801028bc: addiu a2,zero,-17
+801028c0: and v0,v0,v1
+801028c4: lui v1,0x800d
+801028c8: lw v1,-1060(v1)
+801028cc: and v0,v0,a2
+801028d0: sw v0,0(a3)
+801028d4: and v1,v1,t0
+801028d8: lui at,0x800d
+801028dc: sw v1,-1060(at)
+801028e0: lhu v0,270(a0)
+801028e4: addu a2,zero,zero
+801028e8: ori v0,v0,0x4000
+801028ec: sh v0,270(a0)
+801028f0: lui v0,0x800d
+801028f4: lw v0,-1032(v0)
+801028f8: nop
+801028fc: and v0,v0,t1
+80102900: lui at,0x800d
+80102904: sw v0,-1032(at)
+80102908: jal 0x8001a330
+8010290c: addu a3,zero,zero
+80102910: lw ra,20(sp)
+80102914: lw s0,16(sp)
+80102918: addiu sp,sp,24
+8010291c: jr ra
+80102920: nop
+80102924: addiu sp,sp,-24
+80102928: sw s0,16(sp)
+8010292c: addu s0,a0,zero
+80102930: sw ra,20(sp)
+80102934: lbu v1,6(s0)
+80102938: addiu v0,zero,1
+8010293c: beq v1,v0,0x801029f8
+80102940: slti v0,v1,2
+80102944: beq v0,zero,0x8010295c
+80102948: nop
+8010294c: beq v1,zero,0x80102970
+80102950: nop
+80102954: j 0x80102bbc
+80102958: nop
+8010295c: addiu v0,zero,2
+80102960: beq v1,v0,0x80102aa0
+80102964: nop
+80102968: j 0x80102bbc
+8010296c: nop
+80102970: jal 0x80018fb0
+80102974: addu a0,s0,zero
+80102978: lui a1,0x800d
+8010297c: addiu a1,a1,-1064
+80102980: lw a0,0(a1)
+80102984: lui v1,0x100
+80102988: ori v0,a0,0x10
+8010298c: sw v0,0(a1)
+80102990: lui v0,0x800d
+80102994: lw v0,-1060(v0)
+80102998: ori a0,a0,0x110
+8010299c: or v0,v0,v1
+801029a0: lui at,0x800d
+801029a4: sw v0,-1060(at)
+801029a8: sw a0,0(a1)
+801029ac: lbu a0,6(s0)
+801029b0: addiu v0,zero,-9248
+801029b4: sh v0,368(s0)
+801029b8: addiu v0,zero,-1800
+801029bc: sh v0,370(s0)
+801029c0: addiu v0,zero,970
+801029c4: sh v0,372(s0)
+801029c8: lbu v0,467(s0)
+801029cc: lbu v1,448(s0)
+801029d0: sb zero,7(s0)
+801029d4: addiu a0,a0,1
+801029d8: ori v0,v0,0x80
+801029dc: sb v0,467(s0)
+801029e0: lhu v0,536(s0)
+801029e4: ori v1,v1,0x4
+801029e8: sb v1,448(s0)
+801029ec: sb a0,6(s0)
+801029f0: ori v0,v0,0x2
+801029f4: sh v0,536(s0)
+801029f8: lui a0,0x800d
+801029fc: addiu a0,a0,-1064
+80102a00: lw v0,0(a0)
+80102a04: nop
+80102a08: andi v0,v0,0x80
+80102a0c: bne v0,zero,0x80102bbc
+80102a10: nop
+80102a14: lb v0,549(s0)
+80102a18: nop
+80102a1c: beq v0,zero,0x80102a38
+80102a20: addiu v0,zero,-20125
+80102a24: sw v0,56(s0)
+80102a28: addiu v0,zero,-904
+80102a2c: sw v0,64(s0)
+80102a30: addiu v0,zero,4096
+80102a34: sh v0,118(s0)
+80102a38: lui v1,0x8
+80102a3c: lui v0,0x800d
+80102a40: lw v0,-1032(v0)
+80102a44: ori v1,v1,0x400
+80102a48: or v0,v0,v1
+80102a4c: lui at,0x800d
+80102a50: sw v0,-1032(at)
+80102a54: lw v0,0(a0)
+80102a58: lui v1,0x4000
+80102a5c: and v0,v0,v1
+80102a60: beq v0,zero,0x80102a78
+80102a64: addiu a0,a0,20052
+80102a68: jal 0x80077360
+80102a6c: addiu a1,zero,16
+80102a70: bne v0,zero,0x80102a7c
+80102a74: addiu a0,zero,14
+80102a78: addiu a0,zero,7
+80102a7c: jal 0x8002c7ac
+80102a80: nop
+80102a84: addiu v0,zero,1
+80102a88: lui at,0x800e
+80102a8c: sb v0,-997(at)
+80102a90: lbu v0,6(s0)
+80102a94: nop
+80102a98: addiu v0,v0,1
+80102a9c: sb v0,6(s0)
+80102aa0: lbu v0,7(s0)
+80102aa4: nop
+80102aa8: bne v0,zero,0x80102ac8
+80102aac: addu a0,s0,zero
+80102ab0: addiu a0,s0,64
+80102ab4: addu a1,zero,zero
+80102ab8: jal 0x8001a1e0
+80102abc: addiu a2,zero,20
+80102ac0: sb v0,7(s0)
+80102ac4: addu a0,s0,zero
+80102ac8: addiu a1,zero,8
+80102acc: addu a2,zero,zero
+80102ad0: jal 0x8001a330
+80102ad4: addu a3,zero,zero
+80102ad8: beq v0,zero,0x80102bbc
+80102adc: addiu a0,zero,8
+80102ae0: lhu v0,270(s0)
+80102ae4: nop
+80102ae8: ori v0,v0,0x4000
+80102aec: jal 0x8002c7ac
+80102af0: sh v0,270(s0)
+80102af4: lui a1,0xfeff
+80102af8: ori a1,a1,0xffff
+80102afc: lui a2,0xfff7
+80102b00: ori a2,a2,0xfbff
+80102b04: addiu v0,zero,1
+80102b08: lui a0,0x800d
+80102b0c: addiu a0,a0,-1064
+80102b10: lui at,0x800e
+80102b14: sb v0,-997(at)
+80102b18: lw v0,0(a0)
+80102b1c: addiu v1,zero,-257
+80102b20: and v0,v0,v1
+80102b24: addiu v1,zero,-17
+80102b28: and v0,v0,v1
+80102b2c: sw v0,0(a0)
+80102b30: lui v0,0x800d
+80102b34: lw v0,-1060(v0)
+80102b38: lui v1,0x800d
+80102b3c: lw v1,-1032(v1)
+80102b40: and v0,v0,a1
+80102b44: and v1,v1,a2
+80102b48: lui at,0x800d
+80102b4c: sw v0,-1060(at)
+80102b50: addiu v0,zero,1537
+80102b54: lui at,0x800d
+80102b58: sw v1,-1032(at)
+80102b5c: sw v0,4(s0)
+80102b60: addiu v0,zero,-2000
+80102b64: sh v0,244(s0)
+80102b68: addiu v0,zero,7000
+80102b6c: sh v0,246(s0)
+80102b70: addiu v0,zero,7150
+80102b74: addiu v1,zero,2000
+80102b78: sh v0,240(s0)
+80102b7c: sh v0,250(s0)
+80102b80: sh v0,242(s0)
+80102b84: sh v0,252(s0)
+80102b88: addiu v0,zero,-150
+80102b8c: sh v0,180(s0)
+80102b90: addiu v0,zero,4800
+80102b94: sh v0,182(s0)
+80102b98: addiu v0,zero,5500
+80102b9c: sh zero,248(s0)
+80102ba0: sh v1,254(s0)
+80102ba4: sh zero,184(s0)
+80102ba8: sh v0,176(s0)
+80102bac: sh v0,186(s0)
+80102bb0: sh v1,190(s0)
+80102bb4: sh v0,178(s0)
+80102bb8: sh v0,188(s0)
+80102bbc: lw ra,20(sp)
+80102bc0: lw s0,16(sp)
+80102bc4: addiu sp,sp,24
+80102bc8: jr ra
+80102bcc: nop
+80102bd0: addiu sp,sp,-24
+80102bd4: sw s0,16(sp)
+80102bd8: addu s0,a0,zero
+80102bdc: sw ra,20(sp)
+80102be0: lbu v1,6(s0)
+80102be4: nop
+80102be8: beq v1,zero,0x80102c00
+80102bec: addiu v0,zero,1
+80102bf0: beq v1,v0,0x80102c40
+80102bf4: addu a0,s0,zero
+80102bf8: j 0x80102c68
+80102bfc: nop
+80102c00: lbu v0,562(s0)
+80102c04: nop
+80102c08: bne v0,zero,0x80102c18
+80102c0c: addu a0,zero,zero
+80102c10: jal 0x8005bd6c
+80102c14: addu a1,s0,zero
+80102c18: lbu v0,467(s0)
+80102c1c: addu a0,s0,zero
+80102c20: ori v0,v0,0x80
+80102c24: jal 0x801039ec
+80102c28: sb v0,467(s0)
+80102c2c: lbu v0,6(s0)
+80102c30: nop
+80102c34: addiu v0,v0,1
+80102c38: sb v0,6(s0)
+80102c3c: addu a0,s0,zero
+80102c40: addiu a1,zero,10
+80102c44: addiu a2,zero,3
+80102c48: jal 0x8001a330
+80102c4c: addu a3,zero,zero
+80102c50: beq v0,zero,0x80102c68
+80102c54: addiu v1,zero,257
+80102c58: lbu v0,467(s0)
+80102c5c: sw v1,4(s0)
+80102c60: andi v0,v0,0x7f
+80102c64: sb v0,467(s0)
+80102c68: lw ra,20(sp)
+80102c6c: lw s0,16(sp)
+80102c70: addiu sp,sp,24
+80102c74: jr ra
+80102c78: nop
+80102c7c: jr ra
+80102c80: sb zero,466(a0)
+80102c84: addiu sp,sp,-32
+80102c88: sw s0,16(sp)
+80102c8c: addu s0,a0,zero
+80102c90: sw s1,20(sp)
+80102c94: addu s1,a1,zero
+80102c98: sw s2,24(sp)
+80102c9c: sw ra,28(sp)
+80102ca0: lbu v1,5(s0)
+80102ca4: addiu v0,zero,255
+80102ca8: beq v1,v0,0x80102cbc
+80102cac: addu s2,a2,zero
+80102cb0: addiu v0,zero,255
+80102cb4: jal 0x80102c7c
+80102cb8: sb v0,5(s0)
+80102cbc: addu a0,s0,zero
+80102cc0: lbu v0,466(s0)
+80102cc4: addu a1,s1,zero
+80102cc8: sll v0,v0,2
+80102ccc: lui at,0x8010
+80102cd0: addu at,at,v0
+80102cd4: lw v0,18064(at)
+80102cd8: nop
+80102cdc: jalr v0
+80102ce0: addu a2,s2,zero
+80102ce4: lw ra,28(sp)
+80102ce8: lw s2,24(sp)
+80102cec: lw s1,20(sp)
+80102cf0: lw s0,16(sp)
+80102cf4: addiu sp,sp,32
+80102cf8: jr ra
+80102cfc: nop
+80102d00: jr ra
+80102d04: nop
+80102d08: addiu sp,sp,-24
+80102d0c: sw ra,16(sp)
+80102d10: lbu v0,5(a0)
+80102d14: nop
+80102d18: sll v0,v0,2
+80102d1c: lui at,0x8010
+80102d20: addu at,at,v0
+80102d24: lw v0,18064(at)
+80102d28: nop
+80102d2c: jalr v0
+80102d30: nop
+80102d34: lw ra,16(sp)
+80102d38: addiu sp,sp,24
+80102d3c: jr ra
+80102d40: nop
+80102d44: addiu sp,sp,-32
+80102d48: sw s0,16(sp)
+80102d4c: addu s0,a0,zero
+80102d50: sw s1,20(sp)
+80102d54: addu s1,a1,zero
+80102d58: sw s2,24(sp)
+80102d5c: sw ra,28(sp)
+80102d60: lbu v1,6(s0)
+80102d64: addiu v0,zero,1
+80102d68: beq v1,v0,0x80102e80
+80102d6c: addu s2,a2,zero
+80102d70: slti v0,v1,2
+80102d74: beq v0,zero,0x80102d8c
+80102d78: nop
+80102d7c: beq v1,zero,0x80102da8
+80102d80: addiu a0,zero,10
+80102d84: j 0x80102f2c
+80102d88: nop
+80102d8c: addiu v0,zero,2
+80102d90: beq v1,v0,0x80102ec8
+80102d94: addiu v0,zero,3
+80102d98: beq v1,v0,0x80102f24
+80102d9c: addiu v0,zero,128
+80102da0: j 0x80102f2c
+80102da4: nop
+80102da8: addiu a1,zero,40
+80102dac: addiu a2,zero,150
+80102db0: jal 0x800395b8
+80102db4: addiu a3,zero,11
+80102db8: addiu a0,zero,3
+80102dbc: jal 0x8003947c
+80102dc0: addiu a1,zero,22
+80102dc4: addiu a0,zero,3
+80102dc8: jal 0x8003947c
+80102dcc: addiu a1,zero,26
+80102dd0: addiu a0,zero,65
+80102dd4: addiu a1,zero,240
+80102dd8: addiu a2,zero,120
+80102ddc: jal 0x800395b8
+80102de0: addiu a3,zero,21
+80102de4: addiu a0,zero,10
+80102de8: addiu a1,zero,245
+80102dec: addiu a2,zero,70
+80102df0: jal 0x800395b8
+80102df4: addiu a3,zero,86
+80102df8: addiu a0,zero,5
+80102dfc: addiu a1,zero,70
+80102e00: addiu a2,zero,140
+80102e04: jal 0x800395b8
+80102e08: addiu a3,zero,106
+80102e0c: addiu a0,zero,3
+80102e10: jal 0x8003947c
+80102e14: addiu a1,zero,110
+80102e18: addiu a0,zero,20
+80102e1c: addiu a1,zero,255
+80102e20: addiu a2,zero,120
+80102e24: jal 0x800395b8
+80102e28: addiu a3,zero,108
+80102e2c: addiu a0,zero,20
+80102e30: addiu a1,zero,190
+80102e34: addiu a2,zero,100
+80102e38: jal 0x800395b8
+80102e3c: addiu a3,zero,128
+80102e40: addiu a0,zero,145
+80102e44: addiu a1,zero,160
+80102e48: addiu a2,zero,30
+80102e4c: jal 0x800395b8
+80102e50: addiu a3,zero,148
+80102e54: lui a0,0x800d
+80102e58: addiu a0,a0,-1060
+80102e5c: sh zero,344(s0)
+80102e60: lw v0,0(a0)
+80102e64: lui v1,0x100
+80102e68: or v0,v0,v1
+80102e6c: sw v0,0(a0)
+80102e70: lbu v0,6(s0)
+80102e74: nop
+80102e78: addiu v0,v0,1
+80102e7c: sb v0,6(s0)
+80102e80: lui v0,0x3
+80102e84: ori v0,v0,0x2
+80102e88: addu a0,s0,zero
+80102e8c: lw a1,264(s0)
+80102e90: lw a2,380(s0)
+80102e94: addiu a3,zero,1024
+80102e98: sb zero,333(s0)
+80102e9c: jal 0x8002959c
+80102ea0: sw v0,332(s0)
+80102ea4: lh v0,344(s0)
+80102ea8: nop
+80102eac: beq v0,zero,0x80102f2c
+80102eb0: addiu v1,zero,1
+80102eb4: lbu v0,6(s0)
+80102eb8: sw v1,332(s0)
+80102ebc: addiu v0,v0,1
+80102ec0: j 0x80102f2c
+80102ec4: sb v0,6(s0)
+80102ec8: addu a0,s0,zero
+80102ecc: addu a1,s1,zero
+80102ed0: addu a2,s2,zero
+80102ed4: jal 0x80015cb8
+80102ed8: addu a3,zero,zero
+80102edc: lbu v1,333(s0)
+80102ee0: addiu v0,zero,3
+80102ee4: bne v1,v0,0x80102f00
+80102ee8: addu a0,s0,zero
+80102eec: lui a0,0x402
+80102ef0: ori a0,a0,0x1
+80102ef4: jal 0x8005ba28
+80102ef8: addiu a1,s0,56
+80102efc: addu a0,s0,zero
+80102f00: addu a1,s1,zero
+80102f04: addu a2,s2,zero
+80102f08: jal 0x8002959c
+80102f0c: addiu a3,zero,4096
+80102f10: lbu v1,6(s0)
+80102f14: nop
+80102f18: addu v1,v1,v0
+80102f1c: j 0x80102f2c
+80102f20: sb v1,6(s0)
+80102f24: lui at,0x800d
+80102f28: sb v0,-565(at)
+80102f2c: lw ra,28(sp)
+80102f30: lw s2,24(sp)
+80102f34: lw s1,20(sp)
+80102f38: lw s0,16(sp)
+80102f3c: addiu sp,sp,32
+80102f40: jr ra
+80102f44: nop
+80102f48: addiu sp,sp,-40
+80102f4c: sw s0,16(sp)
+80102f50: addu s0,a0,zero
+80102f54: sw s2,24(sp)
+80102f58: addu s2,a1,zero
+80102f5c: sw s3,28(sp)
+80102f60: addiu v0,zero,1
+80102f64: sw ra,32(sp)
+80102f68: sw s1,20(sp)
+80102f6c: lbu v1,6(s0)
+80102f70: lw s1,436(s0)
+80102f74: beq v1,v0,0x80102fe0
+80102f78: addu s3,a2,zero
+80102f7c: slti v0,v1,2
+80102f80: beq v0,zero,0x8010305c
+80102f84: nop
+80102f88: bne v1,zero,0x8010305c
+80102f8c: lui a0,0x403
+80102f90: ori a0,a0,0x1
+80102f94: jal 0x8005ba28
+80102f98: addiu a1,s0,56
+80102f9c: addiu a0,zero,53
+80102fa0: addiu a1,zero,240
+80102fa4: addiu a2,zero,40
+80102fa8: jal 0x800395b8
+80102fac: addu a3,zero,zero
+80102fb0: addiu v0,zero,768
+80102fb4: lui a0,0x800d
+80102fb8: addiu a0,a0,-1164
+80102fbc: sw v0,332(s0)
+80102fc0: lw v0,0(a0)
+80102fc4: lui v1,0x400
+80102fc8: or v0,v0,v1
+80102fcc: sw v0,0(a0)
+80102fd0: lbu v0,6(s0)
+80102fd4: sb zero,7(s0)
+80102fd8: addiu v0,v0,1
+80102fdc: sb v0,6(s0)
+80102fe0: lbu a0,7(s0)
+80102fe4: nop
+80102fe8: sltiu v0,a0,0x3
+80102fec: beq v0,zero,0x8010300c
+80102ff0: nop
+80102ff4: jal 0x801034e8
+80102ff8: nop
+80102ffc: lbu v0,7(s0)
+80103000: nop
+80103004: addiu v0,v0,1
+80103008: sb v0,7(s0)
+8010300c: lh a0,56(s1)
+80103010: lh a1,64(s1)
+80103014: lh a2,56(s0)
+80103018: lh a3,64(s0)
+8010301c: jal 0x800154ac
+80103020: nop
+80103024: addu a0,s0,zero
+80103028: sll v0,v0,16
+8010302c: sra a1,v0,16
+80103030: jal 0x8001569c
+80103034: addiu a2,zero,128
+80103038: addu a0,s0,zero
+8010303c: addu a1,s2,zero
+80103040: addu a2,s3,zero
+80103044: jal 0x8002959c
+80103048: addiu a3,zero,1024
+8010304c: lbu v1,6(s0)
+80103050: nop
+80103054: addu v1,v1,v0
+80103058: sb v1,6(s0)
+8010305c: lw ra,32(sp)
+80103060: lw s3,28(sp)
+80103064: lw s2,24(sp)
+80103068: lw s1,20(sp)
+8010306c: lw s0,16(sp)
+80103070: addiu sp,sp,40
+80103074: jr ra
+80103078: nop
+8010307c: addiu sp,sp,-32
+80103080: sw s1,20(sp)
+80103084: addu s1,a0,zero
+80103088: sw ra,24(sp)
+8010308c: sw s0,16(sp)
+80103090: lbu v1,6(s1)
+80103094: nop
+80103098: sltiu v0,v1,0x5
+8010309c: beq v0,zero,0x801031e0
+801030a0: sll v0,v1,2
+801030a4: lui at,0x8010
+801030a8: addu at,at,v0
+801030ac: lw v0,116(at)
+801030b0: nop
+801030b4: jr v0
+801030b8: nop
+801030bc: lui a0,0x401
+801030c0: ori a0,a0,0x1
+801030c4: jal 0x8005ba28
+801030c8: addiu a1,s1,56
+801030cc: lui v0,0x3
+801030d0: ori v0,v0,0x12
+801030d4: sw v0,332(s1)
+801030d8: addiu v0,zero,1
+801030dc: sb v0,6(s1)
+801030e0: addiu v0,zero,-800
+801030e4: sh v0,324(s1)
+801030e8: lbu v0,467(s1)
+801030ec: lbu v1,448(s1)
+801030f0: sh zero,326(s1)
+801030f4: sh zero,328(s1)
+801030f8: ori v0,v0,0x80
+801030fc: ori v1,v1,0x12
+80103100: sb v0,467(s1)
+80103104: sb v1,448(s1)
+80103108: lbu v0,334(s1)
+8010310c: nop
+80103110: bne v0,zero,0x80103120
+80103114: addu a0,s1,zero
+80103118: addiu v0,zero,2
+8010311c: sb v0,6(s1)
+80103120: jal 0x800152c8
+80103124: addu a1,zero,zero
+80103128: addu a0,s1,zero
+8010312c: lw a1,400(s1)
+80103130: lw a2,404(s1)
+80103134: jal 0x8002959c
+80103138: addiu a3,zero,1024
+8010313c: lhu v0,324(s1)
+80103140: nop
+80103144: addiu v0,v0,150
+80103148: j 0x801031e0
+8010314c: sh v0,324(s1)
+80103150: lui v0,0x3
+80103154: ori v0,v0,0x13
+80103158: sw v0,332(s1)
+8010315c: addiu v0,zero,3
+80103160: sb v0,6(s1)
+80103164: addu a0,s1,zero
+80103168: jal 0x800152c8
+8010316c: addu a1,zero,zero
+80103170: addu a0,s1,zero
+80103174: lw a1,400(s1)
+80103178: lw a2,404(s1)
+8010317c: jal 0x8002959c
+80103180: addiu a3,zero,1024
+80103184: addu s0,v0,zero
+80103188: addu a0,s1,zero
+8010318c: lw a1,400(s1)
+80103190: lw a2,404(s1)
+80103194: jal 0x8002959c
+80103198: addiu a3,zero,1024
+8010319c: addu s0,s0,v0
+801031a0: lbu v0,6(s1)
+801031a4: lhu v1,324(s1)
+801031a8: addu v0,v0,s0
+801031ac: addiu v1,v1,15
+801031b0: sh v1,324(s1)
+801031b4: sll v1,v1,16
+801031b8: blez v1,0x801031e0
+801031bc: sb v0,6(s1)
+801031c0: j 0x801031e0
+801031c4: sh zero,324(s1)
+801031c8: lbu v1,448(s1)
+801031cc: addiu v0,zero,1
+801031d0: sw v0,4(s1)
+801031d4: sb zero,467(s1)
+801031d8: andi v1,v1,0xed
+801031dc: sb v1,448(s1)
+801031e0: lw ra,24(sp)
+801031e4: lw s1,20(sp)
+801031e8: lw s0,16(sp)
+801031ec: addiu sp,sp,32
+801031f0: jr ra
+801031f4: nop
+801031f8: addiu sp,sp,-32
+801031fc: sw s1,20(sp)
+80103200: addu s1,a0,zero
+80103204: sw ra,24(sp)
+80103208: sw s0,16(sp)
+8010320c: lbu v1,6(s1)
+80103210: nop
+80103214: sltiu v0,v1,0x7
+80103218: beq v0,zero,0x80103374
+8010321c: sll v0,v1,2
+80103220: lui at,0x8010
+80103224: addu at,at,v0
+80103228: lw v0,140(at)
+8010322c: nop
+80103230: jr v0
+80103234: nop
+80103238: lui a0,0x402
+8010323c: ori a0,a0,0x1
+80103240: jal 0x8005ba28
+80103244: addiu a1,s1,56
+80103248: lui v0,0x3
+8010324c: ori v0,v0,0x14
+80103250: sw v0,332(s1)
+80103254: addiu v0,zero,1
+80103258: sb v0,6(s1)
+8010325c: addiu v0,zero,800
+80103260: sh v0,324(s1)
+80103264: lbu v0,467(s1)
+80103268: lbu v1,448(s1)
+8010326c: sh zero,326(s1)
+80103270: sh zero,328(s1)
+80103274: ori v0,v0,0x80
+80103278: ori v1,v1,0x12
+8010327c: sb v0,467(s1)
+80103280: sb v1,448(s1)
+80103284: addu a0,s1,zero
+80103288: jal 0x800152c8
+8010328c: addu a1,zero,zero
+80103290: addu a0,s1,zero
+80103294: lw a1,400(s1)
+80103298: lw a2,404(s1)
+8010329c: jal 0x8002959c
+801032a0: addiu a3,zero,1024
+801032a4: lbu v1,6(s1)
+801032a8: nop
+801032ac: addu v1,v1,v0
+801032b0: sb v1,6(s1)
+801032b4: lhu v0,324(s1)
+801032b8: nop
+801032bc: addiu v0,v0,-120
+801032c0: sh v0,324(s1)
+801032c4: lh v0,324(s1)
+801032c8: nop
+801032cc: bgez v0,0x80103374
+801032d0: nop
+801032d4: j 0x80103374
+801032d8: sh zero,324(s1)
+801032dc: lui v0,0x3
+801032e0: ori v0,v0,0x11
+801032e4: sw v0,332(s1)
+801032e8: addiu v0,zero,5
+801032ec: sb v0,6(s1)
+801032f0: sb zero,467(s1)
+801032f4: addu a0,s1,zero
+801032f8: lw a1,400(s1)
+801032fc: lw a2,404(s1)
+80103300: jal 0x8002959c
+80103304: addiu a3,zero,1024
+80103308: addu s0,v0,zero
+8010330c: addu a0,s1,zero
+80103310: lw a1,400(s1)
+80103314: lw a2,404(s1)
+80103318: jal 0x8002959c
+8010331c: addiu a3,zero,1024
+80103320: addu s0,s0,v0
+80103324: beq s0,zero,0x80103374
+80103328: lui v1,0x3
+8010332c: ori v1,v1,0x6
+80103330: addiu v0,zero,6
+80103334: sb v0,6(s1)
+80103338: j 0x80103374
+8010333c: sw v1,332(s1)
+80103340: addu a0,s1,zero
+80103344: lui a3,0x1
+80103348: lw a1,264(s1)
+8010334c: lw a2,380(s1)
+80103350: jal 0x8002959c
+80103354: ori a3,a3,0x400
+80103358: beq v0,zero,0x80103374
+8010335c: addiu v0,zero,1
+80103360: lbu v1,448(s1)
+80103364: sw v0,4(s1)
+80103368: sb zero,467(s1)
+8010336c: andi v1,v1,0xed
+80103370: sb v1,448(s1)
+80103374: lw ra,24(sp)
+80103378: lw s1,20(sp)
+8010337c: lw s0,16(sp)
+80103380: addiu sp,sp,32
+80103384: jr ra
+80103388: nop
+8010338c: addiu sp,sp,-72
+80103390: addiu a3,sp,16
+80103394: lui a2,0x8010
+80103398: addiu a2,a2,168
+8010339c: or v0,a3,a2
+801033a0: andi v0,v0,0x3
+801033a4: sw s0,64(sp)
+801033a8: lui s0,0x800d
+801033ac: addiu s0,s0,1308
+801033b0: beq v0,zero,0x80103410
+801033b4: sw ra,68(sp)
+801033b8: addiu t0,a2,48
+801033bc: .word 0x88c20003(op22)
+801033c0: .word 0x98c20000(op26)
+801033c4: .word 0x88c30007(op22)
+801033c8: .word 0x98c30004(op26)
+801033cc: .word 0x88c4000b(op22)
+801033d0: .word 0x98c40008(op26)
+801033d4: .word 0x88c5000f(op22)
+801033d8: .word 0x98c5000c(op26)
+801033dc: .word 0xa8e20003(op2a)
+801033e0: .word 0xb8e20000(op2e)
+801033e4: .word 0xa8e30007(op2a)
+801033e8: .word 0xb8e30004(op2e)
+801033ec: .word 0xa8e4000b(op2a)
+801033f0: .word 0xb8e40008(op2e)
+801033f4: .word 0xa8e5000f(op2a)
+801033f8: .word 0xb8e5000c(op2e)
+801033fc: addiu a2,a2,16
+80103400: bne a2,t0,0x801033bc
+80103404: addiu a3,a3,16
+80103408: j 0x80103444
+8010340c: lui a0,0x30f
+80103410: addiu t0,a2,48
+80103414: lw v0,0(a2)
+80103418: lw v1,4(a2)
+8010341c: lw a0,8(a2)
+80103420: lw a1,12(a2)
+80103424: sw v0,0(a3)
+80103428: sw v1,4(a3)
+8010342c: sw a0,8(a3)
+80103430: sw a1,12(a3)
+80103434: addiu a2,a2,16
+80103438: bne a2,t0,0x80103414
+8010343c: addiu a3,a3,16
+80103440: lui a0,0x30f
+80103444: ori a0,a0,0x2000
+80103448: addu a1,zero,zero
+8010344c: addiu s0,s0,84
+80103450: addu a2,s0,zero
+80103454: jal 0x8001bf10
+80103458: addiu a3,sp,16
+8010345c: lui a0,0x30f
+80103460: ori a0,a0,0x3000
+80103464: addu a1,zero,zero
+80103468: addu a2,s0,zero
+8010346c: jal 0x8001bf10
+80103470: addiu a3,sp,24
+80103474: lui a0,0x30f
+80103478: ori a0,a0,0x3000
+8010347c: addu a1,zero,zero
+80103480: addu a2,s0,zero
+80103484: jal 0x8001bf10
+80103488: addiu a3,sp,32
+8010348c: lui a0,0x30f
+80103490: ori a0,a0,0x2000
+80103494: addu a1,zero,zero
+80103498: addu a2,s0,zero
+8010349c: jal 0x8001bf10
+801034a0: addiu a3,sp,40
+801034a4: lui a0,0x30f
+801034a8: ori a0,a0,0x2000
+801034ac: addu a1,zero,zero
+801034b0: addu a2,s0,zero
+801034b4: jal 0x8001bf10
+801034b8: addiu a3,sp,48
+801034bc: lui a0,0x30f
+801034c0: ori a0,a0,0x3000
+801034c4: addu a1,zero,zero
+801034c8: addu a2,s0,zero
+801034cc: jal 0x8001bf10
+801034d0: addiu a3,sp,56
+801034d4: lw ra,68(sp)
+801034d8: lw s0,64(sp)
+801034dc: addiu sp,sp,72
+801034e0: jr ra
+801034e4: nop
+801034e8: addiu sp,sp,-160
+801034ec: addu t0,a0,zero
+801034f0: addiu a3,sp,16
+801034f4: lui a2,0x8010
+801034f8: addiu a2,a2,216
+801034fc: addiu t1,a2,96
+80103500: sw ra,156(sp)
+80103504: sw s6,152(sp)
+80103508: sw s5,148(sp)
+8010350c: sw s4,144(sp)
+80103510: sw s3,140(sp)
+80103514: sw s2,136(sp)
+80103518: sw s1,132(sp)
+8010351c: sw s0,128(sp)
+80103520: lw v0,0(a2)
+80103524: lw v1,4(a2)
+80103528: lw a0,8(a2)
+8010352c: lw a1,12(a2)
+80103530: sw v0,0(a3)
+80103534: sw v1,4(a3)
+80103538: sw a0,8(a3)
+8010353c: sw a1,12(a3)
+80103540: addiu a2,a2,16
+80103544: bne a2,t1,0x80103520
+80103548: addiu a3,a3,16
+8010354c: lw v0,0(a2)
+80103550: lw v1,4(a2)
+80103554: lw a0,8(a2)
+80103558: sw v0,0(a3)
+8010355c: sw v1,4(a3)
+80103560: sw a0,8(a3)
+80103564: lui a0,0x1
+80103568: ori a0,a0,0x1800
+8010356c: sll s0,t0,3
+80103570: addu s0,s0,t0
+80103574: sll s0,s0,2
+80103578: addiu s4,sp,16
+8010357c: addu s2,s4,s0
+80103580: addu a3,s2,zero
+80103584: lw v1,8(s2)
+80103588: lh a1,6(s2)
+8010358c: lui s1,0x800d
+80103590: lw s1,-624(s1)
+80103594: sll v0,v1,1
+80103598: addu v0,v0,v1
+8010359c: sll v0,v0,2
+801035a0: subu v0,v0,v1
+801035a4: sll v0,v0,2
+801035a8: subu v0,v0,v1
+801035ac: sll v0,v0,2
+801035b0: addu s1,s1,v0
+801035b4: addiu s5,s1,72
+801035b8: jal 0x8001bf10
+801035bc: addu a2,s5,zero
+801035c0: lui a0,0x2
+801035c4: ori a0,a0,0x1000
+801035c8: addiu s6,s1,244
+801035cc: addu a2,s6,zero
+801035d0: addiu s3,s0,12
+801035d4: addu s3,s4,s3
+801035d8: lh a1,6(s2)
+801035dc: jal 0x8001bf10
+801035e0: addu a3,s3,zero
+801035e4: lui a0,0x1
+801035e8: ori a0,a0,0x1800
+801035ec: addiu s1,s1,416
+801035f0: addu a2,s1,zero
+801035f4: addiu s0,s0,24
+801035f8: addu s4,s4,s0
+801035fc: lh a1,6(s2)
+80103600: jal 0x8001bf10
+80103604: addu a3,s4,zero
+80103608: lui a0,0x2
+8010360c: ori a0,a0,0x2000
+80103610: addu a2,s5,zero
+80103614: lh a1,6(s2)
+80103618: addu a3,s2,zero
+8010361c: jal 0x8001bf10
+80103620: addiu a1,a1,1024
+80103624: addiu a0,zero,6144
+80103628: addu a2,s6,zero
+8010362c: lh a1,6(s2)
+80103630: addu a3,s3,zero
+80103634: jal 0x8001bf10
+80103638: addiu a1,a1,1024
+8010363c: addiu a0,zero,4096
+80103640: addu a2,s1,zero
+80103644: lh a1,6(s2)
+80103648: addu a3,s4,zero
+8010364c: jal 0x8001bf10
+80103650: addiu a1,a1,1024
+80103654: lw ra,156(sp)
+80103658: lw s6,152(sp)
+8010365c: lw s5,148(sp)
+80103660: lw s4,144(sp)
+80103664: lw s3,140(sp)
+80103668: lw s2,136(sp)
+8010366c: lw s1,132(sp)
+80103670: lw s0,128(sp)
+80103674: addiu sp,sp,160
+80103678: jr ra
+8010367c: nop
+80103680: addiu sp,sp,-48
+80103684: sw s1,36(sp)
+80103688: addu s1,a0,zero
+8010368c: addiu v0,zero,1
+80103690: sw ra,40(sp)
+80103694: sw s0,32(sp)
+80103698: lw t2,408(s1)
+8010369c: lbu v1,557(s1)
+801036a0: nop
+801036a4: beq v1,v0,0x801036c8
+801036a8: addiu s0,t2,1204
+801036ac: slti v0,v1,2
+801036b0: bne v0,zero,0x80103844
+801036b4: addiu v0,zero,2
+801036b8: beq v1,v0,0x80103758
+801036bc: nop
+801036c0: j 0x80103844
+801036c4: nop
+801036c8: addiu a0,t2,1248
+801036cc: addiu a1,t2,1308
+801036d0: addiu a2,t2,1276
+801036d4: addiu a3,sp,16
+801036d8: lw v1,1296(t2)
+801036dc: lw t0,1300(t2)
+801036e0: lw t1,1304(t2)
+801036e4: lui v0,0x800a
+801036e8: addiu v0,v0,-9404
+801036ec: sw v0,1320(t2)
+801036f0: sw v1,1248(t2)
+801036f4: sw t0,1252(t2)
+801036f8: sw t1,1256(t2)
+801036fc: sh zero,20(sp)
+80103700: sh zero,18(sp)
+80103704: jal 0x8007746c
+80103708: sh zero,16(sp)
+8010370c: addiu v0,zero,-700
+80103710: lui at,0x8010
+80103714: sh v0,18628(at)
+80103718: addiu v0,zero,-500
+8010371c: lui at,0x8010
+80103720: sh v0,18632(at)
+80103724: addiu v0,zero,70
+80103728: lui at,0x8010
+8010372c: sh v0,18636(at)
+80103730: addiu v0,zero,-210
+80103734: lui at,0x8010
+80103738: sh v0,18640(at)
+8010373c: addiu v0,zero,10
+80103740: lui at,0x8010
+80103744: sh v0,18644(at)
+80103748: lbu v0,557(s1)
+8010374c: nop
+80103750: addiu v0,v0,1
+80103754: sb v0,557(s1)
+80103758: lh a0,44(s0)
+8010375c: lh a1,52(s0)
+80103760: lui a2,0x800d
+80103764: lh a2,-976(a2)
+80103768: lui a3,0x800d
+8010376c: lh a3,-968(a3)
+80103770: jal 0x800154ac
+80103774: nop
+80103778: sll v0,v0,16
+8010377c: sra a0,v0,16
+80103780: addiu a1,sp,16
+80103784: lui v0,0x8010
+80103788: lhu v0,18628(v0)
+8010378c: addu a2,a1,zero
+80103790: sh zero,20(sp)
+80103794: jal 0x80077384
+80103798: sh v0,16(sp)
+8010379c: lh v1,16(sp)
+801037a0: lw v0,44(s0)
+801037a4: lui a1,0x8010
+801037a8: lh a1,18632(a1)
+801037ac: lui a0,0x8010
+801037b0: lhu a0,18640(a0)
+801037b4: addu v0,v0,v1
+801037b8: sw v0,44(s0)
+801037bc: lw v0,48(s0)
+801037c0: lh a2,20(sp)
+801037c4: lui v1,0x8010
+801037c8: lhu v1,18636(v1)
+801037cc: addu v0,v0,a1
+801037d0: sw v0,48(s0)
+801037d4: lhu v0,108(s0)
+801037d8: addu v1,v1,a1
+801037dc: lui at,0x8010
+801037e0: sh v1,18632(at)
+801037e4: addu v0,v0,a0
+801037e8: sh v0,108(s0)
+801037ec: lw v0,52(s0)
+801037f0: lw v1,48(s0)
+801037f4: addu v0,v0,a2
+801037f8: bltz v1,0x80103808
+801037fc: sw v0,52(s0)
+80103800: sw zero,48(s0)
+80103804: sb zero,557(s1)
+80103808: lui v0,0x8010
+8010380c: lhu v0,18640(v0)
+80103810: lui v1,0x8010
+80103814: lhu v1,18644(v1)
+80103818: nop
+8010381c: addu v0,v0,v1
+80103820: lui at,0x8010
+80103824: sh v0,18640(at)
+80103828: sll v0,v0,16
+8010382c: bltz v0,0x80103844
+80103830: nop
+80103834: lui at,0x8010
+80103838: sh zero,18640(at)
+8010383c: lui at,0x8010
+80103840: sh zero,18644(at)
+80103844: lw ra,40(sp)
+80103848: lw s1,36(sp)
+8010384c: lw s0,32(sp)
+80103850: addiu sp,sp,48
+80103854: jr ra
+80103858: nop
+8010385c: addu a1,zero,zero
+80103860: lui a0,0x800a
+80103864: addiu a0,a0,-9176
+80103868: lh v0,0(a0)
+8010386c: addiu a1,a1,1
+80103870: sll v1,v0,1
+80103874: addu v1,v1,v0
+80103878: sll v1,v1,1
+8010387c: sh v1,0(a0)
+80103880: sltiu v0,a1,0x1e
+80103884: bne v0,zero,0x80103868
+80103888: addiu a0,a0,2
+8010388c: jr ra
+80103890: nop
+80103894: addu a1,zero,zero
+80103898: lui a2,0x2aaa
+8010389c: ori a2,a2,0xaaab
+801038a0: lui a0,0x800a
+801038a4: addiu a0,a0,-9176
+801038a8: lhu v0,0(a0)
+801038ac: nop
+801038b0: sll v0,v0,16
+801038b4: sra v1,v0,16
+801038b8: mult v1,a2
+801038bc: addiu a1,a1,1
+801038c0: sra v0,v0,31
+801038c4: mfhi a3
+801038c8: subu v0,a3,v0
+801038cc: sh v0,0(a0)
+801038d0: sltiu v0,a1,0x1e
+801038d4: bne v0,zero,0x801038a8
+801038d8: addiu a0,a0,2
+801038dc: jr ra
+801038e0: nop
+801038e4: addiu sp,sp,-24
+801038e8: sw s0,16(sp)
+801038ec: addu s0,a0,zero
+801038f0: addiu a0,zero,3
+801038f4: sw ra,20(sp)
+801038f8: jal 0x8003947c
+801038fc: addu a1,zero,zero
+80103900: addiu a0,zero,14
+80103904: addiu a1,zero,210
+80103908: addiu a2,zero,40
+8010390c: jal 0x800395b8
+80103910: addiu a3,zero,2
+80103914: addu a0,s0,zero
+80103918: jal 0x800401d4
+8010391c: addu a1,zero,zero
+80103920: addu v1,v0,zero
+80103924: andi v0,v1,0x1
+80103928: beq v0,zero,0x80103938
+8010392c: addiu v0,zero,4
+80103930: lui at,0x800d
+80103934: sb v0,-1026(at)
+80103938: andi v0,v1,0x2
+8010393c: beq v0,zero,0x8010394c
+80103940: addiu v0,zero,3
+80103944: lui at,0x800d
+80103948: sw v0,-1028(at)
+8010394c: lw ra,20(sp)
+80103950: lw s0,16(sp)
+80103954: addiu sp,sp,24
+80103958: jr ra
+8010395c: nop
+80103960: addiu sp,sp,-32
+80103964: sw ra,24(sp)
+80103968: sw s1,20(sp)
+8010396c: sw s0,16(sp)
+80103970: lw v1,0(a1)
+80103974: nop
+80103978: sltiu v0,v1,0x21
+8010397c: beq v0,zero,0x80103990
+80103980: addu s1,a2,zero
+80103984: addiu v0,v1,-1
+80103988: bne v0,zero,0x801039c0
+8010398c: sw v0,0(a1)
+80103990: andi s0,a0,0xff
+80103994: jal 0x80015fe8
+80103998: sw s0,0(a1)
+8010399c: andi v0,v0,0xff
+801039a0: divu v0,s0
+801039a4: bne s0,zero,0x801039b0
+801039a8: nop
+801039ac: .word 0x0007000d(fn0d)
+801039b0: mfhi v1
+801039b4: lui v0,0x8000
+801039b8: srlv v0,v0,v1
+801039bc: sw v0,0(s1)
+801039c0: lw v1,0(s1)
+801039c4: nop
+801039c8: srl v0,v1,31
+801039cc: sll v1,v1,1
+801039d0: sw v1,0(s1)
+801039d4: lw ra,24(sp)
+801039d8: lw s1,20(sp)
+801039dc: lw s0,16(sp)
+801039e0: addiu sp,sp,32
+801039e4: jr ra
+801039e8: nop
+801039ec: addiu sp,sp,-32
+801039f0: sw s0,24(sp)
+801039f4: addu s0,a0,zero
+801039f8: sw ra,28(sp)
+801039fc: lbu v0,560(s0)
+80103a00: nop
+80103a04: addiu v1,v0,-1
+80103a08: sltiu v0,v1,0x13
+80103a0c: beq v0,zero,0x80103b4c
+80103a10: sb zero,561(s0)
+80103a14: sll v0,v1,2
+80103a18: lui at,0x8010
+80103a1c: addu at,at,v0
+80103a20: lw v0,324(at)
+80103a24: nop
+80103a28: jr v0
+80103a2c: nop
+80103a30: addu a0,s0,zero
+80103a34: j 0x80103b00
+80103a38: addiu a1,zero,1
+80103a3c: jal 0x80103c84
+80103a40: addu a0,s0,zero
+80103a44: j 0x80103b4c
+80103a48: nop
+80103a4c: addu a0,s0,zero
+80103a50: j 0x80103b00
+80103a54: addiu a1,zero,1
+80103a58: addu a0,s0,zero
+80103a5c: jal 0x80104244
+80103a60: addiu a1,zero,4
+80103a64: j 0x80103b4c
+80103a68: nop
+80103a6c: addu a0,s0,zero
+80103a70: jal 0x80104244
+80103a74: addiu a1,zero,6
+80103a78: j 0x80103b4c
+80103a7c: nop
+80103a80: addiu v0,zero,96
+80103a84: sw v0,16(sp)
+80103a88: addu a0,s0,zero
+80103a8c: addiu a1,zero,23
+80103a90: addiu a2,zero,96
+80103a94: jal 0x80104488
+80103a98: addiu a3,zero,96
+80103a9c: addu a0,s0,zero
+80103aa0: addiu a1,zero,4
+80103aa4: jal 0x801040ec
+80103aa8: addiu a2,zero,9
+80103aac: j 0x80103b4c
+80103ab0: nop
+80103ab4: addu a0,s0,zero
+80103ab8: j 0x80103b00
+80103abc: addiu a1,zero,1
+80103ac0: addiu v0,zero,96
+80103ac4: sw v0,16(sp)
+80103ac8: addu a0,s0,zero
+80103acc: addiu a1,zero,23
+80103ad0: addiu a2,zero,96
+80103ad4: jal 0x80104488
+80103ad8: addiu a3,zero,96
+80103adc: jal 0x8010435c
+80103ae0: addu a0,s0,zero
+80103ae4: j 0x80103b4c
+80103ae8: nop
+80103aec: addu a0,s0,zero
+80103af0: j 0x80103b00
+80103af4: addiu a1,zero,1
+80103af8: addu a0,s0,zero
+80103afc: addiu a1,zero,4
+80103b00: addu a2,zero,zero
+80103b04: addiu a3,zero,6
+80103b08: addiu v0,zero,10240
+80103b0c: sw v0,16(sp)
+80103b10: jal 0x80103b60
+80103b14: sw zero,20(sp)
+80103b18: j 0x80103b4c
+80103b1c: nop
+80103b20: addu a0,s0,zero
+80103b24: addiu a1,zero,5
+80103b28: jal 0x801040ec
+80103b2c: addiu a2,zero,4
+80103b30: addiu v0,zero,96
+80103b34: sw v0,16(sp)
+80103b38: addu a0,s0,zero
+80103b3c: addiu a1,zero,23
+80103b40: addiu a2,zero,96
+80103b44: jal 0x80104488
+80103b48: addiu a3,zero,96
+80103b4c: lw ra,28(sp)
+80103b50: lw s0,24(sp)
+80103b54: addiu sp,sp,32
+80103b58: jr ra
+80103b5c: nop
+80103b60: addiu sp,sp,-72
+80103b64: sw s3,44(sp)
+80103b68: addu s3,a0,zero
+80103b6c: sw s1,36(sp)
+80103b70: addu s1,a1,zero
+80103b74: sw s4,48(sp)
+80103b78: addu s4,a2,zero
+80103b7c: sw s5,52(sp)
+80103b80: addu s5,a3,zero
+80103b84: sw s7,60(sp)
+80103b88: lw s7,88(sp)
+80103b8c: addu v0,s1,zero
+80103b90: sw s6,56(sp)
+80103b94: lw s6,92(sp)
+80103b98: addiu s1,s1,-1
+80103b9c: sw ra,64(sp)
+80103ba0: sw s2,40(sp)
+80103ba4: beq v0,zero,0x80103c54
+80103ba8: sw s0,32(sp)
+80103bac: lui s2,0x8010
+80103bb0: addiu s2,s2,18080
+80103bb4: beq s6,zero,0x80103bf4
+80103bb8: nop
+80103bbc: jal 0x80015fe8
+80103bc0: nop
+80103bc4: andi v0,v0,0xff
+80103bc8: lui v1,0xaaaa
+80103bcc: ori v1,v1,0xaaab
+80103bd0: multu v0,v1
+80103bd4: mfhi t0
+80103bd8: srl a0,t0,4
+80103bdc: sll v1,a0,1
+80103be0: addu v1,v1,a0
+80103be4: sll v1,v1,3
+80103be8: subu v0,v0,v1
+80103bec: j 0x80103c00
+80103bf0: andi v0,v0,0xff
+80103bf4: jal 0x80015fe8
+80103bf8: nop
+80103bfc: andi v0,v0,0x7
+80103c00: sll v1,v0,1
+80103c04: addu v1,v1,v0
+80103c08: sll v1,v1,2
+80103c0c: jal 0x80015fe8
+80103c10: addu s0,v1,s2
+80103c14: sll v0,v0,24
+80103c18: sra v0,v0,20
+80103c1c: addu a0,s3,zero
+80103c20: addu a1,s4,zero
+80103c24: lh v1,6(s0)
+80103c28: addu a2,s5,zero
+80103c2c: addu v1,v1,v0
+80103c30: sw v1,16(sp)
+80103c34: lw v0,8(s0)
+80103c38: addu a3,s7,zero
+80103c3c: sw s0,24(sp)
+80103c40: jal 0x801044e0
+80103c44: sw v0,20(sp)
+80103c48: addu v0,s1,zero
+80103c4c: bne v0,zero,0x80103bb4
+80103c50: addiu s1,s1,-1
+80103c54: lw ra,64(sp)
+80103c58: lw s7,60(sp)
+80103c5c: lw s6,56(sp)
+80103c60: lw s5,52(sp)
+80103c64: lw s4,48(sp)
+80103c68: lw s3,44(sp)
+80103c6c: lw s2,40(sp)
+80103c70: lw s1,36(sp)
+80103c74: lw s0,32(sp)
+80103c78: addiu sp,sp,72
+80103c7c: jr ra
+80103c80: nop
+80103c84: addiu sp,sp,-56
+80103c88: sw s1,44(sp)
+80103c8c: addu s1,a0,zero
+80103c90: sw ra,48(sp)
+80103c94: sw s0,40(sp)
+80103c98: lbu v0,563(s1)
+80103c9c: nop
+80103ca0: bne v0,zero,0x80103cc0
+80103ca4: addiu v0,zero,4
+80103ca8: jal 0x80015fe8
+80103cac: nop
+80103cb0: andi v0,v0,0x7
+80103cb4: lui at,0x8010
+80103cb8: sw v0,18652(at)
+80103cbc: addiu v0,zero,4
+80103cc0: sb v0,563(s1)
+80103cc4: lui v0,0x8010
+80103cc8: lw v0,18652(v0)
+80103ccc: nop
+80103cd0: sll s0,v0,1
+80103cd4: addu s0,s0,v0
+80103cd8: sll s0,s0,2
+80103cdc: lui v0,0x8010
+80103ce0: addiu v0,v0,18080
+80103ce4: jal 0x80015fe8
+80103ce8: addu s0,s0,v0
+80103cec: andi v0,v0,0xff
+80103cf0: lhu v1,0(s0)
+80103cf4: sll v0,v0,1
+80103cf8: addiu v1,v1,-127
+80103cfc: addu v1,v1,v0
+80103d00: jal 0x80015fe8
+80103d04: sh v1,32(sp)
+80103d08: andi v0,v0,0xff
+80103d0c: lhu v1,2(s0)
+80103d10: sll v0,v0,1
+80103d14: addiu v1,v1,-127
+80103d18: addu v1,v1,v0
+80103d1c: jal 0x80015fe8
+80103d20: sh v1,34(sp)
+80103d24: andi v0,v0,0xff
+80103d28: sll v0,v0,1
+80103d2c: addu a0,s1,zero
+80103d30: addu a1,zero,zero
+80103d34: lhu v1,4(s0)
+80103d38: addiu a2,zero,6
+80103d3c: addiu v1,v1,-127
+80103d40: addu v1,v1,v0
+80103d44: sh v1,36(sp)
+80103d48: lh v0,6(s0)
+80103d4c: addiu a3,zero,10240
+80103d50: sw v0,16(sp)
+80103d54: lw v1,8(s0)
+80103d58: addiu v0,sp,32
+80103d5c: sw v0,24(sp)
+80103d60: jal 0x801044e0
+80103d64: sw v1,20(sp)
+80103d68: lw ra,48(sp)
+80103d6c: lw s1,44(sp)
+80103d70: lw s0,40(sp)
+80103d74: addiu sp,sp,56
+80103d78: jr ra
+80103d7c: nop
+80103d80: addiu sp,sp,-40
+80103d84: sw s1,28(sp)
+80103d88: addu s1,a0,zero
+80103d8c: sw ra,32(sp)
+80103d90: sw s0,24(sp)
+80103d94: lbu v0,561(s1)
+80103d98: lui v1,0x800d
+80103d9c: addiu v1,v1,-1032
+80103da0: beq v0,zero,0x80103dc0
+80103da4: nop
+80103da8: bltz v0,0x80103e9c
+80103dac: slti v0,v0,4
+80103db0: beq v0,zero,0x80103e9c
+80103db4: nop
+80103db8: j 0x80103dd4
+80103dbc: nop
+80103dc0: lbu v0,561(s1)
+80103dc4: lui v1,0x8010
+80103dc8: addiu v1,v1,15744
+80103dcc: j 0x80103e90
+80103dd0: sw v1,564(s1)
+80103dd4: lh a0,56(v1)
+80103dd8: lh a1,64(v1)
+80103ddc: lh a2,56(s1)
+80103de0: lh a3,64(s1)
+80103de4: jal 0x800154ac
+80103de8: nop
+80103dec: jal 0x80015fe8
+80103df0: addu s0,v0,zero
+80103df4: sll v0,v0,24
+80103df8: lui v1,0x800d
+80103dfc: lw v1,-976(v1)
+80103e00: sra v0,v0,24
+80103e04: addu v0,v0,v1
+80103e08: jal 0x80015fe8
+80103e0c: sh v0,16(sp)
+80103e10: sll v0,v0,24
+80103e14: sra v0,v0,24
+80103e18: lui v1,0x800d
+80103e1c: lw v1,-972(v1)
+80103e20: addiu v0,v0,-800
+80103e24: addu v1,v1,v0
+80103e28: jal 0x80015fe8
+80103e2c: sh v1,18(sp)
+80103e30: sll v0,v0,24
+80103e34: lui v1,0x800d
+80103e38: lw v1,-968(v1)
+80103e3c: sra v0,v0,24
+80103e40: addu v0,v0,v1
+80103e44: jal 0x80015fe8
+80103e48: sh v0,20(sp)
+80103e4c: lui a0,0x1
+80103e50: ori a0,a0,0x2000
+80103e54: sll s0,s0,16
+80103e58: sra s0,s0,16
+80103e5c: sll v0,v0,24
+80103e60: sra v0,v0,20
+80103e64: addu a1,s0,v0
+80103e68: lui a2,0x800a
+80103e6c: addiu a2,a2,-9404
+80103e70: jal 0x8001bf10
+80103e74: addiu a3,sp,16
+80103e78: lbu v1,561(s1)
+80103e7c: addiu v0,zero,3
+80103e80: bne v1,v0,0x80103e8c
+80103e84: nop
+80103e88: sw zero,564(s1)
+80103e8c: lbu v0,561(s1)
+80103e90: nop
+80103e94: addiu v0,v0,1
+80103e98: sb v0,561(s1)
+80103e9c: lw ra,32(sp)
+80103ea0: lw s1,28(sp)
+80103ea4: lw s0,24(sp)
+80103ea8: addiu sp,sp,40
+80103eac: jr ra
+80103eb0: nop
+80103eb4: addiu sp,sp,-40
+80103eb8: sw s1,28(sp)
+80103ebc: addu s1,a0,zero
+80103ec0: addiu v0,zero,1
+80103ec4: sw ra,36(sp)
+80103ec8: sw s2,32(sp)
+80103ecc: sw s0,24(sp)
+80103ed0: lbu v1,561(s1)
+80103ed4: lw s2,408(s1)
+80103ed8: beq v1,v0,0x80103f20
+80103edc: slti v0,v1,2
+80103ee0: beq v0,zero,0x80103ef8
+80103ee4: nop
+80103ee8: beq v1,zero,0x80103f0c
+80103eec: addiu v0,zero,64
+80103ef0: j 0x801040b4
+80103ef4: nop
+80103ef8: slti v0,v1,9
+80103efc: beq v0,zero,0x801040ac
+80103f00: nop
+80103f04: j 0x80103f74
+80103f08: nop
+80103f0c: lbu v0,561(s1)
+80103f10: lui v1,0x8010
+80103f14: addiu v1,v1,16052
+80103f18: j 0x801040c4
+80103f1c: sw v1,564(s1)
+80103f20: jal 0x80015fe8
+80103f24: nop
+80103f28: sll v0,v0,24
+80103f2c: sra v0,v0,23
+80103f30: addiu v0,v0,300
+80103f34: jal 0x80015fe8
+80103f38: sh v0,16(sp)
+80103f3c: sll v0,v0,24
+80103f40: sra v0,v0,23
+80103f44: jal 0x80015fe8
+80103f48: sh v0,18(sp)
+80103f4c: lui a0,0x2603
+80103f50: ori a0,a0,0x2000
+80103f54: addu a1,zero,zero
+80103f58: addiu a2,s2,1104
+80103f5c: addiu a3,sp,16
+80103f60: sll v0,v0,24
+80103f64: sra v0,v0,22
+80103f68: addiu v0,v0,200
+80103f6c: jal 0x8001bf10
+80103f70: sh v0,20(sp)
+80103f74: jal 0x80015fe8
+80103f78: addiu s0,s2,1276
+80103f7c: sll v0,v0,24
+80103f80: sra v0,v0,22
+80103f84: addiu v0,v0,300
+80103f88: jal 0x80015fe8
+80103f8c: sh v0,16(sp)
+80103f90: sll v0,v0,24
+80103f94: sra v0,v0,23
+80103f98: jal 0x80015fe8
+80103f9c: sh v0,18(sp)
+80103fa0: sll v0,v0,24
+80103fa4: sra v0,v0,23
+80103fa8: addiu v0,v0,200
+80103fac: jal 0x80015fe8
+80103fb0: sh v0,20(sp)
+80103fb4: lui a0,0x6
+80103fb8: ori a0,a0,0x4000
+80103fbc: sll v0,v0,24
+80103fc0: sra a1,v0,20
+80103fc4: addu a2,s0,zero
+80103fc8: jal 0x8001bf10
+80103fcc: addiu a3,sp,16
+80103fd0: jal 0x80015fe8
+80103fd4: nop
+80103fd8: sll v0,v0,24
+80103fdc: sra v0,v0,22
+80103fe0: addiu v0,v0,300
+80103fe4: jal 0x80015fe8
+80103fe8: sh v0,16(sp)
+80103fec: sll v0,v0,24
+80103ff0: sra v0,v0,23
+80103ff4: jal 0x80015fe8
+80103ff8: sh v0,18(sp)
+80103ffc: sll v0,v0,24
+80104000: sra v0,v0,23
+80104004: addiu v0,v0,200
+80104008: jal 0x80015fe8
+8010400c: sh v0,20(sp)
+80104010: lui a0,0x3
+80104014: ori a0,a0,0x4000
+80104018: sll v0,v0,24
+8010401c: sra a1,v0,20
+80104020: addu a2,s0,zero
+80104024: jal 0x8001bf10
+80104028: addiu a3,sp,16
+8010402c: jal 0x80015fe8
+80104030: addiu s0,s2,1104
+80104034: sll v0,v0,24
+80104038: sra v0,v0,23
+8010403c: addiu v0,v0,300
+80104040: jal 0x80015fe8
+80104044: sh v0,16(sp)
+80104048: sll v0,v0,24
+8010404c: sra v0,v0,23
+80104050: jal 0x80015fe8
+80104054: sh v0,18(sp)
+80104058: sll v0,v0,24
+8010405c: sra v0,v0,22
+80104060: addiu v0,v0,200
+80104064: jal 0x80015fe8
+80104068: sh v0,20(sp)
+8010406c: lui a0,0x802
+80104070: ori a0,a0,0x4000
+80104074: sll v0,v0,24
+80104078: sra a1,v0,20
+8010407c: addu a2,s0,zero
+80104080: jal 0x8001bf10
+80104084: addiu a3,sp,16
+80104088: jal 0x80015fe8
+8010408c: nop
+80104090: lui a0,0x802
+80104094: ori a0,a0,0x4000
+80104098: sll v0,v0,24
+8010409c: sra a1,v0,20
+801040a0: addu a2,s0,zero
+801040a4: jal 0x8001bf10
+801040a8: addiu a3,sp,16
+801040ac: lbu v1,561(s1)
+801040b0: addiu v0,zero,64
+801040b4: bne v1,v0,0x801040c0
+801040b8: nop
+801040bc: sw zero,564(s1)
+801040c0: lbu v0,561(s1)
+801040c4: nop
+801040c8: addiu v0,v0,1
+801040cc: sb v0,561(s1)
+801040d0: lw ra,36(sp)
+801040d4: lw s2,32(sp)
+801040d8: lw s1,28(sp)
+801040dc: lw s0,24(sp)
+801040e0: addiu sp,sp,40
+801040e4: jr ra
+801040e8: nop
+801040ec: addiu sp,sp,-48
+801040f0: sw s1,28(sp)
+801040f4: addu s1,a1,zero
+801040f8: sw s0,24(sp)
+801040fc: sw ra,40(sp)
+80104100: sw s3,36(sp)
+80104104: sw s2,32(sp)
+80104108: lw s2,408(a0)
+8010410c: jal 0x80015fe8
+80104110: addu s0,a2,zero
+80104114: sll v0,v0,24
+80104118: sra v0,v0,23
+8010411c: addiu s3,zero,-400
+80104120: sh v0,16(sp)
+80104124: sh s3,18(sp)
+80104128: jal 0x80015fe8
+8010412c: sh zero,20(sp)
+80104130: sll s1,s1,24
+80104134: sll s0,s0,16
+80104138: or s1,s1,s0
+8010413c: ori s0,s1,0x2000
+80104140: addu a0,s0,zero
+80104144: sll v0,v0,24
+80104148: sra a1,v0,20
+8010414c: addiu a3,sp,16
+80104150: addiu s2,s2,1276
+80104154: jal 0x8001bf10
+80104158: addu a2,s2,zero
+8010415c: jal 0x80015fe8
+80104160: nop
+80104164: sll v0,v0,24
+80104168: sra v0,v0,23
+8010416c: addiu v0,v0,300
+80104170: sh v0,16(sp)
+80104174: addiu v0,zero,-300
+80104178: sh v0,18(sp)
+8010417c: addiu v0,zero,900
+80104180: jal 0x80015fe8
+80104184: sh v0,20(sp)
+80104188: addu a0,s0,zero
+8010418c: sll v0,v0,24
+80104190: sra a1,v0,20
+80104194: addu a2,s2,zero
+80104198: jal 0x8001bf10
+8010419c: addiu a3,sp,16
+801041a0: jal 0x80015fe8
+801041a4: nop
+801041a8: sll v0,v0,24
+801041ac: sra v0,v0,23
+801041b0: addiu v0,v0,-600
+801041b4: sh v0,16(sp)
+801041b8: addiu v0,zero,-200
+801041bc: sh v0,18(sp)
+801041c0: addiu v0,zero,-1000
+801041c4: jal 0x80015fe8
+801041c8: sh v0,20(sp)
+801041cc: addu a0,s0,zero
+801041d0: sll v0,v0,24
+801041d4: sra a1,v0,20
+801041d8: addu a2,s2,zero
+801041dc: jal 0x8001bf10
+801041e0: addiu a3,sp,16
+801041e4: jal 0x80015fe8
+801041e8: nop
+801041ec: sll v0,v0,24
+801041f0: sra v0,v0,23
+801041f4: addiu v0,v0,-400
+801041f8: sh v0,16(sp)
+801041fc: addiu v0,zero,200
+80104200: sh s3,18(sp)
+80104204: jal 0x80015fe8
+80104208: sh v0,20(sp)
+8010420c: ori a0,s1,0x2800
+80104210: sll v0,v0,24
+80104214: sra a1,v0,20
+80104218: addu a2,s2,zero
+8010421c: jal 0x8001bf10
+80104220: addiu a3,sp,16
+80104224: lw ra,40(sp)
+80104228: lw s3,36(sp)
+8010422c: lw s2,32(sp)
+80104230: lw s1,28(sp)
+80104234: lw s0,24(sp)
+80104238: addiu sp,sp,48
+8010423c: jr ra
+80104240: nop
+80104244: addiu sp,sp,-40
+80104248: sw s2,32(sp)
+8010424c: addu s2,a0,zero
+80104250: sw ra,36(sp)
+80104254: sw s1,28(sp)
+80104258: sw s0,24(sp)
+8010425c: lbu v0,561(s2)
+80104260: nop
+80104264: bne v0,zero,0x80104294
+80104268: addu a0,s2,zero
+8010426c: lbu v0,561(s2)
+80104270: lui v1,0x8010
+80104274: addiu v1,v1,16964
+80104278: sw v1,564(s2)
+8010427c: addiu v0,v0,1
+80104280: sb v0,561(s2)
+80104284: lui at,0x8010
+80104288: sw a1,18656(at)
+8010428c: j 0x801042fc
+80104290: nop
+80104294: addiu a1,zero,1
+80104298: addu a2,zero,zero
+8010429c: addiu a3,zero,6
+801042a0: addiu s1,zero,12288
+801042a4: addiu s0,zero,1
+801042a8: sw s1,16(sp)
+801042ac: jal 0x80103b60
+801042b0: sw s0,20(sp)
+801042b4: addu a0,s2,zero
+801042b8: addiu a1,zero,1
+801042bc: addu a2,zero,zero
+801042c0: addiu a3,zero,6
+801042c4: sw s1,16(sp)
+801042c8: jal 0x80103b60
+801042cc: sw s0,20(sp)
+801042d0: lbu v1,561(s2)
+801042d4: lui v0,0x8010
+801042d8: lw v0,18656(v0)
+801042dc: nop
+801042e0: bne v1,v0,0x801042ec
+801042e4: nop
+801042e8: sw zero,564(s2)
+801042ec: lbu v0,561(s2)
+801042f0: nop
+801042f4: addiu v0,v0,1
+801042f8: sb v0,561(s2)
+801042fc: lw ra,36(sp)
+80104300: lw s2,32(sp)
+80104304: lw s1,28(sp)
+80104308: lw s0,24(sp)
+8010430c: addiu sp,sp,40
+80104310: jr ra
+80104314: nop
+80104318: lui a2,0x20
+8010431c: lw v0,0(a1)
+80104320: ori a2,a2,0x2038
+80104324: ori v0,v0,0x4a
+80104328: sw v0,0(a1)
+8010432c: lhu v1,118(a0)
+80104330: ori v0,zero,0x8000
+80104334: sh v0,160(a1)
+80104338: addiu v0,zero,-10
+8010433c: sh zero,156(a1)
+80104340: sh v0,154(a1)
+80104344: sh zero,158(a1)
+80104348: sh zero,164(a1)
+8010434c: sw a2,112(a1)
+80104350: addiu v1,v1,2048
+80104354: jr ra
+80104358: sh v1,152(a1)
+8010435c: addiu sp,sp,-32
+80104360: sw s1,20(sp)
+80104364: addu s1,a0,zero
+80104368: sw ra,28(sp)
+8010436c: sw s2,24(sp)
+80104370: sw s0,16(sp)
+80104374: lbu v0,561(s1)
+80104378: lw s2,408(s1)
+8010437c: bne v0,zero,0x801043a8
+80104380: nop
+80104384: lui v0,0x8010
+80104388: addiu v0,v0,18368
+8010438c: lui at,0x8010
+80104390: sw v0,18660(at)
+80104394: lbu v0,561(s1)
+80104398: lui v1,0x8010
+8010439c: addiu v1,v1,17244
+801043a0: j 0x80104460
+801043a4: sw v1,564(s1)
+801043a8: lui v1,0x8010
+801043ac: lw v1,18660(v1)
+801043b0: nop
+801043b4: lhu v0,10(v1)
+801043b8: nop
+801043bc: andi v0,v0,0x2
+801043c0: bne v0,zero,0x80104420
+801043c4: nop
+801043c8: lhu v0,8(v1)
+801043cc: nop
+801043d0: sll s0,v0,1
+801043d4: addu s0,s0,v0
+801043d8: sll s0,s0,2
+801043dc: subu s0,s0,v0
+801043e0: sll s0,s0,2
+801043e4: subu s0,s0,v0
+801043e8: sll s0,s0,2
+801043ec: addu s0,s2,s0
+801043f0: jal 0x80015fe8
+801043f4: addiu s0,s0,72
+801043f8: lui a0,0x600
+801043fc: ori a0,a0,0x1800
+80104400: andi v0,v0,0xff
+80104404: sll v0,v0,1
+80104408: or a0,v0,a0
+8010440c: addu a1,zero,zero
+80104410: lui a3,0x8010
+80104414: lw a3,18660(a3)
+80104418: jal 0x8001bf10
+8010441c: addu a2,s0,zero
+80104420: lui v0,0x8010
+80104424: lw v0,18660(v0)
+80104428: nop
+8010442c: lhu v1,10(v0)
+80104430: addiu v0,v0,12
+80104434: lui at,0x8010
+80104438: sw v0,18660(at)
+8010443c: andi v1,v1,0x1
+80104440: bne v1,zero,0x801043a8
+80104444: addiu v0,zero,24
+80104448: lbu v1,561(s1)
+8010444c: nop
+80104450: bne v1,v0,0x8010445c
+80104454: nop
+80104458: sw zero,564(s1)
+8010445c: lbu v0,561(s1)
+80104460: nop
+80104464: addiu v0,v0,1
+80104468: sb v0,561(s1)
+8010446c: lw ra,28(sp)
+80104470: lw s2,24(sp)
+80104474: lw s1,20(sp)
+80104478: lw s0,16(sp)
+8010447c: addiu sp,sp,32
+80104480: jr ra
+80104484: nop
+80104488: addiu sp,sp,-8
+8010448c: lw v0,24(sp)
+80104490: lw a0,408(a0)
+80104494: beq a1,zero,0x801044d4
+80104498: addu t0,zero,zero
+8010449c: lui t1,0xff00
+801044a0: sll v0,v0,16
+801044a4: sll v1,a3,8
+801044a8: or v0,v0,v1
+801044ac: or a2,v0,a2
+801044b0: addu v1,a0,zero
+801044b4: lw v0,112(v1)
+801044b8: addiu t0,t0,1
+801044bc: and v0,v0,t1
+801044c0: or v0,v0,a2
+801044c4: sw v0,112(v1)
+801044c8: sltu v0,t0,a1
+801044cc: bne v0,zero,0x801044b4
+801044d0: addiu v1,v1,172
+801044d4: addiu sp,sp,8
+801044d8: jr ra
+801044dc: nop
+801044e0: addiu sp,sp,-48
+801044e4: sw s1,28(sp)
+801044e8: addu s1,a1,zero
+801044ec: sw s2,32(sp)
+801044f0: addu s2,a2,zero
+801044f4: sw s4,40(sp)
+801044f8: addu s4,a3,zero
+801044fc: lw v1,68(sp)
+80104500: lw a1,72(sp)
+80104504: addiu a2,sp,16
+80104508: sw ra,44(sp)
+8010450c: sw s3,36(sp)
+80104510: sw s0,24(sp)
+80104514: lw s0,408(a0)
+80104518: lw s3,64(sp)
+8010451c: sll v0,v1,1
+80104520: addu v0,v0,v1
+80104524: sll v0,v0,2
+80104528: subu v0,v0,v1
+8010452c: sll v0,v0,2
+80104530: subu v0,v0,v1
+80104534: sll v0,v0,2
+80104538: addu s0,s0,v0
+8010453c: jal 0x8008dba4
+80104540: addiu a0,s0,72
+80104544: sll s1,s1,24
+80104548: sll s2,s2,16
+8010454c: or s1,s1,s2
+80104550: or a0,s1,s4
+80104554: lw v1,92(s0)
+80104558: lhu v0,16(sp)
+8010455c: addu a1,s3,zero
+80104560: addu v0,v0,v1
+80104564: sh v0,16(sp)
+80104568: lw v1,96(s0)
+8010456c: lhu v0,18(sp)
+80104570: lui a2,0x800a
+80104574: addiu a2,a2,-9404
+80104578: addu v0,v0,v1
+8010457c: sh v0,18(sp)
+80104580: lw v1,100(s0)
+80104584: lhu v0,20(sp)
+80104588: addiu a3,sp,16
+8010458c: addu v0,v0,v1
+80104590: jal 0x8001bf10
+80104594: sh v0,20(sp)
+80104598: lw ra,44(sp)
+8010459c: lw s4,40(sp)
+801045a0: lw s3,36(sp)
+801045a4: lw s2,32(sp)
+801045a8: lw s1,28(sp)
+801045ac: lw s0,24(sp)
+801045b0: addiu sp,sp,48
+801045b4: jr ra
+801045b8: nop
+801045bc: .word 0x012c012c(fn2c)
+801045c0: .word 0x01c200fa(fn3a)
+801045c4: .word 0x012c012c(fn2c)
+801045c8: .word 0x012c00dc(fn1c)
+801045cc: mfhi zero
+801045d0: mfhi zero
+801045d4: .word 0x015400b4(fn34)
+801045d8: .word 0x00f000dc(fn1c)
+801045dc: .word 0x00f000af(fn2f)
+801045e0: .word 0x00f00136(fn36)
+801045e4: .word 0x012c0136(fn36)
+801045e8: .word 0x00c800fa(fn3a)
+801045ec: .word 0x00f000f0(fn30)
+801045f0: .word 0x01c200fa(fn3a)
+801045f4: .word 0x012c012c(fn2c)
+801045f8: .word 0x012c00dc(fn1c)
+801045fc: mfhi zero
+80104600: mfhi zero
+80104604: .word 0x015400b4(fn34)
+80104608: .word 0x00f000dc(fn1c)
+8010460c: .word 0x00f000af(fn2f)
+80104610: .word 0x00f00136(fn36)
+80104614: .word 0x012c0136(fn36)
+80104618: .word 0x00c800fa(fn3a)
+8010461c: lb s0,1248(zero)
+80104620: lb s0,1892(zero)
+80104624: lb s0,8176(zero)
+80104628: lb s0,11396(zero)
+8010462c: nop
+80104630: nop
+80104634: nop
+80104638: lb s0,11520(zero)
+8010463c: lb s0,2044(zero)
+80104640: lb s0,2404(zero)
+80104644: lb s0,2404(zero)
+80104648: lb s0,3368(zero)
+8010464c: lb s0,3920(zero)
+80104650: lb s0,4612(zero)
+80104654: lb s0,4628(zero)
+80104658: lb s0,4644(zero)
+8010465c: lb s0,2052(zero)
+80104660: lb s0,3104(zero)
+80104664: lb s0,3292(zero)
+80104668: lb s0,3376(zero)
+8010466c: lb s0,3928(zero)
+80104670: lb s0,4620(zero)
+80104674: lb s0,4636(zero)
+80104678: lb s0,4652(zero)
+8010467c: lb s0,8336(zero)
+80104680: lb s0,8536(zero)
+80104684: lb s0,9912(zero)
+80104688: lb s0,10532(zero)
+8010468c: lb s0,11216(zero)
+80104690: lb s0,11588(zero)
+80104694: lb s0,12104(zero)
+80104698: lb s0,12412(zero)
+8010469c: lb s0,12792(zero)
+801046a0: .word 0xfed408fc(op3f)
+801046a4: .word 0xf63c0190(op3d)
+801046a8: .word 0x00000007(fn07)
+801046ac: .word 0xfe0c076c(op3f)
+801046b0: .word 0xf63c0190(op3d)
+801046b4: .word 0x00000007(fn07)
+801046b8: .word 0xfda804b0(op3f)
+801046bc: .word 0xf63c0320(op3d)
+801046c0: .word 0x00000007(fn07)
+801046c4: .word 0xff3801f4(op3f)
+801046c8: .word 0xf63c04b0(op3d)
+801046cc: .word 0x00000007(fn07)
+801046d0: .word 0xfda80640(op3f)
+801046d4: .word 0xf63c0064(op3d)
+801046d8: .word 0x00000007(fn07)
+801046dc: .word 0xfe700708(op3f)
+801046e0: .word 0xf63cfed4(op3d)
+801046e4: .word 0x00000007(fn07)
+801046e8: .word 0x00000a28(fn28)
+801046ec: .word 0xf63cfed4(op3d)
+801046f0: .word 0x00000007(fn07)
+801046f4: .word 0xfe700320(op3f)
+801046f8: .word 0xf63cfc7c(op3d)
+801046fc: .word 0x00000007(fn07)
+80104700: and zero,t7,s4
+80104704: .word 0xf63cfc7c(op3d)
+80104708: srlv zero,zero,zero
+8010470c: jr v1
+80104710: .word 0xf63c01f4(op3d)
+80104714: sllv zero,zero,zero
+80104718: mult t1,t4
+8010471c: .word 0xf63c0000(op3d)
+80104720: .word 0x0000000a(fn0a)
+80104724: .word 0x000002bc(fn3c)
+80104728: .word 0xf63c0514(op3d)
+8010472c: srlv zero,zero,zero
+80104730: .word 0x02bc03e8(fn28)
+80104734: .word 0xf63c0320(op3d)
+80104738: srlv zero,zero,zero
+8010473c: mfhi zero
+80104740: .word 0xf63cff9c(op3d)
+80104744: srlv zero,zero,zero
+80104748: mfhi zero
+8010474c: .word 0xf63c0000(op3d)
+80104750: srlv zero,zero,zero
+80104754: mult t7,s4
+80104758: .word 0xf63c0000(op3d)
+8010475c: srlv zero,zero,zero
+80104760: sll at,t4,18
+80104764: .word 0xf63c01f4(op3d)
+80104768: srlv zero,zero,zero
+8010476c: and at,t1,t4
+80104770: .word 0xf63c00c8(op3d)
+80104774: srlv zero,zero,zero
+80104778: .word 0x012c0c1c(fn1c)
+8010477c: .word 0xf63cfed4(op3d)
+80104780: srlv zero,zero,zero
+80104784: sllv zero,s4,t7
+80104788: .word 0xf63cfc18(op3d)
+8010478c: .word 0x00000005(fn05)
+80104790: bgez a1,0x801050f4
+80104794: .word 0xf63c0320(op3d)
+80104798: sra zero,zero,0
+8010479c: .word 0x0320fe70(fn30)
+801047a0: .word 0xf63c00c8(op3d)
+801047a4: jr zero
+801047a8: .word 0xfe7002bc(op3f)
+801047ac: .word 0xf63c04b0(op3d)
+801047b0: .word 0x00000005(fn05)
+801047b4: .word 0x00000514(fn14)
+801047b8: .word 0xf63c0514(op3d)
+801047bc: srlv zero,zero,zero
+801047c0: .word 0xfce00c1c(op3f)
+801047c4: nop
+801047c8: nop
+801047cc: nop
+801047d0: nop
+801047d4: sll zero,v0,0
+801047d8: .word 0xff9c09c4(op3f)
+801047dc: .word 0x0000ff38(fn38)
+801047e0: .word 0x00000007(fn07)
+801047e4: nop
+801047e8: nop
+801047ec: sll zero,v0,0
+801047f0: .word 0xff9c07d0(op3f)
+801047f4: jr zero
+801047f8: nop
+801047fc: nop
+80104800: nop
+80104804: sll zero,v0,0
+80104808: nop
+8010480c: nop
+80104810: sll zero,v0,0
+80104814: nop
+80104818: nop
+8010481c: sll zero,v0,0
+80104820: nop
+80104824: nop
+80104828: sll zero,v0,0
+8010482c: sllv zero,t8,s2
+80104830: add zero,zero,zero
+80104834: .word 0x00000005(fn05)
+80104838: nop
+8010483c: nop
+80104840: sll zero,v0,0
+80104844: .word 0x0258fed4(fn14)
+80104848: jr zero
+8010484c: jr zero
+80104850: nop
+80104854: nop
+80104858: sll zero,v0,0
+8010485c: mfhi zero
+80104860: nop
+80104864: sra zero,zero,0
+80104868: nop
+8010486c: nop
+80104870: sll zero,v0,0
+80104874: .word 0xfc1803e8(op3f)
+80104878: .word 0x000003e8(fn28)
+8010487c: nop
+80104880: nop
+80104884: nop
+80104888: sll zero,v0,0
+8010488c: nop
+80104890: nop
+80104894: sll zero,v0,0
+80104898: nop
+8010489c: nop
+801048a0: sll zero,v0,0
+801048a4: nop
+801048a8: nop
+801048ac: sll zero,v0,0
+801048b0: .word 0xfc7c06a4(op3f)
+801048b4: mult zero,zero
+801048b8: nop
+801048bc: nop
+801048c0: nop
+801048c4: nop
+801048c8: nop
+801048cc: nop
+801048d0: nop
+801048d4: nop
+801048d8: nop
+801048dc: nop
+801048e0: nop
+801048e4: nop

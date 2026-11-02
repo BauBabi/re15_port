@@ -1,4 +1,4 @@
-# Runde 41 Spur C "ventilkette" — STAGE2-Kette: Leiter 2000 (Text 40), Bruecke + Pult + Ventil 13, das Ventilraetsel 2030
+# Runde 41 Spur C "ventilkette" — STAGE2-Kette: Leiter 2000 (Text 40), Bruecke + Pult (seit Spur N Panel-Raetsel, Riegel r41_nachtrag30), das Ventilraetsel 2030
 # (sechs Ventile, Reihenfolge, Dokument + Plakat; Nachtrag 13), Zaehler/Flut/Ertrinken, 20B0 statt 2000, Schaltpult 2050
 # (80 V) sperrt den Hebel; mit dem Strom (Generator 2060, (3,126)) steht 2030 knapp unter der Absperrung (Nachtraege 7/8/12),
 # der Rechner 2080 bleibt Original.
@@ -35,7 +35,7 @@ if(RE15_BUILD_PC AND TARGET re15_pc)
 endif()
 
 # Teil B (dritte Fortsetzung 2026-10-24): die Glieder, die Teil A nicht faehrt — Pult 2050 -> 80 V -> Hebel = Original
-# sub04 (Leon + Elza), Hebel vorher gesperrt, 2030-Pult ohne Ventil 13, Leitern 20B0 <-> 2050 nach der Flut, 2030 nach der
+# sub04 (Leon + Elza), Hebel vorher gesperrt, 2030-Pult ohne Druck, Leitern 20B0 <-> 2050 nach der Flut, 2030 nach der
 # Flut ohne Strom (y -7200) und mit Strom (3,126) (y -5350, knapp unter der Absperrung; Nachtraege 7/8/12), Ring-Zugaenge,
 # Elza-Leiter 2001. Eigener exe-Kopie-Praefix re15_pc_r41cb_.
 if(RE15_BUILD_PC AND TARGET re15_pc)

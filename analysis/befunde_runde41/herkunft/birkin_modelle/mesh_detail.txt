@@ -1,0 +1,38 @@
+Knochen-Paare M1 <-> RE2 G2 (Beine: RE2 G2 mesh 12-17)
+M1 mesh 1 gegen G2 mesh 12
+  G2: V 37/37 exakt 5, beste Verschiebung (0, 0, -2) deckt 11; Flaechen T 6/6 Q 32/32; UV-Flaechen gleich 14/36
+M1 mesh 2 gegen G2 mesh 13
+  G2: V 21/21 exakt 3, beste Verschiebung (-2, 0, 0) deckt 8; Flaechen T 25/25 Q 6/6; UV-Flaechen gleich 0/30
+M1 mesh 3 gegen G2 mesh 14
+  G2: V 16/16 exakt 6, beste Verschiebung (0, 0, 0) deckt 6; Flaechen T 4/4 Q 12/12; UV-Flaechen gleich 12/12
+M1 mesh 4 gegen G2 mesh 15
+  G2: V 31/31 exakt 9, beste Verschiebung (0, 0, 0) deckt 9; Flaechen T 6/6 Q 26/26; UV-Flaechen gleich 11/23
+M1 mesh 5 gegen G2 mesh 16
+  G2: V 21/21 exakt 4, beste Verschiebung (-2, 0, -2) deckt 8; Flaechen T 25/25 Q 6/6; UV-Flaechen gleich 0/30
+M1 mesh 6 gegen G2 mesh 17
+  G2: V 16/16 exakt 6, beste Verschiebung (0, 0, -1) deckt 6; Flaechen T 4/4 Q 12/12; UV-Flaechen gleich 12/12
+
+G2 Meshes: [(0, 18, 6, 13), (1, 76, 80, 30), (2, 135, 222, 21), (3, 48, 56, 14), (4, 95, 76, 55), (5, 61, 58, 30), (6, 8, 6, 3), (7, 8, 6, 3), (8, 11, 6, 6), (9, 39, 40, 17), (10, 18, 18, 7), (11, 25, 10, 18), (12, 37, 6, 32), (13, 21, 25, 6), (14, 16, 4, 12), (15, 31, 6, 26), (16, 21, 25, 6), (17, 16, 4, 12)]
+
+Roh M1 mesh 3 / G2 mesh 14, sortiert:
+[(-131, 262, 141), (-130, 262, -118), (-89, 42, -124), (-89, 42, 102), (31, 261, -156), (31, 261, 129), (104, 39, 89), (105, 39, -115), (222, 262, -167), (222, 262, 137), (292, 168, -165), (293, 168, 141), (426, 198, -129), (426, 198, 126), (456, 262, -123), (456, 262, 118)]
+[(-132, 262, 141), (-131, 262, -119), (-90, 42, -125), (-90, 42, 102), (31, 261, -157), (31, 261, 129), (104, 39, 89), (105, 39, -116), (222, 262, -168), (222, 262, 137), (292, 168, -166), (293, 168, 141), (426, 198, -130), (426, 198, 126), (456, 262, -124), (456, 262, 118)]
+
+UV-Treffer M1-Mesh gegen ALLE Meshes von G1/G2/D0 (nur >=30%):
+   0 (84 UV-Flaechen): 
+   1 (36 UV-Flaechen): G2[12] 14/36
+   2 (30 UV-Flaechen): 
+   3 (12 UV-Flaechen): G2[14] 12/12, G2[17] 12/12
+   4 (23 UV-Flaechen): G2[15] 11/23
+   5 (30 UV-Flaechen): 
+   6 (12 UV-Flaechen): G2[14] 12/12, G2[17] 12/12
+   7 (1 UV-Flaechen): 
+   8 (104 UV-Flaechen): D0[8] 104/104
+   9 (91 UV-Flaechen): D0[9] 91/91
+  10 (52 UV-Flaechen): D0[10] 52/52
+  11 (25 UV-Flaechen): D0[11] 25/25
+  12 (58 UV-Flaechen): D0[12] 58/58
+  13 (56 UV-Flaechen): D0[13] 56/56
+  14 (37 UV-Flaechen): D0[14] 37/37
+  15 (105 UV-Flaechen): 
+  16 (105 UV-Flaechen): 

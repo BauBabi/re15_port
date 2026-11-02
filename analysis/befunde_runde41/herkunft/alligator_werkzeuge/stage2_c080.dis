@@ -1,0 +1,3701 @@
+; C:/workspace/git/reAi_v2/Version_40%/PSX/BIN\STAGE2.BIN  @0x8010c080 (3700 instr)
+  8010c080: addiu sp,sp,-24                    
+  8010c084: lui v0,0x800b                      
+  8010c088: lw v0,-13760(v0)                   g_pauseflags
+  8010c08c: lui v1,0x2000                      
+  8010c090: and v0,v0,v1                       
+  8010c094: bne v0,zero,0x8010c0e4             
+  8010c098: sw ra,16(sp)                       
+  8010c09c: lui v1,0x800b                      
+  8010c0a0: lw v1,-14460(v1)                   g_entity(cur)
+  8010c0a4: nop                                
+  8010c0a8: lbu v0,9(v1)                       0x800b0009
+  8010c0ac: nop                                
+  8010c0b0: andi v0,v0,0x20                    
+  8010c0b4: bne v0,zero,0x8010c0e4             
+  8010c0b8: nop                                
+  8010c0bc: lbu v0,4(v1)                       0x800b0004
+  8010c0c0: nop                                
+  8010c0c4: sll v0,v0,2                        
+  8010c0c8: lui at,0x8012                      
+  8010c0cc: addiu at,at,-30176                 0x80118a20
+  8010c0d0: addu at,at,v0                      
+  8010c0d4: lw v0,0(at)                        0x80120000
+  8010c0d8: nop                                
+  8010c0dc: jalr v0                            
+  8010c0e0: nop                                
+  8010c0e4: lw ra,16(sp)                       
+  8010c0e8: addiu sp,sp,24                     
+  8010c0ec: jr ra                              
+  8010c0f0: nop                                
+  8010c0f4: jr ra                              
+  8010c0f8: nop                                
+  8010c0fc: lui v0,0x800b                      
+  8010c100: lw v0,-14460(v0)                   g_entity(cur)
+  8010c104: addiu sp,sp,-24                    
+  8010c108: sw ra,16(sp)                       
+  8010c10c: lbu v0,5(v0)                       0x800b0005
+  8010c110: nop                                
+  8010c114: sll v0,v0,2                        
+  8010c118: lui at,0x8012                      
+  8010c11c: addiu at,at,-30144                 0x80118a40
+  8010c120: addu at,at,v0                      
+  8010c124: lw v0,0(at)                        0x80120000
+  8010c128: nop                                
+  8010c12c: jalr v0                            
+  8010c130: nop                                
+  8010c134: lui v0,0x800b                      
+  8010c138: lw v0,-14460(v0)                   g_entity(cur)
+  8010c13c: nop                                
+  8010c140: lbu v0,5(v0)                       0x800b0005
+  8010c144: nop                                
+  8010c148: sll v0,v0,2                        
+  8010c14c: lui at,0x8012                      
+  8010c150: addiu at,at,-30080                 0x80118a80
+  8010c154: addu at,at,v0                      
+  8010c158: lw v0,0(at)                        0x80120000
+  8010c15c: nop                                
+  8010c160: jalr v0                            
+  8010c164: nop                                
+  8010c168: lw ra,16(sp)                       
+  8010c16c: addiu sp,sp,24                     
+  8010c170: jr ra                              
+  8010c174: nop                                
+  8010c178: jr ra                              
+  8010c17c: nop                                
+  8010c180: jr ra                              
+  8010c184: nop                                
+  8010c188: jr ra                              
+  8010c18c: nop                                
+  8010c190: jr ra                              
+  8010c194: nop                                
+  8010c198: jr ra                              
+  8010c19c: nop                                
+  8010c1a0: jr ra                              
+  8010c1a4: nop                                
+  8010c1a8: jr ra                              
+  8010c1ac: nop                                
+  8010c1b0: jr ra                              
+  8010c1b4: nop                                
+  8010c1b8: jr ra                              
+  8010c1bc: nop                                
+  8010c1c0: jr ra                              
+  8010c1c4: nop                                
+  8010c1c8: jr ra                              
+  8010c1cc: nop                                
+  8010c1d0: jr ra                              
+  8010c1d4: nop                                
+  8010c1d8: jr ra                              
+  8010c1dc: nop                                
+  8010c1e0: jr ra                              
+  8010c1e4: nop                                
+  8010c1e8: jr ra                              
+  8010c1ec: nop                                
+  8010c1f0: jr ra                              
+  8010c1f4: nop                                
+  8010c1f8: jr ra                              
+  8010c1fc: nop                                
+  8010c200: jr ra                              
+  8010c204: nop                                
+  8010c208: jr ra                              
+  8010c20c: nop                                
+  8010c210: jr ra                              
+  8010c214: nop                                
+  8010c218: jr ra                              
+  8010c21c: nop                                
+  8010c220: jr ra                              
+  8010c224: nop                                
+  8010c228: jr ra                              
+  8010c22c: nop                                
+  8010c230: jr ra                              
+  8010c234: nop                                
+  8010c238: jr ra                              
+  8010c23c: nop                                
+  8010c240: jr ra                              
+  8010c244: nop                                
+  8010c248: jr ra                              
+  8010c24c: nop                                
+  8010c250: jr ra                              
+  8010c254: nop                                
+  8010c258: jr ra                              
+  8010c25c: nop                                
+  8010c260: jr ra                              
+  8010c264: nop                                
+  8010c268: jr ra                              
+  8010c26c: nop                                
+  8010c270: jr ra                              
+  8010c274: nop                                
+  8010c278: lui v0,0x800b                      
+  8010c27c: lw v0,-14460(v0)                   g_entity(cur)
+  8010c280: addiu sp,sp,-24                    
+  8010c284: sw ra,16(sp)                       
+  8010c288: lbu v0,5(v0)                       0x800b0005
+  8010c28c: nop                                
+  8010c290: sll v0,v0,2                        
+  8010c294: lui at,0x8012                      
+  8010c298: addiu at,at,-30016                 0x80118ac0
+  8010c29c: addu at,at,v0                      
+  8010c2a0: lw v0,0(at)                        0x80120000
+  8010c2a4: nop                                
+  8010c2a8: jalr v0                            
+  8010c2ac: nop                                
+  8010c2b0: lw ra,16(sp)                       
+  8010c2b4: addiu sp,sp,24                     
+  8010c2b8: jr ra                              
+  8010c2bc: nop                                
+  8010c2c0: jr ra                              
+  8010c2c4: nop                                
+  8010c2c8: jr ra                              
+  8010c2cc: nop                                
+  8010c2d0: jr ra                              
+  8010c2d4: nop                                
+  8010c2d8: lui v0,0x800b                      
+  8010c2dc: lw v0,-14460(v0)                   g_entity(cur)
+  8010c2e0: addiu sp,sp,-24                    
+  8010c2e4: sw ra,16(sp)                       
+  8010c2e8: lbu v0,5(v0)                       0x800b0005
+  8010c2ec: nop                                
+  8010c2f0: sll v0,v0,2                        
+  8010c2f4: lui at,0x8012                      
+  8010c2f8: addiu at,at,-29928                 0x80118b18
+  8010c2fc: addu at,at,v0                      
+  8010c300: lw v0,0(at)                        0x80120000
+  8010c304: nop                                
+  8010c308: jalr v0                            
+  8010c30c: nop                                
+  8010c310: lw ra,16(sp)                       
+  8010c314: addiu sp,sp,24                     
+  8010c318: jr ra                              
+  8010c31c: nop                                
+  8010c320: jr ra                              
+  8010c324: nop                                
+  8010c328: jr ra                              
+  8010c32c: nop                                
+  8010c330: jr ra                              
+  8010c334: nop                                
+  8010c338: lui v0,0x800b                      
+  8010c33c: lw v0,-14460(v0)                   g_entity(cur)
+  8010c340: addiu sp,sp,-24                    
+  8010c344: sw ra,16(sp)                       
+  8010c348: lbu v0,5(v0)                       0x800b0005
+  8010c34c: nop                                
+  8010c350: sll v0,v0,2                        
+  8010c354: lui at,0x8012                      
+  8010c358: addiu at,at,-29840                 0x80118b70
+  8010c35c: addu at,at,v0                      
+  8010c360: lw v0,0(at)                        0x80120000
+  8010c364: nop                                
+  8010c368: jalr v0                            
+  8010c36c: nop                                
+  8010c370: lw ra,16(sp)                       
+  8010c374: addiu sp,sp,24                     
+  8010c378: jr ra                              
+  8010c37c: nop                                
+  8010c380: jr ra                              
+  8010c384: nop                                
+  8010c388: jr ra                              
+  8010c38c: nop                                
+  8010c390: jr ra                              
+  8010c394: nop                                
+  8010c398: jr ra                              
+  8010c39c: nop                                
+  8010c3a0: jr ra                              
+  8010c3a4: nop                                
+  8010c3a8: lui v0,0x800b                      
+  8010c3ac: lbu v0,-13735(v0)                  0x800aca59
+  8010c3b0: addiu sp,sp,-24                    
+  8010c3b4: sw ra,16(sp)                       
+  8010c3b8: sll v0,v0,2                        
+  8010c3bc: lui at,0x8012                      
+  8010c3c0: addiu at,at,-29824                 0x80118b80
+  8010c3c4: addu at,at,v0                      
+  8010c3c8: lw v0,0(at)                        0x80120000
+  8010c3cc: nop                                
+  8010c3d0: jalr v0                            
+  8010c3d4: nop                                
+  8010c3d8: lw ra,16(sp)                       
+  8010c3dc: addiu sp,sp,24                     
+  8010c3e0: jr ra                              
+  8010c3e4: nop                                
+  8010c3e8: jr ra                              
+  8010c3ec: nop                                
+  8010c3f0: jr ra                              
+  8010c3f4: nop                                
+  8010c3f8: lui v0,0x800b                      
+  8010c3fc: lbu v0,-13735(v0)                  0x800aca59
+  8010c400: addiu sp,sp,-24                    
+  8010c404: sw ra,16(sp)                       
+  8010c408: sll v0,v0,2                        
+  8010c40c: lui at,0x8012                      
+  8010c410: addiu at,at,-29808                 0x80118b90
+  8010c414: addu at,at,v0                      
+  8010c418: lw v0,0(at)                        0x80120000
+  8010c41c: nop                                
+  8010c420: jalr v0                            
+  8010c424: nop                                
+  8010c428: lw ra,16(sp)                       
+  8010c42c: addiu sp,sp,24                     
+  8010c430: jr ra                              
+  8010c434: nop                                
+  8010c438: jr ra                              
+  8010c43c: nop                                
+  8010c440: jr ra                              
+  8010c444: nop                                
+  8010c448: addiu sp,sp,-24                    
+  8010c44c: lui a0,0x28                        
+  8010c450: ori a0,a0,0x10                     
+  8010c454: lui v0,0x800b                      
+  8010c458: lw v0,-14460(v0)                   g_entity(cur)
+  8010c45c: sw ra,20(sp)                       
+  8010c460: sw s0,16(sp)                       
+  8010c464: lw a3,4(v0)                        0x800b0004
+  8010c468: lui a2,0x8010                      
+  8010c46c: addiu a2,a2,404                    0x80100194
+  8010c470: jal 0x800279c8                     
+  8010c474: addu a1,zero,zero                  
+  8010c478: lui s0,0x800b                      
+  8010c47c: addiu s0,s0,-13760                 g_pauseflags
+  8010c480: lw v0,0(s0)                        0x800b0000
+  8010c484: lui v1,0x2000                      
+  8010c488: and v0,v0,v1                       
+  8010c48c: bne v0,zero,0x8010c53c             
+  8010c490: nop                                
+  8010c494: lui v1,0x800b                      
+  8010c498: lw v1,-14460(v1)                   g_entity(cur)
+  8010c49c: nop                                
+  8010c4a0: lbu v0,9(v1)                       0x800b0009
+  8010c4a4: nop                                
+  8010c4a8: andi v0,v0,0x20                    
+  8010c4ac: bne v0,zero,0x8010c53c             
+  8010c4b0: nop                                
+  8010c4b4: lbu v0,4(v1)                       0x800b0004
+  8010c4b8: nop                                
+  8010c4bc: sll v0,v0,2                        
+  8010c4c0: lui at,0x8012                      
+  8010c4c4: addiu at,at,-29752                 0x80118bc8
+  8010c4c8: addu at,at,v0                      
+  8010c4cc: lw v0,0(at)                        0x80120000
+  8010c4d0: nop                                
+  8010c4d4: jalr v0                            
+  8010c4d8: nop                                
+  8010c4dc: lui a0,0x800b                      
+  8010c4e0: lw a0,-14460(a0)                   g_entity(cur)
+  8010c4e4: jal 0x8002b498                     
+  8010c4e8: nop                                
+  8010c4ec: lui a1,0x800b                      
+  8010c4f0: lw a1,-14460(a1)                   g_entity(cur)
+  8010c4f4: jal 0x8002aec4                     
+  8010c4f8: addiu a0,s0,20                     0x800b0014
+  8010c4fc: lui v1,0x800b                      
+  8010c500: lw v1,-14460(v1)                   g_entity(cur)
+  8010c504: jal 0x8002b544                     
+  8010c508: sh v0,466(v1)                      0x800b01d2
+  8010c50c: lui a0,0x800b                      
+  8010c510: lw a0,-14460(a0)                   g_entity(cur)
+  8010c514: nop                                
+  8010c518: lw v0,120(a0)                      0x800b0078
+  8010c51c: ori a2,zero,0x4                    
+  8010c520: lhu a1,6(v0)                       0x800b0006
+  8010c524: jal 0x8003b0a4                     
+  8010c528: addiu a0,a0,52                     0x800b0034
+  8010c52c: lui v1,0x800b                      
+  8010c530: lw v1,-14460(v1)                   g_entity(cur)
+  8010c534: nop                                
+  8010c538: sh v0,470(v1)                      0x800b01d6
+  8010c53c: lui v0,0x800b                      
+  8010c540: lw v0,-14460(v0)                   g_entity(cur)
+  8010c544: lui a0,0x800b                      
+  8010c548: lw a0,-14460(a0)                   g_entity(cur)
+  8010c54c: lh a1,442(v0)                      0x800b01ba
+  8010c550: jal 0x8001b064                     
+  8010c554: addiu a0,a0,176                    0x800b00b0
+  8010c558: lw ra,20(sp)                       
+  8010c55c: lw s0,16(sp)                       
+  8010c560: addiu sp,sp,24                     
+  8010c564: jr ra                              
+  8010c568: nop                                
+  8010c56c: addiu sp,sp,-32                    
+  8010c570: lui v1,0x800b                      
+  8010c574: lw v1,-14460(v1)                   g_entity(cur)
+  8010c578: ori v0,zero,0x601                  
+  8010c57c: sw ra,24(sp)                       
+  8010c580: sw v0,4(v1)                        0x800b0004
+  8010c584: lui v1,0x800b                      
+  8010c588: lw v1,-14460(v1)                   g_entity(cur)
+  8010c58c: ori v0,zero,0x4                    
+  8010c590: sb v0,148(v1)                      0x800b0094
+  8010c594: lui v0,0x800b                      
+  8010c598: lw v0,-14460(v0)                   g_entity(cur)
+  8010c59c: nop                                
+  8010c5a0: sb zero,149(v0)                    0x800b0095
+  8010c5a4: lui v0,0x800b                      
+  8010c5a8: lw v0,-14460(v0)                   g_entity(cur)
+  8010c5ac: nop                                
+  8010c5b0: sb zero,143(v0)                    0x800b008f
+  8010c5b4: lui v0,0x800b                      
+  8010c5b8: lw v0,-14460(v0)                   g_entity(cur)
+  8010c5bc: nop                                
+  8010c5c0: sb zero,147(v0)                    0x800b0093
+  8010c5c4: lui v0,0x800b                      
+  8010c5c8: lw v0,-14460(v0)                   g_entity(cur)
+  8010c5cc: nop                                
+  8010c5d0: sh zero,156(v0)                    0x800b009c
+  8010c5d4: lui v0,0x800b                      
+  8010c5d8: lw v0,-14460(v0)                   g_entity(cur)
+  8010c5dc: nop                                
+  8010c5e0: sb zero,158(v0)                    0x800b009e
+  8010c5e4: lui v0,0x800b                      
+  8010c5e8: lw v0,-14460(v0)                   g_entity(cur)
+  8010c5ec: nop                                
+  8010c5f0: sb zero,159(v0)                    0x800b009f
+  8010c5f4: lui v0,0x800b                      
+  8010c5f8: lw v0,-14460(v0)                   g_entity(cur)
+  8010c5fc: nop                                
+  8010c600: sh zero,476(v0)                    0x800b01dc
+  8010c604: lui v0,0x800b                      
+  8010c608: lw v0,-14460(v0)                   g_entity(cur)
+  8010c60c: nop                                
+  8010c610: sh zero,478(v0)                    0x800b01de
+  8010c614: lui v1,0x800b                      
+  8010c618: lw v1,-14460(v1)                   g_entity(cur)
+  8010c61c: ori v0,zero,0x1                    
+  8010c620: sb v0,480(v1)                      0x800b01e0
+  8010c624: lui v0,0x800b                      
+  8010c628: lw v0,-14460(v0)                   g_entity(cur)
+  8010c62c: nop                                
+  8010c630: sb zero,481(v0)                    0x800b01e1
+  8010c634: lui v0,0x800b                      
+  8010c638: lw v0,-14460(v0)                   g_entity(cur)
+  8010c63c: nop                                
+  8010c640: sb zero,482(v0)                    0x800b01e2
+  8010c644: lui v0,0x800b                      
+  8010c648: lw v0,-14460(v0)                   g_entity(cur)
+  8010c64c: nop                                
+  8010c650: sb zero,483(v0)                    0x800b01e3
+  8010c654: lui v1,0x800b                      
+  8010c658: lw v1,-14460(v1)                   g_entity(cur)
+  8010c65c: addiu v0,zero,-1200                
+  8010c660: sw v0,56(v1)                       0x800b0038
+  8010c664: lui v1,0x800b                      
+  8010c668: lw v1,-14460(v1)                   g_entity(cur)
+  8010c66c: nop                                
+  8010c670: lhu v0,56(v1)                      0x800b0038
+  8010c674: nop                                
+  8010c678: sh v0,442(v1)                      0x800b01ba
+  8010c67c: lui v0,0x800b                      
+  8010c680: lw v0,-14460(v0)                   g_entity(cur)
+  8010c684: addu a2,zero,zero                  
+  8010c688: lw a0,132(v0)                      0x800b0084
+  8010c68c: lw a1,364(v0)                      0x800b016c
+  8010c690: jal 0x8001f314                     anim_set
+  8010c694: ori a3,zero,0x200                  
+  8010c698: jal 0x8001af20                     rng
+  8010c69c: nop                                
+  8010c6a0: lui a0,0x8011                      
+  8010c6a4: addiu a0,a0,29052                  0x8011717c
+  8010c6a8: andi v0,v0,0xf                     
+  8010c6ac: lui a1,0x800b                      
+  8010c6b0: lw a1,-14460(a1)                   g_entity(cur)
+  8010c6b4: sll v0,v0,1                        
+  8010c6b8: lbu v1,8(a1)                       0x800b0008
+  8010c6bc: lui t0,0x80                        
+  8010c6c0: sll v1,v1,5                        
+  8010c6c4: addu v1,v1,a0                      
+  8010c6c8: addu v0,v0,v1                      
+  8010c6cc: lhu v0,0(v0)                       0x800b0000
+  8010c6d0: ori t0,t0,0x8080                   
+  8010c6d4: sh v0,154(a1)                      0x800b009a
+  8010c6d8: lui v1,0x800b                      
+  8010c6dc: lw v1,-14460(v1)                   g_entity(cur)
+  8010c6e0: lui a0,0x1fff                      
+  8010c6e4: lw v0,0(v1)                        0x800b0000
+  8010c6e8: ori a0,a0,0xffff                   
+  8010c6ec: and v0,v0,a0                       
+  8010c6f0: sw v0,0(v1)                        0x800b0000
+  8010c6f4: lui v1,0x800b                      
+  8010c6f8: lw v1,-14460(v1)                   g_entity(cur)
+  8010c6fc: lui v0,0x8012                      
+  8010c700: lw v0,-29776(v0)                   0x80118bb0
+  8010c704: addu a1,zero,zero                  
+  8010c708: sw v0,120(v1)                      0x800b0078
+  8010c70c: lui v0,0x800b                      
+  8010c710: lw v0,-14460(v0)                   g_entity(cur)
+  8010c714: addu a0,zero,zero                  
+  8010c718: lw v1,120(v0)                      0x800b0078
+  8010c71c: lui v0,0x800b                      
+  8010c720: lw v0,-14460(v0)                   g_entity(cur)
+  8010c724: lhu a2,6(v1)                       0x800b0006
+  8010c728: lhu a3,10(v1)                      0x800b000a
+  8010c72c: addiu v0,v0,176                    0x800b00b0
+  8010c730: sw v0,16(sp)                       
+  8010c734: sw t0,20(sp)                       
+  8010c738: addiu a2,a2,100                    0x80100064
+  8010c73c: jal 0x8001af5c                     
+  8010c740: addiu a3,a3,200                    
+  8010c744: lui v1,0x800b                      
+  8010c748: lw v1,-14460(v1)                   g_entity(cur)
+  8010c74c: nop                                
+  8010c750: lbu v0,9(v1)                       0x800b0009
+  8010c754: nop                                
+  8010c758: andi v0,v0,0x1                     
+  8010c75c: beq v0,zero,0x8010c7d8             
+  8010c760: ori a3,zero,0x15                   
+  8010c764: lui v0,0x100                       
+  8010c768: ori v0,v0,0x1                      
+  8010c76c: sw v0,4(v1)                        0x800b0004
+  8010c770: lui v0,0x800b                      
+  8010c774: lw v0,-14460(v0)                   g_entity(cur)
+  8010c778: nop                                
+  8010c77c: sb zero,148(v0)                    0x800b0094
+  8010c780: lui v0,0x800b                      
+  8010c784: lw v0,-14460(v0)                   g_entity(cur)
+  8010c788: nop                                
+  8010c78c: sb zero,480(v0)                    0x800b01e0
+  8010c790: lui a0,0x800b                      
+  8010c794: lw a0,-14460(a0)                   g_entity(cur)
+  8010c798: nop                                
+  8010c79c: lbu v1,130(a0)                     0x800b0082
+  8010c7a0: nop                                
+  8010c7a4: sll v0,v1,3                        
+  8010c7a8: subu v0,v0,v1                      
+  8010c7ac: sll v0,v0,5                        
+  8010c7b0: addu v0,v0,v1                      
+  8010c7b4: sll v0,v0,3                        
+  8010c7b8: subu v0,zero,v0                    
+  8010c7bc: sw v0,56(a0)                       0x800b0038
+  8010c7c0: lui v1,0x800b                      
+  8010c7c4: lw v1,-14460(v1)                   g_entity(cur)
+  8010c7c8: nop                                
+  8010c7cc: lhu v0,56(v1)                      0x800b0038
+  8010c7d0: nop                                
+  8010c7d4: sh v0,442(v1)                      0x800b01ba
+  8010c7d8: ori a2,zero,0xe1c                  
+  8010c7dc: lui v0,0x800b                      
+  8010c7e0: lw v0,-14460(v0)                   g_entity(cur)
+  8010c7e4: addu a1,a3,zero                    
+  8010c7e8: lw a0,392(v0)                      0x800b0188
+  8010c7ec: addiu a3,a3,-1                     
+  8010c7f0: addu a0,a2,a0                      
+  8010c7f4: lw v1,44(a0)                       0x800b002c
+  8010c7f8: addiu a2,a2,-172                   0x800fff54
+  8010c7fc: sll v0,v1,2                        
+  8010c800: addu v0,v0,v1                      
+  8010c804: srl v1,v0,31                       
+  8010c808: addu v0,v0,v1                      
+  8010c80c: lw v1,48(a0)                       0x800b0030
+  8010c810: sra v0,v0,1                        
+  8010c814: sw v0,44(a0)                       0x800b002c
+  8010c818: sll v0,v1,2                        
+  8010c81c: addu v0,v0,v1                      
+  8010c820: srl v1,v0,31                       
+  8010c824: addu v0,v0,v1                      
+  8010c828: lw v1,52(a0)                       0x800b0034
+  8010c82c: sra v0,v0,1                        
+  8010c830: sw v0,48(a0)                       0x800b0030
+  8010c834: sll v0,v1,2                        
+  8010c838: addu v0,v0,v1                      
+  8010c83c: srl v1,v0,31                       
+  8010c840: addu v0,v0,v1                      
+  8010c844: sra v0,v0,1                        
+  8010c848: bne a1,zero,0x8010c7dc             
+  8010c84c: sw v0,52(a0)                       0x800b0034
+  8010c850: lw ra,24(sp)                       
+  8010c854: addiu sp,sp,32                     
+  8010c858: jr ra                              
+  8010c85c: nop                                
+  8010c860: addiu sp,sp,-32                    
+  8010c864: sw ra,24(sp)                       
+  8010c868: jal 0x8001bc08                     
+  8010c86c: nop                                
+  8010c870: lui v1,0x800b                      
+  8010c874: lw v1,-14460(v1)                   g_entity(cur)
+  8010c878: nop                                
+  8010c87c: sh v0,472(v1)                      0x800b01d8
+  8010c880: lui v1,0x800b                      
+  8010c884: lw v1,-14460(v1)                   g_entity(cur)
+  8010c888: nop                                
+  8010c88c: lhu v0,472(v1)                     0x800b01d8
+  8010c890: nop                                
+  8010c894: srl v0,v0,1                        
+  8010c898: bne v0,zero,0x8010c8d0             
+  8010c89c: nop                                
+  8010c8a0: lhu v0,464(v1)                     0x800b01d0
+  8010c8a4: nop                                
+  8010c8a8: andi v0,v0,0xfffe                  
+  8010c8ac: sh v0,464(v1)                      0x800b01d0
+  8010c8b0: lui a0,0x800b                      
+  8010c8b4: lw a0,-14460(a0)                   g_entity(cur)
+  8010c8b8: nop                                
+  8010c8bc: lhu v0,472(a0)                     0x800b01d8
+  8010c8c0: lhu v1,464(a0)                     0x800b01d0
+  8010c8c4: andi v0,v0,0x1                     
+  8010c8c8: or v1,v1,v0                        
+  8010c8cc: sh v1,464(a0)                      0x800b01d0
+  8010c8d0: lui a0,0x800b                      
+  8010c8d4: lw a0,-14460(a0)                   g_entity(cur)
+  8010c8d8: lui v0,0x800b                      
+  8010c8dc: lw v0,-13688(v0)                   playerX
+  8010c8e0: lw v1,52(a0)                       0x800b0034
+  8010c8e4: nop                                
+  8010c8e8: subu v0,v0,v1                      
+  8010c8ec: mult v0,v0                         
+  8010c8f0: lui v0,0x800b                      
+  8010c8f4: lw v0,-13680(v0)                   playerZ
+  8010c8f8: lw v1,60(a0)                       0x800b003c
+  8010c8fc: mflo a1                            
+  8010c900: subu v0,v0,v1                      
+  8010c904: mult v0,v0                         
+  8010c908: mflo a0                            
+  8010c90c: jal 0x80065f60                     SquareRoot0
+  8010c910: addu a0,a1,a0                      
+  8010c914: lui v1,0x800b                      
+  8010c918: lw v1,-14460(v1)                   g_entity(cur)
+  8010c91c: nop                                
+  8010c920: sh v0,468(v1)                      0x800b01d4
+  8010c924: lui v0,0x800b                      
+  8010c928: lw v0,-14460(v0)                   g_entity(cur)
+  8010c92c: nop                                
+  8010c930: lbu v0,5(v0)                       0x800b0005
+  8010c934: nop                                
+  8010c938: sll v0,v0,2                        
+  8010c93c: lui at,0x8012                      
+  8010c940: addiu at,at,-29720                 0x80118be8
+  8010c944: addu at,at,v0                      
+  8010c948: lw v0,0(at)                        0x80120000
+  8010c94c: nop                                
+  8010c950: jalr v0                            
+  8010c954: nop                                
+  8010c958: lui v0,0x800b                      
+  8010c95c: lw v0,-14460(v0)                   g_entity(cur)
+  8010c960: nop                                
+  8010c964: lbu v0,5(v0)                       0x800b0005
+  8010c968: nop                                
+  8010c96c: sll v0,v0,2                        
+  8010c970: lui at,0x8012                      
+  8010c974: addiu at,at,-29656                 0x80118c28
+  8010c978: addu at,at,v0                      
+  8010c97c: lw v0,0(at)                        0x80120000
+  8010c980: nop                                
+  8010c984: jalr v0                            
+  8010c988: nop                                
+  8010c98c: lui a0,0x800b                      
+  8010c990: lw a0,-14460(a0)                   g_entity(cur)
+  8010c994: lui v1,0x1fff                      
+  8010c998: lw v0,0(a0)                        0x800b0000
+  8010c99c: ori v1,v1,0xffff                   
+  8010c9a0: and v0,v0,v1                       
+  8010c9a4: sw v0,0(a0)                        0x800b0000
+  8010c9a8: lui a1,0x800b                      
+  8010c9ac: lw a1,-14460(a1)                   g_entity(cur)
+  8010c9b0: ori a0,zero,0x9c4                  
+  8010c9b4: lw v0,0(a1)                        0x800b0000
+  8010c9b8: lui v1,0x4000                      
+  8010c9bc: or v0,v0,v1                        
+  8010c9c0: jal 0x80012974                     
+  8010c9c4: sw v0,0(a1)                        0x800b0000
+  8010c9c8: lui a0,0x800b                      
+  8010c9cc: lw a0,-14460(a0)                   g_entity(cur)
+  8010c9d0: nop                                
+  8010c9d4: lh v0,476(a0)                      0x800b01dc
+  8010c9d8: nop                                
+  8010c9dc: beq v0,zero,0x8010c9ec             
+  8010c9e0: addu v1,v0,zero                    
+  8010c9e4: addiu v0,v1,-1                     
+  8010c9e8: sh v0,476(a0)                      0x800b01dc
+  8010c9ec: lui v1,0x800b                      
+  8010c9f0: lw v1,-14460(v1)                   g_entity(cur)
+  8010c9f4: nop                                
+  8010c9f8: lbu v0,482(v1)                     0x800b01e2
+  8010c9fc: nop                                
+  8010ca00: beq v0,zero,0x8010ca20             
+  8010ca04: nop                                
+  8010ca08: lbu v0,482(v1)                     0x800b01e2
+  8010ca0c: nop                                
+  8010ca10: addiu v0,v0,-1                     0x800affff
+  8010ca14: sb v0,482(v1)                      0x800b01e2
+  8010ca18: lui v1,0x800b                      
+  8010ca1c: lw v1,-14460(v1)                   g_entity(cur)
+  8010ca20: nop                                
+  8010ca24: lbu v0,483(v1)                     0x800b01e3
+  8010ca28: nop                                
+  8010ca2c: beq v0,zero,0x8010ca44             
+  8010ca30: nop                                
+  8010ca34: lbu v0,483(v1)                     0x800b01e3
+  8010ca38: nop                                
+  8010ca3c: addiu v0,v0,-1                     0x800affff
+  8010ca40: sb v0,483(v1)                      0x800b01e3
+  8010ca44: lui v1,0x800b                      
+  8010ca48: lw v1,-14460(v1)                   g_entity(cur)
+  8010ca4c: nop                                
+  8010ca50: lhu v0,470(v1)                     0x800b01d6
+  8010ca54: nop                                
+  8010ca58: beq v0,zero,0x8010ca74             
+  8010ca5c: nop                                
+  8010ca60: lhu v0,478(v1)                     0x800b01de
+  8010ca64: nop                                
+  8010ca68: addiu v0,v0,1                      0x800b0001
+  8010ca6c: j 0x8010ca78                       
+  8010ca70: sh v0,478(v1)                      0x800b01de
+  8010ca74: sh zero,478(v1)                    0x800b01de
+  8010ca78: lw ra,24(sp)                       
+  8010ca7c: addiu sp,sp,32                     
+  8010ca80: jr ra                              
+  8010ca84: nop                                
+  8010ca88: lui v0,0x800b                      
+  8010ca8c: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010ca90: nop                                
+  8010ca94: bne v0,zero,0x8010cac4             
+  8010ca98: nop                                
+  8010ca9c: lui v1,0x800b                      
+  8010caa0: lw v1,-14460(v1)                   g_entity(cur)
+  8010caa4: nop                                
+  8010caa8: lhu v0,468(v1)                     0x800b01d4
+  8010caac: nop                                
+  8010cab0: sltiu v0,v0,0xfa0                  
+  8010cab4: bne v0,zero,0x8010cb04             
+  8010cab8: ori v0,zero,0x2                    
+  8010cabc: lui v0,0x800b                      
+  8010cac0: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010cac4: nop                                
+  8010cac8: bne v0,zero,0x8010cb28             
+  8010cacc: nop                                
+  8010cad0: lui v1,0x800b                      
+  8010cad4: lw v1,-14460(v1)                   g_entity(cur)
+  8010cad8: nop                                
+  8010cadc: lhu v0,468(v1)                     0x800b01d4
+  8010cae0: nop                                
+  8010cae4: sltiu v0,v0,0x1388                 
+  8010cae8: beq v0,zero,0x8010cb28             
+  8010caec: nop                                
+  8010caf0: lhu v0,464(v1)                     0x800b01d0
+  8010caf4: nop                                
+  8010caf8: andi v0,v0,0x1                     
+  8010cafc: beq v0,zero,0x8010cb28             
+  8010cb00: ori v0,zero,0x1                    
+  8010cb04: sb v0,5(v1)                        0x800b0005
+  8010cb08: lui v0,0x800b                      
+  8010cb0c: lw v0,-14460(v0)                   g_entity(cur)
+  8010cb10: nop                                
+  8010cb14: sb zero,6(v0)                      0x800b0006
+  8010cb18: lui v0,0x800b                      
+  8010cb1c: lw v0,-14460(v0)                   g_entity(cur)
+  8010cb20: nop                                
+  8010cb24: sb zero,7(v0)                      0x800b0007
+  8010cb28: jr ra                              
+  8010cb2c: nop                                
+  8010cb30: lui a0,0x800b                      
+  8010cb34: lw a0,-14460(a0)                   g_entity(cur)
+  8010cb38: addiu sp,sp,-24                    
+  8010cb3c: sw ra,16(sp)                       
+  8010cb40: lbu v1,6(a0)                       0x800b0006
+  8010cb44: ori v0,zero,0x1                    
+  8010cb48: beq v1,v0,0x8010cbf4               
+  8010cb4c: slti v0,v1,2                       
+  8010cb50: beq v0,zero,0x8010cb68             
+  8010cb54: nop                                
+  8010cb58: beq v1,zero,0x8010cb7c             
+  8010cb5c: nop                                
+  8010cb60: j 0x8010cc58                       
+  8010cb64: nop                                
+  8010cb68: ori v0,zero,0x2                    
+  8010cb6c: beq v1,v0,0x8010cc34               
+  8010cb70: nop                                
+  8010cb74: j 0x8010cc58                       
+  8010cb78: nop                                
+  8010cb7c: jal 0x8001af20                     rng
+  8010cb80: nop                                
+  8010cb84: andi v0,v0,0x7f                    
+  8010cb88: lui v1,0x800b                      
+  8010cb8c: lw v1,-14460(v1)                   g_entity(cur)
+  8010cb90: addiu v0,v0,59                     0x800b003b
+  8010cb94: sh v0,156(v1)                      0x800b009c
+  8010cb98: lui v1,0x800b                      
+  8010cb9c: lw v1,-14460(v1)                   g_entity(cur)
+  8010cba0: ori v0,zero,0x1                    
+  8010cba4: sb v0,6(v1)                        0x800b0006
+  8010cba8: lui v1,0x800b                      
+  8010cbac: lw v1,-14460(v1)                   g_entity(cur)
+  8010cbb0: nop                                
+  8010cbb4: lbu v0,7(v1)                       0x800b0007
+  8010cbb8: nop                                
+  8010cbbc: addiu v0,v0,1                      0x800b0001
+  8010cbc0: sb v0,7(v1)                        0x800b0007
+  8010cbc4: lui v0,0x800b                      
+  8010cbc8: lw v0,-14460(v0)                   g_entity(cur)
+  8010cbcc: nop                                
+  8010cbd0: sb zero,148(v0)                    0x800b0094
+  8010cbd4: lui v0,0x800b                      
+  8010cbd8: lw v0,-14460(v0)                   g_entity(cur)
+  8010cbdc: nop                                
+  8010cbe0: sb zero,149(v0)                    0x800b0095
+  8010cbe4: lui v1,0x800b                      
+  8010cbe8: lw v1,-14460(v1)                   g_entity(cur)
+  8010cbec: ori v0,zero,0x7                    
+  8010cbf0: sb v0,143(v1)                      0x800b008f
+  8010cbf4: lui v0,0x800b                      
+  8010cbf8: lw v0,-14460(v0)                   g_entity(cur)
+  8010cbfc: ori a3,zero,0x200                  
+  8010cc00: lbu a2,7(v0)                       0x800b0007
+  8010cc04: lw a0,132(v0)                      0x800b0084
+  8010cc08: lw a1,364(v0)                      0x800b016c
+  8010cc0c: jal 0x8001f314                     anim_set
+  8010cc10: andi a2,a2,0x1                     
+  8010cc14: lui a0,0x800b                      
+  8010cc18: lw a0,-14460(a0)                   g_entity(cur)
+  8010cc1c: nop                                
+  8010cc20: lbu v1,6(a0)                       0x800b0006
+  8010cc24: nop                                
+  8010cc28: addu v1,v1,v0                      
+  8010cc2c: j 0x8010cc58                       
+  8010cc30: sb v1,6(a0)                        0x800b0006
+  8010cc34: lhu v1,156(a0)                     0x800b009c
+  8010cc38: nop                                
+  8010cc3c: addiu v0,v1,-1                     0x800affff
+  8010cc40: bne v1,zero,0x8010cc58             
+  8010cc44: sh v0,156(a0)                      0x800b009c
+  8010cc48: lui v0,0x800b                      
+  8010cc4c: lw v0,-14460(v0)                   g_entity(cur)
+  8010cc50: nop                                
+  8010cc54: sb zero,6(v0)                      0x800b0006
+  8010cc58: lw ra,16(sp)                       
+  8010cc5c: addiu sp,sp,24                     
+  8010cc60: jr ra                              
+  8010cc64: nop                                
+  8010cc68: jr ra                              
+  8010cc6c: nop                                
+  8010cc70: lui a0,0x800b                      
+  8010cc74: lw a0,-14460(a0)                   g_entity(cur)
+  8010cc78: addiu sp,sp,-24                    
+  8010cc7c: sw ra,16(sp)                       
+  8010cc80: lbu v1,6(a0)                       0x800b0006
+  8010cc84: ori v0,zero,0x1                    
+  8010cc88: beq v1,v0,0x8010ccf0               
+  8010cc8c: slti v0,v1,2                       
+  8010cc90: beq v0,zero,0x8010cca8             
+  8010cc94: nop                                
+  8010cc98: beq v1,zero,0x8010ccbc             
+  8010cc9c: ori v0,zero,0x1                    
+  8010cca0: j 0x8010cd60                       
+  8010cca4: nop                                
+  8010cca8: ori v0,zero,0x2                    
+  8010ccac: beq v1,v0,0x8010cd2c               
+  8010ccb0: ori v0,zero,0x2                    
+  8010ccb4: j 0x8010cd60                       
+  8010ccb8: nop                                
+  8010ccbc: sb v0,6(a0)                        0x800b0006
+  8010ccc0: lui v0,0x800b                      
+  8010ccc4: lw v0,-14460(v0)                   g_entity(cur)
+  8010ccc8: ori v1,zero,0x7                    
+  8010cccc: sb v1,148(v0)                      0x800b0094
+  8010ccd0: lui v0,0x800b                      
+  8010ccd4: lw v0,-14460(v0)                   g_entity(cur)
+  8010ccd8: nop                                
+  8010ccdc: sb zero,149(v0)                    0x800b0095
+  8010cce0: lui v0,0x800b                      
+  8010cce4: lw v0,-14460(v0)                   g_entity(cur)
+  8010cce8: nop                                
+  8010ccec: sb v1,143(v0)                      0x800b008f
+  8010ccf0: lui v0,0x800b                      
+  8010ccf4: lw v0,-14460(v0)                   g_entity(cur)
+  8010ccf8: addu a2,zero,zero                  
+  8010ccfc: lw a0,132(v0)                      0x800b0084
+  8010cd00: lw a1,364(v0)                      0x800b016c
+  8010cd04: jal 0x8001f314                     anim_set
+  8010cd08: ori a3,zero,0x200                  
+  8010cd0c: lui a0,0x800b                      
+  8010cd10: lw a0,-14460(a0)                   g_entity(cur)
+  8010cd14: nop                                
+  8010cd18: lbu v1,6(a0)                       0x800b0006
+  8010cd1c: nop                                
+  8010cd20: addu v1,v1,v0                      
+  8010cd24: j 0x8010cd60                       
+  8010cd28: sb v1,6(a0)                        0x800b0006
+  8010cd2c: sb v0,5(a0)                        0x800b0005
+  8010cd30: lui v0,0x800b                      
+  8010cd34: lw v0,-14460(v0)                   g_entity(cur)
+  8010cd38: nop                                
+  8010cd3c: sb zero,6(v0)                      0x800b0006
+  8010cd40: lui v0,0x800b                      
+  8010cd44: lw v0,-14460(v0)                   g_entity(cur)
+  8010cd48: nop                                
+  8010cd4c: sb zero,7(v0)                      0x800b0007
+  8010cd50: lui v1,0x800b                      
+  8010cd54: lw v1,-14460(v1)                   g_entity(cur)
+  8010cd58: ori v0,zero,0x78                   
+  8010cd5c: sb v0,482(v1)                      0x800b01e2
+  8010cd60: lw ra,16(sp)                       
+  8010cd64: addiu sp,sp,24                     
+  8010cd68: jr ra                              
+  8010cd6c: nop                                
+  8010cd70: lui a1,0x800b                      
+  8010cd74: lw a1,-14460(a1)                   g_entity(cur)
+  8010cd78: addiu sp,sp,-24                    
+  8010cd7c: sw ra,16(sp)                       
+  8010cd80: lbu a0,144(a1)                     0x800b0090
+  8010cd84: nop                                
+  8010cd88: andi v0,a0,0x3                     
+  8010cd8c: beq v0,zero,0x8010cdc8             
+  8010cd90: andi v0,a0,0xf0                    
+  8010cd94: lh v1,106(a1)                      0x800b006a
+  8010cd98: sll v0,v0,4                        
+  8010cd9c: subu v0,v0,v1                      
+  8010cda0: addiu v0,v0,512                    0x800b0200
+  8010cda4: andi v0,v0,0xfff                   
+  8010cda8: slti v0,v0,1024                    
+  8010cdac: beq v0,zero,0x8010cdc8             
+  8010cdb0: ori v0,zero,0xa                    
+  8010cdb4: sb a0,159(a1)                      0x800b009f
+  8010cdb8: lui v1,0x800b                      
+  8010cdbc: lw v1,-14460(v1)                   g_entity(cur)
+  8010cdc0: j 0x8010ce6c                       
+  8010cdc4: sb v0,5(v1)                        0x800b0005
+  8010cdc8: lui v0,0x800b                      
+  8010cdcc: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010cdd0: nop                                
+  8010cdd4: beq v0,zero,0x8010ce34             
+  8010cdd8: ori a0,zero,0x1770                 
+  8010cddc: lui v1,0x800b                      
+  8010cde0: lw v1,-14460(v1)                   g_entity(cur)
+  8010cde4: nop                                
+  8010cde8: lhu v0,468(v1)                     0x800b01d4
+  8010cdec: nop                                
+  8010cdf0: sltiu v0,v0,0x1388                 
+  8010cdf4: beq v0,zero,0x8010ce20             
+  8010cdf8: nop                                
+  8010cdfc: lhu v0,464(v1)                     0x800b01d0
+  8010ce00: nop                                
+  8010ce04: andi v0,v0,0x1                     
+  8010ce08: beq v0,zero,0x8010ce20             
+  8010ce0c: nop                                
+  8010ce10: lbu v0,482(v1)                     0x800b01e2
+  8010ce14: nop                                
+  8010ce18: beq v0,zero,0x8010ce68             
+  8010ce1c: ori v0,zero,0x1                    
+  8010ce20: lui v0,0x800b                      
+  8010ce24: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010ce28: nop                                
+  8010ce2c: bne v0,zero,0x8010ce8c             
+  8010ce30: ori a0,zero,0x1770                 
+  8010ce34: lui a2,0x800b                      
+  8010ce38: addiu a2,a2,-13688                 playerX
+  8010ce3c: jal 0x8001a804                     
+  8010ce40: ori a1,zero,0x180                  
+  8010ce44: bgez v0,0x8010ce8c                 
+  8010ce48: nop                                
+  8010ce4c: lui v1,0x800b                      
+  8010ce50: lw v1,-14460(v1)                   g_entity(cur)
+  8010ce54: nop                                
+  8010ce58: lh v0,476(v1)                      0x800b01dc
+  8010ce5c: nop                                
+  8010ce60: bne v0,zero,0x8010ce8c             
+  8010ce64: ori v0,zero,0x3                    
+  8010ce68: sb v0,5(v1)                        0x800b0005
+  8010ce6c: lui v0,0x800b                      
+  8010ce70: lw v0,-14460(v0)                   g_entity(cur)
+  8010ce74: nop                                
+  8010ce78: sb zero,6(v0)                      0x800b0006
+  8010ce7c: lui v0,0x800b                      
+  8010ce80: lw v0,-14460(v0)                   g_entity(cur)
+  8010ce84: nop                                
+  8010ce88: sb zero,7(v0)                      0x800b0007
+  8010ce8c: lw ra,16(sp)                       
+  8010ce90: addiu sp,sp,24                     
+  8010ce94: jr ra                              
+  8010ce98: nop                                
+  8010ce9c: lui v1,0x800b                      
+  8010cea0: lw v1,-14460(v1)                   g_entity(cur)
+  8010cea4: addiu sp,sp,-24                    
+  8010cea8: sw ra,16(sp)                       
+  8010ceac: lbu v0,6(v1)                       0x800b0006
+  8010ceb0: nop                                
+  8010ceb4: bne v0,zero,0x8010cf2c             
+  8010ceb8: nop                                
+  8010cebc: ori a0,zero,0x1                    
+  8010cec0: sb a0,6(v1)                        0x800b0006
+  8010cec4: lui v0,0x800b                      
+  8010cec8: lw v0,-14460(v0)                   g_entity(cur)
+  8010cecc: ori v1,zero,0x2                    
+  8010ced0: sb v1,148(v0)                      0x800b0094
+  8010ced4: lui v1,0x800b                      
+  8010ced8: lw v1,-14460(v1)                   g_entity(cur)
+  8010cedc: nop                                
+  8010cee0: lbu v0,7(v1)                       0x800b0007
+  8010cee4: nop                                
+  8010cee8: beq v0,zero,0x8010cf0c             
+  8010ceec: nop                                
+  8010cef0: jal 0x8001af20                     rng
+  8010cef4: sb a0,148(v1)                      0x800b0094
+  8010cef8: andi v0,v0,0x1f                    
+  8010cefc: lui v1,0x800b                      
+  8010cf00: lw v1,-14460(v1)                   g_entity(cur)
+  8010cf04: addiu v0,v0,2                      0x800b0002
+  8010cf08: sb v0,158(v1)                      0x800b009e
+  8010cf0c: lui v0,0x800b                      
+  8010cf10: lw v0,-14460(v0)                   g_entity(cur)
+  8010cf14: nop                                
+  8010cf18: sb zero,149(v0)                    0x800b0095
+  8010cf1c: lui v1,0x800b                      
+  8010cf20: lw v1,-14460(v1)                   g_entity(cur)
+  8010cf24: ori v0,zero,0x7                    
+  8010cf28: sb v0,143(v1)                      0x800b008f
+  8010cf2c: jal 0x8001af20                     rng
+  8010cf30: nop                                
+  8010cf34: andi v0,v0,0x3f                    
+  8010cf38: lui v1,0x800b                      
+  8010cf3c: lw v1,-14460(v1)                   g_entity(cur)
+  8010cf40: addiu v0,v0,60                     0x800b003c
+  8010cf44: jal 0x8001af20                     rng
+  8010cf48: sh v0,140(v1)                      0x800b008c
+  8010cf4c: andi v0,v0,0x1f                    
+  8010cf50: lui v1,0x800b                      
+  8010cf54: lw v1,-14460(v1)                   g_entity(cur)
+  8010cf58: addiu v0,v0,6                      0x800b0006
+  8010cf5c: sb v0,158(v1)                      0x800b009e
+  8010cf60: lui v0,0x800b                      
+  8010cf64: lw v0,-14460(v0)                   g_entity(cur)
+  8010cf68: nop                                
+  8010cf6c: lb a1,158(v0)                      0x800b009e
+  8010cf70: lui a0,0x800b                      
+  8010cf74: addiu a0,a0,-13688                 playerX
+  8010cf78: jal 0x8001a8f8                     
+  8010cf7c: nop                                
+  8010cf80: lui v0,0x800b                      
+  8010cf84: lw v0,-14460(v0)                   g_entity(cur)
+  8010cf88: addu a2,zero,zero                  
+  8010cf8c: lw a0,132(v0)                      0x800b0084
+  8010cf90: lw a1,364(v0)                      0x800b016c
+  8010cf94: jal 0x8001f314                     anim_set
+  8010cf98: ori a3,zero,0x200                  
+  8010cf9c: jal 0x800245d8                     pos_advance(walker)
+  8010cfa0: addu a0,zero,zero                  
+  8010cfa4: lw ra,16(sp)                       
+  8010cfa8: addiu sp,sp,24                     
+  8010cfac: jr ra                              
+  8010cfb0: nop                                
+  8010cfb4: jr ra                              
+  8010cfb8: nop                                
+  8010cfbc: lui a3,0x800b                      
+  8010cfc0: lw a3,-14460(a3)                   g_entity(cur)
+  8010cfc4: addiu sp,sp,-40                    
+  8010cfc8: sw s0,32(sp)                       
+  8010cfcc: sw ra,36(sp)                       
+  8010cfd0: lbu v1,6(a3)                       0x800b0006
+  8010cfd4: ori v0,zero,0x1                    
+  8010cfd8: beq v1,v0,0x8010d084               
+  8010cfdc: addu s0,zero,zero                  
+  8010cfe0: slti v0,v1,2                       
+  8010cfe4: beq v0,zero,0x8010cffc             
+  8010cfe8: nop                                
+  8010cfec: beq v1,zero,0x8010d018             
+  8010cff0: ori a1,zero,0x20                   
+  8010cff4: j 0x8010d390                       
+  8010cff8: nop                                
+  8010cffc: ori v0,zero,0x2                    
+  8010d000: beq v1,v0,0x8010d0f8               
+  8010d004: ori v0,zero,0x3                    
+  8010d008: beq v1,v0,0x8010d30c               
+  8010d00c: addu a2,zero,zero                  
+  8010d010: j 0x8010d390                       
+  8010d014: nop                                
+  8010d018: lui a0,0x800b                      
+  8010d01c: addiu a0,a0,-13688                 playerX
+  8010d020: ori v0,zero,0x1                    
+  8010d024: jal 0x8001a9cc                     arc_test
+  8010d028: sb v0,6(a3)                        0x800b0006
+  8010d02c: lui v1,0x800b                      
+  8010d030: lw v1,-14460(v1)                   g_entity(cur)
+  8010d034: nop                                
+  8010d038: sh v0,474(v1)                      0x800b01da
+  8010d03c: lui v0,0x800b                      
+  8010d040: lw v0,-14460(v0)                   g_entity(cur)
+  8010d044: nop                                
+  8010d048: lh a0,474(v0)                      0x800b01da
+  8010d04c: jal 0x8010ee40                     
+  8010d050: addu a1,zero,zero                  
+  8010d054: lui v0,0x800b                      
+  8010d058: lw v0,-14460(v0)                   g_entity(cur)
+  8010d05c: nop                                
+  8010d060: sb zero,149(v0)                    0x800b0095
+  8010d064: lui v1,0x800b                      
+  8010d068: lw v1,-14460(v1)                   g_entity(cur)
+  8010d06c: ori v0,zero,0x7                    
+  8010d070: sb v0,143(v1)                      0x800b008f
+  8010d074: lui v0,0x800b                      
+  8010d078: lw v0,-14460(v0)                   g_entity(cur)
+  8010d07c: nop                                
+  8010d080: sh zero,156(v0)                    0x800b009c
+  8010d084: lui v0,0x800b                      
+  8010d088: lw v0,-14460(v0)                   g_entity(cur)
+  8010d08c: addu a2,zero,zero                  
+  8010d090: lw a0,132(v0)                      0x800b0084
+  8010d094: lw a1,364(v0)                      0x800b016c
+  8010d098: jal 0x8001f314                     anim_set
+  8010d09c: ori a3,zero,0x200                  
+  8010d0a0: lui a0,0x800b                      
+  8010d0a4: lw a0,-14460(a0)                   g_entity(cur)
+  8010d0a8: nop                                
+  8010d0ac: lbu v1,149(a0)                     0x800b0095
+  8010d0b0: ori v0,zero,0xc                    
+  8010d0b4: bne v1,v0,0x8010d388               
+  8010d0b8: ori v0,zero,0x2                    
+  8010d0bc: jal 0x8001af20                     rng
+  8010d0c0: sb v0,6(a0)                        0x800b0006
+  8010d0c4: andi v0,v0,0x1f                    
+  8010d0c8: lui v1,0x800b                      
+  8010d0cc: lw v1,-14460(v1)                   g_entity(cur)
+  8010d0d0: addiu v0,v0,120                    0x800b0078
+  8010d0d4: sh v0,140(v1)                      0x800b008c
+  8010d0d8: lui v1,0x800b                      
+  8010d0dc: lw v1,-14460(v1)                   g_entity(cur)
+  8010d0e0: nop                                
+  8010d0e4: lbu v0,147(v1)                     0x800b0093
+  8010d0e8: nop                                
+  8010d0ec: ori v0,v0,0x3                      
+  8010d0f0: j 0x8010d388                       
+  8010d0f4: sb v0,147(v1)                      0x800b0093
+  8010d0f8: addu a2,zero,zero                  
+  8010d0fc: lw a0,132(a3)                      0x800b0084
+  8010d100: lw a1,364(a3)                      0x800b016c
+  8010d104: jal 0x8001f314                     anim_set
+  8010d108: ori a3,zero,0x200                  
+  8010d10c: lui v0,0x800b                      
+  8010d110: lw v0,-14460(v0)                   g_entity(cur)
+  8010d114: ori a1,zero,0x64                   
+  8010d118: lh a0,140(v0)                      0x800b008c
+  8010d11c: lh a3,442(v0)                      0x800b01ba
+  8010d120: jal 0x8001c1a4                     
+  8010d124: addiu a2,zero,-10                  
+  8010d128: beq v0,zero,0x8010d174             
+  8010d12c: ori v0,zero,0x3                    
+  8010d130: lui v1,0x800b                      
+  8010d134: lw v1,-14460(v1)                   g_entity(cur)
+  8010d138: nop                                
+  8010d13c: sb v0,6(v1)                        0x800b0006
+  8010d140: lui v1,0x800b                      
+  8010d144: lw v1,-14460(v1)                   g_entity(cur)
+  8010d148: ori v0,zero,0x32                   
+  8010d14c: sh v0,140(v1)                      0x800b008c
+  8010d150: lui v0,0x800b                      
+  8010d154: lw v0,-14460(v0)                   g_entity(cur)
+  8010d158: nop                                
+  8010d15c: sb zero,147(v0)                    0x800b0093
+  8010d160: lui v1,0x800b                      
+  8010d164: lw v1,-14460(v1)                   g_entity(cur)
+  8010d168: ori v0,zero,0x21                   
+  8010d16c: j 0x8010d390                       
+  8010d170: sb v0,149(v1)                      0x800b0095
+  8010d174: lui a3,0x800b                      
+  8010d178: addiu a3,a3,-13593                 player.hit_react(+0x93)
+  8010d17c: lbu v0,0(a3)                       0x800b0000
+  8010d180: nop                                
+  8010d184: bne v0,zero,0x8010d2e4             
+  8010d188: ori a0,zero,0x2000                 
+  8010d18c: addiu a1,sp,16                     
+  8010d190: ori a2,zero,0x320                  
+  8010d194: lui v0,0x800b                      
+  8010d198: lw v0,-14460(v0)                   g_entity(cur)
+  8010d19c: addiu a3,a3,-95                    0x800affa1
+  8010d1a0: lw t1,392(v0)                      0x800b0188
+  8010d1a4: lui t0,0x8007                      
+  8010d1a8: addiu t0,t0,11616                  0x80072d60
+  8010d1ac: lw v0,0(t0)                        0x80070000
+  8010d1b0: lw v1,4(t0)                        0x80070004
+  8010d1b4: lw a0,8(t0)                        0x80070008
+  8010d1b8: sw v0,16(sp)                       
+  8010d1bc: sw v1,20(sp)                       
+  8010d1c0: sw a0,24(sp)                       
+  8010d1c4: lw v0,12(t0)                       0x8007000c
+  8010d1c8: nop                                
+  8010d1cc: sw v0,28(sp)                       
+  8010d1d0: ori v0,zero,0x2bc                  
+  8010d1d4: sw v0,16(sp)                       
+  8010d1d8: jal 0x8001bff8                     
+  8010d1dc: addiu a0,t1,2644                   
+  8010d1e0: lui v1,0x800b                      
+  8010d1e4: lw v1,-14460(v1)                   g_entity(cur)
+  8010d1e8: ori a0,zero,0x2                    
+  8010d1ec: sh v0,472(v1)                      0x800b01d8
+  8010d1f0: lui v0,0x800b                      
+  8010d1f4: lw v0,-14460(v0)                   g_entity(cur)
+  8010d1f8: ori a1,zero,0xffff                 
+  8010d1fc: lbu v1,149(v0)                     0x800b0095
+  8010d200: andi v0,a0,0xffff                  
+  8010d204: lui at,0x8012                      
+  8010d208: addiu at,at,-29592                 0x80118c68
+  8010d20c: addu at,at,v0                      
+  8010d210: lbu v0,0(at)                       0x80120000
+  8010d214: nop                                
+  8010d218: bne v1,v0,0x8010d224               
+  8010d21c: addu v0,a0,zero                    
+  8010d220: ori s0,zero,0x1                    
+  8010d224: andi v0,v0,0xffff                  
+  8010d228: bne v0,zero,0x8010d200             
+  8010d22c: addu a0,a0,a1                      
+  8010d230: andi v0,s0,0xffff                  
+  8010d234: beq v0,zero,0x8010d2d0             
+  8010d238: nop                                
+  8010d23c: lui v1,0x800b                      
+  8010d240: lw v1,-14460(v1)                   g_entity(cur)
+  8010d244: nop                                
+  8010d248: lh v0,472(v1)                      0x800b01d8
+  8010d24c: nop                                
+  8010d250: beq v0,zero,0x8010d2d0             
+  8010d254: nop                                
+  8010d258: lui s0,0x800b                      
+  8010d25c: addiu s0,s0,-13586                 player.hp(+0x9a)
+  8010d260: lhu v0,0(s0)                       0x800b0000
+  8010d264: nop                                
+  8010d268: sh v0,0(s0)                        0x800b0000
+  8010d26c: ori v0,zero,0x64                   
+  8010d270: sh v0,476(v1)                      0x800b01dc
+  8010d274: ori v0,zero,0x2                    
+  8010d278: lui at,0x800b                      
+  8010d27c: sb v0,-13736(at)                   0x800aca58
+  8010d280: jal 0x8001a780                     facing_aligned
+  8010d284: addiu a0,s0,-154                   0x800aff66
+  8010d288: lh v1,0(s0)                        0x800b0000
+  8010d28c: addiu v0,v0,2                      0x800b0002
+  8010d290: lui at,0x800b                      
+  8010d294: sb v0,-13735(at)                   0x800aca59
+  8010d298: lui at,0x800b                      
+  8010d29c: sb zero,-13734(at)                 0x800aca5a
+  8010d2a0: bgez v1,0x8010d2b8                 
+  8010d2a4: ori v0,zero,0x3                    
+  8010d2a8: lui at,0x800b                      
+  8010d2ac: sb v0,-13736(at)                   0x800aca58
+  8010d2b0: lui at,0x800b                      
+  8010d2b4: sb zero,-13735(at)                 0x800aca59
+  8010d2b8: lui v0,0x800b                      
+  8010d2bc: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010d2c0: nop                                
+  8010d2c4: ori v0,v0,0x1                      
+  8010d2c8: lui at,0x800b                      
+  8010d2cc: sb v0,-13593(at)                   player.hit_react(+0x93)
+  8010d2d0: lui v0,0x800b                      
+  8010d2d4: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010d2d8: nop                                
+  8010d2dc: beq v0,zero,0x8010d390             
+  8010d2e0: ori a0,zero,0x2000                 
+  8010d2e4: lui v0,0x800b                      
+  8010d2e8: lw v0,-14460(v0)                   g_entity(cur)
+  8010d2ec: lui a3,0x8012                      
+  8010d2f0: addiu a3,a3,-29768                 0x80118bb8
+  8010d2f4: lw t1,392(v0)                      0x800b0188
+  8010d2f8: lh a1,106(v0)                      0x800b006a
+  8010d2fc: jal 0x80019700                     
+  8010d300: addiu a2,t1,2644                   
+  8010d304: j 0x8010d390                       
+  8010d308: nop                                
+  8010d30c: lw a0,132(a3)                      0x80120084
+  8010d310: lw a1,364(a3)                      0x8012016c
+  8010d314: jal 0x8001f314                     anim_set
+  8010d318: ori a3,zero,0x200                  
+  8010d31c: beq v0,zero,0x8010d388             
+  8010d320: nop                                
+  8010d324: lui v1,0x800b                      
+  8010d328: lw v1,-14460(v1)                   g_entity(cur)
+  8010d32c: nop                                
+  8010d330: lh v0,476(v1)                      0x800b01dc
+  8010d334: nop                                
+  8010d338: bne v0,zero,0x8010d34c             
+  8010d33c: ori v0,zero,0x2d                   
+  8010d340: sh v0,476(v1)                      0x800b01dc
+  8010d344: lui v1,0x800b                      
+  8010d348: lw v1,-14460(v1)                   g_entity(cur)
+  8010d34c: nop                                
+  8010d350: lbu v0,480(v1)                     0x800b01e0
+  8010d354: nop                                
+  8010d358: bne v0,zero,0x8010d364             
+  8010d35c: ori v0,zero,0x4                    
+  8010d360: ori v0,zero,0x2                    
+  8010d364: sb v0,5(v1)                        0x800b0005
+  8010d368: lui v0,0x800b                      
+  8010d36c: lw v0,-14460(v0)                   g_entity(cur)
+  8010d370: nop                                
+  8010d374: sb zero,6(v0)                      0x800b0006
+  8010d378: lui v0,0x800b                      
+  8010d37c: lw v0,-14460(v0)                   g_entity(cur)
+  8010d380: j 0x8010d390                       
+  8010d384: sb zero,7(v0)                      0x800b0007
+  8010d388: jal 0x800245d8                     pos_advance(walker)
+  8010d38c: addu a0,zero,zero                  
+  8010d390: lw ra,36(sp)                       
+  8010d394: lw s0,32(sp)                       
+  8010d398: addiu sp,sp,40                     
+  8010d39c: jr ra                              
+  8010d3a0: nop                                
+  8010d3a4: lui v0,0x800b                      
+  8010d3a8: lw v0,-14460(v0)                   g_entity(cur)
+  8010d3ac: addiu sp,sp,-24                    
+  8010d3b0: sw ra,20(sp)                       
+  8010d3b4: sw s0,16(sp)                       
+  8010d3b8: lbu v1,480(v0)                     0x800b01e0
+  8010d3bc: ori v0,zero,0x1                    
+  8010d3c0: bne v1,v0,0x8010d5a4               
+  8010d3c4: nop                                
+  8010d3c8: lui a2,0x800b                      
+  8010d3cc: addiu a2,a2,-13593                 player.hit_react(+0x93)
+  8010d3d0: lbu v0,0(a2)                       0x800b0000
+  8010d3d4: nop                                
+  8010d3d8: bne v0,zero,0x8010d434             
+  8010d3dc: ori a0,zero,0x1770                 
+  8010d3e0: ori a1,zero,0x180                  
+  8010d3e4: jal 0x8001a804                     
+  8010d3e8: addiu a2,a2,-95                    0x800affa1
+  8010d3ec: bgez v0,0x8010d434                 
+  8010d3f0: nop                                
+  8010d3f4: lui v1,0x800b                      
+  8010d3f8: lw v1,-14460(v1)                   g_entity(cur)
+  8010d3fc: nop                                
+  8010d400: lh v0,476(v1)                      0x800b01dc
+  8010d404: nop                                
+  8010d408: bne v0,zero,0x8010d43c             
+  8010d40c: ori v0,zero,0x3                    
+  8010d410: sb v0,5(v1)                        0x800b0005
+  8010d414: lui v0,0x800b                      
+  8010d418: lw v0,-14460(v0)                   g_entity(cur)
+  8010d41c: nop                                
+  8010d420: sb zero,6(v0)                      0x800b0006
+  8010d424: lui v0,0x800b                      
+  8010d428: lw v0,-14460(v0)                   g_entity(cur)
+  8010d42c: j 0x8010d670                       
+  8010d430: sb zero,7(v0)                      0x800b0007
+  8010d434: lui v1,0x800b                      
+  8010d438: lw v1,-14460(v1)                   g_entity(cur)
+  8010d43c: nop                                
+  8010d440: lhu v0,468(v1)                     0x800b01d4
+  8010d444: nop                                
+  8010d448: sltiu v0,v0,0x1389                 
+  8010d44c: bne v0,zero,0x8010d4a0             
+  8010d450: nop                                
+  8010d454: lhu v0,464(v1)                     0x800b01d0
+  8010d458: nop                                
+  8010d45c: andi v0,v0,0x1                     
+  8010d460: beq v0,zero,0x8010d4a0             
+  8010d464: nop                                
+  8010d468: jal 0x8001af20                     rng
+  8010d46c: nop                                
+  8010d470: jal 0x8001af20                     rng
+  8010d474: addu s0,v0,zero                    
+  8010d478: andi s0,s0,0x1                     
+  8010d47c: andi v0,v0,0x1                     
+  8010d480: mult s0,v0                         
+  8010d484: mflo v0                            
+  8010d488: beq v0,zero,0x8010d4a0             
+  8010d48c: ori v0,zero,0x6                    
+  8010d490: lui v1,0x800b                      
+  8010d494: lw v1,-14460(v1)                   g_entity(cur)
+  8010d498: j 0x8010d580                       
+  8010d49c: sb v0,5(v1)                        0x800b0005
+  8010d4a0: lui v1,0x800b                      
+  8010d4a4: lw v1,-14460(v1)                   g_entity(cur)
+  8010d4a8: nop                                
+  8010d4ac: lhu v0,468(v1)                     0x800b01d4
+  8010d4b0: nop                                
+  8010d4b4: sltiu v0,v0,0xbb8                  
+  8010d4b8: beq v0,zero,0x8010d52c             
+  8010d4bc: nop                                
+  8010d4c0: lhu v0,464(v1)                     0x800b01d0
+  8010d4c4: nop                                
+  8010d4c8: andi v0,v0,0x1                     
+  8010d4cc: bne v0,zero,0x8010d52c             
+  8010d4d0: ori v0,zero,0x5                    
+  8010d4d4: sb v0,5(v1)                        0x800b0005
+  8010d4d8: lui v0,0x800b                      
+  8010d4dc: lw v0,-14460(v0)                   g_entity(cur)
+  8010d4e0: nop                                
+  8010d4e4: sb zero,6(v0)                      0x800b0006
+  8010d4e8: lui v0,0x800b                      
+  8010d4ec: lw v0,-14460(v0)                   g_entity(cur)
+  8010d4f0: nop                                
+  8010d4f4: sb zero,7(v0)                      0x800b0007
+  8010d4f8: lui a0,0x800b                      
+  8010d4fc: lw a0,-14460(a0)                   g_entity(cur)
+  8010d500: nop                                
+  8010d504: lbu v1,130(a0)                     0x800b0082
+  8010d508: nop                                
+  8010d50c: sll v0,v1,3                        
+  8010d510: subu v0,v0,v1                      
+  8010d514: sll v0,v0,5                        
+  8010d518: addu v0,v0,v1                      
+  8010d51c: sll v0,v0,3                        
+  8010d520: subu v0,zero,v0                    
+  8010d524: j 0x8010d670                       
+  8010d528: sh v0,442(a0)                      0x800b01ba
+  8010d52c: lui a1,0x800b                      
+  8010d530: lw a1,-14460(a1)                   g_entity(cur)
+  8010d534: nop                                
+  8010d538: lbu a0,144(a1)                     0x800b0090
+  8010d53c: nop                                
+  8010d540: andi v0,a0,0x3                     
+  8010d544: beq v0,zero,0x8010d5a4             
+  8010d548: andi v0,a0,0xf0                    
+  8010d54c: lh v1,106(a1)                      0x800b006a
+  8010d550: sll v0,v0,4                        
+  8010d554: subu v0,v0,v1                      
+  8010d558: addiu v0,v0,512                    0x800b0200
+  8010d55c: andi v0,v0,0xfff                   
+  8010d560: slti v0,v0,1024                    
+  8010d564: beq v0,zero,0x8010d5a4             
+  8010d568: ori v0,zero,0xa                    
+  8010d56c: sb a0,159(a1)                      0x800b009f
+  8010d570: lui v1,0x800b                      
+  8010d574: lw v1,-14460(v1)                   g_entity(cur)
+  8010d578: nop                                
+  8010d57c: sb v0,5(v1)                        0x800b0005
+  8010d580: lui v0,0x800b                      
+  8010d584: lw v0,-14460(v0)                   g_entity(cur)
+  8010d588: nop                                
+  8010d58c: sb zero,6(v0)                      0x800b0006
+  8010d590: lui v1,0x800b                      
+  8010d594: lw v1,-14460(v1)                   g_entity(cur)
+  8010d598: ori v0,zero,0x1                    
+  8010d59c: j 0x8010d670                       
+  8010d5a0: sb v0,7(v1)                        0x800b0007
+  8010d5a4: lui a0,0x800b                      
+  8010d5a8: addiu a0,a0,-13688                 playerX
+  8010d5ac: jal 0x8001a9cc                     arc_test
+  8010d5b0: ori a1,zero,0x3e8                  
+  8010d5b4: lui v1,0x800b                      
+  8010d5b8: lw v1,-14460(v1)                   g_entity(cur)
+  8010d5bc: nop                                
+  8010d5c0: sh v0,474(v1)                      0x800b01da
+  8010d5c4: sll v0,v0,16                       
+  8010d5c8: beq v0,zero,0x8010d638             
+  8010d5cc: nop                                
+  8010d5d0: lui v1,0x800b                      
+  8010d5d4: lw v1,-14460(v1)                   g_entity(cur)
+  8010d5d8: nop                                
+  8010d5dc: lh v0,476(v1)                      0x800b01dc
+  8010d5e0: nop                                
+  8010d5e4: beq v0,zero,0x8010d5fc             
+  8010d5e8: ori v0,zero,0x9                    
+  8010d5ec: lbu v0,483(v1)                     0x800b01e3
+  8010d5f0: nop                                
+  8010d5f4: bne v0,zero,0x8010d640             
+  8010d5f8: ori v0,zero,0x8                    
+  8010d5fc: sb v0,5(v1)                        0x800b0005
+  8010d600: lui v0,0x800b                      
+  8010d604: lw v0,-14460(v0)                   g_entity(cur)
+  8010d608: nop                                
+  8010d60c: sb zero,6(v0)                      0x800b0006
+  8010d610: lui v0,0x800b                      
+  8010d614: lw v0,-14460(v0)                   g_entity(cur)
+  8010d618: nop                                
+  8010d61c: sb zero,7(v0)                      0x800b0007
+  8010d620: lui v1,0x800b                      
+  8010d624: lw v1,-14460(v1)                   g_entity(cur)
+  8010d628: nop                                
+  8010d62c: lhu v0,474(v1)                     0x800b01da
+  8010d630: j 0x8010d670                       
+  8010d634: sh v0,156(v1)                      0x800b009c
+  8010d638: lui v1,0x800b                      
+  8010d63c: lw v1,-14460(v1)                   g_entity(cur)
+  8010d640: nop                                
+  8010d644: lhu v0,468(v1)                     0x800b01d4
+  8010d648: nop                                
+  8010d64c: sltiu v0,v0,0xbb8                  
+  8010d650: beq v0,zero,0x8010d670             
+  8010d654: nop                                
+  8010d658: lhu v0,464(v1)                     0x800b01d0
+  8010d65c: nop                                
+  8010d660: andi v0,v0,0x1                     
+  8010d664: beq v0,zero,0x8010d670             
+  8010d668: nop                                
+  8010d66c: sb zero,481(v1)                    0x800b01e1
+  8010d670: lw ra,20(sp)                       
+  8010d674: lw s0,16(sp)                       
+  8010d678: addiu sp,sp,24                     
+  8010d67c: jr ra                              
+  8010d680: nop                                
+  8010d684: lui v1,0x800b                      
+  8010d688: lw v1,-14460(v1)                   g_entity(cur)
+  8010d68c: addiu sp,sp,-24                    
+  8010d690: sw ra,16(sp)                       
+  8010d694: lbu v0,6(v1)                       0x800b0006
+  8010d698: nop                                
+  8010d69c: bne v0,zero,0x8010d720             
+  8010d6a0: ori v0,zero,0x1                    
+  8010d6a4: sh zero,156(v1)                    0x800b009c
+  8010d6a8: lui v1,0x800b                      
+  8010d6ac: lw v1,-14460(v1)                   g_entity(cur)
+  8010d6b0: nop                                
+  8010d6b4: sb v0,6(v1)                        0x800b0006
+  8010d6b8: lui v1,0x800b                      
+  8010d6bc: lw v1,-14460(v1)                   g_entity(cur)
+  8010d6c0: ori v0,zero,0x4                    
+  8010d6c4: sb v0,148(v1)                      0x800b0094
+  8010d6c8: lui v1,0x800b                      
+  8010d6cc: lw v1,-14460(v1)                   g_entity(cur)
+  8010d6d0: nop                                
+  8010d6d4: lbu v0,7(v1)                       0x800b0007
+  8010d6d8: nop                                
+  8010d6dc: beq v0,zero,0x8010d700             
+  8010d6e0: ori v0,zero,0x3                    
+  8010d6e4: jal 0x8001af20                     rng
+  8010d6e8: sb v0,148(v1)                      0x800b0094
+  8010d6ec: andi v0,v0,0x1f                    
+  8010d6f0: lui v1,0x800b                      
+  8010d6f4: lw v1,-14460(v1)                   g_entity(cur)
+  8010d6f8: addiu v0,v0,2                      0x800b0002
+  8010d6fc: sb v0,158(v1)                      0x800b009e
+  8010d700: lui v0,0x800b                      
+  8010d704: lw v0,-14460(v0)                   g_entity(cur)
+  8010d708: nop                                
+  8010d70c: sb zero,149(v0)                    0x800b0095
+  8010d710: lui v1,0x800b                      
+  8010d714: lw v1,-14460(v1)                   g_entity(cur)
+  8010d718: ori v0,zero,0x7                    
+  8010d71c: sb v0,143(v1)                      0x800b008f
+  8010d720: jal 0x8001af20                     rng
+  8010d724: nop                                
+  8010d728: andi v0,v0,0x3f                    
+  8010d72c: lui v1,0x800b                      
+  8010d730: lw v1,-14460(v1)                   g_entity(cur)
+  8010d734: addiu v0,v0,60                     0x800b003c
+  8010d738: jal 0x8001af20                     rng
+  8010d73c: sh v0,140(v1)                      0x800b008c
+  8010d740: andi v0,v0,0x1f                    
+  8010d744: lui v1,0x800b                      
+  8010d748: lw v1,-14460(v1)                   g_entity(cur)
+  8010d74c: addiu v0,v0,6                      0x800b0006
+  8010d750: sb v0,158(v1)                      0x800b009e
+  8010d754: lui v0,0x800b                      
+  8010d758: lw v0,-14460(v0)                   g_entity(cur)
+  8010d75c: nop                                
+  8010d760: lb a1,158(v0)                      0x800b009e
+  8010d764: lui a0,0x800b                      
+  8010d768: addiu a0,a0,-13688                 playerX
+  8010d76c: jal 0x8001a8f8                     
+  8010d770: nop                                
+  8010d774: lui v0,0x800b                      
+  8010d778: lw v0,-14460(v0)                   g_entity(cur)
+  8010d77c: addu a2,zero,zero                  
+  8010d780: lw a0,132(v0)                      0x800b0084
+  8010d784: lw a1,364(v0)                      0x800b016c
+  8010d788: jal 0x8001f314                     anim_set
+  8010d78c: ori a3,zero,0x200                  
+  8010d790: lui a0,0x800b                      
+  8010d794: lw a0,-14460(a0)                   g_entity(cur)
+  8010d798: nop                                
+  8010d79c: lbu v1,480(a0)                     0x800b01e0
+  8010d7a0: ori v0,zero,0x2                    
+  8010d7a4: bne v1,v0,0x8010d848               
+  8010d7a8: nop                                
+  8010d7ac: lbu v1,481(a0)                     0x800b01e1
+  8010d7b0: nop                                
+  8010d7b4: addiu v0,v1,255                    0x800b00ff
+  8010d7b8: bne v1,zero,0x8010d848             
+  8010d7bc: sb v0,481(a0)                      0x800b01e1
+  8010d7c0: lui v0,0x800b                      
+  8010d7c4: lw v0,-14460(v0)                   g_entity(cur)
+  8010d7c8: nop                                
+  8010d7cc: sb zero,481(v0)                    0x800b01e1
+  8010d7d0: lui v1,0x800b                      
+  8010d7d4: lw v1,-14460(v1)                   g_entity(cur)
+  8010d7d8: nop                                
+  8010d7dc: lw v0,56(v1)                       0x800b0038
+  8010d7e0: nop                                
+  8010d7e4: addiu v0,v0,-50                    0x800affce
+  8010d7e8: sw v0,56(v1)                       0x800b0038
+  8010d7ec: lui v1,0x800b                      
+  8010d7f0: lw v1,-14460(v1)                   g_entity(cur)
+  8010d7f4: nop                                
+  8010d7f8: lw v0,56(v1)                       0x800b0038
+  8010d7fc: nop                                
+  8010d800: slti v0,v0,-1200                   
+  8010d804: beq v0,zero,0x8010d848             
+  8010d808: addiu v0,zero,-1200                
+  8010d80c: sw v0,56(v1)                       0x800b0038
+  8010d810: lui v1,0x800b                      
+  8010d814: lw v1,-14460(v1)                   g_entity(cur)
+  8010d818: nop                                
+  8010d81c: lhu v0,56(v1)                      0x800b0038
+  8010d820: nop                                
+  8010d824: sh v0,442(v1)                      0x800b01ba
+  8010d828: lui v1,0x800b                      
+  8010d82c: lw v1,-14460(v1)                   g_entity(cur)
+  8010d830: ori v0,zero,0x1                    
+  8010d834: sb v0,480(v1)                      0x800b01e0
+  8010d838: lui v0,0x800b                      
+  8010d83c: lw v0,-14460(v0)                   g_entity(cur)
+  8010d840: nop                                
+  8010d844: sb zero,147(v0)                    0x800b0093
+  8010d848: jal 0x800245d8                     pos_advance(walker)
+  8010d84c: addu a0,zero,zero                  
+  8010d850: lw ra,16(sp)                       
+  8010d854: addiu sp,sp,24                     
+  8010d858: jr ra                              
+  8010d85c: nop                                
+  8010d860: jr ra                              
+  8010d864: nop                                
+  8010d868: lui a0,0x800b                      
+  8010d86c: lw a0,-14460(a0)                   g_entity(cur)
+  8010d870: addiu sp,sp,-24                    
+  8010d874: sw ra,16(sp)                       
+  8010d878: lbu v1,6(a0)                       0x800b0006
+  8010d87c: ori v0,zero,0x1                    
+  8010d880: beq v1,v0,0x8010d934               
+  8010d884: slti v0,v1,2                       
+  8010d888: beq v0,zero,0x8010d8a0             
+  8010d88c: nop                                
+  8010d890: beq v1,zero,0x8010d8b4             
+  8010d894: ori v0,zero,0x1                    
+  8010d898: j 0x8010d9fc                       
+  8010d89c: nop                                
+  8010d8a0: ori v0,zero,0x2                    
+  8010d8a4: beq v1,v0,0x8010d9b8               
+  8010d8a8: ori v0,zero,0x4                    
+  8010d8ac: j 0x8010d9fc                       
+  8010d8b0: nop                                
+  8010d8b4: sh zero,156(a0)                    0x800b009c
+  8010d8b8: lui v1,0x800b                      
+  8010d8bc: lw v1,-14460(v1)                   g_entity(cur)
+  8010d8c0: nop                                
+  8010d8c4: sb v0,6(v1)                        0x800b0006
+  8010d8c8: lui v0,0x800b                      
+  8010d8cc: lw v0,-14460(v0)                   g_entity(cur)
+  8010d8d0: nop                                
+  8010d8d4: sb zero,7(v0)                      0x800b0007
+  8010d8d8: lui v1,0x800b                      
+  8010d8dc: lw v1,-14460(v1)                   g_entity(cur)
+  8010d8e0: ori v0,zero,0x5                    
+  8010d8e4: sb v0,148(v1)                      0x800b0094
+  8010d8e8: lui v0,0x800b                      
+  8010d8ec: lw v0,-14460(v0)                   g_entity(cur)
+  8010d8f0: nop                                
+  8010d8f4: sb zero,149(v0)                    0x800b0095
+  8010d8f8: lui v1,0x800b                      
+  8010d8fc: lw v1,-14460(v1)                   g_entity(cur)
+  8010d900: ori v0,zero,0x7                    
+  8010d904: sb v0,143(v1)                      0x800b008f
+  8010d908: lui v1,0x800b                      
+  8010d90c: lw v1,-14460(v1)                   g_entity(cur)
+  8010d910: ori v0,zero,0x14                   
+  8010d914: sh v0,140(v1)                      0x800b008c
+  8010d918: lui v1,0x800b                      
+  8010d91c: lw v1,-14460(v1)                   g_entity(cur)
+  8010d920: nop                                
+  8010d924: lbu v0,147(v1)                     0x800b0093
+  8010d928: nop                                
+  8010d92c: ori v0,v0,0x3                      
+  8010d930: sb v0,147(v1)                      0x800b0093
+  8010d934: lui v0,0x800b                      
+  8010d938: lw v0,-14460(v0)                   g_entity(cur)
+  8010d93c: ori a3,zero,0x200                  
+  8010d940: lw a0,132(v0)                      0x800b0084
+  8010d944: lbu a2,7(v0)                       0x800b0007
+  8010d948: lw a1,364(v0)                      0x800b016c
+  8010d94c: jal 0x8001f314                     anim_set
+  8010d950: andi a2,a2,0x1                     
+  8010d954: lui a0,0x800b                      
+  8010d958: lw a0,-14460(a0)                   g_entity(cur)
+  8010d95c: nop                                
+  8010d960: lbu v1,6(a0)                       0x800b0006
+  8010d964: nop                                
+  8010d968: addu v1,v1,v0                      
+  8010d96c: sb v1,6(a0)                        0x800b0006
+  8010d970: lui v1,0x800b                      
+  8010d974: lw v1,-14460(v1)                   g_entity(cur)
+  8010d978: nop                                
+  8010d97c: lbu v0,149(v1)                     0x800b0095
+  8010d980: nop                                
+  8010d984: sltiu v0,v0,0x4                    
+  8010d988: bne v0,zero,0x8010d9fc             
+  8010d98c: addu a1,zero,zero                  
+  8010d990: lh a0,140(v1)                      0x800b008c
+  8010d994: lh a3,442(v1)                      0x800b01ba
+  8010d998: jal 0x8001c1a4                     
+  8010d99c: addiu a2,zero,-70                  
+  8010d9a0: beq v0,zero,0x8010d9fc             
+  8010d9a4: ori v0,zero,0x2                    
+  8010d9a8: lui v1,0x800b                      
+  8010d9ac: lw v1,-14460(v1)                   g_entity(cur)
+  8010d9b0: j 0x8010d9fc                       
+  8010d9b4: sb v0,6(v1)                        0x800b0006
+  8010d9b8: sb v0,5(a0)                        0x800b0005
+  8010d9bc: lui v0,0x800b                      
+  8010d9c0: lw v0,-14460(v0)                   g_entity(cur)
+  8010d9c4: nop                                
+  8010d9c8: sb zero,6(v0)                      0x800b0006
+  8010d9cc: lui v0,0x800b                      
+  8010d9d0: lw v0,-14460(v0)                   g_entity(cur)
+  8010d9d4: nop                                
+  8010d9d8: sb zero,7(v0)                      0x800b0007
+  8010d9dc: lui v1,0x800b                      
+  8010d9e0: lw v1,-14460(v1)                   g_entity(cur)
+  8010d9e4: ori v0,zero,0x2                    
+  8010d9e8: sb v0,480(v1)                      0x800b01e0
+  8010d9ec: lui v1,0x800b                      
+  8010d9f0: lw v1,-14460(v1)                   g_entity(cur)
+  8010d9f4: ori v0,zero,0x64                   
+  8010d9f8: sb v0,481(v1)                      0x800b01e1
+  8010d9fc: lw ra,16(sp)                       
+  8010da00: addiu sp,sp,24                     
+  8010da04: jr ra                              
+  8010da08: nop                                
+  8010da0c: lui v0,0x800b                      
+  8010da10: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010da14: nop                                
+  8010da18: bne v0,zero,0x8010da60             
+  8010da1c: nop                                
+  8010da20: lui v1,0x800b                      
+  8010da24: lw v1,-14460(v1)                   g_entity(cur)
+  8010da28: nop                                
+  8010da2c: lhu v0,468(v1)                     0x800b01d4
+  8010da30: nop                                
+  8010da34: addiu v0,v0,-4000                  0x800af060
+  8010da38: sltiu v0,v0,0x7d1                  
+  8010da3c: beq v0,zero,0x8010dab0             
+  8010da40: ori v0,zero,0x4                    
+  8010da44: lhu v0,464(v1)                     0x800b01d0
+  8010da48: nop                                
+  8010da4c: andi v0,v0,0x1                     
+  8010da50: beq v0,zero,0x8010dab0             
+  8010da54: ori v0,zero,0x4                    
+  8010da58: lui v0,0x800b                      
+  8010da5c: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010da60: nop                                
+  8010da64: bne v0,zero,0x8010dad4             
+  8010da68: nop                                
+  8010da6c: lui v1,0x800b                      
+  8010da70: lw v1,-14460(v1)                   g_entity(cur)
+  8010da74: nop                                
+  8010da78: lhu v0,468(v1)                     0x800b01d4
+  8010da7c: nop                                
+  8010da80: sltiu v0,v0,0x1770                 
+  8010da84: beq v0,zero,0x8010dad4             
+  8010da88: nop                                
+  8010da8c: lhu v0,464(v1)                     0x800b01d0
+  8010da90: nop                                
+  8010da94: andi v0,v0,0x1                     
+  8010da98: beq v0,zero,0x8010dad4             
+  8010da9c: nop                                
+  8010daa0: lbu v0,482(v1)                     0x800b01e2
+  8010daa4: nop                                
+  8010daa8: bne v0,zero,0x8010dad4             
+  8010daac: ori v0,zero,0x7                    
+  8010dab0: sb v0,5(v1)                        0x800b0005
+  8010dab4: lui v0,0x800b                      
+  8010dab8: lw v0,-14460(v0)                   g_entity(cur)
+  8010dabc: nop                                
+  8010dac0: sb zero,6(v0)                      0x800b0006
+  8010dac4: lui v0,0x800b                      
+  8010dac8: lw v0,-14460(v0)                   g_entity(cur)
+  8010dacc: j 0x8010db48                       
+  8010dad0: sb zero,7(v0)                      0x800b0007
+  8010dad4: lui v1,0x800b                      
+  8010dad8: lhu v1,-13736(v1)                  0x800aca58
+  8010dadc: ori v0,zero,0x701                  
+  8010dae0: bne v1,v0,0x8010db48               
+  8010dae4: ori v0,zero,0x5                    
+  8010dae8: lui v1,0x800b                      
+  8010daec: lw v1,-14460(v1)                   g_entity(cur)
+  8010daf0: nop                                
+  8010daf4: sb v0,5(v1)                        0x800b0005
+  8010daf8: lui v0,0x800b                      
+  8010dafc: lw v0,-14460(v0)                   g_entity(cur)
+  8010db00: nop                                
+  8010db04: sb zero,6(v0)                      0x800b0006
+  8010db08: lui v0,0x800b                      
+  8010db0c: lw v0,-14460(v0)                   g_entity(cur)
+  8010db10: nop                                
+  8010db14: sb zero,7(v0)                      0x800b0007
+  8010db18: lui a0,0x800b                      
+  8010db1c: lw a0,-14460(a0)                   g_entity(cur)
+  8010db20: nop                                
+  8010db24: lbu v1,130(a0)                     0x800b0082
+  8010db28: nop                                
+  8010db2c: sll v0,v1,3                        
+  8010db30: subu v0,v0,v1                      
+  8010db34: sll v0,v0,5                        
+  8010db38: addu v0,v0,v1                      
+  8010db3c: sll v0,v0,3                        
+  8010db40: subu v0,zero,v0                    
+  8010db44: sh v0,442(a0)                      0x800b01ba
+  8010db48: jr ra                              
+  8010db4c: nop                                
+  8010db50: lui a0,0x800b                      
+  8010db54: lw a0,-14460(a0)                   g_entity(cur)
+  8010db58: addiu sp,sp,-24                    
+  8010db5c: sw ra,16(sp)                       
+  8010db60: lbu v1,6(a0)                       0x800b0006
+  8010db64: ori v0,zero,0x1                    
+  8010db68: beq v1,v0,0x8010dc14               
+  8010db6c: slti v0,v1,2                       
+  8010db70: beq v0,zero,0x8010db88             
+  8010db74: nop                                
+  8010db78: beq v1,zero,0x8010db9c             
+  8010db7c: nop                                
+  8010db80: j 0x8010dc78                       
+  8010db84: nop                                
+  8010db88: ori v0,zero,0x2                    
+  8010db8c: beq v1,v0,0x8010dc54               
+  8010db90: nop                                
+  8010db94: j 0x8010dc78                       
+  8010db98: nop                                
+  8010db9c: jal 0x8001af20                     rng
+  8010dba0: nop                                
+  8010dba4: andi v0,v0,0x7f                    
+  8010dba8: lui v1,0x800b                      
+  8010dbac: lw v1,-14460(v1)                   g_entity(cur)
+  8010dbb0: addiu v0,v0,59                     0x800b003b
+  8010dbb4: sh v0,156(v1)                      0x800b009c
+  8010dbb8: lui v1,0x800b                      
+  8010dbbc: lw v1,-14460(v1)                   g_entity(cur)
+  8010dbc0: ori v0,zero,0x1                    
+  8010dbc4: sb v0,6(v1)                        0x800b0006
+  8010dbc8: lui v1,0x800b                      
+  8010dbcc: lw v1,-14460(v1)                   g_entity(cur)
+  8010dbd0: nop                                
+  8010dbd4: lbu v0,7(v1)                       0x800b0007
+  8010dbd8: nop                                
+  8010dbdc: addiu v0,v0,1                      0x800b0001
+  8010dbe0: sb v0,7(v1)                        0x800b0007
+  8010dbe4: lui v1,0x800b                      
+  8010dbe8: lw v1,-14460(v1)                   g_entity(cur)
+  8010dbec: ori v0,zero,0x6                    
+  8010dbf0: sb v0,148(v1)                      0x800b0094
+  8010dbf4: lui v0,0x800b                      
+  8010dbf8: lw v0,-14460(v0)                   g_entity(cur)
+  8010dbfc: nop                                
+  8010dc00: sb zero,149(v0)                    0x800b0095
+  8010dc04: lui v1,0x800b                      
+  8010dc08: lw v1,-14460(v1)                   g_entity(cur)
+  8010dc0c: ori v0,zero,0x7                    
+  8010dc10: sb v0,143(v1)                      0x800b008f
+  8010dc14: lui v0,0x800b                      
+  8010dc18: lw v0,-14460(v0)                   g_entity(cur)
+  8010dc1c: ori a3,zero,0x200                  
+  8010dc20: lbu a2,7(v0)                       0x800b0007
+  8010dc24: lw a0,132(v0)                      0x800b0084
+  8010dc28: lw a1,364(v0)                      0x800b016c
+  8010dc2c: jal 0x8001f314                     anim_set
+  8010dc30: andi a2,a2,0x1                     
+  8010dc34: lui a0,0x800b                      
+  8010dc38: lw a0,-14460(a0)                   g_entity(cur)
+  8010dc3c: nop                                
+  8010dc40: lbu v1,6(a0)                       0x800b0006
+  8010dc44: nop                                
+  8010dc48: addu v1,v1,v0                      
+  8010dc4c: j 0x8010dc78                       
+  8010dc50: sb v1,6(a0)                        0x800b0006
+  8010dc54: lhu v1,156(a0)                     0x800b009c
+  8010dc58: nop                                
+  8010dc5c: addiu v0,v1,-1                     0x800affff
+  8010dc60: bne v1,zero,0x8010dc78             
+  8010dc64: sh v0,156(a0)                      0x800b009c
+  8010dc68: lui v0,0x800b                      
+  8010dc6c: lw v0,-14460(v0)                   g_entity(cur)
+  8010dc70: nop                                
+  8010dc74: sb zero,6(v0)                      0x800b0006
+  8010dc78: lw ra,16(sp)                       
+  8010dc7c: addiu sp,sp,24                     
+  8010dc80: jr ra                              
+  8010dc84: nop                                
+  8010dc88: jr ra                              
+  8010dc8c: nop                                
+  8010dc90: lui a0,0x800b                      
+  8010dc94: lw a0,-14460(a0)                   g_entity(cur)
+  8010dc98: addiu sp,sp,-24                    
+  8010dc9c: sw ra,16(sp)                       
+  8010dca0: lbu v1,6(a0)                       0x800b0006
+  8010dca4: ori v0,zero,0x1                    
+  8010dca8: beq v1,v0,0x8010dd10               
+  8010dcac: slti v0,v1,2                       
+  8010dcb0: beq v0,zero,0x8010dcc8             
+  8010dcb4: nop                                
+  8010dcb8: beq v1,zero,0x8010dcdc             
+  8010dcbc: ori v0,zero,0x1                    
+  8010dcc0: j 0x8010dd80                       
+  8010dcc4: nop                                
+  8010dcc8: ori v0,zero,0x2                    
+  8010dccc: beq v1,v0,0x8010dd4c               
+  8010dcd0: ori v0,zero,0x6                    
+  8010dcd4: j 0x8010dd80                       
+  8010dcd8: nop                                
+  8010dcdc: sb v0,6(a0)                        0x800b0006
+  8010dce0: lui v1,0x800b                      
+  8010dce4: lw v1,-14460(v1)                   g_entity(cur)
+  8010dce8: ori v0,zero,0x14                   
+  8010dcec: sb v0,148(v1)                      0x800b0094
+  8010dcf0: lui v0,0x800b                      
+  8010dcf4: lw v0,-14460(v0)                   g_entity(cur)
+  8010dcf8: nop                                
+  8010dcfc: sb zero,149(v0)                    0x800b0095
+  8010dd00: lui v1,0x800b                      
+  8010dd04: lw v1,-14460(v1)                   g_entity(cur)
+  8010dd08: ori v0,zero,0x7                    
+  8010dd0c: sb v0,143(v1)                      0x800b008f
+  8010dd10: lui v0,0x800b                      
+  8010dd14: lw v0,-14460(v0)                   g_entity(cur)
+  8010dd18: addu a2,zero,zero                  
+  8010dd1c: lw a0,132(v0)                      0x800b0084
+  8010dd20: lw a1,364(v0)                      0x800b016c
+  8010dd24: jal 0x8001f314                     anim_set
+  8010dd28: ori a3,zero,0x200                  
+  8010dd2c: lui a0,0x800b                      
+  8010dd30: lw a0,-14460(a0)                   g_entity(cur)
+  8010dd34: nop                                
+  8010dd38: lbu v1,6(a0)                       0x800b0006
+  8010dd3c: nop                                
+  8010dd40: addu v1,v1,v0                      
+  8010dd44: j 0x8010dd80                       
+  8010dd48: sb v1,6(a0)                        0x800b0006
+  8010dd4c: sb v0,5(a0)                        0x800b0005
+  8010dd50: lui v0,0x800b                      
+  8010dd54: lw v0,-14460(v0)                   g_entity(cur)
+  8010dd58: nop                                
+  8010dd5c: sb zero,6(v0)                      0x800b0006
+  8010dd60: lui v0,0x800b                      
+  8010dd64: lw v0,-14460(v0)                   g_entity(cur)
+  8010dd68: nop                                
+  8010dd6c: sb zero,7(v0)                      0x800b0007
+  8010dd70: lui v1,0x800b                      
+  8010dd74: lw v1,-14460(v1)                   g_entity(cur)
+  8010dd78: ori v0,zero,0x78                   
+  8010dd7c: sb v0,482(v1)                      0x800b01e2
+  8010dd80: lw ra,16(sp)                       
+  8010dd84: addiu sp,sp,24                     
+  8010dd88: jr ra                              
+  8010dd8c: nop                                
+  8010dd90: jr ra                              
+  8010dd94: nop                                
+  8010dd98: lui a0,0x800b                      
+  8010dd9c: lw a0,-14460(a0)                   g_entity(cur)
+  8010dda0: addiu sp,sp,-24                    
+  8010dda4: sw ra,16(sp)                       
+  8010dda8: lbu v1,6(a0)                       0x800b0006
+  8010ddac: nop                                
+  8010ddb0: beq v1,zero,0x8010ddc8             
+  8010ddb4: ori v0,zero,0x1                    
+  8010ddb8: beq v1,v0,0x8010de08               
+  8010ddbc: nop                                
+  8010ddc0: j 0x8010df1c                       
+  8010ddc4: nop                                
+  8010ddc8: ori v0,zero,0x1                    
+  8010ddcc: sb v0,6(a0)                        0x800b0006
+  8010ddd0: lui v0,0x800b                      
+  8010ddd4: lw v0,-14460(v0)                   g_entity(cur)
+  8010ddd8: nop                                
+  8010dddc: lh a0,156(v0)                      0x800b009c
+  8010dde0: jal 0x8010ee40                     
+  8010dde4: ori a1,zero,0x1                    
+  8010dde8: lui v0,0x800b                      
+  8010ddec: lw v0,-14460(v0)                   g_entity(cur)
+  8010ddf0: nop                                
+  8010ddf4: sb zero,149(v0)                    0x800b0095
+  8010ddf8: lui v1,0x800b                      
+  8010ddfc: lw v1,-14460(v1)                   g_entity(cur)
+  8010de00: ori v0,zero,0x7                    
+  8010de04: sb v0,143(v1)                      0x800b008f
+  8010de08: lui v0,0x800b                      
+  8010de0c: lw v0,-14460(v0)                   g_entity(cur)
+  8010de10: ori a3,zero,0x200                  
+  8010de14: lw a0,132(v0)                      0x800b0084
+  8010de18: lbu a2,7(v0)                       0x800b0007
+  8010de1c: lw a1,364(v0)                      0x800b016c
+  8010de20: jal 0x8001f314                     anim_set
+  8010de24: andi a2,a2,0x1                     
+  8010de28: beq v0,zero,0x8010df1c             
+  8010de2c: ori v0,zero,0x4                    
+  8010de30: lui v1,0x800b                      
+  8010de34: lw v1,-14460(v1)                   g_entity(cur)
+  8010de38: nop                                
+  8010de3c: sb v0,5(v1)                        0x800b0005
+  8010de40: lui v0,0x800b                      
+  8010de44: lw v0,-14460(v0)                   g_entity(cur)
+  8010de48: nop                                
+  8010de4c: sb zero,6(v0)                      0x800b0006
+  8010de50: lui v0,0x800b                      
+  8010de54: lw v0,-14460(v0)                   g_entity(cur)
+  8010de58: nop                                
+  8010de5c: sb zero,7(v0)                      0x800b0007
+  8010de60: lui v1,0x800b                      
+  8010de64: lw v1,-14460(v1)                   g_entity(cur)
+  8010de68: nop                                
+  8010de6c: lhu v0,106(v1)                     0x800b006a
+  8010de70: nop                                
+  8010de74: addiu v0,v0,2048                   0x800b0800
+  8010de78: sh v0,106(v1)                      0x800b006a
+  8010de7c: lui v1,0x800b                      
+  8010de80: lw v1,-14460(v1)                   g_entity(cur)
+  8010de84: ori v0,zero,0x96                   
+  8010de88: sb v0,483(v1)                      0x800b01e3
+  8010de8c: lui a0,0x800b                      
+  8010de90: lw a0,-14460(a0)                   g_entity(cur)
+  8010de94: nop                                
+  8010de98: lbu v0,147(a0)                     0x800b0093
+  8010de9c: nop                                
+  8010dea0: beq v0,zero,0x8010df1c             
+  8010dea4: ori v0,zero,0x2                    
+  8010dea8: lbu v1,480(a0)                     0x800b01e0
+  8010deac: nop                                
+  8010deb0: beq v1,v0,0x8010df1c               
+  8010deb4: ori v0,zero,0x5                    
+  8010deb8: sb v0,5(a0)                        0x800b0005
+  8010debc: lui v0,0x800b                      
+  8010dec0: lw v0,-14460(v0)                   g_entity(cur)
+  8010dec4: nop                                
+  8010dec8: sb zero,6(v0)                      0x800b0006
+  8010decc: lui v0,0x800b                      
+  8010ded0: lw v0,-14460(v0)                   g_entity(cur)
+  8010ded4: nop                                
+  8010ded8: sb zero,7(v0)                      0x800b0007
+  8010dedc: lui a0,0x800b                      
+  8010dee0: lw a0,-14460(a0)                   g_entity(cur)
+  8010dee4: nop                                
+  8010dee8: lbu v1,130(a0)                     0x800b0082
+  8010deec: nop                                
+  8010def0: sll v0,v1,3                        
+  8010def4: subu v0,v0,v1                      
+  8010def8: sll v0,v0,5                        
+  8010defc: addu v0,v0,v1                      
+  8010df00: sll v0,v0,3                        
+  8010df04: subu v0,zero,v0                    
+  8010df08: sh v0,442(a0)                      0x800b01ba
+  8010df0c: lui v0,0x800b                      
+  8010df10: lw v0,-14460(v0)                   g_entity(cur)
+  8010df14: nop                                
+  8010df18: sb zero,147(v0)                    0x800b0093
+  8010df1c: lw ra,16(sp)                       
+  8010df20: addiu sp,sp,24                     
+  8010df24: jr ra                              
+  8010df28: nop                                
+  8010df2c: jr ra                              
+  8010df30: nop                                
+  8010df34: lui a0,0x800b                      
+  8010df38: lw a0,-14460(a0)                   g_entity(cur)
+  8010df3c: addiu sp,sp,-48                    
+  8010df40: sw ra,40(sp)                       
+  8010df44: sw s1,36(sp)                       
+  8010df48: sw s0,32(sp)                       
+  8010df4c: lbu v1,6(a0)                       0x800b0006
+  8010df50: nop                                
+  8010df54: beq v1,zero,0x8010df70             
+  8010df58: addu s1,zero,zero                  
+  8010df5c: ori v0,zero,0x1                    
+  8010df60: beq v1,v0,0x8010dfb0               
+  8010df64: nop                                
+  8010df68: j 0x8010e1a0                       
+  8010df6c: nop                                
+  8010df70: ori v0,zero,0x1                    
+  8010df74: sb v0,6(a0)                        0x800b0006
+  8010df78: lui v0,0x800b                      
+  8010df7c: lw v0,-14460(v0)                   g_entity(cur)
+  8010df80: nop                                
+  8010df84: lh a0,156(v0)                      0x800b009c
+  8010df88: jal 0x8010ee40                     
+  8010df8c: ori a1,zero,0x2                    
+  8010df90: lui v0,0x800b                      
+  8010df94: lw v0,-14460(v0)                   g_entity(cur)
+  8010df98: nop                                
+  8010df9c: sb zero,149(v0)                    0x800b0095
+  8010dfa0: lui v1,0x800b                      
+  8010dfa4: lw v1,-14460(v1)                   g_entity(cur)
+  8010dfa8: ori v0,zero,0x7                    
+  8010dfac: sb v0,143(v1)                      0x800b008f
+  8010dfb0: lui v0,0x800b                      
+  8010dfb4: lw v0,-14460(v0)                   g_entity(cur)
+  8010dfb8: ori a3,zero,0x200                  
+  8010dfbc: lw a0,132(v0)                      0x800b0084
+  8010dfc0: lbu a2,7(v0)                       0x800b0007
+  8010dfc4: lw a1,364(v0)                      0x800b016c
+  8010dfc8: jal 0x8001f314                     anim_set
+  8010dfcc: andi a2,a2,0x1                     
+  8010dfd0: beq v0,zero,0x8010e044             
+  8010dfd4: ori v0,zero,0x4                    
+  8010dfd8: lui v1,0x800b                      
+  8010dfdc: lw v1,-14460(v1)                   g_entity(cur)
+  8010dfe0: nop                                
+  8010dfe4: sb v0,5(v1)                        0x800b0005
+  8010dfe8: lui v0,0x800b                      
+  8010dfec: lw v0,-14460(v0)                   g_entity(cur)
+  8010dff0: nop                                
+  8010dff4: sb zero,6(v0)                      0x800b0006
+  8010dff8: lui v0,0x800b                      
+  8010dffc: lw v0,-14460(v0)                   g_entity(cur)
+  8010e000: nop                                
+  8010e004: sb zero,7(v0)                      0x800b0007
+  8010e008: lui v1,0x800b                      
+  8010e00c: lw v1,-14460(v1)                   g_entity(cur)
+  8010e010: nop                                
+  8010e014: lhu v0,106(v1)                     0x800b006a
+  8010e018: nop                                
+  8010e01c: addiu v0,v0,2048                   0x800b0800
+  8010e020: sh v0,106(v1)                      0x800b006a
+  8010e024: lui v1,0x800b                      
+  8010e028: lw v1,-14460(v1)                   g_entity(cur)
+  8010e02c: nop                                
+  8010e030: lh v0,476(v1)                      0x800b01dc
+  8010e034: nop                                
+  8010e038: bne v0,zero,0x8010e044             
+  8010e03c: ori v0,zero,0x3c                   
+  8010e040: sh v0,476(v1)                      0x800b01dc
+  8010e044: lui s0,0x800b                      
+  8010e048: addiu s0,s0,-13593                 player.hit_react(+0x93)
+  8010e04c: lbu v0,0(s0)                       0x800b0000
+  8010e050: nop                                
+  8010e054: bne v0,zero,0x8010e184             
+  8010e058: ori a0,zero,0x2000                 
+  8010e05c: addiu a1,sp,16                     
+  8010e060: ori a2,zero,0x320                  
+  8010e064: lui v0,0x800b                      
+  8010e068: lw v0,-14460(v0)                   g_entity(cur)
+  8010e06c: addiu a3,s0,-95                    0x800affa1
+  8010e070: lw t1,392(v0)                      0x800b0188
+  8010e074: lui t0,0x8007                      
+  8010e078: addiu t0,t0,11616                  0x80072d60
+  8010e07c: lw v0,0(t0)                        0x80070000
+  8010e080: lw v1,4(t0)                        0x80070004
+  8010e084: lw a0,8(t0)                        0x80070008
+  8010e088: sw v0,16(sp)                       
+  8010e08c: sw v1,20(sp)                       
+  8010e090: sw a0,24(sp)                       
+  8010e094: lw v0,12(t0)                       0x8007000c
+  8010e098: nop                                
+  8010e09c: sw v0,28(sp)                       
+  8010e0a0: jal 0x8001bff8                     
+  8010e0a4: addiu a0,t1,1612                   
+  8010e0a8: lui v1,0x800b                      
+  8010e0ac: lw v1,-14460(v1)                   g_entity(cur)
+  8010e0b0: nop                                
+  8010e0b4: sh v0,472(v1)                      0x800b01d8
+  8010e0b8: lui v1,0x800b                      
+  8010e0bc: lw v1,-14460(v1)                   g_entity(cur)
+  8010e0c0: nop                                
+  8010e0c4: lbu v0,149(v1)                     0x800b0095
+  8010e0c8: nop                                
+  8010e0cc: addiu v0,v0,-7                     0x800afff9
+  8010e0d0: sltiu v0,v0,0x9                    
+  8010e0d4: beq v0,zero,0x8010e0e4             
+  8010e0d8: andi v0,s1,0xffff                  
+  8010e0dc: ori s1,zero,0x1                    
+  8010e0e0: andi v0,s1,0xffff                  
+  8010e0e4: beq v0,zero,0x8010e170             
+  8010e0e8: nop                                
+  8010e0ec: lh v0,472(v1)                      0x800b01d8
+  8010e0f0: nop                                
+  8010e0f4: beq v0,zero,0x8010e170             
+  8010e0f8: nop                                
+  8010e0fc: lui v0,0x800b                      
+  8010e100: lhu v0,-13586(v0)                  player.hp(+0x9a)
+  8010e104: nop                                
+  8010e108: lui at,0x800b                      
+  8010e10c: sh v0,-13586(at)                   player.hp(+0x9a)
+  8010e110: ori v0,zero,0x78                   
+  8010e114: sh v0,476(v1)                      0x800b01dc
+  8010e118: ori v0,zero,0x2                    
+  8010e11c: lui at,0x800b                      
+  8010e120: sb v0,-13736(at)                   0x800aca58
+  8010e124: jal 0x8001a780                     facing_aligned
+  8010e128: addiu a0,s0,-147                   0x800aff6d
+  8010e12c: lui v1,0x800b                      
+  8010e130: lh v1,-13586(v1)                   player.hp(+0x9a)
+  8010e134: addiu v0,v0,2                      0x800b0002
+  8010e138: lui at,0x800b                      
+  8010e13c: sb v0,-13735(at)                   0x800aca59
+  8010e140: lui at,0x800b                      
+  8010e144: sb zero,-13734(at)                 0x800aca5a
+  8010e148: bgez v1,0x8010e160                 
+  8010e14c: ori v0,zero,0x3                    
+  8010e150: lui at,0x800b                      
+  8010e154: sb v0,-13736(at)                   0x800aca58
+  8010e158: lui at,0x800b                      
+  8010e15c: sb zero,-13735(at)                 0x800aca59
+  8010e160: lbu v0,0(s0)                       0x800b0000
+  8010e164: nop                                
+  8010e168: ori v0,v0,0x1                      
+  8010e16c: sb v0,0(s0)                        0x800b0000
+  8010e170: lui v0,0x800b                      
+  8010e174: lbu v0,-13593(v0)                  player.hit_react(+0x93)
+  8010e178: nop                                
+  8010e17c: beq v0,zero,0x8010e1a0             
+  8010e180: ori a0,zero,0x2000                 
+  8010e184: lui v0,0x800b                      
+  8010e188: lw v0,-14460(v0)                   g_entity(cur)
+  8010e18c: addiu a3,sp,16                     
+  8010e190: lw t1,392(v0)                      0x800b0188
+  8010e194: lh a1,106(v0)                      0x800b006a
+  8010e198: jal 0x80019700                     
+  8010e19c: addiu a2,t1,1612                   
+  8010e1a0: lw ra,40(sp)                       
+  8010e1a4: lw s1,36(sp)                       
+  8010e1a8: lw s0,32(sp)                       
+  8010e1ac: addiu sp,sp,48                     
+  8010e1b0: jr ra                              
+  8010e1b4: nop                                
+  8010e1b8: jr ra                              
+  8010e1bc: nop                                
+  8010e1c0: lui a1,0x800b                      
+  8010e1c4: lw a1,-14460(a1)                   g_entity(cur)
+  8010e1c8: addiu sp,sp,-24                    
+  8010e1cc: sw ra,16(sp)                       
+  8010e1d0: lbu v1,6(a1)                       0x800b0006
+  8010e1d4: ori v0,zero,0x1                    
+  8010e1d8: beq v1,v0,0x8010e27c               
+  8010e1dc: slti v0,v1,2                       
+  8010e1e0: beq v0,zero,0x8010e1f8             
+  8010e1e4: nop                                
+  8010e1e8: beq v1,zero,0x8010e214             
+  8010e1ec: addu a2,zero,zero                  
+  8010e1f0: j 0x8010e510                       
+  8010e1f4: nop                                
+  8010e1f8: ori v0,zero,0x2                    
+  8010e1fc: beq v1,v0,0x8010e2e4               
+  8010e200: ori v0,zero,0x3                    
+  8010e204: beq v1,v0,0x8010e408               
+  8010e208: nop                                
+  8010e20c: j 0x8010e510                       
+  8010e210: nop                                
+  8010e214: lw a0,132(a1)                      0x800b0084
+  8010e218: lw a1,364(a1)                      0x800b016c
+  8010e21c: jal 0x8001f314                     anim_set
+  8010e220: ori a3,zero,0x200                  
+  8010e224: lui v0,0x800b                      
+  8010e228: lw v0,-14460(v0)                   g_entity(cur)
+  8010e22c: nop                                
+  8010e230: lb a0,159(v0)                      0x800b009f
+  8010e234: ori a1,zero,0x10                   
+  8010e238: andi a0,a0,0xf0                    
+  8010e23c: jal 0x8001aa68                     
+  8010e240: sll a0,a0,4                        
+  8010e244: lui a0,0x800b                      
+  8010e248: lw a0,-14460(a0)                   g_entity(cur)
+  8010e24c: nop                                
+  8010e250: lhu v1,106(a0)                     0x800b006a
+  8010e254: nop                                
+  8010e258: addu v1,v0,v1                      
+  8010e25c: sll v0,v0,16                       
+  8010e260: bne v0,zero,0x8010e510             
+  8010e264: sh v1,106(a0)                      0x800b006a
+  8010e268: lui v1,0x800b                      
+  8010e26c: lw v1,-14460(v1)                   g_entity(cur)
+  8010e270: ori v0,zero,0x1                    
+  8010e274: j 0x8010e510                       
+  8010e278: sb v0,6(v1)                        0x800b0006
+  8010e27c: ori v0,zero,0x2                    
+  8010e280: sb v0,6(a1)                        0x800b0006
+  8010e284: lui v1,0x800b                      
+  8010e288: lw v1,-14460(v1)                   g_entity(cur)
+  8010e28c: nop                                
+  8010e290: sb v0,148(v1)                      0x800b0094
+  8010e294: lui v1,0x800b                      
+  8010e298: lw v1,-14460(v1)                   g_entity(cur)
+  8010e29c: nop                                
+  8010e2a0: lbu v0,7(v1)                       0x800b0007
+  8010e2a4: nop                                
+  8010e2a8: beq v0,zero,0x8010e2b4             
+  8010e2ac: ori v0,zero,0x4                    
+  8010e2b0: sb v0,148(v1)                      0x800b0094
+  8010e2b4: lui v0,0x800b                      
+  8010e2b8: lw v0,-14460(v0)                   g_entity(cur)
+  8010e2bc: nop                                
+  8010e2c0: sb zero,149(v0)                    0x800b0095
+  8010e2c4: lui v1,0x800b                      
+  8010e2c8: lw v1,-14460(v1)                   g_entity(cur)
+  8010e2cc: ori v0,zero,0x7                    
+  8010e2d0: sb v0,143(v1)                      0x800b008f
+  8010e2d4: lui v1,0x800b                      
+  8010e2d8: lw v1,-14460(v1)                   g_entity(cur)
+  8010e2dc: ori v0,zero,0x64                   
+  8010e2e0: sh v0,140(v1)                      0x800b008c
+  8010e2e4: lui v1,0x800b                      
+  8010e2e8: lw v1,-14460(v1)                   g_entity(cur)
+  8010e2ec: nop                                
+  8010e2f0: lbu v0,7(v1)                       0x800b0007
+  8010e2f4: nop                                
+  8010e2f8: beq v0,zero,0x8010e38c             
+  8010e2fc: ori a0,zero,0x320                  
+  8010e300: ori a1,zero,0x190                  
+  8010e304: jal 0x8001c0dc                     
+  8010e308: addiu a2,zero,-10                  
+  8010e30c: lui a0,0x800b                      
+  8010e310: lw a0,-14460(a0)                   g_entity(cur)
+  8010e314: nop                                
+  8010e318: lbu v1,6(a0)                       0x800b0006
+  8010e31c: nop                                
+  8010e320: addu v1,v1,v0                      
+  8010e324: sb v1,6(a0)                        0x800b0006
+  8010e328: lui v1,0x800b                      
+  8010e32c: lw v1,-14460(v1)                   g_entity(cur)
+  8010e330: nop                                
+  8010e334: lw v0,56(v1)                       0x800b0038
+  8010e338: nop                                
+  8010e33c: addiu v0,v0,-50                    0x800affce
+  8010e340: sw v0,56(v1)                       0x800b0038
+  8010e344: lui a0,0x800b                      
+  8010e348: lw a0,-14460(a0)                   g_entity(cur)
+  8010e34c: nop                                
+  8010e350: lbu v1,130(a0)                     0x800b0082
+  8010e354: nop                                
+  8010e358: addiu v1,v1,1                      0x800b0001
+  8010e35c: sll v0,v1,3                        
+  8010e360: subu v0,v0,v1                      
+  8010e364: sll v0,v0,5                        
+  8010e368: addu v0,v0,v1                      
+  8010e36c: sll v0,v0,3                        
+  8010e370: lw v1,56(a0)                       0x800b0038
+  8010e374: subu v0,zero,v0                    
+  8010e378: slt v1,v1,v0                       
+  8010e37c: beq v1,zero,0x8010e3dc             
+  8010e380: nop                                
+  8010e384: j 0x8010e3dc                       
+  8010e388: sw v0,56(a0)                       0x800b0038
+  8010e38c: lw v0,56(v1)                       0x800b0038
+  8010e390: nop                                
+  8010e394: addiu v0,v0,50                     0x800b0032
+  8010e398: sw v0,56(v1)                       0x800b0038
+  8010e39c: lui v1,0x800b                      
+  8010e3a0: lw v1,-14460(v1)                   g_entity(cur)
+  8010e3a4: nop                                
+  8010e3a8: lw v0,56(v1)                       0x800b0038
+  8010e3ac: nop                                
+  8010e3b0: slti v0,v0,-1199                   
+  8010e3b4: bne v0,zero,0x8010e3dc             
+  8010e3b8: addiu v0,zero,-1200                
+  8010e3bc: sw v0,56(v1)                       0x800b0038
+  8010e3c0: lui v1,0x800b                      
+  8010e3c4: lw v1,-14460(v1)                   g_entity(cur)
+  8010e3c8: nop                                
+  8010e3cc: lbu v0,6(v1)                       0x800b0006
+  8010e3d0: nop                                
+  8010e3d4: addiu v0,v0,1                      0x800b0001
+  8010e3d8: sb v0,6(v1)                        0x800b0006
+  8010e3dc: lui v0,0x800b                      
+  8010e3e0: lw v0,-14460(v0)                   g_entity(cur)
+  8010e3e4: addu a2,zero,zero                  
+  8010e3e8: lw a0,132(v0)                      0x800b0084
+  8010e3ec: lw a1,364(v0)                      0x800b016c
+  8010e3f0: jal 0x8001f314                     anim_set
+  8010e3f4: ori a3,zero,0x200                  
+  8010e3f8: jal 0x800245d8                     pos_advance(walker)
+  8010e3fc: addu a0,zero,zero                  
+  8010e400: j 0x8010e510                       
+  8010e404: nop                                
+  8010e408: lbu v0,7(a1)                       0x800b0007
+  8010e40c: nop                                
+  8010e410: beq v0,zero,0x8010e498             
+  8010e414: ori a0,zero,0x898                  
+  8010e418: lbu v0,130(a1)                     0x800b0082
+  8010e41c: nop                                
+  8010e420: addiu v0,v0,1                      0x800b0001
+  8010e424: sb v0,130(a1)                      0x800b0082
+  8010e428: lui v1,0x800b                      
+  8010e42c: lw v1,-14460(v1)                   g_entity(cur)
+  8010e430: ori v0,zero,0x2                    
+  8010e434: sb v0,5(v1)                        0x800b0005
+  8010e438: lui v0,0x800b                      
+  8010e43c: lw v0,-14460(v0)                   g_entity(cur)
+  8010e440: nop                                
+  8010e444: sb zero,6(v0)                      0x800b0006
+  8010e448: lui v0,0x800b                      
+  8010e44c: lw v0,-14460(v0)                   g_entity(cur)
+  8010e450: nop                                
+  8010e454: sb zero,7(v0)                      0x800b0007
+  8010e458: lui a0,0x800b                      
+  8010e45c: lw a0,-14460(a0)                   g_entity(cur)
+  8010e460: nop                                
+  8010e464: lbu v1,130(a0)                     0x800b0082
+  8010e468: nop                                
+  8010e46c: sll v0,v1,3                        
+  8010e470: subu v0,v0,v1                      
+  8010e474: sll v0,v0,5                        
+  8010e478: addu v0,v0,v1                      
+  8010e47c: sll v0,v0,3                        
+  8010e480: subu v0,zero,v0                    
+  8010e484: sh v0,442(a0)                      0x800b01ba
+  8010e488: lui v0,0x800b                      
+  8010e48c: lw v0,-14460(v0)                   g_entity(cur)
+  8010e490: j 0x8010e510                       
+  8010e494: sb zero,480(v0)                    0x800b01e0
+  8010e498: ori a1,zero,0x320                  
+  8010e49c: jal 0x8001c0dc                     
+  8010e4a0: ori a2,zero,0xbb8                  
+  8010e4a4: lui v1,0x800b                      
+  8010e4a8: lw v1,-14460(v1)                   g_entity(cur)
+  8010e4ac: nop                                
+  8010e4b0: lbu v0,130(v1)                     0x800b0082
+  8010e4b4: nop                                
+  8010e4b8: addiu v0,v0,-1                     0x800affff
+  8010e4bc: sb v0,130(v1)                      0x800b0082
+  8010e4c0: lui v1,0x800b                      
+  8010e4c4: lw v1,-14460(v1)                   g_entity(cur)
+  8010e4c8: ori v0,zero,0x4                    
+  8010e4cc: sb v0,5(v1)                        0x800b0005
+  8010e4d0: lui v0,0x800b                      
+  8010e4d4: lw v0,-14460(v0)                   g_entity(cur)
+  8010e4d8: nop                                
+  8010e4dc: sb zero,6(v0)                      0x800b0006
+  8010e4e0: lui v0,0x800b                      
+  8010e4e4: lw v0,-14460(v0)                   g_entity(cur)
+  8010e4e8: nop                                
+  8010e4ec: sb zero,7(v0)                      0x800b0007
+  8010e4f0: lui v1,0x800b                      
+  8010e4f4: lw v1,-14460(v1)                   g_entity(cur)
+  8010e4f8: addiu v0,zero,-1200                
+  8010e4fc: sh v0,442(v1)                      0x800b01ba
+  8010e500: lui v1,0x800b                      
+  8010e504: lw v1,-14460(v1)                   g_entity(cur)
+  8010e508: ori v0,zero,0x1                    
+  8010e50c: sb v0,480(v1)                      0x800b01e0
+  8010e510: lw ra,16(sp)                       
+  8010e514: addiu sp,sp,24                     
+  8010e518: jr ra                              
+  8010e51c: nop                                
+  8010e520: jr ra                              
+  8010e524: nop                                
+  8010e528: jr ra                              
+  8010e52c: nop                                
+  8010e530: jr ra                              
+  8010e534: nop                                
+  8010e538: jr ra                              
+  8010e53c: nop                                
+  8010e540: jr ra                              
+  8010e544: nop                                
+  8010e548: jr ra                              
+  8010e54c: nop                                
+  8010e550: jr ra                              
+  8010e554: nop                                
+  8010e558: jr ra                              
+  8010e55c: nop                                
+  8010e560: jr ra                              
+  8010e564: nop                                
+  8010e568: jr ra                              
+  8010e56c: nop                                
+  8010e570: lui v1,0x800b                      
+  8010e574: lw v1,-14460(v1)                   g_entity(cur)
+  8010e578: addiu sp,sp,-24                    
+  8010e57c: sw ra,16(sp)                       
+  8010e580: lbu v0,480(v1)                     0x800b01e0
+  8010e584: nop                                
+  8010e588: beq v0,zero,0x8010e5a0             
+  8010e58c: nop                                
+  8010e590: jal 0x8010e91c                     
+  8010e594: nop                                
+  8010e598: j 0x8010e5c8                       
+  8010e59c: nop                                
+  8010e5a0: lbu v0,5(v1)                       0x800b0005
+  8010e5a4: nop                                
+  8010e5a8: sll v0,v0,2                        
+  8010e5ac: lui at,0x8012                      
+  8010e5b0: addiu at,at,-29588                 0x80118c6c
+  8010e5b4: addu at,at,v0                      
+  8010e5b8: lw v0,0(at)                        0x80120000
+  8010e5bc: nop                                
+  8010e5c0: jalr v0                            
+  8010e5c4: nop                                
+  8010e5c8: lw ra,16(sp)                       
+  8010e5cc: addiu sp,sp,24                     
+  8010e5d0: jr ra                              
+  8010e5d4: nop                                
+  8010e5d8: lui a0,0x800b                      
+  8010e5dc: lw a0,-14460(a0)                   g_entity(cur)
+  8010e5e0: addiu sp,sp,-40                    
+  8010e5e4: sw ra,32(sp)                       
+  8010e5e8: lbu v1,7(a0)                       0x800b0007
+  8010e5ec: ori v0,zero,0x1                    
+  8010e5f0: beq v1,v0,0x8010e694               
+  8010e5f4: slti v0,v1,2                       
+  8010e5f8: beq v0,zero,0x8010e610             
+  8010e5fc: nop                                
+  8010e600: beq v1,zero,0x8010e624             
+  8010e604: nop                                
+  8010e608: j 0x8010e738                       
+  8010e60c: nop                                
+  8010e610: ori v0,zero,0x2                    
+  8010e614: beq v1,v0,0x8010e6d0               
+  8010e618: nop                                
+  8010e61c: j 0x8010e738                       
+  8010e620: nop                                
+  8010e624: lbu v0,147(a0)                     0x800b0093
+  8010e628: nop                                
+  8010e62c: ori v0,v0,0x2                      
+  8010e630: sb v0,147(a0)                      0x800b0093
+  8010e634: lui v1,0x800b                      
+  8010e638: lw v1,-14460(v1)                   g_entity(cur)
+  8010e63c: ori v0,zero,0x1                    
+  8010e640: sb v0,7(v1)                        0x800b0007
+  8010e644: lui v1,0x800b                      
+  8010e648: lw v1,-14460(v1)                   g_entity(cur)
+  8010e64c: ori v0,zero,0xa                    
+  8010e650: sb v0,148(v1)                      0x800b0094
+  8010e654: lui v0,0x800b                      
+  8010e658: lw v0,-14460(v0)                   g_entity(cur)
+  8010e65c: lui a3,0x8012                      
+  8010e660: addiu a3,a3,-29768                 0x80118bb8
+  8010e664: sb zero,149(v0)                    0x800b0095
+  8010e668: lui v1,0x800b                      
+  8010e66c: lw v1,-14460(v1)                   g_entity(cur)
+  8010e670: ori v0,zero,0x7                    
+  8010e674: sb v0,143(v1)                      0x800b008f
+  8010e678: lui v0,0x800b                      
+  8010e67c: lw v0,-14460(v0)                   g_entity(cur)
+  8010e680: ori a0,zero,0x2000                 
+  8010e684: lw a2,392(v0)                      0x800b0188
+  8010e688: lh a1,106(v0)                      0x800b006a
+  8010e68c: jal 0x80019700                     
+  8010e690: addiu a2,a2,2644                   0x800b0a54
+  8010e694: lui v0,0x800b                      
+  8010e698: lw v0,-14460(v0)                   g_entity(cur)
+  8010e69c: addu a2,zero,zero                  
+  8010e6a0: lw a0,132(v0)                      0x800b0084
+  8010e6a4: lw a1,364(v0)                      0x800b016c
+  8010e6a8: jal 0x8001f314                     anim_set
+  8010e6ac: ori a3,zero,0x200                  
+  8010e6b0: lui a0,0x800b                      
+  8010e6b4: lw a0,-14460(a0)                   g_entity(cur)
+  8010e6b8: nop                                
+  8010e6bc: lbu v1,7(a0)                       0x800b0007
+  8010e6c0: nop                                
+  8010e6c4: addu v1,v1,v0                      
+  8010e6c8: j 0x8010e738                       
+  8010e6cc: sb v1,7(a0)                        0x800b0007
+  8010e6d0: sb zero,147(a0)                    0x800b0093
+  8010e6d4: lui v1,0x800b                      
+  8010e6d8: lw v1,-14460(v1)                   g_entity(cur)
+  8010e6dc: nop                                
+  8010e6e0: lbu v0,480(v1)                     0x800b01e0
+  8010e6e4: nop                                
+  8010e6e8: bne v0,zero,0x8010e704             
+  8010e6ec: ori v0,zero,0x1                    
+  8010e6f0: sb v0,4(v1)                        0x800b0004
+  8010e6f4: lui v1,0x800b                      
+  8010e6f8: lw v1,-14460(v1)                   g_entity(cur)
+  8010e6fc: j 0x8010e714                       
+  8010e700: ori v0,zero,0x2                    
+  8010e704: sb v0,4(v1)                        0x800b0004
+  8010e708: lui v1,0x800b                      
+  8010e70c: lw v1,-14460(v1)                   g_entity(cur)
+  8010e710: ori v0,zero,0x4                    
+  8010e714: sb v0,5(v1)                        0x800b0005
+  8010e718: lui v0,0x800b                      
+  8010e71c: lw v0,-14460(v0)                   g_entity(cur)
+  8010e720: nop                                
+  8010e724: sb zero,6(v0)                      0x800b0006
+  8010e728: lui v0,0x800b                      
+  8010e72c: lw v0,-14460(v0)                   g_entity(cur)
+  8010e730: nop                                
+  8010e734: sb zero,7(v0)                      0x800b0007
+  8010e738: lw ra,32(sp)                       
+  8010e73c: addiu sp,sp,40                     
+  8010e740: jr ra                              
+  8010e744: nop                                
+  8010e748: lui a1,0x800b                      
+  8010e74c: lw a1,-14460(a1)                   g_entity(cur)
+  8010e750: addiu sp,sp,-40                    
+  8010e754: sw ra,32(sp)                       
+  8010e758: lbu v1,7(a1)                       0x800b0007
+  8010e75c: ori v0,zero,0x1                    
+  8010e760: beq v1,v0,0x8010e85c               
+  8010e764: slti v0,v1,2                       
+  8010e768: beq v0,zero,0x8010e780             
+  8010e76c: nop                                
+  8010e770: beq v1,zero,0x8010e794             
+  8010e774: ori a0,zero,0x2000                 
+  8010e778: j 0x8010e90c                       
+  8010e77c: nop                                
+  8010e780: ori v0,zero,0x2                    
+  8010e784: beq v1,v0,0x8010e8c8               
+  8010e788: ori v0,zero,0x1                    
+  8010e78c: j 0x8010e90c                       
+  8010e790: nop                                
+  8010e794: addu a3,zero,zero                  
+  8010e798: lw a2,392(a1)                      0x800b0188
+  8010e79c: lh a1,106(a1)                      0x800b006a
+  8010e7a0: jal 0x80019700                     
+  8010e7a4: addiu a2,a2,2644                   0x800b0a54
+  8010e7a8: lui a0,0x800b                      
+  8010e7ac: lw a0,-14460(a0)                   g_entity(cur)
+  8010e7b0: lui v0,0x800b                      
+  8010e7b4: lhu v0,-13634(v0)                  0x800acabe
+  8010e7b8: lhu v1,106(a0)                     0x800b006a
+  8010e7bc: nop                                
+  8010e7c0: subu v0,v0,v1                      
+  8010e7c4: andi v0,v0,0xfff                   
+  8010e7c8: sh v0,156(a0)                      0x800b009c
+  8010e7cc: lui v1,0x800b                      
+  8010e7d0: lw v1,-14460(v1)                   g_entity(cur)
+  8010e7d4: nop                                
+  8010e7d8: lbu v0,147(v1)                     0x800b0093
+  8010e7dc: nop                                
+  8010e7e0: ori v0,v0,0x2                      
+  8010e7e4: sb v0,147(v1)                      0x800b0093
+  8010e7e8: lui v1,0x800b                      
+  8010e7ec: lw v1,-14460(v1)                   g_entity(cur)
+  8010e7f0: ori v0,zero,0x1                    
+  8010e7f4: sb v0,7(v1)                        0x800b0007
+  8010e7f8: lui v1,0x800b                      
+  8010e7fc: lw v1,-14460(v1)                   g_entity(cur)
+  8010e800: ori v0,zero,0xb                    
+  8010e804: sb v0,148(v1)                      0x800b0094
+  8010e808: lui v1,0x800b                      
+  8010e80c: lw v1,-14460(v1)                   g_entity(cur)
+  8010e810: nop                                
+  8010e814: lbu v0,147(v1)                     0x800b0093
+  8010e818: nop                                
+  8010e81c: andi v0,v0,0x80                    
+  8010e820: beq v0,zero,0x8010e82c             
+  8010e824: ori v0,zero,0xc                    
+  8010e828: sb v0,148(v1)                      0x800b0094
+  8010e82c: lui v0,0x800b                      
+  8010e830: lw v0,-14460(v0)                   g_entity(cur)
+  8010e834: nop                                
+  8010e838: sb zero,149(v0)                    0x800b0095
+  8010e83c: lui v1,0x800b                      
+  8010e840: lw v1,-14460(v1)                   g_entity(cur)
+  8010e844: ori v0,zero,0x7                    
+  8010e848: sb v0,143(v1)                      0x800b008f
+  8010e84c: lui v1,0x800b                      
+  8010e850: lw v1,-14460(v1)                   g_entity(cur)
+  8010e854: ori v0,zero,0xc8                   
+  8010e858: sh v0,140(v1)                      0x800b008c
+  8010e85c: lui v0,0x800b                      
+  8010e860: lw v0,-14460(v0)                   g_entity(cur)
+  8010e864: addu a2,zero,zero                  
+  8010e868: lw a0,132(v0)                      0x800b0084
+  8010e86c: lw a1,364(v0)                      0x800b016c
+  8010e870: jal 0x8001f314                     anim_set
+  8010e874: ori a3,zero,0x200                  
+  8010e878: lui a0,0x800b                      
+  8010e87c: lw a0,-14460(a0)                   g_entity(cur)
+  8010e880: nop                                
+  8010e884: lbu v1,7(a0)                       0x800b0007
+  8010e888: nop                                
+  8010e88c: addu v1,v1,v0                      
+  8010e890: sb v1,7(a0)                        0x800b0007
+  8010e894: lui v1,0x800b                      
+  8010e898: lw v1,-14460(v1)                   g_entity(cur)
+  8010e89c: nop                                
+  8010e8a0: lbu v0,149(v1)                     0x800b0095
+  8010e8a4: nop                                
+  8010e8a8: sltiu v0,v0,0x12                   
+  8010e8ac: beq v0,zero,0x8010e90c             
+  8010e8b0: nop                                
+  8010e8b4: lh a0,156(v1)                      0x800b009c
+  8010e8b8: jal 0x800245d8                     pos_advance(walker)
+  8010e8bc: nop                                
+  8010e8c0: j 0x8010e90c                       
+  8010e8c4: nop                                
+  8010e8c8: sb zero,147(a1)                    0x800b0093
+  8010e8cc: lui v1,0x800b                      
+  8010e8d0: lw v1,-14460(v1)                   g_entity(cur)
+  8010e8d4: nop                                
+  8010e8d8: sb v0,4(v1)                        0x800b0004
+  8010e8dc: lui v1,0x800b                      
+  8010e8e0: lw v1,-14460(v1)                   g_entity(cur)
+  8010e8e4: ori v0,zero,0x2                    
+  8010e8e8: sb v0,5(v1)                        0x800b0005
+  8010e8ec: lui v0,0x800b                      
+  8010e8f0: lw v0,-14460(v0)                   g_entity(cur)
+  8010e8f4: nop                                
+  8010e8f8: sb zero,6(v0)                      0x800b0006
+  8010e8fc: lui v0,0x800b                      
+  8010e900: lw v0,-14460(v0)                   g_entity(cur)
+  8010e904: nop                                
+  8010e908: sb zero,7(v0)                      0x800b0007
+  8010e90c: lw ra,32(sp)                       
+  8010e910: addiu sp,sp,40                     
+  8010e914: jr ra                              
+  8010e918: nop                                
+  8010e91c: addiu sp,sp,-24                    
+  8010e920: ori a0,zero,0x2000                 
+  8010e924: lui v0,0x800b                      
+  8010e928: lw v0,-14460(v0)                   g_entity(cur)
+  8010e92c: addu a3,zero,zero                  
+  8010e930: sw ra,16(sp)                       
+  8010e934: lw a2,392(v0)                      0x800b0188
+  8010e938: lh a1,106(v0)                      0x800b006a
+  8010e93c: jal 0x80019700                     
+  8010e940: addiu a2,a2,2644                   0x800b0a54
+  8010e944: lui a0,0x800b                      
+  8010e948: addiu a0,a0,-13634                 0x800acabe
+  8010e94c: lui a1,0x800b                      
+  8010e950: lw a1,-14460(a1)                   g_entity(cur)
+  8010e954: lhu v0,0(a0)                       0x800b0000
+  8010e958: lhu v1,106(a1)                     0x800b006a
+  8010e95c: nop                                
+  8010e960: subu v0,v0,v1                      
+  8010e964: andi v0,v0,0xfff                   
+  8010e968: sh v0,156(a1)                      0x800b009c
+  8010e96c: lui v1,0x800b                      
+  8010e970: lw v1,-14460(v1)                   g_entity(cur)
+  8010e974: ori v0,zero,0x1                    
+  8010e978: sb v0,4(v1)                        0x800b0004
+  8010e97c: lui v1,0x800b                      
+  8010e980: lw v1,-14460(v1)                   g_entity(cur)
+  8010e984: ori v0,zero,0x8                    
+  8010e988: sb v0,5(v1)                        0x800b0005
+  8010e98c: lui v0,0x800b                      
+  8010e990: lw v0,-14460(v0)                   g_entity(cur)
+  8010e994: addiu a0,a0,-54                    0x800affca
+  8010e998: sb zero,6(v0)                      0x800b0006
+  8010e99c: lui v0,0x800b                      
+  8010e9a0: lw v0,-14460(v0)                   g_entity(cur)
+  8010e9a4: ori a1,zero,0x20                   
+  8010e9a8: jal 0x8001a9cc                     arc_test
+  8010e9ac: sb zero,7(v0)                      0x800b0007
+  8010e9b0: lui v1,0x800b                      
+  8010e9b4: lw v1,-14460(v1)                   g_entity(cur)
+  8010e9b8: nop                                
+  8010e9bc: sh v0,474(v1)                      0x800b01da
+  8010e9c0: lui v1,0x800b                      
+  8010e9c4: lw v1,-14460(v1)                   g_entity(cur)
+  8010e9c8: nop                                
+  8010e9cc: lhu v0,474(v1)                     0x800b01da
+  8010e9d0: nop                                
+  8010e9d4: sh v0,156(v1)                      0x800b009c
+  8010e9d8: lw ra,16(sp)                       
+  8010e9dc: addiu sp,sp,24                     
+  8010e9e0: jr ra                              
+  8010e9e4: nop                                
+  8010e9e8: lui v0,0x800b                      
+  8010e9ec: lw v0,-14460(v0)                   g_entity(cur)
+  8010e9f0: addiu sp,sp,-24                    
+  8010e9f4: sw ra,16(sp)                       
+  8010e9f8: lbu v0,5(v0)                       0x800b0005
+  8010e9fc: nop                                
+  8010ea00: sll v0,v0,2                        
+  8010ea04: lui at,0x8012                      
+  8010ea08: addiu at,at,-29500                 0x80118cc4
+  8010ea0c: addu at,at,v0                      
+  8010ea10: lw v0,0(at)                        0x80120000
+  8010ea14: nop                                
+  8010ea18: jalr v0                            
+  8010ea1c: nop                                
+  8010ea20: lw ra,16(sp)                       
+  8010ea24: addiu sp,sp,24                     
+  8010ea28: jr ra                              
+  8010ea2c: nop                                
+  8010ea30: lui a1,0x800b                      
+  8010ea34: lw a1,-14460(a1)                   g_entity(cur)
+  8010ea38: addiu sp,sp,-40                    
+  8010ea3c: sw ra,32(sp)                       
+  8010ea40: lbu v1,7(a1)                       0x800b0007
+  8010ea44: ori v0,zero,0x1                    
+  8010ea48: beq v1,v0,0x8010eb58               
+  8010ea4c: slti v0,v1,2                       
+  8010ea50: beq v0,zero,0x8010ea68             
+  8010ea54: nop                                
+  8010ea58: beq v1,zero,0x8010ea7c             
+  8010ea5c: ori a0,zero,0x2000                 
+  8010ea60: j 0x8010ec1c                       
+  8010ea64: nop                                
+  8010ea68: ori v0,zero,0x2                    
+  8010ea6c: beq v1,v0,0x8010ebf8               
+  8010ea70: ori a0,zero,0x2000                 
+  8010ea74: j 0x8010ec1c                       
+  8010ea78: nop                                
+  8010ea7c: lbu v0,147(a1)                     0x800b0093
+  8010ea80: nop                                
+  8010ea84: ori v0,v0,0x2                      
+  8010ea88: sb v0,147(a1)                      0x800b0093
+  8010ea8c: lui v1,0x800b                      
+  8010ea90: lw v1,-14460(v1)                   g_entity(cur)
+  8010ea94: ori v0,zero,0x1                    
+  8010ea98: sb v0,7(v1)                        0x800b0007
+  8010ea9c: lui v1,0x800b                      
+  8010eaa0: lw v1,-14460(v1)                   g_entity(cur)
+  8010eaa4: ori v0,zero,0xd                    
+  8010eaa8: sb v0,148(v1)                      0x800b0094
+  8010eaac: lui v0,0x800b                      
+  8010eab0: lw v0,-14460(v0)                   g_entity(cur)
+  8010eab4: nop                                
+  8010eab8: sb zero,149(v0)                    0x800b0095
+  8010eabc: lui v1,0x800b                      
+  8010eac0: lw v1,-14460(v1)                   g_entity(cur)
+  8010eac4: ori v0,zero,0x7                    
+  8010eac8: sb v0,143(v1)                      0x800b008f
+  8010eacc: lui v0,0x800b                      
+  8010ead0: lw v0,-14460(v0)                   g_entity(cur)
+  8010ead4: nop                                
+  8010ead8: sh zero,140(v0)                    0x800b008c
+  8010eadc: lui v0,0x800b                      
+  8010eae0: lw v0,-14460(v0)                   g_entity(cur)
+  8010eae4: nop                                
+  8010eae8: sh zero,156(v0)                    0x800b009c
+  8010eaec: lui a1,0x800b                      
+  8010eaf0: lw a1,-14460(a1)                   g_entity(cur)
+  8010eaf4: nop                                
+  8010eaf8: lbu v1,130(a1)                     0x800b0082
+  8010eafc: nop                                
+  8010eb00: sll v0,v1,3                        
+  8010eb04: subu v0,v0,v1                      
+  8010eb08: sll v0,v0,5                        
+  8010eb0c: addu v0,v0,v1                      
+  8010eb10: sll v0,v0,3                        
+  8010eb14: subu v0,zero,v0                    
+  8010eb18: sh v0,442(a1)                      0x800b01ba
+  8010eb1c: lui v0,0x800b                      
+  8010eb20: lw v0,-14460(v0)                   g_entity(cur)
+  8010eb24: addu a3,zero,zero                  
+  8010eb28: lw a2,392(v0)                      0x800b0188
+  8010eb2c: lh a1,106(v0)                      0x800b006a
+  8010eb30: jal 0x80019700                     
+  8010eb34: addiu a2,a2,2644                   0x800b0a54
+  8010eb38: lui v0,0x800b                      
+  8010eb3c: lw v0,-14460(v0)                   g_entity(cur)
+  8010eb40: nop                                
+  8010eb44: lbu a1,454(v0)                     0x800b01c6
+  8010eb48: lui a0,0x800b                      
+  8010eb4c: addiu a0,a0,4184                   0x800b1058
+  8010eb50: jal 0x8004ef90                     
+  8010eb54: nop                                
+  8010eb58: lui v0,0x800b                      
+  8010eb5c: lw v0,-14460(v0)                   g_entity(cur)
+  8010eb60: addu a2,zero,zero                  
+  8010eb64: lw a0,132(v0)                      0x800b0084
+  8010eb68: lw a1,364(v0)                      0x800b016c
+  8010eb6c: jal 0x8001f314                     anim_set
+  8010eb70: ori a3,zero,0x200                  
+  8010eb74: lui a0,0x800b                      
+  8010eb78: lw a0,-14460(a0)                   g_entity(cur)
+  8010eb7c: nop                                
+  8010eb80: lbu v1,7(a0)                       0x800b0007
+  8010eb84: nop                                
+  8010eb88: addu v1,v1,v0                      
+  8010eb8c: sb v1,7(a0)                        0x800b0007
+  8010eb90: lui a0,0x800b                      
+  8010eb94: lw a0,-14460(a0)                   g_entity(cur)
+  8010eb98: nop                                
+  8010eb9c: lbu v0,480(a0)                     0x800b01e0
+  8010eba0: nop                                
+  8010eba4: bne v0,zero,0x8010ebc0             
+  8010eba8: ori v0,zero,0x14                   
+  8010ebac: lbu v1,149(a0)                     0x800b0095
+  8010ebb0: nop                                
+  8010ebb4: bne v1,v0,0x8010ebc0               
+  8010ebb8: ori v0,zero,0x2                    
+  8010ebbc: sb v0,7(a0)                        0x800b0007
+  8010ebc0: lui v1,0x800b                      
+  8010ebc4: lw v1,-14460(v1)                   g_entity(cur)
+  8010ebc8: nop                                
+  8010ebcc: lbu v0,149(v1)                     0x800b0095
+  8010ebd0: nop                                
+  8010ebd4: sltiu v0,v0,0x15                   
+  8010ebd8: bne v0,zero,0x8010ec1c             
+  8010ebdc: addu a1,zero,zero                  
+  8010ebe0: lh a0,140(v1)                      0x800b008c
+  8010ebe4: lh a3,442(v1)                      0x800b01ba
+  8010ebe8: jal 0x8001c1a4                     
+  8010ebec: addiu a2,zero,-80                  
+  8010ebf0: j 0x8010ec1c                       
+  8010ebf4: nop                                
+  8010ebf8: addu a3,zero,zero                  
+  8010ebfc: lw a2,392(a1)                      0x800b0188
+  8010ec00: lh a1,106(a1)                      0x800b006a
+  8010ec04: jal 0x80019700                     
+  8010ec08: addiu a2,a2,2644                   0x800b0a54
+  8010ec0c: lui v1,0x800b                      
+  8010ec10: lw v1,-14460(v1)                   g_entity(cur)
+  8010ec14: ori v0,zero,0x7                    
+  8010ec18: sw v0,4(v1)                        0x800b0004
+  8010ec1c: lw ra,32(sp)                       
+  8010ec20: addiu sp,sp,40                     
+  8010ec24: jr ra                              
+  8010ec28: nop                                
+  8010ec2c: jr ra                              
+  8010ec30: nop                                
+  8010ec34: jr ra                              
+  8010ec38: nop                                
+  8010ec3c: lui v0,0x800b                      
+  8010ec40: lw v0,-14460(v0)                   g_entity(cur)
+  8010ec44: addiu sp,sp,-24                    
+  8010ec48: sw ra,16(sp)                       
+  8010ec4c: lbu v0,5(v0)                       0x800b0005
+  8010ec50: nop                                
+  8010ec54: sll v0,v0,2                        
+  8010ec58: lui at,0x8012                      
+  8010ec5c: addiu at,at,-29412                 0x80118d1c
+  8010ec60: addu at,at,v0                      
+  8010ec64: lw v0,0(at)                        0x80120000
+  8010ec68: nop                                
+  8010ec6c: jalr v0                            
+  8010ec70: nop                                
+  8010ec74: lw ra,16(sp)                       
+  8010ec78: addiu sp,sp,24                     
+  8010ec7c: jr ra                              
+  8010ec80: nop                                
+  8010ec84: jr ra                              
+  8010ec88: nop                                
+  8010ec8c: jr ra                              
+  8010ec90: nop                                
+  8010ec94: jr ra                              
+  8010ec98: nop                                
+  8010ec9c: jr ra                              
+  8010eca0: nop                                
+  8010eca4: lui a0,0x800b                      
+  8010eca8: lw a0,-14460(a0)                   g_entity(cur)
+  8010ecac: nop                                
+  8010ecb0: lbu v1,7(a0)                       0x800b0007
+  8010ecb4: ori v0,zero,0x1                    
+  8010ecb8: beq v1,v0,0x8010ed20               
+  8010ecbc: lui a2,0xff                        
+  8010ecc0: slti v0,v1,2                       
+  8010ecc4: beq v0,zero,0x8010ed98             
+  8010ecc8: nop                                
+  8010eccc: bne v1,zero,0x8010ed98             
+  8010ecd0: ori v0,zero,0x5a                   
+  8010ecd4: sb v0,158(a0)                      0x800b009e
+  8010ecd8: lui v1,0x800b                      
+  8010ecdc: lw v1,-14460(v1)                   g_entity(cur)
+  8010ece0: ori v0,zero,0x1                    
+  8010ece4: sb v0,7(v1)                        0x800b0007
+  8010ece8: lui v1,0x800b                      
+  8010ecec: lw v1,-14460(v1)                   g_entity(cur)
+  8010ecf0: nop                                
+  8010ecf4: lw v0,0(v1)                        0x800b0000
+  8010ecf8: nop                                
+  8010ecfc: ori v0,v0,0x2                      
+  8010ed00: sw v0,0(v1)                        0x800b0000
+  8010ed04: lui v1,0x800b                      
+  8010ed08: lw v1,-14460(v1)                   g_entity(cur)
+  8010ed0c: nop                                
+  8010ed10: lw v0,0(v1)                        0x800b0000
+  8010ed14: nop                                
+  8010ed18: ori v0,v0,0x40                     
+  8010ed1c: sw v0,0(v1)                        0x800b0000
+  8010ed20: ori a2,a2,0xff38                   
+  8010ed24: lui a0,0x800b                      
+  8010ed28: lw a0,-14460(a0)                   g_entity(cur)
+  8010ed2c: lui a1,0xff00                      
+  8010ed30: lw v0,196(a0)                      0x800b00c4
+  8010ed34: lw v1,236(a0)                      0x800b00ec
+  8010ed38: and v0,v0,a1                       
+  8010ed3c: or v0,v0,a2                        
+  8010ed40: and v1,v1,a1                       
+  8010ed44: sw v0,196(a0)                      0x800b00c4
+  8010ed48: lhu v0,188(a0)                     0x800b00bc
+  8010ed4c: or v1,v1,a2                        
+  8010ed50: sw v1,236(a0)                      0x800b00ec
+  8010ed54: lhu v1,190(a0)                     0x800b00be
+  8010ed58: addiu v0,v0,8                      0x800b0008
+  8010ed5c: addiu v1,v1,8                      0x800b0008
+  8010ed60: sh v0,188(a0)                      0x800b00bc
+  8010ed64: sh v1,190(a0)                      0x800b00be
+  8010ed68: lui v1,0x800b                      
+  8010ed6c: lw v1,-14460(v1)                   g_entity(cur)
+  8010ed70: nop                                
+  8010ed74: lbu a0,158(v1)                     0x800b009e
+  8010ed78: nop                                
+  8010ed7c: addiu v0,a0,-1                     0x800affff
+  8010ed80: bne a0,zero,0x8010ed98             
+  8010ed84: sb v0,158(v1)                      0x800b009e
+  8010ed88: lui v1,0x800b                      
+  8010ed8c: lw v1,-14460(v1)                   g_entity(cur)
+  8010ed90: ori v0,zero,0x2                    
+  8010ed94: sb v0,7(v1)                        0x800b0007
+  8010ed98: jr ra                              
+  8010ed9c: nop                                
+  8010eda0: lui v0,0x800b                      
+  8010eda4: lbu v0,-13735(v0)                  0x800aca59
+  8010eda8: addiu sp,sp,-24                    
+  8010edac: sw ra,16(sp)                       
+  8010edb0: sll v0,v0,2                        
+  8010edb4: lui at,0x8012                      
+  8010edb8: addiu at,at,-29396                 0x80118d2c
+  8010edbc: addu at,at,v0                      
+  8010edc0: lw v0,0(at)                        0x80120000
+  8010edc4: nop                                
+  8010edc8: jalr v0                            
+  8010edcc: nop                                
+  8010edd0: lw ra,16(sp)                       
+  8010edd4: addiu sp,sp,24                     
+  8010edd8: jr ra                              
+  8010eddc: nop                                
+  8010ede0: jr ra                              
+  8010ede4: nop                                
+  8010ede8: jr ra                              
+  8010edec: nop                                
+  8010edf0: lui v0,0x800b                      
+  8010edf4: lbu v0,-13735(v0)                  0x800aca59
+  8010edf8: addiu sp,sp,-24                    
+  8010edfc: sw ra,16(sp)                       
+  8010ee00: sll v0,v0,2                        
+  8010ee04: lui at,0x8012                      
+  8010ee08: addiu at,at,-29380                 0x80118d3c
+  8010ee0c: addu at,at,v0                      
+  8010ee10: lw v0,0(at)                        0x80120000
+  8010ee14: nop                                
+  8010ee18: jalr v0                            
+  8010ee1c: nop                                
+  8010ee20: lw ra,16(sp)                       
+  8010ee24: addiu sp,sp,24                     
+  8010ee28: jr ra                              
+  8010ee2c: nop                                
+  8010ee30: jr ra                              
+  8010ee34: nop                                
+  8010ee38: jr ra                              
+  8010ee3c: nop                                
+  8010ee40: andi a1,a1,0xff                    
+  8010ee44: lui v0,0x8012                      
+  8010ee48: addiu v0,v0,-29372                 0x80118d44
+  8010ee4c: sll a1,a1,2                        
+  8010ee50: sll a0,a0,16                       
+  8010ee54: sra a0,a0,16                       
+  8010ee58: beq a0,zero,0x8010ee70             
+  8010ee5c: addu a1,a1,v0                      
+  8010ee60: blez a0,0x8010ee74                 
+  8010ee64: nop                                
+  8010ee68: j 0x8010ee74                       
+  8010ee6c: addiu a1,a1,2                      
+  8010ee70: addiu a1,a1,1                      
+  8010ee74: lui v1,0x800b                      
+  8010ee78: lw v1,-14460(v1)                   g_entity(cur)
+  8010ee7c: lbu a1,0(a1)                       
+  8010ee80: lbu v0,148(v1)                     0x800b0094
+  8010ee84: nop                                
+  8010ee88: beq v0,a1,0x8010ee94               
+  8010ee8c: nop                                
+  8010ee90: sb a1,148(v1)                      0x800b0094
+  8010ee94: jr ra                              
+  8010ee98: nop                                
+  8010ee9c: addiu sp,sp,-24                    
+  8010eea0: lui v0,0x800b                      
+  8010eea4: lw v0,-13760(v0)                   g_pauseflags
+  8010eea8: lui v1,0x2000                      
+  8010eeac: and v0,v0,v1                       
+  8010eeb0: beq v0,zero,0x8010eed8             
+  8010eeb4: sw ra,16(sp)                       
+  8010eeb8: lui v0,0x800b                      
+  8010eebc: lw v0,-14460(v0)                   g_entity(cur)
+  8010eec0: nop                                
+  8010eec4: lbu v0,9(v0)                       0x800b0009
+  8010eec8: nop                                
+  8010eecc: andi v0,v0,0x20                    
+  8010eed0: beq v0,zero,0x8010ef0c             
+  8010eed4: nop                                
+  8010eed8: lui v0,0x800b                      
+  8010eedc: lw v0,-14460(v0)                   g_entity(cur)
+  8010eee0: nop                                
+  8010eee4: lbu v0,4(v0)                       0x800b0004
+  8010eee8: nop                                
+  8010eeec: sll v0,v0,2                        
+  8010eef0: lui at,0x8012                      
+  8010eef4: addiu at,at,-29360                 0x80118d50
+  8010eef8: addu at,at,v0                      
+  8010eefc: lw v0,0(at)                        0x80120000
+  8010ef00: nop                                
+  8010ef04: jalr v0                            
+  8010ef08: nop                                
+  8010ef0c: lw ra,16(sp)                       
+  8010ef10: addiu sp,sp,24                     
+  8010ef14: jr ra                              
+  8010ef18: nop                                
+  8010ef1c: addiu sp,sp,-24                    
+  8010ef20: lui v0,0x800b                      
+  8010ef24: lw v0,-14460(v0)                   g_entity(cur)
+  8010ef28: ori v1,zero,0x1                    
+  8010ef2c: sw ra,16(sp)                       
+  8010ef30: lui at,0x800b                      
+  8010ef34: sb v1,-13300(at)                   0x800acc0c
+  8010ef38: sb zero,440(v0)                    0x800b01b8
+  8010ef3c: lui v0,0x800b                      
+  8010ef40: lw v0,-14460(v0)                   g_entity(cur)
+  8010ef44: nop                                
+  8010ef48: sb zero,441(v0)                    0x800b01b9
+  8010ef4c: lui v0,0x800b                      
+  8010ef50: lw v0,-14460(v0)                   g_entity(cur)
+  8010ef54: addu a0,zero,zero                  
+  8010ef58: sb v1,147(v0)                      0x800b0093
+  8010ef5c: lui v1,0x800b                      
+  8010ef60: lw v1,-14460(v1)                   g_entity(cur)
+  8010ef64: ori v0,zero,0x78                   
+  8010ef68: jal 0x8011089c                     
+  8010ef6c: sh v0,140(v1)                      0x800b008c
+  8010ef70: lui v0,0x800b                      
+  8010ef74: lw v0,-14460(v0)                   g_entity(cur)
+  8010ef78: addu a2,zero,zero                  
+  8010ef7c: lw a0,132(v0)                      0x800b0084
+  8010ef80: lw a1,364(v0)                      0x800b016c
+  8010ef84: jal 0x8001f314                     anim_set
+  8010ef88: ori a3,zero,0x200                  
+  8010ef8c: addu a0,zero,zero                  
+  8010ef90: andi v0,a0,0xff                    
+  8010ef94: addiu a0,a0,1                      0x800b0001
+  8010ef98: lui v1,0x800b                      
+  8010ef9c: lw v1,-14460(v1)                   g_entity(cur)
+  8010efa0: sll v0,v0,2                        
+  8010efa4: addu v0,v0,v1                      
+  8010efa8: sw zero,464(v0)                    0x800b01d0
+  8010efac: andi v0,a0,0xff                    
+  8010efb0: sltiu v0,v0,0x8                    
+  8010efb4: bne v0,zero,0x8010ef94             
+  8010efb8: andi v0,a0,0xff                    
+  8010efbc: lui v0,0x800b                      
+  8010efc0: lw v0,-14460(v0)                   g_entity(cur)
+  8010efc4: nop                                
+  8010efc8: lw a0,392(v0)                      0x800b0188
+  8010efcc: nop                                
+  8010efd0: lw v0,0(a0)                        0x800b0000
+  8010efd4: addiu v1,zero,-2                   
+  8010efd8: lui at,0x8012                      
+  8010efdc: sw a0,-27880(at)                   0x80119318
+  8010efe0: and v0,v0,v1                       
+  8010efe4: sw v0,0(a0)                        0x800b0000
+  8010efe8: lui v1,0x800b                      
+  8010efec: lw v1,-14460(v1)                   g_entity(cur)
+  8010eff0: ori v0,zero,0x1                    
+  8010eff4: sw v0,4(v1)                        0x800b0004
+  8010eff8: lui v1,0x800b                      
+  8010effc: lw v1,-14460(v1)                   g_entity(cur)
+  8010f000: nop                                
+  8010f004: lbu v0,9(v1)                       0x800b0009
+  8010f008: nop                                
+  8010f00c: sb v0,5(v1)                        0x800b0005
+  8010f010: lw ra,16(sp)                       
+  8010f014: addiu sp,sp,24                     
+  8010f018: jr ra                              
+  8010f01c: nop                                
+  8010f020: lui a0,0x800b                      
+  8010f024: lw a0,-14460(a0)                   g_entity(cur)
+  8010f028: lui v0,0x800b                      
+  8010f02c: lw v0,-13688(v0)                   playerX
+  8010f030: addiu sp,sp,-24                    
+  8010f034: sw ra,16(sp)                       
+  8010f038: lw v1,52(a0)                       0x800b0034
+  8010f03c: nop                                
+  8010f040: subu v0,v0,v1                      
+  8010f044: mult v0,v0                         
+  8010f048: lui v0,0x800b                      
+  8010f04c: lw v0,-13680(v0)                   playerZ
+  8010f050: lw v1,60(a0)                       0x800b003c
+  8010f054: mflo a1                            
+  8010f058: subu v0,v0,v1                      
+  8010f05c: mult v0,v0                         
+  8010f060: mflo a0                            
+  8010f064: jal 0x80065f60                     SquareRoot0
+  8010f068: addu a0,a1,a0                      
+  8010f06c: lui v1,0x800b                      
+  8010f070: lw v1,-14460(v1)                   g_entity(cur)
+  8010f074: nop                                
+  8010f078: sh v0,468(v1)                      0x800b01d4
+  8010f07c: lui v0,0x800b                      
+  8010f080: lw v0,-14460(v0)                   g_entity(cur)
+  8010f084: nop                                
+  8010f088: lbu v0,5(v0)                       0x800b0005
+  8010f08c: nop                                
+  8010f090: sll v0,v0,2                        
+  8010f094: lui at,0x8012                      
+  8010f098: addiu at,at,-29352                 0x80118d58
+  8010f09c: addu at,at,v0                      
+  8010f0a0: lw v0,0(at)                        0x80120000
+  8010f0a4: nop                                
+  8010f0a8: jalr v0                            
+  8010f0ac: nop                                
+  8010f0b0: lui v1,0x800b                      
+  8010f0b4: lw v1,-14460(v1)                   g_entity(cur)
+  8010f0b8: nop                                
+  8010f0bc: lhu v0,140(v1)                     0x800b008c
+  8010f0c0: nop                                
+  8010f0c4: addiu v0,v0,1                      0x800b0001
+  8010f0c8: sh v0,140(v1)                      0x800b008c
+  8010f0cc: lui v1,0x800b                      
+  8010f0d0: lw v1,-14460(v1)                   g_entity(cur)
+  8010f0d4: nop                                
+  8010f0d8: lh a0,140(v1)                      0x800b008c
+  8010f0dc: lw v0,52(v1)                       0x800b0034
+  8010f0e0: nop                                
+  8010f0e4: subu v0,v0,a0                      
+  8010f0e8: sw v0,52(v1)                       0x800b0034
+  8010f0ec: lui v1,0x800b                      
+  8010f0f0: lw v1,-14460(v1)                   g_entity(cur)
+  8010f0f4: nop                                
+  8010f0f8: lw v0,52(v1)                       0x800b0034
+  8010f0fc: nop                                
+  8010f100: slti v0,v0,-25000                  
+  8010f104: beq v0,zero,0x8010f120             
+  8010f108: ori v0,zero,0x4e20                 
+  8010f10c: sw v0,52(v1)                       0x800b0034
+  8010f110: lui v1,0x800b                      
+  8010f114: lw v1,-14460(v1)                   g_entity(cur)
+  8010f118: ori v0,zero,0xe1                   
+  8010f11c: sh v0,140(v1)                      0x800b008c
+  8010f120: lw ra,16(sp)                       
+  8010f124: addiu sp,sp,24                     
+  8010f128: jr ra                              
+  8010f12c: nop                                
+  8010f130: lui v0,0x800b                      
+  8010f134: lw v0,-14460(v0)                   g_entity(cur)
+  8010f138: addiu sp,sp,-24                    
+  8010f13c: sw ra,16(sp)                       
+  8010f140: lbu v0,6(v0)                       0x800b0006
+  8010f144: nop                                
+  8010f148: sll v0,v0,2                        
+  8010f14c: lui at,0x8012                      
+  8010f150: addiu at,at,-29304                 0x80118d88
+  8010f154: addu at,at,v0                      
+  8010f158: lw v0,0(at)                        0x80120000
+  8010f15c: nop                                
+  8010f160: jalr v0                            
+  8010f164: nop                                
+  8010f168: lw ra,16(sp)                       
+  8010f16c: addiu sp,sp,24                     
+  8010f170: jr ra                              
+  8010f174: nop                                
+  8010f178: lui v0,0x800b                      
+  8010f17c: lw v0,-14460(v0)                   g_entity(cur)
+  8010f180: addiu sp,sp,-24                    
+  8010f184: sw ra,16(sp)                       
+  8010f188: lbu v0,464(v0)                     0x800b01d0
+  8010f18c: nop                                
+  8010f190: bne v0,zero,0x8010f254             
+  8010f194: addiu a0,zero,-1000                
+  8010f198: ori a1,zero,0xa8c                  
+  8010f19c: jal 0x801108cc                     
+  8010f1a0: addiu a2,zero,-1200                
+  8010f1a4: ori a0,zero,0x4000                 
+  8010f1a8: addu a1,zero,zero                  
+  8010f1ac: jal 0x80110988                     
+  8010f1b0: ori a2,zero,0x7                    
+  8010f1b4: addiu a0,zero,-2000                
+  8010f1b8: ori a1,zero,0xa8c                  
+  8010f1bc: jal 0x801108cc                     
+  8010f1c0: ori a2,zero,0x4b0                  
+  8010f1c4: ori a0,zero,0x4000                 
+  8010f1c8: addu a1,zero,zero                  
+  8010f1cc: jal 0x80110988                     
+  8010f1d0: ori a2,zero,0x7                    
+  8010f1d4: addiu a0,zero,-1000                
+  8010f1d8: ori a1,zero,0xa8c                  
+  8010f1dc: jal 0x801108cc                     
+  8010f1e0: addu a2,zero,zero                  
+  8010f1e4: ori a0,zero,0x3000                 
+  8010f1e8: addu a1,zero,zero                  
+  8010f1ec: jal 0x80110988                     
+  8010f1f0: ori a2,zero,0x7                    
+  8010f1f4: addiu a0,zero,-2000                
+  8010f1f8: ori a1,zero,0x514                  
+  8010f1fc: jal 0x801108cc                     
+  8010f200: addiu a2,zero,-1200                
+  8010f204: ori a0,zero,0x4000                 
+  8010f208: addu a1,zero,zero                  
+  8010f20c: jal 0x80110988                     
+  8010f210: ori a2,zero,0x7                    
+  8010f214: addiu a0,zero,-1000                
+  8010f218: ori a1,zero,0x514                  
+  8010f21c: jal 0x801108cc                     
+  8010f220: ori a2,zero,0x4b0                  
+  8010f224: ori a0,zero,0x4000                 
+  8010f228: addu a1,zero,zero                  
+  8010f22c: jal 0x80110988                     
+  8010f230: ori a2,zero,0x7                    
+  8010f234: addiu a0,zero,-2000                
+  8010f238: ori a1,zero,0x514                  
+  8010f23c: jal 0x801108cc                     
+  8010f240: addu a2,zero,zero                  
+  8010f244: ori a0,zero,0x4000                 
+  8010f248: addu a1,zero,zero                  
+  8010f24c: jal 0x80110988                     
+  8010f250: ori a2,zero,0x7                    
+  8010f254: lui v0,0x800b                      
+  8010f258: lw v0,-14460(v0)                   g_entity(cur)
+  8010f25c: nop                                
+  8010f260: lbu v1,464(v0)                     0x800b01d0
+  8010f264: nop                                
+  8010f268: addiu v1,v1,1                      0x800b0001
+  8010f26c: sb v1,464(v0)                      0x800b01d0
+  8010f270: lui v1,0x800b                      
+  8010f274: lw v1,-14460(v1)                   g_entity(cur)
+  8010f278: nop                                
+  8010f27c: lbu v0,464(v1)                     0x800b01d0
+  8010f280: nop                                
+  8010f284: sltiu v0,v0,0xb                    
+  8010f288: bne v0,zero,0x8010f2b0             
+  8010f28c: nop                                
+  8010f290: sb zero,464(v1)                    0x800b01d0
+  8010f294: lui v1,0x800b                      
+  8010f298: lw v1,-14460(v1)                   g_entity(cur)
+  8010f29c: nop                                
+  8010f2a0: lbu v0,6(v1)                       0x800b0006
+  8010f2a4: nop                                
+  8010f2a8: addiu v0,v0,1                      0x800b0001
+  8010f2ac: sb v0,6(v1)                        0x800b0006
+  8010f2b0: lw ra,16(sp)                       
+  8010f2b4: addiu sp,sp,24                     
+  8010f2b8: jr ra                              
+  8010f2bc: nop                                
+  8010f2c0: lui v0,0x800b                      
+  8010f2c4: lw v0,-14460(v0)                   g_entity(cur)
+  8010f2c8: addiu sp,sp,-24                    
+  8010f2cc: sw ra,16(sp)                       
+  8010f2d0: lbu v0,464(v0)                     0x800b01d0
+  8010f2d4: nop                                
+  8010f2d8: bne v0,zero,0x8010f39c             
+  8010f2dc: addiu a0,zero,-2000                
+  8010f2e0: ori a1,zero,0x9c4                  
+  8010f2e4: jal 0x801108cc                     
+  8010f2e8: addiu a2,zero,-1200                
+  8010f2ec: ori a0,zero,0x3000                 
+  8010f2f0: addu a1,zero,zero                  
+  8010f2f4: jal 0x80110988                     
+  8010f2f8: ori a2,zero,0x7                    
+  8010f2fc: addiu a0,zero,-1000                
+  8010f300: ori a1,zero,0x9c4                  
+  8010f304: jal 0x801108cc                     
+  8010f308: ori a2,zero,0x4b0                  
+  8010f30c: ori a0,zero,0x3000                 
+  8010f310: addu a1,zero,zero                  
+  8010f314: jal 0x80110988                     
+  8010f318: ori a2,zero,0x7                    
+  8010f31c: addiu a0,zero,-2000                
+  8010f320: ori a1,zero,0x9c4                  
+  8010f324: jal 0x801108cc                     
+  8010f328: addu a2,zero,zero                  
+  8010f32c: ori a0,zero,0x3000                 
+  8010f330: addu a1,zero,zero                  
+  8010f334: jal 0x80110988                     
+  8010f338: ori a2,zero,0x7                    
+  8010f33c: addiu a0,zero,-1000                
+  8010f340: ori a1,zero,0x44c                  
+  8010f344: jal 0x801108cc                     
+  8010f348: addiu a2,zero,-1200                
+  8010f34c: ori a0,zero,0x3000                 
+  8010f350: addu a1,zero,zero                  
+  8010f354: jal 0x80110988                     
+  8010f358: ori a2,zero,0x7                    
+  8010f35c: addiu a0,zero,-2000                
+  8010f360: ori a1,zero,0x44c                  
+  8010f364: jal 0x801108cc                     
+  8010f368: ori a2,zero,0x4b0                  
+  8010f36c: ori a0,zero,0x3000                 
+  8010f370: addu a1,zero,zero                  
+  8010f374: jal 0x80110988                     
+  8010f378: ori a2,zero,0x7                    
+  8010f37c: addiu a0,zero,-1000                
+  8010f380: ori a1,zero,0x44c                  
+  8010f384: jal 0x801108cc                     
+  8010f388: addu a2,zero,zero                  
+  8010f38c: ori a0,zero,0x3000                 
+  8010f390: addu a1,zero,zero                  
+  8010f394: jal 0x80110988                     
+  8010f398: ori a2,zero,0x7                    
+  8010f39c: lui v0,0x800b                      
+  8010f3a0: lw v0,-14460(v0)                   g_entity(cur)
+  8010f3a4: nop                                
+  8010f3a8: lbu v1,464(v0)                     0x800b01d0
+  8010f3ac: nop                                
+  8010f3b0: addiu v1,v1,1                      0x800b0001
+  8010f3b4: sb v1,464(v0)                      0x800b01d0
+  8010f3b8: lui v1,0x800b                      
+  8010f3bc: lw v1,-14460(v1)                   g_entity(cur)
+  8010f3c0: nop                                
+  8010f3c4: lbu v0,464(v1)                     0x800b01d0
+  8010f3c8: nop                                
+  8010f3cc: sltiu v0,v0,0xb                    
+  8010f3d0: bne v0,zero,0x8010f3ec             
+  8010f3d4: nop                                
+  8010f3d8: sb zero,464(v1)                    0x800b01d0
+  8010f3dc: lui v0,0x800b                      
+  8010f3e0: lw v0,-14460(v0)                   g_entity(cur)
+  8010f3e4: nop                                
+  8010f3e8: sb zero,6(v0)                      0x800b0006
+  8010f3ec: lw ra,16(sp)                       
+  8010f3f0: addiu sp,sp,24                     
+  8010f3f4: jr ra                              
+  8010f3f8: nop                                
+  8010f3fc: lui v0,0x800b                      
+  8010f400: lw v0,-14460(v0)                   g_entity(cur)
+  8010f404: addiu sp,sp,-24                    
+  8010f408: sw ra,16(sp)                       
+  8010f40c: lbu v0,6(v0)                       0x800b0006
+  8010f410: nop                                
+  8010f414: sll v0,v0,2                        
+  8010f418: lui at,0x8012                      
+  8010f41c: addiu at,at,-29296                 0x80118d90
+  8010f420: addu at,at,v0                      
+  8010f424: lw v0,0(at)                        0x80120000
+  8010f428: nop                                
+  8010f42c: jalr v0                            
+  8010f430: nop                                
+  8010f434: lw ra,16(sp)                       
+  8010f438: addiu sp,sp,24                     
+  8010f43c: jr ra                              
+  8010f440: nop                                
+  8010f444: lui v0,0x800b                      
+  8010f448: lw v0,-14460(v0)                   g_entity(cur)
+  8010f44c: addiu sp,sp,-24                    
+  8010f450: sw ra,16(sp)                       
+  8010f454: lbu v0,464(v0)                     0x800b01d0
+  8010f458: nop                                
+  8010f45c: bne v0,zero,0x8010f480             
+  8010f460: ori a0,zero,0xc8                   
+  8010f464: ori a1,zero,0x708                  
+  8010f468: jal 0x801108cc                     
+  8010f46c: addu a2,zero,zero                  
+  8010f470: ori a0,zero,0x2000                 
+  8010f474: addiu a1,zero,-200                 
+  8010f478: jal 0x80110988                     
+  8010f47c: addu a2,zero,zero                  
+  8010f480: lui v0,0x800b                      
+  8010f484: lw v0,-14460(v0)                   g_entity(cur)
+  8010f488: nop                                
+  8010f48c: lbu v1,464(v0)                     0x800b01d0
+  8010f490: ori v0,zero,0x3                    
+  8010f494: bne v1,v0,0x8010f4d8               
+  8010f498: ori a0,zero,0x190                  
+  8010f49c: ori a1,zero,0x708                  
+  8010f4a0: jal 0x801108cc                     
+  8010f4a4: addiu a2,zero,-600                 
+  8010f4a8: ori a0,zero,0x2600                 
+  8010f4ac: addiu a1,zero,-100                 
+  8010f4b0: jal 0x80110988                     
+  8010f4b4: addu a2,zero,zero                  
+  8010f4b8: ori a0,zero,0x190                  
+  8010f4bc: ori a1,zero,0x960                  
+  8010f4c0: jal 0x801108cc                     
+  8010f4c4: addu a2,zero,zero                  
+  8010f4c8: ori a0,zero,0x2600                 
+  8010f4cc: addiu a1,zero,-100                 
+  8010f4d0: jal 0x80110988                     
+  8010f4d4: addu a2,zero,zero                  
+  8010f4d8: lui v0,0x800b                      
+  8010f4dc: lw v0,-14460(v0)                   g_entity(cur)
+  8010f4e0: nop                                
+  8010f4e4: lbu v1,464(v0)                     0x800b01d0
+  8010f4e8: ori v0,zero,0x6                    
+  8010f4ec: bne v1,v0,0x8010f550               
+  8010f4f0: ori a0,zero,0x258                  
+  8010f4f4: ori a1,zero,0x708                  
+  8010f4f8: jal 0x801108cc                     
+  8010f4fc: addiu a2,zero,-1200                
+  8010f500: ori a0,zero,0x2c00                 
+  8010f504: addu a1,zero,zero                  
+  8010f508: jal 0x80110988                     
+  8010f50c: addu a2,zero,zero                  
+  8010f510: ori a0,zero,0x258                  
+  8010f514: ori a1,zero,0x960                  
+  8010f518: jal 0x801108cc                     
+  8010f51c: addiu a2,zero,-600                 
+  8010f520: ori a0,zero,0x3000                 
+  8010f524: addu a1,zero,zero                  
+  8010f528: jal 0x80110988                     
+  8010f52c: addu a2,zero,zero                  
+  8010f530: ori a0,zero,0x258                  
+  8010f534: ori a1,zero,0xbb8                  
+  8010f538: jal 0x801108cc                     
+  8010f53c: addu a2,zero,zero                  
+  8010f540: ori a0,zero,0x2c00                 
+  8010f544: addu a1,zero,zero                  
+  8010f548: jal 0x80110988                     
+  8010f54c: addu a2,zero,zero                  
+  8010f550: lui v0,0x800b                      
+  8010f554: lw v0,-14460(v0)                   g_entity(cur)
+  8010f558: nop                                
+  8010f55c: lbu v1,464(v0)                     0x800b01d0
+  8010f560: ori v0,zero,0x9                    
+  8010f564: bne v1,v0,0x8010f5a8               
+  8010f568: ori a0,zero,0x320                  
+  8010f56c: ori a1,zero,0x960                  
+  8010f570: jal 0x801108cc                     
+  8010f574: addiu a2,zero,-1200                
+  8010f578: ori a0,zero,0x3200                 
+  8010f57c: addu a1,zero,zero                  
+  8010f580: jal 0x80110988                     
+  8010f584: addu a2,zero,zero                  
+  8010f588: ori a0,zero,0x320                  
+  8010f58c: ori a1,zero,0xbb8                  
+  8010f590: jal 0x801108cc                     
+  8010f594: addiu a2,zero,-600                 
+  8010f598: ori a0,zero,0x3200                 
+  8010f59c: addu a1,zero,zero                  
+  8010f5a0: jal 0x80110988                     
+  8010f5a4: addu a2,zero,zero                  
+  8010f5a8: lui v0,0x800b                      
+  8010f5ac: lw v0,-14460(v0)                   g_entity(cur)
+  8010f5b0: nop                                
+  8010f5b4: lbu v1,464(v0)                     0x800b01d0
+  8010f5b8: ori v0,zero,0xc                    
+  8010f5bc: bne v1,v0,0x8010f5e0               
+  8010f5c0: ori a0,zero,0x3e8                  
+  8010f5c4: ori a1,zero,0xbb8                  
+  8010f5c8: jal 0x801108cc                     
+  8010f5cc: addiu a2,zero,-1200                
+  8010f5d0: ori a0,zero,0x3800                 
+  8010f5d4: addu a1,zero,zero                  
+  8010f5d8: jal 0x80110988                     
+  8010f5dc: addu a2,zero,zero                  
+  8010f5e0: lui v0,0x800b                      
+  8010f5e4: lw v0,-14460(v0)                   g_entity(cur)
+  8010f5e8: nop                                
+  8010f5ec: lbu v1,464(v0)                     0x800b01d0
+  8010f5f0: nop                                
+  8010f5f4: addiu v1,v1,1                      0x800b0001
+  8010f5f8: sb v1,464(v0)                      0x800b01d0
+  8010f5fc: lui v1,0x800b                      
+  8010f600: lw v1,-14460(v1)                   g_entity(cur)
+  8010f604: nop                                
+  8010f608: lbu v0,464(v1)                     0x800b01d0
+  8010f60c: nop                                
+  8010f610: sltiu v0,v0,0x1a                   
+  8010f614: bne v0,zero,0x8010f63c             
+  8010f618: nop                                
+  8010f61c: sb zero,464(v1)                    0x800b01d0
+  8010f620: lui v1,0x800b                      
+  8010f624: lw v1,-14460(v1)                   g_entity(cur)
+  8010f628: nop                                
+  8010f62c: lbu v0,6(v1)                       0x800b0006
+  8010f630: nop                                
+  8010f634: addiu v0,v0,1                      0x800b0001
+  8010f638: sb v0,6(v1)                        0x800b0006
+  8010f63c: lw ra,16(sp)                       
+  8010f640: addiu sp,sp,24                     
+  8010f644: jr ra                              
+  8010f648: nop                                
+  8010f64c: lui v0,0x800b                      
+  8010f650: lw v0,-14460(v0)                   g_entity(cur)
+  8010f654: nop                                
+  8010f658: lbu v1,464(v0)                     0x800b01d0
+  8010f65c: nop                                
+  8010f660: addiu v1,v1,1                      0x800b0001
+  8010f664: sb v1,464(v0)                      0x800b01d0
+  8010f668: lui v1,0x800b                      
+  8010f66c: lw v1,-14460(v1)                   g_entity(cur)
+  8010f670: nop                                
+  8010f674: lbu v0,464(v1)                     0x800b01d0
+  8010f678: nop                                
+  8010f67c: sltiu v0,v0,0xb                    
+  8010f680: bne v0,zero,0x8010f6a8             
+  8010f684: nop                                
+  8010f688: sb zero,464(v1)                    0x800b01d0
+  8010f68c: lui v1,0x800b                      
+  8010f690: lw v1,-14460(v1)                   g_entity(cur)
+  8010f694: nop                                
+  8010f698: lbu v0,6(v1)                       0x800b0006
+  8010f69c: nop                                
+  8010f6a0: addiu v0,v0,1                      0x800b0001
+  8010f6a4: sb v0,6(v1)                        0x800b0006
+  8010f6a8: jr ra                              
+  8010f6ac: nop                                
+  8010f6b0: lui v0,0x800b                      
+  8010f6b4: lw v0,-14460(v0)                   g_entity(cur)
+  8010f6b8: addiu sp,sp,-24                    
+  8010f6bc: sw ra,16(sp)                       
+  8010f6c0: lbu v0,464(v0)                     0x800b01d0
+  8010f6c4: nop                                
+  8010f6c8: bne v0,zero,0x8010f6ec             
+  8010f6cc: ori a0,zero,0xc8                   
+  8010f6d0: ori a1,zero,0x708                  
+  8010f6d4: jal 0x801108cc                     
+  8010f6d8: addiu a2,zero,-1200                
+  8010f6dc: ori a0,zero,0x2000                 
+  8010f6e0: addu a1,zero,zero                  
+  8010f6e4: jal 0x80110988                     
+  8010f6e8: addu a2,zero,zero                  
+  8010f6ec: lui v0,0x800b                      
+  8010f6f0: lw v0,-14460(v0)                   g_entity(cur)
+  8010f6f4: nop                                
+  8010f6f8: lbu v1,464(v0)                     0x800b01d0
+  8010f6fc: ori v0,zero,0x3                    
+  8010f700: bne v1,v0,0x8010f744               
+  8010f704: ori a0,zero,0x190                  
+  8010f708: ori a1,zero,0x708                  
+  8010f70c: jal 0x801108cc                     
+  8010f710: addiu a2,zero,-600                 
+  8010f714: ori a0,zero,0x2600                 
+  8010f718: ori a1,zero,0x64                   
+  8010f71c: jal 0x80110988                     
+  8010f720: addu a2,zero,zero                  
+  8010f724: ori a0,zero,0x190                  
+  8010f728: ori a1,zero,0x960                  
+  8010f72c: jal 0x801108cc                     
+  8010f730: addiu a2,zero,-1200                
+  8010f734: ori a0,zero,0x2600                 
+  8010f738: addu a1,zero,zero                  
+  8010f73c: jal 0x80110988                     
+  8010f740: addu a2,zero,zero                  
+  8010f744: lui v0,0x800b                      
+  8010f748: lw v0,-14460(v0)                   g_entity(cur)
+  8010f74c: nop                                
+  8010f750: lbu v1,464(v0)                     0x800b01d0
+  8010f754: ori v0,zero,0x6                    
+  8010f758: bne v1,v0,0x8010f7bc               
+  8010f75c: ori a0,zero,0x258                  
+  8010f760: ori a1,zero,0x708                  
+  8010f764: jal 0x801108cc                     
+  8010f768: addu a2,zero,zero                  
+  8010f76c: ori a0,zero,0x2000                 
+  8010f770: ori a1,zero,0xc8                   
+  8010f774: jal 0x80110988                     
+  8010f778: addu a2,zero,zero                  
+  8010f77c: ori a0,zero,0x258                  
+  8010f780: ori a1,zero,0x960                  
+  8010f784: jal 0x801108cc                     
+  8010f788: addiu a2,zero,-600                 
+  8010f78c: ori a0,zero,0x3000                 
+  8010f790: addu a1,zero,zero                  
+  8010f794: jal 0x80110988                     
+  8010f798: addu a2,zero,zero                  
+  8010f79c: ori a0,zero,0x258                  
+  8010f7a0: ori a1,zero,0xbb8                  
+  8010f7a4: jal 0x801108cc                     
+  8010f7a8: addiu a2,zero,-1200                
+  8010f7ac: ori a0,zero,0x2c00                 
+  8010f7b0: addu a1,zero,zero                  
+  8010f7b4: jal 0x80110988                     
+  8010f7b8: addu a2,zero,zero                  
+  8010f7bc: lui v0,0x800b                      
+  8010f7c0: lw v0,-14460(v0)                   g_entity(cur)
+  8010f7c4: nop                                
+  8010f7c8: lbu v1,464(v0)                     0x800b01d0
+  8010f7cc: ori v0,zero,0x9                    
+  8010f7d0: bne v1,v0,0x8010f814               
+  8010f7d4: ori a0,zero,0x320                  
+  8010f7d8: ori a1,zero,0x258                  
+  8010f7dc: jal 0x801108cc                     
+  8010f7e0: addu a2,zero,zero                  
+  8010f7e4: ori a0,zero,0x3200                 
+  8010f7e8: ori a1,zero,0x64                   
+  8010f7ec: jal 0x80110988                     
+  8010f7f0: addu a2,zero,zero                  
+  8010f7f4: ori a0,zero,0x320                  
+  8010f7f8: ori a1,zero,0xbb8                  
+  8010f7fc: jal 0x801108cc                     
+  8010f800: addiu a2,zero,-600                 
+  8010f804: ori a0,zero,0x3200                 
+  8010f808: addu a1,zero,zero                  
+  8010f80c: jal 0x80110988                     
+  8010f810: addu a2,zero,zero                  
+  8010f814: lui v0,0x800b                      
+  8010f818: lw v0,-14460(v0)                   g_entity(cur)
+  8010f81c: nop                                
+  8010f820: lbu v1,464(v0)                     0x800b01d0
+  8010f824: ori v0,zero,0xc                    
+  8010f828: bne v1,v0,0x8010f84c               
+  8010f82c: ori a0,zero,0x3e8                  
+  8010f830: ori a1,zero,0xbb8                  
+  8010f834: jal 0x801108cc                     
+  8010f838: addu a2,zero,zero                  
+  8010f83c: ori a0,zero,0x3800                 
+  8010f840: addu a1,zero,zero                  
+  8010f844: jal 0x80110988                     
+  8010f848: addu a2,zero,zero                  
+  8010f84c: lui v0,0x800b                      
+  8010f850: lw v0,-14460(v0)                   g_entity(cur)
+  8010f854: nop                                
+  8010f858: lbu v1,464(v0)                     0x800b01d0
+  8010f85c: nop                                
+  8010f860: addiu v1,v1,1                      0x800b0001
+  8010f864: sb v1,464(v0)                      0x800b01d0
+  8010f868: lui v1,0x800b                      
+  8010f86c: lw v1,-14460(v1)                   g_entity(cur)
+  8010f870: nop                                
+  8010f874: lbu v0,464(v1)                     0x800b01d0
+  8010f878: nop                                
+  8010f87c: sltiu v0,v0,0x1a                   
+  8010f880: bne v0,zero,0x8010f8a8             
+  8010f884: nop                                
+  8010f888: sb zero,464(v1)                    0x800b01d0
+  8010f88c: lui v1,0x800b                      
+  8010f890: lw v1,-14460(v1)                   g_entity(cur)
+  8010f894: nop                                
+  8010f898: lbu v0,6(v1)                       0x800b0006
+  8010f89c: nop                                
+  8010f8a0: addiu v0,v0,1                      0x800b0001
+  8010f8a4: sb v0,6(v1)                        0x800b0006
+  8010f8a8: lw ra,16(sp)                       
+  8010f8ac: addiu sp,sp,24                     
+  8010f8b0: jr ra                              
+  8010f8b4: nop                                
+  8010f8b8: lui v0,0x800b                      
+  8010f8bc: lw v0,-14460(v0)                   g_entity(cur)
+  8010f8c0: nop                                
+  8010f8c4: lbu v1,464(v0)                     0x800b01d0
+  8010f8c8: nop                                
+  8010f8cc: addiu v1,v1,1                      0x800b0001
+  8010f8d0: sb v1,464(v0)                      0x800b01d0
+  8010f8d4: lui v1,0x800b                      
+  8010f8d8: lw v1,-14460(v1)                   g_entity(cur)
+  8010f8dc: nop                                
+  8010f8e0: lbu v0,464(v1)                     0x800b01d0
+  8010f8e4: nop                                
+  8010f8e8: sltiu v0,v0,0xb                    
+  8010f8ec: bne v0,zero,0x8010f908             
+  8010f8f0: nop                                
+  8010f8f4: sb zero,464(v1)                    0x800b01d0
+  8010f8f8: lui v0,0x800b                      
+  8010f8fc: lw v0,-14460(v0)                   g_entity(cur)
+  8010f900: nop                                
+  8010f904: sb zero,6(v0)                      0x800b0006
+  8010f908: jr ra                              
+  8010f90c: nop                                
+  8010f910: lui v0,0x800b                      
+  8010f914: lw v0,-14460(v0)                   g_entity(cur)
+  8010f918: addiu sp,sp,-24                    
+  8010f91c: sw ra,16(sp)                       
+  8010f920: lbu v0,6(v0)                       0x800b0006
+  8010f924: nop                                
+  8010f928: sll v0,v0,2                        
+  8010f92c: lui at,0x8012                      
+  8010f930: addiu at,at,-29280                 0x80118da0
+  8010f934: addu at,at,v0                      
+  8010f938: lw v0,0(at)                        0x80120000
+  8010f93c: nop                                
+  8010f940: jalr v0                            
+  8010f944: nop                                
+  8010f948: lw ra,16(sp)                       
+  8010f94c: addiu sp,sp,24                     
+  8010f950: jr ra                              
+  8010f954: nop                                
+  8010f958: lui v0,0x800b                      
+  8010f95c: lw v0,-14460(v0)                   g_entity(cur)
+  8010f960: nop                                
+  8010f964: lbu v1,464(v0)                     0x800b01d0
+  8010f968: nop                                
+  8010f96c: addiu v1,v1,1                      0x800b0001
+  8010f970: sb v1,464(v0)                      0x800b01d0
+  8010f974: lui v1,0x800b                      
+  8010f978: lw v1,-14460(v1)                   g_entity(cur)
+  8010f97c: nop                                
+  8010f980: lbu v0,464(v1)                     0x800b01d0
+  8010f984: nop                                
+  8010f988: sltiu v0,v0,0xb                    
+  8010f98c: bne v0,zero,0x8010f9b4             
+  8010f990: nop                                
+  8010f994: sb zero,464(v1)                    0x800b01d0
+  8010f998: lui v1,0x800b                      
+  8010f99c: lw v1,-14460(v1)                   g_entity(cur)
+  8010f9a0: nop                                
+  8010f9a4: lbu v0,6(v1)                       0x800b0006
+  8010f9a8: nop                                
+  8010f9ac: addiu v0,v0,1                      0x800b0001
+  8010f9b0: sb v0,6(v1)                        0x800b0006
+  8010f9b4: jr ra                              
+  8010f9b8: nop                                
+  8010f9bc: lui v0,0x800b                      
+  8010f9c0: lw v0,-14460(v0)                   g_entity(cur)
+  8010f9c4: addiu sp,sp,-24                    
+  8010f9c8: sw ra,16(sp)                       
+  8010f9cc: lbu v0,464(v0)                     0x800b01d0
+  8010f9d0: nop                                
+  8010f9d4: bne v0,zero,0x8010f9f8             
+  8010f9d8: ori a0,zero,0xc8                   
+  8010f9dc: ori a1,zero,0x708                  
+  8010f9e0: jal 0x801108cc                     
+  8010f9e4: addu a2,zero,zero                  
+  8010f9e8: ori a0,zero,0x2000                 
+  8010f9ec: addu a1,zero,zero                  
+  8010f9f0: jal 0x80110988                     
+  8010f9f4: addu a2,zero,zero                  
+  8010f9f8: lui v0,0x800b                      
+  8010f9fc: lw v0,-14460(v0)                   g_entity(cur)
+  8010fa00: nop                                
+  8010fa04: lbu v1,464(v0)                     0x800b01d0
+  8010fa08: ori v0,zero,0x3                    
+  8010fa0c: bne v1,v0,0x8010fa50               
+  8010fa10: ori a0,zero,0x190                  
+  8010fa14: ori a1,zero,0x708                  
+  8010fa18: jal 0x801108cc                     
+  8010fa1c: ori a2,zero,0x258                  
+  8010fa20: ori a0,zero,0x2600                 
+  8010fa24: ori a1,zero,0x64                   
+  8010fa28: jal 0x80110988                     
+  8010fa2c: addu a2,zero,zero                  
+  8010fa30: ori a0,zero,0x190                  
+  8010fa34: ori a1,zero,0x960                  
+  8010fa38: jal 0x801108cc                     
+  8010fa3c: addu a2,zero,zero                  
+  8010fa40: ori a0,zero,0x2600                 
+  8010fa44: addu a1,zero,zero                  
+  8010fa48: jal 0x80110988                     
+  8010fa4c: addu a2,zero,zero                  

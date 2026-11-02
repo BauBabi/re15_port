@@ -1,0 +1,29 @@
+== Beine
+M1[1] G2[12] n=37: nach Regel exakt gleiche Punkte 5; beste 1:1-Zuordnung max Abweichung je Achse [1. 1. 1.], Summe 49, exakte Paare 5
+    Abweichungen: [((-70, 819, -101), (-71, 819, -102)), ((-132, 818, -2), (-133, 818, -3)), ((10, 916, -10), (10, 916, -11)), ((-71, 818, 95), (-72, 818, 95)), ((136, 818, -2), (136, 818, -3)), ((92, 818, -101), (92, 818, -102)), ((-153, 469, -3), (-154, 469, -4)), ((-82, 431, -117), (-83, 431, -118))]
+M1[2] G2[13] n=21: nach Regel exakt gleiche Punkte 3; beste 1:1-Zuordnung max Abweichung je Achse [1. 1. 1.], Summe 24, exakte Paare 3
+    Abweichungen: [((-88, 240, -203), (-89, 240, -204)), ((-114, 415, -180), (-115, 415, -181)), ((111, 403, -92), (111, 403, -93)), ((131, 38, -101), (131, 38, -102)), ((-77, 573, -136), (-78, 573, -137)), ((-122, 587, 2), (-123, 587, 2)), ((-90, 841, -104), (-91, 841, -105)), ((-76, 515, 119), (-77, 515, 119))]
+M1[3] G2[14] n=16: nach Regel exakt gleiche Punkte 16; beste 1:1-Zuordnung max Abweichung je Achse [0. 0. 0.], Summe 0, exakte Paare 16
+M1[4] G2[15] n=31: nach Regel exakt gleiche Punkte 9; beste 1:1-Zuordnung max Abweichung je Achse [1. 1. 1.], Summe 31, exakte Paare 9
+    Abweichungen: [((-70, 819, 103), (-71, 819, 103)), ((-132, 818, 4), (-133, 818, 4)), ((91, 819, -93), (91, 819, -94)), ((-71, 818, -93), (-72, 818, -94)), ((-82, 632, 119), (-83, 632, 119)), ((-153, 632, 5), (-154, 632, 5)), ((-85, -121, 6), (-86, -122, 6)), ((-34, -122, 106), (-35, -123, 106))]
+M1[5] G2[16] n=21: nach Regel exakt gleiche Punkte 4; beste 1:1-Zuordnung max Abweichung je Achse [1. 1. 1.], Summe 25, exakte Paare 4
+    Abweichungen: [((-114, 415, 182), (-115, 415, 182)), ((-88, 240, 205), (-89, 240, 205)), ((-122, 587, 0), (-123, 587, -1)), ((-77, 573, 138), (-78, 573, 138)), ((-90, 841, 106), (-91, 841, 106)), ((97, 834, -90), (97, 834, -91)), ((118, 402, -50), (118, 402, -51)), ((-76, 515, -117), (-77, 515, -118))]
+M1[6] G2[17] n=16: nach Regel exakt gleiche Punkte 16; beste 1:1-Zuordnung max Abweichung je Achse [0. 0. 0.], Summe 0, exakte Paare 16
+== M1[15] n 84
+   G2[5]    Inlier 32/61 (0.52) Drehwinkel 0.6 t [23.0, -37.0, 2.0]
+   G2[8]    Inlier 11/11 (1.00) Drehwinkel 0.1 t [189.0, 613.0, 0.0]
+   G2[6]    Inlier 7/8 (0.88) Drehwinkel 0.6 t [21.0, 711.0, 3.0]
+   G2[7]    Inlier 7/8 (0.88) Drehwinkel 0.4 t [-110.0, 711.0, 2.0]
+   G2[10]   Inlier 4/18 (0.22) Drehwinkel 84.5 t [-234.0, 22.0, -62.0]
+   G2[11]   Inlier 4/25 (0.16) Drehwinkel 176.9 t [303.0, 286.0, 210.0]
+   G1[1]    Inlier 4/25 (0.16) Drehwinkel 178.8 t [143.0, 131.0, -106.0]
+   G1[9]    Inlier 4/26 (0.15) Drehwinkel 134.3 t [-150.0, 482.0, 89.0]
+== M1[0] n 86
+   G2[1]    Inlier 4/76 (0.05) Drehwinkel 158.4 t [-103.0, -638.0, -232.0]
+   G2[4]    Inlier 4/95 (0.04) Drehwinkel 178.8 t [-2.0, 224.0, 204.0]
+   G2[6]    Inlier 3/8 (0.38) Drehwinkel 93.1 t [765.0, -183.0, -411.0]
+   G2[7]    Inlier 3/8 (0.38) Drehwinkel 137.3 t [382.0, -193.0, 391.0]
+   G2[8]    Inlier 3/11 (0.27) Drehwinkel 108.0 t [673.0, -153.0, 391.0]
+   G2[0]    Inlier 3/18 (0.17) Drehwinkel 128.3 t [516.0, -286.0, -112.0]
+   G2[10]   Inlier 3/18 (0.17) Drehwinkel 152.6 t [680.0, -526.0, -549.0]
+   G1[0]    Inlier 3/18 (0.17) Drehwinkel 151.0 t [464.0, -380.0, 62.0]

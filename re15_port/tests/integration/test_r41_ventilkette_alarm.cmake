@@ -8,13 +8,15 @@
 # (audio_pc.c, Haken "Runde 41 Spur C, C-E4") laedt shared_assets/RE2/SOUND/SUB_25.BGM in den SUB-Platz; Flut/Tod -> aus.
 #
 # Gemessen mit RE15_AUDIO_CAP_SYNC (bildgenaue Aufnahme ohne SDL-Geraet, 1470 Stereo-Bilder je Spieltakt):
-#   A  Leon, 2030: richtige Folge 09/07/02/01 zu Fuss -> Warntext 46 -> Ring -> Flut (Plan wie integration_r41_ventilkette C).
+#   A  Leon, 2030: richtige Folge 09/02/01/08 zu Fuss -> Warntext 46 -> Ring -> Flut (Plan wie integration_r41_ventilkette C).
 #   B  derselbe Lauf mit RE15_RE2_ASSET_ROOT -> SOUND/SUB_25.BGM = der 4-Byte-Stummel der RE1.5-CD (shared_assets/PSX/SOUND):
 #      der Alarm laedt NICHT ("nicht lesbar"), sonst bitgleich. A - B = der Alarm allein.
 #      Erwartet (Messlauf nb6 al_flut_leon / al_flut_leon_ohne 2026-10-25): vor dem Alarm-Takt bitgleich (max |A-B| = 0), waehrend
 #      des Alarms RMS(A-B) 667..718 (>= 300 verlangt), ab dem Alarm-Ende + 120 Takte wieder bitgleich (Hall abgeklungen; gemessen letzte Abweichung Ende + 78).
-#   C  Elza, 2031, derselbe Plan: Alarm an/aus in 2031; die Aufnahme ab ihrem Alarm-Takt korreliert mit A - B (gemessen 0,571,
+#   C  Elza, 2031, derselbe Plan: Alarm an/aus in 2031; die Aufnahme ab ihrem Alarm-Takt korreliert mit A - B (gemessen 0,571, seit der Sirene der Spur N 0,432,
 #      Gegenprobe 300 Takte vorher ~0; verlangt >= 0,3 bzw. <= 0,1).
+#   Spur N, Nachtrag 36: in A und C laeuft die Sirene ROOM6000 (RE2 SUB_34) nach Warntext + Zaehlerstart mit und endet im Bild des Flut-Beginns; ihren Pegel und "durchgehend" misst
+#   integration_r41_nachtrag30_ton.
 #   Je Lauf: der Alarm geht MIT dem Warntext an und im Bild des Flut-Beginns aus - das ist das Bild, in dem der Countdown RE2s
 #   abgelaufenes " 0^00=00" zeigt (Bild 1800, @0x80026284).
 #
@@ -90,7 +92,7 @@ macro(_lauf _name _figur _plan)
         "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
         RE15_AUDIO_CAP_SYNC=cap.raw RE15_BGM_CTL_DEBUG=1
         ${ARGN}
-        "RE15_EXIT_AT=6450#${_raum}"
+        "RE15_EXIT_AT=6647#${_raum}"
         "${_exe_kopie}")
     if(NOT EXISTS "${WORKDIR}/debug.log" OR NOT EXISTS "${WORKDIR}/cap.raw")
         _fehler("[${_name}]: kein debug.log/cap.raw (exit=${_rv}, ${WORKDIR})")
@@ -98,19 +100,12 @@ macro(_lauf _name _figur _plan)
     file(READ "${WORKDIR}/debug.log" _dbg)
 endmacro()
 
-# Plan = integration_r41_ventilkette C: die richtige Folge 09/07/02/01 zu Fuss (Sued, Sued, Steg, Nord, Nord), Warnung weg,
+# Plan = integration_r41_ventilkette C: die richtige Folge 09/02/01/08 zu Fuss (Sued, Sued, Steg, Nord, Nord), Warnung weg,
 # ueber Steg und Treppe auf den Ring (6550,-200), dort stehen bleiben -> Flut.
 function(_plan _s _out)
     set(${_out} "RAUM 203${_s}
 WARTE 30
 GEHE -2650 7280 100
-BLICK 3072
-WARTE 10
-AKTION
-WARTE 150
-AKTION
-WARTE 450
-GEHE 2600 7280 100
 BLICK 3072
 WARTE 10
 AKTION
@@ -135,8 +130,23 @@ AKTION
 WARTE 150
 AKTION
 WARTE 450
+GEHE -1050 -7400 100
+GEHE -1050 -6400
+GEHE -1050 6000
+GEHE -1050 6900 100
+GEHE 400 7280 100
+BLICK 3072
+WARTE 10
+AKTION
+WARTE 150
+AKTION
+WARTE 450
 AKTION
 WARTE 30
+GEHE -1050 6900 100
+GEHE -1050 6000
+GEHE -1050 -6400
+GEHE -1050 -7400 100
 GEHE -1900 -7700 80
 BLICK 2048
 WARTE 20
@@ -170,9 +180,16 @@ function(_alarm_takte _text _raum _name _an _aus)
         _fehler("[${_name}]: Reihenfolge Alarm an / Warntext 46 / Flut / Alarm aus falsch (${_p_an} ${_p_46} ${_p_flut} ${_p_aus})")
     endif()
     # der Alarm geht mit dem Warntext an: hoechstens 60 Takte vor der Textzeile (Schreibmaschine) und nicht vor der richtigen Folge
-    string(FIND "${_text}" "Folge 09 07 02 01 -> RICHTIG" _p_r)
+    string(FIND "${_text}" "Folge 09 02 01 08 -> RICHTIG" _p_r)
     if(_p_r LESS 0 OR NOT _p_r LESS _p_an)
         _fehler("[${_name}]: Alarm vor der richtigen Folge")
+    endif()
+    # Spur N, Nachtrag 36: die Sirene ROOM6000 (RE2 SUB_34) laeuft zusaetzlich nach der Ansage (Warntext 46 + Zaehlerstart) bis zum Flut-Beginn
+    string(FIND "${_text}" "Sirene ROOM6000 (RE2 SUB_34) AN, ROOM${_raum}" _p_s_an)
+    string(FIND "${_text}" "Sirene ROOM6000 (RE2 SUB_34) AUS" _p_s_aus)
+    string(REGEX MATCH "Sirene ROOM6000 \\(RE2 SUB_34\\) AUS, ROOM${_raum}, capTick [0-9]+ F([0-9]+)" _m4 "${_text}")
+    if(_p_s_an LESS 0 OR _p_s_aus LESS 0 OR NOT _p_46 LESS _p_s_an OR NOT _p_s_an LESS _p_flut OR NOT _m4 OR NOT CMAKE_MATCH_1 STREQUAL _f_aus)
+        _fehler("[${_name}]: Sirene: Reihenfolge Warntext 46 / Sirene an / Flut oder Ende nicht im Flut-Bild F${_f_aus} (${_p_46} ${_p_s_an} ${_p_flut}, '${_m4}')")
     endif()
     # Alarm aus im Bild des Flut-Beginns = Bild des abgelaufenen Countdowns " 0^00=00" (RE2 @0x80026284)
     string(REGEX MATCH "Countdown RE2-Form Bild 1800 \" 0\\^00=00\" Farbe 2 \\(x 104 y 32\\) F([0-9]+)" _m3 "${_text}")
