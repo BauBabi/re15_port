@@ -173,16 +173,16 @@ def blatt_rundum(aus, specs, clip=2):
     cv2.imwrite(aus, gitter(zeilen, 'Rundum, Ruhepose (Clip 2), Licht nur fuers Blatt, aufgehellt (Gamma 0,5); je Variante ganze Figur und Kopf 2,6-fach'))
 
 
-def blatt_loecher(aus, vorher_emd, vorher_js, nachher_emd, nachher_js, n=8, tim=None):
+def blatt_loecher(aus, vorher_emd, vorher_js, nachher_emd, nachher_js, n=8, tim=None, wahl_aus='vorher', ohne=('Kiefer - Kopf',)):
     """Schlimmste Nahtloecher von VORHER (Pose, Ansicht) neben derselben Pose/Ansicht NACHHER. Textur-Render wie das Rundumblatt (rundum_dreiecke),
     Loecher aus k_loecher in derselben Projektion, rot umrandet und gefuellt."""
     import k_loecher as KL
     R0 = json.load(open(vorher_js, encoding='utf-8'))
     R1 = json.load(open(nachher_js, encoding='utf-8'))
     L = []
-    for c in R0['clips']:
+    for c in (R0 if wahl_aus == 'vorher' else R1)['clips']:
         for b in c['bilder']:
-            px = sum(l['px'] for l in b['loecher'] if l['naht'])
+            px = sum(l['px'] for l in b['loecher'] if l['naht'] and l['naht'] not in ohne)
             if px:
                 L.append((px, c['clip'], b['bild'], b['ansicht']))
     L.sort(reverse=True)
@@ -198,14 +198,15 @@ def blatt_loecher(aus, vorher_emd, vorher_js, nachher_emd, nachher_js, n=8, tim=
     tim = tim or os.path.join(KK.J_DIR, 'FORM.TIM')
     zeilen = []
     for px, c, b, an in wahl:
-        ks = []
+        ks, ausschn = [], []
+        naht_name = None
         for emd, t, R in ((vorher_emd, os.path.join(KK.J_DIR, 'FORM.TIM'), R0), (nachher_emd, tim, R1)):
             mo = KK.FE.modell(open(emd, 'rb').read(), open(t, 'rb').read())
             tex = FB.Textur(open(t, 'rb').read())
             fig = KL.Figur(emd)
             kf = fig.kf(c, b)
             _, az, el = V[an]
-            gross = 420
+            gross = 600
             alle = P.pose_punkte(mo, kf)
             mitte = (alle.max(0) + alle.min(0)) / 2
             s = gross * 0.46 / float(np.linalg.norm(alle - mitte, axis=1).max())
@@ -216,18 +217,30 @@ def blatt_loecher(aus, vorher_emd, vorher_js, nachher_emd, nachher_js, n=8, tim=
             a = a[:, :, ::-1].copy()
             idb, piv, _ = KL.rendern(fig, kf, KL.blick(az, el), mitte=mitte, gross=gross, s=s)
             lo = KL.loecher(idb, piv, s=s)
-            npx = 0
+            npx, groesst = 0, None
             for l in lo:
-                if not l['naht']:
+                if not l['naht'] or l['naht'] in ohne:
                     continue
                 x, y, w, h = l['box']
                 sub = idb[y:y + h, x:x + w] < 0
                 a[y:y + h, x:x + w][sub] = (0, 0, 255)
                 cv2.rectangle(a, (x - 3, y - 3), (x + w + 3, y + h + 3), (0, 0, 255), 1)
                 npx += l['px']
-            ks.append(kachel(a, '%s: Naht %d px (Massstab %.3f px/E.)' % ('vorher' if emd == vorher_emd else 'nachher', npx, s), 420, 420))
+                if groesst is None or l['px'] > groesst['px']:
+                    groesst = l
+            if naht_name is None and groesst is not None:
+                naht_name = groesst['naht']
+            cx, cy = piv.get(naht_name, (gross / 2, gross / 2)) if naht_name else (gross / 2, gross / 2)
+            r = 70
+            x0, y0 = int(np.clip(cx - r, 0, gross - 2 * r)), int(np.clip(cy - r, 0, gross - 2 * r))
+            nah = cv2.resize(a[y0:y0 + 2 * r, x0:x0 + 2 * r], (300, 300), interpolation=cv2.INTER_NEAREST)
+            art = 'vorher J' if emd == vorher_emd else 'nachher'
+            ks.append(kachel(a, '%s: Naht %d px' % (art, npx), 300, 300))
+            ks.append(kachel(nah, '%s nah: %s' % (art, naht_name or '-'), 300, 300))
         zeilen.append(('Clip %d %s|Bild %d|%s' % (c, namen.get(c, ''), b, an), ks))
-    cv2.imwrite(aus, gitter(zeilen, 'Nahtloecher, schlimmste Posen vorher (J, Stufe-3-Asset) und nachher (gleiche Pose und Ansicht); rot = Loch an einer Naht'))
+    kopf = ('Nahtloecher (ohne Mundwinkel), die %d schlimmsten Posen %s; links J (Stufe-3-Asset), rechts Variante in derselben Pose und Ansicht; rot = Loch an einer Naht'
+            % (len(zeilen), 'von J' if wahl_aus == 'vorher' else 'der Variante'))
+    cv2.imwrite(aus, gitter(zeilen, kopf))
 
 
 if __name__ == '__main__':
@@ -240,4 +253,4 @@ if __name__ == '__main__':
         blatt_rundum(sys.argv[2], sys.argv[3:])
     elif art == 'loecher':
         blatt_loecher(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], int(sys.argv[7]) if len(sys.argv) > 7 else 8,
-                      sys.argv[8] if len(sys.argv) > 8 else None)
+                      sys.argv[8] if len(sys.argv) > 8 else None, sys.argv[9] if len(sys.argv) > 9 else 'vorher')

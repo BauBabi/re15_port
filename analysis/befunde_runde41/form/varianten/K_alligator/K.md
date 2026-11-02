@@ -10,12 +10,13 @@ Generator `K_alligator/generator/` (k_*.py, Ablauf `k_variante.sh`). Dieses Doss
 |---|---|
 | 1 Teile vermessen | erledigt (Abschnitt 1, 3) |
 | 2 Krallen lesen | erledigt (Abschnitt 2) |
-| 3 Varianten K1/K2/K3 | gebaut (Abschnitt 4, 5) |
-| 4 Messen | Abschnitt 6 |
-| 5 Kontaktblaetter | `blaetter/` (Abschnitt 9) |
+| 3 Varianten K1/K2/K3 | gebaut (Abschnitt 4, 5): K1 schlank/lang, K2 breit/kurz, K3 bester Fit |
+| 4 Messen | Abschnitt 6: Bild 1 IoU 0,954 (J 0,948), K2/K3 31/31; Bild 2 0,948-0,961 (J 0,935); Unterkiefer IoU bis 0,80 |
+| 5 Kontaktblaetter | `K_alligator/*.png` (Abschnitt 9) |
 | 6 Folgen Stufe 3 | Abschnitt 8 |
 | 7 E20 | in NUTZER_ENTSCHEIDE.md angehaengt |
-| Nachtrag Loecher | Messwerkzeug, Gelenkkoerper, vorher/nachher (Abschnitt 7) |
+| Nachtrag Loecher | Hauptnaehte -94 %, alle Naehte ohne Mundwinkel -83 bis -86 %; "in keiner Pose" NICHT erreicht, Rest in Abschnitt 7 |
+| Offen beim Nutzer | Wahl K1/K2/K3; heller Unterkiefer im sauberen Render; Kiefer/Mundwinkel in den Stufe-3-Clips |
 
 ## 1. Nutzer-Teile Oberkiefer / Unterkiefer (`k_teile.py`)
 
@@ -130,9 +131,42 @@ Zurueckgerechnet mit der Kamera von Bild 2 (Pose der Variante, Tiefenpuffer gege
 Tiefenpuffer-Raster aus `k_kern` (Umriss J zum Vergleich: Bild 2 0,934, Bild 1 0,9465; form_pruefung: 0,935 / 0,948). "ohne Rumpf": der uebrige
 Oberkoerper (face_and_upper_body ohne die Kiefer-Teile) zaehlt auf keiner Seite (dunkel auf dunkel).
 
-## 6. Messwerte der Varianten
+## 6. Messwerte der Varianten (Endstand, mit Gelenkkoerpern)
 
-(folgt nach dem Endbau)
+**Form gegen die Screenshots** (`form_pruefung.py pruefe`, je Variante `K*/pruefung/bericht.txt`):
+
+| | Flaechen | Bild 1 IoU | Bild 1 Punkte | Bild 1 Boden/Kerbe | Bild 2 IoU | Bild 2 Punkte | Bild 2 Boden/Verd. | Zeichnung 1 / 2 | Verbote 2 |
+|---|---|---|---|---|---|---|---|---|---|
+| J | 2398 | 0,948 | 31/31 | 5/7 | 0,935 | 7/7 | 9/9 | 5/9 / 4/7 (Bild 2: Q1, Q2, Q5) | 1/1 |
+| K1 | 3642 | 0,954 | 30/31 (b1.nr_y322_rechts) | 5/7 | 0,961 | 7/7 | 9/9 | 5/9 / 2/7 (Bild 2: Q1, Q3, Q4, Q5, P) | 0/1 |
+| K2 | 3642 | 0,954 | 31/31 | 5/7 | 0,948 | 7/7 | 9/9 | 5/9 / 3/7 (Bild 2: Q1, Q4, Q5, P) | 0/1 |
+| K3 | 3642 | 0,954 | 31/31 | 5/7 | 0,948 | 7/7 | 9/9 | 5/9 / 3/7 (Bild 2: Q1, Q4, Q5, P) | 0/1 |
+
+- Bild 1 wird nicht schlechter als J: IoU 0,954 gegen 0,948, K2 und K3 31 von 31 Punkten; K1 30/31 (b1.nr_y322_rechts, rechte Beinkante: der lange Kopf
+  liegt in Bild 1 hinter dem Bein und schiebt die Kante). Boden L1/L2 wie bei J offen (5/7). Bild 2: IoU 0,948 (K1 0,961) gegen 0,935, 7/7, 9/9.
+- Zeichnung Bild 2: Q3, Q4 und P fallen neu (Q2 besteht neu). Q (Zug Q) und P (Wangenspitze) waren Merkmale am Kopfrand von J (FORMBLATT2: "Rand auf
+  Zug Q", "Wangenspitze, Stelle P"); nach E20 liegt dort kein Kopf mehr. Verbot N1 (Rumpfinneres 290-340/225-280 ohne helle Zeichnung) faellt: wo der
+  Kopf von J sass, sieht man jetzt Oberarm r und Hals mit ihrer H2-Haut (heller Anteil 0,21). Beides folgt aus der neuen Kopflage, nicht aus der Textur.
+- Flaechen 3642 (J 2398): Kopf und Kiefer haben zusammen rund so viele Flaechen wie bei J, dazu 31 Gelenkkoerper zu je 40 Flaechen.
+
+**Ober-/Unterkiefer und Krallen** (`k_mass.py`, `mass_kiefer_krallen.json`; Tiefenpuffer, Pose Bild 2):
+
+| | IoU Oberkiefer | ohne Rumpf | Schwerpunkt px / Achse Grad | IoU Unterkiefer | Schwerpunkt px / Achse Grad | Arm r ohne Unterkiefer | Krallen rechts (Paare/Soll, mittl. px) | Krallen links |
+|---|---|---|---|---|---|---|---|---|
+| J | 0,003 | 0,008 | 107,2 / 25,2 | 0,000 | 77,2 / 20,8 | 0,526 | 4/5, 12,7 | 3/3, 11,9 |
+| K1 | 0,378 | 0,425 | 12,6 / 37,5 | 0,725 | 4,8 / 3,3 | 0,596 | 3/5, 5,3 | 2/3, 1,5 |
+| K2 | 0,500 | 0,671 | 35,1 / 32,0 | 0,746 | 4,2 / 3,1 | 0,743 | 4/5, 12,3 | 2/3, 1,5 |
+| K3 | 0,508 | 0,625 | 31,5 / 31,8 | 0,801 | 0,7 / 2,3 | 0,736 | 4/5, 12,8 | 2/3, 1,5 |
+
+- Unterkiefer: K3 trifft das Band fast deckungsgleich (IoU 0,80, Schwerpunkt 0,7 px, Achse 2,3 Grad); K1 und K2 0,73-0,75.
+- Oberkiefer: IoU 0,38-0,51, ohne den uebrigen Oberkoerper (dunkel auf dunkel) 0,43-0,67. Die Achse weicht 32-38 Grad ab: der sichtbare Kopf schliesst
+  hinten den Schaedel und die Muffe Kopf-Hals ein (rechts oben, ausserhalb der Maske), die Maske ist nur die Schnauze. Ohne Gelenkkoerper lag K3 bei 0,57.
+- Rechter Arm ohne den Unterkiefer-Anteil: J 0,53, K 0,60-0,74 (der Arm liegt jetzt, wie E20 verlangt, hinter dem Kiefer).
+- Krallen: Lage wie J (Form unveraendert, rechts 4 von 5 Spitzen in 12,3-12,8 px). Links paart die Messung 2 von 3 Spitzen in 1,5 px; die dritte ist
+  das obere Wurzelende des Handschnitts, das sich mit den Gelenkkoerpern an Ellbogen und Hand verschiebt, keine Krallenspitze.
+- Farben (bau.json): Maulboden und Kieferunterseite K3 = Brust-Textur x (2,86 / 2,69 / 2,14), also rund (163,140,122); Zaehne rund (243,226,211). Unter dem
+  Licht von Cut 11 und dem Videofilter wird daraus das rote Band (Kiefer-Eichung Soll/Ist 1,075 -> 1,005). Im sauberen Render ist der Unterkiefer
+  dadurch hell beige (Rundumblatt): so verlangt es die Rueckrechnung, ein gesaettigtes Rot im Modell zeigte unter dem Filter zu rot.
 
 ## 7. Nachtrag Nutzer: Loecher zwischen Bein und Oberkoerper (`k_loecher.py`, `k_naht.py`)
 
@@ -165,12 +199,158 @@ Drohen, Biss, Griff). Datei `loecher/vorher_J_stufe3.json`.
 - Erste Runde (nur Kugeln, ohne Mundwinkel-Grenze): Nahtloecher ohne Kiefer 17 899 -> 3 397-3 695 px (K1-K3). Rest: Bein r - Huefte (rund 840 px, vor allem
   Biss und Hieb links), Bein l - Huefte, Kopf - Hals, Haende, Arm l - Brust; Bild 2 begrenzt die Kugel an Arm l (0,5/0,6) und Bein r (0,9/0,8).
 
-(Endstand folgt)
+**Endstand** (alle 28 Clips, 1120 Posen-Ansichten je Variante, `K*/loecher_stufe3.json`; Mundwinkel = Kiefer - Kopf getrennt ausgewiesen):
+
+Nahtloecher je Clip (Zahl / px; in Klammern davon Mundwinkel Kiefer - Kopf, px):
+
+| Clip | J vorher | K1 | K2 | K3 |
+|---|---|---|---|---|
+| 0 rennen | 26 / 1020 (102) | 16 / 448 (0) | 11 / 173 (0) | 15 / 201 (0) |
+| 1 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 2 stehen | 24 / 696 (0) | 36 / 1092 (1008) | 61 / 736 (650) | 49 / 529 (423) |
+| 3 hieb_rechts | 25 / 764 (0) | 42 / 1400 (874) | 51 / 810 (497) | 45 / 881 (347) |
+| 4 hieb_links | 20 / 1254 (0) | 40 / 1382 (809) | 53 / 1337 (758) | 39 / 1268 (516) |
+| 5 gehen | 29 / 1217 (0) | 43 / 1680 (1572) | 59 / 1275 (1165) | 41 / 812 (698) |
+| 6 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 7 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 8 zucken | 13 / 463 (21) | 27 / 862 (794) | 43 / 780 (733) | 36 / 560 (505) |
+| 9 nachhieb | 36 / 719 (65) | 24 / 594 (469) | 36 / 996 (681) | 31 / 545 (230) |
+| 10 drohen | 19 / 714 (0) | 29 / 1013 (771) | 33 / 817 (559) | 32 / 664 (394) |
+| 11 flucht | 35 / 7681 (18) | 22 / 576 (324) | 26 / 641 (568) | 22 / 457 (383) |
+| 12 sturz | 18 / 778 (87) | 10 / 274 (152) | 10 / 195 (74) | 17 / 271 (123) |
+| 13 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 14 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 15 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 16 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 17 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 18 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 19 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 20 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 21 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 22 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 23 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 24 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 25 frei (Ruhe) | 2 / 91 (0) | 4 / 104 (104) | 6 / 90 (90) | 4 / 56 (56) |
+| 26 biss | 16 / 384 (80) | 33 / 802 (606) | 46 / 970 (780) | 36 / 701 (515) |
+| 27 griff | 19 / 1143 (17) | 21 / 590 (405) | 30 / 624 (381) | 25 / 615 (278) |
+| Summe | 312 / 18289 (390) | 407 / 12377 (9448) | 555 / 10794 (8286) | 452 / 8400 (5308) |
+
+Nahtloecher je Gelenk ueber alle 28 Clips, px:
+
+| Gelenk | J vorher | K1 | K2 | K3 |
+|---|---|---|---|---|
+| Brust - Wirbel (Hauptnaht) | 7617 | 29 | 133 | 131 |
+| Bein l - Huefte (Hauptnaht) | 3265 | 231 | 372 | 377 |
+| Hals - Brust (Hauptnaht) | 1508 | 0 | 0 | 0 |
+| Bein r - Huefte (Hauptnaht) | 1413 | 263 | 275 | 289 |
+| Hand r | 1010 | 366 | 232 | 397 |
+| Kopf - Hals (Hauptnaht) | 541 | 212 | 26 | 77 |
+| Knie r | 503 | 240 | 222 | 225 |
+| Kiefer - Kopf | 390 | 9448 | 8286 | 5308 |
+| Hand l | 383 | 816 | 539 | 614 |
+| Fuss l | 293 | 301 | 295 | 308 |
+| Schwanz 3-4 | 268 | 58 | 32 | 46 |
+| Arm l - Brust (Hauptnaht) | 261 | 46 | 64 | 47 |
+| Ellbogen l | 237 | 0 | 0 | 12 |
+| Ellbogen r | 170 | 18 | 47 | 70 |
+| Arm r - Brust (Hauptnaht) | 156 | 0 | 15 | 21 |
+| Knie l | 139 | 185 | 181 | 175 |
+| Fuss r | 78 | 8 | 8 | 11 |
+| Wirbel - Huefte | 42 | 97 | 12 | 116 |
+| Schwanz - Becken (Hauptnaht) | 15 | 43 | 43 | 41 |
+| Schwanz 2-3 | 0 | 9 | 5 | 5 |
+| Schwanz 4-5 | 0 | 7 | 7 | 130 |
+| Summe ohne Mundwinkel | 17899 | 2929 | 2508 | 3092 |
+| Summe Hauptnaehte | 14776 | 824 | 928 | 983 |
+
+Gewaehlte Koerper K3 (`K3_fit/naht.json`, 31 Stueck): Kugeln an allen 23 Gelenken, u. a. Bein l 1,0/0,6, Bein r 0,9/0,8, Arm l 0,6/0,4 (Bild 2 laesst nicht
+mehr zu), Arm r 0,9/1,0, Hals 1,0/1,0, Kopf 1,0/0,8, Mundwinkel 0,8/1,0; Muffen Bein l 0,6/1,6, Bein r 0,7/1,6, Arm r 0,8/1,3, Hals 1,0/1,3, Kopf 1,0/1,6,
+Schwanz 0,9/1,3, Haende 1,0/1,6 (Muffe Arm l verworfen: Bild 2 +2549 px auf Schwarz).
+
+Lesart:
+- Die Hauptnaehte (Bein, Arm, Hals, Schwanz, Kopf, Rumpfbeuge) fallen von 14 776 auf 824-983 px (-94 %), alle Naehte ohne Mundwinkel von 17 899 auf
+  2 508-3 092 px (-83 bis -86 %). Hals-Brust ist zu (0 px), Brust-Wirbel in der Flucht von 7 617 auf 29-133 px, Bein l - Huefte von 3 265 auf 231-377 px.
+- NICHT erreicht: "in keiner Pose". Es bleiben kleine Spalte, vor allem Bein r - Huefte (Hieb links Bild 35, Biss), Bein l - Huefte (Drohen Bild 36),
+  Knie r (Rennen), Hand l (Sturz Bild 0, Hieb links). Blatt `loecher_rest_K3.png`. Grund: an Huefte und linkem Arm begrenzen die Screenshot-Posen die
+  Koerper (Bild 1 bzw. Bild 2 bekaemen Pixel auf Ziel-Schwarz oder Punkte fielen). Naechster Schritt dafuer: die Koerper nur dort groesser, wo die Pose
+  der Screenshots sie nicht sieht (z. B. Muffe Bein l nach vorn statt rund), oder die Beinwinkel der Stufe-3-Clips an diesen Bildern um wenige Grad aendern.
+- Mundwinkel (Kiefer - Kopf): 390 px bei J, 5 308-9 448 px bei K. Das ist der Spalt zwischen Ober- und Unterkiefer, weil die Stufe-3-Clips den Kiefer auch
+  im Stehen und Gehen 4-11 Grad oeffnen (Kieferwinkel des alten Kopfes 46-126). Probe K3 mit geschlossenem Kiefer (az 0) in Stehen und Gehen: Mundwinkel
+  423 -> 101 px und 698 -> 66 px (`_lauf/K3_kiefer_zu.json`). Bei weit offenem Maul (Biss, Drohen, Griff) sieht man durchs Maul, gewollt nach E20; den
+  Mundwinkel selbst schliesst ein Koerper nur bis 0,8/1,0, sonst verdeckt er in Bild 2 den Unterkiefer (voll: IoU 0,804 -> 0,576). Fuer Stufe 3: Kiefer
+  zu, wenn nicht gebissen oder gedroht wird (Abschnitt 8).
+- Kontaktblaetter: `loecher_vorher_nachher_K3.png` (die 8 schlimmsten Posen von J, daneben K3 in derselben Pose und Ansicht, je ganz und nah) und
+  `loecher_rest_K3.png` (die 6 schlimmsten verbliebenen Posen von K3). Pixelzahlen dort im Massstab des Blatts (rund 0,04-0,05 px je Einheit), die
+  Tabellen oben im Messmassstab 0,075.
 
 ## 8. Folgen fuer Stufe 3 (notiert, nicht umgesetzt)
 
-(folgt)
+Gemessen an den 28 Clips der Stufe 3 mit den Meshes von K (`k_s3.py`, `k_s3_kopf.py`, `stufe3_kopf.json`); die Clips selbst sind unveraendert.
 
-## 9. Dateien
+| Clip | Kiefer (Knochen 23, az) | Kopf/Hals | Bedeutung fuer K |
+|---|---|---|---|
+| 26 Biss | bis 524 (46 Grad) | Kopf seitlich bis +-88 | Hauptclip fuer das Maul; Treffer ueber EDD-Bit 16 |
+| 10 Drohen | bis 547 (48 Grad) | Bild 45-52 = Pose Bild 2 mit den Kopfwinkeln von J | Gebruell (Toene im EDD); einen eigenen Gebruell-Clip gibt es nicht |
+| 27 Griff | bis 547 | +-63 | Maul offen beim Griff, Opfer-Spur |
+| 9 Nachhieb | bis 478 | | |
+| 12 Sturz | bis 635 (56 Grad) | Bild 0 = Pose Bild 2 | Rueckstoss-Szene im Zug |
+| 8 Zucken | bis 387 | | |
+| 3/4 Hiebe | bis 342 | | |
+| 2 Stehen, 5 Gehen | 46-126 (4-11 Grad) | | oeffnet den langen Kiefer: Spalt sichtbar (Abschnitt 7) |
 
-(folgt)
+Was ein langer Kopf verlangt:
+1. Pose Bild 2 (Drohen 45-52, Sturz 0) mit den Kopfwinkeln der Variante (K3: Hals 21 = [-471, 935, 1116], Kopf 22 = [128, 54, -561], Kiefer 23 = [0, 40, 279];
+   gegen die Brust Hals 92 Grad rechts / 57 unten, Kopf 97 rechts / 7 unten), sonst sitzt der Kopf dort anders als im Screenshot. Rennen Bild 11
+   (= Pose Bild 1) entsprechend mit den Bild-1-Winkeln.
+2. Kiefer in Stehen/Gehen/Ruhe auf az 0 (zu); offen nur in Biss, Drohen, Griff, Sturz, Nachhieb. Kieferwinkel der Angriffe neu abstimmen: ein 46-Grad-Maul
+   ist bei K3 an der Spitze rund 790 Einheiten offen (Kiefer 1089 lang), bei J rund 520.
+3. Biss-Trefferpunkt: der Tick prueft Teil 10 (Brust) + (1400, 0, 0), Radius 1500 (birkin_bahnsteig.c bb_biss, `bb_nah(e, pl, BB_TEIL_RUMPF, BB_L(1400), 0,
+   BB_L(1500))`). Die Kieferspitze liegt in den Stufe-3-Clips 1632-2198 (K3), 1703-2266 (K2), 2392-2947 (K1) Einheiten davon (J 1413-2207); bei K1 liegt sie
+   ausserhalb der 1500er-Kugel, mit den Bild-2-Kopfwinkeln (Kopf vorgestreckt) bei allen weiter. Vorschlag: Bisspunkt an Teil 23 (Kiefer) oder Versatz nach vorn.
+4. Laenge: Schnauze in den Stufe-3-Clips vorn bis x 4380 (K3), 4450 (K2), 5150-5780 (K1) gegen 4330-4820 bei J; die Gesamtlaenge bleibt vom Schwanz
+   bestimmt (7924-9447). Mit vorgestrecktem Kopf waechst sie vorn um rund L - 1300 (K3 330, K1 1100). Kasten hit_offset_x 800 und Schatten 2300 x 1300
+   (main.c, werkzeug.md Abschnitt 3) decken die Schnauze dann nicht: nachziehen, vor allem fuer K1.
+5. Kopf am Boden: in Rennen, Hieben, Nachhieb und Flucht ist der Kopf (wie bei J) der tiefste Punkt der Figur (Abstand 0 zur Fussebene). Mit der laengeren
+   Schnauze schleift sie dort; Hals/Kopf in diesen Clips einige Grad hoeher nehmen (bei K1 noetig, bei K3 Grenzfall).
+6. Trefferzone: Schuesse auf die Form kennen keine Kopfzone (Teile 10/13/18). Ob Kasten und Trefferpruefung den Kopf erfassen, im Spiel pruefen.
+7. Kamera-Nahsicht: Sturz/Rueckstoss im Zug (5090) und der Auftritt am Bahnsteig. Ein vorgestreckter Kopf ragt um die Schnauzenlaenge weiter zur
+   Kamera; Spielblatt (form_spiel.sh) mit den neuen Winkeln pruefen, bevor die Laenge festgelegt wird.
+8. Griff: der Kopf ist beim Griff (Bild 8) nahe am Opfer; mit 1089-1860 langen Kiefern Durchdringung mit dem Opfer pruefen (nicht gemessen).
+9. Gelenkkoerper: +1244 Flaechen (3642 gesamt, RE2-Bosse 963-1427). Fuer den PC ohne Belang, fuer ein PSX-Budget zu viel; dann Koerper mit 6 statt 8
+   Ecken (24 statt 40 Flaechen) und nur an den Hauptnaehten.
+10. Textur: neue Seite 3 und CLUT-Zeile 3 (TIM 512 x 256). form_emd.py und der Port lesen das (TIM-Breite bis 15*128+256, werkzeug.md); Tests und
+    Paket-Gate beim Tausch des Assets auf die TIM-Groesse pruefen.
+
+## 9. Dateien und Ablauf
+
+Kontaktblaetter fuer den Nutzer (alle in `varianten/K_alligator/`):
+- `bild2_vergleich.png`: je Zeile J, K1, K2, K3: Screenshot 2 | Overlay (Modellumriss gruen, Kopf gelb, Kiefer magenta, Nutzer-Teile orange/violett) |
+  Render sauber | Render durch Videofilter, Kamera von Bild 2.
+- `bild1_vergleich.png`: dasselbe fuer Bild 1 (Rueckansicht).
+- `nah_maul_krallen.png`: Maul, Hand rechts, Hand links, je Screenshot | gefiltert | sauber, 1,5-fach.
+- `rundum.png`: Ruhepose aus 6 Winkeln, ganze Figur und Kopf 2,6-fach, je J, K1, K2, K3.
+- `loecher_vorher_nachher_K3.png`, `loecher_rest_K3.png`: Nachtrag Loecher.
+
+Varianten: `K1_lang/`, `K2_breit/`, `K3_fit/` je FORM.EMD, FORM.TIM (512 x 256, 4 CLUT-Zeilen), form.json (fuer form_pruefung), bau.json (Masse, Farben,
+Krallen, Koerper), kopf.json (Kopfform, Winkel, Fit-Masse), naht.json (Koerper, Proben, Nachpruefung, Mundwinkel), seite3.png (neue Texturseite),
+loecher_stufe3.json, pruefung/bericht.txt + bericht.json (Pruefbilder lokal, nachbaubar). Messdaten: `mass_kiefer_krallen.json`, `stufe3_kopf.json`,
+`krallen_lesung.json`, `lage_J.json`, `loecher/vorher_J_stufe3.json`, `tabellen.md`.
+
+Generator `generator/`: k_kern (Laden, Tiefenpuffer), k_teile (Masken), k_lage, k_krallen, k_form (Kopf/Kiefer-Geometrie), k_kopf_fit + k_bild1 (Posen),
+k_bau (Bau, Textur, Lichtmessung, Kiefer-Eichung, Krallen), k_naht (Gelenkkoerper, Abstimmung, Nachpruefung), k_maulwinkel, k_loecher (Loch-Messung),
+k_s3 (Variante mit Stufe-3-Clips), k_s3_kopf, k_mass, k_blatt (Kontaktblaetter), k_bericht (Tabellen), k_lochblick, k_sicht (Hilfsbilder).
+
+Ablauf (aus `generator/`):
+- `python k_teile.py`, `python k_lage.py`, `python k_krallen.py`
+- `python k_kopf_fit.py --name K1 --form L=2400,Ws=320,Wt=240,Wk=420 --aus ../_lauf/K1/kopf.json --iters 700 --starts 3`
+- `python k_kopf_fit.py --name K2 --form L=1700,Ws=430,Wt=390,Wk=460,yt_s=-280,yt_t=-190 --aus ../_lauf/K2/kopf.json --iters 700 --starts 3`
+- `python k_kopf_fit.py --name K3 --frei L,Ws,Wt,Wk,yt_s,yt_t --aus ../_lauf/K3/kopf.json --iters 1000 --starts 3`
+- `python k_bild1.py ../_lauf/K1/kopf.json` (ebenso K2, K3)
+- `bash k_variante.sh K1 ../K1_lang`, `bash k_variante.sh K2 ../K2_breit`, `bash k_variante.sh K3 ../K3_fit`
+- `python k_loecher.py messen ../../../stufe3/asset/BAHNSTEIG_FORM.EMD --aus ../loecher/vorher_J_stufe3.json`
+- `python k_blatt.py bild|nah|rundum|loecher ...`, `python k_mass.py ...`, `python k_s3_kopf.py ...`, `python k_bericht.py`
+
+Parallel laufende Varianten brauchen getrennte Arbeitsordner (k_maulwinkel: `_lauf/<K>_naht_maulwinkel`); ein gemeinsamer Ordner hat einen ersten Lauf
+verdorben (K2 abgebrochen, K1/K3 wiederholt, Endstand aus dem Wiederholungslauf).
+
+Nicht angefasst: re15_port/ (nur gelesen), Spiel-Asset, stufe3/ (nur gelesen), STUFE3_abnahme_1.md, nutzer_teile/lage.json, pri/, synchro/, Version_80%/.

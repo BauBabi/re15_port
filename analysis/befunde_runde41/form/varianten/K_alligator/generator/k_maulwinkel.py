@@ -20,7 +20,7 @@ SPIEL = 0.01
 
 def main(kopf, naht, aus):
     g = json.load(open(naht, encoding='utf-8'))
-    tmp = os.path.join(os.path.dirname(os.path.abspath(aus)), '_maulwinkel')
+    tmp = os.path.splitext(os.path.abspath(aus))[0] + '_maulwinkel'      # je Variante eigener Ordner (parallele Laeufe)
     ohne = dict(g)
     ohne['gelenke'] = {k: v for k, v in g['gelenke'].items() if k != 'Kiefer - Kopf'}
     json.dump(ohne, open(tmp + '_naht.json', 'w', encoding='utf-8'))

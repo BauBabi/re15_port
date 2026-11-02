@@ -1,0 +1,1130 @@
+{
+ "J": {
+  "0": {
+   "name": "rennen",
+   "bilder": 18,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 4070,
+   "laenge_max": 8281,
+   "biss_min": 1631,
+   "biss_max": 2207
+  },
+  "1": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "2": {
+   "name": "stehen",
+   "bilder": 60,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1293,
+   "schnauze_x_max": 4334,
+   "laenge_max": 7920,
+   "biss_min": 1754,
+   "biss_max": 1793
+  },
+  "3": {
+   "name": "hieb_rechts",
+   "bilder": 60,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 4331,
+   "laenge_max": 9447,
+   "biss_min": 1413,
+   "biss_max": 1850
+  },
+  "4": {
+   "name": "hieb_links",
+   "bilder": 50,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 4331,
+   "laenge_max": 8942,
+   "biss_min": 1416,
+   "biss_max": 1860
+  },
+  "5": {
+   "name": "gehen",
+   "bilder": 89,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1409,
+   "schnauze_x_max": 4335,
+   "laenge_max": 8042,
+   "biss_min": 1760,
+   "biss_max": 1797
+  },
+  "6": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "7": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "8": {
+   "name": "zucken",
+   "bilder": 30,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4332,
+   "laenge_max": 8150,
+   "biss_min": 1710,
+   "biss_max": 1760
+  },
+  "9": {
+   "name": "nachhieb",
+   "bilder": 63,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -106,
+   "schnauze_x_max": 4339,
+   "laenge_max": 8861,
+   "biss_min": 1685,
+   "biss_max": 1847
+  },
+  "10": {
+   "name": "drohen",
+   "bilder": 126,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4334,
+   "laenge_max": 8525,
+   "biss_min": 1655,
+   "biss_max": 1825
+  },
+  "11": {
+   "name": "flucht",
+   "bilder": 57,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 4330,
+   "laenge_max": 8281,
+   "biss_min": 1631,
+   "biss_max": 2207
+  },
+  "12": {
+   "name": "sturz",
+   "bilder": 56,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1528,
+   "schnauze_x_max": 2946,
+   "laenge_max": 7924,
+   "biss_min": 1604,
+   "biss_max": 1825
+  },
+  "13": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "14": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "15": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "16": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "17": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "18": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "19": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "20": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "21": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "22": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "23": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "24": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "25": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1450,
+   "schnauze_x_max": 4329,
+   "laenge_max": 7848,
+   "biss_min": 1757,
+   "biss_max": 1757
+  },
+  "26": {
+   "name": "biss",
+   "bilder": 35,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -616,
+   "schnauze_x_max": 4822,
+   "laenge_max": 7859,
+   "biss_min": 1712,
+   "biss_max": 1814
+  },
+  "27": {
+   "name": "griff",
+   "bilder": 100,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -437,
+   "schnauze_x_max": 4796,
+   "laenge_max": 8422,
+   "biss_min": 1668,
+   "biss_max": 1862
+  }
+ },
+ "K1": {
+  "0": {
+   "name": "rennen",
+   "bilder": 18,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 5026,
+   "laenge_max": 8419,
+   "biss_min": 2777,
+   "biss_max": 2947
+  },
+  "1": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "2": {
+   "name": "stehen",
+   "bilder": 60,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1529,
+   "schnauze_x_max": 5140,
+   "laenge_max": 8699,
+   "biss_min": 2473,
+   "biss_max": 2525
+  },
+  "3": {
+   "name": "hieb_rechts",
+   "bilder": 60,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 5148,
+   "laenge_max": 9447,
+   "biss_min": 2475,
+   "biss_max": 2627
+  },
+  "4": {
+   "name": "hieb_links",
+   "bilder": 50,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 5143,
+   "laenge_max": 8942,
+   "biss_min": 2475,
+   "biss_max": 2620
+  },
+  "5": {
+   "name": "gehen",
+   "bilder": 89,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1608,
+   "schnauze_x_max": 5150,
+   "laenge_max": 8755,
+   "biss_min": 2492,
+   "biss_max": 2535
+  },
+  "6": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "7": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "8": {
+   "name": "zucken",
+   "bilder": 30,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8641,
+   "biss_min": 2392,
+   "biss_max": 2527
+  },
+  "9": {
+   "name": "nachhieb",
+   "bilder": 63,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 5172,
+   "laenge_max": 9084,
+   "biss_min": 2476,
+   "biss_max": 2592
+  },
+  "10": {
+   "name": "drohen",
+   "bilder": 126,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1647,
+   "schnauze_x_max": 5157,
+   "laenge_max": 8933,
+   "biss_min": 2442,
+   "biss_max": 2586
+  },
+  "11": {
+   "name": "flucht",
+   "bilder": 57,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 5151,
+   "laenge_max": 8633,
+   "biss_min": 2400,
+   "biss_max": 2947
+  },
+  "12": {
+   "name": "sturz",
+   "bilder": 56,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1720,
+   "schnauze_x_max": 3495,
+   "laenge_max": 7924,
+   "biss_min": 2471,
+   "biss_max": 2615
+  },
+  "13": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "14": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "15": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "16": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "17": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "18": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "19": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "20": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "21": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "22": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "23": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "24": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "25": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1648,
+   "schnauze_x_max": 5113,
+   "laenge_max": 8633,
+   "biss_min": 2476,
+   "biss_max": 2476
+  },
+  "26": {
+   "name": "biss",
+   "bilder": 35,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -275,
+   "schnauze_x_max": 5655,
+   "laenge_max": 8691,
+   "biss_min": 2451,
+   "biss_max": 2642
+  },
+  "27": {
+   "name": "griff",
+   "bilder": 100,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -110,
+   "schnauze_x_max": 5781,
+   "laenge_max": 8863,
+   "biss_min": 2419,
+   "biss_max": 2662
+  }
+ },
+ "K2": {
+  "0": {
+   "name": "rennen",
+   "bilder": 18,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 4346,
+   "laenge_max": 8281,
+   "biss_min": 1955,
+   "biss_max": 2266
+  },
+  "1": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "2": {
+   "name": "stehen",
+   "bilder": 60,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1499,
+   "schnauze_x_max": 4441,
+   "laenge_max": 8012,
+   "biss_min": 1790,
+   "biss_max": 1839
+  },
+  "3": {
+   "name": "hieb_rechts",
+   "bilder": 60,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -51,
+   "schnauze_x_max": 4449,
+   "laenge_max": 9447,
+   "biss_min": 1770,
+   "biss_max": 1930
+  },
+  "4": {
+   "name": "hieb_links",
+   "bilder": 50,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -79,
+   "schnauze_x_max": 4450,
+   "laenge_max": 8942,
+   "biss_min": 1769,
+   "biss_max": 1923
+  },
+  "5": {
+   "name": "gehen",
+   "bilder": 89,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1593,
+   "schnauze_x_max": 4451,
+   "laenge_max": 8056,
+   "biss_min": 1806,
+   "biss_max": 1848
+  },
+  "6": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "7": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "8": {
+   "name": "zucken",
+   "bilder": 30,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 8150,
+   "biss_min": 1703,
+   "biss_max": 1825
+  },
+  "9": {
+   "name": "nachhieb",
+   "bilder": 63,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -267,
+   "schnauze_x_max": 4479,
+   "laenge_max": 8861,
+   "biss_min": 1792,
+   "biss_max": 1903
+  },
+  "10": {
+   "name": "drohen",
+   "bilder": 126,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1632,
+   "schnauze_x_max": 4457,
+   "laenge_max": 8525,
+   "biss_min": 1708,
+   "biss_max": 1888
+  },
+  "11": {
+   "name": "flucht",
+   "bilder": 57,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 4452,
+   "laenge_max": 8281,
+   "biss_min": 1715,
+   "biss_max": 2266
+  },
+  "12": {
+   "name": "sturz",
+   "bilder": 56,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1708,
+   "schnauze_x_max": 3186,
+   "laenge_max": 7924,
+   "biss_min": 1772,
+   "biss_max": 1909
+  },
+  "13": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "14": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "15": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "16": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "17": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "18": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "19": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "20": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "21": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "22": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "23": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "24": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "25": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1633,
+   "schnauze_x_max": 4424,
+   "laenge_max": 7943,
+   "biss_min": 1792,
+   "biss_max": 1792
+  },
+  "26": {
+   "name": "biss",
+   "bilder": 35,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -716,
+   "schnauze_x_max": 4960,
+   "laenge_max": 7996,
+   "biss_min": 1743,
+   "biss_max": 1943
+  },
+  "27": {
+   "name": "griff",
+   "bilder": 100,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -541,
+   "schnauze_x_max": 5083,
+   "laenge_max": 8422,
+   "biss_min": 1742,
+   "biss_max": 1964
+  }
+ },
+ "K3": {
+  "0": {
+   "name": "rennen",
+   "bilder": 18,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 4278,
+   "laenge_max": 8281,
+   "biss_min": 1890,
+   "biss_max": 2198
+  },
+  "1": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "2": {
+   "name": "stehen",
+   "bilder": 60,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1495,
+   "schnauze_x_max": 4370,
+   "laenge_max": 7942,
+   "biss_min": 1722,
+   "biss_max": 1770
+  },
+  "3": {
+   "name": "hieb_rechts",
+   "bilder": 60,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -100,
+   "schnauze_x_max": 4378,
+   "laenge_max": 9447,
+   "biss_min": 1701,
+   "biss_max": 1860
+  },
+  "4": {
+   "name": "hieb_links",
+   "bilder": 50,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -128,
+   "schnauze_x_max": 4380,
+   "laenge_max": 8942,
+   "biss_min": 1700,
+   "biss_max": 1852
+  },
+  "5": {
+   "name": "gehen",
+   "bilder": 89,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1580,
+   "schnauze_x_max": 4380,
+   "laenge_max": 8042,
+   "biss_min": 1737,
+   "biss_max": 1778
+  },
+  "6": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "7": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "8": {
+   "name": "zucken",
+   "bilder": 30,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4355,
+   "laenge_max": 8150,
+   "biss_min": 1632,
+   "biss_max": 1755
+  },
+  "9": {
+   "name": "nachhieb",
+   "bilder": 63,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -299,
+   "schnauze_x_max": 4408,
+   "laenge_max": 8861,
+   "biss_min": 1724,
+   "biss_max": 1834
+  },
+  "10": {
+   "name": "drohen",
+   "bilder": 126,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1619,
+   "schnauze_x_max": 4386,
+   "laenge_max": 8525,
+   "biss_min": 1649,
+   "biss_max": 1817
+  },
+  "11": {
+   "name": "flucht",
+   "bilder": 57,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": 0,
+   "schnauze_x_max": 4381,
+   "laenge_max": 8281,
+   "biss_min": 1646,
+   "biss_max": 2198
+  },
+  "12": {
+   "name": "sturz",
+   "bilder": 56,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1694,
+   "schnauze_x_max": 3132,
+   "laenge_max": 7924,
+   "biss_min": 1703,
+   "biss_max": 1841
+  },
+  "13": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "14": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "15": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "16": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "17": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "18": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "19": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "20": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "21": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "22": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "23": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "24": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "25": {
+   "name": "frei (Ruhe)",
+   "bilder": 1,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -1620,
+   "schnauze_x_max": 4354,
+   "laenge_max": 7873,
+   "biss_min": 1724,
+   "biss_max": 1724
+  },
+  "26": {
+   "name": "biss",
+   "bilder": 35,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -760,
+   "schnauze_x_max": 4889,
+   "laenge_max": 7926,
+   "biss_min": 1674,
+   "biss_max": 1872
+  },
+  "27": {
+   "name": "griff",
+   "bilder": 100,
+   "kopf_im_boden_bilder": 0,
+   "kopf_tiefer_als_fuesse_max": -585,
+   "schnauze_x_max": 5013,
+   "laenge_max": 8422,
+   "biss_min": 1670,
+   "biss_max": 1893
+  }
+ }
+}

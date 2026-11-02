@@ -1,0 +1,502 @@
+{
+ "J": {
+  "oberkiefer": {
+   "iou": 0.003,
+   "iou_ohne_rumpf": 0.008,
+   "deckung": 0.009,
+   "lage": {
+    "schwerpunkt_abstand_px": 107.2,
+    "achse_ist_grad": 36.8,
+    "achse_soll_grad": 11.6,
+    "achse_abweichung_grad": 25.2,
+    "laenge_ist_soll_px": [
+     129,
+     107
+    ],
+    "breite_ist_soll_px": [
+     125,
+     79
+    ]
+   }
+  },
+  "unterkiefer": {
+   "iou": 0.0,
+   "deckung": 0.0,
+   "lage": {
+    "schwerpunkt_abstand_px": 77.2,
+    "achse_ist_grad": 162.3,
+    "achse_soll_grad": 141.5,
+    "achse_abweichung_grad": 20.8,
+    "laenge_ist_soll_px": [
+     78,
+     109
+    ],
+    "breite_ist_soll_px": [
+     64,
+     37
+    ]
+   }
+  },
+  "rechter_arm_ohne_unterkiefer": {
+   "iou": 0.526
+  },
+  "krallen_rechts": {
+   "spitzen_soll": 5,
+   "spitzen_ist": 4,
+   "paare": 4,
+   "abstand_mittel_px": 12.7,
+   "soll_ohne_partner": 1,
+   "ist_ohne_partner": 0,
+   "soll": [
+    [
+     274,
+     443
+    ],
+    [
+     249,
+     476
+    ],
+    [
+     197,
+     476
+    ],
+    [
+     229,
+     351
+    ],
+    [
+     145,
+     353
+    ]
+   ],
+   "ist": [
+    [
+     272,
+     441
+    ],
+    [
+     207,
+     472
+    ],
+    [
+     257,
+     372
+    ],
+    [
+     143,
+     354
+    ]
+   ]
+  },
+  "krallen_links": {
+   "spitzen_soll": 3,
+   "spitzen_ist": 3,
+   "paare": 3,
+   "abstand_mittel_px": 11.9,
+   "soll_ohne_partner": 0,
+   "ist_ohne_partner": 0,
+   "soll": [
+    [
+     468,
+     417
+    ],
+    [
+     439,
+     418
+    ],
+    [
+     406,
+     260
+    ]
+   ],
+   "ist": [
+    [
+     468,
+     418
+    ],
+    [
+     439,
+     420
+    ],
+    [
+     384,
+     284
+    ]
+   ]
+  }
+ },
+ "K1": {
+  "oberkiefer": {
+   "iou": 0.378,
+   "iou_ohne_rumpf": 0.425,
+   "deckung": 0.747,
+   "lage": {
+    "schwerpunkt_abstand_px": 12.6,
+    "achse_ist_grad": 154.1,
+    "achse_soll_grad": 11.6,
+    "achse_abweichung_grad": 37.5,
+    "laenge_ist_soll_px": [
+     246,
+     107
+    ],
+    "breite_ist_soll_px": [
+     58,
+     79
+    ]
+   }
+  },
+  "unterkiefer": {
+   "iou": 0.725,
+   "deckung": 0.787,
+   "lage": {
+    "schwerpunkt_abstand_px": 4.8,
+    "achse_ist_grad": 138.2,
+    "achse_soll_grad": 141.5,
+    "achse_abweichung_grad": 3.3,
+    "laenge_ist_soll_px": [
+     126,
+     109
+    ],
+    "breite_ist_soll_px": [
+     36,
+     37
+    ]
+   }
+  },
+  "rechter_arm_ohne_unterkiefer": {
+   "iou": 0.596
+  },
+  "krallen_rechts": {
+   "spitzen_soll": 5,
+   "spitzen_ist": 3,
+   "paare": 3,
+   "abstand_mittel_px": 5.3,
+   "soll_ohne_partner": 2,
+   "ist_ohne_partner": 0,
+   "soll": [
+    [
+     274,
+     443
+    ],
+    [
+     249,
+     476
+    ],
+    [
+     197,
+     476
+    ],
+    [
+     229,
+     351
+    ],
+    [
+     145,
+     353
+    ]
+   ],
+   "ist": [
+    [
+     272,
+     441
+    ],
+    [
+     207,
+     472
+    ],
+    [
+     143,
+     354
+    ]
+   ]
+  },
+  "krallen_links": {
+   "spitzen_soll": 3,
+   "spitzen_ist": 3,
+   "paare": 2,
+   "abstand_mittel_px": 1.5,
+   "soll_ohne_partner": 1,
+   "ist_ohne_partner": 1,
+   "soll": [
+    [
+     468,
+     417
+    ],
+    [
+     439,
+     418
+    ],
+    [
+     406,
+     260
+    ]
+   ],
+   "ist": [
+    [
+     468,
+     418
+    ],
+    [
+     439,
+     420
+    ],
+    [
+     386,
+     301
+    ]
+   ]
+  }
+ },
+ "K2": {
+  "oberkiefer": {
+   "iou": 0.5,
+   "iou_ohne_rumpf": 0.671,
+   "deckung": 0.854,
+   "lage": {
+    "schwerpunkt_abstand_px": 35.1,
+    "achse_ist_grad": 159.6,
+    "achse_soll_grad": 11.6,
+    "achse_abweichung_grad": 32.0,
+    "laenge_ist_soll_px": [
+     188,
+     107
+    ],
+    "breite_ist_soll_px": [
+     68,
+     79
+    ]
+   }
+  },
+  "unterkiefer": {
+   "iou": 0.746,
+   "deckung": 0.803,
+   "lage": {
+    "schwerpunkt_abstand_px": 4.2,
+    "achse_ist_grad": 144.5,
+    "achse_soll_grad": 141.5,
+    "achse_abweichung_grad": 3.1,
+    "laenge_ist_soll_px": [
+     111,
+     109
+    ],
+    "breite_ist_soll_px": [
+     44,
+     37
+    ]
+   }
+  },
+  "rechter_arm_ohne_unterkiefer": {
+   "iou": 0.743
+  },
+  "krallen_rechts": {
+   "spitzen_soll": 5,
+   "spitzen_ist": 4,
+   "paare": 4,
+   "abstand_mittel_px": 12.3,
+   "soll_ohne_partner": 1,
+   "ist_ohne_partner": 0,
+   "soll": [
+    [
+     274,
+     443
+    ],
+    [
+     249,
+     476
+    ],
+    [
+     197,
+     476
+    ],
+    [
+     229,
+     351
+    ],
+    [
+     145,
+     353
+    ]
+   ],
+   "ist": [
+    [
+     272,
+     441
+    ],
+    [
+     207,
+     472
+    ],
+    [
+     253,
+     374
+    ],
+    [
+     143,
+     354
+    ]
+   ]
+  },
+  "krallen_links": {
+   "spitzen_soll": 3,
+   "spitzen_ist": 3,
+   "paare": 2,
+   "abstand_mittel_px": 1.5,
+   "soll_ohne_partner": 1,
+   "ist_ohne_partner": 1,
+   "soll": [
+    [
+     468,
+     417
+    ],
+    [
+     439,
+     418
+    ],
+    [
+     406,
+     260
+    ]
+   ],
+   "ist": [
+    [
+     468,
+     418
+    ],
+    [
+     439,
+     420
+    ],
+    [
+     387,
+     302
+    ]
+   ]
+  }
+ },
+ "K3": {
+  "oberkiefer": {
+   "iou": 0.508,
+   "iou_ohne_rumpf": 0.625,
+   "deckung": 0.758,
+   "lage": {
+    "schwerpunkt_abstand_px": 31.5,
+    "achse_ist_grad": 159.8,
+    "achse_soll_grad": 11.6,
+    "achse_abweichung_grad": 31.8,
+    "laenge_ist_soll_px": [
+     181,
+     107
+    ],
+    "breite_ist_soll_px": [
+     68,
+     79
+    ]
+   }
+  },
+  "unterkiefer": {
+   "iou": 0.801,
+   "deckung": 0.844,
+   "lage": {
+    "schwerpunkt_abstand_px": 0.7,
+    "achse_ist_grad": 139.1,
+    "achse_soll_grad": 141.5,
+    "achse_abweichung_grad": 2.3,
+    "laenge_ist_soll_px": [
+     110,
+     109
+    ],
+    "breite_ist_soll_px": [
+     38,
+     37
+    ]
+   }
+  },
+  "rechter_arm_ohne_unterkiefer": {
+   "iou": 0.736
+  },
+  "krallen_rechts": {
+   "spitzen_soll": 5,
+   "spitzen_ist": 4,
+   "paare": 4,
+   "abstand_mittel_px": 12.8,
+   "soll_ohne_partner": 1,
+   "ist_ohne_partner": 0,
+   "soll": [
+    [
+     274,
+     443
+    ],
+    [
+     249,
+     476
+    ],
+    [
+     197,
+     476
+    ],
+    [
+     229,
+     351
+    ],
+    [
+     145,
+     353
+    ]
+   ],
+   "ist": [
+    [
+     272,
+     441
+    ],
+    [
+     207,
+     472
+    ],
+    [
+     256,
+     374
+    ],
+    [
+     143,
+     354
+    ]
+   ]
+  },
+  "krallen_links": {
+   "spitzen_soll": 3,
+   "spitzen_ist": 3,
+   "paare": 2,
+   "abstand_mittel_px": 1.5,
+   "soll_ohne_partner": 1,
+   "ist_ohne_partner": 1,
+   "soll": [
+    [
+     468,
+     417
+    ],
+    [
+     439,
+     418
+    ],
+    [
+     406,
+     260
+    ]
+   ],
+   "ist": [
+    [
+     468,
+     418
+    ],
+    [
+     439,
+     420
+    ],
+    [
+     386,
+     301
+    ]
+   ]
+  }
+ }
+}
