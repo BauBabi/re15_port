@@ -80,22 +80,30 @@ FORMEN = {
                     (-1760, 1880, -20), (-1900, 2280, -120), (-1960, 2520, -160)],
             radien=[300, 260, 215, 170, 125, 80, 34],
             glieder=7, seiten=8, ueberlapp=0.45,
-            # Fleischtextur links oben (TPage 128, CLUT-Zeile 0 wie der Rumpf, u<128), laeuft ueber alle Glieder durch
-            uv=dict(clut=30720, page=128, u=(4, 60), v=(4, 124)),
+            # Runde 41 SF N1.5: rot-weiss gebaendert wie im Video (Schwanz h18-h28 Bild-links, h58-h70 Bild-rechts; vorher
+            # Fleischtextur TPage 128 u 4-60 v 4-124). Bandstreifen TPage 130 u 0-42 v 92-130 (senkrechte hellere Streifen),
+            # Laenge auf u (laengs='u') -> die Streifen liegen als Ringe um den Schwanz; eigene CLUT-Zeile 483 (cluts unten).
+            uv=dict(clut=483 << 6, page=130, u=(0, 42), v=(92, 130), laengs='u'),
             # Nachschwingen (schwanz_bewegung): Feder und Nachlauf Wurzel -> Spitze, Daempfung je Bild, Schwere, Grenzwinkel
             bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.004, grenze=55),
         ),
         # Umtexturieren (nur UV/CLUT/TPage, vorhandene Texel, keine neuen Farben). Quelle der UVs = die
         # Ausdehnung der gewaehlten Faces; Ziel = Rechteck im TIM. Teile T3-T6 im Dossier.
+        # Runde 41 SF N1.6: Oberschenkel-Vierecke (Mesh 1/4, Ringe bei y ~76 und ~818) an y 360 teilen, damit die Jeans
+        # dort enden koennen (vorher reichte das Viereck 76..818 als Ganzes bis ans Knie). Form unveraendert.
+        teilen=[dict(meshes=(1, 4), schnitt=360)],
         umtexturieren=[
-            # T5 Sichelarm: Unterarm rechts (Mesh 14) rot-weiss gebaendert wie die Klaue; im Video ist der
-            # ganze Arm ab dem Ellbogen eine rot-weisse Sichel (1367-1376, rote Pixel ab y 270 = Ellbogen)
-            dict(meshes=(14,), page=130, clut=30848, u=(2, 42), v=(92, 166)),
-            # T3 Kurze Hose: Jeans am Schienbein (Mesh 2/5, TPage 129) und am Oberschenkel unterhalb 70 %
-            # (Mesh 1/4, Vertex-y >= 520 von 747) -> Beinhaut wie der untere Schienbeinteil (TPage 128,
-            # CLUT 0, u 19-55 v 55-115). Video: Hose endet ~15 px ueber dem Knie (1470, Huefte 290 / Knie 345)
+            # T5 (Runde 41 SF) zurueckgenommen in N1.2/N1.7: das rot-weisse Glied h18-h28 war der Schwanz, der Unterarm
+            # (Mesh 14) traegt wieder die EM30-Haut (im Video h96-h100 rotgrau (55,43,46) am Ellbogen).
+            # T7 Sichel (Mesh 15): eigene CLUT-Zeile 484 (dunkel wie im Video h128-h132, cluts unten), UVs unveraendert.
+            dict(meshes=(15,), clut=484 << 6),
+            # T3 Kurze Hose: Jeans am Schienbein (Mesh 2/5, TPage 129) und am Oberschenkel unterhalb y 360
+            # (Mesh 1/4, nach teilen) -> Beinhaut wie der untere Schienbeinteil (TPage 128, CLUT 0, u 19-55 v 55-115).
+            # Video h120-h132: Jeans y 136..157, Haut 157..178 (PSX, Blau-/Hautprofil der Beine) = Hosenende bei 62 % von
+            # Bund bis Knie; im Port Bund 145, Knie (Knochen 2) 187 -> Ende bei y 171 = Oberschenkel-lokal ~350.
+            # Vorher (y_ab 520) traf die Regel nur das Kniedreieck 818-951, die Jeans reichten bis y 187 (Lauf n1).
             dict(meshes=(2, 5), nur_page=129, page=128, clut=30720, u=(19, 55), v=(55, 115)),
-            dict(meshes=(1, 4), y_ab=520, page=128, clut=30720, u=(19, 55), v=(55, 115)),
+            dict(meshes=(1, 4), y_ab=360, page=128, clut=30720, u=(19, 55), v=(55, 115)),
             # T4 Fuesse rot statt schwarzer Schuhe (alle Hangar-Bilder; 1355/1470 rote Fuesse) -> Wundfleisch
             # der Schulter (TPage 128, CLUT 0, u 66-126 v 4-90)
             dict(meshes=(3, 6), page=128, clut=30720, u=(66, 126), v=(4, 90)),
@@ -103,6 +111,22 @@ FORMEN = {
             # Mitte) -> dasselbe Wundfleisch
             dict(meshes=(9,), page=128, clut=30720, u=(66, 126), v=(4, 90)),
         ],
+        # Runde 41 SF N1.4/N1.5/N1.7: CLUT-Arbeit (nur Farben der Paletten, Texel unveraendert; Werte = Videomessung,
+        # abgeglichen an der Buehne tools/r41_sichel/farbmass.py, die das Port-Fenster nachweislich trifft).
+        #  Haut (Zeilen 480-482): Video h40-h64 Rumpf L 66 / Rotanteil 0,33 / hell (78,62,61) / rot (72,40,40), Modell vorher
+        #   L 94 / 0,16 / (114,91,87) / (82,40,40) -> blasse Eintraege x0,64, rote (r/g >= 1,6) satter; Jeans (b > r) bleiben.
+        #  Zeile 483 Schwanz aus Zeile 482: dunkle Streifen rot, helle weisslich (Video 2-Mittel (92,54,55) 63 % /
+        #   (137,90,91); Buehne danach (90,47,54) 64 % / (138,96,97)).
+        #  Zeile 484 Sichel aus Zeile 482: dunkel, fast unbunt (Video h128-h132 (21,23,18) = 0,58 der Hauthelligkeit; der
+        #   Gruenstich ist Videokompression - der dunkle Torbogen daneben misst ebenso (14,16,16)). Lauf n2 mit
+        #   (38,46,32)/(76,90,64) wirkte im Fenster olivgruen -> unbunt.
+        cluts=dict(
+            haut_zeilen=(0, 1, 2),
+            haut=dict(dunkel=0.63, q0=1.2, q1=1.6, rot_hell=0.95, satt=0.82),
+            # Schwanz: Schwellen 44/52 = Tal/Gipfel der Streifen (Spalten-L des Bandstreifens 41..63) -> klare Baender
+            zusatz=[dict(aus=2, l0=44, l1=52, dunkel=(100, 52, 54), hell=(180, 128, 128)),
+                    dict(aus=2, l0=20, l1=90, dunkel=(40, 40, 35), hell=(84, 81, 72))],
+        ),
     ),
 }
 
@@ -365,8 +389,17 @@ def kette_meshes(sw, ruhe):
             m['v'].append([0, int(round(Li + 2.5 * r1)), 0, 0])
             m['n'].append([0, 4096, 0, 0])
 
+        laengs = uv.get('laengs') == 'u'
         def u_(k):  return int(round(uv['u'][0] + (uv['u'][1] - uv['u'][0]) * k / S))
         def v_(t):  return int(round(uv['v'][0] + (uv['v'][1] - uv['v'][0]) * t))
+
+        def tx(k, t):
+            """(u, v) fuer Seite k und Laengenanteil t. laengs='u' (Runde 41 SF N1.5): Laenge auf u, Umfang auf v, damit
+            die senkrechten Streifen des Bandstreifens (TPage 130 u 0-42) als Ringe ueber dem Schwanz liegen."""
+            if laengs:
+                return (int(round(uv['u'][0] + (uv['u'][1] - uv['u'][0]) * t)),
+                        int(round(uv['v'][0] + (uv['v'][1] - uv['v'][0]) * k / S)))
+            return (u_(k), v_(t))
 
         def orient(ia, ib, ic):
             P = [np.array(m['v'][j][:3], float) for j in (ia, ib, ic)]
@@ -377,8 +410,7 @@ def kette_meshes(sw, ruhe):
                 k2 = (k + 1) % S
                 a, b = ringe[j][k], ringe[j][k2]
                 c, d = ringe[j+1][k], ringe[j+1][k2]
-                uvs = [(u_(k), v_(ringe_s[j])), (u_(k+1), v_(ringe_s[j])),
-                       (u_(k), v_(ringe_s[j+1])), (u_(k+1), v_(ringe_s[j+1]))]
+                uvs = [tx(k, ringe_s[j]), tx(k + 1, ringe_s[j]), tx(k, ringe_s[j+1]), tx(k + 1, ringe_s[j+1])]
                 if not orient(a, b, c):
                     a, b, c, d = b, a, d, c
                     uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
@@ -392,8 +424,9 @@ def kette_meshes(sw, ruhe):
                 if not orient(a, b, sv):
                     a, b = b, a
                 m['tf'].append([a, a, b, b, sv, sv])
-                m['tuv'].append([u_(k), uv['v'][1], uv['clut'], u_(k+1), uv['v'][1], uv['page'],
-                                 (u_(k) + u_(k+1)) // 2, uv['v'][1], 0])
+                p0, p1 = tx(k, 1.0), tx(k + 1, 1.0)
+                m['tuv'].append([p0[0], p0[1], uv['clut'], p1[0], p1[1], uv['page'],
+                                 (p0[0] + p1[0]) // 2, (p0[1] + p1[1]) // 2, 0])
         out.append(m)
     return out
 
@@ -572,11 +605,112 @@ def umtexturieren(meshes, regeln):
                 return int(round(t[0] + (x - s[0]) * (t[1] - t[0]) / max(1, s[1] - s[0])))
             for ul, i, n in wahl:
                 uv = list(ul[i])
-                for k in range(n):
-                    uv[3*k], uv[3*k+1] = abb(uv[3*k], su, r['u']), abb(uv[3*k+1], sv, r['v'])
-                uv[2], uv[5] = r['clut'], r['page']
+                if 'u' in r:
+                    for k in range(n):
+                        uv[3*k], uv[3*k+1] = abb(uv[3*k], su, r['u']), abb(uv[3*k+1], sv, r['v'])
+                uv[2], uv[5] = r['clut'], r.get('page', uv[5])
                 ul[i] = uv
     return meshes
+
+
+def teile_quer(meshes, regeln):
+    """Runde 41 SF N1.6 (kurze Hose): Vierecke, die die Ebene y = schnitt (Mesh-lokal) kreuzen, an dieser Ebene in zwei
+    Vierecke teilen. Die Form bleibt gleich (neue Ecken liegen auf den alten Kanten, Normalen und UVs linear dazwischen);
+    danach kann umtexturieren(y_ab=schnitt) den unteren Teil allein umlegen. EM30-Viereck = (0,1,3)+(0,3,2): Kanten 0-1,
+    1-3, 3-2, 2-0."""
+    for r in regeln:
+        y_s = r['schnitt']
+        for b in r['meshes']:
+            m = meshes[b]
+            neu_f, neu_uv = [], []
+            for f, uv in zip(m['qf'], m['quv']):
+                vi, ni = f[1::2], f[0::2]
+                y = [m['v'][j][1] for j in vi]
+                oben = [k for k in range(4) if y[k] < y_s]
+                if len(oben) != 2 or min(y) >= y_s or max(y) <= y_s:
+                    neu_f.append(f); neu_uv.append(uv); continue
+                if sorted(oben) in ([0, 1], [2, 3]):
+                    kanten = [(0, 2), (1, 3)]           # Schnitt auf den Kanten 0-2 und 1-3
+                elif sorted(oben) in ([0, 2], [1, 3]):
+                    kanten = [(0, 1), (2, 3)]
+                else:
+                    raise AssertionError('Mesh %d: Viereck mit diagonaler Lage zur Schnittebene' % b)
+                neue = {}
+                for a, c in kanten:
+                    t = (y_s - y[a]) / float(y[c] - y[a])
+                    P = [int(round(m['v'][vi[a]][q] + t * (m['v'][vi[c]][q] - m['v'][vi[a]][q]))) for q in range(3)]
+                    P[1] = y_s
+                    N = np.array(m['n'][ni[a]][:3], float) * (1 - t) + np.array(m['n'][ni[c]][:3], float) * t
+                    N = N / max(np.linalg.norm(N), 1e-9) * 4096
+                    m['v'].append(P + [0]); m['n'].append([int(round(x)) for x in N] + [0])
+                    U = (int(round(uv[3*a] + t * (uv[3*c] - uv[3*a]))), int(round(uv[3*a+1] + t * (uv[3*c+1] - uv[3*a+1]))))
+                    neue[(a, c)] = (len(m['n']) - 1, len(m['v']) - 1, U)
+                def ecke(k):
+                    return (ni[k], vi[k], (uv[3*k], uv[3*k+1]))
+                (a0, c0), (a1, c1) = kanten
+                if kanten == [(0, 2), (1, 3)]:
+                    teil = [[ecke(0), ecke(1), neue[(0, 2)], neue[(1, 3)]], [neue[(0, 2)], neue[(1, 3)], ecke(2), ecke(3)]]
+                else:
+                    teil = [[ecke(0), neue[(0, 1)], ecke(2), neue[(2, 3)]], [neue[(0, 1)], ecke(1), neue[(2, 3)], ecke(3)]]
+                for q in teil:
+                    neu_f.append([x for e in q for x in (e[0], e[1])])
+                    neu_uv.append([q[0][2][0], q[0][2][1], uv[2], q[1][2][0], q[1][2][1], uv[5],
+                                   q[2][2][0], q[2][2][1], 0, q[3][2][0], q[3][2][1], 0])
+            m['qf'], m['quv'] = neu_f, neu_uv
+    return meshes
+
+
+# ═══════════════════════════════════════════════════ TIM: CLUT-Zeilen (Runde 41 SF N1.4-N1.7)
+def _clut(tim):
+    cs, cx, cy, cw, ch = struct.unpack_from('<I4H', tim, 8)
+    c = np.array(struct.unpack_from('<%dH' % (cw * ch), tim, 20), dtype=np.int64).reshape(ch, cw)
+    return cx, cy, cw, ch, c, 8 + cs
+
+
+def _rgb(c):
+    return np.stack([(c & 31) * 8, ((c >> 5) & 31) * 8, ((c >> 10) & 31) * 8], -1).astype(float)
+
+
+def _pack(rgb, alt):
+    q = np.clip(np.rint(rgb / 8.0), 0, 31).astype(np.int64)
+    w = q[..., 0] | (q[..., 1] << 5) | (q[..., 2] << 10) | (alt & 0x8000)
+    w = np.where(alt == 0, 0, np.where(w == 0, 1, w))      # 0 bleibt transparent, nichts wird neu transparent
+    return w
+
+
+def haut_zeile(c, p):
+    """Haut dunkler und roter gefleckt (Video 4, N1.4): je Eintrag Rotgrad q = r/g; Blaues (b > r, Jeans) bleibt.
+    blass = alt * dunkel; rot = (r*rot_hell, g*rot_hell*satt, b*rot_hell*satt); Mischung w = linear in q zwischen q0..q1."""
+    rgb = _rgb(c); r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    q = r / np.maximum(g, 8.0)
+    w = np.clip((q - p['q0']) / (p['q1'] - p['q0']), 0, 1)[..., None]
+    blass = rgb * p['dunkel']
+    rot = np.stack([r * p['rot_hell'], g * p['rot_hell'] * p['satt'], b * p['rot_hell'] * p['satt']], -1)
+    neu = blass * (1 - w) + rot * w
+    neu = np.where((b > r)[..., None], rgb, neu)
+    return _pack(neu, c)
+
+
+def band_zeile(c, p):
+    """Zweifarbige Zeile nach Helligkeit des Texels: dunkle Eintraege -> p['dunkel'], helle -> p['hell'] (linear
+    zwischen den Helligkeits-Quantilen l0..l1 der Zeile). Farben = Videomessung (N1.5 Schwanz, N1.7 Sichel)."""
+    rgb = _rgb(c); L = rgb @ np.array([0.299, 0.587, 0.114])
+    w = np.clip((L - p['l0']) / (p['l1'] - p['l0']), 0, 1)[..., None]
+    neu = np.array(p['dunkel'], float) * (1 - w) + np.array(p['hell'], float) * w
+    return _pack(neu, c)
+
+
+def cluts_bauen(tim, cl):
+    """Hautzeilen umfaerben und Zusatzzeilen (aus einer Quellzeile abgeleitet) anhaengen. Die Texel bleiben; nur der
+    CLUT-Block waechst (h 3 -> 3 + n), Pixelblock unveraendert dahinter."""
+    cx, cy, cw, ch, orig, ende = _clut(tim)
+    c = orig.copy()
+    for z in cl.get('haut_zeilen', ()):
+        c[z] = haut_zeile(orig[z], cl['haut'])
+    extra = [band_zeile(orig[zz['aus']], zz) for zz in cl.get('zusatz', ())]   # Zusatzzeilen aus der Originalzeile
+    alle = np.vstack([c] + [e[None] for e in extra]).astype('<u2')
+    blk = struct.pack('<I4H', 12 + alle.size * 2, cx, cy, cw, alle.shape[0]) + alle.tobytes()
+    return bytes(tim[:8]) + blk + bytes(tim[ende:])
 
 
 # ═══════════════════════════════════════════════════ EMR: Bindoffsets mitziehen
@@ -785,6 +919,8 @@ def baue(blob, form):
     kette = form.get('schwanz_kette')
     if form.get('schwanz') or form.get('umtexturieren') or kette:
         meshes = md1_lesen(md1)
+        if form.get('teilen'):
+            teile_quer(meshes, form['teilen'])
         if form.get('umtexturieren'):
             umtexturieren(meshes, form['umtexturieren'])
         if form.get('schwanz'):
@@ -797,6 +933,10 @@ def baue(blob, form):
             emr0 = emr_mit_kette(emr0, kette, ruhe, schwanz_bewegung(emr0, blob[d[1]:d[2]], kette, ruhe))
         md1 = md1_schreiben(meshes)
     tim = faerbe_tim(blob[md1_e:dir_off], form['tint'])
+    if form.get('cluts'):
+        tim = cluts_bauen(tim, form['cluts'])
+    if len(tim) % 4:
+        tim += bytes(4 - len(tim) % 4)
     sek = [bytes(vor[d[i]:d[i+1]]) for i in range(7)]
     sek[2] = emr0
     sek += [md1, tim]

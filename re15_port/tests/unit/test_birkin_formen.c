@@ -10,7 +10,10 @@
  *   - Clip-Zahl und EDD sind byte-gleich; jeder Keyframe beginnt mit dem EM30-Keyframe (Wurzel, Spur,
  *     16 x 36 Bit), die Schwanzwinkel haengen dahinter und bewegen sich,
  *   - Meshes 0-15: Topologie gleich, UVs gleich ausser den umtexturierten Teilen (Beine 1-6, Kopf 9,
- *     Unterarm 14); Meshes 16-22 zeigen nur in ihre eigenen Arrays,
+ *     Sichel 15 nur CLUT); Meshes 16-22 zeigen nur in ihre eigenen Arrays,
+ *   - Runde 41 SF Nachbesserung 1: Oberschenkel 1/4 an y 360 geteilt (kurze Hose; jedes alte Dreieck bleibt, jedes
+ *     geteilte Viereck wird zu zwei, neue Ecken liegen hinter den alten), Haut-CLUTs 480-482 umgefaerbt (Jeans-Eintraege
+ *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22) und 484 (Sichel, Mesh 15),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  */
 #include <stdint.h>
@@ -54,8 +57,14 @@ static modell_t s_basis, s_form;
 #define KETTE 7                  /* Schwanzglieder, birkin_formen.py FORMEN['hangar'] schwanz_kette glieder */
 static int umtexturiert(int m)   /* birkin_formen.py FORMEN['hangar'] umtexturieren */
 {
-    return (m >= 1 && m <= 6) || m == 9 || m == 14;
+    return (m >= 1 && m <= 6) || m == 9 || m == 15;
 }
+static int geteilt(int m)        /* birkin_formen.py FORMEN['hangar'] teilen (kurze Hose, N1.6) */
+{
+    return m == 1 || m == 4;
+}
+#define CLUT_SCHWANZ (483u << 6)  /* birkin_formen.py schwanz_kette uv clut */
+#define CLUT_SICHEL  (484u << 6)  /* birkin_formen.py umtexturieren Mesh 15 */
 
 static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
 {
@@ -118,6 +127,30 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         const re15_md1_mesh_t *b = &s_form.md1.meshes[m];
         if (m < nb0) {
             const re15_md1_mesh_t *a = &s_basis.md1.meshes[m];
+            if (geteilt(m)) {
+                /* Dreiecke unveraendert (Topologie), Vierecke: mehr als vorher, alle Indizes im Block, alte Ecken
+                 * an ihrem Platz (neue Ecken haengen hinten an). */
+                CHECK(b->triangle_count == a->triangle_count && b->quad_count > a->quad_count &&
+                      b->quad_vertex_count > a->quad_vertex_count, "%s: Mesh %d nicht geteilt (Quads %d/%d)", name, m,
+                      b->quad_count, a->quad_count);
+                CHECK(b->quad_count - a->quad_count == (b->quad_vertex_count - a->quad_vertex_count) / 2,
+                      "%s: Mesh %d: %d neue Quads zu %d neuen Ecken", name, m, b->quad_count - a->quad_count,
+                      b->quad_vertex_count - a->quad_vertex_count);
+                if (a->triangle_count > 0)
+                    CHECK(!memcmp(a->triangles, b->triangles, sizeof *a->triangles * (size_t)a->triangle_count),
+                          "%s: Mesh %d Dreieckstopologie weicht ab", name, m);
+                for (int q = 0; q < b->quad_count; q++) {
+                    const re15_md1_quad_t *f = &b->quads[q];
+                    CHECK(f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count && f->v2 < b->quad_vertex_count &&
+                          f->v3 < b->quad_vertex_count && f->n0 < b->quad_normal_count && f->n1 < b->quad_normal_count &&
+                          f->n2 < b->quad_normal_count && f->n3 < b->quad_normal_count,
+                          "%s: Mesh %d Quad %d zeigt ausserhalb", name, m, q);
+                }
+                uv_neu++;
+                for (int v = 0; v < a->tri_vertex_count; v++)
+                    geaendert += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
+                continue;
+            }
             CHECK(b->triangle_count == a->triangle_count && b->quad_count == a->quad_count &&
                   b->tri_vertex_count == a->tri_vertex_count && b->quad_vertex_count == a->quad_vertex_count,
                   "%s: Mesh %d Elementzahlen weichen von EM30 ab", name, m);
@@ -135,10 +168,20 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                  !memcmp(a->quad_uvs, b->quad_uvs, sizeof *a->quad_uvs * (size_t)a->quad_count));
             if (umtexturiert(m)) { CHECK(!uv_gleich, "%s: Mesh %d nicht umtexturiert", name, m); uv_neu++; }
             else CHECK(uv_gleich, "%s: Mesh %d UVs weichen ab", name, m);
+            if (m == 15) {
+                int sichel = 0;
+                for (int q = 0; q < b->quad_count; q++) sichel += b->quad_uvs[q].clut == CLUT_SICHEL;
+                for (int t = 0; t < b->triangle_count; t++) sichel += b->triangle_uvs[t].clut == CLUT_SICHEL;
+                CHECK(sichel == b->quad_count + b->triangle_count, "%s: Sichel (Mesh 15) nur %d/%d Teile auf CLUT 484",
+                      name, sichel, b->quad_count + b->triangle_count);
+            }
             for (int v = 0; v < a->tri_vertex_count; v++)
                 geaendert += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
         } else {
             CHECK(b->quad_count > 0, "%s: Schwanzglied-Mesh %d leer", name, m);
+            for (int q = 0; q < b->quad_count; q++)
+                CHECK(b->quad_uvs[q].clut == CLUT_SCHWANZ, "%s: Schwanzglied %d Quad %d CLUT %04x statt 483", name, m, q,
+                      b->quad_uvs[q].clut);
             for (int q = 0; q < b->quad_count; q++) {
                 const re15_md1_quad_t *f = &b->quads[q];
                 CHECK(f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count &&
@@ -157,6 +200,22 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         }
     }
     CHECK(geaendert > 0, "%s: keine einzige Vertex-Aenderung gegenueber EM30", name);
+    /* CLUT-Block (N1.4/N1.5/N1.7): 3 EM30-Zeilen + 2 Zusatzzeilen; Haut umgefaerbt, blaue Eintraege (Jeans) gleich. */
+    CHECK(s_basis.tim.clut_entries == 3 * 256 && s_form.tim.clut_entries == 5 * 256 &&
+          s_form.tim.clut_y == s_basis.tim.clut_y, "%s: CLUT %d Eintraege (Soll 5 x 256) ab y %d", name,
+          s_form.tim.clut_entries, s_form.tim.clut_y);
+    if (s_form.tim.clut_entries == 5 * 256) {
+        int blau_anders = 0, haut_anders = 0;
+        for (int i = 0; i < 3 * 256; i++) {
+            const uint16_t c = s_basis.tim.clut[i], d = s_form.tim.clut[i];
+            const int r = c & 31, bl = (c >> 10) & 31;
+            if (bl > r) blau_anders += c != d; else haut_anders += c != d;
+            CHECK((c == 0) == (d == 0), "%s: CLUT %d Transparenz geaendert (%04x -> %04x)", name, i, c, d);
+        }
+        CHECK(blau_anders == 0, "%s: %d blaue CLUT-Eintraege (Jeans) umgefaerbt", name, blau_anders);
+        CHECK(haut_anders > 200, "%s: nur %d Haut-Eintraege umgefaerbt", name, haut_anders);
+        fprintf(stderr, "%s: %d Haut-CLUT-Eintraege umgefaerbt, 2 Zusatzzeilen\n", name, haut_anders);
+    }
     fprintf(stderr, "%s: %d Meshes, %d Knochen, %d Clips, %ld Tri-Vertices umgeformt, %ld Teile umtexturiert\n",
             name, s_form.md1.mesh_count, s_form.skel.bone_count, s_form.anim.clip_count, geaendert, uv_neu);
     free(blob);
