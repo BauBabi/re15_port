@@ -363,8 +363,11 @@ static void test_g5(const char *rel, unsigned id)
             if (fest(pl->x, pl->z)) n_wand++;
             /* G5-Auftritt Nachbesserung 1 (M2): die Intro-Arme halten jetzt RE2s eingerollte letzte Austritts-Pose (sub8 ph4..ph7 ohne
              * Anim-Schritt, +0x178 = Clip 14/16/15 Bild 29) statt der geraden Clip-0-Stange; an dieser Lage liegen sie 13 statt >= 30
-             * Bilder auf Leon. Die Laufprobe startet darum nach 10 Kontaktbildern (vorher 30). */
-            if (kontakt && ++geduld >= 10) {
+             * Bilder auf Leon. Die Laufprobe startet darum nach 10 Kontaktbildern (vorher 30).
+             * Nachbesserung G5A 4: mit der RE2-genauen Speer-Zeitfolge (Durchfaelle sub9 ph0 @0x80102140 / ph4 @0x80102378, RE2-RAM s11/s12
+             * bitgleich) liegen an dieser Lage nur noch 9 Kontaktbilder an (Testbild 408..449, [T5]); die Probe startet beim 5. (Testparameter,
+             * kein Spielwert - die Absicht "Eingabe wirkt, waehrend ein Arm am Spieler liegt" bleibt). */
+            if (kontakt && ++geduld >= 5) {
                 /* der Arm liegt: laufen. Vorher warf die Klemme jede Eingabe auf die Lage in der Wand zurueck. */
                 const int32_t sx = pl->x, sz = pl->z;
                 pl->rot_y = 0;

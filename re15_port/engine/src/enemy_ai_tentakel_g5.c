@@ -35,10 +35,12 @@
  *      vier Aktoren beim Kampfstart selbst. Im RE2-Raum stehen sie ebenfalls nicht in der RDT
  *      (room7040 parkt alle fuenf auf (-32000,0,-32000)); die Platzierung macht auch dort der
  *      Code ueber die Ankertabelle (em037-tentakel.md 4.2/4.4).
- *   2. STRECKUNG: scaleX (part0+0x8C) wirkt im Original ueber FUN_80019CD0 (Flag 0x400) als
- *      Skalierung UM DEN PART-0-RAHMEN auf die Weltraum-Vertices des Schlauchs; der Zeichner
- *      (main.c) holt den Wert ueber re15_g5_tentakel_scale_x und streckt den geskinnten
- *      Schlauch entlang lokal X (re15_g5_skin.h). Kein uniformer render_scale mehr.
+ *   2. STRECKUNG: scaleX (part0+0x8C) wirkt im Original ZWEIMAL: (a) die Teile 1..3 (Flag 0x800,
+ *      Ctor @0x80100774-0x8010078c) bekommen gestreckte Gelenk-Translationen (FUN_80027434
+ *      @0x800275e0-0x8002768c; Port re15_g5_tentakel_kette_strecken, Nachbesserung G5A 4), aus
+ *      denen der Haeuter 0x80104CF0 den Schlauch baut; (b) FUN_80019CD0 (Flag 0x400 an Teil 0)
+ *      skaliert danach UM DEN PART-0-RAHMEN. Der Zeichner (main.c) holt den Wert ueber
+ *      re15_g5_tentakel_scale_x (re15_g5_skin.h). Kein uniformer render_scale mehr.
  *   3. SPIELER-ZYLINDER fuer die Kind-Kollision: RE2-Spieler-Init r=450 (`li v1,0x1c2`
  *      @0x8003bdc0 -> +0x9A/9C/90/92 @0x8003bdc4-d0), Hoehe 1530 (+0x9E @0x8003bdec),
  *      ein Segment (+0x1E8=1 @0x8003bddc). Von FUN_80034D0C sind Kreis-/Hoehentest, radialer
@@ -609,19 +611,19 @@ int re15_g5_tentakel_spitze(int idx, int32_t out[3])
 }
 
 /* Diagnose/Test (Abnahme G5 1, M2): Weltlage der vier Gelenke (Part-Ursprung = RE2 parts+i*172+92/96/100) in der gezeichneten
- * Pose (+0x178, gestreckt wie der Zeichner, re15_g5_tentakel_stretch_point). 0 = ok, -1 = kein Arm. */
+ * Pose (+0x178). Nachbesserung G5A 4 (N2): gestreckt wie die Zeichen-Kette (re15_g5_tentakel_kette_strecken = FUN_80027434
+ * Flag 0x800 @0x800275e0-0x8002768c), nicht mehr um den Teil-0-Rahmen - fuer gerade Arme gleich, fuer eingerollte nicht
+ * (RE2-RAM s09 Arm 1, Streckung 0, Clip 14: p3 = p0; die alte Rechnung gab |p3 - p0| = 434). 0 = ok, -1 = kein Arm. */
 int re15_g5_tentakel_gelenke(int idx, int32_t out[4][3])
 {
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     int32_t E[9];
     int p;
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
     if (idx < 0 || idx >= TENT_N || s_tent[idx].slot < 0 || s_tent[idx].slot >= RE15_ACTOR_MAX) return -1;
-    if (tent_posen(&g_actors[s_tent[idx].slot], poses, E) != 0) return -1;
-    for (p = 0; p < 4; p++) {
-        int32_t m[3] = { poses[p].trans[0], poses[p].trans[1], poses[p].trans[2] };
-        if (p > 0) re15_g5_tentakel_stretch_point(&poses[0], s_tent[idx].scale_x, m);
-        tent_welt(&g_actors[s_tent[idx].slot], E, m, out[p]);
-    }
+    if (!b || tent_posen(&g_actors[s_tent[idx].slot], poses, E) != 0) return -1;
+    re15_g5_tentakel_kette_strecken(&b->skel, poses, b->skel.bone_count, s_tent[idx].scale_x);
+    for (p = 0; p < 4; p++) tent_welt(&g_actors[s_tent[idx].slot], E, poses[p].trans, out[p]);
     return 0;
 }
 
@@ -642,6 +644,43 @@ int32_t re15_g5_tentakel_scale_x(int slot)
     for (i = 0; i < TENT_N; i++)
         if (s_tent[i].slot == slot) return s_tent[i].scale_x;
     return 0x1000;
+}
+
+/* Diagnose/Test (Nachbesserung G5A 4): Weltlage der GEZEICHNETEN Vertices von Mesh 0 eines Arms, Rechenweg wie der Zeichner
+ * (platform/pc/main.c): gestreckte Kette (re15_g5_tentakel_kette_strecken, FUN_80027434 Flag 0x800), Haeuter (Callback
+ * 0x80104CF0 -> FUN_800197f4), Streckung um Teil 0 (FUN_80019CD0 Flag 0x400), Entity-Matrix + Lage. Rueckgabe Anzahl der
+ * Vertices (hoechstens max), -1 = kein Arm / keine Pose. */
+int re15_g5_tentakel_zeichen_vertices(int idx, int32_t (*out)[3], int max)
+{
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    int32_t E[9];
+    const re15_md1_vertex_t *v = NULL, *nrm = NULL;
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
+    const re15_actor_t *e;
+    int n, i;
+    if (idx < 0 || idx >= TENT_N || s_tent[idx].slot < 0 || s_tent[idx].slot >= RE15_ACTOR_MAX || !out || max <= 0) return -1;
+    e = &g_actors[s_tent[idx].slot];
+    if (!b || !b->ok || b->md1.mesh_count < 1 || tent_posen(e, poses, E) != 0) return -1;
+    re15_g5_tentakel_kette_strecken(&b->skel, poses, b->skel.bone_count, s_tent[idx].scale_x);
+    if (re15_g5_tentakel_skin_mesh0(poses, b->skel.bone_count, &b->md1.meshes[0], s_tent[idx].scale_x, &v, &nrm) != 0) return -1;
+    n = b->md1.meshes[0].tri_vertex_count;
+    if (n > max) n = max;
+    for (i = 0; i < n; i++) {
+        int32_t p[3] = { v[i].x, v[i].y, v[i].z };
+        tent_welt(e, E, p, out[i]);
+    }
+    return n;
+}
+
+/* Diagnose/Test (Nachbesserung G5A 4): Zaehler +0x158 und Entity-Drehung +0x74/+0x76/+0x78 eines Arms (Riegel gegen RE2-RAM). */
+int re15_g5_tentakel_mess(int idx, int32_t *timer, int16_t rot[3])
+{
+    const re15_actor_t *e;
+    if (idx < 0 || idx >= TENT_N || s_tent[idx].slot < 0 || s_tent[idx].slot >= RE15_ACTOR_MAX) return -1;
+    e = &g_actors[s_tent[idx].slot];
+    if (timer) *timer = s_tent[idx].timer;
+    if (rot) { rot[0] = e->rot_x; rot[1] = e->rot_y; rot[2] = e->rot_z; }
+    return 0;
 }
 
 /* Diagnose: Zustand eines Arms. */
@@ -970,7 +1009,11 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             break;                                  /* G5 treibt +0x06 weiter */
         case 1:
             tent_se(0); t->ph = 2; t->ankermodus = 1;   /* @0x80101D90 */
-            break;
+            /* Nachbesserung G5A 4: KEIN break. ph1 (`sb v0=2,6(s1)` @0x80101d9c, `jal 0x8005bd6c` @0x80101da4, `sb v0=1,0x219(s1)`
+             * @0x80101da8) endet ohne Sprung im ph2-Koerper 0x80101dac (Tabelle Datei 0x54 = 0x8010edac - 0xD000). RE2-RAM s03
+             * (G5 [T1] +0x158 31): Arm 2 (Phase 1 bei 30) Streckung 512 = zwei Schritte +256 (ohne Durchfall 256); s04..s07 die
+             * Zaehler der Arme 2/3 (21/11, 70/60, 106/96, 156/146) - ohne Durchfall je 1 weniger. */
+            /* fall through */
         case 2:                                     /* @0x80101DAC: 16 Frames heraus */
             t->scale_x += 256;
             if (t->scale_x > 4096) t->scale_x = 4096;
@@ -1155,7 +1198,11 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             t->ph = 1;
             t->scale_x = 0;                        /* @0x8010212c */
             tent_se(0);                            /* @0x8010213c */
-            break;
+            /* Nachbesserung G5A 4: KEIN break. ph0 endet mit `jal 0x8005bd6c` @0x8010213c / `sw v0,0x1e8(s1)` @0x80102140 ohne
+             * Sprung und laeuft im SELBEN Takt in den ph1-Koerper 0x80102144 (Tabelle Datei 0x78 = 0x8010f144 - 0xD000).
+             * RE2-RAM s11 (G5 [T5] +0x158 52): Arm 0 (0x901 bei 20) Streckung 3992 / +0x158 280, Arm 1 (bei 40) 528 / 96,
+             * Arm 2 (bei 45) 168 / 56 - nur mit dem Durchfall (sonst 3480 / 248, 440 / 88, 120 / 48); s12 Arm 3 2400 / 200. */
+            /* fall through */
         case 1:                                     /* @0x80102144 */
             tent_anim(e, t, 64);   /* a3 @0x80102154 */
             t->scale_x += t->timer; t->timer += 8;
@@ -1181,7 +1228,10 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             t->rate = 64; t->timer = 60; t->ph = 5; t->dir = 1;
             t->ankermodus = 1;                     /* @0x80102370 */
             t->kontakt = 7;                        /* sb v0=7,546 (+0x222) */
-            break;
+            /* Nachbesserung G5A 4: KEIN break. ph4 endet mit `sb v0=7,0x222(s1)` @0x80102378 ohne Sprung im ph5-Koerper
+             * 0x8010237c (Tabelle Datei 0x84 = 0x8010f37c - 0xD000). RE2-RAM s12 (G5 [T5] +0x158 81): Arm 1 schon Phase 6,
+             * Arm 2 Phase 5 mit +0x158 57 - ohne Durchfall Phase 5 bzw. 58. */
+            /* fall through */
         case 5: {                                   /* @0x8010237c: Einrollen */
             int32_t was = t->timer;
             t->timer--;
@@ -1224,7 +1274,12 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             e->rot_z = s_tent_rot10[idx][2];       /* @0x801027ec-fc */
             t->ankermodus = 0;                     /* sb zero,537 @0x801027f4 */
             tent_se(0);
-            break;
+            /* Nachbesserung G5A 4: KEIN break. ph0 endet mit `jal 0x8005bd6c` @0x801027f8 / `sh v0,0x78(s1)` @0x801027fc ohne
+             * Sprung und laeuft im SELBEN Takt in den ph1-Koerper 0x80102800 (Tabelle Datei 0xA0 = 0x8010f800 - 0xD000). ph0
+             * schreibt +0x8c nicht: die Arme wachsen aus der Streckung, die [T7]/sub9 ph9 hinterlassen hat (0). RE2-RAM s21
+             * (G5 [T10] +0x158 54): Arm 0 (0xA01 bei 20) Streckung 2176 ph2, Arm 2 (bei 35) 1216, Arm 1 (bei 40) 896, Arm 3
+             * (bei 50) 256 = 64 je Bild inklusive des Befehlsbilds (ohne Durchfall 2112 ph2 / 1152 / 832 / 192). */
+            /* fall through */
         case 1:                                     /* @0x80102800 */
             tent_anim(e, t, 64);   /* a3 @0x80102810 */
             t->scale_x += 64;
@@ -1381,9 +1436,11 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
 
     case 6:                                        /* EINZIEHEN (0x601) @0x80101B80 */
         if (t->ph == 0) { tent_clip(e, t, 0, 0, 0x1F); t->ph = 1; }   /* @0x80101BB4 `lui v0,0x1f` / @0x80101BB8 sw */
-        else {
-            t->scale_x -= 64;
-            if (t->scale_x < 0) { t->scale_x = 0; t->sub = 0; t->ph = 0; }
+        /* Nachbesserung G5A 4: ph0 (`sb v0=1,6(s0)` @0x80101bc0) laeuft ohne Sprung in den ph1-Koerper 0x80101bc4 (`jal 0x8002959c`
+         * @0x80101bc8). RE2-RAM s26 (G5 [T14] +0x158 19): alle vier Arme Streckung 1472 = 4096 - 41 * 64; ohne Durchfall 1536. */
+        {
+            t->scale_x -= 64;                      /* @0x80101bd8 */
+            if (t->scale_x < 0) { t->scale_x = 0; t->sub = 0; t->ph = 0; }   /* @0x80101bec / `sw v0=1,4(s0)` @0x80101bf0 */
             tent_anim(e, t, 128);   /* a3 @0x80101BCC */
         }
         break;

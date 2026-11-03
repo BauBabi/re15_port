@@ -156,6 +156,31 @@ void re15_g5_tentakel_stretch_point(const re15_skel_pose_t *p0, int32_t scale_x_
     p[2] = (int32_t)(((int64_t)R[6]*l[0] + (int64_t)R[7]*l[1] + (int64_t)R[8]*l[2]) >> 12) + p0->trans[2];
 }
 
+void re15_g5_tentakel_kette_strecken(const re15_emd_skeleton_t *skel, re15_skel_pose_t poses[], int npose,
+                                     int32_t scale_x_q12)
+{
+    /* FUN_80027434 Flag-0x800-Zweig (RE2 SLUS_007.48 @0x800275e0-0x8002768c): t' = ((tl.x * S.x) >> 12, (tl.y * 4096) >> 12,
+     * (tl.z * 4096) >> 12) (`mult` @0x80027600/@0x80027650/@0x80027674, `sra 0xc` @0x80027634/@0x80027658/@0x80027688; S.y = S.z =
+     * 4096: RAM s03/s09 +0x8e/+0x90), dann W = W_Eltern * [R_lokal | t'] (`jal 0x8002ce94` @0x8002768c). Eltern zuerst: der
+     * Kindteil nimmt die schon gestreckte Eltern-Translation (Kette W0*L1, W1*L2, W2*L3). */
+    int b, n;
+    if (!skel || !poses) return;
+    n = npose < skel->bone_count ? npose : skel->bone_count;
+    for (b = 1; b < n; b++) {
+        const int parent = (int)skel->bone_parent[b];
+        const int32_t *R;
+        int32_t rel[3];
+        if (parent < 0 || parent >= b) continue;
+        R = poses[parent].rot;
+        rel[0] = (int32_t)(((int64_t)skel->bone_relative_pos[b][0] * scale_x_q12) >> 12);
+        rel[1] = (int32_t)skel->bone_relative_pos[b][1];
+        rel[2] = (int32_t)skel->bone_relative_pos[b][2];
+        poses[b].trans[0] = poses[parent].trans[0] + (int32_t)(((int64_t)R[0]*rel[0] + (int64_t)R[1]*rel[1] + (int64_t)R[2]*rel[2]) >> 12);
+        poses[b].trans[1] = poses[parent].trans[1] + (int32_t)(((int64_t)R[3]*rel[0] + (int64_t)R[4]*rel[1] + (int64_t)R[5]*rel[2]) >> 12);
+        poses[b].trans[2] = poses[parent].trans[2] + (int32_t)(((int64_t)R[6]*rel[0] + (int64_t)R[7]*rel[1] + (int64_t)R[8]*rel[2]) >> 12);
+    }
+}
+
 int re15_g5_tentakel_skin_mesh0(const re15_skel_pose_t poses[], int npose,
                                 const re15_md1_mesh_t *m0, int32_t scale_x_q12,
                                 const re15_md1_vertex_t **out_v,

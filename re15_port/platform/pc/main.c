@@ -10411,6 +10411,12 @@ re_title:;
                 /* Region-gecullt: Pose gerechnet (Takt-Zustand wie @0x8001e9b4 FUN_8001ef54),
                  * gezeichnet wird nichts. */
                 if (npc_region_culled) continue;
+                /* Nachbesserung G5A 4 (N2): G5-Arm (EM37) - Teile 1..3 tragen Flag 0x800 (Ctor `ori 0x4800` @0x80100774-0x8010078c),
+                 * FUN_80027434 baut ihre Translationen GESTRECKT (@0x800275e0-0x8002768c), und der Haeuter 0x80104CF0 nimmt genau diese
+                 * Teil-Lagen. Erst danach streckt der Zeichner Mesh 0 um Teil 0 (FUN_80019CD0, Flag 0x400). Ohne diesen Schritt blieb
+                 * ein eingerollter Arm bei Streckung 0 als Stummel stehen (Szenenbild 290..330, RE2-RAM s09 Arm 1: p3 = p0). */
+                if (npc->type == 0x37u)
+                    re15_g5_tentakel_kette_strecken(npc_skel, npc_poses, npc_skel->bone_count, re15_g5_tentakel_scale_x(npc_i));
                 (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
                 /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
                  * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
@@ -10736,14 +10742,9 @@ re_title:;
                             g5_skin_v = NULL; g5_skin_n = NULL;
                         }
                     }
-                    /* Tentakel-Stummel (Meshes 1..3) an die gestreckten Schlauch-Enden
-                     * (Port-Entscheidung 2 in enemy_ai_tentakel_g5.c). */
-                    if (npc->type == 0x37u && nbi >= 1 && nbi <= 3 && nbi < npc_bones) {
-                        np_kind = npc_poses[nbi];
-                        re15_g5_tentakel_stretch_point(&npc_poses[0], re15_g5_tentakel_scale_x(npc_i),
-                                                       np_kind.trans);
-                        np = &np_kind;
-                    }
+                    /* Tentakel-Meshes 1..3 (RE2-RAM s09: je 4 Vertices +-5 = Platzhalter-Quad) stehen an den Teil-Lagen der
+                     * GESTRECKTEN Kette (oben re15_g5_tentakel_kette_strecken); Teile 1..3 tragen kein Flag 0x400 (Ctor
+                     * `ori 0x4800` @0x80100774-0x8010078c), also keine zweite Streckung um Teil 0. */
                     int32_t nyawed_rot[9];
                     for (int r = 0; r < 3; r++) {
                         for (int c = 0; c < 3; c++) {

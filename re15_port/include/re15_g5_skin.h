@@ -52,10 +52,21 @@ int re15_g5_tentakel_skin_mesh0(const re15_skel_pose_t poses[], int npose,
                                 const re15_md1_vertex_t **out_v,
                                 const re15_md1_vertex_t **out_n);
 
-/* Streckung eines beliebigen Modellraum-Punkts um den Part-0-Rahmen (fuer die Stummel-
- * Meshes 1..3 des Tentakels, damit sie an den gestreckten Schlauch-Enden bleiben). */
+/* Streckung eines beliebigen Modellraum-Punkts um den Part-0-Rahmen (Zeichner FUN_80019CD0, Flag 0x400). */
 void re15_g5_tentakel_stretch_point(const re15_skel_pose_t *pose0, int32_t scale_x_q12,
                                     int32_t p[3]);
+
+/* Nachbesserung G5A 4 (N2): die TEIL-KETTE des Arms wird in RE2 mit gestreckten Gelenk-Translationen gebaut, BEVOR
+ * gehaeutet wird. EM37-Ctor: Teil 0 `ori 0x4400` @0x80100768/@0x8010076c, Teile 1..3 `ori 0x4800` @0x80100774-0x8010078c;
+ * Flag 0x800 waehlt in FUN_80027434 (RE2 SLUS_007.48) den Zweig @0x800275e0: lokale Translation (+0x2c/+0x30/+0x34) *
+ * Streckung (+0x8c/+0x8e/+0x90 des Teils *(Teil+0x94)) mit `mult`/`sra 0xc` @0x80027600-0x80027688, dann CompMatrix
+ * `jal 0x8002ce94` @0x8002768c mit der Eltern-Matrix *(Teil+0x74). Die Streckung steht jeden Takt in allen vier Teilen
+ * (`sh` @0x801003e4/@0x801003e8/@0x801003ec). Der Haeuter FUN_800197f4 (Callback 0x80104CF0 @0x80104d10/24/38) nimmt
+ * Rotation +0x48 UND Translation +0x5c..+0x64 der Teile. Also: poses[b].trans = poses[parent].trans +
+ * R_parent * ((rel.x * scale) >> 12, rel.y, rel.z) fuer b = 1..; Teil 0 bleibt. RE2-RAM: Arm 1 in s09/s10 (Streckung 0,
+ * eingerollter Clip 14) p1 = p2 = p3 = p0; s03 Arm 2 p2 - p1 = W1 * (3003 * 256 >> 12, 0, 0) (Vorbild-Streckung 256). */
+void re15_g5_tentakel_kette_strecken(const re15_emd_skeleton_t *skel, re15_skel_pose_t poses[], int npose,
+                                     int32_t scale_x_q12);
 
 /* ---- Augen-UV-Wanderer (0x80105064, Ziele 0x8010503C) -------------------------------- */
 void re15_g5_eye_reset(void);

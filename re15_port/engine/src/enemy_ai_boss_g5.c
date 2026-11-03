@@ -949,6 +949,14 @@ static void g5_intro_tick(re15_actor_t *e)
         break;
     case 7:                                            /* [T7] */
         g5_clip(e, 2, 0); g->gewicht[1] = 0; g->ph = 8; g5_se(10);
+        /* Nachbesserung G5A 4 (N1): im selben Zweig setzt RE2 alle vier Arme auf Phase 9 = EINZIEHEN (sub9 ph9 @0x80102690):
+         * `addiu v0,zero,9` @0x801015dc, `sb v0,6(a2)` @0x801015e0 / @0x801015ec / @0x801015f8 / @0x80101608 mit
+         * a2 = `lw a2,0x3c38/0x3c3c/0x3c40/0x3c44(s3)` @0x801015d8 / @0x801015e4 / @0x801015f0 / @0x801015fc (Arm-Slots
+         * 0x800d3c38..0x800d3c44, dieselben wie [T5] @0x80101500-2c). Nur das Phasenbyte: Zaehler +0x158 (181 aus ph7/ph8,
+         * `addiu v0,zero,0xb4` @0x8010266c) bleibt. RE2-RAM s17 (G5 [T8] Clip 2 Bild 27): alle vier Arme Wort 0x000a0901,
+         * Streckung 0, +0x158 = 257 = 181 + 4 * 19, rot_z +152 = 19 * 8 gegen s16. ⛔ Fehlte im Port: die Arme blieben in
+         * ph8 gestreckt vor der Masse stehen (Szenenbild 652..807) und waren in Cut 12 sofort voll statt nach [T10] auszuwachsen. */
+        g5_tentakel_phase_alle(9);
         /* M4b: KEIN break. [T7] `j 0x80101734` @0x80101604 -> `jal 0x8005bd6c` @0x80101734 (SE 10) ->
          * 0x8010173c = [T8] (Tabelle @0x80100034), `jal 0x8002959c` @0x80101748 im selben Takt. */
         /* fall through */

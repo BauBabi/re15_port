@@ -38,6 +38,7 @@
 extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
 extern int re15_g5_tentakel_zustand(int idx, int *sub, int *ph, int *ankermodus, int32_t *scale_x, uint16_t *kontakt);
 extern int re15_g5_tentakel_spitze(int idx, int32_t out[3]);
+extern int re15_g5_tentakel_mess(int idx, int32_t *timer, int16_t rot[3]);
 extern void scd_register_current_rdt(const re15_rdt_t *);
 extern int g_test_re2xa_count, g_test_re2xa_lese;   /* tests/test_support.c: Spion re15_audio_re2_xa (Abnahme 1 M5) */
 extern const char *g_test_re2xa_datei;
@@ -381,6 +382,63 @@ static int masse_abweichung(int k, int *bb_abw)
     return abw;
 }
 
+/* ---- Nachbesserung G5A 4 (N1/N2): Riegel Arme gegen RE2-RAM ------------------------------------------------------------------
+ * Tabellen aus den Savestates s03..s26 der Abnahme 1 erzeugt (G5_belege/nb4/werkzeug/gen_riegel.py, eigener RAM-Leser, keine
+ * Handabschrift): G5 = *(0x800cfe1c), Arme = *(0x800cfe1c + 4i) i = 1..4, Index +0x218, Wort +4 (Sub Byte 5, Phase Byte 6),
+ * Streckung *(+0x198)+0x8c, Zaehler +0x158, Drehung +0x74/+0x76/+0x78 (12 Bit mit Vorzeichen). Das Szenenbild ist dem G5-Zustand
+ * zugeordnet (Zeitphasen +0x158, Clipphasen +0x14D) - der Riegel prueft die Zuordnung mit. t = -1: Zaehler nicht verglichen (der
+ * RE2-Sender 0x80104E9C schreibt nur +4, das Port-Kommando nullt ihn; sub10 ph0..2 und sub6 lesen ihn nicht; ab s22 haengt er
+ * an der Zufallsfolge). Abgedeckt: [T7] Phase 9 (s17..s20), Durchfaelle sub8 ph1 (s03..s07), sub9 ph0 (s11/s12), sub9 ph4 (s12),
+ * sub10 ph0 (s21), sub6 ph0 (s26). */
+static const struct { int s, bild, g5ph, g5t, g5bild; struct { int sub, ph, sc, t, rx, ry, rz; } a[4]; } k_re2_arme[] = {
+    {  3,   31,  1,  31,   0, { { 8, 2, 4096, 0, 0, 0, 0 }, { 8, 0, 0, 0, 0, 0, 0 }, { 8, 2, 512, 0, 0, 0, 0 }, { 8, 0, 0, 0, 0, 0, 0 } } },
+    {  4,   80,  1,  80,   0, { { 8, 5, 4096, 0, 0, 0, 0 }, { 8, 0, 0, 0, 0, 0, 0 }, { 8, 4, 4096, 21, 0, 0, 0 }, { 8, 4, 4096, 11, 0, 0, 0 } } },
+    {  5,  129,  2,  90,  39, { { 8, 6, 4096, 40, 0, 0, 0 }, { 8, 6, 0, 40, 0, 0, 0 }, { 8, 6, 4096, 70, 0, 0, 0 }, { 8, 6, 4096, 60, 0, 0, 0 } } },
+    {  6,  165,  2,  90,  75, { { 8, 6, 4096, 76, 0, 0, 0 }, { 8, 6, 0, 76, 0, 0, 0 }, { 8, 6, 4096, 106, 0, 0, 0 }, { 8, 6, 4096, 96, 0, 0, 0 } } },
+    {  7,  215,  2,  90, 125, { { 8, 6, 4096, 126, 0, 0, 0 }, { 8, 6, 0, 126, 0, 0, 0 }, { 8, 6, 4096, 156, 0, 0, 0 }, { 8, 6, 4096, 146, 0, 0, 0 } } },
+    {  8,  264,  2,  90, 174, { { 8, 6, 4096, 175, 0, 0, 0 }, { 8, 6, 0, 175, 0, 0, 0 }, { 8, 7, 4096, 181, 0, 0, 0 }, { 8, 7, 4096, 181, 0, 0, 0 } } },
+    {  9,  313,  4,  43,  43, { { 8, 8, 3264, 181, 0, -208, 0 }, { 8, 9, 0, 181, 0, -16, 0 }, { 8, 8, 3264, 181, 0, 208, 0 }, { 8, 8, 3264, 181, 0, 208, 0 } } },
+    { 10,  363,  5,   3,  93, { { 8, 9, 0, 181, 0, -528, 0 }, { 8, 9, 0, 181, 0, -16, 0 }, { 8, 9, 0, 181, 0, 528, 0 }, { 8, 9, 0, 181, 0, 528, 0 } } },
+    { 11,  412,  5,  52,  42, { { 9, 2, 3992, 280, -1792, 0, 52 }, { 9, 1, 528, 96, -1280, 0, -376 }, { 9, 1, 168, 56, 64, 0, -428 }, { 8, 9, 0, 181, 0, 528, 0 } } },
+    { 12,  441,  5,  81,  71, { { 9, 6, 4096, 0, -1792, 0, 160 }, { 9, 6, 4096, 0, -1280, 0, 104 }, { 9, 5, 4096, 57, 64, 0, -88 }, { 9, 1, 2400, 200, 1920, 0, -272 } } },
+    { 13,  479,  6,   0,   9, { { 9, 7, 4096, 10, -1792, 0, 160 }, { 9, 7, 4096, 10, -1280, 0, 104 }, { 9, 7, 4096, 10, 64, 0, -88 }, { 9, 7, 4096, 10, 1920, 0, 160 } } },
+    { 14,  529,  6,   0,  59, { { 9, 7, 4096, 60, -1792, 0, 160 }, { 9, 7, 4096, 60, -1280, 0, 104 }, { 9, 7, 4096, 60, 64, 0, -88 }, { 9, 7, 4096, 60, 1920, 0, 160 } } },
+    { 15,  578,  6,   0, 108, { { 9, 7, 4096, 109, -1792, 0, 160 }, { 9, 7, 4096, 109, -1280, 0, 104 }, { 9, 7, 4096, 109, 64, 0, -88 }, { 9, 7, 4096, 109, 1920, 0, 160 } } },
+    { 16,  628,  6,   0, 158, { { 9, 7, 4096, 159, -1792, 0, 160 }, { 9, 7, 4096, 159, -1280, 0, 104 }, { 9, 7, 4096, 159, 64, 0, -88 }, { 9, 7, 4096, 159, 1920, 0, 160 } } },
+    { 17,  677,  8,   0,  27, { { 9, 10, 0, 257, -1792, 0, 312 }, { 9, 10, 0, 257, -1280, 0, 256 }, { 9, 10, 0, 257, 64, 0, 64 }, { 9, 10, 0, 257, 1920, 0, 312 } } },
+    { 18,  727,  8,   0,  77, { { 9, 10, 0, 257, -1792, 0, 312 }, { 9, 10, 0, 257, -1280, 0, 256 }, { 9, 10, 0, 257, 64, 0, 64 }, { 9, 10, 0, 257, 1920, 0, 312 } } },
+    { 19,  776,  8,   0, 126, { { 9, 10, 0, 257, -1792, 0, 312 }, { 9, 10, 0, 257, -1280, 0, 256 }, { 9, 10, 0, 257, 64, 0, 64 }, { 9, 10, 0, 257, 1920, 0, 312 } } },
+    { 20,  812, 10,  12,  12, { { 9, 10, 0, 257, -1792, 0, 312 }, { 9, 10, 0, 257, -1280, 0, 256 }, { 9, 10, 0, 257, 64, 0, 64 }, { 9, 10, 0, 257, 1920, 0, 312 } } },
+    { 21,  854, 10,  54,  54, { { 10, 2, 2176, -1, 768, 0, 32 }, { 10, 1, 896, -1, 1536, 0, 32 }, { 10, 1, 1216, -1, -1536, 0, 32 }, { 10, 1, 256, -1, -512, 0, 32 } } },
+    { 26, 1101, 14,  19,  41, { { 6, 1, 1472, -1, 768, 0, 32 }, { 6, 1, 1472, -1, 1536, 0, 32 }, { 6, 1, 1472, -1, -1536, 0, 32 }, { 6, 1, 1472, -1, -512, 0, 32 } } },
+};
+/* Gezeichnete Reichweite max |Mesh-0-Vertex - Teil 0| der Arme mit Streckung 0 (in diesem und dem Vorbild), RE2: Haeuter
+ * FUN_800197f4 aus den RAM-Teilmatrizen (+-1 gegen den RAM-Vertexpuffer 0x8015da14 an s05/s09/s12/s13), dann FUN_80019CD0-Streckung
+ * W0*S*W0^T*(v - t0) + t0. -1 = Arm nicht in Streckung 0. Ein eingezogener Arm ist in RE2 eine flache Scheibe (~571) in der Masse. */
+static const struct { int s, bild; int r[4]; } k_re2_reichweite[] = {
+    {  5,  129, { -1, 571, -1, -1 } },
+    {  9,  313, { -1, 571, -1, -1 } },
+    { 10,  363, { 571, 571, 572, 572 } },
+    { 17,  677, { 571, 573, 571, 571 } },
+    { 18,  727, { 571, 573, 571, 571 } },
+    { 19,  776, { 571, 573, 571, 571 } },
+    { 20,  812, { 571, 573, 571, 571 } },
+};
+extern int re15_g5_tentakel_zeichen_vertices(int idx, int32_t (*out)[3], int max);
+static int32_t arm_reichweite(int i)
+{
+    static int32_t v[256][3];
+    int32_t g[4][3], best = 0;
+    const int n = re15_g5_tentakel_zeichen_vertices(i, v, 256);
+    if (n <= 0 || re15_g5_tentakel_gelenke(i, g) != 0) return -1;
+    for (int k = 0; k < n; k++) {
+        const int64_t dx = v[k][0] - g[0][0], dy = v[k][1] - g[0][1], dz = v[k][2] - g[0][2];
+        const int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dy * dy + dz * dz));
+        if (d > best) best = d;
+    }
+    return best;
+}
+
 static void test_ablauf(const char *rdt, unsigned raum)
 {
     uint8_t *buf = raum_laden(rdt, raum);
@@ -454,6 +512,9 @@ static void test_ablauf(const char *rdt, unsigned raum)
     int16_t speer_w6[2][4] = { { 0 } }, speer_w7[2][4] = { { 0 } };
     int32_t speer_laenge = -1;
     int32_t arme_abw_max = 0;
+    int nb4_n = 0, nb4_ok = 0, nb4_zuord = 0, nb4_rw_n = 0, nb4_rw_ok = 0, nb4_rw_max_abw = 0;
+    int nb4_n1_bilder = 0, nb4_n1_vor = 0, nb4_n2_bilder = 0, nb4_n2_vor = 0, nb4_einzug_ende = -1;
+    int32_t nb4_n1_rw_max = 0, nb4_n2_rw_max = 0;
     int32_t gew_ist[8][2] = { { 0 } };
     int gew_ph[8] = { 0 }, gew_ok0 = 0, gew_ok1 = 0;
     int masse_abw[4] = { 99999, 99999, 99999, 99999 }, masse_bb_abw[4] = { 99999, 99999, 99999, 99999 };
@@ -488,6 +549,11 @@ static void test_ablauf(const char *rdt, unsigned raum)
             for (int i = 0; i < 4; i++) { int32_t g[4][3]; int su = -1, ph = -1;   /* Gelenke p0/p3 (RE2 parts+92.., s13 = Bild ~472) */
                 (void)re15_g5_tentakel_zustand(i, &su, &ph, NULL, NULL, NULL);
                 if (re15_g5_tentakel_gelenke(i, g) == 0) fprintf(spur, " | a%d s%d p%d p0 %d %d %d p3 %d %d %d", i, su, ph, (int)g[0][0], (int)g[0][1], (int)g[0][2], (int)g[3][0], (int)g[3][1], (int)g[3][2]); }
+            {   int gt = -1; int32_t at = 0; int16_t ar[3] = { 0, 0, 0 };   /* NB4: G5 +0x158, je Arm +0x158 und +0x74/76/78 */
+                (void)re15_g5_boss_zustand(NULL, NULL, &gt);
+                fprintf(spur, " || g5t %d", gt);
+                for (int i = 0; i < 4; i++)
+                    if (re15_g5_tentakel_mess(i, &at, ar) == 0) fprintf(spur, " m%d %d %d %d %d", i, (int)at, ar[0], ar[1], ar[2]); }
             fprintf(spur, "\n");
         }
         if (b < RE15_G5A_BILD_ENDE) {
@@ -568,6 +634,64 @@ static void test_ablauf(const char *rdt, unsigned raum)
                         speer_laenge = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dy * dy + dz * dz));
                     } }
             }
+        }
+        /* NB4 (N1/N2): Arme gegen RE2-RAM - Zuordnung ueber den G5-Zustand, dann Sub/Phase/Streckung/Zaehler/Drehung je Arm */
+        for (int k = 0; k < (int)(sizeof k_re2_arme / sizeof k_re2_arme[0]); k++) {
+            if (b != k_re2_arme[k].bild) continue;
+            int gs = -1, gp = -1, gt = -1;
+            (void)re15_g5_boss_zustand(&gs, &gp, &gt);
+            const int clipph = (gp == 2 || gp == 6 || gp == 8 || gp == 12);
+            if (gs != 2 || gp != k_re2_arme[k].g5ph || (clipph ? (int)e->anim_frame != k_re2_arme[k].g5bild : gt != k_re2_arme[k].g5t)) {
+                nb4_zuord++;
+                fprintf(stderr, "%04X: NB4 Bild %d: G5 Sub %d Ph %d t %d Bild %d statt RE2 s%02d Ph %d t %d Bild %d\n", raum, b, gs, gp, gt,
+                        (int)e->anim_frame, k_re2_arme[k].s, k_re2_arme[k].g5ph, k_re2_arme[k].g5t, k_re2_arme[k].g5bild);
+            }
+            for (int i = 0; i < 4; i++) {
+                int su = -1, ph = -1; int32_t sc = -1, at = -1; int16_t ar[3] = { 0, 0, 0 };
+                (void)re15_g5_tentakel_zustand(i, &su, &ph, NULL, &sc, NULL);
+                (void)re15_g5_tentakel_mess(i, &at, ar);
+                const int rsub = k_re2_arme[k].a[i].sub, rph = k_re2_arme[k].a[i].ph, rsc = k_re2_arme[k].a[i].sc, rt = k_re2_arme[k].a[i].t;
+                const int ok = su == rsub && ph == rph && sc == rsc && (rt < 0 || at == rt) && winkel12(ar[0]) == k_re2_arme[k].a[i].rx &&
+                               winkel12(ar[1]) == k_re2_arme[k].a[i].ry && winkel12(ar[2]) == k_re2_arme[k].a[i].rz;
+                nb4_n++;
+                if (ok) nb4_ok++;
+                else fprintf(stderr, "%04X: NB4 s%02d Bild %d Arm %d: Port Sub %d Ph %d Streckung %d t %d Drehung (%d,%d,%d) / RE2 %d %d %d %d (%d,%d,%d)\n",
+                             raum, k_re2_arme[k].s, b, i, su, ph, (int)sc, (int)at, winkel12(ar[0]), winkel12(ar[1]), winkel12(ar[2]), rsub, rph, rsc, rt,
+                             k_re2_arme[k].a[i].rx, k_re2_arme[k].a[i].ry, k_re2_arme[k].a[i].rz);
+            }
+        }
+        for (int k = 0; k < (int)(sizeof k_re2_reichweite / sizeof k_re2_reichweite[0]); k++) {
+            if (b != k_re2_reichweite[k].bild) continue;
+            for (int i = 0; i < 4; i++) {
+                if (k_re2_reichweite[k].r[i] < 0) continue;
+                const int32_t rw = arm_reichweite(i);
+                int d = (int)rw - k_re2_reichweite[k].r[i]; if (d < 0) d = -d;
+                nb4_rw_n++;
+                if (rw >= 0 && d <= 16) nb4_rw_ok++;
+                if (d > nb4_rw_max_abw) nb4_rw_max_abw = d;
+            }
+        }
+        /* N1: nach dem [T7]-Einzug (19 Bilder ab Bild 651, RE2-RAM s17 +0x158 257) kein Arm mehr vor/ueber der Masse bis zum
+         * Schnitt 5/Cut 12 (Bild 807); N2: Arm 1 (Streckung 0 ab Bild 301, RE2-RAM s09) ohne Stummel bis Bild 336. Schranke 600 =
+         * RE2-Scheibe 571..573 (k_re2_reichweite) + Rundung; ein gestreckter Arm reicht in Schnitt 17 rund 6700..9000. */
+        if (b >= 670 && b < RE15_G5A_BILD_SCHNITT5) {
+            nb4_n1_bilder++;
+            for (int i = 0; i < 4; i++) {
+                const int32_t rw = arm_reichweite(i);
+                if (rw > nb4_n1_rw_max) nb4_n1_rw_max = rw;
+                if (rw < 0 || rw > 600) { nb4_n1_vor++; break; }
+            }
+        }
+        if (b >= 652 && b < 700 && nb4_einzug_ende < 0) {
+            int alle = 1;
+            for (int i = 0; i < 4; i++) { int su = -1, ph = -1; (void)re15_g5_tentakel_zustand(i, &su, &ph, NULL, NULL, NULL); if (su != 9 || ph != 10) alle = 0; }
+            if (alle) nb4_einzug_ende = b;
+        }
+        if (b >= 302 && b <= 336) {
+            const int32_t rw = arm_reichweite(1);
+            nb4_n2_bilder++;
+            if (rw > nb4_n2_rw_max) nb4_n2_rw_max = rw;
+            if (rw < 0 || rw > 600) nb4_n2_vor++;
         }
         /* M2: Gelenklagen der Arme gegen RE2 s04 (Arme gehalten: sub8 ph4..ph7, Bild 80..120) */
         if (b >= 80 && b <= 120) {
@@ -665,6 +789,23 @@ static void test_ablauf(const char *rdt, unsigned raum)
     }
     fprintf(stderr, "%04X: M5 Speer Arm 0 |p3-p0| %d (RE2 s13 8170, vorher 6080)\n", raum, (int)speer_laenge);
     CHECK(speer_laenge >= 8170 - 250 && speer_laenge <= 8170 + 250, "%04X: Punkt 3 Arm 0 Reichweite %d statt RE2 s13 8170", raum, (int)speer_laenge);
+    /* NB4 (N1/N2) */
+    fprintf(stderr, "%04X: NB4 Arme gegen RE2-RAM %d von %d gleich (%d Savestates, Zuordnung falsch %d); Reichweite Streckung 0 %d von %d "
+                    "innerhalb 16 (max %d); Einzug [T7] fertig Bild %d; Bild 670..806 Arm vor der Masse in %d von %d Bildern (max Reichweite %d); "
+                    "Bild 302..336 Arm-1-Stummel in %d von %d (max %d)\n",
+            raum, nb4_ok, nb4_n, (int)(sizeof k_re2_arme / sizeof k_re2_arme[0]), nb4_zuord, nb4_rw_ok, nb4_rw_n, nb4_rw_max_abw, nb4_einzug_ende,
+            nb4_n1_vor, nb4_n1_bilder, (int)nb4_n1_rw_max, nb4_n2_vor, nb4_n2_bilder, (int)nb4_n2_rw_max);
+    CHECK(nb4_zuord == 0 && nb4_n == 4 * (int)(sizeof k_re2_arme / sizeof k_re2_arme[0]), "%04X: NB4 Zuordnung Szenenbild <-> RE2-Savestate (%d falsch, %d Vergleiche)",
+          raum, nb4_zuord, nb4_n);
+    CHECK(nb4_ok == nb4_n, "%04X: NB4 Armzustand %d von %d gleich RE2-RAM (s.o.)", raum, nb4_ok, nb4_n);
+    CHECK(nb4_rw_n > 0 && nb4_rw_ok == nb4_rw_n, "%04X: NB4 gezeichnete Reichweite Streckung 0: %d von %d innerhalb 16 von RE2 (max %d)", raum, nb4_rw_ok,
+          nb4_rw_n, nb4_rw_max_abw);
+    CHECK(nb4_einzug_ende == 669, "%04X: N1 Einzug [T7] fertig bei Bild %d statt 669 (Start 651, 19 Schritte: RE2-RAM s17 +0x158 257 = 181 + 4*19)",
+          raum, nb4_einzug_ende);
+    CHECK(nb4_n1_bilder > 100 && nb4_n1_vor == 0, "%04X: N1 Arm vor/ueber der Masse in %d von %d Bildern 670..806 (Reichweite bis %d, RE2 571..573)",
+          raum, nb4_n1_vor, nb4_n1_bilder, (int)nb4_n1_rw_max);
+    CHECK(nb4_n2_bilder == 35 && nb4_n2_vor == 0, "%04X: N2 Arm-1-Stummel in %d von %d Bildern 302..336 (Reichweite bis %d, RE2 s09 571)", raum,
+          nb4_n2_vor, nb4_n2_bilder, (int)nb4_n2_rw_max);
     /* NB3 M2: Vorkampf-Puls @0x801044FC - w0 und Phase bitgleich mit RE2-RAM. NB3 M1: Gewicht 1 = RE2-RAM (Ctor-Basis trotz spaeter Bank) */
     for (int k = 0; k < 8; k++) {
         fprintf(stderr, "%04X: NB3 Bild %3d %s w0 %6d (RE2 %6d) ph %d (RE2 %d) w1 %5d (RE2 %5d)\n", raum, k_re2_gewichte[k].bild,
