@@ -3839,7 +3839,15 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
          * denselben Werten aus einem Savestate. */
         case 0x40: case 0x42:
         case 0x47: case 0x49:
-        case 0x4d: r = 450;  h = 1530; break;  /* STAGE1-NPC-Familie, Kasten @0x80121658    */
+                   r = 450;  h = 1530; break;  /* STAGE1-NPC-Familie, Kasten @0x80121658    */
+        /* Runde 41 Spur AN, Nachbesserung 5 (Entscheid nach Dossier N5.3: die Annette-Szene folgt RE2): 0x4D = Annette (nur in
+         * 5090/6000/6030) bekommt das RE2-Koerpersegment statt des NPC-Familienkastens {450,1530}. RE2-Schub FUN_80034D0C (Leon
+         * info/re2leon/PSX.EXE; Claire 0x80032904): Segmentzahl `lw v0,488(s6)` (+0x1E8) @0x80034d74, Segmente ab +0x84
+         * (`addiu s5,s6,132` @0x80034d78), Radius `lhu s7,22(s5)` (+0x16) @0x80034dac, Halbhoehe `lhu v0,26(s5)` (+0x1A)
+         * @0x80034e5c. Claire-RAM ROOM6141 lauf3, Annette (em[0] @0x800c79b0, id 0x49), lebend e01..e22 und liegend e23..e30
+         * gleich: +0x1E8 = 1, +0x14 = -1350 (Segmentmitte = Lage - 1350), +0x16 = 350, +0x1A = 1350 -> r 350, h 1350, Versatz
+         * -1350 (unten, = -h). Gilt damit fuer die lebende Annette und die Leiche. */
+        case 0x4d: r = 350;  h = 1350; break;
         /* ⛔ RUNDE 34 B2: 0x45 und 0x4b haben EIGENE Kaesten (INIT-Zeiger selbst gelesen):
          *   0x45: `lw v0,5940(v0)` @0x8011d2f8 (*(0x80121734) = 0x80121728) / `sw v0,120(v1)`
          *         @0x8011d300; @0x80121728 = `00 00 60 fa 00 00 f4 01 a0 05 f4 01`

@@ -745,6 +745,48 @@ static void test_schuss(void)
     free(b);
 }
 
+/* NB5 (Entscheid nach Dossier N5.3, die Szene folgt RE2): Annette (0x4D) traegt das RE2-Koerpersegment, r 350 / Halbhoehe 1350 /
+ * Mitte Lage - 1350 (RE2 FUN_80034D0C: +0x1E8 `lw v0,488(s6)` @0x80034d74, Radius +0x16 @0x80034dac, Halbhoehe +0x1A @0x80034e5c;
+ * Claire-RAM ROOM6141 lauf3 e01..e30 lebend und liegend gleich), statt des NPC-Familienkastens {450,1530}.
+ * Wirkung an der Leiche: Leon (Port-Spieler r 450) wird erst unter 350 + 450 = 800 weggeschoben. Bei 850 bleibt er stehen
+ * (Gegenprobe 450: 900 > 850 -> Schub, rot), bei 750 wird er auf >= 799 geschoben (die Leiche hat wie in RE2 eine Kollision). */
+static void test_leiche_radius(void)
+{
+    re15_game_flag_set(3, 89, 1); re15_game_flag_set(3, 42, 1); zug(1);
+    uint8_t *b = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u, 12);
+    CHECK(b != NULL, "ROOM5090 nicht ladbar");
+    if (!b) return;
+    const int s = slot_vom_typ(0x4Du);
+    CHECK(s > 0, "keine 0x4D in 5090 bei (3,42)=1");
+    if (s <= 0) { free(b); return; }
+    re15_annette_r41_reset();
+    re15_annette_r41_tick();                                   /* Wiedereintritt: Leiche gelegt (Phase RUHE) */
+    re15_actor_t *a = &g_actors[s];
+    fprintf(stderr, "Leiche Kasten: r %d/%d h %d Versatz %d (Soll RE2 350/350/1350/-1350)\n", (int)a->hit_radius_min,
+            (int)a->hit_radius_max, (int)a->hit_height, (int)a->hit_offset_y);
+    CHECK(a->hit_radius_min == 350 && a->hit_radius_max == 350 && a->hit_height == 1350 && a->hit_offset_y == -1350,
+          "0x4D-Kasten r %d/%d h %d Versatz %d statt RE2-Segment 350/350/1350/-1350 (@0x80034d74, Claire-RAM e01..e30)",
+          (int)a->hit_radius_min, (int)a->hit_radius_max, (int)a->hit_height, (int)a->hit_offset_y);
+    for (int i = 1; i < RE15_ACTOR_MAX; i++)                  /* nur die Leiche schiebt */
+        if (i != s && g_actors[i].active) g_actors[i].active = 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_player_apply_hitbox(pl);
+    pl->active = 1; pl->hp = 100; pl->y = 0; pl->flags = 1;
+    pl->x = a->x + 850; pl->z = a->z;
+    re15_body_push_player();
+    fprintf(stderr, "Leiche Schub bei 850: Leon (%d,%d) Abstand %d\n", (int)pl->x, (int)pl->z, (int)(pl->x - a->x));
+    CHECK(pl->x == a->x + 850 && pl->z == a->z, "Leiche schiebt Leon schon bei 850 (Leon nach (%d,%d)) - RE2 350 + 450 = 800",
+          (int)pl->x, (int)pl->z);
+    pl->x = a->x + 750; pl->z = a->z;
+    re15_body_push_player();
+    fprintf(stderr, "Leiche Schub bei 750: Leon (%d,%d) Abstand %d\n", (int)pl->x, (int)pl->z, (int)(pl->x - a->x));
+    CHECK(pl->x - a->x >= 799 && pl->x - a->x <= 801 && pl->z == a->z,
+          "Leiche schiebt Leon bei 750 nicht auf 800 (Abstand %d) - RE2 hat die Kollision (+0x1E8 = 1)", (int)(pl->x - a->x));
+    re15_annette_r41_reset();
+    re15_game_flag_set(3, 42, 0); re15_game_flag_set(3, 89, 0); zug(0);
+    free(b);
+}
+
 int main(void)
 {
     s_rdt5080 = slurp(RE15_ASSET_PSX_DIR "/STAGE5/ROOM5080.RDT", &s_n5080);
@@ -756,6 +798,7 @@ int main(void)
     test_szene();
     test_zugstart();
     test_schuss();
+    test_leiche_radius();
     if (fails) { fprintf(stderr, "test_r41_annette: %d Fehler\n", fails); return 1; }
     printf("test_r41_annette: OK\n");
     return 0;

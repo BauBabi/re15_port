@@ -1347,11 +1347,12 @@ Keil jeden Schuss (Abnahme 3, E1).
 - Alle Tore lassen den Schub durch: Die liegende Annette schiebt Claire aus einem Kreis von 350 + 350 = 700 um ihre Wurzel.
 - Das ist derselbe Mechanismus wie beim Port-Befund "um 100 seitlich versetzt".
 
-**Hinweis (nicht geaendert, zur Entscheidung):** Die Masse weichen ab.
-- RE2: Segment r 350 / Halbhoehe 1350 plus Spieler 350, Summe 700.
-- Port: 0x4D-Kasten der RE1.5-NPC-Familie r 450 / Hoehe 1530 (@0x80121658, re15_enemy_apply_hitbox) plus Spieler 450
-  (RE15_BODY_R_PLAYER, PSX.EXE @file 0x64694), Summe 900.
-- Laut Auftrag bleibt die Kollision. Ob die Leiche als RE2-Inhalt den RE2-Radius bekommen soll, ist eine eigene Frage.
+**Radius (Entscheid nach N5.3: die Szene folgt RE2):** Annette (0x4D) traegt jetzt das RE2-Segment r 350 / Halbhoehe 1350 /
+Mitte Lage - 1350 statt des NPC-Familienkastens 450/1530 (`re15_enemy_apply_hitbox`). Beleg: FUN_80034D0C +0x1E8 @0x80034d74,
++0x16 @0x80034dac, +0x1A @0x80034e5c. Claire-RAM lauf3 zeigt lebend (e01..e22) und liegend (e23..e30) dieselben Werte, deshalb gilt
+er fuer die lebende Annette und die Leiche, ohne getrennte Fuehrung. Die Leiche schiebt den Port-Spieler (r 450) jetzt ab 800 statt
+900: `unit_r41_annette` test_leiche_radius ist gruen, die Gegenprobe mit 450 ist rot (3 Fehler,
+`AN_belege/n5/gegenprobe_radius450.txt`).
 
 Belege: `AN_belege/n5/leiche_kollision_re2.txt`, `claire_schub_code.txt`, `leon_schub_code.txt`. Werkzeug:
 `AN_belege/werkzeug/n5/leiche_kollision.py`, `claire_code.py`, `cdis.py`. Die Savestates lauf3 und SLES_109.72 liegen wie
@@ -1380,7 +1381,7 @@ Die Integrationstests liefen nacheinander und nicht parallel zur Suite.
   (neu), `re15_port/tests/unit/probes/r41_annette.cmake` (Eintrag).
 - Belege: `AN_belege/n5/`, `AN_belege/werkzeug/n5/`.
 - Offen:
-  - Leichen-Radius RE2 350 gegen Port 450 (N5.3).
+  - Leichen-Radius: entschieden und gebaut (RE2 350/1350, N5.3).
   - Die RE2-Regel gilt im Port fuer die NPC-Familie 0x40..0x4D mit hp < 0. Ein NPC mit hp >= 0 waere wie in RE2 treffbar; im Port
     setzt der NPC-INIT hp -1 (@0x8011c744), im Lauf 10D0 ab Bild 6 (Bild 1..5 traegt Marvin noch hp 0).
   - Release Notes: Der E1-Punkt der Abnahme 3 ist durch den Nutzerentscheid erledigt.

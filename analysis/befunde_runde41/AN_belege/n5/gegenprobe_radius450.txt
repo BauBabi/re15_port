@@ -1,0 +1,16 @@
+Gegenprobe NB5 Radius: re15_damage.c re15_enemy_apply_hitbox mit "case 0x4d: r = 450;  h = 1530;" (alter NPC-Familienkasten),
+gebaut ueber local_build.sh, tests/unit/test_r41_annette.exe:
+
+Leiche Kasten: r 450/450 h 1530 Versatz -1530 (Soll RE2 350/350/1350/-1350)
+FAIL: 0x4D-Kasten r 450/450 h 1530 Versatz -1530 statt RE2-Segment 350/350/1350/-1350 (@0x80034d74, Claire-RAM e01..e30)
+Leiche Schub bei 850: Leon (5757,-22748) Abstand 901
+FAIL: Leiche schiebt Leon schon bei 850 (Leon nach (5757,-22748)) - RE2 350 + 450 = 800
+Leiche Schub bei 750: Leon (5757,-22748) Abstand 901
+FAIL: Leiche schiebt Leon bei 750 nicht auf 800 (Abstand 901) - RE2 hat die Kollision (+0x1E8 = 1)
+test_r41_annette: 3 Fehler
+
+Mit r 350 / h 1350 (Stand NB5):
+Leiche Kasten: r 350/350 h 1350 Versatz -1350 (Soll RE2 350/350/1350/-1350)
+Leiche Schub bei 850: Leon (5706,-22748) Abstand 850
+Leiche Schub bei 750: Leon (5657,-22748) Abstand 801
+test_r41_annette: OK
