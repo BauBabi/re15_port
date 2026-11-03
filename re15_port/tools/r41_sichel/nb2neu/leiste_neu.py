@@ -34,6 +34,8 @@ def main():
     hell = float(sys.argv[11]) if len(sys.argv) > 11 else 1.0
     global KOPF, KURZ
     if len(runs) == 4: KOPF, KURZ = KOPF5, KURZ5
+    if len(runs) == 2:                   # Leiste Video | Ref2 | neu (Auftrag nach Referenz 2)
+        KOPF, KURZ = (KOPF[0], 'Ref2 84e8a4d97 (vom Nutzer gelobt)', 'neu'), ('Video', 'Ref2', 'neu')
     G = {r: griff6.abstaende(r) for r in runs} if art == 'griff' else {}
     B = {r: beine6.beine(r) for r in runs} if art == 'knie' else {}
     rows = []

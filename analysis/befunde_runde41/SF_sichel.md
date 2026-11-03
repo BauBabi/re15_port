@@ -725,3 +725,30 @@ Inhalt von Referenz 2: NB2-Koerper, -Farbe und -Gang plus die Nutzerwuensche
 
 Ab jetzt prueft jede weitere Aenderung zusaetzlich gegen Referenz 2; was dagegen schlechter aussieht, ist ein Befund. Die Leisten
 bekommen dafuer eine Spalte "Ref2".
+
+### Nutzerentscheid Spider-Man-Farbe (2026-11-03)
+
+Nutzer (ueber den Koordinator): "na original textur!"
+- Der Spider-Man behaelt die dunkelbraune Original-Textur der Auslieferung (EM2B aus CDEMD0.EMS, wie Referenz 2). Der
+  orange-schwarze Patch-Entwurf (r41/sichel, SF_belege/nb6/zwischenstand_spiderman_textur.patch) ist verworfen.
+- Abnahme 4 Punkt A (Spider-Man-Aussehen) ist damit kein Befund mehr.
+
+### Schritt 1 nach Referenz 2: Wurf zur Kamera
+
+Auftrag: Im Video fliegt der Spider-Man h81-h85 dicht an der Kamera vorbei, das grosse orange Glied fuellt die rechte
+Bildhaelfte; bei Ref2 bleibt er klein im Hintergrund.
+- Ref2 hatte k_wurf_bahn ab h82 in Blicktiefe 4300 -> 2800.
+- Neu ab h81 auf die Kamera zu: Tiefe 4600 (h81), 3800 (h82), 3200 (h83), 2500 (h84), 2200 (h85), 2000 (h86), 1900 (h87). Die
+  Bildpunkte wandern von x 370 nach x 940, der Weltweg geht Richtung Kameraposition Cut 12.
+- Loslassen und Anfangsrichtung bleiben die der Hand (unveraendert gegen Ref2).
+Laeufe:
+- R7 (Tiefe bis 1300): er fuellte h81-h85 das ganze Bild, verworfen.
+- R8: h84/h85 noch kleiner als das Video-Glied.
+- R9: Endstand.
+Leiste 08_schritt1_wurf_zur_kamera_h76-h87.jpg (Video | Ref2 | neu, Kacheln 460 px).
+Am Bild:
+- h81-h83 steht er gross in der rechten Bildhaelfte mit hochstehenden Gliedern (Video h82/h83: Glied rechts der Mitte,
+  Oberkante ~196).
+- h84-h87 Glieder am rechten Rand. Sie sind noch kleiner als das Video-Glied h84/h85 (Oberkante 111/120), das bleibt offen.
+Gegen Ref2 ist bis h80 nichts veraendert (gleiche Bilder). Ab h81 ist nichts schlechter gefunden.
+Tests: unit_birkin_szenen (Griff-Riegel), unit_birkin_formen, unit_schwanz_r41 gruen.

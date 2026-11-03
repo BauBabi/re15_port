@@ -727,9 +727,16 @@ static int32_t bf_bogen(int32_t lin)
 /* Lauf R4 (h74-h80 auf dem Sehstrahl in Tiefe 4800-4400): Lage im Bild wie das Video, aber er beruehrt den Boden nie - der Nutzer:
  * "Er wirft sie auf den Boden in Richtung Kamera". Video h79/h80 liegt er (Oberkante 266/288). Jetzt h78/h80 Bodenpunkte in
  * Blicktiefe ~5200 (Bild-y ~500, unter dem Bildrand: man sieht die hochstehenden Glieder), danach wieder auf dem Sehstrahl. */
+/* Schritt 1 nach Referenz 2 (Koordinator 2026-11-03: "Im Video fliegt der Spider-Man h81-h85 ganz dicht an der Kamera vorbei, das
+ * grosse orange Glied fuellt die rechte Bildhaelfte. Bei Ref2 bleibt er klein im Hintergrund"): Ref2 hatte ab h82 Blicktiefe
+ * 4300 -> 2800. Video (flucht6.py, Schwarzwert heraus) h82/h83/h84/h85 Oberkante 196/196/111/120, Flaeche 13011/24471/14860/20708,
+ * Schwerpunkt x 406/495/544/584; hochskaliertes Nutzerbild h85 (Screenshot 100432): Glied von y ~150 bis zum unteren Rand am
+ * rechten Rand. Lauf R7 (Tiefe 3800 -> 1300, x 380-820): h81-h85 fuellte er das GANZE Bild -> Tiefe 4600 -> 2200 und weiter
+ * rechts (x 370-940), so dass vor allem Glieder in der rechten Bildhaelfte stehen; Lauf R8 damit h84/h85 noch kleiner als das
+ * Video-Glied -> h84-h87 Tiefe 2500 -> 1900. Weltweg Richtung Kameraposition Cut 12. */
 static const int16_t k_wurf_bahn[][4] = { { 74, 230, 340, 4800 }, { 76, 250, 390, 4600 }, { 78, 270, 505, 0 }, { 80, 330, 500, 0 },
-                                          { 82, 400, 400, 4300 }, { 83, 520, 380, 4000 }, { 84, 610, 330, 3600 }, { 85, 690, 330, 3300 },
-                                          { 86, 770, 350, 3000 }, { 87, 860, 350, 2800 } };
+                                          { 81, 370, 450, 4600 }, { 82, 450, 380, 3800 }, { 83, 560, 340, 3200 }, { 84, 640, 290, 2500 },
+                                          { 85, 720, 290, 2200 }, { 86, 820, 320, 2000 }, { 87, 940, 330, 1900 } };
 static int bf_wurf_punkt(const re15_actor_t *b, int i, int32_t out[3])
 {
     bf_schwanzpunkt_t q = { 0, k_wurf_bahn[i][1], k_wurf_bahn[i][2], k_wurf_bahn[i][3] > 0 ? 3 : 0, k_wurf_bahn[i][3] };
