@@ -141,6 +141,135 @@ static struct {
 
 static int raum_5090(void) { return (g_current_room_id & 0xFFFEu) == 0x5090u; }
 
+/* ═══ M4 (Nachbesserung 5): TUNNELLAMPEN, BEBEN und BEBEN-TON des Vorlaufs (RE2 ROOM7040 sub09/sub10/sub11/sub12, sub04) ═══
+ *
+ * sub06 @0x01892 `29 09` Cut_chg(9), @0x01894 `04 07 18 09` Evt_exec(7, sub09), @0x01898 Evt_next, @0x0189A `04 06 18 04`
+ * Evt_exec(6, sub04); @0x0193A `29 0a` Cut_chg(10), @0x0193C `04 07 18 0a` Evt_exec(7, sub10).
+ *   sub09 @0x01B20 `04 04 18 0b` Evt_exec(4, sub11), @0x01B24 `09 0a 0a 00` Sleep 10, @0x01B28 `04 03 18 0c` Evt_exec(3, sub12).
+ *   sub11 (Objekt 3) / sub12 (Objekt 4) @0x01B4C / @0x01B98:
+ *     Work_set(4,n) `2e 04 0n` (Typ 4 -> 0x800d0324 + n*0x1F8, Tabelle @0x800111f0[3] = 0x80055994),
+ *     Pos_set `32 00 00 00 d0 ee 60 be` @0x01B50/@0x01B9C = (0,-4400,-16800) (Handler @0x80055ba0: sw +0x38/+0x3C/+0x40),
+ *     Dir_set `33 00 00 0c 00 0c 00 04` @0x01B58/@0x01BA4 = (0x0C00,0x0C00,0x0400) (Handler @0x80055bd0: sh +0x74/+0x76/+0x78),
+ *     Schleife: If Member_cmp `3e 00 0b 04 e0 b1` @0x01B68/@0x01BB4 (Member 0x0B = +0x38 `lw` @0x80055ffc, Op 4 = "<=" @0x80055f18)
+ *       -> Pos_set wie oben @0x01B72/@0x01BBE; Member_copy(V16 <- +0x38) `3d 10 0b`, Calc `26 00 01 10 e8 03` @0x01B84/@0x01BD0
+ *       (Op 1 = `subu` @0x80054664, `sh` @0x80054754: 16 Bit), Member_set2(+0x38 <- V16) `35 0b 10` (`lh` @0x80055c7c, `sw` @0x80055d30),
+ *       Evt_next, Goto `17 ff ff 00 d0 ff`.
+ *   sub10 @0x01B2E: Evt_kill 3/4, Pos_set `32 00 00 83 00 00 00 83` @0x01B36/@0x01B42 = (-32000,0,-32000) fuer Objekt 3 und 4.
+ *   RE2-RAM (Abnahme-1-Savestates, Objekt n = 0x800d0324 + n*0x1F8): s02..s11 Objekt 3/4 +0x3C -4400, +0x40 -16800, +0x74..78
+ *   0C00/0C00/0400, +0x38 Vielfache von 1000 in -20000..-1000, Objekt 4 = Objekt 3 +- 10000; Szenenbild f (Zuordnung Abnahme 4) ->
+ *   Objekt 3 +0x38 = -1000 * (((f - 3) mod 20) + 1) an s03..s11 ohne Ausnahme; ab s12 beide (-32000,0,-32000).
+ *
+ * TASK-REIHENFOLGE: die Skript-Schleife FUN_800536c4 laeuft die Plaetze 0..9 aufsteigend (0x800d7860 + i*0x174, `addiu s1,s1,0x174`
+ * @0x8005379c, `sltiu v0,s2,0xa` @0x80053794); Evt_exec @0x800538a4 -> FUN_80053138 legt den Task in Platz pc[1] an (< 10 direkt,
+ * @0x80053154 -> @0x800531f8). sub06 laeuft in Platz 9 (MAIN sub00 @0x01292 `04 09 18 02` + Evt_chain @0x013A8), sub09 in 7, sub04 in 6,
+ * sub11 in 4, sub12 in 3: ein angelegter Task kleinerer Nummer laeuft erst im NAECHSTEN Bild. Cut_chg(9) im Bild C -> sub09 C+1 ->
+ * sub11 (erstes Bild, Lampe 3 bei -1000) C+2; sub06 @0x01898 Evt_next -> Evt_exec(6, sub04) C+1 -> erstes Beben C+2.
+ * Aufnahme: Schnitt sichtbar 61,467 s (Spielbild 2 Videobilder unbewegt), Beben 3 Zeilen ab 61,500 s - ein Bild spaeter, wie der Port
+ * (Kamera im Bild nach der Anforderung sichtbar, Beben ab Vorlaufbild G5A_SKRIPT_START).
+ * ⛔ PORT-WAHL (Phase): RE2 Cut_chg(9) -> Armierung = 59 Bilder (RAM-Phase: Lampe 3 beginnt bei Szenenbild -57 mod 20 = C+2; Aufnahme:
+ * Schnitt bei -59,8 + Achsenversatz 1,5..3,3 = C+1), der Port-Vorlauf ist 55 (F1558 -> F1613, Abnahme 4). Damit die Lampe bei gleichem
+ * Szenenbild an derselben Stelle steht wie in RE2 (RAM s03..s11 bitgleich), laeuft sub11 im Port beim Start G5A_LAMPE_VORSPRUNG = 59 - 55
+ * Bilder nach: das Skript selbst ist unveraendert, nur sein erstes Bild steht 4 Bilder spaeter in sub11s eigener Zeit.
+ */
+#define G5A_LAMPE_X0        0          /* Pos_set @0x01B50/@0x01B9C x */
+#define G5A_LAMPE_Y         (-4400)    /* ebenda y 0xEED0 */
+#define G5A_LAMPE_Z         (-16800)   /* ebenda z 0xBE60 */
+#define G5A_LAMPE_MARKE     (-20000)   /* Member_cmp @0x01B68/@0x01BB4 `e0 b1`, Op 4 "<=" @0x80055f18 */
+#define G5A_LAMPE_SCHRITT   1000       /* Calc @0x01B84/@0x01BD0 `e8 03`, Op 1 Abzug @0x80054664 */
+#define G5A_LAMPE_VERSATZ   10         /* sub09 Sleep 10 @0x01B24 zwischen sub11 und sub12 (RAM: Objekt 4 = Objekt 3 +- 10000) */
+#define G5A_LAMPE_PARK      (-32000)   /* sub10 @0x01B36/@0x01B42 und Obj_model_set @0x01240/@0x01266 (x/z) */
+#define G5A_LAMPE_VORSPRUNG 4          /* ⛔ PORT-WAHL, s.o.: RE2-Vorlauf 59 - Port-Vorlauf 55 */
+#define G5A_SKRIPT_START    2          /* Vorlaufbild, in dem sub11 und sub04 ihr erstes Bild laufen (Cut_chg-Bild 0, Task-Reihenfolge s.o.) */
+static const int16_t k_lampe_dir[3]  = { 0x0C00, 0x0C00, 0x0400 };   /* Dir_set @0x01B58/@0x01BA4 */
+static const int16_t k_lampe_park[3] = { 0x0000, 0x0C00, 0x0000 };   /* Obj_model_set @0x01240 / @0x01266 pc[0x14..0x19] */
+
+static struct { int laeuft, t; int an[2]; int32_t x[2]; } s_lampe;
+
+/* Ein Bild von sub11 (i = 0, Objekt 3) bzw. sub12 (i = 1, Objekt 4). */
+static void lampe_task(int i)
+{
+    const int start = i ? G5A_LAMPE_VERSATZ : 0;
+    if (s_lampe.t < start) return;
+    if (s_lampe.t == start) { s_lampe.an[i] = 1; s_lampe.x[i] = G5A_LAMPE_X0; }     /* @0x01B50 Pos_set, @0x01B58 Dir_set */
+    if (s_lampe.x[i] <= G5A_LAMPE_MARKE) s_lampe.x[i] = G5A_LAMPE_X0;               /* @0x01B64 If Member_cmp, @0x01B72 Pos_set */
+    s_lampe.x[i] = (int16_t)(s_lampe.x[i] - G5A_LAMPE_SCHRITT);                     /* @0x01B80 Member_copy .. @0x01B8A Member_set2 */
+}
+
+static void lampe_takt(void)
+{
+    if (!s_lampe.laeuft) return;
+    lampe_task(0); lampe_task(1);
+    s_lampe.t++;
+}
+
+static void lampen_start(void)                                      /* erstes Bild von sub11 (sub09 @0x01B20 Evt_exec(4, sub11)) */
+{
+    memset(&s_lampe, 0, sizeof s_lampe);
+    s_lampe.x[0] = s_lampe.x[1] = G5A_LAMPE_PARK;
+    s_lampe.laeuft = 1;
+    for (int k = 0; k <= G5A_LAMPE_VORSPRUNG; k++) lampe_takt();    /* erstes Bild + Vorsprung (PORT-WAHL) */
+}
+
+static void lampen_parken(void)                                     /* @0x0193C Evt_exec(7, sub10) */
+{
+    s_lampe.laeuft = 0; s_lampe.an[0] = s_lampe.an[1] = 0;
+    s_lampe.x[0] = s_lampe.x[1] = G5A_LAMPE_PARK;
+}
+
+int re15_g5a_lampe(int i, int32_t pos[3], int16_t dir[3])
+{
+    if (i < 0 || i > 1 || !raum_5090()) return 0;
+    const int an = s_lampe.an[i];
+    if (pos) { pos[0] = an ? s_lampe.x[i] : G5A_LAMPE_PARK; pos[1] = an ? G5A_LAMPE_Y : 0; pos[2] = an ? G5A_LAMPE_Z : G5A_LAMPE_PARK; }
+    if (dir) for (int k = 0; k < 3; k++) dir[k] = an ? k_lampe_dir[k] : k_lampe_park[k];
+    return an;
+}
+
+/* RE2 FUN_800363f0 zeichnet ein Raumobjekt nur, wenn FUN_8002c820(+0x68 Weltlage, *(0x800ce338)) != 0 (`jal 0x8002c820` @0x80036534,
+ * `bnez v0` @0x8003653c) oder Flag 0x10 (@0x8003654c; Objekt 3/4: Wort +0 = 0x0B). *(0x800ce338) = Ankerzone des aktuellen Schnitts
+ * im RVD (RAM s01..s11: 0x8011a600 = RDT +0x45C, s12: +0x470). ROOM7040.RDT @0x45C `01 ff 09 00 18 ca 79 88 88 c8 d8 c3 b0 1d d8 c3
+ * 88 2c 78 88` (Schnitt 9), @0x470 `01 ff 0a 00 bc d0 34 8b 3c dd 1c c1 d0 20 d8 c3 88 2c 78 88` (Schnitt 10). */
+static const int16_t k_zone9[8]  = { -13800, -30599, -14200, -15400, 7600, -15400, 11400, -30600 };
+static const int16_t k_zone10[8] = { -12100, -29900, -8900, -16100, 8400, -15400, 11400, -30600 };
+
+/* FUN_8002c820 Schritt fuer Schritt (Produkte = mflo, 32 Bit). */
+static int32_t mflo32(int32_t a, int32_t b) { return (int32_t)(uint32_t)((int64_t)a * (int64_t)b); }
+int re15_g5a_lampe_zone(int cut, int32_t px, int32_t pz)
+{
+    const int16_t *q = (cut == RE15_G5A_SCHNITT9) ? k_zone9 : (cut == RE15_G5A_SCHNITT10) ? k_zone10 : 0;
+    if (!q || !raum_5090()) return 0;
+    const int32_t x0 = q[0], z0 = q[1], x1 = q[2], z1 = q[3], x2 = q[4], z2 = q[5], x3 = q[6], z3 = q[7];
+    int32_t t2 = pz - z0, t3 = x1 - x0, a0 = px - x0, a2 = z1 - z0;
+    if (mflo32(a2, a0) < mflo32(t3, t2)) return 0;                                  /* @0x8002c864 */
+    const int32_t a3 = x3 - x0, t0 = z3 - z0;
+    if (mflo32(a3, t2) < mflo32(t0, a0)) return 0;                                  /* @0x8002c888 */
+    t2 -= z2 - z0; t3 -= x2 - x0; a0 -= x2 - x0; a2 -= z2 - z0;                     /* @0x8002c89c-b8 */
+    if (mflo32(t3, t2) < mflo32(a2, a0)) return 0;                                  /* @0x8002c8c8 */
+    if (mflo32(t0 - (z2 - z0), a0) < mflo32(a3 - (x2 - x0), t2)) return 0;          /* @0x8002c8ec, sonst 1 @0x8002c8f4 */
+    return 1;
+}
+
+/* BEBEN: sub04 @0x0169E (ab dem Bild nach dem Schnitt, @0x01898 Evt_next): Evt_exec(8, sub05) @0x0169E, Gosub sub14 @0x016A2 (Vib_*),
+ * Sce_shake_on `5c 00 fd` @0x016A4, Evt_next, `5c 00 fb` @0x016A8, Evt_next, Se_on `36 02 0c 00 01 ..` @0x016AC, For 5 (`0d 00 06 00 05 00`
+ * @0x016B8, Zaehler `lh 4(pc)` @0x80053b28) { `5c 00 f9`, Evt_next }, dann fa/fb/fc/fd/fe/ff je ein Bild (@0x016C4..@0x016D8).
+ * Sce_shake_on @0x80058164: s3 = (s8)pc[2] (@0x800581a4), je Zeile 0..239 (`addiu s5,zero,0xf0` @0x800581b0) FUN_8002ac94: Quelle
+ * Zeile + pc[2] (@0x8002ad10, Rand geklemmt @0x8002ad14-38) -> Ziel Zeile, Breite 0x140 (@0x8002acc4) = das Bild rutscht um -pc[2] Zeilen
+ * nach unten. Aufnahme (Abnahme-2-Mitschnitt 640x480, 61,50..61,92 s): Verschiebung 6/11/15x5/13/11/9/6/4/2 Halbzeilen, 13 Bilder. */
+static const int8_t k_beben[13] = { -3, -5, -7, -7, -7, -7, -7, -6, -5, -4, -3, -2, -1 };
+#define G5A_BEBEN_TON_BILD  3          /* drittes Bild von sub04: Se_on @0x016AC nach @0x016A4/@0x016A8 */
+/* sub04-Bild s = 1.. ab Vorlaufbild G5A_SKRIPT_START (s = vl - G5A_SKRIPT_START + 1). */
+static int s_beben;
+void (*re15_g5a_beben_ton_hook)(void) = 0;
+
+int re15_g5a_beben(void) { return (raum_5090() && s_g5a.laeuft) ? s_beben : 0; }
+
+static void beben_takt(int vl)
+{
+    const int sb = vl - G5A_SKRIPT_START + 1;
+    s_beben = (sb >= 1 && sb <= (int)sizeof k_beben) ? k_beben[sb - 1] : 0;
+    if (sb == G5A_BEBEN_TON_BILD && re15_g5a_beben_ton_hook) re15_g5a_beben_ton_hook();
+}
+
 const re15_camera_cut_t *re15_g5a_schnitt(int cut)
 {
     if (!raum_5090()) return (const re15_camera_cut_t *)0;
@@ -322,6 +451,7 @@ void re15_g5a_reset(void)
     }
     s_g5a.laeuft = 0; s_g5a.phase = G5A_VL_SCHLAF; s_g5a.bild = -1; s_g5a.slot = -1; s_g5a.frisch = 0;
     s_g5a.vl = 0; s_g5a.vl_t = 0; s_g5a.rw = 0; s_g5a.frau = -1;
+    lampen_parken(); s_beben = 0;                        /* NB5 M4 */
 }
 
 void re15_bf_g5_auftritt_start(int slot)
@@ -337,6 +467,7 @@ void re15_bf_g5_auftritt_start(int slot)
      * @0x01890 Cut_auto(0), @0x01892 Cut_chg(9). */
     spieler_setzen(G5A_X_VORLAUF, G5A_GIER_OST);
     kamera(RE15_G5A_SCHNITT);
+    lampen_parken(); s_beben = 0;                        /* NB5 M4: @0x01894 Evt_exec(7, sub09) im Bild des Cut_chg(9); sub11 ab G5A_SKRIPT_START */
     /* Der G5 existiert in RE2 schon (MAIN sub00 Sce_em_set @0x011AC `44 00 00 36 ..` Typ 0x36 auf (-32000,0,-32000)) und wartet
      * unarmiert in [T0] (@0x801011b0-b8). Port: Typwechsel jetzt, Armierung (grid 0x13 = +0x1D4-Bit-0-Analogon) erst @0x018DE. */
     re15_bf_morph_zu_g5(slot);
@@ -376,6 +507,9 @@ static void vorlauf_tick(void)
 {
     s_g5a.vl++;
     kamera(RE15_G5A_SCHNITT);
+    if (s_g5a.vl == G5A_SKRIPT_START) lampen_start();    /* NB5 M4: erstes Bild von sub11 (C+2, s. Task-Reihenfolge) */
+    else lampe_takt();                                   /* NB5 M4: sub11/sub12 je Bild */
+    beben_takt(s_g5a.vl);                                /* NB5 M4: sub04 (Evt_exec @0x0189A, erstes Bild C+2) */
     frau_verbergen(1);
     switch (s_g5a.phase) {
     case G5A_VL_SCHLAF:
@@ -408,6 +542,10 @@ void re15_g5a_tick(void)
     if (s_g5a.phase != G5A_SZENE) { vorlauf_tick(); return; }
     const int b = ++s_g5a.bild;
     rueckwaerts_takt();
+    s_beben = 0;                                         /* sub04 endet @0x016DC vor der Armierung */
+    lampe_takt();                                        /* NB5 M4: sub11/sub12 */
+    if (b == RE15_G5A_BILD_SCHNITT10 + 1) lampen_parken();   /* NB5 M4: @0x0193C Evt_exec(7, sub10) im Bild des Cut_chg(10); Platz 7 < 9
+                                                          * -> sub10 laeuft im Folgebild, nach sub12/sub11 (Plaetze 3/4) */
     if (b == RE15_G5A_BILD_XA0B) (void)re15_audio_re2_xa(RE15_G5A_XA0B_DATEI, RE15_G5A_XA0B_LESE);   /* @0x01920 `59 00 0b 00` */
     if (b == RE15_G5A_BILD_XA0C) (void)re15_audio_re2_xa(RE15_G5A_XA0C_DATEI, RE15_G5A_XA0C_LESE);   /* @0x01946 `59 00 0c 00` */
     if (b == G5A_BILD_LAUF)                              /* @0x01906 Plc_motion(0x0C,1,4): Laufen nach Osten (PORT-WAHL s. G5A_X_OSTWAND) */

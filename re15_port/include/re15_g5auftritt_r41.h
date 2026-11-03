@@ -86,4 +86,14 @@ int  re15_g5a_licht_schnitt(int cut);
  * Indizes 16/17 legen und cut_count auf 18 heben; jeder andere Raum: nichts. */
 void re15_g5a_licht_einsetzen(void *licht_satz /* re15_light_set_t* */);
 
+/* M4 (Nachbesserung 5): Tunnellampen = RE2 ROOM7040 Raumobjekte 3/4 (sub11/sub12, Modell R704_LAMPE.MD1/.TIM), Beben (sub04).
+ * re15_g5a_lampe: i 0 = Objekt 3 (sub11), 1 = Objekt 4 (sub12); Weltlage und Drehung (Pos_set/Dir_set des Skripts, sonst der Parkplatz
+ * (-32000,0,-32000) des Obj_model_set); Rueckgabe 1 = vom Skript gesetzt. re15_g5a_lampe_zone: RE2 FUN_8002c820 mit der Ankerzone des
+ * Schnitts (16 = RE2 9, 17 = RE2 10), 1 = das Objekt wird gezeichnet. re15_g5a_beben: Sce_shake_on pc[2] dieses Bildes (das Bild rutscht
+ * um -Wert Zeilen nach unten), 0 = kein Beben. re15_g5a_beben_ton_hook: Se_on @0x016AC (Plattform bindet die Mini-Bank R704_BEBEN.VBS). */
+int  re15_g5a_lampe(int i, int32_t pos[3], int16_t dir[3]);
+int  re15_g5a_lampe_zone(int cut, int32_t x, int32_t z);
+int  re15_g5a_beben(void);
+extern void (*re15_g5a_beben_ton_hook)(void);
+
 #endif /* RE15_G5AUFTRITT_R41_H */

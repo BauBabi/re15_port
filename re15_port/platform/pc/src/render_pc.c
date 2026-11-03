@@ -230,7 +230,8 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
-#define RE15_TIM_SLOT_MAX 57   /* 56 = Runde 41 Spur G (Nachtrag 28, Orchestrator-Entscheid G-E6): RE2 TEX.TIM mit den Kern-
+#define RE15_TIM_SLOT_MAX 58   /* 57 = Runde 41 G5-Auftritt Nachbesserung 5: Tunnellampen R704_LAMPE.TIM (g5lampen_pc.c)
+                                * 56 = Runde 41 Spur G (Nachtrag 28, Orchestrator-Entscheid G-E6): RE2 TEX.TIM mit den Kern-
                                 *      CLUT-Zeilen 485..498 (gator_fx_r41_pc.c; 54 = Raum-ESP ROOM40A0 ebenda)
                                 * 50/51 = Runde 34 C2: die zwei GLOBAL-Effektseiten aus DATA/TEX.TIM
                                 *      (tpage 0x1e / 0x1f, je 16 Paletten 480..495 -> 256x4096;
@@ -1052,6 +1053,14 @@ static void pc_masken_schatten_flush(int *mi, int mask_n, const int *mask_order,
     }
 }
 
+/* BEBEN (Runde 41 G5-Auftritt, Nachbesserung 5): RE2 Sce_shake_on @0x80058164 kopiert in DIESEM Bild jede der 240 Zeilen von
+ * Zeile + pc[2] (FUN_8002ac94 @0x8002ad10, Rand geklemmt @0x8002ad14-38) - das fertige Szenenbild rutscht um -pc[2] Zeilen nach unten.
+ * Die Szenenbalken liegen darueber (RE2-Aufnahme 61,50..61,92 s: Balkenkanten 34/445 bei 640x480 unbewegt, Szene 6..15 Halbzeilen
+ * verschoben). Port: Viewport des Szenenteils (Hintergrund, Schatten, Dreiecke, Masken) um -pc[2] nach unten, Balken/Text danach
+ * unverschoben. Ein Aufruf gilt fuer ein Bild (RE2 ruft je Bild neu, sub04 @0x016A4..@0x016D8). */
+static int s_beben_dy = 0;
+void re15_render_pc_beben(int dy) { s_beben_dy = dy; }
+
 void re15_render_end_frame(void)
 {
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
@@ -1083,6 +1092,12 @@ void re15_render_end_frame(void)
         SDL_UpdateTexture(s_texture, NULL, s_framebuffer, SCREEN_XRES * sizeof(uint32_t));
     SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
     SDL_RenderClear(s_renderer);
+    SDL_Rect beben_vp_alt; int beben_vp = 0;                   /* BEBEN, s. re15_render_pc_beben */
+    if (s_beben_dy != 0) {
+        SDL_RenderGetViewport(s_renderer, &beben_vp_alt);
+        SDL_Rect vp = beben_vp_alt; vp.y -= s_beben_dy;
+        SDL_RenderSetViewport(s_renderer, &vp); beben_vp = 1;
+    }
     if (!s_black_bg) {
         SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
     } else if (s_gameover_tex) {
@@ -1357,6 +1372,9 @@ void re15_render_end_frame(void)
     }
     s_sb_gueltig = 1;
     s_textri_count = 0;  /* reset queue for next frame */
+
+    if (beben_vp) SDL_RenderSetViewport(s_renderer, &beben_vp_alt);   /* BEBEN: Balken, Text, Blenden unverschoben */
+    s_beben_dy = 0;
 
     /* Step 2.5: ITEM-GET pickup MODAL — the zooming/spinning/flipping item quad, ON TOP of the frozen
      * 3D scene (byte-true FUN_8001db28; gameplay is paused underneath). 2 triangles from the 4 screen

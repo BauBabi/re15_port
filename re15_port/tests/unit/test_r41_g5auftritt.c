@@ -9,6 +9,8 @@
  *    G5 unarmiert geparkt), Armierung, Schnitt 16 bis Bild 436, 17 ab 437, Cut 12 ab 807, Ende 1162; M1 Leon laeuft ab Bild 12 aus
  *    der Grossaufnahme und geht in 17/12 rueckwaerts hinaus; M2 Armgelenke = RE2-RAM s04; M3 G5-Lage = RE2-RAM; M4b keine Spruenge
  *    der gezeichneten Wurzel; M4 Masse hinter der Pfostenmaske; M6 Frau in 16/17 unsichtbar; M5 Xa-Aufrufe; Sperre/Zonen; Kampf.
+ * 3. NB5 (M4 Tunnellampen/Beben): R704_LAMPE.MD1/.TIM = ROOM7040-Bytes; Lampen-Lage (Objekt 3/4 +0x38/+0x3C/+0x40, +0x74..78) an den
+ *    RE2-RAM-Savestates s03..s12 bitgleich; Sichtpruefung FUN_8002c820; Lampenfleck gegen die RE2-Aufnahme; Beben-Folge sub04.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -27,6 +29,7 @@
 #include "re15_sld.h"
 #include "re15_pri.h"
 #include "re15_tim.h"
+#include "re15_md1.h"
 #include "re15_birkin_formen.h"
 #include "re15_g5auftritt_r41.h"
 #include "re2_ems.h"
@@ -439,6 +442,76 @@ static int32_t arm_reichweite(int i)
     return best;
 }
 
+/* ---- NB5 M4: Tunnellampen + Beben ------------------------------------------------------------------------------------------ */
+static int s_beben_ton_n = 0, s_beben_ton_vl = -1;
+static void beben_ton_spion(void) { s_beben_ton_n++; s_beben_ton_vl = re15_g5a_vorlauf(); }
+
+/* RE2-RAM (Abnahme-1-Savestates, Objekt n = 0x800d0324 + n*0x1F8, +0x38 = x; Szenenbild-Zuordnung Abnahme 4 2.2):
+ * NB5 G5_belege/nb5/messung_lampen_ram.txt. s12 (Bild 441): beide auf dem Parkplatz (sub10 @0x01B36/@0x01B42). */
+static const struct { int s, bild; int32_t x3, x4; } k_re2_lampen[] = {
+    {  3,  31,  -9000, -19000 }, {  4,  80, -18000,  -8000 }, {  5, 129,  -7000, -17000 }, {  6, 165,  -3000, -13000 },
+    {  7, 215, -13000,  -3000 }, {  8, 264,  -2000, -12000 }, {  9, 313, -11000,  -1000 }, { 10, 363,  -1000, -11000 },
+    { 11, 412, -10000, -20000 }, { 12, 441, -32000, -32000 },
+};
+/* RE2-Aufnahme (Abnahme-2-Mitschnitt, Zeitachse -2,0 Bilder wie Abnahme 4): Schwerpunkt des Lampenflecks (Grauwert > 120, 320x240) im
+ * Tuerloch, nb5/messung_lampe_2_s120.txt; die Lampe ist Objekt 4 bei x -4000 / -5000 / -6000 (Szenenbild -44 / -43 / -42). */
+static const struct { int bild; int32_t x; float sx, sy; } k_re2_fleck[] = {
+    { -44, -4000, 108.8f, 119.3f }, { -43, -5000, 95.1f, 120.8f }, { -42, -6000, 80.6f, 121.6f },
+};
+static const int8_t k_re2_beben[13] = { -3, -5, -7, -7, -7, -7, -7, -6, -5, -4, -3, -2, -1 };   /* sub04 @0x016A4..@0x016D8 */
+static uint8_t *s_lampe_md1_raw = NULL;
+static int      s_lampe_md1_n = 0;
+/* Port-Vorlauf, fuer den G5A_LAMPE_VORSPRUNG (engine/src/g5auftritt_r41.c) gewaehlt ist: echte exe F1558 -> F1613 (Abnahme 4). */
+#define NB5_VORLAUF_EXE 55
+
+/* Kasten des Lampengehaeuses (Modell-x > 0: Prisma 0..136 + Lichtband x 180) in Schnitt 16 fuer Objektlage x, Drehung (0C00,0C00,0400)
+ * = RAM-Weltmatrix (0,0,-4096 / 0,-4096,0 / -4096,0,0): Welt = (x - mz, -4400 - my, -16800 - mx). */
+static int lampe_kasten(const re15_camera_cut_t *k16, int32_t x, int *x0, int *x1, int *y0, int *y1)
+{
+    re15_md1_t m;
+    if (!s_lampe_md1_raw || re15_md1_parse(s_lampe_md1_raw, s_lampe_md1_n, &m) != 0 || m.mesh_count < 1) return 0;
+    *x0 = *y0 = 9999; *x1 = *y1 = -9999;
+    const re15_md1_mesh_t *h = &m.meshes[0];
+    int n = 0;
+    for (int i = 0; i < h->tri_vertex_count; i++) {
+        const re15_md1_vertex_t *v = &h->tri_vertices[i];
+        int sx, sy;
+        if (v->x <= 0) continue;
+        if (!im_bild(k16, x - v->z, -4400 - v->y, -16800 - v->x, &sx, &sy)) continue;
+        if (sx < *x0) *x0 = sx; if (sx > *x1) *x1 = sx; if (sy < *y0) *y0 = sy; if (sy > *y1) *y1 = sy;
+        n++;
+    }
+    return n > 0;
+}
+
+static void test_m4_daten(void)
+{
+    size_t mn = 0, tn = 0, rn = 0, vn = 0;
+    uint8_t *md1 = slurp(RE2_DIR "/R704_LAMPE.MD1", &mn), *tim = slurp(RE2_DIR "/R704_LAMPE.TIM", &tn);
+    uint8_t *vbs = slurp(RE2_DIR "/R704_BEBEN.VBS", &vn);
+    CHECK(md1 && mn == 2012, "RE2/R704_LAMPE.MD1 fehlt oder Laenge %zu statt 2012 (ROOM7040 [0x28A4, 0x3080))", mn);
+    CHECK(tim && tn == 34336, "RE2/R704_LAMPE.TIM fehlt oder Laenge %zu statt 34336", tn);
+    CHECK(vbs && vn > 3144, "RE2/R704_BEBEN.VBS fehlt oder Laenge %zu", vn);
+    uint8_t *r = slurp(INFO_RE2 "/PL0/RDT/ROOM7040.RDT", &rn);
+    if (r && md1 && tim && rn > 0x33844u + 34336u) {
+        CHECK(memcmp(r + 0x28A4, md1, 2012) == 0, "R704_LAMPE.MD1 != ROOM7040.RDT [0x28A4, 0x3080)");
+        CHECK(memcmp(r + 0x33844, tim, 34336) == 0, "R704_LAMPE.TIM != ROOM7040.RDT @0x33844");
+        CHECK(memcmp(r + 0x244 + 3 * 8, "\x44\x38\x03\x00\xa4\x28\x00\x00", 8) == 0 && memcmp(r + 0x244 + 4 * 8, r + 0x244 + 3 * 8, 8) == 0,
+              "Objektmodell-Liste @0x244: Modell 3/4 nicht TIM 0x33844 / MD1 0x28A4\n");
+        CHECK(memcmp(r + 0x1B50, "\x32\x00\x00\x00\xd0\xee\x60\xbe", 8) == 0 && memcmp(r + 0x1B84, "\x26\x00\x01\x10\xe8\x03", 6) == 0 &&
+              memcmp(r + 0x1B68, "\x3e\x00\x0b\x04\xe0\xb1", 6) == 0, "sub11-Bytes @0x1B50/@0x1B68/@0x1B84 weichen ab");
+    } else fprintf(stderr, "NB5: info/re2leon/PL0/RDT/ROOM7040.RDT nicht da - nur Laengen geprueft\n");
+    re15_md1_t m;
+    if (md1 && mn >= 12) { s_lampe_md1_raw = (uint8_t *)malloc(mn); if (s_lampe_md1_raw) { memcpy(s_lampe_md1_raw, md1, mn); s_lampe_md1_n = (int)mn; } }
+    CHECK(md1 && re15_md1_parse(md1, (int)mn, &m) == 0 && m.mesh_count == 1 && m.meshes[0].triangle_count == 18 && m.meshes[0].quad_count == 19,
+          "R704_LAMPE.MD1: Port-Parser liest nicht 1 Mesh / 18 Dreiecke / 19 Vierecke");
+    re15_tim_t t;
+    CHECK(tim && re15_tim_parse(tim, (int)tn, &t) == 0 && t.bpp == 8 && t.width == 128 && t.height == 256, "R704_LAMPE.TIM: kein 8-bpp-TIM 128x256");
+    /* FUN_8002c820 mit der Ankerzone von Schnitt 9: Lampe auf z -16800 sichtbar bis x -14163 (Kante (-13800,-30599)-(-14200,-15400)).
+     * Die Pruefung gilt nur in ROOM5090/5091 (raum_5090) - hier im Kontext des zuletzt geladenen Raums, s. test_ablauf. */
+    free(md1); free(tim); free(vbs); free(r);
+}
+
 static void test_ablauf(const char *rdt, unsigned raum)
 {
     uint8_t *buf = raum_laden(rdt, raum);
@@ -478,8 +551,39 @@ static void test_ablauf(const char *rdt, unsigned raum)
     CHECK(e->type == 0x36u && e->grid_id != 0x13u && e->x == -32000, "%04X: G5 im Vorlauf nicht unarmiert geparkt (Typ 0x%02X grid 0x%02X x %d, @0x011AC)",
           raum, e->type, e->grid_id, (int)e->x);
     int vl = 0, vl_armiert = 0, vl_frau_sichtbar = 0, vl_spieler_im_bild = 0;
+    /* NB5 M4: Sichtpruefung FUN_8002c820 / Ankerzone RVD @0x45C (Kante (-13800,-30599)-(-14200,-15400): bei z -16800 bis x -14163) */
+    CHECK(re15_g5a_lampe_zone(RE15_G5A_SCHNITT9, -14000, -16800) == 1 && re15_g5a_lampe_zone(RE15_G5A_SCHNITT9, -15000, -16800) == 0 &&
+          re15_g5a_lampe_zone(RE15_G5A_SCHNITT9, -1000, -16800) == 1 && re15_g5a_lampe_zone(RE15_G5A_SCHNITT9, -32000, -32000) == 0 &&
+          re15_g5a_lampe_zone(0x0C, -5000, -16800) == 0, "%04X: NB5 Sichtpruefung FUN_8002c820 / Ankerzone RVD @0x45C falsch\n", raum);
+    /* NB5 M4: Beben je Vorlaufbild, Lampen vor dem ersten sub11-Bild, Lampe im Bild */
+    re15_g5a_beben_ton_hook = beben_ton_spion; s_beben_ton_n = 0; s_beben_ton_vl = -1;
+    int nb5_vl_letzt = 0;   /* letztes Vorlaufbild der Engine; die Armierung laeuft im Vorlaufbild nb5_vl_letzt + 1 ("Armierung nach N") */
+    int nb5_beben_falsch = 0, nb5_lampe_frueh = 0, nb5_lampe_vl2 = 0, nb5_fleck_n = 0, nb5_fleck_ok = 0;
+    float nb5_fleck_max = 0.0f;
+    for (unsigned k = 0; k < sizeof k_re2_fleck / sizeof k_re2_fleck[0]; k++) {   /* RE2-Lampenfleck im projizierten Gehaeusekasten */
+        int kx0, kx1, ky0, ky1;
+        nb5_fleck_n++;
+        if (!lampe_kasten(k16, k_re2_fleck[k].x, &kx0, &kx1, &ky0, &ky1)) continue;
+        const float dx = k_re2_fleck[k].sx < kx0 ? kx0 - k_re2_fleck[k].sx : (k_re2_fleck[k].sx > kx1 ? k_re2_fleck[k].sx - kx1 : 0.0f);
+        const float dy = k_re2_fleck[k].sy < ky0 ? ky0 - k_re2_fleck[k].sy : (k_re2_fleck[k].sy > ky1 ? k_re2_fleck[k].sy - ky1 : 0.0f);
+        const float d = dx > dy ? dx : dy;
+        if (d > nb5_fleck_max) nb5_fleck_max = d;
+        if (d <= 1.0f) nb5_fleck_ok++;
+        fprintf(stderr, "%04X: NB5 Lampe x %d: Gehaeusekasten Schnitt 16 (%d..%d, %d..%d), RE2-Aufnahme Fleck (%.1f,%.1f) Bild %d\n", raum,
+                (int)k_re2_fleck[k].x, kx0, kx1, ky0, ky1, k_re2_fleck[k].sx, k_re2_fleck[k].sy, k_re2_fleck[k].bild);
+    }
+    {   int32_t lp[3]; int16_t ld[3];
+        if (re15_g5a_beben() != 0 || re15_g5a_lampe(0, lp, ld) || re15_g5a_lampe(1, lp, ld)) nb5_lampe_frueh++; }
     for (vl = 1; vl <= 200 && re15_g5a_bild() < 0; vl++) {
         takt();
+        if (re15_g5a_vorlauf() >= 0) nb5_vl_letzt = re15_g5a_vorlauf();
+        {   const int v = re15_g5a_vorlauf(), sb = v - 1;   /* sub04-Bild sb = 1.. ab Vorlaufbild 2 (Task-Reihenfolge @0x800536c4) */
+            const int soll = (v >= 0 && sb >= 1 && sb <= 13) ? k_re2_beben[sb - 1] : 0;
+            if (v >= 0 && re15_g5a_beben() != soll) nb5_beben_falsch++;
+            int32_t lp[3]; int16_t ld[3];
+            if (v == 1 && (re15_g5a_lampe(0, lp, ld) || re15_g5a_lampe(1, lp, ld))) nb5_lampe_frueh++;
+            if (v == 2 && re15_g5a_lampe(0, lp, ld) && lp[0] == -5000) nb5_lampe_vl2 = 1; }
+
         if (vl == 1) banken_wie_main_c(1);                        /* ... und ist ab dem naechsten Bild geladen */
         if (re15_g5a_bild() < 0) {
             if (e->grid_id == 0x13u || e->x != -32000) vl_armiert++;
@@ -496,6 +600,18 @@ static void test_ablauf(const char *rdt, unsigned raum)
     CHECK(pl->x >= 1100 && pl->x <= 1700 && vl_spieler_im_bild > 20, "%04X: Spieler kommt nicht ins Bild nach 1400 (x %d, %d Bilder im Bild)",
           raum, (int)pl->x, vl_spieler_im_bild);
     CHECK(vl_frau_sichtbar == 0, "%04X: Frau im Kittel %d Vorlaufbilder sichtbar (M6)", raum, vl_frau_sichtbar);
+    fprintf(stderr, "%04X: NB5 Beben falsch in %d Vorlaufbildern, Ton %d x bei Vorlaufbild %d, Lampe vor sub11 %d, Vorlaufbild 2 x -5000 %d, "
+            "RE2-Lampenfleck im Gehaeusekasten %d/%d (max %.1f px daneben)\n", raum, nb5_beben_falsch, s_beben_ton_n, s_beben_ton_vl, nb5_lampe_frueh, nb5_lampe_vl2,
+            nb5_fleck_ok, nb5_fleck_n, nb5_fleck_max);
+    CHECK(nb5_beben_falsch == 0, "%04X: NB5 Beben in %d Vorlaufbildern nicht sub04 (-3,-5,5x-7,-6..-1 ab Vorlaufbild 2)", raum, nb5_beben_falsch);
+    CHECK(s_beben_ton_n == 1 && s_beben_ton_vl == 4, "%04X: NB5 Beben-Ton %d x bei Vorlaufbild %d statt 1 x bei 4 (Se_on @0x016AC, sub04-Bild 3)",
+          raum, s_beben_ton_n, s_beben_ton_vl);
+    CHECK(nb5_lampe_frueh == 0 && nb5_lampe_vl2, "%04X: NB5 Lampen vor dem ersten sub11-Bild gesetzt (%d) / Vorlaufbild 2 nicht x -5000",
+          raum, nb5_lampe_frueh);
+    CHECK(nb5_fleck_n == 3 && nb5_fleck_ok == 3, "%04X: NB5 RE2-Lampenfleck %d/%d im projizierten Gehaeusekasten (max %.1f px daneben)",
+          raum, nb5_fleck_ok, nb5_fleck_n, nb5_fleck_max);
+    const int nb5_vorlauf = nb5_vl_letzt + 1;   /* = "Armierung nach N Vorlaufbildern" (exe: 55); Lampen-Zeitachse ab dem Schnitt */
+    re15_g5a_beben_ton_hook = NULL;
 
     /* ---- SZENE ab der Armierung (Bild 0 ist schon gelaufen) ---- */
     FILE *spur = NULL;
@@ -525,9 +641,31 @@ static void test_ablauf(const char *rdt, unsigned raum)
     int16_t cam_bei[3] = { -1, -1, -1 };
     int32_t pl_x_bei[3] = { 0, 0, 0 };
     const float pfosten_schluessel = re15_pri_mask_camera_z_re2(100);   /* linker Pfosten: RE2-Masken depth 100 (M4) */
+    int nb5_n = 0, nb5_ok = 0, nb5_sicht = 0, nb5_sicht_spaet = 0;
     for (int b = 0; b <= RE15_G5A_BILD_ENDE + 40; b++) {    /* b = Szenenbild dieses KI-Durchlaufs (Bild 0 = Armierung, [T0]) */
         if (b > 0) takt();
         CHECK(b >= RE15_G5A_BILD_ENDE || re15_g5a_bild() == b, "%04X: Szenenbild %d statt %d", raum, re15_g5a_bild(), b);
+        {   /* NB5 M4: Objekt 3/4 gegen RE2-RAM; gezeichnet nur in Schnitt 16 mit Ankerzone (FUN_8002c820) */
+            int32_t p3[3], p4[3]; int16_t d3[3], d4[3];
+            const int a3 = re15_g5a_lampe(0, p3, d3), a4 = re15_g5a_lampe(1, p4, d4);
+            const int sicht = (a3 && re15_g5a_lampe_zone(g_scd.cam_id, p3[0], p3[2])) || (a4 && re15_g5a_lampe_zone(g_scd.cam_id, p4[0], p4[2]));
+            if (sicht) { nb5_sicht++; if (b > RE15_G5A_BILD_SCHNITT10) nb5_sicht_spaet++; }
+            for (unsigned k = 0; k < sizeof k_re2_lampen / sizeof k_re2_lampen[0]; k++) {
+                const int park = (k_re2_lampen[k].x3 == -32000);
+                /* Port-Lampenzeit ab dem Schnitt = Szenenbild + Vorlauf (+ VORSPRUNG - 2); fuer die exe (Vorlauf 55) ist das RE2s Szenenbild.
+                 * Laeuft der Vorlauf hier anders (Testtakt), steht dieselbe Lampenzeit um (55 - Vorlauf) Bilder verschoben. Das Parken haengt
+                 * am Schnitt 10 (Bild 437/438), nicht an der Lampenzeit. */
+                const int b_port = park ? k_re2_lampen[k].bild : k_re2_lampen[k].bild + NB5_VORLAUF_EXE - nb5_vorlauf;
+                if (b_port != b) continue;
+                const int ok3 = p3[0] == k_re2_lampen[k].x3 && p3[1] == (park ? 0 : -4400) && p3[2] == (park ? -32000 : -16800) &&
+                                (park || (d3[0] == 0x0C00 && d3[1] == 0x0C00 && d3[2] == 0x0400));
+                const int ok4 = p4[0] == k_re2_lampen[k].x4 && p4[1] == (park ? 0 : -4400) && p4[2] == (park ? -32000 : -16800) &&
+                                (park || (d4[0] == 0x0C00 && d4[1] == 0x0C00 && d4[2] == 0x0400));
+                nb5_n += 2; nb5_ok += ok3 + ok4;
+                if (!ok3 || !ok4)
+                    fprintf(stderr, "%04X: NB5 s%02d Bild %d: Port Objekt 3 (%d,%d,%d) Objekt 4 (%d,%d,%d) / RE2 %d / %d\n", raum, k_re2_lampen[k].s, b,
+                            (int)p3[0], (int)p3[1], (int)p3[2], (int)p4[0], (int)p4[1], (int)p4[2], (int)k_re2_lampen[k].x3, (int)k_re2_lampen[k].x4);
+            } }
         if (g_test_re2xa_count != xa_alt) {
             const int k = g_test_re2xa_count - xa_n0 - 1;
             if (k >= 0 && k < 2) { xa_bild[k] = b; xa_lese[k] = g_test_re2xa_lese; xa_datei[k] = g_test_re2xa_datei; }
@@ -825,6 +963,11 @@ static void test_ablauf(const char *rdt, unsigned raum)
     }
     /* M4: die Masse links im Bild liegt hinter der Pfostenmaske (depth 100, RE2-Regel) */
     CHECK(pfosten_n == 0 || pfosten_vor == pfosten_n, "%04X: M4 Masse in %d von %d Bildern vor dem Pfosten", raum, pfosten_n - pfosten_vor, pfosten_n);
+    fprintf(stderr, "%04X: NB5 Lampen gegen RE2-RAM %d von %d gleich (s03..s12), sichtbar (Ankerzone) in %d Szenenbildern, nach Bild 437: %d\n",
+            raum, nb5_ok, nb5_n, nb5_sicht, nb5_sicht_spaet);
+    CHECK(nb5_n == 20 && nb5_ok == 20, "%04X: NB5 Lampen %d von %d gleich RE2-RAM s03..s12 (Testvorlauf %d, exe %d)", raum, nb5_ok, nb5_n,
+          nb5_vorlauf, NB5_VORLAUF_EXE);
+    CHECK(nb5_sicht > 300 && nb5_sicht_spaet == 0, "%04X: NB5 Lampen sichtbar %d Bilder, nach Schnitt 10 %d", raum, nb5_sicht, nb5_sicht_spaet);
     CHECK(frau_sichtbar_re2 == 0 && frau_ok_cut12, "%04X: M6 Frau in 16/17 %d Bilder sichtbar, Cut 12 wie vorher %d", raum, frau_sichtbar_re2, frau_ok_cut12);
     CHECK(cam_bei[0] == RE15_G5A_SCHNITT10, "%04X: Bild 437 Cut %d statt Schnitt 17 (@0x0193A)", raum, cam_bei[0]);
     CHECK(cam_bei[1] == 0x0C && pl_x_bei[1] >= 15646 && pl_x_bei[1] <= 15800, "%04X: Bild 807 Cut %d Spieler %d statt Cut 12 / 15646",
@@ -842,9 +985,11 @@ int main(void)
 {
     test_daten();
     test_xa_daten();
+    test_m4_daten();
     test_ablauf("STAGE5/ROOM5090.RDT", 0x5090u);
     test_ablauf("STAGE5/ROOM5091.RDT", 0x5091u);
     free(s_ems);
+    free(s_lampe_md1_raw);
     if (fails) { fprintf(stderr, "test_r41_g5auftritt: %d Fehler\n", fails); return 1; }
     fprintf(stderr, "test_r41_g5auftritt: OK\n");
     return 0;

@@ -4148,6 +4148,7 @@ re_title:;
     { extern void re15_pc_gator_re2_init(void); re15_pc_gator_re2_init(); }   /* Runde 41 Spur B: GATOR40A0.VBS-Haken + Kanister-Modell */
     { extern void re15_pc_gatorszene_r41_init(void); re15_pc_gatorszene_r41_init(); }   /* Runde 41 Spur F: Gator-SE + Metalltuer der 2090-Ankunftsszene (gatorszene_r41_pc.c) */
     { extern void re15_pc_kanister2080_init(void); re15_pc_kanister2080_init(); }   /* Runde 41 Spur G: Knall (gen/knall_bank.inc Satz 0), Tuer-Ton DOOR06, Aufschlag, NPC-Schuss */
+    { extern void re15_pc_g5lampen_init(void); re15_pc_g5lampen_init(); }   /* Runde 41 G5A NB5: Beben-Ton R704_BEBEN.VBS */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -11465,6 +11466,7 @@ re_title:;
 
             re15_gr2_pc_zeichnen(&cam_view, cx, cy);   /* Runde 41 Spur B: Kanister-Prop (ROOM40A0 Modell 1) */
             { extern void re15_k2080_pc_zeichnen(const void *, int, int); re15_k2080_pc_zeichnen(&cam_view, cx, cy); }   /* Runde 41 Spur G: Kanister in 2080 */
+            { extern void re15_g5lampen_pc_zeichnen(const void *, int, int); re15_g5lampen_pc_zeichnen(&cam_view, cx, cy); }   /* Runde 41 G5A NB5: Tunnellampen ROOM7040 Obj 3/4 */
 
             /* Cut/player HUD + projection marker silenced. */
             (void)active_cut_count;
@@ -11800,6 +11802,7 @@ re_title:;
                   re15_render_pc_request_readback(p);
               } } }
 
+        { extern void re15_render_pc_beben(int dy); re15_render_pc_beben(re15_g5a_beben()); }   /* Runde 41 G5A NB5: RE2 sub04 Sce_shake_on */
         re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Absicherung (Bild ohne Spiel-Takt) */
         { extern void re15_render_pc_bild_halten(void);   /* Runde 41 Spur E: Apply-Bild @0x80021560 - kein DrawOTag, kein Pufferwechsel */
           extern void re15_render_pc_standbild(int bilder, uint32_t budget_ms, unsigned bild_nr);   /* NB4: Dauer @0x80021d2c/@0x80021e34 */
