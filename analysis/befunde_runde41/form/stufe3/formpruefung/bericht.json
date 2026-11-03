@@ -2,13 +2,13 @@
  "name": "BAHNSTEIG_FORM (Stufe 3)",
  "licht": "mess",
  "kennzahlen": {
-  "flaechen": 3642,
-  "dreiecke": 1194,
-  "vierecke": 2448,
+  "flaechen": 3780,
+  "dreiecke": 1254,
+  "vierecke": 2526,
   "knochen": 32,
   "meshes": 32,
   "textur": [
-   512,
+   1408,
    256
   ],
   "bpp": 8,
@@ -25,8 +25,8 @@
    1
   ],
   "rahmen": [
-   "3642 Flaechen, Rahmen rund 1900",
-   "Textur 512x256, Rahmen 384x256",
+   "3780 Flaechen, Rahmen rund 1900",
+   "Textur 1408x256, Rahmen 384x256",
    "Clip 0 hat 18 Bilder, gefordert 1"
   ],
   "boden_y": [
@@ -53,12 +53,12 @@
    0.825
   ],
   "umriss": {
-   "iou": 0.9538,
-   "weiss_gedeckt": 0.9588,
+   "iou": 0.9537,
+   "weiss_gedeckt": 0.9587,
    "weiss": 33511,
    "schwarz_getroffen": 174,
-   "render_pixel": 37848,
-   "render_auf_grau": 5545
+   "render_pixel": 37843,
+   "render_auf_grau": 5543
   },
   "weiss_fehlt": [
    [
@@ -763,14 +763,14 @@
     "flaeche": 278,
     "anteil_material": 0.662,
     "anteil_figur": 1.0,
-    "groesse": 0.57,
-    "lage_px": 3.5,
+    "groesse": 0.58,
+    "lage_px": 3.3,
     "sollmitte": [
      317,
      265
     ],
     "y_video": 130.0,
-    "y_render": 122.0,
+    "y_render": 124.0,
     "ok": true,
     "zaehlt": true
    },
@@ -781,14 +781,14 @@
     "flaeche": 257,
     "anteil_material": 0.089,
     "anteil_figur": 1.0,
-    "groesse": 0.01,
-    "lage_px": 19.5,
+    "groesse": 0.02,
+    "lage_px": 14.2,
     "sollmitte": [
      325,
      294
     ],
     "y_video": 172.0,
-    "y_render": 108.0,
+    "y_render": 118.0,
     "ok": false,
     "zaehlt": true
    },
@@ -797,17 +797,17 @@
     "material": "helle_baender",
     "sicherheit": "wahrscheinlich",
     "flaeche": 140,
-    "anteil_material": 0.493,
+    "anteil_material": 0.786,
     "anteil_figur": 1.0,
-    "groesse": 0.38,
-    "lage_px": 7.1,
+    "groesse": 0.64,
+    "lage_px": 3.4,
     "sollmitte": [
      320,
      303
     ],
     "y_video": 141.0,
-    "y_render": 124.0,
-    "ok": false,
+    "y_render": 138.0,
+    "ok": true,
     "zaehlt": true
    },
    {
@@ -842,7 +842,7 @@
      351
     ],
     "y_video": 134.0,
-    "y_render": 83.0,
+    "y_render": 98.0,
     "ok": false,
     "zaehlt": true
    },
@@ -878,7 +878,7 @@
      384
     ],
     "y_video": 56.0,
-    "y_render": 62.0,
+    "y_render": 61.0,
     "ok": false,
     "zaehlt": false
    },
@@ -887,16 +887,16 @@
     "material": "feine_linien",
     "sicherheit": "wahrscheinlich",
     "flaeche": 378,
-    "anteil_material": 0.063,
+    "anteil_material": 0.119,
     "anteil_figur": 0.413,
-    "groesse": 0.18,
-    "lage_px": 20.0,
+    "groesse": 0.15,
+    "lage_px": 10.4,
     "sollmitte": [
      243,
      367
     ],
     "y_video": 101.0,
-    "y_render": 161.0,
+    "y_render": 154.0,
     "ok": false,
     "zaehlt": true
    },
@@ -907,14 +907,14 @@
     "flaeche": 212,
     "anteil_material": 0.481,
     "anteil_figur": 1.0,
-    "groesse": 0.07,
-    "lage_px": 1.7,
+    "groesse": 0.08,
+    "lage_px": 8.1,
     "sollmitte": [
      258,
      286
     ],
     "y_video": 96.0,
-    "y_render": 75.0,
+    "y_render": 78.0,
     "ok": false,
     "zaehlt": true
    },
@@ -923,17 +923,17 @@
     "material": "z9",
     "sicherheit": "wahrscheinlich",
     "flaeche": 230,
-    "anteil_material": 0.652,
+    "anteil_material": 0.448,
     "anteil_figur": 0.913,
-    "groesse": 0.28,
-    "lage_px": 15.7,
+    "groesse": 0.17,
+    "lage_px": 13.1,
     "sollmitte": [
      416,
      253
     ],
     "y_video": 55.0,
-    "y_render": 58.0,
-    "ok": true,
+    "y_render": 55.0,
+    "ok": false,
     "zaehlt": true
    }
   ],
@@ -941,14 +941,14 @@
    {
     "id": "N2",
     "text": "right_arm unter Z5 ohne Band (384-411,302-354)",
-    "anteil_hell": 0.106,
-    "ok": false,
+    "anteil_hell": 0.031,
+    "ok": true,
     "zaehlt": true,
     "sicherheit": "sicher"
    }
   ],
-  "mae_weiss": 24.8,
-  "ncc_weiss": 0.589
+  "mae_weiss": 23.5,
+  "ncc_weiss": 0.63
  },
  "bild2": {
   "lage": [
@@ -966,12 +966,12 @@
    1.004
   ],
   "umriss": {
-   "iou": 0.948,
-   "weiss_gedeckt": 0.9519,
+   "iou": 0.9485,
+   "weiss_gedeckt": 0.9523,
    "weiss": 45465,
    "schwarz_getroffen": 183,
-   "render_pixel": 48979,
-   "render_auf_grau": 5520
+   "render_pixel": 48929,
+   "render_auf_grau": 5450
   },
   "weiss_fehlt": [
    [
@@ -1433,7 +1433,7 @@
      192
     ],
     "y_video": 58.0,
-    "y_render": 99.0,
+    "y_render": 101.0,
     "ok": false,
     "zaehlt": true
    },
@@ -1442,10 +1442,10 @@
     "material": "rotbraun_mittelton",
     "sicherheit": "wahrscheinlich",
     "flaeche": 1856,
-    "anteil_material": 0.626,
+    "anteil_material": 0.668,
     "anteil_figur": 1.0,
     "groesse": 0.25,
-    "lage_px": 6.4,
+    "lage_px": 8.4,
     "sollmitte": [
      322,
      179
@@ -1469,7 +1469,7 @@
      205
     ],
     "y_video": 50.0,
-    "y_render": 26.0,
+    "y_render": 19.0,
     "ok": false,
     "zaehlt": true
    },
@@ -1496,16 +1496,16 @@
     "material": "feine_linien",
     "sicherheit": "wahrscheinlich",
     "flaeche": 682,
-    "anteil_material": 0.226,
+    "anteil_material": 0.028,
     "anteil_figur": 1.0,
     "groesse": 0.06,
-    "lage_px": 2.3,
+    "lage_px": 14.1,
     "sollmitte": [
      378,
      267
     ],
     "y_video": 34.0,
-    "y_render": 26.0,
+    "y_render": 23.0,
     "ok": false,
     "zaehlt": true
    },
@@ -1516,14 +1516,14 @@
     "flaeche": 911,
     "anteil_material": 1.0,
     "anteil_figur": 1.0,
-    "groesse": 1.95,
-    "lage_px": 7.4,
+    "groesse": 1.99,
+    "lage_px": 5.9,
     "sollmitte": [
      313,
      341
     ],
     "y_video": 113.0,
-    "y_render": 89.0,
+    "y_render": 101.0,
     "ok": true,
     "zaehlt": true
    },
@@ -1533,7 +1533,7 @@
     "sicherheit": "wahrscheinlich",
     "flaeche": 174,
     "anteil_material": 0.0,
-    "anteil_figur": 0.897,
+    "anteil_figur": 0.77,
     "groesse": 0.0,
     "lage_px": null,
     "sollmitte": [
@@ -1541,7 +1541,7 @@
      304
     ],
     "y_video": 116.0,
-    "y_render": 27.0,
+    "y_render": 26.0,
     "ok": false,
     "zaehlt": true
    }
@@ -1550,14 +1550,14 @@
    {
     "id": "N1",
     "text": "Rumpfinneres ohne Zeichnung (290-340,225-280)",
-    "anteil_hell": 0.278,
+    "anteil_hell": 0.201,
     "ok": false,
     "zaehlt": true,
     "sicherheit": "sicher"
    }
   ],
-  "mae_weiss": 13.9,
-  "ncc_weiss": 0.647
+  "mae_weiss": 13.3,
+  "ncc_weiss": 0.673
  },
  "teile": {
   "bild1": {
@@ -1775,7 +1775,7 @@
       "right_arm": 0.017,
       "right_leg": 0.014,
       "tail": 0.008,
-      "face_and_upper_body": 0.023
+      "face_and_upper_body": 0.022
      },
      "leer": 0.002,
      "merkmale": [],
@@ -1879,7 +1879,7 @@
      },
      "leer": 0.021,
      "merkmale": [],
-     "render_px": 5420,
+     "render_px": 5419,
      "allein_px": 6119,
      "deckung": 0.908,
      "kern_deckung": 0.953,
@@ -2737,27 +2737,28 @@
       "left_arm_front": 48,
       "right_arm_front": 27
      },
-     "treffer_px": 25546,
-     "iou": 0.712,
+     "treffer_px": 24670,
+     "iou": 0.698,
      "fremd": {
-      "right_arm_front": 0.006,
-      "right_leg": 0.002,
-      "right_arm": 0.125
+      "right_arm_front": 0.012,
+      "right_leg": 0.004,
+      "right_arm": 0.149
      },
-     "leer": 0.014,
+     "leer": 0.013,
      "merkmale": [],
-     "render_px": 31453,
-     "allein_px": 35702,
-     "deckung": 0.852,
-     "kern_deckung": 0.861,
-     "innen": 0.812,
-     "innen_saum": 0.849,
-     "verdeckt": 0.119,
+     "render_px": 30036,
+     "allein_px": 35379,
+     "deckung": 0.823,
+     "kern_deckung": 0.833,
+     "innen": 0.821,
+     "innen_saum": 0.857,
+     "verdeckt": 0.151,
      "verdeckt_von": {
-      "left_arm_front": 0.004,
-      "right_arm_front": 0.007,
-      "right_leg": 0.0,
-      "right_arm": 0.108
+      "left_arm_front": 0.009,
+      "right_arm_front": 0.008,
+      "left_leg": 0.0,
+      "right_leg": 0.004,
+      "right_arm": 0.131
      },
      "schwerpunkt": {
       "soll": [
@@ -2765,25 +2766,25 @@
        249.5
       ],
       "ist": [
-       310.8,
-       264.1
+       310.5,
+       262.0
       ],
-      "dx": 5.1,
-      "dy": 14.5,
-      "abstand": 15.4
+      "dx": 4.8,
+      "dy": 12.5,
+      "abstand": 13.4
      },
      "achse": {
       "soll_grad": 132.3,
-      "ist_grad": 124.7,
-      "abweichung_grad": 7.6,
-      "quer_px": -13.5,
-      "laengs_px": 7.3,
+      "ist_grad": 125.3,
+      "abweichung_grad": 7.0,
+      "quer_px": -11.9,
+      "laengs_px": 6.0,
       "laenge": [
-       233.7,
+       234.3,
        219.8
       ],
       "breite": [
-       176.5,
+       177.1,
        160.3
       ],
       "streckung_soll": 1.41
@@ -2812,12 +2813,12 @@
         374
        ],
        "ist": [
-        257,
-        400
+        253,
+        402
        ],
-       "dx": 21,
-       "dy": 26,
-       "abstand": 33.4,
+       "dx": 17,
+       "dy": 28,
+       "abstand": 32.8,
        "sichtbar": true,
        "unter_logo": false
       }
@@ -2840,23 +2841,23 @@
      "geteilt": {
       "face_and_upper_body": 48
      },
-     "treffer_px": 4189,
-     "iou": 0.692,
+     "treffer_px": 4340,
+     "iou": 0.714,
      "fremd": {
-      "face_and_upper_body": 0.184,
+      "face_and_upper_body": 0.157,
       "left_leg": 0.003
      },
      "leer": 0.059,
      "merkmale": [],
-     "render_px": 4681,
+     "render_px": 4856,
      "allein_px": 6318,
-     "deckung": 0.754,
-     "kern_deckung": 0.811,
-     "innen": 0.895,
+     "deckung": 0.781,
+     "kern_deckung": 0.84,
+     "innen": 0.894,
      "innen_saum": 0.971,
-     "verdeckt": 0.259,
+     "verdeckt": 0.231,
      "verdeckt_von": {
-      "face_and_upper_body": 0.259
+      "face_and_upper_body": 0.232
      },
      "schwerpunkt": {
       "soll": [
@@ -2864,25 +2865,25 @@
        344.2
       ],
       "ist": [
-       414.9,
-       357.8
+       413.6,
+       355.5
       ],
-      "dx": 5.3,
-      "dy": 13.6,
-      "abstand": 14.6
+      "dx": 4.0,
+      "dy": 11.3,
+      "abstand": 12.0
      },
      "achse": {
       "soll_grad": 66.4,
-      "ist_grad": 57.0,
-      "abweichung_grad": 9.4,
-      "quer_px": 0.5,
-      "laengs_px": 14.6,
+      "ist_grad": 57.5,
+      "abweichung_grad": 9.0,
+      "quer_px": 0.9,
+      "laengs_px": 12.0,
       "laenge": [
-       135.0,
+       145.6,
        153.0
       ],
       "breite": [
-       47.6,
+       47.3,
        52.4
       ],
       "streckung_soll": 3.26
@@ -2966,29 +2967,29 @@
      "geteilt": {
       "face_and_upper_body": 27
      },
-     "treffer_px": 6163,
-     "iou": 0.595,
+     "treffer_px": 6225,
+     "iou": 0.588,
      "fremd": {
-      "face_and_upper_body": 0.236
+      "face_and_upper_body": 0.228
      },
-     "leer": 0.144,
+     "leer": 0.146,
      "merkmale": [
       {
        "name": "Y Hand",
        "flaeche": 4280,
-       "gedeckt": 0.772
+       "gedeckt": 0.775
       }
      ],
-     "render_px": 6585,
+     "render_px": 6877,
      "allein_px": 12138,
-     "deckung": 0.62,
-     "kern_deckung": 0.707,
-     "innen": 0.936,
-     "innen_saum": 0.98,
-     "verdeckt": 0.397,
+     "deckung": 0.627,
+     "kern_deckung": 0.706,
+     "innen": 0.905,
+     "innen_saum": 0.959,
+     "verdeckt": 0.373,
      "verdeckt_von": {
-      "face_and_upper_body": 0.381,
-      "right_arm": 0.017
+      "face_and_upper_body": 0.331,
+      "right_arm": 0.043
      },
      "schwerpunkt": {
       "soll": [
@@ -2996,25 +2997,25 @@
        396.5
       ],
       "ist": [
-       213.0,
-       404.5
+       216.7,
+       402.4
       ],
-      "dx": -16.1,
-      "dy": 8.0,
-      "abstand": 18.0
+      "dx": -12.5,
+      "dy": 5.9,
+      "abstand": 13.8
      },
      "achse": {
       "soll_grad": 162.7,
-      "ist_grad": 7.6,
-      "abweichung_grad": 24.9,
-      "quer_px": -2.9,
-      "laengs_px": 17.8,
+      "ist_grad": 173.7,
+      "abweichung_grad": 10.9,
+      "quer_px": -2.0,
+      "laengs_px": 13.7,
       "laenge": [
-       130.8,
+       165.8,
        188.1
       ],
       "breite": [
-       84.3,
+       102.3,
        109.6
       ],
       "streckung_soll": 1.91
@@ -3119,8 +3120,8 @@
      ]
     }
    ],
-   "trefferquote": 0.79,
-   "iou_mittel": 0.666
+   "trefferquote": 0.775,
+   "iou_mittel": 0.667
   }
  }
 }

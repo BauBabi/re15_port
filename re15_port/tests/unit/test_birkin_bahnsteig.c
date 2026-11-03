@@ -1308,11 +1308,11 @@ static void test_flucht(unsigned raum, const char *rdt)
 
 /* ---- Nachbesserung 1 (Abnahme 1 der Stufe 3, M3/M6/M7/M8a, Kopf-Folgen D) ------------------------------------------- */
 
-/* D: Biss am Kiefer (Teil 23 + (911,-75,0), Radius 1500 @0x80104f88-a4). Gegenprobe: am alten Brustpunkt Teil 10 + (1400,0,0) haette
+/* D: Biss am Kiefer (Teil 23 + (928,-85,0) = Zahnreihen-Mitte Kopf K4 (NB2; K3: (911,-75,0)), Radius 1500 @0x80104f88-a4). Gegenprobe: am alten Brustpunkt Teil 10 + (1400,0,0) haette
  * der Spieler getroffen werden muessen, am Kiefer nicht -> kein Treffer. Und: Spieler an der gezeichneten Kieferspitze -> Treffer. */
 static int biss_lauf(re15_actor_t *b, re15_actor_t *pl, int32_t abstand, int32_t *kiefer_min, int32_t *brust_min)
 {
-    static const int32_t spitze[3] = { 911, -75, 0 }, brust[3] = { 1400, 0, 0 };
+    static const int32_t spitze[3] = { 928, -85, 0 }, brust[3] = { 1400, 0, 0 };
     int hp0, f, getroffen = 0;
     beruhigen(b, pl, 30);
     stelle(b, pl, abstand);

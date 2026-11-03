@@ -24,7 +24,10 @@ J_DIR = os.path.join(FORM_DIR, 'varianten/J_dicker')
 K3_DIR = os.path.join(FORM_DIR, 'varianten/K_alligator/K3_fit')
 # Basis des Spiel-Assets: K3_fit mit neuer Textur-UV der 31 Gelenkkoerper und geklemmter Kopfnaht (stufe3/gen/s3_n1_textur.py bauen
 # ../basis_n1; Nutzerbefund "Texturen kaputt": Schachbrett aus gedrehten Fleckstuecken an Hals, Schulter, Gelenken)
-BASIS_DIR = os.path.join(FORM_DIR, 'stufe3/basis_n1')
+# Nachbesserung 2 (E22): Kopf K4 (Krokodilkeil, varianten/K_alligator/K4_kroko, Kopfart 'kroko' in k_form) und Textur-Bau
+# s3_n2_textur.py bauen (Gelenkkoerper-Hautkacheln, haut_stoff auf Seite 3, Kappen planar) -> stufe3/basis_n2. basis_n1 bleibt als Stand NB1.
+K4_DIR = os.path.join(FORM_DIR, 'varianten/K_alligator/K4_kroko')
+BASIS_DIR = os.path.join(FORM_DIR, 'stufe3/basis_n2')
 RUHE_KIEFER = [0, 0, 0]
 sys.path.insert(0, os.path.join(WURZEL, 're15_port/tools'))
 import form_emd as FE           # noqa: E402

@@ -1,0 +1,1829 @@
+{
+ "J": {
+  "5080_g0": {
+   "_haut_kante": {
+    "kante": 9.4,
+    "innen": 0.0,
+    "kante_px": 7053,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 8.6,
+    "innen": 4.4,
+    "kante_px": 3307,
+    "mosaik": 4.64,
+    "px": 32883,
+    "texel_px": 3.54,
+    "block": 32.0
+   },
+   "schwanz": {
+    "kante": 7.1,
+    "innen": 4.6,
+    "kante_px": 2105,
+    "mosaik": 4.99,
+    "px": 10713,
+    "texel_px": 2.71,
+    "block": 22.9
+   },
+   "beine": {
+    "kante": 13.8,
+    "innen": 7.4,
+    "kante_px": 1641,
+    "mosaik": 9.04,
+    "px": 10120,
+    "texel_px": 2.45,
+    "block": 30.3
+   },
+   "_gesamt": {
+    "kante": 9.4,
+    "innen": 5.0,
+    "mosaik": 5.54,
+    "px": 53716,
+    "texel_px": 3.17,
+    "block": 29.8
+   }
+  },
+  "5080_g1024": {
+   "_haut_kante": {
+    "kante": 10.2,
+    "innen": 0.0,
+    "kante_px": 8795,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 10.2,
+    "innen": 5.3,
+    "kante_px": 1858,
+    "mosaik": 5.86,
+    "px": 14345,
+    "texel_px": 3.02,
+    "block": 28.8
+   },
+   "schwanz": {
+    "kante": 8.7,
+    "innen": 2.4,
+    "kante_px": 3814,
+    "mosaik": 3.49,
+    "px": 23307,
+    "texel_px": 4.12,
+    "block": 27.7
+   },
+   "beine": {
+    "kante": 13.1,
+    "innen": 9.1,
+    "kante_px": 2002,
+    "mosaik": 10.45,
+    "px": 10705,
+    "texel_px": 2.04,
+    "block": 28.1
+   },
+   "arme": {
+    "kante": 10.0,
+    "innen": 5.5,
+    "kante_px": 1077,
+    "mosaik": 6.34,
+    "px": 6004,
+    "texel_px": 2.44,
+    "block": 25.9
+   },
+   "klauen": {
+    "kante": 12.0,
+    "innen": 7.7,
+    "kante_px": 44,
+    "mosaik": 20.11,
+    "px": 194,
+    "texel_px": 1.55,
+    "block": 23.1
+   },
+   "_gesamt": {
+    "kante": 10.2,
+    "innen": 4.7,
+    "mosaik": 5.85,
+    "px": 54555,
+    "texel_px": 3.23,
+    "block": 27.9
+   }
+  },
+  "5080_g2048": {
+   "_haut_kante": {
+    "kante": 11.9,
+    "innen": 0.0,
+    "kante_px": 11533,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 10.7,
+    "innen": 7.3,
+    "kante_px": 4028,
+    "mosaik": 6.89,
+    "px": 35775,
+    "texel_px": 3.08,
+    "block": 44.8
+   },
+   "schwanz": {
+    "kante": 6.7,
+    "innen": 2.5,
+    "kante_px": 1304,
+    "mosaik": 3.2,
+    "px": 8606,
+    "texel_px": 4.18,
+    "block": 30.0
+   },
+   "beine": {
+    "kante": 15.0,
+    "innen": 8.7,
+    "kante_px": 1968,
+    "mosaik": 10.07,
+    "px": 12380,
+    "texel_px": 2.48,
+    "block": 35.9
+   },
+   "arme": {
+    "kante": 13.5,
+    "innen": 8.7,
+    "kante_px": 2703,
+    "mosaik": 8.71,
+    "px": 17647,
+    "texel_px": 2.55,
+    "block": 37.1
+   },
+   "klauen": {
+    "kante": 16.5,
+    "innen": 10.5,
+    "kante_px": 413,
+    "mosaik": 15.07,
+    "px": 2028,
+    "texel_px": 1.98,
+    "block": 29.8
+   },
+   "hals": {
+    "kante": 12.7,
+    "innen": 7.1,
+    "kante_px": 236,
+    "mosaik": 7.19,
+    "px": 1201,
+    "texel_px": 2.75,
+    "block": 30.8
+   },
+   "kopf": {
+    "kante": 11.7,
+    "innen": 8.9,
+    "kante_px": 816,
+    "mosaik": 9.13,
+    "px": 4085,
+    "texel_px": 2.04,
+    "block": 28.0
+   },
+   "kiefer": {
+    "kante": 6.9,
+    "innen": 6.6,
+    "kante_px": 65,
+    "mosaik": 6.72,
+    "px": 395,
+    "texel_px": 1.49,
+    "block": 14.1
+   },
+   "_gesamt": {
+    "kante": 11.9,
+    "innen": 7.4,
+    "mosaik": 7.69,
+    "px": 82117,
+    "texel_px": 2.9,
+    "block": 38.5
+   }
+  },
+  "5080_g3072": {
+   "_haut_kante": {
+    "kante": 13.1,
+    "innen": 0.0,
+    "kante_px": 11191,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 18.3,
+    "innen": 5.8,
+    "kante_px": 1689,
+    "mosaik": 7.05,
+    "px": 14887,
+    "texel_px": 5.7,
+    "block": 77.2
+   },
+   "arme": {
+    "kante": 15.9,
+    "innen": 6.2,
+    "kante_px": 2138,
+    "mosaik": 7.45,
+    "px": 25714,
+    "texel_px": 5.38,
+    "block": 87.2
+   },
+   "klauen": {
+    "kante": 22.2,
+    "innen": 7.4,
+    "kante_px": 473,
+    "mosaik": 11.56,
+    "px": 2506,
+    "texel_px": 3.93,
+    "block": 76.7
+   },
+   "hals": {
+    "kante": 13.4,
+    "innen": 2.9,
+    "kante_px": 110,
+    "mosaik": 6.88,
+    "px": 329,
+    "texel_px": 2.57,
+    "block": 18.6
+   },
+   "kopf": {
+    "kante": 10.5,
+    "innen": 2.9,
+    "kante_px": 4651,
+    "mosaik": 3.73,
+    "px": 56000,
+    "texel_px": 7.52,
+    "block": 71.2
+   },
+   "kiefer": {
+    "kante": 9.7,
+    "innen": 1.8,
+    "kante_px": 2130,
+    "mosaik": 2.66,
+    "px": 24927,
+    "texel_px": 7.93,
+    "block": 57.0
+   },
+   "_gesamt": {
+    "kante": 13.1,
+    "innen": 3.7,
+    "mosaik": 4.85,
+    "px": 124363,
+    "texel_px": 6.86,
+    "block": 73.3
+   }
+  },
+  "5090_g3874": {
+   "_haut_kante": {
+    "kante": 15.8,
+    "innen": 0.0,
+    "kante_px": 8221,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 13.5,
+    "innen": 9.1,
+    "kante_px": 1657,
+    "mosaik": 8.76,
+    "px": 9030,
+    "texel_px": 2.07,
+    "block": 30.9
+   },
+   "schwanz": {
+    "kante": 50.7,
+    "innen": 0.0,
+    "kante_px": 7,
+    "mosaik": 14.3,
+    "px": 10,
+    "texel_px": 1.3,
+    "block": 10.8
+   },
+   "beine": {
+    "kante": 13.8,
+    "innen": 12.2,
+    "kante_px": 707,
+    "mosaik": 12.8,
+    "px": 2550,
+    "texel_px": 1.39,
+    "block": 21.6
+   },
+   "arme": {
+    "kante": 20.7,
+    "innen": 14.3,
+    "kante_px": 2062,
+    "mosaik": 14.14,
+    "px": 11038,
+    "texel_px": 2.17,
+    "block": 44.9
+   },
+   "klauen": {
+    "kante": 15.7,
+    "innen": 9.8,
+    "kante_px": 986,
+    "mosaik": 13.66,
+    "px": 4506,
+    "texel_px": 2.32,
+    "block": 39.5
+   },
+   "hals": {
+    "kante": 38.2,
+    "innen": 16.8,
+    "kante_px": 173,
+    "mosaik": 18.44,
+    "px": 779,
+    "texel_px": 1.66,
+    "block": 45.4
+   },
+   "kopf": {
+    "kante": 14.0,
+    "innen": 7.4,
+    "kante_px": 1939,
+    "mosaik": 8.03,
+    "px": 8345,
+    "texel_px": 2.48,
+    "block": 31.9
+   },
+   "kiefer": {
+    "kante": 8.3,
+    "innen": 3.7,
+    "kante_px": 690,
+    "mosaik": 4.21,
+    "px": 3159,
+    "texel_px": 2.57,
+    "block": 20.6
+   },
+   "_gesamt": {
+    "kante": 15.8,
+    "innen": 10.2,
+    "mosaik": 10.76,
+    "px": 39417,
+    "texel_px": 2.2,
+    "block": 35.0
+   }
+  },
+  "5090_g802": {
+   "_haut_kante": {
+    "kante": 15.4,
+    "innen": 0.0,
+    "kante_px": 8071,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 8.4,
+    "innen": 5.6,
+    "kante_px": 2157,
+    "mosaik": 5.62,
+    "px": 13479,
+    "texel_px": 2.2,
+    "block": 21.0
+   },
+   "schwanz": {
+    "kante": 8.5,
+    "innen": 5.4,
+    "kante_px": 1130,
+    "mosaik": 6.37,
+    "px": 4786,
+    "texel_px": 1.84,
+    "block": 16.5
+   },
+   "beine": {
+    "kante": 16.0,
+    "innen": 11.2,
+    "kante_px": 364,
+    "mosaik": 13.74,
+    "px": 1618,
+    "texel_px": 1.49,
+    "block": 23.5
+   },
+   "arme": {
+    "kante": 20.4,
+    "innen": 12.4,
+    "kante_px": 2300,
+    "mosaik": 12.67,
+    "px": 13231,
+    "texel_px": 2.44,
+    "block": 47.9
+   },
+   "klauen": {
+    "kante": 25.5,
+    "innen": 15.8,
+    "kante_px": 561,
+    "mosaik": 21.78,
+    "px": 2159,
+    "texel_px": 2.19,
+    "block": 57.1
+   },
+   "hals": {
+    "kante": 22.6,
+    "innen": 10.4,
+    "kante_px": 521,
+    "mosaik": 10.04,
+    "px": 4147,
+    "texel_px": 3.46,
+    "block": 52.8
+   },
+   "kopf": {
+    "kante": 18.6,
+    "innen": 11.7,
+    "kante_px": 937,
+    "mosaik": 12.88,
+    "px": 4597,
+    "texel_px": 2.13,
+    "block": 37.1
+   },
+   "kiefer": {
+    "kante": 7.1,
+    "innen": 5.1,
+    "kante_px": 101,
+    "mosaik": 6.9,
+    "px": 445,
+    "texel_px": 1.6,
+    "block": 13.1
+   },
+   "_gesamt": {
+    "kante": 15.4,
+    "innen": 9.4,
+    "mosaik": 10.05,
+    "px": 44462,
+    "texel_px": 2.31,
+    "block": 34.4
+   }
+  },
+  "5090_g1826": {
+   "_haut_kante": {
+    "kante": 9.7,
+    "innen": 0.0,
+    "kante_px": 5358,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 8.7,
+    "innen": 6.1,
+    "kante_px": 2065,
+    "mosaik": 5.9,
+    "px": 11958,
+    "texel_px": 1.97,
+    "block": 19.1
+   },
+   "schwanz": {
+    "kante": 8.6,
+    "innen": 3.8,
+    "kante_px": 1845,
+    "mosaik": 5.19,
+    "px": 9394,
+    "texel_px": 2.83,
+    "block": 24.3
+   },
+   "beine": {
+    "kante": 16.5,
+    "innen": 9.2,
+    "kante_px": 346,
+    "mosaik": 13.65,
+    "px": 1572,
+    "texel_px": 1.56,
+    "block": 21.9
+   },
+   "arme": {
+    "kante": 11.2,
+    "innen": 8.1,
+    "kante_px": 1017,
+    "mosaik": 8.87,
+    "px": 5173,
+    "texel_px": 1.72,
+    "block": 20.8
+   },
+   "klauen": {
+    "kante": 21.4,
+    "innen": 17.7,
+    "kante_px": 50,
+    "mosaik": 27.08,
+    "px": 194,
+    "texel_px": 1.31,
+    "block": 28.0
+   },
+   "hals": {
+    "kante": 9.1,
+    "innen": 3.8,
+    "kante_px": 35,
+    "mosaik": 6.9,
+    "px": 167,
+    "texel_px": 2.41,
+    "block": 19.9
+   },
+   "_gesamt": {
+    "kante": 9.7,
+    "innen": 5.9,
+    "mosaik": 6.78,
+    "px": 28458,
+    "texel_px": 2.19,
+    "block": 21.0
+   }
+  }
+ },
+ "NB1": {
+  "5080_g0": {
+   "_gelenk_grenze": {
+    "kante": 13.6,
+    "innen": 0.0,
+    "kante_px": 2831,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 9.5,
+    "innen": 0.0,
+    "kante_px": 4163,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "gelenk": {
+    "kante": 11.5,
+    "innen": 1.2,
+    "kante_px": 2536,
+    "mosaik": 3.8,
+    "px": 17327,
+    "texel_px": 9.59,
+    "block": 68.9
+   },
+   "rumpf": {
+    "kante": 9.3,
+    "innen": 4.3,
+    "kante_px": 2500,
+    "mosaik": 4.57,
+    "px": 23154,
+    "texel_px": 3.58,
+    "block": 32.4
+   },
+   "schwanz": {
+    "kante": 8.8,
+    "innen": 4.4,
+    "kante_px": 1629,
+    "mosaik": 5.44,
+    "px": 7745,
+    "texel_px": 2.69,
+    "block": 22.0
+   },
+   "beine": {
+    "kante": 14.9,
+    "innen": 7.2,
+    "kante_px": 1408,
+    "mosaik": 9.13,
+    "px": 8382,
+    "texel_px": 2.49,
+    "block": 30.6
+   },
+   "_gesamt": {
+    "kante": 11.0,
+    "innen": 3.8,
+    "mosaik": 5.13,
+    "px": 56608,
+    "texel_px": 5.14,
+    "block": 34.2
+   }
+  },
+  "5080_g1024": {
+   "_gelenk_grenze": {
+    "kante": 17.2,
+    "innen": 0.0,
+    "kante_px": 2983,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 9.2,
+    "innen": 0.0,
+    "kante_px": 4982,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 11.4,
+    "innen": 5.2,
+    "kante_px": 1523,
+    "mosaik": 5.81,
+    "px": 11800,
+    "texel_px": 3.08,
+    "block": 30.1
+   },
+   "gelenk": {
+    "kante": 12.7,
+    "innen": 1.6,
+    "kante_px": 3131,
+    "mosaik": 5.32,
+    "px": 15597,
+    "texel_px": 6.72,
+    "block": 56.8
+   },
+   "schwanz": {
+    "kante": 9.9,
+    "innen": 2.2,
+    "kante_px": 2987,
+    "mosaik": 3.62,
+    "px": 17924,
+    "texel_px": 4.17,
+    "block": 28.0
+   },
+   "beine": {
+    "kante": 14.1,
+    "innen": 9.1,
+    "kante_px": 1369,
+    "mosaik": 10.63,
+    "px": 7592,
+    "texel_px": 2.11,
+    "block": 29.0
+   },
+   "arme": {
+    "kante": 9.2,
+    "innen": 4.6,
+    "kante_px": 566,
+    "mosaik": 6.0,
+    "px": 3138,
+    "texel_px": 2.49,
+    "block": 24.4
+   },
+   "klauen": {
+    "kante": 13.4,
+    "innen": 6.3,
+    "kante_px": 44,
+    "mosaik": 24.42,
+    "px": 194,
+    "texel_px": 1.55,
+    "block": 29.3
+   },
+   "_gesamt": {
+    "kante": 11.9,
+    "innen": 3.8,
+    "mosaik": 5.7,
+    "px": 56245,
+    "texel_px": 4.27,
+    "block": 31.9
+   }
+  },
+  "5080_g2048": {
+   "_gelenk_grenze": {
+    "kante": 29.3,
+    "innen": 0.0,
+    "kante_px": 3409,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 13.7,
+    "innen": 0.0,
+    "kante_px": 6636,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 17.9,
+    "innen": 6.8,
+    "kante_px": 3050,
+    "mosaik": 7.14,
+    "px": 24998,
+    "texel_px": 3.16,
+    "block": 44.7
+   },
+   "gelenk": {
+    "kante": 18.4,
+    "innen": 2.1,
+    "kante_px": 4597,
+    "mosaik": 5.87,
+    "px": 28508,
+    "texel_px": 7.91,
+    "block": 73.4
+   },
+   "schwanz": {
+    "kante": 9.5,
+    "innen": 2.1,
+    "kante_px": 1010,
+    "mosaik": 3.3,
+    "px": 5911,
+    "texel_px": 4.29,
+    "block": 28.4
+   },
+   "beine": {
+    "kante": 16.3,
+    "innen": 8.2,
+    "kante_px": 1474,
+    "mosaik": 10.2,
+    "px": 9348,
+    "texel_px": 2.49,
+    "block": 34.5
+   },
+   "arme": {
+    "kante": 14.8,
+    "innen": 9.0,
+    "kante_px": 1768,
+    "mosaik": 9.01,
+    "px": 12031,
+    "texel_px": 2.69,
+    "block": 41.6
+   },
+   "klauen": {
+    "kante": 14.4,
+    "innen": 9.3,
+    "kante_px": 411,
+    "mosaik": 14.41,
+    "px": 2052,
+    "texel_px": 1.9,
+    "block": 29.2
+   },
+   "kopf": {
+    "kante": 41.8,
+    "innen": 12.5,
+    "kante_px": 491,
+    "mosaik": 18.24,
+    "px": 2483,
+    "texel_px": 1.19,
+    "block": 22.9
+   },
+   "kiefer": {
+    "kante": 27.8,
+    "innen": 20.0,
+    "kante_px": 132,
+    "mosaik": 27.83,
+    "px": 744,
+    "texel_px": 1.09,
+    "block": 34.6
+   },
+   "hals": {
+    "kante": 6.7,
+    "innen": 0.0,
+    "kante_px": 1,
+    "mosaik": 9.57,
+    "px": 4,
+    "texel_px": 1.55,
+    "block": 23.1
+   },
+   "_gesamt": {
+    "kante": 18.3,
+    "innen": 5.6,
+    "mosaik": 7.72,
+    "px": 86079,
+    "texel_px": 4.57,
+    "block": 43.6
+   }
+  },
+  "5080_g3072": {
+   "_gelenk_grenze": {
+    "kante": 31.5,
+    "innen": 0.0,
+    "kante_px": 1775,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 21.6,
+    "innen": 0.0,
+    "kante_px": 9066,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "gelenk": {
+    "kante": 22.0,
+    "innen": 1.0,
+    "kante_px": 3388,
+    "mosaik": 3.59,
+    "px": 34013,
+    "texel_px": 18.02,
+    "block": 151.7
+   },
+   "rumpf": {
+    "kante": 24.3,
+    "innen": 7.5,
+    "kante_px": 1052,
+    "mosaik": 8.83,
+    "px": 8110,
+    "texel_px": 5.17,
+    "block": 88.9
+   },
+   "beine": {
+    "kante": 26.5,
+    "innen": 22.6,
+    "kante_px": 156,
+    "mosaik": 24.01,
+    "px": 564,
+    "texel_px": 1.28,
+    "block": 31.5
+   },
+   "arme": {
+    "kante": 16.3,
+    "innen": 7.9,
+    "kante_px": 1913,
+    "mosaik": 9.85,
+    "px": 16697,
+    "texel_px": 4.4,
+    "block": 83.5
+   },
+   "klauen": {
+    "kante": 21.0,
+    "innen": 8.3,
+    "kante_px": 547,
+    "mosaik": 10.92,
+    "px": 3058,
+    "texel_px": 3.31,
+    "block": 50.7
+   },
+   "hals": {
+    "kante": 16.7,
+    "innen": 5.4,
+    "kante_px": 650,
+    "mosaik": 7.32,
+    "px": 3015,
+    "texel_px": 3.64,
+    "block": 43.0
+   },
+   "kopf": {
+    "kante": 20.8,
+    "innen": 5.5,
+    "kante_px": 3651,
+    "mosaik": 6.88,
+    "px": 46729,
+    "texel_px": 4.74,
+    "block": 48.8
+   },
+   "kiefer": {
+    "kante": 31.4,
+    "innen": 12.3,
+    "kante_px": 1867,
+    "mosaik": 14.38,
+    "px": 19031,
+    "texel_px": 3.19,
+    "block": 71.9
+   },
+   "_gesamt": {
+    "kante": 22.6,
+    "innen": 5.8,
+    "mosaik": 7.79,
+    "px": 131217,
+    "texel_px": 7.87,
+    "block": 65.5
+   }
+  },
+  "5090_g3874": {
+   "_gelenk_grenze": {
+    "kante": 31.1,
+    "innen": 0.0,
+    "kante_px": 1535,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 19.2,
+    "innen": 0.0,
+    "kante_px": 4730,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "gelenk": {
+    "kante": 17.9,
+    "innen": 2.4,
+    "kante_px": 2714,
+    "mosaik": 5.89,
+    "px": 13915,
+    "texel_px": 6.59,
+    "block": 63.5
+   },
+   "rumpf": {
+    "kante": 16.9,
+    "innen": 10.1,
+    "kante_px": 1208,
+    "mosaik": 9.91,
+    "px": 6086,
+    "texel_px": 2.29,
+    "block": 38.5
+   },
+   "beine": {
+    "kante": 13.9,
+    "innen": 12.9,
+    "kante_px": 235,
+    "mosaik": 15.23,
+    "px": 850,
+    "texel_px": 1.15,
+    "block": 17.9
+   },
+   "arme": {
+    "kante": 18.4,
+    "innen": 10.8,
+    "kante_px": 1127,
+    "mosaik": 12.44,
+    "px": 5918,
+    "texel_px": 2.26,
+    "block": 38.3
+   },
+   "klauen": {
+    "kante": 19.8,
+    "innen": 8.0,
+    "kante_px": 1243,
+    "mosaik": 12.83,
+    "px": 5762,
+    "texel_px": 1.9,
+    "block": 23.6
+   },
+   "hals": {
+    "kante": 19.9,
+    "innen": 12.9,
+    "kante_px": 220,
+    "mosaik": 11.81,
+    "px": 1072,
+    "texel_px": 2.31,
+    "block": 49.3
+   },
+   "kopf": {
+    "kante": 20.6,
+    "innen": 7.6,
+    "kante_px": 884,
+    "mosaik": 9.72,
+    "px": 4526,
+    "texel_px": 1.32,
+    "block": 16.9
+   },
+   "kiefer": {
+    "kante": 35.8,
+    "innen": 20.7,
+    "kante_px": 586,
+    "mosaik": 24.38,
+    "px": 2598,
+    "texel_px": 1.32,
+    "block": 44.9
+   },
+   "_gesamt": {
+    "kante": 20.7,
+    "innen": 7.5,
+    "mosaik": 10.38,
+    "px": 40727,
+    "texel_px": 3.51,
+    "block": 34.9
+   }
+  },
+  "5090_g802": {
+   "_gelenk_grenze": {
+    "kante": 18.2,
+    "innen": 0.0,
+    "kante_px": 2484,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 15.8,
+    "innen": 0.0,
+    "kante_px": 3670,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 8.4,
+    "innen": 5.5,
+    "kante_px": 1332,
+    "mosaik": 5.89,
+    "px": 7364,
+    "texel_px": 2.17,
+    "block": 20.5
+   },
+   "gelenk": {
+    "kante": 14.9,
+    "innen": 2.5,
+    "kante_px": 2932,
+    "mosaik": 5.76,
+    "px": 15356,
+    "texel_px": 5.44,
+    "block": 48.0
+   },
+   "schwanz": {
+    "kante": 9.9,
+    "innen": 5.6,
+    "kante_px": 931,
+    "mosaik": 6.94,
+    "px": 3795,
+    "texel_px": 1.83,
+    "block": 16.8
+   },
+   "beine": {
+    "kante": 15.8,
+    "innen": 10.3,
+    "kante_px": 310,
+    "mosaik": 11.37,
+    "px": 1242,
+    "texel_px": 1.51,
+    "block": 21.2
+   },
+   "arme": {
+    "kante": 19.9,
+    "innen": 11.9,
+    "kante_px": 1429,
+    "mosaik": 12.05,
+    "px": 8952,
+    "texel_px": 2.66,
+    "block": 52.6
+   },
+   "klauen": {
+    "kante": 29.9,
+    "innen": 8.4,
+    "kante_px": 541,
+    "mosaik": 17.53,
+    "px": 2102,
+    "texel_px": 1.95,
+    "block": 25.9
+   },
+   "hals": {
+    "kante": 16.8,
+    "innen": 4.6,
+    "kante_px": 193,
+    "mosaik": 8.61,
+    "px": 767,
+    "texel_px": 2.06,
+    "block": 22.3
+   },
+   "kopf": {
+    "kante": 60.4,
+    "innen": 27.9,
+    "kante_px": 10,
+    "mosaik": 84.62,
+    "px": 39,
+    "texel_px": 1.0,
+    "block": 41.7
+   },
+   "kiefer": {
+    "kante": 29.1,
+    "innen": 19.4,
+    "kante_px": 164,
+    "mosaik": 22.86,
+    "px": 532,
+    "texel_px": 1.04,
+    "block": 31.8
+   },
+   "_gesamt": {
+    "kante": 16.1,
+    "innen": 6.3,
+    "mosaik": 8.45,
+    "px": 40149,
+    "texel_px": 3.45,
+    "block": 34.8
+   }
+  },
+  "5090_g1826": {
+   "_gelenk_grenze": {
+    "kante": 14.4,
+    "innen": 0.0,
+    "kante_px": 1680,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 9.1,
+    "innen": 0.0,
+    "kante_px": 3202,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "gelenk": {
+    "kante": 11.5,
+    "innen": 2.8,
+    "kante_px": 1790,
+    "mosaik": 6.01,
+    "px": 8045,
+    "texel_px": 4.38,
+    "block": 40.7
+   },
+   "rumpf": {
+    "kante": 9.8,
+    "innen": 5.9,
+    "kante_px": 1611,
+    "mosaik": 5.88,
+    "px": 9234,
+    "texel_px": 2.05,
+    "block": 19.7
+   },
+   "schwanz": {
+    "kante": 9.8,
+    "innen": 3.8,
+    "kante_px": 1610,
+    "mosaik": 5.34,
+    "px": 7747,
+    "texel_px": 2.97,
+    "block": 26.1
+   },
+   "beine": {
+    "kante": 16.6,
+    "innen": 9.9,
+    "kante_px": 251,
+    "mosaik": 14.08,
+    "px": 1133,
+    "texel_px": 1.55,
+    "block": 22.7
+   },
+   "arme": {
+    "kante": 10.9,
+    "innen": 7.6,
+    "kante_px": 551,
+    "mosaik": 9.09,
+    "px": 2937,
+    "texel_px": 1.8,
+    "block": 21.7
+   },
+   "klauen": {
+    "kante": 8.7,
+    "innen": 9.3,
+    "kante_px": 50,
+    "mosaik": 21.55,
+    "px": 193,
+    "texel_px": 1.14,
+    "block": 20.1
+   },
+   "_gesamt": {
+    "kante": 10.8,
+    "innen": 4.9,
+    "mosaik": 6.51,
+    "px": 29289,
+    "texel_px": 2.88,
+    "block": 24.4
+   }
+  }
+ },
+ "NB2": {
+  "5080_g0": {
+   "_gelenk_grenze": {
+    "kante": 14.0,
+    "innen": 0.0,
+    "kante_px": 2831,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 9.5,
+    "innen": 0.0,
+    "kante_px": 4163,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "gelenk": {
+    "kante": 11.5,
+    "innen": 5.1,
+    "kante_px": 2536,
+    "mosaik": 6.16,
+    "px": 17327,
+    "texel_px": 2.48,
+    "block": 23.6
+   },
+   "rumpf": {
+    "kante": 9.7,
+    "innen": 4.3,
+    "kante_px": 2500,
+    "mosaik": 4.58,
+    "px": 23154,
+    "texel_px": 3.58,
+    "block": 32.4
+   },
+   "schwanz": {
+    "kante": 8.4,
+    "innen": 4.4,
+    "kante_px": 1629,
+    "mosaik": 5.22,
+    "px": 7745,
+    "texel_px": 2.69,
+    "block": 22.0
+   },
+   "beine": {
+    "kante": 15.0,
+    "innen": 7.2,
+    "kante_px": 1408,
+    "mosaik": 9.16,
+    "px": 8382,
+    "texel_px": 2.49,
+    "block": 30.6
+   },
+   "_gesamt": {
+    "kante": 11.1,
+    "innen": 5.0,
+    "mosaik": 5.83,
+    "px": 56608,
+    "texel_px": 2.96,
+    "block": 27.6
+   }
+  },
+  "5080_g1024": {
+   "_gelenk_grenze": {
+    "kante": 16.2,
+    "innen": 0.0,
+    "kante_px": 2983,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 9.2,
+    "innen": 0.0,
+    "kante_px": 4982,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 11.2,
+    "innen": 5.2,
+    "kante_px": 1523,
+    "mosaik": 5.78,
+    "px": 11800,
+    "texel_px": 3.08,
+    "block": 30.1
+   },
+   "gelenk": {
+    "kante": 11.8,
+    "innen": 5.4,
+    "kante_px": 3131,
+    "mosaik": 6.69,
+    "px": 15597,
+    "texel_px": 2.39,
+    "block": 23.3
+   },
+   "schwanz": {
+    "kante": 9.9,
+    "innen": 2.2,
+    "kante_px": 2987,
+    "mosaik": 3.6,
+    "px": 17924,
+    "texel_px": 4.17,
+    "block": 28.0
+   },
+   "beine": {
+    "kante": 13.2,
+    "innen": 9.1,
+    "kante_px": 1369,
+    "mosaik": 10.43,
+    "px": 7592,
+    "texel_px": 2.11,
+    "block": 29.0
+   },
+   "arme": {
+    "kante": 9.4,
+    "innen": 4.6,
+    "kante_px": 566,
+    "mosaik": 5.98,
+    "px": 3138,
+    "texel_px": 2.49,
+    "block": 24.4
+   },
+   "klauen": {
+    "kante": 10.9,
+    "innen": 7.5,
+    "kante_px": 44,
+    "mosaik": 23.51,
+    "px": 194,
+    "texel_px": 1.55,
+    "block": 22.0
+   },
+   "_gesamt": {
+    "kante": 11.5,
+    "innen": 4.7,
+    "mosaik": 6.04,
+    "px": 56245,
+    "texel_px": 3.07,
+    "block": 27.0
+   }
+  },
+  "5080_g2048": {
+   "_gelenk_grenze": {
+    "kante": 25.9,
+    "innen": 0.0,
+    "kante_px": 3370,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 12.3,
+    "innen": 0.0,
+    "kante_px": 6641,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 16.1,
+    "innen": 6.8,
+    "kante_px": 3050,
+    "mosaik": 7.01,
+    "px": 24998,
+    "texel_px": 3.16,
+    "block": 44.7
+   },
+   "gelenk": {
+    "kante": 15.3,
+    "innen": 6.0,
+    "kante_px": 4544,
+    "mosaik": 7.38,
+    "px": 28295,
+    "texel_px": 2.28,
+    "block": 23.2
+   },
+   "schwanz": {
+    "kante": 10.8,
+    "innen": 2.1,
+    "kante_px": 1010,
+    "mosaik": 3.46,
+    "px": 5911,
+    "texel_px": 4.29,
+    "block": 28.4
+   },
+   "beine": {
+    "kante": 17.1,
+    "innen": 8.2,
+    "kante_px": 1474,
+    "mosaik": 10.2,
+    "px": 9348,
+    "texel_px": 2.49,
+    "block": 34.5
+   },
+   "arme": {
+    "kante": 14.2,
+    "innen": 9.0,
+    "kante_px": 1768,
+    "mosaik": 8.95,
+    "px": 12031,
+    "texel_px": 2.69,
+    "block": 41.6
+   },
+   "klauen": {
+    "kante": 13.5,
+    "innen": 7.9,
+    "kante_px": 411,
+    "mosaik": 13.29,
+    "px": 2052,
+    "texel_px": 1.9,
+    "block": 24.9
+   },
+   "kopf": {
+    "kante": 19.3,
+    "innen": 6.0,
+    "kante_px": 496,
+    "mosaik": 11.63,
+    "px": 2294,
+    "texel_px": 1.2,
+    "block": 11.3
+   },
+   "kiefer": {
+    "kante": 16.0,
+    "innen": 7.6,
+    "kante_px": 115,
+    "mosaik": 23.79,
+    "px": 612,
+    "texel_px": 1.07,
+    "block": 14.2
+   },
+   "hals": {
+    "kante": 6.7,
+    "innen": 0.0,
+    "kante_px": 1,
+    "mosaik": 7.05,
+    "px": 4,
+    "texel_px": 1.55,
+    "block": 23.1
+   },
+   "_gesamt": {
+    "kante": 16.0,
+    "innen": 6.7,
+    "mosaik": 7.9,
+    "px": 85545,
+    "texel_px": 2.71,
+    "block": 31.8
+   }
+  },
+  "5080_g3072": {
+   "_gelenk_grenze": {
+    "kante": 21.3,
+    "innen": 0.0,
+    "kante_px": 1552,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 21.7,
+    "innen": 0.0,
+    "kante_px": 9336,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "gelenk": {
+    "kante": 11.7,
+    "innen": 3.8,
+    "kante_px": 3080,
+    "mosaik": 4.53,
+    "px": 30506,
+    "texel_px": 4.37,
+    "block": 31.6
+   },
+   "rumpf": {
+    "kante": 22.4,
+    "innen": 7.4,
+    "kante_px": 1060,
+    "mosaik": 8.52,
+    "px": 8314,
+    "texel_px": 5.18,
+    "block": 88.4
+   },
+   "arme": {
+    "kante": 15.9,
+    "innen": 7.8,
+    "kante_px": 1967,
+    "mosaik": 9.65,
+    "px": 17103,
+    "texel_px": 4.38,
+    "block": 82.3
+   },
+   "klauen": {
+    "kante": 19.4,
+    "innen": 6.7,
+    "kante_px": 547,
+    "mosaik": 10.19,
+    "px": 3058,
+    "texel_px": 3.31,
+    "block": 41.3
+   },
+   "hals": {
+    "kante": 16.7,
+    "innen": 4.8,
+    "kante_px": 693,
+    "mosaik": 6.77,
+    "px": 3450,
+    "texel_px": 4.18,
+    "block": 46.7
+   },
+   "kopf": {
+    "kante": 23.8,
+    "innen": 4.1,
+    "kante_px": 3933,
+    "mosaik": 6.36,
+    "px": 40409,
+    "texel_px": 4.22,
+    "block": 32.3
+   },
+   "kiefer": {
+    "kante": 26.4,
+    "innen": 5.2,
+    "kante_px": 1644,
+    "mosaik": 9.7,
+    "px": 16776,
+    "texel_px": 2.89,
+    "block": 29.5
+   },
+   "beine": {
+    "kante": 26.5,
+    "innen": 23.0,
+    "kante_px": 143,
+    "mosaik": 24.97,
+    "px": 514,
+    "texel_px": 1.25,
+    "block": 31.7
+   },
+   "_gesamt": {
+    "kante": 20.4,
+    "innen": 5.0,
+    "mosaik": 7.17,
+    "px": 120130,
+    "texel_px": 4.12,
+    "block": 40.8
+   }
+  },
+  "5090_g3874": {
+   "_gelenk_grenze": {
+    "kante": 29.0,
+    "innen": 0.0,
+    "kante_px": 1529,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 18.8,
+    "innen": 0.0,
+    "kante_px": 4912,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "gelenk": {
+    "kante": 15.4,
+    "innen": 6.1,
+    "kante_px": 2700,
+    "mosaik": 7.39,
+    "px": 13531,
+    "texel_px": 1.8,
+    "block": 17.3
+   },
+   "rumpf": {
+    "kante": 16.5,
+    "innen": 9.9,
+    "kante_px": 1294,
+    "mosaik": 9.68,
+    "px": 6396,
+    "texel_px": 2.29,
+    "block": 37.1
+   },
+   "beine": {
+    "kante": 14.8,
+    "innen": 12.8,
+    "kante_px": 252,
+    "mosaik": 15.1,
+    "px": 903,
+    "texel_px": 1.15,
+    "block": 18.1
+   },
+   "arme": {
+    "kante": 22.2,
+    "innen": 10.4,
+    "kante_px": 1350,
+    "mosaik": 13.11,
+    "px": 6717,
+    "texel_px": 2.25,
+    "block": 37.9
+   },
+   "klauen": {
+    "kante": 13.6,
+    "innen": 9.4,
+    "kante_px": 1250,
+    "mosaik": 13.4,
+    "px": 5797,
+    "texel_px": 1.9,
+    "block": 26.9
+   },
+   "hals": {
+    "kante": 20.9,
+    "innen": 15.4,
+    "kante_px": 162,
+    "mosaik": 13.5,
+    "px": 961,
+    "texel_px": 2.22,
+    "block": 49.2
+   },
+   "kopf": {
+    "kante": 24.0,
+    "innen": 6.5,
+    "kante_px": 775,
+    "mosaik": 10.82,
+    "px": 3780,
+    "texel_px": 1.27,
+    "block": 14.1
+   },
+   "kiefer": {
+    "kante": 32.8,
+    "innen": 7.7,
+    "kante_px": 600,
+    "mosaik": 18.94,
+    "px": 2580,
+    "texel_px": 1.19,
+    "block": 18.2
+   },
+   "_gesamt": {
+    "kante": 19.7,
+    "innen": 8.3,
+    "mosaik": 10.92,
+    "px": 40665,
+    "texel_px": 1.87,
+    "block": 24.6
+   }
+  },
+  "5090_g802": {
+   "_gelenk_grenze": {
+    "kante": 16.8,
+    "innen": 0.0,
+    "kante_px": 2519,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 14.6,
+    "innen": 0.0,
+    "kante_px": 3742,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "rumpf": {
+    "kante": 9.1,
+    "innen": 5.6,
+    "kante_px": 1337,
+    "mosaik": 5.95,
+    "px": 7271,
+    "texel_px": 2.15,
+    "block": 20.4
+   },
+   "gelenk": {
+    "kante": 13.0,
+    "innen": 6.4,
+    "kante_px": 2827,
+    "mosaik": 7.37,
+    "px": 14860,
+    "texel_px": 1.66,
+    "block": 16.5
+   },
+   "schwanz": {
+    "kante": 8.9,
+    "innen": 5.6,
+    "kante_px": 931,
+    "mosaik": 6.62,
+    "px": 3795,
+    "texel_px": 1.83,
+    "block": 16.8
+   },
+   "beine": {
+    "kante": 14.6,
+    "innen": 10.3,
+    "kante_px": 310,
+    "mosaik": 11.1,
+    "px": 1242,
+    "texel_px": 1.51,
+    "block": 21.2
+   },
+   "arme": {
+    "kante": 20.1,
+    "innen": 12.0,
+    "kante_px": 1464,
+    "mosaik": 12.32,
+    "px": 9098,
+    "texel_px": 2.65,
+    "block": 52.9
+   },
+   "klauen": {
+    "kante": 21.9,
+    "innen": 10.5,
+    "kante_px": 557,
+    "mosaik": 18.04,
+    "px": 2153,
+    "texel_px": 1.95,
+    "block": 30.4
+   },
+   "hals": {
+    "kante": 11.6,
+    "innen": 4.6,
+    "kante_px": 211,
+    "mosaik": 5.99,
+    "px": 937,
+    "texel_px": 1.91,
+    "block": 18.9
+   },
+   "kopf": {
+    "kante": 46.5,
+    "innen": 13.3,
+    "kante_px": 17,
+    "mosaik": 45.58,
+    "px": 42,
+    "texel_px": 1.0,
+    "block": 14.0
+   },
+   "kiefer": {
+    "kante": 29.0,
+    "innen": 8.2,
+    "kante_px": 156,
+    "mosaik": 18.97,
+    "px": 538,
+    "texel_px": 1.05,
+    "block": 13.9
+   },
+   "_gesamt": {
+    "kante": 14.8,
+    "innen": 7.9,
+    "mosaik": 9.02,
+    "px": 39936,
+    "texel_px": 2.0,
+    "block": 25.3
+   }
+  },
+  "5090_g1826": {
+   "_gelenk_grenze": {
+    "kante": 14.1,
+    "innen": 0.0,
+    "kante_px": 1680,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "_haut_kante": {
+    "kante": 9.1,
+    "innen": 0.0,
+    "kante_px": 3202,
+    "mosaik": null,
+    "px": 0,
+    "texel_px": null,
+    "block": null
+   },
+   "gelenk": {
+    "kante": 11.4,
+    "innen": 6.4,
+    "kante_px": 1781,
+    "mosaik": 7.45,
+    "px": 8037,
+    "texel_px": 1.44,
+    "block": 14.5
+   },
+   "rumpf": {
+    "kante": 9.6,
+    "innen": 5.9,
+    "kante_px": 1611,
+    "mosaik": 5.89,
+    "px": 9234,
+    "texel_px": 2.05,
+    "block": 19.7
+   },
+   "schwanz": {
+    "kante": 9.6,
+    "innen": 3.8,
+    "kante_px": 1610,
+    "mosaik": 5.34,
+    "px": 7747,
+    "texel_px": 2.97,
+    "block": 26.1
+   },
+   "beine": {
+    "kante": 15.9,
+    "innen": 9.9,
+    "kante_px": 251,
+    "mosaik": 13.88,
+    "px": 1133,
+    "texel_px": 1.55,
+    "block": 22.7
+   },
+   "arme": {
+    "kante": 10.4,
+    "innen": 7.6,
+    "kante_px": 551,
+    "mosaik": 9.02,
+    "px": 2937,
+    "texel_px": 1.8,
+    "block": 21.7
+   },
+   "klauen": {
+    "kante": 9.8,
+    "innen": 9.0,
+    "kante_px": 50,
+    "mosaik": 20.58,
+    "px": 193,
+    "texel_px": 1.14,
+    "block": 17.7
+   },
+   "_gesamt": {
+    "kante": 10.7,
+    "innen": 5.8,
+    "mosaik": 6.89,
+    "px": 29281,
+    "texel_px": 2.08,
+    "block": 19.5
+   }
+  }
+ }
+}

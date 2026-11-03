@@ -80,14 +80,16 @@ enum { BB_AUFTRITT = 0, BB_HIEB = 2, BB_GEHEN = 3, BB_RENNEN = 4, BB_WEICHEN = 8
 #define BB_C_TAUMELN  13
 
 #define BB_TEIL_RUMPF 10     /* Teil +0x198 + 10*0xac: `addiu a0,a0,1792` = +0x700 = Teil 10 + 0x48 @0x80102ed0 */
-/* Nachbesserung 1, Kopf K3 (PORT-WAHL, kein G4-Wert): Unterkiefer = Teil 23 des Assets; Bisspunkt im Kieferraum = 228 hinter
- * der Kieferspitze (Mesh 23 vorderste Ecke (1139,-75,0), gelesen aus RE2/BAHNSTEIG_FORM.EMD). Biss-Entscheid 0xce4 (@0x80102434-54)
- * + 1700 = 5000: die K3-Schnauze reicht 1640-1690 weiter vor als der G4-Bisspunkt Teil 10 + 1400 (Messung Asset-Spur, D). */
+/* Kopf (PORT-WAHL, kein G4-Wert): Unterkiefer = Teil 23 des Assets; Bisspunkt im Kieferraum = Mitte der vorderen Zahnreihe.
+ * Nachbesserung 2, Kopf K4 Krokodil (E22): Mesh 23 vorderste Ecke (1190,-85,0), Zahnreihen-Mitte (928,-85,0) = 262 hinter der
+ * Spitze (gelesen aus RE2/BAHNSTEIG_FORM.EMD mit stufe3/gen/s3_kopfmass.py, stufe3/nachbesserung2/kopfmass.json; K3 vorher
+ * (1139,-75,0) / (911,-75,0)). Biss-Entscheid 0xce4 (@0x80102434-54) + 1740 = 5044: die K4-Schnauze reicht im Biss (Clip 26
+ * Bild 16-30) 1715-1737 weiter vor als der G4-Bisspunkt Teil 10 + 1400 (K3: 1640-1690 -> +1700; Regel: Maximum auf 10 auf). */
 #define BB_TEIL_KIEFER  23
 #define BB_TEIL_KOPF    22
-#define BB_BISS_X      911
-#define BB_BISS_Y      (-75)
-#define BB_BISS_ENTSCHEID (BB_L(0xce4) + 1700)
+#define BB_BISS_X      928
+#define BB_BISS_Y      (-85)
+#define BB_BISS_ENTSCHEID (BB_L(0xce4) + 1740)
 
 /* EDD-Wort eines Bildes (FUN_80016028 @0x80016034-54: Bit 27 = Ton, Id = Wort >> 28; Bit 16 = Trefferbild,
  * `lui v1,1` + `and` @0x80101cb8-bc / @0x80104f58-5c). */
@@ -319,9 +321,9 @@ static void bb_entscheiden(re15_actor_t *e, re15_actor_t *pl, int32_t dist)
         /* HIEB ist RE2-Phase-1 (A[1] @0x80101780-c8: Kegel 512, dist < 0xfa0, +0x21e == 0). Hier dieselbe Regel
          * in der Nabe, weil Clip 2 entfaellt; Rangfolge durch die Reichweite: Hieb weit, Biss nah, Griff zuletzt. */
         if (k512 && dist < BB_L(0xfa0) && s_bb.cd_nah == 0) neu = BB_HIEB;
-        /* Biss: G4 dist < 0xce4 (@0x80102434-54). K3 reicht mit der Schnauze 1700 weiter (BB_BISS_ENTSCHEID); damit die Rangfolge
+        /* Biss: G4 dist < 0xce4 (@0x80102434-54). Die Schnauze reicht 1700 (K3) bzw. 1740 (K4, NB2) weiter (BB_BISS_ENTSCHEID); damit die Rangfolge
          * "Hieb weit, Biss nah" und der Hieb ueberhaupt bleiben, gilt der Zuwachs nur jenseits der Hieb-Reichweite 0xfa0:
-         * Biss bei dist < 0xce4 wie G4 oder 0xfa0 <= dist < 5000 (PORT-WAHL). Ohne das Band verdraengte der Biss jeden Hieb. */
+         * Biss bei dist < 0xce4 wie G4 oder 0xfa0 <= dist < BB_BISS_ENTSCHEID (5044, PORT-WAHL). Ohne das Band verdraengte der Biss jeden Hieb. */
         if (k824 && s_bb.cd_nah == 0 &&
             (dist < BB_L(0xce4) || (dist >= BB_L(0xfa0) && dist < BB_BISS_ENTSCHEID))) {
             neu = BB_BISS;                                             /* sw 0xe01 @0x80102464 */
@@ -498,9 +500,10 @@ static void bb_biss(re15_actor_t *e, re15_actor_t *pl)
     }
     if (s_bb.wort & BB_FL_TREFFER) {                   /* @0x80104f4c-60 */
         re15_enemy_steer_point(e, pl->x, pl->z, 16);   /* @0x80104f7c */
-        /* Nachbesserung 1 (Kopf K3, Entscheid Orchestrator Weg a): G4 misst den Biss an Teil 10 + (1400,0,0), Radius 1500
-         * (@0x80104f88-a4). Die K3-Schnauze liegt 1640-1690 vor diesem Punkt; die Probe sitzt deshalb am Kiefer selbst,
-         * Teil 23 + (911,-75,0) = 228 hinter der Kieferspitze (Mesh 23 vorn bei x 1139, y -75; PORT-WAHL), Radius 1500 von G4. */
+        /* Nachbesserung 1 (Entscheid Orchestrator Weg a): G4 misst den Biss an Teil 10 + (1400,0,0), Radius 1500
+         * (@0x80104f88-a4). Die Schnauze liegt 1640-1737 vor diesem Punkt; die Probe sitzt deshalb am Kiefer selbst,
+         * Teil 23 + (BB_BISS_X, BB_BISS_Y, 0) = Mitte der vorderen Zahnreihe (NB2 Kopf K4: (928,-85,0), 262 hinter der Spitze
+         * (1190,-85,0); PORT-WAHL), Radius 1500 von G4. */
         if (pl->hit_react == 0 && bb_nah(e, pl, BB_TEIL_KIEFER, BB_BISS_X, BB_BISS_Y, BB_L(1500))) {   /* Radius @0x80104f88-a4 */
             bb_schlag(pl, 10, 6, 0);                   /* se(6) @0x801050a0 */
             s_bb.getroffen = 1;

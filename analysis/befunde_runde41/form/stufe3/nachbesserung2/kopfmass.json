@@ -1,0 +1,986 @@
+{
+ "kiefer_spitze_knochen23": [
+  1190.0,
+  -85.0,
+  0.0
+ ],
+ "kiefer_x_bereich": [
+  -400.0,
+  1190.0
+ ],
+ "kiefer_mitte_vorn_knochen23": [
+  928.0,
+  -85.0,
+  0.0
+ ],
+ "biss": [
+  {
+   "bild": 0,
+   "treffer": false,
+   "spitze": [
+    4383.0,
+    -2298.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4128.0,
+    -2234.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3092.0,
+    425.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2639.0,
+    -2362.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1744.0
+  },
+  {
+   "bild": 1,
+   "treffer": false,
+   "spitze": [
+    4381.0,
+    -2342.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4127.0,
+    -2276.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3096.0,
+    415.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2635.0,
+    -2383.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1745.0
+  },
+  {
+   "bild": 2,
+   "treffer": false,
+   "spitze": [
+    4374.0,
+    -2459.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4122.0,
+    -2387.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3106.0,
+    381.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2626.0,
+    -2433.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1748.0
+  },
+  {
+   "bild": 3,
+   "treffer": false,
+   "spitze": [
+    4359.0,
+    -2626.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4109.0,
+    -2545.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3118.0,
+    336.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2612.0,
+    -2508.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1747.0
+  },
+  {
+   "bild": 4,
+   "treffer": false,
+   "spitze": [
+    4330.0,
+    -2834.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4085.0,
+    -2742.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3132.0,
+    280.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2591.0,
+    -2599.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1739.0
+  },
+  {
+   "bild": 5,
+   "treffer": false,
+   "spitze": [
+    4287.0,
+    -3060.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4046.0,
+    -2957.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3144.0,
+    219.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2566.0,
+    -2699.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1721.0
+  },
+  {
+   "bild": 6,
+   "treffer": false,
+   "spitze": [
+    4232.0,
+    -3281.0,
+    0.0
+   ],
+   "zahnmitte": [
+    3996.0,
+    -3166.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3154.0,
+    153.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2540.0,
+    -2795.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1692.0
+  },
+  {
+   "bild": 7,
+   "treffer": false,
+   "spitze": [
+    4170.0,
+    -3483.0,
+    0.0
+   ],
+   "zahnmitte": [
+    3940.0,
+    -3358.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3160.0,
+    94.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2512.0,
+    -2884.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1658.0
+  },
+  {
+   "bild": 8,
+   "treffer": false,
+   "spitze": [
+    4108.0,
+    -3655.0,
+    0.0
+   ],
+   "zahnmitte": [
+    3883.0,
+    -3521.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3163.0,
+    44.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2487.0,
+    -2961.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1621.0
+  },
+  {
+   "bild": 9,
+   "treffer": false,
+   "spitze": [
+    4071.0,
+    -3750.0,
+    0.0
+   ],
+   "zahnmitte": [
+    3848.0,
+    -3612.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3165.0,
+    13.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2473.0,
+    -3003.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1599.0
+  },
+  {
+   "bild": 10,
+   "treffer": false,
+   "spitze": [
+    4052.0,
+    -3795.0,
+    0.0
+   ],
+   "zahnmitte": [
+    3831.0,
+    -3654.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3165.0,
+    -1.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2465.0,
+    -3022.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1587.0
+  },
+  {
+   "bild": 11,
+   "treffer": false,
+   "spitze": [
+    4298.0,
+    -3402.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4059.0,
+    -3295.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3174.0,
+    145.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2602.0,
+    -2863.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1696.0
+  },
+  {
+   "bild": 12,
+   "treffer": false,
+   "spitze": [
+    4693.0,
+    -2494.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4433.0,
+    -2466.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3157.0,
+    464.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2876.0,
+    -2504.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1817.0
+  },
+  {
+   "bild": 13,
+   "treffer": false,
+   "spitze": [
+    4881.0,
+    -1548.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4625.0,
+    -1603.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3091.0,
+    780.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    3113.0,
+    -2131.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1768.0
+  },
+  {
+   "bild": 14,
+   "treffer": false,
+   "spitze": [
+    4896.0,
+    -1126.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4651.0,
+    -1218.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3045.0,
+    918.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    3207.0,
+    -1960.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1689.0
+  },
+  {
+   "bild": 15,
+   "treffer": false,
+   "spitze": [
+    4943.0,
+    -1407.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4683.0,
+    -1438.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3105.0,
+    640.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    3207.0,
+    -1960.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1736.0
+  },
+  {
+   "bild": 16,
+   "treffer": true,
+   "spitze": [
+    4922.0,
+    -1690.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4662.0,
+    -1658.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3099.0,
+    357.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    3207.0,
+    -1960.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1715.0
+  },
+  {
+   "bild": 17,
+   "treffer": true,
+   "spitze": [
+    4916.0,
+    -1689.0,
+    -187.0
+   ],
+   "zahnmitte": [
+    4656.0,
+    -1657.0,
+    -165.0
+   ],
+   "spitze_in_teil10": [
+    3095.0,
+    357.0,
+    -122.0
+   ],
+   "bisspunkt_alt": [
+    3207.0,
+    -1960.0,
+    -34.0
+   ],
+   "spitze_minus_alt_xz": 1716.0
+  },
+  {
+   "bild": 18,
+   "treffer": true,
+   "spitze": [
+    4870.0,
+    -1685.0,
+    -534.0
+   ],
+   "zahnmitte": [
+    4617.0,
+    -1654.0,
+    -473.0
+   ],
+   "spitze_in_teil10": [
+    3070.0,
+    359.0,
+    -341.0
+   ],
+   "bisspunkt_alt": [
+    3205.0,
+    -1960.0,
+    -102.0
+   ],
+   "spitze_minus_alt_xz": 1720.0
+  },
+  {
+   "bild": 19,
+   "treffer": true,
+   "spitze": [
+    4827.0,
+    -1681.0,
+    -716.0
+   ],
+   "zahnmitte": [
+    4580.0,
+    -1651.0,
+    -634.0
+   ],
+   "spitze_in_teil10": [
+    3047.0,
+    360.0,
+    -460.0
+   ],
+   "bisspunkt_alt": [
+    3203.0,
+    -1960.0,
+    -136.0
+   ],
+   "spitze_minus_alt_xz": 1725.0
+  },
+  {
+   "bild": 20,
+   "treffer": true,
+   "spitze": [
+    4899.0,
+    -1688.0,
+    -353.0
+   ],
+   "zahnmitte": [
+    4642.0,
+    -1656.0,
+    -313.0
+   ],
+   "spitze_in_teil10": [
+    3087.0,
+    358.0,
+    -223.0
+   ],
+   "bisspunkt_alt": [
+    3206.0,
+    -1960.0,
+    -68.0
+   ],
+   "spitze_minus_alt_xz": 1717.0
+  },
+  {
+   "bild": 21,
+   "treffer": true,
+   "spitze": [
+    4899.0,
+    -1688.0,
+    353.0
+   ],
+   "zahnmitte": [
+    4642.0,
+    -1656.0,
+    313.0
+   ],
+   "spitze_in_teil10": [
+    3087.0,
+    358.0,
+    223.0
+   ],
+   "bisspunkt_alt": [
+    3206.0,
+    -1960.0,
+    68.0
+   ],
+   "spitze_minus_alt_xz": 1717.0
+  },
+  {
+   "bild": 22,
+   "treffer": true,
+   "spitze": [
+    4827.0,
+    -1681.0,
+    716.0
+   ],
+   "zahnmitte": [
+    4580.0,
+    -1651.0,
+    634.0
+   ],
+   "spitze_in_teil10": [
+    3047.0,
+    360.0,
+    460.0
+   ],
+   "bisspunkt_alt": [
+    3203.0,
+    -1960.0,
+    136.0
+   ],
+   "spitze_minus_alt_xz": 1725.0
+  },
+  {
+   "bild": 23,
+   "treffer": true,
+   "spitze": [
+    4897.0,
+    -1687.0,
+    367.0
+   ],
+   "zahnmitte": [
+    4641.0,
+    -1656.0,
+    325.0
+   ],
+   "spitze_in_teil10": [
+    3085.0,
+    358.0,
+    238.0
+   ],
+   "bisspunkt_alt": [
+    3206.0,
+    -1960.0,
+    68.0
+   ],
+   "spitze_minus_alt_xz": 1717.0
+  },
+  {
+   "bild": 24,
+   "treffer": true,
+   "spitze": [
+    4909.0,
+    -1688.0,
+    -271.0
+   ],
+   "zahnmitte": [
+    4650.0,
+    -1657.0,
+    -240.0
+   ],
+   "spitze_in_teil10": [
+    3092.0,
+    357.0,
+    -174.0
+   ],
+   "bisspunkt_alt": [
+    3207.0,
+    -1960.0,
+    -51.0
+   ],
+   "spitze_minus_alt_xz": 1716.0
+  },
+  {
+   "bild": 25,
+   "treffer": true,
+   "spitze": [
+    4854.0,
+    -1683.0,
+    -606.0
+   ],
+   "zahnmitte": [
+    4604.0,
+    -1653.0,
+    -536.0
+   ],
+   "spitze_in_teil10": [
+    3061.0,
+    359.0,
+    -392.0
+   ],
+   "bisspunkt_alt": [
+    3204.0,
+    -1960.0,
+    -113.0
+   ],
+   "spitze_minus_alt_xz": 1722.0
+  },
+  {
+   "bild": 26,
+   "treffer": true,
+   "spitze": [
+    4904.0,
+    -1681.0,
+    -325.0
+   ],
+   "zahnmitte": [
+    4647.0,
+    -1651.0,
+    -288.0
+   ],
+   "spitze_in_teil10": [
+    3090.0,
+    365.0,
+    -206.0
+   ],
+   "bisspunkt_alt": [
+    3206.0,
+    -1960.0,
+    -62.0
+   ],
+   "spitze_minus_alt_xz": 1718.0
+  },
+  {
+   "bild": 27,
+   "treffer": true,
+   "spitze": [
+    4917.0,
+    -1669.0,
+    218.0
+   ],
+   "zahnmitte": [
+    4658.0,
+    -1642.0,
+    193.0
+   ],
+   "spitze_in_teil10": [
+    3097.0,
+    377.0,
+    142.0
+   ],
+   "bisspunkt_alt": [
+    3207.0,
+    -1960.0,
+    40.0
+   ],
+   "spitze_minus_alt_xz": 1719.0
+  },
+  {
+   "bild": 28,
+   "treffer": true,
+   "spitze": [
+    4879.0,
+    -1658.0,
+    512.0
+   ],
+   "zahnmitte": [
+    4625.0,
+    -1633.0,
+    453.0
+   ],
+   "spitze_in_teil10": [
+    3076.0,
+    386.0,
+    329.0
+   ],
+   "bisspunkt_alt": [
+    3205.0,
+    -1960.0,
+    96.0
+   ],
+   "spitze_minus_alt_xz": 1725.0
+  },
+  {
+   "bild": 29,
+   "treffer": true,
+   "spitze": [
+    4911.0,
+    -1584.0,
+    384.0
+   ],
+   "zahnmitte": [
+    4653.0,
+    -1576.0,
+    340.0
+   ],
+   "spitze_in_teil10": [
+    3095.0,
+    462.0,
+    243.0
+   ],
+   "bisspunkt_alt": [
+    3206.0,
+    -1960.0,
+    74.0
+   ],
+   "spitze_minus_alt_xz": 1733.0
+  },
+  {
+   "bild": 30,
+   "treffer": true,
+   "spitze": [
+    4941.0,
+    -1444.0,
+    127.0
+   ],
+   "zahnmitte": [
+    4680.0,
+    -1466.0,
+    112.0
+   ],
+   "spitze_in_teil10": [
+    3107.0,
+    603.0,
+    83.0
+   ],
+   "bisspunkt_alt": [
+    3207.0,
+    -1960.0,
+    23.0
+   ],
+   "spitze_minus_alt_xz": 1737.0
+  },
+  {
+   "bild": 31,
+   "treffer": false,
+   "spitze": [
+    4940.0,
+    -1367.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4681.0,
+    -1406.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3101.0,
+    680.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    3207.0,
+    -1960.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1733.0
+  },
+  {
+   "bild": 32,
+   "treffer": false,
+   "spitze": [
+    4819.0,
+    -1612.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4557.0,
+    -1624.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3105.0,
+    613.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    3065.0,
+    -2066.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1754.0
+  },
+  {
+   "bild": 33,
+   "treffer": false,
+   "spitze": [
+    4551.0,
+    -2057.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4291.0,
+    -2021.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3101.0,
+    491.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2792.0,
+    -2258.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1759.0
+  },
+  {
+   "bild": 34,
+   "treffer": false,
+   "spitze": [
+    4383.0,
+    -2298.0,
+    0.0
+   ],
+   "zahnmitte": [
+    4128.0,
+    -2234.0,
+    0.0
+   ],
+   "spitze_in_teil10": [
+    3092.0,
+    425.0,
+    0.0
+   ],
+   "bisspunkt_alt": [
+    2639.0,
+    -2362.0,
+    0.0
+   ],
+   "spitze_minus_alt_xz": 1744.0
+  }
+ ],
+ "clips": {
+  "0": {
+   "bilder": 18,
+   "vorn": 4882,
+   "hinten": -3572,
+   "seitlich": 1681,
+   "schnauze_vorn": 4246
+  },
+  "2": {
+   "bilder": 60,
+   "vorn": 4396,
+   "hinten": -3591,
+   "seitlich": 2258,
+   "schnauze_vorn": 4396
+  },
+  "3": {
+   "bilder": 60,
+   "vorn": 5414,
+   "hinten": -3836,
+   "seitlich": 2770,
+   "schnauze_vorn": 4440
+  },
+  "4": {
+   "bilder": 50,
+   "vorn": 4949,
+   "hinten": -3836,
+   "seitlich": 2806,
+   "schnauze_vorn": 4431
+  },
+  "5": {
+   "bilder": 89,
+   "vorn": 4550,
+   "hinten": -3612,
+   "seitlich": 2256,
+   "schnauze_vorn": 4388
+  },
+  "8": {
+   "bilder": 30,
+   "vorn": 4585,
+   "hinten": -3603,
+   "seitlich": 2721,
+   "schnauze_vorn": 4383
+  },
+  "9": {
+   "bilder": 63,
+   "vorn": 4781,
+   "hinten": -3942,
+   "seitlich": 2254,
+   "schnauze_vorn": 4448
+  },
+  "10": {
+   "bilder": 126,
+   "vorn": 4742,
+   "hinten": -4062,
+   "seitlich": 3009,
+   "schnauze_vorn": 4412
+  },
+  "11": {
+   "bilder": 57,
+   "vorn": 5210,
+   "hinten": -3572,
+   "seitlich": 2312,
+   "schnauze_vorn": 4406
+  },
+  "12": {
+   "bilder": 56,
+   "vorn": 3838,
+   "hinten": -4291,
+   "seitlich": 2815,
+   "schnauze_vorn": 2439
+  },
+  "13": {
+   "bilder": 40,
+   "vorn": 4598,
+   "hinten": -3729,
+   "seitlich": 2224,
+   "schnauze_vorn": 4318
+  },
+  "26": {
+   "bilder": 35,
+   "vorn": 4943,
+   "hinten": -3522,
+   "seitlich": 2272,
+   "schnauze_vorn": 4943
+  },
+  "27": {
+   "bilder": 100,
+   "vorn": 5091,
+   "hinten": -3519,
+   "seitlich": 3074,
+   "schnauze_vorn": 4986
+  }
+ }
+}
