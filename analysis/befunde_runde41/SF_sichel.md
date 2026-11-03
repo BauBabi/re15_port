@@ -752,3 +752,38 @@ Am Bild:
 - h84-h87 Glieder am rechten Rand. Sie sind noch kleiner als das Video-Glied h84/h85 (Oberkante 111/120), das bleibt offen.
 Gegen Ref2 ist bis h80 nichts veraendert (gleiche Bilder). Ab h81 ist nichts schlechter gefunden.
 Tests: unit_birkin_szenen (Griff-Riegel), unit_birkin_formen, unit_schwanz_r41 gruen.
+
+### Schritt 1b: Glied h84/h85 groesser (nicht eingebaut)
+
+Ein groesseres Glied h84/h85 liesse sich nur ueber eine andere Pose des fliegenden Koerpers erreichen. Die Rueckenlage-Bilder 0x0B
+B0-30 heben kein Glied zur Kamera. Ein aufgerichtetes Sprungbild (0x16) waere der verworfene "Seestern"/Sprung. Nicht eingebaut,
+damit h81-h83 nicht wieder zuwachsen. Offen: Video-Glied h84/h85 bis y 111/120, neu nur am rechten Rand.
+
+### Schritt 2 nach Referenz 2: Loslassen
+
+Video 4:
+- h66-h70: Birkin haelt den Spider-Man oben links (Rumpf x ~100-170, y ~60-250).
+- h71: er sinkt links herab.
+- h72: kopfueber links (x 60-150).
+- h73/h74: unten links.
+Das Loslassen liegt zwischen h70 und h71.
+Ref2 84e8a4d97:
+- Die Hand schwang ab Bild 68 nach unten: Clip 0x0B B38 -> B44 bei Takt 70 -> 72, der Takt h wird im Bild h - 2 gezeichnet.
+- Bild 70 war schon 3041 Einheiten von der Hand weg, Bild 72 lag er am Boden.
+Neu (engine/src/birkin_formen.c):
+- Abschwung 2 Takte spaeter: k_birkin_bild B27 bei Takt 68, Wurfbild B44 bei Takt 74, Aufschlag B55 bei Takt 78;
+  k_birkin_gier mit.
+- Loslassen im Takt BF_H_LOS 73 = Bild 71 mitten im Abschwung (B41), mit dem Tempo der Hand.
+Griff-Abstand (griff6.py):
+
+| Stand | h69 | h70 | h71 | h72 |
+|---|---|---|---|---|
+| Ref2 | 0 | 3041 | 3120 | 2829 |
+| neu | 0 | 0 | 2617 | 3388 |
+
+Am Bild: neu h72 kopfueber oben links wie das Video, h73 links Mitte, h74 unten. Ref2 lag h70 schon unten links.
+Leiste 09_schritt2_loslassen_h66-h74.jpg (Video | Ref2 | neu).
+Gegen Ref2 schlechter: nichts gefunden. Birkin haelt 2 Bilder laenger hoch wie im Video.
+Tests: unit_birkin_szenen (Griff-Riegel), unit_birkin_formen, unit_schwanz_r41 gruen.
+Hinweis: Die hochskalierten Nutzerbilder (Version_80%/Screenshot 2026-11-03 *.png) liegen nicht mehr dort. Die Leisten nehmen ab
+jetzt das Videobild.

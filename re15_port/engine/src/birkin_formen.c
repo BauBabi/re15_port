@@ -188,14 +188,20 @@ void re15_bf_morph_zu_g5(int slot)
  * (h60), also links und nach rechts wandernd -> B10->28 (h17..35), zurueck ->12 (h51), wieder ->27 (h66). */
 #define BF_BILD_N 8
 static const int16_t k_birkin_bild[BF_BILD_N][2] = {
-    {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  66, 27 }, { BF_H_WURF, BF_WURF_BILD }, { BF_H_AUFSCHLAG, 55 },
+    {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  68, 27 }, { BF_H_WURF + 2, BF_WURF_BILD }, { BF_H_AUFSCHLAG + 2, 55 },
     { BF_H_GANG, 70 } };
+/* Schritt 2 nach Referenz 2 (Loslassen): Video 4 h66-h70 haelt Birkin den Spider-Man noch oben links (Rumpf x ~100-170, y ~60-250),
+ * h71 sinkt er links herab, h72 kopfueber links (x 60-150), h73/h74 unten links. Ref2 (84e8a4d97) schwang die Hand schon ab Bild 68
+ * nach unten (Clip 0x0B B38 -> B44 Takt 70 -> 72) und liess bei Bild 70 los (3041 Einheiten von der Hand). Jetzt der Abschwung
+ * 2 Takte spaeter (B27 bei Takt 68, Wurfbild B44 bei Takt 74, Aufschlag B55 bei Takt 78, Gier mit) und Loslassen im Takt
+ * BF_H_LOS = 73 = Bild 71 mitten im Abschwung (B41) mit dem Tempo der Hand. GESTALTUNG nach dem Video. */
+#define BF_H_LOS        (BF_H_WURF + 1)
 /* Birkin-Gier relativ zum Blick auf den Spider-Man-Start (Q12, 4096 = 360 Grad). Gestaltung nach dem Video: Birkin steht
  * zur Kamera gedreht (die haltende rechte Klaue liegt dann links im Bild, Gier 1300 = Bezug - 1270,
  * Video Rumpf x 110..145 bis h70), dreht h66..72 nach links und schmettert in Richtung des Ansprungs (Klaue B50 bei Gier
  * 2570 Bild (148,188), Video h72 Rumpf ganz links (60..150), Aufschlag (115..150, 203..215)). */
 static const int16_t k_birkin_gier[][2] = {
-    {   0, -1270 }, {  66, -1270 }, {  72,     0 }, { BF_H_AUFSCHLAG, 0 } };
+    {   0, -1270 }, {  68, -1270 }, {  74,     0 }, { BF_H_AUFSCHLAG + 2, 0 } };   /* Schritt 2: Abschwung 2 Takte spaeter */
 #define BF_GANG_SCHRITT  22          /* Video h90..135: ~1000 Einheiten in 45 Bildern */
 /* Runde 41 SF Neuaufbau ab NB2 (Nutzerwunsch "Schwanz: laenger, Laenge, Glieder und Baender wie im Video, Bewegung 1:1 nach
  * dem Video"): Schwanzbahn und Verdecken aus NB3-NB5 (r41/sichel 3f91e5c57) uebernommen. Die Tabelle ist je VIDEOBILD h; der
@@ -813,7 +819,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         m->x = bf_mix(BF_SM_X, s_h.ziel[0], u);
         m->z = bf_mix(BF_SM_Z, s_h.ziel[2], u);
         m->y = bf_mix(0, s_h.ziel[1], u) - (int32_t)(((int64_t)BF_BOGEN * bf_bogen(lin)) >> 12);
-    } else if (h < BF_H_WURF) {                                           /* gehalten bis zum Wurfbild (NB2-Kopplung) */
+    } else if (h < BF_H_LOS) {                                            /* gehalten bis zum Loslassen (NB2-Kopplung) */
         if (h == BF_H_BERUEHRUNG) bf_clip(m, BF_SM_GRIFF);
         else re15_r38_birkin_anim(m);                                     /* Zappeln: Clip 7 laeuft im Kreis */
         s_h.wvor[0] = m->x; s_h.wvor[1] = m->y; s_h.wvor[2] = m->z;       /* Neuaufbau: Lage vor dem Takt (Handtempo) */
@@ -840,14 +846,14 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     } else if (h < BF_H_WEG) {                                            /* Neuaufbau ab NB2: passiv geworfen (Kopf k_wurf_bahn) */
         const int hb = h + BF_BILD_VERSATZ;
         int32_t p[3], z[3];
-        if (h == BF_H_WURF) {                                             /* Loslassen im Wurfbild mit dem Tempo der Hand */
+        if (h == BF_H_LOS) {                                              /* Loslassen im Abschwung mit dem Tempo der Hand */
             s_h.w0[0] = m->x; s_h.w0[1] = m->y; s_h.w0[2] = m->z;
             for (int k_ = 0; k_ < 3; k_++) s_h.wv[k_] = s_h.w0[k_] - s_h.wvor[k_];
             bf_clip(m, BF_SM_LIEGT);
         }
-        bf_bild(m, BF_SM_LIEGT, (h - BF_H_WURF) * 2 > 30 ? 30 : (h - BF_H_WURF) * 2);   /* Rueckenlage, Glieder schlaff */
+        bf_bild(m, BF_SM_LIEGT, (h - BF_H_LOS) * 2 > 30 ? 30 : (h - BF_H_LOS) * 2);   /* Rueckenlage, Glieder schlaff */
         if (hb < k_wurf_bahn[0][0]) {                                     /* Flug vom Loslassen zum Boden: quadratisch */
-            const int h0 = BF_H_WURF + BF_BILD_VERSATZ, n_ = k_wurf_bahn[0][0] - h0;
+            const int h0 = BF_H_LOS + BF_BILD_VERSATZ, n_ = k_wurf_bahn[0][0] - h0;
             if (bf_wurf_punkt(b, 0, z)) {
                 const int32_t u = (hb + 1 - h0) * 4096 / n_;             /* Takt h wird im Bild hb gezeichnet: Stand fuer hb+1 */
                 for (int k_ = 0; k_ < 3; k_++) {

@@ -14,6 +14,7 @@ KOPF5 = KOPF[:3] + ('Ref2 84e8a4d97 (vom Nutzer gelobt)', KOPF[3])
 KURZ5 = KURZ[:3] + ('Ref2', KURZ[3])
 Z = json.load(open(os.path.join(RUNS, 'zuordnung_screenshots.json')))
 HOCH = {v['h']: os.path.join(r'C:/workspace/git/reAi_v2/Version_80%', k) for k, v in Z.items() if v['ncc'] > 0.95}
+HOCH = {h: f for h, f in HOCH.items() if os.path.exists(f)}   # Nutzerbilder liegen nicht mehr dort -> Videobild
 def videobild(h):
     if h in HOCH:
         return cv2.resize(cv2.imread(HOCH[h]), (640, 480), interpolation=cv2.INTER_AREA), True
