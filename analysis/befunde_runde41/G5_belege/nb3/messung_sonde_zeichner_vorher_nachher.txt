@@ -1,0 +1,34 @@
+Sonde RE15_G5_MORPH_SONDE (main.c, Zeichner-Eingang Teil 2 = nmi 2), Fensterlauf, Spielbild F = 1613 + Szenenbild
+== vorher (Kopf 77479f1f2 + Sonde), Leon 5090
+F1644 Bild 31 mv 1 w1ok 0 w0 186 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1693 Bild 80 mv 1 w1ok 0 w0 480 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1742 Bild 129 mv 1 w1ok 0 w0 774 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1778 Bild 165 mv 1 w1ok 0 w0 990 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1877 Bild 264 mv 1 w1ok 0 w0 1584 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1926 Bild 313 mv 1 w1ok 0 w0 1878 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F2092 Bild 479 mv 1 w1ok 0 w0 2874 w1 0 cut 17 bb x -3600..2693 y -4223..23 z -3648..3647
+[g5sonde] F1558 Ctor slot 2 typ 36 bank 0 ok -1 pose 0
+[g5sonde] F1613 T0 w1_ok 0 basis 0
+== nachher, Leon 5090
+F1644 Bild 31 mv 1 w1ok 1 w0 3078 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1693 Bild 80 mv 1 w1ok 1 w0 10296 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1742 Bild 129 mv 1 w1ok 1 w0 5796 w1 566 cut 16 bb x -3600..2887 y -4223..-241 z -3396..3394
+F1778 Bild 165 mv 1 w1ok 1 w0 -184 w1 2895 cut 16 bb x -3600..3688 y -4223..-1326 z -2358..2357
+F1877 Bild 264 mv 1 w1ok 1 w0 9440 w1 2865 cut 16 bb x -3600..3677 y -4223..-1312 z -2372..2370
+F1926 Bild 313 mv 1 w1ok 1 w0 -4168 w1 2865 cut 16 bb x -3600..3677 y -4223..-1312 z -2372..2370
+F2092 Bild 479 mv 1 w1ok 1 w0 8000 w1 2865 cut 17 bb x -3600..3677 y -4223..-1312 z -2372..2370
+F2290 Bild 677 mv 1 w1ok 1 w0 3152 w1 0 cut 17 bb x -3600..2693 y -4223..23 z -3648..3647
+[g5sonde] F1558 Ctor slot 2 typ 36 bank 0 ok -1 pose 0
+[g5sonde] F1613 T0 w1_ok 1 basis -4534
+== nachher, Elza 5091
+F1644 Bild 31 mv 1 w1ok 1 w0 3078 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1693 Bild 80 mv 1 w1ok 1 w0 10296 w1 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+F1742 Bild 129 mv 1 w1ok 1 w0 5796 w1 566 cut 16 bb x -3600..2887 y -4223..-241 z -3396..3394
+F1778 Bild 165 mv 1 w1ok 1 w0 -184 w1 2895 cut 16 bb x -3600..3688 y -4223..-1326 z -2358..2357
+F1877 Bild 264 mv 1 w1ok 1 w0 9440 w1 2865 cut 16 bb x -3600..3677 y -4223..-1312 z -2372..2370
+F1926 Bild 313 mv 1 w1ok 1 w0 -4168 w1 2865 cut 16 bb x -3600..3677 y -4223..-1312 z -2372..2370
+F2092 Bild 479 mv 1 w1ok 1 w0 8000 w1 2865 cut 17 bb x -3600..3677 y -4223..-1312 z -2372..2370
+F2290 Bild 677 mv 1 w1ok 1 w0 3152 w1 0 cut 17 bb x -3600..2693 y -4223..23 z -3648..3647
+[g5sonde] F1558 Ctor slot 1 typ 36 bank 0 ok -1 pose 0
+[g5sonde] F1613 T0 w1_ok 1 basis -4534
+== RE2-RAM (Abnahme 2, re2_v_sNN.txt): Bbox Mesh 2 s06 y -4224..-1327, s09/s13 y -4224..-1313, s17 y -4224..23

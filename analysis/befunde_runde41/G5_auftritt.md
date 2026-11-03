@@ -5,10 +5,11 @@ von Birkin aus dem Zug, sollst du die letzte Stufe GENAUSO machen wie bei Reside
 eine Grossaufnahme an seitlich der offenen Stelle des Zuges, und dann kommen da zunaechst die Tentakel vom finalen Birkin G5, und
 der zieht ihn dann rein. Schau es dir an!"
 
-Stand: Nachbesserung 2 (Abschnitt 8; ersetzt in 2.2 die PORT-WAHL "Lichtsatz 16/17 = Cut 11" durch RE2-Lichtsatz 9/10 und in 7.5 die
+Stand: Nachbesserung 3 (Abschnitt 9; Masse in Schnitt 16/17 mit Gewicht 1 gezeichnet, Vorkampf-Puls nach RE2 @0x801044FC; erledigt
+8.9 erster Punkt "Masse anders gedreht/hoeher"). Davor Nachbesserung 2 (Abschnitt 8; ersetzt in 2.2 die PORT-WAHL "Lichtsatz 16/17 = Cut 11" durch RE2-Lichtsatz 9/10 und in 7.5 die
 offenen Punkte Pistolenlauf, G5-Richtung, Speer-Phase, Uebergang Kampf). Davor Nachbesserung 1 nach Abnahme 1 (Abschnitt 7; ersetzt in
 2.1/2.2/3/4 "Leon steht", die Spielerlagen 1400/13873 im Cut-12-Teil und "XA-Ton nicht gebaut"). Belege: `G5_belege/`, `G5_belege/nb1/`,
-`G5_belege/nb2/`.
+`G5_belege/nb2/`, `G5_belege/nb3/`.
 
 ## 1. Was RE2 tut (selbst gelesen)
 
@@ -498,3 +499,148 @@ Vorlauf-Ton (sub04 @0x0169E Se_on Bank 2 Satz 12), Beben (9x Sce_shake_on) und T
 - **Spieltest-Strategie:** der Pistolen-Test zieht sich hinter X 18000 zurueck; ob die Arme (Reichweite bis ~X 24700) einen Spieler dort im
   RE2-Zufall treffen koennen, ist nicht gemessen - in beiden Laeufen kein Treffer.
 - Punkt 6 (Vorlauf-Ton/Beben/Tunnellichter), Musik MAIN11, PSX-Bau (Szenen-Schnitte, RE2-Licht nur PC-Plattform main.c), CD-Standbilder - wie 7.5.
+
+## 9. Nachbesserung 3 (Abnahme 2: NICHT BESTANDEN, M1 Masse ohne Aufbaeumen, M2 Atmen, M4/M5)
+
+Abnahme: `G5_abnahme_2.md`. Belege: `G5_belege/nb3/` (Werkzeuge `nb3/werkzeug/`, Pfade auf den Scratch-Ordner dieser Sitzung). RE2-Code:
+`build/extracted/re2_ems/CDEMD0_EM36_ai0.BIN`, Datei-Offset = Adresse - 0x80100000 (im RAM bei 0x80100000, Datenzugriffe dort mit `lui 0x8010`,
+in der Datei mit `lui 0x8011` relokiert). RE2-RAM: Savestates s01..s26 der Abnahme 1 (Lesewerkzeug `nb1/werkzeug/re2ss.py`).
+
+### 9.1 M1 Ursache (gemessen, nicht vermutet)
+
+Sonde `RE15_G5_MORPH_SONDE=<datei>` (main.c, im Zeichner direkt nach `re15_g5_morph_verts`, je Teil: Morphpuffer da, Gewichte, Bbox der
+uebergebenen Vertices) und zwei Zeilen im G5-Modul (Ctor und [T0], dieselbe Variable, stderr). Fensterlauf Leon 5090 auf dem Kopf 77479f1f2
+(`nb3/messung_sonde_zeichner_vorher_nachher.txt`):
+
+- Der Morphpuffer kommt beim Zeichner an (Teil 2 = nbi 2 -> nmi 2, `mv 1`), aber **Gewicht 1 ist in jedem Bild 0** (`w1ok 0`), die
+  gezeichnete Masse hat daher die Bbox der Grundform (y bis 23 statt RE2 -1313).
+- `[g5sonde] F1558 Ctor slot 2 typ 36 bank 0 ok -1 pose 0`, `[g5sonde] F1613 T0 w1_ok 0 basis 0`.
+
+Ablauf: `re15_bf_g5_auftritt_start` -> `re15_bf_morph_zu_g5` macht den Typwechsel und `re15_g5_boss_spawn`, der Ctor laeuft im selben KI-Takt
+(F1558). Die RE2-EM36-Bank laedt main.c aber erst im Render-Durchgang danach (`pc_enemy_load_ex`, Log `[enemy] RE2 EM036 loaded` hinter der
+F1558-Zeile). `g5_posieren` findet im Ctor keine Bank, die Ctor-Pose fehlt; [T0] liest daraus die Basis der Intro-Kopplung, findet nichts und
+laesst `s_g5_w1_ok` auf 0 - die Kopplung in [T2]/[T6] schreibt Gewicht 1 nie. `unit_r41_g5auftritt` sah das nicht, weil es die Banken vor dem
+Start lud (`g5_banken()`).
+
+RE2 (selbst disassembliert):
+- Ctor: Clip-Wort 0 `sw zero,332(s0)` @0x80100590 (`4c 01 00 ae`), Anim-Schritt `jal 0x8002959c` @0x801005a8 (`67 a5 00 0c`) = Pose Clip 0
+  Bild 0; die Bank ist in RE2 immer resident.
+- [T0] @0x80101164: Clip-Wort 0x1F0001 @0x8010116c, alle vier Gewichte 0 (`sh zero,12/16/20/24(v0)` @0x80101188/94/a0/ac), Basis
+  `lw v0,48(a3)` @0x801011f4 (`30 00 e2 8c`, Teil0+0x30 OHNE eigenen Schritt davor), `sh v0,0x5bb0(at)` @0x80101200 (RAM
+  `10 80 01 3c b0 5b 22 a4`), Blob 3 `sb v0,536(a1)` @0x80101208, Phase 0 `sb zero,537(a1)` @0x80101210.
+- [T2] @0x80101334-68: `lh v1,0x5bb0(v1)`, `lw v0,48(a3)` @0x80101338, `subu` @0x80101340, *4415 @0x80101344-58, `srl a0,v0,11` @0x80101360,
+  `sh a0,16(v1)` @0x80101368. [T6] @0x8010157c-b4 (*8830 >> 12).
+- RE2-RAM (`nb3/messung_re2_ram_ctor_basis_und_gewichte.txt`, Werkzeug `re2_w1_basis.py`): @0x80105bb0 = 0 in s01/s02 (vor [T0]), -4534 ab s03;
+  Teil0.y in s01/s02 = -4534 (Ctor-Pose, Clip-Wort 0x100).
+
+### 9.2 M1 Behebung
+
+`enemy_ai_boss_g5.c` (Haupttick, hinter dem Ctor-Block): solange der Boss seit dem Ctor keinen Schritt getan hat (Sub 2 Phase 0 = vor [T0])
+und die gehaltene Pose fehlt, wird der Ctor-Schritt (Clip-Wort 0 @0x80100590, Schritt @0x801005a8 ohne Stufen) nachgeholt, sobald die Bank da
+ist; Clip/Bild/Stufen des Aktors bleiben unberuehrt. Damit liegt beim [T0] dieselbe Pose vor wie in RE2. Keine Konstante neu; die Schnittstelle
+zur Form-Spur (`re15_bf_g5_auftritt_start`, `re15_bf_morph_zu_g5`) ist unveraendert. Spiel danach: `F1558 Ctor ... bank 0 pose 0`,
+`F1613 T0 w1_ok 1 basis -4534`.
+
+Riegel (`unit_r41_g5auftritt`, neu):
+- Bankreihenfolge wie main.c: EM36/EM37 fehlen im Takt des Typwechsels (`ok = 0` -> `re15_enemy_find` NULL), ab dem naechsten Bild da.
+- Gewichte gegen RE2-RAM an 8 Bildern (s03 31, s04 80, s05 129, s06 165, s08 264, s09 313, s13 479, s17 677): w0, Blob-Phase und w1 bitgleich.
+- **Zeichner-Vertices:** die Vertices, die main.c fuer Teil 2 uebergibt (`re15_g5_morph_verts(0x36, 2)`), an Bild 165/313/479/677 gegen den
+  RE2-RAM-Vertexpuffer 0x80132be0 (s06/s09/s13/s17): Bbox aller 635 und jeder 10. Vertex, Grenze 4 Einheiten. Tabelle aus den RAM-Abzuegen
+  der Abnahme 2 (`nb3/werkzeug/re2_morph_tabelle.py`).
+- Gegenproben (`nb3/messung_riegel_gegenproben.txt`): (a) ohne die Nachholung: rot, 8 Fehler - w1 0 statt 566/2895/2865, Zeichner-Vertices
+  weichen um 1334-1348 ab (Bbox 1336-1350), Bild 677 (w1 0) passt; (b) Engine-Stand 77479f1f2: rot, 12 Fehler - zusaetzlich w0 774 statt 5796 bei
+  Bild 129 usw. (dieselben Werte wie im Fensterlauf der Abnahme, `gw0` 990 bei Bild 165) und Bild 677 um 86 daneben. Mit Behebung gruen:
+  Zeichner-Vertices max. 2 Einheiten, Bbox 1.
+
+### 9.3 M2 Vorkampf-Puls (Blob 3 @0x801044FC)
+
+Selbst disassembliert (Werte in `enemy_ai_boss_g5.c` `case 3` je Zeile mit Adresse): Phase +0x219 `lbu v1,537(s0)` @0x80104510, `sltiu v0,v1,0x8`
+@0x80104518, Sprungtabelle (Datei-Offset 0x84) = 0x80104540 / 0x80104564 / 0x80104634 / 0x80104720 / 0x80104740 / 0x8010477c / 0x801047cc /
+0x801047d8.
+- Ph 0 @0x80104540: Ph 1 (Verzoegerungsplatz @0x80104548), `jal 0x80015fe8` @0x80104544, Zeitgeber +0x21C = 30 + rnd&0x1F @0x8010454c-54,
+  Tempo +0x21E = 6 @0x80104558-5c, +0x21B = 0 @0x80104560, faellt in Ph 1.
+- Ph 1 @0x80104564: w3 halbieren wenn != 0 (@0x8010456c-80), w0 += Tempo (@0x8010458c-98), Tempo += 6 bis 162 solange +0x21B = 0 (@0x801045a8-e4,
+  bei 162 +0x21B = 1); ab w0 >= 8501 (`slti v0,v0,8501` @0x801045f8) Tempo -= 6, unter 0 Ph 2 mit Tempo 8 (@0x80104604-30).
+- Ph 2 @0x80104634: w0 -= Tempo, Tempo += 8 bis 192 (@0x80104658-94); unter -1048 (@0x801046a8) Tempo -= 8, unter 0 zurueck in Ph 1 (@0x801046b4-dc);
+  w0 in [1, 2047] (`lhu`/`addiu -1`/`sltiu 0x7ff` @0x801046e8-f4) -> Ph 6 (@0x80104700); Zeitgeber -1 (@0x80104704-1c).
+- Ph 3/4/5 @0x80104720/@0x80104740/@0x8010477c: +0x21B = 7 + rnd&3, w0 -= 2136 bzw. += 712 im Wechsel; in CDEMD0_EM36_ai0.BIN setzt niemand Ph 3
+  (Zensus aller `sb ..,537`), gebaut der Vollstaendigkeit halber.
+- Ph 6 @0x801047cc: +0x220 = 0, Ph 7. Ph 7 @0x801047d8: w0 = 8000 - 24 * Tabelle[+0x220] (Tabelle @0x80105ad4, 110 x s16, Datei-Offset 0x5ad4,
+  `lh v0,0x2ad4(at)` @0x801047ec, *24 @0x801047f4-fc, 8000 @0x80104800), +0x220 + 1, bei 110 wieder Ph 6 (@0x80104810/@0x80104824).
+Vorher im Port ("vereinfachte Puls-Variante"): Tempo fest 6, nur Ph 1/2 (w0 774 -> 2820). Nachgerechnet (`nb3/werkzeug/puls_sim.py`,
+`nb3/messung_puls_sim_gegen_re2_ram.txt`) und im Riegel gemessen: bitgleich mit RE2-RAM an allen 8 Bildern; die 19 RAM-Werte s07..s25 sind
+saemtlich Tabellenwerte 8000 - 24 * t. Spanne der Szene -4288 .. 10692.
+
+### 9.4 Messwerte vorher / nachher (Fensterlauf, Sonde am Zeichner, Leon 5090 = Elza 5091)
+
+| Bild | RE2-RAM w0 / w1 / Bbox-y-max | vorher (77479f1f2) w0 / w1 / y-max | nachher w0 / w1 / y-max |
+|---|---|---|---|
+| 31 (s03) | 3078 / 0 / - | 186 / 0 / 23 | 3078 / 0 / 23 |
+| 80 (s04) | 10296 / 0 / - | 480 / 0 / 23 | 10296 / 0 / 23 |
+| 129 (s05) | 5796 / 566 / - | 774 / 0 / 23 | 5796 / 566 / -241 |
+| 165 (s06) | -184 / 2895 / -1327 | 990 / 0 / 23 | -184 / 2895 / -1326 |
+| 264 (s08) | 9440 / 2865 / - | 1584 / 0 / 23 | 9440 / 2865 / -1312 |
+| 313 (s09) | -4168 / 2865 / -1313 | 1878 / 0 / 23 | -4168 / 2865 / -1312 |
+| 479 (s13, Schnitt 17) | 8000 / 2865 / -1313 | 2874 / 0 / 23 | 8000 / 2865 / -1312 |
+| 677 (s17) | 3152 / 0 / 23 | - | 3152 / 0 / 23 |
+
+(Bbox aus der Sonde ist +-1 gegen die RAM-Bbox: die Sonde rechnet ueber alle 635 Vertices des Mesh, die RAM-Bbox ebenso; Rundung der
+GTE-Interpolation, Abnahme 2 3.1 "max 3 Einheiten".)
+
+### 9.5 Sichtbeleg (echtes Fenster, gdigrab, kein AUTOSHOT/SOFTWARE_RENDER)
+
+Laeufe `nb3/werkzeug/sonde_lauf.sh` (eigene exe-Kopie, hwnd der eigenen PID, 20 B/s, Eingabe wie integration_r41_birkin_pistole bis zur Szene),
+Zeitachse mit `abnahme2/werkzeug/port_zeit.py` (Kante 16 -> 17 vorhergesagt 85,67 / gemessen 85,65 s Leon, 85,02 / 85,00 s Elza; 29,42 B/s),
+Bilder `port_bilder.py`, RE2-Bilder der Abnahme 2.
+- Umriss-Probe (`nb3/werkzeug/silhouette_n.py` = Abnahme-Werkzeug plus Beschriftung): `nb3/umriss_leon_bild165/313/479/677.jpg`,
+  `nb3/umriss_elza_bild*.jpg`. Gruen = Masse gemorpht (RE2-RAM), magenta = Grundform. Bild 165/313: die Stachelreihe liegt im Port auf der
+  gruenen Diagonale wie in RE2 (vorher auf dem magenta Rand); Bild 479: Masse klein und flach im gruenen Umriss; Gegenprobe 677 (Gewicht 1 = 0):
+  beide Umrisse passen, RE2 und Port gleich.
+- Leisten RE2 echt | Leon | Elza: `nb3/vergleich_nb3_1_bild165_313_479_677.jpg`, `nb3/vergleich_nb3_2_schnitt16_bild180_240_360.jpg` (Stachelreihe
+  schraeg nach rechts unten wie RE2), `nb3/vergleich_nb3_3_schnitt17_bild450_472_520_600.jpg` (Masse in 17 klein und flach wie RE2).
+- Farbe der Masse (Flaeche wie Abnahme 2, `nb3/messung_farbe_masse.txt`): Bild 180 RE2 35/18/11, Port 31/16/10 (vorher 44/20/12); Bild 240 RE2
+  32/16/10, Port 23/12/8 (vorher 45/21/12); Bild 313 RE2 14/7/5, Port 13/6/5. Leon = Elza. Die Messflaeche enthaelt jetzt die gemorphte
+  Masse; bei 240 liegt im Port weniger Masse in der Flaeche (dunkler Hintergrund), ein Lichtunterschied ist daraus nicht abzulesen. Licht
+  unveraendert (NB2 8.5).
+
+### 9.6 M4 / M5: nicht gebaut, Mechanismus belegt
+
+- **Beben + Geraeusch (RE2 sub04 @0x0169E, gestartet von sub06 @0x0189A `04 06 18 04`):** `5c 00 fd` / `5c 00 fb` (@0x016A4/@0x016A8), Se_on
+  `36 02 0c 00 01 ..` @0x016AC, 6 x `5c 00 f9` (For @0x016B8), dann fa/fb/fc/fd/fe/ff (@0x016C4..@0x016D8), je 1 Bild; dazu sub05 @0x016DE
+  (8 x Sce_espr_on Effekt 0x19 an der Decke) und sub14 (op8C/op8B). Im Port ist Sce_shake_on ein Leerbefehl (`scd_vm.c` `op_sce_shake_on`,
+  `t->pc += 4`), es gibt keinen Beben-Zeichner; RE2-Raumton und RE2-Effekte dieses Raums laedt der Port nicht. Offen.
+- **Tunnellichter (sub06 @0x01894 `04 07 18 09`):** sub09 @0x01B20 startet sub11 (0x0B), nach 10 Bildern sub12 (0x0C); beide setzen Raum-Objekt
+  3 bzw. 4 auf (0,-4400,-16800) (`32 00 00 00 d0 ee 60 be` @0x01B50/@0x01B9C), ziehen es je Bild um 1000 (`26 00 01 10 e8 03` @0x01B84/@0x01BD0)
+  und setzen es an der Marke -20000 (`3e 00 0b 04 e0 b1`) zurueck; sub10 @0x01B2E beendet beide und parkt sie auf (-32000,0,-32000). Im Port
+  fehlen die RE2-Raumobjekte von ROOM7040. Offen.
+- **M5 Musik:** RE2s Sce_bgm_control @0x018F4..@0x01900 wirkt auf MAIN11 (7.1 M5); der Port spielt hier RE1.5 SUB_17. Eine Uebertragung der
+  Lautstaerke auf ein anderes Stueck ist nicht belegt. Bleibt PORT-WAHL (7.2), offen.
+- M3 (Kampfstart 13873, PORT-WAHL) und M6 (PSX) unveraendert.
+
+### 9.7 Tests (re15_port/build, ctest)
+
+| Lauf | Ergebnis |
+|---|---|
+| unit_r41_g5auftritt (neu: Bankreihenfolge wie main.c, Gewichte an 8 RE2-RAM-Bildern, Zeichner-Vertices Teil 2) | gruen 5090/5091; Gegenproben rot (9.2) |
+| G5/Birkin/Tentakel/Granate/PRI-Gruppe (28 Tests, -j 6) | 27/28; rot nur unit_r41_birkin_wand_g5 (9.8) |
+| integration_r41_g5_tod / _g5_westen / r35_zgirl_5090 / pri_masken / r36_pri_schatten (-j 3) | gruen (282 / 410 / 148 / 0,3 / 29 s) |
+| integration_r41_birkin_pistole | Lauf 1 ROT (Leon und Elza: G5 tot 0 bis F5400): ein Arm peitscht den Spieler bei x 23113 (F3576 45 -> 38, F3618 -> 31), Blick 2055 -> 640, mit durchgehend gehaltenem R1 kein neues Heben, also keine Zielhilfe; G5 blieb bei 150 HP. Die Zufallsfolge ist um einen Wurf verschoben (9.8); NB2 8.9 hatte "kein Treffer bei 23113" als ungemessen offen gelassen. Teststrategie angepasst: nach jedem 4-s-Abschnitt `W0.2`, das naechste Heben zielt neu (Latch FUN_8003703c rundum, Radius 0x7530 @0x80032fac, Drehung FUN_8001a8f8 0xC8 @0x80032fe0-ec). Lauf 2 GRUEN (419 s): je ein Peitschentreffer F3807 (45 -> 38), G5 tot F3973, Spieler-HP 38 (`nb3/messung_pistolentest_vorher_nachher.txt`) |
+| Alle Nicht-Integrationstests ohne die 6 Release-Skript-Tests (-j 6) | 1065/1066, 945 s; rot nur unit_r41_birkin_wand_g5 (9.8). Release-/Titelversion-Tests nicht gelaufen: df.exe haengt maschinenweit (Abnahme 2, 8.) |
+
+### 9.8 Befund ausserhalb der Spur: unit_r41_birkin_wand_g5 haengt an der Zufallsfolge
+
+RE2 wuerfelt im Puls-Eintritt (`jal 0x80015fe8` @0x80104544); der Port zieht dort jetzt ebenfalls einen Wert aus `re15_engine_rand8`. Alle
+spaeteren Wuerfe des G5 verschieben sich damit um einen. Im Fuzz-Riegel `unit_r41_birkin_wand_g5` (Spur R, 424 Startlagen) faellt danach eine
+Startlage auf: (2100,-25900), Lage i 14 (vom Test erzwungener Spiess-Griff, Variante 3): der gegriffene Spieler springt je Bild um rund 500 in z
+und endet in Bild 30 und 32 in Zelle 30 (`2 Bildenden in fester Zelle`). Gegenprobe (`nb3/messung_wand_g5_alt_plus_ein_zufallswurf.txt`):
+Engine-Stand 77479f1f2 mit NUR einem zusaetzlichen Wurf im alten Puls-Eintritt liefert genau dieselben zwei Bilder (Start, Bild, Lage, Zelle,
+Boss-x gleich). Ohne den Wurf (Zeitgeber fest) kippt statt dessen die 5091-Lage derselben Startlage (241 Bilder in Zelle 30). Die Luecke liegt
+also in der Spieler-Klemme waehrend des Griffs (Spur R, `re15_collision_constrain_re2`, Diagonale #30), nicht im Puls; sie haengt nur an der
+Zufallsfolge. Hier nicht behoben (fremde Spur), Saat des Tests nicht veraendert. Uebergabe an Spur R.
+
+### 9.9 Commits
+
+- `a73316c4f` fix(r41-g5auftritt): Nachbesserung 3 - Masse mit Gewicht 1 (Ctor-Pose trotz spaeter Bank), Vorkampf-Puls nach RE2, Zeichner-Riegel
+  (enemy_ai_boss_g5.c, re15_enemy.h, main.c Sonde, test_r41_g5auftritt.c).
+- `352a9a12f` test(r41-g5auftritt): Pistolentest hebt die Waffe nach jedem 4-s-Abschnitt neu (test_r41_birkin_pistole.cmake).
+- Folge-Commit: dieses Dossier und `G5_belege/nb3/`.

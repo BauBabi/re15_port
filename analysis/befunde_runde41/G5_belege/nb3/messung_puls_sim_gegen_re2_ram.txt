@@ -1,0 +1,30 @@
+Bild   31 RE2 ph 1 w0   3078 tempo 162 | Sim ph 1 w0   3078 tempo 162 t 58 i 0
+Bild   80 RE2 ph 1 w0  10296 tempo  66 | Sim ph 1 w0  10296 tempo  66 t 58 i 0
+Bild  129 RE2 ph 2 w0   5796 tempo 192 | Sim ph 2 w0   5796 tempo 192 t 21 i 0
+Bild  165 RE2 ph 7 w0   -184 tempo 192 | Sim ph 7 w0   -184 tempo 192 t 1 i 16
+Eintritt ph7: 150
+s07 -4000 Tabellenindex [65]
+s08 9440 Tabellenindex [4]
+s09 -4168 Tabellenindex [53]
+s10 8000 Tabellenindex [6, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+s11 -3928 Tabellenindex [27, 40, 42]
+s12 -2200 Tabellenindex [71]
+s13 8000 Tabellenindex [6, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+s14 -4216 Tabellenindex [35, 49]
+s15 7520 Tabellenindex [98]
+s16 -3904 Tabellenindex [38, 44]
+s17 3152 Tabellenindex [87]
+s18 -3928 Tabellenindex [27, 40, 42]
+s19 -880 Tabellenindex [76]
+s20 9200 Tabellenindex [2]
+s21 -3904 Tabellenindex [38, 44]
+s22 6080 Tabellenindex [94]
+s23 -4192 Tabellenindex [33, 51]
+s24 1160 Tabellenindex [82]
+s25 -3472 Tabellenindex [22, 24]
+Spanne Bild 0..1161: -4288 .. 10692
+Bild 165 (165, 7, -184, 192, 1, 16)
+Bild 264 (264, 7, 9440, 192, 1, 5)
+Bild 313 (313, 7, -4168, 192, 1, 54)
+Bild 479 (479, 6, 8000, 192, 1, 110)
+Bild 677 (677, 7, 3152, 192, 1, 88)
