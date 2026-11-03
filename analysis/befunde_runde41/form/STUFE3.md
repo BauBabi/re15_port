@@ -1,5 +1,103 @@
 # Stufe 3 Bahnsteig-Form: Bewegung, Angriffe, Einbau (laufendes Dossier)
 
+## Nachbesserung 3 (AN-Abnahme 2 N1: Riesenform kommt im echten Wagenweg mit HP 0 in Wagen C)
+
+Auftrag: Mangel N1 aus `.claude/worktrees/r41_annette/analysis/befunde_runde41/AN_abnahme_2.md` (Laeufe `kette_ohne`, `form_kette_ohne`).
+Belege: `stufe3/nachbesserung3/` (vorher_kette.txt, nachher_wagenweg.txt, gegenprobe_wagenweg.txt, probe_hp1000.txt;
+werkzeug/lauf.sh + kette_ohne_sw.env + zustand.py der Abnahme). Gegenprobe-exe: `re15_port/build/platform/pc/re15_pc_nb3_basis_917195879.exe`
+(unversioniert).
+
+### NB3-1. Reproduktion (exe 917195879 = Kopf r41/form vor der Behebung)
+
+Eigener Lauf `re15_port/build/nb3/vorher_kette` mit der Eingabe von `kette_ohne` (Raumladung 5090 am 6030-Eintrittspunkt
+(27200,4900), Flag (3,89), Wagen A -> B -> C zu Fuss, NOAUDIO/SOFTWARE_RENDER). HP des 0x30 (Slot 2), state.log:
+
+| Ort | Bild | HP | st/ss1 | stun | Herkunft |
+|---|---|---|---|---|---|
+| Wagen A (Raumladung) | F1 | 300 | 1/9 | 9 | EM30-INIT (Bank beim Spawn noch nicht geladen: Spawn debug.log Z. 89, "Bahnsteig-Form ... Slot 12" erst Z. 95) |
+| Wagen B (Tuer slot 0, Schnitt 9) | F498 | 150 | 1/0 | 0 | Eintritt re15_bb_tick (s_bb.slot war -1) |
+| Wagen C (Tuer slot 2, Schnitt 14) | F946 | **0** | 1/0 | 0 | kein Eintritt |
+| Kampfstart | F1169 | 0 | 1/0, Clip 10 | | |
+
+Bildgleich mit der Abnahme (F498/F946/F1169). Der Unit-Test `test_n3_wagenweg` (unten) bildet denselben Weg ohne Fenster nach und misst
+dieselben Werte (A 300, B 150, C 0) in ROOM5090 und ROOM5091.
+
+### NB3-2. Ursache
+
+- Die Wagentueren sind **Selbst-Tueren** (Ziel = ROOM5090): der Port nimmt dafuer `scd_room_reenter` (game_step_common.c,
+  "Same-room SCENARIO re-entry"), das den Aktorpool wischt und main00/sub00 neu startet, aber **kein** `re15_enemy_reset` ruft (nur der
+  Raumwechsel room_common.c tut das) - also auch kein `re15_bf_reset`/`re15_bb_reset`. Beleg: die Bank-Zeile "Bahnsteig-Form" steht nur
+  einmal im debug.log, die drei Spawn-Zeilen `Sce_em_set type=0x30` dreimal.
+- Sce_em_set legt die Form jedes Mal neu in Slot 2 an, Port mit `a->hp = 0` und `a->state = 0` (scd_vm.c op_sce_em_set).
+- Der Eintritt von re15_bb_tick (Port-Gegenstueck des G4-Ctors, setzt HP/Kasten/Sicherung) war an `s_bb.slot != slot` gebunden. In Wagen B
+  lief er (s_bb.slot -1 seit der Raumladung, die Form war vor der Bank ueber den EM30-INIT gegangen), in Wagen C stand s_bb.slot schon
+  auf 2: kein Eintritt, die HP blieben bei der 0 aus Sce_em_set. Mit HP 0 fuehrt der erste Treffer zu hp < 0 -> Zustand 3 -> Rueckstoss.
+- Der Debug-Sprung der Integrationstests in Wagen B hat nur EINE Selbst-Tuer (B -> C): dort laeuft der Eintritt, HP 150.
+
+Original (selbst disassembliert, `re15_disasm.py`, G4-Overlay = `info/re2leon/PL0/PLD/CDEMD0.EMS` ab Datei 0x653000, 0xB2D4 Byte,
+@0x80100000):
+- RE1.5 FUN_8001d600: `beq v1,v0,0x8001d988` @0x8001d968 vergleicht nur die Stage, `jal 0x800396fc` @0x8001d988 (bf e5 00 0c) laedt den
+  Raum unbedingt, auch bei Ziel = derselbe Raum. FUN_8001a4c0 nullt den Entity-Pool (`sw zero,0(at)` @0x8001a4e8, 20 Slots).
+- RE1.5 Sce_em_set: `sw zero,4(s0)` @0x800421e0 (04 00 00 ae) = +0x4..+0x7 = 0 bei JEDER Anlage.
+- G4-Wurzel: `lbu v0,4(s5)` @0x80100314 (04 00 a2 92), `lw v0,-20640(at)` @0x80100328 (60 af 22 8c) = Tabelle @0x8010af60
+  {0x8010062c Ctor, 0x80100bbc, 0x80106d3c, 0x801076ec}, `jalr v0` @0x80100330. Zustand 0 = Ctor.
+- G4-Ctor 0x8010062c: `sw v0,4(s1)` @0x80100654 (04 00 22 ae, v0 = 1: +0x4 = 1, +0x5..+0x7 = 0 = Auftritt), HP `sh v0,342(s1)`
+  @0x8010067c (56 01 22 a6) mit 1000 @0x80100678 (e8 03 02 24) bzw. 1100/900.
+- RE1.5-0x30 zum Vergleich: INIT `ori v0,zero,0x12c` / `sh v0,154(v1)` @0x80117120-24 STAGE5.BIN (@0x8011690c-10 STAGE3.BIN), ebenfalls
+  bei jeder Anlage. Beide Engines geben der neu angelegten Form also ihre Start-HP; ein "Schaden behalten" ueber den Wagenwechsel gibt
+  es im Original nicht (die Tuer legt ein neues Entity an).
+
+### NB3-3. Behebung (Commit 20998731f; Integrationstest 8ae5263fb, Pruefung 5 und Dossier im Folgecommit)
+
+- `re15_bb_tick` (birkin_bahnsteig.c): Eintritt bei `s_bb.slot != slot || e->state == 0`. Zustand 0 = neue Anlage (Sce_em_set @0x800421e0),
+  wie die Ctor-Verteilung @0x80100314-330. Im selben Raum setzt der Eintritt nichts zurueck (die Form steht nach dem Eintritt in 1/2/3).
+- `RE15_BB_FORM_HP` (include/re15_birkin_formen.h) = 150, PORT-MASS (die 0x96 der Mutation `ori v0,zero,0x96` / `sh v0,154(v1)`
+  @0x80118094-98 STAGE3.BIN, 96 00 02 34 9a 00 62 a4). Beide Zuweisungen in birkin_bahnsteig.c und der M3-Unit-Check nehmen sie; der
+  neue Integrationstest liest den Wert aus dem Kopf. **Integration mit Spur GR:** dort steht `#define RE15_BB_FORM_HP 1000` an derselben
+  Stelle (vor re15_bf_morph_zu_g5); bei der Zusammenfuehrung nur den Wert (und GRs Herleitungskommentar) uebernehmen. GR aendert auch den
+  Eintritt von re15_bb_tick (Zeilen um die HP-Zuweisung): die Bedingung `s_bb.slot != slot || e->state == 0` muss erhalten bleiben,
+  integration_r41_form_wagenweg und unit_birkin_bahnsteig (test_n3_wagenweg) pruefen das.
+
+### NB3-4. Messwerte nach der Behebung (integration_r41_form_wagenweg, Laeufe lauf_d2f26a55 und lauf_b7cdeef9 bildgleich)
+
+| | vorher (exe 917195879) | nachher |
+|---|---|---|
+| HP Wagen B / Wagen C (F946) | 150 / **0** | 150 / 150 |
+| Kampfstart (Clip 10) | F1169, HP 0 | F1169, HP 150 |
+| Treffer auf die Form bis zur Rueckstoss-Szene | 0 (Szene beim ersten Treffer F1237) | 10 (F1237 .. F1464, je 15), Szene beim 11. F1486 |
+| Kampfdauer ab erstem Treffer | 0 Bilder | 249 Bilder (8,3 s) |
+| Angriffe der Form im Beschuss | keine | Rennen F1296 (Leon hp 100 -> 95 F1322), Biss F1377/F1446 (verfehlt); Zucken F1420 |
+
+Unit (`test_n3_wagenweg`, 5090 und 5091): A 300 (EM30-INIT), B/C/C2 je 150, Zustand 1/0; Gegenprobe mit der alten Bedingung: C und C2
+HP 0 (6 FAIL). Im selben Raum bleibt die HP nach Treffer und 30 Ticks stehen (kein Eintritt ohne neue Anlage).
+
+### NB3-5. Tests
+
+- Neu `integration_r41_form_wagenweg` (tests/integration/test_r41_form_wagenweg.cmake): Raumladung 5090 am 6030-Eintrittspunkt (derselbe
+  Raumwechsel re15_room_apply_pending wie die 6030-Tuer), dann zu Fuss A -> B -> C (Tastenskript w8 der Abnahme), Zielen + Feuer. Prueft:
+  beide Wagentueren und drei Spawns, HP in B und C = RE15_BB_FORM_HP, Treffer im Kampffenster >= RE15_BB_FORM_HP/30 (min. 3), HP der
+  Form steigen im Kampf nie (Schaden bleibt), Leon nach dem ersten Treffer mindestens einmal getroffen; kommt die Rueckstoss-Szene,
+  dann erst nach Abzug >= RE15_BB_FORM_HP - groesster Einzelabzug, sonst muss die Form am Laufende noch leben.
+  Messhaken RE15_R39_MESS_SPIELER_HP=100 (kein Spielverhalten), damit der stehende Schuetze auch mit GRs 1000 HP lebt; Endbild
+  1500 + 4 x HP, Zeitlimit wachsen mit dem Wert. Gruen (90 s); **Gegenprobe exe 917195879 rot** (C: HP 0, 0 Treffer, Szene nach 0 HP
+  Abzug, Leon nicht getroffen).
+- Probelauf mit RE15_BB_FORM_HP 1000 (nur der Kopf geaendert, danach zurueck auf 150 und neu gebaut): HP B/C 1000, 64 Treffer, Leon 42x
+  getroffen, keine Rueckstoss-Szene bis F5500, Form bei HP 40. Ursache: Leon steht ab ~F3250 an der Suedwestecke (-12,-26433) und zielt
+  auf den naeheren 0x4D-Aktor, den r41/form aus der RDT anlegt ((600,-25300), Zustand 4, hp -1; Munition 82 -> 11 ohne Treffer auf die
+  Form). In der Integration verwirft Spur AN den 0x4D bei (3,89) ohne (9,133) ("0x4D verworfen", AN-Abnahme 2 Lauf kette_ohne); dort
+  pruefen.
+- `unit_birkin_bahnsteig` um `test_n3_wagenweg` (5090/5091) erweitert, gruen; Gegenprobe rot (s.o.).
+- Suite `^unit_|^prop_|^probe_` ohne `releaseskript|android|r37_masken36_ausschluss|paket|titelversion`, `-j 4`: 1036/1036 gruen (210 s).
+- Integration (alle mit dieser exe): integration_r41_birkin_pistole gruen (253 s), integration_r41_g5_tod gruen (273 s),
+  integration_r41_g5_westen gruen (293 s), integration_r35_zgirl_5090 gruen (147 s).
+
+### NB3-6. Offen / Hinweise
+
+- Die Ursache ist allgemein: jeder Port-Zustand ausserhalb von g_actors, der an "Slot" haengt, ueberlebt eine Selbst-Tuer. Fuer die Form ist
+  das mit dem Zustand-0-Eintritt erledigt; `re15_bf_reset` (Rueckstoss-Szene s_rs, Kameras) laeuft bei Selbst-Tueren weiterhin nicht. Im
+  Wagenweg ist das folgenlos (die Szene beginnt erst in Wagen C), nicht geprueft fuer einen Tuerwechsel waehrend der Rueckstoss-Szene.
+- Erreichbarkeit (Weg Torschalter -> Zugtuer, H2 der Abnahme) nicht Teil dieses Auftrags.
+
 ## Nachbesserung 2 (E22: Kopf Krokodil statt Nilpferd, Textur durchgehend; Zusatzpunkt START im Griff) - laufend
 
 Auftrag: Orchestrator nach E22 (NUTZER_ENTSCHEIDE.md). Drei Spuren: Kopf (Hauptstrang, dieser Abschnitt), Textur (eigener Bericht
