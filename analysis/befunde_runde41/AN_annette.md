@@ -1,6 +1,6 @@
 # Spur AN: Annette-Szene im hinteren Zugwagen (Runde 41, laufendes Dossier)
 
-Arbeitsbaum `.claude/worktrees/r41_annette`, Zweig `r41/annette`, Basis `r41/form` 62f0be3ac. Wer nach einem Abbruch weitermacht,
+Arbeitsbaum `.claude/worktrees/r41_annette`, Zweig `r41/annette`, Basis `r41/form` 62f0be3ac (ab Nachbesserung 3: r41/form 7d79bcfae gemergt). Wer nach einem Abbruch weitermacht,
 liest zuerst Abschnitt 0.
 
 Auftrag, Wortlaut Nutzer: "Sobald man den Boss aussen besiegt hat, den Generator eingeschaltet und das Tor geoeffnet, ist Anette nicht
@@ -19,6 +19,7 @@ haben und dann die G5 Form."
 | Phase 2: Bau | erledigt (Abschnitt 8), Tests gruen (Abschnitt 9), Sichtbelege (Abschnitt 10). Der Bau weicht vom Plan in Abschnitt 3/4 an drei Stellen ab (8.2). Offen: Abschnitt 11. |
 | Nachbesserung 1 (2026-11-02) | erledigt (Abschnitt N1): RE2-Szene auf der Claire-Disc gefunden und im Emulator aufgenommen, 5090-Szene danach umgebaut, Zugstart-Szene 6030, Toene (ANNETTE_SE.VBS), F7-Recherche. Offen: N1.10. Abschnitte 1.2, 3, 5, 7, 8.2 sind dadurch teils ueberholt (N1 gilt). |
 | Nachbesserung 2 (2026-11-02/03) | erledigt (Abschnitt N2): Bit 133 eingetragen, Ausgang 6030 vor dem Zugstart = Tuer (msg 20 erst danach), Musikwechsel als Original belegt, Blut = RE2-Emitter FUN_80104C24, Sherry vermerkt. Offen: N2.8. |
+| Nachbesserung 3 (2026-11-03) | erledigt (Abschnitt N3): r41/form gemergt; nach Abnahme 1 Satz/Landung in Cut 11 mit neuen Lagen und RE2-Vorstoss (M1), Abgang 6030 ueber Cut 0 (M2), Zusammensacken im Trefferbild (M4), Blut in RE2-Bildgroesse (M5), Untertitel = RE2-Stimmlaenge (M6), PAL-Takt + Ausholen nach der Aufnahme (M7), Leiche beim Wiedereintritt (M8), Kampfstart Cut 11 geprueft (M9). Offen: N3.12. |
 
 Belege dieser Spur: `analysis/befunde_runde41/AN_belege/` (Werkzeuge unter `werkzeug/`).
 
@@ -730,3 +731,188 @@ Fensterlaeufe nur mit eigener exe-Kopie, beendet per eigener PID (an_lauf.sh); d
 - F4 (Annette hielt William fuer tot), F7 (spaeter), ZUG_AN-Alternative 7030, NTSC-Bildzahlen, Haut der Form beim Kampfstart:
   wie N1.10.
 - `alle[64]` in test_r36_kartenbits.c teil_p: 61/64 belegt (N2.1).
+
+## N3. Nachbesserung 3 (2026-11-03)
+
+Auftrag: Abnahme 1 (`AN_abnahme_1.md`, NICHT BESTANDEN) - M1, M2, M4 bis M8 beheben, M9 nach dem Merge pruefen, M3 (Aufnahmen)
+bleibt beim Nutzer. Vorher r41/form in r41/annette mergen und alles auf dem neuen Formstand messen.
+
+### N3.0 Merge r41/form
+
+- `git merge r41/form` (Kopf 7d79bcfae, neuer als 8c7cc6754: dazu Textur-Werkzeug E22 und START im Griff) -> Merge-Commit
+  b0685df4f. Textuell ohne Konflikt; ueberlappend nur `engine/src/enemy_ai_common.c` (Annette-Haken in run_all + Koerper-Schub der
+  Form) und `platform/pc/main.c` (Annette-Modell/Ton + Form-Schatten/Messspalten), beide Seiten erhalten. Die Annette-Szene laeuft
+  weiter vor dem Kampfstart (Evt_exec sub04 -> Programm -> am Ende sub04).
+- Tests direkt nach dem Merge: unit_r41_annette (+ _se_bank/_toene/_lagen), unit_r36_kartenbits, unit_birkin_bahnsteig,
+  unit_birkin_formen, unit_birkin_szenen, unit_r41_form_emd, unit_n2_griff_start, unit_r41_birkin_wand_rein/_g5, gruen;
+  integration_r41_annette (278 s), integration_r41_birkin_pistole (322 s), integration_r35_zgirl_5090 (182 s) gruen.
+
+### N3.1 Messweg
+
+- Alle Bilder dieses Abschnitts aus dem ECHTEN Fenster (eigene exe-Kopie `re15_pc_n3_*`, Renderer des Nutzers, kein AUTOSHOT, kein
+  SOFTWARE_RENDER), Bild fuer Bild per `RE15_FRAMEDUMP` (komponiertes Bild direkt vor dem Present, kein Bildausfall):
+  `AN_belege/werkzeug/n3/n3_lauf.sh`. Bildleisten `blatt.py`, RE2/Port-Blatt `vergleich.py` (RE2-Bilder aus
+  `re2_claire/re2c_szene_320.mp4`, Clipzeit = Videozeit - 1,00 s).
+- Bildanteil: `szmass.py` baut die Port-Zeichenkette fuer Form (BAHNSTEIG_FORM.EMD/TIM) und Annette (ANNETTE_4D.EMD) nach
+  (form_buehne-Kette, RID 5090 @0x60 + 32 * Cut), zeichnet einen ID-Puffer und zaehlt im Band zwischen den Kinobalken (render_pc.c
+  FUN_80021a0c: Balken (0,0)-(320,24) und (0,216)-(320,240)). `satzmass.py` nimmt Lage/Gier/Clip/Bild je Spielbild aus dem state.log
+  des Fensterlaufs. Gegenprobe: alter Stand (L (500,-22600)) Cut 15 Form 71-97 %, Annette 0-32 % frei = Abnahme M1 ("70-80 %");
+  NB3-Erstlauf F600 Cut 15 offline 74 % = Fensterbild. Fehler auf dem Weg (behoben): die Gier rechnete zuerst mit atan2(dz, dx);
+  `re15_atan2_q12(dz, dx)` ist atan2(dx, dz) (gemessen: L -> S Gier 3957 im Spiel, 3959 im Werkzeug).
+
+### N3.2 M1 (schwer): Satz und Landung, Form verdeckt Annette
+
+Befund gemessen (`suche3.py`, `suche3_3760.json`, `suche3_5157.json`): Cut 15 (Auge (46,-1236,-24302)) sieht vom Wagen nur x 0..6000;
+mit 3760 Abstand (Trefferfenster Clip 4) oder 3760 + 1397 (RE2-Vorstoss) gibt es KEINE Lage im Gang, bei der Annette >= 95 % frei
+ist und die Form <= 40 % des Bildes deckt (beide Listen leer). Der erste NB3-Lauf mit einer anderen Lage zeigte es im Fenster:
+Cut 15 beim Satz 74 % Form, Annette nur unten rechts. RE2 0x0B (hoch von Williams Seite) hat in 5090 keine Entsprechung.
+
+Behebung (PORT-WAHL, `annette_r41.c` Lagen-Kopf und k_prog):
+- Satz in Cut 11 (von Annettes Seite, wie Abnahme-Zeile "Bruellen, Anstarren: gut" und wie Foto #145), Lagen per `suche4.py`:
+  S (3700,-22500), L (-1378,-23395), Abstand 5157 = 3760 + 1397. W1 (5979,-23427), W2 (4732,-22920) wie bisher 47 %/76 %.
+- Sturz/Landung ebenfalls in Cut 11 (Schnitt mit dem Sturz-Signal, RE2 @0x010CA): die Form faellt vor der Tuer ganz ins Bild.
+- Schnittfolge jetzt 12 / 15 / 11 / 13 (RE2 7 / 2 / 0x0A+0x0B+0x0A / 6).
+- Vorstoss beim Hieb: RE2 Birkin x -6600 (e20) -> -7997 (e22) = 1397 (AN_VORSTOSS); die Gier des Hiebs wird an der Lage nach dem
+  Vorstoss gewaehlt.
+
+Messwerte (Fensterlauf `n3_leon`, Lagen aus dem state.log, `satzmass.py`):
+
+| Bild | Schnitt | Form im Bild | Annette frei | Annette ganz zwischen den Balken |
+|---|---|---|---|---|
+| F479 gelandet | 11 | 9,9 % | 100 % | ja (y 177..402 von 48..432) |
+| F520 Bruellen | 11 | 8,7 % | 100 % | ja |
+| F596 Satz | 11 | 10,1 % | 100 % | ja (y 187..424) |
+| F650 Satz | 11 | 9,7 % | 100 % | ja |
+| F700 Satzende | 11 | 9,8 % | 100 % | ja |
+| vorher (Abnahme w8) Satz | 15 | 70-80 % (Werkzeug 71-97 %) | 0-32 % | nein |
+
+Bilder: `AN_belege/n3/szene5090_n3.jpg` (20 Felder), `vergleich_re2_port_n3.jpg` (13 Zeilen RE2 | Port), `szene5090_n3.mp4`
+(30 Bilder/s, F270..F1250).
+
+### N3.3 M2 (mittel): Abgang in 6030
+
+Befund: das Auge von Cut 1 (RID 6030 Cut 1 (-5886,-3132,-23058)) steht in der Tuer selbst (Tuerrechteck main00 @0x00C32 x
+-5100..-4200); wer zur Tuer geht, laeuft in die Kamera, am Ziel (-3873,-22550) blieben Kopf und Rumpf im Bild (Projektion x 94..105,
+Fuesse unter dem Rand) - daher "gross im Vordergrund, dann weg".
+
+Behebung (PORT-WAHL, Original-Bytes): vor dem Gehen Cut 0 (sub08 @0x01336 `29 00`, Eintrittskamera, Tuer rechts im Bild), sie geht
+zur Tuer; im Ankunftsbild Schnitt auf Cut 1 (sub08 @0x0114A `29 01`) und im selben VM-Schritt versteckt (6000 @0x0100A).
+Gemessen (Fensterlauf `n3_zug`): Cut 0 F757..F786, sie steht in F786 an der Tuer neben Leon, F787 Cut 1 ohne sie. Es gibt kein Bild,
+in dem sie innerhalb eines Schnitts verschwindet. Bilder `AN_belege/n3/zugstart6030_n3.jpg`, `zugstart6030_n3.mp4`.
+
+### N3.4 M4 (mittel/leicht): Reaktion auf den Treffer
+
+Im Trefferbild sackt Annette mit 0x4D-Clip 6 sofort zusammen (Bild 0..12, ab Bild 12 am Boden, gehalten); bis dahin Clip 4. Gemessen:
+Treffer F752 Clip 6/0, F764 am Boden; vorher (Abnahme) 1,0 s aufrecht mit erhobenen Armen. RE2 zeigt sie in diesem Moment nicht.
+Beim Schnitt weg (F785) wird sie wie bisher an die Lage aus @0x01162 gelegt.
+
+### N3.5 M5 (leicht): Blut sichtbar
+
+Kette unveraendert RE2 (FUN_80104C24: 15 Bilder x 2 Klauen, Effekt 0/sub 1). Neu ist nur die Skala: gleiche Bildgroesse wie RE2.
+RE2 Schnitt 0x0A: ROOM6141 RID @0x64 + 0x0A * 32 = fov 32946 (H 257), Auge (-10656,-684,-16056); erster Blutplatz RAM e22 Slot 6
+(-8064,-1865,-16471) = 2878 vom Auge. Port: Skala = 0x2000 * (257 / H) * (Abstand / 2878) mit H und Auge des angezeigten Schnitts
+im Trefferbild (`blut_skala`). Fensterlauf: Cut 11 H 208, Klaue 14 4492 vom Auge -> Skala 0x3DB6.
+
+Blut-Flaeche (Anteil rein roter Pixel im Band, abzueglich des Bildes vor dem Treffer, `blutflaeche.py`):
+
+- RE2 (Aufnahme ab 71,09 s): 3,7 % / +0,21 s 5,5 % / +0,34 s 12,0 % / +0,51 s 16,4 % / bis +1,04 s 16,4 % (bis zum Schnitt).
+- Port NB3 (ab Treffer F752): 2,1 % / +0,13 s 14,6 % / +0,27 s 12,1 % / +0,40 s 7,5 % / +0,53 s 9,3 % / +0,67 s 8,4 % /
+  +0,80 s 1,3 % / +1,07 s 1,1 %.
+- Vorher (Abnahme M5): "kleiner dunkelroter Fleck am Boden, ~0,9 s".
+
+Rest: RE2-Zeilen wachsen am Ort und stehen bis zum Schnitt, die RE1.5-Zeilen 0/1 fallen und zerspritzen (N2.4) - im Port ist die
+Wolke so gross wie in RE2, aber nach 0,7 s weg statt 1,1 s. Pool weiter 96/96 waehrend der 15 Bilder.
+
+### N3.6 M6 (leicht): Untertiteldauer
+
+Der Port zeigt eine Zeile genau ihren `01 nn`-Halt lang (msg_common.c re15_msg_compute_duration, FUN_80028134 Zustand 6). Halt jetzt
+je Zeile (`tools/r41_annette/texte_bauen.py`): 43 "William." 35 Bilder (Xa 0x30 11 Sektoren = 1,173 s), 40 "W-William! You're
+alive!" 118 (Xa 0x31 37 Sektoren = 3,947 s), 42 "Leon: Annette!" 60 (= Sleep bis zum Kampfstart); 6030 bleibt 99.
+Gemessen (state.log, Spalte msg): 43 F376..F411 (Schnitt F442), 40 F592..F710 (endet mit dem Hieb-Signal), 42 F828..F888
+(Kampfstart F888/F889). Vorher 99 Bilder ueber den Schnitt bzw. ueber den Kampfstart.
+
+### N3.7 M7 (Info): Tempo und Ausholen
+
+- Die RE2-Sleeps zaehlen PAL-Spielbilder (25/s, VSync(2) @0x8002ade4-ec); jetzt PAL(n) = n * 6 / 5 Port-Bilder (30/s): 25 -> 30,
+  36 -> 43, 30 -> 36, 60 -> 72, 1 -> 1. Die Xa-Laengen waren schon Sekunden.
+- Hieb nach der RE2-Aufnahme (re2c_12b_hieb_dicht.jpg): Signal/Schnitt 69,77 s, Birkin steht noch 70,05 s, Ausholen ab 70,22 s,
+  Blut 71,09 s, Schnitt 6 72,23 s -> Port: 13 Bilder Vorlauf (Form steht), Clip 4 Bild 0..14 mit 2 Takten je Bild (28 Bilder), dabei
+  der Vorstoss 1397, Treffer, 34 Bilder bis zum Schnitt (zusammen 75 = Sleep im Programm).
+
+| Schritt (s ab Krach) | RE2 | Port vorher (Abnahme w8) | Port NB3 (n3_leon) |
+|---|---|---|---|
+| "William." | 3,53 | 2,80 | 3,20 |
+| Schnitt Gang | 8,07 | 4,83 | 5,40 |
+| Sturz | 9,30 | 5,43 | 6,07 |
+| Landung | 10,21 | 5,93 | 6,57 |
+| Bruellen | 11,77 | 6,90 | 7,97 |
+| Satz | 14,80 | 8,93 | 10,40 |
+| Hieb-Signal | 20,37 | 12,87 | 14,33 |
+| Ausholen sichtbar | 20,82 | (keins) | 14,77 |
+| Treffer/Blut | 21,69 | 13,37 | 15,73 |
+| Schnitt weg | 22,83 | 14,40 | 16,83 |
+| Steuerung / Kampfstart | 24,39 | 17,8 | 20,27 |
+
+Hieb-Signal -> Treffer: RE2 1,32 s, Port 1,40 s (vorher 0,5 s); Treffer -> Schnitt weg: RE2 1,14 s, Port 1,10 s. Rest der
+Gesamtdifferenz (4,1 s): Annettes Weg ist im Port 4640 lang, in RE2 17000 (drei Plc_dest-Strecken), und RE2 laedt an jedem Schnitt
+von der CD (0,3-0,7 s Standbild je Schnitt, zeitachse.md) - beides nicht nachgebaut.
+
+### N3.8 M8 (Info): Leiche beim Wiedereintritt
+
+RE2 legt Annette bei spaeteren Besuchen liegend hin (Claire ROOM6141 MAIN sub00 else-Zweig @0x00D16, gleiche Lage wie Pos_set
+@0x01162). Kein neues Bit: (3,42) schreiben nur ROOM5090 sub01 @0x0129A und ROOM5091 @0x0127E (Byte-Suche `22 03 2a` ueber alle
+RDTs); in 5090 heisst (3,89) und (9,133) und (3,42) also "Szene gelaufen". Port: die 0x4D aus sub00 @0x0122A wird dann nicht mehr
+verworfen, der erste Takt legt sie (Phase RE15_AN_RUHE) an die Lage aus @0x01162 (Stand S), Clip 6 Bild 12 gekippt, hp -1,
+ANNETTE_4D_BLUT.EMD. Auch beim Neuaufbau desselben Raums (Tuer Wagen B -> C ist ein Wiedereintritt in 5090) wird sie neu gelegt.
+Liegen-Zerlegung korrigiert: RE2-Versatz in Williams Blickrichtung = 1215 weg, +245 quer (NB1/NB2 hatten die Achsenwerte 1203/-299,
+Seite gespiegelt) -> Leiche (4856,-22048), 348 vor dem Regal SCA #28.
+Fensterlauf `n3_leiche` ((3,89),(9,133),(3,42) per Flag, Weg aus Wagen B): Leiche in Cut 12 hinten rechts, in Cut 11 vorn rechts;
+kein Formauftritt, keine Szene. Bild `AN_belege/n3/leiche_wiedereintritt_n3.jpg`.
+
+### N3.9 M9 (Form-Spur): Kampfstart
+
+Nach dem Merge tritt die Form beim Kampfstart in Cut 11 auf (form/STUFE3.md N4a). Fensterlauf: "Leon: Annette!" bis F888 in Cut 13,
+F889/F890 noch Cut 13, ab F891 Cut 11 mit der ganzen Form, F949 Cut 12. Ein Bild "nur Haut" in Cut 15 gibt es nicht mehr
+(`AN_belege/n3/kampfstart_n3.jpg`). Leon steht beim Satz nicht mehr im Bild (Cut 11 schaut von ihm weg).
+
+### N3.10 M3
+
+Unveraendert: `synchro/STAGE5/room5090/main40..43.wav` und `synchro/STAGE6/room6030/main27..30.wav` fehlen (Sache des Nutzers).
+Die Untertitel-Halte (N3.6) sind die Laengen, die die Aufnahmen haben sollten.
+
+### N3.11 Tests
+
+Bau `bash re15_port/tools/local_build.sh build`: LOCAL-BUILD-OK.
+
+| Test | Inhalt (neu in NB3) | Ergebnis |
+|---|---|---|
+| `unit_r41_annette` | Schnittfolge 15/11/13 im Programm, 12/15/11/13 im Takt; Sleeps 30/43/1/35/36/72/1/118/75/1/42/60; Annette steht bei S (3700,-22500); Hieb-Signal -> Treffer 42 Bilder, Treffer -> Schnitt weg 33..36; Annette Clip 6 im Trefferbild; Untertitel-Halt 35/118/60; Leiche 1215 von L / 245 quer; Wiedereintritt (3,42)=1: Leiche (4856,-22048) Clip 6/12, hp -1, Phase RUHE, Blut-Kittel; 6030: vor dem Verstecken Cut 0, beim Verstecken Cut 1 | gruen |
+| `unit_r41_annette_se_bank/_toene/_lagen` | unveraendert | gruen |
+| `integration_r41_annette` (5 Laeufe, echte exe) | Schritte jetzt mit "Ausholen (RE2" und "Blut-Skala"; neuer Lauf `leon_leiche` ((3,89),(9,133),(3,42)): Leiche gelegt, Blut-Kittel, keine zweite Szene | gruen (254 s) |
+| `integration_r41_birkin_pistole`, `integration_r35_zgirl_5090` | Bestand | gruen (248 s / 147 s) |
+| Form-/Birkin-Tests nach dem Merge: unit_birkin_bahnsteig, _szenen, _formen, _opfer, _ai, unit_r41_form_emd, unit_n2_griff_start, unit_r41_birkin_wand_rein/_g5/_griff, unit_r36_kartenbits | Bestand | gruen |
+| Suite `^unit_\|^prop_\|^probe_` ohne `releaseskript\|android\|r37_masken36_ausschluss\|paket\|titelversion`, `-j 4` | Bestand | **1040/1040 gruen** (295 s) |
+
+Ausgeschlossen wie in N2.6 (Umgebungsproblem df.exe / echtes release_alles.sh). Fensterlaeufe nur mit eigener exe-Kopie
+`re15_pc_n3_*` (per `timeout` auf die eigene PID begrenzt), danach geloescht.
+
+### N3.12 Offen
+
+- RE2 0x0B (hoch von Williams Seite) bleibt ohne 5090-Gegenstueck; der Satz laeuft von Annettes Seite (N3.2). Wer das Gesicht im
+  Satz will, braucht eine neue Kamera (kein RID-Schnitt der Disc) - nicht gebaut.
+- Blut: RE2-Wolke steht bis zum Schnitt (1,1 s), die RE1.5-Zeilen sind nach 0,7 s weg (N3.5); RE2-FX-Zeilen nicht portiert.
+- Tempo: 20,3 s gegen RE2 24,4 s; Rest = kuerzerer Weg und keine CD-Ladepausen (N3.7).
+- Die Form steht nach der Landung bei L (-1378,-23395) zwischen den Bodenfeuern am Wagenende (naechstes 500 entfernt).
+- Stimmen (M3), F4, F7, ZUG_AN-Alternative, NTSC-Bildzahlen: wie N2.8.
+
+### N3.13 Dateien und Commits
+
+- Merge b0685df4f (r41/form 7d79bcfae).
+- Code: `re15_port/engine/src/annette_r41.c`, `re15_port/include/re15_annette_r41.h`, `re15_port/tools/r41_annette/texte_bauen.py`,
+  `re15_port/engine/src/gen/annette_r41_texte.inc`, `re15_port/tests/unit/test_r41_annette.c`,
+  `re15_port/tests/integration/test_r41_annette.cmake`, `re15_port/tests/unit/probes/r41_annette.cmake`.
+- Belege `AN_belege/n3/`: `szene5090_n3.jpg`/`.mp4`, `vergleich_re2_port_n3.jpg`, `zugstart6030_n3.jpg`/`.mp4`,
+  `leiche_wiedereintritt_n3.jpg`, `kampfstart_n3.jpg`. Werkzeug `AN_belege/werkzeug/n3/` (n3_lauf.sh, szmass.py, satzmass.py,
+  suche1-4.py mit Ergebnissen suche3_3760.json / suche3_5157.json (leer) / suche4.json, ansicht.py, blatt.py, vergleich.py,
+  blutflaeche.py). Rohdaten `re15_port/build/an_lauf/n3_*` (nicht versioniert).
+- Commits: b0685df4f (Merge), afadac63f (Code, Tests), Doku-Commit mit diesem Abschnitt und den Belegen.
