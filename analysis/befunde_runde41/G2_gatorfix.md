@@ -607,3 +607,29 @@ ohne Rammen (Pruefhaken) 0 Rammen. bahn/kamera (NB5-Stadion) ausgetragen.
   Bilder und Rammen >= 1 - nicht nachgelaufen), integration_r41_gatorfix_frei, _abn2_nordbecken, _abn2_wand_elza (2-s-Fenster-Schranke 0 -> <= 10 angepasst, nicht
   nachgelaufen; Ursachen nicht einzeln geprueft), integration_r41_alligator2_schluessel_west_elza (R1-Tod/Schluessel im Westen mit Elza - Ursache NICHT untersucht).
 - Die restlichen 68 Tests der Gruppe und Unit/Prop/Probe sind auf diesem Stand nicht gelaufen.
+
+## G2-RE2 NB1 (Fortsetzung)
+Stand 2026-11-03, frische Sitzung. Worktree auf 57667b4d2 zurueckgesetzt (Arbeitsbaum vorher sauber). Der WIP 1e60a9eeb ("ausser Sicht keine Kollision",
+Riegel re2 rot) ist verworfen, nur per Hash lesbar; sein Befund: ausser Sicht nur 1,9 % der Kanisterzeit, Nordbecken-Ost/NO-Ecke unveraendert 55 s.
+
+### RE2-Befund Tank-Zustand (nur festgehalten, nichts daraus gebaut - Nutzerentscheid "Vorschlag 4")
+EM23-Overlay (analysis/re2_alligator_2026-09-09/EM23_OVL_0000.BIN, Disasm `herkunft/alligator_werkzeuge/re2_em23.dis`):
+- T2 @0x801017c4 schaltet nur fuer +0x226 < 8: `lbu v1,550(s1)` @0x80101808, `sltiu v0,v1,0x8` @0x80101814, `beq v0,zero,0x80101b90` @0x80101818,
+  Tafel @0x80100024: [0] 0x80101b90 (Ende, nichts), [1] 0x8010183c, [2] 0x80101860, [3] 0x80101970, [4] 0x801019dc, [5] 0x80101a64, [6] 0x80101aec, [7] 0x80101b58.
+  Ab @0x80100044 beginnt die Tafel der Ereignis-Maschine +0x227 (@0x80101d44, `lw v0,68(at)` @0x80101d70) - es gibt keine Tank-Stufen 8-12.
+- Stufe 7 (getragen) @0x80101b58-8c: nur `lw v1,56(s2) / addiu v0,zero,1750 / ... jal 0x8001a1e0 (a2 = 100)` und `lw v1,60(s2) / addiu v0,zero,-210 /
+  ... jal 0x8001a1e0 (a2 = 30)`, also die Lokallage nachfuehren. Kein Zaehler, kein Ausgang.
+- Alle Schreiber von +0x226 im Overlay: `sb zero,550(s0)` @0x8010066c (INIT), `sb v0,550(s0)` @0x80100b08 (0 -> 1, Fenstertreffer), T2-Zaehlung
+  @0x8010185c / @0x80101964-6c / @0x80101b44-54 (1 -> 7), `addiu v0,zero,13 / sb v0,550(s1)` @0x801022b8-bc (R1). Leser: @0x80100a34, @0x80100a98, @0x80100af4,
+  @0x80100b20, @0x80101360, @0x80101808 und @0x80101ef4 (HURT-Selektor: `addiu v0,zero,7` @0x80101ef0, `lbu v1,550(s0) / bne v1,v0` @0x80101ef4-fc -> R1).
+- Ergebnis: In RE2 endet das Tragen NUR durch den Schuss (R1). Es gibt keinen Zeitzaehler, kein Fallenlassen, Ausspucken oder Zerbeissen und keinen Sonderzustand
+  beim Haengen. RE2 braucht das nicht, weil der Gator dort nur im Korridor schwimmt.
+
+### Nutzerentscheid (Koordinator, 2026-11-03) - ersetzt die Schritte 1-3
+Wortlaut: "Vorschlag 4: Ignoriere den Kanister einfach in der Berechnung. Tu so als ob er nicht da waere....", dann "Ja, wichtig ist nur das der Kanister synchron
+mit dem Aligator mitlaeuft. Ansonsten soll er nicht als Stoerkoerper zaehlen." und "Wenn es dir hilft.... Mach ein 2. Aligator Modell mit Kanister im Maul...".
+- Mit dem Kanister bewegt er sich wie ohne Kanister (NB5 ohne Kanister): gleiche Huelle, Klemme, Verfolgung und Wendungen. Der Kanister wird nur gezeichnet und ist Trefferziel.
+- Rampe: Rammen wie gehabt. Rueckwaerts und Tauchen bleiben nur als Rueckfall, wenn er auch ohne Kanister haengt.
+- Der Kanister haengt in jedem Bild fest am Kiefer bzw. Maul, ohne Versatz, Nachziehen oder Springen, auch beim Wenden, Rueckwaerts, auf der Rampe, beim Rammen und Biss.
+- Zweites Modell nur, wenn die Messung zeigt, dass die Kopplung heute nicht bildgenau ist.
+- Riegel: Bewegung mit = ohne Kanister (Gegenprobe Kanister-Huelle rot); Halterung zu Kieferknochen konstant (Gegenprobe ein Bild alte Pose rot).
