@@ -1,0 +1,13 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_begleiter_schusslinie davor: 8 Schuesse, Zombie 98 -> 34 (4 Treffer, erster F311: Zombie hp 98 -> 82), Marvin st 4 hp -1 (5775,23625)
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_begleiter_schusslinie seitlich: 8 Schuesse, Zombie 98 -> 34 (4 Treffer, erster F289: Zombie hp 98 -> 82), Marvin st 4 hp -1 (5775,23625)
+CMake Error at re15_port/tests/integration/test_r41_begleiter_schusslinie.cmake:185 (message):
+  r41_begleiter_schusslinie:
+
+   davor: Begleiter veraendert (darf weder Schaden nehmen noch in Zustand 3 gehen): F289: Marvin st 4 -> 3, hp -1 -> -6
+
+  (Laeufe unter
+  C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/nb5/gp_vor/lauf_3c8f91df)
+
+

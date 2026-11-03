@@ -1,0 +1,91 @@
+FUN_80034D0C Kopf+Tore (0x80034d0c, 27 Worte): ['0x80032904']
+FUN_80034D0C Y-Tor (0x80034e50, 11 Worte):    ['0x80032a48']
+FUN_800355C4 Schleife (0x80035604, 21 Worte): ['0x800331dc']
+; C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/an/cdisc/SLES_109.72  @0x80032930 (30 instr)
+  80032930: sw s0,16(sp)                       
+  80032934: lw a0,0(s6)                        
+  80032938: lw v1,0(s1)                        
+  8003293c: nop                                
+  80032940: or v0,a0,v1                        
+  80032944: andi v0,v0,0x2                     
+  80032948: bne v0,zero,0x80032d04             
+  8003294c: addu v0,zero,zero                  
+  80032950: and v0,a0,v1                       
+  80032954: andi v0,v0,0x1000                  
+  80032958: bne v0,zero,0x80032d04             
+  8003295c: addu v0,zero,zero                  
+  80032960: andi v0,v1,0x4                     
+  80032964: bne v0,zero,0x80032d04             
+  80032968: addu v0,zero,zero                  
+  8003296c: lw v0,488(s6)                      
+  80032970: addiu s5,s6,132                    
+  80032974: lui at,0x800c                      
+  80032978: sw zero,-18008(at)                 0x800bb9a8
+  8003297c: lui at,0x800c                      
+  80032980: sw v0,-18004(at)                   0x800bb9ac
+  80032984: lui v0,0x800c                      
+  80032988: lw v0,-18004(v0)                   0x800bb9ac
+  8003298c: nop                                
+  80032990: addiu v0,v0,-1                     0x800bffff
+  80032994: lui at,0x800c                      
+  80032998: sw v0,-18004(at)                   0x800bb9ac
+  8003299c: bltz v0,0x80032cfc                 
+  800329a0: addiu s2,s1,132                    
+  800329a4: lhu s7,22(s5)                      
+; C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/an/cdisc/SLES_109.72  @0x80032a48 (12 instr)
+  80032a48: lhu a0,26(s2)                      
+  80032a4c: lw v1,4(s2)                        
+  80032a50: lw t1,4(s5)                        
+  80032a54: lhu v0,26(s5)                      
+  80032a58: subu v1,v1,t1                      
+  80032a5c: addu a0,a0,v0                      
+  80032a60: subu t0,zero,a0                    
+  80032a64: slt v0,t0,v1                       
+  80032a68: beq v0,zero,0x80032cec             
+  80032a6c: slt v0,v1,a0                       
+  80032a70: beq v0,zero,0x80032cec             
+  80032a74: mult s3,s0                         
+; C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/an/cdisc/SLES_109.72  @0x800331b4 (32 instr)
+  800331b4: sw s2,24(sp)                       
+  800331b8: jal 0x80032fe0                     
+  800331bc: sw s0,16(sp)                       
+  800331c0: ori s2,zero,0x8000                 
+  800331c4: addiu v0,zero,255                  
+  800331c8: sb v0,13(s1)                       
+  800331cc: lui v0,0x800c                      
+  800331d0: lw v0,24332(v0)                    0x800c5f0c
+  800331d4: lui s0,0x800c                      
+  800331d8: addiu s0,s0,31144                  0x800c79a8
+  800331dc: beq v0,s0,0x80033230               
+  800331e0: addu s3,zero,zero                  
+  800331e4: lw a0,0(s0)                        0x800c0000
+  800331e8: nop                                
+  800331ec: beq s1,a0,0x8003321c               
+  800331f0: nop                                
+  800331f4: lw v0,0(a0)                        
+  800331f8: nop                                
+  800331fc: andi v0,v0,0x1                     
+  80033200: beq v0,zero,0x8003321c             
+  80033204: nop                                
+  80033208: jal 0x80032904                     
+  8003320c: addu a1,s1,zero                    
+  80033210: beq v0,zero,0x8003321c             
+  80033214: nop                                
+  80033218: or s3,s3,s2                        
+  8003321c: lui v0,0x800c                      
+  80033220: lw v0,24332(v0)                    0x800c5f0c
+  80033224: addiu s0,s0,4                      0x800c0004
+  80033228: bne s0,v0,0x800331e4               
+  8003322c: srl s2,s2,1                        
+  80033230: sh s3,14(s1)                       
+; C:/Users/mjoedicke/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/an/cdisc/SLES_109.72  @0x80025b4c (10 instr)
+  80025b4c: lhu v0,15066(s3)                   
+  80025b50: addiu s0,s3,14796                  
+  80025b54: andi v0,v0,0x8000                  
+  80025b58: bne v0,zero,0x80025bc8             
+  80025b5c: sw s0,8520(s3)                     
+  80025b60: jal 0x80039144                     
+  80025b64: addu a0,s0,zero                    
+  80025b68: jal 0x8003319c                     
+  80025b6c: addu a0,s0,zero                    
+  80025b70: addu a0,s0,zero                    

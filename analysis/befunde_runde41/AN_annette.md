@@ -979,8 +979,9 @@ gegen Bild 0.
 - **Pose:** `annette_r41.c` AN_FA_LIEGEN 24, Bild 0 gehalten, y = AN_LIEGEN_Y 900 (@0x01162), nicht mehr gekippt
   (AN_KIPP_* entfallen).
   - PORT-WAHL: RE2 laesst den Clip als Schleife laufen, denn dort atmet die Sterbende noch und spricht spaeter mit Claire
-    (sub03). Im Port ist sie tot, deshalb haelt der Port Bild 0. Das ist das Startbild, das Plc_motion setzt (RE2 0x80052ef0
-    `a060014d sb zero,0x14d`).
+    (sub03). Im Port ist sie tot, deshalb haelt der Port Bild 0. Das ist das Startbild, das Plc_motion setzt: RE2-Handler
+    0x80056b8c (Opcode-Tabelle 0x800a74c8[0x3F] @0x800a75c4), darin `sb zero,333(v1)` = `a060014d` @0x80056ba0 (berichtigt in
+    NB5, N5.1; vorher stand hier 0x80052ef0, dort steht `subu v0,v0,v1`).
 - **Lage:** Die Lage ist fest, denn RE2 setzt absolute Werte. Sie wird aus dem Haltepunkt S abgeleitet: 1215 weg und 245 quer
   von L wie bisher, das ergibt (4854,-22047).
   - **Gier:** relativ zu William wie in RE2. RE2 3300 minus Peilung((-6600,-14800) -> (-12300,-15300)) ergibt rel 1309; im
@@ -1026,15 +1027,17 @@ hat (:1108, :1148, :3640, :4450), gehoeren zu anderen Wegen.
 ```
 
 Ein NPC als naechstes Ziel laesst den Schuss in RE1.5 also ins Leere gehen. Diese Pruefung fehlte im Port. RE2 verwirft
-Kandidaten mit hp < 0 schon in der Schleife: `lh v0,0x156(s0)` @0x80047148, `bltz v0,0x8004740c` @0x80047150 (Leon PSX.EXE und
-SLUS_007.48 gleich). Die liegende RE2-Annette traegt hp -1 (RAM e24 +0x156).
+Kandidaten mit hp < 0 schon in der Schleife (Leon PSX.EXE und SLUS_007.48 gleich), fuer die Pistole in FUN_800410CC
+(`lh v0,342(s2)` @0x80041280, `bltz v0,0x80041300` @0x80041288; ergaenzt in NB5, N5.1), fuer Messer und Bolzen in FUN_800470C0
+(`lh v0,0x156(s0)` @0x80047148, `bltz v0,0x8004740c` @0x80047150). Die liegende RE2-Annette traegt hp -1 (RAM e24 +0x156).
 
 **Bau:**
 
 - `re15_damage.c`, nach der Sichtlinie: `if (g_actors[best].type >= 0x40u) return 0;` (@0x80012178-84). RE1.5 hat die
   Pruefung vollstaendig, also gilt RE1.5 fuer jedes NPC.
 - In der Kandidatenschleife ist die Leiche kein Kandidat: Haken `re15_annette_r41_kein_ziel` (nach dem Treffer oder in Phase
-  RUHE und hp < 0). Die Leiche ist RE2-Inhalt (RE1.5 hat keine), deshalb gilt hier die RE2-Regel @0x80047148-50. Der Schuss geht
+  RUHE und hp < 0). Die Leiche ist RE2-Inhalt (RE1.5 hat keine), deshalb gilt hier die RE2-Regel (Pistole @0x80041280-88,
+  Messer/Bolzen @0x80047148-50). Der Schuss geht
   dann an ihr vorbei auf die G5.
 
 **Gemessen:**
@@ -1198,3 +1201,186 @@ Ausgeschlossen wie in N2.6/N3.11: Umgebungsproblem df.exe und das echte release_
     Kampfstart F1776).
 - Stimmen (M3), F4, F7, ZUG_AN-Alternative, NTSC-Bildzahlen: wie N3.12.
 - Commits: Code/Tests/Assets, dann Doku-Commit mit diesem Abschnitt und den Belegen.
+
+## N5. Nachbesserung 5 (2026-11-03)
+
+Auftrag: kleine Nachtraege aus der bestandenen Abnahme 3 (`AN_abnahme_3.md`): A1 (falscher Beleg), H1 (Pistolen-Adresse), A2 (Test
+"Begleiter in der Schusslinie"), H2 (Leiche schiebt Leon). Waehrend der Arbeit kam ein Nutzerentscheid zu A2/E1 (N5.2), der
+Vorrang vor dem Orchestrator-Entscheid im Auftrag hat.
+
+### N5.1 A1 und H1: Belege berichtigt (am Verhalten aendert sich nichts)
+
+- **Plc_motion setzt Bild 0.** An 0x80052ef0 steht in beiden RE2-Programmen (`info/re2leon/PSX.EXE`, `SLUS_007.48`) das Wort
+  `0x00431023` = `subu v0,v0,v1` (auch `ghidra_re2_Leon.txt:171650`). Selbst nachgelesen:
+  - Die SCD-Opcode-Tabelle beginnt bei 0x800a74c8. Der Dispatcher liest sie mit `lbu v0,0(a1)` / `sll v0,v0,2` / `lui at,0x800a` /
+    `lw v0,0x74c8(at)` / `jalr v0` @0x80053f70-8c.
+  - Eintrag [0x3F] @0x800a75c4 = 0x80056b8c (Plc_motion), Eintrag [0] = 0x800537e4 (Nop: `pc += 1`).
+  - Handler 0x80056b8c: `lw v0,28(a0)` (pc), `lw v1,340(a0)` (Arbeits-Entity), `lbu a1,2(v0)` (Clip), dann
+    **`sb zero,333(v1)` @0x80056ba0 = `a060014d`** (Bildzaehler +0x14D = 0) und `sb a1,332(v1)` @0x80056bb8 (Clip +0x14C).
+  - Wortsuche `a060014d` im ganzen EXE: nur 0x80056ba0, in beiden Programmen gleich.
+  - Berichtigt in `annette_r41.c` (Kopf AN_FA_LIEGEN) und hier in N4.2.
+- **hp < 0 ist kein Ziel, Pistole.** Die Schusswaffen laufen ueber FUN_800410CC (nicht FUN_800470C0): `lw s2,0(fp)`
+  @0x80041254 (Kandidat), `lh v0,342(s2)` @0x80041280, `bltz v0,0x80041300` @0x80041288, 0x80041300 = `j 0x800417d0` /
+  `addiu fp,fp,4` (naechster Kandidat). Ergaenzt in `annette_r41.c`, `re15_annette_r41.h`, `re15_damage.c`, `test_r41_annette.c`
+  und hier in N4.3.
+- Belege: `AN_belege/n5/re2_plc_motion.txt`, `AN_belege/n5/re2_kandidaten_tore.txt`.
+
+### N5.2 A2 und E1: Begleiter in der Schusslinie, jetzt RE2-Regel (Nutzerentscheid)
+
+**Nutzerentscheid (2026-11-03, woertlich):** "Mache die RE 2 Variante, das der Schuss durch begleiter durch geht."
+
+Das ersetzt die NB4-Typpruefung (RE1.5 FUN_80011f50 @0x80012178-84) fuer die Begleiter. Vorher schluckte ein Begleiter vorn im
+Keil jeden Schuss (Abnahme 3, E1).
+
+**RE2, selbst disassembliert (`info/re2leon/PSX.EXE`, `SLUS_007.48` gleich):** Die Regel laeuft ueber hp, nicht ueber den Typ.
+
+- Schusswaffen FUN_800410CC, Kandidatenliste ab 0x800cfe1c (`lui fp,0x800d` / `addiu fp,fp,-484` @0x80041208-0c), Ende
+  `[0x800ce334]` (@0x800417d0-dc). Je Kandidat genau vier Tore, dann die Sichtlinie `jal 0x80050858` @0x800412f0:
+
+  | Tor | Befehle |
+  |---|---|
+  | aktiv | `lw v0,0(s2)` / `andi v0,v0,0x1` / `beq` @0x8004125c-68 |
+  | Trefferpause +0x1D3 | `lbu v0,467(s2)` / `bne` @0x80041270-78 |
+  | **hp < 0** | **`lh v0,342(s2)` @0x80041280 / `bltz v0,0x80041300` @0x80041288** |
+  | +0x10E & 0xC000 | @0x80041290-9c |
+
+  Eine Typabfrage gibt es nicht.
+- Messer, Bolzen und Explosion FUN_800470C0: dieselbe hp-Abfrage `lh v0,0x156(s0)` @0x80047148 / `bltz v0,0x8004740c` @0x80047150.
+- Begleiter stehen in derselben Liste wie die Gegner (Claire-RAM ROOM6141: Annette em[0] @0x800c79b0) und tragen hp -1:
+  Claire-RAM lauf3 e01..e22 (lebend) und e23..e30 (liegend) +0x156 = -1.
+- RE1.5-NPCs tragen dieselbe Kennung aus ihrem INIT (+0x9a = -1 @0x8011c744). Im Port bestaetigt der Lauf unten Marvin mit hp -1.
+
+**Bau (`re15_damage.c`, re15_player_weapon_fire):**
+
+- In der Kandidatenschleife: `if (e->type >= 0x40u && e->type <= 0x4Du && e->hp < 0) continue;` mit der Kennzeichnung
+  "RE2-Retail-Regel statt RE1.5 @0x80012178-84, Nutzerentscheid 2026-11-03".
+  - PORT-ZUORDNUNG wie Runde 34 B1 in re15_resolve_attack: die RE2-hp-Bedingung fuer die NPC-Familie 0x40..0x4D. Das ist dieselbe
+    Menge, die RE1.5 mit `sltiu v0,v0,0x40` @0x80012180 aussortiert hat.
+  - Fuer Gegner < 0x40 bleibt die RE1.5-Semantik von hp < 0 unveraendert (Resolver liest nur das Vorzeichen, @0x80012520-2c).
+- Die Typpruefung des Gewinners (`if (g_actors[best].type >= 0x40u) return 0;`) ist entfernt.
+- Der Annette-Haken `re15_annette_r41_kein_ziel` bleibt. Er ist jetzt ein Teilfall (Typ 0x4D, hp -1) und dient der Szene und
+  `test_r41_annette` als Zustandsabfrage.
+
+**Alle Waffen, Wege im Port geprueft:**
+
+| Weg | Waffen | Begleiter-Tor |
+|---|---|---|
+| re15_player_weapon_fire | Pistole, Schrot (w8), Magnum, MG, Messer/Rohr, Kanister-Explosion (`re15_player_weapon_fire(7)`, kanister2080_r41.c) | **neu** (NB5) |
+| re15_re2_gl_kandidat | Granaten-Explosion und Flugkontakt (granate_r35.c) | schon da: Gate 3 `e->hp < 0` (@0x80047148-50) |
+| re15_re2_gl_apply | RE2-Op 40, Bodenfeuer/Werfer (fx_plattform_pc.c `re2fx_applier`) | schon da: Gate 3 |
+| re15_resolve_attack | Angriffskasten FUN_80012d60 | schon da: Runde 34 B1, 0x40..0x4D und hp < 0 |
+| dining_r39.c | nur Gorilla-Typ | nicht betroffen |
+
+**Was NB4 sonst brauchte, weiter erfuellt:**
+
+- Leiche: Typ 0x4D, hp -1 -> kein Kandidat (allgemeine Regel und Haken).
+- `unit_r41_annette` test_schuss (a): Leiche hp -1 st 0, G5 345 -> 330.
+- test_schuss (b) ist umgestellt: das lebende NPC (hp -1) ist kein Kandidat, der Schuss geht durch auf die G5 (Rueckgabe = G5-Slot,
+  G5 345 -> 330, NPC hp -1 st 0). Vorher erwartete (b) "ins Leere".
+
+**Raum fuer den Integrationstest: ROOM10D0, nicht 2000 oder 3080.**
+
+- ROOM2000 sub00 (selbst disassembliert): Ada 0x42 und Marvin 0x40 stehen im If-Zweig von Ck(4,244)=1 (`06 00 34 00` @0x01794).
+  Die beiden 0x16 stehen im **Else-Zweig** (`07 00 2e 00` @0x017C8, Sce_em_set @0x017CC/@0x017E0). Sie sind also nie gleichzeitig im
+  Raum. Das berichtigt Abnahme 3, Abschnitt 3.3.
+- ROOM3080: Ada, Marvin und Birkin 0x36 stehen unter Ck(4,96)=0, aber sub00 startet sofort die Szene (Evt_exec sub02 @0x007E8).
+  Es gibt dort kein freies Spiel.
+- ROOM10D0 sub00 Ck(4,247)=0 (neuer Spielstand):
+  - Marvin: Sce_em_set @0x01256 `44 00 40 40 .. 8f 16 .. 49 5c .. 76 04` = Typ 0x40 bei (5775,23625).
+  - Zombie: Sce_em_set @0x0126A `44 01 10 0e ..` = Typ 0x10, Deskriptor 0x0E (schlafend liegend, wacht bei Spielerabstand
+    < 0xBB8 auf).
+  - Erkundungslauf: Marvin bleibt in st 4 / ss1 6 an seiner Lage, hp -1; der Zombie wacht auf.
+
+**Test `integration_r41_begleiter_schusslinie`** (`tests/integration/test_r41_begleiter_schusslinie.cmake`, eingetragen in
+`tests/unit/probes/r41_annette.cmake`):
+
+- Aufbau: echte exe, Debug-Sprung 10D0, Pistole (RE15_EQUIP=3, RE15_GIVE=3:100), Zielen + Feuer 6 s.
+- Der Zombie (Aktor 2) wird ueber den Messhaken RE15_GEGNER_POS 2950 vor Leon festgehalten: wach, aber ausser Griffweite.
+  Marvin bleibt unberuehrt.
+- Pistolen-Keil: Halbbreite Radius + 1000 (`s_player_wpn_reach[3]`).
+
+| Lauf | Lage | Erwartet | Ergebnis |
+|---|---|---|---|
+| (a) `davor` | Leon (3800,23625) Gier 0, Zombie (6750,23625); Marvin 1975 vor Leon genau auf der Linie | Zombie >= 2 Treffer, Marvin st/hp unveraendert | 8 Schuesse, Zombie 98 -> 34 (4 Treffer, erster F289), Marvin st 4 hp -1 |
+| (b) `seitlich` | Leon (3800,25500), Zombie (6750,25500); Marvin 1875 seitlich (> 450 + 1000) | Zombie >= 2 Treffer, Marvin unveraendert | 8 Schuesse, Zombie 98 -> 34 (4 Treffer), Marvin st 4 hp -1 |
+| (c) Gegenprobe 1: re15_damage.c = NB4 (HEAD 37f565a3c) | wie (a) | rot | **rot:** "davor: Zombie hinter Marvin nur 0x getroffen" (8 Schuesse, Zombie 98 -> 98) |
+| (d) Gegenprobe 2: re15_damage.c aus b646c72a6^ (vor NB4) | wie (a) | rot | **rot:** "davor: Begleiter veraendert ... F289: Marvin st 4 -> 3, hp -1 -> -6" |
+
+- In (c) und (d) war der Lauf `seitlich` jeweils gruen (4 Treffer).
+- Die Gegenproben liefen mit eigenen exe-Kopien. Die Sonde `npc_schuss.c` der Abnahme ist eine Bibliotheks-Sonde ohne Raum; fuer
+  die exe-Gegenprobe passte sie nicht.
+- Belege: `AN_belege/n5/gegenprobe_nb4.txt`, `gegenprobe_vor_nb4.txt`. Werkzeug: `AN_belege/werkzeug/n5/lauf.sh` (Erkundung).
+
+### N5.3 H2: Leiche schiebt Leon - RE2 hat die Kollision auch, bleibt
+
+**Frage:** Hat die tote Annette in RE2 (Claire ROOM6141) eine Kollision gegen den Spieler?
+
+**Antwort: ja.** Der Port bleibt, wie er ist.
+
+**Mechanismus (Leon-EXE selbst disassembliert, im Claire-EXE SLES_109.72 per Muster wiedergefunden und gegengelesen):**
+
+1. Spieler-Tick: `jal 0x800355c4` @0x80026628 (Claire `jal 0x8003319c` @0x80025b68). Vorher prueft er nur das globale
+   Pausenbit (`lhu` / `andi v0,v0,0x8000` / `bne` @0x80025b4c-58).
+2. FUN_800355C4 (Claire 0x8003319C) laeuft ueber die Entity-Liste: Leon 0x800cfe14 bis `[0x800ce334]`, Claire 0x800c79a8 bis
+   `[0x800c5f0c]`.
+   - Sich selbst ueberspringt sie: `beq s1,a0` (Claire @0x800331ec).
+   - Jede aktive Entity (`andi v0,v0,0x1` @0x800331fc) geht an `jal 0x80032904` @0x80033208 (Leon `jal 0x80034d0c` @0x80035630).
+3. FUN_80034D0C (Claire 0x80032904) schiebt den Spieler aus den Segmenten der Entity. Die Tore:
+   - `(e.w0 | p.w0) & 2` und `(e.w0 & p.w0) & 0x1000` und `p.w0 & 4` -> kein Schub (Claire @0x80032940-64, Leon @0x80034d48-6c).
+   - Segmentzahl `lw v0,488(s6)` (+0x1E8) @0x8003296c, -1, `bltz` @0x8003299c (Leon @0x80034d74 / @0x80034da4). 0 Segmente
+     heisst kein Schub.
+   - Segmente ab +0x84 (`addiu s5,s6,132`): x/y/z +0x0/+0x4/+0x8, Radius +0x16 (`lhu s7,22(s5)`), Halbhoehe +0x1A.
+   - XZ-Ueberdeckung: R = Summe der Radien.
+   - Hoehen-Tor `-(hA+hB) < dy < hA+hB` @0x80032a48-70 (Leon @0x80034e50-78).
+   - Bit 0x100000 der Entity begrenzt den Schub auf +-100 (Leon @0x80035048-50).
+
+**RAM (Claire lauf3 e23, e24, e25, e30; Annette liegt seit e23):**
+
+| Feld | Annette (@0x80125d4c, id 0x49) | Claire |
+|---|---|---|
+| w0 | 0x00002001 (Bit 0x2 = 0, Bit 0x1000 = 0, Bit 0x100000 = 0) | 0x00000001 |
+| in der Liste | 0x800c79b0 (Ende 0x800c79b8) | 0x800c79a8 |
+| +0x1E8 (Segmente) | **1** | 1 |
+| Segment | Mitte (-12300, -450, -15300) = Lage (y 900) + 0x14 (-1350); **Radius 350**, Halbhoehe 1350 | y -1350, Radius 350, Halbhoehe 1350 |
+
+- dy = 900 < 2700, also greift das Hoehen-Tor nicht.
+- Alle Tore lassen den Schub durch: Die liegende Annette schiebt Claire aus einem Kreis von 350 + 350 = 700 um ihre Wurzel.
+- Das ist derselbe Mechanismus wie beim Port-Befund "um 100 seitlich versetzt".
+
+**Hinweis (nicht geaendert, zur Entscheidung):** Die Masse weichen ab.
+- RE2: Segment r 350 / Halbhoehe 1350 plus Spieler 350, Summe 700.
+- Port: 0x4D-Kasten der RE1.5-NPC-Familie r 450 / Hoehe 1530 (@0x80121658, re15_enemy_apply_hitbox) plus Spieler 450
+  (RE15_BODY_R_PLAYER, PSX.EXE @file 0x64694), Summe 900.
+- Laut Auftrag bleibt die Kollision. Ob die Leiche als RE2-Inhalt den RE2-Radius bekommen soll, ist eine eigene Frage.
+
+Belege: `AN_belege/n5/leiche_kollision_re2.txt`, `claire_schub_code.txt`, `leon_schub_code.txt`. Werkzeug:
+`AN_belege/werkzeug/n5/leiche_kollision.py`, `claire_code.py`, `cdis.py`. Die Savestates lauf3 und SLES_109.72 liegen wie
+bisher unversioniert im Scratch der Sitzung (Pfade in den Skripten).
+
+### N5.4 Tests
+
+Bau nur ueber `bash re15_port/tools/local_build.sh build` (LOCAL-BUILD-OK). Laeufe in diesem Arbeitsbaum:
+
+| Test | Ergebnis |
+|---|---|
+| unit_r41_annette (+ `_se_bank`, `_se_toene`, `_se_lagen`) | gruen; test_schuss (a) Leiche hp -1 st 0, G5 330; (b) lebendes NPC hp -1 st 0, G5 330 |
+| integration_r41_annette | gruen (271 s) |
+| integration_r41_begleiter_schusslinie (neu) | gruen (62 s); Gegenproben (c) und (d) rot wie in N5.2 |
+| integration_r41_birkin_pistole | gruen (323 s) |
+| Suite `^unit_\|^prop_\|^probe_` ohne `releaseskript\|titelversion`, `-j 4` | **1050/1050 gruen** (1190 s) |
+
+Ausgenommen sind die 7 `unit_r38_releaseskript_*` und die 9 `unit_r39_titelversion_*` (df-Haenger der Maschine, laut Auftrag).
+Die Integrationstests liefen nacheinander und nicht parallel zur Suite.
+
+### N5.5 Dateien, Commits und Offen
+
+- Code: `re15_port/engine/src/re15_damage.c` (RE2-Regel, Zitate), `re15_port/engine/src/annette_r41.c`,
+  `re15_port/include/re15_annette_r41.h` (Zitate/Kommentare).
+- Tests: `re15_port/tests/unit/test_r41_annette.c` (test_schuss (b)), `re15_port/tests/integration/test_r41_begleiter_schusslinie.cmake`
+  (neu), `re15_port/tests/unit/probes/r41_annette.cmake` (Eintrag).
+- Belege: `AN_belege/n5/`, `AN_belege/werkzeug/n5/`.
+- Offen:
+  - Leichen-Radius RE2 350 gegen Port 450 (N5.3).
+  - Die RE2-Regel gilt im Port fuer die NPC-Familie 0x40..0x4D mit hp < 0. Ein NPC mit hp >= 0 waere wie in RE2 treffbar; im Port
+    setzt der NPC-INIT hp -1 (@0x8011c744), im Lauf 10D0 ab Bild 6 (Bild 1..5 traegt Marvin noch hp 0).
+  - Release Notes: Der E1-Punkt der Abnahme 3 ist durch den Nutzerentscheid erledigt.

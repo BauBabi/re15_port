@@ -1,0 +1,73 @@
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80041208 (34 instr)
+  80041208: lui fp,0x800d                      
+  8004120c: addiu fp,fp,-484                   0x800cfe1c
+  80041210: subu v0,v0,a1                      
+  80041214: sll v0,v0,2                        
+  80041218: lw t0,56(sp)                       
+  8004121c: lw a0,0(a2)                        
+  80041220: lbu v1,449(t0)                     
+  80041224: addu s3,a0,v0                      
+  80041228: sll v0,v1,1                        
+  8004122c: addu v0,v0,v1                      
+  80041230: sll v0,v0,2                        
+  80041234: subu v0,v0,v1                      
+  80041238: sll v0,v0,2                        
+  8004123c: subu v0,v0,v1                      
+  80041240: lw v1,408(t0)                      
+  80041244: sll v0,v0,2                        
+  80041248: addu v1,v1,v0                      
+  8004124c: addiu v1,v1,92                     
+  80041250: sw v1,128(sp)                      
+  80041254: lw s2,0(fp)                        0x800d0000
+  80041258: nop                                
+  8004125c: lw v0,0(s2)                        
+  80041260: nop                                
+  80041264: andi v0,v0,0x1                     
+  80041268: beq v0,zero,0x80041300             
+  8004126c: nop                                
+  80041270: lbu v0,467(s2)                     
+  80041274: nop                                
+  80041278: bne v0,zero,0x80041300             
+  8004127c: nop                                
+  80041280: lh v0,342(s2)                      
+  80041284: nop                                
+  80041288: bltz v0,0x80041300                 
+  8004128c: nop                                
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80041290 (4 instr)
+  80041290: lhu v0,270(s2)                     
+  80041294: nop                                
+  80041298: andi v0,v0,0xc000                  
+  8004129c: bne v0,zero,0x80041300             
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x800412f0 (6 instr)
+  800412f0: jal 0x80050858                     
+  800412f4: sw v0,24(sp)                       
+  800412f8: beq v0,zero,0x80041308             
+  800412fc: addu s4,zero,zero                  
+  80041300: j 0x800417d0                       
+  80041304: addiu fp,fp,4                      
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x800417c8 (6 instr)
+  800417c8: addiu fp,fp,4                      
+  800417cc: sw v0,64(s2)                       
+  800417d0: lui v0,0x800d                      
+  800417d4: lw v0,-7372(v0)                    0x800ce334
+  800417d8: nop                                
+  800417dc: bne fp,v0,0x80041254               
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80047128 (12 instr)
+  80047128: nop                                
+  8004712c: andi v0,v0,0x1                     
+  80047130: beq v0,zero,0x8004740c             
+  80047134: nop                                
+  80047138: lbu v0,467(s0)                     
+  8004713c: nop                                
+  80047140: bne v0,zero,0x8004740c             
+  80047144: nop                                
+  80047148: lh v0,342(s0)                      
+  8004714c: nop                                
+  80047150: bltz v0,0x8004740c                 
+  80047154: nop                                
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x8005d7ac (5 instr)
+  8005d7ac: lbu v1,8(s0)                       
+  8005d7b0: sh v0,270(s0)                      
+  8005d7b4: addiu v0,zero,-1                   
+  8005d7b8: sh v0,342(s0)                      
+  8005d7bc: sh v0,354(s0)                      
