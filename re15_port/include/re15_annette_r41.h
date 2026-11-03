@@ -89,6 +89,10 @@ void re15_annette_r41_tick(void);                                               
 int  re15_annette_r41_besitzt(int slot);                                                            /* enemy_ai_common.c run_all */
 const char *re15_annette_r41_emd_datei(uint8_t type);                                               /* platform/pc/main.c */
 int  re15_annette_r41_volle_drehung(const void *actor);                                             /* platform/pc/main.c Zeichner */
+/* Nachbesserung 4 (Abnahme 2 N3): 1 = dieser Aktor ist Annettes Leiche (hp -1) und kein Schuss-Kandidat - wie die liegende
+ * RE2-Annette (Claire RAM lauf3 e23..e30 +0x156 = -1), die RE2s Kandidatenfilter FUN_800470C0 verwirft (`lh v0,342(s0)` /
+ * `bltz v0,0x8004740c` @0x80047148-50). */
+int  re15_annette_r41_kein_ziel(const void *actor);                                                 /* re15_damage.c Waffen-Resolver */
 void re15_annette_r41_modell_hook(void (*fn)(uint8_t type));                                        /* platform/pc/main.c */
 void re15_annette_r41_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank)); /* platform/pc/main.c */
 
@@ -103,6 +107,8 @@ enum {
 };
 void re15_annette_r41_se_hook(void (*fn)(int satz));                                                /* platform/pc/main.c */
 void re15_annette_r41_stimme_hook(void (*fn)(uint16_t room, int voice_id));                         /* platform/pc/main.c */
+/* NB4 N4: laedt den Tonteil von DOOR2A in die RE2-Tuerbank (Port-Bank 0x0E); 1 = geladen (annette_se_pc.c) */
+void re15_annette_r41_tuerbank_hook(int (*fn)(void));                                               /* platform/pc/main.c */
 
 /* Fuer Tests */
 const uint8_t *re15_annette_r41_programm(int *out_len);

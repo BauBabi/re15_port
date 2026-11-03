@@ -4150,6 +4150,7 @@ re_title:;
     { extern void re15_pc_lift2030_se_init(void); re15_pc_lift2030_se_init(); }   /* Runde 37 Spur C N1: LIFT6030.VBS-Haken */
     { extern void re15_pc_annette_se(int); re15_annette_r41_se_hook(re15_pc_annette_se); }   /* Runde 41 Spur AN: ANNETTE_SE.VBS */
     { extern void re15_audio_stimme(uint16_t, int); re15_annette_r41_stimme_hook(re15_audio_stimme); }   /* Runde 41 Spur AN N1: Schrei 5090 nur als Ton */
+    { extern int re15_pc_annette_tuerbank(void); re15_annette_r41_tuerbank_hook(re15_pc_annette_tuerbank); }   /* Runde 41 Spur AN NB4: Tuerton 6030 (DOOR2A) */
     { extern void re15_pc_w11b0_init(void); re15_pc_w11b0_init(); }   /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (Satz 7 aus ROOM1171) */
     { extern void re15_pc_dining_r38_init(void); re15_pc_dining_r38_init(); }     /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
     { extern void re15_pc_toene_r39_init(void); re15_pc_toene_r39_init(); }   /* Runde 39 Spur B: TOENE39.VBS-Haken (Schublade 11F0, Gitter/Schrank 1190) */

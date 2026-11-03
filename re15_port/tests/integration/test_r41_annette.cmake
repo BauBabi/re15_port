@@ -9,11 +9,12 @@
 #              freigegeben (grid 0x13 = sub04 Member_set @0x0130A), Annette bleibt liegen (hp -1).
 #   leon_ohne_zug (3,89)=1, (9,133)=0: die Frau im Kittel wird in 5090 verworfen (erst nach dem Zugstart), keine Szene.
 #   leon_leiche (3,89)=1, (9,133)=1, (3,42)=1 (Nachbesserung 3, M8): Wiedereintritt nach der Szene, Annette liegt als Leiche
-#              (Clip 6 Bild 12, hp -1, Blut-Kittel), keine zweite Szene.
+#              (NB4: RE2-Liegeclip 0x18 = Clip 24 Bild 0, Lage (4856,-22748) Gier 1170, hp -1, Blut-Kittel), keine zweite Szene.
 #   elza       5091 mit (3,89)=1, (9,133)=1: keine Frau im Kittel auf der Disc, keine Szene.
 #   zug6030    Fuehrerstand 6030 (Debug-Sprung = Eintritt Cut 0 @0x8001d818 -> sub00 Case 0 -> sub07) mit (3,89)=1, (4,23)=1:
 #              Zugstart-Szene statt sub05 (sub07 @0x01132), Toene Zug an (3) vor Krach (0), Annette geht ab und ist versteckt
-#              (Pos_set-Form 6000 @0x0100A), (9,133) gesetzt.
+#              (Pos_set-Form 6000 @0x0100A), (9,133) gesetzt. NB4: Leon tritt zur Seite (Plc_dest (-3000,-23700)), Tuerton
+#              Port-Bank 0x0E Satz 0 vor Satz 1 (RE2 Claire ROOM4081 sub05 @0x03634/@0x03644; RE15_SE_DEBUG-Zeilen).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_annette.cmake
 # =============================================================================
@@ -46,6 +47,9 @@ function(ein_lauf _name _raum _flag _pos _exit)
     endif()
     if(_flag)
         list(APPEND _extra "RE15_SET_FLAG=${_flag}")
+    endif()
+    if(_name STREQUAL "zug6030")
+        list(APPEND _extra "RE15_SE_DEBUG=1")
     endif()
     re15_start_spiel(_rv 240
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
@@ -93,8 +97,8 @@ function(ein_lauf _name _raum _flag _pos _exit)
             string(APPEND _g "\n ${_name}: keine Frau im Kittel im state.log")
         else()
             list(GET _frau -1 _letzte)
-            if(NOT _letzte MATCHES "hp=-1")
-                string(APPEND _g "\n ${_name}: Annette am Ende nicht hp -1: ${_letzte}")
+            if(NOT _letzte MATCHES "hp=-1" OR NOT _letzte MATCHES "mo=24 af=0 ")
+                string(APPEND _g "\n ${_name}: Annette am Ende nicht liegend (NB4: Clip 24 Bild 0, hp -1): ${_letzte}")
             endif()
         endif()
     elseif(_name STREQUAL "leon_leiche")
@@ -113,8 +117,8 @@ function(ein_lauf _name _raum _flag _pos _exit)
             string(APPEND _g "\n ${_name}: keine Leiche im state.log")
         else()
             list(GET _frau -1 _letzte)
-            if(NOT _letzte MATCHES "mo=6 af=12" OR NOT _letzte MATCHES "hp=-1")
-                string(APPEND _g "\n ${_name}: Leiche nicht liegend (Clip 6 Bild 12, hp -1): ${_letzte}")
+            if(NOT _letzte MATCHES "mo=24 af=0 " OR NOT _letzte MATCHES "hp=-1" OR NOT _letzte MATCHES "@\\(4856,-22748,r1170\\)")
+                string(APPEND _g "\n ${_name}: Leiche nicht RE2-liegend (NB4: Clip 24 Bild 0 bei (4856,-22748) Gier 1170, hp -1): ${_letzte}")
             endif()
         endif()
     elseif(_name STREQUAL "zug6030")
@@ -139,6 +143,14 @@ function(ein_lauf _name _raum _flag _pos _exit)
             if(NOT _letzte MATCHES "8646")
                 string(APPEND _g "\n ${_name}: Annette am Ende nicht versteckt (z 8646): ${_letzte}")
             endif()
+        endif()
+        if(NOT _dbg MATCHES "Plc_dest\\(slot=0 mode=0x04 dest=\\(-3000,-23700\\)")
+            string(APPEND _g "\n ${_name}: Leon tritt nicht zur Seite (Plc_dest (-3000,-23700))")
+        endif()
+        string(FIND "${_dbg}" "SCD Se_on: bank=14 id=0 " _p_auf)
+        string(FIND "${_dbg}" "SCD Se_on: bank=14 id=1 " _p_zu)
+        if(_p_auf LESS 0 OR _p_zu LESS _p_auf)
+            string(APPEND _g "\n ${_name}: Tuerton Bank 0x0E Satz 0 (oeffnen) vor Satz 1 (zufallen) fehlt (${_p_auf}/${_p_zu})")
         endif()
     else()
         if(_dbg MATCHES "\\[annette\\] F[0-9]+ Szenenstart")

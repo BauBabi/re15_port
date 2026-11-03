@@ -2050,6 +2050,9 @@ retry_after_latch:
          * automatically (the ivy is a dormant weapon-immune prop, audit wf_efd92a2c ivy #77).
          * So gate on the hitbox, which makes every ported enemy with a box shootable. */
         if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
+        /* Runde 41 Spur AN, Nachbesserung 4 (Abnahme 2 N3): Annettes Leiche (RE2-Inhalt, hp -1) ist kein Kandidat - RE2-Gate
+         * `lh v0,0x156(s0)` @0x80047148 / `bltz v0,0x8004740c` @0x80047150 (Begruendung re15_annette_r41.h). */
+        { extern int re15_annette_r41_kein_ziel(const void *actor); if (re15_annette_r41_kein_ziel(e)) continue; }
         if (re15_r38_sm_versteckt(e)) continue; /* Runde 38 Spur T: 0x2B ohne Hoehenband ausser ACTIVE (@0x80111C14-20, @0x80111DCC-E24) */
         /* RE2-ADULT-SPINNE (Runde 7, spinne-todeszyklus.md 5.2): das Original kennt
          * KEIN state-Gate (Kandidaten-Gates @0x8004712C-30/@0x80047138-40/
@@ -2730,6 +2733,12 @@ retry_after_latch:
     /* Runde 36 Spur C: SICHTLINIE auf den Gewinner — `jal 0x8001b9b4` / `bne v0,zero,0x80012540`
      * @0x80012168-74, VOR Typ-Pruefung und +0x93-Latch (Belege include/re15_schuss_r36.h). */
     if (re15_schuss_r36_sichtlinie_blockiert(pl, &g_actors[best])) return 0;
+    /* Runde 41 Spur AN, Nachbesserung 4 (Abnahme 2 N3): die Typ-Pruefung des Gewinners, die hier fehlte. FUN_80011f50
+     * @0x80012178 `lbu v0,8(s1)` / @0x80012180 `sltiu v0,v0,0x40` / @0x80012184 `beq v0,zero,0x80012540` (v0 = 0): ist das
+     * naechste Ziel im Keil ein NPC (Typ >= 0x40), trifft der Schuss nichts. Die NPCs stehen mit Band LEVEL im Keil (RE1.5-RAM
+     * mzd_stage1_npc.sav: 0x40/0x42/0x4B Wort 0 = 0x40000001, hp -1); ohne die Pruefung zog der Port ihnen Schaden ab und
+     * setzte +0x4 = 3 (gemessen Abnahme 2: Annette hp -1 -> -6, st 3). RE1.5 hat das vollstaendig -> RE1.5 gilt. */
+    if (g_actors[best].type >= 0x40u) return 0;
     /* CRIT-CLASS flag +0x93 |= 0x40 (byte-true FUN_80011f50 LAB_80012370, decompile lines 145-148:
      * `+0x93 &= 1; if ((wpn==8 && dist<3000) || wpn==7) +0x93 |= 0x40`) — set BEFORE the bit0-latch
      * branch, so it also lands on a hit-guarded target. Types < 0x20 die from it (the hp=-1 crit

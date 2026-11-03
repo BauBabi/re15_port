@@ -87,7 +87,8 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 /* Liegen: RE2 @0x01162 setzt Annette von ihrem Standort (-11097,-15001) auf (-12300,-15300) (Savestate e23), William stand
  * bei (-6600,-14800) (e07). In Williams Blickrichtung zerlegt (Einheit e = (A - W) / |A - W|, quer q = (-e.z, e.x)):
  * 1215 von William weg, +245 quer. Port: dieselbe Zerlegung an der Landestelle L (wie RE2 e07: Lage VOR dem Vorstoss) ->
- * Leiche bei (4854,-22048), 348 vor dem Regal SCA #28 (z -21700); Pose wie bisher (Clip 6 Bild 12, gekippt).
+ * (4854,-22048), 348 vor dem Regal SCA #28 (z -21700). Nachbesserung 4: Pose RE2-Liegeclip, Gier wie RE2, 700 nach Sueden
+ * (AN_FA_LIEGEN .. AN_LIEGEN_SUED unten) -> Leiche (4856,-22748).
  * Nachbesserung 3: NB1/NB2 nahmen die Achsenwerte 1203/-299 als Laengs-/Querwert (Seite gespiegelt). */
 #define AN_LIEGEN_WEG      1215
 #define AN_LIEGEN_SEIT      245
@@ -117,8 +118,27 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define AN_FA_REAKTION        4
 #define AN_FA_STURZ           6     /* faellt zu Boden (Bild 12 = am Boden) */
 #define AN_FA_STURZ_BODEN    12
-#define AN_KIPP_WINKEL     (-683)   /* 60 Grad nach hinten (Kontaktblatt liegen.png) */
-#define AN_KIPP_HEBEN      (-480)   /* Clip 6 Bild 12 um -60 Grad gekippt reicht bis y +482 unter den Ursprung (Gerippe gemessen) */
+/* Nachbesserung 4 (Abnahme 2 N2 "Leiche wirkt sitzend, Knie hoch, Kopf aufrecht"): liegen wie RE2 statt Clip 6 Bild 12 um
+ * 60 Grad gekippt. RE2 Claire ROOM6141 MAIN sub02, waehrend die Kamera weg ist: Pos_set @0x01162 `32 00 f4 cf 84 03 3c c4` =
+ * (-12300, 900, -15300), Dir_set @0x0116A `33 00 00 00 e4 0c` = 3300, Plc_motion @0x01172 `3f 00 18 04` = Clip 0x18 des
+ * Raum-RBJ; beim spaeteren Besuch dieselbe Lage und Clip (Sce_em_set @0x00D16 `... f4 cf 84 03 3c c4 e4 0c 18 01 ..`).
+ * RAM lauf3 e23..e30 (AN_belege/re2_claire): +0x14C = 0x18, Teile y -433..-24 = flach am Boden, +0x156 (hp) = -1.
+ * Der Clip liegt als Clip 24 in Paar 1 von ANNETTE_4D*.EMD (tools/r41_annette/annette_modell.py, RBJ ROOM6141 @0x2E70
+ * Record 0 Clip 24 = 40 Bilder). RE2 laesst ihn als Schleife laufen (Bildzaehler e23..e30 6/26/6/22): dort atmet die
+ * Sterbende noch und spricht spaeter mit Claire (sub03). Im Port ist sie tot -> Bild 0 gehalten (das Startbild, das
+ * Plc_motion setzt: RE2 0x80052ef0 `a060014d sb zero,0x14d`). PORT-WAHL: Halten statt Schleife. */
+#define AN_FA_LIEGEN         24
+#define AN_LIEGEN_Y         900     /* @0x01162 `84 03` */
+#define AN_RE2_W_X        (-6600)   /* William vor dem Vorstoss (RAM e07, wie AN_LIEGEN_WEG) */
+#define AN_RE2_W_Z       (-14800)
+#define AN_RE2_LIEGT_X   (-12300)   /* @0x01162 `f4 cf` */
+#define AN_RE2_LIEGT_Z   (-15300)   /* @0x01162 `3c c4` */
+#define AN_RE2_LIEGT_D     3300     /* @0x0116A `e4 0c` */
+/* Wandfreiheit (PORT-WAHL, gemessen mit dem Netz der RE2-Liegepose an der Port-Lage, Werkzeug AN_belege/werkzeug/n4/
+ * leiche_lage.py): an der RE2-Lage (4854,-22047) mit der RE2-Gier ragen Kopf und Schulter bis z -21043 in das Regal SCA #28
+ * (x 4050..20225, z -21700..-19700, 294 Netzpunkte darin). Keine Drehung am selben Ort ist frei. Kleinste Verschiebung im
+ * 50er-Raster ohne Netzpunkt in einer soliden SCA-Zelle: 700 nach Sueden (-z), Abstand zum Regal dann 43. */
+#define AN_LIEGEN_SUED      700
 /* Blut (Nachbesserung 2): der Emitter der RE2-Szene selbst. Claire-Disc SLES-10972, Birkin-Overlay (Typ 0x33, im RAM
  * @0x80100000, Savestate e22 aus analysis/befunde_runde41/AN_belege/re2_claire/), Routinen-Tabelle @0x80106584: [2] =
  * FUN_80104C24 (Member_set 0x17=2 @0x01142 -> Routine 2 @0x80104BE4-F8). Dort, NACH dem Bildvorschub @0x80104C9C-A8:
@@ -294,8 +314,35 @@ static const uint8_t z_weg[]      = { 0x32, 0x00, 0xf5, 0xd6, 0xf0, 0xf1, 0xc6, 
  * ist hinter der Kamera hinaus). Original-Bytes: Cut 0 = sub08 @0x01336 `29 00`, Cut 1 = sub08 @0x0114A `29 01`. */
 static const uint8_t z_cut0[]     = { 0x29, 0x00 };                                         /* sub08 @0x01336 */
 static const uint8_t z_cut1_ab[]  = { 0x29, 0x01 };                                         /* sub08 @0x0114A */
-static const uint8_t z_schluss[]  = { 0x09, 0x0a, 0x1e, 0x00, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x3c, 0x01,
-                                      0x42, 0x00 };                                       /* @0x01364 Sleep 30, Sperren auf, Cut_auto, Plc_ret */
+/* Nachbesserung 4 (Abnahme 2 N4: "sie bleibt vor Leon stehen, die Tuer bewegt sich nicht, kein Tuerton").
+ * (a) Leon tritt zur Seite: er steht an der Tuer (Eintritt Slot 1 (-3873,-23487)); am Tuerziel stand Annette zwischen Auge von
+ *     Cut 0 und ihm (ID-Puffer Cut 0: Leon 46 % frei, gemessen = Abnahme F1490). PORT-WAHL Z_LEON (-3000,-23700): 898 Schritt,
+ *     Leon und Annette in Cut 0 je 100 % frei, 1444 von ihrem Tuerziel, >= 1100 von ihrem Weg (zwei Koerperradien 902;
+ *     Werkzeug AN_belege/werkzeug/n4/zug6030.py). Form: Work_set(1,0) + Plc_dest Modus 4 mit Ankunftsbit 0x20 = ROOM6031
+ *     @0x00D86 `2e 01 00 00 40 00 04 20`; Warten auf seine Ankunft (Form @0x01358), dann dreht er sich zur Tuer (z_dreh_leon,
+ *     Form @0x01150, ohne Warten) und erst danach geht sie los - nacheinander, weil die Ankunftsbits (5,0x20)/(5,0x21)
+ *     Ein-Bild-Pulse sind (Bank 5 Wort 1 je Bild gewischt, FUN_8003ebf4) und ein zweites Warten einen frueheren Puls
+ *     verpassen wuerde.
+ * (b) Tuerton: kein RE1.5-Raum laesst ein NPC mit Ton oder Tuerbewegung durch eine Tuer gehen (Zensus aller 240 RDTs: die fuenf
+ *     Abgaenge 10D0 sub21, 2000 sub02/03, 4010 sub02, 6000 sub02 sind stumm; ROOM4010 sub02 @0x00D1A..@0x00D2A = gehen,
+ *     warten, Cut 1, Sleep 20, Pos_set weg). RE2 hat genau einen: Claire ROOM4081 MAIN sub05 @0x03624..@0x03658 (Annette
+ *     laeuft in die Tuer): Se_on Tuerbank Satz 0 (oeffnen) `36 00 00 01 03 00 ..` @0x03634, Sleep 30 @0x03640, Satz 1
+ *     (zufallen) @0x03644, Pos_set weg. Port: Tuerbank = Port-Bank 0x0E (RE15_CUT10F0_SE_BANK, audio_pc.c ->
+ *     re15_audio_re2_tuer_se), Ursprung RE1.5-Modus 2 = Entity-Pool Index 0 (Handler @0x80041624, @0x80041698-b0; Annette ist
+ *     Sce_em_set-Slot 0, z_emset) statt RE2-Modus 3. Die Tuerbank ist DOOR2A (alle Zugtueren 5090/6030, gen/tuer_zuordnung.inc
+ *     S320/S321), geladen beim Szenenstart (re15_annette_r41_tuerbank_hook).
+ * (c) Tuerbewegung: ROOM6030 hat kein Tuermodell (nOmodel 2: Objekt 0 main00 @0x00CEE bei (-17800,-25900), Objekt 1 sub06
+ *     @0x010A2 bei (-26230,-20148)); das Tuernetz gibt es nur in der Tuersequenz (DOOR2A.DO2). RE1.5 und RE2 bewegen bei einem
+ *     NPC-Abgang nie eine Tuer im Raum -> keine Tuerbewegung (Beleg statt Erfindung). Sie geht durch die Tuer, waehrend der
+ *     Schnitt auf Cut 1 (Auge in der Tuer) fuehrt: Satz 0 im Ankunftsbild, Satz 1 nach Sleep 30 wie RE2. */
+#define Z_LEON_X          (-3000)
+#define Z_LEON_Z          (-23700)
+static const uint8_t z_leon_seite[]= { 0x2e, 0x01, 0x00, 0x00, 0x40, 0x00, 0x04, 0x20, LE16(Z_LEON_X), LE16(Z_LEON_Z) };   /* Form 6031 @0x00D86 */
+static const uint8_t z_tuer_auf[] = { 0x36, 0x0e, 0x00, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };   /* RE2 4081 @0x03634 */
+static const uint8_t z_tuer_zu[]  = { 0x36, 0x0e, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };   /* RE2 4081 @0x03644 */
+static const uint8_t z_schlaf30[] = { 0x09, 0x0a, 0x1e, 0x00 };                             /* @0x01364 (= RE2 4081 @0x03640) */
+static const uint8_t z_schluss[]  = { 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x3c, 0x01,
+                                      0x42, 0x00 };                                       /* @0x01368 Sperren auf, Cut_auto, Plc_ret */
 static const uint8_t z_ende[]     = { 0x01, 0x00 };                                         /* @0x01374 Evt_end */
 
 #define SEG(a, off) { a, (uint16_t)sizeof a, (uint16_t)(off) }
@@ -310,8 +357,12 @@ static const an_seg_t k_zug_seg[] = {
     SEG(z_m28, 0),           SEG(z_geste11, 0x01178),
     SEG(z_work_leon, 0x0125A), SEG(z_m29, 0),        SEG(z_geste15, 0x01262),
     SEG(z_work_an2, 0x012E2), SEG(z_m30, 0),         SEG(z_geste18, 0x012EA),
-    SEG(z_cut0, 0x01336),    SEG(z_gehen, 0),         SEG(z_warte21, 0x0128A), SEG(z_cut1_ab, 0x0114A), SEG(z_weg, 0),
-    SEG(z_work_leon, 0x0125A), SEG(z_schluss, 0x01364), SEG(z_ende, 0x01374),
+    SEG(z_cut0, 0x01336),    SEG(z_leon_seite, 0),   SEG(z_warte20, 0x01358),
+    SEG(z_dreh_leon, 0),
+    SEG(z_work_an2, 0x012E2), SEG(z_gehen, 0),        SEG(z_warte21, 0x0128A),
+    SEG(z_tuer_auf, 0),      SEG(z_cut1_ab, 0x0114A), SEG(z_weg, 0),
+    SEG(z_schlaf30, 0x01364), SEG(z_tuer_zu, 0),
+    SEG(z_work_leon, 0x0125A), SEG(z_schluss, 0x01368), SEG(z_ende, 0x01374),
 };
 #define AN_N_ZUG_SEG ((int)(sizeof k_zug_seg / sizeof k_zug_seg[0]))
 
@@ -383,6 +434,8 @@ void re15_annette_r41_modell_hook(void (*fn)(uint8_t type)) { s_modell_fn = fn; 
 void re15_annette_r41_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int)) { s_se_fn = se_fn; s_bank_fn = bank_fn; }
 void re15_annette_r41_se_hook(void (*fn)(int satz)) { s_satz_fn = fn; }
 void re15_annette_r41_stimme_hook(void (*fn)(uint16_t room, int voice_id)) { s_stimme_fn = fn; }
+static int (*s_tuerbank_fn)(void) = 0;
+void re15_annette_r41_tuerbank_hook(int (*fn)(void)) { s_tuerbank_fn = fn; }
 
 static void ton(int satz)
 {
@@ -607,9 +660,14 @@ static const uint8_t *zug_evt_exec(uint8_t sub_id, const uint8_t *target)
     zug_bauen();
     if (!s_zug_len) return target;
     s_an.zug++;
+    /* NB4 N4: Tuerbank DOOR2A fuer den Abgang (z_tuer_auf/z_tuer_zu). Nach dem Weg durch die Wagentuer liegt sie schon in der
+     * Bank (Tuersequenz DOOR2A, gleiche Bytes -> kein Neuladen, audio_pc.c memcmp); beim Debug-Sprung laedt sie diese Zeile. */
+    const int tb = s_tuerbank_fn ? s_tuerbank_fn() : 0;
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[annette] F%u ROOM6030 Zugstart-Szene statt sub05 (sub07 @0x01132), %d Byte\n",
-            (unsigned)g_engine.frame_count, s_zug_len);
+    fprintf(stderr, "[annette] F%u ROOM6030 Zugstart-Szene statt sub05 (sub07 @0x01132), %d Byte, Tuerbank DOOR2A %s\n",
+            (unsigned)g_engine.frame_count, s_zug_len, tb ? "geladen" : "NICHT geladen");
+#else
+    (void)tb;
 #endif
     return s_zug_prog;
 }
@@ -658,6 +716,17 @@ int re15_annette_r41_besitzt(int slot)
     if (s_an.phase == RE15_AN_AUS || slot < 0) return 0;
     if (slot == s_an.frau) return s_an.phase >= RE15_AN_HIEB;   /* vorher geht sie ueber Plc_dest (Sub-VM); RUHE = Leiche */
     return slot == s_an.form && s_an.phase < RE15_AN_FREI;
+}
+
+/* Nachbesserung 4 (Abnahme 2 N3, state.log F2751: Annette hp -1 -> -6, st 0 -> 3, ss1 3 = Waffe 3, ss2 1 = EBEN): der
+ * Waffen-Resolver re15_player_weapon_fire waehlte die Leiche als naechstes Ziel im Schusskeil (Band LEVEL wie jedes NPC,
+ * RE1.5-RAM mzd_stage1_npc.sav: NPC 0x40/0x42/0x4B Wort 0 = 0x40000001) vor der G5 dahinter. RE2 verwirft Kandidaten mit
+ * hp < 0 (`lh v0,0x156(s0)` @0x80047148, `bltz v0,0x8004740c` @0x80047150, info/re2leon/PSX.EXE), und die liegende
+ * RE2-Annette traegt hp -1 (RAM lauf3 e24: +0x156 = -1). Die Leiche ist RE2-Inhalt (RE1.5 hat keine): RE2-Regel. */
+int re15_annette_r41_kein_ziel(const void *actor)
+{
+    if (s_an.frau < 0 || actor != (const void *)&g_actors[s_an.frau]) return 0;
+    return (s_an.treffer || s_an.phase == RE15_AN_RUHE) && g_actors[s_an.frau].hp < 0;
 }
 
 int re15_annette_r41_volle_drehung(const void *actor)
@@ -726,51 +795,57 @@ static void treffer(re15_actor_t *f, re15_actor_t *a)
     protokoll("Treffer");
 }
 
-/* RE2 @0x01162: Pos_set liegend, waehrend die Kamera weg ist. Bezug ist die Landestelle L (RE2 e07: William vor dem Vorstoss);
- * e = (Stand - L) / |Stand - L|, quer q = (-e.z, e.x). */
-static void liegen_lage(int32_t sx, int32_t sz, int32_t *x, int32_t *z, int16_t *gier)
+/* Peilung von (x0,z0) nach (x1,z1) als Gier (0 = +X) - dieselbe Formel wie blick() (re15_actor.h re15_atan2_q12). */
+static int peilung(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
 {
+    return ((int)re15_atan2_q12(z1 - z0, x1 - x0) - 0x400) & 0x0fff;
+}
+
+/* RE2 @0x01162: Pos_set liegend, waehrend die Kamera weg ist - eine FESTE Lage (RE2 setzt absolute Werte), im Port aus dem
+ * Haltepunkt S abgeleitet. Bezug ist die Landestelle L (RE2 e07: William vor dem Vorstoss); e = (S - L) / |S - L|, quer
+ * q = (-e.z, e.x): 1215 weg, +245 quer. Gier wie RE2 relativ zur Peilung William -> Liegestelle: RE2 3300 - Peilung((-6600,
+ * -14800) -> (-12300,-15300)); im Port dazu die Peilung L -> Liegestelle. Danach AN_LIEGEN_SUED (Wandfreiheit, oben). */
+static void liegen_lage(int32_t *x, int32_t *z, int16_t *gier)
+{
+    const int32_t sx = AN_S_X, sz = AN_S_Z;
     int32_t ux = sx - AN_L_X, uz = sz - AN_L_Z;
     int32_t l = (int32_t)re15_squareroot0((uint32_t)(ux * ux + uz * uz)); if (l < 1) l = 1;   /* BIOS-Wurzel (re15_math.h) */
     const int64_t ex = (int64_t)ux * 4096 / l, ez = (int64_t)uz * 4096 / l;      /* weg von der Form, Q12 */
-    *x = sx + (int32_t)((ex * AN_LIEGEN_WEG - ez * AN_LIEGEN_SEIT) / 4096);
-    *z = sz + (int32_t)((ez * AN_LIEGEN_WEG + ex * AN_LIEGEN_SEIT) / 4096);
-    *gier = (int16_t)((((int)re15_atan2_q12(AN_L_Z - *z, AN_L_X - *x) - 0x400) + 0x800) & 0x0fff);   /* Kopf von der Form weg */
+    const int32_t px = sx + (int32_t)((ex * AN_LIEGEN_WEG - ez * AN_LIEGEN_SEIT) / 4096);
+    const int32_t pz = sz + (int32_t)((ez * AN_LIEGEN_WEG + ex * AN_LIEGEN_SEIT) / 4096);
+    const int rel = (AN_RE2_LIEGT_D - peilung(AN_RE2_W_X, AN_RE2_W_Z, AN_RE2_LIEGT_X, AN_RE2_LIEGT_Z)) & 0x0fff;
+    *gier = (int16_t)((peilung(AN_L_X, AN_L_Z, px, pz) + rel) & 0x0fff);
+    *x = px;
+    *z = pz - AN_LIEGEN_SUED;
 }
 
-static void liegen(re15_actor_t *f, re15_actor_t *a)
+/* Liegepose halten: RE2-Clip 0x18 (Clip 24) Bild 0, y +900, ungekippt. Lage und Gier bleiben. */
+static void leiche_halten(re15_actor_t *a)
+{
+    a->motion = AN_FA_LIEGEN; a->anim_frame = 0; a->anim_frac = 0;
+    a->anim_flags &= (uint16_t)~0x80u;
+    a->rot_x = 0; a->rot_z = 0;
+    a->y = AN_LIEGEN_Y;
+}
+
+static void liegen(re15_actor_t *a)
 {
     int32_t x, z; int16_t g;
-    (void)f;
-    liegen_lage(a->x, a->z, &x, &z, &g);
+    liegen_lage(&x, &z, &g);
     a->x = x; a->z = z; a->rot_y = g;
-    clip(a, AN_FA_STURZ);
-    a->anim_frame = AN_FA_STURZ_BODEN;
-    a->rot_z = AN_KIPP_WINKEL;
-    a->y = AN_KIPP_HEBEN;
+    leiche_halten(a);
 }
 
 /* NB3 M8: Wiedereintritt nach der Szene - die 0x4D (sub00 @0x0122A) liegt als Leiche an der Lage aus @0x01162 (RE2 MAIN sub00
- * @0x00D16 setzt dieselbe Lage wie der Pos_set der Szene), Stand = Haltepunkt S. */
-static void leiche_halten(re15_actor_t *a)
-{
-    clip(a, AN_FA_STURZ);
-    a->anim_frame = AN_FA_STURZ_BODEN;
-    a->rot_z = AN_KIPP_WINKEL;
-    a->y = AN_KIPP_HEBEN;
-}
-
+ * @0x00D16 setzt dieselbe Lage und denselben Clip 0x18 wie der Pos_set/Plc_motion der Szene). */
 static void ruhe_setzen(void)
 {
     const int as = slot_vom_typ(RE15_AN_TYP);
     if (as < 0) return;
     re15_actor_t *a = &g_actors[as];
-    int32_t x, z; int16_t g;
-    liegen_lage(AN_S_X, AN_S_Z, &x, &z, &g);
-    a->x = x; a->z = z; a->rot_y = g; a->rot_x = 0;
     a->state = 0; a->sub_state_1 = 0; a->sub_state_2 = 0; a->walk_active = 0;
-    a->hp = -1;                                          /* wie nach dem Treffer: kein Treffer-Kandidat */
-    leiche_halten(a);
+    a->hp = -1;                                          /* wie nach dem Treffer: kein Treffer-Kandidat (re15_annette_r41_kein_ziel) */
+    liegen(a);
     s_an.frau = as; s_an.form = -1; s_an.blut_textur = 1;
     s_an.phase = RE15_AN_RUHE;
     protokoll("Wiedereintritt nach der Szene: Leiche liegt (RE2 sub00 @0x00D16)");
@@ -871,7 +946,7 @@ void re15_annette_r41_tick(void)
         if (f->motion == AN_FC_HIEB) { if (vor(f, 1)) clip(f, AN_FC_STEHEN); } else vor(f, 0);
         if (re15_game_flag_get(5, RE15_AN_SIG_LIEGT)) {
             re15_game_flag_set(5, RE15_AN_SIG_LIEGT, 0);
-            liegen(f, a);
+            liegen(a);
             s_an.schrei++;
             if (s_stimme_fn) s_stimme_fn(RE15_AN_RAUM, RE15_AN_MSG_SCHREI);   /* nur Ton, kein Untertitel (Nutzer F9) */
             s_an.phase = RE15_AN_LEICHE; s_an.t = 0;
@@ -884,9 +959,7 @@ void re15_annette_r41_tick(void)
         /* fallthrough: Leiche halten */
     case RE15_AN_FREI:
     default:
-        a->anim_frame = AN_FA_STURZ_BODEN;
-        a->rot_z = AN_KIPP_WINKEL;
-        a->y = AN_KIPP_HEBEN;
+        leiche_halten(a);
         break;
     }
     /* Blut wie FUN_80104C24: nach dem Bildvorschub (@0x80104C9C-A8) und dem Trefferbild (@0x80104CD4-14) je Bild an den

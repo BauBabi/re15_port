@@ -4,7 +4,8 @@ add_executable(test_r41_annette ${CMAKE_CURRENT_SOURCE_DIR}/test_r41_annette.c)
 target_link_libraries(test_r41_annette PRIVATE re15_engine re15_test_support m)
 target_include_directories(test_r41_annette PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r41_annette PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_AN_AUSZUG="${CMAKE_SOURCE_DIR}/tools/r41_annette/re2_6141_liegen.bin")
 add_test(NAME unit_r41_annette COMMAND test_r41_annette)
 set_tests_properties(unit_r41_annette PROPERTIES TIMEOUT 120)
 if(TARGET re15_pc)

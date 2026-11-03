@@ -95,6 +95,23 @@ static int slot_vom_typ(uint8_t t)
     return -1;
 }
 
+/* NB4 N2: Liegepose wie RE2 ROOM6141 (@0x01162 Pos_set y 900, @0x0116A Dir_set 3300, @0x01172 Plc_motion Clip 0x18), Lage =
+ * Stand S (3700,-22500) + RE2-Versatz 1215 weg / 245 quer von L (-1378,-23395) = (4854,-22047), dann 700 nach Sueden
+ * (Wandfreiheit Regal SCA #28) = (4854,-22747). Gier = Peilung L -> (4854,-22047) + (3300 - Peilung RE2 William -> Liegestelle);
+ * mit den Python-Winkeln des Werkzeugs n4/leiche_lage.py 1170 (Toleranz 24 fuer die BIOS-Arkustangens-Tabelle). */
+static void leiche_pruefen(const re15_actor_t *a, const char *wo)
+{
+    fprintf(stderr, "%s: Leiche (%d,%d,%d) Gier %d rot_x %d rot_z %d Clip %d/%d hp %d\n", wo, (int)a->x, (int)a->y, (int)a->z,
+            a->rot_y, a->rot_x, a->rot_z, a->motion, (int)a->anim_frame, a->hp);
+    CHECK(abs((int)a->x - 4854) <= 2 && abs((int)a->z - (-22747)) <= 2, "%s: Leiche bei (%d,%d) statt (4854,-22747)", wo,
+          (int)a->x, (int)a->z);
+    const int dg = (((int)a->rot_y - 1170) + 2048 + 4096) % 4096 - 2048;
+    CHECK(abs(dg) <= 24, "%s: Leiche Gier %d statt ~1170 (RE2-Lage relativ zu William)", wo, a->rot_y);
+    CHECK(a->y == 900 && a->rot_x == 0 && a->rot_z == 0 && a->motion == 24 && a->anim_frame == 0 && a->hp == -1,
+          "%s: Leiche nicht RE2-liegend (y %d rot %d/%d Clip %d/%d hp %d; Soll y 900, ungekippt, Clip 24 Bild 0, hp -1)", wo,
+          (int)a->y, a->rot_x, a->rot_z, a->motion, (int)a->anim_frame, a->hp);
+}
+
 static void flags(int f89, int f42, int f423)
 {
     re15_game_flag_set(3, 89, f89); re15_game_flag_set(3, 42, f42); re15_game_flag_set(4, 23, f423);
@@ -126,12 +143,10 @@ static void test_bedingungen(void)
             const re15_actor_t *a = &g_actors[s];
             fprintf(stderr, "Wiedereintritt: Leiche (%d,%d,%d) Gier %d rot_z %d Clip %d/%d hp %d Phase %d\n", (int)a->x, (int)a->y,
                     (int)a->z, a->rot_y, a->rot_z, a->motion, (int)a->anim_frame, a->hp, re15_annette_r41_phase());
-            CHECK(abs((int)a->x - 4854) < 30 && abs((int)a->z - (-22048)) < 30, "Leiche bei (%d,%d) statt (4854,-22048)",
-                  (int)a->x, (int)a->z);
-            CHECK(a->rot_z == -683 && a->y == -480 && a->motion == 6 && a->anim_frame == 12 && a->hp == -1 &&
-                  re15_annette_r41_phase() == RE15_AN_RUHE, "Leiche nicht liegend (rot_z %d y %d Clip %d/%d hp %d)", a->rot_z,
-                  (int)a->y, a->motion, (int)a->anim_frame, a->hp);
-            CHECK(re15_annette_r41_besitzt(s) && re15_annette_r41_volle_drehung(a), "Leiche: Besitz/Kippen");
+            leiche_pruefen(a, "Wiedereintritt");
+            CHECK(re15_annette_r41_phase() == RE15_AN_RUHE, "Wiedereintritt: Phase %d statt RUHE", re15_annette_r41_phase());
+            CHECK(re15_annette_r41_besitzt(s), "Leiche: Besitz");
+            CHECK(re15_annette_r41_kein_ziel(a) && a->hp == -1, "Leiche beim Wiedereintritt ist Schuss-Kandidat (hp %d)", a->hp);
             CHECK(strstr(re15_annette_r41_emd_datei(0x4Du), "BLUT") != NULL, "Leiche ohne Blut-Kittel");
             re15_annette_r41_reset();
         }
@@ -310,8 +325,39 @@ static void test_modell(void)
         CHECK(dn == 9 && dn_a == 9 && dof + 36 == s_an_len[i], "%s: Verzeichnis", k[i].datei);
         uint32_t d[9], da[9];
         memcpy(d, b + dof, 36); memcpy(da, alt + dof_a, 36);
-        /* Gerippe und Clips (dir[0..6]) bytegleich mit dem RE1.5-0x4D */
-        CHECK(memcmp(d, da, 8 * 4) == 0 && memcmp(b + 8, alt + 8, da[7] - 8) == 0, "%s: dir[0..6] nicht bytegleich mit EM4D", k[i].datei);
+        /* Gerippe und Clips 0..23 bytegleich mit dem RE1.5-0x4D; NB4: Paar 1 traegt hinten Clip 24 = RE2-Liegeclip 0x18
+         * (ROOM6141-RBJ, Auszug tools/r41_annette/re2_6141_liegen.bin). dir[0]-Inhalt, EMR von Paar 1 (Keyframes 0..357 als
+         * Praefix) und Paar 2/3 bytegleich; die Bildliste von Paar 1 gleich bis auf die 40 neuen Eintraege. */
+        CHECK(d[0] == da[0] && d[1] == da[1] && memcmp(b + 8, alt + 8, da[1] - 8) == 0, "%s: dir[0] nicht bytegleich mit EM4D", k[i].datei);
+        CHECK(d[3] - d[2] == da[3] - da[2] + 40 * 80 && memcmp(b + d[2], alt + da[2], da[3] - da[2]) == 0,
+              "%s: EMR Paar 1 ist kein EM4D-Praefix + 40 Keyframes", k[i].datei);
+        CHECK(d[7] - d[3] == da[7] - da[3] && memcmp(b + d[3], alt + da[3], da[7] - da[3]) == 0, "%s: Paar 2/3 nicht bytegleich", k[i].datei);
+        {
+            re15_emd_animation_t *a0 = (re15_emd_animation_t *)calloc(1, sizeof *a0);
+            re15_emd_animation_t *a1 = (re15_emd_animation_t *)calloc(1, sizeof *a1);
+            size_t azl = 0;
+            uint8_t *az = slurp(RE15_AN_AUSZUG, &azl);
+            CHECK(az && azl == 40 * (4 + 80), "Auszug re2_6141_liegen.bin fehlt/Groesse %u", (unsigned)azl);
+            if (a0 && a1 && az && re15_emd_parse_animation(alt + da[1], da[2] - da[1], a0) == 0 &&
+                re15_emd_parse_animation(b + d[1], d[2] - d[1], a1) == 0) {
+                int gleich = a0->clip_count == 24 && a1->clip_count == 25 && a1->frame_count == a0->frame_count + 40;
+                for (int c = 0; gleich && c < 24; c++)
+                    gleich = a0->clips[c].frame_count == a1->clips[c].frame_count && a0->clips[c].first_frame == a1->clips[c].first_frame;
+                for (int f = 0; gleich && f < a0->frame_count; f++) gleich = a0->frames[f] == a1->frames[f];
+                CHECK(gleich, "%s: Clips 0..23 von Paar 1 nicht gleich EM4D", k[i].datei);
+                const int kf0 = (int)((da[3] - da[2]) - 176u) / 80;          /* 358 (kf_off 176, 80 Byte) */
+                const uint16_t kfo = (uint16_t)(b[d[2] + 2] | (b[d[2] + 3] << 8));
+                int liegt = a1->clips[24].frame_count == 40 && a1->clips[24].first_frame == a0->frame_count;
+                for (int f = 0; liegt && f < 40; f++) {
+                    uint32_t e = 0; memcpy(&e, az + 4 * f, 4);
+                    liegt = (a1->frames[a0->frame_count + f] & 0xFFFu) == (uint32_t)(kf0 + f) &&
+                            (a1->frames[a0->frame_count + f] & ~0xFFFu) == (e & ~0xFFFu) &&
+                            memcmp(b + d[2] + kfo + (kf0 + f) * 80, az + 160 + f * 80, 80) == 0;
+                }
+                CHECK(kf0 == 358 && liegt, "%s: Clip 24 != RE2-Liegeclip 0x18 (Auszug), Keyframe-Basis %d", k[i].datei, kf0);
+            }
+            free(a0); free(a1); free(az);
+        }
         /* MD1 + TIM = RE2 kind (TOC) */
         const uint8_t *emd2 = NULL, *tim2 = NULL; size_t el = 0, tl = 0;
         CHECK(re2_ems_locate(r2, r2sz, k[i].kind, RE2_EMS_REC_EMD, &emd2, &el) == 0 &&
@@ -326,7 +372,7 @@ static void test_modell(void)
         re15_emd_skeleton_t *sk = (re15_emd_skeleton_t *)calloc(1, sizeof *sk);
         re15_emd_animation_t *an = (re15_emd_animation_t *)calloc(1, sizeof *an);
         CHECK(re15_emd_parse_container(b, s_an_len[i], md1, sk, an, NULL) == 0, "%s: Parser", k[i].datei);
-        CHECK(sk->bone_count == 15 && an->clip_count == 24, "%s: %d Knochen %d Clips", k[i].datei, sk->bone_count, an->clip_count);
+        CHECK(sk->bone_count == 15 && an->clip_count == 25, "%s: %d Knochen %d Clips", k[i].datei, sk->bone_count, an->clip_count);
         free(md1); free(sk); free(an);
     }
     CHECK(strcmp(re15_annette_r41_emd_datei(0x4Du), "ANNETTE_4D.EMD") == 0 && re15_annette_r41_emd_datei(0x42u) == NULL,
@@ -531,19 +577,12 @@ static void test_szene(void)
     CHECK(re15_annette_r41_ton(RE15_AN_SE_KRACH) == 1 && re15_annette_r41_ton(RE15_AN_SE_STURZ) == 1 &&
           re15_annette_r41_ton(RE15_AN_SE_BRUELL) == 1, "Toene Krach/Sturz/Bruellen nicht je einmal");
     CHECK(re15_annette_r41_schrei() == 1, "Schrei (Stimme 41 ohne Text) %d mal", re15_annette_r41_schrei());
-    {   /* RE2 @0x01162 in Williams Blickrichtung zerlegt (NB3): 1215 von der Landestelle weg, 245 quer -> sqrt = 1239 */
-        const double dx = (double)g_actors[as].x - steh_x, dz = (double)g_actors[as].z - steh_z;
-        const double ux = steh_x + 1378.0, uz = steh_z + 23395.0, ul = sqrt(ux * ux + uz * uz);
-        const double weg = (dx * ux + dz * uz) / ul;
-        CHECK(fabs(sqrt(dx * dx + dz * dz) - 1239.0) < 40.0 && fabs(weg - 1215.0) < 40.0,
-              "Leiche nicht 1215 von L weg / 245 quer (RE2 @0x01162): (%d,%d), weg %.0f", (int)g_actors[as].x,
-              (int)g_actors[as].z, weg);
-    }
+    (void)steh_x; (void)steh_z;   /* NB4: die Liegestelle ist fest (RE2 @0x01162 setzt absolute Werte), nicht vom Stand abhaengig */
     CHECK(re15_game_flag_get(3, 42), "(3,42) nach dem Kampfstart nicht gesetzt (sub01 @0x0129A)");
-    CHECK(g_actors[as].hp == -1 && g_actors[as].rot_z == -683 && g_actors[as].y == -480 && g_actors[as].motion == 6,
-          "Leiche: hp %d rot_z %d y %d Clip %d", g_actors[as].hp, g_actors[as].rot_z, (int)g_actors[as].y, g_actors[as].motion);
+    leiche_pruefen(&g_actors[as], "nach der Szene");
     CHECK(re15_annette_r41_besitzt(as) && !re15_annette_r41_besitzt(fs), "Besitz nach der Szene");
-    CHECK(re15_annette_r41_volle_drehung(&g_actors[as]) && !re15_annette_r41_volle_drehung(&g_actors[fs]), "Kippen nur fuer Annette");
+    CHECK(re15_annette_r41_kein_ziel(&g_actors[as]) && !re15_annette_r41_kein_ziel(&g_actors[fs]),
+          "kein Schuss-Kandidat: nur die Leiche (NB4 N3)");
     CHECK(re15_annette_r41_emd_datei(0x4Du) && strstr(re15_annette_r41_emd_datei(0x4Du), "BLUT"), "nach dem Treffer keine Blut-Textur");
     /* Kampfstart lief wirklich: sub04 Pos_set (1200,-23350) @0x012FE und Member_set(0x0C,0x13) @0x0130A */
     for (int k = 0; k < 10; k++) { scd_vm_tick(); re15_enemy_ai_run_all(0); }
@@ -598,11 +637,22 @@ static void test_zugstart(void)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = -3873; pl->z = -23487; pl->hp = 100;          /* Tuer Slot 1 main00 @0x00C52 Ziel */
     int ende = -1, ton_an = -1, ton_krach = -1, f, cut_vorher = -1, cut_vor_weg = -1, cut_weg = -1;
+    int tuer_auf = -1, tuer_zu = -1, tuer_n = 0, leon_ziel = 0, f_weg = -1;   /* NB4 N4 */
+    { scd_audio_event_t ev; while (scd_audio_queue_pop(&ev)) {} }
     for (f = 0; f < 3000; f++) {
         re15_game_flag_set(5, 0x20, 1);                  /* Plc_dest-Ankunft Leon */
         scd_vm_tick();
         re15_enemy_ai_run_all(0);
-        if (as > 0 && cut_weg < 0 && g_actors[as].z == 8646) { cut_weg = (int)g_scd.work_vars[0x0A]; cut_vor_weg = cut_vorher; }
+        if (pl->walk_dest_x == -3000 && pl->walk_dest_z == -23700) leon_ziel = 1;   /* NB4: Leon tritt zur Seite */
+        {   scd_audio_event_t ev;
+            while (scd_audio_queue_pop(&ev))
+                if (ev.kind == SCD_AUDIO_SE_ON && ev.bank == 0x0E) {
+                    tuer_n++;
+                    if (ev.sample_id == 0 && tuer_auf < 0) tuer_auf = f;
+                    if (ev.sample_id == 1 && tuer_zu < 0) tuer_zu = f;
+                }
+        }
+        if (as > 0 && cut_weg < 0 && g_actors[as].z == 8646) { cut_weg = (int)g_scd.work_vars[0x0A]; cut_vor_weg = cut_vorher; f_weg = f; }
         cut_vorher = (int)g_scd.work_vars[0x0A];
         if (ton_an < 0 && re15_annette_r41_ton(RE15_AN_SE_ZUG_AN)) ton_an = f;
         if (ton_krach < 0 && re15_annette_r41_ton(RE15_AN_SE_KRACH)) ton_krach = f;
@@ -616,6 +666,26 @@ static void test_zugstart(void)
     /* NB3 M2: Abgang in Cut 0 (Tuer im Bild), versteckt im selben Bild wie der Schnitt auf Cut 1 (Auge in der Tuer) */
     CHECK(cut_vor_weg == 0 && cut_weg == 1, "Abgang: vor dem Verstecken Cut %d (statt 0), beim Verstecken Cut %d (statt 1)",
           cut_vor_weg, cut_weg);
+    /* NB4 N4: Leon tritt zur Seite (Form 6031 @0x00D86), Tuerton der RE2-Tuerbank (Port-Bank 0x0E): Satz 0 (oeffnen) im Bild des
+     * Verschwindens, Satz 1 (zufallen) 30 Bilder spaeter (RE2 Claire ROOM4081 sub05 @0x03634 / Sleep 30 @0x03640 / @0x03644) */
+    int bild_weg = -1;
+    {   /* Bild des Verschwindens = erstes Bild mit Cut 1 nach dem Gehen; aus der Reihenfolge der Segmente */
+        const uint8_t *sb; int sn, sr, i_auf = -1, i_cut1 = -1, i_zu = -1, i_s30 = -1;
+        for (int i = 0; re15_annette_r41_zug_segment(i, &sb, &sn, &sr); i++) {
+            if (sn == 12 && sb[0] == 0x36 && sb[1] == 0x0E && sb[2] == 0) i_auf = i;
+            if (sn == 12 && sb[0] == 0x36 && sb[1] == 0x0E && sb[2] == 1) i_zu = i;
+            if (sr == 0x0114A) i_cut1 = i;
+            if (sr == 0x01364) i_s30 = i;
+        }
+        CHECK(i_auf >= 0 && i_cut1 == i_auf + 1 && i_s30 > i_cut1 && i_zu == i_s30 + 1,
+              "Tuerton-Segmente: auf %d, Cut 1 %d, Sleep 30 %d, zu %d", i_auf, i_cut1, i_s30, i_zu);
+        bild_weg = f_weg;
+    }
+    fprintf(stderr, "Abgang: Leon zur Seite %d, Tuerton auf F%d zu F%d (%d Se_on Bank 0x0E)\n", leon_ziel, tuer_auf, tuer_zu, tuer_n);
+    CHECK(leon_ziel, "Leon tritt nicht zur Seite (Plc_dest (-3000,-23700))");
+    CHECK(tuer_n == 2 && tuer_auf >= 0 && tuer_auf == bild_weg && tuer_zu - tuer_auf >= 30 && tuer_zu - tuer_auf <= 31,
+          "Tuerton: %d Se_on Bank 0x0E, auf F%d (versteckt F%d), zu F%d (Soll 2, auf = versteckt, Abstand 30)", tuer_n, tuer_auf,
+          bild_weg, tuer_zu);
     /* Wiedereintritt: kein zweiter Zugstart, keine Annette */
     free(b);
     b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 0);
@@ -623,6 +693,53 @@ static void test_zugstart(void)
           re15_annette_r41_zug_szene(), slot_vom_typ(0x4Du));
     free(b);
     zug(0);
+}
+
+/* NB4 N3 (Abnahme 2: F2751 Annette hp -1 -> -6, st 3, ss1 3 = Waffe 3): der Waffen-Resolver re15_player_weapon_fire waehlte die
+ * Leiche (naechstes Ziel im Keil) vor der G5. Lage wie im Abnahme-Lauf: Leon (14378,-23510) Gier 2049, G5 (0x36) (1800,-23400).
+ *   (a) Leiche (RE2-Gate @0x80047148/50 hp < 0): kein Kandidat, der Schuss trifft die G5 dahinter.
+ *   (b) dasselbe NPC ohne Leichen-Zustand (lebendes NPC, RE1.5): es ist das naechste Ziel, die Typ-Pruefung @0x80012178-84
+ *       (`sltiu v0,v0,0x40` @0x80012180) laesst den Schuss nichts treffen - kein Schaden am NPC, keiner an der G5. */
+static void test_schuss(void)
+{
+    re15_game_flag_set(3, 89, 1); re15_game_flag_set(3, 42, 1); zug(1);
+    uint8_t *b = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u, 12);
+    CHECK(b != NULL, "ROOM5090 nicht ladbar");
+    if (!b) return;
+    const int s = slot_vom_typ(0x4Du);
+    CHECK(s > 0, "keine 0x4D in 5090 bei (3,42)=1");
+    if (s <= 0) { free(b); return; }
+    re15_annette_r41_reset();
+    re15_annette_r41_tick();                                   /* Wiedereintritt: Leiche gelegt (Phase RUHE) */
+    re15_actor_t *a = &g_actors[s];
+    re15_enemy_apply_hitbox(a, 0x4Du);
+    int g = -1;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) if (!g_actors[i].active) { g = i; break; }
+    CHECK(g > 0, "kein freier Slot fuer die G5");
+    if (g <= 0) { free(b); return; }
+    for (int i = 1; i < RE15_ACTOR_MAX; i++)                  /* nur Leiche und G5 im Raum */
+        if (i != s && g_actors[i].active) g_actors[i].active = 0;
+    re15_actor_t *f = &g_actors[g];
+    memset(f, 0, sizeof *f);
+    f->active = 1; f->type = 0x36; f->hp = 345; f->x = 1800; f->y = 0; f->z = -23400; f->rot_y = 3;
+    re15_enemy_apply_hitbox(f, 0x36u);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = 14378; pl->y = 0; pl->z = -23510; pl->rot_y = 2049;
+    const re15_actor_t a0 = *a, f0 = *f;
+    int r = re15_player_weapon_fire(3);
+    fprintf(stderr, "Schuss (a) Leiche: Rueckgabe %d (G5-Slot %d), Leiche hp %d st %d, G5 hp %d\n", r, g, a->hp, a->state, f->hp);
+    CHECK(r == g + 1 && a->hp == -1 && a->state == a0.state && f->hp < 345,
+          "Leiche schluckt den Schuss oder nimmt Schaden: r %d, Leiche hp %d st %d, G5 hp %d", r, a->hp, a->state, f->hp);
+    *a = a0; *f = f0;
+    re15_annette_r41_reset();                                  /* kein Leichen-Zustand: dieselbe 0x4D als lebendes NPC */
+    CHECK(!re15_annette_r41_kein_ziel(a), "nach reset noch kein_ziel");
+    r = re15_player_weapon_fire(3);
+    fprintf(stderr, "Schuss (b) lebendes NPC: Rueckgabe %d, NPC hp %d st %d, G5 hp %d\n", r, a->hp, a->state, f->hp);
+    CHECK(r == 0 && a->hp == -1 && a->state == a0.state && f->hp == 345,
+          "RE1.5 @0x80012178-84: NPC als naechstes Ziel muss den Schuss ins Leere gehen lassen: r %d, NPC hp %d st %d, G5 hp %d",
+          r, a->hp, a->state, f->hp);
+    re15_game_flag_set(3, 42, 0); re15_game_flag_set(3, 89, 0); zug(0);
+    free(b);
 }
 
 int main(void)
@@ -635,6 +752,7 @@ int main(void)
     test_modell();
     test_szene();
     test_zugstart();
+    test_schuss();
     if (fails) { fprintf(stderr, "test_r41_annette: %d Fehler\n", fails); return 1; }
     printf("test_r41_annette: OK\n");
     return 0;

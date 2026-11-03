@@ -97,3 +97,25 @@ void re15_pc_annette_se(int satz)
 }
 
 unsigned re15_pc_annette_se_gespielt(int satz) { return (satz >= 0 && satz < RE2_ANSE_SE_COUNT) ? s_gespielt[satz] : 0u; }
+
+/* Nachbesserung 4 (Abnahme 2 N4): Tonteil der Zugtuer DOOR2A in die RE2-Tuerbank (Port-Bank 0x0E), damit der Abgang in 6030
+ * oeffnen/zufallen spielt (annette_r41.c z_tuer_auf/z_tuer_zu, Muster RE2 Claire ROOM4081 sub05 @0x03634/@0x03644). DOOR2A =
+ * alle Zugtueren 5090/6030 (gen/tuer_zuordnung.inc S320/S321); Tonteil = Datei[0 .. 0x4028) laut RE2-Archivtabelle @0x8009A718
+ * (`28 40 54 87 09 00 00 00 62 3f 00 00`, gen/re2_tuer_tabelle.inc), gelesen wie door_scene_pc.c re2_archiv_lesen. */
+#include "re15_door_seq.h"   /* re15_door_seq_re2_archiv */
+#define AN_TUER_ARCHIV 0x2A
+int re15_pc_annette_tuerbank(void)
+{
+    int ton = 0, modell = 0, sektor = 0, groesse = 0, n = 0;
+    if (!g_audio.initialized) return 0;
+    if (re15_door_seq_re2_archiv(AN_TUER_ARCHIV, &ton, &modell, &sektor, &groesse) != 0) return 0;
+    uint8_t *d = re15_pc_read_re2("DOOR/DOOR2A.DO2", &n);
+    if (!d) { fprintf(stderr, "[annette] shared_assets/RE2/DOOR/DOOR2A.DO2 fehlt - Tuerton still\n"); return 0; }
+    int ok = 0;
+    if (n == groesse && sektor * 0x800 + modell == n && ton > 0 && ton <= n)
+        ok = re15_audio_re2_tuer_laden(d, ton);          /* kopiert; gleiche Bytes schon geladen -> nichts zu tun */
+    else
+        fprintf(stderr, "[annette] DOOR2A.DO2: %d B passt nicht zur Tabelle @0x8009A718 (%d B)\n", n, groesse);
+    free(d);
+    return ok;
+}
