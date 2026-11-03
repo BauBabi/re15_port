@@ -20,6 +20,7 @@ haben und dann die G5 Form."
 | Nachbesserung 1 (2026-11-02) | erledigt (Abschnitt N1): RE2-Szene auf der Claire-Disc gefunden und im Emulator aufgenommen, 5090-Szene danach umgebaut, Zugstart-Szene 6030, Toene (ANNETTE_SE.VBS), F7-Recherche. Offen: N1.10. Abschnitte 1.2, 3, 5, 7, 8.2 sind dadurch teils ueberholt (N1 gilt). |
 | Nachbesserung 2 (2026-11-02/03) | erledigt (Abschnitt N2): Bit 133 eingetragen, Ausgang 6030 vor dem Zugstart = Tuer (msg 20 erst danach), Musikwechsel als Original belegt, Blut = RE2-Emitter FUN_80104C24, Sherry vermerkt. Offen: N2.8. |
 | Nachbesserung 3 (2026-11-03) | erledigt (Abschnitt N3): r41/form gemergt; nach Abnahme 1 Satz/Landung in Cut 11 mit neuen Lagen und RE2-Vorstoss (M1), Abgang 6030 ueber Cut 0 (M2), Zusammensacken im Trefferbild (M4), Blut in RE2-Bildgroesse (M5), Untertitel = RE2-Stimmlaenge (M6), PAL-Takt + Ausholen nach der Aufnahme (M7), Leiche beim Wiedereintritt (M8), Kampfstart Cut 11 geprueft (M9). Offen: N3.12. |
+| Nachbesserung 4 (2026-11-03) | erledigt (Abschnitt N4): nach Abnahme 2 liegt die Leiche flach mit dem RE2-Liegeclip 0x18 (ROOM6141-RBJ, N2), sie ist kein Schuss-Kandidat mehr, und der Waffen-Resolver hat die RE1.5-Typpruefung @0x80012178-84 (N3). Abgang 6030: Leon tritt zur Seite, Tuerton nach RE2 ROOM4081, keine Tuerbewegung, weil es kein Modell gibt (N4). Gesicht beim Satz: mit den Disc-Kameras nicht moeglich, begruendet (N5). N3.5 berichtigt (Ladestandbild). |
 
 Belege dieser Spur: `analysis/befunde_runde41/AN_belege/` (Werkzeuge unter `werkzeug/`).
 
@@ -816,11 +817,14 @@ im Trefferbild (`blut_skala`). Fensterlauf: Cut 11 H 208, Klaue 14 4492 vom Auge
 Blut-Flaeche (Anteil rein roter Pixel im Band, abzueglich des Bildes vor dem Treffer, `blutflaeche.py`):
 
 - RE2 (Aufnahme ab 71,09 s): 3,7 % / +0,21 s 5,5 % / +0,34 s 12,0 % / +0,51 s 16,4 % / bis +1,04 s 16,4 % (bis zum Schnitt).
+  **Berichtigt in Nachbesserung 4 (Abnahme 2 H3):** die 16,4 % ab +0,40 s sind kein stehendes Blut, sondern ein
+  Ladestandbild. Ab 71,49 s steht das RE2-Bild bis zum Schnitt still (mittlere Pixeldifferenz zum Vorbild 0,00 bis 0,04 von
+  71,49 bis 72,13 s, Abnahme 2 Abschnitt 2.4). Bewegt ist das RE2-Blut nur 0,40 s (71,09 bis 71,49 s).
 - Port NB3 (ab Treffer F752): 2,1 % / +0,13 s 14,6 % / +0,27 s 12,1 % / +0,40 s 7,5 % / +0,53 s 9,3 % / +0,67 s 8,4 % /
   +0,80 s 1,3 % / +1,07 s 1,1 %.
 - Vorher (Abnahme M5): "kleiner dunkelroter Fleck am Boden, ~0,9 s".
 
-Rest: RE2-Zeilen wachsen am Ort und stehen bis zum Schnitt, die RE1.5-Zeilen 0/1 fallen und zerspritzen (N2.4) - im Port ist die
+Rest (berichtigt NB4: "stehen bis zum Schnitt" = RE2-Ladestandbild ab 71,49 s, bewegt 0,40 s): RE2-Zeilen wachsen am Ort, die RE1.5-Zeilen 0/1 fallen und zerspritzen (N2.4) - im Port ist die
 Wolke so gross wie in RE2, aber nach 0,7 s weg statt 1,1 s. Pool weiter 96/96 waehrend der 15 Bilder.
 
 ### N3.6 M6 (leicht): Untertiteldauer
@@ -900,7 +904,8 @@ Ausgeschlossen wie in N2.6 (Umgebungsproblem df.exe / echtes release_alles.sh). 
 
 - RE2 0x0B (hoch von Williams Seite) bleibt ohne 5090-Gegenstueck; der Satz laeuft von Annettes Seite (N3.2). Wer das Gesicht im
   Satz will, braucht eine neue Kamera (kein RID-Schnitt der Disc) - nicht gebaut.
-- Blut: RE2-Wolke steht bis zum Schnitt (1,1 s), die RE1.5-Zeilen sind nach 0,7 s weg (N3.5); RE2-FX-Zeilen nicht portiert.
+- Blut: RE2-Wolke ist 0,40 s bewegt zu sehen, danach Ladestandbild bis zum Schnitt (berichtigt NB4, N3.5); die RE1.5-Zeilen
+  sind nach 0,7 s weg; RE2-FX-Zeilen nicht portiert.
 - Tempo: 20,3 s gegen RE2 24,4 s; Rest = kuerzerer Weg und keine CD-Ladepausen (N3.7).
 - Die Form steht nach der Landung bei L (-1378,-23395) zwischen den Bodenfeuern am Wagenende (naechstes 500 entfernt).
 - Stimmen (M3), F4, F7, ZUG_AN-Alternative, NTSC-Bildzahlen: wie N2.8.
@@ -916,3 +921,280 @@ Ausgeschlossen wie in N2.6 (Umgebungsproblem df.exe / echtes release_alles.sh). 
   suche1-4.py mit Ergebnissen suche3_3760.json / suche3_5157.json (leer) / suche4.json, ansicht.py, blatt.py, vergleich.py,
   blutflaeche.py). Rohdaten `re15_port/build/an_lauf/n3_*` (nicht versioniert).
 - Commits: b0685df4f (Merge), afadac63f (Code, Tests), Doku-Commit mit diesem Abschnitt und den Belegen.
+
+## N4. Nachbesserung 4 (2026-11-03)
+
+Auftrag: Abnahme 2 (`AN_abnahme_2.md`, NICHT BESTANDEN), Punkte N2 bis N5 und die Dossier-Korrektur H3 (N3.5). N1 (Riesenform mit
+HP 0 im Wagenweg) gehoert der Form-Spur und ist hier nicht angefasst.
+
+### N4.1 Messweg
+
+Alle Fensterbilder stammen aus dem echten Fenster: eigene exe-Kopie `re15_pc_n4_*`, Renderer des Nutzers, kein AUTOSHOT, kein
+SOFTWARE_RENDER. Gezogen per `RE15_FRAMEDUMP`, Ton per `RE15_AUDIO_CAP_SYNC`, beendet ueber `timeout` auf die eigene PID. Werkzeug:
+`AN_belege/werkzeug/n4/` (`n4_lauf.sh`, Eingaben `eingabe_*.txt`). Rohdaten liegen unter `re15_port/build/an_lauf/n4/` und sind
+nicht versioniert.
+
+| Lauf | Weg | Zweck |
+|---|---|---|
+| `kampf` | Debug-Sprung in Wagen B mit (3,89),(9,133), Tuer nach C, Szene, dann Zielen und Feuer gehalten (Pistole), F250 bis F3300 jedes 5. Bild | N2 (Leiche im Kampfbild), N3 (Schuesse an der Leiche vorbei) |
+| `leiche` | wie `kampf` mit (3,89),(9,133),(3,42) (Wiedereintritt) | N2 (Leiche beim Wiedereintritt) |
+| `z6030` | Kette ab der 6000-Zugtuer wie Abnahme 2 `z6030` (Eingabe w8), F1340 bis F1700 jedes Bild, Ton bildgenau | N4 |
+
+### N4.2 N2 (mittel): Leiche liegt flach wie RE2
+
+**RE2-Beleg.** Claire PL1/RDT/ROOM6141.RDT, MAIN sub02. Die drei Befehle laufen, waehrend die Kamera weg ist (Cut 6):
+
+- Pos_set @0x01162 `32 00 f4 cf 84 03 3c c4` = (-12300, **900**, -15300)
+- Dir_set @0x0116A `33 00 00 00 e4 0c` = 3300
+- Plc_motion @0x01172 `3f 00 18 04` = Clip **0x18**
+
+Beim spaeteren Besuch setzt MAIN sub00 @0x00D16 `44 00 00 49 00 09 00 00 00 ff f4 cf 84 03 3c c4 e4 0c 18 01 40 00` dieselbe
+Lage, dieselbe Richtung und Bewegung 0x18.
+
+Clip 0x18 steht nicht im Annette-EMD: EM049 hat in Paar 1 nur 8 Clips, in Paar 2 17 und in Paar 3 keinen. Er steht im
+Raum-Animationsblock. ROOM6141 RDT+0x60 zeigt auf @0x2E70 `b8 79 00 00 01 00 00 00`. Record 0 traegt Marker 5, 15 Knochen,
+80 Byte je Keyframe und 26 Clips; Clip 24 = 0x18 hat 40 Bilder (Keyframes 239 bis 278).
+
+RAM-Beleg aus der eigenen Aufnahme (Savestates lauf3 e23, e24, e25, e30), gelesen mit `werkzeug/n4/liege.py` und `lage.py`:
+
+| Feld | Wert |
+|---|---|
+| Annette +0x14C | 0x18 |
+| Bildzaehler +0x14D | 6, 26, 6, 22 (Schleife ueber 40 Bilder) |
+| +0x156 (hp) | -1 |
+| Teile (+0x198, je 0xAC, Lage +0x5C/+0x60/+0x64) | y -433 bis -24, sie liegt also flach am Boden |
+
+Aus dem RBJ nachgerechnet liegen Teil 0, 4 und 8 bei (-12300,-154,-15300), (-11682,-108,-13977) und (-12611,-158,-15842).
+Der RAM-Stand e23 sagt (-12300,-171,-15300), (-11680,-73,-13980) und (-12611,-188,-15840); der Rest erklaert sich aus Bild 6
+gegen Bild 0.
+
+**Bau:**
+
+- **Modell:** Paar 1 von `ANNETTE_4D*.EMD` bekommt hinten Clip 24 = RE2-Clip 0x18 (`tools/r41_annette/annette_modell.py`).
+  - Der Auszug liegt als `tools/r41_annette/re2_6141_liegen.bin` (40 Bildeintraege + 40 Keyframes, md5 bd1ce367...), weil
+    `info/re2clair` nicht versioniert ist; `--auszug <ROOM6141.RDT> --pruef` vergleicht ihn mit der Quelle.
+  - Clips 0..23, Keyframes 0..357 und Paar 2/3 bleiben bytegleich.
+  - Das u32 hinter der Bildliste (EM4D @EDD+0x5F8 = Listenende) wandert mit.
+  - Gegen das RE2-Gerippe weichen die Gelenke um hoechstens 19 ab (Unterarme, AN_belege/rig_4d_gegen_re2_47.txt).
+- **Pose:** `annette_r41.c` AN_FA_LIEGEN 24, Bild 0 gehalten, y = AN_LIEGEN_Y 900 (@0x01162), nicht mehr gekippt
+  (AN_KIPP_* entfallen).
+  - PORT-WAHL: RE2 laesst den Clip als Schleife laufen, denn dort atmet die Sterbende noch und spricht spaeter mit Claire
+    (sub03). Im Port ist sie tot, deshalb haelt der Port Bild 0. Das ist das Startbild, das Plc_motion setzt (RE2 0x80052ef0
+    `a060014d sb zero,0x14d`).
+- **Lage:** Die Lage ist fest, denn RE2 setzt absolute Werte. Sie wird aus dem Haltepunkt S abgeleitet: 1215 weg und 245 quer
+  von L wie bisher, das ergibt (4854,-22047).
+  - **Gier:** relativ zu William wie in RE2. RE2 3300 minus Peilung((-6600,-14800) -> (-12300,-15300)) ergibt rel 1309; im
+    Port kommt die Peilung L -> Liegestelle dazu, zusammen 1170.
+  - **Wandfreiheit (PORT-WAHL, gemessen):** An dieser Lage ragen Kopf und Schulter bis z -21043 in das Regal SCA #28 (z -21700,
+    294 Netzpunkte darin). Keine Drehung am selben Ort ist frei (`leiche_lage.py` / `suche_liegen.py`). Die kleinste
+    Verschiebung im 50er-Raster ohne Netzpunkt in einer soliden SCA-Zelle ist 700 nach Sueden (AN_LIEGEN_SUED). Die Leiche
+    liegt damit bei **(4856,-22748), Gier 1170**, 43 vom Regal und 401 vom naechsten Bodenfeuer (4000,-24600).
+
+**Bildanteil** (ID-Puffer `bildmass.py`, Netz der Liegepose):
+
+| Schnitt | Vorher | Jetzt |
+|---|---|---|
+| Cut 11 (Kampfstart, Rueckstoss, G5) | Abnahme 2: "gross vorn rechts" | 0,00 % im Band zwischen den Kinobalken; bei offenem Bild 2,95 % als Streifen am unteren Rand (Bild-y 433..479) |
+| Cut 12 | | 0,30 % (Bild-x 217..306, y 209..226), klein hinten |
+
+**Fenster (Lauf `kampf`):**
+
+- Ab F786 (Cut 13, Schnitt weg) liegt sie mit Clip 24 Bild 0 bei (4856,900,-22748) r1170, hp -1.
+- In allen 2515 state.log-Zeilen bis F3300 bleibt das so: eine Lage, ein Bild, st 0, hp -1.
+- Bilder: `n4/leiche_kampf_n4.jpg` (16 Felder Szene bis Kampfende) und `n4/leiche_vorher_nachher_n4.jpg` (Abnahme 2 gegen NB4 in
+  Cut 11).
+- Im offenen Cut 11 (F1300) sieht man sie am unteren Rand flach auf dem Ruecken liegen, Gesicht nach oben; vorher sass sie
+  gekippt rechts im Bild.
+- Wiedereintritt (Lauf `leiche`): `Wiedereintritt nach der Szene: Leiche liegt` mit derselben Lage und Pose; in Cut 12 liegt
+  sie flach neben dem Weg (`n4/leiche_wiedereintritt_n4.jpg`).
+
+### N4.3 N3 (leicht): Leiche nimmt keinen Treffer mehr
+
+**Schadensweg (gemessen):** Abnahme 2 F2751 zeigt Annette mit hp -1 -> -6, st 3, ss1 3 (= Waffe 3) und ss2 1 (= EBEN). Das ist
+die Schreibfolge des Waffen-Resolvers `re15_player_weapon_fire` (re15_damage.c): +0x5 = Waffe, +0x6 = senkrechte Trefferrichtung,
++0x4 = 2/3. Dessen Kandidatenschleife prueft nur Trefferkasten, Band und Keil. Ein NPC traegt einen Kasten (0x4D: 450/1530) und
+Band LEVEL; das zeigt der RE1.5-RAM `stage_saves/mzd_stage1_npc.sav`: Typ 0x40/0x42/0x4B haben Wort 0 = 0x40000001, hp -1
+(`werkzeug/n4/npc_band.py`). Die Leiche lag naeher als die G5 und war deshalb das Ziel. Die Schleifen, die die Abnahme genannt
+hat (:1108, :1148, :3640, :4450), gehoeren zu anderen Wegen.
+
+**Original:** FUN_80011f50 prueft nach der Wahl die Sichtlinie (@0x80012168-74) und danach den Typ des Gewinners:
+
+```
+80012178: lbu   v0,8(s1)
+80012180: sltiu v0,v0,0x40
+80012184: beq   v0,zero,0x80012540     ; v0 = 0: kein Treffer
+```
+
+Ein NPC als naechstes Ziel laesst den Schuss in RE1.5 also ins Leere gehen. Diese Pruefung fehlte im Port. RE2 verwirft
+Kandidaten mit hp < 0 schon in der Schleife: `lh v0,0x156(s0)` @0x80047148, `bltz v0,0x8004740c` @0x80047150 (Leon PSX.EXE und
+SLUS_007.48 gleich). Die liegende RE2-Annette traegt hp -1 (RAM e24 +0x156).
+
+**Bau:**
+
+- `re15_damage.c`, nach der Sichtlinie: `if (g_actors[best].type >= 0x40u) return 0;` (@0x80012178-84). RE1.5 hat die
+  Pruefung vollstaendig, also gilt RE1.5 fuer jedes NPC.
+- In der Kandidatenschleife ist die Leiche kein Kandidat: Haken `re15_annette_r41_kein_ziel` (nach dem Treffer oder in Phase
+  RUHE und hp < 0). Die Leiche ist RE2-Inhalt (RE1.5 hat keine), deshalb gilt hier die RE2-Regel @0x80047148-50. Der Schuss geht
+  dann an ihr vorbei auf die G5.
+
+**Gemessen:**
+
+- `unit_r41_annette` test_schuss, Lage wie Abnahme 2: Leon (14378,-23510) Gier 2049, G5 (1800,-23400).
+  - (a) Leiche: Rueckgabe = G5-Slot, G5 345 -> 330, Leiche hp -1 st 0.
+  - (b) dieselbe 0x4D ohne Leichen-Zustand (lebendes NPC): Rueckgabe 0, NPC und G5 unveraendert.
+- Fensterlauf `kampf`: Leon steht bei (13775,-23550) mit Blick nach Westen, die Leiche seitlich 802 vor ihm (in Abnahme 2
+  wurde sie seitlich 1424 getroffen).
+  - 108 Schuss (Munition 144 -> 36).
+  - Jeder Treffer im Kampf liegt im Feuertakt 22 Bilder: Riesenform 150 -> 0 in 10 Treffern F930..F1128, G5 600 -> -1 in 40
+    Treffern F1612..F2470.
+  - Die Leiche hat in allen Zeilen hp -1 und st 0.
+
+### N4.4 N4 (leicht): Abgang in 6030 durch die Tuer
+
+**Befund (gemessen, ID-Puffer Cut 0 `werkzeug/n4/zug6030.py`):** Am Tuerziel (-3873,-22550) steht Annette zwischen dem Auge von
+Cut 0 und Leon (-3873,-23487). Leon ist dort nur zu 46 % frei, das entspricht Abnahme 2 F1490.
+
+**Muster (Zensus aller 240 RE1.5-RDTs, Unteragent, Rohdaten im Scratchpad):**
+
+- RE1.5 hat keinen NPC-Abgang mit Tuerton oder Tuerbewegung. Die fuenf Abgaenge (10D0 sub21, 2000 sub02/03, 4010 sub02, 6000
+  sub02) sind stumm, zum Beispiel ROOM4010 sub02 @0x00D1A..@0x00D2A: gehen, warten, Cut 1, Sleep 20, Pos_set weg.
+- RE2 hat genau einen: Claire ROOM4081 MAIN sub05 @0x03624..@0x03658, Annette laeuft in die Tuer.
+  - Se_on Tuerbank Satz 0 (oeffnen) @0x03634 `36 00 00 01 03 00 ..`
+  - Sleep 30 @0x03640
+  - Satz 1 (zufallen) @0x03644
+  - Pos_set weg
+- Tuerbewegung: ROOM6030 hat kein Tuermodell. nOmodel ist 2; Objekt 0 sitzt bei main00 @0x00CEE (-17800,-25900), Objekt 1 bei
+  sub06 @0x010A2 (-26230,-20148). Das Tuernetz gibt es nur in der Tuersequenz (DOOR2A.DO2). Weder RE1.5 noch RE2 bewegen bei
+  einem NPC-Abgang eine Tuer im Raum. **Eine Tuerbewegung waere erfunden und ist nicht gebaut.**
+
+**Bau (`annette_r41.c` k_zug_seg nach msg 30):**
+
+1. Cut 0.
+2. Leon tritt zur Seite: Work_set(1,0) + Plc_dest Modus 4, Bit 0x20 auf (-3000,-23700), Form ROOM6031 @0x00D86
+   `2e 01 00 00 40 00 04 20`; dann Warten @0x01358.
+3. Leon dreht sich zur Tuer (Form @0x01150).
+4. Erst dann geht sie zur Tuer und wird erwartet (@0x0128A). Nacheinander, weil die Ankunftsbits Ein-Bild-Pulse sind.
+5. Im Ankunftsbild: Tuer auf `36 0e 00 01 02 00 ..` (Port-Bank 0x0E = RE2-Tuerbank, Ursprung RE1.5-Modus 2 = Entity-Pool
+   Index 0, Handler @0x80041624/@0x80041698-b0), Cut 1 (@0x0114A), versteckt (6000 @0x0100A).
+6. Sleep 30 (@0x01364 = RE2 @0x03640), dann Tuer zu `36 0e 01 01 02 00 ..`.
+7. Rest von sub08 @0x01368.
+
+- Die Tuerbank laedt `re15_pc_annette_tuerbank` (annette_se_pc.c, Haken in main.c) aus DOOR2A.DO2, Tonteil [0..0x4028) laut
+  Tabelle @0x8009A718. DOOR2A ist die Tuer aller Zugtueren 5090/6030 (gen/tuer_zuordnung.inc S320/S321).
+- PORT-WAHL Z_LEON (-3000,-23700): Am Ende sind Leon und Annette in Cut 0 je zu 100 % frei. Sie steht 1444 von ihm entfernt und
+  ist mindestens 1100 von ihrem Weg entfernt.
+
+**Fenster (Lauf `z6030`, jedes Bild, Ton):**
+
+| Bild | Was | Beleg |
+|---|---|---|
+| F1460 | Cut 0 | |
+| F1470..F1480 | Leon tritt nach (-3080,-23674) | |
+| F1482..F1497 | Leon dreht sich zur Tuer | |
+| F1482..F1510 | Annette geht zur Tuer (-3820,-22540) | |
+| F1511 | Cut 1, sie ist versteckt, `Se_on: bank=14 id=0` | |
+| F1541 | `Se_on: bank=14 id=1` | |
+| F1555 | Steuerung frei | |
+| ab F1504 | Annette rechts an der Tuer, Leon frei in der Mitte | `n4/zugstart6030_abgang_n4.jpg` Felder F1504 bis F1510 |
+
+- Ton: Der Pegel je Spielbild steigt 4 Bilder nach jedem Se_on an, bei F1516 auf 1796 (davor rund 900) und bei F1546 auf 2157
+  (davor rund 1000). Beide Anstiege liegen wie die Befehle 30 Bilder auseinander.
+- Video mit Ton: `n4/zugstart6030_abgang_n4_mit_ton.mp4` (F1340..F1700).
+- Kein Bild zeigt ein Verschwinden innerhalb eines Schnitts. Die Steuerung kommt 21 Bilder spaeter als in Abnahme 2.
+
+### N4.5 N5 (Hinweis): Gesicht beim Satz - mit den 5090-Kameras nicht moeglich
+
+Die Kameras von Wagen C (RID @0x60) liegen so:
+
+| Schnitt | Auge | Blickrichtung |
+|---|---|---|
+| 11 | (7626,-3256,-25360) | nach Westen |
+| 12 | (18526,-2656,-24660) | nach Westen |
+| 13 | (11050,-3110,-24812) | nach Osten, nur x > 11050 |
+| 14 | (23870,-7450,-29130) | nach Norden, Ostende |
+| 15 | (46,-1236,-24302) | nach Osten |
+
+Beim Satz sieht Annette zur Form im Westen.
+
+**Heute** (ID-Puffer, `n4/n5_satz_kameras.png`):
+
+- Cut 11: Der Winkel zwischen ihrer Blickrichtung und der Richtung zum Auge betraegt 134 Grad, man sieht also ihren Ruecken.
+- Cut 15: 16 Grad, das Gesicht waere zu sehen. Dort steht aber der Leib der Form vor dem Auge (70 % des Bildes, Annette 25 %
+  frei), obwohl ihre Wurzel L hinter dem Auge liegt, denn der Leib reicht 4340 nach vorn.
+
+**Suche** (`werkzeug/n4/suche5.py`, Ergebnis `suche5.json`):
+
+- Geprueft: alle fuenf Schnitte, Annette im Raster 500/300 ueber den Gang, die Form in 24 Richtungen im Abstand 5157 (Hieb
+  3760 + Vorstoss 1397), beide begehbar.
+- Bedingungen: Gesicht sichtbar (Winkel hoechstens 60 Grad), Form hoechstens 40 %, Annette ganz im Band und mindestens 95 %
+  frei.
+- Ergebnis: 1693 Lagen geprueft, 126 Treffer.
+
+| Schnitt | Treffer | Lage | Annette im Bild | Folge |
+|---|---|---|---|---|
+| 14 | 123 | Annette x 15500..20000, Form x 20657..25157 | 37..74 x 91..99 Pixel | Die Form stuende an Leons Eintrittstuer (24800,-23550) |
+| 11 | 3 | Annette am Westende (-3500), Form zwischen ihr und der Kamera | 35 x 107 Pixel | Gesicht etwa 10 Pixel |
+
+Beide Treffer drehen die Szene um: Die Form faellt dann oestlich von Annette, zwischen sie und Leon. Sturz, Weg, Hieb, Blut und
+Kampfstart muessten neu gelegt werden, und das Gesicht bliebe trotzdem winzig, kleiner als heute ihr ganzer Koerper in Cut 11
+(79 x 235 Pixel).
+
+Eine Drehung Annettes in Cut 11 muesste mindestens 74 Grad von William weg gehen (fuer 60 Grad zur Kamera). Dann spraeche sie
+nicht mehr zu ihm. RE2 0x0B zeigt sie William zugewandt (Plc_neck @0x01128 auf William).
+
+**Ergebnis:** Mit den Disc-Kameras von 5090 gibt es keine Einstellung, die ihr Gesicht beim Satz zeigt und die Szene so laesst.
+Nicht gebaut. Moeglich waere es nur mit einer neuen Kamera; das ist kein RID-Schnitt der Disc und nicht beauftragt.
+
+### N4.6 Tests
+
+Bau `bash re15_port/tools/local_build.sh build`: LOCAL-BUILD-OK.
+
+| Test | Inhalt (neu in NB4) | Ergebnis |
+|---|---|---|
+| `unit_r41_annette` | Modell: 25 Clips, Clips 0..23/Keyframes/Paar 2-3 gleich EM4D, Clip 24 = Auszug; Leiche (Wiedereintritt und nach der Szene) (4856,-22748) Gier 1170 +-24, y 900, ungekippt, Clip 24 Bild 0, hp -1, kein Schuss-Kandidat; 6030: Leon zur Seite, Tuerton Bank 0x0E Satz 0 im Bild des Verschwindens, Satz 1 30 Bilder spaeter, Segmentfolge; test_schuss (a)/(b) | gruen |
+| `integration_r41_annette` (5 Laeufe) | leon_tor: Annette am Ende Clip 24 Bild 0; leon_leiche: Clip 24 Bild 0 bei (4856,-22748) r1170; zug6030: Plc_dest (-3000,-23700), Se_on bank=14 id=0 vor id=1 | gruen (248 s) |
+| `unit_r41_annette_se_bank/_toene/_lagen` | unveraendert | gruen (in der Suite) |
+| `integration_r41_birkin_pistole` | Bestand | gruen (242 s) |
+| `integration_r35_zgirl_5090` | Bestand | gruen (147 s) |
+| Suite `^unit_\|^prop_\|^probe_` ohne `releaseskript\|android\|r37_masken36_ausschluss\|paket\|titelversion`, `-j 4` | Bestand, darin die Resolver-Pruefung fuer alle Typen | **1040/1040 gruen** (249 s) |
+
+Ausgeschlossen wie in N2.6/N3.11: Umgebungsproblem df.exe und das echte release_alles.sh. Fensterlaeufe nur mit eigener exe-Kopie
+`re15_pc_n4_*` (timeout auf die eigene PID), danach geloescht; ctest-Laeufe mit ihren eigenen Kopien.
+
+### N4.7 Dateien
+
+- Code:
+  - `re15_port/engine/src/annette_r41.c` (Liegepose, Lage, kein_ziel, Abgang 6030, Tuerbank-Haken)
+  - `re15_port/include/re15_annette_r41.h`
+  - `re15_port/engine/src/re15_damage.c` (2 Stellen)
+  - `re15_port/platform/pc/src/annette_se_pc.c` (re15_pc_annette_tuerbank)
+  - `re15_port/platform/pc/main.c` (1 Zeile Haken)
+- Assets und Generator: `re15_port/shared_assets/RE2/ANNETTE_4D.EMD` / `ANNETTE_4D_BLUT.EMD`,
+  `re15_port/tools/r41_annette/annette_modell.py`, `re15_port/tools/r41_annette/re2_6141_liegen.bin`.
+- Tests: `re15_port/tests/unit/test_r41_annette.c`, `re15_port/tests/unit/probes/r41_annette.cmake` (RE15_AN_AUSZUG),
+  `re15_port/tests/integration/test_r41_annette.cmake`.
+- Belege `AN_belege/n4/`:
+  - `leiche_kampf_n4.jpg`, `leiche_vorher_nachher_n4.jpg`, `leiche_wiedereintritt_n4.jpg`
+  - `zugstart6030_abgang_n4.jpg`, `zugstart6030_abgang_n4_mit_ton.mp4`
+  - `n5_satz_kameras.png`
+- Werkzeug `AN_belege/werkzeug/n4/`:
+  - Laeufe: `n4_lauf.sh`, `eingabe_*.txt` (darin `eingabe_w8_nb4.txt` = w8 fuer den neuen Abgang)
+  - RE2-Liegepose und Lage: `re2emd.py`, `rbj2.py`, `liege.py`, `lage.py`, `suche_liegen.py`, `leiche_lage.py`, `bildmass.py`
+  - N5: `suche5.py`, `suche5.json`, `suche5.log`, `n5_blatt.py`
+  - 6030: `zug6030.py`
+  - NPC-Band aus dem RE1.5-RAM: `npc_band.py`
+
+### N4.8 Offen und Commits
+
+- N1 (Form-Spur): Die Riesenform kommt im Wagenweg mit HP 0; hier nicht angefasst.
+- Die RE1.5-Typpruefung @0x80012178-84 gilt jetzt fuer jedes NPC (Typ >= 0x40). Ein lebendes NPC, das im Schusskeil naeher steht
+  als ein Gegner, schluckt den Schuss wie im Original, statt Schaden zu nehmen. Fuer die Integration ist das eine
+  Verhaltensaenderung in re15_damage.c fuer alle Spuren.
+- Abnahme-Ketten mit festen Tastenskripten durch 6030: Die Szene endet 21 Bilder spaeter, und Leon steht danach bei
+  (-3080,-23674) statt an der Tuer. Mit w8 bleibt die Kette deshalb in 6030 stecken (Lauf `kette`).
+  - Angepasste Eingabe `werkzeug/n4/eingabe_w8_nb4.txt`: `W29,L0.367,W0.2,` wird zu `W29.7,L0.22,U0.4,`, der Rest bleibt
+    gleich. Ein Sprungtest `t1` zeigt: Leon dreht auf 1999, geht bis x -3873, und die Tuer loest aus.
+  - Lauf `kette2` (ganze Kette): Die Kette erreicht 5090, und die Szene laeuft bildgleich zu Abnahme 2 (Treffer F1640,
+    Kampfstart F1776).
+- Stimmen (M3), F4, F7, ZUG_AN-Alternative, NTSC-Bildzahlen: wie N3.12.
+- Commits: Code/Tests/Assets, dann Doku-Commit mit diesem Abschnitt und den Belegen.
