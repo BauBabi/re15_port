@@ -8,6 +8,8 @@
 #              nachgeladen) -> Schnitt weg/liegt/Schrei -> Kampfstart sub04; Toene 0/1/2 der Mini-Bank; danach die Riesenform
 #              freigegeben (grid 0x13 = sub04 Member_set @0x0130A), Annette bleibt liegen (hp -1).
 #   leon_ohne_zug (3,89)=1, (9,133)=0: die Frau im Kittel wird in 5090 verworfen (erst nach dem Zugstart), keine Szene.
+#   leon_leiche (3,89)=1, (9,133)=1, (3,42)=1 (Nachbesserung 3, M8): Wiedereintritt nach der Szene, Annette liegt als Leiche
+#              (Clip 6 Bild 12, hp -1, Blut-Kittel), keine zweite Szene.
 #   elza       5091 mit (3,89)=1, (9,133)=1: keine Frau im Kittel auf der Disc, keine Szene.
 #   zug6030    Fuehrerstand 6030 (Debug-Sprung = Eintritt Cut 0 @0x8001d818 -> sub00 Case 0 -> sub07) mit (3,89)=1, (4,23)=1:
 #              Zugstart-Szene statt sub05 (sub07 @0x01132), Toene Zug an (3) vor Krach (0), Annette geht ab und ist versteckt
@@ -66,7 +68,7 @@ function(ein_lauf _name _raum _flag _pos _exit)
         endif()
         set(_pos 0)
         foreach(_schritt "Ton 0 " "Szenenstart statt sub04" "Ton 1 " "Sturz:" "gelandet, Drohen:" "Ton 2 " "Hieb \\(RE2"
-                         "Treffer:" "Schnitt weg, liegt, Schrei" "Kampfstart \\(sub04\\), Form frei")
+                         "Ausholen \\(RE2" "Blut-Skala" "Treffer:" "Schnitt weg, liegt, Schrei" "Kampfstart \\(sub04\\), Form frei")
             string(REGEX MATCH "\\[annette\\] F[0-9]+ ${_schritt}" _m "${_dbg}")
             if(NOT _m)
                 string(APPEND _g "\n ${_name}: Schritt '${_schritt}' fehlt im debug.log")
@@ -93,6 +95,26 @@ function(ein_lauf _name _raum _flag _pos _exit)
             list(GET _frau -1 _letzte)
             if(NOT _letzte MATCHES "hp=-1")
                 string(APPEND _g "\n ${_name}: Annette am Ende nicht hp -1: ${_letzte}")
+            endif()
+        endif()
+    elseif(_name STREQUAL "leon_leiche")
+        # NB3 M8: Wiedereintritt nach der Szene ((3,42)=1): die 0x4D liegt als Leiche (RE2 MAIN sub00 @0x00D16), Blut-Kittel
+        if(NOT _dbg MATCHES "Wiedereintritt nach der Szene: Leiche liegt")
+            string(APPEND _g "\n ${_name}: Leiche nicht gelegt")
+        endif()
+        if(NOT _dbg MATCHES "Ersatzmodell RE2/ANNETTE_4D_BLUT.EMD")
+            string(APPEND _g "\n ${_name}: Leiche ohne Blut-Kittel (ANNETTE_4D_BLUT.EMD)")
+        endif()
+        if(_dbg MATCHES "\\[annette\\] F[0-9]+ Szenenstart")
+            string(APPEND _g "\n ${_name}: Szene lief ein zweites Mal")
+        endif()
+        list(LENGTH _frau _na)
+        if(_na EQUAL 0)
+            string(APPEND _g "\n ${_name}: keine Leiche im state.log")
+        else()
+            list(GET _frau -1 _letzte)
+            if(NOT _letzte MATCHES "mo=6 af=12" OR NOT _letzte MATCHES "hp=-1")
+                string(APPEND _g "\n ${_name}: Leiche nicht liegend (Clip 6 Bild 12, hp -1): ${_letzte}")
             endif()
         endif()
     elseif(_name STREQUAL "zug6030")
@@ -136,6 +158,7 @@ endfunction()
 
 ein_lauf(leon_tor 5090 "3:89,9:133" "500,-9175,2048,0" 1500)
 ein_lauf(leon_ohne_zug 5090 "3:89" "500,-9175,2048,0" 900)
+ein_lauf(leon_leiche 5090 "3:89,9:133,3:42" "500,-9175,2048,0" 600)
 ein_lauf(elza 5091 "3:89,9:133" "500,-9175,2048,0" 900)
 ein_lauf(zug6030 6030 "3:89,4:23" "-3873,-23487,0,0" 1300)
 file(REMOVE "${_exe_kopie}")

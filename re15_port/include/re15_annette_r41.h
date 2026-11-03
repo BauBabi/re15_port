@@ -77,7 +77,8 @@
 /* Phasen des Takts (5090) */
 enum {
     RE15_AN_AUS = 0, RE15_AN_WARTEN = 1, RE15_AN_STURZ = 2, RE15_AN_DROHEN = 3, RE15_AN_HIEB = 4, RE15_AN_REAKTION = 5,
-    RE15_AN_LEICHE = 6, RE15_AN_FREI = 7
+    RE15_AN_LEICHE = 6, RE15_AN_FREI = 7,
+    RE15_AN_RUHE = 8      /* Nachbesserung 3 (M8): Wiedereintritt nach der Szene, Leiche liegt (RE2 MAIN sub00 @0x00D16) */
 };
 
 /* Haken (je eine Zeile, "Runde 41 Spur AN") */
@@ -116,6 +117,7 @@ int  re15_annette_r41_phase(void);
 int  re15_annette_r41_slot(int form);           /* 1 = Riesenform, 0 = Annette; -1 = keiner */
 int  re15_annette_r41_blut(void);               /* Blut-Aufrufe (RE2 FUN_801058BC, 2 je Bild x 15) seit Szenenstart */
 int  re15_annette_r41_blut_plaetze(void);       /* davon belegte ESP-Plaetze (Zeilen je Aufruf) */
+int  re15_annette_r41_blut_skala(void);         /* Skala der Blutzeilen (NB3: Bildgroesse wie RE2 Schnitt 0x0A) */
 void re15_annette_r41_reset(void);
 
 #endif

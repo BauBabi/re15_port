@@ -9,7 +9,16 @@ Kodierung wie jede Port-Zeile (Vorbild tools/r39_funk10f1/szene_bauen.py, Glyphe
     05 cc <Name:> 05 00   Sprecherfarbe (01 Leon/Elza, 02 Annette/Ada; Census P_story.md "Farben")
     <Text>           A-Z 0x1D.., a-z 0x3D.., ' ' 0x00, '!' 0x1A, '?' 0x1B, ':' 0x16, ',' 0x18, "'" 0x3A, '-' 0x3B, '.' 0x57
     08               Zeilenumbruch (FUN_80028868; wie tools/r36_p/texte_bauen.py)
-    04 01 01 63      Ende mit 99-Bilder-Halt (wie die Port-Zeilen der Runden 35-41)
+    04 01 01 nn      Ende mit nn Bildern Halt. Der Port zeigt eine Zeile genau diesen Halt lang (msg_common.c
+                     re15_msg_compute_duration: nur 0x01 N und 0x02 N zaehlen, FUN_80028134 Zustand 6).
+                     Standard 0x63 = 99 Bilder (wie die Port-Zeilen der Runden 35-41). Nachbesserung 3 (Abnahme 1 M6:
+                     "Annette: William." stand 3,3 s ueber den Schnitt, RE2-Stimme 1,17 s; "Leon: Annette!" stand noch
+                     ueber dem Kampfstart): 5090 haelt so lange wie die RE2-Stimme bzw. bis zum naechsten Schritt:
+                       43 "William."                 35 Bilder = Xa 0x30, 11 Kanalsektoren * 4032 / 37800 s = 1,173 s
+                       40 "W-William! You're alive!" 118 Bilder = Xa 0x31, 37 Sektoren = 3,947 s
+                       42 "Leon: Annette!"           60 Bilder = Sleep vor dem Kampfstart im Programm (annette_r41.c k_prog)
+                     (Xa-Tabelle der Claire-STAGE6.BIN @0x4D4, Dossier N1.1; die Programm-Sleeps nach Message_on sind
+                     dieselben Zahlen, die Zeile endet also mit dem naechsten Schritt.)
 Zeilenbreite <= 271 px mit Sprecherkopf in Zeile 1 (include/font_width.h = DEBUG.BIN[0x4416+code], Grenze wie
 tools/r36_p/texte_bauen.py MAX_PX).
 
@@ -33,15 +42,15 @@ ZIEL = os.path.join(PORT, 'engine', 'src', 'gen', 'annette_r41_texte.inc')
 FW = os.path.join(PORT, 'include', 'font_width.h')
 MAX_PX = 271
 
-# (Raum, Id, Farbe, Sprecher, [Zeilen])
+# (Raum, Id, Farbe, Sprecher, [Zeilen], Halt in Bildern)
 ZEILEN = (
-    (0x5090, 40, 0x02, 'Annette', ["W-William! You're alive!"]),
-    (0x5090, 42, 0x01, 'Leon', ['Annette!']),
-    (0x5090, 43, 0x02, 'Annette', ['William.']),
-    (0x6030, 27, 0x02, 'Annette', ["There! The train's moving."]),
-    (0x6030, 28, 0x02, 'Annette', ['What was that?', '...Sherry is back there!']),
-    (0x6030, 29, 0x01, 'Leon', ["I'll check it out."]),
-    (0x6030, 30, 0x02, 'Annette', ["No. She's my daughter.", 'Stay here and keep an eye on', 'the controls.']),
+    (0x5090, 40, 0x02, 'Annette', ["W-William! You're alive!"], 118),
+    (0x5090, 42, 0x01, 'Leon', ['Annette!'], 60),
+    (0x5090, 43, 0x02, 'Annette', ['William.'], 35),
+    (0x6030, 27, 0x02, 'Annette', ["There! The train's moving."], 0x63),
+    (0x6030, 28, 0x02, 'Annette', ['What was that?', '...Sherry is back there!'], 0x63),
+    (0x6030, 29, 0x01, 'Leon', ["I'll check it out."], 0x63),
+    (0x6030, 30, 0x02, 'Annette', ["No. She's my daughter.", 'Stay here and keep an eye on', 'the controls.'], 0x63),
 )
 
 TAB = {' ': 0x00, '!': 0x1A, '?': 0x1B, ':': 0x16, ',': 0x18, "'": 0x3A, '-': 0x3B, '.': 0x57}
@@ -72,26 +81,27 @@ def px(text):
     return sum(WID[glyphe(c)] for c in text)
 
 
-def kodiere(farbe, name, zeilen):
+def kodiere(farbe, name, zeilen, halt=0x63):
+    assert 0 < halt <= 0xFF
     b = [0x04, 0x00, 0x05, farbe] + [glyphe(c) for c in name + ':'] + [0x05, 0x00, 0x00]
     for i, z in enumerate(zeilen):
         if i:
             b.append(0x08)
         b += [glyphe(c) for c in z]
-    return b + [0x04, 0x01, 0x01, 0x63]
+    return b + [0x04, 0x01, 0x01, halt]
 
 
 def main():
     fehler = []
     out = ['/* Generiert von re15_port/tools/r41_annette/texte_bauen.py - nicht von Hand aendern. */']
-    for raum, mid, farbe, name, zeilen in ZEILEN:
+    for raum, mid, farbe, name, zeilen, halt in ZEILEN:
         bw = [px(name + ': ') + px(zeilen[0])] + [px(z) for z in zeilen[1:]]
         for i, w in enumerate(bw):
             if w > MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, MAX_PX))
-        b = kodiere(farbe, name, zeilen)
-        out.append('/* ROOM%04X %d %s: %s  (Zeilen %s px) */' % (raum, mid, name, ' / '.join(zeilen),
-                                                                '/'.join(str(w) for w in bw)))
+        b = kodiere(farbe, name, zeilen, halt)
+        out.append('/* ROOM%04X %d %s: %s  (Zeilen %s px, Halt %d Bilder) */' % (raum, mid, name, ' / '.join(zeilen),
+                                                                               '/'.join(str(w) for w in bw), halt))
         out.append('static const uint8_t k_an_%04x_msg%d[%d] = {' % (raum, mid, len(b)))
         for i in range(0, len(b), 16):
             out.append('    ' + ' '.join('0x%02x,' % x for x in b[i:i + 16]))

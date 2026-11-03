@@ -40,31 +40,41 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
  * RE2 ROOM6141: Annette geht auf die Stelle zu, an der William herabfaellt (@0x010A2/@0x010B8/@0x010DE), und bleibt
  * 4497 vor ihm stehen (Savestate e07: Annette (-11097,-15001), Birkin (-6600,-14800)); der Hieb kommt mit einem Vorstoss
  * von 1397 (e20..e22: -6600 -> -7997). Die RE1.5-Riesenform trifft mit dem Hieb links (Clip 4) nur im Trefferfenster
- * lokal x 3685..3864 (gemessen aus BAHNSTEIG_FORM.EMD, Dossier 8.2) und hat keinen Vorstoss; deshalb Abstand 3760.
+ * lokal x 3685..3864 (gemessen aus BAHNSTEIG_FORM.EMD, Dossier 8.2); ihr Clip 4 hat keinen Vorstoss (NB1/NB2: Abstand 3760).
+ * NB3: der Vorstoss von RE2 laeuft im Takt (AN_VORSTOSS), Abstand vor dem Hieb 3760 + 1397.
  * Kameras (Projektion mit den RID-Daten 5090 @0x60+32*Cut, tools/form_kamera.py-Kette, Dossier N1.2):
  *   Cut 12 (Auge (18526,-2656,-24660), weit, Leon vorn)      = RE2 Cut 7 (beide im Bild, Krach, "William.")
- *   Cut 15 (Auge (46,-1236,-24302), Blick nach Osten)          = RE2 Cut 2 und 0x0B (von Williams Seite auf Annette)
- *   Cut 11 (Auge (7626,-3256,-25360), Blick nach Westen)       = RE2 Cut 0x0A (von Annettes Seite auf William)
+ *   Cut 15 (Auge (46,-1236,-24302), Blick nach Osten)          = RE2 Cut 2 (sie kommt auf die Kamera zu)
+ *   Cut 11 (Auge (7626,-3256,-25360), Blick nach Westen)       = RE2 Cut 0x0A und (NB3) 0x0B: Sturz, Bruellen, Satz, Hieb
  *   Cut 13 (Auge (11050,-3110,-24812), Blick nach Osten, Leon) = RE2 Cut 6 (weg von der Tat, Schrei aus dem Off)
- * Lagen per Projektion (Werkzeuge analysis/befunde_runde41/AN_belege/werkzeug/n1/proj5090.py, lage2.py, lagesuche.py; Dossier N1.2), gemessen
- * im ersten Fensterlauf korrigiert: mit L (1000,-22800) fuellte die Form in Cut 15 fast das ganze Bild und Annette war beim
- * Satz nur zwischen ihren Beinen zu sehen; mit A0 (9500,-22900) stand Annette in Cut 12 genau hinter Leon.
- *   L  Landestelle: in Cut 15 liegt die Form (Kasten +-1300, Hoehe 4000) links bis Bild-x 155, Annette (Hoehe 1750) rechts
- *      bei x 259..302 - keine Ueberdeckung; in Cut 11 steht Annette vorn (x 170..194), die Form dahinter (x 126..195).
- *   S  Haltepunkt 3759 vor L (Trefferfenster s. oben).
- *   A0 Start in Cut 12 bei Bild-x 117 neben Leon (x 156, Ausloeser-Lage (13775,-23550), debug.log Runde 41), mindestens 1600
- *      von den Bodenfeuern main00 @0x0110E..@0x0120E (naechstes (9900,-24500)), der Weg A0->S bleibt >= 1035 von ihnen.
+ * Nachbesserung 3 (Abnahme 1 M1, Dossier N3.1): die Kasten-Projektion aus NB1 gab die echte Pose nicht wieder; mit L (500,-22600)
+ * stand die Form 1760 vor dem Auge von Cut 15 und deckte beim Satz 71-97 % des Bildes (Annette 0-32 % sichtbar). Neu gemessen mit
+ * dem Gerippe der Form (BAHNSTEIG_FORM.EMD + ANNETTE_4D.EMD, form_buehne-Kette, ID-Puffer, Kinobalken 24/216 abgezogen; Werkzeug
+ * analysis/befunde_runde41/AN_belege/werkzeug/n3/szmass.py, gegen den Fensterlauf geprueft: F600 Cut 15 offline 74 %):
+ *   Cut 15 sieht vom Wagen nur x 0..6000 (die Blickachse verlaesst den Gang bei x 3220). Suche ueber alle Lagen mit 3760 bzw.
+ *   3760 + 1397 Abstand (suche3.py): keine einzige, bei der Annette >= 95 % frei ist und die Form <= 40 % deckt.
+ *   Cut 11 (von Annettes Seite, wie das 80-%-Foto #145): Suche suche4.py, gewaehlt S (3700,-22500) / L (-1378,-23395):
+ *   Satz (Form Clip 2) Form 9,8 % des Bildes, Annette 100 % frei und ganz zwischen den Balken (Bild-y 185..420 von 48..432),
+ *   Drohen 8,5 %, Landung 9,8 %. Annette steht naeher am Auge (x > 4000) mit den Fuessen unter dem Balken.
+ * Deshalb (PORT-WAHL): Sturz, Bruellen, Satz und Hieb in Cut 11; RE2 0x0B (hoch von Williams Seite auf Annette) hat in 5090 keine
+ * Entsprechung, ohne dass die Form zwischen Auge und Annette steht.
+ *   L  Landestelle (-1378,-23395): 5157 = 3760 + 1397 von S; die Form stoesst beim Hieb die 1397 vor (RE2 e20..e22, s. unten),
+ *      danach steht die Hand im Trefferfenster (lokal x 3685..3864, Dossier 8.2).
+ *   S  Haltepunkt (3700,-22500): 1303 vom naechsten Bodenfeuer main00 @0x0110E..@0x0120E ((2400,-22600)), Weg A0->S >= 1303.
+ *   A0 Start (8000,-24250) wie NB1 (Cut 12 neben Leon).
  * Wegpunkte W1/W2 teilen A0->S wie RE2 seine drei Plc_dest-Strecken (8040/5016/4000 = 47 % / 76 %). */
 #define AN_A0_X            8000
 #define AN_A0_Z          (-24250)
-#define AN_W1_X            6182
-#define AN_W1_Z          (-23932)
-#define AN_W2_X            5060
-#define AN_W2_Z          (-23735)
-#define AN_S_X             4131
-#define AN_S_Z           (-23573)
-#define AN_L_X              500
-#define AN_L_Z           (-22600)
+#define AN_W1_X            5979
+#define AN_W1_Z          (-23427)
+#define AN_W2_X            4732
+#define AN_W2_Z          (-22920)
+#define AN_S_X             3700
+#define AN_S_Z           (-22500)
+#define AN_L_X           (-1378)
+#define AN_L_Z           (-23395)
+/* Vorstoss beim Hieb: RE2 Birkin x -6600 (e20) -> -7997 (e22) = 1397 auf Annette zu (zeitachse.md Abschnitt 0, RAM lauf3). */
+#define AN_VORSTOSS        1397
 /* Sturz der Riesenform vom Dach = ROOM5080 sub03 (Original): @0x00822 Pos_set y -5600 `20 ea`, @0x0082A Sleep 1,
  * @0x0082E Speed_set(1,400) `2f 01 90 01`, @0x00832 For 14 `0d 00 06 00 0e 00` { Add_speed `30`, Evt_next } -> y 0.
  * Im Takt statt im Programm: das Programm muss wie RE2 (gosub sub10 @0x010E6) waehrend des Sturzes auf Annettes Ankunft
@@ -74,10 +84,23 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define AN_STURZ_HALT        1
 #define AN_STURZ_V          400
 #define AN_STURZ_N           14
-/* Liegen: RE2 @0x01162 setzt Annette von ihrem Standort (-11097,-15001) auf (-12300,-15300) = 1203 von William weg,
- * 299 seitlich (Savestate e23). Port: dieselbe Strecke von der Form weg; Pose wie bisher (Clip 6 Bild 12, gekippt). */
-#define AN_LIEGEN_WEG      1203
-#define AN_LIEGEN_SEIT    (-299)
+/* Liegen: RE2 @0x01162 setzt Annette von ihrem Standort (-11097,-15001) auf (-12300,-15300) (Savestate e23), William stand
+ * bei (-6600,-14800) (e07). In Williams Blickrichtung zerlegt (Einheit e = (A - W) / |A - W|, quer q = (-e.z, e.x)):
+ * 1215 von William weg, +245 quer. Port: dieselbe Zerlegung an der Landestelle L (wie RE2 e07: Lage VOR dem Vorstoss) ->
+ * Leiche bei (4854,-22048), 348 vor dem Regal SCA #28 (z -21700); Pose wie bisher (Clip 6 Bild 12, gekippt).
+ * Nachbesserung 3: NB1/NB2 nahmen die Achsenwerte 1203/-299 als Laengs-/Querwert (Seite gespiegelt). */
+#define AN_LIEGEN_WEG      1215
+#define AN_LIEGEN_SEIT      245
+/* Hieb-Takt (Nachbesserung 3, Abnahme 1 M7 "Ausholen bis Treffer Port 0,5 s, RE2 1,3 s"), RE2-Aufnahme Lauf 1
+ * (re2_claire/zeitachse.md Abschnitt 2, Bildleiste re2c_12b_hieb_dicht.jpg): Schnitt 0x0A + Member_set 0x17=2 @0x0113C/@0x01142
+ * bei 69,77 s, Birkin steht noch bei 70,05 s, erstes Ausholbild 70,22 s, Blut (Trefferbild) ab 71,09 s, Schnitt 6 bei 72,23 s.
+ *   Vorlauf  69,77 -> 70,22 s = 0,45 s = 13 Port-Bilder: die Form steht nach dem Schnitt noch (Clip 2).
+ *   Ausholen 70,22 -> 71,09 s = 0,87 s = 26 Port-Bilder; Clip 4 holt in 14 Bildern aus (Treffer Bild 14) -> je Bild 2 Takte = 28.
+ *   Danach   71,09 -> 72,23 s = 1,14 s = 34 Port-Bilder bis zum Schnitt weg.
+ * Der Vorstoss (AN_VORSTOSS) laeuft gleichmaessig ueber die 28 Ausholtakte (RE2 e20 -> e22). */
+#define AN_HIEB_VORLAUF      13
+#define AN_HIEB_TAKT          2
+#define AN_HIEB_NACH         34
 /* Clips der Riesenform (Stufe 3, BB_C_* in birkin_bahnsteig.c) */
 #define AN_FC_DROHEN         10     /* Drohen; Bild 45-52 = Pose Bild 2 = 80 % #145 (STUFE3.md Abschnitt 3) */
 #define AN_FC_STEHEN          2
@@ -88,7 +111,9 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define AN_TON_BANK          24     /* G4-Bank, wie bb_se */
 /* Clips der Frau (0x4D-Bank, 24 Clips, Kontaktblatt AN_belege). RE2 laesst Annette waehrend des Hiebs Clip 0x02 ihrer
  * Bank spielen (`3f 02 02 44` @0x01138, Savestates e20..e22 M02 Bild 6/26/46 synchron zu Birkins M07). Naechster
- * 0x4D-Clip: 4 = Zurueckweichen mit erhobenen Armen (PORT-WAHL, an Ort und Stelle). */
+ * 0x4D-Clip: 4 = Zurueckweichen mit erhobenen Armen (PORT-WAHL, an Ort und Stelle) - bis zum Trefferbild.
+ * Nachbesserung 3 (Abnahme 1 M4: nach dem Treffer stand sie 1 s aufrecht mit erhobenen Armen in Cut 11): im Trefferbild
+ * sackt sie mit Clip 6 sofort zusammen (Bild 0-12, ab Bild 12 am Boden, gehalten); RE2 zeigt sie in diesem Moment nicht. */
 #define AN_FA_REAKTION        4
 #define AN_FA_STURZ           6     /* faellt zu Boden (Bild 12 = am Boden) */
 #define AN_FA_STURZ_BODEN    12
@@ -121,6 +146,14 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define AN_BLUT_EFFEKT        0     /* 0x801065BE `00` (Bit 0x80 = 0: Einheitsanker) */
 #define AN_BLUT_SUB           1     /* 0x801065BF `01` + u16 0x801065C0 `00 00` */
 #define AN_BLUT_SKALA    0x2000     /* u16 0x801065C2 `00 20` */
+/* Nachbesserung 3 (Abnahme 1 M5 "kleiner Fleck am Boden, RE2 grosse Wolke vor der Kamera"): Bildgroesse wie RE2. RE2 zeigt das
+ * Blut durch Schnitt 0x0A, ROOM6141 RID @0x64 + 0x0A * 32: fov 32946 (H = fov >> 7 = 257), Auge (-10656,-684,-16056); erster
+ * Platz RAM e22 Slot 6 +0x2C/+0x30 = (-8064,-1865,-16471) -> 2878 vom Auge. Ein Zeilenbild hat auf dem Schirm die Groesse
+ * Skala * H / Abstand; gleiche Groesse im Port: Skala = 0x2000 * (257 / H_Port) * (Abstand_Port / 2878), mit H und Auge des
+ * Port-Schnitts im Trefferbild (g_room_rdt.cuts[Cut]) und dem Abstand zur Klaue 14 (PORT-WAHL: RE2-Bildwirkung als Massstab,
+ * Effekt/sub/Zahl/Dauer bleiben RE2). */
+#define AN_BLUT_RE2_H       257
+#define AN_BLUT_RE2_ABSTAND 2878
 
 /* ---- 5090: Programm --------------------------------------------------------------------------------------------------
  * Opcode-Formen mit Vorbild (Laengen = s_opcode_sizes, scd_vm.c):
@@ -136,7 +169,12 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
  *   Evt_exec `04 ff 18 ss`          ROOM5090 sub01 @0x01296
  * Bildzahlen = RE2-Skript (ROOM6141 sub02), XA-Laengen aus der Claire-STAGE6.BIN-Tabelle @0x4D4 (Laenge in
  * Kanalsektoren * 4032 / 37800 s, je 30 Bilder/s): Xa 0x30 11 Sektoren = 1,173 s = 35 Bilder; Xa 0x31 37 = 3,947 s =
- * 118 Bilder; Xa 0x32 13 = 1,387 s = 42 Bilder. RE2 wartet nach jedem Xa mit Wsleep bis zum Ende der Stimme. */
+ * 118 Bilder; Xa 0x32 13 = 1,387 s = 42 Bilder. RE2 wartet nach jedem Xa mit Wsleep bis zum Ende der Stimme.
+ * Nachbesserung 3 (Abnahme 1 M7 "Port 17,8 s, RE2 24,4 s"): die Sleeps des RE2-Skripts zaehlen Spielbilder der PAL-Fassung,
+ * 25 je Sekunde (VSync(2) @0x8002ade4-ec `90847662` lbu VSync-Teiler, zeitachse.md Abschnitt 0/3); NB1/NB2 setzten sie 1:1 als
+ * Port-Bilder (30/s) und waren damit um 1/6 zu kurz. Jetzt PAL(n) = n * 30 / 25 (gerundet), also dieselbe Wanduhrzeit wie RE2.
+ * Die Xa-Laengen sind schon Sekunden (oben). */
+#define PAL(n)           (((n) * 6 + 2) / 5)
 #define LE16(v)          (uint8_t)((uint16_t)(v) & 0xff), (uint8_t)(((uint16_t)(v) >> 8) & 0xff)
 #define OP_SET(b,i,v)    0x22, (b), (i), (v)
 #define OP_CUT(c)        0x29, (c)
@@ -153,28 +191,39 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 static const uint8_t k_prog[] = {
     OP_SET(2, 7, 1), OP_SET(1, 27, 1),          /* Sperre + Balken (5090 sub04 @0x012F2/@0x012F6 = RE2 @0x00E32/@0x00E36) */
                                                 /* Cut 12 bleibt (RE2 Cut 7 @0x01024); Krach im Haken (RE2 @0x01040) */
-    OP_SLEEP(25),                               /* RE2 @0x0104C `0a 19 00` */
+    OP_SLEEP(PAL(25)),                          /* RE2 @0x0104C `0a 19 00` */
     OP_WORK(1, 0), OP_DREHEN(AN_L_X, AN_L_Z), OP_WARTE(0x20),        /* beide sehen hin (RE2 Plc_neck @0x0105A/@0x01068) */
     OP_WORK(2, 0), OP_DREHEN_AN(AN_L_X, AN_L_Z), OP_WARTE(0x21),
-    OP_SLEEP(36), OP_SLEEP(1),                  /* RE2 @0x01072 `0a 24 00`, @0x01076 `0a 01 00` */
+    OP_SLEEP(PAL(36)), OP_SLEEP(PAL(1)),        /* RE2 @0x01072 `0a 24 00`, @0x01076 `0a 01 00` */
     OP_MSG(RE15_AN_MSG_WILLIAM),                /* "William." RE2 Xa 0x30 @0x0107A */
     OP_SLEEP(35),                               /* RE2 Wsleep @0x01084 bis Xa-Ende (11 Sektoren) */
     OP_WORK(2, 0), OP_GEHEN_AN(AN_W1_X, AN_W1_Z), OP_WARTE(0x21),   /* RE2 Strecke 1 @0x010A2 + gosub sub10 @0x010AE */
-    OP_CUT(15),                                 /* RE2 Cut 2 @0x010B2 */
+    OP_CUT(15),                                 /* RE2 Cut 2 @0x010B2: sie kommt auf die Kamera zu */
     OP_GEHEN_AN(AN_W2_X, AN_W2_Z), OP_WARTE(0x21),                  /* RE2 Strecke 2 @0x010B8 + gosub @0x010C4 */
-    OP_SET(5, RE15_AN_SIG_STURZ, 1),            /* RE2 @0x010CA Member_set 0x17=1 (Birkin faellt), @0x010CE Se_on(2,0x0A) */
+    /* RE2 @0x010CA Member_set 0x17=1 (Birkin faellt), @0x010CE Se_on(2,0x0A). Nachbesserung 3 (M1b, PORT-WAHL): Schnitt auf
+     * Cut 11 mit dem Sturz - die Landestelle L liegt hinter/links neben dem Auge von Cut 15 (dort 70 % dunkle Flaeche), Cut 11
+     * zeigt den Sturz ganz vor der Tuer (Form 9,8 % des Bildes, Annette von hinten auf dem Weg); RE2 schneidet erst danach auf
+     * 0x0A (@0x01102). */
+    OP_CUT(11), OP_SET(5, RE15_AN_SIG_STURZ, 1),
     OP_GEHEN_AN(AN_S_X, AN_S_Z),                /* RE2 Strecke 3 @0x010DE; der Sturz (Takt, 5080 sub03) laeuft dabei (RE2 e06) */
     OP_WARTE(0x21),                             /* RE2 gosub sub10 @0x010E6 */
-    OP_SLEEP(30),                               /* RE2 @0x010FE `0a 1e 00` */
-    OP_CUT(11), OP_SET(5, RE15_AN_SIG_BRUELL, 1),   /* RE2 Cut 0x0A @0x01102 + Se_on(2,0x0C) @0x01104 */
-    OP_SLEEP(60),                               /* RE2 @0x01110 `0a 3c 00` */
-    OP_CUT(15), OP_SLEEP(1),                    /* RE2 Cut 0x0B @0x01114, @0x01116 `0a 01 00` */
+    /* RE2 Plc_motion 0x0C @0x010F9 (sie bleibt stehen, Waffe auf William). Port: sie dreht sich zur Form (Modus 9 wie oben,
+     * Form 6030 sub08 @0x01160) - der Weg W2 -> S zeigt 41 Grad an L vorbei. */
+    OP_DREHEN_AN(AN_L_X, AN_L_Z), OP_WARTE(0x21),
+    OP_SLEEP(PAL(30)),                          /* RE2 @0x010FE `0a 1e 00` */
+    OP_SET(5, RE15_AN_SIG_BRUELL, 1),           /* RE2 Cut 0x0A @0x01102 (Port: Cut 11 steht schon) + Se_on(2,0x0C) @0x01104 */
+    OP_SLEEP(PAL(60)),                          /* RE2 @0x01110 `0a 3c 00` */
+    /* RE2 Cut 0x0B @0x01114 (Annette von Williams Seite). NB3 (M1, PORT-WAHL, Lagen oben): kein 5090-Schnitt zeigt sie von dort,
+     * ohne dass die Form zwischen Auge und Annette steht (Cut 15: 70 % Form, Annette 25 % frei) - der Satz bleibt in Cut 11. */
+    OP_SLEEP(PAL(1)),                           /* RE2 @0x01116 `0a 01 00` */
     OP_MSG(RE15_AN_MSG_SATZ),                   /* "W-William! You're alive!" RE2 Xa 0x31 @0x0111A */
     OP_SLEEP(118),                              /* RE2 Sleep 30 @0x01132 + Wsleep @0x01136 bis Xa-Ende (37 Sektoren) */
-    OP_SET(5, RE15_AN_SIG_SCHLAG, 1),           /* RE2 @0x01138 Annette Clip 2, @0x01142 Member_set 0x17=2 (Hieb) */
-    OP_CUT(11),                                 /* RE2 Cut 0x0A @0x0113C */
-    OP_SLEEP(45),                               /* RE2 @0x01146 `0a 2d 00` */
-    OP_CUT(13), OP_SLEEP(1),                    /* RE2 Cut 6 @0x0114A (weg von der Tat), @0x0114C `0a 01 00` */
+    OP_SET(5, RE15_AN_SIG_SCHLAG, 1),           /* RE2 @0x01138 Annette Clip 2, @0x01142 Member_set 0x17=2 (Hieb); RE2 Cut 0x0A
+                                                 * @0x0113C = Port Cut 11, steht schon */
+    /* RE2 @0x01146 `0a 2d 00` = 45 Spielbilder; gemessen Schnitt 0x0A -> Schnitt 6 = 69,77 -> 72,23 s (mit Ladezeit). Port:
+     * Vorlauf + Ausholen bis zum Trefferbild + RE2-Rest nach dem Treffer (AN_HIEB_*, oben) = 13 + 28 + 34 = 75 Bilder = 2,5 s. */
+    OP_SLEEP(AN_HIEB_VORLAUF + AN_HIEB_TREFFER * AN_HIEB_TAKT + AN_HIEB_NACH),
+    OP_CUT(13), OP_SLEEP(PAL(1)),               /* RE2 Cut 6 @0x0114A (weg von der Tat), @0x0114C `0a 01 00` */
     OP_SET(5, RE15_AN_SIG_LIEGT, 1),            /* RE2 Xa 0x32 @0x01150 (Schrei, nur Ton) + Pos_set liegend @0x01162 */
     OP_SLEEP(42),                               /* RE2 Wsleep @0x01184 bis Xa-Ende (13 Sektoren) */
     OP_MSG(RE15_AN_MSG_LEON),                   /* "Leon: Annette!" (PORT-WAHL, RE2 gibt hier die Steuerung zurueck) */
@@ -237,6 +286,14 @@ static const uint8_t z_geste18[]  = { 0x3f, 0x00, 0x0e, 0x00, 0x09, 0x0a, 0x32, 
                                       0x80, 0x00, 0x09, 0x0a, 0x32, 0x00, 0x3f, 0x00, 0x10, 0x00, 0x09, 0x0a, 0x14, 0x00 }; /* @0x012EA */
 static const uint8_t z_gehen[]    = { 0x40, 0x00, 0x04, 0x21, LE16(Z_TUER_X), LE16(Z_TUER_Z) };   /* Form 6000 sub02 @0x00FFA */
 static const uint8_t z_weg[]      = { 0x32, 0x00, 0xf5, 0xd6, 0xf0, 0xf1, 0xc6, 0x21 };     /* 6000 sub02 @0x0100A (versteckt) */
+/* Nachbesserung 3 (Abnahme 1 M2: sie ging in Cut 1 auf die Kamera zu und verschwand gross im Vordergrund). Das Auge von Cut 1
+ * steht in der Tuer selbst (RID 6030 Cut 1 (-5886,-3132,-23058), Tuerrechteck x -5100..-4200), wer zur Tuer geht, laeuft also
+ * in die Kamera; am Tuerziel waren Kopf und Rumpf noch im Bild (Projektion Bild-x 94..105, Fuesse unter dem Rand). PORT-WAHL:
+ * fuer den Abgang Cut 0 (Auge (-3510,-4356,-19512) im Norden, die Tuer rechts im Bild, Eintrittskamera von Slot 1), sie geht zur
+ * Tuer; im Ankunftsbild Schnitt zurueck auf Cut 1 und im selben Bild versteckt (Cut 1 schaut aus der Tuer in den Raum, sie
+ * ist hinter der Kamera hinaus). Original-Bytes: Cut 0 = sub08 @0x01336 `29 00`, Cut 1 = sub08 @0x0114A `29 01`. */
+static const uint8_t z_cut0[]     = { 0x29, 0x00 };                                         /* sub08 @0x01336 */
+static const uint8_t z_cut1_ab[]  = { 0x29, 0x01 };                                         /* sub08 @0x0114A */
 static const uint8_t z_schluss[]  = { 0x09, 0x0a, 0x1e, 0x00, 0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x3c, 0x01,
                                       0x42, 0x00 };                                       /* @0x01364 Sleep 30, Sperren auf, Cut_auto, Plc_ret */
 static const uint8_t z_ende[]     = { 0x01, 0x00 };                                         /* @0x01374 Evt_end */
@@ -253,7 +310,7 @@ static const an_seg_t k_zug_seg[] = {
     SEG(z_m28, 0),           SEG(z_geste11, 0x01178),
     SEG(z_work_leon, 0x0125A), SEG(z_m29, 0),        SEG(z_geste15, 0x01262),
     SEG(z_work_an2, 0x012E2), SEG(z_m30, 0),         SEG(z_geste18, 0x012EA),
-    SEG(z_gehen, 0),         SEG(z_warte21, 0x0128A), SEG(z_weg, 0),
+    SEG(z_cut0, 0x01336),    SEG(z_gehen, 0),         SEG(z_warte21, 0x0128A), SEG(z_cut1_ab, 0x0114A), SEG(z_weg, 0),
     SEG(z_work_leon, 0x0125A), SEG(z_schluss, 0x01364), SEG(z_ende, 0x01374),
 };
 #define AN_N_ZUG_SEG ((int)(sizeof k_zug_seg / sizeof k_zug_seg[0]))
@@ -313,7 +370,9 @@ static struct {
     int toene[RE15_AN_SE_N];
     int schrei;
     unsigned raum;
-} s_an = { RE15_AN_AUS, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, { 0 }, 0, 0 };
+    int32_t vx0, vz0, vx1, vz1;   /* Vorstoss beim Hieb: Wurzel vorher / nachher (AN_VORSTOSS) */
+    int blut_skala;               /* Skala der Blutzeilen (AN_BLUT_RE2_*), im Trefferbild bestimmt */
+} s_an = { RE15_AN_AUS, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, { 0 }, 0, 0, 0, 0, 0, 0, AN_BLUT_SKALA };
 
 static void (*s_modell_fn)(uint8_t) = 0;
 static void (*s_se_fn)(int, int) = 0;
@@ -340,12 +399,14 @@ void re15_annette_r41_reset(void)
     s_an.phase = RE15_AN_AUS; s_an.t = 0; s_an.form = s_an.frau = -1;
     s_an.luft = 0; s_an.blut = 0; s_an.blut_plaetze = 0; s_an.blut_rest = 0; s_an.blut_textur = 0; s_an.treffer = 0;
     s_an.zug = 0; memset(s_an.toene, 0, sizeof s_an.toene); s_an.schrei = 0;
+    s_an.vx0 = s_an.vz0 = s_an.vx1 = s_an.vz1 = 0; s_an.blut_skala = AN_BLUT_SKALA;
 }
 
 int re15_annette_r41_phase(void) { return s_an.phase; }
 int re15_annette_r41_slot(int form) { return form ? s_an.form : s_an.frau; }
 int re15_annette_r41_blut(void) { return s_an.blut; }
 int re15_annette_r41_blut_plaetze(void) { return s_an.blut_plaetze; }
+int re15_annette_r41_blut_skala(void) { return s_an.blut_skala; }
 int re15_annette_r41_zug_szene(void) { return s_an.zug; }
 int re15_annette_r41_ton(int satz) { return (satz >= 0 && satz < RE15_AN_SE_N) ? s_an.toene[satz] : 0; }
 int re15_annette_r41_schrei(void) { return s_an.schrei; }
@@ -425,10 +486,22 @@ static int annette_steht_da(void)
            !re15_game_flag_get(RE15_AN_KAMPF_BANK, RE15_AN_KAMPF_BIT);
 }
 
+/* Nachbesserung 3 (Abnahme 1 M8): RE2 legt Annette bei spaeteren Besuchen liegend hin (Claire ROOM6141 MAIN sub00 else-Zweig
+ * @0x00D16 Sce_em_set Typ 0x49 auf (-12300,900,-15300), Richtung 0x0CE4, Bewegung 0x18 = dieselbe Lage wie Pos_set @0x01162).
+ * Kein neues Bit: (3,42) schreiben nur ROOM5090 sub01 @0x0129A `22 03 2a 01` (Leon) und ROOM5091 @0x0127E (Elza) - Byte-Suche
+ * ueber alle 240 RDTs. In 5090 steht Annette beim Ausloeser genau dann im Wagen, wenn (3,89) und (9,133) gelten und (3,42)
+ * noch 0 ist (annette_steht_da), und Evt_exec sub04 @0x01296 laeuft dann in ihre Szene, bevor @0x0129A (3,42) setzt. Also:
+ * (3,89) und (9,133) und (3,42) in 5090 <=> die Szene ist gelaufen und Annette ist tot. */
+static int leiche_da(void)
+{
+    return re15_game_flag_get(RE15_AN_TOR_BANK, RE15_AN_TOR_BIT) && zug_gesehen() &&
+           re15_game_flag_get(RE15_AN_KAMPF_BANK, RE15_AN_KAMPF_BIT);
+}
+
 int re15_annette_r41_spawn_weg(uint16_t room_id, uint8_t type)
 {
     if (!raum_ist(room_id) || type != RE15_AN_TYP) return 0;
-    const int weg = !annette_steht_da();
+    const int weg = !annette_steht_da() && !leiche_da();
 #ifdef RE15_PLATFORM_PC
     if (weg) fprintf(stderr, "[annette] ROOM%04X: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=%d (9,133)=%d (3,42)=%d\n",
                      room_id, re15_game_flag_get(3, 89), re15_game_flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT),
@@ -485,7 +558,7 @@ static void blut_bild(const re15_actor_t *f)
         int32_t p[3];
         re15_enemy_bone_world_pos(f, k_klaue[i], p);
         s_an.blut++;
-        s_an.blut_plaetze += re15_esp_fx_spawn_rows(re15_esp_room_bank(), AN_BLUT_EFFEKT, AN_BLUT_SUB, AN_BLUT_SKALA,
+        s_an.blut_plaetze += re15_esp_fx_spawn_rows(re15_esp_room_bank(), AN_BLUT_EFFEKT, AN_BLUT_SUB, (uint16_t)s_an.blut_skala,
                                                     p[0], p[1], p[2], f->y, w);
     }
     s_an.blut_rest--;                                    /* @0x80104D54-60 `addiu v0,v0,-1` / `sb v0,0x16b(s0)` */
@@ -509,7 +582,8 @@ static void meldungen_einsetzen(uint16_t room_id)
 
 void re15_annette_r41_install(uint16_t room_id)
 {
-    if (s_an.raum != room_id) { re15_annette_r41_reset(); s_an.raum = room_id; }
+    /* NB3 M8: auch beim Neuaufbau desselben Raums (Laden) nach dem Szenenende neu aufsetzen, damit die Leiche gelegt wird */
+    if (s_an.raum != room_id || s_an.phase >= RE15_AN_FREI) { re15_annette_r41_reset(); s_an.raum = room_id; }
     if (raum_ist(room_id) || room_id == RE15_AN_ZUG_RAUM) meldungen_einsetzen(room_id);
 }
 
@@ -582,7 +656,7 @@ const uint8_t *re15_annette_r41_evt_exec(uint16_t room_id, uint8_t sub_id, const
 int re15_annette_r41_besitzt(int slot)
 {
     if (s_an.phase == RE15_AN_AUS || slot < 0) return 0;
-    if (slot == s_an.frau) return s_an.phase >= RE15_AN_HIEB;   /* vorher geht sie ueber Plc_dest (Sub-VM) */
+    if (slot == s_an.frau) return s_an.phase >= RE15_AN_HIEB;   /* vorher geht sie ueber Plc_dest (Sub-VM); RUHE = Leiche */
     return slot == s_an.form && s_an.phase < RE15_AN_FREI;
 }
 
@@ -594,7 +668,9 @@ int re15_annette_r41_volle_drehung(const void *actor)
 const char *re15_annette_r41_emd_datei(uint8_t type)
 {
     if (type != RE15_AN_TYP) return NULL;                /* 0x4D steht nur in 5090/6000/6030 (Leon) */
-    return s_an.blut_textur ? "ANNETTE_4D_BLUT.EMD" : "ANNETTE_4D.EMD";
+    /* NB3 M8: beim Wiedereintritt (Szene gelaufen) mit dem blutigen Kittel wie nach dem Treffer */
+    const int tot = raum_ist((uint16_t)g_current_room_id) && s_an.phase == RE15_AN_AUS && leiche_da();
+    return (s_an.blut_textur || tot) ? "ANNETTE_4D_BLUT.EMD" : "ANNETTE_4D.EMD";
 }
 
 /* Hieb ausrichten: die Gier waehlen, bei der die linke Hand im Trefferbild ihr am naechsten kommt (gemessen am Gerippe). */
@@ -614,10 +690,35 @@ static void hieb_ausrichten(re15_actor_t *f, const re15_actor_t *a)
     f->rot_y = beste; f->motion = m0; f->anim_frame = b0;
 }
 
+/* NB3 M5: Skala der Blutzeilen fuer RE2-Bildgroesse (AN_BLUT_RE2_*): Auge und H des angezeigten Schnitts, Abstand zur Klaue 14
+ * im Trefferbild. Ohne Raumdaten (Unit-Test ohne RID) bleibt die RE2-Skala. */
+static int blut_skala(const re15_actor_t *f)
+{
+    const int cut = (int)g_scd.work_vars[0x0A];
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cut < 0 || cut >= g_room_rdt.cut_count) return AN_BLUT_SKALA;
+    const re15_camera_cut_t *c = &g_room_rdt.cuts[cut];
+    const int h = (int)(c->fov >> 7);
+    int32_t k[3];
+    re15_enemy_bone_world_pos(f, AN_BLUT_KLAUE_A, k);
+    const int64_t dx = (int64_t)k[0] - c->pos_x, dy = (int64_t)k[1] - c->pos_y, dz = (int64_t)k[2] - c->pos_z;
+    const int64_t q = dx * dx + dy * dy + dz * dz;
+    const int64_t d = (int64_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q));
+    if (h <= 0 || d <= 0) return AN_BLUT_SKALA;
+    int64_t sk = (int64_t)AN_BLUT_SKALA * AN_BLUT_RE2_H * d / ((int64_t)h * AN_BLUT_RE2_ABSTAND);
+    if (sk < 1) sk = 1;
+    if (sk > 0xffff) sk = 0xffff;
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[annette] F%u Blut-Skala 0x%04X: Cut %d H %d, Klaue 14 (%d,%d,%d) %d vom Auge (RE2 0x2000 bei H 257 / 2878)\n",
+            (unsigned)g_engine.frame_count, (unsigned)sk, cut, h, (int)k[0], (int)k[1], (int)k[2], (int)d);
+#endif
+    return (int)sk;
+}
+
 static void treffer(re15_actor_t *f, re15_actor_t *a)
 {
-    (void)f;
+    s_an.blut_skala = blut_skala(f);
     s_an.blut_rest = AN_BLUT_BILDER;                     /* @0x80104D10-14 (Blut ab diesem Bild, blut_bild im Takt) */
+    clip(a, AN_FA_STURZ);                                /* NB3 M4: sackt sofort zusammen (Clip 6, ab Bild 12 am Boden) */
     a->hp = -1;                                          /* NPC-Familie: unverwundbar, kein Treffer-Kandidat (re15_damage.c) */
     s_an.blut_textur = 1;
     if (s_modell_fn) s_modell_fn(RE15_AN_TYP);           /* Kittel mit Blut (ANNETTE_4D_BLUT.EMD = RE2 EM049-Textur) */
@@ -625,26 +726,68 @@ static void treffer(re15_actor_t *f, re15_actor_t *a)
     protokoll("Treffer");
 }
 
-/* RE2 @0x01162: Pos_set liegend, waehrend die Kamera weg ist. */
-static void liegen(re15_actor_t *f, re15_actor_t *a)
+/* RE2 @0x01162: Pos_set liegend, waehrend die Kamera weg ist. Bezug ist die Landestelle L (RE2 e07: William vor dem Vorstoss);
+ * e = (Stand - L) / |Stand - L|, quer q = (-e.z, e.x). */
+static void liegen_lage(int32_t sx, int32_t sz, int32_t *x, int32_t *z, int16_t *gier)
 {
-    int32_t ux = a->x - f->x, uz = a->z - f->z;
+    int32_t ux = sx - AN_L_X, uz = sz - AN_L_Z;
     int32_t l = (int32_t)re15_squareroot0((uint32_t)(ux * ux + uz * uz)); if (l < 1) l = 1;   /* BIOS-Wurzel (re15_math.h) */
     const int64_t ex = (int64_t)ux * 4096 / l, ez = (int64_t)uz * 4096 / l;      /* weg von der Form, Q12 */
-    a->x += (int32_t)((ex * AN_LIEGEN_WEG - ez * AN_LIEGEN_SEIT) / 4096);
-    a->z += (int32_t)((ez * AN_LIEGEN_WEG + ex * AN_LIEGEN_SEIT) / 4096);
-    a->rot_y = (int16_t)((blick(a, f->x, f->z) + 0x800) & 0x0fff);
+    *x = sx + (int32_t)((ex * AN_LIEGEN_WEG - ez * AN_LIEGEN_SEIT) / 4096);
+    *z = sz + (int32_t)((ez * AN_LIEGEN_WEG + ex * AN_LIEGEN_SEIT) / 4096);
+    *gier = (int16_t)((((int)re15_atan2_q12(AN_L_Z - *z, AN_L_X - *x) - 0x400) + 0x800) & 0x0fff);   /* Kopf von der Form weg */
+}
+
+static void liegen(re15_actor_t *f, re15_actor_t *a)
+{
+    int32_t x, z; int16_t g;
+    (void)f;
+    liegen_lage(a->x, a->z, &x, &z, &g);
+    a->x = x; a->z = z; a->rot_y = g;
     clip(a, AN_FA_STURZ);
     a->anim_frame = AN_FA_STURZ_BODEN;
     a->rot_z = AN_KIPP_WINKEL;
     a->y = AN_KIPP_HEBEN;
 }
 
+/* NB3 M8: Wiedereintritt nach der Szene - die 0x4D (sub00 @0x0122A) liegt als Leiche an der Lage aus @0x01162 (RE2 MAIN sub00
+ * @0x00D16 setzt dieselbe Lage wie der Pos_set der Szene), Stand = Haltepunkt S. */
+static void leiche_halten(re15_actor_t *a)
+{
+    clip(a, AN_FA_STURZ);
+    a->anim_frame = AN_FA_STURZ_BODEN;
+    a->rot_z = AN_KIPP_WINKEL;
+    a->y = AN_KIPP_HEBEN;
+}
+
+static void ruhe_setzen(void)
+{
+    const int as = slot_vom_typ(RE15_AN_TYP);
+    if (as < 0) return;
+    re15_actor_t *a = &g_actors[as];
+    int32_t x, z; int16_t g;
+    liegen_lage(AN_S_X, AN_S_Z, &x, &z, &g);
+    a->x = x; a->z = z; a->rot_y = g; a->rot_x = 0;
+    a->state = 0; a->sub_state_1 = 0; a->sub_state_2 = 0; a->walk_active = 0;
+    a->hp = -1;                                          /* wie nach dem Treffer: kein Treffer-Kandidat */
+    leiche_halten(a);
+    s_an.frau = as; s_an.form = -1; s_an.blut_textur = 1;
+    s_an.phase = RE15_AN_RUHE;
+    protokoll("Wiedereintritt nach der Szene: Leiche liegt (RE2 sub00 @0x00D16)");
+}
+
 void re15_annette_r41_tick(void)
 {
     if ((uint16_t)g_current_room_id == RE15_AN_ZUG_RAUM) { zug_tick(); return; }
-    if (s_an.phase == RE15_AN_AUS) return;
+    if (s_an.phase == RE15_AN_AUS) {
+        if (raum_ist((uint16_t)g_current_room_id) && leiche_da()) ruhe_setzen();
+        return;
+    }
     if (!raum_ist((uint16_t)g_current_room_id)) { re15_annette_r41_reset(); return; }
+    if (s_an.phase == RE15_AN_RUHE) {
+        if (s_an.frau >= 0 && g_actors[s_an.frau].active) leiche_halten(&g_actors[s_an.frau]);
+        return;
+    }
     if (s_an.form < 0 || s_an.frau < 0) return;
     re15_actor_t *f = &g_actors[s_an.form], *a = &g_actors[s_an.frau];
     if (!f->active || !a->active) { s_an.phase = RE15_AN_FREI; return; }
@@ -686,23 +829,45 @@ void re15_annette_r41_tick(void)
             a->state = 0; a->sub_state_1 = 0; a->sub_state_2 = 0; a->walk_active = 0;   /* Takt uebernimmt (Plc_dest fertig) */
             a->rot_y = blick(a, f->x, f->z);
             clip(a, AN_FA_REAKTION);
-            hieb_ausrichten(f, a);
-            clip(f, AN_FC_HIEB);
+            {   /* NB3: Vorstoss AN_VORSTOSS auf Annette zu (RE2 e20..e22); die Gier des Hiebs gilt fuer die Lage danach */
+                int32_t ux = a->x - f->x, uz = a->z - f->z;
+                int32_t l = (int32_t)re15_squareroot0((uint32_t)(ux * ux + uz * uz)); if (l < 1) l = 1;
+                s_an.vx0 = f->x; s_an.vz0 = f->z;
+                s_an.vx1 = f->x + (int32_t)((int64_t)ux * AN_VORSTOSS / l);
+                s_an.vz1 = f->z + (int32_t)((int64_t)uz * AN_VORSTOSS / l);
+                f->x = s_an.vx1; f->z = s_an.vz1;
+                hieb_ausrichten(f, a);
+                f->x = s_an.vx0; f->z = s_an.vz0;
+            }
             s_an.phase = RE15_AN_HIEB; s_an.t = 0;
             protokoll("Hieb (RE2 @0x01142)");
         }
         break;
     case RE15_AN_HIEB:
         vor(a, 1);
-        if (!s_an.treffer && (int)f->anim_frame == AN_HIEB_TREFFER) { treffer(f, a); s_an.phase = RE15_AN_REAKTION; s_an.t = 0; }
-        vor(f, 1);
+        if (s_an.t <= AN_HIEB_VORLAUF) {                 /* Vorlauf: die Form steht noch (RE2 69,77 -> 70,22 s) */
+            if (f->motion == AN_FC_DROHEN) { if (vor(f, 1)) clip(f, AN_FC_STEHEN); } else vor(f, 0);
+            if (s_an.t == AN_HIEB_VORLAUF) { clip(f, AN_FC_HIEB); protokoll("Ausholen (RE2 70,22 s)"); }
+        } else {
+            const int k = s_an.t - AN_HIEB_VORLAUF, n = AN_HIEB_TREFFER * AN_HIEB_TAKT;
+            if (!s_an.treffer && f->motion == AN_FC_HIEB && (int)f->anim_frame == AN_HIEB_TREFFER) {
+                treffer(f, a); s_an.phase = RE15_AN_REAKTION; s_an.t = 0;
+            }
+            if ((int)f->anim_frame < AN_HIEB_TREFFER) { if (k % AN_HIEB_TAKT == 0) vor(f, 1); }   /* Ausholen, 2 Takte je Bild */
+            else vor(f, 1);
+            if (k <= n) {                                /* Vorstoss gleichmaessig ueber die Ausholtakte */
+                f->x = s_an.vx0 + (int32_t)((int64_t)(s_an.vx1 - s_an.vx0) * k / n);
+                f->z = s_an.vz0 + (int32_t)((int64_t)(s_an.vz1 - s_an.vz0) * k / n);
+            }
+        }
         if (re15_game_flag_get(5, RE15_AN_SIG_LIEGT)) {   /* Schnitt weg vor dem Trefferbild: Treffer nachholen */
             if (!s_an.treffer) treffer(f, a);
             s_an.phase = RE15_AN_REAKTION; s_an.t = 0;
         }
         break;
     case RE15_AN_REAKTION:
-        vor(a, 1);
+        if (a->motion == AN_FA_STURZ) { if ((int)a->anim_frame < AN_FA_STURZ_BODEN) vor(a, 0); }   /* NB3 M4: zusammensacken */
+        else vor(a, 1);
         if (f->motion == AN_FC_HIEB) { if (vor(f, 1)) clip(f, AN_FC_STEHEN); } else vor(f, 0);
         if (re15_game_flag_get(5, RE15_AN_SIG_LIEGT)) {
             re15_game_flag_set(5, RE15_AN_SIG_LIEGT, 0);
