@@ -787,3 +787,29 @@ Gegen Ref2 schlechter: nichts gefunden. Birkin haelt 2 Bilder laenger hoch wie i
 Tests: unit_birkin_szenen (Griff-Riegel), unit_birkin_formen, unit_schwanz_r41 gruen.
 Hinweis: Die hochskalierten Nutzerbilder (Version_80%/Screenshot 2026-11-03 *.png) liegen nicht mehr dort. Die Leisten nehmen ab
 jetzt das Videobild.
+
+### Schritt 3 nach Referenz 2: gruenes Blut auf Video-Staerke
+
+Gruene Bildpunkte (mess6.py, gleiche Maske wie Abnahme 4):
+
+| Messung | Video | Ref2 | neu (Lauf R14) |
+|---|---|---|---|
+| Saeule h53 (Kasten x 320-365 y 95-150) | 753 | 12 | 170 |
+| Saeule h56 | 558 | 37 | 533 |
+| Saeule h58 | 453 | 31 | 443 |
+| Bodenspritzer h84 | 779 | 21 | 449 |
+| Bodenspritzer h86 | 1151 | 363 | 1025 |
+| Summe h18-h92 | 12417 | 12149 | 13543 |
+
+engine/src/birkin_formen.c bf_gruenes_blut:
+- Saeule: 85 statt 60 Bildpunkte rechts der Hand, ab h50 (h50-h54 jedes Bild, dann jedes zweite bis h60), Skala BF_BLUT_SAEULE
+  0x1800 (Ref2 0x1000, h52-h68 jedes zweite).
+- Bodenspritzer: ein Bild frueher (Bild 82/84), Skala 0x4000/0x3000.
+- Wolke: Skala 0x3400 statt 0x4000, damit die Summe nahe am Video bleibt.
+Laeufe:
+- R11 (0x2800, h52-h58 jedes Bild): Summe 45043
+- R12 (Saeule bis h68): 23724
+- R13 (Wolke 0x4000): 20144
+Leisten 10_schritt3_gruene_saeule_h40-h60.jpg, 10b_schritt3_bodenspritzer_h84-h88.jpg (Video | Ref2 | neu).
+Gegen Ref2 schwaecher: die Wolke h28-h40 (neu 32/22, Ref2 64/~70, Video 468/149). Sie war schon in Ref2 viel schwaecher als das
+Video. Offen: Wolke h28-h48 links der Hand (Video x 222-324).

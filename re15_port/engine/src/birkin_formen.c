@@ -643,8 +643,13 @@ static void bf_schwanz_ziel(const re15_actor_t *b, int h)
 #define BF_BLUT_GRUEN 0x00082000u
 /* Skala Q12 der Wolke (NB4 0x2400, s. bf_gruenes_blut; Lauf nb4/N4L mit 0x3000: h28-h48 1202-1324 Bildpunkte, Video 149-468).
  * NB5 (ABR3): Lauf nb5/T2 mit 0x2400 jedes 4. Bild h28-h48 ~0 gruene Bildpunkte -> 0x4000. */
-#define BF_BLUT_WOLKE 0x4000
+#define BF_BLUT_WOLKE 0x3400                 /* Schritt 3 nach Referenz 2: Saeule/Spritzer jetzt auf Video-Staerke -> Wolke
+                                              * kleiner, Summe h18-h92 nahe am Video (Lauf R13 mit 0x4000: 20144, Video 12417) */
 #define BF_BLUT_BODEN 0x3000                 /* Skala Q12 der Bodenspritzer (NB4: halbe Menge) */
+/* Schritt 3 nach Referenz 2: Bodenspritzer h84/h86 Ref2 21/363 gruene Bildpunkte, Video 779/1151 -> groessere Skala; Saeule
+ * Skala (Ref2 0x1000). GESTALTUNG nach dem Video. */
+#define BF_BLUT_BODEN2  0x4000                /* Lauf R11 mit 0x5000: h84/h86 897/2630 */
+#define BF_BLUT_SAEULE  0x1800
 /* NB5 (Abnahme 3 B4 "matter Nebel statt gesaettigter scharfer Quadrate"; gruen-Maske Farbe Median Video (33-42,48-58,21-37), Port
  * NB4 (29-32,50-56,14-16) bei ABR0 50/50): Mischart B + F/4 (ABR3, abr_port 4) - der Hintergrund bleibt, der gruene Anteil liegt als
  * schwacher Schleier darueber (Rechnung: Decke ~(35,45,30) + Sprite/4 ~(6,15,0) = (41,60,30)). PORT-WAHL nach dem Video. */
@@ -677,21 +682,25 @@ static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
             fx = re15_esp_fx_spawn_ex(bank, 0, 8, BF_BLUT_WOLKE, q[0], q[1], q[2], m->rot_y);
             if (fx) fx->abr_port = BF_BLUT_MISCH;
         }
-        if (h >= 52 && h <= 68 && (h & 1)) {                              /* schmale Saeule ueber der Hand */
+        if (h >= 50 && h <= 60 && (h & 1 || h <= 54)) {                  /* schmale Saeule ueber der Hand (Video h53-h58; Lauf R12 bis h68: Summe 23724) */
+            /* Schritt 3 nach Referenz 2: Video h53/h56/h58 im Kasten x 320-365 y 95-150 753/558/453 gruene Bildpunkte, Ref2 12/37/31
+             * bei x 271-344 (Hand im NB2-Halten bei x ~252-264). Jetzt 85 statt 60 Bildpunkte rechts der Hand, ab h50, h50-h54 jedes
+             * Bild, Skala BF_BLUT_SAEULE statt 0x1000 (Lauf R11 mit h52-h58 jedem Bild und 0x2800: h56/h58 1395/1822, Summe 45043).
+             * GESTALTUNG nach dem Video. */
             int32_t q[3] = { p[0], p[1], p[2] };
             re15_esp_fx_t *fx;
-            bf_bild_versatz(q, 60, -30 - 6 * (h - 52));
-            fx = re15_esp_fx_spawn_ex(bank, 0, 8, 0x1000, q[0], q[1], q[2], m->rot_y);
+            bf_bild_versatz(q, 85, -30 - 6 * (h - 52));
+            fx = re15_esp_fx_spawn_ex(bank, 0, 8, BF_BLUT_SAEULE, q[0], q[1], q[2], m->rot_y);
             if (fx) fx->abr_port = BF_BLUT_MISCH;
         }
     }
-    if (b && (h == 83 || h == 85)) {                     /* Neuaufbau ab NB2: Spritzer im Bild 83/85 -> sichtbar h84-h88 wie das Video */
+    if (b && (h == 82 || h == 84)) {                     /* Schritt 3 (Ref2: Bild 83/85, h84 21 Bildpunkte, Video 779): ein Bild frueher */
         static const bf_schwanzpunkt_t sp1 = { 0, 345, 405, 0, 0 }, sp2 = { 0, 480, 415, 0, 0 };   /* Video h84 / h86 */
         int32_t q[3];
-        if (bf_video_welt(h == 83 ? &sp1 : &sp2, b, q)) {
+        if (bf_video_welt(h == 82 ? &sp1 : &sp2, b, q)) {
             /* Neuaufbau ab NB2: Bodenspritzer im Original-Mischweg (ABR0 50/50) - mit dem NB5-Schleier ABR3 waren sie unsichtbar
              * (Abnahme 4: h84/h86/h88 0 Bildpunkte, Video 779/1151/170); die Wolke bleibt der matte Schleier (Nutzerwunsch c). */
-            (void)re15_esp_fx_spawn_ex(bank, 0, 8, BF_BLUT_BODEN, q[0], -80, q[2], 0);
+            (void)re15_esp_fx_spawn_ex(bank, 0, 8, h == 82 ? BF_BLUT_BODEN2 : BF_BLUT_BODEN, q[0], -80, q[2], 0);   /* R12 h86 1706 (Video 1151) */
         }
     }
     if (h == 88) re15_esp_fx_reset();                    /* Video h89: kein Spritzer mehr */
