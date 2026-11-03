@@ -78,6 +78,7 @@
 #include "re15_kleinkram_r38.h"  /* Runde 38 Spur Q: RE2-Inventar-Ton Oeffnen/Schliessen (kleinkram_r38.c) */
 #include "re15_tagebuch_r38.h"  /* Runde 38 Spur G: Dokument schon in der Liste -> nur lesen (tagebuch_r38.c) */
 #include "re15_keyitems_r41.h"  /* Runde 41 Spur O: USE von Key Items in RE2-Form (keyitems_r41.c) */
+#include "re15_birkin_opfer.h"  /* Runde 41 Form NB2: Birkin-Haken haelt aca3c & 0x40 (START-Block @0x8001cd04-08) */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -173,6 +174,15 @@ static uint8_t equip_id_now(void)
 void re15_menu_start_poll(uint16_t pad_pressed, int hit_react_ok)
 {
     if (s_alive || s_stage != 0) return;            /* poll runs only in normal gameplay */
+    /* aca3c & 0x40 @0x8001cd04-08 (`lw a0,0x800aca3c` @0x8001ccfc, `andi v0,a0,0x40`, `bne v0,zero,0x8001cdec`) springt ueber
+     * den GANZEN Block, auch ueber die Vormerkung @0x8001cd80-90. Das Bit setzt nicht nur das offene Menue (s_alive/s_stage
+     * oben), sondern auch der Birkin-Spieler-Haken beim Packen (STAGE5 [0] `ori v0,v0,0x40` @0x8011b0b4 / `sw` @0x8011b0c0,
+     * [1] @0x8011b4a0/ac, [2] @0x8011b770/7c) und erst das Loslassen loescht es ([0] `addiu v1,zero,-65` @0x8011b3e0 / `sw`
+     * @0x8011b3ec, [1] @0x8011b6b8/c4, [2] @0x8011b95c/68). START im Griff wird damit VERWORFEN, nicht vorgemerkt (RE2 ebenso:
+     * `lbu 0x800cfdcb` = Spieler+0x93, `bne -> 0x80026540` @0x80026438-40 vor der Flanke). Port-Gegenstueck des Bits im Haken:
+     * re15_bk_opfer_cmd() (aca58 5/6 von der Packung bis loesen). Ohne das merkte der Port START im Griff vor und oeffnete den
+     * Schirm unerwartet im ersten freien Bild (GR-Abnahme 2, Nebenbefund 1; Dossier stufe3/nachbesserung2_griff_start.md). */
+    if (re15_bk_opfer_cmd()) return;
     if (pad_pressed & RE15_PAD_BIT_START)           /* raw 0x800 edge @0x8001cd64-74     */
         s_request = 1;                              /* aca3c |= 0x8000 (sticky)          */
     if (s_request && hit_react_ok) {                /* gate: lbu 0x800acae7 @0x8001cd94  */

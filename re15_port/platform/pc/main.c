@@ -8064,6 +8064,12 @@ re_title:;
                         /* Runde 30 (N1-Messung, nachschliff-room5080.md 9.6): der Griff-Kanal des Ports
                          * (s_player_grabbed), damit Halte-Laeufe im Echtlauf direkt zaehlbar sind. */
                         fprintf(s_state_log, " gr=%d", re15_player_is_grabbed());
+                        /* Runde 41 Form NB2 (Zusatzpunkt START im Griff): Birkin-Haken (aca58/aca5a), Statusschirm-Erlaubnis
+                         * des Ports und Spieler+0x93 (0x800acae7, Tor des Originals @0x8001cdb0-b8), Menue-Stufe. Nur Messung. */
+                        {   extern int re15_bk_opfer_cmd(void); extern int re15_bk_opfer_phase(void);
+                            extern int re15_inv_open_allowed(void); extern int re15_menu_stage(void);
+                            fprintf(s_state_log, " hk=%d/%d io=%d hr=%02x ms=%d", re15_bk_opfer_cmd(), re15_bk_opfer_phase(),
+                                    re15_inv_open_allowed(), (unsigned)pl->hit_react, re15_menu_stage()); }
                     }
                     /* Runde 34 VERTRAG V5 (C0): je Gegner " hp=<HP>" DIREKT HINTER seiner schliessenden
                      * Klammer — die Klammer selbst bleibt Zeichen fuer Zeichen wie bisher, weil drei
