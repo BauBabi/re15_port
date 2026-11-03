@@ -1,0 +1,42 @@
+Spur PF Nachbesserung 1 - Messwerte (2026-11-03). vorher = exe Stand 422048234 (re15_pc_nb1vorher.exe), nachher = Arbeitsbaum.
+Fenster: gdigrab per hwnd der eigenen PID, beschleunigter Renderer (direct3d), 960x720, kein AUTOSHOT/SOFTWARE_RENDER/FRAMEDUMP; Treiber = Abnahme-1-Werkzeuge fahrt.py.
+
+== 1. Kasten 2010 Cut 3, Fensterbild b_00113 (t 28 s): Inhalt auf Weltmass entzerrt, ECC (inhalt.py / fluegel_fp.py = fluegel.py mit Fluchtpunkt 130,8 statt Handkanten 139,7), Neigung (waagrecht.py)
+-- s_vor
+Rueckwand: ECC 0.964  sx 1.0687  sy 1.0463  sx/sy 1.021  Achsenwinkel 85.1 Grad  Verschiebung (-53,-34)
+inhalt_port.png: Waagrechte +4.5 Grad, Senkrechte -2.1 Grad
+Fluegel:   ECC 0.983  sx 1.1308  sy 1.2183  sx/sy 0.928  Achsenwinkel 85.8 Grad  Verschiebung (-123,-64)
+fluegelfp_port.png: Waagrechte -0.0 Grad, Senkrechte -6.1 Grad
+-- s_nach
+Rueckwand: ECC 0.976  sx 1.0255  sy 1.0157  sx/sy 1.010  Achsenwinkel 89.7 Grad  Verschiebung (-43,-27)
+inhalt_port.png: Waagrechte -0.0 Grad, Senkrechte -0.6 Grad
+Fluegel:   ECC 0.988  sx 1.1109  sy 1.0960  sx/sy 1.014  Achsenwinkel 89.6 Grad  Verschiebung (-94,-64)
+fluegelfp_port.png: Waagrechte -0.0 Grad, Senkrechte -0.0 Grad
+-- s_nach_elza
+Rueckwand: ECC 0.976  sx 1.0255  sy 1.0157  sx/sy 1.010  Achsenwinkel 89.7 Grad  Verschiebung (-43,-27)
+inhalt_port.png: Waagrechte -0.0 Grad, Senkrechte -0.6 Grad
+Fluegel:   ECC 0.988  sx 1.1109  sy 1.0960  sx/sy 1.014  Achsenwinkel 89.6 Grad  Verschiebung (-94,-64)
+fluegelfp_port.png: Waagrechte -0.0 Grad, Senkrechte -0.0 Grad
+-- Vorlagen 2060 (nur Kamera Cut 6): 
+inhalt_2060.png: Waagrechte -0.0 Grad, Senkrechte -1.4 Grad
+fluegelfp_2060.png: Waagrechte -0.0 Grad, Senkrechte -0.0 Grad
+
+== 2. Riegel-Werkzeug kasten (Framedump F720 Cut 3, Lauf pf von Hand, Leon), Hundertstel Grad
+vor_leon: KASTEN innen NCC 610 SX 108 SY 104 VERHAELTNIS 1038 GEGENPROBE 811 SCHERUNG_W 400 SCHERUNG_S 100 GEGENPROBE_SCHERUNG -100
+vor_leon: KASTEN tuer NCC 463 SX 112 SY 102 VERHAELTNIS 1098 GEGENPROBE 863 SCHERUNG_W -200 SCHERUNG_S 350 GEGENPROBE_SCHERUNG -150
+nach_leon: KASTEN innen NCC 753 SX 102 SY 102 VERHAELTNIS 1000 GEGENPROBE 804 SCHERUNG_W 25 SCHERUNG_S -50 GEGENPROBE_SCHERUNG -475
+nach_leon: KASTEN tuer NCC 883 SX 112 SY 110 VERHAELTNIS 1018 GEGENPROBE 818 SCHERUNG_W -25 SCHERUNG_S -50 GEGENPROBE_SCHERUNG -550
+
+== 3. Panel 2030, Fensterbild (scheiben_mass.py): Balken der Drehscheiben (Seite ohne Schatten), Teilstriche 0..70 des Instruments, Zeiger (Seite ohne Schatten)
+vor b_00109.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 59 von 268 (22.0 %) | Teilstriche 0..70 Kontrast 0.89 0.57 0.72 0.41 0.71 0.33 0.81 0.53 Mittel 0.62 | Zeiger 135 Grad: Zwischentoene 4 von 16
+nach b_00109.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 0 von 272 (0.0 %) | Teilstriche 0..70 Kontrast 1.05 1.05 1.05 1.05 1.05 1.05 1.05 1.05 Mittel 1.05 | Zeiger 134 Grad: Zwischentoene 0 von 16
+vor b_00120.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 59 von 268 (22.0 %) | Teilstriche 0..70 Kontrast 0.89 0.56 0.71 0.40 0.71 0.32 0.81 0.52 Mittel 0.62 | Zeiger 68 Grad: Zwischentoene 2 von 17
+nach b_00120.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 0 von 272 (0.0 %) | Teilstriche 0..70 Kontrast 1.05 1.05 1.05 1.05 1.05 1.05 1.15 1.05 Mittel 1.06 | Zeiger 34 Grad: Zwischentoene 0 von 18
+vor b_00121.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 59 von 268 (22.0 %) | Teilstriche 0..70 Kontrast 0.89 0.56 0.71 0.40 0.71 0.32 0.81 0.52 Mittel 0.62 | Zeiger 8 Grad: Zwischentoene 3 von 16
+nach b_00121.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 0 von 272 (0.0 %) | Teilstriche 0..70 Kontrast 1.05 1.05 1.05 1.05 1.05 1.15 1.05 1.05 Mittel 1.06 | Zeiger -3 Grad: Zwischentoene 0 von 21
+vor b_00122.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 59 von 268 (22.0 %) | Teilstriche 0..70 Kontrast 0.89 0.56 0.71 0.40 0.71 0.68 0.81 0.52 Mittel 0.66 | Zeiger 0 Grad: Zwischentoene 6 von 18
+nach b_00122.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 0 von 272 (0.0 %) | Teilstriche 0..70 Kontrast 1.05 1.05 1.05 1.05 1.05 1.15 1.05 1.05 Mittel 1.06 | Zeiger -3 Grad: Zwischentoene 0 von 21
+vor b_00125.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 59 von 268 (22.0 %) | Teilstriche 0..70 Kontrast 0.89 0.56 0.71 0.40 0.71 0.68 0.81 0.52 Mittel 0.66 | Zeiger 0 Grad: Zwischentoene 6 von 18
+nach b_00125.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 0 von 272 (0.0 %) | Teilstriche 0..70 Kontrast 1.05 1.05 1.05 1.05 1.05 1.15 1.05 1.05 Mittel 1.06 | Zeiger -3 Grad: Zwischentoene 0 von 21
+vor b_00155.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 59 von 268 (22.0 %) | Teilstriche 0..70 Kontrast 0.89 0.56 0.71 0.40 0.71 0.32 0.81 0.52 Mittel 0.62 | Zeiger 80 Grad: Zwischentoene 3 von 16
+nach b_00155.png: Bloecke einfarbig 1.0000 | Balken: Zwischentoene 0 von 272 (0.0 %) | Teilstriche 0..70 Kontrast 1.05 1.05 1.05 1.05 1.05 1.05 1.05 1.05 Mittel 1.05 | Zeiger 81 Grad: Zwischentoene 0 von 16
