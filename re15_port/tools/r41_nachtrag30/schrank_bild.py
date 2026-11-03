@@ -20,6 +20,17 @@ Runde 41 Spur PF (Nutzer: "der Kasten ist bei der Kamerasicht irgendwie komisch 
     (Rechnung affin_fehler(), auch fuer den Fluegel bei 0, 45 und 90 Grad) - dieselbe Abhilfe wie die Unterteilung der Original-Netze (Wasser ROOM2080
     Prop 0: Vierecke <= 1800 x 1800).
 
+Runde 41 Spur PF, Nachbesserung 1 (Abnahme 1 M1: Inhalt geschert, Rueckwand +4,2 Grad, Fluegel +6,0 Grad; Dossier PF_panelfix.md "Nachbesserung 1"):
+  * Die Handvierecke Q_INNEN / Q_TUER sind weg. Beide Flaechen werden ueber die RDT-Kamera ROOM2060 Cut 6 entzerrt (ROOM2060.RDT Kameratabelle
+    @0x60, Satz 6 @0x120: fov 26684 -> H 208, Auge (-5146,-2700,-442), Ziel (6281,2882,18728); Projektion wie camera_common.c / FUN_80053ca4):
+    je Texel ein Weltpunkt auf der Flaeche -> Bildpunkt in BG06. Senkrechte der Welt bleiben senkrecht, Waagrechte waagrecht, gleicher Massstab in
+    beiden Achsen (Seitenverhaeltnis 1,00 statt 1,02/1,01).
+  * Rueckwand: Ebene z = WAND_Z (achsparallel; z aendert nur den Massstab). Rechteck RUECKWAND im entzerrten BG06 gemessen.
+  * Fluegel: senkrechte Ebene, Richtung aus dem Fluchtpunkt der Waagrechten auf dem Fluegel. Gemessen an den vier Kanten der zwei Schilder in BG06
+    (fluchtpunkt(): Schwellenkreuzung je Spalte, gemeinsamer Fluchtpunkt auf dem Horizont der Kamera); frueher aus den Handkanten des Vierecks
+    (139,7 statt 130,9 -> Waagrechte um 2 Grad schief), und die linke Kante von Q_TUER war der Bildrand (-> 6 Grad Scherung).
+  * Ausschnitt wie bisher mittig auf 1300:3600 (PORT-WAHL der Spur PF), jetzt in Weltmass auf der Flaeche.
+
 Aufruf: R41N_BG=<dumps stage2> C:/Python310/python.exe re15_port/tools/r41_nachtrag30/schrank_bild.py [--beleg <png>]
 """
 import hashlib
@@ -34,15 +45,27 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HIER, "..", "..", ".."))
 GEN = os.path.join(REPO, "re15_port", "engine", "src", "gen")
 RDT2010 = os.path.join(REPO, "re15_port", "shared_assets", "PSX", "STAGE2", "ROOM2010.RDT")
+RDT2060 = os.path.join(REPO, "re15_port", "shared_assets", "PSX", "STAGE2", "ROOM2060.RDT")
 QUELLE = os.environ.get("R41N_BG", ".").split(";")
 H_KAM = 208.0            # fov 26684 >> 7
 
 X_WAND = 5400
 Z_ANGEL, Z_FREI = -2000, -3300
 Y_OBEN, Y_UNTEN = -3650, -50
-# Ecken im Bild ROOM2060 Cut 6 (links oben, rechts oben, rechts unten, links unten), gemessen an fuse_box.bmp / BG06
-Q_INNEN = [(48, 26), (122, 28), (126, 165), (62, 186)]
-Q_TUER = [(0, 28), (48, 42), (60, 182), (22, 236)]
+# Spur PF, Nachbesserung 1: Flaechen in ROOM2060 ueber die Kamera Cut 6 (@0x120) statt Handvierecken
+CUT_2060 = 6
+WAND_Z = 4500.0              # Rueckwand-Ebene z = const; die Unterkante (62,186) liegt damit auf dem Boden y 0 (z 4504)
+# Rueckwand-Rechteck auf z 4500 (x links, x rechts, y oben, y unten), im entzerrten BG06 (5 Einheiten je Bildpunkt) gemessen: Fuge links x -4830
+# (Helligkeit 5,8), Fuge rechts vor der grauen Nachbartuer x -3250 (1,1), Oberkante des Deckels y -3545 (steilster Anstieg -3560 -> -3520),
+# Boden y 0 (Unterkante, wie Gegenrechnung Spur PF). Mittel der alten Handecken: -4831 / -3255 / -3554 / -68.
+RUECKWAND = (-4830.0, -3250.0, -3545.0, 0.0)
+ANGEL_2060 = np.array([-4830.0, 0.0, WAND_Z])        # Punkt der Fluegelebene (linke Fuge der Rueckwand; aendert nur den Massstab)
+# Fluegel auf seiner Ebene (Abstand s vom Punkt ANGEL_2060 zum freien Rand, y): Scharnierfuge s 290 (Spaltenprofil 7,6 vor der Tuerflaeche ab
+# s 360), Oberkante y -3198 (steilster Anstieg -3215 -> -3190), Unterkante y 15 (Uebergang Tuer -> Boden). Der freie Rand liegt ausserhalb des Bilds.
+FLUEGEL = (290.0, -3198.0, 15.0)
+# Schildkanten auf dem Fluegel in BG06 (weisses und gelbes Schild): Spalten, Startzeile, Richtung der Kreuzung (Schwelle 40 auf dem Grauwert)
+SCHILDKANTEN = (("weiss oben", range(26, 40), 104, "runter", True), ("weiss unten", range(30, 45), 130, "runter", False),
+                ("gelb oben", range(32, 45), None, "runter", True), ("gelb unten", range(36, 50), 196, "hoch", True))
 W_I, H_I = 128, 192
 W_T, H_T = 64, 192
 GITTER = (4, 8)          # Spalten x Zeilen je Flaeche (Spur PF): affiner Fehler unter Cut 3 <= 0,40 Bildpunkte, siehe affin_fehler()
@@ -56,26 +79,135 @@ def bg(name):
     raise SystemExit("Bild-Dump fehlt: %s" % name)
 
 
-def seitenverhaeltnis(quad):
-    """Welt-Seitenverhaeltnis B/H des Rechtecks, dessen Bild das Viereck quad ist (Lochkamera H_KAM, Bildmitte 160/120 wie tuer_aussen):
-    Homographie Einheitsquadrat -> quad, |K^-1 * Spalte 1| / |K^-1 * Spalte 2| = Breite / Hoehe (Lage und Richtung der Kamera kuerzen sich heraus)."""
-    k = np.array([[H_KAM, 0, 160], [0, H_KAM, 120], [0, 0, 1.]])
-    m = cv2.getPerspectiveTransform(np.float32([(0, 0), (1, 0), (1, 1), (0, 1)]), np.float32(quad))
-    ki = np.linalg.inv(k)
-    return float(np.linalg.norm(ki @ m[:, 0]) / np.linalg.norm(ki @ m[:, 1]))
+def gitter_uv(n, w):
+    """UV der Gitterpunkte 0..n wie md1_gitter: gleichmaessig 0..w-1, gerundet (Nachbarn teilen ihre Kanten exakt)."""
+    return [int(round(i * (w - 1) / n)) for i in range(n + 1)]
 
 
-def entzerren(bild, quad, w, h, ziel):
-    """quad perspektivisch richtig auf sein wahres Seitenverhaeltnis entzerren, dann mittig auf B/H = ziel beschneiden und auf w x h abtasten
-    (EINE Abtastung: Homographie quad -> Rechteck, danach Verschiebung + Massstab). Liefert Bild, wahres B/H, verbleibenden Breitenanteil."""
-    a = seitenverhaeltnis(quad)
-    hb = float(h)
-    wb = a * hb                                                  # wahres Rechteck, gemessen in Hoehen-Texeln
-    wk = min(ziel * hb, wb)                                      # Breite des Ausschnitts bei gleichem Massstab
-    x0 = (wb - wk) / 2
-    m = cv2.getPerspectiveTransform(np.float32(quad), np.float32([(0, 0), (wb, 0), (wb, hb), (0, hb)]))
-    s = np.array([[w / wk, 0, -x0 * w / wk], [0, h / hb, 0], [0, 0, 1.]])
-    return cv2.warpPerspective(bild, s @ m, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE), a, wk / wb
+def flaeche_aus_texel(n, w):
+    """Anteil 0..1 ueber die Flaeche fuer jede Texelmitte 0..w-1. Die Textur wird ueber UV 0..w-1 gelegt (SDL tex_coord = u / Texturbreite,
+    render_pc.c), je Gitterzelle linear zwischen den gerundeten UV von gitter_uv(): Texel t (Mitte t + 0,5) liegt in Zelle i bei
+    (i + (t + 0,5 - uv_i) / (uv_i+1 - uv_i)) / n. Die letzte Spalte (Mitte w - 0,5 > w - 1) liegt knapp hinter dem Rand."""
+    uv = gitter_uv(n, w)
+    aus = np.empty(w)
+    for t in range(w):
+        m = t + .5
+        i = min(max(j for j in range(n) if uv[j] <= m), n - 1)
+        aus[t] = (i + (m - uv[i]) / float(uv[i + 1] - uv[i])) / n
+    return aus
+
+
+def kamera_2060():
+    """ROOM2060 Cut 6 (Kameratabelle @0x60, Satz 6 @0x120): Lage, Achsen (wie camera_common.c / FUN_80053ca4) und H = fov >> 7."""
+    d = open(RDT2060, "rb").read()
+    o = struct.unpack_from("<I", d, 0x24)[0] + CUT_2060 * 0x20
+    assert o == 0x120, hex(o)
+    assert struct.unpack_from("<H", d, o + 2)[0] >> 7 == H_KAM
+    return kamera(RDT2060, CUT_2060)
+
+
+def projektion(kam, w):
+    """Weltpunkte (..., 3) -> Bildpunkte u, v (Bildpunkt-Mitte bei +0,5 wie tuer_aussen) in einem 320 x 240-Bild."""
+    p, x, y, z = kam
+    d = np.asarray(w, float) - p
+    cz = d @ z
+    return 160 + H_KAM * (d @ x) / cz, 120 + H_KAM * (d @ y) / cz
+
+
+def horizont(kam):
+    """Bildzeile, auf der sich alle waagrechten Linien der Welt treffen (Fluchtpunkt der x-Achse)."""
+    p, x, y, z = kam
+    e = np.array([1.0, 0, 0])
+    return 120 + H_KAM * (e @ y) / (e @ z)
+
+
+def fluchtpunkt(b6, kam):
+    """Fluchtpunkt der Waagrechten auf dem offenen Fluegel in BG06, gemessen an den vier Kanten der zwei Schilder (SCHILDKANTEN): je Spalte die
+    Kreuzung der Schwelle 40 (Grauwert), linear interpoliert; dann der gemeinsame Punkt auf dem Horizont, durch den alle vier Kanten am besten gehen
+    (Summe der senkrechten Abstandsquadrate). Liefert x des Fluchtpunkts, Horizont, Rest und die Einzelschnitte der Kanten mit dem Horizont."""
+    g = b6.astype(float) @ np.array([.299, .587, .114])          # Grauwert wie PIL "L" (ITU-R 601)
+    hor = horizont(kam)
+    schw = 40.0
+
+    def kreuz(x, y, abwaerts, hell):
+        while 1 <= y < 239:
+            a, b = g[y, x], g[y + (1 if abwaerts else -1), x]
+            if (a <= schw < b) if hell else (a > schw >= b):
+                f = (schw - a) / (b - a)
+                return (y + f if abwaerts else y - f) + .5
+            y += 1 if abwaerts else -1
+        return None
+    kanten, einzeln, weiss_unten = [], [], {}
+    for name, spalten, y0, richtung, hell in SCHILDKANTEN:
+        pkt = []
+        for x in spalten:
+            start = y0 if y0 is not None else int(weiss_unten[x]) + 1      # gelb oben: unter der Unterkante des weissen Schilds weitersuchen
+            y = kreuz(x, start, richtung == "runter", hell)
+            if y is not None:
+                pkt.append((x + .5, y))
+                if name == "weiss unten":
+                    weiss_unten[x] = y
+        q = np.array(pkt)
+        m, c = np.polyfit(q[:, 0], q[:, 1], 1)
+        einzeln.append((name, (hor - c) / m, float(np.abs(q[:, 1] - m * q[:, 0] - c).max())))
+        kanten.append(q)
+
+    def rest(vx):
+        return sum(float(np.linalg.eigvalsh((q - [vx, hor]).T @ (q - [vx, hor]))[0]) for q in kanten)
+    vs = np.arange(100.0, 180.0, 0.05)
+    vx = float(vs[int(np.argmin([rest(v) for v in vs]))])
+    return vx, hor, rest(vx), einzeln
+
+
+def fluegel_richtung(kam, vx):
+    """Waagrechte Richtung d der senkrechten Fluegelebene, deren Waagrechte im Bild durch (vx, Horizont) laufen; d zeigt vom freien Rand zum
+    Scharnier (von der Kamera weg)."""
+    p, x, y, z = kam
+    c = (vx - 160) / H_KAM
+    t = math.atan2(x[0] - c * z[0], -(x[2] - c * z[2]))
+    d = np.array([math.cos(t), 0.0, math.sin(t)])
+    return (d if d @ z > 0 else -d), math.degrees(t) % 180
+
+
+def ausschnitt(b6, kam, welt, w, h, n=GITTER):
+    """Textur w x h: je Texelmitte der Weltpunkt welt(fu, fv) (Anteile ueber die Port-Flaeche, siehe flaeche_aus_texel) -> Bildpunkt in BG06."""
+    fu, fv = np.meshgrid(flaeche_aus_texel(n[0], w), flaeche_aus_texel(n[1], h))
+    u, v = projektion(kam, welt(fu, fv))
+    assert u.min() >= .5 and u.max() <= 319.5 and v.min() >= .5 and v.max() <= 239.5, (u.min(), u.max(), v.min(), v.max())
+    return cv2.remap(b6, (u - .5).astype(np.float32), (v - .5).astype(np.float32), cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+
+
+def innen_2060(b6, kam, w, h, ziel):
+    """Rueckwand: Rechteck RUECKWAND auf z = WAND_Z, mittig auf B/H = ziel beschnitten (gleicher Massstab in beiden Achsen)."""
+    xl, xr, yo, yu = RUECKWAND
+    br = (yu - yo) * ziel
+    xm = (xl + xr) / 2
+    x0, x1 = xm - br / 2, xm + br / 2                           # links im Texturbild = Angel (links in 2060), rechts = freier Rand
+    welt = lambda fu, fv: np.stack([x0 + fu * (x1 - x0), yo + fv * (yu - yo), np.full_like(fu, WAND_Z)], -1)
+    return ausschnitt(b6, kam, welt, w, h), (xr - xl) / (yu - yo), br / (xr - xl), (x0, x1, yo, yu)
+
+
+def sichtbar_bis(kam, d, yo, yu):
+    """Groesstes s (Abstand vom Punkt ANGEL_2060 zum freien Rand), bis zu dem der Fluegel zwischen yo und yu ganz im Bild BG06 liegt."""
+    s_max = 1e9
+    for y in np.linspace(yo, yu, 200):
+        s = np.arange(0.0, 4000.0, 1.0)
+        u, v = projektion(kam, ANGEL_2060[None, :] - s[:, None] * d[None, :] + np.array([0, y, 0]))
+        drin = (u >= .5) & (v <= 239.5) & (v >= .5)
+        s_max = min(s_max, float(s[np.argmin(drin)] - 1) if not drin.all() else 4000.0)
+    return s_max
+
+
+def tuer_2060(b6, kam, d, w, h, ziel):
+    """Fluegel: senkrechte Ebene durch ANGEL_2060 mit Richtung d; Hoehe FLUEGEL, Breite mittig zwischen Scharnierfuge und Bildrand auf B/H = ziel."""
+    sa, yo, yu = FLUEGEL
+    sb = sichtbar_bis(kam, d, yo, yu)
+    br = (yu - yo) * ziel
+    sm = (sa + sb) / 2
+    s0, s1 = sm + br / 2, sm - br / 2                           # links im Texturbild = freier Rand (grosses s), rechts = Scharnier
+    welt = lambda fu, fv: np.stack([ANGEL_2060[0] - (s0 + fu * (s1 - s0)) * d[0], yo + fv * (yu - yo),
+                                    ANGEL_2060[2] - (s0 + fu * (s1 - s0)) * d[2]], -1)
+    return ausschnitt(b6, kam, welt, w, h), (sb - sa) / (yu - yo), br / (sb - sa), (s0, s1, yo, yu, sb)
 
 
 def kamera(rdt, cut):
@@ -148,10 +280,9 @@ def md1_gitter(ecken, normale, w, h, gitter=GITTER):
     zellen = [(i, j) for j in range(ny) for i in range(nx)]
     for (i, j) in zellen:   # v0 unten links, v1 oben links, v2 unten rechts, v3 oben rechts
         b += struct.pack("<8H", 0, idx(i, j + 1), 0, idx(i, j), 0, idx(i + 1, j + 1), 0, idx(i + 1, j))
-    uu = lambda i: int(round(i * (w - 1) / nx))
-    vv = lambda j: int(round(j * (h - 1) / ny))
+    uu, vv = gitter_uv(nx, w), gitter_uv(ny, h)          # dieselben UV liest flaeche_aus_texel() beim Abtasten
     for (i, j) in zellen:
-        b += struct.pack("<BBHBBHBBHBBH", uu(i), vv(j + 1), 0x7800, uu(i), vv(j), 0x0080, uu(i + 1), vv(j + 1), 0, uu(i + 1), vv(j), 0)
+        b += struct.pack("<BBHBBHBBHBBH", uu[i], vv[j + 1], 0x7800, uu[i], vv[j], 0x0080, uu[i + 1], vv[j + 1], 0, uu[i + 1], vv[j], 0)
     assert len(b) == 12 + tu + 16 * nq
     return bytes(b)
 
@@ -203,12 +334,25 @@ def main():
     b6 = bg("ROOM20606.ppm")
     b3 = bg("ROOM20103.ppm")
     ziel = (Z_ANGEL - Z_FREI) / float(Y_UNTEN - Y_OBEN)          # Tuerflaeche 1300 x 3600 in ROOM2010
-    innen, a_i, k_i = entzerren(b6, Q_INNEN, W_I, H_I, ziel)
-    tuer, a_t, k_t = entzerren(b6, Q_TUER, W_T, H_T, ziel)
+    kam = kamera_2060()
+    vx, hor, rest, einzeln = fluchtpunkt(b6, kam)
+    assert 125 < vx < 137 and rest < 4 and all(abs(e[1] - vx) < 3 for e in einzeln), (vx, rest, einzeln)
+    d, winkel = fluegel_richtung(kam, vx)
+    innen, a_i, k_i, r_i = innen_2060(b6, kam, W_I, H_I, ziel)
+    tuer, a_t, k_t, r_t = tuer_2060(b6, kam, d, W_T, H_T, ziel)
     aussen = tuer_aussen(b3, W_T, H_T)
     fehler = affin_fehler(GITTER)
-    print("Seitenverhaeltnis 2060: innen %.3f (bleibt %.1f %% der Breite), Fluegel %.3f (%.1f %%), Ziel %.3f; affiner Fehler Gitter %dx%d: %s; EIN Viereck: %.2f"
-          % (a_i, 100 * k_i, a_t, 100 * k_t, ziel, GITTER[0], GITTER[1], ", ".join("%s %.2f" % kv for kv in fehler.items()), affin_fehler((1, 1))["innen"]))
+    p2 = lambda w: tuple(round(float(c), 1) for c in projektion(kam, np.array(w, float)))
+    ecken_i = [p2((r_i[0], r_i[2], WAND_Z)), p2((r_i[1], r_i[2], WAND_Z)), p2((r_i[1], r_i[3], WAND_Z)), p2((r_i[0], r_i[3], WAND_Z))]
+    fw = lambda s_, y_: ANGEL_2060 - s_ * d + np.array([0, y_, 0])
+    ecken_t = [p2(fw(r_t[0], r_t[2])), p2(fw(r_t[1], r_t[2])), p2(fw(r_t[1], r_t[3])), p2(fw(r_t[0], r_t[3]))]
+    print("ROOM2060 Cut 6: Horizont y %.2f; Fluchtpunkt Fluegel x %.2f (Rest %.2f; Kanten %s) -> Richtung %.2f Grad"
+          % (hor, vx, rest, ", ".join("%s %.1f/%.2f" % e for e in einzeln), winkel))
+    print("Seitenverhaeltnis 2060: innen %.3f (bleibt %.1f %% der Breite), Fluegel sichtbar %.3f (bis s %.0f, bleibt %.1f %%), Ziel %.3f"
+          % (a_i, 100 * k_i, a_t, r_t[4], 100 * k_t, ziel))
+    print("Ausschnitt in BG06 (Projektion, oben links / oben rechts / unten rechts / unten links): innen %s, Fluegel %s" % (ecken_i, ecken_t))
+    print("affiner Fehler Gitter %dx%d: %s; EIN Viereck: %.2f" % (GITTER[0], GITTER[1], ", ".join("%s %.2f" % kv for kv in fehler.items()),
+                                                                 affin_fehler((1, 1))["innen"]))
     assert max(fehler.values()) < 0.5, fehler
     # innen: Prop im Ursprung, Ecken in Weltkoordinaten; aussen/tuer: Ursprung = Angel (Prop (X_WAND, 0, Z_ANGEL)), geschlossen laengs -z
     m_innen = md1_gitter([(X_WAND, Y_UNTEN, Z_ANGEL), (X_WAND, Y_OBEN, Z_ANGEL), (X_WAND, Y_UNTEN, Z_FREI), (X_WAND, Y_OBEN, Z_FREI)], (-4096, 0, 0), W_I, H_I)
@@ -217,9 +361,10 @@ def main():
     m_tuer = md1_gitter([(0, Y_UNTEN, br), (0, Y_OBEN, br), (0, Y_UNTEN, 0), (0, Y_OBEN, 0)], (4096, 0, 0), W_T, H_T)
     z = ["/* AUTOMATISCH ERZEUGT von re15_port/tools/r41_nachtrag30/schrank_bild.py - nicht von Hand aendern.",
          " * Schrank ROOM2010/2011 (Runde 41 Spur N, Nachtrag 30): Inneres + Tuer-Innenseite aus ROOM2060 Cut 6 (BG06, fuse_box.bmp), Tuer aussen aus ROOM2010",
-         " * Cut 3 (BG03). Ecken in Cut 6: innen %s, Tuer %s." % (Q_INNEN, Q_TUER),
-         " * Spur PF: auf das wahre Seitenverhaeltnis entzerrt (innen %.3f, Fluegel %.3f) und mittig auf %.3f beschnitten; Gitter %d x %d je Flaeche. */"
-         % (a_i, a_t, ziel, GITTER[0], GITTER[1]),
+         " * Cut 3 (BG03). Spur PF Nachbesserung 1: ueber die Kamera ROOM2060 Cut 6 (@0x120, H %d) entzerrt, keine Handvierecke. Rueckwand z %.0f," % (H_KAM, WAND_Z),
+         " * x %.0f..%.0f, y %.0f..%.0f (B/H %.3f, mittig auf %.3f); Fluegel: Fluchtpunkt x %.2f -> Richtung %.2f Grad, s %.0f..%.0f, y %.0f..%.0f." % (
+             r_i[0], r_i[1], r_i[2], r_i[3], a_i, ziel, vx, winkel, r_t[0], r_t[1], r_t[2], r_t[3]),
+         " * Ausschnitt in BG06: innen %s, Fluegel %s; Gitter %d x %d je Flaeche. */" % (ecken_i, ecken_t, GITTER[0], GITTER[1]),
          inc_array("re15_r41n_schrank_innen_md1", m_innen), inc_array("re15_r41n_schrank_innen_tim", tim_8bpp(innen)),
          inc_array("re15_r41n_schrank_aussen_md1", m_aussen), inc_array("re15_r41n_schrank_aussen_tim", tim_8bpp(aussen)),
          inc_array("re15_r41n_schrank_tuer_md1", m_tuer), inc_array("re15_r41n_schrank_tuer_tim", tim_8bpp(tuer))]

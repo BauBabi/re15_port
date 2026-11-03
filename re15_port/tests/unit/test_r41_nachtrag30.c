@@ -17,7 +17,7 @@
  * Werkzeug: "bild <ppm> <x0> <y0> <x1> <y1>" = mittlere Helligkeit, "diff <a.ppm> <b.ppm> <x0> <y0> <x1> <y1>" = mittlere Abweichung, "endstufe <cap_a> <cap_b> <q>" = Endstufe bitgleich,
  * "fluss <ordner> <von> <bis> <x0> <y0> <x1> <y1>" = Bewegung in Bildern f_<n>.ppm: je Abstand 1..3 Bilder die beste Verschiebung in x des Bildes ohne sein Zeitmittel, Korrelation dort und bei 0, dazu Bildpunkte, die sich je 6 Bilder aendern,
  * "luecke <cap_a> <cap_b> <an> <aus> <schwelle>" = laengste Folge leiser Takte, (Spur PF) "etikett <ppm>" = Beschriftung im Framedump gegen die Spielschrift,
- * "kasten <ppm> <innen|tuer>" = Seitenverhaeltnis des Schranks 2010 Cut 3 gegen ROOM2060 Cut 6, "karte <datei> <raum-hex> <x> <y> <z> <gier> [bank:bit ...]" = Spielstand fuer den Lade-Weg (RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0; Muster probe_r36_elza_karte.c, mit y:
+ * "kasten <ppm> <innen|tuer>" = Seitenverhaeltnis und Scherung des Schranks 2010 Cut 3 gegen ROOM2060 Cut 6, "karte <datei> <raum-hex> <x> <y> <z> <gier> [bank:bit ...]" = Spielstand fuer den Lade-Weg (RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0; Muster probe_r36_elza_karte.c, mit y:
  * das Band folgt beim Laden aus y, re15_savedata.c @re15_collision_band_from_y; der Ring von 2030 liegt auf y -5400).
  */
 #include "re15_rdt.h"
@@ -714,6 +714,72 @@ static void fall_g(void)
     re15_panel2030_r41_reset();
 }
 
+/* Spur PF Nachbesserung 1 (Zusage an den Nutzer: Drehscheiben und Teilstriche auf ganze Bildpunkte). S1: jeder Stempel-Texel des Generators (Teilstriche,
+ * rotes Band, Querbalken) steht unveraendert im Panel-Bild (Gegenprobe um (2,2) versetzt). S2: der Zeiger kennt keine Zwischentoene: jeder Texel des
+ * Instruments ist Grund, Zeigerfarbe (16,15,15), Nabe (96,96,96) oder Grund mit Schatten 87/256 - in jedem Bild der Loesungsfahrt A 100 -> 50 -> 80. */
+static int zeiger_texel_pruefen(int *zeiger_px, int *zwischen)
+{
+    const uint32_t *b = re15_panel2030_r41_rgba();
+    if (!b) return -1;
+    *zeiger_px = 0; *zwischen = 0;
+    for (int y = RE15_R41N_ZEIGER_Y - 15; y <= RE15_R41N_ZEIGER_Y + 15; y++)
+        for (int x = RE15_R41N_ZEIGER_X - 15; x <= RE15_R41N_ZEIGER_X + 15; x++) {
+            const double dx = x + .5 - (RE15_R41N_ZEIGER_X + .5), dy = y + .5 - (RE15_R41N_ZEIGER_Y + .5);
+            if (dx * dx + dy * dy > 13.9 * 13.9) continue;                                   /* Blatt des Instruments */
+            const uint32_t g = re15_panel2030_r41_grund_rgba(x, y), v = b[y * 320 + x];
+            if (v == g) continue;
+            const uint32_t r0 = g >> 24, g0 = (g >> 16) & 255, b0 = (g >> 8) & 255;
+            const uint32_t schatten = (((r0 * 169) >> 8) << 24) | (((g0 * 169) >> 8) << 16) | (((b0 * 169) >> 8) << 8) | 0xFFu;
+            if (v == ((16u << 24) | (15u << 16) | (15u << 8) | 0xFFu) || v == ((96u << 24) | (96u << 16) | (96u << 8) | 0xFFu)) (*zeiger_px)++;
+            else if (v != schatten) (*zwischen)++;
+        }
+    return 0;
+}
+
+static void fall_s(void)
+{
+    const int n = re15_panel2030_r41_stempel(-1, NULL, NULL, NULL);
+    PRUEFE(n > 200, "Scheiben: Stempel-Texel vorhanden (%d)", n);
+    re15_panel2030_r41_oeffnen();
+    re15_panel2030_r41_cursor_setzen(300, 200);
+    const uint32_t *b = re15_panel2030_r41_rgba();
+    PRUEFE(b != NULL, "Panel-Bild steht");
+    if (!b || n <= 0) return;
+    const double zw = (-135.0 + 270.0 * re15_panel2030_r41_anzeige_zehntel() / 1000.0);
+    long ges = 0, gl = 0, ges1 = 0, gl1 = 0;
+    for (int i = 0; i < n; i++) {
+        int x = 0, y = 0;
+        uint16_t f = 0;
+        re15_panel2030_r41_stempel(i, &x, &y, &f);
+        const double dx = x + .5 - (RE15_R41N_ZEIGER_X + .5), dy = y + .5 - (RE15_R41N_ZEIGER_Y + .5);
+        if (dx * dx + dy * dy < 16 * 16 && fabs(atan2(dx, -dy) * 180 / 3.14159265358979 - zw) < 15) continue;    /* unter dem Zeiger */
+        ges++;
+        if ((b[y * 320 + x] & 0xFFFFFF00u) == (farbe15(f) & 0xFFFFFF00u)) gl++;
+        ges1++;
+        if ((b[(y + 2) * 320 + x + 2] & 0xFFFFFF00u) == (farbe15(f) & 0xFFFFFF00u)) gl1++;    /* quer zu Balken und Band */
+    }
+    PRUEFE(ges > 200 && gl == ges, "Teilstriche/Band/Balken Texel fuer Texel im Bild: %ld von %ld gleich", gl, ges);
+    PRUEFE(gl1 * 4 < ges1, "Gegenprobe um (2,2) versetzt: %ld von %ld gleich (< Viertel)", gl1, ges1);
+    /* S2: Zeiger in jedem Bild der Fahrt */
+    int bilder = 0, min_px = 1 << 30, max_zw = 0, z_px = 0, z_zw = 0;
+    zeiger_texel_pruefen(&z_px, &z_zw);
+    bilder++; if (z_px < min_px) min_px = z_px; if (z_zw > max_zw) max_zw = z_zw;
+    static const int zuege[3][2] = { { 0, 1 }, { 1, 2 }, { 2, 0 } };    /* Loesung: A -> B (A 50), B -> C, C -> A (A 80) */
+    for (int z = 0; z < 3; z++) {
+        re15_panel2030_r41_aktion(zuege[z][0]);
+        re15_panel2030_r41_aktion(zuege[z][1]);
+        for (int t = 0; t < RE15_R41N_UMFUELL_TAKTE + 2; t++) {
+            re15_panel2030_r41_takt(0, 0, 0);
+            if (zeiger_texel_pruefen(&z_px, &z_zw) != 0) break;
+            bilder++; if (z_px < min_px) min_px = z_px; if (z_zw > max_zw) max_zw = z_zw;
+        }
+    }
+    PRUEFE(bilder > 20 && min_px >= 12 && max_zw == 0, "Zeiger auf ganzen Texeln: %d Bilder, je mindestens %d Zeiger-Texel, hoechstens %d Zwischentoene", bilder, min_px, max_zw);
+    printf("S Scheiben: %d Stempel-Texel, %ld von %ld gleich, um (2,2) versetzt %ld von %ld; Zeiger %d Bilder (A %d), Zwischentoene max %d, Zeiger-Texel min %d\n",
+           n, gl, ges, gl1, ges1, bilder, re15_panel2030_r41_stand(0), max_zw, min_px);
+    re15_panel2030_r41_reset();
+}
+
 static int debug_breiten(void)
 {
     if (s_breite_ok >= 0) return s_breite_ok;
@@ -814,11 +880,15 @@ static int etikett_werkzeug(const char *pfad)
     return 0;
 }
 
-/* Werkzeug "kasten <ppm> <innen|tuer>" (Riegel integration_r41_nachtrag30_schrank_*): Seitenverhaeltnis des Schranks im Framedump (Cut 3 ROOM2010) gegen
- * ROOM2060 Cut 6 (BG06, fuse_box.bmp). Beide Flaechen werden auf gleichmaessige Weltkoordinaten entzerrt (20 Einheiten je Bildpunkt): die Port-Flaeche ueber die
- * Kamera Cut 3 @0xC0 (Projektion H = fov >> 7), die Vorlage ueber die Homographie Viereck -> Rechteck mit ihrem Welt-Seitenverhaeltnis (innen 0,453: Rueckwand-Ebene
- * z 4500, Unterkante auf dem Boden y 0, 1581 x 3487; Fluegel 0,511). Gesucht wird der Massstab (sx, sy), mit dem die Kanten der Vorlage am besten (NCC) passen;
- * sx/sy = 1 heisst unverzerrt. GEGENPROBE: dieselbe Suche auf der Port-Flaeche, waagrecht auf 80 % gestaucht. */
+/* Werkzeug "kasten <ppm> <innen|tuer>" (Riegel integration_r41_nachtrag30_schrank_*): Seitenverhaeltnis und Scherung des Schranks im Framedump (Cut 3 ROOM2010)
+ * gegen ROOM2060 Cut 6 (BG06, fuse_box.bmp). Beide Flaechen werden auf gleichmaessige Weltkoordinaten entzerrt (20 Einheiten je Bildpunkt): die Port-Flaeche ueber die
+ * Kamera ROOM2010 Cut 3 @0xC0, die Vorlage (Spur PF Nachbesserung 1, wie schrank_bild.py) ueber die Kamera ROOM2060 Cut 6 @0x120 (Projektion H = fov >> 7, Achsen wie
+ * camera_common.c / FUN_80053ca4): Rueckwand Rechteck auf z 4500, x -4830..-3250, y -3545..0; Fluegel senkrechte Ebene durch (-4830,0,4500), Richtung aus dem
+ * Fluchtpunkt der Schildkanten x 130,8 auf dem Horizont, s 290..1538 (Scharnierfuge .. Bildrand), y -3198..15 (schrank_bild.py FLUEGEL, fluchtpunkt()).
+ * 1. Massstab (sx, sy) mit der besten Deckung der Kanten (NCC); sx/sy = 1 heisst unverzerrt. GEGENPROBE: Port-Flaeche waagrecht auf 80 % gestaucht.
+ * 2. Scherung (Abnahme 1 M1): Port-Flaeche mit geneigten Achsen abgetastet (Waagrechte um w Grad, Senkrechte um s Grad, -8..+8 in 0,25), NCC gegen die Vorlage im
+ *    besten Massstab; der beste Winkel ist die Neigung des Inhalts gegen die Kastenkanten (0 = nicht geschert). GEGENPROBE: die Port-Flaeche zusaetzlich um 5 Grad
+ *    geschert abgetastet (innen die Waagrechten, Fluegel die Senkrechten) muss um 5 Grad versetzt gemessen werden. Ausgabe in Hundertstel Grad. */
 #include "re15_bss.h"
 static uint8_t *bss_rgb_pf(const char *pfad)
 {
@@ -858,38 +928,6 @@ static float grau_bilinear(const uint8_t *rgb, float x, float y)   /* Bildpunkt-
     return s;
 }
 
-static int loese8(double a[8][9], double *x)       /* Gauss mit Spaltenpivot */
-{
-    for (int c = 0; c < 8; c++) {
-        int p = c;
-        for (int r = c + 1; r < 8; r++) if (fabs(a[r][c]) > fabs(a[p][c])) p = r;
-        if (fabs(a[p][c]) < 1e-12) return -1;
-        for (int k = 0; k < 9; k++) { const double t = a[c][k]; a[c][k] = a[p][k]; a[p][k] = t; }
-        for (int r = 0; r < 8; r++) {
-            if (r == c) continue;
-            const double f = a[r][c] / a[c][c];
-            for (int k = c; k < 9; k++) a[r][k] -= f * a[c][k];
-        }
-    }
-    for (int c = 0; c < 8; c++) x[c] = a[c][8] / a[c][c];
-    return 0;
-}
-
-/* Homographie Rechteck (0,0)-(w,h) -> Viereck q (oben links, oben rechts, unten rechts, unten links). */
-static int homographie(const float q[4][2], float w, float h, double m[9])
-{
-    const float r[4][2] = { { 0, 0 }, { w, 0 }, { w, h }, { 0, h } };
-    double a[8][9];
-    for (int i = 0; i < 4; i++) {
-        const double X = r[i][0], Y = r[i][1], u = q[i][0], v = q[i][1];
-        double z0[9] = { X, Y, 1, 0, 0, 0, -u * X, -u * Y, u }, z1[9] = { 0, 0, 0, X, Y, 1, -v * X, -v * Y, v };
-        memcpy(a[2 * i], z0, sizeof z0); memcpy(a[2 * i + 1], z1, sizeof z1);
-    }
-    if (loese8(a, m) != 0) return -1;
-    m[8] = 1;
-    return 0;
-}
-
 static void sobel(const float *g, int w, int h, float *e)
 {
     for (int y = 0; y < h; y++)
@@ -903,8 +941,42 @@ static void sobel(const float *g, int w, int h, float *e)
         }
 }
 
-/* Bestes (NCC, sx, sy): Vorlage tg (tw x th) skaliert, mittig auf die Port-Groesse beschnitten, ueber alle Lagen in pe (pw x ph). */
-static void suche(const float *pe, int pw, int ph, const float *tg, int tw, int th, double *best, double *bsx, double *bsy)
+/* Vorlage tg (tw x th) auf (sx, sy) skaliert (Flaechenmittel), Kanten (Sobel) in te; Groesse in *w_, *h_. */
+static void vorlage_skaliert(const float *tg, int tw, int th, double sx, double sy, float *t, float *te, int *w_, int *h_)
+{
+    const int w = (int)(tw * sx), h = (int)(th * sy);
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++) {
+            const double fx0 = x / sx, fx1 = (x + 1) / sx, fy0 = y / sy, fy1 = (y + 1) / sy;
+            double s = 0, a = 0;
+            for (int yy = (int)fy0; yy < (int)ceil(fy1) && yy < th; yy++)
+                for (int xx = (int)fx0; xx < (int)ceil(fx1) && xx < tw; xx++) {
+                    const double ox = fmin(fx1, xx + 1) - fmax(fx0, xx), oy = fmin(fy1, yy + 1) - fmax(fy0, yy);
+                    if (ox > 0 && oy > 0) { s += tg[yy * tw + xx] * ox * oy; a += ox * oy; }
+                }
+            t[y * w + x] = (float)(a > 0 ? s / a : 0);
+        }
+    sobel(t, w, h, te);
+    *w_ = w; *h_ = h;
+}
+
+/* NCC zwischen dem Ausschnitt (x0, y0, nw, nh) der skalierten Vorlagenkanten te (Breite w) und pe (Breite pw) an der Lage (ox, oy). */
+static double ncc_an(const float *pe, int pw, const float *te, int w, int x0, int y0, int nw, int nh, int ox, int oy)
+{
+    double ms = 0, mq = 0, sp = 0, sq = 0, sk = 0;
+    for (int y = 0; y < nh; y++)
+        for (int x = 0; x < nw; x++) {
+            const double v = te[(y0 + y) * w + x0 + x], p = pe[(oy + y) * pw + ox + x];
+            ms += v; mq += v * v; sp += p; sq += p * p; sk += p * v;
+        }
+    const double nn = (double)nw * nh, mt = ms / nn, st = sqrt(fmax(mq / nn - mt * mt, 1e-9)), mp = sp / nn, spp = sqrt(fmax(sq / nn - mp * mp, 1e-9));
+    return (sk / nn - mp * mt) / (spp * st);
+}
+
+typedef struct { double ncc, sx, sy; int ox, oy; } kasten_treffer_t;
+
+/* Bestes (NCC, sx, sy, Lage): Vorlage tg (tw x th) skaliert, mittig auf die Port-Groesse beschnitten, ueber alle Lagen in pe (pw x ph). */
+static void suche(const float *pe, int pw, int ph, const float *tg, int tw, int th, double *best, double *bsx, double *bsy, kasten_treffer_t *tr)
 {
     *best = -2; *bsx = 0; *bsy = 0;
     float *t = (float *)malloc(sizeof(float) * (size_t)(tw * 2) * (size_t)(th * 2)), *te = (float *)malloc(sizeof(float) * (size_t)(tw * 2) * (size_t)(th * 2));
@@ -941,10 +1013,75 @@ static void suche(const float *pe, int pw, int ph, const float *tg, int tw, int 
                         }
                     const double mp = sp / nn, spp = sqrt(fmax(sq / nn - mp * mp, 1e-9));
                     const double ncc = (sk / nn - mp * mt) / (spp * st);
-                    if (ncc > *best) { *best = ncc; *bsx = sx; *bsy = sy; }
+                    if (ncc > *best) { *best = ncc; *bsx = sx; *bsy = sy; if (tr) { tr->ncc = ncc; tr->sx = sx; tr->sy = sy; tr->ox = ox; tr->oy = oy; } }
                 }
         }
     free(t); free(te);
+}
+
+typedef struct { double p[3], x[3], y[3], z[3], H; } kam_t;
+
+/* RDT-Kamera Satz cut: Kopf +0x24 -> Kameratabelle, je 0x20 B: fov (u16 @+2), Auge @+4, Ziel @+16; Achsen wie camera_common.c (FUN_80053ca4). */
+static void kam_lesen(const uint8_t *rdt, int cut, kam_t *k)
+{
+    const uint32_t kt = (uint32_t)rdt[0x24] | ((uint32_t)rdt[0x25] << 8) | ((uint32_t)rdt[0x26] << 16) | ((uint32_t)rdt[0x27] << 24);
+    const uint8_t *s = rdt + kt + (uint32_t)cut * 0x20;
+    int32_t w6[6];
+    memcpy(w6, s + 4, sizeof w6);
+    k->H = (double)((s[2] | (s[3] << 8)) >> 7);
+    for (int i = 0; i < 3; i++) { k->p[i] = w6[i]; k->z[i] = w6[3 + i] - w6[i]; }
+    double l = sqrt(k->z[0] * k->z[0] + k->z[1] * k->z[1] + k->z[2] * k->z[2]);
+    for (int i = 0; i < 3; i++) k->z[i] /= l;
+    k->x[0] = k->z[2]; k->x[1] = 0; k->x[2] = -k->z[0];
+    l = sqrt(k->x[0] * k->x[0] + k->x[2] * k->x[2]); k->x[0] /= l; k->x[2] /= l;
+    k->y[0] = k->z[1] * k->x[2] - k->z[2] * k->x[1]; k->y[1] = k->z[2] * k->x[0] - k->z[0] * k->x[2]; k->y[2] = k->z[0] * k->x[1] - k->z[1] * k->x[0];
+}
+
+static void kam_proj(const kam_t *k, const double w[3], double *sx, double *sy)
+{
+    const double d[3] = { w[0] - k->p[0], w[1] - k->p[1], w[2] - k->p[2] };
+    const double cz = d[0] * k->z[0] + d[1] * k->z[1] + d[2] * k->z[2];
+    *sx = 160 + k->H * (d[0] * k->x[0] + d[1] * k->x[1] + d[2] * k->x[2]) / cz;
+    *sy = 120 + k->H * (d[0] * k->y[0] + d[1] * k->y[1] + d[2] * k->y[2]) / cz;
+}
+
+enum { KPW = 65, KPH = 180, KE = 20 };    /* Port-Flaeche 1300 x 3600 Welt, 20 je Bildpunkt */
+
+/* Port-Flaeche aus dem Framedump (Cut 3): Waagrechte um w Grad, Senkrechte um s Grad geneigt abgetastet (Drehpunkt Flaechenmitte). */
+static void port_flaeche(const uint8_t *rgb, const kam_t *k, int innen, double w_grad, double s_grad, float *out)
+{
+    const double tw = tan(w_grad * 3.14159265358979 / 180), ts = tan(s_grad * 3.14159265358979 / 180);
+    for (int v = 0; v < KPH; v++)
+        for (int u = 0; u < KPW; u++) {
+            const double cu = u + .5 - KPW / 2.0, cv = v + .5 - KPH / 2.0;
+            const double fu = KPW / 2.0 + cu + ts * cv, fv = KPH / 2.0 + cv + tw * cu;
+            double w[3], sx, sy;
+            if (innen) { w[0] = 5400; w[1] = -3650 + fv * KE; w[2] = -2000 - fu * KE; }    /* links Angel z -2000 .. rechts z -3300 */
+            else       { w[0] = 4100 + fu * KE; w[1] = -3650 + fv * KE; w[2] = -2000; }    /* offene Tuer: freier Rand x 4100 links .. Angel rechts */
+            kam_proj(k, w, &sx, &sy);
+            out[v * KPW + u] = grau_bilinear(rgb, (float)sx, (float)sy);
+        }
+}
+
+/* Neigung des Inhalts (Grad): Winkel der Waagrechten (senkrecht = 0) bzw. Senkrechten (senkrecht = 1) mit der besten NCC gegen die Vorlage im besten Massstab,
+ * Lage +-3 um die beste; vorab = zusaetzliche Scherung der Abtastung (Gegenprobe). */
+static double kasten_neigung(const uint8_t *rgb, const kam_t *k, int innen, int senkrecht, double vorab, const float *te, int w, int x0, int y0, int nw, int nh,
+                             const kasten_treffer_t *tr)
+{
+    static float pg[KPW * KPH], pe[KPW * KPH];
+    double best = -2, wbest = 0;
+    for (int i = -32; i <= 32; i++) {
+        const double a = i * 0.25;
+        port_flaeche(rgb, k, innen, senkrecht ? 0 : vorab + a, senkrecht ? vorab + a : 0, pg);
+        sobel(pg, KPW, KPH, pe);
+        for (int oy = tr->oy - 3; oy <= tr->oy + 3; oy++)
+            for (int ox = tr->ox - 3; ox <= tr->ox + 3; ox++) {
+                if (ox < 0 || oy < 0 || ox + nw > KPW || oy + nh > KPH) continue;
+                const double n = ncc_an(pe, KPW, te, w, x0, y0, nw, nh, ox, oy);
+                if (n > best) { best = n; wbest = a; }
+            }
+    }
+    return wbest;
 }
 
 static int kasten_werkzeug(const char *ppm, const char *teil)
@@ -953,62 +1090,65 @@ static int kasten_werkzeug(const char *ppm, const char *teil)
     uint8_t *d = slurp(ppm, &n);
     uint8_t *bg = bss_rgb_pf(RE15_ASSET_PSX_DIR "/BSS/ROOM2060/BG06.BSS");
     uint8_t *rdt = slurp(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2010.RDT", &n);
-    if (!d || !bg || !rdt) { printf("FEHLER: Eingabe\n"); return 2; }
+    uint8_t *rdt6 = slurp(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2060.RDT", &n);
+    if (!d || !bg || !rdt || !rdt6) { printf("FEHLER: Eingabe\n"); return 2; }
     const int innen = strcmp(teil, "tuer") != 0;
-    /* Kamera Cut 3: RDT+0x24 -> Kamera-Tabelle, Satz 3 je 0x20 B: fov (u16 @+2), Auge @+4, Ziel @+16 */
-    const uint32_t kt = (uint32_t)rdt[0x24] | ((uint32_t)rdt[0x25] << 8) | ((uint32_t)rdt[0x26] << 16) | ((uint32_t)rdt[0x27] << 24);
-    const uint8_t *k = rdt + kt + 3 * 0x20;
-    int32_t w6[6];
-    memcpy(w6, k + 4, sizeof w6);
-    const double H = (double)((k[2] | (k[3] << 8)) >> 7);
-    double p[3] = { w6[0], w6[1], w6[2] }, z[3] = { w6[3] - p[0], w6[4] - p[1], w6[5] - p[2] };
-    double l = sqrt(z[0] * z[0] + z[1] * z[1] + z[2] * z[2]);
-    for (int i = 0; i < 3; i++) z[i] /= l;
-    double x[3] = { z[2], 0, -z[0] };
-    l = sqrt(x[0] * x[0] + x[2] * x[2]); x[0] /= l; x[2] /= l;
-    const double y[3] = { z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0] };
-    /* Port-Flaeche 65 x 180 (1300 x 3600 Welt, 20 je Bildpunkt) */
-    enum { PW = 65, PH = 180, E = 20 };
-    static float pg[PW * PH], pe[PW * PH], ps[PW * PH], pse[PW * PH];
-    for (int v = 0; v < PH; v++)
-        for (int u = 0; u < PW; u++) {
-            const double wy = -3650 + (v + 0.5) * E;
-            double w[3];
-            if (innen) { w[0] = 5400; w[1] = wy; w[2] = -2000 - (u + 0.5) * E; }        /* links Angel z -2000 .. rechts z -3300 */
-            else       { w[0] = 4100 + (u + 0.5) * E; w[1] = wy; w[2] = -2000; }         /* offene Tuer: freier Rand x 4100 links .. Angel rechts */
-            const double dd[3] = { w[0] - p[0], w[1] - p[1], w[2] - p[2] };
-            const double cz = dd[0] * z[0] + dd[1] * z[1] + dd[2] * z[2];
-            const double sx = 160 + H * (dd[0] * x[0] + dd[1] * x[1] + dd[2] * x[2]) / cz, sy = 120 + H * (dd[0] * y[0] + dd[1] * y[1] + dd[2] * y[2]) / cz;
-            pg[v * PW + u] = grau_bilinear(d + 15, (float)sx, (float)sy);
-        }
-    sobel(pg, PW, PH, pe);
-    /* Gegenprobe: waagrecht auf 80 % gestaucht (Mitte bleibt), Rand = Randwert */
-    for (int v = 0; v < PH; v++)
-        for (int u = 0; u < PW; u++) {
-            float s = (float)((u + 0.5 - PW / 2.0) / 0.8 + PW / 2.0 - 0.5);
-            if (s < 0) s = 0; if (s > PW - 1) s = PW - 1;
+    kam_t k3, k6;
+    kam_lesen(rdt, 3, &k3);          /* ROOM2010 Cut 3 @0xC0 */
+    kam_lesen(rdt6, 6, &k6);         /* ROOM2060 Cut 6 @0x120: Auge (-5146,-2700,-442), H 208 */
+    static float pg[KPW * KPH], pe[KPW * KPH], ps[KPW * KPH], pse[KPW * KPH];
+    port_flaeche(d + 15, &k3, innen, 0, 0, pg);
+    sobel(pg, KPW, KPH, pe);
+    /* Gegenprobe Massstab: waagrecht auf 80 % gestaucht (Mitte bleibt), Rand = Randwert */
+    for (int v = 0; v < KPH; v++)
+        for (int u = 0; u < KPW; u++) {
+            float s = (float)((u + 0.5 - KPW / 2.0) / 0.8 + KPW / 2.0 - 0.5);
+            if (s < 0) s = 0; if (s > KPW - 1) s = KPW - 1;
             const int s0 = (int)s; const float f = s - (float)s0;
-            ps[v * PW + u] = pg[v * PW + s0] * (1 - f) + pg[v * PW + (s0 + 1 < PW ? s0 + 1 : s0)] * f;
+            ps[v * KPW + u] = pg[v * KPW + s0] * (1 - f) + pg[v * KPW + (s0 + 1 < KPW ? s0 + 1 : s0)] * f;
         }
-    sobel(ps, PW, PH, pse);
-    /* Vorlage: Viereck aus ROOM2060 Cut 6 (schrank_bild.py Q_INNEN / Q_TUER) auf sein Welt-Seitenverhaeltnis */
-    const float qi[4][2] = { { 48, 26 }, { 122, 28 }, { 126, 165 }, { 62, 186 } }, qt[4][2] = { { 0, 28 }, { 48, 42 }, { 60, 182 }, { 22, 236 } };
-    const double a = innen ? 0.453 : 0.511;
-    const int th = 174, tw = (int)lround(a * th);               /* 3487 / 20 */
-    double m[9];
-    if (homographie(innen ? qi : qt, (float)tw, (float)th, m) != 0) { printf("FEHLER: Homographie\n"); return 2; }
+    sobel(ps, KPW, KPH, pse);
+    /* Vorlage: ROOM2060 Cut 6 ueber die Kamera (schrank_bild.py RUECKWAND / FLUEGEL / fluchtpunkt) */
+    int tw, th;
+    double dfl[3] = { 0, 0, 0 };
+    if (innen) { tw = (int)lround((-3250.0 + 4830.0) / KE); th = (int)lround(3545.0 / KE); }
+    else {
+        tw = (int)lround((1538.0 - 290.0) / KE); th = (int)lround((15.0 + 3198.0) / KE);
+        const double c = (130.8 - 160) / k6.H;                                  /* Fluchtpunkt x 130,8 auf dem Horizont */
+        const double t = atan2(k6.x[0] - c * k6.z[0], -(k6.x[2] - c * k6.z[2]));
+        dfl[0] = cos(t); dfl[2] = sin(t);
+        if (dfl[0] * k6.z[0] + dfl[2] * k6.z[2] < 0) { dfl[0] = -dfl[0]; dfl[2] = -dfl[2]; }
+    }
     float *tg = (float *)malloc(sizeof(float) * (size_t)(tw * th));
     for (int v = 0; v < th; v++)
         for (int u = 0; u < tw; u++) {
-            const double X = u + 0.5, Y = v + 0.5, ww = m[6] * X + m[7] * Y + m[8];
-            tg[v * tw + u] = grau_bilinear(bg, (float)((m[0] * X + m[1] * Y + m[2]) / ww), (float)((m[3] * X + m[4] * Y + m[5]) / ww));
+            double w[3], sx, sy;
+            if (innen) { w[0] = -4830 + (u + .5) * KE; w[1] = -3545 + (v + .5) * KE; w[2] = 4500; }
+            else {
+                const double s_ = 1538 - (u + .5) * KE;                         /* links freier Rand, rechts Scharnier */
+                w[0] = -4830 - s_ * dfl[0]; w[1] = -3198 + (v + .5) * KE; w[2] = 4500 - s_ * dfl[2];
+            }
+            kam_proj(&k6, w, &sx, &sy);
+            tg[v * tw + u] = grau_bilinear(bg, (float)sx, (float)sy);
         }
     double ncc, sx, sy, ncc2, sx2, sy2;
-    suche(pe, PW, PH, tg, tw, th, &ncc, &sx, &sy);
-    suche(pse, PW, PH, tg, tw, th, &ncc2, &sx2, &sy2);
-    printf("KASTEN %s NCC %d SX %d SY %d VERHAELTNIS %d GEGENPROBE %d\n", innen ? "innen" : "tuer", (int)lround(ncc * 1000), (int)lround(sx * 100), (int)lround(sy * 100),
-           (int)lround(sx / sy * 1000), (int)lround(sx2 / sy2 * 1000));
-    free(tg); free(d); free(bg); free(rdt);
+    kasten_treffer_t tr = { 0, 0, 0, 0, 0 };
+    suche(pe, KPW, KPH, tg, tw, th, &ncc, &sx, &sy, &tr);
+    suche(pse, KPW, KPH, tg, tw, th, &ncc2, &sx2, &sy2, NULL);
+    /* Scherung im besten Massstab */
+    float *t = (float *)malloc(sizeof(float) * (size_t)(tw * 2) * (size_t)(th * 2)), *te = (float *)malloc(sizeof(float) * (size_t)(tw * 2) * (size_t)(th * 2));
+    int w = 0, h = 0;
+    vorlage_skaliert(tg, tw, th, tr.sx, tr.sy, t, te, &w, &h);
+    const int cw = w < KPW - 4 ? w : KPW - 4, ch = h < KPH - 4 ? h : KPH - 4;
+    const int x0 = (w - cw) / 2 + 2, y0 = (h - ch) / 2 + 2, nw = cw - 4, nh = ch - 4;
+    const double nw_w = kasten_neigung(d + 15, &k3, innen, 0, 0, te, w, x0, y0, nw, nh, &tr);
+    const double nw_s = kasten_neigung(d + 15, &k3, innen, 1, 0, te, w, x0, y0, nw, nh, &tr);
+    /* Gegenprobe Scherung: zusaetzlich um 5 Grad geschert abgetastet (innen die Waagrechten, Fluegel die Senkrechten) */
+    const double gp = kasten_neigung(d + 15, &k3, innen, !innen, 5.0, te, w, x0, y0, nw, nh, &tr);
+    printf("KASTEN %s NCC %d SX %d SY %d VERHAELTNIS %d GEGENPROBE %d SCHERUNG_W %d SCHERUNG_S %d GEGENPROBE_SCHERUNG %d\n", innen ? "innen" : "tuer",
+           (int)lround(ncc * 1000), (int)lround(sx * 100), (int)lround(sy * 100), (int)lround(sx / sy * 1000), (int)lround(sx2 / sy2 * 1000),
+           (int)lround(nw_w * 100), (int)lround(nw_s * 100), (int)lround(gp * 100));
+    free(t); free(te); free(tg); free(d); free(bg); free(rdt); free(rdt6);
     return 0;
 }
 
@@ -1177,6 +1317,7 @@ int main(int argc, char **argv)
     fall_f();
     fall_g();   /* Spur PF */
     fall_q();   /* Spur PF */
+    fall_s();   /* Spur PF Nachbesserung 1 */
     for (int v = 0; v < 2; v++) {
         fall_b((uint16_t)(0x2030 + v));
         fall_c((uint16_t)(0x2010 + v));
