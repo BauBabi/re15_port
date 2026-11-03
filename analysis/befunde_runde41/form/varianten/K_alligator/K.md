@@ -354,3 +354,12 @@ Parallel laufende Varianten brauchen getrennte Arbeitsordner (k_maulwinkel: `_la
 verdorben (K2 abgebrochen, K1/K3 wiederholt, Endstand aus dem Wiederholungslauf).
 
 Nicht angefasst: re15_port/ (nur gelesen), Spiel-Asset, stufe3/ (nur gelesen), STUFE3_abnahme_1.md, nutzer_teile/lage.json, pri/, synchro/, Version_80%/.
+
+## 10. Variante K4 Krokodil (Nachbesserung 2 der Stufe 3, E22)
+
+Nutzer (E22): K3 "zu rundlich ... hippomaessig", Oberkiefer-Markierung "krokodilmaessig". K4 ersetzt K3 im Spiel-Asset; Herleitung, Fit-Tabelle und
+Zielkonflikt im Dossier `stufe3` (STUFE3.md, Abschnitt Nachbesserung 2, NB2-K1).
+- Geometrie: Kopfart 'kroko' in `k_form.py` (`kopf_kroko`, `kiefer_kroko`, `ring_kroko`, `wulst`, `VORGABE_KROKO`); K1-K3 bauen unveraendert.
+- Fit: `k_kopf_fit2.py` (Kroko-Grenzen, Gelenkkoerper am Kopf im Fit, Startlagen aus `k_kopf_suche.py`); Referenzlauf ohne Grenzen `_lauf/Kfrei`.
+- Bau: `bash k_variante.sh <Fit-Lauf> ../K4_kroko` (wie K1-K3); Seite 3 jetzt aus `haut_stoff` (stufe3/gen/s3_n2_textur.py) statt der gespiegelten
+  Brust (`k_bau.HAUT_STOFF_N2`); ganze Kette bis zum Spiel-Asset: `stufe3/gen/s3_n2_kette.sh <Fit-Lauf>`.

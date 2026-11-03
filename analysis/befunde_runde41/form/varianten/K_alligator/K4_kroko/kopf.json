@@ -1,0 +1,148 @@
+{
+ "name": "K9",
+ "form": {
+  "art": "kroko",
+  "L": 1620.0,
+  "Wk": 382.1,
+  "taper": 0.5,
+  "x_hinten": -250.0,
+  "x_auge": 520.0,
+  "yt_k": -230.0,
+  "yt_s": -157.6,
+  "yt_t": -59.8,
+  "y_gaumen": 270.0,
+  "nase": 90.0,
+  "augen": 1,
+  "auge_hoch": 140.0,
+  "zaehne": 11,
+  "zahn_lang": 150.0,
+  "kiefer_kuerzer": -30.0,
+  "kiefer_boden": 399.6,
+  "kiefer_boden_t": 120.0,
+  "kiefer_breit": 0.9,
+  "kiefer_tief": 110.0,
+  "uk_zaehne": 10,
+  "bulbe": 1.2,
+  "zahn_oben": 0.5,
+  "schaedel": 200.0
+ },
+ "bild2": {
+  "winkel": {
+   "21": [
+    -1381,
+    826,
+    2007
+   ],
+   "22": [
+    -3,
+    -167,
+    -508
+   ],
+   "23": [
+    0,
+    -40,
+    236
+   ]
+  },
+  "mass": {
+   "umriss": 0.9427,
+   "iou_ok": 0.5725,
+   "iou_ok_ohne_rumpf": 0.6346,
+   "iou_uk": 0.8254,
+   "kopf_px": 4922,
+   "kiefer_px": 3231,
+   "kopf_sichtbar_px": 13910
+  }
+ },
+ "herkunft": "K8 Start 1 (Bild-2-Winkel), kiefer_kuerzer -59,3 -> -30 (Unterkiefer vorn praktisch buendig; IoU UK 0,813 -> 0,807 bei gerundeten Winkeln), Bild 1 mit k_bild1.py",
+ "grenzen": {
+  "L": [
+   1650,
+   1500,
+   2400
+  ],
+  "Wk": [
+   350,
+   300,
+   460
+  ],
+  "taper": [
+   0.46,
+   0.3,
+   0.5
+  ],
+  "yt_s": [
+   -130,
+   -160,
+   -80
+  ],
+  "yt_k": [
+   -230.0,
+   -330.0,
+   -180.0
+  ],
+  "yt_t": [
+   -30,
+   -60,
+   20
+  ],
+  "nase": [
+   70,
+   30,
+   90
+  ],
+  "bulbe": [
+   1.18,
+   1.0,
+   1.25
+  ],
+  "kiefer_breit": [
+   0.99,
+   0.8,
+   1.05
+  ],
+  "zahn_oben": [
+   0.55,
+   0.5,
+   1.0
+  ],
+  "schaedel": [
+   80,
+   40,
+   200
+  ],
+  "kiefer_kuerzer": [
+   -30,
+   -60,
+   120
+  ],
+  "kiefer_boden": [
+   380,
+   180,
+   400
+  ]
+ },
+ "bild1": {
+  "winkel": {
+   "21": [
+    42,
+    314,
+    432
+   ],
+   "22": [
+    112,
+    -78,
+    167
+   ],
+   "23": [
+    0,
+    0,
+    0
+   ]
+  },
+  "mass": {
+   "umriss": 0.9471,
+   "kopf_sichtbar_px": 394
+  }
+ }
+}

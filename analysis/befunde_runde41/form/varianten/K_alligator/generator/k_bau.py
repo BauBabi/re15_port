@@ -22,6 +22,18 @@ import k_kern as KK
 import k_form as KF
 import k_naht as KN
 
+# Nachbesserung 2 (E22): Seite 3 (Kopf/Kiefer) aus haut_stoff (stufe3/gen/s3_n2_textur.py: Rumpfhaut von J ohne Hell-/Wundflecken, auf dem
+# Torus gequiltet = nahtlos, nicht gespiegelt). Der alte stoff() kachelte die Brust GESPIEGELT samt weiss-rosa Wundflecken (Kopf/Kiefer
+# Hellfleck 2,6/5,9 %, nachbesserung2_textur.md Abschnitt 1). K1-K3 bleiben mit stoff() nachbaubar (HAUT_STOFF_N2 = False).
+sys.path.insert(0, os.path.normpath(os.path.join(KK.FORM, 'stufe3', 'gen')))
+HAUT_STOFF_N2 = True
+# Nachbesserung 2: Fleischflaechen (Kiefer innen/aussen, Gaumen) sind 2-3-mal heller als die Haut; dieselbe Hautstruktur multipliziert
+# darauf den Texelkontrast entsprechend (gemessen am K4-Asset vor der Daempfung: Kiefer Innenkontrast 12,5-17,5 gegen J 2,1, Kanten-
+# sprung 35,0 gegen 9,2; nachbesserung2_textur.md). Fuer die Kopfart 'kroko' traegt Fleisch nur FLEISCH_STRUKTUR der Struktur (Mittelfarbe
+# gleich, Kiefer-Eichung unberuehrt), und die gemalten hellen Zahnflecken entfallen (K4 hat echte Zaehne, 11/10 je Seite).
+FLEISCH_STRUKTUR = 1.0      # K1-K3: volle Struktur (gesetzt in bauen() je Kopfart)
+FLECKEN = True
+
 FE = KK.FE
 YK = np.array([.299, .587, .114])
 KRALLEN = {14: 'klaue_l1', 15: 'klaue_l2', 28: 'klaue_l3', 30: 'klaue_l4', 19: 'klaue_r1', 20: 'klaue_r2', 29: 'klaue_r3', 31: 'klaue_r4'}
@@ -134,6 +146,14 @@ def stoff(tx, bau, ziel_wh):
     return rep / np.maximum(rep.reshape(-1, 3).mean(0), 1.0), s.reshape(-1, 3).mean(0)
 
 
+def haut(tx, bau, ziel_wh):
+    """Struktur fuer Seite 3: haut_stoff (Nachbesserung 2) oder der alte gespiegelte Brust-Stoff (K1-K3)."""
+    if HAUT_STOFF_N2:
+        import s3_n2_textur as T2
+        return T2.haut_stoff(tx, bau, ziel_wh)
+    return stoff(tx, bau, ziel_wh)
+
+
 def farben_standard():
     """Erster Durchgang (ohne Lichtmessung): Verhaeltnis der Rueckrechnung zum Rumpf in Bild 2 (K.md Abschnitt 4), Basis = Mittel der Brust-Textur."""
     # haut: Oberkiefer (28,9,8) gegen Rumpf (27,12,12), Y 24 gegen 25 -> gleiche Haut wie der Rumpf, Abweichung unter dem Filterrauschen (farbe.md MAE 15-21)
@@ -146,28 +166,29 @@ def farben_standard():
 def malen(tx, bau, farben, hand_mittel):
     """Seite 3 (128 x 256) als RGB. farben: Faktoren je Material relativ zur Brust-Textur von J (Haut, Fleisch, Hell) bzw. zur Hand (Kralle)."""
     S = np.zeros((256, 128, 3), np.float32)
-    st, basis = stoff(tx, bau, (128, 256))
+    st, basis = haut(tx, bau, (128, 256))
 
-    def feld(rect, f):
+    def feld(rect, f, g=1.0):
         x, y, w, h = rect
         x -= KF.SEITE_X
-        S[y:y + h, x:x + w] = st[y:y + h, x:x + w] * basis * np.array(f, np.float32)
+        S[y:y + h, x:x + w] = (1.0 + g * (st[y:y + h, x:x + w] - 1.0)) * basis * np.array(f, np.float32)
+    gf = FLEISCH_STRUKTUR
     kx, ky, kw, kh = KF.ATLAS['kopf']
     feld(KF.ATLAS['kopf'], farben['haut'])
     # Gaumen: Ecken 0-1 und 9-10 (u < 0,1 und > 0,9) = Maulinneres oben
     gx = kx - KF.SEITE_X
     for u0, u1 in ((0.0, 0.09), (0.91, 1.0)):
         a, b = gx + int(u0 * kw), gx + int(math.ceil(u1 * kw))
-        S[ky:ky + kh, a:b] = st[ky:ky + kh, a:b] * basis * np.array(farben['fleisch'], np.float32)
+        S[ky:ky + kh, a:b] = (1.0 + gf * (st[ky:ky + kh, a:b] - 1.0)) * basis * np.array(farben['fleisch'], np.float32)
     jx, jy, jw, jh = KF.ATLAS['kiefer']
     gx = jx - KF.SEITE_X
     # Kiefer aussen (Ecken 0-2, 8-10) = Unterseite, Ecken 3-7 (u 0,3-0,7) = Rand und Maulboden (Fleisch). Screenshot 2 zeigt das ganze Band hell
     # (Unterkiefer gefiltert Y 94 gegen Rumpf 25), darum ist auch die Unterseite hell (wie die blasse Unterseite eines Krokodilkiefers).
-    feld(KF.ATLAS['kiefer'], farben['unterseite'])
+    feld(KF.ATLAS['kiefer'], farben['unterseite'], gf)
     a, b = gx + int(0.3 * jw), gx + int(math.ceil(0.7 * jw))
-    S[jy:jy + jh, a:b] = st[jy:jy + jh, a:b] * basis * np.array(farben['fleisch'], np.float32)
-    # helle Flecken am Rand: 6 Flecken im Band, Abstand 16 px = rund 190 Einheiten (K.md Abschnitt 1)
-    for u in (0.35, 0.65):
+    S[jy:jy + jh, a:b] = (1.0 + gf * (st[jy:jy + jh, a:b] - 1.0)) * basis * np.array(farben['fleisch'], np.float32)
+    # helle Flecken am Rand: 6 Flecken im Band, Abstand 16 px = rund 190 Einheiten (K.md Abschnitt 1); nicht bei 'kroko' (echte Zaehne)
+    for u in ((0.35, 0.65) if FLECKEN else ()):
         c = gx + int(u * jw)
         for r in range(jy + 3, jy + jh - 3, 9):
             S[r:r + 4, c - 2:c + 3] = basis * np.array(farben['hell'], np.float32) * st[r:r + 4, c - 2:c + 3].mean((0, 1))
@@ -246,7 +267,10 @@ def bauen(kopf_json, aus, name, naht=None, farben=None, pruefen=True):
     j_tim = open(os.path.join(KK.J_DIR, 'FORM.TIM'), 'rb').read()
     p = dict(KF.VORGABE)
     p.update(kopf['form'])
-    p['zaehne'] = ZAEHNE
+    if p.get('art') != 'kroko':
+        p['zaehne'] = ZAEHNE      # K1-K3; die Kopfart 'kroko' traegt ihre Zahnzahl selbst (k_form.VORGABE_KROKO)
+    global FLEISCH_STRUKTUR, FLECKEN
+    FLEISCH_STRUKTUR, FLECKEN = (0.4, False) if p.get('art') == 'kroko' else (1.0, True)
     neu_netz(form, 22, KF.kopf(p))
     neu_netz(form, 23, KF.kiefer(p))
     kb = krallen(form)
@@ -262,7 +286,7 @@ def bauen(kopf_json, aus, name, naht=None, farben=None, pruefen=True):
     tx = FB.Textur(j_tim)
     bau = json.load(open(os.path.join(KK.J_DIR, 'bau.json')))
     hand = np.mean([_rgb_teil(tx, a['rechteck'], a['zeile']).reshape(-1, 3).mean(0) for a in bau['atlas'] if a['name'] in ('hand_r', 'hand_l')], 0)
-    _st, brust = stoff(tx, bau, (8, 8))
+    _st, brust = haut(tx, bau, (8, 8))
     fb = farben or farben_standard()
     S = malen(tx, bau, fb, hand)
     tim, nf = tim_k(j_tim, S)
@@ -307,7 +331,7 @@ def alles(kopf, aus, name, naht=None, pruefen=True):
     L = lichtmessung(aus)
     import form_buehne as FB
     tx = FB.Textur(open(os.path.join(KK.J_DIR, 'FORM.TIM'), 'rb').read())
-    _st, brust = stoff(tx, json.load(open(os.path.join(KK.J_DIR, 'bau.json'))), (8, 8))
+    _st, brust = haut(tx, json.load(open(os.path.join(KK.J_DIR, 'bau.json'))), (8, 8))
     fb = farben_standard()
     if L['ziel']['fleisch'] is not None:
         fb['fleisch'] = [round(float(z / max(b, 1.0)), 3) for z, b in zip(L['ziel']['fleisch'], brust)]
