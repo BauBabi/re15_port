@@ -1,0 +1,56 @@
+== Raum 5090
+s01 G5 Ph 0 (Vorlauf, vor Bild 0) - nicht zugeordnet
+s02 G5 Ph 0 (Vorlauf, vor Bild 0) - nicht zugeordnet
+s03 -> Bild 31 (Kandidaten [31]) G5 ph 1 t 31 x Port -9000 RE2 -9000 | ALLE GLEICH
+s04 -> Bild 80 (Kandidaten [80]) G5 ph 1 t 80 x Port -9000 RE2 -9000 | ALLE GLEICH
+s05 -> Bild 129 (Kandidaten [129]) G5 ph 2 bild 39 x Port -9525 RE2 -9525 | ALLE GLEICH
+s06 -> Bild 165 (Kandidaten [165]) G5 ph 2 bild 75 x Port -5126 RE2 -5126 | ALLE GLEICH
+s07 -> Bild 215 (Kandidaten [215]) G5 ph 2 bild 125 x Port -4899 RE2 -4899 | ALLE GLEICH
+s08 -> Bild 264 (Kandidaten [264]) G5 ph 2 bild 174 x Port -2825 RE2 -2825 | ALLE GLEICH
+s09 -> Bild 313 (Kandidaten [313]) G5 ph 4 t 43 x Port -2786 RE2 -2786 | ALLE GLEICH
+s10 -> Bild 363 (Kandidaten [363]) G5 ph 5 t 3 x Port -2786 RE2 -2786 | ALLE GLEICH
+s11 -> Bild 412 (Kandidaten [412]) G5 ph 5 t 52 x Port -2786 RE2 -2786 | ALLE GLEICH
+s12 -> Bild 441 (Kandidaten [441]) G5 ph 5 t 81 x Port -2786 RE2 -2786 | ALLE GLEICH
+s13 -> Bild 479 (Kandidaten [479]) G5 ph 6 bild 9 x Port -2779 RE2 -2779 | ALLE GLEICH
+s14 -> Bild 529 (Kandidaten [529]) G5 ph 6 bild 59 x Port -2071 RE2 -2071 | ALLE GLEICH
+s15 -> Bild 578 (Kandidaten [578]) G5 ph 6 bild 108 x Port -789 RE2 -789 | ALLE GLEICH
+s16 -> Bild 628 (Kandidaten [628]) G5 ph 6 bild 158 x Port 1333 RE2 1333 | ALLE GLEICH
+s17 -> Bild 677 (Kandidaten [677]) G5 ph 8 bild 27 x Port 1160 RE2 1160 | ALLE GLEICH
+s18 -> Bild 727 (Kandidaten [727]) G5 ph 8 bild 77 x Port 1160 RE2 1160 | ALLE GLEICH
+s19 -> Bild 776 (Kandidaten [776]) G5 ph 8 bild 126 x Port 1160 RE2 1160 | ALLE GLEICH
+s20 -> Bild 812 (Kandidaten [812]) G5 ph 10 t 12 x Port 1160 RE2 1160 | ALLE GLEICH
+s21 -> Bild 854 (Kandidaten [854]) G5 ph 10 t 54 x Port 1160 RE2 1160 | A0 Port (10, 2, 2176, 0, 768, 0, 32) RE2 (10, 2, 2176, 257, 768, 0, 32) (nur t); A1 Port (10, 1, 896, 0, 1536, 0, 32) RE2 (10, 1, 896, 257, 1536, 0, 32) (nur t); A2 Port (10, 1, 1216, 0, -1536, 0, 32) RE2 (10, 1, 1216, 257, -1536, 0, 32) (nur t); A3 Port (10, 1, 256, 0, -512, 0, 32) RE2 (10, 1, 256, 257, -512, 0, 32) (nur t)
+s22 -> Bild 904 (Kandidaten [904]) G5 ph 10 t 104 x Port 1160 RE2 1160 | A0 Port (10, 3, 4096, 23, 768, 0, 32) RE2 (10, 3, 4096, 12, 768, 0, 32) (nur t); A1 Port (10, 2, 4096, 0, 1536, 0, 32) RE2 (10, 2, 4096, 257, 1536, 0, 32) (nur t); A2 =; A3 Port (10, 2, 3456, 0, -512, 0, 32) RE2 (10, 2, 3456, 257, -512, 0, 32) (nur t)
+s23 -> Bild 953 (Kandidaten [953]) G5 ph 12 bild 43 x Port 1160 RE2 1160 | A0 Port (10, 5, 4096, 0, 768, 0, 32) RE2 (10, 5, 4096, 6, 768, 0, 32) (nur t); A1 Port (10, 3, 4096, 56, 1536, 0, 32) RE2 (10, 3, 4096, 64, 1536, 0, 32) (nur t); A2 Port (10, 5, 4096, 0, -1536, 0, 32) RE2 (10, 5, 4096, 22, -1536, 0, 32) (nur t); A3 Port (10, 3, 4096, 7, -512, 0, 32) RE2 (10, 3, 4096, 66, -512, 0, 32) (nur t)
+s24 -> Bild 1002 (Kandidaten [1002]) G5 ph 12 bild 92 x Port 1160 RE2 1160 | A0 Port (10, 5, 4096, 0, 768, 0, 32) RE2 (10, 5, 4096, 6, 768, 0, 32) (nur t); A1 Port (10, 3, 4096, 7, 1536, 0, 32) RE2 (10, 3, 4096, 15, 1536, 0, 32) (nur t); A2 Port (10, 5, 4096, 0, -1536, 0, 32) RE2 (10, 5, 4096, 22, -1536, 0, 32) (nur t); A3 Port (10, 3, 4096, 30, -512, 0, 32) RE2 (10, 3, 4096, 17, -512, 0, 32) (nur t)
+s25 -> Bild 1052 (Kandidaten [1052]) G5 ph 12 bild 142 x Port 1160 RE2 1160 | A0 Port (10, 3, 4096, 57, 768, 0, 32) RE2 (10, 3, 4096, 69, 768, 0, 32) (nur t); A1 Port (10, 3, 4096, 21, 1536, 0, 32) RE2 (10, 3, 4096, 35, 1536, 0, 32) (nur t); A2 Port (10, 3, 4096, 66, -1536, 0, 32) RE2 (10, 3, 4096, 65, -1536, 0, 32) (nur t); A3 Port (10, 3, 4096, 54, -512, 0, 32) RE2 (10, 3, 4096, 37, -512, 0, 32) (nur t)
+s26 -> Bild 1101 (Kandidaten [1101]) G5 ph 14 t 19 x Port 1160 RE2 1160 | A0 Port (6, 1, 1472, 0, 768, 0, 32) RE2 (6, 1, 1472, 61, 768, 0, 32) (nur t); A1 Port (6, 1, 1472, 0, 1536, 0, 32) RE2 (6, 1, 1472, 27, 1536, 0, 32) (nur t); A2 Port (6, 1, 1472, 0, -1536, 0, 32) RE2 (6, 1, 1472, 57, -1536, 0, 32) (nur t); A3 Port (6, 1, 1472, 0, -512, 0, 32) RE2 (6, 1, 1472, 29, -512, 0, 32) (nur t)
+Raum 5090: Arme gleich 73 / 96, Felder gleich 649 / 672
+== Raum 5091
+s01 G5 Ph 0 (Vorlauf, vor Bild 0) - nicht zugeordnet
+s02 G5 Ph 0 (Vorlauf, vor Bild 0) - nicht zugeordnet
+s03 -> Bild 31 (Kandidaten [31]) G5 ph 1 t 31 x Port -9000 RE2 -9000 | ALLE GLEICH
+s04 -> Bild 80 (Kandidaten [80]) G5 ph 1 t 80 x Port -9000 RE2 -9000 | ALLE GLEICH
+s05 -> Bild 129 (Kandidaten [129]) G5 ph 2 bild 39 x Port -9525 RE2 -9525 | ALLE GLEICH
+s06 -> Bild 165 (Kandidaten [165]) G5 ph 2 bild 75 x Port -5126 RE2 -5126 | ALLE GLEICH
+s07 -> Bild 215 (Kandidaten [215]) G5 ph 2 bild 125 x Port -4899 RE2 -4899 | ALLE GLEICH
+s08 -> Bild 264 (Kandidaten [264]) G5 ph 2 bild 174 x Port -2825 RE2 -2825 | ALLE GLEICH
+s09 -> Bild 313 (Kandidaten [313]) G5 ph 4 t 43 x Port -2786 RE2 -2786 | ALLE GLEICH
+s10 -> Bild 363 (Kandidaten [363]) G5 ph 5 t 3 x Port -2786 RE2 -2786 | ALLE GLEICH
+s11 -> Bild 412 (Kandidaten [412]) G5 ph 5 t 52 x Port -2786 RE2 -2786 | ALLE GLEICH
+s12 -> Bild 441 (Kandidaten [441]) G5 ph 5 t 81 x Port -2786 RE2 -2786 | ALLE GLEICH
+s13 -> Bild 479 (Kandidaten [479]) G5 ph 6 bild 9 x Port -2779 RE2 -2779 | ALLE GLEICH
+s14 -> Bild 529 (Kandidaten [529]) G5 ph 6 bild 59 x Port -2071 RE2 -2071 | ALLE GLEICH
+s15 -> Bild 578 (Kandidaten [578]) G5 ph 6 bild 108 x Port -789 RE2 -789 | ALLE GLEICH
+s16 -> Bild 628 (Kandidaten [628]) G5 ph 6 bild 158 x Port 1333 RE2 1333 | ALLE GLEICH
+s17 -> Bild 677 (Kandidaten [677]) G5 ph 8 bild 27 x Port 1160 RE2 1160 | ALLE GLEICH
+s18 -> Bild 727 (Kandidaten [727]) G5 ph 8 bild 77 x Port 1160 RE2 1160 | ALLE GLEICH
+s19 -> Bild 776 (Kandidaten [776]) G5 ph 8 bild 126 x Port 1160 RE2 1160 | ALLE GLEICH
+s20 -> Bild 812 (Kandidaten [812]) G5 ph 10 t 12 x Port 1160 RE2 1160 | ALLE GLEICH
+s21 -> Bild 854 (Kandidaten [854]) G5 ph 10 t 54 x Port 1160 RE2 1160 | A0 Port (10, 2, 2176, 0, 768, 0, 32) RE2 (10, 2, 2176, 257, 768, 0, 32) (nur t); A1 Port (10, 1, 896, 0, 1536, 0, 32) RE2 (10, 1, 896, 257, 1536, 0, 32) (nur t); A2 Port (10, 1, 1216, 0, -1536, 0, 32) RE2 (10, 1, 1216, 257, -1536, 0, 32) (nur t); A3 Port (10, 1, 256, 0, -512, 0, 32) RE2 (10, 1, 256, 257, -512, 0, 32) (nur t)
+s22 -> Bild 904 (Kandidaten [904]) G5 ph 10 t 104 x Port 1160 RE2 1160 | A0 Port (10, 3, 4096, 18, 768, 0, 32) RE2 (10, 3, 4096, 12, 768, 0, 32) (nur t); A1 Port (10, 2, 4096, 0, 1536, 0, 32) RE2 (10, 2, 4096, 257, 1536, 0, 32) (nur t); A2 Port (10, 3, 4096, 39, -1536, 0, 32) RE2 (10, 3, 4096, 28, -1536, 0, 32) (nur t); A3 Port (10, 2, 3456, 0, -512, 0, 32) RE2 (10, 2, 3456, 257, -512, 0, 32) (nur t)
+s23 -> Bild 953 (Kandidaten [953]) G5 ph 12 bild 43 x Port 1160 RE2 1160 | A0 Port (10, 5, 4096, 0, 768, 0, 32) RE2 (10, 5, 4096, 6, 768, 0, 32) (nur t); A1 Port (10, 3, 4096, 54, 1536, 0, 32) RE2 (10, 3, 4096, 64, 1536, 0, 32) (nur t); A2 Port (10, 5, 4096, 0, -1536, 0, 32) RE2 (10, 5, 4096, 22, -1536, 0, 32) (nur t); A3 Port (10, 3, 4096, 67, -512, 0, 32) RE2 (10, 3, 4096, 66, -512, 0, 32) (nur t)
+s24 -> Bild 1002 (Kandidaten [1002]) G5 ph 12 bild 92 x Port 1160 RE2 1160 | A0 Port (10, 5, 4096, 0, 768, 0, 32) RE2 (10, 5, 4096, 6, 768, 0, 32) (nur t); A1 Port (10, 3, 4096, 5, 1536, 0, 32) RE2 (10, 3, 4096, 15, 1536, 0, 32) (nur t); A2 Port (10, 5, 4096, 0, -1536, 0, 32) RE2 (10, 5, 4096, 22, -1536, 0, 32) (nur t); A3 Port (10, 3, 4096, 18, -512, 0, 32) RE2 (10, 3, 4096, 17, -512, 0, 32) (nur t)
+s25 -> Bild 1052 (Kandidaten [1052]) G5 ph 12 bild 142 x Port 1160 RE2 1160 | A0 Port (10, 3, 4096, 58, 768, 0, 32) RE2 (10, 3, 4096, 69, 768, 0, 32) (nur t); A1 Port (10, 3, 4096, 25, 1536, 0, 32) RE2 (10, 3, 4096, 35, 1536, 0, 32) (nur t); A2 Port (10, 3, 4096, 2, -1536, 0, 32) RE2 (10, 3, 4096, 65, -1536, 0, 32) (nur t); A3 Port (10, 3, 4096, 40, -512, 0, 32) RE2 (10, 3, 4096, 37, -512, 0, 32) (nur t)
+s26 -> Bild 1101 (Kandidaten [1101]) G5 ph 14 t 19 x Port 1160 RE2 1160 | A0 Port (6, 1, 1472, 0, 768, 0, 32) RE2 (6, 1, 1472, 61, 768, 0, 32) (nur t); A1 Port (6, 1, 1472, 0, 1536, 0, 32) RE2 (6, 1, 1472, 27, 1536, 0, 32) (nur t); A2 Port (6, 1, 1472, 0, -1536, 0, 32) RE2 (6, 1, 1472, 57, -1536, 0, 32) (nur t); A3 Port (6, 1, 1472, 0, -512, 0, 32) RE2 (6, 1, 1472, 29, -512, 0, 32) (nur t)
+Raum 5091: Arme gleich 72 / 96, Felder gleich 648 / 672

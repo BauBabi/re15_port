@@ -1,0 +1,32 @@
+RE2 (Videobild -> Szenenbild nach re2_t):
+  RE2 n= 14.5 Flaeche   355 rechtester Armpixel x 236
+  RE2 n= 15.0 Flaeche   134 rechtester Armpixel x 236
+  RE2 n= 15.5 Flaeche   134 rechtester Armpixel x 236
+  RE2 n= 16.0 Flaeche     0 rechtester Armpixel x -1
+  RE2 n= 16.5 Flaeche     0 rechtester Armpixel x -1
+  RE2 n= 17.0 Flaeche   168 rechtester Armpixel x 181
+  RE2 n= 17.5 Flaeche   168 rechtester Armpixel x 181
+  RE2 n= 18.0 Flaeche   390 rechtester Armpixel x 202
+  RE2 n= 18.5 Flaeche   390 rechtester Armpixel x 202
+  RE2 n= 19.0 Flaeche   766 rechtester Armpixel x 202
+  RE2 n= 19.5 Flaeche   766 rechtester Armpixel x 202
+  RE2 n= 20.0 Flaeche  2149 rechtester Armpixel x 202
+  RE2 n= 20.5 Flaeche  2149 rechtester Armpixel x 202
+  RE2 n= 21.0 Flaeche  2158 rechtester Armpixel x 265
+  RE2 n= 21.5 Flaeche  2158 rechtester Armpixel x 265
+  RE2 n= 22.0 Flaeche   941 rechtester Armpixel x 299
+  RE2 n= 22.5 Flaeche   941 rechtester Armpixel x 299
+  RE2 n= 23.0 Flaeche  1004 rechtester Armpixel x 299
+  RE2 n= 23.5 Flaeche  1004 rechtester Armpixel x 299
+  RE2 n= 24.0 Flaeche  1716 rechtester Armpixel x 299
+  RE2 n= 24.5 Flaeche  1716 rechtester Armpixel x 299
+  RE2 n= 25.0 Flaeche  2514 rechtester Armpixel x 299
+  RE2 n= 25.5 Flaeche  2514 rechtester Armpixel x 299
+  RE2 n= 26.0 Flaeche  3246 rechtester Armpixel x 299
+  RE2 n= 26.5 Flaeche  3246 rechtester Armpixel x 299
+  RE2 n= 27.0 Flaeche  3473 rechtester Armpixel x 299
+vorher 10:0/-1 11:0/-1 12:0/-1 13:0/-1 14:0/-1 15:0/-1 16:0/-1 17:0/-1 18:0/-1 19:85/106 20:1051/150 21:2109/198 22:2286/243 23:2162/294 24:941/299 25:726/299 26:549/299 27:1701/299
+Leon NB4 10:0/-1 11:0/-1 12:0/-1 13:0/-1 14:0/-1 15:0/-1 16:0/-1 17:0/-1 18:0/-1 19:0/-1 20:0/-1 21:498/124 22:1807/190 23:2103/266 24:769/299 25:549/299 26:1701/299 27:2889/299
+Elza NB4 10:0/-1 11:0/-1 12:0/-1 13:0/-1 14:0/-1 15:0/-1 16:0/-1 17:0/-1 18:0/-1 19:0/-1 20:0/-1 21:498/124 22:1807/190 23:2103/266 24:769/299 25:549/299 26:1701/299 27:2889/299
+vorher: gleiche Armflaeche wie RE2 bei RE2-n - Port-n = ['-0.4', '-1.0', '+2.9', '+1.8', '-4.4', '-6.1', '-7.3', '-7.2'] (Mittel -2.7)
+Leon NB4: gleiche Armflaeche wie RE2 bei RE2-n - Port-n = ['-2.4', '-2.1', '-3.0', '-4.5', '-6.3', '-6.2', '-1.3'] (Mittel -3.7)
