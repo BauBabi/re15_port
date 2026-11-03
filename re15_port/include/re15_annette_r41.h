@@ -90,9 +90,11 @@ int  re15_annette_r41_besitzt(int slot);                                        
 const char *re15_annette_r41_emd_datei(uint8_t type);                                               /* platform/pc/main.c */
 int  re15_annette_r41_volle_drehung(const void *actor);                                             /* platform/pc/main.c Zeichner */
 /* Nachbesserung 4 (Abnahme 2 N3): 1 = dieser Aktor ist Annettes Leiche (hp -1) und kein Schuss-Kandidat - wie die liegende
- * RE2-Annette (Claire RAM lauf3 e23..e30 +0x156 = -1), die RE2s Kandidatenfilter FUN_800470C0 verwirft (`lh v0,342(s0)` /
- * `bltz v0,0x8004740c` @0x80047148-50). */
-int  re15_annette_r41_kein_ziel(const void *actor);                                                 /* re15_damage.c Waffen-Resolver */
+ * RE2-Annette (Claire RAM lauf3 e23..e30 +0x156 = -1), die RE2s Kandidatenfilter verwerfen: Pistole FUN_800410CC (`lh v0,342(s2)`
+ * @0x80041280 / `bltz v0,0x80041300` @0x80041288), Messer/Bolzen FUN_800470C0 (`lh v0,342(s0)` / `bltz v0,0x8004740c`
+ * @0x80047148-50). Seit NB5 (Nutzerentscheid 2026-11-03, RE2-Retail-Regel fuer alle Begleiter 0x40..0x4D mit hp < 0 im
+ * Resolver) ist das ein Teilfall der allgemeinen Regel; der Haken bleibt als Zustandsabfrage der Szene. */
+int  re15_annette_r41_kein_ziel(const void *actor);                                                /* re15_damage.c Waffen-Resolver */
 void re15_annette_r41_modell_hook(void (*fn)(uint8_t type));                                        /* platform/pc/main.c */
 void re15_annette_r41_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank)); /* platform/pc/main.c */
 

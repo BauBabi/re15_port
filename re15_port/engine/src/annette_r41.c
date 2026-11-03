@@ -126,7 +126,10 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
  * Der Clip liegt als Clip 24 in Paar 1 von ANNETTE_4D*.EMD (tools/r41_annette/annette_modell.py, RBJ ROOM6141 @0x2E70
  * Record 0 Clip 24 = 40 Bilder). RE2 laesst ihn als Schleife laufen (Bildzaehler e23..e30 6/26/6/22): dort atmet die
  * Sterbende noch und spricht spaeter mit Claire (sub03). Im Port ist sie tot -> Bild 0 gehalten (das Startbild, das
- * Plc_motion setzt: RE2 0x80052ef0 `a060014d sb zero,0x14d`). PORT-WAHL: Halten statt Schleife. */
+ * Plc_motion setzt: RE2-Handler 0x80056b8c = Opcode-Tabelle 0x800a74c8[0x3F] @0x800a75c4, darin `a060014d sb zero,333(v1)`
+ * @0x80056ba0, v1 = Arbeits-Entity `lw v1,340(a0)` @0x80056b90; Clip `sb a1,332(v1)` @0x80056bb8; Leon PSX.EXE und SLUS_007.48
+ * gleich - Nachbesserung 5, Abnahme 3 A1: vorher stand hier 0x80052ef0, dort steht `subu v0,v0,v1`).
+ * PORT-WAHL: Halten statt Schleife. */
 #define AN_FA_LIEGEN         24
 #define AN_LIEGEN_Y         900     /* @0x01162 `84 03` */
 #define AN_RE2_W_X        (-6600)   /* William vor dem Vorstoss (RAM e07, wie AN_LIEGEN_WEG) */
@@ -721,8 +724,13 @@ int re15_annette_r41_besitzt(int slot)
 /* Nachbesserung 4 (Abnahme 2 N3, state.log F2751: Annette hp -1 -> -6, st 0 -> 3, ss1 3 = Waffe 3, ss2 1 = EBEN): der
  * Waffen-Resolver re15_player_weapon_fire waehlte die Leiche als naechstes Ziel im Schusskeil (Band LEVEL wie jedes NPC,
  * RE1.5-RAM mzd_stage1_npc.sav: NPC 0x40/0x42/0x4B Wort 0 = 0x40000001) vor der G5 dahinter. RE2 verwirft Kandidaten mit
- * hp < 0 (`lh v0,0x156(s0)` @0x80047148, `bltz v0,0x8004740c` @0x80047150, info/re2leon/PSX.EXE), und die liegende
- * RE2-Annette traegt hp -1 (RAM lauf3 e24: +0x156 = -1). Die Leiche ist RE2-Inhalt (RE1.5 hat keine): RE2-Regel. */
+ * hp < 0, fuer die Pistole in FUN_800410CC (`lh v0,342(s2)` @0x80041280, `bltz v0,0x80041300` @0x80041288), fuer Messer und
+ * Bolzen in FUN_800470C0 (`lh v0,0x156(s0)` @0x80047148, `bltz v0,0x8004740c` @0x80047150; info/re2leon/PSX.EXE und SLUS_007.48
+ * gleich; NB5 nach Abnahme 3 H1), und die liegende
+ * RE2-Annette traegt hp -1 (RAM lauf3 e24: +0x156 = -1). Die Leiche ist RE2-Inhalt (RE1.5 hat keine): RE2-Regel.
+ * NB5 (Nutzerentscheid 2026-11-03 "Mache die RE 2 Variante, das der Schuss durch begleiter durch geht."): dieselbe RE2-Regel
+ * gilt jetzt im Resolver fuer jeden Begleiter 0x40..0x4D mit hp < 0, auch fuer die lebende Annette; dieser Haken ist damit
+ * ein Teilfall und bleibt als Zustandsabfrage (Leiche gelegt) fuer die Szene und test_r41_annette. */
 int re15_annette_r41_kein_ziel(const void *actor)
 {
     if (s_an.frau < 0 || actor != (const void *)&g_actors[s_an.frau]) return 0;

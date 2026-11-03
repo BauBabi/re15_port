@@ -2050,7 +2050,30 @@ retry_after_latch:
          * automatically (the ivy is a dormant weapon-immune prop, audit wf_efd92a2c ivy #77).
          * So gate on the hitbox, which makes every ported enemy with a box shootable. */
         if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
-        /* Runde 41 Spur AN, Nachbesserung 4 (Abnahme 2 N3): Annettes Leiche (RE2-Inhalt, hp -1) ist kein Kandidat - RE2-Gate
+        /* ⛔ RE2-Retail-Regel statt RE1.5 @0x80012178-84, Nutzerentscheid 2026-11-03 (Runde 41 Spur AN, Nachbesserung 5):
+         * "Mache die RE 2 Variante, das der Schuss durch begleiter durch geht."
+         * Ein lebender Begleiter ist KEIN Kandidat; der Schuss geht durch ihn hindurch auf den Gegner dahinter, der Begleiter
+         * nimmt keinen Schaden und geht nicht in Zustand 3.
+         * RE2 (info/re2leon/PSX.EXE und SLUS_007.48 gleich, selbst disassembliert) filtert ueber HP, nicht ueber den Typ:
+         *   Schusswaffen FUN_800410CC: Liste ab 0x800cfe1c (`lui fp,0x800d` / `addiu fp,fp,-484` @0x80041208-0c),
+         *     `lw s2,0(fp)` @0x80041254; Tore aktiv `andi v0,v0,0x1` @0x80041264, +0x1D3 `lbu v0,467(s2)` @0x80041270,
+         *     HP `lh v0,342(s2)` @0x80041280 / `bltz v0,0x80041300` @0x80041288 (0x80041300 `j 0x800417d0` /
+         *     `addiu fp,fp,4` = naechster Kandidat), +0x10E & 0xC000 @0x80041290-9c - KEINE Typabfrage.
+         *   Messer/Bolzen/Explosion FUN_800470C0: dieselbe HP-Abfrage `lh v0,0x156(s0)` @0x80047148 / `bltz v0,0x8004740c`
+         *     @0x80047150 (Port: re15_re2_gl_apply / re15_re2_gl_kandidat Gate 3 - Granaten-Explosion, Bodenfeuer).
+         *   Begleiter stehen in derselben Liste (Claire-RAM ROOM6141: Annette em[0] @0x800c79b0) und tragen HP -1
+         *     (Claire-RAM lauf3 e01..e22 lebend, e23..e30 liegend: +0x156 = -1; Em-Setzer FUN_8005CF70 `li v0,-1` /
+         *     `sh v0,0x156(s0)` @0x8005d7b4-b8, Beleg Runde 34 B1 unten in re15_resolve_attack).
+         * Die RE1.5-NPCs tragen dieselbe Kennung aus ihrem INIT (+0x9a = -1 @0x8011c744, enemy_ai_common.c NPC-INIT).
+         * PORT-ZUORDNUNG wie Runde 34 B1 in re15_resolve_attack: die RE2-HP-Bedingung gilt fuer die NPC-Familie 0x40..0x4D
+         * (dieselbe Menge, die RE1.5 mit `sltiu v0,v0,0x40` @0x80012180 aussortiert); fuer die Gegner < 0x40 bleibt die
+         * RE1.5-Semantik von HP < 0 (Resolver liest nur das Vorzeichen, @0x80012520-2c) unveraendert.
+         * Ersetzt die NB4-Typpruefung des Gewinners (vorher: ein Begleiter vorn im Keil schluckte JEDEN Schuss).
+         * Gilt fuer alle Waffen dieses Resolvers (Pistole, Schrot, Magnum, Messer, MG, Kanister-Explosion w7). */
+        if (e->type >= 0x40u && e->type <= 0x4Du && e->hp < 0) continue;
+        /* Runde 41 Spur AN, Nachbesserung 4 (Abnahme 2 N3): Annettes Leiche (RE2-Inhalt, hp -1) ist kein Kandidat - seit NB5 von der
+         * allgemeinen Regel oben mit abgedeckt (Typ 0x4D, hp -1); der Haken bleibt als Zustandsabfrage der Szene. RE2-Gate
+         * Pistole FUN_800410CC `lh v0,342(s2)` @0x80041280 / `bltz v0,0x80041300` @0x80041288, Messer/Bolzen FUN_800470C0
          * `lh v0,0x156(s0)` @0x80047148 / `bltz v0,0x8004740c` @0x80047150 (Begruendung re15_annette_r41.h). */
         { extern int re15_annette_r41_kein_ziel(const void *actor); if (re15_annette_r41_kein_ziel(e)) continue; }
         if (re15_r38_sm_versteckt(e)) continue; /* Runde 38 Spur T: 0x2B ohne Hoehenband ausser ACTIVE (@0x80111C14-20, @0x80111DCC-E24) */
@@ -2733,12 +2756,10 @@ retry_after_latch:
     /* Runde 36 Spur C: SICHTLINIE auf den Gewinner — `jal 0x8001b9b4` / `bne v0,zero,0x80012540`
      * @0x80012168-74, VOR Typ-Pruefung und +0x93-Latch (Belege include/re15_schuss_r36.h). */
     if (re15_schuss_r36_sichtlinie_blockiert(pl, &g_actors[best])) return 0;
-    /* Runde 41 Spur AN, Nachbesserung 4 (Abnahme 2 N3): die Typ-Pruefung des Gewinners, die hier fehlte. FUN_80011f50
-     * @0x80012178 `lbu v0,8(s1)` / @0x80012180 `sltiu v0,v0,0x40` / @0x80012184 `beq v0,zero,0x80012540` (v0 = 0): ist das
-     * naechste Ziel im Keil ein NPC (Typ >= 0x40), trifft der Schuss nichts. Die NPCs stehen mit Band LEVEL im Keil (RE1.5-RAM
-     * mzd_stage1_npc.sav: 0x40/0x42/0x4B Wort 0 = 0x40000001, hp -1); ohne die Pruefung zog der Port ihnen Schaden ab und
-     * setzte +0x4 = 3 (gemessen Abnahme 2: Annette hp -1 -> -6, st 3). RE1.5 hat das vollstaendig -> RE1.5 gilt. */
-    if (g_actors[best].type >= 0x40u) return 0;
+    /* KEINE Typ-Pruefung des Gewinners mehr: RE1.5 FUN_80011f50 @0x80012178 `lbu v0,8(s1)` / @0x80012180 `sltiu v0,v0,0x40` /
+     * @0x80012184 `beq v0,zero,0x80012540` liesse einen Begleiter vorn im Keil jeden Schuss schlucken (NB4 hatte das gebaut).
+     * RE2-Retail-Regel statt RE1.5 @0x80012178-84, Nutzerentscheid 2026-11-03: Begleiter (hp -1) sind schon in der
+     * Kandidatenschleife kein Ziel (RE2 @0x80041280-88 / @0x80047148-50, Begruendung dort), der Schuss geht durch. */
     /* CRIT-CLASS flag +0x93 |= 0x40 (byte-true FUN_80011f50 LAB_80012370, decompile lines 145-148:
      * `+0x93 &= 1; if ((wpn==8 && dist<3000) || wpn==7) +0x93 |= 0x40`) — set BEFORE the bit0-latch
      * branch, so it also lands on a hit-guarded target. Types < 0x20 die from it (the hp=-1 crit

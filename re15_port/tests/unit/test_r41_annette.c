@@ -697,9 +697,12 @@ static void test_zugstart(void)
 
 /* NB4 N3 (Abnahme 2: F2751 Annette hp -1 -> -6, st 3, ss1 3 = Waffe 3): der Waffen-Resolver re15_player_weapon_fire waehlte die
  * Leiche (naechstes Ziel im Keil) vor der G5. Lage wie im Abnahme-Lauf: Leon (14378,-23510) Gier 2049, G5 (0x36) (1800,-23400).
- *   (a) Leiche (RE2-Gate @0x80047148/50 hp < 0): kein Kandidat, der Schuss trifft die G5 dahinter.
- *   (b) dasselbe NPC ohne Leichen-Zustand (lebendes NPC, RE1.5): es ist das naechste Ziel, die Typ-Pruefung @0x80012178-84
- *       (`sltiu v0,v0,0x40` @0x80012180) laesst den Schuss nichts treffen - kein Schaden am NPC, keiner an der G5. */
+ *   (a) Leiche (RE2-Gate hp < 0, Pistole @0x80041280/88, Messer/Bolzen @0x80047148/50): kein Kandidat, der Schuss trifft die
+ *       G5 dahinter.
+ *   (b) dasselbe NPC ohne Leichen-Zustand (lebendes NPC, hp -1). NB5, Nutzerentscheid 2026-11-03 ("Mache die RE 2 Variante, das
+ *       der Schuss durch begleiter durch geht."): RE2-Retail-Regel statt RE1.5 @0x80012178-84 - ein Begleiter mit hp < 0 ist kein
+ *       Kandidat (RE2 @0x80041280-88), der Schuss geht durch auf die G5; das NPC bleibt unveraendert. (NB4 liess hier mit der
+ *       RE1.5-Typpruefung den Schuss ins Leere gehen.) */
 static void test_schuss(void)
 {
     re15_game_flag_set(3, 89, 1); re15_game_flag_set(3, 42, 1); zug(1);
@@ -735,9 +738,9 @@ static void test_schuss(void)
     CHECK(!re15_annette_r41_kein_ziel(a), "nach reset noch kein_ziel");
     r = re15_player_weapon_fire(3);
     fprintf(stderr, "Schuss (b) lebendes NPC: Rueckgabe %d, NPC hp %d st %d, G5 hp %d\n", r, a->hp, a->state, f->hp);
-    CHECK(r == 0 && a->hp == -1 && a->state == a0.state && f->hp == 345,
-          "RE1.5 @0x80012178-84: NPC als naechstes Ziel muss den Schuss ins Leere gehen lassen: r %d, NPC hp %d st %d, G5 hp %d",
-          r, a->hp, a->state, f->hp);
+    CHECK(r == g + 1 && a->hp == -1 && a->state == a0.state && f->hp < 345,
+          "RE2 @0x80041280-88 (Nutzerentscheid 2026-11-03): der Schuss muss durch das lebende NPC auf die G5 gehen: r %d, NPC hp %d"
+          " st %d, G5 hp %d", r, a->hp, a->state, f->hp);
     re15_game_flag_set(3, 42, 0); re15_game_flag_set(3, 89, 0); zug(0);
     free(b);
 }

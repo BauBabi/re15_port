@@ -17,4 +17,12 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_annette_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_annette.cmake)
     set_tests_properties(integration_r41_annette PROPERTIES TIMEOUT 900)
+    # Nachbesserung 5 (Abnahme 3 A2, Nutzerentscheid 2026-11-03 RE2-Regel): Begleiter in der Schusslinie, ROOM10D0 Marvin + Zombie,
+    # der Schuss geht durch den Begleiter auf den Gegner, der Begleiter bleibt unveraendert.
+    add_test(NAME integration_r41_begleiter_schusslinie
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_begleiter_schusslinie_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_begleiter_schusslinie.cmake)
+    set_tests_properties(integration_r41_begleiter_schusslinie PROPERTIES TIMEOUT 300)
 endif()
