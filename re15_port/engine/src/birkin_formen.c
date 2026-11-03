@@ -11,6 +11,7 @@
 #include "re15_scd.h"           /* g_scd.work_vars[0x0A] = angezeigter Cut, re15_game_flag_set */
 #include "re15_room.h"          /* g_current_room_id */
 #include "re15_audio.h"        /* re15_audio_room_se */
+#include "re15_skeleton.h"     /* re15_skel_bone_to_world (Nahsicht-Wache) */
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,6 +19,7 @@ void re15_g5_boss_spawn(int slot);
 int  re15_g5_boss_zustand(int *sub, int *ph, int *timer);   /* enemy_ai_boss_g5.c */                       /* enemy_ai_boss_g5.c: Ctor faellig */
 int  re15_r38_birkin_anim(re15_actor_t *e);              /* enemy_ai_common.c: Clip-Vorschub des Typs */
 int  re15_r38_birkin_fc(const re15_actor_t *e);          /* enemy_ai_common.c: Clip-Laenge des Typs */
+void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);   /* FUN_80015558-Zwilling */
 
 /* ---- Modellwahl --------------------------------------------------------------------------- */
 static int s_bf_mutiert = 0;   /* 5090: Original-Birkin hat mutiert -> Bahnsteig-Form */
@@ -142,6 +144,8 @@ static struct {
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_kam_g5 = 0;       /* G5-Auftritt: Kamera aufs Zugende halten (Slot+1, 0 = aus) */
+static int s_kam_auftritt = 0, s_kam_wache = 0, s_kam_wache_halt = 0;   /* Nachbesserung 1 M4, s. bf_nahsicht_wache */
+static void bf_nahsicht_wache(void);
 static void bf_kamera(int cut);
 static void bf_kamera_setzen(int cut);
 static void bf_kamera_frei(void);
@@ -150,6 +154,7 @@ static void bf_zucken(re15_actor_t *e);
 void re15_bf_reset(void)
 {
     s_bf_mutiert = 0; s_kam_g5 = 0;
+    s_kam_auftritt = 0; s_kam_wache = 0; s_kam_wache_halt = 0;
     re15_bb_reset();
     s_rs.slot = -1; s_rs.phase = 0; s_rs.t = 0;
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = 0; s_h.t = 0; s_h.birkin_start = 0;
@@ -221,6 +226,7 @@ void re15_bf_raumtick(void)
                       g_actors[i].hp = 0; g_actors[i].state = 3; g_actors[i].sub_state_3 = 0; }   /* = Todes-Commit nach Treffer */
       } }
     bf_rueckstoss_tick();
+    bf_nahsicht_wache();                                 /* Nachbesserung 1 M4: Riesenform 5090, Kamera */
     /* G5-AUFTRITT (wie RE2): die Kamera bleibt aufs Zugende gerichtet, waehrend zuerst die vier Tentakel
      * hereingreifen ([T1] @0x80101214-2e0) und dann den Koerper nachziehen ([T2] Root-Spur +7014).
      * GESTALTUNG (Abnahme 2): die Szenenkamera endet mit [T2], nicht mit Sub 2. Sub 2 dauert ohne Treffer 1126 Bilder
@@ -371,6 +377,86 @@ static void bf_kamera(int cut)
 
 static void bf_kamera_frei(void) { g_scd.cut_auto_enabled = 1; }
 
+/* ---- Nachbesserung 1, M4: Kamera-Nahsicht der Riesenform in 5090/5091 (PORT-WAHL) ------------------------------------
+ * Abnahme 1 M4: (a) Kampfstart, Cut 15 (RID-Auge (46,-1236,-24302) -> (5190,-2246,-20090), ROOM5090 sub04 Cut_chg 0x0f @0x0130E):
+ * die Form steht 1150 vor der Kamera auf der Pos_set-Lage (1200,-23350) (sub04 @0x012FE), 1 s nur Texturflaeche. Offline gemessen
+ * (form_buehne, Clip 10 Bild 30): x 1200 -> 89 % des Bildes, x 3000 -> 45 % und rechts abgeschnitten; die Blickachse von Cut 15 verlaesst
+ * den Gang (z -21700) schon bei x 3220, eine Lage weiter weg gibt es im Wagen nicht. Deshalb ein eigener Schnitt: die Riesenform tritt in
+ * Cut 11 auf (Auge (7626,-3256,-25360) -> (-1504,-986,-21970)), der Kamera von Bild 2 (form/kamera_bild2.json, Lage (941,-23776)) -
+ * Clip 10 Bild 45-52 ist Pose Bild 2. Gehalten bis Clip 10 Bild BF_AUFTRITT_KAM_BIS, dann der Schnitt der Spielerlage
+ * (re15_bf_schnitt_aus_lage) und die Zonen wieder frei, wie das Szenenende der Rueckstoss-Szene.
+ * (b) Cut 13 (Auge x 11050, Blick +x) und Cut 12 (Auge x 18526, Blick -x) schauen den Gang entlang gegeneinander. Steht die Form
+ * weniger als BF_NAH_ACHSE vor dem Auge und der Spieler dahinter (Abnahme: Leon x 15191, Form 8223 -> 13380, 8 s 60-90 % des Bildes),
+ * schaltet die Wache auf die Gegenkamera, wenn der Spieler dort mindestens 1500 vor dem Auge steht und die Form hinter ihm. Haltezeit
+ * 30 Bilder gegen Flattern; danach Zonen frei. */
+#define BF_AUFTRITT_KAM_BIS 60
+#define BF_NAH_ACHSE      4500
+static const struct { uint8_t cut; int32_t auge_x; int8_t blick; } k_gang_kam[2] = {
+    { 0x0C, 18526, -1 },   /* RID ROOM5090 Cut 12 */
+    { 0x0D, 11050, +1 },   /* RID ROOM5090 Cut 13 */
+};
+
+static int bf_riesenform_slot(void)
+{
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *e = &g_actors[i];
+        if (e->active && !e->no_draw && e->type == 0x30u && re15_bb_bank_da(e) && !(e->grid_id & 0x20)) return i;
+    }
+    return -1;
+}
+
+static void bf_kamera_zurueck(void)
+{
+    bf_kamera_setzen(re15_bf_schnitt_aus_lage(g_actors[RE15_ACTOR_SLOT_PLAYER].x));
+    bf_kamera_frei();
+}
+
+static void bf_nahsicht_wache(void)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int s = (re15_bf_bahnsteig_aktiv() && s_rs.slot < 0 && !s_kam_g5 && !re15_bb_pose_aktiv()) ? bf_riesenform_slot() : -1;
+    const re15_actor_t *e = s >= 0 ? &g_actors[s] : NULL;
+    /* (a) Auftritt in Cut 11 */
+    if (e && e->state == 1 && e->sub_state_1 == 0 /* BB_AUFTRITT */ && e->motion == 10 /* BB_C_DROHEN */
+        && e->anim_frame < BF_AUFTRITT_KAM_BIS) {
+        bf_kamera(0x0B);
+        s_kam_auftritt = 1;
+        return;
+    }
+    if (s_kam_auftritt) { s_kam_auftritt = 0; bf_kamera_zurueck(); }
+    /* (b) Gegenkamera, wenn die Form zwischen Auge und Spieler die Sicht fuellt */
+    if (!e || e->state != 1) {
+        if (s_kam_wache) { s_kam_wache = 0; bf_kamera_zurueck(); }
+        return;
+    }
+    {
+        int cur = (int)g_scd.work_vars[0x0A], k, ziel = -1;
+        int32_t mitte;
+        {   /* Kastenmitte (hit_offset_x laengs der Gier) als Lage der Masse */
+            const int32_t v[3] = { e->hit_offset_x, 0, 0 };
+            int32_t w[3];
+            re15_skel_bone_to_world(v, e->rot_y, e->x, e->y, e->z, w);
+            mitte = w[0];
+        }
+        for (k = 0; k < 2; k++) {
+            if (cur != k_gang_kam[k].cut && !(s_kam_wache && s_kam_wache == k_gang_kam[k ^ 1].cut + 1)) continue;
+            {
+                const int32_t form_achse = (mitte - k_gang_kam[k].auge_x) * k_gang_kam[k].blick;
+                const int32_t pl_achse   = (pl->x - k_gang_kam[k].auge_x) * k_gang_kam[k].blick;
+                const int32_t g_form = (mitte - k_gang_kam[k ^ 1].auge_x) * k_gang_kam[k ^ 1].blick;
+                const int32_t g_pl   = (pl->x - k_gang_kam[k ^ 1].auge_x) * k_gang_kam[k ^ 1].blick;
+                if (form_achse > -2000 && form_achse < BF_NAH_ACHSE && pl_achse > form_achse && g_pl >= 1500 && g_form > g_pl)
+                    ziel = k_gang_kam[k ^ 1].cut;
+            }
+        }
+        if (ziel >= 0) { bf_kamera(ziel); s_kam_wache = ziel + 1; s_kam_wache_halt = 30; return; }
+        if (s_kam_wache) {
+            if (s_kam_wache_halt > 0) { s_kam_wache_halt--; bf_kamera(s_kam_wache - 1); return; }
+            s_kam_wache = 0; bf_kamera_zurueck();
+        }
+    }
+}
+
 /* Schnitt zur Spielerlage ROOM5090/5091, Abnahme 2. Die RVD-Zonen sind Streifen, sie loesen nur aus dem passenden Schnitt aus:
  * @0x490 11->12 x 2800..4200, @0x4b8 12->11 x 1203..2703, @0x4cc 12->13 x 14000..15400, @0x4f4 13->12 x 12249..13873, @0x508
  * 13->14 x 20250..21750, @0x530 14->13 x 18502..20252. Ein fester Cut 12 am Szenenende liess Leon oestlich von x 15400 ohne Zone
@@ -393,7 +479,8 @@ void re15_bf_rueckstoss_start(int slot)
     s_rs.slot = slot; s_rs.phase = 1; s_rs.t = 0;
     re15_actor_t *e = &g_actors[slot];
     e->hp = 1;                                           /* bleibt "am Ende", stirbt aber nicht */
-    bf_zucken(e);
+    if (re15_bb_bank_da(e)) re15_bb_taumeln_start(slot);  /* Nachbesserung 1 M5: Riesenform taumelt (Clip 13) */
+    else bf_zucken(e);
     bf_kamera(0x0C);
 }
 
@@ -419,6 +506,41 @@ static void bf_rs_form_ist_draussen(re15_actor_t *e, int mit_gebruell)
     if (mit_gebruell) re15_audio_room_se(10);            /* Gebruell (Birkin-Todes-SE 10, @0x8011a744) */
 }
 
+/* Nachbesserung 1 (PORT-WAHL), Riesenform in der Rueckstoss-Szene, Phase 1:
+ *  M5: kein Gleiten mehr (Abnahme 1: 147 je Bild auf dem stehenden Zucken-Clip 8). Die Form taumelt rueckwaerts: Clip 13 im Kreis,
+ *      Vortrieb aus seiner Spur (-80 je Bild, Fuesse in der Welt verriegelt), Ruecken zum Wagenende - die Gier lenkt mit 64 je Bild
+ *      auf den Punkt, der dem Ausgang gegenueberliegt (Gestaltung). Kamera Cut 12 (Kampfkamera, wie bisher).
+ *  M1: der Sturz (Clip 12) beginnt IM Wagen bei Wurzel x <= BF_RS_STURZ_X, wo Cut 11 die Form ganz zeigt (Abnahme 1 M1, Messhaken in
+ *      Cut 11: x -3000 ganz, -5000 halb, -6300 nicht sichtbar). Die Clip-Spur (Bild 0-30 zusammen -3270) traegt sie zur Tuer (-5683),
+ *      dort kippt sie hinaus. Ist die Grenze vor BF_RS_MIN_TICKS erreicht, zuckt sie dort am Platz (Clip 8 ab Bild 5, @0x80107224). */
+#define BF_RS_STURZ_X  (-2500)        /* Gestaltung = BF_RS_ZUGENDE_KAM */
+#define BF_RS_TAUMEL_KAM_X  3000      /* Gestaltung: Cut 11 ab hier (Form >= 4600 vor dem Auge x 7626) */
+static void bf_rs_riesenform_phase1(re15_actor_t *e, const re15_actor_t *pl)
+{
+    (void)pl;
+    if (e->x <= BF_RS_STURZ_X) {
+        bf_kamera(0x0B);
+        if (s_rs.t >= BF_RS_MIN_TICKS) {
+            s_rs.t = 0;
+            s_rs.phase = 3;
+            re15_bb_sturz_start(s_rs.slot);
+            return;
+        }
+        if (e->motion != 8) bf_zucken(e);
+        else if (re15_r38_birkin_anim(e)) bf_zucken(e);
+        return;
+    }
+    {   /* Ruecken zum Ausgang: Ziel = Spiegelpunkt des Ausgangs an der Wurzel */
+        const int32_t ax = BF_RS_AUSGANG_X - 900, az = BF_RS_AUSGANG_Z;
+        re15_enemy_steer_point(e, 2 * e->x - ax, 2 * e->z - az, 64);
+    }
+    re15_bb_taumeln_tick(s_rs.slot);
+    /* Kamera: Cut 12 (Kampfkamera, Auge x 18526) zeigt die taumelnde Form 12000-21000 entfernt, hinter Leon (Lauf n1 l5090_feuer
+     * Bild 372-420). Ab x <= BF_RS_TAUMEL_KAM_X zeigt Cut 11 (Auge x 7626, Blick -x, Kamera von Bild 2) sie von vorn, >= 4600 vor dem
+     * Auge, wie sie zum Wagenende zurueckgedraengt wird (PORT-WAHL). */
+    bf_kamera(e->x <= BF_RS_TAUMEL_KAM_X ? 0x0B : 0x0C);
+}
+
 static void bf_rueckstoss_tick(void)
 {
     if (s_rs.slot < 0) return;
@@ -428,6 +550,11 @@ static void bf_rueckstoss_tick(void)
     e->state = 2; e->hp = 1;                             /* Treffer aendern nichts mehr am Ablauf */
     switch (s_rs.phase) {
     case 1: {
+        if (re15_bb_bank_da(e)) {                        /* Riesenform: Nachbesserung 1 M1/M5 */
+            const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            bf_rs_riesenform_phase1(e, pl);
+            break;
+        }
         if (re15_r38_birkin_anim(e)) bf_zucken(e);       /* Zucken bei jedem Treffer: Clip im Kreis */
         int32_t dx = BF_RS_AUSGANG_X - 900 - e->x, dz = BF_RS_AUSGANG_Z - e->z;
         int32_t rest = (int32_t)(dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);

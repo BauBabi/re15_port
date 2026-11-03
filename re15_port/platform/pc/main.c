@@ -8082,6 +8082,12 @@ re_title:;
                         /* Runde 30 (N1-Messung, nachschliff-room5080.md 9.6): der Griff-Kanal des Ports
                          * (s_player_grabbed), damit Halte-Laeufe im Echtlauf direkt zaehlbar sind. */
                         fprintf(s_state_log, " gr=%d", re15_player_is_grabbed());
+                        /* Runde 41 Form NB2 (Zusatzpunkt START im Griff): Birkin-Haken (aca58/aca5a), Statusschirm-Erlaubnis
+                         * des Ports und Spieler+0x93 (0x800acae7, Tor des Originals @0x8001cdb0-b8), Menue-Stufe. Nur Messung. */
+                        {   extern int re15_bk_opfer_cmd(void); extern int re15_bk_opfer_phase(void);
+                            extern int re15_inv_open_allowed(void); extern int re15_menu_stage(void);
+                            fprintf(s_state_log, " hk=%d/%d io=%d hr=%02x ms=%d", re15_bk_opfer_cmd(), re15_bk_opfer_phase(),
+                                    re15_inv_open_allowed(), (unsigned)pl->hit_react, re15_menu_stage()); }
                     }
                     /* Runde 34 VERTRAG V5 (C0): je Gegner " hp=<HP>" DIREKT HINTER seiner schliessenden
                      * Klammer — die Klammer selbst bleibt Zeichen fuer Zeichen wie bisher, weil drei
@@ -10124,6 +10130,12 @@ re_title:;
                         { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
                         {  nhx, 0,  nhz }, {  nhx, 0, -nhz },
                     };
+                    if (re15_bb_bank_da(npc)) {   /* Nachbesserung 1 (D, PORT-WAHL): Riesenform K3, Huefte bis Schnauze */
+                        int32_t bx0, bx1, bhz;
+                        re15_bb_schatten(&bx0, &bx1, &bhz);
+                        nsh_c[0][0] = nsh_c[1][0] = bx0; nsh_c[2][0] = nsh_c[3][0] = bx1;
+                        nsh_c[0][2] = nsh_c[2][2] = bhz; nsh_c[1][2] = nsh_c[3][2] = -bhz;
+                    }
                     /* Quad-Hoehe = BODEN, nicht Actor-Y: FUN_8001b064 setzt `t[1] = param_2`
                      * (Decompile RE_15_Quellcode_V2) — das Y kommt als a1 rein, und der
                      * Kraehen-Root-Post-Pass uebergibt a1 = +0x1ba = die Floor-Referenz

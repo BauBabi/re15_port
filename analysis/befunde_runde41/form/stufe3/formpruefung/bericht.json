@@ -2,17 +2,17 @@
  "name": "BAHNSTEIG_FORM (Stufe 3)",
  "licht": "mess",
  "kennzahlen": {
-  "flaechen": 2398,
-  "dreiecke": 656,
-  "vierecke": 1742,
+  "flaechen": 3642,
+  "dreiecke": 1194,
+  "vierecke": 2448,
   "knochen": 32,
   "meshes": 32,
   "textur": [
-   384,
+   512,
    256
   ],
   "bpp": 8,
-  "clut_zeilen": 3,
+  "clut_zeilen": 4,
   "clips": 28,
   "clip_bilder": [
    18,
@@ -25,7 +25,8 @@
    1
   ],
   "rahmen": [
-   "2398 Flaechen, Rahmen rund 1900",
+   "3642 Flaechen, Rahmen rund 1900",
+   "Textur 512x256, Rahmen 384x256",
    "Clip 0 hat 18 Bilder, gefordert 1"
   ],
   "boden_y": [
@@ -52,33 +53,33 @@
    0.825
   ],
   "umriss": {
-   "iou": 0.9483,
-   "weiss_gedeckt": 0.9513,
+   "iou": 0.9538,
+   "weiss_gedeckt": 0.9588,
    "weiss": 33511,
-   "schwarz_getroffen": 106,
-   "render_pixel": 37340,
-   "render_auf_grau": 5356
+   "schwarz_getroffen": 174,
+   "render_pixel": 37848,
+   "render_auf_grau": 5545
   },
   "weiss_fehlt": [
    [
-    1178,
+    1013,
     274,
     381,
     342,
     471
    ],
    [
-    57,
-    377,
-    362,
-    404,
-    375
+    33,
+    343,
+    326,
+    345,
+    349
    ],
    [
-    36,
+    33,
     213,
-    341,
-    225,
+    344,
+    222,
     355
    ]
   ],
@@ -91,18 +92,18 @@
     302
    ],
    [
-    23,
-    292,
+    29,
+    190,
+    387,
+    197,
+    398
+   ],
+   [
+    28,
+    291,
     400,
     297,
     404
-   ],
-   [
-    16,
-    378,
-    227,
-    384,
-    233
    ]
   ],
   "punkte": [
@@ -131,8 +132,8 @@
      277
     ],
     "art": "mat_spalte_oben",
-    "ist": 276.5,
-    "abstand": -0.5,
+    "ist": 277.5,
+    "abstand": 0.5,
     "grenze": 2.8,
     "ok": true,
     "zaehlt": true,
@@ -148,8 +149,8 @@
      296
     ],
     "art": "mat_spalte_unten",
-    "ist": 297.5,
-    "abstand": 1.5,
+    "ist": 293.5,
+    "abstand": -2.5,
     "grenze": 13.3,
     "ok": true,
     "zaehlt": true,
@@ -166,7 +167,7 @@
     ],
     "art": "kontur",
     "ist": null,
-    "abstand": 5.5,
+    "abstand": 1.5,
     "grenze": 11.6,
     "ok": true,
     "zaehlt": true,
@@ -182,8 +183,8 @@
      187
     ],
     "art": "spalte_oben",
-    "ist": 186.5,
-    "abstand": -0.5,
+    "ist": 185.5,
+    "abstand": -1.5,
     "grenze": 3.7,
     "ok": true,
     "zaehlt": true,
@@ -216,8 +217,8 @@
      187
     ],
     "art": "spalte_oben",
-    "ist": 185.5,
-    "abstand": -1.5,
+    "ist": 183.5,
+    "abstand": -3.5,
     "grenze": 6.9,
     "ok": true,
     "zaehlt": true,
@@ -233,8 +234,8 @@
      187
     ],
     "art": "spalte_oben",
-    "ist": 186.5,
-    "abstand": -0.5,
+    "ist": 184.5,
+    "abstand": -2.5,
     "grenze": 7.1,
     "ok": true,
     "zaehlt": true,
@@ -250,8 +251,8 @@
      187
     ],
     "art": "spalte_oben",
-    "ist": 194.5,
-    "abstand": 7.5,
+    "ist": 186.5,
+    "abstand": -0.5,
     "grenze": 8.6,
     "ok": true,
     "zaehlt": true,
@@ -352,8 +353,8 @@
      242
     ],
     "art": "zeile_links",
-    "ist": 244.5,
-    "abstand": -2.5,
+    "ist": 243.5,
+    "abstand": -3.5,
     "grenze": 4.0,
     "ok": true,
     "zaehlt": true,
@@ -590,8 +591,8 @@
      342
     ],
     "art": "zeile_links",
-    "ist": 224.5,
-    "abstand": -1.5,
+    "ist": 223.5,
+    "abstand": -2.5,
     "grenze": 3.2,
     "ok": true,
     "zaehlt": true,
@@ -625,7 +626,7 @@
     ],
     "art": "kontur",
     "ist": null,
-    "abstand": -13.5,
+    "abstand": -15.3,
     "grenze": 7.5,
     "ok": false,
     "zaehlt": false,
@@ -642,7 +643,7 @@
     ],
     "art": "kontur",
     "ist": null,
-    "abstand": -6.5,
+    "abstand": -7.7,
     "grenze": 3.2,
     "ok": false,
     "zaehlt": false,
@@ -658,8 +659,8 @@
      191
     ],
     "art": "spalte_oben",
-    "ist": 192.5,
-    "abstand": 1.5,
+    "ist": 191.5,
+    "abstand": 0.5,
     "grenze": 3.2,
     "ok": true,
     "zaehlt": true,
@@ -673,7 +674,7 @@
     "id": "L1",
     "text": "Boden frei L1",
     "flaeche": 969,
-    "treffer": 6,
+    "treffer": 11,
     "eindringen_px": 1.4,
     "ok": false,
     "zaehlt": true,
@@ -683,7 +684,7 @@
     "id": "L2",
     "text": "Boden frei L2",
     "flaeche": 629,
-    "treffer": 16,
+    "treffer": 23,
     "eindringen_px": 2.2,
     "ok": false,
     "zaehlt": true,
@@ -762,14 +763,14 @@
     "flaeche": 278,
     "anteil_material": 0.662,
     "anteil_figur": 1.0,
-    "groesse": 0.58,
-    "lage_px": 3.8,
+    "groesse": 0.57,
+    "lage_px": 3.5,
     "sollmitte": [
      317,
      265
     ],
     "y_video": 130.0,
-    "y_render": 121.0,
+    "y_render": 122.0,
     "ok": true,
     "zaehlt": true
    },
@@ -778,17 +779,17 @@
     "material": "weisskerne",
     "sicherheit": "Form wahrscheinlich, Farbe offen",
     "flaeche": 257,
-    "anteil_material": 0.708,
+    "anteil_material": 0.089,
     "anteil_figur": 1.0,
-    "groesse": 0.41,
-    "lage_px": 8.1,
+    "groesse": 0.01,
+    "lage_px": 19.5,
     "sollmitte": [
      325,
      294
     ],
     "y_video": 172.0,
-    "y_render": 209.0,
-    "ok": true,
+    "y_render": 108.0,
+    "ok": false,
     "zaehlt": true
    },
    {
@@ -796,17 +797,17 @@
     "material": "helle_baender",
     "sicherheit": "wahrscheinlich",
     "flaeche": 140,
-    "anteil_material": 0.629,
+    "anteil_material": 0.493,
     "anteil_figur": 1.0,
-    "groesse": 0.84,
-    "lage_px": 8.8,
+    "groesse": 0.38,
+    "lage_px": 7.1,
     "sollmitte": [
      320,
      303
     ],
     "y_video": 141.0,
-    "y_render": 157.0,
-    "ok": true,
+    "y_render": 124.0,
+    "ok": false,
     "zaehlt": true
    },
    {
@@ -814,17 +815,17 @@
     "material": "helle_baender",
     "sicherheit": "sicher als Stelle",
     "flaeche": 410,
-    "anteil_material": 0.368,
+    "anteil_material": 0.734,
     "anteil_figur": 1.0,
-    "groesse": 0.24,
-    "lage_px": 9.9,
+    "groesse": 0.37,
+    "lage_px": 9.8,
     "sollmitte": [
      403,
      289
     ],
     "y_video": 75.0,
-    "y_render": 71.0,
-    "ok": false,
+    "y_render": 80.0,
+    "ok": true,
     "zaehlt": true
    },
    {
@@ -835,13 +836,13 @@
     "anteil_material": 0.246,
     "anteil_figur": 1.0,
     "groesse": 0.35,
-    "lage_px": 8.8,
+    "lage_px": 9.4,
     "sollmitte": [
      329,
      351
     ],
     "y_video": 134.0,
-    "y_render": 117.0,
+    "y_render": 83.0,
     "ok": false,
     "zaehlt": true
    },
@@ -853,7 +854,7 @@
     "anteil_material": 0.0,
     "anteil_figur": 1.0,
     "groesse": 0.0,
-    "lage_px": 14.1,
+    "lage_px": 15.9,
     "sollmitte": [
      322,
      366
@@ -877,7 +878,7 @@
      384
     ],
     "y_video": 56.0,
-    "y_render": 61.0,
+    "y_render": 62.0,
     "ok": false,
     "zaehlt": false
    },
@@ -886,16 +887,16 @@
     "material": "feine_linien",
     "sicherheit": "wahrscheinlich",
     "flaeche": 378,
-    "anteil_material": 0.148,
+    "anteil_material": 0.063,
     "anteil_figur": 0.413,
-    "groesse": 0.09,
-    "lage_px": 10.3,
+    "groesse": 0.18,
+    "lage_px": 20.0,
     "sollmitte": [
      243,
      367
     ],
     "y_video": 101.0,
-    "y_render": 149.0,
+    "y_render": 161.0,
     "ok": false,
     "zaehlt": true
    },
@@ -904,17 +905,17 @@
     "material": "feine_linien",
     "sicherheit": "Lage wahrscheinlich, Bedeutung offen",
     "flaeche": 212,
-    "anteil_material": 0.67,
+    "anteil_material": 0.481,
     "anteil_figur": 1.0,
-    "groesse": 0.23,
-    "lage_px": 2.9,
+    "groesse": 0.07,
+    "lage_px": 1.7,
     "sollmitte": [
      258,
      286
     ],
     "y_video": 96.0,
-    "y_render": 93.0,
-    "ok": true,
+    "y_render": 75.0,
+    "ok": false,
     "zaehlt": true
    },
    {
@@ -922,17 +923,17 @@
     "material": "z9",
     "sicherheit": "wahrscheinlich",
     "flaeche": 230,
-    "anteil_material": 0.343,
-    "anteil_figur": 0.752,
-    "groesse": 0.1,
-    "lage_px": 10.4,
+    "anteil_material": 0.652,
+    "anteil_figur": 0.913,
+    "groesse": 0.28,
+    "lage_px": 15.7,
     "sollmitte": [
      416,
      253
     ],
     "y_video": 55.0,
-    "y_render": 57.0,
-    "ok": false,
+    "y_render": 58.0,
+    "ok": true,
     "zaehlt": true
    }
   ],
@@ -940,14 +941,14 @@
    {
     "id": "N2",
     "text": "right_arm unter Z5 ohne Band (384-411,302-354)",
-    "anteil_hell": 0.009,
-    "ok": true,
+    "anteil_hell": 0.106,
+    "ok": false,
     "zaehlt": true,
     "sicherheit": "sicher"
    }
   ],
-  "mae_weiss": 22.2,
-  "ncc_weiss": 0.688
+  "mae_weiss": 24.8,
+  "ncc_weiss": 0.589
  },
  "bild2": {
   "lage": [
@@ -965,12 +966,12 @@
    1.004
   ],
   "umriss": {
-   "iou": 0.9352,
-   "weiss_gedeckt": 0.9389,
+   "iou": 0.948,
+   "weiss_gedeckt": 0.9519,
    "weiss": 45465,
    "schwarz_getroffen": 183,
-   "render_pixel": 47460,
-   "render_auf_grau": 4588
+   "render_pixel": 48979,
+   "render_auf_grau": 5520
   },
   "weiss_fehlt": [
    [
@@ -988,11 +989,11 @@
     451
    ],
    [
-    243,
-    288,
-    331,
-    332,
-    386
+    225,
+    155,
+    385,
+    169,
+    415
    ]
   ],
   "schwarz_treffer": [
@@ -1130,7 +1131,7 @@
     ],
     "art": "kontur",
     "ist": null,
-    "abstand": 0.9,
+    "abstand": -1.5,
     "grenze": 2.5,
     "ok": true,
     "zaehlt": true,
@@ -1370,7 +1371,7 @@
    {
     "id": "V6",
     "text": "Rohr endet: R 194 bei y=204, 117 bei y=208, Kante der Figur",
-    "abstand": 1.5,
+    "abstand": -2.5,
     "grenze": 2.5,
     "ok": true,
     "zaehlt": true,
@@ -1402,7 +1403,7 @@
     "id": "HAKEN",
     "text": "Haken gefuellt (205-245,215-262)",
     "flaeche": 355,
-    "anteil": 0.687,
+    "anteil": 0.758,
     "ok": true,
     "zaehlt": false,
     "sicherheit": "wahrscheinlich",
@@ -1423,16 +1424,16 @@
     "material": "feine_linien",
     "sicherheit": "wahrscheinlich",
     "flaeche": 412,
-    "anteil_material": 0.434,
+    "anteil_material": 0.172,
     "anteil_figur": 1.0,
-    "groesse": 0.15,
-    "lage_px": 8.3,
+    "groesse": 0.25,
+    "lage_px": 10.0,
     "sollmitte": [
      282,
      192
     ],
     "y_video": 58.0,
-    "y_render": 106.0,
+    "y_render": 99.0,
     "ok": false,
     "zaehlt": true
    },
@@ -1441,17 +1442,17 @@
     "material": "rotbraun_mittelton",
     "sicherheit": "wahrscheinlich",
     "flaeche": 1856,
-    "anteil_material": 0.525,
+    "anteil_material": 0.626,
     "anteil_figur": 1.0,
-    "groesse": 0.19,
-    "lage_px": 3.7,
+    "groesse": 0.25,
+    "lage_px": 6.4,
     "sollmitte": [
      322,
      179
     ],
     "y_video": 32.0,
-    "y_render": 58.0,
-    "ok": false,
+    "y_render": 48.0,
+    "ok": true,
     "zaehlt": true
    },
    {
@@ -1459,17 +1460,17 @@
     "material": "feine_linien",
     "sicherheit": "wahrscheinlich",
     "flaeche": 149,
-    "anteil_material": 1.0,
+    "anteil_material": 0.0,
     "anteil_figur": 1.0,
-    "groesse": 0.81,
-    "lage_px": 5.2,
+    "groesse": 0.0,
+    "lage_px": null,
     "sollmitte": [
      376,
      205
     ],
     "y_video": 50.0,
-    "y_render": 89.0,
-    "ok": true,
+    "y_render": 26.0,
+    "ok": false,
     "zaehlt": true
    },
    {
@@ -1477,17 +1478,17 @@
     "material": "helle_baender",
     "sicherheit": "wahrscheinlich",
     "flaeche": 187,
-    "anteil_material": 0.856,
+    "anteil_material": 0.348,
     "anteil_figur": 0.979,
-    "groesse": 0.76,
-    "lage_px": 3.2,
+    "groesse": 0.23,
+    "lage_px": 15.4,
     "sollmitte": [
      411,
      218
     ],
     "y_video": 96.0,
-    "y_render": 134.0,
-    "ok": true,
+    "y_render": 59.0,
+    "ok": false,
     "zaehlt": true
    },
    {
@@ -1495,16 +1496,16 @@
     "material": "feine_linien",
     "sicherheit": "wahrscheinlich",
     "flaeche": 682,
-    "anteil_material": 0.076,
+    "anteil_material": 0.226,
     "anteil_figur": 1.0,
-    "groesse": 0.07,
-    "lage_px": 14.4,
+    "groesse": 0.06,
+    "lage_px": 2.3,
     "sollmitte": [
      378,
      267
     ],
     "y_video": 34.0,
-    "y_render": 33.0,
+    "y_render": 26.0,
     "ok": false,
     "zaehlt": true
    },
@@ -1513,16 +1514,16 @@
     "material": "untere_streifen",
     "sicherheit": "sicher als Stelle",
     "flaeche": 911,
-    "anteil_material": 0.932,
-    "anteil_figur": 0.936,
-    "groesse": 1.29,
+    "anteil_material": 1.0,
+    "anteil_figur": 1.0,
+    "groesse": 1.95,
     "lage_px": 7.4,
     "sollmitte": [
      313,
      341
     ],
     "y_video": 113.0,
-    "y_render": 104.0,
+    "y_render": 89.0,
     "ok": true,
     "zaehlt": true
    },
@@ -1531,17 +1532,17 @@
     "material": "weisskerne",
     "sicherheit": "wahrscheinlich",
     "flaeche": 174,
-    "anteil_material": 0.805,
+    "anteil_material": 0.0,
     "anteil_figur": 0.897,
-    "groesse": 0.74,
-    "lage_px": 3.9,
+    "groesse": 0.0,
+    "lage_px": null,
     "sollmitte": [
      366,
      304
     ],
     "y_video": 116.0,
-    "y_render": 90.0,
-    "ok": true,
+    "y_render": 27.0,
+    "ok": false,
     "zaehlt": true
    }
   ],
@@ -1549,14 +1550,14 @@
    {
     "id": "N1",
     "text": "Rumpfinneres ohne Zeichnung (290-340,225-280)",
-    "anteil_hell": 0.0,
-    "ok": true,
+    "anteil_hell": 0.278,
+    "ok": false,
     "zaehlt": true,
     "sicherheit": "sicher"
    }
   ],
-  "mae_weiss": 12.4,
-  "ncc_weiss": 0.71
+  "mae_weiss": 13.9,
+  "ncc_weiss": 0.647
  },
  "teile": {
   "bild1": {
@@ -1657,22 +1658,24 @@
      "geteilt": {
       "tail": 90
      },
-     "treffer_px": 3835,
-     "iou": 0.89,
+     "treffer_px": 3718,
+     "iou": 0.847,
      "fremd": {
-      "tail": 0.027
+      "part_of_Body": 0.038,
+      "tail": 0.029
      },
-     "leer": 0.051,
+     "leer": 0.039,
      "merkmale": [],
-     "render_px": 3979,
-     "allein_px": 4717,
-     "deckung": 0.921,
-     "kern_deckung": 0.999,
-     "innen": 0.964,
-     "innen_saum": 1.0,
-     "verdeckt": 0.134,
+     "render_px": 3947,
+     "allein_px": 5540,
+     "deckung": 0.893,
+     "kern_deckung": 0.971,
+     "innen": 0.942,
+     "innen_saum": 0.992,
+     "verdeckt": 0.269,
      "verdeckt_von": {
-      "tail": 0.135
+      "part_of_Body": 0.024,
+      "tail": 0.245
      },
      "schwerpunkt": {
       "soll": [
@@ -1680,25 +1683,25 @@
        362.4
       ],
       "ist": [
-       223.6,
-       364.9
+       222.3,
+       368.8
       ],
-      "dx": -1.4,
-      "dy": 2.5,
-      "abstand": 2.8
+      "dx": -2.6,
+      "dy": 6.4,
+      "abstand": 6.9
      },
      "achse": {
       "soll_grad": 105.6,
-      "ist_grad": 105.8,
-      "abweichung_grad": 0.2,
-      "quer_px": 0.6,
-      "laengs_px": 2.8,
+      "ist_grad": 107.3,
+      "abweichung_grad": 1.7,
+      "quer_px": 0.8,
+      "laengs_px": 6.8,
       "laenge": [
-       171.1,
+       168.7,
        172.5
       ],
       "breite": [
-       39.1,
+       41.3,
        39.4
       ],
       "streckung_soll": 4.76
@@ -1711,12 +1714,12 @@
         264
        ],
        "ist": [
-        247,
-        264
+        257,
+        254
        ],
-       "dx": 5,
-       "dy": 0,
-       "abstand": 5.0,
+       "dx": 15,
+       "dy": -10,
+       "abstand": 18.0,
        "sichtbar": false,
        "unter_logo": false
       },
@@ -1761,32 +1764,33 @@
       10
      ],
      "maske_px": 7293,
-     "wertung_px": 6410,
+     "wertung_px": 6601,
      "logo_px": 0,
      "geteilt": {
       "right_leg": 1316
      },
-     "treffer_px": 5718,
-     "iou": 0.765,
+     "treffer_px": 6177,
+     "iou": 0.716,
      "fremd": {
-      "right_arm": 0.023,
-      "right_leg": 0.018,
-      "tail": 0.009,
-      "face_and_upper_body": 0.056
+      "right_arm": 0.017,
+      "right_leg": 0.014,
+      "tail": 0.008,
+      "face_and_upper_body": 0.023
      },
      "leer": 0.002,
      "merkmale": [],
-     "render_px": 6781,
-     "allein_px": 12823,
-     "deckung": 0.892,
-     "kern_deckung": 0.926,
-     "innen": 0.843,
-     "innen_saum": 0.913,
-     "verdeckt": 0.471,
+     "render_px": 8209,
+     "allein_px": 17091,
+     "deckung": 0.936,
+     "kern_deckung": 0.96,
+     "innen": 0.752,
+     "innen_saum": 0.826,
+     "verdeckt": 0.52,
      "verdeckt_von": {
-      "right_arm": 0.015,
-      "right_leg": 0.072,
-      "tail": 0.384
+      "left_leg": 0.01,
+      "right_arm": 0.104,
+      "right_leg": 0.056,
+      "tail": 0.35
      },
      "schwerpunkt": {
       "soll": [
@@ -1794,25 +1798,25 @@
        266.7
       ],
       "ist": [
-       337.3,
-       254.0
+       338.5,
+       256.3
       ],
-      "dx": -0.1,
-      "dy": -12.7,
-      "abstand": 12.7
+      "dx": 1.0,
+      "dy": -10.4,
+      "abstand": 10.5
      },
      "achse": {
       "soll_grad": 107.6,
-      "ist_grad": 119.6,
-      "abweichung_grad": 12.0,
-      "quer_px": 3.9,
-      "laengs_px": -12.0,
+      "ist_grad": 146.6,
+      "abweichung_grad": 39.0,
+      "quer_px": 2.1,
+      "laengs_px": -10.2,
       "laenge": [
-       113.2,
+       156.4,
        110.7
       ],
       "breite": [
-       82.4,
+       118.1,
        84.5
       ],
       "streckung_soll": 1.4
@@ -1825,12 +1829,12 @@
         212
        ],
        "ist": [
-        399,
-        254
+        423,
+        279
        ],
-       "dx": 36,
-       "dy": 42,
-       "abstand": 55.3,
+       "dx": 60,
+       "dy": 67,
+       "abstand": 89.9,
        "sichtbar": false,
        "unter_logo": false
       },
@@ -1868,22 +1872,22 @@
      "wertung_px": 4939,
      "logo_px": 0,
      "geteilt": {},
-     "treffer_px": 4682,
-     "iou": 0.776,
+     "treffer_px": 4487,
+     "iou": 0.764,
      "fremd": {
-      "part_of_Body": 0.024
+      "part_of_Body": 0.07
      },
-     "leer": 0.028,
+     "leer": 0.021,
      "merkmale": [],
-     "render_px": 5775,
-     "allein_px": 5903,
-     "deckung": 0.948,
-     "kern_deckung": 0.988,
-     "innen": 0.811,
-     "innen_saum": 0.921,
-     "verdeckt": 0.022,
+     "render_px": 5420,
+     "allein_px": 6119,
+     "deckung": 0.908,
+     "kern_deckung": 0.953,
+     "innen": 0.828,
+     "innen_saum": 0.933,
+     "verdeckt": 0.114,
      "verdeckt_von": {
-      "part_of_Body": 0.022
+      "part_of_Body": 0.114
      },
      "schwerpunkt": {
       "soll": [
@@ -1891,25 +1895,25 @@
        308.3
       ],
       "ist": [
-       399.7,
-       305.6
+       401.0,
+       308.8
       ],
-      "dx": 0.2,
-      "dy": -2.7,
-      "abstand": 2.8
+      "dx": 1.5,
+      "dy": 0.5,
+      "abstand": 1.6
      },
      "achse": {
       "soll_grad": 89.5,
-      "ist_grad": 92.3,
-      "abweichung_grad": 2.8,
-      "quer_px": -0.3,
-      "laengs_px": -2.7,
+      "ist_grad": 95.1,
+      "abweichung_grad": 5.6,
+      "quer_px": -1.5,
+      "laengs_px": 0.5,
       "laenge": [
-       125.4,
+       125.7,
        128.1
       ],
       "breite": [
-       53.5,
+       48.1,
        48.9
       ],
       "streckung_soll": 3.01
@@ -1922,12 +1926,12 @@
         242
        ],
        "ist": [
-        409,
-        244
+        407,
+        240
        ],
-       "dx": 29,
-       "dy": 2,
-       "abstand": 29.1,
+       "dx": 27,
+       "dy": -2,
+       "abstand": 27.1,
        "sichtbar": true,
        "unter_logo": false
       },
@@ -1972,30 +1976,31 @@
       27
      ],
      "maske_px": 6896,
-     "wertung_px": 6463,
+     "wertung_px": 6193,
      "logo_px": 0,
      "geteilt": {
       "part_of_Body": 1316,
       "tail": 190
      },
-     "treffer_px": 5358,
-     "iou": 0.778,
+     "treffer_px": 5211,
+     "iou": 0.783,
      "fremd": {
       "part_of_Body": 0.002,
-      "face_and_upper_body": 0.001,
+      "tail": 0.001,
       "left_arm_front": 0.002
      },
-     "leer": 0.167,
+     "leer": 0.154,
      "merkmale": [],
-     "render_px": 5785,
-     "allein_px": 5787,
-     "deckung": 0.829,
-     "kern_deckung": 0.896,
-     "innen": 0.926,
-     "innen_saum": 0.969,
-     "verdeckt": 0.0,
+     "render_px": 5677,
+     "allein_px": 6498,
+     "deckung": 0.841,
+     "kern_deckung": 0.902,
+     "innen": 0.918,
+     "innen_saum": 0.958,
+     "verdeckt": 0.126,
      "verdeckt_von": {
-      "part_of_Body": 0.001
+      "part_of_Body": 0.128,
+      "left_arm_front": 0.0
      },
      "schwerpunkt": {
       "soll": [
@@ -2003,25 +2008,25 @@
        369.8
       ],
       "ist": [
-       317.0,
-       363.9
+       316.5,
+       367.3
       ],
-      "dx": 0.2,
-      "dy": -5.8,
-      "abstand": 5.8
+      "dx": -0.3,
+      "dy": -2.4,
+      "abstand": 2.4
      },
      "achse": {
       "soll_grad": 95.8,
-      "ist_grad": 98.1,
-      "abweichung_grad": 2.3,
-      "quer_px": 0.3,
-      "laengs_px": -5.8,
+      "ist_grad": 99.0,
+      "abweichung_grad": 3.2,
+      "quer_px": 0.5,
+      "laengs_px": -2.4,
       "laenge": [
-       167.7,
+       169.3,
        170.9
       ],
       "breite": [
-       43.0,
+       43.9,
        49.9
       ],
       "streckung_soll": 4.01
@@ -2034,13 +2039,13 @@
         285
        ],
        "ist": [
-        317,
-        274
+        328,
+        265
        ],
-       "dx": -12,
-       "dy": -11,
-       "abstand": 16.3,
-       "sichtbar": true,
+       "dx": -1,
+       "dy": -20,
+       "abstand": 20.0,
+       "sichtbar": false,
        "unter_logo": false
       },
       {
@@ -2087,34 +2092,34 @@
       6
      ],
      "maske_px": 12366,
-     "wertung_px": 12306,
+     "wertung_px": 12287,
      "logo_px": 1278,
      "geteilt": {
       "left_leg": 90,
       "right_leg": 190
      },
-     "treffer_px": 11638,
-     "iou": 0.873,
+     "treffer_px": 11654,
+     "iou": 0.865,
      "fremd": {
-      "part_of_Body": 0.025
+      "part_of_Body": 0.034
      },
-     "leer": 0.029,
+     "leer": 0.018,
      "merkmale": [
       {
        "name": "X Schwanzspitze",
        "flaeche": 1473,
-       "gedeckt": 0.84
+       "gedeckt": 0.847
       }
      ],
-     "render_px": 12661,
-     "allein_px": 15533,
-     "deckung": 0.946,
-     "kern_deckung": 0.969,
-     "innen": 0.919,
-     "innen_saum": 0.989,
-     "verdeckt": 0.091,
+     "render_px": 12840,
+     "allein_px": 15907,
+     "deckung": 0.948,
+     "kern_deckung": 0.975,
+     "innen": 0.908,
+     "innen_saum": 0.978,
+     "verdeckt": 0.101,
      "verdeckt_von": {
-      "part_of_Body": 0.091
+      "part_of_Body": 0.103
      },
      "schwerpunkt": {
       "soll": [
@@ -2122,25 +2127,25 @@
        315.5
       ],
       "ist": [
-       271.8,
-       316.3
+       271.5,
+       318.3
       ],
-      "dx": -1.2,
-      "dy": 0.8,
-      "abstand": 1.5
+      "dx": -1.5,
+      "dy": 2.8,
+      "abstand": 3.2
      },
      "achse": {
       "soll_grad": 94.9,
-      "ist_grad": 95.4,
-      "abweichung_grad": 0.5,
-      "quer_px": 1.1,
-      "laengs_px": 0.9,
+      "ist_grad": 95.0,
+      "abweichung_grad": 0.1,
+      "quer_px": 1.2,
+      "laengs_px": 2.9,
       "laenge": [
-       287.0,
+       287.3,
        285.1
       ],
       "breite": [
-       66.2,
+       64.9,
        66.0
       ],
       "streckung_soll": 5.49
@@ -2153,12 +2158,12 @@
         185
        ],
        "ist": [
-        316,
-        187
+        319,
+        185
        ],
-       "dx": 9,
-       "dy": 2,
-       "abstand": 9.2,
+       "dx": 12,
+       "dy": 0,
+       "abstand": 12.0,
        "sichtbar": true,
        "unter_logo": false
       },
@@ -2182,8 +2187,8 @@
      "spitzen": []
     }
    ],
-   "trefferquote": 0.911,
-   "iou_mittel": 0.816,
+   "trefferquote": 0.914,
+   "iou_mittel": 0.795,
    "verfeinert": [
     {
      "teil": "bein_links",
@@ -2198,24 +2203,24 @@
       "left_leg": 3018,
       "tail": 48
      },
-     "treffer_px": 2790,
-     "iou": 0.823,
+     "treffer_px": 2655,
+     "iou": 0.76,
      "fremd": {
       "fuss_links": 0.007,
-      "Rest": 0.054
+      "Rest": 0.103
      },
-     "leer": 0.042,
+     "leer": 0.037,
      "merkmale": [],
-     "render_px": 3068,
-     "allein_px": 3869,
-     "deckung": 0.897,
-     "kern_deckung": 0.995,
-     "innen": 0.909,
-     "innen_saum": 0.982,
-     "verdeckt": 0.207,
+     "render_px": 3037,
+     "allein_px": 4786,
+     "deckung": 0.854,
+     "kern_deckung": 0.969,
+     "innen": 0.874,
+     "innen_saum": 0.952,
+     "verdeckt": 0.365,
      "verdeckt_von": {
-      "fuss_links": 0.043,
-      "Rest": 0.164
+      "fuss_links": 0.054,
+      "Rest": 0.312
      },
      "schwerpunkt": {
       "soll": [
@@ -2223,25 +2228,25 @@
        346.1
       ],
       "ist": [
-       228.6,
-       348.3
+       227.0,
+       353.2
       ],
-      "dx": -1.8,
-      "dy": 2.3,
-      "abstand": 2.9
+      "dx": -3.4,
+      "dy": 7.2,
+      "abstand": 7.9
      },
      "achse": {
       "soll_grad": 103.7,
-      "ist_grad": 105.2,
-      "abweichung_grad": 1.6,
-      "quer_px": 1.2,
-      "laengs_px": 2.6,
+      "ist_grad": 108.7,
+      "abweichung_grad": 5.1,
+      "quer_px": 1.6,
+      "laengs_px": 7.8,
       "laenge": [
-       134.0,
+       139.5,
        135.4
       ],
       "breite": [
-       40.6,
+       42.2,
        38.0
       ],
       "streckung_soll": 3.89
@@ -2254,12 +2259,12 @@
         257
        ],
        "ist": [
-        247,
-        264
+        257,
+        254
        ],
-       "dx": 5,
-       "dy": 7,
-       "abstand": 8.6,
+       "dx": 15,
+       "dy": -3,
+       "abstand": 15.3,
        "sichtbar": false,
        "unter_logo": false
       },
@@ -2270,13 +2275,13 @@
         400
        ],
        "ist": [
-        201,
-        408
+        196,
+        411
        ],
-       "dx": -3,
-       "dy": 8,
-       "abstand": 8.5,
-       "sichtbar": false,
+       "dx": -8,
+       "dy": 11,
+       "abstand": 13.6,
+       "sichtbar": true,
        "unter_logo": false
       }
      ],
@@ -2288,11 +2293,11 @@
        ],
        "unter_logo": false,
        "ist": [
-        201,
-        408
+        196,
+        411
        ],
-       "abstand": 8.5,
-       "sichtbar": false
+       "abstand": 13.6,
+       "sichtbar": true
       }
      ],
      "verfeinert": "left_leg"
@@ -2308,22 +2313,22 @@
      "geteilt": {
       "left_leg": 884
      },
-     "treffer_px": 856,
-     "iou": 0.889,
+     "treffer_px": 855,
+     "iou": 0.888,
      "fremd": {
-      "bein_links": 0.024
+      "bein_links": 0.043
      },
-     "leer": 0.033,
+     "leer": 0.015,
      "merkmale": [],
-     "render_px": 911,
+     "render_px": 910,
      "allein_px": 1024,
-     "deckung": 0.943,
+     "deckung": 0.942,
      "kern_deckung": 0.998,
      "innen": 0.94,
      "innen_saum": 0.997,
-     "verdeckt": 0.009,
+     "verdeckt": 0.01,
      "verdeckt_von": {
-      "bein_links": 0.009
+      "bein_links": 0.01
      },
      "schwerpunkt": {
       "soll": [
@@ -2340,8 +2345,8 @@
      },
      "achse": {
       "soll_grad": 78.5,
-      "ist_grad": 82.2,
-      "abweichung_grad": 3.8,
+      "ist_grad": 82.3,
+      "abweichung_grad": 3.9,
       "quer_px": -0.7,
       "laengs_px": -0.1,
       "laenge": [
@@ -2418,24 +2423,24 @@
       "part_of_Body": 1004,
       "right_leg": 4417
      },
-     "treffer_px": 3965,
-     "iou": 0.796,
+     "treffer_px": 3820,
+     "iou": 0.74,
      "fremd": {
-      "fuss_rechts": 0.046,
-      "Rest": 0.036
+      "fuss_rechts": 0.042,
+      "Rest": 0.073
      },
-     "leer": 0.04,
+     "leer": 0.038,
      "merkmale": [],
-     "render_px": 4431,
-     "allein_px": 4819,
-     "deckung": 0.879,
-     "kern_deckung": 0.951,
-     "innen": 0.895,
-     "innen_saum": 0.949,
-     "verdeckt": 0.081,
+     "render_px": 4470,
+     "allein_px": 5743,
+     "deckung": 0.846,
+     "kern_deckung": 0.923,
+     "innen": 0.855,
+     "innen_saum": 0.901,
+     "verdeckt": 0.222,
      "verdeckt_von": {
-      "fuss_rechts": 0.08,
-      "Rest": 0.001
+      "fuss_rechts": 0.079,
+      "Rest": 0.145
      },
      "schwerpunkt": {
       "soll": [
@@ -2443,25 +2448,25 @@
        347.5
       ],
       "ist": [
-       320.5,
-       344.9
+       319.3,
+       351.2
       ],
-      "dx": -1.2,
-      "dy": -2.6,
-      "abstand": 2.8
+      "dx": -2.4,
+      "dy": 3.7,
+      "abstand": 4.4
      },
      "achse": {
       "soll_grad": 93.3,
-      "ist_grad": 95.0,
-      "abweichung_grad": 1.7,
-      "quer_px": 1.3,
-      "laengs_px": -2.5,
+      "ist_grad": 98.4,
+      "abweichung_grad": 5.1,
+      "quer_px": 2.2,
+      "laengs_px": 3.8,
       "laenge": [
-       124.6,
+       146.3,
        122.4
       ],
       "breite": [
-       43.6,
+       44.5,
        45.5
       ],
       "streckung_soll": 2.99
@@ -2474,13 +2479,13 @@
         285
        ],
        "ist": [
-        317,
-        274
+        328,
+        265
        ],
-       "dx": -12,
-       "dy": -11,
-       "abstand": 16.3,
-       "sichtbar": true,
+       "dx": -1,
+       "dy": -20,
+       "abstand": 20.0,
+       "sichtbar": false,
        "unter_logo": false
       },
       {
@@ -2490,13 +2495,13 @@
         413
        ],
        "ist": [
-        302,
-        419
+        297,
+        426
        ],
-       "dx": -8,
-       "dy": 6,
-       "abstand": 10.0,
-       "sichtbar": false,
+       "dx": -13,
+       "dy": 13,
+       "abstand": 18.4,
+       "sichtbar": true,
        "unter_logo": false
       }
      ],
@@ -2508,11 +2513,11 @@
        ],
        "unter_logo": false,
        "ist": [
-        302,
-        419
+        297,
+        426
        ],
-       "abstand": 10.0,
-       "sichtbar": false
+       "abstand": 18.4,
+       "sichtbar": true
       }
      ],
      "verfeinert": "right_leg"
@@ -2529,46 +2534,49 @@
       "right_leg": 1237,
       "tail": 27
      },
-     "treffer_px": 1115,
-     "iou": 0.755,
+     "treffer_px": 991,
+     "iou": 0.682,
      "fremd": {
-      "bein_rechts": 0.002
+      "bein_rechts": 0.127,
+      "Rest": 0.006
      },
-     "leer": 0.097,
+     "leer": 0.065,
      "merkmale": [],
-     "render_px": 1354,
+     "render_px": 1207,
      "allein_px": 1354,
-     "deckung": 0.901,
-     "kern_deckung": 0.993,
-     "innen": 0.823,
-     "innen_saum": 0.94,
-     "verdeckt": 0.0,
-     "verdeckt_von": {},
+     "deckung": 0.801,
+     "kern_deckung": 0.877,
+     "innen": 0.821,
+     "innen_saum": 0.941,
+     "verdeckt": 0.109,
+     "verdeckt_von": {
+      "bein_rechts": 0.109
+     },
      "schwerpunkt": {
       "soll": [
        306.9,
        428.2
       ],
       "ist": [
-       305.7,
-       426.3
+       306.1,
+       427.2
       ],
-      "dx": -1.2,
-      "dy": -1.9,
-      "abstand": 2.3
+      "dx": -0.8,
+      "dy": -1.0,
+      "abstand": 1.3
      },
      "achse": {
       "soll_grad": 74.1,
-      "ist_grad": 88.6,
-      "abweichung_grad": 14.6,
-      "quer_px": 0.7,
-      "laengs_px": -2.2,
+      "ist_grad": 89.4,
+      "abweichung_grad": 15.4,
+      "quer_px": 0.5,
+      "laengs_px": -1.2,
       "laenge": [
-       50.9,
+       51.0,
        47.0
       ],
       "breite": [
-       28.8,
+       28.9,
        32.1
       ],
       "streckung_soll": 1.57
@@ -2723,34 +2731,33 @@
       23
      ],
      "maske_px": 29990,
-     "wertung_px": 29962,
+     "wertung_px": 29970,
      "logo_px": 0,
      "geteilt": {
       "left_arm_front": 48,
       "right_arm_front": 27
      },
-     "treffer_px": 26769,
-     "iou": 0.845,
+     "treffer_px": 25546,
+     "iou": 0.712,
      "fremd": {
-      "right_arm_front": 0.043,
-      "left_leg": 0.0,
-      "right_leg": 0.034,
-      "right_arm": 0.006
+      "right_arm_front": 0.006,
+      "right_leg": 0.002,
+      "right_arm": 0.125
      },
-     "leer": 0.023,
+     "leer": 0.014,
      "merkmale": [],
-     "render_px": 28494,
-     "allein_px": 28908,
-     "deckung": 0.893,
-     "kern_deckung": 0.916,
-     "innen": 0.939,
-     "innen_saum": 0.964,
-     "verdeckt": 0.014,
+     "render_px": 31453,
+     "allein_px": 35702,
+     "deckung": 0.852,
+     "kern_deckung": 0.861,
+     "innen": 0.812,
+     "innen_saum": 0.849,
+     "verdeckt": 0.119,
      "verdeckt_von": {
-      "left_arm_front": 0.006,
-      "right_arm_front": 0.001,
-      "right_leg": 0.007,
-      "right_arm": 0.001
+      "left_arm_front": 0.004,
+      "right_arm_front": 0.007,
+      "right_leg": 0.0,
+      "right_arm": 0.108
      },
      "schwerpunkt": {
       "soll": [
@@ -2758,25 +2765,25 @@
        249.5
       ],
       "ist": [
-       312.0,
-       241.5
+       310.8,
+       264.1
       ],
-      "dx": 6.3,
-      "dy": -8.0,
-      "abstand": 10.2
+      "dx": 5.1,
+      "dy": 14.5,
+      "abstand": 15.4
      },
      "achse": {
       "soll_grad": 132.3,
-      "ist_grad": 154.0,
-      "abweichung_grad": 21.8,
-      "quer_px": 0.7,
-      "laengs_px": -10.2,
+      "ist_grad": 124.7,
+      "abweichung_grad": 7.6,
+      "quer_px": -13.5,
+      "laengs_px": 7.3,
       "laenge": [
-       207.7,
+       233.7,
        219.8
       ],
       "breite": [
-       170.3,
+       176.5,
        160.3
       ],
       "streckung_soll": 1.41
@@ -2789,12 +2796,12 @@
         150
        ],
        "ist": [
-        424,
-        228
+        313,
+        140
        ],
-       "dx": 84,
-       "dy": 78,
-       "abstand": 114.6,
+       "dx": -27,
+       "dy": -10,
+       "abstand": 28.8,
        "sichtbar": true,
        "unter_logo": false
       },
@@ -2805,12 +2812,12 @@
         374
        ],
        "ist": [
-        207,
-        294
+        257,
+        400
        ],
-       "dx": -29,
-       "dy": -80,
-       "abstand": 85.1,
+       "dx": 21,
+       "dy": 26,
+       "abstand": 33.4,
        "sichtbar": true,
        "unter_logo": false
       }
@@ -2828,28 +2835,28 @@
       30
      ],
      "maske_px": 5607,
-     "wertung_px": 5560,
+     "wertung_px": 5559,
      "logo_px": 0,
      "geteilt": {
       "face_and_upper_body": 48
      },
-     "treffer_px": 4640,
-     "iou": 0.766,
+     "treffer_px": 4189,
+     "iou": 0.692,
      "fremd": {
-      "face_and_upper_body": 0.101,
+      "face_and_upper_body": 0.184,
       "left_leg": 0.003
      },
-     "leer": 0.061,
+     "leer": 0.059,
      "merkmale": [],
-     "render_px": 5137,
-     "allein_px": 6296,
-     "deckung": 0.835,
-     "kern_deckung": 0.911,
-     "innen": 0.903,
-     "innen_saum": 0.973,
-     "verdeckt": 0.184,
+     "render_px": 4681,
+     "allein_px": 6318,
+     "deckung": 0.754,
+     "kern_deckung": 0.811,
+     "innen": 0.895,
+     "innen_saum": 0.971,
+     "verdeckt": 0.259,
      "verdeckt_von": {
-      "face_and_upper_body": 0.185
+      "face_and_upper_body": 0.259
      },
      "schwerpunkt": {
       "soll": [
@@ -2857,25 +2864,25 @@
        344.2
       ],
       "ist": [
-       412.4,
-       352.0
+       414.9,
+       357.8
       ],
-      "dx": 2.8,
-      "dy": 7.7,
-      "abstand": 8.2
+      "dx": 5.3,
+      "dy": 13.6,
+      "abstand": 14.6
      },
      "achse": {
       "soll_grad": 66.4,
-      "ist_grad": 59.6,
-      "abweichung_grad": 6.9,
+      "ist_grad": 57.0,
+      "abweichung_grad": 9.4,
       "quer_px": 0.5,
-      "laengs_px": 8.2,
+      "laengs_px": 14.6,
       "laenge": [
-       145.7,
+       135.0,
        153.0
       ],
       "breite": [
-       46.8,
+       47.6,
        52.4
       ],
       "streckung_soll": 3.26
@@ -2954,34 +2961,34 @@
       31
      ],
      "maske_px": 9943,
-     "wertung_px": 9943,
+     "wertung_px": 9936,
      "logo_px": 2371,
      "geteilt": {
       "face_and_upper_body": 27
      },
-     "treffer_px": 8175,
-     "iou": 0.701,
+     "treffer_px": 6163,
+     "iou": 0.595,
      "fremd": {
-      "left_leg": 0.003
+      "face_and_upper_body": 0.236
      },
-     "leer": 0.175,
+     "leer": 0.144,
      "merkmale": [
       {
        "name": "Y Hand",
        "flaeche": 4280,
-       "gedeckt": 0.829
+       "gedeckt": 0.772
       }
      ],
-     "render_px": 9897,
-     "allein_px": 12011,
-     "deckung": 0.822,
-     "kern_deckung": 0.917,
-     "innen": 0.826,
-     "innen_saum": 0.884,
-     "verdeckt": 0.115,
+     "render_px": 6585,
+     "allein_px": 12138,
+     "deckung": 0.62,
+     "kern_deckung": 0.707,
+     "innen": 0.936,
+     "innen_saum": 0.98,
+     "verdeckt": 0.397,
      "verdeckt_von": {
-      "face_and_upper_body": 0.101,
-      "right_arm": 0.015
+      "face_and_upper_body": 0.381,
+      "right_arm": 0.017
      },
      "schwerpunkt": {
       "soll": [
@@ -2989,25 +2996,25 @@
        396.5
       ],
       "ist": [
-       238.1,
-       388.5
+       213.0,
+       404.5
       ],
-      "dx": 9.0,
-      "dy": -8.0,
-      "abstand": 12.1
+      "dx": -16.1,
+      "dy": 8.0,
+      "abstand": 18.0
      },
      "achse": {
       "soll_grad": 162.7,
-      "ist_grad": 152.0,
-      "abweichung_grad": 10.7,
-      "quer_px": 5.0,
-      "laengs_px": -11.0,
+      "ist_grad": 7.6,
+      "abweichung_grad": 24.9,
+      "quer_px": -2.9,
+      "laengs_px": 17.8,
       "laenge": [
-       189.3,
+       130.8,
        188.1
       ],
       "breite": [
-       107.0,
+       84.3,
        109.6
       ],
       "streckung_soll": 1.91
@@ -3112,8 +3119,8 @@
      ]
     }
    ],
-   "trefferquote": 0.871,
-   "iou_mittel": 0.771
+   "trefferquote": 0.79,
+   "iou_mittel": 0.666
   }
  }
 }

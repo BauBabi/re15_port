@@ -149,3 +149,25 @@ Folge: Breite je Hoehe aus den Masken; Beine, Fuesse und jede andere zu schmale 
 Wortlaut Nutzer: "Zu Variante J, sieht doch gut aus. Als naechstes Arbeite an Animationen, Angriffsmuster etc. Du kannst dich da gerne wahrscheinlich ein wenig an Birkin G4 orientieren."
 
 Folge: Variante J (varianten/J_dicker, Textur H2) ist das Modell; Form und Textur werden nicht mehr veraendert, ausser eine Bewegung verlangt Gelenke/Gewichte. Animationen (Gehen, Rennen, Hiebe, Biss, Griff, Treffer, Drohen, Flucht usw.) und Angriffsmuster duerfen sich an RE2-Birkin G4 (Typ 0x34) orientieren; die Form bleibt die eigene nach den zwei Screenshots (E1-E18).
+
+## E20 (2026-11-02 14:22): Vierbeiner mit Alligator-Kopf, Maul offen, Krallen aus Screenshot 2
+
+Wortlaut Nutzer: "Ah, ich erkenne gerade noch beim 4 Beinigen - Er hat eher so eine Aligator Form. Schaue mal die Screenshots die ich jetzt gemacht habe: Man hat einen Aligatormaessigen Oberkiefer und dann ist sein Mund offen auf den 2. Screenshot und man sieht den Unterkiefer. Und Naja, ansonsten kann man aus dem 2. Screenshot noch lernen wie seine Krallen aussehen."
+
+Neue Nutzer-Teile (Alpha-Ausschnitte in Version_80%/, nicht auf voller Leinwand), Lage per cv2.matchTemplate (TM_SQDIFF mit Alpha-Maske) in Screenshot 2 (Version_80%/vlcsnap-2026-10-31-00h29m02s830.png = bild2.png, Video A Standbild 145, ROOM5090 Cut 11):
+- Oberkiefer.png 121 x 97 bei x 216, y 279 (Rest -0,00006): dunkle, breite, schnauzenfoermige Masse, Oberkante von (216,280) nach (330,316).
+- Unterkiefer.png 105 x 92 bei x 239, y 318 (Rest -0,0003): roetliches Band mit 6 hellen Flecken (Abstand 16 px), schraeg von unten links (262,405) nach oben rechts (342,320).
+- Leinwand-Masken nutzer_teile/maske_oberkiefer.png, maske_unterkiefer.png (Alpha >= 200 wie die anderen), Lage in nutzer_teile/lage_E20.json (bewusst nicht in lage.json, siehe varianten/K_alligator/K.md Abschnitt 1).
+- Ueberlappung: Unterkiefer liegt zu 74 % im alten Teil right_arm_front (2477 von 3355 px). Das gerippte Band, bisher als rechter Unterarm gelesen, ist nach E20 der Unterkiefer; der rechte Unterarm liegt in Bild 2 dahinter.
+- Krallen: Nutzer-Teile right_arm_front (Klauenhand unten links) und left_arm_front (Klaue unten rechts) aus Screenshot 2; Lesung in K.md Abschnitt 2.
+
+Folgen: Variante K (varianten/K_alligator) baut auf J nur Kopf, Kiefer, Zaehne und Krallen neu; Rumpf, Beine, Arme, Schwanz und die Textur H2 (Seiten 0-2, CLUT-Zeilen 0-2) bleiben. Nachtrag Nutzer (Loecher zwischen Bein und Oberkoerper) wird in K mit erledigt (Gelenkkoerper, K.md).
+
+## E21 (2026-11-02, uebermittelt im Auftrag "Nachbesserung 1 der Stufe 3"): Kopfvariante K3
+
+Der Nutzer hat aus Variante K (E20, varianten/K_alligator) die Kopfvariante K3 (bester Fit, kurze, vorn breite Schnauze) gewaehlt; der beige
+Unterkiefer ohne Raumlicht bleibt (im Spiel macht Licht und Videofilter daraus das rote Band von Screenshot 2, K.md Abschnitt 6).
+Folgen: K3 wird ins Spiel-Asset RE2/BAHNSTEIG_FORM.EMD/.TIM eingebaut (Ober-/Unterkiefer an Knochen 22/23, Krallen an den Klauenknochen,
+Gelenkkoerper), Kiefer im Stehen/Gehen/Ruhe zu, Posen-Pins mit den K3-Kopfwinkeln; Loecher zwischen Bein und Oberkoerper in keiner Pose
+sichtbar (Nutzerbefund zu E20).
+Nachtrag Orchestrator (abends): Kopf-Nachformung "Schildkroete statt Alligator" ist zurueckgestellt; erst Klaerungsblatt im echten Fenster.

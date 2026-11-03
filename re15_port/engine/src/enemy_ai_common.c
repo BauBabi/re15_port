@@ -4550,6 +4550,9 @@ void re15_body_push_player(void)
             extern int re15_g5_body_push_player(re15_actor_t *pl);
             re15_g5_body_push_player(pl); continue;
         }
+        /* Riesenform (Bahnsteig-Form K3): drei Segmente am Gerippe statt des 0x30-Zylinders, Nachbesserung 1 M7
+         * (birkin_bahnsteig.c re15_bb_koerper_schub, PORT-WAHL nach dem G4-Muster FUN_80034d0c). */
+        if (re15_bb_bank_da(e)) { re15_bb_koerper_schub(e, pl, 0); continue; }
         re15_body_push(e, (int32_t)e->hit_radius_min, pl, RE15_BODY_R_PLAYER);
     }
 }
@@ -15076,7 +15079,7 @@ static void re15_birkin_root(int s)
          * Ohne das trug allein der Spieler-Pass die Ueberdeckung, und an einer Wand, wo Leon nicht seitlich ausweichen kann,
          * schob ihn das Rennen mit voller Laufgeschwindigkeit mit (Abnahme 2 M11: Nordspur 7472 Einheiten, zweiter Treffer)
          * oder 500 Einheiten je Bild durch die Diagonale Box 30 (Lauf rw_24700, z -25630 -> -27668). */
-        re15_enemy_selfpush_from_player(s, e);
+        re15_bb_koerper_schub(e, &g_actors[RE15_ACTOR_SLOT_PLAYER], 1);   /* Nachbesserung 1 M7: Segmente statt Zylinder r 1000 */
     }
     else re15_birkin_ai_tick(s);
     re15_enemy_body_push_tail(s, e);
@@ -15103,7 +15106,8 @@ static void re15_birkin_root(int s)
          * (@0x00832 `0d 00 06 00 0e 00`) x Add_speed = y 0, und band_from_y(0) = 0 = +0x82.
          * Die Klemme bleibt trotzdem in der Original-Form (Band aus +0x82). */
         re15_collision_constrain_contact_band(&g_room_rdt, bk_ox, bk_oz, &nx, &nz,
-                                              e->hit_radius_min, (int)e->floor, 4u,
+                                              re15_bb_bank_da(e) ? re15_bb_klemme_r(e) : e->hit_radius_min,   /* Nachbesserung 1 M7 */
+                                              (int)e->floor, 4u,
                                               NULL, NULL);
         e->x = nx; e->z = nz;
     }

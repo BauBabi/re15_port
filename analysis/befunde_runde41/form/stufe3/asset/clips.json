@@ -194,9 +194,11 @@
  },
  {
   "clip": 13,
-  "name": "frei (Ruhe)",
-  "bilder": 1,
-  "quelle": "Platzhalter, vom Tick nicht benutzt"
+  "name": "taumeln",
+  "bilder": 40,
+  "quelle": "PORT-WAHL (Nachbesserung 1, M5): Rueckstoss-Taumeln, Schleife, Spur -80 je Bild",
+  "treffer": [],
+  "ton": []
  },
  {
   "clip": 14,

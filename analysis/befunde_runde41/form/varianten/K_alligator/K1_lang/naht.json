@@ -1,0 +1,1483 @@
+{
+ "gelenke": {
+  "Bein l - Huefte": [
+   8,
+   1.0,
+   0.6,
+   null
+  ],
+  "Bein r - Huefte": [
+   9,
+   0.9,
+   1.0,
+   null
+  ],
+  "Arm l - Brust": [
+   11,
+   0.6,
+   0.4,
+   null
+  ],
+  "Arm r - Brust": [
+   16,
+   0.9,
+   1.0,
+   null
+  ],
+  "Hals - Brust": [
+   21,
+   1.0,
+   1.0,
+   null
+  ],
+  "Schwanz - Becken": [
+   1,
+   1.0,
+   0.8,
+   null
+  ],
+  "Kopf - Hals": [
+   22,
+   0.9,
+   1.0,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Wirbel - Huefte": [
+   7,
+   1.0,
+   1.0,
+   null
+  ],
+  "Brust - Wirbel": [
+   10,
+   1.0,
+   1.0,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Knie l": [
+   24,
+   0.9,
+   1.0,
+   null
+  ],
+  "Knie r": [
+   26,
+   1.0,
+   1.0,
+   null
+  ],
+  "Ellbogen l": [
+   12,
+   1.0,
+   1.0,
+   null
+  ],
+  "Ellbogen r": [
+   17,
+   0.7,
+   1.0,
+   null
+  ],
+  "Fuss l": [
+   25,
+   0.5,
+   0.4,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Fuss r": [
+   27,
+   0.6,
+   1.0,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Hand l": [
+   13,
+   1.0,
+   1.0,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Hand r": [
+   18,
+   1.0,
+   1.0,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Schwanz 1-2": [
+   2,
+   1.0,
+   1.0,
+   null
+  ],
+  "Schwanz 2-3": [
+   3,
+   1.0,
+   1.0,
+   null
+  ],
+  "Schwanz 3-4": [
+   4,
+   1.0,
+   1.0,
+   null
+  ],
+  "Schwanz 4-5": [
+   5,
+   1.0,
+   1.0,
+   null
+  ],
+  "Schwanz 5-6": [
+   6,
+   0.9,
+   1.0,
+   null
+  ],
+  "Kiefer - Kopf": [
+   23,
+   0.8,
+   1.0,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Muffe Bein l - Huefte": [
+   8,
+   0.6,
+   1.6,
+   null
+  ],
+  "Muffe Bein r - Huefte": [
+   9,
+   0.8,
+   1.3,
+   null
+  ],
+  "Muffe Arm r - Brust": [
+   16,
+   0.8,
+   1.3,
+   null
+  ],
+  "Muffe Hals - Brust": [
+   21,
+   1.0,
+   1.3,
+   null
+  ],
+  "Muffe Kopf - Hals": [
+   22,
+   0.9,
+   1.6,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Muffe Schwanz - Becken": [
+   1,
+   0.8,
+   1.6,
+   null
+  ],
+  "Muffe Hand l": [
+   13,
+   1.0,
+   1.6,
+   [
+    1,
+    0,
+    0
+   ]
+  ],
+  "Muffe Hand r": [
+   18,
+   1.0,
+   1.6,
+   [
+    1,
+    0,
+    0
+   ]
+  ]
+ },
+ "bericht": {
+  "Bein l - Huefte": {
+   "kind": 8,
+   "fq": 1.0,
+   "fn": 0.6,
+   "radius_kind": 330,
+   "aussen": [
+    -0.551,
+    0.462,
+    0.694
+   ],
+   "proben": 6,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     154,
+     211
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": false
+   }
+  },
+  "Bein r - Huefte": {
+   "kind": 9,
+   "fq": 0.9,
+   "fn": 1.0,
+   "radius_kind": 330,
+   "aussen": [
+    -0.551,
+    0.462,
+    -0.694
+   ],
+   "proben": 2,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     168
+    ],
+    "ok": false
+   }
+  },
+  "Arm l - Brust": {
+   "kind": 11,
+   "fq": 0.5,
+   "fn": 0.6,
+   "radius_kind": 547,
+   "aussen": [
+    0.402,
+    0.319,
+    0.858
+   ],
+   "proben": 26,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     827,
+     1792
+    ],
+    "ok": false
+   }
+  },
+  "Arm r - Brust": {
+   "kind": 16,
+   "fq": 0.9,
+   "fn": 1.0,
+   "radius_kind": 547,
+   "aussen": [
+    0.402,
+    0.319,
+    -0.858
+   ],
+   "proben": 2,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     230
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": false
+   }
+  },
+  "Hals - Brust": {
+   "kind": 21,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 540,
+   "aussen": [
+    0.831,
+    0.557,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": true
+   }
+  },
+  "Schwanz - Becken": {
+   "kind": 1,
+   "fq": 1.0,
+   "fn": 0.8,
+   "radius_kind": 347,
+   "aussen": [
+    0.009,
+    -1.0,
+    0.0
+   ],
+   "proben": 3,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     17,
+     171
+    ],
+    "bild2": [
+     0,
+     68
+    ],
+    "ok": false
+   }
+  },
+  "Kopf - Hals": {
+   "kind": 22,
+   "fq": 0.9,
+   "fn": 1.0,
+   "radius_kind": 486,
+   "aussen": [
+    0.998,
+    -0.061,
+    0.0
+   ],
+   "proben": 2,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     176
+    ],
+    "ok": false
+   }
+  },
+  "Wirbel - Huefte": {
+   "kind": 7,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 811,
+   "aussen": [
+    1.0,
+    -0.023,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     106
+    ],
+    "ok": true
+   }
+  },
+  "Brust - Wirbel": {
+   "kind": 10,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 933,
+   "aussen": [
+    0.997,
+    0.077,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     5,
+     92
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": true
+   }
+  },
+  "Knie l": {
+   "kind": 24,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 206,
+   "aussen": [
+    0.001,
+    0.998,
+    -0.07
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     4
+    ],
+    "bild2": [
+     0,
+     12
+    ],
+    "ok": true
+   }
+  },
+  "Knie r": {
+   "kind": 26,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 211,
+   "aussen": [
+    0.001,
+    0.998,
+    0.07
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     13
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": true
+   }
+  },
+  "Ellbogen l": {
+   "kind": 12,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 447,
+   "aussen": [
+    0.009,
+    0.996,
+    -0.087
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     56
+    ],
+    "ok": true
+   }
+  },
+  "Ellbogen r": {
+   "kind": 17,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 431,
+   "aussen": [
+    0.009,
+    0.996,
+    0.087
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     6,
+     6
+    ],
+    "bild2": [
+     0,
+     12
+    ],
+    "ok": true
+   }
+  },
+  "Fuss l": {
+   "kind": 25,
+   "fq": 0.5,
+   "fn": 0.4,
+   "radius_kind": 361,
+   "aussen": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "proben": 30,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     954,
+     1517
+    ],
+    "bild2": [
+     10,
+     787
+    ],
+    "ok": false
+   }
+  },
+  "Fuss r": {
+   "kind": 27,
+   "fq": 0.6,
+   "fn": 1.0,
+   "radius_kind": 233,
+   "aussen": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "proben": 13,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     17,
+     225
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": false
+   }
+  },
+  "Hand l": {
+   "kind": 13,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 192,
+   "aussen": [
+    -0.111,
+    0.99,
+    0.084
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     3
+    ],
+    "ok": true
+   }
+  },
+  "Hand r": {
+   "kind": 18,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 240,
+   "aussen": [
+    -0.111,
+    0.99,
+    -0.084
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     19
+    ],
+    "bild2": [
+     3,
+     3
+    ],
+    "ok": true
+   }
+  },
+  "Schwanz 1-2": {
+   "kind": 2,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 332,
+   "aussen": [
+    -0.929,
+    -0.37,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     19
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": true
+   }
+  },
+  "Schwanz 2-3": {
+   "kind": 3,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 332,
+   "aussen": [
+    -0.999,
+    0.032,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     3
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": true
+   }
+  },
+  "Schwanz 3-4": {
+   "kind": 4,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 264,
+   "aussen": [
+    -1.0,
+    -0.0,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": true
+   }
+  },
+  "Schwanz 4-5": {
+   "kind": 5,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 173,
+   "aussen": [
+    -1.0,
+    -0.007,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": true
+   }
+  },
+  "Schwanz 5-6": {
+   "kind": 6,
+   "fq": 0.9,
+   "fn": 1.0,
+   "radius_kind": 221,
+   "aussen": [
+    -1.0,
+    -0.021,
+    0.0
+   ],
+   "proben": 2,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     151
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": false
+   }
+  },
+  "Kiefer - Kopf": {
+   "kind": 23,
+   "fq": 1.0,
+   "fn": 1.0,
+   "radius_kind": 304,
+   "aussen": [
+    -0.925,
+    0.38,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     92
+    ],
+    "ok": true
+   }
+  },
+  "Muffe Bein l - Huefte": {
+   "kind": 8,
+   "fq": 0.6,
+   "fn": 1.6,
+   "radius_kind": 330,
+   "aussen": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "proben": 12,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     138,
+     294
+    ],
+    "bild2": [
+     0,
+     0
+    ],
+    "ok": false
+   }
+  },
+  "Muffe Bein r - Huefte": {
+   "kind": 9,
+   "fq": 0.8,
+   "fn": 1.3,
+   "radius_kind": 330,
+   "aussen": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "proben": 7,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     243
+    ],
+    "ok": false
+   }
+  },
+  "Muffe Arm l - Brust": {
+   "kind": 11,
+   "fq": 0.0,
+   "fn": 0.0,
+   "radius_kind": 547,
+   "aussen": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "proben": 21,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     2549,
+     3736
+    ],
+    "ok": false
+   }
+  },
+  "Muffe Arm r - Brust": {
+   "kind": 16,
+   "fq": 0.8,
+   "fn": 1.3,
+   "radius_kind": 547,
+   "aussen": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "proben": 7,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     0,
+     321
+    ],
+    "bild2": [
+     0,
+     344
+    ],
+    "ok": false
+   }
+  },
+  "Muffe Hals - Brust": {
+   "kind": 21,
+   "fq": 1.0,
+   "fn": 1.3,
+   "radius_kind": 540,
+   "aussen": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "proben": 2,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     30,
+     381
+    ],
+    "ok": false
+   }
+  },
+  "Muffe Kopf - Hals": {
+   "kind": 22,
+   "fq": 0.9,
+   "fn": 1.6,
+   "radius_kind": 486,
+   "aussen": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "proben": 3,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     177
+    ],
+    "ok": false
+   }
+  },
+  "Muffe Schwanz - Becken": {
+   "kind": 1,
+   "fq": 0.9,
+   "fn": 1.3,
+   "radius_kind": 347,
+   "aussen": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "proben": 4,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     29,
+     273
+    ],
+    "bild2": [
+     0,
+     84
+    ],
+    "ok": false
+   }
+  },
+  "Muffe Hand l": {
+   "kind": 13,
+   "fq": 1.0,
+   "fn": 1.6,
+   "radius_kind": 192,
+   "aussen": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     0,
+     0
+    ],
+    "bild2": [
+     0,
+     8
+    ],
+    "ok": true
+   }
+  },
+  "Muffe Hand r": {
+   "kind": 18,
+   "fq": 1.0,
+   "fn": 1.6,
+   "radius_kind": 240,
+   "aussen": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "proben": 1,
+   "erste_probe": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "bild1": [
+     0,
+     29
+    ],
+    "bild2": [
+     1,
+     12
+    ],
+    "ok": true
+   }
+  }
+ },
+ "grenzen": {
+  "neu_schwarz_max": 10,
+  "neu_aussen_max": 150,
+  "fq": [
+   1.0,
+   0.9,
+   0.8,
+   0.7,
+   0.6,
+   0.5,
+   0.4
+  ],
+  "fn": [
+   1.0,
+   0.8,
+   0.6,
+   0.4,
+   0.25
+  ]
+ },
+ "nachpruefung": {
+  "protokoll": {
+   "Bein l - Huefte": {
+    "fq": 1.0,
+    "fn": 0.6,
+    "iou_delta": [
+     0.0003,
+     0.0
+    ]
+   },
+   "Bein r - Huefte": {
+    "fq": 0.9,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0004
+    ]
+   },
+   "Arm l - Brust (verworfen)": [
+    {
+     "fq": 0.5,
+     "fn": 0.6,
+     "faellt": [
+      "b2.kante_7",
+      "V6"
+     ],
+     "iou_delta": [
+      0.0,
+      0.0002
+     ]
+    }
+   ],
+   "Arm l - Brust": {
+    "fq": 0.6,
+    "fn": 0.4,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Arm r - Brust": {
+    "fq": 0.9,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Hals - Brust": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Schwanz - Becken": {
+    "fq": 1.0,
+    "fn": 0.8,
+    "iou_delta": [
+     0.0001,
+     0.0
+    ]
+   },
+   "Kopf - Hals": {
+    "fq": 0.9,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Wirbel - Huefte": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Brust - Wirbel": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0002,
+     0.0015
+    ]
+   },
+   "Knie l (verworfen)": [
+    {
+     "fq": 1.0,
+     "fn": 1.0,
+     "faellt": [
+      "b1.nl_y342_links"
+     ],
+     "iou_delta": [
+      0.0002,
+      0.0
+     ]
+    }
+   ],
+   "Knie l": {
+    "fq": 0.9,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0001,
+     0.0
+    ]
+   },
+   "Knie r": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     -0.0002,
+     0.0001
+    ]
+   },
+   "Ellbogen l": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Ellbogen r (verworfen)": [
+    {
+     "fq": 1.0,
+     "fn": 1.0,
+     "faellt": [
+      "b1.kappe_spitze"
+     ],
+     "iou_delta": [
+      -0.0001,
+      0.0
+     ]
+    },
+    {
+     "fq": 0.9,
+     "fn": 1.0,
+     "faellt": [
+      "b1.kappe_spitze",
+      "b1.kappe_basis"
+     ],
+     "iou_delta": [
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "fq": 1.0,
+     "fn": 0.8,
+     "faellt": [
+      "b1.kappe_spitze",
+      "b1.kappe_basis"
+     ],
+     "iou_delta": [
+      -0.0001,
+      0.0
+     ]
+    },
+    {
+     "fq": 0.9,
+     "fn": 0.8,
+     "faellt": [
+      "b1.kappe_spitze",
+      "b1.kappe_basis"
+     ],
+     "iou_delta": [
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "fq": 0.8,
+     "fn": 1.0,
+     "faellt": [
+      "b1.kappe_basis"
+     ],
+     "iou_delta": [
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "fq": 1.0,
+     "fn": 0.6,
+     "faellt": [
+      "b1.kappe_spitze"
+     ],
+     "iou_delta": [
+      -0.0002,
+      0.0
+     ]
+    },
+    {
+     "fq": 0.8,
+     "fn": 0.8,
+     "faellt": [
+      "b1.kappe_spitze",
+      "b1.kappe_basis"
+     ],
+     "iou_delta": [
+      0.0,
+      0.0
+     ]
+    }
+   ],
+   "Ellbogen r": {
+    "fq": 0.7,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Fuss l": {
+    "fq": 0.5,
+    "fn": 0.4,
+    "iou_delta": [
+     -0.0004,
+     0.0
+    ]
+   },
+   "Fuss r": {
+    "fq": 0.6,
+    "fn": 1.0,
+    "iou_delta": [
+     0.001,
+     0.0
+    ]
+   },
+   "Hand l": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0001
+    ]
+   },
+   "Hand r": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0005,
+     0.0001
+    ]
+   },
+   "Schwanz 1-2": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Schwanz 2-3": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Schwanz 3-4": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Schwanz 4-5": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Schwanz 5-6": {
+    "fq": 0.9,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0037,
+     0.0
+    ]
+   },
+   "Kiefer - Kopf": {
+    "fq": 1.0,
+    "fn": 1.0,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Muffe Bein l - Huefte": {
+    "fq": 0.6,
+    "fn": 1.6,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Muffe Bein r - Huefte": {
+    "fq": 0.8,
+    "fn": 1.3,
+    "iou_delta": [
+     0.0,
+     0.0004
+    ]
+   },
+   "Muffe Arm r - Brust": {
+    "fq": 0.8,
+    "fn": 1.3,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Muffe Hals - Brust": {
+    "fq": 1.0,
+    "fn": 1.3,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Muffe Kopf - Hals": {
+    "fq": 0.9,
+    "fn": 1.6,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Muffe Schwanz - Becken (verworfen)": [
+    {
+     "fq": 0.9,
+     "fn": 1.3,
+     "faellt": [
+      "b1.scheitel_x305"
+     ],
+     "iou_delta": [
+      0.0001,
+      0.0
+     ]
+    }
+   ],
+   "Muffe Schwanz - Becken": {
+    "fq": 0.8,
+    "fn": 1.6,
+    "iou_delta": [
+     0.0,
+     0.0
+    ]
+   },
+   "Muffe Hand l": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "iou_delta": [
+     0.0,
+     0.0003
+    ]
+   },
+   "Muffe Hand r": {
+    "fq": 1.0,
+    "fn": 1.6,
+    "iou_delta": [
+     0.0008,
+     0.0003
+    ]
+   }
+  },
+  "ohne": {
+   "1": {
+    "iou": 0.9486,
+    "bestanden": 35,
+    "von": 38
+   },
+   "2": {
+    "iou": 0.9581,
+    "bestanden": 16,
+    "von": 16
+   }
+  },
+  "alle": {
+   "1": {
+    "iou": 0.9543,
+    "bestanden": 35,
+    "von": 38
+   },
+   "2": {
+    "iou": 0.9605,
+    "bestanden": 16,
+    "von": 16
+   }
+  },
+  "faellt_zusammen": []
+ },
+ "maulwinkel": {
+  "basis_ober_unter": [
+   0.379,
+   0.725
+  ],
+  "protokoll": [
+   {
+    "fq": 1.0,
+    "fn": 1.0,
+    "delta_ober": -0.014,
+    "delta_unter": -0.084
+   },
+   {
+    "fq": 1.0,
+    "fn": 0.8,
+    "delta_ober": -0.011,
+    "delta_unter": -0.074
+   },
+   {
+    "fq": 0.8,
+    "fn": 1.0,
+    "delta_ober": -0.001,
+    "delta_unter": 0.0
+   }
+  ],
+  "wahl": [
+   0.8,
+   1.0
+  ],
+  "spiel": 0.01
+ }
+}

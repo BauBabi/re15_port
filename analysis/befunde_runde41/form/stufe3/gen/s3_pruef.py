@@ -16,7 +16,7 @@ import form_emd as FE       # noqa: E402
 
 # Clips, deren Spur der Tick auf die Lage schiebt (bb_schieben): Rennen, Hieb, Gehen/Weichen, Nachhieb, Drohen, Biss, Flucht, Sturz.
 # Nicht: Zucken (BB_ZUCKEN nur bb_anim), Griff (Opfer-Spur), Stehen.
-BEWEGT = {0, 3, 4, 5, 9, 10, 11, 12, 26}
+BEWEGT = {0, 3, 4, 5, 9, 10, 11, 12, 13, 26}
 GLIED_ENDE = {'LH': 25, 'RH': 27, 'LV': 13, 'RV': 18}
 
 
@@ -38,8 +38,8 @@ def pruefen(pfad):
         n = len(form['knochen'])
         k = dict(k, spur=[0, 0, 0])            # die Spur traegt keine Pose (bb_spur), verglichen werden Wurzel + Winkel
         return FE.keyframe_schreiben(k, n, FE.keyframe_groesse(n))
-    j_posen = {'bild1': J['pool'][J['clips'][0]['bilder'][0]['kf']], 'bild2': J['pool'][J['clips'][1]['bilder'][0]['kf']],
-               'ruhe': J['pool'][J['clips'][2]['bilder'][0]['kf']]}
+    # Referenzposen des Rigs (Nachbesserung 1: Bild 1/2 aus K3, Ruhe = Ruhe von J mit Kiefer zu)
+    j_posen = {'bild1': r.keyframe(r.bild1), 'bild2': r.keyframe(r.bild2), 'ruhe': r.keyframe(r.ruhe)}
     fund = {k: [] for k in j_posen}
     for ci, c in enumerate(f['clips']):
         for bi, b in enumerate(c['bilder']):

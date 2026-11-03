@@ -13,7 +13,7 @@
 #   2  debug.log "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips" (BAHNSTEIG_FORM.EMD), die Form kommt mit HP 150 und laeuft
 #      (Clip 10, Clip 5)
 #   3  Die Form nimmt weiter Schaden: HP faellt unter 100
-#   4  Rueckstoss-Szene (Clip 8, HP 1), Sturz aus dem Wagen (Clip 12, Stufe 3), danach Typ 0x36 mit HP 600 (G5)
+#   4  Rueckstoss-Szene (Clip 13 Taumeln, Nachbesserung 1; HP 1), Sturz aus dem Wagen (Clip 12, Stufe 3), danach Typ 0x36 mit HP 600 (G5)
 #   5  Abnahme 2: der G5 faellt unter derselben Pistole (HP < 0), der Spieler lebt dabei noch. Bis zur Nachbesserung frass er den
 #      gesunden Spieler bei F2879 kurz vor dem Ziel (Polaritaet `bgtz` @0x801008e0 / @0x80103e80).
 #
@@ -121,7 +121,8 @@ function(ein_lauf _name _raum)
         if(_clip10 AND _st EQUAL 1 AND _hp LESS _form_min)
             set(_form_min "${_hp}")
         endif()
-        if(_clip10 AND _st EQUAL 2 AND _mo EQUAL 8 AND _hp EQUAL 1)
+        # Nachbesserung 1 M5: die Riesenform taumelt in Phase 1 (Clip 13), Clip 8 nur noch am Platz an der Sturzgrenze
+        if(_clip10 AND _st EQUAL 2 AND (_mo EQUAL 13 OR _mo EQUAL 8) AND _hp EQUAL 1)
             set(_rueck 1)
         endif()
         if(_rueck AND _st EQUAL 2 AND _mo EQUAL 12 AND _hp EQUAL 1)

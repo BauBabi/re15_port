@@ -74,9 +74,18 @@ void re15_bb_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(
 void re15_bb_wartet(int slot);
 void re15_bb_sturz_start(int slot);
 int  re15_bb_sturz_tick(int slot);              /* 1 = Clip zu Ende */
+void re15_bb_taumeln_start(int slot);          /* Nachbesserung 1 M5: Rueckstoss Phase 1, Clip 13 */
+void re15_bb_taumeln_tick(int slot);
+int  re15_bb_ton_zaehler(void);                 /* Testhaken M3: Raum-Ton 10 fuer stumme EDD-Ids 9-15 */
+/* Nachbesserung 1 M7/D (PORT-WAHL): Koerper-Segmente (form_weicht 1 = die Form weicht, 0 = der Spieler wird geschoben), Wandklemme,
+ * Schatten-Rechteck im Aktorraum (x0..x1 laengs, +-hz quer). */
+int     re15_bb_koerper_schub(re15_actor_t *e, re15_actor_t *pl, int form_weicht);
+int32_t re15_bb_klemme_r(const re15_actor_t *e);
+void    re15_bb_schatten(int32_t *x0, int32_t *x1, int32_t *hz);
 /* Testhaken, kein Verhalten: Trefferzaehler +0x21d und Zahl der abgesetzten Treffer-Blutspawns der Form. */
 int  re15_bb_zaehler(void);
 int  re15_bb_blut_zaehler(void);
+void re15_bb_blut_letzte(int32_t out[3]);       /* Testhaken M8a: Lage des letzten Blutspawns */
 int  re15_bb_cd_lauf_test(int setzen);
 /* Messhaken RE15_BB_POSE="x,z,gier,clip,bild,schnitt" (Sichtpruefung): der 0x30 steht fest, bild < 0 spielt ab. */
 int  re15_bb_pose_aktiv(void);
