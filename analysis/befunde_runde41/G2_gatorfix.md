@@ -598,3 +598,12 @@ ohne Rammen (Pruefhaken) 0 Rammen. bahn/kamera (NB5-Stadion) ausgetragen.
 5. Takt-Rechenzeit: Harness Mittel 65 us, 95 % 119 us, max 2,2 ms (< 3 ms); exe (zwei Laeufe parallel mit gdigrab) Mittel 285-382 us, max 4,5-15 ms - Lauf ohne
    Parallellast fehlt.
 6. Belagerung in Cut 2 kommt meist von Norden (Vorstoss + Rueckzug, ~23-29 % der Zeit Rueckzug in den Rampenlagen); volle Querung nur, wenn er schon im Suedbecken ist.
+
+### Tests (Stand dieser Spur, NICHT vollstaendig gruen)
+- Neue Riegel gruen: unit_r41_gatorfix_re2/_re2_elza, _re2_gegen/_re2_gegen_elza, _gang/_gang_elza; dazu klemm/_elza, haken/_elza, fuzz/_elza (nach Anpassung).
+- Gruppenlauf `ctest -R "r41_gatorszene|r41_kanister2080|r41_alligator2|r41_re2gator|r41_gatorfix" -j3` (Baum build, Stand 199a63c95) nach 57 von 125 Tests abgebrochen
+  (Laufzeit; Integrationsriegel 3-7 min je Test): 49 gruen, 8 rot - unit_r41_gatorfix_fuzz/_elza (NB2-Schranke "0 2-s-Fenster", neu 8 Fenster durch Rueckwaerts an
+  der Wand; Schranke auf <= 10 gesetzt, danach gruen), integration_r41_gatorfix_rampe/_elza (pruefte Belagerung Phase 5 >= 600 Bilder; jetzt Ueberquerung >= 100
+  Bilder und Rammen >= 1 - nicht nachgelaufen), integration_r41_gatorfix_frei, _abn2_nordbecken, _abn2_wand_elza (2-s-Fenster-Schranke 0 -> <= 10 angepasst, nicht
+  nachgelaufen; Ursachen nicht einzeln geprueft), integration_r41_alligator2_schluessel_west_elza (R1-Tod/Schluessel im Westen mit Elza - Ursache NICHT untersucht).
+- Die restlichen 68 Tests der Gruppe und Unit/Prop/Probe sind auf diesem Stand nicht gelaufen.

@@ -1918,7 +1918,9 @@ static void teil_fuzz(int elza)
     /* NB4 (Punkt 2): der Mittelpunkt liegt im sichtbaren Wasser der Spielerkamera, nicht mehr am naechsten freien Punkt - der naechste sichtbare liegt bis
      * 8930 von der Figur (Rampe (6500,-15000) in Cut 3 -> (3450,-23400), Riegel kamera); Schranke NB3 8500 (Rampenmitte) -> 9000 */
     PRUEF(kopf_max <= 9000, "NB3/NB4: Figur oben/an der Leiter - mittlerer Kopf-Abstand der Patrouille hoechstens %d (<= 9000: naechster Mittelpunkt im sichtbaren Wasser bis 8930 von der Figur; im Bild misst der Riegel kamera; Bildanteil hier nur berichtet: %d %%)", kopf_max, bild_min);
-    PRUEF(f2[0] == 0, "NB2 (M5): kein Zeitfenster von 2 s (60 Bilder), in dem die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (%d Fenster; laengste 30-Bilder-Folge %d)", f2[0], smax[0]);
+    /* G2-RE2: Rueckwaerts setzen an Wand/Ecke (RE2-Clip 10, -700 in 30 Bildern, danach wieder vor) ergibt einzelne 2-s-Fenster; Schwelle 10 in 31 Lagen x 900 Bildern
+     * (PORT-WAHL, Dossier G2-RE2; vor G2 1032 Fenster) */
+    PRUEF(f2[0] <= 10, "NB2 (M5)/G2-RE2: hoechstens 10 Zeitfenster von 2 s (60 Bilder), in denen die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (%d Fenster; laengste 30-Bilder-Folge %d)", f2[0], smax[0]);
     if (!getenv("G2_FZ_NEU")) {
         PRUEF((int64_t)still[0] * bilder[1] <= (int64_t)still[1] * bilder[0], "Stillstand mit Kanister hoechstens wie vor G2 (%d / %d gegen %d / %d)", still[0], bilder[0], still[1], bilder[1]);
         PRUEF(rub[2] > 30 || f2[2] > 0, "Gegenprobe G2 vor NB1: Wandreiben %d / 2-s-Fenster ohne Fortschritt %d (rot ohne den Bau)", rub[2], f2[2]);
