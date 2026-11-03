@@ -93,5 +93,8 @@ void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen 
 int  re15_bf_szene_im_schnitt(int cut);
 /* Region-Cull-Ausnahme (Zeichner): 1 = `a` ist eine Figur der Hangar-Szene und die Szene haelt Cut 12. */
 int  re15_bf_szene_zeigt(const re15_actor_t *a);
+/* Runde 41 SF Neuaufbau ab NB2 (aus NB3): 1 = die Hangar-Szene haelt Cut 12 -> Effekte (gruenes Blut) nicht gegen den
+ * Platzhalter-Anker cullen. */
+int  re15_bf_szene_effekte(void);
 
 #endif

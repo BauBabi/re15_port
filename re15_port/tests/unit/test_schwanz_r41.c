@@ -92,7 +92,10 @@ int main(void)
     re15_actor_t *a = &g_actors[20];
     memset(a, 0, sizeof *a);
     a->active = 1; a->type = 0x30u; a->x = -8488; a->z = -21651; a->rot_y = 1300;
-    a->motion = 0x0B; a->anim_frame = 20;
+    /* Runde 41 SF Neuaufbau ab NB2: Haltung wie NB2 (Becken 170 tiefer als NB4/NB5) und Schwanz in NB4-Laenge - in Clip 0x0B B20
+     * liegt die Spitze jetzt auf dem Boden (Modellraum: Gelenk 6 bei y -133, NB5-Stand -478), die Bodenregel haelt sie dort fest.
+     * Die freie Kette wird deshalb im Stand (Clip 0 B0, Gelenk 6 bei y -892) geprueft. */
+    a->motion = 0; a->anim_frame = 0;
     re15_skel_pose_t p[RE15_EMD_MAX_BONES], k[RE15_EMD_MAX_BONES];
     double sp[3], sk[3];
 
@@ -123,7 +126,23 @@ int main(void)
 
     /* (5) Szenenvorgabe Seite 4000 (wie k_schwanz_seite) -> rechte Seite, Freigabe -> zurueck durch die Mitte */
     re15_schwanz_r41_seite(20, 4000);
-    for (int i = 0; i < 25; i++) { takt(); pose(a, p, 1); }
+    double sim_min = 1e9, sim_max = 0;
+    for (int i = 0; i < 25; i++) {
+        takt(); pose(a, p, 1);
+        /* Runde 41 SF NB3 (Abnahme 1 Mangel 3): die SIMULIERTEN Glieder bleiben auch mit Seitenvorgabe so lang wie die
+         * gezeichneten (vorher 429..973 statt 424, weil die Laengen nach der Vorgabe gemessen wurden). */
+        for (int j = 1; j < 8; j++) {
+            int32_t g0[3], g1[3];
+            if (re15_schwanz_r41_gelenk(20, j - 1, g0) && re15_schwanz_r41_gelenk(20, j, g1)) {
+                const double l = sqrt((double)(g1[0] - g0[0]) * (g1[0] - g0[0]) + (double)(g1[1] - g0[1]) * (g1[1] - g0[1]) +
+                                      (double)(g1[2] - g0[2]) * (g1[2] - g0[2]));
+                if (l < sim_min) sim_min = l;
+                if (l > sim_max) sim_max = l;
+            }
+        }
+    }
+    CHECK(sim_min > glied(k, 17) - 6.0 && sim_max < glied(k, 17) + 6.0, "Seitenvorgabe: simulierte Glieder %.0f..%.0f statt %.0f",
+          sim_min, sim_max, glied(k, 17));
     spitze(p, sp);
     CHECK(sp[2] < -800.0, "Vorgabe rechts: Spitze z %.0f (Soll < -800)", sp[2]);
     re15_schwanz_r41_seite(20, 0);
@@ -134,9 +153,52 @@ int main(void)
         if (links < 0 && sp[2] > 1000.0) links = i;
     }
     CHECK(mitte >= 1 && mitte <= 12, "Freigabe: Mitte nach %d Takten (Video h28 -> h30..h34)", mitte);
-    CHECK(links > mitte && links <= 20, "Freigabe: linke Seite nach %d Takten (Video bis h38)", links);
+    /* Neuaufbau ab NB2: "linke Seite" nur, wenn die Ruhelage der Spitze links liegt (Clip 0x0B B20: z +1500..+1850); im Stand
+     * (Clip 0 B0, s. oben) liegt sie mittig - die Seitenvorgabe nutzt die Szene seit NB3 nicht mehr (Schwanzbahn). */
+    if (sk[2] > 1000.0) CHECK(links > mitte && links <= 20, "Freigabe: linke Seite nach %d Takten (Video bis h38)", links);
     fprintf(stderr, "Schwanz: Nachlauf max %.0f, Rest %.0f; Freigabe Mitte nach %d, links nach %d Takten\n",
             max_ab, end_ab, mitte, links);
+
+    /* (7) Runde 41 SF NB3: Szenenziel der Spitze (FABRIK) - erreichbares Ziel wird im selben Takt getroffen, die Glieder
+     *     bleiben gleich lang; Freigabe ohne Sprung. */
+    {
+        int32_t w0[3], ziel[3], g[3];
+        re15_schwanz_r41_gelenk(20, 0, w0);
+        ziel[0] = w0[0] + 900; ziel[1] = -300; ziel[2] = w0[2] - 1200;
+        re15_schwanz_r41_ziel(20, ziel, 4096);
+        takt(); pose(a, p, 1); pose(a, k, 0);
+        re15_schwanz_r41_gelenk(20, 7, g);
+        const double d = sqrt((double)(g[0] - ziel[0]) * (g[0] - ziel[0]) + (double)(g[1] - ziel[1]) * (g[1] - ziel[1]) +
+                              (double)(g[2] - ziel[2]) * (g[2] - ziel[2]));
+        CHECK(d < 40.0, "Ziel: Spitze %.0f vom Szenenziel (Soll < 40)", d);
+        verbunden(p, k, "Ziel");
+        re15_schwanz_r41_ziel(20, NULL, 0);
+        int32_t g1[3];
+        takt(); pose(a, p, 1);
+        re15_schwanz_r41_gelenk(20, 7, g1);
+        const double s = sqrt((double)(g1[0] - g[0]) * (g1[0] - g[0]) + (double)(g1[1] - g[1]) * (g1[1] - g[1]) +
+                              (double)(g1[2] - g[2]) * (g1[2] - g[2]));
+        CHECK(s < 700.0, "Ziel-Freigabe: Spitze springt %.0f in einem Takt", s);
+        fprintf(stderr, "Schwanz: Szenenziel getroffen auf %.0f, Freigabe-Schritt %.0f\n", d, s);
+    }
+    /* (8) Runde 41 SF NB3 (Abnahme 1 Mangel 12): ohne Ziel steht kein Glied flacher als 62 Grad zur Senkrechten (Labor-Pult:
+     *     kein waagerechter Dorn). */
+    {
+        double flach = 0;
+        a->rot_y = (int16_t)(a->rot_y + 1024);
+        for (int i = 0; i < 40; i++) {
+            takt(); pose(a, p, 1);
+            for (int j = 1; j < 8; j++) {
+                int32_t g0[3], g1[3];
+                if (!re15_schwanz_r41_gelenk(20, j - 1, g0) || !re15_schwanz_r41_gelenk(20, j, g1)) continue;
+                const double dx = g1[0] - g0[0], dy = g1[1] - g0[1], dz = g1[2] - g0[2];
+                const double w = acos(dy / sqrt(dx * dx + dy * dy + dz * dz + 1e-9)) * 180.0 / 3.14159265;
+                if (w > flach) flach = w;
+            }
+        }
+        CHECK(flach <= 63.0, "Haengen: Glied %.0f Grad von der Senkrechten (Soll <= 62)", flach);
+        fprintf(stderr, "Schwanz: flachstes Glied ohne Ziel %.0f Grad\n", flach);
+    }
 
     /* (6) EM30 mit 16 Knochen: keine Kette */
     {

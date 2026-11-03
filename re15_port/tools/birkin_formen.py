@@ -62,11 +62,15 @@ FORMEN = {
         # Verdickung). Video 4 (von Hand nachgezeichnete Umrisse, SF_belege/nb2) ist schmaler als die Form: Hoehe/Breite
         # Video 1,70 im Mittel (h0/40/64/100/116/124), Port mit Haltung 1,47; Gittersuche (tools/r41_sichel/nb2/anpassen.py
         # form_variante): IoU gleich (0,667 -> 0,665), H/B 1,65. Schultern/Arme stehen im Video nicht seitlich ab.
+        # Runde 41 SF Neuaufbau ab NB2 (2026-11-03, Nutzer: "Das 2. Bild von links ... sah doch, bis auf die Farbe im Vergleich
+        # zum Original recht gut aus"): Koerpermasse wie NB2 (6a1e9430d). Uebernommen aus NB3 nur der Nutzerwunsch "linke
+        # Klauenhand kleiner, nach dem Video": Klaue (12) 0,55/0,54/0,55 der EM30-Klaue (vorher NB2 1,171/1,15/1,171; Video
+        # h124/h132 Hand ~40 x 30 Bildpunkte gegen ~106 x 60, Abnahme 1 5c) und Klauen-Unterarm (11) Laenge 0,80 (Dicke wie NB2).
         skal={
             7:  (1.15, 1.10, 1.15),
             8:  (1.30, 1.25, 1.15),
             9:  (1.05, 1.05, 1.05),
-            10: (1.20, 1.12, 1.20), 11: (1.229, 1.12, 1.229), 12: (1.171, 1.15, 1.171),
+            10: (1.20, 1.12, 1.20), 11: (1.229, 0.80, 1.229), 12: (0.55, 0.54, 0.55),
             13: (1.20, 1.12, 1.20), 14: (1.229, 1.12, 1.229), 15: (1.171, 1.15, 1.171),
         },
         # Runde 41 SF N2 (Kopf): vorher (60, 170, 0) = Kopf 170 tiefer zwischen die Schultern (Beta-Screenshots). Video 4
@@ -79,7 +83,10 @@ FORMEN = {
         # (ducken()). Werte = Koordinatensuche gegen die von Hand nachgezeichneten Video-Umrisse h0/h40/h64/h100/h116/h124
         # (SF_belege/nb2/umrisse_video.json; tools/r41_sichel/nb2/anpassen.py, Lage aus dem Video-Fusspunkt, Clip-Bild/Gier je
         # Bild frei): IoU nach Verschiebung 0,585 -> 0,667. GESTALTUNG, keine RE-Werte.
-        ducken=dict(becken=110, spreiz=340, knie_aussen=0.2, rumpf=3, brust=20, kopf=0, arm_halten=0.575, arm_innen=20),
+        # Neuaufbau ab NB2: Haltung wie NB2; aus NB3 nur der Klauen-Ellbogen 60 Grad nach vorn (Teil des Wunsches "linke
+        # Klauenhand kleiner, nach dem Video": die kleine Klaue endet auf Oberschenkelhoehe wie im Video h124/h132).
+        ducken=dict(becken=110, spreiz=340, knie_aussen=0.2, rumpf=3, brust=20, kopf=0, arm_halten=0.575, arm_innen=20,
+                    ellbogen_links=60),
         # Nutzerhinweis 2026-10-30: "Die Hangar-Form hat auch direkt einen Tail am Ruecken."
         # Runde 41 Spur SF, Nutzerurteil 2026-11-02 "Der Schwanz ist viel zu starr": der Schwanz ist jetzt eine
         # eigene Kette aus 7 Knochen (16-22), angehaengt an Knochen 8 (Brust), Lage der Ruhegestalt wie bisher
@@ -89,14 +96,24 @@ FORMEN = {
         # Keyframe rechnet schwanz_bewegung (Nachschwingen aus der Rumpfbewegung, Gestaltung).
         schwanz_kette=dict(
             knochen=8,
-            punkte=[(-380, 120, 0), (-760, 420, 60), (-1150, 860, 120), (-1500, 1380, 90),
-                    (-1760, 1880, -20), (-1900, 2280, -120), (-1960, 2520, -160)],
-            radien=[300, 260, 215, 170, 125, 80, 34],
-            glieder=7, seiten=8, ueberlapp=0.45,
+            # Runde 41 SF NB4 (Abnahme 2 A3/A4): Laenge x1,1 um den Ansatz (Glied 424 -> ~466, gesamt 2968 -> ~3265). Video h22:
+            # Schwanz sichtbar von (325,275) bis zum Boden (238,408) = 2556 Einheiten (Rueckprojektion Cut 12) plus der verdeckte
+            # Teil Ansatz -> Austritt (>= 755); mit 7 x 424 war die Spitze h22 nicht erreichbar (50 Bildpunkte, Lauf nb4/t1).
+            punkte=[(-380, 120, 0), (-798, 450, 66), (-1227, 934, 132), (-1612, 1506, 99),
+                    (-1898, 2056, -22), (-2052, 2496, -132), (-2118, 2760, -176)],
+            # Runde 41 SF NB3 (Abnahme 1 Mangel 1/3): Wurzel-Durchmesser 300 statt 600 (Video h20 ~20 Bildpunkte bei Tiefe
+            # ~7000, h66-h70 15-18), 10 Seiten, gegliedertes Profil (Gelenk 0,8 / Mitte 1,05), Deckel in den Rumpf, Dorn
+            # 4 x Endradius.
+            # Runde 41 SF NB4 (Abnahme 2 A4: Dicke h20-h24 Port ~6-10, Video ~15-20 Bildpunkte = Durchmesser ~230-300 bei
+            # Abstand ~7000): der vordere Schwanz bleibt dick (Radien 150 -> 84 statt 150 -> 26), Dorn 3 x Endradius.
+            radien=[150, 146, 140, 132, 120, 102, 72],   # Lauf nb4/t10 mit ... 84: rechts h64-h70 825-964 rote Bildpunkte, Video 356-631
+            glieder=7, seiten=10, ueberlapp=0.45,
+            profil=[(0.0, 0.80), (0.12, 0.97), (0.45, 1.05), (0.80, 0.97), (1.0, 0.80)], dorn=3.0,
             # Runde 41 SF N1.5: rot-weiss gebaendert wie im Video (Schwanz h18-h28 Bild-links, h58-h70 Bild-rechts; vorher
             # Fleischtextur TPage 128 u 4-60 v 4-124). Bandstreifen TPage 130 u 0-42 v 92-130 (senkrechte hellere Streifen),
             # Laenge auf u (laengs='u') -> die Streifen liegen als Ringe um den Schwanz; eigene CLUT-Zeile 483 (cluts unten).
-            uv=dict(clut=483 << 6, page=130, u=(0, 42), v=(92, 130), laengs='u'),
+            # NB3: eigene gemalte Textur (schwanz_textur) in TPage 130 u 0-63 v 176-239, je Glied die ganze Hoehe.
+            uv=dict(clut=483 << 6, page=130, u=(0, 63), v=(176, 239), je_glied=True),
             # Nachschwingen (schwanz_bewegung): Feder und Nachlauf Wurzel -> Spitze, Daempfung je Bild, Schwere, Grenzwinkel
             bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.004, grenze=55),
         ),
@@ -134,15 +151,28 @@ FORMEN = {
         #  Zeile 484 Sichel aus Zeile 482: dunkel, fast unbunt (Video h128-h132 (21,23,18) = 0,58 der Hauthelligkeit; der
         #   Gruenstich ist Videokompression - der dunkle Torbogen daneben misst ebenso (14,16,16)). Lauf n2 mit
         #   (38,46,32)/(76,90,64) wirkte im Fenster olivgruen -> unbunt.
+        # Runde 41 SF NB3: gemalte Schwanztextur (schwanz_textur), Werte = Index in Zeile 483 je Laengenanteil des Glieds.
+        schwanz_textur=dict(u=(0, 63), v=(176, 239), streifen=20, streifen_n=3, rauschen=14,
+                            # Lauf nb3/e7 mit Band 196-202 (bis (172,124,120)): Schwanzkasten h64-h70 19 % hell (L > 110),
+                            # p90 L 126; Video 2 %, p90 86 -> Band 150-158, schmaler.
+                            # Runde 41 SF NB4 (Abnahme 2 2d: "Wuerstchenkette" - harte dunkle Gelenkringe, Video rot mit hellen
+                            # Ringen und weichem Uebergang; A2 "matter"): Gelenk 12-38 -> 62-84, breitere Uebergaenge.
+                            laenge=[(0.0, 62), (0.08, 92), (0.17, 150), (0.27, 156), (0.40, 116), (0.80, 108),
+                                    (0.92, 84), (1.0, 64)]),
         cluts=dict(
             haut_zeilen=(0, 1, 2),
-            haut=dict(dunkel=0.63, q0=1.2, q1=1.6, rot_hell=0.95, satt=0.82),
+            haut=dict(dunkel=0.63, q0=1.2, q1=1.6, rot_hell=0.95, satt=0.82),   # NB2 (N1.8); NB3-NB5-Abdunklung nicht uebernommen
             # Schwanz: Schwellen 44/52 = Tal/Gipfel der Streifen (Spalten-L des Bandstreifens 41..63) -> klare Baender
             # Lauf n5 (echtes Fenster, Schwanz h20-h26 Bild-links): (99,66,66) 41 % / (176,128,128) - heller als das Video,
             # die Flanke steht dort im Licht -> helle Farbe x0,78, Rot satter; Lauf n6 (Schwellen 48/56): Farben getroffen
             # (88,50,50) / (142,96,96), aber nur 42 % rot (Video 63 %) -> Schwellen 52/58.
-            zusatz=[dict(aus=2, l0=52, l1=58, dunkel=(96, 44, 46), hell=(140, 100, 100)),
-                    dict(aus=2, l0=20, l1=90, dunkel=(40, 40, 35), hell=(84, 81, 72)),
+            # Zeile 483 Schwanz, Runde 41 SF NB3 (Abnahme 1 Mangel 1): die Zweifarb-Zeile (Schwellen 52/58) machte den Schwanz im
+            # Fenster zu einem flachen rosa Rohr mit drei schwachen Ringen. Jetzt eine Farbtreppe fuer die gemalte Schwanztextur
+            # (schwanz_textur): Gelenk dunkel -> rot (Video 2-Mittel (92,54,55)) -> rosa-weiss (Video hell (137,90,91), p90
+            # (163,112,113), Glanz h66-h70 ~(200,150,150)).
+            zusatz=[dict(verlauf=[(0, (0, 0, 0)), (1, (24, 11, 13)), (40, (50, 21, 23)), (110, (98, 44, 46)),
+                                  (150, (124, 64, 64)), (200, (172, 124, 120)), (255, (212, 182, 176))]),
+                    dict(aus=2, l0=20, l1=90, dunkel=(40, 40, 35), hell=(84, 81, 72)),   # Zeile 484 Sichel wie NB2
                     # Zeile 485 Kopf aus Zeile 480 (Wundfleisch, L-Quantile 30/70 = 93/126): Video h108-h132 Kopfbereich
                     # Median r/g ~1,5, 40-50 % kraeftig rot, Lichter rosa (p90 ~(104-123,77-104,77-105)), 1,3x so hell
                     # wie der Rumpf; vorher im Fenster (Lauf n10) r/g 2,0, 72 % kraeftig rot, so hell wie der Rumpf.
@@ -151,7 +181,7 @@ FORMEN = {
                     # 42 % kraeftig rot, Kopf/Rumpf 1,41; x0,85 fuer Kopf/Rumpf ~1,2 wie das Video.
                     # Runde 41 SF N2: Kopf 350 hoeher -> Kopf/Rumpf an der Buehne (Gang h100-h124) 1,07-1,09 statt 1,2 (Video
                     # 1,11-1,28) -> beide Farben x1,12.
-                    dict(aus=0, l0=109, l1=140, dunkel=(114, 57, 55), hell=(167, 129, 125))],
+                    dict(aus=0, l0=109, l1=140, dunkel=(114, 57, 55), hell=(167, 129, 125))],   # Zeile 485 Kopf wie NB2
         ),
     ),
 }
@@ -388,17 +418,28 @@ def kette_ruhe(sw):
 
 def kette_meshes(sw, ruhe):
     """Je Glied ein Rohr-Mesh im Knochenraum (Y = Laengsachse): Manschette bei -ueberlapp, Ringe bei 0, L/2, L;
-    das letzte Glied endet in einer Spitze. Normalen radial in Laenge 4096, Windung wie haenge_schwanz_an."""
+    das letzte Glied endet in einer Spitze. Normalen radial in Laenge 4096, Windung wie haenge_schwanz_an.
+    Runde 41 SF NB3 (Abnahme 1 Mangel 1): mit sw['profil'] (Liste (t, Radiusfaktor)) bekommt jedes Glied eigene Ringe
+    entlang der Laenge (Gelenke schmal, Mitte bauchig -> gegliedertes Rohr wie im Video h64-h70), Glied 0 einen Deckel
+    in den Rumpf (vorher offenes Rohrende = schwarzer Spalt an der Huefte) und das letzte Glied einen spitzen Dorn
+    (sw['dorn'] x Endradius); die Textur laeuft dann je Glied ueber die ganze Bildhoehe (uv['je_glied'])."""
     S, uv = sw['seiten'], sw['uv']
     out = []
     n = sw['glieder']
+    profil = sw.get('profil')
     for i in range(n):
         Li, r0, r1 = ruhe['L'][i], ruhe['radien'][i], ruhe['radien'][i+1]
         s0, s1 = ruhe['s'][i], ruhe['s'][i+1]
-        ue = sw['ueberlapp'] * r0 if i > 0 else 0.0
-        ringe_y = ([-ue] if ue else []) + [0.0, Li / 2.0, float(Li)]
-        ringe_r = ([r0] if ue else []) + [r0, (r0 + r1) / 2.0, r1]
-        ringe_s = ([s0] if ue else []) + [s0, (s0 + s1) / 2.0, s1]
+        if profil:
+            ue = sw['ueberlapp'] * r0
+            ringe_y = [-ue] + [t * Li for t, _f in profil]
+            ringe_r = [profil[0][1] * r0] + [f * (r0 + (r1 - r0) * t) for t, f in profil]
+            ringe_s = [0.0] + [t for t, _f in profil]
+        else:
+            ue = sw['ueberlapp'] * r0 if i > 0 else 0.0
+            ringe_y = ([-ue] if ue else []) + [0.0, Li / 2.0, float(Li)]
+            ringe_r = ([r0] if ue else []) + [r0, (r0 + r1) / 2.0, r1]
+            ringe_s = ([s0] if ue else []) + [s0, (s0 + s1) / 2.0, s1]
         m = dict(v=[], n=[], tf=[], tuv=[], qf=[], quv=[])
         ringe = []
         for y, r in zip(ringe_y, ringe_r):
@@ -412,16 +453,24 @@ def kette_meshes(sw, ruhe):
             ringe.append(ring)
         if i == n - 1:
             sv = len(m['v'])
-            m['v'].append([0, int(round(Li + 2.5 * r1)), 0, 0])
+            m['v'].append([0, int(round(Li + sw.get('dorn', 2.5) * r1)), 0, 0])
             m['n'].append([0, 4096, 0, 0])
+        deckel = None
+        if profil and i == 0:                      # Deckel in den Rumpf: Kegel vom Manschettenring nach -y
+            deckel = len(m['v'])
+            m['v'].append([0, int(round(-ue - 0.8 * r0)), 0, 0])
+            m['n'].append([0, -4096, 0, 0])
 
         laengs = uv.get('laengs') == 'u'
+        je_glied = uv.get('je_glied', False)
         def u_(k):  return int(round(uv['u'][0] + (uv['u'][1] - uv['u'][0]) * k / S))
         def v_(t):  return int(round(uv['v'][0] + (uv['v'][1] - uv['v'][0]) * t))
 
         def tx(k, t):
             """(u, v) fuer Seite k und Laengenanteil t. laengs='u' (Runde 41 SF N1.5): Laenge auf u, Umfang auf v, damit
             die senkrechten Streifen des Bandstreifens (TPage 130 u 0-42) als Ringe ueber dem Schwanz liegen."""
+            if je_glied:                          # NB3: Umfang auf u, Gliedlaenge t (0..1) auf v
+                return (u_(k), v_(min(1.0, max(0.0, t))))
             if laengs:
                 return (int(round(uv['u'][0] + (uv['u'][1] - uv['u'][0]) * t)),
                         int(round(uv['v'][0] + (uv['v'][1] - uv['v'][0]) * k / S)))
@@ -453,8 +502,47 @@ def kette_meshes(sw, ruhe):
                 p0, p1 = tx(k, 1.0), tx(k + 1, 1.0)
                 m['tuv'].append([p0[0], p0[1], uv['clut'], p1[0], p1[1], uv['page'],
                                  (p0[0] + p1[0]) // 2, (p0[1] + p1[1]) // 2, 0])
+        if deckel is not None:
+            erste = ringe[0]
+            for k in range(S):
+                a, b = erste[k], erste[(k + 1) % S]
+                if not orient(a, b, deckel):
+                    a, b = b, a
+                m['tf'].append([a, a, b, b, deckel, deckel])
+                p0, p1 = tx(k, 0.0), tx(k + 1, 0.0)
+                m['tuv'].append([p0[0], p0[1], uv['clut'], p1[0], p1[1], uv['page'],
+                                 (p0[0] + p1[0]) // 2, (p0[1] + p1[1]) // 2, 0])
         out.append(m)
     return out
+
+
+def schwanz_textur(tim, p):
+    """Runde 41 SF NB3 (Abnahme 1 Mangel 1, GESTALTUNG nach Video 4): eigene Schwanztextur in die freie Flaeche der
+    TPage 130 (u 256+u0.., v v0.., von keinem EM30-Mesh benutzt: Seite 130 belegt v 0-167) malen. Je Glied laeuft v
+    ueber die ganze Hoehe: dunkles Gelenk -> helles rosa-weisses Band -> rotes Glied mit Laengsstreifen -> dunkles
+    Gelenk. Die Indizes zeigen in eine eigene Verlaufszeile (cluts zusatz 'verlauf'), Index 0 bleibt ungenutzt
+    (transparent). Struktur (Rauschen) aus der Helligkeit des Wundfleischs (TPage 128 u 66-126 v 4-90, Zeile 480),
+    damit die Flaeche nicht glatt wirkt. Vorher: Bandstreifen u 0-42 v 92-130 mit Zweifarb-Zeile 483 -> flaches Rosa."""
+    tim = bytearray(tim)
+    cx, cy, cw, ch, c, ende = _clut(tim)
+    iw, ih = struct.unpack_from('<HH', tim, ende + 8)
+    breite = iw * 2
+    pix = np.frombuffer(bytes(tim[ende + 12:ende + 12 + breite * ih]), np.uint8).reshape(ih, breite).copy()
+    L0 = (_rgb(c[0]) @ np.array([0.299, 0.587, 0.114]))
+    quelle = L0[pix[4:90, 66:126]]
+    quelle = (quelle - quelle.mean()) / max(quelle.std(), 1e-6)
+    u0, v0, bu, bv = 256 + p['u'][0], p['v'][0], p['u'][1] - p['u'][0] + 1, p['v'][1] - p['v'][0] + 1
+    assert v0 >= 168 and v0 + bv <= ih and u0 + bu <= breite, 'Schwanztextur ausserhalb der freien Flaeche'
+    stuetz_t, stuetz_w = zip(*p['laenge'])
+    for y in range(bv):
+        t = y / (bv - 1)
+        basis = float(np.interp(t, stuetz_t, stuetz_w))
+        for x in range(bu):
+            streif = p['streifen'] * np.sin(2 * np.pi * x * p['streifen_n'] / bu) if 0.35 < t < 0.88 else 0.0
+            rausch = p['rauschen'] * quelle[(y * 3) % quelle.shape[0], (x * 2) % quelle.shape[1]]
+            pix[v0 + y, u0 + x] = int(np.clip(round(basis + streif + rausch), 1, 255))
+    tim[ende + 12:ende + 12 + breite * ih] = pix.tobytes()
+    return bytes(tim)
 
 
 def emr_mit_kette(emr, sw, ruhe, winkel):
@@ -620,6 +708,20 @@ def umtexturieren(meshes, regeln):
                         continue
                     if 'y_ab' in r and min(m['v'][f[2*k+1]][1] for k in range(n)) < r['y_ab']:
                         continue
+                    # Runde 41 SF NB3: weitere Filter (Mesh-lokal, Mittelwert der Ecken bzw. CLUT-Zeile der Flaeche)
+                    if 'nur_clut' in r and (uv[2] >> 6) not in r['nur_clut']:
+                        continue
+                    mx = [sum(m['v'][f[2*k+1]][q] for k in range(n)) / n for q in range(3)]
+                    if 'x_ab' in r and mx[0] < r['x_ab']:
+                        continue
+                    if 'z_max' in r and abs(mx[2]) > r['z_max']:
+                        continue
+                    if 'my_ab' in r and mx[1] < r['my_ab']:
+                        continue
+                    if 'my_bis' in r and mx[1] > r['my_bis']:
+                        continue
+                    if 'mz_bis' in r and mx[2] > r['mz_bis']:      # Runde 41 SF NB4: nur die rechte Seite (z <)
+                        continue
                     wahl.append((ul, i, n))
             if not wahl:
                 continue
@@ -726,6 +828,32 @@ def band_zeile(c, p):
     return _pack(neu, c)
 
 
+def zusatz_zeile(orig, neu, zz):
+    """Eine Zusatzzeile: 'verlauf' = eigene Farbtreppe ueber die Indizes (Index 0 transparent, Runde 41 SF NB3
+    Schwanztextur); 'faktor' = Kopie der UMGEFAERBTEN Zeile zz['aus'] mal Faktor je Kanal (NB3 Lichtzonen: Rumpf/Beine
+    dunkler, Adern entsaettigt); sonst band_zeile aus der Originalzeile (N1.5-N1.10)."""
+    if 'verlauf' in zz:
+        idx, farben = zip(*zz['verlauf'])
+        k = np.arange(256)
+        rgb = np.stack([np.interp(k, idx, [f[j] for f in farben]) for j in range(3)], -1)
+        alt = np.full(256, 0x7FFF, np.int64); alt[0] = 0
+        return _pack(rgb, alt)
+    if 'faktor' in zz:
+        quelle = _rgb(neu[zz['aus']])
+        rgb = quelle * np.array(zz['faktor'], float)
+        if 'blau_faktor' in zz:                   # Jeans (b > r) nur maessig dunkler (Video h124: Jeans deutlich blau)
+            rgb = np.where((quelle[..., 2] > quelle[..., 0])[..., None], quelle * zz['blau_faktor'], rgb)
+        if 'entsaettigen' in zz:                  # Rot zur Helligkeit ziehen (Adern), Anteil je Eintrag nach r/g
+            L = rgb @ np.array([0.299, 0.587, 0.114])
+            q = rgb[..., 0] / np.maximum(rgb[..., 1], 8.0)
+            w = np.clip((q - 1.25) / 0.6, 0, 1)[..., None] * zz['entsaettigen']
+            rgb = rgb * (1 - w) + np.stack([L * 1.25, L * 0.92, L * 0.9], -1) * w
+        if 'blau_faktor' in zz:
+            rgb = np.where((quelle[..., 2] > quelle[..., 0])[..., None], quelle * zz['blau_faktor'], rgb)
+        return _pack(rgb, neu[zz['aus']])
+    return band_zeile(orig[zz['aus']], zz)
+
+
 def cluts_bauen(tim, cl):
     """Hautzeilen umfaerben und Zusatzzeilen (aus einer Quellzeile abgeleitet) anhaengen. Die Texel bleiben; nur der
     CLUT-Block waechst (h 3 -> 3 + n), Pixelblock unveraendert dahinter."""
@@ -733,7 +861,28 @@ def cluts_bauen(tim, cl):
     c = orig.copy()
     for z in cl.get('haut_zeilen', ()):
         c[z] = haut_zeile(orig[z], cl['haut'])
-    extra = [band_zeile(orig[zz['aus']], zz) for zz in cl.get('zusatz', ())]   # Zusatzzeilen aus der Originalzeile
+        if cl['haut'].get('entsaettigen'):      # Runde 41 SF NB3: Adern entsaettigen (wie zusatz_zeile), Jeans bleiben
+            rgb = _rgb(c[z]); L = rgb @ np.array([0.299, 0.587, 0.114])
+            q = rgb[..., 0] / np.maximum(rgb[..., 1], 8.0)
+            w = np.clip((q - 1.25) / 0.6, 0, 1)[..., None] * cl['haut']['entsaettigen']
+            neu = rgb * (1 - w) + np.stack([L * 1.25, L * 0.92, L * 0.9], -1) * w
+            neu = np.where((rgb[..., 2] > rgb[..., 0])[..., None], rgb, neu)
+            c[z] = _pack(neu, orig[z])
+        if 'hell' in cl['haut'] or 'kontrast' in cl['haut']:   # Runde 41 SF NB4: Helligkeit und Aderkontrast, Jeans bleiben
+            rgb = _rgb(c[z]); jeans = (rgb[..., 2] > rgb[..., 0]) | (c[z] == 0)
+            haut = ~jeans
+            mitte = rgb[haut].mean(0) if haut.any() else np.zeros(3)
+            k = cl['haut'].get('kontrast', 1.0)
+            neu = (rgb * k + mitte * (1 - k)) * cl['haut'].get('hell', 1.0)
+            li = cl['haut'].get('lichter')
+            if li and haut.any():                 # Runde 41 SF NB5: hellste Hauteintraege -> rosa-weisses Licht
+                L = neu @ np.array([0.299, 0.587, 0.114])
+                lq = np.quantile(L[haut], li['q']); lm = L[haut].max()
+                w = np.clip((L - lq) / max(lm - lq, 1.0), 0, 1)[..., None] * li['staerke']
+                neu = neu * (1 - w) + np.array(li['farbe'], float) * w
+            neu = np.where(jeans[..., None], rgb, neu)
+            c[z] = _pack(neu, orig[z])
+    extra = [zusatz_zeile(orig, c, zz) for zz in cl.get('zusatz', ())]
     alle = np.vstack([c] + [e[None] for e in extra]).astype('<u2')
     blk = struct.pack('<I4H', 12 + alle.size * 2, cx, cy, cw, alle.shape[0]) + alle.tobytes()
     return bytes(tim[:8]) + blk + bytes(tim[ende:])
@@ -896,9 +1045,16 @@ def ducken(emr, p):
             folgt = R1[8] @ lokal[ab]
             alt = R0[8] @ lokal[ab]
             W = folgt @ _exp(p['arm_halten'] * _log(folgt.T @ alt))
-            neu[ab] = _rx(innen * p['arm_innen'] * w) @ (R1[8].T @ W)
+            wi = p.get('arm_innen_links', p['arm_innen']) if ab == 10 else p['arm_innen']   # NB4: Klauenarm eigener Wert
+            neu[ab] = _rx(innen * wi * w) @ (R1[8].T @ W)
+        # Runde 41 SF NB3 (Abnahme 1 Mangel 2): Klauenarm im Ellbogen nach vorn beugen, damit die (verkleinerte) Klaue
+        # auf Hoehe des Oberschenkels endet (Video h124/h132 Handende y ~355-365 statt Knoechel). GESTALTUNG.
+        knochen = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13]
+        if p.get('ellbogen_links'):
+            neu[11] = _rz(-p['ellbogen_links'] * w) @ lokal[11]
+            knochen.append(11)
         struct.pack_into('<h', emr, o + 2, int(max(-32768, min(32767, round(wurzel1[1])))))
-        for b in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13):
+        for b in knochen:
             for i, wi in enumerate(_zerlege(neu[b])):
                 _bits_schreiben(emr, o + 12, b * 36 + i * 12, wi)
     return bytes(emr)
@@ -1055,6 +1211,8 @@ def baue(blob, form):
     tim = faerbe_tim(blob[md1_e:dir_off], form['tint'])
     if form.get('cluts'):
         tim = cluts_bauen(tim, form['cluts'])
+    if form.get('schwanz_textur'):
+        tim = schwanz_textur(tim, form['schwanz_textur'])
     if len(tim) % 4:
         tim += bytes(4 - len(tim) % 4)
     sek = [bytes(vor[d[i]:d[i+1]]) for i in range(7)]
@@ -1093,6 +1251,40 @@ ROT_AFFE = dict(typ=0x29, datei='EM29_ROT.EMD',
                                 [0.08, 0.14, 0.22]]), 0.62))
 
 
+# ═══════════════════════════════════════════════════ Spider-Man der Hangar-Szene (ROOM50A0/50A1)
+# Runde 41 SF NB3 (Abnahme 1 Mangel 14, "Aussehen ist entscheidend"): Video 4 h40-h65 zeigt den Spider-Man gelb-orange mit
+# schwarzen Streifen (gelbe Bildpunkte r > g > b + 15, Median (83,64,38), p25 (71,53,28), p75 (105,84,52); nb3/em2b.py), die
+# EM2B-Textur der Auslieferung ist dunkelbraun (mittlere Texel-Farbe (53,35,23) / (46,26,18)). Gestaltung: jeder CLUT-Eintrag
+# nach seiner Helligkeit auf eine Treppe schwarz -> gelb-orange; kraeftig rote Eintraege (Augen, Maul, r/g > 2,2) bleiben.
+# Lauf nb3/e7 mit gelb (232,170,66), l0 16, l1 72: gelbe Bildpunkte h40-h64 2980 (Video 11370), Median (91,68,28) (Video
+# (83,64,38)) -> mehr Texel gelb (l0 10, l1 55), Ton (225,168,90).
+# Runde 41 SF NB5 (Abnahme 3 B2 "breite DUNKLE Masse", B3 "oranges Bein"): mit dem Massstab 1,5 der Szene (birkin_formen.c
+# BF_SM_MASSSTAB) gelbe Bildpunkte (Maske der Abnahme) im Ansprung h4-h12 5100-7600 je Bild, Video 1150-1900; Halten 4300-6200,
+# Video 500-1450 -> weniger Texel bis ganz gelb (l0 16, l1 95), Ton unveraendert.
+SPIDERMAN = dict(typ=0x2B, datei='EM2B_HANGAR.EMD', schwarz=(8, 6, 4), gelb=(225, 168, 90), l0=16.0, l1=95.0, gamma=0.85)
+
+
+def baue_spiderman():
+    ems = open(EA.EMS_PFAD, 'rb').read()
+    off, ln = EA.ems_entry(ems, EA.EMS_ORDER.index(SPIDERMAN['typ']))
+    blob = bytearray(ems[off:off+ln])
+    d = EA.emd_dir(bytes(blob))
+    dir_off = u32(blob, 0)
+    tim = bytes(blob[d[-1]:dir_off])
+    cx, cy, cw, ch, c, ende = _clut(tim)
+    rgb = _rgb(c)
+    L = rgb @ np.array([0.299, 0.587, 0.114])
+    t = np.clip((L - SPIDERMAN['l0']) / (SPIDERMAN['l1'] - SPIDERMAN['l0']), 0, 1) ** SPIDERMAN['gamma']
+    neu = (np.array(SPIDERMAN['schwarz'], float) * (1 - t[..., None]) + np.array(SPIDERMAN['gelb'], float) * t[..., None])
+    rot = (rgb[..., 0] / np.maximum(rgb[..., 1], 8.0) > 2.2) & (rgb[..., 0] > 60)
+    neu = np.where(rot[..., None], rgb, neu)
+    w = _pack(neu, c).astype('<u2')
+    blk = bytearray(tim)
+    blk[20:20 + w.size * 2] = w.tobytes()
+    blob[d[-1]:dir_off] = bytes(blk)
+    return bytes(blob)
+
+
 def baue_rot_affe():
     ems = open(EA.EMS_PFAD, 'rb').read()
     off, ln = EA.ems_entry(ems, EA.EMS_ORDER.index(ROT_AFFE['typ']))
@@ -1129,6 +1321,7 @@ def main():
         mo.hinweis = 'NICHT byte-true: nur die CLUTs sind umgefaerbt (birkin_formen.py ROT_AFFE). Alles andere = EM29.'
         os.makedirs(a.blatt, exist_ok=True)
         EA.blatt(mo, 0, os.path.join(a.blatt, 'affe_rot.png'))
+    # Neuaufbau ab NB2: kein EM2B_HANGAR - der Spider-Man traegt die Auslieferungs-Textur (wie NB2; NB3-Gelb nicht uebernommen).
     basis = lade_em30()
     d = EA.emd_dir(basis)
     roh = basis[d[7]:d[8]]

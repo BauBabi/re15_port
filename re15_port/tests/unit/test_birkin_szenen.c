@@ -179,6 +179,12 @@ static void test_hangar(unsigned raum)
      *     Bild), der Spider-Man wird hochgehalten und landet am Boden, dann springt er davon und ist weg. */
     int max_hoehe = 0, ende = -1, starr_b = 0, starr_m = 0, lauf_b = 0, lauf_m = 0, sprung_max = 0, sm_am_boden = 0;
     int sm_weg = -1, ph_seen[8] = { 0 }, griff_takte = 0;
+    /* Runde 41 SF Neuaufbau ab NB2 (Nutzer 2026-11-03: Fangen und Wurf "vollkommen asynchron"): im Halten haengt der Spider-Man
+     * mit seinem Griffknochen (20) an Birkins Sichelhand (15). r41/sichel 3f91e5c57 hielt ihn 866-1243 Einheiten (57-84 Bildpunkte)
+     * daneben (eigene Bildversatz-Spur k_sm_halte5_dx/dy); NB2 6a1e9430d 39-126. Grenze 150 Einheiten = ~10 Bildpunkte in Birkins
+     * Blicktiefe (~7000, 1 Bildpunkt ~14,6 Einheiten), also sichtbar Hand an Glied; gemessen ab dem 5. Haltetakt (Video h16), vorher
+     * zieht der Griff ihn heran (h12-h14 396-762). */
+    int griff_max = 0, griff_n = 0;
     uint64_t kb = pose_kennung(b), km = pose_kennung(m);
     int32_t mx = m->x, my = m->y, mz = m->z;
     for (int f = 0; f < 200 && ende < 0; f++) {
@@ -195,6 +201,15 @@ static void test_hangar(unsigned raum)
                 if (d > sprung_max) sprung_max = d;
             }
             mx = m->x; my = m->y; mz = m->z;
+            if (ph == 3 && griff_takte >= 5) {   /* griff_takte 1 = h12 -> 5 = h16 */
+                int32_t hand[3], griff[3];
+                re15_enemy_bone_world_pos(b, 15, hand);
+                re15_enemy_bone_world_pos(m, 20, griff);
+                const double gx = hand[0] - griff[0], gy = hand[1] - griff[1], gz = hand[2] - griff[2];
+                const int ga = (int)sqrt(gx * gx + gy * gy + gz * gz);
+                if (ga > griff_max) griff_max = ga;
+                griff_n++;
+            }
         } else if (sm_weg < 0) sm_weg = f;
         if (ph == 7 && ende < 0) ende = f;
         if (re15_bf_hangar_riegel()) {
@@ -209,6 +224,8 @@ static void test_hangar(unsigned raum)
     for (int p = 1; p <= 7; p++) CHECK(ph_seen[p], "Phase %d nie erreicht", p);
     CHECK(max_hoehe > 2500, "Spider-Man nie hochgehalten (max %d)", max_hoehe);
     CHECK(sm_am_boden, "Spider-Man nie am Boden aufgeschlagen");
+    CHECK(griff_n >= 40 && griff_max < 150, "Griff nicht synchron: Griffknochen bis %d Einheiten von der Sichelhand (Soll < 150, %d Haltetakte)", griff_max, griff_n);
+    fprintf(stderr, "Griff: Abstand Sichelhand - Griffknochen im Halten hoechstens %d Einheiten\n", griff_max);
     CHECK(sprung_max <= 700, "Ansprung/Halten springt: %d Einheiten in einem Takt (Video h4..8 hoechstens 485)", sprung_max);
     CHECK(starr_b <= 1 && starr_m <= 1, "starr in der Szene: Birkin %d, Spider-Man %d Takte ohne Posenwechsel", starr_b, starr_m);
     CHECK(sm_weg > 0 && !m->active && re15_bf_hangar_slot(0) < 0, "Spider-Man flieht nicht aus dem Bild (aktiv %d)", m->active);

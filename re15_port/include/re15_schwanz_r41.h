@@ -28,6 +28,24 @@ int  re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *ske
 /* Szene: seitliche Vorgabe fuer Slot `slot` (Birkin-Raum z; + = rechte Seite, Einheiten am Schwanzende), 0 = frei. */
 void re15_schwanz_r41_seite(int slot, int32_t seite);
 
+/* Runde 41 SF NB3: Szenenziel der Schwanzspitze (Welt) fuer Slot `slot` mit Gewicht Q12 (4096 = Spitze liegt auf dem
+ * Ziel, FABRIK von der Wurzel; 0 oder spitze == NULL = aus). Ohne Ziel haengt jedes Glied hoechstens 62 Grad von der
+ * Senkrechten ab (Labor-Pult: kein waagerechter Dorn). */
+void re15_schwanz_r41_ziel(int slot, const int32_t spitze[3], int32_t gewicht_q12);
+
+/* Runde 41 SF NB4 (Abnahme 2 A1/A2/A4): Fuehrung des Szenenziels. `via` (Welt, NULL = keiner) ist ein Durchgangspunkt fuer
+ * Gelenk `via_j` (1..6): FABRIK in zwei Abschnitten Wurzel -> via -> Spitze. `beuge_q12` (Welt, Q12, NULL = aus) laesst die
+ * Rechnung an einer in diese Richtung gebogenen Startform beginnen statt am Federstand; die Szene gibt die Blickrichtung der
+ * Kamera, damit ueberschuessige Laenge in der Tiefe (hinter dem Koerper) liegt. Gilt nur, solange ein Ziel gesetzt ist. */
+void re15_schwanz_r41_fuehrung(int slot, const int32_t via[3], int via_j, const int32_t beuge_q12[3]);
+
+/* Runde 41 SF NB5 (Abnahme 3 B1): Dicke der gezeichneten Glieder 16-22 (Q12, 4096 = Modell) fuer Slot `slot`; skaliert nur
+ * den Querschnitt (lokale x/z-Achsen), Gliedlaengen und Kette bleiben. 0 = 4096. */
+void re15_schwanz_r41_dicke(int slot, int32_t dicke_q12);
+/* Runde 41 SF NB5 (Abnahme 3 B1): die ersten `glieder` Glieder ab der Wurzel werden ohne Querschnitt gezeichnet (verdeckt - im
+ * Video liegt das Stueck Huefte -> Austritt hinter dem Koerper); Kette und Lage bleiben. 0 = alle sichtbar. */
+void re15_schwanz_r41_verdeckt(int slot, int glieder);
+
 /* Zuruecksetzen (Raumwechsel, Tests). */
 void re15_schwanz_r41_reset(void);
 

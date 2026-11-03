@@ -123,7 +123,7 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         int bewegt = 0, geduckt = 0, wurzel_abw = 0, winkel_abw = 0, fuss_weg = 0;
         double fuss_max = 0;
         const uint8_t *k0 = s_form.skel.keyframe_data;
-        static const int fest[] = { 0, 11, 12, 14, 15 };
+        static const int fest[] = { 0, 12, 14, 15 };   /* Neuaufbau ab NB2: 11 = Klauen-Ellbogen 60 Grad nach vorn (NB3, Klaue) */
         for (int k = 0; k < kn; k++) {
             const uint8_t *a = s_basis.skel.keyframe_data + (size_t)k * ka;
             const uint8_t *b = s_form.skel.keyframe_data + (size_t)k * kb;
@@ -172,7 +172,7 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         }
         CHECK(wurzel_abw == 0, "%s: %d Keyframes mit Wurzel x/z/Spur anders oder Becken ausserhalb 0..%d", name, wurzel_abw,
               BECKEN);
-        CHECK(winkel_abw == 0, "%s: %d Winkel der Knochen 0/11/12/14/15 weichen von EM30 ab", name, winkel_abw);
+        CHECK(winkel_abw == 0, "%s: %d Winkel der Knochen 0/12/14/15 weichen von EM30 ab", name, winkel_abw);
         CHECK(fuss_weg == 0, "%s: %d Fussgelenke mehr als %d vom EM30-Ort (max %.0f)", name, fuss_weg, SPREIZ + 40, fuss_max);
         CHECK(geduckt > kn / 2, "%s: nur %d von %d Keyframes geduckt", name, geduckt, kn);
         CHECK(bewegt > kn / 2, "%s: Schwanz starr (%d von %d Keyframes anders als Keyframe 0)", name, bewegt, kn);

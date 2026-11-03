@@ -18,7 +18,9 @@
 #include "re15_enemy_ai.h"     /* Runde 41 Spur H: re15_player_is_grabbed */
 #include "re15_skeleton.h"     /* Runde 41 Spur H: re15_cos_q12 / re15_sin_q12 (Gang auf die Kamera zu) */
 #include "re15_engine.h"       /* Runde 41 Spur H: g_engine.frame_count (nur Messzeile RE15_HANGAR_LOG) */
-#include "re15_schwanz_r41.h"  /* Runde 41 SF N1.9: Seitenvorgabe der Schwanz-Feder-Kette in der Hangar-Szene */
+#include "re15_schwanz_r41.h"  /* Runde 41 SF N1.9: Schwanz-Kette */
+#include "re15_esp.h"          /* Neuaufbau ab NB2 (aus NB3/NB5): gruenes Blut (re15_esp_fx_spawn_ex, abr_port) */
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
@@ -173,7 +175,7 @@ void re15_bf_morph_zu_g5(int slot)
 #define BF_H_WURF        72
 #define BF_H_AUFSCHLAG   76
 #define BF_H_AUFSPRINGEN 80          /* Video h80: Beine schon hoch, h82..86 rechts hinaus; Lauf n5 (Start h82) war 2 Bilder spaet */
-#define BF_H_WEG         86
+#define BF_H_WEG         89          /* Neuaufbau ab NB2: Takt 89 = Bild 87, Video h87 weg (h86 noch 5266 Bildpunkte am Rand) */
 #define BF_H_GANG        90
 #define BF_H_ENDE       135
 /* Birkin-Clip 0x0B Bild je Videobild (stueckweise linear): Griff beginnt h7 (Klaue bei h12 auf Brusthoehe B5, ueber dem
@@ -195,17 +197,65 @@ static const int16_t k_birkin_bild[BF_BILD_N][2] = {
 static const int16_t k_birkin_gier[][2] = {
     {   0, -1270 }, {  66, -1270 }, {  72,     0 }, { BF_H_AUFSCHLAG, 0 } };
 #define BF_GANG_SCHRITT  22          /* Video h90..135: ~1000 Einheiten in 45 Bildern */
-/* Schwanz-Seitenvorgabe (Runde 41 SF N1.9, PORT-WAHL nach Videomessung; Feder-Kette engine/src/schwanz_r41.c):
- * Video 4 Hangar, rote Flecken unter der Huefte: h18-h24 Bild-links bis zum Boden (x 223-331), h26-h28 links oben
- * (x 230-263), h30-h34 zwischen den Knien (x 327-374), h38-h48 Bild-rechts auf Hufthoehe (x 402-430), h60-h70 Bild-rechts
- * bis zum Boden. Birkin steht zur Kamera: Bild-links = seine rechte Seite. In Clip 0x0B liegt die Schwanzspitze auf der
- * linken Seite (Modell z +1500..+1850, B5..B28) -> Vorgabe 4000 nach rechts ab dem Aufprall (die Kette ist dann gestreckt,
- * Spitze gemessen z < -800, test_schwanz_r41; 3200 erreichte nur -721), ab h27 zurueck,
- * Mitte bei h30, dann frei (die Feder schwingt selbst ueber). Werte in Einheiten an der Spitze. Lauf n8 mit zusaetzlicher
- * Vorgabe -900 bei h36: Spitze h36-h44 bei Bild-x 261-276, Video 200-214 -> gestrichen. */
-static const int16_t k_schwanz_seite[][2] = {
-    { 11, 0 }, { 16, 3300 }, { 27, 3300 }, { 30, 0 }, { 31, 0 }, { 34, 1700 }, { 39, 1700 }, { 43, 0 } };
-#define BF_SCHWANZ_N ((int)(sizeof k_schwanz_seite / sizeof k_schwanz_seite[0]))
+/* Runde 41 SF Neuaufbau ab NB2 (Nutzerwunsch "Schwanz: laenger, Laenge, Glieder und Baender wie im Video, Bewegung 1:1 nach
+ * dem Video"): Schwanzbahn und Verdecken aus NB3-NB5 (r41/sichel 3f91e5c57) uebernommen. Die Tabelle ist je VIDEOBILD h; der
+ * NB2-Takt h wird im Bild h - 2 gezeichnet (Lauf nb2neu/G2: Messzeile "h-1 F240", erstes Letterbox-Bild F243) -> die Szene
+ * ruft bf_schwanz_ziel mit dem Bild des Takts (BF_BILD_VERSATZ). */
+#define BF_BILD_VERSATZ (-2)
+#define BF_N(t) ((int)(sizeof (t) / sizeof (t)[0]))
+/* Runde 41 SF NB3 (Abnahme 1 Mangel 3): die Seitenvorgabe ist ersetzt. Der Schwanz faehrt jetzt die Bahn der Spitze aus
+ * dem Video direkt nach (Tabelle 5d der Abnahme, Bildpunkte 640x480 je Videobild), FABRIK von der Wurzel
+ * (re15_schwanz_r41_ziel). art 0 = Punkt auf dem Boden, 1 = Blicktiefe der Birkin-Wurzel + tiefe, 2 = verdeckt hinter
+ * dem Koerper (Modellraum (-1500, -150, 200), Video h74-h100: Schwanz nicht sichtbar; vorher Haken ueber dem Ruecken).
+ * Quellen: Abnahme 5d (h20-h34, h60-h70), SF N1.2 (h38-h48 Fleck x 402-430 y 289-326). */
+typedef struct { int16_t h, vx, vy, art, tiefe; } bf_schwanzpunkt_t;
+/* Runde 41 SF NB4 (Abnahme 2 HSF_abnahme_2.md A1-A4; PORT-WAHL nach Video 4, Bildpunkte 640x480, Ziel je VIDEOBILD h).
+ * A3 Zeitversatz: der Szenentakt h wird im Spielbild h+1 gezeichnet (Dump F = h + 236, Videobild h = F - 235; die Messzeile
+ * "hN Schwanzspitze" zeigt den Stand des Bilds F = N + 235). NB3 verglich Video h mit Messzeile h+1 und setzte die Tabelle so
+ * 1 Bild zu spaet (Abnahme 2a: am gleichen Bild Mittel 18, max 56 Bildpunkte). Jetzt ist h der Tabelle das Videobild, der
+ * Takt h setzt das Ziel fuer h+1 (bf_schwanz_ziel(b, h + 1)).
+ * A4 Form: zusaetzlich ein Durchgangspunkt `via` fuer das Gelenk v.h (dort tritt der Schwanz im Video aus dem
+ * Koerperumriss) und eine in die Blickrichtung gebogene Startform (re15_schwanz_r41_fuehrung): die ueberschuessige Laenge
+ * liegt hinter dem Koerper, das Bild zeigt eine gerade Linie via -> Spitze. Videopunkte am Raster gelesen
+ * (Lupe f 1,6, Blaetter nb4 v_schwanz_a/b): h18/h20/h22 Diagonale (316,262)/(318,263)/(325,275) -> (290,340)/(280,357)/
+ * (238,408); h24 Knick (293,340) -> (205,352); h26 Knick (300,345) -> (222,290); h28 (262,340) -> (232,300); h30-h34 zwischen
+ * den Knien; h58 kurzes Stueck (420-430, 315-345); h60-h70 gerade von (430,320-335) zum Boden (455,390) .. (530,410);
+ * h72 Rest (390-400, 340-360); h74.. nichts.
+ * A1/A2 Verdeckung: Video h36-h56 und h74-h102 kein Schwanz (Abnahme 2b: 0 kraeftig rote Bildpunkte rechts der Huefte) ->
+ * Spitze und via auf dem Sehstrahl durch die Koerpermitte HINTER den Koerper (art 1, tiefe +1800 / +900).
+ * art 0 = Boden, 1 = Blicktiefe der Birkin-Wurzel (Hoehe -1000) + tiefe, 2 = Modellraum hinter dem Koerper (nicht mehr benutzt). */
+typedef struct { bf_schwanzpunkt_t s, v; } bf_schwanzbahn_t;   /* v.h = Gelenk des Durchgangspunkts (1..6) */
+/* via-Gelenk je Eintrag nach der Erreichbarkeit (Rueckprojektion, Glied ~466 nach NB4-Verlaengerung, Lauf nb4/t1: Ansatz ->
+ * Austritt 664-819 (h16-h22), 1477-1495 (h24/h26), 1960 (h28), ~1000 (h30-h34, h60-h70); Austritt -> Spitze bis 2556 (h22)). */
+static const bf_schwanzbahn_t k_schwanz_bahn[] = {
+    { { 16, 300, 345, 1,    0 }, { 2, 320, 272, 1, -150 } }, { { 18, 290, 340, 1,    0 }, { 2, 316, 262, 1, -150 } },
+    { { 20, 280, 357, 1,    0 }, { 2, 318, 263, 1, -150 } }, { { 22, 238, 408, 0,    0 }, { 2, 312, 298, 1, -150 } },
+    { { 24, 205, 352, 1,    0 }, { 3, 293, 340, 1, -150 } }, { { 26, 222, 290, 1,    0 }, { 3, 300, 345, 1, -150 } },
+    { { 28, 232, 300, 1,    0 }, { 4, 262, 340, 1, -150 } }, { { 30, 318, 372, 1, -300 }, { 3, 330, 330, 1,    0 } },
+    { { 32, 340, 383, 1, -300 }, { 3, 345, 335, 1,    0 } }, { { 34, 365, 375, 1, -200 }, { 3, 360, 330, 1,  200 } },
+    { { 36, 395, 300, 1, 1800 }, { 3, 390, 290, 1,  900 } }, { { 56, 395, 300, 1, 1800 }, { 3, 390, 290, 1,  900 } },
+    { { 58, 425, 340, 1,  700 }, { 3, 415, 300, 1,  900 } }, { { 60, 455, 390, 1,    0 }, { 4, 430, 320, 1,    0 } },
+    { { 62, 470, 410, 1,    0 }, { 4, 430, 325, 1,    0 } }, { { 64, 505, 425, 0,    0 }, { 3, 430, 335, 1,    0 } },
+    { { 66, 515, 408, 1,    0 }, { 3, 430, 335, 1,    0 } }, { { 68, 530, 410, 1,    0 }, { 3, 430, 330, 1,    0 } },
+    { { 70, 522, 402, 1,    0 }, { 3, 430, 335, 1,    0 } }, { { 72, 395, 300, 1, 1800 }, { 3, 390, 290, 1,  900 } },
+    { { 74, 395, 300, 1, 1800 }, { 3, 390, 290, 1,  900 } }, { { 102, 395, 300, 1, 1800 }, { 3, 390, 290, 1,  900 } } };
+#define BF_SCHWANZ_N ((int)(sizeof k_schwanz_bahn / sizeof k_schwanz_bahn[0]))
+/* NB5 (Abnahme 3 B1 "Schwanz h60-h72: oberes Stueck an der Huefte nicht sichtbar, duenner, h72 weg"): kraeftig rot im Kasten
+ * x 395-435 y 270-335 h62-h72 Video 88/57/8/0/62/0, Port NB4 187/298/345/373/495/365; Schwanzkasten x 420-545 y 320-435 h64-h70
+ * Video 356/544/631/523, Port 920/823/894/754 (1,4-2,6x); h72 Video leer. Jetzt: Durchgangspunkt h60-h70 500 hinter der Wurzel
+ * und 10 Bildpunkte weiter zur Koerpermitte (420 statt 430: das Stueck Wurzel -> Austritt liegt hinter dem Koerperumriss), h72
+ * verdeckt wie h74, Querschnitt h58-h72 k_schwanz_dicke (Q12). PORT-WAHL nach Video 4.
+ * Laeufe nb5/T3 (Durchgangspunkt (420,330-338) +500) und T5 ((405,345-348) +600): oberes Stueck h62-h70 142-332 bzw. 80-309
+ * (Video 0-88) - neben dem Port-Koerper liegt dort nichts, was es verdeckt. Jetzt: Durchgangspunkte wieder am Video-Austritt
+ * (430,320-335, Tiefe 0 wie NB4) und die Glieder Wurzel -> Durchgangsgelenk h60-h70 ohne Querschnitt (re15_schwanz_r41_verdeckt):
+ * sichtbar ist nur Austritt -> Spitze (Video ~120 Bildpunkte). */
+static const int16_t k_schwanz_dicke[][2] = { { 56, 4096 }, { 58, 3195 }, { 72, 3195 }, { 74, 4096 } };   /* T3 mit 3400: h64 744
+                                                                                                        * (Video 356), T4 mit 2870:
+                                                                                                        * h62-h70 227-382 (317-631) */   /* T2 mit 2250: Kasten
+                                                                                                        * h60-h70 56-238, Video 175-631 */
+/* Gewicht des Szenenziels je Videobild (NB4: Videobild, nicht Takt; Freigabe nach dem Verdecken h102-h108). */
+static const int16_t k_schwanz_gewicht[][2] = { { 15, 0 }, { 19, 4096 }, { 102, 4096 }, { 108, 0 } };
+
 
 /* ---- Runde 41 Spur H "hangar": Ausloeser, Riegel, Kamera ----------------------------------------
  * GEMESSEN (Dossier analysis/befunde_runde41/H_hangar.md 1.2): Cut 12 ist in ROOM50A0/50A1 (beide RDT bytegleich) NICHT
@@ -248,7 +298,8 @@ static struct {
     int32_t  lx, lz;               /* Spider-Man: Aufschlagstelle */
     int32_t  ex, ez;               /* Spider-Man: Fluchtziel neben der Kamera */
     int32_t  ziel[3];              /* geglaettetes Klauenziel des Ansprungs */
-} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 } };
+    int32_t  w0[3], wv[3], wvor[3]; /* Neuaufbau ab NB2: Loslassen (Lage, Handtempo je Takt), Lage im Takt davor */
+} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_kam_g5 = 0;       /* G5-Auftritt: Kamera aufs Zugende halten (Slot+1, 0 = aus) */
@@ -301,6 +352,12 @@ int re15_bf_szene_zeigt(const re15_actor_t *a)
     if ((int)g_scd.work_vars[0x0A] != BF_HANGAR_CUT) return 0;
     const int slot = (int)(a - g_actors);
     return slot >= 1 && (slot == s_h.birkin || slot == s_h.sm);
+}
+
+/* Neuaufbau ab NB2 (aus NB3): Effekte (gruenes Blut) der Szene nicht gegen den Platzhalter-Anker von Cut 12 cullen. */
+int re15_bf_szene_effekte(void)
+{
+    return s_h.riegel && s_h.raum != 0 && (int)g_scd.work_vars[0x0A] == BF_HANGAR_CUT;
 }
 
 static int16_t bf_blick(const re15_actor_t *e, int32_t tx, int32_t tz)
@@ -471,6 +528,9 @@ static void bf_hangar_beenden(void)
     }
     if (s_h.sm >= 0 && g_actors[s_h.sm].active && g_actors[s_h.sm].type == 0x2Bu) g_actors[s_h.sm].active = 0;
     re15_schwanz_r41_seite(s_h.birkin, 0);
+    re15_schwanz_r41_ziel(s_h.birkin, NULL, 0);          /* Neuaufbau ab NB2: Schwanzbahn und Verdecken aus */
+    re15_schwanz_r41_dicke(s_h.birkin, 0);
+    re15_schwanz_r41_verdeckt(s_h.birkin, 0);
     s_h.sm = -1;
     s_h.phase = BF_H_FREI;
     s_szene_gespielt = 1;
@@ -491,6 +551,146 @@ static void bf_klauenziel(re15_actor_t *b, re15_actor_t *m, int32_t z[3])
     z[1] -= g[1] - m->y;
     z[2] -= g[2] - m->z;
 }
+
+/* Runde 41 SF NB3: Videopunkt (640x480; Registrierung der Abnahme 1: x_v = 2 x_psx + 1,97, y_v = 2,079 y_psx + 1,3) ->
+ * Weltpunkt durch die Szenenkamera (Umkehrung von bf_punkt_im_bild). art 0 = Boden (y = -100, Schwanzradius), 1 = Blicktiefe
+ * der Birkin-Wurzel (Hoehe -1000) + tiefe, 2 = hinter dem Koerper (Modellraum (-1500,-150,200)). */
+static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int32_t out[3])
+{
+    if (q->art == 2) {
+        const int32_t mdl[3] = { -1500, -150, 200 };
+        re15_skel_bone_to_world(mdl, b->rot_y, b->x, b->y, b->z, out);
+        return 1;
+    }
+    const re15_camera_cut_t *c = bf_szenenkamera();
+    re15_camera_view_t v;
+    if (!c || re15_camera_build_view(c, &v) != 0 || v.fov_screen_dist <= 0) return 0;
+    double R[9], cp[3], dw[3];
+    for (int i = 0; i < 9; i++) R[i] = (double)v.rot[i] / 4096.0;
+    const double H = (double)v.fov_screen_dist;
+    const double d[3] = { (((double)q->vx - 1.97) / 2.0 - 160.0) / H, (((double)q->vy - 1.3) / 2.079 - 120.0) / H, 1.0 };
+    for (int k = 0; k < 3; k++) {
+        cp[k] = -(R[k] * v.trans[0] + R[3 + k] * v.trans[1] + R[6 + k] * v.trans[2]);
+        dw[k] = R[k] * d[0] + R[3 + k] * d[1] + R[6 + k] * d[2];
+    }
+    double z;
+    if (q->art == 0) {
+        if (dw[1] <= 1e-6) return 0;
+        z = (-100.0 - cp[1]) / dw[1];
+    } else if (q->art == 3) {                            /* Neuaufbau ab NB2: Punkt auf dem Sehstrahl in Blicktiefe q->tiefe */
+        z = (double)q->tiefe;
+    } else {
+        z = R[6] * b->x + R[7] * -1000.0 + R[8] * b->z + v.trans[2] + q->tiefe;
+    }
+    for (int k = 0; k < 3; k++) out[k] = (int32_t)(cp[k] + dw[k] * z);
+    return 1;
+}
+
+
+/* NB4: Weltpunkt p um (dx, dy) Bildpunkte (640x480) in der Szenenkamera verschieben (in seiner Blicktiefe). */
+static void bf_bild_versatz(int32_t p[3], int dx, int dy)
+{
+    const re15_camera_cut_t *c = bf_szenenkamera();
+    re15_camera_view_t v;
+    if (!c || re15_camera_build_view(c, &v) != 0 || v.fov_screen_dist <= 0 || (dx == 0 && dy == 0)) return;
+    const double vz = ((double)v.rot[6] * p[0] + (double)v.rot[7] * p[1] + (double)v.rot[8] * p[2]) / 4096.0 + v.trans[2];
+    if (vz <= 1.0) return;
+    const double sx = dx / 2.0 * vz / v.fov_screen_dist, sy = dy / 2.079 * vz / v.fov_screen_dist;
+    for (int k = 0; k < 3; k++) p[k] += (int32_t)((v.rot[k] * sx + v.rot[3 + k] * sy) / 4096.0);
+}
+
+
+/* Schwanzziel je Videobild: zwischen den Tabellenpunkten im Weltraum linear (Spitze und Durchgangspunkt), Startform in die
+ * Blickrichtung der Szenenkamera gebogen (NB4, Kopf k_schwanz_bahn). */
+static void bf_schwanz_ziel(const re15_actor_t *b, int h)
+{
+    const int32_t w = bf_tab(k_schwanz_gewicht, BF_N(k_schwanz_gewicht), h);
+    int32_t a[3], e[3], z[3], va[3], ve[3], vz[3], bg[3];
+    int i = 0;
+    if (w <= 0) { re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); re15_schwanz_r41_fuehrung(s_h.birkin, NULL, 0, NULL); return; }
+    while (i < BF_SCHWANZ_N - 1 && h >= k_schwanz_bahn[i + 1].s.h) i++;
+    const bf_schwanzbahn_t *p0 = &k_schwanz_bahn[i], *p1 = &k_schwanz_bahn[i < BF_SCHWANZ_N - 1 ? i + 1 : i];
+    if (!bf_video_welt(&p0->s, b, a) || !bf_video_welt(&p1->s, b, e) || !bf_video_welt(&p0->v, b, va) ||
+        !bf_video_welt(&p1->v, b, ve)) { re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); return; }
+    const int span = p1->s.h - p0->s.h;
+    const int u = (span > 0 && h > p0->s.h) ? ((h < p1->s.h ? h - p0->s.h : span) * 4096 / span) : 0;
+    for (int k = 0; k < 3; k++) { z[k] = bf_mix(a[k], e[k], u); vz[k] = bf_mix(va[k], ve[k], u); }
+    bg[0] = bg[1] = bg[2] = 0;
+    {   /* Beugerichtung = Sehstrahl der Kamera zur Mitte des sichtbaren Stuecks via -> Spitze (dort liegt der Ueberschuss genau
+         * in der Tiefe, das Bild zeigt eine Gerade) */
+        const re15_camera_cut_t *c = bf_szenenkamera();
+        if (c) {
+            const double fx = (vz[0] + z[0]) * 0.5 - c->pos_x, fy = (vz[1] + z[1]) * 0.5 - c->pos_y, fz = (vz[2] + z[2]) * 0.5 - c->pos_z;
+            const double l = sqrt(fx * fx + fy * fy + fz * fz);
+            if (l > 1.0) { bg[0] = (int32_t)(fx * 4096.0 / l); bg[1] = (int32_t)(fy * 4096.0 / l); bg[2] = (int32_t)(fz * 4096.0 / l); }
+        }
+    }
+    re15_schwanz_r41_fuehrung(s_h.birkin, vz, p0->v.h, bg);
+    re15_schwanz_r41_ziel(s_h.birkin, z, w);
+    re15_schwanz_r41_verdeckt(s_h.birkin, (h >= 60 && h <= 70) ? p0->v.h : 0);   /* NB5 B1: Huefte -> Austritt verdeckt */
+}
+
+/* Gruenes Blut (Abnahme 1 Mangel 5, Video 4): Wolke am Griff h18-h71 (Maximum h53, 750 Bildpunkte), schmale Fontaene
+ * h56-h68 ueber der Hand, Spritzer am Boden bei der Flucht h84-h89, keine Lache. Effekt = RE1.5-Spinnenblut 0x00082000
+ * (STAGE2 `lui a0,0x8` @0x80113b10, `ori a0,a0,0x2000` @0x80113b30, `jal 0x80019700` @0x80113b50; Sub 8 -> CLUT-Zeile
+ * 486 gruen, Spur S Nachbesserung 1). Zeitplan PORT-WAHL nach dem Video. */
+#define BF_BLUT_GRUEN 0x00082000u
+/* Skala Q12 der Wolke (NB4 0x2400, s. bf_gruenes_blut; Lauf nb4/N4L mit 0x3000: h28-h48 1202-1324 Bildpunkte, Video 149-468).
+ * NB5 (ABR3): Lauf nb5/T2 mit 0x2400 jedes 4. Bild h28-h48 ~0 gruene Bildpunkte -> 0x4000. */
+#define BF_BLUT_WOLKE 0x4000
+#define BF_BLUT_BODEN 0x3000                 /* Skala Q12 der Bodenspritzer (NB4: halbe Menge) */
+/* NB5 (Abnahme 3 B4 "matter Nebel statt gesaettigter scharfer Quadrate"; gruen-Maske Farbe Median Video (33-42,48-58,21-37), Port
+ * NB4 (29-32,50-56,14-16) bei ABR0 50/50): Mischart B + F/4 (ABR3, abr_port 4) - der Hintergrund bleibt, der gruene Anteil liegt als
+ * schwacher Schleier darueber (Rechnung: Decke ~(35,45,30) + Sprite/4 ~(6,15,0) = (41,60,30)). PORT-WAHL nach dem Video. */
+#define BF_BLUT_MISCH 4
+#define BF_H_BLUT_ENDE   64                  /* letzter Wolken-Spawn: Lauf nb3/r3 mit Ende h71 hatte bei h72 noch 665 gruene
+                                              * Bildpunkte (Effekt steht ~8 Bilder), Video h72 0 */
+
+/* Gruenes Blut des Spider-Man (Kopf "Gruenes Blut").
+ * Runde 41 SF NB4 (Abnahme 2 B6: "Wolke UEBER dem Spider-Man (nicht darunter), Nebel statt Quadrate, Fontaene als Saeule,
+ * Bodenspritzer ~100 px weiter rechts, halbe Menge, weg bei h89"). Video 4 (gruene Bildpunkte g > r+14, g > b+6, g > 45,
+ * Lage 5-95 %): h28 x 222-324 y 59-98, h40 243-339 / 61-84, h48 241-331 / 63-118, h53-h58 328-359 / 103-142, h66-h70
+ * 312-349 / 117-137 = am Griff (Sichelhand) und darueber, rechts vom Spider-Man; Port (Lauf nb4/t7, Spawn am Spider-Man-Rumpf)
+ * x 111-308 y 51-148. Jetzt: Wolke an der Sichelhand (Knochen 15) + Bildversatz (+20, -40), groessere Sprites (Skala 0x4800,
+ * jedes 2. Bild - ABR0 50/50 des Spinnenbluts wie bisher), Saeule h52-h68 ueber der Hand. Boden: Video h84 x 311-380 y 371-422
+ * (779 Bildpunkte), h86 405-562 (1151), h88 457-476 (170), h90 0; Port t7 h84 296-428 (1484), h86 288-444 (974), h88 315-486
+ * (530), h90 27 -> Spawn unter dem fliehenden Spider-Man selbst (h81-h83), kleinere Skala, und h88 alle Effekte der Szene
+ * weg (re15_esp_fx_reset; ein Blut-Effekt steht sonst ~10 Bilder, NB3). PORT-WAHL nach dem Video. */
+static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
+{
+    const re15_esp_t *bank = re15_esp_room_bank();
+    if (b && m && m->active && h >= 24 && h <= BF_H_BLUT_ENDE) {
+        int32_t p[3];
+        re15_enemy_bone_world_pos(b, BF_KLAUE, p);
+        if (h % 3 == 0) {                                /* NB5: Lauf nb5/T3 jedes 2. Bild (0x4000, ABR3): Summe h18-h92 47882 gruene
+                                                          * Bildpunkte, T4 jedes 4.: 5272, Video 13145 -> jedes 3.; Lauf nb4/t8 (jedes 2. Bild, 0x4800, Versatz (20,-40)): 1259-3131 Bildpunkte
+                                                          * bei x 186-309 y 78-190 - Video 136-753 bei x 222-359 y 59-142 */
+            int32_t q[3] = { p[0], p[1], p[2] };
+            re15_esp_fx_t *fx;
+            bf_bild_versatz(q, 60, -85);
+            fx = re15_esp_fx_spawn_ex(bank, 0, 8, BF_BLUT_WOLKE, q[0], q[1], q[2], m->rot_y);
+            if (fx) fx->abr_port = BF_BLUT_MISCH;
+        }
+        if (h >= 52 && h <= 68 && (h & 1)) {                              /* schmale Saeule ueber der Hand */
+            int32_t q[3] = { p[0], p[1], p[2] };
+            re15_esp_fx_t *fx;
+            bf_bild_versatz(q, 60, -30 - 6 * (h - 52));
+            fx = re15_esp_fx_spawn_ex(bank, 0, 8, 0x1000, q[0], q[1], q[2], m->rot_y);
+            if (fx) fx->abr_port = BF_BLUT_MISCH;
+        }
+    }
+    if (b && (h == 83 || h == 85)) {                     /* Neuaufbau ab NB2: Spritzer im Bild 83/85 -> sichtbar h84-h88 wie das Video */
+        static const bf_schwanzpunkt_t sp1 = { 0, 345, 405, 0, 0 }, sp2 = { 0, 480, 415, 0, 0 };   /* Video h84 / h86 */
+        int32_t q[3];
+        if (bf_video_welt(h == 83 ? &sp1 : &sp2, b, q)) {
+            /* Neuaufbau ab NB2: Bodenspritzer im Original-Mischweg (ABR0 50/50) - mit dem NB5-Schleier ABR3 waren sie unsichtbar
+             * (Abnahme 4: h84/h86/h88 0 Bildpunkte, Video 779/1151/170); die Wolke bleibt der matte Schleier (Nutzerwunsch c). */
+            (void)re15_esp_fx_spawn_ex(bank, 0, 8, BF_BLUT_BODEN, q[0], -80, q[2], 0);
+        }
+    }
+    if (h == 88) re15_esp_fx_reset();                    /* Video h89: kein Spritzer mehr */
+}
+
 /* Waagerechter Bahnanteil des Ansprungs (Q12): erste 30 % quadratisch anlaufen, dann gleich schnell (Kopf BF_BOGEN). */
 static int32_t bf_anlauf(int32_t lin)
 {
@@ -509,12 +709,46 @@ static int32_t bf_bogen(int32_t lin)
 }
 
 /* Ein Takt der Hangar-Szene (Zeitplan nach dem Video, Kopf "Hangar-Szene"). */
+/* Runde 41 SF Neuaufbau ab NB2, Nutzer 2026-11-03: "Und die Spiderman springt auch nicht oder sowas. Er wirft sie auf den Boden in
+ * Richtung Kamera wo sie fliegt." Der Spider-Man bewegt sich nach dem Loslassen NICHT selbst: er verlaesst die Sichelhand im
+ * Wurfbild (Clip 0x0B B44 = BF_WURF_BILD, Takt BF_H_WURF) mit dem Tempo der Hand und fliegt passiv (Rueckenlage-Clip 0x0B, Glieder
+ * schlaff) zu Boden und auf die Kamera zu. Bahn je VIDEOBILD hb nach der Messung Video 4 (tools/r41_sichel/nb2neu/flucht6.py,
+ * Maske ohne Birkin, Schwarzwert heraus): h70-h73 faellt er links herab (Schwerpunkt (320,256) -> (232,261)), h74-h78 liegt er
+ * links unten im Vordergrund (Schwerpunkt x 240-267, Oberkante 221-235, Unterkante am Bildrand), h79-h86 rutscht er gross
+ * nach rechts vorn an der Kamera vorbei (Schwerpunkt x 311/385/345/406/495/544/584/606, Flaeche h82/h83 13011/24471), h87 weg.
+ * Spalten: hb, x, y (Video 640x480), Blicktiefe (0 = Bodenpunkt unter (x,y)). Vom Loslassen bis zum ersten Punkt eine
+ * quadratische Bahn, deren Anfangsrichtung das Handtempo ist. GESTALTUNG nach dem Video. */
+/* Lauf nb2neu/R1 mit Bodenpunkten in Birkins Naehe (Tiefe ~5900): Flaeche h74-h81 4243-4990 (Video 5164-11883), h83 8685 (Video
+ * 24471) - er bleibt zu weit weg. Das hochskalierte Bild des Nutzers zu h74 (Screenshot 100003, NCC 0,982) zeigt ihn kopfueber gross
+ * VOR Birkin im Flug, h85 (Screenshot 100432) ein Glied dicht vor der Kamera rechts -> Bahnpunkte auf dem Sehstrahl in Blicktiefe
+ * 4200 -> 2100 (Hoehe aus dem Strahl, nie unter dem Boden). */
+/* Lauf R3 (Tiefe 4200 -> 2100): h72-h76 und h82-h85 zu gross und zu mittig (h83/h84 fuellt er die Bildmitte, Video: Glied am
+ * rechten Rand) -> weiter weg (4800 -> 2800) und ab h83 schneller nach rechts hinaus. */
+/* Lauf R4 (h74-h80 auf dem Sehstrahl in Tiefe 4800-4400): Lage im Bild wie das Video, aber er beruehrt den Boden nie - der Nutzer:
+ * "Er wirft sie auf den Boden in Richtung Kamera". Video h79/h80 liegt er (Oberkante 266/288). Jetzt h78/h80 Bodenpunkte in
+ * Blicktiefe ~5200 (Bild-y ~500, unter dem Bildrand: man sieht die hochstehenden Glieder), danach wieder auf dem Sehstrahl. */
+static const int16_t k_wurf_bahn[][4] = { { 74, 230, 340, 4800 }, { 76, 250, 390, 4600 }, { 78, 270, 505, 0 }, { 80, 330, 500, 0 },
+                                          { 82, 400, 400, 4300 }, { 83, 520, 380, 4000 }, { 84, 610, 330, 3600 }, { 85, 690, 330, 3300 },
+                                          { 86, 770, 350, 3000 }, { 87, 860, 350, 2800 } };
+static int bf_wurf_punkt(const re15_actor_t *b, int i, int32_t out[3])
+{
+    bf_schwanzpunkt_t q = { 0, k_wurf_bahn[i][1], k_wurf_bahn[i][2], k_wurf_bahn[i][3] > 0 ? 3 : 0, k_wurf_bahn[i][3] };
+    if (!bf_video_welt(&q, b, out)) return 0;
+    if (q.art == 0 || out[1] > 0) out[1] = 0;
+    return 1;
+}
+
 static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
 {
     const int h = s_h.t - BF_VORLAUF;                    /* Videobild */
     int32_t k[3];
     s_h.t++;
-    re15_schwanz_r41_seite(s_h.birkin, bf_tab(k_schwanz_seite, BF_SCHWANZ_N, h));
+    {   /* Neuaufbau ab NB2: Schwanzbahn je Videobild (NB3-NB5), der Takt h wird im Bild h + BF_BILD_VERSATZ gezeichnet */
+        const int hb = h + BF_BILD_VERSATZ;
+        bf_schwanz_ziel(b, hb);
+        re15_schwanz_r41_dicke(s_h.birkin, bf_tab(k_schwanz_dicke, BF_N(k_schwanz_dicke), hb));
+        bf_gruenes_blut(b, m, hb);                       /* Neuaufbau ab NB2: gruenes Blut als matter Schleier (NB5) */
+    }
     /* --- Birkin: Clip, Gier ------------------------------------------------------------------------------------- */
     if (h < BF_H_GANG) {
         if (h < k_birkin_bild[0][0]) re15_r38_birkin_anim(b);             /* Stand, Clip 0 laeuft */
@@ -572,9 +806,10 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         m->x = bf_mix(BF_SM_X, s_h.ziel[0], u);
         m->z = bf_mix(BF_SM_Z, s_h.ziel[2], u);
         m->y = bf_mix(0, s_h.ziel[1], u) - (int32_t)(((int64_t)BF_BOGEN * bf_bogen(lin)) >> 12);
-    } else if (h < BF_H_AUFSCHLAG - 2) {                                  /* gehalten, Wurf bis kurz vor dem Aufschlag */
+    } else if (h < BF_H_WURF) {                                           /* gehalten bis zum Wurfbild (NB2-Kopplung) */
         if (h == BF_H_BERUEHRUNG) bf_clip(m, BF_SM_GRIFF);
         else re15_r38_birkin_anim(m);                                     /* Zappeln: Clip 7 laeuft im Kreis */
+        s_h.wvor[0] = m->x; s_h.wvor[1] = m->y; s_h.wvor[2] = m->z;       /* Neuaufbau: Lage vor dem Takt (Handtempo) */
         m->rot_y = bf_blick(m, b->x, b->z);
         bf_klauenziel(b, m, k);
         {   /* folgt der Hand geglaettet (halber Abstand je Takt). Runde 41 SF N2: bis zum Wurf hoechstens BF_SM_SCHRITT je
@@ -588,26 +823,47 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
                 for (int i = 0; i < 3; i++) d[i] = (int32_t)((int64_t)d[i] * BF_SM_SCHRITT / (l > 0 ? l : 1));
             }
             m->x += d[0]; m->y += d[1]; m->z += d[2];
+            /* Runde 41 SF Neuaufbau ab NB2 (Nutzer 2026-11-03: Fangen und Wurf "vollkommen asynchron"): ab dem 4. Haltetakt
+             * (Video h16) haengt der Griffknochen JEDEN Takt genau auf der Sichelhand - keine Glaettung, keine eigene Spur. NB2
+             * glaettete auch im Wurf (halber Abstand je Takt) und lief der schnellen Hand h66-h71 bis 1419 Einheiten nach
+             * (unit_birkin_szenen); vorher (h12-h15) zieht der Griff ihn geglaettet heran (Clipwechsel Birkins). */
+            if (h >= BF_H_BERUEHRUNG + 4) { m->x = k[0]; m->y = k[1]; m->z = k[2]; }
         }
         if (m->y > 0) m->y = 0;                                           /* Hand tief im Wurf: nicht unter den Boden */
-    } else if (h < BF_H_AUFSPRINGEN) {                                    /* Aufschlag + am Boden (Video h74..81) */
-        if (h == BF_H_AUFSCHLAG - 2) { bf_clip(m, BF_SM_LIEGT); s_h.lx = m->x; s_h.lz = m->z; }
-        bf_bild(m, BF_SM_LIEGT, 20 + (h - (BF_H_AUFSCHLAG - 2)) * 19 / (BF_H_AUFSPRINGEN - (BF_H_AUFSCHLAG - 2)));
-        m->y = (h >= BF_H_AUFSCHLAG) ? 0 : bf_mix(m->y, 0, 2048);        /* zwei Takte bis auf den Boden */
-    } else if (h < BF_H_WEG) {                                            /* springt auf und rechts an der Kamera vorbei */
-        const int32_t lin = (int32_t)((h - BF_H_AUFSPRINGEN + 1) * 4096 / (BF_H_WEG - BF_H_AUFSPRINGEN));
-        if (h == BF_H_AUFSPRINGEN) {
-            const re15_camera_cut_t *c = bf_szenenkamera();
-            /* Ziel am rechten Bildrand 3500 vor der Kamera (Bild-x 338, Boden): Video h82..86 Bein bei x 220..290 -> 240..320
-             * -> 300..320, danach aus dem Bild. Kamera-Raum (2727, ., 3500) -> Welt (-9069,0,-25486) = Kamera + (4071,.,1118). */
-            s_h.ex = c ? c->pos_x + 4071 : s_h.lx + 1300;
-            s_h.ez = c ? c->pos_z + 1118 : s_h.lz - 5200;
-            m->rot_y = bf_blick(m, s_h.ex, s_h.ez);
+    } else if (h < BF_H_WEG) {                                            /* Neuaufbau ab NB2: passiv geworfen (Kopf k_wurf_bahn) */
+        const int hb = h + BF_BILD_VERSATZ;
+        int32_t p[3], z[3];
+        if (h == BF_H_WURF) {                                             /* Loslassen im Wurfbild mit dem Tempo der Hand */
+            s_h.w0[0] = m->x; s_h.w0[1] = m->y; s_h.w0[2] = m->z;
+            for (int k_ = 0; k_ < 3; k_++) s_h.wv[k_] = s_h.w0[k_] - s_h.wvor[k_];
+            bf_clip(m, BF_SM_LIEGT);
         }
-        bf_bild(m, BF_SM_SPRUNG, 4 + (h - BF_H_AUFSPRINGEN) * 2);
-        m->x = bf_mix(s_h.lx, s_h.ex, bf_glatt(lin));
-        m->z = bf_mix(s_h.lz, s_h.ez, bf_glatt(lin));
-        m->y = -(int32_t)(((int64_t)1600 * 4 * lin * (4096 - lin)) >> 24);   /* Gestaltung: Bogen 1600 */
+        bf_bild(m, BF_SM_LIEGT, (h - BF_H_WURF) * 2 > 30 ? 30 : (h - BF_H_WURF) * 2);   /* Rueckenlage, Glieder schlaff */
+        if (hb < k_wurf_bahn[0][0]) {                                     /* Flug vom Loslassen zum Boden: quadratisch */
+            const int h0 = BF_H_WURF + BF_BILD_VERSATZ, n_ = k_wurf_bahn[0][0] - h0;
+            if (bf_wurf_punkt(b, 0, z)) {
+                const int32_t u = (hb + 1 - h0) * 4096 / n_;             /* Takt h wird im Bild hb gezeichnet: Stand fuer hb+1 */
+                for (int k_ = 0; k_ < 3; k_++) {
+                    const int32_t c_ = s_h.w0[k_] + s_h.wv[k_] * n_ / 2;  /* Kontrollpunkt: Anfangsrichtung = Handtempo */
+                    const int32_t a_ = bf_mix(s_h.w0[k_], c_, u), e_ = bf_mix(c_, z[k_], u);
+                    p[k_] = bf_mix(a_, e_, u);
+                }
+                if (p[1] > 0) p[1] = 0;
+                if (p[0] != m->x || p[2] != m->z) m->rot_y = bf_blick(m, p[0], p[2]);
+                m->x = p[0]; m->y = p[1]; m->z = p[2];
+            }
+        } else {                                                          /* am Boden und an der Kamera vorbei */
+            int i = 0;
+            const int hz = hb + 1;
+            while (i < BF_N(k_wurf_bahn) - 2 && hz >= k_wurf_bahn[i + 1][0]) i++;
+            if (bf_wurf_punkt(b, i, p) && bf_wurf_punkt(b, i + 1, z)) {
+                const int span = k_wurf_bahn[i + 1][0] - k_wurf_bahn[i][0];
+                const int32_t u = hz <= k_wurf_bahn[i][0] ? 0 : hz >= k_wurf_bahn[i + 1][0] ? 4096 : (hz - k_wurf_bahn[i][0]) * 4096 / span;
+                const int32_t x = bf_mix(p[0], z[0], u), y = bf_mix(p[1], z[1], u), zz = bf_mix(p[2], z[2], u);
+                if (z[0] != x || z[2] != zz) m->rot_y = bf_blick(m, z[0], z[2]);
+                m->x = x; m->y = y > 0 ? 0 : y; m->z = zz;
+            }
+        }
     } else if (m->active) {                                               /* aus dem Bild: Spider-Man ist weg */
         m->active = 0;
         s_h.sm = -1;

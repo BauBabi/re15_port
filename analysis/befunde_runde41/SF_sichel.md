@@ -510,3 +510,200 @@ Offen:
 3. Kopfform/Gesicht bei 320x240 nicht bestimmbar (N2.4); ob die rote Kappe in h0 Kopf oder Schulterwunde ist, offen.
 4. Schwanz h42-h46 jetzt bis 14 Bildpunkte links vom Video-Fleck (vorher bis 40 rechts).
 5. Labor nur an der Buehne (N2.6); PSX-Plattform ungeprueft (Feder-Kette und CLUT-Zeilen nur PC, wie N1).
+
+## Neuaufbau ab NB2 (Runde 41, 2026-11-03, Zweig r41/sichel_nb2 ab 6a1e9430d)
+
+Nutzer (2026-11-03, ueber den Koordinator):
+- "Birkin mit Schwanz in der Vorschau gerade wirkt jetzt noch schlechter als gestern abend, gerade was die komische Bein Pose
+  angeht.... hast du das über Nacht verschlechtert?"
+- Zu Fangen und Wurf: "vollkommen asynchrones Verhalten hin zur Spinne ... Es ist nicht mal mehr ansatzweise wie gestern
+  Abend noch..."
+- Zu den Leisten mit NB2-Spalte: "Das 2. Bild von links bei den Bildern sah doch, bis auf die Farbe im Vergleich zum Original
+  recht gut aus. Aber die Farbe wiederum ist wie bei den anderen Birkin Formen oder? Wenn ja, stimmt die Farbe. Die Farbe
+  soll schon den anderen Birkin Formen entsprechen. Wir bauen ja auch auf einen schlecht aufgeloesten Video auf, das durchaus
+  dunkler sein kann."
+- Zur Flucht: "Und die Spiderman springt auch nicht oder sowas. Er wirft sie auf den Boden in Richtung Kamera wo sie fliegt."
+- "ich habe dir noch mal höher aufgelöste Versionen von birkin gegeben ..., vielleicht helfen die dir ja?"
+
+Entscheid des Koordinators: Die Sichel-Form wird ab NB2 neu aufgebaut. Uebernommen wird nur, was der Nutzer ausdruecklich
+verlangt hat. Der Zweig r41/sichel bleibt als Sicherung stehen:
+- ecabea078 NB6 Beinhaltung
+- 98f5221cf NB6 Flucht
+- 18c8dadf1 Sicherung
+Neuer Zweig r41/sichel_nb2 im selben Worktree.
+
+Werkzeuge: re15_port/tools/r41_sichel/nb2neu/
+- c6.py: Helfer; die Registrierung der Abnahme 3 liegt als reg.json daneben.
+- lauf6.sh, raum6.sh: Laeufe mit eigener exe-Kopie.
+- Messhaken in main.c (nur Messung, im Normalpfad stumm): beinhaken.c = RE15_BEIN_LOG, griffhaken.c = RE15_GRIFF_LOG.
+- griff6.py: Abstand Sichelhand zu Griffknochen.
+- beine6.py: Kniewinkel.
+- flucht6.py: Spider-Man-Maske ohne Birkin.
+- haut.py, farbe_leiste.py: Hautton.
+- zuordnung.py: Zuordnung der Nutzerbilder.
+- leiste_neu.py: Pflicht-Leisten.
+
+Laeufe (Sitzungs-Scratchpad):
+- G2: NB2 6a1e9430d mit Messhaken
+- V3: r41/sichel 3f91e5c57 mit Messhaken
+- R5/R6: neu (R6 = Endstand)
+- R5090/R5090b: Birkin-Formen in 5090
+Alle Leisten haben vier beschriftete Spalten: Video | NB2 | 3f91e5c57 | neu. Ablage: SF_belege/nb2neu/.
+
+### NB2neu.1 Farbe (Frage des Nutzers)
+
+Antwort: Ja. NB2 hat den Farbton der anderen Birkin-Formen und liegt in deren Helligkeitsband (nur etwas dunkler als EM30). Die
+NB2-Farbe bleibt; die Abdunklungen aus NB3-NB5 sind nicht uebernommen (Hautzeilen hell/kontrast/lichter, Lichtzonen 486/487,
+Kopf x0,72, Klaue 488, Kappe 489, Sichel 484 x0,5). Leiste 01_farbe_birkin_formen.jpg.
+
+Hautton = Mittel der texel-gewichteten Flaechen, ohne Jeans (b > r), Wunden (r > 2,2 g) und Schwarz (haut.py):
+
+| Form | Haut RGB | Farbton | Saettigung | am Bild (Median, Spiellicht) |
+|---|---|---|---|---|
+| EM30 Auslieferung (Mensch, 3070/5080, 5090 erste Form) | (118,91,89) | 4 Grad | 0,24 | kein Spielbild (3070-Lauf zeigt in 900 Bildern nur Ada/Marvin) |
+| NB2-Hangar 6a1e9430d (= neu) | (95,68,67) | 3 Grad | 0,29 | h40 (81,59,57) |
+| r41/sichel 3f91e5c57 | (69,45,44) | 2 Grad | 0,35 | h40 (64,48,45) |
+| Riesenform 5090 (Bahnsteig-G4) | (103,74,65) | 14 Grad | 0,36 | Feuerlicht (44,29,26) |
+| G5 (RE2 EM36) | (126,81,58) | 20 Grad | 0,53 | Feuerlicht (58,38,25) |
+| Video 4 h40 (Schwarzwert abgezogen) | - | - | - | (61,46,42) |
+
+Der Schwarzwert des Videos ist am Hintergrund selbst gemessen: Video = 0,954 x Port + 12,65 im Dunklen, Letterbox 15-18.
+
+### NB2neu.2 Uebertragen (nur Nutzerwuensche)
+
+(a) Linke Klauenhand kleiner, nach dem Video (aus NB3 Mangel 2).
+- tools/birkin_formen.py FORMEN skal 12 (0,55/0,54/0,55), Unterarm 11 Laenge 0,80 (Dicke wie NB2), ducken ellbogen_links 60.
+- Die Klaue endet auf Oberschenkelhoehe wie im hochskalierten Video h111-h132 (Leiste 04_klaue_h90-h132.jpg).
+(b) Schwanz: Laenge, Glieder und Baender aus NB3/NB4.
+- Kette 7 x ~466, Radien 150 -> 72, 10 Seiten, Profil, Deckel, Dorn.
+- Gemalte Textur (schwanz_textur) mit Verlaufszeile 483.
+- Bewegung 1:1 nach dem Video: k_schwanz_bahn, Durchgangspunkte, Verdecken, Dicke h58-h72. engine/src/schwanz_r41.c und der
+  Kopf re15_schwanz_r41.h stammen aus 3f91e5c57.
+- Der NB2-Takt h wird im Bild h - 2 gezeichnet (Lauf G2: Messzeile "h-1 F240", erste Letterbox F243). Die Szene ruft deshalb
+  die Bahn je Bild (BF_BILD_VERSATZ -2). Leiste 03_schwanz_h18-h66.jpg.
+(c) Gruenes Blut beim Hochheben als matter Schleier, NB5-Fassung.
+- bf_gruenes_blut, abr_port 4, Cull-Ausnahme re15_bf_szene_effekte, main.c Mischart.
+- Aus 3f91 auch re15_damage.c (Sub-Byte ganz, gruene Zeile).
+- Summe gruener Bildpunkte h18-h92: Video 12417, NB2 0, neu 12149 (Lauf R6; R5 vor dem ABR0-Wechsel der Spritzer 10614).
+- Saeule h53/h56/h58 neu 12/37/31 (Video 753/558/453): sie liegt weiter links (x 271-344).
+- Die Bodenspritzer h84-h88 stehen im Originalmischweg ABR0 (mit dem Schleier waren sie unsichtbar): h84/h86/h88 neu
+  21/363/0, Video 779/1151/170.
+- Leisten 05_gruenes_blut_h28-h63.jpg, 05b_gruene_spritzer_h84-h88.jpg.
+(d) Kein Glaettungsfilter: unveraendert.
+(e) Flucht nach dem Wurf: passiv geworfen (s. NB2neu.4).
+
+Nicht uebertragen (wie angeordnet):
+- Ausfallschritt mit Bein-IK, Becken- und Schienbein-Aenderungen
+- Vorbeugung und Gang aus NB4/NB5
+- Annaeherung an die Kamera aus NB5
+- Spider-Man gelb
+- alle Licht- und Farbaenderungen
+- Abblende
+- Keyframe-Tween
+- NB3-Zeitkorrektur BF_VORLAUF
+Der Spider-Man traegt wieder die Auslieferungs-Textur des EM2B (kein EM2B_HANGAR).
+
+### NB2neu.3 Griff synchron (Riegel)
+
+Messhaken RE15_GRIFF_LOG, griff6.py. Abstand Sichelhand (Knochen 15) zu Griffknochen Spider-Man (20) je gezeichnetem Bild:
+
+| h | 12 | 16 | 20 | 36 | 52 | 64 | 68 | 70 |
+|---|---|---|---|---|---|---|---|---|
+| NB2 6a1e9430d (Einheiten / px) | 762/58 | 126/8 | 70/1 | 65/4 | 39/2 | 60/3 | 340/18 | 1377/91 |
+| r41/sichel 3f91e5c57 | 663/34 | 589/43 | 1049/74 | 940/61 | 902/65 | 866/57 | 897/58 | 1159/58 |
+| neu | 762/58 | 4/0 | 0/0 | 0/0 | 0/0 | 0/0 | 0/0 | geworfen |
+
+Ursache in 3f91 (Commits 1ef4c9bf4/e25d029d9, NB4/NB5): der Spider-Man hing ueber eine eigene Bildversatz-Spur neben der Hand
+(k_sm_halte_dx/dy, k_sm_halte5_dx/dy bis -113 / -55 Bildpunkte); ab h70 stand Birkin im Stand-Clip, die Hand warf nicht.
+NB2 glaettete im Halten und im Wurf (halber Abstand je Takt) und lief der Hand h66-h71 bis 1419 Einheiten nach.
+Neu: ab dem 4. Haltetakt (Video h16) liegt der Griffknochen JEDEN Takt genau auf der Hand (engine/src/birkin_formen.c,
+Haltezweig). h12-h15 zieht der Griff ihn wie in NB2 geglaettet heran. Im Wurfbild (Clip 0x0B B44, Takt BF_H_WURF) verlaesst er die
+Hand mit dem Tempo der Hand.
+Riegel unit_birkin_szenen:
+- Abstand im Halten ab h16 unter 150 Einheiten (~10 Bildpunkte in Birkins Blicktiefe ~7000), mindestens 40 Haltetakte.
+- Neu: 56 Haltetakte, hoechstens 0.
+- Gegenprobe mit der entkoppelten Spur (bf_bild_versatz(k, 10, -55) wie NB5, nur lokal gebaut): ROT, "Griffknochen bis 1086
+  Einheiten von der Sichelhand". Leiste 02_griff_halten_wurf_h4-h78.jpg mit dem Abstand unter jeder Kachel.
+
+### NB2neu.4 Wurf und Flucht (passiv)
+
+Nutzer: "Er wirft sie auf den Boden in Richtung Kamera wo sie fliegt."
+Der Spider-Man bewegt sich nach dem Loslassen nicht selbst: kein Lauf-, kein Sprung-Clip. Er liegt in Rueckenlage (Clip 0x0B
+B0-30), die Glieder sind schlaff.
+Bahn je Videobild in k_wurf_bahn (engine/src/birkin_formen.c):
+- Vom Loslassen bis h74 eine quadratische Bahn, deren Anfangsrichtung das Handtempo ist.
+- h74-h76 fliegt er auf dem Sehstrahl in Blicktiefe 4800-4600 vor Birkin.
+- h78/h80 schlaegt er am Boden auf (Blicktiefe ~5200, unter dem Bildrand).
+- h82-h87 fliegt er rechts an der Kamera vorbei (Tiefe 4300 -> 2800).
+- BF_H_WEG 89 = Bild 87.
+Laeufe R3/R4/R5/R6 am Bild gegen das Video (Leiste 06_wurf_flucht_h70-h87.jpg, mit Griff-Abstand: im Bild des Loslassens
+h70 verlaesst er die Hand).
+Der Massstab im Bild ist die Lage aus dem hochskalierten Nutzerbild h74 (Screenshot 100003: er fliegt kopfueber gross vor
+Birkin) und h85 (Screenshot 100432: Glied dicht vor der Kamera rechts, gruene Spritzer am Boden).
+Die Maske aus flucht6.py ist hier unbrauchbar, weil der werfende Birkin (Clip 0x0B B44-B59) in der Spider-Man-Maske liegt.
+Deshalb gibt es keine Flaechenzahlen fuer den neuen Stand.
+
+### NB2neu.5 Zuordnung der hochskalierten Nutzerbilder (Version_80%/Screenshot 2026-11-03 *.png, nur gelesen)
+
+zuordnung.py: Bild auf 640x480 skaliert. Normierte Korrelation gegen jedes Videobild, ohne Schriftzug "Vorschaumodus" und
+UI-Raender. Ergebnis auch in SF_belege/nb2neu/zuordnung_screenshots.json.
+
+| Datei | Videobild h | NCC | zweitbestes |
+|---|---|---|---|
+| 100406.png | h0 | 0.995 | h1 0.988 |
+| 100341.png | h5 | 0.998 | h4 0.753 |
+| 100310.png | h18 | 0.991 | h19 0.970 |
+| 100249.png | h22 | 0.974 | h23 0.970 |
+| 100215.png | h28 | 0.989 | h29 0.978 |
+| 100142.png | h37 | 0.995 | h38 0.991 |
+| 100118.png | h44 | 0.995 | h43 0.988 |
+| 100055.png | h51 | 0.995 | h52 0.993 |
+| 100028.png | h61 | 0.998 | h60 0.996 |
+| 100459.png | h63 | 0.993 | h62 0.991 |
+| 100003.png | h74 | 0.982 | h75 0.954 |
+| 100432.png | h85 | 0.994 | h83 0.943 |
+| 095941.png | h90 | 0.992 | h89 0.990 |
+| 095852.png | h104 | 0.989 | h103 0.987 |
+| 095820.png | h111 | 0.997 | h112 0.997 |
+| 095754.png | h117 | 0.996 | h118 0.996 |
+| 095731.png | h121 | 0.985 | h122 0.982 |
+| 095706.png | h127 | 0.995 | h126 0.993 |
+| 095645.png | h132 | 0.996 | h131 0.995 |
+| 095606.png | h135 | 0.986 | h134 0.985 |
+| 095918.png | h139 | 0.761 | h140 0.759 (unsicher, Abblende) |
+
+Widerlegt durch die Zuordnung:
+- Die Bilder 18-20 der Aufnahme-Reihenfolge sind nicht alle Wurf. 100406 ist h0 (Spider-Man hockt links vorn), 100003 ist h74
+  (Wurf), 100432 ist h85 (Glied vor der Kamera).
+- Das grosse orange Glied h85 ist im hochskalierten Bild schwarz-orange gebaendert.
+- Der Spider-Man in h0 (100406) hat gelb-schwarz gebaenderte Glieder. Die KI-Hochskalierung erfindet hier moeglicherweise
+  Farbe; die NB2-Auslieferungstextur bleibt (Entscheid Farbe).
+Die Bilder stehen in den Leisten als Videospalte, wo h exakt passt (Beschriftung "hochskaliert").
+
+### NB2neu.6 Gang
+
+Der Gang entspricht NB2: Haltung (ducken) und Szenenweg sind wie NB2. Nur der Klauen-Ellbogen ist neu, er wirkt nicht auf die
+Beine. Kniewinkel aus RE15_BEIN_LOG stehen unter jeder Kachel der Leiste 07_gang_h84-h132.jpg.
+
+### NB2neu.7 Tests, Pins
+
+- unit_birkin_formen: Knochen 11 aus der Liste der unveraenderten Winkel (Klauen-Ellbogen).
+- unit_schwanz_r41 (aus 3f91): freie Kette im Stand (Clip 0 B0) statt Clip 0x0B B20 geprueft. In 0x0B B20 liegt die Spitze mit
+  NB2-Haltung und NB4-Laenge auf dem Boden (Gelenk 6 Modellraum y -133, 3f91 -478). Die Pruefung "linke Seite" gilt nur bei
+  Ruhelage links.
+- unit_birkin_szenen: Griff-Riegel (s. NB2neu.3).
+- release/em30_hangar.sha256 nachgezogen.
+
+### NB2neu.8 Offen / Vorschlaege fuer den Nutzer (nicht eingebaut)
+
+1. Zeitversatz NB2: Die Szene laeuft 2 Bilder vor dem Video (Takt h wird im Bild h - 2 gezeichnet). NB3 hatte das
+   korrigiert (BF_VORLAUF 1). Es ist nicht uebernommen, weil es nicht verlangt war; Schwanz und Blut rechnen mit dem Versatz.
+2. Beinhaltung gegen das Video: Das Video zeigt h96-h124 tief gebeugte Knie mit langen Schienbeinen, NB2 Knie 115-140 Grad. Im
+   Zweig r41/sichel liegt dafuer ecabea078 (Schienbein 1,25, Hosenbund hoeher). Nicht uebertragen.
+3. Spider-Man: Das Video und die hochskalierten Bilder (h0, h85) zeigen orange-schwarz gebaenderte Glieder, NB2 traegt die
+   dunkelbraune Auslieferungs-Textur. Ein Entwurf liegt auf r41/sichel
+   (SF_belege/nb6/zwischenstand_spiderman_textur.patch).
+4. Wurf/Flucht: Der Spider-Man ist h79-h83 kleiner als im Video (das Video zeigt hochstehende Glieder im Vordergrund).
+   EM2B hat keinen passenden Original-Clip "kopfueber geworfen".
+5. Gruene Saeule h53-h58 schwaecher und weiter links als im Video (neu 12-37, Video 453-753 im Kasten x 320-365);
+   Bodenspritzer h84 schwaecher als im Video (21 gegen 779).
