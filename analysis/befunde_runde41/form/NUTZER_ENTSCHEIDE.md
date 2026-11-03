@@ -171,3 +171,12 @@ Folgen: K3 wird ins Spiel-Asset RE2/BAHNSTEIG_FORM.EMD/.TIM eingebaut (Ober-/Unt
 Gelenkkoerper), Kiefer im Stehen/Gehen/Ruhe zu, Posen-Pins mit den K3-Kopfwinkeln; Loecher zwischen Bein und Oberkoerper in keiner Pose
 sichtbar (Nutzerbefund zu E20).
 Nachtrag Orchestrator (abends): Kopf-Nachformung "Schildkroete statt Alligator" ist zurueckgestellt; erst Klaerungsblatt im echten Fenster.
+
+## E22 (2026-11-02, nach Nachbesserung 1): Krokodilkeil nach der Oberkiefer-Maske, Textur durchgehend
+
+Wortlaut Nutzer: "Die Textur vom Vierbeiner wirkt immer noch kaputt, ausserdem ist mir das Gesicht immer noch zu rundlich... Ich habe es doch markiert vom Oberkiefer her - Es wirkt eher krokodilmaessig. Hier sieht es eher hippomaessig aus...."
+
+Folgen (Auftrag Nachbesserung 2 der Stufe 3):
+- Kopf neu als Krokodilkeil: lange, flache, nach vorn spitz zulaufende Schnauze, flache Oberseite ohne Kuppel, Oberkiefer greift seitlich ueber den Unterkiefer, gezackte Zahnreihe seitlich sichtbar, Augenwuelste hinten oben, Nasenhoecker an der Spitze; von vorn schmal, kein rundes Maul. Ziel ist die Oberkiefer-Maske in Screenshot 2 (Nutzer-Teil Oberkiefer.png): IoU deutlich ueber K3 (0,51), Ziel >= 0,70, Unterkiefer >= 0,80, Umriss Bild 1 >= 0,954 31/31 und Bild 2 >= 0,948 7/7 (minimal darunter nur mit Begruendung; das Aussehen geht vor). Proportionsreferenz nur fuer die Anatomie: RE2-Alligator EM23 im Port, dazu K1. Kiefergelenke bleiben Knochen 22/23; Biss-Probe an die neue Spitze.
+- E20/E21 neu ausgelegt: K3 (vorn breite, kurze Schnauze) ist ersetzt; die Kopflage folgt weiter Screenshot 2 (offenes Maul, Unterkiefer-Band).
+- Textur: die Haut soll im Spiel wie durchgehende Haut im H2-Stil aussehen (E10-E16 gelten: keine erfundenen Farben, kein Cel-Shading). Ursache messen (Heatmap, echtes Fenster), beheben; Gegenprobe Mosaik-Mass <= J.

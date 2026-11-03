@@ -1,5 +1,154 @@
 # Stufe 3 Bahnsteig-Form: Bewegung, Angriffe, Einbau (laufendes Dossier)
 
+## Nachbesserung 2 (E22: Kopf Krokodil statt Nilpferd, Textur durchgehend; Zusatzpunkt START im Griff) - laufend
+
+Auftrag: Orchestrator nach E22 (NUTZER_ENTSCHEIDE.md). Drei Spuren: Kopf (Hauptstrang, dieser Abschnitt), Textur (eigener Bericht
+stufe3/nachbesserung2_textur.md), START im Griff (eigener Bericht stufe3/nachbesserung2_griff_start.md). Kein RE-Wert ausser der START-Sperre
+(Adressen dort); Kopf und Textur sind Gestaltung eines neuen Modells (PORT-WAHL).
+
+| Schritt | Stand |
+|---|---|
+| T Textur | gemessen und behoben (nachbesserung2_textur.md): Gelenkkoerper 97 Einheiten je Texel (Mosaik), Seite 3 gespiegelt mit Wundflecken, Faecherkappen als Streifen; `s3_n2_textur.py bauen`, `haut_stoff` fuer Seite 3; Mosaik-Mass NB2 <= J in 7/7 Ansichten (Block 35,0 gegen J 44,3) |
+| S START im Griff | behoben (nachbesserung2_griff_start.md): RE1.5 `andi v0,a0,0x40` / `bne` @0x8001cd04-08 ueberspringt den START-Block, der Birkin-Haken setzt aca3c 0x40 beim Packen (STAGE5 @0x8011b0b4/c0); Port re15_menu_start_poll verwirft START bei re15_bk_opfer_cmd(); Test unit_n2_griff_start |
+| K Kopf | K4 Krokodil im Spiel-Asset (NB2-K1 Herleitung, NB2-K2 Endstand): IoU Oberkiefer 0,508 -> 0,573 (Ziel 0,70 mit diesem Gerippe nicht erreichbar, Referenz 0,647), Unterkiefer 0,801 -> 0,805, Umriss 0,954 31/31 / 0,949 7/7 |
+| L Loecher/Clips/Tick | nicht verschlechtert (NB2-L): Nahtloecher 8768 -> 6363 px, Achsel+Huefte 319 -> 337 px, Clips/Posen/Reichweite wie NB1, Biss 3200-6000 am Kiefer |
+| P Tests | 24/24 gezielt gruen, integration_r41_birkin_pistole gruen, APK-Asset-Gate OK (NB2-P); volle Suite offen |
+| B Belege | stufe3/nachbesserung2/kopf/*, textur/*_endstand*, griff_start/ (NB2-S) |
+
+### NB2-K1. Kopf: Form, Fit, Zielkonflikt der Maske
+
+**Form (Kopfart 'kroko', varianten/K_alligator/generator/k_form.py `kopf_kroko`/`kiefer_kroko`, Gestaltung).** Schaedel hinten breit (Wk),
+Augenwuelste oben (k_form.wulst), Schnauze in der Draufsicht gerade verjuengt auf taper x Wk (Grenze 0,30-0,50; RE2-Alligator EM23 Mesh 7
+nur als Proportion gelesen: Spitze 790 / groesste Breite 1970 = 0,40, Laenge rund 4000), flache Oberseite (Querschnitt `ring_kroko`:
+Lippenrand am breitesten, senkrechte Lippenwand, Flanke nach innen, Dach eben), Nasenhoecker als weiche Kuppe und Rosette an der Spitze,
+11 obere Zaehne je Seite am Lippenrand nach unten aussen, Unterkiefer V-foermig mit 10 Zaehnen nach oben. UV nach Bogenlaenge
+(`rohr(..., bogen=True)`), damit die lange Schnauze nicht gestreckt wird. K1-K3 bleiben unveraendert nachbaubar.
+
+**Fit (k_kopf_fit2.py, Kamera Bild 2, Tiefenpuffer k_kern, Gelenkkoerper am Kopf wie K3 mitgerechnet).** Mass wie k_mass: IoU sichtbarer
+Kopf 22 gegen Nutzer-Teil Oberkiefer, Kiefer 23 gegen Unterkiefer; Strafe, wenn der Umriss Bild 2 unter K3 (0,9426 in diesem Raster) oder
+der Unterkiefer unter 0,80 faellt. Startlagen aus der globalen Suche k_kopf_suche.py (Halsrichtung x Schnauzenrichtung x Rollwinkel x
+Kieferwinkel, je Lauf 1785-5355 Lagen).
+
+| Lauf (_lauf/) | Form | IoU Oberkiefer (mit / ohne Koerper) | IoU Unterkiefer | Befund |
+|---|---|---|---|---|
+| K3 (NB1, Vergleich) | U-Schnauze, vorn breiter als der Ansatz | 0,498 / 0,574 (k_mass am Bau: 0,508) | 0,808 (0,801) | "rundlich, hippomaessig" (E22) |
+| K4 (K4.log) | EM23-Proportion, Schaedel 470 breit, Schnauze 570 hoch | 0,30-0,34 | 0,66-0,76 | Kopf im Bild 10000-13000 px gegen 5832 px Maske: viel zu gross |
+| Suche (K4_suche*.log) | flach, klein | Rasterbestes 0,40-0,48 | 0,25-0,58 | beste Richtung: Schnauze nach -z (Bild links), leicht nach unten = Lesung von K3; andere Richtungen deutlich schlechter |
+| K4b | flach, taper <= 0,5 | 0,43 / 0,52 | 0,71 | Fit drueckt Verjuengung, Breite und Hoehe an die oberen Grenzen |
+| K5 | + Rosette, kuerzere obere Zaehne, Kieferbreite | 0,47-0,50 | 0,75-0,77 | linke obere Maskenecke (216,280) bleibt frei, Schaedel ragt rechts oben hinaus |
+| Suche K5 | Kiefer 26/40/53 Grad | Rasterbestes 1,245 (wie 26 Grad) | - | weiter offenes Maul hilft nicht |
+| **Kfrei (Referenz, nicht gebaut)** | ohne Krokodil-Grenzen | **0,647 / 0,683** | 0,756 | nur mit Spitze breiter (taper 0,9) und hoeher als der Ansatz (Spitze 570, Ansatz 440): senkrechte, stumpfe Front |
+| K6 | + Kieferlaenge/-tiefe frei | 0,617 | 0,826 | Nasenhoecker 240 = senkrechte Platte an der Spitze, Unterkiefer 161 laenger als der Oberkiefer: kein sauberes Krokodil |
+| K7 | Hoecker weich und <= 140, Rosette <= 1,25, Kieferueberstand <= 60 | 0,602 / 0,603 (am Bau: 0,615) | 0,824 (0,818) | gebaut und im Spiel geprueft (Tests gruen), aber: Fit legte das Schaedeldach (-180) TIEFER als die Schnauze (-220) und machte die Schnauze 490 hoch auf ganzer Laenge: von vorn ein hoher Kasten (5080 frontal), kein flaches Krokodil -> verworfen |
+| K8 | Schnauze flach (Ansatz 350-430, Spitze 250-330 hoch), Schaedeldach an die Schnauze gekoppelt (`schaedel` 40-200 hoeher), Hoecker <= 90 | Start 0: 0,568 / Start 1: 0,573 | 0,831 / 0,825 | Start 0 schlichter Keil; Start 1 Krokodilprofil (Schaedeldach +200 mit Augenwuelsten, Schnauze faellt zur flachen Spitze, Nasenhoecker 90, Rosette 1,2) |
+| **K9 (gewaehlt -> Variante K4_kroko)** | K8 Start 1, Unterkiefer vorn 30 statt 59 ueberstehend (geschlossen praktisch buendig) | **0,570** (Fitraster, gerundete Winkel) | **0,807** | Krokodilprofil; Werte am Bau siehe NB2-K2 |
+
+**Zielkonflikt (gemessen, nicht wegzufitten).** In Bild 2 endet der Hals (Knochen 21 aus der Brust-Pose von J) bei Bildpunkt (342,280);
+der Kopfursprung kann sich nur rund 40 px (Halslaenge 503) davon entfernen. Die Masse des Oberkiefer-Teils liegt 85-125 px links unten
+davon, die Schnauze muss also nach links zeigen, und ihr Ende liegt am BREITEN Ende der Maske (links 96 px hoch, rechts bei (330,316)
+spitz). Eine nach vorn spitz zulaufende Schnauze fuellt das breite linke Ende nicht; die Oberkante der Maske faellt nach rechts zum Hals
+hin ab, die eines Krokodilkopfs steigt zum Schaedel hin an. Darum erreicht selbst der Fit ohne Krokodil-Grenzen nur 0,647 und das nur mit
+der stumpfen, hohen Front, die E22 ablehnt. Ziel 0,70 ist mit Gerippe und Koerperpose von J in dieser Kopf-Familie nicht erreichbar;
+gewaehlt ist eine Krokodilform mit flacher Schnauze und hohem Schaedeldach (K9) statt der Form mit der hoechsten Zahl (K7, 0,615,
+aber Kasten-Schnauze): Aussehen geht vor (Auftrag).
+
+### NB2-K2. Kopf K4 im Spiel-Asset (Endstand)
+
+Kette `stufe3/gen/s3_n2_kette.sh K9` (Protokoll stufe3/roh/n2_kopf/kette_K9.log): Variante `varianten/K_alligator/K4_kroko` (k_variante.sh:
+Gelenkkoerper neu abgestimmt, Mundwinkel 0,8/1,0, Licht- und Kiefer-Eichung), Textur-Basis `stufe3/basis_n2` (s3_n2_textur.py bauen),
+`s3_rig.BASIS_DIR` = basis_n2, Clips (s3_clips.py, unveraendert), Asset `stufe3/asset` = `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM`
+(EMD 291 816 Byte, 28 Clips, 799 Bilder; TIM 1408 x 256, 362 528 Byte), Testkopf `re15_port/tests/unit/form_j_posen.h` neu.
+
+Kopfmasse K4 (Gestaltung, `K4_kroko/kopf.json`): Schnauzenspitze L 1620 ab Kopfursprung, Schaedel halbe Breite 382, Verjuengung 0,5,
+Schnauze am Ansatz 428 hoch (Dach -158), Schaedeldach 200 hoeher (-358) mit Augenwuelsten, Spitze 330 hoch + Nasenhoecker 90, Rosette 1,2,
+11 obere / 10 untere Zaehne je Seite, Unterkiefer 0,9 der Oberkieferbreite (Oberkiefer greift seitlich ueber), vorn 30 ueberstehend.
+
+| Mass | K3 (NB1) | K4 (NB2) | Ziel |
+|---|---|---|---|
+| IoU Oberkiefer (k_mass, mit Gelenkkoerpern) | 0,508 | **0,573** | >= 0,70 (nicht erreichbar, NB2-K1; Referenz ohne Krokodil-Grenzen 0,647) |
+| IoU Oberkiefer ohne uebrigen Oberkoerper | 0,625 | 0,627 | - |
+| IoU Unterkiefer | 0,801 | **0,805** | >= 0,80 |
+| Umriss Bild 1 / Punkte / Boden-Verdeckung | 0,954 / 31/31 / 5/7 | **0,954 / 31/31 / 5/7** | >= 0,954 31/31 |
+| Umriss Bild 2 / Punkte / Boden-Verdeckung | 0,948 / 7/7 / 9/9 | **0,949 / 7/7 / 9/9** | >= 0,948 7/7 |
+| Zeichnung Bild 1 / Bild 2 | 4/9 / 2/7 | 4/9 / 2/7 | - (Z4 und N2 neu, Z9 faellt: Gelenkkoerper Arm r - Brust im Hautton, NB2-O) |
+| Kieferspitze / Zahnreihen-Mitte im Raum von Knochen 23 | (1139,-75,0) / (911,-75,0) | (1190,-85,0) / (928,-85,0) | - |
+| Biss Clip 26 Bild 16-30: Spitze vor G4-Bisspunkt Teil 10 + 1400 | 1640-1690 | 1715-1737 | - |
+| Krallen rechts / links (Paare, mittl. px) | 4/5 12,8 / 2/3 1,5 | 4/5 12,6 / 2/3 1,5 | unveraendert |
+
+Tick (engine/src/birkin_bahnsteig.c, PORT-WAHL mit Messherkunft im Kommentar): Biss-Probe Teil 23 + (928,-85,0) statt (911,-75,0), Radius 1500
+(@0x80104f88-a4), Biss-Band 0xce4 (@0x80102434-54) + 1740 = 5044 statt + 1700 (gleiche Regel: gemessene Reichweite, Maximum auf 10 aufgerundet).
+Test test_n1_biss_kiefer: Probe (928,-85,0).
+
+### NB2-T. Textur am Endstand (Kopf K4, Messwerkzeug der Textur-Spur, stufe3/nachbesserung2/textur/*_endstand.*)
+
+Ursachen und Behebung im Bericht der Textur-Spur (stufe3/nachbesserung2_textur.md): Gelenkkoerper-Hautkacheln (vorher 97 Einheiten je Texel =
+grosse flache Quadrate), Seite 3 aus `haut_stoff` statt gespiegelter Brust mit Wundflecken, Faecherkappen planar. Im Hauptstrang dazu (k_bau.py,
+Kopfart 'kroko'): Fleischflaechen (Kiefer innen/aussen, Gaumen) tragen nur 0,4 der Hautstruktur (`FLEISCH_STRUKTUR`), weil das 2-3-mal hellere
+Fleisch sonst den Texelkontrast entsprechend vervielfacht; die gemalten hellen Zahnflecken entfallen (K4 hat echte Zaehne). Gemessen vor der
+Daempfung am K4-Asset: Kiefer Innen 12,5, Kante 35,0, Block 57,2.
+
+| Teil (Bild, 7 Spielansichten) | J | NB1 | NB2 (Endstand) |
+|---|---|---|---|
+| Gesamt: Innen / Block / Texel px | 6,0 / **44,3** / 3,96 | 5,4 / 44,5 / 5,28 | 5,9 / **31,1** / 3,00 |
+| Gelenkkoerper: Kante / Innen / Block / Texel px | - | 16,2 / 1,8 / 85,0 / 9,94 | 13,2 / 5,3 / 23,3 / 2,65 |
+| Kopf: Kante / Innen / Block | 12,3 / 4,3 / 62,1 | 22,9 / 6,0 / 44,9 | 23,5 / 4,4 / 29,8 |
+| Kiefer: Kante / Innen / Block | 9,2 / 2,1 / 51,8 | 32,0 / 13,7 / 66,7 | 27,6 / 5,7 / 27,2 |
+| Rumpf (Referenz): Kante / Innen / Block | 10,7 / 6,0 / 37,8 | 13,7 / 6,0 / 38,7 | 13,1 / 6,1 / 38,9 |
+| Grenze Gelenkkoerper/Haut (Kante) | - | 21,7 | 19,3 |
+
+Je Ansicht Block J / NB1 / NB2: 5080 Gier 0 29,8 / 34,2 / 27,6; 1024 27,9 / 31,9 / 27,0; 2048 38,5 / 43,6 / 32,3; 3072 73,3 / 65,5 / 40,8;
+5090 Gier 3874 35,0 / 34,9 / 24,6; 802 34,4 / 34,8 / 25,3; 1826 21,0 / 24,4 / 19,5. **Gegenprobe: NB2 <= J in allen 7 Ansichten.**
+Netz (blickunabhaengig): Hellfleck Kopf 2,6 % -> 0,2 %, Kiefer 5,8 % -> 3,3 % (Zahnfeld, gewollt hell), Kantensprung Kopf 15,7 -> 8,4,
+Gelenkkoerper 9,9 -> 7,8, gesamt 11,4 -> 10,3 (J 12,2). Rest: Kiefer-Kante 27,6 (Grenze Fleisch/Zahnfeld und Rand des Unterkiefers, J 9,2),
+J-eigene Inselnaehte an Armen/Beinen/Klauen unveraendert (wie J).
+
+Belege: `heatmap_J_NB1_NB2_endstand.png` (Buehne, je Ansicht Render | Texelbloecke | Kanten), `echt_J_NB1_NB2_endstand.png` (echtes Fenster,
+eigene exe-Kopie, gdigrab; Spalten J | NB1 | NB2), Zahlen `bild_J_NB1_NB2_endstand.json`, `netz_J_NB1_NB2_endstand.json`, `tabelle_endstand.md`.
+
+### NB2-L. Loecher, Posen, Clips, Tick (nicht verschlechtert)
+
+- Loecher am Spiel-Asset (`k_loecher.py messen`, 13 Tick-Clips x 8 Bilder x 10 Ansichten, `stufe3/nachbesserung2/loecher/nachher.json`):
+  Nahtloecher NB1 503 / 8768 px -> NB2 385 / 6363 px; ohne Mundwinkel 3183 -> 2984 px; Mundwinkel 5585 -> 3379 px; Achsel+Huefte 319 -> 337 px
+  (Bein l 82 -> 70, Bein r 120 -> 141, Arm l 95 -> 103, Arm r 22 -> 23); Kopf - Hals 12 -> 0. Erst mit den K3-Groessen der Koerper an Bein r -
+  Huefte (naht.json Feld `nachbesserung2`); mit der Proxy-Abstimmung waren es dort 458 px.
+- Clips (`s3_pruef.py`, `nachbesserung2/pruef.json`): Bildzahl, tiefster Punkt, Drehung/Bild, Gleiten, Tempo wie NB1 (Rennen Bild 11 = Pose Bild 1
+  333,5; Drohen 67; Hieb rechts 13,8; Sturz/Flucht gewollt). Posen Bild 1/Bild 2/Ruhe bytegleich im Asset (Pins). Reichweite der Hiebe unveraendert
+  (`s3_reichweite.py`: rechts Bild 28-30, links 16-17, Einstiege frei).
+- Biss: test_n1_biss_kiefer (5090/5091) trifft wie NB1 von 3200 bis 6000 mit Kieferprobe < 1500, Gegenprobe 2600-3000 ohne Treffer.
+
+### NB2-S. Sichtbelege fuer den Nutzer (stufe3/nachbesserung2/)
+
+| Blatt | Inhalt |
+|---|---|
+| `kopf/spielkamera_alt_neu.png` | echtes Fenster (eigene exe-Kopie, gdigrab, Renderer des Nutzers), Kopf aus den Spielkameras: 5080 frontal / 3/4 / seitlich, 5090 Lage/Pose Bild 2 (3/4 von vorn) / frontal / seitlich; links alt K3, rechts neu K4 |
+| `kopf/bild2_masken_alt_neu.png` | Screenshot 2 mit Nutzer-Teilen Oberkiefer (orange) / Unterkiefer (rosa), sichtbarer Kopf/Kiefer des Modells; K3 / K4 / Referenz "nur Maske" |
+| `kopf/rundum_spiellicht_alt_neu.png` | Offline-Buehne mit Spiel-Licht (5090 Schnitt 11), Kamera vor dem Kopf -90..+90 Grad, Ruhe (Maul zu) und Pose Bild 2; K3 / K4 |
+| `textur/echt_J_NB1_NB2_endstand.png` | Textur im echten Fenster, 5 Ansichten, Spalten J / NB1 / NB2 |
+| `textur/heatmap_J_NB1_NB2_endstand.png` | Textur-Heatmap (Buehne, 7 Spielansichten): Render / Texelbloecke / Kantenspruenge je Satz |
+| `griff_start/echt_vorher_nachher.png` | Zusatzpunkt START im Griff (Bericht nachbesserung2_griff_start.md) |
+
+Laeufe: `re15_port/build_n2/spiel/kopf_{K3,K4}_*`, `tex_{J,NB1,NB2E}_*`; Werkzeug `stufe3/gen/s3_n2_endbelege.sh`.
+
+### NB2-P. Tests (re15_port/build, Endstand)
+
+- Gezielt (24, `ctest -R "unit_birkin_*|unit_r41_form_emd|unit_n2_griff_start|unit_r41_birkin_wand*|unit_g5_*|probe_p2/p3_birkin*|unit_r17|r18/r20/r30_birkin*"`):
+  24/24 gruen, darunter unit_birkin_bahnsteig (Asset-Formtreue gegen form_j_posen.h, Boeden, Biss am Kiefer), unit_n2_griff_start.
+- integration_r41_birkin_pistole gruen (241 s): Leon und Elza je "Mutationen 0, Form-HP 150 bis 0, Rueckstoss 1, Sturz 1, G5 1, G5 tot 1".
+- Paket-Gates: `release/apk_asset_gate.py --quellbaum` OK (4282 Dateien, Tuer-Soll erfuellt); make_package check_tree-Bedingung fuer
+  BAHNSTEIG_FORM.EMD/.TIM (vorhanden, nicht leer, bytegleich mit stufe3/asset) erfuellt; make_package selbst nicht gelaufen (kein Release-Bau).
+- Volle Suite nicht gelaufen (df.exe-Haenger der Release-/Titelversion-/Android-Bash-Tests, N12).
+
+### NB2-O. Offen
+
+- Oberkiefer-IoU 0,573 statt Ziel 0,70: mit Gerippe und Koerperpose von J nicht erreichbar (NB2-K1, Referenz 0,647 nur mit stumpfer Front).
+  Hoeher kaeme man nur ueber eine andere Brust-/Halspose in Bild 2 (Halsende naeher an die Maske) - das aendert die abgenommene Form von J.
+- Kiefer-Kantensprung 27,6 (J 9,2): Grenze heller Unterkiefer / dunkle Haut ist gewollt (E21 beiger Kiefer), Rest am Zahnfeld.
+- Zeichnung (form_pruefung d, Spiel-Asset): Bild 1 4/9 wie NB1, aber anders verteilt: Z4 (helles Band am rechten Oberschenkel, Koerper Bein r
+  wieder K3-gross) und N2 bestehen neu, Z9 (Schraegstrich neben dem rechten Oberarm, FORMBLATT2 "kann Hintergrund sein") faellt, weil der
+  Gelenkkoerper Arm r - Brust jetzt den Hautton seiner Umgebung traegt (Textur-Spur 4); Bild 2 2/7 wie NB1.
+- START-Sperre fuer andere Spieler-Haken (Zombie, Hund, Gorilla) nicht geprueft (nachbesserung2_griff_start.md).
+- Volle Suite steht aus.
+
 ## Nachbesserung 1 - N0: Ursache "Texturen vollkommen kaputt" (Nutzerbefund zur K3-Vorschau, 2026-11-02 abends)
 
 Befund: im echten Fenster (stufe3/nachbesserung1/loecher_echt_vorher_nachher.png, rechte Spalte) und offline (stufe3/formpruefung/
