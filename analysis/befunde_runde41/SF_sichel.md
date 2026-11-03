@@ -813,3 +813,30 @@ Laeufe:
 Leisten 10_schritt3_gruene_saeule_h40-h60.jpg, 10b_schritt3_bodenspritzer_h84-h88.jpg (Video | Ref2 | neu).
 Gegen Ref2 schwaecher: die Wolke h28-h40 (neu 32/22, Ref2 64/~70, Video 468/149). Sie war schon in Ref2 viel schwaecher als das
 Video. Offen: Wolke h28-h48 links der Hand (Video x 222-324).
+
+### Schritt 4 nach Referenz 2: Zeitversatz
+
+- Ref2: Der Takt h wurde im Bild h - 2 gezeichnet (Messzeile "h-1 F240", erstes Letterbox-Bild F243). Die Szene lief 2 Bilder
+  vor dem Video.
+- Neu: BF_VORLAUF 6 -> 8 (Messzeile "h-1 F242"), Takt h = Bild h. BF_BILD_VERSATZ ist damit 0, und Schwanz, Blut und Wurfbahn
+  bleiben auf denselben Bildern.
+- Damit sich nur der Start verschiebt, bleibt der Bildablauf aus Schritt 2 erhalten:
+  - k_birkin_bild und k_birkin_gier wieder mit den NB2-Takten (B27 Takt 66, Wurfbild B44 Takt 72, B55 Takt 76).
+  - Loslassen BF_H_LOS = 71 = Bild 71.
+  - Phase GRIFF bis BF_H_LOS.
+  - BF_H_WEG 87 = Bild 87.
+Ergebnis Griff-Abstand (griff6.py):
+
+| Stand | h8 | h10 | h12 | h14 | h16 |
+|---|---|---|---|---|---|
+| Ref2 | 717 | 512 | 762 | 128 | 4 |
+| neu | 1854 | 716 | 514 | 762 | 128 |
+
+- Beruehrung neu bei Bild 12 (Video h10-h12 an Birkins Brust), Ref2 bei Bild 10.
+- Loslassen Bild 71, Wurfbild 72, Spritzer und Schwanz unveraendert.
+- Gruenes Blut: Summe 13964 (R16), Saeule 177/522/479, Spritzer h84/h86 529/1113.
+Leiste 11_schritt4_zeitversatz_h0-h14.jpg (Video | Ref2 | neu).
+Gegen Ref2 schlechter: nichts gefunden. Die Szene beginnt 2 Bilder spaeter wie das Video. Die Gesamtdauer bis zum Abgang ist
+gleich (Szenenende Takt 135 = Bild 135).
+Tests: unit_birkin_szenen (Riegel; ein Starr-Fehler im Zwischenlauf R16 kam vom Abgang: BF_H_WEG 89 liess den Spider-Man 2 Takte
+am letzten Bahnpunkt stehen -> 87), unit_birkin_formen, unit_schwanz_r41 gruen.

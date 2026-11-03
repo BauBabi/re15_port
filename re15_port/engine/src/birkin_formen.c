@@ -175,7 +175,8 @@ void re15_bf_morph_zu_g5(int slot)
 #define BF_H_WURF        72
 #define BF_H_AUFSCHLAG   76
 #define BF_H_AUFSPRINGEN 80          /* Video h80: Beine schon hoch, h82..86 rechts hinaus; Lauf n5 (Start h82) war 2 Bilder spaet */
-#define BF_H_WEG         89          /* Neuaufbau ab NB2: Takt 89 = Bild 87, Video h87 weg (h86 noch 5266 Bildpunkte am Rand) */
+#define BF_H_WEG         87          /* Neuaufbau ab NB2: Bild 87 weg (Video h87 weg, h86 noch 5266 Bildpunkte am Rand); Schritt 4:
+                                       * Takt = Bild (vorher Takt 89 = Bild 87) */
 #define BF_H_GANG        90
 #define BF_H_ENDE       135
 /* Birkin-Clip 0x0B Bild je Videobild (stueckweise linear): Griff beginnt h7 (Klaue bei h12 auf Brusthoehe B5, ueber dem
@@ -188,26 +189,28 @@ void re15_bf_morph_zu_g5(int slot)
  * (h60), also links und nach rechts wandernd -> B10->28 (h17..35), zurueck ->12 (h51), wieder ->27 (h66). */
 #define BF_BILD_N 8
 static const int16_t k_birkin_bild[BF_BILD_N][2] = {
-    {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  68, 27 }, { BF_H_WURF + 2, BF_WURF_BILD }, { BF_H_AUFSCHLAG + 2, 55 },
+    {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  66, 27 }, { BF_H_WURF, BF_WURF_BILD }, { BF_H_AUFSCHLAG, 55 },   /* Schritt 4: Takt = Bild, wieder die NB2-Takte */
     { BF_H_GANG, 70 } };
 /* Schritt 2 nach Referenz 2 (Loslassen): Video 4 h66-h70 haelt Birkin den Spider-Man noch oben links (Rumpf x ~100-170, y ~60-250),
  * h71 sinkt er links herab, h72 kopfueber links (x 60-150), h73/h74 unten links. Ref2 (84e8a4d97) schwang die Hand schon ab Bild 68
  * nach unten (Clip 0x0B B38 -> B44 Takt 70 -> 72) und liess bei Bild 70 los (3041 Einheiten von der Hand). Jetzt der Abschwung
  * 2 Takte spaeter (B27 bei Takt 68, Wurfbild B44 bei Takt 74, Aufschlag B55 bei Takt 78, Gier mit) und Loslassen im Takt
  * BF_H_LOS = 73 = Bild 71 mitten im Abschwung (B41) mit dem Tempo der Hand. GESTALTUNG nach dem Video. */
-#define BF_H_LOS        (BF_H_WURF + 1)
+/* Schritt 4 (Zeitversatz: Takt h = Bild h): derselbe Bildablauf wie Schritt 2 mit den NB2-Takten - Wurfbild B44 Takt/Bild 72,
+ * Loslassen Takt/Bild 71 (B41). */
+#define BF_H_LOS        (BF_H_WURF - 1)
 /* Birkin-Gier relativ zum Blick auf den Spider-Man-Start (Q12, 4096 = 360 Grad). Gestaltung nach dem Video: Birkin steht
  * zur Kamera gedreht (die haltende rechte Klaue liegt dann links im Bild, Gier 1300 = Bezug - 1270,
  * Video Rumpf x 110..145 bis h70), dreht h66..72 nach links und schmettert in Richtung des Ansprungs (Klaue B50 bei Gier
  * 2570 Bild (148,188), Video h72 Rumpf ganz links (60..150), Aufschlag (115..150, 203..215)). */
 static const int16_t k_birkin_gier[][2] = {
-    {   0, -1270 }, {  68, -1270 }, {  74,     0 }, { BF_H_AUFSCHLAG + 2, 0 } };   /* Schritt 2: Abschwung 2 Takte spaeter */
+    {   0, -1270 }, {  66, -1270 }, {  72,     0 }, { BF_H_AUFSCHLAG, 0 } };   /* Schritt 4: wieder NB2-Takte (Takt = Bild) */
 #define BF_GANG_SCHRITT  22          /* Video h90..135: ~1000 Einheiten in 45 Bildern */
 /* Runde 41 SF Neuaufbau ab NB2 (Nutzerwunsch "Schwanz: laenger, Laenge, Glieder und Baender wie im Video, Bewegung 1:1 nach
  * dem Video"): Schwanzbahn und Verdecken aus NB3-NB5 (r41/sichel 3f91e5c57) uebernommen. Die Tabelle ist je VIDEOBILD h; der
  * NB2-Takt h wird im Bild h - 2 gezeichnet (Lauf nb2neu/G2: Messzeile "h-1 F240", erstes Letterbox-Bild F243) -> die Szene
  * ruft bf_schwanz_ziel mit dem Bild des Takts (BF_BILD_VERSATZ). */
-#define BF_BILD_VERSATZ (-2)
+#define BF_BILD_VERSATZ 0   /* Schritt 4: vorher -2 (BF_VORLAUF 6) */
 #define BF_N(t) ((int)(sizeof (t) / sizeof (t)[0]))
 /* Runde 41 SF NB3 (Abnahme 1 Mangel 3): die Seitenvorgabe ist ersetzt. Der Schwanz faehrt jetzt die Bahn der Spitze aus
  * dem Video direkt nach (Tabelle 5d der Abnahme, Bildpunkte 640x480 je Videobild), FABRIK von der Wurzel
@@ -284,7 +287,10 @@ static const int16_t k_schwanz_gewicht[][2] = { { 15, 0 }, { 19, 4096 }, { 102, 
  *     `29 05` @0x012C4, Cut_auto `3c 01` @0x012E2), wie gatorszene_r41.c kam_uebergabe.
  *   - Der Spieler muss frei sein (Zustand 1, nicht gegriffen, keine andere Zwischensequenz) - sonst wartet der Ausloeser;
  *     bis dahin gibt es keine Figuren, die starr stehen koennten. */
-#define BF_VORLAUF       6           /* Standbilder des Kamera-Applys (kamerahalt_r41.c KH_STANDBILDER): Videobild h0 = Takt 6 */
+#define BF_VORLAUF       8           /* Standbilder des Kamera-Applys (kamerahalt_r41.c KH_STANDBILDER): Videobild h0 = Takt 6 */
+/* Schritt 4 nach Referenz 2 (Zeitversatz): mit 6 wurde der Takt h im Bild h - 2 gezeichnet (Lauf G2/R6: Messzeile "h-1 F240",
+ * erstes Letterbox-Bild F243) - die Szene lief 2 Bilder vor dem Video. Mit 8 liegt Takt h im Bild h; nur der Start verschiebt
+ * sich, BF_BILD_VERSATZ ist dafuer 0 (Schwanz, Blut und Wurfbahn bleiben auf denselben Bildern). */
 #define BF_KOPF_DY       2000        /* Gestaltung: Kopfpunkt des Sichttests ueber dem Fuss */
 
 /* Phasen (re15_bf_hangar_phase). */
@@ -952,7 +958,7 @@ void re15_bf_raumtick(void)
     if (!re15_enemy_find(0x30u) || (m && !re15_enemy_find(0x2Bu))) return;   /* Banken noch nicht geladen (Lader main.c) */
     bf_hangar_takt(b, m);
     {   const int h = s_h.t - 1 - BF_VORLAUF;            /* Diagnose-Phase des eben gespielten Videobilds */
-        s_h.phase = (h < 0) ? BF_H_VORLAUF : (h < BF_H_BERUEHRUNG) ? BF_H_SPRUNG : (h < BF_H_WURF) ? BF_H_GRIFF
+        s_h.phase = (h < 0) ? BF_H_VORLAUF : (h < BF_H_BERUEHRUNG) ? BF_H_SPRUNG : (h < BF_H_LOS) ? BF_H_GRIFF
                   : (h < BF_H_AUFSCHLAG) ? BF_H_STURZ : (h < BF_H_WEG) ? BF_H_LIEGT : BF_H_ABGANG;
         if (h >= BF_H_ENDE) bf_hangar_beenden(); }
 }
