@@ -707,3 +707,21 @@ Beine. Kniewinkel aus RE15_BEIN_LOG stehen unter jeder Kachel der Leiste 07_gang
    EM2B hat keinen passenden Original-Clip "kopfueber geworfen".
 5. Gruene Saeule h53-h58 schwaecher und weiter links als im Video (neu 12-37, Video 453-753 im Kasten x 320-365);
    Bodenspritzer h84 schwaecher als im Video (21 gegen 779).
+
+### Referenz 2 (vom Nutzer gelobt 2026-11-03)
+
+Nutzer (2026-11-03, ueber den Koordinator): "die jetzige vorschau von birkin sah schon nicht so schlecht aus."
+- Referenz 2 = Commit 84e8a4d97 auf r41/sichel_nb2.
+- Die laufende exe ist aus genau diesem Stand gebaut: Arbeitsbaum sauber, Ninja "no work to do", exe 10:46:42.
+- EM30_HANGAR.EMD sha256 cfd1ac42729e5636... = release/em30_hangar.sha256.
+
+Inhalt von Referenz 2: NB2-Koerper, -Farbe und -Gang plus die Nutzerwuensche
+- a: Klaue klein
+- b: Schwanz aus NB3/NB4 mit Bahn und Verdecken
+- c: gruenes Blut als Schleier, Bodenspritzer ABR0
+- d: kein Filter
+- e: passiver Wurf auf die Kamera zu
+- Griff hart gekoppelt (Riegel unter 150 Einheiten)
+
+Ab jetzt prueft jede weitere Aenderung zusaetzlich gegen Referenz 2; was dagegen schlechter aussieht, ist ein Befund. Die Leisten
+bekommen dafuer eine Spalte "Ref2".
