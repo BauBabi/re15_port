@@ -624,8 +624,8 @@ Bilder `port_bilder.py`, RE2-Bilder der Abnahme 2.
 | unit_r41_g5auftritt (neu: Bankreihenfolge wie main.c, Gewichte an 8 RE2-RAM-Bildern, Zeichner-Vertices Teil 2) | gruen 5090/5091; Gegenproben rot (9.2) |
 | G5/Birkin/Tentakel/Granate/PRI-Gruppe (28 Tests, -j 6) | 27/28; rot nur unit_r41_birkin_wand_g5 (9.8) |
 | integration_r41_g5_tod / _g5_westen / r35_zgirl_5090 / pri_masken / r36_pri_schatten (-j 3) | gruen (282 / 410 / 148 / 0,3 / 29 s) |
-| integration_r41_birkin_pistole | Lauf 1 ROT (Leon und Elza: G5 tot 0 bis F5400): ein Arm peitscht den Spieler bei x 23113 (F3576 45 -> 38, F3618 -> 31), Blick 2055 -> 640, mit durchgehend gehaltenem R1 kein neues Heben, also keine Zielhilfe; G5 blieb bei 150 HP. Die Zufallsfolge ist um einen Wurf verschoben (9.8); NB2 8.9 hatte "kein Treffer bei 23113" als ungemessen offen gelassen. Teststrategie angepasst: nach jedem 4-s-Abschnitt `W0.2`, das naechste Heben zielt neu (Latch FUN_8003703c rundum, Radius 0x7530 @0x80032fac, Drehung FUN_8001a8f8 0xC8 @0x80032fe0-ec). Lauf 2 GRUEN (419 s): je ein Peitschentreffer F3807 (45 -> 38), G5 tot F3973, Spieler-HP 38 (`nb3/messung_pistolentest_vorher_nachher.txt`) |
-| Alle Nicht-Integrationstests ohne die 6 Release-Skript-Tests (-j 6) | 1065/1066, 945 s; rot nur unit_r41_birkin_wand_g5 (9.8). Release-/Titelversion-Tests nicht gelaufen: df.exe haengt maschinenweit (Abnahme 2, 8.) |
+| integration_r41_birkin_pistole | Lauf 1 ROT (Leon und Elza: G5 tot 0 bis F5400): ein Arm peitscht den Spieler bei x 23113 (F3576 45 -> 38, F3618 -> 31), Blick 2055 -> 640, mit durchgehend gehaltenem R1 kein neues Heben, also keine Zielhilfe; G5 blieb bei 150 HP. Die Zufallsfolge ist um einen Wurf verschoben (9.8); NB2 8.9 hatte "kein Treffer bei 23113" als ungemessen offen gelassen. Teststrategie angepasst: nach jedem 4-s-Abschnitt `W0.2`, das naechste Heben zielt neu (Latch FUN_8003703c rundum, Radius 0x7530 @0x80032fac, Drehung FUN_8001a8f8 0xC8 @0x80032fe0-ec). Lauf 2 GRUEN (419 s): je ein Peitschentreffer F3807 (45 -> 38), G5 tot F3973, Spieler-HP 38 (`nb3/messung_pistolentest_vorher_nachher.txt`). Skript vom Koordinator abgesegnet (9.10) |
+| Alle Nicht-Integrationstests ohne die 6 Release-Skript-Tests (-j 6) | 1065/1066, 945 s; rot nur unit_r41_birkin_wand_g5 (9.8, behoben in 9.10). Release-/Titelversion-Tests nicht gelaufen: df.exe haengt maschinenweit (Abnahme 2, 8.) |
 
 ### 9.8 Befund ausserhalb der Spur: unit_r41_birkin_wand_g5 haengt an der Zufallsfolge
 
@@ -636,11 +636,57 @@ und endet in Bild 30 und 32 in Zelle 30 (`2 Bildenden in fester Zelle`). Gegenpr
 Engine-Stand 77479f1f2 mit NUR einem zusaetzlichen Wurf im alten Puls-Eintritt liefert genau dieselben zwei Bilder (Start, Bild, Lage, Zelle,
 Boss-x gleich). Ohne den Wurf (Zeitgeber fest) kippt statt dessen die 5091-Lage derselben Startlage (241 Bilder in Zelle 30). Die Luecke liegt
 also in der Spieler-Klemme waehrend des Griffs (Spur R, `re15_collision_constrain_re2`, Diagonale #30), nicht im Puls; sie haengt nur an der
-Zufallsfolge. Hier nicht behoben (fremde Spur), Saat des Tests nicht veraendert. Uebergabe an Spur R.
+Zufallsfolge. Saat des Tests nicht veraendert. Behoben in 9.10 (Auftrag Koordinator).
 
 ### 9.9 Commits
 
 - `a73316c4f` fix(r41-g5auftritt): Nachbesserung 3 - Masse mit Gewicht 1 (Ctor-Pose trotz spaeter Bank), Vorkampf-Puls nach RE2, Zeichner-Riegel
   (enemy_ai_boss_g5.c, re15_enemy.h, main.c Sonde, test_r41_g5auftritt.c).
 - `352a9a12f` test(r41-g5auftritt): Pistolentest hebt die Waffe nach jedem 4-s-Abschnitt neu (test_r41_birkin_pistole.cmake).
-- Folge-Commit: dieses Dossier und `G5_belege/nb3/`.
+- `28390dd47` docs(r41-g5auftritt): Nachbesserung 3 im Dossier, Umriss-Probe und Vergleichsleisten, Messungen (`G5_belege/nb3/`).
+- Folge-Commits: Klemme im Griff-Zweig + Riegel g5saat (game_step_common.c, test_r41_birkin_wand.c, tests/unit/CMakeLists.txt), danach Nachtrag 9.10.
+
+### 9.10 Nachtrag: Klemmen-Luecke im Griff-Zweig behoben (Auftrag Koordinator nach 9.8)
+
+Entscheidungen des Koordinators: (1) Pistolentest-Skript `MA4,W0.2` abgesegnet ("so spielt auch ein Mensch"). (2) unit_r41_birkin_wand_g5 darf
+nicht rot in die Integration; Luecke in diesem Zweig beheben, fuer jede Zufallsfolge, Saat nicht aendern, Fuzz-Riegel ueber viele Saaten.
+
+**Ursache an den zwei Bildern (gemessen, `nb3/messung_klemme_griffzweig.txt`).** Zelle 30 ist SCA #30 von ROOM5090/5091: Typ 6, x -425 z -27200
+w 5725 d 2000, also die Sued-Diagonale (-425,-27200)-(5300,-25200), fest unter der Linie. Stationen des Spielschritts (Messschiene
+`re15_schritt_station_*`) und eine Sonde im Griff-Zweig, Start (2100,-25900), erzwungener Spiessgriff (Opfer-Variante 3):
+- Bild 30: Spieler-Klemme S3 (3190,-25588) frei. Der Gegner-Pass setzt den Gegriffenen (Zug 600 @0x80104780) auf (3009,-26098), 98 hinter die
+  Linie (S5). Der Griff-Zweig (`grabbed_branch`, Koerper-Schub waehrend des Griffs) schiebt auf (3022,-26104) und klemmt mit der **Platzierung
+  (3009,-26098) als Vorlage**. re2_diag6 erkennt "ungeschobene Lage jenseits der Linie" (@0x8004d8dc) und stellt auf die Vorlage zurueck - die
+  liegt selbst in der Wand. spieler_klemme schreibt sie als `s_klemme_ende`. Die Nachklemme sieht `pl == s_klemme_ende` und kehrt sofort zurueck:
+  Bildende in #30. Bild 32 ebenso (Platzierung (2985,-26127)).
+- Bild 27-29: dieselbe Platzierung hinter der Linie, aber kein Koerper-Schub (Abstand zum G5), der Griff-Zweig klemmt nicht, die Nachklemme
+  stellt auf (3046,-25646) usw. zurueck. Darum haengt der Fehler an der Zufallsfolge: er braucht Schub UND Platzierung hinter der Linie im selben
+  Bild, also eine bestimmte Boss-Lage (Zug-Wuerfel).
+- RE2: die Aktor-Klemme FUN_8003567c liest als Vorlage immer +0x118/+0x11a und schreibt sie nach jedem Aufruf aus der aktuellen Lage:
+  `lw v0,132(s0)` / `lw v1,140(s0)` / `sh v0,280(s0)` / `sh v1,282(s0)` @0x800356ec-f8 (auch wenn der Klemmaufruf selbst uebersprungen
+  wird, `bne` @0x80035698/@0x800356a8). Eine ungeklemmte Griff-Platzierung ist dort nie Vorlage. Der Port nahm sie aus dem RE1.5-Zombiegriff
+  ("the anchored placement = the valid pos").
+
+**Behebung (game_step_common.c).**
+- Griff-Zweig: im Birkin-Kampf (`re15_birkin_klemme_aktiv`) ist die Vorlage `s_klemme_ende` = Port-+0x118 (letzte geklemmte Lage), nicht die
+  Platzierung. Ausserhalb des Birkin-Kampfs unveraendert (RE1.5 FUN_8003b0a4).
+- Nachklemme: schreibt danach `s_klemme_ende` = Ergebnis (+0x118 nach jeder Klemme @0x800356f4-f8); vorher blieb die Vorlage des Bildanfangs
+  stehen.
+Keine neue Konstante. Bild 30/32 enden danach auf (3190,-25588) / (3254,-25563), beide frei.
+
+**Riegel `unit_r41_birkin_wand_g5saat` (neu, test_r41_birkin_wand.c Modus g5saat, CMake TIMEOUT 1200, RE15_ENDKAMPF_NUR_G5=1).** Je Raum 5090 und
+5091: 200 Saaten der Engine-Ziehung (`re15_damage_seed_rng`) und der Testwuerfel, je Saat 5 wandnahe Startlagen (Zufall aus 424), Zufallsboss-x
+(-1500 .. 12000), Zufallseingaben in jeder zweiten Lage, erzwungener Griff in Bild 10..39 mit Zufallsvariante 0..4, 150 Bilder. Mass: kein
+Bildende mit dem Mittelpunkt in fester Zelle. Die Saat des bestehenden g5-Fuzz bleibt 0x0badf00d.
+- Mit Behebung: je Raum 1000 Faelle, rund 38 500 Griff-Bilder, **0 Bildenden in fester Zelle**, Laufzeit 22 s.
+- Gegenprobe (game_step_common.c auf dem Stand a73316c4f): je Raum **166 Bildenden in fester Zelle in 3 Saaten** (erste Saat 67, Start
+  (900,-26200), Peitschen-Griff, Zelle #22) - rot.
+- unit_r41_birkin_wand_g5 (Saat 0x0badf00d) mit Behebung: 0 Wandbilder in beiden Raeumen (vorher 2).
+
+**Tests nach der Behebung.**
+
+| Lauf | Ergebnis |
+|---|---|
+| unit_r41_birkin_wand_rein / _g5 / _griff / _g5saat (neu), unit_r41_g5auftritt und die G5/Birkin/Tentakel/Granate-Gruppe (23 Tests, -j 6) | 23/23 gruen |
+| integration_r41_birkin_pistole, _g5_tod, _g5_westen, r35_zgirl_5090, r35_werfer_form, r37_elzaems_leon5080, r37_elzaems_elza1181griff, r34_plattform_takt, r34_plattform_esp_eintritt, pri_masken, r36_pri_schatten (-j 3) | 11/11 gruen; Pistole wie in 9.7 (je ein Peitschentreffer F3807, G5 tot F3973, Spieler-HP 38) |
+| Alle Nicht-Integrationstests ohne die 6 Release-Skript-Tests (-j 6) | 1066/1067, 1039 s; rot nur unit_r35_android_bash_mutanten (Bash-Mutanten des Android-Skripts, ohne Bezug); einzeln wiederholt gruen (704 s) - Last |
