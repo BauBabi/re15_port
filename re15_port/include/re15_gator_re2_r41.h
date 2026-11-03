@@ -316,6 +316,15 @@ void re15_gr2_pc_zeichnen(const void *cam_view, int cx, int cy);
  * Messzeilen debug.log "[gator-re2] Sicht ...": Wechsel untergetaucht/aufgetaucht mit Bild, Lage, Clip/Bild; erstes
  * gezeichnetes Bild; groesster Lagesprung zwischen zwei aufgetauchten Bildern. */
 int  re15_gr2_pc_untergetaucht(const re15_actor_t *npc, int gecullt);
+/* Runde 41 Spur G2-RE2 (aus r41/gatorfix NB7): Schnitt eines Mesh-Polygons (n = 3 oder 4 Scheitel als Umfang) an der Wasserlinie (weg: Welt-y > y_wl) und, mit
+ * bloecke, an den festen Bloecken Plattform/Rampe unter dem Deck (weg: Inneres). mv = Modellraum, wm/wt = Modell -> Welt, vm/vt = Modell -> Kamera (Q12).
+ * Rueckgabe 0 = Polygon unberuehrt, 1 = erledigt (ganz weg oder Reststuecke gezeichnet). Zaehler re15_gr2_pc_schnitt_zaehler. */
+int  re15_gr2_pc_wl_poly(int n, const int32_t (*mv)[3], const int (*uv)[2], const uint8_t (*col)[3],
+                         const int32_t wm[9], const int32_t wt[3], const int32_t vm[9], const int32_t vt[3],
+                         int32_t y_wl, int bloecke, int fov, int cx, int cy, int clut);
+void re15_gr2_pc_schnitt_zaehler(int *geschnitten, int *weg);
+/* Zeichner-Gate Boss-Alligator mit Kanister: 1 = Mesh aus (untergetaucht); *wl/*y_wl/*bloecke = Schnitt an/aus, Wasserlinie, Bloecke. */
+int  re15_gr2_pc_gator_schnitt(const re15_actor_t *npc, int *wl, int32_t *y_wl, int *bloecke);
 /* Messhaken: Zahl der gespawnten Putz-Brocken (Raumbank 0x19) seit Start + Welt-Lage des letzten Spawns; exe-Zeile "RE2 PUTZ Stoss ..." in gator_boss.log. */
 int  re15_gr2_putz_spawns(void);
 /* Spur P (Nachbesserung 1, M4): Zahl der Putz-Stoesse = sub15-Laeufe mit Ringseite (ROOM40A0 sub01 @SCD 0x008C haengt am Stark-Schuetteln-Bit) */
@@ -324,6 +333,37 @@ void re15_gr2_putz_letzte(int32_t pos[3]);
 
 /* Messhaken: Log-Zeilen (gator_boss.log, "RE2 ...") an/aus. */
 void re15_gr2_log(const char *fmt, ...);
+
+/* ---- Runde 41 Spur G2-RE2 (Neuaufbau ab NB5 bc5fb7c9c; Dossier G2_gatorfix.md "G2-RE2"): Alligator mit dem Kanister im Maul ----------
+ * gator_rw_r41.c: Rueckwaerts (RE2-Clip 10, Blend 3 @0x80102c40-48) wo die Drehung nicht passt, kurz Tauchen nur als Notloesung (PORT-WAHL).
+ * gator_re2_r41.c: Kopf/Kanister nicht in Rampe/Plattform und mindestens 2500 vor der Kamera (Klemme + Zielkuerzung, PORT-WAHL).
+ * Pruefhaken _alt_setzen(1) = Stand NB5 (Gegenproben der Riegel, kein Spielweg). */
+typedef struct { uint32_t takte, rueck_n, rueck_bilder, tauchgaenge, tauch_bilder, unter_bilder, haenger; } re15_gr2_rw_stat_t;
+void re15_gr2_rw_alt_setzen(int an);
+int  re15_gr2_rw_alt(void);
+int  re15_gr2_rw_an(void);                       /* Kanister getragen (Stufe 7) und nicht der Pruefhaken */
+void re15_gr2_rw_tauchen_aus_setzen(int an);     /* Pruefhaken: Notloesung aus */
+void re15_gr2_rw_rueck_aus_setzen(int an);       /* Pruefhaken: Rueckwaerts aus */
+void re15_gr2_rw_reset(int slot);
+void re15_gr2_rw_stat(int slot, re15_gr2_rw_stat_t *s);
+void re15_gr2_rw_stat_null(void);
+int  re15_gr2_rw_modus(int slot);                /* 0 normal, 1 rueckwaerts, 2 abtauchen, 3 untergetaucht, 4 auftauchen */
+int  re15_gr2_rw_taucht(int slot);
+int  re15_gr2_rw_takt(int slot, re15_actor_t *e, const re15_actor_t *pl, int32_t tx, int32_t tz, int32_t dist);
+void re15_gr2_rw_nachtakt(int slot, re15_actor_t *e, const re15_actor_t *pl, int32_t ox, int32_t oz, int32_t takt_x, int32_t takt_z, int verfolgt, int phase_biss);
+int  re15_gr2_rw_modell_aus(const re15_actor_t *e);
+int  re15_gr2_rw_wasserlinie(const re15_actor_t *e, int32_t *y_wl);
+int  re15_gr2_rueck_clip(int slot, re15_actor_t *e, int32_t *vortrieb);   /* RE2-Clip 10 Blend 3, authored Vortrieb; 1 = Clip zu Ende */
+int  re15_gr2_rw_freie_stelle(const re15_actor_t *e, const re15_actor_t *pl, int32_t tx, int32_t tz, int32_t *x, int32_t *z, int *gier);
+int32_t re15_gr2_kamera_tiefe(int cam, const int32_t p[3]);   /* Bildtiefe (vz) von p in Kamera cam; sehr gross = keine Kamera */
+void re15_gr2_kk_erweitert(int an);
+int  re15_gr2_kreuz_anfahrt(int slot, const re15_actor_t *e, int32_t sx, int32_t sz, int32_t *tx, int32_t *tz);   /* Weg zum Startpunkt der Ueberquerung */
+int  re15_gr2_rw_kopf_verletzt(re15_actor_t *e);   /* Kopf/Kanister unter dem Deck in Plattform/Rampe oder < 2500 vor der Kamera */
+int32_t re15_gr2_vortrieb_soll(const re15_actor_t *e, int clip, int frame);   /* Messhaken: authored Vortrieb wie re15_gr2_chase_clip */
+int  re15_gr2_rw_umweg(int slot, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *tx, int32_t *tz);   /* Westkanal-Umweg zur Figur */
+void re15_gr2_rw_kamera_neu(void);              /* Raumwechsel/INIT: Kamera-Cache verwerfen */              /* Boss je Takt: 1 = Kopf-Klemme auch gegen Plattform/Rampe und die Kamera */
+int  re15_gr2_rw_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max);   /* Messhaken: Mesh 5/6/7 + Kanister-Zylinder der gezeichneten Pose */
+int  re15_gr2_teile_deck_tiefe(re15_actor_t *e, int32_t deck, const int32_t (*bl)[4], int nb, uint32_t teile);
 
 #ifdef __cplusplus
 }

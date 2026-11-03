@@ -35,7 +35,13 @@ endforeach()
 #   unit_r41_gatorfix_bahn(_elza)    NB5 (Abnahme 3 M2a/M2b): Belagerung mit Kanister je Rampenlage und Kamera - die GEFAHRENE Bahn folgt dem Plan (Abstand,
 #                                     Umlaufzeit, Schwerpunkt) und der Alligator ist im Bild erkennbar (Silhouette >= 50 % der Verfolgung an der Leiter in Cut 0);
 #                                     Gegenprobe Stand NB4 (Kreis R 2000, gespiegelte Karotte): rot
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza kamera kamera_elza haken haken_elza bahn bahn_elza)
+#   unit_r41_gatorfix_re2(_elza)     G2-RE2 (Neuaufbau ab NB5, Dossier "G2-RE2"): echter Boss-Takt mit dem Kanister, 13 Lagen (Abnahme-4-Haenger, Rampe,
+#                                     Leiter, Wege) x 1800 Bilder, Stand NB5 (Pruefhaken re15_gr2_rw_alt_setzen) gegen neu: Haengen, Drehen, Kopf/Kanister in
+#                                     Rampe/Plattform/vor der Kamera, Rammen, Tauch-Obergrenze, rueckwaerts, Gang = authored RE2-Vortrieb; Gegenproben NB5 rot
+#   unit_r41_gatorfix_re2_gegen(_elza) Gegenproben der Bausteine: RE1.5-Tempo (Gang weicht ab), ohne Rammen (0 Rammen)
+#   unit_r41_gatorfix_gang(_elza)    ohne Kanister Bild fuer Bild gleich NB5; Gegenprobe RE1.5-Tempo auch ohne Kanister
+#   (bahn/kamera = NB5-Belagerung mit dem Kanister: entfallen, mit dem Kanister ueberquert er die Rampe - Werkzeuge bleiben)
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)

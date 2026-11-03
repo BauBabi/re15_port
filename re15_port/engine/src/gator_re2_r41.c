@@ -2242,6 +2242,10 @@ static void gr2_kk_punkt(const int32_t p[3], int32_t u[4])
 /* NB5 (Abnahme 3 M2b): Waende, gegen die die Kopf-Klemme in diesem Takt prueft (Bit 0 West, 1 Ost, 2 Sued, 3 Nord). Waehrend der Bahn der Belagerung
  * nur die Waende im Bild der laufenden Kamera (gr2_kk_waende_setzen aus der Trag-Lenkung, s. BAHN DER BELAGERUNG); sonst alle vier. */
 static int s_kk_waende = 15;
+/* Runde 41 Spur G2-RE2: Zusatz der Kopf-Klemme gegen Plattform/Rampe und die Kamera (Abschnitt G2-RE2 unten) */
+static int s_rw_erw = 0;
+void re15_gr2_kk_erweitert(int an) { s_rw_erw = an; }
+static int gr2_rw_zusatz(const re15_actor_t *e, const re15_skel_pose_t *poses, int32_t *dx, int32_t *dz);
 static int gr2_kk_rechnen(const re15_actor_t *e, const re15_skel_pose_t *poses, int mit_kanister, int32_t *dx, int32_t *dz)
 {
     int32_t u[4] = { 0, 0, 0, 0 }, r[9], p[3];
@@ -2264,6 +2268,10 @@ static int gr2_kk_rechnen(const re15_actor_t *e, const re15_skel_pose_t *poses, 
     }
     for (int i = 0; i < 4; i++) if (!(s_kk_waende & (1 << i))) u[i] = 0;   /* NB5: Wand nicht im Bild (nur waehrend der Bahn der Belagerung) */
     *dx = u[0] - u[1]; *dz = u[2] - u[3];
+    if (mit_kanister && s_rw_erw && !re15_gr2_rw_alt()) {     /* G2-RE2 (c): Plattform/Rampe und Kamera */
+        int32_t bx = 0, bz = 0;
+        if (gr2_rw_zusatz(e, poses, &bx, &bz)) { *dx += bx; *dz += bz; }
+    }
     return *dx != 0 || *dz != 0;
 }
 /* Runde 41 Spur G2 (Punkt 7 "Hat der Aligator den Kanister bleibt es staendig an verschiedenen Stellen haengen", Haken): das STEUERZIEL mit dem Kanister im
@@ -2350,6 +2358,11 @@ static int gr2_kk_ziel_v1(const re15_actor_t *e, int32_t *tx, int32_t *tz)   /* 
 #define GR2_TR_HALTEN  150
 #define GR2_TR_PN      1024
 static struct { int ok; int32_t lokal[3]; int32_t rel[9]; int32_t sk; int n; int32_t h[96][2]; } s_th;   /* Huelle (Gator-Rahmen) */
+/* Runde 41 Spur G2-RE2: zweite Huelle fuer Plattform/Rampe/Kamera - Mesh der Parts 5/6/7 (Ecken des Part-Kastens der Scheitel, die Schnauze reicht bis
+ * 5644 vor die Wurzel, NB6 Messung 1) und Kanister-Zylinder r 267 (KANISTER40A0.MD1, Dossier B 2.5) an beiden Enden; die NB5-Huelle s_th (Bone-Ursprung) bleibt
+ * fuer die Aussenwaende (Gang/Wege wie NB5). */
+static struct { int n; int32_t h[256][2]; } s_th2;
+static int gr2_tr_huelle_pkt(const re15_actor_t *t, const re15_skel_pose_t *poses, int32_t sk, int32_t (*pk)[2], int cap);
 static int64_t gr2_kreuz(const int32_t o[2], const int32_t a[2], const int32_t b[2])
 {
     return (int64_t)(a[0] - o[0]) * (b[1] - o[1]) - (int64_t)(a[1] - o[1]) * (b[0] - o[0]);
@@ -2359,13 +2372,45 @@ static int gr2_pkt_cmp(const void *x, const void *y)
     const int32_t *a = (const int32_t *)x, *b = (const int32_t *)y;
     return a[0] != b[0] ? (a[0] < b[0] ? -1 : 1) : (a[1] < b[1] ? -1 : a[1] > b[1]);
 }
+/* Runde 41 Spur G2-RE2 (Leistung, Auftrag Punkt 7): gemessen (Riegel re2, G2_RE2_ZEIT_ZEIGE) kostete jeder Neubau der Huelle ~7 ms (200 Posen der Clips
+ * 0/1), und waehrend der Kanister in den Sitz dreht (Stufe 7, rel aendert sich) baute sie jedes Bild neu (NB5: Takt bis 9,9 ms). Die Posen haengen nicht vom
+ * Kanister ab: Teile 5/6/7 je Bild einmal je Bank/Skala in s_thp (verteilt, GR2_THP_JE_TAKT Bilder je Takt), danach rechnet der Neubau nur Punkte. Vor dem
+ * Ende des Vorrats keine Huelle (Kuerzung aus, wie vor Stufe 7). Mit dem Pruefhaken NB5 der alte Weg (bitgleich). */
+#define GR2_THP_JE_TAKT 8
+static struct { const void *bk; int32_t sk; int n, fertig; int16_t clip[256], bild[256]; int32_t r[256][3][9], p[256][3][3]; } s_thp;
+static int gr2_thp_vorrat(const re15_actor_t *e, re15_enemy_bank_t *bk, int32_t sk)
+{
+    if (s_thp.bk != bk || s_thp.sk != sk) { s_thp.bk = bk; s_thp.sk = sk; s_thp.n = 0; s_thp.fertig = 0; }
+    if (s_thp.fertig) return 1;
+    re15_actor_t t = *e; t.x = 0; t.y = 0; t.z = 0; t.rot_y = 0;
+    int idx = 0, neu = 0;
+    for (int c = 0; c <= 1 && c < bk->anim.clip_count; c++)
+        for (int f = 0; f < bk->anim.clips[c].frame_count && idx < 256; f++, idx++) {
+            if (idx < s_thp.n) continue;
+            if (neu >= GR2_THP_JE_TAKT) return 0;
+            t.motion = (int16_t)c; t.anim_frame = f;
+            const int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, &t, c, (uint32_t)f);
+            re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+            void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+            const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+            g_anim_pose_actor = save;
+            s_thp.clip[idx] = (int16_t)(rv == 0 ? c : -1); s_thp.bild[idx] = (int16_t)f;
+            if (rv == 0) for (int k = 0; k < 3; k++) gr2_part_welt(&t, &poses[5 + k], s_thp.r[idx][k], s_thp.p[idx][k]);
+            s_thp.n = idx + 1; neu++;
+        }
+    s_thp.fertig = 1;
+    return 1;
+}
+static int gr2_tr_huelle_vorrat(const re15_actor_t *e);
 static int gr2_tr_huelle(const re15_actor_t *e)
 {
     const int32_t sk = gr2_scale(e);
     if (s_th.ok && s_th.sk == sk && !memcmp(s_th.lokal, s_kan.lokal, sizeof s_th.lokal) && !memcmp(s_th.rel, s_kan.rel, sizeof s_th.rel)) return s_th.n > 2;
     re15_enemy_bank_t *bk = gr2_bank(e);
     if (!bk || bk->skel.bone_count <= 7) return 0;
+    if (!re15_gr2_rw_alt()) return gr2_tr_huelle_vorrat(e);
     static int32_t pk[GR2_TR_PN][2];
+    static int32_t pk2[8192][2]; int n2 = 0;                /* G2-RE2: Punkte der zweiten Huelle (s_th2) */
     int n = 0;
     re15_actor_t t = *e;
     t.x = 0; t.y = 0; t.z = 0; t.rot_y = 0;
@@ -2378,6 +2423,7 @@ static int gr2_tr_huelle(const re15_actor_t *e)
             const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
             g_anim_pose_actor = save;
             if (rv != 0) continue;
+            n2 += gr2_tr_huelle_pkt(&t, poses, sk, pk2 + n2, 8192 - n2);
             int32_t r[9], p[3];
             for (int k = 0; k < 3; k++) { gr2_part_welt(&t, &poses[k_kk_bone[k]], r, p); pk[n][0] = p[0]; pk[n][1] = p[2]; n++; }
             gr2_part_welt(&t, &poses[6], r, p);
@@ -2407,8 +2453,83 @@ static int gr2_tr_huelle(const re15_actor_t *e)
     if (m > 96) m = 96;
     memcpy(s_th.h, hl, (size_t)m * sizeof hl[0]);
     s_th.n = m; s_th.ok = 1; s_th.sk = sk;
+    {   /* G2-RE2: zweite Huelle (gleiche Kette) */
+        qsort(pk2, (size_t)n2, sizeof pk2[0], gr2_pkt_cmp);
+        int m2 = 0;
+        static int32_t hl2[2 * 8192][2];
+        for (int i = 0; i < n2; i++) {
+            while (m2 >= 2 && gr2_kreuz(hl2[m2-2], hl2[m2-1], pk2[i]) <= 0) m2--;
+            hl2[m2][0] = pk2[i][0]; hl2[m2][1] = pk2[i][1]; m2++;
+        }
+        for (int i = n2 - 2, u = m2 + 1; i >= 0; i--) {
+            while (m2 >= u && gr2_kreuz(hl2[m2-2], hl2[m2-1], pk2[i]) <= 0) m2--;
+            hl2[m2][0] = pk2[i][0]; hl2[m2][1] = pk2[i][1]; m2++;
+        }
+        if (m2 > 1) m2--;
+        if (m2 > 256) m2 = 256;
+        memcpy(s_th2.h, hl2, (size_t)m2 * sizeof hl2[0]); s_th2.n = m2;
+    }
     memcpy(s_th.lokal, s_kan.lokal, sizeof s_th.lokal); memcpy(s_th.rel, s_kan.rel, sizeof s_th.rel);
     re15_gr2_log("TRAG-HUELLE F%u: %d Punkte aus %d (Clips 0/1, Bones 5/6/7 + Kanister-Enden)", (unsigned)g_engine.frame_count, m, n);
+    return m > 2;
+}
+/* G2-RE2: Huellen s_th / s_th2 aus dem Posen-Vorrat (gleiche Punkte wie gr2_tr_huelle + gr2_tr_huelle_pkt) */
+static void gr2_kette(int32_t (*pk)[2], int n, int32_t (*hl)[2], int32_t (*out)[2], int cap, int *m_aus)
+{
+    qsort(pk, (size_t)n, sizeof pk[0], gr2_pkt_cmp);
+    int m = 0;
+    for (int i = 0; i < n; i++) { while (m >= 2 && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--; hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++; }
+    for (int i = n - 2, u = m + 1; i >= 0; i--) { while (m >= u && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--; hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++; }
+    if (m > 1) m--;
+    if (m > cap) m = cap;
+    memcpy(out, hl, (size_t)m * sizeof hl[0]);
+    *m_aus = m;
+}
+static void gr2_rw_box_bauen(const re15_enemy_bank_t *bk);
+static int gr2_rw_box_ecken(int part, int32_t sk, int32_t (*v)[3]);
+static int gr2_rw_kan_pkt(const int32_t kp[3], const int32_t kr[9], int32_t (*out)[3], int max);
+static int gr2_tr_huelle_vorrat(const re15_actor_t *e)
+{
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    const int32_t sk = gr2_scale(e);
+    if (!bk || !gr2_thp_vorrat(e, bk, sk)) return 0;
+    gr2_rw_box_bauen(bk);
+    static int32_t pk[GR2_TR_PN][2], pk2[8192][2], hl[2 * 8192][2];
+    int n = 0, n2 = 0;
+    const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+    for (int i = 0; i < s_thp.n; i++) {
+        if (s_thp.clip[i] < 0 || n + 5 > GR2_TR_PN) continue;
+        for (int k = 0; k < 3; k++) { pk[n][0] = s_thp.p[i][k][0]; pk[n][1] = s_thp.p[i][k][2]; n++; }
+        const int32_t *r = s_thp.r[i][1], *p = s_thp.p[i][1];   /* Part 6 */
+        int32_t kp[3], kf2[3], kr[9];
+        for (int a = 0; a < 3; a++) {
+            kp[a] = p[a] + (int32_t)(((int64_t)r[a*3] * l[0] + (int64_t)r[a*3+1] * l[1] + (int64_t)r[a*3+2] * l[2]) >> 12);
+            const int64_t ry = (int64_t)r[a*3] * s_kan.rel[1] + (int64_t)r[a*3+1] * s_kan.rel[4] + (int64_t)r[a*3+2] * s_kan.rel[7];
+            kf2[a] = kp[a] + (int32_t)(((ry >> 12) * -2784) >> 12);
+            for (int c = 0; c < 3; c++) kr[a*3+c] = (int32_t)(((int64_t)r[a*3] * s_kan.rel[c] + (int64_t)r[a*3+1] * s_kan.rel[3+c] + (int64_t)r[a*3+2] * s_kan.rel[6+c]) >> 12);
+        }
+        pk[n][0] = kp[0]; pk[n][1] = kp[2]; n++;
+        pk[n][0] = kf2[0]; pk[n][1] = kf2[2]; n++;
+        /* zweite Huelle: Bone-Ursprung, Ecken der Part-Kaesten, Kanister-Zylinder */
+        for (int k = 0; k < 3 && n2 < 8192; k++) {
+            const int part = 5 + k; const int32_t *rr = s_thp.r[i][k], *pp = s_thp.p[i][k];
+            pk2[n2][0] = pp[0]; pk2[n2][1] = pp[2]; n2++;
+            int32_t ek[8][3];
+            if (!gr2_rw_box_ecken(part, sk, ek)) continue;
+            for (int c = 0; c < 8 && n2 < 8192; c++) {
+                const int32_t *v = ek[c];
+                pk2[n2][0] = pp[0] + (int32_t)(((int64_t)rr[0] * v[0] + (int64_t)rr[1] * v[1] + (int64_t)rr[2] * v[2]) >> 12);
+                pk2[n2][1] = pp[2] + (int32_t)(((int64_t)rr[6] * v[0] + (int64_t)rr[7] * v[1] + (int64_t)rr[8] * v[2]) >> 12); n2++;
+            }
+        }
+        int32_t kz[48][3]; const int m = gr2_rw_kan_pkt(kp, kr, kz, 48);
+        for (int j = 0; j < m && n2 < 8192; j++) { pk2[n2][0] = kz[j][0]; pk2[n2][1] = kz[j][2]; n2++; }
+    }
+    int m = 0, m2 = 0;
+    gr2_kette(pk, n, hl, s_th.h, 96, &m);
+    gr2_kette(pk2, n2, hl, s_th2.h, 256, &m2);
+    s_th.n = m; s_th.ok = 1; s_th.sk = sk; s_th2.n = m2;
+    memcpy(s_th.lokal, s_kan.lokal, sizeof s_th.lokal); memcpy(s_th.rel, s_kan.rel, sizeof s_th.rel);
     return m > 2;
 }
 /* Messhaken NB5 (M2a): Ausdehnung von Hals/Kopf/Kiefer (a[0..3]) und Kanister-Enden (a[4..7]) im Gator-Rahmen (Gier 0: x = vorn, z = links)
@@ -2476,7 +2597,15 @@ static int gr2_tr_gier(const re15_actor_t *e, int32_t tx, int32_t tz)
     return ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 1024) & 0xfff;
 }
 /* Ziel auf die Strecke kuerzen; Rueckgabe = Seiten, die gekuerzt haben (1 West, 2 Ost, 4 Sued, 8 Nord), 0 = Ziel passt */
+static int gr2_tr_fit_wand(const re15_actor_t *e, int32_t *tx, int32_t *tz);
+static int gr2_rw_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz);
 static int gr2_tr_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    int seiten = gr2_tr_fit_wand(e, tx, tz);
+    if (!re15_gr2_rw_alt()) seiten |= gr2_rw_fit(e, tx, tz);   /* G2-RE2 (c): auch Plattform/Rampe und Kamera (Abschnitt G2-RE2) */
+    return seiten;
+}
+static int gr2_tr_fit_wand(const re15_actor_t *e, int32_t *tx, int32_t *tz)
 {
     int seiten = 0;
     for (int it = 0; it < 3; it++) {
@@ -2554,6 +2683,368 @@ static void gr2_tr_frei_r(const re15_actor_t *e, int32_t *x, int32_t *z, int32_t
     }
     *x = bx; *z = bz;
 }
+/* ==== Runde 41 Spur G2-RE2 (Neuaufbau ab NB5 bc5fb7c9c): KOPF UND KANISTER NICHT IN RAMPE/PLATTFORM, NICHT VOR DIE LINSE ===============================
+ * Befund Abnahme 4 (29cb53610, M3): Kopf/Kanister in 24 % der Bilder im Grundriss von Rampe/Plattform unter dem Deck und in 20 % hinter der Kameraebene - die
+ * NB5-Kopf-Klemme und die NB5-Zielkuerzung pruefen nur die Aussenwaende. RE2 hat dafuer nichts (Korridor ohne Insel, Root @0x80100190-3a4 ohne Wandklemme).
+ * PORT-WAHL (Nutzer-Auftrag 2026-11-03 Punkt 4c; Grenze 2500 = die Grenze von r41/gatorfix a14ff425a/NB9 "Kopf/Kanister >= 2500 vor der Figur-Kamera"):
+ *  - Punkte = die Mesh-Scheitel der Parts 5/6/7 (Hals, Kopf, Kiefer) der GEZEICHNETEN Pose und der Kanister-Zylinder (Achse Anfang/Mitte/Ende, Ring r 267 in
+ *    8 Richtungen + waagerechtes Achteck; KANISTER40A0.MD1 r 267 x 2784, Dossier B 2.5) - dieselben Punkte wie r41/gatorfix re15_gr2_teile_deck_tiefe;
+ *  - kein Punkt im Grundriss von Plattform (SCA [4]/[7]) oder Rampe (SCA [5]) + GR2_RW_RAND - auch nicht ueber dem Deck: Abnahme 4 sah "Schnauze und Kanister
+ *    auf der Rampe vor den Fuessen der Figur" (gemessen Riegel re2: mit der Deck-Ausnahme Drehen 11,8 %, ohne 4,8 %) - und jeder Punkt
+ *    mindestens GR2_RW_KAM_NAH tief vor der laufenden Kamera g_scd.cam_id (Bildtiefe vz wie der Zeichner, re15_camera_build_view);
+ *  - Klemme: wie die NB5-Kopf-Klemme den ganzen Alligator verschieben (Block: kuerzester Ausgang ueber eine Kante; Kamera: waagerecht in Blickrichtung), je Bild
+ *    hoechstens GR2_KK_SCHRITT (re15_gr2_kopf_klemme); nicht in der Ueberquerung (dort traegt der Hub den Koerper ueber das Deck) und nicht untergetaucht;
+ *  - Zielkuerzung: das Steuerziel auf der Strecke Wurzel -> Ziel so weit kuerzen, dass die Huelle s_th2 (Schwimm-Clips 0/1) mit der Ankunfts-Gier frei bleibt -
+ *    sonst draengte die Lenkung gegen die Klemme (= das NB5-Festdruecken). */
+#define GR2_RW_DECK      (-1800)   /* Deck Plattform/Rampe = Stockwerk 1 (B10 @0x8010e33c-360) */
+#define GR2_RW_RAND        100     /* PORT-WAHL: Abstand Punkte - Block (= r41/gatorfix GA_RAND) */
+#define GR2_RW_KAM_NAH    2500     /* PORT-WAHL (Auftrag Punkt 4c): Kopf/Kanister mindestens 2500 vor der Kamera */
+#define GR2_RW_SCHWIMM_Y (-1200)   /* Schwimmhoehe GB_WATER_Y (0x23-KI INIT @0x8010c65c) */
+#define GR2_RW_KOERPER_OBEN 1793   /* Schwimm-Pose: oberster Scheitel 1793 ueber der Wurzel (gemessen r41/gatorfix NB7, Huelle y -1793..146) */
+#define GR2_RW_PN          640
+static const int32_t k_rw_bl[2][4] = { { GR2_PLAT_X0, GR2_PLAT_X1, GR2_PLAT_Z0, GR2_PLAT_Z1 }, { GR2_RAMP_X0, GR2_RAMP_X1, GR2_RAMP_Z0, GR2_RAMP_Z1 } };
+static struct { int ok, cam; re15_camera_view_t v; } s_rw_kam;
+static const re15_camera_view_t *gr2_rw_view(int cam)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cam < 0 || cam >= g_room_rdt.cut_count) return NULL;
+    if (!s_rw_kam.ok || s_rw_kam.cam != cam) {
+        if (re15_camera_build_view(&g_room_rdt.cuts[cam], &s_rw_kam.v) != 0) { s_rw_kam.ok = 0; return NULL; }
+        s_rw_kam.ok = 1; s_rw_kam.cam = cam;
+    }
+    return &s_rw_kam.v;
+}
+void re15_gr2_rw_kamera_neu(void) { s_rw_kam.ok = 0; }   /* Raumwechsel: Kamera-Cache verwerfen */
+static int32_t gr2_rw_vz(const re15_camera_view_t *v, int32_t x, int32_t y, int32_t z)
+{
+    return (int32_t)(((int64_t)v->rot[6] * x + (int64_t)v->rot[7] * y + (int64_t)v->rot[8] * z) >> 12) + v->trans[2];
+}
+int32_t re15_gr2_kamera_tiefe(int cam, const int32_t p[3])
+{
+    const re15_camera_view_t *v = gr2_rw_view(cam);
+    return v ? gr2_rw_vz(v, p[0], p[1], p[2]) : (1 << 30);
+}
+/* Kasten der Mesh-Scheitel je Part im Part-Rahmen (ungeskaliert), einmal je Bank */
+static struct { const void *bk; int ok[8]; int32_t lo[8][3], hi[8][3]; } s_rw_box;
+static void gr2_rw_box_bauen(const re15_enemy_bank_t *bk)
+{
+    if (s_rw_box.bk == bk) return;
+    memset(&s_rw_box, 0, sizeof s_rw_box); s_rw_box.bk = bk;
+    for (int part = 5; part <= 7; part++) {
+        if (part >= bk->md1.mesh_count) continue;
+        const re15_md1_mesh_t *ms = &bk->md1.meshes[part];
+        for (int pass = 0; pass < 2; pass++) {
+            const int nv = pass ? ms->quad_vertex_count : ms->tri_vertex_count;
+            for (int i = 0; i < nv; i++) {
+                const re15_md1_vertex_t *vv = pass ? &ms->quad_vertices[i] : &ms->tri_vertices[i];
+                const int32_t q[3] = { vv->x, vv->y, vv->z };
+                for (int k = 0; k < 3; k++) {
+                    if (!s_rw_box.ok[part] || q[k] < s_rw_box.lo[part][k]) s_rw_box.lo[part][k] = q[k];
+                    if (!s_rw_box.ok[part] || q[k] > s_rw_box.hi[part][k]) s_rw_box.hi[part][k] = q[k];
+                }
+                s_rw_box.ok[part] = 1;
+            }
+        }
+    }
+}
+static int gr2_rw_box_ecken(int part, int32_t sk, int32_t (*v)[3])   /* 8 Ecken des Part-Kastens (Part-Rahmen, x Skala) */
+{
+    if (part < 0 || part >= 8 || !s_rw_box.ok[part]) return 0;
+    for (int c = 0; c < 8; c++) {
+        v[c][0] = q12mul((c & 1) ? s_rw_box.hi[part][0] : s_rw_box.lo[part][0], sk);
+        v[c][1] = q12mul((c & 2) ? s_rw_box.hi[part][1] : s_rw_box.lo[part][1], sk);
+        v[c][2] = q12mul((c & 4) ? s_rw_box.hi[part][2] : s_rw_box.lo[part][2], sk);
+    }
+    return 1;
+}
+/* Kanister an Part 6 der Pose (wie gr2_kan_folgen): Lage kp = p6 + R6 x Skala x lokal, Drehung kr = R6 x rel */
+static int gr2_rw_kanister(const re15_actor_t *e, const re15_skel_pose_t *ps, int32_t kp[3], int32_t kr[9])
+{
+    if (!s_kan.aktiv || !s_kan.angehaengt) return 0;
+    int32_t r6[9], p6[3]; gr2_part_welt(e, &ps[6], r6, p6);
+    const int32_t sk = gr2_scale(e);
+    const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+    for (int r = 0; r < 3; r++) {
+        kp[r] = p6[r] + (int32_t)(((int64_t)r6[r*3] * l[0] + (int64_t)r6[r*3+1] * l[1] + (int64_t)r6[r*3+2] * l[2]) >> 12);
+        for (int c = 0; c < 3; c++)
+            kr[r*3+c] = (int32_t)(((int64_t)r6[r*3] * s_kan.rel[c] + (int64_t)r6[r*3+1] * s_kan.rel[3+c] + (int64_t)r6[r*3+2] * s_kan.rel[6+c]) >> 12);
+    }
+    return 1;
+}
+/* Punkte des Kanister-Zylinders (Achse 0 / -1392 / -2784, Ring r 267 in 8 Richtungen + waagerechtes Achteck) */
+static int gr2_rw_kan_pkt(const int32_t kp[3], const int32_t kr[9], int32_t (*out)[3], int max)
+{
+    int n = 0;
+    for (int t = 0; t <= 2; t++) {
+        const int32_t a = -1392 * t;
+        const int32_t cx = kp[0] + (int32_t)(((int64_t)kr[1] * a) >> 12), cy = kp[1] + (int32_t)(((int64_t)kr[4] * a) >> 12), cz = kp[2] + (int32_t)(((int64_t)kr[7] * a) >> 12);
+        for (int o = 0; o < 8 && n + 2 <= max; o++) {
+            const int32_t ux = (int32_t)(((int64_t)re15_cos_q12(o * 512) * 267) >> 12), uz = (int32_t)(((int64_t)re15_sin_q12(o * 512) * 267) >> 12);
+            out[n][0] = cx + (int32_t)(((int64_t)kr[0] * ux + (int64_t)kr[2] * uz) >> 12);
+            out[n][1] = cy + (int32_t)(((int64_t)kr[3] * ux + (int64_t)kr[5] * uz) >> 12);
+            out[n][2] = cz + (int32_t)(((int64_t)kr[6] * ux + (int64_t)kr[8] * uz) >> 12); n++;
+            out[n][0] = cx + ux; out[n][1] = cy; out[n][2] = cz + uz; n++;
+        }
+    }
+    return n;
+}
+/* Huellen-Punkte (Gator-Rahmen, x/z) eines Bildes fuer s_th2: Bone-Ursprung 5/6/7, Ecken der Part-Kaesten 5/6/7, Kanister-Zylinder */
+static int gr2_tr_huelle_pkt(const re15_actor_t *t, const re15_skel_pose_t *poses, int32_t sk, int32_t (*pk)[2], int cap)
+{
+    re15_enemy_bank_t *bk = gr2_bank(t);
+    if (!bk) return 0;
+    gr2_rw_box_bauen(bk);
+    int n = 0;
+    for (int part = 5; part <= 7; part++) {
+        int32_t r[9], p[3]; gr2_part_welt(t, &poses[part], r, p);
+        if (n < cap) { pk[n][0] = p[0]; pk[n][1] = p[2]; n++; }
+        if (!s_rw_box.ok[part]) continue;
+        for (int c = 0; c < 8 && n < cap; c++) {
+            const int32_t v[3] = { q12mul((c & 1) ? s_rw_box.hi[part][0] : s_rw_box.lo[part][0], sk), q12mul((c & 2) ? s_rw_box.hi[part][1] : s_rw_box.lo[part][1], sk),
+                                   q12mul((c & 4) ? s_rw_box.hi[part][2] : s_rw_box.lo[part][2], sk) };
+            pk[n][0] = p[0] + (int32_t)(((int64_t)r[0] * v[0] + (int64_t)r[1] * v[1] + (int64_t)r[2] * v[2]) >> 12);
+            pk[n][1] = p[2] + (int32_t)(((int64_t)r[6] * v[0] + (int64_t)r[7] * v[1] + (int64_t)r[8] * v[2]) >> 12); n++;
+        }
+    }
+    int32_t kp[3], kr[9], kz[48][3];
+    if (gr2_rw_kanister(t, poses, kp, kr)) {
+        const int m = gr2_rw_kan_pkt(kp, kr, kz, 48);
+        for (int i = 0; i < m && n < cap; i++) { pk[n][0] = kz[i][0]; pk[n][1] = kz[i][2]; n++; }
+    }
+    return n;
+}
+/* Welt-Punkte Mesh 5/6/7 + Kanister der Pose ps */
+static int gr2_rw_punkte(const re15_actor_t *e, const re15_skel_pose_t *ps, int32_t (*out)[3], int max)
+{
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7) return 0;
+    const int32_t sk = gr2_scale(e);
+    int n = 0;
+    for (int part = 5; part <= 7; part++) {
+        if (part >= bk->md1.mesh_count) continue;
+        int32_t r[9], p[3]; gr2_part_welt(e, &ps[part], r, p);
+        const re15_md1_mesh_t *ms = &bk->md1.meshes[part];
+        for (int pass = 0; pass < 2; pass++) {
+            const int nv = pass ? ms->quad_vertex_count : ms->tri_vertex_count;
+            for (int i = 0; i < nv && n < max; i++) {
+                const re15_md1_vertex_t *vv = pass ? &ms->quad_vertices[i] : &ms->tri_vertices[i];
+                const int32_t v[3] = { q12mul(vv->x, sk), q12mul(vv->y, sk), q12mul(vv->z, sk) };
+                out[n][0] = p[0] + (int32_t)(((int64_t)r[0] * v[0] + (int64_t)r[1] * v[1] + (int64_t)r[2] * v[2]) >> 12);
+                out[n][1] = p[1] + (int32_t)(((int64_t)r[3] * v[0] + (int64_t)r[4] * v[1] + (int64_t)r[5] * v[2]) >> 12);
+                out[n][2] = p[2] + (int32_t)(((int64_t)r[6] * v[0] + (int64_t)r[7] * v[1] + (int64_t)r[8] * v[2]) >> 12); n++;
+            }
+        }
+    }
+    int32_t kp[3], kr[9];
+    if (gr2_rw_kanister(e, ps, kp, kr)) n += gr2_rw_kan_pkt(kp, kr, out + n, max - n);
+    return n;
+}
+int re15_gr2_rw_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max)
+{
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!e || !gr2_pose_gezeichnet(e, ps)) return 0;
+    return gr2_rw_punkte(e, ps, out, max);
+}
+/* Klemmen-Zusatz: Verschiebung (*dx,*dz), die alle Punkte aus Plattform/Rampe (unter dem Deck) und vor die Kamera bringt */
+static int gr2_rw_zusatz(const re15_actor_t *e, const re15_skel_pose_t *poses, int32_t *dx, int32_t *dz)
+{
+    static int32_t q[GR2_RW_PN][3];
+    const int n = gr2_rw_punkte(e, poses, q, GR2_RW_PN);
+    *dx = *dz = 0;
+    for (int b = 0; b < 2; b++) {
+        int32_t w = 0, o = 0, s = 0, nd = 0; int drin = 0;     /* noetiger Weg ueber die West-/Ost-/Sued-/Nordkante */
+        const int32_t x0 = k_rw_bl[b][0] - GR2_RW_RAND, x1 = k_rw_bl[b][1] + GR2_RW_RAND, z0 = k_rw_bl[b][2] - GR2_RW_RAND, z1 = k_rw_bl[b][3] + GR2_RW_RAND;
+        for (int i = 0; i < n; i++) {
+            if (q[i][0] <= x0 || q[i][0] >= x1 || q[i][2] <= z0 || q[i][2] >= z1) continue;
+            drin = 1;
+            if (q[i][0] - x0 > w) w = q[i][0] - x0;
+            if (x1 - q[i][0] > o) o = x1 - q[i][0];
+            if (q[i][2] - z0 > s) s = q[i][2] - z0;
+            if (z1 - q[i][2] > nd) nd = z1 - q[i][2];
+        }
+        if (!drin) continue;
+        int32_t m = w; int k = 0;
+        if (o < m) { m = o; k = 1; }
+        if (s < m) { m = s; k = 2; }
+        if (nd < m) { m = nd; k = 3; }
+        if (k == 0) *dx -= m; else if (k == 1) *dx += m; else if (k == 2) *dz -= m; else *dz += m;
+    }
+    const re15_camera_view_t *v = gr2_rw_view((int)g_scd.cam_id);
+    if (v) {
+        int32_t vmin = 1 << 30;
+        for (int i = 0; i < n; i++) { const int32_t vz = gr2_rw_vz(v, q[i][0], q[i][1], q[i][2]); if (vz < vmin) vmin = vz; }
+        const int64_t fx = v->rot[6], fz = v->rot[8], f2 = fx * fx + fz * fz;
+        if (vmin < GR2_RW_KAM_NAH && f2 > 0) {
+            const int64_t need = (int64_t)(GR2_RW_KAM_NAH - vmin) * 4096;   /* Weg D = need / |f| in Blickrichtung f/|f| -> Versatz f * need / |f|^2 */
+            *dx += (int32_t)(fx * need / f2); *dz += (int32_t)(fz * need / f2);
+        }
+    }
+    return *dx != 0 || *dz != 0;
+}
+/* frei: Huelle s_th2 (gedreht, Wurzel bei x/z) ausserhalb von Plattform/Rampe + Rand und vor der Kamera (Wurzelhoehe und Koerper-Oberkante) */
+static int gr2_rw_frei(const int32_t (*hw)[2], int n, int32_t x, int32_t z, const re15_camera_view_t *v)
+{
+    for (int i = 0; i < n; i++) {
+        const int32_t px = x + hw[i][0], pz = z + hw[i][1];
+        for (int b = 0; b < 2; b++)
+            if (px > k_rw_bl[b][0] - GR2_RW_RAND && px < k_rw_bl[b][1] + GR2_RW_RAND && pz > k_rw_bl[b][2] - GR2_RW_RAND && pz < k_rw_bl[b][3] + GR2_RW_RAND) return 0;
+        if (v && (gr2_rw_vz(v, px, GR2_RW_SCHWIMM_Y, pz) < GR2_RW_KAM_NAH || gr2_rw_vz(v, px, GR2_RW_SCHWIMM_Y - GR2_RW_KOERPER_OBEN, pz) < GR2_RW_KAM_NAH)) return 0;
+    }
+    return 1;
+}
+static int gr2_rw_drehen(int gier, int32_t (*hw)[2])
+{
+    const int64_t c = re15_cos_q12(gier), sn = re15_sin_q12(gier);
+    for (int i = 0; i < s_th2.n; i++) {
+        hw[i][0] = (int32_t)((c * s_th2.h[i][0] + sn * s_th2.h[i][1]) >> 12);
+        hw[i][1] = (int32_t)((-sn * s_th2.h[i][0] + c * s_th2.h[i][1]) >> 12);
+    }
+    return s_th2.n;
+}
+/* Zielkuerzung (an gr2_tr_fit): erster unfreier Punkt der Strecke -> Ziel davor; Seiten-Bit nach der Fahrtrichtung (wie eine Wand) */
+static int gr2_rw_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    if (s_th2.n < 3) return 0;
+    int32_t hw[256][2];
+    const int n = gr2_rw_drehen(gr2_tr_gier(e, *tx, *tz), hw);
+    const re15_camera_view_t *v = gr2_rw_view((int)g_scd.cam_id);
+    const int64_t dx = (int64_t)*tx - e->x, dz = (int64_t)*tz - e->z, d2 = dx * dx + dz * dz;
+    const int32_t d = (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
+    if (d < 1) return 0;
+    const int seite = (dx * dx >= dz * dz) ? (dx > 0 ? 2 : 1) : (dz > 0 ? 8 : 4);
+    if (!gr2_rw_frei(hw, n, e->x, e->z, v)) return 0;          /* schon jetzt unfrei (Kamerawechsel): keine Kuerzung - Klemme und Kollisions-Antwort fuehren heraus */
+    int steps = d / 250 + 1; if (steps > 120) steps = 120;
+    for (int k = 1; k <= steps; k++) {
+        const int32_t px = e->x + (int32_t)(dx * k / steps), pz = e->z + (int32_t)(dz * k / steps);
+        if (gr2_rw_frei(hw, n, px, pz, v)) continue;
+        *tx = e->x + (int32_t)(dx * (k - 1) / steps); *tz = e->z + (int32_t)(dz * (k - 1) / steps);
+        return seite;
+    }
+    return 0;
+}
+/* Runde 41 Spur G2-RE2 (c): liegt ein Punkt (Mesh 5/6/7 + Kanister) der gezeichneten Pose unter dem Deck im Grundriss von Plattform/Rampe (ohne Rand) oder
+ * weniger als GR2_RW_KAM_NAH tief vor der Kamera der Figur? Grundlage der Kollisions-Antwort im Boss-Takt (enemy_ai_boss_gator.c): die Bewegung eines Bildes,
+ * die Kopf/Kanister dorthin braechte, wird zurueckgenommen (erst die Drehung, dann der Schritt) - so dringt der Kopf beim Wenden nicht ein; die Klemme (mit
+ * Rand) bleibt fuer Lagen, die schon verletzen (Kamerawechsel). */
+int re15_gr2_rw_kopf_verletzt(re15_actor_t *e)
+{
+    if (!e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
+    static int32_t q[GR2_RW_PN][3];
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!gr2_pose_gezeichnet(e, ps)) return 0;
+    const int n = gr2_rw_punkte(e, ps, q, GR2_RW_PN);
+    const re15_camera_view_t *v = gr2_rw_view((int)g_scd.cam_id);
+    for (int i = 0; i < n; i++) {
+            for (int b = 0; b < 2; b++)
+                if (q[i][0] > k_rw_bl[b][0] && q[i][0] < k_rw_bl[b][1] && q[i][2] > k_rw_bl[b][2] && q[i][2] < k_rw_bl[b][3]) return 1;
+        if (v && gr2_rw_vz(v, q[i][0], q[i][1], q[i][2]) < GR2_RW_KAM_NAH) return 1;
+    }
+    return 0;
+}
+/* Messhaken Riegel "Gang gleich NB5": authored Vortrieb des Bildes wie re15_gr2_chase_clip (+0x144 = dx des Wurzelversatzes, Bild 0 gegen Latch 0, x Skala) */
+int32_t re15_gr2_vortrieb_soll(const re15_actor_t *e, int clip, int frame)
+{
+    re15_enemy_bank_t *bk = e ? gr2_bank(e) : NULL;
+    if (!bk || clip < 0 || clip >= bk->anim.clip_count) return 0;
+    int16_t a[3] = { 0, 0, 0 }, b[3] = { 0, 0, 0 };
+    gr2_off(bk, clip, frame, b);
+    if (frame > 0) gr2_off(bk, clip, frame - 1, a);
+    return q12mul((int32_t)b[0] - a[0], gr2_scale(e));
+}
+/* Notloesung (gator_rw_r41.c): freie Stelle zum Auftauchen. PORT-WAHL: Raster 500 im Wasser; Gier = die freie von 16 Richtungen, die der Richtung zum
+ * Steuerziel (tx,tz) am naechsten liegt; Wurzel in der Wurzel-Klemmflaeche (Aussenwaende
+ * - 1600, ausserhalb der um den Wurzel-Rand aufgeblasenen Bloecke wie gr2_tr_frei), Huelle s_th mit dieser Gier im Wurzel-Kasten der Aussenwaende
+ * (gr2_tr_kasten), Huelle s_th2 frei (Bloecke, Kamera) - an der Stelle und 1500 voraus (er kann nach dem Auftauchen anschwimmen); 2000..9000 von der jetzigen
+ * Lage; Wahl = kleinster Abstand zum Steuerziel + 2 x Abweichung der Gier, Kopfpunkt (3236 vor) mindestens 2500 von der Figur, im Bild der Kamera 2000 besser. */
+int re15_gr2_rw_freie_stelle(const re15_actor_t *e, const re15_actor_t *pl, int32_t tx, int32_t tz, int32_t *x, int32_t *z, int *gier)
+{
+    if (!e || !pl || !s_kan.aktiv || !s_kan.angehaengt || !gr2_tr_huelle(e) || s_th2.n < 3) return 0;
+    const int cam = (int)g_scd.cam_id;
+    const re15_camera_view_t *v = gr2_rw_view(cam);
+    const int32_t m = (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60 + 120;
+    int64_t best = -1; int32_t bx = 0, bz = 0; int bg = 0;
+    for (int32_t cx = GR2_KK_X0 + 1600; cx <= GR2_KK_X1 - 1600; cx += 500)
+        for (int32_t cz = GR2_KK_Z0 + 1600; cz <= GR2_KK_Z1 - 1600; cz += 500) {
+            if (gr2_tr_im_block(cx, cz, m)) continue;
+            const int64_t ex = (int64_t)cx - e->x, ez = (int64_t)cz - e->z, e2 = ex * ex + ez * ez;
+            if (e2 < 2000LL * 2000 || e2 > 9000LL * 9000) continue;
+            /* Gier: die von 16 Richtungen, die frei ist und am wenigsten von der Richtung zum Steuerziel (tx,tz) abweicht */
+            const int gz = (cx == tx && cz == tz) ? (int)(e->rot_y & 0xfff) : ((((int)re15_atan2_q12(tz - cz, tx - cx)) - 1024) & 0xfff);
+            int g = -1, gab = 0;
+            for (int r = 0; r < 16; r++) {
+                const int g1 = (gz + (r & 1 ? -1 : 1) * ((r + 1) / 2) * 256) & 0xfff;
+                int32_t k[4]; gr2_tr_kasten(g1, k);
+                const int32_t fx = re15_cos_q12(g1), fz = -re15_sin_q12(g1);
+                const int32_t vx = cx + (int32_t)(((int64_t)fx * 1500) >> 12), vz = cz + (int32_t)(((int64_t)fz * 1500) >> 12);
+                if (cx < k[0] || cx > k[1] || cz < k[2] || cz > k[3] || vx < k[0] || vx > k[1] || vz < k[2] || vz > k[3]) continue;
+                int32_t hw[256][2]; const int n = gr2_rw_drehen(g1, hw);
+                if (!gr2_rw_frei(hw, n, cx, cz, v) || !gr2_rw_frei(hw, n, vx, vz, v)) continue;
+                g = g1; gab = ((r + 1) / 2) * 256; break;
+            }
+            if (g < 0) continue;
+            const int32_t fx = re15_cos_q12(g), fz = -re15_sin_q12(g);
+            const int64_t kx = (int64_t)cx + ((3236LL * fx) >> 12) - pl->x, kz = (int64_t)cz + ((3236LL * fz) >> 12) - pl->z;   /* Kopfpunkt 3236 vor (GR2_RUNDE_KOPF) */
+            const int64_t k2 = kx * kx + kz * kz;
+            if (k2 < 2500LL * 2500) continue;
+            const int64_t zx = (int64_t)cx - tx, zz = (int64_t)cz - tz;
+            int64_t score = (int64_t)re15_squareroot0((uint32_t)(zx * zx + zz * zz > 0xffffffffLL ? 0xffffffffLL : zx * zx + zz * zz)) + 2 * gab;   /* nah am Steuerziel, wenig Abweichung */
+            if (v) { const int32_t w[3] = { cx, GR2_RW_SCHWIMM_Y, cz }; int sx = 0, sy = 0; if (gr2_im_bild(&g_room_rdt.cuts[cam], w, &sx, &sy) && sy >= 24 && sy < 216) score -= 2000; }
+            if (best < 0 || score < best) { best = score; bx = cx; bz = cz; bg = g; }
+        }
+    if (best < 0) return 0;
+    *x = bx; *z = bz; *gier = bg;
+    return 1;
+}
+/* RE2-Rueckzug: Clip 10, Blend 3 (`addiu a1,zero,10 / addiu a2,zero,3 / jal 0x8001a330` @0x80102c40-48), Vortrieb = authored Wurzelversatz laengs
+ * (+0x144 wie re15_gr2_chase_clip), 1 = letztes Bild (Clip-Ende -> `addiu v1,zero,257 / sw v1,4(s0)` @0x80102c54-5c: zurueck ins Schwimmen) */
+int re15_gr2_rueck_clip(int slot, re15_actor_t *e, int32_t *vortrieb)
+{
+    (void)slot;
+    *vortrieb = 0;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->anim.clip_count <= 10) return 1;
+    if (e->motion != 10) { e->motion = 10; e->anim_frame = 0; gr2_blend(e, 3); }
+    else if (e->anim_frame + 1 < bk->anim.clips[10].frame_count) e->anim_frame++;
+    int16_t a[3] = { 0, 0, 0 }, b[3] = { 0, 0, 0 };
+    gr2_off(bk, 10, e->anim_frame, b);
+    if (e->anim_frame > 0) gr2_off(bk, 10, e->anim_frame - 1, a);
+    *vortrieb = q12mul((int32_t)b[0] - a[0], gr2_scale(e));
+    return e->anim_frame + 1 >= bk->anim.clips[10].frame_count;
+}
+/* Ueberquerung mit dem Kanister (r41/gatorfix NB9 557e1a75b, ohne Entwurf F): groesste Tiefe gezeichneter Punkte der Teile `teile` (Mesh) und des
+ * Kanister-Zylinders unter dem Deck im Grundriss der Bloecke bl; <= 0 = keiner. */
+int re15_gr2_teile_deck_tiefe(re15_actor_t *e, int32_t deck, const int32_t (*bl)[4], int nb, uint32_t teile)
+{
+    re15_enemy_bank_t *bk = e ? gr2_bank(e) : NULL;
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!bk || !s_kan.aktiv || !s_kan.angehaengt || !gr2_pose_gezeichnet(e, ps)) return 0;
+    const int32_t sk = gr2_scale(e);
+    int32_t best = -(1 << 30);
+    #define GR2_KDT(px, py, pz) do { const int32_t x_ = (px), y_ = (py), z_ = (pz); \
+        for (int b_ = 0; b_ < nb; b_++) if (x_ > bl[b_][0] && x_ < bl[b_][1] && z_ > bl[b_][2] && z_ < bl[b_][3] && y_ - deck > best) best = y_ - deck; } while (0)
+    for (int part = 0; part < 32; part++) {
+        if (!(teile & (1u << part)) || part >= bk->md1.mesh_count || part >= bk->skel.bone_count) continue;
+        int32_t r[9], p[3]; gr2_part_welt(e, &ps[part], r, p);
+        const re15_md1_mesh_t *ms = &bk->md1.meshes[part];
+        for (int pass = 0; pass < 2; pass++) {
+            const int nv = pass ? ms->quad_vertex_count : ms->tri_vertex_count;
+            for (int i = 0; i < nv; i++) {
+                const re15_md1_vertex_t *vv = pass ? &ms->quad_vertices[i] : &ms->tri_vertices[i];
+                const int32_t v[3] = { q12mul(vv->x, sk), q12mul(vv->y, sk), q12mul(vv->z, sk) };
+                GR2_KDT(p[0] + (int32_t)(((int64_t)r[0] * v[0] + (int64_t)r[1] * v[1] + (int64_t)r[2] * v[2]) >> 12),
+                        p[1] + (int32_t)(((int64_t)r[3] * v[0] + (int64_t)r[4] * v[1] + (int64_t)r[5] * v[2]) >> 12),
+                        p[2] + (int32_t)(((int64_t)r[6] * v[0] + (int64_t)r[7] * v[1] + (int64_t)r[8] * v[2]) >> 12));
+            }
+        }
+    }
+    {   int32_t kp[3], kr[9], kz[48][3];
+        if (bk->skel.bone_count > 6 && gr2_rw_kanister(e, ps, kp, kr)) {
+            const int m = gr2_rw_kan_pkt(kp, kr, kz, 48);
+            for (int i = 0; i < m; i++) GR2_KDT(kz[i][0], kz[i][1], kz[i][2]);
+        } }
+    #undef GR2_KDT
+    return best;
+}
+
 /* ==== Runde 41 Spur G2 Nachbesserung 4 (Orchestrator nach NB3, Punkt 2): KREISPUNKT IN DER SPIELERKAMERA ============================================
  * Befund NB3: der Mittelpunkt der Belagerung (Figur oben/an der Leiter, mit dem Kanister nicht erreichbar) ist der naechste freie Wasserpunkt zur Figur - auf
  * der Rampe West liegt der Alligator so zu 91 % im Bild der Spielerkamera (Cut 2), auf dem Nordteil der Rampe nur zu 12 %.
@@ -3037,6 +3528,34 @@ static void gr2_runde_anfahrt(const re15_actor_t *e, int32_t tx, int32_t tz, int
     if (best < 0) { bx = tx; bz = tz; re15_gator_boss_steuerziel(e, &bx, &bz); }   /* kein Knotenweg (Wurzel in einem Block-Schatten): Kanten-Umweg der Spur B */
     *qx = bx; *qz = bz;
 }
+/* Runde 41 Spur G2-RE2 (5): Weg zum Startpunkt der Ueberquerung mit dem Kanister - die NB5-Anfahrt der Belagerung ueber die Westkanal-Knoten (gr2_runde_anfahrt:
+ * direkt, wenn die Strecke frei von den um den Wurzel-Rand aufgeblasenen Bloecken ist, sonst ueber Knoten Nord/Sued des Westkanals), das Ziel danach wie jedes
+ * Trag-Ziel gekuerzt (Aussenwaende NB5, Plattform/Rampe/Kamera G2-RE2: gr2_tr_fitfrei). PORT-WAHL wie die NB5-Anfahrt; RE2 hat keine Insel. */
+int re15_gr2_kreuz_anfahrt(int slot, const re15_actor_t *e, int32_t sx, int32_t sz, int32_t *tx, int32_t *tz)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || s_kk_ziel_alt) return 0;
+    s_kk_waende = 15;
+    if (!s_kan.aktiv || !s_kan.angehaengt || s_kan.stufe != 7 || !gr2_tr_huelle(e)) return 0;
+    int32_t qx, qz;
+    gr2_runde_anfahrt(e, sx, sz, &qx, &qz);
+    (void)gr2_tr_fitfrei(e, &qx, &qz);
+    s_tr[slot].an = 0; s_tr[slot].kreis = 0;
+    s_tr_modus[slot] = 4;
+    *tx = qx; *tz = qz;
+    return 1;
+}
+/* Runde 41 Spur G2-RE2 (M4 "haengt mit dem Kanister"): Weg zur Figur, wenn die Strecke Wurzel -> Figur durch die um den Wurzel-Rand aufgeblasenen Bloecke
+ * Plattform/Rampe fuehrt - dieselbe Knoten-Anfahrt ueber den Westkanal wie die Belagerung in NB5 (gr2_runde_anfahrt). Gemessen (Riegel re2, Lage
+ * Nordbecken-Ost = Abnahme 4 west4_elza): mit dem NB5-Weg (Spur-B-Routenwahl + Hop-/Vorbei-Etappen der Trag-Lenkung) pendelte er zwischen dem NW-Hop und
+ * Vorbei-Etappen im Suedbecken (58 s ohne Fortschritt). Ist die Strecke frei, bleibt die NB5-Verfolgung (Kuerzung, Vorbei-Etappe, Kreis) unveraendert.
+ * Rueckgabe 1 = Umweg-Ziel gesetzt. PORT-WAHL wie die NB5-Anfahrt. */
+int re15_gr2_rw_umweg(int slot, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *tx, int32_t *tz)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || s_kk_ziel_alt || !s_kan.aktiv || !s_kan.angehaengt || s_kan.stufe != 7) return 0;
+    gr2_tr_frei(e, &px, &pz);                                  /* Ziel aus den aufgeblasenen Bloecken (Figur dicht an Rampe/Plattform) */
+    if (gr2_runde_frei(e->x, e->z, px, pz, gr2_runde_wurzelrand(e))) return 0;
+    return re15_gr2_kreuz_anfahrt(slot, e, px, pz, tx, tz);
+}
 /* naechster Stuetzpunkt (Bogenlaenge) zur Wurzel und sein Abstand */
 static int32_t gr2_runde_naechst(const gr2_runde_t *b, int32_t x, int32_t z, int32_t *ab)
 {
@@ -3389,6 +3908,7 @@ int re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz)
 void re15_gr2_nachtakt(int slot, re15_actor_t *e)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return;
+    if (s_kan.aktiv && !re15_gr2_rw_alt()) { re15_enemy_bank_t *vb = gr2_bank(e); if (vb && vb->skel.bone_count > 7) (void)gr2_thp_vorrat(e, vb, gr2_scale(e)); }   /* G2-RE2: Posen-Vorrat der Huelle verteilt bauen, sobald der Kanister im Spiel ist */
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     if (!gr2_pose_gezeichnet(e, poses)) return;
     int32_t r6[9], p6[3], r7[9], p7[3];

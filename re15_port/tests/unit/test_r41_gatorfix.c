@@ -1565,7 +1565,8 @@ static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, 
         /* NB2 (M5): ohne Ausnahme ausser laufendem Biss (Phase 3/8) am Spieler im Wasser (Wurzel < 3200 oder Kopf < 2400) */
         const int64_t wx0 = (int64_t)g->x - L->x, wz0 = (int64_t)g->z - L->z;
         const int am_spieler = ((ph == 3 || ph == 8) && (wx0 * wx0 + wz0 * wz0 < 3200LL * 3200 || kopf < 2400))
-                             || (ph == 5 && g->motion == 4 && L->y != 0 && kopf < 4200);   /* Hochbiss der Belagerung (Aufricht-Gate 4200) */
+                             || (ph == 5 && g->motion == 4 && L->y != 0 && kopf < 4200)   /* Hochbiss der Belagerung (Aufricht-Gate 4200) */
+                             || re15_gator_boss_lauert(g) || re15_gr2_rw_taucht((int)(g - g_actors));   /* G2-RE2: Lauern am Startpunkt der Ueberquerung / Tauchgang der Notloesung */
         if (hn >= 30 && !am_spieler) {
             const int32_t *a = hist[hn % 30];
             const int64_t wx = (int64_t)g->x - a[0], wz = (int64_t)g->z - a[1];
@@ -1978,10 +1979,302 @@ static int kasten_werkzeug(int elza)
     return 0;
 }
 
+/* ==== Runde 41 Spur G2-RE2 (Neuaufbau ab NB5 bc5fb7c9c): MASS UND RIEGEL ===========================================================================
+ * Dossier G2_gatorfix.md Abschnitt "G2-RE2 (Neuaufbau ab NB5)". Echter Boss-Takt mit dem Kanister im Maul, je Lage der Figur (Abnahme 4: SO-Ecke = frei4_leon,
+ * Nordbecken-Ost = west4_elza, NO-Ecke = nordost; Rampe x4428/x2318 = west4_leon/west5_elza; Leiter/Leiterecke = leiter2; dazu Westkanal, Mitte-Nord,
+ * Plattform-Sued, zwei Wege mit bewegter Figur) G2_RE2_BILDER Bilder; Stand "nb5" = Pruefhaken re15_gr2_rw_alt_setzen(1), Stand "neu" = Bau.
+ * Masse (PORT-WAHL des Messwegs, je Bild):
+ *  - ohne Fortschritt: Folge von Bildern, in denen der Kopf (Bone 6) der Figur nicht 300 naeher kommt als sein bester Wert seit Folgenbeginn, solange er
+ *    weiter als 4500 von ihr ist (naeher = "am Spieler"); die Folge endet mit Annaeherung, Naehe oder wenn die Figur > 1500 weitergeht;
+ *  - 2-s-Fenster (Mass der Abnahmen): 60 Bilder, in denen die Wurzel nicht 300 vom Fensteranfang wegkommt, ausser mit Biss;
+ *  - Drehen auf der Stelle: Bild liegt in einem 120-Bilder-Fenster, in dem die Gier sich um >= 360 Grad dreht und die Wurzel in einem Kasten < 3000 bleibt;
+ *  - rueckwaerts / Tauchgaenge / untergetaucht: re15_gr2_rw_modus;
+ *  - Kopf/Kanister in Rampe/Plattform: ein Punkt von re15_gr2_rw_kopf_punkte (Mesh 5/6/7 + Kanister-Zylinder der gezeichneten Pose) unter dem Deck (y > -1800)
+ *    im Grundriss von Plattform/Rampe (ohne Rand); vor der Kamera: kleinste Bildtiefe dieser Punkte in der Kamera der Figur < 2500 bzw. <= 0 (dahinter);
+ *  - Rammen / Ueberquerungen: Zaehler des Boss-Moduls; Takt-Rechenzeit: Faden-Zyklen des Boss-Takts (re15_gator_boss_zeit_letzt) in Mikrosekunden;
+ *  - Gang: in Bildern der normalen Verfolgung (Phase CHASE, Modus 0, Clip 0/1) Taktschritt je (Clip, Bild) gegen die Tafel des NB5-Laufs, |Gier-Delta|. */
+typedef struct { const char *name; int32_t x, y, z; int weg, von; } g2r_lage_t;
+static const g2r_lage_t k_re2_lagen[] = {
+    { "SO-Ecke", 6734, 0, -26532, 0, 11 }, { "Nordbecken-Ost", 6732, 0, -13687, 0, 13 }, { "NO-Ecke", 4944, 0, -5868, 0, 14 },
+    { "Rampe-x4428", 4428, -1800, -16300, 0, 0 }, { "Rampe-x2318", 2318, -1800, -16685, 0, 0 }, { "Rampe-Nord", 4500, -1800, -15000, 0, 1 },
+    { "Leiter", -8200, 0, -25550, 0, 0 }, { "Leiterecke", -8437, 0, -26507, 0, 0 }, { "Westkanal", -6000, 0, -16000, 0, 0 },
+    { "Mitte-Nord", 0, 0, -8000, 0, 0 }, { "Plattform-Sued", 1000, 0, -22500, 0, 0 },
+    { "Weg-Becken", -6000, 0, -24000, 1, 0 }, { "Weg-Rampe", 2600, -1800, -16300, 2, 0 },
+};
+static const int32_t k_weg_becken[][2] = { { -6000, -24000 }, { -6000, -9000 }, { 5000, -9000 }, { -6000, -9000 }, { -6000, -24000 }, { 5000, -23000 } };
+static const int32_t k_weg_rampe[][2] = { { 2600, -16300 }, { 6400, -16300 }, { 6400, -15200 }, { 2600, -17300 } };
+#define G2R_WEG_TEMPO 50   /* PORT-WAHL des Messwegs: Figur geht 50 je Bild */
+typedef struct {
+    int bilder, ohne_max, fenster2, lauer, drehen, rueck, rueckzug, tauch_n, taucht, block, kam2500, kam0, rammen, kreuz, gang_n, gang_fehl, gier_max, clip1, rw_haeng;
+    int64_t kopf_summe; int zeit_n; double zeit[4096];
+} g2r_m_t;
+static int16_t s_g2r_tafel[2][256]; static int s_g2r_blk; static int32_t s_g2r_vmin;   /* Taktschritt je (Clip 0/1, Bild) aus dem NB5-Lauf; -1 = unbekannt */
+static int g2r_cmp_d(const void *a, const void *b) { const double x = *(const double *)a, y = *(const double *)b; return x < y ? -1 : x > y; }
+static void g2r_weg(const g2r_lage_t *L, int t, int32_t *x, int32_t *z)
+{
+    const int32_t (*w)[2] = L->weg == 1 ? k_weg_becken : k_weg_rampe;
+    const int n = L->weg == 1 ? (int)(sizeof k_weg_becken / sizeof k_weg_becken[0]) : (int)(sizeof k_weg_rampe / sizeof k_weg_rampe[0]);
+    int64_t s = (int64_t)t * G2R_WEG_TEMPO, um = 0;
+    int32_t ln[16];
+    for (int i = 0; i < n; i++) { const int64_t dx = w[(i + 1) % n][0] - w[i][0], dz = w[(i + 1) % n][1] - w[i][1]; ln[i] = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz)); um += ln[i]; }
+    s %= um;
+    for (int i = 0; i < n; i++) {
+        if (s <= ln[i]) { *x = w[i][0] + (int32_t)((int64_t)(w[(i + 1) % n][0] - w[i][0]) * s / (ln[i] ? ln[i] : 1)); *z = w[i][1] + (int32_t)((int64_t)(w[(i + 1) % n][1] - w[i][1]) * s / (ln[i] ? ln[i] : 1)); return; }
+        s -= ln[i];
+    }
+    *x = w[0][0]; *z = w[0][1];
+}
+static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int bilder, int nb5, g2r_m_t *m, FILE *spur)
+{
+    memset(m, 0, sizeof *m);
+    int bi = 0; int64_t bd = -1;
+    for (int i = 0; i < 5; i++) { const int64_t dx = k_fz_start[i][0] - L->x, dz = k_fz_start[i][1] - L->z; if (dx * dx + dz * dz > bd) { bd = dx * dx + dz * dz; bi = i; } }
+    g->x = k_fz_start[bi][0]; g->z = k_fz_start[bi][1]; g->anchor_x = g->x; g->anchor_z = g->z;
+    g2_lage_t gl = { L->name, L->x, L->y, L->z };
+    int cam = L->von >= 10 ? L->von - 10 : g2_lage_kamera(&gl, L->von);   /* von >= 10: Kamera der Abnahme-4-Laeufe (state.log cam=), 10 + Cut */
+    if (cam < 0) cam = 0;
+    re15_gr2_rw_stat_t st0; re15_gr2_rw_stat((int)(g - g_actors), &st0);
+    const int ramm0 = re15_gator_boss_rammen(), kreuz0 = re15_gator_boss_kreuz_kanister();
+    int32_t h60[60][2]; int hn = 0; uint8_t biss60[60]; memset(biss60, 0, sizeof biss60);
+    int32_t h120[120][2]; int16_t d120[120]; int64_t dsum = 0; int dreh_bis = -1;
+    int lauf = 0; int64_t best = -1; int32_t px0 = L->x, pz0 = L->z; int prev_mod = 0; int prev_gier = g->rot_y & 0xfff;
+    static int32_t pts[640][3];
+    for (int t = 0; t < bilder && re15_gr2_traegt(); t++) {
+        int32_t px = L->x, pz = L->z;
+        if (L->weg) g2r_weg(L, t, &px, &pz);
+        pl->x = px; pl->y = L->y; pl->z = pz; pl->hp = 100; pl->hit_react = 0;
+        if (L->weg == 1) cam = g2_zonen_schritt(px, pz, cam);
+        g_scd.cam_id = (uint8_t)cam;
+        re15_collision_set_band(re15_collision_band_from_y(L->y));
+        frame(0, 0);
+        m->bilder++;
+        const int slot = (int)(g - g_actors), ph = re15_gator_boss_phase(g), mod = re15_gr2_rw_modus(slot);
+        const int gier = g->rot_y & 0xfff;
+        int dg = ((gier - prev_gier + 0x800) & 0xfff) - 0x800; prev_gier = gier;
+        int32_t kopf[3] = { g->x, g->y, g->z }; (void)re15_gr2_bone_welt_pub(g, 6, kopf);
+        const int64_t kx = (int64_t)kopf[0] - px, kz = (int64_t)kopf[2] - pz, k2 = kx * kx + kz * kz;
+        const int32_t kd = (int32_t)re15_squareroot0((uint32_t)(k2 > 0xffffffffLL ? 0xffffffffLL : k2));
+        m->kopf_summe += kd;
+        /* ohne Fortschritt */
+        { const int64_t mx = (int64_t)px - px0, mz = (int64_t)pz - pz0;
+          if (kd <= 4500 || mx * mx + mz * mz > 1500LL * 1500 || best < 0 || kd < best - 300) { lauf = 0; best = kd; px0 = px; pz0 = pz; }
+          else { lauf++; if (lauf > m->ohne_max) m->ohne_max = lauf; } }
+        /* 2-s-Fenster */
+        { const int biss = ((ph == 3) && kd < 2400) || re15_gator_boss_lauert(g);
+          biss60[hn % 60] = (uint8_t)biss;
+          int64_t weit = 0; const int32_t *a0 = h60[hn % 60];
+          if (hn >= 60) { for (int k = 0; k < 60; k++) { const int64_t ax = (int64_t)h60[k][0] - a0[0], az = (int64_t)h60[k][1] - a0[1]; if (ax * ax + az * az > weit) weit = ax * ax + az * az; }
+                          const int64_t ax = (int64_t)g->x - a0[0], az = (int64_t)g->z - a0[1]; if (ax * ax + az * az > weit) weit = ax * ax + az * az; }
+          int b = 0; for (int k = 0; k < 60; k++) b |= biss60[k];
+          if (hn >= 60 && weit < 300LL * 300 && !b && mod < 2) m->fenster2++;
+          if (re15_gator_boss_lauert(g)) m->lauer++;
+          h60[hn % 60][0] = g->x; h60[hn % 60][1] = g->z; }
+        /* Drehen auf der Stelle */
+        { const int i = hn % 120;
+          if (hn >= 120) dsum -= d120[i] < 0 ? -d120[i] : d120[i];
+          d120[i] = (int16_t)dg; dsum += dg < 0 ? -dg : dg; h120[i][0] = g->x; h120[i][1] = g->z;
+          if (hn >= 119 && dsum >= 4096) {
+              int32_t x0 = h120[0][0], x1 = x0, z0 = h120[0][1], z1 = z0;
+              for (int k = 1; k < 120; k++) { if (h120[k][0] < x0) x0 = h120[k][0]; if (h120[k][0] > x1) x1 = h120[k][0]; if (h120[k][1] < z0) z0 = h120[k][1]; if (h120[k][1] > z1) z1 = h120[k][1]; }
+              if (x1 - x0 < 3000 && z1 - z0 < 3000 && kd > 4500) { const int von = dreh_bis >= hn - 119 ? dreh_bis + 1 : hn - 119; m->drehen += hn - von + 1; dreh_bis = hn; }
+          } }
+        hn++;
+        if (mod == 1) m->rueck++;
+        if (ph == 7 && g->motion == 10) m->rueckzug++;
+        if (mod >= 2) m->taucht++;
+        if (mod == 2 && prev_mod != 2) m->tauch_n++;
+        prev_mod = mod;
+        /* Kopf/Kanister in Rampe/Plattform, vor der Kamera */
+        { const int n = mod == 3 ? 0 : re15_gr2_rw_kopf_punkte(g, pts, 640);
+          int im_block = 0; int32_t vmin = 1 << 30;
+          for (int i = 0; i < n; i++) {
+              if (((pts[i][0] > -1700 && pts[i][0] < 1850 && pts[i][2] > -20000 && pts[i][2] < -12450)
+                                        || (pts[i][0] > 1850 && pts[i][0] < 7200 && pts[i][2] > -18100 && pts[i][2] < -14500))) im_block = 1;
+              const int32_t vz = re15_gr2_kamera_tiefe(cam, pts[i]); if (vz < vmin) vmin = vz;
+          }
+          if (ph == 7) im_block = 0;   /* Ueberquerung: der Hub traegt ihn ueber das Deck (gewollt) */
+          m->block += im_block; m->kam2500 += vmin < 2500; m->kam0 += vmin <= 0; s_g2r_blk = im_block; s_g2r_vmin = vmin; }
+        /* Gang */
+        { int32_t sdx = 0, sdz = 0; re15_gator_boss_takt_schritt(&sdx, &sdz);
+          const int32_t sl = (int32_t)re15_squareroot0((uint32_t)((int64_t)sdx * sdx + (int64_t)sdz * sdz));
+          if (ph == 2 && mod == 0 && g->motion <= 1 && g->anim_frame < 256 && !re15_gator_boss_lauert(g)) {
+              m->clip1 += g->motion == 1;
+              int32_t soll = re15_gr2_vortrieb_soll(g, g->motion, g->anim_frame); if (soll < 0) soll = -soll;
+              const int32_t soll44 = soll > 44 ? soll - 44 : 44 - soll;   /* NB5-Wende nahe der Figur: zusaetzlich 44 zurueck (CHASE "RUECKWAERTSGANG") */
+              m->gang_n++; if ((sl - soll > 3 || soll - sl > 3) && (sl - soll44 > 3 || soll44 - sl > 3)) m->gang_fehl++;
+              if ((dg < 0 ? -dg : dg) > m->gier_max) m->gier_max = dg < 0 ? -dg : dg;
+          } }
+        { int64_t ns = 0, zy = 0; re15_gator_boss_zeit_letzt(&ns, &zy); if (m->zeit_n < 4096) m->zeit[m->zeit_n++] = (double)zy;
+          if (getenv("G2_RE2_ZEIT_ZEIGE") && ns > 1500000) printf("        ZEIT %s t%d %.2f ms (Faden %lld Zyklen) ph %d mod %d clip %d\n", L->name, t, ns / 1e6, (long long)zy, ph, mod, (int)g->motion); }
+        if (spur) { int32_t zx = 0, zz = 0; re15_gator_boss_ziel(g, &zx, &zz);
+                    fprintf(spur, "%s %s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", L->name, nb5 ? "nb5" : "neu", t, g->x, g->z, gier, ph, mod, (int)g->motion,
+                            (int)g->anim_frame, px, pz, cam, kd, zx, zz, re15_gr2_kk_aktiv(), re15_gr2_trag_modus((int)(g - g_actors)), s_g2r_blk, (int)s_g2r_vmin, g->y); }
+    }
+    re15_gr2_rw_stat_t st1; re15_gr2_rw_stat((int)(g - g_actors), &st1);
+    m->rw_haeng = (int)(st1.haenger - st0.haenger);
+    m->rammen = re15_gator_boss_rammen() - ramm0; m->kreuz = re15_gator_boss_kreuz_kanister() - kreuz0;
+    const double zj = re15_g2_zeit_zyk_je_us();
+    for (int i = 0; i < m->zeit_n; i++) m->zeit[i] = zj > 0 ? m->zeit[i] / zj : 0;
+}
+typedef struct { int bilder, ohne_max, fenster2, lauer, drehen, rueck, rueckzug, tauch_n, taucht, block, kam2500, kam0, rammen, kreuz, gang_n, gang_fehl, gier_max; double z_mittel, z_p95, z_max; } g2r_sum_t;
+static void g2r_zeit(g2r_m_t *m, double *mi, double *p95, double *mx)
+{
+    if (!m->zeit_n) { *mi = *p95 = *mx = 0; return; }
+    double s = 0; for (int i = 0; i < m->zeit_n; i++) s += m->zeit[i];
+    *mi = s / m->zeit_n;
+    qsort(m->zeit, (size_t)m->zeit_n, sizeof m->zeit[0], g2r_cmp_d);
+    *p95 = m->zeit[(m->zeit_n * 95) / 100]; *mx = m->zeit[m->zeit_n - 1];
+}
+/* je Stand (0 = nb5, 1 = neu) alle Lagen; Rueckgabe: Summen */
+static int g2r_alle(int elza, int nb5, int bilder, g2r_sum_t *S, g2r_m_t *M, int nm, FILE *spur, const char *nur)
+{
+    memset(S, 0, sizeof *S);
+    re15_gr2_rw_alt_setzen(nb5);
+    re15_actor_t *g = szene_bis_kampf(elza);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    %s: kein Tragen\n", nb5 ? "nb5" : "neu"); re15_gr2_rw_alt_setzen(0); return 0; }
+    const int nl = (int)(sizeof k_re2_lagen / sizeof k_re2_lagen[0]);
+    static double alle_z[64 * 4096]; int nz = 0;
+    for (int i = 0; i < nl && i < nm; i++) {
+        if (nur && strcmp(nur, k_re2_lagen[i].name)) { M[i].bilder = 0; continue; }
+        if (!re15_gr2_traegt() && !g2_kanister_ins_maul(g, pl)) { printf("    %s: Kanister weg\n", k_re2_lagen[i].name); break; }
+        g2r_lauf(g, pl, &k_re2_lagen[i], bilder, nb5, &M[i], spur);
+        g2r_m_t *m = &M[i];
+        for (int k = 0; k < m->zeit_n && nz < 64 * 4096; k++) alle_z[nz++] = m->zeit[k];
+        double mi, p95, mx; g2r_zeit(m, &mi, &p95, &mx);
+        const double min_s = m->bilder / 1800.0;
+        printf("    %s %-15s %4d B.: ohne Fortschritt max %5.1f s, 2-s-Fenster %3d, Drehen %3d %%, rueckw. %3d %% (+Rueckzug %2d %%), Tauch %d (%.1f/min) unter %2d %%, Block %3d %%, Kam<2500 %3d %%, hinter %3d %%, "
+               "Kopf %5d, Rammen %d/Querung %d, Haenger %d, Gang %d/%d abw., Gier max %d, Takt %.0f/%.0f/%.0f us\n",
+               nb5 ? "nb5" : "neu", k_re2_lagen[i].name, m->bilder, m->ohne_max / 30.0, m->fenster2, m->bilder ? 100 * m->drehen / m->bilder : 0, m->bilder ? 100 * m->rueck / m->bilder : 0, m->bilder ? 100 * m->rueckzug / m->bilder : 0,
+               m->tauch_n, min_s > 0 ? m->tauch_n / min_s : 0, m->bilder ? 100 * m->taucht / m->bilder : 0, m->bilder ? 100 * m->block / m->bilder : 0,
+               m->bilder ? 100 * m->kam2500 / m->bilder : 0, m->bilder ? 100 * m->kam0 / m->bilder : 0, m->bilder ? (int)(m->kopf_summe / m->bilder) : 0, m->rammen, m->kreuz, m->rw_haeng,
+               m->gang_fehl, m->gang_n, m->gier_max, mi, p95, mx);
+        S->bilder += m->bilder; if (m->ohne_max > S->ohne_max) S->ohne_max = m->ohne_max; S->fenster2 += m->fenster2; S->drehen += m->drehen; S->rueck += m->rueck; S->rueckzug += m->rueckzug;
+        S->tauch_n += m->tauch_n; S->taucht += m->taucht; S->block += m->block; S->kam2500 += m->kam2500; S->kam0 += m->kam0; S->rammen += m->rammen; S->kreuz += m->kreuz;
+        S->gang_n += m->gang_n; S->gang_fehl += m->gang_fehl; if (m->gier_max > S->gier_max) S->gier_max = m->gier_max;
+    }
+    if (nz) { double s = 0; for (int k = 0; k < nz; k++) s += alle_z[k]; S->z_mittel = s / nz; qsort(alle_z, (size_t)nz, sizeof alle_z[0], g2r_cmp_d); S->z_p95 = alle_z[(nz * 95) / 100]; S->z_max = alle_z[nz - 1]; }
+    re15_gr2_rw_alt_setzen(0);
+    return 1;
+}
+static void g2r_summe_druck(const char *w, const g2r_sum_t *S)
+{
+    const double min = S->bilder / 1800.0;
+    printf("    SUMME %s: %d Bilder (%.1f min): ohne Fortschritt max %.1f s, 2-s-Fenster %d, Drehen %.1f %%, rueckwaerts %.1f %% (Rueckzug nach Vorstoss %.1f %%), Tauchgaenge %d = %.2f/min, untergetaucht %.1f %%, "
+           "Kopf/Kanister in Rampe/Plattform %.1f %%, < 2500 vor der Kamera %.1f %%, hinter der Kamera %.1f %%, Rammen %d (Querungen %d), Gang %d von %d abweichend, "
+           "Gier max %d, Takt-Rechenzeit Mittel %.0f us / 95 %% %.0f us / max %.0f us\n", w, S->bilder, min, S->ohne_max / 30.0, S->fenster2,
+           S->bilder ? 100.0 * S->drehen / S->bilder : 0, S->bilder ? 100.0 * S->rueck / S->bilder : 0, S->bilder ? 100.0 * S->rueckzug / S->bilder : 0, S->tauch_n, min > 0 ? S->tauch_n / min : 0,
+           S->bilder ? 100.0 * S->taucht / S->bilder : 0, S->bilder ? 100.0 * S->block / S->bilder : 0, S->bilder ? 100.0 * S->kam2500 / S->bilder : 0,
+           S->bilder ? 100.0 * S->kam0 / S->bilder : 0, S->rammen, S->kreuz, S->gang_fehl, S->gang_n, S->gier_max, S->z_mittel, S->z_p95, S->z_max);
+}
+/* Riegel re2(_elza): Hängen, Drehen, Kopf in Rampe/Kamera, Rammen, Tauch-Obergrenze, Gang (mit Kanister) - je mit Gegenprobe */
+#define G2R_BILDER 1800
+static void teil_re2(int elza)
+{
+    printf("== re2%s (G2-RE2, Neuaufbau ab NB5) ==\n", elza ? "_elza" : "");
+    const char *bs = getenv("G2_RE2_BILDER"); const int bilder = bs ? atoi(bs) : G2R_BILDER;
+    const char *nur = getenv("G2_RE2_NUR");
+    FILE *spur = getenv("G2_RE2_SPUR") ? fopen(getenv("G2_RE2_SPUR"), "w") : NULL;
+    static g2r_m_t M[2][16];
+    g2r_sum_t S[2];
+    memset(s_g2r_tafel, 0xff, sizeof s_g2r_tafel);
+    re15_gr2_rw_stat_null();
+    const int ok0 = g2r_alle(elza, 1, bilder, &S[0], M[0], 16, spur, nur);
+    const int ok1 = g2r_alle(elza, 0, bilder, &S[1], M[1], 16, spur, nur);
+    if (spur) fclose(spur);
+    g2r_summe_druck("nb5", &S[0]); g2r_summe_druck("neu", &S[1]);
+    const double min = S[1].bilder / 1800.0;
+    PRUEF(ok0 && ok1 && S[1].bilder >= (nur ? 1 : 12) * bilder * 9 / 10, "gelaufen (neu %d Bilder mit Kanister)", S[1].bilder);
+    PRUEF(S[1].fenster2 <= 15, "Haengen: hoechstens 15 2-s-Fenster ohne Fortschritt in 13 Lagen-Minuten (PORT-WAHL; neu %d, nb5 im Harness %d - der exe-Haenger frei4_leon der Abnahme 4 hatte 430 in 4,3 min)", S[1].fenster2, S[0].fenster2);
+    {   int ohne_haeng = 0;   /* Lagen der Abnahme-4-Haenger mit erreichbarer Figur: SO-Ecke (frei4_leon) und die Rampe (Belagerung) */
+        for (int i = 0; i < 16; i++) if (M[1][i].bilder && (!strcmp(k_re2_lagen[i].name, "SO-Ecke") || k_re2_lagen[i].y != 0) && M[1][i].ohne_max > ohne_haeng) ohne_haeng = M[1][i].ohne_max;
+        PRUEF(ohne_haeng <= 20 * 30, "Haengen: SO-Ecke und Rampe - laengste Zeit ohne Fortschritt zur Figur <= 20 s (neu %.1f s; alle Lagen neu %.1f s, nb5 %.1f s)", ohne_haeng / 30.0,
+              S[1].ohne_max / 30.0, S[0].ohne_max / 30.0); }
+    PRUEF(S[1].drehen * 100 <= S[1].bilder * 15, "Drehen auf der Stelle (fern der Figur) <= 15 %% (neu %.1f %%, nb5 %.1f %%)", 100.0 * S[1].drehen / S[1].bilder, S[0].bilder ? 100.0 * S[0].drehen / S[0].bilder : 0);
+    PRUEF(S[1].block * 100 <= S[1].bilder * 2, "Kopf/Kanister unter dem Deck in Rampe/Plattform <= 2 %% (neu %d Bilder, nb5 %d)", S[1].block, S[0].block);
+    PRUEF(S[1].kam2500 * 100 <= S[1].bilder * 8 && S[1].kam0 * 1000 <= S[1].bilder, "Kopf/Kanister < 2500 vor der Kamera <= 8 %% (Kamerawechsel, Kamera dicht an der Figur) und hinter der Kamera <= 0,1 %% (neu %d / %d Bilder, nb5 %d / %d)",
+          S[1].kam2500, S[1].kam0, S[0].kam2500, S[0].kam0);
+    PRUEF(S[1].rueck * 100 <= S[1].bilder * 12, "rueckwaerts setzen hoechstens 12 %% (neu %.1f %%; Rueckzug nach Vorstoss getrennt %.1f %%)", S[1].bilder ? 100.0 * S[1].rueck / S[1].bilder : 0,
+          S[1].bilder ? 100.0 * S[1].rueckzug / S[1].bilder : 0);
+    PRUEF(min > 0 && S[1].tauch_n <= min + 0.0001 && S[1].taucht * 20 < S[1].bilder, "Tauch-Obergrenze: <= 1 je Minute und < 5 %% untergetaucht (neu %d in %.1f min, %.1f %%)",
+          S[1].tauch_n, min, S[1].bilder ? 100.0 * S[1].taucht / S[1].bilder : 0);
+    PRUEF(S[1].gang_n > 1000 && (int64_t)S[1].gang_fehl * S[0].gang_n <= (int64_t)S[0].gang_fehl * S[1].gang_n + (int64_t)S[1].gang_n * S[0].gang_n / 100 && S[1].gang_fehl * 50 <= S[1].gang_n && S[1].gier_max <= 0x60,
+          "Gang mit Kanister wie NB5: Taktschritt = authored RE2-Vortrieb je (Clip, Bild) - abweichend neu %d von %d, nb5 %d von %d (neu hoechstens nb5-Anteil + 1 %%), |Gier-Delta| <= 0x60 (max %d)",
+          S[1].gang_fehl, S[1].gang_n, S[0].gang_fehl, S[0].gang_n, S[1].gier_max);
+    if (!nur) {
+        int rampe = 0, ramm_ok = 1;
+        for (int i = 0; i < 16; i++) if (M[1][i].bilder && k_re2_lagen[i].y != 0) { rampe++; if (M[1][i].rammen < 1) ramm_ok = 0; }
+        PRUEF(rampe >= 3 && ramm_ok, "Rampe: in jeder Lage mit der Figur oben mindestens ein Rammen (%d Lagen)", rampe);
+        /* Gegenproben (rot ohne den Bau) */
+        PRUEF(S[0].block * 100 > S[0].bilder * 2 && S[0].kam0 > 0, "Gegenprobe NB5: Kopf/Kanister in Rampe/Plattform > 2 %% und hinter der Kamera (%d / %d Bilder)", S[0].block, S[0].kam0);
+        PRUEF(S[0].drehen * 100 > S[0].bilder * 15, "Gegenprobe NB5: Drehen auf der Stelle > 15 %% (%d von %d)", S[0].drehen, S[0].bilder);
+        int ohne_nb5 = 0;
+        for (int i = 0; i < 16; i++) if (M[0][i].bilder && (!strcmp(k_re2_lagen[i].name, "SO-Ecke") || k_re2_lagen[i].y != 0) && M[0][i].ohne_max > ohne_nb5) ohne_nb5 = M[0][i].ohne_max;
+        PRUEF(S[0].fenster2 > 0 || ohne_nb5 > 10 * 30, "Gegenprobe NB5: SO-Ecke/Rampe ohne Fortschritt %.1f s (2-s-Fenster %d)", ohne_nb5 / 30.0, S[0].fenster2);
+        PRUEF(S[0].rammen == 0, "Gegenprobe NB5: kein Rammen (%d)", S[0].rammen);
+    }
+}
+/* Riegel re2_gegen(_elza): Gegenproben der Bausteine - ohne Rammen (Pruefhaken), ohne Rueckwaerts, mit RE1.5-Tempo: muss rot sein */
+static void teil_re2_gegen(int elza)
+{
+    printf("== re2_gegen%s ==\n", elza ? "_elza" : "");
+    const char *bs = getenv("G2_RE2_BILDER"); const int bilder = bs ? atoi(bs) : 900;
+    static g2r_m_t M[16]; g2r_sum_t S;
+    re15_gr2_rw_stat_null();
+    memset(s_g2r_tafel, 0xff, sizeof s_g2r_tafel);
+    re15_gator_boss_tempo_alt_setzen(1);
+    (void)g2r_alle(elza, 0, bilder, &S, M, 16, NULL, "Westkanal");
+    re15_gator_boss_tempo_alt_setzen(0);
+    PRUEF(S.gang_fehl * 10 > S.gang_n, "Gegenprobe RE1.5-Tempo: Gang weicht vom authored RE2-Vortrieb ab (%d von %d)", S.gang_fehl, S.gang_n);
+    re15_gator_boss_ramm_alt_setzen(1);
+    (void)g2r_alle(elza, 0, bilder, &S, M, 16, NULL, "Rampe-x4428");
+    re15_gator_boss_ramm_alt_setzen(0);
+    PRUEF(S.rammen == 0, "Gegenprobe ohne Rammen: 0 Rammen auf der Rampe (%d)", S.rammen);
+    re15_gr2_rw_rueck_aus_setzen(1); re15_gr2_rw_tauchen_aus_setzen(1);
+    (void)g2r_alle(elza, 0, bilder, &S, M, 16, NULL, "SO-Ecke");
+    re15_gr2_rw_rueck_aus_setzen(0); re15_gr2_rw_tauchen_aus_setzen(0);
+    printf("    ohne Rueckwaerts/Tauchen SO-Ecke: 2-s-Fenster %d, ohne Fortschritt %.1f s\n", S.fenster2, S.ohne_max / 30.0);
+}
+/* Riegel gang(_elza): ohne Kanister Bild fuer Bild gleich NB5 (Lage, Gier, Clip, Bild, Hoehe); Gegenprobe Pruefhaken Tempo 2 (RE1.5-Tempo auch ohne Kanister) */
+static int g2r_ohne_lauf(int elza, int alt, int tempo, int32_t (*z)[6], int n)
+{
+    re15_gr2_rw_alt_setzen(alt); re15_gator_boss_tempo_alt_setzen(tempo);
+    re15_actor_t *g = szene_bis_kampf(elza);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int k = 0;
+    if (g) {
+        static const int32_t lage[3][3] = { { -6000, 0, -16000 }, { 6732, 0, -13687 }, { 4428, -1800, -16300 } };
+        for (int li = 0; li < 3; li++)
+            for (int t = 0; t < n / 3 && k < n; t++) {
+                pl->x = lage[li][0]; pl->y = lage[li][1]; pl->z = lage[li][2]; pl->hp = 100; pl->hit_react = 0;
+                re15_collision_set_band(re15_collision_band_from_y(lage[li][1]));
+                frame(0, 0);
+                if (re15_gr2_traegt()) break;
+                z[k][0] = g->x; z[k][1] = g->z; z[k][2] = g->rot_y & 0xfff; z[k][3] = g->motion; z[k][4] = g->anim_frame; z[k][5] = g->y; k++;
+            }
+    }
+    re15_gr2_rw_alt_setzen(0); re15_gator_boss_tempo_alt_setzen(0);
+    return k;
+}
+static void teil_gang(int elza)
+{
+    printf("== gang%s (G2-RE2: Gang ohne Kanister gleich NB5) ==\n", elza ? "_elza" : "");
+    enum { N = 2700 };
+    static int32_t a[N][6], b[N][6], c[N][6];
+    const int na = g2r_ohne_lauf(elza, 1, 0, a, N), nb = g2r_ohne_lauf(elza, 0, 0, b, N), nc = g2r_ohne_lauf(elza, 0, 2, c, N);
+    int diff = 0, diff_c = 0, clip1 = 0;
+    for (int i = 0; i < na && i < nb; i++) { if (memcmp(a[i], b[i], sizeof a[i])) diff++; clip1 += b[i][3] == 1; }
+    for (int i = 0; i < na && i < nc; i++) if (memcmp(a[i], c[i], sizeof a[i])) diff_c++;
+    printf("    nb5 %d Bilder, neu %d Bilder (Clip 1 in %d), abweichend %d; Gegenprobe RE1.5-Tempo %d Bilder, abweichend %d\n", na, nb, clip1, diff, nc, diff_c);
+    PRUEF(na >= N * 9 / 10 && na == nb && diff == 0, "ohne Kanister Bild fuer Bild gleich NB5 (Lage, Gier, Clip, Bild, Hoehe): %d von %d abweichend", diff, na);
+    PRUEF(diff_c > 0, "Gegenprobe RE1.5-Tempo ohne Kanister: abweichend %d (rot ohne den Bau)", diff_c);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     re15_door_seq_setze_laeufer(fang);
+    if (getenv("G2_RE2_ALT")) re15_gr2_rw_alt_setzen(1);   /* G2-RE2: Werkzeug-Laeufe (fuzz/bahn) im Stand NB5 - Vergleich mit dem NB5-Bau */
     if (!strcmp(teil, "projektion") && argc >= 5) return projektion(argc, argv);
     if (!strcmp(teil, "kamerazone") && argc >= 3) return kamerazone(argc, argv);
     if (!strcmp(teil, "begehbar") && argc >= 5) return begehbar(argc, argv);
@@ -2026,6 +2319,12 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "bahn_elza")) teil_bahn(1);
     if (alle || !strcmp(teil, "kamera"))      teil_kamera(0);
     if (alle || !strcmp(teil, "kamera_elza")) teil_kamera(1);
+    if (alle || !strcmp(teil, "re2"))       teil_re2(0);
+    if (alle || !strcmp(teil, "re2_elza"))  teil_re2(1);
+    if (alle || !strcmp(teil, "re2_gegen"))      teil_re2_gegen(0);
+    if (alle || !strcmp(teil, "re2_gegen_elza")) teil_re2_gegen(1);
+    if (alle || !strcmp(teil, "gang"))      teil_gang(0);
+    if (alle || !strcmp(teil, "gang_elza")) teil_gang(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

@@ -55,6 +55,24 @@ int  re15_gator_boss_im_fressen(const re15_actor_t *e);   /* Nachbesserung 5: 1 
 /* Messhaken GIER-WACHE (NB4, M2): Bildpaare mit beiden Takten in CHASE/GUARD, groesstes |Gier-Delta| (ohne den RE2-Knick +1024),
  * Zahl der Deltas > 0x60 (Port-Wenderate). gator_boss.log: "GIER-SPRUNG ..." je Verstoss, "GIER-WACHE ..." alle 300 Paare. */
 int  re15_gator_boss_gier_wache(int slot, int *paare, int *max_delta, int *spruenge);
+/* Runde 41 Spur G2-RE2 (Ueberquerung mit dem Kanister, Rammen; aus r41/gatorfix NB7-NB9): Pruefhaken der Riegel (Gegenproben, kein Spielweg) und Messhaken. */
+void re15_gator_boss_ramm_alt_setzen(int an);   /* 1 = Ueberquerung mit dem Kanister ohne Rammen */
+void re15_gator_boss_deck_alt_setzen(int an);   /* 1 = Push ohne Halt auf der begehbaren Rampe */
+void re15_gator_boss_kdt_alt_setzen(int an);    /* 1 = Ueberquerung ohne Hub ueber dem Deck */
+int  re15_gator_boss_rammen(void);              /* Rammen seit Programmstart */
+int  re15_gator_boss_kreuz_kanister(void);      /* Ueberquerungen mit dem Kanister seit Programmstart */
+int  re15_gator_boss_koerper_kontakt(const re15_actor_t *e, int32_t px, int32_t pz);   /* Punkt im Koerper-Grundriss (Push-Kreise + 450) */
+void re15_gator_boss_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);   /* Messhaken: Steuerziel des letzten CHASE-Takts */
+int  re15_gator_boss_lauert(const re15_actor_t *e);   /* Messhaken: Takt lauerte am Startpunkt der Ueberquerung */
+void re15_gator_boss_tempo_alt_setzen(int an);  /* Pruefhaken: 1 = RE1.5-Tempo B4 statt RE2-Vortrieb (Gegenprobe "Gang gleich NB5") */
+void re15_gator_boss_takt_schritt(int32_t *dx, int32_t *dz);   /* Messhaken: Takt-Schritt des letzten Boss-Takts vor den Klemmen */
+void re15_gator_boss_zeit_letzt(int64_t *ns, int64_t *zyk);    /* Messhaken: Wanduhr ns / Faden-Zyklen des letzten Boss-Takts (PC) */
+/* gator_zeit_r41.c (aus r41/gatorfix NB9, Messhaken): Wanduhr ns, Faden-Zyklen (Windows QueryThreadCycleTime), Zyklen je us; Zeile je Takt in gator_zeit.log
+ * bei env RE15_G2_ZEIT_LOG */
+int64_t re15_g2_zeit_ns(void);
+int64_t re15_g2_faden_zyk(void);
+double  re15_g2_zeit_zyk_je_us(void);
+void    re15_g2_zeit_takt(unsigned bild, int phase, int modus, int64_t takt_ns, int64_t takt_zyk, int64_t biege_ns, int64_t biege_zyk, const int64_t *teile);
 
 
 

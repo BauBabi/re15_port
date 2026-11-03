@@ -9968,6 +9968,10 @@ re_title:;
                  * Schatten stehen (Feuer-Emitter 0x26), deshalb der eigene Ausstieg HIER. */
                 if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc)) continue;
                 if (re15_gr2_pc_untergetaucht(npc, npc_region_culled)) continue;   /* Runde 41 Spur B (Entscheid B9): Boss-Alligator vor dem Durchbruch untergetaucht wie RE2 (Sce_em_set y=+3000 @RDT 0x25A0) - Mesh UND Schatten aus */
+                /* Runde 41 Spur G2-RE2 (aus r41/gatorfix NB7): Alligator mit dem Kanister - im Tauchgang der Notloesung untergetaucht Mesh aus, beim Ab-/Auftauchen
+                 * Schnitt an der Wasserlinie, immer Schnitt an den Bloecken Plattform/Rampe unter dem Deck (gator_re2_pc.c re15_gr2_pc_wl_poly) */
+                int gwl_on = 0, gwl_bl = 0; int32_t gwl_y = 0;
+                const int gwl_aus = re15_gr2_pc_gator_schnitt(npc, &gwl_on, &gwl_y, &gwl_bl);
 
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage
@@ -10376,6 +10380,7 @@ re_title:;
                 /* Region-gecullt: Pose gerechnet (Takt-Zustand wie @0x8001e9b4 FUN_8001ef54),
                  * gezeichnet wird nichts. */
                 if (npc_region_culled) continue;
+                if (gwl_aus) continue;   /* Runde 41 Spur G2-RE2 (r41/gatorfix NB7): untergetaucht kein Mesh - erst NACH der Pose (Ueberblend-Schnappschuss bleibt aktuell, wie der Regions-Cull) */
                 (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
                 /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
                  * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
@@ -10984,6 +10989,16 @@ re_title:;
                          * Stand als UV-Versatz (FUN_800171d0: (char)delta auf u/v, akkumuliert). */
                         int eye_du = 0, eye_dv = 0;
                         if (npc->type == 0x36u) re15_g5_eye_uv_offset(nmi, 0, ti, &eye_du, &eye_dv);
+                        if (gwl_on) {   /* Runde 41 Spur G2 NB7: Wasserlinien-/Block-Schnitt */
+                            const int32_t wmv[3][3] = { { vp[0]->x + bofs_x, vp[0]->y + bofs_y, vp[0]->z + bofs_z },
+                                                        { vp[1]->x + bofs_x, vp[1]->y + bofs_y, vp[1]->z + bofs_z },
+                                                        { vp[2]->x + bofs_x, vp[2]->y + bofs_y, vp[2]->z + bofs_z } };
+                            const int wuv[3][2] = { { (int)uv->u0 + page_off + eye_du, (int)uv->v0 + eye_dv }, { (int)uv->u1 + page_off + eye_du, (int)uv->v1 + eye_dv },
+                                                    { (int)uv->u2 + page_off + eye_du, (int)uv->v2 + eye_dv } };
+                            const uint8_t wcl[3][3] = { { nr0, ng0, nb0 }, { nr1, ng1, nb1 }, { nr2, ng2, nb2 } };
+                            if (re15_gr2_pc_wl_poly(3, wmv, wuv, wcl, nyawed_rot, nbone_world_trans, nbone_m, nbone_t, gwl_y, gwl_bl,
+                                                    (int)cam_view.fov_screen_dist, cx, cy, (int)uv->clut)) continue;
+                        }
                         re15_render_textured_tri_lit(
                             (int)ax[0], (int)ay[0], (int)uv->u0 + page_off + eye_du, (int)uv->v0 + eye_dv,
                             (int)ax[1], (int)ay[1], (int)uv->u1 + page_off + eye_du, (int)uv->v1 + eye_dv,
@@ -11075,6 +11090,17 @@ re_title:;
                         }
                         int eye_qdu = 0, eye_qdv = 0;
                         if (npc->type == 0x36u) re15_g5_eye_uv_offset(nmi, 1, qi, &eye_qdu, &eye_qdv);
+                        if (gwl_on) {   /* Runde 41 Spur G2 NB7: Wasserlinien-/Block-Schnitt (Umfang 0,1,3,2) */
+                            const int32_t wmv[4][3] = { { vp[0]->x + bofs_x, vp[0]->y + bofs_y, vp[0]->z + bofs_z },
+                                                        { vp[1]->x + bofs_x, vp[1]->y + bofs_y, vp[1]->z + bofs_z },
+                                                        { vp[3]->x + bofs_x, vp[3]->y + bofs_y, vp[3]->z + bofs_z },
+                                                        { vp[2]->x + bofs_x, vp[2]->y + bofs_y, vp[2]->z + bofs_z } };
+                            const int wuv[4][2] = { { (int)uv->u0 + page_off + eye_qdu, (int)uv->v0 + eye_qdv }, { (int)uv->u1 + page_off + eye_qdu, (int)uv->v1 + eye_qdv },
+                                                    { (int)uv->u3 + page_off + eye_qdu, (int)uv->v3 + eye_qdv }, { (int)uv->u2 + page_off + eye_qdu, (int)uv->v2 + eye_qdv } };
+                            const uint8_t wcl[4][3] = { { nqr0, nqg0, nqb0 }, { nqr1, nqg1, nqb1 }, { nqr3, nqg3, nqb3 }, { nqr2, nqg2, nqb2 } };
+                            if (re15_gr2_pc_wl_poly(4, wmv, wuv, wcl, nyawed_rot, nbone_world_trans, nbone_m, nbone_t, gwl_y, gwl_bl,
+                                                    (int)cam_view.fov_screen_dist, cx, cy, (int)uv->clut)) continue;
+                        }
                         re15_render_textured_tri_lit(
                             (int)ax[0], (int)ay[0], (int)uv->u0 + page_off + eye_qdu, (int)uv->v0 + eye_qdv,
                             (int)ax[1], (int)ay[1], (int)uv->u1 + page_off + eye_qdu, (int)uv->v1 + eye_qdv,

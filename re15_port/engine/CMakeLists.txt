@@ -8,6 +8,11 @@
 file(GLOB ENGINE_SOURCES "src/*.c")
 
 add_library(re15_engine STATIC ${ENGINE_SOURCES})
+# Runde 41 Spur G2-RE2 (Leistung, Auftrag Punkt 7 "kein Gator-Takt ueber 3 ms"): die Kopf-/Kanister-Pruefungen und die Notloesung rechnen Posen und
+# Mesh-Punkte je Takt (Ganzzahl-Arithmetik); wie gator_biege_r41.c in r41/gatorfix NB9 mit -O2. Gleichheit des NB5-Pruefhakens gemessen (Dossier G2-RE2).
+if(NOT MSVC)
+    set_source_files_properties(src/gator_re2_r41.c src/gator_rw_r41.c PROPERTIES COMPILE_OPTIONS "-O2")
+endif()
 include(re15_version_r39)   # Runde 39 Spur T: RE15_VERSION nur fuer src/titelversion_r39.c (Titelbild)
 target_include_directories(re15_engine PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
