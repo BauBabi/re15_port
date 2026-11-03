@@ -507,3 +507,94 @@ Quer-Haltung, Band-Mass 0; die Grenze "seitlich bis zu den Kieferraendern" ist n
 NB4 (Kreisel am Fixpunkt der gespiegelten Karotte, Abnahme 3 bestanden). (3) Cut 3 nur im Riegel (Klettern von Norden im exe-Lauf nicht moeglich). (4) PSX-Bau:
 Bahn und Klemmen nur PC (PSX wie NB4); Bahn-Suche je Kamera auf PC in 71 Teilschritten (~1-3 ms je Bild). (5) Die Bahn haengt nur von der Kamera ab, nicht von
 der Lage der Figur auf der Rampe (Cut 2: immer das Stadion vor der Kamera, 4000-7000 von der Figur).
+
+## G2-RE2 (Neuaufbau ab NB5)
+Stand 2026-11-03, Zweig r41/gator_re2 auf bc5fb7c9c (NB5). Nutzer: "nimm Resident Evil 2 als Grundlage", Entwurf F (NB7-NB9, r41/gatorfix bis d3e5966e9) verworfen.
+Code-Commit 199a63c95. Belege `G2_belege/re2/` (Bildleisten, Riegel-Ausgaben, `exe_mass.txt`, Werkzeuge `werkzeug/`).
+
+### Was bleibt wie NB5
+Verfolgung mit dem Kanister = NB5 (RE2-Clip 0/1 nach der +0x1F0-Hysterese, authored Vortrieb re15_gr2_chase_clip, Lenkung 0x30/0x60, NB5-Kuerzung an den Aussenwaenden,
+Vorbei-Etappe, Kreis). Ohne Kanister Bild fuer Bild gleich NB5 (Riegel gang/gang_elza: 2700 Bilder, 0 abweichend; Gegenprobe RE1.5-Tempo 2699 abweichend).
+Szene/Leiche/Wurf/Montage/Marvin/Water Key unberuehrt (andere Dateien). Pruefhaken `re15_gr2_rw_alt_setzen(1)` = NB5; bitgleich gegen den NB5-Bau gemessen
+(fuzz-Bahn Rampe und O3, je 900 Bilder, `cmp` gleich, auch nach -O2).
+
+### Neu (alles PORT-WAHL ausser den zitierten RE2-Werten)
+- (a) Rueckwaerts setzen (gator_rw_r41.c): wenn er sich festdrueckt (16 Bilder: Takte wollen >= 400, Wurzel netto < 400 und < 1/4) ein Durchgang RE2-Clip 10, Blend 3
+  (`addiu a1,zero,10 / addiu a2,zero,3 / jal 0x8001a330` @0x80102c40-48 EM23-Overlay, Clip-Ende -> Schwimmen `addiu v1,zero,257 / sw v1,4(s0)` @0x80102c54-5c),
+  authored Rueckwaerts-Vortrieb, Drehung 0x20/Bild, danach 45 Bilder Pause.
+- (b) Notloesung Tauchen: Wurzel 150 Bilder in einem Kasten < 2500, netto < 600 in 60 Bildern, Kopf > 4500 von der Figur, kein Biss, Rueckwaerts im Fenster half nicht ->
+  20 Bilder ab (Wasserlinien-Schnitt), untergetaucht zur freien Stelle (Raster 500, Huelle frei, 1500 voraus frei, Richtung zum Steuerziel), 20 Bilder auf;
+  Wellenring Effekt 6 Sub 5 (0x06050D00 @0x800456b8/bc), nicht treffbar. Darstellung aus r41/gatorfix NB7 (gator_re2_pc.c wl_poly, main.c).
+- (c) Kopf/Kanister (Mesh Parts 5/6/7 + Kanister-Zylinder r 267) nicht im Grundriss von Plattform/Rampe (auch nicht ueber dem Deck: mit Deck-Ausnahme gemessen Drehen
+  11,8 %, ohne 4,8 %) und mindestens 2500 tief vor der Kamera der Figur: Klemme (je Bild <= 340 wie NB5), Zielkuerzung, Kollisions-Antwort (Drehung, sonst Schritt
+  zuruecknehmen). Grenze 2500 wie r41/gatorfix a14ff425a; Hub ueber dem Deck in der Ueberquerung aus 557e1a75b/ac29780f0.
+- Weg: fuehrt die Strecke zur Figur durch Plattform/Rampe, die NB5-Westkanal-Anfahrt (gr2_runde_anfahrt) statt Spur-B-Hop/Vorbei (Lage Nordbecken-Ost pendelte sonst).
+- (5) Rampe: Figur oben + Kanister -> keine Belagerung (NB5-Stadion entfaellt), sondern GBP_CROSS. Seite = die des Gators; laeuft die volle Querung von der Kamera weg,
+  ganz; zur Kamera hin (Ende: Kopf < 2500 vor der Kamera) als Vorstoss bis zur Kamera-Grenze bzw. bis zum Rammen, dann Rueckzug mit RE2-Clip 10 zum Startpunkt, 45 Bilder
+  Lauern, naechster Vorstoss. Gemessen: mit dem Kanister kommt er in Cut 2 kopfvoran nicht aus dem Westkanal ins Suedbecken (Kopf 5644 vor der Wurzel, Kanister 2694
+  links, Plattform-Ecke, Kamera-Grenze). Rammen (Koerper-Grundriss, einmal je Querung) = NB5-Biss gb_biss_abschluss -> DAT_8006f418[5] = 50 (@0x8006f422) + Niederwurf;
+  Kletterprofil (GB_KL_*), Halt auf der begehbaren Rampe aus r41/gatorfix NB7/NB8.
+- Leistung: Posen-Vorrat der Huelle (Neubau vorher bis ~10 ms je Takt, auch in NB5), -O2 fuer gator_re2_r41.c / gator_rw_r41.c.
+
+### Bewusst nicht uebernommen (r41/gatorfix)
+Entwurf F gator_anlauf_r41.c (Anlauf-Bahnen, Abtauchen als Routine, Tauch-Budget 100), RE1.5-Tempo (rnd&0x3f)+60 @0x8010d728, Sprung-Biss B3, Wende unter Wasser B8,
+Freikarten/Dijkstra, Trag-Netz NB6, Biegung gator_biege_r41.c (Schwanz/Beine: in den Bildleisten nicht auffaellig, nicht gemessen).
+
+### Zahlen Riegel (Harness, echter Boss-Takt, 13 Lagen x 1800 Bilder, Leon = Elza bitgleich; links nb5 = Pruefhaken, rechts neu)
+| Lage | ohne Fortschritt s | 2-s-Fenster | Drehen % | rueckw. % (+Rueckzug) | Tauchg./min, unter % | Kopf/Kan. in Rampe/Plattform % | < 2500 / hinter Kamera % | Rammen | Takt us Mittel/95%/max |
+|---|---|---|---|---|---|---|---|---|---|
+| SO-Ecke | 1.6 / 4.8 | 0 / 0 | 89 / 0 | 0 / 27 (+0) | 0.0/0.0, 0/0 | 27 / 4 | 0/5 / 0/0 | 0 / 0 | 0/0/0 / 76/131/1776 |
+| Nordbecken-Ost | 54.9 / 56.0 | 0 / 0 | 87 / 23 | 0 / 29 (+0) | 0.0/0.0, 0/0 | 1 / 4 | 0/0 / 0/0 | 0 / 0 | 48/75/391 / 67/108/321 |
+| NO-Ecke | 9.5 / 57.0 | 0 / 0 | 26 / 0 | 0 / 28 (+0) | 0.0/5.0, 0/14 | 10 / 0 | 24/45 / 1/0 | 0 / 0 | 37/63/320 / 49/86/283 |
+| Rampe-x4428 | 15.9 / 2.3 | 0 / 0 | 63 / 0 | 0 / 0 (+24) | 0.0/0.0, 0/0 | 13 / 0 | 31/0 / 13/0 | 0 / 13 | 68/57/5317 / 47/86/449 |
+| Rampe-x2318 | 17.5 / 7.3 | 0 / 0 | 66 / 0 | 0 / 1 (+23) | 0.0/0.0, 0/0 | 20 / 0 | 32/1 / 13/0 | 0 / 9 | 26/43/249 / 36/69/354 |
+| Rampe-Nord | 13.4 / 4.7 | 0 / 0 | 64 / 0 | 0 / 0 (+25) | 0.0/0.0, 0/0 | 12 / 0 | 36/0 / 14/0 | 0 / 10 | 65/60/3928 / 32/56/286 |
+| Leiter | 2.0 / 18.3 | 0 / 6 | 34 / 17 | 0 / 8 (+0) | 0.0/2.0, 0/5 | 10 / 1 | 0/0 / 0/0 | 0 / 0 | 34/57/687 / 51/82/391 |
+| Leiterecke | 3.8 / 6.8 | 0 / 0 | 0 / 0 | 0 / 0 (+0) | 0.0/0.0, 0/0 | 20 / 0 | 0/0 / 0/0 | 0 / 0 | 47/73/637 / 69/109/468 |
+| Westkanal | 1.7 / 2.6 | 0 / 0 | 0 / 8 | 0 / 6 (+0) | 0.0/0.0, 0/0 | 11 / 2 | 0/0 / 0/0 | 0 / 0 | 42/65/598 / 49/81/331 |
+| Mitte-Nord | 2.0 / 4.5 | 0 / 3 | 61 / 7 | 0 / 18 (+0) | 0.0/1.0, 0/2 | 12 / 0 | 14/14 / 1/0 | 0 / 0 | 43/67/402 / 50/85/389 |
+| Plattform-Sued | 1.1 / 2.3 | 0 / 0 | 0 / 0 | 0 / 20 (+0) | 0.0/0.0, 0/0 | 15 / 3 | 5/5 / 0/0 | 0 / 0 | 46/71/396 / 46/71/291 |
+| Weg-Becken | 1.1 / 2.1 | 0 / 2 | 15 / 6 | 0 / 14 (+0) | 0.0/2.0, 0/5 | 14 / 0 | 11/8 / 4/0 | 0 / 0 | 46/70/576 / 48/78/290 |
+| Weg-Rampe | 2.4 / 1.0 | 0 / 0 | 65 / 0 | 0 / 0 (+29) | 0.0/0.0, 0/0 | 14 / 0 | 31/0 / 13/0 | 0 / 9 | 94/100/5103 / 34/67/459 |
+- SUMME nb5: 23400 Bilder (13.0 min): ohne Fortschritt max 54.9 s, 2-s-Fenster 0, Drehen 44.2 %, rueckwaerts 0.0 % (Rueckzug nach Vorstoss 0.0 %), Tauchgaenge 0 = 0.00/min, untergetaucht 0.0 %, Kopf/Kanister in Rampe/Plattform 14.2 %, < 2500 vor der Kamera 14.5 %, hinter der Kamera 4.9 %, Rammen 0 (Querungen 0), Gang 57 von 13835 abweichend, Gier max 96, Takt-Rechenzeit Mittel 46 us / 95 % 67 us / max 5317 us
+- SUMME neu: 23400 Bilder (13.0 min): ohne Fortschritt max 57.0 s, 2-s-Fenster 11, Drehen 4.8 %, rueckwaerts 11.9 % (Rueckzug nach Vorstoss 7.9 %), Tauchgaenge 10 = 0.77/min, untergetaucht 2.2 %, Kopf/Kanister in Rampe/Plattform 1.3 %, < 2500 vor der Kamera 6.3 %, hinter der Kamera 0.0 %, Rammen 41 (Querungen 41), Gang 113 von 10858 abweichend, Gier max 96, Takt-Rechenzeit Mittel 50 us / 95 % 93 us / max 1776 us
+
+### Zahlen Fensterlaeufe (exe, gdigrab, Eingaben der Abnahme 4; gestern = Abnahme-4-Laeufe auf bc5fb7c9c, neu = exe 15aa14b5; Werkzeug `werkzeug/mass_exe.py`, Kopf-/Kanister-Punkte wie Abnahme 4 kopfblock.py)
+```
+gestern frei4_leon: 7805 Bilder mit Kanister (4.3 min) | 2-s-Fenster 430, laengste Folge 13.7 s | ohne Fortschritt zur Figur 21.5 s | Drehen 7.9 % | rueckwaerts 0.0 % (+Rueckzug 0.0 %) | Tauch 0 (0.00/min) unter 0.0 % | Kopf/Kanister in Plattform/Rampe 34.3 % | < 2500 vor der Kamera 25.4 %, hinter 10.0 % | Rammen 0 (Querungen 0) | 
+neu     frei4_leon: 7805 Bilder mit Kanister (4.3 min) | 2-s-Fenster 1, laengste Folge 2.0 s | ohne Fortschritt zur Figur 38.5 s | Drehen 15.2 % | rueckwaerts 17.1 % (+Rueckzug 0.0 %) | Tauch 1 (0.23/min) unter 0.8 % | Kopf/Kanister in Plattform/Rampe 21.8 % | < 2500 vor der Kamera 0.8 %, hinter 0.0 % | Rammen 0 (Querungen 0) | Takt 355/547/15113 us (Mittel/95 %/max, 8674 Takte)
+gestern frei4_elza: 7454 Bilder mit Kanister (4.1 min) | 2-s-Fenster 133, laengste Folge 3.4 s | ohne Fortschritt zur Figur 6.6 s | Drehen 47.8 % | rueckwaerts 0.0 % (+Rueckzug 0.0 %) | Tauch 0 (0.00/min) unter 0.0 % | Kopf/Kanister in Plattform/Rampe 13.0 % | < 2500 vor der Kamera 0.5 %, hinter 0.0 % | Rammen 0 (Querungen 0) | 
+neu     frei4_elza: 7454 Bilder mit Kanister (4.1 min) | 2-s-Fenster 68, laengste Folge 2.3 s | ohne Fortschritt zur Figur 48.1 s | Drehen 26.3 % | rueckwaerts 11.7 % (+Rueckzug 0.0 %) | Tauch 11 (2.66/min) unter 7.6 % | Kopf/Kanister in Plattform/Rampe 9.5 % | < 2500 vor der Kamera 0.3 %, hinter 0.0 % | Rammen 0 (Querungen 0) | Takt 382/570/5566 us (Mittel/95 %/max, 8674 Takte)
+gestern west4_leon: 2650 Bilder mit Kanister (1.5 min) | 2-s-Fenster 0, laengste Folge 0.0 s | ohne Fortschritt zur Figur 8.9 s | Drehen 87.1 % | rueckwaerts 0.0 % (+Rueckzug 0.0 %) | Tauch 0 (0.00/min) unter 0.0 % | Kopf/Kanister in Plattform/Rampe 23.0 % | < 2500 vor der Kamera 50.9 %, hinter 22.2 % | Rammen 0 (Querungen 0) | 
+neu     west4_leon: 2650 Bilder mit Kanister (1.5 min) | 2-s-Fenster 0, laengste Folge 0.0 s | ohne Fortschritt zur Figur 7.0 s | Drehen 0.0 % | rueckwaerts 30.3 % (+Rueckzug 2.0 %) | Tauch 0 (0.00/min) unter 0.0 % | Kopf/Kanister in Plattform/Rampe 18.8 % | < 2500 vor der Kamera 8.9 %, hinter 0.0 % | Rammen 1 (Querungen 1) | Takt 359/631/7661 us (Mittel/95 %/max, 3574 Takte)
+gestern west4_elza: 2688 Bilder mit Kanister (1.5 min) | 2-s-Fenster 0, laengste Folge 0.0 s | ohne Fortschritt zur Figur 70.2 s | Drehen 75.7 % | rueckwaerts 0.0 % (+Rueckzug 0.0 %) | Tauch 0 (0.00/min) unter 0.0 % | Kopf/Kanister in Plattform/Rampe 3.9 % | < 2500 vor der Kamera 10.4 %, hinter 7.4 % | Rammen 0 (Querungen 0) | 
+neu     west4_elza: 2688 Bilder mit Kanister (1.5 min) | 2-s-Fenster 11, laengste Folge 2.4 s | ohne Fortschritt zur Figur 66.5 s | Drehen 27.8 % | rueckwaerts 25.7 % (+Rueckzug 0.0 %) | Tauch 1 (0.67/min) unter 1.9 % | Kopf/Kanister in Plattform/Rampe 36.9 % | < 2500 vor der Kamera 1.1 %, hinter 0.0 % | Rammen 0 (Querungen 0) | Takt 305/538/4564 us (Mittel/95 %/max, 3574 Takte)
+gestern west5_elza: 2596 Bilder mit Kanister (1.4 min) | 2-s-Fenster 0, laengste Folge 0.0 s | ohne Fortschritt zur Figur 10.9 s | Drehen 82.1 % | rueckwaerts 0.0 % (+Rueckzug 0.0 %) | Tauch 0 (0.00/min) unter 0.0 % | Kopf/Kanister in Plattform/Rampe 21.7 % | < 2500 vor der Kamera 47.7 %, hinter 20.1 % | Rammen 0 (Querungen 0) | 
+neu     west5_elza: 2596 Bilder mit Kanister (1.4 min) | 2-s-Fenster 0, laengste Folge 0.0 s | ohne Fortschritt zur Figur 6.8 s | Drehen 0.0 % | rueckwaerts 11.6 % (+Rueckzug 16.3 %) | Tauch 0 (0.00/min) unter 0.0 % | Kopf/Kanister in Plattform/Rampe 11.4 % | < 2500 vor der Kamera 0.9 %, hinter 0.0 % | Rammen 7 (Querungen 7) | Takt 285/510/4798 us (Mittel/95 %/max, 3574 Takte)
+```
+Takt-Rechenzeit: gestern ohne Zeitlog (NB5 hatte gator_zeit_r41.c nicht; Harness NB5 max 4,7-10,6 ms beim Huellen-Neubau). Die exe-Laeufe liefen zu zweit parallel mit gdigrab.
+
+### Bildleisten (Normalhelligkeit, 320 x 240 je Bild, Zeile = Videozeit)
+- `G2_belege/re2/frei4_leon_plattform_suedkante_t229-241_gestern_neu.jpg` (Abnahme-4-Haenger M4 an der Plattform-Suedkante)
+- `G2_belege/re2/west4_leon_rampe_cut2_t60-100_gestern_neu.jpg`, `west5_elza_rampe_rammen_t50-110_gestern_neu.jpg` (gestern Stadion vor der Kamera, neu Vorstoss/Rammen/Rueckzug)
+- `G2_belege/re2/west4_elza_nordbecken_ost_t40-120_gestern_neu.jpg` (M4 Westkanal/Nordbecken Ost)
+- `G2_belege/re2/gang_ohne_kanister_frei4_leon_t8-20_gestern_neu.jpg` (Gang ohne Kanister)
+
+### Riegel
+unit_r41_gatorfix_re2(_elza), _re2_gegen(_elza), _gang(_elza) gruen (Ausgaben `fin_*.txt`). Schwellen (PORT-WAHL aus der Messung): 2-s-Fenster <= 15 in 13 min,
+SO-Ecke/Rampe ohne Fortschritt <= 20 s, Drehen fern der Figur <= 15 %, Kopf/Kanister in Plattform/Rampe <= 2 % (ohne Ueberquerung), < 2500 vor der Kamera <= 8 %,
+hinter der Kamera <= 0,1 %, Rueckwaerts setzen <= 12 %, Tauchen <= 1/min und < 5 %, Gang = authored RE2-Vortrieb (Anteil Abweichung <= NB5 + 1 %, <= 2 %), Rammen in
+jeder Rampenlage. Gegenproben: NB5 (Pruefhaken) rot fuer Kopf/Kanister, Kamera, Drehen, Haengen (SO-Ecke/Rampe 15,9-17,5 s), Rammen; RE1.5-Tempo rot (Gang);
+ohne Rammen (Pruefhaken) 0 Rammen. bahn/kamera (NB5-Stadion) ausgetragen.
+
+### Offen (ehrlich, nicht abnahmereif)
+1. Figur im Nordosten (Lagen Nordbecken-Ost = west4_elza, NO-Ecke): er kommt mit dem Kanister nicht heran (Harness 56/57 s ohne Fortschritt, exe west4_elza 66,5 s,
+   gestern 70,2 s); NO-Ecke 5 Tauchgaenge/min und 45 % < 2500 vor Cut 4. Die Ecke Nordwand/Rampe/Ostwand laesst Kopf (5644) + Kanister (2694 quer) nicht an die Figur.
+2. Rueckwaerts im exe ueber dem Riegel: frei4_leon 17 %, west4_elza 26 %, west4_leon 30 % (Harness gesamt 11,9 %). Ausloeser "drueckt sich fest" feuert an der
+   Westkanal-Einmuendung (Plattform-NW-Ecke) wiederholt - dort ist mit dem Kanister ohne Wenden in drei Zuegen kein Weg (NB6: nur vorwaerts 0 lebensfaehige Lagen).
+3. frei4_elza: 11 Tauchgaenge in 4,1 min (2,7/min, 7,6 % unter Wasser) - ueber der Grenze 1/min; frei4_leon 0,23/min.
+4. Kopf/Kanister in Plattform/Rampe im exe nach dem Abnahme-4-Naeherungsmass (feste Kanister-Lage 4630 vor) 9-37 %; das genaue Mesh-Mass gibt es nur im Harness (1,3 %).
+   Fuer das exe fehlt eine Messzeile mit den echten Punkten.
+5. Takt-Rechenzeit: Harness Mittel 65 us, 95 % 119 us, max 2,2 ms (< 3 ms); exe (zwei Laeufe parallel mit gdigrab) Mittel 285-382 us, max 4,5-15 ms - Lauf ohne
+   Parallellast fehlt.
+6. Belagerung in Cut 2 kommt meist von Norden (Vorstoss + Rueckzug, ~23-29 % der Zeit Rueckzug in den Rampenlagen); volle Querung nur, wenn er schon im Suedbecken ist.
