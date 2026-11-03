@@ -1,0 +1,9 @@
+# Nachbesserung 4 G5A: Spielerlage Schnitt 17 (Nebenbefund 3.3 der Abnahme 3) RE2-RAM gegen Port-Messschiene vorher (Kopf 8c45dbd14) / nachher
+s12 Bild 441  RE2 Leon (6565,-23570)  Port vorher (6565,-23570)  nachher (6565,-23570)
+s13 Bild 479  RE2 Leon (7715,-23627)  Port vorher (7758,-23803)  nachher (7773,-23797)
+s14 Bild 529  RE2 Leon (9118,-23627)  Port vorher (9161,-23803)  nachher (9176,-23797)
+s15 Bild 578  RE2 Leon (10496,-23627)  Port vorher (10539,-23803)  nachher (10554,-23797)
+s16 Bild 628  RE2 Leon (11913,-23627)  Port vorher (11956,-23803)  nachher (11971,-23797)
+s17 Bild 677  RE2 Leon (13267,-23627)  Port vorher (13310,-23803)  nachher (13325,-23797)
+s18 Bild 727  RE2 Leon (14671,-23627)  Port vorher (14714,-23803)  nachher (14729,-23797)
+s19 Bild 776  RE2 Leon (16038,-23627)  Port vorher (16081,-23803)  nachher (16096,-23797)

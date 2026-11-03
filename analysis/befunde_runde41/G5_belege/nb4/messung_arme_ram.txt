@@ -1,0 +1,150 @@
+# Nachbesserung 4 G5A: Arme gegen RE2-RAM (Savestates s01..s26 der Abnahme 1, eigener Leser werkzeug/re2_alle.py)
+## RE2-RAM: G5 (Sub, Phase, +0x158, Clip, +0x14D) und je Arm (Index +0x218: Sub, Phase, Streckung *(+0x198)+0x8c, +0x158, Drehung +0x74/76/78)
+s01 G5 sub 2 ph  0 t    0 clip 0 bild   1 | A0 s8 p0 sc0 t0 r(0,0,0) | A1 s8 p0 sc0 t0 r(0,0,0) | A2 s8 p0 sc0 t0 r(0,0,0) | A3 s8 p0 sc0 t0 r(0,0,0) |
+s02 G5 sub 2 ph  0 t    0 clip 0 bild   1 | A0 s8 p0 sc0 t0 r(0,0,0) | A1 s8 p0 sc0 t0 r(0,0,0) | A2 s8 p0 sc0 t0 r(0,0,0) | A3 s8 p0 sc0 t0 r(0,0,0) |
+s03 G5 sub 2 ph  1 t   31 clip 1 bild   0 | A0 s8 p2 sc4096 t0 r(0,0,0) | A1 s8 p0 sc0 t0 r(0,0,0) | A2 s8 p2 sc512 t0 r(0,0,0) | A3 s8 p0 sc0 t0 r(0,0,0) |
+s04 G5 sub 2 ph  1 t   80 clip 1 bild   0 | A0 s8 p5 sc4096 t0 r(0,0,0) | A1 s8 p0 sc0 t0 r(0,0,0) | A2 s8 p4 sc4096 t21 r(0,0,0) | A3 s8 p4 sc4096 t11 r(0,0,0) |
+s05 G5 sub 2 ph  2 t   90 clip 1 bild  39 | A0 s8 p6 sc4096 t40 r(0,0,0) | A1 s8 p6 sc0 t40 r(0,0,0) | A2 s8 p6 sc4096 t70 r(0,0,0) | A3 s8 p6 sc4096 t60 r(0,0,0) |
+s06 G5 sub 2 ph  2 t   90 clip 1 bild  75 | A0 s8 p6 sc4096 t76 r(0,0,0) | A1 s8 p6 sc0 t76 r(0,0,0) | A2 s8 p6 sc4096 t106 r(0,0,0) | A3 s8 p6 sc4096 t96 r(0,0,0) |
+s07 G5 sub 2 ph  2 t   90 clip 1 bild 125 | A0 s8 p6 sc4096 t126 r(0,0,0) | A1 s8 p6 sc0 t126 r(0,0,0) | A2 s8 p6 sc4096 t156 r(0,0,0) | A3 s8 p6 sc4096 t146 r(0,0,0) |
+s08 G5 sub 2 ph  2 t   90 clip 1 bild 174 | A0 s8 p6 sc4096 t175 r(0,0,0) | A1 s8 p6 sc0 t175 r(0,0,0) | A2 s8 p7 sc4096 t181 r(0,0,0) | A3 s8 p7 sc4096 t181 r(0,0,0) |
+s09 G5 sub 2 ph  4 t   43 clip 3 bild  43 | A0 s8 p8 sc3264 t181 r(0,-208,0) | A1 s8 p9 sc0 t181 r(0,-16,0) | A2 s8 p8 sc3264 t181 r(0,208,0) | A3 s8 p8 sc3264 t181 r(0,208,0) |
+s10 G5 sub 2 ph  5 t    3 clip 3 bild  93 | A0 s8 p9 sc0 t181 r(0,-528,0) | A1 s8 p9 sc0 t181 r(0,-16,0) | A2 s8 p9 sc0 t181 r(0,528,0) | A3 s8 p9 sc0 t181 r(0,528,0) |
+s11 G5 sub 2 ph  5 t   52 clip 3 bild  42 | A0 s9 p2 sc3992 t280 r(2304,0,52) | A1 s9 p1 sc528 t96 r(2816,0,-376) | A2 s9 p1 sc168 t56 r(64,0,-428) | A3 s8 p9 sc0 t181 r(0,528,0) |
+s12 G5 sub 2 ph  5 t   81 clip 3 bild  71 | A0 s9 p6 sc4096 t0 r(2304,0,160) | A1 s9 p6 sc4096 t0 r(2816,0,104) | A2 s9 p5 sc4096 t57 r(64,0,-88) | A3 s9 p1 sc2400 t200 r(1920,0,-272) |
+s13 G5 sub 2 ph  6 t    0 clip 4 bild   9 | A0 s9 p7 sc4096 t10 r(2304,0,160) | A1 s9 p7 sc4096 t10 r(2816,0,104) | A2 s9 p7 sc4096 t10 r(64,0,-88) | A3 s9 p7 sc4096 t10 r(1920,0,160) |
+s14 G5 sub 2 ph  6 t    0 clip 4 bild  59 | A0 s9 p7 sc4096 t60 r(2304,0,160) | A1 s9 p7 sc4096 t60 r(2816,0,104) | A2 s9 p7 sc4096 t60 r(64,0,-88) | A3 s9 p7 sc4096 t60 r(1920,0,160) |
+s15 G5 sub 2 ph  6 t    0 clip 4 bild 108 | A0 s9 p7 sc4096 t109 r(2304,0,160) | A1 s9 p7 sc4096 t109 r(2816,0,104) | A2 s9 p7 sc4096 t109 r(64,0,-88) | A3 s9 p7 sc4096 t109 r(1920,0,160) |
+s16 G5 sub 2 ph  6 t    0 clip 4 bild 158 | A0 s9 p7 sc4096 t159 r(2304,0,160) | A1 s9 p7 sc4096 t159 r(2816,0,104) | A2 s9 p7 sc4096 t159 r(64,0,-88) | A3 s9 p7 sc4096 t159 r(1920,0,160) |
+s17 G5 sub 2 ph  8 t    0 clip 2 bild  27 | A0 s9 p10 sc0 t257 r(2304,0,312) | A1 s9 p10 sc0 t257 r(2816,0,256) | A2 s9 p10 sc0 t257 r(64,0,64) | A3 s9 p10 sc0 t257 r(1920,0,312) |
+s18 G5 sub 2 ph  8 t    0 clip 2 bild  77 | A0 s9 p10 sc0 t257 r(2304,0,312) | A1 s9 p10 sc0 t257 r(2816,0,256) | A2 s9 p10 sc0 t257 r(64,0,64) | A3 s9 p10 sc0 t257 r(1920,0,312) |
+s19 G5 sub 2 ph  8 t    0 clip 2 bild 126 | A0 s9 p10 sc0 t257 r(2304,0,312) | A1 s9 p10 sc0 t257 r(2816,0,256) | A2 s9 p10 sc0 t257 r(64,0,64) | A3 s9 p10 sc0 t257 r(1920,0,312) |
+s20 G5 sub 2 ph 10 t   12 clip 0 bild  12 | A0 s9 p10 sc0 t257 r(2304,0,312) | A1 s9 p10 sc0 t257 r(2816,0,256) | A2 s9 p10 sc0 t257 r(64,0,64) | A3 s9 p10 sc0 t257 r(1920,0,312) |
+s21 G5 sub 2 ph 10 t   54 clip 0 bild  54 | A0 s10 p2 sc2176 t257 r(768,0,32) | A1 s10 p1 sc896 t257 r(1536,0,32) | A2 s10 p1 sc1216 t257 r(2560,0,32) | A3 s10 p1 sc256 t257 r(3584,0,32) |
+s22 G5 sub 2 ph 10 t  104 clip 0 bild   4 | A0 s10 p3 sc4096 t12 r(768,0,32) | A1 s10 p2 sc4096 t257 r(1536,0,32) | A2 s10 p3 sc4096 t28 r(2560,0,32) | A3 s10 p2 sc3456 t257 r(3584,0,32) |
+s23 G5 sub 2 ph 12 t  110 clip 2 bild  43 | A0 s10 p5 sc4096 t6 r(768,0,32) | A1 s10 p3 sc4096 t64 r(1536,0,32) | A2 s10 p5 sc4096 t22 r(2560,0,32) | A3 s10 p3 sc4096 t66 r(3584,0,32) |
+s24 G5 sub 2 ph 12 t  110 clip 2 bild  92 | A0 s10 p5 sc4096 t6 r(768,0,32) | A1 s10 p3 sc4096 t15 r(1536,0,32) | A2 s10 p5 sc4096 t22 r(2560,0,32) | A3 s10 p3 sc4096 t17 r(3584,0,32) |
+s25 G5 sub 2 ph 12 t  110 clip 2 bild 142 | A0 s10 p3 sc4096 t69 r(768,0,32) | A1 s10 p3 sc4096 t35 r(1536,0,32) | A2 s10 p3 sc4096 t65 r(2560,0,32) | A3 s10 p3 sc4096 t37 r(3584,0,32) |
+s26 G5 sub 2 ph 14 t   19 clip 0 bild  41 | A0 s6 p1 sc1472 t61 r(768,0,32) | A1 s6 p1 sc1472 t27 r(1536,0,32) | A2 s6 p1 sc1472 t57 r(2560,0,32) | A3 s6 p1 sc1472 t29 r(3584,0,32) |
+
+## Port NACHHER (Messschiene RE15_G5A_SPUR, unit_r41_g5auftritt, ROOM5090; werkzeug/abgleich.py), Feld RE2/Port nur bei Abweichung
+s03 -> Bild   31 (G5 ph  1 t  31 bild   0): A0 = | A1 = | A2 = | A3 =
+s04 -> Bild   80 (G5 ph  1 t  80 bild   0): A0 = | A1 = | A2 = | A3 =
+s05 -> Bild  129 (G5 ph  2 t  90 bild  39): A0 = | A1 = | A2 = | A3 =
+s06 -> Bild  165 (G5 ph  2 t  90 bild  75): A0 = | A1 = | A2 = | A3 =
+s07 -> Bild  215 (G5 ph  2 t  90 bild 125): A0 = | A1 = | A2 = | A3 =
+s08 -> Bild  264 (G5 ph  2 t  90 bild 174): A0 = | A1 = | A2 = | A3 =
+s09 -> Bild  313 (G5 ph  4 t  43 bild  43): A0 = | A1 = | A2 = | A3 =
+s10 -> Bild  363 (G5 ph  5 t   3 bild  93): A0 = | A1 = | A2 = | A3 =
+s11 -> Bild  412 (G5 ph  5 t  52 bild  42): A0 = | A1 = | A2 = | A3 =
+s12 -> Bild  441 (G5 ph  5 t  81 bild  71): A0 = | A1 = | A2 = | A3 =
+s13 -> Bild  479 (G5 ph  6 t   0 bild   9): A0 = | A1 = | A2 = | A3 =
+s14 -> Bild  529 (G5 ph  6 t   0 bild  59): A0 = | A1 = | A2 = | A3 =
+s15 -> Bild  578 (G5 ph  6 t   0 bild 108): A0 = | A1 = | A2 = | A3 =
+s16 -> Bild  628 (G5 ph  6 t   0 bild 158): A0 = | A1 = | A2 = | A3 =
+s17 -> Bild  677 (G5 ph  8 t   0 bild  27): A0 = | A1 = | A2 = | A3 =
+s18 -> Bild  727 (G5 ph  8 t   0 bild  77): A0 = | A1 = | A2 = | A3 =
+s19 -> Bild  776 (G5 ph  8 t   0 bild 126): A0 = | A1 = | A2 = | A3 =
+s20 -> Bild  812 (G5 ph 10 t  12 bild  12): A0 = | A1 = | A2 = | A3 =
+s21 -> Bild  854 (G5 ph 10 t  54 bild  54): A0 t 257/0 | A1 t 257/0 | A2 t 257/0 | A3 t 257/0
+s22 -> Bild  904 (G5 ph 10 t 104 bild   4): A0 t 12/23 | A1 t 257/0 | A2 = | A3 t 257/0
+s23 -> Bild  953 (G5 ph 12 t 110 bild  43): A0 t 6/0 | A1 t 64/56 | A2 t 22/0 | A3 t 66/7
+s24 -> Bild 1002 (G5 ph 12 t 110 bild  92): A0 t 6/0 | A1 t 15/7 | A2 t 22/0 | A3 t 17/30
+s25 -> Bild 1052 (G5 ph 12 t 110 bild 142): A0 t 69/57 | A1 t 35/21 | A2 t 65/66 | A3 t 37/54
+s26 -> Bild 1101 (G5 ph 14 t  19 bild  41): A0 t 61/0 | A1 t 27/0 | A2 t 57/0 | A3 t 29/0
+gleich 18 / 24 (Feld RE2/Port)
+## ROOM5091:
+gleich 18 / 24 (Feld RE2/Port)
+## s21..s26: nur +0x158 weicht ab - RE2-Sender 0x80104E9C schreibt nur +4 (sub10/sub6 lesen +0x158 vor dem Setzen nicht); ab s22 haengt er an der Zufallsfolge (sub10 ph2/ph5 rng & 0xF + 30).
+
+## Port VORHER (Gegenprobe: Riegel auf dem Verhalten von 8c45dbd14, nur Diagnose angehaengt)
+5090: NB4 s03 Bild 31 Arm 2: Port Sub 8 Ph 2 Streckung 256 t 0 Drehung (0,0,0) / RE2 8 2 512 0 (0,0,0)
+5090: NB4 s04 Bild 80 Arm 2: Port Sub 8 Ph 4 Streckung 4096 t 20 Drehung (0,0,0) / RE2 8 4 4096 21 (0,0,0)
+5090: NB4 s04 Bild 80 Arm 3: Port Sub 8 Ph 4 Streckung 4096 t 10 Drehung (0,0,0) / RE2 8 4 4096 11 (0,0,0)
+5090: NB4 s05 Bild 129 Arm 2: Port Sub 8 Ph 6 Streckung 4096 t 69 Drehung (0,0,0) / RE2 8 6 4096 70 (0,0,0)
+5090: NB4 s05 Bild 129 Arm 3: Port Sub 8 Ph 6 Streckung 4096 t 59 Drehung (0,0,0) / RE2 8 6 4096 60 (0,0,0)
+5090: NB4 s06 Bild 165 Arm 2: Port Sub 8 Ph 6 Streckung 4096 t 105 Drehung (0,0,0) / RE2 8 6 4096 106 (0,0,0)
+5090: NB4 s06 Bild 165 Arm 3: Port Sub 8 Ph 6 Streckung 4096 t 95 Drehung (0,0,0) / RE2 8 6 4096 96 (0,0,0)
+5090: NB4 s07 Bild 215 Arm 2: Port Sub 8 Ph 6 Streckung 4096 t 155 Drehung (0,0,0) / RE2 8 6 4096 156 (0,0,0)
+5090: NB4 s07 Bild 215 Arm 3: Port Sub 8 Ph 6 Streckung 4096 t 145 Drehung (0,0,0) / RE2 8 6 4096 146 (0,0,0)
+5090: NB4 s11 Bild 412 Arm 0: Port Sub 9 Ph 2 Streckung 3728 t 264 Drehung (-1792,0,0) / RE2 9 2 3992 280 (-1792,0,52)
+5090: NB4 s11 Bild 412 Arm 1: Port Sub 9 Ph 1 Streckung 440 t 88 Drehung (-1280,0,-356) / RE2 9 1 528 96 (-1280,0,-376)
+5090: NB4 s11 Bild 412 Arm 2: Port Sub 9 Ph 1 Streckung 120 t 48 Drehung (64,0,-388) / RE2 9 1 168 56 (64,0,-428)
+5090: NB4 s12 Bild 441 Arm 1: Port Sub 9 Ph 5 Streckung 4096 t 54 Drehung (-1280,0,104) / RE2 9 6 4096 0 (-1280,0,104)
+5090: NB4 s12 Bild 441 Arm 2: Port Sub 9 Ph 5 Streckung 4096 t 59 Drehung (64,0,-88) / RE2 9 5 4096 57 (64,0,-88)
+5090: NB4 s12 Bild 441 Arm 3: Port Sub 9 Ph 1 Streckung 2208 t 192 Drehung (1920,0,-304) / RE2 9 1 2400 200 (1920,0,-272)
+5090: NB4 s17 Bild 677 Arm 0: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1792,0,160) / RE2 9 10 0 257 (-1792,0,312)
+5090: NB4 s17 Bild 677 Arm 1: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1280,0,104) / RE2 9 10 0 257 (-1280,0,256)
+5090: NB4 s17 Bild 677 Arm 2: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (64,0,-88) / RE2 9 10 0 257 (64,0,64)
+5090: NB4 s17 Bild 677 Arm 3: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (1920,0,160) / RE2 9 10 0 257 (1920,0,312)
+5090: NB4 s18 Bild 727 Arm 0: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1792,0,160) / RE2 9 10 0 257 (-1792,0,312)
+5090: NB4 s18 Bild 727 Arm 1: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1280,0,104) / RE2 9 10 0 257 (-1280,0,256)
+5090: NB4 s18 Bild 727 Arm 2: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (64,0,-88) / RE2 9 10 0 257 (64,0,64)
+5090: NB4 s18 Bild 727 Arm 3: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (1920,0,160) / RE2 9 10 0 257 (1920,0,312)
+5090: NB4 s19 Bild 776 Arm 0: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1792,0,160) / RE2 9 10 0 257 (-1792,0,312)
+5090: NB4 s19 Bild 776 Arm 1: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1280,0,104) / RE2 9 10 0 257 (-1280,0,256)
+5090: NB4 s19 Bild 776 Arm 2: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (64,0,-88) / RE2 9 10 0 257 (64,0,64)
+5090: NB4 s19 Bild 776 Arm 3: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (1920,0,160) / RE2 9 10 0 257 (1920,0,312)
+5090: NB4 s20 Bild 812 Arm 0: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1792,0,160) / RE2 9 10 0 257 (-1792,0,312)
+5090: NB4 s20 Bild 812 Arm 1: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1280,0,104) / RE2 9 10 0 257 (-1280,0,256)
+5090: NB4 s20 Bild 812 Arm 2: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (64,0,-88) / RE2 9 10 0 257 (64,0,64)
+5090: NB4 s20 Bild 812 Arm 3: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (1920,0,160) / RE2 9 10 0 257 (1920,0,312)
+5090: NB4 s21 Bild 854 Arm 0: Port Sub 10 Ph 3 Streckung 4096 t 1 Drehung (768,0,32) / RE2 10 2 2176 -1 (768,0,32)
+5090: NB4 s21 Bild 854 Arm 1: Port Sub 10 Ph 3 Streckung 4096 t 28 Drehung (1536,0,32) / RE2 10 1 896 -1 (1536,0,32)
+5090: NB4 s21 Bild 854 Arm 2: Port Sub 10 Ph 3 Streckung 4096 t 17 Drehung (-1536,0,32) / RE2 10 1 1216 -1 (-1536,0,32)
+5090: NB4 s21 Bild 854 Arm 3: Port Sub 10 Ph 3 Streckung 4096 t 43 Drehung (-512,0,32) / RE2 10 1 256 -1 (-512,0,32)
+5090: NB4 s26 Bild 1101 Arm 0: Port Sub 6 Ph 1 Streckung 1536 t 0 Drehung (768,0,32) / RE2 6 1 1472 -1 (768,0,32)
+5090: NB4 s26 Bild 1101 Arm 1: Port Sub 6 Ph 1 Streckung 1536 t 0 Drehung (1536,0,32) / RE2 6 1 1472 -1 (1536,0,32)
+5090: NB4 s26 Bild 1101 Arm 2: Port Sub 6 Ph 1 Streckung 1536 t 0 Drehung (-1536,0,32) / RE2 6 1 1472 -1 (-1536,0,32)
+5090: NB4 s26 Bild 1101 Arm 3: Port Sub 6 Ph 1 Streckung 1536 t 0 Drehung (-512,0,32) / RE2 6 1 1472 -1 (-512,0,32)
+5090: NB4 Arme gegen RE2-RAM 41 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 4 von 22 innerhalb 16 (max 8757); Einzug [T7] fertig Bild -1; Bild 670..806 Arm vor der Masse in 137 von 137 Bildern (max Reichweite 9042); Bild 302..336 Arm-1-Stummel in 35 von 35 (max 712)
+FAIL: 5090: NB4 Armzustand 41 von 80 gleich RE2-RAM (s.o.)
+FAIL: 5090: NB4 gezeichnete Reichweite Streckung 0: 4 von 22 innerhalb 16 von RE2 (max 8757)
+FAIL: 5090: N1 Einzug [T7] fertig bei Bild -1 statt 669 (Start 651, 19 Schritte: RE2-RAM s17 +0x158 257 = 181 + 4*19)
+FAIL: 5090: N1 Arm vor/ueber der Masse in 137 von 137 Bildern 670..806 (Reichweite bis 9042, RE2 571..573)
+FAIL: 5090: N2 Arm-1-Stummel in 35 von 35 Bildern 302..336 (Reichweite bis 712, RE2 s09 571)
+5091: NB4 s03 Bild 31 Arm 2: Port Sub 8 Ph 2 Streckung 256 t 0 Drehung (0,0,0) / RE2 8 2 512 0 (0,0,0)
+5091: NB4 s04 Bild 80 Arm 2: Port Sub 8 Ph 4 Streckung 4096 t 20 Drehung (0,0,0) / RE2 8 4 4096 21 (0,0,0)
+5091: NB4 s04 Bild 80 Arm 3: Port Sub 8 Ph 4 Streckung 4096 t 10 Drehung (0,0,0) / RE2 8 4 4096 11 (0,0,0)
+5091: NB4 s05 Bild 129 Arm 2: Port Sub 8 Ph 6 Streckung 4096 t 69 Drehung (0,0,0) / RE2 8 6 4096 70 (0,0,0)
+5091: NB4 s05 Bild 129 Arm 3: Port Sub 8 Ph 6 Streckung 4096 t 59 Drehung (0,0,0) / RE2 8 6 4096 60 (0,0,0)
+5091: NB4 s06 Bild 165 Arm 2: Port Sub 8 Ph 6 Streckung 4096 t 105 Drehung (0,0,0) / RE2 8 6 4096 106 (0,0,0)
+5091: NB4 s06 Bild 165 Arm 3: Port Sub 8 Ph 6 Streckung 4096 t 95 Drehung (0,0,0) / RE2 8 6 4096 96 (0,0,0)
+5091: NB4 s07 Bild 215 Arm 2: Port Sub 8 Ph 6 Streckung 4096 t 155 Drehung (0,0,0) / RE2 8 6 4096 156 (0,0,0)
+5091: NB4 s07 Bild 215 Arm 3: Port Sub 8 Ph 6 Streckung 4096 t 145 Drehung (0,0,0) / RE2 8 6 4096 146 (0,0,0)
+5091: NB4 s11 Bild 412 Arm 0: Port Sub 9 Ph 2 Streckung 3728 t 264 Drehung (-1792,0,0) / RE2 9 2 3992 280 (-1792,0,52)
+5091: NB4 s11 Bild 412 Arm 1: Port Sub 9 Ph 1 Streckung 440 t 88 Drehung (-1280,0,-356) / RE2 9 1 528 96 (-1280,0,-376)
+5091: NB4 s11 Bild 412 Arm 2: Port Sub 9 Ph 1 Streckung 120 t 48 Drehung (64,0,-388) / RE2 9 1 168 56 (64,0,-428)
+5091: NB4 s12 Bild 441 Arm 1: Port Sub 9 Ph 5 Streckung 4096 t 54 Drehung (-1280,0,104) / RE2 9 6 4096 0 (-1280,0,104)
+5091: NB4 s12 Bild 441 Arm 2: Port Sub 9 Ph 5 Streckung 4096 t 59 Drehung (64,0,-88) / RE2 9 5 4096 57 (64,0,-88)
+5091: NB4 s12 Bild 441 Arm 3: Port Sub 9 Ph 1 Streckung 2208 t 192 Drehung (1920,0,-304) / RE2 9 1 2400 200 (1920,0,-272)
+5091: NB4 s17 Bild 677 Arm 0: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1792,0,160) / RE2 9 10 0 257 (-1792,0,312)
+5091: NB4 s17 Bild 677 Arm 1: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1280,0,104) / RE2 9 10 0 257 (-1280,0,256)
+5091: NB4 s17 Bild 677 Arm 2: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (64,0,-88) / RE2 9 10 0 257 (64,0,64)
+5091: NB4 s17 Bild 677 Arm 3: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (1920,0,160) / RE2 9 10 0 257 (1920,0,312)
+5091: NB4 s18 Bild 727 Arm 0: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1792,0,160) / RE2 9 10 0 257 (-1792,0,312)
+5091: NB4 s18 Bild 727 Arm 1: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1280,0,104) / RE2 9 10 0 257 (-1280,0,256)
+5091: NB4 s18 Bild 727 Arm 2: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (64,0,-88) / RE2 9 10 0 257 (64,0,64)
+5091: NB4 s18 Bild 727 Arm 3: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (1920,0,160) / RE2 9 10 0 257 (1920,0,312)
+5091: NB4 s19 Bild 776 Arm 0: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1792,0,160) / RE2 9 10 0 257 (-1792,0,312)
+5091: NB4 s19 Bild 776 Arm 1: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1280,0,104) / RE2 9 10 0 257 (-1280,0,256)
+5091: NB4 s19 Bild 776 Arm 2: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (64,0,-88) / RE2 9 10 0 257 (64,0,64)
+5091: NB4 s19 Bild 776 Arm 3: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (1920,0,160) / RE2 9 10 0 257 (1920,0,312)
+5091: NB4 s20 Bild 812 Arm 0: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1792,0,160) / RE2 9 10 0 257 (-1792,0,312)
+5091: NB4 s20 Bild 812 Arm 1: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (-1280,0,104) / RE2 9 10 0 257 (-1280,0,256)
+5091: NB4 s20 Bild 812 Arm 2: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (64,0,-88) / RE2 9 10 0 257 (64,0,64)
+5091: NB4 s20 Bild 812 Arm 3: Port Sub 9 Ph 8 Streckung 4096 t 181 Drehung (1920,0,160) / RE2 9 10 0 257 (1920,0,312)
+5091: NB4 s21 Bild 854 Arm 0: Port Sub 10 Ph 3 Streckung 4096 t 12 Drehung (768,0,32) / RE2 10 2 2176 -1 (768,0,32)
+5091: NB4 s21 Bild 854 Arm 1: Port Sub 10 Ph 3 Streckung 4096 t 28 Drehung (1536,0,32) / RE2 10 1 896 -1 (1536,0,32)
+5091: NB4 s21 Bild 854 Arm 2: Port Sub 10 Ph 3 Streckung 4096 t 29 Drehung (-1536,0,32) / RE2 10 1 1216 -1 (-1536,0,32)
+5091: NB4 s21 Bild 854 Arm 3: Port Sub 10 Ph 3 Streckung 4096 t 42 Drehung (-512,0,32) / RE2 10 1 256 -1 (-512,0,32)
+5091: NB4 s26 Bild 1101 Arm 0: Port Sub 6 Ph 1 Streckung 1536 t 0 Drehung (768,0,32) / RE2 6 1 1472 -1 (768,0,32)
+5091: NB4 s26 Bild 1101 Arm 1: Port Sub 6 Ph 1 Streckung 1536 t 0 Drehung (1536,0,32) / RE2 6 1 1472 -1 (1536,0,32)
+5091: NB4 s26 Bild 1101 Arm 2: Port Sub 6 Ph 1 Streckung 1536 t 0 Drehung (-1536,0,32) / RE2 6 1 1472 -1 (-1536,0,32)
+5091: NB4 s26 Bild 1101 Arm 3: Port Sub 6 Ph 1 Streckung 1536 t 0 Drehung (-512,0,32) / RE2 6 1 1472 -1 (-512,0,32)
+5091: NB4 Arme gegen RE2-RAM 41 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 4 von 22 innerhalb 16 (max 8757); Einzug [T7] fertig Bild -1; Bild 670..806 Arm vor der Masse in 137 von 137 Bildern (max Reichweite 9042); Bild 302..336 Arm-1-Stummel in 35 von 35 (max 712)
+FAIL: 5091: NB4 Armzustand 41 von 80 gleich RE2-RAM (s.o.)
+FAIL: 5091: NB4 gezeichnete Reichweite Streckung 0: 4 von 22 innerhalb 16 von RE2 (max 8757)
+FAIL: 5091: N1 Einzug [T7] fertig bei Bild -1 statt 669 (Start 651, 19 Schritte: RE2-RAM s17 +0x158 257 = 181 + 4*19)
+FAIL: 5091: N1 Arm vor/ueber der Masse in 137 von 137 Bildern 670..806 (Reichweite bis 9042, RE2 571..573)
+FAIL: 5091: N2 Arm-1-Stummel in 35 von 35 Bildern 302..336 (Reichweite bis 712, RE2 s09 571)

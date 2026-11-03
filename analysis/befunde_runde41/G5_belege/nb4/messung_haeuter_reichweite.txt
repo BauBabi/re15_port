@@ -1,0 +1,60 @@
+# Nachbesserung 4 G5A: RE2-Haeuter nachgebaut (werkzeug/re2_haut.py) aus den RAM-Teilmatrizen (+0x48 Rotation, +0x5c..+0x64 Translation)
+# gegen den RAM-Vertexpuffer von Mesh 0 (0x8015da14, 66 Vertices, zuletzt gezeichneter Arm = Slot 4); Tabellen RAM 0x801128b8/0x80112940/0x801129b8 (EM37 bei 0x8010D000)
+s09 slot 4: 66 Vertices gehaeutet, max Abweichung zum RAM-Puffer 1, Mittel 0.70
+s12 slot 4: 66 Vertices gehaeutet, max Abweichung zum RAM-Puffer 1, Mittel 0.55
+s13 slot 4: 66 Vertices gehaeutet, max Abweichung zum RAM-Puffer 1, Mittel 0.53
+s05 slot 4: 66 Vertices gehaeutet, max Abweichung zum RAM-Puffer 1, Mittel 0.56
+
+# Teile-Strukturen (werkzeug/re2_teile.py): Flags w0, lokale R/t, Weltlage, Streckung - s09 Arm 1 (Streckung 0, Clip 14 eingerollt) / Arm 2 (3264, gerade), s03 Arm 2 (512)
+s09 slot 2 idx 1 Wort 00090801 e 80160120 parts 80160368
+  teil 0 @80160368 w0 00004401 Rl [4089, -232, 0, 232, 4089, 0, 0, 0, 4096] tl (0, 0, 0) | W [4088, -232, -101, 232, 4089, 0, 100, -6, 4095] tw (644, -591, -24620) | +74 80160144 +94 80160120 scale 0 4096 4096 ang 0 0 37
+  teil 1 @80160414 w0 00004801 Rl [4074, 206, 358, -205, 4090, -13, -359, -6, 4080] tl (3750, 0, 0) | W [4086, -26, 257, 26, 4094, 7, -260, -7, 4087] tw (644, -591, -24620) | +74 801603b0 +94 80160368 scale 0 4096 4096 ang 2 57 4062
+  teil 2 @801604c0 w0 00004801 Rl [3871, 586, -1195, -562, 4052, 168, 1205, 5, 3912] tl (3003, 0, 0) | W [3940, 559, -948, -536, 4053, 167, 957, -40, 3978] tw (644, -591, -24620) | +74 8016045c +94 80160414 scale 0 4096 4096 ang 4067 3902 3997
+  teil 3 @8016056c w0 00004801 Rl [3938, -666, -897, 649, 4040, -148, 908, 0, 3992] tl (1508, 0, 0) | W [3666, -90, -1807, 163, 4084, 133, 1795, -196, 3668] tw (644, -591, -24620) | +74 80160508 +94 801604c0 scale 0 4096 4096 ang 24 3951 109
+s09 slot 3 idx 2 Wort 00080801 e 80162140 parts 80162388
+  teil 0 @80162388 w0 00004401 Rl [4096, 0, 0, 0, 4096, 0, 0, 0, 4096] tl (0, 0, 0) | W [3887, 0, 1285, 0, 4096, 0, -1285, 0, 3887] tw (-5499, -723, -20834) | +74 80162164 +94 80162140 scale 3264 4096 4096 ang 0 0 0
+  teil 1 @80162434 w0 00004801 Rl [4096, 0, 0, 0, 4096, 0, 0, 0, 4096] tl (3750, 0, 0) | W [3887, 0, 1285, 0, 4096, 0, -1285, 0, 3887] tw (-2664, -723, -21772) | +74 801623d0 +94 80162388 scale 3264 4096 4096 ang 0 0 0
+  teil 2 @801624e0 w0 00004801 Rl [4096, 0, 0, 0, 4096, 0, 0, 0, 4096] tl (3003, 0, 0) | W [3887, 0, 1285, 0, 4096, 0, -1285, 0, 3887] tw (-394, -723, -22523) | +74 8016247c +94 80162434 scale 3264 4096 4096 ang 0 0 0
+  teil 3 @8016258c w0 00004801 Rl [4096, 0, 0, 0, 4096, 0, 0, 0, 4096] tl (1508, 0, 0) | W [3887, 0, 1285, 0, 4096, 0, -1285, 0, 3887] tw (745, -723, -22900) | +74 80162528 +94 801624e0 scale 3264 4096 4096 ang 0 0 0
+s03 slot 3 idx 2 Wort 00020801 e 80162140 parts 80162388
+  teil 0 @80162388 w0 00004401 Rl [4089, -239, 6, 239, 4089, 0, -6, 1, 4096] tl (0, 0, 0) | W [4089, -232, 0, 232, 4089, 0, 0, 0, 4096] tw (-5791, -717, -20905) | +74 80162164 +94 80162140 scale 512 4096 4096 ang 0 1 38
+  teil 1 @80162434 w0 00004801 Rl [4073, 225, 358, -224, 4089, -19, -360, -1, 4080] tl (3750, 0, 0) | W [4078, -27, 358, 26, 4094, 7, -359, -6, 4080] tw (-5558, -704, -20905) | +74 801623d0 +94 80162388 scale 512 4096 4096 ang 3 57 4059
+  teil 2 @801624e0 w0 00004801 Rl [3876, 581, -1177, -558, 4053, 162, 1186, 6, 3917] tl (3003, 0, 0) | W [3963, 557, -849, -536, 4053, 167, 861, -53, 4001] tw (-5372, -703, -20922) | +74 8016247c +94 80162434 scale 512 4096 4096 ang 4068 3905 3998
+  teil 3 @8016258c w0 00004801 Rl [3950, -668, -842, 654, 4039, -136, 851, -3, 4004] tl (1508, 0, 0) | W [3710, -95, -1716, 163, 4084, 133, 1706, -193, 3712] tw (-5282, -716, -20903) | +74 80162528 +94 801624e0 scale 512 4096 4096 ang 22 3960 109
+# Nachrechnung s03 Arm 2 (Vorbild-Streckung 256): p2 - p1 = (-5372+5558, -703+704, -20922+20905) = (186,1,-17); W1 * (3003*256>>12, 0, 0) = (186.9, 1.2, -16.4)
+
+# Gezeichnete Reichweite max |Vertex - Teil 0| nach FUN_80019CD0-Streckung (werkzeug/re2_reichweite.py)
+s05 Arm 0 Streckung 4096 t0 (-6192, -2301, -25299) Reichweite 6739
+s05 Arm 1 Streckung    0 t0 (-6412, -1398, -24611) Reichweite 571
+s05 Arm 2 Streckung 4096 t0 (-5678, -694, -20941) Reichweite 6733
+s05 Arm 3 Streckung 4096 t0 (-6189, -2441, -21429) Reichweite 6937
+s09 Arm 0 Streckung 3264 t0 (-6049, -2298, -25355) Reichweite 6112
+s09 Arm 1 Streckung    0 t0 (644, -591, -24620) Reichweite 571
+s09 Arm 2 Streckung 3264 t0 (-5499, -723, -20834) Reichweite 6112
+s09 Arm 3 Streckung 3264 t0 (-6014, -2456, -21309) Reichweite 6112
+s10 Arm 0 Streckung    0 t0 (-6049, -2298, -25355) Reichweite 571
+s10 Arm 1 Streckung    0 t0 (629, -557, -24620) Reichweite 571
+s10 Arm 2 Streckung    0 t0 (-5499, -723, -20834) Reichweite 572
+s10 Arm 3 Streckung    0 t0 (-6014, -2456, -21309) Reichweite 572
+s17 Arm 0 Streckung    0 t0 (114, -1164, -24317) Reichweite 571
+s17 Arm 1 Streckung    0 t0 (680, -539, -24581) Reichweite 573
+s17 Arm 2 Streckung    0 t0 (528, -650, -22151) Reichweite 571
+s17 Arm 3 Streckung    0 t0 (-120, -1231, -22360) Reichweite 571
+s18 Arm 0 Streckung    0 t0 (114, -1164, -24317) Reichweite 571
+s18 Arm 1 Streckung    0 t0 (680, -539, -24581) Reichweite 573
+s18 Arm 2 Streckung    0 t0 (528, -650, -22151) Reichweite 571
+s18 Arm 3 Streckung    0 t0 (-120, -1231, -22360) Reichweite 571
+s19 Arm 0 Streckung    0 t0 (114, -1164, -24317) Reichweite 571
+s19 Arm 1 Streckung    0 t0 (680, -539, -24581) Reichweite 573
+s19 Arm 2 Streckung    0 t0 (528, -650, -22151) Reichweite 571
+s19 Arm 3 Streckung    0 t0 (-120, -1231, -22360) Reichweite 571
+s20 Arm 0 Streckung    0 t0 (114, -1164, -24317) Reichweite 571
+s20 Arm 1 Streckung    0 t0 (680, -539, -24581) Reichweite 573
+s20 Arm 2 Streckung    0 t0 (528, -650, -22151) Reichweite 571
+s20 Arm 3 Streckung    0 t0 (-120, -1231, -22360) Reichweite 571
+
+# Port (unit_r41_g5auftritt, NB4-Zeile) nachher / vorher
+5090: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+5091: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+5090: NB4 Arme gegen RE2-RAM 41 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 4 von 22 innerhalb 16 (max 8757); Einzug [T7] fertig Bild -1; Bild 670..806 Arm vor der Masse in 137 von 137 Bildern (max Reichweite 9042); Bild 302..336 Arm-1-Stummel in 35 von 35 (max 712)
+5091: NB4 Arme gegen RE2-RAM 41 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 4 von 22 innerhalb 16 (max 8757); Einzug [T7] fertig Bild -1; Bild 670..806 Arm vor der Masse in 137 von 137 Bildern (max Reichweite 9042); Bild 302..336 Arm-1-Stummel in 35 von 35 (max 712)

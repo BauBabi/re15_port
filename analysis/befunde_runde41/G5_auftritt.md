@@ -690,3 +690,125 @@ Bildende mit dem Mittelpunkt in fester Zelle. Die Saat des bestehenden g5-Fuzz b
 | unit_r41_birkin_wand_rein / _g5 / _griff / _g5saat (neu), unit_r41_g5auftritt und die G5/Birkin/Tentakel/Granate-Gruppe (23 Tests, -j 6) | 23/23 gruen |
 | integration_r41_birkin_pistole, _g5_tod, _g5_westen, r35_zgirl_5090, r35_werfer_form, r37_elzaems_leon5080, r37_elzaems_elza1181griff, r34_plattform_takt, r34_plattform_esp_eintritt, pri_masken, r36_pri_schatten (-j 3) | 11/11 gruen; Pistole wie in 9.7 (je ein Peitschentreffer F3807, G5 tot F3973, Spieler-HP 38) |
 | Alle Nicht-Integrationstests ohne die 6 Release-Skript-Tests (-j 6) | 1066/1067, 1039 s; rot nur unit_r35_android_bash_mutanten (Bash-Mutanten des Android-Skripts, ohne Bezug); einzeln wiederholt gruen (704 s) - Last |
+
+## 10. Nachbesserung 4 (Abnahme 3: NICHT BESTANDEN, N1 Arme in [T7] nicht eingezogen, N2 Armstummel 313/320, M4 offen)
+
+Belege: `G5_belege/nb4/` (Leisten, `messung_*.txt`, Werkzeuge `nb4/werkzeug/`; RAM-Leser `abnahme3/werkzeug/re2_ram.py`, Savestates s01..s26 der
+Abnahme 1). Alle Adressen selbst disassembliert (`nb4/messung_re2_disasm.txt`; EM36/EM37 = `build/extracted/re2_ems/CDEMD0_EM3x_ai0.BIN`, Datei-
+Offset = Adresse - 0x80100000; RE2-EXE `info/re2leon/SLUS_007.48`). EM37 liegt im RE2-RAM bei 0x8010D000 (EM36 belegt 0x80100000): Zeiger im
+EM37-Code sind um 0xD000 hoeher als die Port-Adressen.
+
+### 10.1 N1: [T7] setzt die Arme nicht auf Phase 9
+
+- RE2 EM36 [T7]: `addiu v0,zero,9` @0x801015dc, `sb v0,6(a2)` @0x801015e0 / @0x801015ec / @0x801015f8 / @0x80101608 mit
+  `lw a2,0x3c38/0x3c3c/0x3c40/0x3c44(s3)` @0x801015d8/e4/f0/fc. EM37 sub9 ph9 @0x80102690: Schritt a3 0x40, Streckung -= +0x158
+  (@0x801026a4-b4), +0x158 += 4, rot_z += 8 (@0x801026b8-cc), unter 0 -> 0, Phase 10, SE 0 (@0x801026d8-f0). Phase 10 tut nichts:
+  `sltiu v0,v1,0xa` / `beqz` @0x80102074-78 (Epilog). Ph7 endet bei 180 (`addiu v0,zero,0xb4` @0x8010266c) mit +0x158 = 181.
+- Port: `enemy_ai_boss_g5.c` case 7 `g5_tentakel_phase_alle(9)`. Der Einzug laeuft dann 19 Bilder (Bild 651..669): 181*19 + 2*19*18 = 4123 >= 4096.
+  RE2-RAM s17: alle vier Arme Wort 0x000a0901, +0x158 257 = 181 + 4*19, rot_z gegen s16 +152 = 19*8 - der Port trifft das bitgleich.
+- Folgeablauf: sub10 ph0 schreibt +0x8c nicht (@0x8010276c-0x801027fc), die Arme wachsen nach [T10] aus 0 (+64 je Bild, ab 2049 Phase 2,
+  @0x8010281c-30 / @0x80102894-a8). Dabei fiel ein fehlender Durchfall auf (10.3): sub10 ph0 laeuft im selben Takt in ph1 0x80102800.
+  RE2-RAM s21: 2176 (Ph 2) / 896 / 1216 / 256 - Port gleich.
+
+### 10.2 N2: Armstummel Bild 313/320 - Ursache gemessen
+
+- Armzustand war nicht die Ursache: Port Bild 313 = RE2 s09 (Arme 0/2/3 sub8 ph8 Streckung 3264, Arm 1 ph9 Streckung 0).
+- Ursache ist die **Kette**: die Port-Gelenke von Arm 1 (Streckung 0, eingerollter Clip 14) lagen bei |p3 - p0| = 434, RE2-RAM s09/s10
+  p1 = p2 = p3 = p0. Der Port haeutete Mesh 0 aus der UNGESTRECKTEN Kette und streckte danach nur um den Teil-0-Rahmen
+  (W0*S*W0^T); bei gerader Pose ist das gleich, bei eingerollter bleiben die Querteile stehen.
+- RE2: EM37-Ctor setzt Teil 0 `|= 0x4400` (@0x80100768/6c), Teile 1..3 `|= 0x4800` (@0x80100774-0x8010078c, RAM w0 0x4401 / 0x4801); die
+  Streckung steht jeden Takt in allen vier Teilen (`sh` @0x801003e4/e8/ec). FUN_80027434 waehlt mit Flag 0x800 (@0x800275e0) die gestreckte
+  Gelenk-Translation: lokale Translation * Streckung (`mult`/`sra 0xc` @0x80027600-0x80027688), CompMatrix mit der Eltern-Matrix
+  (`jal 0x8002ce94` @0x8002768c). Lokale Offsets rein X (3750/3003/1508, RAM +0x2c). Der Haeuter FUN_800197f4 (Callback 0x80104CF0) nimmt
+  Rotation +0x48 UND Translation +0x5c..64 der Teile; danach streckt FUN_80019CD0 (Flag 0x400 an Teil 0) noch einmal um Teil 0.
+- Nachgerechnet: s03 Arm 2 (Vorbild-Streckung 256) p2 - p1 = (186,1,-17) = W1*(3003*256>>12,0,0) = (186.9,1.2,-16.4). Haeuter in Python aus den
+  RAM-Teilmatrizen gegen den RAM-Vertexpuffer 0x8015da14 (66 Vertices): s05/s09/s12/s13 je max 1 Abweichung (`nb4/messung_haeuter_reichweite.txt`).
+- Port: `re15_g5_tentakel_kette_strecken` (re15_g5_skin.c) baut poses[1..3].trans = Eltern-Translation + R_Eltern*((rel.x*S)>>12, rel.y, rel.z)
+  vor dem Haeuten (main.c, Typ 0x37) und in der Gelenk-Diagnose; die Platzhalter-Meshes 1..3 (RAM: je 4 Vertices +-5) stehen an diesen Lagen
+  ohne zweite Streckung. Bei Streckung 4096 bitgleich zur alten Kette (gleiche Rundung wie mat3_apply).
+- Wirkung: ein eingezogener Arm ist wie in RE2 eine flache Scheibe in der Masse, gezeichnete Reichweite 568..572 (RE2 aus RAM 571..573,
+  22 Vergleiche, max 4 Abweichung); vorher bis 712 (Arm 1, Bild 302..336) bzw. 9042 (N1, Bild 670..806). Nebenwirkung, gewollt: auch die
+  einziehenden/ausfahrenden Arme sind jetzt so kurz wie in RE2 (Bild 305/309 Leiste: vorher zu lang).
+
+### 10.3 Weitere Ein-Bild-Versaetze (RAM-Zensus aller 26 Savestates, `nb4/messung_arme_ram.txt`)
+
+Der Vollabgleich der Arme (Sub, Phase, Streckung, +0x158, Drehung) fand fuenf fehlende Durchfaelle der EM37-Phasentabellen (Phase endet ohne
+Sprung und laeuft im selben Takt in die naechste; Tabellenwerte in der Datei minus 0xD000):
+
+| Stelle | RE2 | RAM-Beleg | Port vorher |
+|---|---|---|---|
+| sub8 ph1 -> ph2 | Ende @0x80101da8, ph2 0x80101dac | s03 Arm 2 Streckung 512 (2 x 256); s04..s07 Zaehler Arme 2/3 21/11 .. 156/146 | 256, Zaehler je -1 |
+| sub9 ph0 -> ph1 | Ende @0x80102140, ph1 0x80102144 | s11 Arm 0 3992 / 280, Arm 1 528 / 96, Arm 2 168 / 56; s12 Arm 3 2400 / 200 | 3480/248, 440/88, 120/48, 2208 |
+| sub9 ph4 -> ph5 | Ende @0x80102378, ph5 0x8010237c | s12 Arm 1 Phase 6, Arm 2 Phase 5 +0x158 57 | Phase 5, 58 |
+| sub10 ph0 -> ph1 | Ende @0x801027fc, ph1 0x80102800 | s21 2176 Ph 2 / 896 / 1216 / 256 | 2112 / 832 / 1152 / 192 |
+| sub6 ph0 -> ph1 | ph0 @0x80101bb4-c0, ph1 0x80101bc4 | s26 alle vier 1472 = 4096 - 41*64 | 1536 |
+
+Ergebnis Port gegen RE2-RAM (Leon 5090 = Elza 5091): **s03..s20 alle 18 Savestates x 4 Arme bitgleich** in Sub, Phase, Streckung, +0x158,
+Drehung x/y/z; s21..s26 Sub/Phase/Streckung/Drehung gleich, nur +0x158 weicht ab (RE2-Sender 0x80104E9C schreibt nur +4, `sw v1,4(a2)`
+@0x80101730; das Port-Kommando nullt den Zaehler; sub10 ph0..2 und sub6 lesen ihn nicht, ab s22 haengt er an der Zufallsfolge).
+Gegenprobe (Verhalten Kopf 8c45dbd14): 41 von 80 Riegel-Vergleichen gleich.
+
+### 10.4 Sichtbeleg (RE15_FRAMEDUMP, eigene exe-Kopie, Lauf wie Abnahme 3: Armierung F1613, Szenenende F2775)
+
+Leisten RE2 echt | Port vorher (Framedump Abnahme 3, 8c45dbd14) | Leon nachher | Elza nachher:
+- `nb4_n2_kopf_bild300_bis_330.jpg` (Kopfregion), `nb4_n2_bild290_bis_345.jpg`, `nb4_n2_bild290_bis_345_ausschnitt.jpg`: Stummel bei 313/316/320
+  weg wie RE2; bei 305/309 einziehende Arme so kurz wie RE2 (vorher zu lang).
+- `nb4_n1_obere_haelfte_bild650_bis_800.jpg`, `nb4_n1_bild640_bis_806.jpg`: ab Bild 660 keine Arme mehr ueber der Masse (vorher zwei rote Stangen
+  bis 806). Rotanteil ueber der Masse (`nb4/messung_arme_oben.txt`, Feld der Abnahme 3): RE2 650 -> 660 4,43 -> 1,99 %, Leon = Elza 2,87 -> 1,49 %,
+  vorher 3,07 -> 3,13 % ohne Kante. Der Restabstand (~0,5..1 %) besteht auch vor Bild 650 (Farbgrundversatz).
+- `nb4_cut12_arme_wachsen_bild812_bis_950.jpg`, `nb4_cut12_bild812_bis_1200.jpg`: Cut 12 Bild 812..850 ohne Arme, ab ~870 waechst der erste aus der
+  Masse, 890/910 weitere, 950 voll - wie RE2 (vorher sofort voll).
+
+### 10.5 M4 (Tunnellampen, Truemmer): offen, Befund erweitert
+
+ROOM7040.RDT (`nb4/messung_m4_lampe.txt`): Kopf[2] = 7 Objektmodelle, Liste @0x244; Modell 3 = Modell 4 = MD1 @0x28a4 (1492 Byte, 44 Vertices,
+18 Dreiecke + 19 Vierecke, x 0..180, y +-1800, z +-2549 = Lampengestell) mit TIM @0x33844. Ein treuer Nachbau braucht: diese RE2-Raumobjekte als
+Assets, die bytegenaue Semantik von sub09..sub12 (0x32 Lage, 0x26 Schritt 1000 - Achse/Vorzeichen, 0x3e Marke -20000), Zeichnen hinter den
+RE2-Masken des Tuerlochs (R704_CUT09.PRI) mit der Blendart des Modells, und fuer die Truemmer sub05 (8 x Sce_espr_on Effekt 0x19) die RE2-Raum-
+ESP. Eine "einfache Lichtflaeche" ohne diese Belege waere geraten - nicht gebaut, offen (eigene Nachbesserung).
+
+### 10.6 Nebenbefunde (nicht behoben, offen)
+
+- **Spitzensonde ungestreckt:** sub9 ph2/ph3 ruft vor der Sonde FUN_80104BA4 (`jal 0x80111ba4` @0x8010225c = ungestreckte Kette E*L0..W2*L3, reine
+  CompMatrix @0x80104bd8-c14) und liest dann Teil 3 (+0x24c/+0x264/+0x268). Der Port streckt dort (tent_gestreckt). Wirkt nur in sub9 ph2
+  (Streckung 3073..4096, wenige Bilder). Die Kind-Kollision liest im RE2 die zuletzt geschriebene Kette (Zeichen-Komposition gestreckt bzw. nach
+  einer Sonde ungestreckt) - der Port nimmt weiter den Teil-0-Rahmen. Beides ausserhalb von N1/N2.
+- **Spielerlage Schnitt 17** (Abnahme 3, 3.3): RE2 s13..s19 x 7715..16038, z -23627; Port vorher +43 x / z -23803, nachher +58 x / z -23797
+  (`nb4/messung_spieler.txt`); im Bild nicht unterscheidbar. Ursache ist der Schub der Speer-Arme (Kollision, s.o.), nicht die Armzustaende
+  (s12/s13 bitgleich).
+- **Port-Kommando nullt +0x158** (10.3) - ohne Wirkung in sub10/sub6; nicht angefasst.
+
+### 10.7 Riegel und Tests (re15_port/build, `nb4/messung_tests.txt`)
+
+**Riegel `unit_r41_g5auftritt` (erweitert, 5090 und 5091):**
+- Arme gegen RE2-RAM an 20 Savestates (s03..s21, s26; Tabelle aus dem RAM erzeugt, `nb4/werkzeug/gen_riegel.py`): Zuordnung Szenenbild <-> Savestate
+  ueber den G5-Zustand mitgeprueft, je Arm Sub/Phase/Streckung/+0x158/Drehung - **80/80 gleich**.
+- Gezeichnete Reichweite (Diagnose `re15_g5_tentakel_zeichen_vertices` = Rechenweg des Zeichners) bei Streckung 0 gegen RE2 (Haeuter-Nachbau aus RAM):
+  22/22 innerhalb 16, max 4.
+- N1: Einzug [T7] fertig bei Bild 669 (19 Schritte); Bild 670..806 in 0 von 137 Bildern ein Arm vor der Masse (Reichweite <= 572).
+- N2: Bild 302..336 Arm 1 in 0 von 35 Bildern als Stummel (Reichweite <= 568).
+- Nebeneffekt der genaueren Kette: M2 Armgelenke gegen RE2 s04 max Abweichung 12 -> 0; Speer |p3-p0| 8143 -> 8159 (RE2 8170).
+- **Gegenprobe** (Verhaltensdateien auf Kopf 8c45dbd14, nur die zwei Diagnosen angehaengt, alte Zeichenrechnung): 41/80, Reichweite 4/22 (max 8757
+  daneben), Einzug nie fertig, N1 137/137 Bilder (Reichweite bis 9042), N2 35/35 Bilder (bis 712) - **rot**, 10 Fehler je Lauf.
+
+**unit_r41_birkin_wand_g5, Teilfall N2 (Arm-Kontakt an der Suedwand):** mit der RE2-genauen Speer-Zeitfolge nur noch 9 Kontaktbilder an dieser
+kuenstlichen Lage (Testbild 408..449, [T5]) - die Laufprobe startete erst nach 10 und lief nie (0/0, rot). Testparameter auf das 5. Kontaktbild
+gesetzt (kein Spielwert): 15 Kontaktbilder, Laufproben 3/3, 0 Bildenden in der Wand; Fuzz 424 Faelle je Raum 0 in fester Zelle, 0 eingekeilt.
+
+| Lauf | Ergebnis |
+|---|---|
+| Gezielt (-j 6, 46 Tests wie Abnahme 3) | 45/46, rot nur unit_r41_birkin_wand_g5 (s.o.), nach der Anpassung gruen -> 46/46 |
+| Integration (-j 3): r41_birkin_pistole, _g5_tod, _g5_westen, r35_zgirl_5090, r37_bissarm_echtlauf, r37_elzaems_elza1181griff, r37_re2zombie, r38_wasserzombie, r41_zombiefresser_tuer2000, pri_masken, r36_pri_schatten | **11/11 gruen**, 535 s; Pistole Leon und Elza: G5 tot, Spieler-HP 45 (Abnahme 3: 38 - der Kampf laeuft mit den RE2-genauen Durchfaellen etwas anders) |
+| Alle Nicht-Integrationstests ohne die 7 df-haengenden Skripttests (-j 6) | **1068/1068 gruen**, 343 s |
+| unit_r38_releaseskript_{trocken,ablauf,fehler_bau,fehler_umfeld,cmd}, unit_r39_titelversion_ablauf, unit_r35_android_bash_mutanten | nicht gelaufen (Umgebung: df.exe haengt), wie Abnahme 3 |
+
+### 10.8 Commits
+
+- `d6e0e919d` fix(r41-g5auftritt): [T7] Phase 9, gestreckte Arm-Kette, fuenf Durchfaelle, Riegel gegen RE2-RAM, Testparameter wand_g5.
+- Folge-Commit: dieses Dossier-Kapitel und `G5_belege/nb4/`.
+
+### 10.9 Offen nach Nachbesserung 4
+
+- M4 Tunnellampen/Truemmer/Beben/Vorlauf-Ton (10.5) - offen gefuehrt.
+- Nebenbefunde 10.6 (Sonde ungestreckt, Kind-Kollision-Kette, Spielerlage +58/+170, Kommando nullt +0x158).
+- M3/M5/M6 unveraendert (PORT-WAHL bzw. PSX).
