@@ -16,12 +16,15 @@
 # Geprueft aus state.log/debug.log:
 #   1  der Weg: beide Wagentueren (DOOR FIRE slot=0 target_cut=9, slot=2 target_cut=14), drei Spawns des 0x30
 #   2  HP der Form beim Eintritt in Wagen B UND C > 0 und = RE15_BB_FORM_HP (aus include/re15_birkin_formen.h gelesen)
-#   3  der Kampf dauert: Treffer auf die Form bis zur Rueckstoss-Szene >= RE15_BB_FORM_HP / 30 (mindestens 3), und die Summe
-#      der HP-Abzuege bis dahin >= RE15_BB_FORM_HP - groesster Einzelabzug (die Form verliert ihre ganzen HP bis auf den letzten
-#      Treffer, der sie unter 0 bringt; der Todesbild-Wert steht nicht im state.log, die Szene setzt sofort HP 1)
-#   4  Leon wird im Kampf angegriffen: seine HP fallen mindestens einmal zwischen dem ersten Treffer auf die Form und der
-#      Rueckstoss-Szene
-#   5  die Rueckstoss-Szene kommt (Clip 13, HP 1)
+#   3  der Kampf dauert: Treffer auf die Form im Kampffenster (Eintritt C bis Rueckstoss-Szene bzw. Laufende) >= RE15_BB_FORM_HP / 30
+#      (mindestens 3); die HP steigen im Fenster nie (kein Ruecksetzen, der Schaden bleibt)
+#   4  Leon wird im Kampf angegriffen: seine HP fallen mindestens einmal zwischen dem ersten Treffer auf die Form und dem Fensterende
+#   5  Rueckstoss-Szene (Clip 13, HP 1): kommt sie, dann erst nach Abzug >= RE15_BB_FORM_HP - groesster Einzelabzug (die Form verliert
+#      ihre ganzen HP bis auf den letzten Treffer; der Todesbild-Wert steht nicht im state.log, die Szene setzt sofort HP 1). Kommt
+#      sie bis zum Laufende nicht, muss die Form noch leben (letzte HP > 0). Mit 150 HP kommt sie (F1486). Probelauf mit 1000 HP
+#      (GR-Wert, nur der Kopf geaendert): C 1000, 64 Treffer, Leon 42x getroffen, keine Szene bis F5500, Form bei HP 40: Leon steht
+#      ab ~F3250 an der Suedwestecke (-12,-26433) und zielt auf den naeheren 0x4D-Aktor (r41/form legt ihn aus der RDT an, (600,-25300),
+#      Zustand 4, hp -1; Spur AN verwirft ihn bei (3,89) ohne (9,133)).
 # Messhaken RE15_R39_MESS_SPIELER_HP=100 (engine/src/gegner_r39.c, KEIN Spielverhalten, nur mit Env): ein stehender
 # Skript-Schuetze ueberlebt eine Form mit mehr HP nicht (Spur GR NB3: 1000 HP, Spieler tot F2100). Der Haken hebt die HP am
 # Kopf jedes KI-Bildes; ein Abzug steht im state.log des Bildes, in dem er faellt (Pruefung 4 sieht ihn).
@@ -47,8 +50,10 @@ math(EXPR _treffer_min "${_form_hp_soll} / 30")
 if(_treffer_min LESS 3)
     set(_treffer_min 3)
 endif()
-# Endbild: Kampfstart ~F1170, Pistole alle 22 Bilder, 15 je Treffer -> 150 HP ~ 250 Bilder, 1000 HP ~ 1500 Bilder.
-math(EXPR _exit_bild "1500 + ${_form_hp_soll} * 3")
+# Endbild: erster Treffer F1237, 15 je Treffer. Gemessen: 150 HP -> 10 Treffer bis F1464, Szene F1486 (~25 Bilder je Treffer);
+# 1000 HP (Probelauf mit dem GR-Wert) -> 64 Treffer bis F4500 (~51 Bilder je Treffer, Leon wird 31x getroffen und unterbrochen).
+# 1500 + 4 x HP: 150 -> 2100, 1000 -> 5500.
+math(EXPR _exit_bild "1500 + ${_form_hp_soll} * 4")
 math(EXPR _limit_s "120 + ${_exit_bild} / 20")
 
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
@@ -126,6 +131,7 @@ set(_form_alt "")
 set(_treffer 0)
 set(_abzug 0)
 set(_max_einzel 0)
+set(_hp_hoch "")
 set(_erster_treffer "")
 set(_pl_alt "")
 set(_pl_treffer 0)
@@ -177,6 +183,9 @@ foreach(_z IN LISTS _zeilen)
             set(_phase 4)
             continue()
         endif()
+        if(NOT _form_alt STREQUAL "" AND _fhp GREATER _form_alt AND _hp_hoch STREQUAL "")
+            set(_hp_hoch "F${_bild} ${_form_alt} -> ${_fhp}")
+        endif()
         if(NOT _form_alt STREQUAL "" AND _fhp LESS _form_alt)
             math(EXPR _treffer "${_treffer} + 1")
             math(EXPR _einzel "${_form_alt} - ${_fhp}")
@@ -202,21 +211,25 @@ endif()
 if(_hp_c STREQUAL "" OR NOT _hp_c GREATER 0 OR NOT _hp_c EQUAL _form_hp_soll)
     string(APPEND _f "\n Wagen C (F${_bild_c}): Form mit HP '${_hp_c}', erwartet ${_form_hp_soll} (RE15_BB_FORM_HP, N1: 0)")
 endif()
-if(_rueck STREQUAL "")
-    string(APPEND _f "\n keine Rueckstoss-Szene (Clip 13, HP 1) bis F${_exit_bild}")
-endif()
 if(_treffer LESS _treffer_min)
-    string(APPEND _f "\n Kampf: ${_treffer} Treffer auf die Form bis zur Rueckstoss-Szene, erwartet >= ${_treffer_min}")
+    string(APPEND _f "\n Kampf: ${_treffer} Treffer auf die Form bis zur Rueckstoss-Szene bzw. F${_exit_bild}, erwartet >= ${_treffer_min}")
 endif()
-math(EXPR _abzug_min "${_form_hp_soll} - ${_max_einzel}")
-if(_abzug LESS _abzug_min OR _abzug LESS 1)
-    string(APPEND _f "\n Kampf: Form verliert bis zur Rueckstoss-Szene nur ${_abzug} HP, erwartet >= ${_abzug_min} (${_form_hp_soll} - Einzelabzug ${_max_einzel})")
+if(NOT _hp_hoch STREQUAL "")
+    string(APPEND _f "\n Kampf: HP der Form steigen im Kampf (${_hp_hoch}), der Schaden bleibt nicht")
+endif()
+if(NOT _rueck STREQUAL "")
+    math(EXPR _abzug_min "${_form_hp_soll} - ${_max_einzel}")
+    if(_abzug LESS _abzug_min OR _abzug LESS 1)
+        string(APPEND _f "\n Kampf: Rueckstoss-Szene F${_rueck} schon nach ${_abzug} HP Abzug, erwartet >= ${_abzug_min} (${_form_hp_soll} - Einzelabzug ${_max_einzel})")
+    endif()
+elseif(_form_alt STREQUAL "" OR NOT _form_alt GREATER 0)
+    string(APPEND _f "\n keine Rueckstoss-Szene (Clip 13, HP 1) bis F${_exit_bild}, Form steht bei HP '${_form_alt}'")
 endif()
 if(_pl_treffer LESS 1)
-    string(APPEND _f "\n Kampf: Leon wird zwischen dem ersten Treffer (F${_erster_treffer}) und der Rueckstoss-Szene (F${_rueck}) nicht getroffen")
+    string(APPEND _f "\n Kampf: Leon wird zwischen dem ersten Treffer (F${_erster_treffer}) und dem Kampfende (Rueckstoss F${_rueck}) nicht getroffen")
 endif()
 message(STATUS "r41_form_wagenweg: Soll-HP ${_form_hp_soll}, Wagen B ${_hp_b}, Wagen C ${_hp_c} (F${_bild_c}), "
-               "Treffer ${_treffer} (Abzug ${_abzug}, groesster ${_max_einzel}) ab F${_erster_treffer}, Rueckstoss F${_rueck}, Leon getroffen ${_pl_treffer}x, "
+               "Treffer ${_treffer} (Abzug ${_abzug}, groesster ${_max_einzel}) ab F${_erster_treffer}, Rueckstoss F${_rueck}, Form-HP zuletzt ${_form_alt}, Leon getroffen ${_pl_treffer}x, "
                "exit=${_rv}, Lauf ${WORKDIR}")
 if(_f)
     message(FATAL_ERROR "r41_form_wagenweg: FEHLER${_f}")
