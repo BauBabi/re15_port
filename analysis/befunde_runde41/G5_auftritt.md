@@ -5,7 +5,8 @@ von Birkin aus dem Zug, sollst du die letzte Stufe GENAUSO machen wie bei Reside
 eine Grossaufnahme an seitlich der offenen Stelle des Zuges, und dann kommen da zunaechst die Tentakel vom finalen Birkin G5, und
 der zieht ihn dann rein. Schau es dir an!"
 
-Stand: Nachbesserung 3 (Abschnitt 9; Masse in Schnitt 16/17 mit Gewicht 1 gezeichnet, Vorkampf-Puls nach RE2 @0x801044FC; erledigt
+Stand: Nachbesserung 5 (Abschnitt 11; M4 Tunnellampen = RE2-Raumobjekte 3/4, Beben, Beben-Ton; Truemmer/Vibration offen). Davor Nachbesserung 4
+(Abschnitt 10) und Nachbesserung 3 (Abschnitt 9; Masse in Schnitt 16/17 mit Gewicht 1 gezeichnet, Vorkampf-Puls nach RE2 @0x801044FC; erledigt
 8.9 erster Punkt "Masse anders gedreht/hoeher"). Davor Nachbesserung 2 (Abschnitt 8; ersetzt in 2.2 die PORT-WAHL "Lichtsatz 16/17 = Cut 11" durch RE2-Lichtsatz 9/10 und in 7.5 die
 offenen Punkte Pistolenlauf, G5-Richtung, Speer-Phase, Uebergang Kampf). Davor Nachbesserung 1 nach Abnahme 1 (Abschnitt 7; ersetzt in
 2.1/2.2/3/4 "Leon steht", die Spielerlagen 1400/13873 im Cut-12-Teil und "XA-Ton nicht gebaut"). Belege: `G5_belege/`, `G5_belege/nb1/`,
@@ -812,3 +813,141 @@ gesetzt (kein Spielwert): 15 Kontaktbilder, Laufproben 3/3, 0 Bildenden in der W
 - M4 Tunnellampen/Truemmer/Beben/Vorlauf-Ton (10.5) - offen gefuehrt.
 - Nebenbefunde 10.6 (Sonde ungestreckt, Kind-Kollision-Kette, Spielerlage +58/+170, Kommando nullt +0x158).
 - M3/M5/M6 unveraendert (PORT-WAHL bzw. PSX).
+
+## 11. Nachbesserung 5 (M4: Tunnellampen, Beben, Beben-Ton; Abnahme 4 BESTANDEN, Wunsch Nutzer "kannst du machen")
+
+Belege: `G5_belege/nb5/` (Leisten, `messung_*.txt`, Werkzeuge `nb5/werkzeug/`). Alle Adressen selbst disassembliert (`nb5/messung_re2_disasm.txt`,
+RE2-EXE `info/re2leon/SLUS_007.48`, capstone), Skript `nb5/messung_re2_scd_sub04_05_09_12.txt` (`re2_scd_dump.py ROOM7040`), RAM aus den
+Abnahme-1-Savestates s01..s26 (`nb5/messung_lampen_ram.txt`, RAM-Leser `abnahme4/werkzeug/re2ram4.py`). Ersetzt 10.5 ("M4 offen").
+
+### 11.1 RE2-Befund
+
+**Skript** (ROOM7040 MAIN, Task-Plaetze in Klammern):
+- sub06 (Platz 9) @0x01892 `29 09` Cut_chg(9), @0x01894 `04 07 18 09` Evt_exec(7, sub09), @0x01898 Evt_next, @0x0189A `04 06 18 04`
+  Evt_exec(6, sub04); @0x0193A `29 0a` Cut_chg(10), @0x0193C `04 07 18 0a` Evt_exec(7, sub10).
+- sub09 @0x01B20 `04 04 18 0b` Evt_exec(4, sub11), @0x01B24 `09 0a 0a 00` Sleep 10, @0x01B28 `04 03 18 0c` Evt_exec(3, sub12).
+- sub11/sub12 @0x01B4C/@0x01B98: Work_set(4,3/4), Pos_set `32 00 00 00 d0 ee 60 be` = (0,-4400,-16800) @0x01B50/@0x01B9C, Dir_set
+  `33 00 00 0c 00 0c 00 04` = (0x0C00,0x0C00,0x0400) @0x01B58/@0x01BA4; Schleife: If Member_cmp `3e 00 0b 04 e0 b1` (x <= -20000) ->
+  Pos_set wie oben; Member_copy V16 <- x, Calc `26 00 01 10 e8 03` (V16 -= 1000), Member_set2 x <- V16, Evt_next, Goto.
+- sub10 @0x01B2E: Evt_kill 3/4, Pos_set `32 00 00 83 00 00 00 83` = (-32000,0,-32000) fuer Objekt 3 und 4.
+- sub04 (Platz 6) @0x0169E: Evt_exec(8, sub05), Gosub sub14 (Vibration), Sce_shake_on `5c 00 fd` @0x016A4, Evt_next, `5c 00 fb`
+  @0x016A8, Evt_next, Se_on `36 02 0c 00 01 00 ..` @0x016AC, For `0d 00 06 00 05 00` (5 Durchlaeufe, `lh 4(pc)` @0x80053b28)
+  { `5c 00 f9`, Evt_next }, dann `fa fb fc fd fe ff` je ein Bild (@0x016C4..@0x016D8).
+- sub05 @0x016DE: 8 x Sce_espr_on `3a 00 19 ..` Effekt 0x19 an der Decke (y -5040; x/z (1060,-21520), (3000,-24545), (2670,-23420),
+  (500,-25330), (2830,-21090)), Sleep 5/5/3/5/5/3 dazwischen.
+
+**Befehle** (Opcode-Tabelle @0x800a74c8): Work_set Typ 4 -> 0x800d0324 + n*0x1F8 (Tabelle @0x800111f0[3] = 0x80055994); Pos_set
+@0x80055ba0 `sw +0x38/+0x3C/+0x40`; Dir_set @0x80055bd0 `sh +0x74/+0x76/+0x78`; Member 0x0B = x (`lw 0x38` @0x80055ffc, `sw 0x38`
+@0x80055d30); Member_cmp Op 4 = "<=" (@0x80055f18, Tabelle @0x800112d8); Calc Op 1 = `subu` @0x80054664, `sh` @0x80054754 (16 Bit);
+Member_set2 `lh` @0x80055c7c. Obj_model_set @0x80055260: Objekt +0x10 = pc[0x0C] (Lampen 0), Eltern pc[7] & 0xC0 = 0 -> 0x8009db44
+(Einheitsmatrix, t 0, EXE und RAM), Modell = Raumliste +0x30 [n].
+
+**Task-Reihenfolge**: FUN_800536c4 laeuft die Plaetze 0..9 aufsteigend (0x800d7860 + i*0x174, `addiu s1,s1,0x174` @0x8005379c,
+`sltiu v0,s2,0xa` @0x80053794); Evt_exec @0x800538a4 -> FUN_80053138 legt den Task im Platz pc[1] an (@0x80053154 -> @0x800531f8).
+Aus Platz 9 angelegte Tasks kleinerer Nummer laufen erst im Folgebild: Cut_chg(9) Bild C -> sub09 C+1 -> sub11 C+2; sub04 C+2;
+sub10 im Bild nach Cut_chg(10). Aufnahme bestaetigt: Schnitt sichtbar 61,467 s unbewegt, erstes Beben ein Spielbild spaeter.
+
+**Zeichnen** FUN_800363f0 (je Objekt mit Wort+0 & 1): RotMatrix(+0x74) @0x80036470, CompMatrix(Eltern) @0x80036484, Licht je Objektlage
+`jal 0x80076f88` @0x800364ac, Sichtpruefung `jal 0x8002c820` @0x80036534 (Lage gegen *(0x800ce338) = RVD-Ankerzone des Schnitts; RAM
+s01..s11 RDT +0x45C `01 ff 09 00 ..` = Schnitt 9, s12 +0x470 = Schnitt 10; nicht innen und Flag 0x10 nicht gesetzt -> nicht gezeichnet),
++0x10 = 0 -> weder flach noch halbtransparent: FUN_80027bec / FUN_80027dbc (GT3/GT4 beleuchtet, Code `ori a3,0x34` @0x80027c04, Grundfarbe
++0x7C = 0x808080 RAM). FUN_8002c820 Schritt fuer Schritt im Port nachgebaut (re15_g5a_lampe_zone).
+
+**RAM** (`messung_lampen_ram.txt`): Objekt 3/4 an s02..s11 y -4400, z -16800, Drehung 0C00/0C00/0400, x Vielfache von 1000 in -20000..-1000,
+Objekt 4 = Objekt 3 +- 10000; mit der Szenenbild-Zuordnung der Abnahme 4 gilt an s03..s11 ausnahmslos Objekt 3 x = -1000 * (((f - 3) mod 20) + 1);
+s12 (Bild 441) beide geparkt. Weltmatrix +0x54 = (0,0,-4096 / 0,-4096,0 / -4096,0,0) = RotMatrix(0C00,0C00,0400) des Ports. +0x68 (Zeichenlauf)
+ist an s02/06/08/09/11 = +0x38, an s03/04/05/07/10 = +0x38 + 1000: der Zeichenlauf kommt nach dem Skript (Savestate mal davor, mal danach).
+
+**Modell** (ROOM7040.RDT, Liste @0x244, Modell 3 = Modell 4): MD1 @0x28A4, 2012 Byte (Laengenfeld 1492 ohne UV-Tabellen, 0x3080 = MD1
+von Modell 5), TIM @0x33844 (34336 Byte, 8 bpp 128 x 256, CLUT 3 Zeilen @ (0,480)). Inhalt: Tunnelwand 5098 x 3600 (Modell-x 0) mit
+Lampengehaeuse (Prisma x 0..136, +-136, z +-339) und Lichtband (Viereck x 180, Verlaufstextur). Gedreht steht die Wand bei z -16800 dem
+Wagen zugewandt (Nordwand -21990); 10000 Abstand der Objekte bei 1000 je Bild = alle 10 Bilder zieht eine Lampe von rechts nach links
+durch das Tuerloch, sichtbar bei x -4000..-7000 (Schwerpunkt sx 109 / 95 / 81 / 67), sonst hinter den Masken der Wagenwand; bei
+x < -14163 nicht mehr in der Ankerzone (nicht gezeichnet).
+
+**Beben**: Sce_shake_on @0x80058164: s3 = (s8)pc[2] (@0x800581a4), je Zeile 0..239 FUN_8002ac94: Quelle Zeile + pc[2] (@0x8002ad10,
+Rand geklemmt @0x8002ad14-38) -> Ziel Zeile, Breite 0x140 = Bild um -pc[2] Zeilen nach unten, ein Bild je Aufruf. Aufnahme (`messung_beben.txt`,
+320x240): 0 (Schnitt), 3, 5, 8 x 5, 6, 5, 4, 3, 2, 1, 0 - Folge und Laenge (13 Bilder) wie sub04; die Spitze misst 8 statt 7 (Halbzeile der
+640x480-Aufnahme). Balkenkanten unbewegt (RE2 zeichnet die Szenenbalken danach).
+
+**Ton**: Se_on @0x80056428: Code (pc[1]<<24)|(pc[2]<<16) = 0x020C0000 `jal 0x8005ba28` @0x80056530, Lage Spieler (Typ 1, Tabelle @0x80011458).
+Bank 2 = Raumbank: ROOM7040 EDT (RDT [0] 0x6018) Satz 12 `00 01 13 20` = Programm 1, Ton 1, 2 Lagen, VAG 17 (10064 Byte).
+
+### 11.2 Was der Port jetzt tut
+
+| Teil | Datei | Inhalt |
+|---|---|---|
+| Daten | `tools/r41_g5auftritt/re2_m4_7040.py` -> `shared_assets/RE2/R704_LAMPE.MD1` (2012 B), `R704_LAMPE.TIM` (34336 B), `R704_BEBEN.VBS` (Mini-Bank Satz 0 = EDT 12, 13208 B), `engine/src/gen/r41_g5a_beben_bank.inc` | bytegleich aus ROOM7040.RDT; Paket-Gate `release/make_package.sh` (Runde-41-Liste) |
+| Skript | `engine/src/g5auftritt_r41.c` (Block "M4") | sub11/sub12 als Bild-Takt (Pos_set/If/Calc mit int16 wie RE2), Start im Vorlaufbild 2 (= C+2), sub12 10 Bilder spaeter, Parken im Bild 438 (sub10, Platz 7 < 9); Beben-Folge ab Vorlaufbild 2, Ton-Haken im Vorlaufbild 4 (sub04-Bild 3); `re15_g5a_lampe`, `re15_g5a_lampe_zone` (FUN_8002c820 mit den Ankerzonen RDT @0x45C/@0x470), `re15_g5a_beben` |
+| Zeichnen | `platform/pc/src/g5lampen_pc.c`, Aufruf `main.c` hinter dem Kanister | wie FUN_800363f0: RotMatrix, Licht des aktiven Schnitts (16 = RE2-Lichtsatz 9), objpoly_r38 (RTPT/NCLIP), beleuchtete Dreiecke; Tiefe gegen die RE2-Masken wie jedes Prop; TIM-Platz 57 (`render_pc.c` RE15_TIM_SLOT_MAX 57 -> 58) |
+| Beben | `render_pc.c` `re15_render_pc_beben`, gesetzt in `main.c` vor `re15_render_end_frame` | Viewport des Szenenteils (Hintergrund, Schatten, Dreiecke, Masken) um -pc[2] nach unten, Balken/Text/Blenden danach unverschoben; der logische Letterbox-Viewport wird gesichert und zurueckgesetzt |
+| Ton | `g5lampen_pc.c` `beben_ton` | Mini-Bank wie kanister2080_pc.c (`re15_audio_se_play_bank`) |
+
+⛔ PORT-WAHL (Phase): RE2 Cut_chg(9) -> Armierung = 59 Bilder (RAM-Phase: sub11 beginnt bei Szenenbild -57 mod 20 = C+2; Aufnahme: Schnitt
+sichtbar bei -59,8 + Achsenversatz 1,5..3,3 = C+1); der Port-Vorlauf ist 55 (exe F1558 -> F1613). Damit die Lampe bei gleichem Szenenbild
+an derselben Stelle steht wie in RE2, laeuft sub11 im Port bei seinem ersten Bild G5A_LAMPE_VORSPRUNG = 59 - 55 = 4 Bilder nach; das Skript
+selbst ist unveraendert. Folge: am Schnitt ausgerichtet steht die erste Lampe im Port 4 Bilder frueher im Tuerloch (Vorlaufbild 2 statt ~6).
+Das Beben bleibt am Schnitt ausgerichtet (wie RE2: Schnitt, dann ein Bild spaeter Beben 3). Der Unit-Takt hat einen anderen Vorlauf (58);
+der Riegel bildet die Lampenzeit deshalb ueber den gemessenen Vorlauf ab (s. 11.5).
+
+### 11.3 Messwerte gegen RE2 (echte exe, eigene exe-Kopie, RE15_FRAMEDUMP F1540..1740, Messzeile RE15_G5A_LAMPE_LOG bis F2060)
+
+- **Lampenzustand exe gegen RE2-RAM** (`messung_exe_ram.txt`): s03..s12 **10 von 10 bitgleich**, Leon 5090 und Elza 5091 (beide Objekte, inkl.
+  Ruecksetzen bei -20000 und Parken bei Bild 441). Erstes gesetztes Bild F1560 (Vorlaufbild 2).
+- **Lampenfleck im Bild** (`messung_lampe_2_s120.txt`, Fleck = Grauwert > 120 im Tuerloch, RE2-Zeitachse -2,0 wie Abnahme 4, Bild -54..110):
+  in 48 Bildern in RE2 und Port, Schwerpunkt |dx| Median 0,1 px, |dy| Median 0,4 px; Leon = Elza. Nur RE2 (17): an der vierten Lage x 67
+  liegt die Port-Lampe knapp unter der Schwelle (Spitze 105 gegen RE2 135), Bild -54 (Port-Vorlauf kuerzer: dort erst Vorlaufbild 1), Bild -31.
+  Nur Port (2): Bild -23/-22, wo RE2-Leon das Loch verdeckt (Leon steht im Port weiter rechts, bekannt seit Abnahme 2). Schwelle 150:
+  31 Bilder, |dx| 0,6 / |dy| 0,7. Ohne Achsenkorrektur (`messung_lampe_0_s120.txt`) liegen die Lampen 28 px auseinander - die Korrektur -2,0
+  ist die der Abnahme 4.
+- **Helligkeit** (`messung_lampe_helligkeit.txt`): integrierter Lampenfleck Port/RE2 0,82..0,89; ruhige Hintergrundflaechen derselben Bilder
+  0,91..1,05. Die Port-Lampe ist also rund 15 % dunkler als in RE2 - offen (11.7), nicht angepasst.
+- **Beben** (`messung_beben.txt`): Port Leon/Elza F1559 0 (Schnitt sichtbar), F1560..F1572 3, 5, 7 x 5, 6, 5, 4, 3, 2, 1, dann 0 - gleiche Folge
+  und Lage zum Schnitt wie RE2 (RE2-Spitze 8, s.o.).
+- **Ton**: `[g5lampe] F1562 Beben-Ton R704_BEBEN.VBS Satz 0` (Vorlaufbild 4 = sub04-Bild 3), Leon und Elza.
+
+### 11.4 Sichtbeleg (Leisten RE2 echt | Port Leon | Port Elza, RE2-Zeitachse -2,0)
+
+- `nb5/nb5_vorlauf_bild-56_bis_-34.jpg`: ganzer Bildschirm, jedes zweite Bild. Bild -56 zeigt der Port noch die Rueckstoss-Szene (Vorlauf
+  4 Bilder kuerzer), ab -54 dieselbe Einstellung mit Lampe im Loch wie RE2.
+- `nb5/nb5_tuerloch_bild-56_bis_-20.jpg`: Tuerloch jedes Bild - Lampe mit Lichtband zieht in denselben Bildern an derselben Stelle durch.
+- `nb5/nb5_lampenphase_bild-4_bis_107.jpg`: Lampenbilder der Szene; die Arme ziehen wie in RE2 vor der Lampe vorbei (Bild 46), ab ~100 deckt
+  die Masse das Loch.
+- `nb5/nb5_beben_schnitt+0_bis_+15.jpg`: am Schnitt ausgerichtet (RE2 61,475 s + k/29,9 | Port F1559 + k).
+
+### 11.5 Riegel und Tests (re15_port/build)
+
+**Riegel `unit_r41_g5auftritt` (erweitert, 5090 und 5091):** Daten (R704_LAMPE.MD1/.TIM Laenge, Port-Parser 1 Mesh / 18 Dreiecke / 19 Vierecke,
+8-bpp-TIM 128 x 256; Bytevergleich gegen ROOM7040.RDT, wenn `info/` da ist); Sichtpruefung FUN_8002c820 (x -14000 innen, -15000 aussen,
+Parkplatz aussen, Cut 12 nie); RE2-Lampenfleck der Aufnahme (Bild -44/-43/-42) liegt im projizierten Gehaeusekasten (3/3); Beben in jedem
+Vorlaufbild = sub04-Folge ab Vorlaufbild 2; Ton genau einmal im Vorlaufbild 4; keine Lampe vor sub11; **Lampen gegen RE2-RAM s03..s12 20 von 20**
+(Lampenzeit ueber den gemessenen Testvorlauf 58 auf die exe abgebildet, Parken am Schnitt 10); sichtbar in 438 Szenenbildern, nach Bild 437 in 0.
+**Gegenprobe** (Verhalten Kopf 44a9e8b7c, nur Diagnose-Stubs angehaengt, eigener Bau-Baum): 12 Fehler (je Raum Sichtpruefung, Beben 13 Bilder,
+Ton 0 x, Lampenstart, RAM 2 von 20, sichtbar 0) - **rot**.
+
+| Lauf | Ergebnis |
+|---|---|
+| `unit_r41_g5auftritt` -V | gruen, 5090 und 5091 (NB4-Riegel unveraendert gruen) |
+| Gegenprobe (s.o.) | 12 Fehler, alle NB5 - rot |
+| Alle Nicht-Integrationstests ohne die 7 df-haengenden Skripttests (-j 6) | **1068/1068 gruen**, 573 s |
+| Integration (-j 3): r41_birkin_pistole, r41_g5_tod, r41_g5_westen, r35_zgirl_5090, r37_bissarm_echtlauf, r37_elzaems_elza1181griff, r37_re2zombie, r38_wasserzombie, r41_zombiefresser_tuer2000, pri_masken, r36_pri_schatten, dazu wegen TIM-Platz/Renderer r41_kanister2080, r41_re2gator, r41_gatorszene_tod_explosion | **14/14 gruen**, 1000 s |
+| unit_r38_releaseskript_{trocken,ablauf,fehler_bau,fehler_umfeld,cmd}, unit_r39_titelversion_ablauf, unit_r35_android_bash_mutanten | nicht gelaufen (Umgebung: df.exe haengt), wie Abnahme 3/4 |
+
+Nur eigene Prozesse (exe-Kopien `re15_g5nb5_*`) liefen; keiner musste beendet werden. `nb5/messung_tests.txt`.
+
+### 11.6 Commits
+
+- Code-Commit: fix/feat(r41-g5auftritt) Nachbesserung 5 - Tunnellampen, Beben, Beben-Ton, Daten, Riegel.
+- Folge-Commit: dieses Kapitel und `G5_belege/nb5/`.
+
+### 11.7 Offen nach Nachbesserung 5
+
+- **Truemmer/Staub (sub05, 8 x Sce_espr_on Effekt 0x19)**: belegt (Lagen, Takt, Raum-ESP ROOM7040 Ids @0x35D8 `19 ff ..`, Daten [19] @0x36F8, TIM
+  [20] @0x18984; Aufnahme Bild -54..-34: fallende Brocken und Staubwolken oben Mitte), nicht gebaut: braucht die Raum-ESP-Registrierung der RE2-FX-
+  Maschine fuer 5090/5091 (wie gator_fx_r41_pc.c fuer ROOM40A0: VRAM-Lage FUN_8001bd38, eigener Atlas) und die Pruefung, ob die Ops von Effekt
+  0x19 in engine/src/re2_fx.c vorhanden sind.
+- **Vibration (sub13/sub14/sub15, Opcodes 0x8A/0x8B/0x8C, Handler @0x80059348/@0x80059394/@0x800593e4)**: nicht nachgelesen, nicht gebaut.
+- **Lampe ~15 % dunkler** (11.3): RE2s Objektlicht 0x80076f88 ist gegen re15_light_setup_actor nicht verglichen.
+- **Vorlauf 55 statt 59** (bekannt seit Abnahme 2): Ursache der Phasen-PORT-WAHL; die erste Lampe steht am Schnitt gemessen 4 Bilder frueher.
+- PSX-Bau: Lampen und Beben nur PC (wie Schnitte 16/17).
+- Nebenbefunde 10.6 und M3/M5/M6 unveraendert.

@@ -1,0 +1,15 @@
+Bild  Lampe-x  Fenstermitte  RE2 (640x480)  Port Leon (960x720)  Port/RE2
+ -44     108    108        7880        6694    0.85
+ -43      95     95        7447        6661    0.89
+ -42      81     81        6619        5850    0.88
+ -41      67     67        5652        4863    0.86
+ -34     108    108        7880        6490    0.82
+ -33      95     95        7449        6417    0.86
+ -32      81     81        6616        5611    0.85
+   6     108    108        7883        6490    0.82
+   7      95     95        7449        6417    0.86
+   8      81     81        6622        5611    0.85
+Wand rechts        RE2   29.1  Port   28.3  Port/RE2 0.97
+Lichtleiste Mitte  RE2   45.2  Port   47.6  Port/RE2 1.05
+Decke              RE2   40.7  Port   37.1  Port/RE2 0.91
+Pfosten links      RE2   26.6  Port   27.4  Port/RE2 1.03

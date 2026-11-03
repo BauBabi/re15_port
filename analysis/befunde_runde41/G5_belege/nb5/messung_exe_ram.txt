@@ -1,0 +1,28 @@
+== fd_leon: 503 Zustandszeilen
+  s03 Bild   31 F1644: Port Obj 3 an  -9000 Obj 4 an -19000 | RE2  -9000 -19000 gleich
+  s04 Bild   80 F1693: Port Obj 3 an -18000 Obj 4 an  -8000 | RE2 -18000  -8000 gleich
+  s05 Bild  129 F1742: Port Obj 3 an  -7000 Obj 4 an -17000 | RE2  -7000 -17000 gleich
+  s06 Bild  165 F1778: Port Obj 3 an  -3000 Obj 4 an -13000 | RE2  -3000 -13000 gleich
+  s07 Bild  215 F1828: Port Obj 3 an -13000 Obj 4 an  -3000 | RE2 -13000  -3000 gleich
+  s08 Bild  264 F1877: Port Obj 3 an  -2000 Obj 4 an -12000 | RE2  -2000 -12000 gleich
+  s09 Bild  313 F1926: Port Obj 3 an -11000 Obj 4 an  -1000 | RE2 -11000  -1000 gleich
+  s10 Bild  363 F1976: Port Obj 3 an  -1000 Obj 4 an -11000 | RE2  -1000 -11000 gleich
+  s11 Bild  412 F2025: Port Obj 3 an -10000 Obj 4 an -20000 | RE2 -10000 -20000 gleich
+  s12 Bild  441 F2054: Port Obj 3 park -32000 Obj 4 park -32000 | RE2 -32000 -32000 gleich
+  10 von 10 Savestates bitgleich
+  Beben (Vorlaufbild, Wert): [(2, -3), (3, -5), (4, -7), (5, -7), (6, -7), (7, -7), (8, -7), (9, -6), (10, -5), (11, -4), (12, -3), (13, -2), (14, -1)]
+  erstes Bild mit Obj 3 an: F1560 (Vorlauf 2)
+== fd_elza: 503 Zustandszeilen
+  s03 Bild   31 F1644: Port Obj 3 an  -9000 Obj 4 an -19000 | RE2  -9000 -19000 gleich
+  s04 Bild   80 F1693: Port Obj 3 an -18000 Obj 4 an  -8000 | RE2 -18000  -8000 gleich
+  s05 Bild  129 F1742: Port Obj 3 an  -7000 Obj 4 an -17000 | RE2  -7000 -17000 gleich
+  s06 Bild  165 F1778: Port Obj 3 an  -3000 Obj 4 an -13000 | RE2  -3000 -13000 gleich
+  s07 Bild  215 F1828: Port Obj 3 an -13000 Obj 4 an  -3000 | RE2 -13000  -3000 gleich
+  s08 Bild  264 F1877: Port Obj 3 an  -2000 Obj 4 an -12000 | RE2  -2000 -12000 gleich
+  s09 Bild  313 F1926: Port Obj 3 an -11000 Obj 4 an  -1000 | RE2 -11000  -1000 gleich
+  s10 Bild  363 F1976: Port Obj 3 an  -1000 Obj 4 an -11000 | RE2  -1000 -11000 gleich
+  s11 Bild  412 F2025: Port Obj 3 an -10000 Obj 4 an -20000 | RE2 -10000 -20000 gleich
+  s12 Bild  441 F2054: Port Obj 3 park -32000 Obj 4 park -32000 | RE2 -32000 -32000 gleich
+  10 von 10 Savestates bitgleich
+  Beben (Vorlaufbild, Wert): [(2, -3), (3, -5), (4, -7), (5, -7), (6, -7), (7, -7), (8, -7), (9, -6), (10, -5), (11, -4), (12, -3), (13, -2), (14, -1)]
+  erstes Bild mit Obj 3 an: F1560 (Vorlauf 2)
