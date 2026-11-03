@@ -1,0 +1,10 @@
+== leon
+Ton-Takte 3600.0
+R704_XA0B.XAS Dauer 8.85 s Einsatz bei Ton-Takt 2171.00, Korrelation 0.838
+R704_XA0C.XAS Dauer 11.31 s Einsatz bei Ton-Takt 2477.00, Korrelation 0.664
+Abstand 0C - 0B: 306.00 Takte (Soll 438 - 132 = 306)
+== elza
+Ton-Takte 3600.0
+R704_XA0B.XAS Dauer 8.85 s Einsatz bei Ton-Takt 2171.00, Korrelation 0.838
+R704_XA0C.XAS Dauer 11.31 s Einsatz bei Ton-Takt 2477.00, Korrelation 0.664
+Abstand 0C - 0B: 306.00 Takte (Soll 438 - 132 = 306)
