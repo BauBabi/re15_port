@@ -627,9 +627,10 @@ static void test_m3_mutation(unsigned raum, const char *rdt)
     CHECK(n < 260, "M3 %s: Mutation dauert %d Ticks unter Beschuss", rdt, n);
     fprintf(stderr, "%s M3: Mutation %d Ticks unter Dauerfeuer, %d Treffer, HP %d\n", rdt, n, treffer_n, b->hp);
     /* Die Form bringt eigene HP mit (RE2-Ctor +0x156 @0x8010067c, Port 0x96 @0x80118094), nicht den Mutationsrest */
-    CHECK(b->hp < 150, "M3 %s: Vorbedingung, Dauerfeuer hat die HP nicht gesenkt (%d)", rdt, b->hp);
+    CHECK(b->hp < RE15_BB_FORM_HP, "M3 %s: Vorbedingung, Dauerfeuer hat die HP nicht gesenkt (%d)", rdt, b->hp);
     tick(1);
-    CHECK(b->hp == 150 && b->motion == 10, "M3 %s: Form kommt mit HP %d (Clip %d) statt 150", rdt, b->hp, b->motion);
+    CHECK(b->hp == RE15_BB_FORM_HP && b->motion == 10, "M3 %s: Form kommt mit HP %d (Clip %d) statt %d", rdt, b->hp, b->motion,
+          RE15_BB_FORM_HP);
     re15_bf_modell_hook(NULL);
     free(buf);
 }
@@ -1440,6 +1441,52 @@ static void test_n1_blut_kopf(unsigned raum, const char *rdt)
     free(buf);
 }
 
+/* Nachbesserung 3, N1 der AN-Abnahme 2: Wagenweg A -> B -> C. Die Wagentueren in 5090/5091 fuehren in denselben Raum
+ * (Selbst-Tuer, scd_room_reenter; kein re15_enemy_reset), Sce_em_set legt die Form jedes Mal neu in Slot 2 an (+0x4 = 0
+ * `sw zero,4(s0)` @0x800421e0, HP 0). Das Original ruft dann den G4-Ctor (Tabelle @0x8010af60[0] = 0x8010062c), der die HP
+ * schreibt (`sh v0,342(s1)` @0x8010067c). Gemessen vor der Behebung (Lauf nb3/vorher_kette, exe 917195879): A 300 (EM30-INIT,
+ * Bank noch nicht da), B 150, C 0. Raumladung wie die 6030-Tuer bzw. der Debug-Sprung (raum_laden: re15_enemy_reset), dann die
+ * Tueren B (Schnitt 9) und C (Schnitt 14) wie im Lauf. Gegenprobe: im selben Raum setzt der Eintritt die HP nicht zurueck. */
+static void test_n3_wagenweg(unsigned raum, const char *rdt)
+{
+    static const struct { int32_t x, z; uint8_t schnitt; const char *name; } k_tuer[] = {
+        { 24700,  -9250,  9, "B" },                    /* DOOR FIRE slot 0 -> cut 9, spawn (24700,0,-9250) */
+        { 24800, -23550, 14, "C" },                    /* DOOR FIRE slot 2 -> cut 14, spawn (24800,0,-23550) */
+        { 24800, -23550, 14, "C2" },                   /* noch eine Selbst-Tuer: die Form ist wieder neu */
+    };
+    uint8_t *buf = raum_laden(rdt, raum);
+    CHECK(buf != NULL, "Wagenweg: %s nicht ladbar", rdt);
+    if (!buf) return;
+    re15_actor_t *b = birkin_finden(), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (!b || !form_bank()) { CHECK(0, "Wagenweg %s: kein 0x30 / keine Bank", rdt); free(buf); return; }
+    fprintf(stderr, "%s Wagenweg: A hp %d st %d/%d (Bank fehlte beim Spawn)\n", rdt, b->hp, b->state, b->sub_state_1);
+    for (unsigned w = 0; w < sizeof k_tuer / sizeof k_tuer[0]; w++) {
+        pl->x = k_tuer[w].x; pl->z = k_tuer[w].z;
+        scd_room_reenter(&s_rdt, pl->x, pl->z, k_tuer[w].schnitt);
+        for (int i = 0; i < 4; i++) scd_vm_tick();
+        b = birkin_finden();
+        CHECK(b != NULL, "Wagenweg %s Wagen %s: kein 0x30", rdt, k_tuer[w].name);
+        if (!b) break;
+        tick(2);                                       /* grid 0x33: Wurzel friert ein, die Form wartet */
+        fprintf(stderr, "%s Wagenweg: %s hp %d st %d/%d grid 0x%02x\n", rdt, k_tuer[w].name, b->hp, b->state, b->sub_state_1, b->grid_id);
+        CHECK(b->hp == RE15_BB_FORM_HP, "Wagenweg %s Wagen %s: Form mit HP %d statt %d (G4-Ctor @0x8010067c)", rdt, k_tuer[w].name,
+              b->hp, RE15_BB_FORM_HP);
+        CHECK(b->state == 1 && b->sub_state_1 == 0, "Wagenweg %s Wagen %s: Zustand %d/%d statt Auftritt 1/0 (+0x4 = 1 @0x80100654)",
+              rdt, k_tuer[w].name, b->state, b->sub_state_1);
+    }
+    if (b) {   /* Gegenprobe im selben Raum: Freigabe (sub04 Member_set(0x0c,0x13) @0x130A), Treffer, weiter ticken */
+        b->grid_id = 0x13; b->no_draw = 0;
+        stelle(b, pl, 7000);
+        tick(3);
+        int hp0 = b->hp;
+        CHECK(re15_enemy_take_damage(b, 5) == 1 && b->hp < hp0, "Wagenweg %s: Form nimmt keinen Treffer (hp %d)", rdt, b->hp);
+        int hp1 = b->hp;
+        for (int i = 0; i < 30; i++) { stelle(b, pl, 7000); tick(1); }
+        CHECK(b->hp == hp1, "Wagenweg %s: HP im selben Raum von %d auf %d gesetzt (Eintritt ohne neue Anlage)", rdt, hp1, b->hp);
+    }
+    free(buf);
+}
+
 /* Stufe 3: grid 0x33 friert die Wurzel ein (@0x80116a7c-a88); die Riesenform zeigt dann den Stehen-Clip im Kreis. */
 static void test_wartet(unsigned raum, const char *rdt)
 {
@@ -1494,6 +1541,7 @@ int main(void)
         /* M1/M3/M4 (Tausch EM30 -> Form nach der Mutation in 5090) entfallen seit Stufe 3: die Riesenform ist ab der
          * Raumladung da, es gibt in 5090 keine Mutation mehr (re15_bf_mutation_offen = 0, STUFE3.md). */
         test_wartet(id, rdt);
+        test_n3_wagenweg(id, rdt);
         test_m5_takt(id, rdt);
         test_m6_pose(id, rdt);
         test_m7_weichen_treffer(id, rdt);

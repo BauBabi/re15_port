@@ -47,6 +47,13 @@ int  re15_bf_mutation_offen(void);
 void re15_bf_mutation_fertig(int slot);
 void re15_bf_modell_hook(void (*fn)(uint8_t type));
 
+/* Start-HP der Bahnsteig-/Riesenform: die Zuweisung im Eintritt von re15_bb_tick (birkin_bahnsteig.c), dem Port-Gegenstueck des
+ * G4-Ctors 0x8010062c, der +0x156 schreibt (`sh v0,342(s1)` @0x8010067c, Bytes 56 01 22 a6). Wert in diesem Zweig: PORT-MASS 150
+ * = die 0x96 der Mutation (`ori v0,zero,0x96` / `sh v0,154(v1)` @0x80118094-98 STAGE3.BIN, Bytes 96 00 02 34 9a 00 62 a4), mit der
+ * die 0x30-Waffen rechnen. Die Spur GR hebt ihn auf 1000 (G4-Ctor `addiu v0,zero,1000` @0x80100678, Bytes e8 03 02 24); Engine
+ * und Tests (auch integration_r41_form_wagenweg, liest diese Zeile) nehmen ihn von hier, die Integration aendert nur den Wert. */
+#define RE15_BB_FORM_HP 150
+
 /* Birkin (0x30) in 5090 nach Todesphase 2 an den G5 uebergeben (Typwechsel 0x30 -> 0x36). */
 void re15_bf_morph_zu_g5(int slot);
 

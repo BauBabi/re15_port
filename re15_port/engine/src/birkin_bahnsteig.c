@@ -783,7 +783,17 @@ void re15_bb_tick(int slot)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     int32_t dist;
 
-    if (s_bb.slot != slot) {                           /* Eintritt: Port-Gegenstueck des Ctor-Teils 0x8010062c */
+    /* Eintritt = Port-Gegenstueck des G4-Ctors 0x8010062c. Das Overlay ruft ihn ueber den Hauptzustand: `lbu v0,4(s5)` @0x80100314
+     * (04 00 a2 92), Tabelle @0x8010af60[0] = 0x8010062c (`lw v0,-20640(at)` @0x80100328, 60 af 22 8c; `jalr v0` @0x80100330); +0x4 = 0
+     * schreibt RE1.5 Sce_em_set bei JEDER Anlage (`sw zero,4(s0)` @0x800421e0, 04 00 00 ae), der Ctor stellt +0x4 = 1
+     * (`sw v0,4(s1)` @0x80100654, 04 00 22 ae).
+     * ⛔ NACHBESSERUNG 3 (AN-Abnahme 2 N1): bis hierher lief der Eintritt nur bei einem neuen SLOT. Die Wagentueren in 5090/5091 sind
+     * Selbst-Tueren (Ziel = derselbe Raum, scd_room_reenter; dort kein re15_enemy_reset und damit kein re15_bb_reset). Sce_em_set
+     * legte die Form in Wagen B und C in denselben Slot 2 neu an (hp 0 @scd_vm.c op_sce_em_set, +0x4 0). In Wagen B lief der
+     * Eintritt noch (s_bb.slot war -1, die Raumladung vor Wagen A hatte die Form vor der Bank angelegt, EM30-INIT), in Wagen C
+     * nicht mehr: die Form kam mit HP 0 in den Kampf, der erste Treffer startete die Rueckstoss-Szene. Neue Anlage (+0x4 == 0)
+     * loest den Eintritt jetzt wie im Original aus, unabhaengig vom Slot. */
+    if (s_bb.slot != slot || e->state == 0) {
         memset(&s_bb, 0, sizeof s_bb);
         s_bb.slot = slot;
         /* Kasten: Wurzel = Becken, die Masse sitzt davor (Gestaltung; RE2-Kaesten +0x90/+0xb0 @0x80100718-a4
@@ -795,8 +805,8 @@ void re15_bb_tick(int slot)
         /* Eigene HP der neuen Form: RE2 schreibt sie im Ctor (+0x156 = 1000/900/1100 je Schwierigkeit @0x8010067c-b8), wie
          * der G5 (@0x801003fc, re15_bf_morph_zu_g5). Port-Mass: die 0x96 der Mutation @0x80118094-98, mit der die 0x30-Waffen
          * rechnen. Ohne das kam die Form unter Dauerfeuer mit dem Mutationsrest an: gemessen HP 30, tot nach 49 Bildern
-         * noch im Auftritt, kein einziger Angriff (Lauf a1_leon, Dossier Nachbesserung). */
-        e->hp = 150;
+         * noch im Auftritt, kein einziger Angriff (Lauf a1_leon, Dossier Nachbesserung). Wert: RE15_BB_FORM_HP (re15_birkin_formen.h). */
+        e->hp = RE15_BB_FORM_HP;
         /* Abnahme 1 M1: der Schuss laeuft VOR der KI (game_step_common.c), ein Treffer im Tauschbild steht also schon in
          * Zustand 2 oder 3. Der Auftritt ist dann der gesicherte Zustand (+0x1fc), den der Handler fortsetzt @0x80107180-8c;
          * wer ihn ueberschrieb, verlor case 2 und damit das einzige Armieren des Riegel-Zaehlers (+0x93 Bit 0 blieb stehen). */
@@ -879,7 +889,7 @@ void re15_bb_tick(int slot)
             e->hit_react = (uint8_t)(e->hit_react & ~1u);
             break;
         }
-        e->hp = 150; e->state = 1; bb_setze(e, BB_ZUCKEN);   /* RE15_BIRKIN_FORM ausserhalb 5090: nur Sichtpruefung */
+        e->hp = RE15_BB_FORM_HP; e->state = 1; bb_setze(e, BB_ZUCKEN);   /* RE15_BIRKIN_FORM ausserhalb 5090: nur Sichtpruefung */
         e->birkin_hurt_cd = 9;
         break;
     default:
