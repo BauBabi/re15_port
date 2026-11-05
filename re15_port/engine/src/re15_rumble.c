@@ -39,6 +39,19 @@ int re15_rumble_belegt(int ring)
     return rumble_belegt(ring);
 }
 
+/* Diagnose (Sonden/Riegel): die 10 Byte eines Platzes als Felder; Rueckgabe = +0 belegt. Kein Verhalten. */
+int re15_rumble_platz(int ring, int i, int *wert, int *delay, int *dauer, int *schritt, int *akku)
+{
+    if (ring < 0 || ring > 1 || i < 0 || i >= RE15_RUMBLE_SLOTS) return 0;
+    const re15_rumble_slot_t *s = &s_ring[ring][i];
+    if (wert) *wert = s->wert;
+    if (delay) *delay = s->delay;
+    if (dauer) *dauer = s->dauer;
+    if (schritt) *schritt = s->schritt;
+    if (akku) *akku = s->akku;
+    return s->belegt;
+}
+
 /* `FUN_800397B8` @0x800397b8 — ersten freien Slot suchen. Laeuft der Ring voll, liefert das
  * Original den Zeiger HINTER den Ring; der Aufrufer prueft aber vorher den Fuellstand
  * (`sltiu v0,v0,0x20` @0x80039498 / @0x80039530 / @0x800395d4), also kommt es nie dazu. */

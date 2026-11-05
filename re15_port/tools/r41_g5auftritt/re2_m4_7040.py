@@ -13,6 +13,11 @@ Offsets; [0] EDT 0x6018, [1] VH 0x60D8, [2] VB 0x6EF8, [10] Objektmodell-Liste 0
                     ROOM7040 EDT-Satz 12 `00 01 13 20` = sub04 Se_on `36 02 0c 00 01 00 ..` @SCD 0x016AC (Handler @0x80056428:
                     Code (pc[1]<<24)|(pc[2]<<16) -> `jal 0x8005ba28` @0x80056530; Lage = Spieler (Typ 1, Tabelle @0x80011458[1]))
   engine/src/gen/r41_g5a_beben_bank.inc   Groessen der Mini-Bank fuer den Lader (platform/pc/src/g5lampen_pc.c)
+  R704.ESP        = RDT[0x35D8 : 0x36FC]   (Nachbesserung 6) Raum-ESP = Kopf [18] bis [19]+4 wie GATOR40A0.ESP (ROOM40A0 [0x59CC:0x65E8]);
+                    Ids `19 ff ..`, Bank 0x19 = Brocken (sub05 8 x Sce_espr_on Effekt 0x19). Der RE2-Raumlader FUN_8001bba4 ruft
+                    FUN_8001bca0(+0x50, +0x54, +0x50, 8) und FUN_8001bd38(+0x5c, +0x58). Die Textur der Bank (Tafel rueckwaerts vor
+                    RDT[21]: RDT[0x1B1E0] = 0 -> RDT[0x18984 : 0x1B1C4], 10304 B) ist BYTEGLEICH shared_assets/RE2/GATOR40A0_19.TIM
+                    und wird nicht doppelt abgelegt (hier geprueft).
 
 Aufruf: python re15_port/tools/r41_g5auftritt/re2_m4_7040.py [--install]   (ohne --install nach build/r41_g5a_m4)
 """
@@ -95,15 +100,32 @@ def beben(a):
     return edt_rec, bytes(vbd), rows
 
 
+ESP_VON, ESP_BIS = 0x35D8, 0x36FC
+TIM19_VON, TIM19_BIS = 0x18984, 0x1B1C4
+
+
+def esp(a):
+    offs = struct.unpack_from("<23I", a, 8)
+    if (offs[18], offs[19] + 4, offs[20]) != (ESP_VON, ESP_BIS, TIM19_VON): die("ESP-Offsets %x %x %x" % (offs[18], offs[19], offs[20]))
+    e = a[ESP_VON:ESP_BIS]
+    if e[:8] != bytes([0x19] + [0xFF] * 7): die("ESP-Ids %s" % e[:8].hex())
+    if struct.unpack_from("<I", a, offs[21] - 4)[0] != 0: die("TIM-Tafel vor RDT[21] != 0")
+    t = a[TIM19_VON:TIM19_BIS]
+    g = open(os.path.join(REPO, "re15_port", "shared_assets", "RE2", "GATOR40A0_19.TIM"), "rb").read()
+    if t != g: die("RDT[0x18984:0x1B1C4] != shared_assets/RE2/GATOR40A0_19.TIM")
+    return e
+
+
 def main():
     install = "--install" in sys.argv
     a = open(RDT, "rb").read()
+    e = esp(a)
     md1, tim = lampe(a)
     edt_rec, vbd, rows = beben(a)
     out_dir = os.path.join(REPO, "re15_port", "shared_assets", "RE2") if install else os.path.join(REPO, "build", "r41_g5a_m4")
     inc_dir = os.path.join(REPO, "re15_port", "engine", "src", "gen") if install else out_dir
     os.makedirs(out_dir, exist_ok=True); os.makedirs(inc_dir, exist_ok=True)
-    for name, data in (("R704_LAMPE.MD1", md1), ("R704_LAMPE.TIM", tim), ("R704_BEBEN.VBS", edt_rec + vbd)):
+    for name, data in (("R704_LAMPE.MD1", md1), ("R704_LAMPE.TIM", tim), ("R704_BEBEN.VBS", edt_rec + vbd), ("R704.ESP", e)):
         open(os.path.join(out_dir, name), "wb").write(data)
         print("  %s %d B md5 %s" % (os.path.join(out_dir, name), len(data), hashlib.md5(data).hexdigest()))
     with open(os.path.join(inc_dir, "r41_g5a_beben_bank.inc"), "w", newline="\n") as o:

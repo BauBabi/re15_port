@@ -623,6 +623,12 @@ static int s_fx_camf = 0;
 int  pc_fx_camf(void) { return s_fx_camf; }
 static void pc_fx_set_camf(const uint8_t *rdt_raw, size_t rdt_size, int cut)
 {
+    /* Runde 41 G5-Auftritt, Nachbesserung 6: die Szenen-Schnitte 16/17 sind RE2-Kameras (re15_g5a_schnitt) und stehen NICHT im
+     * RID des RE1.5-Raums - ROOM5090.RDT @0x262/@0x282 sind fremde Bytes (camf 0 / 77). RE2 liest die Skala aus dem Satz des
+     * Schnitts: `lhu v0,0x66(v1)` @0x800779ac + `srl v0,v0,7` @0x800779bc (RID +2 >> 7) = Schnitt 9 @0x184 -> 231, Schnitt 10
+     * @0x1A4 -> 208. Mit camf 0 waeren die RE2-Effekte (Brocken Bank 0x19) 0 breit, also unsichtbar. */
+    { const re15_camera_cut_t *g5 = re15_g5a_schnitt(cut);
+      if (g5) { s_fx_camf = (uint16_t)g5->fov >> 7; return; } }
     size_t off = (size_t)cut * 0x20 + 0x62;
     if (rdt_raw && off + 2 <= rdt_size) {
         uint16_t v = (uint16_t)(rdt_raw[off] | (rdt_raw[off + 1] << 8));

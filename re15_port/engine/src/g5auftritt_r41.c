@@ -58,6 +58,8 @@
 #include "re15_engine.h"        /* g_engine.frame_count (Protokollzeile) */
 #include "re15_audio.h"         /* re15_audio_re2_xa / _stop (Abnahme 1 M5) */
 #include "re15_light.h"         /* re15_light_parse (Lichtsatz der Szenen-Schnitte) */
+#include "re15_rumble.h"        /* NB6: Vibration sub14 (Vib_set1 / Vib_fade_set) */
+#include "re2_fx.h"             /* NB6: Brocken sub05 (Sce_espr_on Effekt 0x19) */
 #include <string.h>
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
@@ -263,9 +265,53 @@ void (*re15_g5a_beben_ton_hook)(void) = 0;
 
 int re15_g5a_beben(void) { return (raum_5090() && s_g5a.laeuft) ? s_beben : 0; }
 
+/* NB6 VIBRATION: sub04 @0x016A2 `18 0e` Gosub sub14 im ersten sub04-Bild, vor dem ersten Beben. sub14 @0x01C02:
+ *   `8c 00 64 c8 07 00 00 00` Vib_fade_set, `8b fa 05 00 02 00` Vib_set1, `8c 00 c8 32 11 00 05 00` Vib_fade_set.
+ * Vib_set1 @0x80059394: a0 = pc[2..3] (`lhu a0,2(v0)` @0x800593ac) Dauer, a1 = pc[1] (`lbu a1,1(v0)` @0x800593b0) Staerke,
+ *   a2 = pc[4..5] (`lhu a2,4(v0)` @0x800593b4) Vorlauf -> `jal 0x80039514` @0x800593b8 = re15_rumble_large(Dauer, Staerke, Vorlauf);
+ * Vib_fade_set @0x800593e4: a0 = pc[4..5] Dauer (@0x800593fc), a1 = pc[2] von (@0x80059400), a2 = pc[3] bis (@0x80059404),
+ *   a3 = pc[6..7] Vorlauf (@0x80059408) -> `jal 0x800395b8` @0x8005940c = re15_rumble_ramp(Dauer, von, bis, Vorlauf).
+ * (Vib_set0 @0x80059348 -> FUN_8003947C(pc[2..3], pc[4..5]) = re15_rumble_small benutzt die Szene nicht.) Die Raum-Schleife sub15
+ * (Platz 6, MAIN sub00 @0x01296) beendet sub06 @0x01784 `05 06` vor dem Vorlauf; RE2-RAM s01..s03: Ringe A/B leer. */
+static void vibration_sub14(void)
+{
+    re15_rumble_ramp(0x07, 0x64, 0xC8, 0x00);           /* @0x01C02 */
+    re15_rumble_large(0x05, 0xFA, 0x02);                /* @0x01C0A */
+    re15_rumble_ramp(0x11, 0xC8, 0x32, 0x05);           /* @0x01C10 */
+}
+
+/* NB6 BROCKEN: sub04 @0x0169E `04 08 18 05` Evt_exec(8, sub05) im ersten sub04-Bild; Platz 8 > 6 -> sub05 laeuft im SELBEN Bild
+ * (Schleife FUN_800536c4 aufsteigend). sub05 @0x016DE: Sce_espr_on `3a 00 19 00 00 00 00 10 x x 50 ec z z 00 00` (Handler @0x800565a4:
+ * Bank pc[2] / Sub pc[3] / Skala pc[6..7] -> a0 = 0x19001000 @0x800565cc-e8, Matrix pc[4] = 0 -> Einheit 0x8009DB44, Lage pc[8..13]
+ * (y -5040 = 0xEC50), Gier pc[14..15] = 0; `jal 0x8001bf10` @0x80056614 = sofort lebendig), dazwischen Sleep 5/5/3/5/5/3
+ * (@0x016FE..@0x01772). RE2-RAM s02 (sub05-Bild 39): Alter der Brocken 29/26/21/21/16 = Spawnbilder 11/14/19/19/24. */
+static const struct { int bild; int16_t x, z; } k_brocken[8] = {
+    {  1, 1060, -21520 }, {  1, 3000, -24545 },           /* @0x016DE, @0x016EE */
+    {  6, 2670, -23420 },                                 /* @0x01702 nach Sleep 5 @0x016FE */
+    { 11,  500, -25330 },                                 /* @0x01716 nach Sleep 5 @0x01712 */
+    { 14, 3000, -24545 },                                 /* @0x0172A nach Sleep 3 @0x01726 */
+    { 19, 2670, -23420 }, { 19, 2830, -21090 },           /* @0x0173E, @0x0174E nach Sleep 5 @0x0173A */
+    { 24,  500, -25330 },                                 /* @0x01762 nach Sleep 5 @0x0175E */
+};
+#define G5A_BROCKEN_Y       (-5040)    /* pc[10..11] 0xEC50 */
+#define G5A_BROCKEN_A0      0x19001000u/* Bank 0x19, Sub 0, Skala 0x1000 (pc[2], pc[3], pc[6..7]) */
+static int s_brocken_n = 0;            /* Messung: gespawnte Brocken dieser Szene */
+int re15_g5a_brocken_gespawnt(void) { return s_brocken_n; }
+
+static void brocken_takt(int sb)
+{
+    for (int k = 0; k < 8; k++) {
+        if (k_brocken[k].bild != sb) continue;
+        const int16_t ofs[4] = { k_brocken[k].x, G5A_BROCKEN_Y, k_brocken[k].z, 0 };
+        if (re2fx_spawn_sofort(G5A_BROCKEN_A0, 0, re2fx_einheitsmatrix, ofs) >= 0) s_brocken_n++;
+    }
+}
+
 static void beben_takt(int vl)
 {
     const int sb = vl - G5A_SKRIPT_START + 1;
+    if (sb == 1) { s_brocken_n = 0; vibration_sub14(); }   /* @0x0169E Evt_exec sub05, @0x016A2 Gosub sub14 vor @0x016A4 */
+    brocken_takt(sb);
     s_beben = (sb >= 1 && sb <= (int)sizeof k_beben) ? k_beben[sb - 1] : 0;
     if (sb == G5A_BEBEN_TON_BILD && re15_g5a_beben_ton_hook) re15_g5a_beben_ton_hook();
 }

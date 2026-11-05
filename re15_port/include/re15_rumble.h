@@ -73,6 +73,10 @@ void re15_rumble_tick(uint8_t *aktuator0_out, uint8_t *aktuator1_out);
 /* Diagnose fuer die Sonden: Anzahl belegter Slots je Ring (`FUN_800397E4` @0x800397e4). */
 int re15_rumble_belegt(int ring);
 
+/* Diagnose fuer Riegel: Felder des Platzes i von Ring `ring` (+1 Wert, +2 Vorlauf, +4 Rest, +6 Schritt, +8 Akku);
+ * Rueckgabe = +0 belegt. */
+int re15_rumble_platz(int ring, int i, int *wert, int *delay, int *dauer, int *schritt, int *akku);
+
 #ifdef __cplusplus
 }
 #endif

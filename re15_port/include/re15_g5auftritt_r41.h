@@ -95,5 +95,7 @@ int  re15_g5a_lampe(int i, int32_t pos[3], int16_t dir[3]);
 int  re15_g5a_lampe_zone(int cut, int32_t x, int32_t z);
 int  re15_g5a_beben(void);
 extern void (*re15_g5a_beben_ton_hook)(void);
+/* NB6: Zahl der in dieser Szene gespawnten Brocken (RE2 sub05, 8 x Sce_espr_on Effekt 0x19; Messung). */
+int  re15_g5a_brocken_gespawnt(void);
 
 #endif /* RE15_G5AUFTRITT_R41_H */

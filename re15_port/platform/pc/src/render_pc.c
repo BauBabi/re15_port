@@ -2723,13 +2723,20 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
  *
  * RE15_UVPHASE bleibt als MESSSCHIENE stehen (Gegenprobe ohne Neubau); ohne die
  * Variable gilt der gemessene Wert. */
+/* OBJEKT-ABTASTPHASE (Runde 41 G5-Auftritt, Nachbesserung 6): ein Zeichner, dessen Objekt gegen ein PSX-Bild Pixel fuer Pixel
+ * gemessen ist, kann fuer SEINE Dreiecke eine eigene Phase setzen (s_phase_objekt >= 0); danach zurueck auf < 0. Die globale
+ * Phase oben gilt fuer alles andere unveraendert. Erster Nutzer: die RE2-Tunnellampen (g5lampen_pc.c) - RE2-VRAM s04 Zeilen
+ * 119..123 sind mit +0.5 pixelgleich (max. 3 Stufen), mit +0.375 tastet die 1 Pixel hohe Gehaeuseflaeche die Nachbarspalte
+ * u 115 statt u 116 ab (Dossier G5_auftritt.md Abschnitt 12). +0.5 liegt im Fenster [1/3, 1/2] aus re15_abtastphase.h §4. */
+static float s_phase_objekt = -1.0f;
+void re15_render_pc_abtastphase_objekt(float a) { s_phase_objekt = a; }
 static float re15_render_pc_abtastphase(void)
 {
     static float s_phase = RE15_UV_ABTASTPHASE;   /* include/re15_abtastphase.h */
     static int   s_init  = 0;
     if (!s_init) { s_init = 1; const char *e = getenv("RE15_UVPHASE");
                    if (e && *e) s_phase = (float)atof(e); }
-    return s_phase;
+    return s_phase_objekt >= 0.0f ? s_phase_objekt : s_phase;
 }
 
 /* ===== MESSSCHIENE RE15_TRILOG ==============================================

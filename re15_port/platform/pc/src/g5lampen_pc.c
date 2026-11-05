@@ -35,6 +35,8 @@
 extern void re15_render_pc_bind_tim_slot(int slot);
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 extern int  re15_render_pc_dbg_slot_loaded(int slot);
+extern void re15_render_pc_abtastphase_objekt(float a);
+#define G5L_ABTASTPHASE 0.5f   /* gemessen: RE2-VRAM s04 gegen Port nativ (Nachbesserung 6, nb6/messung_lampe_vram.txt) */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                     const int *decoded_len, int satz);
 
@@ -109,63 +111,114 @@ static void lampe_zeichnen(int i, const re15_camera_view_t *cam_view, int cx, in
     int32_t bm[9], bt[3];
     re15_camera_compose_view_bone(cam_view, rot, pos, bm, bt);
     int tris = 0, x0 = 9999, x1 = -9999, y0 = 9999, y1 = -9999;
+    /* MESSUNG (kein Verhalten): RE15_G5A_LAMPE_FARBEN=<x> -> beim ersten Bild mit Objektlage x je Polygon Bildlage, Eckfarben und
+     * OT-Fach (Vergleich mit den RE2-Paketen im RAM, FUN_80027bec RGB +4/+0x10/+0x1C, XY +8/+0x14/+0x20). */
+    static int s_farben_x = 1, s_farben_fertig = 0;
+    if (s_farben_x == 1) { const char *e = getenv("RE15_G5A_LAMPE_FARBEN"); s_farben_x = (e && *e) ? atoi(e) : 0; }
+    const int farben = (s_farben_x != 0 && !s_farben_fertig && pos[0] == s_farben_x);
+    if (farben) s_farben_fertig = 1;
+    /* OT-EINSORTIERUNG wie RE2 (statt des exakten SZ-Mittels): FUN_80027bec / FUN_80027dbc legen jedes Polygon in das Fach
+     * OTZ >> 3 (`srl v0,v0,1` / `andi v0,v0,0xffc` @0x80027d60-64 bzw. @0x80027f94-98; OTZ = AVSZ3/AVSZ4 mit ZSF3 0x155 / ZSF4 0x100,
+     * `addiu t0,zero,0x155` / `0x100` vor `ctc2 t0,$29/$30` @0x8008d2a0/@0x8008d2ac), unter 8 verworfen (@0x80027d34 / @0x80027f68),
+     * ueber 0x1FFF geklemmt (@0x80027d48-54 / @0x80027f7c-88), und haengen es VORN an das Fach (`lw v1,(v0)` / `sw a1,(v0)` /
+     * Tag = alter Kopf | Laenge @0x80027d6c-90 bzw. @0x80027fa0-c4). FUN_800363f0 ruft erst die Dreiecke, dann die Vierecke
+     * (@0x8003666c / @0x8003669c): im selben Fach zeichnet die GPU also die Vierecke vor den Dreiecken, je in umgekehrter
+     * Reihenfolge. RE2-RAM s04 (Lampe x -6000, Puffer 0) bestaetigt: Kette Q17 -> T16 -> T14 -> T04 -> T03 (nb6/messung_lampe_ot.txt).
+     * Port: Schluessel = Fachmitte in SZ-Einheiten ((Fach << 5) + 16, OTZ = SZ/4), Abgabe in RE2-Zeichenreihenfolge; der Sortierer
+     * (render_pc.c, Einfuegesortierung absteigend, stabil) behaelt sie bei gleichem Schluessel bei.
+     * ANNAHME wie RE2: Dreieck nur bei NCLIP-MAC0 > 0 (`bgtz v0` @0x80027cc8), Viereck bei MAC0 >= 0 (`bgez v0` @0x80027e84);
+     * die GPU-Groessengrenze der Hardware bleibt (tri_ok). Viereck = GPU-Dreiecke (0,1,2) und (1,2,3). */
+    enum { G5L_MAX_POLY = 64 };
+    struct { int quad, idx, key; re15_objpoly_t p; uint8_t c[4][3]; int u[4], v[4], page, clut; } poly[G5L_MAX_POLY];
+    int npoly = 0;
     for (int mi = 0; mi < s_md1.mesh_count; mi++) {
         const re15_md1_mesh_t *hm = &s_md1.meshes[mi];
-        for (int ti = 0; ti < hm->triangle_count; ti++) {
+        for (int ti = 0; ti < hm->triangle_count && npoly < G5L_MAX_POLY; ti++) {
             const re15_md1_triangle_t *tr = &hm->triangles[ti];
             if (tr->v0 >= (uint32_t)hm->tri_vertex_count || tr->v1 >= (uint32_t)hm->tri_vertex_count
                 || tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
             const re15_md1_vertex_t *vp[3] = { &hm->tri_vertices[tr->v0], &hm->tri_vertices[tr->v1], &hm->tri_vertices[tr->v2] };
-            int ax[3], ay[3], wz = 0;
-            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz)) continue;
+            re15_objpoly_t p;
+            (void)re15_objpoly_r38_tri_mesh_p(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, &p);
+            if (p.opz <= 0 || p.otz < 8 || !p.tri_ok[0]) continue;                       /* @0x80027cc8, @0x80027d34 */
             const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[ti];
-            int po = (int)((uv->page & 0x000F) * 128);
-            uint8_t c[3][3];
+            const int po = (int)((uv->page & 0x000F) * 128);
+            poly[npoly].quad = 0; poly[npoly].idx = ti; poly[npoly].p = p;
+            poly[npoly].key = ((((p.otz > 0x1FFF) ? 0x1FFF : (int)p.otz) >> 3) << 5) + 16;
+            poly[npoly].u[0] = uv->u0 + po; poly[npoly].v[0] = uv->v0; poly[npoly].u[1] = uv->u1 + po; poly[npoly].v[1] = uv->v1;
+            poly[npoly].u[2] = uv->u2 + po; poly[npoly].v[2] = uv->v2; poly[npoly].page = uv->page; poly[npoly].clut = uv->clut;
             for (int k = 0; k < 3; k++) {
                 uint32_t ni = (k == 0) ? tr->n0 : (k == 1) ? tr->n1 : tr->n2;
+                uint8_t *c = poly[npoly].c[k];
                 if (hm->tri_normals && ni < (uint32_t)hm->tri_normal_count)
-                    re15_light_shade_vertex(&lctx, hm->tri_normals[ni].x, hm->tri_normals[ni].y, hm->tri_normals[ni].z,
-                                            &c[k][0], &c[k][1], &c[k][2]);
-                else { c[k][0] = g_re15_light_tint[0]; c[k][1] = g_re15_light_tint[1]; c[k][2] = g_re15_light_tint[2]; }
-                if (ax[k] < x0) x0 = ax[k]; if (ax[k] > x1) x1 = ax[k];
-                if (ay[k] < y0) y0 = ay[k]; if (ay[k] > y1) y1 = ay[k];
+                    re15_light_shade_vertex(&lctx, hm->tri_normals[ni].x, hm->tri_normals[ni].y, hm->tri_normals[ni].z, &c[0], &c[1], &c[2]);
+                else { c[0] = g_re15_light_tint[0]; c[1] = g_re15_light_tint[1]; c[2] = g_re15_light_tint[2]; }
             }
-            re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0, ax[1], ay[1], (int)uv->u1 + po, (int)uv->v1,
-                                         ax[2], ay[2], (int)uv->u2 + po, (int)uv->v2, (int)uv->page, (int)uv->clut, wz,
-                                         c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2], c[2][0], c[2][1], c[2][2]);
-            tris++;
+            npoly++;
         }
-        for (int qi = 0; qi < hm->quad_count; qi++) {
+        for (int qi = 0; qi < hm->quad_count && npoly < G5L_MAX_POLY; qi++) {
             const re15_md1_quad_t *qd = &hm->quads[qi];
             if (qd->v0 >= (uint32_t)hm->quad_vertex_count || qd->v1 >= (uint32_t)hm->quad_vertex_count
                 || qd->v2 >= (uint32_t)hm->quad_vertex_count || qd->v3 >= (uint32_t)hm->quad_vertex_count) continue;
             const re15_md1_vertex_t *vp[4] = { &hm->quad_vertices[qd->v0], &hm->quad_vertices[qd->v1],
                                                &hm->quad_vertices[qd->v2], &hm->quad_vertices[qd->v3] };
-            int ax[4], ay[4], wz = 0; uint8_t ok[2];
-            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz, ok)) continue;
+            re15_objpoly_t p;
+            (void)re15_objpoly_r38_quad_mesh_p(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, &p);
+            if (p.opz < 0 || p.otz < 8 || (!p.tri_ok[0] && !p.tri_ok[1])) continue;     /* @0x80027e84, @0x80027f68 */
             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
-            int po = (int)((uv->page & 0x000F) * 128);
-            uint8_t c[4][3];
+            const int po = (int)((uv->page & 0x000F) * 128);
+            poly[npoly].quad = 1; poly[npoly].idx = qi; poly[npoly].p = p;
+            poly[npoly].key = ((((p.otz > 0x1FFF) ? 0x1FFF : (int)p.otz) >> 3) << 5) + 16;
+            poly[npoly].u[0] = uv->u0 + po; poly[npoly].v[0] = uv->v0; poly[npoly].u[1] = uv->u1 + po; poly[npoly].v[1] = uv->v1;
+            poly[npoly].u[2] = uv->u2 + po; poly[npoly].v[2] = uv->v2; poly[npoly].u[3] = uv->u3 + po; poly[npoly].v[3] = uv->v3;
+            poly[npoly].page = uv->page; poly[npoly].clut = uv->clut;
             for (int k = 0; k < 4; k++) {
                 uint32_t ni = (k == 0) ? qd->n0 : (k == 1) ? qd->n1 : (k == 2) ? qd->n2 : qd->n3;
+                uint8_t *c = poly[npoly].c[k];
                 if (hm->quad_normals && ni < (uint32_t)hm->quad_normal_count)
-                    re15_light_shade_vertex(&lctx, hm->quad_normals[ni].x, hm->quad_normals[ni].y, hm->quad_normals[ni].z,
-                                            &c[k][0], &c[k][1], &c[k][2]);
-                else { c[k][0] = g_re15_light_tint[0]; c[k][1] = g_re15_light_tint[1]; c[k][2] = g_re15_light_tint[2]; }
-                if (ax[k] < x0) x0 = ax[k]; if (ax[k] > x1) x1 = ax[k];
-                if (ay[k] < y0) y0 = ay[k]; if (ay[k] > y1) y1 = ay[k];
+                    re15_light_shade_vertex(&lctx, hm->quad_normals[ni].x, hm->quad_normals[ni].y, hm->quad_normals[ni].z, &c[0], &c[1], &c[2]);
+                else { c[0] = g_re15_light_tint[0]; c[1] = g_re15_light_tint[1]; c[2] = g_re15_light_tint[2]; }
             }
-            if (ok[0])
-                re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0, ax[1], ay[1], (int)uv->u1 + po, (int)uv->v1,
-                                             ax[3], ay[3], (int)uv->u3 + po, (int)uv->v3, (int)uv->page, (int)uv->clut, wz,
-                                             c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2], c[3][0], c[3][1], c[3][2]);
-            if (ok[1])
-                re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0, ax[3], ay[3], (int)uv->u3 + po, (int)uv->v3,
-                                             ax[2], ay[2], (int)uv->u2 + po, (int)uv->v2, (int)uv->page, (int)uv->clut, wz,
-                                             c[0][0], c[0][1], c[0][2], c[3][0], c[3][1], c[3][2], c[2][0], c[2][1], c[2][2]);
+            npoly++;
+        }
+    }
+    /* Abgabe in RE2-Zeichenreihenfolge innerhalb eines Fachs: Vierecke absteigend, dann Dreiecke absteigend.
+     * ABTASTPHASE +0.5 fuer die Lampe (render_pc.c re15_render_pc_abtastphase_objekt): gemessen gegen das RE2-VRAM s04 (Lampe
+     * x -6000, Zeilen 119..123 pixelgleich bis 3 Stufen; mit der globalen +0.375 trifft die 1 Pixel hohe Gehaeuseflaeche T02/T14
+     * in Zeile 122 die Texelspalte u 115 (104) statt u 116 (224) - die "15 % dunkler" der Nachbesserung 5). */
+    re15_render_pc_abtastphase_objekt(G5L_ABTASTPHASE);
+    for (int durchgang = 0; durchgang < 2; durchgang++) {
+        const int quad = (durchgang == 0);
+        for (int k = npoly - 1; k >= 0; k--) {
+            if (poly[k].quad != quad) continue;
+            const re15_objpoly_t *p = &poly[k].p;
+            const int n = quad ? 4 : 3;
+            int ax[4], ay[4];
+            for (int e = 0; e < n; e++) {
+                ax[e] = p->sx[e]; ay[e] = p->sy[e];
+                if (ax[e] < x0) x0 = ax[e]; if (ax[e] > x1) x1 = ax[e];
+                if (ay[e] < y0) y0 = ay[e]; if (ay[e] > y1) y1 = ay[e];
+            }
+            const uint8_t (*c)[3] = (const uint8_t (*)[3])poly[k].c;
+            if (farben)
+                fprintf(stderr, "[g5lampe-farben] %c%02d Fach %d OTZ %d xy (%d,%d) (%d,%d) (%d,%d) (%d,%d) rgb (%d,%d,%d) (%d,%d,%d) (%d,%d,%d) (%d,%d,%d)\n",
+                        quad ? 'Q' : 'T', poly[k].idx, (int)((p->otz > 0x1FFF ? 0x1FFF : p->otz) >> 3), (int)p->otz,
+                        ax[0] - cx + 160, ay[0] - cy + 120, ax[1] - cx + 160, ay[1] - cy + 120, ax[2] - cx + 160, ay[2] - cy + 120,
+                        quad ? ax[3] - cx + 160 : 0, quad ? ay[3] - cy + 120 : 0, c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2],
+                        c[2][0], c[2][1], c[2][2], quad ? c[3][0] : 0, quad ? c[3][1] : 0, quad ? c[3][2] : 0);
+            const int *u = poly[k].u, *v = poly[k].v, key = poly[k].key;
+            if (!quad || p->tri_ok[0])
+                re15_render_textured_tri_lit(ax[0], ay[0], u[0], v[0], ax[1], ay[1], u[1], v[1], ax[2], ay[2], u[2], v[2],
+                                             poly[k].page, poly[k].clut, key,
+                                             c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2], c[2][0], c[2][1], c[2][2]);
+            if (quad && p->tri_ok[1])
+                re15_render_textured_tri_lit(ax[1], ay[1], u[1], v[1], ax[2], ay[2], u[2], v[2], ax[3], ay[3], u[3], v[3],
+                                             poly[k].page, poly[k].clut, key,
+                                             c[1][0], c[1][1], c[1][2], c[2][0], c[2][1], c[2][2], c[3][0], c[3][1], c[3][2]);
             tris++;
         }
     }
+    re15_render_pc_abtastphase_objekt(-1.0f);
     if (s_log < 0) { const char *e = getenv("RE15_G5A_LAMPE_LOG"); s_log = (e && *e && *e != '0') ? 1 : 0; }
     static int s_erst = 1;
     if (s_log || s_erst) {

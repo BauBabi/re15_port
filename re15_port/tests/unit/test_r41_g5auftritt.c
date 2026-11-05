@@ -11,6 +11,9 @@
  *    der gezeichneten Wurzel; M4 Masse hinter der Pfostenmaske; M6 Frau in 16/17 unsichtbar; M5 Xa-Aufrufe; Sperre/Zonen; Kampf.
  * 3. NB5 (M4 Tunnellampen/Beben): R704_LAMPE.MD1/.TIM = ROOM7040-Bytes; Lampen-Lage (Objekt 3/4 +0x38/+0x3C/+0x40, +0x74..78) an den
  *    RE2-RAM-Savestates s03..s12 bitgleich; Sichtpruefung FUN_8002c820; Lampenfleck gegen die RE2-Aufnahme; Beben-Folge sub04.
+ * 4. NB6: Brocken (sub05, 8 x Sce_espr_on Effekt 0x19, RE2-FX-Pool) gegen RE2-RAM s02 (18 Plaetze bitgleich in Bank/Sub/Status/Ops/
+ *    Geschwindigkeit/Lage/Anim/Skala/TPage/CLUT); Vibration sub14 (Ring B: drei Plaetze mit den Feldern aus FUN_80039514/FUN_800395B8;
+ *    RE2-RAM s02: Ringe leer).
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -30,6 +33,8 @@
 #include "re15_pri.h"
 #include "re15_tim.h"
 #include "re15_md1.h"
+#include "re2_fx.h"
+#include "re15_rumble.h"
 #include "re15_birkin_formen.h"
 #include "re15_g5auftritt_r41.h"
 #include "re2_ems.h"
@@ -459,6 +464,74 @@ static const struct { int bild; int32_t x; float sx, sy; } k_re2_fleck[] = {
     { -44, -4000, 108.8f, 119.3f }, { -43, -5000, 95.1f, 120.8f }, { -42, -6000, 80.6f, 121.6f },
 };
 static const int8_t k_re2_beben[13] = { -3, -5, -7, -7, -7, -7, -7, -6, -5, -4, -3, -2, -1 };   /* sub04 @0x016A4..@0x016D8 */
+
+/* NB6: RE2-FX-Pool im RE2-RAM s02 (0x800D8CF0, 96 x 0x7C, lebende Plaetze; sub05-Bild 39), sortiert. Felder: Bank +0x1C, Sub +0x1E,
+ * Status +0x18, OpA +0, OpB +1, s2 +2, vel.y +0x0E, lokal.y +0x26, TPage +0x2A, CLUT +0x32, Skala +0x3A, Anim +0x21, Countdown +0x20,
+ * ofs +0x2C..30, welt +0x34..38. Quelle: nb6/messung_pool_s02.txt (Werkzeug nb6/werkzeug/pool.py, soll_json.py). */
+static const int32_t k_re2_pool_s02[18][19] = {
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 32, 0, 500, -3948, -25330, 500, -3948, -25330 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 33, 0, 500, -4104, -25330, 500, -4104, -25330 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 33, 0, 2670, -3204, -23420, 2670, -3204, -23420 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 33, 0, 2830, -3204, -21090, 2830, -3204, -21090 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 34, 0, 500, -4248, -25330, 500, -4248, -25330 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 34, 0, 2670, -3408, -23420, 2670, -3408, -23420 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 34, 0, 2830, -3408, -21090, 2830, -3408, -21090 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 35, 0, 500, -4380, -25330, 500, -4380, -25330 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 35, 0, 2670, -3600, -23420, 2670, -3600, -23420 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 35, 0, 2830, -3600, -21090, 2830, -3600, -21090 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 36, 0, 500, -4500, -25330, 500, -4500, -25330 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 36, 0, 2670, -3780, -23420, 2670, -3780, -23420 },
+    { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 36, 0, 2830, -3780, -21090, 2830, -3780, -21090 },
+    { 25, 0, 0xA003, 21, 21, 0, 252, 2520, 15, 30738, 4096, 6, 0, 2670, -5040, -23420, 2670, -2760, -23420 },
+    { 25, 0, 0xA003, 21, 21, 0, 252, 2520, 15, 30738, 4096, 6, 0, 2830, -5040, -21090, 2830, -2760, -21090 },
+    { 25, 0, 0xA003, 21, 21, 0, 312, 3900, 15, 30738, 4096, 8, 1, 3000, -5040, -24545, 3000, -1440, -24545 },
+    { 25, 0, 0xA003, 21, 21, 0, 348, 4872, 15, 30738, 4096, 9, 1, 500, -5040, -25330, 500, -504, -25330 },
+    { 25, 0, 0xA003, 21, 21, 8, 192, 1440, 15, 30738, 4096, 5, 2, 500, -5040, -25330, 500, -3780, -25330 },
+};
+static int pool_cmp(const void *a, const void *b)
+{
+    const int32_t *x = (const int32_t *)a, *y = (const int32_t *)b;
+    for (int k = 0; k < 19; k++) if (x[k] != y[k]) return x[k] < y[k] ? -1 : 1;
+    return 0;
+}
+/* Port-Pool in dieselbe Form; Rueckgabe = Zahl der lebenden Plaetze (hoechstens 96). */
+static int pool_lesen(int32_t out[96][19])
+{
+    int n = 0;
+    for (int i = 0; i < RE2FX_PLAETZE && n < 96; i++) {
+        const uint8_t *b = re2fx_platz(i);
+        if (!b) continue;
+        const int st = b[0x18] | (b[0x19] << 8);
+        if (!st) continue;
+#define S16(o) ((int32_t)(int16_t)(b[(o)] | (b[(o) + 1] << 8)))
+#define U16(o) ((int32_t)(b[(o)] | (b[(o) + 1] << 8)))
+        const int32_t r[19] = { b[0x1C], b[0x1E], st, b[0], b[1], b[2], S16(0x0E), S16(0x26), U16(0x2A), U16(0x32), U16(0x3A), b[0x21], b[0x20],
+                                S16(0x2C), S16(0x2E), S16(0x30), S16(0x34), S16(0x36), S16(0x38) };
+#undef S16
+#undef U16
+        memcpy(out[n++], r, sizeof r);
+    }
+    qsort(out, (size_t)n, sizeof out[0], pool_cmp);
+    return n;
+}
+/* NB6: RE2-FX wie der PC-Lader in 5090/5091: CORE00.ESP + R704.ESP, Bankkopf 0x19 wie FUN_8001bd38 umgelegt (Spalte 15 -> TPage 0x0F,
+ * CLUT (0x120, 480) -> 0x7812, v + 0; RE2-RAM s01..s03: Kopf +4 0x7812, +6 0x000F). */
+static uint8_t *s_core_esp = NULL, *s_r704_esp = NULL;
+static size_t   s_core_n = 0, s_r704_n = 0;
+static int re2fx_wie_5090(void)
+{
+    if (!s_core_esp) s_core_esp = slurp(RE2_DIR "/CORE00.ESP", &s_core_n);
+    if (!s_r704_esp) s_r704_esp = slurp(RE2_DIR "/R704.ESP", &s_r704_n);
+    const size_t cn = s_core_n, rn = s_r704_n;
+    if (!s_core_esp || !s_r704_esp || rn != 292) return -1;
+    re2fx_reset();
+    if (re2fx_register_core(s_core_esp, cn) != 0) return -2;
+    const uint32_t off = (uint32_t)s_r704_esp[288] | ((uint32_t)s_r704_esp[289] << 8) | ((uint32_t)s_r704_esp[290] << 16) | ((uint32_t)s_r704_esp[291] << 24);
+    if (off != 8) return -3;                                         /* Tafelwort @0x120 = 8 (FUN_8001bca0, rueckwaerts) */
+    s_r704_esp[off + 4] = 0x12; s_r704_esp[off + 5] = 0x78;         /* GetClut(0x120, 480) */
+    s_r704_esp[off + 6] = 0x0F;                                      /* GetTPage(0, 0, 960, 0) */
+    return re2fx_register_raum(s_r704_esp, rn);
+}
 static uint8_t *s_lampe_md1_raw = NULL;
 static int      s_lampe_md1_n = 0;
 /* Port-Vorlauf, fuer den G5A_LAMPE_VORSPRUNG (engine/src/g5auftritt_r41.c) gewaehlt ist: echte exe F1558 -> F1613 (Abnahme 4). */
@@ -540,6 +613,9 @@ static void test_ablauf(const char *rdt, unsigned raum)
     if (!k16 || !k17 || !k12) { free(buf); return; }
 
     banken_wie_main_c(0);                                         /* NB3 M1: Bank fehlt im Takt des Typwechsels (main.c) */
+    const int nb6_fx_rc = re2fx_wie_5090();                       /* NB6: Raum-ESP ROOM7040 wie gator_fx_r41_pc.c */
+    CHECK(nb6_fx_rc == 0 && re2fx_bank_registriert(0x19), "%04X: NB6 R704.ESP nicht registriert (rc %d)", raum, nb6_fx_rc);
+    re15_rumble_reset();
     re15_bf_g5_auftritt_start(bs);                                /* die SCHNITTSTELLE */
     /* ---- VORLAUF (M7): RE2 sub06 @0x0187C..@0x018D6 ---- */
     CHECK(re15_g5a_laeuft() && re15_g5a_bild() == -1 && re15_g5a_vorlauf() == 0, "%04X: Szene startet nicht mit dem Vorlauf", raum);
@@ -574,8 +650,37 @@ static void test_ablauf(const char *rdt, unsigned raum)
     }
     {   int32_t lp[3]; int16_t ld[3];
         if (re15_g5a_beben() != 0 || re15_g5a_lampe(0, lp, ld) || re15_g5a_lampe(1, lp, ld)) nb5_lampe_frueh++; }
+    int nb6_pool_n = -1, nb6_pool_ok = 0, nb6_ring_ok = -1, nb6_ring_leer39 = -1, nb6_brocken = 0;
     for (vl = 1; vl <= 200 && re15_g5a_bild() < 0; vl++) {
         takt();
+        {   uint8_t a0 = 0, a1 = 0; re15_rumble_tick(&a0, &a1); (void)a0; (void)a1; }   /* Pad-Handler FUN_80038BBC @0x80038da4/@0x80038db4 */
+        re2fx_tick();                                             /* Pumpe FUN_8001d300 nach dem Skript (@0x800263b0 vor @0x80026980) */
+        {   const int v6 = re15_g5a_vorlauf();
+            if (v6 == 2) {                                        /* sub04-Bild 1: sub14 hat die Ringe gefuellt, der Tick lief schon einmal */
+                int w, d, du, sch, ak, ok = re15_rumble_belegt(0) == 0 && re15_rumble_belegt(1) == 3;
+                /* erwartete Felder nach EINEM Tick (FUN_800396FC): Platz 0 Rampe(7,100,200,0): Akku 100<<7 + Schritt, Rest 6;
+                 * Platz 1 Konstant(5,250,2): Vorlauf 1; Platz 2 Rampe(17,200,50,5): Vorlauf 4. Schritt = (bis-von)*0x80/Dauer
+                 * (`subu`/`sll 7`/`div` @0x80039610-40). */
+                ok = ok && re15_rumble_platz(1, 0, &w, &d, &du, &sch, &ak) && sch == (200 - 100) * 0x80 / 7;
+                ok = ok && re15_rumble_platz(1, 1, &w, &d, &du, &sch, &ak) && sch == 0;
+                ok = ok && re15_rumble_platz(1, 2, &w, &d, &du, &sch, &ak) && sch == (50 - 200) * 0x80 / 17;
+                nb6_ring_ok = ok;
+                for (int k = 0; k < 3; k++) { re15_rumble_platz(1, k, &w, &d, &du, &sch, &ak);
+                    fprintf(stderr, "%04X: NB6 Ring B Platz %d nach Vorlaufbild 2: Wert %d Vorlauf %d Rest %d Schritt %d Akku %d\n", raum, k, w, d, du, sch, ak); }
+            }
+            if (v6 == 40) {                                       /* sub05-Bild 39 = RE2-RAM s02 */
+                static int32_t ist[96][19];
+                nb6_pool_n = pool_lesen(ist);
+                int32_t soll[18][19]; memcpy(soll, k_re2_pool_s02, sizeof soll); qsort(soll, 18, sizeof soll[0], pool_cmp);
+                for (int k = 0; k < 18 && k < nb6_pool_n; k++) nb6_pool_ok += (memcmp(ist[k], soll[k], sizeof soll[k]) == 0);
+                for (int k = 0; k < nb6_pool_n && k < 18; k++) if (memcmp(ist[k], soll[k], sizeof soll[k]) != 0)
+                    fprintf(stderr, "%04X: NB6 Pool-Zeile %d Port (%d %d %04X %d %d %d v%d l%d tp%d cl%d sk%d an%d cd%d o%d/%d/%d w%d/%d/%d) / RE2 s02 (%d %d %04X .. l%d .. an%d cd%d w%d/%d/%d)\n",
+                            raum, k, ist[k][0], ist[k][1], ist[k][2], ist[k][3], ist[k][4], ist[k][5], ist[k][6], ist[k][7], ist[k][8], ist[k][9], ist[k][10],
+                            ist[k][11], ist[k][12], ist[k][13], ist[k][14], ist[k][15], ist[k][16], ist[k][17], ist[k][18],
+                            soll[k][0], soll[k][1], soll[k][2], soll[k][7], soll[k][11], soll[k][12], soll[k][16], soll[k][17], soll[k][18]);
+                nb6_ring_leer39 = (re15_rumble_belegt(0) == 0 && re15_rumble_belegt(1) == 0);
+                nb6_brocken = re15_g5a_brocken_gespawnt();
+            } }
         if (re15_g5a_vorlauf() >= 0) nb5_vl_letzt = re15_g5a_vorlauf();
         {   const int v = re15_g5a_vorlauf(), sb = v - 1;   /* sub04-Bild sb = 1.. ab Vorlaufbild 2 (Task-Reihenfolge @0x800536c4) */
             const int soll = (v >= 0 && sb >= 1 && sb <= 13) ? k_re2_beben[sb - 1] : 0;
@@ -612,6 +717,13 @@ static void test_ablauf(const char *rdt, unsigned raum)
           raum, nb5_fleck_ok, nb5_fleck_n, nb5_fleck_max);
     const int nb5_vorlauf = nb5_vl_letzt + 1;   /* = "Armierung nach N Vorlaufbildern" (exe: 55); Lampen-Zeitachse ab dem Schnitt */
     re15_g5a_beben_ton_hook = NULL;
+    fprintf(stderr, "%04X: NB6 Brocken %d gespawnt; RE2-FX-Pool bei sub05-Bild 39: %d Plaetze, %d von 18 gleich RE2-RAM s02; op_unbekannt %u; "
+            "Ring B nach sub14 %s; Ringe bei sub05-Bild 39 leer %d (RE2-RAM s02: leer)\n", raum, nb6_brocken, nb6_pool_n, nb6_pool_ok,
+            re2fx_op_unbekannt(), nb6_ring_ok > 0 ? "wie FUN_80039514/FUN_800395B8" : "FALSCH", nb6_ring_leer39);
+    CHECK(nb6_brocken == 8, "%04X: NB6 %d Brocken statt 8 (sub05 @0x016DE..@0x01762)", raum, nb6_brocken);
+    CHECK(nb6_pool_n == 18 && nb6_pool_ok == 18, "%04X: NB6 RE2-FX-Pool %d Plaetze, %d von 18 gleich RE2-RAM s02", raum, nb6_pool_n, nb6_pool_ok);
+    CHECK(re2fx_op_unbekannt() == 0, "%04X: NB6 %u Aufrufe nicht umgesetzter RE2-FX-Ops", raum, re2fx_op_unbekannt());
+    CHECK(nb6_ring_ok == 1 && nb6_ring_leer39 == 1, "%04X: NB6 Vibration: Ring B nach sub14 %d, leer bei sub05-Bild 39 %d", raum, nb6_ring_ok, nb6_ring_leer39);
 
     /* ---- SZENE ab der Armierung (Bild 0 ist schon gelaufen) ---- */
     FILE *spur = NULL;
@@ -990,6 +1102,7 @@ int main(void)
     test_ablauf("STAGE5/ROOM5091.RDT", 0x5091u);
     free(s_ems);
     free(s_lampe_md1_raw);
+    free(s_core_esp); free(s_r704_esp);
     if (fails) { fprintf(stderr, "test_r41_g5auftritt: %d Fehler\n", fails); return 1; }
     fprintf(stderr, "test_r41_g5auftritt: OK\n");
     return 0;

@@ -103,6 +103,13 @@ int re15_objpoly_r38_tri_mesh(const re15_md1_vertex_t *const v[3], const int32_t
 int re15_objpoly_r38_quad_mesh(const re15_md1_vertex_t *const v[4], const int32_t bm[9], const int32_t bt[3],
                                int h, int ofx, int ofy, int ax[4], int ay[4], int *wz, uint8_t tri_ok[2]);
 
+/* Dasselbe mit dem ganzen Polygon (SZ je Scheitel, NCLIP-MAC0 opz, OTZ, GPU-Grenze tri_ok) - fuer Zeichner mit eigener
+ * Annahme-Regel und OT-Einsortierung (RE2-Raumobjekte, g5lampen_pc.c). Rueckgabe wie re15_objpoly_r38_tri / _quad. */
+int re15_objpoly_r38_tri_mesh_p(const re15_md1_vertex_t *const v[3], const int32_t bm[9], const int32_t bt[3],
+                                int h, int ofx, int ofy, re15_objpoly_t *p);
+int re15_objpoly_r38_quad_mesh_p(const re15_md1_vertex_t *const v[4], const int32_t bm[9], const int32_t bt[3],
+                                 int h, int ofx, int ofy, re15_objpoly_t *p);
+
 /* NUR PC (platform/pc/src/objpoly_r38_pc.c): Viereck, von dem genau ein GPU-Dreieck (0,1,2)/(1,2,3) besteht ->
  * nur dieses zeichnen. rgb = je Scheitel 0..3 die Farbe (r,g,b); attr = Objekt-Attribut (halbtransparent ueber
  * re15_objabe_r38_pc_dreieck, Nachbesserung 1). */

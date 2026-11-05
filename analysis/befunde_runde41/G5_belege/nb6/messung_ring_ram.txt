@@ -1,0 +1,14 @@
+== s01
+  Task 7 aktiv, pc 8011bcc4
+  Task 9 aktiv, pc 8011ba3d
+  Aktuatoren 0x800CBC20: 0 0
+== s02
+  Task 3 aktiv, pc 8011bd7f
+  Task 4 aktiv, pc 8011bd33
+  Task 9 aktiv, pc 8011ba61
+  Aktuatoren 0x800CBC20: 0 0
+== s03
+  Task 3 aktiv, pc 8011bd7f
+  Task 4 aktiv, pc 8011bd33
+  Task 9 aktiv, pc 8011baaf
+  Aktuatoren 0x800CBC20: 0 0
