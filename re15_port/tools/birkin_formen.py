@@ -299,6 +299,7 @@ VARIANTEN = {
     'v2_spitz':  lambda: _variante(SCHWANZ_V2_SPITZ, KOERPER_V2),
     'v2_kralle': lambda: _variante(SCHWANZ_V2_KRALLE, KOERPER_V2),
     'v3':        None,          # Runde 41 SF V3 (Messblatt V3): baue_v3 - Kopf + Schwanz neu, Koerper Referenz 2
+    'v4':        None,          # Runde 41 SF V4 (Messblatt V4, Nutzer-Beschreibung): _variante_v4 - Kopf + Schwanz + Farben
 }
 
 
@@ -563,6 +564,412 @@ def _variante_v3(schulterauge=None, seite_uv=None):
     f['kopf_v3'] = KOPF_V3
     f['cluts'] = dict(f['cluts'], zusatz=list(f['cluts']['zusatz']) + [KOPF_V3_ZEILE])
     return f
+
+
+# ═══════════════════════════════════════════════════ Runde 41 SF "V4" (Messblatt V4, Nutzer-Beschreibung 2026-11-06 ~22:00)
+# Nutzer: "Da du offenbar nicht in der Lage bist das beim Original Material vom 2 Beiner Birkin richtig zu erkennen, habe ich dir das
+# mit Beschreibung1 und Beschreibung2 und Beschreibung1_Vorlage und Beschreibung2_Vorlage auch noch mal im Detail beschrieben. Ich
+# will EXAKT diese Umsetzung und auch EXAKT seine Farben."  Vorlage = die Original-Videobilder n1485 (vorn) / n1435 (seitlich) mit der
+# Beschriftung des Nutzers; Masszahlen aus analysis/befunde_runde41/SF_MESSBLATT_V4.md (Zeilen/Riegel in den Kommentaren). KEIN
+# RE-Befund (die Sichel-Form gibt es auf der Disc nicht), keine @0x-Konstante. V4 = Koerper Referenz 2 (FORMEN['hangar'], Meshes 0-8 und
+# 10-15 byte-gleich, Riegel G1) + Kopf V4 (Mesh 9: Form x skal, UVs nach Ansicht, Bild in TPage 128 v 160-223, CLUT-Zeile 486) +
+# Schwanz V4 (Knochen 16-22: Gelenke im Bild der Vorlage-2-Kamera, Taille am Knick, Textur TPage 130 u 64-127 v 0-63, Zeile 487) +
+# Farben (Texel/CLUT aus der Eichung tools/r41_sichel/v4/eichen_v4.py, Datei V4_FARBEN). Erzeugt nur mit --variante v4 --aus DIR.
+V4_DIR = os.path.join(HIER, 'r41_sichel', 'v4')
+V4_FARBEN = os.environ.get('RE15_V4_FARBEN', os.path.join(V4_DIR, 'farben_v4.npz'))   # Eichung (Messblatt V4 Abschnitt 5), committet
+# Posen der beiden Vorlage-Kameras (Spielkamera 50A0 Schnitt 12): tools/r41_sichel/v4/posen_v4.json
+V4_POSE_VORN = dict(clip=0, bild=9, gier=1737, x=-9279, z=-22511)    # "135": Silhouette n1485, IoU 0,619 (posen_v4.py)
+V4_POSE_SEITE = dict(clip=1, bild=26, gier=556, x=-8070, z=-21202)   # "85" = sfv2/posen_seite.json "85" (Messblatt V4 Abschnitt 7)
+SCHWANZ_V4 = dict(
+    pose=V4_POSE_SEITE,                    # Ruhe-Pose = Vorlage 2 (Messblatt V4 Abschnitt 4 "Darstellung" Punkt 1)
+    # T1 (Abschnitt 4 Zeile "Beginn"): Beginn = Unterseite des Ansatzes 0,15 H hinter dem Buckelscheitel, 0,767 H ueber der Sohle.
+    # PORT-WAHL x 0,21 statt 0,15: sichtbar beginnt der Schwanz an der Rueckenkontur der Figur, und die liegt beim Koerper Referenz 2
+    # (Riegel G1: unveraendert) in Pose "85" in 0,767 H Hoehe 0,21 H hinter dem Scheitel (riegel_v4 T1, form_suche_v4.py: Gelenke 0-2
+    # bis 0,49 H nach vorn und 0-0,20 H zur Kamera versetzt aendern den Wert nicht, 0,203-0,225). Die Masse T2-T6 beziehen sich auf den
+    # Beginn; so behalten Ansatz, Biegung, Knick und Ende ihre gemessenen Abstaende. T1 x bleibt rot (Dossier V4, Offen).
+    beginn=(0.21, 0.767),
+    # Mittellinie: Gelenke 16..22 und Ende des Glieds 22 (vor dem Dorn) im Bild der Vorlage-2-Kamera, (dx, dy) in H ab dem Beginn,
+    # dx < 0 = nach hinten (Bild-links), dy > 0 = nach unten. Quelle Abschnitt 4: Ansatzmitte ~0,15 H unter der Oberkante = 0,079 H ueber
+    # dem Beginn (0,229 - 0,15); Achse "fast waagerecht nach hinten" (x 356 -> 298, y 231 -> 247: 15 Grad abwaerts); Biegung bei dx
+    # -0,245 / dy +0,036 (Achse 70-90 Grad nach unten auf <= 0,10 H); "Biegung -> Knick nahezu senkrecht"; Knick dx -0,265 / dy +0,257;
+    # Ende dx -0,245 / dy +0,397 (Endstueck 82-84 Grad, 6-8 Grad wieder nach vorn). Gliederteilung nach Abschnitt 4 Punkt 2 (Vorschlag):
+    # Glied 16 im Buckel (versenkt), 17-18 waagerechter Ansatz bis zur Biegung, 19-20 senkrecht bis zum Knick, 21-22 Endstueck. Die
+    # Werte unten sind diese Messpunkte, nachgestellt an der Riegelmessung (riegel_v4.py T1-T6): form_suche_v4.py 6 Runden ab
+    # (0,12 -0,08) (0,03 -0,05) (-0,12 -0,02) (-0,24 0,015) (-0,268 0,135) (-0,265 0,257) (-0,256 0,33) (-0,248 0,39), dann
+    # gitter_v4.py (Gelenk 2 y / 3 y / 4 x): gewaehlt 0,014 / 0,06 / -0,268 = T2 -0,244/0,025 68 Grad, T3 -0,263/0,255, T4 -0,242/0,398.
+    gelenke=[(0.12, -0.080), (0.03, -0.050), (-0.107, 0.014), (-0.244, 0.060), (-0.268, 0.191), (-0.268, 0.303),
+             (-0.256, 0.363), (-0.245, 0.422)],
+    # Durchmesser je Gelenk in H (Abschnitt 4 "breiter nach oben": vom Knick zum Ruecken f 0,1/0,3/0,5/0,7 = 0,03/0,065/0,125/0,14 H,
+    # f 0,9 geht in den Buckel >= 0,09; Taille am Knick 0,024-0,032 H; unter dem Knick gleich breit 0,035 H). Nachgestellt mit
+    # form_suche_v4.py (Gelenke 2-4 nach f 0,7 / 0,5 / 0,3); der Knick (Gelenk 5) 0,022 H, damit er die schmalste Stelle bleibt (T6).
+    durchmesser=[0.16, 0.15, 0.153, 0.128, 0.0475, 0.022, 0.038, 0.038],
+    dorn=0.8,                              # Spitze 0,8 x Endradius (Spitzenform nicht aufloesbar, Abschnitt 9 Punkt 2; PORT-WAHL kurz)
+    glieder=7, seiten=10,                  # M1: 7 x 20 + Deckel 10 + Spitze 10 = 160 Dreiecke <= 212 (EM30-Arm 13-15)
+    ueberlapp=0.45, deckel=True,           # wie V3 (Manschette ins Vorglied, Deckel in den Rumpf)
+    # Textur: eigene Flaeche TPage 130 u 64-127 v 0-255 (frei, Atlasbelegung Referenz 2: Seite 2 belegt u 0-47 und u 0-63 ab v 176),
+    # Zeile 487; je Flaeche eine Farbklasse (Abschnitt 4 "zweitoenig"): Wurzel (Glied 16), Aussenseite des Bogens (Normale weg von der
+    # Bogenmitte), Unterseite (zur Bogenmitte), Endstueck unter dem Knick (Glieder 21-22); je Klasse ein Band von 64 Zeilen.
+    # dichte = Texel je E. (M4: 0,045-0,091, EM30-Haut 0,046-0,087 -> Mitte 0,068): je Glied u-Spanne = Laenge x dichte, v-Spanne =
+    # halber Umfang x dichte (Umfang gespiegelt wie V3), beide hoechstens 63.
+    uv=dict(clut=487 << 6, page=130, u=(64, 127), dichte=0.068,
+            baender=dict(wurzel=(0, 63), aussen=(64, 127), unten=(128, 191), ende=(192, 255))),
+    # Nachschwingen wie V3 (Ae5), Knick-Grenze mit Ausnahme fuer die Biegung (ab 30 Grad Ruhewinkel, schwanz_r41.c SW_GLATT_KNICK_AB)
+    bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.0, grenze=55,
+                  knick=dict(rand=3.0, min=12.0, max=16.0, ab=30.0)),
+)
+KOPF_V4 = dict(
+    # Form (Mesh 9 frei, Riegel G1): K10 Kopfbox vorn 0,159 x 0,172 H (0,14-0,18 x 0,15-0,20); Referenz 2 in Pose "135": 0,126 x 0,170 H.
+    # Mesh-lokal x = vorn (Tiefe), y = Hoehe, z = Breite. Breite x1,2 (K10), Tiefe x1,3 (seitlich ist der Originalkopf 0,22 H tief,
+    # Referenz 2 0,11 H, Kopfbox seitlich Abschnitt 3 / p_riegelfenster.py x 412-467), Hoehe unveraendert. Nachgestellt im Dossier V4.
+    # Eichlauf 1 mit (1,3 1,0 1,2): K10 0,137 x 0,192 H (Breite unter 0,14, Hoehe ueber 0,172) -> Breite x1,4, Hoehe x0,9.
+    skal=(1.3, 0.9, 1.4),
+    # Vorbau der (W)-linken Gesichtshaelfte (Messblatt V4 Abschnitt 3: "die Haare haengen ueber die (W)-linke Gesichtshaelfte und
+    # bilden von der Seite die dunkle Vorderkante"; das Auge liegt seitlich 0,049 H HINTER der Vorderkante). Ohne Vorbau liegt das
+    # Auge an der K4-Stelle in der Seitenansicht 0,00-0,02 H hinter der Kante (augenpunkt_v4.py / Dossier V4): ein Auge kann nicht
+    # beide Riegel K4 und S2 erfuellen. Ecken mit Kopfraum-z > z0 (z > 0 = (W)-links) werden im vorderen Teil (x > xa) nach vorn
+    # geschoben: dx = d x glatt((z - z0) / (z1 - z0)) x glatt((x - xa) / (xb - xa)). d = Abstand, der S2 x 0,049 H herstellt
+    # (0,049 H = 13 px bei H 264 in Pose "85" = ~190 E. bei 0,069 px/E.), nachgestellt im Dossier V4.
+    # Nur oberhalb des Mauls (y < ya, voll ab yb; Kopfraum y < 0 = oben): mit Vorbau bis zum Kinn mass K10 0,209-0,212 H (Hoehe > 0,20).
+    vorbau=dict(d=200.0, z0=-60.0, z1=60.0, xa=100.0, xb=320.0, ya=-50.0, yb=-150.0),
+    clut=486, page=128,
+    # Ansichten: Flaechen von Mesh 9 mit Blick zur Kamera (Normale . Blick >= schwelle) bekommen das Bild der Ansicht, in der sie
+    # frontaler liegen (Parallelprojektion aus der Spielkamera): vorn = Pose "135" (Vorlage 1), seitlich = Pose "85" (Vorlage 2).
+    # Haarstraehne seitlich (Messblatt V4 Abschnitt 8 zu N27: "bei Bedarf hoechstens 2 flache Dreiecke an Knochen 9 fuer die
+    # Vorderkante"; S3: dunkler Streifen vor dem Auge im Fenster KS2 = Anteile 0,84-0,96 x 0,52-0,80 der Kopfbox seitlich). Der Kopf
+    # Referenz 2 laeuft seitlich als Keil nach vorn unten aus; im Fenster KS2 lag Hintergrund (Eichlauf 5: L* 38,6, S3 rot). Ein
+    # Viereck in der Seitenansicht ueber x 0,80-0,99 / y 0,46-0,84 der Kopfbox (Ecken der projizierten Mesh-9-Ecken), Ebene Kopfraum-
+    # nah an der Kopfoberflaeche (Modell-z der naechsten Ecke) plus 'vor' E. zur Kamera, Texel = Seitenbild (Zone Haar).
+    straehne=dict(x=(0.86, 0.99), y=(0.50, 0.84), vor=100.0),   # Eichlauf 6: x 0,80 / vor 30 teilte das Auge (S1 4 Komp.); Lauf 8: Kopfflaechen vor dem oberen Ende -> y 0,50, vor 100
+    vorn=dict(pose=V4_POSE_VORN, u=(0, 47), v=(160, 223)),
+    seite=dict(pose=V4_POSE_SEITE, u=(56, 111), v=(160, 223)),     # TPage 128 v 160-255 frei (Atlasbelegung Referenz 2)
+    schwelle=0.05,
+    # (Eichlauf 10 mit Vorrang fuer das Vorderbild ab Normale . Blick >= 0,35: die streifend gesehenen Seitenflaechen teilten sich dann
+    # Texel mit den Vorderflaechen, das Auge zerfiel (K1-K4 rot) - verworfen, keine Vorrangregel)
+)
+
+
+def _variante_v4():
+    f = dict(FORMEN['hangar'])
+    f['schwanz_kette'] = dict(f['schwanz_kette'], **SCHWANZ_V4)
+    f['kopf_v4'] = KOPF_V4
+    return f
+
+
+_V4_KAM = {}
+
+
+def _v4_kamera():
+    import birkin_buehne as BB
+    if not _V4_KAM:
+        r = BB.Raum('50A0')
+        s = r.schnitt(12)
+        _V4_KAM['k'] = BB.Kamera(s['pos'], s['ziel'], s['fov'] >> 7)
+        _V4_KAM['M'] = BB.abbildung_laden('50A0', 12)
+    return _V4_KAM['k'], _V4_KAM['M']
+
+
+def v4_proj(pose, P):
+    """Punkt(e) im Modellraum der Pose (mo.geometrie) -> Videopunkt 640x480 der Spielkamera 50A0/12 (wie b2.projiziere)."""
+    import birkin_buehne as BB
+    kam, M = _v4_kamera()
+    g = int(pose['gier'])
+    s, c = EA.sin_q12(g) / 4096.0, EA.cos_q12(g) / 4096.0
+    Y = np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+    P = np.atleast_2d(np.asarray(P, float)) @ Y.T + np.array([pose['x'], pose.get('y', 0), pose['z']], float)
+    q = P @ (kam.V.astype(float) / 4096.0).T + kam.t.astype(float)
+    sx = BB.OFX + q[:, 0] * kam.h / q[:, 2]
+    sy = BB.OFY + q[:, 1] * kam.h / q[:, 2]
+    x, y = BB.abbilden(sx + BB.PHASE, sy + BB.PHASE, M)
+    return np.stack([x, y], 1)
+
+
+def v4_kamerapunkt(pose):
+    """Kameraort im Modellraum der Pose."""
+    kam, _M = _v4_kamera()
+    g = int(pose['gier'])
+    s, c = EA.sin_q12(g) / 4096.0, EA.cos_q12(g) / 4096.0
+    Y = np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+    return Y.T @ (np.array(kam.pos, float) - np.array([pose['x'], pose.get('y', 0), pose['z']], float))
+
+
+def v4_rueck(pose, xy, z):
+    """Videopunkt -> Modellpunkt der Pose auf der Ebene Modell-z = z (Newton mit numerischer Ableitung)."""
+    p = np.array([0.0, -2000.0, float(z)])
+    for _ in range(40):
+        f0 = v4_proj(pose, p)[0]
+        J = np.zeros((2, 2))
+        for k in range(2):
+            d = np.zeros(3); d[k] = 1.0
+            J[:, k] = v4_proj(pose, p + d)[0] - f0
+        st = np.linalg.solve(J, f0 - np.asarray(xy, float))
+        p[:2] -= st
+        if np.abs(st).max() < 1e-4:
+            break
+    return p
+
+
+def _v4_kf(mo, pose):
+    f0, nf = mo.clips[pose['clip']]
+    return mo.frames[f0 + pose['bild'] % nf] & 0xFFF
+
+
+def kette_v4_punkte(sw, mo, A):
+    """Schwanz V4: Gelenke aus den Bildmassen der Vorlage 2 (SCHWANZ_V4 gelenke/durchmesser in H) per Rueckprojektion durch die
+    Spielkamera auf die Mittelebene der Figur (Modell-z des Ankerknochens A in der Pose); Radien aus dem Bildmassstab am Gelenk.
+    Bildgroessen der Figur aus den projizierten Ecken der Koerpermeshes 0-15: Oberkante, Sohle, H, Buckelscheitel (Mitte der Ecken in
+    der obersten 0,01 H). Rueckgabe: Gelenke im Raum von A, Radien (E.), Info."""
+    p = sw['pose']
+    kf = _v4_kf(mo, p)
+    V, _N, F = mo.geometrie(kf)
+    koerper = sorted({i for f in F if f['bone'] < 16 for i in f['v']})
+    xy = v4_proj(p, V[koerper])
+    ok, so = float(xy[:, 1].min()), float(xy[:, 1].max())
+    H = so - ok
+    scheitel = float(xy[xy[:, 1] <= ok + 0.01 * H, 0].mean())
+    bx, by = scheitel - sw['beginn'][0] * H, so - sw['beginn'][1] * H
+    R, T = mo.pose(kf)
+    Ra, Ta = R[A].astype(float) / 4096.0, T[A].astype(float)
+    z = float(T[A][2])
+    zk = 1.0 if v4_kamerapunkt(p)[2] > z else -1.0              # Modell-z-Richtung zur Kamera (seitliche Ansicht)
+    pk, rad = [], []
+    for i, ((dx, dy), d) in enumerate(zip(sw['gelenke'], sw['durchmesser'])):
+        q = v4_rueck(p, (bx + dx * H, by + dy * H), z)
+        e = v4_proj(p, np.vstack([q, q + np.array([0.0, 100.0, 0.0])]))
+        pxu = float(np.linalg.norm(e[1] - e[0])) / 100.0
+        tz = sw.get('tiefe', [0.0] * len(sw['gelenke']))[i]
+        if tz:                                                   # Versatz zur Kamera (H, Bildmassstab am Gelenk), dann neu rueckprojizieren
+            q = v4_rueck(p, (bx + dx * H, by + dy * H), z + zk * tz * H / pxu)
+        pk.append(tuple(Ra.T @ (q - Ta)))
+        rad.append(0.5 * d * H / pxu)
+    return pk, rad, dict(H=H, ok=ok, sohle=so, scheitel=scheitel, beginn=(bx, by), z=z)
+
+
+def kette_ruhe_v4(pk, rad):
+    """Ruhegestalt aus den Gelenken direkt (keine Catmull-Rom-Neuverteilung: die Biegung und der Knick muessen auf Gelenke fallen,
+    Messblatt V4 Abschnitt 4 Punkt 2)."""
+    p = np.array(pk, float)
+    n = len(p) - 1
+    L = np.linalg.norm(np.diff(p, axis=0), axis=1)
+    lokal, W = [], np.eye(3)
+    for i in range(n):
+        d = W.T @ (p[i + 1] - p[i])
+        Li = _quant(_min_rot(np.array([0.0, 1.0, 0.0]), d))
+        lokal.append(Li)
+        W = W @ Li
+    rel = [tuple(int(round(c)) for c in p[0])] + [(0, int(round(L[i - 1])), 0) for i in range(1, n)]
+    s = np.r_[0, np.cumsum(L)] / L.sum()
+    return dict(p=p, L=[int(round(x)) for x in L], lokal=lokal, rel=rel, radien=np.array(rad, float), s=s)
+
+
+def kette_meshes_v4(sw, ruhe, welt, bogenmitte):
+    """Schwanz V4: Kegelstuempfe wie kette_meshes_v3 (Gehrung an den Gelenken, Deckel, Spitze), Textur je Flaeche nach Farbklasse
+    (SCHWANZ_V4 uv baender): Glied 0 'wurzel', Glieder 5-6 'ende', sonst 'aussen'/'unten' nach der Flaechennormale in der Ruhe-Pose:
+    aussen = Normale zeigt weg von der Bogenmitte (welt[i] = (Drehung, Ursprung) des Glieds im Ankerraum, bogenmitte im Ankerraum)."""
+    S, uv = sw['seiten'], sw['uv']
+    out, n = [], sw['glieder']
+    ey = np.array([0.0, 1.0, 0.0])
+    for i in range(n):
+        Li, r0, r1 = ruhe['L'][i], ruhe['radien'][i], ruhe['radien'][i + 1]
+        ue = sw['ueberlapp'] * r0
+        m = dict(v=[], n=[], tf=[], tuv=[], qf=[], quv=[])
+        t0 = ey if i == 0 else (ruhe['lokal'][i].T @ ey + ey)
+        t1 = ey if i == n - 1 else (ey + ruhe['lokal'][i + 1] @ ey)
+        ringe = []
+        for c0, t, r in ((np.array([0.0, -ue, 0.0]), t0, r0), (np.array([0.0, float(Li), 0.0]), t1, r1)):
+            Rt = _min_rot(ey, t / np.linalg.norm(t))
+            ring = []
+            for k in range(S):
+                w = 2 * np.pi * k / S
+                q = Rt @ np.array([np.cos(w), 0.0, np.sin(w)])
+                ring.append(len(m['v']))
+                m['v'].append([int(round(x)) for x in c0 + q * r] + [0])
+                m['n'].append([int(round(x)) for x in q * 4096] + [0])
+            ringe.append(ring)
+        W, P0 = welt[i]
+        achse_mitte = P0 + W @ np.array([0.0, Li / 2.0, 0.0])
+
+        def klasse(nrm_lokal):
+            if i == 0:
+                return 'wurzel'
+            if i >= 5:
+                return 'ende'
+            nw = W @ nrm_lokal
+            return 'aussen' if float(nw @ (achse_mitte - bogenmitte)) > 0 else 'unten'
+
+        us = min(uv['u'][1] - uv['u'][0], Li * uv['dichte'])
+        vs_ = min(63.0, np.pi * 0.5 * (r0 + r1) * uv['dichte'])
+
+        def tx(kl, k, t):
+            v0, _v1 = uv['baender'][kl]
+            a = 1.0 - abs(1.0 - 2.0 * (k % (S + 1)) / S)
+            return (int(round(uv['u'][0] + us * t)), int(round(v0 + vs_ * a)))
+
+        def orient(ia, ib, ic):
+            P = [np.array(m['v'][j][:3], float) for j in (ia, ib, ic)]
+            N = sum(np.array(m['n'][j][:3], float) for j in (ia, ib, ic))
+            return np.cross(P[1] - P[0], P[2] - P[0]) @ N < 0
+        for k in range(S):
+            k2 = (k + 1) % S
+            a, b = ringe[0][k], ringe[0][k2]
+            c, d = ringe[1][k], ringe[1][k2]
+            w = 2 * np.pi * (k + 0.5) / S
+            kl = klasse(np.array([np.cos(w), 0.0, np.sin(w)]))
+            uvs = [tx(kl, k, 0.0), tx(kl, k + 1, 0.0), tx(kl, k, 1.0), tx(kl, k + 1, 1.0)]
+            if not orient(a, b, c):
+                a, b, c, d = b, a, d, c
+                uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
+            m['qf'].append([a, a, b, b, c, c, d, d])
+            m['quv'].append([uvs[0][0], uvs[0][1], uv['clut'], uvs[1][0], uvs[1][1], uv['page'],
+                             uvs[2][0], uvs[2][1], 0, uvs[3][0], uvs[3][1], 0])
+        kegel = []
+        if i == 0 and sw.get('deckel', True):
+            kegel.append((ringe[0], [0, int(round(-ue - 0.8 * r0)), 0], [0, -4096, 0], 0.0))
+        if i == n - 1:
+            kegel.append((ringe[1], [0, int(round(Li + sw['dorn'] * r1)), 0], [0, 4096, 0], 1.0))
+        for ring, p, nn, t in kegel:
+            sv = len(m['v'])
+            m['v'].append(p + [0]); m['n'].append(nn + [0])
+            for k in range(S):
+                a, b = ring[k], ring[(k + 1) % S]
+                if not orient(a, b, sv):
+                    a, b = b, a
+                w = 2 * np.pi * (k + 0.5) / S
+                kl = klasse(np.array([np.cos(w), 0.0, np.sin(w)]))
+                p0, p1 = tx(kl, k, t), tx(kl, k + 1, t)
+                m['tf'].append([a, a, b, b, sv, sv])
+                m['tuv'].append([p0[0], p0[1], uv['clut'], p1[0], p1[1], uv['page'], (p0[0] + p1[0]) // 2, p0[1], 0])
+        out.append(m)
+    return out
+
+
+def kopf_v4_form_uv(meshes, kp, mo):
+    """Kopf V4: Mesh 9 (mesh-lokal) mit kp['skal'] um den Knochenursprung skalieren (Normalen invers-transponiert, wie skaliere_md1),
+    dann je Flaeche die Ansicht waehlen (vorn/seitlich: Normale . Richtung zur Kamera, groesserer Wert, >= schwelle) und die UVs als
+    Parallelprojektion des Videobilds dieser Ansicht in die Flaeche u/v legen (gleicher Massstab in x und y, zentriert). Ergebnis in
+    BAU_INFO['kopf_v4']: Abbildung je Ansicht (Bildbox, Massstab, Versatz) fuer die Eichung (Texel <-> Bildpunkt)."""
+    m = meshes[9]
+    sk = np.array(kp['skal'], float)
+    vb = kp.get('vorbau')
+
+    def glatt(t):
+        t = np.clip(t, 0.0, 1.0)
+        return t * t * (3 - 2 * t)
+    for v in m['v']:
+        q = np.array(v[:3], float) * sk
+        if vb:
+            q[0] += vb['d'] * glatt((q[2] - vb['z0']) / (vb['z1'] - vb['z0'])) * glatt((q[0] - vb['xa']) / (vb['xb'] - vb['xa'])) *                 glatt((q[1] - vb['ya']) / (vb['yb'] - vb['ya']))
+        v[0], v[1], v[2] = (int(round(c)) for c in np.clip(q, -32768, 32767))
+    for nn in m['n']:
+        a = np.array(nn[:3], float); L = np.linalg.norm(a)
+        if L:
+            b = a / sk; b = b / np.linalg.norm(b) * L
+            nn[0], nn[1], nn[2] = (int(round(c)) for c in b)
+    ab = {}
+    V9 = np.array([v[:3] for v in m['v']], float)
+    for ans in ('vorn', 'seite'):
+        pose = kp[ans]['pose']
+        R, T = mo.pose(_v4_kf(mo, pose))
+        R9, T9 = R[9].astype(float) / 4096.0, T[9].astype(float)
+        xy = v4_proj(pose, V9 @ R9.T + T9)
+        x0, y0 = xy.min(0); x1, y1 = xy.max(0)
+        u0, u1 = kp[ans]['u']; v0, v1 = kp[ans]['v']
+        s = min((u1 - u0) / (x1 - x0), (v1 - v0) / (y1 - y0))
+        ou = u0 + 0.5 * ((u1 - u0) - s * (x1 - x0)); ov = v0 + 0.5 * ((v1 - v0) - s * (y1 - y0))
+        ab[ans] = dict(R9=R9, T9=T9, xy=xy, x0=float(x0), y0=float(y0), s=float(s), ou=float(ou), ov=float(ov),
+                       kam=v4_kamerapunkt(pose))
+    wahl = {'vorn': 0, 'seite': 0, 'alt': 0}
+    for fl, ul, n in ((m['tf'], m['tuv'], 3), (m['qf'], m['quv'], 4)):
+        for i, f in enumerate(fl):
+            idx = [f[2 * k + 1] for k in range(n)]
+            N = sum(np.array(m['n'][f[2 * k]][:3], float) for k in range(n))
+            N /= max(np.linalg.norm(N), 1e-9)
+            best, sc = None, -9.0
+            for ans, a in ab.items():
+                mitte = (V9[idx] @ a['R9'].T + a['T9']).mean(0)
+                blick = a['kam'] - mitte; blick /= np.linalg.norm(blick)
+                c = float((a['R9'] @ N) @ blick)
+                if c > sc:
+                    best, sc = ans, c
+            if sc < kp['schwelle']:
+                # Rueckseite: in keiner Vorlage-Kamera sichtbar. Eichlauf 12: mit dem Referenz-2-Wundfleisch (Zeile 485, hell) bildeten
+                # streifend sichtbare Rueckflaechen seitlich ueber dem Auge eigene helle Komponenten (S1) -> auch sie bekommen das Bild
+                # der naeheren Ansicht (Zonenfarben)
+                wahl['alt'] += 1
+            a = ab[best]
+            uv = list(ul[i])
+            for k in range(n):
+                x, y = a['xy'][idx[k]]
+                uv[3 * k] = int(round(a['ou'] + (x - a['x0']) * a['s']))
+                uv[3 * k + 1] = int(round(a['ov'] + (y - a['y0']) * a['s']))
+            uv[2], uv[5] = kp['clut'] << 6, kp['page']
+            ul[i] = uv
+            wahl[best] += 1
+    st = kp.get('straehne')
+    if st:
+        a = ab['seite']
+        x0, y0 = a['xy'].min(0); x1, y1 = a['xy'].max(0)
+        pose = kp['seite']['pose']
+        R9, T9 = a['R9'], a['T9']
+        mitte = (x0 + (x1 - x0) * np.mean(st['x']), y0 + (y1 - y0) * np.mean(st['y']))
+        welt = V9 @ R9.T + T9
+        j = int(np.argmin(np.linalg.norm(a['xy'] - np.array(mitte), axis=1)))
+        zk = 1.0 if a['kam'][2] > welt[j][2] else -1.0
+        z = welt[j][2] + zk * st['vor']
+        ecken = []
+        for fx, fy in ((st['x'][0], st['y'][0]), (st['x'][1], st['y'][0]), (st['x'][0], st['y'][1]), (st['x'][1], st['y'][1])):
+            q = v4_rueck(pose, (x0 + (x1 - x0) * fx, y0 + (y1 - y0) * fy), z)
+            ecken.append(R9.T @ (q - T9))
+        E = np.array(ecken)
+        nrm = R9.T @ np.array([0.0, 0.0, zk]); nrm /= np.linalg.norm(nrm)
+        b0, n0 = len(m['v']), len(m['n'])
+        for e in E:
+            m['v'].append([int(round(c)) for c in e] + [0])
+            m['n'].append([int(round(c)) for c in nrm * 4096] + [0])
+        uvs = []
+        for fx, fy in ((st['x'][0], st['y'][0]), (st['x'][1], st['y'][0]), (st['x'][0], st['y'][1]), (st['x'][1], st['y'][1])):
+            x, y = x0 + (x1 - x0) * fx, y0 + (y1 - y0) * fy
+            uvs.append((int(round(a['ou'] + (x - a['x0']) * a['s'])), int(round(a['ov'] + (y - a['y0']) * a['s']))))
+        ia, ib, ic, idd = b0, b0 + 1, b0 + 2, b0 + 3
+        if np.cross(E[1] - E[0], E[2] - E[0]) @ nrm >= 0:          # Windung wie EM30: Kreuzprodukt gegen die Normale
+            ia, ib, ic, idd = ib, ia, idd, ic
+            uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
+        m['qf'].append([ia - b0 + n0, ia, ib - b0 + n0, ib, ic - b0 + n0, ic, idd - b0 + n0, idd])
+        m['quv'].append([uvs[0][0], uvs[0][1], kp['clut'] << 6, uvs[1][0], uvs[1][1], kp['page'], uvs[2][0], uvs[2][1], 0,
+                         uvs[3][0], uvs[3][1], 0])
+    BAU_INFO['kopf_v4'] = dict(wahl=wahl, **{k: dict(x0=v['x0'], y0=v['y0'], s=v['s'], ou=v['ou'], ov=v['ov']) for k, v in ab.items()})
+
+
+def v4_farben_einsetzen(tim, kp, sw):
+    """Eichung (V4_FARBEN, tools/r41_sichel/v4/eichen_v4.py) in den TIM: Texelbilder Kopf vorn/seitlich und Schwanzbaender (Indizes),
+    CLUT-Zeilen 486 (Kopf) / 487 (Schwanz) und die geeichten Hautzeilen 480-485 (Koerperfarben F6-F19 nur ueber die CLUT, Texel der
+    Meshes 0-15 unveraendert). Ohne Datei: Platzhalter (Index 128, Zeilen grau), damit die Eichung den ersten Stand rendern kann."""
+    tim = bytearray(tim)
+    cx, cy, cw, ch, c, ende = _clut(tim)
+    iw, ih = struct.unpack_from('<HH', tim, ende + 8)
+    breite = iw * 2
+    pix = np.frombuffer(bytes(tim[ende + 12:ende + 12 + breite * ih]), np.uint8).reshape(ih, breite).copy()
+    f = dict(np.load(V4_FARBEN)) if os.path.exists(V4_FARBEN) else {}
+    pb = 128 * (kp['page'] & 0xF)
+    for name, ans in (('kopf_vorn', kp['vorn']), ('kopf_seite', kp['seite'])):
+        u0, u1 = ans['u']; v0, v1 = ans['v']
+        pix[v0:v1 + 1, pb + u0:pb + u1 + 1] = f.get(name, np.full((v1 - v0 + 1, u1 - u0 + 1), 128, np.uint8))
+    uv = sw['uv']
+    pbs = 128 * (uv['page'] & 0xF)
+    pix[0:256, pbs + uv['u'][0]:pbs + uv['u'][1] + 1] = f.get('schwanz', np.full((256, 64), 128, np.uint8))
+    grau = np.stack([np.arange(256)] * 3, -1).astype(float)
+    zeilen = {kp['clut'] - cy: f.get('clut486', grau), (uv['clut'] >> 6) - cy: f.get('clut487', grau)}
+    neu = c.copy()
+    if 'haut' in f:                                   # geeichte Zeilen 480.. (RGB 0..255 je Eintrag; transparente bleiben)
+        for z in range(min(ch, f['haut'].shape[0])):
+            neu[z] = _pack(np.asarray(f['haut'][z], float), c[z])
+    alle = np.zeros((max(ch, max(zeilen) + 1), cw), np.int64)
+    alle[:ch] = neu
+    for z, rgb in zeilen.items():
+        a = np.full(256, 0x7FFF, np.int64); a[0] = 0
+        alle[z] = _pack(np.asarray(rgb, float), a)
+    alle = alle.astype('<u2')
+    blk = struct.pack('<I4H', 12 + alle.size * 2, cx, cy, cw, alle.shape[0]) + alle.tobytes()
+    return bytes(tim[:8]) + blk + bytes(tim[ende:ende + 12]) + pix.tobytes() + bytes(tim[ende + 12 + breite * ih:])
 
 
 # ═══════════════════════════════════════════════════ MD1: Vertex-/Normalen-Offsets
@@ -1263,8 +1670,13 @@ def schwanz_bewegung(emr, edd, sw, ruhe):
                         # begrenzt auf min..max; sonst in der Ebene beider Glieder auf die Grenze zurueckdrehen
                         y = np.array([0.0, 1.0, 0.0])
                         dv, dn = welt[i - 1] @ y, W @ y
-                        lim = np.radians(np.clip(np.degrees(np.arccos(np.clip((ruhe['lokal'][i] @ y) @ y, -1, 1))) + kn['rand'],
-                                                 kn['min'], kn['max']))
+                        ruhe_grad = np.degrees(np.arccos(np.clip((ruhe['lokal'][i] @ y) @ y, -1, 1)))
+                        lim = np.radians(np.clip(ruhe_grad + kn['rand'], kn['min'], kn['max']))
+                        if kn.get('ab') is not None and ruhe_grad > kn['ab']:
+                            # Runde 41 SF V4 (Messblatt V4 Abschnitt 4 Punkt 2): ein Gelenk, dessen Ruhewinkel ueber kn['ab'] liegt
+                            # (die Biegung 70-90 Grad), behaelt Ruhewinkel + rand; die 16-Grad-Grenze gilt fuer die uebrigen
+                            # (wie schwanz_r41.c glaetten, SW_GLATT_KNICK_AB)
+                            lim = np.radians(ruhe_grad + kn['rand'])
                         if float(dv @ dn) < np.cos(lim):
                             sv = dn - dv * float(dv @ dn)
                             sv = sv / np.linalg.norm(sv) if np.linalg.norm(sv) > 1e-9 else np.cross(dv, [0.0, 0.0, 1.0])
@@ -1802,6 +2214,16 @@ def baue(blob, form):
         pk, info = kette_v2_punkte(kette, mo, kette['knochen'])
         kette = dict(kette, punkte=pk)
         BAU_INFO['schwanz_v2'] = info
+    elif kette and kette.get('gelenke'):
+        # Schwanz V4 (Messblatt V4): Gelenke direkt aus den Bildmassen der Vorlage 2 (kette_v4_punkte), Modellraum der fertigen Haltung
+        mo = EA.Modell.__new__(EA.Modell)
+        mo.skel = EA.emr_parse(emr0)
+        mo.clips, mo.frames = EA.edd_parse(bytes(blob[d[1]:d[2]]))
+        mo.meshes = EA.md1_parse(md1)
+        pk, rad, info = kette_v4_punkte(kette, mo, kette['knochen'])
+        kette = dict(kette, punkte=pk, radien_v4=rad)
+        BAU_INFO['schwanz_v2'] = info
+        BAU_INFO['mo_v4'] = mo
     elif kette and kette.get('bogen'):
         # Schwanz V3 (Messblatt V3): glatter Bogen statt Haken mit Seitenwellen, Modellraum der fertigen Haltung wie V2.
         mo = EA.Modell.__new__(EA.Modell)
@@ -1828,11 +2250,26 @@ def baue(blob, form):
         if kette:
             # Mesh 16 (Hand mit Rohr, ohne Knochen) entfaellt: Mesh 16.. = Glieder der Kette (Mesh i == Knochen i).
             # Der Port tauscht Teil 15 nur bei genau 16 Knochen gegen Mesh 16 (main.c bk_rohr).
-            ruhe = kette_ruhe(kette)
+            ruhe = kette_ruhe_v4(kette['punkte'], kette['radien_v4']) if kette.get('radien_v4') is not None else kette_ruhe(kette)
             BAU_INFO['ruhe'] = ruhe
             if form.get('kopf_v2'):
                 kopf_v2_uv(meshes, form['kopf_v2'])
-            if 'fenster' in kette['uv']:                   # Schwanz V3: Kegelstuempfe mit Hautfenstern
+            if form.get('kopf_v4'):
+                kopf_v4_form_uv(meshes, form['kopf_v4'], BAU_INFO['mo_v4'])
+            if 'baender' in kette['uv']:                   # Schwanz V4: Farbklassen je Flaeche in der Ruhe-Pose
+                mo4 = BAU_INFO['mo_v4']
+                R, T = mo4.pose(_v4_kf(mo4, kette['pose']))
+                W, P, welt = np.eye(3), np.array(ruhe['rel'][0], float), []
+                for i in range(kette['glieder']):
+                    W = W @ ruhe['lokal'][i]
+                    welt.append((W.copy(), P.copy()))
+                    P = P + W @ np.array([0.0, ruhe['L'][i], 0.0])
+                # Bogenmitte (Ankerraum): innen im Bogen, auf Hoehe des Knicks (Gelenk 5) unter dem waagerechten Ansatz (Gelenk 2):
+                # x/z von Gelenk 2, y von Gelenk 5 - liegt zwischen Ansatz und senkrechtem Stueck (Messblatt V4 Abschnitt 4 Biegung)
+                bm = np.array([ruhe['p'][2][0], ruhe['p'][5][1], ruhe['p'][2][2]])
+                bm = ruhe['p'][3] + 0.5 * (bm - ruhe['p'][3])
+                meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes_v4(kette, ruhe, welt, bm)
+            elif 'fenster' in kette['uv']:                   # Schwanz V3: Kegelstuempfe mit Hautfenstern
                 meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes_v3(kette, ruhe)
             else:
                 meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes(kette, ruhe, meshes)
@@ -1845,6 +2282,8 @@ def baue(blob, form):
         tim = schwanz_textur(tim, form['schwanz_textur'])
     if form.get('kopf_v2') and not form.get('kopf_v3'):     # V3 malt nach dem Bau (kopf_v3_malen)
         tim = kopf_v2_textur(tim, form['kopf_v2'])
+    if form.get('kopf_v4'):                                 # V4: Texel/CLUT aus der Eichung (v4_farben_einsetzen)
+        tim = v4_farben_einsetzen(tim, form['kopf_v4'], form['schwanz_kette'])
     if len(tim) % 4:
         tim += bytes(4 - len(tim) % 4)
     sek = [bytes(vor[d[i]:d[i+1]]) for i in range(7)]
@@ -2546,7 +2985,7 @@ def main():
         os.makedirs(a.aus, exist_ok=True)
         for name in a.variante:
             BAU_INFO.clear()
-            blob = baue_v3(basis) if name == 'v3' else baue(basis, VARIANTEN[name]())
+            blob = baue_v3(basis) if name == 'v3' else baue(basis, _variante_v4()) if name == 'v4' else baue(basis, VARIANTEN[name]())
             ziel = os.path.join(a.aus, 'EM30_%s.EMD' % name.upper())
             with open(ziel, 'wb') as f:
                 f.write(blob)

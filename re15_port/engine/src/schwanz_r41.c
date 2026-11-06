@@ -49,6 +49,13 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
 #define SW_GLATT_MIN       0.2094f    /* 12 Grad */
 #define SW_GLATT_MAX       0.2793f    /* 16 Grad. Lauf V3 mit 22 Grad (Raum max 22,2): im Bild der Spielkamera bis 55 Grad je Gelenk,
                                        * 5 Gelenke > 20 Grad (Glieder schraeg zur Kamera verkuerzt, riegel_v3 R25b/R26b rot) */
+/* Runde 41 SF "V4" (analysis/befunde_runde41/SF_MESSBLATT_V4.md Abschnitt 4 Punkt 2: die Biegung 70-90 Grad auf <= 0,10 H muss auf
+ * ein Gelenk fallen, "SW_GLATT_MAX muss fuer die Biegung angepasst werden"): ein Gelenk, dessen Keyframe-Gelenkwinkel ueber
+ * SW_GLATT_KNICK_AB liegt, ist eine gewollte Biegung und darf seinen Keyframe-Winkel + SW_GLATT_RAND behalten; die 16-Grad-Grenze gilt
+ * nur fuer die uebrigen Gelenke. V3 bleibt unveraendert: dort begrenzt schon das Nachschwingen der Keyframes (tools/birkin_formen.py
+ * schwanz_bewegung knick max 16) jeden Gelenkwinkel auf ~16 Grad. Dieselbe Regel gilt beim Nachschwingen (knick 'ab'). GESTALTUNG
+ * (PORT-WAHL), keine Original-Konstante. */
+#define SW_GLATT_KNICK_AB  0.5236f    /* 30 Grad (V4: Ruhe-Gelenkwinkel 6,5 / 6,2 / 60,0 / 11,1 / 12,4 Grad, Biegung am Gelenk 19) */
 
 static struct {
     int      gueltig;
@@ -226,14 +233,15 @@ static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float bo
         float ka[3] = { zw[j][0] - zw[j - 1][0], zw[j][1] - zw[j - 1][1], zw[j][2] - zw[j - 1][2] };
         float kd[3] = { zw[j + 1][0] - zw[j][0], zw[j + 1][1] - zw[j][1], zw[j + 1][2] - zw[j][2] };
         if (norm(a) < 1e-3f || norm(d) < 1e-3f) continue;
-        float lim = SW_GLATT_MIN;
+        float lim = SW_GLATT_MIN, kw = 0.0f;
         if (norm(ka) > 1e-3f && norm(kd) > 1e-3f) {
             float c = ka[0] * kd[0] + ka[1] * kd[1] + ka[2] * kd[2];
             c = c > 1.0f ? 1.0f : (c < -1.0f ? -1.0f : c);
-            lim = acosf(c) + SW_GLATT_RAND;
+            kw = acosf(c);
+            lim = kw + SW_GLATT_RAND;
         }
         if (lim < SW_GLATT_MIN) lim = SW_GLATT_MIN;
-        if (lim > SW_GLATT_MAX) lim = SW_GLATT_MAX;
+        if (lim > SW_GLATT_MAX && kw <= SW_GLATT_KNICK_AB) lim = SW_GLATT_MAX;    /* V4: gewollte Biegung behaelt ihren Winkel */
         const float c = a[0] * d[0] + a[1] * d[1] + a[2] * d[2];
         if (c < cosf(lim)) {
             float s[3] = { d[0] - a[0] * c, d[1] - a[1] * c, d[2] - a[2] * c };

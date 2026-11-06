@@ -1,0 +1,26 @@
+{
+ "85": {
+  "clip": 1,
+  "bild": 26,
+  "gier": 556,
+  "x": -8070,
+  "z": -21202,
+  "art": "seite",
+  "x_ab": 340,
+  "fenster": 128,
+  "iou": 0.6202,
+  "quelle": "Kopie sfv2/posen_seite.json \"85\" (Messblatt V4 Abschnitt 7)"
+ },
+ "135": {
+  "clip": 0,
+  "bild": 9,
+  "gier": 1737,
+  "x": -9279,
+  "z": -22511,
+  "art": "vorn",
+  "iou": 0.619,
+  "x_ab": 462,
+  "y_bis": 396,
+  "quelle": "posen_v4.py: Silhouette n1485 entblendet gegen BSS 50A0/12, IoU Knochen 0-15 (Referenz 2)"
+ }
+}
