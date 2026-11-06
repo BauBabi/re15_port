@@ -587,7 +587,7 @@ static void test_m4_daten(void)
     CHECK(tim && tn == 34336, "RE2/R704_LAMPE.TIM fehlt oder Laenge %zu statt 34336", tn);
     CHECK(vbs && vn > 3144, "RE2/R704_BEBEN.VBS fehlt oder Laenge %zu", vn);
     uint8_t *r = slurp(INFO_RE2 "/PL0/RDT/ROOM7040.RDT", &rn);
-    if (r && md1 && tim && rn > 0x33844u + 34336u) {
+    if (r && md1 && tim && rn >= 0x33844u + 34336u) {   /* NB6: >= (die TIM endet genau am Dateiende 245348; mit > lief der Vergleich seit NB5 nie) */
         CHECK(memcmp(r + 0x28A4, md1, 2012) == 0, "R704_LAMPE.MD1 != ROOM7040.RDT [0x28A4, 0x3080)");
         CHECK(memcmp(r + 0x33844, tim, 34336) == 0, "R704_LAMPE.TIM != ROOM7040.RDT @0x33844");
         CHECK(memcmp(r + 0x244 + 3 * 8, "\x44\x38\x03\x00\xa4\x28\x00\x00", 8) == 0 && memcmp(r + 0x244 + 4 * 8, r + 0x244 + 3 * 8, 8) == 0,
