@@ -500,10 +500,10 @@ static void test_m3_mutation(unsigned raum, const char *rdt)
     CHECK(!re15_bf_mutation_offen(), "M3 %s: Mutation endet unter Dauerfeuer nicht (%d Ticks)", rdt, n);
     CHECK(n < 260, "M3 %s: Mutation dauert %d Ticks unter Beschuss", rdt, n);
     fprintf(stderr, "%s M3: Mutation %d Ticks unter Dauerfeuer, %d Treffer, HP %d\n", rdt, n, treffer_n, b->hp);
-    /* Die Form bringt eigene HP mit (RE2-Ctor +0x156 @0x8010067c, Port 0x96 @0x80118094), nicht den Mutationsrest */
-    CHECK(b->hp < 150, "M3 %s: Vorbedingung, Dauerfeuer hat die HP nicht gesenkt (%d)", rdt, b->hp);
+    /* Die Form bringt eigene HP mit (RE2-Ctor +0x156 @0x8010067c = RE15_BB_FORM_HP 1000, GR NB3), nicht den Mutationsrest */
+    CHECK(b->hp < RE15_BIRKIN_HP_MUTATION, "M3 %s: Vorbedingung, Dauerfeuer hat die HP nicht gesenkt (%d)", rdt, b->hp);
     tick(1);
-    CHECK(b->hp == 150 && b->motion == 10, "M3 %s: Form kommt mit HP %d (Clip %d) statt 150", rdt, b->hp, b->motion);
+    CHECK(b->hp == RE15_BB_FORM_HP && b->motion == 10, "M3 %s: Form kommt mit HP %d (Clip %d) statt %d", rdt, b->hp, b->motion, RE15_BB_FORM_HP);
     re15_bf_modell_hook(NULL);
     free(buf);
 }

@@ -594,16 +594,17 @@ void re15_bb_tick(int slot)
          * tragen x 400 bei Halbmassen 1100/1000). */
         e->hit_offset_x = (int16_t)BB_L(800);
         /* Eigene HP der neuen Form: RE2 schreibt sie im Ctor (+0x156 = 1000/900/1100 je Schwierigkeit @0x8010067c-b8), wie
-         * der G5 (@0x801003fc, re15_bf_morph_zu_g5). Port-Mass: die 0x96 der Mutation @0x80118094-98, mit der die 0x30-Waffen
-         * rechnen. Ohne das kam die Form unter Dauerfeuer mit dem Mutationsrest an: gemessen HP 30, tot nach 49 Bildern
-         * noch im Auftritt, kein einziger Angriff (Lauf a1_leon, Dossier Nachbesserung). */
-        e->hp = 150;
+         * der G5 (@0x801003fc, re15_bf_morph_zu_g5). Ohne das kam die Form unter Dauerfeuer mit dem Mutationsrest an: gemessen
+         * HP 30, tot nach 49 Bildern noch im Auftritt, kein einziger Angriff (Lauf a1_leon, Dossier Nachbesserung).
+         * Runde 41 Spur GR NB3 (Nutzerentscheid F2): RE15_BB_FORM_HP = 1000 = der erreichbare G4-Zweig `addiu v0,zero,1000`
+         * @0x80100678 / `sh v0,342(s1)` @0x8010067c (Beleg re15_birkin_formen.h); vorher Port-Mass 150 (0x96 @0x80118094). */
+        e->hp = RE15_BB_FORM_HP;
         /* Abnahme 1 M1: der Schuss laeuft VOR der KI (game_step_common.c), ein Treffer im Tauschbild steht also schon in
          * Zustand 2 oder 3. Der Auftritt ist dann der gesicherte Zustand (+0x1fc), den der Handler fortsetzt @0x80107180-8c;
          * wer ihn ueberschrieb, verlor case 2 und damit das einzige Armieren des Riegel-Zaehlers (+0x93 Bit 0 blieb stehen). */
         s_bb.s_state = 1; s_bb.s_sub = BB_AUFTRITT; s_bb.s_ph2 = 0; s_bb.s_ph3 = 0;
         s_bb.gesichert = 1;
-        if (e->state == 3) e->state = 2;               /* gilt der alten Form; die neue hat noch 150 */
+        if (e->state == 3) e->state = 2;               /* gilt der alten Form; die neue hat volle RE15_BB_FORM_HP */
         if (e->state != 2) {
             e->state = 1; bb_setze(e, BB_AUFTRITT);
             /* Riegel ohne laufenden Zaehler loest hier niemand mehr (nur der Vortakt unten ueber +0x1de). */
@@ -657,7 +658,7 @@ void re15_bb_tick(int slot)
     }
     case 3:                                            /* Port: statt Clip 17 @0x80107b3c die Rueckstoss-Szene */
         if (re15_bf_bahnsteig_aktiv()) { re15_bf_rueckstoss_start(slot); return; }
-        e->hp = 150; e->state = 1; bb_setze(e, BB_ZUCKEN);   /* RE15_BIRKIN_FORM ausserhalb 5090: nur Sichtpruefung */
+        e->hp = RE15_BB_FORM_HP; e->state = 1; bb_setze(e, BB_ZUCKEN);   /* RE15_BIRKIN_FORM ausserhalb 5090: nur Sichtpruefung */
         e->birkin_hurt_cd = 9;
         break;
     default:

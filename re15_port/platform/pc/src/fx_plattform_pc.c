@@ -364,6 +364,65 @@ int re15_pc_force_explosion(int art, const re15_actor_t *ziel)
     return n;
 }
 
+/* ===== Runde 41 Spur GR (Nachbesserung 1) — MESS-HAKEN RE15_FORCE_GRANATE="<bild>:<slot>[,...]" =================
+ * Kein Spielverhalten. Eine liegende Handgranate (Art 2) zuendet am Gegner <slot> mit derselben Zuender-Folge wie
+ * Routine 31 (re15_esp.c case 31), damit Sichtlaeufe auch dort die ECHTE Explosion zeigen, wo kein Wurf das Ziel
+ * erreicht (enge Kanalstege, Wurfbild in der Wandzelle):
+ *   Zuender 7 : Licht-Latch (`sb v0,21336(at)` @0x8001857c), Resolver (Op 47 / FUN_80012d60 @0x800185b8), Kind
+ *               0x03195000 (@0x800185dc), SE (@0x800185ec)
+ *   Zuender 2 : Kinder 0x03195000 + 0x030B5400 (@0x80018640 / @0x80018660)  — 5 ESP-Takte spaeter (7 -> 2)
+ *   Zuender 0 : Kind 0x030B5800 (@0x800186c8)                              — 7 ESP-Takte spaeter
+ * P = (Ziel.x, Spieler.y - 500, Ziel.z) wie RE15_FORCE_EXPLOSION. Bank = die globale (Wurfkoerper-Bank,
+ * game_step_common.c re15_esp_granate_spawn(re15_esp_global_bank(), ...)). */
+#include "re15_esp.h"   /* re15_esp_global_bank, g_re15_licht_latch */
+extern int re15_esp_granate_kind(const re15_esp_t *bank, uint32_t code, int16_t gier, const int32_t p[3]);
+void re15_pc_force_granate_takt(unsigned bild)
+{
+    static const char *spec = NULL; static int init = 0;
+    static int lauf = -1; static int32_t P[3]; static int16_t gier = 0; static uint32_t erledigt = 0;
+    if (!init) { init = 1; spec = getenv("RE15_FORCE_GRANATE");
+                 if (spec) fprintf(stderr, "[harness] RE15_FORCE_GRANATE=%s (erster Takt F%u)\n", spec, bild); }
+    if (!spec || !*spec) return;
+    if (lauf < 0) {
+        const char *p = spec;
+        while (*p) {
+            char *e = NULL;
+            long b = strtol(p, &e, 10);
+            if (!e || *e != ':') return;
+            long s = strtol(e + 1, &e, 10);
+            if (b >= 0 && bild >= (unsigned long)b && bild < (unsigned long)b + 30u && s >= 1 && s < RE15_ACTOR_MAX
+                && g_actors[s].active && !(erledigt & (1u << (s & 31)))) {
+                erledigt |= 1u << (s & 31);
+                const re15_actor_t *z = &g_actors[s];
+                P[0] = z->x; P[1] = g_actors[RE15_ACTOR_SLOT_PLAYER].y - 500; P[2] = z->z;
+                gier = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y;
+                g_re15_licht_latch = 1;
+                int n = re15_granate_r35_explosion(P, gier, 2);
+                re15_esp_granate_kind(re15_esp_global_bank(), 0x03195000u, gier, P);
+                re15_granate_r35_explosion_se(P);
+                fprintf(stderr, "[harness] RE15_FORCE_GRANATE F%u slot=%ld t=%02x P=(%d,%d,%d) Treffer=%d\n",
+                        bild, s, (unsigned)z->type, (int)P[0], (int)P[1], (int)P[2], n);
+                lauf = 0;
+                return;
+            }
+            if (!*e) break;
+            p = (*e == ',') ? e + 1 : e;
+            if (p == e) break;
+        }
+        return;
+    }
+    lauf++;
+    if (getenv("RE15_GR_LOG"))
+        fprintf(stderr, "[harness] RE15_FORCE_GRANATE Takt +%d: ESP-Plaetze belegt %d\n", lauf, re15_esp_fx_count());
+    if (lauf == 5) {
+        re15_esp_granate_kind(re15_esp_global_bank(), 0x03195000u, gier, P);
+        re15_esp_granate_kind(re15_esp_global_bank(), 0x030B5400u, gier, P);
+    } else if (lauf == 7) {
+        re15_esp_granate_kind(re15_esp_global_bank(), 0x030B5800u, gier, P);
+        lauf = -1;
+    }
+}
+
 /* ===== C7 — RE2-Part-Farbwort fuer RE2-KI-Aktoren ausserhalb der Zombie-Gore-Bruecke ========= */
 
 #include "re15_ai_flavor.h"

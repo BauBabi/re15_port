@@ -97,6 +97,8 @@ const re15_emd_animation_t *re15_re2z_re15_pose_anim(void) { return s_re2z_re15_
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: RE1.5-Phase-4-Wundstempel (@0x8010a4e8) am RE2-Abwurf */
 #include "re15_wasserzombie_r38.h" /* Runde 38 Spur U: RE1.5-Hochziehen an der Wasserkante statt Zustands-Dispatch */
 #include "re15_zombiefresser_r41.h" /* Runde 41 Spur I: 0x84/0x85 = Liegender mit Naehe-Wecker, kein Fresser */
+#include "re15_collision.h"   /* Runde 41 Spur GR N1: Boden-Sonde + Wandtest der Explosions-Teile */
+#include "re15_room.h"        /* g_room_rdt / g_room_rdt_ok */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
@@ -4489,6 +4491,7 @@ static void re15_re2z_part_reset(re15_actor_t *e)
     e->re2z_part_seeded  = 0u;
     e->re2z_part_stepped = 0u;
     e->re2z_part_frame   = 0u;
+    e->re2z_part_gr      = 0u;                                 /* PORT, Runde 41 Spur GR N1 */
     for (int i = 0; i < 16; i++) {
         e->re2z_part_flags[i] = (i < 15) ? 1u : 0u;
         /* Farbwort-Seed: der Modell-Aufbau schreibt in JEDEN Part `+0x70 = 0x808080`
@@ -4647,7 +4650,8 @@ int re15_re2z_gore_active(const re15_actor_t *e)
     if (e->type == 0x21u) return re15_ai_re2_for_type(0x21u) && e->re2c_gib_parts != 0u;
     /* Runde 41 Spur S: der RE2-HUND (0x20) wirft im Tod 7 Parts (0x80104440, Tabelle @0x80105680, Flagwort 0x4a
      * @0x801044a4); den Block seedet erst dieser Wurf (re15_gore_r41_hund_bruecke), vorher bleibt die Bruecke aus. */
-    if (e->type == 0x20u) return re15_ai_re2_for_type(0x20u) && (e->re2z_part_flags[0] & 1u) != 0;
+    /* Runde 41 Spur GR N1: auch unter der RE1.5-KI, sobald eine Explosivgranate die Teile geworfen hat (re2z_part_gr). */
+    if (e->type == 0x20u) return (re15_ai_re2_for_type(0x20u) || e->re2z_part_gr != 0u) && (e->re2z_part_flags[0] & 1u) != 0;
     if (!re15_re2z_owns_type(e->type)) return 0;
     if (!re15_ai_re2_for_type(e->type) &&
         !re15_re15_re2z_import_owns(e->type)) return 0;
@@ -4786,6 +4790,32 @@ static void re2z_part_settle(re15_actor_t *e, int i)
     e->re2z_part_blend[i] = (int8_t)(e->re2z_part_blend[i] - 1);      /* @0x80028D7C-88 */
 }
 
+/* Runde 41 Spur GR (Nachbesserung 1) — der Boden UNTER DEM TEIL fuer die Explosions-Teile (re2z_part_gr).
+ * Original RE2: FUN_8004FBA0(&t, 100, 0x2000, 1) @0x80028B74 an der Teil-Lage. PORT-MAPPING auf die RE1.5-Bodensonde
+ * FUN_8001c6e8 mit genau den Argumenten, mit denen RE1.5 seine fliegenden Brocken landet (ESP-Routine 36:
+ * `addu a1,zero,zero` @0x800187dc, `ori a2,zero,0x8` @0x800187e8, `ori a3,zero,0x100` @0x800187f4, `jal 0x8001c6e8`
+ * @0x800187f8; esp_brocken.c). Damit faellt ein Teil hinter der Stegkante in den Kanal statt in der Luft auf Steghoehe
+ * zu liegen. Erklaert die Sonde den eigenen Standboden des Aktors nicht (+-50), bleibt es bei [PORT (1)] Aktor-y. */
+#define GR_G        40   /* PORT-WAHL: Schwerkraft +0x79 je Bild (RE2-Wurf 30 @0x80108E7C / 50 @0x80105398); mit GR_DECKE
+                          * Steigzeit sqrt(2*Steighoehe/40) = 9-12 Bilder = CD2 #577 -> #586..#589 (Teile an der Decke) */
+#define GR_DECKE  2400   /* PORT-WAHL: Zielhoehe des Scheitels ueber dem Boden (+ 0..511 Zufall): CD2 19,55-19,69 s die
+                          * Teile an der Tunneldecke = gut 1,3 Koerperhoehen; Fallzeit vom Scheitel sqrt(2*2400/40) = 11
+                          * Bilder -> Landung ~21-24 Bilder nach der Detonation = CD2 #600 (20,02 s) */
+#define GR_STEIG_MIN 600 /* PORT-WAHL: Mindest-Steighoehe, falls das Teil schon nah an der Zielhoehe sitzt */
+#define GR_VH0      30   /* PORT-WAHL: waagrechtes Tempo 30 + (rand & 0x3f) je Bild: CD2 #577-#592 die linken Teile bis
+                          * an die linke Tunnelwand (gut 250 px in 15 Bildern) */
+static unsigned s_re2z_gr_wand = 0;   /* Port-Diagnose (Tests): Wandtreffer der Explosions-Teile */
+static int s_gr_log = -1;            /* RE15_GR_LOG: Flugbahn je Explosions-Teil (Messzeile, kein Verhalten) */
+unsigned re15_re2z_granate_wandtreffer(void) { return s_re2z_gr_wand; }
+static int32_t re2z_gr_boden(const re15_actor_t *e, int32_t x, int32_t z)
+{
+    if (!g_room_rdt_ok) return (int32_t)e->y;
+    int32_t eigen = (int32_t)re15_collision_room_coll(&g_room_rdt, e->x, e->z, 0, 8, 0x100u);
+    int32_t d = eigen - (int32_t)e->y;
+    if (d < -50 || d > 50) return (int32_t)e->y;
+    return (int32_t)re15_collision_room_coll(&g_room_rdt, x, z, 0, 8, 0x100u);
+}
+
 /* FUN_80028AD8 — Wurf mit Aufschlag (Flagbit 0x20). */
 static void re2z_part_phys_ad8(re15_actor_t *e, int i)
 {
@@ -4793,6 +4823,16 @@ static void re2z_part_phys_ad8(re15_actor_t *e, int i)
     int32_t *t = e->re2z_part_t[i];
 
     if (e->re2z_part_st86[i] == 0) {                           /* lh v0,134 @0x80028AF4 */
+        if ((e->re2z_part_gr >> i) & 1) {
+            /* Runde 41 Spur GR N1 (PORT-WAHL, Block re2z_granate_zerfetzen): die Steig-Geschwindigkeit erst JETZT aus der
+             * wirklichen Lage des Teils (die Matrix ist im ersten gezeichneten Bild eingefroren, re15_re2z_gore_part_matrix)
+             * und der Zielhoehe +0x9A (beim Wurf abgelegt; +0x9A ist das Drift-Feld von FUN_80028DAC, das ein 0x1062-Teil
+             * nie liest): v = sqrt(2 * g * Steighoehe), PsyQ SquareRoot0. */
+            int32_t boden = re2z_gr_boden(e, t[0], t[2]);
+            int32_t steig = (int32_t)e->re2z_part_w9a[i] - (boden - t[1]);
+            if (steig < GR_STEIG_MIN) steig = GR_STEIG_MIN;
+            v[1] = (int16_t)-(int32_t)re15_squareroot0((uint32_t)(2 * (int32_t)e->re2z_part_grav[i] * steig));
+        }
         /* RotMatrix((0, +0x38, 0)) @0x80028B10-24, dann ApplyMatrixSV((+0x3C, +0x3A, 0))
          * mit dem Ergebnis ZURUECK nach +0x38/+0x3A/+0x3C (`addiu a2,s1,56` @0x80028B3C). */
         int32_t M[9];
@@ -4810,6 +4850,13 @@ static void re2z_part_phys_ad8(re15_actor_t *e, int i)
         int32_t floor_y = (e->type == 0x21u) ? (int32_t)e->dog_floor_y   /* Runde 36 Spur C: die Kraehe fliegt —
                                                                             * ihr Boden ist +0x1C2 (Boden-Probe), nicht y */
                                              : (int32_t)e->y;           /* [PORT (1)] @0x80028B74 */
+        const int gr = (e->re2z_part_gr >> i) & 1;             /* Runde 41 Spur GR N1: Explosions-Teil */
+        if (gr) floor_y = re2z_gr_boden(e, t[0], t[2]);        /* Boden AM TEIL (FUN_8004FBA0 @0x80028B74) */
+        if (gr && s_gr_log < 0) s_gr_log = getenv("RE15_GR_LOG") ? 1 : 0;
+        if (gr && s_gr_log) fprintf(stderr, "[gr-teil] F%u slot %d part %d t=(%d,%d,%d) v=(%d,%d,%d) boden=%d st=%d fl=%04x\n",
+                                    (unsigned)e->re2z_part_frame, (int)(e - g_actors), i, (int)t[0], (int)t[1], (int)t[2],
+                                    (int)v[0], (int)v[1], (int)v[2], (int)floor_y, (int)e->re2z_part_st86[i],
+                                    (unsigned)e->re2z_part_flags[i]);
         t[0] += v[0];                                          /* @0x80028B80-8C */
         v[1]  = (int16_t)(v[1] + e->re2z_part_grav[i]);        /* +0x3A += +0x79 @0x80028B90-A4 */
         t[1] += v[1];                                          /* @0x80028BAC-B8 */
@@ -4831,12 +4878,31 @@ static void re2z_part_phys_ad8(re15_actor_t *e, int i)
             }
             if (e->re2z_part_st86[i] == 1) {                   /* lh 134 / beq 1 @0x80028C84-8C */
                 t[1] = floor_y;                                /* @0x80028C94 */
+                /* Runde 41 Spur GR N1 — NUTZER-ENTSCHEID 2026-11-02 ("die einzelnen Koerperteile wuerden nach der
+                 * Explosion da liegen"): ein Explosions-Teil bleibt nach dem zweiten Aufschlag LIEGEN (Bit 0 bleibt,
+                 * st86 = 1 haelt die Physik an: `slti v0,v0,2` @0x80028B60) statt in der Kaskade zu verschwinden. */
+                if (!gr)
                 e->re2z_part_flags[i] =                        /* DER KASKADEN-AUSLOESER:
                                                                 * `and v0,v0,-2` @0x80028CA0 */
                     (uint16_t)(e->re2z_part_flags[i] & (uint16_t)~1u);
             }
         }
-        /* [PORT (2)] Wandtest @0x80028CAC-D20 nicht modelliert. */
+        /* [PORT (2)] Wandtest @0x80028CAC-D20 nicht modelliert — ausser fuer die Explosions-Teile (Runde 41 Spur GR N1):
+         *   80028cac-cd4: a2 = -(t.y / 1800) (`lui 0x91a2 / ori 0xb3c5 / mult` = /1800), a0 = &t (+0x5C), a1 = 100
+         *   80028cdc: jal 0x8004c1bc (a2 = 1 << Band @0x80028CE0, a3 = 0x2000)  -> Treffer:
+         *   80028cec-d20: vx = -(vx >> 2), vz = -(vz >> 2)  (`sll 16 / sra 18` + `subu zero`, sh 56/60)
+         * PORT-MAPPING: FUN_8004C1BC (RE2-Kollision) -> re15_collision_box_blocked (RE1.5-SCA-Zelle der festen Klasse 4
+         * wie re15_collision_constrain_enemy, Radius 100), Band = das des BODENS unter dem Teil statt der Teil-Hoehe:
+         * eine RE1.5-SCA-Wand hat nur das Band ihres Bodens und reicht im Bild bis zur Decke. */
+        if (gr && g_room_rdt_ok) {
+            int band = re15_collision_band_from_y(floor_y);
+            if (band < 0) band = 0;
+            if (re15_collision_box_blocked(&g_room_rdt, t[0], t[2], band, 100, 4u)) {
+                v[0] = (int16_t)-(int16_t)(v[0] >> 2);         /* @0x80028CEC-D1C */
+                v[2] = (int16_t)-(int16_t)(v[2] >> 2);         /* @0x80028CF0-D20 */
+                s_re2z_gr_wand++;
+            }
+        }
     }
 
     if (e->re2z_part_blend[i] >= 0)                            /* lb 122 / bltz @0x80028D24-2C */
@@ -7706,7 +7772,9 @@ static const uint8_t re2z_death_tbl[19][9] = {
  * grosse Lache). Granaten-Zerplatzen zeigen B 3:31.4, 3:36.0 und 8:42.2 (Z08/Z11/Z24) — dort ist vom Koerper fast
  * nichts mehr da, also MEHR als 8BEC (Rumpf bleibt). Zeilen 10/11
  * (Brand/Saeure) bleiben bei der Tabelle: ihr eigenes RE2-Gore (Verkohlung FUN_80106128 / Aetzen) haengt am
- * Sturz-Pfad (unit_r36_granate pinnt die Flammen). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1. */
+ * Sturz-Pfad (unit_r36_granate pinnt die Flammen). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1.
+ * Runde 41 Spur GR: im DEATH-Dispatch geht Zeile 9 bei eingeschaltetem Schalter nicht mehr in diese Zelle, sondern
+ * vorher durch re2z_granate_zerfetzen (Block unten) und dann in den Sturz 0x80108530. */
 int re15_zgore_80prozent(void);   /* zombiegore_r15.c */
 
 /* ---- 80%-GORE IM RE2-GEHIRN: DAS ZERFETZEN (Nutzer-Auftrag 2026-10-30) -----------------------------------------
@@ -7769,6 +7837,168 @@ static void re2z_80_zerfetzen(re15_actor_t *e, re15_actor_t *pl)
     re2z_80_arm(e, 12, slot);                                           /* RE1.5 11/12/13 */
     re2z_se(2);                                                         /* wie @0x801094C4 */
 }
+/* ---- RUNDE 41 SPUR GR: DIE EXPLOSION ZERFETZT DEN ZOMBIE GANZ (Nutzer-Auftrag 2026-11-02, Nachbesserung 1) -------
+ * ⛔ GESTALTUNG / PORT-WAHL (Gore = Maximum aus RE1.5, RE2 und den 80%-Videos; Dossier
+ * analysis/befunde_runde41/GR_granate.md §2N/§5N). VORLAGE ist der einzige HANDGRANATEN-Wurf im 80%-Material:
+ * `Version_80%/Resident Evil 1.5 Complete Disc Video 2 (480p Upscale) (480p).mp4` (CD2, 29,97 B/s, = B 5:20-5:24),
+ * Leon wirft (Ausholen 16,95-17,15 s), Detonation am ueber der Stegkante liegenden Khaki-Zombie (Typ 0x16) im ersten
+ * Bild #577 = 19,253 s. Gemessen Bild fuer Bild (Belege GR_belege/nutzer_cd2 + video2, Messreihe §2N.3):
+ *   (a) Kein Koerper bleibt stehen: ab 19,65 s ist vom Zombie an seiner Stelle nichts mehr zu sehen (#589-#632, bis
+ *       zum Schnitt 21,12 s). Wo die Teile landen, zeigt das Video NICHT (Rauch, Bildausschnitt, Schnitt nach 1,8 s).
+ *       NUTZER-ENTSCHEID 2026-11-02: die Teile landen und BLEIBEN verstreut liegen (bis zum Raumwechsel).
+ *   (b) Teile: 4-5 khakifarbene Brocken (Glied-Laenge, 30-50 px bei 640x480) steigen in 0,10 s (#577->#579) ueber
+ *       Leons Kopf und erreichen die Tunneldecke (Hoehe der Deckenleuchten) 19,55-19,69 s = 9-13 Bilder nach der
+ *       Detonation; sie streuen nach links bis an die linke Wand und nach rechts neben Leon; ein Teil landet
+ *       20,02 s (#600, 23 Bilder), das letzte faellt 20,55-20,62 s (#616-618).
+ *   (c) Blut: rote Wolke ueber dem ganzen Koerper und groesser (#579-#585, bis 2,6 % roter Bildanteil, weg ab
+ *       19,52 s), rote Brocken fliegen nach vorn links (19,69-19,75 s), rote Spritzer auf beiden Stegkanten (20,15 s).
+ *   (d) Rauch: schwarze Saeule ab #590 (19,686 s), voll ab #598, steht bis zum Schnitt (>= 1,4 s) -> re15_esp.c
+ *       Rauch-Nachlauf (Original-Kind 0x030B5800 @0x80018698-a8 wiederholt).
+ * Mechanismen (je Teil ein belegter Einzelmechanismus, Teilnummern = RE2-Slots, Parser-Bindlaengen im Block ueber
+ * re2z_perm_for; RE1.5-Gehirn ueber re2z_part_to_bone = re2_hybrid_perm):
+ *   Rumpf 0, Becken 1, Kopf 8, Oberarme 9/12, Oberschenkel 2/5: RE2-Wurf mit Aufschlag FUN_80028AD8 (Flagwort
+ *       `ori 0x1062` wie der Arm-/Beinwurf @0x80108E5C / @0x8010537C-80, Felder +0x38/+0x3A/+0x3C/+0x79/+0x86/
+ *       +0x3E-42 wie @0x80108E6C-98). Die Kinder (Unterarm/Hand, Unterschenkel/Fuss) fliegen am Eltern-Teil mit
+ *       (Eltern-Verkettung der Records, FUN_80028368.c:106-109). Bit 0 von Part 0 bleibt dabei stehen
+ *       (re15_re2z_gore_active liest es als INIT-Seed).
+ *       Neu gegen den RE2-Wurf (PORT-WAHL nach (b)): Steigflug bis zur Zielhoehe GR_DECKE ueber dem Boden,
+ *       Schwerkraft GR_G, Streuung ueber den Vollkreis, siehe die Konstanten unten; nach dem zweiten Aufschlag
+ *       bleibt das Teil liegen statt in der Kaskade zu verschwinden (`and v0,v0,-2` @0x80028CA0 entfaellt, (a)).
+ *       Boden AM TEIL statt Aktor-y und Wandtest — die zwei Original-Zweige von FUN_80028AD8, die der Port
+ *       bisher offen liess ([PORT (1)]/[PORT (2)] im Block ueber re2z_part_settle), nur fuer diese Teile
+ *       (re2z_part_gr), damit nichts in der Luft haengt und nichts durch Waende fliegt.
+ *   Blut/Brocken wie die erste Fassung: FUN_80109610 P0 (Wolken 8096/6096, Fleischbrocken 0x0902xxxx
+ *       @0x801096E8-0x801097B8), Brocken 0x0800xxxx + Wolke 8000 (@0x80108FF0-0x80109054), Fontaene 0x00021F40
+ *       (@0x80109428-38), Spreng-Russ FUN_8010640C (Zeile 9, @0x80108CD8-EC), Blut 2000 an jedem Teil beim
+ *       Aufschlag (@0x80028C34-4C), Spritzer am Boden (2 x 2 Ausloeser), die Lache waechst an der Leiche.
+ * Danach der normale Sturz 0x80108530 -> Leiche (Zustand 7); gezeichnet werden nur die liegenden Stuecke.
+ * NICHT gebaut (keine Port-Mechanik, benannt statt erfunden): die dunklen Flecken an Wand/Decke 19,75-21,1 s.
+ * Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1 (dann RE2 0x80108BEC wie vor Spur GR). */
+static int re2z_gr_teil_frei(const re15_actor_t *e, int p)
+{
+    return (e->re2z_part_flags[p] & 0x41u) == 0x01u;                    /* vorhanden, nicht schon abgeloest */
+}
+/* Ein Glied fliegt (FUN_80028AD8, Flagwort 0x1062). yaw = Flugrichtung, vy/vh = Start-Tempo senkrecht/waagrecht. */
+static void re2z_gr_wurf(re15_actor_t *e, int p, int16_t yaw, int16_t vy, int16_t vh, int16_t ziel)
+{
+    if (!re2z_gr_teil_frei(e, p)) return;
+    e->re2z_part_w9a[p] = ziel;                                          /* Zielhoehe, gelesen im ersten Wurfbild (ad8) */
+    e->re2z_part_flags[p] |= 0x1062u;                                    /* `ori 0x1062` @0x80108E5C / @0x8010537C-80 */
+    e->re2z_part_v   [p][0] = (int16_t)(yaw & 0xfff);                    /* +0x38 Gier (RotMatrix (0,+0x38,0) @0x80028B10-24) */
+    e->re2z_part_v   [p][1] = vy;                                        /* +0x3A senkrecht */
+    e->re2z_part_v   [p][2] = vh;                                        /* +0x3C waagrecht */
+    e->re2z_part_st86[p]    = 0;                                         /* +0x86 @0x80108E74 */
+    e->re2z_part_grav[p]    = GR_G;                                      /* +0x79 */
+    e->re2z_part_rot [p][0] = 0;                                         /* +0x3E @0x80108E80 */
+    e->re2z_part_rot [p][1] = (int16_t)e->rot_y;                         /* +0x40 @0x80108E98 */
+    e->re2z_part_rot [p][2] = 1024;                                      /* +0x42 @0x80108E94 */
+    e->re2z_part_gr |= (uint16_t)(1u << p);                              /* PORT: Boden am Teil + Wandtest */
+}
+static unsigned s_re2z_gr_zerfetzt = 0;   /* Port-Diagnose (Tests): Zahl der Zerfetzungen seit Programmstart */
+unsigned re15_re2z_granate_zerfetzt_zahl(void) { return s_re2z_gr_zerfetzt; }
+
+/* Die Teile (gemeinsam fuer RE2-Gehirn und RE1.5-Gehirn mit RE2-Modellblock). Sieben Stuecke fliegen, landen und
+ * BLEIBEN LIEGEN (Nutzer-Entscheid 2026-11-02, Kasten ueber re2z_part_phys_ad8 @0x80028CA0): Rumpf 0, Becken 1, Kopf 8,
+ * beide Arme (Oberarm 9/12 mit Unterarm + Hand) und beide Beine (Oberschenkel 2/5 mit Unterschenkel + Fuss). Kein
+ * heiler Rumpf bleibt stehen. Die Richtungen sind ueber den Vollkreis gestreut (4096/7 je Stueck + Zufall). */
+/* Gemeinsamer Wurf fuer alle Explosions-Teile (Zombie hier, Hund enemy_ai_re2_dog.c re15_re2d_granate_teile): n Stuecke,
+ * Richtungen 4096/n je Stueck + Zufall, Steighoehe aus GR_DECKE, danach der Rauch-Nachlauf (re15_esp.c). */
+void re15_re2z_granate_werfen(re15_actor_t *e, const uint8_t *teile, int n)
+{
+    if (!e || !teile || n <= 0) return;
+    int basis = (int)(re2z_rand() * 16u);
+    int schritt = 4096 / n;
+    for (int k = 0; k < n; k++) {
+        int p = (int)teile[k];
+        if (p < 0 || p >= 16 || !re2z_gr_teil_frei(e, p)) continue;
+        int32_t ziel = GR_DECKE + (int32_t)(re2z_rand() * 2u);            /* Zielhoehe 2400..2910 ueber dem Boden */
+        int16_t vy = (int16_t)-(int32_t)re15_squareroot0((uint32_t)(2 * GR_G * (ziel - 1000)));   /* Vorwert, ad8 rechnet
+                                                                           * im ersten Wurfbild aus der echten Lage neu */
+        int16_t vh = (int16_t)(GR_VH0 + (int)(re2z_rand() & 0x3fu));
+        int yaw = basis + k * schritt + (int)(re2z_rand() & 0xffu) - 128;
+        re2z_gr_wurf(e, p, (int16_t)yaw, vy, vh, (int16_t)ziel);
+    }
+    {   /* Rauch-Nachlauf an der Stelle des Koerpers (re15_esp.c, CD2 19,69-21,09 s) */
+        extern void re15_esp_granate_rauch_nachlauf(const int32_t p[3], int16_t gier);
+        int32_t rp[3] = { e->x, (int32_t)e->y - 500, e->z };              /* P wie Routine 31 (y - 500 @0x800185a8) */
+        re15_esp_granate_rauch_nachlauf(rp, (int16_t)e->rot_y);
+    }
+}
+static void re2z_gr_teile(re15_actor_t *e)
+{
+    static const uint8_t stueck[7] = { 0, 1, 8, 9, 12, 2, 5 };
+    re15_re2z_granate_werfen(e, stueck, 7);
+}
+
+static void re2z_granate_zerfetzen(re15_actor_t *e, re15_actor_t *pl)
+{
+    int slot = (int)(e - g_actors);
+    int bear = re2z_bearing_to(e, pl);
+    s_re2z_gr_zerfetzt++;
+    if (!(e->re2z_f10e & 0x80u)) re2z_gore_soot(e);                      /* Zeile 9 @0x80108CD8-EC */
+    /* Blut und Brocken am Rumpf: FUN_80109610 P0 (Zeile != 12) */
+    {   static const int32_t a3_8096[3] = { 0, -300, 0 };                /* @0x801096F8-704 */
+        static const int32_t a3_6096[3] = { 0, -100, 0 };                /* @0x80109720-2C */
+        re2z_gore_fx_a3(e, 0, 8096u, (int16_t)bear, a3_8096);            /* @0x801096E8 / @0x80109710 */
+        re2z_gore_fx_a3(e, 0, 6096u, (int16_t)bear, a3_6096);            /* @0x80109718 / @0x80109734 */
+        unsigned n = (re2z_rand() & 3u) + 1u;                             /* `andi 0x3 / addiu 1` @0x801096D0-D4 */
+        for (;;) {
+            n--;
+            int32_t a3[3];
+            a3[0] = 256 - 2 * (int32_t)re2z_rand();                       /* @0x80109744-50 */
+            a3[1] = 56  - 2 * (int32_t)re2z_rand();                       /* @0x80109754-64 */
+            a3[2] = 256 - 2 * (int32_t)re2z_rand();                       /* @0x80109768-74 */
+            uint32_t r4 = re2z_rand();                                    /* @0x80109778-88 */
+            uint32_t r5 = re2z_rand();                                    /* @0x80109784 */
+            int ang = bear - (int)((r5 * 4u) - 512u);                     /* @0x80109798-A8 */
+            re2z_gore_fx_a3(e, 0, 0x09020000u | (r4 * 4u + 1536u), (int16_t)ang, a3);   /* @0x801097A4 */
+            if (n == 0u) break;                                           /* `beq s4,zero` @0x801097AC */
+        }
+    }
+    {   static const int32_t a3r[3] = { 0, -500, 0 };                    /* @0x80108FE4-F4 */
+        uint32_t r1 = re2z_rand(), r2 = re2z_rand();                      /* @0x80108FF0 / @0x80108FF8 */
+        re2z_gore_fx_a3(e, 0, 8000u, (int16_t)((int)e->rot_y + (int)(r1 * 16u) - (int)(r2 * 16u)), a3r);   /* @0x80109024 */
+        uint32_t r3 = re2z_rand(), r4 = re2z_rand();                      /* @0x8010902C-4C */
+        re2z_gore_fx_a3(e, 0, 0x08000000u | ((r3 + 4000u) * 4u), (int16_t)(r4 * 16u), a3r);           /* @0x80109054 */
+    }
+    /* Fontaene am Hals (92C4 @0x80109428-38) */
+    if (re2z_gr_teil_frei(e, 8)) {
+        int32_t a3m[3];
+        re2z_blood_a3(e, 1, 0, -100, a3m);                                /* (P8.x, P8.y - 100, P8.z) @0x80109414-24 */
+        re2z_gore_fx_a3(e, 0, 0x00021F40u, (int16_t)e->rot_y, a3m);      /* @0x80109438 */
+    }
+    re2z_gr_teile(e);
+    e->re2z_flags21a |= 0x60u;                /* Teile 9/12 schon ab (Bits 0x20/0x40 wie @0x801052F4/@0x801052E4, Gates
+                                               * @0x80108E40-4C / @0x80108EF0-F4): kein zweiter Abriss */
+    e->re2z_self1d3 |= 0x80u;                                             /* @0x80108DCC */
+    /* Spritzer am Boden (CD2 20,15 s rote Spritzer auf beiden Stegkanten). Zahl wie der RE1.5-Gore-Aufbau: 0x2000 ZWEIMAL
+     * (re15_esp_fx_splatter-Kopf, 2 Ausloeser x 3 Stroeme). Die erste Fassung nahm 2 x 16 Ausloeser = 96 Plaetze = der
+     * ganze Pool (RE15_ESP_FX_MAX, `sltiu 0x60` @0x8001978c) — gemessen (gr.log): die Explosionskinder der Routine 31
+     * im Zuender-2-/0-Bild (0x03195000/0x030B5400/0x030B5800, @0x80018640/60/@0x800186c8) fanden danach keinen Platz
+     * mehr (n=0), der Rauch fiel aus. Die Lache selbst waechst an der Leiche (re2z_corpse_pool_grow). */
+    re15_esp_fx_splatter(re15_esp_room_bank(), 0, 2, e->x, e->y - 900, e->z, e->y);
+    re15_esp_fx_splatter(re15_esp_room_bank(), 0, 2, e->x, e->y - 300, e->z, e->y);
+    re2z_se(2);                                                           /* @0x8010905C-60 */
+    if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
+        fprintf(stderr, "[gr] RE2 Slot %d Typ 0x%02x Zeile %u: ZERFETZT (HP %d)\n", slot, (unsigned)e->type,
+                (unsigned)e->sub_state_1, (int)e->hp);
+}
+
+/* Fuer das RE1.5-Gehirn (zombiegore_r15.c z_granate): dieselben Teile, wenn der RE2-Modellblock dem Typ gehoert
+ * (Port-Option re15_re15_re2z_import, Vorgabe an). Seedet den Block wie der erste Treffer (re2z_import_seed), weil ein
+ * toedlicher Ersttreffer re15_re15_re2z_gore_hit vor dem Seed verlaesst (`e->state == 3`). 0 = kein Block. */
+int re15_re2z_granate_teile_r15(re15_actor_t *e)
+{
+    if (!e || !re15_re15_re2z_import_owns(e->type)) return 0;
+    re2z_import_seed(e);
+    s_re2z_gr_zerfetzt++;
+    re2z_gr_teile(e);
+    if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
+        fprintf(stderr, "[gr] RE1.5 Slot %d Typ 0x%02x Waffe %u: ZERFETZT (RE2-Modellblock, HP %d)\n",
+                (int)(e - g_actors), (unsigned)e->type, (unsigned)e->sub_state_1, (int)e->hp);
+    return 1;
+}
+
 static uint8_t re2z_death_zelle(unsigned row, unsigned col)
 {
     uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
@@ -8202,6 +8432,14 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
     /* `lbu v0,6(s0) / bne -> 0x801083B0` @0x80108328-34: nur in Phase 0 werden fuenf
      * Modell-Flagwoerter |= 0x8000 gesetzt (@0x80108338-AC) — Praesentation, PORT-OPEN. */
 
+    /* Runde 41 Spur GR (GESTALTUNG, Block ueber re2z_granate_zerfetzen): der Explosionstod (Zeile 9 = Handgranate
+     * w9 und Granatwerfer-Explosivrunde w15, re2z_row_from_weapon) zerfetzt den Zombie in JEDEM Zweig der Wurzel
+     * (stehend, liegend, Kriecher) einmal; Zweig 4 faehrt danach den normalen Sturz. */
+    if (e->sub_state_1 == 9u && !(e->zg_9f & 0x08) && re15_zgore_80prozent()) {
+        e->zg_9f |= 0x08;
+        re2z_granate_zerfetzen(e, pl);
+    }
+
     if (e->re2z_f10e & 1u) {                                       /* ZWEIG 1 @0x801083B0-BC */
         s_re2z_last_death_handler = -1;                            /* 1D-Tabelle @0x8010CECC */
         re2z_death_crawler(e);
@@ -8242,6 +8480,7 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
                         (e->zg_9f & 0x20) ? "ZERFETZT" : "Halbieren 66FC");
         }
         if (e->zg_9f & 0x20) h = (uint8_t)RE2ZD_MAIN;     /* zerfetzt -> normaler Sturz 0x80108530 */
+        if (e->zg_9f & 0x08) h = (uint8_t)RE2ZD_MAIN;     /* Runde 41 Spur GR: von der Explosion zerfetzt -> Sturz */
         if (row == 9u && h == (uint8_t)RE2ZD_8BEC && !(e->zg_9f & 0x40)) {
             /* GESTALTUNG Video 3: grosse Blutlachen beim Granaten-Zerreissen (einmal je Tod). */
             e->zg_9f |= 0x40;

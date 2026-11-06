@@ -244,7 +244,7 @@ set(_env_basis RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TIT
                RE15_STATE_LOG=state.log RE15_GRANATE_LOG=gr.log RE15_WAFFEN_LOG=wf.log RE15_FX_LOG=fx.log SDL_ASSERT=always_ignore)
 
 # ---------------------------------------------------------------------------------------------------
-# Lauf "he" — HE-Granate an die Zombies: nach der Explosion KEINE Flamme (id=8), Zerreissen bleibt.
+# Lauf "he" — HE-Granate an die Zombies: nach der Explosion KEINE Flamme (id=8), Zerfetzung (Runde 41 GR).
 # ---------------------------------------------------------------------------------------------------
 r36_laeuft(he _an)
 if(_an)
@@ -252,7 +252,7 @@ if(_an)
     r36_exe(he "${_dir}" 240 ${_env_basis}
         RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=-1676,-18070,1076" RE15_AI_FLAVOR=re2 RE15_GIVE=9:5 RE15_EQUIP=9
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=MD0.6,MDA0.2,MD2.5,W5"
-        "RE15_EXIT_AT=330#1140")
+        "RE15_EXIT_AT=330#1140" RE15_GR_LOG=1)
     r36_granatenlog("${_dir}/gr.log" _G)
     if("${_G_X}" STREQUAL "" OR NOT _G_EINGRIFFE GREATER_EQUAL 2)
         r36_fehler(he "keine Explosion (X='${_G_X}') oder nur ${_G_EINGRIFFE} Eingriffe (soll >= 2)")
@@ -273,34 +273,21 @@ if(_an)
         if("${_V_HP}" STREQUAL "" OR "${_X_HP}" STREQUAL "")
             continue()
         endif()
-        if(NOT _X_HP LESS _V_HP OR NOT "${_X_T}" STREQUAL "10")
+        if(NOT _X_HP LESS _V_HP OR NOT ("${_X_T}" STREQUAL "10" OR "${_X_T}" STREQUAL "11"))
             continue()
         endif()
         math(EXPR _getroffen "${_getroffen} + 1")
-        r36_gegner("${_Z_${_xn}}" ${_s} _N)
-        r36_gegner("${_Z_${_x10}}" ${_s} _N10)
-        if("${_N_MO}" STREQUAL "1")
-            r36_fehler(he "Zombie ${_s}: Clip 1 im Bild X+1 = Sturz-Tod 0x80108530 statt Zerreissen 0x80108BEC")
-        endif()
-        if(NOT "${_N10_Z}" STREQUAL "" AND NOT "${_X_Z}" STREQUAL "")
-            math(EXPR _dz "${_N10_Z} - ${_X_Z}")
-            math(EXPR _dx "${_N10_X} - ${_X_X}")
-            if(_dz LESS 0)
-                math(EXPR _dz "0 - ${_dz}")
-            endif()
-            if(_dx LESS 0)
-                math(EXPR _dx "0 - ${_dx}")
-            endif()
-            math(EXPR _d "${_dx} + ${_dz}")
-            if(_d GREATER 600)
-                math(EXPR _gore "${_gore} + 1")
-            endif()
+        # Runde 41 Spur GR: statt Zerreissen/Wegschleudern die Zerfetzung (re2z_granate_zerfetzen), je Slot genau einmal.
+        file(STRINGS "${_dir}/debug.log" _zf REGEX "\\[gr\\] RE2 Slot ${_s} Typ 0x1[01] Zeile 9: ZERFETZT")
+        list(LENGTH _zf _zfn)
+        if(_zfn EQUAL 1)
+            math(EXPR _gore "${_gore} + 1")
         endif()
     endforeach()
     if(_getroffen LESS 2 OR NOT _gore EQUAL _getroffen)
-        r36_fehler(he "${_gore}/${_getroffen} getroffene Zombies zerrissen/weggeschleudert (soll >= 2 und alle)")
+        r36_fehler(he "${_gore}/${_getroffen} getroffene Zombies zerfetzt (soll >= 2 und alle, Runde 41 GR)")
     endif()
-    message(STATUS "${_tag} [he]: ok — X=${_G_X}, ${_getroffen} Zombies zerrissen, Flammen nach X: ${_F_NACH} (vor X: ${_F_VOR})")
+    message(STATUS "${_tag} [he]: ok — X=${_G_X}, ${_getroffen} Zombies zerfetzt, Flammen nach X: ${_F_NACH} (vor X: ${_F_VOR})")
 endif()
 
 # ---------------------------------------------------------------------------------------------------
@@ -312,7 +299,7 @@ if(_an)
     r36_exe(brand "${_dir}" 240 ${_env_basis}
         RE15_DEBUG_JUMP=1140@250 "RE15_PLAYER_POS=-1676,-18070,1076" RE15_AI_FLAVOR=re2 RE15_GIVE=11:5 RE15_EQUIP=11
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=MD0.6,MDA0.2,MD2.5,W5"
-        "RE15_EXIT_AT=330#1140")
+        "RE15_EXIT_AT=330#1140" RE15_GR_LOG=1)
     r36_granatenlog("${_dir}/gr.log" _G)
     if("${_G_X}" STREQUAL "")
         r36_fehler(brand "keine Explosion im Granatenlog")

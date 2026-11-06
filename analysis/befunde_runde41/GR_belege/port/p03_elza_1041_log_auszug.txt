@@ -1,0 +1,3 @@
+[gr] RE2 Slot 1 Typ 0x16 Zeile 9: ZERFETZT (HP -921)
+[gr] RE2 Slot 2 Typ 0x16 Zeile 9: ZERFETZT (HP -950)
+T=348 EV resolver art=2 P=(-24194,-729,-1190) r=2000 eingriffe=2

@@ -8487,6 +8487,15 @@ static void re15_dog_ai_tick(int slot)
 
     case 3: { /* DEATH dispatcher FUN_80110dc0 -> rows @0x80121070 (audit #5 + verified detour claim) */
         re15_dog_fall_physics(e);
+        {   /* Runde 41 Spur GR N1 (GESTALTUNG / PORT-WAHL, Block re15_re2d_granate_teile in enemy_ai_re2_dog.c): auch der
+             * RE1.5-Hund zerfetzt bei Tod durch eine Explosivgranate (+0x5 = 9 Handgranate, 15 Werfer-Explosivrunde) —
+             * das RE1.5-Gehirn hat keine Teile-Mechanik (Luft-Tod FUN_80110eb0: nur Blut an Bone 0), die Teile kommen aus
+             * RE2 0x80104440 und fahren ueber die Part-Bruecke der Spur S. Einmal je Tod (re2z_part_gr). */
+            extern void re15_re2d_granate_teile(re15_actor_t *e);
+            extern int  re15_zgore_80prozent(void);
+            if ((e->sub_state_1 == 9 || e->sub_state_1 == 15) && !e->re2z_part_gr && re15_zgore_80prozent())
+                re15_re2d_granate_teile(e);
+        }
         if (!re15_dog_row_airborne(e->sub_state_1)) {
             /* GROUNDED death FUN_80111120 */
             switch (e->sub_state_3) {
@@ -11484,7 +11493,14 @@ static void re15_adult_spider_ai_tick(int slot)
         if (e->sub_state_3 == 0) {
             if (re15_spinnengore_platzwaffe(e->sub_state_1))
                 re15_spinnengore_platzen(e);                   /* @0x8011403c-52c */
-            else if (e->hit_react & 0x40) {
+            else if (e->sub_state_1 == 15 && re15_spinnengore_an()) {
+                /* Runde 41 Spur GR N1 (GESTALTUNG / PORT-WAHL, Nutzer 2026-11-02 "alle Gegner, die zerfetzen koennen, bei
+                 * Tod durch eine Granate"): die Werfer-Explosivrunde (+0x5 = 15) laesst die Spinne platzen wie die
+                 * Handgranate (Tabelle @0x80118f38[9] = 0x80113ff8); im Original zeigt [15] auf 0x8011461c. Danach +0x5 = 9,
+                 * damit die Wurzel den Platzweg nimmt (Muster der Krit-Zeile unten, @0x80114b1c-20). */
+                re15_spinnengore_platzen(e);                   /* @0x8011403c-52c */
+                e->sub_state_1 = 9;
+            } else if (e->hit_react & 0x40) {
                 re15_spinnengore_platzen(e);                   /* @0x801146bc-b0c */
                 e->sub_state_1 = 7;                            /* Nachbesserung 2: +0x5 = 7 `ori v0,zero,0x7` / `sb v0,5(v1)`
                                                                 * @0x80114b1c-20 -> die Wurzel nimmt danach den Platzweg
@@ -12166,7 +12182,8 @@ static void re15_birkin_ai_tick(int slot)
 
     switch (e->state) {
     case 0:   /* INIT 0x801166e0: HP 300 UNCONDITIONAL, grid-nibble sub dispatch, work-byte seeds */
-        e->hp = 300;                                   /* +0x9a = 0x12c UNCONDITIONAL @0x8011690c-910 (not `if hp<=0`) */
+        e->hp = RE15_BIRKIN_HP_INIT;                   /* +0x9a = 0x12c UNCONDITIONAL @0x8011690c-910 (not `if hp<=0`);
+                                                        * x RE15_BIRKIN_HP_FAKTOR = PORT-WAHL Runde 41 GR NB3 (re15_birkin_formen.h) */
         e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;  /* clip 0 @0x8011683c, +0x95=0 @0x8011684c, +0x8f=0 @0x8011685c */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be = player @0x80116710/728 */
         e->ai_timer = 100;                             /* +0x9c = 0x64 @0x8011677c */
@@ -12368,7 +12385,7 @@ static void re15_birkin_ai_tick(int slot)
                  * a1 = 0x1d (`ori a1,zero,0x1d` @0x80118070), jal @0x80118074 = "Birkin hat mutiert". */
                 re15_game_flag_set(5, 0x1d, 1);
                 re15_audio_room_se(1); re15_audio_room_se(8);         /* Se(1) @0x8011807c + Se(8) @0x80118084 */
-                e->hp = 150;                                          /* HP RESET = 0x96 @0x80118094-98 */
+                e->hp = RE15_BIRKIN_HP_MUTATION;                      /* HP RESET = 0x96 @0x80118094-98 (x Faktor, GR NB3) */
                 e->birkin_flags |= 0x8;                               /* +0x1dd |= 8 mutating (revive-guard) @0x801180b0 */
                 e->sub_state_2 = 1;
             }
@@ -12618,7 +12635,7 @@ static void re15_birkin_ai_tick(int slot)
                     re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000, bp[0], bp[1], bp[2], s0);
                 }
             }
-            e->hp = 50;                                /* HP = 0x32 revive @0x8011a534 */
+            e->hp = RE15_BIRKIN_HP_REVIVE;             /* HP = 0x32 revive @0x8011a534 (x Faktor, GR NB3) */
             e->hit_react = (uint8_t)(e->hit_react & ~1u);            /* +0x93 &= ~1 @0x8011a550 */
             e->state = e->birkin_saved_state;          /* resume +0x4 = *(+0x1d8) @0x8011a568 */
             e->sub_state_1 = e->birkin_saved_sub;
@@ -12728,9 +12745,9 @@ static void re15_birkin_ai_tick(int slot)
      * (`ori v0,v0,0x10` / `sb v0,9(v1)` @0x80118050-54), der offene Merker erst am Clip-Ende (@0x8011888c): HP < 100 im
      * laufenden Sub 6 erzwang 0x601 neu (HP 150, Clip 0x14 von vorn), solange der Spieler weiterschoss. +0x1dd & 8
      * @0x801180b0 ist genau "Mutation laeuft"; der Fall HP < 0 geht wie im Original ueber den Revive-Waechter. */
-    if ((!(e->grid_id & 0x10) || (re15_bf_mutation_offen() && !(e->birkin_flags & 0x8))) && e->hp < 200) {   /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc */
+    if ((!(e->grid_id & 0x10) || (re15_bf_mutation_offen() && !(e->birkin_flags & 0x8))) && e->hp < RE15_BIRKIN_HP_VERWUNDET) {   /* gate !(grid&0x10) @0x801164e8 && hp<200 @0x801164fc (x Faktor, GR NB3) */
         e->birkin_flags ^= 0x4;                        /* +0x1dd ^= 4 heave toggle @0x80116510 (wounded-breathing; DECIDE mutate gate) */
-        if (e->hp < 100) {                             /* slti hp,100 @0x8011667c */
+        if (e->hp < RE15_BIRKIN_HP_MUT_TOR) {          /* slti hp,100 @0x8011667c (x Faktor, GR NB3) */
             e->state = 1; e->sub_state_1 = 6;          /* FORCE state1-sub6 MUTATION: sw 0x601 @0x80116684-88 (form-1 only) */
             e->sub_state_2 = 0; e->sub_state_3 = 0;
         }

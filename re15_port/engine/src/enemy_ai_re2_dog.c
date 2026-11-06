@@ -2213,6 +2213,31 @@ static void re2d_teile_wurf(re15_actor_t *e)
     }
 }
 
+/* Runde 41 Spur GR (Nachbesserung 1) — der Hund ZERFETZT bei Tod durch eine EXPLOSIVGRANATE (Handgranate w9 /
+ * Werfer-Explosivrunde w15 = RE2-Zeile 9). GESTALTUNG / PORT-WAHL (Nutzer 2026-11-02: "auch die Hunde ... sollen
+ * entsprechend zerfetzen"; Gore = Maximum aus RE1.5, RE2, 80%-Videos; kein 80%-Video zeigt einen Hund an einer
+ * Explosion — Inventur GR_granate.md §4N). Quelle der TEILE: RE2 0x80104440, dieselben 7 Parts der Tabelle @0x80105680
+ * (`02 03 04 07 08 09 0a`) mit dem Farbwort 0x00101040 (@0x801044c8). Anders als das Original (Drift + Scherben 0x4A,
+ * `ori v0,v0,0x4a` @0x801044a4, nach 29 Bildern weg) fliegen sie wie die Zombie-Teile mit dem Wurf FUN_80028AD8
+ * (re15_re2z_granate_werfen) und BLEIBEN LIEGEN (Nutzer-Entscheid 2026-11-02). Der Rumpf bleibt wie im RE2-Original
+ * (der Teile-Wurf nimmt Part 0/1 nie). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1. */
+void re15_re2z_granate_werfen(re15_actor_t *e, const uint8_t *teile, int n);   /* enemy_ai_re2_zombie.c */
+int  re15_zgore_80prozent(void);                                               /* zombiegore_r15.c */
+static unsigned s_re2d_gr_zahl = 0;   /* Port-Diagnose (Tests) */
+unsigned re15_re2d_granate_zahl(void) { return s_re2d_gr_zahl; }
+void re15_re2d_granate_teile(re15_actor_t *e)
+{
+    static const uint8_t parts[7] = { 2, 3, 4, 7, 8, 9, 10 };   /* @0x80105680 */
+    if (!e || e->re2z_part_gr) return;                            /* einmal je Tod */
+    re15_gore_r41_hund_bruecke(e);
+    re15_re2z_granate_werfen(e, parts, 7);
+    for (int i = 0; i < 7; i++) e->re2z_part_tint[parts[i]] = 0x00101040u;   /* `sw a2,112` @0x801044c8 */
+    s_re2d_gr_zahl++;
+    if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
+        fprintf(stderr, "[gr] Hund Slot %d Waffe %u: ZERFETZT (Teile-Maske 0x%04x, HP %d)\n", (int)(e - g_actors),
+                (unsigned)e->sub_state_1, (unsigned)e->re2z_part_gr, (int)e->hp);
+}
+
 /* Die drei Effekte je Bild des Routers 0x80104610 (@0x80104644-7C):
  *   80104648/4c/50  a1 = 3, jal 0x80105070, a2 = 0      -> FX(Part 3, 0)
  *   80104658/5c/60  a1 = 2, jal 0x80105070, a2 = 0      -> FX(Part 2, 0)
@@ -2281,9 +2306,14 @@ static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
          * Vorher lief der Port-Kern NACH dem Gore-Block: sein Treffer-P0 (re2d_hurt_p0 setzt
          * Budget 1 und verbraucht es mit FX(0,0)) machte das Budget 18 zunichte. */
         int router9 = (row == 5 || row == 6 || row == 9 || row == 17 || row == 19);   /* @0x801055CC */
-        if (router9 && !(row == 9 && e->re2z_hits1d2 >= 3)) {
+        /* Runde 41 Spur GR N1: Zeile 9 (Explosivgranate) zerfetzt mit eingeschaltetem 80%-Gore IMMER, auch die
+         * Werfer-Explosion mit +0x1D2 >= 3 (Original dort nur der Kern @0x801046A8-D4) — Block re15_re2d_granate_teile. */
+        const int gr9 = (row == 9) && re15_zgore_80prozent();
+        if (router9 && (gr9 || !(row == 9 && e->re2z_hits1d2 >= 3))) {
             e->re2d_se231 = 1;                             /* sb s1,561 @0x801046E8 (kein SE 7) */
             re2d_kern(e, pl);                              /* jal 0x80104178 @0x801046E4 */
+            if (gr9) re15_re2d_granate_teile(e);           /* Runde 41 Spur GR N1 statt 0x80104440 */
+            else
             re2d_teile_wurf(e);                            /* jal 0x80104440 @0x801046EC */
             if (row == 9) {                                /* @0x801046F4-754 (nur Zeile 9) */
                 e->re2d_budget21f = 1;                     /* sb s1,543 @0x80104708 (Delay-Slot) */

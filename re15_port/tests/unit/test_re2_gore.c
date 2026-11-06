@@ -426,6 +426,8 @@ int main(void)
             reset_z(e); e->rot_y = 0; pl->x = e->x - 900; pl->z = e->z;
             e->state = 3; e->sub_state_1 = (uint8_t)t[i].row; e->sub_state_2 = 0;
             e->re2z_flags21a = 2u;              /* liegend, kein Kill-Latch 0x4000 */
+            e->zg_9f |= 0x08;                   /* Runde 41 Spur GR: Zerfetzungs-Latch (re2z_granate_zerfetzen) vorbelegt —
+                                                 * PIN 8 misst die RE2-Leiter allein, die Zerfetzung pinnt unit_r41_granate */
             uint32_t d0 = re15_re2_rand_draws();
             frame();
             uint32_t used = re15_re2_rand_draws() - d0;

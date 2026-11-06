@@ -1,0 +1,11 @@
+# ROOM2000 Cut 6 (RE15_FORCE_CUT=6), Leon (-22500,-13000) Band 0, RE15_FORCE_GRANATE=100:4, RE15_KEIN_80PROZENT_GORE=1, RE15_FX_LOG
+# Explosionskind id=3 sub=25 (0x03195000) besteht den Regionstest und wird projiziert -> Mitte sx=2 sy=341 (Bild 320x240) = ausserhalb
+id=3 sub=25 eidx=0 frame=10 w(-22184,-500,-9711) phys=1 xlat=(0,0,0) drift=(0,0,0) slot=50 q=1394 wpos=(-22184,-500,-9711) A=0 B=0 zuender=0 zaehler=0 fl=13 art=0 F=100
+   -> sx=2 sy=341 S=16 n=6 c0=16 w16=5664768 camf=208
+--
+id=3 sub=25 eidx=0 frame=11 w(-22184,-500,-9711) phys=1 xlat=(0,0,0) drift=(0,0,0) slot=50 q=1394 wpos=(-22184,-500,-9711) A=0 B=0 zuender=0 zaehler=0 fl=13 art=0 F=101
+   -> sx=2 sy=341 S=16 n=9 c0=22 w16=5664768 camf=208
+--
+# Blut derselben Zerfetzung (Slot 3) zum Vergleich: sy=286
+id=0 sub=0 eidx=2 frame=1 w(-24178,-900,-10610) phys=1 xlat=(74,-70,0) drift=(72,-62,0) slot=51 q=1394 wpos=(-24178,-900,-10610) A=3 B=0 zuender=0 zaehler=1 fl=03 art=0 F=101
+   -> sx=148 sy=286 S=16 n=1 c0=1 w16=1011712 camf=208

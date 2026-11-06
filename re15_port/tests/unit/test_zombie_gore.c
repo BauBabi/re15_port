@@ -154,16 +154,47 @@ static void test_beine(void)
     CHECK(e->grid_id == 0x81 && e->hp == 30, "Beine ab: kein Kriecher (grid 0x%x hp %d)", e->grid_id, e->hp);
 }
 
-/* Gestaltung Video 3: Granaten-Tod -> Oberkoerper ab, kriecht weiter (immer, ohne Krit-Bit). */
+/* Runde 41 Spur GR (GR_granate.md, zombiegore_r15.c z_granate): die HANDGRANATE (w9) zerfetzt — Kopf, Arme,
+ * Unterschenkel/Fuesse platzen (0x80107ee0 ZERFETZEN + 0x80108abc BEINE WEG), kein Kriecher, Leiche.
+ * Saeure/Brand (w10/w11) behalten die fruehere Gestaltung (Oberkoerper ab, kriecht weiter). */
+int re15_re15_re2z_import_owns(unsigned type);   /* enemy_ai_re2_zombie.c */
 static void test_granate(void)
 {
+    /* Nachbesserung 1 (Spur GR N1): mit RE2-Modellblock (Vorgabe re15_re15_re2z_import) fliegen sieben Stuecke mit dem
+     * Wurf 0x1062 und bleiben liegen (Maske 0x1327 = Parts 0,1,2,5,8,9,12); ohne Block platzen die Glieder (0x4a),
+     * Wurzel 0 und Rumpf 7 sind weg. Beides fuer die Handgranate w9 UND die Werfer-Explosivrunde w15. */
+    static const uint8_t waffen[2] = { 9, 15 };
+    for (int wi = 0; wi < 2; wi++) {
+        re15_damage_seed_rng(11);
+        re15_actor_t *e = zombie(3, waffen[wi], 1, 1);
+        re15_enemy_ai_live_death(Z);
+        re15_teil_t *t = re15_teile(Z);
+        if (re15_re15_re2z_import_owns(e->type)) {
+            int wurf = 1;
+            static const int st[7] = { 0, 1, 2, 5, 8, 9, 12 };
+            for (int k = 0; k < 7; k++) if ((e->re2z_part_flags[st[k]] & 0x1062u) != 0x1062u) wurf = 0;
+            CHECK(wurf && e->re2z_part_gr == 0x1327u && (e->re2z_part_flags[0] & 1u) && e->sub_state_3 == 3,
+                  "Granate w%u: nicht zerfetzt (RE2-Block: Maske 0x%04x, Part0 0x%04x, ph %d)", (unsigned)waffen[wi],
+                  (unsigned)e->re2z_part_gr, (unsigned)e->re2z_part_flags[0], e->sub_state_3);
+        } else {
+            CHECK((t[14].w & 0x4a) == 0x4a && (t[2].w & 0x4a) == 0x4a && (t[6].w & 0x4a) == 0x4a && t[0].w == 0 && t[7].w == 0
+                  && e->sub_state_3 == 3,
+                  "Granate w%u: nicht zerfetzt (w14 0x%x w2 0x%x w7 0x%x ph %d)", (unsigned)waffen[wi], t[14].w, t[2].w,
+                  t[7].w, e->sub_state_3);
+        }
+        int n;
+        for (n = 0; n < 400 && e->state == 3; n++) takt(re15_enemy_ai_live_death);
+        CHECK(e->state == RE15_AI_STATE_CORPSE && e->grid_id != 0x81, "Granate w%u: keine Leiche / Kriecher (st %d grid 0x%x)",
+              (unsigned)waffen[wi], e->state, e->grid_id);
+    }
+    re15_actor_t *e; re15_teil_t *t; int n;
     re15_damage_seed_rng(11);
-    re15_actor_t *e = zombie(3, 9, 1, 1);
+    e = zombie(3, 10, 1, 1);
     re15_enemy_ai_live_death(Z);
-    re15_teil_t *t = re15_teile(Z);
-    CHECK((t[7].w & 0x40) && e->sub_state_3 == 1, "Granate: Oberkoerper nicht ab (w7 0x%x ph %d)", t[7].w, e->sub_state_3);
-    for (int n = 0; n < 400 && e->grid_id != 0x81; n++) { t[7].fest = 1; takt(re15_enemy_ai_live_death); }
-    CHECK(e->grid_id == 0x81 && e->hp == 30, "Granate: kein Kriecher");
+    t = re15_teile(Z);
+    CHECK((t[7].w & 0x40) && e->sub_state_3 == 1, "Saeure w10: Oberkoerper nicht ab (w7 0x%x ph %d)", t[7].w, e->sub_state_3);
+    for (n = 0; n < 400 && e->grid_id != 0x81; n++) { t[7].fest = 1; takt(re15_enemy_ai_live_death); }
+    CHECK(e->grid_id == 0x81 && e->hp == 30, "Saeure w10: kein Kriecher");
 }
 
 static void test_beretta(void)

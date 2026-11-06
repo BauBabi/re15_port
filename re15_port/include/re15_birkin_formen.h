@@ -42,6 +42,37 @@ int  re15_bf_mutation_offen(void);
 void re15_bf_mutation_fertig(int slot);
 void re15_bf_modell_hook(void (*fn)(uint8_t type));
 
+/* ⛔ RUNDE 41 SPUR GR, NACHBESSERUNG 3 — PORT-WAHL (Nutzerentscheid F1 2026-11-02 "ja" auf "HP anheben wie beim Gorilla
+ * x 2"; Dossier analysis/befunde_runde41/GR_granate.md N3): die GANZE HP-Skala der EM30-Wurzel (0x30, STAGE3/STAGE5 Root
+ * 0x80116230) laeuft mal RE15_BIRKIN_HP_FAKTOR. Mitgezogen wird jede HP-Zahl und jede HP-Schwelle dieser Wurzel, damit das
+ * Verhaeltnis der Formen und Tore bleibt (Tor 100 = 1/3 der Start-HP, Verwundet-Tor 200 = 2/3, Mutations-HP 150 = 1/2,
+ * Revive 50 = 1/3 der Mutations-HP). NICHT skaliert: der Fern-Rueckgabewert +5 @0x8011a134-38 (gehoert zum Schaden je
+ * Treffer, der unveraendert bleibt). Original (STAGE3.BIN, selbst disassembliert):
+ *   INIT        `ori v0,zero,0x12c` / `sh v0,154(v1)`  @0x8011690c-910      300
+ *   Verwundet   `slti v0,v0,200`                       @0x801164fc          hp < 200 (+0x1dd ^= 4, DECIDE-Mutationstor)
+ *   Mutation    `slti v0,v0,100` / `ori v0,zero,0x601` @0x8011667c-684      hp < 100 -> 0x601
+ *   Mut.-HP     `ori v0,zero,0x96` / `sh v0,154(v1)`   @0x80118094-098      150
+ *   Revive      `ori v0,zero,0x32` / `sh v0,154(v1)`   @0x8011a530-534      50 */
+#define RE15_BIRKIN_HP_FAKTOR     2
+#define RE15_BIRKIN_HP_INIT       (300 * RE15_BIRKIN_HP_FAKTOR)   /* 0x12c @0x8011690c */
+#define RE15_BIRKIN_HP_VERWUNDET  (200 * RE15_BIRKIN_HP_FAKTOR)   /* slti 200 @0x801164fc */
+#define RE15_BIRKIN_HP_MUT_TOR    (100 * RE15_BIRKIN_HP_FAKTOR)   /* slti 100 @0x8011667c */
+#define RE15_BIRKIN_HP_MUTATION   (150 * RE15_BIRKIN_HP_FAKTOR)   /* 0x96 @0x80118094 */
+#define RE15_BIRKIN_HP_REVIVE     ( 50 * RE15_BIRKIN_HP_FAKTOR)   /* 0x32 @0x8011a530 */
+
+/* Runde 41 Spur GR, Nachbesserung 2 (Bossschaden der Handgranate, re15_damage.c): Start-HP und Ende (hp < ende) der
+ * laufenden Form eines 0x30 - INIT/0 (Form-2-Bit vom Spawn), INIT/MUT_TOR (Form 1 bis zur Mutation), MUTATION/0
+ * (Mutation laeuft, danach), RE15_BB_FORM_HP/0 (Bahnsteig-Form). RE15_BB_FORM_HP = die Zuweisung im Eintritt von re15_bb_tick
+ * (birkin_bahnsteig.c).
+ * ⛔ NACHBESSERUNG 3 (Nutzerentscheid F2 "ja"): die Bahnsteig-/Riesenform traegt die HP des RE2-G4, dessen Ablaeufe sie
+ * faehrt - G4-Ctor (CDEMD0.EMS rec 1 @0x80100000): `andi v0,v0,0x40` @0x80100670 (Bit gesetzt) -> `addiu v0,zero,1000`
+ * @0x80100678 / `sh v0,342(s1)` @0x8010067c; `andi v0,v0,0x20` @0x80100688 (Bit nie gesetzt) ueberspringt die 900
+ * @0x80100690-98. Bit 0x40 ist im ausgelieferten RE2 immer gesetzt, 0x20 nie (Schreiber-Zensus re15_damage.c "START-HP AUS
+ * DEN RE2-EM-MODULEN") -> 1000 ist der einzige erreichbare Zweig (1100 @0x8010069c / 1000 @0x801006b4 sind toter Code).
+ * Vorher 150 (Port-Mass, die 0x96 der Mutation). */
+#define RE15_BB_FORM_HP 1000
+void re15_bf_granate_form(const re15_actor_t *e, int *form_hp, int *ende);
+
 /* Birkin (0x30) in 5090 nach Todesphase 2 an den G5 uebergeben (Typwechsel 0x30 -> 0x36). */
 void re15_bf_morph_zu_g5(int slot);
 

@@ -83,13 +83,21 @@ static void teil_tore(void)
     CHECK(12, e->hp == 180 && (e->hit_react & 3u) == 3u && n == 1,
           "Bit-0-Riegel: hp=%d (180) hit_react=0x%02X (&3==3) n=%d (1)", e->hp, e->hit_react, n);
 
-    /* (13) NEGATIV-KONTROLLE: frei -> 1000 Schaden (@0x8006f41c), +0x5 = 9 (@0x8006f432). */
+    /* (13) NEGATIV-KONTROLLE: frei -> Schaden, +0x5 = 9 (@0x8006f432). Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL,
+     *      Nutzerentscheid): der Gorilla 0x27 ist Boss - die Handgranate traegt an ihm Form-HP 360 - Rest 40 = 320
+     *      (re15_granate_schaden, re15_damage.c); der Tabellenwert 1000 (@0x8006f41c) gilt fuer jeden normalen Gegner
+     *      (Gegenprobe 13b mit dem kleinen Affen 0x29). Die Tor-Mechanik dieses Teils ist davon unberuehrt. */
     re15_actor_init(); pl_far();
     e = mk(1, 0x27, 300, 0, 0, 180);
     n = re15_resolve_attack(&b, 2, -1);
-    CHECK(13, e->hp == 180 - 1000 && e->state == 3 && e->sub_state_1 == 9 && e->sub_state_2 == 1 && n == 1,
-          "freier Gegner: hp=%d state=%d +5=%d +6=%d n=%d", e->hp, e->state, e->sub_state_1,
+    CHECK(13, e->hp == 180 - 320 && e->state == 3 && e->sub_state_1 == 9 && e->sub_state_2 == 1 && n == 1,
+          "freier Gegner (Gorilla, Bossschaden 320): hp=%d state=%d +5=%d +6=%d n=%d", e->hp, e->state, e->sub_state_1,
           e->sub_state_2, n);
+    re15_actor_init(); pl_far();
+    e = mk(1, 0x29, 300, 0, 0, 180);
+    n = re15_resolve_attack(&b, 2, -1);
+    CHECK(13, e->hp == 180 - 1000 && e->state == 3 && e->sub_state_1 == 9 && n == 1,
+          "13b normaler Gegner 0x29: hp=%d (-820, 1000 @0x8006f41c) state=%d n=%d", e->hp, e->state, n);
 
     /* (14) NPC 0x45 mit HP -1 300 neben P -> kein Kandidat (E7). */
     re15_actor_init(); pl_far();
@@ -399,7 +407,8 @@ static void teil_applier(void)
         a = mk(1, 0x10, 0, 0, 0, 2000);
         re15_enemy_take_damage(a, 2);
         const int d2 = 2000 - a->hp;
-        CHECK(99, d5 == 50 && d2 == 200, "Import-Zombie Direktaufruf: Art 5 -> %d (50), Art 2 -> %d (200)", d5, d2);
+        /* Runde 41 Spur GR: Art 2 (Handgranate) an der Zombie-Familie = 1000 (@0x8006f41c) statt E4 200. */
+        CHECK(99, d5 == 50 && d2 == 1000, "Import-Zombie Direktaufruf: Art 5 -> %d (50), Art 2 -> %d (1000)", d5, d2);
     }
 
     /* ---- Runde 34 NACHBESSERUNG der Integration (mess_sb 3.1 / 3.2) — Gate 2 fuer RE1.5-KI-
@@ -483,10 +492,11 @@ static void teil_stempel(void)
     re15_attack_box_t b = box_at(-300, -500, 0);
     int n = re15_resolve_attack(&b, 2, -1);
     /* Runde 35 Spur A (NUTZER-VORGABE Brutalitaet, A_granate.md par.3.5): +0x1D2 = 1 (K0, Zone 1 fest) statt 3 (K1). */
-    CHECK(31, n == 1 && a->hp == -120 && a->state == 3 && a->sub_state_1 == 9 && a->sub_state_2 == 0 &&
+    /* Runde 41 Spur GR (PORT-WAHL, GR_granate.md §4): Art 2 an der Zombie-Familie = 1000 (@0x8006f41c) statt E4 200. */
+    CHECK(31, n == 1 && a->hp == 80 - 1000 && a->state == 3 && a->sub_state_1 == 9 && a->sub_state_2 == 0 &&
               a->re2z_hits1d2 == 1 && a->re2z_self1d3 == 15 && a->re2_gl_stamp == 1 &&
               a->re2z_pool152 == 13,
-          "HE 0x10: n=%d hp=%d st=%d +5=%d +6=%d 1D2=%d 1D3=%d gl=%d pool152=%d", n, a->hp, a->state,
+          "HE 0x10 (1000): n=%d hp=%d st=%d +5=%d +6=%d 1D2=%d 1D3=%d gl=%d pool152=%d", n, a->hp, a->state,
           a->sub_state_1, a->sub_state_2, a->re2z_hits1d2, a->re2z_self1d3, a->re2_gl_stamp, a->re2z_pool152);
     /* (32) Richtung aus P: P bei x = -300 (dx = +300 -> Peilung 4096 - catan(0) = 4095) ->
      *      a = 4095: nur 0x20 (+Bit 0) = 0x21; P bei x = +300 (dx = -300 -> 2047) -> nur Bit 0. */
@@ -518,7 +528,9 @@ static void teil_stempel(void)
     a = mk_re2z(1, 0x11, 0, 0, 0, 250);
     re15_resolve_attack(&b, 2, -1);
     /* Runde 35 Spur A: Spalte 1 (HURT[9][1] = 0x80105BC0 Taumeln, `table 0x8010C940`) statt 3. */
-    CHECK(34, a->hp == 50 && a->state == 2 && a->sub_state_1 == 9 && a->re2z_hits1d2 == 1,
+    /* Runde 41 Spur GR (Nutzer 2026-11-02 "die sollte auch die dicken Zombies zerfetzen"): der dicke Zombie/Brad stirbt
+     * jetzt (250 - 1000 @0x8006f41c), Zustand 3, Spalte 1 bleibt. */
+    CHECK(34, a->hp == 250 - 1000 && a->state == 3 && a->sub_state_1 == 9 && a->re2z_hits1d2 == 1,
           "Brad: hp=%d st=%d +5=%d 1D2=%d (1)", a->hp, a->state, a->sub_state_1, a->re2z_hits1d2);
     /* (30) ABGRENZUNG der Klammer-1-Spalte (NACHBESSERUNG K1): NUR HE an der Zombie-Familie.
      *      Saeure/Brand an 0x10 -> Spalte 0 (E6 K0; DEATH 10/11 spaltenunabhaengig `table
@@ -549,7 +561,7 @@ static void teil_stempel(void)
     re15_resolve_attack(&b, 2, -1);
     CHECK(81, a->re2z_hitdir1d0 == 0x1221u, "Explosion, 1D0 vorbelegt 0x12E0 -> 0x%04X (0x1221)",
           a->re2z_hitdir1d0);
-    /* (35) 0x16 (Zeile @0x800A42A8): HE 80 / Saeure 200 / Brand 80. */
+    /* (35) 0x16 (Zeile @0x800A42A8): HE 80 / Saeure 200 / Brand 80 — HE seit Runde 41 Spur GR 1000. */
     {
         int hp[3]; const uint8_t art[3] = { 2, 3, 4 };
         for (int i = 0; i < 3; i++) {
@@ -558,7 +570,8 @@ static void teil_stempel(void)
             re15_resolve_attack(&b, art[i], -1);
             hp[i] = a->hp;
         }
-        CHECK(35, hp[0] == 220 && hp[1] == 100 && hp[2] == 220, "0x16: HE %d (220) Saeure %d (100) Brand %d (220)",
+        /* Runde 41 Spur GR: HE (Art 2) an 0x16 = 1000 (@0x8006f41c) statt 80; Saeure/Brand unveraendert. */
+        CHECK(35, hp[0] == 300 - 1000 && hp[1] == 100 && hp[2] == 220, "0x16: HE %d (-700) Saeure %d (100) Brand %d (220)",
               hp[0], hp[1], hp[2]);
     }
     /* (36) Hund 0x20 RE2: 300 (@0x800A44C4), +0x5 bleibt RE1.5-Waffen-Id (Art 3 -> 10 = Saeure ->
@@ -598,7 +611,8 @@ static void teil_stempel(void)
     re15_actor_init(); pl_far();
     a = mk_re2z(1, 0x10, 0, 0, 0, 80);
     re15_resolve_attack(&b, 2, -1);
-    CHECK(38, a->hp == 80 - 200 && a->sub_state_2 == 1 && a->sub_state_1 == 9 && a->re2_gl_stamp == 0,
+    /* Runde 41 Spur GR: Art 2 an der Zombie-Familie traegt auch mit Import 1000 (@0x8006f41c), nicht mehr E4 200. */
+    CHECK(38, a->hp == 80 - 1000 && a->sub_state_2 == 1 && a->sub_state_1 == 9 && a->re2_gl_stamp == 0,
           "RE1.5 mit Import: hp=%d +6=%d +5=%d gl=%d", a->hp, a->sub_state_2, a->sub_state_1, a->re2_gl_stamp);
 }
 

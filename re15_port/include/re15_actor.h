@@ -607,6 +607,10 @@ typedef struct {
                                      * im Original haengt der Schritt am ZEICHNEN:
                                      * `andi v0,s3,0x20` @0x80027694 -> `jal 0x80028AD8` @0x800276A0,
                                      * `jal 0x80028DAC` @0x80027B98)                              */
+    uint16_t re2z_part_gr;          /* PORT (Runde 41 Spur GR, Nachbesserung 1): Bit i = Part i ist ein Teil des
+                                     * Explosions-Zerfetzens (re2z_granate_zerfetzen) — nur fuer diese Teile
+                                     * laufen in FUN_80028AD8 die Boden-Sonde AM TEIL (FUN_8004FBA0 @0x80028B74,
+                                     * sonst [PORT (1)] Aktor-y) und der Wandtest (FUN_8004C1BC @0x80028CDC). */
     /* ---- RE2-Flavor WELLE C (enemy_ai_re2_dog.c re15_re2dog_tick): die Cerberus-Arbeitsbytes
      * aus EMD0G_MOD0.BIN (ModB @0x80100000). Geteilt mit dem Zombie werden speed_h(+0x144),
      * re2z_t158(+0x158), re2z_t15a(+0x15A), re2z_dir16a(+0x16A Aggro/Mash, signed gelesen),

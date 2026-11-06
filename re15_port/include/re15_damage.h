@@ -28,6 +28,11 @@
  *   [5]=50                                               [9]=1000  [10]=0          */
 extern const int16_t re15_damage_table[11];
 
+/* Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL, Nutzerentscheid): Schaden der Handgranate (Art 2) an `e` - 1000
+ * (@0x8006f41c) fuer jeden normalen Gegner unter jeder KI, Bosse nach Form (Gorilla 320, Alligator 250, Birkin 190/90/40);
+ * Herleitung am Block in re15_damage.c. Der G5-Wert (80) steht danach im Gegnerzweig. */
+int re15_granate_schaden(const re15_actor_t *e);
+
 /* Attack-type → hit-reaction code. Byte-true DAT_8006f430 (ghidra1_V2.txt:223480-
  * 223490; read @80012fe8). Written to the TARGET's reaction sub-state in the ENEMY
  * branch (enemy +0x5); the player branch uses the front/back selector instead.

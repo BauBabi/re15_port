@@ -310,7 +310,8 @@ int re15_esp_global_sheet_index(uint8_t effect_id)
     return -1;
 }
 
-void re15_esp_fx_reset(void) { memset(s_esp_fx, 0, sizeof(s_esp_fx)); }
+static void esp_gr_rauch_reset(void);
+void re15_esp_fx_reset(void) { memset(s_esp_fx, 0, sizeof(s_esp_fx)); esp_gr_rauch_reset(); }
 
 int re15_esp_fx_count(void)
 {
@@ -621,6 +622,58 @@ unsigned re15_esp_granate_resolver_calls(void) { return s_granate_resolver_calls
 /* FUN_800199d4-Zwilling (Kind-Spawner mit Start-Flags 0x0a), unten definiert. */
 static int esp_fx_spawn_kind(const re15_esp_t *bank, uint32_t code, int16_t gier,
                              const int32_t p[3]);
+/* Runde 41 Spur GR (Nachbesserung 1) — die Kinder der Explosion (Routine 31, Art 2) vor Blutteilchen. Gemessen (gr.log,
+ * ROOM2000, zwei zerfetzte Zombies): Kind 0x03195000 im Zuender-7-Bild bekam Platz 59, die Kinder im Zuender-2-/0-Bild
+ * (0x03195000/0x030B5400 @0x80018640/60, Rauch 0x030B5800 @0x800186c8) fanden KEINEN Platz mehr (n=0): der Pool (96,
+ * `sltiu 0x60` @0x8001978c) war mit den Blutteilchen des Zerfetzens voll, Feuerball 2 und Rauch fielen aus. Dieselbe
+ * PORT-WAHL wie fuer den Wurfkoerper (Runde 36 Spur D Punkt 2b, re15_esp_granate_spawn): ist der Pool voll, raeumt ein
+ * Blutteilchen (Effekt 0) den Platz. Im Original gab es das Zerfetzen nicht (DEATH[9][*] @0x8011feac = 0). */
+static int esp_granate_kind(const re15_esp_t *bank, uint32_t code, int16_t gier, const int32_t p[3])
+{
+    if (re15_esp_fx_count() >= RE15_ESP_FX_MAX) (void)re15_granate_r36_platz_freimachen();
+    return esp_fx_spawn_kind(bank, code, gier, p);
+}
+
+/* Runde 41 Spur GR (Nachbesserung 1) — RAUCH-NACHLAUF am zerfetzten Gegner. GESTALTUNG / PORT-WAHL nach dem 80%-Video
+ * `Version_80%/Resident Evil 1.5 Complete Disc Video 2 (480p Upscale) (480p).mp4` (Handgranate, Detonation #577 =
+ * 19,253 s): eine schwarze Rauchsaeule steigt ab #590 (19,686 s = 13 Bilder nach der Detonation) aus der Stelle des
+ * Zombies, ist ab #598 (19,953 s) voll (Dunkelanteil der Bildmitte 41 % -> 74 %) und steht unveraendert bis zum
+ * Schnitt #632 (21,088 s, >= 1,4 s). Die Routine 31 des Ports zeigt ihren eigenen Rauch (Kind 0x030B5800) nur ~0,2-0,3 s
+ * (gemessen ROOM1140, echter Wurf). Gebaut: dasselbe Original-Kind 0x030B5800 (`lui a0,0x30b` / `ori a0,a0,0x5800`
+ * @0x80018698-a8) erneut an P = (x, y - 500, z) der Leiche, erstmals 13 Takte nach dem Zerfetzen, dann alle 8 Takte,
+ * 6 Mal (letztes Kind Takt 53 = 1,77 s). Ein Nachlauf je Stelle (zwei Leichen naeher als 1000 teilen sich einen). */
+#define GR_RAUCH_MAX    8
+#define GR_RAUCH_START 13   /* CD2 #577 -> #590 */
+#define GR_RAUCH_TAKT   8
+#define GR_RAUCH_ZAHL   6
+static struct { int32_t p[3]; int16_t gier; int16_t takt; uint8_t an; } s_gr_rauch[GR_RAUCH_MAX];
+static unsigned s_gr_rauch_kinder = 0;   /* Port-Diagnose (Tests) */
+unsigned re15_esp_granate_rauch_kinder(void) { return s_gr_rauch_kinder; }
+void re15_esp_granate_rauch_nachlauf(const int32_t p[3], int16_t gier)
+{
+    int frei = -1;
+    for (int i = 0; i < GR_RAUCH_MAX; i++) {
+        if (!s_gr_rauch[i].an) { if (frei < 0) frei = i; continue; }
+        int32_t dx = s_gr_rauch[i].p[0] - p[0], dz = s_gr_rauch[i].p[2] - p[2];
+        if (dx > -1000 && dx < 1000 && dz > -1000 && dz < 1000) return;
+    }
+    if (frei < 0) return;
+    s_gr_rauch[frei].p[0] = p[0]; s_gr_rauch[frei].p[1] = p[1]; s_gr_rauch[frei].p[2] = p[2];
+    s_gr_rauch[frei].gier = gier; s_gr_rauch[frei].takt = 0; s_gr_rauch[frei].an = 1;
+}
+static void esp_gr_rauch_reset(void) { memset(s_gr_rauch, 0, sizeof s_gr_rauch); }
+static void esp_gr_rauch_takt(void)
+{
+    for (int i = 0; i < GR_RAUCH_MAX; i++) {
+        if (!s_gr_rauch[i].an) continue;
+        int t = ++s_gr_rauch[i].takt;
+        if (t >= GR_RAUCH_START && ((t - GR_RAUCH_START) % GR_RAUCH_TAKT) == 0) {
+            esp_granate_kind(re15_esp_global_bank(), 0x030B5800u, s_gr_rauch[i].gier, s_gr_rauch[i].p);
+            s_gr_rauch_kinder++;
+        }
+        if (t >= GR_RAUCH_START + GR_RAUCH_TAKT * (GR_RAUCH_ZAHL - 1)) s_gr_rauch[i].an = 0;
+    }
+}
 /* Zeilen-Spawn mit waehlbaren Start-Flags (0x03 = FUN_80019700, 0x0a = FUN_800199d4), unten
  * definiert. Routinen 8/15 spawnen ihre Kinder damit ueber den 0x0a-Weg (Gegenpruefung M-3). */
 static int esp_fx_spawn_rows_flags(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
@@ -1001,7 +1054,7 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                 esp_granate_p(f, p);
                 esp_fx_kill(f);
                 if (gl) fprintf(gl, "T=%u EV frei art=%u\n", s_gr_tick, (unsigned)art);
-                if (art == 2) esp_fx_spawn_kind(kb, 0x030B5800u, gier, p);
+                if (art == 2) esp_granate_kind(kb, 0x030B5800u, gier, p);
                 break;
             }
             if (z == 7) {
@@ -1030,7 +1083,7 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                      * a2 = Einheitsmatrix 0x80072d4c @0x800185d0-d4; a1 = `lh a1,46(v0)` @0x800185d8;
                      * a3 = &P @0x800185e0; `jal 0x800199d4` @0x800185dc), dann SE 0x04080001 an P
                      * (`lui a0,0x408` / `ori a0,a0,0x1` / `jal 0x80045024` @0x800185e4-ec, a1 = &P). */
-                    esp_fx_spawn_kind(f->bank, 0x03195000u, f->param, p);
+                    esp_granate_kind(f->bank, 0x03195000u, f->param, p);
                     if (gl) fprintf(gl, "T=%u EV se code=%08x pos=(%d,%d,%d)\n", s_gr_tick,
                                     RE15_GRANATE_R35_SE_EXPLOSION, (int)p[0], (int)p[1], (int)p[2]);
                     re15_granate_r35_explosion_se(p);   /* Runde 35 Spur A: RE2-SE 0x01110001 @0x80020d40-48 statt 0x04080001 */
@@ -1054,8 +1107,8 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
                  * (`lui a0,0x30b` / `ori a0,a0,0x5400` @0x80018648-4c, jal @0x80018660), beide mit
                  * a2 = s0 = 0x80072d4c (@0x80018620-34) und a1 = Gier +0x2e. */
                 esp_granate_p(f, p);
-                esp_fx_spawn_kind(f->bank, 0x03195000u, f->param, p);
-                esp_fx_spawn_kind(f->bank, 0x030B5400u, f->param, p);
+                esp_granate_kind(f->bank, 0x03195000u, f->param, p);
+                esp_granate_kind(f->bank, 0x030B5400u, f->param, p);
             }
             row_set16(f, 0x1e, (uint16_t)(z - 1u));   /* addiu v0,v0,-1 @0x8001867c /
                                                        * sh v0,30(v1) @0x80018684 (Delay-Slot) */
@@ -1369,6 +1422,9 @@ static int esp_fx_spawn_kind(const re15_esp_t *bank, uint32_t code, int16_t gier
 /* Runde 38 Spur R: FUN_800199d4-Kind fuer Routine 25 (spinnen_r38.c, `jal 0x800199d4` @0x80018054). */
 int re15_esp_kind_r38(const re15_esp_t *bank, uint32_t code, int16_t gier, const int32_t p[3])
 { return esp_fx_spawn_kind(bank, code, gier, p); }
+/* Runde 41 Spur GR N1: dasselbe mit dem Vorrang der Explosionskinder (Mess-Haken RE15_FORCE_GRANATE). */
+int re15_esp_granate_kind(const re15_esp_t *bank, uint32_t code, int16_t gier, const int32_t p[3])
+{ return esp_granate_kind(bank, code, gier, p); }
 
 /* FUN_80019700-ZWILLING fuer den Wurfkoerper 0x040D1000 (Runde 34 A8, Deklaration mit Belegen
  * in re15_esp.h). Effekt 4 sub 0x0D hat 1 Strom mit 2 Zeilen (CORE00.ESP @0x1AB0 `01 00 00 00
@@ -1600,6 +1656,7 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
      *  game_step_common.c mit denselben Adressen gegatet.) */
     if (g_re15_pauseflags & RE15_PAUSE_ACTION) return;
     s_gr_tick++;
+    esp_gr_rauch_takt();   /* Runde 41 Spur GR N1: Rauch-Nachlauf (Block bei esp_granate_kind) */
     /* Byte-true FUN_80019e20 frame timer (L117-131): when the per-slot timer hits 0, advance
      * the anim-record index; the new record's param-low byte = its duration, 0xFF = loop back
      * to the record's desc-low byte, 0/0 (duration & loop-target both 0) = end -> despawn.

@@ -1,0 +1,37 @@
+   Boss                                         | Form-HP | Ende  | Pistole | Schrot | Granate | Rest  | Schuesse nach 1 Granate | ohne Granate
+   Gorilla 0x27 (1141)                          |     360 |     0 |      12 |     38 |     320 |    40 |                       4 | 31
+ok   70: Gorilla 0x27 (1141): Form-HP 360, eine Granate (320) beendet die Form nicht (Rest 40), danach 4 Pistolenschuesse (soll 4)
+   Alligator 0x23 RE1.5-KI (ausserhalb 2090)    |     300 |     0 |       7 |     30 |     250 |    50 |                       8 | 43
+ok   71: Alligator 0x23 RE1.5-KI (ausserhalb 2090): Form-HP 300, eine Granate (250) beendet die Form nicht (Rest 50), danach 8 Pistolenschuesse (soll 8)
+   Birkin 0x30 Mensch 3070 (grid 0x10)          |     600 |     0 |      15 |     40 |     490 |   110 |                       8 | 41
+ok   72: Birkin 0x30 Mensch 3070 (grid 0x10): Form-HP 600, eine Granate (490) beendet die Form nicht (Rest 110), danach 8 Pistolenschuesse (soll 8)
+   Birkin 0x30 5080 (grid 0x13)                 |     600 |     0 |      15 |     40 |     490 |   110 |                       8 | 41
+ok   73: Birkin 0x30 5080 (grid 0x13): Form-HP 600, eine Granate (490) beendet die Form nicht (Rest 110), danach 8 Pistolenschuesse (soll 8)
+   Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10)   |     600 |     0 |      15 |     40 |     490 |   110 |                       8 | 41
+ok   74: Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10): Form-HP 600, eine Granate (490) beendet die Form nicht (Rest 110), danach 8 Pistolenschuesse (soll 8)
+   Birkin 0x30 Labor 50E0 (grid 0x10)           |     600 |     0 |      15 |     40 |     490 |   110 |                       8 | 41
+ok   75: Birkin 0x30 Labor 50E0 (grid 0x10): Form-HP 600, eine Granate (490) beendet die Form nicht (Rest 110), danach 8 Pistolenschuesse (soll 8)
+   Birkin 0x30 Form 1 3071 (grid 0x01)          |     600 |   200 |      15 |     40 |     290 |   310 |                       8 | 27
+ok   76: Birkin 0x30 Form 1 3071 (grid 0x01): Form-HP 600, eine Granate (290) beendet die Form nicht (Rest 310), danach 8 Pistolenschuesse (soll 8)
+   Birkin 0x30 Form 1 5090 (grid 0x13)          |     600 |   200 |      15 |     40 |     290 |   310 |                       8 | 27
+ok   77: Birkin 0x30 Form 1 5090 (grid 0x13): Form-HP 600, eine Granate (290) beendet die Form nicht (Rest 310), danach 8 Pistolenschuesse (soll 8)
+   Birkin 0x30 waehrend der Mutation (3071)     |     300 |     0 |      15 |     40 |     190 |   110 |                      -2 | -2
+ok   78: Birkin 0x30 waehrend der Mutation (3071): HP 300 (soll 300 = 0x96 @0x80118094 x 2), eine Granate (190) toetet nicht, Rest 110
+   Birkin 0x30 nach der Mutation 3071           |     300 |     0 |      15 |     40 |     190 |   110 |                       8 | 21
+ok   79: Birkin 0x30 nach der Mutation 3071: Form-HP 300, eine Granate (190) beendet die Form nicht (Rest 110), danach 8 Pistolenschuesse (soll 8)
+   Bahnsteig-/Riesenform 5090 (G4-Eintritt)     |    1000 |     0 |      15 |     40 |     890 |   110 |                       8 | 67
+ok   80: Bahnsteig-/Riesenform 5090 (G4-Eintritt): Form-HP 1000, eine Granate (890) beendet die Form nicht (Rest 110), danach 8 Pistolenschuesse (soll 8)
+   G5 0x36 5090                                 |     600 |     0 |      15 |     40 |      80 |   520 |                      35 | 41
+ok   81: G5 0x36 5090: unveraendert 80 (E16 @0x800A5F7C), lebt (Rest 520)
+   Gator-Boss 0x23 2090 (bis zur Schwaeche)     |   25300 | 25000 |       7 |     30 |     250 | 25050 |                       8 | 43
+ok   82: Gator-Boss 0x23 2090 (bis zur Schwaeche): Form-HP 25300, eine Granate (250) beendet die Form nicht (Rest 25050), danach 8 Pistolenschuesse (soll 8)
+ok   90: Gorilla braucht nach einer Granate weniger Schuesse (4) als jede Birkin-Form, der Alligator und der Gator-Boss (min 8)
+   ohne Granate: Leon 3070 (INIT-Form)                         41 Pistolenschuesse (Gorilla 31)
+   ohne Granate: 5080                                          41 Pistolenschuesse (Gorilla 31)
+   ohne Granate: Hangar/Sichel 50A0                            41 Pistolenschuesse (Gorilla 31)
+   ohne Granate: Labor 50E0/50F1                               41 Pistolenschuesse (Gorilla 31)
+   ohne Granate: Elza 3071 (Form 1 + nach der Mutation)        48 Pistolenschuesse (Gorilla 31)
+   ohne Granate: Endkampf 5090 (Form 1 + Riesenform + G5)     135 Pistolenschuesse (Gorilla 31)
+   ohne Granate: Gator-Boss 2090 bis zur Schwaeche             43 Pistolenschuesse (Gorilla 31)
+ok   91: ohne Granate braucht jeder Birkin-Kampf und der Gator-Boss mehr Pistolenschuesse als der Gorilla (31): 7/7
+test_r41_granate: ALLE PRUEFUNGEN GRUEN
