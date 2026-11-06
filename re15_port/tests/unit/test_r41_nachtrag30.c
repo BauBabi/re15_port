@@ -709,6 +709,7 @@ static void fall_g(void)
     etiketten_vergleich(b, 0, &ges, &gl);
     etiketten_vergleich(b, 1, &ges1, &gl1);
     PRUEFE(ges > 600 && gl == ges, "Beschriftung = Spielschrift Texel fuer Texel: %ld von %ld gleich", gl, ges);
+    PRUEFE(ges == 1334, "Beschriftung: 1334 Tintentexel (Abnahme 2 Par. 3a: 1334/1334 im Fenster, Leon + Elza, vor/nach der Loesung) (%ld)", ges);
     PRUEFE(gl1 * 2 < ges1, "Gegenprobe um 1 Bildpunkt versetzt: %ld von %ld gleich (< Haelfte)", gl1, ges1);
     printf("G Beschriftung: %d Glyphen, %ld von %ld Texeln gleich der Spielschrift, um 1 Bildpunkt versetzt %ld von %ld\n", n, gl, ges, gl1, ges1);
     re15_panel2030_r41_reset();
@@ -740,6 +741,7 @@ static void fall_s(void)
 {
     const int n = re15_panel2030_r41_stempel(-1, NULL, NULL, NULL);
     PRUEFE(n > 200, "Scheiben: Stempel-Texel vorhanden (%d)", n);
+    PRUEFE(n == 288, "Scheiben: 288 Stempel-Texel (Abnahme 2 Par. 3c: re15_r41n_panel_stempel[288]) (%d)", n);
     re15_panel2030_r41_oeffnen();
     re15_panel2030_r41_cursor_setzen(300, 200);
     const uint32_t *b = re15_panel2030_r41_rgba();
@@ -1152,6 +1154,161 @@ static int kasten_werkzeug(const char *ppm, const char *teil)
     return 0;
 }
 
+/* K (Spur PF, Abnahme 2 Par. 5): Riegel ohne Fenster fuer die Scherung des Kastens 2010/2011 - gemessen an den Texturen selbst (gen/schrank2010_r41.inc, k 5 =
+ * Rueckwand 128 x 192, k 7 = Fluegel 64 x 192, TIM 8 bpp wie schrank_bild.py tim_8bpp()) gegen ROOM2060 BG06 ueber die Kamera ROOM2060 Cut 6 @0x120 (kam_lesen,
+ * H = fov >> 7 = 0x683c >> 7 = 208). Je Texel der Weltpunkt der Port-Flaeche wie der Generator (flaeche_aus_texel() ueber das Gitter 4 x 8, gitter_uv() gerundet);
+ * Flaechen aus dem Kopf der inc: Rueckwand z 4500, x -4830..-3250 mittig auf 1300:3600 beschnitten (-4680..-3400), y -3545..0; Fluegel senkrechte Ebene durch
+ * (-4830,0,4500), Fluchtpunkt x 130,80 auf dem Horizont, s 1494,125..333,875 (= (290 + 1538) / 2 +- 3213 * 1300 / 3600 / 2; Scharnierfuge 290, sichtbar bis 1538,
+ * schrank_bild.py FLUEGEL / sichtbar_bis(), inc-Kopf "s 1494..334"), y -3198..15.
+ * Gemessen wird wie in Abnahme 2 Par. 2c (Neigung der Waagrechten und Senkrechten des Inhalts gegen die Vorlage), hier als Suche: die Vorlage wird mit geneigten
+ * Achsen abgetastet (Waagrechte um w Grad, Senkrechte um s Grad, Weltmass, -8..+8 in 0,25, Lage +-3 Texel), der Winkel mit der besten NCC der Kanten (Sobel) ist die
+ * Scherung der Textur gegen 2060.
+ * Schranke |w|, |s| <= 0,5 Grad: Abnahme 2 Par. 2c, im Fenster nach NB1 Waagrechte -0,08 / -0,00, Senkrechte +0,30 / +0,11 Grad (Rueckwand / Fluegel); vor NB1
+ * -4,00 Grad (Rueckwand-Waagrechte) und -6,50 Grad (Fluegel-Senkrechte). NCC >= 0,9 (Abnahme 2 Par. 2c: NCC der Registrierung im Fenster 0,950 / 0,985).
+ * GEGENPROBE wie Abnahme 2 Par. 2c (5 Grad kuenstlich geschert -> +4,99 / -4,91 Grad): Vorlage zusaetzlich um 5 Grad geschert abgetastet (Rueckwand die
+ * Waagrechten, Fluegel die Senkrechten) muss um 5 +- 0,5 Grad versetzt gemessen werden. */
+enum { KT_I_W = 128, KT_T_W = 64, KT_H = 192 };    /* schrank_bild.py W_I, W_T, H_I = H_T */
+
+static void kt_flaeche_aus_texel(int n, int w, double *aus)     /* schrank_bild.py flaeche_aus_texel() + gitter_uv() */
+{
+    int uv[9];
+    for (int i = 0; i <= n; i++) uv[i] = (int)lround(i * (w - 1) / (double)n);   /* Python round(): 63,5 / 31,5 / 95,5 -> gerade wie lround */
+    for (int t = 0; t < w; t++) {
+        const double m = t + .5;
+        int i = 0;
+        for (int j = 0; j < n; j++) if (uv[j] <= m) i = j;
+        aus[t] = (i + (m - uv[i]) / (double)(uv[i + 1] - uv[i])) / n;
+    }
+}
+
+/* TIM 8 bpp (CLUT 256 x 1) -> Grauwert je Texel (5 -> 8 Bit wie farbe15, Grau ITU-R 601 wie grau_bilinear); 0 = Fehler. */
+static int kt_tim_grau(const uint8_t *d, int n, int w, int h, float *g)
+{
+    if (!d || n < 20 + 512 + 12 || d[0] != 0x10 || (d[4] & 7) != 1 || !(d[4] & 8)) return 0;
+    const uint32_t clen = (uint32_t)d[8] | ((uint32_t)d[9] << 8) | ((uint32_t)d[10] << 16) | ((uint32_t)d[11] << 24);
+    const uint8_t *im = d + 8 + clen;
+    if ((long)(8 + clen + 12) + (long)w * h > n || (im[8] | (im[9] << 8)) * 2 != w || (im[10] | (im[11] << 8)) != h) return 0;
+    for (int i = 0; i < w * h; i++) {
+        const uint8_t *c = d + 20 + 2 * im[12 + i];
+        const uint32_t f = farbe15((uint16_t)(c[0] | (c[1] << 8)));
+        g[i] = 0.299f * (float)(f >> 24) + 0.587f * (float)((f >> 16) & 255) + 0.114f * (float)((f >> 8) & 255);
+    }
+    return 1;
+}
+
+/* Vorlage im Texelgitter der Textur: BG06 an der Projektion (Cut 6) des Weltpunkts je Texel, Achsen um w / s Grad geneigt (Drehpunkt Flaechenmitte). */
+static void kt_vorlage(const uint8_t *bg, const kam_t *k6, int innen, double w_grad, double s_grad, float *out)
+{
+    const int w = innen ? KT_I_W : KT_T_W;
+    double fu[KT_I_W], fv[KT_H];
+    kt_flaeche_aus_texel(4, w, fu);
+    kt_flaeche_aus_texel(8, KT_H, fv);
+    const double ziel = 1300.0 / 3600.0;                                       /* Tuerflaeche ROOM2010: Z_ANGEL - Z_FREI : Y_UNTEN - Y_OBEN */
+    const double tw = tan(w_grad * 3.14159265358979 / 180), ts = tan(s_grad * 3.14159265358979 / 180);
+    double d[3] = { 0, 0, 0 }, a0, a1, yo, yu;
+    if (innen) { const double br = 3545.0 * ziel, xm = (-4830.0 - 3250.0) / 2; a0 = xm - br / 2; a1 = xm + br / 2; yo = -3545; yu = 0; }
+    else {
+        const double br = (15.0 + 3198.0) * ziel, sm = (290.0 + 1538.0) / 2;
+        a0 = sm + br / 2; a1 = sm - br / 2; yo = -3198; yu = 15;
+        const double c = (130.80 - 160) / k6->H;                               /* Fluchtpunkt x 130,80 (Kopf der inc) */
+        const double t = atan2(k6->x[0] - c * k6->z[0], -(k6->x[2] - c * k6->z[2]));
+        d[0] = cos(t); d[2] = sin(t);
+        if (d[0] * k6->z[0] + d[2] * k6->z[2] < 0) { d[0] = -d[0]; d[2] = -d[2]; }
+    }
+    const double bw = fabs(a1 - a0), bh = yu - yo;
+    for (int v = 0; v < KT_H; v++)
+        for (int u = 0; u < w; u++) {
+            const double cu = (fu[u] - .5) * bw, cv = (fv[v] - .5) * bh;      /* Weltmass ab der Mitte */
+            const double gu = .5 + (cu + ts * cv) / bw, gv = .5 + (cv + tw * cu) / bh;
+            const double a = a0 + gu * (a1 - a0), y = yo + gv * bh;
+            double pw[3], sx, sy;
+            if (innen) { pw[0] = a; pw[1] = y; pw[2] = 4500; }
+            else       { pw[0] = -4830 - a * d[0]; pw[1] = y; pw[2] = 4500 - a * d[2]; }
+            kam_proj(k6, pw, &sx, &sy);
+            out[v * w + u] = grau_bilinear(bg, (float)sx, (float)sy);
+        }
+}
+
+/* Beste Neigung (Grad) der Waagrechten (senkrecht = 0) bzw. Senkrechten (1); vorab = zusaetzliche Scherung der Vorlage (Gegenprobe). NCC der Kanten, Rand 4 Texel. */
+static double kt_neigung(const float *te, const uint8_t *bg, const kam_t *k6, int innen, int senkrecht, double vorab, double *ncc_best)
+{
+    const int w = innen ? KT_I_W : KT_T_W, rand = 4;
+    static float vg[KT_I_W * KT_H], ve[KT_I_W * KT_H];
+    double best = -2, abest = 0;
+    for (int i = -32; i <= 32; i++) {
+        const double a = i * 0.25;
+        kt_vorlage(bg, k6, innen, senkrecht ? 0 : vorab + a, senkrecht ? vorab + a : 0, vg);
+        sobel(vg, w, KT_H, ve);
+        for (int oy = -3; oy <= 3; oy++)
+            for (int ox = -3; ox <= 3; ox++) {
+                double ms = 0, mq = 0, sp = 0, sq = 0, sk = 0, nn = 0;
+                for (int y = rand + 3; y < KT_H - rand - 3; y++)
+                    for (int x = rand + 3; x < w - rand - 3; x++) {
+                        const double p = te[y * w + x], q = ve[(y + oy) * w + x + ox];
+                        ms += q; mq += q * q; sp += p; sq += p * p; sk += p * q; nn++;
+                    }
+                const double mt = ms / nn, st = sqrt(fmax(mq / nn - mt * mt, 1e-9)), mp = sp / nn, spp = sqrt(fmax(sq / nn - mp * mp, 1e-9));
+                const double n = (sk / nn - mp * mt) / (spp * st);
+                if (n > best) { best = n; abest = a; }
+            }
+    }
+    if (ncc_best) *ncc_best = best;
+    return abest;
+}
+
+/* Scherung einer Kasten-Textur: w, s (Grad), Gegenprobe (Grad), NCC bei w; 0 = gemessen. */
+static int kt_mass(const uint8_t *tim, int n, int innen, double *w_, double *s_, double *gp, double *ncc)
+{
+    const int w = innen ? KT_I_W : KT_T_W;
+    static float tg[KT_I_W * KT_H], te[KT_I_W * KT_H];
+    long ln = 0;
+    uint8_t *bg = bss_rgb_pf(RE15_ASSET_PSX_DIR "/BSS/ROOM2060/BG06.BSS");
+    uint8_t *rdt6 = slurp(RE15_ASSET_PSX_DIR "/STAGE2/ROOM2060.RDT", &ln);
+    const int ok = bg && rdt6 && kt_tim_grau(tim, n, w, KT_H, tg);
+    if (ok) {
+        kam_t k6;
+        kam_lesen(rdt6, 6, &k6);                                               /* ROOM2060 Cut 6 @0x120: fov 0x683c -> H 208 */
+        sobel(tg, w, KT_H, te);
+        *w_ = kt_neigung(te, bg, &k6, innen, 0, 0, ncc);
+        *s_ = kt_neigung(te, bg, &k6, innen, 1, 0, NULL);
+        *gp = kt_neigung(te, bg, &k6, innen, !innen, 5.0, NULL);
+    }
+    free(bg); free(rdt6);
+    return ok ? 0 : -1;
+}
+
+static void fall_k(void)
+{
+    for (int innen = 1; innen >= 0; innen--) {
+        int n = 0;
+        const uint8_t *tim = re15_ventilkette_r41_tim_bytes_k(innen ? 5 : 7, &n);
+        double w = 99, s = 99, gp = 0, ncc = 0;
+        const int ok = kt_mass(tim, n, innen, &w, &s, &gp, &ncc);
+        const char *name = innen ? "Rueckwand" : "Fluegel";
+        PRUEFE(ok == 0, "K %s: Textur (k %d) und BG06/ROOM2060 gelesen", name, innen ? 5 : 7);
+        if (ok) continue;
+        PRUEFE(ncc >= 0.9, "K %s: Textur deckt BG06 ueber Cut 6 (NCC %.3f >= 0,9)", name, ncc);
+        PRUEFE(fabs(w) <= 0.5 && fabs(s) <= 0.5, "K %s: Scherung Waagrechte %.2f, Senkrechte %.2f Grad (Schranke 0,5; Abnahme 2 Par. 2c)", name, w, s);
+        PRUEFE(fabs(gp + 5.0) <= 0.5, "K %s: Gegenprobe 5 Grad geschert -> %.2f Grad (erwartet -5 +- 0,5)", name, gp);
+        printf("K Kasten %s: Scherung Waagrechte %.2f Grad, Senkrechte %.2f Grad, NCC %.3f; Gegenprobe 5 Grad -> %.2f Grad\n", name, w, s, ncc, gp);
+    }
+}
+
+/* Werkzeug "kastentex <innen|tuer> <tim>" (Gegenprobe mit einer fremden Textur, z.B. dem Stand vor NB1): dieselbe Messung wie K. */
+static int kastentex_werkzeug(const char *teil, const char *pfad)
+{
+    long n = 0;
+    uint8_t *d = slurp(pfad, &n);
+    const int innen = strcmp(teil, "tuer") != 0;
+    double w = 0, s = 0, gp = 0, ncc = 0;
+    const int ok = kt_mass(d, (int)n, innen, &w, &s, &gp, &ncc);
+    free(d);
+    if (ok) { printf("FEHLER: Eingabe\n"); return 2; }
+    printf("KASTENTEX %s SCHERUNG_W %d SCHERUNG_S %d NCC %d GEGENPROBE_SCHERUNG %d\n", innen ? "innen" : "tuer",
+           (int)lround(w * 100), (int)lround(s * 100), (int)lround(ncc * 1000), (int)lround(gp * 100));
+    return 0;
+}
+
 /* ---- Werkzeuge -------------------------------------------------------------------------------------------------------- */
 static uint8_t *ppm_lesen(const char *p)
 {
@@ -1255,6 +1412,7 @@ int main(int argc, char **argv)
     if (argc >= 9 && !strcmp(argv[1], "fluss")) return fluss(argv);
     if (argc >= 3 && !strcmp(argv[1], "etikett")) return etikett_werkzeug(argv[2]);      /* Spur PF */
     if (argc >= 4 && !strcmp(argv[1], "kasten")) return kasten_werkzeug(argv[2], argv[3]); /* Spur PF */
+    if (argc >= 4 && !strcmp(argv[1], "kastentex")) return kastentex_werkzeug(argv[2], argv[3]); /* Spur PF, Abnahme 2 */
     if (argc >= 7 && !strcmp(argv[1], "bild")) {
         uint8_t *d = ppm_lesen(argv[2]);
         if (!d) { printf("kein Bild\n"); return 2; }
@@ -1318,6 +1476,7 @@ int main(int argc, char **argv)
     fall_g();   /* Spur PF */
     fall_q();   /* Spur PF */
     fall_s();   /* Spur PF Nachbesserung 1 */
+    fall_k();   /* Spur PF Abnahme 2: Scherung der Kasten-Texturen gegen ROOM2060 Cut 6 */
     for (int v = 0; v < 2; v++) {
         fall_b((uint16_t)(0x2030 + v));
         fall_c((uint16_t)(0x2010 + v));
