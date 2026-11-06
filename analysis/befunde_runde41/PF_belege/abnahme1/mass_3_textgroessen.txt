@@ -1,0 +1,30 @@
+nutzer_fenster.png: Fenster 960x720, Faktor 3, 3x3-Bloecke einfarbig 1.0000
+  A 100                          Tinte 17x 4 Texel ->  51x 12 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 165 | Zwischentoene 81.8 %
+  B 50                           Tinte 14x 5 Texel ->  42x 15 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 174 | Zwischentoene 88.1 %
+  C 30                           Tinte 14x 5 Texel ->  42x 15 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 149 | Zwischentoene 77.3 %
+  80 links                       Tinte  6x 4 Texel ->  18x 12 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 107 | Zwischentoene 95.1 %
+  BRIDGE                         Tinte 54x12 Texel -> 162x 36 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 173 | Zwischentoene 91.8 %
+  PRESSURE 80 / SET 80           Tinte 47x13 Texel -> 141x 39 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 174 | Zwischentoene 86.8 %
+  CAUTION                        Tinte 104x11 Texel -> 312x 33 Fensterpunkte | Strich 3.0 Texel = 9 Fensterpunkte | Kontrast 165 | Zwischentoene 96.2 %
+  HIGH PRESSURE                  Tinte 45x 4 Texel -> 135x 12 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 181 | Zwischentoene 96.5 %
+  Ziffern im Zeiger-Instrument   Tinte 24x24 Texel ->  72x 72 Fensterpunkte | Strich 2.0 Texel = 6 Fensterpunkte | Kontrast 173 | Zwischentoene 80.6 %
+b_00169.png: Fenster 960x720, Faktor 3, 3x3-Bloecke einfarbig 1.0000
+  A 100                          Tinte 29x 7 Texel ->  87x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 198 | Zwischentoene 44.1 %
+  B 50                           Tinte 23x 7 Texel ->  69x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 189 | Zwischentoene 46.4 %
+  C 30                           Tinte 23x 7 Texel ->  69x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 198 | Zwischentoene 43.4 %
+  80 links                       Tinte 11x 7 Texel ->  33x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 190 | Zwischentoene  0.0 %
+  BRIDGE                         Tinte 47x 7 Texel -> 141x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 173 | Zwischentoene 82.1 %
+  PRESSURE 80 / SET 80           Tinte 39x 7 Texel -> 117x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 182 | Zwischentoene 52.2 %
+  CAUTION                        Tinte 55x 7 Texel -> 165x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 198 | Zwischentoene 51.2 %
+  HIGH PRESSURE                  Tinte 98x 7 Texel -> 294x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 198 | Zwischentoene 60.2 %
+  Ziffern im Zeiger-Instrument   Tinte 24x24 Texel ->  72x 72 Fensterpunkte | Strich 2.0 Texel = 6 Fensterpunkte | Kontrast 182 | Zwischentoene 68.3 %
+b_00169.png: Fenster 960x720, Faktor 3, 3x3-Bloecke einfarbig 1.0000
+  A 100                          Tinte 29x 7 Texel ->  87x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 198 | Zwischentoene 44.1 %
+  B 50                           Tinte 23x 7 Texel ->  69x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 189 | Zwischentoene 46.4 %
+  C 30                           Tinte 23x 7 Texel ->  69x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 198 | Zwischentoene 43.4 %
+  80 links                       Tinte 11x 7 Texel ->  33x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 190 | Zwischentoene  0.0 %
+  BRIDGE                         Tinte 47x 7 Texel -> 141x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 173 | Zwischentoene 82.1 %
+  PRESSURE 80 / SET 80           Tinte 39x 7 Texel -> 117x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 182 | Zwischentoene 52.2 %
+  CAUTION                        Tinte 55x 7 Texel -> 165x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 198 | Zwischentoene 51.2 %
+  HIGH PRESSURE                  Tinte 98x 7 Texel -> 294x 21 Fensterpunkte | Strich 1.0 Texel = 3 Fensterpunkte | Kontrast 198 | Zwischentoene 60.2 %
+  Ziffern im Zeiger-Instrument   Tinte 24x24 Texel ->  72x 72 Fensterpunkte | Strich 2.0 Texel = 6 Fensterpunkte | Kontrast 182 | Zwischentoene 68.3 %

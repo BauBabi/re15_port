@@ -42,11 +42,14 @@
 /* Fuellstand -> Zeile: Skala gleich je Tank, Wert 100 oben (Zeile GT) .. Wert 0 unten (Zeile GB). */
 #define RE15_R41N_GT               66
 #define RE15_R41N_GB               116
-#define RE15_R41N_ZEIGER_X         124
+#define RE15_R41N_ZEIGER_X         124               /* Texel; Drehpunkt = Texelmitte 124,5 / 87,5 (Spur PF Nachbesserung 1, Generator D0) */
 #define RE15_R41N_ZEIGER_Y         87
 #define RE15_R41N_ZEIGER_R         139               /* Zehntel Bildpunkte: Scheibe R 13,9 */
 #define RE15_R41N_NACHRICHT_Y0     172               /* abgedunkeltes Band hinter dem Text (Text-Ursprung y 180) */
 #define RE15_R41N_NACHRICHT_Y1     218
+/* Deckung des Bands (von 256). PORT-WAHL. Spur N: 170; Spur PF: 232, weil die scharfe Schrift des roten Schilds (y 182..205) bei 170 zu 34 % durch den
+ * Nachrichtentext schien (gdigrab, Text 41 ueber "HIGH PRESSURE"); bei 232 bleiben 9 %. */
+#define RE15_R41N_NACHRICHT_DECKUNG 232
 
 /* Takt-Ergebnis */
 #define RE15_R41N_ERG_NICHTS       0
@@ -70,5 +73,14 @@ int  re15_panel2030_r41_quelle(void);       /* -1 oder Tank */
 void re15_panel2030_r41_cursor(int *x, int *y);
 void re15_panel2030_r41_cursor_setzen(int x, int y);
 int  re15_panel2030_r41_ziel_erreicht(void);
+/* Spur PF: Beschriftung = Glyphen der 8x8-Spielschrift (TEX.TIM, FUN_80029214) mit je einer 16er-CLUT (RGB555, 0 = durchsichtig), vom Generator
+ * tools/r41_nachtrag30/panel_bild.py (beschriften) nach der JPEG-Kette in das Bild gestempelt. Liefert die Zahl der Glyphen; fuer 0 <= i < Zahl
+ * zusaetzlich Zeichen, linke obere Ecke der 8x8-Zelle und CLUT (Riegel unit_r41_nachtrag30 / Werkzeug "etikett"). PSX: 0. */
+int  re15_panel2030_r41_glyphe(int i, int *code, int *x, int *y, const uint16_t **clut);
+/* Spur PF Nachbesserung 1: Teilstriche, rotes Band und Querbalken der Scheiben, vom Generator (scheiben_stempeln) Texel fuer Texel nach der JPEG-Kette
+ * gestempelt. Liefert die Zahl der Stempel-Texel; fuer 0 <= i < Zahl zusaetzlich Lage und Farbe (RGB555). Dazu der Grund ohne Laufzeit-Teile (RGBA8888)
+ * an (x, y) fuer den Zeiger-Riegel. PSX: 0. */
+int      re15_panel2030_r41_stempel(int i, int *x, int *y, uint16_t *farbe);
+uint32_t re15_panel2030_r41_grund_rgba(int x, int y);
 
 #endif /* RE15_PANEL2030_R41_H */

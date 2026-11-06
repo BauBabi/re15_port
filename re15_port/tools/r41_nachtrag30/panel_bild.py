@@ -7,11 +7,30 @@ Dossier analysis/befunde_runde41/N_nachtrag30.md §2 (Kamera, Lage, Regeln). Erz
   re15_r41n_panel_voll   RGB555 je Fenster: dieselbe Stelle mit VOLLEM Tank (engine/src/panel2030_r41.c setzt beide je Fuellstand zusammen)
   re15_r41n_panel_cursor Cursor-Stempel aus dem Spielbild 2050 (C_belege/pult2050_loesung_sheet.png, Kachel F540)
 Rahmen pixelgleich aus ROOM2050 Cut 15, EXIT-Feld pixelgleich aus ROOM11F0 Cut 10 (x 210..238, y 175..204).
+  re15_r41n_panel_glyphen / re15_r41n_panel_clut  die Beschriftung (Spur PF, unten)
+
+Runde 41 Spur PF (Nutzer: "Zahlen und Texte auf den Panel in Nahansicht sind kaum lesbar/verschwommen"; Dossier PF_panelfix.md §2):
+Ursache: die Schrift war Arial Bold mit 4,6..8,2 Bildpunkten, 4-fach ueberabgetastet, weichgezeichnet, mit INTER_AREA verkleinert, verrauscht und
+durch die JPEG-Kette (4:2:0, Farbe auf halber Aufloesung) gezogen. Jetzt: Bild ohne Schrift durch dieselbe Kette, DANACH die Beschriftung Pixel fuer
+Pixel aus der 8x8-Schrift des Spiels gestempelt (kein Weichzeichnen, ganzzahlige Lage, 15 Bit): DATA/TEX.TIM, Glyphe c bei
+u = ((c-0x20) & 0x1f) * 8, v = ((c-0x20) & 0xe0) >> 5 * 8 auf der Seite ab Texel x 256 (FUN_80029214 @0x80029214, tpage VRAM 768 = TIM-Texel 256,
+render_pc.c re15_render_pc_debug_text), Farben je Schild als 16er-CLUT wie die PSX (helle Schrift = CLUT-Zeile 0 von TEX.TIM @(256,480) unveraendert).
+Laufweite, Lage und Wortlaut der Schilder sind PORT-WAHL; "PRESSURE 80" passt mit 8 Bildpunkten je Zeichen nicht auf das Schild (88 > 54) -> "SET 80".
+
+Runde 41 Spur PF, Nachbesserung 1 (Nutzer zur Schrift: "ja, ist super."; Zusage: Drehscheiben und Teilstriche auf ganze Bildpunkte): die vier
+Drehscheiben und das Zeiger-Instrument liefen bisher wie das uebrige Bild durch die Kette (4-fach ueberabgetastet, weiche Kanten, INTER_AREA, JPEG 4:2:0):
+Teilstriche 0,44..0,72 Texel breit und Querbalken 2,3 Texel wurden zu grauen Verlaeufen. Jetzt stempelt scheiben_stempeln() sie NACH der Kette Texel fuer
+Texel (wie die Schrift): jeder Texel gehoert ganz oder gar nicht zu Lippe, Ring, Blatt, Teilstrich, Band oder Balken (Entscheidung an der Texelmitte),
+Farben wie kit.scheibe/kit.instrument/kit.drehscheibe, danach das Gamma von fertig() (1,16). Mitten auf Texelmitten (x,5): Instrument 124,5/87,5,
+Scheiben 125,5 / 163,5 / 200,5 / 237,5 bei 160,5. Striche: je Schritt entlang der Hauptachse genau ein Texel (linie_px), der Querbalken zwei Texel je
+Spalte in der Steigung 1:2 (63,4 Grad statt 60: die einzige Lage nahe 60 Grad mit gleichmaessiger Treppe). In der Kette bleibt nur der Schlagschatten.
+Der Zeiger (Laufzeit, engine/src/panel2030_r41.c) folgt derselben Regel. Alles PORT-WAHL wie das Panel selbst.
 
 Aufruf: R41N_BG=<dumps stage2>;<dumps stage1> C:/Python310/python.exe re15_port/tools/r41_nachtrag30/panel_bild.py [--beleg <png>]
 """
 import hashlib
 import os
+import struct
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np, cv2
@@ -27,8 +46,8 @@ ECHT = kit.echtbild()
 T = [(53, 69), (73, 89), (139.5, 155.5), (173.5, 189.5), (193.5, 209.5)]   # fuenf Roehrenelemente, x
 TK0, TK1 = 41, 131                                                        # Kopf oben, Fuss unten
 GT, GB = 66, 116                                                          # Schauglas: Wert 100 / Wert 0
-D0 = (124.0, 87.0)                                                        # Hauptanzeige
-DR = [(125, 160), (163, 160), (200.5, 160), (237.5, 160)]                 # Scheibenreihe
+D0 = (124.5, 87.5)                                                        # Hauptanzeige (Nachbesserung 1: Texelmitte, frueher 124/87)
+DR = [(125.5, 160.5), (163.5, 160.5), (200.5, 160.5), (237.5, 160.5)]     # Scheibenreihe (Texelmitten, frueher 125/163/200,5/237,5 bei 160)
 R = 13.9
 PL = (50, 33, 272.5, 228)                                                 # Tafel unter der Schiene
 yw = lambda v: GB - (GB - GT) * v / 100                                    # Wert -> Bildzeile im Schauglas
@@ -152,7 +171,7 @@ def alle_koerper(img):
 
 
 def schild_oben(img):
-    """Echtes Schild oben rechts (rotes Feld, helles Feld) neu aufgebaut, Ziel in Klartext."""
+    """Echtes Schild oben rechts (rotes Feld, helles Feld) neu aufgebaut; die Schrift stempelt beschriften() (Spur PF)."""
     x0, y0, x1, y1 = 212, 46.5, 270, 87
     schatten(img, sd_box(x0, y0, x1, y1, .8), .5, 1., .8, 1.1)
     a = aa(sd_box(x0, y0, x1, y1, .8), .5)
@@ -165,20 +184,19 @@ def schild_oben(img):
     a = aa(sd_box(x0 + 2, y0 + 21.5, x1 - 2, y0 + 37.5, .5), .5)
     f = col(208, 206, 190)[None, None, :] + (rausch(.9, 74) * 5 + rausch(.3, 75) * 2)[..., None]
     img[:] = img * (1 - a[..., None]) + f * a[..., None]
-    text(img, 'BRIDGE', (x0 + x1) / 2, y0 + 11.9, 8.2, col(232, 228, 214), .94, F_BD, blur=.1)
-    text(img, 'PRESSURE 80', (x0 + x1) / 2, y0 + 29.6, 6.7, col(34, 30, 28), .94, F_BD, blur=.1)
 
 
-def schild_rot(img, z1, z2, g1=6.0, g2=5.6):
-    """Rotes Schild unter der Scheibenreihe."""
-    x0, y0, x1, y1 = 129, 182.5, 184.5, 205
+ROT = (122, 182.5, 230, 205)   # Spur PF: breiter (frueher 129..184,5), "HIGH PRESSURE" = 98 Bildpunkte in der Spielschrift
+
+
+def schild_rot(img):
+    """Rotes Schild unter der Scheibenreihe; die Schrift stempelt beschriften() (Spur PF)."""
+    x0, y0, x1, y1 = ROT
     schatten(img, sd_box(x0, y0, x1, y1, .8), .55, 1., .8, 1.1)
     a = aa(sd_box(x0, y0, x1, y1, .8), .5)
     f = col(146, 34, 30)[None, None, :] * (1.04 - .010 * (Y - y0))[..., None] + (rausch(1.2, 76) * 6 + rausch(.3, 77) * 2.5)[..., None]
     img[:] = img * (1 - a[..., None]) + f * a[..., None]
     blend(img, col(236, 226, 214), aa(np.abs(sd_box(x0 + 1.6, y0 + 1.6, x1 - 1.6, y1 - 1.6, .5)) - .18, .4) * .55)
-    text(img, z1, (x0 + x1) / 2, y0 + 7.8, g1, col(238, 232, 218), .95, F_BD, blur=.1)
-    text(img, z2, (x0 + x1) / 2, y0 + 15.2, g2, col(238, 232, 218), .9, F_BD, blur=.1)
 
 
 def linie(img, stuecke, st=.8):
@@ -206,11 +224,8 @@ def instrument_ohne_zeiger(img, cx, cy, R):
     for v in np.arange(80, 100.01, 1.):
         ph = skala_winkel(v)
         strich(img, cx, cy, ph, R * .76, R * .92, .42, col(178, 28, 22), .95)
-    rot = col(172, 22, 18)
-    for v, s, c, gr in ((0, '0', tinte, 4.6), (50, '50', tinte, 4.6), (80, '80', rot, 6.0)):
-        ph = skala_winkel(v)
-        rr = R * (.45 if v == 80 else .50)
-        text(img, s, cx + rr * np.sin(ph), cy - rr * np.cos(ph) + (0 if v != 50 else .4), gr, c, .96, F_BD, blur=.12)
+    # Spur PF: keine Ziffern im Zifferblatt (4,6 Bildpunkte waren nicht lesbar, 6x8-Ziffern passen nicht in die 18 Bildpunkte innen);
+    # das Ziel 80 steht scharf am Schild neben Tank A und oben rechts, auf der Skala bleibt das rote Band 80..100.
     glas(img, cx, cy, R)
 
 
@@ -230,16 +245,253 @@ def bild(voll):
     for i in (0, 1):                               # Zielmarke 80 am Tank A
         x0, x1 = T[i]
         blend(img, col(182, 30, 24), aa(sd_box(x0 + 2.2, yw(80) - .65, x1 - 2.2, yw(80) + .65, .3), .4))
-    schildchen(img, 92, yw(80) - 4.2, 105.5, yw(80) + 4.2, '80', 6.6, tinte=col(226, 70, 54))
-    instrument_ohne_zeiger(img, D0[0], D0[1], R)
-    for (cx, cy) in DR:
-        drehscheibe(img, cx, cy, R, 60)
-    for x0, x1, s, lx in ((55.5, 82, 'A  100', 84.5), (135, 158.5, 'B  50', 161), (177, 202.5, 'C  30', 205)):
-        schildchen(img, x0, 133.2, x1, 141.4, s, 6.0)
+    schildchen(img, *SCHILD_80, '')
+    for (cx, cy) in [D0] + DR:                     # Nachbesserung 1: in der Kette nur der Schlagschatten, die Scheiben stempelt scheiben_stempeln()
+        schatten(img, sd_kreis(cx, cy, R + RING), .6, 1.5, 1.1, 1.5)
+    for (x0, x1), lx in zip(TANKSCHILD, (84.5, 161, 205)):
+        schildchen(img, x0, TANKSCHILD_Y[0], x1, TANKSCHILD_Y[1], '')
         lampe_unten(img, lx, 135.8, 7, 3, an=False)
     schild_oben(img)
-    schild_rot(img, 'CAUTION', 'HIGH PRESSURE')
-    return fertig(img, None, None)
+    schild_rot(img)
+    return beschriften(scheiben_stempeln(fertig(img, None, None)))
+
+
+# ---- Scheiben auf ganze Texel (Spur PF, Nachbesserung 1) ----------------------------------------------------------------
+RING = 3.9                                              # kit.scheibe ring
+GAMMA_FERTIG = 1.16                                     # fertig(): arr = 255 * (arr / 255) ** 1.16
+TINTE = (30, 28, 26)
+STEMPEL = []                                            # (x, y, r, g, b) aller gestempelten Strich-/Balken-Texel nach dem Gamma, fuer die Riegel
+
+
+def linie_px(x0, y0, x1, y1, dick=False):
+    """Texel einer Strecke: je Schritt entlang der Hauptachse genau EIN Texel, dessen Mitte der Geraden am naechsten liegt (bei Gleichstand der untere bzw.
+    rechte); dick: dazu der Nachbar in der Nebenachse, der naeher an der Geraden liegt (zwei Texel je Schritt, gleichmaessige Treppe). Dieselbe Regel hat
+    linie_px() in engine/src/panel2030_r41.c fuer den Zeiger."""
+    dx, dy = x1 - x0, y1 - y0
+    pts = []
+    if abs(dx) >= abs(dy):
+        a, b = int(np.ceil(min(x0, x1) - .5)), int(np.floor(max(x0, x1) - .5))
+        if a > b:
+            a = b = int(np.floor((x0 + x1) / 2))
+        for i in range(a, b + 1):
+            y = y0 + (i + .5 - x0) * dy / dx if dx else y0
+            j = int(np.floor(y))
+            pts.append((i, j))
+            if dick:
+                pts.append((i, j + 1 if y - j >= .5 else j - 1))
+    else:
+        a, b = int(np.ceil(min(y0, y1) - .5)), int(np.floor(max(y0, y1) - .5))
+        if a > b:
+            a = b = int(np.floor((y0 + y1) / 2))
+        for j in range(a, b + 1):
+            x = x0 + (j + .5 - y0) * dx / dy
+            i = int(np.floor(x))
+            pts.append((i, j))
+            if dick:
+                pts.append((i + 1 if x - i >= .5 else i - 1, j))
+    return pts
+
+
+def scheibe_px(a, cx, cy, R, seed):
+    """Lippe, Ring, innere Lippe und Blatt wie kit.scheibe, je Texel nach dem Abstand der Texelmitte (ohne Teilbedeckung); a = Bild vor dem Gamma (float).
+    Liefert die Maske des Blatts (fuer Glas und Striche)."""
+    y0, y1, x0, x1 = int(cy - R - RING - 2), int(cy + R + RING + 3), int(cx - R - RING - 2), int(cx + R + RING + 3)
+    yy, xx = np.mgrid[y0:y1, x0:x1]
+    X, Y = xx + .5, yy + .5
+    d = np.hypot(X - cx, Y - cy)
+    phi = np.arctan2(Y - cy, X - cx)
+    r = np.random.default_rng(seed)
+    licht = .5 + .5 * np.cos(phi + np.radians(125))
+    ringf = (46 + 150 * licht ** 2.4)[..., None] * np.array([1., 1., .96]) + (r.standard_normal(d.shape) * 3)[..., None]
+    u = d / R
+    n = cv2.GaussianBlur(r.standard_normal(d.shape).astype(np.float32), (0, 0), 1.2)
+    schmutz = (n / (n.std() + 1e-6) * 6 + r.standard_normal(d.shape) * 2)[..., None]
+    blatt = np.array([219., 214., 190.]) * (1.02 - .22 * u ** 3 + .06 * ((cx - X) + (cy - Y)) / R)[..., None] + schmutz
+    blk = a[y0:y1, x0:x1]
+    blk[d <= R + RING + .5] = (6, 6, 6)
+    m = d <= R + RING - .4
+    blk[m] = ringf[m]
+    blk[d <= R + .7] = (10, 10, 9)
+    mb = d <= R
+    blk[mb] = blatt[mb]
+    # Glas wie kit.glas, nur auf dem Blatt und VOR den Strichen (die Striche bleiben in voller Deckung)
+    d1 = np.hypot(X - (cx - R * .28), Y - (cy - R * .34)) - R * .82
+    d2 = np.hypot(X - (cx - R * .02), Y - (cy - R * .02)) - R * .90
+    ga = (np.clip(.5 - d1 / 1., 0, 1) * (1 - np.clip(.5 - d2 / 2.2, 0, 1)) * .34)[..., None]
+    blk[mb] = (blk * (1 - ga) + np.array([255., 255., 248.]) * ga)[mb]
+    maske = np.zeros(a.shape[:2], bool)
+    maske[y0:y1, x0:x1] = d <= R + RING + .5
+    blatt_m = np.zeros(a.shape[:2], bool)
+    blatt_m[y0:y1, x0:x1] = mb
+    return maske, blatt_m
+
+
+def setze(a, pts, farbe, deckung=1.):
+    for (i, j) in pts:
+        a[j, i] = a[j, i] * (1 - deckung) + np.array(farbe, float) * deckung
+
+
+def scheiben_stempeln(im):
+    """Instrument (ohne Zeiger) und vier Drehscheiben Texel fuer Texel in das fertige Bild (nach fertig(), vor beschriften())."""
+    out = np.array(im).astype(np.float64)
+    lin = 255 * (out / 255) ** (1 / GAMMA_FERTIG)           # zurueck vor das Gamma, damit die Farben wie in der Kette gerechnet werden
+    neu = np.zeros(out.shape[:2], bool)
+    striche = []
+    # Instrument: Teilstriche 0..100 je 10 (lang je 20), rotes Band 80..100 (kit.instrument)
+    cx, cy = D0
+    m, blatt = scheibe_px(lin, cx, cy, R, 2031)
+    neu |= m
+    for v in range(0, 101, 10):
+        ph = skala_winkel(v)
+        lang = v % 20 == 0
+        r0, r1 = R * (.70 if lang else .78), R * .92
+        pts = linie_px(cx + r0 * np.sin(ph), cy - r0 * np.cos(ph), cx + r1 * np.sin(ph), cy - r1 * np.cos(ph))
+        setze(lin, pts, TINTE, .9)
+        striche += pts
+    yy, xx = np.mgrid[0:H, 0:W]
+    dd = np.hypot(xx + .5 - cx, yy + .5 - cy)
+    wk = np.arctan2(xx + .5 - cx, -(yy + .5 - cy))         # Winkel wie skala_winkel: 0 oben, im Uhrzeigersinn
+    band = (dd >= R * .76) & (dd <= R * .92) & (wk >= skala_winkel(80)) & (wk <= skala_winkel(100))
+    pts = [(int(i), int(j)) for j, i in zip(*np.nonzero(band))]
+    setze(lin, pts, (178, 28, 22), .95)
+    striche += pts
+    # Drehscheiben: 12 Teilstriche (Deckung .6 wie kit.drehscheibe), Querbalken 2 Texel je Spalte, Steigung 1:2, Schatten (+1,+1) Deckung .32
+    for k, (cx, cy) in enumerate(DR):
+        m, blatt = scheibe_px(lin, cx, cy, R, 2040 + k)
+        neu |= m
+        for t in range(12):
+            ph = np.radians(30 * t)
+            pts = linie_px(cx + R * .84 * np.sin(ph), cy - R * .84 * np.cos(ph), cx + R * .95 * np.sin(ph), cy - R * .95 * np.cos(ph))
+            setze(lin, pts, TINTE, .6)
+            striche += pts
+        ex, ey = 2 / np.sqrt(5), -1 / np.sqrt(5)
+        L = R * .93
+        balken = linie_px(cx - L * ex, cy - L * ey, cx + L * ex, cy + L * ey, dick=True)
+        setze(lin, [(i + 1, j + 1) for (i, j) in balken if (i + 1, j + 1) not in balken], (0, 0, 0), .32)
+        setze(lin, balken, (14, 14, 13), 1.)
+        striche += balken
+    out[neu] = 255 * (np.clip(lin[neu], 0, 255) / 255) ** GAMMA_FERTIG
+    o8 = out.clip(0, 255).astype(np.uint8)
+    if not STEMPEL:
+        q = lambda c: (int(c) >> 3) << 3                    # 15 Bit wie rgb555()
+        STEMPEL.extend(sorted({(i, j, q(o8[j, i, 0]), q(o8[j, i, 1]), q(o8[j, i, 2])) for (i, j) in striche}))
+    return Image.fromarray(o8)
+
+
+# ---- Beschriftung (Spur PF) --------------------------------------------------------------------------------------------
+TEX_TIM = os.path.join(kit.TREE, "re15_port", "shared_assets", "PSX", "DATA", "TEX.TIM")
+TANKSCHILD = ((50.5, 82.5), (136, 160), (180, 204))     # Plaettchen unter den Tanks (frueher 55,5..82 / 135..158,5 / 177..202,5)
+TANKSCHILD_Y = (132, 142)                               # frueher 133,2..141,4: 8 Zeilen Glyphe + je 1 Rand
+SCHILD_80 = (91, 71, 106, 81)                           # Zielmarke an Tank A, Mitte yw(80) = 76
+
+
+def rgb15(r, g, b):
+    return (r >> 3) | ((g >> 3) << 5) | ((b >> 3) << 10)
+
+
+def tex_schrift():
+    """Die 8x8-Schrift: TEX.TIM 4 bpp, Seite ab Texel x 256, Zeilen 0..31 (der 16er-Spielfont beginnt bei v 32), CLUT-Zeile 0."""
+    d = open(TEX_TIM, "rb").read()
+    assert struct.unpack_from("<I", d, 4)[0] & 8, "TEX.TIM ohne CLUT"
+    clen, cx, cy, cw, ch = struct.unpack_from("<IHHHH", d, 8)
+    assert (cx, cy) == (256, 480), (cx, cy)                 # CLUT-Rechteck (256,480) = FUN_80029214 CLUT 0x1e0 * 0x40 | 0x10
+    clut0 = list(struct.unpack_from("<16H", d, 20))         # Zeile 0
+    o = 8 + clen
+    ilen, ix, iy, iw, ih = struct.unpack_from("<IHHHH", d, o)
+    roh = np.frombuffer(d, np.uint8, iw * 2 * ih, o + 12).reshape(ih, iw * 2)
+    idx = np.zeros((ih, iw * 4), np.uint8)
+    idx[:, 0::2] = roh & 15
+    idx[:, 1::2] = roh >> 4
+    return idx[0:32, 256:512], clut0
+
+
+SCHRIFT, CLUT0 = None, None
+
+
+def glyphe(c):
+    g = ord(c) - 0x20                                       # FUN_80029214 @0x80029214: u = (g & 0x1f) * 8, v = ((g & 0xe0) >> 5) * 8
+    u, v = (g & 0x1F) * 8, ((g & 0xE0) >> 5) * 8
+    return SCHRIFT[v:v + 8, u:u + 8]
+
+
+def clut_aus(tinte, schatten):
+    """16er-CLUT wie CLUT-Zeile 0, die Schriftindizes 1..4 (Schattierung der Glyphe) in der Tinte, 8 = Schlagschatten (0 = durchsichtig)."""
+    c = list(CLUT0)
+    if tinte is not None:
+        hell = [CLUT0[k] for k in (1, 2, 3, 4)]
+        for k, h in zip((1, 2, 3, 4), hell):
+            f = ((h & 31) + ((h >> 5) & 31) + ((h >> 10) & 31)) / (3.0 * 27)    # Anteil an Index 1 (0x677b = 27,27,25)
+            c[k] = rgb15(*(min(255, int(t * f)) for t in tinte)) or 0x0421
+    if schatten is not None:
+        c[8] = rgb15(*schatten) if schatten else 0
+    return c
+
+
+# CLUTs der Schilder: 0 = helle Spielschrift (CLUT-Zeile 0 unveraendert), 1 = dunkle Schrift ohne Schatten auf hellem Feld, 2 = rote Ziffern
+CLUTS = None
+ZEICHEN_VORSCHUB = {"ziffer": 6, "leer": 3}             # Laufweite PORT-WAHL: Buchstaben 8 (FUN_80029214), Ziffern 6 (Tinte 5 breit), Leerzeichen 3
+
+
+def lauf(text):
+    """Lage der Glyphen relativ zum Anfang: Buchstaben 8, Ziffern 6, Leerzeichen 3."""
+    aus, x = [], 0
+    for c in text:
+        if c == " ":
+            x += ZEICHEN_VORSCHUB["leer"]
+            continue
+        aus.append((c, x))
+        x += ZEICHEN_VORSCHUB["ziffer"] if c.isdigit() else 8
+    return aus
+
+
+def ausdehnung(text):
+    """Linke und rechte Spalte der gesetzten Texel (Tinte und Schatten) relativ zum Anfang."""
+    spalten = [dx + int(s) for c, dx in lauf(text) for s in np.where((glyphe(c) != 0).any(0))[0]]
+    return min(spalten), max(spalten)
+
+
+def mittig(text, x0, x1):
+    """Anfang so, dass die gesetzten Texel mittig zwischen x0 und x1 stehen (ganzzahlig)."""
+    links, rechts = ausdehnung(text)
+    return int(np.floor((x0 + x1) / 2.0 - (rechts - links + 1) / 2.0)) - links
+
+
+ETIKETTEN = None
+
+
+def etiketten():
+    """(Text, x, y, CLUT) - y = obere Glyphenzeile."""
+    t0, t1 = TANKSCHILD_Y
+    sx0, sy0, sx1, sy1 = 212, 46.5, 270, 87                 # schild_oben
+    rx0, ry0, rx1, ry1 = ROT
+    e = []
+    for (x0, x1), txt in zip(TANKSCHILD, ("A 100", "B 50", "C 30")):
+        e.append((txt, mittig(txt, x0, x1), t0 + 1, 0))
+    e.append(("80", mittig("80", SCHILD_80[0], SCHILD_80[2]), SCHILD_80[1] + 1, 2))
+    e.append(("BRIDGE", mittig("BRIDGE", sx0, sx1), int(sy0 + 7.5), 0))          # rotes Feld y0+5 .. y0+18,5
+    e.append(("SET 80", mittig("SET 80", sx0, sx1), int(sy0 + 25.5), 1))         # helles Feld y0+21,5 .. y0+37,5
+    e.append(("CAUTION", mittig("CAUTION", rx0, rx1), int(ry0 + 2.5), 0))
+    e.append(("HIGH PRESSURE", mittig("HIGH PRESSURE", rx0, rx1), int(ry0 + 12.5), 0))
+    return e
+
+
+def beschriften(im):
+    """Stempelt die Beschriftung Texel fuer Texel (Index 0 und CLUT-Wert 0 = durchsichtig, PSX-Regel) in das fertige 320x240-Bild."""
+    global SCHRIFT, CLUT0, CLUTS, ETIKETTEN
+    if SCHRIFT is None:
+        SCHRIFT, CLUT0 = tex_schrift()
+        CLUTS = [clut_aus(None, None), clut_aus((34, 30, 28), 0), clut_aus((236, 76, 56), None)]
+        ETIKETTEN = etiketten()
+    a = np.array(im).copy()
+    for txt, x, y, k in ETIKETTEN:
+        for c, dx in lauf(txt):
+            g = glyphe(c)
+            for gy in range(8):
+                for gx in range(8):
+                    v = CLUTS[k][g[gy, gx]] if g[gy, gx] else 0
+                    if v:
+                        a[y + gy, x + dx + gx] = ((v & 31) << 3, ((v >> 5) & 31) << 3, ((v >> 10) & 31) << 3)
+    return Image.fromarray(a)
 
 
 def rgb555(bild):
@@ -278,6 +530,23 @@ def main():
     for f in fenster:
         z.append("    { %d, %d, %d, %d, %d, %d }," % f)
     z.append("};")
+    # Beschriftung (Spur PF): Glyphen + CLUTs, damit unit_r41_nachtrag30 und das Werkzeug "etikett" sie gegen TEX.TIM nachpruefen
+    z.append("typedef struct { unsigned char code; short x, y; unsigned char clut; } re15_r41n_glyphe_t;")
+    gl = [(ord(c), x + dx, y, k) for txt, x, y, k in ETIKETTEN for c, dx in lauf(txt)]
+    z.append("static const re15_r41n_glyphe_t re15_r41n_panel_glyphen[%d] = {" % len(gl))
+    for g in gl:
+        z.append("    { 0x%02x, %d, %d, %d }," % g)
+    z.append("};")
+    z.append("static const unsigned short re15_r41n_panel_clut[%d][16] = {" % len(CLUTS))
+    for c in CLUTS:
+        z.append("    { " + ", ".join("0x%04x" % v for v in c) + " },")
+    z.append("};")
+    # Nachbesserung 1: Strich-/Balken-Texel der Scheiben (nach dem Gamma, 15 Bit), damit unit_r41_nachtrag30 sie Texel fuer Texel im Panel-Bild nachprueft
+    z.append("typedef struct { short x, y; unsigned short farbe; } re15_r41n_stempel_t;")
+    z.append("static const re15_r41n_stempel_t re15_r41n_panel_stempel[%d] = {" % len(STEMPEL))
+    for (x, y, r_, g_, b_) in STEMPEL:
+        z.append("    { %d, %d, 0x%04x }," % (x, y, rgb15(r_, g_, b_)))
+    z.append("};")
     c = cursor_stempel()
     z.append("typedef struct { signed char dx, dy; unsigned char r, g, b; } re15_r41n_cursorpx_t;")
     z.append("static const re15_r41n_cursorpx_t re15_r41n_panel_cursor[%d] = {" % len(c))
@@ -286,7 +555,10 @@ def main():
     z.append("};")
     ziel = os.path.join(GEN, "panel2030_r41.inc")
     open(ziel, "w", newline="\n").write("\n".join(z) + "\n")
-    print("geschrieben:", ziel, "Grund md5", hashlib.md5(p_leer.tobytes()).hexdigest(), "Cursor-Pixel", len(c), "Fenster", len(fenster))
+    print("geschrieben:", ziel, "Grund md5", hashlib.md5(p_leer.tobytes()).hexdigest(), "Cursor-Pixel", len(c), "Fenster", len(fenster),
+          "Etiketten", ", ".join("%s @%d,%d" % (t, x, y) for t, x, y, k in ETIKETTEN), "Stempel-Texel", len(STEMPEL))
+    if "--beleg" in sys.argv:
+        Image.fromarray(np.asarray(leer)).resize((W * 3, H * 3), Image.NEAREST).save(sys.argv[sys.argv.index("--beleg") + 1])
 
 
 if __name__ == "__main__":

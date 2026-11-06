@@ -151,6 +151,41 @@ int  re15_panel2030_r41_ziel_erreicht(void) { return s_ziel; }
 void re15_panel2030_r41_cursor(int *x, int *y) { if (x) *x = s_cx_q8 >> 8; if (y) *y = s_cy_q8 >> 8; }
 void re15_panel2030_r41_cursor_setzen(int x, int y) { s_cx_q8 = x << 8; s_cy_q8 = y << 8; }
 
+/* ---- Beschriftung (Spur PF): Glyphen + CLUT fuer die Riegel ------------------------------------------------------------- */
+int re15_panel2030_r41_glyphe(int i, int *code, int *x, int *y, const uint16_t **clut)
+{
+#ifdef RE15_PLATFORM_PC
+    const int n = (int)(sizeof re15_r41n_panel_glyphen / sizeof re15_r41n_panel_glyphen[0]);
+    if (i >= 0 && i < n) {
+        const re15_r41n_glyphe_t *g = &re15_r41n_panel_glyphen[i];
+        if (code) *code = g->code;
+        if (x) *x = g->x;
+        if (y) *y = g->y;
+        if (clut) *clut = re15_r41n_panel_clut[g->clut];
+    }
+    return n;
+#else
+    (void)i; (void)code; (void)x; (void)y; (void)clut;
+    return 0;
+#endif
+}
+
+int re15_panel2030_r41_stempel(int i, int *x, int *y, uint16_t *farbe)
+{
+#ifdef RE15_PLATFORM_PC
+    const int n = (int)(sizeof re15_r41n_panel_stempel / sizeof re15_r41n_panel_stempel[0]);
+    if (i >= 0 && i < n) {
+        if (x) *x = re15_r41n_panel_stempel[i].x;
+        if (y) *y = re15_r41n_panel_stempel[i].y;
+        if (farbe) *farbe = re15_r41n_panel_stempel[i].farbe;
+    }
+    return n;
+#else
+    (void)i; (void)x; (void)y; (void)farbe;
+    return 0;
+#endif
+}
+
 /* ---- Bild --------------------------------------------------------------------------------------------------------------- */
 #ifdef RE15_PLATFORM_PC
 static uint32_t s_rgba[RE15_R41N_PANEL_W * RE15_R41N_PANEL_H];
@@ -171,32 +206,47 @@ static void punkt_mischen(int x, int y, int r, int g, int b, int a)    /* a 0..2
          ((uint32_t)((b0 * (256 - a) + b * a) >> 8) << 8) | 0xFFu;
 }
 
-/* Strecke mit Halbbreite b (Hundertstel Bildpunkte), weich an der Kante: derselbe Zeiger wie im Entwurf (panel_kit.instrument). */
-static void strecke(double x0, double y0, double x1, double y1, double b, int r, int g, int bl, int deckung)
+/* Strecke auf ganze Texel (Spur PF Nachbesserung 1; frueher weich an der Kante, Halbbreite 0,62/0,34 Texel -> graue Zwischentoene, die beim Umfuellen
+ * flimmerten): je Schritt entlang der Hauptachse genau EIN Texel, dessen Mitte der Geraden am naechsten liegt (bei Gleichstand der untere bzw. rechte);
+ * dick: dazu der Nachbar in der Nebenachse, der naeher an der Geraden liegt. Dieselbe Regel wie linie_px() in tools/r41_nachtrag30/panel_bild.py
+ * (Teilstriche und Querbalken der Scheiben). Jeder Texel ganz mit der Deckung a (0..256), dx/dy = Versatz (Schatten). PORT-WAHL wie das Panel. */
+static void linie_px(double x0, double y0, double x1, double y1, int dick, int r, int g, int b, int a, int dx_, int dy_)
 {
-    const int ax = (int)floor((x0 < x1 ? x0 : x1) - b - 2), ex = (int)ceil((x0 > x1 ? x0 : x1) + b + 2);
-    const int ay = (int)floor((y0 < y1 ? y0 : y1) - b - 2), ey = (int)ceil((y0 > y1 ? y0 : y1) + b + 2);
-    const double dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
-    for (int y = ay; y <= ey; y++)
-        for (int x = ax; x <= ex; x++) {
-            const double px = x + .5 - x0, py = y + .5 - y0;
-            double h = (px * dx + py * dy) / (l2 > 0 ? l2 : 1);
-            if (h < 0) h = 0; if (h > 1) h = 1;
-            const double qx = px - dx * h, qy = py - dy * h;
-            const double d = sqrt(qx * qx + qy * qy) - b;
-            const double a = d <= -.5 ? 1. : d >= .5 ? 0. : .5 - d;
-            if (a > 0) punkt_mischen(x, y, r, g, bl, (int)(a * deckung));
+    const double dx = x1 - x0, dy = y1 - y0;
+    if (fabs(dx) >= fabs(dy)) {
+        int i0 = (int)ceil((x0 < x1 ? x0 : x1) - .5), i1 = (int)floor((x0 > x1 ? x0 : x1) - .5);
+        if (i0 > i1) i0 = i1 = (int)floor((x0 + x1) / 2);
+        for (int i = i0; i <= i1; i++) {
+            const double y = dx != 0 ? y0 + (i + .5 - x0) * dy / dx : y0;
+            const int j = (int)floor(y);
+            punkt_mischen(i + dx_, j + dy_, r, g, b, a);
+            if (dick) punkt_mischen(i + dx_, (y - j >= .5 ? j + 1 : j - 1) + dy_, r, g, b, a);
         }
+    } else {
+        int j0 = (int)ceil((y0 < y1 ? y0 : y1) - .5), j1 = (int)floor((y0 > y1 ? y0 : y1) - .5);
+        if (j0 > j1) j0 = j1 = (int)floor((y0 + y1) / 2);
+        for (int j = j0; j <= j1; j++) {
+            const double x = x0 + (j + .5 - y0) * dx / dy;
+            const int i = (int)floor(x);
+            punkt_mischen(i + dx_, j + dy_, r, g, b, a);
+            if (dick) punkt_mischen((x - i >= .5 ? i + 1 : i - 1) + dx_, j + dy_, r, g, b, a);
+        }
+    }
 }
 
+/* Zeiger wie panel_kit.instrument (Schatten, Schaft -0,24R..0,58R, Spitze 0,50R..0,88R, Nabe R 2,3), jetzt auf ganzen Texeln: Schaft zwei Texel je Schritt,
+ * Spitze einer, Schatten = die Mittellinie um (+1,+1) mit Deckung 87/256, Nabe = Texel mit Mittenabstand <= 2,3. Drehpunkt = Texelmitte (ZEIGER_X/Y + 0,5),
+ * wie die Mitte des gestempelten Instruments im Generator (D0 124,5 / 87,5). */
 static void zeiger(int wert_zehntel)
 {
-    const double R = RE15_R41N_ZEIGER_R / 10.0, cx = RE15_R41N_ZEIGER_X, cy = RE15_R41N_ZEIGER_Y;
+    const double R = RE15_R41N_ZEIGER_R / 10.0, cx = RE15_R41N_ZEIGER_X + .5, cy = RE15_R41N_ZEIGER_Y + .5;
     const double ph = (-135.0 + 270.0 * wert_zehntel / 1000.0) * 3.14159265358979 / 180.0, s = sin(ph), k = cos(ph);
-    strecke(cx - R * .22 * s + .8, cy + R * .22 * k + 1., cx + R * .86 * s + .8, cy - R * .86 * k + 1., .5, 0, 0, 0, 87);   /* Schatten */
-    strecke(cx - R * .24 * s, cy + R * .24 * k, cx + R * .58 * s, cy - R * .58 * k, .62, 16, 15, 15, 256);
-    strecke(cx + R * .50 * s, cy - R * .50 * k, cx + R * .88 * s, cy - R * .88 * k, .34, 16, 15, 15, 256);
-    strecke(cx, cy, cx, cy, 2.3, 96, 96, 96, 256);                                                                          /* Nabe */
+    linie_px(cx - R * .22 * s, cy + R * .22 * k, cx + R * .86 * s, cy - R * .86 * k, 0, 0, 0, 0, 87, 1, 1);                   /* Schatten */
+    linie_px(cx - R * .24 * s, cy + R * .24 * k, cx + R * .58 * s, cy - R * .58 * k, 1, 16, 15, 15, 256, 0, 0);
+    linie_px(cx + R * .50 * s, cy - R * .50 * k, cx + R * .88 * s, cy - R * .88 * k, 0, 16, 15, 15, 256, 0, 0);
+    for (int y = RE15_R41N_ZEIGER_Y - 3; y <= RE15_R41N_ZEIGER_Y + 3; y++)                                                   /* Nabe */
+        for (int x = RE15_R41N_ZEIGER_X - 3; x <= RE15_R41N_ZEIGER_X + 3; x++)
+            if ((x + .5 - cx) * (x + .5 - cx) + (y + .5 - cy) * (y + .5 - cy) <= 2.3 * 2.3) punkt_mischen(x, y, 96, 96, 96, 256);
 }
 
 static void lampe(int t)    /* Lage wie im Generator: x 84,5 / 161 / 205, y 135,8, 7 x 3 */
@@ -204,6 +254,12 @@ static void lampe(int t)    /* Lage wie im Generator: x 84,5 / 161 / 205, y 135,
     static const int k_lx[RE15_R41N_TANKS] = { 85, 161, 205 };
     for (int y = 136; y < 139; y++)
         for (int x = k_lx[t]; x < k_lx[t] + 7; x++) punkt_mischen(x, y, y == 136 ? 190 : 40, y == 136 ? 255 : 212, y == 136 ? 200 : 80, 256);
+}
+
+uint32_t re15_panel2030_r41_grund_rgba(int x, int y)
+{
+    if ((unsigned)x >= RE15_R41N_PANEL_W || (unsigned)y >= RE15_R41N_PANEL_H) return 0;
+    return farbe(re15_r41n_panel_grund[y * RE15_R41N_PANEL_W + x]);
 }
 
 const uint32_t *re15_panel2030_r41_rgba(void)
@@ -232,9 +288,10 @@ const uint32_t *re15_panel2030_r41_rgba(void)
     }
     if (s_nachricht)                                                        /* Band hinter dem Text (Text = Glyphen ohne Kasten) */
         for (int y = RE15_R41N_NACHRICHT_Y0; y < RE15_R41N_NACHRICHT_Y1; y++)
-            for (int x = RE15_R41N_X_MIN; x < RE15_R41N_X_MAX; x++) punkt_mischen(x, y, 0, 0, 0, 170);
+            for (int x = RE15_R41N_X_MIN; x < RE15_R41N_X_MAX; x++) punkt_mischen(x, y, 0, 0, 0, RE15_R41N_NACHRICHT_DECKUNG);
     return s_rgba;
 }
 #else
 const uint32_t *re15_panel2030_r41_rgba(void) { return NULL; }
+uint32_t re15_panel2030_r41_grund_rgba(int x, int y) { (void)x; (void)y; return 0; }
 #endif
