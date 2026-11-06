@@ -284,7 +284,14 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
          * -> keine Ausnahme 0x10. */
         static int s_drin = -1;
         int16_t rx[4], rz[4];
-        const int drin = !(g_room_rdt_ok && g_re15_active_cut >= 0 &&
+        /* G2-RE2 NB2 "Vorschlag 4" (PORT-WAHL, Nutzer "wichtig ist nur das der Kanister synchron mit dem Aligator mitlaeuft"): ohne Kopf-Klemme ragt der Kopf mit
+         * dem Kanister an den Aussenwaenden ueber das Regions-Viereck hinaus (z. B. Suedwand -27000, Viereck bis -29000, Kanister-Ende 4660 vor der Wurzel,
+         * Wurzel-Klemme 1466 vor der Wand: bis ~-30200) - der Test verwarf ihn dann, er verschwand aus dem Maul. RE2 kennt den Fall nicht (der Gator schwimmt
+         * dort nur im Korridor). Der angehaengte Kanister wird darum wie der Alligator gezeichnet (kein eigener Regions-Test); liegend/fallend wie RE2.
+         * Pruefhaken v4_alt = Stand f942f56c0. */
+        int32_t lk[3];
+        const int haengt = re15_gr2_kanister_lokal(lk) && !re15_gr2_v4_alt();
+        const int drin = haengt || !(g_room_rdt_ok && g_re15_active_cut >= 0 &&
                            re15_rdt_get_region_quad(&g_room_rdt, g_re15_active_cut, rx, rz)) || re15_aot_point_in_quad(pos[0], pos[2], rx, rz);
         if (drin != s_drin) {
             s_drin = drin;
@@ -649,11 +656,15 @@ int re15_gr2_pc_gator_schnitt(const re15_actor_t *npc, int *wl, int32_t *y_wl, i
      * (sonst so tief, dass nichts schneidet - Schwimmen und Biss wie NB5); die Bloecke Plattform/Rampe schneiden immer (was dort unter dem Deck liegt, steckt
      * im festen Block - Ueberquerung, Schwanz an der Rampe). */
     *wl = 0;
-    if (!npc || npc->type != 0x23u || !re15_gator_boss_active(npc) || !re15_gr2_rw_an()) return 0;
+    if (!npc || npc->type != 0x23u || !re15_gator_boss_active(npc) || !re15_gr2_rw_traegt()) return 0;
     if (re15_gr2_rw_modell_aus(npc)) return 1;
     int32_t y = 0;
-    *y_wl = re15_gr2_rw_wasserlinie(npc, &y) ? y : (1 << 30);
-    *bloecke = 1;
+    const int taucht = re15_gr2_rw_wasserlinie(npc, &y);
+    /* G2-RE2 NB2 Vorschlag 4 (Nutzerentscheid: der Kanister darf in die Geometrie ragen - dokumentieren, nicht verstecken): kein Block-Schnitt, gezeichnet wie
+     * ohne Kanister; nur der Rueckfall-Tauchgang schneidet an der Wasserlinie. Pruefhaken v4_alt = Stand f942f56c0 (Bloecke schneiden immer). */
+    if (!re15_gr2_v4_alt() && !taucht) return 0;
+    *y_wl = taucht ? y : (1 << 30);
+    *bloecke = re15_gr2_v4_alt();
     *wl = 1;
     return 0;
 }

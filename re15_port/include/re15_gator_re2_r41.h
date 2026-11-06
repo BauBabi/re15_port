@@ -365,6 +365,20 @@ void re15_gr2_rw_kamera_neu(void);              /* Raumwechsel/INIT: Kamera-Cach
 int  re15_gr2_rw_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max);   /* Messhaken: Mesh 5/6/7 + Kanister-Zylinder der gezeichneten Pose */
 int  re15_gr2_teile_deck_tiefe(re15_actor_t *e, int32_t deck, const int32_t (*bl)[4], int nb, uint32_t teile);
 
+/* ---- Runde 41 Spur G2-RE2 NB2 "Vorschlag 4" (Nutzerentscheid 2026-11-03, Dossier G2_gatorfix.md Abschnitt "G2-RE2 NB2 (Vorschlag 4)") --------------------
+ * "Ignoriere den Kanister einfach in der Berechnung. Tu so als ob er nicht da waere" / "wichtig ist nur das der Kanister synchron mit dem Aligator mitlaeuft.
+ * Ansonsten soll er nicht als Stoerkoerper zaehlen": der getragene Kanister (RE2-Stufe 7) zaehlt in keiner Bewegungs-, Kollisions- oder Wegrechnung; er haengt
+ * als Kind der gezeichneten Part-6-Matrix am Kiefer (RE2 `addiu a0,s0,1104` @0x801018d0 / `sw a0,128(s2)` @0x801018e0) und bleibt Trefferziel (T2 @0x801017c4,
+ * R1). Pruefhaken re15_gr2_v4_alt_setzen(1) = Stand f942f56c0 (Kanister zaehlt: Huelle, Klemme, Trag-Lenkung, Kollisions-Antwort, Ueberquerungs-Profil). */
+void re15_gr2_v4_alt_setzen(int an);
+int  re15_gr2_v4_alt(void);
+int  re15_gr2_traegt_lenkung(void);              /* getragen UND der Kanister zaehlt in der Bewegung (nur Pruefhaken v4_alt) */
+int  re15_gr2_rw_traegt(void);                   /* getragen und nicht der NB5-Pruefhaken: Rueckfall Rueckwaerts/Tauchen, Rammen in der Ueberquerung */
+int  re15_gr2_rw_nur_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max);   /* Messhaken: Mesh 5/6/7 der gezeichneten Pose (ohne Kanister) */
+int  re15_gr2_kanister_rel(int32_t rel[9]);
+int  re15_gr2_ohne_kanister_entfernt(void);      /* Messhaken env RE15_G2_OHNE_KANISTER (PC): 1 = der Kanister wurde beim Tragen entfernt */      /* Messhaken: Drehung des Kanisters im Part-6-Rahmen (1 = angehaengt) */
+void re15_gr2_kan_vorbild_setzen(int an);        /* Pruefhaken Riegel v4 (b): 1 = Kanister folgt der Part-6-Matrix des VORBILDS (ein Bild alte Pose) */
+
 #ifdef __cplusplus
 }
 #endif

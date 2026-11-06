@@ -81,7 +81,12 @@ static rw_t s_rw[RE15_ACTOR_MAX];
 static int s_rw_alt = 0;
 void re15_gr2_rw_alt_setzen(int an) { s_rw_alt = an; }
 int  re15_gr2_rw_alt(void) { return s_rw_alt; }
-int  re15_gr2_rw_an(void) { return !s_rw_alt && re15_gr2_traegt(); }
+/* G2-RE2 NB2 Vorschlag 4 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"): rw_an = die G2-RE2-Bausteine, die den Kanister als Koerper behandeln (Kollisions-Antwort,
+ * erweiterte Kopf-Klemme, Westkanal-Umweg, Vorstoss/Rueckzug, Ueberquerungs-Profil, keine Belagerung) - nur noch mit dem Pruefhaken re15_gr2_v4_alt_setzen(1).
+ * rw_traegt = dieses Modul selbst (Rueckwaerts / Tauchen als Rueckfall, wenn er auch ohne den Kanister haengt) und das Rammen in der Ueberquerung ("Rampe: rammen
+ * wie gehabt"): getragen, nicht der NB5-Pruefhaken. */
+int  re15_gr2_rw_an(void) { return !s_rw_alt && re15_gr2_traegt_lenkung(); }
+int  re15_gr2_rw_traegt(void) { return !s_rw_alt && re15_gr2_traegt(); }
 static int s_rw_tauch_aus = 0;           /* Pruefhaken der Riegel (Gegenprobe): 1 = Notloesung Tauchen aus */
 void re15_gr2_rw_tauchen_aus_setzen(int an) { s_rw_tauch_aus = an; }
 static int s_rw_rueck_aus = 0;           /* Pruefhaken der Riegel (Gegenprobe): 1 = Rueckwaerts aus */
@@ -140,7 +145,7 @@ static void rw_tauchen_start(int slot, re15_actor_t *e, const re15_actor_t *pl)
  * 1 = dieses Bild gehoert dem Modul (Rueckwaerts/Tauchgang), die Verfolgung laeuft nicht. */
 int re15_gr2_rw_takt(int slot, re15_actor_t *e, const re15_actor_t *pl, int32_t tx, int32_t tz, int32_t dist)
 {
-    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || !re15_gr2_rw_an()) return 0;
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || !re15_gr2_rw_traegt()) return 0;
     rw_t *w = &s_rw[slot];
     w->st.takte++;
     w->tx = tx; w->tz = tz;
@@ -218,7 +223,7 @@ void re15_gr2_rw_nachtakt(int slot, re15_actor_t *e, const re15_actor_t *pl, int
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return;
     rw_t *w = &s_rw[slot];
-    if (!re15_gr2_rw_an()) {
+    if (!re15_gr2_rw_traegt()) {
         if (w->modus >= RW_SINKEN && w->r_min) { e->hit_radius_min = w->r_min; e->hit_radius_max = w->r_max; }
         if (w->modus != RW_NORMAL) { w->modus = RW_NORMAL; e->y = RW_WASSER_Y; }
         w->hn = 0; w->dn = 0; w->fest = 0;
@@ -226,6 +231,9 @@ void re15_gr2_rw_nachtakt(int slot, re15_actor_t *e, const re15_actor_t *pl, int
     }
     if (phase_biss) w->seit_biss = 0; else if (w->seit_biss < (1 << 20)) w->seit_biss++;
     if (w->modus != RW_RUECK && w->seit_rueck < (1 << 20)) w->seit_rueck++;
+    /* G2-RE2 NB2 Vorschlag 4: ein Rueckwaerts-Durchgang, den ein Phasenwechsel (Biss, Belagerung, Ueberquerung) unterbricht, ist zu Ende - sonst hielt der
+     * Modus ausserhalb der Verfolgung an (gemessen Riegel re2, Lage Rampe-x2318: 100 % "rueckwaerts" in der Belagerung). Pruefhaken v4_alt wie f942f56c0. */
+    if (!verfolgt && w->modus == RW_RUECK && !re15_gr2_v4_alt()) { w->modus = RW_NORMAL; w->pause = RW_PAUSE; }
     if (!verfolgt || w->modus != RW_NORMAL) { w->dn = 0; w->fest = 0; if (!verfolgt) w->hn = 0; return; }
     /* (a) drueckt sich fest: die Takte wollten in RW_DRUECK_N Bildern zusammen >= RW_DRUECK_WEG, die Wurzel kam netto < RW_DRUECK_NETTO und < 1/4 davon voran
      * (die Klemmen / die Kollisions-Antwort nahmen die Bewegung zurueck). Gleiten an einer Wand (NB5, netto weiter) loest nichts aus. */
@@ -240,6 +248,10 @@ void re15_gr2_rw_nachtakt(int slot, re15_actor_t *e, const re15_actor_t *pl, int
             const int64_t nx = (int64_t)e->x - w->dx[alt], nz = (int64_t)e->z - w->dz[alt];
             const int32_t netto = (int32_t)re15_squareroot0((uint32_t)(nx * nx + nz * nz > 0xffffffffLL ? 0xffffffffLL : nx * nx + nz * nz));
             w->fest = (uint8_t)(weg >= RW_DRUECK_WEG && netto < RW_DRUECK_NETTO && 4 * netto < weg);
+            /* G2-RE2 NB2 Vorschlag 4 (Auftrag "Rueckwaerts und Tauchen nur als Rueckfall, falls er auch ohne Kanister haengt"): ohne Kopf-/Kanister-Klemme loest
+             * "drueckt sich fest" nicht mehr aus - das 16-Bilder-Fenster schlug sonst beim Wenden und Beissen an der Figur an (gemessen Riegel re2 Lage Mitte-Nord:
+             * 8 % rueckwaerts im Angriff); der Rueckfall beginnt erst mit dem Haenge-Fenster (b) (Rueckwaerts zuerst, dann Tauchen). */
+            if (!re15_gr2_v4_alt()) w->fest = 0;
         }
         w->dx[i] = e->x; w->dz[i] = e->z; w->dn++;
     }
@@ -276,7 +288,7 @@ void re15_gr2_rw_nachtakt(int slot, re15_actor_t *e, const re15_actor_t *pl, int
 static int rw_slot(const re15_actor_t *e)
 {
     const int i = (int)(e - g_actors);
-    return (e && i >= 0 && i < RE15_ACTOR_MAX && re15_gr2_rw_an()) ? i : -1;
+    return (e && i >= 0 && i < RE15_ACTOR_MAX && re15_gr2_rw_traegt()) ? i : -1;
 }
 int re15_gr2_rw_modell_aus(const re15_actor_t *e)
 {

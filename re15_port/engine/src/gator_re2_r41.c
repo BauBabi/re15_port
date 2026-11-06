@@ -134,6 +134,22 @@ static struct {
     uint16_t scherben;        /* +0x1EC (0 = intaktes Mesh) */
     uint32_t scherben_farbe;  /* +0x1BC = Record +0x70 */
 } s_kan;
+/* Runde 41 Spur G2-RE2 NB2 "Vorschlag 4" (Nutzerentscheid 2026-11-03 "Ignoriere den Kanister einfach in der Berechnung. Tu so als ob er nicht da waere" /
+ * "wichtig ist nur das der Kanister synchron mit dem Aligator mitlaeuft. Ansonsten soll er nicht als Stoerkoerper zaehlen"; PORT-WAHL, Dossier G2_gatorfix.md
+ * Abschnitt "G2-RE2 NB2 (Vorschlag 4)"): der angehaengte Kanister zaehlt in keiner Bewegungs-, Kollisions- oder Wegrechnung - Kopf-Klemme, Steuerziel,
+ * Trag-Lenkung, Zonen-Dash, Kollisions-Antwort, Ueberquerungs-Profil und Hysterese-Ruhe sehen ihn nicht. Er folgt nur der gezeichneten Part-6-Matrix
+ * (gr2_kan_folgen, RE2 `addiu a0,s0,1104` @0x801018d0 / `sw a0,128(s2)` @0x801018e0) und bleibt Trefferziel (T2 @0x801017c4, HURT-Selektor @0x80101ef4-fc -> R1).
+ * Pruefhaken s_v4_alt = 1: Stand f942f56c0 (der Kanister zaehlt). */
+static int s_v4_alt = 0;
+static void gr2_th_verwerfen(void);
+void re15_gr2_v4_alt_setzen(int an) { if (an != s_v4_alt) gr2_th_verwerfen(); s_v4_alt = an; }   /* die Huelle haengt am Pruefhaken (mit/ohne Kanister) */
+int  re15_gr2_v4_alt(void) { return s_v4_alt; }
+static int gr2_kan_zaehlt(void) { return s_v4_alt && s_kan.aktiv && s_kan.angehaengt; }   /* 1 = der angehaengte Kanister gehoert zur Bewegungs-Huelle */
+static int s_kan_vorbild = 0;                                   /* Pruefhaken Riegel v4 (b): Kanister an der Part-6-Matrix des Vorbilds */
+void re15_gr2_kan_vorbild_setzen(int an) { s_kan_vorbild = an; }
+static int s_ohne_entfernt = 0;                                /* Messhaken RE15_G2_OHNE_KANISTER: Kanister beim Tragen entfernt */
+int re15_gr2_ohne_kanister_entfernt(void) { return s_ohne_entfernt; }
+static int s_rw_ohne_kan = 0;                                   /* Messhaken re15_gr2_rw_nur_kopf_punkte: Punkte ohne Kanister-Zylinder */
 
 static int s_env_geprueft;
 /* Nachbesserung 2 (M3): Beckenzone des Boss-Moduls (gb_zone: 0 Sued, 1 Nord, 2 Westkanal-Streifen, PORT-WAHL der
@@ -699,6 +715,13 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         g->ease_t++;
         gr2_kan_sitz_takt();
         if (g->ease_t == 7) { g->ease_t = 0; s_kan.stufe = 7; re15_gr2_log("KANISTER getragen (Stufe 7)"); }
+#ifdef RE15_PLATFORM_PC
+        {   /* MESSHAKEN G2-RE2 NB2 (env RE15_G2_OHNE_KANISTER, PC, kein Spielweg): der Kanister verschwindet im Bild, in dem er getragen ist - dieselbe
+             * Eingabe zeigt dann den Gang ohne Kanister (Bildleisten-Spalte "NB5 ohne Kanister", Riegel v4 (a) im exe-Lauf). */
+            static int s_ohne = -1; if (s_ohne < 0) s_ohne = getenv("RE15_G2_OHNE_KANISTER") != NULL;
+            if (s_ohne && s_kan.stufe == 7) { s_ohne_entfernt = 1; re15_gr2_log("MESSHAKEN RE15_G2_OHNE_KANISTER: Kanister entfernt F%u", (unsigned)g_engine.frame_count); memset(&s_kan, 0, sizeof s_kan); }
+        }
+#endif
         break;
     case 7:                                                 /* @0x80101b58: halten */
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 100);            /* @0x80101b68-70 */
@@ -1312,6 +1335,7 @@ int re15_gr2_hysterese_ruht(int slot, const re15_actor_t *e)
 {
     (void)slot;
     if (!s_kan.aktiv || s_kan.stufe == 13) return 0;
+    if (s_kan.stufe == 7 && !s_v4_alt) return 0;   /* G2-RE2 NB2 Vorschlag 4 (PORT-WAHL Nutzerentscheid): getragen ruht die Hysterese nicht - wie ohne Kanister im Raum */
     if (s_kan.stufe != 0 && s_kan.stufe != 7) return 1;                              /* (b) */
     if (e && s_zone_fn && s_zone_fn(e->z) == s_zone_fn(s_kan.liege_z)) return 1;     /* (a) */
     return 0;
@@ -2115,6 +2139,12 @@ void re15_gr2_kanister_setzen(int32_t x, int32_t y, int32_t z)
 }
 void re15_gr2_kanister_entfernen(void) { memset(&s_kan, 0, sizeof s_kan); }
 int  re15_gr2_kanister_stufe(void) { return s_kan.aktiv ? (int)s_kan.stufe : -1; }
+int  re15_gr2_kanister_rel(int32_t rel[9])
+{
+    if (!s_kan.aktiv || !s_kan.angehaengt) return 0;
+    memcpy(rel, s_kan.rel, sizeof s_kan.rel);
+    return 1;
+}
 int  re15_gr2_kanister_lokal(int32_t l[3])
 {
     if (!s_kan.aktiv || !s_kan.angehaengt) return 0;
@@ -2362,6 +2392,7 @@ static struct { int ok; int32_t lokal[3]; int32_t rel[9]; int32_t sk; int n; int
  * 5644 vor die Wurzel, NB6 Messung 1) und Kanister-Zylinder r 267 (KANISTER40A0.MD1, Dossier B 2.5) an beiden Enden; die NB5-Huelle s_th (Bone-Ursprung) bleibt
  * fuer die Aussenwaende (Gang/Wege wie NB5). */
 static struct { int n; int32_t h[256][2]; } s_th2;
+static void gr2_th_verwerfen(void) { s_th.ok = 0; }
 static int gr2_tr_huelle_pkt(const re15_actor_t *t, const re15_skel_pose_t *poses, int32_t sk, int32_t (*pk)[2], int cap);
 static int64_t gr2_kreuz(const int32_t o[2], const int32_t a[2], const int32_t b[2])
 {
@@ -2508,8 +2539,8 @@ static int gr2_tr_huelle_vorrat(const re15_actor_t *e)
             kf2[a] = kp[a] + (int32_t)(((ry >> 12) * -2784) >> 12);
             for (int c = 0; c < 3; c++) kr[a*3+c] = (int32_t)(((int64_t)r[a*3] * s_kan.rel[c] + (int64_t)r[a*3+1] * s_kan.rel[3+c] + (int64_t)r[a*3+2] * s_kan.rel[6+c]) >> 12);
         }
-        pk[n][0] = kp[0]; pk[n][1] = kp[2]; n++;
-        pk[n][0] = kf2[0]; pk[n][1] = kf2[2]; n++;
+        if (s_v4_alt) { pk[n][0] = kp[0]; pk[n][1] = kp[2]; n++;
+                         pk[n][0] = kf2[0]; pk[n][1] = kf2[2]; n++; }   /* Vorschlag 4: die Huelle (Notloesung freie Stelle) ohne den Kanister */
         /* zweite Huelle: Bone-Ursprung, Ecken der Part-Kaesten, Kanister-Zylinder */
         for (int k = 0; k < 3 && n2 < 8192; k++) {
             const int part = 5 + k; const int32_t *rr = s_thp.r[i][k], *pp = s_thp.p[i][k];
@@ -2522,7 +2553,7 @@ static int gr2_tr_huelle_vorrat(const re15_actor_t *e)
                 pk2[n2][1] = pp[2] + (int32_t)(((int64_t)rr[6] * v[0] + (int64_t)rr[7] * v[1] + (int64_t)rr[8] * v[2]) >> 12); n2++;
             }
         }
-        int32_t kz[48][3]; const int m = gr2_rw_kan_pkt(kp, kr, kz, 48);
+        int32_t kz[48][3]; const int m = s_v4_alt ? gr2_rw_kan_pkt(kp, kr, kz, 48) : 0;
         for (int j = 0; j < m && n2 < 8192; j++) { pk2[n2][0] = kz[j][0]; pk2[n2][1] = kz[j][2]; n2++; }
     }
     int m = 0, m2 = 0;
@@ -2630,7 +2661,7 @@ static int gr2_tr_fit_wand(const re15_actor_t *e, int32_t *tx, int32_t *tz)
 }
 int re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
 {
-    if (s_kk_ziel_alt == 1 || !e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
+    if (s_kk_ziel_alt == 1 || !e || !gr2_kan_zaehlt()) return 0;   /* G2-RE2 NB2 Vorschlag 4: Steuerziel wie ohne Kanister */
     if (s_kk_ziel_alt == 2) return gr2_kk_ziel_v1(e, tx, tz);
     if (s_kan.stufe != 7 || !gr2_tr_huelle(e)) return 0;   /* erst getragen (Stufe 7): in Stufe 3-6 wandert die Lokallage noch vom Fenster ins Maul */
     return gr2_tr_fit(e, tx, tz) != 0;
@@ -2759,7 +2790,7 @@ static int gr2_rw_box_ecken(int part, int32_t sk, int32_t (*v)[3])   /* 8 Ecken 
 /* Kanister an Part 6 der Pose (wie gr2_kan_folgen): Lage kp = p6 + R6 x Skala x lokal, Drehung kr = R6 x rel */
 static int gr2_rw_kanister(const re15_actor_t *e, const re15_skel_pose_t *ps, int32_t kp[3], int32_t kr[9])
 {
-    if (!s_kan.aktiv || !s_kan.angehaengt) return 0;
+    if (!s_kan.aktiv || !s_kan.angehaengt || s_rw_ohne_kan) return 0;
     int32_t r6[9], p6[3]; gr2_part_welt(e, &ps[6], r6, p6);
     const int32_t sk = gr2_scale(e);
     const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
@@ -2844,6 +2875,16 @@ int re15_gr2_rw_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max)
     if (!e || !gr2_pose_gezeichnet(e, ps)) return 0;
     return gr2_rw_punkte(e, ps, out, max);
 }
+/* Messhaken G2-RE2 NB2 (Riegel v4 / re2: Kopf-Riegel ohne den Kanister): nur Mesh 5/6/7 der gezeichneten Pose */
+int re15_gr2_rw_nur_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max)
+{
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!e || !gr2_pose_gezeichnet(e, ps)) return 0;
+    s_rw_ohne_kan = 1;
+    const int n = gr2_rw_punkte(e, ps, out, max);
+    s_rw_ohne_kan = 0;
+    return n;
+}
 /* Klemmen-Zusatz: Verschiebung (*dx,*dz), die alle Punkte aus Plattform/Rampe (unter dem Deck) und vor die Kamera bringt */
 static int gr2_rw_zusatz(const re15_actor_t *e, const re15_skel_pose_t *poses, int32_t *dx, int32_t *dz)
 {
@@ -2927,7 +2968,7 @@ static int gr2_rw_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz)
  * Rand) bleibt fuer Lagen, die schon verletzen (Kamerawechsel). */
 int re15_gr2_rw_kopf_verletzt(re15_actor_t *e)
 {
-    if (!e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
+    if (!e || !gr2_kan_zaehlt()) return 0;                  /* G2-RE2 NB2 Vorschlag 4: keine Kollisions-Antwort fuer Kopf/Kanister (ohne Kanister gibt es keine) */
     static int32_t q[GR2_RW_PN][3];
     re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
     if (!gr2_pose_gezeichnet(e, ps)) return 0;
@@ -3121,7 +3162,7 @@ int re15_gr2_kreis_kamera(int cam, const re15_actor_t *e, int32_t px, int32_t pz
 }
 int re15_gr2_trag_dash_erlaubt(int slot)
 {
-    if (slot < 0 || slot >= RE15_ACTOR_MAX || s_kk_ziel_alt || !s_kan.aktiv || s_kan.stufe != 7) return 1;
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || s_kk_ziel_alt || !gr2_kan_zaehlt() || s_kan.stufe != 7) return 1;   /* Vorschlag 4: Dash wie ohne Kanister */
     if (!s_tr[slot].dash) re15_gr2_log("TRAG DASH F%u: kein Zonen-Dash mit dem Kanister im Maul", (unsigned)g_engine.frame_count);
     s_tr[slot].dash = 1;
     return 0;   /* Fuzz NB2 N2: auch der eine Dash = 3,9 s Vordrehung auf der Stelle (Clip 2/3) ohne Weg - mit dem Kanister keiner */
@@ -3535,7 +3576,7 @@ int re15_gr2_kreuz_anfahrt(int slot, const re15_actor_t *e, int32_t sx, int32_t 
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || s_kk_ziel_alt) return 0;
     s_kk_waende = 15;
-    if (!s_kan.aktiv || !s_kan.angehaengt || s_kan.stufe != 7 || !gr2_tr_huelle(e)) return 0;
+    if (!gr2_kan_zaehlt() || s_kan.stufe != 7 || !gr2_tr_huelle(e)) return 0;
     int32_t qx, qz;
     gr2_runde_anfahrt(e, sx, sz, &qx, &qz);
     (void)gr2_tr_fitfrei(e, &qx, &qz);
@@ -3551,7 +3592,7 @@ int re15_gr2_kreuz_anfahrt(int slot, const re15_actor_t *e, int32_t sx, int32_t 
  * Rueckgabe 1 = Umweg-Ziel gesetzt. PORT-WAHL wie die NB5-Anfahrt. */
 int re15_gr2_rw_umweg(int slot, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *tx, int32_t *tz)
 {
-    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || s_kk_ziel_alt || !s_kan.aktiv || !s_kan.angehaengt || s_kan.stufe != 7) return 0;
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || s_kk_ziel_alt || !gr2_kan_zaehlt() || s_kan.stufe != 7) return 0;
     gr2_tr_frei(e, &px, &pz);                                  /* Ziel aus den aufgeblasenen Bloecken (Figur dicht an Rampe/Plattform) */
     if (gr2_runde_frei(e->x, e->z, px, pz, gr2_runde_wurzelrand(e))) return 0;
     return re15_gr2_kreuz_anfahrt(slot, e, px, pz, tx, tz);
@@ -3637,7 +3678,7 @@ static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
     s_kk_waende = 15;                                      /* NB5: alle Waende, ausser die Bahn der Belagerung laeuft (unten) */
     if (s_kk_ziel_alt) return re15_gr2_kk_ziel(e, tx, tz);
-    if (!s_kan.aktiv || !s_kan.angehaengt || s_kan.stufe != 7) { s_tr[slot].an = 0; s_tr[slot].dir = 0; s_tr[slot].kreis = 0; s_tr[slot].dash = 0; return 0; }   /* Stufe 7 = getragen (s. re15_gr2_kk_ziel) */
+    if (!gr2_kan_zaehlt() || s_kan.stufe != 7) { s_tr[slot].an = 0; s_tr[slot].dir = 0; s_tr[slot].kreis = 0; s_tr[slot].dash = 0; return 0; }   /* Stufe 7 = getragen (s. re15_gr2_kk_ziel) */
     if (!gr2_tr_huelle(e)) return 0;
     const int32_t ox = *tx, oz = *tz;
     int hop = (nx != *tx || nz != *tz);
@@ -3874,7 +3915,7 @@ int re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz)
     *dx = *dz = 0;
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
     if (s_tr[slot].kreis != 2) s_kk_waende = 15;            /* NB5: Wandmaske nur waehrend der Bahn der Belagerung (sonst galt sie nach einem Takt ohne Lenkung weiter) */
-    const int traegt = s_kan.aktiv && s_kan.angehaengt;
+    const int traegt = gr2_kan_zaehlt();                     /* G2-RE2 NB2 Vorschlag 4: mit dem Kanister im Maul keine Kopf-Klemme (wie ohne Kanister); R1-Tod bleibt */
     int hat = 0;
     if (traegt || s_g[slot].r1_phase != 0) {
         re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
@@ -3911,7 +3952,9 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e)
     if (s_kan.aktiv && !re15_gr2_rw_alt()) { re15_enemy_bank_t *vb = gr2_bank(e); if (vb && vb->skel.bone_count > 7) (void)gr2_thp_vorrat(e, vb, gr2_scale(e)); }   /* G2-RE2: Posen-Vorrat der Huelle verteilt bauen, sobald der Kanister im Spiel ist */
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     if (!gr2_pose_gezeichnet(e, poses)) return;
-    int32_t r6[9], p6[3], r7[9], p7[3];
+    int32_t r6[9], p6[3], r7[9], p7[3], r6v[9], p6v[3];
+    const int vorbild = s_kan_vorbild && s_fx_ok;            /* Pruefhaken Riegel v4 (b): Part-6-Matrix des vorigen Bildes */
+    memcpy(r6v, s_p6_rot, sizeof r6v); memcpy(p6v, s_p6_pos, sizeof p6v);
     gr2_part_welt(e, &poses[6], r6, p6);
     gr2_part_welt(e, &poses[7], r7, p7);
     memcpy(s_p6_rot, r6, sizeof s_p6_rot); memcpy(s_p6_pos, p6, sizeof s_p6_pos);
@@ -3934,7 +3977,7 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e)
         re15_gr2_log("KANISTER angehaengt lokal=(%d,%d,%d) F%u", s_kan.lokal[0], s_kan.lokal[1], s_kan.lokal[2],
                      (unsigned)g_engine.frame_count);
     }
-    if (s_kan.aktiv && s_kan.angehaengt) gr2_kan_folgen(e, r6, p6);
+    if (s_kan.aktiv && s_kan.angehaengt) gr2_kan_folgen(e, vorbild ? r6v : r6, vorbild ? p6v : p6);
     gr2_mtx(s_fx_mtx[GR2_FXM_TEIL6], r6, p6);
     gr2_mtx(s_fx_mtx[GR2_FXM_TEIL7], r7, p7);
     int32_t kp[3], kr[9];
@@ -3968,13 +4011,18 @@ int re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw)
     gr2_part_welt(e, &poses[6], r6, p6);
     int32_t s = gr2_scale(e);
     int32_t l[3] = { q12mul(s_kan.lokal[0], s), q12mul(s_kan.lokal[1], s), q12mul(s_kan.lokal[2], s) };
-    int64_t q = 0;
+    int64_t q = 0; int32_t dr_max = 0;
     for (int r = 0; r < 3; r++) {
         int32_t soll = p6[r] + (int32_t)(((int64_t)r6[r*3] * l[0] + (int64_t)r6[r*3+1] * l[1] + (int64_t)r6[r*3+2] * l[2]) >> 12);
         int64_t d = (int64_t)soll - s_kan.welt[r];
         q += d * d;
+        /* G2-RE2 NB2 (Vorschlag 4, Riegel "Halterung zum Kieferknochen konstant"): auch die Drehung - R6 x rel gegen die gezeichnete Kanister-Drehung, je Komponente (Q12) */
+        for (int c = 0; c < 3; c++) {
+            const int32_t sr = (int32_t)(((int64_t)r6[r*3] * s_kan.rel[c] + (int64_t)r6[r*3+1] * s_kan.rel[3+c] + (int64_t)r6[r*3+2] * s_kan.rel[6+c]) >> 12);
+            int32_t dd = sr - s_kan.welt_rot[r*3+c]; if (dd < 0) dd = -dd; if (dd > dr_max) dr_max = dd;
+        }
     }
-    if (abw) *abw = (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q));
+    if (abw) *abw = (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q)) + dr_max;   /* 0 = Lage UND Drehung bitgleich */
     return 1;
 }
 /* ==== Nachbesserung 5 (Abnahme 4, M1): FINISHER-BUEHNE (FRESSEN P0) + Messzeile Maul-Sitz ======================================
@@ -4621,3 +4669,4 @@ int re15_gr2_geschwaecht(void) { for (int i = 0; i < RE15_ACTOR_MAX; i++) if (s_
 int re15_gr2_treffer(void)     { int n = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) n += s_g[i].treffer; return n; }
 int re15_gr2_tot(void)         { for (int i = 0; i < RE15_ACTOR_MAX; i++) if (s_g[i].tot) return 1; return 0; }
 int re15_gr2_traegt(void)      { return s_kan.aktiv && s_kan.stufe == 7; }
+int re15_gr2_traegt_lenkung(void) { return s_v4_alt && re15_gr2_traegt(); }   /* G2-RE2 NB2 Vorschlag 4: der Kanister zaehlt in der Bewegung nur mit dem Pruefhaken */
