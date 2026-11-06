@@ -1,0 +1,36 @@
+Riegel V3 - C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv2/emd/EM30_V1_SPITZ.EMD
+ok   R1 Kopfaugen                           Soll genau 1                                                        Ist 1
+ok   R2 Schulterauge                        Soll -0,10..-0,13 / +0,04..+0,07 H, dunkel                          Ist -0.112 / 0.046 H, L* dunkel/Haut 0.30
+ROT  R3 Kopfauge Groesse                    Soll B 0,017-0,025 x H 0,008-0,014 H                                Ist 0.0070 x 0.0070
+ROT  R4 Kopfauge Form                       Soll B/H 1,5-2,5                                                    Ist 1.00
+ROT  R5 Kopfauge Helligkeit                 Soll L* Auge/Haut 0,35-0,55                                         Ist 0.215
+ROT  R6 kein heller Ring                    Soll lid_hell <= 0,10; L Lid/Haut 0,70-1,00                         Ist 0.867; 1.774
+ROT  R7 keine Sclera, ein Glanzkern         Soll L80 <= 0,05; hell 0,05-0,25; Kern x 0,4-0,7 y 0,55-0,8         Ist 0.000; 0.000; None
+ROT  R8 Pupille                             Soll L* Pupille/Haut <= 0,12                                        Ist 0.144
+ROT  R9 Schulterauge                        Soll L* 0,30-0,50; hell <= 0,05; aequiv 0,8-1,3 x Kopfauge          Ist 0.397; 0.024; 3.71
+ROT  R10 Maul Groesse                       Soll B 0,075-0,095 x H 0,038-0,055 H                                Ist 0.0446 x 0.0474
+ROT  R11 Maul Form                          Soll B/H 1,5-2,3                                                    Ist 0.94
+ok   R12 Maul Lage                          Soll 0,04-0,07 H unter Auge; Versatz <= 0,012 H                     Ist 0.0627; 0.0117
+ROT  R13 Maul innen                         Soll L innen/Haut 0,20-0,40; da >= +4                               Ist 0.179; -2.9
+ROT  R14 Zaehne                             Soll oben >= 5, unten >= 3; Teil <= 0,005 H; L* <= Haut+20; a* 12-20 Ist 5 / 1; 0.0293; L 59.0 (Haut 31.8); a 7.8
+ROT  R15 Schwanz Helligkeit                 Soll L*/Haut 0,50-0,72 (h85 / h92)                                  Ist 0.838 / 0.812
+ROT  R16 Schwanz Buntheit                   Soll C*/Haut 0,45-0,90                                              Ist 1.47 / 1.42
+ok   R17 Schwanz Farbton                    Soll |dh| <= 10 Grad                                                Ist -4.1 / -4.1
+ROT  R18 Schwanz Rot                        Soll Rot Schwanz <= 0,8 x Haut                                      Ist 0.874 (Haut 0.368) / 0.837 (Haut 0.376)
+ROT  R19 Schwanz dE00                       Soll 6-11                                                           Ist 5.8 / 5.8
+ROT  R20 Muster                             Soll Periode <= 0,25; Rest-Std a* <= 2,0                            Ist 0.16; 3.95 / 0.13; 3.70
+ROT  R21 Dicke s 0,2                        Soll 0.150-0.200 H                                                  Ist 0.140 / 0.136
+ok   R22 Dicke s 0,5                        Soll 0.070-0.100 H                                                  Ist 0.083 / 0.079
+ROT  R23 Dicke s 0,9                        Soll 0.028-0.045 H                                                  Ist 0.025 / 0.025
+ROT  R24 Dickenverlauf                      Soll kein Anstieg > 0,01 H (s 0,2-0,7)                              Ist 0.032 / 0.032
+ROT  R25 Glaette                            Soll <= 36 Grad je 0,05 H                                           Ist 38.5 / 40.7
+ROT  R26 Knicke                             Soll <= 3 (> 20 Grad)                                               Ist 5 / 4
+ok   R27 Austritt                           Soll 0,10-0,16 H unter OK                                           Ist 0.136 / 0.115
+ok   R28 Koerper unveraendert               Soll Meshes 0-15/Skelett/EDD = Ref2 (ausser Mesh 9 UV, <= 1 Viereck Mesh 8) Ist abweichend [], Skelett True, Keyframes True, EDD True, Mesh 8 +1 Viereck
+ROT  R29 Dreiecke Schwanz                   Soll <= 212                                                         Ist 720
+ok   R30 Dreiecke Kopf                      Soll Mesh 9 <= 118; Schulterauge <= 2                               Ist 109; 2
+ROT  R31 Texeldichte                        Soll Schwanz 0,045-0,090; Kopf 0,05-0,091                           Ist [0.052, 0.057, 0.065, 0.089, 0.088, 0.103, 0.14]; 0.073
+ROT  R32 Farbtiefe/Palette                  Soll 8 bpp; Haut-CLUT; C* Schwanz <= C* Haut                        Ist 8bpp True; Zeilen [483]; C* 31.8 <= 63.3
+ROT  R25b/R26b Gang h84-h132 (Spiellauf)    Soll je Takt Gelenkwinkel im Raum <= 25 Grad, <= 3 Gelenke > 20 Grad Ist max 154.3 Grad, Gelenke > 20 Grad max 6 je Takt (49 Takte)
+ROT  R25b/R26b Halten h16-h70 (Spiellauf)   Soll je Takt Gelenkwinkel im Raum <= 25 Grad, <= 3 Gelenke > 20 Grad Ist max 147.8 Grad, Gelenke > 20 Grad max 6 je Takt (55 Takte)
+ROT: 26 von 34
