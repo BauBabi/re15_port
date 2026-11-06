@@ -23,7 +23,9 @@ def zustand(fit):
     L = F.Lauf(fit['f4'], fit['f5'])
     L.start21, L.start22, L.start_hl = fit['start']['w21'], fit['start']['w22'], fit['start']['hl']
     L.arm_r = (np.array(fit['arm_r'][0]), np.array(fit['arm_r'][1]))
-    x = np.array(fit['x'])
+    x = list(fit['x'])
+    nf = fit.get('nform', 10)
+    x = np.array(x[:nf] + [0.0] * (F.NFORM - nf) + x[nf:])      # aeltere Laeufe mit weniger Formparametern: Vorgabe fuer die neuen
     p, w, hl, Rw, Tw = L.welt(x)
     L.fig.kopf_neu(p)
     L.fig.hals_neu(hl)

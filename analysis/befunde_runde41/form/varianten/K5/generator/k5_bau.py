@@ -61,9 +61,32 @@ def form_mit_kopf(fit, fuss=None):
     return form, p, kb
 
 
-def naht_k4():
+# Gelenkkoerper am Kopf: K4 hatte Kugel/Muffe Kopf - Hals mit Radius 426 (Schaedel 764 breit) und Mundwinkel 268/335 (K4_kroko/bau.json naht).
+# Der K5-Schaedel ist 1,6-2,6-mal so breit; mit den Faktoren von K4 waere die Muffe 1100 lang und ragte oben aus dem Schaedel (Probebau v1-K5a:
+# Ecken bei y -774 ueber dem Schaedeldach -339). Darum Kopfkoerper auf die absoluten Masse von K4 begrenzt.
+KOPF_KOERPER_MAX = {'Kopf - Hals': (426.0, 426.0), 'Muffe Kopf - Hals': (426.0, 681.0), 'Kiefer - Kopf': (268.0, 335.0)}
+
+
+def naht_k4(quelle=None):
     g = json.load(open(os.path.join(K4_DIR, 'naht.json'), encoding='utf-8'))['gelenke']
-    return {k: tuple(v) if v[3] is None else (v[0], v[1], v[2], tuple(v[3])) for k, v in g.items()}
+    out = {k: tuple(v) if v[3] is None else (v[0], v[1], v[2], tuple(v[3])) for k, v in g.items()}
+    if quelle is not None:
+        for nm, (q_max, n_max) in KOPF_KOERPER_MAX.items():
+            c, fq, fn, ax = out[nm]
+            _a, r, _n = KN.gelenk_mass(quelle, c, ax)
+            out[nm] = (c, min(fq, q_max / r), min(fn, n_max / r), ax)
+    return out
+
+
+def ohne_augen(form):
+    """Kopie, in der Knochen 22 keine Augen-Flaechen hat: die Gelenkkoerper nehmen UV von der naechsten Flaeche des Eltern/Kinds; Augenfelder
+    gaeben ihnen die Augenfarbe (Probebau v1-K5a: zwei Muffen-Vierecke mit Augen-UV)."""
+    q = copy.deepcopy(form)
+    ax, ay, aw, ah = K5.ATLAS['auge']
+    for art in ('dreiecke', 'vierecke'):
+        q['meshes'][22][art] = [f for f in q['meshes'][22][art]
+                                if not ('tex' in f and all(ax <= u <= ax + aw and ay <= v <= ay + ah for u, v in f['tex']))]
+    return q
 
 
 def fuss_textur(px, tx, bau):
@@ -140,7 +163,11 @@ def auge_messen(aus):
     z = np.isin(idb, (C.AUGE_L, C.AUGE_R))
     if z.sum() < 3:
         return None, int(z.sum())
-    return sauber[z].reshape(-1, 3).astype(np.float32).mean(0), int(z.sum())
+    # Vergleich mit dem Lichtpunkt des Originals (+30 ueber dem Umfeld, FORMBLATT_V2 1.2 Nr 1/17): hellstes Drittel der Augenpixel, nicht das Mittel
+    # (Probebau K5a: Mittel ueber den ganzen Augapfel inkl. Schattenseite trieb die Textur bis an die Grenze 255/173/255)
+    px = sauber[z].reshape(-1, 3).astype(np.float32)
+    y = px @ YK
+    return px[y >= np.percentile(y, 67)].mean(0), int(z.sum())
 
 
 def bauen(fit_json, aus, fuss_json=None, pruefen=True):
@@ -148,8 +175,8 @@ def bauen(fit_json, aus, fuss_json=None, pruefen=True):
     name = os.path.basename(os.path.normpath(aus))
     fuss = json.load(open(fuss_json, encoding='utf-8')) if fuss_json else None
     form, p, kb = form_mit_kopf(fit, fuss)
-    quelle = copy.deepcopy(form)
-    form, nb = KN.schliessen(form, naht_k4(), quelle=quelle)
+    quelle = ohne_augen(form)
+    form, nb = KN.schliessen(form, naht_k4(quelle), quelle=quelle)
     FE.orientiere(form)
     # Seite 3 wie K4: Farben (Lichtmessung/Kiefer-Eichung von K4) als Start
     k4 = json.load(open(os.path.join(K4_DIR, 'bau.json'), encoding='utf-8'))
@@ -163,7 +190,7 @@ def bauen(fit_json, aus, fuss_json=None, pruefen=True):
     meta = dict(name=name, basis='J_dicker + K5-Kopf', fit=fit_json, kopf=p, halslaenge=fit['halslaenge'], krallen=kb, naht=nb, farben=fb,
                 flaechen=sum(len(m['dreiecke']) + len(m['vierecke']) for m in form['meshes']))
     eich = []
-    for runde in range(3):
+    for runde in range(5):
         S = KB.malen(tx, bau, fb, hand)
         schreiben(form, aus, name, p, fit, S, auge, meta)
         q, n = KB.kiefer_eichen(aus)
@@ -177,7 +204,7 @@ def bauen(fit_json, aus, fuss_json=None, pruefen=True):
         for k in ('fleisch', 'unterseite', 'hell'):
             fb[k] = [round(float(v * q), 3) for v in fb[k]]
         if am is not None:
-            auge = np.clip(auge * AUGE_ZIEL / np.maximum(am, 4.0), 8, 255)
+            auge = np.clip(auge * AUGE_ZIEL / np.maximum(am, 4.0), 8, 200)
     meta['eichung'] = eich
     S = KB.malen(tx, bau, fb, hand)
     schreiben(form, aus, name, p, fit, S, auge, meta)
