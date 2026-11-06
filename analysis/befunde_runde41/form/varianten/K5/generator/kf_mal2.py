@@ -58,11 +58,13 @@ ADER_CL = float(np.hypot(25.6, 12.2) / 18.9)
 # Rotklasse der Fleischtexel und der G4-Adern: Riegel A3 (a* > 15, C* > 20, Farbton -40..70 Grad).
 # Fleischflaechen aus RE2-G4 (CDEMD0.EMS Typ 0x34, Atlas wie p_lade.re2(0x34)), voll gedeckte Rechtecke mit hohem Rotanteil (Suche im G4-Atlas,
 # Dossier FARBE.md 3): (181,224,20,30) rosa Fleisch mit Faltenstraengen, Rot 0,84, Lab (33,4/24,6/11,4); (179,229,24,24) Rot 0,89, Lab (37,2/25,6/11,6).
-# Dazu die G4-"Rose" (89,189,18,34), Rot 1,00, Lab (42,2/58,3/32,9), Farbton 29 Grad = die satten G4-Rotstufen (Messblatt 1, G4-Palette
-# (32,8/43,7/25,8) und (46,4/65,1/35,5)). Lauf r2-e8 nur mit den beiden blassen Quellen (C* 27): im neutralen Render faellt Fleisch im Halbschatten
-# unter die Rotklasse (C* > 20) und zerfaellt in Linien (B1 22 %, B2 2,2-2,7 %); Sicht-Pruefer r1 P5: Z1 "pastelliger und flacher als die Familie".
+# Fleischfarbe der Screenshot-Fleischstellen: Form aus diesen G4-Quellen, Helligkeit und Buntheit auf das Mittel der Familienwunden skaliert
+# (Sicht-Pruefer r1 P5: EM30-Wunde (50/26/13), G4-Wunde (53/27/23) -> (51,5/26,5/18,0)), Farbton der Quelle bleibt.
+# Verworfen (Lauf r2-e17): die G4-"Rose" (89,189,18,34), Lab (42,2/58,3/32,9), C* 67 als dritte Quelle -> Z1 im Bild-1-Vergleich (Tafel 01)
+# knallrot statt rosa; Bild 1 zeigt dort rosa (T Lab (54/17/-3), Messblatt 2).
 # Nicht genommen: das Schulterauge (x 270-321, y 160-245, Messblatt 1 ausgenommen).
-G4_FLEISCH = [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)]
+FLEISCH_ZIEL = ((50.0 + 53.0) / 2, (26.0 + 27.0) / 2, (13.0 + 23.0) / 2)
+G4_FLEISCH = [(181, 224, 20, 30), (179, 229, 24, 24)]
 # Haut-Quellen: aus M1.G4_HAUT (kf_mal.py:58) nur die mit Aderanteil (Rotklasse A3) <= 10 %: (130,96,20,62) 6 %, (190,96,20,60) 9 %, (314,12,32,30) 7 %;
 # dazu die voll gedeckten G4-Rechtecke (269,4,24,32) 0 % und (29,152,24,32) 9,5 % (Suche im G4-Atlas, Dossier FARBE.md 3). Grenze 10 % = EM30-Linienrot
 # im Render 4,6-10,2 % der Figur (Rotpixel ohne erosionsfesten Kern, r2-Messung wie Riegel B1) - "Adern nur als Akzent" (Sicht-Pruefer r1 P1).
@@ -348,6 +350,15 @@ def bauen(aus, eich=None, sicht_pfad=SICHT):
     fl_maske = haut & ((wf >= FLEISCH_SCHWELLE) | (uw >= FLEISCH_SCHWELLE))
     # weiche Kante: Glaettung der Screenshot-Maske mit SIG_AB_FEIN (E13: Bereichskanten sauber, ohne Einzeltexel-Saum), Unterseite mit ihrem Verlauf
     fw = cv2.GaussianBlur((haut & (wf >= FLEISCH_SCHWELLE)).astype(np.float32), (0, 0), SIG_AB_FEIN) * haut
+    sel_f = haut & (fw > 0)
+    if sel_f.any():
+        fL = float(g4f[..., 0][sel_f].mean())
+        fC = float(np.hypot(g4f[..., 1], g4f[..., 2])[sel_f].mean())
+        g4w = g4f.copy()
+        g4w[..., 0] *= FLEISCH_ZIEL[0] / max(fL, 1e-3)
+        g4w[..., 1:] *= float(np.hypot(FLEISCH_ZIEL[1], FLEISCH_ZIEL[2])) / max(fC, 1e-3)
+    else:
+        g4w = g4f
     # Unterseite in der dunklen G4-Rotstufe (Messblatt 1, G4-Palette (18,9/25,6/12,2), "dunkelrote Tiefen" E10): G4-Fleisch in L* und C* auf das
     # Mittel dieser Stufe skaliert (Form und Farbton bleiben; je Kanal skaliert gab Rauschen, Lauf r2-e14 A6 Kopf 0,276). Lauf r2-e12 mit hellem Fleisch: Unterseite stand an Umrisskanten als hellrote Linie.
     sel = haut & (uw > 0)
@@ -357,7 +368,7 @@ def bauen(aus, eich=None, sicht_pfad=SICHT):
     g4d[..., 0] *= G4_DUNKELROT[0] / max(mL, 1e-3)                                  # Helligkeit auf die Stufe
     g4d[..., 1:] *= float(np.hypot(G4_DUNKELROT[1], G4_DUNKELROT[2])) / max(mC, 1e-3)   # Buntheit auf die Stufe, Farbton bleibt
     neu = neu * (1 - uw[..., None]) + g4d * uw[..., None]
-    neu = neu * (1 - fw[..., None]) + g4f * fw[..., None]
+    neu = neu * (1 - fw[..., None]) + g4w * fw[..., None]
     herkunft['fleisch'] = '%d Texel (%.1f %% der Haut) Fleischflaeche (Gewicht >= 0,5), Schwelle %.3f; gesehen Bild 1 %d / Bild 2 %d Texel; Unterseite ny >= %.2f (%d Texel, verdeckt %d)' % (
         int(fl_maske.sum()), 100 * fl_maske[haut].mean(), FLEISCH_SCHWELLE, int((a1 > 0).sum()), int((a2 > 0).sum()), q, int(unten.sum()),
         int((unten & ~gesehen).sum()))
@@ -383,8 +394,11 @@ def bauen(aus, eich=None, sicht_pfad=SICHT):
     # Unterkiefer-Zone (L* +38,7) traf ueber Bildpunkte vor dem Maul hand_r (217 px), Kopf (502 px) und Unterschenkel (107 px) -> helle Pfote
     # (Sicht-Pruefer r1 P3) und Glanzrest B4 +22.
     kfm = fid['s3_kiefer']
+    vor = {}
     for z, v in eich['zonen'].items():
         c = sicht[z].astype(np.float32) * (kfm if z == 'b2|Unterkiefer' else ~kfm)
+        vor[z] = [round(float(x), 2) for x in (neu[c > 0] * c[c > 0][:, None]).sum(0) / max(float(c.sum()), 1.0)]
+        vor[z].append(round(float(neu[..., 2][c > 0].max()), 2) if (c > 0).any() else 0.0)     # groesstes b* der Zone (Grenze der b*-Eichung)
         num += c[..., None] * np.asarray(v['d'], np.float32)
         den += c
     dz = np.zeros((h, w, 3), np.float32)
@@ -469,10 +483,11 @@ def bauen(aus, eich=None, sicht_pfad=SICHT):
     neu[..., 0] = np.clip(neu[..., 0], 0, 100)
     out_rgb = M1.rgb_f(neu)
     out_rgb[~genutzt] = 0
-    bau = schreiben2(aus, tim, out_rgb, zeile, genutzt, eich, herkunft, dict(konflikt_zeilen=konflikt, felder=len(ordnung), rest_texel=int(rest.sum())))
+    bau = schreiben2(aus, tim, out_rgb, zeile, genutzt, eich, herkunft, dict(konflikt_zeilen=konflikt, felder=len(ordnung), rest_texel=int(rest.sum()),
+                                                                          zone_vor_versatz=vor))
     bau['basis'] = 'K5c (varianten/K5/K5c): FORM.EMD byte-gleich, nur FORM.TIM neu (Runde 2, kf_mal2.py)'
     bau['konstanten'] = dict(SIG_GROB=SIG_GROB, G_AB=G_AB, SIG_AB_FEIN=SIG_AB_FEIN, GLANZ_L=GLANZ_L, GLANZ_C=GLANZ_C, HOF_L=HOF_L, GAUMEN_L=GAUMEN_L,
-                             GAUMEN_C=GAUMEN_C, ADER_L=ADER_L, ADER_CL=ADER_CL, G4_HAUT2=G4_HAUT2, G4_FLEISCH=G4_FLEISCH, G4_MAUL=M1.G4_MAUL,
+                             GAUMEN_C=GAUMEN_C, ADER_L=ADER_L, ADER_CL=ADER_CL, G4_HAUT2=G4_HAUT2, G4_FLEISCH=G4_FLEISCH, FLEISCH_ZIEL=FLEISCH_ZIEL, G4_MAUL=M1.G4_MAUL,
                              G4_KRALLE=M1.G4_KRALLE, EINSTREU_A2=EINSTREU_A2, H_MIN=H_MIN, H_WARM=H_WARM, H_MAX=H_MAX, C_VIO=C_VIO, C_REST=C_REST,
                              B_MIN=B_MIN, FLEISCH_SCHWELLE=FLEISCH_SCHWELLE, FLEISCH_ANTEIL=FLEISCH_ANTEIL, FLEISCH_UMRING=FLEISCH_UMRING, G4_DUNKELROT=G4_DUNKELROT, AUGE_R=AUGE_R, ZAHN_LAB=ZAHN_LAB, ZAHN_GRUND=ZAHN_GRUND, DAEMPF=DAEMPF, SAAT=SAAT)
     bau['masken'] = dict(glanz=int(glanz.sum()), gaumen=int(gaumen.sum()), ader=int(ader.sum()), fleisch=int(fl_maske.sum()))
@@ -530,7 +545,7 @@ def eichen(aus, runden):
     eich = json.load(open(EICH, encoding='utf-8')) if os.path.exists(EICH) else standard_eich()
     O = M1.original_messen()
     for r in range(runden):
-        bauen(aus, eich)
+        vor_z = bauen(aus, eich)['info']['zone_vor_versatz']
         V = M1.kette_messen(aus)
         prot = {}
         for z in ZONEN:
@@ -546,6 +561,10 @@ def eichen(aus, runden):
                 e['d'][0] = 0.0
                 e['d'][2] = 0.0
                 e['d'][1] = round(max(0.0, float(e['d'][1])) if v['lab'][1] < o['lab'][1] else max(0.0, float(alt[1])), 2)
+            # b*-Versatz nur so weit, wie er wirken kann: bis auch der Texel mit dem groessten b* der Zone an B_MIN liegt (darueber hinaus kappt
+            # das Farbfenster jeden Texel, der Versatz waere wirkungslos). Lauf r2-e18 ohne Grenze: Hinterbein r (W) d_b lief auf -147;
+            # Lauf r2-e20 mit Grenze am Zonenmittel: Kette b* -0,6 gegen Original -7,9 (K3 dE 7,3 ROT), weil nur die Haelfte der Texel die Grenze erreichte.
+            e['d'][2] = round(max(float(e['d'][2]), B_MIN - float(vor_z[z][3])), 2)
             e['_alt'] = list(e['d'])
             prot[z] = dict(orig=o['lab'], kette=v['lab'], R=(o['kl_p']['R'], v['kl_p']['R']), d=list(e['d']))
         yy, xx = np.mgrid[:480, :640]

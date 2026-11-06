@@ -1,19 +1,19 @@
 {
  "variante": {
   "A1 Chroma Koerper": {
-   "wert": "11.7",
+   "wert": "11.8",
    "ok": true
   },
   "A2 Farbstreuung je Teil sigma_ab": {
-   "wert": "14.6",
+   "wert": "13.1",
    "ok": true
   },
   "A3 Fleischrot-Anteil %": {
-   "wert": "17.3",
+   "wert": "22.4",
    "ok": true
   },
   "A4 Farbton Fleischrot Grad": {
-   "wert": "29.0",
+   "wert": "26.0",
    "ok": true
   },
   "A5 Neutralweiss Koerper %": {
@@ -21,15 +21,15 @@
    "ok": true
   },
   "A6 HF_fft je Feld (max)": {
-   "wert": "{'koerper': 0.097, 'kopf': 0.173, 'kiefer': 0.044, 'kralle': 0.063}",
+   "wert": "{'koerper': 0.091, 'kopf': 0.153, 'kiefer': 0.047, 'kralle': 0.064}",
    "ok": true
   },
   "A7 HF_rest je Feld (max)": {
-   "wert": "{'koerper': 0.074, 'kopf': 0.068, 'kiefer': 0.046, 'kralle': 0.066}",
+   "wert": "{'koerper': 0.056, 'kopf': 0.062, 'kiefer': 0.049, 'kralle': 0.065}",
    "ok": true
   },
   "A8 Kiefer Zahn/Rot/Dunkel %": {
-   "wert": "(7.4, 95.9, 36.5)",
+   "wert": "(6.1, 95.7, 39.2)",
    "ok": true
   },
   "A9 Auge L*/C*": {
@@ -45,51 +45,51 @@
    "ok": true
   },
   "A12 Farbkorn Koerper (a*b*-Rest)": {
-   "wert": "5.13",
+   "wert": "4.54",
    "ok": true
   },
   "K1 Bild1 Chroma Figur / Original": {
-   "wert": "(6.9, 9.3)",
+   "wert": "(6.5, 9.3)",
    "ok": false
   },
   "K2 Bild1 ab-Streuung Figur / Original": {
-   "wert": "(9.2, 9.8)",
-   "ok": true
+   "wert": "(8.0, 9.8)",
+   "ok": false
   },
   "K3 Bild1 dE je Zone (max)": {
-   "wert": "{'Schwanz': 0.3, 'Ruecken/Flanke': 0.7, 'Hinterbein l (W)': 2.5, 'Hinterbein r (W)': 4.9, 'Vorderglied r (W)': 0.7}",
+   "wert": "{'Schwanz': 0.8, 'Ruecken/Flanke': 2.4, 'Hinterbein l (W)': 3.1, 'Hinterbein r (W)': 5.4, 'Vorderglied r (W)': 1.1}",
    "ok": true
   },
   "K4 Bild1 Rot-Klasse Figur % / Original": {
-   "wert": "(6.4, 5.2)",
+   "wert": "(6.2, 5.2)",
    "ok": true
   },
   "K5 Bild1 Hell-Klasse Ruecken % / W Figur %": {
-   "wert": "(5.8, 9.9, 0.0, 0.5)",
+   "wert": "(4.7, 9.9, 0.4, 0.5)",
    "ok": true
   },
   "K6 Bild2 Figur dE / Chroma": {
-   "wert": "(2.3, 24.2, 25.6)",
+   "wert": "(1.5, 23.8, 25.6)",
    "ok": true
   },
   "K7 Bild2 Unterkiefer dE / a*": {
-   "wert": "(0.4, 24.5, 24.9)",
+   "wert": "(0.0, 24.9, 24.9)",
    "ok": true
   },
   "K8 Bild2 Oberkiefer dE": {
-   "wert": "0.3",
+   "wert": "1.4",
    "ok": true
   },
   "K9 Bild2 Klauen a* (r, l) / Original": {
-   "wert": "(27.4, 24.1, 29.5, 22.2)",
+   "wert": "(26.1, 24.1, 28.3, 22.2)",
    "ok": true
   },
   "K10 Bild2 Augenpunkte L*max (r, l)": {
-   "wert": "(14.4, 15.8)",
+   "wert": "(14.3, 15.9)",
    "ok": true
   },
   "N1 neutral C* je Winkel (Variante / EM30)": {
-   "wert": "((10.2, 8.5, 6.8), (10.0, 12.5, 10.5))",
+   "wert": "((10.2, 8.8, 6.9), (10.0, 12.5, 10.5))",
    "ok": false
   },
   "N2 neutral L*>85 % je Winkel": {
@@ -97,11 +97,11 @@
    "ok": true
   },
   "B1 Rot erosionsfest % (3 Winkel zus.)": {
-   "wert": "26.6",
+   "wert": "28.0",
    "ok": false
   },
   "B2 groesste Rotflaeche % Figur (3/4 vorn, Seite)": {
-   "wert": "(2.7, 2.49)",
+   "wert": "(3.65, 2.45)",
    "ok": false
   },
   "B3 Blau-Klasse % je Winkel": {
@@ -113,7 +113,7 @@
    "ok": true
   },
   "B5 Kopffeld Zahn-/Gaumenklasse %": {
-   "wert": "0.14",
+   "wert": "1.02",
    "ok": true
   }
  },

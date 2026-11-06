@@ -70,3 +70,9 @@
 !/varianten/K5/K*/seite3.png
 /varianten/K5/_lauf/
 /varianten/K5/generator/__pycache__/
+
+# K5c Farbe (Runde 1/2): Nutzer-Tafeln, Spielbilder und Variantenmodelle versioniert (generator/kf_*.py, riegel_farbe.py)
+!/varianten/K5/farbe/*.png
+!/varianten/K5/farbe/K5C_FARBE.*
+!/varianten/K5/farbe/K5c_farbe*/FORM.*
+!/varianten/K5/farbe/spiel*/*.png
