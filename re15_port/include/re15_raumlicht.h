@@ -6,7 +6,11 @@
  * durch die RID-Kamera des Cuts auf den Boden (y aus den Sce_em_set-Spawns des Raums), Farben gemessen
  * (Rot-Ueberschuss gegen unseren Hintergrund), Groesse/Blinken Gestaltung.
  *   ROOM50B0/50B1 Cut 2 (V1 3:58-4:01): rot-rosa Schein am Boden vor der Tankreihe ("Container").
- *   ROOM2000/2001 Cut 2 (V1 2:06-2:15): weisse Glanzpunkte, die einzeln auf dem Kanalwasser aufblitzen.
+ *   ROOM2000/2001: entfernt (Runde 41 Spur W, Dossier analysis/befunde_runde41/W_wasserblink.md) — die
+ *   "Glanzpunkte" waren im Video Spritzer watender Zombies. Die Raumdaten setzen im Kanal kein Licht; als Effekt
+ *   faellt dort nur ein Deckentropfen (Effekt 6 Sub 0, Routine 13 @0x80017990), und den startet nur der Repo-Baum
+ *   (main00 @0x0177C `04 ff 18 07`). Version_40% startet ihn nicht, und seit OFFEN 4 (Variante B) auch der Port nicht
+ *   (include/re15_tropfen_r41.h). Einzelheiten stehen in raumlicht.c.
  * RE15_KEIN_RAUMLICHT=1 schaltet alles ab.
  */
 #ifndef RE15_RAUMLICHT_H
@@ -20,7 +24,7 @@ typedef struct {
     uint8_t  r, g, b;          /* additiver Beitrag in der Mitte (Blob faellt zum Rand auf 0) */
 } re15_raumlicht_t;
 
-/* Die in diesem Bild sichtbaren Lichter des Raums `room` (Bildzaehler `frame` fuer das Blinken).
+/* Die in diesem Bild sichtbaren Lichter des Raums `room` (`frame` ungenutzt, seit kein Licht mehr blinkt).
  * Rueckgabe = Anzahl (<= max). */
 int re15_raumlicht_liste(unsigned room, uint32_t frame, re15_raumlicht_t *out, int max);
 

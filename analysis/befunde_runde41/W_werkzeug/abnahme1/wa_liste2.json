@@ -1,0 +1,181 @@
+[
+ {
+  "name": "E_fix_leon_2000_c08_9_100",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=8",
+   "RE15_SET_FLAG=9:100"
+  ]
+ },
+ {
+  "name": "E_vorher_leon_2000_c08",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=8"
+  ]
+ },
+ {
+  "name": "E_fix_leon_2000_c09_9_100",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=9",
+   "RE15_SET_FLAG=9:100"
+  ]
+ },
+ {
+  "name": "E_vorher_leon_2000_c09",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=9"
+  ]
+ },
+ {
+  "name": "E_fix_leon_2000_c13_9_100",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=13",
+   "RE15_SET_FLAG=9:100"
+  ]
+ },
+ {
+  "name": "E_vorher_leon_2000_c13",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=13"
+  ]
+ },
+ {
+  "name": "F_fix_leon_2000_c02_fxlog",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 24,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=2",
+   "RE15_FX_LOG=fx.log"
+  ]
+ },
+ {
+  "name": "G_fix_leon_20B0_c12",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=12"
+  ]
+ },
+ {
+  "name": "G_fix_leon_20B0_c13",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=13"
+  ]
+ },
+ {
+  "name": "G_fix_leon_20B0_c15",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=15"
+  ]
+ },
+ {
+  "name": "G_vorher_leon_20B0_c12",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=12"
+  ]
+ },
+ {
+  "name": "G_vorher_leon_20B0_c13",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=13"
+  ]
+ },
+ {
+  "name": "G_vorher_leon_20B0_c15",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=15"
+  ]
+ }
+]

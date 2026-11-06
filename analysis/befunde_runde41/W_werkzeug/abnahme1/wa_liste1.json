@@ -1,0 +1,1185 @@
+[
+ {
+  "name": "A_fix_leon_2000_marke",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 24,
+  "ab": 8,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_PLAYER_POS=-7000,-25659,1976,1",
+   "RE15_INPUT_SCRIPT_BASIS=spiel",
+   "RE15_INPUT_SCRIPT_START=130",
+   "RE15_INPUT_SCRIPT=U1.6",
+   "RE15_EXIT_AT=2400#2000"
+  ]
+ },
+ {
+  "name": "A_fix_elza_2001_marke",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 24,
+  "ab": 8,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_PLAYER_POS=-7000,-25659,1976,1",
+   "RE15_INPUT_SCRIPT_BASIS=spiel",
+   "RE15_INPUT_SCRIPT_START=130",
+   "RE15_INPUT_SCRIPT=U1.6",
+   "RE15_EXIT_AT=2400#2001"
+  ]
+ },
+ {
+  "name": "A_vorher_leon_2000_marke",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 24,
+  "ab": 8,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_PLAYER_POS=-7000,-25659,1976,1",
+   "RE15_INPUT_SCRIPT_BASIS=spiel",
+   "RE15_INPUT_SCRIPT_START=130",
+   "RE15_INPUT_SCRIPT=U1.6",
+   "RE15_EXIT_AT=2400#2000"
+  ]
+ },
+ {
+  "name": "A_vorher_elza_2001_marke",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 24,
+  "ab": 8,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_PLAYER_POS=-7000,-25659,1976,1",
+   "RE15_INPUT_SCRIPT_BASIS=spiel",
+   "RE15_INPUT_SCRIPT_START=130",
+   "RE15_INPUT_SCRIPT=U1.6",
+   "RE15_EXIT_AT=2400#2001"
+  ]
+ },
+ {
+  "name": "A_vorher_leon_2000_marke_keinraumlicht",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 24,
+  "ab": 8,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_PLAYER_POS=-7000,-25659,1976,1",
+   "RE15_INPUT_SCRIPT_BASIS=spiel",
+   "RE15_INPUT_SCRIPT_START=130",
+   "RE15_INPUT_SCRIPT=U1.6",
+   "RE15_KEIN_RAUMLICHT=1",
+   "RE15_EXIT_AT=2400#2000"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c00",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=0"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c01",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=1"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c02",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=2"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c03",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=3"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c04",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=4"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c05",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=5"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c06",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=6"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c07",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=7"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c08",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=8"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c09",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=9"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c10",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c11",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=11"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c12",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=12"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c13",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=13"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c14",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=14"
+  ]
+ },
+ {
+  "name": "B_fix_leon_2000_c15",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=15"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c00",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=0"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c01",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=1"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c02",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=2"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c03",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=3"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c04",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=4"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c05",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=5"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c06",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=6"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c07",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=7"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c08",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=8"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c09",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=9"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c10",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c11",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=11"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c12",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=12"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c13",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=13"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c14",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=14"
+  ]
+ },
+ {
+  "name": "B_fix_elza_2000_c15",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=15"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c00",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=0"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c01",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=1"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c02",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=2"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c03",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=3"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c04",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=4"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c05",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=5"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c06",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=6"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c07",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=7"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c08",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=8"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c09",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=9"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c10",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=10"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c11",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=11"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c12",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=12"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c13",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=13"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c14",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=14"
+  ]
+ },
+ {
+  "name": "B_fix_leon_20B0_c15",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=15"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c00",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=0"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c01",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=1"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c02",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=2"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c03",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=3"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c04",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=4"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c05",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=5"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c06",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=6"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c07",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=7"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c08",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=8"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c09",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=9"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c10",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=10"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c11",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=11"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c12",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=12"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c13",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=13"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c14",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=14"
+  ]
+ },
+ {
+  "name": "B_fix_elza_20B0_c15",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=20B0@90",
+   "RE15_FORCE_CUT=15"
+  ]
+ },
+ {
+  "name": "C_vorher_leon_2000_c02",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=2"
+  ]
+ },
+ {
+  "name": "C_vorher_leon_2000_c06",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=6"
+  ]
+ },
+ {
+  "name": "C_vorher_leon_2000_c07",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=7"
+  ]
+ },
+ {
+  "name": "C_vorher_leon_2000_c15",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=15"
+  ]
+ },
+ {
+  "name": "C_vorher_elza_2000_c02",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=2"
+  ]
+ },
+ {
+  "name": "C_vorher_elza_2000_c06",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=6"
+  ]
+ },
+ {
+  "name": "C_vorher_elza_2000_c07",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=7"
+  ]
+ },
+ {
+  "name": "C_vorher_elza_2000_c15",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=15"
+  ]
+ },
+ {
+  "name": "D_fix_leon_2000_c10_ohneflag",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10"
+  ]
+ },
+ {
+  "name": "D_fix_leon_2000_c10_9_100",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10",
+   "RE15_SET_FLAG=9:100"
+  ]
+ },
+ {
+  "name": "D_fix_leon_2000_c10_9_103",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10",
+   "RE15_SET_FLAG=9:103"
+  ]
+ },
+ {
+  "name": "D_fix_leon_2000_c09_ohneflag",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=9"
+  ]
+ },
+ {
+  "name": "D_fix_elza_2000_c10_ohneflag",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10"
+  ]
+ },
+ {
+  "name": "D_fix_elza_2000_c10_9_100",
+  "exe": "fix",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10",
+   "RE15_SET_FLAG=9:100"
+  ]
+ },
+ {
+  "name": "D_vorher_leon_2000_c10_ohneflag",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10"
+  ]
+ },
+ {
+  "name": "D_vorher_elza_2000_c10_ohneflag",
+  "exe": "vorher",
+  "warte": 17,
+  "dauer": 16,
+  "ab": 5,
+  "keep": true,
+  "env": [
+   "RE15_TITLE_CONFIRM_MS=1500",
+   "RE15_PSELECT_AUTO=1",
+   "RE15_PSELECT_AUTO_SWITCH=1",
+   "RE15_DEBUG_JUMP=2000@90",
+   "RE15_FORCE_CUT=10"
+  ]
+ }
+]

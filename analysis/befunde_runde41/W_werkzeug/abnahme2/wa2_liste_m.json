@@ -1,0 +1,80 @@
+[
+{
+"name": "M_fix_leon_2000_marke",
+"exe": "fix",
+"warte": 12,
+"dauer": 34,
+"ab": 4,
+"keep": true,
+"env": [
+"RE15_TITLE_CONFIRM_MS=1500",
+"RE15_PSELECT_AUTO=1",
+"RE15_DEBUG_JUMP=2000@90",
+"RE15_PLAYER_POS=-7000,-25659,1976,1",
+"RE15_INPUT_SCRIPT_BASIS=spiel",
+"RE15_INPUT_SCRIPT_START=130",
+"RE15_INPUT_SCRIPT=U1.6",
+"RE15_WINDOW_SCALE=3",
+"RE15_EXIT_AT=3600#2000"
+]
+},
+{
+"name": "M_fix_elza_2001_marke",
+"exe": "fix",
+"warte": 12,
+"dauer": 34,
+"ab": 4,
+"keep": true,
+"env": [
+"RE15_TITLE_CONFIRM_MS=1500",
+"RE15_PSELECT_AUTO=1",
+"RE15_PSELECT_AUTO_SWITCH=1",
+"RE15_DEBUG_JUMP=2000@90",
+"RE15_PLAYER_POS=-7000,-25659,1976,1",
+"RE15_INPUT_SCRIPT_BASIS=spiel",
+"RE15_INPUT_SCRIPT_START=130",
+"RE15_INPUT_SCRIPT=U1.6",
+"RE15_WINDOW_SCALE=3",
+"RE15_EXIT_AT=3600#2001"
+]
+},
+{
+"name": "M_vorher_leon_2000_marke",
+"exe": "vorher",
+"warte": 12,
+"dauer": 34,
+"ab": 4,
+"keep": true,
+"env": [
+"RE15_TITLE_CONFIRM_MS=1500",
+"RE15_PSELECT_AUTO=1",
+"RE15_DEBUG_JUMP=2000@90",
+"RE15_PLAYER_POS=-7000,-25659,1976,1",
+"RE15_INPUT_SCRIPT_BASIS=spiel",
+"RE15_INPUT_SCRIPT_START=130",
+"RE15_INPUT_SCRIPT=U1.6",
+"RE15_WINDOW_SCALE=3",
+"RE15_EXIT_AT=3600#2000"
+]
+},
+{
+"name": "M_vorher_elza_2001_marke",
+"exe": "vorher",
+"warte": 12,
+"dauer": 34,
+"ab": 4,
+"keep": true,
+"env": [
+"RE15_TITLE_CONFIRM_MS=1500",
+"RE15_PSELECT_AUTO=1",
+"RE15_PSELECT_AUTO_SWITCH=1",
+"RE15_DEBUG_JUMP=2000@90",
+"RE15_PLAYER_POS=-7000,-25659,1976,1",
+"RE15_INPUT_SCRIPT_BASIS=spiel",
+"RE15_INPUT_SCRIPT_START=130",
+"RE15_INPUT_SCRIPT=U1.6",
+"RE15_WINDOW_SCALE=3",
+"RE15_EXIT_AT=3600#2001"
+]
+}
+]

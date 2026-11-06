@@ -51,6 +51,7 @@
 #include "re15_ai_flavor.h"  /* re15_re2z_spawn_pose_seed — Freeze-Fenster-Posen-Seed (S4) */
 #include "re15_rolltor.h"   /* Runde 34 Nacht, Spur A: Rolltor ROOM1050/1051 (rolltor_1050.c) */
 #include "re15_ventilkette_r41.h"   /* Runde 41 Spur C: Ereignis-Kette + Strahlen 20B0 (ventilkette_r41.c) */
+#include "re15_tropfen_r41.h"       /* Runde 41 Spur W: Deckentropfen ROOM2000/2001 wie die 40%-Disc (tropfen_r41.c) */
 #include "re15_keyitems_r41.h"       /* Runde 41 Spur O: Key Items in RE2-Form (keyitems_r41.c) */
 #include "re15_hebetisch_cursor.h" /* Runde 34 Nacht B: Cursor haelt sub04 vor For @0x0FC0 (op_for) */
 #include "re15_nahaufnahmen_r40.h" /* Runde 40: Nahaufnahmen-Programme (nahaufnahmen_r40.c) */
@@ -1231,6 +1232,14 @@ static int op_evt_exec(scd_thread_t *t)
     if (s_current_rdt && re15_panel_zeiger_abnahme_haelt(t->pc, s_current_rdt->raw)) {
         t->pc += 4;
         return SCD_R_IF_FALSE;
+    }
+    /* Runde 41 Spur W, OFFEN 4, Variante B wie die 40%-Disc: ROOM2000/2001 main00 @0x0177C `04 ff 18 07` / `04 ff 18 08`
+     * (Repo-Baum = Mod) startet die Deckentropfen-Schleife sub07 @0x01B06 / sub08 @0x01D32 (Effekt 6 Sub 0). Version_40% hat diese
+     * Zeile nicht, dort endet main00 mit @0x01598 `01 00`. Weiter wie nach einem Evt_exec ohne Start: pc += 4, danach `01 00`.
+     * Belege und Eingrenzung: include/re15_tropfen_r41.h, Dossier analysis/befunde_runde41/W_wasserblink.md OFFEN 4. */
+    if (re15_tropfen_r41_evt_exec_gestrichen((uint16_t)g_current_room_id, t->pc, s_current_rdt)) {
+        t->pc += 4;
+        return SCD_R_CONTINUE;   /* wie der Opcode selbst nach dem Start (`return 1` unten) */
     }
     t->pc += 4;                 /* advance BEFORE spawn (byte-true @0x8003f2b8) */
 
