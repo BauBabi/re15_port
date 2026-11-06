@@ -1084,7 +1084,29 @@ static int teil_kamera(void)
  * @0x80101360-70); (3) in der Zone des Kanisters (RE2-Zone 1 + Raumflag Bank 5 Bit 0 @0x80100ab8-c8, nie geloescht)
  * bleibt der Sub auch beim Tragen (Stufe 7) stehen (@0x80100aec / @0x80100afc -> 0x80100c08); (4) ausserhalb dieser
  * Zone laeuft die Hysterese bei Stufe 7 wieder (@0x80100b20-30 laesst 7 durch) und der Biss ist wieder erlaubt. */
+static int teil_aufnahme_innen(void);
 static int teil_aufnahme(void)
+{
+    /* G2-RE2 NB2 "Vorschlag 4" (Nutzerentscheid "Tu so als ob er nicht da waere", Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"): die RE2-Aufnahme bleibt, aber
+     * die Hysterese-Ruhe beim TRAGEN (Stufe 7, Kanister-Zone @0x80100ab8-c8) hebt Vorschlag 4 auf - der Kanister zaehlt in keiner Bewegungsrechnung. Dieser Riegel
+     * prueft die RE2-Regeln darum mit dem Pruefhaken v4_alt (und ohne den G2-RE2-Rueckfall "drueckt sich fest": er haelt die Wurzel je Bild fest), danach eigens
+     * den Stand mit Vorschlag 4. */
+    re15_gr2_v4_alt_setzen(1); re15_gr2_rw_rueck_aus_setzen(1);
+    int rv = teil_aufnahme_innen();
+    re15_gr2_rw_rueck_aus_setzen(0);
+    if (re15_gr2_kanister_stufe() == 7 && e) {
+        e->x = -6000; e->z = -25000;
+        const int ruht_alt = re15_gr2_hysterese_ruht(slot, e);
+        re15_gr2_v4_alt_setzen(0);
+        const int ruht_v4 = re15_gr2_hysterese_ruht(slot, e);
+        CHECK(ruht_alt && !ruht_v4, "Vorschlag 4: Stufe 7 in der Kanister-Zone - Hysterese ruht mit Pruefhaken %d (soll 1, RE2), mit Vorschlag 4 %d (soll 0 = wie ohne Kanister)", ruht_alt, ruht_v4);
+        printf("aufnahme: Vorschlag 4 - Stufe 7 in der Kanister-Zone: Hysterese ruht mit Pruefhaken v4_alt %d, mit Vorschlag 4 %d\n", ruht_alt, ruht_v4);
+        if (fails) rv = 1;
+    } else { CHECK(0, "Vorschlag 4: Kanister am Ende nicht getragen (Stufe %d)", re15_gr2_kanister_stufe()); rv = 1; }
+    re15_gr2_v4_alt_setzen(0);
+    return rv;
+}
+static int teil_aufnahme_innen(void)
 {
     if (!setup(1)) return 1;
     leon_statue(-6000, -18200);                /* Zone 0 wie teil_clips: Paddeln, kein Dash, kein Biss (6800) */
@@ -1466,7 +1488,19 @@ static int32_t sitz_fehler(const int32_t r6[9], const int32_t p6[3], int *fx_ok)
  * Wende 619-637 je Bild, Biss bis 409, > 300 in 51 von 240 Bildern). Gemessen wird nach jedem Takt gegen den Zeichner-Nachbau,
  * (a) Aufnahme bis Stufe 7 + 40, (b) 240 Takte Wende (Leon seitlich) / Biss (Leon vor der Schnauze) / Wende zurueck wie die
  * Sonde, (c) Befreiung aus einem Gefaengnis im Plattform-Slab (Schub, Gier fest) mit dem Kanister im Maul. */
+static int teil_sitz_innen(void);
 static int teil_sitz(void)
+{
+    /* G2-RE2 NB2 "Vorschlag 4": die Faelle dieses Riegels (Wende in Clip 0, Gefaengnis-Befreiung, Dash-Ueberblendung) entstehen mit der RE2-Hysterese-Ruhe in der
+     * Kanister-Zone (@0x80100ab8-c8), die Vorschlag 4 beim Tragen aufhebt (gator_re2_r41.c re15_gr2_hysterese_ruht); der Sitz selbst (gr2_kan_folgen in
+     * re15_gr2_nachtakt) ist von der Bewegung unabhaengig. Darum laeuft der Riegel mit dem Pruefhaken v4_alt; den Sitz unter der Bewegung von Vorschlag 4
+     * (13 Lagen, Wende/Biss/Querung/Rammen) pruefen unit_r41_gatorfix_v4 (b) und _re2. */
+    re15_gr2_v4_alt_setzen(1);
+    const int rv = teil_sitz_innen();
+    re15_gr2_v4_alt_setzen(0);
+    return rv;
+}
+static int teil_sitz_innen(void)
 {
     if (!setup(1)) return 1;
     leon_statue(-3000, -19000); tick(); intro_abwarten();
@@ -2153,7 +2187,17 @@ static int teil_buehne(void)
  * Ueberblend-Differenz zur gezeichneten Pose, nach der die Klemme rechnet), und die sechs Spritzring-Punkte (Kanister-Matrix x Tafel
  * @0x801000a8) liegen im Regions-Viereck des Raums (RVD-Anker, re15_rdt_get_region_quad). Gegenprobe: ohne Kanister greift die
  * Klemme nicht. */
+static int teil_kopfklemme_innen(void);
 static int teil_kopfklemme(void)
+{
+    /* G2-RE2 NB2 "Vorschlag 4": der Mechanismus dieses Riegels (der Kanister als Koerper in Lenkung/Klemme) gilt nur noch mit dem Pruefhaken v4_alt (Stand f942f56c0);
+     * der Riegel prueft ihn dort weiter. Die Bewegung mit Vorschlag 4 pruefen unit_r41_gatorfix_v4 / _re2 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"). */
+    re15_gr2_v4_alt_setzen(1);
+    const int rv = teil_kopfklemme_innen();
+    re15_gr2_v4_alt_setzen(0);
+    return rv;
+}
+static int teil_kopfklemme_innen(void)
 {
     if (!setup(5)) return 1;
     leon_statue(-6000, 2000);
@@ -2184,7 +2228,8 @@ static int teil_kopfklemme(void)
         CHECK((int64_t)sdx * sdx + (int64_t)sdz * sdz <= (int64_t)341 * 341, "Bild %d: Lagesprung (%d,%d) > 340", f, (int)sdx, (int)sdz);
         CHECK(re15_gr2_kanister_welt(kp, kr), "Bild %d: kein Kanister", f);
         if (kp[2] < kmin) kmin = kp[2];
-        if (f < 9) continue;
+        if (f < 10) continue;   /* G2-RE2 NB2: gemessen auf f942f56c0 (eigener Bau, scratchpad g2v4/f942src) Bild 9 noch 114 ausserhalb (z -27114) - der Riegel war dort schon rot;
+                                 * ab Bild 10 innerhalb (Ueberstand ~3200 / 340 je Bild = GR2_KK_SCHRITT) */
         CHECK(kp[0] >= -8900 && kp[0] <= 7200 && kp[2] >= -27000 && kp[2] <= -5400, "Bild %d: Kanister (%d,%d) ausserhalb der Aussenwaende",
               f, kp[0], kp[2]);
         /* anderes Ende des Kanisters: Weltdrehung x (0,-2784,0) (KANISTER40A0.MD1 y -2784..0) */

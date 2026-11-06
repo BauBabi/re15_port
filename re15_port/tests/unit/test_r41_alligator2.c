@@ -489,7 +489,16 @@ static void trag_scan(int zeige)
 }
 
 /* Riegel: Auswahl der Scan-Laeufe, die ohne die weiche Klemme springen (Scan trag_scan, Stand vor Spur P: > 340 in 946 Bildpaaren, > 1000 in 68). */
+static void teil_tragen_innen(void);
 static void teil_tragen(void)
+{
+    /* G2-RE2 NB2 "Vorschlag 4": der Mechanismus dieses Riegels (Kopf-Klemme mit dem Kanister, Querungsbeginn an der Lage des Gators) gilt nur noch mit dem Pruefhaken v4_alt (Stand f942f56c0);
+     * der Riegel prueft ihn dort weiter. Die Bewegung mit Vorschlag 4 pruefen unit_r41_gatorfix_v4 / _re2 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"). */
+    re15_gr2_v4_alt_setzen(1);
+    teil_tragen_innen();
+    re15_gr2_v4_alt_setzen(0);
+}
+static void teil_tragen_innen(void)
 {
     printf("== tragen (Abnahme G 4 O1) ==\n");
     static const struct { int32_t x, z; int gier; int32_t lx, lz; } k[] = {

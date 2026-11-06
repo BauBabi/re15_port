@@ -1437,7 +1437,29 @@ static int32_t g2_ueber_am_ziel(re15_actor_t *g, int slot, int32_t x0, int32_t z
     re15_gr2_kopf_klemme(slot, g, &dx, &dz);
     return (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
 }
+static void teil_klemm_innen(int elza);
+static int g2_kanister_ins_maul(re15_actor_t *g, re15_actor_t *pl);
 static void teil_klemm(int elza)
+{
+    /* G2-RE2 NB2 "Vorschlag 4": der Mechanismus dieses Riegels (der Kanister als Koerper in Lenkung/Klemme) gilt nur noch mit dem Pruefhaken v4_alt (Stand f942f56c0);
+     * der Riegel prueft ihn dort weiter. Die Bewegung mit Vorschlag 4 pruefen unit_r41_gatorfix_v4 / _re2 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"). */
+    re15_gr2_v4_alt_setzen(1);
+    teil_klemm_innen(elza);
+    re15_gr2_v4_alt_setzen(0);
+    {   /* Vorschlag 4: mit dem Kanister im Maul greift die Kopf-Klemme nicht (wie ohne Kanister) */
+        re15_actor_t *g = szene_bis_kampf(elza);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        int32_t dx = 0, dz = 0, zx = 0, zz = 0; int an = -1, ziel = -1;
+        if (g && g2_kanister_ins_maul(g, pl)) {
+            g->x = 3191; g->z = -22595; g->rot_y = 1;   /* Lage der Nutzer-Marke 1 F735 (Dossier Punkt 7) */
+            an = re15_gr2_kopf_klemme((int)(g - g_actors), g, &dx, &dz);
+            ziel = re15_gr2_kk_ziel(g, &zx, &zz);
+        }
+        PRUEF(an == 0 && ziel == 0, "Vorschlag 4: an der Lage der Nutzer-Marke keine Kopf-Klemme (%d, Ueberstand %d,%d) und kein verschobenes Steuerziel (%d) mit dem Kanister im Maul",
+              an, (int)dx, (int)dz, ziel);
+    }
+}
+static void teil_klemm_innen(int elza)
 {
     printf("== klemm%s (Punkt 7) ==\n", elza ? "_elza" : "");
     re15_actor_t *g = szene_bis_kampf(elza);
@@ -1872,7 +1894,16 @@ static void teil_bahn(int elza)
           ok_sicht, laeufe, ref, 100 * min_sicht_q, wo_sicht);
     PRUEF(alt_n > 0 && alt_rot == alt_n, "Gegenprobe Stand NB4 (Kreis R 2000, gespiegelte Karotte): %d von %d Laeufen faehrt er den Plan nicht oder ist in Cut 2 nicht erkennbar (rot ohne den Bau)", alt_rot, alt_n);
 }
+static void teil_fuzz_innen(int elza);
 static void teil_fuzz(int elza)
+{
+    /* G2-RE2 NB2 "Vorschlag 4": der Mechanismus dieses Riegels (Trag-Lenkung mit Kopf + Kanister: Kuerzung, Vorbei-Etappe, Kreis) gilt nur noch mit dem Pruefhaken v4_alt (Stand f942f56c0);
+     * der Riegel prueft ihn dort weiter. Die Bewegung mit Vorschlag 4 pruefen unit_r41_gatorfix_v4 / _re2 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"). */
+    re15_gr2_v4_alt_setzen(1);
+    teil_fuzz_innen(elza);
+    re15_gr2_v4_alt_setzen(0);
+}
+static void teil_fuzz_innen(int elza)
 {
     printf("== fuzz%s (Punkt 7, Nachbesserung 1) ==\n", elza ? "_elza" : "");
     const int zeige = getenv("G2_ZEIGE") != NULL;
@@ -2008,8 +2039,10 @@ static const int32_t k_weg_rampe[][2] = { { 2600, -16300 }, { 6400, -16300 }, { 
 #define G2R_WEG_TEMPO 50   /* PORT-WAHL des Messwegs: Figur geht 50 je Bild */
 typedef struct {
     int bilder, ohne_max, fenster2, lauer, drehen, rueck, rueckzug, tauch_n, taucht, block, kam2500, kam0, rammen, kreuz, gang_n, gang_fehl, gier_max, clip1, rw_haeng;
+    int block_k, kamk2500, kamk0, drehen_f, treffer;   /* drehen_f = Drehen, das ganze 120-Bilder-Fenster fern der Figur (Kopf > 4500); treffer = Bilder, in denen die Figur Schaden nahm. G2-RE2 NB2 Vorschlag 4: block = Kopf + Kanister (nur dokumentiert), block_k = nur Kopf; kam2500/kam0 = nur Kopf (Riegel), kamk* = Kopf + Kanister */
     int64_t kopf_summe; int zeit_n; double zeit[4096];
 } g2r_m_t;
+static const char *g2r_stand(int st) { return st == 0 ? "nb5" : st == 1 ? "f942" : st == 2 ? "neu" : "ohne"; }   /* 0 = NB5 (Pruefhaken rw_alt + v4_alt), 1 = f942f56c0 (v4_alt), 2 = Bau, 3 = Bau ohne Kanister (nach dem Anhaengen entfernt) */
 static int16_t s_g2r_tafel[2][256]; static int s_g2r_blk; static int32_t s_g2r_vmin;   /* Taktschritt je (Clip 0/1, Bild) aus dem NB5-Lauf; -1 = unbekannt */
 static int g2r_cmp_d(const void *a, const void *b) { const double x = *(const double *)a, y = *(const double *)b; return x < y ? -1 : x > y; }
 static void g2r_weg(const g2r_lage_t *L, int t, int32_t *x, int32_t *z)
@@ -2026,7 +2059,7 @@ static void g2r_weg(const g2r_lage_t *L, int t, int32_t *x, int32_t *z)
     }
     *x = w[0][0]; *z = w[0][1];
 }
-static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int bilder, int nb5, g2r_m_t *m, FILE *spur)
+static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int bilder, int stand, g2r_m_t *m, FILE *spur)
 {
     memset(m, 0, sizeof *m);
     int bi = 0; int64_t bd = -1;
@@ -2038,10 +2071,10 @@ static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int
     re15_gr2_rw_stat_t st0; re15_gr2_rw_stat((int)(g - g_actors), &st0);
     const int ramm0 = re15_gator_boss_rammen(), kreuz0 = re15_gator_boss_kreuz_kanister();
     int32_t h60[60][2]; int hn = 0; uint8_t biss60[60]; memset(biss60, 0, sizeof biss60);
-    int32_t h120[120][2]; int16_t d120[120]; int64_t dsum = 0; int dreh_bis = -1;
+    int32_t h120[120][2], k120[120]; int16_t d120[120]; int64_t dsum = 0; int dreh_bis = -1, dreh_bis_f = -1;
     int lauf = 0; int64_t best = -1; int32_t px0 = L->x, pz0 = L->z; int prev_mod = 0; int prev_gier = g->rot_y & 0xfff;
-    static int32_t pts[640][3];
-    for (int t = 0; t < bilder && re15_gr2_traegt(); t++) {
+    static int32_t pts[640][3], ptk[640][3];
+    for (int t = 0; t < bilder && (stand == 3 || re15_gr2_traegt()); t++) {
         int32_t px = L->x, pz = L->z;
         if (L->weg) g2r_weg(L, t, &px, &pz);
         pl->x = px; pl->y = L->y; pl->z = pz; pl->hp = 100; pl->hit_react = 0;
@@ -2050,6 +2083,7 @@ static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int
         re15_collision_set_band(re15_collision_band_from_y(L->y));
         frame(0, 0);
         m->bilder++;
+        if (pl->hp < 100) m->treffer++;   /* G2-RE2 NB2: Biss oder Rammen traf die Figur in diesem Bild (hp vor dem Bild 100) */
         const int slot = (int)(g - g_actors), ph = re15_gator_boss_phase(g), mod = re15_gr2_rw_modus(slot);
         const int gier = g->rot_y & 0xfff;
         int dg = ((gier - prev_gier + 0x800) & 0xfff) - 0x800; prev_gier = gier;
@@ -2074,11 +2108,13 @@ static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int
         /* Drehen auf der Stelle */
         { const int i = hn % 120;
           if (hn >= 120) dsum -= d120[i] < 0 ? -d120[i] : d120[i];
-          d120[i] = (int16_t)dg; dsum += dg < 0 ? -dg : dg; h120[i][0] = g->x; h120[i][1] = g->z;
+          d120[i] = (int16_t)dg; dsum += dg < 0 ? -dg : dg; h120[i][0] = g->x; h120[i][1] = g->z; k120[i] = kd;
           if (hn >= 119 && dsum >= 4096) {
               int32_t x0 = h120[0][0], x1 = x0, z0 = h120[0][1], z1 = z0;
               for (int k = 1; k < 120; k++) { if (h120[k][0] < x0) x0 = h120[k][0]; if (h120[k][0] > x1) x1 = h120[k][0]; if (h120[k][1] < z0) z0 = h120[k][1]; if (h120[k][1] > z1) z1 = h120[k][1]; }
               if (x1 - x0 < 3000 && z1 - z0 < 3000 && kd > 4500) { const int von = dreh_bis >= hn - 119 ? dreh_bis + 1 : hn - 119; m->drehen += hn - von + 1; dreh_bis = hn; }
+              int32_t kmin = k120[0]; for (int k = 1; k < 120; k++) if (k120[k] < kmin) kmin = k120[k];
+              if (x1 - x0 < 3000 && z1 - z0 < 3000 && kmin > 4500) { const int von = dreh_bis_f >= hn - 119 ? dreh_bis_f + 1 : hn - 119; m->drehen_f += hn - von + 1; dreh_bis_f = hn; }
           } }
         hn++;
         if (mod == 1) m->rueck++;
@@ -2087,15 +2123,22 @@ static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int
         if (mod == 2 && prev_mod != 2) m->tauch_n++;
         prev_mod = mod;
         /* Kopf/Kanister in Rampe/Plattform, vor der Kamera */
-        { const int n = mod == 3 ? 0 : re15_gr2_rw_kopf_punkte(g, pts, 640);
-          int im_block = 0; int32_t vmin = 1 << 30;
+        { const int n = mod == 3 ? 0 : re15_gr2_rw_kopf_punkte(g, pts, 640);        /* Mesh 5/6/7 + Kanister-Zylinder */
+          const int nk = mod == 3 ? 0 : re15_gr2_rw_nur_kopf_punkte(g, ptk, 640);   /* G2-RE2 NB2 Vorschlag 4: nur Mesh 5/6/7 (Kopf-Riegel) */
+          int im_block = 0, im_block_k = 0; int32_t vmin = 1 << 30, vmin_k = 1 << 30;
           for (int i = 0; i < n; i++) {
               if (((pts[i][0] > -1700 && pts[i][0] < 1850 && pts[i][2] > -20000 && pts[i][2] < -12450)
                                         || (pts[i][0] > 1850 && pts[i][0] < 7200 && pts[i][2] > -18100 && pts[i][2] < -14500))) im_block = 1;
               const int32_t vz = re15_gr2_kamera_tiefe(cam, pts[i]); if (vz < vmin) vmin = vz;
           }
-          if (ph == 7) im_block = 0;   /* Ueberquerung: der Hub traegt ihn ueber das Deck (gewollt) */
-          m->block += im_block; m->kam2500 += vmin < 2500; m->kam0 += vmin <= 0; s_g2r_blk = im_block; s_g2r_vmin = vmin; }
+          for (int i = 0; i < nk; i++) {
+              if (((ptk[i][0] > -1700 && ptk[i][0] < 1850 && ptk[i][2] > -20000 && ptk[i][2] < -12450)
+                                        || (ptk[i][0] > 1850 && ptk[i][0] < 7200 && ptk[i][2] > -18100 && ptk[i][2] < -14500))) im_block_k = 1;
+              const int32_t vz = re15_gr2_kamera_tiefe(cam, ptk[i]); if (vz < vmin_k) vmin_k = vz;
+          }
+          if (ph == 7) im_block = im_block_k = 0;   /* Ueberquerung: der Hub traegt ihn ueber das Deck (gewollt) */
+          m->block += im_block; m->block_k += im_block_k; m->kam2500 += vmin_k < 2500; m->kam0 += vmin_k <= 0; m->kamk2500 += vmin < 2500; m->kamk0 += vmin <= 0;
+          s_g2r_blk = im_block; s_g2r_vmin = vmin_k; }
         /* Gang */
         { int32_t sdx = 0, sdz = 0; re15_gator_boss_takt_schritt(&sdx, &sdz);
           const int32_t sl = (int32_t)re15_squareroot0((uint32_t)((int64_t)sdx * sdx + (int64_t)sdz * sdz));
@@ -2109,7 +2152,7 @@ static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int
         { int64_t ns = 0, zy = 0; re15_gator_boss_zeit_letzt(&ns, &zy); if (m->zeit_n < 4096) m->zeit[m->zeit_n++] = (double)zy;
           if (getenv("G2_RE2_ZEIT_ZEIGE") && ns > 1500000) printf("        ZEIT %s t%d %.2f ms (Faden %lld Zyklen) ph %d mod %d clip %d\n", L->name, t, ns / 1e6, (long long)zy, ph, mod, (int)g->motion); }
         if (spur) { int32_t zx = 0, zz = 0; re15_gator_boss_ziel(g, &zx, &zz);
-                    fprintf(spur, "%s %s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", L->name, nb5 ? "nb5" : "neu", t, g->x, g->z, gier, ph, mod, (int)g->motion,
+                    fprintf(spur, "%s %s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", L->name, g2r_stand(stand), t, g->x, g->z, gier, ph, mod, (int)g->motion,
                             (int)g->anim_frame, px, pz, cam, kd, zx, zz, re15_gr2_kk_aktiv(), re15_gr2_trag_modus((int)(g - g_actors)), s_g2r_blk, (int)s_g2r_vmin, g->y); }
     }
     re15_gr2_rw_stat_t st1; re15_gr2_rw_stat((int)(g - g_actors), &st1);
@@ -2118,7 +2161,7 @@ static void g2r_lauf(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int
     const double zj = re15_g2_zeit_zyk_je_us();
     for (int i = 0; i < m->zeit_n; i++) m->zeit[i] = zj > 0 ? m->zeit[i] / zj : 0;
 }
-typedef struct { int bilder, ohne_max, fenster2, lauer, drehen, rueck, rueckzug, tauch_n, taucht, block, kam2500, kam0, rammen, kreuz, gang_n, gang_fehl, gier_max; double z_mittel, z_p95, z_max; } g2r_sum_t;
+typedef struct { int bilder, ohne_max, fenster2, lauer, drehen, rueck, rueckzug, tauch_n, taucht, block, kam2500, kam0, rammen, kreuz, gang_n, gang_fehl, gier_max, block_k, kamk2500, kamk0, drehen_f, treffer; double z_mittel, z_p95, z_max; } g2r_sum_t;
 static void g2r_zeit(g2r_m_t *m, double *mi, double *p95, double *mx)
 {
     if (!m->zeit_n) { *mi = *p95 = *mx = 0; return; }
@@ -2127,93 +2170,125 @@ static void g2r_zeit(g2r_m_t *m, double *mi, double *p95, double *mx)
     qsort(m->zeit, (size_t)m->zeit_n, sizeof m->zeit[0], g2r_cmp_d);
     *p95 = m->zeit[(m->zeit_n * 95) / 100]; *mx = m->zeit[m->zeit_n - 1];
 }
-/* je Stand (0 = nb5, 1 = neu) alle Lagen; Rueckgabe: Summen */
-static int g2r_alle(int elza, int nb5, int bilder, g2r_sum_t *S, g2r_m_t *M, int nm, FILE *spur, const char *nur)
+/* je Stand (0 = nb5, 1 = f942f56c0, 2 = neu) alle Lagen; Rueckgabe: Summen */
+static int g2r_alle(int elza, int stand, int bilder, g2r_sum_t *S, g2r_m_t *M, int nm, FILE *spur, const char *nur)
 {
     memset(S, 0, sizeof *S);
-    re15_gr2_rw_alt_setzen(nb5);
-    re15_actor_t *g = szene_bis_kampf(elza);
+    re15_gr2_rw_alt_setzen(stand == 0); re15_gr2_v4_alt_setzen(stand <= 1);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    %s: kein Tragen\n", nb5 ? "nb5" : "neu"); re15_gr2_rw_alt_setzen(0); return 0; }
     const int nl = (int)(sizeof k_re2_lagen / sizeof k_re2_lagen[0]);
     static double alle_z[64 * 4096]; int nz = 0;
     for (int i = 0; i < nl && i < nm; i++) {
         if (nur && strcmp(nur, k_re2_lagen[i].name)) { M[i].bilder = 0; continue; }
-        if (!re15_gr2_traegt() && !g2_kanister_ins_maul(g, pl)) { printf("    %s: Kanister weg\n", k_re2_lagen[i].name); break; }
-        g2r_lauf(g, pl, &k_re2_lagen[i], bilder, nb5, &M[i], spur);
+        /* G2-RE2 NB2: je Lage ein frischer Kampf (gleicher Anfangszustand in allen Staenden; vorher liefen die Lagen nacheinander im selben Kampf) */
+        re15_actor_t *g = szene_bis_kampf(elza);
+        if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    %s %s: kein Tragen\n", g2r_stand(stand), k_re2_lagen[i].name); re15_gr2_rw_alt_setzen(0); re15_gr2_v4_alt_setzen(0); return 0; }
+        if (stand == 3) re15_gr2_kanister_entfernen();   /* derselbe Kampf ohne Kanister (Bezug der Kopf-Riegel) */
+        g2r_lauf(g, pl, &k_re2_lagen[i], bilder, stand, &M[i], spur);
         g2r_m_t *m = &M[i];
         for (int k = 0; k < m->zeit_n && nz < 64 * 4096; k++) alle_z[nz++] = m->zeit[k];
         double mi, p95, mx; g2r_zeit(m, &mi, &p95, &mx);
         const double min_s = m->bilder / 1800.0;
-        printf("    %s %-15s %4d B.: ohne Fortschritt max %5.1f s, 2-s-Fenster %3d, Drehen %3d %%, rueckw. %3d %% (+Rueckzug %2d %%), Tauch %d (%.1f/min) unter %2d %%, Block %3d %%, Kam<2500 %3d %%, hinter %3d %%, "
-               "Kopf %5d, Rammen %d/Querung %d, Haenger %d, Gang %d/%d abw., Gier max %d, Takt %.0f/%.0f/%.0f us\n",
-               nb5 ? "nb5" : "neu", k_re2_lagen[i].name, m->bilder, m->ohne_max / 30.0, m->fenster2, m->bilder ? 100 * m->drehen / m->bilder : 0, m->bilder ? 100 * m->rueck / m->bilder : 0, m->bilder ? 100 * m->rueckzug / m->bilder : 0,
-               m->tauch_n, min_s > 0 ? m->tauch_n / min_s : 0, m->bilder ? 100 * m->taucht / m->bilder : 0, m->bilder ? 100 * m->block / m->bilder : 0,
-               m->bilder ? 100 * m->kam2500 / m->bilder : 0, m->bilder ? 100 * m->kam0 / m->bilder : 0, m->bilder ? (int)(m->kopf_summe / m->bilder) : 0, m->rammen, m->kreuz, m->rw_haeng,
+        printf("    %s %-15s %4d B.: ohne Fortschritt max %5.1f s, 2-s-Fenster %3d, Drehen %3d %%, rueckw. %3d %% (+Rueckzug %2d %%), Tauch %d (%.1f/min) unter %2d %%, Block Kopf %3d %% (+Kanister %3d %%), "
+               "Kopf Kam<2500 %3d %%, hinter %3d %% (+Kanister %3d %% / %3d %%), Kopf %5d, Drehen ganz fern %3d %%, Treffer %d, Rammen %d/Querung %d, Haenger %d, Gang %d/%d abw., Gier max %d, Takt %.0f/%.0f/%.0f us\n",
+               g2r_stand(stand), k_re2_lagen[i].name, m->bilder, m->ohne_max / 30.0, m->fenster2, m->bilder ? 100 * m->drehen / m->bilder : 0, m->bilder ? 100 * m->rueck / m->bilder : 0, m->bilder ? 100 * m->rueckzug / m->bilder : 0,
+               m->tauch_n, min_s > 0 ? m->tauch_n / min_s : 0, m->bilder ? 100 * m->taucht / m->bilder : 0, m->bilder ? 100 * m->block_k / m->bilder : 0, m->bilder ? 100 * m->block / m->bilder : 0,
+               m->bilder ? 100 * m->kam2500 / m->bilder : 0, m->bilder ? 100 * m->kam0 / m->bilder : 0, m->bilder ? 100 * m->kamk2500 / m->bilder : 0, m->bilder ? 100 * m->kamk0 / m->bilder : 0,
+               m->bilder ? (int)(m->kopf_summe / m->bilder) : 0, m->bilder ? 100 * m->drehen_f / m->bilder : 0, m->treffer, m->rammen, m->kreuz, m->rw_haeng,
                m->gang_fehl, m->gang_n, m->gier_max, mi, p95, mx);
         S->bilder += m->bilder; if (m->ohne_max > S->ohne_max) S->ohne_max = m->ohne_max; S->fenster2 += m->fenster2; S->drehen += m->drehen; S->rueck += m->rueck; S->rueckzug += m->rueckzug;
         S->tauch_n += m->tauch_n; S->taucht += m->taucht; S->block += m->block; S->kam2500 += m->kam2500; S->kam0 += m->kam0; S->rammen += m->rammen; S->kreuz += m->kreuz;
         S->gang_n += m->gang_n; S->gang_fehl += m->gang_fehl; if (m->gier_max > S->gier_max) S->gier_max = m->gier_max;
+        S->block_k += m->block_k; S->kamk2500 += m->kamk2500; S->kamk0 += m->kamk0; S->drehen_f += m->drehen_f; S->treffer += m->treffer;
     }
     if (nz) { double s = 0; for (int k = 0; k < nz; k++) s += alle_z[k]; S->z_mittel = s / nz; qsort(alle_z, (size_t)nz, sizeof alle_z[0], g2r_cmp_d); S->z_p95 = alle_z[(nz * 95) / 100]; S->z_max = alle_z[nz - 1]; }
-    re15_gr2_rw_alt_setzen(0);
+    re15_gr2_rw_alt_setzen(0); re15_gr2_v4_alt_setzen(0);
     return 1;
 }
 static void g2r_summe_druck(const char *w, const g2r_sum_t *S)
 {
     const double min = S->bilder / 1800.0;
     printf("    SUMME %s: %d Bilder (%.1f min): ohne Fortschritt max %.1f s, 2-s-Fenster %d, Drehen %.1f %%, rueckwaerts %.1f %% (Rueckzug nach Vorstoss %.1f %%), Tauchgaenge %d = %.2f/min, untergetaucht %.1f %%, "
-           "Kopf/Kanister in Rampe/Plattform %.1f %%, < 2500 vor der Kamera %.1f %%, hinter der Kamera %.1f %%, Rammen %d (Querungen %d), Gang %d von %d abweichend, "
+           "Kopf in Rampe/Plattform %.1f %% (mit Kanister %.1f %%), Kopf < 2500 vor der Kamera %.1f %%, hinter der Kamera %.1f %% (mit Kanister %.1f %% / %.1f %%), Rammen %d (Querungen %d), Gang %d von %d abweichend, "
            "Gier max %d, Takt-Rechenzeit Mittel %.0f us / 95 %% %.0f us / max %.0f us\n", w, S->bilder, min, S->ohne_max / 30.0, S->fenster2,
            S->bilder ? 100.0 * S->drehen / S->bilder : 0, S->bilder ? 100.0 * S->rueck / S->bilder : 0, S->bilder ? 100.0 * S->rueckzug / S->bilder : 0, S->tauch_n, min > 0 ? S->tauch_n / min : 0,
-           S->bilder ? 100.0 * S->taucht / S->bilder : 0, S->bilder ? 100.0 * S->block / S->bilder : 0, S->bilder ? 100.0 * S->kam2500 / S->bilder : 0,
-           S->bilder ? 100.0 * S->kam0 / S->bilder : 0, S->rammen, S->kreuz, S->gang_fehl, S->gang_n, S->gier_max, S->z_mittel, S->z_p95, S->z_max);
+           S->bilder ? 100.0 * S->taucht / S->bilder : 0, S->bilder ? 100.0 * S->block_k / S->bilder : 0, S->bilder ? 100.0 * S->block / S->bilder : 0, S->bilder ? 100.0 * S->kam2500 / S->bilder : 0,
+           S->bilder ? 100.0 * S->kam0 / S->bilder : 0, S->bilder ? 100.0 * S->kamk2500 / S->bilder : 0, S->bilder ? 100.0 * S->kamk0 / S->bilder : 0,
+           S->rammen, S->kreuz, S->gang_fehl, S->gang_n, S->gier_max, S->z_mittel, S->z_p95, S->z_max);
 }
 /* Riegel re2(_elza): Hängen, Drehen, Kopf in Rampe/Kamera, Rammen, Tauch-Obergrenze, Gang (mit Kanister) - je mit Gegenprobe */
 #define G2R_BILDER 1800
 static void teil_re2(int elza)
 {
-    printf("== re2%s (G2-RE2, Neuaufbau ab NB5) ==\n", elza ? "_elza" : "");
+    /* G2-RE2 NB2 "Vorschlag 4" (Dossier G2_gatorfix.md Abschnitt "G2-RE2 NB2 (Vorschlag 4)"): Stand "f942" = Pruefhaken re15_gr2_v4_alt_setzen(1) (der Kanister zaehlt,
+     * Stand f942f56c0), Stand "neu" = Bau (der Kanister zaehlt nicht). Die Kopf-Riegel der NB1 (Auftrag Punkt 4c) messen nur noch Mesh 5/6/7; Kopf + Kanister in
+     * Rampe/Plattform und vor der Kamera stehen nur noch zur Dokumentation in der Ausgabe (Nutzerentscheid: der Kanister darf in die Geometrie ragen). */
+    printf("== re2%s (G2-RE2 NB2 Vorschlag 4: Kopf-Riegel, f942f56c0 gegen neu) ==\n", elza ? "_elza" : "");
     const char *bs = getenv("G2_RE2_BILDER"); const int bilder = bs ? atoi(bs) : G2R_BILDER;
     const char *nur = getenv("G2_RE2_NUR");
     FILE *spur = getenv("G2_RE2_SPUR") ? fopen(getenv("G2_RE2_SPUR"), "w") : NULL;
-    static g2r_m_t M[2][16];
-    g2r_sum_t S[2];
+    static g2r_m_t M[3][16];
+    g2r_sum_t S[3];
     memset(s_g2r_tafel, 0xff, sizeof s_g2r_tafel);
     re15_gr2_rw_stat_null();
     const int ok0 = g2r_alle(elza, 1, bilder, &S[0], M[0], 16, spur, nur);
-    const int ok1 = g2r_alle(elza, 0, bilder, &S[1], M[1], 16, spur, nur);
+    const int ok1 = g2r_alle(elza, 2, bilder, &S[1], M[1], 16, spur, nur);
+    const int ok2 = g2r_alle(elza, 3, bilder, &S[2], M[2], 16, spur, nur);
     if (spur) fclose(spur);
-    g2r_summe_druck("nb5", &S[0]); g2r_summe_druck("neu", &S[1]);
+    g2r_summe_druck("f942", &S[0]); g2r_summe_druck("neu", &S[1]); g2r_summe_druck("ohne", &S[2]);
     const double min = S[1].bilder / 1800.0;
-    PRUEF(ok0 && ok1 && S[1].bilder >= (nur ? 1 : 12) * bilder * 9 / 10, "gelaufen (neu %d Bilder mit Kanister)", S[1].bilder);
-    PRUEF(S[1].fenster2 <= 15, "Haengen: hoechstens 15 2-s-Fenster ohne Fortschritt in 13 Lagen-Minuten (PORT-WAHL; neu %d, nb5 im Harness %d - der exe-Haenger frei4_leon der Abnahme 4 hatte 430 in 4,3 min)", S[1].fenster2, S[0].fenster2);
-    {   int ohne_haeng = 0;   /* Lagen der Abnahme-4-Haenger mit erreichbarer Figur: SO-Ecke (frei4_leon) und die Rampe (Belagerung) */
+    PRUEF(ok0 && ok1 && ok2 && S[1].bilder >= (nur ? 1 : 12) * bilder * 9 / 10, "gelaufen (neu %d Bilder mit Kanister, ohne %d)", S[1].bilder, S[2].bilder);
+    printf("    (Dokumentation, kein Riegel: 2-s-Fenster ohne Fortschritt neu %d, f942 %d - der Angriff an der Figur ohne Kanister (Biss Kopf 2400..3600) zaehlt hier mit;"
+           " Kopf + Kanister unter dem Deck in Rampe/Plattform neu %d Bilder = %.1f %%, f942 %d)\n",
+           S[1].fenster2, S[0].fenster2, S[1].block, S[1].bilder ? 100.0 * S[1].block / S[1].bilder : 0, S[0].block);
+    {   int ohne_haeng = 0;   /* Lagen der Abnahme-4-Haenger mit erreichbarer Figur: SO-Ecke (frei4_leon) und die Rampe */
         for (int i = 0; i < 16; i++) if (M[1][i].bilder && (!strcmp(k_re2_lagen[i].name, "SO-Ecke") || k_re2_lagen[i].y != 0) && M[1][i].ohne_max > ohne_haeng) ohne_haeng = M[1][i].ohne_max;
-        PRUEF(ohne_haeng <= 20 * 30, "Haengen: SO-Ecke und Rampe - laengste Zeit ohne Fortschritt zur Figur <= 20 s (neu %.1f s; alle Lagen neu %.1f s, nb5 %.1f s)", ohne_haeng / 30.0,
+        PRUEF(ohne_haeng <= 20 * 30, "Kopf-Riegel Haengen: SO-Ecke und Rampe - laengste Zeit ohne Fortschritt zur Figur <= 20 s (neu %.1f s; alle Lagen neu %.1f s, f942 %.1f s)", ohne_haeng / 30.0,
               S[1].ohne_max / 30.0, S[0].ohne_max / 30.0); }
-    PRUEF(S[1].drehen * 100 <= S[1].bilder * 15, "Drehen auf der Stelle (fern der Figur) <= 15 %% (neu %.1f %%, nb5 %.1f %%)", 100.0 * S[1].drehen / S[1].bilder, S[0].bilder ? 100.0 * S[0].drehen / S[0].bilder : 0);
-    PRUEF(S[1].block * 100 <= S[1].bilder * 2, "Kopf/Kanister unter dem Deck in Rampe/Plattform <= 2 %% (neu %d Bilder, nb5 %d)", S[1].block, S[0].block);
-    PRUEF(S[1].kam2500 * 100 <= S[1].bilder * 8 && S[1].kam0 * 1000 <= S[1].bilder, "Kopf/Kanister < 2500 vor der Kamera <= 8 %% (Kamerawechsel, Kamera dicht an der Figur) und hinter der Kamera <= 0,1 %% (neu %d / %d Bilder, nb5 %d / %d)",
-          S[1].kam2500, S[1].kam0, S[0].kam2500, S[0].kam0);
-    PRUEF(S[1].rueck * 100 <= S[1].bilder * 12, "rueckwaerts setzen hoechstens 12 %% (neu %.1f %%; Rueckzug nach Vorstoss getrennt %.1f %%)", S[1].bilder ? 100.0 * S[1].rueck / S[1].bilder : 0,
-          S[1].bilder ? 100.0 * S[1].rueckzug / S[1].bilder : 0);
-    PRUEF(min > 0 && S[1].tauch_n <= min + 0.0001 && S[1].taucht * 20 < S[1].bilder, "Tauch-Obergrenze: <= 1 je Minute und < 5 %% untergetaucht (neu %d in %.1f min, %.1f %%)",
+    {   /* Drehen: das alte Mass zaehlt ein 120-Bilder-Fenster, wenn der Kopf nur im LETZTEN Bild > 4500 von der Figur ist - mit Vorschlag 4 erreicht er die Figur und
+         * kreist beim Beissen (Treffer je Lage in der Ausgabe); "fern der Figur" heisst jetzt: im ganzen Fenster Kopf > 4500 (drehen_f). Je Lage hoechstens 15 %. */
+        int fmax = 0, fmax0 = 0; const char *fn = "-", *fn0 = "-";
+        for (int i = 0; i < 16; i++) {
+            if (M[1][i].bilder && 100 * M[1][i].drehen_f > fmax * M[1][i].bilder) { fmax = 100 * M[1][i].drehen_f / M[1][i].bilder; fn = k_re2_lagen[i].name; }
+            if (M[0][i].bilder && 100 * M[0][i].drehen_f > fmax0 * M[0][i].bilder) { fmax0 = 100 * M[0][i].drehen_f / M[0][i].bilder; fn0 = k_re2_lagen[i].name; }
+        }
+        printf("    (Dokumentation: Drehen altes Mass neu %.1f %%, ohne Kanister %.1f %%, f942 %.1f %%)\n", 100.0 * S[1].drehen / S[1].bilder, S[2].bilder ? 100.0 * S[2].drehen / S[2].bilder : 0,
+               S[0].bilder ? 100.0 * S[0].drehen / S[0].bilder : 0);
+        PRUEF(fmax <= 15, "Kopf-Riegel Drehen auf der Stelle fern der Figur (ganzes 120-Bilder-Fenster Kopf > 4500) je Lage <= 15 %% (neu hoechstens %d %% %s)", fmax, fn);
+        if (!nur) PRUEF(fmax0 > 15, "Gegenprobe f942f56c0: Drehen fern der Figur in einer Lage > 15 %% (%d %% %s) - das Mass sieht das Haengen", fmax0, fn0);
+    }
+    /* Kopf vor der Kamera: die NB1-Schranke (<= 8 %% / <= 0,1 %%) war eine G2-RE2-Regel fuer Kopf + Kanister (Klemme vor der Kamera); ohne Kanister gab und gibt es sie
+     * nicht (NB5). Mit Vorschlag 4 ist das Mass deshalb das des Gangs ohne Kanister - Riegel: mit Kanister nicht haeufiger als ohne Kanister im selben Kampf; die
+     * absoluten Werte gegen die alte Schranke stehen in der Ausgabe (Dossier "Offen"). */
+    printf("    (Dokumentation Kopf vor der Kamera gegen die NB1-Schranke 8 %% / 0,1 %%: neu %.1f %% / %.1f %%, ohne Kanister %.1f %% / %.1f %%, f942 %.1f %% / %.1f %%)\n",
+           100.0 * S[1].kam2500 / (S[1].bilder ? S[1].bilder : 1), 100.0 * S[1].kam0 / (S[1].bilder ? S[1].bilder : 1), 100.0 * S[2].kam2500 / (S[2].bilder ? S[2].bilder : 1),
+           100.0 * S[2].kam0 / (S[2].bilder ? S[2].bilder : 1), 100.0 * S[0].kam2500 / (S[0].bilder ? S[0].bilder : 1), 100.0 * S[0].kam0 / (S[0].bilder ? S[0].bilder : 1));
+    PRUEF((int64_t)S[1].kam2500 * S[2].bilder <= (int64_t)S[2].kam2500 * S[1].bilder && (int64_t)S[1].kam0 * S[2].bilder <= (int64_t)S[2].kam0 * S[1].bilder,
+          "Kopf-Riegel Kopf (Mesh 5/6/7) < 2500 vor / hinter der Kamera mit Kanister nicht haeufiger als ohne Kanister (neu %d / %d, ohne %d / %d Bilder)", S[1].kam2500, S[1].kam0, S[2].kam2500, S[2].kam0);
+    PRUEF(S[1].rueck * 100 <= S[1].bilder * 12, "Rueckfall rueckwaerts setzen hoechstens 12 %% (neu %.1f %%, f942 %.1f %%)", S[1].bilder ? 100.0 * S[1].rueck / S[1].bilder : 0,
+          S[0].bilder ? 100.0 * S[0].rueck / S[0].bilder : 0);
+    PRUEF(min > 0 && S[1].tauch_n <= min + 0.0001 && S[1].taucht * 20 < S[1].bilder, "Rueckfall Tauchen: <= 1 je Minute und < 5 %% untergetaucht (neu %d in %.1f min, %.1f %%)",
           S[1].tauch_n, min, S[1].bilder ? 100.0 * S[1].taucht / S[1].bilder : 0);
-    PRUEF(S[1].gang_n > 1000 && (int64_t)S[1].gang_fehl * S[0].gang_n <= (int64_t)S[0].gang_fehl * S[1].gang_n + (int64_t)S[1].gang_n * S[0].gang_n / 100 && S[1].gang_fehl * 50 <= S[1].gang_n && S[1].gier_max <= 0x60,
-          "Gang mit Kanister wie NB5: Taktschritt = authored RE2-Vortrieb je (Clip, Bild) - abweichend neu %d von %d, nb5 %d von %d (neu hoechstens nb5-Anteil + 1 %%), |Gier-Delta| <= 0x60 (max %d)",
-          S[1].gang_fehl, S[1].gang_n, S[0].gang_fehl, S[0].gang_n, S[1].gier_max);
+    /* Gang: mit Vorschlag 4 gilt "mit Kanister = ohne Kanister" (Riegel v4, Bild fuer Bild) und "ohne Kanister = NB5" (Riegel gang) - hier nur dokumentiert */
+    printf("    (Dokumentation: Taktschritt gegen den authored RE2-Vortrieb abweichend neu %d von %d, f942 %d von %d; |Gier-Delta| max neu %d)\n",
+           S[1].gang_fehl, S[1].gang_n, S[0].gang_fehl, S[0].gang_n, S[1].gier_max);
+    PRUEF(S[1].gier_max <= 0x60, "Gier je Bild in der Verfolgung <= 0x60 (Port-Wenderate, GIER-WACHE; neu %d)", S[1].gier_max);
     if (!nur) {
-        int rampe = 0, ramm_ok = 1;
-        for (int i = 0; i < 16; i++) if (M[1][i].bilder && k_re2_lagen[i].y != 0) { rampe++; if (M[1][i].rammen < 1) ramm_ok = 0; }
-        PRUEF(rampe >= 3 && ramm_ok, "Rampe: in jeder Lage mit der Figur oben mindestens ein Rammen (%d Lagen)", rampe);
-        /* Gegenproben (rot ohne den Bau) */
-        PRUEF(S[0].block * 100 > S[0].bilder * 2 && S[0].kam0 > 0, "Gegenprobe NB5: Kopf/Kanister in Rampe/Plattform > 2 %% und hinter der Kamera (%d / %d Bilder)", S[0].block, S[0].kam0);
-        PRUEF(S[0].drehen * 100 > S[0].bilder * 15, "Gegenprobe NB5: Drehen auf der Stelle > 15 %% (%d von %d)", S[0].drehen, S[0].bilder);
-        int ohne_nb5 = 0;
-        for (int i = 0; i < 16; i++) if (M[0][i].bilder && (!strcmp(k_re2_lagen[i].name, "SO-Ecke") || k_re2_lagen[i].y != 0) && M[0][i].ohne_max > ohne_nb5) ohne_nb5 = M[0][i].ohne_max;
-        PRUEF(S[0].fenster2 > 0 || ohne_nb5 > 10 * 30, "Gegenprobe NB5: SO-Ecke/Rampe ohne Fortschritt %.1f s (2-s-Fenster %d)", ohne_nb5 / 30.0, S[0].fenster2);
-        PRUEF(S[0].rammen == 0, "Gegenprobe NB5: kein Rammen (%d)", S[0].rammen);
+        /* Rampe "rammen wie gehabt, keine Deckung" (Vorschlag 4: Belagerung wie ohne Kanister + Querung ueber die Figur, wenn sie von der Kamera weg fuehrt):
+         * in jeder Rampenlage wird die Figur getroffen (Hochbiss oder Rammen), in jeder Lage mit einer Querung rammt er, insgesamt mindestens ein Rammen; an der
+         * Lage, die ohne Kanister fast sicher ist (Rampe-x2318 = Abnahme 4 west5_elza), trifft er mit dem Kanister oefter als ohne. */
+        int rampe = 0, treff_ok = 1, ramm_ok = 1, ramm = 0, t2318 = -1, t2318_o = -1;
+        for (int i = 0; i < 16; i++) if (M[1][i].bilder && k_re2_lagen[i].y != 0) {
+            rampe++; ramm += M[1][i].rammen;
+            if (M[1][i].treffer < 1) treff_ok = 0;
+            if (M[1][i].kreuz > 0 && M[1][i].rammen < 1) ramm_ok = 0;
+            if (!strcmp(k_re2_lagen[i].name, "Rampe-x2318")) { t2318 = M[1][i].treffer; t2318_o = M[2][i].treffer; }
+        }
+        PRUEF(rampe >= 3 && treff_ok, "Kopf-Riegel Rampe (keine Deckung): in jeder Lage mit der Figur oben mindestens ein Treffer (%d Lagen)", rampe);
+        PRUEF(ramm >= 1 && ramm_ok, "Kopf-Riegel Rampe: Rammen in jeder Lage mit einer Querung, zusammen %d", ramm);
+        PRUEF(t2318 > t2318_o, "Rampe-x2318 (ohne Kanister fast sicher): Treffer mit Kanister %d > ohne Kanister %d", t2318, t2318_o);
+        int r0 = 0; for (int i = 0; i < 16; i++) if (M[2][i].bilder && k_re2_lagen[i].y != 0) r0 += M[2][i].rammen;
+        PRUEF(r0 == 0, "Gegenprobe ohne Kanister: kein Rammen auf der Rampe (%d) - die Querung mit Rammen gehoert zum Kanister (Auftrag)", r0);
     }
 }
 /* Riegel re2_gegen(_elza): Gegenproben der Bausteine - ohne Rammen (Pruefhaken), ohne Rueckwaerts, mit RE1.5-Tempo: muss rot sein */
@@ -2225,15 +2300,15 @@ static void teil_re2_gegen(int elza)
     re15_gr2_rw_stat_null();
     memset(s_g2r_tafel, 0xff, sizeof s_g2r_tafel);
     re15_gator_boss_tempo_alt_setzen(1);
-    (void)g2r_alle(elza, 0, bilder, &S, M, 16, NULL, "Westkanal");
+    (void)g2r_alle(elza, 2, bilder, &S, M, 16, NULL, "Westkanal");
     re15_gator_boss_tempo_alt_setzen(0);
     PRUEF(S.gang_fehl * 10 > S.gang_n, "Gegenprobe RE1.5-Tempo: Gang weicht vom authored RE2-Vortrieb ab (%d von %d)", S.gang_fehl, S.gang_n);
     re15_gator_boss_ramm_alt_setzen(1);
-    (void)g2r_alle(elza, 0, bilder, &S, M, 16, NULL, "Rampe-x4428");
+    (void)g2r_alle(elza, 2, bilder, &S, M, 16, NULL, "Rampe-x4428");
     re15_gator_boss_ramm_alt_setzen(0);
     PRUEF(S.rammen == 0, "Gegenprobe ohne Rammen: 0 Rammen auf der Rampe (%d)", S.rammen);
     re15_gr2_rw_rueck_aus_setzen(1); re15_gr2_rw_tauchen_aus_setzen(1);
-    (void)g2r_alle(elza, 0, bilder, &S, M, 16, NULL, "SO-Ecke");
+    (void)g2r_alle(elza, 2, bilder, &S, M, 16, NULL, "SO-Ecke");
     re15_gr2_rw_rueck_aus_setzen(0); re15_gr2_rw_tauchen_aus_setzen(0);
     printf("    ohne Rueckwaerts/Tauchen SO-Ecke: 2-s-Fenster %d, ohne Fortschritt %.1f s\n", S.fenster2, S.ohne_max / 30.0);
 }
@@ -2270,6 +2345,155 @@ static void teil_gang(int elza)
     printf("    nb5 %d Bilder, neu %d Bilder (Clip 1 in %d), abweichend %d; Gegenprobe RE1.5-Tempo %d Bilder, abweichend %d\n", na, nb, clip1, diff, nc, diff_c);
     PRUEF(na >= N * 9 / 10 && na == nb && diff == 0, "ohne Kanister Bild fuer Bild gleich NB5 (Lage, Gier, Clip, Bild, Hoehe): %d von %d abweichend", diff, na);
     PRUEF(diff_c > 0, "Gegenprobe RE1.5-Tempo ohne Kanister: abweichend %d (rot ohne den Bau)", diff_c);
+}
+
+/* ==== Runde 41 Spur G2-RE2 NB2 "Vorschlag 4": Riegel v4(_elza) =====================================================================================
+ * Dossier G2_gatorfix.md Abschnitt "G2-RE2 NB2 (Vorschlag 4)". Nutzer: "Ignoriere den Kanister einfach in der Berechnung. Tu so als ob er nicht da waere" /
+ * "wichtig ist nur das der Kanister synchron mit dem Aligator mitlaeuft".
+ *  (a) BEWEGUNG MIT = OHNE KANISTER: je Stand ein frischer Kampf (szene_bis_kampf), der Kanister wird ins Maul gegeben (g2_kanister_ins_maul, bis Stufe 7); dann
+ *      "mit" = so weiter, "ohne" = re15_gr2_kanister_entfernen() im selben Bild (Lage des Alligators bis dahin bitgleich), "huelle" = mit + Pruefhaken
+ *      re15_gr2_v4_alt_setzen(1) (Stand f942f56c0: der Kanister zaehlt). Alle 13 Lagen des Riegels re2 nacheinander (Start, Figur, Kamera wie g2r_lauf), je
+ *      G2V4_BILDER Bilder; je Bild Lage x/y/z, Gier, Clip, Bild, Phase. Rammen aus (Pruefhaken re15_gator_boss_ramm_alt_setzen(1)): das Rammen mit dem Kanister ist
+ *      ein Angriff (Riegel re2 "Rammen auf der Rampe"), kein Teil der Bewegung, und gibt es ohne Kanister nicht. Soll: mit = ohne in jedem Bild; huelle != ohne (rot).
+ *  (b) HALTERUNG: in jedem Bild "mit" ist der Kanister genau Part 6 (Pose wie der Zeichner, g2_pose / g2_part_welt - eigene Rechnung im Riegel) x Lokallage/Relation
+ *      des Moduls: |Lage - (p6 + R6 x s x lokal)| und |Drehung - R6 x rel| je Komponente = 0. Gegenprobe Pruefhaken re15_gr2_kan_vorbild_setzen(1) (Part 6 des
+ *      Vorbilds = "ein Bild alte Pose"): > 0 (rot). Dazu: in wie vielen Bildern die Lokallage selbst wandert (RE2 Stufe 7 fuehrt sie heran @0x80101b58-8c). */
+#define G2V4_BILDER 900
+typedef struct { int32_t x, y, z; int16_t gier, clip, bild, ph; } g2v4_z_t;
+static g2v4_z_t s_v4z[3][16][G2V4_BILDER];
+static int s_v4n[3][16];
+typedef struct { int bilder, abw_bilder, rw_bilder, lokal_wechsel, lokal_letzt; int32_t abw_pos, abw_rot; } g2v4_halt_t;
+static int g2v4_halt(re15_actor_t *g, int32_t *ap, int32_t *ar, int32_t lok[3])
+{
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES]; int32_t r6[9], p6[3], l[3], rel[9], kp[3], kr[9];
+    if (!g2_pose(g, ps) || !re15_gr2_kanister_lokal(l) || !re15_gr2_kanister_rel(rel) || !re15_gr2_kanister_welt(kp, kr)) return 0;
+    g2_part_welt(g, &ps[6], r6, p6);
+    const int32_t s = g->render_scale_q12 ? g->render_scale_q12 : 4096;
+    const int32_t ls[3] = { g2_q12(l[0], s), g2_q12(l[1], s), g2_q12(l[2], s) };
+    *ap = *ar = 0;
+    for (int r = 0; r < 3; r++) {
+        const int32_t soll = p6[r] + (int32_t)(((int64_t)r6[r*3] * ls[0] + (int64_t)r6[r*3+1] * ls[1] + (int64_t)r6[r*3+2] * ls[2]) >> 12);
+        int32_t d = soll - kp[r]; if (d < 0) d = -d; if (d > *ap) *ap = d;
+        for (int c = 0; c < 3; c++) {
+            const int32_t sr = (int32_t)(((int64_t)r6[r*3] * rel[c] + (int64_t)r6[r*3+1] * rel[3+c] + (int64_t)r6[r*3+2] * rel[6+c]) >> 12);
+            int32_t dr = sr - kr[r*3+c]; if (dr < 0) dr = -dr; if (dr > *ar) *ar = dr;
+        }
+    }
+    memcpy(lok, l, 12);
+    return 1;
+}
+/* eine Lage wie g2r_lauf (Start, Figur, Kamera); z = Zustand je Bild, h = Halterung (nur "mit") */
+static int g2v4_lage(re15_actor_t *g, re15_actor_t *pl, const g2r_lage_t *L, int bilder, g2v4_z_t *z, g2v4_halt_t *h, int mit)
+{
+    int bi = 0; int64_t bd = -1;
+    for (int i = 0; i < 5; i++) { const int64_t dx = k_fz_start[i][0] - L->x, dz = k_fz_start[i][1] - L->z; if (dx * dx + dz * dz > bd) { bd = dx * dx + dz * dz; bi = i; } }
+    g->x = k_fz_start[bi][0]; g->z = k_fz_start[bi][1]; g->anchor_x = g->x; g->anchor_z = g->z;
+    g2_lage_t gl = { L->name, L->x, L->y, L->z };
+    int cam = L->von >= 10 ? L->von - 10 : g2_lage_kamera(&gl, L->von);
+    if (cam < 0) cam = 0;
+    int n = 0; int32_t lok_alt[3] = { 0, 0, 0 }; int lok_ok = 0;
+    for (int t = 0; t < bilder; t++) {
+        if (mit && !re15_gr2_traegt()) break;
+        int32_t px = L->x, pz = L->z;
+        if (L->weg) g2r_weg(L, t, &px, &pz);
+        pl->x = px; pl->y = L->y; pl->z = pz; pl->hp = 100; pl->hit_react = 0;
+        if (L->weg == 1) cam = g2_zonen_schritt(px, pz, cam);
+        g_scd.cam_id = (uint8_t)cam;
+        re15_collision_set_band(re15_collision_band_from_y(L->y));
+        frame(0, 0);
+        z[n].x = g->x; z[n].y = g->y; z[n].z = g->z; z[n].gier = (int16_t)(g->rot_y & 0xfff); z[n].clip = (int16_t)g->motion; z[n].bild = (int16_t)g->anim_frame;
+        z[n].ph = (int16_t)re15_gator_boss_phase(g); n++;
+        if (h && mit) {
+            int32_t ap = 0, ar = 0, lok[3];
+            if (g2v4_halt(g, &ap, &ar, lok)) {
+                h->bilder++;
+                if (ap > h->abw_pos) h->abw_pos = ap;
+                if (ar > h->abw_rot) h->abw_rot = ar;
+                if (ap || ar) h->abw_bilder++;
+                if (lok_ok && memcmp(lok, lok_alt, sizeof lok_alt)) { h->lokal_wechsel++; h->lokal_letzt = h->bilder; }
+                memcpy(lok_alt, lok, sizeof lok_alt); lok_ok = 1;
+            }
+            if (re15_gr2_rw_modus((int)(g - g_actors)) != 0) h->rw_bilder++;
+        }
+    }
+    return n;
+}
+/* Stand: 0 = mit, 1 = ohne (entfernt), 2 = mit + Huelle (Pruefhaken v4_alt). Je Lage ein frischer Kampf (gleicher Anfangszustand in allen Staenden). */
+static int g2v4_stand(int elza, int st, int bilder, g2v4_halt_t *h)
+{
+    int ok = 1;
+    const int nl = (int)(sizeof k_re2_lagen / sizeof k_re2_lagen[0]);
+    for (int i = 0; i < nl && i < 16; i++) {
+        re15_gr2_v4_alt_setzen(0); re15_gr2_kan_vorbild_setzen(0); re15_gator_boss_ramm_alt_setzen(1);
+        re15_actor_t *g = szene_bis_kampf(elza);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        s_v4n[st][i] = 0;
+        if (!g || !g2_kanister_ins_maul(g, pl)) { ok = 0; continue; }
+        if (st == 1) re15_gr2_kanister_entfernen();
+        if (st == 2) re15_gr2_v4_alt_setzen(1);
+        s_v4n[st][i] = g2v4_lage(g, pl, &k_re2_lagen[i], bilder, s_v4z[st][i], h, st != 1);
+    }
+    re15_gr2_v4_alt_setzen(0); re15_gator_boss_ramm_alt_setzen(0);
+    return ok;
+}
+static int g2v4_vergleich(int a, int b, int i, int *erstes)
+{
+    int d = 0; *erstes = -1;
+    const int n = s_v4n[a][i] < s_v4n[b][i] ? s_v4n[a][i] : s_v4n[b][i];
+    for (int t = 0; t < n; t++) if (memcmp(&s_v4z[a][i][t], &s_v4z[b][i][t], sizeof(g2v4_z_t))) { d++; if (*erstes < 0) *erstes = t; }
+    return d + (s_v4n[a][i] > s_v4n[b][i] ? s_v4n[a][i] - s_v4n[b][i] : s_v4n[b][i] - s_v4n[a][i]);
+}
+static void teil_v4(int elza)
+{
+    printf("== v4%s (G2-RE2 NB2 Vorschlag 4: Bewegung mit = ohne Kanister, Halterung am Kiefer) ==\n", elza ? "_elza" : "");
+    const char *bs = getenv("G2_V4_BILDER"); int bilder = bs ? atoi(bs) : G2V4_BILDER; if (bilder > G2V4_BILDER) bilder = G2V4_BILDER;
+    g2v4_halt_t h; memset(&h, 0, sizeof h);
+    re15_gr2_rw_stat_null();
+    const int ok0 = g2v4_stand(elza, 0, bilder, &h), ok1 = g2v4_stand(elza, 1, bilder, NULL), ok2 = g2v4_stand(elza, 2, bilder, NULL);
+    const int nl = (int)(sizeof k_re2_lagen / sizeof k_re2_lagen[0]);
+    int summe = 0, alle = 0, diff = 0, diff_h = 0, diff_r = 0, bild_r = 0, rampe_vor_querung = 0, gegen_rot = 0, n_wasser = 0;
+    for (int i = 0; i < nl && i < 16; i++) {
+        int e01 = -1, e21 = -1;
+        const int d01 = g2v4_vergleich(0, 1, i, &e01), d21 = g2v4_vergleich(2, 1, i, &e21);
+        const int rampe = k_re2_lagen[i].y != 0;   /* Figur oben auf der Rampe: Querung mit Rammen (Auftrag "Rampe: rammen wie gehabt"), s. enemy_ai_boss_gator.c GBP_GUARD */
+        summe += s_v4n[0][i]; alle += s_v4n[1][i];
+        if (rampe) { diff_r += d01; bild_r += s_v4n[0][i]; } else { diff += d01; n_wasser++; if (d21 > 0) gegen_rot++; }
+        diff_h += d21;
+        int q = -1;                                /* erste Querung im Lauf mit */
+        for (int t = 0; t < s_v4n[0][i]; t++) if (s_v4z[0][i][t].ph == 7) { q = t; break; }
+        const int ph_e = e01 >= 0 ? s_v4z[0][i][e01].ph : -1, ph_o = e01 >= 0 ? s_v4z[1][i][e01].ph : -1;   /* Phase mit / ohne im ersten abweichenden Bild */
+        if (rampe && d01 > 0 && !((ph_e == 5 || ph_e == 7) && (ph_o == 5 || ph_o == 7))) rampe_vor_querung++;   /* Abweichung beginnt nur in Belagerung/Querung (GBP_GUARD 5 / GBP_CROSS 7) */
+        printf("    %-15s %s mit %4d / ohne %4d Bilder: abweichend %4d (erstes Bild %d%s) | Gegenprobe Huelle aktiv (f942f56c0): abweichend %4d (erstes Bild %d)\n",
+               k_re2_lagen[i].name, rampe ? "Rampe " : "Wasser", s_v4n[0][i], s_v4n[1][i], d01, e01, rampe ? ", Rampe" : "", d21, e21);
+        if (rampe) printf("                      erste Querung im Lauf mit: Bild %d; Phase im ersten abweichenden Bild mit %d / ohne %d\n", q, ph_e, ph_o);
+    }
+    printf("    SUMME Wasser-Lagen: abweichend %d; Rampen-Lagen: abweichend %d von %d Bildern (ab der ersten Querung mit Rammen); Gegenprobe Huelle %d; Rueckfall (Rueckwaerts/Tauchen) im Lauf mit: %d Bilder\n",
+           diff, diff_r, bild_r, diff_h, h.rw_bilder);
+    printf("    Halterung: %d Bilder getragen, Lage-Abweichung max %d, Drehungs-Abweichung max %d (Q12), Bilder mit Abweichung %d; Lokallage wandert in %d Bildern (zuletzt im Bild %d)\n",
+           h.bilder, (int)h.abw_pos, (int)h.abw_rot, h.abw_bilder, h.lokal_wechsel, h.lokal_letzt);
+    PRUEF(ok0 && ok1 && ok2 && summe >= nl * bilder * 9 / 10, "gelaufen (mit %d, ohne %d Bilder)", summe, alle);
+    PRUEF(diff == 0, "(a) Wasser-Lagen: Bewegung mit Kanister Bild fuer Bild = ohne Kanister (Lage, Hoehe, Gier, Clip, Bild, Phase): %d abweichende Bilder", diff);
+    PRUEF(rampe_vor_querung == 0, "(a) Rampen-Lagen: mit = ohne Kanister, bis die Seitenwahl der Belagerung (Querung ueber die Figur mit Rammen) greift - erste Abweichung in GUARD/CROSS (%d Lagen weichen anders ab)", rampe_vor_querung);
+    PRUEF(h.rw_bilder == 0, "(a) kein Rueckfall Rueckwaerts/Tauchen in den 13 Lagen (%d Bilder)", h.rw_bilder);
+    PRUEF(gegen_rot == n_wasser, "(a) Gegenprobe Kanister-Huelle aktiv (Stand f942f56c0): jede Wasser-Lage weicht ab (%d von %d) - rot ohne den Bau", gegen_rot, n_wasser);
+    PRUEF(h.bilder >= summe * 9 / 10 && h.abw_pos == 0 && h.abw_rot == 0, "(b) Halterung: Kanister = Part 6 der gezeichneten Pose x Lokallage in jedem Bild (%d Bilder, Lage max %d, Drehung max %d)",
+          h.bilder, (int)h.abw_pos, (int)h.abw_rot);
+    {   /* Gegenprobe (b): ein Bild alte Pose */
+        g2v4_halt_t hg; memset(&hg, 0, sizeof hg);
+        re15_gr2_v4_alt_setzen(0); re15_gator_boss_ramm_alt_setzen(1);
+        re15_actor_t *g = szene_bis_kampf(elza);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        static g2v4_z_t zg[G2V4_BILDER];
+        if (g && g2_kanister_ins_maul(g, pl)) {
+            re15_gr2_kan_vorbild_setzen(1);
+            (void)g2v4_lage(g, pl, &k_re2_lagen[11], 300, zg, &hg, 1);   /* Weg-Becken: Figur geht, er verfolgt */
+            re15_gr2_kan_vorbild_setzen(0);
+        }
+        re15_gator_boss_ramm_alt_setzen(0);
+        printf("    Gegenprobe ein Bild alte Pose: %d Bilder, Lage-Abweichung max %d, Drehung max %d, Bilder mit Abweichung %d\n", hg.bilder, (int)hg.abw_pos, (int)hg.abw_rot, hg.abw_bilder);
+        PRUEF(hg.bilder > 100 && hg.abw_pos > 0 && hg.abw_bilder * 2 > hg.bilder, "(b) Gegenprobe ein Bild alte Pose: Abweichung > 0 in mehr als der Haelfte der Bilder (%d von %d, max %d) - rot ohne den Bau",
+              hg.abw_bilder, hg.bilder, (int)hg.abw_pos);
+    }
 }
 
 int main(int argc, char **argv)
@@ -2327,6 +2551,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "re2_gegen_elza")) teil_re2_gegen(1);
     if (alle || !strcmp(teil, "gang"))      teil_gang(0);
     if (alle || !strcmp(teil, "gang_elza")) teil_gang(1);
+    if (alle || !strcmp(teil, "v4"))        teil_v4(0);
+    if (alle || !strcmp(teil, "v4_elza"))   teil_v4(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

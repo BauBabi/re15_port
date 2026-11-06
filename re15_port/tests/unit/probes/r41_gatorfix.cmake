@@ -41,7 +41,10 @@ endforeach()
 #   unit_r41_gatorfix_re2_gegen(_elza) Gegenproben der Bausteine: RE1.5-Tempo (Gang weicht ab), ohne Rammen (0 Rammen)
 #   unit_r41_gatorfix_gang(_elza)    ohne Kanister Bild fuer Bild gleich NB5; Gegenprobe RE1.5-Tempo auch ohne Kanister
 #   (bahn/kamera = NB5-Belagerung mit dem Kanister: entfallen, mit dem Kanister ueberquert er die Rampe - Werkzeuge bleiben)
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza)
+#   unit_r41_gatorfix_v4(_elza)      G2-RE2 NB2 "Vorschlag 4": (a) Bewegung mit Kanister Bild fuer Bild = ohne Kanister (13 Lagen, Gegenprobe Kanister-Huelle aktiv =
+#                                     Stand f942f56c0: rot), (b) Kanister = Part 6 der gezeichneten Pose x Lokallage in jedem Bild (Gegenprobe ein Bild alte Pose: rot)
+#   unit_r41_gatorfix_re2(_elza)     seit NB2: Kopf-Riegel (Mesh 5/6/7) Stand f942f56c0 gegen neu; Kopf + Kanister in Rampe/Plattform nur dokumentiert
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
