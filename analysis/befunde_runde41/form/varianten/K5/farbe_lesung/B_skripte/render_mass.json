@@ -1,0 +1,110 @@
+{
+ "EM30_HANGAR (Clip 0 Bild 0) | roh, ohne Gamma | 3/4 vorn": {
+  "L": 24.5,
+  "C": 10.0,
+  "a": 6.9,
+  "b": 2.2,
+  "hell70": 0.04,
+  "hell85": 0.0,
+  "px": 28967
+ },
+ "EM30_HANGAR (Clip 0 Bild 0) | roh, ohne Gamma | Seite": {
+  "L": 29.0,
+  "C": 12.5,
+  "a": 10.1,
+  "b": 4.2,
+  "hell70": 0.43,
+  "hell85": 0.0,
+  "px": 20186
+ },
+ "EM30_HANGAR (Clip 0 Bild 0) | roh, ohne Gamma | 3/4 hinten": {
+  "L": 26.7,
+  "C": 10.5,
+  "a": 7.9,
+  "b": 2.6,
+  "hell70": 0.16,
+  "hell85": 0.0,
+  "px": 29022
+ },
+ "K5c (Clip 2 Ruhe Bild 0) | roh, ohne Gamma | 3/4 vorn": {
+  "L": 19.7,
+  "C": 4.6,
+  "a": 2.8,
+  "b": -1.1,
+  "hell70": 1.35,
+  "hell85": 0.83,
+  "px": 15012
+ },
+ "K5c (Clip 2 Ruhe Bild 0) | roh, ohne Gamma | Seite": {
+  "L": 18.5,
+  "C": 5.0,
+  "a": 3.1,
+  "b": -1.1,
+  "hell70": 1.7,
+  "hell85": 1.3,
+  "px": 17317
+ },
+ "K5c (Clip 2 Ruhe Bild 0) | roh, ohne Gamma | 3/4 hinten": {
+  "L": 17.2,
+  "C": 4.0,
+  "a": 2.4,
+  "b": -1.9,
+  "hell70": 0.23,
+  "hell85": 0.11,
+  "px": 15548
+ },
+ "EM30_HANGAR (Clip 0 Bild 0) | Gamma 0,5 wie alte Tafeln | 3/4 vorn": {
+  "L": 48.2,
+  "C": 10.0,
+  "a": 6.3,
+  "b": 1.2,
+  "hell70": 6.82,
+  "hell85": 0.02,
+  "px": 28967
+ },
+ "EM30_HANGAR (Clip 0 Bild 0) | Gamma 0,5 wie alte Tafeln | Seite": {
+  "L": 52.0,
+  "C": 11.8,
+  "a": 9.2,
+  "b": 3.0,
+  "hell70": 13.48,
+  "hell85": 0.19,
+  "px": 20186
+ },
+ "EM30_HANGAR (Clip 0 Bild 0) | Gamma 0,5 wie alte Tafeln | 3/4 hinten": {
+  "L": 50.1,
+  "C": 10.2,
+  "a": 7.1,
+  "b": 1.6,
+  "hell70": 10.18,
+  "hell85": 0.07,
+  "px": 29022
+ },
+ "K5c (Clip 2 Ruhe Bild 0) | Gamma 0,5 wie alte Tafeln | 3/4 vorn": {
+  "L": 44.7,
+  "C": 4.6,
+  "a": 2.8,
+  "b": -1.3,
+  "hell70": 4.94,
+  "hell85": 1.29,
+  "px": 15012
+ },
+ "K5c (Clip 2 Ruhe Bild 0) | Gamma 0,5 wie alte Tafeln | Seite": {
+  "L": 43.3,
+  "C": 5.2,
+  "a": 3.3,
+  "b": -1.3,
+  "hell70": 4.56,
+  "hell85": 1.58,
+  "px": 17317
+ },
+ "K5c (Clip 2 Ruhe Bild 0) | Gamma 0,5 wie alte Tafeln | 3/4 hinten": {
+  "L": 42.6,
+  "C": 4.4,
+  "a": 2.7,
+  "b": -2.1,
+  "hell70": 1.64,
+  "hell85": 0.21,
+  "px": 15548
+ }
+}

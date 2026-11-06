@@ -1,0 +1,1018 @@
+{
+ "EM30_haut": {
+  "name": "EM30_HANGAR Haut (Meshes ohne Jeans)",
+  "texel": 58188,
+  "T1_palette": [
+   {
+    "lab": [
+     54.3,
+     11.8,
+     6.5
+    ],
+    "anteil": 0.234
+   },
+   {
+    "lab": [
+     69.3,
+     7.1,
+     6.6
+    ],
+    "anteil": 0.161
+   },
+   {
+    "lab": [
+     40.9,
+     16.7,
+     6.2
+    ],
+    "anteil": 0.138
+   },
+   {
+    "lab": [
+     41.5,
+     6.3,
+     6.0
+    ],
+    "anteil": 0.118
+   },
+   {
+    "lab": [
+     9.1,
+     7.6,
+     -1.8
+    ],
+    "anteil": 0.113
+   },
+   {
+    "lab": [
+     21.2,
+     4.0,
+     3.2
+    ],
+    "anteil": 0.101
+   },
+   {
+    "lab": [
+     19.6,
+     23.2,
+     12.1
+    ],
+    "anteil": 0.101
+   },
+   {
+    "lab": [
+     38.3,
+     39.7,
+     22.0
+    ],
+    "anteil": 0.034
+   }
+  ],
+  "T2_farben_je_teil": 5.42,
+  "T2_meshes": 12,
+  "T3_texeldichte_mittel": 0.0671,
+  "T3_texeldichte_median": 0.0553,
+  "T4_glanz_L85_proz": 0.05,
+  "T5_hf": 0.0885,
+  "T6_chroma_mittel": 14.7,
+  "T6_chroma_streu": 9.3,
+  "L_mittel": 40.9,
+  "L_p5_p95": [
+   9.4,
+   71.8
+  ],
+  "T7_rot_anteil_proz": 22.3,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.7,
+   58.4
+  ],
+  "T7_rot_mittel_lab": [
+   41.9,
+   22.5,
+   9.9
+  ],
+  "klassen": {
+   "D": 0.218,
+   "M": 0.279,
+   "R": 0.264,
+   "H": 0.238,
+   "W": 0.0
+  }
+ },
+ "EM30_alle": {
+  "name": "EM30_HANGAR alle Meshes",
+  "texel": 73407,
+  "T1_palette": [
+   {
+    "lab": [
+     47.6,
+     12.3,
+     6.2
+    ],
+    "anteil": 0.256
+   },
+   {
+    "lab": [
+     65.5,
+     8.0,
+     6.6
+    ],
+    "anteil": 0.2
+   },
+   {
+    "lab": [
+     11.4,
+     1.8,
+     0.6
+    ],
+    "anteil": 0.153
+   },
+   {
+    "lab": [
+     32.4,
+     9.6,
+     5.1
+    ],
+    "anteil": 0.106
+   },
+   {
+    "lab": [
+     25.7,
+     -2.1,
+     -9.7
+    ],
+    "anteil": 0.09
+   },
+   {
+    "lab": [
+     12.1,
+     7.1,
+     -11.7
+    ],
+    "anteil": 0.089
+   },
+   {
+    "lab": [
+     18.9,
+     23.2,
+     12.0
+    ],
+    "anteil": 0.077
+   },
+   {
+    "lab": [
+     38.4,
+     38.9,
+     21.5
+    ],
+    "anteil": 0.03
+   }
+  ],
+  "T2_farben_je_teil": 4.59,
+  "T2_meshes": 17,
+  "T3_texeldichte_mittel": 0.067,
+  "T3_texeldichte_median": 0.0568,
+  "T4_glanz_L85_proz": 0.04,
+  "T5_hf": 0.1101,
+  "T6_chroma_mittel": 13.7,
+  "T6_chroma_streu": 8.6,
+  "L_mittel": 36.4,
+  "L_p5_p95": [
+   5.5,
+   69.4
+  ],
+  "T7_rot_anteil_proz": 17.7,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.7,
+   58.4
+  ],
+  "T7_rot_mittel_lab": [
+   41.9,
+   22.5,
+   9.9
+  ],
+  "klassen": {
+   "D": 0.297,
+   "M": 0.298,
+   "R": 0.21,
+   "H": 0.195,
+   "W": 0.0
+  }
+ },
+ "K5c_gesamt": {
+  "name": "K5c gesamt ohne Zaehne/Augen",
+  "texel": 84226,
+  "T1_palette": [
+   {
+    "lab": [
+     22.9,
+     3.9,
+     -5.1
+    ],
+    "anteil": 0.222
+   },
+   {
+    "lab": [
+     19.7,
+     0.6,
+     0.5
+    ],
+    "anteil": 0.167
+   },
+   {
+    "lab": [
+     10.1,
+     2.4,
+     0.1
+    ],
+    "anteil": 0.142
+   },
+   {
+    "lab": [
+     15.7,
+     4.3,
+     -5.3
+    ],
+    "anteil": 0.139
+   },
+   {
+    "lab": [
+     63.3,
+     5.4,
+     13.0
+    ],
+    "anteil": 0.137
+   },
+   {
+    "lab": [
+     30.4,
+     1.8,
+     -3.4
+    ],
+    "anteil": 0.133
+   },
+   {
+    "lab": [
+     45.4,
+     2.2,
+     -4.2
+    ],
+    "anteil": 0.051
+   },
+   {
+    "lab": [
+     92.9,
+     0.8,
+     -2.2
+    ],
+    "anteil": 0.008
+   }
+  ],
+  "T2_farben_je_teil": 1.53,
+  "T2_meshes": 32,
+  "T3_texeldichte_mittel": 0.0421,
+  "T3_texeldichte_median": 0.0324,
+  "T4_glanz_L85_proz": 0.6,
+  "T5_hf": 0.1735,
+  "T6_chroma_mittel": 6.2,
+  "T6_chroma_streu": 5.2,
+  "L_mittel": 27.8,
+  "L_p5_p95": [
+   9.4,
+   63.9
+  ],
+  "T7_rot_anteil_proz": 0.5,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.4,
+   66.3
+  ],
+  "T7_rot_mittel_lab": [
+   42.1,
+   26.0,
+   -2.2
+  ],
+  "klassen": {
+   "D": 0.339,
+   "M": 0.495,
+   "R": 0.015,
+   "H": 0.151,
+   "W": 0.0
+  }
+ },
+ "K5c_koerperJ": {
+  "name": "K5c Koerper J (ohne 21-23)",
+  "texel": 73315,
+  "T1_palette": [
+   {
+    "lab": [
+     25.4,
+     3.6,
+     -4.4
+    ],
+    "anteil": 0.219
+   },
+   {
+    "lab": [
+     16.9,
+     3.5,
+     -5.4
+    ],
+    "anteil": 0.179
+   },
+   {
+    "lab": [
+     35.0,
+     1.3,
+     -3.1
+    ],
+    "anteil": 0.174
+   },
+   {
+    "lab": [
+     10.0,
+     2.5,
+     0.1
+    ],
+    "anteil": 0.159
+   },
+   {
+    "lab": [
+     19.7,
+     0.5,
+     0.6
+    ],
+    "anteil": 0.139
+   },
+   {
+    "lab": [
+     47.1,
+     -0.1,
+     -2.8
+    ],
+    "anteil": 0.116
+   },
+   {
+    "lab": [
+     90.1,
+     0.6,
+     -2.2
+    ],
+    "anteil": 0.009
+   },
+   {
+    "lab": [
+     46.5,
+     27.5,
+     -6.1
+    ],
+    "anteil": 0.005
+   }
+  ],
+  "T2_farben_je_teil": 1.69,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.038,
+  "T3_texeldichte_median": 0.031,
+  "T4_glanz_L85_proz": 0.62,
+  "T5_hf": 0.1511,
+  "T6_chroma_mittel": 5.1,
+  "T6_chroma_streu": 4.1,
+  "L_mittel": 25.5,
+  "L_p5_p95": [
+   9.0,
+   48.6
+  ],
+  "T7_rot_anteil_proz": 0.5,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.4,
+   66.3
+  ],
+  "T7_rot_mittel_lab": [
+   42.0,
+   26.0,
+   -2.0
+  ],
+  "klassen": {
+   "D": 0.341,
+   "M": 0.589,
+   "R": 0.004,
+   "H": 0.065,
+   "W": 0.0
+  }
+ },
+ "K5c_kopf22": {
+  "name": "K5c Hals+Kopf (21,22)",
+  "texel": 15798,
+  "T1_palette": [
+   {
+    "lab": [
+     19.9,
+     3.9,
+     -4.6
+    ],
+    "anteil": 0.336
+   },
+   {
+    "lab": [
+     19.7,
+     0.4,
+     0.3
+    ],
+    "anteil": 0.239
+   },
+   {
+    "lab": [
+     26.0,
+     3.2,
+     -3.4
+    ],
+    "anteil": 0.189
+   },
+   {
+    "lab": [
+     62.1,
+     5.9,
+     13.2
+    ],
+    "anteil": 0.132
+   },
+   {
+    "lab": [
+     12.4,
+     2.9,
+     -2.2
+    ],
+    "anteil": 0.048
+   },
+   {
+    "lab": [
+     37.4,
+     4.0,
+     -4.1
+    ],
+    "anteil": 0.029
+   },
+   {
+    "lab": [
+     70.6,
+     2.8,
+     16.1
+    ],
+    "anteil": 0.022
+   },
+   {
+    "lab": [
+     97.6,
+     -0.5,
+     -0.8
+    ],
+    "anteil": 0.003
+   }
+  ],
+  "T2_farben_je_teil": 1.5,
+  "T2_meshes": 2,
+  "T3_texeldichte_mittel": 0.0646,
+  "T3_texeldichte_median": 0.0573,
+  "T4_glanz_L85_proz": 0.31,
+  "T5_hf": 0.1126,
+  "T6_chroma_mittel": 5.9,
+  "T6_chroma_streu": 4.9,
+  "L_mittel": 28.1,
+  "L_p5_p95": [
+   16.5,
+   63.9
+  ],
+  "T7_rot_anteil_proz": 0.1,
+  "T7_rot_cluster": 0,
+  "T7_rot_L_p5_p95": null,
+  "T7_rot_mittel_lab": null,
+  "klassen": {
+   "D": 0.222,
+   "M": 0.616,
+   "R": 0.016,
+   "H": 0.145,
+   "W": 0.0
+  }
+ },
+ "K5c_kiefer23": {
+  "name": "K5c Unterkiefer (23)",
+  "texel": 8770,
+  "T1_palette": [
+   {
+    "lab": [
+     64.3,
+     9.4,
+     13.0
+    ],
+    "anteil": 0.225
+   },
+   {
+    "lab": [
+     62.1,
+     2.6,
+     15.4
+    ],
+    "anteil": 0.183
+   },
+   {
+    "lab": [
+     58.8,
+     5.7,
+     11.5
+    ],
+    "anteil": 0.156
+   },
+   {
+    "lab": [
+     62.5,
+     3.0,
+     11.0
+    ],
+    "anteil": 0.129
+   },
+   {
+    "lab": [
+     65.1,
+     6.0,
+     12.0
+    ],
+    "anteil": 0.109
+   },
+   {
+    "lab": [
+     58.6,
+     4.0,
+     15.6
+    ],
+    "anteil": 0.074
+   },
+   {
+    "lab": [
+     71.3,
+     2.2,
+     16.6
+    ],
+    "anteil": 0.068
+   },
+   {
+    "lab": [
+     69.8,
+     6.7,
+     14.3
+    ],
+    "anteil": 0.055
+   }
+  ],
+  "T2_farben_je_teil": 1.0,
+  "T2_meshes": 1,
+  "T3_texeldichte_mittel": 0.0689,
+  "T3_texeldichte_median": 0.0608,
+  "T4_glanz_L85_proz": 0.0,
+  "T5_hf": 0.4605,
+  "T6_chroma_mittel": 14.7,
+  "T6_chroma_streu": 2.1,
+  "L_mittel": 63.3,
+  "L_p5_p95": [
+   58.8,
+   71.0
+  ],
+  "T7_rot_anteil_proz": 0.0,
+  "T7_rot_cluster": 0,
+  "T7_rot_L_p5_p95": null,
+  "T7_rot_mittel_lab": null,
+  "klassen": {
+   "D": 0.0,
+   "M": 0.0,
+   "R": 0.082,
+   "H": 0.918,
+   "W": 0.0
+  }
+ },
+ "K5c_zaehne_augen": [
+  {
+   "lab": [
+    56.2,
+    51.5,
+    -14.8
+   ],
+   "anteil": 0.315
+  },
+  {
+   "lab": [
+    94.0,
+    2.4,
+    1.1
+   ],
+   "anteil": 0.304
+  },
+  {
+   "lab": [
+    63.2,
+    5.6,
+    12.2
+   ],
+   "anteil": 0.256
+  },
+  {
+   "lab": [
+    90.9,
+    -5.9,
+    17.7
+   ],
+   "anteil": 0.125
+  }
+ ],
+ "K4_heute_gesamt": {
+  "name": "K4_heute gesamt ohne Zaehne/Augen",
+  "texel": 98461,
+  "T1_palette": [
+   {
+    "lab": [
+     20.7,
+     2.6,
+     -3.3
+    ],
+    "anteil": 0.311
+   },
+   {
+    "lab": [
+     12.2,
+     2.7,
+     -0.7
+    ],
+    "anteil": 0.205
+   },
+   {
+    "lab": [
+     28.5,
+     3.2,
+     -3.9
+    ],
+    "anteil": 0.151
+   },
+   {
+    "lab": [
+     60.4,
+     6.6,
+     11.3
+    ],
+    "anteil": 0.117
+   },
+   {
+    "lab": [
+     39.3,
+     2.4,
+     -6.4
+    ],
+    "anteil": 0.099
+   },
+   {
+    "lab": [
+     38.4,
+     -2.3,
+     1.4
+    ],
+    "anteil": 0.059
+   },
+   {
+    "lab": [
+     53.9,
+     -0.5,
+     -5.5
+    ],
+    "anteil": 0.047
+   },
+   {
+    "lab": [
+     90.2,
+     -1.5,
+     -2.4
+    ],
+    "anteil": 0.012
+   }
+  ],
+  "T2_farben_je_teil": 1.81,
+  "T2_meshes": 32,
+  "T3_texeldichte_mittel": 0.0422,
+  "T3_texeldichte_median": 0.0321,
+  "T4_glanz_L85_proz": 0.81,
+  "T5_hf": 0.1751,
+  "T6_chroma_mittel": 6.2,
+  "T6_chroma_streu": 4.9,
+  "L_mittel": 30.1,
+  "L_p5_p95": [
+   9.4,
+   61.2
+  ],
+  "T7_rot_anteil_proz": 0.4,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.4,
+   70.6
+  ],
+  "T7_rot_mittel_lab": [
+   43.4,
+   25.6,
+   -2.0
+  ],
+  "klassen": {
+   "D": 0.274,
+   "M": 0.541,
+   "R": 0.028,
+   "H": 0.157,
+   "W": 0.0
+  }
+ },
+ "K4_heute_koerperJ": {
+  "name": "K4_heute Koerper J (ohne 21-23)",
+  "texel": 73315,
+  "T1_palette": [
+   {
+    "lab": [
+     20.3,
+     1.8,
+     -1.3
+    ],
+    "anteil": 0.227
+   },
+   {
+    "lab": [
+     27.6,
+     3.0,
+     -4.6
+    ],
+    "anteil": 0.196
+   },
+   {
+    "lab": [
+     10.0,
+     2.6,
+     0.1
+    ],
+    "anteil": 0.155
+   },
+   {
+    "lab": [
+     39.3,
+     2.7,
+     -6.4
+    ],
+    "anteil": 0.133
+   },
+   {
+    "lab": [
+     16.1,
+     5.0,
+     -5.6
+    ],
+    "anteil": 0.122
+   },
+   {
+    "lab": [
+     37.4,
+     -2.1,
+     1.2
+    ],
+    "anteil": 0.092
+   },
+   {
+    "lab": [
+     54.0,
+     -0.1,
+     -5.4
+    ],
+    "anteil": 0.063
+   },
+   {
+    "lab": [
+     88.7,
+     -2.1,
+     -5.3
+    ],
+    "anteil": 0.013
+   }
+  ],
+  "T2_farben_je_teil": 1.86,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.038,
+  "T3_texeldichte_median": 0.031,
+  "T4_glanz_L85_proz": 0.74,
+  "T5_hf": 0.1502,
+  "T6_chroma_mittel": 5.4,
+  "T6_chroma_streu": 4.5,
+  "L_mittel": 26.7,
+  "L_p5_p95": [
+   9.0,
+   51.4
+  ],
+  "T7_rot_anteil_proz": 0.5,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.4,
+   66.3
+  ],
+  "T7_rot_mittel_lab": [
+   42.0,
+   26.0,
+   -2.0
+  ],
+  "klassen": {
+   "D": 0.32,
+   "M": 0.592,
+   "R": 0.004,
+   "H": 0.084,
+   "W": 0.0
+  }
+ },
+ "K4_heute_kopf22": {
+  "name": "K4_heute Hals+Kopf (21,22)",
+  "texel": 16115,
+  "T1_palette": [
+   {
+    "lab": [
+     22.4,
+     3.8,
+     -4.3
+    ],
+    "anteil": 0.334
+   },
+   {
+    "lab": [
+     19.7,
+     0.4,
+     0.2
+    ],
+    "anteil": 0.235
+   },
+   {
+    "lab": [
+     15.9,
+     3.9,
+     -4.1
+    ],
+    "anteil": 0.161
+   },
+   {
+    "lab": [
+     58.8,
+     7.9,
+     9.5
+    ],
+    "anteil": 0.114
+   },
+   {
+    "lab": [
+     29.0,
+     2.4,
+     -2.7
+    ],
+    "anteil": 0.096
+   },
+   {
+    "lab": [
+     66.5,
+     2.9,
+     15.1
+    ],
+    "anteil": 0.039
+   },
+   {
+    "lab": [
+     44.2,
+     5.2,
+     -4.4
+    ],
+    "anteil": 0.011
+   },
+   {
+    "lab": [
+     93.9,
+     -0.5,
+     4.7
+    ],
+    "anteil": 0.01
+   }
+  ],
+  "T2_farben_je_teil": 1.5,
+  "T2_meshes": 2,
+  "T3_texeldichte_mittel": 0.0608,
+  "T3_texeldichte_median": 0.0511,
+  "T4_glanz_L85_proz": 0.94,
+  "T5_hf": 0.1228,
+  "T6_chroma_mittel": 5.7,
+  "T6_chroma_streu": 4.5,
+  "L_mittel": 28.2,
+  "L_p5_p95": [
+   16.5,
+   62.0
+  ],
+  "T7_rot_anteil_proz": 0.1,
+  "T7_rot_cluster": 0,
+  "T7_rot_L_p5_p95": null,
+  "T7_rot_mittel_lab": null,
+  "klassen": {
+   "D": 0.22,
+   "M": 0.613,
+   "R": 0.038,
+   "H": 0.129,
+   "W": 0.0
+  }
+ },
+ "K4_heute_kiefer23": {
+  "name": "K4_heute Unterkiefer (23)",
+  "texel": 9031,
+  "T1_palette": [
+   {
+    "lab": [
+     59.2,
+     4.7,
+     11.8
+    ],
+    "anteil": 0.282
+   },
+   {
+    "lab": [
+     59.8,
+     10.3,
+     8.7
+    ],
+    "anteil": 0.14
+   },
+   {
+    "lab": [
+     56.2,
+     6.3,
+     7.4
+    ],
+    "anteil": 0.131
+   },
+   {
+    "lab": [
+     64.4,
+     6.7,
+     12.1
+    ],
+    "anteil": 0.128
+   },
+   {
+    "lab": [
+     67.6,
+     2.8,
+     16.3
+    ],
+    "anteil": 0.125
+   },
+   {
+    "lab": [
+     60.2,
+     10.1,
+     13.1
+    ],
+    "anteil": 0.094
+   },
+   {
+    "lab": [
+     55.8,
+     4.8,
+     11.5
+    ],
+    "anteil": 0.089
+   },
+   {
+    "lab": [
+     92.4,
+     -0.6,
+     7.3
+    ],
+    "anteil": 0.012
+   }
+  ],
+  "T2_farben_je_teil": 1.0,
+  "T2_meshes": 1,
+  "T3_texeldichte_mittel": 0.0915,
+  "T3_texeldichte_median": 0.0747,
+  "T4_glanz_L85_proz": 1.13,
+  "T5_hf": 0.4662,
+  "T6_chroma_mittel": 13.4,
+  "T6_chroma_streu": 2.7,
+  "L_mittel": 60.8,
+  "L_p5_p95": [
+   56.1,
+   68.2
+  ],
+  "T7_rot_anteil_proz": 0.1,
+  "T7_rot_cluster": 0,
+  "T7_rot_L_p5_p95": null,
+  "T7_rot_mittel_lab": null,
+  "klassen": {
+   "D": 0.0,
+   "M": 0.0,
+   "R": 0.202,
+   "H": 0.798,
+   "W": 0.0
+  }
+ }
+}
