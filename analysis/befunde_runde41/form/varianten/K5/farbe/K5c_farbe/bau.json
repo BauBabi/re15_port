@@ -1,0 +1,249 @@
+{
+ "basis": "K5c (varianten/K5/K5c): FORM.EMD byte-gleich, nur FORM.TIM neu",
+ "eich": {
+  "zonen": {
+   "b1|Schwanz": {
+    "d": [
+     -3.44,
+     -6.64,
+     -2.4
+    ],
+    "g": 0.002
+   },
+   "b1|Ruecken/Flanke": {
+    "d": [
+     -10.96,
+     -8.4,
+     -1.2
+    ],
+    "g": 0.091
+   },
+   "b1|Hinterbein l (W)": {
+    "d": [
+     -0.32,
+     -11.48,
+     -12.96
+    ],
+    "g": 2.5
+   },
+   "b1|Hinterbein r (W)": {
+    "d": [
+     -2.88,
+     -8.52,
+     -11.76
+    ],
+    "g": 0.332
+   },
+   "b1|Vorderglied r (W)": {
+    "d": [
+     -2.4,
+     -5.68,
+     -3.6
+    ],
+    "g": 0.0
+   },
+   "b2|Oberkiefer": {
+    "d": [
+     -4.96,
+     11.36,
+     1.84
+    ],
+    "g": 0.346
+   },
+   "b2|Kopf/Rumpf": {
+    "d": [
+     -5.04,
+     1.12,
+     0.64
+    ],
+    "g": 1.15
+   },
+   "b2|Unterkiefer": {
+    "d": [
+     41.04,
+     16.32,
+     16.56
+    ],
+    "g": 0.094
+   },
+   "b2|Klaue r (W)": {
+    "d": [
+     0.96,
+     1.68,
+     0.0
+    ],
+    "g": 0.115
+   },
+   "b2|Klaue l (W)": {
+    "d": [
+     10.8,
+     -6.16,
+     0.0
+    ],
+    "g": 2.5
+   }
+  },
+  "auge": [
+   13.4,
+   15.8,
+   6.9
+  ],
+  "fleisch_k": 0.632
+ },
+ "herkunft": {
+  "klaue_l4": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 6 nebeneinander, ueberblendet) + Zonenwert",
+  "s3_auge": "gemalt: Augenfarbe E24 (Messblatt 3), geeicht K10: [13.4, 15.8, 6.9]",
+  "zeh0_r": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 8 nebeneinander, ueberblendet) + Zonenwert",
+  "s3_zahn": "gemalt: Zahnfarbe Bild 2 (79.6, 1.4, 9.5) (Messblatt 3), Verlauf 100 -> 60 % L* zum Zahngrund",
+  "klaue_r4": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 5 nebeneinander, ueberblendet) + Zonenwert",
+  "klaue_l1": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 6 nebeneinander, ueberblendet) + Zonenwert",
+  "klaue_l3": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 7 nebeneinander, ueberblendet) + Zonenwert",
+  "kralle_l": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 8 nebeneinander, ueberblendet) + Zonenwert",
+  "klaue_l2": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 9 nebeneinander, ueberblendet) + Zonenwert",
+  "klaue_r1": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 0 nebeneinander, ueberblendet) + Zonenwert",
+  "klaue_r3": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 1 nebeneinander, ueberblendet) + Zonenwert",
+  "kralle_r": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 2 nebeneinander, ueberblendet) + Zonenwert",
+  "klaue_r2": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 3 nebeneinander, ueberblendet) + Zonenwert",
+  "schwanz5": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 4 nebeneinander, ueberblendet) + Zonenwert",
+  "schwanz6": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 5 nebeneinander, ueberblendet) + Zonenwert",
+  "schwanz4": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 6 nebeneinander, ueberblendet) + Zonenwert",
+  "hand_l": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 7 nebeneinander, ueberblendet) + Zonenwert",
+  "schwanz2": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 8 nebeneinander, ueberblendet) + Zonenwert",
+  "oberschenkel_r": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 9 nebeneinander, ueberblendet) + Zonenwert",
+  "oberschenkel_l": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 0 nebeneinander, ueberblendet) + Zonenwert",
+  "schwanz3": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 1 nebeneinander, ueberblendet) + Zonenwert",
+  "fuss_r": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 2 nebeneinander, ueberblendet) + Zonenwert",
+  "fuss_l": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 3 nebeneinander, ueberblendet) + Zonenwert",
+  "unterschenkel_r": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 5 nebeneinander, ueberblendet) + Zonenwert",
+  "unterschenkel_l": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 6 nebeneinander, ueberblendet) + Zonenwert",
+  "unterarm_r": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 7 nebeneinander, ueberblendet) + Zonenwert",
+  "unterarm_l": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 8 nebeneinander, ueberblendet) + Zonenwert",
+  "hand_r": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 9 nebeneinander, ueberblendet) + Zonenwert",
+  "hals": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 0 nebeneinander, ueberblendet) + Zonenwert",
+  "schwanz1": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 1 nebeneinander, ueberblendet) + Zonenwert",
+  "oberarm_r": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 2 nebeneinander, ueberblendet) + Zonenwert",
+  "oberarm_l": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 3 nebeneinander, ueberblendet) + Zonenwert",
+  "s3_kralle": "RE2-G4 Krallen (231, 200, 20, 50), um den Umfang versetzt wiederholt und ueberblendet, 40 Zeilen, G4-Texelmassstab; + Zonenwert",
+  "brust": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 6 nebeneinander, ueberblendet) + Zonenwert",
+  "wirbel": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 8 nebeneinander, ueberblendet) + Zonenwert",
+  "huefte": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 9 nebeneinander, ueberblendet) + Zonenwert",
+  "s3_kiefer": "RE2-G4 Maul (10, 44, 60, 40), 90 Grad gedreht, um den Umfang versetzt wiederholt und ueberblendet, G4-Texelmassstab; + Zonenwert (L nur sichtbar)",
+  "s3_kopf": "K5c-Grobbild (sigma 2.5) + 0.5 x K5c-Fein + RE2-G4-Malform (Hautfelder ab Nr. 1 nebeneinander, ueberblendet) + Zonenwert",
+  "fleisch_bild1": "930 Texel mit Gewicht > 0,1 (Rotklasse Original Bild 1), Farbe T [36.7, 19.6, -3.3], Staerke 0.632",
+  "ton_bild1": "19195 Texel mit a*b*-Abweichung vom Zonenmittel des Originals Bild 1 (x 1.0)",
+  "fleisch_bild2": "7690 Texel mit Gewicht > 0,1 (Rotklasse Original Bild 2), Farbe T [34.3, 26.6, 15.1], Staerke 0",
+  "ton_bild2": "25003 Texel mit a*b*-Abweichung vom Zonenmittel des Originals Bild 2 (x 1.0)",
+  "augenumfeld": "218 Texel unter r <= 6 px um E24 in Bild 2 -> Augenfarbe",
+  "schwanz_e9": "Glied-L* vorher [13.4, 8.9, 11.6, 12.2, 11.3], Gerade 11.70 + -0.10 i",
+  "farbfenster": "gedreht 8876, Blau/Violett begrenzt 4473, Tuerkis/Gruen/Gelbgruen begrenzt 4755 Texel (von 85948)"
+ },
+ "info": {
+  "konflikt_zeilen": 0,
+  "felder": 52,
+  "rest_texel": 0
+ },
+ "konstanten": {
+  "H_MIN": -55,
+  "H_WARM": 10,
+  "H_MAX": 80,
+  "H_BLAU": -125,
+  "C_VIO": 14.5,
+  "C_REST": 5.5,
+  "SIG_NAEHE": 2.0,
+  "K_VERDECKT": 1.0,
+  "SIG_FLEISCH": 1.5,
+  "K_TON": 1.0,
+  "SIG_GROB": 2.5,
+  "SIG_AB_FEIN": 0.7,
+  "AUGE_R": 6,
+  "K_FEIN": 0.5,
+  "G_L": 1.0,
+  "G_AB": 1.48,
+  "SIG_ERG": 6.0,
+  "L_MAX_KOERPER": 70.0,
+  "G4_HAUT": [
+   [
+    130,
+    96,
+    20,
+    62
+   ],
+   [
+    160,
+    98,
+    20,
+    62
+   ],
+   [
+    190,
+    96,
+    20,
+    60
+   ],
+   [
+    136,
+    172,
+    20,
+    76
+   ],
+   [
+    132,
+    26,
+    20,
+    34
+   ],
+   [
+    232,
+    22,
+    16,
+    60
+   ],
+   [
+    314,
+    12,
+    32,
+    30
+   ],
+   [
+    20,
+    158,
+    48,
+    24
+   ],
+   [
+    22,
+    110,
+    40,
+    24
+   ],
+   [
+    10,
+    202,
+    24,
+    34
+   ]
+  ],
+  "G4_MAUL": [
+   10,
+   44,
+   60,
+   40
+  ],
+  "G4_KRALLE": [
+   231,
+   200,
+   20,
+   50
+  ],
+  "ZAHN_LAB": [
+   79.6,
+   1.4,
+   9.5
+  ],
+  "AUGE_LAB": [
+   13.4,
+   15.8,
+   6.9
+  ]
+ }
+}
