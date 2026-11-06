@@ -298,7 +298,138 @@ VARIANTEN = {
     'v1_kralle': lambda: _variante(SCHWANZ_V2_KRALLE),
     'v2_spitz':  lambda: _variante(SCHWANZ_V2_SPITZ, KOERPER_V2),
     'v2_kralle': lambda: _variante(SCHWANZ_V2_KRALLE, KOERPER_V2),
+    'v3':        None,          # Runde 41 SF V3 (Messblatt V3): baue_v3 - Kopf + Schwanz neu, Koerper Referenz 2
 }
+
+
+
+# ═══════════════════════════════════════════════════ Runde 41 SF "V3" (Messblatt V3, Ablehnung V1/V2 durch den Nutzer 2026-11-06)
+# Nutzer 2026-11-06 zu V1/V2: "Die Augen sehen nicht mal ansatzweise aus wie im Original ... Der Grosse Schwanz auch nicht und hat
+# komplett die falsche Farbe". Vorlage = KI-Fassung (Nutzerentscheid F4, PORT-WAHL, PSX-Machart); Masszahlen aus
+# analysis/befunde_runde41/SF_MESSBLATT_V3.md (Zeilen K1-K15, Abschnitte 2-6, Riegel R1-R32). KEIN RE-Befund, keine @0x-Konstante.
+# V3 = Koerper Referenz 2 (FORMEN['hangar'] unveraendert: Meshes 0-15, Skelett 0-15, EDD) + Kopfbild V3 (nur Textur auf Mesh 9,
+# Zeile 486) + ein Schulterauge (1 Viereck auf Mesh 8) + Schwanz V3 (Knochen 16-22). Erzeugt nur mit --variante v3 --aus DIR.
+SCHWANZ_V3 = dict(
+    modellraum=dict(clip=1, bild=0),       # wie V2: Masse im Modellraum der Gangpose Clip 1 Bild 0 (geduckte Haltung)
+    # Wurzel: Messblatt 5 "Wurzelmitte unter OK 0,10-0,16 H" (Pruefer h85/h83/h92 0,119/0,133/0,122) und "hinter Buckelmitte
+    # Richtwert 0,12-0,20 H". Im Modellraum wie V2 (0,255 / 0,19 H): V1 traf damit den Austritt im Bild h85/h92 mit 0,136 / 0,115 H
+    # (Messblatt 5 letzte Zeile, R27 0,10-0,16 erfuellt) - unveraendert uebernommen.
+    wurzel_h=(0.255, 0.19),
+    versenkt=400,                          # wie V2 (Gelenk 16 400 E. im Buckel, sichtbar ab der Wurzelmitte)
+    laenge=3475,                           # Formblatt V2 S9, Laenge von Referenz 2 (Auftrag: "Laenge bleibt")
+    # Ruhe-Mittellinie = GLATTER Bogen gleicher Kruemmung (Auftrag V3; Messblatt 4 "Glaette": KI max 28-33 Grad je 0,05 H,
+    # 2-4 Knicke > 20 Grad; V1 hatte mit den zwei seitlichen S-Wellen Gelenkwinkel 100-126 Grad in den Keyframes und 100-147 Grad
+    # im Spiel, Lauf sfv2/r/V1s debug.log, gemessen tools/r41_sichel/v3/gelenke.py + kf_gelenkwinkel.py). Startrichtung 20 Grad unter der Waagerechten
+    # nach hinten (Messblatt 5 Austrittsrichtung: Richtwert 5-30 Grad, Pruefer 8-9, Leser A 30-40), Gesamtdrehung 100 Grad (Messblatt
+    # 4: KI h85/h83/h92 124/118/83, Richtwert 80-125). Gleiche Kruemmung = Ruhe-Gelenkwinkel 100/7 ~ 14 Grad. Probe (tools/r41_sichel/v3/
+    # probe_schwanz_v3.py, P_port.py h85/h92): 10/110 Grad -> max 35-40 Grad je 0,05 H am Wurzelbogen (R25 rot), 20/100 -> 24-27 Grad,
+    # 15/105 -> 28-33 Grad mit 2-3 Knicken.
+    bogen=dict(start_grad=20.0, dreh_grad=100.0),
+    # Seitlich nur EIN monotoner Zug zur rechten Seite (W) statt zweier Wellen: z = spitze * H * u^2 (u = Anteil der sichtbaren
+    # Laenge). Spitze 0,12 H nach rechts (W) hinter das rechte Bein wie V2 (PORT-WAHL V2, Formblatt V2 S9/Ae2). Die Bogenlaenge in
+    # der Seitenebene wird so gewaehlt, dass die 7 Sehnen zusammen `laenge` ergeben (Bisektion).
+    seitlich=dict(spitze=-0.12),
+    glieder=7, seiten=10,                  # R29: 7 x (10 Vierecke = 20 Dreiecke) + Deckel 10 + Spitze 10 = 160 <= 212 (EM30-Arm 13-15)
+    ueberlapp=0.45,                        # Manschette in das Vorglied (Anteil des Radius, wie Referenz 2)
+    # Dicke (Radius in E.) je Anteil s der Kette (0 = Gelenk 16, sichtbar ab s 400/3475 = 0,115). Ziel im Bild (Messblatt 3,
+    # R21-R23, ab Austritt s0): 0,2 -> 0,15-0,20 H, 0,5 -> 0,07-0,10 H, 0,9 -> 0,028-0,045 H, stetig duenner bis 0,7 (R24).
+    # Startwerte aus V1 (Radius 300 an der sichtbaren 0,2 ergab 0,140 H; 151 an 0,5 -> 0,083 H; 68 an 0,9 -> 0,025 H,
+    # Messblatt 7 Punkt 7) hochgerechnet auf die Vorgabe 0,175 / 0,085 / 0,035 H; nachgestellt an der Messung P_port.py
+    # (Iterationen im Dossier Abschnitt V3).
+    radien_s=[(0.0, 380), (0.115, 380), (0.29, 350), (0.38, 300), (0.56, 200), (0.73, 130), (0.91, 82), (1.0, 68)],
+    dorn=1.6,                              # Spitze: Kegel 1,6 x Endradius (spitz auslaufend; Ende Hand/Kralle = F2 offen)
+    # Textur (R31/R32, Auftrag "Texel aus der KOERPERHAUT desselben EM30-Atlas, Marmorierung laengs wie am Arm"): Hautstreifen der
+    # Seite 2 (TPage 130), Haut-CLUT-Zeile 482 (Arme, Referenz 2), Streifen A u 44-83 v 30-88, OHNE die roten Querstreifen ab v 92
+    # (Bild sfv3/bau/streifen.png aus tools/r41_sichel/v3/arm_uv_richtung.py). Zeilenmittel Streifen A v 52-88: L* 15,8-18,9, a* 8-11, b* 1-6 (tools/r41_sichel/v3/streifen_profil.py) = 0,6 x
+    # Hauthelligkeit bei gleichem Farbton (Vorgabe L* 0,63, Messblatt 2 / R15); Streifen B (u 87-126) ist so hell wie die Haut
+    # (L* 28-33) und roter (a* 13-16): im ersten Stand mit A/B im Wechsel L* 0,70-0,72 und Rest-Std a* 3,1-3,3 (R20 rot).
+    # Laufrichtung: die Marmorierung hat keine Vorzugsrichtung (Strukturtensor L*, Gradientenanteil in v: Streifen A 0,49,
+    # EM30-Oberarm Seite 0 0,48; tools/r41_sichel/v3/marmor_richtung.py). Gliedlaenge auf u, Umfang auf v (gespiegelt v0 -> v1 -> v0, PSX-uebliche
+    # Spiegelung fuer die Texeldichte der Haut, R31 0,045-0,090): Rest-Std a* 1,7-1,9 (R20 <= 2,0); mit Laenge auf v wie am
+    # Arm 2,2-2,6 (probe_schwanz_v3.py). Je Glied ein anderes Fenster/eine andere Laufrichtung (keine Wiederholung je Glied, R20).
+    uv=dict(clut=482 << 6, page=130, spiegeln=True, laengs='u',
+            fenster=[(44, 30, 83, 88), (83, 32, 44, 86), (46, 34, 81, 86), (81, 36, 48, 84), (48, 38, 79, 84), (79, 38, 50, 82),
+                     (52, 42, 77, 82)]),
+    bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.0, grenze=55),   # wie V2 (Ae5)
+)
+
+# Kopf V3 (Messblatt V3 Abschnitt 1 und 6). Machart wie Kopf V2 (Textur auf der unveraenderten EM30-Kopfgeometrie, Mesh 9;
+# gleiche Parallelprojektion KOPF_V2 'abbildung' in die freie Flaeche TPage 128 u 0-39 v 156-219), aber das Bild wird in der
+# Messansicht "Kopf vorn nah" entworfen (nah_raster: 0,9 px/E., H = 0,9 x 3865 = 3479 px, Messblatt 8) und je Texel an der
+# Stelle abgetastet, an der das Texel dort erscheint - so treffen Groesse und Lage die Riegel R1-R14 unabhaengig von der
+# Verzerrung der Projektion. Masse in H (Messblatt-Vorgabe), PORT-WAHL wo vermerkt.
+KOPF_V3 = dict(
+    page=128, clut=486, u=(0, 39), v=(156, 219),
+    abbildung=KOPF_V2['abbildung'], blick=KOPF_V2['blick'], schwelle=KOPF_V2['schwelle'],
+    nah=dict(clip=1, bild=0, mitte=(150.0, -150.0, 0.0), massstab=0.9, H_px=0.9 * 3865, breite=1200, hoehe=960,
+             cx=720, cy=480),                     # P_port_kopf.nah (960 breit, cx 480) um 240 px nach rechts erweitert:
+                                                  # das Schulterauge liegt 0,117 H = 407 px links vom Kopfauge (K12)
+    # Lage: Augenmitte bei 0,265 der Kopfhoehe (Messansicht). PORT-WAHL: KI K5 "in der Kopfbox y 0,32-0,35"; der Port-Kopf ist in
+    # der Messansicht 0,165 H hoch und unten schmal (Kinn) - mit 0,33 laege die Maulmitte (0,052 H tiefer, K5) dort, wo der Kopf nur
+    # ~0,075 H breit ist; bei 0,265 ist er an der Maulmitte 0,088-0,091 H breit (Vorgabe Maulbreite 0,075-0,095 H, R10).
+    auge_y_anteil=0.265,
+    auge=dict(b=0.020, h=0.0105,                  # K3/R3 Vorgabe 0,020 x 0,0105 H (KI 0,019-0,022 x 0,009-0,012), B/H 1,9 (K4)
+              dx_maul=-0.008,                     # K5: 0,005 / 0,011 H B-links der Maulmitte
+              pupille=(0.65, 0.90),               # Pupille = dunkelste 25 % (K6, L*/Haut <= 0,12): Kern 0,65 x 0,90 der Augen-Halbachsen
+                                                  # (Probe 1 mit 0,55 x 0,80: L* Pupille/Haut 0,135, R8 rot)
+              glanz=(0.55, 0.68, 0.0018, 0.0024), # K11: ein heller Kern x 0,50-0,59 / y 0,66-0,70 der Augenbox, ~0,004 x 0,005 H
+                                                  # (Probe 1 mit Halbachsen 0,0024 x 0,0030: heller Anteil 0,20, L* Auge/Haut 0,552)
+              lid=0.0035),                        # K8: Lidrand = 2-px-Ring bei H 569 = 0,0035 H, L* Lid/Haut 0,78-0,95, kein heller Ring
+    maul=dict(dy_auge=0.052,                      # K5/R12: Maulmitte 0,052 / 0,053 H unter der Augenmitte
+              b=0.092, h=0.040,                   # Messblatt 6: Breite 0,084 / 0,092 H, Hoehe 0,042 / 0,048 H inkl. Zaehne (R10 Bbox der
+                                                  # dunklen Flaeche + Zaehne). Probe 1 mit 0,086 x 0,036 / Kopfbreite 0,92: gemessen
+                                                  # 0,0716 x 0,0382 H (R10 rot) - die Ellipsenenden sind flacher als die Schwelle
+              max_kopfbreite=0.95,                # Messblatt 6: Breite / Kopfbreite 0,80 / 0,95 (oberer Wert)
+              zaehne=(11, 7),                     # Messblatt 6: 17 / 18 Flecken, oben 11 / 10, unten 6 / 8
+              zahn_b=0.0026, zahn_l=0.0060,       # Einzelzahn <= 0,005 H breit (R14), ~3 px bei H 569 = 0,005 H lang
+              zahn_bereich=0.84,
+              tief=0.06),                 # Zaehne ueber 0,84 der Maulbreite verteilt (KI birkin19: Eckzaehne x 165-167 / 208-212)
+    zonen=dict(kuppe_bis=0.012,                   # K9/K15: helle Kuppe um das Auge (Haut um das Auge L* 44-52) bis 0,012 H unter der Augenmitte
+               uebergang=0.016,                   # danach 0,016 H Uebergang in die dunklere Kopfhaut (KI birkin19: graue Haut zwischen
+                                                  # Auge und Maul; Probe 8 ohne diese Zone: helle Kuppe stiess als Kante an ein rotes Band)
+               rot_ab=-0.004),                    # K15: rote Zone (Maul + Kinn) ab 0,004 H ueber der Maul-Oberkante bis zum Kinn
+    rauschen=1.3,                                 # Hautstruktur: Wundfleisch-Helligkeit (TPage 128 u 66-126 v 4-90) als Rampenstufen (Std);
+                                                  # KI-Kuppe marmoriert (birkin19), Probe 8 mit 0,9 wirkte die Kuppe glatt grau
+    schulterauge=dict(dx=-0.117, dy=0.058,        # K12: -0,116 / -0,120 H (B-links), +0,051 / +0,058 H tiefer als das Kopfauge. dy am
+                                                  # oberen Rand (h125): bei 0,055 lag die dunkle EM30-Ader der Schulter (Mesh 8, Original-
+                                                  # textur) im Messfenster und war dunkler als das Auge (Probe 3, L* min 1,7)
+                      b=0.017, h=0.014,           # K13: Halbwert 0,016 x 0,016 / 0,018 x 0,013 H, aequiv. 0,015 / 0,0145 H
+                      seite=0.062,                # Viereck 0,062 H: Auge + Hautring (R9 misst die Haut 4-7 px um das Auge bei H 569)
+                                                  # und deckt das Messfenster (+-12 px bei H 569 = +-0,021 H) ab
+                      u=(42, 53), v=(156, 167), abstand=60.0,
+                      clut=480, lab_auge=(12.0, 4.5, 2.4), L_verh=0.375),   # Hautzeile 480 (Mesh 8 Seite 0); K14 Lab [12,0 4,5 2,4],
+                                                  # L* Auge/Haut 0,385 / 0,36   # 12 x 12 Texel frei (TPage 128 v >= 156 nutzt kein EM30-Mesh)
+                                                  # abstand (E., vor der Schulter): Probe 1 mit 10 E. stach die gewoelbte Schulter durch
+                                                  # das ebene Viereck (nur ~1/3 sichtbar)
+)
+# Zeile 486 (Kopf V3): feste Eintraege mit den Messblatt-Farben (KI, sRGB aus Lab D65 umgerechnet, Dossier Abschnitt V3; im TIM 15 Bit) und Rampen.
+KOPF_V3_INDEX = dict(pupille=1, auge=2, lid=3, glanz=4, maul=5, maul_tief=6, zahn=7, schulterauge=8,
+                     kuppe=(10, 14), haut=(16, 20), rot=(22, 26))
+KOPF_V3_ZEILE = dict(tabelle=[
+    (1, (18, 6, 11)),       # K6 Pupille h118 Lab [2,6 4,7 -0,6]
+    (2, (66, 53, 59)),      # K7 Auge gesamt h118 Lab [22,5 6,5 -1,3]
+    (3, (107, 92, 97)),     # K8 Lidrand h118 Lab [40,4 7,1 -0,7]
+    (4, (183, 171, 178)),   # K11 heller Kern h118 Lab [71,1 5,7 -2,2]
+    (5, (54, 27, 28)),      # Messblatt 6 Maul innen Lab [13,5 13,7 4,8]
+    (6, (31, 13, 13)),      # KI Maul dunkelste 10 % (Dossier SV2, Kopf V2)
+    (7, (162, 122, 124)),   # Messblatt 6 Zaehne: Lab [55 16 4,6] = Mitte aus Pruefer 50 / A 57-62 / B 58,9
+    (8, (39, 29, 28)),      # K14 Schulterauge Lab [12,0 4,5 2,4]
+    # K9 Kuppe: Haut um das Auge Lab [51,9 7,6 0,8] / [44,3 7,5 0,4] -> Rampe L* 42..56
+    (10, (110, 94, 97)), (11, (118, 101, 104)), (12, (128, 110, 113)), (13, (138, 119, 123)), (14, (150, 131, 135)),
+    # Kopfhaut unter der Kuppe: KI-Haut (Band OK..+0,45 H) birkin12 Lab [29,4 9,7 2,8] = (86,64,65) -> Rampe L* 26..36
+    (16, (74, 54, 55)), (17, (80, 59, 60)), (18, (86, 64, 65)), (19, (94, 71, 72)), (20, (102, 78, 79)),
+    # rote Zone (K15, Original): Farben der Referenz-2-Kopfzeile 485 (dunkel (114,57,55)) x 0,80 / 0,90 / 1,0 / 1,1 / 1,2
+    (22, (91, 46, 44)), (23, (103, 51, 50)), (24, (114, 57, 55)), (25, (125, 63, 61)), (26, (137, 68, 66)),
+])
+
+
+def _variante_v3(schulterauge=None):
+    f = dict(FORMEN['hangar'])
+    f['schwanz_kette'] = dict(f['schwanz_kette'], **SCHWANZ_V3)
+    f['kopf_v2'] = dict(KOPF_V3, schulterauge=schulterauge)     # kopf_v2_uv: UVs Mesh 9 + Viereck auf Mesh 8
+    f['kopf_v3'] = KOPF_V3
+    f['cluts'] = dict(f['cluts'], zusatz=list(f['cluts']['zusatz']) + [KOPF_V3_ZEILE])
+    return f
 
 
 # ═══════════════════════════════════════════════════ MD1: Vertex-/Normalen-Offsets
@@ -715,6 +846,123 @@ def kette_v2_punkte(sw, mo, A):
     return punkte(a), dict(H=H, oben=oben, xo=xo, a=a)
 
 
+
+def kette_v3_punkte(sw, mo, A):
+    """Schwanz V3 (Messblatt V3 Abschnitt 4/5, GESTALTUNG): Ruhe-Mittellinie als Kreisbogen gleicher Kruemmung in der
+    Seitenebene (X vorn, Y unten) ab der Wurzelmitte (sw['wurzel_h'] wie V2), Startrichtung sw['bogen']['start_grad'] unter
+    der Waagerechten nach hinten, Gesamtdrehung sw['bogen']['dreh_grad']; dazu ein monotoner Seitenzug z = spitze * H * u^2.
+    Die Bogenlaenge in der Seitenebene wird per Bisektion so gewaehlt, dass die Kette (inkl. versenktem Stueck) sw['laenge']
+    lang ist. Rueckgabe wie kette_v2_punkte: Stuetzpunkte im Raum des Ankerknochens A."""
+    mr = sw['modellraum']
+    f0, nf = mo.clips[mr['clip']]
+    kf = mo.frames[f0 + mr['bild'] % nf] & 0xFFF
+    V, _N, F = mo.geometrie(kf)
+    koerper = sorted({i for f in F if f['bone'] < 16 for i in f['v']})
+    K = V[koerper]
+    oben, sohle = K[:, 1].min(), K[:, 1].max()
+    H = sohle - oben
+    xo = K[K[:, 1] <= oben + 0.01 * H, 0].mean()
+    R, T = mo.pose(kf)
+    Ra, Ta = R[A].astype(float) / 4096.0, T[A].astype(float)
+    w0 = np.array([xo - sw['wurzel_h'][0] * H, oben + sw['wurzel_h'][1] * H, 0.0])
+    p0 = np.radians(sw['bogen']['start_grad']); th = np.radians(sw['bogen']['dreh_grad'])
+    u = np.linspace(0.0, 1.0, 29)
+    zs = sw['seitlich']['spitze'] * H * u * u
+    r0 = np.array([-np.cos(p0), np.sin(p0), 0.0])            # Startrichtung (hinten = -X, unten = +Y)
+
+    def punkte(lb):
+        rho = lb / th
+        phi = p0 + th * u
+        x = -rho * (np.sin(phi) - np.sin(p0))                # Integral von -cos(phi) ds
+        y = rho * (np.cos(p0) - np.cos(phi))                 # Integral von sin(phi) ds
+        pf = [w0 - r0 * sw['versenkt']] + [w0 + np.array([xx, yy, zz]) for xx, yy, zz in zip(x, y, zs)]
+        return [tuple(Ra.T @ (q - Ta)) for q in pf]
+
+    def laenge(lb):
+        return sum(kette_ruhe(dict(sw, punkte=punkte(lb)))['L'])
+    lo, hi = 500.0, 6000.0
+    for _ in range(40):
+        mi = 0.5 * (lo + hi)
+        lo, hi = (mi, hi) if laenge(mi) < sw['laenge'] else (lo, mi)
+    lb = 0.5 * (lo + hi)
+    pk = punkte(lb)
+    spitze = np.array(pk[-1]) @ Ra.T + Ta
+    return pk, dict(H=H, oben=oben, xo=xo, a=lb, spitze_ueber_sohle_H=float((sohle - spitze[1]) / H))
+
+
+def kette_meshes_v3(sw, ruhe):
+    """Schwanz V3 (Messblatt V3 R29-R32, PSX-Machart): je Glied EIN Kegelstumpf mit sw['seiten'] Seiten von der Manschette
+    (-ueberlapp * r0, im Vorglied) bis zum Gliedende (Radius r1), Glied 0 mit Deckel in den Rumpf, letztes Glied mit Spitze
+    (sw['dorn'] x Endradius). Kein Gliederprofil (die KI zeigt einen glatten Bogen ohne Glieder). Textur je Glied aus dem
+    eigenen Hautfenster uv['fenster'][i] (Umfang auf u, Laenge auf v, wie am EM30-Arm), Haut-CLUT uv['clut'].
+    Normalen radial (Laenge 4096), Windung wie haenge_schwanz_an / kette_meshes (Kreuzprodukt gegen die Normale)."""
+    S, uv = sw['seiten'], sw['uv']
+    out, n = [], sw['glieder']
+    for i in range(n):
+        Li, r0, r1 = ruhe['L'][i], ruhe['radien'][i], ruhe['radien'][i + 1]
+        fu0, fv0, fu1, fv1 = uv['fenster'][i]
+        ue = sw['ueberlapp'] * r0
+        m = dict(v=[], n=[], tf=[], tuv=[], qf=[], quv=[])
+        # Gehrung: Ringe an den Gelenken stehen senkrecht zur Winkelhalbierenden der Ruhe-Gelenkwinkel (Gliedrichtung des Nachbarn
+        # aus ruhe['lokal']), damit der Umriss am Gelenk in Ruhe geschlossen ist (rechtwinklige Ringe: Kerbe aussen, Ueberstand
+        # innen). Auf die Knick-Messung R25 hatte das keinen Einfluss (Probe 35-39 -> 38-42 Grad); deren Ursache war der Wurzelbogen
+        # (siehe SCHWANZ_V3 bogen).
+        ey = np.array([0.0, 1.0, 0.0])
+        t0 = ey if i == 0 else (ruhe['lokal'][i].T @ ey + ey)
+        t1 = ey if i == n - 1 else (ey + ruhe['lokal'][i + 1] @ ey)
+        ringe = []
+        for c0, t, r in ((np.array([0.0, -ue, 0.0]), t0, r0), (np.array([0.0, float(Li), 0.0]), t1, r1)):
+            Rt = _min_rot(ey, t / np.linalg.norm(t))
+            ring = []
+            for k in range(S):
+                w = 2 * np.pi * k / S
+                q = Rt @ np.array([np.cos(w), 0.0, np.sin(w)])
+                ring.append(len(m['v']))
+                m['v'].append([int(round(x)) for x in c0 + q * r] + [0])
+                m['n'].append([int(round(x)) for x in q * 4096] + [0])
+            ringe.append(ring)
+
+        def tx(k, t):
+            a = 1.0 - abs(1.0 - 2.0 * k / S) if uv.get('spiegeln') else k / S
+            if uv.get('laengs') == 'u':                   # Gliedlaenge auf u, Umfang auf v (Fenster (u_wurzel, v0, u_spitze, v1))
+                return (int(round(fu0 + (fu1 - fu0) * t)), int(round(fv0 + (fv1 - fv0) * a)))
+            return (int(round(fu0 + (fu1 - fu0) * a)), int(round(fv0 + (fv1 - fv0) * t)))
+
+        def orient(ia, ib, ic):
+            P = [np.array(m['v'][j][:3], float) for j in (ia, ib, ic)]
+            N = sum(np.array(m['n'][j][:3], float) for j in (ia, ib, ic))
+            return np.cross(P[1] - P[0], P[2] - P[0]) @ N < 0
+        for k in range(S):
+            k2 = (k + 1) % S
+            a, b = ringe[0][k], ringe[0][k2]
+            c, d = ringe[1][k], ringe[1][k2]
+            uvs = [tx(k, 0.0), tx(k + 1, 0.0), tx(k, 1.0), tx(k + 1, 1.0)]
+            if not orient(a, b, c):
+                a, b, c, d = b, a, d, c
+                uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
+            m['qf'].append([a, a, b, b, c, c, d, d])
+            m['quv'].append([uvs[0][0], uvs[0][1], uv['clut'], uvs[1][0], uvs[1][1], uv['page'],
+                             uvs[2][0], uvs[2][1], 0, uvs[3][0], uvs[3][1], 0])
+        kegel = []
+        if i == 0:                                        # Deckel in den Rumpf (wie kette_meshes, Referenz 2)
+            kegel.append((ringe[0], [0, int(round(-ue - 0.8 * r0)), 0], [0, -4096, 0], 0.0))
+        if i == n - 1:                                    # Spitze
+            kegel.append((ringe[1], [0, int(round(Li + sw['dorn'] * r1)), 0], [0, 4096, 0], 1.0))
+        for ring, p, nn, t in kegel:
+            sv = len(m['v'])
+            m['v'].append(p + [0]); m['n'].append(nn + [0])
+            for k in range(S):
+                a, b = ring[k], ring[(k + 1) % S]
+                if not orient(a, b, sv):
+                    a, b = b, a
+                m['tf'].append([a, a, b, b, sv, sv])
+                p0, p1 = tx(k, t), tx(k + 1, t)
+                m['tuv'].append([p0[0], p0[1], uv['clut'], p1[0], p1[1], uv['page'],
+                                 (p0[0] + p1[0]) // 2, int(round(fv0 + (fv1 - fv0) * (0.5 if t == 0.0 else 0.92))), 0])
+        out.append(m)
+    return out
+
+
 def schwanz_textur(tim, p):
     """Runde 41 SF NB3 (Abnahme 1 Mangel 1, GESTALTUNG nach Video 4): eigene Schwanztextur in die freie Flaeche der
     TPage 130 (u 256+u0.., v v0.., von keinem EM30-Mesh benutzt: Seite 130 belegt v 0-167) malen. Je Glied laeuft v
@@ -1031,6 +1279,11 @@ def zusatz_zeile(orig, neu, zz):
     """Eine Zusatzzeile: 'verlauf' = eigene Farbtreppe ueber die Indizes (Index 0 transparent, Runde 41 SF NB3
     Schwanztextur); 'faktor' = Kopie der UMGEFAERBTEN Zeile zz['aus'] mal Faktor je Kanal (NB3 Lichtzonen: Rumpf/Beine
     dunkler, Adern entsaettigt); sonst band_zeile aus der Originalzeile (N1.5-N1.10)."""
+    if 'tabelle' in zz:                             # Runde 41 SF V3: feste Eintraege (Index, RGB), Rest schwarz/transparent
+        rgb = np.zeros((256, 3)); alt = np.zeros(256, np.int64)
+        for i, c in zz['tabelle']:
+            rgb[i] = c; alt[i] = 0x7FFF
+        return _pack(rgb, alt)
     if 'verlauf' in zz:
         idx, farben = zip(*zz['verlauf'])
         k = np.arange(256)
@@ -1402,6 +1655,15 @@ def baue(blob, form):
         pk, info = kette_v2_punkte(kette, mo, kette['knochen'])
         kette = dict(kette, punkte=pk)
         BAU_INFO['schwanz_v2'] = info
+    elif kette and kette.get('bogen'):
+        # Schwanz V3 (Messblatt V3): glatter Bogen statt Haken mit Seitenwellen, Modellraum der fertigen Haltung wie V2.
+        mo = EA.Modell.__new__(EA.Modell)
+        mo.skel = EA.emr_parse(emr0)
+        mo.clips, mo.frames = EA.edd_parse(bytes(blob[d[1]:d[2]]))
+        mo.meshes = EA.md1_parse(md1)
+        pk, info = kette_v3_punkte(kette, mo, kette['knochen'])
+        kette = dict(kette, punkte=pk)
+        BAU_INFO['schwanz_v2'] = info
     elif kette and form.get('ducken'):
         # Runde 41 SF N2: die Ruhegestalt des Schwanzes haengt im Brustraum; Rumpf+Brust kippen um (rumpf+brust) Grad nach
         # vorn -> Ruhelinie um denselben Winkel zurueckdrehen (um den Ansatz), damit er in der Welt haengt wie vorher.
@@ -1423,7 +1685,10 @@ def baue(blob, form):
             BAU_INFO['ruhe'] = ruhe
             if form.get('kopf_v2'):
                 kopf_v2_uv(meshes, form['kopf_v2'])
-            meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes(kette, ruhe, meshes)
+            if 'fenster' in kette['uv']:                   # Schwanz V3: Kegelstuempfe mit Hautfenstern
+                meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes_v3(kette, ruhe)
+            else:
+                meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes(kette, ruhe, meshes)
             emr0 = emr_mit_kette(emr0, kette, ruhe, schwanz_bewegung(emr0, blob[d[1]:d[2]], kette, ruhe))
         md1 = md1_schreiben(meshes)
     tim = faerbe_tim(blob[md1_e:dir_off], form['tint'])
@@ -1431,7 +1696,7 @@ def baue(blob, form):
         tim = cluts_bauen(tim, form['cluts'])
     if form.get('schwanz_textur'):
         tim = schwanz_textur(tim, form['schwanz_textur'])
-    if form.get('kopf_v2'):
+    if form.get('kopf_v2') and not form.get('kopf_v3'):     # V3 malt nach dem Bau (kopf_v3_malen)
         tim = kopf_v2_textur(tim, form['kopf_v2'])
     if len(tim) % 4:
         tim += bytes(4 - len(tim) % 4)
@@ -1489,7 +1754,7 @@ def kopf_v2_uv(meshes, p):
         nrm = np.array(a['normale'], float); nrm /= np.linalg.norm(nrm)
         b0, n0 = len(m8['v']), len(m8['n'])
         for e in E:
-            m8['v'].append([int(round(x)) for x in e + nrm * a.get('abstand', 12.0)] + [0])
+            m8['v'].append([int(round(x)) for x in e + nrm * a.get('abstand_uv', a.get('abstand', 12.0))] + [0])
             m8['n'].append([int(round(x)) for x in nrm * 4096] + [0])
         ua, va = a['u'], a['v']
         uvs = [(ua[0], va[0]), (ua[1], va[0]), (ua[0], va[1]), (ua[1], va[1])]
@@ -1499,7 +1764,7 @@ def kopf_v2_uv(meshes, p):
             ia, ib, ic, idd = ib, ia, idd, ic
             uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
         m8['qf'].append([ia - b0 + n0, ia, ib - b0 + n0, ib, ic - b0 + n0, ic, idd - b0 + n0, idd])
-        m8['quv'].append([uvs[0][0], uvs[0][1], p['clut'] << 6, uvs[1][0], uvs[1][1], p['page'],
+        m8['quv'].append([uvs[0][0], uvs[0][1], a.get('clut', p['clut']) << 6, uvs[1][0], uvs[1][1], p['page'],
                           uvs[2][0], uvs[2][1], 0, uvs[3][0], uvs[3][1], 0])
     return meshes
 
@@ -1562,6 +1827,275 @@ def kopf_v2_textur(tim, p):
     tim[ende + 12:ende + 12 + breite * ih] = pix.tobytes()
     return bytes(tim)
 
+
+# ═══════════════════════════════════════════════════ Kopf V3: Messansicht, Kopfbild, Schulterauge (Messblatt V3)
+def nah_raster(mo, p):
+    """Messansicht "Kopf vorn nah" (Messblatt V3 Abschnitt 8, P_port_kopf.nah): Pose p['clip']/p['bild'], Mitte = T[9] +
+    p['mitte'], Blick von vorn (+X), rechts = +Z (= linke Seite (W)), unten = +Y, Massstab p['massstab'] px/E.
+    Rasterung wie EA.render (Tiefenpuffer), je Bildpunkt: Face-Index (-1 leer), Knochen, Atlas-u/v (Gleitkomma, u inkl. TPage),
+    Modellpunkt. Rueckgabe dict(F, fi, knochen, u, v, P, V, N, R, T)."""
+    import birkin_buehne as BB
+    kf = BB.kf_von_clip(mo, p['clip'], p['bild'])
+    V, N, F = mo.geometrie(kf)
+    R, T = mo.pose(kf)
+    mitte = T[9].astype(float) + np.array(p['mitte'], float)
+    Vm = V - mitte
+    W, H, sc, cx, cy = p['breite'], p['hoehe'], p['massstab'], p['cx'], p['cy']
+    sx, sy, sz = Vm[:, 2] * sc + cx, Vm[:, 1] * sc + cy, Vm[:, 0]
+    fi = np.full((H, W), -1, np.int32)
+    zb = np.full((H, W), -1e18)
+    uu = np.zeros((H, W)); vv = np.zeros((H, W)); P = np.zeros((H, W, 3))
+    for k, f in enumerate(F):
+        i0, i1, i2 = f['v']
+        x = np.array([sx[i0], sx[i1], sx[i2]]); y = np.array([sy[i0], sy[i1], sy[i2]]); z = np.array([sz[i0], sz[i1], sz[i2]])
+        area = (x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0])
+        if abs(area) < 1e-9:
+            continue
+        x0, x1 = max(int(np.floor(x.min())), 0), min(int(np.ceil(x.max())) + 1, W)
+        y0, y1 = max(int(np.floor(y.min())), 0), min(int(np.ceil(y.max())) + 1, H)
+        if x0 >= x1 or y0 >= y1:
+            continue
+        PX, PY = np.meshgrid(np.arange(x0, x1) + 0.5, np.arange(y0, y1) + 0.5)
+        w0 = ((x[1] - x[0]) * (PY - y[0]) - (PX - x[0]) * (y[1] - y[0])) / area
+        w1 = ((PX - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (PY - y[0])) / area
+        w2 = 1.0 - w0 - w1
+        innen = (w0 >= -1e-9) & (w1 >= -1e-9) & (w2 >= -1e-9)
+        zz = w2 * z[0] + w1 * z[1] + w0 * z[2]
+        sub = zb[y0:y1, x0:x1]
+        hit = innen & (zz > sub)
+        if not hit.any():
+            continue
+        (a0, b0), (a1, b1), (a2, b2) = f['uv']
+        ub = (f['page'] & 0xF) * 128
+        sub[hit] = zz[hit]
+        fi[y0:y1, x0:x1][hit] = k
+        uu[y0:y1, x0:x1][hit] = (w2 * (a0 + ub) + w1 * (a1 + ub) + w0 * (a2 + ub))[hit]
+        vv[y0:y1, x0:x1][hit] = (w2 * b0 + w1 * b1 + w0 * b2)[hit]
+        for j in range(3):
+            P[y0:y1, x0:x1, j][hit] = (w2 * V[i0, j] + w1 * V[i1, j] + w0 * V[i2, j])[hit]
+    kn = np.array([f['bone'] for f in F] + [-1])[fi]
+    return dict(F=F, fi=fi, knochen=kn, u=uu, v=vv, P=P, V=V, N=N, R=R, T=T, kf=kf, mitte=mitte)
+
+
+def kopf_v3_anker(r, p):
+    """Lage von Kopfauge und Maul in der Messansicht (px), aus der Kopfbild-Flaeche auf Mesh 9 (KOPF_V3 u/v)."""
+    Hp = p['nah']['H_px']
+    pb = 128 * (p['page'] & 0xF)
+    bild = (r['knochen'] == 9) & (r['u'] >= pb + p['u'][0]) & (r['u'] < pb + p['u'][1] + 1) & (r['v'] >= p['v'][0])
+    ys = np.nonzero(bild.any(1))[0]
+    oben, unten = int(ys.min()), int(ys.max())
+    ay = oben + p['auge_y_anteil'] * (unten - oben)
+    my = ay + p['maul']['dy_auge'] * Hp
+    zeile = np.nonzero(bild[int(round(my))])[0]
+    mx = 0.5 * (zeile.min() + zeile.max())
+    kopfbreite = float(zeile.max() - zeile.min() + 1)
+    ax = mx + p['auge']['dx_maul'] * Hp
+    return dict(auge=(ax, ay), maul=(mx, my), kopfbreite_px=kopfbreite, oben=oben, unten=unten, maske=bild)
+
+
+def _texel_lagen(r, u0, v0, bu, bv, maske):
+    """Mittlere Bildlage (px) je Texel der Flaeche (u0..u0+bu-1, v0..v0+bv-1) in der Messansicht; nicht sichtbare Texel
+    bekommen die Lage des naechsten sichtbaren Texels plus den Texelabstand mal mittlerem Bildschritt je Texel."""
+    ys, xs = np.nonzero(maske)
+    tu = np.floor(r['u'][ys, xs]).astype(int) - u0
+    tv = np.floor(r['v'][ys, xs]).astype(int) - v0
+    ok = (tu >= 0) & (tu < bu) & (tv >= 0) & (tv < bv)
+    sx = np.zeros((bv, bu)); sy = np.zeros((bv, bu)); n = np.zeros((bv, bu))
+    np.add.at(sx, (tv[ok], tu[ok]), xs[ok] + 0.5)
+    np.add.at(sy, (tv[ok], tu[ok]), ys[ok] + 0.5)
+    np.add.at(n, (tv[ok], tu[ok]), 1)
+    hat = n > 0
+    sx[hat] /= n[hat]; sy[hat] /= n[hat]
+    hv, hu = np.nonzero(hat)
+    du = np.median(np.abs(np.diff(sx, axis=1))[hat[:, 1:] & hat[:, :-1]]) if hat.sum() > 2 else 8.0
+    dv = np.median(np.abs(np.diff(sy, axis=0))[hat[1:] & hat[:-1]]) if hat.sum() > 2 else 8.0
+    for v, u in zip(*np.nonzero(~hat)):
+        k = np.argmin((hv - v) ** 2 + (hu - u) ** 2)
+        sx[v, u] = sx[hv[k], hu[k]] + (u - hu[k]) * du
+        sy[v, u] = sy[hv[k], hu[k]] + (v - hv[k]) * dv
+    return sx, sy, hat
+
+
+def _lab(rgb):
+    """sRGB 0..255 -> CIE-Lab (D65), wie tools/r41_sichel/v3/P_farbe.lab."""
+    c = np.asarray(rgb, float) / 255.0
+    c = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    M = np.array([[0.4124564, 0.3575761, 0.1804375], [0.2126729, 0.7151522, 0.0721750], [0.0193339, 0.1191920, 0.9503041]])
+    x = c @ M.T / np.array([0.95047, 1.0, 1.08883])
+    d = 6.0 / 29.0
+    f = np.where(x > d ** 3, np.cbrt(x), x / (3 * d * d) + 4.0 / 29.0)
+    return np.stack([116 * f[..., 1] - 16, 500 * (f[..., 0] - f[..., 1]), 200 * (f[..., 1] - f[..., 2])], -1)
+
+
+def _rampe(rng, t):
+    a, b = rng
+    return np.clip(np.round(a + t * (b - a)), a, b).astype(int)
+
+
+def kopf_v3_bild(X, Y, an, p, rausch):
+    """Index der Zeile 486 je Abtastpunkt (X, Y in px der Messansicht). Zonen nach Messblatt V3 K1-K15 und Abschnitt 6."""
+    Hp, I = p['nah']['H_px'], KOPF_V3_INDEX
+    ax, ay = an['auge']
+    mx, my = an['maul']
+    z, au, mu = p['zonen'], p['auge'], p['maul']
+    dy_a = (Y - ay) / Hp
+    # Grundhaut: Kuppe (K9) -> Kopfhaut, rote Zone (K15) ab Maul-Oberkante + rot_ab bis zum Kinn; Rampen mit Hautrauschen
+    t = np.clip((dy_a - z['kuppe_bis']) / z['uebergang'], 0, 1)
+    kuppe = _rampe(I['kuppe'], 0.55 + 0.25 * rausch)
+    haut = _rampe(I['haut'], 0.5 + 0.25 * rausch)
+    idx = np.where(t < 0.5, kuppe, haut)
+    mb = min(mu['b'] * Hp, mu['max_kopfbreite'] * an['kopfbreite_px'])
+    mh = mu['h'] * Hp
+    rot = _rampe(I['rot'], 0.5 + 0.3 * rausch)
+    idx = np.where(Y >= my - mh / 2 + z['rot_ab'] * Hp, rot, idx)
+    # Maul: dunkles Inneres (Ellipse mb x mh) mit tieferem Kern, Zaehne als Spitzen von der Lippe ins Innere
+    ex = (X - mx) / (mb / 2)
+    ey = (Y - my) / (mh / 2)
+    idx = np.where(ex ** 2 + ey ** 2 <= 1.0, I['maul'], idx)
+    # tieferer Kern (KI dunkelste 10 %) nur in der Mitte: mu['tief'] = Anteil der Ellipse (Probe 1: 0,45 -> L* innen/Haut 0,176,
+    # Probe 7: 0,20 -> 0,187, R13 verlangt 0,20-0,40; die Messblatt-Farbe "innen" [13,5 13,7 4,8] ist schon das Mittel der Oeffnung)
+    idx = np.where(ex ** 2 + (ey / 0.6) ** 2 <= mu['tief'], I['maul_tief'], idx)
+    zb, zl = mu['zahn_b'] * Hp, mu['zahn_l'] * Hp
+    for n_z, oben in ((mu['zaehne'][0], True), (mu['zaehne'][1], False)):
+        for xk in mx + np.linspace(-0.5, 0.5, n_z) * mb * mu['zahn_bereich']:
+            r_k = np.sqrt(max(0.0, 1.0 - ((xk - mx) / (mb / 2)) ** 2)) * mh / 2
+            d_in = (Y - (my - r_k)) if oben else ((my + r_k) - Y)          # Abstand vom Lippenrand ins Innere
+            breite = zb / 2 * np.clip(1.0 - d_in / zl, 0.35, 1.0)
+            zahn = (np.abs(X - xk) <= breite) & (d_in >= -0.002 * Hp) & (d_in <= zl)
+            idx = np.where(zahn, I['zahn'], idx)
+    # Auge (Mandel = Ellipse b x h): Lidrand, Auge, Pupille, ein heller Kern
+    ea = ((X - ax) / (au['b'] * Hp / 2)) ** 2 + ((Y - ay) / (au['h'] * Hp / 2)) ** 2
+    el = ((X - ax) / (au['b'] * Hp / 2 + au['lid'] * Hp)) ** 2 + ((Y - ay) / (au['h'] * Hp / 2 + au['lid'] * Hp)) ** 2
+    ep = ((X - ax) / (au['b'] * Hp / 2 * au['pupille'][0])) ** 2 + ((Y - ay) / (au['h'] * Hp / 2 * au['pupille'][1])) ** 2
+    gx = ax + (au['glanz'][0] - 0.5) * au['b'] * Hp
+    gy = ay + (au['glanz'][1] - 0.5) * au['h'] * Hp
+    eg = ((X - gx) / (au['glanz'][2] * Hp)) ** 2 + ((Y - gy) / (au['glanz'][3] * Hp)) ** 2
+    idx = np.where(el <= 1.0, I['lid'], idx)
+    idx = np.where(ea <= 1.0, I['auge'], idx)
+    idx = np.where(ep <= 1.0, I['pupille'], idx)
+    idx = np.where(eg <= 1.0, I['glanz'], idx)
+    return idx
+
+
+def _rausch_feld(tim_pix, pal0, shape):
+    """Hautstruktur wie Kopf V2: Helligkeit des Wundfleischs (TPage 128 u 66-126 v 4-90, Zeile 480), normiert."""
+    L0 = pal0 @ np.array([0.299, 0.587, 0.114])
+    q = L0[tim_pix[4:90, 66:126]]
+    q = (q - q.mean()) / max(q.std(), 1e-6)
+    yy, xx = np.mgrid[0:shape[0], 0:shape[1]]
+    return q[(yy * 3) % q.shape[0], (xx * 2) % q.shape[1]]
+
+
+def kopf_v3_malen(blob, p):
+    """Kopfbild und Schulterauge in die TIM-Flaechen des fertigen Blobs malen (Indizes der Zeile p['clut'])."""
+    mo = modell_aus_blob(blob)
+    r = nah_raster(mo, p['nah'])
+    an = kopf_v3_anker(r, p)
+    blob = bytearray(blob)
+    d = EA.emd_dir(bytes(blob))
+    dir_off = u32(blob, 0)
+    tim = bytes(blob[d[8]:dir_off])
+    cx, cy, cw, ch, c, ende = _clut(tim)
+    iw, ih = struct.unpack_from('<HH', tim, ende + 8)
+    breite = iw * 2
+    pix = np.frombuffer(tim[ende + 12:ende + 12 + breite * ih], np.uint8).reshape(ih, breite).copy()
+    pb = 128 * (p['page'] & 0xF)
+    u0, v0, bu, bv = pb + p['u'][0], p['v'][0], p['u'][1] - p['u'][0] + 1, p['v'][1] - p['v'][0] + 1
+    X, Y, _hat = _texel_lagen(r, u0, v0, bu, bv, an['maske'])
+    rausch = p['rauschen'] * _rausch_feld(pix, _rgb(c[0]), (bv, bu))
+    pix[v0:v0 + bv, u0:u0 + bu] = kopf_v3_bild(X, Y, an, p, rausch).astype(np.uint8)
+    sa = p.get('schulterauge')
+    info = dict(auge_px=tuple(an['auge']), maul_px=tuple(an['maul']), kopfbreite_px=an['kopfbreite_px'])
+    if sa and sa.get('ecken'):
+        su0, sv0 = pb + sa['u'][0], sa['v'][0]
+        sbu, sbv = sa['u'][1] - sa['u'][0] + 1, sa['v'][1] - sa['v'][0] + 1
+        m8 = (r['knochen'] == 8) & (r['u'] >= su0) & (r['u'] < su0 + sbu) & (r['v'] >= sv0) & (r['v'] < sv0 + sbv)
+        SX, SY, _h = _texel_lagen(r, su0, sv0, sbu, sbv, m8)
+        Hp = p['nah']['H_px']
+        zx, zy = sa['ziel_px']
+        es = ((SX - zx) / (sa['b'] * Hp / 2)) ** 2 + ((SY - zy) / (sa['h'] * Hp / 2)) ** 2
+        # Haut des Vierecks = die EM30-Texel der Schulter darunter (Messansicht ohne Viereck, r0), Farbe auf die naechste
+        # Farbe der Hautzeile sa['clut'] gebracht (Mesh 8 nutzt Zeile 480 auf Seite 0 und 481 auf Seite 1): das Viereck traegt
+        # dieselbe Haut wie die Schulter. Probe 4 mit eigener Hautrampe: als flaches violettes Quadrat sichtbar.
+        r0 = p['r0']
+        zeile = sa['clut'] - cy
+        Lz = _lab(_rgb(c[zeile]))
+        f = np.zeros((sbv, sbu), int)
+        for (yy, xx), _w in np.ndenumerate(SX):
+            iy, ix = int(round(SY[yy, xx])), int(round(SX[yy, xx]))
+            k = r0['fi'][iy, ix]
+            if k < 0 or r0['knochen'][iy, ix] != 8:
+                f[yy, xx] = f[yy, xx - 1] if xx else 0
+                continue
+            fc = r0['F'][k]
+            t = pix[int(r0['v'][iy, ix]), int(r0['u'][iy, ix])]
+            farbe = _rgb(c[(fc['clut'] >> 6) - cy][t])
+            dist = np.linalg.norm(Lz[1:] - _lab(farbe), axis=1)
+            f[yy, xx] = 1 + int(np.argmin(dist))
+        # Die dunkle EM30-Ader, die hier ueber die Schulter laeuft (Probe 5: L* min 1,7, mit dem Auge verbunden -> Auge 2,6 x so gross
+        # wie das Kopfauge), im Viereck mit dem Median-Hautton uebermalen: die KI zeigt am Schulterauge glatte helle Haut (K14).
+        Lf = Lz[f, 0]
+        med = np.median(Lf)
+        hautton = f.flat[int(np.argmin(np.abs(Lf - med)))]
+        f = np.where(Lf < 0.6 * med, hautton, f)
+        # Auge: Eintrag der Hautzeile mit der Helligkeit K14 "L* Auge/Haut 0,36-0,39" (Mitte 0,375) bezogen auf den Hautton des
+        # Vierecks und dem Buntton der KI (Lab a* 4,5 b* 2,4). Probe 6 mit der KI-Farbe absolut (L* 12): Verhaeltnis 0,56 (R9 rot),
+        # weil die Schulterhaut des Ports dunkler ist als die der KI.
+        ziel = np.array([sa['L_verh'] * med, sa['lab_auge'][1], sa['lab_auge'][2]])
+        auge = 1 + int(np.argmin(np.linalg.norm(Lz[1:] - ziel, axis=1)))
+        f = np.where(es <= 1.0, auge, f)
+        pix[sv0:sv0 + sbv, su0:su0 + sbu] = f.astype(np.uint8)
+        info['schulterauge_index'] = auge
+        info['schulterauge_px'] = (zx, zy)
+    tim = tim[:ende + 12] + pix.tobytes() + tim[ende + 12 + breite * ih:]
+    blob[d[8]:dir_off] = tim
+    BAU_INFO['kopf_v3'] = info
+    return bytes(blob)
+
+
+def schulterauge_v3_ecken(blob, p):
+    """Lage des Schulterauges (Messblatt V3 K12: relativ zum Kopfauge sa['dx'] H waagerecht (B-links), sa['dy'] H tiefer) auf der
+    Oberflaeche von Mesh 8 in der Messansicht suchen; Viereck (Ecken im Brustraum, Knochen 8): Mitte = Flaechenpunkt unter dem
+    Zielbildpunkt, Kanten entlang Bild-rechts/-unten in der Tangentialebene, Seitenlaenge sa['seite'] H."""
+    mo = modell_aus_blob(blob)
+    r = nah_raster(mo, p['nah'])
+    an = kopf_v3_anker(r, p)
+    sa, Hp, sc = p['schulterauge'], p['nah']['H_px'], p['nah']['massstab']
+    zx, zy = an['auge'][0] + sa['dx'] * Hp, an['auge'][1] + sa['dy'] * Hp
+    iy, ix = int(round(zy)), int(round(zx))
+    assert r['knochen'][iy, ix] == 8, 'Schulterauge: Zielpunkt nicht auf Mesh 8 (%d)' % r['knochen'][iy, ix]
+    f = r['F'][r['fi'][iy, ix]]
+    Pw = r['P'][iy, ix]                                 # Modellraum (nah_raster speichert V, nicht V - mitte)
+    nw = sum(r['N'][j] for j in f['n'])
+    nw = nw / np.linalg.norm(nw)
+    R8, T8 = r['R'][8].astype(float) / 4096.0, r['T'][8].astype(float)
+    # Kanten in der Tangentialebene, die in der Messansicht genau waagerecht (Bild-x = +Z) bzw. senkrecht (Bild-y = +Y) liegen:
+    # das Viereck erscheint dort als achsparalleles Quadrat der Seite sa['seite'] H (Probe 3: schraeges Viereck liess die
+    # EM30-Ader oberhalb im Messfenster frei).
+    rechts = np.array([-nw[2], 0.0, nw[0]]); rechts /= np.linalg.norm(rechts)
+    if rechts[2] < 0:
+        rechts = -rechts
+    unten = np.array([-nw[1], nw[0], 0.0]); unten /= np.linalg.norm(unten)
+    if unten[1] < 0:
+        unten = -unten
+    hb = 0.5 * sa['seite'] * Hp / sc                    # halbe Seitenlaenge im Bild, in E.
+    rechts, unten = rechts * hb / abs(rechts[2]), unten * hb / abs(unten[1])
+    h = 1.0
+    # Abstand zur Schulter entlang der Blickrichtung der Messansicht (+X), nicht entlang der Normale: so bleibt die Mitte des
+    # Vierecks auf dem Zielbildpunkt (Probe 2: Versatz entlang der Normale schob die Mitte 30 px tiefer, das Auge lag am Rand).
+    Pc = Pw + np.array([1.0, 0.0, 0.0]) * sa['abstand']
+    welt = [Pc - rechts * h - unten * h, Pc + rechts * h - unten * h, Pc - rechts * h + unten * h, Pc + rechts * h + unten * h]
+    ecken = [tuple(int(x) for x in np.round(R8.T @ (q - T8))) for q in welt]
+    return dict(sa, ecken=ecken, normale=tuple(float(x) for x in R8.T @ nw), ziel_px=(zx, zy), abstand_uv=0.0)
+
+
+def baue_v3(basis):
+    """Variante V3: (1) Bau ohne Schulterauge, (2) Schulterauge auf Mesh 8 legen und neu bauen, (3) Kopfbild malen."""
+    blob = baue(basis, _variante_v3())
+    sa = schulterauge_v3_ecken(blob, KOPF_V3)
+    r0 = nah_raster(modell_aus_blob(blob), KOPF_V3['nah'])          # Messansicht ohne Viereck (Hautvorlage fuer das Viereck)
+    blob = baue(basis, _variante_v3(sa))
+    return kopf_v3_malen(blob, dict(KOPF_V3, schulterauge=sa, r0=r0))
 
 def modell_aus_blob(blob):
     """EA.Modell ohne EMS-Zugriff aus einem fertigen Blob aufbauen (fuer das Ansichtsblatt)."""
@@ -1645,7 +2179,7 @@ def main():
         os.makedirs(a.aus, exist_ok=True)
         for name in a.variante:
             BAU_INFO.clear()
-            blob = baue(basis, VARIANTEN[name]())
+            blob = baue_v3(basis) if name == 'v3' else baue(basis, VARIANTEN[name]())
             ziel = os.path.join(a.aus, 'EM30_%s.EMD' % name.upper())
             with open(ziel, 'wb') as f:
                 f.write(blob)
