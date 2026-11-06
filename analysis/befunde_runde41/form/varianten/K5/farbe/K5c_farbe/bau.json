@@ -1,0 +1,290 @@
+{
+ "eich": {
+  "zonen": {
+   "b1|Schwanz": {
+    "d": [
+     -1.84,
+     -2.56,
+     -10.8
+    ],
+    "_alt": [
+     -1.84,
+     -2.56,
+     -10.8
+    ]
+   },
+   "b1|Ruecken/Flanke": {
+    "d": [
+     -3.44,
+     -9.2,
+     -38.56
+    ],
+    "_alt": [
+     -3.44,
+     -9.2,
+     -38.56
+    ]
+   },
+   "b1|Hinterbein l (W)": {
+    "d": [
+     0.32,
+     19.84,
+     -74.16
+    ],
+    "_alt": [
+     0.32,
+     19.84,
+     -74.16
+    ]
+   },
+   "b1|Hinterbein r (W)": {
+    "d": [
+     -3.12,
+     16.32,
+     -134.56
+    ],
+    "_alt": [
+     -3.12,
+     16.32,
+     -134.56
+    ]
+   },
+   "b1|Vorderglied r (W)": {
+    "d": [
+     -2.32,
+     -10.72,
+     -28.24
+    ],
+    "_alt": [
+     -2.32,
+     -10.72,
+     -28.24
+    ]
+   },
+   "b2|Oberkiefer": {
+    "d": [
+     -4.08,
+     12.32,
+     -20.88
+    ],
+    "_alt": [
+     -4.08,
+     12.32,
+     -20.88
+    ]
+   },
+   "b2|Kopf/Rumpf": {
+    "d": [
+     -1.76,
+     0.88,
+     -1.68
+    ],
+    "_alt": [
+     -1.76,
+     0.88,
+     -1.68
+    ]
+   },
+   "b2|Unterkiefer": {
+    "d": [
+     86.32,
+     35.36,
+     20.56
+    ],
+    "_alt": [
+     86.32,
+     35.36,
+     20.56
+    ]
+   },
+   "b2|Klaue r (W)": {
+    "d": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "_alt": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "b2|Klaue l (W)": {
+    "d": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "_alt": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "auge": [
+   13.4,
+   15.8,
+   6.9
+  ],
+  "runden_r2e1": 6
+ },
+ "herkunft": {
+  "glanz_entfernt": "881 Texel (Keim L*>85 C*<10: 492, Hof L*>58), Gaumenstreifen Kopf 2324 Texel; harmonisch gefuellt",
+  "klaue_l4": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 1 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "zeh0_r": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 2 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "klaue_r4": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 3 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "klaue_l1": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 4 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "klaue_l3": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 0 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "kralle_l": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 1 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "klaue_l2": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 2 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "klaue_r1": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 3 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "klaue_r3": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 4 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "kralle_r": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 0 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "klaue_r2": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 1 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "schwanz5": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 2 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "schwanz6": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 3 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "schwanz4": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 4 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "hand_l": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 0 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "schwanz2": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 1 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "oberschenkel_r": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 2 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "oberschenkel_l": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 3 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "schwanz3": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 4 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "fuss_r": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 0 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "fuss_l": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 1 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "unterschenkel_r": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 3 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "unterschenkel_l": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 4 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "unterarm_r": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 0 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "unterarm_l": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 1 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "hand_r": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 2 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "hals": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 3 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "schwanz1": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 4 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "oberarm_r": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 0 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "oberarm_l": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 1 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "brust": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 3 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "wirbel": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 0 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "huefte": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 1 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "s3_kopf": "K5c-Grobbild ohne Glanz (sigma 2.5) + RE2-G4-Haut G4_HAUT2 ab Quelle 2 (Adern dunkel), Fleisch RE2-G4 [(181, 224, 20, 30), (89, 189, 18, 34), (179, 229, 24, 24)] wo Bild 1/2 Rot zeigen",
+  "adern": "4449 Texel (5.9 % der Haut) G4-Adern: L* x 0.85 der Haut, C* <= 1.50 x L*",
+  "fleisch": "17210 Texel (23.0 % der Haut) Fleischflaeche (Gewicht >= 0,5), Schwelle 0.500; gesehen Bild 1 8005 / Bild 2 11358 Texel; Unterseite ny >= 0.64 (17898 Texel, verdeckt 16343)",
+  "s3_kiefer": "RE2-G4 (10, 44, 60, 40), 5 Kopien um den Umfang, Zeilenversatz (j x Hoehe) / 5, G4-Texelmassstab",
+  "s3_kralle": "RE2-G4 (231, 200, 20, 50), 8 Kopien um den Umfang, Zeilenversatz (j x Hoehe) / 8, G4-Texelmassstab",
+  "ton": "14956 sichtbare Hauttexel mit a*b*-Abweichung vom Zonenmittel des Originals (Bild 1+2), Streuung 8.0",
+  "augenumfeld": "218 Texel unter r <= 6 px um E24 in Bild 2 -> Augenfarbe [13.4, 15.8, 6.9]",
+  "schwanz_e9": "Glied-L* vorher [13.5, 10.7, 13.7, 14.3, 17.3], Gerade 11.66 + 1.12 i",
+  "farbfenster": "auf 25 Grad gedreht 15838, ausserhalb -55..80 Grad C* <= 5.5: 46660, b* < -6 begrenzt 1436 Texel (von 85948)"
+ },
+ "info": {
+  "konflikt_zeilen": 0,
+  "felder": 52,
+  "rest_texel": 0,
+  "clut_blau_stufen": 21
+ },
+ "basis": "K5c (varianten/K5/K5c): FORM.EMD byte-gleich, nur FORM.TIM neu (Runde 2, kf_mal2.py)",
+ "konstanten": {
+  "SIG_GROB": 2.5,
+  "G_AB": 1.48,
+  "SIG_AB_FEIN": 0.7,
+  "GLANZ_L": 85.0,
+  "GLANZ_C": 10.0,
+  "HOF_L": 58.0,
+  "GAUMEN_L": 60.0,
+  "GAUMEN_C": 35.0,
+  "ADER_L": 0.8518518518518519,
+  "ADER_CL": 1.5004455167353619,
+  "G4_HAUT2": [
+   [
+    130,
+    96,
+    20,
+    62
+   ],
+   [
+    190,
+    96,
+    20,
+    60
+   ],
+   [
+    314,
+    12,
+    32,
+    30
+   ],
+   [
+    269,
+    4,
+    24,
+    32
+   ],
+   [
+    29,
+    152,
+    24,
+    32
+   ]
+  ],
+  "G4_FLEISCH": [
+   [
+    181,
+    224,
+    20,
+    30
+   ],
+   [
+    89,
+    189,
+    18,
+    34
+   ],
+   [
+    179,
+    229,
+    24,
+    24
+   ]
+  ],
+  "G4_MAUL": [
+   10,
+   44,
+   60,
+   40
+  ],
+  "G4_KRALLE": [
+   231,
+   200,
+   20,
+   50
+  ],
+  "EINSTREU_A2": 12.8,
+  "H_MIN": -55.0,
+  "H_WARM": 25.0,
+  "H_MAX": 80.0,
+  "C_VIO": 14.5,
+  "C_REST": 5.5,
+  "B_MIN": -6.0,
+  "FLEISCH_SCHWELLE": 0.5,
+  "FLEISCH_ANTEIL": 0.239,
+  "FLEISCH_UMRING": 1.2,
+  "G4_DUNKELROT": [
+   18.9,
+   25.6,
+   12.2
+  ],
+  "AUGE_R": 6,
+  "ZAHN_LAB": [
+   79.6,
+   1.4,
+   9.5
+  ],
+  "ZAHN_GRUND": 0.5625,
+  "DAEMPF": 0.8,
+  "SAAT": 7
+ },
+ "masken": {
+  "glanz": 881,
+  "gaumen": 2324,
+  "ader": 4449,
+  "fleisch": 17210
+ }
+}
