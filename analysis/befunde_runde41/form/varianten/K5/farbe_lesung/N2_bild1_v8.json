@@ -1,0 +1,182 @@
+[
+ {
+  "g": 1.0,
+  "figur_C": 6.27,
+  "figur_ab": 6.57,
+  "figur_rot": 4.55,
+  "ruecken_rot": 11.9,
+  "albedo_C": 7.6,
+  "albedo_blau_p": 0.0,
+  "zonen": {
+   "Schwanz": [
+    6.9,
+    6.1,
+    4.4
+   ],
+   "Ruecken/Flanke": [
+    8.0,
+    7.0,
+    11.9
+   ],
+   "Hinterbein l (W)": [
+    3.4,
+    3.6,
+    0.0
+   ],
+   "Hinterbein r (W)": [
+    5.3,
+    5.6,
+    0.0
+   ],
+   "Vorderglied r (W)": [
+    4.6,
+    4.7,
+    0.0
+   ]
+  }
+ },
+ {
+  "g": 1.5,
+  "figur_C": 7.36,
+  "figur_ab": 7.16,
+  "figur_rot": 5.21,
+  "ruecken_rot": 13.5,
+  "albedo_C": 9.5,
+  "albedo_blau_p": 13.06,
+  "zonen": {
+   "Schwanz": [
+    8.3,
+    6.7,
+    5.1
+   ],
+   "Ruecken/Flanke": [
+    9.0,
+    7.5,
+    13.5
+   ],
+   "Hinterbein l (W)": [
+    4.5,
+    4.2,
+    0.0
+   ],
+   "Hinterbein r (W)": [
+    6.3,
+    6.3,
+    0.0
+   ],
+   "Vorderglied r (W)": [
+    5.3,
+    5.2,
+    0.0
+   ]
+  }
+ },
+ {
+  "g": 2.0,
+  "figur_C": 7.33,
+  "figur_ab": 7.15,
+  "figur_rot": 4.9,
+  "ruecken_rot": 12.4,
+  "albedo_C": 9.6,
+  "albedo_blau_p": 14.97,
+  "zonen": {
+   "Schwanz": [
+    8.2,
+    6.7,
+    5.0
+   ],
+   "Ruecken/Flanke": [
+    8.9,
+    7.4,
+    12.4
+   ],
+   "Hinterbein l (W)": [
+    4.5,
+    4.2,
+    0.0
+   ],
+   "Hinterbein r (W)": [
+    6.3,
+    6.3,
+    0.0
+   ],
+   "Vorderglied r (W)": [
+    5.4,
+    5.3,
+    0.0
+   ]
+  }
+ },
+ {
+  "g": 3.0,
+  "figur_C": 7.1,
+  "figur_ab": 6.91,
+  "figur_rot": 4.07,
+  "ruecken_rot": 11.2,
+  "albedo_C": 9.3,
+  "albedo_blau_p": 19.34,
+  "zonen": {
+   "Schwanz": [
+    7.9,
+    6.5,
+    3.6
+   ],
+   "Ruecken/Flanke": [
+    8.6,
+    7.4,
+    11.2
+   ],
+   "Hinterbein l (W)": [
+    4.4,
+    4.2,
+    0.0
+   ],
+   "Hinterbein r (W)": [
+    6.3,
+    6.3,
+    0.0
+   ],
+   "Vorderglied r (W)": [
+    5.2,
+    5.1,
+    0.0
+   ]
+  }
+ },
+ {
+  "g": 4.0,
+  "figur_C": 7.1,
+  "figur_ab": 6.91,
+  "figur_rot": 3.98,
+  "ruecken_rot": 10.9,
+  "albedo_C": 9.4,
+  "albedo_blau_p": 20.59,
+  "zonen": {
+   "Schwanz": [
+    7.9,
+    6.6,
+    3.5
+   ],
+   "Ruecken/Flanke": [
+    8.5,
+    7.4,
+    10.9
+   ],
+   "Hinterbein l (W)": [
+    4.4,
+    4.2,
+    0.0
+   ],
+   "Hinterbein r (W)": [
+    6.3,
+    6.3,
+    0.0
+   ],
+   "Vorderglied r (W)": [
+    5.2,
+    5.1,
+    0.0
+   ]
+  }
+ }
+]
