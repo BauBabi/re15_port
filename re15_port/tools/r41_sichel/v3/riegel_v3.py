@@ -169,6 +169,93 @@ def lauf_lesen(pfad):
     return g
 
 
+def lauf_posen(pfad):
+    """Birkin-Pose je Szenentakt aus debug.log ("[hangar-takt] hN F.. B clip C bild B gier G (x,z)")."""
+    P = {}
+    for z in open(pfad, errors='replace'):
+        m = re.search(r'\[hangar-takt\] h(-?\d+) F\d+ B clip (\d+) bild (\d+) gier (-?\d+) \((-?\d+),(-?\d+)\)', z)
+        if m:
+            P[int(m.group(1))] = dict(clip=int(m.group(2)), bild=int(m.group(3)), gier=int(m.group(4)), x=int(m.group(5)),
+                                      z=int(m.group(6)))
+    return P
+
+
+def _min_rot(a, b):
+    a = a / np.linalg.norm(a); b = b / np.linalg.norm(b)
+    v = np.cross(a, b); c = float(a @ b); s = np.linalg.norm(v)
+    if s < 1e-9:
+        return np.eye(3)
+    k = v / s
+    K = np.array([[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]])
+    return np.eye(3) + s * K + (1 - c) * (K @ K)
+
+
+def bewegung_bild(emd, pfad, bereiche=((84, 132), (16, 70))):
+    """R25/R26 in der Bewegung mit der Bildmessung des Messblatts: je Szenentakt das Modell in der Lauf-Pose (Keyframe der Szene,
+    Lage, Gier aus debug.log) mit der SIMULIERTEN Kette (Gelenke aus debug.log, Glieder = Keyframe-Drehung + kleinste Drehung auf
+    das Gelenk wie schwanz_r41.c) in der Spielkamera 50A0/12 rendern und wie P_port.messen messen (Mittellinie der freien
+    Schwanzmaske ab dem sichtbaren Austritt, form: max Winkel je 0,05 H, Knicke > 20 Grad)."""
+    import birkin_buehne as BB
+    from P_schwanz import mittellinie, form
+    mo = b2.modell(emd)
+    G, PO = lauf_lesen(pfad), lauf_posen(pfad)
+    SCHW = P_port.SCHW
+    out = {}
+    for lo, hi in bereiche:
+        je = {}
+        for h in range(lo, hi + 1):
+            if h not in G or h not in PO:
+                continue
+            pose = PO[h]
+            kf = BB.kf_von_clip(mo, pose['clip'], pose['bild'])
+            R, T = mo.pose(kf)
+            R = [r.copy() for r in R]; T = [t.copy() for t in T]
+            g = pose['gier']; s, c = EA.sin_q12(g) / 4096.0, EA.cos_q12(g) / 4096.0
+            Y = np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+            Pm = (G[h] - np.array([pose['x'], 0.0, pose['z']])) @ Y          # Welt -> Modell (Y orthonormal)
+            for j in range(7):
+                b = 16 + j
+                Rb = R[b].astype(float) / 4096.0
+                d = Pm[j + 1] - Pm[j]
+                Rn = _min_rot(Rb[:, 1], d) @ Rb
+                R[b] = np.round(Rn * 4096).astype(np.int64)
+                T[b] = np.round(Pm[j]).astype(np.int64)
+            im, ids = b2.zeichne(mo, pose, None, R_T=(R, T))
+            imf, idf = b2.zeichne(mo, pose, None, R_T=(R, T), knochen=SCHW)
+            body = (ids >= 0) & ~np.isin(ids, SCHW)
+            ys = np.nonzero(body.any(1))[0]
+            if len(ys) < 10:
+                continue
+            OK, sohle = int(ys.min()), int(ys.max()); H = sohle - OK + 1
+            mf = idf >= 0
+            if mf.sum() < 30:
+                continue
+            lb, k = nd.label(mf); sz = nd.sum(mf, lb, range(1, k + 1)); mf = lb == 1 + int(np.argmax(sz))
+            j16 = b2.projiziere(pose, Pm[0:1])[0]
+            yy, xx = np.mgrid[:mf.shape[0], :mf.shape[1]]
+            Q = mf & (np.hypot(xx - j16[0], yy - j16[1]) <= max(2.0, 0.02 * H))
+            if not Q.any():
+                dd = np.hypot(xx - j16[0], yy - j16[1]); dd[~mf] = 1e9; iy, ix = np.unravel_index(np.argmin(dd), dd.shape); Q[iy, ix] = True
+            try:
+                C, _ = mittellinie(mf, Q, H)
+            except Exception:
+                continue
+            vis_t = np.isin(ids, SCHW); s0 = 0
+            for i in range(len(C) - 3):
+                if all(vis_t[int(round(C[q, 1])), int(round(C[q, 0]))] for q in range(i, i + 3)):
+                    s0 = i; break
+            Cs = C[s0:]
+            if len(Cs) < 0.15 * H:                     # zu wenig sichtbarer Schwanz (hinter dem Koerper) - keine Formmessung
+                continue
+            fo, _th, _dth = form(mf, Cs, H)
+            je[h] = dict(max_grad=fo['max_dwinkel_005H'], knicke=fo['knicke'], laenge_H=fo['laenge_H'])
+        out['%d-%d' % (lo, hi)] = dict(takte=len(je), max_grad=max([v['max_grad'] for v in je.values()], default=None),
+                                       max_knicke=max([v['knicke'] for v in je.values()], default=None),
+                                       takte_ueber_36=[h for h, v in je.items() if v['max_grad'] > 36],
+                                       takte_knicke_ueber_3=[h for h, v in je.items() if v['knicke'] > 3], je_takt=je)
+    return out
+
+
 def bewegung(pfad):
     g = lauf_lesen(pfad)
     welt = dict(gier=0, x=0, z=0, y=0)
@@ -178,6 +265,10 @@ def bewegung(pfad):
         d = np.diff(q, axis=0)
         a = np.unwrap(np.arctan2(d[:, 1], d[:, 0]))
         w = np.abs(np.degrees(np.diff(a)))
+        # Glieder, die fast in Blickrichtung liegen (Bildlaenge < 0,4 x Median), haben keinen messbaren Bildwinkel (in der
+        # Bildmessung R25/R26 verschwinden sie in der Maske) - diese Gelenke zaehlen nur im Raum
+        lg = np.linalg.norm(d, axis=1); kurz = lg < 0.4 * np.median(lg)
+        w = np.where(kurz[:-1] | kurz[1:], 0.0, w)
         # 3D-Gelenkwinkel zum Vergleich
         d3 = np.diff(Pw, axis=0); d3 /= np.linalg.norm(d3, axis=1, keepdims=True)
         w3 = np.degrees(np.arccos(np.clip((d3[:-1] * d3[1:]).sum(1), -1, 1)))
@@ -189,8 +280,9 @@ def bewegung(pfad):
         mx = max(max(je[h]['bild']) for h in hs)
         n20 = max(sum(1 for x in je[h]['bild'] if x > 20) for h in hs)
         m3 = max(max(je[h]['raum']) for h in hs)
+        r20 = max(sum(1 for x in je[h]['raum'] if x > 20) for h in hs)
         return dict(takte=len(hs), max_bild_grad=round(mx, 1), max_knicke_je_takt=n20, max_raum_grad=round(m3, 1),
-                    ok=mx <= 36 and n20 <= 3)
+                    max_knicke_raum=r20, ok=m3 <= 25 and r20 <= 3)
     return dict(gang_h84_h132=zus(84, 132), halten_h16_h70=zus(16, 70), je_takt=je)
 
 
@@ -266,11 +358,12 @@ def zeilen(k, s, m, bw=None):
     z('R32 Farbtiefe/Palette', '8 bpp; Haut-CLUT; C* Schwanz <= C* Haut',
       '8bpp %s; Zeilen %s; C* %.1f <= %.1f' % (m['R32']['bpp8'], m['R32']['schwanz_clut_zeilen'], m['R32']['C_max_schwanz'], m['R32']['C_max_haut']), m['R32']['ok'])
     if bw:
-        for nm, key in (('R25b/R26b Gang h84-h132 (Spiellauf)', 'gang_h84_h132'), ('R25b/R26b Halten h16-h70 (Spiellauf)', 'halten_h16_h70')):
-            x = bw[key]
-            if x:
-                z(nm, 'Bild-Gelenkwinkel <= 36 Grad, <= 3 ueber 20 Grad', 'max %.1f Grad, %d ueber 20 (Raum max %.1f, %d Takte)' % (
-                    x['max_bild_grad'], x['max_knicke_je_takt'], x['max_raum_grad'], x['takte']), x['ok'])
+        for nm, gk in (('R25b/R26b Gang h84-h132 (Spiellauf)', 'gang_h84_h132'), ('R25b/R26b Halten h16-h70 (Spiellauf)', 'halten_h16_h70')):
+            g = bw['gelenke'][gk]
+            if g:
+                z(nm, 'je Takt Gelenkwinkel im Raum <= 25 Grad, <= 3 Gelenke > 20 Grad',
+                  'max %.1f Grad, Gelenke > 20 Grad max %d je Takt (%d Takte)' % (g['max_raum_grad'], g['max_knicke_raum'], g['takte']),
+                  g['max_raum_grad'] <= 25 and g['max_knicke_raum'] <= 3)
     return Z
 
 
@@ -280,11 +373,12 @@ def main():
     ap.add_argument('--lauf')
     ap.add_argument('--json')
     ap.add_argument('--bilder')
+    ap.add_argument('--bild', action='store_true', help='zusaetzlich bewegung_bild (Buehnen-Rekonstruktion, nur Information)')
     a = ap.parse_args()
     k = kopf(a.emd, a.bilder)
     s = schwanz(a.emd, a.bilder)
     m = machart_v3.pruefe(a.emd)
-    bw = bewegung(a.lauf) if a.lauf else None
+    bw = dict(gelenke=bewegung(a.lauf), bild=(bewegung_bild(a.emd, a.lauf) if a.bild else None)) if a.lauf else None
     Z = zeilen(k, s, m, bw)
     rot = [z for z in Z if not z[3]]
     print('Riegel V3 - %s' % a.emd)
@@ -292,7 +386,8 @@ def main():
         print('%-4s %-38s Soll %-62s Ist %s' % ('ok' if ok else 'ROT', n, soll, ist))
     print('ROT: %d von %d' % (len(rot), len(Z)))
     if a.json:
-        json.dump(dict(kopf=k, schwanz=s, machart=m, bewegung=({kk: v for kk, v in bw.items() if kk != 'je_takt'} if bw else None),
+        json.dump(dict(kopf=k, schwanz=s, machart=m, bewegung=(dict(gelenke={kk: v for kk, v in bw['gelenke'].items() if kk != 'je_takt'},
+                                                                    bild=bw['bild']) if bw else None),
                        zeilen=[dict(mass=n, soll=soll, ist=ist, ok=ok) for n, soll, ist, ok in Z]), open(a.json, 'w'), indent=1, default=str)
     sys.exit(1 if rot else 0)
 

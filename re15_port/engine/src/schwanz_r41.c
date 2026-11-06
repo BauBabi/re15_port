@@ -36,6 +36,20 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
                                    * Kette V2 im Gang (laengere Beine, mehr Seitenschwung) an der Grenze in die Senkrechte:
                                    * Spitze h108-h132 375-995 E. ueber dem Boden statt der Keyframes ~1000 (Lauf sfv2/V2s). */
 
+/* Runde 41 SF "V3" (analysis/befunde_runde41/SF_MESSBLATT_V3.md, Riegel R25/R26 "auch in der Bewegung"): Glaettung der Kette
+ * nach Feder, Haengen und Szenenziel. Jedes Gelenk darf hoechstens um seinen Keyframe-Gelenkwinkel + SW_GLATT_RAND abknicken,
+ * mindestens SW_GLATT_MIN, hoechstens SW_GLATT_MAX (Bogenmass). Gemessen (Laeufe sfv3/r, riegel_v3.py --lauf, Gelenkwinkel im Raum
+ * je Szenentakt): ohne Glaettung V3 im Gang h84-h132 bis 115 Grad, beim Halten h16-h70 bis 129 Grad (Feder-Nachlauf bzw. FABRIK
+ * der Schwanzbahn), Referenz 2 bis 163 / 168 Grad; die Keyframes des V3-Bogens haben 8-24 Grad je Gelenk (kf_gelenkwinkel.py).
+ * KI-Vorlage: hoechstens 28-33 Grad je 0,05 H im Bild, 2-4 Abschnitte ueber 20 Grad (Messblatt 4). Nur fuer Ketten mit der hohen
+ * Wurzel der Varianten V1/V2/V3 (Bindversatz Gelenk 16 x < SW_GLATT_WURZEL_X wie BF_V2_WURZEL_X in birkin_formen.c); Referenz 2
+ * (Spiel-Asset, x -380) bleibt unveraendert. GESTALTUNG (PORT-WAHL), keine Original-Konstante. */
+#define SW_GLATT_WURZEL_X  (-700)
+#define SW_GLATT_RAND      0.0524f    /* 3 Grad ueber dem Keyframe-Gelenkwinkel */
+#define SW_GLATT_MIN       0.2094f    /* 12 Grad */
+#define SW_GLATT_MAX       0.2793f    /* 16 Grad. Lauf V3 mit 22 Grad (Raum max 22,2): im Bild der Spielkamera bis 55 Grad je Gelenk,
+                                       * 5 Gelenke > 20 Grad (Glieder schraeg zur Kamera verkuerzt, riegel_v3 R25b/R26b rot) */
+
 static struct {
     int      gueltig;
     uint32_t takt;
@@ -201,6 +215,43 @@ static void haengen(float (*p)[3], const float *laenge, float boden, float (*zw)
     }
 }
 
+/* Runde 41 SF V3: Knick-Grenze je Gelenk (siehe SW_GLATT_*). Von der Wurzel zur Spitze: ist das Glied j -> j+1 staerker gegen
+ * das Vorglied abgeknickt als erlaubt, wird es in der Ebene beider Glieder auf die Grenze zurueckgedreht; Laenge bleibt, Boden.
+ * Die alte Lage q wird um dieselbe Verschiebung mitgezogen (keine Scheingeschwindigkeit fuer die Feder im naechsten Takt). */
+static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float boden, float (*zw)[3])
+{
+    for (int j = 1; j < SW_J - 1; j++) {
+        float a[3] = { p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1], p[j][2] - p[j - 1][2] };
+        float d[3] = { p[j + 1][0] - p[j][0], p[j + 1][1] - p[j][1], p[j + 1][2] - p[j][2] };
+        float ka[3] = { zw[j][0] - zw[j - 1][0], zw[j][1] - zw[j - 1][1], zw[j][2] - zw[j - 1][2] };
+        float kd[3] = { zw[j + 1][0] - zw[j][0], zw[j + 1][1] - zw[j][1], zw[j + 1][2] - zw[j][2] };
+        if (norm(a) < 1e-3f || norm(d) < 1e-3f) continue;
+        float lim = SW_GLATT_MIN;
+        if (norm(ka) > 1e-3f && norm(kd) > 1e-3f) {
+            float c = ka[0] * kd[0] + ka[1] * kd[1] + ka[2] * kd[2];
+            c = c > 1.0f ? 1.0f : (c < -1.0f ? -1.0f : c);
+            lim = acosf(c) + SW_GLATT_RAND;
+        }
+        if (lim < SW_GLATT_MIN) lim = SW_GLATT_MIN;
+        if (lim > SW_GLATT_MAX) lim = SW_GLATT_MAX;
+        const float c = a[0] * d[0] + a[1] * d[1] + a[2] * d[2];
+        if (c < cosf(lim)) {
+            float s[3] = { d[0] - a[0] * c, d[1] - a[1] * c, d[2] - a[2] * c };
+            if (norm(s) < 1e-6f) { s[0] = -a[1]; s[1] = a[0]; s[2] = 0.0f; if (norm(s) < 1e-6f) { s[0] = 1.0f; s[1] = 0.0f; s[2] = 0.0f; } }
+            for (int k = 0; k < 3; k++) d[k] = a[k] * cosf(lim) + s[k] * sinf(lim);
+        }
+        float alt[3] = { p[j + 1][0], p[j + 1][1], p[j + 1][2] };
+        for (int k = 0; k < 3; k++) p[j + 1][k] = p[j][k] + d[k] * laenge[j + 1];
+        if (p[j + 1][1] > boden) {                       /* Boden: auf Bodenhoehe ziehen, aber nur ohne neuen Knick (Lauf V3 mit
+                                                          * hartem Boden: Spitze h33-h35 / h69-h71 bis 72 Grad abgeknickt) */
+            float e[3] = { p[j + 1][0] - p[j][0], boden - p[j][1], p[j + 1][2] - p[j][2] };
+            if (norm(e) > 1e-3f && a[0] * e[0] + a[1] * e[1] + a[2] * e[2] >= cosf(lim))
+                for (int k = 0; k < 3; k++) p[j + 1][k] = p[j][k] + e[k] * laenge[j + 1];
+        }
+        for (int k = 0; k < 3; k++) q[j + 1][k] += p[j + 1][k] - alt[k];
+    }
+}
+
 /* FABRIK auf den Gelenken a..e (a fest, e auf das Ziel t), feste Gliedlaengen, Boden. NB4 (Abnahme 2 A4: h18 Schlinge,
  * h60-h72 J-Bogen statt gerader Diagonale): mit `beuge` beginnt die Rechnung nicht am Federstand, sondern an einer Startform,
  * die von der Geraden a -> t in Richtung `beuge` ausbaucht (Sinusbogen, Hoehe aus Kettenlaenge und Abstand). FABRIK behaelt
@@ -326,6 +377,8 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
             if (s_sw[slot].ziel_w <= 0) haengen(p, laenge, (float)a->y, zw);
         }
         if (s_sw[slot].ziel_w > 0) ziel_anwenden(slot, laenge, (float)a->y);
+        if (skel->bone_relative_pos[SW_K0][0] < SW_GLATT_WURZEL_X)                 /* Runde 41 SF V3: Knick-Grenze */
+            glaetten(s_sw[slot].p, s_sw[slot].q, laenge, (float)a->y, zw);
         s_sw[slot].takt = g_engine.frame_count;
     }
 

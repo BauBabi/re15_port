@@ -326,9 +326,11 @@ SCHWANZ_V3 = dict(
     # 15/105 -> 28-33 Grad mit 2-3 Knicken.
     bogen=dict(start_grad=20.0, dreh_grad=100.0),
     # Seitlich nur EIN monotoner Zug zur rechten Seite (W) statt zweier Wellen: z = spitze * H * u^2 (u = Anteil der sichtbaren
-    # Laenge). Spitze 0,12 H nach rechts (W) hinter das rechte Bein wie V2 (PORT-WAHL V2, Formblatt V2 S9/Ae2). Die Bogenlaenge in
-    # der Seitenebene wird so gewaehlt, dass die 7 Sehnen zusammen `laenge` ergeben (Bisektion).
-    seitlich=dict(spitze=-0.12),
+    # Laenge), Spitze hinter das rechte Bein (PORT-WAHL V2, Formblatt V2 S9/Ae2/S15 "von vorn hinter dem Koerper"). Die Bogenlaenge
+    # in der Seitenebene wird so gewaehlt, dass die 7 Sehnen zusammen `laenge` ergeben (Bisektion). 0,16 H statt 0,12 H (V2): Probe
+    # vorn (Buehne h118/h125, sichtbare Schwanzbildpunkte 640er, tools/r41_sichel/v3/vorn_probe.py): 0,12 -> 122 / 0, 0,16 -> 0 / 3,
+    # 0,20 -> 0 / 185, 0 -> 310 / 219; Seitenriegel R15-R27 mit 0,16 unveraendert gruen (probe_schwanz_v3.py).
+    seitlich=dict(spitze=-0.16),
     glieder=7, seiten=10,                  # R29: 7 x (10 Vierecke = 20 Dreiecke) + Deckel 10 + Spitze 10 = 160 <= 212 (EM30-Arm 13-15)
     ueberlapp=0.45,                        # Manschette in das Vorglied (Anteil des Radius, wie Referenz 2)
     # Dicke (Radius in E.) je Anteil s der Kette (0 = Gelenk 16, sichtbar ab s 400/3475 = 0,115). Ziel im Bild (Messblatt 3,
@@ -368,12 +370,15 @@ KOPF_V3 = dict(
     # der Messansicht 0,165 H hoch und unten schmal (Kinn) - mit 0,33 laege die Maulmitte (0,052 H tiefer, K5) dort, wo der Kopf nur
     # ~0,075 H breit ist; bei 0,265 ist er an der Maulmitte 0,088-0,091 H breit (Vorgabe Maulbreite 0,075-0,095 H, R10).
     auge_y_anteil=0.265,
-    auge=dict(b=0.020, h=0.0105,                  # K3/R3 Vorgabe 0,020 x 0,0105 H (KI 0,019-0,022 x 0,009-0,012), B/H 1,9 (K4)
+    auge=dict(b=0.022, h=0.0105,                  # K3/R3 Vorgabe 0,020 x 0,0105 H (KI 0,019-0,022 x 0,009-0,012), B/H 1,9-2,2 (K4). Breite =
+                                                  # KI h125 0,022: mit 0,020 mass die Halbwert-Maske nach dem Verkleinern auf H 569 nur
+                                                  # 0,0141-0,0176 H (die Mandelspitzen verschwimmen mit dem Lid; Probe 15, R3/R4)
               dx_maul=-0.008,                     # K5: 0,005 / 0,011 H B-links der Maulmitte
               pupille=(0.65, 0.90),               # Pupille = dunkelste 25 % (K6, L*/Haut <= 0,12): Kern 0,65 x 0,90 der Augen-Halbachsen
                                                   # (Probe 1 mit 0,55 x 0,80: L* Pupille/Haut 0,135, R8 rot)
-              glanz=(0.55, 0.68, 0.0018, 0.0024), # K11: ein heller Kern x 0,50-0,59 / y 0,66-0,70 der Augenbox, ~0,004 x 0,005 H
-                                                  # (Probe 1 mit Halbachsen 0,0024 x 0,0030: heller Anteil 0,20, L* Auge/Haut 0,552)
+              glanz=(0.55, 0.68, 0.0020, 0.0030), # K11: ein heller Kern x 0,50-0,59 / y 0,66-0,70 der Augenbox, ~0,004 x 0,005 H;
+                                                  # Probe 1 mit 0,0024 x 0,0030 (Auge 0,020 breit): L* Auge/Haut 0,552; Probe 15 mit
+                                                  # 0,0018 x 0,0024 (Auge 0,022): 0,341 - mit 0,0020 x 0,0030: 0,475, heller Anteil 0,19
               lid=0.0035),                        # K8: Lidrand = 2-px-Ring bei H 569 = 0,0035 H, L* Lid/Haut 0,78-0,95, kein heller Ring
     maul=dict(dy_auge=0.052,                      # K5/R12: Maulmitte 0,052 / 0,053 H unter der Augenmitte
               b=0.092, h=0.040,                   # Messblatt 6: Breite 0,084 / 0,092 H, Hoehe 0,042 / 0,048 H inkl. Zaehne (R10 Bbox der
@@ -383,7 +388,7 @@ KOPF_V3 = dict(
               zaehne=(11, 7),                     # Messblatt 6: 17 / 18 Flecken, oben 11 / 10, unten 6 / 8
               zahn_b=0.0026, zahn_l=0.0060,       # Einzelzahn <= 0,005 H breit (R14), ~3 px bei H 569 = 0,005 H lang
               zahn_bereich=0.84,
-              tief=0.06),                 # Zaehne ueber 0,84 der Maulbreite verteilt (KI birkin19: Eckzaehne x 165-167 / 208-212)
+              tief=0.0, form=3.0, schlund=0.10),     # tief 0: der Schlund ersetzt den Kern (Probe 13 mit beiden: R13 0,196)                 # Zaehne ueber 0,84 der Maulbreite verteilt (KI birkin19: Eckzaehne x 165-167 / 208-212)
     zonen=dict(kuppe_bis=0.012,                   # K9/K15: helle Kuppe um das Auge (Haut um das Auge L* 44-52) bis 0,012 H unter der Augenmitte
                uebergang=0.016,                   # danach 0,016 H Uebergang in die dunklere Kopfhaut (KI birkin19: graue Haut zwischen
                                                   # Auge und Maul; Probe 8 ohne diese Zone: helle Kuppe stiess als Kante an ein rotes Band)
@@ -414,12 +419,15 @@ KOPF_V3_ZEILE = dict(tabelle=[
     (6, (31, 13, 13)),      # KI Maul dunkelste 10 % (Dossier SV2, Kopf V2)
     (7, (162, 122, 124)),   # Messblatt 6 Zaehne: Lab [55 16 4,6] = Mitte aus Pruefer 50 / A 57-62 / B 58,9
     (8, (39, 29, 28)),      # K14 Schulterauge Lab [12,0 4,5 2,4]
-    # K9 Kuppe: Haut um das Auge Lab [51,9 7,6 0,8] / [44,3 7,5 0,4] -> Rampe L* 42..56
-    (10, (110, 94, 97)), (11, (118, 101, 104)), (12, (128, 110, 113)), (13, (138, 119, 123)), (14, (150, 131, 135)),
+    # K9 Kuppe: Haut um das Auge Lab [51,9 7,6 0,8] / [44,3 7,5 0,4] -> Rampe L* 40..53 (erst L* 42..56 = x 1/0,94; Probe 14: R13
+    # L* Maul innen / Haut am Auge 0,196-0,198 knapp unter 0,20 - die Mitte der Rampe liegt jetzt beim KI-Wert h125)
+    (10, (103, 88, 91)), (11, (111, 95, 98)), (12, (120, 103, 106)), (13, (130, 112, 116)), (14, (141, 123, 127)),
     # Kopfhaut unter der Kuppe: KI-Haut (Band OK..+0,45 H) birkin12 Lab [29,4 9,7 2,8] = (86,64,65) -> Rampe L* 26..36
     (16, (74, 54, 55)), (17, (80, 59, 60)), (18, (86, 64, 65)), (19, (94, 71, 72)), (20, (102, 78, 79)),
-    # rote Zone (K15, Original): Farben der Referenz-2-Kopfzeile 485 (dunkel (114,57,55)) x 0,80 / 0,90 / 1,0 / 1,1 / 1,2
-    (22, (91, 46, 44)), (23, (103, 51, 50)), (24, (114, 57, 55)), (25, (125, 63, 61)), (26, (137, 68, 66)),
+    # rote Zone (K15, Original): Farben der Referenz-2-Kopfzeile 485 (dunkel (114,57,55)) x 0,90 / 1,0 / 1,1 / 1,2 / 1,3. Probe 10 mit
+    # x 0,8-1,2: das Maulinnere lag in der Messansicht genau an der Schwelle 0,5 x Fenster-Median (R10) und zerfiel je nach
+    # Flaechenschattierung (Breite 0,068-0,076 H) - die hellere Lippe/Kinnzone hebt den Median.
+    (22, (103, 51, 50)), (23, (114, 57, 55)), (24, (125, 63, 61)), (25, (137, 68, 66)), (26, (148, 74, 72)),
 ])
 
 
@@ -1760,7 +1768,8 @@ def kopf_v2_uv(meshes, p):
         uvs = [(ua[0], va[0]), (ua[1], va[0]), (ua[0], va[1]), (ua[1], va[1])]
         ia, ib, ic, idd = b0, b0 + 1, b0 + 2, b0 + 3
         P = [np.array(m8['v'][j][:3], float) for j in (ia, ib, ic)]
-        if np.cross(P[1] - P[0], P[2] - P[0]) @ nrm >= 0:     # Windung wie EM30: Kreuzprodukt gegen die Normale
+        fl = np.array(a.get('flaeche', nrm), float)          # V3: Windung nach der Flaechenrichtung, Licht nach a['normale']
+        if np.cross(P[1] - P[0], P[2] - P[0]) @ fl >= 0:      # Windung wie EM30: Kreuzprodukt gegen die Normale
             ia, ib, ic, idd = ib, ia, idd, ic
             uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
         m8['qf'].append([ia - b0 + n0, ia, ib - b0 + n0, ib, ic - b0 + n0, ic, idd - b0 + n0, idd])
@@ -1951,14 +1960,20 @@ def kopf_v3_bild(X, Y, an, p, rausch):
     # Maul: dunkles Inneres (Ellipse mb x mh) mit tieferem Kern, Zaehne als Spitzen von der Lippe ins Innere
     ex = (X - mx) / (mb / 2)
     ey = (Y - my) / (mh / 2)
-    idx = np.where(ex ** 2 + ey ** 2 <= 1.0, I['maul'], idx)
+    # Umriss |x|^p + y^2 <= 1 (p = mu['form']): volle Enden wie das KI-Maul (birkin19: Mundwinkel offen bis zu den Eckzaehnen);
+    # Probe 11 mit der Ellipse (p 2) liefen die Enden spitz aus und die Messung (R10) sah nur 0,068-0,076 H Breite.
+    idx = np.where(np.abs(ex) ** mu['form'] + ey ** 2 <= 1.0, I['maul'], idx)
     # tieferer Kern (KI dunkelste 10 %) nur in der Mitte: mu['tief'] = Anteil der Ellipse (Probe 1: 0,45 -> L* innen/Haut 0,176,
     # Probe 7: 0,20 -> 0,187, R13 verlangt 0,20-0,40; die Messblatt-Farbe "innen" [13,5 13,7 4,8] ist schon das Mittel der Oeffnung)
     idx = np.where(ex ** 2 + (ey / 0.6) ** 2 <= mu['tief'], I['maul_tief'], idx)
+    # Schlund: schmales dunkles Band ueber die ganze Maulbreite (KI birkin19: dunkle Spalte zwischen den Zahnreihen bis in die
+    # Mundwinkel). Probe 12: auf der lichtzugewandten Kopfseite lag das Maulinnere (KI-Mittel L* 13,5) in der Messansicht ueber der
+    # Schwelle 0,5 x Fenster-Median, die dunkle Flaeche reichte nur ueber 0,068-0,072 H (R10 0,075-0,095).
+    idx = np.where((np.abs(ey) <= mu['schlund']) & (np.abs(ex) <= 0.97), I['maul_tief'], idx)
     zb, zl = mu['zahn_b'] * Hp, mu['zahn_l'] * Hp
     for n_z, oben in ((mu['zaehne'][0], True), (mu['zaehne'][1], False)):
         for xk in mx + np.linspace(-0.5, 0.5, n_z) * mb * mu['zahn_bereich']:
-            r_k = np.sqrt(max(0.0, 1.0 - ((xk - mx) / (mb / 2)) ** 2)) * mh / 2
+            r_k = np.sqrt(max(0.0, 1.0 - abs((xk - mx) / (mb / 2)) ** mu['form'])) * mh / 2
             d_in = (Y - (my - r_k)) if oben else ((my + r_k) - Y)          # Abstand vom Lippenrand ins Innere
             breite = zb / 2 * np.clip(1.0 - d_in / zl, 0.35, 1.0)
             zahn = (np.abs(X - xk) <= breite) & (d_in >= -0.002 * Hp) & (d_in <= zl)
@@ -2086,7 +2101,17 @@ def schulterauge_v3_ecken(blob, p):
     Pc = Pw + np.array([1.0, 0.0, 0.0]) * sa['abstand']
     welt = [Pc - rechts * h - unten * h, Pc + rechts * h - unten * h, Pc - rechts * h + unten * h, Pc + rechts * h + unten * h]
     ecken = [tuple(int(x) for x in np.round(R8.T @ (q - T8))) for q in welt]
-    return dict(sa, ecken=ecken, normale=tuple(float(x) for x in R8.T @ nw), ziel_px=(zx, zy), abstand_uv=0.0)
+    # Normale fuer das Licht = Mittel der EM30-Eckennormalen von Mesh 8 im Umkreis 400 E. um die Viereckmitte: so wird das Viereck
+    # schattiert wie die Schulter darum (Probe 9 mit der Flaechennormale aus der Messansicht (0,90 0,34 0,28): im Spiellicht h118
+    # fast schwarz, die Nachbarecken zeigen nach oben/aussen).
+    m8 = modell_aus_blob(blob).meshes[8]
+    qv = np.array([v[:3] for v in m8.qv], float); qn = np.array([n[:3] for n in m8.qn], float)
+    mitte_l = np.mean(np.array(ecken, float), axis=0)
+    nah = np.linalg.norm(qv - mitte_l, axis=1) < 400.0
+    nl = (qn[nah] / np.linalg.norm(qn[nah], axis=1, keepdims=True)).sum(0)
+    nl /= np.linalg.norm(nl)
+    return dict(sa, ecken=ecken, normale=tuple(float(x) for x in nl), flaeche=tuple(float(x) for x in R8.T @ nw), ziel_px=(zx, zy),
+                abstand_uv=0.0)
 
 
 def baue_v3(basis):
