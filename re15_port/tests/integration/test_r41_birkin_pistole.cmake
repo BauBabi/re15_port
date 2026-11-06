@@ -26,6 +26,12 @@
 # Der Zug bringt den G5 nur bis X < 12000 (@0x80100fd0-e4), der Biss-Vorstoss nur bis 12000 (@0x80104060-94): wer hinter X 18000
 # steht, wird nie gebissen. Der Spieltest misst also weiter "Pistole besiegt den G5", mit dem Abstand, den RE2 dafuer vorsieht.
 #
+# INTEGRATION RUNDE 41 (GR + G5A, gemessen im Integrationsbaum mit Dauerfeuer ohne Rueckzug, Leon 5090 = Elza 5091): mit den
+# GR-HP (Form 1 600, Riesenform 1000) liegt die G5-Szene 1992 Bilder spaeter als in G5A NB2: Mutation F1274, Rueckstoss F3431,
+# Vorlauf F3550, Armierung F3605 (55 Vorlaufbilder), Szenenende F4767 (Bild 1162, Spieler x 13873 wie in NB2). Der Rueckzug
+# (12 s Taste unten) beginnt deshalb bei F4540 = F2548 + 1992 (34 x MA4 + W2.4 statt 18 x MA4) und wirkt wie in NB2 genau
+# 133 Bilder nach dem Szenenende (F4767..F4900). Endbild 6500 (G5A: G5 tot 867 Bilder nach dem Rueckzugsende -> ~F5770, + ~700).
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_birkin_pistole.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -51,9 +57,10 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 # Runde 41 Spur GR NB3: die Formen tragen mehr HP (Form 1 600, Riesenform 1000) - bei einem Pistolenschuss alle 22 Bilder
 # brauchen sie 27 + 67 statt 14 + 11 Treffer; Endbild und Zeitlimit wachsen mit. Gemessen (Dossier GR_granate.md N3.5): Leon
-# und Elza gleich - Mutation F1274, Riesenform F1455, Rueckstoss F3431, G5 F3594, G5 tot F4706. Endbild 5400 = F4706 + ~700.
+# und Elza gleich - Mutation F1274, Riesenform F1455, Rueckstoss F3431, G5 F3594, G5 tot F4706 (alte Szene). Integration Runde 41
+# mit der G5A-Szene (1162 Bilder ab Armierung F3605) und Rueckzug: Szenenende F4767, Rueckzug bis F4900, G5 tot ~F5770 -> Endbild 6500.
 if(NOT DEFINED _exit_bild)
-    set(_exit_bild 5400)
+    set(_exit_bild 6500)
 endif()
 # Runde 41 Spur GR NB3: ein STEHENDER Skript-Schuetze ohne Ausweichen und Heilen ueberlebt die laengere Form nicht mehr - gemessen
 # ohne Haken (Lauf nb3_pistole_ohne_haken, Leon): Form 1 600 -> Mutation F1274, Form F1455 mit 1000, Spieler tot F2100 bei
@@ -76,14 +83,16 @@ function(ein_lauf _name _raum)
     if(_raum STREQUAL "5091")
         set(_extra "RE15_TITLE_SHOT_CHAR=1")
     endif()
-    # Zielen + Feuer gehalten (R1 + Quadrat) bis F2548, dann 12 s zurueck (D), danach wieder Zielen + Feuer; die Pistole schiesst
-    # alle 22 Bilder. Gemessen (Nachbesserung 2): Szenenende F2775, Spieler 13873 -> 23113, G5 600 -> 15 bis F3774 ohne Treffer am
-    # Spieler, 40 Schuesse a 15.
+    # Zielen + Feuer gehalten (R1 + Quadrat) bis F4540, dann 12 s zurueck (D), danach wieder Zielen + Feuer; die Pistole schiesst
+    # alle 22 Bilder. Gemessen (G5A Nachbesserung 2, Form-HP 150): Szenenende F2775, Spieler 13873 -> 23113, G5 600 -> 15 bis F3774
+    # ohne Treffer am Spieler, 40 Schuesse a 15. Integration Runde 41 (GR-HP): Szenenende F4767, Rueckzug ab F4540 = F388 + 34 x 120
+    # + 72 (W2.4). In der Rueckstoss-Szene (ab F3431) feuert der Spieler selbst weiter (re15_bf_pad); ab dem Vorlauf F3550 sperrt
+    # die G5-Szene die Eingabe (sub06 @0x01778 Set(2,7,1), g5auftritt_r41.c), die Schritte bis zum Szenenende F4767 wirken nicht.
     set(_skript "A0.1,W1,U8.5")
-    foreach(_i RANGE 1 18)
+    foreach(_i RANGE 1 34)
         string(APPEND _skript ",MA4")
     endforeach()
-    string(APPEND _skript ",D12")
+    string(APPEND _skript ",W2.4,D12")
     # Nachbesserung G5 3: nach jedem 4-s-Abschnitt R1 kurz los (W0.2), damit das naechste Heben neu zielt. Die Zielhilfe laeuft nur im
     # Heben (Latch FUN_8003703c rundum, Radius 0x7530 @0x80032fac, Drehung FUN_8001a8f8 0xC8 @0x80032fe0-ec, player_common.c RAISE).
     # Gemessen (Lauf mit RE2-Vorkampf-Puls, eine Zufallsziehung @0x80104544 mehr): ein Arm peitscht den Spieler bei x 23113 (F3576 HP
