@@ -1,0 +1,85 @@
+== ../farbe/K5c_farbe
+  A1 Chroma Koerper                            13.9                                                                   GRUEN
+  A2 Farbstreuung je Teil sigma_ab             7.6                                                                    GRUEN
+  A3 Fleischrot-Anteil %                       20.3                                                                   GRUEN
+  A4 Farbton Fleischrot Grad                   22.0                                                                   GRUEN
+  A5 Neutralweiss Koerper %                    0.0                                                                    GRUEN
+  A6 HF_fft je Feld (max)                      {'koerper': 0.09, 'kopf': 0.167, 'kiefer': 0.073, 'kralle': 0.065}     GRUEN
+  A7 HF_rest je Feld (max)                     {'koerper': 0.058, 'kopf': 0.053, 'kiefer': 0.082, 'kralle': 0.069}    GRUEN
+  A8 Kiefer Zahn/Rot/Dunkel %                  (6.9, 25.3, 39.6)                                                      GRUEN
+  A9 Auge L*/C*                                (13.1, 18.0)                                                           GRUEN
+  A10 Texeldichte Teil/Koerper (min,max)       (0.64, 2.33)                                                           GRUEN
+  A11 Schwanz L*-Sprung Glied 1-5 (max)        0.1                                                                    GRUEN
+  A12 Farbkorn Koerper (a*b*-Rest)             2.48                                                                   GRUEN
+  K1 Bild1 Chroma Figur / Original             (6.1, 9.3)                                                             ROT
+  K2 Bild1 ab-Streuung Figur / Original        (6.2, 9.8)                                                             ROT
+  K3 Bild1 dE je Zone (max)                    {'Schwanz': 0.2, 'Ruecken/Flanke': 0.6, 'Hinterbein l (W)': 3.2, 'Hinterbein r (W)': 4.9, 'Vorderglied r (W)': 0.6} GRUEN
+  K4 Bild1 Rot-Klasse Figur % / Original       (2.8, 5.2)                                                             ROT
+  K5 Bild1 Hell-Klasse Ruecken % / W Figur %   (11.7, 9.9, 0.3, 0.5)                                                  GRUEN
+  K6 Bild2 Figur dE / Chroma                   (1.0, 24.7, 25.6)                                                      GRUEN
+  K7 Bild2 Unterkiefer dE / a*                 (1.6, 23.3, 24.9)                                                      GRUEN
+  K8 Bild2 Oberkiefer dE                       0.3                                                                    GRUEN
+  K9 Bild2 Klauen a* (r, l) / Original         (25.7, 24.1, 28.8, 22.2)                                               GRUEN
+  K10 Bild2 Augenpunkte L*max (r, l)           (14.0, 15.4)                                                           GRUEN
+  N1 neutral C* je Winkel (Variante / EM30)    ((10.3, 9.7, 10.1), (10.0, 12.5, 10.5))                                GRUEN
+  N2 neutral L*>85 % je Winkel                 (0.0, 0.0, 0.0)                                                        GRUEN
+  B1 Rot erosionsfest % (3 Winkel zus.)        35.9                                                                   GRUEN
+  B2 groesste Rotflaeche % Figur (3/4 vorn, Seite) (2.97, 5.96)                                                           ROT
+  B3 Blau-Klasse % je Winkel                   (0.03, 0.02, 0.0)                                                      GRUEN
+  B4 Glanzrest L* p90 ehemalige Keime          44.3                                                                   GRUEN
+  B5 Kopffeld Zahn-/Gaumenklasse %             0.0                                                                    GRUEN
+  B6 Kachelwiederholung Koerper %              0.04                                                                   GRUEN
+  B7 Rot-Farbton-Streuung Koerper Grad         11.3                                                                   GRUEN
+  B8 Bild2 Unterkiefer Hell-Klasse % / Original (14.1, 22.6)                                                           GRUEN
+  B9 Rot im Umrissband % (3 Winkel)            17.8                                                                   ROT
+  -> 28/33 GRUEN
+== Gegenprobe ../K5c
+  A1 Chroma Koerper                            4.9                                                                    ROT
+  A2 Farbstreuung je Teil sigma_ab             4.0                                                                    ROT
+  A3 Fleischrot-Anteil %                       0.5                                                                    ROT
+  A4 Farbton Fleischrot Grad                   -10.0                                                                  ROT
+  A5 Neutralweiss Koerper %                    0.79                                                                   ROT
+  A6 HF_fft je Feld (max)                      {'koerper': 0.105, 'kopf': 0.119, 'kiefer': 0.461, 'kralle': 0.324}    ROT
+  A7 HF_rest je Feld (max)                     {'koerper': 0.085, 'kopf': 0.04, 'kiefer': 0.436, 'kralle': 0.327}     ROT
+  A8 Kiefer Zahn/Rot/Dunkel %                  (77.1, 0.0, 0.0)                                                       ROT
+  A9 Auge L*/C*                                (56.1, 53.7)                                                           ROT
+  A10 Texeldichte Teil/Koerper (min,max)       (0.64, 2.33)                                                           GRUEN
+  A11 Schwanz L*-Sprung Glied 1-5 (max)        3.4                                                                    GRUEN
+  A12 Farbkorn Koerper (a*b*-Rest)             2.63                                                                   GRUEN
+  K1 Bild1 Chroma Figur / Original             (6.3, 9.3)                                                             ROT
+  K2 Bild1 ab-Streuung Figur / Original        (6.3, 9.8)                                                             ROT
+  K3 Bild1 dE je Zone (max)                    {'Schwanz': 2.1, 'Ruecken/Flanke': 8.3, 'Hinterbein l (W)': 2.1, 'Hinterbein r (W)': 4.6, 'Vorderglied r (W)': 3.3} ROT
+  K4 Bild1 Rot-Klasse Figur % / Original       (2.5, 5.2)                                                             ROT
+  K5 Bild1 Hell-Klasse Ruecken % / W Figur %   (21.9, 9.9, 1.0, 0.5)                                                  ROT
+  K6 Bild2 Figur dE / Chroma                   (9.9, 16.7, 25.6)                                                      ROT
+  K7 Bild2 Unterkiefer dE / a*                 (12.4, 13.7, 24.9)                                                     ROT
+  K8 Bild2 Oberkiefer dE                       12.0                                                                   ROT
+  K9 Bild2 Klauen a* (r, l) / Original         (13.8, 24.1, 22.8, 22.2)                                               ROT
+  K10 Bild2 Augenpunkte L*max (r, l)           (51.5, 36.2)                                                           ROT
+  N1 neutral C* je Winkel (Variante / EM30)    ((4.6, 5.0, 4.0), (10.0, 12.5, 10.5))                                  ROT
+  N2 neutral L*>85 % je Winkel                 (0.83, 1.3, 0.11)                                                      ROT
+  B1 Rot erosionsfest % (3 Winkel zus.)        21.5                                                                   ROT
+  B2 groesste Rotflaeche % Figur (3/4 vorn, Seite) (1.19, 0.61)                                                           ROT
+  B3 Blau-Klasse % je Winkel                   (3.86, 4.96, 2.38)                                                     ROT
+  B4 Glanzrest L* p90 ehemalige Keime          100.0                                                                  ROT
+  B5 Kopffeld Zahn-/Gaumenklasse %             15.06                                                                  ROT
+  B6 Kachelwiederholung Koerper %              0.24                                                                   GRUEN
+  B7 Rot-Farbton-Streuung Koerper Grad         19.9                                                                   GRUEN
+  B8 Bild2 Unterkiefer Hell-Klasse % / Original (41.1, 22.6)                                                           ROT
+  B9 Rot im Umrissband % (3 Winkel)            10.2                                                                   GRUEN
+  -> 6/33 GRUEN
+  Gegenprobe K5c heute: 6/33 GRUEN; Farbriegel, die dort NICHT rot sind: keine
+== Gegenprobe Runde 1 (nur B-Riegel) ../farbe/K5c_farbe_r1
+  B1 Rot erosionsfest % (3 Winkel zus.)        20.0                                                                   ROT
+  B2 groesste Rotflaeche % Figur (3/4 vorn, Seite) (3.26, 1.7)                                                            ROT
+  B3 Blau-Klasse % je Winkel                   (11.41, 15.54, 16.03)                                                  ROT
+  B4 Glanzrest L* p90 ehemalige Keime          80.1                                                                   ROT
+  B5 Kopffeld Zahn-/Gaumenklasse %             9.02                                                                   ROT
+  Gegenprobe Runde 1: B-Riegel, die dort NICHT rot sind: keine
+== Gegenprobe Runde 2 (nur B6-B9) ../farbe/K5c_farbe_r2
+  B6 Kachelwiederholung Koerper %              2.82                                                                   ROT
+  B7 Rot-Farbton-Streuung Koerper Grad         4.5                                                                    ROT
+  B8 Bild2 Unterkiefer Hell-Klasse % / Original (0.2, 22.6)                                                            ROT
+  B9 Rot im Umrissband % (3 Winkel)            23.3                                                                   ROT
+  Gegenprobe Runde 2: B6-B9, die dort NICHT rot sind: keine
+EXIT 1

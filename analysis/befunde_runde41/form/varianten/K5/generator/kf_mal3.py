@@ -639,12 +639,18 @@ def eichen(aus, runden):
             neu[2] = max(neu[2], -C_BLAU - bmax[z] + alt[2])     # tiefer als b* -8 (C* <= 8) wirkt nicht
             # Saettigung: hat die letzte Aenderung eines Anteils (> 1) die Kette um weniger als ein Zehntel davon bewegt, wirkt der Versatz dort
             # nicht mehr (Blau-Grenze C* <= 8 kappt) -> Anteil bleibt stehen. Lauf e3: Hinterbein r (W) b* -26,7 -> -31,7 bei Kette -3,1 -> -2,9.
+            # Einmal gesaettigt bleibt der Anteil gesperrt (Lauf e4 ohne Sperre: Hinterbein r (W) b* pendelte zwischen Sperre und Schritt,
+            # Schritt 5,0 / 1,2 im Wechsel, kein Abbruch).
             vk = e.get('_kette')
             va = e.get('_d_vor')
+            satt = e.setdefault('_satt', [False, False, False])
             if vk is not None and va is not None:
                 for i in range(3):
                     if abs(alt[i] - va[i]) > 1.0 and abs(v['lab'][i] - vk[i]) < 0.1 * abs(alt[i] - va[i]):
-                        neu[i] = alt[i]
+                        satt[i] = True
+            for i in range(3):
+                if satt[i]:
+                    neu[i] = alt[i]
             e['_kette'] = list(v['lab'])
             e['_d_vor'] = list(alt)
             e['d'] = [round(x, 2) for x in neu]
