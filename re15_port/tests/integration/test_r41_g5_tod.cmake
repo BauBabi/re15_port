@@ -14,6 +14,14 @@
 #   2  finisher.log: FSM-START, BLACKBG, YOUDIED, mit Latch 0 (Latch der Gator-Schiene) bei isdead 0 = G5-Latch traegt die FSM
 #   3  Titel: zweiter Spiel-Boot erreicht (RE15_BOOT_EXIT_AT=2, debug.log/stderr "[flow] BOOT_EXIT_AT")
 #
+# INTEGRATION RUNDE 41 (GR + G5A, gemessen im Integrationsbaum, Leon 5090 = Elza 5091): mit den GR-HP (Form 1 600, Riesenform 1000 =
+# RE2-G4-Ctor `addiu v0,zero,1000` @0x80100678) trifft die Rakete (w18 -> Art 9, DAT_8006f418[9] = 1000 `e8 03` @0x8006f42a) die
+# Riesenform auf GENAU 0: Form 1 F413 600 -> -400 (tot, Mutation mit 300/100), Riesenform F592 HP 1000, Rakete F604 -> 0, und
+# 0 ist nicht tot (Todesregel hp < 0, GR: 'bis hp < 0'). Mit MA7.2 endete das Feuer genau bei F604; die Form stand mit 0 HP,
+# toetete den stehenden Spieler (Griff/Hiebe, HP 0 bei F1520, tot F1592) und der G5 kam nie: FSM-START mit isdead=1.
+# Deshalb MA9 (Feuer bis F658): die Rakete im 32-Bild-Takt (F413, 445, ..., 604, 636) trifft die 0-HP-Form noch einmal ->
+# tot -> Rueckstoss (dort feuert re15_bf_pad selbst) -> G5-Szene -> der Spieler steht danach ohne Taste auf RE2s Linie.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_g5_tod.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -44,11 +52,11 @@ function(ein_lauf _name _raum)
     if(_raum STREQUAL "5091")
         set(_extra "RE15_TITLE_SHOT_CHAR=1")
     endif()
-    re15_start_spiel(_rv 300
+    re15_start_spiel(_rv 600
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_extra}
         RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA7.2,W260"
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA9,W260"
         RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log RE15_GIVE=18:200 RE15_EQUIP=18
         RE15_FINISHER_LOG=1 RE15_BOOT_EXIT_AT=2 "RE15_EXIT_AT=7000#${_raum}"
         "${_exe_kopie}")

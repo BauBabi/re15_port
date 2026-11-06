@@ -4135,7 +4135,8 @@ if(TARGET re15_pc)
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_tod_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_tod.cmake)
-    set_tests_properties(integration_r41_g5_tod PROPERTIES TIMEOUT 640)
+    # Integration Runde 41 (GR-HP): Rueckstoss und G5-Szene liegen ~1400 Bilder spaeter, Laeufe je 600 s -> 1300 s.
+    set_tests_properties(integration_r41_g5_tod PROPERTIES TIMEOUT 1300)
 endif()
 
 # --- ZOMBIE-GORE je Waffe (zombiegore_r15.c) + RE1.5-Teilschicht (teile_r15.c) ---
