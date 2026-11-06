@@ -467,7 +467,7 @@ static const int8_t k_re2_beben[13] = { -3, -5, -7, -7, -7, -7, -7, -6, -5, -4, 
 
 /* NB6: RE2-FX-Pool im RE2-RAM s02 (0x800D8CF0, 96 x 0x7C, lebende Plaetze; sub05-Bild 39), sortiert. Felder: Bank +0x1C, Sub +0x1E,
  * Status +0x18, OpA +0, OpB +1, s2 +2, vel.y +0x0E, lokal.y +0x26, TPage +0x2A, CLUT +0x32, Skala +0x3A, Anim +0x21, Countdown +0x20,
- * ofs +0x2C..30, welt +0x34..38. Quelle: nb6/messung_pool_s02.txt (Werkzeug nb6/werkzeug/pool.py, soll_json.py). */
+ * ofs +0x2C..30, welt +0x34..38. Quelle: analysis/befunde_runde41/G5_belege/nb6/messung_pool_s01_s03.txt (Abschnitt s02) und\n * nb6/soll_s02_pool.json (Werkzeuge nb6/werkzeug/pool.py, soll_json.py; RAM-Leser abnahme4/werkzeug/re2ram4.py). */
 static const int32_t k_re2_pool_s02[18][19] = {
     { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 32, 0, 500, -3948, -25330, 500, -3948, -25330 },
     { 3, 9, 0xB003, 0, 0, 0, 0, 0, 126, 30801, 6912, 33, 0, 500, -4104, -25330, 500, -4104, -25330 },
@@ -488,6 +488,27 @@ static const int32_t k_re2_pool_s02[18][19] = {
     { 25, 0, 0xA003, 21, 21, 0, 348, 4872, 15, 30738, 4096, 9, 1, 500, -5040, -25330, 500, -504, -25330 },
     { 25, 0, 0xA003, 21, 21, 8, 192, 1440, 15, 30738, 4096, 5, 2, 500, -5040, -25330, 500, -3780, -25330 },
 };
+/* NB6 VIBRATION, Soll von Hand aus den Skript-Bytes sub14 (@0x01C02 `8c 00 64 c8 07 00 00 00`, @0x01C0A `8b fa 05 00 02 00`,
+ * @0x01C10 `8c 00 c8 32 11 00 05 00`; Handler @0x800593e4 / @0x80059394: a0..a3 aus pc[4..5]/pc[2]/pc[3]/pc[6..7] bzw. pc[2..3]/pc[1]/pc[4..5])
+ * und dem Ring-Takt FUN_800396FC (Vorlauf zuerst abbauen, ohne Beitrag @0x80039728-2c; Rest -1 @0x8003973c; Akku + Schritt, Wert = Summe >> 7
+ * @0x8003976c-78; Maximum @0x8003977c-90) und den Allokatoren FUN_800395B8 (Akku = von << 7, Schritt = (bis - von) * 0x80 / Dauer, `div`
+ * schneidet gegen 0) / FUN_80039514 (Wert = Staerke, Schritt 0):
+ *   Rampe(7,100,200,0): Schritt 1828, Werte 114 128 142 157 171 185 199 (Takt 1..7)
+ *   Konstant(5,250,2):  Takt 1..2 Vorlauf, Takt 3..7 Wert 250
+ *   Rampe(17,200,50,5): Schritt -1129, Takt 1..5 Vorlauf, Takt 6..22 Werte 191 182 173 .. 50
+ * Aktuator 1 (DAT_800CBC21, `sb v0,1(s0)` @0x80038dc0) je sub04-Bild 1..23; Aktuator 0 bleibt 0 (sub14 legt nichts in Ring A). */
+static const uint8_t k_vib_a1[23] = { 114, 128, 250, 250, 250, 250, 250, 173, 164, 155, 147, 138, 129, 120, 111, 102, 94, 85, 76, 67, 58, 50, 0 };
+/* NB6 BROCKEN-TAKT, Soll aus sub05 (Bytes s.o.): Zahl der Sce_espr_on bis einschliesslich sub05-Bild s (= sub04-Bild s, Evt_exec(8, sub05)
+ * @0x0169E im ersten sub04-Bild, Platz 8 > 6 laeuft im selben Bild): @0x016DE/@0x016EE Bild 1, Sleep 5 @0x016FE -> @0x01702 Bild 6,
+ * Sleep 5 @0x01712 -> @0x01716 Bild 11, Sleep 3 @0x01726 -> @0x0172A Bild 14, Sleep 5 @0x0173A -> @0x0173E/@0x0174E Bild 19,
+ * Sleep 5 @0x0175E -> @0x01762 Bild 24. */
+static int brocken_soll(int s)
+{
+    static const int k_bild[8] = { 1, 1, 6, 11, 14, 19, 19, 24 };
+    int n = 0;
+    for (int k = 0; k < 8; k++) n += (k_bild[k] <= s);
+    return n;
+}
 static int pool_cmp(const void *a, const void *b)
 {
     const int32_t *x = (const int32_t *)a, *y = (const int32_t *)b;
@@ -573,6 +594,13 @@ static void test_m4_daten(void)
               "Objektmodell-Liste @0x244: Modell 3/4 nicht TIM 0x33844 / MD1 0x28A4\n");
         CHECK(memcmp(r + 0x1B50, "\x32\x00\x00\x00\xd0\xee\x60\xbe", 8) == 0 && memcmp(r + 0x1B84, "\x26\x00\x01\x10\xe8\x03", 6) == 0 &&
               memcmp(r + 0x1B68, "\x3e\x00\x0b\x04\xe0\xb1", 6) == 0, "sub11-Bytes @0x1B50/@0x1B68/@0x1B84 weichen ab");
+        /* NB6: Raum-ESP = RDT[0x35D8 : 0x36FC] (Kopf [18] 0x35D8 bis [19] 0x36F8 + 4), Ids `19 ff ff ff ff ff ff ff`; sub05 Sce_espr_on @0x016DE. */
+        size_t en = 0; uint8_t *esp = slurp(RE2_DIR "/R704.ESP", &en);
+        CHECK(esp && en == 0x36FCu - 0x35D8u && memcmp(r + 0x35D8, esp, en) == 0, "R704.ESP != ROOM7040.RDT [0x35D8, 0x36FC) (Laenge %zu)", en);
+        CHECK(memcmp(r + 0x16DE, "\x3a\x00\x19\x00\x00\x00\x00\x10\x24\x04\x50\xec\xf0\xab\x00\x00", 16) == 0 &&
+              memcmp(r + 0x1C02, "\x8c\x00\x64\xc8\x07\x00\x00\x00\x8b\xfa\x05\x00\x02\x00\x8c\x00\xc8\x32\x11\x00\x05\x00\x01\x00", 24) == 0,
+              "sub05 @0x016DE / sub14 @0x01C02 weichen ab");
+        free(esp);
     } else fprintf(stderr, "NB5: info/re2leon/PL0/RDT/ROOM7040.RDT nicht da - nur Laengen geprueft\n");
     re15_md1_t m;
     if (md1 && mn >= 12) { s_lampe_md1_raw = (uint8_t *)malloc(mn); if (s_lampe_md1_raw) { memcpy(s_lampe_md1_raw, md1, mn); s_lampe_md1_n = (int)mn; } }
@@ -651,9 +679,21 @@ static void test_ablauf(const char *rdt, unsigned raum)
     {   int32_t lp[3]; int16_t ld[3];
         if (re15_g5a_beben() != 0 || re15_g5a_lampe(0, lp, ld) || re15_g5a_lampe(1, lp, ld)) nb5_lampe_frueh++; }
     int nb6_pool_n = -1, nb6_pool_ok = 0, nb6_ring_ok = -1, nb6_ring_leer39 = -1, nb6_brocken = 0;
+    int nb6_vib_falsch = 0, nb6_vib_a0 = 0, nb6_takt_falsch = 0, nb6_vib_n = 0;
     for (vl = 1; vl <= 200 && re15_g5a_bild() < 0; vl++) {
         takt();
-        {   uint8_t a0 = 0, a1 = 0; re15_rumble_tick(&a0, &a1); (void)a0; (void)a1; }   /* Pad-Handler FUN_80038BBC @0x80038da4/@0x80038db4 */
+        uint8_t nb6_a0 = 0, nb6_a1 = 0;
+        re15_rumble_tick(&nb6_a0, &nb6_a1);                       /* Pad-Handler FUN_80038BBC @0x80038da4/@0x80038db4 */
+        {   const int sb6 = re15_g5a_vorlauf() - 1;              /* sub04-Bild (Vorlaufbild 2 = sub04-Bild 1) */
+            if (sb6 >= 0 && sb6 <= 23) {                       /* sub04-Bild 0 (Vorlaufbild 1) .. 23 */
+                const uint8_t soll = (sb6 >= 1) ? k_vib_a1[sb6 - 1] : 0;
+                if (nb6_a1 != soll) { nb6_vib_falsch++;
+                    fprintf(stderr, "%04X: NB6 Vibration sub04-Bild %d: Aktuator 1 = %d, Soll %d\n", raum, sb6, nb6_a1, soll); }
+                if (nb6_a0 != 0) nb6_vib_a0++;
+                nb6_vib_n++;
+            }
+            if (sb6 >= 1 && sb6 <= 40 && re15_g5a_brocken_gespawnt() != brocken_soll(sb6)) { nb6_takt_falsch++;
+                fprintf(stderr, "%04X: NB6 Brocken-Takt sub05-Bild %d: %d gespawnt, Soll %d\n", raum, sb6, re15_g5a_brocken_gespawnt(), brocken_soll(sb6)); } }
         re2fx_tick();                                             /* Pumpe FUN_8001d300 nach dem Skript (@0x800263b0 vor @0x80026980) */
         {   const int v6 = re15_g5a_vorlauf();
             if (v6 == 2) {                                        /* sub04-Bild 1: sub14 hat die Ringe gefuellt, der Tick lief schon einmal */
@@ -724,6 +764,11 @@ static void test_ablauf(const char *rdt, unsigned raum)
     CHECK(nb6_pool_n == 18 && nb6_pool_ok == 18, "%04X: NB6 RE2-FX-Pool %d Plaetze, %d von 18 gleich RE2-RAM s02", raum, nb6_pool_n, nb6_pool_ok);
     CHECK(re2fx_op_unbekannt() == 0, "%04X: NB6 %u Aufrufe nicht umgesetzter RE2-FX-Ops", raum, re2fx_op_unbekannt());
     CHECK(nb6_ring_ok == 1 && nb6_ring_leer39 == 1, "%04X: NB6 Vibration: Ring B nach sub14 %d, leer bei sub05-Bild 39 %d", raum, nb6_ring_ok, nb6_ring_leer39);
+    fprintf(stderr, "%04X: NB6 Vibration Aktuator 1 je sub04-Bild 0..23: %d von %d Bildern falsch, Aktuator 0 in %d Bildern != 0; "
+            "Brocken-Takt sub05-Bild 1..40: %d Bilder falsch\n", raum, nb6_vib_falsch, nb6_vib_n, nb6_vib_a0, nb6_takt_falsch);
+    CHECK(nb6_vib_n == 24 && nb6_vib_falsch == 0 && nb6_vib_a0 == 0, "%04X: NB6 Vibrationsmuster sub14: %d/%d Bilder falsch, Aktuator 0 %d x",
+          raum, nb6_vib_falsch, nb6_vib_n, nb6_vib_a0);
+    CHECK(nb6_takt_falsch == 0, "%04X: NB6 Brocken-Takt in %d sub05-Bildern nicht wie sub05 @0x016DE..@0x01762", raum, nb6_takt_falsch);
 
     /* ---- SZENE ab der Armierung (Bild 0 ist schon gelaufen) ---- */
     FILE *spur = NULL;

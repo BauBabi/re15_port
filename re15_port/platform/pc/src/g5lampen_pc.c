@@ -36,7 +36,7 @@ extern void re15_render_pc_bind_tim_slot(int slot);
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 extern int  re15_render_pc_dbg_slot_loaded(int slot);
 extern void re15_render_pc_abtastphase_objekt(float a);
-#define G5L_ABTASTPHASE 0.5f   /* gemessen: RE2-VRAM s04 gegen Port nativ (Nachbesserung 6, nb6/messung_lampe_vram.txt) */
+#define G5L_ABTASTPHASE 0.5f   /* PORT-WAHL, gemessen: RE2-VRAM s04 gegen Port nativ (Nachbesserung 6, nb6/messung_lampe_vram.txt) */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                     const int *decoded_len, int satz);
 
@@ -185,7 +185,10 @@ static void lampe_zeichnen(int i, const re15_camera_view_t *cam_view, int cx, in
     /* Abgabe in RE2-Zeichenreihenfolge innerhalb eines Fachs: Vierecke absteigend, dann Dreiecke absteigend.
      * ABTASTPHASE +0.5 fuer die Lampe (render_pc.c re15_render_pc_abtastphase_objekt): gemessen gegen das RE2-VRAM s04 (Lampe
      * x -6000, Zeilen 119..123 pixelgleich bis 3 Stufen; mit der globalen +0.375 trifft die 1 Pixel hohe Gehaeuseflaeche T02/T14
-     * in Zeile 122 die Texelspalte u 115 (104) statt u 116 (224) - die "15 % dunkler" der Nachbesserung 5). */
+     * in Zeile 122 die Texelspalte u 115 (104) statt u 116 (224)). PORT-WAHL (gemessen, keine PSX-Adresse: die Phase ist eine Eigenschaft
+     * des PC-Rasterers, re15_abtastphase.h): Lampenfleck Summe ueber Median Port/RE2-VRAM s04 0,82 -> 0,88 nativ, 0,83 -> 0,84 im 3x-Fenster;
+     * Eckfarben aller 31 Polygone = RE2-Pakete (Licht 0x80076f88 = re15_light_setup_actor, nb6/messung_lampe_pakete_ot.txt). Rest offen
+     * (Dossier 12.7). */
     re15_render_pc_abtastphase_objekt(G5L_ABTASTPHASE);
     for (int durchgang = 0; durchgang < 2; durchgang++) {
         const int quad = (durchgang == 0);

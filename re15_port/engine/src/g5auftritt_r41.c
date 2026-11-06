@@ -271,8 +271,13 @@ int re15_g5a_beben(void) { return (raum_5090() && s_g5a.laeuft) ? s_beben : 0; }
  *   a2 = pc[4..5] (`lhu a2,4(v0)` @0x800593b4) Vorlauf -> `jal 0x80039514` @0x800593b8 = re15_rumble_large(Dauer, Staerke, Vorlauf);
  * Vib_fade_set @0x800593e4: a0 = pc[4..5] Dauer (@0x800593fc), a1 = pc[2] von (@0x80059400), a2 = pc[3] bis (@0x80059404),
  *   a3 = pc[6..7] Vorlauf (@0x80059408) -> `jal 0x800395b8` @0x8005940c = re15_rumble_ramp(Dauer, von, bis, Vorlauf).
- * (Vib_set0 @0x80059348 -> FUN_8003947C(pc[2..3], pc[4..5]) = re15_rumble_small benutzt die Szene nicht.) Die Raum-Schleife sub15
- * (Platz 6, MAIN sub00 @0x01296) beendet sub06 @0x01784 `05 06` vor dem Vorlauf; RE2-RAM s01..s03: Ringe A/B leer. */
+ * (Vib_set0 @0x80059348 -> FUN_8003947C(pc[2..3], pc[4..5]) = re15_rumble_small benutzt die Szene nicht.) Opcode-Tabelle @0x800a74c8:
+ * [0x8A] = 0x80059348, [0x8B] = 0x80059394, [0x8C] = 0x800593e4. Die Raum-Schleife sub15 (@0x01C1A: 6 x Vib_set1, Sleep 0x34, Goto;
+ * Platz 6, MAIN sub00 @0x01296) beendet sub06 @0x01784 `05 06` vor dem Vorlauf; sub13 (@0x01BE4) ruft sub06 @0x0179E `18 0d` im Teil VOR
+ * Cut_chg(9), den der Port durch Rueckstoss/Sturz der Riesenform ersetzt (Dossier 1.1) - beide gehoeren nicht zur Port-Szene.
+ * RE2-RAM s01..s03 (nb6/messung_ring_ram.txt): Ringe A/B leer, Aktuatoren 0x800CBC20/21 = 0 0.
+ * PC: der Ring-Takt laeuft im Pad-Takt (input_pc.c pad_rumble_tick, Runde 18) und geht an SDL_GameControllerRumble; ohne Pad
+ * geschieht nichts - wie RE2 (DAT_800CBC20 hat nur den PadSetAct-Leser, kein Kamera-Beben; re15_rumble.h). */
 static void vibration_sub14(void)
 {
     re15_rumble_ramp(0x07, 0x64, 0xC8, 0x00);           /* @0x01C02 */
