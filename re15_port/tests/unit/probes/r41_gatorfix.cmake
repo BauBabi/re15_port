@@ -44,14 +44,21 @@ endforeach()
 #   unit_r41_gatorfix_v4(_elza)      G2-RE2 NB2 "Vorschlag 4": (a) Bewegung mit Kanister Bild fuer Bild = ohne Kanister (13 Lagen, Gegenprobe Kanister-Huelle aktiv =
 #                                     Stand f942f56c0: rot), (b) Kanister = Part 6 der gezeichneten Pose x Lokallage in jedem Bild (Gegenprobe ein Bild alte Pose: rot)
 #   unit_r41_gatorfix_re2(_elza)     seit NB2: Kopf-Riegel (Mesh 5/6/7) Stand f942f56c0 gegen neu; Kopf + Kanister in Rampe/Plattform nur dokumentiert
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza)
+#   unit_r41_gatorfix_nb3(_elza)     G2-RE2 NB3 (Nutzerentscheid 2026-11-06, Messblatt G2_MESSBLATT_NB3.md): (A1) 18 Rampen-Lagen oben x 3600 Bilder, mit und ohne
+#                                     Kanister: erster Treffer <= 600 Bilder und laengste Pause ohne Treffer <= 600, Rammen >= 1; (B1) 11 Wasser-Lagen vor der
+#                                     Suedkante: Haenge-Fenster 0, (B3) ohne Fortschritt <= 450, Pause ohne Treffer <= 600; mit = ohne; Gegenproben Stand
+#                                     a661eb8aa (Pruefhaken nb3_alt): R2318/-16300 ohne Treffer, W4200/-18800/c2 Haenge-Fenster, alte gang-Lagen weichen ab
+#   unit_r41_gatorfix_gang(_elza)    seit NB3: Lagen ausserhalb der Baender (Westkanal, Nordbecken 2500 vor der Kante, Suedbecken 2500 vor der Plattform),
+#                                     alter Stand = Pruefhaken rw_alt + nb3_alt
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza nb3 nb3_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
     foreach(_teil gang_montage gang_montage_elza gang_szene gang_szene_elza frei frei_elza rampe rampe_elza
-                  abn2_leiterecke abn2_wand_elza abn2_nordbecken abn2_rampe_west abn2_rampe_west_elza abn2_ecken abn2_wand)   # NB1/NB2
+                  abn2_leiterecke abn2_wand_elza abn2_nordbecken abn2_rampe_west abn2_rampe_west_elza abn2_ecken abn2_wand   # NB1/NB2
+                  rampe_oben rampe_oben_elza)   # G2-RE2 NB3 (Vorgabe A): Figur oben auf der Rampe, obenlog; rampe/rampe_elza/abn2_wand_elza: dazu haenglog (Vorgabe B)
         add_test(NAME integration_r41_gatorfix_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

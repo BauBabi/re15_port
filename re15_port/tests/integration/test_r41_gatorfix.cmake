@@ -17,6 +17,11 @@
 # TEIL=rampe|rampe_elza  Nachbesserung 1 (M3): wie frei, Rueckkehr mit dem Messhaken RE15_K2080_RUECK_LAGE an die Suedkante der Rampe (Blick Nord), die
 #     Figur klettert auf die Rampe (Kletterzellen Bodentypwort Bit 0, nur die Rampe) und bleibt oben; climb.log sub=9, Belagerung (Phase 5) mit dem Kanister,
 #     Stillstand fern <= 60 Bilder am Stueck, Wandreiben <= 30.
+#     G2-RE2 NB3 (Vorgabe B, Messblatt G2_MESSBLATT_NB3.md Riegel B2/B3): rampe/rampe_elza/abn2_wand_elza mit und ohne Kanister - haenglog: Haenge-Fenster
+#     (RW-Mass) 0, laengste Zeit ohne Fortschritt <= 450 Bilder; mit Kanister 0 Zeilen HAENGT / RUECKWAERTS an / TAUCHEN an (kein Rueckfall noetig).
+# TEIL=rampe_oben|rampe_oben_elza  G2-RE2 NB3 (Vorgabe A, Riegel A2): Rueckkehr 650 vor der Rampen-Suedkante (RE15_K2080_RUECK_LAGE 4200,-18750 / 3600,-18750,
+#     Cut 2), nach der Szenen-Haltung Klettern (U0.1,A0.2 ab F48) und U1.2 auf die Rampe, dann die Schuesse wie in allen Raeumen (F180) und W170 stehen; 4400 Bilder, mit und ohne Kanister - obenlog:
+#     erster Treffer oben <= 600 Bilder nach dem ersten Oben-Bild, keine Pause ohne Treffer > 600, solange die Figur oben ist (Rammen, CROSS-Biss, Hochbiss).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_TOOL=<test_r41_gatorfix> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r41_gatorfix.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -85,7 +90,20 @@ elseif(TEIL MATCHES "^(frei|rampe|abn2_)")
     endif()
     set(_extra "")
     set(_ende 8400)
-    if(TEIL MATCHES "^rampe")
+    if(TEIL MATCHES "^rampe_oben")   # G2-RE2 NB3 (Vorgabe A): Figur oben auf der Rampe, Messblatt NB3 1.3 (batch3.sh oben_leon|oben_elza), Eingabe angepasst:
+        # Das Skript startet je Raum neu; im Rueckkehr-Besuch kommt der Alligator mit Vorgabe B schon ab ~F100 an die Kante (erster Biss F122-125) und das Zielen (M)
+        # dreht die Figur per Auto-Aim vom Rampenrand weg (rot 3072 -> 1699, Probelaufe 1/2) - darum Klettern (U0.1,A0.2) und Gang auf die Rampe (U1.2) VOR die
+        # Schuesse, nach der Szenen-Haltung der Rueckkehr (Cut 12, pst=1: Eingaben bis mindestens F9 verschluckt, Probelauf 3; ab F48 gemessen frei); die Zeit bis
+        # zum ersten Schuss bleibt 180 Bilder (48 + 3 + 6 + 36 + 36 + 51 = 180 wie W6.0), damit die Kanister-Szene im ersten Besuch wie bisher ausloest.
+        # Kletterpose 650 vor der Kante (z -18750; bei -18800 kein Klettern: Kletterzellen z >= -18000, test_r41_gatorfix kletterkarte 2090).
+        set(_weg "W1.6,U0.1,A0.2,W1.2,U1.2,W1.7,M0.6,MA0.1,M0.3,MA0.1,W170")
+        if(TEIL MATCHES "elza$")
+            set(_extra "RE15_K2080_RUECK_LAGE=3600,-18750,3072,2" RE15_CLIMB_TRACE=climb.log)
+        else()
+            set(_extra "RE15_K2080_RUECK_LAGE=4200,-18750,3072,2" RE15_CLIMB_TRACE=climb.log)
+        endif()
+        set(_ende 4400)
+    elseif(TEIL MATCHES "^rampe")
         set(_weg "W6.0,M0.6,MA0.1,M0.3,MA0.1,W22.0,A0.3,W2.0,A0.3,W2.0,XU0.8,W120")
         set(_extra "RE15_K2080_RUECK_LAGE=3000,-18800,3072" RE15_CLIMB_TRACE=climb.log)
         set(_ende 3600)
@@ -182,6 +200,28 @@ elseif(TEIL MATCHES "^(frei|rampe|abn2_)")
         file(STRINGS "${_dir}/gator_boss.log" _rm REGEX "^RAMMEN F")
         list(LENGTH _rm _rmn)
         set(_tz "${_tz}; Klettern sub=9 ${_kln} Zeilen, Ueberquerung mit Kanister ${_g5n} Bilder, Rammen ${_rmn}")
+    endif()
+    # G2-RE2 NB3 (Vorgabe B, Riegel B2/B3): rampe / rampe_elza / abn2_wand_elza - haenglog mit (0 Rueckfall-Zeilen) und ohne Kanister: Haenge-Fenster 0, ohne Fortschritt <= 450
+    if(TEIL MATCHES "^(rampe|rampe_elza|abn2_wand_elza)$")
+        execute_process(COMMAND "${RE15_TOOL}" haenglog "${_dir}" mit RESULT_VARIABLE _hr OUTPUT_VARIABLE _ho ERROR_VARIABLE _he)
+        string(REGEX MATCH "haenglog: [^\n]*" _hz "${_ho}")
+        execute_process(COMMAND "${RE15_TOOL}" haenglog "${_dir}_ohne" RESULT_VARIABLE _hr2 OUTPUT_VARIABLE _ho2 ERROR_VARIABLE _he2)
+        string(REGEX MATCH "haenglog: [^\n]*" _hz2 "${_ho2}")
+        set(_tz "${_tz}; NB3 mit Kanister: ${_hz}; ohne Kanister: ${_hz2}")
+        if(NOT _hr EQUAL 0 OR NOT _hr2 EQUAL 0)
+            g2_fehler("NB3 Vorgabe B verfehlt (Haenge-Fenster / ohne Fortschritt / Rueckfall): ${_tz}")
+        endif()
+    endif()
+    # G2-RE2 NB3 (Vorgabe A, Riegel A2): rampe_oben(_elza) - obenlog mit und ohne Kanister: erster Treffer oben <= 600, keine Pause > 600
+    if(TEIL MATCHES "^rampe_oben")
+        execute_process(COMMAND "${RE15_TOOL}" obenlog "${_dir}" RESULT_VARIABLE _or OUTPUT_VARIABLE _oo ERROR_VARIABLE _oe)
+        string(REGEX MATCH "obenlog: [^\n]*" _oz "${_oo}")
+        execute_process(COMMAND "${RE15_TOOL}" obenlog "${_dir}_ohne" RESULT_VARIABLE _or2 OUTPUT_VARIABLE _oo2 ERROR_VARIABLE _oe2)
+        string(REGEX MATCH "obenlog: [^\n]*" _oz2 "${_oo2}")
+        set(_tz "${_tz}; NB3 mit Kanister: ${_oz}; ohne Kanister: ${_oz2}")
+        if(NOT _or EQUAL 0 OR NOT _or2 EQUAL 0)
+            g2_fehler("NB3 Vorgabe A verfehlt (Figur oben sicher): ${_tz}")
+        endif()
     endif()
     message(STATUS "r41_gatorfix ${TEIL}: ${_tz}")
     return()
