@@ -250,6 +250,49 @@ static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float bo
         }
         for (int k = 0; k < 3; k++) q[j + 1][k] += p[j + 1][k] - alt[k];
     }
+    /* Runde 41 SF V3 Runde 2 (Zahlen-Pruefer V3 r1 Abschnitt 6.1: Lauf sfv3/r/V3, Halten h32-h36, h60, h65-h71, h84: Gelenke 6/7 bis
+     * 612 E. unter dem Boden, weil die Bodenregel oben keinen neuen Knick zulaesst; Referenz 2 / V1 dort >= 100 E. darueber): liegt
+     * danach noch ein Gelenk unter dem Boden, die ganze Kette starr um das Gelenk 0 hochdrehen - alle Gelenkwinkel bleiben, es
+     * entsteht kein Knick. Achse waagerecht quer zur Richtung Gelenk 0 -> tiefstes Gelenk, Schritt 1 Grad (Aufloesung der Messung
+     * Gelenkwinkel), hoechstens 90 Grad (dann liegt die Strecke Gelenk 0 -> tiefstes Gelenk waagerecht oder hoeher). */
+    int tief = -1;
+    float ymax = boden;
+    for (int j = 1; j < SW_J; j++)
+        if (p[j][1] > ymax) { ymax = p[j][1]; tief = j; }
+    if (tief > 0) {
+        float v[3] = { p[tief][0] - p[0][0], 0.0f, p[tief][2] - p[0][2] };
+        float ax[3] = { -v[2], 0.0f, v[0] };                /* waagerecht, quer zu v */
+        if (norm(ax) < 1e-3f) { ax[0] = 1.0f; ax[1] = 0.0f; ax[2] = 0.0f; }
+        float r0[SW_J][3];
+        for (int j = 0; j < SW_J; j++)
+            for (int k = 0; k < 3; k++) r0[j][k] = p[j][k] - p[0][k];
+        const float schritt = 0.0174533f;                   /* 1 Grad */
+        float best = 0.0f;
+        for (int sg = -1; sg <= 1 && best == 0.0f; sg += 2) {
+            for (int n = 1; n <= 90; n++) {
+                const float w = sg * n * schritt, c = cosf(w), sn = sinf(w);
+                int ok = 1;
+                for (int j = 1; j < SW_J && ok; j++) {
+                    const float *r = r0[j];
+                    const float kd = ax[0] * r[0] + ax[1] * r[1] + ax[2] * r[2];
+                    const float y = r[1] * c + (ax[2] * r[0] - ax[0] * r[2]) * sn + ax[1] * kd * (1.0f - c);
+                    if (p[0][1] + y > boden) ok = 0;
+                }
+                if (ok) { best = w; break; }
+            }
+        }
+        if (best != 0.0f) {
+            const float c = cosf(best), sn = sinf(best);
+            for (int j = 1; j < SW_J; j++) {
+                const float *r = r0[j];
+                const float kd = ax[0] * r[0] + ax[1] * r[1] + ax[2] * r[2];
+                const float kr[3] = { ax[1] * r[2] - ax[2] * r[1], ax[2] * r[0] - ax[0] * r[2], ax[0] * r[1] - ax[1] * r[0] };
+                float neu[3];
+                for (int k = 0; k < 3; k++) neu[k] = p[0][k] + r[k] * c + kr[k] * sn + ax[k] * kd * (1.0f - c);
+                for (int k = 0; k < 3; k++) { q[j][k] += neu[k] - p[j][k]; p[j][k] = neu[k]; }
+            }
+        }
+    }
 }
 
 /* FABRIK auf den Gelenken a..e (a fest, e auf das Ziel t), feste Gliedlaengen, Boden. NB4 (Abnahme 2 A4: h18 Schlinge,

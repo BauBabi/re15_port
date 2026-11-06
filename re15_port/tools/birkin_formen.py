@@ -340,6 +340,10 @@ SCHWANZ_V3 = dict(
     # (Iterationen im Dossier Abschnitt V3).
     radien_s=[(0.0, 380), (0.115, 380), (0.29, 350), (0.38, 300), (0.56, 200), (0.73, 130), (0.91, 82), (1.0, 68)],
     dorn=1.6,                              # Spitze: Kegel 1,6 x Endradius (spitz auslaufend; Ende Hand/Kralle = F2 offen)
+    # Deckel am Glied 0 bleibt (Runde 2, Zahlen-Pruefer V3 r1: R31 Glied 0 0,046 an der Grenze 0,045, der Deckel traegt 10 Dreiecke
+    # ohne Texelflaeche): Probe r2k ohne Deckel - Glied 0 0,054, aber R25 h85 34,1 statt 27,4 Grad (offenes Rohrende im Umriss am
+    # Austritt), h83 42,6 statt 25,7 Grad (n2_schwanz_mass.py)
+    deckel=True,
     # Textur (R31/R32, Auftrag "Texel aus der KOERPERHAUT desselben EM30-Atlas, Marmorierung laengs wie am Arm"): Hautstreifen der
     # Seite 2 (TPage 130), Haut-CLUT-Zeile 482 (Arme, Referenz 2), Streifen A u 44-83 v 30-88, OHNE die roten Querstreifen ab v 92
     # (Bild sfv3/bau/streifen.png aus tools/r41_sichel/v3/arm_uv_richtung.py). Zeilenmittel Streifen A v 52-88: L* 15,8-18,9, a* 8-11, b* 1-6 (tools/r41_sichel/v3/streifen_profil.py) = 0,6 x
@@ -352,7 +356,11 @@ SCHWANZ_V3 = dict(
     uv=dict(clut=482 << 6, page=130, spiegeln=True, laengs='u',
             fenster=[(44, 30, 83, 88), (83, 32, 44, 86), (46, 34, 81, 86), (81, 36, 48, 84), (48, 38, 79, 84), (79, 38, 50, 82),
                      (52, 42, 77, 82)]),
-    bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.0, grenze=55),   # wie V2 (Ae5)
+    bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.0, grenze=55,    # wie V2 (Ae5)
+                  # Runde 2 (Zahlen-Pruefer V3 r1 6.2: Pose h83 = Clip 11 Bild 85 mit 4 Knicken > 20 Grad, max 35,6 Grad je 0,05 H; die
+                  # Buehne zeigt die Keyframes, das Spiel die Feder-Kette mit Knick-Grenze): dieselbe Knick-Grenze wie schwanz_r41.c
+                  # glaetten (SW_GLATT_RAND / _MIN / _MAX in Grad) schon in den Keyframes, damit Buehne und Spiel dieselbe Kette zeigen
+                  knick=dict(rand=3.0, min=12.0, max=16.0)),
 )
 
 # Kopf V3 (Messblatt V3 Abschnitt 1 und 6). Machart wie Kopf V2 (Textur auf der unveraenderten EM30-Kopfgeometrie, Mesh 9;
@@ -360,6 +368,56 @@ SCHWANZ_V3 = dict(
 # Messansicht "Kopf vorn nah" entworfen (nah_raster: 0,9 px/E., H = 0,9 x 3865 = 3479 px, Messblatt 8) und je Texel an der
 # Stelle abgetastet, an der das Texel dort erscheint - so treffen Groesse und Lage die Riegel R1-R14 unabhaengig von der
 # Verzerrung der Projektion. Masse in H (Messblatt-Vorgabe), PORT-WAHL wo vermerkt.
+#
+# Runde 2 (Pruefung V3 r1 2026-11-06, analysis/befunde_runde41/SF_PRUEFUNG_V3_r1_sicht.md A2/A3/A4/B1/B2, _zahlen.md 5/6.4):
+# KI-Belegzahlen aus eigener Messung tools/r41_sichel/v3/n2_ki_kopf.py (Ausgabe sfv3/n2/ki_kopf.json, Kopie in
+# analysis/befunde_runde41/SF_belege/v3r2/ki_kopf.json), Fenster dort im Kopf beschrieben:
+#   vorn birkin19 (h118, H 569) / birkin20 (h125, H 599):
+#     Halo um das Kopfauge (Median L* je Ring, nur oberhalb Augenmitte + 0,01 H): r 0,010/0,015/0,020/0,025/0,030 H =
+#       44,9/48,5/36,9/29,7/26,6 bzw. 41,5/47,4/42,1/27,2/20,1; ab 0,035 H 15,6-20,9 (n2_ki_kopf.py ringe).
+#     Haut-Streuung (n2_ki_kopf.py streuung): Halo (r 0,0075-0,0175 H) L* P5/P50/P95 30,7/46,0/69,0 bzw. 20,3/44,7/69,2,
+#       Std 12,2/13,5; aussen (r 0,025-0,05 H) 10,3/19,1/47,1 bzw. 10,0/18,6/43,3, Std 12,4/10,5.
+#     Gesichtsfeld (x +-0,035 H, y -0,035..+0,02 H) / Nachbarhaut (x +-(0,09..0,15) H): 0,867 / 0,872.
+#     Maul: Spalt-Anteil am Band 0,27 / 0,26, Spalt Lab [14,4 12,6 5,3] / [11,4 10,6 3,9]; Stummel 16 / 19, je ~0,0031 H, Lab
+#       [49,6 22,4 6,8] / [50,2 20,7 6,2]; Glanz max(RGB) > 170: 33 / 29 px = 1,9 / 1,4 % des Bands, RGB (197,139,142) /
+#       (199,147,150), Lab [63,6 22,4 7,2] / [66,0 20,0 6,2].
+#   Seite birkin12 (h85, H 504): Auge 0,034 H hinter der Schnauzenspitze (388,112), Mitte (371,123), 0,014 x 0,010 H, Lab
+#     [7,0 1,5 -0,2], L* Auge / Haut 0,27; Maulprofil (a* > 15) 0,044-0,101 H hinter der Spitze, 0,006-0,034 H unter dem Auge,
+#     Lab [27,3 22,8 8,4], 5 Stummel Lab [56,1 20,1 8,4]; Schnauzenhaut oben Lab [43,4 4,5 1,0], unten [26,4 4,5 1,8].
+# Helligkeitsbezug: alle KI-Farben werden mit KOPF_V3_HELL auf das Port-Licht gebracht (nur L*, a*/b* wie KI), damit das
+# Gesichtsfeld zur Nachbarhaut steht wie in der KI (0,87). Wert = Probe (n2_maul_spiel.py feld_nachbar, Spielkamera h118/h125;
+# n2_probe.py): Runde 1 (KI-Farben absolut) 1,35 / 1,28; 0,85 -> 1,04 / 1,01 (Feld L* 32,3 gegen Nachbarhaut 31,1: Sicht-Pruefer A3
+# "nicht heller als Nachbarhaut + 5 L*" erfuellt); 0,75 -> 0,95 / 0,91, aber R3 0,0141 H, R4 1,33 und R13 a* +3,0 rot (n2_probe.py L).
+KOPF_V3_HELL = 0.85
+# Seitenflaechen des Kopfs liegen im RDT-Licht der Seitenkamera dunkler als die Vorderseite: eigener Faktor, damit die Schnauzenhaut
+# zur Port-Haut steht wie in der KI (birkin12: oben L* 43,4 / Haut 29,4 = 1,48, unten 26,4 / 29,4 = 0,90; Messung n2_seite_mass.py
+# L_oben_haut / L_unten_haut in h85/h92). Wert = Probe (Dossier SV3r2): 1,6 -> Rampenende (243,231,232) = weisser Fleck auf der
+# lichtzugewandten Facette; 1,3 -> L* oben / Haut 1,30, unten / Haut 0,65-0,75 (KI 1,48 / 0,90; unten liegt im Port die schattige
+# Unterseite, heller nur mit Leuchtfarben).
+KOPF_V3_HELL_SEITE = 1.3
+
+
+def _lab_rgb(L, a, b):
+    """CIE-Lab (D65) -> sRGB 0..255, Umkehrung von _lab (gerundet, begrenzt)."""
+    fy = (L + 16.0) / 116.0
+    f = np.array([fy + a / 500.0, fy, fy - b / 200.0])
+    d = 6.0 / 29.0
+    x = np.where(f > d, f ** 3, 3 * d * d * (f - 4.0 / 29.0)) * np.array([0.95047, 1.0, 1.08883])
+    M = np.array([[3.2404542, -1.5371385, -0.4985314], [-0.9692660, 1.8760108, 0.0415560], [0.0556434, -0.2040259, 1.0572252]])
+    c = M @ x
+    c = np.where(c <= 0.0031308, 12.92 * c, 1.055 * np.clip(c, 0, None) ** (1 / 2.4) - 0.055)
+    return tuple(int(v) for v in np.clip(np.round(c * 255.0), 0, 255))
+
+
+def _ki(L, a, b, hell=None):
+    """KI-Farbe (Lab) im Port-Licht: L* x KOPF_V3_HELL, a*/b* unveraendert."""
+    return _lab_rgb(L * (KOPF_V3_HELL if hell is None else hell), a, b)
+
+
+def _rampe_lab(L0, L1, a, b, n=5):
+    return [_ki(L0 + (L1 - L0) * i / (n - 1.0), a, b) for i in range(n)]
+
+
 KOPF_V3 = dict(
     page=128, clut=486, u=(0, 39), v=(156, 219),
     abbildung=KOPF_V2['abbildung'], blick=KOPF_V2['blick'], schwelle=KOPF_V2['schwelle'],
@@ -376,65 +434,132 @@ KOPF_V3 = dict(
               dx_maul=-0.008,                     # K5: 0,005 / 0,011 H B-links der Maulmitte
               pupille=(0.65, 0.90),               # Pupille = dunkelste 25 % (K6, L*/Haut <= 0,12): Kern 0,65 x 0,90 der Augen-Halbachsen
                                                   # (Probe 1 mit 0,55 x 0,80: L* Pupille/Haut 0,135, R8 rot)
-              glanz=(0.55, 0.68, 0.0020, 0.0030), # K11: ein heller Kern x 0,50-0,59 / y 0,66-0,70 der Augenbox, ~0,004 x 0,005 H;
-                                                  # Probe 1 mit 0,0024 x 0,0030 (Auge 0,020 breit): L* Auge/Haut 0,552; Probe 15 mit
-                                                  # 0,0018 x 0,0024 (Auge 0,022): 0,341 - mit 0,0020 x 0,0030: 0,475, heller Anteil 0,19
+              # K11: EIN heller Kern, KI 7 px bei H 569 = 2-3 x 3-4 px (Leser A) = 0,004-0,005 x 0,005-0,007 H, Lage x 0,50-0,59 /
+              # y 0,62-0,72 der Augenbox. Runde 2 (Sicht-Pruefer A2: "ein weisser Glanzpixel" statt grauem Kern; Zahlen-Pruefer:
+              # y 0,73 an der Grenze 0,8): Halbachsen 0,0022 x 0,0026 H = 0,0044 x 0,0052 H (KI-Mitte), Mitte x 0,55 / y 0,64
+              # Mitte im Entwurf x 0,55 / y 0,58: das Texelraster (Auge 3 Texel hoch) verschiebt den Kern; gemessen (R7, n2_probe.py O)
+              # x 0,49 / y 0,68 = KI-Mitte 0,545 / 0,68 (Runde 1: 0,73, 0,07 vor der Grenze 0,8).
+              glanz=(0.55, 0.58, 0.0022, 0.0026),
               lid=0.0035),                        # K8: Lidrand = 2-px-Ring bei H 569 = 0,0035 H, L* Lid/Haut 0,78-0,95, kein heller Ring
     maul=dict(dy_auge=0.052,                      # K5/R12: Maulmitte 0,052 / 0,053 H unter der Augenmitte
-              b=0.092, h=0.040,                   # Messblatt 6: Breite 0,084 / 0,092 H, Hoehe 0,042 / 0,048 H inkl. Zaehne (R10 Bbox der
+              b=0.092, h=0.050,                   # Messblatt 6: Breite 0,084 / 0,092 H, Hoehe 0,042 / 0,048 H inkl. Zaehne (R10 Bbox der
                                                   # dunklen Flaeche + Zaehne). Probe 1 mit 0,086 x 0,036 / Kopfbreite 0,92: gemessen
-                                                  # 0,0716 x 0,0382 H (R10 rot) - die Ellipsenenden sind flacher als die Schwelle
+                                                  # 0,0716 x 0,0382 H (R10 rot) - die Ellipsenenden sind flacher als die Schwelle.
+                                                  # Runde 2: Hoehe = Oeffnung 0,036 H + 2 x Lippe 0,007 H; mit den Stummeln misst R10
+                                                  # 0,0454 H (Messblatt 0,042-0,048). Probe r2h (n2_probe.py I/N) gegen 0,056: Oeffnung
+                                                  # 0,042 H, schwarze Flaeche in der Spielkamera h125 31,6 statt 29,6 x 1e-4 H^2
+              lippe=0.007,                        # Lippe oben/unten: KI birkin19 Zeilen 55-58 (4 px / H 569 = 0,007 H) ueber der oberen
+                                                  # Stummelreihe (ab Zeile 59), L*-Raster im Dossier SV3r2
               max_kopfbreite=0.95,                # Messblatt 6: Breite / Kopfbreite 0,80 / 0,95 (oberer Wert)
-              zaehne=(11, 7),                     # Messblatt 6: 17 / 18 Flecken, oben 11 / 10, unten 6 / 8
-              zahn_b=0.0026, zahn_l=0.0060,       # Einzelzahn <= 0,005 H breit (R14), ~3 px bei H 569 = 0,005 H lang
-              zahn_bereich=0.84,
-              tief=0.0, form=3.0, schlund=0.10),     # tief 0: der Schlund ersetzt den Kern (Probe 13 mit beiden: R13 0,196)                 # Zaehne ueber 0,84 der Maulbreite verteilt (KI birkin19: Eckzaehne x 165-167 / 208-212)
-    zonen=dict(kuppe_bis=0.012,                   # K9/K15: helle Kuppe um das Auge (Haut um das Auge L* 44-52) bis 0,012 H unter der Augenmitte
-               uebergang=0.016,                   # danach 0,016 H Uebergang in die dunklere Kopfhaut (KI birkin19: graue Haut zwischen
-                                                  # Auge und Maul; Probe 8 ohne diese Zone: helle Kuppe stiess als Kante an ein rotes Band)
-               rot_ab=-0.004),                    # K15: rote Zone (Maul + Kinn) ab 0,004 H ueber der Maul-Oberkante bis zum Kinn
-    rauschen=1.3,                                 # Hautstruktur: Wundfleisch-Helligkeit (TPage 128 u 66-126 v 4-90) als Rampenstufen (Std);
-                                                  # KI-Kuppe marmoriert (birkin19), Probe 8 mit 0,9 wirkte die Kuppe glatt grau
+              form=3.0,                           # Umriss |x|^3 + y^2 <= 1: volle Enden bis zu den Eckzaehnen (KI birkin19 x 165-167 /
+                                                  # 208-212); Probe 11 mit der Ellipse (2): Enden spitz, R10 nur 0,068-0,076 H breit
+              # Runde 2 (Sicht-Pruefer B1/B2: "aufgerissenes schwarzes Maul ohne Lippen, Zackenreihe"): Innen dunkelrot statt schwarz
+              # (KI-Spaltfarbe), nur ein schmaler dunkler Spalt in der Mitte (KI-Anteil am Band 0,26-0,27), Glanz auf den Lippen,
+              # Zaehne als stumpfe Stummel (Quadrat) statt Spitzen.
+              # Spalt: KI-Zeilenprofil h118 (n2_ki_kopf.py zeilen): L* 9-13 von 0,046 bis 0,058 H unter dem Auge gegen 15-21 darueber
+              # (h125 0,048-0,060) = 0,012 H von 0,042 H Oeffnung -> halbe Spalthoehe / halbe Oeffnung 0,29
+              spalt=0.29,
+              zaehne=(6, 4),                      # oben / unten. KI 16 / 19 Flecken (n2_ki_kopf, L* > 40) bzw. Pruefer 11/10 + 6/8;
+                                                  # Sicht-Pruefer B2: "6-8 Stummel, vereinzelt"; Riegel R14 oben >= 5, unten >= 3
+              zahn_b=0.0031,                      # Stummelbreite = KI-Stummel 0,0031-0,0032 H (Wurzel der mittleren Flaeche, n2_ki_kopf)
+              zahn_l=0.0053,                      # Stummellaenge = KI "Stummel 2-3 px" (Sicht-Pruefer B2, birkin19/20) = 3 px / 569 = 0,0053 H;
+                                                  # Probe r2f mit 0,0031 (quadratisch): obere Stummel erreichten die dunkle Flaeche nicht
+                                                  # (Messansicht, Facettenlicht), R14 oben 1
+              zahn_bereich=0.84,                  # Zaehne ueber 0,84 der Maulbreite (KI birkin19: Eckzaehne x 165-167 / 208-212 von 165-212)
+              # Stummel sitzen mit halber Kante auf dem Rand der Oeffnung (Innenkante der Lippe; KI birkin19: Stummelreihen direkt unter
+              # der Oberlippe y 59-67 und ueber der Unterlippe y 71-78); die Haelfte auf der Lippe zaehlt R14 als Zahn am Rand.
+              zahn_ueber=0.0,                     # Stummel beginnen am Rand der Oeffnung (KI: Stummel ragen aus dem Zahnfleisch in die Oeffnung);
+                                                  # Probe r2g (n2_probe.py F) mit 0,15: R14 oben 5 (Grenze), mit 0,3: oben 0-2
+              # Glanz auf den Lippen: KI 1,4-1,9 % des Bands. Mund ~26 x 14 Texel (0,92 der Rechteckflaeche bei Form 3) = ~330 Texel ->
+              # 5 Texel = 1,5 %. Lage: Lippenmitte (x in Maulhalbachsen), Halbmesser 0,0019 H = 1 Texel (Texelabstand im Kopfbild
+              # 0,0035-0,004 H); drei oben, zwei unten (KI: Glanz vor allem auf der Oberlippe, birkin19 y 55-60).
+              glanz_x=((-0.55, -0.05, 0.45), (-0.30, 0.25)), glanz_r=0.0019),
+    # Grundhaut vorn (Runde 2, Sicht-Pruefer A3 "helle Maske": Gesichtsfeld/Nachbarhaut in der Spielkamera Port 1,28-1,35, KI 0,87):
+    # Kuppe vom Scheitel bis an die Oberlippe, darunter die rote Zone. Kuppenrampe = KI-Halo P5..P95 (Zeile 486), Lage = KI-Median der
+    # hellen Gesichtssaeule (n2_ki_kopf.py fein: 43,6 / 42,1 -> (42,85 - 25,5) / 43,6 = 0,40), Rauschgewicht = KI-Streuung auf
+    # Texelmassstab (L* - Gauss 1 Texel = 0,0037 H: 6,22 / 5,23) / 43,6 = 0,13 (Runde 1: 0,55 / 0,25 ohne Beleg).
+    # PORT-WAHL gegen die KI-Saeule (n2_ki_kopf.py saeule: Stirn ueber -0,0195 H L* 22-31, unter +0,0155 H bis zum Maul L* 15-21):
+    # Probe r2c mit beiden Zonen - die schattige obere Facette und das dunkle Band unter dem Auge zaehlte R1 als zweites und drittes
+    # Auge (R1 = 2 / 3), das Band verschob die Maulmessung (R10-R12 auf das Band). Die Gesamthelligkeit traegt KOPF_V3_HELL.
+    # Rote Zone (K15: Maul + Kinn, Rampe Referenz 2 Zeile 485) ab der Maul-Oberkante: Mitte der Rampe, Streuung 7,2 L* (KI unter dem
+    # Auge, Texelmassstab) / Rampenspanne der Zeile-485-Rampe (in kopf_v3_bild aus der Palette gerechnet).
+    zonen=dict(kuppe_t=(0.40, 0.13), rot_mitte=0.5, rot_std_L=7.2),
+    # Seitenansicht (Runde 2, Sicht-Pruefer A4: "seitlich kein Auge, kein Maul, flache lachsrosa Platte"): die Seitenflaechen von
+    # Mesh 9 (nicht im Kopfbild vorn) bekommen ein eigenes Seitenbild per Parallelprojektion aus der Spielkamera der Seitenpose
+    # (ROOM50A0 Schnitt 12, Pose sfv2/posen_seite.json h85/h92: Clip 1 Bild 26, Gier 556; die Gegenseite gespiegelt an der Ebene
+    # durch das Kopfauge), Texeldichte wie das Kopfbild vorn (R31 Mesh 9 0,072 Texel/E.), Flaeche TPage 128 u 64-111 v 156-219
+    # (frei: n2_frei.py). Flaechen mit Normale . Blick <= -0,10 (wie KOPF_V2 schwelle 0,15 um 0,05 weiter, damit die Kante zum
+    # Kopfbild geschlossen ist; Probe im Dossier).
+    seite=dict(raum='50A0', schnitt=12, clip=1, bild=26, gier=556, massstab=0.9, breite=900, hoehe=900, cx=450, cy=450,
+               u=(64, 111), v=(156, 219), dichte=0.072, schwelle=0.10,
+               auge_b=0.014, auge_h=0.010,                             # KI birkin12: Seitenauge 0,014 x 0,010 H
+               maul_hinter=0.101, maul_h=0.028, zaehne=5,              # KI: Maulprofil bis 0,101 H hinter der Spitze, 0,006-0,034 H, 5 Stummel
+               # Schnauzenhaut KI birkin12 (n2_ki_kopf.py schnauze, x 345-368): oben y 100-118 L* P5/P50/P95 18,0/46,7/57,9, Texel-
+               # Streuung 3,73, a*/b* 4,0/1,0; unten y 119-128 15,7/24,6/40,9, Texel-Streuung 4,75, a*/b* 4,5/1,9 -> eigene Rampen (Zeile
+               # 486 Index 32-36 / 38-42), Mitte (46,7 - 18,0) / 39,9 = 0,72 bzw. (24,6 - 15,7) / 25,2 = 0,35, Streuung 3,73 / 39,9 = 0,09
+               # bzw. 4,75 / 25,2 = 0,19
+               kuppe_t=(0.72, 0.09), haut_t=(0.35, 0.19)),
     schulterauge=dict(dx=-0.117, dy=0.058,        # K12: -0,116 / -0,120 H (B-links), +0,051 / +0,058 H tiefer als das Kopfauge. dy am
                                                   # oberen Rand (h125): bei 0,055 lag die dunkle EM30-Ader der Schulter (Mesh 8, Original-
                                                   # textur) im Messfenster und war dunkler als das Auge (Probe 3, L* min 1,7)
-                      b=0.017, h=0.014,           # K13: Halbwert 0,016 x 0,016 / 0,018 x 0,013 H, aequiv. 0,015 / 0,0145 H
+                      # K13: Halbwert 0,016 x 0,016 / 0,018 x 0,013 H, aequiv. 0,015 / 0,0145 H. Runde 2: mit 20 x 20 Texeln misst die
+                      # Halbwertmaske das Auge groesser (Probe r2d mit 0,017 x 0,014: 1,38 x Kopfauge, R9 0,8-1,3) -> x 0,87 = 0,0148 x
+                      # 0,0122 H (Mitte des R9-Bereichs 1,05)
+                      b=0.0148, h=0.0122,
                       seite=0.062,                # Viereck 0,062 H: Auge + Hautring (R9 misst die Haut 4-7 px um das Auge bei H 569)
                                                   # und deckt das Messfenster (+-12 px bei H 569 = +-0,021 H) ab
-                      u=(42, 53), v=(156, 167), abstand=60.0,
-                      clut=480, lab_auge=(12.0, 4.5, 2.4), L_verh=0.375),   # Hautzeile 480 (Mesh 8 Seite 0); K14 Lab [12,0 4,5 2,4],
-                                                  # L* Auge/Haut 0,385 / 0,36   # 12 x 12 Texel frei (TPage 128 v >= 156 nutzt kein EM30-Mesh)
+                      # Runde 2 (Zahlen-Pruefer 6.4: 12 x 12 Texel = 0,032 Texel/E. auf dem Viereck, Haut 0,045-0,090): 20 x 20 Texel
+                      # = 0,053 Texel/E. (Mitte des Hautbereichs R31), Flaeche TPage 128 u 42-61 v 156-175 (frei, Seitenbild ab u 64)
+                      u=(42, 61), v=(156, 175), abstand=60.0,
                                                   # abstand (E., vor der Schulter): Probe 1 mit 10 E. stach die gewoelbte Schulter durch
                                                   # das ebene Viereck (nur ~1/3 sichtbar)
+                      clut=480, lab_auge=(12.0, 4.5, 2.4), L_verh=0.375,   # Hautzeile 480 (Mesh 8 Seite 0); K14 Lab [12,0 4,5 2,4],
+                                                  # L* Auge/Haut 0,385 / 0,36
+                      # Ader-Schwelle: Texel dunkler als die Haelfte des Median-Hauttons gelten als Ader (Halbwertregel des Messblatts,
+                      # P_kopf.auge "dunkel = L* < (Lmin + Haut)/2" mit Lmin ~ 0); Runde 1 hatte 0,6 ohne Beleg.
+                      ader=0.5),
 )
-# Zeile 486 (Kopf V3): feste Eintraege mit den Messblatt-Farben (KI, sRGB aus Lab D65 umgerechnet, Dossier Abschnitt V3; im TIM 15 Bit) und Rampen.
-KOPF_V3_INDEX = dict(pupille=1, auge=2, lid=3, glanz=4, maul=5, maul_tief=6, zahn=7, schulterauge=8,
-                     kuppe=(10, 14), haut=(16, 20), rot=(22, 26))
+# Zeile 486 (Kopf V3): feste Eintraege; KI-Farben (Messblatt bzw. n2_ki_kopf) mit KOPF_V3_HELL ins Port-Licht, im TIM 15 Bit.
+KOPF_V3_INDEX = dict(pupille=1, auge=2, lid=3, glanz=4, maul=5, maul_tief=6, zahn=7, schulterauge=8, lippe_glanz=9, lippe=27,
+                     kuppe=(10, 14), haut=(16, 20), rot=(22, 26), seitenauge=28, seitenmaul=29, seitenzahn=30,
+                     seite_oben=(32, 36), seite_unten=(38, 42))
 KOPF_V3_ZEILE = dict(tabelle=[
-    (1, (18, 6, 11)),       # K6 Pupille h118 Lab [2,6 4,7 -0,6]
-    (2, (66, 53, 59)),      # K7 Auge gesamt h118 Lab [22,5 6,5 -1,3]
-    (3, (107, 92, 97)),     # K8 Lidrand h118 Lab [40,4 7,1 -0,7]
-    (4, (183, 171, 178)),   # K11 heller Kern h118 Lab [71,1 5,7 -2,2]
-    (5, (54, 27, 28)),      # Messblatt 6 Maul innen Lab [13,5 13,7 4,8]
-    (6, (31, 13, 13)),      # KI Maul dunkelste 10 % (Dossier SV2, Kopf V2)
-    (7, (162, 122, 124)),   # Messblatt 6 Zaehne: Lab [55 16 4,6] = Mitte aus Pruefer 50 / A 57-62 / B 58,9
-    (8, (39, 29, 28)),      # K14 Schulterauge Lab [12,0 4,5 2,4]
-    # K9 Kuppe: Haut um das Auge Lab [51,9 7,6 0,8] / [44,3 7,5 0,4] -> Rampe L* 40..53 (erst L* 42..56 = x 1/0,94; Probe 14: R13
-    # L* Maul innen / Haut am Auge 0,196-0,198 knapp unter 0,20 - die Mitte der Rampe liegt jetzt beim KI-Wert h125)
-    (10, (103, 88, 91)), (11, (111, 95, 98)), (12, (120, 103, 106)), (13, (130, 112, 116)), (14, (141, 123, 127)),
-    # Kopfhaut unter der Kuppe: KI-Haut (Band OK..+0,45 H) birkin12 Lab [29,4 9,7 2,8] = (86,64,65) -> Rampe L* 26..36
-    (16, (74, 54, 55)), (17, (80, 59, 60)), (18, (86, 64, 65)), (19, (94, 71, 72)), (20, (102, 78, 79)),
-    # rote Zone (K15, Original): Farben der Referenz-2-Kopfzeile 485 (dunkel (114,57,55)) x 0,90 / 1,0 / 1,1 / 1,2 / 1,3. Probe 10 mit
-    # x 0,8-1,2: das Maulinnere lag in der Messansicht genau an der Schwelle 0,5 x Fenster-Median (R10) und zerfiel je nach
-    # Flaechenschattierung (Breite 0,068-0,076 H) - die hellere Lippe/Kinnzone hebt den Median.
+    (1, _ki(2.6, 4.7, -0.6)),      # K6 Pupille h118 Lab [2,6 4,7 -0,6]
+    (2, _ki(22.5, 6.5, -1.3)),     # K7 Auge gesamt h118 Lab [22,5 6,5 -1,3]
+    (3, _ki(40.4, 7.1, -0.7)),     # K8 Lidrand h118 Lab [40,4 7,1 -0,7]
+    (4, _ki(65.6, 3.8, -1.8)),     # K11 heller Kern: Mittel h118/h125 Lab [71,1 5,7 -2,2] / [60,1 1,8 -1,3] (grau, a* <= 7)
+    (5, _lab_rgb(13.5, 13.7, 4.8)),  # Maul innen = Messblatt 6 innen Lab [13,5 13,7 4,8] absolut wie Runde 1 (R13 misst L* innen / Haut am
+                                     # Auge = 0,20-0,40 und a* innen - a* Haut >= +4; Probe r2d mit x KOPF_V3_HELL: a* +2,6, R13 rot)
+    (27, _lab_rgb(19.6, 17.1, 5.9)),  # Lippe = KI n2_ki_kopf lab_lippe h118/h125 Lab [20,1 17,7 5,9] / [19,2 16,5 5,9], absolut wie das
+                                      # Maulinnere (Probe r2e mit x KOPF_V3_HELL: Lippe unter der R10-Schwelle, obere Stummel als Loch in der
+                                      # dunklen Flaeche, R14 oben 2)
+    (6, (31, 13, 13)),             # Spaltkern: KI Maul dunkelste 10 % (Dossier SV2, Kopf V2), absolut (schon dunkelster KI-Wert)
+    (7, _lab_rgb(45.0, 17.0, 4.65)),  # Zaehne: Messblatt 6 Lab [50,0 17,0 4,4] / [49,4 17,0 4,9] (a*/b*), L* 45 = KI x 0,9. PORT-WAHL zwischen
+                                      # KI x KOPF_V3_HELL (n2_probe.py B: obere Stummel auf der schattigen Facette unter der R14-Schwelle
+                                      # Median + 15, oben 2) und KI absolut (n2_probe.py I: L* Zahn 43,4 an der Grenze Haut + 20 = 44,3)
+    (8, (39, 29, 28)),             # K14 Schulterauge Lab [12,0 4,5 2,4] (Runde 1; das Viereck nutzt Zeile 480)
+    (9, (198, 143, 146)),          # Lippenglanz KI h118/h125 RGB (197,139,142) / (199,147,150) absolut: Glanzlicht = Spiegelung der
+                                   # Lichtquelle, nicht Hautton (mit KOPF_V3_HELL in der Spielkamera max(RGB) < 170, Probe r2d: 0 Glanzpunkte)
+    # Halo/Kuppe (K9): KI P5..P95 der Halo-Ringe L* 25,5..69,1 (Mittel h118/h125), a* 7,0, b* 0,6 (Ringe 0,010-0,015 H)
+    ] + [(10 + i, c) for i, c in enumerate(_rampe_lab(25.5, 69.1, 7.0, 0.6))] + [
+    # Kopfhaut aussen: KI P5..P95 der Ringe 0,025-0,05 H L* 10,15..45,2, a* 7,0, b* 1,4 (Ringe 0,025-0,05 H)
+    ] + [(16 + i, c) for i, c in enumerate(_rampe_lab(10.15, 45.2, 7.0, 1.4))] + [
+    # rote Zone (K15, Original): Farben der Referenz-2-Kopfzeile 485 (dunkel (114,57,55)) x 0,90 / 1,0 / 1,1 / 1,2 / 1,3 (Runde 1)
     (22, (103, 51, 50)), (23, (114, 57, 55)), (24, (125, 63, 61)), (25, (137, 68, 66)), (26, (148, 74, 72)),
+    (28, _ki(7.0, 1.5, -0.2, KOPF_V3_HELL_SEITE)),     # Seitenauge KI birkin12 Lab [7,0 1,5 -0,2]
+    (29, _ki(27.3, 22.8, 8.4, KOPF_V3_HELL_SEITE)),    # Maulprofil KI birkin12 Lab [27,3 22,8 8,4]
+    (30, _ki(56.1, 20.1, 8.4, KOPF_V3_HELL_SEITE)),    # Stummel seitlich KI birkin12 Lab [56,1 20,1 8,4]
+    # Schnauzenhaut seitlich (KI birkin12, KOPF_V3 seite): oben L* 18,0..57,9 a* 4,0 b* 1,0; unten L* 15,7..40,9 a* 4,5 b* 1,9
+    ] + [(32 + i, _ki(18.0 + 39.9 * i / 4.0, 4.0, 1.0, KOPF_V3_HELL_SEITE)) for i in range(5)] + [
+    ] + [(38 + i, _ki(15.7 + 25.2 * i / 4.0, 4.5, 1.9, KOPF_V3_HELL_SEITE)) for i in range(5)] + [
 ])
 
 
-def _variante_v3(schulterauge=None):
+def _variante_v3(schulterauge=None, seite_uv=None):
     f = dict(FORMEN['hangar'])
     f['schwanz_kette'] = dict(f['schwanz_kette'], **SCHWANZ_V3)
-    f['kopf_v2'] = dict(KOPF_V3, schulterauge=schulterauge)     # kopf_v2_uv: UVs Mesh 9 + Viereck auf Mesh 8
+    # kopf_v2_uv: UVs Mesh 9 (Kopfbild vorn, Runde 2 auch Seitenbild) + Viereck auf Mesh 8
+    f['kopf_v2'] = dict(KOPF_V3, schulterauge=schulterauge, seite_uv=seite_uv)
     f['kopf_v3'] = KOPF_V3
     f['cluts'] = dict(f['cluts'], zusatz=list(f['cluts']['zusatz']) + [KOPF_V3_ZEILE])
     return f
@@ -952,7 +1077,7 @@ def kette_meshes_v3(sw, ruhe):
             m['quv'].append([uvs[0][0], uvs[0][1], uv['clut'], uvs[1][0], uvs[1][1], uv['page'],
                              uvs[2][0], uvs[2][1], 0, uvs[3][0], uvs[3][1], 0])
         kegel = []
-        if i == 0:                                        # Deckel in den Rumpf (wie kette_meshes, Referenz 2)
+        if i == 0 and sw.get('deckel', True):             # Deckel in den Rumpf (wie kette_meshes, Referenz 2)
             kegel.append((ringe[0], [0, int(round(-ue - 0.8 * r0)), 0], [0, -4096, 0], 0.0))
         if i == n - 1:                                    # Spitze
             kegel.append((ringe[1], [0, int(round(Li + sw['dorn'] * r1)), 0], [0, 4096, 0], 1.0))
@@ -966,7 +1091,8 @@ def kette_meshes_v3(sw, ruhe):
                 m['tf'].append([a, a, b, b, sv, sv])
                 p0, p1 = tx(k, t), tx(k + 1, t)
                 m['tuv'].append([p0[0], p0[1], uv['clut'], p1[0], p1[1], uv['page'],
-                                 (p0[0] + p1[0]) // 2, int(round(fv0 + (fv1 - fv0) * (0.5 if t == 0.0 else 0.92))), 0])
+                                 (p0[0] + p1[0]) // 2, int(round(fv0 + (fv1 - fv0) * 0.5)), 0])
+                # Scheitel von Deckel und Spitze auf der Fenstermitte (Umfang 0,5; Runde 1 hatte fuer die Spitze 0,92 ohne Beleg)
         out.append(m)
     return out
 
@@ -1131,6 +1257,19 @@ def schwanz_bewegung(emr, edd, sw, ruhe):
                     if t > grenze:
                         th[i] *= grenze / t; om[i] *= 0.5
                     W = basis @ _exp(th[i])
+                    kn = dyn.get('knick')
+                    if kn and i > 0:
+                        # Knick-Grenze wie schwanz_r41.c glaetten: Gelenkwinkel zum Vorglied hoechstens Ruhe-Gelenkwinkel + rand,
+                        # begrenzt auf min..max; sonst in der Ebene beider Glieder auf die Grenze zurueckdrehen
+                        y = np.array([0.0, 1.0, 0.0])
+                        dv, dn = welt[i - 1] @ y, W @ y
+                        lim = np.radians(np.clip(np.degrees(np.arccos(np.clip((ruhe['lokal'][i] @ y) @ y, -1, 1))) + kn['rand'],
+                                                 kn['min'], kn['max']))
+                        if float(dv @ dn) < np.cos(lim):
+                            sv = dn - dv * float(dv @ dn)
+                            sv = sv / np.linalg.norm(sv) if np.linalg.norm(sv) > 1e-9 else np.cross(dv, [0.0, 0.0, 1.0])
+                            W = _min_rot(dn, dv * np.cos(lim) + sv * np.sin(lim)) @ W
+                            th[i] = _log(basis.T @ W)
                     W2 = boden(kf, i, P, W, basis)
                     if W2 is not None:
                         W = W2
@@ -1755,6 +1894,37 @@ def kopf_v2_uv(meshes, p):
                 uv[3 * k + 1] = int(round(np.clip(q[1], v0, v1)))
             uv[2], uv[5] = p['clut'] << 6, p['page']
             ul[i] = uv
+    su = p.get('seite_uv')
+    if su:
+        # Runde 2 (V3): Seitenflaechen (nicht im Kopfbild vorn) -> Seitenbild. Kamera-Seite: Normale . d <= -schwelle; Gegenseite:
+        # Normale . d' <= -schwelle mit d' = d an der Ebene z = z_spiegel gespiegelt, UV vom gespiegelten Punkt (gleiche Texel).
+        As = np.array(su['A'], float)
+        ds = np.array(su['d'], float); ds /= np.linalg.norm(ds)
+        dm = ds * np.array([1.0, 1.0, -1.0])
+        zc = float(su['z_spiegel'])
+        for fl, ul, n in ((m['tf'], m['tuv'], 3), (m['qf'], m['quv'], 4)):
+            for i, f in enumerate(fl):
+                N = sum(np.array(m['n'][f[2 * k]][:3], float) for k in range(n))
+                N /= max(np.linalg.norm(N), 1e-9)
+                if N @ d <= -p.get('schwelle', 0.15):          # Kopfbild vorn (oben)
+                    continue
+                P3 = [np.array(m['v'][f[2 * k + 1]][:3], float) for k in range(n)]
+                if N @ ds <= -su['schwelle'] and N @ ds <= N @ dm:
+                    spiegel = False
+                elif N @ dm <= -su['schwelle']:
+                    spiegel = True
+                else:
+                    continue
+                uv = list(ul[i])
+                for k in range(n):
+                    q = P3[k].copy()
+                    if spiegel:
+                        q[2] = 2 * zc - q[2]
+                    t = As @ np.r_[q, 1.0]
+                    uv[3 * k] = int(round(np.clip(t[0], su['u'][0], su['u'][1])))
+                    uv[3 * k + 1] = int(round(np.clip(t[1], su['v'][0], su['v'][1])))
+                uv[2], uv[5] = p['clut'] << 6, p['page']
+                ul[i] = uv
     a = p.get('schulterauge')
     if a:
         m8 = meshes[8]
@@ -1850,7 +2020,9 @@ def nah_raster(mo, p):
     mitte = T[9].astype(float) + np.array(p['mitte'], float)
     Vm = V - mitte
     W, H, sc, cx, cy = p['breite'], p['hoehe'], p['massstab'], p['cx'], p['cy']
-    sx, sy, sz = Vm[:, 2] * sc + cx, Vm[:, 1] * sc + cy, Vm[:, 0]
+    # Runde 2: p['achsen'] = (rechts, unten, zur Kamera) im Modellraum (Seitenansicht aus der Spielkamera); ohne = Messansicht vorn
+    ri, un, de = (np.array(x, float) for x in p.get('achsen', ((0, 0, 1), (0, 1, 0), (1, 0, 0))))
+    sx, sy, sz = Vm @ ri * sc + cx, Vm @ un * sc + cy, Vm @ de
     fi = np.full((H, W), -1, np.int32)
     zb = np.full((H, W), -1e18)
     uu = np.zeros((H, W)); vv = np.zeros((H, W)); P = np.zeros((H, W, 3))
@@ -1941,42 +2113,53 @@ def _rampe(rng, t):
     return np.clip(np.round(a + t * (b - a)), a, b).astype(int)
 
 
+def _zone_t(rausch, zt):
+    """Rampenlage je Abtastpunkt: Mitte zt[0] + KI-Streuung zt[1] x Hautrauschen (Std 1), siehe KOPF_V3 zonen."""
+    return zt[0] + zt[1] * rausch
+
+
 def kopf_v3_bild(X, Y, an, p, rausch):
-    """Index der Zeile 486 je Abtastpunkt (X, Y in px der Messansicht). Zonen nach Messblatt V3 K1-K15 und Abschnitt 6."""
+    """Index der Zeile 486 je Abtastpunkt (X, Y in px der Messansicht). Zonen nach Messblatt V3 K1-K15 und Abschnitt 6,
+    Runde 2 nach n2_ki_kopf (KOPF_V3 Kommentar)."""
     Hp, I = p['nah']['H_px'], KOPF_V3_INDEX
     ax, ay = an['auge']
     mx, my = an['maul']
     z, au, mu = p['zonen'], p['auge'], p['maul']
-    dy_a = (Y - ay) / Hp
-    # Grundhaut: Kuppe (K9) -> Kopfhaut, rote Zone (K15) ab Maul-Oberkante + rot_ab bis zum Kinn; Rampen mit Hautrauschen
-    t = np.clip((dy_a - z['kuppe_bis']) / z['uebergang'], 0, 1)
-    kuppe = _rampe(I['kuppe'], 0.55 + 0.25 * rausch)
-    haut = _rampe(I['haut'], 0.5 + 0.25 * rausch)
-    idx = np.where(t < 0.5, kuppe, haut)
+    # Grundhaut: helle Kuppe bis an die Oberlippe (KOPF_V3 zonen)
+    idx = _rampe(I['kuppe'], _zone_t(rausch, z['kuppe_t']))
     mb = min(mu['b'] * Hp, mu['max_kopfbreite'] * an['kopfbreite_px'])
     mh = mu['h'] * Hp
-    rot = _rampe(I['rot'], 0.5 + 0.3 * rausch)
-    idx = np.where(Y >= my - mh / 2 + z['rot_ab'] * Hp, rot, idx)
-    # Maul: dunkles Inneres (Ellipse mb x mh) mit tieferem Kern, Zaehne als Spitzen von der Lippe ins Innere
+    # rote Zone (K15: Maul + Kinn) ab der Maul-Oberkante bis zum Kinn
+    tab = dict(KOPF_V3_ZEILE['tabelle'])
+    dL = float(_lab(np.array(tab[I['rot'][1]], float))[0] - _lab(np.array(tab[I['rot'][0]], float))[0])
+    rot = _rampe(I['rot'], z['rot_mitte'] + z['rot_std_L'] / dL * rausch)
+    idx = np.where(Y >= my - mh / 2, rot, idx)
+    # Maul: Umriss |x|^form + y^2 <= 1 = Lippe (KI dunkelrot, Glanz), darin die Oeffnung (Umriss um die Lippe kleiner, gleiche
+    # Form) innen dunkelrot (Messblatt innen) mit Spaltkern |y| <= spalt der Oeffnung (KI-Anteil)
     ex = (X - mx) / (mb / 2)
     ey = (Y - my) / (mh / 2)
-    # Umriss |x|^p + y^2 <= 1 (p = mu['form']): volle Enden wie das KI-Maul (birkin19: Mundwinkel offen bis zu den Eckzaehnen);
-    # Probe 11 mit der Ellipse (p 2) liefen die Enden spitz aus und die Messung (R10) sah nur 0,068-0,076 H Breite.
-    idx = np.where(np.abs(ex) ** mu['form'] + ey ** 2 <= 1.0, I['maul'], idx)
-    # tieferer Kern (KI dunkelste 10 %) nur in der Mitte: mu['tief'] = Anteil der Ellipse (Probe 1: 0,45 -> L* innen/Haut 0,176,
-    # Probe 7: 0,20 -> 0,187, R13 verlangt 0,20-0,40; die Messblatt-Farbe "innen" [13,5 13,7 4,8] ist schon das Mittel der Oeffnung)
-    idx = np.where(ex ** 2 + (ey / 0.6) ** 2 <= mu['tief'], I['maul_tief'], idx)
-    # Schlund: schmales dunkles Band ueber die ganze Maulbreite (KI birkin19: dunkle Spalte zwischen den Zahnreihen bis in die
-    # Mundwinkel). Probe 12: auf der lichtzugewandten Kopfseite lag das Maulinnere (KI-Mittel L* 13,5) in der Messansicht ueber der
-    # Schwelle 0,5 x Fenster-Median, die dunkle Flaeche reichte nur ueber 0,068-0,072 H (R10 0,075-0,095).
-    idx = np.where((np.abs(ey) <= mu['schlund']) & (np.abs(ex) <= 0.97), I['maul_tief'], idx)
+    aussen = np.abs(ex) ** mu['form'] + ey ** 2 <= 1.0
+    lp = mu['lippe'] * Hp
+    oh, ob = mh / 2 - lp, mb / 2                                        # halbe Hoehe / Breite der Oeffnung (Lippe nur oben/unten:
+                                                                        # KI-Mundwinkel offen bis zu den Eckzaehnen x 165-167 / 208-212)
+    eo_y = (Y - my) / oh
+    innen = np.abs((X - mx) / ob) ** mu['form'] + eo_y ** 2 <= 1.0
+    idx = np.where(aussen, I['lippe'], idx)
+    idx = np.where(innen, I['maul'], idx)
+    idx = np.where(innen & (np.abs(eo_y) <= mu['spalt']), I['maul_tief'], idx)
+    # Glanz auf der Lippenmitte (KI 1,4-1,9 % des Bands)
+    for gxs, sg in ((mu['glanz_x'][0], -1), (mu['glanz_x'][1], 1)):
+        for gx in gxs:
+            ry = np.sqrt(max(0.0, 1.0 - abs(gx) ** mu['form']))
+            g = np.hypot(X - (mx + gx * mb / 2), Y - (my + sg * (ry * mh / 2 - lp / 2))) <= mu['glanz_r'] * Hp
+            idx = np.where(g & aussen & ~innen, I['lippe_glanz'], idx)
+    # Zaehne: stumpfe Stummel (Quadrat zahn_b x zahn_l), mit zahn_ueber ihrer Laenge ueber dem Rand der Oeffnung
     zb, zl = mu['zahn_b'] * Hp, mu['zahn_l'] * Hp
     for n_z, oben in ((mu['zaehne'][0], True), (mu['zaehne'][1], False)):
-        for xk in mx + np.linspace(-0.5, 0.5, n_z) * mb * mu['zahn_bereich']:
-            r_k = np.sqrt(max(0.0, 1.0 - abs((xk - mx) / (mb / 2)) ** mu['form'])) * mh / 2
-            d_in = (Y - (my - r_k)) if oben else ((my + r_k) - Y)          # Abstand vom Lippenrand ins Innere
-            breite = zb / 2 * np.clip(1.0 - d_in / zl, 0.35, 1.0)
-            zahn = (np.abs(X - xk) <= breite) & (d_in >= -0.002 * Hp) & (d_in <= zl)
+        for xk in mx + np.linspace(-0.5, 0.5, n_z) * 2 * ob * mu['zahn_bereich']:
+            r_k = np.sqrt(max(0.0, 1.0 - abs((xk - mx) / ob) ** mu['form'])) * oh
+            d_in = (Y - (my - r_k)) if oben else ((my + r_k) - Y)          # Abstand vom Rand der Oeffnung ins Innere
+            zahn = (np.abs(X - xk) <= zb / 2) & (d_in >= -mu['zahn_ueber'] * zl) & (d_in <= (1 - mu['zahn_ueber']) * zl)
             idx = np.where(zahn, I['zahn'], idx)
     # Auge (Mandel = Ellipse b x h): Lidrand, Auge, Pupille, ein heller Kern
     ea = ((X - ax) / (au['b'] * Hp / 2)) ** 2 + ((Y - ay) / (au['h'] * Hp / 2)) ** 2
@@ -1992,17 +2175,140 @@ def kopf_v3_bild(X, Y, an, p, rausch):
     return idx
 
 
+def kopf_v3_seite_bild(X, Y, an, p, rausch):
+    """Index der Zeile 486 je Abtastpunkt der Seitenansicht (px). an: auge/maul = projizierte Lage von Kopfauge und Mundwinkel,
+    kante(y) = Vorderkante des Kopfs in der Zeile y, vor = +1/-1 (Bildrichtung nach vorn). Masse = KI birkin12 (KOPF_V3 seite)."""
+    Hp, I, s = p['nah']['H_px'], KOPF_V3_INDEX, p['seite']
+    z = p['zonen']
+    ax, ay = an['auge']
+    my = an['maul'][1]
+    vor = an['vor']
+    hinter = (an['kante'](Y) - X) * vor / Hp          # Abstand hinter der Vorderkante (H)
+    # Grundhaut: bis zur Unterkante des Augenprofils helle Schnauzenhaut (KI oben), darunter dunklere (KI unten). PORT-WAHL: KI-Auge (birkin12 y 123) sitzt an der Grenze hell/dunkel
+    # (oben y 100-118, unten y 119-128); Probe r2b mit der Grenze in der Augenzeile: das Auge lag halb auf der im Port-Licht dunklen
+    # Unterseite und war in der Seitenkamera nicht zu sehen (n2_seite_mass.py: kein dunkler Fleck an der Vorderkante).
+    yg = ay + s['auge_h'] / 2 * Hp
+    idx = np.where(Y < yg, _rampe(I['seite_oben'], _zone_t(rausch, s['kuppe_t'])), _rampe(I['seite_unten'], _zone_t(rausch, s['haut_t'])))
+    # Kinn/rote Zone unter dem Maulprofil wie vorn
+    tab = dict(KOPF_V3_ZEILE['tabelle'])
+    dL = float(_lab(np.array(tab[I['rot'][1]], float))[0] - _lab(np.array(tab[I['rot'][0]], float))[0])
+    rot = _rampe(I['rot'], z['rot_mitte'] + z['rot_std_L'] / dL * rausch)
+    mh = s['maul_h'] * Hp
+    idx = np.where(Y >= my + mh / 2, rot, idx)
+    # Maulprofil: vom Mundwinkel des Kopfbilds (an['maul'], projiziert) bis maul_hinter hinter der Vorderkante, Hoehe maul_h um die
+    # Mundwinkelzeile (PORT-WAHL: an den Mundwinkel angeschlossen statt KI 0,044-0,101 H hinter der Spitze / 0,006-0,034 H unter dem
+    # Auge - der Port-Mund liegt 0,052 H unter dem Auge (K5), die Kopfbild-Flaechen reichen von vorn bis an den Mundwinkel)
+    h0 = (an['kante'](np.array([my]))[0] - an['maul'][0]) * vor / Hp
+    band = (hinter >= h0) & (hinter <= s['maul_hinter']) & (np.abs(Y - my) <= mh / 2)
+    # Maulprofil rot (KI a* > 15) ohne schwarzen Spalt (Probe r2i mit dem Spaltkern vorn: in der Seitenkamera eine schwarze Linie
+    # quer ueber den Kopf, n2_seite_mass.py Zeilen 210-211 L* 6), Stummel in der Bandmitte (KI: helle Stummel im roten Zahnfleisch)
+    idx = np.where(band, I['seitenmaul'], idx)
+    zb = p['maul']['zahn_b'] * Hp
+    for hk in h0 + np.linspace(0.15, 0.85, s['zaehne']) * (s['maul_hinter'] - h0):
+        zahn = (np.abs(hinter - hk) * Hp <= zb / 2) & (np.abs(Y - my) <= p['maul']['zahn_l'] * Hp / 2)
+        idx = np.where(zahn & band, I['seitenzahn'], idx)
+    # Augenprofil: das Kopfauge (Kopfbild vorn) ist von der Seite an der Vorderkante sichtbar, aber verkuerzt; die Seitenflaeche
+    # setzt es nach hinten fort: dunkle Mandel auge_b x auge_h (KI), deren Vorderende in der Mitte des projizierten Kopfauges liegt
+    # (PORT-WAHL: KI-Auge 0,034 H hinter der Schnauzenspitze; der Port-Kopf hat keine Schnauze vor dem Auge)
+    cx = ax - vor * s['auge_b'] / 2 * Hp
+    ea = ((X - cx) / (s['auge_b'] * Hp / 2)) ** 2 + ((Y - ay) / (s['auge_h'] * Hp / 2)) ** 2
+    vv = an.get('von_vorn') if s.get('auge_nur_seitlich', True) else None
+    idx = np.where((ea <= 1.0) & ~(vv if vv is not None else np.zeros_like(ea, bool)), I['seitenauge'], idx)
+    return idx
+
+
 def _rausch_feld(tim_pix, pal0, shape):
-    """Hautstruktur wie Kopf V2: Helligkeit des Wundfleischs (TPage 128 u 66-126 v 4-90, Zeile 480), normiert."""
+    """Hautstruktur: Helligkeit des EM30-Wundfleischs (TPage 128 u 66-126 v 4-90, Zeile 480), normiert (Std 1), Texel 1:1
+    (Runde 2: ohne die unbelegte Streckung y x 3 / x x 2 der Runde 1)."""
     L0 = pal0 @ np.array([0.299, 0.587, 0.114])
     q = L0[tim_pix[4:90, 66:126]]
     q = (q - q.mean()) / max(q.std(), 1e-6)
+    # auf +-2 Std begrenzt: die Rauschgewichte sind KI-Standardabweichungen (Normalannahme, 95 % in +-2 Std); die dunklen Adern der
+    # Wundfleischquelle (bis -4 Std) erzeugten sonst Flecken, die R1 als zweites Auge zaehlte (Probe r2e, Fleck (719,396) L* 11,6)
+    q = np.clip(q, -2.0, 2.0)
     yy, xx = np.mgrid[0:shape[0], 0:shape[1]]
-    return q[(yy * 3) % q.shape[0], (xx * 2) % q.shape[1]]
+    return q[yy % q.shape[0], xx % q.shape[1]]
+
+
+def kamera_achsen(raum, schnitt, gier):
+    """(rechts, unten, zur Kamera) der Spielkamera raum/schnitt im Modellraum einer Figur mit Gier gier (wie b2.zeichne)."""
+    import birkin_buehne as BB
+    s = BB.Raum(raum).schnitt(schnitt)
+    kam = BB.Kamera(s['pos'], s['ziel'], s['fov'] >> 7)
+    sn, cs = EA.sin_q12(gier) / 4096.0, EA.cos_q12(gier) / 4096.0
+    Y = np.array([[cs, 0, sn], [0, 1, 0], [-sn, 0, cs]])
+    Mm = (kam.V.astype(float) / 4096.0) @ Y
+    return Mm[0], Mm[1], -Mm[2]
+
+
+def seite_nah(p):
+    """Seitenansicht des Kopfs (nah_raster-Parameter): Spielkamera p['seite'], Mitte T[9], Massstab wie die Messansicht vorn."""
+    s = p['seite']
+    return dict(clip=s['clip'], bild=s['bild'], mitte=(0.0, 0.0, 0.0), massstab=s['massstab'], H_px=p['nah']['H_px'],
+                breite=s['breite'], hoehe=s['hoehe'], cx=s['cx'], cy=s['cy'],
+                achsen=kamera_achsen(s['raum'], s['schnitt'], s['gier']))
+
+
+def _lokal(r, px, py):
+    """Modellpunkt unter dem Bildpunkt (px, py) einer nah_raster-Ansicht im Kopfraum (Knochen 9)."""
+    iy, ix = int(round(py)), int(round(px))
+    R9, T9 = r['R'][9].astype(float) / 4096.0, r['T'][9].astype(float)
+    return R9.T @ (r['P'][iy, ix] - T9)
+
+
+def _ins_bild(r, p_nah, q):
+    """Kopfraum-Punkt q -> Bildpunkt der nah_raster-Ansicht r (Parameter p_nah)."""
+    R9, T9 = r['R'][9].astype(float) / 4096.0, r['T'][9].astype(float)
+    ri, un, _de = (np.array(x, float) for x in p_nah.get('achsen', ((0, 0, 1), (0, 1, 0), (1, 0, 0))))
+    w = R9 @ q + T9 - r['mitte']
+    return w @ ri * p_nah['massstab'] + p_nah['cx'], w @ un * p_nah['massstab'] + p_nah['cy']
+
+
+def seite_abbildung(blob, p):
+    """Runde 2: Abbildung Kopfraum -> Texel (u, v) des Seitenbilds = Parallelprojektion der Seitenansicht (seite_nah), Texeldichte
+    p['seite']['dichte'] je E.; Spiegelebene z = Kopfauge (Kopfraum). Die Lage wird so gelegt, dass alle Seitenflaechen (beide
+    Seiten) in die Flaeche u/v passen."""
+    mo = modell_aus_blob(blob)
+    s = p['seite']
+    rv = nah_raster(mo, p['nah'])
+    an = kopf_v3_anker(rv, p)
+    auge = _lokal(rv, *an['auge'])
+    pn = seite_nah(p)
+    kf = __import__('birkin_buehne').kf_von_clip(mo, pn['clip'], pn['bild'])
+    R, T = mo.pose(kf)
+    R9 = R[9].astype(float) / 4096.0
+    ri, un, de = (np.array(x, float) for x in pn['achsen'])
+    a_u, a_v = R9.T @ ri * s['dichte'], R9.T @ un * s['dichte']       # Texel je E. entlang Bild-rechts / Bild-unten
+    d = -(R9.T @ de); d /= np.linalg.norm(d)                            # Blickrichtung im Kopfraum
+    dm = d * np.array([1.0, 1.0, -1.0])
+    dv = np.array(p['blick'], float); dv /= np.linalg.norm(dv)
+    m = mo.meshes[9]
+    pts = []
+    for verts, norms, faces in ((m.tv, m.tn, m.tf), (m.qv, m.qn, m.qf)):
+        for f in faces:
+            n = len(f) // 2
+            N = sum(np.array(norms[f[2 * k]][:3], float) for k in range(n)); N /= max(np.linalg.norm(N), 1e-9)
+            if N @ dv <= -p['schwelle']:
+                continue
+            for k in range(n):
+                q = np.array(verts[f[2 * k + 1]][:3], float)
+                if N @ d <= -s['schwelle'] and N @ d <= N @ dm:
+                    pts.append(q)
+                elif N @ dm <= -s['schwelle']:
+                    pts.append(np.array([q[0], q[1], 2 * auge[2] - q[2]]))
+    P = np.array(pts)
+    tu, tv = P @ a_u, P @ a_v
+    bu, bv = tu.max() - tu.min(), tv.max() - tv.min()
+    assert bu <= s['u'][1] - s['u'][0] and bv <= s['v'][1] - s['v'][0], 'Seitenbild passt nicht in die Flaeche (%.1f x %.1f)' % (bu, bv)
+    u0 = s['u'][0] + 0.5 * ((s['u'][1] - s['u'][0]) - bu) - tu.min()
+    v0 = s['v'][0] + 0.5 * ((s['v'][1] - s['v'][0]) - bv) - tv.min()
+    A = [list(a_u) + [u0], list(a_v) + [v0]]
+    BAU_INFO['seite_uv'] = dict(texel=(round(bu, 1), round(bv, 1)), d=tuple(round(x, 3) for x in d), z_spiegel=round(auge[2], 1))
+    return dict(A=A, d=tuple(float(x) for x in d), z_spiegel=float(auge[2]), u=s['u'], v=s['v'], schwelle=s['schwelle'])
 
 
 def kopf_v3_malen(blob, p):
-    """Kopfbild und Schulterauge in die TIM-Flaechen des fertigen Blobs malen (Indizes der Zeile p['clut'])."""
+    """Kopfbild, Seitenbild und Schulterauge in die TIM-Flaechen des fertigen Blobs malen (Indizes der Zeile p['clut'])."""
     mo = modell_aus_blob(blob)
     r = nah_raster(mo, p['nah'])
     an = kopf_v3_anker(r, p)
@@ -2014,13 +2320,44 @@ def kopf_v3_malen(blob, p):
     iw, ih = struct.unpack_from('<HH', tim, ende + 8)
     breite = iw * 2
     pix = np.frombuffer(tim[ende + 12:ende + 12 + breite * ih], np.uint8).reshape(ih, breite).copy()
+    pix_alt = pix.copy()
     pb = 128 * (p['page'] & 0xF)
     u0, v0, bu, bv = pb + p['u'][0], p['v'][0], p['u'][1] - p['u'][0] + 1, p['v'][1] - p['v'][0] + 1
     X, Y, _hat = _texel_lagen(r, u0, v0, bu, bv, an['maske'])
-    rausch = p['rauschen'] * _rausch_feld(pix, _rgb(c[0]), (bv, bu))
+    rausch = _rausch_feld(pix_alt, _rgb(c[0]), (bv, bu))
     pix[v0:v0 + bv, u0:u0 + bu] = kopf_v3_bild(X, Y, an, p, rausch).astype(np.uint8)
-    sa = p.get('schulterauge')
     info = dict(auge_px=tuple(an['auge']), maul_px=tuple(an['maul']), kopfbreite_px=an['kopfbreite_px'])
+    if p.get('seite_uv'):
+        # Seitenbild: Seitenansicht rastern, Kopfauge und Mundwinkel (Kopfbild vorn) dorthin projizieren, Vorderkante je Zeile
+        s = p['seite']
+        pn = seite_nah(p)
+        rs = nah_raster(mo, pn)
+        su0, sv0 = pb + s['u'][0], s['v'][0]
+        sbu, sbv = s['u'][1] - s['u'][0] + 1, s['v'][1] - s['v'][0] + 1
+        ms = (rs['knochen'] == 9) & (rs['u'] >= su0) & (rs['u'] < su0 + sbu) & (rs['v'] >= sv0) & (rs['v'] < sv0 + sbv)
+        k9 = rs['knochen'] == 9
+        ea = _ins_bild(rs, pn, _lokal(r, *an['auge']))
+        mb = min(p['maul']['b'] * p['nah']['H_px'], p['maul']['max_kopfbreite'] * an['kopfbreite_px'])
+        ecken = [_ins_bild(rs, pn, _lokal(r, an['maul'][0] + sg * 0.5 * mb, an['maul'][1])) for sg in (-1, 1)]
+        nach_vorn = _ins_bild(rs, pn, _lokal(r, *an['auge']) - 100.0 * np.array(p['blick'], float) / np.linalg.norm(p['blick']))
+        vor = 1.0 if nach_vorn[0] > ea[0] else -1.0
+        ys = np.nonzero(k9.any(1))[0]
+        kz = np.array([(np.nonzero(k9[y])[0].max() if vor > 0 else np.nonzero(k9[y])[0].min()) for y in ys], float)
+        kante = lambda yy: np.interp(yy, ys, kz)
+        mw = max(ecken, key=lambda e: e[0] * vor)                     # Mundwinkel zur Kamera hin
+        an_s = dict(auge=ea, maul=mw, vor=vor, kante=kante)
+        SX, SY, _h = _texel_lagen(rs, su0, sv0, sbu, sbv, ms)
+        # Texel des Seitenbilds, die von vorn (Messansicht) zu sehen sind: dort kein Augenprofil (Probe r2d: das Profil am Kopfrand
+        # zaehlte R1 von vorn als zweites Auge, Fleck (719,396) L* 11,6)
+        vv = (r['knochen'] == 9) & (r['u'] >= su0) & (r['u'] < su0 + sbu) & (r['v'] >= sv0) & (r['v'] < sv0 + sbv)
+        von_vorn = np.zeros((sbv, sbu), bool)
+        von_vorn[np.floor(r['v'][vv]).astype(int) - sv0, np.floor(r['u'][vv]).astype(int) - su0] = True
+        an_s['von_vorn'] = von_vorn
+        pix[sv0:sv0 + sbv, su0:su0 + sbu] = kopf_v3_seite_bild(SX, SY, an_s, p, _rausch_feld(pix_alt, _rgb(c[0]), (sbv, sbu))).astype(np.uint8)
+        info.setdefault('seite', {})['texel_von_vorn'] = int(von_vorn.sum())
+        info['seite'] = dict(info.get('seite', {}), auge_px=tuple(round(float(x), 1) for x in ea), mundwinkel_px=tuple(round(float(x), 1) for x in mw),
+                             vor=vor, kante_auge_px=round(float(kante(np.array([ea[1]]))[0]), 1), texel_sichtbar=int(_h.sum()))
+    sa = p.get('schulterauge')
     if sa and sa.get('ecken'):
         su0, sv0 = pb + sa['u'][0], sa['v'][0]
         sbu, sbv = sa['u'][1] - sa['u'][0] + 1, sa['v'][1] - sa['v'][0] + 1
@@ -2043,7 +2380,7 @@ def kopf_v3_malen(blob, p):
                 f[yy, xx] = f[yy, xx - 1] if xx else 0
                 continue
             fc = r0['F'][k]
-            t = pix[int(r0['v'][iy, ix]), int(r0['u'][iy, ix])]
+            t = pix_alt[int(r0['v'][iy, ix]), int(r0['u'][iy, ix])]
             farbe = _rgb(c[(fc['clut'] >> 6) - cy][t])
             dist = np.linalg.norm(Lz[1:] - _lab(farbe), axis=1)
             f[yy, xx] = 1 + int(np.argmin(dist))
@@ -2052,7 +2389,7 @@ def kopf_v3_malen(blob, p):
         Lf = Lz[f, 0]
         med = np.median(Lf)
         hautton = f.flat[int(np.argmin(np.abs(Lf - med)))]
-        f = np.where(Lf < 0.6 * med, hautton, f)
+        f = np.where(Lf < sa['ader'] * med, hautton, f)
         # Auge: Eintrag der Hautzeile mit der Helligkeit K14 "L* Auge/Haut 0,36-0,39" (Mitte 0,375) bezogen auf den Hautton des
         # Vierecks und dem Buntton der KI (Lab a* 4,5 b* 2,4). Probe 6 mit der KI-Farbe absolut (L* 12): Verhaeltnis 0,56 (R9 rot),
         # weil die Schulterhaut des Ports dunkler ist als die der KI.
@@ -2101,26 +2438,31 @@ def schulterauge_v3_ecken(blob, p):
     Pc = Pw + np.array([1.0, 0.0, 0.0]) * sa['abstand']
     welt = [Pc - rechts * h - unten * h, Pc + rechts * h - unten * h, Pc - rechts * h + unten * h, Pc + rechts * h + unten * h]
     ecken = [tuple(int(x) for x in np.round(R8.T @ (q - T8))) for q in welt]
-    # Normale fuer das Licht = Mittel der EM30-Eckennormalen von Mesh 8 im Umkreis 400 E. um die Viereckmitte: so wird das Viereck
-    # schattiert wie die Schulter darum (Probe 9 mit der Flaechennormale aus der Messansicht (0,90 0,34 0,28): im Spiellicht h118
-    # fast schwarz, die Nachbarecken zeigen nach oben/aussen).
+    # Normale fuer das Licht = Mittel der EM30-Eckennormalen von Mesh 8 im Umkreis der halben Viereck-Diagonale plus Abstand um die
+    # Viereckmitte (Runde 2; Runde 1: 400 E. ohne Beleg): so wird das Viereck schattiert wie die Schulter darunter (Probe 9 mit der
+    # Flaechennormale aus der Messansicht (0,90 0,34 0,28): im Spiellicht h118 fast schwarz, die Nachbarecken zeigen nach oben/aussen).
     m8 = modell_aus_blob(blob).meshes[8]
     qv = np.array([v[:3] for v in m8.qv], float); qn = np.array([n[:3] for n in m8.qn], float)
-    mitte_l = np.mean(np.array(ecken, float), axis=0)
-    nah = np.linalg.norm(qv - mitte_l, axis=1) < 400.0
+    E = np.array(ecken, float)
+    mitte_l = np.mean(E, axis=0)
+    umkreis = 0.5 * np.linalg.norm(E[0] - E[3]) + sa['abstand']
+    nah = np.linalg.norm(qv - mitte_l, axis=1) < umkreis
     nl = (qn[nah] / np.linalg.norm(qn[nah], axis=1, keepdims=True)).sum(0)
     nl /= np.linalg.norm(nl)
+    BAU_INFO['schulterauge_umkreis'] = (round(float(umkreis), 1), int(nah.sum()))
     return dict(sa, ecken=ecken, normale=tuple(float(x) for x in nl), flaeche=tuple(float(x) for x in R8.T @ nw), ziel_px=(zx, zy),
                 abstand_uv=0.0)
 
 
 def baue_v3(basis):
-    """Variante V3: (1) Bau ohne Schulterauge, (2) Schulterauge auf Mesh 8 legen und neu bauen, (3) Kopfbild malen."""
+    """Variante V3: (1) Bau ohne Schulterauge, (2) Schulterauge auf Mesh 8 legen, Seitenbild-Abbildung rechnen und neu bauen,
+    (3) Kopfbild, Seitenbild und Schulterauge malen."""
     blob = baue(basis, _variante_v3())
     sa = schulterauge_v3_ecken(blob, KOPF_V3)
+    su = seite_abbildung(blob, KOPF_V3)
     r0 = nah_raster(modell_aus_blob(blob), KOPF_V3['nah'])          # Messansicht ohne Viereck (Hautvorlage fuer das Viereck)
-    blob = baue(basis, _variante_v3(sa))
-    return kopf_v3_malen(blob, dict(KOPF_V3, schulterauge=sa, r0=r0))
+    blob = baue(basis, _variante_v3(sa, su))
+    return kopf_v3_malen(blob, dict(KOPF_V3, schulterauge=sa, seite_uv=su, r0=r0))
 
 def modell_aus_blob(blob):
     """EA.Modell ohne EMS-Zugriff aus einem fertigen Blob aufbauen (fuer das Ansichtsblatt)."""
