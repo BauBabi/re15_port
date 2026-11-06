@@ -182,22 +182,34 @@ int main(void)
         fprintf(stderr, "Schwanz: Szenenziel getroffen auf %.0f, Freigabe-Schritt %.0f\n", d, s);
     }
     /* (8) Runde 41 SF NB3 (Abnahme 1 Mangel 12): ohne Ziel steht kein Glied flacher als 62 Grad zur Senkrechten (Labor-Pult:
-     *     kein waagerechter Dorn). */
+     *     kein waagerechter Dorn). Runde 41 SF "Schwanz V2": ein Glied darf so flach sein wie sein Keyframe (Haken der
+     *     V2-Ruhelinie, Formblatt V2 S6), aber nie flacher als 80 Grad (schwanz_r41.c SW_HANG_COS_MIN). */
     {
-        double flach = 0;
+        double flach = 0, ueber = -90;
         a->rot_y = (int16_t)(a->rot_y + 1024);
         for (int i = 0; i < 40; i++) {
-            takt(); pose(a, p, 1);
+            re15_skel_pose_t q[RE15_EMD_MAX_BONES];
+            double kf[8][3];
+            takt();
+            pose(a, q, 0);                                   /* Keyframe ohne Kette (Modellraum; Winkel zur Senkrechten gierfrei) */
+            for (int j = 0; j < 7; j++) for (int k = 0; k < 3; k++) kf[j][k] = q[16 + j].trans[k];
+            spitze(q, kf[7]);
+            pose(a, p, 1);
             for (int j = 1; j < 8; j++) {
                 int32_t g0[3], g1[3];
                 if (!re15_schwanz_r41_gelenk(20, j - 1, g0) || !re15_schwanz_r41_gelenk(20, j, g1)) continue;
                 const double dx = g1[0] - g0[0], dy = g1[1] - g0[1], dz = g1[2] - g0[2];
                 const double w = acos(dy / sqrt(dx * dx + dy * dy + dz * dz + 1e-9)) * 180.0 / 3.14159265;
+                const double ex = kf[j][0] - kf[j - 1][0], ey = kf[j][1] - kf[j - 1][1], ez = kf[j][2] - kf[j - 1][2];
+                const double wk = acos(ey / sqrt(ex * ex + ey * ey + ez * ez + 1e-9)) * 180.0 / 3.14159265;
+                const double grenze = wk + 2.5 > 62.0 ? wk + 2.5 : 62.0;
                 if (w > flach) flach = w;
+                if (w - grenze > ueber) ueber = w - grenze;
             }
         }
-        CHECK(flach <= 63.0, "Haengen: Glied %.0f Grad von der Senkrechten (Soll <= 62)", flach);
-        fprintf(stderr, "Schwanz: flachstes Glied ohne Ziel %.0f Grad\n", flach);
+        CHECK(ueber <= 1.0, "Haengen: Glied %.0f Grad ueber der Grenze max(62, Keyframe) (flachstes %.0f)", ueber, flach);
+        CHECK(flach <= 81.0, "Haengen: Glied %.0f Grad von der Senkrechten (Soll <= 80)", flach);
+        fprintf(stderr, "Schwanz: flachstes Glied ohne Ziel %.0f Grad (Abstand zur Grenze %.1f)\n", flach, ueber);
     }
 
     /* (6) EM30 mit 16 Knochen: keine Kette */

@@ -25,6 +25,14 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
 /* Runde 41 SF NB3 (Abnahme 1 Mangel 12, Labor-Pult: Schwanz als langer waagerechter Dorn quer durchs Bild, Video n430-n465
  * kompakte Masse): ohne Szenenvorgabe haengt jedes Glied hoechstens SW_HANG_GRAD von der Senkrechten ab. GESTALTUNG. */
 #define SW_HANG_COS 0.4695f   /* cos 62 Grad */
+/* Runde 41 SF "Schwanz V2" (Formblatt V2 S6: Ruheverlauf als Haken - erst fast waagerecht nach hinten, dann senkrecht, dazu
+ * die seitliche Welle der V2-Ruhelinie): ein Glied darf so waagerecht haengen wie sein Keyframe-Ziel (Ruhe + Nachschwingen
+ * des Modells), hoechstens SW_HANG_COS_MIN von der Senkrechten. Mit der festen 62-Grad-Grenze drueckte haengen() die
+ * V2-Glieder 4-5 (Keyframe 70-71 Grad, Gang Clip 1) in die Senkrechte, der Haken fiel zusammen. Der waagerechte Dorn am
+ * Labor-Pult (NB3 Mangel 12, 90 Grad) bleibt ausgeschlossen. Referenz 2: Gang/Stand-Keyframes 10-68 Grad -> Glied 1 darf 65-68
+ * statt 62 Grad, sonst gleich. GESTALTUNG, keine Original-Konstante. */
+#define SW_HANG_COS_MIN 0.1736f   /* cos 80 Grad */
+#define SW_HANG_RAND    0.03f     /* Spielraum zum Keyframe-Winkel (Kosinus) */
 
 static struct {
     int      gueltig;
@@ -167,17 +175,24 @@ static void min_dreh(const float a[3], const float b[3], float R[9])
     for (int i = 0; i < 9; i++) R[i] = I[i] + K[i] + KK[i] * k;
 }
 
-/* NB3 Mangel 12: kein Glied steiler als SW_HANG_COS zur Senkrechten (y+ = unten); Laengen bleiben. */
-static void haengen(float (*p)[3], const float *laenge, float boden)
+/* NB3 Mangel 12: kein Glied steiler als SW_HANG_COS zur Senkrechten (y+ = unten); Laengen bleiben.
+ * Schwanz V2: Grenze je Glied = min(SW_HANG_COS, max(Keyframe-Kosinus - SW_HANG_RAND, SW_HANG_COS_MIN)), zw = Keyframe-Gelenke. */
+static void haengen(float (*p)[3], const float *laenge, float boden, float (*zw)[3])
 {
     for (int j = 1; j < SW_J; j++) {
         float d[3] = { p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1], p[j][2] - p[j - 1][2] };
+        float kf[3] = { zw[j][0] - zw[j - 1][0], zw[j][1] - zw[j - 1][1], zw[j][2] - zw[j - 1][2] };
         if (norm(d) < 1e-3f) continue;
-        if (d[1] < SW_HANG_COS) {
+        float lim = SW_HANG_COS;
+        if (norm(kf) > 1e-3f) {
+            const float k = kf[1] - SW_HANG_RAND;
+            lim = k < SW_HANG_COS ? (k > SW_HANG_COS_MIN ? k : SW_HANG_COS_MIN) : SW_HANG_COS;
+        }
+        if (d[1] < lim) {
             float h = sqrtf(d[0] * d[0] + d[2] * d[2]);
-            const float s = sqrtf(1.0f - SW_HANG_COS * SW_HANG_COS);
+            const float s = sqrtf(1.0f - lim * lim);
             if (h > 1e-4f) { d[0] *= s / h; d[2] *= s / h; } else { d[0] = s; d[2] = 0.0f; }
-            d[1] = SW_HANG_COS;
+            d[1] = lim;
         }
         for (int k = 0; k < 3; k++) p[j][k] = p[j - 1][k] + d[k] * laenge[j];
         if (p[j][1] > boden) p[j][1] = boden;
@@ -306,7 +321,7 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
                 for (int k = 0; k < 3; k++) p[j][k] = p[j - 1][k] + d[k] * laenge[j];
                 if (p[j][1] > (float)a->y) p[j][1] = (float)a->y;            /* nicht unter den Boden (y+ = unten) */
             }
-            if (s_sw[slot].ziel_w <= 0) haengen(p, laenge, (float)a->y);
+            if (s_sw[slot].ziel_w <= 0) haengen(p, laenge, (float)a->y, zw);
         }
         if (s_sw[slot].ziel_w > 0) ziel_anwenden(slot, laenge, (float)a->y);
         s_sw[slot].takt = g_engine.frame_count;

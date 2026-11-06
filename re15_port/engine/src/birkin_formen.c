@@ -264,6 +264,23 @@ static const int16_t k_schwanz_dicke[][2] = { { 56, 4096 }, { 58, 3195 }, { 72, 
                                                                                                         * h60-h70 56-238, Video 175-631 */
 /* Gewicht des Szenenziels je Videobild (NB4: Videobild, nicht Takt; Freigabe nach dem Verdecken h102-h108). */
 static const int16_t k_schwanz_gewicht[][2] = { { 15, 0 }, { 19, 4096 }, { 102, 4096 }, { 108, 0 } };
+/* Runde 41 SF "Schwanz V2" (Formblatt V2 S2-S6; PORT-WAHL nach Video 4). Die V2-Wurzel sitzt oben am Buckel (0,16 H unter der
+ * Oberkante statt 0,31 H); erkannt am Bindversatz des Gelenks 16 im Brustraum (Knochen 8, X vorn): V2 x -986, Referenz 2 x -380.
+ * (1) Durchgangspunkte (Austritt an der Huefte, art 1) liegen fuer V2 BF_V2_VIA_TIEFE hinter der Koerperebene: mit -150 (vor
+ *     der Wurzelebene, fuer die alte Wurzel an der Hueftrueckseite) lief das Stueck Wurzel -> Austritt sichtbar VOR dem Bauch
+ *     quer durchs Bild (Lauf sfv2/V1s h22/h24).
+ * (2) Freigabe ab h74 statt h102: Video h77-h98 zeigt in der rechten Flanke den Bogen vom oberen Ruecken (Formblatt V2 S1/
+ *     Punkt 4, Nutzer "bis in den oberen Ruecken"); die NB4-Verdeckung h74-h102 stuetzte sich auf "0 kraeftig rote Bildpunkte
+ *     rechts der Huefte" und hat den Bogen (r-g 2-16, Leser B 2.1) nicht gesehen. Mit Gewicht 0 haengt die Kette in ihrer
+ *     Ruhe (Haken, birkin_formen.py SCHWANZ_V2). Referenz 2 bleibt unveraendert. */
+#define BF_V2_WURZEL_X   (-700)
+#define BF_V2_VIA_TIEFE  550
+static const int16_t k_schwanz_gewicht_v2[][2] = { { 15, 0 }, { 19, 4096 }, { 74, 4096 }, { 80, 0 } };
+static int bf_schwanz_v2(void)
+{
+    const re15_enemy_bank_t *bk = re15_enemy_find(0x30u);
+    return bk && bk->skel.bone_count == 23 && bk->skel.bone_relative_pos[16][0] < BF_V2_WURZEL_X;
+}
 
 
 /* ---- Runde 41 Spur H "hangar": Ausloeser, Riegel, Kamera ----------------------------------------
@@ -616,14 +633,19 @@ static void bf_bild_versatz(int32_t p[3], int dx, int dy)
  * Blickrichtung der Szenenkamera gebogen (NB4, Kopf k_schwanz_bahn). */
 static void bf_schwanz_ziel(const re15_actor_t *b, int h)
 {
-    const int32_t w = bf_tab(k_schwanz_gewicht, BF_N(k_schwanz_gewicht), h);
+    const int v2 = bf_schwanz_v2();
+    const int32_t w = v2 ? bf_tab(k_schwanz_gewicht_v2, BF_N(k_schwanz_gewicht_v2), h)
+                         : bf_tab(k_schwanz_gewicht, BF_N(k_schwanz_gewicht), h);
     int32_t a[3], e[3], z[3], va[3], ve[3], vz[3], bg[3];
     int i = 0;
     if (w <= 0) { re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); re15_schwanz_r41_fuehrung(s_h.birkin, NULL, 0, NULL); return; }
     while (i < BF_SCHWANZ_N - 1 && h >= k_schwanz_bahn[i + 1].s.h) i++;
     const bf_schwanzbahn_t *p0 = &k_schwanz_bahn[i], *p1 = &k_schwanz_bahn[i < BF_SCHWANZ_N - 1 ? i + 1 : i];
-    if (!bf_video_welt(&p0->s, b, a) || !bf_video_welt(&p1->s, b, e) || !bf_video_welt(&p0->v, b, va) ||
-        !bf_video_welt(&p1->v, b, ve)) { re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); return; }
+    bf_schwanzpunkt_t v0 = p0->v, v1 = p1->v;           /* Schwanz V2: Austritt hinter der Koerperebene */
+    if (v2 && v0.art == 1) v0.tiefe = (int16_t)(v0.tiefe + BF_V2_VIA_TIEFE);
+    if (v2 && v1.art == 1) v1.tiefe = (int16_t)(v1.tiefe + BF_V2_VIA_TIEFE);
+    if (!bf_video_welt(&p0->s, b, a) || !bf_video_welt(&p1->s, b, e) || !bf_video_welt(&v0, b, va) ||
+        !bf_video_welt(&v1, b, ve)) { re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); return; }
     const int span = p1->s.h - p0->s.h;
     const int u = (span > 0 && h > p0->s.h) ? ((h < p1->s.h ? h - p0->s.h : span) * 4096 / span) : 0;
     for (int k = 0; k < 3; k++) { z[k] = bf_mix(a[k], e[k], u); vz[k] = bf_mix(va[k], ve[k], u); }
@@ -814,7 +836,13 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
                               m->anim_frame, (int)m->x, (int)m->y, (int)m->z, m->rot_y);
         {   int32_t sp[3];                                  /* Runde 41 SF N1.9: Schwanzspitze (Stand des letzten Zeichnens) */
             if (log && re15_schwanz_r41_gelenk(s_h.birkin, 7, sp))
-                fprintf(stderr, "[hangar-takt] h%d Schwanzspitze (%d,%d,%d)\n", h, (int)sp[0], (int)sp[1], (int)sp[2]); } }
+                fprintf(stderr, "[hangar-takt] h%d Schwanzspitze (%d,%d,%d)\n", h, (int)sp[0], (int)sp[1], (int)sp[2]);
+            if (log && re15_schwanz_r41_gelenk(s_h.birkin, 0, sp)) {   /* Runde 41 SF "Schwanz V2": alle Gelenke (Riegel) */
+                fprintf(stderr, "[hangar-takt] h%d Schwanz B y %d", h, (int)b->y);
+                for (int j = 0; j < 8 && re15_schwanz_r41_gelenk(s_h.birkin, j, sp); j++)
+                    fprintf(stderr, " %d(%d,%d,%d)", j, (int)sp[0], (int)sp[1], (int)sp[2]);
+                fprintf(stderr, "\n");
+            } } }
 #endif
     /* --- Spider-Man ------------------------------------------------------------------------------------------- */
     if (!m) return;
