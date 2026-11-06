@@ -714,6 +714,19 @@ static int gb_pl_nische(const re15_actor_t *pl)
 {
     return pl->x > GB_RAMP_X1 && pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1;
 }
+/* NB3 (Vorgabe B): die Figur steht IM Block-Rechteck (Plattform/Rampe) auf Wasserhoehe (y >= -900). Fuer die Figur ist das Rechteck nicht begehbar
+ * (test_r41_gatorfix begehbar 2091 Band 0/1: Raster x <= 2200, z -20200..-12200 "weggeschoben"), beim Klettern springen y und z im selben Bild
+ * (y 0 -> -1800, z -18750 -> -17602, exe probe4 F82) - der Zustand kommt nur im Defektfall vor: exe wand_elza (NB3) F7920 Biss-Wegstoss aus der
+ * Taschen-Ecke (2318,-18568) in den Pier (1382,-16749) -> (1382,-17036), 488 Bilder bis zum Laufende; in 7 Laeufen vor/nach NB3 sonst 0 Bilder.
+ * Dort gilt "Punkt innen" zu Recht, die NB5-Verfolgung pendelte an der SW-Ecke (2 Haenge-Fenster F8239/F8389, Kopf 9076-11182 von der Figur).
+ * Unerreichbar wie die Ostnische -> Belagerung der naechsten Kante (GBP_GUARD). Der Wegstoss selbst (Spieler-Kollision) ist nicht Teil dieser Spur. */
+static int gb_pl_im_block(const re15_actor_t *pl)
+{
+    return pl->y >= -900
+        && ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 && pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1)
+            || (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 && pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
+}
+static int gb_pl_unerreichbar(const re15_actor_t *pl) { return gb_pl_nische(pl) || gb_pl_im_block(pl); }
 /* NB3: die Figur ist OBEN (Rampe/Plattform mit y < -900 wie player_on_platform im CHASE) oder in der Ostnische - der Zaehler der Vorgabe A
  * und das Rammen ohne Kanister gelten nur ihr; eine Figur im Wasser wird in der Verfolgungs-Querung wie in NB5 nur vom Maul getroffen. */
 static int gb_pl_oben(const re15_actor_t *pl)
@@ -721,7 +734,7 @@ static int gb_pl_oben(const re15_actor_t *pl)
     return ((pl->y < -900)
             && ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 && pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1)
                 || (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 && pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1)))
-           || gb_pl_nische(pl);
+           || gb_pl_unerreichbar(pl);
 }
 
 static int     gb_zone(int32_t z);       /* fwd (definiert unten) */
@@ -1885,7 +1898,7 @@ static void gb_takt(int slot)
               pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1) ||
              (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 &&
               pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
-        if (!gb_nb3_aus() && gb_pl_nische(pl)) player_on_platform = 1;   /* NB3 (Vorgabe B): Ostnische = belagern wie oben */
+        if (!gb_nb3_aus() && gb_pl_unerreichbar(pl)) player_on_platform = 1;   /* NB3 (Vorgabe B): Ostnische / Figur im Block = belagern wie oben */
         if (g->cross_cd > 0) g->cross_cd--;
         {   const char *tv6 = getenv("RE15_GB_TEST");
             if (tv6 && *tv6 == '6') player_on_platform = 1;
@@ -2397,7 +2410,7 @@ static void gb_takt(int slot)
                      pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1) ||
                     (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 &&
                      pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
-        if (!gb_nb3_aus() && gb_pl_nische(pl)) oben = 1;   /* NB3 (Vorgabe B): Ostnische = belagern wie oben */
+        if (!gb_nb3_aus() && gb_pl_unerreichbar(pl)) oben = 1;   /* NB3 (Vorgabe B): Ostnische / Figur im Block = belagern wie oben */
         {   const char *tv6 = getenv("RE15_GB_TEST");
             if (tv6 && *tv6 == '6') oben = 1;   /* Sichtlauf: Belagerung erzwingen */
         }
