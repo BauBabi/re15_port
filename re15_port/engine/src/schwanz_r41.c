@@ -32,7 +32,9 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
  * Labor-Pult (NB3 Mangel 12, 90 Grad) bleibt ausgeschlossen. Referenz 2: Gang/Stand-Keyframes 10-68 Grad -> Glied 1 darf 65-68
  * statt 62 Grad, sonst gleich. GESTALTUNG, keine Original-Konstante. */
 #define SW_HANG_COS_MIN 0.1736f   /* cos 80 Grad */
-#define SW_HANG_RAND    0.03f     /* Spielraum zum Keyframe-Winkel (Kosinus) */
+#define SW_HANG_RAND    0.10f     /* Spielraum zum Keyframe-Winkel (Kosinus; ~6-8 Grad bei 60-70 Grad). Mit 0,03 kippte die
+                                   * Kette V2 im Gang (laengere Beine, mehr Seitenschwung) an der Grenze in die Senkrechte:
+                                   * Spitze h108-h132 375-995 E. ueber dem Boden statt der Keyframes ~1000 (Lauf sfv2/V2s). */
 
 static struct {
     int      gueltig;

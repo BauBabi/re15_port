@@ -205,21 +205,31 @@ SCHWANZ_V2 = dict(
     pfad_h=[(0.08, 0.04), (0.14, 0.08), (0.17, 0.14), (0.19, 0.20), (0.21, 0.26), (0.22, 0.33), (0.21, 0.39),
             (0.19, 0.45), (0.15, 0.51)],                    # S6 Mittellinie R1 (h85), Spitze (0,15 0,51): 0,33 H ueber der Sohle
     laenge=3475,                   # S9: Laenge von Referenz 2 behalten (0,89 H)
-    # PORT-WAHL (S9/Ae2 "den Rest durch Seitwaertslauf ... aufnehmen, nicht durch eine tiefere Spitze"): eine seitliche Welle
-    # im haengenden Teil (ab 0,30 der Pfadlaenge; von vorn hinter Becken und Beinen), Spitze 0,12 H zur rechten Seite (W) =
+    # PORT-WAHL (S9/Ae2 "den Rest durch Seitwaertslauf ... aufnehmen, nicht durch eine tiefere Spitze"): seitliche Wellen
+    # im haengenden Teil (ab 0,38 der Kettenlaenge; von vorn hinter Becken und Beinen), Spitze 0,12 H zur rechten Seite (W) =
     # hinter das rechte Bein. Erster Stand (Welle ab der Wurzel, z = a sin 2 pi s) drehte das Wurzelglied 59 Grad aus der
     # Seitenebene: in der Seitenansicht h85 sah man die Wurzel von vorn (Scheibe), der Schwanz wirkte duenn.
-    seitlich=dict(wellen=1.0, ab=0.30, spitze=-0.12),
+    seitlich=dict(wellen=2.0, ab=0.38, spitze=-0.12),
+    # Gelenk 16 400 E. im Buckel versenkt (sichtbar beginnt der Schwanz an der Wurzelmitte): weniger Restlaenge fuer die Welle.
+    # Probe (sfv2/probe_welle.py, Vorderansicht h118/h125, sichtbare Schwanz-Bildpunkte 640er): ohne Versenkung, eine Welle
+    # (+-620 E.): 722/612 - der Schwanz trat in Taillenhoehe beidseits aus dem Umriss (S15 verlangt: hinter dem Koerper);
+    # 400 E. versenkt, eine Welle: 252/325; 400 E., zwei Wellen (+-325 E.): 0/0.
+    versenkt=400,
     # S10 Dicke quer zur Mittellinie (Durchmesser in H, H = 3880 E.): 0,15-0,2 der Laenge 0,135; 0,3 0,10; 0,4 0,08;
     # 0,5 0,0675; 0,6-0,7 0,0575; 0,9 0,034 -> Radien in Einheiten (halber Durchmesser).
     # Mit den reinen Formblatt-Radien [(0,262) (0,2 262) (0,3 194) (0,4 155) (0,5 131) (0,65 112) (0,9 66)] mass die Seitenansicht
     # h85 0,117 / 0,057 / 0,034 H (Gliederprofil, Lage zur Kamera) -> x1,15 bis 0,65 der Laenge.
-    radien_s=[(0.0, 300), (0.2, 300), (0.3, 223), (0.4, 178), (0.5, 151), (0.65, 128), (0.9, 68), (1.0, 54)],
+    # Mit 400 E. Versenkung beginnt der sichtbare Teil bei s = 0,115 der Kette: Anteile der SICHTBAREN Laenge f -> s = 0,115 +
+    # 0,885 f (sonst mass h85 bei 0,2 nur 0,109 H, bei 0,9 0,019 H).
+    radien_s=[(0.0, 300), (0.292, 300), (0.381, 223), (0.469, 178), (0.558, 151), (0.690, 128), (0.912, 68), (1.0, 54)],
     # Gliederprofil flacher als Referenz 2 (0,80/1,05), damit die gemessene Dicke dem Radius entspricht; Glieder bleiben sichtbar.
     profil=[(0.0, 0.90), (0.12, 0.98), (0.45, 1.03), (0.80, 0.98), (1.0, 0.90)],
     # S3: Wurzel ohne Stufe in den Buckel -> Wurzelglied mit Kragen (1,25) statt Einschnuerung (0,80).
     profil_wurzel=[(0.0, 1.15), (0.15, 1.06), (0.45, 1.02), (0.80, 0.98), (1.0, 0.92)],
     wurzel_v=0.22,                 # Kragen in der hellen Bandfarbe statt des dunklen Gelenkrings (Lauf: dunkler Block am Buckel)
+    # Ae5 (Spitze im Gang 0,32-0,44 H frei halten): Nachschwingen ohne Schwere. Mit schwere 0,004 (Referenz 2) lagen die
+    # Keyframe-Spitzen im Gang (Clip 1) bei 0,21-0,31 H statt der Ruhe 0,33 H.
+    bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.0, grenze=55),
 )
 SCHWANZ_V2_SPITZ = dict(ende='dorn', dorn=4.0,
                         profil_ende=[(0.0, 0.90), (0.12, 0.98), (0.45, 0.95), (0.80, 0.78), (1.0, 0.55)])
@@ -241,7 +251,9 @@ KOPF_V2 = dict(
     index=dict(kuppe=205, haut=160, rot=92, lippe=78, zahn=246, zahnschatten=205, innen=12, weiss=252),
     # Maul: KI-Lippenrand x 0,11-0,88; im Spielbild (Lauf sfv2/V1s h118/h128) wirkte das als rundes "O" mitten im Kopf ->
     # Lippen auf die innere KI-Oeffnung (x 0,22-0,78) und tiefer (y 0,47-0,90: Kopfbox im Spiel schliesst die Kuppe von oben ein).
-    maul=dict(x=(0.22, 0.78), y=(0.47, 0.90), zahn_aussen=0.86, zahn_innen=0.58, zaehne=12),
+    # Kopf-Nahleiste 05 (erster Stand): rundes dunkles "O" mit Zahnring -> KI zeigt ein senkrechtes Maul, Zaehne oben und
+    # unten, rote Lippen; Inneres kleiner, Zaehne nur an Ober- und Unterkante (|sin| > 0,45).
+    maul=dict(x=(0.28, 0.72), y=(0.44, 0.93), zahn_aussen=0.84, zahn_innen=0.56, zaehne=10, zahn_bogen=0.45),
     auge=dict(x=0.415, y=0.30, r=(3.0, 3.2)),
     schulterauge=dict(u=(42, 48), v=(156, 164), abstand=14.0, normale=(0.41, -0.90, 0.12),
                       ecken=[(86, -1181, -628), (76, -1175, -554), (180, -1138, -624), (170, -1132, -550)]),
@@ -262,11 +274,25 @@ def _variante(schwanz_ende, koerper=None):
     f['cluts'] = dict(f['cluts'], zusatz=list(f['cluts']['zusatz']) + [KOPF_V2_ZEILE])
     if koerper:
         for k, v in koerper.items():
-            f[k] = dict(f[k], **v) if isinstance(v, dict) and k in ('skal', 'rel', 'ducken') else v
+            f[k] = {**f[k], **v} if isinstance(v, dict) and k in ('skal', 'rel', 'ducken') else v
     return f
 
 
-KOERPER_V2 = {}          # wird unten (K1-K10) gesetzt
+# Koerper V2 (Formblatt V2 K3-K7 / Ae6, Ae8, Ae9; Frage F1 an den Nutzer - nur in den V2-Varianten). Werte aus der Koordinaten-
+# suche tools/r41_sichel/v2/koerper_suche.py gegen die Vorderansicht h118/h125 (Posen anpassen_v2, Spielkamera, H = Oberkante bis
+# Sohle im selben Bild): Ziel Bund 0,42 / Saum 0,57 / Breite 0,61 (0,57-0,65) H unter OK, Krallen 0,33 (0,30-0,36) / Sichel 0,22
+# (0,17-0,27) H ueber der Sohle. Referenz 2 dort: 0,47-0,49 / 0,65-0,68 / 0,65-0,68 / 0,39-0,44 / 0,15-0,19. Ergebnis der Suche:
+# Oberschenkel x1,48, Schienbein x1,08 (laenger, die Jeans enden weiter bei 360 E. unter der Huefte), Rumpf (7/8) x0,90 laengs,
+# Brust quer 1,15 -> 1,09, Becken 163 statt 110 tiefer, Arme 9 statt 20 Grad zur Mitte, Klauen-Ellbogen 20 statt 60 Grad, dazu
+# Klauen-Unterarm 0,80 -> 0,92 (Krallen in der Suche noch 0,36-0,39 H), Wurzel aller Keyframes 420 hoeher (die Suche mass nur
+# den Umriss: mit den laengeren Beinen stand der Koerper sonst 420 E. im Boden). GESTALTUNG nach der Bildmessung, keine RE-Werte.
+_SK = FORMEN['hangar']['skal']
+KOERPER_V2 = dict(
+    skal={1: (1.0, 1.48, 1.0), 4: (1.0, 1.48, 1.0), 2: (1.0, 1.08, 1.0), 5: (1.0, 1.08, 1.0),
+          7: (_SK[7][0], _SK[7][1] * 0.90, _SK[7][2]), 8: (_SK[8][0], _SK[8][1] * 0.90, 1.09),
+          11: (_SK[11][0], 0.92, _SK[11][2])},
+    ducken=dict(becken=163.0, arm_innen=9.0, ellbogen_links=20.0, wurzel_hoch=420.0),
+)
 VARIANTEN = {
     'v1_spitz':  lambda: _variante(SCHWANZ_V2_SPITZ),
     'v1_kralle': lambda: _variante(SCHWANZ_V2_KRALLE),
@@ -659,6 +685,11 @@ def kette_v2_punkte(sw, mo, A):
     Ra, Ta = R[A].astype(float) / 4096.0, T[A].astype(float)
     w0 = np.array([xo - sw['wurzel_h'][0] * H, oben + sw['wurzel_h'][1] * H, 0.0])
     pfad = [w0] + [w0 + np.array([-b * H, d * H, 0.0]) for b, d in sw['pfad_h']]
+    if sw.get('versenkt'):
+        # Gelenk 16 liegt im Buckel: das erste Stueck (sw['versenkt'] E.) laeuft gegen die Richtung des ersten Pfadabschnitts
+        # in den Koerper; sichtbar beginnt der Schwanz an der Wurzelmitte w0 (Formblatt V2 S2/S3).
+        r0 = pfad[1] - pfad[0]; r0 /= np.linalg.norm(r0)
+        pfad = [w0 - r0 * sw['versenkt']] + pfad
     seg = np.r_[0, np.cumsum(np.linalg.norm(np.diff(np.array(pfad), axis=0), axis=1))]
     s = seg / seg[-1]
     se = sw['seitlich']
@@ -1178,9 +1209,15 @@ def ducken(emr, p):
         sk = EA.Skel(); sk.kf_size, sk.kf_data = ks, bytes(emr[o:o + ks])
         lokal = [EA.mat_euler(*EA.kf_angles(sk, 0, b)).astype(float) / 4096 for b in range(nb)]
         wurzel = np.array(EA.kf_pos(sk, 0), float)
+        # Schwanz V2 / Koerper V2: laengere Beine (skal 1/2/4/5) verlaengern auch die Bezugslage der Fussgelenke (T0 mit den neuen
+        # Bindversaetzen): ohne Anheben stand der Koerper V2 420 E. im Boden (Sohle Clip 0 y +427, Clip 1 +404..+504 statt -8..+95).
+        hoch = p.get('wurzel_hoch', 0.0)
+        wurzel[1] -= hoch
         R0, T0 = _welt(s, rel, lokal, wurzel)
         w = float(np.clip((R0[7][1, 1] - 0.35) / 0.45, 0.0, 1.0))
         if w <= 0.0:
+            if hoch:
+                struct.pack_into('<h', emr, o + 2, int(max(-32768, min(32767, round(wurzel[1])))))
             continue
         neu = list(lokal)
         wurzel1 = wurzel + np.array([0.0, p['becken'] * w, 0.0])
@@ -1499,11 +1536,12 @@ def kopf_v2_textur(tim, p):
     img = img * (1 - rz) + (I['rot'] + rausch * 0.8) * rz
     e = np.sqrt(((tx - mx) / rx) ** 2 + ((ty - my) / ry) ** 2)
     img[e <= 1.0] = I['lippe'] + rausch[e <= 1.0] * 0.5
-    zahn = (e <= mu['zahn_aussen']) & (e > mu['zahn_innen'])
     w = np.arctan2((ty - my) / ry, (tx - mx) / rx)
+    zahn = (e <= mu['zahn_aussen']) & (e > mu['zahn_innen']) & (np.abs(np.sin(w)) > mu.get('zahn_bogen', 0.0))
     luecke = (np.floor((w + np.pi) / (2 * np.pi) * mu['zaehne']) % 2) == 1
     img[zahn & ~luecke] = I['zahn']
     img[zahn & luecke] = I['zahnschatten']
+    img[(e <= mu['zahn_aussen']) & ~zahn & (e > mu['zahn_innen'])] = I['innen'] + 20     # Mundwinkel: dunkelrot
     img[e <= mu['zahn_innen']] = I['innen']
     au = p['auge']
     ea = np.sqrt(((xx - au['x'] * (bu - 1)) / au['r'][0]) ** 2 + ((yy - au['y'] * (bv - 1)) / au['r'][1]) ** 2)

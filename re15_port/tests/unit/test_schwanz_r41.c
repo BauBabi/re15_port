@@ -202,7 +202,7 @@ int main(void)
                 const double w = acos(dy / sqrt(dx * dx + dy * dy + dz * dz + 1e-9)) * 180.0 / 3.14159265;
                 const double ex = kf[j][0] - kf[j - 1][0], ey = kf[j][1] - kf[j - 1][1], ez = kf[j][2] - kf[j - 1][2];
                 const double wk = acos(ey / sqrt(ex * ex + ey * ey + ez * ez + 1e-9)) * 180.0 / 3.14159265;
-                const double grenze = wk + 2.5 > 62.0 ? wk + 2.5 : 62.0;
+                const double grenze = wk + 8.0 > 62.0 ? wk + 8.0 : 62.0;   /* SW_HANG_RAND 0,10 im Kosinus */
                 if (w > flach) flach = w;
                 if (w - grenze > ueber) ueber = w - grenze;
             }
