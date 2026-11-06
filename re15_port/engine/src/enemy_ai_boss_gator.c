@@ -2618,7 +2618,8 @@ static void gb_takt(int slot)
         }
         if (t >= (g->cframes ? g->cframes : GB_CROSS_FRAMES)) {
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
-            g->cross_cd = (int16_t)((pl->y < -900) ? (re15_gr2_rw_traegt() ? GB_KREUZ_PAUSE : 300) : 90);   /* G2-RE2: mit dem Kanister GB_KREUZ_PAUSE (NB2 Vorschlag 4: auch zwischen den Querungen der Belagerung) */
+            g->cross_cd = (int16_t)((pl->y < -900) ? (re15_gr2_rw_an() ? GB_KREUZ_PAUSE : 300) : 90);   /* G2-RE2: mit dem Kanister GB_KREUZ_PAUSE - NB2 Vorschlag 4: nur noch mit dem Pruefhaken; sonst die
+                                              * 10 s der Spur B wie ohne Kanister (exe west4_leon mit 45: Querung alle ~6 s hin und her, Kopf < 2500 vor der Kamera 8,2 % gegen 1,5 % ohne Kanister) */
                                              /* Leon OBEN: 10 s auf der Seite
                                               * bleiben (souveraene Belagerung
                                               * statt Dauer-Pendelei, Nutzer

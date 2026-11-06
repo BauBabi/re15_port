@@ -59,6 +59,6 @@ if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gato
                          -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_gatorfix_${_teil}_wd
                          -DTEIL=${_teil}
                          -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
-        set_tests_properties(integration_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 900)
+        set_tests_properties(integration_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 2400)   # G2-RE2 NB2: frei/rampe/abn2_* laufen zweimal (mit / ohne Kanister, tragvergleich)
     endforeach()
 endif()

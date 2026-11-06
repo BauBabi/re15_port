@@ -350,7 +350,7 @@ if(TEIL MATCHES "^tod_explosion")
         "RE15_PLAYER_POS=-7000,-19000,3072,0"
         RE15_R39_MESS_SPIELER_HP=100 RE15_GB_TEST=5 "RE15_GATOR_KANISTER=4430,-26160" "RE15_GIVE=3:15,21:50" RE15_EQUIP=3
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss}"
-        "RE15_EXIT_AT=1330#${_r2090}" "RE15_FRAMEDUMP=1146-1330/1:fd_"
+        "RE15_EXIT_AT=1400#${_r2090}" "RE15_FRAMEDUMP=1146-1400/1:fd_"   # G2-RE2 NB2 (Vorschlag 4): ohne Kopf-Klemme trifft der Schuss spaeter - R1 F1192 statt F1156 (Lauf 2026-11-06), X = Ende + 15 = F1335 lag hinter 1330
         "${_exe_kopie}")
     file(REMOVE "${_exe_kopie}")
     if(NOT _rv EQUAL 0)

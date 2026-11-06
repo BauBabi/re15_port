@@ -783,6 +783,60 @@ static int kletterkarte(const char *raum_s)
 typedef struct { int f; int32_t px, pz, gx, gz; int rot, mo, cam; } g2_tl_t;
 static g2_tl_t s_tl[20000];
 static uint8_t s_tl_kk[40000];
+/* G2-RE2 NB2 (Vorschlag 4) - Werkzeug/exe-Riegel: tragvergleich <lauf_mit> <lauf_ohne>. Beide Laeufe mit derselben Eingabe, der zweite mit dem Messhaken
+ * RE15_G2_OHNE_KANISTER=1 (der Kanister verschwindet beim Tragen). gator_trag.log Bild fuer Bild (F): Phase, Clip, Bild, Gier, Lage. Ausgabe "tragvergleich: ..."
+ * mit der ersten Abweichung und ihrer Phase; dazu aus debug.log des Laufs mit Kanister die groesste "Kanister-Sitz"-Abweichung (Lage + Drehung, gator_re2_pc.c).
+ * Rueckgabe 0 = gleich bis zur ersten Abweichung in Belagerung/Querung (GBP_GUARD 5 / GBP_CROSS 7 - die Querung mit Rammen, Auftrag "Rampe: rammen wie gehabt")
+ * oder bis nach dem ersten Rammen (gator_boss.log "RAMMEN F": der Treffer wirft die Figur nieder, ohne Kanister gibt es ihn nicht - gemessen west5_elza: Rammen
+ * F1864 in einer Querung mit der Figur im Wasser, erste Abweichung F1934 in der Verfolgung) oder ganz gleich, und Kanister-Sitz 0 in >= 100 Bildern. */
+typedef struct { int ph, mo, af, gier, x, z; } g2v_t;
+static g2v_t s_tv[2][40000]; static uint8_t s_tv_da[2][40000];
+static int tragvergleich(const char *mit, const char *ohne)
+{
+    const char *d[2] = { mit, ohne };
+    char pf[1024], z[1024];
+    memset(s_tv_da, 0, sizeof s_tv_da);
+    for (int k = 0; k < 2; k++) {
+        snprintf(pf, sizeof pf, "%s/gator_trag.log", d[k]);
+        FILE *f = fopen(pf, "r");
+        if (!f) { printf("tragvergleich: %s fehlt\n", pf); return 1; }
+        while (fgets(z, sizeof z, f)) {
+            int fr, ph, mo, af, g, x, zz;
+            if (sscanf(z, "TRAG F%d ph=%d mo=%d af=%d gier=%d pos=(%d,%d)", &fr, &ph, &mo, &af, &g, &x, &zz) == 7 && fr >= 0 && fr < 40000) {
+                g2v_t *v = &s_tv[k][fr]; v->ph = ph; v->mo = mo; v->af = af; v->gier = g; v->x = x; v->z = zz; s_tv_da[k][fr] = 1;
+            }
+        }
+        fclose(f);
+    }
+    int gem = 0, ab = 0, erst = -1, ph_m = -1, ph_o = -1, n_m = 0;
+    for (int fr = 0; fr < 40000; fr++) {
+        n_m += s_tv_da[0][fr];
+        if (!s_tv_da[0][fr] || !s_tv_da[1][fr]) continue;
+        gem++;
+        if (memcmp(&s_tv[0][fr], &s_tv[1][fr], sizeof(g2v_t))) { ab++; if (erst < 0) { erst = fr; ph_m = s_tv[0][fr].ph; ph_o = s_tv[1][fr].ph; } }
+    }
+    int sitz_n = -1, sitz_max = -1;
+    snprintf(pf, sizeof pf, "%s/debug.log", mit);
+    FILE *f = fopen(pf, "r");
+    if (f) {
+        while (fgets(z, sizeof z, f)) {
+            const char *p = strstr(z, "Kanister-Sitz F");
+            int fr, nb, mx;
+            if (p && sscanf(p, "Kanister-Sitz F%d: angehaengt %d Bilder, Abweichung max %d", &fr, &nb, &mx) == 3) { sitz_n = nb; if (mx > sitz_max) sitz_max = mx; }
+        }
+        fclose(f);
+    }
+    int ramm = -1;                                         /* erstes Rammen im Lauf mit Kanister */
+    snprintf(pf, sizeof pf, "%s/gator_boss.log", mit);
+    if ((f = fopen(pf, "r")) != NULL) {
+        while (fgets(z, sizeof z, f)) { int fr; if (sscanf(z, "RAMMEN F%d", &fr) == 1 && (ramm < 0 || fr < ramm)) ramm = fr; }
+        fclose(f);
+    }
+    const int ok_weg = erst < 0 || ((ph_m == 5 || ph_m == 7) && (ph_o == 5 || ph_o == 7)) || (ramm >= 0 && erst > ramm);
+    printf("tragvergleich: %d Bilder mit Kanister, %d gemeinsame Bilder, abweichend %d, erste Abweichung F%d (Phase mit %d / ohne %d, erstes Rammen F%d)%s; Kanister-Sitz %d Bilder, Abweichung max %d\n",
+           n_m, gem, ab, erst, ph_m, ph_o, ramm, ok_weg ? "" : " - NICHT in Belagerung/Querung und nicht nach einem Rammen", sitz_n, sitz_max);
+    return (gem > 0 && ok_weg && sitz_n >= 100 && sitz_max == 0) ? 0 : 1;
+}
 static int traglog(const char *dir)
 {
     char pf[1024]; static char z[16384];
@@ -851,9 +905,9 @@ static int traglog(const char *dir)
         for (int k = i + 1; k <= i + 60; k++) { const double ax = (double)s_tl[k].gx - s_tl[i].gx, az = (double)s_tl[k].gz - s_tl[i].gz; const double d = sqrt(ax * ax + az * az); if (d > w) w = d; }
         if (w < 300.0) st2[i] = 1;
     }
-    int fenster2 = 0, fenster2_f = -1;
-    static uint8_t bs[20000];
-    memset(bs, 0, sizeof bs);
+    int fenster2 = 0, fenster2_f = -1, fenster2_fern = 0, fenster2_fern_f = -1;
+    static uint8_t bs[20000], nah[20000];
+    memset(bs, 0, sizeof bs); memset(nah, 0, sizeof nah);
     for (int i = 0; i < n; i++) {
         const g2_tl_t *r = &s_tl[i];
         if (auf < 0 || r->f < auf) continue;
@@ -870,6 +924,11 @@ static int traglog(const char *dir)
         const int ohne = st[i] && !am_spieler;
         if (st[i] && am_spieler) biss++;
         bs[i] = (uint8_t)am_spieler;
+        {   /* G2-RE2 NB2 (Vorschlag 4): Kopf (3236 vor der Wurzel, Clip 0 - NB5 M2a) naeher als 4500 an der Figur = "am Spieler" (Mass wie ohne Fortschritt / Drehen
+             * des Riegels re2 und das Haenge-Fenster RW_NAH): mit Vorschlag 4 greift er an der Figur an (Biss, Kreisen) wie ohne Kanister */
+            const double kx = r->gx + 3236.0 * cos(th) - r->px, kz = r->gz - 3236.0 * sin(th) - r->pz;
+            nah[i] = (uint8_t)(sqrt(kx * kx + kz * kz) <= 4500.0);
+        }
         if (ohne) { still++; if (++ep > ep_max) { ep_max = ep; ep_f = r->f; } } else ep = 0;
         /* Wandreiben: in einer Folge ohne Fortschritt die Spanne der Bilder mit greifender Kopf-Klemme (Luecken <= 26 = ein Paddel-Zyklus) */
         const int kk = r->f >= 0 && r->f < (int)sizeof s_tl_kk && s_tl_kk[r->f];
@@ -887,6 +946,9 @@ static int traglog(const char *dir)
         int b = 0;
         for (int k = i; k <= i + 60 && k < n; k++) if (bs[k]) b = 1;
         if (!b) { fenster2++; if (fenster2_f < 0) fenster2_f = s_tl[i].f; }
+        int n_ = 0;
+        for (int k = i; k <= i + 60 && k < n; k++) if (nah[k]) n_ = 1;
+        if (!b && !n_) { fenster2_fern++; if (fenster2_fern_f < 0) fenster2_fern_f = s_tl[i].f; }
     }
     /* NB3 (M3'): Figur oben (Plattform/Rampe) - mittlerer Kopf-Abstand und Anteil der Bilder, in denen die Wurzel des Alligators im Bild der laufenden Kamera
      * (state.log cam=, Kino-Balken 24..216) liegt */
@@ -909,9 +971,9 @@ static int traglog(const char *dir)
     const int auf_bilder = (land >= 0 && auf >= 0) ? auf - land : -1;
     printf("traglog: %d Bilder 2090, Aufschlag F%d, angehaengt F%d (%d Bilder = %.1f s), %d Trag-Bilder: ohne Fortschritt %d (%d %%), davon keine Ausnahme ausser Biss am Spieler "
            "(%d Bilder), laengste Folge ohne Fortschritt %d Bilder (bis F%d), laengstes Wandreiben %d Bilder (bis F%d), 2-s-Fenster ohne Fortschritt %d (erstes F%d); "
-           "Figur oben %d Bilder, Kopf-Abstand mittel %d, Gator im Bild der Spielerkamera %d %%\n", n, land, auf, auf_bilder,
+           "Figur oben %d Bilder, Kopf-Abstand mittel %d, Gator im Bild der Spielerkamera %d %%; 2-s-Fenster fern der Figur %d (erstes F%d)\n", n, land, auf, auf_bilder,
            auf_bilder / 30.0, trag, still, trag ? 100 * still / trag : 0, biss, ep_max, ep_f, rub_max, rub_f, fenster2, fenster2_f,
-           oben_n, oben_n ? (int)(oben_kopf / oben_n) : -1, oben_n ? 100 * oben_bild / oben_n : 0);
+           oben_n, oben_n ? (int)(oben_kopf / oben_n) : -1, oben_n ? 100 * oben_bild / oben_n : 0, fenster2_fern, fenster2_fern_f);
     return trag > 0 ? 0 : 1;
 }
 
@@ -2511,6 +2573,7 @@ int main(int argc, char **argv)
         return 0;
     }
     if (!strcmp(teil, "traglog") && argc >= 3) return traglog(argv[2]);
+    if (!strcmp(teil, "tragvergleich") && argc >= 4) return tragvergleich(argv[2], argv[3]);
     if (!strcmp(teil, "kletterkarte") && argc >= 3) return kletterkarte(argv[2]);
     if (!strcmp(teil, "ganglog") && argc >= 4) return ganglog(argv[2], argv[3]);
     if (!strcmp(teil, "beckenkarte") && argc >= 4) return beckenkarte(argv[2], argv[3]);
