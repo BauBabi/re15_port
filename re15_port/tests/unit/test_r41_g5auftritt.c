@@ -601,6 +601,12 @@ static void test_m4_daten(void)
               memcmp(r + 0x1C02, "\x8c\x00\x64\xc8\x07\x00\x00\x00\x8b\xfa\x05\x00\x02\x00\x8c\x00\xc8\x32\x11\x00\x05\x00\x01\x00", 24) == 0,
               "sub05 @0x016DE / sub14 @0x01C02 weichen ab");
         free(esp);
+        /* Textur der Bank 0x19: Tafel rueckwaerts vor RDT[21] = 0 -> RDT[0x18984 : 0x1B1C4] (Kopf [20]), der Port nimmt dafuer
+         * GATOR40A0_19.TIM (gator_fx_r41_pc.c Satz ROOM7040; Erzeuger tools/r41_g5auftritt/re2_m4_7040.py prueft dasselbe). */
+        size_t tn19 = 0; uint8_t *t19 = slurp(RE2_DIR "/GATOR40A0_19.TIM", &tn19);
+        CHECK(t19 && tn19 == 0x1B1C4u - 0x18984u && memcmp(r + 0x18984, t19, tn19) == 0,
+              "GATOR40A0_19.TIM != ROOM7040.RDT [0x18984, 0x1B1C4) (Laenge %zu)", tn19);
+        free(t19);
     } else fprintf(stderr, "NB5: info/re2leon/PL0/RDT/ROOM7040.RDT nicht da - nur Laengen geprueft\n");
     re15_md1_t m;
     if (md1 && mn >= 12) { s_lampe_md1_raw = (uint8_t *)malloc(mn); if (s_lampe_md1_raw) { memcpy(s_lampe_md1_raw, md1, mn); s_lampe_md1_n = (int)mn; } }
