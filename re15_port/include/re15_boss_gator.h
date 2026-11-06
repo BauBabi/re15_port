@@ -65,6 +65,11 @@ int  re15_gator_boss_koerper_kontakt(const re15_actor_t *e, int32_t px, int32_t 
 void re15_gator_boss_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);   /* Messhaken: Steuerziel des letzten CHASE-Takts */
 int  re15_gator_boss_lauert(const re15_actor_t *e);   /* Messhaken: Takt lauerte am Startpunkt der Ueberquerung */
 void re15_gator_boss_tempo_alt_setzen(int an);  /* Pruefhaken: 1 = RE1.5-Tempo B4 statt RE2-Vortrieb (Gegenprobe "Gang gleich NB5") */
+/* Runde 41 Spur G2-RE2 NB3 (Nutzerentscheid 2026-11-06, Vorgabe A + B): Pruefhaken 1 = Stand a661eb8aa (Gegenproben der Riegel nb3); Messhaken
+ * Bilder, die die Figur oben/in der Ostnische steht, ohne Treffer (GUARD quert ab GB_OBEN_OHNE 300 ueber sie). */
+void re15_gator_boss_nb3_alt_setzen(int an);
+int  re15_gator_boss_nb3_alt(void);
+int  re15_gator_boss_oben_ohne(const re15_actor_t *e);
 void re15_gator_boss_takt_schritt(int32_t *dx, int32_t *dz);   /* Messhaken: Takt-Schritt des letzten Boss-Takts vor den Klemmen */
 void re15_gator_boss_zeit_letzt(int64_t *ns, int64_t *zyk);    /* Messhaken: Wanduhr ns / Faden-Zyklen des letzten Boss-Takts (PC) */
 /* gator_zeit_r41.c (aus r41/gatorfix NB9, Messhaken): Wanduhr ns, Faden-Zyklen (Windows QueryThreadCycleTime), Zyklen je us; Zeile je Takt in gator_zeit.log
