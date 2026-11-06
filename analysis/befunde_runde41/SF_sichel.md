@@ -967,3 +967,110 @@ integration_r41_sichel_form 4/4 gruen (unit_schwanz_r41 (8) prueft die neue Haen
    keine Messung; Final Build 58,5-64,5 s nicht ausgewertet.
 6. PSX: Feder-Kette und CLUT-Zeilen 483-486 nur auf dem PC geprueft.
 7. Nach der Wahl des Nutzers: Variante nach FORMEN['hangar'], Pin release/em30_hangar.sha256, Suite/Paket-Gate (Schritt 5).
+
+## Schwanz V3 / Kopf V3 (Runde 41, 2026-11-06, Messblatt V3)
+
+Anlass: Der Nutzer hat V1/V2 abgelehnt ("Die Augen sehen nicht mal ansatzweise aus wie im Original ... Der grosse Schwanz auch nicht
+und hat komplett die falsche Farbe"). Vorgabe: SF_MESSBLATT_V3.md (KI-Fassung, Nutzerentscheid F4, PORT-WAHL, PSX-Machart).
+Kein RE-Befund, keine @0x-Konstante. Spiel-Asset EM30_HANGAR.EMD und Pin unveraendert (Ref2-Bau byte-gleich nachgeprueft,
+sha256 cfd1ac42...). Variante: birkin_formen.py --variante v3 --aus DIR -> Scratchpad sfv3/emd/EM30_V3.EMD (sha256 9a0d3630...).
+
+### SV3.1 Ursache der Ablehnung in Zahlen (V1, Riegel-Gegenprobe riegel_v3.py, SF_belege/v3/riegel_V1_gegenprobe.txt)
+
+| Teil | V1 | Vorgabe | Ursache in V1 |
+|---|---|---|---|
+| Kopfauge | 0,007 x 0,007 H (nur Pupille), B/H 1,00, Lidring 87 % hell, L Lid/Haut 1,77 | 0,017-0,025 x 0,008-0,014 H, B/H 1,5-2,5, Lid hell <= 0,10 | rundes Ringauge mit Weiss und Kreuz (KOPF_V2 weiss 252) |
+| Schulterauge | aequiv. 3,7 x Kopfauge | 0,8-1,3 x | Ringauge 75 x 104 E. |
+| Maul | 0,045 x 0,047 H, B/H 0,94, innen a* -2,9 gegen Haut | 0,075-0,095 x 0,038-0,055 H, B/H 1,5-2,3, a* >= +4 | senkrechtes Oval, Zaehne als zwei grosse helle Boegen |
+| Schwanzfarbe h85/h92 | L/Haut 0,84/0,81, C/Haut 1,47/1,42, Rot 0,87 gegen Haut 0,37, Rest-Std a* 3,95 | 0,50-0,72 / 0,45-0,90 / <= 0,8 x Haut / <= 2,0 | eigene Rot-Zeile 483 mit gemalten Ringen |
+| Form | Dicke 0,2 0,140 H, 0,9 0,025 H; max 38,5-40,7 Grad, 4-5 Knicke | 0,15-0,20 / 0,028-0,045; <= 36, <= 3 | Haken + zwei Seitenwellen: Keyframe-Gelenkwinkel 100-126 Grad |
+| Bewegung (Spiellauf) | Gelenkwinkel im Raum bis 154 Grad (Gang) / 148 Grad (Halten) | <= 25 Grad, <= 3 ueber 20 | Wellen + Feder-Nachlauf + FABRIK der Schwanzbahn |
+| Machart | 720 Dreiecke, Texeldichte bis 0,140, CLUT-Zeile 483 | <= 212, 0,045-0,090, Haut-CLUT | 7 Rohrglieder x 10 Seiten x 5 Ringe |
+
+### SV3.2 Was geaendert ist
+
+Koerper: unveraendert Referenz 2 (R28: Meshes 0-15, Skelett 0-15, alle Keyframes 0-15, EDD gleich; nur Mesh 9 UV/CLUT und 1 Viereck auf Mesh 8).
+
+Schwanz V3 (SCHWANZ_V3, kette_v3_punkte, kette_meshes_v3):
+- Ruhelinie = Kreisbogen gleicher Kruemmung: Start 20 Grad unter der Waagerechten nach hinten, Gesamtdrehung 100 Grad (Ruhe-Gelenkwinkel
+  ~14 Grad), Wurzel wie V2 (0,255 / 0,19 H Modellraum, 400 E. versenkt), Laenge 3475 E. Seitlich nur ein monotoner Zug (Spitze 0,16 H
+  nach rechts (W)) statt zweier Wellen. Probe Startrichtung/Drehung: 10/110 -> max 35-40 Grad (R25 rot), 15/105 -> 28-33 Grad mit
+  2-3 Knicken, 20/100 -> 24-27 Grad mit 1-2 Knicken. Seitenzug: 0,12 H -> von vorn 122 / 0 Bildpunkte, 0,16 H -> 0 / 3.
+- Geometrie: 7 Kegelstuempfe mit 10 Seiten (Manschette ins Vorglied, Ringe mit Gehrung an den Gelenken), Deckel in den Rumpf, Spitze
+  1,6 x Endradius = 160 Dreiecke (V1 720). Radien 380 -> 68 E.
+- Textur: Hautstreifen A der Seite 2 (u 44-83, v 30-88) mit der Hautzeile 482, ohne die roten Querstreifen (v >= 92); Laenge auf u,
+  Umfang gespiegelt auf v (die Marmorierung hat keine Vorzugsrichtung: Strukturtensor-Anteil v 0,49 Streifen / 0,48 Oberarm; mit
+  Laenge auf v Rest-Std a* 2,2-2,6, auf u 1,65-1,9). Je Glied ein anderes Fenster. Keine eigene CLUT-Zeile.
+
+Kopf V3 (KOPF_V3, nah_raster, kopf_v3_malen): Bild in der Riegel-Messansicht entworfen und je Texel abgetastet (gleiche Flaeche
+TPage 128 u 0-39 v 156-219 und Projektion wie V2; Zeile 486 mit KI-Farben aus dem Messblatt):
+- ein dunkles Mandelauge 0,022 x 0,0105 H, Pupille (18,6,11), ein heller Kern (183,171,178) mittig-unten, Lidrand (107,92,97), keine Sclera.
+- helle Kuppe (K9, Rampe L* 40-53), graue Kopfhaut, rote Zone ab Maul-Oberkante bis Kinn (Ref2-Zeile 485 x 0,9-1,3).
+- waagerechtes Maul 0,092 x 0,040 H (Umriss |x|^3 + y^2 <= 1), Inneres (54,27,28), dunkler Schlund, 11 / 7 kleine Zaehne (162,122,124).
+- Schulterauge: 1 Viereck (0,062 H) 60 E. vor der Schulter, Lage -0,117 / +0,058 H zum Kopfauge, Haut = EM30-Texel der Schulter darunter
+  (Zeile 480, dunkle Ader im Viereck uebermalt), Auge = Hautzeilen-Eintrag mit L* 0,375 x Hautton; Lichtnormale aus den Nachbarecken
+  (mit der Flaechennormale war das Viereck im Spiellicht schwarz).
+
+Feder-Kette (schwanz_r41.c glaetten): Knick-Grenze je Gelenk Keyframe-Winkel + 3 Grad, 12-16 Grad, Boden nur ohne neuen Knick; nur fuer
+Ketten mit der hohen Wurzel (Gelenk 16 x < -700 = V1/V2/V3), Referenz 2 unveraendert. Probe mit 22 Grad: Raum max 22,2 Grad, im Bild
+bis 55 Grad an verkuerzten Gliedern.
+
+### SV3.3 Riegel-Tabelle V3 (riegel_v3.py, SF_belege/v3/riegel_V3.txt; Exit 0)
+
+| Riegel | Soll | Ist V3 |
+|---|---|---|
+| R1 Kopfaugen | genau 1 | 1 |
+| R2 Schulterauge | -0,10..-0,13 / +0,04..+0,07 H | -0,117 / +0,059 H |
+| R3 Kopfauge | 0,017-0,025 x 0,008-0,014 H | 0,0176 x 0,0105 H |
+| R4 Form | B/H 1,5-2,5 | 1,67 |
+| R5 Helligkeit | L* Auge/Haut 0,35-0,55 | 0,475 |
+| R6 kein heller Ring | Lid hell <= 0,10; Lid/Haut 0,70-1,00 | 0,019; 0,806 |
+| R7 Sclera/Kern | L80 <= 0,05; hell 0,05-0,25; Kern x 0,4-0,7 y 0,55-0,8 | 0,000; 0,186; (0,44 0,73) |
+| R8 Pupille | <= 0,12 | 0,060 |
+| R9 Schulterauge | L 0,30-0,50; hell <= 0,05; 0,8-1,3 x | 0,462; 0,043; 1,28 |
+| R10 Maul | 0,075-0,095 x 0,038-0,055 H | 0,0805 x 0,0428 H |
+| R11 Maul Form | 1,5-2,3 | 1,88 |
+| R12 Maul Lage | 0,04-0,07 H; Versatz <= 0,012 | 0,0535; 0,0067 |
+| R13 Maul innen | L 0,20-0,40; da >= +4 | 0,213; +5,9 |
+| R14 Zaehne | oben >= 5, unten >= 3, <= 0,005 H, L <= Haut+20, a* 12-20 | 11 / 4, 0,0032 H, L 43,0 (Haut 32,4), a* 13,8 |
+| R15 L*/Haut h85/h92 | 0,50-0,72 | 0,580 / 0,594 |
+| R16 C*/Haut | 0,45-0,90 | 0,55 / 0,53 |
+| R17 Farbton | abs <= 10 Grad | -7,3 / -8,4 |
+| R18 Rot | <= 0,8 x Haut | 0,225 (0,375) / 0,219 (0,381) |
+| R19 dE00 | 6-11 | 10,1 / 10,0 |
+| R20 Muster | Periode <= 0,25; Rest-Std a* <= 2,0 | 0,10; 1,67 / 0,01; 1,65 |
+| R21-R23 Dicke 0,2/0,5/0,9 | 0,15-0,20 / 0,07-0,10 / 0,028-0,045 H | 0,164/0,085/0,036 (h85), 0,155/0,081/0,034 (h92) |
+| R24 Verlauf | kein Anstieg > 0,01 H | 0,000 |
+| R25 Glaette | <= 36 Grad | 27,4 / 24,4 |
+| R26 Knicke | <= 3 | 2 / 1 |
+| R27 Austritt | 0,10-0,16 H | 0,145 / 0,146 |
+| R28 Koerper | = Ref2 | gleich (Mesh 8 +1 Viereck) |
+| R29 Dreiecke Schwanz | <= 212 | 160 |
+| R30 Kopf | <= 118; <= 2 | 109; 2 |
+| R31 Texeldichte | 0,045-0,090; Kopf 0,05-0,091 | 0,046-0,082; 0,073 |
+| R32 Palette | 8 bpp, Haut-CLUT, C* <= Haut | 8 bpp, Zeile 482, C* 29,7 <= 63,3 |
+| R25b/R26b Gang h84-h132 (Lauf) | Raum <= 25 Grad, <= 3 ueber 20 | 16,2 Grad, 0 |
+| R25b/R26b Halten h16-h70 (Lauf) | dito | 16,2 Grad, 0 |
+
+Gegenprobe V1 SPITZ: 26 von 34 rot (u. a. R3-R11, R13-R16, R18-R21, R23-R26, R29, R31, R32, R25b/R26b). ctest der vier Pflichttests 4/4 gruen.
+Schwanz von vorn (Buehne h118/h125): 0 / 3 Bildpunkte (Ref2 409 / 0).
+
+### SV3.4 Leisten (analysis/befunde_runde41/SF_belege/v3/)
+
+01_seite_h83_h85_h92, 02_vorn_h118_h125, 04_gang_h84-h132 (Spiellaeufe sfv3/r/R2n, V1s, V3), 05_kopf_nah, 07_schwanz_nah, 08_rundum_V3,
+09_farbe, Messansicht und Riegelbild Kopf, Riegel-Ausgaben.
+
+### SV3.5 Offen
+
+1. Ende des Schwanzes (F2): V3 spitz; Hand/Kralle der KI-Seitenansicht nicht gebaut (Nutzerwahl).
+2. R25b/R26b messen die Gelenkwinkel im Raum (Grenze 25 Grad aus dem Faktor Bild/Raum 1,45 der Buehne h85), nicht die Bildmaske: die
+   Buehnen-Rekonstruktion der Lauf-Kette (riegel_v3.py --bild) passt Gier/Takt nicht sicher zum Spielbild (h90 Ruecken im Spiel,
+   Vorderansicht in der Buehne) und liefert Scheinwinkel bis 135 Grad an verkuerzten Gliedern.
+3. Knick-Grenze nur fuer V1/V2/V3 (hohe Wurzel); Referenz 2 behaelt im Spiel Gelenkwinkel bis 163-168 Grad. Uebernahme mit dem Einbau.
+4. Spitze 0,16 H ueber der Sohle (Formblatt V2 S8 0,32-0,44 H, kein Messblatt-V3-Riegel): mit glattem Bogen und 3475 E. Laenge ohne
+   Seitenwellen nicht erreichbar.
+5. Gesamtdrehung im Bild h85/h92 67 / 48 Grad (Richtwert 80-125, kein Riegel).
+6. Knappe Riegel: R31 Glied 0 0,046 (>= 0,045), R13 0,213 (>= 0,20); das Maulinnere liegt je nach Flaechenschattierung nahe der
+   Messschwelle 0,5 x Fenster-Median (deshalb der dunkle Schlund).
+7. Schulterauge ist ein ebenes Viereck 60 E. vor der Schulter; aus steilen Blickwinkeln als Kante sichtbar (Leiste 08).
+8. PSX: Feder-Kette nur auf dem PC geprueft.
