@@ -1,0 +1,490 @@
+{
+ "birkin19": {
+  "kopfauge": {
+   "mitte": [
+    185.9,
+    40.9
+   ],
+   "min": [
+    189,
+    41
+   ],
+   "b_px": 11,
+   "h_px": 5,
+   "flaeche": 40,
+   "aequiv_px": 7.1,
+   "b_H": 0.0193,
+   "h_H": 0.0088,
+   "aequiv_H": 0.0125,
+   "bh": 2.2,
+   "lab_auge": [
+    22.5,
+    6.5,
+    -1.3
+   ],
+   "rgb_auge": [
+    66.0,
+    53.0,
+    59.0
+   ],
+   "lab_pupille": [
+    2.6,
+    4.7,
+    -0.6
+   ],
+   "rgb_pupille": [
+    18.0,
+    6.0,
+    11.0
+   ],
+   "lab_lid": [
+    40.4,
+    7.1,
+    -0.7
+   ],
+   "rgb_lid": [
+    107.0,
+    92.0,
+    97.0
+   ],
+   "lab_haut": [
+    51.9,
+    7.6,
+    0.8
+   ],
+   "rgb_haut": [
+    138.0,
+    120.0,
+    123.0
+   ],
+   "L_auge_haut": 0.434,
+   "L_lid_haut": 0.779,
+   "L_pup_haut": 0.049,
+   "anteil_L80": 0.025,
+   "anteil_heller_haut": 0.175,
+   "anteil_haut_plus15": 0.125,
+   "anteil_dunkel": 0.675,
+   "lab_dunkel": [
+    8.3,
+    6.7,
+    -0.9
+   ],
+   "L_dunkel_haut": 0.16,
+   "glanz_px": 7,
+   "glanz_Lmax": 82.4,
+   "schwelle": 21.9,
+   "Lmin": 0.9,
+   "Lhaut_ring": 42.8,
+   "glanz_mitte": [
+    186.0,
+    42.0
+   ],
+   "lab_glanz": [
+    71.1,
+    5.7,
+    -2.2
+   ],
+   "rgb_glanz": [
+    183.0,
+    171.0,
+    178.0
+   ],
+   "glanz_rel_box": [
+    0.5,
+    0.7
+   ],
+   "lage_kopfbox": [
+    0.332,
+    0.347
+   ],
+   "ueber_maulmitte_H": 0.052,
+   "b_kopfbreite": 0.183
+  },
+  "kopfauge_schwelle06": {
+   "b_px": 11,
+   "h_px": 6,
+   "aequiv_H": 0.014,
+   "L_auge_haut": 0.489,
+   "anteil_haut_plus15": 0.1
+  },
+  "schulterauge": {
+   "mitte": [
+    120.0,
+    70.0
+   ],
+   "min": [
+    122,
+    69
+   ],
+   "b_px": 9,
+   "h_px": 9,
+   "flaeche": 57,
+   "aequiv_px": 8.5,
+   "b_H": 0.0158,
+   "h_H": 0.0158,
+   "aequiv_H": 0.015,
+   "bh": 1.0,
+   "lab_auge": [
+    12.4,
+    5.5,
+    2.5
+   ],
+   "rgb_auge": [
+    42.0,
+    29.0,
+    29.0
+   ],
+   "lab_pupille": [
+    4.6,
+    4.7,
+    2.1
+   ],
+   "rgb_pupille": [
+    24.0,
+    12.0,
+    12.0
+   ],
+   "lab_lid": [
+    25.1,
+    6.0,
+    2.7
+   ],
+   "rgb_lid": [
+    70.0,
+    57.0,
+    56.0
+   ],
+   "lab_haut": [
+    32.3,
+    7.0,
+    2.5
+   ],
+   "rgb_haut": [
+    89.0,
+    72.0,
+    73.0
+   ],
+   "L_auge_haut": 0.385,
+   "L_lid_haut": 0.777,
+   "L_pup_haut": 0.142,
+   "anteil_L80": 0.0,
+   "anteil_heller_haut": 0.018,
+   "anteil_haut_plus15": 0.0,
+   "anteil_dunkel": 0.719,
+   "lab_dunkel": [
+    8.2,
+    5.6,
+    2.5
+   ],
+   "L_dunkel_haut": 0.253,
+   "glanz_px": 1,
+   "glanz_Lmax": 36.9,
+   "schwelle": 16.2,
+   "Lmin": 2.6,
+   "Lhaut_ring": 29.8,
+   "glanz_mitte": [
+    118.0,
+    69.0
+   ],
+   "lab_glanz": [
+    36.9,
+    4.9,
+    1.8
+   ],
+   "rgb_glanz": [
+    96.0,
+    84.0,
+    84.0
+   ],
+   "glanz_rel_box": [
+    0.28,
+    0.39
+   ],
+   "relativ_kopfauge_H": [
+    -0.116,
+    0.051
+   ]
+  },
+  "maul": {
+   "bbox": [
+    165,
+    59,
+    212,
+    82
+   ],
+   "b_px": 48,
+   "h_px": 24,
+   "b_H": 0.0844,
+   "h_H": 0.0422,
+   "bh": 2.0,
+   "lab_innen_L30": [
+    13.5,
+    13.7,
+    4.8
+   ],
+   "rgb_innen_L30": [
+    55.0,
+    27.0,
+    28.0
+   ],
+   "zahnflecken": 17,
+   "oben": 11,
+   "unten": 6,
+   "zahn_px_mittel": 3.0,
+   "lab_zahn": [
+    50.0,
+    17.0,
+    4.4
+   ],
+   "mitte": [
+    188.5,
+    70.5
+   ],
+   "b_kopfbreite": 0.8
+  }
+ },
+ "birkin20": {
+  "kopfauge": {
+   "mitte": [
+    205.3,
+    41.0
+   ],
+   "min": [
+    203,
+    40
+   ],
+   "b_px": 13,
+   "h_px": 7,
+   "flaeche": 78,
+   "aequiv_px": 10.0,
+   "b_H": 0.0217,
+   "h_H": 0.0117,
+   "aequiv_H": 0.0166,
+   "bh": 1.86,
+   "lab_auge": [
+    21.0,
+    5.2,
+    -1.2
+   ],
+   "rgb_auge": [
+    59.0,
+    49.0,
+    54.0
+   ],
+   "lab_pupille": [
+    4.7,
+    4.3,
+    -1.2
+   ],
+   "rgb_pupille": [
+    22.0,
+    13.0,
+    17.0
+   ],
+   "lab_lid": [
+    42.1,
+    7.1,
+    -0.7
+   ],
+   "rgb_lid": [
+    111.0,
+    96.0,
+    101.0
+   ],
+   "lab_haut": [
+    44.3,
+    7.5,
+    0.4
+   ],
+   "rgb_haut": [
+    119.0,
+    102.0,
+    105.0
+   ],
+   "L_auge_haut": 0.474,
+   "L_lid_haut": 0.95,
+   "L_pup_haut": 0.106,
+   "anteil_L80": 0.0,
+   "anteil_heller_haut": 0.09,
+   "anteil_haut_plus15": 0.038,
+   "anteil_dunkel": 0.679,
+   "lab_dunkel": [
+    12.3,
+    5.7,
+    -1.3
+   ],
+   "L_dunkel_haut": 0.278,
+   "glanz_px": 7,
+   "glanz_Lmax": 77.7,
+   "schwelle": 24.0,
+   "Lmin": 3.8,
+   "Lhaut_ring": 44.1,
+   "glanz_mitte": [
+    206.1,
+    42.1
+   ],
+   "lab_glanz": [
+    60.1,
+    1.8,
+    -1.3
+   ],
+   "rgb_glanz": [
+    147.0,
+    144.0,
+    147.0
+   ],
+   "glanz_rel_box": [
+    0.59,
+    0.66
+   ],
+   "lage_kopfbox": [
+    0.367,
+    0.317
+   ],
+   "ueber_maulmitte_H": 0.0534,
+   "b_kopfbreite": 0.224
+  },
+  "kopfauge_schwelle06": {
+   "b_px": 13,
+   "h_px": 7,
+   "aequiv_H": 0.0166,
+   "L_auge_haut": 0.474,
+   "anteil_haut_plus15": 0.038
+  },
+  "schulterauge": {
+   "mitte": [
+    133.4,
+    75.7
+   ],
+   "min": [
+    133,
+    77
+   ],
+   "b_px": 11,
+   "h_px": 8,
+   "flaeche": 59,
+   "aequiv_px": 8.7,
+   "b_H": 0.0184,
+   "h_H": 0.0134,
+   "aequiv_H": 0.0145,
+   "bh": 1.38,
+   "lab_auge": [
+    11.7,
+    3.6,
+    2.3
+   ],
+   "rgb_auge": [
+    37.0,
+    28.0,
+    27.0
+   ],
+   "lab_pupille": [
+    1.5,
+    2.0,
+    1.0
+   ],
+   "rgb_pupille": [
+    11.0,
+    4.0,
+    3.0
+   ],
+   "lab_lid": [
+    21.8,
+    5.2,
+    3.1
+   ],
+   "rgb_lid": [
+    62.0,
+    49.0,
+    48.0
+   ],
+   "lab_haut": [
+    32.6,
+    5.7,
+    3.5
+   ],
+   "rgb_haut": [
+    88.0,
+    74.0,
+    72.0
+   ],
+   "L_auge_haut": 0.36,
+   "L_lid_haut": 0.667,
+   "L_pup_haut": 0.046,
+   "anteil_L80": 0.0,
+   "anteil_heller_haut": 0.034,
+   "anteil_haut_plus15": 0.017,
+   "anteil_dunkel": 0.695,
+   "lab_dunkel": [
+    6.9,
+    3.5,
+    2.3
+   ],
+   "L_dunkel_haut": 0.211,
+   "glanz_px": 2,
+   "glanz_Lmax": 51.8,
+   "schwelle": 15.3,
+   "Lmin": 0.7,
+   "Lhaut_ring": 29.9,
+   "glanz_mitte": [
+    131.5,
+    74.0
+   ],
+   "lab_glanz": [
+    43.9,
+    2.6,
+    1.6
+   ],
+   "rgb_glanz": [
+    110.0,
+    102.0,
+    102.0
+   ],
+   "glanz_rel_box": [
+    0.36,
+    0.31
+   ],
+   "relativ_kopfauge_H": [
+    -0.12,
+    0.058
+   ]
+  },
+  "maul": {
+   "bbox": [
+    185,
+    59,
+    239,
+    87
+   ],
+   "b_px": 55,
+   "h_px": 29,
+   "b_H": 0.0918,
+   "h_H": 0.0484,
+   "bh": 1.9,
+   "lab_innen_L30": [
+    13.5,
+    13.7,
+    4.9
+   ],
+   "rgb_innen_L30": [
+    54.0,
+    26.0,
+    28.0
+   ],
+   "zahnflecken": 18,
+   "oben": 10,
+   "unten": 8,
+   "zahn_px_mittel": 3.2,
+   "lab_zahn": [
+    49.4,
+    17.0,
+    4.9
+   ],
+   "mitte": [
+    212.0,
+    73.0
+   ],
+   "b_kopfbreite": 0.948
+  }
+ }
+}
