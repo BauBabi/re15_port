@@ -4135,6 +4135,14 @@ target_compile_definitions(test_zombie_gore PRIVATE
 add_test(NAME unit_zombie_gore COMMAND test_zombie_gore)
 set_tests_properties(unit_zombie_gore PROPERTIES TIMEOUT 60)
 
+# --- RUNDE 41 SPUR ZA: Zombie-Spawn-Variante (abgemagerte Gliedmassen) abgeschaltet — im Original unsichtbar
+#     (Teil-Wort in allen Savestates 0x00000001, Skala-Tor @0x8001ebb0). Gegenprobe: Zufallsstrom unveraendert. ---
+add_executable(test_za_spawnvariante test_za_spawnvariante.c)
+target_link_libraries(test_za_spawnvariante PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_za_spawnvariante PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_za_spawnvariante COMMAND test_za_spawnvariante)
+set_tests_properties(unit_za_spawnvariante PROPERTIES TIMEOUT 60)
+
 # --- BIRKIN-SPIELER-HAKEN 0x8011afd8 (Leons Reaktion auf Kralle/Biss/Wurf, Nutzer-Report v0.8.29 ROOM5080) ---
 add_executable(test_birkin_opfer test_birkin_opfer.c)
 target_link_libraries(test_birkin_opfer PRIVATE re15_engine re15_test_support m)

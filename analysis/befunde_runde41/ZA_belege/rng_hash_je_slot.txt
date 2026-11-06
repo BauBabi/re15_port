@@ -1,0 +1,16 @@
+slot 0 E=800acc2c r=c4 -> Variante idx 5 = 8010118c
+slot 1 E=800ace20 r=bc -> Variante idx 5 = 8010118c
+slot 2 E=800ad014 r=b4 -> Variante idx 5 = 8010118c
+slot 3 E=800ad208 r=ac -> Variante idx 5 = 8010118c
+slot 4 E=800ad3fc r=a3 -> keine Variante
+slot 5 E=800ad5f0 r=9b -> keine Variante
+slot 6 E=800ad7e4 r=93 -> keine Variante
+slot 7 E=800ad9d8 r=8b -> keine Variante
+slot 8 E=800adbcc r=83 -> keine Variante
+slot 9 E=800addc0 r=7b -> keine Variante
+slot10 E=800adfb4 r=73 -> keine Variante
+slot11 E=800ae1a8 r=6b -> keine Variante
+slot12 E=800ae39c r=63 -> keine Variante
+slot13 E=800ae590 r=5b -> keine Variante
+slot14 E=800ae784 r=53 -> keine Variante
+slot15 E=800ae978 r=4a -> keine Variante

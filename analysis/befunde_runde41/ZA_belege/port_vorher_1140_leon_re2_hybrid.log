@@ -1,0 +1,7 @@
+[debug-menu] AUTO-JUMP -> ROOM1140 (Frame 240)
+[debug-menu] JUMP -> 114 BRIEFING ROOM  (ROOM1140) spawn=(-7600,0,-17600) cut=0
+[enemy] Hybrid EM16: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 11
+[enemy] Hybrid EM10: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 12
+[enemy] Hybrid EM11: RE1.5-Geometrie (15 Meshes) unter RE2-Rig (15 Bones, 31 Clips), 0 Kanten ohne Zuordnung -> slot 13
+[ZA-MESS] Spawn-Variante slot 4 typ 11 idx 1 Teile 2/-1
+[ZA-MESS] Spawn-Variante slot 5 typ 11 idx 2 Teile 8/9
