@@ -187,7 +187,39 @@ Bild vor dem Text), keine Schrift. Bild `frage40_vor_nach.png`.
 
 ## 5. Tests
 
-(wird nach den Laeufen ergaenzt)
+Nachgeliefert 2026-11-06 (Auftrag PF, Abnahme 2 Par. 5). Bau `re15_port/build` im Arbeitsbaum (Stand 4dae40c04 = Abnahme-Stand 4bd229ead + Riegel K),
+`RE15_BUILD_DIR=<wt>/re15_port/build bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`; ctest aus Git-Bash mit
+`/c/msys64/mingw64/bin` vorn im PATH, **-j 3** (andere Agenten bauten parallel). Kein Test rot, keiner musste einzeln wiederholt werden.
+
+| Testgruppe | Ergebnis | Dauer | Bemerkung (Last / einzeln) |
+|---|---|---|---|
+| Alle Nicht-Integrationstests ohne die 7 df-haengenden Skripttests (`-E "^integration_\|releaseskript_(trocken\|ablauf\|fehler_bau\|fehler_umfeld\|cmd)$\|titelversion_ablauf$\|android_bash_mutanten$"`, -j 3, --timeout 900) | **1066/1066 gruen** | 448,8 s (17:03:34..17:11:03) | unter Last (Parallelbau anderer Agenten); nichts rot, nichts wiederholt |
+| davon PF-beruehrt (unit): `unit_r41_nachtrag30` (G, Q, S, neu K), `unit_r41_ventilkette`, `unit_r41_keyitems_*` (8), `unit_r37_codepanel_*` (4), `unit_r26_panel_11f0`, `unit_r27_panel_schalterwerte`, `unit_r39_toene_schrank`, Karten-Riegel `unit_*karte*` / `unit_r36_kartenbits` / `_kartenitems` / `unit_r41_kleinkram_b_karte_pin` (26) | **44/44 gruen** | Summe 15,9 s (nachtrag30 3,31 s, ventilkette 2,34 s) | im Lauf oben enthalten |
+| `integration_r41_nachtrag30_{panel,schrank,laden,wasser}_{leon,elza}`, `_ton`, `_laut` | **10/10 gruen** | Summe 1903,0 s (schrank_elza 361,4 s, schrank_leon 235,2 s, panel_elza 136,2 s, panel_leon 104,8 s) | Gruppe B, -j 3, ton/laut seriell (RUN_SERIAL) |
+| `integration_r41_ventilkette{,_b,_alarm,_kette,_kette_elza,_weg,_weg_elza,_sperre}` (Text 40/41/43, Frage 40 auf zwei Seiten) | **8/8 gruen** | Summe 5944,5 s (weg_elza 1680,2 s, weg 1456,5 s) | Gruppe B |
+| `integration_r41_keyitems_*` (Sicherung 2010, Karte, Aktion) | **13/13 gruen** | Summe 365,7 s | Gruppe B |
+| `integration_r37_codepanel` | **1/1 gruen** | 96,8 s | Gruppe B |
+| Raeume 2010/2011 und 2030/2031 im Lauf: `integration_r36_dachkiste`, `r37_fahrstuhl_n1`, `r37_itemband`, `r37_itemband_lift`, `r37_kiste`, `r38_spinnen_echtlauf`, `r41_kleinkram_a_gift`, `r41_kleinkram_a_lautstaerke`, `r41_masken36_stage2`, `r41_spinnenanim` | **10/10 gruen** | Summe 5735,8 s (dachkiste 1502,5 s, itemband_lift 1398,6 s) | Gruppe B |
+| **Gruppe B gesamt** (42 Integrationstests, -j 3, --timeout 3000) | **42/42 gruen** | 9086,2 s (17:11:23..19:42:49) | unter Last; nichts rot, nichts einzeln wiederholt |
+| nicht gelaufen: `unit_r38_releaseskript_{trocken,ablauf,fehler_bau,fehler_umfeld,cmd}`, `unit_r39_titelversion_ablauf`, `unit_r35_android_bash_mutanten` | — | — | Umgebung: df.exe haengt maschinenweit (wie G5-Abnahmen 3/4); release/ in diesem Zweig unberuehrt |
+
+**Riegel der PF-Aenderung** (Ausgaben dieses Laufs):
+
+| Riegel | Test | Schranke (Quelle) | Wert |
+|---|---|---|---|
+| Panel-Tinte = Spielschrift | `unit_r41_nachtrag30` G | 42 Glyphen, alle Tintentexel gleich, **genau 1334** (neu, Abnahme 2 Par. 3a); versetzt < Haelfte | `42 Glyphen, 1334 von 1334 ..., um 1 Bildpunkt versetzt 450 von 1334` |
+| dto. im Fenster-Framedump | `integration_r41_nachtrag30_panel_{leon,elza}` | F780/F900 >= 1000 Texel, gleich = gesamt, versetzt < Haelfte | Leon und Elza F780/F900: je 1334 von 1334, versetzt 450 |
+| Drehscheiben-Stempel, Zeiger-Zwischentoene | `unit_r41_nachtrag30` S | **genau 288** Stempel-Texel (neu, Abnahme 2 Par. 3c), sichtbare alle gleich, (2,2)-versetzt < Viertel; Zeiger in jedem Bild der Fahrt A 100 -> 50 -> 80 **0 Zwischentoene**, >= 12 Zeiger-Texel (Abnahme 2 Par. 3c: max 0, vor NB1 bis 51) | `288 Stempel-Texel, 279 von 279 gleich, um (2,2) versetzt 0 von 279; Zeiger 55 Bilder (A 80), Zwischentoene max 0, Zeiger-Texel min 32` |
+| Kasten-Scherung im Framedump (Cut 3) gegen ROOM2060 Cut 6 | `integration_r41_nachtrag30_schrank_{leon,elza}` Lauf pf | NCC >= 600, sx/sy 940..1060, Gegenprobe Massstab <= 880, \|W\|, \|S\| <= 100 (1 Grad), Gegenprobe 5 Grad -> 4..6 Grad | Leon = Elza: innen NCC 753, V 1000, W 25, S -50, Gegenprobe -475; Fluegel NCC 883, V 1018, W -25, S -50, Gegenprobe -550 (Hundertstel Grad) |
+| **neu K**: Kasten-Scherung der Texturen ohne Fenster | `unit_r41_nachtrag30` K | Textur k 5 / k 7 aus `gen/schrank2010_r41.inc` gegen BG06 ueber ROOM2060 Cut 6 @0x120 (H 208), Weltflaechen aus dem inc-Kopf; \|W\|, \|S\| <= 0,5 Grad (Abnahme 2 Par. 2c: nach NB1 hoechstens 0,30, vor NB1 4,00 / 6,50), NCC >= 0,9 (Par. 2c: 0,950 / 0,985), Gegenprobe 5 Grad -> 5 +- 0,5 | Rueckwand W 0,00 S 0,00 NCC 0,955, Gegenprobe -5,00; Fluegel W 0,00 S 0,00 NCC 0,965, Gegenprobe -5,00 |
+
+Gegenprobe des neuen Riegels K (Werkzeug `test_r41_nachtrag30 kastentex <innen\|tuer> <tim>` auf den Texturen frueherer Staende, aus der inc
+herausgeschnitten): 422048234 (vor NB1) innen W -2,75 S -1,25 NCC 0,511, Fluegel W -8,00 (Suchrand) S -6,00 NCC 0,303; 789f6e681 (vor PF) innen
+W -3,50 S -1,00 NCC 0,376, Fluegel W -8,00 S -3,75 NCC 0,247 -> beide Staende rot (Scherung und NCC). Grenze: K prueft die Textur gegen die Kamera,
+nicht die Abbildung auf die Port-Geometrie im Fenster; die deckt der Fenster-Riegel `_schrank_*` (Framedump, RE15_SOFTWARE_RENDER) ab.
+
+Commits: `4dae40c04 test(r41-panelfix): Riegel K - Scherung der Kasten-Texturen 2010 gegen ROOM2060 Cut 6 ohne Fenster` (dazu G auf genau 1334,
+S auf genau 288 geschaerft).
 
 ## 6. Hinweise (keine Maengel)
 
