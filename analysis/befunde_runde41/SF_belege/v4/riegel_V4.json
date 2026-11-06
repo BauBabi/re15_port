@@ -1,0 +1,520 @@
+{
+ "emd": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V4.EMD",
+ "sha256": "0dddbdbe1ea020e10a4abb9885c2e3067fb7f91b4837147716d97b6b53f67c95",
+ "zeilen": [
+  {
+   "mass": "G1 Koerper-Geometrie = Ref2",
+   "soll": "Meshes 0-8, 10-15 byte-gleich; Skelett/Keyframes 0-15, EDD gleich",
+   "ist": "abweichend keine; Skelett True; Keyframes True; EDD True; uebrige Sektionen True; Ref2 sha256 cfd1ac42",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "M1 Dreiecke Schwanz",
+   "soll": "<= 212",
+   "ist": "160 ([30, 20, 20, 20, 20, 20, 30])",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "M2 Dreiecke Kopf",
+   "soll": "<= 118",
+   "ist": "111",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "M3 Farbtiefe",
+   "soll": "8-bpp-TIM, Texel aus der CLUT",
+   "ist": "8 bpp True; CLUT-Zeilen Kopf [486], Schwanz [487] (TIM 8 Zeilen)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "M4 Texeldichte",
+   "soll": "Kopf und Schwanz 0,045-0,091 Texel/E.",
+   "ist": "Kopf 0.062; Schwanz [0.049, 0.061, 0.063, 0.063, 0.065, 0.066, 0.06]",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K1 Augen vorn",
+   "soll": "1 Komponente; Kontrast >= 20 (Original 29,5)",
+   "ist": "1 Komp.; 31.6",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K2 Augenfleck Farbe",
+   "soll": "46,9/7,2/-1,1 dE00 <= 6; L* >= KV5 + 20",
+   "ist": "47.3/7.3/-1.4 dE00 0.5; L* 47.3 vs KV5 20.0 + 20",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K3 Augenfleck Groesse",
+   "soll": "B 0,016-0,036 / H 0,023-0,043 H",
+   "ist": "0.022 x 0.036 H (8 x 13 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K4 Augenlage vorn",
+   "soll": "(B)-links 0,035-0,065 H; 0,07-0,12 H unter OK",
+   "ist": "0.056 H links; 0.112 H unter OK",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K5 Haarfeld vorn",
+   "soll": "13,3/7,4/1,5 dE00 <= 6; L* <= Auge - 25",
+   "ist": "13.2/7.2/1.7 dE00 0.3; L* 13.2 vs 22.3",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K6 zweites Auge verdeckt",
+   "soll": "L* <= 18 (Original 12,9)",
+   "ist": "L* 11.2 (Box (370, 188, 377, 200))",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K7 Nase",
+   "soll": "18,2/7,1/1,3 dE00 <= 6; L* zwischen Haar und Auge",
+   "ist": "18.3/6.3/1.0 dE00 0.9",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K8 Kinn/Maulzone",
+   "soll": "9,9/9,9/3,8 dE00 <= 6; Anteil L*>35 <= 0,05",
+   "ist": "11.9/13.2/4.3 dE00 3.1; Anteil 0.000",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K9 Kopf-Oberseite rot vorn",
+   "soll": "22,6/15,4/5,2 dE00 <= 6; a* >= 11",
+   "ist": "22.9/15.4/5.4 dE00 0.2",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K10 Kopfbox vorn",
+   "soll": "0,14-0,18 x 0,15-0,20 H",
+   "ist": "0.143 x 0.187 H",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "S1 Auge seitlich",
+   "soll": "48,4/4,0/0,5 dE00 <= 6; 0,028-0,052 x 0,040-0,070 H",
+   "ist": "47.5/3.6/0.5 dE00 1.0; 0.023 x 0.030 H; 5 Komp.",
+   "ok": false,
+   "note": ""
+  },
+  {
+   "mass": "S2 Augenlage seitlich",
+   "soll": "0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle",
+   "ist": "0.046 H; 0.818 H",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "S3 Haarkante seitlich",
+   "soll": "L* <= 22; 19,1/1,2/1,1 dE00 <= 6; Abstand zum Fleck <= 0,01 H",
+   "ist": "19.5/0.9/1.6 dE00 0.8; Abstand 0.008 H",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "S4 Kopf-Oberseite rot seitlich",
+   "soll": "27,6/15,3/3,3 dE00 <= 6; a* >= 11",
+   "ist": "27.5/14.3/2.9 dE00 0.8",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T1 Schwanz Beginn",
+   "soll": "0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03)",
+   "ist": "0.214 H hinter, 0.727 H ueber",
+   "ok": false,
+   "note": "unterster Schwanz-Pixel an Id 7/8 (Id 16 versenkt)"
+  },
+  {
+   "mass": "T2 Biegung",
+   "soll": "dx -0,245 dy +0,036 (+-0,03); Drehung 60-100 Grad auf 0,10 H",
+   "ist": "dx -0.244 dy 0.025; 68 Grad",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T3 Knick (Taille)",
+   "soll": "dx -0,265 dy +0,257 (+-0,03)",
+   "ist": "dx -0.263 dy 0.255",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T4 Ende",
+   "soll": "dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle",
+   "ist": "dx -0.241 dy 0.398; 0.330 H ueber Sohle",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T5 Breite nach oben",
+   "soll": "f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01",
+   "ist": "0.034/0.066/0.123/0.140 H; Abfall 0.002",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T6 Endstueck",
+   "soll": "B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste",
+   "ist": "B 0.028; L 0.144 H; 81 Grad (vorn); Taille 0.021, schmalste davor 0.021",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T8 Schwanzfarbe",
+   "soll": "F15 9,3/11,4/1,5; F16 8,7/8,4/2,2; F17 26,8/-0,1/2,4; F18 15,2/3,2/1,6; dE00 <= 6; a* Wurzel >= 7, Ende <= 6",
+   "ist": "F15 9.3/8.5/3.2 dE00 3.0 (146 px); F16 9.2/8.7/3.2 dE00 0.9 (131 px); F17 26.6/-0.0/1.9 dE00 0.4 (2032 px); F18 15.5/3.4/1.9 dE00 0.3 (218 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T7 Gang h85",
+   "soll": "T1-T4 je +-0,06 H",
+   "ist": "T1 (0.116, 0.659) (0.108) T2 (-0.244, 0.447) (0.411) T3 (-0.238, 0.476) (0.219) T4 (-0.221, 0.484) (0.087)",
+   "ok": false,
+   "note": "Laufpose clip 11 bild 64 gier 1893"
+  },
+  {
+   "mass": "T7 Gang h100",
+   "soll": "T1-T4 je +-0,06 H",
+   "ist": "T1 (0.153, 0.617) (0.150) T2 (-0.316, 0.025) (0.071) T3 (-0.345, 0.033) (0.224) T4 (-0.341, 0.033) (0.364)",
+   "ok": false,
+   "note": "Laufpose clip 1 bild 10 gier 1515"
+  },
+  {
+   "mass": "T7 Gang h110",
+   "soll": "T1-T4 je +-0,06 H",
+   "ist": "T1 (0.206, 0.723) (0.056) T2 (-0.372, 0.077) (0.127) T3 (-0.378, 0.163) (0.113) T4 (-0.305, 0.288) (0.109)",
+   "ok": false,
+   "note": "Laufpose clip 1 bild 20 gier 1515"
+  },
+  {
+   "mass": "T7 Gang h118",
+   "soll": "T1-T4 je +-0,06 H",
+   "ist": "T1 (0.218, 0.735) (0.068) T2 (-0.231, 0.039) (0.014) T3 (-0.236, 0.275) (0.029) T4 (-0.253, 0.413) (0.016)",
+   "ok": false,
+   "note": "Laufpose clip 1 bild 28 gier 1515"
+  },
+  {
+   "mass": "T7 Gang h125",
+   "soll": "T1-T4 je +-0,06 H",
+   "ist": "T1 (0.214, 0.727) (0.064) T2 (-0.255, -0.017) (0.053) T3 (-0.295, 0.207) (0.050) T4 (-0.267, 0.311) (0.086)",
+   "ok": false,
+   "note": "Laufpose clip 1 bild 35 gier 1515"
+  },
+  {
+   "mass": "T7 Gang h135",
+   "soll": "T1-T4 je +-0,06 H",
+   "ist": "T1 (0.214, 0.723) (0.064) T2 (-0.232, 0.047) (0.013) T3 (-0.263, 0.293) (0.036) T4 (-0.284, 0.393) (0.039)",
+   "ok": false,
+   "note": "Laufpose clip 1 bild 45 gier 1513"
+  },
+  {
+   "mass": "F0 Lichtgegenprobe h118",
+   "soll": "Rumpf b2 gegen FRAMEDUMP dE00 <= 3",
+   "ist": "b2 22.6/11.9/4.0 / Spiel 22.5/12.0/4.1 dE00 0.1 (11424 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F0 Lichtgegenprobe h135",
+   "soll": "Rumpf b2 gegen FRAMEDUMP dE00 <= 3",
+   "ist": "b2 17.9/13.1/5.0 / Spiel 17.9/12.9/4.9 dE00 0.1 (12873 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F6",
+   "soll": "16.6/17.3/6.2 dE00 <= 5, |dL| <= 4",
+   "ist": "16.1/15.2/6.1 dE00 1.5 dL -0.5 (8698 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F7",
+   "soll": "33.3/5.5/2.7 dE00 <= 5, |dL| <= 4",
+   "ist": "36.1/8.7/1.5 dE00 4.2 dL +2.8 (2181 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F8",
+   "soll": "16.4/8.3/1.5 dE00 <= 5, |dL| <= 4",
+   "ist": "40.6/6.4/0.4 dE00 18.5 dL +24.2 (3293 px)",
+   "ok": false,
+   "note": ""
+  },
+  {
+   "mass": "F F9",
+   "soll": "12.7/-0.9/-1.5 dE00 <= 5, |dL| <= 4",
+   "ist": "14.8/0.3/-2.4 dE00 2.4 dL +2.1 (4090 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F10",
+   "soll": "11.2/14.0/2.5 dE00 <= 5, |dL| <= 4",
+   "ist": "11.0/13.5/1.4 dE00 0.8 dL -0.2 (677 px)",
+   "ok": true,
+   "note": "Id 12 (Klaue (B)-rechts); Id 15: nan/nan/nan (0 px)"
+  },
+  {
+   "mass": "F F14",
+   "soll": "60.0/11.0/1.2 dE00 <= 5, |dL| <= 4",
+   "ist": "56.3/8.0/0.8 dE00 4.3 dL -3.7 (1256 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F19",
+   "soll": "18.4/0.5/-3.5 dE00 <= 5, |dL| <= 4",
+   "ist": "15.6/-0.0/-2.1 dE00 2.4 dL -2.8 (1341 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F Mittel",
+   "soll": "Mittel dE00 <= 4",
+   "ist": "4.87",
+   "ok": false,
+   "note": ""
+  },
+  {
+   "mass": "F0 Gueltigkeit Farbvergleich",
+   "soll": "Wand links 64,7/0,3/-2,1 dE00 <= 2",
+   "ist": "65.2/0.2/-2.5 dE00 0.52",
+   "ok": true,
+   "note": ""
+  }
+ ],
+ "kopf_vorn": {
+  "H": 364,
+  "ok": 145,
+  "sohle": 509,
+  "kopfbox": [
+   327,
+   154,
+   378,
+   221
+  ],
+  "blob": {
+   "n": 1,
+   "ext": 54.06756591796875,
+   "umg": 23.401087504433576,
+   "thr": 38.73432671120116,
+   "Lmax": 55.039295187626976,
+   "kontrast": 31.6382076831934,
+   "bbox": [
+    328,
+    188,
+    335,
+    200
+   ],
+   "wh": [
+    8,
+    13
+   ],
+   "sp": [
+    332.0833333333333,
+    194.5952380952381
+   ],
+   "rgb": [
+    123.59975559918543,
+    108.23145783864885,
+    114.76810506395607
+   ],
+   "px": 84
+  },
+  "fenster": {
+   "KV1": [
+    [
+     347,
+     155,
+     368,
+     175
+    ],
+    [
+     22.9,
+     15.4,
+     5.4
+    ]
+   ],
+   "KV2": [
+    [
+     354,
+     171,
+     370,
+     204
+    ],
+    [
+     13.2,
+     7.2,
+     1.7
+    ]
+   ],
+   "KV3": [
+    [
+     349,
+     198,
+     359,
+     208
+    ],
+    [
+     18.3,
+     6.3,
+     1.0
+    ]
+   ],
+   "KV4": [
+    [
+     338,
+     213,
+     359,
+     224
+    ],
+    [
+     11.9,
+     13.2,
+     4.3
+    ]
+   ],
+   "KV5": [
+    [
+     330,
+     196,
+     345,
+     211
+    ],
+    [
+     20.0,
+     7.8,
+     0.7
+    ]
+   ]
+  }
+ },
+ "kopf_seite": {
+  "H": 264,
+  "kopfbox": [
+   439,
+   185,
+   483,
+   236
+  ],
+  "blob": {
+   "n": 5,
+   "ext": 54.38226318359375,
+   "umg": 24.25620977064486,
+   "thr": 39.319236477119304,
+   "Lmax": 58.10639698053359,
+   "kontrast": 33.85018720988873,
+   "bbox": [
+    468,
+    214,
+    473,
+    221
+   ],
+   "wh": [
+    6,
+    8
+   ],
+   "sp": [
+    470.8611111111111,
+    217.91666666666666
+   ],
+   "rgb": [
+    119.40382400258383,
+    110.7069839143753,
+    112.0237853298611
+   ],
+   "px": 36
+  }
+ },
+ "schwanz": {
+  "H": 264.0,
+  "ok": 170,
+  "sohle": 434,
+  "scheitel": 403.5,
+  "beginn": [
+   347.0,
+   242.0
+  ],
+  "T1": [
+   0.21401515151515152,
+   0.7272727272727273
+  ],
+  "biegung": [
+   282.558492188313,
+   248.60620732676412
+  ],
+  "T2": [
+   -0.24409662049881445,
+   0.025023512601379246
+  ],
+  "drehung": 67.95942973915824,
+  "knick": [
+   277.6054503850684,
+   309.4460330866536
+  ],
+  "T3": [
+   -0.2628581424808014,
+   0.255477398055506
+  ],
+  "ende": [
+   283.39798679374786,
+   346.9707694492074
+  ],
+  "T4": [
+   -0.240916716690349,
+   0.3976165509439675
+  ],
+  "ende_ueber_sohle": 0.3296561763287598,
+  "T5": {
+   "0.05": 0.028409090909090908,
+   "0.1": 0.03409090909090909,
+   "0.15": 0.03977272727272727,
+   "0.2": 0.03977272727272727,
+   "0.25": 0.054924242424242424,
+   "0.3": 0.06628787878787878,
+   "0.35": 0.07765151515151515,
+   "0.4": 0.08522727272727272,
+   "0.45": 0.11553030303030302,
+   "0.5": 0.12310606060606061,
+   "0.55": 0.12121212121212122,
+   "0.6": 0.12878787878787878,
+   "0.65": 0.13446969696969696,
+   "0.7": 0.14015151515151514,
+   "0.75": 0.14772727272727273,
+   "0.8": 0.1534090909090909,
+   "0.85": 0.14962121212121213,
+   "0.9": 0.14962121212121213,
+   "0.95": 0.14015151515151514
+  },
+  "taille": 0.020833333333333332,
+  "schmal_vor_knick": 0.020833333333333332,
+  "end_breite": 0.028409090909090908,
+  "end_laenge": 0.14393793117941822,
+  "end_richtung": 81.22475419868285,
+  "end_vor": 5.792536408679439,
+  "jb": 72,
+  "jk": 135,
+  "je": 173
+ }
+}
