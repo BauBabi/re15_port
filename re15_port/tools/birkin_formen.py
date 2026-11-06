@@ -189,6 +189,92 @@ FORMEN = {
 u16, u32 = EA.u16, EA.u32
 
 
+# ═══════════════════════════════════════════════════ Runde 41 SF "Schwanz V2": Varianten zur Wahl des Nutzers
+# Formblatt V2 (analysis/befunde_runde41/SF_FORMBLATT_V2.md, Bildmessung am Original Video 4, keine RE-Werte). Die Varianten
+# werden NICHT ins Spiel-Asset geschrieben (main ohne --variante schreibt weiter Referenz 2); --variante NAME --aus DIR legt
+# sie fuer Buehne und Probelaeufe ab. Nach der Wahl des Nutzers wird die gewaehlte Variante zu FORMEN['hangar'].
+#   V1 = Schwanz V2 + Kopf V2, Koerper wie Referenz 2;  V2 = dazu Koerper nach K1-K10 (Formblatt V2 Ae6/Ae8/Ae9).
+#   Endung _spitz / _kralle = Schwanzende nach F2 (Nutzer waehlt).
+SCHWANZ_V2 = dict(
+    # Ruhe-Mittellinie im Modellraum der Gangpose Clip 1 Bild 0 (geduckte Haltung, X vorn, Y unten), kette_v2_punkte:
+    modellraum=dict(clip=1, bild=0),
+    # S2 Wurzelmitte 0,15-0,17 H unter OK; S5 0,23-0,28 H hinter dem hoechsten Buckelpunkt. Im Modellraum (Gang B0, ohne
+    # Perspektive) 0,19 H, weil die Spielkamera von oben schaut: in der Seitenansicht h85 (Pose anpassen_v2) liegt die Wurzel
+    # dann 0,16 H unter der Oberkante (mit 0,16 im Modellraum: 0,13 H).
+    wurzel_h=(0.255, 0.19),
+    pfad_h=[(0.08, 0.04), (0.14, 0.08), (0.17, 0.14), (0.19, 0.20), (0.21, 0.26), (0.22, 0.33), (0.21, 0.39),
+            (0.19, 0.45), (0.15, 0.51)],                    # S6 Mittellinie R1 (h85), Spitze (0,15 0,51): 0,33 H ueber der Sohle
+    laenge=3475,                   # S9: Laenge von Referenz 2 behalten (0,89 H)
+    # PORT-WAHL (S9/Ae2 "den Rest durch Seitwaertslauf ... aufnehmen, nicht durch eine tiefere Spitze"): eine seitliche Welle
+    # im haengenden Teil (ab 0,30 der Pfadlaenge; von vorn hinter Becken und Beinen), Spitze 0,12 H zur rechten Seite (W) =
+    # hinter das rechte Bein. Erster Stand (Welle ab der Wurzel, z = a sin 2 pi s) drehte das Wurzelglied 59 Grad aus der
+    # Seitenebene: in der Seitenansicht h85 sah man die Wurzel von vorn (Scheibe), der Schwanz wirkte duenn.
+    seitlich=dict(wellen=1.0, ab=0.30, spitze=-0.12),
+    # S10 Dicke quer zur Mittellinie (Durchmesser in H, H = 3880 E.): 0,15-0,2 der Laenge 0,135; 0,3 0,10; 0,4 0,08;
+    # 0,5 0,0675; 0,6-0,7 0,0575; 0,9 0,034 -> Radien in Einheiten (halber Durchmesser).
+    # Mit den reinen Formblatt-Radien [(0,262) (0,2 262) (0,3 194) (0,4 155) (0,5 131) (0,65 112) (0,9 66)] mass die Seitenansicht
+    # h85 0,117 / 0,057 / 0,034 H (Gliederprofil, Lage zur Kamera) -> x1,15 bis 0,65 der Laenge.
+    radien_s=[(0.0, 300), (0.2, 300), (0.3, 223), (0.4, 178), (0.5, 151), (0.65, 128), (0.9, 68), (1.0, 54)],
+    # Gliederprofil flacher als Referenz 2 (0,80/1,05), damit die gemessene Dicke dem Radius entspricht; Glieder bleiben sichtbar.
+    profil=[(0.0, 0.90), (0.12, 0.98), (0.45, 1.03), (0.80, 0.98), (1.0, 0.90)],
+    # S3: Wurzel ohne Stufe in den Buckel -> Wurzelglied mit Kragen (1,25) statt Einschnuerung (0,80).
+    profil_wurzel=[(0.0, 1.15), (0.15, 1.06), (0.45, 1.02), (0.80, 0.98), (1.0, 0.92)],
+    wurzel_v=0.22,                 # Kragen in der hellen Bandfarbe statt des dunklen Gelenkrings (Lauf: dunkler Block am Buckel)
+)
+SCHWANZ_V2_SPITZ = dict(ende='dorn', dorn=4.0,
+                        profil_ende=[(0.0, 0.90), (0.12, 0.98), (0.45, 0.95), (0.80, 0.78), (1.0, 0.55)])
+SCHWANZ_V2_KRALLE = dict(ende='kralle',
+                         # KI-Seitenansicht h85: Verdickung am Ende 32-35 px = 0,06-0,07 H (Leser A 2.5) -> Klauenhand
+                         # (Mesh 12 der Form, schon 0,55 x EM30) x1,4 quer / x1,2 laengs.
+                         kralle=dict(mesh=12, skal=(1.4, 1.2, 1.4), gier=0.0, ueberlapp=40.0))
+# Kopf V2 (Nutzer-Entscheid F4 2026-11-06, Quelle KI-Fassung; Werte tools/r41_sichel/v2/kopf_entwurf.py):
+#   Flaeche TPage 128 u 0-39 v 156-219 (frei: kein Mesh nutzt Seite 0 unter v 155) = 40 x 64 Texel, Texeldichte 0,10 je
+#   Einheit wie die Haut (Rumpf 0,05-0,09, Kopf EM30 0,091); Schulterauge u 42-48 v 156-164.
+#   abbildung = Parallelprojektion der Vorderansicht h118 (Pose anpassen_v2, Fehler <= 0,8 Texel), blick = Blickrichtung dort.
+#   KI birkin19 (Kopfbox 755-820 x 318-440): Auge oben (0,415 0,30), Durchmesser 0,15 der Kopfbreite; Maul x 0,11-0,88
+#   y 0,41-0,80. Schulterauge KI (705-715, 360-372) -> Mesh 8 (128, -1156, -589), Normale (0,41 -0,90 0,12), 75 x 104 E.
+KOPF_V2 = dict(
+    page=128, clut=486, u=(0, 39), v=(156, 219),
+    abbildung=[[-0.0007, 0.02925, 0.09677, 25.61496], [0.06312, 0.0739, -0.02374, 192.56861]],
+    blick=(-0.775, 0.604, -0.187), schwelle=0.15,
+    kuppe=0.22, rauschen=9,
+    index=dict(kuppe=205, haut=160, rot=92, lippe=78, zahn=246, zahnschatten=205, innen=12, weiss=252),
+    # Maul: KI-Lippenrand x 0,11-0,88; im Spielbild (Lauf sfv2/V1s h118/h128) wirkte das als rundes "O" mitten im Kopf ->
+    # Lippen auf die innere KI-Oeffnung (x 0,22-0,78) und tiefer (y 0,47-0,90: Kopfbox im Spiel schliesst die Kuppe von oben ein).
+    maul=dict(x=(0.22, 0.78), y=(0.47, 0.90), zahn_aussen=0.86, zahn_innen=0.58, zaehne=12),
+    auge=dict(x=0.415, y=0.30, r=(3.0, 3.2)),
+    schulterauge=dict(u=(42, 48), v=(156, 164), abstand=14.0, normale=(0.41, -0.90, 0.12),
+                      ecken=[(86, -1181, -628), (76, -1175, -554), (180, -1138, -624), (170, -1132, -550)]),
+)
+# Zeile 486 Kopf V2: Verlauf dunkel -> rot -> Haut -> hell. Rot = Schwanzrot (Video (92,54,55), Zeile 483 (98,44,46)); Haut =
+# NB2-Hautton (95,68,67) x1,2 (Kopf/Rumpf im Original 1,16-1,28, N1.10); helle Kuppe nach dem Original-Verhaeltnis (p90 h118
+# (106,86,86) gegen Rumpf) im NB2-Ton; Maulinneres KI dunkelste 10 % (31,13,13); Zaehne/Augenweiss KI (172,113,119) bis
+# (215,194,194), gedaempft. Keine Leuchtfarben.
+KOPF_V2_ZEILE = dict(verlauf=[(0, (0, 0, 0)), (1, (22, 9, 9)), (30, (46, 17, 18)), (78, (92, 40, 42)), (92, (100, 46, 47)),
+                              (130, (110, 66, 64)), (160, (114, 82, 80)), (205, (148, 120, 116)), (230, (164, 142, 136)),
+                              (255, (190, 170, 162))])
+
+
+def _variante(schwanz_ende, koerper=None):
+    f = dict(FORMEN['hangar'])
+    f['schwanz_kette'] = dict(f['schwanz_kette'], **SCHWANZ_V2, **schwanz_ende)
+    f['kopf_v2'] = KOPF_V2
+    f['cluts'] = dict(f['cluts'], zusatz=list(f['cluts']['zusatz']) + [KOPF_V2_ZEILE])
+    if koerper:
+        for k, v in koerper.items():
+            f[k] = dict(f[k], **v) if isinstance(v, dict) and k in ('skal', 'rel', 'ducken') else v
+    return f
+
+
+KOERPER_V2 = {}          # wird unten (K1-K10) gesetzt
+VARIANTEN = {
+    'v1_spitz':  lambda: _variante(SCHWANZ_V2_SPITZ),
+    'v1_kralle': lambda: _variante(SCHWANZ_V2_KRALLE),
+    'v2_spitz':  lambda: _variante(SCHWANZ_V2_SPITZ, KOERPER_V2),
+    'v2_kralle': lambda: _variante(SCHWANZ_V2_KRALLE, KOERPER_V2),
+}
+
+
 # ═══════════════════════════════════════════════════ MD1: Vertex-/Normalen-Offsets
 def md1_bloecke(md1):
     """Je Mesh die Byte-Offsets (relativ zum MD1-Anfang) der Vertex- und Normalenbloecke.
@@ -412,11 +498,15 @@ def kette_ruhe(sw):
         lokal.append(Li)
         W = W @ Li
     rel = [tuple(int(round(c)) for c in p[0])] + [(0, int(round(L[i-1])), 0) for i in range(1, n)]
-    rad = np.interp(ziel, np.linspace(0, s[-1], len(sw['radien'])), sw['radien'])
+    if 'radien_s' in sw:                  # Schwanz V2: Radius je Laengenanteil (Formblatt V2 S10), Liste (s, r)
+        ss, rr = zip(*sw['radien_s'])
+        rad = np.interp(ziel / s[-1], ss, rr)
+    else:
+        rad = np.interp(ziel, np.linspace(0, s[-1], len(sw['radien'])), sw['radien'])
     return dict(p=p, L=[int(round(x)) for x in L], lokal=lokal, rel=rel, radien=rad, s=ziel / s[-1])
 
 
-def kette_meshes(sw, ruhe):
+def kette_meshes(sw, ruhe, quelle=None):
     """Je Glied ein Rohr-Mesh im Knochenraum (Y = Laengsachse): Manschette bei -ueberlapp, Ringe bei 0, L/2, L;
     das letzte Glied endet in einer Spitze. Normalen radial in Laenge 4096, Windung wie haenge_schwanz_an.
     Runde 41 SF NB3 (Abnahme 1 Mangel 1): mit sw['profil'] (Liste (t, Radiusfaktor)) bekommt jedes Glied eigene Ringe
@@ -426,15 +516,19 @@ def kette_meshes(sw, ruhe):
     S, uv = sw['seiten'], sw['uv']
     out = []
     n = sw['glieder']
-    profil = sw.get('profil')
+    ende = sw.get('ende', 'dorn')
     for i in range(n):
         Li, r0, r1 = ruhe['L'][i], ruhe['radien'][i], ruhe['radien'][i+1]
         s0, s1 = ruhe['s'][i], ruhe['s'][i+1]
+        # Schwanz V2: eigenes Profil fuer das Wurzelglied (Uebergang in den Buckel ohne Stufe, Formblatt V2 S3) und das
+        # Endglied (spitz auslaufend, F2); sonst das Gliederprofil.
+        profil = sw.get('profil_wurzel') if (i == 0 and sw.get('profil_wurzel')) else \
+            sw.get('profil_ende') if (i == n - 1 and sw.get('profil_ende')) else sw.get('profil')
         if profil:
             ue = sw['ueberlapp'] * r0
             ringe_y = [-ue] + [t * Li for t, _f in profil]
             ringe_r = [profil[0][1] * r0] + [f * (r0 + (r1 - r0) * t) for t, f in profil]
-            ringe_s = [0.0] + [t for t, _f in profil]
+            ringe_s = [sw.get('wurzel_v', 0.0) if i == 0 else 0.0] + [t for t, _f in profil]
         else:
             ue = sw['ueberlapp'] * r0 if i > 0 else 0.0
             ringe_y = ([-ue] if ue else []) + [0.0, Li / 2.0, float(Li)]
@@ -453,7 +547,8 @@ def kette_meshes(sw, ruhe):
             ringe.append(ring)
         if i == n - 1:
             sv = len(m['v'])
-            m['v'].append([0, int(round(Li + sw.get('dorn', 2.5) * r1)), 0, 0])
+            dorn = sw.get('dorn', 2.5) if ende != 'kralle' else 0.15
+            m['v'].append([0, int(round(Li + dorn * r1)), 0, 0])
             m['n'].append([0, 4096, 0, 0])
         deckel = None
         if profil and i == 0:                      # Deckel in den Rumpf: Kegel vom Manschettenring nach -y
@@ -512,8 +607,81 @@ def kette_meshes(sw, ruhe):
                 p0, p1 = tx(k, 0.0), tx(k + 1, 0.0)
                 m['tuv'].append([p0[0], p0[1], uv['clut'], p1[0], p1[1], uv['page'],
                                  (p0[0] + p1[0]) // 2, (p0[1] + p1[1]) // 2, 0])
+        if i == n - 1 and ende == 'kralle':
+            kralle_anhaengen(m, quelle[sw['kralle']['mesh']], sw['kralle'], Li)
         out.append(m)
     return out
+
+
+def kralle_anhaengen(m, q, p, Li):
+    """Schwanz V2, Ende 'Kralle' (Formblatt V2 S12/F2, KI-Seitenansicht h78-h97 "Hand mit roter Kralle"): eine Kopie der
+    EM30-Klauenhand (Mesh 12 nach der Form-Skalierung, gleiche UVs/CLUT/TPage = Originaltexel) ans Schwanzende, Handgelenk
+    am Ende des letzten Glieds, Finger entlang der Gliedachse (+y), Massstab p['skal'], Drehung p['gier'] Grad um y.
+    Keine neue Geometrie-Art: die Dreiecke/Vierecke der Originalhand (32 + 26). PORT-WAHL."""
+    w = np.radians(p.get('gier', 0.0))
+    Ry = np.array([[np.cos(w), 0, np.sin(w)], [0, 1, 0], [-np.sin(w), 0, np.cos(w)]])
+    sk = np.array(p['skal'], float)
+    v0, n0 = len(m['v']), len(m['n'])
+    for v in q['v']:
+        x = Ry @ (np.array(v[:3], float) * sk) + np.array([0.0, Li - p.get('ueberlapp', 40.0), 0.0])
+        m['v'].append([int(round(c)) for c in x] + [0])
+    for nn in q['n']:
+        x = Ry @ (np.array(nn[:3], float) / sk)
+        x = x / max(np.linalg.norm(x), 1e-9) * 4096
+        m['n'].append([int(round(c)) for c in x] + [0])
+    for f in q['tf']:
+        m['tf'].append([f[0] + n0, f[1] + v0, f[2] + n0, f[3] + v0, f[4] + n0, f[5] + v0])
+    for f in q['qf']:
+        m['qf'].append([f[0] + n0, f[1] + v0, f[2] + n0, f[3] + v0, f[4] + n0, f[5] + v0, f[6] + n0, f[7] + v0])
+    m['tuv'].extend([list(x) for x in q['tuv']])
+    m['quv'].extend([list(x) for x in q['quv']])
+
+
+def kette_v2_punkte(sw, mo, A):
+    """Schwanz V2 (Formblatt V2 S2-S9, GESTALTUNG nach der Bildmessung am Original, keine RE-Werte): Ruhe-Mittellinie im
+    Modellraum der Pose sw['modellraum'] (X vorn, Y unten, Z links (W)) aus den Masszahlen in H:
+      Wurzelmitte  sw['wurzel_h'] = (hinter dem hoechsten Koerperpunkt, unter der Oberkante) - S2/S5
+      Pfad         sw['pfad_h'] = (hinten, unten) je Stuetzpunkt ab der Wurzelmitte - S6 (Haken, Spitze 0,15/0,51)
+      Laenge       sw['laenge'] (S9, 3475 E. wie Referenz 2) - die Seitenprojektion des Pfads ist kuerzer; der Rest liegt
+                   seitlich (S9/Ae2 "Seitwaertslauf"): S-Welle ab dem Anteil sw['seitlich']['ab'] der Pfadlaenge, a so gewaehlt, dass die 7 Sehnen
+                   der Kette zusammen sw['laenge'] lang sind (Bisektion). PORT-WAHL: Wellenzahl w und Spitzenlage.
+    Rueckgabe: Stuetzpunkte im Raum des Ankerknochens A (wie sw['punkte'])."""
+    mr = sw['modellraum']
+    f0, nf = mo.clips[mr['clip']]
+    kf = mo.frames[f0 + mr['bild'] % nf] & 0xFFF
+    V, _N, F = mo.geometrie(kf)
+    koerper = sorted({i for f in F if f['bone'] < 16 for i in f['v']})
+    K = V[koerper]
+    oben, sohle = K[:, 1].min(), K[:, 1].max()
+    H = sohle - oben
+    xo = K[K[:, 1] <= oben + 0.01 * H, 0].mean()
+    R, T = mo.pose(kf)
+    Ra, Ta = R[A].astype(float) / 4096.0, T[A].astype(float)
+    w0 = np.array([xo - sw['wurzel_h'][0] * H, oben + sw['wurzel_h'][1] * H, 0.0])
+    pfad = [w0] + [w0 + np.array([-b * H, d * H, 0.0]) for b, d in sw['pfad_h']]
+    seg = np.r_[0, np.cumsum(np.linalg.norm(np.diff(np.array(pfad), axis=0), axis=1))]
+    s = seg / seg[-1]
+    se = sw['seitlich']
+
+    ab = se.get('ab', 0.0)
+    u = np.clip((s - ab) / (1.0 - ab), 0.0, 1.0)
+
+    def punkte(a):
+        # S-Welle ab dem Anteil `ab` (Wurzel und waagerechtes Stueck bleiben in der Seitenebene, Formblatt S3/S6), Steigung
+        # 0 am Anfang und am Ende: z = a sin(2 pi u) sin(pi u) (+-0,77 a), dazu die Spitzenlage spitze H u^2.
+        z = a * np.sin(2 * np.pi * se['wellen'] * u) * np.sin(np.pi * u) + se['spitze'] * H * u * u
+        return [tuple(Ra.T @ (q + np.array([0.0, 0.0, zz]) - Ta)) for q, zz in zip(pfad, z)]
+
+    def laenge(a):
+        return sum(kette_ruhe(dict(sw, punkte=punkte(a)))['L'])
+    lo, hi = 0.0, 3000.0
+    if laenge(lo) >= sw['laenge']:
+        return punkte(lo), dict(H=H, oben=oben, xo=xo, a=0.0)
+    for _ in range(40):
+        mi = 0.5 * (lo + hi)
+        lo, hi = (mi, hi) if laenge(mi) < sw['laenge'] else (lo, mi)
+    a = 0.5 * (lo + hi)
+    return punkte(a), dict(H=H, oben=oben, xo=xo, a=a)
 
 
 def schwanz_textur(tim, p):
@@ -1187,7 +1355,17 @@ def baue(blob, form):
     if form.get('ducken'):
         emr0 = ducken(emr0, form['ducken'])
     kette = form.get('schwanz_kette')
-    if kette and form.get('ducken'):
+    if kette and kette.get('pfad_h'):
+        # Schwanz V2: Stuetzpunkte aus den Formblatt-Masszahlen im Modellraum der fertigen Haltung (nach ducken); keine
+        # Rueckdrehung wie unten, der Pfad ist schon in der geduckten Pose gemessen.
+        mo = EA.Modell.__new__(EA.Modell)
+        mo.skel = EA.emr_parse(emr0)
+        mo.clips, mo.frames = EA.edd_parse(bytes(blob[d[1]:d[2]]))
+        mo.meshes = EA.md1_parse(md1)
+        pk, info = kette_v2_punkte(kette, mo, kette['knochen'])
+        kette = dict(kette, punkte=pk)
+        BAU_INFO['schwanz_v2'] = info
+    elif kette and form.get('ducken'):
         # Runde 41 SF N2: die Ruhegestalt des Schwanzes haengt im Brustraum; Rumpf+Brust kippen um (rumpf+brust) Grad nach
         # vorn -> Ruhelinie um denselben Winkel zurueckdrehen (um den Ansatz), damit er in der Welt haengt wie vorher.
         g = -(form['ducken']['rumpf'] + form['ducken']['brust'])
@@ -1205,7 +1383,10 @@ def baue(blob, form):
             # Mesh 16 (Hand mit Rohr, ohne Knochen) entfaellt: Mesh 16.. = Glieder der Kette (Mesh i == Knochen i).
             # Der Port tauscht Teil 15 nur bei genau 16 Knochen gegen Mesh 16 (main.c bk_rohr).
             ruhe = kette_ruhe(kette)
-            meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes(kette, ruhe)
+            BAU_INFO['ruhe'] = ruhe
+            if form.get('kopf_v2'):
+                kopf_v2_uv(meshes, form['kopf_v2'])
+            meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes(kette, ruhe, meshes)
             emr0 = emr_mit_kette(emr0, kette, ruhe, schwanz_bewegung(emr0, blob[d[1]:d[2]], kette, ruhe))
         md1 = md1_schreiben(meshes)
     tim = faerbe_tim(blob[md1_e:dir_off], form['tint'])
@@ -1213,6 +1394,8 @@ def baue(blob, form):
         tim = cluts_bauen(tim, form['cluts'])
     if form.get('schwanz_textur'):
         tim = schwanz_textur(tim, form['schwanz_textur'])
+    if form.get('kopf_v2'):
+        tim = kopf_v2_textur(tim, form['kopf_v2'])
     if len(tim) % 4:
         tim += bytes(4 - len(tim) % 4)
     sek = [bytes(vor[d[i]:d[i+1]]) for i in range(7)]
@@ -1226,6 +1409,120 @@ def baue(blob, form):
     neu = b''.join(sek)
     kopf = struct.pack('<II', 8 + len(neu), n)
     return kopf + neu + struct.pack('<%dI' % n, *neu_dir)
+
+
+BAU_INFO = {}
+
+
+# ═══════════════════════════════════════════════════ Kopf V2 (Runde 41 SF "Schwanz V2", Nutzer-Entscheid F4 2026-11-06)
+# Nutzer 2026-11-06 zu F4: "ja, das soll mit uebernommen werden aus der KI Fassung, das soll so sein." und "natuerlich in der
+# grafischen Qualitaet des spieles." -> PORT-WAHL nach Nutzer-Entscheid, Quelle KI-Fassung (kein Original-Beleg):
+#   offenes Maul mit Zaehnen, ein Auge oben am Kopf, ein Auge auf der rechten Schulter (W).
+# Original bleibt gueltig: helle Kuppe oben, rote Zone darunter (Formblatt V2 K1/K2).
+# Machart wie die Originalmodelle: Maul, Zaehne und Kopfauge sind TEXTUR auf der vorhandenen Kopfgeometrie (Mesh 9, EM30-
+# Dreiecke unveraendert), 8 bpp im TIM-Raster, Texeldichte wie die Haut; das Schulterauge ist EIN kleines Viereck (zwei
+# Dreiecke) auf der Schulter. Farben: eigene CLUT-Zeile aus Hautton/Rot der vorhandenen Zeilen (keine Leuchtfarben).
+
+def kopf_v2_uv(meshes, p):
+    """Mesh 9: die der Kamera zugewandten Flaechen (Vorderansicht h118, Blickrichtung p['blick'] im Kopfraum) bekommen das
+    Kopfbild per Parallelprojektion aus dieser Ansicht (u, v = p['abbildung'] @ (x, y, z, 1)); die abgewandten behalten das
+    Wundfleisch (Zeile 485). So liegt das Bild dort, wo Original und KI es von vorn zeigen, ohne Spiegelbild hinten.
+    Dazu das Schulterauge: ein Viereck (zwei Dreiecke) mit den Ecken p['schulterauge']['ecken'] im Brustraum (Mesh 8)."""
+    m = meshes[9]
+    A = np.array(p['abbildung'], float)
+    d = np.array(p['blick'], float); d /= np.linalg.norm(d)
+    u0, v0, u1, v1 = p['u'][0], p['v'][0], p['u'][1], p['v'][1]
+    for fl, ul, n in ((m['tf'], m['tuv'], 3), (m['qf'], m['quv'], 4)):
+        for i, f in enumerate(fl):
+            P3 = [np.array(m['v'][f[2 * k + 1]][:3], float) for k in range(n)]
+            N = sum(np.array(m['n'][f[2 * k]][:3], float) for k in range(n))
+            if N @ d > -p.get('schwelle', 0.15) * np.linalg.norm(N):      # nicht zur Kamera: Wundfleisch behalten
+                continue
+            uv = list(ul[i])
+            for k in range(n):
+                q = A @ np.r_[P3[k], 1.0]
+                uv[3 * k] = int(round(np.clip(q[0], u0, u1)))
+                uv[3 * k + 1] = int(round(np.clip(q[1], v0, v1)))
+            uv[2], uv[5] = p['clut'] << 6, p['page']
+            ul[i] = uv
+    a = p.get('schulterauge')
+    if a:
+        m8 = meshes[8]
+        E = [np.array(e, float) for e in a['ecken']]           # Reihenfolge: oben links, oben rechts, unten links, unten rechts
+        nrm = np.array(a['normale'], float); nrm /= np.linalg.norm(nrm)
+        b0, n0 = len(m8['v']), len(m8['n'])
+        for e in E:
+            m8['v'].append([int(round(x)) for x in e + nrm * a.get('abstand', 12.0)] + [0])
+            m8['n'].append([int(round(x)) for x in nrm * 4096] + [0])
+        ua, va = a['u'], a['v']
+        uvs = [(ua[0], va[0]), (ua[1], va[0]), (ua[0], va[1]), (ua[1], va[1])]
+        ia, ib, ic, idd = b0, b0 + 1, b0 + 2, b0 + 3
+        P = [np.array(m8['v'][j][:3], float) for j in (ia, ib, ic)]
+        if np.cross(P[1] - P[0], P[2] - P[0]) @ nrm >= 0:     # Windung wie EM30: Kreuzprodukt gegen die Normale
+            ia, ib, ic, idd = ib, ia, idd, ic
+            uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
+        m8['qf'].append([ia - b0 + n0, ia, ib - b0 + n0, ib, ic - b0 + n0, ic, idd - b0 + n0, idd])
+        m8['quv'].append([uvs[0][0], uvs[0][1], p['clut'] << 6, uvs[1][0], uvs[1][1], p['page'],
+                          uvs[2][0], uvs[2][1], 0, uvs[3][0], uvs[3][1], 0])
+    return meshes
+
+
+def kopf_v2_textur(tim, p):
+    """Kopfbild in eine freie TIM-Flaeche malen (Indizes in die Zeile p['clut'], Verlauf dunkel -> rot -> Haut -> hell).
+    Die Flaeche ist die Vorderansicht des Kopfs (h118, kopf_v2_uv), Anteile x/y = 0..1 der Kopfbreite/-hoehe im Bild:
+    helle Kuppe oben (Original K1/K2), Hautstruktur aus dem Wundfleisch-Rauschen, rote Zone um und unter dem Maul (K2),
+    offenes senkrechtes Maul mit Lippe, Zahnreihe und dunklem Inneren (KI, F4), rundes Auge oben (KI, F4); daneben das
+    Feld des Schulterauges."""
+    tim = bytearray(tim)
+    cx, cy, cw, ch, c, ende = _clut(tim)
+    iw, ih = struct.unpack_from('<HH', tim, ende + 8)
+    breite = iw * 2
+    pix = np.frombuffer(bytes(tim[ende + 12:ende + 12 + breite * ih]), np.uint8).reshape(ih, breite).copy()
+    L0 = (_rgb(c[0]) @ np.array([0.299, 0.587, 0.114]))
+    quelle = L0[pix[4:90, 66:126]]
+    quelle = (quelle - quelle.mean()) / max(quelle.std(), 1e-6)
+    pb = 128 * (p['page'] & 0xF)
+    def flaeche(u, v):
+        return pb + u[0], v[0], u[1] - u[0] + 1, v[1] - v[0] + 1
+    I = p['index']
+    u0, v0, bu, bv = flaeche(p['u'], p['v'])
+    assert u0 + bu <= breite and v0 + bv <= ih
+    yy, xx = np.mgrid[0:bv, 0:bu]
+    ty, tx = yy / (bv - 1.0), xx / (bu - 1.0)
+    rausch = p['rauschen'] * quelle[(yy * 3) % quelle.shape[0], (xx * 2) % quelle.shape[1]]
+    img = np.interp(ty, [0.0, p['kuppe'], p['kuppe'] + 0.18, 1.0], [I['kuppe'], I['kuppe'], I['haut'], I['haut']]) + rausch
+    mu = p['maul']
+    mx, my = (mu['x'][0] + mu['x'][1]) / 2.0, (mu['y'][0] + mu['y'][1]) / 2.0
+    rx, ry = (mu['x'][1] - mu['x'][0]) / 2.0, (mu['y'][1] - mu['y'][0]) / 2.0
+    # rote Zone (K2): um das Maul und darunter bis zum Kopfende, seitlich weich
+    rz = np.clip(1.0 - (np.abs(tx - mx) - rx * 1.25) / 0.12, 0, 1) * np.clip((ty - (mu['y'][0] - 0.10)) / 0.10, 0, 1)
+    img = img * (1 - rz) + (I['rot'] + rausch * 0.8) * rz
+    e = np.sqrt(((tx - mx) / rx) ** 2 + ((ty - my) / ry) ** 2)
+    img[e <= 1.0] = I['lippe'] + rausch[e <= 1.0] * 0.5
+    zahn = (e <= mu['zahn_aussen']) & (e > mu['zahn_innen'])
+    w = np.arctan2((ty - my) / ry, (tx - mx) / rx)
+    luecke = (np.floor((w + np.pi) / (2 * np.pi) * mu['zaehne']) % 2) == 1
+    img[zahn & ~luecke] = I['zahn']
+    img[zahn & luecke] = I['zahnschatten']
+    img[e <= mu['zahn_innen']] = I['innen']
+    au = p['auge']
+    ea = np.sqrt(((xx - au['x'] * (bu - 1)) / au['r'][0]) ** 2 + ((yy - au['y'] * (bv - 1)) / au['r'][1]) ** 2)
+    img[ea <= 1.35] = I['innen'] + 25
+    img[ea <= 1.0] = I['weiss']
+    img[ea <= 0.45] = I['innen']
+    pix[v0:v0 + bv, u0:u0 + bu] = np.clip(np.round(img), 1, 255).astype(np.uint8)
+    sa = p.get('schulterauge')
+    if sa:
+        su0, sv0, sbu, sbv = flaeche(sa['u'], sa['v'])
+        yy, xx = np.mgrid[0:sbv, 0:sbu]
+        es = np.sqrt(((xx - (sbu - 1) / 2.0) / (sbu / 2.0)) ** 2 + ((yy - (sbv - 1) / 2.0) / (sbv / 2.0)) ** 2)
+        f = np.full((sbv, sbu), float(I['haut']))
+        f[es <= 0.95] = I['innen'] + 25
+        f[es <= 0.72] = I['weiss']
+        f[es <= 0.30] = I['innen']
+        pix[sv0:sv0 + sbv, su0:su0 + sbu] = np.clip(np.round(f), 1, 255).astype(np.uint8)
+    tim[ende + 12:ende + 12 + breite * ih] = pix.tobytes()
+    return bytes(tim)
 
 
 def modell_aus_blob(blob):
@@ -1301,7 +1598,23 @@ def main():
     ap.add_argument('--blatt', help='Verzeichnis fuer Ansichtsblaetter (PNG)')
     ap.add_argument('--clip', type=lambda s: int(s, 0), default=0)
     ap.add_argument('--aus', default=AUS_DIR, help='Zielverzeichnis der EMDs')
+    ap.add_argument('--variante', action='append', help='Schwanz-V2-Variante(n) (VARIANTEN) statt der Formen schreiben; '
+                    'nur mit --aus ausserhalb von shared_assets')
     a = ap.parse_args()
+    if a.variante:
+        assert os.path.abspath(a.aus) != os.path.abspath(AUS_DIR), 'Varianten nicht ins Spiel-Asset (Wahl des Nutzers offen)'
+        basis = lade_em30()
+        os.makedirs(a.aus, exist_ok=True)
+        for name in a.variante:
+            BAU_INFO.clear()
+            blob = baue(basis, VARIANTEN[name]())
+            ziel = os.path.join(a.aus, 'EM30_%s.EMD' % name.upper())
+            with open(ziel, 'wb') as f:
+                f.write(blob)
+            info = BAU_INFO.get('schwanz_v2', {})
+            print('geschrieben: %s  (%d Byte, Variante %s; H %.0f, Welle %.0f, Glieder %s)' % (
+                ziel, len(blob), name, info.get('H', 0), info.get('a', 0), BAU_INFO['ruhe']['L']))
+        return
 
     affe = baue_rot_affe()
     ziel = os.path.join(a.aus, ROT_AFFE['datei'])
