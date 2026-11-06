@@ -788,7 +788,9 @@ static uint8_t s_tl_kk[40000];
  * mit der ersten Abweichung und ihrer Phase; dazu aus debug.log des Laufs mit Kanister die groesste "Kanister-Sitz"-Abweichung (Lage + Drehung, gator_re2_pc.c).
  * Rueckgabe 0 = gleich bis zur ersten Abweichung in Belagerung/Querung (GBP_GUARD 5 / GBP_CROSS 7 - die Querung mit Rammen, Auftrag "Rampe: rammen wie gehabt")
  * oder bis nach dem ersten Rammen (gator_boss.log "RAMMEN F": der Treffer wirft die Figur nieder, ohne Kanister gibt es ihn nicht - gemessen west5_elza: Rammen
- * F1864 in einer Querung mit der Figur im Wasser, erste Abweichung F1934 in der Verfolgung) oder ganz gleich, und Kanister-Sitz 0 in >= 100 Bildern. */
+ * F1864 in einer Querung mit der Figur im Wasser, erste Abweichung F1934 in der Verfolgung) oder ab dem Rueckfall (gator_boss.log "G2RE2 RUECKWAERTS an" / "G2RE2 TAUCHEN an":
+ * er haengt auch ohne Kanister - gemessen rampe: ab F2499 150 Bilder in einem Kasten an der Plattform-Suedkante, Rueckwaerts F2650) oder ganz gleich, und Kanister-Sitz 0
+ * in >= 100 Bildern. */
 typedef struct { int ph, mo, af, gier, x, z; } g2v_t;
 static g2v_t s_tv[2][40000]; static uint8_t s_tv_da[2][40000];
 static int tragvergleich(const char *mit, const char *ohne)
@@ -826,15 +828,20 @@ static int tragvergleich(const char *mit, const char *ohne)
         }
         fclose(f);
     }
-    int ramm = -1;                                         /* erstes Rammen im Lauf mit Kanister */
+    int ramm = -1, rueck = -1;                             /* erstes Rammen / erster Rueckfall im Lauf mit Kanister */
     snprintf(pf, sizeof pf, "%s/gator_boss.log", mit);
     if ((f = fopen(pf, "r")) != NULL) {
-        while (fgets(z, sizeof z, f)) { int fr; if (sscanf(z, "RAMMEN F%d", &fr) == 1 && (ramm < 0 || fr < ramm)) ramm = fr; }
+        while (fgets(z, sizeof z, f)) {
+            int fr; const char *q;
+            if (sscanf(z, "RAMMEN F%d", &fr) == 1 && (ramm < 0 || fr < ramm)) ramm = fr;
+            if (((q = strstr(z, "G2RE2 RUECKWAERTS an F")) != NULL && sscanf(q, "G2RE2 RUECKWAERTS an F%d", &fr) == 1)
+                || ((q = strstr(z, "G2RE2 TAUCHEN an F")) != NULL && sscanf(q, "G2RE2 TAUCHEN an F%d", &fr) == 1)) { if (rueck < 0 || fr < rueck) rueck = fr; }
+        }
         fclose(f);
     }
-    const int ok_weg = erst < 0 || ((ph_m == 5 || ph_m == 7) && (ph_o == 5 || ph_o == 7)) || (ramm >= 0 && erst > ramm);
-    printf("tragvergleich: %d Bilder mit Kanister, %d gemeinsame Bilder, abweichend %d, erste Abweichung F%d (Phase mit %d / ohne %d, erstes Rammen F%d)%s; Kanister-Sitz %d Bilder, Abweichung max %d\n",
-           n_m, gem, ab, erst, ph_m, ph_o, ramm, ok_weg ? "" : " - NICHT in Belagerung/Querung und nicht nach einem Rammen", sitz_n, sitz_max);
+    const int ok_weg = erst < 0 || ((ph_m == 5 || ph_m == 7) && (ph_o == 5 || ph_o == 7)) || (ramm >= 0 && erst > ramm) || (rueck >= 0 && erst >= rueck);
+    printf("tragvergleich: %d Bilder mit Kanister, %d gemeinsame Bilder, abweichend %d, erste Abweichung F%d (Phase mit %d / ohne %d, erstes Rammen F%d, erster Rueckfall F%d)%s; Kanister-Sitz %d Bilder, Abweichung max %d\n",
+           n_m, gem, ab, erst, ph_m, ph_o, ramm, rueck, ok_weg ? "" : " - NICHT in Belagerung/Querung, nicht nach Rammen oder Rueckfall", sitz_n, sitz_max);
     return (gem > 0 && ok_weg && sitz_n >= 100 && sitz_max == 0) ? 0 : 1;
 }
 static int traglog(const char *dir)
