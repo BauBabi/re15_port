@@ -1,0 +1,4 @@
+Pruefer: Schwanz unter dem Knick, Fenster x280-300 y312-345, Bewegungsmaske |L-L_bg|>10 (Hintergrund Median n1449-1473), nicht erodiert
+ px 222  RGB [43.4 36.8 35.9]  Lab [15.2, 3.2, 1.6]  Lab SW17 [6.9, 2.9, 1.4]
+ Zeilenbreite (Maske, x280-300): {312: 6, 315: 5, 318: 4, 321: 4, 324: 1, 327: 6, 330: 11, 333: 10, 336: 8, 339: 2, 342: 9, 345: 11}
+Gegenprobe Chroma-Fenster x283-296 y314-342 Chroma>=4: siehe P_farben.json 'Schwanz unter dem Knick'
