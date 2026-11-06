@@ -2565,6 +2565,161 @@ static void teil_v4(int elza)
     }
 }
 
+/* ==== Runde 41 Spur G2-RE2 NB3 - MESSER (Messblatt analysis/befunde_runde41/G2_MESSBLATT_NB3.md): Werkzeuge, KEINE Riegel ==================================
+ * nb3_oben <leon|elza> <neu|ohne> [bilder=3600] [x,z ...]: die Figur steht still OBEN auf der Rampe (y -1800; Raster 6 x 3 Lagen oder die angegebenen), je Lage ein
+ *   frischer Kampf (szene_bis_kampf, Kanister ins Maul bis Stufe 7; "ohne" = Kanister nach dem Anhaengen entfernt = Gang ohne Kanister). Kamera = die des Wegs von
+ *   Sueden (g2_lage_kamera, RVD-Zonen). Je Lage: erstes Bild mit Schaden (pl->hp < 100 nach dem Bild), Treffer gesamt und je Art (Rammen = Zaehler
+ *   re15_gator_boss_rammen; CROSS-Biss = Phase 7 ohne Rammen; Hochbiss = Phase 5 Clip 4; Biss = Phase 3), laengste Pause ohne Treffer, Wurzel-Kasten und Kopf-Abstand
+ *   (Bone 6) ab Bild 600, Anteile GUARD/CROSS, laengste Zeit ohne Fortschritt (Mass des Riegels re2), Haenge-Fenster (Mass von gator_rw_r41.c (b)).
+ *   Umgebung G2_NB3_SPUR=<datei>: je Bild eine Zeile "Lage Stand t gx gz gier ph mod clip bild px pz kd hp zx zz cam".
+ * nb3_haengt <leon|elza> <neu|ohne> [bilder=3600] [x,z,cam ...]: die Figur steht still im WASSER (y 0) vor der Rampen-Suedkante (Lagen der exe-Riegel rampe / west4 /
+ *   west5 / wand oder die angegebenen, cam = Cut der Figur); Haenge-Fenster wie gator_rw_r41.c re15_gr2_rw_nachtakt (b): 150 Bilder Wurzel-Kasten < 2500, Kopf (Bone 6)
+ *   > 4500 von der Figur, netto < 600 in 60 Bildern, kein Biss seit 150 Bildern - je Fenster Kasten, Lage, Gier, Clip, Steuerziel (re15_gator_boss_ziel), Phase.
+ *   Zweig/Route je 30 Bilder stehen in gator_boss.log des Arbeitsverzeichnisses (TICK ... rt= zw= ziel=), Zuordnung ueber pos=(x,z). */
+typedef struct { int t, art, ph, mo; int32_t gx, gz, kx, kz, kd; } nb3_treffer_t;
+static const char *nb3_art(int a) { return a == 1 ? "Rammen" : a == 2 ? "CROSS-Biss" : a == 3 ? "Hochbiss" : a == 4 ? "Biss" : "sonst"; }
+typedef struct { int n, ntr, n_guard, n_cross, ohne_max, haeng_n, haeng_t1; int32_t box[4], kd_min; int64_t kd_sum; } nb3_m_t;
+static int nb3_lauf(re15_actor_t *g, re15_actor_t *pl, const char *name, int32_t lx, int32_t ly, int32_t lz, int cam, int bilder, int stand, FILE *spur,
+                    nb3_treffer_t *tr, int trmax, nb3_m_t *m)
+{
+    int bi = 0; int64_t bd = -1;   /* Start des Gators: fernste der fuenf Beckenlagen (wie g2r_lauf) */
+    for (int i = 0; i < 5; i++) { const int64_t dx = k_fz_start[i][0] - lx, dz = k_fz_start[i][1] - lz; if (dx * dx + dz * dz > bd) { bd = dx * dx + dz * dz; bi = i; } }
+    g->x = k_fz_start[bi][0]; g->z = k_fz_start[bi][1]; g->anchor_x = g->x; g->anchor_z = g->z;
+    memset(m, 0, sizeof *m);
+    m->box[0] = m->box[2] = 1 << 30; m->box[1] = m->box[3] = -(1 << 30); m->kd_min = 1 << 30; m->haeng_t1 = -1;
+    int lauf = 0; int64_t best = -1;
+    static int32_t hx[150], hz[150]; int hn = 0; int seit_biss = 1 << 20;
+    const int slot = (int)(g - g_actors);
+    for (int t = 0; t < bilder && (stand == 3 || re15_gr2_traegt()); t++) {
+        pl->x = lx; pl->y = ly; pl->z = lz; pl->hp = 100; pl->hit_react = 0;
+        g_scd.cam_id = (uint8_t)cam;
+        re15_collision_set_band(re15_collision_band_from_y(ly));
+        const int ramm0 = re15_gator_boss_rammen();
+        frame(0, 0);
+        m->n++;
+        const int ph = re15_gator_boss_phase(g), mod = re15_gr2_rw_modus(slot);
+        int32_t kopf[3] = { g->x, g->y, g->z }; (void)re15_gr2_bone_welt_pub(g, 6, kopf);
+        const int64_t kx = (int64_t)kopf[0] - lx, kz = (int64_t)kopf[2] - lz, k2 = kx * kx + kz * kz;
+        const int32_t kd = (int32_t)re15_squareroot0((uint32_t)(k2 > 0xffffffffLL ? 0xffffffffLL : k2));
+        if (pl->hp < 100) {
+            const int art = re15_gator_boss_rammen() > ramm0 ? 1 : ph == 7 ? 2 : (ph == 5 && g->motion == 4) ? 3 : ph == 3 ? 4 : 0;
+            if (m->ntr < trmax) { nb3_treffer_t *x = &tr[m->ntr]; x->t = t; x->art = art; x->ph = ph; x->mo = g->motion; x->gx = g->x; x->gz = g->z; x->kx = kopf[0]; x->kz = kopf[2]; x->kd = kd; }
+            m->ntr++;
+        }
+        if (t >= 600) { if (g->x < m->box[0]) m->box[0] = g->x; if (g->x > m->box[1]) m->box[1] = g->x; if (g->z < m->box[2]) m->box[2] = g->z; if (g->z > m->box[3]) m->box[3] = g->z;
+                        if (kd < m->kd_min) m->kd_min = kd; m->kd_sum += kd; }
+        m->n_guard += ph == 5; m->n_cross += ph == 7;
+        if (kd <= 4500 || best < 0 || kd < best - 300) { lauf = 0; best = kd; } else { lauf++; if (lauf > m->ohne_max) m->ohne_max = lauf; }   /* ohne Fortschritt (Riegel re2, Figur steht) */
+        if (ph == 3 || ph == 8 || pl->hp < 100) seit_biss = 0; else if (seit_biss < (1 << 20)) seit_biss++;
+        if (ph != 2) hn = 0;   /* Haenge-Fenster nur in der Verfolgung (verfolgt = GBP_CHASE) wie re15_gr2_rw_nachtakt */
+        else {
+            hx[hn % 150] = g->x; hz[hn % 150] = g->z; hn++;
+            if (hn >= 150 && seit_biss >= 150) {
+                int32_t x0 = hx[0], x1 = x0, z0 = hz[0], z1 = z0;
+                for (int i = 1; i < 150; i++) { if (hx[i] < x0) x0 = hx[i]; if (hx[i] > x1) x1 = hx[i]; if (hz[i] < z0) z0 = hz[i]; if (hz[i] > z1) z1 = hz[i]; }
+                const int i60 = (hn - 60) % 150;
+                const int64_t n6x = (int64_t)g->x - hx[i60], n6z = (int64_t)g->z - hz[i60];
+                if (x1 - x0 < 2500 && z1 - z0 < 2500 && kd > 4500 && n6x * n6x + n6z * n6z < 600LL * 600) {
+                    int32_t zx = 0, zz = 0; re15_gator_boss_ziel(g, &zx, &zz);
+                    m->haeng_n++; if (m->haeng_t1 < 0) m->haeng_t1 = t;
+                    printf("        %s t%d HAENGT: Wurzel 150 Bilder in (%d..%d, %d..%d), jetzt (%d,%d) Gier %d Clip %d Bild %d, Kopf (%d,%d) %d von der Figur (%d,%d), Steuerziel (%d,%d), Phase %d Modus %d\n",
+                           name, t, (int)x0, (int)x1, (int)z0, (int)z1, g->x, g->z, g->rot_y & 0xfff, (int)g->motion, (int)g->anim_frame, kopf[0], kopf[2], (int)kd, (int)lx, (int)lz, (int)zx, (int)zz, ph, mod);
+                    hn = 0;
+                }
+            }
+        }
+        if (spur) { int32_t zx = 0, zz = 0; re15_gator_boss_ziel(g, &zx, &zz);
+                    fprintf(spur, "%s %s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", name, stand == 3 ? "ohne" : "neu", t, g->x, g->z, g->rot_y & 0xfff, ph, mod, (int)g->motion,
+                            (int)g->anim_frame, (int)lx, (int)lz, (int)kd, (int)pl->hp, (int)zx, (int)zz, cam); }
+    }
+    return m->n;
+}
+static void nb3_druck(const char *name, int cam, const nb3_m_t *m, const nb3_treffer_t *tr, int zeilen)
+{
+    int je[5] = { 0, 0, 0, 0, 0 }, pause = m->ntr ? tr[0].t : m->n, letzt = 0;
+    const int nt = m->ntr < 512 ? m->ntr : 512;
+    for (int k = 0; k < nt; k++) { je[tr[k].art]++; if (k) { const int p = tr[k].t - tr[k - 1].t; if (p > pause) pause = p; } letzt = tr[k].t; }
+    if (m->ntr && m->n - letzt > pause) pause = m->n - letzt;
+    printf("    %-14s Cut %d: %4d B., Treffer %3d (Rammen %d, CROSS-Biss %d, Hochbiss %d, Biss %d, sonst %d), erster t%d %s, laengste Pause ohne Treffer %d B. = %.1f s, "
+           "GUARD %d %% CROSS %d %%, Wurzel ab t600 (%d..%d, %d..%d), Kopf min %d mittel %d, ohne Fortschritt max %.1f s, Haenge-Fenster %d (erstes t%d)\n",
+           name, cam, m->n, m->ntr, je[1], je[2], je[3], je[4], je[0], m->ntr ? tr[0].t : -1, m->ntr ? nb3_art(tr[0].art) : "KEIN TREFFER", pause, pause / 30.0,
+           m->n ? 100 * m->n_guard / m->n : 0, m->n ? 100 * m->n_cross / m->n : 0, m->box[0], m->box[1], m->box[2], m->box[3], (int)m->kd_min,
+           m->n > 600 ? (int)(m->kd_sum / (m->n - 600)) : -1, m->ohne_max / 30.0, m->haeng_n, m->haeng_t1);
+    for (int k = 0; k < nt && k < zeilen; k++)
+        printf("        t%-5d %-10s Phase %d Clip %2d Wurzel (%6d,%6d) Kopf (%6d,%6d) Kopf-Abstand %d\n", tr[k].t, nb3_art(tr[k].art), tr[k].ph, tr[k].mo, tr[k].gx, tr[k].gz, tr[k].kx, tr[k].kz, tr[k].kd);
+}
+static int nb3_pause(const nb3_m_t *m, const nb3_treffer_t *tr)
+{
+    int pause = m->ntr ? tr[0].t : m->n, letzt = 0; const int nt = m->ntr < 512 ? m->ntr : 512;
+    for (int k = 0; k < nt; k++) { if (k) { const int p = tr[k].t - tr[k - 1].t; if (p > pause) pause = p; } letzt = tr[k].t; }
+    if (m->ntr && m->n - letzt > pause) pause = m->n - letzt;
+    return pause;
+}
+static int nb3_oben(int argc, char **argv)
+{
+    const int elza = argc > 2 && !strcmp(argv[2], "elza");
+    const int stand = (argc > 3 && !strcmp(argv[3], "ohne")) ? 3 : 2;
+    const int bilder = argc > 4 ? atoi(argv[4]) : 3600;
+    static const int32_t xs[6] = { 2318, 2800, 3350, 4428, 5500, 6500 }, zs[3] = { -17600, -16300, -15000 };
+    static int32_t lagen[64][2]; int nl = 0;
+    for (int a = 5; a < argc; a++) { int x, z; if (sscanf(argv[a], "%d,%d", &x, &z) == 2 && nl < 64) { lagen[nl][0] = x; lagen[nl][1] = z; nl++; } }
+    if (!nl) for (int zi = 0; zi < 3; zi++) for (int xi = 0; xi < 6; xi++) { lagen[nl][0] = xs[xi]; lagen[nl][1] = zs[zi]; nl++; }
+    FILE *spur = getenv("G2_NB3_SPUR") ? fopen(getenv("G2_NB3_SPUR"), "a") : NULL;
+    printf("== nb3_oben %s %s: Figur steht still oben auf der Rampe (y -1800), %d Bilder je Lage, Kamera des Wegs von Sueden ==\n", elza ? "elza" : "leon", stand == 3 ? "ohne Kanister" : "mit Kanister", bilder);
+    int schlecht = 0, erst_max = -1, pause_max = 0; const char *erst_wo = "-", *pause_wo = "-";
+    static char namen[64][32];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    for (int i = 0; i < nl; i++) {
+        snprintf(namen[i], sizeof namen[i], "R%d/%d", lagen[i][0], lagen[i][1]);
+        re15_actor_t *g = szene_bis_kampf(elza);
+        if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    %s: kein Tragen\n", namen[i]); continue; }
+        if (stand == 3) re15_gr2_kanister_entfernen();
+        g2_lage_t gl = { namen[i], lagen[i][0], -1800, lagen[i][1] };
+        int cam = g2_lage_kamera(&gl, 0); if (cam < 0) cam = 2;
+        static nb3_treffer_t tr[512]; nb3_m_t m;
+        nb3_lauf(g, pl, namen[i], lagen[i][0], -1800, lagen[i][1], cam, bilder, stand, spur, tr, 512, &m);
+        nb3_druck(namen[i], cam, &m, tr, 12);
+        const int pause = nb3_pause(&m, tr);
+        if (!m.ntr) schlecht++;
+        if ((m.ntr ? tr[0].t : m.n) > erst_max) { erst_max = m.ntr ? tr[0].t : m.n; erst_wo = namen[i]; }
+        if (pause > pause_max) { pause_max = pause; pause_wo = namen[i]; }
+    }
+    if (spur) fclose(spur);
+    printf("    SUMME %s %s: %d von %d Lagen ohne Treffer; spaetester erster Treffer t%d (%s); laengste Pause ohne Treffer %d B. = %.1f s (%s)\n",
+           elza ? "elza" : "leon", stand == 3 ? "ohne" : "neu", schlecht, nl, erst_max, erst_wo, pause_max, pause_max / 30.0, pause_wo);
+    return 0;
+}
+static int nb3_haengt(int argc, char **argv)
+{
+    const int elza = argc > 2 && !strcmp(argv[2], "elza");
+    const int stand = (argc > 3 && !strcmp(argv[3], "ohne")) ? 3 : 2;
+    const int bilder = argc > 4 ? atoi(argv[4]) : 3600;
+    typedef struct { int32_t x, z; int cam; } nb3_w_t;
+    static nb3_w_t lagen[64]; int nl = 0;
+    for (int a = 5; a < argc; a++) { int x, z, c = 0; if (sscanf(argv[a], "%d,%d,%d", &x, &z, &c) >= 2 && nl < 64) { lagen[nl].x = x; lagen[nl].z = z; lagen[nl].cam = c; nl++; } }
+    if (!nl) { static const nb3_w_t k[] = { { 3000, -18800, 0 }, { 3000, -18800, 2 }, { 4200, -18800, 2 }, { 3600, -18750, 2 }, { 6400, -18700, 2 }, { 2318, -18568, 2 }, { 4428, -18951, 2 }, { 1000, -20700, 2 } };
+               for (unsigned i = 0; i < sizeof k / sizeof k[0]; i++) lagen[nl++] = k[i]; }
+    FILE *spur = getenv("G2_NB3_SPUR") ? fopen(getenv("G2_NB3_SPUR"), "a") : NULL;
+    printf("== nb3_haengt %s %s: Figur steht still im Wasser vor der Rampen-Suedkante (y 0), %d Bilder je Lage ==\n", elza ? "elza" : "leon", stand == 3 ? "ohne Kanister" : "mit Kanister", bilder);
+    static char namen[64][32];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int haeng_max = 0, ohne_max = 0; const char *haeng_wo = "-", *ohne_wo = "-";
+    for (int i = 0; i < nl; i++) {
+        snprintf(namen[i], sizeof namen[i], "W%d/%d/c%d", lagen[i].x, lagen[i].z, lagen[i].cam);
+        re15_actor_t *g = szene_bis_kampf(elza);
+        if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    %s: kein Tragen\n", namen[i]); continue; }
+        if (stand == 3) re15_gr2_kanister_entfernen();
+        static nb3_treffer_t tr[512]; nb3_m_t m;
+        nb3_lauf(g, pl, namen[i], lagen[i].x, 0, lagen[i].z, lagen[i].cam, bilder, stand, spur, tr, 512, &m);
+        nb3_druck(namen[i], lagen[i].cam, &m, tr, 4);
+        if (m.haeng_n > haeng_max) { haeng_max = m.haeng_n; haeng_wo = namen[i]; }
+        if (m.ohne_max > ohne_max) { ohne_max = m.ohne_max; ohne_wo = namen[i]; }
+    }
+    if (spur) fclose(spur);
+    printf("    SUMME %s %s: Haenge-Fenster hoechstens %d (%s); laengste Zeit ohne Fortschritt %.1f s (%s)\n", elza ? "elza" : "leon", stand == 3 ? "ohne" : "neu", haeng_max, haeng_wo, ohne_max / 30.0, ohne_wo);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -2592,6 +2747,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "kasten")) { if (!gator_bank()) return 1; return kasten_werkzeug(argc > 2); }
     if (!strcmp(teil, "leichenfit")) { if (!gator_bank()) return 1; leichenfit(argc > 2); return 0; }
     if (!gator_bank()) { printf("RE2-EM23-Bank fehlt\n"); return 1; }
+    if (!strcmp(teil, "nb3_oben"))   return nb3_oben(argc, argv);     /* G2-RE2 NB3 Messer: Messwerkzeuge (Messblatt), keine Riegel */
+    if (!strcmp(teil, "nb3_haengt")) return nb3_haengt(argc, argv);
     const int alle = !strcmp(teil, "alle");
     if (alle || !strcmp(teil, "maul"))      teil_maul_riegel(0);
     if (alle || !strcmp(teil, "maul_elza")) teil_maul_riegel(1);

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# G2 NB3 (Messer): batch3.sh <lauf> <neu|ohne> - Laeufe fuer das Messblatt NB3.
+#  rampe_leon / rampe_elza / wand_elza = die exe-Riegel integration_r41_gatorfix_rampe / _rampe_elza / _abn2_wand_elza (Eingabe, Umgebung wortgleich test_r41_gatorfix.cmake,
+#      RE15_NOAUDIO=1, RE15_WINDOW_SCALE=1) - Vorgabe B (Haenger Plattform-Suedkante);
+#  oben_leon / oben_elza = Vorgabe A: Eingabe der Abnahme-4-Laeufe west4_leon / west5_elza bis zum Klettern (A0.2 bei ~F639), dann W2.0, U1.2 (auf die Rampe),
+#      W170 (steht still, ~120 s oben); Framedump-Serie F600..F4400 je 30 Bilder (640 x 480, RE15_WINDOW_SCALE=2 wie die Abnahme 4).
+SP="C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g2nb3"
+W="$SP/werkzeug"
+GEM=(RE15_NO_INTRO=1 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:1" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 RE15_STATE_LOG=state.log RE15_G2_TRAG_LOG=1 RE15_CLIMB_TRACE=climb.log "RE15_PLAYER_POS=-6000,-17500,3072" RE15_G2_ZEIT_LOG=1)
+BL=("${GEM[@]}" RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=2090@250)
+BE=("${GEM[@]}" RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_TITLE_CONFIRM_MS=1500 RE15_DEBUG_JUMP=2091@250)
+P="${2:-neu}"; X=()
+if [ "$P" = "ohne" ]; then X=(RE15_G2_OHNE_KANISTER=1); fi
+RAMPE="W6.0,M0.6,MA0.1,M0.3,MA0.1,W22.0,A0.3,W2.0,A0.3,W2.0,XU0.8,W120"
+WAND="W6.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,D0.500,W1.200,U0.400,W1.300,D0.500,W1.033,U0.400,W2.233,XU8.867,W7.367,D0.500,W1.367,U0.400,W0.933,L0.200,W1.700,D0.500,W1.200,U0.400,W0.933,XU7.667,W9.500,U0.400,W2.233,D0.500,W2.067,R0.200,W2.200,U0.400,W1.267,L0.533,XU3.467,W3.067,L0.367,XU8.267,W17.467,R0.367,XU7.733,W12.033,XU8.400,W6.100,UL2.000,W1.067,L0.367,XU6.367,W17.867,UR1.100,W1.933,R0.700,XU1.800,W3.600,XU7.467,W8.833,U0.400,W0.900,R0.200,W1.033,U0.400,W2.000,D0.500,W0.933,R0.200,W1.000,L0.367,XU6.300,W16.567,XU6.633,W12.700,XU6.433,W6.400,UR2.933,W2.167,R0.200,W1.667,U0.400,W1.600,R0.200,W1.300,L0.200,W1.300,D0.500,W0.833,R0.367,XU6.067,W1.600"
+OBEN="W6.0,M0.6,MA0.1,M0.3,MA0.1,W14.0,U0.1,A0.2,W2.0,U1.2,W170"
+case "${1:-}" in
+rampe_leon) bash "$W/lauf3.sh" ${P}_rampe_leon "${BL[@]}" "${X[@]}" RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 "RE15_INPUT_SCRIPT=$RAMPE" "RE15_K2080_RUECK_LAGE=3000,-18800,3072" "RE15_EXIT_AT=3600#2090" ;;
+rampe_elza) bash "$W/lauf3.sh" ${P}_rampe_elza "${BE[@]}" "${X[@]}" RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 "RE15_INPUT_SCRIPT=$RAMPE" "RE15_K2080_RUECK_LAGE=3000,-18800,3072" "RE15_EXIT_AT=3600#2091" ;;
+wand_elza)  bash "$W/lauf3.sh" ${P}_wand_elza "${BE[@]}" "${X[@]}" RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 "RE15_INPUT_SCRIPT=$WAND" "RE15_EXIT_AT=8400#2091" ;;
+oben_leon)  bash "$W/lauf3.sh" ${P}_oben_leon "${BL[@]}" "${X[@]}" RE15_WINDOW_SCALE=2 "RE15_FRAMEDUMP=600-4400/30:fd_" "RE15_INPUT_SCRIPT=$OBEN" "RE15_K2080_RUECK_LAGE=4200,-18800,3072,2" "RE15_EXIT_AT=4400#2090" ;;
+oben_elza)  bash "$W/lauf3.sh" ${P}_oben_elza "${BE[@]}" "${X[@]}" RE15_WINDOW_SCALE=2 "RE15_FRAMEDUMP=600-4400/30:fd_" "RE15_INPUT_SCRIPT=$OBEN" "RE15_K2080_RUECK_LAGE=3600,-18750,3072,2" "RE15_EXIT_AT=4400#2091" ;;
+*) echo "unbekannt: $1"; exit 2 ;;
+esac
+echo BATCH_FERTIG
