@@ -23,8 +23,16 @@ FORM (belegt, nicht geraten):
     Kopf `04 02`, Seitentrenner `02 00` und Schwanz `01 00` WOERTLICH aus der Original-Nachricht;
     Seiten- und Zeilenzahl muessen der Vorlage gleichen ("Zeilenumbrueche wie das Original"), sonst Abbruch.
 
+  * DIALOG_NEU (Runde 41 Spur ST80-T): eine NEUE Dialog-Id hinter den Original-Nachrichten eines Raums (Id >= RDT-Zahl,
+    < 32 = PSX MSG_TABLE_N). Kopf und Schwanz WOERTLICH aus einer Original-Nachricht DESSELBEN Raums mit demselben
+    Sprecher (Spalte "Vorlage", z. B. John = ROOM6030 msg 3 `04 00 05 07 26 4b 44 4a 16 05 00 00`); Abbruch, wenn die
+    Vorlage nicht die Dialogform hat oder die Id belegt ist. Bis zu drei Zeilen (28 Original-Dialoge haben zwei 0x08,
+    z. B. ROOM10D0 msg 17).
+
 WORTLAUT = PORT-WAHL (Story, Nachtrag AUFTRAG.md 14:00, P4: "Die duerfen sich niemals begegnet sein");
 alt -> neu steht im Dossier analysis/befunde_runde36/P_story.md zur Freigabe.
+Runde 41 Spur ST80-T: Nutzerentscheide aus dem Story-Abgleich (analysis/story80/ABGLEICH.md A1; Wortlaut der Nutzer bzw.
+vom Nutzer freigegebene PORT-WAHL), Liste mit Stimmen-Pfaden: analysis/story80/TEXTE_UMSETZUNG.md.
 
 Aufruf: python re15_port/tools/r36_p/texte_bauen.py          (schreibt die .inc)
         python re15_port/tools/r36_p/texte_bauen.py --check  (prueft nur, schreibt nichts)
@@ -143,20 +151,40 @@ def kopf_px(kopf):
 
 # (Raum, Id, C-Name, neue Zeilen, Grund) — P4 UMSCHREIBEN (Kopf/Schwanz = Original derselben Id)
 UMSCHREIBEN = [
-    ("30C1", 3, "k_s36_30c1_m3", ["Leon? I don't know him.", "I never ran into him at the RPD."],
-     "Elza fragte nach Leon und sprach von einer Trennung im RPD = Bekanntschaft"),
-    ("30C1", 4, "k_s36_30c1_m4", ["He's a rookie, and he's helping", "me and Ada escape the city."],
-     "Antwort auf 'How is he?' setzte Elzas Sorge um Leon voraus"),
-    ("30C1", 7, "k_s36_30c1_m7", ["Will you tell them that me and John", "and Sherry are here and we're all right?"],
-     "'tell him ... we're all right' = persoenliche Nachricht an einen Bekannten"),
-    ("6030", 1, "k_s36_6030_m1", ["Is anyone else with you?"],
-     "Leon fragte nach Elza beim Namen"),
-    ("6030", 2, "k_s36_6030_m2", ["Elza is out there fighting", "the monsters!"],
-     "Sherry nennt Elza jetzt als Fremde beim Namen (Antwort auf die neue Frage)"),
-    ("6030", 12, "k_s36_6030_m12", ["I've never met her.", "Can you start this thing?"],
-     "Annette (sub08, Zug vorne, Eintritt Cut 0) kann VOR der Wagen-Szene (sub02) kommen: Spawn aus 6000 "
-     "(-17970,-20380) liegt oestlich der Marke Slot 5 x[-19730..-18130], die Tuer nach vorne Slot 1 bei x -9300 "
-     "- dann wusste Leon ohne Sherry, was Elza tut = Bekanntschaft"),
+    # Runde 41 ST80-T, 30C1 (Elza trifft Marvin am Tresen, 80 % K074 / Foto #058): Nutzerentscheid "auf die kurze Fassung".
+    # Die Szene ruft nur noch msg 1..5 (gen/story80_szenen.inc); msg 6..8 laufen nicht mehr. Sprecherkopf je Id wie heute
+    # (msg 2 "Officer:" = Original-Kopf @0x00EF0, Elza stellt sich ihm erst vor).
+    ("30C1", 2, "k_s36_30c1_m2", ["Marvin Branagh, RPD."],
+     "ST80-T 30C1 kurze Fassung (Nutzer): Marvin stellt sich vor, ohne Leon"),
+    ("30C1", 3, "k_s36_30c1_m3", ["Are there any others still alive?"],
+     "ST80-T 30C1 kurze Fassung (Nutzer); Runde 36 'Leon? I don't know him...' entfaellt"),
+    ("30C1", 4, "k_s36_30c1_m4", ["A few. There are other", "survivors out there."],
+     "ST80-T 30C1 kurze Fassung (Nutzer); Runde 36 'He's a rookie...' entfaellt"),
+    ("30C1", 5, "k_s36_30c1_m5", ["Then I hope they make it out."],
+     "ST80-T 30C1 kurze Fassung (Nutzer), letzte Zeile, danach Marvins Abgang"),
+    # Runde 41 ST80-T, A1 (ABGLEICH.md): Disc D30E #12 ROOM30E1.RDT @0x0067D, gerufen (sub02 @0x358 Message_on 12):
+    # "umstellt" / "kein Versteck" statt "gebissen" / "Medikamente" (Fehllesung 囲まれ -> 噛まれ der Mod).
+    ("30E1", 2, "k_s41_30e1_m2", ["This is bad... those monsters", "have us surrounded!"],
+     "ST80-T A1 (Nutzer): Disc D30E #12 @0x0067D 囲まれ = umstellt, nicht gebissen"),
+    ("30E1", 3, "k_s41_30e1_m3", ["...Damn it, there's no place", "around here to hide..."],
+     "ST80-T A1 (Nutzer): Disc D30E #12 @0x0067D 隠れられそうな所 = Versteck, keine Medikamente"),
+    # Runde 41 ST80-T, 6030 Wagen-Szene (Leon, sub02): Nutzer-Lueckenfueller, Folge in gen/story80_szenen.inc.
+    ("6030", 1, "k_s36_6030_m1", ["Who are you two?"],
+     "ST80-T 6030 Wagen (Nutzer): Leon kennt John und Sherry nicht; Runde 36 'Is anyone else with you?' entfaellt"),
+    ("6030", 3, "k_s41_6030_m3", ["She's trying to keep the outside", "clear so we can escape."],
+     "ST80-T 6030 Wagen (Nutzer): ohne 'Yeah!'"),
+    ("6030", 5, "k_s41_6030_m5", ["She told me to stay with the kid...", "and look after your friend here."],
+     "ST80-T 6030 Wagen (Nutzer): Leon kennt Marvin, John nennt ihn nicht beim Namen"),
+    ("6030", 7, "k_s41_6030_m7", ["The woman in the lab coat?", "Up front, trying to start the train."],
+     "ST80-T 6030 Wagen (Nutzer): John kennt Annettes Namen nicht"),
+    ("6030", 8, "k_s41_6030_m8", ["I'll find out. Stay here."],
+     "ST80-T 6030 Wagen (Nutzer): letzte Zeile; 'I see. Thanks.' entfaellt"),
+    # Runde 41 ST80-T, 6030 Fuehrerstand (sub08): Nutzerbefund "der Anfang mit dem Biker Girl waere nur sinnvoll, wenn
+    # Leon sie auch kennen wuerde" -> PORT-WAHL, vom Nutzer freigegeben.
+    ("6030", 11, "k_s41_6030_m11", ["Is everyone aboard?"],
+     "ST80-T 6030 Fuehrerstand (Nutzer): statt 'Where's that biker girl?'"),
+    ("6030", 12, "k_s36_6030_m12", ["Everyone we could find. There's a", "little girl in the back... Sherry."],
+     "ST80-T 6030 Fuehrerstand (Nutzer): Runde 36 'I've never met her. Can you start this thing?' entfaellt"),
     ("6031", 0, "k_s36_6031_m0", ["Sherry! Is anyone else here?"],
      "Elza fragte nach Leon"),
     ("6031", 1, "k_s36_6031_m1", ["A policeman! He's fighting off", "monsters. He wants us to start the train."],
@@ -167,6 +195,24 @@ UMSCHREIBEN = [
      "'Your friends' = alle am Zug als Leons Freunde (Freund = Marvin, 50B0 msg 0)"),
     ("6000", 3, "k_s36_6000_m3", ["Come on. Let's join the others", "and get out of here."],
      "'Let's join your friends' wie msg 0"),
+]
+# Runde 36 entfallen (Runde 41 ST80-T): 30C1 msg 7 (die Szene ruft msg 7 nicht mehr), 6030 msg 2 (Sherry spricht wieder den
+# Original-Satz ROOM6030 @0x01416 "She's out there fighting the monsters!" = Nutzer-Zeile 4; John nennt Elza vorher in msg 21).
+
+# (Raum, Id, C-Name, Vorlage-Id (Kopf/Schwanz), Zeilen, Grund) — Runde 41 ST80-T DIALOG_NEU
+DIALOG_NEU = [
+    ("6030", 21, "k_s41_6030_m21", 3, ["Name's John. This is Sherry.", "We made it down here with", "a girl named Elza."],
+     "ST80-T 6030 Wagen Zeile 3 (Nutzer); Kopf John = msg 3 @0x0144E"),
+    ("6030", 22, "k_s41_6030_m22", 3, ["She said she'd catch up with us."],
+     "ST80-T 6030 Wagen Zeile 6 (Nutzer, Elzas Verbleib Variante a); Kopf John = msg 3"),
+    ("6030", 23, "k_s41_6030_m23", 2, ["A lab coat...? Is it Mom?!"],
+     "ST80-T 6030 Wagen Zeile 11 (Nutzer); Kopf Sherry = msg 2 @0x01416"),
+    ("6030", 24, "k_s41_6030_m24", 3, ["Easy, kid. Stay with me."],
+     "ST80-T 6030 Wagen Zeile 12 (Nutzer); Kopf John = msg 3"),
+    ("6030", 25, "k_s41_6030_m25", 11, ["Sherry...? My daughter is", "on this train? ...Thank God."],
+     "ST80-T 6030 Fuehrerstand c (Nutzer); Kopf Annette = msg 11 @0x015D1"),
+    ("6030", 26, "k_s41_6030_m26", 12, ["Can you start this thing?"],
+     "ST80-T 6030 Fuehrerstand d (Nutzer); Kopf Leon = msg 12 @0x015FC"),
 ]
 
 # (Raum, Id, C-Name, Seiten (je Liste von Zeilen), Grund) — P2/P3 NEU, Untersuchungstext
@@ -214,7 +260,28 @@ def bauen():
             fehler.append("%s msg %d: %d B > %d" % (room, mid, len(neu), MAX_LEN))
         eintraege.append(dict(room=room, mid=mid, name=name, bytes=neu, orig=orig, off=off,
                               alt=decode(orig), neu=decode(neu), breiten=breiten, grund=grund,
-                              kopf=len(kopf), art="umschreiben"))
+                              kopf=len(kopf), art="umschreiben", vorlage=mid))
+    for room, mid, name, vorlage, zeilen, grund in DIALOG_NEU:
+        d = rdt(room)
+        ms = struct.unpack_from("<I", d, 0x3C)[0]
+        n_rdt = (d[ms] | d[ms + 1] << 8) // 2
+        if mid < n_rdt or mid >= 32:
+            raise SystemExit("%s msg %d: neue Id muss hinter den %d RDT-Nachrichten liegen und < 32 sein" % (room, mid, n_rdt))
+        off, orig = msg_raw(room, vorlage)
+        kopf, schwanz = split_dialog(orig)
+        body = bytes([0x08]).join(enc(z) for z in zeilen)
+        neu = kopf + body + schwanz
+        breiten = [kopf_px(kopf) + px(enc(zeilen[0]))] + [px(enc(z)) for z in zeilen[1:]]
+        for i in range(len(zeilen)):
+            if breiten[i] > MAX_PX:
+                fehler.append("%s msg %d: Zeile %d = %d px > %d" % (room, mid, i + 1, breiten[i], MAX_PX))
+        if len(zeilen) > 3:
+            fehler.append("%s msg %d: %d Zeilen > 3" % (room, mid, len(zeilen)))
+        if len(neu) > MAX_LEN:
+            fehler.append("%s msg %d: %d B > %d" % (room, mid, len(neu), MAX_LEN))
+        eintraege.append(dict(room=room, mid=mid, name=name, bytes=neu, orig=orig, off=0, voff=off,
+                              alt="", neu=decode(neu), breiten=breiten, grund=grund,
+                              kopf=len(kopf), art="dialog_neu", vorlage=vorlage))
     for room, mid, name, seiten, grund in NEU:
         body = b"\x02\x00".join(b"\x08".join(enc(z) for z in s) for s in seiten)
         neu = bytes([0x04, 0x02]) + body + bytes([0x01, 0x00])
@@ -224,7 +291,7 @@ def bauen():
         if len(neu) > MAX_LEN:
             fehler.append("%s msg %d: %d B > %d" % (room, mid, len(neu), MAX_LEN))
         eintraege.append(dict(room=room, mid=mid, name=name, bytes=neu, orig=b"", off=0,
-                              alt="", neu=decode(neu), breiten=breiten, grund=grund, kopf=2, art="neu"))
+                              alt="", neu=decode(neu), breiten=breiten, grund=grund, kopf=2, art="neu", vorlage=0xFF))
     for room, mid, name, seiten, grund in UNTERSUCHEN:
         off, orig = msg_raw(room, mid)
         if orig[:2] != bytes([0x04, 0x02]) or orig[-2:] != bytes([0x01, 0x00]):
@@ -246,7 +313,7 @@ def bauen():
             fehler.append("%s msg %d: %d B > %d" % (room, mid, len(neu), MAX_LEN))
         eintraege.append(dict(room=room, mid=mid, name=name, bytes=neu, orig=orig, off=off,
                               alt=decode(orig), neu=decode(neu), breiten=breiten, grund=grund,
-                              kopf=2, art="untersuchen"))
+                              kopf=2, art="untersuchen", vorlage=mid))
     return eintraege, fehler
 
 
@@ -258,13 +325,16 @@ def schreiben(eintraege):
     L = []
     L.append("/* AUTO-GENERIERT von re15_port/tools/r36_p/texte_bauen.py — NICHT von Hand aendern.")
     L.append(" * Runde 36 Spur P (story). Form/Belege: Kopf des Skripts + analysis/befunde_runde36/P_story.md.")
-    L.append(" * Wortlaut = PORT-WAHL (Nachtrag AUFTRAG.md 14:00). */")
+    L.append(" * Wortlaut = PORT-WAHL (Nachtrag AUFTRAG.md 14:00); Runde 41 ST80-T: Nutzerentscheide analysis/story80/TEXTE_UMSETZUNG.md. */")
     L.append("")
     for e in eintraege:
         L.append("/* ROOM%s msg %d (%s) — %s" % (e["room"], e["mid"], e["art"], e["grund"]))
         if e["art"] in ("umschreiben", "untersuchen"):
             L.append(" *   alt @0x%05X (%d B): \"%s\"" % (e["off"], len(e["orig"]), e["alt"]))
             L.append(" *   Kopf %d B + Schwanz %d B = Original-Bytes derselben Nachricht" % (e["kopf"], 4 if e["art"] == "umschreiben" else 2))
+        if e["art"] == "dialog_neu":
+            L.append(" *   neue Id; Kopf %d B + Schwanz 4 B = Original-Bytes der Vorlage msg %d @0x%05X \"%s\""
+                     % (e["kopf"], e["vorlage"], e["voff"], decode(e["orig"])))
         L.append(" *   neu (%d B): \"%s\"" % (len(e["bytes"]), e["neu"]))
         L.append(" *   Zeilenbreiten px: %s (Grenze %d) */" % (", ".join(str(b) for b in e["breiten"]), MAX_PX))
         hexs = ["0x%02x" % b for b in e["bytes"]]
@@ -273,11 +343,13 @@ def schreiben(eintraege):
             L.append("    " + ",".join(hexs[i:i + 16]) + ",")
         L.append("};")
         L.append("")
+    ART = {"umschreiben": "RE15_S36_ART_UMSCHREIBEN", "neu": "RE15_S36_ART_PLATZ",
+           "dialog_neu": "RE15_S36_ART_DIALOG_NEU", "untersuchen": "RE15_S36_ART_UNTERSUCHEN"}
     L.append("static const re15_story_r36_text_t k_s36_texte[] = {")
     for e in eintraege:
         L.append("    { 0x%s, %2d, %s, (uint8_t)sizeof %s, 0x%05X, %s,"
                  % (e["room"], e["mid"], e["name"], e["name"], e["off"], c_str(e["alt"])))
-        L.append("      %s }," % c_str(e["neu"]))
+        L.append("      %s, %s, %d }," % (c_str(e["neu"]), ART[e["art"]], e["vorlage"]))
     L.append("};")
     L.append("")
     data = "\n".join(L)

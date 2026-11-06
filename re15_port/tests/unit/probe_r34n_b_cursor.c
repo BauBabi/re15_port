@@ -16,7 +16,7 @@
  *   kuppel    R2  Engine-Projektion der Kuppel (Deckel Prop 1/2 + Podest aus Prop 0) unter Cut 4 bei
  *                 Plattform @0x0FB4 = die Huelle im Modul (+-1 px); Start nicht drin, Kuppelmitte drin,
  *                 Punkte knapp ausserhalb nicht drin
- *   ablauf    R3  Fehldruck -> "Nothing happened." (Id 20, Bytes, Maske 0xffff0000, kein Klick, Halt
+ *   ablauf    R3  Fehldruck -> "Nothing happened." (Id 21 seit Runde 41 ST80-T, Bytes, Maske 0xffff0000, kein Klick, Halt
  *                 bleibt), Text zu, D-Pad (18x RIGHT+DOWN, 4x DOWN) -> Heisspunkt (208,177) in der
  *                 Kuppel, Druck -> Klick (RE2 0x0A) und im SELBEN Takt Deckel +-10, nach 15 Takten
  *                 +-150; Rest von sub04 unveraendert: Sicherung/Granate in der Ruhe oben (y -1205),
@@ -316,7 +316,7 @@ static void r3_ablauf(int mit_r4)
            (unsigned)g_re15_pauseflags, g_test_panel_se_count, (long)(t->pc - s_rdt.raw));
     static const uint8_t k_bytes[] = { 0x04,0x02, 0x2a,0x4b,0x50,0x44,0x45,0x4a,0x43, 0x00,0x44,0x3d,0x4c,
                                        0x4c,0x41,0x4a,0x41,0x40, 0x57, 0x01,0x00 };
-    pruefe(6, "Fehldruck: \"Nothing happened.\" (Id 20, Bytes wie Kopf), Maske 0xffff0000, KEIN Klick, Halt bleibt",
+    pruefe(6, "Fehldruck: \"Nothing happened.\" (Id 21, Bytes wie Kopf), Maske 0xffff0000, KEIN Klick, Halt bleibt",
            g_re15_hebetisch_text_zaehler == 1 && g_scd.message_active && g_scd.message_id == RE15_HC_TEXT_ID &&
            raw && len == (int)sizeof k_bytes && memcmp(raw, k_bytes, sizeof k_bytes) == 0 &&
            tlen == (int)sizeof k_bytes && memcmp(soll, k_bytes, sizeof k_bytes) == 0 &&

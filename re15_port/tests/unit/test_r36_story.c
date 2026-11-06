@@ -298,13 +298,48 @@ static int teil_texte(void)
 {
     int n = 0;
     const re15_story_r36_text_t *tab = re15_story_r36_tabelle(&n);
-    int umgeschrieben = 0;
+    int umgeschrieben = 0, neu_dialog = 0;
     for (int i = 0; i < n; i++) {
         const re15_story_r36_text_t *t = &tab[i];
         char dec[256];
         int dn = re15_msg_decode_text(t->bytes, t->len, dec, sizeof dec);
         CHECK(dn > 0 && strcmp(dec, t->neu) == 0 && t->len <= 128,
               "ROOM%04X msg %d: Bytes dekodieren zu \"%s\" (%d B <= 128)", t->raum, t->id, dec, t->len);
+        if (t->art == RE15_S36_ART_DIALOG_NEU) {
+            /* Runde 41 ST80-T: neue Dialog-Id hinter den RDT-Nachrichten; Kopf/Schwanz = Original der Vorlage-Id */
+            neu_dialog++;
+            raum_t r;
+            if (raum_laden(&r, t->raum)) { CHECK(0, "ROOM%04X lesbar", t->raum); continue; }
+            const uint8_t *blk = r.rdt.messages;
+            int bs = (int)r.rdt.messages_size;
+            int nmsg = (blk[0] | (blk[1] << 8)) / 2;
+            int o0 = blk[t->vorlage * 2] | (blk[t->vorlage * 2 + 1] << 8);
+            const uint8_t *vo = blk + o0;
+            int vlen = 0, kopf = 0;
+            while (o0 + vlen < bs && vo[vlen] != 0x01) {
+                uint8_t b = vo[vlen];
+                vlen += (b == 0x02 || b == 0x04 || b == 0x05 || b == 0x06 || b == 0x09 || b == 0x0A || b == 0x0B) ? 2 : 1;
+            }
+            vlen += 2;
+            for (int k = 0; k + 3 < vlen; k++)
+                if (vo[k] == 0x16 && vo[k + 1] == 0x05 && vo[k + 2] == 0x00 && vo[k + 3] == 0x00) { kopf = k + 4; break; }
+            CHECK(t->id >= nmsg && t->id < 32 && t->off_alt == 0 && t->alt[0] == 0 && t->vorlage < nmsg,
+                  "ROOM%04X msg %d: neue Id (RDT hat %d), < 32, Vorlage msg %d", t->raum, t->id, nmsg, t->vorlage);
+            CHECK(kopf > 4 && memcmp(t->bytes, vo, (size_t)kopf) == 0 &&
+                  memcmp(t->bytes + t->len - 4, vo + vlen - 4, 4) == 0,
+                  "ROOM%04X msg %d: Kopf %d B und Schwanz 4 B = Vorlage msg %d", t->raum, t->id, kopf, t->vorlage);
+            CHECK(re15_msg_compute_duration(t->bytes, t->len, 0) == re15_msg_compute_duration(vo, (size_t)vlen, 0),
+                  "ROOM%04X msg %d: Dauer = Vorlage", t->raum, t->id);
+            g_current_room_id = t->raum;
+            re15_msg_clear_room_block();
+            re15_msg_load_room_block(blk, bs);
+            int rl = 0;
+            const unsigned char *raw = re15_msg_get_raw(t->id, &rl);
+            CHECK(text_ist(t->id, t->neu) && raw && rl == t->len && memcmp(raw, t->bytes, (size_t)rl) == 0,
+                  "ROOM%04X msg %d nach dem Laden: \"%s\"", t->raum, t->id, re15_msg_get_text(t->id));
+            free(r.buf);
+            continue;
+        }
         if (t->off_alt == 0) continue;
         umgeschrieben++;
         raum_t r;
@@ -361,8 +396,9 @@ static int teil_texte(void)
         CHECK(fremd == 0, "ROOM%04X: alle anderen %d Nachrichten bytegleich zur RDT", t->raum, nmsg - 1);
         free(r.buf);
     }
-    CHECK(umgeschrieben == 12, "P4: %d umgeschriebene Nachrichten (30C1 3/4/7, 6030 1/2/12, 6031 0/1, 50B0 1, 6000 0/3; "
-          "Runde 37 Spur F: 50B1 0)", umgeschrieben);
+    CHECK(umgeschrieben == 19, "P4: %d umgeschriebene Nachrichten (Runde 41 ST80-T: 30C1 2/3/4/5, 30E1 2/3, "
+          "6030 1/3/5/7/8/11/12; Runde 36: 6031 0/1, 50B0 1, 6000 0/3; Runde 37 Spur F: 50B1 0)", umgeschrieben);
+    CHECK(neu_dialog == 6, "Runde 41 ST80-T: %d neue Dialog-Ids (6030 21..26)", neu_dialog);
     return 0;
 }
 
@@ -373,9 +409,8 @@ static const erlaubt_t k_erlaubt[] = {
     { 0x3060, 1, "unbenutzt (einziges Message_on @0x01034 = msg 9)" },
     { 0x3060, 2, "unbenutzt" }, { 0x3060, 3, "unbenutzt" }, { 0x3060, 4, "unbenutzt" },
     { 0x3060, 5, "unbenutzt" }, { 0x3060, 6, "unbenutzt" }, { 0x3060, 7, "unbenutzt" }, { 0x3060, 8, "unbenutzt" },
-    { 0x6030, 2, "Sherry nennt Elza als Fremde (neu)" },
-    { 0x30C1, 2, "Marvin nennt seinen Begleiter" },
-    { 0x30C1, 3, "Elza: kennt ihn nicht (neu)" },
+    { 0x6030, 21, "John nennt Elza (Runde 41 ST80-T, Nutzer-Lueckenfueller)" },
+    { 0x30C1, 7, "unbenutzt seit Runde 41 ST80-T: die kurze Fassung (k_s80_30c1_sub03) ruft nur msg 1..5" },
 };
 static const char *const k_verboten[] = {
     "How is he", "separated", "Where's Elza", "Where's Leon", "He wants you", "Your other friends",
@@ -443,8 +478,8 @@ static int teil_reihenfolge(void)
         CHECK(text_ist(20, zeile(0x1091, 20)->neu) && g_aot.slots[5].event_id == 20,
               "%s ROOM1091: msg 20 + Slot 5 stehen", weg);
         hochfahren_ex(&m, -18930, 0, -22420, 0, NULL, 0, tuer);
-        CHECK(text_ist(1, zeile(0x6030, 1)->neu) && text_ist(2, zeile(0x6030, 2)->neu),
-              "%s ROOM6030: msg 1/2 umgeschrieben", weg);
+        CHECK(text_ist(1, zeile(0x6030, 1)->neu) && text_ist(21, zeile(0x6030, 21)->neu),
+              "%s ROOM6030: msg 1 umgeschrieben, msg 21 neu (Runde 41 ST80-T)", weg);
     }
     return 0;
 }

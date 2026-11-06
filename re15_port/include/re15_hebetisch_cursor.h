@@ -111,7 +111,7 @@
  *   "...") bewusst OHNE fuehrendes 0x08 und mit EINEM Punkt (Auflage 6): STAGE1 fuehrt 0x08 nur in
  *   6 von 360 Untersuchungstexten, ROOM1150 msg 0/1/3 (@0x1316/@0x1385/@0x1426) nie; einzeilige
  *   Texte schliessen 256x mit '.' gegen 39x '...' (tools/r34n_b/textform_zensus.py); der Nutzer
- *   schreibt den Satz ohne Auslassungspunkte. Nachrichten-Id 20 (VERTRAG §1.3; ROOM1150 hat 15
+ *   schreibt den Satz ohne Auslassungspunkte. Nachrichten-Id 21 (seit Runde 41 ST80-T, vorher 20; ROOM1150 hat 15
  *   Texte, Sektion @0x012F8, ROOM1151 4, @0x010EC).
  * Abbruch (Auflage 4, Vorbild 11F0 EXIT -> sub17 @0x015FA): virtuelle Abbruchtaste 0x8000
  *   (<- CROSS, Preset @0x80073dbc[15] = 64 = roh 0x40), dieselbe Taste, die Texte und Menues
@@ -180,7 +180,12 @@
 #define RE15_HC_KAM_TGT_Z        22617
 
 /* ---- Text ---------------------------------------------------------------------------------- */
-#define RE15_HC_TEXT_ID          20        /* VERTRAG §1.3 Spur B; < MSG_TABLE_N 32 */
+/* Runde 41 Spur ST80-T (Abgleich f.2, gemessen unit_r41_story80_hebetisch1151): Id 20 war in ROOM1151 doppelt belegt —
+ * elza_r36.c legt Irons' Text "He has already passed..." als Id 20 ab (RE15_ELZA_IRONS_MSG_ID) und
+ * re15_scd_show_message liest die Tabelle ohne neu einzusetzen; nach einem Fehldruck zeigte Irons "Nothing happened.".
+ * Jetzt eigene Id 21: in ROOM1150 belegt sind 0..14 (RDT, Sektion @0x012F8), 22..29 (irons_tod_1150.c), 30/31
+ * (kartenitems_r36.h); in ROOM1151 0..3 (RDT @0x010EC), 20 (elza_r36.h), 30/31; 21 nirgends (grep aller Arbeitsbaeume). */
+#define RE15_HC_TEXT_ID          21        /* < MSG_TABLE_N 32 (PSX) */
 #define RE15_HC_TEXT_MASKE       0xFFFF0000u /* sce-1 @0x80043098/@0x800430a4; 4020 `2b 01 ff ff` @0x00B44 */
 
 /* ---- Trefferflaeche (Deckel + Podest unter Cut 4, 320x240, im Uhrzeigersinn) --------------- */

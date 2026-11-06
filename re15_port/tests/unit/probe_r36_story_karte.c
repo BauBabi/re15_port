@@ -26,6 +26,9 @@
  *             Annette schon gesehen (sub00 @0x00F40 startet es sonst); 3 s vorwaerts -> Marke Slot 5 @0x00CC6
  *             -> sub02 (msg 0..8)
  *   vor6031   Elza ROOM6001 dito (Tuer Slot 3 @0x00DDA -> 6031 Cut 6 -> sub06 @0x00E42) -> sub02 (msg 0..2)
+ *   john30e1  Elza ROOM30E1 (-25470,0,-22730) = Pos_set sub02 @0x00B78, mit (3,0xB5)=1 und cut=0: sub00 @0x00AF4
+ *             Case 0 -> Gosub sub03 @0x00EA4 Ck(3,0xB5)=1 -> John/Sherry + Evt_exec sub02 (msg 0..17)
+ *             (Runde 41 ST80-T, Bildbeleg A1)
  * Zusatz:
  *   strom     (4,0xF3) = 1 (Generator, ROOM11F0 sub18 @0x016F6)
  *   cut=N     gespeicherter Kamera-Cut (CONTINUE stellt ihn her, main.c s_resume_cut) — fuer Bildbelege
@@ -61,6 +64,7 @@ static const stand_t k_staende[] = {
     { "vor6030",  0x6000, 0,   1763, -3600,  -9700, 1024 },
     { "vor6031",  0x6001, 1,   1763, -3600,  -9700, 1024 },
     { "feuer",    0x1090, 0,      0, -1800,    250,    0 },   /* Gegenstueck zu "schuppen": Leon vor dem Feuer */
+    { "john30e1", 0x30E1, 1, -25470,     0, -22730,    0 },   /* Runde 41 ST80-T: Elza trifft John in 30E1 */
 };
 
 int main(int argc, char **argv)
@@ -88,6 +92,7 @@ int main(int argc, char **argv)
     if (strom) re15_game_flag_set(RE15_S36_STROM_BANK, RE15_S36_STROM_BIT, 1);
     if (s->raum == 0x11E0) re15_game_flag_set(3, 0x8B, 1);
     if (s->raum == 0x30C1) re15_game_flag_set(3, 0x39, 1);
+    if (s->raum == 0x30E1) re15_game_flag_set(3, 0xB5, 1);   /* sub03 @0x00EA8 Ck(3,0xB5)=1 (Runde 41 ST80-T) */
     if (strcmp(s->name, "vor6030") == 0) re15_game_flag_set(3, 0x64, 1);   /* Annette-Treffen 6000 gesehen */
 
     if (cut >= 0) g_scd.cam_id = (uint8_t)cut;   /* gespeicherter Kamera-Cut (re15_savedata camera_cut, v3) */
