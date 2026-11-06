@@ -1197,3 +1197,132 @@ R25b/R26b (Knicke). ctest unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r
 7. schwanz_r41.c SW_GLATT_MIN 12 Grad und SW_GLATT_RAND 3 Grad weiter ohne eigene Messreihe (Zahlen-Pruefer 5); MAX 16 gegen 22 geprobt.
 8. R31 Glied 0 0,046 (Grenze 0,045) bleibt knapp: Deckel ohne Texelflaeche; ohne Deckel R25 rot.
 9. Ende Hand/Kralle (F2) weiter Nutzerwahl; PSX-Pruefung der Feder-Kette offen.
+
+
+## V4 nach der Nutzer-Beschreibung (Runde 41, 2026-11-06/07, Messblatt V4, Bauer Runde 1)
+
+### Nutzer-Wortlaut
+"Da du offenbar nicht in der Lage bist das beim Original Material vom 2 Beiner Birkin richtig zu erkennen, habe ich dir das mit
+Beschreibung1 und Beschreibung2 und Beschreibung1_Vorlage und Beschreibung2_Vorlage auch noch mal im Detail beschrieben. Ich will
+EXAKT diese Umsetzung und auch EXAKT seine Farben." Vorlage sind ab jetzt die Original-Videobilder n1485 (vorn, h135) und n1435
+(seitlich, h85) mit der Beschriftung, nicht mehr die KI-Fassung.
+
+### Lesung (SF_MESSBLATT_V4.md, Pruefer)
+- Vorn: Das Auge ist ein heller Fleck (46,9 / 7,2 / -1,1) 0,050 H (W)-rechts der Kopfmitte. (W)-links liegt ein dunkles Haarfeld
+  (13,3 / 7,4 / 1,5), die Nase ist mitteldunkel. Die Kopfoberseite ist rot (22,6 / 15,4 / 5,2), das Kinn dunkel.
+- Seitlich: Das Auge ist ein heller Fleck 0,049 H hinter der Kopf-Vorderkante. Vor ihm liegt ein dunkler Haarstreifen, oben ist der
+  Kopf rot.
+- Schwanz: Der Ansatz laeuft waagerecht nach hinten und biegt dann um 70-90 Grad nach unten. Am Knick sitzt die Taille. Nach oben
+  zum Ruecken wird der Schwanz breiter, darunter folgt ein gleich breites Endstueck. Er ist zweitoenig: Wurzel und Unterseite
+  rotbraun, aussen dunkelgrau.
+- Farben im Videoraum. Die Vergleichsregel lautet: Port-Render, Gauss sigma 1,5, dann V = a + b x P.
+
+### Aenderungen (Commit adfab2a13)
+- Koerper = Referenz 2: Die Meshes 0-8 und 10-15, das Skelett 0-15, alle Keyframes 0-15 und das EDD sind byte-gleich (G1).
+  Referenz 2 neu gebaut ergibt cfd1ac42, der Pin ist unveraendert. Das Spiel-Asset bleibt unveraendert.
+- Schwanz (SCHWANZ_V4, birkin_formen.py): Die Gelenke 16-22 kommen direkt aus den Bildmassen der Vorlage-2-Kamera und werden auf die
+  Mittelebene rueckprojiziert. Der Ruhewinkel betraegt an der Biegung (Gelenk 19) 60,0 Grad, an den uebrigen Gelenken 6-12 Grad.
+  Die Durchmesser je Gelenk sind 0,16 / 0,15 / 0,153 / 0,128 / 0,0475 / 0,022 (Knick) / 0,038 / 0,038 H. Nachgestellt wurde mit
+  form_suche_v4.py (6 Runden) und gitter_v4.py. Die Textur liegt in TPage 130 u 64-127 mit CLUT-Zeile 487, in vier Farbklassen
+  (Wurzel, Aussenseite, Unterseite, Endstueck). Die Texeldichte ist 0,068 je E.
+- Kopf (KOPF_V4): Mesh 9 ist skaliert (Tiefe 1,3, Hoehe 0,9, Breite 1,4). Die (W)-linke Gesichtshaelfte ist bis zum Mund um 200 E.
+  nach vorn gebaut (Haare bilden seitlich die Vorderkante). Dazu kommt 1 Viereck als Haarstraehne an der Vorderkante (M2: 111
+  Dreiecke). Die UVs sind je Flaeche die Projektion der naeheren Vorlage-Kamera. Das Kopfbild liegt in TPage 128 v 160-223 mit
+  CLUT-Zeile 486.
+- Ein Auge fuer beide Ansichten: Der Augenpunkt liegt auf der Kopfoberflaeche (Strahl aus der Vorderkamera bei K4 0,050 / 0,12 H)
+  und ist in beiden Bildern als 3D-Ellipsoid gemalt. Ohne Vorbau lag die K4-Stelle seitlich an der Kante (S2 0,00-0,02 H,
+  augenpunkt_v4.py), mit Vorbau liegt sie bei 0,046 H.
+- Farben (eichen_v4.py, farben_v4.npz):
+  1. Ein Code-Render liefert je Bildpunkt Texelzeile und Index.
+  2. Der weisse Pruefkoerper (Texel 248) liefert das Licht lambda.
+  3. Das Regionsmittel nach der Vergleichsregel ist linear in den Texelfarben.
+  4. Kopf und Schwanz bekommen Zonenfarben, geloest mit kleinsten Quadraten gegen die Fenster des Messblatts. Die zusaetzlichen
+     Fenster KV6/KV8/KV9 und KS3-KS6 sind an den Originalen gemessen (Protokoll eichung_v4_protokoll.json).
+  5. Fuer den Koerper werden die Hautzeilen 480-482 mit Faktor R/G/B und Kontrastexponent gefittet, die Jeans mit eigenen Faktoren.
+     Die Texel bleiben dabei unveraendert.
+  6. Die Hautstruktur sind 16 Helligkeitsstufen, amp = 2 x Hochpass-Std der Originalfenster. In 4 Zonen ist sie halbiert, weil sie
+     dort Nebenkomponenten ueber der K1/S1-Schwelle bildete.
+- Engine (schwanz_r41.c): SW_GLATT_KNICK_AB = 30 Grad. Ein Gelenk mit Keyframe-Winkel ueber 30 Grad behaelt Winkel + 3 Grad. Fuer
+  V3 und Referenz 2 aendert sich nichts. Dieselbe Regel gilt beim Nachschwingen (knick "ab").
+- Posen (posen_v4.json): "85" = sfv2 "85". "135" ist neu an die Silhouette von n1485 angepasst (IoU 0,619). Diese Pose steht
+  aufrechter und naeher als das Original; die Sohle liegt unter dem Bild, daher gilt H_port = 364 auf der verlaengerten Leinwand.
+  Eine Anpassung mit festgehaltener Sohle erreichte nur IoU 0,560.
+
+### Riegel-Tabelle (riegel_v4.py, EM30_V4.EMD sha256 0dddbdbe..., Lauf sfv4/r/V4; Exit 1)
+| Mass | Soll | Ist | |
+|---|---|---|---|
+| G1 Koerper-Geometrie = Ref2 | Meshes 0-8, 10-15 byte-gleich; Skelett/Keyframes 0-15, EDD gleich | abweichend keine; Skelett True; Keyframes True; EDD True; uebrige Sektionen True; Ref2 sha256 cfd1ac42 | OK |
+| M1 Dreiecke Schwanz | <= 212 | 160 ([30, 20, 20, 20, 20, 20, 30]) | OK |
+| M2 Dreiecke Kopf | <= 118 | 111 | OK |
+| M3 Farbtiefe | 8-bpp-TIM, Texel aus der CLUT | 8 bpp True; CLUT-Zeilen Kopf [486], Schwanz [487] (TIM 8 Zeilen) | OK |
+| M4 Texeldichte | Kopf und Schwanz 0,045-0,091 Texel/E. | Kopf 0.062; Schwanz [0.049, 0.061, 0.063, 0.063, 0.065, 0.066, 0.06] | OK |
+| K1 Augen vorn | 1 Komponente; Kontrast >= 20 (Original 29,5) | 1 Komp.; 31.6 | OK |
+| K2 Augenfleck Farbe | 46,9/7,2/-1,1 dE00 <= 6; L* >= KV5 + 20 | 47.3/7.3/-1.4 dE00 0.5; L* 47.3 vs KV5 20.0 + 20 | OK |
+| K3 Augenfleck Groesse | B 0,016-0,036 / H 0,023-0,043 H | 0.022 x 0.036 H (8 x 13 px) | OK |
+| K4 Augenlage vorn | (B)-links 0,035-0,065 H; 0,07-0,12 H unter OK | 0.056 H links; 0.112 H unter OK | OK |
+| K5 Haarfeld vorn | 13,3/7,4/1,5 dE00 <= 6; L* <= Auge - 25 | 13.2/7.2/1.7 dE00 0.3; L* 13.2 vs 22.3 | OK |
+| K6 zweites Auge verdeckt | L* <= 18 (Original 12,9) | L* 11.2 (Box (370, 188, 377, 200)) | OK |
+| K7 Nase | 18,2/7,1/1,3 dE00 <= 6; L* zwischen Haar und Auge | 18.3/6.3/1.0 dE00 0.9 | OK |
+| K8 Kinn/Maulzone | 9,9/9,9/3,8 dE00 <= 6; Anteil L*>35 <= 0,05 | 11.9/13.2/4.3 dE00 3.1; Anteil 0.000 | OK |
+| K9 Kopf-Oberseite rot vorn | 22,6/15,4/5,2 dE00 <= 6; a* >= 11 | 22.9/15.4/5.4 dE00 0.2 | OK |
+| K10 Kopfbox vorn | 0,14-0,18 x 0,15-0,20 H | 0.143 x 0.187 H | OK |
+| S1 Auge seitlich | 48,4/4,0/0,5 dE00 <= 6; 0,028-0,052 x 0,040-0,070 H | 47.5/3.6/0.5 dE00 1.0; 0.023 x 0.030 H; 5 Komp. | ROT |
+| S2 Augenlage seitlich | 0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle | 0.046 H; 0.818 H | OK |
+| S3 Haarkante seitlich | L* <= 22; 19,1/1,2/1,1 dE00 <= 6; Abstand zum Fleck <= 0,01 H | 19.5/0.9/1.6 dE00 0.8; Abstand 0.008 H | OK |
+| S4 Kopf-Oberseite rot seitlich | 27,6/15,3/3,3 dE00 <= 6; a* >= 11 | 27.5/14.3/2.9 dE00 0.8 | OK |
+| T1 Schwanz Beginn | 0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03) | 0.214 H hinter, 0.727 H ueber (unterster Schwanz-Pixel an Id 7/8 (Id 16 versenkt)) | ROT |
+| T2 Biegung | dx -0,245 dy +0,036 (+-0,03); Drehung 60-100 Grad auf 0,10 H | dx -0.244 dy 0.025; 68 Grad | OK |
+| T3 Knick (Taille) | dx -0,265 dy +0,257 (+-0,03) | dx -0.263 dy 0.255 | OK |
+| T4 Ende | dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle | dx -0.241 dy 0.398; 0.330 H ueber Sohle | OK |
+| T5 Breite nach oben | f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 | 0.034/0.066/0.123/0.140 H; Abfall 0.002 | OK |
+| T6 Endstueck | B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste | B 0.028; L 0.144 H; 81 Grad (vorn); Taille 0.021, schmalste davor 0.021 | OK |
+| T8 Schwanzfarbe | F15 9,3/11,4/1,5; F16 8,7/8,4/2,2; F17 26,8/-0,1/2,4; F18 15,2/3,2/1,6; dE00 <= 6; a* Wurzel >= 7, Ende <= 6 | F15 9.3/8.5/3.2 dE00 3.0 (146 px); F16 9.2/8.7/3.2 dE00 0.9 (131 px); F17 26.6/-0.0/1.9 dE00 0.4 (2032 px); F18 15.5/3.4/1.9 dE00 0.3 (218 px) | OK |
+| T7 Gang h85 | T1-T4 je +-0,06 H | T1 (0.116, 0.659) (0.108) T2 (-0.244, 0.447) (0.411) T3 (-0.238, 0.476) (0.219) T4 (-0.221, 0.484) (0.087) (Laufpose clip 11 bild 64 gier 1893) | ROT |
+| T7 Gang h100 | T1-T4 je +-0,06 H | T1 (0.153, 0.617) (0.150) T2 (-0.316, 0.025) (0.071) T3 (-0.345, 0.033) (0.224) T4 (-0.341, 0.033) (0.364) (Laufpose clip 1 bild 10 gier 1515) | ROT |
+| T7 Gang h110 | T1-T4 je +-0,06 H | T1 (0.206, 0.723) (0.056) T2 (-0.372, 0.077) (0.127) T3 (-0.378, 0.163) (0.113) T4 (-0.305, 0.288) (0.109) (Laufpose clip 1 bild 20 gier 1515) | ROT |
+| T7 Gang h118 | T1-T4 je +-0,06 H | T1 (0.218, 0.735) (0.068) T2 (-0.231, 0.039) (0.014) T3 (-0.236, 0.275) (0.029) T4 (-0.253, 0.413) (0.016) (Laufpose clip 1 bild 28 gier 1515) | ROT |
+| T7 Gang h125 | T1-T4 je +-0,06 H | T1 (0.214, 0.727) (0.064) T2 (-0.255, -0.017) (0.053) T3 (-0.295, 0.207) (0.050) T4 (-0.267, 0.311) (0.086) (Laufpose clip 1 bild 35 gier 1515) | ROT |
+| T7 Gang h135 | T1-T4 je +-0,06 H | T1 (0.214, 0.723) (0.064) T2 (-0.232, 0.047) (0.013) T3 (-0.263, 0.293) (0.036) T4 (-0.284, 0.393) (0.039) (Laufpose clip 1 bild 45 gier 1513) | ROT |
+| F0 Lichtgegenprobe h118 | Rumpf b2 gegen FRAMEDUMP dE00 <= 3 | b2 22.6/11.9/4.0 / Spiel 22.5/12.0/4.1 dE00 0.1 (11424 px) | OK |
+| F0 Lichtgegenprobe h135 | Rumpf b2 gegen FRAMEDUMP dE00 <= 3 | b2 17.9/13.1/5.0 / Spiel 17.9/12.9/4.9 dE00 0.1 (12873 px) | OK |
+| F F6 | 16.6/17.3/6.2 dE00 <= 5, |dL| <= 4 | 16.1/15.2/6.1 dE00 1.5 dL -0.5 (8698 px) | OK |
+| F F7 | 33.3/5.5/2.7 dE00 <= 5, |dL| <= 4 | 36.1/8.7/1.5 dE00 4.2 dL +2.8 (2181 px) | OK |
+| F F8 | 16.4/8.3/1.5 dE00 <= 5, |dL| <= 4 | 40.6/6.4/0.4 dE00 18.5 dL +24.2 (3293 px) | ROT |
+| F F9 | 12.7/-0.9/-1.5 dE00 <= 5, |dL| <= 4 | 14.8/0.3/-2.4 dE00 2.4 dL +2.1 (4090 px) | OK |
+| F F10 | 11.2/14.0/2.5 dE00 <= 5, |dL| <= 4 | 11.0/13.5/1.4 dE00 0.8 dL -0.2 (677 px) (Id 12 (Klaue (B)-rechts); Id 15: nan/nan/nan (0 px)) | OK |
+| F F14 | 60.0/11.0/1.2 dE00 <= 5, |dL| <= 4 | 56.3/8.0/0.8 dE00 4.3 dL -3.7 (1256 px) | OK |
+| F F19 | 18.4/0.5/-3.5 dE00 <= 5, |dL| <= 4 | 15.6/-0.0/-2.1 dE00 2.4 dL -2.8 (1341 px) | OK |
+| F Mittel | Mittel dE00 <= 4 | 4.87 | ROT |
+| F0 Gueltigkeit Farbvergleich | Wand links 64,7/0,3/-2,1 dE00 <= 2 | 65.2/0.2/-2.5 dE00 0.52 | OK |
+
+Gegenprobe V3 r2 (riegel_V3r2_gegenprobe.md, 28 von 35 rot): K4 -0,035 H (falsche Seite), S2 0,086 / 0,906 H, T2 34 Grad,
+T3/T4 0,392 / 0,483 H, T6 0,091 H, T8 dE00 8,9-9,1, F6 9,6, F9 10,0, F14 18,7.
+
+Tests: unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41 und integration_r41_sichel_form laufen 4/4 gruen (64,6 s,
+SF_belege/v4/ctest_v4.txt).
+
+### Leisten (SF_belege/v4/)
+01_vorn_kamera12, 02_seite_wie_bild2, 03_kopf_nah_vorn_x4, 04_kopf_nah_seite_x4, 05_schwanz_x3, 06_farben, 07_gang,
+08_rundum_V4. Spalten: Nutzer-Vorlage | Nutzer-Beschriftung | V3 r2 | V4. Dazu kommen kopf_nah_vorn/seite_x6_eichung.png
+(Original | V4 mit den Fenstern).
+
+### Offen
+1. T1 (Beginn 0,214 / 0,727 H statt 0,15 / 0,767): Der Schwanz wird sichtbar an der Rueckenkontur der Figur Referenz 2. Diese liegt
+   in Pose 85 auf 0,77 H Hoehe 0,21 H hinter dem Scheitel. Getestet wurde, die Wurzel bis 0,49 H nach vorn und 0-0,20 H zur Kamera
+   zu legen; der Wert blieb bei 0,203-0,225. Abhilfe waere nur ueber den Koerper (G1, nicht erlaubt). Deshalb sind T2-T6 auf den
+   gemessenen Beginn bezogen.
+2. S1: Das Auge seitlich hat die richtige Farbe (dE00 1,0) und Lage (S2 gruen), zerfaellt aber in 5 Komponenten (0,023 x 0,030 H).
+   Ursache: Es sitzt an der Kante zwischen Vorder- und Seitenbild, dazu kommt die Straehne. Pruefbild kopf_nah_seite_x6_eichung.png.
+3. F8 (Oberarm (W)-links 40,6 statt 16,4): Beide Oberarme (Mesh 10 und 13) nutzen dieselbe Zeile 480 / Seite 128. Das Original ist
+   links 17 L* dunkler (Licht im Video), das Port-Licht nicht. Ueber die CLUT allein ist das nicht trennbar; dazu waeren eigene Texel
+   bzw. eine eigene CLUT-Zeile fuer Mesh 10 noetig, und die UVs sind G1. Das F-Mittel betraegt 4,87, ohne F8 2,6.
+4. T7: Der Spiellauf zeigt h84-h135 den Gang auf die Kamera zu; h85 ist dort Clip 11 (Halten). Gemessen wurde mit dem Feder-Stand
+   des Laufs an Pose 85. Fuer h118 und h135 liegt T2-T4 bei <= 0,039 H (gruen bis auf T1). h100-h125 weichen ab (0,05-0,36 H), weil
+   die Szene den Schwanz zur Seite schwingt (Seitenvorgabe Spur H) und das Nachschwingen nach der Freigabe wirkt.
+5. Das Schulterauge (Messblatt 8: "Stand V3 r2 bleibt") fehlt in V4. Es war ein Viereck auf Mesh 8, und G1 verlangt Mesh 8
+   byte-gleich. Offene Frage an den Pruefer/Nutzer: Schulterauge als Texel auf Mesh 8 (geteilte Texel?) oder weglassen?
+6. Koerperbild: Brust und Bauch sind nach der Eichung dunkelrot bzw. sehr dunkel. Das entspricht den Originalfenstern (Brust ohne
+   Maske 16,9 / 15,8 / 5,8, Bauch 9,4 / 1,3 / 2,3), die Hautzeichnung von Referenz 2 wirkt dadurch aber flaecher. Die Jeans sind
+   dunkel (F9 14,8 L*); A1 entscheidet am Bild.
+7. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme. Bis dahin liegt die EMD im Scratchpad sfv4/emd/EM30_V4.EMD und ist
+   reproduzierbar mit "birkin_formen.py --variante v4 --aus DIR".
