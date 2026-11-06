@@ -3,7 +3,7 @@ import numpy as np, sys
 from PIL import Image
 sys.path.insert(0, ".")
 from vram5 import vram, rgb
-L = r"C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g5nb5/lauf"
+L = r"C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g5nb6/lauf"   # NB6-Abschluss 2026-11-06: Laeufe lauf6.sh (fd_leon, fd_elza, nativ, fenster)
 v = vram(4)
 paare = [("x -6000", rgb(v[0:240, 0:320]).astype(int), sys.argv[1], 1581)]
 for name, a, lauf, f in paare:

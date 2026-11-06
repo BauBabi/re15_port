@@ -3,7 +3,7 @@ import subprocess, numpy as np, sys, os
 from PIL import Image, ImageDraw
 FF = r"C:/ProgramData/chocolatey/bin/ffmpeg"; VFPS = 59.817
 SRC = r"C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g5abn2/re2/re2_lauf1.mp4"
-L = r"C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g5nb5/lauf"
+L = r"C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g5nb6/lauf"   # NB6-Abschluss 2026-11-06: Laeufe lauf6.sh (fd_leon, fd_elza, nativ, fenster)
 def re2_t(n):
     if n <= 132: return 63.47 + n / 29.9
     if n <= 437: return 68.261 + (n - 133) / 29.9

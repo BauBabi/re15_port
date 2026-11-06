@@ -4,7 +4,7 @@ import subprocess, numpy as np, sys
 from PIL import Image, ImageDraw
 FF = r"C:/ProgramData/chocolatey/bin/ffmpeg"
 SRC = r"C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g5abn2/re2/re2_lauf1.mp4"
-L = r"C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g5nb5/lauf"
+L = r"C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g5nb6/lauf"   # NB6-Abschluss 2026-11-06: Laeufe lauf6.sh (fd_leon, fd_elza, nativ, fenster)
 out = sys.argv[1]; ks = [int(a) for a in sys.argv[2].split(",")]
 x0, y0, x1, y1 = [int(a) for a in sys.argv[3].split(",")]; sk = float(sys.argv[4]); laeufe = sys.argv[5].split(",")
 W, H = int((x1 - x0) * sk), int((y1 - y0) * sk)

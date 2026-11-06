@@ -5,7 +5,8 @@ von Birkin aus dem Zug, sollst du die letzte Stufe GENAUSO machen wie bei Reside
 eine Grossaufnahme an seitlich der offenen Stelle des Zuges, und dann kommen da zunaechst die Tentakel vom finalen Birkin G5, und
 der zieht ihn dann rein. Schau es dir an!"
 
-Stand: Nachbesserung 5 (Abschnitt 11; M4 Tunnellampen = RE2-Raumobjekte 3/4, Beben, Beben-Ton; Truemmer/Vibration offen). Davor Nachbesserung 4
+Stand: Nachbesserung 6 (Abschnitt 12; Truemmer/Staub sub05 ueber die RE2-FX-Maschine, Vibration sub14, Lampenlicht gemessen). Davor Nachbesserung 5
+(Abschnitt 11; M4 Tunnellampen = RE2-Raumobjekte 3/4, Beben, Beben-Ton). Davor Nachbesserung 4
 (Abschnitt 10) und Nachbesserung 3 (Abschnitt 9; Masse in Schnitt 16/17 mit Gewicht 1 gezeichnet, Vorkampf-Puls nach RE2 @0x801044FC; erledigt
 8.9 erster Punkt "Masse anders gedreht/hoeher"). Davor Nachbesserung 2 (Abschnitt 8; ersetzt in 2.2 die PORT-WAHL "Lichtsatz 16/17 = Cut 11" durch RE2-Lichtsatz 9/10 und in 7.5 die
 offenen Punkte Pistolenlauf, G5-Richtung, Speer-Phase, Uebergang Kampf). Davor Nachbesserung 1 nach Abnahme 1 (Abschnitt 7; ersetzt in
@@ -950,4 +951,166 @@ Nur eigene Prozesse (exe-Kopien `re15_g5nb5_*`) liefen; keiner musste beendet we
 - **Lampe ~15 % dunkler** (11.3): RE2s Objektlicht 0x80076f88 ist gegen re15_light_setup_actor nicht verglichen.
 - **Vorlauf 55 statt 59** (bekannt seit Abnahme 2): Ursache der Phasen-PORT-WAHL; die erste Lampe steht am Schnitt gemessen 4 Bilder frueher.
 - PSX-Bau: Lampen und Beben nur PC (wie Schnitte 16/17).
+- Nebenbefunde 10.6 und M3/M5/M6 unveraendert.
+
+## 12. Nachbesserung 6 (Truemmer/Staub sub05, Vibration sub14, Lampenlicht)
+
+Ausgangsstand: WIP-Sicherungen 7b1c3bf46 (Code, Riegel, Belege der ersten NB6-Sitzung, die am 2026-11-03 vom Wochenlimit abgebrochen wurde)
+und 4855570fe (R704.ESP). Diese Sitzung: Bestandsaufnahme, Belege selbst nachgelesen (RE2-EXE `info/re2leon/SLUS_007.48`, capstone,
+`nb5/werkzeug/re2dis.py`; Skript `re2_scd_dump.py ROOM7040 MAIN 4/5/6/13/14/15`), Riegel ergaenzt, ein toter Riegelteil gefunden (12.5),
+alle Laeufe und Leisten mit der Endfassung neu. Belege: `G5_belege/nb6/`. Ersetzt die ersten drei Punkte von 11.7.
+
+### 12.1 RE2-Befund
+
+**Truemmer/Staub (sub05):** sub04 @0x0169E `04 08 18 05` Evt_exec(8, sub05) im ersten sub04-Bild; Platz 8 > Platz 6, also laeuft sub05 im
+selben Bild (FUN_800536c4, Plaetze aufsteigend, 11.1). sub05 @0x016DE..@0x01776 (Bytes `re2_scd_dump.py ROOM7040 MAIN 5`):
+
+| Adresse | Bytes | Lage (x, y, z) | sub05-Bild |
+|---|---|---|---|
+| @0x016DE | `3a 00 19 00 00 00 00 10 24 04 50 ec f0 ab 00 00` | (1060, -5040, -21520) | 1 |
+| @0x016EE | `3a 00 19 00 00 00 00 10 b8 0b 50 ec 1f a0 00 00` | (3000, -5040, -24545) | 1 |
+| @0x016FE Sleep 5, @0x01702 | `.. 6e 0a 50 ec 84 a4 ..` | (2670, -5040, -23420) | 6 |
+| @0x01712 Sleep 5, @0x01716 | `.. f4 01 50 ec 0e 9d ..` | (500, -5040, -25330) | 11 |
+| @0x01726 Sleep 3, @0x0172A | `.. b8 0b 50 ec 1f a0 ..` | (3000, -5040, -24545) | 14 |
+| @0x0173A Sleep 5, @0x0173E / @0x0174E | `.. 6e 0a ..` / `.. 0e 0b 50 ec 9e ad ..` | (2670, -5040, -23420) / (2830, -5040, -21090) | 19 |
+| @0x0175E Sleep 5, @0x01762 | `.. f4 01 50 ec 0e 9d ..` | (500, -5040, -25330) | 24 |
+
+Sce_espr_on @0x800565a4 (`nb6/dis_belege.txt`): `lb a0,4(s1)` / `lhu a1,4(s1)` -> FUN_80056a38 (Matrix pc[4] = 0: Sprungtafel @0x80011470[0] =
+0x80056a78 -> `lui v0,0x800a / addiu v0,-0x24bc` = 0x8009DB44 Einheitsmatrix), `lhu s0,2(s1)` -> a0 = pc[2]<<24 | pc[3]<<16 | pc[6..7] =
+0x19001000 (@0x800565dc..@0x80056608), Lage pc[8..13] auf den Stapel (@0x800565e8..@0x8005660c), Gier `lh a1,0xe(s1)`, `jal 0x8001bf10`
+@0x80056614 (sofort lebendig), pc += 0x10 @0x80056620. Raum-ESP: ROOM7040.RDT Kopf [18] = 0x35D8 (Ids `19 ff ff ff ff ff ff ff`), [19] = 0x36F8
+(Bank 0x19: 11 Anim-Eintraege, 10 Zellen 40 x 40, Skripte sub0..2, `nb6/esp7040_dump.txt`), [20] = 0x18984 (TIM 10304 B, 4 bpp 64 x 80, bytegleich
+`GATOR40A0_19.TIM`); Raumlader FUN_8001bba4 -> FUN_8001bca0 (Registry Basis 8) / FUN_8001bd38 (VRAM-Fenster). RAM s01..s03
+(`nb6/messung_pool_s01_s03.txt`): Registry 0x800EAE48 `03 05 00 01 02 06 07 04 19 ff ..`, Bank 0x19 Kopf +4 CLUT 0x7812, +6 TPage 0x000F.
+Sub0 Step 0 OpA/OpB = 21 = Op 21 @0x8001f5a4 (`lui v0,0x309` @0x8001f5e4, `addiu a0,a0,0xb00` @0x8001f5fc, `jal 0x8001cbe8` @0x8001f600):
+jeder Brocken streut Staub (Bank 3 Sub 9). RAM s02 (= sub05-Bild 39): 18 lebende Plaetze = 5 Brocken (vel.y 348/312/252/252/192 = Alter
+29/26/21/21/16 bei acc 12 = Spawnbilder 11/14/19/19/24) + 13 Staubwolken (Skala 6912). **Skala der Effekte (camf):** FUN_80077924 liest sie aus
+dem RID-Satz des Schnitts, `lhu v0,0x66(v1)` @0x800779ac + `srl v0,v0,7` @0x800779bc; ROOM7040.RDT @0x184 (Schnitt 9) = 29623 -> 231,
+@0x1A4 (Schnitt 10) = 26684 -> 208.
+
+**Vibration:** Opcode-Tabelle @0x800a74c8: [0x8A] = 0x80059348, [0x8B] = 0x80059394, [0x8C] = 0x800593e4 (selbst gelesen).
+- 0x8A Vib_set0 @0x80059348: `lhu a0,2(v0)` @0x80059360, `lhu a1,4(v0)` @0x80059364, `jal 0x8003947c` @0x80059368 (Ring A, kleiner Motor), pc += 6.
+- 0x8B Vib_set1 @0x80059394: `lhu a0,2(v0)` (Dauer) @0x800593ac, `lbu a1,1(v0)` (Staerke) @0x800593b0, `lhu a2,4(v0)` (Vorlauf) @0x800593b4,
+  `jal 0x80039514` @0x800593b8 (Ring B, konstant), pc += 6.
+- 0x8C Vib_fade_set @0x800593e4: `lhu a0,4(v0)` (Dauer) @0x800593fc, `lbu a1,2(v0)` (von) @0x80059400, `lbu a2,3(v0)` (bis) @0x80059404,
+  `lhu a3,6(v0)` (Vorlauf) @0x80059408, `jal 0x800395b8` @0x8005940c (Ring B, Rampe), pc += 8.
+
+Skript: sub04 @0x016A2 `18 0e` Gosub sub14 im ersten sub04-Bild (vor dem ersten Beben @0x016A4). sub14 @0x01C02 `8c 00 64 c8 07 00 00 00` =
+Rampe(7, 100, 200, 0), @0x01C0A `8b fa 05 00 02 00` = Konstant(5, 250, 2), @0x01C10 `8c 00 c8 32 11 00 05 00` = Rampe(17, 200, 50, 5).
+sub13 @0x01BE4 (Vib_set0 + 3 x Ring B) ruft sub06 @0x0179E `18 0d` im Teil VOR Cut_chg(9) (Dossier 1.1: im Port durch Rueckstoss/Sturz der
+Riesenform ersetzt). sub15 @0x01C1A (6 x Vib_set1, Sleep 0x34, Goto) ist die Raumschleife in Platz 6 (MAIN sub00 @0x01296), beendet von sub06
+@0x01784 `05 06`. Beide gehoeren nicht zur Port-Szene. RAM s01..s03 (`nb6/messung_ring_ram.txt`): Ringe A/B leer, Aktuatoren 0x800CBC20/21 = 0 0.
+Ring-Takt FUN_800396FC und Aktuator-Tabelle: `include/re15_rumble.h` (Runde 18). Daraus die Soll-Folge Aktuator 1 je sub04-Bild 1..23:
+`114 128 250 250 250 250 250 173 164 155 147 138 129 120 111 102 94 85 76 67 58 50 0` (Rampe 1: Schritt 12800/7 = 1828; Rampe 2: -19200/17 =
+-1129, `div` schneidet gegen 0), Aktuator 0 bleibt 0. RE2 hat keinen Bild- oder Kameraleser fuer DAT_800CBC20 (nur PadSetAct, re15_rumble.h).
+
+**Lampenlicht:** RE2-Pakete der Lampe im RAM s04 (Objekt 4, Puffer 0, x -6000; FUN_80027bec RGB +4/+0x10/+0x1C, XY +8/+0x14/+0x20) gegen die
+Port-Messzeile RE15_G5A_LAMPE_FARBEN=-6000 (`nb6/messung_lampe_pakete_ot.txt`): **31 von 31 gezeichneten Polygonen mit gleichen Eckfarben und
+gleicher Bildlage**. Das Objektlicht 0x80076f88 (`jal` @0x800364ac) und re15_light_setup_actor/re15_light_shade_vertex (RE2-Lichtsatz 9) liefern
+also dieselben Farben; der Helligkeitsunterschied aus 11.3 kommt nicht vom Licht. 6 RE2-Polygone zeichnet der Port nicht: T05/T17 (Lage -16192,
+hinter der Kamera), T00/T09/T13 (x < 15, Farbe 36, ausserhalb des Tuerlochs), Q02 (Farbe 36, 2 x 3 Pixel bei x 106..107).
+OT wie RE2: Fach OTZ >> 3 (`srl v0,v0,1` / `andi 0xffc` @0x80027d60-64, @0x80027f94-98), unter 8 verworfen (@0x80027d34/@0x80027f68), vorn an
+das Fach gehaengt (@0x80027d6c-90), Dreiecke vor Vierecken abgegeben (@0x8003666c/@0x8003669c); RAM s04 Kette Q17 -> T16 -> T14 -> T04 -> T03.
+
+### 12.2 Was der Port tut
+
+| Teil | Datei | Inhalt |
+|---|---|---|
+| Brocken | `engine/src/g5auftritt_r41.c` `brocken_takt`, `k_brocken` | 8 x re2fx_spawn_sofort(0x19001000, 0, Einheitsmatrix, Lage) in den sub05-Bildern 1/1/6/11/14/19/19/24 ab Vorlaufbild 2 |
+| Raum-ESP | `platform/pc/src/gator_fx_r41_pc.c` | Satz-Tabelle je RE2-Vorlage: ROOM40A0 fuer 2090/2091, **ROOM7040 (R704.ESP) fuer 5090/5091**; FUN_8001bd38-Zwilling legt Bank 0x19 ins VRAM-Fenster (TIM `GATOR40A0_19.TIM`, bytegleich RDT[0x18984]), Atlas Platz 54 je Satzwechsel neu |
+| Effekt-Ops | `engine/src/re2_fx.c` | Op 21 (0x8001f5a4) war schon da (Runde 41 Spur P); `re2fx_op_unbekannt()` = 0 ueber die ganze Szene |
+| Effekt-Skala | `platform/pc/main.c` `pc_fx_set_camf` | Szenenschnitte 16/17: camf = RE2-RID +2 >> 7 (231 / 208) statt der fremden Bytes ROOM5090 @0x262/@0x282 |
+| Vibration | `engine/src/g5auftritt_r41.c` `vibration_sub14` | im ersten sub04-Bild re15_rumble_ramp(7,100,200,0), _large(5,250,2), _ramp(17,200,50,5) - dieselben Ring-Zwillinge wie G5-Kampf, 1120, 1121, Gator |
+| Vibration PC | `platform/pc/src/input_pc.c` `pad_rumble_tick` (Runde 18) | Ringe im Pad-Takt, Aktuator 1 -> SDL_GameControllerRumble low_frequency (x 257), Aktuator 0 -> high_frequency an/aus. Ohne Pad: nichts. **Kein Bildbeben** - RE2 hat keins (12.1); das Bildbeben der Szene ist Sce_shake_on (11.1) |
+| Lampe | `platform/pc/src/g5lampen_pc.c` | OT-Fach/Annahme wie RE2 (12.1); Abtastphase 0,5 nur fuer die Lampendreiecke (`render_pc.c` re15_render_pc_abtastphase_objekt) |
+| Daten | `tools/r41_g5auftritt/re2_m4_7040.py` -> `shared_assets/RE2/R704.ESP` | 292 B = RDT[0x35D8:0x36FC], sha256 `518c89ade773f7187afac0564d5dccf33dc585931fe7daac127a8a6b14b9a416`; Paket-Gate `release/make_package.sh` Runde-41-Liste (Pflicht + cmp) |
+
+PORT-WAHLEN und Grenzen:
+- **Abtastphase 0,5 der Lampe** (gemessen, keine PSX-Adresse - die Phase ist eine Eigenschaft des PC-Rasterers, `include/re15_abtastphase.h`):
+  RE2-VRAM s04 Zeilen 119..123 mit 0,5 bis auf 3 Stufen gleich; mit der globalen 0,375 tastet die 1 Pixel hohe Gehaeuseflaeche T02/T14 in Zeile 122
+  Texelspalte u 115 statt u 116 ab (`nb6/messung_lampe_phase.txt`).
+- **Pin:** fuer RE2-Assets gibt es kein `release/*.sha256` (die drei Dateien dort pinnen Gate-Skripte, nicht Spieldaten). R704.ESP ist wie
+  R704_LAMPE.* gesichert: Paket-Gate (Pflicht + cmp gegen den Quellbaum), Bytevergleich gegen ROOM7040.RDT im Erzeuger und im Riegel (12.5), sha256 oben.
+- PSX-Bau: Brocken nur PC (Zeichner gator_fx_r41_pc.c); die Vibrations-Ringe sind Engine-Code, der PSX-Pad-Ausgang ist nicht geprueft.
+
+### 12.3 Messwerte (Endfassung, eigene exe-Kopien `re15_g5nb6_*`, kein AUTOSHOT/SOFTWARE_RENDER)
+
+- **Brocken-Pool gegen RE2-RAM s02** (Riegel, 5090 und 5091): 18 von 18 lebenden Plaetzen gleich in Bank/Sub/Status/Ops/s2/vel.y/lokal.y/TPage/
+  CLUT/Skala/Anim/Countdown/Versatz/Weltlage; 8 Brocken gespawnt; Brocken-Takt sub05-Bild 1..40 in 0 Bildern falsch.
+- **Vibration** (Riegel): Aktuator 1 in 24 von 24 sub04-Bildern (0..23) = Soll-Folge 12.1, Aktuator 0 in 0 Bildern != 0; Ring B nach sub14
+  Platz 0/1/2 = Rampe Schritt 1828 / Konstant 250 Vorlauf 1 / Rampe Schritt -1129 Vorlauf 4; Ringe bei sub05-Bild 39 leer (RE2-RAM s02: leer).
+- **Lampenhelligkeit** (`nb6/messung_lampe_helligkeit_abschluss.txt`, `nb6/messung_lampe_helligkeit_grundlinie.txt`, Lampe x -6000, Fenster
+  x 70..99 / y 115..126 = 360 Pixel, RE2-VRAM s04 gegen Port F1581):
+
+| Mass | RE2 | Port nativ | Port 3x-Fenster (Leon = Elza) |
+|---|---|---|---|
+| Median des Fensters (Hintergrund) | 13,3 | 16,7 | 16,7 |
+| Rohsumme | 9437 | 9554 (1,012) | 9356 (0,991) |
+| Summe ueber eigenem Median (Mass aus 11.3) | 5269 | 4634 (0,88; NB5 0,82) | 0,84 (NB5 0,83) |
+| Summe ueber gemeinsamer Grundlinie 13,3 | 5269 | 5313 (1,01) | 5115 (0,97) |
+| Summe ueber gemeinsamer Grundlinie 20 / 40 | 4248 / 2683 | 0,97 / 0,98 | 0,93 / 0,94 |
+| Pixel x 70..105 / y 112..128 (612), mittlere Abweichung | - | 2,65 (NB5 4,18), ueber 16: 6 Pixel (NB5 17) | - |
+
+  Die "15 % dunkler" aus 11.3 setzen sich zusammen aus (a) der Abtastphase der 1 Pixel hohen Gehaeuseflaechen (behoben, nativ 0,82 -> 0,88) und
+  (b) dem Mass selbst: es zieht je Bild den eigenen Median ab, und der Hintergrund im Fenster ist im Port 3,4 Stufen heller - das senkt die
+  Port-Summe, ohne dass die Lampe dunkler ist. Mit gemeinsamer Grundlinie liegt die Lampe nativ bei 0,97..1,01, im 3x-Fenster bei 0,93..0,97.
+  Groesster Einzelbeitrag: Spalte x 88, Zeilen 122..124 (RE2 72/72/72, Port 18/18/20; rechte Kante des Lichtbands, 1 Pixel breit).
+- **Ablauf exe** (Leon 5090, Elza 5091): Vorlauf F1558, Armierung F1613 nach 55 Vorlaufbildern (unveraendert).
+  RE2-FX-Pool je Bild (`nb6/messung_brocken_exe_{leon,elza}.txt`, RE15_GATOR_FX_LOG=1, Leon = Elza Zeile fuer Zeile): F1560 (sub05-Bild 1)
+  2 Brocken; F1598 (sub05-Bild 39 = RE2-RAM s02) **18 Plaetze = 13 Staub + 5 Brocken wie RE2**; Spitze F1583 35; F1608 nur noch 1 (kein Brocken).
+
+### 12.4 Sichtbeleg (Leisten RE2 echt | Port Leon | Port Elza; eigene exe-Kopien, RE15_FRAMEDUMP F1540..1740, 3x-Fenster)
+
+- `nb6/nb6_truemmer_schnitt+4_bis_+32.jpg`: Decke ueber dem Tuerloch, am Schnitt ausgerichtet (RE2 61,475 s + k/29,9 | Port F1559 + k), k = 4..32
+  in Viererschritten, 3x vergroessert: Brocken und Staubfahnen in denselben Bildern an denselben Stellen.
+- `nb6/nb6_beben_schnitt+0_bis_+15.jpg`: ganzer Bildschirm, Schnitt +0..+15 (Beben 3, 5, 7 x 5, 6..1 wie 11.3, dazu die ersten Brocken).
+- `nb6/nb6_lampe_bild-44_bis_-41.jpg`: Tuerloch 4x, Szenenbild -44..-41 (RE2-Zeitachse -2,0), Lampe mit Lichtband an derselben Stelle.
+- `nb6/nb6_tuerloch_bild-56_bis_-20.jpg`: Tuerloch 2x, jedes Bild -56..-20.
+- **Endkontrolle echtes Fenster** (gdigrab auf das hwnd der eigenen exe-Kopie `re15_g5nb6_fenster`, ohne RE15_AUTOSHOT/RE15_SOFTWARE_RENDER/
+  RE15_FRAMEDUMP, 20 B/s): `nb6/nb6_fenster_gdigrab_vorlauf_10fps.jpg` (Vorlauf 2,4 s, Lampe im Tuerloch, Leon laeuft ein, Tentakel) und
+  `nb6/nb6_fenster_gdigrab_truemmer_20fps.jpg` (Decke 3x, erste 1,2 s: Brocken und Staub fallen in den ersten 8 Aufnahmebildern).
+
+### 12.5 Riegel und Tests (re15_port/build, -j 3)
+
+**Riegel `unit_r41_g5auftritt` (NB6-Teil):** Brocken 8; Pool 18/18 gegen RAM s02; Ring B nach sub14; Ringe leer bei sub05-Bild 39 (aus der
+ersten Sitzung) und neu: Vibrationsmuster Aktuator 1 je sub04-Bild 0..23 (Soll 12.1), Brocken-Takt je sub05-Bild 1..40, R704.ESP ==
+RDT[0x35D8, 0x36FC), GATOR40A0_19.TIM == RDT[0x18984, 0x1B1C4), sub05 @0x016DE und sub14 @0x01C02 bytegleich. **Toter Riegelteil gefunden und behoben:** der Quellvergleich von test_m4_daten
+(R704_LAMPE.MD1/.TIM, Objektmodell-Liste @0x244, sub11-Bytes) verlangte `rn > 0x33844 + 34336`; die Lampen-TIM endet genau am Dateiende
+(245348 Byte), also lief er seit NB5 nie ("ROOM7040.RDT nicht da"; 11.5 fuehrt ihn als "wenn info/ da ist"). Jetzt `>=`; alle Vergleiche gruen.
+**Gegenprobe** (vibration_sub14 und brocken_takt abgeklemmt, nur Test-Ziel neu gebaut, danach zurueck und voll neu gebaut): 10 Fehler - je Raum
+Brocken 0 statt 8, Pool 0/18, Ring B, Vibrationsmuster 22/24 Bilder falsch, Brocken-Takt 40 Bilder falsch (`nb6/messung_gegenprobe_abschluss.txt`).
+Gegenprobe der ersten Sitzung (`nb6/messung_gegenprobe.txt`): 6 Fehler.
+
+| Lauf | Ergebnis |
+|---|---|
+| `unit_r41_g5auftritt` -V (5090 und 5091) | gruen; NB4/NB5-Riegel unveraendert gruen, Quellvergleich ROOM7040.RDT jetzt wirklich gelaufen |
+| Gegenprobe (12.5) | 10 Fehler - rot |
+| G5/Birkin/Tentakel/Granate-Gruppe (`-R 'g5\|birkin\|tentak\|granat'`, 30 Tests, darin integration_r41_birkin_pistole/_g5_westen/_g5_tod und vier Granaten-Integrationen) + integration_r41_re2gator, _gatorszene_tod_explosion, _kanister2080 (Raum-ESP-Saetze, TIM-Platz) | **33/33 gruen**, 862 s, -j 3 |
+| Alle Nicht-Integrationstests ohne die 7 df-haengenden Skripttests | **1068/1068 gruen**, 509 s, -j 3 |
+| Einzeln wiederholt | keiner noetig (kein roter Test unter Last) |
+| unit_r38_releaseskript_{trocken,ablauf,fehler_bau,fehler_umfeld,cmd}, unit_r39_titelversion_ablauf, unit_r35_android_bash_mutanten | nicht gelaufen (Umgebung: df.exe haengt), wie NB5 |
+
+Nur eigene Prozesse (exe-Kopien `re15_g5nb6_fd_leon/_fd_elza/_nativ/_fenster/_log_leon/_log_elza`) liefen; alle endeten selbst (EXIT_AT), keiner
+musste beendet werden. `nb6/messung_tests_abschluss.txt`, Laufskript `nb6/werkzeug/lauf6.sh`.
+
+### 12.6 Commits
+
+- 7b1c3bf46 wip - NB6-Zwischenstand der ersten Sitzung (Code, Riegel, Belege), 4855570fe wip - R704.ESP.
+- 337751f7b test - Riegel Vibrationsmuster, Brocken-Takt, R704.ESP gegen ROOM7040.RDT; Kommentare sub13/sub15, PC-Rumble, PORT-WAHL Abtastphase.
+- 1aa55d23d fix - Quellvergleich gegen ROOM7040.RDT lief seit NB5 nie (`>` statt `>=`).
+- c2c5228e2 test - GATOR40A0_19.TIM gegen ROOM7040.RDT [0x18984, 0x1B1C4).
+- Folge-Commit: dieses Kapitel und die Belege `G5_belege/nb6/` der Endfassung.
+
+### 12.7 Offen nach Nachbesserung 6
+
+- **Lampe im 3x-Fenster 0,93..0,97** gegen RE2 (gemeinsame Grundlinie), nativ 0,97..1,01; Rest = Rasterkanten (Spalte x 88 Zeilen 122..124: 3 Pixel
+  RE2 72, Port 18..20) und Q02 (2 x 3 Pixel, Farbe 36, Port verwirft). Hintergrund im Tuerloch-Fenster Median 16,7 gegen 13,3 (BSS/Masken, nicht
+  die Lampe) - nicht untersucht.
+- **Phase Vibration gegen Skript:** in der exe tickt der Ring am Bildanfang (re15_input_tick vor dem Spieltakt), die Werte aus sub14 erscheinen also
+  ein Bild nach dem sub04-Bild 1; der Riegel tickt nach dem Skript. RE2-Reihenfolge Pad-Handler (`jal 0x80038bbc` @0x8002b2d0 in FUN_8002aee0)
+  gegen Skriptlauf (FUN_80053644 aus FUN_80025794 @0x800263b0, FUN_80025794 nur indirekt aufgerufen) nicht aufgeloest - hoechstens 1 Bild.
+- **sub15-Raumschleife** (Zugfahrt-Vibration vor der Szene, 6 x Vib_set1 je 52 Bilder) und **sub13** (Teil vor Cut_chg(9)) nicht gebaut: im Port
+  ist 5090/5091 vor der Szene RE1.5-Raum bzw. Rueckstoss-Szene.
+- **Vorlauf 55 statt 59** (seit Abnahme 2), PORT-WAHL G5A_LAMPE_VORSPRUNG 4 unveraendert.
+- PSX-Bau: Lampen, Beben, Brocken nur PC.
 - Nebenbefunde 10.6 und M3/M5/M6 unveraendert.
