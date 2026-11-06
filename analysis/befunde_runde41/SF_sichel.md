@@ -1074,3 +1074,126 @@ Schwanz von vorn (Buehne h118/h125): 0 / 3 Bildpunkte (Ref2 409 / 0).
    Messschwelle 0,5 x Fenster-Median (deshalb der dunkle Schlund).
 7. Schulterauge ist ein ebenes Viereck 60 E. vor der Schulter; aus steilen Blickwinkeln als Kante sichtbar (Leiste 08).
 8. PSX: Feder-Kette nur auf dem PC geprueft.
+
+## Schwanz V3 / Kopf V3 - Runde 2 (2026-11-06, Pruefung V3 r1)
+
+Anlass: Pruefung V3 r1 nicht bestanden (SF_PRUEFUNG_V3_r1_sicht.md: K3 bei A4 Kopf seitlich und B1/B2 Maul; SF_PRUEFUNG_V3_r1_zahlen.md:
+Konstanten ohne Quelle, Spitze unter dem Boden, h83 4 Knicke, Schulterauge 0,032 Texel/E., knappe Riegel). Kein RE-Befund, keine
+@0x-Konstante: Gestaltungsquelle bleibt die KI-Fassung (F4, PORT-WAHL). Spiel-Asset EM30_HANGAR.EMD und Pin unveraendert
+(Referenz-2-Neubau sha256 cfd1ac42... byte-gleich). Variante: sfv3/emd/EM30_V3.EMD (sha256 1952713c...), Runde 1 als EM30_V3_r1.EMD.
+Neue Belegzahlen der KI aus eigener Messung (tools/r41_sichel/v3/n2_ki_kopf.py, SF_belege/v3r2/ki_kopf.json, ki_kopf_profile.txt).
+H = Oberkante Buckel bis Sohle im selben Bild; Seiten (W) = Sicht des Wesens.
+
+### SV3r2.1 Ursache der Ablehnung in Zahlen (Runde 1)
+
+| Punkt | Runde 1 | KI | Ursache |
+|---|---|---|---|
+| A4 Kopf in der Seitenkamera h85/h92 | 283 / 346 von 668 / 790 Kopf-Bildpunkten Wundfleisch (Zeile 485), kein Auge, kein Maul | Schnauze grau (L* 43 oben / 26 unten), Auge 0,034 H hinter der Spitze, rotes Maulprofil mit 5 Stummeln | nur die Vorderflaechen (Normale . Blick vorn <= -0,15) trugen das Kopfbild; von der Seite sieht die Kamera 22 reine Seitenflaechen und 25 Vorderflaechen streifend (n2_kopf_richtung.py) |
+| A3 Gesichtsfeld / Nachbarhaut, Spielkamera h118 / h125 | 1,35 / 1,28 | 0,87 (Freisteller) | KI-Farben absolut, Port-Haut dunkler (n2_maul_spiel.py) |
+| B1 Maul | schwarzes Inneres ohne Lippe, 0 Glanzpunkte max(RGB) > 170 | Lippe dunkelrot, 29-33 Glanzpunkte (1,4-1,9 % des Bands), Spalt 0,012 H | Inneres + Schlundband, keine Lippe |
+| B2 Zaehne | 11 / 7 Spitzen bis 0,006 H | Stummel ~0,0031 H, 2-3 px | Zahnform Dreieck |
+| Spitze im Spiellauf | Halten bis 612 E. unter dem Boden (Lauf sfv3/r/V3) | - | glaetten() liess die Spitze unter dem Boden, wenn der Bodenzug einen Knick erzeugt haette |
+| h83 (Buehne) | max 37,7 Grad je 0,05 H, 5 Knicke (n2_schwanz_mass.py; Pruefer 35,6 / 4) | 28,4 Grad, 3 Knicke in Port-Aufloesung | Keyframes ohne Knick-Grenze (die Grenze galt nur im Spiel) |
+| Schulterauge | 12 x 12 Texel auf dem Viereck = 0,032 Texel/E. | Haut 0,045-0,090 | zu kleine Texelflaeche |
+
+### SV3r2.2 Was geaendert ist (birkin_formen.py, schwanz_r41.c)
+
+- Seitenbild Kopf: Seitenflaechen von Mesh 9 (Normale . Blick der Spielkamera h85 <= -0,10, Gegenseite gespiegelt an der Ebene durch das
+  Kopfauge) bekommen ein Bild in TPage 128 u 64-111 v 156-219 (frei, n2_frei.py), Parallelprojektion aus der Spielkamera, 0,072
+  Texel/E. Inhalt: Schnauzenhaut KI birkin12 (oben L* 18-58 bis zur Unterkante des Augenprofils, unten 16-41, eigene Rampen Zeile 486
+  Index 32-42, Faktor KOPF_V3_HELL_SEITE 1,3 nach Probe), Maulprofil rot (KI Lab [27,3 22,8 8,4]) vom projizierten Mundwinkel bis
+  0,101 H hinter die Vorderkante, 0,028 H hoch, 5 Stummel; das Kopfauge selbst sitzt an der Vorderkante.
+- Kopf vorn: KOPF_V3_HELL 0,85 auf alle KI-Hautfarben (Probe 0,75: R3/R4/R13 rot). Kuppe bis an die Oberlippe (KI-Halo-Rampe, Lage aus
+  dem KI-Median, Streuung aus KI-Texelstreuung 5,2-7,4 L*). Die KI-Stirn (L* 22-31) und das dunkle Band unter dem Auge (L* 15-21) sind
+  nicht uebernommen: Probe r2c zaehlte R1 dort 2-3 Augen und R10-R12 mass das Band als Maul.
+- Maul: Lippe 0,007 H (KI birkin19 Zeilen 55-58) Lab [19,6 17,1 5,9], Oeffnung 0,036 H innen Messblatt-Farbe [13,5 13,7 4,8], Spaltkern
+  0,29 der Oeffnung (KI-Zeilenprofil: 0,046-0,058 H unter dem Auge L* 9-13), 5 Glanzpunkte (KI RGB (198,143,146)), 6 / 4 stumpfe
+  Stummel 0,0031 x 0,0053 H, L* 45 (KI 49,7 x 0,9; Begruendung im Generator), Breite 0,092 H bis an die Mundwinkel.
+- Auge: Glanzkern 0,0044 x 0,0052 H, gemessen y 0,68 (Runde 1 0,73).
+- Schulterauge: 20 x 20 Texel (u 42-61 v 156-175) = 0,053 Texel/E., Auge 0,0148 x 0,0122 H (R9 1,01 x Kopfauge).
+- Unbelegte Konstanten der Runde 1 (Zahlen-Pruefer Abschnitt 5) ersetzt: Rampenlagen/Rauschgewichte aus KI-Median/-Streuung,
+  Kern-Achsverhaeltnis 0,6 und Schlundbreite 0,97 entfallen, Zahnform = Rechteck mit belegter Groesse, Spitzen-UV 0,92 -> 0,5
+  (Fenstermitte wie der Deckel), Ader-Schwelle 0,6 -> 0,5 (Halbwertregel P_kopf.auge), Lichtnormalen-Umkreis 400 E. -> halbe
+  Viereck-Diagonale + Abstand (378 E.), Rauschfeld 1:1 statt y x 3 / x x 2, auf +-2 Std begrenzt (dunkle Adern erzeugten sonst ein
+  zweites Auge in R1), rauschen 1,3 und zonen kuppe_bis/rot_ab entfallen.
+- Schwanz-Keyframes: Knick-Grenze wie schwanz_r41.c glaetten (Ruhewinkel + 3 Grad, 12-16 Grad) schon in schwanz_bewegung; h83 max
+  37,7 -> 25,7 Grad je 0,05 H, Knicke 5 -> 4 (Bildmessung; im Raum <= 16 Grad). h85/h92 unveraendert gruen.
+- schwanz_r41.c glaetten: liegt nach der Knick-Grenze ein Gelenk unter dem Boden, wird die Kette starr um Gelenk 0 hochgedreht (1-Grad-
+  Schritte, <= 90 Grad, alle Gelenkwinkel bleiben). Lauf sfv3/r/V3r2: unter Boden max 612 -> 0 E. (Halten), Gang -296 E.; Raum max
+  16,2 Grad, 0 Gelenke > 20 Grad (SF_belege/v3r2/gang_boden_V3r2.json).
+- Deckel an Glied 0 bleibt (Probe ohne Deckel: R25 h85 34,1 Grad, h83 42,6 Grad).
+
+### SV3r2.3 Zahlen Spielkamera (SF_belege/v3r2/*.txt)
+
+| Mass | KI | Runde 1 | Runde 2 |
+|---|---|---|---|
+| Kopf seitlich h85 / h92: Wundfleisch-Bildpunkte | - | 283 / 346 | 0 / 0 |
+| Kopf seitlich h85: L* oben / Haut, unten / Haut | 1,48 / 0,90 (birkin12) | 1,28 / 0,73 (Wundfleisch) | 1,30 / 0,75 (h92 1,29 / 0,70) |
+| Kopf seitlich h85: rote Bildpunkte (a* > 15) / helle Stummel | Maulprofil + 5 Stummel | 323 / 67 (Wundfleisch) | 166 / 45 |
+| Kopfauge seitlich (Spielkamera, 640er) | 3,7 x 2,6 px | nicht sichtbar | 1 x 3 px an der Vorderkante (L* 0-14) |
+| Gesichtsfeld / Nachbarhaut h118 / h125 | 0,87 | 1,35 / 1,28 | 1,05 / 1,00 |
+| Lippenglanz max(RGB) > 170 (1280er) h118 / h125 | 69 / 31 | 0 / 0 | 16 / 8 |
+| schwarze Flaeche L* < 0,25 x Haut am Auge (1e-4 H^2) h118 / h125 | 14,6 / 16,5 | 35,2 / 23,1 | 24,0 / 29,6 |
+
+### SV3r2.4 Riegel-Tabelle (riegel_v3.py, SF_belege/v3/riegel_V3.txt, Lauf sfv3/r/V3r2; Exit 0)
+
+| Riegel | Soll | Ist |
+|---|---|---|
+| R1 Kopfaugen | genau 1 | 1 |
+| R2 Schulterauge | -0,10..-0,13 / +0,04..+0,07 H | -0,118 / +0,058 H |
+| R3 Kopfauge | 0,017-0,025 x 0,008-0,014 H | 0,0176 x 0,0105 |
+| R4 Form | 1,5-2,5 | 1,67 |
+| R5 Helligkeit | 0,35-0,55 | 0,418 |
+| R6 Lidring | hell <= 0,10; Lid/Haut 0,70-1,00 | 0,000; 0,920 |
+| R7 Sclera/Kern | L80 <= 0,05; hell 0,05-0,25; x 0,4-0,7 y 0,55-0,8 | 0,000; 0,114; (0,49 0,68) |
+| R8 Pupille | <= 0,12 | 0,039 |
+| R9 Schulterauge | L 0,30-0,50; hell <= 0,05; 0,8-1,3 x | 0,362; 0,022; 1,01 |
+| R10 Maul | 0,075-0,095 x 0,038-0,055 H | 0,0831 x 0,0454 |
+| R11 Form | 1,5-2,3 | 1,83 |
+| R12 Lage | 0,04-0,07 H; Versatz <= 0,012 | 0,0562; 0,0060 |
+| R13 innen | L 0,20-0,40; da >= +4 | 0,251; +4,9 |
+| R14 Zaehne | oben >= 5, unten >= 3; <= 0,005 H; L <= Haut+20; a* 12-20 | 7 / 6; 0,0046; L 42,3 (Haut 24,3); a* 19,2 |
+| R15 L*/Haut h85/h92 | 0,50-0,72 | 0,571 / 0,585 |
+| R16 C*/Haut | 0,45-0,90 | 0,56 / 0,54 |
+| R17 dh | <= 10 Grad | -7,7 / -7,8 |
+| R18 Rot | <= 0,8 x Haut | 0,228 (0,361) / 0,215 (0,367) |
+| R19 dE00 | 6-11 | 10,1 / 10,0 |
+| R20 Muster | AK <= 0,25; Rest-Std <= 2,0 | 0,04; 1,77 / 0,15; 1,70 |
+| R21-R23 Dicke | 0,15-0,20 / 0,07-0,10 / 0,028-0,045 H | 0,162 / 0,089 / 0,032 (h85), 0,155 / 0,074 / 0,036 (h92) |
+| R24 Verlauf | kein Anstieg > 0,01 H | 0,000 / 0,000 |
+| R25 Glaette | <= 36 Grad | 27,4 / 24,4 |
+| R26 Knicke | <= 3 | 2 / 1 |
+| R27 Austritt | 0,10-0,16 H | 0,145 / 0,146 |
+| R28 Koerper | = Ref2 | Meshes 0-15, Skelett, Keyframes, EDD gleich; Mesh 8 +1 Viereck |
+| R29 Dreiecke Schwanz | <= 212 | 160 |
+| R30 Kopf | <= 118; <= 2 | 109; 2 |
+| R31 Texeldichte | 0,045-0,090; Kopf 0,05-0,091 | 0,046-0,082; 0,066 |
+| R32 Palette | 8 bpp, Haut-CLUT | 8 bpp, Zeile 482, C* 29,7 <= 63,3 |
+| R25b/R26b Gang h84-h132 (Lauf) | Raum <= 25 Grad, <= 3 ueber 20 | 16,2; 0 |
+| R25b/R26b Halten h16-h70 (Lauf) | dito | 16,2; 0 |
+
+Gegenprobe V1 SPITZ (riegel_V1_gegenprobe.txt): 26 von 34 rot, darunter R3-R9 (Augen), R15/R16/R18/R19 (Schwanzfarbe), R25/R26 und
+R25b/R26b (Knicke). ctest unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41, integration_r41_sichel_form: 4/4 bestanden.
+
+### SV3r2.5 Leisten (analysis/befunde_runde41/SF_belege/v3/, Spalten KI | Original | Referenz 2 | V1 | V3)
+
+01_seite_h83_h85_h92, 02_vorn_h118_h125, 04_gang_h84-h132 (Lauf V3r2), 05_kopf_nah (vorn h118/h125, Seite h85, Messansicht),
+07_schwanz_nah, 08_rundum_V3, 09_farbe, neu 10_kopf_seite_spielmassstab (KI birkin12 | V3 r1 | V3 r2, h85 x8) und
+11_kopf_vorn_spielmassstab (KI | V3 r1 | V3 r2, h118/h125 x3), Riegelbilder riegel_kopf_V3.png, messansicht_kopf_V3.png.
+
+### SV3r2.6 Offen
+
+1. Maul in der Spielkamera weiter dunkler als die KI: schwarze Flaeche 24,0 / 29,6 gegen KI 14,6 / 16,5 x 1e-4 H^2 (Runde 1 35,2 / 23,1;
+   h125 groesser, weil die Lippe die Maulhoehe auf 0,050 H bringt). R10 verlangt eine Oeffnung mit L* < 0,5 x Fenster-Median
+   >= 0,038 H; das KI-Maul (Lippe L* 19-20 ~ Kinn L* 15-17) erfuellt diese Messregel selbst nicht (Messblatt Abschnitt 9 Punkt 9).
+   Ein KI-gleich helleres Inneres (Probe G/H: L* 16-18,6) machte R13/R14 rot. Entscheidung Messblatt-Pruefer/Nutzer.
+2. Kopfauge seitlich nur 1 x 3 px (KI 3,7 x 2,6 px): der Port-Kopf hat keine Schnauze vor dem Auge, die Seitenflaechen um das Auge
+   gehoeren zum Kopfbild vorn (n2_seite_mess.py); ein Augenprofil auf den Seitenflaechen waere von vorn ein zweites Auge.
+   Groesser nur mit Geometrie (Kopf-Freigabe des Nutzers).
+3. Kopf seitlich unten L*/Haut 0,65-0,75 (KI 0,90): schattige Unterseite im RDT-Licht; heller nur mit Leuchtfarben (Probe 1,6: Weiss).
+4. Gesichtsfeld/Nachbarhaut 1,0 statt KI 0,87 (A3-Grenze "Nachbarhaut + 5 L*" erfuellt; KI-Wert erst mit HELL 0,75, dann R3/R4/R13 rot).
+5. KI-Stirn und dunkles Band unter dem Auge nicht uebernommen (R1-Konflikt, SV3r2.2).
+6. h83 (keine Riegel-Pose): 4 Knicke > 20 Grad im Bild bei max 25,7 Grad (KI h83 Port-Aufloesung 3 / 28,5 Grad).
+7. schwanz_r41.c SW_GLATT_MIN 12 Grad und SW_GLATT_RAND 3 Grad weiter ohne eigene Messreihe (Zahlen-Pruefer 5); MAX 16 gegen 22 geprobt.
+8. R31 Glied 0 0,046 (Grenze 0,045) bleibt knapp: Deckel ohne Texelflaeche; ohne Deckel R25 rot.
+9. Ende Hand/Kralle (F2) weiter Nutzerwahl; PSX-Pruefung der Feder-Kette offen.

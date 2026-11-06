@@ -27,7 +27,7 @@ EMD = {'Ref2': os.path.join(b2.BAUM, 're15_port', 'shared_assets', 'PSX', 'EMD',
        'V1': os.path.join(SCR, 'sfv2', 'emd', 'EM30_V1_SPITZ.EMD'),
        'V3': os.path.join(SCR, 'sfv3', 'emd', 'EM30_V3.EMD')}
 LAEUFE = {'Ref2': os.path.join(SCR, 'sfv3', 'r', 'R2n'), 'V1': os.path.join(SCR, 'sfv3', 'r', 'V1s'),
-          'V3': os.path.join(SCR, 'sfv3', 'r', 'V3')}
+          'V3': os.path.join(SCR, 'sfv3', 'r', 'V3r2')}   # Runde 2: Lauf mit der V3-EMD Runde 2 (lauf_v3.sh)
 AUS = os.path.join(b2.BELEGE, 'v3')
 MOD = ('Ref2', 'V1', 'V3')
 _mo = {}
@@ -171,7 +171,7 @@ def leiste_kopf():
         for key in MOD:
             im, _ids = b2.zeichne(modell(key), pose, b2.video_sw(h))
             r.append(kachel(zu(x2(im)), (0, 0, 480, 480), '%s h%d (%s, Spielkamera) x4' % (key, h, art), [{'Ref2': 'Referenz 2: Wundfleisch, kein Gesicht',
-                     'V1': 'V1: Ringaugen mit Kreuz, senkrechtes Maul (abgelehnt)', 'V3': 'V3: Textur auf EM30-Kopf (Mesh 9) + 1 Viereck'}[key]]))
+                     'V1': 'V1: Ringaugen mit Kreuz, senkrechtes Maul (abgelehnt)', 'V3': 'V3 r2: Kopfbild + Seitenbild (Mesh 9), Lippen/Stummel, 1 Viereck'}[key]]))
         zeilen.append(r)
     # Messansicht (Riegel R1-R14) als eigene Zeile
     r = []

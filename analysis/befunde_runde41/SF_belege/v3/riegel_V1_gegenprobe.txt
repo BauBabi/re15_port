@@ -1,4 +1,4 @@
-Riegel V3 - C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv2/emd/EM30_V1_SPITZ.EMD
+Riegel V3 - C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv3/../sfv2/emd/EM30_V1_SPITZ.EMD
 ok   R1 Kopfaugen                           Soll genau 1                                                        Ist 1
 ok   R2 Schulterauge                        Soll -0,10..-0,13 / +0,04..+0,07 H, dunkel                          Ist -0.112 / 0.046 H, L* dunkel/Haut 0.30
 ROT  R3 Kopfauge Groesse                    Soll B 0,017-0,025 x H 0,008-0,014 H                                Ist 0.0070 x 0.0070
