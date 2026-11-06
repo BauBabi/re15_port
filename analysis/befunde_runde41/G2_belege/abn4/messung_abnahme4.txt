@@ -1,0 +1,80 @@
+== west4_leon
+-- neu: pid=41872 winpid=36896 start=20:23:39 hwnd=0x13608ae rect=1264,0-1920,519 exit=0 ende=20:26:04  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=141
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4151,-101,-1381) F625|RAMMEN F880 gator=(4450,-1200,-20664) spieler=(4428,-1800,-17263) hp=1|RAMMEN F1731 gator=(4032,-1200,-14173) spieler=(2318,-1800,-17182) hp=|
+   Kanister-Sitz-Zeilen: 90, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf f_neu_west4_leon (exe f7037901c4a7a6e669a6518019a2a7aa)
+-- ohne: pid=42167 winpid=38516 start=20:26:05 hwnd=0x13808ae rect=1264,0-1920,519 exit=0 ende=20:28:29  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=141
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4151,-101,-1381) F625|RE2 MESSHAKEN RE15_G2_OHNE_KANISTER: Kanister entfernt F651|
+   Kanister-Sitz-Zeilen: 1, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf f_ohne_west4_leon (exe f7037901c4a7a6e669a6518019a2a7aa)
+neu_west4_leon: 2650 Bilder (1.5 min) | ohne Fortschritt zur Figur 11.1 s | Drehen 0.0 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 11.4 % (+Kanister 19.3 %) | Kopf < 2500 vor der Kamera 3.7 %, hinter 0.1 % (+Kanister < 2500 6.0 %) | Rammen 2, Querungen 4 | Kanister-Sitz 2670 Bilder, Abweichung max 0 (letzte Zeile F3294) | Kanister ausserhalb Regions-Viereck 0
+  gegen ohne_west4_leon: 2650 gemeinsame Bilder (mit 2650, ohne 2650), abweichend 2433, erstes F868 (Phase mit/ohne (5, 5)), davon vor der ersten Querung mit Kanister: 11
+ohne_west4_leon: 2650 Bilder (1.5 min) | ohne Fortschritt zur Figur 3.0 s | Drehen 35.4 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 1.4 % (+Kanister 9.0 %) | Kopf < 2500 vor der Kamera 1.5 %, hinter 0.1 % (+Kanister < 2500 3.7 %) | Rammen 0, Querungen 1 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F625) | Kanister ausserhalb Regions-Viereck 0
+tragvergleich: 2650 Bilder mit Kanister, 2650 gemeinsame Bilder, abweichend 2433, erste Abweichung F868 (Phase mit 5 / ohne 5, erstes Rammen F880, erster Rueckfall F-1); Kanister-Sitz 2670 Bilder, Abweichung max 0
+   tragvergleich exit=0
+   neu traglog: 3300 Bilder 2090, Aufschlag F43, angehaengt F625 (582 Bilder = 19.4 s), 2676 Trag-Bilder: ohne Fortschritt 490 (18 %), davon keine Ausnahme ausser Biss am Spieler (113 Bilder), laengste Folge ohne Fortschritt 95 Bilder (bis F2221), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 35 (erstes F2127); Figur oben 2302 Bilder, Kopf-Abstand mittel 5955, Gator im Bild der Spielerkamera 94 %; 2-s-Fenster fern der Figur 22 (erstes F2127)
+   ohne traglog: 3300 Bilder 2090, Aufschlag F43, angehaengt F625 (582 Bilder = 19.4 s), 2676 Trag-Bilder: ohne Fortschritt 1070 (39 %), davon keine Ausnahme ausser Biss am Spieler (594 Bilder), laengste Folge ohne Fortschritt 118 Bilder (bis F1739), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 127 (erstes F914); Figur oben 344 Bilder, Kopf-Abstand mittel 5349, Gator im Bild der Spielerkamera 64 %; 2-s-Fenster fern der Figur 0 (erstes F-1)
+== west5_elza
+-- neu: pid=42533 winpid=53692 start=20:28:31 hwnd=0x12a08ca rect=1264,0-1920,519 exit=0 ende=20:31:11  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=201
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4346,-256,-79) F679|RAMMEN F1103 gator=(4012,-1200,-14173) spieler=(2318,-1800,-17140) hp=|RAMMEN F1864 gator=(3573,-1200,-13660) spieler=(1873,0,-8914) hp=100|
+   Kanister-Sitz-Zeilen: 88, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf f_neu_west5_elza (exe f7037901c4a7a6e669a6518019a2a7aa)
+-- ohne: pid=43112 winpid=61220 start=20:31:13 hwnd=0x12b08ca rect=1264,0-1920,519 exit=0 ende=20:33:54  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=201
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4346,-256,-79) F679|RE2 MESSHAKEN RE15_G2_OHNE_KANISTER: Kanister entfernt F705|
+   Kanister-Sitz-Zeilen: 1, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf f_ohne_west5_elza (exe f7037901c4a7a6e669a6518019a2a7aa)
+neu_west5_elza: 2596 Bilder (1.4 min) | ohne Fortschritt zur Figur 9.6 s | Drehen 31.4 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 3.1 % (+Kanister 3.6 %) | Kopf < 2500 vor der Kamera 1.1 %, hinter 0.0 % (+Kanister < 2500 3.7 %) | Rammen 2, Querungen 2 | Kanister-Sitz 2610 Bilder, Abweichung max 0 (letzte Zeile F3288) | Kanister ausserhalb Regions-Viereck 0
+  gegen ohne_west5_elza: 2596 gemeinsame Bilder (mit 2596, ohne 2596), abweichend 1367, erstes F1934 (Phase mit/ohne (2, 2)), davon vor der ersten Querung mit Kanister: 0
+ohne_west5_elza: 2596 Bilder (1.4 min) | ohne Fortschritt zur Figur 9.6 s | Drehen 31.4 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 3.1 % (+Kanister 3.8 %) | Kopf < 2500 vor der Kamera 1.1 %, hinter 0.0 % (+Kanister < 2500 5.0 %) | Rammen 0, Querungen 2 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F679) | Kanister ausserhalb Regions-Viereck 0
+tragvergleich: 2596 Bilder mit Kanister, 2596 gemeinsame Bilder, abweichend 1367, erste Abweichung F1934 (Phase mit 2 / ohne 2, erstes Rammen F1103, erster Rueckfall F-1); Kanister-Sitz 2610 Bilder, Abweichung max 0
+   tragvergleich exit=0
+   neu traglog: 3300 Bilder 2090, Aufschlag F43, angehaengt F679 (636 Bilder = 21.2 s), 2622 Trag-Bilder: ohne Fortschritt 857 (32 %), davon keine Ausnahme ausser Biss am Spieler (511 Bilder), laengste Folge ohne Fortschritt 78 Bilder (bis F2521), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 0 (erstes F-1); Figur oben 753 Bilder, Kopf-Abstand mittel 6479, Gator im Bild der Spielerkamera 83 %; 2-s-Fenster fern der Figur 0 (erstes F-1)
+   ohne traglog: 3300 Bilder 2090, Aufschlag F43, angehaengt F679 (636 Bilder = 21.2 s), 2622 Trag-Bilder: ohne Fortschritt 790 (30 %), davon keine Ausnahme ausser Biss am Spieler (508 Bilder), laengste Folge ohne Fortschritt 79 Bilder (bis F2565), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 18 (erstes F2366); Figur oben 753 Bilder, Kopf-Abstand mittel 6479, Gator im Bild der Spielerkamera 83 %; 2-s-Fenster fern der Figur 0 (erstes F-1)
+== west4_elza
+-- neu: pid=43460 winpid=49920 start=20:33:55 hwnd=0x1950374 rect=1264,0-1920,519 exit=0 ende=20:36:36  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=161
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4199,-109,-1370) F587|RAMMEN F1183 gator=(4834,-1200,-19050) spieler=(6732,0,-13792) hp=100|RE2 G2RE2 HAENGT F3035 slot 35: Wurzel 150 Bilder in (3154..3739, -100|RE2 G2RE2 RUECKWAERTS an F3036 slot 35 pos=(3604,-9335) gier=3049 ziel|RE2 G2RE2 HAENGT F3274 slot 35: Wurzel 150 Bilder in (3467..4755, -101|RE2 G2RE2 RUECKWAERTS an F3275 slot 35 pos=(3528,-9849) gier=2881 ziel|
+   Kanister-Sitz-Zeilen: 91, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf f_neu_west4_elza (exe f7037901c4a7a6e669a6518019a2a7aa)
+-- ohne: pid=43768 winpid=22724 start=20:36:38 hwnd=0xfe092e rect=1264,0-1920,519 exit=0 ende=20:39:21  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=161
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4199,-109,-1370) F587|RE2 MESSHAKEN RE15_G2_OHNE_KANISTER: Kanister entfernt F613|
+   Kanister-Sitz-Zeilen: 1, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf f_ohne_west4_elza (exe f7037901c4a7a6e669a6518019a2a7aa)
+neu_west4_elza: 2688 Bilder (1.5 min) | ohne Fortschritt zur Figur 7.3 s | Drehen 83.4 % (ganz fern 29.8 %) | rueckwaerts 2.1 % (2), Tauch 0, Haenger 2 | Kopf in Plattform/Rampe 0.7 % (+Kanister 31.7 %) | Kopf < 2500 vor der Kamera 24.3 %, hinter 7.3 % (+Kanister < 2500 29.6 %) | Rammen 1, Querungen 1 | Kanister-Sitz 2700 Bilder, Abweichung max 0 (letzte Zeile F3286) | Kanister ausserhalb Regions-Viereck 0
+  gegen ohne_west4_elza: 2688 gemeinsame Bilder (mit 2688, ohne 2688), abweichend 1857, erstes F1444 (Phase mit/ohne (2, 2)), davon vor der ersten Querung mit Kanister: 0
+ohne_west4_elza: 2688 Bilder (1.5 min) | ohne Fortschritt zur Figur 7.3 s | Drehen 77.0 % (ganz fern 17.4 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.3 % (+Kanister 6.5 %) | Kopf < 2500 vor der Kamera 10.4 %, hinter 4.3 % (+Kanister < 2500 11.0 %) | Rammen 0, Querungen 1 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F587) | Kanister ausserhalb Regions-Viereck 0
+tragvergleich: 2688 Bilder mit Kanister, 2688 gemeinsame Bilder, abweichend 1857, erste Abweichung F1444 (Phase mit 2 / ohne 2, erstes Rammen F1183, erster Rueckfall F3036); Kanister-Sitz 2700 Bilder, Abweichung max 0
+   tragvergleich exit=0
+   neu traglog: 3300 Bilder 2090, Aufschlag F43, angehaengt F587 (544 Bilder = 18.1 s), 2714 Trag-Bilder: ohne Fortschritt 1127 (41 %), davon keine Ausnahme ausser Biss am Spieler (557 Bilder), laengste Folge ohne Fortschritt 123 Bilder (bis F3284), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 107 (erstes F1655); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %; 2-s-Fenster fern der Figur 103 (erstes F2946)
+   ohne traglog: 3300 Bilder 2090, Aufschlag F43, angehaengt F587 (544 Bilder = 18.1 s), 2714 Trag-Bilder: ohne Fortschritt 1208 (44 %), davon keine Ausnahme ausser Biss am Spieler (679 Bilder), laengste Folge ohne Fortschritt 79 Bilder (bis F1728), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 9 (erstes F1541); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %; 2-s-Fenster fern der Figur 0 (erstes F-1)
+== frei4_leon
+-- neu: pid=44361 winpid=35600 start=20:39:22 hwnd=0x1040816 rect=1264,0-1920,519 exit=0 ende=20:44:39  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=81
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4328,-190,2336) F570|
+   Kanister-Sitz-Zeilen: 262, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf neu_frei4_leon (exe d2290ddb0e366985d1a5802227dbc9db)
+-- ohne: pid=44975 winpid=40268 start=20:44:40 hwnd=0x1d70520 rect=1264,0-1920,519 exit=0 ende=20:49:57  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=81
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4328,-190,2336) F570|RE2 MESSHAKEN RE15_G2_OHNE_KANISTER: Kanister entfernt F596|
+   Kanister-Sitz-Zeilen: 1, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf ohne_frei4_leon (exe d2290ddb0e366985d1a5802227dbc9db)
+neu_frei4_leon: 7805 Bilder (4.3 min) | ohne Fortschritt zur Figur 4.1 s | Drehen 63.2 % (ganz fern 1.6 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.4 % (+Kanister 7.2 %) | Kopf < 2500 vor der Kamera 6.9 %, hinter 0.0 % (+Kanister < 2500 22.3 %) | Rammen 0, Querungen 0 | Kanister-Sitz 7830 Bilder, Abweichung max 0 (letzte Zeile F8399) | Kanister ausserhalb Regions-Viereck 0
+  gegen ohne_frei4_leon: 7805 gemeinsame Bilder (mit 7805, ohne 7805), abweichend 0, erstes FNone (Phase mit/ohne None)
+ohne_frei4_leon: 7805 Bilder (4.3 min) | ohne Fortschritt zur Figur 4.1 s | Drehen 63.2 % (ganz fern 1.6 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.4 % (+Kanister 7.2 %) | Kopf < 2500 vor der Kamera 6.9 %, hinter 0.0 % (+Kanister < 2500 22.3 %) | Rammen 0, Querungen 0 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F570) | Kanister ausserhalb Regions-Viereck 0
+tragvergleich: 7805 Bilder mit Kanister, 7805 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1, erster Rueckfall F-1); Kanister-Sitz 7830 Bilder, Abweichung max 0
+   tragvergleich exit=0
+   neu traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F570 (527 Bilder = 17.6 s), 7831 Trag-Bilder: ohne Fortschritt 3313 (42 %), davon keine Ausnahme ausser Biss am Spieler (2323 Bilder), laengste Folge ohne Fortschritt 80 Bilder (bis F946), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 48 (erstes F4583); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %; 2-s-Fenster fern der Figur 0 (erstes F-1)
+   ohne traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F570 (527 Bilder = 17.6 s), 7831 Trag-Bilder: ohne Fortschritt 3313 (42 %), davon keine Ausnahme ausser Biss am Spieler (2323 Bilder), laengste Folge ohne Fortschritt 80 Bilder (bis F946), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 48 (erstes F4583); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %; 2-s-Fenster fern der Figur 0 (erstes F-1)
+== frei4_elza
+-- neu: pid=46048 winpid=53824 start=20:49:58 hwnd=0x1a703d0 rect=1264,0-1920,519 exit=0 ende=20:55:36  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=71
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4242,-125,625) F921|
+   Kanister-Sitz-Zeilen: 250, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf neu_frei4_elza (exe d2290ddb0e366985d1a5802227dbc9db)
+-- ohne: pid=46776 winpid=45276 start=20:55:37 hwnd=0x1920566 rect=1264,0-1920,519 exit=0 ende=21:01:15  exe_md5=d872c8e64bb6914619ec2d14d48c3433 Framedumps=71
+   Ereignisse: RE2 KANISTER angehaengt lokal=(4242,-125,625) F921|RE2 MESSHAKEN RE15_G2_OHNE_KANISTER: Kanister entfernt F947|
+   Kanister-Sitz-Zeilen: 1, AUSSERHALB: 0, Zeilen error/assert/abort: 0
+   Determinismus: TRAG-Zeilen bitgleich mit dem Bauer-Lauf ohne_frei4_elza (exe d2290ddb0e366985d1a5802227dbc9db)
+neu_frei4_elza: 7454 Bilder (4.1 min) | ohne Fortschritt zur Figur 7.4 s | Drehen 47.6 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.7 % (+Kanister 11.0 %) | Kopf < 2500 vor der Kamera 12.2 %, hinter 0.5 % (+Kanister < 2500 21.1 %) | Rammen 0, Querungen 1 | Kanister-Sitz 7470 Bilder, Abweichung max 0 (letzte Zeile F8390) | Kanister ausserhalb Regions-Viereck 0
+  gegen ohne_frei4_elza: 7454 gemeinsame Bilder (mit 7454, ohne 7454), abweichend 0, erstes FNone (Phase mit/ohne None)
+ohne_frei4_elza: 7454 Bilder (4.1 min) | ohne Fortschritt zur Figur 7.4 s | Drehen 47.6 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.7 % (+Kanister 11.0 %) | Kopf < 2500 vor der Kamera 12.2 %, hinter 0.5 % (+Kanister < 2500 21.1 %) | Rammen 0, Querungen 1 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F921) | Kanister ausserhalb Regions-Viereck 0
+tragvergleich: 7454 Bilder mit Kanister, 7454 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1, erster Rueckfall F-1); Kanister-Sitz 7470 Bilder, Abweichung max 0
+   tragvergleich exit=0
+   neu traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F921 (878 Bilder = 29.3 s), 7480 Trag-Bilder: ohne Fortschritt 3148 (42 %), davon keine Ausnahme ausser Biss am Spieler (1845 Bilder), laengste Folge ohne Fortschritt 119 Bilder (bis F3920), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 231 (erstes F1216); Figur oben 16 Bilder, Kopf-Abstand mittel 2440, Gator im Bild der Spielerkamera 100 %; 2-s-Fenster fern der Figur 209 (erstes F3109)
+   ohne traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F921 (878 Bilder = 29.3 s), 7480 Trag-Bilder: ohne Fortschritt 3148 (42 %), davon keine Ausnahme ausser Biss am Spieler (1845 Bilder), laengste Folge ohne Fortschritt 119 Bilder (bis F3920), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 231 (erstes F1216); Figur oben 16 Bilder, Kopf-Abstand mittel 2440, Gator im Bild der Spielerkamera 100 %; 2-s-Fenster fern der Figur 209 (erstes F3109)
