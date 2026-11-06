@@ -1,0 +1,129 @@
+# Abnahme 3, Befund N1: RE2 zieht die vier Arme in [T7] ein, der Port nicht
+## RE2 CDEMD0_EM36_ai0.BIN (build/extracted/re2_ems, Datei-Offset = Adresse - 0x80100000), [T6]-Ende/[T7]
+  801015b8 98 01 02 8e  lw $v0, 0x198($s0)
+  801015bc 1f 00 03 3c  lui $v1, 0x1f
+  801015c0 e0 01 42 8c  lw $v0, 0x1e0($v0)
+  801015c4 02 00 63 34  ori $v1, $v1, 2
+  801015c8 10 00 40 a4  sh $zero, 0x10($v0)
+  801015cc 08 00 02 24  addiu $v0, $zero, 8
+  801015d0 4c 01 03 ae  sw $v1, 0x14c($s0)
+  801015d4 06 00 02 a2  sb $v0, 6($s0)
+  801015d8 38 3c 66 8e  lw $a2, 0x3c38($s3)
+  801015dc 09 00 02 24  addiu $v0, $zero, 9
+  801015e0 06 00 c2 a0  sb $v0, 6($a2)
+  801015e4 3c 3c 66 8e  lw $a2, 0x3c3c($s3)
+  801015e8 00 00 00 00  nop 
+  801015ec 06 00 c2 a0  sb $v0, 6($a2)
+  801015f0 40 3c 66 8e  lw $a2, 0x3c40($s3)
+  801015f4 0a 00 04 24  addiu $a0, $zero, 0xa
+  801015f8 06 00 c2 a0  sb $v0, 6($a2)
+  801015fc 44 3c 66 8e  lw $a2, 0x3c44($s3)
+  80101600 21 28 00 02  move $a1, $s0
+  80101604 cd 39 04 08  j 0x8010e734
+  80101608 06 00 c2 a0  sb $v0, 6($a2)
+## RE2 CDEMD0_EM37_ai0.BIN: sub9-Phasentabelle @0x74 (Datei, relokiert +0xD000) und Phase 9 = Einziehen
+  Tabelle: ['0x8010209c', '0x80102144', '0x801021c0', '0x80102224', '0x80102344', '0x8010237c', '0x80102500', '0x80102508', '0x801026f4', '0x80102690', '0x8010276c']
+  80102690 21 20 20 02  move $a0, $s1
+  80102694 21 28 00 02  move $a1, $s0
+  80102698 21 30 60 02  move $a2, $s3
+  8010269c 67 a5 00 0c  jal 0x8002959c
+  801026a0 40 00 07 24  addiu $a3, $zero, 0x40
+  801026a4 8c 00 42 96  lhu $v0, 0x8c($s2)
+  801026a8 58 01 23 96  lhu $v1, 0x158($s1)
+  801026ac 00 00 00 00  nop 
+  801026b0 23 10 43 00  subu $v0, $v0, $v1
+  801026b4 8c 00 42 a6  sh $v0, 0x8c($s2)
+  801026b8 58 01 22 96  lhu $v0, 0x158($s1)
+  801026bc 78 00 23 96  lhu $v1, 0x78($s1)
+  801026c0 04 00 42 24  addiu $v0, $v0, 4
+  801026c4 08 00 63 24  addiu $v1, $v1, 8
+  801026c8 58 01 22 a6  sh $v0, 0x158($s1)
+  801026cc 78 00 23 a6  sh $v1, 0x78($s1)
+  801026d0 8c 00 42 86  lh $v0, 0x8c($s2)
+  801026d4 00 00 00 00  nop 
+  801026d8 06 00 41 04  bgez $v0, 0x801026f4
+  801026dc 21 20 00 00  move $a0, $zero
+  801026e0 21 28 20 02  move $a1, $s1
+  801026e4 0a 00 02 24  addiu $v0, $zero, 0xa
+  801026e8 8c 00 40 a6  sh $zero, 0x8c($s2)
+  801026ec 5b 6f 01 0c  jal 0x8005bd6c
+  801026f0 06 00 a2 a0  sb $v0, 6($a1)
+## RE2-RAM (Savestates Abnahme 1, wz/re2_arme.py): Arme Slot 1..4, Wort = 01 09 <Phase> 00
+s12 Schnitt 10 G5 x -2786 Wort 00050201 t158 81 clip 3 bild 71 | Leon x 6565
+   slot 1 typ ff w0 0000000d Wort 00060901 (-9,-1151,-24366) clip 0 bild 0 +06 6 scale? -392 -32748 2622
+   slot 2 typ ff w0 0000000d Wort 00060901 (637,-565,-24620) clip 0 bild 0 +06 6 scale? 572 -32746 3678
+   slot 3 typ ff w0 0000000d Wort 00050901 (426,-547,-22153) clip 2 bild 0 +06 5 scale? 8796 -32746 4167
+   slot 4 typ ff w0 0000000d Wort 00010901 (-27,-1218,-22421) clip 0 bild 0 +06 1 scale? 17020 -32746 1776
+s13 Schnitt 10 G5 x -2779 Wort 00060201 t158 0 clip 4 bild 9 | Leon x 7715
+   slot 1 typ ff w0 0000000d Wort 00070901 (0,-1142,-24357) clip 0 bild 0 +06 7 scale? -392 -32748 2914
+   slot 2 typ ff w0 0000000d Wort 00070901 (631,-569,-24620) clip 0 bild 0 +06 7 scale? 572 -32746 3906
+   slot 3 typ ff w0 0000000d Wort 00070901 (434,-555,-22161) clip 0 bild 0 +06 7 scale? 8796 -32746 4179
+   slot 4 typ ff w0 0000000d Wort 00070901 (-20,-1202,-22419) clip 0 bild 0 +06 7 scale? 17020 -32746 2892
+s16 Schnitt 10 G5 x 1333 Wort 00060201 t158 0 clip 4 bild 158 | Leon x 11913
+   slot 1 typ ff w0 0000000d Wort 00070901 (82,-1178,-24309) clip 0 bild 0 +06 7 scale? -392 -32748 3040
+   slot 2 typ ff w0 0000000d Wort 00070901 (672,-550,-24551) clip 0 bild 0 +06 7 scale? 572 -32746 3981
+   slot 3 typ ff w0 0000000d Wort 00070901 (528,-614,-22174) clip 0 bild 0 +06 7 scale? 8796 -32746 4260
+   slot 4 typ ff w0 0000000d Wort 00070901 (-99,-1231,-22353) clip 0 bild 0 +06 7 scale? 17020 -32746 2864
+s17 Schnitt 10 G5 x 1160 Wort 00080201 t158 0 clip 2 bild 27 | Leon x 13267
+   slot 1 typ ff w0 0000000d Wort 000a0901 (114,-1164,-24317) clip 0 bild 0 +06 10 scale? -392 -32748 114
+   slot 2 typ ff w0 0000000d Wort 000a0901 (680,-539,-24581) clip 0 bild 0 +06 10 scale? 572 -32746 680
+   slot 3 typ ff w0 0000000d Wort 000a0901 (528,-650,-22151) clip 0 bild 0 +06 10 scale? 8796 -32746 528
+   slot 4 typ ff w0 0000000d Wort 000a0901 (-120,-1231,-22360) clip 0 bild 0 +06 10 scale? 17020 -32746 -120
+s20 Schnitt 5 G5 x 1160 Wort 000a0201 t158 12 clip 0 bild 12 | Leon x 11394
+   slot 1 typ ff w0 0000000d Wort 000a0901 (114,-1164,-24317) clip 0 bild 0 +06 10 scale? -392 -32748 114
+   slot 2 typ ff w0 0000000d Wort 000a0901 (680,-539,-24581) clip 0 bild 0 +06 10 scale? 572 -32746 680
+   slot 3 typ ff w0 0000000d Wort 000a0901 (528,-650,-22151) clip 0 bild 0 +06 10 scale? 8796 -32746 528
+   slot 4 typ ff w0 0000000d Wort 000a0901 (-120,-1231,-22360) clip 0 bild 0 +06 10 scale? 17020 -32746 -120
+
+## Port enemy_ai_boss_g5.c: Schreiber der Armphase (grep g5_tentakel_phase): nur [T1] 1/6, [T4] 8, [T5]-Ende 7 - in [T7] (case 7) keiner
+115:extern void    re15_g5_tentakel_phase(int idx, unsigned ph);
+116:extern void    re15_g5_tentakel_phase_alle(unsigned ph);
+126:static void g5_tentakel_phase(int idx, unsigned ph) { re15_g5_tentakel_phase(idx, ph); }
+127:static void g5_tentakel_phase_alle(unsigned ph) { re15_g5_tentakel_phase_alle(ph); }
+867:        if (g->timer == 10) { g5_tentakel_phase(0, 1); g5_se(9); }
+868:        if (g->timer == 30) { g5_tentakel_phase(2, 1); g5_se(9); }
+869:        if (g->timer == 40) { g5_tentakel_phase(3, 1); g5_se(9); }
+871:            g5_tentakel_phase_alle(6);                 /* alle vier +0x06 = 6 */
+907:        if (g->timer == 30) { g5_tentakel_phase_alle(8); g5_se(0); }
+933:                               g5_tentakel_phase_alle(7); }
+    case 7:                                            /* [T7] */
+        g5_clip(e, 2, 0); g->gewicht[1] = 0; g->ph = 8; g5_se(10);
+        /* M4b: KEIN break. [T7] `j 0x80101734` @0x80101604 -> `jal 0x8005bd6c` @0x80101734 (SE 10) ->
+         * 0x8010173c = [T8] (Tabelle @0x80100034), `jal 0x8002959c` @0x80101748 im selben Takt. */
+        /* fall through */
+    case 8: if (g5_anim(e)) g->ph = 9; break;          /* [T8] Clip 2, 150 F */
+
+## Bild: Rotanteil der Arme ueber der Masse (wz/arme_oben.py), RE2 faellt bei Bild 650 -> 660 ([T7] = Bild 652), Port bleibt
+Bild 560  Rotanteil %: RE2  3.56  Leon  2.65  Elza  2.65
+Bild 570  Rotanteil %: RE2  3.37  Leon  2.41  Elza  2.41
+Bild 580  Rotanteil %: RE2  3.57  Leon  2.67  Elza  2.67
+Bild 590  Rotanteil %: RE2  4.03  Leon  2.53  Elza  2.53
+Bild 600  Rotanteil %: RE2  3.84  Leon  2.86  Elza  2.86
+Bild 610  Rotanteil %: RE2  3.58  Leon  3.00  Elza  3.00
+Bild 620  Rotanteil %: RE2  3.98  Leon  3.01  Elza  3.01
+Bild 630  Rotanteil %: RE2  4.14  Leon  2.69  Elza  2.69
+Bild 640  Rotanteil %: RE2  4.06  Leon  3.08  Elza  3.08
+Bild 650  Rotanteil %: RE2  4.43  Leon  3.07  Elza  3.07
+Bild 660  Rotanteil %: RE2  1.99  Leon  3.13  Elza  3.13
+Bild 670  Rotanteil %: RE2  1.93  Leon  3.11  Elza  3.11
+Bild 680  Rotanteil %: RE2  2.30  Leon  3.09  Elza  3.09
+Bild 690  Rotanteil %: RE2  2.16  Leon  2.99  Elza  2.99
+Bild 700  Rotanteil %: RE2  2.15  Leon  2.90  Elza  2.90
+Bild 710  Rotanteil %: RE2  2.06  Leon  3.05  Elza  3.05
+Bild 720  Rotanteil %: RE2  1.82  Leon  2.96  Elza  2.96
+Bild 730  Rotanteil %: RE2  1.64  Leon  2.91  Elza  2.91
+Bild 740  Rotanteil %: RE2  1.74  Leon  3.05  Elza  3.05
+Bild 750  Rotanteil %: RE2  2.05  Leon  3.23  Elza  3.23
+Bild 760  Rotanteil %: RE2  2.27  Leon  3.40  Elza  3.40
+Bild 770  Rotanteil %: RE2  2.45  Leon  3.53  Elza  3.53
+Bild 780  Rotanteil %: RE2  2.68  Leon  3.59  Elza  3.59
+Bild 790  Rotanteil %: RE2  2.75  Leon  3.43  Elza  3.43
+Bild 800  Rotanteil %: RE2  2.74  Leon  3.50  Elza  3.50
+
+## N2: RE2-RAM Armstreckung *(Arm+0x198)+0x8c je Savestate
+s03 A0 ph2 scale 4096 (-6235,-25333) | A1 ph0 scale 0 (-5585,-24620) | A2 ph2 scale 512 (-5791,-20905) | A3 ph0 scale 0 (-6243,-21442)
+s05 A0 ph6 scale 4096 (-6194,-25313) | A1 ph6 scale 0 (-6412,-24622) | A2 ph6 scale 4096 (-5693,-20955) | A3 ph6 scale 4096 (-6197,-21433)
+s06 A0 ph6 scale 4096 (-6207,-25340) | A1 ph6 scale 0 (-1792,-24621) | A2 ph6 scale 4096 (-5629,-20924) | A3 ph6 scale 4096 (-6140,-21377)
+s08 A0 ph6 scale 4096 (-6085,-25358) | A1 ph6 scale 0 (582,-24618) | A2 ph7 scale 4096 (-5499,-20834) | A3 ph7 scale 4096 (-6014,-21309)
+s09 A0 ph8 scale 3264 (-6049,-25355) | A1 ph9 scale 0 (644,-24620) | A2 ph8 scale 3264 (-5499,-20834) | A3 ph8 scale 3264 (-6014,-21309)
+s10 A0 ph9 scale 0 (-6049,-25355) | A1 ph9 scale 0 (629,-24620) | A2 ph9 scale 0 (-5499,-20834) | A3 ph9 scale 0 (-6014,-21309)

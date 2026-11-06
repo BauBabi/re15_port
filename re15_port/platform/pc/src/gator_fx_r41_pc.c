@@ -84,10 +84,27 @@ extern void re15_render_textured_tri(int x0, int y0, int u0, int v0,
 #define G41FX_KERN_CLUT0    485     /* erste Zeile, die re2fx_pc.c nicht laedt (RE2FX_CLUT_ERSTE 480 + 5) */
 #define G41FX_KERN_CLUTS    14      /* 485..498: TEX.TIM-CLUT 32 x 19 ab Zeile 480 (`20 00 13 00`) */
 
-static uint8_t  *s_esp;            /* umgelegte Kopie von GATOR40A0.ESP (re2fx haelt den Zeiger) */
+/* RAUM-ESP-SAETZE (Runde 41 G5-Auftritt, Nachbesserung 6): der RE2-Raumlader FUN_8001bba4 registriert bei JEDEM Raumwechsel die
+ * Raum-ESP des neuen Raums (FUN_8001bca0 Registry-Basis 8) und legt ihre Texturen mit FUN_8001bd38 neu ins VRAM-Fenster. Der Port
+ * fuehrt dafuer je RE2-Vorlage einen Satz: Raeume, ESP-Datei, TIM-Namen. Satz 1 = ROOM7040 fuer 5090/5091 (Brocken Bank 0x19 der
+ * G5-Szene, ROOM7040 sub05 @0x016DE; R704.ESP = RDT[0x35D8:0x36FC], Textur RDT[0x18984:0x1B1C4] bytegleich GATOR40A0_19.TIM,
+ * geprueft in tools/r41_g5auftritt/re2_m4_7040.py). Je Satz eine eigene, einmal umgelegte ESP-Kopie; der Atlas in Platz 54 wird
+ * bei jedem Satzwechsel neu geladen (wie RE2 das VRAM-Fenster je Raum neu belegt). */
+typedef struct { unsigned r0, r1; const char *esp, *tim_form, *vorlage; } g41_satz_t;
+static const g41_satz_t k_saetze[] = {
+    { 0x2090u, 0x2091u, "GATOR40A0.ESP", "GATOR40A0_%02X.TIM", "ROOM40A0" },
+    { 0x5090u, 0x5091u, "R704.ESP",      "GATOR40A0_%02X.TIM", "ROOM7040" },
+};
+#define G41FX_SAETZE ((int)(sizeof k_saetze / sizeof k_saetze[0]))
+static uint8_t  *s_esp_satz[G41FX_SAETZE];      /* umgelegte Kopien (re2fx haelt den Zeiger des registrierten Satzes) */
+static int       s_esp_sz_satz[G41FX_SAETZE];
+static int       s_geladen_satz[G41FX_SAETZE];  /* 0 ungeprueft, 1 ok, -1 fehlt */
+static int       s_raum_h_satz[G41FX_SAETZE];
+static int       s_satz = -1;      /* registrierter Satz, -1 = keiner (GLAS1090.ESP der uebrigen Raeume) */
+static int       s_atlas_satz = -1;/* Satz, dessen Atlas in Platz 54 liegt */
+static uint8_t  *s_esp;            /* umgelegte Kopie des Satzes in Arbeit */
 static int       s_esp_sz;
-static int       s_geladen;        /* 0 ungeprueft, 1 ok, -1 fehlt */
-static int       s_reg;            /* 1 = Raum-ESP ROOM40A0 ist registriert */
+static int       s_reg;            /* 1 = eine Raum-ESP-Vorlage ist registriert */
 static int       s_raum_ok;        /* Textur-Platz 54 geladen (Atlas der Raum-Texturen) */
 static int       s_kern_geladen, s_kern_ok;   /* Platz 56 (Kern-Zeilen 485..498): versucht / geladen */
 static int       s_raum_h;         /* belegte Hoehe des VRAM-Fensters nach FUN_8001bd38 (ROOM40A0: 216) = Blockhoehe im Atlas */
@@ -122,7 +139,7 @@ static int tim_lesen(const uint8_t *t, int sz, g41_tim_t *o)
 
 /* FUN_8001bd38-Zwilling: Texturen der registrierten Raumbanken in das VRAM-Fenster legen und die Bankkoepfe der ESP-Kopie
  * umlegen. Bankkopf = Bankoffset aus der rueckwaerts gelesenen Offset-Tafel (FUN_8001bca0, wie re2fx_register_raum). */
-static int raum_umlegen(void)
+static int raum_umlegen(const char *tim_form)
 {
     const size_t al = ((size_t)s_esp_sz + 3u) & ~(size_t)3u;
     const int32_t ende = (int32_t)al - 4;
@@ -136,7 +153,7 @@ static int raum_umlegen(void)
         const uint32_t off = le32(s_esp + ende - 4 * n);
         if ((size_t)off + 12 > (size_t)s_esp_sz) return -10 - n;
         char name[32];
-        snprintf(name, sizeof name, "GATOR40A0_%02X.TIM", (unsigned)id);
+        snprintf(name, sizeof name, tim_form, (unsigned)id);
         int tsz = 0;
         uint8_t *t = re15_pc_read_re2(name, &tsz);
         g41_tim_t ti;
@@ -206,17 +223,32 @@ static void kern_laden(void)
             s_kern_ok ? "ok" : "FEHLT");
 }
 
-static void laden(void)
+static void laden(int k)
 {
-    if (s_geladen) return;
-    s_geladen = -1;
-    s_esp = re15_pc_read_re2("GATOR40A0.ESP", &s_esp_sz);
-    if (!s_esp || s_esp_sz < 12) {
-        fprintf(stderr, "[gator-fx] shared_assets/RE2/GATOR40A0.ESP fehlt -> keine Explosion der RE2-Raumbanken\n");
-        return;
+    const g41_satz_t *z = &k_saetze[k];
+    if (s_geladen_satz[k] > 0 && s_atlas_satz == k && re15_render_pc_dbg_slot_loaded(G41FX_RAUM_SLOT)) return;
+    if (s_geladen_satz[k] < 0) return;
+    if (s_geladen_satz[k] == 0) {                                    /* ESP einmal lesen und umlegen */
+        s_geladen_satz[k] = -1;
+        s_esp = re15_pc_read_re2(z->esp, &s_esp_sz);
+        if (!s_esp || s_esp_sz < 12) {
+            fprintf(stderr, "[gator-fx] shared_assets/RE2/%s fehlt -> keine RE2-Raumbanken %s\n", z->esp, z->vorlage);
+            free(s_esp); s_esp = NULL; return;
+        }
+        const int nb0 = raum_umlegen(z->tim_form);
+        if (nb0 <= 0) { fprintf(stderr, "[gator-fx] Raum-Texturen %s fehlen/unlesbar (rc %d)\n", z->tim_form, nb0); free(s_esp); s_esp = NULL; return; }
+        s_esp_satz[k] = s_esp; s_esp_sz_satz[k] = s_esp_sz; s_raum_h_satz[k] = s_raum_h; s_geladen_satz[k] = 2;   /* 2 = umgelegt, Atlas offen */
     }
-    const int nb = raum_umlegen();
-    if (nb <= 0) { fprintf(stderr, "[gator-fx] Raum-Texturen GATOR40A0_*.TIM fehlen/unlesbar (rc %d)\n", nb); return; }
+    /* Atlas neu bauen (Fenster-Pixel/CLUT dieses Satzes neu einlesen: raum_umlegen hat s_raum_pix/clut nur beim ersten Mal gefuellt) */
+    s_esp = s_esp_satz[k]; s_esp_sz = s_esp_sz_satz[k];
+    if (s_geladen_satz[k] != 2) {                                    /* Fensterinhalt fuer einen spaeteren Satzwechsel neu legen */
+        uint8_t *roh = re15_pc_read_re2(z->esp, &s_esp_sz);           /* frische Kopie nur fuer die Fensterbelegung */
+        if (!roh) return;
+        uint8_t *alt = s_esp; s_esp = roh;
+        (void)raum_umlegen(z->tim_form);
+        free(roh); s_esp = alt; s_esp_sz = s_esp_sz_satz[k];
+    }
+    s_raum_h = s_raum_h_satz[k];
     /* Atlas (Nachbesserung 4): 16 Raum-Bloecke (CLUT-Zeile 480 + k) der belegten Fensterhoehe s_raum_h. Texel = CLUT[Index]
      * (16 Bit), dieselbe Wertregel wie der 4-bpp-Pfad von render_pc.c. */
     const int h = G41FX_RAUM_CLUTS * s_raum_h;
@@ -238,29 +270,35 @@ static void laden(void)
     re15_render_pc_upload_tim_slot(&t, G41FX_RAUM_SLOT);
     free(at);
     s_raum_ok = re15_render_pc_dbg_slot_loaded(G41FX_RAUM_SLOT);
-    s_geladen = 1;
-    fprintf(stderr, "[gator-fx] GATOR40A0.ESP %d B (%d Raumbanken umgelegt), Raum-Atlas Slot %d %s: %d x %d (16 Bloecke a %d Zeilen)\n",
-            s_esp_sz, nb, G41FX_RAUM_SLOT, s_raum_ok ? "ok" : "FEHLT", G41FX_RAUM_BREITE, h, s_raum_h);
+    s_geladen_satz[k] = 1; s_atlas_satz = k;
+    fprintf(stderr, "[gator-fx] %s %d B (%s), Raum-Atlas Slot %d %s: %d x %d (16 Bloecke a %d Zeilen)\n",
+            z->esp, s_esp_sz, z->vorlage, G41FX_RAUM_SLOT, s_raum_ok ? "ok" : "FEHLT", G41FX_RAUM_BREITE, h, s_raum_h);
 }
 
 /* RE2-Raumlader FUN_8001bba4: Raum-ESP des NEUEN Raums registrieren (vorherige Raumbanken austragen, @0x8001bbc8-c0c). */
 static void raum_takt(void)
 {
     const unsigned r = (unsigned)g_current_room_id & 0xFFFFu;
-    const int soll = (r == 0x2090u || r == 0x2091u);
-    if (soll && !s_reg) {
-        laden();
-        if (s_geladen <= 0) return;
-        const int rc = re2fx_register_raum(s_esp, (size_t)s_esp_sz);
-        s_reg = (rc == 0);
-        fprintf(stderr, "[gator-fx] F%u ROOM%04X: Raum-ESP ROOM40A0 -> re2fx_register_raum rc=%d (Banken 0x26 %d, 0x08 %d, 0x09 %d, 0x1A %d)\n",
-                (unsigned)g_engine.frame_count, r, rc, re2fx_bank_registriert(0x26), re2fx_bank_registriert(0x08),
-                re2fx_bank_registriert(0x09), re2fx_bank_registriert(0x1A));
-    } else if (!soll && s_reg) {
-        s_reg = 0;
+    int soll = -1;
+    for (int k = 0; k < G41FX_SAETZE; k++) if (r == k_saetze[k].r0 || r == k_saetze[k].r1) soll = k;
+    if (soll >= 0 && s_satz == soll && s_reg) {                    /* Atlas nach einem Platz-Teardown wiederherstellen */
+        if (!re15_render_pc_dbg_slot_loaded(G41FX_RAUM_SLOT) || s_atlas_satz != soll) laden(soll);
+        return;
+    }
+    if (soll >= 0) {
+        laden(soll);
+        if (s_geladen_satz[soll] <= 0) return;
+        const int rc = re2fx_register_raum(s_esp_satz[soll], (size_t)s_esp_sz_satz[soll]);
+        s_reg = (rc == 0); s_satz = s_reg ? soll : -1;
+        fprintf(stderr, "[gator-fx] F%u ROOM%04X: Raum-ESP %s -> re2fx_register_raum rc=%d (Banken 0x26 %d, 0x08 %d, 0x09 %d, 0x1A %d) 0x19 %d\n",
+                (unsigned)g_engine.frame_count, r, k_saetze[soll].vorlage, rc, re2fx_bank_registriert(0x26), re2fx_bank_registriert(0x08),
+                re2fx_bank_registriert(0x09), re2fx_bank_registriert(0x1A), re2fx_bank_registriert(0x19));
+    } else if (s_reg) {
+        const char *alt = (s_satz >= 0) ? k_saetze[s_satz].vorlage : "?";
+        s_reg = 0; s_satz = -1;
         re15_pc_glas1120_init();                                     /* GLAS1090.ESP wieder (Raum-ESP der uebrigen Raeume) */
-        fprintf(stderr, "[gator-fx] F%u ROOM%04X: Raum-ESP ROOM40A0 ausgetragen, GLAS1090.ESP wieder registriert\n",
-                (unsigned)g_engine.frame_count, r);
+        fprintf(stderr, "[gator-fx] F%u ROOM%04X: Raum-ESP %s ausgetragen, GLAS1090.ESP wieder registriert\n",
+                (unsigned)g_engine.frame_count, r, alt);
     }
 }
 

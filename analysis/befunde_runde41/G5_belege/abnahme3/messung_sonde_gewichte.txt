@@ -1,0 +1,23 @@
+# Sonde RE15_G5_MORPH_SONDE im Fensterlauf (wz/lauf.sh sonde_*), Zeile Teil 2 an den RE2-Savestate-Bildern
+== leon
+[g5sonde] F1558 Ctor slot 2 typ 36 bank 0 ok -1 pose 0
+[g5sonde] F1613 T0 w1_ok 1 basis -4534
+Bild 31: F1644 slot 2 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 3078 0 0 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+Bild 80: F1693 slot 2 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 10296 0 0 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+Bild 129: F1742 slot 2 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 5796 566 0 0 cut 16 bb x -3600..2887 y -4223..-241 z -3396..3394
+Bild 165: F1778 slot 2 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w -184 2895 0 0 cut 16 bb x -3600..3688 y -4223..-1326 z -2358..2357
+Bild 264: F1877 slot 2 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 9440 2865 0 0 cut 16 bb x -3600..3677 y -4223..-1312 z -2372..2370
+Bild 313: F1926 slot 2 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w -4168 2865 0 0 cut 16 bb x -3600..3677 y -4223..-1312 z -2372..2370
+Bild 479: F2092 slot 2 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 8000 2865 0 0 cut 17 bb x -3600..3677 y -4223..-1312 z -2372..2370
+Bild 677: F2290 slot 2 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 3152 0 0 0 cut 17 bb x -3600..2693 y -4223..23 z -3648..3647
+== elza
+[g5sonde] F1558 Ctor slot 1 typ 36 bank 0 ok -1 pose 0
+[g5sonde] F1613 T0 w1_ok 1 basis -4534
+Bild 31: F1644 slot 1 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 3078 0 0 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+Bild 80: F1693 slot 1 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 10296 0 0 0 cut 16 bb x -3600..2693 y -4223..23 z -3648..3647
+Bild 129: F1742 slot 1 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 5796 566 0 0 cut 16 bb x -3600..2887 y -4223..-241 z -3396..3394
+Bild 165: F1778 slot 1 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w -184 2895 0 0 cut 16 bb x -3600..3688 y -4223..-1326 z -2358..2357
+Bild 264: F1877 slot 1 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 9440 2865 0 0 cut 16 bb x -3600..3677 y -4223..-1312 z -2372..2370
+Bild 313: F1926 slot 1 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w -4168 2865 0 0 cut 16 bb x -3600..3677 y -4223..-1312 z -2372..2370
+Bild 479: F2092 slot 1 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 8000 2865 0 0 cut 17 bb x -3600..3677 y -4223..-1312 z -2372..2370
+Bild 677: F2290 slot 1 nbi 2 nmi 2 nv 635 mv 1 gueltig 1 mesh 2 w1ok 1 w 3152 0 0 0 cut 17 bb x -3600..2693 y -4223..23 z -3648..3647

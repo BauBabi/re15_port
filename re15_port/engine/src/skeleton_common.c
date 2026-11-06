@@ -165,6 +165,8 @@ void *g_anim_pose_actor = NULL;
 void (*g_anim_bone_angle_hook)(const void *actor, int bone, int16_t *ay, int16_t *az) = NULL;
 /* Aktor-Identitaet fuer den Haken im QUERY-Modus (g_anim_pose_actor == NULL); s. Header. */
 void *g_anim_query_actor = NULL;
+/* Gehaltene RE2-Pose (Nachbesserung G5 2, re15_g5_skin.c): 1 = Winkel (bone >= 0) bzw. Wurzel (bone -1) ersetzt. */
+int (*g_anim_pose_override)(const void *actor, int bone, int16_t w[3], int32_t r[3]) = NULL;
 /* Runde 38 Spur D (Zopf): Fangpuffer der lokalen Knochen-Rotationen, NULL = aus. */
 int32_t (*g_skel_lokal_rot)[9] = NULL;
 
@@ -295,6 +297,15 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
     /* Root-translation crossfade (FUN_8001f3bc gpf12/gpl12): lerp the keyframe root
      * toward the prior rendered root. rt_* = the rendered (possibly blended) root. */
     int32_t rt_x = kf_px, rt_y = kf_py, rt_z = kf_pz;
+    /* GEHALTENE RE2-POSE (G5 EM036 / Arme EM037, Nachbesserung G5 2): RE2 mischt nur im Anim-Schritt FUN_80029614 und haelt
+     * Winkel und Wurzel bis zum naechsten Schritt (re15_g5_skin.c). Dann gibt es hier weder Keyframe noch Crossfade - der
+     * Crossfade je Zeichnung wuerde in Takten ohne Schritt (Speer sub9 ph3..ph7) gegen das rohe Bild laufen. */
+    const void *ovr_actor = bact ? (const void *)bact : (const void *)g_anim_query_actor;
+    int ovr = 0;
+    if (g_anim_pose_override && ovr_actor) {
+        int32_t r[3];
+        if (g_anim_pose_override(ovr_actor, -1, NULL, r)) { ovr = 1; rt_x = r[0]; rt_y = r[1]; rt_z = r[2]; blend = 0; tween.active = 0; }
+    }
     if (blend) {
         rt_x = ((int)kf_px * wc + bact->prev_root[0] * wp) >> 12;
         rt_y = ((int)kf_py * wc + bact->prev_root[1] * wp) >> 12;
@@ -325,6 +336,10 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
          * the prior rendered angle, then snapshot the result as prev for next frame.
          * Done on the RAW keyframe angle (before the Plc_neck head-look add) so prev
          * stays in keyframe space. */
+        if (ovr) {
+            int16_t ow[3];
+            if (g_anim_pose_override(ovr_actor, b, ow, NULL)) { ax = ow[0]; ay = ow[1]; az = ow[2]; }
+        }
         if (blend) {
             ax = re15_blend_angle12(bact->prev_angles[b][0], ax, wp);
             ay = re15_blend_angle12(bact->prev_angles[b][1], ay, wp);

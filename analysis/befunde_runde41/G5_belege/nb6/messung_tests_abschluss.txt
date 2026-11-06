@@ -1,0 +1,66 @@
+# NB6-Abschluss Testlaeufe (re15_port/build im Worktree, Bau tools/local_build.sh, RE15_JOBS=3)
+## unit_r41_g5auftritt -V (Stand 1aa55d23d; mit c2c5228e2 (TIM-Vergleich) erneut: "test_r41_g5auftritt: OK", 1/1)
+5090: NB5 Lampe x -4000: Gehaeusekasten Schnitt 16 (107..149, 113..120), RE2-Aufnahme Fleck (108.8,119.3) Bild -44
+5090: NB5 Lampe x -5000: Gehaeusekasten Schnitt 16 (93..132, 115..121), RE2-Aufnahme Fleck (95.1,120.8) Bild -43
+5090: NB5 Lampe x -6000: Gehaeusekasten Schnitt 16 (79..117, 116..122), RE2-Aufnahme Fleck (80.6,121.6) Bild -42
+5090: NB6 Ring B Platz 0 nach Vorlaufbild 2: Wert 114 Vorlauf 0 Rest 6 Schritt 1828 Akku 14628
+5090: NB6 Ring B Platz 1 nach Vorlaufbild 2: Wert 250 Vorlauf 1 Rest 5 Schritt 0 Akku 0
+5090: NB6 Ring B Platz 2 nach Vorlaufbild 2: Wert 0 Vorlauf 4 Rest 17 Schritt -1129 Akku 25600
+5090: NB5 Beben falsch in 0 Vorlaufbildern, Ton 1 x bei Vorlaufbild 4, Lampe vor sub11 0, Vorlaufbild 2 x -5000 1, RE2-Lampenfleck im Gehaeusekasten 3/3 (max 0.0 px daneben)
+5090: NB6 Brocken 8 gespawnt; RE2-FX-Pool bei sub05-Bild 39: 18 Plaetze, 18 von 18 gleich RE2-RAM s02; op_unbekannt 0; Ring B nach sub14 wie FUN_80039514/FUN_800395B8; Ringe bei sub05-Bild 39 leer 1 (RE2-RAM s02: leer)
+5090: NB6 Vibration Aktuator 1 je sub04-Bild 0..23: 0 von 24 Bildern falsch, Aktuator 0 in 0 Bildern != 0; Brocken-Takt sub05-Bild 1..40: 0 Bilder falsch
+5090: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+5090: NB5 Lampen gegen RE2-RAM 20 von 20 gleich (s03..s12), sichtbar (Ankerzone) in 438 Szenenbildern, nach Bild 437: 0
+5091: NB5 Lampe x -4000: Gehaeusekasten Schnitt 16 (107..149, 113..120), RE2-Aufnahme Fleck (108.8,119.3) Bild -44
+5091: NB5 Lampe x -5000: Gehaeusekasten Schnitt 16 (93..132, 115..121), RE2-Aufnahme Fleck (95.1,120.8) Bild -43
+5091: NB5 Lampe x -6000: Gehaeusekasten Schnitt 16 (79..117, 116..122), RE2-Aufnahme Fleck (80.6,121.6) Bild -42
+5091: NB6 Ring B Platz 0 nach Vorlaufbild 2: Wert 114 Vorlauf 0 Rest 6 Schritt 1828 Akku 14628
+5091: NB6 Ring B Platz 1 nach Vorlaufbild 2: Wert 250 Vorlauf 1 Rest 5 Schritt 0 Akku 0
+5091: NB6 Ring B Platz 2 nach Vorlaufbild 2: Wert 0 Vorlauf 4 Rest 17 Schritt -1129 Akku 25600
+5091: NB5 Beben falsch in 0 Vorlaufbildern, Ton 1 x bei Vorlaufbild 4, Lampe vor sub11 0, Vorlaufbild 2 x -5000 1, RE2-Lampenfleck im Gehaeusekasten 3/3 (max 0.0 px daneben)
+5091: NB6 Brocken 8 gespawnt; RE2-FX-Pool bei sub05-Bild 39: 18 Plaetze, 18 von 18 gleich RE2-RAM s02; op_unbekannt 0; Ring B nach sub14 wie FUN_80039514/FUN_800395B8; Ringe bei sub05-Bild 39 leer 1 (RE2-RAM s02: leer)
+5091: NB6 Vibration Aktuator 1 je sub04-Bild 0..23: 0 von 24 Bildern falsch, Aktuator 0 in 0 Bildern != 0; Brocken-Takt sub05-Bild 1..40: 0 Bilder falsch
+5091: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+5091: NB5 Lampen gegen RE2-RAM 20 von 20 gleich (s03..s12), sichtbar (Ankerzone) in 438 Szenenbildern, nach Bild 437: 0
+test_r41_g5auftritt: OK
+
+## G5/Birkin/Tentakel/Granate-Gruppe: ctest -j 3 -R 'g5|birkin|tentak|granat' + integration_r41_re2gator, integration_r41_gatorszene_tod_explosion, integration_r41_kanister2080 (Stand 1aa55d23d)
+ 1/33 Test #1382: integration_r41_g5_tod .....................   Passed  256.58 sec
+ 2/33 Test #1303: integration_r41_re2gator ...................   Passed  296.21 sec
+ 3/33 Test #1381: integration_r41_g5_westen ..................   Passed  415.34 sec
+ 4/33 Test #1376: unit_r41_birkin_wand_griff .................   Passed  142.43 sec
+ 5/33 Test #1167: integration_r41_gatorszene_tod_explosion ...   Passed   59.47 sec
+ 6/33 Test #1377: unit_r41_birkin_wand_g5saat ................   Passed   19.02 sec
+ 7/33 Test #1375: unit_r41_birkin_wand_g5 ....................   Passed   22.84 sec
+ 8/33 Test  #320: unit_r20_birkin_push_pin ...................   Passed    0.84 sec
+ 9/33 Test  #339: unit_r30_birkin_frost ......................   Passed    0.68 sec
+10/33 Test  #303: probe_p3_birkin_rest .......................   Passed    0.51 sec
+11/33 Test  #292: probe_p2_birkin_g5 .........................   Passed    0.47 sec
+12/33 Test  #274: unit_g5_boss ...............................   Passed    0.38 sec
+13/33 Test  #343: unit_r30_granate ...........................   Passed    0.15 sec
+14/33 Test  #308: unit_r17_birkin_1zu1_pin ...................   Passed    0.17 sec
+15/33 Test  #528: unit_r35_granate ...........................   Passed    0.14 sec
+16/33 Test  #314: unit_r18_birkin_restluecken_pin ............   Passed    0.14 sec
+17/33 Test #1373: unit_birkin_bahnsteig ......................   Passed    0.13 sec
+18/33 Test  #597: unit_r36_granate ...........................   Passed    0.07 sec
+19/33 Test #1378: unit_birkin_szenen .........................   Passed    0.08 sec
+20/33 Test  #363: unit_r30_n_room5080_birkin_wand ............   Passed    0.09 sec
+21/33 Test  #272: unit_g5_tentakel ...........................   Passed    0.03 sec
+22/33 Test #1374: unit_r41_birkin_wand_rein ..................   Passed    0.01 sec
+23/33 Test #1384: unit_birkin_opfer ..........................   Passed    0.01 sec
+24/33 Test   #44: unit_birkin_ai .............................   Passed    0.01 sec
+25/33 Test #1372: unit_birkin_formen .........................   Passed    0.01 sec
+26/33 Test  #273: unit_g5_morph ..............................   Passed    0.01 sec
+27/33 Test #1379: unit_r41_g5auftritt ........................   Passed    0.14 sec
+28/33 Test #1191: integration_r41_kanister2080 ...............   Passed  176.56 sec
+29/33 Test  #344: integration_r30_granate_laden ..............   Passed   82.68 sec
+30/33 Test #1380: integration_r41_birkin_pistole .............   Passed  405.25 sec
+31/33 Test  #598: integration_r36_granate ....................   Passed  100.84 sec
+32/33 Test  #529: integration_r35_granate ....................   Passed  182.76 sec
+33/33 Test  #407: integration_r34_granaten ...................   Passed  269.57 sec
+100% tests passed, 0 tests failed out of 33
+Total Test time (real) = 861.51 sec
+
+## Alle Nicht-Integrationstests ohne die 7 df-haengenden Skripttests: ctest -j 3 -E '^integration_|^unit_r38_releaseskript_(trocken|ablauf|fehler_bau|fehler_umfeld|cmd)$|^unit_r39_titelversion_ablauf$|^unit_r35_android_bash_mutanten$' (Stand c2c5228e2)
+100% tests passed, 0 tests failed out of 1068
+Total Test time (real) = 508.95 sec

@@ -1,0 +1,18 @@
+== leon 5090
+Bild    0 G5 spur (-9000, -23400) exe (-9000, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (1200,-23570) exe (1208,-23570)
+Bild  313 G5 spur (-2786, -23400) exe (-2786, -23400) | Arm-Gier spur [-208, -16, 208, 208] exe [-208, -16, 208, 208] | Spieler spur (19800,-23570) exe (19808,-23570)
+Bild  652 G5 spur (1160, -23400) exe (1160, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (12646,-23797) exe (12646,-23797)
+Bild  677 G5 spur (1160, -23400) exe (1160, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (13325,-23797) exe (13325,-23797)
+Bild  812 G5 spur (1160, -23400) exe (1160, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (15808,-23570) exe (15808,-23570)
+Bild  900 G5 spur (1160, -23400) exe (1160, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (18270,-23570) exe (18270,-23570)
+Bild 1161 G5 spur (1848, -23400) exe (1848, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (25574,-23570) exe (25015,-23570)
+Bilder 1163, G5-Lage und Arm-Gier gleich 1163
+== elza 5091
+Bild    0 G5 spur (-9000, -23400) exe (-9000, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (1200,-23570) exe (1208,-23570)
+Bild  313 G5 spur (-2786, -23400) exe (-2786, -23400) | Arm-Gier spur [-208, -16, 208, 208] exe [-208, -16, 208, 208] | Spieler spur (19800,-23570) exe (19808,-23570)
+Bild  652 G5 spur (1160, -23400) exe (1160, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (12646,-23797) exe (12646,-23797)
+Bild  677 G5 spur (1160, -23400) exe (1160, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (13325,-23797) exe (13325,-23797)
+Bild  812 G5 spur (1160, -23400) exe (1160, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (15808,-23570) exe (15808,-23570)
+Bild  900 G5 spur (1160, -23400) exe (1160, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (18270,-23570) exe (18270,-23570)
+Bild 1161 G5 spur (1848, -23400) exe (1848, -23400) | Arm-Gier spur [0, 0, 0, 0] exe [0, 0, 0, 0] | Spieler spur (25574,-23570) exe (25015,-23570)
+Bilder 1163, G5-Lage und Arm-Gier gleich 1163

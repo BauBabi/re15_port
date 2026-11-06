@@ -47,4 +47,13 @@ int re15_xa_decode_movie(const uint8_t *str_data, size_t size,
  * older_R}, carried across calls (init to 0 at movie start). Exposed for tests. */
 void re15_xa_decode_sector(const uint8_t *adpcm2304, int16_t *dst2016x2, int hist[4]);
 
+/* Runde 41 G5-Auftritt (Abnahme 1 M5): ein 4-Bit-MONO-Sektor (coding_info 0x00 = mono / 37800 Hz / 4 Bit, wie RE2
+ * PL0/VOICE/VOICE07.XAS: Subheader Datei 1, Submode 0x64) -> 4032 Mono-Proben (18 Gruppen x 8 Einheiten x 28).
+ * Einheit u = 0..7 nacheinander in der Zeit: Parameter grp[4 + u], Datenbyte grp[16 + j*4 + (u >> 1)], Halbbyte u & 1
+ * (gerade = unten) - psx-spx cdromformat "XA-ADPCM", dieselben K0/K1 und dieselbe (.+32)>>6-Rundung wie der Stereo-Weg.
+ * hist[2] = {old, older}, ueber die Sektoren einer Strecke weitergereicht (Anfang 0). Gegenprobe 2026-11-02: 0 Abweichungen
+ * zu einer unabhaengigen Python-Dekodierung ueber 83 + 106 Sektoren; dieselbe Dekodierung korreliert mit der RE2-Aufnahme
+ * der Szene (DuckStation, Abnahme 1) mit ncc bis 0,86 je 0,5-s-Stueck, ohne Drift. */
+void re15_xa_decode_sector_mono(const uint8_t *adpcm2304, int16_t *dst4032, int hist[2]);
+
 #endif /* RE15_XA_H */

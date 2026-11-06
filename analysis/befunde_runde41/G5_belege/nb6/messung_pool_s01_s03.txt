@@ -1,0 +1,54 @@
+=== s01  Registry 0x800EAE48: 03 05 00 01 02 06 07 04 19 FF FF FF FF FF FF FF
+    DAT_800ce324 (RDT) 0x8011A1A4  +0x50 0x8011D77C +0x54 0x8011D89C +0x58 0x80132B28 +0x5c 0x80135388
+    Bank 03: Kopf 0x801FC408 Tab 0x801FC81C n1 48 n2 163 CLUT +4 0x7811 TPage +6 0x001E 
+    Bank 05: Kopf 0x801FC9F0 Tab 0x801FCAD0 n1 20 n2 14 CLUT +4 0x7911 TPage +6 0x001E 
+    Bank 00: Kopf 0x801FCC8C Tab 0x801FCE34 n1 36 n2 32 CLUT +4 0x7A11 TPage +6 0x001F 
+    Bank 01: Kopf 0x801FD5B0 Tab 0x801FD6D8 n1 27 n2 18 CLUT +4 0x7B11 TPage +6 0x001F 
+    Bank 02: Kopf 0x801FDB84 Tab 0x801FDC94 n1 23 n2 20 CLUT +4 0x7B91 TPage +6 0x001F 
+    Bank 06: Kopf 0x801FDDC0 Tab 0x801FDE24 n1 8 n2 7 CLUT +4 0x7C51 TPage +6 0x001F 
+    Bank 07: Kopf 0x801FDF58 Tab 0x801FDF80 n1 2 n2 4 CLUT +4 0x7C91 TPage +6 0x001F 
+    Bank 04: Kopf 0x801FDFCC Tab 0x801FE388 n1 37 n2 163 CLUT +4 0x7811 TPage +6 0x001E 
+    Bank 19: Kopf 0x8011D784 Tab 0x8011D80C n1 11 n2 10 CLUT +4 0x7812 TPage +6 0x000F Zellen(u,v) [(0, 0), (40, 0), (80, 0), (120, 0), (160, 0), (200, 0), (0, 40), (40, 40), (80, 40), (120, 40)]
+  lebend 0
+=== s02  Registry 0x800EAE48: 03 05 00 01 02 06 07 04 19 FF FF FF FF FF FF FF
+    DAT_800ce324 (RDT) 0x8011A1A4  +0x50 0x8011D77C +0x54 0x8011D89C +0x58 0x80132B28 +0x5c 0x80135388
+    Bank 03: Kopf 0x801FC408 Tab 0x801FC81C n1 48 n2 163 CLUT +4 0x7811 TPage +6 0x001E 
+    Bank 05: Kopf 0x801FC9F0 Tab 0x801FCAD0 n1 20 n2 14 CLUT +4 0x7911 TPage +6 0x001E 
+    Bank 00: Kopf 0x801FCC8C Tab 0x801FCE34 n1 36 n2 32 CLUT +4 0x7A11 TPage +6 0x001F 
+    Bank 01: Kopf 0x801FD5B0 Tab 0x801FD6D8 n1 27 n2 18 CLUT +4 0x7B11 TPage +6 0x001F 
+    Bank 02: Kopf 0x801FDB84 Tab 0x801FDC94 n1 23 n2 20 CLUT +4 0x7B91 TPage +6 0x001F 
+    Bank 06: Kopf 0x801FDDC0 Tab 0x801FDE24 n1 8 n2 7 CLUT +4 0x7C51 TPage +6 0x001F 
+    Bank 07: Kopf 0x801FDF58 Tab 0x801FDF80 n1 2 n2 4 CLUT +4 0x7C91 TPage +6 0x001F 
+    Bank 04: Kopf 0x801FDFCC Tab 0x801FE388 n1 37 n2 163 CLUT +4 0x7811 TPage +6 0x001E 
+    Bank 19: Kopf 0x8011D784 Tab 0x8011D80C n1 11 n2 10 CLUT +4 0x7812 TPage +6 0x000F Zellen(u,v) [(0, 0), (40, 0), (80, 0), (120, 0), (160, 0), (200, 0), (0, 40), (40, 40), (80, 40), (120, 40)]
+  [72] @800DAFD0 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 500/-4248/-25330 clut 7851 welt 500/-4248/-25330 skala 6912 anz 34/0 m.t 0/0/0
+  [73] @800DB04C st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 500/-4380/-25330 clut 7851 welt 500/-4380/-25330 skala 6912 anz 35/0 m.t 0/0/0
+  [74] @800DB0C8 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 2670/-3600/-23420 clut 7851 welt 2670/-3600/-23420 skala 6912 anz 35/0 m.t 0/0/0
+  [75] @800DB144 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 500/-4500/-25330 clut 7851 welt 500/-4500/-25330 skala 6912 anz 36/0 m.t 0/0/0
+  [76] @800DB1C0 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 2670/-3780/-23420 clut 7851 welt 2670/-3780/-23420 skala 6912 anz 36/0 m.t 0/0/0
+  [80] @800DB3B0 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 2670/-3408/-23420 clut 7851 welt 2670/-3408/-23420 skala 6912 anz 34/0 m.t 0/0/0
+  [81] @800DB42C st A003 bank 19 sub 00 OpA 21 OpB 21 s2   0 s3   0 asp 4096/4096 acc 0/12/0 lb 0 vel 0/252/0 ph 0 par 0 art 0 gier 0 lok 0/2520/0 tp 000F ofs 2830/-5040/-21090 clut 7812 welt 2830/-2760/-21090 skala 4096 anz 6/0 m.t 0/0/0
+  [82] @800DB4A8 st A003 bank 19 sub 00 OpA 21 OpB 21 s2   0 s3   0 asp 4096/4096 acc 0/12/0 lb 0 vel 0/252/0 ph 0 par 0 art 0 gier 0 lok 0/2520/0 tp 000F ofs 2670/-5040/-23420 clut 7812 welt 2670/-2760/-23420 skala 4096 anz 6/0 m.t 0/0/0
+  [83] @800DB524 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 2830/-3600/-21090 clut 7851 welt 2830/-3600/-21090 skala 6912 anz 35/0 m.t 0/0/0
+  [84] @800DB5A0 st A003 bank 19 sub 00 OpA 21 OpB 21 s2   8 s3   0 asp 4096/4096 acc 0/12/0 lb 0 vel 0/192/0 ph 0 par 0 art 0 gier 0 lok 0/1440/0 tp 000F ofs 500/-5040/-25330 clut 7812 welt 500/-3780/-25330 skala 4096 anz 5/2 m.t 0/0/0
+  [85] @800DB61C st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 2830/-3408/-21090 clut 7851 welt 2830/-3408/-21090 skala 6912 anz 34/0 m.t 0/0/0
+  [86] @800DB698 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 2830/-3780/-21090 clut 7851 welt 2830/-3780/-21090 skala 6912 anz 36/0 m.t 0/0/0
+  [87] @800DB714 st A003 bank 19 sub 00 OpA 21 OpB 21 s2   0 s3   0 asp 4096/4096 acc 0/12/0 lb 0 vel 0/348/0 ph 0 par 0 art 0 gier 0 lok 0/4872/0 tp 000F ofs 500/-5040/-25330 clut 7812 welt 500/-504/-25330 skala 4096 anz 9/1 m.t 0/0/0
+  [91] @800DB904 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 500/-3948/-25330 clut 7851 welt 500/-3948/-25330 skala 6912 anz 32/0 m.t 0/0/0
+  [92] @800DB980 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 500/-4104/-25330 clut 7851 welt 500/-4104/-25330 skala 6912 anz 33/0 m.t 0/0/0
+  [93] @800DB9FC st A003 bank 19 sub 00 OpA 21 OpB 21 s2   0 s3   0 asp 4096/4096 acc 0/12/0 lb 0 vel 0/312/0 ph 0 par 0 art 0 gier 0 lok 0/3900/0 tp 000F ofs 3000/-5040/-24545 clut 7812 welt 3000/-1440/-24545 skala 4096 anz 8/1 m.t 0/0/0
+  [94] @800DBA78 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 2670/-3204/-23420 clut 7851 welt 2670/-3204/-23420 skala 6912 anz 33/0 m.t 0/0/0
+  [95] @800DBAF4 st B003 bank 03 sub 09 OpA  0 OpB  0 s2   0 s3   0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 par 0 art 0 gier 0 lok 0/0/0 tp 007E ofs 2830/-3204/-21090 clut 7851 welt 2830/-3204/-21090 skala 6912 anz 33/0 m.t 0/0/0
+  lebend 18
+=== s03  Registry 0x800EAE48: 03 05 00 01 02 06 07 04 19 FF FF FF FF FF FF FF
+    DAT_800ce324 (RDT) 0x8011A1A4  +0x50 0x8011D77C +0x54 0x8011D89C +0x58 0x80132B28 +0x5c 0x80135388
+    Bank 03: Kopf 0x801FC408 Tab 0x801FC81C n1 48 n2 163 CLUT +4 0x7811 TPage +6 0x001E 
+    Bank 05: Kopf 0x801FC9F0 Tab 0x801FCAD0 n1 20 n2 14 CLUT +4 0x7911 TPage +6 0x001E 
+    Bank 00: Kopf 0x801FCC8C Tab 0x801FCE34 n1 36 n2 32 CLUT +4 0x7A11 TPage +6 0x001F 
+    Bank 01: Kopf 0x801FD5B0 Tab 0x801FD6D8 n1 27 n2 18 CLUT +4 0x7B11 TPage +6 0x001F 
+    Bank 02: Kopf 0x801FDB84 Tab 0x801FDC94 n1 23 n2 20 CLUT +4 0x7B91 TPage +6 0x001F 
+    Bank 06: Kopf 0x801FDDC0 Tab 0x801FDE24 n1 8 n2 7 CLUT +4 0x7C51 TPage +6 0x001F 
+    Bank 07: Kopf 0x801FDF58 Tab 0x801FDF80 n1 2 n2 4 CLUT +4 0x7C91 TPage +6 0x001F 
+    Bank 04: Kopf 0x801FDFCC Tab 0x801FE388 n1 37 n2 163 CLUT +4 0x7811 TPage +6 0x001E 
+    Bank 19: Kopf 0x8011D784 Tab 0x8011D80C n1 11 n2 10 CLUT +4 0x7812 TPage +6 0x000F Zellen(u,v) [(0, 0), (40, 0), (80, 0), (120, 0), (160, 0), (200, 0), (0, 40), (40, 40), (80, 40), (120, 40)]
+  lebend 0

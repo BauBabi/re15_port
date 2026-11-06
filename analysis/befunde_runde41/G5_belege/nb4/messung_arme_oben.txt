@@ -1,0 +1,22 @@
+# Nachbesserung 4 G5A: Rotanteil der Arme ueber der Masse (Feld x 180..560, y 40..170 in 640x480; werkzeug/arme_oben4.py), RE2-Kante [T7] Bild 650 -> 660
+Bild 600  Rotanteil %: RE2  3.84  vorher  2.86  Leon  2.76  Elza  2.76
+Bild 610  Rotanteil %: RE2  3.58  vorher  3.00  Leon  2.40  Elza  2.40
+Bild 620  Rotanteil %: RE2  3.98  vorher  3.01  Leon  2.77  Elza  2.77
+Bild 630  Rotanteil %: RE2  4.14  vorher  2.69  Leon  2.66  Elza  2.66
+Bild 640  Rotanteil %: RE2  4.06  vorher  3.08  Leon  3.01  Elza  3.01
+Bild 650  Rotanteil %: RE2  4.43  vorher  3.07  Leon  2.87  Elza  2.87
+Bild 660  Rotanteil %: RE2  1.99  vorher  3.13  Leon  1.49  Elza  1.49
+Bild 670  Rotanteil %: RE2  1.93  vorher  3.11  Leon  1.46  Elza  1.46
+Bild 680  Rotanteil %: RE2  2.30  vorher  3.09  Leon  1.47  Elza  1.47
+Bild 690  Rotanteil %: RE2  2.16  vorher  2.99  Leon  1.29  Elza  1.29
+Bild 700  Rotanteil %: RE2  2.15  vorher  2.90  Leon  1.17  Elza  1.17
+Bild 710  Rotanteil %: RE2  2.06  vorher  3.05  Leon  1.44  Elza  1.44
+Bild 720  Rotanteil %: RE2  1.82  vorher  2.96  Leon  1.34  Elza  1.34
+Bild 730  Rotanteil %: RE2  1.64  vorher  2.91  Leon  1.27  Elza  1.27
+Bild 740  Rotanteil %: RE2  1.74  vorher  3.05  Leon  1.42  Elza  1.42
+Bild 750  Rotanteil %: RE2  2.05  vorher  3.23  Leon  1.61  Elza  1.61
+Bild 760  Rotanteil %: RE2  2.27  vorher  3.40  Leon  1.91  Elza  1.91
+Bild 770  Rotanteil %: RE2  2.45  vorher  3.53  Leon  1.89  Elza  1.89
+Bild 780  Rotanteil %: RE2  2.68  vorher  3.59  Leon  1.93  Elza  1.93
+Bild 790  Rotanteil %: RE2  2.75  vorher  3.43  Leon  2.01  Elza  2.01
+Bild 800  Rotanteil %: RE2  2.74  vorher  3.50  Leon  2.18  Elza  2.18

@@ -1,0 +1,80 @@
+# Kampf ohne Eingabe nach F2548 (vid_*) und stehend mit Zielen+Feuer (steh_*), wz/kampf3.py
+== vid_leon
+F2775 (+0.0 s) Spieler (13873,-23570) HP 45 | G5 x 1842 HP 600
+F3117 (+11.4 s) Spieler (14665,-23778) HP 25 | G5 x 9546 HP 600
+F3249 (+15.8 s) Spieler (15410,-23838) HP 5 | G5 x 10132 HP 600
+F3365 (+19.7 s) Spieler (16012,-23866) HP 0 | G5 x 10692 HP 600
+F3388 (+20.4 s) Spieler (16662,-23911) HP -1 | G5 x 11284 HP 600
+letztes Bild 0
+== vid_elza
+F2775 (+0.0 s) Spieler (13873,-23570) HP 45 | G5 x 1842 HP 600
+F3117 (+11.4 s) Spieler (14665,-23778) HP 25 | G5 x 9546 HP 600
+F3249 (+15.8 s) Spieler (15410,-23838) HP 5 | G5 x 10132 HP 600
+F3365 (+19.7 s) Spieler (16012,-23866) HP 0 | G5 x 10692 HP 600
+F3388 (+20.4 s) Spieler (16662,-23911) HP -1 | G5 x 11284 HP 600
+letztes Bild 0
+== steh_leon
+F2775 (+0.0 s) Spieler (13873,-23570) HP 45 | G5 x 1842 HP 600
+F2785 (+0.3 s) Spieler (13873,-23570) HP 45 | G5 x 1771 HP 585
+F2807 (+1.1 s) Spieler (13873,-23570) HP 45 | G5 x 1678 HP 570
+F2829 (+1.8 s) Spieler (13873,-23570) HP 45 | G5 x 1741 HP 555
+F2851 (+2.5 s) Spieler (13873,-23570) HP 45 | G5 x 3286 HP 540
+F2873 (+3.3 s) Spieler (13873,-23570) HP 45 | G5 x 5481 HP 525
+F2895 (+4.0 s) Spieler (13873,-23570) HP 45 | G5 x 5166 HP 510
+F2917 (+4.7 s) Spieler (13873,-23570) HP 45 | G5 x 5166 HP 495
+F2939 (+5.5 s) Spieler (13873,-23570) HP 45 | G5 x 5166 HP 480
+F2961 (+6.2 s) Spieler (13873,-23570) HP 45 | G5 x 5166 HP 465
+F2983 (+6.9 s) Spieler (13873,-23570) HP 45 | G5 x 5032 HP 450
+F3005 (+7.7 s) Spieler (13985,-23826) HP 45 | G5 x 5828 HP 435
+F3027 (+8.4 s) Spieler (13985,-23826) HP 45 | G5 x 5771 HP 420
+F3049 (+9.1 s) Spieler (13985,-23826) HP 45 | G5 x 5671 HP 405
+F3071 (+9.9 s) Spieler (13985,-23826) HP 45 | G5 x 5845 HP 390
+F3093 (+10.6 s) Spieler (13985,-23826) HP 45 | G5 x 7745 HP 375
+F3110 (+11.2 s) Spieler (13985,-23826) HP 25 | G5 x 9514 HP 375
+F3142 (+12.2 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 360
+F3164 (+13.0 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 345
+F3186 (+13.7 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 330
+F3208 (+14.4 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 315
+F3230 (+15.2 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 300
+F3240 (+15.5 s) Spieler (15452,-24241) HP 5 | G5 x 10108 HP 300
+F3272 (+16.6 s) Spieler (15944,-24319) HP 5 | G5 x 10600 HP 285
+F3294 (+17.3 s) Spieler (15944,-24319) HP 5 | G5 x 10600 HP 270
+F3316 (+18.0 s) Spieler (15944,-24319) HP 5 | G5 x 10600 HP 255
+F3338 (+18.8 s) Spieler (15944,-24319) HP 5 | G5 x 10762 HP 240
+F3356 (+19.4 s) Spieler (15944,-24319) HP 0 | G5 x 10783 HP 240
+F3379 (+20.1 s) Spieler (16443,-24410) HP -1 | G5 x 11260 HP 240
+letztes Bild 0
+== steh_elza
+F2775 (+0.0 s) Spieler (13873,-23570) HP 45 | G5 x 1842 HP 600
+F2785 (+0.3 s) Spieler (13873,-23570) HP 45 | G5 x 1771 HP 585
+F2807 (+1.1 s) Spieler (13873,-23570) HP 45 | G5 x 1678 HP 570
+F2829 (+1.8 s) Spieler (13873,-23570) HP 45 | G5 x 1741 HP 555
+F2851 (+2.5 s) Spieler (13873,-23570) HP 45 | G5 x 3286 HP 540
+F2873 (+3.3 s) Spieler (13873,-23570) HP 45 | G5 x 5481 HP 525
+F2895 (+4.0 s) Spieler (13873,-23570) HP 45 | G5 x 5166 HP 510
+F2917 (+4.7 s) Spieler (13873,-23570) HP 45 | G5 x 5166 HP 495
+F2939 (+5.5 s) Spieler (13873,-23570) HP 45 | G5 x 5166 HP 480
+F2961 (+6.2 s) Spieler (13873,-23570) HP 45 | G5 x 5166 HP 465
+F2983 (+6.9 s) Spieler (13873,-23570) HP 45 | G5 x 5032 HP 450
+F3005 (+7.7 s) Spieler (13985,-23826) HP 45 | G5 x 5828 HP 435
+F3027 (+8.4 s) Spieler (13985,-23826) HP 45 | G5 x 5771 HP 420
+F3049 (+9.1 s) Spieler (13985,-23826) HP 45 | G5 x 5671 HP 405
+F3071 (+9.9 s) Spieler (13985,-23826) HP 45 | G5 x 5845 HP 390
+F3093 (+10.6 s) Spieler (13985,-23826) HP 45 | G5 x 7745 HP 375
+F3110 (+11.2 s) Spieler (13985,-23826) HP 25 | G5 x 9514 HP 375
+F3142 (+12.2 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 360
+F3164 (+13.0 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 345
+F3186 (+13.7 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 330
+F3208 (+14.4 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 315
+F3230 (+15.2 s) Spieler (15452,-24241) HP 25 | G5 x 9940 HP 300
+F3240 (+15.5 s) Spieler (15452,-24241) HP 5 | G5 x 10108 HP 300
+F3272 (+16.6 s) Spieler (15944,-24319) HP 5 | G5 x 10600 HP 285
+F3294 (+17.3 s) Spieler (15944,-24319) HP 5 | G5 x 10600 HP 270
+F3316 (+18.0 s) Spieler (15944,-24319) HP 5 | G5 x 10600 HP 255
+F3338 (+18.8 s) Spieler (15944,-24319) HP 5 | G5 x 10762 HP 240
+F3356 (+19.4 s) Spieler (15944,-24319) HP 0 | G5 x 10783 HP 240
+F3379 (+20.1 s) Spieler (16443,-24410) HP -1 | G5 x 11260 HP 240
+letztes Bild 0
+
+== integration_r41_birkin_pistole (ctest-Lauf Abnahme 3, state.log aus build/tests/integration/r41_birkin_pistole_wd/<lauf>/{leon,elza})
+leon/elza: F2775 Spieler 13873 HP 45, G5 600; F3343 Spieler 23113, G5 x 12100 HP 315; F3807 Peitsche 45 -> 38 (G5 HP 45); G5 HP 15 -> -1 bei F3973 (+39,9 s), Spieler HP 38 x 23500 - beide gleich

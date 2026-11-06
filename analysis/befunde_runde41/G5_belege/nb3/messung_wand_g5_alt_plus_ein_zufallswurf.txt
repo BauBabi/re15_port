@@ -1,0 +1,8 @@
+1375: g5: 424 wandnahe Startlagen
+1375:   Wandbild: Start (2100,-25900) Bild 30 Lage (3009,-26098) Zelle 30 Boss x -838
+1375:   Wandbild: Start (2100,-25900) Bild 32 Lage (2985,-26127) Zelle 30 Boss x -815
+1375: g5: 424 Faelle, Griff-Bilder 3847, Bildenden in fester Zelle 2 (laengste Folge 1), eingekeilt 0, kleinster Laufweg 423, vom Koerper gedrueckt 4 (laengste Wartezeit 36 Bilder)
+1375: FAIL: 2 Bildenden in fester Zelle
+1375: g5: 424 wandnahe Startlagen
+1375: g5: 424 Faelle, Griff-Bilder 3857, Bildenden in fester Zelle 0 (laengste Folge 0), eingekeilt 0, kleinster Laufweg 1108, vom Koerper gedrueckt 2 (laengste Wartezeit 42 Bilder)
+1375: test_r41_birkin_wand g5: 1 FEHLER

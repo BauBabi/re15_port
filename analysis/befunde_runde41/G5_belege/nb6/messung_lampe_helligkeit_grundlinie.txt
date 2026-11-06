@@ -1,0 +1,11 @@
+Fenster x 70..99 / y 115..126 (360 Pixel)
+  Median: RE2 13.3  Port 16.7
+  Rohsumme: RE2 9437  Port 9554  Port/RE2 1.012
+  Summe ueber eigenem Median (hell6.py): RE2 5269  Port 4634  0.88
+  Summe ueber gemeinsamer Grundlinie 13.3: RE2 5269  Port 5313  1.01
+  Summe ueber gemeinsamer Grundlinie 20.0: RE2 4248  Port 4124  0.97
+  Summe ueber gemeinsamer Grundlinie 40.0: RE2 2683  Port 2640  0.98
+  Fehlbetrag (eigener Median) je Spalte x 70..99: 0 0 0 0 0 0 4 8 45 24 8 39 33 33 29 23 19 74 178 20 15 6 11 11 8 6 3 11 7 12
+  Spalte x 88, Zeilen 115..126 RE2: 13 13 13 16 29 37 24 72 72 72 18 13 | Port: 12 14 17 21 30 37 24 18 18 20 20 16
+3x-Fenster fd_leon: Median 16.7, Rohsumme/9 9356 (0.991) | ueber 13.3: 5115 (0.97) | ueber 20.0: 3945 (0.93) | ueber 40.0: 2524 (0.94)
+3x-Fenster fd_elza: Median 16.7, Rohsumme/9 9356 (0.991) | ueber 13.3: 5115 (0.97) | ueber 20.0: 3945 (0.93) | ueber 40.0: 2524 (0.94)

@@ -1,0 +1,12 @@
+Quelle | Summe ueber Median | Maximum | / RE2-VRAM
+RE2-VRAM s04 (PSX-Ausgabe, 320x240)        5269    181  1.00
+RE2-Aufnahme Bild -42 (640x480)            5258    174  1.00
+Port NB6 nativ F1581                       4634    182  0.88
+Port NB5 nativ F1581                       4316    137  0.82
+Port NB6 Fenster 3x F1581 (Leon)           4449    183  0.84
+Port NB6 Fenster 3x F1581 (Elza)           4449    183  0.84
+Port NB5 Fenster 3x F1581                  4357    175  0.83
+
+Pixelvergleich gegen RE2-VRAM s04 im Fenster x 70..105 / y 112..128 (Grauwert, 612 Pixel):
+  Port NB6 nativ   mittlere |Abw.| 2.65, |Abw.| > 16: 6 Pixel, max 54
+  Port NB5 nativ   mittlere |Abw.| 4.18, |Abw.| > 16: 17 Pixel, max 81

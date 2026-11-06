@@ -35,10 +35,12 @@
  *      vier Aktoren beim Kampfstart selbst. Im RE2-Raum stehen sie ebenfalls nicht in der RDT
  *      (room7040 parkt alle fuenf auf (-32000,0,-32000)); die Platzierung macht auch dort der
  *      Code ueber die Ankertabelle (em037-tentakel.md 4.2/4.4).
- *   2. STRECKUNG: scaleX (part0+0x8C) wirkt im Original ueber FUN_80019CD0 (Flag 0x400) als
- *      Skalierung UM DEN PART-0-RAHMEN auf die Weltraum-Vertices des Schlauchs; der Zeichner
- *      (main.c) holt den Wert ueber re15_g5_tentakel_scale_x und streckt den geskinnten
- *      Schlauch entlang lokal X (re15_g5_skin.h). Kein uniformer render_scale mehr.
+ *   2. STRECKUNG: scaleX (part0+0x8C) wirkt im Original ZWEIMAL: (a) die Teile 1..3 (Flag 0x800,
+ *      Ctor @0x80100774-0x8010078c) bekommen gestreckte Gelenk-Translationen (FUN_80027434
+ *      @0x800275e0-0x8002768c; Port re15_g5_tentakel_kette_strecken, Nachbesserung G5A 4), aus
+ *      denen der Haeuter 0x80104CF0 den Schlauch baut; (b) FUN_80019CD0 (Flag 0x400 an Teil 0)
+ *      skaliert danach UM DEN PART-0-RAHMEN. Der Zeichner (main.c) holt den Wert ueber
+ *      re15_g5_tentakel_scale_x (re15_g5_skin.h). Kein uniformer render_scale mehr.
  *   3. SPIELER-ZYLINDER fuer die Kind-Kollision: RE2-Spieler-Init r=450 (`li v1,0x1c2`
  *      @0x8003bdc0 -> +0x9A/9C/90/92 @0x8003bdc4-d0), Hoehe 1530 (+0x9E @0x8003bdec),
  *      ein Segment (+0x1E8=1 @0x8003bddc). Von FUN_80034D0C sind Kreis-/Hoehentest, radialer
@@ -126,6 +128,8 @@ typedef struct {
     int16_t  z21a, z21c, z21e; /* +0x21A/+0x21C/+0x21E (Zug-Laengenformel)          */
     uint16_t kontakt;       /* +0x220: Bits 2|4 = Kind-Kollision, Bit 1 = Zug haelt */
     int      getroffen;     /* Treffer-Sperre je Angriff                            */
+    int16_t  zb_clip;       /* +0x178: Clip des ZULETZT POSIERTEN Bilds (s. tent_anim) */
+    uint16_t zb_bild;       /* +0x178: dessen Bild (+0x14D VOR dem Vorschub)        */
 } tent_t;
 
 static tent_t s_tent[TENT_N];
@@ -181,6 +185,7 @@ void re15_g5_tentakel_phase_alle(unsigned ph)
 }
 
 /* ---- Spawn beim Kampfstart (Port-Entscheidung 1) ---------------------------------------- */
+static void tent_posieren(re15_actor_t *e, int clip, int bild, int a3);
 void re15_g5_tentakel_spawn(const re15_actor_t *g5)
 {
     int i;
@@ -196,6 +201,12 @@ void re15_g5_tentakel_spawn(const re15_actor_t *g5)
             e->hp = -1;                            /* unverwundbar @0x80100530 */
             e->motion = (int16_t)s_tent_clip_austritt[i];
             e->anim_frame = 0;
+            e->anim_frac = 0; e->anim_blend_rate = 0;
+            /* Ctor: `sw zero,332(s1)` @0x801006e0 im Verzoegerungsplatz von `jal 0x8002959c` @0x801006dc -> die
+             * erste posierte Pose ist Clip 0 Bild 0 (RE2-RAM s02: +0x178 aller Arme = EDD+0x60 = Clip 0 Bild 0). */
+            s_tent[i].zb_clip = 0; s_tent[i].zb_bild = 0;
+            re15_g5_pose_aus(slot);
+            tent_posieren(e, 0, 0, 0);             /* Nachbesserung G5 2: gehaltene Ctor-Pose (Clip 0 Bild 0, ohne Stufen) */
             e->rot_x = 0; e->rot_z = 0;
             e->rot_y = g5 ? g5->rot_y : 0;
             e->render_scale_q12 = 0;               /* Streckung laeuft ueber das Skinning */
@@ -500,6 +511,26 @@ static void tent_anker(tent_t *t, int idx, const re15_actor_t *g5, re15_actor_t 
     }
 }
 
+int re15_g5_tentakel_zeichenbild(const re15_actor_t *e, int *clip, int *bild);
+
+/* Keyframe von Bild `bild` des Clips `clip` der EM037-Bank (`andi v0,v0,0xfff` @0x80029638); -1 = keins. */
+static int tent_kf_bild(int clip, int bild)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
+    if (!b || !b->ok || clip < 0 || clip >= b->anim.clip_count) return -1;
+    {   const re15_emd_clip_t *c = &b->anim.clips[clip];
+        if (c->frame_count <= 0) return -1;
+        return (int)(b->anim.frames[c->first_frame + (bild % c->frame_count)] & 0xFFFu);
+    }
+}
+/* Anim-Schritt-Pose (re15_g5_skin.c re15_g5_pose_schritt = FUN_80029614): Bild (clip, bild) mit a3 je +0x14E-Stufe. */
+static void tent_posieren(re15_actor_t *e, int clip, int bild, int a3)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
+    int kf = tent_kf_bild(clip, bild);
+    if (b && b->ok && kf >= 0) (void)re15_g5_pose_schritt(e, &b->skel, kf, a3);
+}
+
 /* ---- Posen / Weltpositionen der Kette ------------------------------------------------------
  * Pose im QUERY-Modus (Crossfade unangetastet), aber MIT dem Bone-Winkel-Haken (die
  * +0x6C-Zuschlaege gehoeren zur Kette). Entity-Matrix = RotMatrix(rx, ry, rz) wie
@@ -511,7 +542,10 @@ static int tent_posen(const re15_actor_t *e, re15_skel_pose_t poses[RE15_EMD_MAX
     int kf, rv;
     void *sav;
     if (!b || !b->ok || b->skel.bone_count < 4) return -1;
-    kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+    {   int zc = -1, zb = 0;   /* die Kette steht in der zuletzt POSIERTEN Pose (+0x178), s. tent_anim */
+        if (!re15_g5_tentakel_zeichenbild(e, &zc, &zb)) { zc = -1; zb = (int)e->anim_frame; }
+        kf = re15_compute_actor_kf(&b->anim, &b->skel, e, zc, (uint32_t)zb);
+    }
     sav = g_anim_pose_actor;
     g_anim_pose_actor = NULL;
     g_anim_query_actor = (void *)e;
@@ -532,16 +566,37 @@ static void tent_welt(const re15_actor_t *e, const int32_t E[9], const int32_t p
 
 /* Spitzensonde (@0x80102264-2cc / @0x80102c70-cd4): FUN_8008DBA4(part3+0x48, (1500,0,0)) +
  * part3-Welt-Y/Z. Rueckgabe 0 ok. */
+/* Streckung der Kette (Abnahme G5 1, M2/M1): RE2 kopiert scaleX von Part 0 auf Part 1..3 (@0x801003BC-EC), die Part-Welt-
+ * TRANSLATIONEN (parts+i*172+92/96/100), aus denen Kind-Kollision (+0x84/+0xA4/+0xC4 = parts+608/436/264, @0x80104f94-5074) und
+ * Spitzensonde (part3+0x48, @0x80102264-2cc) lesen, sind also GESTRECKT, die Matrix-Spalten nicht. RE2-RAM s12 Arm 3 (scaleX 2400,
+ * Clip 0 gerade): |p3 - p0| = 4833 = 8249 * 2400/4096 (8249 = |p1-p0|+|p2-p1|+|p3-p2| = 3746+2999+1504 aus s03 Arm 0); Spalte 0 von
+ * part3 (3742,1627,-322) hat Laenge 4093 = ungestreckt. Der Port nahm die ungestreckten Lagen: der halb ausgefahrene Speer
+ * erreichte ~8250 statt ~4800 und schob Leon in Schnitt 17 seitlich weg (RE2-RAM s12/s13: z -23570 -> -23627). */
+static tent_t *tent_von(const re15_actor_t *e)
+{
+    int i;
+    for (i = 0; i < TENT_N; i++)
+        if (s_tent[i].slot >= 0 && s_tent[i].slot < RE15_ACTOR_MAX && &g_actors[s_tent[i].slot] == e) return &s_tent[i];
+    return NULL;
+}
+static void tent_gestreckt(const re15_actor_t *e, const re15_skel_pose_t *p0, const int32_t in[3], int32_t out[3])
+{
+    const tent_t *t = tent_von(e);
+    out[0] = in[0]; out[1] = in[1]; out[2] = in[2];
+    if (t) re15_g5_tentakel_stretch_point(p0, t->scale_x, out);
+}
+
 static int tent_spitze_welt(const re15_actor_t *e, int32_t out[3])
 {
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
-    int32_t E[9], l[3], m[3], w3[3];
+    int32_t E[9], l[3], m[3], w3[3], p3[3];
     if (tent_posen(e, poses, E) != 0) { out[0] = e->x; out[1] = e->y; out[2] = e->z; return -1; }
-    /* R3*(1500,0,0) im Modellraum, dann Entity-Rotation, plus part3-Welt-Translation. */
+    /* R3*(1500,0,0) im Modellraum (Spalte ungestreckt), dann Entity-Rotation, plus GESTRECKTE part3-Welt-Translation. */
     l[0] = (poses[3].rot[0] * 1500) >> 12;
     l[1] = (poses[3].rot[3] * 1500) >> 12;
     l[2] = (poses[3].rot[6] * 1500) >> 12;
-    m[0] = poses[3].trans[0] + l[0]; m[1] = poses[3].trans[1] + l[1]; m[2] = poses[3].trans[2] + l[2];
+    tent_gestreckt(e, &poses[0], poses[3].trans, p3);
+    m[0] = p3[0] + l[0]; m[1] = p3[1] + l[1]; m[2] = p3[2] + l[2];
     tent_welt(e, E, m, w3);
     out[0] = w3[0]; out[1] = w3[1]; out[2] = w3[2];
     return 0;
@@ -555,6 +610,33 @@ int re15_g5_tentakel_spitze(int idx, int32_t out[3])
     return tent_spitze_welt(&g_actors[s_tent[idx].slot], out);
 }
 
+/* Diagnose/Test (Abnahme G5 1, M2): Weltlage der vier Gelenke (Part-Ursprung = RE2 parts+i*172+92/96/100) in der gezeichneten
+ * Pose (+0x178). Nachbesserung G5A 4 (N2): gestreckt wie die Zeichen-Kette (re15_g5_tentakel_kette_strecken = FUN_80027434
+ * Flag 0x800 @0x800275e0-0x8002768c), nicht mehr um den Teil-0-Rahmen - fuer gerade Arme gleich, fuer eingerollte nicht
+ * (RE2-RAM s09 Arm 1, Streckung 0, Clip 14: p3 = p0; die alte Rechnung gab |p3 - p0| = 434). 0 = ok, -1 = kein Arm. */
+int re15_g5_tentakel_gelenke(int idx, int32_t out[4][3])
+{
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    int32_t E[9];
+    int p;
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
+    if (idx < 0 || idx >= TENT_N || s_tent[idx].slot < 0 || s_tent[idx].slot >= RE15_ACTOR_MAX) return -1;
+    if (!b || tent_posen(&g_actors[s_tent[idx].slot], poses, E) != 0) return -1;
+    re15_g5_tentakel_kette_strecken(&b->skel, poses, b->skel.bone_count, s_tent[idx].scale_x);
+    for (p = 0; p < 4; p++) tent_welt(&g_actors[s_tent[idx].slot], E, poses[p].trans, out[p]);
+    return 0;
+}
+
+/* Diagnose/Test (Nachbesserung G5 2): Teil-Winkel wie RE2 parts+i*172+104/106/108 = gehaltene Pose + noch nicht gefaltete
+ * Einroll-Zuschlaege. 0 = ok, -1 = kein Arm/keine Pose. */
+int re15_g5_tentakel_teilwinkel(int idx, int part, int16_t w[3])
+{
+    if (idx < 0 || idx >= TENT_N || part < 0 || part > 3 || s_tent[idx].slot < 0) return -1;
+    if (!re15_g5_pose_winkel(s_tent[idx].slot, part, w)) return -1;
+    w[2] = (int16_t)(w[2] + s_tent[idx].part_rz[part]);
+    return 0;
+}
+
 /* Zeichner-Schnittstelle: Streckung part0+0x8C dieses Arms (4096 = 1.0; 0 = eingezogen). */
 int32_t re15_g5_tentakel_scale_x(int slot)
 {
@@ -562,6 +644,43 @@ int32_t re15_g5_tentakel_scale_x(int slot)
     for (i = 0; i < TENT_N; i++)
         if (s_tent[i].slot == slot) return s_tent[i].scale_x;
     return 0x1000;
+}
+
+/* Diagnose/Test (Nachbesserung G5A 4): Weltlage der GEZEICHNETEN Vertices von Mesh 0 eines Arms, Rechenweg wie der Zeichner
+ * (platform/pc/main.c): gestreckte Kette (re15_g5_tentakel_kette_strecken, FUN_80027434 Flag 0x800), Haeuter (Callback
+ * 0x80104CF0 -> FUN_800197f4), Streckung um Teil 0 (FUN_80019CD0 Flag 0x400), Entity-Matrix + Lage. Rueckgabe Anzahl der
+ * Vertices (hoechstens max), -1 = kein Arm / keine Pose. */
+int re15_g5_tentakel_zeichen_vertices(int idx, int32_t (*out)[3], int max)
+{
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    int32_t E[9];
+    const re15_md1_vertex_t *v = NULL, *nrm = NULL;
+    re15_enemy_bank_t *b = re15_enemy_find(0x37u);
+    const re15_actor_t *e;
+    int n, i;
+    if (idx < 0 || idx >= TENT_N || s_tent[idx].slot < 0 || s_tent[idx].slot >= RE15_ACTOR_MAX || !out || max <= 0) return -1;
+    e = &g_actors[s_tent[idx].slot];
+    if (!b || !b->ok || b->md1.mesh_count < 1 || tent_posen(e, poses, E) != 0) return -1;
+    re15_g5_tentakel_kette_strecken(&b->skel, poses, b->skel.bone_count, s_tent[idx].scale_x);
+    if (re15_g5_tentakel_skin_mesh0(poses, b->skel.bone_count, &b->md1.meshes[0], s_tent[idx].scale_x, &v, &nrm) != 0) return -1;
+    n = b->md1.meshes[0].tri_vertex_count;
+    if (n > max) n = max;
+    for (i = 0; i < n; i++) {
+        int32_t p[3] = { v[i].x, v[i].y, v[i].z };
+        tent_welt(e, E, p, out[i]);
+    }
+    return n;
+}
+
+/* Diagnose/Test (Nachbesserung G5A 4): Zaehler +0x158 und Entity-Drehung +0x74/+0x76/+0x78 eines Arms (Riegel gegen RE2-RAM). */
+int re15_g5_tentakel_mess(int idx, int32_t *timer, int16_t rot[3])
+{
+    const re15_actor_t *e;
+    if (idx < 0 || idx >= TENT_N || s_tent[idx].slot < 0 || s_tent[idx].slot >= RE15_ACTOR_MAX) return -1;
+    e = &g_actors[s_tent[idx].slot];
+    if (timer) *timer = s_tent[idx].timer;
+    if (rot) { rot[0] = e->rot_x; rot[1] = e->rot_y; rot[2] = e->rot_z; }
+    return 0;
 }
 
 /* Diagnose: Zustand eines Arms. */
@@ -599,9 +718,11 @@ static int tent_kind_kollision(re15_actor_t *e, re15_actor_t *pl)
     int32_t seg[4][3]; uint16_t r[4] = { 800, 600, 600, 600 };
     int k, hit = 0;
     if (tent_posen(e, poses, E) != 0) return 0;
-    tent_welt(e, E, poses[1].trans, w1);
-    tent_welt(e, E, poses[2].trans, w2);
-    tent_welt(e, E, poses[3].trans, w3);
+    {   int32_t g[3];   /* gestreckte Part-Lagen wie RE2 parts+264/436/608 (s. tent_gestreckt) */
+        tent_gestreckt(e, &poses[0], poses[1].trans, g); tent_welt(e, E, g, w1);
+        tent_gestreckt(e, &poses[0], poses[2].trans, g); tent_welt(e, E, g, w2);
+        tent_gestreckt(e, &poses[0], poses[3].trans, g); tent_welt(e, E, g, w3);
+    }
     memcpy(seg[0], w3, sizeof w3);
     memcpy(seg[1], w2, sizeof w2);
     memcpy(seg[2], w1, sizeof w1);
@@ -686,28 +807,65 @@ static int tent_kind_kollision(re15_actor_t *e, re15_actor_t *pl)
     return hit;
 }
 
-static int tent_anim(re15_actor_t *e, tent_t *t)
+/* ANIM-SCHRITT = RE2 FUN_8002959c(e, +0x17C, +0x108, a3) (Abnahme G5 1, M2 "gerade steife Stangen").
+ * RE2 posiert im Schritt das Bild +0x14D VOR dem Vorschub und haelt diese Pose, bis der naechste Schritt laeuft:
+ *   `lbu v0,333(a0)` @0x800295e8, `sw a2,376(a0)` @0x800295f8 (+0x178 = &Bildliste[+0x14D]), `jal 0x80029614` @0x800295fc
+ *   (Part-Winkel +104.. aus diesem Keyframe); Ueberblendung nur bei +0x14E != 0 (`lbu t3,334(s2)` / `beq t3,zero`
+ *   @0x800296a8-b0), Gewicht (a3 & 0xffff) * +0x14E (@0x800296b8-bc), danach +0x14E-- (@0x800299c0-cc);
+ *   ERST DANN +0x14D + 1 (@0x80029b28-34), am Clipende `sb zero,333(s2)` + Rueckgabe 1 (@0x80029b48-4c).
+ * Gemessen (RE2-Savestates der Abnahme, Arm-Zeiger *(0x800cfe20+4i), Parts *(e+0x198), Stride 172, Winkel +104):
+ *   s03 Arm 0 Clip 14 +0x14D 22: +0x178 -> EDD+0xC60 = Bild 22 (kf 768), Part-Winkel == kf 768;
+ *   s04/s06 (sub8 ph5/ph6, Clip-Wort laengst 0x00070000): +0x178 -> EDD+0xC80 = Clip 14 Bild 29 (kf 776), Winkel == kf 776
+ *   (part2 (343,-41,-1095), part3 (366,289,-634) = der eingerollte Arm), ebenso Arm 2 kf 836 (Clip 16 Bild 29) und Arm 3
+ *   kf 806 (Clip 15 Bild 29). Der Port zeichnete (motion, anim_frame) = Clip 0 Bild 0 = kf 0 = alle Winkel 0 -> gerade Stange.
+ * `rate` = a3 der jeweiligen Aufrufstelle (Gewicht je +0x14E-Stufe, Zeichner: anim_blend_rate). Der Schritt schreibt die
+ * Part-Winkel neu -> die +0x6C-Zuschlaege der Einroll-Phasen sind damit weg. */
+static int tent_anim(re15_actor_t *e, tent_t *t, int rate)
 {
     extern int re15_actor_clip_len(const re15_actor_t *a);
     int fc = re15_actor_clip_len(e);
-    /* Der Anim-Schritt (0x8002959c) schreibt die Part-Winkel neu -> die +0x6C-Zuschlaege
-     * der Einroll-Phasen sind damit weg. */
+    int k;
+    /* Nachbesserung G5 2: die Einroll-Zuschlaege stehen in RE2 IN den Teil-Winkeln (`sh` +108/+280/+452/+624 @0x801023e4-24);
+     * der Schritt mischt von dort aus (alt = +104.. @0x800299d8-ec). Darum zuerst falten, dann posieren. */
+    for (k = 0; k < 4; k++) if (t->part_rz[k]) re15_g5_pose_winkel_add(t->slot, k, 0, 0, t->part_rz[k]);
     memset(t->part_rz, 0, sizeof t->part_rz);
+    t->zb_clip = e->motion;                     /* +0x178 = Bild VOR dem Vorschub (@0x800295e8-f8) */
+    t->zb_bild = (uint16_t)e->anim_frame;
+    tent_posieren(e, (int)e->motion, (int)e->anim_frame, rate);   /* a3 der Aufrufstelle, +0x14E-Abbau im Schritt */
     if (fc <= 0) fc = 1;
-    if ((int)e->anim_frame + 1 >= fc) { e->anim_frame = 0; return 1; }
+    if ((int)e->anim_frame + 1 >= fc) { e->anim_frame = 0; return 1; }   /* @0x80029b3c-4c */
     e->anim_frame++;
     return 0;
 }
 
-static void tent_clip(re15_actor_t *e, tent_t *t, int clip, int frame)
+/* CLIP-WORT `sw X,332(s)` = +0x14C Clip, +0x14D Bild, +0x14E Ueberblendstufen (Wort (blend<<16)|(bild<<8)|clip). Der Store
+ * posiert NICHTS und laesst die Part-Winkel stehen (keine Part-Schreibung an den Store-Stellen); sichtbar wird der neue Clip
+ * erst mit dem naechsten tent_anim. `blend` = Byte 2 des RE2-Worts der Aufrufstelle. */
+static void tent_clip(re15_actor_t *e, tent_t *t, int clip, int frame, int blend)
 {
     extern int re15_actor_clip_len(const re15_actor_t *a);
     int fc;
+    (void)t;
     e->motion = (int16_t)clip;
     e->anim_frame = 0;
     fc = re15_actor_clip_len(e);
     if (fc > 0 && frame > 0) e->anim_frame = (uint32_t)(frame % fc);
-    memset(t->part_rz, 0, sizeof t->part_rz);
+    e->anim_frac = (uint8_t)blend;
+}
+
+/* Zeichner-/Pose-Schnittstelle: Clip und Bild der Pose, die RE2 in diesem Takt zeigt (+0x178). 0 = kein Arm. */
+int re15_g5_tentakel_zeichenbild(const re15_actor_t *e, int *clip, int *bild)
+{
+    int i;
+    if (!e || e->type != 0x37u) return 0;
+    for (i = 0; i < TENT_N; i++) {
+        if (s_tent[i].slot >= 0 && s_tent[i].slot < RE15_ACTOR_MAX && &g_actors[s_tent[i].slot] == e) {
+            if (clip) *clip = (int)s_tent[i].zb_clip;
+            if (bild) *bild = (int)s_tent[i].zb_bild;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 /* Gesamtwinkel-Klemme (@0x80102458-4fc / @0x80102ef4-f98): (RotZ + Sum part.rz) & 0xfff
@@ -722,7 +880,14 @@ static void tent_einroll_schritt(re15_actor_t *e, tent_t *t)
     t->rate = (int16_t)(t->rate - 2 * t->dir);              /* 15A -= 2*16A */
     if ((int16_t)t->rate == 0) t->timer = 0;
     {
-        int32_t sum = ((int32_t)e->rot_z + t->part_rz[0] + t->part_rz[1] + t->part_rz[2] +
+        /* Summe = Rot_z + die VIER TEIL-WINKEL rz (`lh v0,120(s1)`, `lh a1,108(s2)`, `lh v1,280(s2)`, `lh a0,624(s2)`, `lh v1,452(s2)`
+         * @0x8010245c-74, `andi 0xfff` @0x80102484). ⛔ HIER STANDEN nur die Zuschlaege: ohne die gemischte Grundpose (Speer sub9:
+         * rz 0/133/164/112 aus Clip 2 mit 31..28 Stufen) brach das Einrollen spaeter ab, der Arm rollte sich staerker ein
+         * (Nachbesserung G5 2, Punkt 3; RE2-RAM s12 Arm 0 (356,-223,-192,-66)). */
+        int32_t teil = 0;
+        int k;
+        for (k = 0; k < 4; k++) { int16_t w[3]; if (re15_g5_pose_winkel(t->slot, k, w)) teil += w[2]; }
+        int32_t sum = ((int32_t)e->rot_z + teil + t->part_rz[0] + t->part_rz[1] + t->part_rz[2] +
                        t->part_rz[3]) & 0xfff;
         if ((uint32_t)(sum - 2049) < 0x7ffu) {
             r = t->rate;
@@ -816,6 +981,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     if (t->slot < 0 || t->slot >= RE15_ACTOR_MAX) return;
     e = &g_actors[t->slot];
     if (!e->active) return;
+    /* +0x14E-Abbau: im Schritt selbst (re15_g5_pose_schritt, @0x800299c0-cc); ohne Schritt kein Abbau. */
 
     /* KIND-KOLLISION jeden Frame VOR dem Zustand (Main 0x801001a0-c8: das Kind laeuft als
      * eigener Entity-Tick; +0x220 &= ~6, dann |= 6*r @0x80105078-a4). Nur mit sichtbarer
@@ -826,7 +992,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     switch (t->sub) {
     case 0:                                        /* IDLE 0x80100A44 */
         if (t->ph == 0) {
-            tent_clip(e, t, 0, 0);
+            tent_clip(e, t, 0, 0, 0x3F);   /* @0x80100A60 `lui v0,0x3f` / @0x80100A64 sw */
             t->ph = 1;
             t->timer = 60 + (re15_engine_rand8() & 0x3F);   /* @0x80100A5C-9C */
             t->scale_x = 0;                                  /* Modell aus (parts.flags &= ~1) */
@@ -836,23 +1002,31 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     case 8:                                        /* AUSTRITT/BEBEN @0x80101D38ff */
         switch (t->ph) {
         case 0:
-            tent_clip(e, t, s_tent_clip_austritt[idx], 0);
+            tent_clip(e, t, s_tent_clip_austritt[idx], 0, 0);   /* @0x80101D44-4C Byte-Tabelle @0x80100048 */
             t->scale_x = 0;
             e->rot_x = 0; e->rot_z = 0; e->rot_y = g5->rot_y;
             if (idx == 1) t->ankermodus = 2;       /* @0x80101D60-78 */
             break;                                  /* G5 treibt +0x06 weiter */
         case 1:
             tent_se(0); t->ph = 2; t->ankermodus = 1;   /* @0x80101D90 */
-            break;
+            /* Nachbesserung G5A 4: KEIN break. ph1 (`sb v0=2,6(s1)` @0x80101d9c, `jal 0x8005bd6c` @0x80101da4, `sb v0=1,0x219(s1)`
+             * @0x80101da8) endet ohne Sprung im ph2-Koerper 0x80101dac (Tabelle Datei 0x54 = 0x8010edac - 0xD000). RE2-RAM s03
+             * (G5 [T1] +0x158 31): Arm 2 (Phase 1 bei 30) Streckung 512 = zwei Schritte +256 (ohne Durchfall 256); s04..s07 die
+             * Zaehler der Arme 2/3 (21/11, 70/60, 106/96, 156/146) - ohne Durchfall je 1 weniger. */
+            /* fall through */
         case 2:                                     /* @0x80101DAC: 16 Frames heraus */
             t->scale_x += 256;
             if (t->scale_x > 4096) t->scale_x = 4096;
-            if (tent_anim(e, t)) t->ph = 3;
+            if (tent_anim(e, t, 256)) t->ph = 3;   /* a3 @0x80101DBC */
             break;
-        case 3:
-            tent_clip(e, t, 0, 0);                 /* Clip-Wort 0x00070000 */
-            t->timer = 0; t->ph = 4; tent_se(2);
-            break;
+        case 3:                                     /* @0x80101DFC */
+            /* Clip-Wort 0x00070000 (`lui v0,0x7` @0x80101E04, `sw v0,332(s1)` @0x80101E08): Clip 0 mit 7 Ueberblendstufen -
+             * sichtbar erst ab dem naechsten Schritt (ph8), bis dahin bleibt die eingerollte Pose (s. tent_anim). */
+            tent_clip(e, t, 0, 0, 7);
+            t->timer = 0; t->ph = 4; tent_se(2);   /* `sh zero,344` @0x80101E10, ph 4 @0x80101E18, SE 2 @0x80101DFC/@0x80101E14 */
+            /* fall through: ph3 endet ohne Sprung (`sb v0,546(s1)` @0x80101E20) und laeuft im SELBEN Takt in den
+             * ph4-Koerper @0x80101E24 (Tabelle @0x8010004C[4]). */
+            /* fall through */
         case 4:                                     /* @0x80101E24 */
             /* ⛔ EIN Zaehler, nicht zwei: ph4, ph5 und ph6 arbeiten im Original ALLE auf
              * +0x158 (`lh v1,344(s1)` @0x80101e24/@0x80101e4c/@0x80101e74/@0x80101e94,
@@ -867,7 +1041,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             else if (t->timer >= 6 && t->timer <= 34)     e->x += 10;
             if (t->timer == 36) t->ph = 5;
             t->timer++;
-            tent_anim(e, t);
+            /* KEIN Anim-Schritt (Abnahme G5 1, M2): ph4 @0x80101E24-88 ruft 0x8002959c nicht - die Pose bleibt die letzte posierte. */
             break;
         case 5: t->timer = 0; break;               /* sh zero,344 @0x80101e90; G5 treibt */
         case 6: {                                   /* Zittern @0x80101E94 */
@@ -877,14 +1051,14 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             if (t->timer >= 161) e->x += 5;
             if (t->timer == 180) t->ph = 7;
             t->timer++;
-            tent_anim(e, t);
+            /* KEIN Anim-Schritt (Abnahme G5 1, M2): ph6 @0x80101E94-F9C ruft 0x8002959c nicht - die Pose bleibt die letzte posierte. */
             break;
         }
         case 8:                                     /* Einzug @0x80101FA8 */
             t->scale_x -= 64;
             e->rot_y = (int16_t)((e->rot_y + ((idx < 2) ? -16 : 16)) & 0xfff);
             if (t->scale_x < 2048) { t->scale_x = 0; tent_se(0); t->ph = 9; }
-            tent_anim(e, t);
+            tent_anim(e, t, 512);   /* a3 @0x80101FB8 */
             break;
         default: break;                             /* 7/9: warten bzw. verborgen */
         }
@@ -893,7 +1067,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     case 3:                                        /* PEITSCHE (0x301) @0x80101404ff */
         switch (t->ph) {
         case 0:
-            tent_clip(e, t, 0, 0);
+            tent_clip(e, t, 0, 0, 0);   /* @0x80101414 `sw zero,332` */
             e->rot_z = -576;                        /* @0x8010143c-40 (+0x78) */
             e->rot_y = g5->rot_y;                   /* sh zero,118 @0x80101444: Yaw 0 = G5-Achse */
             e->rot_x = s_tent_peitsch_rotx[idx];    /* @0x80101454-5c */
@@ -906,10 +1080,10 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             if (t->scale_x >= 2025 && e->rot_z < 32) e->rot_z = (int16_t)(e->rot_z + 32);
             if (t->scale_x >= 3073) {               /* @0x801014B8-D4 */
                 t->variante = (uint8_t)(re15_engine_rand8() & 1u);
-                tent_clip(e, t, 7 + t->variante, 0);
+                tent_clip(e, t, 7 + t->variante, 0, 0x1F);   /* @0x801014C0 `lui v1,0x1f` / @0x801014D4 sw */
                 t->ph = 2;
             }
-            tent_anim(e, t);
+            tent_anim(e, t, 64);   /* a3 @0x80101490 */
             break;
         case 2:
         case 3: {
@@ -921,8 +1095,8 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                     t->scale_x = 4096; t->ph = 3;
                     t->timer = (re15_engine_rand8() & 0xF) + 10;
                 }
-            } else if (tent_anim(e, t)) {           /* @0x801015D8-E8 */
-                tent_clip(e, t, 0, 0); t->ph = 4;
+            } else if (tent_anim(e, t, 128)) {           /* @0x801015D8-E8; a3 @0x801015D4 */
+                tent_clip(e, t, 0, 0, 0x1F); t->ph = 4;   /* @0x801015E4 `lui v0,0x1f` / @0x801015E8 sw */
                 break;
             }
             if (fr > F[0] && fr < F[1]) e->rot_z = (int16_t)(e->rot_z + 8);
@@ -951,7 +1125,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                     }
                 }
             }
-            if (t->ph == 2) tent_anim(e, t);
+            if (t->ph == 2) tent_anim(e, t, 128);   /* a3 @0x80101528 */
             break;
         }
         default:                                    /* ph4: einziehen @0x801017BC */
@@ -960,7 +1134,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                 t->scale_x = 0; t->sub = 0; t->ph = 0;
                 s_tent_maske &= (uint8_t)~(1u << (idx + 4));
             }
-            tent_anim(e, t);
+            tent_anim(e, t, 128);   /* a3 @0x801017CC */
             break;
         }
         break;
@@ -968,7 +1142,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     case 13:                                       /* SPIESS (0xD01) @0x801035BCff */
         switch (t->ph) {
         case 0:
-            tent_clip(e, t, (idx == 0 || idx == 3) ? 23 : 21, 0);
+            tent_clip(e, t, (idx == 0 || idx == 3) ? 23 : 21, 0, 0x1F);   /* @0x80103654 `lui v1,0x1f` / @0x80103660 sw */
             e->rot_x = 0; e->rot_z = 0; e->rot_y = g5->rot_y;
             t->scale_x = 0; t->ph = 1;
             t->variante = 0;                        /* `sb zero,363(s0)` @0x801036a8: der
@@ -998,7 +1172,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                     }
                 }
             }
-            if (tent_anim(e, t)) t->ph = 5;
+            if (tent_anim(e, t, 128)) t->ph = 5;   /* a3 @0x80103868 */
             break;
         default:                                    /* ph5: fertig @0x801038E0 */
             t->scale_x -= 96;
@@ -1006,7 +1180,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                 t->scale_x = 0; t->sub = 0; t->ph = 0;
                 s_tent_maske &= (uint8_t)~(1u << (idx + 4));
             }
-            tent_anim(e, t);
+            tent_anim(e, t, 64);   /* a3 @0x801038A0 */
             break;
         }
         break;
@@ -1014,7 +1188,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     case 9:                                        /* SPEER (0x901) @0x8010204cff, Tabelle @0x80100074 */
         switch (t->ph) {
         case 0:                                     /* @0x8010209c */
-            tent_clip(e, t, 0, 0);                 /* sw zero,332 */
+            tent_clip(e, t, 0, 0, 0);              /* @0x801020A0 `sw zero,332` */
             e->rot_x = s_tent_rot9[idx][0];        /* @0x801020b8-c0 (+0x74) */
             e->rot_y = (int16_t)((g5->rot_y + s_tent_rot9[idx][1]) & 0xfff);   /* +0x76 = 0 */
             e->rot_z = s_tent_rot9[idx][2];        /* @0x801020fc/120 (+0x78) */
@@ -1024,15 +1198,19 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             t->ph = 1;
             t->scale_x = 0;                        /* @0x8010212c */
             tent_se(0);                            /* @0x8010213c */
-            break;
+            /* Nachbesserung G5A 4: KEIN break. ph0 endet mit `jal 0x8005bd6c` @0x8010213c / `sw v0,0x1e8(s1)` @0x80102140 ohne
+             * Sprung und laeuft im SELBEN Takt in den ph1-Koerper 0x80102144 (Tabelle Datei 0x78 = 0x8010f144 - 0xD000).
+             * RE2-RAM s11 (G5 [T5] +0x158 52): Arm 0 (0x901 bei 20) Streckung 3992 / +0x158 280, Arm 1 (bei 40) 528 / 96,
+             * Arm 2 (bei 45) 168 / 56 - nur mit dem Durchfall (sonst 3480 / 248, 440 / 88, 120 / 48); s12 Arm 3 2400 / 200. */
+            /* fall through */
         case 1:                                     /* @0x80102144 */
-            tent_anim(e, t);
+            tent_anim(e, t, 64);   /* a3 @0x80102154 */
             t->scale_x += t->timer; t->timer += 8;
-            if (t->scale_x >= 3073) { t->ph = 2; tent_clip(e, t, 2, 0); }   /* 0x1F0002 */
+            if (t->scale_x >= 3073) { t->ph = 2; tent_clip(e, t, 2, 0, 0x1F); }   /* 0x1F0002; @0x8010218C `lui v1,0x1f` / @0x8010219C sw */
             e->rot_z = (int16_t)(e->rot_z - t->rate); t->rate = (int16_t)(t->rate - 4);
             break;
         case 2:                                     /* @0x801021c0 */
-            tent_anim(e, t);
+            tent_anim(e, t, 128);   /* a3 @0x801021D0 */
             t->scale_x += t->timer; t->timer += 16;
             if (t->scale_x >= 4097) { t->scale_x = 4096; t->ph = 3; tent_se(15); }
             /* FALLTHROUGH in den ph3-Koerper (@0x80102224) */
@@ -1050,12 +1228,15 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             t->rate = 64; t->timer = 60; t->ph = 5; t->dir = 1;
             t->ankermodus = 1;                     /* @0x80102370 */
             t->kontakt = 7;                        /* sb v0=7,546 (+0x222) */
-            break;
+            /* Nachbesserung G5A 4: KEIN break. ph4 endet mit `sb v0=7,0x222(s1)` @0x80102378 ohne Sprung im ph5-Koerper
+             * 0x8010237c (Tabelle Datei 0x84 = 0x8010f37c - 0xD000). RE2-RAM s12 (G5 [T5] +0x158 81): Arm 1 schon Phase 6,
+             * Arm 2 Phase 5 mit +0x158 57 - ohne Durchfall Phase 5 bzw. 58. */
+            /* fall through */
         case 5: {                                   /* @0x8010237c: Einrollen */
             int32_t was = t->timer;
             t->timer--;
             if (was == 0) {
-                t->ph = 6; tent_clip(e, t, 0, 0);   /* 0x3F0000 */
+                t->ph = 6; tent_clip(e, t, 0, 0, 0x3F);   /* 0x3F0000; @0x80102398 `lui v0,0x3f` / @0x8010239C sw */
                 t->timer = 8;
                 t->z21c = (int16_t)t->scale_x;
                 /* +0x21A = part3.WeltX - part0.WeltX, +0x21E = part0.WeltX: nur Diagnose in
@@ -1073,7 +1254,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             t->timer++;
             break;
         case 9:                                     /* @0x80102690 (Tabelle [9]): einziehen */
-            tent_anim(e, t);
+            tent_anim(e, t, 64);   /* a3 @0x801026A0 */
             t->scale_x -= t->timer; t->timer += 4;
             e->rot_z = (int16_t)(e->rot_z + 8);
             if (t->scale_x < 0) { t->scale_x = 0; t->ph = 10; tent_se(0); }
@@ -1086,24 +1267,29 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     case 10:                                       /* WEDELN (0xA01) @0x8010271cff, Tabelle @0x8010009C */
         switch (t->ph) {
         case 0:                                     /* @0x8010276c */
-            tent_clip(e, t, 0, 0);
+            tent_clip(e, t, 0, 0, 0);   /* @0x80102774 `sw zero,332` */
             t->ph = 1;
             e->rot_x = s_tent_rot10[idx][0];       /* @0x801027a8-b0 */
             e->rot_y = (int16_t)((g5->rot_y + s_tent_rot10[idx][1]) & 0xfff);
             e->rot_z = s_tent_rot10[idx][2];       /* @0x801027ec-fc */
             t->ankermodus = 0;                     /* sb zero,537 @0x801027f4 */
             tent_se(0);
-            break;
+            /* Nachbesserung G5A 4: KEIN break. ph0 endet mit `jal 0x8005bd6c` @0x801027f8 / `sh v0,0x78(s1)` @0x801027fc ohne
+             * Sprung und laeuft im SELBEN Takt in den ph1-Koerper 0x80102800 (Tabelle Datei 0xA0 = 0x8010f800 - 0xD000). ph0
+             * schreibt +0x8c nicht: die Arme wachsen aus der Streckung, die [T7]/sub9 ph9 hinterlassen hat (0). RE2-RAM s21
+             * (G5 [T10] +0x158 54): Arm 0 (0xA01 bei 20) Streckung 2176 ph2, Arm 2 (bei 35) 1216, Arm 1 (bei 40) 896, Arm 3
+             * (bei 50) 256 = 64 je Bild inklusive des Befehlsbilds (ohne Durchfall 2112 ph2 / 1152 / 832 / 192). */
+            /* fall through */
         case 1:                                     /* @0x80102800 */
-            tent_anim(e, t);
+            tent_anim(e, t, 64);   /* a3 @0x80102810 */
             t->scale_x += 64;
             if ((int16_t)t->scale_x >= 2049) {
                 t->ph = 2;
-                tent_clip(e, t, 9 + (idx % 3), 0); /* 0x1F0009 + idx%3 @0x8010283c-74 */
+                tent_clip(e, t, 9 + (idx % 3), 0, 0x1F); /* 0x1F0009 + idx%3 @0x8010283c-74; @0x80102834 `lui a1,0x1f` / @0x80102874 sw */
             }
             break;
         case 2:                                     /* @0x80102878 */
-            tent_anim(e, t);
+            tent_anim(e, t, 128);   /* a3 @0x80102888 */
             t->scale_x += 64;
             if ((int16_t)t->scale_x >= 4097) {
                 t->scale_x = 4096; t->ph = 3;
@@ -1112,24 +1298,24 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             break;
         case 3: {                                   /* @0x801028c0 */
             int32_t was;
-            tent_anim(e, t);
+            tent_anim(e, t, 64);   /* a3 @0x801028D0 */
             was = t->timer; t->timer--;
             if (was == 0) {
                 unsigned a = re15_engine_rand8() & 0xFFu;      /* @0x801028e8: Startbild */
                 unsigned b = re15_engine_rand8() & 0xFFu;      /* @0x801028f0: Clip       */
-                tent_clip(e, t, 9 + (int)(b % 3u), (int)(a % 90u));   /* 0x3F0009 + b%3, Bild a%90 */
+                tent_clip(e, t, 9 + (int)(b % 3u), (int)(a % 90u), 0x3F);   /* 0x3F0009 + b%3, Bild a%90; @0x80102920 `lui a1,0x3f` / @0x80102970 sw */
                 t->timer = (re15_engine_rand8() & 0xF) + 60;   /* @0x8010296c-7c */
             }
             break;
         }
         case 4:                                     /* @0x80102980: einmal Peitsche 7/8 */
             t->ph = 5;
-            tent_clip(e, t, 7 + (re15_engine_rand8() & 1), 0);   /* 0x1F0007 + rng&1 */
+            tent_clip(e, t, 7 + (re15_engine_rand8() & 1), 0, 0x1F);   /* 0x1F0007 + rng&1; @0x8010298C `lui v1,0x1f` / @0x8010299C sw */
             /* FALLTHROUGH (@0x801029a0) */
         case 5:                                     /* @0x801029a0 */
-            if (tent_anim(e, t)) {
+            if (tent_anim(e, t, 128)) {   /* a3 @0x801029B0 */
                 t->ph = 3;
-                tent_clip(e, t, 9 + (int)((re15_engine_rand8() & 0xFFu) % 3u), 0);
+                tent_clip(e, t, 9 + (int)((re15_engine_rand8() & 0xFFu) % 3u), 0, 0x3F);   /* @0x801029D4 `lui a1,0x3f` / @0x801029F8 sw */
                 t->timer = (re15_engine_rand8() & 0xF) + 30;
             }
             break;
@@ -1142,7 +1328,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
         switch (t->ph) {
         case 0: {                                   /* @0x80102a88 */
             int row = idx + 4 * (int)(re15_engine_rand8() & 3u);
-            tent_clip(e, t, 0, 0);
+            tent_clip(e, t, 0, 0, 0);   /* @0x80102A8C `sw zero,332` */
             e->rot_x = s_tent_rot11[row][0];       /* @0x80102aac/c0 */
             e->rot_y = (int16_t)((g5->rot_y + s_tent_rot11[row][1]) & 0xfff);
             e->rot_z = s_tent_rot11[row][2];       /* @0x80102aec/b0c */
@@ -1159,13 +1345,13 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
         /* FALLTHROUGH */
         case 1:                                     /* @0x80102b50 */
             (void)fall;
-            tent_anim(e, t);
+            tent_anim(e, t, 64);   /* a3 @0x80102B60 */
             t->scale_x += t->timer; t->timer += 8;
-            if (t->scale_x >= 3073) { t->ph = 2; tent_clip(e, t, 2, 0); }
+            if (t->scale_x >= 3073) { t->ph = 2; tent_clip(e, t, 2, 0, 0x1F); }   /* @0x80102B98 `lui v1,0x1f` / @0x80102BA8 sw */
             e->rot_z = (int16_t)(e->rot_z - t->rate); t->rate = (int16_t)(t->rate - 4);
             break;
         case 2:                                     /* @0x80102bcc */
-            tent_anim(e, t);
+            tent_anim(e, t, 128);   /* a3 @0x80102BDC */
             t->scale_x += t->timer; t->timer += 16;
             if (t->scale_x >= 4097) { t->scale_x = 4096; t->ph = 3; tent_se(15); }
             /* FALLTHROUGH in den ph3-Koerper */
@@ -1202,7 +1388,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             int32_t was = t->timer;
             t->timer--;
             if (was == 0) {
-                t->ph = 6; tent_clip(e, t, 0, 0);   /* 0x3F0000 */
+                t->ph = 6; tent_clip(e, t, 0, 0, 0x3F);   /* 0x3F0000; @0x80102E48 `lui v0,0x3f` / @0x80102E4C sw */
                 t->timer = 8;
                 t->z21a = (int16_t)(e->x + 8192);   /* lw 56 / addiu 8192 @0x80102e50-60 */
                 t->z21c = (int16_t)t->scale_x;      /* @0x80102e64-6c */
@@ -1223,7 +1409,7 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             break;
         case 8:                                     /* @0x801031cc */
             t->dir = 0;
-            tent_clip(e, t, 0, 0);                 /* 0x3F0000 */
+            tent_clip(e, t, 0, 0, 0x3F);                 /* 0x3F0000; @0x801031D4 `lui v0,0x3f` / @0x801031DC sw */
             tent_zug_laenge(e, t);
             break;
         case 9:                                     /* @0x80103210: loslassen, wieder strecken */
@@ -1235,10 +1421,10 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
                 t->kontakt &= (uint16_t)~1u;
                 tent_se(0);
             }
-            tent_anim(e, t);                       /* @0x8010328c-9c */
+            tent_anim(e, t, 64);                       /* @0x8010328c-9c; a3 @0x8010329C */
             break;
         case 10:                                    /* @0x801032a8: einziehen -> sub0 */
-            tent_anim(e, t);
+            tent_anim(e, t, 64);   /* a3 @0x801032B8 */
             t->scale_x -= t->timer; t->timer += 1;
             e->rot_z = (int16_t)(e->rot_z - 1);
             if (t->scale_x < 0) { t->scale_x = 0; t->sub = 0; t->ph = 0; }   /* sw v0=1,4 */
@@ -1249,11 +1435,13 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
     }
 
     case 6:                                        /* EINZIEHEN (0x601) @0x80101B80 */
-        if (t->ph == 0) { tent_clip(e, t, 0, 0); t->ph = 1; }
-        else {
-            t->scale_x -= 64;
-            if (t->scale_x < 0) { t->scale_x = 0; t->sub = 0; t->ph = 0; }
-            tent_anim(e, t);
+        if (t->ph == 0) { tent_clip(e, t, 0, 0, 0x1F); t->ph = 1; }   /* @0x80101BB4 `lui v0,0x1f` / @0x80101BB8 sw */
+        /* Nachbesserung G5A 4: ph0 (`sb v0=1,6(s0)` @0x80101bc0) laeuft ohne Sprung in den ph1-Koerper 0x80101bc4 (`jal 0x8002959c`
+         * @0x80101bc8). RE2-RAM s26 (G5 [T14] +0x158 19): alle vier Arme Streckung 1472 = 4096 - 41 * 64; ohne Durchfall 1536. */
+        {
+            t->scale_x -= 64;                      /* @0x80101bd8 */
+            if (t->scale_x < 0) { t->scale_x = 0; t->sub = 0; t->ph = 0; }   /* @0x80101bec / `sw v0=1,4(s0)` @0x80101bf0 */
+            tent_anim(e, t, 128);   /* a3 @0x80101BCC */
         }
         break;
 
@@ -1267,12 +1455,12 @@ static void tent_tick(int idx, const re15_actor_t *g5, re15_actor_t *pl)
             t->scale_x -= 32;
             if (t->scale_x < 0) t->scale_x = 0;
         }
-        tent_anim(e, t);
+        tent_anim(e, t, 64);   /* a3 @0x80103A00 (erster Schritt von sub14; der Port fasst sub14 zusammen) */
         break;
 
     default:                                       /* 12: ueber Timer laufen lassen */
         if (t->scale_x < 4096) t->scale_x += 96;
-        if (tent_anim(e, t)) { t->sub = 0; t->ph = 0; }
+        if (tent_anim(e, t, 64)) { t->sub = 0; t->ph = 0; }   /* a3 @0x801033E4 */
         break;
     }
 

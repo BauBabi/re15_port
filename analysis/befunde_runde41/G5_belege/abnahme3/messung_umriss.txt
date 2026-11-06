@@ -1,0 +1,26 @@
+# Abnahme 3: eigene Umriss-Probe (wz/umriss3.py). RE2-RAM selbst gelesen (wz/re2_ram.py, 635/635 Vertices gleich den Dateien der Abnahme 2).
+# Regionen: nur gemorpht = Masse RE2-RAM ohne Grundform; nur Grundform = Grundform ohne Masse RE2-RAM. L = Helligkeit 0..255.
+Bild 165 RE2-RAM s06 (635 -184 2895 0 0) Teil2 [-3326, 1309, -23400]: |M|=29699 |B|=34747 nur-gemorpht 7371 nur-Grundform 12419
+  RE2 echt        L(nur gemorpht)  25.9  L(nur Grundform)   4.5  L(beide)  25.0  RGB(nur gemorpht) [38, 23, 15] RGB(nur Grundform) [7, 4, 2]
+  Port Leon 5090  L(nur gemorpht)  27.6  L(nur Grundform)   3.0  L(beide)  23.6  RGB(nur gemorpht) [41, 25, 16] RGB(nur Grundform) [4, 2, 1]
+  Port Elza 5091  L(nur gemorpht)  27.6  L(nur Grundform)   3.0  L(beide)  23.6  RGB(nur gemorpht) [41, 25, 16] RGB(nur Grundform) [4, 2, 1]
+  Port Leon 5090  |Port-RE2| nur gemorpht  15.5, nur Grundform   4.3, ganze Masse  11.4, Bild ausserhalb  10.2
+  Port Elza 5091  |Port-RE2| nur gemorpht  15.5, nur Grundform   4.3, ganze Masse  11.4, Bild ausserhalb  10.2
+Bild 313 RE2-RAM s09 (635 -4168 2865 0 0) Teil2 [-959, 1274, -23400]: |M|=48076 |B|=46245 nur-gemorpht 18278 nur-Grundform 16447
+  RE2 echt        L(nur gemorpht)  26.7  L(nur Grundform)   7.1  L(beide)  15.6  RGB(nur gemorpht) [41, 23, 14] RGB(nur Grundform) [10, 6, 4]
+  Port Leon 5090  L(nur gemorpht)  24.1  L(nur Grundform)   6.9  L(beide)  15.0  RGB(nur gemorpht) [37, 20, 13] RGB(nur Grundform) [9, 6, 4]
+  Port Elza 5091  L(nur gemorpht)  24.1  L(nur Grundform)   6.9  L(beide)  15.0  RGB(nur gemorpht) [37, 20, 13] RGB(nur Grundform) [9, 6, 4]
+  Port Leon 5090  |Port-RE2| nur gemorpht  16.9, nur Grundform   5.2, ganze Masse  10.9, Bild ausserhalb  10.3
+  Port Elza 5091  |Port-RE2| nur gemorpht  16.9, nur Grundform   5.2, ganze Masse  10.9, Bild ausserhalb  10.3
+Bild 479 RE2-RAM s13 (635 8000 2865 0 0) Teil2 [-979, 1295, -23400]: |M|=9331 |B|=19646 nur-gemorpht 5160 nur-Grundform 15475
+  RE2 echt        L(nur gemorpht)  33.9  L(nur Grundform)  16.7  L(beide)  26.1  RGB(nur gemorpht) [54, 28, 19] RGB(nur Grundform) [21, 16, 12]
+  Port Leon 5090  L(nur gemorpht)  36.6  L(nur Grundform)  15.9  L(beide)  29.0  RGB(nur gemorpht) [58, 31, 20] RGB(nur Grundform) [19, 16, 11]
+  Port Elza 5091  L(nur gemorpht)  36.6  L(nur Grundform)  15.9  L(beide)  29.0  RGB(nur gemorpht) [58, 31, 20] RGB(nur Grundform) [19, 16, 11]
+  Port Leon 5090  |Port-RE2| nur gemorpht  18.5, nur Grundform  11.0, ganze Masse  13.9, Bild ausserhalb  10.7
+  Port Elza 5091  |Port-RE2| nur gemorpht  18.6, nur Grundform  11.0, ganze Masse  13.9, Bild ausserhalb  11.0
+Bild 677 RE2-RAM s17 (635 3152 0 0 0) Teil2 [2979, 17, -23481]: |M|=59461 |B|=59912 nur-gemorpht 4475 nur-Grundform 4926
+  RE2 echt        L(nur gemorpht)  52.4  L(nur Grundform)  26.6  L(beide)  30.8  RGB(nur gemorpht) [81, 48, 27] RGB(nur Grundform) [44, 20, 14]
+  Port Leon 5090  L(nur gemorpht)  49.1  L(nur Grundform)  24.6  L(beide)  32.3  RGB(nur gemorpht) [76, 44, 26] RGB(nur Grundform) [41, 18, 12]
+  Port Elza 5091  L(nur gemorpht)  49.1  L(nur Grundform)  24.6  L(beide)  32.3  RGB(nur gemorpht) [76, 44, 26] RGB(nur Grundform) [41, 18, 12]
+  Port Leon 5090  |Port-RE2| nur gemorpht  24.5, nur Grundform  13.7, ganze Masse  15.6, Bild ausserhalb  10.6
+  Port Elza 5091  |Port-RE2| nur gemorpht  24.5, nur Grundform  13.7, ganze Masse  15.6, Bild ausserhalb  10.6

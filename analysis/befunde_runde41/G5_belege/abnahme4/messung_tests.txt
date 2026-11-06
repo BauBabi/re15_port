@@ -1,0 +1,112 @@
+== unit_r41_g5auftritt -V (RE15_G5A_SPUR)
+1379: [g5auftritt] F0 Raum 5090: Vorlauf, Schnitt 16 (RE2 room7040 Cut 9), Spieler x -3800, Slot 2, Frau 1
+1379: [g5auftritt] F0 Raum 5090: Armierung nach 58 Vorlaufbildern, Schnitt 16, Spieler x 1200
+1379: 5090: Vorlauf 59 Bilder (RE2 61,47 -> 63,80 s = 70), Spieler bei der Armierung x 1200, im Bild 59 Vorlaufbilder
+1379: [g5auftritt] F0 Szenenende Bild 1162: G5 Sub 1 Ph 1, Spieler x 13873, Cut 12
+1379: 5090: Tentakel ab Bild 10, Hereinziehen ab 104, Ursprung durch die Tuer bei 159, Tentakel-Spitzen im Bild 891, G5-Front im Bild 300, Ende 1162, G5 Sub 1 Ph 1 x 1658, Spieler x 13873 Cut 12
+1379: 5090: M1 Spieler zuletzt im Bild 16 bei Bild 29, 17 bis 477, 12 bis 877; x 437 6500 / 806 16979 / 807 15646 / 1161 25574
+1379: 5090: M2 Armvergleiche 123, davon <= 250 123, max Abweichung 0; M3 G5 x Bild 129 -9525 / 270 -2786 / 800 1160; M4b groesster Wurzel-y-Schritt 56 bei Bild 129; M4 Pfosten 15 von 15
+1379: 5090: M4b Uebergang Kampf: groesster Wurzel-y-Schritt 14 bei Bild 1127 (vorher 125 bei 1123)
+1379: 5090: M5 Speer Arm 0 ph6 (356,-223,-192,-66) RE2 s12 (356,-223,-192,-66); ph7+20 (266,-133,-102,-21) RE2 s13 (266,-133,-102,-21)
+1379: 5090: M5 Speer Arm 1 ph6 (302,-169,-138,-39) RE2 s12 (302,-169,-138,-39); ph7+20 (212,-79,-48,6) RE2 s13 (212,-79,-48,6)
+1379: 5090: M5 Speer Arm 0 |p3-p0| 8159 (RE2 s13 8170, vorher 6080)
+1379: 5090: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+1379: 5090: NB3 Bild  31 s03 w0   3078 (RE2   3078) ph 1 (RE2 1) w1     0 (RE2     0)
+1379: 5090: NB3 Bild  80 s04 w0  10296 (RE2  10296) ph 1 (RE2 1) w1     0 (RE2     0)
+1379: 5090: NB3 Bild 129 s05 w0   5796 (RE2   5796) ph 2 (RE2 2) w1   566 (RE2   566)
+1379: 5090: NB3 Bild 165 s06 w0   -184 (RE2   -184) ph 7 (RE2 7) w1  2895 (RE2  2895)
+1379: 5090: NB3 Bild 264 s08 w0   9440 (RE2   9440) ph 7 (RE2 7) w1  2865 (RE2  2865)
+1379: 5090: NB3 Bild 313 s09 w0  -4168 (RE2  -4168) ph 7 (RE2 7) w1  2865 (RE2  2865)
+1379: 5090: NB3 Bild 479 s13 w0   8000 (RE2   8000) ph 6 (RE2 6) w1  2865 (RE2  2865)
+1379: 5090: NB3 Bild 677 s17 w0   3152 (RE2   3152) ph 7 (RE2 7) w1     0 (RE2     0)
+1379: 5090: NB3 Zeichner-Vertices Teil 2 Bild 165 gegen RE2-RAM s06: max 2, Bbox 1
+1379: 5090: NB3 Zeichner-Vertices Teil 2 Bild 313 gegen RE2-RAM s09: max 2, Bbox 1
+1379: 5090: NB3 Zeichner-Vertices Teil 2 Bild 479 gegen RE2-RAM s13: max 1, Bbox 1
+1379: 5090: NB3 Zeichner-Vertices Teil 2 Bild 677 gegen RE2-RAM s17: max 1, Bbox 1
+1379: [g5auftritt] F0 Raum 5091: Vorlauf, Schnitt 16 (RE2 room7040 Cut 9), Spieler x -3800, Slot 1, Frau -1
+1379: [g5auftritt] F0 Raum 5091: Armierung nach 58 Vorlaufbildern, Schnitt 16, Spieler x 1200
+1379: 5091: Vorlauf 59 Bilder (RE2 61,47 -> 63,80 s = 70), Spieler bei der Armierung x 1200, im Bild 59 Vorlaufbilder
+1379: [g5auftritt] F0 Szenenende Bild 1162: G5 Sub 1 Ph 1, Spieler x 13873, Cut 12
+1379: 5091: Tentakel ab Bild 10, Hereinziehen ab 104, Ursprung durch die Tuer bei 159, Tentakel-Spitzen im Bild 891, G5-Front im Bild 300, Ende 1162, G5 Sub 1 Ph 1 x 1658, Spieler x 13873 Cut 12
+1379: 5091: M1 Spieler zuletzt im Bild 16 bei Bild 29, 17 bis 477, 12 bis 877; x 437 6500 / 806 16979 / 807 15646 / 1161 25574
+1379: 5091: M2 Armvergleiche 123, davon <= 250 123, max Abweichung 0; M3 G5 x Bild 129 -9525 / 270 -2786 / 800 1160; M4b groesster Wurzel-y-Schritt 56 bei Bild 129; M4 Pfosten 15 von 15
+1379: 5091: M4b Uebergang Kampf: groesster Wurzel-y-Schritt 14 bei Bild 1127 (vorher 125 bei 1123)
+1379: 5091: M5 Speer Arm 0 ph6 (356,-223,-192,-66) RE2 s12 (356,-223,-192,-66); ph7+20 (266,-133,-102,-21) RE2 s13 (266,-133,-102,-21)
+1379: 5091: M5 Speer Arm 1 ph6 (302,-169,-138,-39) RE2 s12 (302,-169,-138,-39); ph7+20 (212,-79,-48,6) RE2 s13 (212,-79,-48,6)
+1379: 5091: M5 Speer Arm 0 |p3-p0| 8159 (RE2 s13 8170, vorher 6080)
+1379: 5091: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+1379: 5091: NB3 Bild  31 s03 w0   3078 (RE2   3078) ph 1 (RE2 1) w1     0 (RE2     0)
+1379: 5091: NB3 Bild  80 s04 w0  10296 (RE2  10296) ph 1 (RE2 1) w1     0 (RE2     0)
+1379: 5091: NB3 Bild 129 s05 w0   5796 (RE2   5796) ph 2 (RE2 2) w1   566 (RE2   566)
+1379: 5091: NB3 Bild 165 s06 w0   -184 (RE2   -184) ph 7 (RE2 7) w1  2895 (RE2  2895)
+1379: 5091: NB3 Bild 264 s08 w0   9440 (RE2   9440) ph 7 (RE2 7) w1  2865 (RE2  2865)
+1379: 5091: NB3 Bild 313 s09 w0  -4168 (RE2  -4168) ph 7 (RE2 7) w1  2865 (RE2  2865)
+1379: 5091: NB3 Bild 479 s13 w0   8000 (RE2   8000) ph 6 (RE2 6) w1  2865 (RE2  2865)
+1379: 5091: NB3 Bild 677 s17 w0   3152 (RE2   3152) ph 7 (RE2 7) w1     0 (RE2     0)
+1379: 5091: NB3 Zeichner-Vertices Teil 2 Bild 165 gegen RE2-RAM s06: max 2, Bbox 1
+1379: 5091: NB3 Zeichner-Vertices Teil 2 Bild 313 gegen RE2-RAM s09: max 2, Bbox 1
+1379: 5091: NB3 Zeichner-Vertices Teil 2 Bild 479 gegen RE2-RAM s13: max 1, Bbox 1
+1379: 5091: NB3 Zeichner-Vertices Teil 2 Bild 677 gegen RE2-RAM s17: max 1, Bbox 1
+1379: test_r41_g5auftritt: OK
+The following tests passed:
+100% tests passed, 0 tests failed out of 1
+g5auftritt EXIT 0
+
+== unit_r41_birkin_wand_* -V
+    Start 1377: unit_r41_birkin_wand_g5saat
+1377: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_g5auftritt\re15_port\build\tests\unit\test_r41_birkin_wand.exe "g5saat"
+1/4 Test #1374: unit_r41_birkin_wand_rein ........   Passed    0.01 sec
+1375: N2: Arm-Kontakt 15 Bilder, Bildende in der Wand 0, Laufproben 3/3
+1375: N1: Ecke #29/#30 unter dem Koerper, 30 Bilder Vorwaerts: Weg 2294, Ende (4654,-24895)
+1375: g5: 424 wandnahe Startlagen
+1377: g5saat STAGE5/ROOM5090.RDT: 200 Saaten x 5 Lagen x 150 Bilder = 1000 Faelle, Griff-Bilder 38660, Bildenden in fester Zelle 0, Saaten mit Wandbild 0 (erste -1)
+1375: g5: 424 Faelle, Griff-Bilder 3604, Bildenden in fester Zelle 0 (laengste Folge 0), eingekeilt 0, kleinster Laufweg 423, vom Koerper gedrueckt 7 (laengste Wartezeit 104 Bilder)
+1375: N2: Arm-Kontakt 15 Bilder, Bildende in der Wand 0, Laufproben 3/3
+1375: N1: Ecke #29/#30 unter dem Koerper, 30 Bilder Vorwaerts: Weg 2294, Ende (4654,-24895)
+1375: g5: 424 wandnahe Startlagen
+1377: g5saat STAGE5/ROOM5091.RDT: 200 Saaten x 5 Lagen x 150 Bilder = 1000 Faelle, Griff-Bilder 38718, Bildenden in fester Zelle 0, Saaten mit Wandbild 0 (erste -1)
+1377: test_r41_birkin_wand g5saat: OK
+2/4 Test #1377: unit_r41_birkin_wand_g5saat ......   Passed   32.58 sec
+1375: g5: 424 Faelle, Griff-Bilder 3532, Bildenden in fester Zelle 0 (laengste Folge 0), eingekeilt 0, kleinster Laufweg 572, vom Koerper gedrueckt 5 (laengste Wartezeit 62 Bilder)
+1375: test_r41_birkin_wand g5: OK
+3/4 Test #1375: unit_r41_birkin_wand_g5 ..........   Passed   41.71 sec
+4/4 Test #1376: unit_r41_birkin_wand_griff .......   Passed  160.03 sec
+The following tests passed:
+	unit_r41_birkin_wand_g5saat
+100% tests passed, 0 tests failed out of 4
+wand EXIT 0
+
+== Suite (ohne integration_ und 7 df-Skripttests)
+1068/1068 Test  #650: unit_r37_masken36_ausschluss ............   Passed  334.70 sec
+
+100% tests passed, 0 tests failed out of 1068
+
+Total Test time (real) = 334.77 sec
+EXIT 0
+
+== Integration
+1382: -- r41_g5_tod leon: HP 0 gesehen 1, Tod bei HP 0, exit 0
+1381: -- r41_g5_westen leon_w4: 3441 Bilder, in fester Zelle 0, Szenenende F1921, Weg danach 15145
+1380: -- r41_birkin_pistole leon: Mutationen 1, Form-HP 150 bis 0, Rueckstoss 1, G5 1, G5 tot 1, Spieler-HP dabei 45
+1382: -- r41_g5_tod elza: HP 0 gesehen 1, Tod bei HP 0, exit 0
+1382: -- r41_g5_tod: alle Pruefungen gruen
+ 1/11 Test #1382: integration_r41_g5_tod ...................   Passed  253.35 sec
+1381: -- r41_g5_westen elza_w4: 3441 Bilder, in fester Zelle 0, Szenenende F1921, Weg danach 16674
+ 2/11 Test  #926: integration_r38_wasserzombie .............   Passed  129.41 sec
+1380: -- r41_birkin_pistole elza: Mutationen 1, Form-HP 150 bis 0, Rueckstoss 1, G5 1, G5 tot 1, Spieler-HP dabei 45
+1380: -- r41_birkin_pistole: alle Pruefungen gruen
+ 3/11 Test #1380: integration_r41_birkin_pistole ...........   Passed  400.54 sec
+1381: -- r41_g5_westen leon_fern: 3441 Bilder, in fester Zelle 0, Szenenende F1921, Weg danach 15145
+1381: -- r41_g5_westen: alle Pruefungen gruen
+ 4/11 Test #1381: integration_r41_g5_westen ................   Passed  412.02 sec
+ 5/11 Test  #766: integration_r37_re2zombie ................   Passed   52.10 sec
+ 6/11 Test #1362: integration_r41_zombiefresser_tuer2000 ...   Passed   41.50 sec
+ 7/11 Test  #627: integration_r36_pri_schatten .............   Passed   28.44 sec
+ 8/11 Test  #689: integration_r37_bissarm_echtlauf .........   Passed   37.80 sec
+ 9/11 Test #1409: integration_pri_masken ...................   Passed    0.08 sec
+10/11 Test  #708: integration_r37_elzaems_elza1181griff ....   Passed   17.04 sec
+11/11 Test  #571: integration_r35_zgirl_5090 ...............   Passed  147.18 sec
+The following tests passed:
+100% tests passed, 0 tests failed out of 11
+Total Test time (real) = 529.99 sec
+EXIT 0

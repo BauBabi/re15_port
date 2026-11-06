@@ -1,0 +1,281 @@
+  DRAW f=1560 part=0/4 (bones=2 meshes=4) welt=(-32000,0,-32000) aktorY=0
+  DRAW f=1560 part=1/4 (bones=2 meshes=4) welt=(-29854,-3727,-32000) aktorY=0
+  DRAW f=1560 part=2/4 (bones=2 meshes=4) welt=(-30200,-34,-32000) aktorY=0
+  DRAW f=1560 part=3/4 (bones=2 meshes=4) welt=(-31200,-4034,-32000) aktorY=0
+g5 tick=0 sub=2 ph=1 clip=1 af=0 u=-9000 dist=10188 hp=600 blob=3/1 gw0=0 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+  DRAW f=1620 part=0/4 (bones=2 meshes=4) welt=(-9000,0,-23400) aktorY=0
+  DRAW f=1620 part=1/4 (bones=2 meshes=4) welt=(-6854,-3727,-23400) aktorY=0
+  DRAW f=1620 part=2/4 (bones=2 meshes=4) welt=(-7200,-34,-23400) aktorY=0
+  DRAW f=1620 part=3/4 (bones=2 meshes=4) welt=(-8200,-4034,-23400) aktorY=0
+g5 tick=15 sub=2 ph=1 clip=1 af=0 u=-9000 dist=10592 hp=600 blob=3/1 gw0=90 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=30 sub=2 ph=1 clip=1 af=0 u=-9000 dist=13584 hp=600 blob=3/1 gw0=180 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=45 sub=2 ph=1 clip=1 af=0 u=-9000 dist=16508 hp=600 blob=3/1 gw0=270 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=60 sub=2 ph=1 clip=1 af=0 u=-9000 dist=19536 hp=600 blob=3/1 gw0=360 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+  DRAW f=1680 part=0/4 (bones=2 meshes=4) welt=(-9000,0,-23400) aktorY=0
+  DRAW f=1680 part=1/4 (bones=2 meshes=4) welt=(-6854,-3727,-23400) aktorY=0
+  DRAW f=1680 part=2/4 (bones=2 meshes=4) welt=(-7200,-34,-23400) aktorY=0
+  DRAW f=1680 part=3/4 (bones=2 meshes=4) welt=(-8200,-4034,-23400) aktorY=0
+g5 tick=75 sub=2 ph=1 clip=1 af=0 u=-9000 dist=22528 hp=600 blob=3/1 gw0=450 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=90 sub=2 ph=2 clip=1 af=0 u=-9000 dist=25576 hp=600 blob=3/1 gw0=540 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=105 sub=2 ph=2 clip=1 af=15 u=-9760 dist=29320 hp=600 blob=3/1 gw0=630 akku=0 pos=(-9760,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=120 sub=2 ph=2 clip=1 af=30 u=-9654 dist=29464 hp=600 blob=3/1 gw0=720 akku=0 pos=(-9654,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+  DRAW f=1740 part=0/4 (bones=2 meshes=4) welt=(-9548,0,-23400) aktorY=0
+  DRAW f=1740 part=1/4 (bones=2 meshes=4) welt=(-7496,-3359,-23400) aktorY=0
+  DRAW f=1740 part=2/4 (bones=2 meshes=4) welt=(-8213,279,-23400) aktorY=0
+  DRAW f=1740 part=3/4 (bones=2 meshes=4) welt=(-8803,-3800,-23400) aktorY=0
+g5 tick=135 sub=2 ph=2 clip=1 af=45 u=-9092 dist=28960 hp=600 blob=3/1 gw0=810 akku=0 pos=(-9092,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=150 sub=2 ph=2 clip=1 af=60 u=-6904 dist=26856 hp=600 blob=3/1 gw0=900 akku=0 pos=(-6904,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=165 sub=2 ph=2 clip=1 af=75 u=-5126 dist=24996 hp=600 blob=3/1 gw0=990 akku=0 pos=(-5126,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=180 sub=2 ph=2 clip=1 af=90 u=-4703 dist=24488 hp=600 blob=3/1 gw0=1080 akku=0 pos=(-4703,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+  DRAW f=1800 part=0/4 (bones=2 meshes=4) welt=(-4817,0,-23400) aktorY=0
+  DRAW f=1800 part=1/4 (bones=2 meshes=4) welt=(-2671,-2395,-23400) aktorY=0
+  DRAW f=1800 part=2/4 (bones=2 meshes=4) welt=(-3017,1298,-23400) aktorY=0
+  DRAW f=1800 part=3/4 (bones=2 meshes=4) welt=(-4017,-2702,-23400) aktorY=0
+g5 tick=195 sub=2 ph=2 clip=1 af=105 u=-4836 dist=24576 hp=600 blob=3/1 gw0=1170 akku=0 pos=(-4836,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=210 sub=2 ph=2 clip=1 af=120 u=-4884 dist=24660 hp=600 blob=3/1 gw0=1260 akku=0 pos=(-4884,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=225 sub=2 ph=2 clip=1 af=135 u=-4898 dist=24660 hp=600 blob=3/1 gw0=1350 akku=0 pos=(-4898,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=240 sub=2 ph=2 clip=1 af=150 u=-4745 dist=24488 hp=600 blob=3/1 gw0=1440 akku=0 pos=(-4745,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+  DRAW f=1860 part=0/4 (bones=2 meshes=4) welt=(-4532,0,-23400) aktorY=0
+  DRAW f=1860 part=1/4 (bones=2 meshes=4) welt=(-2386,-2403,-23400) aktorY=0
+  DRAW f=1860 part=2/4 (bones=2 meshes=4) welt=(-2732,1290,-23400) aktorY=0
+  DRAW f=1860 part=3/4 (bones=2 meshes=4) welt=(-3732,-2710,-23400) aktorY=0
+g5 tick=255 sub=2 ph=2 clip=1 af=165 u=-3566 dist=23440 hp=600 blob=3/1 gw0=1530 akku=0 pos=(-3566,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=270 sub=2 ph=3 clip=1 af=0 u=-2786 dist=22528 hp=600 blob=3/1 gw0=1620 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=285 sub=2 ph=4 clip=3 af=15 u=-2786 dist=22528 hp=600 blob=3/1 gw0=1710 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=300 sub=2 ph=4 clip=3 af=30 u=-2786 dist=22528 hp=600 blob=3/1 gw0=1800 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+  DRAW f=1920 part=0/4 (bones=2 meshes=4) welt=(-2786,0,-23400) aktorY=0
+  DRAW f=1920 part=1/4 (bones=2 meshes=4) welt=(-634,-2439,-23400) aktorY=0
+  DRAW f=1920 part=2/4 (bones=2 meshes=4) welt=(-952,1257,-23400) aktorY=0
+  DRAW f=1920 part=3/4 (bones=2 meshes=4) welt=(-1983,-2736,-23400) aktorY=0
+g5 tick=315 sub=2 ph=4 clip=3 af=45 u=-2786 dist=22528 hp=600 blob=3/1 gw0=1890 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=330 sub=2 ph=4 clip=3 af=60 u=-2786 dist=22528 hp=600 blob=3/1 gw0=1980 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=345 sub=2 ph=4 clip=3 af=75 u=-2786 dist=22528 hp=600 blob=3/1 gw0=2070 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=360 sub=2 ph=5 clip=3 af=90 u=-2786 dist=22528 hp=600 blob=3/1 gw0=2160 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+  DRAW f=1980 part=0/4 (bones=2 meshes=4) welt=(-2786,0,-23400) aktorY=0
+  DRAW f=1980 part=1/4 (bones=2 meshes=4) welt=(-640,-2397,-23400) aktorY=0
+  DRAW f=1980 part=2/4 (bones=2 meshes=4) welt=(-986,1296,-23400) aktorY=0
+  DRAW f=1980 part=3/4 (bones=2 meshes=4) welt=(-1986,-2704,-23400) aktorY=0
+g5 tick=375 sub=2 ph=5 clip=3 af=5 u=-2786 dist=22528 hp=600 blob=3/1 gw0=2250 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=390 sub=2 ph=5 clip=3 af=20 u=-2786 dist=22528 hp=600 blob=3/1 gw0=2340 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=405 sub=2 ph=5 clip=3 af=35 u=-2786 dist=22528 hp=600 blob=3/1 gw0=2430 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=420 sub=2 ph=5 clip=3 af=50 u=-2786 dist=22528 hp=600 blob=3/1 gw0=2520 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+  DRAW f=2040 part=0/4 (bones=2 meshes=4) welt=(-2786,0,-23400) aktorY=0
+  DRAW f=2040 part=1/4 (bones=2 meshes=4) welt=(-637,-2404,-23400) aktorY=0
+  DRAW f=2040 part=2/4 (bones=2 meshes=4) welt=(-966,1290,-23400) aktorY=0
+  DRAW f=2040 part=3/4 (bones=2 meshes=4) welt=(-1984,-2705,-23400) aktorY=0
+g5 tick=435 sub=2 ph=5 clip=3 af=65 u=-2786 dist=22528 hp=600 blob=3/1 gw0=2610 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=4095 dirx=0 letzte=(0,0,0)
+g5 tick=450 sub=2 ph=5 clip=3 af=80 u=-2786 dist=9714 hp=600 blob=3/1 gw0=2700 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=465 sub=2 ph=5 clip=3 af=95 u=-2786 dist=10136 hp=600 blob=3/1 gw0=2790 akku=0 pos=(-2786,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=480 sub=2 ph=6 clip=4 af=10 u=-2777 dist=10592 hp=600 blob=3/1 gw0=2880 akku=0 pos=(-2777,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2100 part=0/4 (bones=2 meshes=4) welt=(-2754,0,-23400) aktorY=0
+  DRAW f=2100 part=1/4 (bones=2 meshes=4) welt=(-608,-2381,-23405) aktorY=0
+  DRAW f=2100 part=2/4 (bones=2 meshes=4) welt=(-954,1312,-23410) aktorY=0
+  DRAW f=2100 part=3/4 (bones=2 meshes=4) welt=(-1954,-2688,-23402) aktorY=0
+g5 tick=495 sub=2 ph=6 clip=4 af=25 u=-2705 dist=10884 hp=600 blob=3/1 gw0=2970 akku=0 pos=(-2705,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=510 sub=2 ph=6 clip=4 af=40 u=-2480 dist=11122 hp=600 blob=3/1 gw0=3060 akku=0 pos=(-2480,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=525 sub=2 ph=6 clip=4 af=55 u=-2242 dist=11310 hp=600 blob=3/1 gw0=3150 akku=0 pos=(-2242,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=540 sub=2 ph=6 clip=4 af=70 u=-2117 dist=11584 hp=600 blob=3/1 gw0=3240 akku=0 pos=(-2117,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2160 part=0/4 (bones=2 meshes=4) welt=(-2071,0,-23400) aktorY=0
+  DRAW f=2160 part=1/4 (bones=2 meshes=4) welt=(73,-2324,-23485) aktorY=0
+  DRAW f=2160 part=2/4 (bones=2 meshes=4) welt=(-273,1369,-23512) aktorY=0
+  DRAW f=2160 part=3/4 (bones=2 meshes=4) welt=(-1272,-2631,-23434) aktorY=0
+g5 tick=555 sub=2 ph=6 clip=4 af=85 u=-1951 dist=11852 hp=600 blob=3/1 gw0=3330 akku=0 pos=(-1951,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=570 sub=2 ph=6 clip=4 af=100 u=-1255 dist=11584 hp=600 blob=3/1 gw0=3420 akku=0 pos=(-1255,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=585 sub=2 ph=6 clip=4 af=115 u=-365 dist=11122 hp=600 blob=3/1 gw0=3510 akku=0 pos=(-365,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=600 sub=2 ph=6 clip=4 af=130 u=511 dist=10690 hp=600 blob=3/1 gw0=3600 akku=0 pos=(511,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2220 part=0/4 (bones=2 meshes=4) welt=(856,0,-23400) aktorY=0
+  DRAW f=2220 part=1/4 (bones=2 meshes=4) welt=(3028,-3274,-23387) aktorY=0
+  DRAW f=2220 part=2/4 (bones=2 meshes=4) welt=(2812,428,-23384) aktorY=0
+  DRAW f=2220 part=3/4 (bones=2 meshes=4) welt=(1672,-3533,-23395) aktorY=0
+g5 tick=615 sub=2 ph=6 clip=4 af=145 u=1121 dist=10442 hp=600 blob=3/1 gw0=3690 akku=0 pos=(1121,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=630 sub=2 ph=6 clip=4 af=160 u=1340 dist=10640 hp=600 blob=3/1 gw0=3780 akku=0 pos=(1340,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=645 sub=2 ph=6 clip=4 af=175 u=1199 dist=11170 hp=600 blob=3/1 gw0=3870 akku=0 pos=(1199,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=660 sub=2 ph=8 clip=2 af=10 u=1160 dist=11674 hp=600 blob=3/1 gw0=3960 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2280 part=0/4 (bones=2 meshes=4) welt=(1160,0,-23400) aktorY=0
+  DRAW f=2280 part=1/4 (bones=2 meshes=4) welt=(3310,-3717,-23451) aktorY=0
+  DRAW f=2280 part=2/4 (bones=2 meshes=4) welt=(2985,-21,-23478) aktorY=0
+  DRAW f=2280 part=3/4 (bones=2 meshes=4) welt=(1962,-4015,-23421) aktorY=0
+g5 tick=675 sub=2 ph=8 clip=2 af=25 u=1160 dist=12072 hp=600 blob=3/1 gw0=4050 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=690 sub=2 ph=8 clip=2 af=40 u=1160 dist=12540 hp=600 blob=3/1 gw0=4140 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=705 sub=2 ph=8 clip=2 af=55 u=1160 dist=12912 hp=600 blob=3/1 gw0=4230 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=720 sub=2 ph=8 clip=2 af=70 u=1160 dist=13350 hp=600 blob=3/1 gw0=4320 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2340 part=0/4 (bones=2 meshes=4) welt=(1160,0,-23400) aktorY=0
+  DRAW f=2340 part=1/4 (bones=2 meshes=4) welt=(3307,-3607,-23455) aktorY=0
+  DRAW f=2340 part=2/4 (bones=2 meshes=4) welt=(2972,87,-23469) aktorY=0
+  DRAW f=2340 part=3/4 (bones=2 meshes=4) welt=(1961,-3910,-23422) aktorY=0
+g5 tick=735 sub=2 ph=8 clip=2 af=85 u=1160 dist=13776 hp=600 blob=3/1 gw0=4410 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=750 sub=2 ph=8 clip=2 af=100 u=1160 dist=14224 hp=600 blob=3/1 gw0=4500 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=765 sub=2 ph=8 clip=2 af=115 u=1160 dist=14588 hp=600 blob=3/1 gw0=4590 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=780 sub=2 ph=8 clip=2 af=130 u=1160 dist=15014 hp=600 blob=3/1 gw0=4680 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2400 part=0/4 (bones=2 meshes=4) welt=(1160,0,-23400) aktorY=0
+  DRAW f=2400 part=1/4 (bones=2 meshes=4) welt=(3307,-3726,-23455) aktorY=0
+  DRAW f=2400 part=2/4 (bones=2 meshes=4) welt=(2972,-32,-23469) aktorY=0
+  DRAW f=2400 part=3/4 (bones=2 meshes=4) welt=(1961,-4029,-23422) aktorY=0
+g5 tick=795 sub=2 ph=8 clip=2 af=145 u=1160 dist=15462 hp=600 blob=3/1 gw0=4770 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=810 sub=2 ph=10 clip=0 af=10 u=1160 dist=14588 hp=600 blob=3/1 gw0=4860 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=825 sub=2 ph=10 clip=0 af=25 u=1160 dist=14978 hp=600 blob=3/1 gw0=4950 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=840 sub=2 ph=10 clip=0 af=40 u=1160 dist=15394 hp=600 blob=3/1 gw0=5040 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2460 part=0/4 (bones=2 meshes=4) welt=(1160,0,-23400) aktorY=0
+  DRAW f=2460 part=1/4 (bones=2 meshes=4) welt=(3310,-3600,-23400) aktorY=0
+  DRAW f=2460 part=2/4 (bones=2 meshes=4) welt=(2987,96,-23400) aktorY=0
+  DRAW f=2460 part=3/4 (bones=2 meshes=4) welt=(1963,-3898,-23400) aktorY=0
+g5 tick=855 sub=2 ph=10 clip=0 af=55 u=1160 dist=15796 hp=600 blob=3/1 gw0=5130 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=870 sub=2 ph=10 clip=0 af=70 u=1160 dist=16254 hp=600 blob=3/1 gw0=5220 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=885 sub=2 ph=10 clip=0 af=85 u=1160 dist=16636 hp=600 blob=3/1 gw0=5310 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=900 sub=2 ph=10 clip=0 af=0 u=1160 dist=17008 hp=600 blob=3/1 gw0=5400 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2520 part=0/4 (bones=2 meshes=4) welt=(1160,0,-23400) aktorY=0
+  DRAW f=2520 part=1/4 (bones=2 meshes=4) welt=(3306,-3721,-23400) aktorY=0
+  DRAW f=2520 part=2/4 (bones=2 meshes=4) welt=(2960,-28,-23400) aktorY=0
+  DRAW f=2520 part=3/4 (bones=2 meshes=4) welt=(1960,-4028,-23400) aktorY=0
+g5 tick=915 sub=2 ph=12 clip=2 af=5 u=1160 dist=17376 hp=600 blob=3/1 gw0=5490 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=930 sub=2 ph=12 clip=2 af=20 u=1160 dist=17852 hp=600 blob=3/1 gw0=5580 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=945 sub=2 ph=12 clip=2 af=35 u=1160 dist=18316 hp=600 blob=3/1 gw0=5670 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=960 sub=2 ph=12 clip=2 af=50 u=1160 dist=18768 hp=600 blob=3/1 gw0=5760 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2580 part=0/4 (bones=2 meshes=4) welt=(1160,0,-23400) aktorY=0
+  DRAW f=2580 part=1/4 (bones=2 meshes=4) welt=(3307,-3592,-23455) aktorY=0
+  DRAW f=2580 part=2/4 (bones=2 meshes=4) welt=(2972,102,-23469) aktorY=0
+  DRAW f=2580 part=3/4 (bones=2 meshes=4) welt=(1961,-3895,-23422) aktorY=0
+g5 tick=975 sub=2 ph=12 clip=2 af=65 u=1160 dist=19100 hp=600 blob=3/1 gw0=5850 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=990 sub=2 ph=12 clip=2 af=80 u=1160 dist=19536 hp=600 blob=3/1 gw0=5940 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1005 sub=2 ph=12 clip=2 af=95 u=1160 dist=19960 hp=600 blob=3/1 gw0=6030 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1020 sub=2 ph=12 clip=2 af=110 u=1160 dist=20480 hp=600 blob=3/1 gw0=6120 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2640 part=0/4 (bones=2 meshes=4) welt=(1160,0,-23400) aktorY=0
+  DRAW f=2640 part=1/4 (bones=2 meshes=4) welt=(3307,-3692,-23455) aktorY=0
+  DRAW f=2640 part=2/4 (bones=2 meshes=4) welt=(2972,2,-23469) aktorY=0
+  DRAW f=2640 part=3/4 (bones=2 meshes=4) welt=(1961,-3995,-23422) aktorY=0
+g5 tick=1035 sub=2 ph=12 clip=2 af=125 u=1160 dist=20784 hp=600 blob=3/1 gw0=6210 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1050 sub=2 ph=12 clip=2 af=140 u=1160 dist=21280 hp=600 blob=3/1 gw0=6300 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1065 sub=2 ph=14 clip=0 af=5 u=1160 dist=21672 hp=600 blob=0/1 gw0=6450 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1080 sub=2 ph=14 clip=0 af=20 u=1160 dist=22152 hp=600 blob=0/1 gw0=7620 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2700 part=0/4 (bones=2 meshes=4) welt=(1160,0,-23400) aktorY=0
+  DRAW f=2700 part=1/4 (bones=2 meshes=4) welt=(3314,-3675,-23400) aktorY=0
+  DRAW f=2700 part=2/4 (bones=2 meshes=4) welt=(3008,22,-23400) aktorY=0
+  DRAW f=2700 part=3/4 (bones=2 meshes=4) welt=(1965,-3967,-23400) aktorY=0
+g5 tick=1095 sub=2 ph=14 clip=0 af=35 u=1160 dist=22528 hp=600 blob=0/1 gw0=9204 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1110 sub=2 ph=14 clip=0 af=50 u=1160 dist=22988 hp=600 blob=0/2 gw0=9444 akku=0 pos=(1160,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1125 sub=1 ph=1 clip=5 af=3 u=1150 dist=23348 hp=600 blob=0/2 gw0=8274 akku=0 pos=(1150,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1140 sub=1 ph=1 clip=5 af=18 u=942 dist=24056 hp=600 blob=0/2 gw0=5790 akku=0 pos=(942,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2760 part=0/4 (bones=2 meshes=4) welt=(1366,0,-23400) aktorY=0
+  DRAW f=2760 part=1/4 (bones=2 meshes=4) welt=(3520,-3640,-23400) aktorY=0
+  DRAW f=2760 part=2/4 (bones=2 meshes=4) welt=(3214,57,-23400) aktorY=0
+  DRAW f=2760 part=3/4 (bones=2 meshes=4) welt=(2171,-3932,-23400) aktorY=0
+g5 tick=1155 sub=1 ph=1 clip=5 af=33 u=1835 dist=23168 hp=600 blob=0/2 gw0=2910 akku=0 pos=(1835,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1170 sub=1 ph=1 clip=5 af=48 u=1778 dist=12072 hp=600 blob=0/2 gw0=30 akku=0 pos=(1778,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1185 sub=1 ph=1 clip=5 af=63 u=1726 dist=12116 hp=600 blob=0/2 gw0=-2322 akku=0 pos=(1726,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1200 sub=1 ph=1 clip=5 af=78 u=1660 dist=12202 hp=600 blob=0/1 gw0=-2910 akku=0 pos=(1660,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2820 part=0/4 (bones=2 meshes=4) welt=(1667,0,-23400) aktorY=0
+  DRAW f=2820 part=1/4 (bones=2 meshes=4) welt=(3815,-3369,-23400) aktorY=0
+  DRAW f=2820 part=2/4 (bones=2 meshes=4) welt=(3481,325,-23400) aktorY=0
+  DRAW f=2820 part=3/4 (bones=2 meshes=4) welt=(2468,-3672,-23400) aktorY=0
+g5 tick=1215 sub=1 ph=1 clip=5 af=93 u=1728 dist=12116 hp=600 blob=0/1 gw0=-1920 akku=0 pos=(1728,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1230 sub=1 ph=1 clip=5 af=108 u=2506 dist=11448 hp=600 blob=0/1 gw0=294 akku=0 pos=(2506,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1245 sub=1 ph=1 clip=5 af=123 u=4088 dist=9874 hp=600 blob=0/1 gw0=2724 akku=0 pos=(4088,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1260 sub=1 ph=1 clip=5 af=138 u=5481 dist=8380 hp=600 blob=0/1 gw0=5154 akku=0 pos=(5481,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2880 part=0/4 (bones=2 meshes=4) welt=(5363,0,-23400) aktorY=0
+  DRAW f=2880 part=1/4 (bones=2 meshes=4) welt=(7509,-3725,-23400) aktorY=0
+  DRAW f=2880 part=2/4 (bones=2 meshes=4) welt=(7163,-32,-23400) aktorY=0
+  DRAW f=2880 part=3/4 (bones=2 meshes=4) welt=(6163,-4032,-23400) aktorY=0
+g5 tick=1275 sub=1 ph=3 clip=2 af=3 u=5166 dist=8688 hp=600 blob=0/1 gw0=7584 akku=0 pos=(5166,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1290 sub=1 ph=3 clip=2 af=18 u=5166 dist=8688 hp=600 blob=0/1 gw0=9546 akku=0 pos=(5166,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1305 sub=1 ph=3 clip=2 af=33 u=5166 dist=8688 hp=600 blob=0/2 gw0=10170 akku=0 pos=(5166,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1320 sub=1 ph=3 clip=2 af=48 u=5166 dist=8688 hp=600 blob=0/2 gw0=9360 akku=0 pos=(5166,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=2940 part=0/4 (bones=2 meshes=4) welt=(5166,0,-23400) aktorY=0
+  DRAW f=2940 part=1/4 (bones=2 meshes=4) welt=(7313,-3593,-23455) aktorY=0
+  DRAW f=2940 part=2/4 (bones=2 meshes=4) welt=(6978,101,-23469) aktorY=0
+  DRAW f=2940 part=3/4 (bones=2 meshes=4) welt=(5967,-3896,-23422) aktorY=0
+g5 tick=1335 sub=1 ph=3 clip=2 af=63 u=5166 dist=8688 hp=600 blob=0/2 gw0=7200 akku=0 pos=(5166,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1350 sub=1 ph=3 clip=2 af=78 u=5166 dist=8688 hp=600 blob=0/2 gw0=4320 akku=0 pos=(5166,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1365 sub=1 ph=1 clip=5 af=5 u=5130 dist=8688 hp=600 blob=0/2 gw0=1440 akku=0 pos=(5130,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1380 sub=1 ph=1 clip=5 af=20 u=4976 dist=8868 hp=600 blob=0/2 gw0=-1360 akku=0 pos=(4976,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3000 part=0/4 (bones=2 meshes=4) welt=(5583,0,-23400) aktorY=0
+  DRAW f=3000 part=1/4 (bones=2 meshes=4) welt=(7737,-3624,-23400) aktorY=0
+  DRAW f=3000 part=2/4 (bones=2 meshes=4) welt=(7431,73,-23400) aktorY=0
+  DRAW f=3000 part=3/4 (bones=2 meshes=4) welt=(6388,-3916,-23400) aktorY=0
+g5 tick=1395 sub=1 ph=1 clip=5 af=35 u=5858 dist=8254 hp=600 blob=0/2 gw0=-2800 akku=0 pos=(5858,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1410 sub=1 ph=1 clip=5 af=50 u=5777 dist=9042 hp=600 blob=0/1 gw0=-2484 akku=0 pos=(5777,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1425 sub=1 ph=1 clip=5 af=65 u=5721 dist=9100 hp=600 blob=0/1 gw0=-774 akku=0 pos=(5721,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1440 sub=1 ph=1 clip=5 af=80 u=5664 dist=9158 hp=600 blob=0/1 gw0=1656 akku=0 pos=(5664,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3060 part=0/4 (bones=2 meshes=4) welt=(5681,0,-23400) aktorY=0
+  DRAW f=3060 part=1/4 (bones=2 meshes=4) welt=(7828,-3370,-23400) aktorY=0
+  DRAW f=3060 part=2/4 (bones=2 meshes=4) welt=(7487,324,-23400) aktorY=0
+  DRAW f=3060 part=3/4 (bones=2 meshes=4) welt=(6481,-3675,-23400) aktorY=0
+g5 tick=1455 sub=1 ph=1 clip=5 af=95 u=5762 dist=9100 hp=600 blob=0/1 gw0=4086 akku=0 pos=(5762,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1470 sub=1 ph=1 clip=5 af=110 u=6687 dist=8254 hp=600 blob=0/1 gw0=6516 akku=0 pos=(6687,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1485 sub=1 ph=1 clip=5 af=125 u=8326 dist=6656 hp=600 blob=0/1 gw0=8856 akku=0 pos=(8326,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1500 sub=1 ph=1 clip=5 af=140 u=9482 dist=5369 hp=600 blob=1/1 gw0=8274 akku=0 pos=(9482,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3120 part=0/4 (bones=2 meshes=4) welt=(9266,0,-23400) aktorY=0
+  DRAW f=3120 part=1/4 (bones=2 meshes=4) welt=(11412,-3726,-23400) aktorY=0
+  DRAW f=3120 part=2/4 (bones=2 meshes=4) welt=(11066,-33,-23400) aktorY=0
+  DRAW f=3120 part=3/4 (bones=2 meshes=4) welt=(10066,-4033,-23400) aktorY=0
+g5 tick=1515 sub=1 ph=3 clip=2 af=5 u=9172 dist=5678 hp=600 blob=1/1 gw0=594 akku=0 pos=(9172,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1530 sub=1 ph=3 clip=2 af=20 u=9844 dist=5514 hp=600 blob=1/3 gw0=0 akku=0 pos=(9844,-23400) blut=0/0/0/0 esp=41 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1545 sub=1 ph=3 clip=2 af=35 u=9844 dist=5514 hp=600 blob=1/4 gw0=0 akku=0 pos=(9844,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1560 sub=1 ph=3 clip=2 af=50 u=9844 dist=5514 hp=600 blob=1/4 gw0=0 akku=0 pos=(9844,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3180 part=0/4 (bones=2 meshes=4) welt=(9844,0,-23400) aktorY=0
+  DRAW f=3180 part=1/4 (bones=2 meshes=4) welt=(11991,-3592,-23455) aktorY=0
+  DRAW f=3180 part=2/4 (bones=2 meshes=4) welt=(11656,102,-23469) aktorY=0
+  DRAW f=3180 part=3/4 (bones=2 meshes=4) welt=(10645,-3895,-23422) aktorY=0
+g5 tick=1575 sub=1 ph=3 clip=2 af=65 u=9844 dist=5514 hp=600 blob=1/4 gw0=0 akku=0 pos=(9844,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1590 sub=1 ph=3 clip=2 af=80 u=9844 dist=5514 hp=600 blob=1/4 gw0=0 akku=0 pos=(9844,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1605 sub=0 ph=1 clip=0 af=9 u=9844 dist=5514 hp=600 blob=1/4 gw0=0 akku=0 pos=(9844,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1620 sub=0 ph=1 clip=0 af=24 u=9844 dist=5514 hp=600 blob=1/4 gw0=0 akku=0 pos=(9844,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3240 part=0/4 (bones=2 meshes=4) welt=(9844,0,-23400) aktorY=0
+  DRAW f=3240 part=1/4 (bones=2 meshes=4) welt=(11997,-3653,-23400) aktorY=0
+  DRAW f=3240 part=2/4 (bones=2 meshes=4) welt=(11685,43,-23400) aktorY=0
+  DRAW f=3240 part=3/4 (bones=2 meshes=4) welt=(10648,-3948,-23400) aktorY=0
+g5 tick=1635 sub=0 ph=1 clip=0 af=39 u=9844 dist=5514 hp=600 blob=1/1 gw0=-582 akku=0 pos=(9844,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1650 sub=0 ph=1 clip=0 af=54 u=10504 dist=5514 hp=600 blob=1/3 gw0=0 akku=0 pos=(10504,-23400) blut=0/0/0/0 esp=29 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1665 sub=0 ph=1 clip=0 af=69 u=10504 dist=5418 hp=600 blob=1/4 gw0=0 akku=0 pos=(10504,-23400) blut=0/0/0/0 esp=26 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1680 sub=0 ph=1 clip=0 af=84 u=10504 dist=5418 hp=600 blob=1/4 gw0=0 akku=0 pos=(10504,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3300 part=0/4 (bones=2 meshes=4) welt=(10504,0,-23400) aktorY=0
+  DRAW f=3300 part=1/4 (bones=2 meshes=4) welt=(12650,-3714,-23400) aktorY=0
+  DRAW f=3300 part=2/4 (bones=2 meshes=4) welt=(12304,-21,-23400) aktorY=0
+  DRAW f=3300 part=3/4 (bones=2 meshes=4) welt=(11304,-4021,-23400) aktorY=0
+g5 tick=1695 sub=0 ph=1 clip=0 af=99 u=10504 dist=5418 hp=600 blob=1/4 gw0=0 akku=0 pos=(10504,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1710 sub=0 ph=1 clip=0 af=14 u=10504 dist=5418 hp=600 blob=1/4 gw0=0 akku=0 pos=(10504,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1725 sub=0 ph=1 clip=0 af=29 u=10504 dist=5418 hp=600 blob=1/4 gw0=0 akku=0 pos=(10504,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1740 sub=0 ph=1 clip=0 af=44 u=10504 dist=5418 hp=600 blob=0/1 gw0=6 akku=0 pos=(10504,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3360 part=0/4 (bones=2 meshes=4) welt=(10504,0,-23400) aktorY=0
+  DRAW f=3360 part=1/4 (bones=2 meshes=4) welt=(12653,-3595,-23400) aktorY=0
+  DRAW f=3360 part=2/4 (bones=2 meshes=4) welt=(12324,99,-23400) aktorY=0
+  DRAW f=3360 part=3/4 (bones=2 meshes=4) welt=(11306,-3896,-23400) aktorY=0
+g5 tick=1755 sub=0 ph=1 clip=0 af=59 u=10504 dist=5418 hp=600 blob=1/1 gw0=-1350 akku=0 pos=(10504,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1770 sub=0 ph=1 clip=0 af=74 u=11164 dist=5418 hp=600 blob=1/3 gw0=0 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=41 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1785 sub=0 ph=1 clip=0 af=89 u=11164 dist=5418 hp=600 blob=1/4 gw0=0 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1800 sub=4 ph=1 clip=9 af=14 u=11164 dist=5418 hp=600 blob=4/2 gw0=7520 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3420 part=0/4 (bones=2 meshes=4) welt=(11164,0,-23400) aktorY=0
+  DRAW f=3420 part=1/4 (bones=2 meshes=4) welt=(13308,-3692,-23470) aktorY=0
+  DRAW f=3420 part=2/4 (bones=2 meshes=4) welt=(12963,1,-23495) aktorY=0
+  DRAW f=3420 part=3/4 (bones=2 meshes=4) welt=(11963,-3999,-23428) aktorY=0
+g5 tick=1815 sub=4 ph=1 clip=9 af=29 u=11164 dist=5418 hp=600 blob=4/2 gw0=7042 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1830 sub=4 ph=1 clip=9 af=44 u=11164 dist=5418 hp=600 blob=4/2 gw0=8596 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1845 sub=4 ph=1 clip=9 af=59 u=11164 dist=5418 hp=600 blob=4/2 gw0=3419 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1860 sub=4 ph=1 clip=9 af=74 u=11164 dist=5418 hp=600 blob=4/3 gw0=5930 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3480 part=0/4 (bones=2 meshes=4) welt=(11164,0,-23400) aktorY=0
+  DRAW f=3480 part=1/4 (bones=2 meshes=4) welt=(13312,-3611,-23414) aktorY=0
+  DRAW f=3480 part=2/4 (bones=2 meshes=4) welt=(12978,83,-23411) aktorY=0
+  DRAW f=3480 part=3/4 (bones=2 meshes=4) welt=(11965,-3914,-23405) aktorY=0
+g5 tick=1875 sub=4 ph=1 clip=9 af=89 u=11164 dist=5418 hp=600 blob=4/3 gw0=2682 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1890 sub=4 ph=1 clip=9 af=104 u=11164 dist=5418 hp=600 blob=4/3 gw0=7003 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1905 sub=4 ph=1 clip=9 af=119 u=11164 dist=5418 hp=600 blob=4/3 gw0=7468 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1920 sub=4 ph=1 clip=9 af=134 u=11164 dist=5418 hp=600 blob=4/3 gw0=10070 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3540 part=0/4 (bones=2 meshes=4) welt=(11164,0,-23400) aktorY=0
+  DRAW f=3540 part=1/4 (bones=2 meshes=4) welt=(13311,-3693,-23455) aktorY=0
+  DRAW f=3540 part=2/4 (bones=2 meshes=4) welt=(12976,1,-23469) aktorY=0
+  DRAW f=3540 part=3/4 (bones=2 meshes=4) welt=(11965,-3996,-23422) aktorY=0
+g5 tick=1935 sub=4 ph=1 clip=9 af=149 u=11164 dist=5418 hp=600 blob=4/3 gw0=9727 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1950 sub=4 ph=2 clip=2 af=14 u=11164 dist=5418 hp=600 blob=4/3 gw0=11081 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1965 sub=4 ph=2 clip=2 af=29 u=11164 dist=5418 hp=600 blob=4/3 gw0=9853 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=1980 sub=4 ph=2 clip=2 af=44 u=11164 dist=5418 hp=600 blob=4/3 gw0=11341 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3600 part=0/4 (bones=2 meshes=4) welt=(11164,0,-23400) aktorY=0
+  DRAW f=3600 part=1/4 (bones=2 meshes=4) welt=(13311,-3598,-23455) aktorY=0
+  DRAW f=3600 part=2/4 (bones=2 meshes=4) welt=(12976,96,-23469) aktorY=0
+  DRAW f=3600 part=3/4 (bones=2 meshes=4) welt=(11965,-3901,-23422) aktorY=0
+g5 tick=1995 sub=4 ph=2 clip=2 af=59 u=11164 dist=5418 hp=600 blob=4/2 gw0=9645 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=2010 sub=4 ph=2 clip=2 af=74 u=11164 dist=5418 hp=600 blob=4/2 gw0=2440 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=17 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=2025 sub=4 ph=2 clip=2 af=89 u=11164 dist=5418 hp=600 blob=4/3 gw0=7165 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+g5 tick=2040 sub=4 ph=2 clip=2 af=104 u=11164 dist=5418 hp=600 blob=4/3 gw0=6420 akku=0 pos=(11164,-23400) blut=0/0/0/0 esp=19 plyaw=2048 dirx=0 letzte=(0,0,0)
+  DRAW f=3660 part=0/4 (bones=2 meshes=4) welt=(11164,0,-23400) aktorY=0
+  DRAW f=3660 part=1/4 (bones=2 meshes=4) welt=(13311,-3679,-23455) aktorY=0
+  DRAW f=3660 part=2/4 (bones=2 meshes=4) welt=(12976,15,-23469) aktorY=0
+  DRAW f=3660 part=3/4 (bones=2 meshes=4) welt=(11965,-3982,-23422) aktorY=0

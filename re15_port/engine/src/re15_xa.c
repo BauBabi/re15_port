@@ -61,6 +61,32 @@ void re15_xa_decode_sector(const uint8_t *adpcm, int16_t *dst, int hist[4])
     }
 }
 
+/* 4 Bit MONO (re15_xa.h): acht Einheiten je Gruppe, zeitlich nacheinander. */
+void re15_xa_decode_sector_mono(const uint8_t *adpcm, int16_t *dst, int hist[2])
+{
+    for (int g = 0; g < XA_GROUPS; g++) {
+        const uint8_t *grp = adpcm + g * XA_GROUP_SZ;
+        for (int u = 0; u < 8; u++) {
+            uint8_t param = grp[4 + u];
+            int shift  = param & 0x0F;
+            if (shift > 12) shift = 9;                       /* reserved 13..15 -> 9 */
+            int filter = (param >> 4) & 0x03;                /* XA: filters 0..3     */
+            int k0 = s_xa_k0[filter], k1 = s_xa_k1[filter];
+            int16_t *out = dst + g * (8 * XA_SAMPLES) + u * XA_SAMPLES;
+            for (int j = 0; j < XA_SAMPLES; j++) {
+                int t = (grp[16 + j * 4 + (u >> 1)] >> ((u & 1) * 4)) & 0x0F;
+                if (t & 0x08) t -= 16;                       /* sign-extend 4-bit    */
+                int v = (t << 12) >> shift;
+                v += (hist[0] * k0 + hist[1] * k1 + 32) >> 6;
+                int16_t s = sat16(v);
+                hist[1] = hist[0];
+                hist[0] = s;
+                out[j] = s;
+            }
+        }
+    }
+}
+
 int re15_xa_decode_movie(const uint8_t *str_data, size_t size,
                          int16_t **out_pcm, int *out_frames,
                          int *out_rate, int *out_channels)

@@ -232,7 +232,8 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
-#define RE15_TIM_SLOT_MAX 57   /* 56 = Runde 41 Spur G (Nachtrag 28, Orchestrator-Entscheid G-E6): RE2 TEX.TIM mit den Kern-
+#define RE15_TIM_SLOT_MAX 58   /* 57 = Runde 41 G5-Auftritt Nachbesserung 5: Tunnellampen R704_LAMPE.TIM (g5lampen_pc.c)
+                                * 56 = Runde 41 Spur G (Nachtrag 28, Orchestrator-Entscheid G-E6): RE2 TEX.TIM mit den Kern-
                                 *      CLUT-Zeilen 485..498 (gator_fx_r41_pc.c; 54 = Raum-ESP ROOM40A0 ebenda)
                                 * 50/51 = Runde 34 C2: die zwei GLOBAL-Effektseiten aus DATA/TEX.TIM
                                 *      (tpage 0x1e / 0x1f, je 16 Paletten 480..495 -> 256x4096;
@@ -299,6 +300,14 @@ typedef struct { int src_x, src_y, dst_x, dst_y, w, h, depth; } re15_pri_rect_t;
 #define RE15_PRI_RECTS_MAX RE15_PRI_MAX_MASKS_PER_CUT  /* = 105, the data maximum */
 static re15_pri_rect_t s_pri_rects[RE15_PRI_RECTS_MAX];
 static int             s_pri_rect_count = 0;
+/* Runde 41 G5-Auftritt M4: 1 = die aktive Maskenliste ist RE2-Form (Szenen-Schnitt 16 = RE2 room7040 Schnitt 9). RE2 vergleicht
+ * depth mit otz>>3 (@0x80027d60-64) und haengt die Masken vor den Figuren ein (@0x80026770 vor @0x8002689c), RE1.5 mit otz>>4
+ * (@0x8002565c) und danach (@0x8001ce54) - s. re15_pri_mask_camera_z_re2. Gesetzt von main.c nach re15_render_pc_set_pri_rects. */
+static int             s_pri_re2 = 0;
+static float pc_mask_key(int depth)
+{
+    return s_pri_re2 ? re15_pri_mask_camera_z_re2(depth) : re15_pri_mask_camera_z(depth);
+}
 /* Player screen position + camera-space Z (set per frame). A mask is skipped ONLY if
  * it is BEHIND the player (mask camera-Z = depth<<4 >= player_z, since the sprite.pri
  * depth is the original otz>>4 = camera-Z>>4) AND it OVERLAPS the player on screen — so a
@@ -1026,7 +1035,7 @@ static void pc_masken_schatten_flush(int *mi, int mask_n, const int *mask_order,
 {
     for (;;) {
         int m_due = (*mi < mask_n) &&
-                    (ende || re15_pri_mask_camera_z(s_pri_rects[mask_order[*mi]].depth) > tri_depth);
+                    (ende || pc_mask_key(s_pri_rects[mask_order[*mi]].depth) > tri_depth);   /* M4: RE2-Form @0x80027d60 */
         int s_due = 0, sb = 0, sp = 0;
         if (*si < sh_n) {
             int k = sh_order[*si];
@@ -1045,6 +1054,14 @@ static void pc_masken_schatten_flush(int *mi, int mask_n, const int *mask_order,
         }
     }
 }
+
+/* BEBEN (Runde 41 G5-Auftritt, Nachbesserung 5): RE2 Sce_shake_on @0x80058164 kopiert in DIESEM Bild jede der 240 Zeilen von
+ * Zeile + pc[2] (FUN_8002ac94 @0x8002ad10, Rand geklemmt @0x8002ad14-38) - das fertige Szenenbild rutscht um -pc[2] Zeilen nach unten.
+ * Die Szenenbalken liegen darueber (RE2-Aufnahme 61,50..61,92 s: Balkenkanten 34/445 bei 640x480 unbewegt, Szene 6..15 Halbzeilen
+ * verschoben). Port: Viewport des Szenenteils (Hintergrund, Schatten, Dreiecke, Masken) um -pc[2] nach unten, Balken/Text danach
+ * unverschoben. Ein Aufruf gilt fuer ein Bild (RE2 ruft je Bild neu, sub04 @0x016A4..@0x016D8). */
+static int s_beben_dy = 0;
+void re15_render_pc_beben(int dy) { s_beben_dy = dy; }
 
 void re15_render_end_frame(void)
 {
@@ -1077,6 +1094,12 @@ void re15_render_end_frame(void)
         SDL_UpdateTexture(s_texture, NULL, s_framebuffer, SCREEN_XRES * sizeof(uint32_t));
     SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
     SDL_RenderClear(s_renderer);
+    SDL_Rect beben_vp_alt; int beben_vp = 0;                   /* BEBEN, s. re15_render_pc_beben */
+    if (s_beben_dy != 0) {
+        SDL_RenderGetViewport(s_renderer, &beben_vp_alt);
+        SDL_Rect vp = beben_vp_alt; vp.y -= s_beben_dy;
+        SDL_RenderSetViewport(s_renderer, &vp); beben_vp = 1;
+    }
     if (!s_black_bg) {
         SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
     } else if (s_gameover_tex) {
@@ -1206,9 +1229,9 @@ void re15_render_end_frame(void)
           re15_entladen_bild(mask_n, re15_render_pc_pri_gen()); }
         for (int i = 1; i < mask_n; i++) {
             int k  = mask_order[i];
-            float kd = re15_pri_mask_camera_z(s_pri_rects[k].depth);
+            float kd = pc_mask_key(s_pri_rects[k].depth);
             int j  = i - 1;
-            while (j >= 0 && re15_pri_mask_camera_z(s_pri_rects[mask_order[j]].depth) < kd) {
+            while (j >= 0 && pc_mask_key(s_pri_rects[mask_order[j]].depth) < kd) {
                 mask_order[j + 1] = mask_order[j];
                 j--;
             }
@@ -1237,7 +1260,7 @@ void re15_render_end_frame(void)
                         if (d < dmin) dmin = d;
                         if (d > dmax) dmax = d;
                         /* Original-Regel (re15_pri.h): verdeckt gdw. vz >= Schluessel. */
-                        if (re15_pri_mask_camera_z(d) <= md) verdeckend++;
+                        if (pc_mask_key(d) <= md) verdeckend++;
                     }
                     fprintf(lf, "Raum %04X Cut %d | Spieler (%d,%d,%d) | Figur-Tiefe %.0f..%.0f Mitte %.0f | Atlas %d Sektion %d | %d Masken Tiefe %d..%d (Schwelle %d..%d) | verdeckend %d\n",
                             (unsigned)g_current_room_id, re15_pri_log_cut(),
@@ -1246,8 +1269,8 @@ void re15_render_end_frame(void)
                             (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
                             lo, hi, md, s_pri_log_fg, s_pri_log_n, mask_n,
                             mask_n ? dmin : -1, mask_n ? dmax : -1,
-                            mask_n ? (int)re15_pri_mask_camera_z(dmin) : -1,
-                            mask_n ? (int)re15_pri_mask_camera_z(dmax) : -1, verdeckend);
+                            mask_n ? (int)pc_mask_key(dmin) : -1,
+                            mask_n ? (int)pc_mask_key(dmax) : -1, verdeckend);
                     fclose(lf);
                 }
             }
@@ -1290,7 +1313,7 @@ void re15_render_end_frame(void)
                 uint8_t s  = (i < s_textri_count) ? s_textri_slot [order[i]] : 0xFF;
                 uint8_t bl = (i < s_textri_count) ? s_textri_blend[order[i]] : 0;
                 int mask_due = (mi < mask_n) &&
-                    (re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) > tri_depth);
+                    (pc_mask_key(s_pri_rects[mask_order[mi]].depth) > tri_depth);   /* M4: RE2-Form @0x80027d60 */
                 /* Runde 36 Spur O: ein Schatten ist faellig, sobald das naechste Dreieck UEBER ihm liegt. */
                 int shadow_due = (si < sh_n) && (i == s_textri_count ||
                     re15_schatten_dreieck_darueber((long)tri_depth,
@@ -1351,6 +1374,9 @@ void re15_render_end_frame(void)
     }
     s_sb_gueltig = 1;
     s_textri_count = 0;  /* reset queue for next frame */
+
+    if (beben_vp) SDL_RenderSetViewport(s_renderer, &beben_vp_alt);   /* BEBEN: Balken, Text, Blenden unverschoben */
+    s_beben_dy = 0;
 
     /* Step 2.5: ITEM-GET pickup MODAL — the zooming/spinning/flipping item quad, ON TOP of the frozen
      * 3D scene (byte-true FUN_8001db28; gameplay is paused underneath). 2 triangles from the 4 screen
@@ -2336,6 +2362,7 @@ int re15_render_pc_tim_slot_anzahl(void) { return RE15_TIM_SLOT_MAX; }
 void re15_render_pc_entladen_raum(void)
 {
     s_pri_rect_count = 0;                                   /* Maskenliste (Arena @0x800399cc) */
+    s_pri_re2 = 0;                                          /* M4: Tiefenregel mit der Liste zuruecksetzen */
     s_pri_atlas_w = s_pri_atlas_h = 0;
     if (s_pri_atlas_tex) s_pri_atlas_frei = 1;
     for (int slot = 0; slot < RE15_TIM_SLOT_MAX; slot++)
@@ -2394,6 +2421,7 @@ void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
 {
     if (count > RE15_PRI_RECTS_MAX) count = RE15_PRI_RECTS_MAX;
     s_pri_rect_count = count;
+    s_pri_re2 = 0;                                          /* M4: jede neue Liste ist RE1.5-Form, bis main.c RE2 meldet */
     if (count > 0) s_pri_rects_gen = g_re15_entladen_gen;   /* Runde 35 Spur I */
     for (int i = 0; i < count; i++) {
         s_pri_rects[i].src_x = src_x[i];
@@ -2404,6 +2432,13 @@ void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
         s_pri_rects[i].h     = h[i];
         s_pri_rects[i].depth = depth ? depth[i] : 0;
     }
+}
+
+/* Runde 41 G5-Auftritt M4: die aktive Maskenliste in RE2-Tiefenregel vergleichen (re15_pri_mask_camera_z_re2: RE2 otz>>3
+ * @0x80027d60-64, Masken vor den Figuren @0x80026770). Nach re15_render_pc_set_pri_rects aufrufen; die setzt auf RE1.5 zurueck. */
+void re15_render_pc_set_pri_re2(int on)
+{
+    s_pri_re2 = (on && s_pri_rect_count > 0) ? 1 : 0;
 }
 
 /* MEASUREMENT PROBE: copy the active cut's mask depths out for the [pocc] trace. */
@@ -2690,13 +2725,20 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
  *
  * RE15_UVPHASE bleibt als MESSSCHIENE stehen (Gegenprobe ohne Neubau); ohne die
  * Variable gilt der gemessene Wert. */
+/* OBJEKT-ABTASTPHASE (Runde 41 G5-Auftritt, Nachbesserung 6): ein Zeichner, dessen Objekt gegen ein PSX-Bild Pixel fuer Pixel
+ * gemessen ist, kann fuer SEINE Dreiecke eine eigene Phase setzen (s_phase_objekt >= 0); danach zurueck auf < 0. Die globale
+ * Phase oben gilt fuer alles andere unveraendert. Erster Nutzer: die RE2-Tunnellampen (g5lampen_pc.c) - RE2-VRAM s04 Zeilen
+ * 119..123 sind mit +0.5 pixelgleich (max. 3 Stufen), mit +0.375 tastet die 1 Pixel hohe Gehaeuseflaeche die Nachbarspalte
+ * u 115 statt u 116 ab (Dossier G5_auftritt.md Abschnitt 12). +0.5 liegt im Fenster [1/3, 1/2] aus re15_abtastphase.h §4. */
+static float s_phase_objekt = -1.0f;
+void re15_render_pc_abtastphase_objekt(float a) { s_phase_objekt = a; }
 static float re15_render_pc_abtastphase(void)
 {
     static float s_phase = RE15_UV_ABTASTPHASE;   /* include/re15_abtastphase.h */
     static int   s_init  = 0;
     if (!s_init) { s_init = 1; const char *e = getenv("RE15_UVPHASE");
                    if (e && *e) s_phase = (float)atof(e); }
-    return s_phase;
+    return s_phase_objekt >= 0.0f ? s_phase_objekt : s_phase;
 }
 
 /* ===== MESSSCHIENE RE15_TRILOG ==============================================

@@ -1,0 +1,113 @@
+=== MAIN sub04 @0x0169E..0x016DE status=ok
+  @0x0169E  04 08 18 05                              evt_exec
+  @0x016A2  18 0e                                    gosub
+  @0x016A4  5c 00 fd                                 sce_shake_on
+  @0x016A7  02                                       evt_next
+  @0x016A8  5c 00 fb                                 sce_shake_on
+  @0x016AB  02                                       evt_next
+  @0x016AC  36 02 0c 00 01 00 00 00 00 00 00 00      se_on
+  @0x016B8  0d 00 06 00 05 00                        for
+  @0x016BE  5c 00 f9                                 sce_shake_on
+  @0x016C1  02                                       evt_next
+  @0x016C2  0e 00                                    next
+  @0x016C4  5c 00 fa                                 sce_shake_on
+  @0x016C7  02                                       evt_next
+  @0x016C8  5c 00 fb                                 sce_shake_on
+  @0x016CB  02                                       evt_next
+  @0x016CC  5c 00 fc                                 sce_shake_on
+  @0x016CF  02                                       evt_next
+  @0x016D0  5c 00 fd                                 sce_shake_on
+  @0x016D3  02                                       evt_next
+  @0x016D4  5c 00 fe                                 sce_shake_on
+  @0x016D7  02                                       evt_next
+  @0x016D8  5c 00 ff                                 sce_shake_on
+  @0x016DB  02                                       evt_next
+  @0x016DC  01 00                                    evt_end
+=== MAIN sub05 @0x016DE..0x01778 status=ok
+  @0x016DE  3a 00 19 00 00 00 00 10 24 04 50 ec f0 ab 00 00 sce_espr_on
+  @0x016EE  3a 00 19 00 00 00 00 10 b8 0b 50 ec 1f a0 00 00 sce_espr_on
+  @0x016FE  09                                       sleep
+  @0x016FF  0a 05 00                                 sleeping
+  @0x01702  3a 00 19 00 00 00 00 10 6e 0a 50 ec 84 a4 00 00 sce_espr_on
+  @0x01712  09                                       sleep
+  @0x01713  0a 05 00                                 sleeping
+  @0x01716  3a 00 19 00 00 00 00 10 f4 01 50 ec 0e 9d 00 00 sce_espr_on
+  @0x01726  09                                       sleep
+  @0x01727  0a 03 00                                 sleeping
+  @0x0172A  3a 00 19 00 00 00 00 10 b8 0b 50 ec 1f a0 00 00 sce_espr_on
+  @0x0173A  09                                       sleep
+  @0x0173B  0a 05 00                                 sleeping
+  @0x0173E  3a 00 19 00 00 00 00 10 6e 0a 50 ec 84 a4 00 00 sce_espr_on
+  @0x0174E  3a 00 19 00 00 00 00 10 0e 0b 50 ec 9e ad 00 00 sce_espr_on
+  @0x0175E  09                                       sleep
+  @0x0175F  0a 05 00                                 sleeping
+  @0x01762  3a 00 19 00 00 00 00 10 f4 01 50 ec 0e 9d 00 00 sce_espr_on
+  @0x01772  09                                       sleep
+  @0x01773  0a 03 00                                 sleeping
+  @0x01776  01 00                                    evt_end
+=== MAIN sub06 @0x01778..0x01992 status=ok
+=== MAIN sub09 @0x01B20..0x01B2E status=ok
+  @0x01B20  04 04 18 0b                              evt_exec
+  @0x01B24  09                                       sleep
+  @0x01B25  0a 0a 00                                 sleeping
+  @0x01B28  04 03 18 0c                              evt_exec
+  @0x01B2C  01 00                                    evt_end
+=== MAIN sub10 @0x01B2E..0x01B4C status=ok
+  @0x01B2E  05 03                                    evt_kill
+  @0x01B30  05 04                                    evt_kill
+  @0x01B32  2e 04 03                                 work_set
+  @0x01B35  00                                       nop
+  @0x01B36  32 00 00 83 00 00 00 83                  pos_set
+  @0x01B3E  2e 04 04                                 work_set
+  @0x01B41  00                                       nop
+  @0x01B42  32 00 00 83 00 00 00 83                  pos_set
+  @0x01B4A  01 00                                    evt_end
+=== MAIN sub11 @0x01B4C..0x01B98 status=ok
+  @0x01B4C  2e 04 03                                 work_set
+  @0x01B4F  00                                       nop
+  @0x01B50  32 00 00 00 d0 ee 60 be                  pos_set
+  @0x01B58  33 00 00 0c 00 0c 00 04                  dir_set
+  @0x01B60  2e 04 03                                 work_set
+  @0x01B63  00                                       nop
+  @0x01B64  06 00 14 00                              if
+  @0x01B68  3e 00 0b 04 e0 b1                        member_cmp
+  @0x01B6E  2e 04 03                                 work_set
+  @0x01B71  00                                       nop
+  @0x01B72  32 00 00 00 d0 ee 60 be                  pos_set
+  @0x01B7A  08 00                                    endif
+  @0x01B7C  2e 04 03                                 work_set
+  @0x01B7F  00                                       nop
+  @0x01B80  3d 10 0b                                 member_copy
+  @0x01B83  00                                       nop
+  @0x01B84  26 00 01 10 e8 03                        calc
+  @0x01B8A  35 0b 10                                 member_set2
+  @0x01B8D  00                                       nop
+  @0x01B8E  02                                       evt_next
+  @0x01B8F  00                                       nop
+  @0x01B90  17 ff ff 00 d0 ff                        goto
+  @0x01B96  01 00                                    evt_end
+=== MAIN sub12 @0x01B98..0x01BE4 status=ok
+  @0x01B98  2e 04 04                                 work_set
+  @0x01B9B  00                                       nop
+  @0x01B9C  32 00 00 00 d0 ee 60 be                  pos_set
+  @0x01BA4  33 00 00 0c 00 0c 00 04                  dir_set
+  @0x01BAC  2e 04 04                                 work_set
+  @0x01BAF  00                                       nop
+  @0x01BB0  06 00 14 00                              if
+  @0x01BB4  3e 00 0b 04 e0 b1                        member_cmp
+  @0x01BBA  2e 04 04                                 work_set
+  @0x01BBD  00                                       nop
+  @0x01BBE  32 00 00 00 d0 ee 60 be                  pos_set
+  @0x01BC6  08 00                                    endif
+  @0x01BC8  2e 04 04                                 work_set
+  @0x01BCB  00                                       nop
+  @0x01BCC  3d 10 0b                                 member_copy
+  @0x01BCF  00                                       nop
+  @0x01BD0  26 00 01 10 e8 03                        calc
+  @0x01BD6  35 0b 10                                 member_set2
+  @0x01BD9  00                                       nop
+  @0x01BDA  02                                       evt_next
+  @0x01BDB  00                                       nop
+  @0x01BDC  17 ff ff 00 d0 ff                        goto
+  @0x01BE2  01 00                                    evt_end
+=== MAIN sub13 @0x01BE4..0x01C02 status=ok

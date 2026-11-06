@@ -1,0 +1,31 @@
+== leon
+Bilder 1360, Median 0.96, 99%-Quantil 6.80
+  F1542 (Szenenbild -71): 8.9
+  F1543 (Szenenbild -70): 9.3
+  F1545 (Szenenbild -68): 7.2
+  F1547 (Szenenbild -66): 8.5
+  F1548 (Szenenbild -65): 10.6
+  F1549 (Szenenbild -64): 10.3
+  F1550 (Szenenbild -63): 8.9
+  F1552 (Szenenbild -61): 8.7
+  F1553 (Szenenbild -60): 8.7
+  F1557 (Szenenbild -56): 7.7
+  F1559 (Szenenbild -54): 38.7
+  F2051 (Szenenbild 438): 16.3
+  F2421 (Szenenbild 808): 30.4
+== elza
+Bilder 1360, Median 0.97, 99%-Quantil 6.90
+  F1542 (Szenenbild -71): 9.1
+  F1543 (Szenenbild -70): 9.5
+  F1544 (Szenenbild -69): 7.0
+  F1545 (Szenenbild -68): 7.3
+  F1547 (Szenenbild -66): 8.5
+  F1548 (Szenenbild -65): 10.7
+  F1549 (Szenenbild -64): 10.4
+  F1550 (Szenenbild -63): 9.0
+  F1552 (Szenenbild -61): 8.8
+  F1553 (Szenenbild -60): 8.9
+  F1557 (Szenenbild -56): 7.8
+  F1559 (Szenenbild -54): 38.7
+  F2051 (Szenenbild 438): 16.6
+  F2421 (Szenenbild 808): 30.9

@@ -1,0 +1,37 @@
+ROOM7040 ESP = RDT[0x35D8:0x36FC] md5 3b8906644de0b46673d98ceee398e205
+ROOM7040 Groesse 292 Ids 19
+ Bank 19 off 0x8 n1(Anim) 11 n2(Zellen) 10 tpage/clut kopf: +4 0x7840 +6 0x0000  Tabelle 0x90
+  Kopf 0b 00 0a 00 40 78 00 00
+  Anim[0] cell 0 nprim 1 dauer 3 size 40 | 00 01 03 28 00 00 00 00
+  Anim[1] cell 1 nprim 1 dauer 3 size 40 | 01 01 03 28 00 00 00 00
+  Anim[2] cell 2 nprim 1 dauer 3 size 40 | 02 01 03 28 00 00 00 00
+  Anim[3] cell 3 nprim 1 dauer 3 size 40 | 03 01 03 28 00 00 00 00
+  Anim[4] cell 4 nprim 1 dauer 3 size 40 | 04 01 03 28 00 00 00 00
+  Anim[5] cell 5 nprim 1 dauer 3 size 40 | 05 01 03 28 00 00 00 00
+  Anim[6] cell 6 nprim 1 dauer 3 size 40 | 06 01 03 28 00 00 00 00
+  Anim[7] cell 7 nprim 1 dauer 3 size 40 | 07 01 03 28 00 00 00 00
+  Anim[8] cell 8 nprim 1 dauer 3 size 40 | 08 01 03 28 00 00 00 00
+  Anim[9] cell 9 nprim 1 dauer 3 size 40 | 09 01 03 28 00 00 00 00
+  Anim[10] cell 0 nprim 0 dauer 0 size 0 | 00 00 00 00 00 00 00 00
+  Zelle[0] u 0 v 0 dx -20 dy -20
+  Zelle[1] u 40 v 0 dx -20 dy -20
+  Zelle[2] u 80 v 0 dx -20 dy -20
+  Zelle[3] u 120 v 0 dx -20 dy -20
+  Zelle[4] u 160 v 0 dx -20 dy -20
+  Zelle[5] u 200 v 0 dx -20 dy -20
+  Zelle[6] u 0 v 40 dx -20 dy -20
+  Zelle[7] u 40 v 40 dx -20 dy -20
+  Zelle[8] u 80 v 40 dx -20 dy -20
+  Zelle[9] u 120 v 40 dx -20 dy -20
+  Skript-woff [4, 12, 20, 0, 0, 0, 0, 0]
+  Skript sub0 @0xA0 nparts 1 (kopf 01 00 00 00)
+   Teil 0 @0xA4 nsteps 1 kopf 01 00 00 00
+    Step 0: OpA 21 OpB 21 s2 40 s3 0 asp 4096/4096 acc 0/12/0 lb 0 vel 0/0/0 ph 0 w14 0x0000 w16 0x0000 | 15 15 28 00 00 10 00 10 00 0c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  Skript sub1 @0xC0 nparts 1 (kopf 01 00 00 00)
+   Teil 0 @0xC4 nsteps 1 kopf 01 00 00 00
+    Step 0: OpA 0 OpB 0 s2 0 s3 0 asp 4096/4096 acc 0/12/0 lb 0 vel 0/0/0 ph 0 w14 0x0000 w16 0x0000 | 00 00 00 00 00 10 00 10 00 0c 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  Skript sub2 @0xE0 nparts 1 (kopf 01 00 00 00)
+   Teil 0 @0xE4 nsteps 1 kopf 01 00 00 00
+    Step 0: OpA 0 OpB 0 s2 0 s3 0 asp 4096/4096 acc 0/0/0 lb 0 vel 0/0/0 ph 0 w14 0x0000 w16 0x0000 | 00 00 00 00 00 10 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+TIM Bank 19: Tafel-Offset 0x0 -> RDT[0x18984:0x1B1C4] 10304 B md5 1323877f35c9fe586dd77de22e71288e
+  TIM-Kopf flags 0x8 clut x 0 y 496 w 16 h 1; bild x 768 y 256 hw 64 h 80

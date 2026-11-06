@@ -34,6 +34,7 @@ extern void    re15_g5_tentakel_cmd(int idx, uint32_t wort);
 extern void    re15_g5_tentakel_reset(void);
 extern uint8_t re15_g5_tentakel_maske(void);
 extern int     re15_g5_tentakel_spitze(int idx, int32_t out[3]);
+extern int     re15_g5_tentakel_gelenke(int idx, int32_t out[4][3]);
 /* Phase 2 (analysis/befunde_2026-09-19/birkin-g5.md): die Streckung steht nicht mehr im
  * uniformen render_scale_q12 des Aktors, sondern ist part0+0x8C und wirkt ueber
  * FUN_80019CD0 (Flag 0x400) nur entlang lokal X auf die geskinnten Schlauch-Vertices. */
@@ -182,9 +183,13 @@ int main(void)
                  * prueft `-h < (spieler.y - segment.y) < h` (Decompile Z.44-47) - die
                  * Arme haengen 2 m ueber dem Boden, ein Spieler auf y=0 wird also nie
                  * getroffen. Der alte Pin stellte ihn nur in x/z und traf deshalb. */
-                int32_t sp[3];
-                if (re15_g5_tentakel_spitze(0, sp) == 0) {
-                    pl->x = sp[0]; pl->z = sp[2]; pl->y = sp[1];
+                /* Nachbesserung G5 1: an PART 3 (= Kollisionssegment 0, r 800, parts+608 @0x80104f94) statt an die Spitze stellen. Die
+                 * Spitze liegt 1500 jenseits von Part 3 (FUN_8008DBA4(part3+0x48,(1500,0,0)) @0x80102264); ob sie in der xz-Ebene unter
+                 * 800+450 bleibt, haengt an der Peitschen-Variante (rng & 1 @0x801014B8-D4) - Variante 1 (Clip 8) traf so nie, und
+                 * welche Variante kommt, verschiebt jeder geaenderte rng-Verbrauch im Intro. Gemessen wird der Schaden, nicht die Lage. */
+                int32_t g[4][3];
+                if (re15_g5_tentakel_gelenke(0, g) == 0) {
+                    pl->x = g[3][0]; pl->z = g[3][2]; pl->y = g[3][1];
                 }
             }
         }

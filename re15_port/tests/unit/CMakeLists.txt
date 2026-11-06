@@ -4090,9 +4090,11 @@ target_compile_definitions(test_r41_birkin_wand PRIVATE
 add_test(NAME unit_r41_birkin_wand_rein COMMAND test_r41_birkin_wand rein)
 add_test(NAME unit_r41_birkin_wand_g5 COMMAND test_r41_birkin_wand g5)
 add_test(NAME unit_r41_birkin_wand_griff COMMAND test_r41_birkin_wand griff)
+add_test(NAME unit_r41_birkin_wand_g5saat COMMAND test_r41_birkin_wand g5saat)   # Nachbesserung G5 3: 200 Saaten je Raum
 set_tests_properties(unit_r41_birkin_wand_rein PROPERTIES TIMEOUT 30)
 set_tests_properties(unit_r41_birkin_wand_g5 PROPERTIES TIMEOUT 240 ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
 set_tests_properties(unit_r41_birkin_wand_griff PROPERTIES TIMEOUT 360)
+set_tests_properties(unit_r41_birkin_wand_g5saat PROPERTIES TIMEOUT 1200 ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
 
 # --- BETA-BIRKIN-AUFTRITTE (2026-10-30): Hangar-Wurfszene ROOM50A0 + Morph Vierbein -> G5 ROOM5090 ---
 add_executable(test_birkin_szenen test_birkin_szenen.c)
@@ -4102,6 +4104,14 @@ target_compile_definitions(test_birkin_szenen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_birkin_szenen COMMAND test_birkin_szenen)
 set_tests_properties(unit_birkin_szenen PROPERTIES TIMEOUT 60)
+# --- Runde 41 G5-Auftritt: RE2 room7040 sub06 ab der Armierung (Schnitt 9 -> 10 -> 5 -> 6), Daten + Ablauf 5090/5091 ---
+add_executable(test_r41_g5auftritt test_r41_g5auftritt.c)
+target_link_libraries(test_r41_g5auftritt PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_r41_g5auftritt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r41_g5auftritt PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r41_g5auftritt COMMAND test_r41_g5auftritt)
+set_tests_properties(unit_r41_g5auftritt PROPERTIES TIMEOUT 120)
 if(TARGET re15_pc)
     # Abnahme 1 Spur R: Pistole, Dauerbeschuss, EM30 -> Mutation -> Form -> G5, Leon und Elza, kein Messhaken.
     add_test(NAME integration_r41_birkin_pistole
@@ -4109,7 +4119,8 @@ if(TARGET re15_pc)
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
-    # Runde 41 Spur GR NB3: zwei Laeufe zu je hoechstens 600 s (Form 1 600 HP, Riesenform 1000 HP, Endbild 6000).
+    # Runde 41 Spur GR NB3: zwei Laeufe zu je hoechstens 600 s (Form 1 600 HP, Riesenform 1000 HP, Endbild 5400).
+    # G5-Auftritt NB2: 2 Laeufe a 5400 Bilder (900 s); Integration Runde 41: GR-Limit 1300 s, beide Spuren laufen zusammen.
     set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 1300)
     # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
     add_test(NAME integration_r41_g5_westen
@@ -4117,7 +4128,7 @@ if(TARGET re15_pc)
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_westen_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_westen.cmake)
-    set_tests_properties(integration_r41_g5_westen PROPERTIES TIMEOUT 640)
+    set_tests_properties(integration_r41_g5_westen PROPERTIES TIMEOUT 1500)   # Abnahme G5 1 M11: 3 Laeufe a 3540 Bilder
     # Abnahme 2 Spur R: G5 frisst den Spieler, YOU DIED, Titel, Leon und Elza, kein Messhaken.
     add_test(NAME integration_r41_g5_tod
              COMMAND "${CMAKE_COMMAND}"

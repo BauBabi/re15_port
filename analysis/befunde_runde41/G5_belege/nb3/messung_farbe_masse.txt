@@ -1,0 +1,4 @@
+Farbe der Masse: Mittel R/G/B ueber x 40..140, y 160..230 (320x240), Abnahme G5 2 Abschnitt 2
+Bild 180: | RE2 echt 35/18/11 | Port Leon 5090 31/16/10 | Port Elza 5091 31/16/10
+Bild 240: | RE2 echt 32/16/10 | Port Leon 5090 23/12/8 | Port Elza 5091 23/12/8
+Bild 313: | RE2 echt 14/7/5 | Port Leon 5090 13/6/5 | Port Elza 5091 13/6/5

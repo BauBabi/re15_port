@@ -1,0 +1,19 @@
+# Nachbesserung 4 G5A, M4: Raumobjekte von RE2 ROOM7040.RDT (info/re2leon/PL0/RDT/ROOM7040.RDT) - Kopf und Objektmodell-Liste
+Kopf (8 Byte): [0, 15, 7, 0, 0, 0, 0, 41] -> Kopf[2] = 7 Objektmodelle
+Offset-Tabelle @8: ['0x6018', '0x60d8', '0x6ef8', '0x0', '0x0', '0x6018', '0xf80', '0x64', '0x27c', '0x500', '0x244', '0x10b0', '0x10a0', '0x1c4c', '0x1cf4', '0x0', '0x10fc', '0x1120', '0x35d8', '0x36f8', '0x18984', '0x1b1e4', '0x36fc']
+Objektmodell-Liste @0x244 (je 8 Byte: TIM, MD1):
+  Modell 0  TIM 0x1b1e4  MD1 0x1ddc
+  Modell 1  TIM 0x23404  MD1 0x0
+  Modell 2  TIM 0x2b624  MD1 0x24f0
+  Modell 3  TIM 0x33844  MD1 0x28a4
+  Modell 4  TIM 0x33844  MD1 0x28a4
+  Modell 5  TIM 0x33844  MD1 0x3080
+  Modell 6  TIM 0x33844  MD1 0x354c
+Modell 3 = Modell 4 (gleiche Bytes): MD1 @0x28a4 Laenge 1492, 2 Objekte
+  Dreiecke: 44 Vertices, 18 Primitive, x 0..180 y -1800..1800 z -2549..2549
+  Vierecke: 44 Vertices, 19 Primitive, x 0..180 y -1800..1800 z -2549..2549
+SCD (Dossier 9.6): sub09 @0x01B20 -> sub11 (0x0B) und nach 10 Bildern sub12 (0x0C); beide setzen Objekt 3 bzw. 4 auf (0,-4400,-16800)
+  (`32 00 00 00 d0 ee 60 be` @0x01B50/@0x01B9C), je Bild 1000 weiter (`26 00 01 10 e8 03` @0x01B84/@0x01BD0), Marke -20000 (`3e 00 0b 04 e0 b1`).
+Fuer einen treuen Nachbau fehlen im Port: RE2-Raumobjekt-Assets (MD1 @0x28a4 1492 B + TIM @0x33844), die bytegenaue Opcode-Semantik von
+sub09..sub12 (Achse/Vorzeichen von 0x26, Ruecksetzwert), Zeichnen hinter den RE2-Masken des Tuerlochs (R704_CUT09.PRI) mit der Blendart
+des Modells, und fuer die Truemmer sub05 (8 x Sce_espr_on Effekt 0x19) die RE2-Raum-ESP. -> offen (eigene Nachbesserung).

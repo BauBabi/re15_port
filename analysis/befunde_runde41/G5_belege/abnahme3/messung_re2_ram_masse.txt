@@ -1,0 +1,9 @@
+# RE2-RAM (wz/re2_ram.py): G5, Teil 2, Gewichte, Vertexpuffer 0x80132be0
+s03 Schnitt 9 G5 x -9000 | Teil2 welt (-7200, -34, -23400) ang (0, 0, 0) | Gewichte [3078, 0, 0, 0] | VB y -4224..23 x -3600..2692 z -3648..3646
+s04 Schnitt 9 G5 x -9000 | Teil2 welt (-7200, -34, -23400) ang (0, 0, 0) | Gewichte [10296, 0, 0, 0] | VB y -4224..23 x -3600..2692 z -3648..3646
+s05 Schnitt 9 G5 x -9525 | Teil2 welt (-8168, 380, -23400) ang (0, 0, 0) | Gewichte [5796, 566, 0, 0] | VB y -4224..-242 x -3600..2886 z -3397..3394
+s06 Schnitt 9 G5 x -5126 | Teil2 welt (-3326, 1309, -23400) ang (0, 0, 0) | Gewichte [-184, 2895, 0, 0] | VB y -4224..-1327 x -3600..3687 z -2359..2357
+s08 Schnitt 9 G5 x -2825 | Teil2 welt (-1025, 1295, -23400) ang (0, 0, 0) | Gewichte [9440, 2865, 0, 0] | VB y -4224..-1313 x -3601..3677 z -2372..2369
+s09 Schnitt 9 G5 x -2786 | Teil2 welt (-959, 1274, -23400) ang (0, 0, 0) | Gewichte [-4168, 2865, 0, 0] | VB y -4224..-1313 x -3601..3677 z -2372..2369
+s13 Schnitt 10 G5 x -2779 | Teil2 welt (-979, 1295, -23400) ang (0, 0, 0) | Gewichte [8000, 2865, 0, 0] | VB y -4224..-1313 x -3601..3677 z -2372..2370
+s17 Schnitt 10 G5 x 1160 | Teil2 welt (2979, 17, -23481) ang (0, 0, 0) | Gewichte [3152, 0, 0, 0] | VB y -4224..23 x -3600..2693 z -3648..3646

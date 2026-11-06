@@ -520,6 +520,15 @@ int re15_birkin_klemme_aktiv(void)
     return 0;
 }
 
+/* SKRIPT-LAGE (Runde 41 G5-Auftritt, Nachbesserung 1): RE2s Pos_set laeuft im SCD-Faden VOR der Entity-Schleife und ist keine Bewegung
+ * (op 0x32, kein Klemmaufruf). Die G5-Szene (g5auftritt_r41.c) setzt ihre Pos_set-Lagen im Gegner-Pass; ohne diesen Abgleich nahm
+ * re15_player_nachklemme den Sprung (z.B. 9258 -> -3800, @0x0187C) als Schub und verwarf ihn ganz (gemessen: Fensterlauf F1558-F1597
+ * Lage unveraendert 9258). */
+void re15_player_skriptlage(int32_t x, int32_t z)
+{
+    s_klemme_ende.x = x; s_klemme_ende.z = z;
+}
+
 static void spieler_klemme(const re15_rdt_t *rdt, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z)
 {
     if (re15_birkin_klemme_aktiv()) re15_collision_constrain_re2(rdt, alt_x, alt_z, x, z);   /* FUN_8003567c */
@@ -559,6 +568,9 @@ static void re15_player_nachklemme(const re15_game_ctx_t *c, re15_actor_t *pl)
      * je Bild, Lage (6862,-24749) unveraendert). RE2 room7040 ist 6114 breit, dort liegt der Arm nicht auf der Wandlinie. */
     if (nx != pl->x || nz != pl->z) { nx = s_klemme_ende.x; nz = s_klemme_ende.z; }
     pl->x = nx; pl->z = nz;
+    /* +0x118 nach der Klemme wie RE2 (`sh v0,280(s0)` / `sh v1,282(s0)` @0x800356f4-f8, Nachbesserung G5 3): bisher blieb hier die Vorlage
+     * des Bildanfangs stehen, die naechste Klemme ohne eigenen Spieler-Schritt (Griff-Zweig oben) hatte dann eine veraltete Vorlage. */
+    s_klemme_ende.x = pl->x; s_klemme_ende.z = pl->z;
 }
 
 /* Bewegung entlang facing+0x800 (back=1, 245d8(0x800) @0x80036200) bzw. facing (back=0,
@@ -2624,7 +2636,17 @@ void re15_game_step(const re15_game_ctx_t *c)
         if (pl->x != ox || pl->z != oz) {                 /* pushed -> wall-resolve the push delta */
             int32_t nx = pl->x, nz = pl->z;
             re15_collision_ensure_band(pl->y);
-            spieler_klemme(c->rdt, ox, oz, &nx, &nz);
+            /* VORLAGE IM BIRKIN-KAMPF (Nachbesserung G5 3, Auftrag Koordinator): RE2s Aktor-Klemme FUN_8003567c liest als Vorlage IMMER
+             * +0x118/+0x11a, die sie nach JEDEM Aufruf aus der aktuellen Lage schreibt (`lw v0,132(s0)` / `lw v1,140(s0)` / `sh v0,280(s0)` /
+             * `sh v1,282(s0)` @0x800356ec-f8, auch wenn der Klemmaufruf selbst uebersprungen wird, `bne` @0x80035698/@0x800356a8). Die
+             * Griff-Platzierung des Greifers ist nie geklemmt und daher nie Vorlage. ⛔ HIER STAND fuer beide Klemmen `ox/oz` = die
+             * Platzierung ("the anchored placement = the valid pos", RE1.5-Zombiegriff). Der G5-Spiessgriff (Opfer-Variante 3, Zug 600
+             * @0x80104780) legt sie hinter die Diagonale #30 von ROOM5090 (-425,-27200)-(5300,-25200); gemessen (unit_r41_birkin_wand_g5,
+             * Start (2100,-25900), Bild 30): Platzierung (3009,-26098), Schub (3022,-26104), re2_diag6 stellte auf diese Vorlage zurueck,
+             * spieler_klemme schrieb sie als s_klemme_ende, die Nachklemme sah pl == s_klemme_ende und liess den Spieler in der Wand. */
+            const int32_t vx = (re15_birkin_klemme_aktiv() && s_klemme_ende.da) ? s_klemme_ende.x : ox;
+            const int32_t vz = (re15_birkin_klemme_aktiv() && s_klemme_ende.da) ? s_klemme_ende.z : oz;
+            spieler_klemme(c->rdt, vx, vz, &nx, &nz);
             re15_collision_objects(&nx, &nz);
             pl->x = nx;
             pl->z = nz;

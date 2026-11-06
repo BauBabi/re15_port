@@ -1,0 +1,6 @@
+Bild 180 RE2 echt         R 40 G 20 B 11  Anteil orange-hell (R>150,G>90) 1.2 %
+Bild 180 Port g5nb1 Leon  R 21 G 11 B 7  Anteil orange-hell (R>150,G>90) 0.0 %
+Bild 180 Port g5nb2 Leon  R 46 G 22 B 12  Anteil orange-hell (R>150,G>90) 1.4 %
+Bild 240 RE2 echt         R 39 G 20 B 11  Anteil orange-hell (R>150,G>90) 1.1 %
+Bild 240 Port g5nb1 Leon  R 19 G 10 B 7  Anteil orange-hell (R>150,G>90) 0.0 %
+Bild 240 Port g5nb2 Leon  R 48 G 23 B 13  Anteil orange-hell (R>150,G>90) 1.6 %

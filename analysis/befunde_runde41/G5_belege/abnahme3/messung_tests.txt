@@ -1,0 +1,77 @@
+# Abnahme 3: ctest-Laeufe (re15_port/build im Worktree)
+## gezielt (-j 6)
+ 1/46 Test  #339: unit_r30_birkin_frost .................   Passed    1.80 sec
+ 2/46 Test  #303: probe_p3_birkin_rest ..................   Passed    1.80 sec
+ 3/46 Test  #320: unit_r20_birkin_push_pin ..............   Passed    2.23 sec
+ 4/46 Test  #292: probe_p2_birkin_g5 ....................   Passed    1.34 sec
+ 5/46 Test  #274: unit_g5_boss ..........................   Passed    1.07 sec
+ 6/46 Test  #469: unit_r35_affen_griff ..................   Passed    1.46 sec
+ 7/46 Test  #613: unit_r36_kleidung_griff_re15 ..........   Passed    0.21 sec
+ 8/46 Test  #308: unit_r17_birkin_1zu1_pin ..............   Passed    0.52 sec
+ 9/46 Test  #687: unit_r37_bissarm_klemme_1140_vorn .....   Passed    0.29 sec
+10/46 Test  #314: unit_r18_birkin_restluecken_pin .......   Passed    0.49 sec
+11/46 Test  #898: unit_r38_griff_hund2 ..................   Passed    0.39 sec
+12/46 Test  #698: unit_r37_elzaems_griff ................   Passed    0.94 sec
+13/46 Test  #894: unit_r38_griff_zombie2_vorn ...........   Passed    0.24 sec
+14/46 Test  #686: unit_r37_bissarm_klemme_1010b .........   Passed    0.11 sec
+15/46 Test  #688: unit_r37_bissarm_klemme_1140_hinten ...   Passed    0.61 sec
+16/46 Test #1373: unit_birkin_bahnsteig .................   Passed    0.69 sec
+17/46 Test  #895: unit_r38_griff_zombie2_hinten .........   Passed    0.32 sec
+18/46 Test  #685: unit_r37_bissarm_klemme_1010a .........   Passed    0.31 sec
+19/46 Test  #896: unit_r38_griff_kriecher2_1220 .........   Passed    0.21 sec
+20/46 Test #1293: unit_r41_re2gator_wand ................   Passed    0.23 sec
+21/46 Test  #363: unit_r30_n_room5080_birkin_wand .......   Passed    0.27 sec
+22/46 Test #1378: unit_birkin_szenen ....................   Passed    0.32 sec
+23/46 Test  #612: unit_r36_kleidung_griff_re2 ...........   Passed    0.36 sec
+24/46 Test  #899: unit_r38_griff_gorilla ................   Passed    0.10 sec
+25/46 Test  #901: unit_r38_griff_spiderman_hinten .......   Passed    0.12 sec
+26/46 Test  #699: unit_r37_elzaems_opfer27 ..............   Passed    0.07 sec
+27/46 Test #1001: unit_r39_gegner_querung_wand1141 ......   Passed    0.19 sec
+28/46 Test  #900: unit_r38_griff_spiderman_vorn .........   Passed    0.11 sec
+29/46 Test  #272: unit_g5_tentakel ......................   Passed    0.13 sec
+30/46 Test  #224: unit_re2_dog_grab_anchor ..............   Passed    0.10 sec
+31/46 Test  #893: unit_r38_griff_zombie15_hinten ........   Passed    0.05 sec
+32/46 Test  #892: unit_r38_griff_zombie15_vorn ..........   Passed    0.10 sec
+33/46 Test  #902: unit_r38_griff_affe3_hinten ...........   Passed    0.06 sec
+34/46 Test   #44: unit_birkin_ai ........................   Passed    0.05 sec
+35/46 Test  #897: unit_r38_griff_hund15 .................   Passed    0.06 sec
+36/46 Test  #200: unit_re2_victim_collapse ..............   Passed    0.09 sec
+37/46 Test #1384: unit_birkin_opfer .....................   Passed    0.07 sec
+38/46 Test #1374: unit_r41_birkin_wand_rein .............   Passed    0.07 sec
+39/46 Test  #472: unit_r35_affen_wand ...................   Passed    0.04 sec
+40/46 Test #1372: unit_birkin_formen ....................   Passed    0.05 sec
+41/46 Test  #273: unit_g5_morph .........................   Passed    0.04 sec
+42/46 Test  #214: unit_dog_grab_anchor ..................   Passed    0.08 sec
+43/46 Test #1379: unit_r41_g5auftritt ...................   Passed    0.64 sec
+44/46 Test #1377: unit_r41_birkin_wand_g5saat ...........   Passed   51.41 sec
+45/46 Test #1375: unit_r41_birkin_wand_g5 ...............   Passed   68.72 sec
+46/46 Test #1376: unit_r41_birkin_wand_griff ............   Passed  306.34 sec
+100% tests passed, 0 tests failed out of 46
+Total Test time (real) = 306.46 sec
+## Integration (-j 3)
+ 1/11 Test  #571: integration_r35_zgirl_5090 ...............   Passed  160.48 sec
+ 2/11 Test #1382: integration_r41_g5_tod ...................   Passed  293.98 sec
+ 3/11 Test  #627: integration_r36_pri_schatten .............   Passed   28.92 sec
+ 4/11 Test  #708: integration_r37_elzaems_elza1181griff ....   Passed   17.14 sec
+ 5/11 Test #1409: integration_pri_masken ...................   Passed    0.38 sec
+ 6/11 Test  #689: integration_r37_bissarm_echtlauf .........   Passed   37.94 sec
+ 7/11 Test #1381: integration_r41_g5_westen ................   Passed  421.61 sec
+ 8/11 Test  #766: integration_r37_re2zombie ................   Passed   52.33 sec
+ 9/11 Test #1362: integration_r41_zombiefresser_tuer2000 ...   Passed   41.69 sec
+10/11 Test  #926: integration_r38_wasserzombie .............   Passed  180.68 sec
+11/11 Test #1380: integration_r41_birkin_pistole ...........   Passed  442.60 sec
+100% tests passed, 0 tests failed out of 11
+Total Test time (real) = 603.22 sec
+## voll: alle Nicht-Integrationstests ohne 7 Skripttests (-j 6)
+100% tests passed, 0 tests failed out of 1068
+Total Test time (real) = 399.79 sec
+1068/1068 Test  #650: unit_r37_masken36_ausschluss ............   Passed  399.64 sec
+1067/1068 Test #1056: unit_r41_birkin_wand_g5 .................   Passed   52.51 sec
+1066/1068 Test  #500: unit_r35_inventar1050_elza ..............   Passed    0.01 sec
+1065/1068 Test  #501: unit_r35_inventar1050_ablegen ...........   Passed    0.02 sec
+1064/1068 Test  #491: unit_r35_entladen_n1beleg ...............   Passed    0.02 sec
+1063/1068 Test #1063: unit_raumlicht ..........................   Passed    0.03 sec
+1062/1068 Test  #502: unit_r35_inventar1050_altstand ..........   Passed    0.04 sec
+1061/1068 Test  #353: unit_map_marke_zid ......................   Passed    0.03 sec
+1060/1068 Test  #488: unit_elza_zweig .........................   Passed    0.04 sec
+1059/1068 Test  #317: unit_r19_marke3_1050_c1_tiefe ...........   Passed    0.04 sec

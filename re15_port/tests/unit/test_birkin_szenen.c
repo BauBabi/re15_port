@@ -24,6 +24,7 @@
 #include "re15_room.h"
 #include "re15_birkin_formen.h"
 #include "re2_ems.h"
+#include "re15_g5auftritt_r41.h"   /* Runde 41: G5-Auftritt nach RE2 room7040 sub06 */
 
 extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
 extern int re15_g5_blut_zaehler(int idx);
@@ -216,24 +217,37 @@ static void test_bahnsteig(void)
     CHECK(x_min < -5683, "Birkin verlaesst den Zug nicht nach Westen (min x %d)", x_min);
     CHECK(versteckt, "Birkin verschwindet hinter dem Zugende nicht");
     CHECK(b->type == 0x36u, "kein Morph zum G5 nach %d Ticks (state %d ph3 %d)", f, b->state, b->sub_state_3);
-    CHECK(b->grid_id == 0x13u, "G5 nicht armiert (grid 0x%02X)", b->grid_id);
+    /* Runde 41 G5-Auftritt, Nachbesserung 1 (M7): die Szene beginnt mit RE2s Vorlauf (sub06 @0x0187C..@0x018D6); bis zur Armierung
+     * @0x018DE ist der G5 unarmiert und geparkt (RE2 Sce_em_set @0x011AC (-32000,0,-32000)). */
+    CHECK(b->grid_id != 0x13u && b->x == -32000, "G5 im Vorlauf nicht unarmiert geparkt (grid 0x%02X x %d)", b->grid_id, (int)b->x);
     CHECK(!b->no_draw, "G5 bleibt unsichtbar");
-    CHECK(g_scd.cam_id == 0x0B, "G5-Auftritt nicht auf Cut 11 (Zugende), cam %d", g_scd.cam_id);
+    /* Runde 41 G5-Auftritt: RE2 room7040 Schnitt 9 (Szenen-Schnitt 16), nicht mehr Cut 11 (Dossier G5_auftritt.md). */
+    CHECK(g_scd.cam_id == RE15_G5A_SCHNITT, "G5-Auftritt nicht auf dem Szenen-Schnitt %d (RE2 Schnitt 9), cam %d", RE15_G5A_SCHNITT, g_scd.cam_id);
     CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Tod der Form gesetzt");
-    /* M9 + Abnahme 2: bis zum Ende von [T2] haelt die Szene Cut 11 mit Zonen aus, danach Zonen an, Schnitt aus der Spielerlage.
-     * Leon steht weit im Osten: ein fester Cut 12 liesse ihn ausser Bild und ohne Zone. */
+    /* M9: die Szene haelt die Zonen aus, danach Zonen an, Schnitt aus der Spielerlage (Leon weit im Osten: Cut 14).
+     * ⛔ Runde 41 G5-Auftritt: die Freigabe kommt jetzt wie in RE2 am Szenenende @0x01981 (Bild 1162, nach Sub 2), mit gesperrtem
+     * Spieler; die Abnahme-2-Gestaltung "Freigabe mit [T2]" galt dem frei laufenden Spieler und ist ersetzt. Der Vorlauf braucht den
+     * Plc_dest-Walker (main.c vor dem Spielschritt) und den Szenen-Spielermodus (main.c: flag(1,27)||flag(2,7) -> 2). */
     {
-        int zonen_im_auftritt = 0, frei = -1, sub = 2, ph = 0, n, sub_bei_frei = -1;
-        for (n = 0; n < 1500 && frei < 0; n++) {
-            pl->x = 20748; pl->z = -26416; pl->hp = 100; pl->hit_react = 0;
+        int zonen_im_auftritt = 0, frei = -1, sub = 2, ph = 0, n, sub_bei_frei = -1, armiert = -1;
+        for (n = 0; n < 1700 && frei < 0; n++) {
+            pl->hp = 100; pl->hit_react = 0;
+            if (re15_cine_active()) g_scd.player_mode = 2;
+            re15_actor_step_all_walkers();
             re15_enemy_ai_run_all(0);
+            if (armiert < 0 && re15_g5a_bild() == 0) armiert = n;
             if (re15_g5_boss_zustand(&sub, &ph, NULL) && sub == 2 && ph < 3 && g_scd.cut_auto_enabled) zonen_im_auftritt++;
             if (g_scd.cut_auto_enabled) { frei = n; sub_bei_frei = sub; }
         }
+        CHECK(armiert > 0 && b->grid_id == 0x13u, "G5 nach dem Vorlauf nicht armiert (Bild %d, grid 0x%02X)", armiert, b->grid_id);
         CHECK(zonen_im_auftritt == 0, "M9: Kamerazonen in %d Auftritts-Bildern an", zonen_im_auftritt);
         CHECK(frei >= 0, "M9: Kamerazonen nach dem Hereinziehen nicht wieder an (%d Ticks, Sub %d Ph %d)", n, sub, ph);
-        CHECK(sub_bei_frei == 2, "Szenenkamera endet erst mit Sub 2 (Freigabe in Sub %d), sperrt 37,5 s", sub_bei_frei);
-        CHECK(g_scd.cam_id == 0x0E, "Leon bei x 20748: Cut %d statt 14 nach dem Szenenende", g_scd.cam_id);
+        CHECK(frei - armiert == RE15_G5A_BILD_ENDE, "Zonen frei %d Bilder nach der Armierung statt am Szenenende Bild %d (@0x01981)",
+              frei - armiert, RE15_G5A_BILD_ENDE);
+        (void)sub_bei_frei;
+        /* Runde 41 G5-Auftritt: die Szene setzt Leon am Ende selbst (RE2 Pos_set @0x0196C, Port-Lage 13873), der Schnitt folgt dieser
+         * Lage (Cut 12), nicht mehr der Lage, in der er vor der Szene stand (hier 20748, frueher Cut 14). */
+        CHECK(g_scd.cam_id == 0x0C, "Szenenende: Cut %d statt 12 (Spielerlage 13873 nach @0x0196C)", g_scd.cam_id);
         fprintf(stderr, "Bahnsteig: Kamerazonen %d Ticks nach dem Morph wieder an, Cut %d\n", frei, g_scd.cam_id);
     }
     fprintf(stderr, "Bahnsteig: Rueckstoss + Morph nach %d Ticks (min x %d)\n", f, x_min);

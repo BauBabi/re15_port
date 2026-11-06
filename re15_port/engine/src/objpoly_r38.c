@@ -132,6 +132,25 @@ int re15_objpoly_r38_quad_mesh(const re15_md1_vertex_t *const v[4], const int32_
     return ok;
 }
 
+/* Wie re15_objpoly_r38_tri_mesh / _quad_mesh, aber mit dem ganzen Polygon (SZ, NCLIP-MAC0, OTZ, GPU-Grenze) fuer Zeichner,
+ * die die Annahme-Regeln und die OT-Einsortierung selbst nachbauen (RE2-Raumobjekte, platform/pc/src/g5lampen_pc.c).
+ * Rueckgabe wie re15_objpoly_r38_tri / _quad (RE1.5-Regeln). */
+int re15_objpoly_r38_tri_mesh_p(const re15_md1_vertex_t *const v[3], const int32_t bm[9], const int32_t bt[3],
+                                int h, int ofx, int ofy, re15_objpoly_t *p)
+{
+    int32_t mac[3][3];
+    for (int k = 0; k < 3; k++) sicht(v[k], bm, bt, mac[k]);
+    return re15_objpoly_r38_tri(mac, h, ofx, ofy, p);
+}
+
+int re15_objpoly_r38_quad_mesh_p(const re15_md1_vertex_t *const v[4], const int32_t bm[9], const int32_t bt[3],
+                                 int h, int ofx, int ofy, re15_objpoly_t *p)
+{
+    int32_t mac[4][3];
+    for (int k = 0; k < 4; k++) sicht(v[k], bm, bt, mac[k]);
+    return re15_objpoly_r38_quad(mac, h, ofx, ofy, p);
+}
+
 /* ---- Messschiene RE15_OBJPOLY_LOG (Diagnose, kein Verhalten) ------------------------------------------------- */
 static FILE    *s_log;
 static int      s_log_init;

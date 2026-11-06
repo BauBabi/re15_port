@@ -294,7 +294,9 @@ check_tree() {           # $1 = fertiger Paketordner
               GATOR40A0.VBS KANISTER40A0.MD1 KANISTER40A0.TIM SOUND/MAIN1A.BGM \
               GATOR40A0.ESP GATOR40A0_08.TIM GATOR40A0_09.TIM GATOR40A0_16.TIM GATOR40A0_18.TIM GATOR40A0_19.TIM \
               GATOR40A0_1A.TIM GATOR40A0_26.TIM KANISTER2080.VBS BAHNSTEIG_G4.EMD BAHNSTEIG_G4.TIM \
-              SOUND/SUB_34.BGM BRUECKE4080.EDT BRUECKE4080.VH BRUECKE4080.VB; do
+              SOUND/SUB_34.BGM BRUECKE4080.EDT BRUECKE4080.VH BRUECKE4080.VB \
+              R704_CUT09.BSS R704_CUT09.PRI R704_CUT09_PRI.TIM R704_CUT10.BSS R704_CUT10.PRI R704_XA0B.XAS R704_XA0C.XAS \
+              R704_LAMPE.MD1 R704_LAMPE.TIM R704_BEBEN.VBS R704.ESP; do
         [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Runde-41-Szene waere stumm/unsichtbar)"
         cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
     done

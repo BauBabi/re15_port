@@ -1,0 +1,109 @@
+# Nachbesserung 4 G5A: Testlaeufe (re15_port/build im Worktree, Bau ueber tools/local_build.sh)
+## unit_r41_g5auftritt (Riegel NB4)
+5090: M2 Armvergleiche 123, davon <= 250 123, max Abweichung 0; M3 G5 x Bild 129 -9525 / 270 -2786 / 800 1160; M4b groesster Wurzel-y-Schritt 56 bei Bild 129; M4 Pfosten 15 von 15
+5090: M5 Speer Arm 0 ph6 (356,-223,-192,-66) RE2 s12 (356,-223,-192,-66); ph7+20 (266,-133,-102,-21) RE2 s13 (266,-133,-102,-21)
+5090: M5 Speer Arm 0 |p3-p0| 8159 (RE2 s13 8170, vorher 6080)
+5090: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+5091: M2 Armvergleiche 123, davon <= 250 123, max Abweichung 0; M3 G5 x Bild 129 -9525 / 270 -2786 / 800 1160; M4b groesster Wurzel-y-Schritt 56 bei Bild 129; M4 Pfosten 15 von 15
+5091: M5 Speer Arm 0 ph6 (356,-223,-192,-66) RE2 s12 (356,-223,-192,-66); ph7+20 (266,-133,-102,-21) RE2 s13 (266,-133,-102,-21)
+5091: M5 Speer Arm 0 |p3-p0| 8159 (RE2 s13 8170, vorher 6080)
+5091: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+test_r41_g5auftritt: OK
+
+## Gegenprobe Riegel auf dem Verhalten von 8c45dbd14 (Verhaltensdateien HEAD, nur Diagnose angehaengt)
+5090: NB4 Arme gegen RE2-RAM 41 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 4 von 22 innerhalb 16 (max 8757); Einzug [T7] fertig Bild -1; Bild 670..806 Arm vor der Masse in 137 von 137 Bildern (max Reichweite 9042); Bild 302..336 Arm-1-Stummel in 35 von 35 (max 712)
+FAIL: 5090: NB4 Armzustand 41 von 80 gleich RE2-RAM (s.o.)
+FAIL: 5090: NB4 gezeichnete Reichweite Streckung 0: 4 von 22 innerhalb 16 von RE2 (max 8757)
+FAIL: 5090: N1 Einzug [T7] fertig bei Bild -1 statt 669 (Start 651, 19 Schritte: RE2-RAM s17 +0x158 257 = 181 + 4*19)
+FAIL: 5090: N1 Arm vor/ueber der Masse in 137 von 137 Bildern 670..806 (Reichweite bis 9042, RE2 571..573)
+FAIL: 5090: N2 Arm-1-Stummel in 35 von 35 Bildern 302..336 (Reichweite bis 712, RE2 s09 571)
+5091: NB4 Arme gegen RE2-RAM 41 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 4 von 22 innerhalb 16 (max 8757); Einzug [T7] fertig Bild -1; Bild 670..806 Arm vor der Masse in 137 von 137 Bildern (max Reichweite 9042); Bild 302..336 Arm-1-Stummel in 35 von 35 (max 712)
+FAIL: 5091: NB4 Armzustand 41 von 80 gleich RE2-RAM (s.o.)
+FAIL: 5091: NB4 gezeichnete Reichweite Streckung 0: 4 von 22 innerhalb 16 von RE2 (max 8757)
+FAIL: 5091: N1 Einzug [T7] fertig bei Bild -1 statt 669 (Start 651, 19 Schritte: RE2-RAM s17 +0x158 257 = 181 + 4*19)
+FAIL: 5091: N1 Arm vor/ueber der Masse in 137 von 137 Bildern 670..806 (Reichweite bis 9042, RE2 571..573)
+FAIL: 5091: N2 Arm-1-Stummel in 35 von 35 Bildern 302..336 (Reichweite bis 712, RE2 s09 571)
+test_r41_g5auftritt: 10 Fehler
+
+## Gezielte Gruppe (46 Tests, -j 6)
+ 1/46 Test  #339: unit_r30_birkin_frost .................   Passed    1.23 sec
+ 2/46 Test  #303: probe_p3_birkin_rest ..................   Passed    1.23 sec
+ 3/46 Test  #320: unit_r20_birkin_push_pin ..............   Passed    1.79 sec
+ 4/46 Test  #469: unit_r35_affen_griff ..................   Passed    0.95 sec
+ 5/46 Test  #292: probe_p2_birkin_g5 ....................   Passed    1.02 sec
+ 6/46 Test  #698: unit_r37_elzaems_griff ................   Passed    0.36 sec
+ 7/46 Test  #274: unit_g5_boss ..........................   Passed    0.86 sec
+ 8/46 Test  #308: unit_r17_birkin_1zu1_pin ..............   Passed    0.42 sec
+ 9/46 Test  #688: unit_r37_bissarm_klemme_1140_hinten ...   Passed    0.31 sec
+10/46 Test  #314: unit_r18_birkin_restluecken_pin .......   Passed    0.43 sec
+11/46 Test #1373: unit_birkin_bahnsteig .................   Passed    0.36 sec
+12/46 Test  #613: unit_r36_kleidung_griff_re15 ..........   Passed    0.17 sec
+13/46 Test  #687: unit_r37_bissarm_klemme_1140_vorn .....   Passed    0.30 sec
+14/46 Test  #898: unit_r38_griff_hund2 ..................   Passed    0.28 sec
+15/46 Test  #685: unit_r37_bissarm_klemme_1010a .........   Passed    0.08 sec
+16/46 Test  #894: unit_r38_griff_zombie2_vorn ...........   Passed    0.22 sec
+17/46 Test  #686: unit_r37_bissarm_klemme_1010b .........   Passed    0.09 sec
+18/46 Test  #895: unit_r38_griff_zombie2_hinten .........   Passed    0.20 sec
+19/46 Test  #612: unit_r36_kleidung_griff_re2 ...........   Passed    0.05 sec
+20/46 Test #1293: unit_r41_re2gator_wand ................   Passed    0.14 sec
+21/46 Test  #896: unit_r38_griff_kriecher2_1220 .........   Passed    0.10 sec
+22/46 Test #1378: unit_birkin_szenen ....................   Passed    0.20 sec
+23/46 Test  #899: unit_r38_griff_gorilla ................   Passed    0.04 sec
+24/46 Test #1001: unit_r39_gegner_querung_wand1141 ......   Passed    0.06 sec
+25/46 Test  #901: unit_r38_griff_spiderman_hinten .......   Passed    0.04 sec
+26/46 Test  #900: unit_r38_griff_spiderman_vorn .........   Passed    0.04 sec
+27/46 Test  #272: unit_g5_tentakel ......................   Passed    0.05 sec
+28/46 Test  #363: unit_r30_n_room5080_birkin_wand .......   Passed    0.18 sec
+29/46 Test  #699: unit_r37_elzaems_opfer27 ..............   Passed    0.02 sec
+30/46 Test  #892: unit_r38_griff_zombie15_vorn ..........   Passed    0.03 sec
+31/46 Test  #224: unit_re2_dog_grab_anchor ..............   Passed    0.05 sec
+32/46 Test   #44: unit_birkin_ai ........................   Passed    0.03 sec
+33/46 Test  #893: unit_r38_griff_zombie15_hinten ........   Passed    0.05 sec
+34/46 Test  #200: unit_re2_victim_collapse ..............   Passed    0.03 sec
+35/46 Test  #902: unit_r38_griff_affe3_hinten ...........   Passed    0.03 sec
+36/46 Test #1384: unit_birkin_opfer .....................   Passed    0.02 sec
+37/46 Test #1374: unit_r41_birkin_wand_rein .............   Passed    0.01 sec
+38/46 Test  #897: unit_r38_griff_hund15 .................   Passed    0.02 sec
+39/46 Test #1372: unit_birkin_formen ....................   Passed    0.03 sec
+40/46 Test  #214: unit_dog_grab_anchor ..................   Passed    0.02 sec
+41/46 Test  #273: unit_g5_morph .........................   Passed    0.02 sec
+42/46 Test  #472: unit_r35_affen_wand ...................   Passed    0.03 sec
+43/46 Test #1379: unit_r41_g5auftritt ...................   Passed    0.28 sec
+44/46 Test #1377: unit_r41_birkin_wand_g5saat ...........   Passed   36.13 sec
+45/46 Test #1375: unit_r41_birkin_wand_g5 ...............***Failed   46.66 sec
+46/46 Test #1376: unit_r41_birkin_wand_griff ............   Passed  213.95 sec
+98% tests passed, 1 tests failed out of 46
+Total Test time (real) = 214.02 sec
+## danach unit_r41_birkin_wand_g5 (Laufprobe ab 5. Kontaktbild)
+1375: N2: Arm-Kontakt 15 Bilder, Bildende in der Wand 0, Laufproben 3/3
+1375: g5: 424 wandnahe Startlagen
+1375: g5: 424 Faelle, Griff-Bilder 3604, Bildenden in fester Zelle 0 (laengste Folge 0), eingekeilt 0, kleinster Laufweg 423, vom Koerper gedrueckt 7 (laengste Wartezeit 104 Bilder)
+1375: N2: Arm-Kontakt 15 Bilder, Bildende in der Wand 0, Laufproben 3/3
+1375: g5: 424 wandnahe Startlagen
+1375: g5: 424 Faelle, Griff-Bilder 3532, Bildenden in fester Zelle 0 (laengste Folge 0), eingekeilt 0, kleinster Laufweg 572, vom Koerper gedrueckt 5 (laengste Wartezeit 62 Bilder)
+1375: test_r41_birkin_wand g5: OK
+1/1 Test #1375: unit_r41_birkin_wand_g5 ..........   Passed   51.22 sec
+
+## Integration (-j 3)
+ 1/11 Test #1382: integration_r41_g5_tod ...................   Passed  256.13 sec
+ 2/11 Test  #926: integration_r38_wasserzombie .............   Passed  131.22 sec
+ 3/11 Test #1380: integration_r41_birkin_pistole ...........   Passed  403.09 sec
+ 4/11 Test #1381: integration_r41_g5_westen ................   Passed  414.39 sec
+ 5/11 Test  #766: integration_r37_re2zombie ................   Passed   52.23 sec
+ 6/11 Test #1362: integration_r41_zombiefresser_tuer2000 ...   Passed   41.67 sec
+ 7/11 Test  #627: integration_r36_pri_schatten .............   Passed   28.80 sec
+ 8/11 Test  #689: integration_r37_bissarm_echtlauf .........   Passed   38.25 sec
+ 9/11 Test #1409: integration_pri_masken ...................   Passed    0.12 sec
+10/11 Test  #708: integration_r37_elzaems_elza1181griff ....   Passed   17.11 sec
+11/11 Test  #571: integration_r35_zgirl_5090 ...............   Passed  147.39 sec
+100% tests passed, 0 tests failed out of 11
+Total Test time (real) = 534.84 sec
+(aus LastTest.log direkt nach dem Integrationslauf:)
+-- r41_g5_tod leon: HP 0 gesehen 1, Tod bei HP 0, exit 0
+-- r41_g5_tod elza: HP 0 gesehen 1, Tod bei HP 0, exit 0
+-- r41_birkin_pistole leon: Mutationen 1, Form-HP 150 bis 0, Rueckstoss 1, G5 1, G5 tot 1, Spieler-HP dabei 45
+-- r41_birkin_pistole elza: Mutationen 1, Form-HP 150 bis 0, Rueckstoss 1, G5 1, G5 tot 1, Spieler-HP dabei 45
+
+## Alle Nicht-Integrationstests ohne die 7 df-haengenden Skripttests (-j 6)
+100% tests passed, 0 tests failed out of 1068
+Total Test time (real) = 342.85 sec

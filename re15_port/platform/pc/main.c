@@ -78,6 +78,7 @@ static inline int RNDI(float f) {
 #include "re15_ai_flavor.h"
 #include "re15_blink_r41.h"   /* Runde 41 Spur D: Helligkeitspuls aufnehmbarer Port-Gegenstaende */
 #include "re15_pri.h"
+#include "re15_g5auftritt_r41.h"   /* Runde 41: Szenen-Schnitte 16/17 ROOM5090/5091 (RE2 room7040 Schnitt 9/10) */
 #include "re15_pri_schatten_r36.h"   /* Runde 36 Spur O: Schatten-Tag fuer die OT-Ordnung */
 #include "re15_nclip_r38.h"          /* Runde 38 Spur A: Rueckseiten-Verwurf der Objekt-Zeichner */
 #include "re15_collision.h"
@@ -321,6 +322,9 @@ FILE *pc_fx_log_handle(void)
     return s_fxlog;
 }
 
+/* 1 = der angezeigte Schnitt ist ein RE2-Szenenschnitt der G5-Szene (16/17, re15_g5a_re2_schnitt), s. pc_draw_effects. */
+static int s_fx_g5a_re2_schnitt = 0;
+
 /* `has_region`/`rxs`/`rzs` = das Region-Quad des AKTIVEN Cuts (DAT_800ac790). Effekte werden
  * damit genauso gecullt wie Spieler/NPCs/Props — siehe den Beleg am Test unten. */
 static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
@@ -370,6 +374,13 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * GLOBAL bank CORE00.ESP, whose sheets live only in VRAM -> the byte-true extracted TIMs.
          * Global ids have per-id sheets (0 blood / 2 muzzle / 3 smoke / 4 shell) in slots 20-23. */
         const re15_esp_t *bank = f->bank;
+        /* ⛔ PORT-WAHL (Abnahme G5 1, M6): in den RE2-Szenenschnitten 16/17 (room7040 Schnitt 9/10) zeichnet der Port das
+         * RE1.5-Feuer von ROOM5090/5091 nicht - 17 Sce_espr_on main00 @0x0110E..@0x0120E `3a 00 08 02 ..` = Effekt-Id 0x08 (pc[2],
+         * Flammen der GLOBAL-Bank CORE00) - und keine Raum-Effekte; es verdeckte dort die offene Tuer, RE2 hat in diesen
+         * Einstellungen kein Feuer. Uebrige globale Effekte (Blut/Muendung) bleiben. In Cut 12 brennt es wieder wie vorher (die
+         * Partikel laufen weiter, nur das Zeichnen entfaellt). Gemessen im Fensterlauf: der erste Filter nur auf die Raum-Bank
+         * liess die Flammen stehen (sie sind Id 0x08 der Global-Bank). */
+        if (s_fx_g5a_re2_schnitt && ((bank && bank != global_bank) || f->effect_id == 0x08u)) continue;
         int slot = RE15_TIM_SLOT_EFFECT;
         int clut_wort = 0;   /* CLUT-Wort an den Zeichner (0 = erste Palette des Blatts, Altweg) */
         if (bank && bank == global_bank) {
@@ -627,6 +638,12 @@ static int s_fx_camf = 0;
 int  pc_fx_camf(void) { return s_fx_camf; }
 static void pc_fx_set_camf(const uint8_t *rdt_raw, size_t rdt_size, int cut)
 {
+    /* Runde 41 G5-Auftritt, Nachbesserung 6: die Szenen-Schnitte 16/17 sind RE2-Kameras (re15_g5a_schnitt) und stehen NICHT im
+     * RID des RE1.5-Raums - ROOM5090.RDT @0x262/@0x282 sind fremde Bytes (camf 0 / 77). RE2 liest die Skala aus dem Satz des
+     * Schnitts: `lhu v0,0x66(v1)` @0x800779ac + `srl v0,v0,7` @0x800779bc (RID +2 >> 7) = Schnitt 9 @0x184 -> 231, Schnitt 10
+     * @0x1A4 -> 208. Mit camf 0 waeren die RE2-Effekte (Brocken Bank 0x19) 0 breit, also unsichtbar. */
+    { const re15_camera_cut_t *g5 = re15_g5a_schnitt(cut);
+      if (g5) { s_fx_camf = (uint16_t)g5->fov >> 7; return; } }
     size_t off = (size_t)cut * 0x20 + 0x62;
     if (rdt_raw && off + 2 <= rdt_size) {
         uint16_t v = (uint16_t)(rdt_raw[off] | (rdt_raw[off + 1] << 8));
@@ -640,6 +657,7 @@ extern void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
                                          const int *dst_x, const int *dst_y,
                                          const int *w, const int *h,
                                          const int *depth, int count);
+extern void re15_render_pc_set_pri_re2(int on);   /* Runde 41 M4: RE2-Tiefenregel (re15_pri_mask_camera_z_re2) */
 extern void re15_render_pc_set_pri_player(int sx, int sy, int z);
 
 /* PC data-driven per-room prop set (parity with PSX re15_load_room_props): loads
@@ -3234,7 +3252,7 @@ static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
      * Hintergrund und Kamera schalten aber auch hier im SELBEN Zug (Kopfkommentar). */
     if (re15_cam_present_tick()) {
         active_cut_idx = (int)g_scd.cam_id;
-        if (active_cut_idx >= active_cut_count)
+        if (active_cut_idx >= active_cut_count && !re15_g5a_schnitt(active_cut_idx))   /* Runde 41: Szenen-Schnitte 16/17 (re15_g5auftritt_r41.h) */
             active_cut_idx = active_cut_count - 1;
         /* Runde 34 Nacht G2: Cut-Apply FUN_80021bbc baut die Masken-Sichtbarkeit neu auf
          * (FUN_800392d4 @0x80021c28). Dieser Zweig bildet die Dirty-1-Setzer @0x8001d5c8 (Laden),
@@ -3273,7 +3291,7 @@ static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
 
         /* BE-round: switch lighting tint to the new cut. */
         if (g_re15_room_lights_ok) {
-            re15_light_apply_cut(&g_re15_room_lights, active_cut_idx);
+            re15_light_apply_cut(&g_re15_room_lights, re15_g5a_licht_schnitt(active_cut_idx));   /* Runde 41: Schnitte 16/17 -> RE2-Lichtsatz 9/10 */
             fprintf(stderr,
                     "[light] cut %d tint=(%u,%u,%u)\n",
                     active_cut_idx,
@@ -4151,6 +4169,7 @@ re_title:;
     { extern void re15_pc_gator_re2_init(void); re15_pc_gator_re2_init(); }   /* Runde 41 Spur B: GATOR40A0.VBS-Haken + Kanister-Modell */
     { extern void re15_pc_gatorszene_r41_init(void); re15_pc_gatorszene_r41_init(); }   /* Runde 41 Spur F: Gator-SE + Metalltuer der 2090-Ankunftsszene (gatorszene_r41_pc.c) */
     { extern void re15_pc_kanister2080_init(void); re15_pc_kanister2080_init(); }   /* Runde 41 Spur G: Knall (gen/knall_bank.inc Satz 0), Tuer-Ton DOOR06, Aufschlag, NPC-Schuss */
+    { extern void re15_pc_g5lampen_init(void); re15_pc_g5lampen_init(); }   /* Runde 41 G5A NB5: Beben-Ton R704_BEBEN.VBS */
 
     /* Load + parse test asset. Try several relative paths so it works whether
      * run from build/Release/, from project root, or installed bin/. */
@@ -4724,6 +4743,7 @@ re_title:;
     if (g_room_rdt_ok && g_room_rdt.lights &&
         re15_light_parse(g_room_rdt.lights, (size_t)g_room_rdt.lights_size, &g_re15_room_lights) == 0) {
         g_re15_room_lights_ok = 1;
+        re15_g5a_licht_einsetzen(&g_re15_room_lights);   /* Runde 41 G5-Auftritt: RE2 Lichtsatz 9/10 auf die Szenen-Schnitte 16/17 */
         re15_light_apply_cut(&g_re15_room_lights, 0);
         fprintf(stderr, "[light] RDT: %d cuts, cut 0 tint=(%u,%u,%u)\n",
                 g_re15_room_lights.cut_count,
@@ -6200,11 +6220,16 @@ re_title:;
                  * overdraw disabled for this cut. */
                 re15_pri_cut_t pri = {0};
                 int pri_n = 0;
+                int pri_re2 = 0;   /* Runde 41 M4: 1 = RE2-Masken -> RE2-Tiefenregel (otz>>3 @0x80027d60, Masken zuerst @0x80026770) */
                 if (rdt_ok && rdt_buf && active_cut_idx >= 0
                     && active_cut_idx < active_cut_count) {
                     pri_n = re15_pri_parse_section(rdt_buf, (size_t)rdt_size,
                                                    active_cuts[active_cut_idx].pri_offset,
                                                    &pri);
+                } else if (re15_g5a_schnitt(active_cut_idx)) {   /* Runde 41: RE2 room7040 Schnitt 9/10 (bg_pc.c re15_bg_g5a_pri) */
+                    extern int re15_bg_g5a_pri(int cut_idx, re15_pri_cut_t *out);
+                    pri_n = re15_bg_g5a_pri(active_cut_idx, &pri);
+                    pri_re2 = (pri_n > 0);
                 }
                 /* NACHGEZEICHNETE MASKEN (s. re15_pri.h, Container "R15M").
                  * Der Prototyp hat die Maskenarbeit nur zu ~1/3 fertiggestellt; wo die
@@ -6263,12 +6288,16 @@ re_title:;
                         pz[m] = pri.masks[m].depth;
                     }
                     re15_render_pc_set_pri_rects(sx, sy, dx, dy, pw, ph, pz, n);
+                    re15_render_pc_set_pri_re2(pri_re2);   /* nach set_pri_rects (setzt auf RE1.5 zurueck) */
                 } else {
                     re15_render_pc_set_pri_rects(NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0);
                 }
-                fprintf(stderr, "[pri] cut=%d pri_offset=0x%X masks=%d fg_atlas=%d\n",
+                /* Abnahme G5 1 M10: die Szenen-Schnitte 16/17 liegen HINTER der RID-Tabelle (cut_count 16) - dort nicht lesen
+                 * (gemessen vorher: `cut=16 pri_offset=0x26DE0E74`). Andere Indizes klemmt Zeile ~3224 auf die Tabelle. */
+                fprintf(stderr, "[pri] cut=%d pri_offset=0x%X masks=%d fg_atlas=%d%s\n",
                         active_cut_idx,
-                        (unsigned)active_cuts[active_cut_idx].pri_offset, pri_n, has_fg);
+                        (unsigned)(re15_g5a_schnitt(active_cut_idx) ? 0u : active_cuts[active_cut_idx].pri_offset), pri_n, has_fg,
+                        re15_g5a_schnitt(active_cut_idx) ? " (RE2-Szenenschnitt, eigene PRI-Datei)" : "");
             }
             re15_camera_view_t cam_view;
             /* BYTE-TRUE DEATH-CAMERA ORBIT (per-frame FUN_80015850 + init FUN_80015284, RE'd
@@ -6287,7 +6316,8 @@ re_title:;
              * (-rot_y - 0xd2c) & 0xfff (=710·forward(rot_y), verified 3/3 death saves) and swings at
              * 900/frame for 3 frames before settling, so the cut + fly-in spin + orbit are all byte-true. Replaces the old fabricated {0x1f4,0xbb8,0x1f4}+drift glide. */
             re15_camera_cut_t death_cut;
-            const re15_camera_cut_t *view_cut = &active_cuts[active_cut_idx];
+            const re15_camera_cut_t *view_cut = re15_g5a_schnitt(active_cut_idx);   /* Runde 41: Szenen-Schnitte 16/17 = RE2-Kameras */
+            if (!view_cut) view_cut = &active_cuts[active_cut_idx];
             {
                 static int s_dc_on = 0, s_dc_updates = 0;
                 static re15_camera_cut_t s_dc;
@@ -6983,7 +7013,8 @@ re_title:;
              * @0x80045830, ALL in the SE path, none on a SsSeq volume) — likewise the
              * `player_mode != 2` hard-mute, which had no original counterpart. re15_rotor_drive
              * stays wired (shared with the PSX main loop) but no longer touches the BGM master. */
-            re15_rotor_drive(&active_cuts[active_cut_idx]);
+            { const re15_camera_cut_t *rc_g5a = re15_g5a_schnitt(active_cut_idx);   /* Runde 41: Schnitte 16/17 liegen hinter der RID-Tabelle */
+              re15_rotor_drive(rc_g5a ? rc_g5a : &active_cuts[active_cut_idx]); }
 
             /* Shadow orientation is built PER-ACTOR at each shadow draw below via
              * re15_camera_yaw_matrix_angle(actor.rot_y) — byte-true RotMatrixY(actor rot_y), the
@@ -9393,6 +9424,10 @@ re_title:;
                                 g_engine.frame_count == 1750 ||
                                 g_engine.frame_count == 1800)) {
                     int32_t cr[9], ct[3];
+                    /* Abnahme G5 1 M10: Schnitt 16/17 = RE2-Kamera hinter der RID-Tabelle -> deren Satz statt active_cuts[16/17]
+                     * (gemessen vorher: cam_pos=(-81857914,753726086,743864200)). */
+                    const re15_camera_cut_t *lr_cut = re15_g5a_schnitt(active_cut_idx);
+                    if (!lr_cut) lr_cut = &active_cuts[active_cut_idx];
                     re15_camera_compose_view_bone(&cam_view, yawed_rot, bone_world_trans,
                                                   cr, ct);
                     float _proj = (cam_view.fov_screen_dist > 0 && ct[2] > 1)
@@ -9406,12 +9441,8 @@ re_title:;
                         (int)ct[0], (int)ct[1], (int)ct[2],
                         (int)cam_view.fov_screen_dist,
                         (float)cx + ct[0] * _proj, (float)cy + ct[1] * _proj,
-                        (int)active_cuts[active_cut_idx].pos_x,
-                        (int)active_cuts[active_cut_idx].pos_y,
-                        (int)active_cuts[active_cut_idx].pos_z,
-                        (int)active_cuts[active_cut_idx].target_x,
-                        (int)active_cuts[active_cut_idx].target_y,
-                        (int)active_cuts[active_cut_idx].target_z,
+                        (int)lr_cut->pos_x, (int)lr_cut->pos_y, (int)lr_cut->pos_z,
+                        (int)lr_cut->target_x, (int)lr_cut->target_y, (int)lr_cut->target_z,
                         active_cut_idx, player_visible);
                     fflush(stderr);
                 }
@@ -10446,8 +10477,26 @@ re_title:;
                     ? (uint32_t)npc->anim_frame
                     : ((uint32_t)npc->anim_frame >> 1);
                 re15_spinnenanim_r41_zeichnen_beginn(npc, &ncur, target_fps);   /* Runde 41 Spur L: posiertes Bild/+0x8f VOR dem Vorschub (FUN_8001f3bc) */
+                int npc_clip_ov = av.clip_override;
+                {   /* G5 (Abnahme G5 1, M4b): RE2 posiert das Bild VOR dem Vorschub (FUN_8002959c `sw a2,0x178(a0)`
+                     * @0x800295f8, Vorschub @0x80029b28-48); Merker aus enemy_ai_boss_g5.c g5_anim. */
+                    extern int re15_g5_zeichenbild(const re15_actor_t *e, int *clip, int *bild);
+                    int zc = 0, zb = 0;
+                    if (npc->type == 0x36u && av.clip_override < 0 && re15_g5_zeichenbild(npc, &zc, &zb)) {
+                        npc_clip_ov = zc;
+                        ncur = (target_fps == 30) ? (uint32_t)zb : ((uint32_t)zb >> 1);   /* dieselbe 30/60-Regel wie oben */
+                    }
+                    /* G5-Tentakel (Abnahme G5 1, M2): dieselbe Regel, +0x178 = Pose des letzten Schritts; ohne Schritt bleibt sie stehen
+                     * (sub8 ph4/ph6: eingerollter Arm statt Clip 0 = gerade Stange). Merker: enemy_ai_tentakel_g5.c tent_anim. */
+                    {   extern int re15_g5_tentakel_zeichenbild(const re15_actor_t *e, int *clip, int *bild);
+                        if (npc->type == 0x37u && av.clip_override < 0 && re15_g5_tentakel_zeichenbild(npc, &zc, &zb)) {
+                            npc_clip_ov = zc;
+                            ncur = (target_fps == 30) ? (uint32_t)zb : ((uint32_t)zb >> 1);
+                        }
+                    }
+                }
                 int npc_kf = re15_compute_actor_kf(npc_anim, npc_skel, npc,
-                                                   av.clip_override, ncur);
+                                                   npc_clip_ov, ncur);
                 re15_skel_pose_t npc_poses[RE15_EMD_MAX_BONES];
                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
                 int npc_pose_rc = re15_skel_compute_pose(npc_skel, npc_kf, npc_poses);
@@ -10456,6 +10505,12 @@ re_title:;
                 /* Region-gecullt: Pose gerechnet (Takt-Zustand wie @0x8001e9b4 FUN_8001ef54),
                  * gezeichnet wird nichts. */
                 if (npc_region_culled) continue;
+                /* Nachbesserung G5A 4 (N2): G5-Arm (EM37) - Teile 1..3 tragen Flag 0x800 (Ctor `ori 0x4800` @0x80100774-0x8010078c),
+                 * FUN_80027434 baut ihre Translationen GESTRECKT (@0x800275e0-0x8002768c), und der Haeuter 0x80104CF0 nimmt genau diese
+                 * Teil-Lagen. Erst danach streckt der Zeichner Mesh 0 um Teil 0 (FUN_80019CD0, Flag 0x400). Ohne diesen Schritt blieb
+                 * ein eingerollter Arm bei Streckung 0 als Stummel stehen (Szenenbild 290..330, RE2-RAM s09 Arm 1: p3 = p0). */
+                if (npc->type == 0x37u)
+                    re15_g5_tentakel_kette_strecken(npc_skel, npc_poses, npc_skel->bone_count, re15_g5_tentakel_scale_x(npc_i));
                 (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
                 /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
                  * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
@@ -10529,6 +10584,18 @@ re_title:;
                         (int32_t)npc->y,
                         (int32_t)npc->z
                     };
+                    /* RE2-ENTITAETEN G5/Arme (Typ 0x36/0x37 im RE2-Modul, ROOM5090/5091; Nachbesserung G5 2, Punkt 5): RE2 wertet
+                     * die Punktlichter an der WELTLAGE VON TEIL 0 aus, nicht am Entity-Ursprung - FUN_80027160 `jal 0x80076f88`
+                     * @0x80027330 mit `addiu a0,s2,92` @0x80027334 (s2 = Teile, +92 = Teil-0-Welttranslation); FUN_80076f88 rechnet
+                     * (Teil0 - Licht) >> 4 inkl. Y und die XZ-Daempfung wie RE1.5 FUN_80053fc0, FUN_80077200 dieselben Zeilen
+                     * (-Skala * VectorNormal, Farbe << 4). Fuer den G5 liegt Teil 0 auf der Wurzel-y (-3205..-4534): das orange
+                     * Bodenlicht von RE2 Schnitt 9 (-2200,0,-23500) faellt von UNTEN auf die Masse, nicht waagerecht. */
+                    if ((npc->type == 0x36u || npc->type == 0x37u) && (g_current_room_id & 0xFFFEu) == 0x5090u) {
+                        const int32_t *t0 = npc_poses[0].trans;
+                        npc_pos_w[0] += (int32_t)(((int64_t)nyaw[0] * t0[0] + (int64_t)nyaw[1] * t0[1] + (int64_t)nyaw[2] * t0[2]) >> 12);
+                        npc_pos_w[1] += (int32_t)(((int64_t)nyaw[3] * t0[0] + (int64_t)nyaw[4] * t0[1] + (int64_t)nyaw[5] * t0[2]) >> 12);
+                        npc_pos_w[2] += (int32_t)(((int64_t)nyaw[6] * t0[0] + (int64_t)nyaw[7] * t0[1] + (int64_t)nyaw[8] * t0[2]) >> 12);
+                    }
                     re15_light_setup_actor(
                         &g_re15_room_lights.cuts[g_re15_active_cut],
                         npc_pos_w, NULL, &lctx_npc_world);
@@ -10772,14 +10839,9 @@ re_title:;
                             g5_skin_v = NULL; g5_skin_n = NULL;
                         }
                     }
-                    /* Tentakel-Stummel (Meshes 1..3) an die gestreckten Schlauch-Enden
-                     * (Port-Entscheidung 2 in enemy_ai_tentakel_g5.c). */
-                    if (npc->type == 0x37u && nbi >= 1 && nbi <= 3 && nbi < npc_bones) {
-                        np_kind = npc_poses[nbi];
-                        re15_g5_tentakel_stretch_point(&npc_poses[0], re15_g5_tentakel_scale_x(npc_i),
-                                                       np_kind.trans);
-                        np = &np_kind;
-                    }
+                    /* Tentakel-Meshes 1..3 (RE2-RAM s09: je 4 Vertices +-5 = Platzhalter-Quad) stehen an den Teil-Lagen der
+                     * GESTRECKTEN Kette (oben re15_g5_tentakel_kette_strecken); Teile 1..3 tragen kein Flag 0x400 (Ctor
+                     * `ori 0x4800` @0x80100774-0x8010078c), also keine zweite Streckung um Teil 0. */
                     int32_t nyawed_rot[9];
                     for (int r = 0; r < 3; r++) {
                         for (int c = 0; c < 3; c++) {
@@ -10962,6 +11024,26 @@ re_title:;
                     if (npc->type == 0x36u) {
                         const re15_md1_vertex_t *mv = re15_g5_morph_verts(npc->type, nmi);
                         if (mv) { nmv = mv; nmq = mv; }
+                        {   /* MESS-SONDE NB3 (RE15_G5_MORPH_SONDE=<datei>): was der Zeichner fuer den G5 je Teil bekommt. */
+                            static FILE *s_ms_fp = NULL; static int s_ms_an = -1;
+                            if (s_ms_an < 0) { const char *p = getenv("RE15_G5_MORPH_SONDE"); s_ms_an = 0;
+                                               if (p && *p) { s_ms_fp = fopen(p, "w"); s_ms_an = s_ms_fp ? 1 : 0; } }
+                            if (s_ms_an) {
+                                int32_t ww[4] = {0,0,0,0}; int gu = 0, gm = -1, w1ok = 0;
+                                int mnx = 99999, mxx = -99999, mny = 99999, mxy = -99999, mnz = 99999, mxz = -99999;
+                                (void)re15_g5_morph_zustand(ww, &gu, &gm, &w1ok);
+                                for (int vi = 0; vi < nm->tri_vertex_count; vi++) {
+                                    const re15_md1_vertex_t *q = &nmv[vi];
+                                    if (q->x < mnx) mnx = q->x; if (q->x > mxx) mxx = q->x;
+                                    if (q->y < mny) mny = q->y; if (q->y > mxy) mxy = q->y;
+                                    if (q->z < mnz) mnz = q->z; if (q->z > mxz) mxz = q->z;
+                                }
+                                fprintf(s_ms_fp, "F%u slot %d nbi %d nmi %d nv %d mv %d gueltig %d mesh %d w1ok %d w %d %d %d %d cut %d bb x %d..%d y %d..%d z %d..%d\n",
+                                        (unsigned)g_engine.frame_count, npc_i, nbi, nmi, nm->tri_vertex_count, mv ? 1 : 0, gu, gm, w1ok,
+                                        (int)ww[0], (int)ww[1], (int)ww[2], (int)ww[3], active_cut_idx, mnx, mxx, mny, mxy, mnz, mxz);
+                                fflush(s_ms_fp);
+                            }
+                        }
                     }
                     if (g5_skin_v && nmi == 0) {   /* geskinntes Mesh 0 (s. oben) */
                         nmv = g5_skin_v; nmq = g5_skin_v;
@@ -11480,6 +11562,7 @@ re_title:;
 
             re15_gr2_pc_zeichnen(&cam_view, cx, cy);   /* Runde 41 Spur B: Kanister-Prop (ROOM40A0 Modell 1) */
             { extern void re15_k2080_pc_zeichnen(const void *, int, int); re15_k2080_pc_zeichnen(&cam_view, cx, cy); }   /* Runde 41 Spur G: Kanister in 2080 */
+            { extern void re15_g5lampen_pc_zeichnen(const void *, int, int); re15_g5lampen_pc_zeichnen(&cam_view, cx, cy); }   /* Runde 41 G5A NB5: Tunnellampen ROOM7040 Obj 3/4 */
 
             /* Cut/player HUD + projection marker silenced. */
             (void)active_cut_count;
@@ -11491,6 +11574,7 @@ re_title:;
              * projizierten die Effekte im Anforderungsbild schon mit dem neuen H (Runde 30,
              * cut-blitz). */
             pc_fx_set_camf(rdt_buf, (size_t)rdt_size, active_cut_idx);
+            s_fx_g5a_re2_schnitt = (re15_g5a_re2_schnitt(active_cut_idx) >= 0);   /* Abnahme G5 1 M6, s. pc_draw_effects */
             pc_draw_effects(&cam_view, cx, cy,
                             cam_has_region, cam_region_xs, cam_region_zs);
             /* Runde 34 C4: die RE2-FX-Plaetze (Saeure-/Brand-Aufschlag, Bodenflammen) im selben
@@ -11814,6 +11898,7 @@ re_title:;
                   re15_render_pc_request_readback(p);
               } } }
 
+        { extern void re15_render_pc_beben(int dy); re15_render_pc_beben(re15_g5a_beben()); }   /* Runde 41 G5A NB5: RE2 sub04 Sce_shake_on */
         re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Absicherung (Bild ohne Spiel-Takt) */
         { extern void re15_render_pc_bild_halten(void);   /* Runde 41 Spur E: Apply-Bild @0x80021560 - kein DrawOTag, kein Pufferwechsel */
           extern void re15_render_pc_standbild(int bilder, uint32_t budget_ms, unsigned bild_nr);   /* NB4: Dauer @0x80021d2c/@0x80021e34 */

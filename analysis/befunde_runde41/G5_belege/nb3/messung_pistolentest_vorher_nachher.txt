@@ -1,0 +1,9 @@
+integration_r41_birkin_pistole - Kampfprotokoll aus state.log (t=36), Spieler-HP-Wechsel und G5-Tod
+== Lauf 1 (Skript NB2: 60 x MA4, R1 durchgehend): ROT
+   ctest-Meldung: leon/elza: Mutationen 1, Form-HP 150 bis 0, Rueckstoss 1, G5 1, G5 tot 0, Spieler-HP dabei -999; G5 faellt unter der Pistole nicht bis F5400
+   Leon: F3576 HP 45 -> 38 (Peitsche, Lage 23113 -> 22855,-22716, Blick 2055 -> 3456), F3618 -> 31 (Blick 640), danach Zielen bei Blick 640, G5 bleibt 150 HP bis F5400
+== Lauf 2 (Skript NB3: 60 x MA4,W0.2): GRUEN (ctest 419 s)
+   leon   F3807 Spieler-HP 45 -> 38 bei (23236,-23181), G5 x 12100
+   leon   F3973 G5 tot, Spieler-HP 38
+   elza   F3807 Spieler-HP 45 -> 38 bei (23236,-23181), G5 x 12100
+   elza   F3973 G5 tot, Spieler-HP 38

@@ -1,0 +1,82 @@
+# Nachbesserung 5 G5A: Testlaeufe (re15_port/build im Worktree, Bau ueber tools/local_build.sh)
+## unit_r41_g5auftritt (Riegel NB4 + NB5)
+NB5: info/re2leon/PL0/RDT/ROOM7040.RDT nicht da - nur Laengen geprueft
+5090: NB5 Lampe x -4000: Gehaeusekasten Schnitt 16 (107..149, 113..120), RE2-Aufnahme Fleck (108.8,119.3) Bild -44
+5090: NB5 Lampe x -5000: Gehaeusekasten Schnitt 16 (93..132, 115..121), RE2-Aufnahme Fleck (95.1,120.8) Bild -43
+5090: NB5 Lampe x -6000: Gehaeusekasten Schnitt 16 (79..117, 116..122), RE2-Aufnahme Fleck (80.6,121.6) Bild -42
+5090: NB5 Beben falsch in 0 Vorlaufbildern, Ton 1 x bei Vorlaufbild 4, Lampe vor sub11 0, Vorlaufbild 2 x -5000 1, RE2-Lampenfleck im Gehaeusekasten 3/3 (max 0.0 px daneben)
+5090: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+5090: NB5 Lampen gegen RE2-RAM 20 von 20 gleich (s03..s12), sichtbar (Ankerzone) in 438 Szenenbildern, nach Bild 437: 0
+5091: NB5 Lampe x -4000: Gehaeusekasten Schnitt 16 (107..149, 113..120), RE2-Aufnahme Fleck (108.8,119.3) Bild -44
+5091: NB5 Lampe x -5000: Gehaeusekasten Schnitt 16 (93..132, 115..121), RE2-Aufnahme Fleck (95.1,120.8) Bild -43
+5091: NB5 Lampe x -6000: Gehaeusekasten Schnitt 16 (79..117, 116..122), RE2-Aufnahme Fleck (80.6,121.6) Bild -42
+5091: NB5 Beben falsch in 0 Vorlaufbildern, Ton 1 x bei Vorlaufbild 4, Lampe vor sub11 0, Vorlaufbild 2 x -5000 1, RE2-Lampenfleck im Gehaeusekasten 3/3 (max 0.0 px daneben)
+5091: NB4 Arme gegen RE2-RAM 80 von 80 gleich (20 Savestates, Zuordnung falsch 0); Reichweite Streckung 0 22 von 22 innerhalb 16 (max 4); Einzug [T7] fertig Bild 669; Bild 670..806 Arm vor der Masse in 0 von 137 Bildern (max Reichweite 572); Bild 302..336 Arm-1-Stummel in 0 von 35 (max 568)
+5091: NB5 Lampen gegen RE2-RAM 20 von 20 gleich (s03..s12), sichtbar (Ankerzone) in 438 Szenenbildern, nach Bild 437: 0
+test_r41_g5auftritt: OK
+
+## Gegenprobe (Verhalten 44a9e8b7c, nur Diagnose-Stubs, Bau-Baum build_gegen)
+NB5: info/re2leon/PL0/RDT/ROOM7040.RDT nicht da - nur Laengen geprueft
+FAIL: 5090: NB5 Sichtpruefung FUN_8002c820 / Ankerzone RVD @0x45C falsch
+5090: NB5 Lampe x -4000: Gehaeusekasten Schnitt 16 (107..149, 113..120), RE2-Aufnahme Fleck (108.8,119.3) Bild -44
+5090: NB5 Lampe x -5000: Gehaeusekasten Schnitt 16 (93..132, 115..121), RE2-Aufnahme Fleck (95.1,120.8) Bild -43
+5090: NB5 Lampe x -6000: Gehaeusekasten Schnitt 16 (79..117, 116..122), RE2-Aufnahme Fleck (80.6,121.6) Bild -42
+5090: NB5 Beben falsch in 13 Vorlaufbildern, Ton 0 x bei Vorlaufbild -1, Lampe vor sub11 0, Vorlaufbild 2 x -5000 0, RE2-Lampenfleck im Gehaeusekasten 3/3 (max 0.0 px daneben)
+FAIL: 5090: NB5 Beben in 13 Vorlaufbildern nicht sub04 (-3,-5,5x-7,-6..-1 ab Vorlaufbild 2)
+FAIL: 5090: NB5 Beben-Ton 0 x bei Vorlaufbild -1 statt 1 x bei 4 (Se_on @0x016AC, sub04-Bild 3)
+FAIL: 5090: NB5 Lampen vor dem ersten sub11-Bild gesetzt (0) / Vorlaufbild 2 nicht x -5000
+5090: NB5 s03 Bild 28: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -9000 / -19000
+5090: NB5 s04 Bild 77: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -18000 / -8000
+5090: NB5 s05 Bild 126: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -7000 / -17000
+5090: NB5 s06 Bild 162: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -3000 / -13000
+5090: NB5 s07 Bild 212: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -13000 / -3000
+5090: NB5 s08 Bild 261: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -2000 / -12000
+5090: NB5 s09 Bild 310: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -11000 / -1000
+5090: NB5 s10 Bild 360: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -1000 / -11000
+5090: NB5 s11 Bild 409: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -10000 / -20000
+5090: NB5 Lampen gegen RE2-RAM 2 von 20 gleich (s03..s12), sichtbar (Ankerzone) in 0 Szenenbildern, nach Bild 437: 0
+FAIL: 5090: NB5 Lampen 2 von 20 gleich RE2-RAM s03..s12 (Testvorlauf 58, exe 55)
+FAIL: 5090: NB5 Lampen sichtbar 0 Bilder, nach Schnitt 10 0
+FAIL: 5091: NB5 Sichtpruefung FUN_8002c820 / Ankerzone RVD @0x45C falsch
+5091: NB5 Lampe x -4000: Gehaeusekasten Schnitt 16 (107..149, 113..120), RE2-Aufnahme Fleck (108.8,119.3) Bild -44
+5091: NB5 Lampe x -5000: Gehaeusekasten Schnitt 16 (93..132, 115..121), RE2-Aufnahme Fleck (95.1,120.8) Bild -43
+5091: NB5 Lampe x -6000: Gehaeusekasten Schnitt 16 (79..117, 116..122), RE2-Aufnahme Fleck (80.6,121.6) Bild -42
+5091: NB5 Beben falsch in 13 Vorlaufbildern, Ton 0 x bei Vorlaufbild -1, Lampe vor sub11 0, Vorlaufbild 2 x -5000 0, RE2-Lampenfleck im Gehaeusekasten 3/3 (max 0.0 px daneben)
+FAIL: 5091: NB5 Beben in 13 Vorlaufbildern nicht sub04 (-3,-5,5x-7,-6..-1 ab Vorlaufbild 2)
+FAIL: 5091: NB5 Beben-Ton 0 x bei Vorlaufbild -1 statt 1 x bei 4 (Se_on @0x016AC, sub04-Bild 3)
+FAIL: 5091: NB5 Lampen vor dem ersten sub11-Bild gesetzt (0) / Vorlaufbild 2 nicht x -5000
+5091: NB5 s03 Bild 28: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -9000 / -19000
+5091: NB5 s04 Bild 77: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -18000 / -8000
+5091: NB5 s05 Bild 126: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -7000 / -17000
+5091: NB5 s06 Bild 162: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -3000 / -13000
+5091: NB5 s07 Bild 212: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -13000 / -3000
+5091: NB5 s08 Bild 261: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -2000 / -12000
+5091: NB5 s09 Bild 310: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -11000 / -1000
+5091: NB5 s10 Bild 360: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -1000 / -11000
+5091: NB5 s11 Bild 409: Port Objekt 3 (-32000,0,-32000) Objekt 4 (-32000,0,-32000) / RE2 -10000 / -20000
+5091: NB5 Lampen gegen RE2-RAM 2 von 20 gleich (s03..s12), sichtbar (Ankerzone) in 0 Szenenbildern, nach Bild 437: 0
+FAIL: 5091: NB5 Lampen 2 von 20 gleich RE2-RAM s03..s12 (Testvorlauf 58, exe 55)
+FAIL: 5091: NB5 Lampen sichtbar 0 Bilder, nach Schnitt 10 0
+test_r41_g5auftritt: 12 Fehler
+
+## Alle Nicht-Integrationstests ohne die 7 df-haengenden Skripttests (-j 6)
+100% tests passed, 0 tests failed out of 1068
+Total Test time (real) = 573.05 sec
+
+## Integration (-j 3)
+ 1/14 Test #1382: integration_r41_g5_tod .....................   Passed  294.59 sec
+ 2/14 Test  #571: integration_r35_zgirl_5090 .................   Passed  186.67 sec
+ 3/14 Test #1380: integration_r41_birkin_pistole .............   Passed  485.42 sec
+ 4/14 Test #1381: integration_r41_g5_westen ..................   Passed  497.15 sec
+ 5/14 Test #1362: integration_r41_zombiefresser_tuer2000 .....   Passed   54.36 sec
+ 6/14 Test  #766: integration_r37_re2zombie ..................   Passed   71.41 sec
+ 7/14 Test  #627: integration_r36_pri_schatten ...............   Passed   43.80 sec
+ 8/14 Test  #689: integration_r37_bissarm_echtlauf ...........   Passed   57.96 sec
+ 9/14 Test #1409: integration_pri_masken .....................   Passed    0.32 sec
+10/14 Test  #708: integration_r37_elzaems_elza1181griff ......   Passed   20.18 sec
+11/14 Test  #926: integration_r38_wasserzombie ...............   Passed  180.98 sec
+12/14 Test #1167: integration_r41_gatorszene_tod_explosion ...   Passed   72.62 sec
+13/14 Test #1191: integration_r41_kanister2080 ...............   Passed  200.10 sec
+14/14 Test #1303: integration_r41_re2gator ...................   Passed  337.23 sec
+100% tests passed, 0 tests failed out of 14
+Total Test time (real) = 999.78 sec

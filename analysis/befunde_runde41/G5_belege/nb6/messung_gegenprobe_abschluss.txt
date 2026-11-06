@@ -1,0 +1,147 @@
+# NB6-Abschluss Gegenprobe: g5auftritt_r41.c mit abgeklemmtem vibration_sub14 und brocken_takt (Stand 337751f7b), nur test_r41_g5auftritt neu gebaut; danach Quelle zurueck und voll gebaut
+5090: NB6 Vibration sub04-Bild 1: Aktuator 1 = 0, Soll 114
+5090: NB6 Brocken-Takt sub05-Bild 1: 0 gespawnt, Soll 2
+5090: NB6 Ring B Platz 0 nach Vorlaufbild 2: Wert 0 Vorlauf 0 Rest 0 Schritt 0 Akku 0
+5090: NB6 Ring B Platz 1 nach Vorlaufbild 2: Wert 0 Vorlauf 0 Rest 0 Schritt 0 Akku 0
+5090: NB6 Ring B Platz 2 nach Vorlaufbild 2: Wert 0 Vorlauf 0 Rest 0 Schritt 0 Akku 0
+5090: NB6 Vibration sub04-Bild 2: Aktuator 1 = 0, Soll 128
+5090: NB6 Brocken-Takt sub05-Bild 2: 0 gespawnt, Soll 2
+5090: NB6 Vibration sub04-Bild 3: Aktuator 1 = 0, Soll 250
+5090: NB6 Brocken-Takt sub05-Bild 3: 0 gespawnt, Soll 2
+5090: NB6 Vibration sub04-Bild 4: Aktuator 1 = 0, Soll 250
+5090: NB6 Brocken-Takt sub05-Bild 4: 0 gespawnt, Soll 2
+5090: NB6 Vibration sub04-Bild 5: Aktuator 1 = 0, Soll 250
+5090: NB6 Brocken-Takt sub05-Bild 5: 0 gespawnt, Soll 2
+5090: NB6 Vibration sub04-Bild 6: Aktuator 1 = 0, Soll 250
+5090: NB6 Brocken-Takt sub05-Bild 6: 0 gespawnt, Soll 3
+5090: NB6 Vibration sub04-Bild 7: Aktuator 1 = 0, Soll 250
+5090: NB6 Brocken-Takt sub05-Bild 7: 0 gespawnt, Soll 3
+5090: NB6 Vibration sub04-Bild 8: Aktuator 1 = 0, Soll 173
+5090: NB6 Brocken-Takt sub05-Bild 8: 0 gespawnt, Soll 3
+5090: NB6 Vibration sub04-Bild 9: Aktuator 1 = 0, Soll 164
+5090: NB6 Brocken-Takt sub05-Bild 9: 0 gespawnt, Soll 3
+5090: NB6 Vibration sub04-Bild 10: Aktuator 1 = 0, Soll 155
+5090: NB6 Brocken-Takt sub05-Bild 10: 0 gespawnt, Soll 3
+5090: NB6 Vibration sub04-Bild 11: Aktuator 1 = 0, Soll 147
+5090: NB6 Brocken-Takt sub05-Bild 11: 0 gespawnt, Soll 4
+5090: NB6 Vibration sub04-Bild 12: Aktuator 1 = 0, Soll 138
+5090: NB6 Brocken-Takt sub05-Bild 12: 0 gespawnt, Soll 4
+5090: NB6 Vibration sub04-Bild 13: Aktuator 1 = 0, Soll 129
+5090: NB6 Brocken-Takt sub05-Bild 13: 0 gespawnt, Soll 4
+5090: NB6 Vibration sub04-Bild 14: Aktuator 1 = 0, Soll 120
+5090: NB6 Brocken-Takt sub05-Bild 14: 0 gespawnt, Soll 5
+5090: NB6 Vibration sub04-Bild 15: Aktuator 1 = 0, Soll 111
+5090: NB6 Brocken-Takt sub05-Bild 15: 0 gespawnt, Soll 5
+5090: NB6 Vibration sub04-Bild 16: Aktuator 1 = 0, Soll 102
+5090: NB6 Brocken-Takt sub05-Bild 16: 0 gespawnt, Soll 5
+5090: NB6 Vibration sub04-Bild 17: Aktuator 1 = 0, Soll 94
+5090: NB6 Brocken-Takt sub05-Bild 17: 0 gespawnt, Soll 5
+5090: NB6 Vibration sub04-Bild 18: Aktuator 1 = 0, Soll 85
+5090: NB6 Brocken-Takt sub05-Bild 18: 0 gespawnt, Soll 5
+5090: NB6 Vibration sub04-Bild 19: Aktuator 1 = 0, Soll 76
+5090: NB6 Brocken-Takt sub05-Bild 19: 0 gespawnt, Soll 7
+5090: NB6 Vibration sub04-Bild 20: Aktuator 1 = 0, Soll 67
+5090: NB6 Brocken-Takt sub05-Bild 20: 0 gespawnt, Soll 7
+5090: NB6 Vibration sub04-Bild 21: Aktuator 1 = 0, Soll 58
+5090: NB6 Brocken-Takt sub05-Bild 21: 0 gespawnt, Soll 7
+5090: NB6 Vibration sub04-Bild 22: Aktuator 1 = 0, Soll 50
+5090: NB6 Brocken-Takt sub05-Bild 22: 0 gespawnt, Soll 7
+5090: NB6 Brocken-Takt sub05-Bild 23: 0 gespawnt, Soll 7
+5090: NB6 Brocken-Takt sub05-Bild 24: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 25: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 26: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 27: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 28: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 29: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 30: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 31: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 32: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 33: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 34: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 35: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 36: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 37: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 38: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 39: 0 gespawnt, Soll 8
+5090: NB6 Brocken-Takt sub05-Bild 40: 0 gespawnt, Soll 8
+5090: NB6 Brocken 0 gespawnt; RE2-FX-Pool bei sub05-Bild 39: 0 Plaetze, 0 von 18 gleich RE2-RAM s02; op_unbekannt 0; Ring B nach sub14 FALSCH; Ringe bei sub05-Bild 39 leer 1 (RE2-RAM s02: leer)
+FAIL: 5090: NB6 0 Brocken statt 8 (sub05 @0x016DE..@0x01762)
+FAIL: 5090: NB6 RE2-FX-Pool 0 Plaetze, 0 von 18 gleich RE2-RAM s02
+FAIL: 5090: NB6 Vibration: Ring B nach sub14 0, leer bei sub05-Bild 39 1
+5090: NB6 Vibration Aktuator 1 je sub04-Bild 0..23: 22 von 24 Bildern falsch, Aktuator 0 in 0 Bildern != 0; Brocken-Takt sub05-Bild 1..40: 40 Bilder falsch
+FAIL: 5090: NB6 Vibrationsmuster sub14: 22/24 Bilder falsch, Aktuator 0 0 x
+FAIL: 5090: NB6 Brocken-Takt in 40 sub05-Bildern nicht wie sub05 @0x016DE..@0x01762
+5091: NB6 Vibration sub04-Bild 1: Aktuator 1 = 0, Soll 114
+5091: NB6 Brocken-Takt sub05-Bild 1: 0 gespawnt, Soll 2
+5091: NB6 Ring B Platz 0 nach Vorlaufbild 2: Wert 0 Vorlauf 0 Rest 0 Schritt 0 Akku 0
+5091: NB6 Ring B Platz 1 nach Vorlaufbild 2: Wert 0 Vorlauf 0 Rest 0 Schritt 0 Akku 0
+5091: NB6 Ring B Platz 2 nach Vorlaufbild 2: Wert 0 Vorlauf 0 Rest 0 Schritt 0 Akku 0
+5091: NB6 Vibration sub04-Bild 2: Aktuator 1 = 0, Soll 128
+5091: NB6 Brocken-Takt sub05-Bild 2: 0 gespawnt, Soll 2
+5091: NB6 Vibration sub04-Bild 3: Aktuator 1 = 0, Soll 250
+5091: NB6 Brocken-Takt sub05-Bild 3: 0 gespawnt, Soll 2
+5091: NB6 Vibration sub04-Bild 4: Aktuator 1 = 0, Soll 250
+5091: NB6 Brocken-Takt sub05-Bild 4: 0 gespawnt, Soll 2
+5091: NB6 Vibration sub04-Bild 5: Aktuator 1 = 0, Soll 250
+5091: NB6 Brocken-Takt sub05-Bild 5: 0 gespawnt, Soll 2
+5091: NB6 Vibration sub04-Bild 6: Aktuator 1 = 0, Soll 250
+5091: NB6 Brocken-Takt sub05-Bild 6: 0 gespawnt, Soll 3
+5091: NB6 Vibration sub04-Bild 7: Aktuator 1 = 0, Soll 250
+5091: NB6 Brocken-Takt sub05-Bild 7: 0 gespawnt, Soll 3
+5091: NB6 Vibration sub04-Bild 8: Aktuator 1 = 0, Soll 173
+5091: NB6 Brocken-Takt sub05-Bild 8: 0 gespawnt, Soll 3
+5091: NB6 Vibration sub04-Bild 9: Aktuator 1 = 0, Soll 164
+5091: NB6 Brocken-Takt sub05-Bild 9: 0 gespawnt, Soll 3
+5091: NB6 Vibration sub04-Bild 10: Aktuator 1 = 0, Soll 155
+5091: NB6 Brocken-Takt sub05-Bild 10: 0 gespawnt, Soll 3
+5091: NB6 Vibration sub04-Bild 11: Aktuator 1 = 0, Soll 147
+5091: NB6 Brocken-Takt sub05-Bild 11: 0 gespawnt, Soll 4
+5091: NB6 Vibration sub04-Bild 12: Aktuator 1 = 0, Soll 138
+5091: NB6 Brocken-Takt sub05-Bild 12: 0 gespawnt, Soll 4
+5091: NB6 Vibration sub04-Bild 13: Aktuator 1 = 0, Soll 129
+5091: NB6 Brocken-Takt sub05-Bild 13: 0 gespawnt, Soll 4
+5091: NB6 Vibration sub04-Bild 14: Aktuator 1 = 0, Soll 120
+5091: NB6 Brocken-Takt sub05-Bild 14: 0 gespawnt, Soll 5
+5091: NB6 Vibration sub04-Bild 15: Aktuator 1 = 0, Soll 111
+5091: NB6 Brocken-Takt sub05-Bild 15: 0 gespawnt, Soll 5
+5091: NB6 Vibration sub04-Bild 16: Aktuator 1 = 0, Soll 102
+5091: NB6 Brocken-Takt sub05-Bild 16: 0 gespawnt, Soll 5
+5091: NB6 Vibration sub04-Bild 17: Aktuator 1 = 0, Soll 94
+5091: NB6 Brocken-Takt sub05-Bild 17: 0 gespawnt, Soll 5
+5091: NB6 Vibration sub04-Bild 18: Aktuator 1 = 0, Soll 85
+5091: NB6 Brocken-Takt sub05-Bild 18: 0 gespawnt, Soll 5
+5091: NB6 Vibration sub04-Bild 19: Aktuator 1 = 0, Soll 76
+5091: NB6 Brocken-Takt sub05-Bild 19: 0 gespawnt, Soll 7
+5091: NB6 Vibration sub04-Bild 20: Aktuator 1 = 0, Soll 67
+5091: NB6 Brocken-Takt sub05-Bild 20: 0 gespawnt, Soll 7
+5091: NB6 Vibration sub04-Bild 21: Aktuator 1 = 0, Soll 58
+5091: NB6 Brocken-Takt sub05-Bild 21: 0 gespawnt, Soll 7
+5091: NB6 Vibration sub04-Bild 22: Aktuator 1 = 0, Soll 50
+5091: NB6 Brocken-Takt sub05-Bild 22: 0 gespawnt, Soll 7
+5091: NB6 Brocken-Takt sub05-Bild 23: 0 gespawnt, Soll 7
+5091: NB6 Brocken-Takt sub05-Bild 24: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 25: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 26: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 27: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 28: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 29: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 30: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 31: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 32: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 33: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 34: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 35: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 36: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 37: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 38: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 39: 0 gespawnt, Soll 8
+5091: NB6 Brocken-Takt sub05-Bild 40: 0 gespawnt, Soll 8
+5091: NB6 Brocken 0 gespawnt; RE2-FX-Pool bei sub05-Bild 39: 0 Plaetze, 0 von 18 gleich RE2-RAM s02; op_unbekannt 0; Ring B nach sub14 FALSCH; Ringe bei sub05-Bild 39 leer 1 (RE2-RAM s02: leer)
+FAIL: 5091: NB6 0 Brocken statt 8 (sub05 @0x016DE..@0x01762)
+FAIL: 5091: NB6 RE2-FX-Pool 0 Plaetze, 0 von 18 gleich RE2-RAM s02
+FAIL: 5091: NB6 Vibration: Ring B nach sub14 0, leer bei sub05-Bild 39 1
+5091: NB6 Vibration Aktuator 1 je sub04-Bild 0..23: 22 von 24 Bildern falsch, Aktuator 0 in 0 Bildern != 0; Brocken-Takt sub05-Bild 1..40: 40 Bilder falsch
+FAIL: 5091: NB6 Vibrationsmuster sub14: 22/24 Bilder falsch, Aktuator 0 0 x
+FAIL: 5091: NB6 Brocken-Takt in 40 sub05-Bildern nicht wie sub05 @0x016DE..@0x01762
+test_r41_g5auftritt: 10 Fehler
+The following tests FAILED:

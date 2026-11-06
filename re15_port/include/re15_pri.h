@@ -139,10 +139,38 @@ static inline float re15_pri_mask_camera_z(int depth) {
     return (float)(depth + 1) * RE15_PRI_OT_BUCKET_VZ;
 }
 
+/* RE2-TIEFENREGEL (Runde 41 G5-Auftritt, M4: RE2 room7040 Schnitt 9 als Szenen-Schnitt 16, Masken re15_pri_parse_section_re2).
+ * RE2 legt Masken und Figuren in DIESELBE OT, teilt die Figur-OTZ aber nur durch 8 und haengt die Masken VOR den Figuren ein.
+ * RE2 SLUS_007.48 (= info/re2leon/PSX.EXE), selbst gelesen:
+ *   Masken  FUN_80049ca8  @0x80049da4 96440000 lhu a0,0(s2)      Tiefe aus dem Merker (Parser @0x80049bdc/e4 kopiert sie unveraendert)
+ *                         @0x80049da8 8ea2fc4c lw v0,-948(s5)    OT-Zeiger *(0x800ce22c) = 0x800cc22c + flip*0x1000
+ *                         @0x80049dac 00042080 sll a0,a0,2       OT-Index = depth (x1, wie RE1.5)
+ *                         @0x80049db0 0c023e46 jal 0x8008f918    AddPrim (Kopf-Einhaengung)
+ *   Figur   FUN_80027bec  @0x80027ce4 4b58002d AVSZ3 / @0x80027cf4 eba70000 swc2 $7,0(sp)
+ *                         @0x80027d60 00021042 srl v0,v0,1 / @0x80027d64 30420ffc andi v0,v0,0xffc   OT-Index = otz >> 3
+ *                         (RE1.5: otz >> 4 @0x8002565c). Ebenso in 0x80027dbc/0x8002d3c8/0x8002d718/0x8002da80/0x8002ddf0
+ *                         (@0x80027f98, @0x8002d200, @0x8002d384, @0x8002d6b8, @0x8002da24, @0x8002dc4c, @0x8002e00c).
+ *                         OT-Basis @0x80027bf4-0x80027c24 = 0x800cc22c + (lbu 0x800ce5e0)<<12 = dieselbe OT wie die Masken.
+ *   ZSF3    @0x8008d29c 24080155 addiu t0,zero,341 / @0x8008d2a0 48c8e800 ctc2 t0,$29   (wie RE1.5) -> Bucket = (1023*vz) >> 15.
+ *   Reihenfolge FUN_80025794: @0x80026770 0c01272a jal 0x80049ca8 (Masken) VOR @0x8002689c 0c009c58 jal 0x80027160 (Figurenschleife)
+ *                         -> im gleichen Bucket wird die Figur ZUERST gezeichnet, die Maske liegt OBEN (RE1.5 umgekehrt, @0x8001ce54).
+ *   => Maske verdeckt gdw. depth <= (1023*vz) >> 15, d.h. ab vz >= depth * 32768/1023 (Bucket-Breite 32,03, nicht 64,06).
+ *   Laufzeitbeleg RE2-Savestates s05..s09 (Schnitt 9): OT-Lauf ab &ot[1023] (DrawOTag @0x8002bd48-50) findet die 32 Masken in
+ *   Bucket 100 und 300 (= depth); in Bucket 300 laufen P3c P3c P34 P34 vor M13..M31 (Maske zuletzt = oben).
+ * Schluessel wie re15_pri_mask_camera_z: kleinste Kamera-z, die die Maske verdeckt; tri_z >= Schluessel liegt dahinter. */
+#define RE15_PRI_RE2_OT_BUCKET_VZ      (32768.0f / 1023.0f) /* vz-Breite eines RE2-Buckets (otz>>3 @0x80027d60, ZSF3 @0x8008d29c) */
+static inline float re15_pri_mask_camera_z_re2(int depth) {
+    return (float)depth * RE15_PRI_RE2_OT_BUCKET_VZ;
+}
+
 /* Parse a sprite priority section at `data + offset` into out. Returns
  * number of masks parsed (0 if NULL section / parse failure). */
 int re15_pri_parse_section(const uint8_t *data, size_t data_size,
                            uint32_t offset, re15_pri_cut_t *out);
+/* Dasselbe fuer einen RE2-Abschnitt (Groessenfeld @+6: 0 = Rechteck mit Breite/Hoehe, sonst Quadratseite; RE2 FUN_80049b1c
+ * @0x80049c10-48). Runde 41 G5-Auftritt, pri_common.c. */
+int re15_pri_parse_section_re2(const uint8_t *data, size_t data_size,
+                               uint32_t offset, re15_pri_cut_t *out);
 
 /* ------------------------------------------------------------------------
  * NACHGEZEICHNETE MASKEN (Seitendaten-Container "R15M").

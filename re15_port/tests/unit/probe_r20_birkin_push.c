@@ -252,6 +252,7 @@ int main(int argc, char **argv)
      * ================================================================================== */
     int m_bilder = 0, m_raus = 0, m_starts = 0, m_verworfen = 0;
     int32_t m_maxsprung = 0; int32_t m_raus_x = 0, m_raus_z = 0, m_sprung_x = 0, m_sprung_z = 0;
+    int32_t m_maxsprung_arm = 0; int m_arm_bilder = 0;   /* Nachbesserung G5 1: Bilder mit Tentakel-Kind-Kollision (s. unten) */
     int m_flinch_kontakt = 0, m_flinch_schub = 0, m_flips = 0, m_spiegel_falsch = 0;
     if (mess) {
         /* Die Startplaetze werden aus der LEBENDEN Bossposition abgeleitet (Rand von
@@ -334,7 +335,17 @@ int main(int argc, char **argv)
                  *    0x80104F64). Massgeblich ist deshalb die Lage NACH der Klemme. Der Satz "die Klemme des Folgebilds loest es" stand hier
                  *    und war falsch: mit der Vorlage in der Wand hielt sie Leon dort fest (Abnahme 3 N2). Seit Abnahme 3 klemmt der
                  *    Spieler-Schritt nach dem Gegner-Pass nach (re15_player_nachklemme), Riegel: test_r41_birkin_wand. */
-                if (re15_g5_opfer_variante() < 0 && sp > m_maxsprung) { m_maxsprung = sp; m_sprung_x = pl->x; m_sprung_z = pl->z; }
+                /* Nachbesserung G5 1 (Abnahme G5 1 M1/M2): die Kind-Kollision der Arme rechnet seit dem mit den GESTRECKTEN Part-Lagen
+                 * (RE2 parts+264/436/608 tragen scaleX, RE2-RAM s12: |p3-p0| 4833 = 8249*2400/4096). Ein Arm, der sich streckt, faehrt
+                 * seine Segmente (r 800/600) durch den Spieler; jedes Segment schiebt (FUN_80034D0C @0x80034e7c-f00), zusammen bis ~2*1250.
+                 * Das ist kein Koerper-Schub (Titel dieses Riegels); solche Bilder zaehlen getrennt, ihre Landepunkte prueft der
+                 * Begehbarkeits-Riegel (m_raus) wie alle anderen. */
+                {   extern int re15_g5_tentakel_zustand(int, int *, int *, int *, int32_t *, uint16_t *);
+                    int arm = 0;
+                    for (int q = 0; q < 4; q++) { uint16_t ko = 0; if (re15_g5_tentakel_zustand(q, NULL, NULL, NULL, NULL, &ko) == 0 && (ko & 6u)) arm = 1; }
+                    if (arm) { m_arm_bilder++; if (sp > m_maxsprung_arm) m_maxsprung_arm = sp; }
+                    else if (re15_g5_opfer_variante() < 0 && sp > m_maxsprung) { m_maxsprung = sp; m_sprung_x = pl->x; m_sprung_z = pl->z; }
+                }
                 lx = pl->x; lz = pl->z;
                 re15_collision_set_band(0);
                 {
@@ -362,6 +373,7 @@ int main(int argc, char **argv)
         if (m_raus) printf("    erster: (%d,%d)\n", (int)m_raus_x, (int)m_raus_z);
         printf("  groesster Ein-Bild-Weg des Spielers: %d  (nach (%d,%d))\n",
                (int)m_maxsprung, (int)m_sprung_x, (int)m_sprung_z);
+        printf("  davon getrennt: Bilder mit Arm-Kind-Kollision %d, groesster Weg dort %d (Landepunkt: Begehbarkeits-Riegel)" "%c", m_arm_bilder, (int)m_maxsprung_arm, 10);
         printf("  Bilder OHNE Schub-Aufruf (Port ueberspringt den Spieler-Schritt): %d\n",
                m_flinch_kontakt);
         printf("  Bilder mit Treffer-Reaktion UND wirksamem Schub: %d\n", m_flinch_schub);

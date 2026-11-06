@@ -580,7 +580,14 @@ static void abschnitt_bosse(void)
                 const int16_t hp_vor = e->hp;
                 /* Granate liegt `abstand` VOR dem Boss auf dem Boden (Gator-Boss im Wasser y -1200: Steg y 0). */
                 int32_t p[3] = { e->x + abstaende[ai], (b->raum == 0x2090 ? 0 : e->y) - 500, e->z };
-                int n = re15_granate_r35_explosion(p, 0, 2);
+                /* WURFRICHTUNG (Nachbesserung G5 2): die Granate wurde vom Werfer VOR dem Boss auf ihn zu geworfen, also nach -X
+                 * (RE2 Gier 0x800 = Westen, RE2-RAM Abnahme G5 1 s12 "Richtung 2048"). Der Explosionskasten liegt in Wurfrichtung:
+                 * FUN_80041EF8 dreht (Box0, -Box1 - 4*Box3) mit RotMatrix(0, Gier, 0) (`sh a1,162(sp)` @0x80041f44, `jal 0x8008e1f4`
+                 * @0x80041f74), Box @0x80010918 = {-2000, 0, 1000, 500} + r1ee/4. Bis hierher stand Gier 0 = Wurf vom Boss WEG: der
+                 * Kasten reichte von P nur 2000 zurueck. Das traf den G5 nur, solange der Port ihn auf den Spieler drehte (Spieler bei
+                 * +Z -> Richtung 0xC00, Bit 0x400 -> Zentrum (o96, o94) = (0, -2000)). Mit RE2s Richtung 0 (@0x8010044c) liegt sein
+                 * Trefferzentrum bei X - 2000 (+0x94 = -2000 @0x80100534/@0x80100538) und damit hinter P - 2000 -> kein Treffer. */
+                int n = re15_granate_r35_explosion(p, 0x800, 2);
                 const int st_hit = e->state;
                 const int getroffen = (b->raum == 0x5090) ? (e->hp != hp_vor) : (st_hit == 2 || st_hit == 3);
                 int ok_reaktion = 0, verlassen = -1, ende_st = -1;

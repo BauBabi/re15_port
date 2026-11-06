@@ -1,0 +1,98 @@
+== Gegenprobe a: Fix ohne Ctor-Pose-Nachholung (nur M2)
+5090: NB3 Bild  31 s03 w0   3078 (RE2   3078) ph 1 (RE2 1) w1     0 (RE2     0)
+5090: NB3 Bild  80 s04 w0  10296 (RE2  10296) ph 1 (RE2 1) w1     0 (RE2     0)
+5090: NB3 Bild 129 s05 w0   5796 (RE2   5796) ph 2 (RE2 2) w1     0 (RE2   566)
+5090: NB3 Bild 165 s06 w0   -184 (RE2   -184) ph 7 (RE2 7) w1     0 (RE2  2895)
+5090: NB3 Bild 264 s08 w0   9440 (RE2   9440) ph 7 (RE2 7) w1     0 (RE2  2865)
+5090: NB3 Bild 313 s09 w0  -4168 (RE2  -4168) ph 7 (RE2 7) w1     0 (RE2  2865)
+5090: NB3 Bild 479 s13 w0   8000 (RE2   8000) ph 6 (RE2 6) w1     0 (RE2  2865)
+5090: NB3 Bild 677 s17 w0   3152 (RE2   3152) ph 7 (RE2 7) w1     0 (RE2     0)
+FAIL: 5090: NB3 M1 Gewicht 1 nur 3 von 8 Bildern gleich RE2-RAM (Ctor-Basis @0x80101200, Kopplung @0x80101334/@0x8010157c)
+5090: NB3 Zeichner-Vertices Teil 2 Bild 165 gegen RE2-RAM s06: max 1348, Bbox 1350
+FAIL: 5090: NB3 M1 gezeichnete Masse Bild 165 weicht von RE2-RAM s06 um 1348 (Bbox 1350) ab
+5090: NB3 Zeichner-Vertices Teil 2 Bild 313 gegen RE2-RAM s09: max 1334, Bbox 1336
+FAIL: 5090: NB3 M1 gezeichnete Masse Bild 313 weicht von RE2-RAM s09 um 1334 (Bbox 1336) ab
+5090: NB3 Zeichner-Vertices Teil 2 Bild 479 gegen RE2-RAM s13: max 1334, Bbox 1336
+FAIL: 5090: NB3 M1 gezeichnete Masse Bild 479 weicht von RE2-RAM s13 um 1334 (Bbox 1336) ab
+5090: NB3 Zeichner-Vertices Teil 2 Bild 677 gegen RE2-RAM s17: max 1, Bbox 1
+5091: NB3 Bild  31 s03 w0   3078 (RE2   3078) ph 1 (RE2 1) w1     0 (RE2     0)
+5091: NB3 Bild  80 s04 w0  10296 (RE2  10296) ph 1 (RE2 1) w1     0 (RE2     0)
+5091: NB3 Bild 129 s05 w0   5796 (RE2   5796) ph 2 (RE2 2) w1     0 (RE2   566)
+5091: NB3 Bild 165 s06 w0   -184 (RE2   -184) ph 7 (RE2 7) w1     0 (RE2  2895)
+5091: NB3 Bild 264 s08 w0   9440 (RE2   9440) ph 7 (RE2 7) w1     0 (RE2  2865)
+5091: NB3 Bild 313 s09 w0  -4168 (RE2  -4168) ph 7 (RE2 7) w1     0 (RE2  2865)
+5091: NB3 Bild 479 s13 w0   8000 (RE2   8000) ph 6 (RE2 6) w1     0 (RE2  2865)
+5091: NB3 Bild 677 s17 w0   3152 (RE2   3152) ph 7 (RE2 7) w1     0 (RE2     0)
+FAIL: 5091: NB3 M1 Gewicht 1 nur 3 von 8 Bildern gleich RE2-RAM (Ctor-Basis @0x80101200, Kopplung @0x80101334/@0x8010157c)
+5091: NB3 Zeichner-Vertices Teil 2 Bild 165 gegen RE2-RAM s06: max 1348, Bbox 1350
+FAIL: 5091: NB3 M1 gezeichnete Masse Bild 165 weicht von RE2-RAM s06 um 1348 (Bbox 1350) ab
+5091: NB3 Zeichner-Vertices Teil 2 Bild 313 gegen RE2-RAM s09: max 1334, Bbox 1336
+FAIL: 5091: NB3 M1 gezeichnete Masse Bild 313 weicht von RE2-RAM s09 um 1334 (Bbox 1336) ab
+5091: NB3 Zeichner-Vertices Teil 2 Bild 479 gegen RE2-RAM s13: max 1334, Bbox 1336
+FAIL: 5091: NB3 M1 gezeichnete Masse Bild 479 weicht von RE2-RAM s13 um 1334 (Bbox 1336) ab
+5091: NB3 Zeichner-Vertices Teil 2 Bild 677 gegen RE2-RAM s17: max 1, Bbox 1
+test_r41_g5auftritt: 8 Fehler
+== Gegenprobe b: Engine-Stand 77479f1f2 (enemy_ai_boss_g5.c alt + Diagnose-Abfrage)
+5090: NB3 Bild  31 s03 w0    186 (RE2   3078) ph 1 (RE2 1) w1     0 (RE2     0)
+5090: NB3 Bild  80 s04 w0    480 (RE2  10296) ph 1 (RE2 1) w1     0 (RE2     0)
+5090: NB3 Bild 129 s05 w0    774 (RE2   5796) ph 1 (RE2 2) w1     0 (RE2   566)
+5090: NB3 Bild 165 s06 w0    990 (RE2   -184) ph 1 (RE2 7) w1     0 (RE2  2895)
+5090: NB3 Bild 264 s08 w0   1584 (RE2   9440) ph 1 (RE2 7) w1     0 (RE2  2865)
+5090: NB3 Bild 313 s09 w0   1878 (RE2  -4168) ph 1 (RE2 7) w1     0 (RE2  2865)
+5090: NB3 Bild 479 s13 w0   2874 (RE2   8000) ph 1 (RE2 6) w1     0 (RE2  2865)
+5090: NB3 Bild 677 s17 w0   4062 (RE2   3152) ph 1 (RE2 7) w1     0 (RE2     0)
+FAIL: 5090: NB3 M2 Puls-Gewicht 0 / Phase nur 0 von 8 Bildern gleich RE2-RAM (@0x801044FC)
+FAIL: 5090: NB3 M1 Gewicht 1 nur 3 von 8 Bildern gleich RE2-RAM (Ctor-Basis @0x80101200, Kopplung @0x80101334/@0x8010157c)
+5090: NB3 Zeichner-Vertices Teil 2 Bild 165 gegen RE2-RAM s06: max 1348, Bbox 1350
+FAIL: 5090: NB3 M1 gezeichnete Masse Bild 165 weicht von RE2-RAM s06 um 1348 (Bbox 1350) ab
+5090: NB3 Zeichner-Vertices Teil 2 Bild 313 gegen RE2-RAM s09: max 1334, Bbox 1336
+FAIL: 5090: NB3 M1 gezeichnete Masse Bild 313 weicht von RE2-RAM s09 um 1334 (Bbox 1336) ab
+5090: NB3 Zeichner-Vertices Teil 2 Bild 479 gegen RE2-RAM s13: max 1334, Bbox 1336
+FAIL: 5090: NB3 M1 gezeichnete Masse Bild 479 weicht von RE2-RAM s13 um 1334 (Bbox 1336) ab
+5090: NB3 Zeichner-Vertices Teil 2 Bild 677 gegen RE2-RAM s17: max 86, Bbox 1
+FAIL: 5090: NB3 M1 gezeichnete Masse Bild 677 weicht von RE2-RAM s17 um 86 (Bbox 1) ab
+5091: NB3 Bild  31 s03 w0    186 (RE2   3078) ph 1 (RE2 1) w1     0 (RE2     0)
+5091: NB3 Bild  80 s04 w0    480 (RE2  10296) ph 1 (RE2 1) w1     0 (RE2     0)
+5091: NB3 Bild 129 s05 w0    774 (RE2   5796) ph 1 (RE2 2) w1     0 (RE2   566)
+5091: NB3 Bild 165 s06 w0    990 (RE2   -184) ph 1 (RE2 7) w1     0 (RE2  2895)
+5091: NB3 Bild 264 s08 w0   1584 (RE2   9440) ph 1 (RE2 7) w1     0 (RE2  2865)
+5091: NB3 Bild 313 s09 w0   1878 (RE2  -4168) ph 1 (RE2 7) w1     0 (RE2  2865)
+5091: NB3 Bild 479 s13 w0   2874 (RE2   8000) ph 1 (RE2 6) w1     0 (RE2  2865)
+5091: NB3 Bild 677 s17 w0   4062 (RE2   3152) ph 1 (RE2 7) w1     0 (RE2     0)
+FAIL: 5091: NB3 M2 Puls-Gewicht 0 / Phase nur 0 von 8 Bildern gleich RE2-RAM (@0x801044FC)
+FAIL: 5091: NB3 M1 Gewicht 1 nur 3 von 8 Bildern gleich RE2-RAM (Ctor-Basis @0x80101200, Kopplung @0x80101334/@0x8010157c)
+5091: NB3 Zeichner-Vertices Teil 2 Bild 165 gegen RE2-RAM s06: max 1348, Bbox 1350
+FAIL: 5091: NB3 M1 gezeichnete Masse Bild 165 weicht von RE2-RAM s06 um 1348 (Bbox 1350) ab
+5091: NB3 Zeichner-Vertices Teil 2 Bild 313 gegen RE2-RAM s09: max 1334, Bbox 1336
+FAIL: 5091: NB3 M1 gezeichnete Masse Bild 313 weicht von RE2-RAM s09 um 1334 (Bbox 1336) ab
+5091: NB3 Zeichner-Vertices Teil 2 Bild 479 gegen RE2-RAM s13: max 1334, Bbox 1336
+FAIL: 5091: NB3 M1 gezeichnete Masse Bild 479 weicht von RE2-RAM s13 um 1334 (Bbox 1336) ab
+5091: NB3 Zeichner-Vertices Teil 2 Bild 677 gegen RE2-RAM s17: max 86, Bbox 1
+FAIL: 5091: NB3 M1 gezeichnete Masse Bild 677 weicht von RE2-RAM s17 um 86 (Bbox 1) ab
+test_r41_g5auftritt: 12 Fehler
+== mit Fix
+5090: NB3 Bild  31 s03 w0   3078 (RE2   3078) ph 1 (RE2 1) w1     0 (RE2     0)
+5090: NB3 Bild  80 s04 w0  10296 (RE2  10296) ph 1 (RE2 1) w1     0 (RE2     0)
+5090: NB3 Bild 129 s05 w0   5796 (RE2   5796) ph 2 (RE2 2) w1   566 (RE2   566)
+5090: NB3 Bild 165 s06 w0   -184 (RE2   -184) ph 7 (RE2 7) w1  2895 (RE2  2895)
+5090: NB3 Bild 264 s08 w0   9440 (RE2   9440) ph 7 (RE2 7) w1  2865 (RE2  2865)
+5090: NB3 Bild 313 s09 w0  -4168 (RE2  -4168) ph 7 (RE2 7) w1  2865 (RE2  2865)
+5090: NB3 Bild 479 s13 w0   8000 (RE2   8000) ph 6 (RE2 6) w1  2865 (RE2  2865)
+5090: NB3 Bild 677 s17 w0   3152 (RE2   3152) ph 7 (RE2 7) w1     0 (RE2     0)
+5090: NB3 Zeichner-Vertices Teil 2 Bild 165 gegen RE2-RAM s06: max 2, Bbox 1
+5090: NB3 Zeichner-Vertices Teil 2 Bild 313 gegen RE2-RAM s09: max 2, Bbox 1
+5090: NB3 Zeichner-Vertices Teil 2 Bild 479 gegen RE2-RAM s13: max 1, Bbox 1
+5090: NB3 Zeichner-Vertices Teil 2 Bild 677 gegen RE2-RAM s17: max 1, Bbox 1
+5091: NB3 Bild  31 s03 w0   3078 (RE2   3078) ph 1 (RE2 1) w1     0 (RE2     0)
+5091: NB3 Bild  80 s04 w0  10296 (RE2  10296) ph 1 (RE2 1) w1     0 (RE2     0)
+5091: NB3 Bild 129 s05 w0   5796 (RE2   5796) ph 2 (RE2 2) w1   566 (RE2   566)
+5091: NB3 Bild 165 s06 w0   -184 (RE2   -184) ph 7 (RE2 7) w1  2895 (RE2  2895)
+5091: NB3 Bild 264 s08 w0   9440 (RE2   9440) ph 7 (RE2 7) w1  2865 (RE2  2865)
+5091: NB3 Bild 313 s09 w0  -4168 (RE2  -4168) ph 7 (RE2 7) w1  2865 (RE2  2865)
+5091: NB3 Bild 479 s13 w0   8000 (RE2   8000) ph 6 (RE2 6) w1  2865 (RE2  2865)
+5091: NB3 Bild 677 s17 w0   3152 (RE2   3152) ph 7 (RE2 7) w1     0 (RE2     0)
+5091: NB3 Zeichner-Vertices Teil 2 Bild 165 gegen RE2-RAM s06: max 2, Bbox 1
+5091: NB3 Zeichner-Vertices Teil 2 Bild 313 gegen RE2-RAM s09: max 2, Bbox 1
+5091: NB3 Zeichner-Vertices Teil 2 Bild 479 gegen RE2-RAM s13: max 1, Bbox 1
+5091: NB3 Zeichner-Vertices Teil 2 Bild 677 gegen RE2-RAM s17: max 1, Bbox 1
+test_r41_g5auftritt: OK

@@ -46,6 +46,7 @@
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 #include "re15_wassersprung_r41.h" /* Runde 41 Spur A: Lage des NPC-Schritts (FUN_80045a64, Entscheid A-E4) */
+#include "re15_xa.h"               /* Runde 41 G5A (M5): re15_xa_decode_sector_mono fuer RE2-VOICE07-Strecken */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -2423,6 +2424,71 @@ static void re15_voice_play(uint16_t room, int voice_id)
 }
 /* Runde 38 Spur F: Johns Hilferuf ROOM1141 als Sprachzeile ohne Text (synchro main42.wav, dining_r38_pc.c). */
 void re15_audio_stimme(uint16_t room, int voice_id) { re15_voice_play(room, voice_id); }
+
+/* Runde 41 G5-Auftritt (Abnahme 1 M5): RE2 Xa_on (0x59, Handler @0x80058028 -> FUN_800129b4) der Szene room7040 sub06.
+ * RE2 streamt die Strecke von CD: CdlSetfilter(Datei 1, Kanal), CdlReadS ab Start; das Laufwerk liefert jeden 16. Sektor
+ * (8 Kanaele in 16er-Zeilen) an den XA-Dekoder, Stopp bei Lage >= Ende. Der Port liest die vorab geschnittenen Sektoren
+ * DES Kanals (bytegleich VOICE07.XAS, re2_xa_schnitt.py), dekodiert sie mono, kappt auf das Lesefenster und rechnet linear
+ * auf die Geraeterate um wie re15_voice_load_clip - OHNE dessen Pegel-Anhebung (das sind RE2-Bytes, keine Synchro-Aufnahme).
+ * Der Puffer gehoert diesem Modul; s_xa leiht ihn (wie die Sprach-Clips) und wird vor jeder Freigabe unter Sperre geloest. */
+static int16_t *s_re2xa_pcm = NULL;
+void re15_audio_re2_xa_stop(void)
+{
+    if (!g_audio.initialized) return;
+    SDL_LockAudioDevice(s_audio_dev);
+    if (s_re2xa_pcm && s_xa.pcm == s_re2xa_pcm) { s_xa.active = 0; s_xa.pcm = NULL; s_xa.pcm_len = 0; s_xa.pos = 0; }
+    free(s_re2xa_pcm); s_re2xa_pcm = NULL;
+    SDL_UnlockAudioDevice(s_audio_dev);
+}
+int re15_audio_re2_xa(const char *datei, int lesesektoren)
+{
+    if (!g_audio.initialized) return 0;
+    int sz = 0;
+    uint8_t *roh = re15_pc_read_re2(datei, &sz);
+    if (!roh || sz < 2336 || (sz % 2336) != 0) {
+        free(roh);
+        fprintf(stderr, "[re2xa] shared_assets/RE2/%s fehlt oder ist keine 2336-Byte-Sektorfolge -> stumm\n", datei);
+        return 0;
+    }
+    const int sek = sz / 2336;
+    int src_n = sek * 4032;                                   /* 18 Gruppen x 8 Einheiten x 28 Proben */
+    int16_t *src = (int16_t *)malloc((size_t)src_n * sizeof(int16_t));
+    if (!src) { free(roh); return 0; }
+    int hist[2] = { 0, 0 };
+    for (int i = 0; i < sek; i++) {
+        const uint8_t *s = roh + (size_t)i * 2336;
+        if (s[0] != 1 || s[2] != 0x64 || s[3] != 0x00) {      /* Datei 1 (CdlSetfilter, FUN_800129b4), Audio|Form2|RT, mono/37800/4 Bit */
+            fprintf(stderr, "[re2xa] %s Sektor %d: Subheader %02X %02X %02X %02X statt 01 kk 64 00 -> stumm\n",
+                    datei, i, s[0], s[1], s[2], s[3]);
+            free(src); free(roh); return 0;
+        }
+        re15_xa_decode_sector_mono(s + 8, src + (size_t)i * 4032, hist);
+    }
+    free(roh);
+    if (lesesektoren > 0 && (int64_t)lesesektoren * 252 < (int64_t)src_n) src_n = lesesektoren * 252;   /* Stopp @0x80012e3c */
+    const int rate = 37800;                                   /* coding_info 0x00: Bits 2-3 = 0 -> 37800 Hz */
+    int64_t out_n = (int64_t)src_n * s_dev_freq / rate;
+    if (out_n < 1) { free(src); return 0; }
+    int16_t *pcm = (int16_t *)malloc((size_t)out_n * sizeof(int16_t));
+    if (!pcm) { free(src); return 0; }
+    for (int64_t i = 0; i < out_n; i++) {                     /* linear, wie re15_voice_load_clip */
+        int64_t sp = i * (int64_t)rate * 65536 / s_dev_freq;
+        int64_t si = sp >> 16; int frac = (int)(sp & 0xffff);
+        int32_t a = src[si], b2 = src[si + 1 < src_n ? si + 1 : si];
+        pcm[i] = (int16_t)(a + (((b2 - a) * frac) >> 16));
+    }
+    free(src);
+    re15_audio_re2_xa_stop();                                 /* alte Strecke loesen (RE2: ein neues Xa_on setzt den Strom neu) */
+    SDL_LockAudioDevice(s_audio_dev);
+    s_re2xa_pcm = pcm;
+    SDL_UnlockAudioDevice(s_audio_dev);
+    re15_xa_set_filter(1, 0);                                 /* Datei 1; der Kanal steckt im Schnitt (re2_xa_schnitt.py) */
+    s_xa.cd_vol_l = s_xa.cd_vol_r = 0x3FFF;                   /* Xa_vol Standard 120 (0x800d5b50) = CD_VOL 0x3FFF wie re15_xa_init */
+    re15_xa_read_s(pcm, (int)out_n);
+    fprintf(stderr, "[re2xa] %s: %d Sektoren, Lesefenster %d -> %d Proben @37800 -> %ld @%d Hz\n",
+            datei, sek, lesesektoren, src_n, (long)out_n, s_dev_freq);
+    return 1;
+}
 
 /* ── re15_ss implementation: VAB soundfont + SEQp software synth ─────────── */
 

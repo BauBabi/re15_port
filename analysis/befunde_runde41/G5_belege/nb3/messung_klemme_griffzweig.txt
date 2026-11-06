@@ -1,0 +1,41 @@
+Klemmen-Luecke im Griff-Zweig (game_step_common.c), unit_r41_birkin_wand_g5 ROOM5090, Start (2100,-25900), Lage i 14, Spiess-Griff (Variante 3)
+SCA #30: Typ 6 x -425 z -27200 w 5725 d 2000 = Diagonale (-425,-27200)-(5300,-25200), fest unter der Linie
+Stationen: S0 Anfang, S1 Tick, S2 Schub, S3 Klemme, S4 Zweig, S5 nach KI (Griff-Platzierung), S6 Opfer, S7 nach Griff-Zweig + Nachklemme, S8 Ende; Zahl hinter der Lage = fest()+1
+== vorher (Kopf a73316c4f), Sonde RE15_KLEMME_SONDE im Griff-Zweig
+DBG f 29 vor (3099,-25625)0 opfer 3 ph 1 mot 4 af 17 boss x -857 | S0 (3099,-25625)0 S1 (3099,-25625)0 S2 (3170,-25651)0 S3 (3152,-25604)0 S4 (3152,-25604)0 S5 (3064,-26189)31 S6 (3064,-26189)31 S7 (3152,-25604)0 S8 (3152,-25604)0 | nach (3152,-25604)0
+KSONDE griff-schub F0 vorlage (3009,-26098) geschoben (3022,-26104) klemme_ende (3190,-25588)
+KSONDE griff-schub -> (3009,-26098)
+DBG f 30 vor (3152,-25604)0 opfer 3 ph 1 mot 4 af 18 boss x -838 | S0 (3152,-25604)0 S1 (3152,-25604)0 S2 (3204,-25623)0 S3 (3190,-25588)0 S4 (3190,-25588)0 S5 (3009,-26098)31 S6 (3009,-26098)31 S7 (3009,-26098)31 S8 (3009,-26098)31 | nach (3009,-26098)31
+KSONDE griff-schub F0 vorlage (2004,-24887) geschoben (3352,-25302) klemme_ende (3455,-24852)
+KSONDE griff-schub -> (3352,-25302)
+DBG f 31 vor (3009,-26098)31 opfer 3 ph 1 mot 4 af 19 boss x -825 | S0 (3009,-26098)31 S1 (3009,-26098)31 S2 (3455,-24852)0 S3 (3455,-24852)0 S4 (3455,-24852)0 S5 (2004,-24887)0 S6 (2004,-24887)0 S7 (3352,-25302)0 S8 (3352,-25302)0 | nach (3352,-25302)0
+KSONDE griff-schub F0 vorlage (2985,-26127) geschoben (3035,-26150) klemme_ende (3352,-25302)
+KSONDE griff-schub -> (2985,-26127)
+DBG f 32 vor (3352,-25302)0 opfer 3 ph 1 mot 4 af 20 boss x -815 | S0 (3352,-25302)0 S1 (3352,-25302)0 S2 (3352,-25302)0 S3 (3352,-25302)0 S4 (3352,-25302)0 S5 (2985,-26127)31 S6 (2985,-26127)31 S7 (2985,-26127)31 S8 (2985,-26127)31 | nach (2985,-26127)31
+KSONDE griff-schub F0 vorlage (1958,-24770) geschoben (3418,-25189) klemme_ende (3474,-24862)
+KSONDE griff-schub -> (3418,-25189)
+== nachher (Vorlage = s_klemme_ende, +0x118 nach der Nachklemme)
+DBG f 29 vor (3099,-25625)0 opfer 3 ph 1 mot 4 af 17 boss x -857 | S0 (3099,-25625)0 S1 (3099,-25625)0 S2 (3170,-25651)0 S3 (3152,-25604)0 S4 (3152,-25604)0 S5 (3064,-26189)31 S6 (3064,-26189)31 S7 (3152,-25604)0 S8 (3152,-25604)0 | nach (3152,-25604)0
+DBG f 30 vor (3152,-25604)0 opfer 3 ph 1 mot 4 af 18 boss x -838 | S0 (3152,-25604)0 S1 (3152,-25604)0 S2 (3204,-25623)0 S3 (3190,-25588)0 S4 (3190,-25588)0 S5 (3009,-26098)31 S6 (3009,-26098)31 S7 (3190,-25588)0 S8 (3190,-25588)0 | nach (3190,-25588)0
+DBG f 31 vor (3190,-25588)0 opfer 3 ph 1 mot 4 af 19 boss x -825 | S0 (3190,-25588)0 S1 (3190,-25588)0 S2 (3242,-25607)0 S3 (3229,-25573)0 S4 (3229,-25573)0 S5 (3014,-26069)31 S6 (3014,-26069)31 S7 (3229,-25573)0 S8 (3229,-25573)0 | nach (3229,-25573)0
+DBG f 32 vor (3229,-25573)0 opfer 3 ph 1 mot 4 af 20 boss x -815 | S0 (3229,-25573)0 S1 (3229,-25573)0 S2 (3262,-25584)0 S3 (3254,-25563)0 S4 (3254,-25563)0 S5 (3158,-26083)31 S6 (3158,-26083)31 S7 (3254,-25563)0 S8 (3254,-25563)0 | nach (3254,-25563)0
+g5: 424 wandnahe Startlagen
+g5: 424 Faelle, Griff-Bilder 3676, Bildenden in fester Zelle 0 (laengste Folge 0), eingekeilt 0, kleinster Laufweg 332, vom Koerper gedrueckt 5 (laengste Wartezeit 2 Bilder)
+g5: 424 wandnahe Startlagen
+g5: 424 Faelle, Griff-Bilder 3794, Bildenden in fester Zelle 0 (laengste Folge 0), eingekeilt 0, kleinster Laufweg 902, vom Koerper gedrueckt 4 (laengste Wartezeit 41 Bilder)
+== Fuzz ueber Saaten (unit_r41_birkin_wand_g5saat), mit Fix
+g5saat STAGE5/ROOM5090.RDT: 200 Saaten x 5 Lagen x 150 Bilder = 1000 Faelle, Griff-Bilder 38517, Bildenden in fester Zelle 0, Saaten mit Wandbild 0 (erste -1)
+g5saat STAGE5/ROOM5091.RDT: 200 Saaten x 5 Lagen x 150 Bilder = 1000 Faelle, Griff-Bilder 38799, Bildenden in fester Zelle 0, Saaten mit Wandbild 0 (erste -1)
+test_r41_birkin_wand g5saat: OK
+== Gegenprobe ohne den Fix (game_step_common.c auf a73316c4f)
+  STAGE5/ROOM5090.RDT Saat 67: Start (900,-26200) Bild 24 Lage (1087,-26956) Zelle 22 Boss x -1690 Griff 2
+  STAGE5/ROOM5090.RDT Saat 67: Start (900,-26200) Bild 25 Lage (987,-26956) Zelle 22 Boss x -1704 Griff 2
+  STAGE5/ROOM5090.RDT Saat 67: Start (900,-26200) Bild 26 Lage (1009,-26891) Zelle 22 Boss x -1715 Griff 2
+g5saat STAGE5/ROOM5090.RDT: 200 Saaten x 5 Lagen x 150 Bilder = 1000 Faelle, Griff-Bilder 38665, Bildenden in fester Zelle 166, Saaten mit Wandbild 3 (erste 67)
+FAIL: STAGE5/ROOM5090.RDT: 166 Bildenden in fester Zelle in 3 Saaten
+  STAGE5/ROOM5091.RDT Saat 67: Start (900,-26200) Bild 24 Lage (1087,-26956) Zelle 22 Boss x -1690 Griff 2
+  STAGE5/ROOM5091.RDT Saat 67: Start (900,-26200) Bild 25 Lage (987,-26956) Zelle 22 Boss x -1704 Griff 2
+  STAGE5/ROOM5091.RDT Saat 67: Start (900,-26200) Bild 26 Lage (1009,-26891) Zelle 22 Boss x -1715 Griff 2
+g5saat STAGE5/ROOM5091.RDT: 200 Saaten x 5 Lagen x 150 Bilder = 1000 Faelle, Griff-Bilder 38665, Bildenden in fester Zelle 166, Saaten mit Wandbild 3 (erste 67)
+FAIL: STAGE5/ROOM5091.RDT: 166 Bildenden in fester Zelle in 3 Saaten
+test_r41_birkin_wand g5saat: 2 FEHLER

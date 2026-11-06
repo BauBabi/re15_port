@@ -1,0 +1,40 @@
+Abschnitt 0 F 0 .. 250 G5-Zeilen 0
+Abschnitt 1 F 1 .. 3660 G5-Zeilen 2103
+Abschnitt 2 F 0 .. 668 G5-Zeilen 0
+F2774 (+-0.0s) PL 25015,-23570 hp 45 pst 4/0/0 mo 1 cam 12 | G5 st 0/0/0 mo 5 x 1848 hp 600
+F2775 (+0.0s) PL 13873,-23570 hp 45 pst 1/0/0 mo 200 cam 12 | G5 st 0/0/0 mo 5 x 1842 hp 600
+F2884 (+3.6s) PL 13873,-23570 hp 45 pst 1/0/0 mo 210 cam 12 | G5 st 0/0/0 mo 5 x 5178 hp 600
+F2886 (+3.7s) PL 13873,-23570 hp 45 pst 1/0/0 mo 210 cam 12 | G5 st 0/0/0 mo 2 x 5166 hp 600
+F2900 (+4.2s) PL 13873,-23570 hp 45 pst 1/0/0 mo 213 cam 12 | G5 st 0/0/0 mo 2 x 5166 hp 600
+F2972 (+6.6s) PL 13873,-23570 hp 45 pst 1/0/0 mo 213 cam 12 | G5 st 0/0/0 mo 0 x 5166 hp 600
+F2973 (+6.6s) PL 13873,-23570 hp 45 pst 1/0/0 mo 213 cam 12 | G5 st 0/0/0 mo 5 x 5166 hp 600
+F3005 (+7.7s) PL 13972,-23649 hp 45 pst 1/0/0 mo 213 cam 12 | G5 st 0/0/0 mo 5 x 5828 hp 600
+F3006 (+7.7s) PL 14119,-23887 hp 45 pst 1/0/0 mo 213 cam 12 | G5 st 0/0/0 mo 5 x 5841 hp 600
+F3007 (+7.7s) PL 14129,-23963 hp 45 pst 1/0/0 mo 213 cam 13 | G5 st 0/0/0 mo 5 x 5851 hp 600
+F3008 (+7.8s) PL 14351,-23847 hp 45 pst 1/0/0 mo 213 cam 13 | G5 st 0/0/0 mo 5 x 5858 hp 600
+F3009 (+7.8s) PL 14611,-23603 hp 45 pst 1/0/0 mo 213 cam 13 | G5 st 0/0/0 mo 5 x 5861 hp 600
+F3010 (+7.8s) PL 14706,-23398 hp 45 pst 1/0/0 mo 213 cam 13 | G5 st 0/0/0 mo 5 x 5862 hp 600
+F3016 (+8.0s) PL 14843,-23548 hp 45 pst 1/0/0 mo 213 cam 13 | G5 st 0/0/0 mo 5 x 5823 hp 600
+F3017 (+8.1s) PL 14868,-23635 hp 45 pst 1/0/0 mo 213 cam 13 | G5 st 0/0/0 mo 5 x 5814 hp 600
+F3124 (+11.6s) PL 14868,-23635 hp 45 pst 1/0/0 mo 213 cam 13 | G5 st 0/0/0 mo 2 x 9172 hp 600
+F3136 (+12.0s) PL 14868,-23635 hp 25 pst 1/0/0 mo 213 cam 13 | G5 st 0/0/0 mo 2 x 9444 hp 600
+F3137 (+12.1s) PL 15068,-23635 hp 25 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 2 x 9628 hp 600
+F3138 (+12.1s) PL 15218,-23635 hp 25 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 2 x 9844 hp 600
+F3139 (+12.1s) PL 15318,-23635 hp 25 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 2 x 9844 hp 600
+F3140 (+12.2s) PL 15368,-23635 hp 25 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 2 x 9844 hp 600
+F3159 (+12.8s) PL 15368,-23635 hp 25 pst 1/0/0 mo 214 cam 13 | G5 st 0/0/0 mo 2 x 9844 hp 600
+F3210 (+14.5s) PL 15368,-23635 hp 25 pst 1/0/0 mo 214 cam 13 | G5 st 0/0/0 mo 0 x 9844 hp 600
+F3260 (+16.2s) PL 15368,-23635 hp 5 pst 1/0/0 mo 214 cam 13 | G5 st 0/0/0 mo 0 x 10012 hp 600
+F3261 (+16.2s) PL 15568,-23635 hp 5 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 10144 hp 600
+F3262 (+16.2s) PL 15718,-23635 hp 5 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 10308 hp 600
+F3263 (+16.3s) PL 15818,-23635 hp 5 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 10504 hp 600
+F3264 (+16.3s) PL 15939,-23645 hp 5 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 10504 hp 600
+F3283 (+16.9s) PL 15939,-23645 hp 5 pst 1/0/0 mo 214 cam 13 | G5 st 0/0/0 mo 0 x 10504 hp 600
+F3376 (+20.0s) PL 15939,-23645 hp 0 pst 1/0/0 mo 214 cam 13 | G5 st 0/0/0 mo 0 x 10572 hp 600
+F3377 (+20.1s) PL 16139,-23645 hp 0 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 10672 hp 600
+F3378 (+20.1s) PL 16289,-23645 hp 0 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 10804 hp 600
+F3379 (+20.1s) PL 16389,-23645 hp 0 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 10968 hp 600
+F3380 (+20.2s) PL 16439,-23645 hp 0 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 11164 hp 600
+F3381 (+20.2s) PL 16594,-23669 hp 0 pst 1/0/0 mo 8 cam 13 | G5 st 0/0/0 mo 0 x 11164 hp 600
+F3399 (+20.8s) PL 16594,-23669 hp -1 pst 1/0/0 mo 0 cam 13 | G5 st 0/0/0 mo 9 x 11164 hp 600
+F3549 (+25.8s) PL 16594,-23669 hp -1 pst 1/0/0 mo 0 cam 13 | G5 st 0/0/0 mo 2 x 11164 hp 600

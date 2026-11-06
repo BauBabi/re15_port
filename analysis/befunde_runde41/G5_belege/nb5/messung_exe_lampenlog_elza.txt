@@ -1,0 +1,1196 @@
+[g5auftritt] F1558 Raum 5091: Vorlauf, Schnitt 16 (RE2 room7040 Cut 9), Spieler x -3800, Slot 1, Frau -1
+[g5lampe] F1558 Zustand Vorlauf 0 Bild -1: Obj 3 park x -32000, Obj 4 park x -32000, Cut 11, Beben 0
+[g5auftritt] Schnitt 16: Hintergrund RE2/R704_CUT09.BSS rv=0, Masken-Atlas 33312 Byte
+[g5lampe] F1559 Zustand Vorlauf 1 Bild -1: Obj 3 park x -32000, Obj 4 park x -32000, Cut 16, Beben 0
+[g5lampe] F1560 Zustand Vorlauf 2 Bild -1: Obj 3 an x -5000, Obj 4 park x -32000, Cut 16, Beben -3
+[g5lampe] Lampen-Modell geladen: 1 Mesh, TIM-Platz 57
+[g5lampe] F1560 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1561 Zustand Vorlauf 3 Bild -1: Obj 3 an x -6000, Obj 4 park x -32000, Cut 16, Beben -5
+[g5lampe] F1561 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1562 Beben-Ton R704_BEBEN.VBS Satz 0 (ROOM7040 sub04 Se_on @0x016AC)
+[g5lampe] F1562 Zustand Vorlauf 4 Bild -1: Obj 3 an x -7000, Obj 4 park x -32000, Cut 16, Beben -7
+[g5lampe] F1562 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1563 Zustand Vorlauf 5 Bild -1: Obj 3 an x -8000, Obj 4 park x -32000, Cut 16, Beben -7
+[g5lampe] F1563 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1564 Zustand Vorlauf 6 Bild -1: Obj 3 an x -9000, Obj 4 park x -32000, Cut 16, Beben -7
+[g5lampe] F1564 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1565 Zustand Vorlauf 7 Bild -1: Obj 3 an x -10000, Obj 4 park x -32000, Cut 16, Beben -7
+[g5lampe] F1565 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1566 Zustand Vorlauf 8 Bild -1: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben -7
+[g5lampe] F1566 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1566 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1567 Zustand Vorlauf 9 Bild -1: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben -6
+[g5lampe] F1567 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1567 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1568 Zustand Vorlauf 10 Bild -1: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben -5
+[g5lampe] F1568 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1568 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1569 Zustand Vorlauf 11 Bild -1: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben -4
+[g5lampe] F1569 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1569 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1570 Zustand Vorlauf 12 Bild -1: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben -3
+[g5lampe] F1570 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1571 Zustand Vorlauf 13 Bild -1: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben -2
+[g5lampe] F1571 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1572 Zustand Vorlauf 14 Bild -1: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben -1
+[g5lampe] F1572 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1573 Zustand Vorlauf 15 Bild -1: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1573 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1574 Zustand Vorlauf 16 Bild -1: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1574 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1575 Zustand Vorlauf 17 Bild -1: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1575 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1576 Zustand Vorlauf 18 Bild -1: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1576 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1576 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1577 Zustand Vorlauf 19 Bild -1: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1577 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1577 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1578 Zustand Vorlauf 20 Bild -1: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1578 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1578 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1579 Zustand Vorlauf 21 Bild -1: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1579 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1579 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1580 Zustand Vorlauf 22 Bild -1: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1580 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1581 Zustand Vorlauf 23 Bild -1: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1581 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1582 Zustand Vorlauf 24 Bild -1: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1582 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1583 Zustand Vorlauf 25 Bild -1: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1583 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1584 Zustand Vorlauf 26 Bild -1: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1584 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1585 Zustand Vorlauf 27 Bild -1: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1585 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1586 Zustand Vorlauf 28 Bild -1: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1586 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1586 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1587 Zustand Vorlauf 29 Bild -1: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1587 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1587 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1588 Zustand Vorlauf 30 Bild -1: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1588 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1588 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1589 Zustand Vorlauf 31 Bild -1: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1589 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1589 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1590 Zustand Vorlauf 32 Bild -1: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1590 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1591 Zustand Vorlauf 33 Bild -1: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1591 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1592 Zustand Vorlauf 34 Bild -1: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1592 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1593 Zustand Vorlauf 35 Bild -1: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1593 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1594 Zustand Vorlauf 36 Bild -1: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1594 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1595 Zustand Vorlauf 37 Bild -1: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1595 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1596 Zustand Vorlauf 38 Bild -1: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1596 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1596 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1597 Zustand Vorlauf 39 Bild -1: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1597 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1597 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1598 Zustand Vorlauf 40 Bild -1: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1598 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1598 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1599 Zustand Vorlauf 41 Bild -1: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1599 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1599 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1600 Zustand Vorlauf 42 Bild -1: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1600 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1601 Zustand Vorlauf 43 Bild -1: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1601 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1602 Zustand Vorlauf 44 Bild -1: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1602 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1603 Zustand Vorlauf 45 Bild -1: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1603 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1604 Zustand Vorlauf 46 Bild -1: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1604 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1605 Zustand Vorlauf 47 Bild -1: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1605 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1606 Zustand Vorlauf 48 Bild -1: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1606 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1606 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1607 Zustand Vorlauf 49 Bild -1: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1607 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1607 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1608 Zustand Vorlauf 50 Bild -1: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1608 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1608 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1609 Zustand Vorlauf 51 Bild -1: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1609 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1609 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1610 Zustand Vorlauf 52 Bild -1: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1610 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1611 Zustand Vorlauf 53 Bild -1: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1611 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1612 Zustand Vorlauf 54 Bild -1: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1612 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5auftritt] F1613 Raum 5091: Armierung nach 55 Vorlaufbildern, Schnitt 16, Spieler x 1208
+[g5lampe] F1613 Zustand Vorlauf -1 Bild 0: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1613 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1614 Zustand Vorlauf -1 Bild 1: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1614 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1615 Zustand Vorlauf -1 Bild 2: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1615 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1616 Zustand Vorlauf -1 Bild 3: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1616 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1616 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1617 Zustand Vorlauf -1 Bild 4: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1617 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1617 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1618 Zustand Vorlauf -1 Bild 5: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1618 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1618 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1619 Zustand Vorlauf -1 Bild 6: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1619 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1619 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1620 Zustand Vorlauf -1 Bild 7: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1620 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1621 Zustand Vorlauf -1 Bild 8: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1621 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1622 Zustand Vorlauf -1 Bild 9: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1622 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1623 Zustand Vorlauf -1 Bild 10: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1623 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1624 Zustand Vorlauf -1 Bild 11: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1624 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1625 Zustand Vorlauf -1 Bild 12: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1625 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1626 Zustand Vorlauf -1 Bild 13: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1626 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1626 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1627 Zustand Vorlauf -1 Bild 14: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1627 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1627 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1628 Zustand Vorlauf -1 Bild 15: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1628 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1628 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1629 Zustand Vorlauf -1 Bild 16: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1629 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1629 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1630 Zustand Vorlauf -1 Bild 17: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1630 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1631 Zustand Vorlauf -1 Bild 18: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1631 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1632 Zustand Vorlauf -1 Bild 19: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1632 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1633 Zustand Vorlauf -1 Bild 20: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1633 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1634 Zustand Vorlauf -1 Bild 21: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1634 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1635 Zustand Vorlauf -1 Bild 22: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1635 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1636 Zustand Vorlauf -1 Bild 23: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1636 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1636 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1637 Zustand Vorlauf -1 Bild 24: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1637 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1637 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1638 Zustand Vorlauf -1 Bild 25: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1638 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1638 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1639 Zustand Vorlauf -1 Bild 26: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1639 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1639 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1640 Zustand Vorlauf -1 Bild 27: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1640 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1641 Zustand Vorlauf -1 Bild 28: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1641 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1642 Zustand Vorlauf -1 Bild 29: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1642 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1643 Zustand Vorlauf -1 Bild 30: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1643 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1644 Zustand Vorlauf -1 Bild 31: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1644 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1645 Zustand Vorlauf -1 Bild 32: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1645 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1646 Zustand Vorlauf -1 Bild 33: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1646 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1646 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1647 Zustand Vorlauf -1 Bild 34: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1647 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1647 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1648 Zustand Vorlauf -1 Bild 35: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1648 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1648 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1649 Zustand Vorlauf -1 Bild 36: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1649 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1649 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1650 Zustand Vorlauf -1 Bild 37: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1650 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1651 Zustand Vorlauf -1 Bild 38: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1651 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1652 Zustand Vorlauf -1 Bild 39: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1652 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1653 Zustand Vorlauf -1 Bild 40: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1653 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1654 Zustand Vorlauf -1 Bild 41: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1654 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1655 Zustand Vorlauf -1 Bild 42: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1655 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1656 Zustand Vorlauf -1 Bild 43: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1656 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1656 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1657 Zustand Vorlauf -1 Bild 44: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1657 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1657 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1658 Zustand Vorlauf -1 Bild 45: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1658 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1658 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1659 Zustand Vorlauf -1 Bild 46: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1659 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1659 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1660 Zustand Vorlauf -1 Bild 47: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1660 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1661 Zustand Vorlauf -1 Bild 48: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1661 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1662 Zustand Vorlauf -1 Bild 49: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1662 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1663 Zustand Vorlauf -1 Bild 50: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1663 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1664 Zustand Vorlauf -1 Bild 51: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1664 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1665 Zustand Vorlauf -1 Bild 52: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1665 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1666 Zustand Vorlauf -1 Bild 53: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1666 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1666 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1667 Zustand Vorlauf -1 Bild 54: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1667 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1667 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1668 Zustand Vorlauf -1 Bild 55: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1668 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1668 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1669 Zustand Vorlauf -1 Bild 56: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1669 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1669 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1670 Zustand Vorlauf -1 Bild 57: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1670 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1671 Zustand Vorlauf -1 Bild 58: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1671 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1672 Zustand Vorlauf -1 Bild 59: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1672 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1673 Zustand Vorlauf -1 Bild 60: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1673 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1674 Zustand Vorlauf -1 Bild 61: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1674 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1675 Zustand Vorlauf -1 Bild 62: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1675 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1676 Zustand Vorlauf -1 Bild 63: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1676 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1676 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1677 Zustand Vorlauf -1 Bild 64: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1677 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1677 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1678 Zustand Vorlauf -1 Bild 65: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1678 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1678 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1679 Zustand Vorlauf -1 Bild 66: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1679 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1679 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1680 Zustand Vorlauf -1 Bild 67: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1680 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1681 Zustand Vorlauf -1 Bild 68: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1681 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1682 Zustand Vorlauf -1 Bild 69: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1682 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1683 Zustand Vorlauf -1 Bild 70: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1683 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1684 Zustand Vorlauf -1 Bild 71: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1684 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1685 Zustand Vorlauf -1 Bild 72: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1685 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1686 Zustand Vorlauf -1 Bild 73: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1686 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1686 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1687 Zustand Vorlauf -1 Bild 74: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1687 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1687 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1688 Zustand Vorlauf -1 Bild 75: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1688 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1688 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1689 Zustand Vorlauf -1 Bild 76: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1689 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1689 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1690 Zustand Vorlauf -1 Bild 77: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1690 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1691 Zustand Vorlauf -1 Bild 78: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1691 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1692 Zustand Vorlauf -1 Bild 79: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1692 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1693 Zustand Vorlauf -1 Bild 80: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1693 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1694 Zustand Vorlauf -1 Bild 81: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1694 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1695 Zustand Vorlauf -1 Bild 82: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1695 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1696 Zustand Vorlauf -1 Bild 83: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1696 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1696 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1697 Zustand Vorlauf -1 Bild 84: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1697 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1697 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1698 Zustand Vorlauf -1 Bild 85: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1698 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1698 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1699 Zustand Vorlauf -1 Bild 86: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1699 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1699 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1700 Zustand Vorlauf -1 Bild 87: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1700 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1701 Zustand Vorlauf -1 Bild 88: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1701 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1702 Zustand Vorlauf -1 Bild 89: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1702 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1703 Zustand Vorlauf -1 Bild 90: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1703 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1704 Zustand Vorlauf -1 Bild 91: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1704 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1705 Zustand Vorlauf -1 Bild 92: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1705 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1706 Zustand Vorlauf -1 Bild 93: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1706 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1706 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1707 Zustand Vorlauf -1 Bild 94: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1707 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1707 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1708 Zustand Vorlauf -1 Bild 95: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1708 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1708 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1709 Zustand Vorlauf -1 Bild 96: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1709 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1709 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1710 Zustand Vorlauf -1 Bild 97: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1710 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1711 Zustand Vorlauf -1 Bild 98: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1711 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1712 Zustand Vorlauf -1 Bild 99: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1712 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1713 Zustand Vorlauf -1 Bild 100: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1713 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1714 Zustand Vorlauf -1 Bild 101: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1714 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1715 Zustand Vorlauf -1 Bild 102: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1715 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1716 Zustand Vorlauf -1 Bild 103: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1716 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1716 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1717 Zustand Vorlauf -1 Bild 104: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1717 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1717 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1718 Zustand Vorlauf -1 Bild 105: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1718 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1718 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1719 Zustand Vorlauf -1 Bild 106: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1719 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1719 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1720 Zustand Vorlauf -1 Bild 107: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1720 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1721 Zustand Vorlauf -1 Bild 108: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1721 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1722 Zustand Vorlauf -1 Bild 109: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1722 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1723 Zustand Vorlauf -1 Bild 110: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1723 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1724 Zustand Vorlauf -1 Bild 111: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1724 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1725 Zustand Vorlauf -1 Bild 112: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1725 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1726 Zustand Vorlauf -1 Bild 113: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1726 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1726 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1727 Zustand Vorlauf -1 Bild 114: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1727 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1727 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1728 Zustand Vorlauf -1 Bild 115: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1728 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1728 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1729 Zustand Vorlauf -1 Bild 116: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1729 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1729 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1730 Zustand Vorlauf -1 Bild 117: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1730 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1731 Zustand Vorlauf -1 Bild 118: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1731 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1732 Zustand Vorlauf -1 Bild 119: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1732 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1733 Zustand Vorlauf -1 Bild 120: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1733 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1734 Zustand Vorlauf -1 Bild 121: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1734 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1735 Zustand Vorlauf -1 Bild 122: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1735 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1736 Zustand Vorlauf -1 Bild 123: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1736 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1736 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1737 Zustand Vorlauf -1 Bild 124: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1737 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1737 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1738 Zustand Vorlauf -1 Bild 125: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1738 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1738 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1739 Zustand Vorlauf -1 Bild 126: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1739 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1739 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1740 Zustand Vorlauf -1 Bild 127: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1740 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1741 Zustand Vorlauf -1 Bild 128: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1741 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1742 Zustand Vorlauf -1 Bild 129: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1742 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1743 Zustand Vorlauf -1 Bild 130: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1743 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1744 Zustand Vorlauf -1 Bild 131: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1744 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1745 Zustand Vorlauf -1 Bild 132: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1745 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1746 Zustand Vorlauf -1 Bild 133: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1746 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1746 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1747 Zustand Vorlauf -1 Bild 134: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1747 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1747 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1748 Zustand Vorlauf -1 Bild 135: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1748 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1748 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1749 Zustand Vorlauf -1 Bild 136: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1749 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1749 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1750 Zustand Vorlauf -1 Bild 137: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1750 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1751 Zustand Vorlauf -1 Bild 138: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1751 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1752 Zustand Vorlauf -1 Bild 139: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1752 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1753 Zustand Vorlauf -1 Bild 140: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1753 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1754 Zustand Vorlauf -1 Bild 141: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1754 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1755 Zustand Vorlauf -1 Bild 142: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1755 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1756 Zustand Vorlauf -1 Bild 143: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1756 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1756 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1757 Zustand Vorlauf -1 Bild 144: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1757 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1757 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1758 Zustand Vorlauf -1 Bild 145: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1758 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1758 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1759 Zustand Vorlauf -1 Bild 146: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1759 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1759 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1760 Zustand Vorlauf -1 Bild 147: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1760 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1761 Zustand Vorlauf -1 Bild 148: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1761 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1762 Zustand Vorlauf -1 Bild 149: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1762 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1763 Zustand Vorlauf -1 Bild 150: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1763 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1764 Zustand Vorlauf -1 Bild 151: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1764 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1765 Zustand Vorlauf -1 Bild 152: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1765 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1766 Zustand Vorlauf -1 Bild 153: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1766 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1766 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1767 Zustand Vorlauf -1 Bild 154: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1767 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1767 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1768 Zustand Vorlauf -1 Bild 155: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1768 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1768 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1769 Zustand Vorlauf -1 Bild 156: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1769 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1769 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1770 Zustand Vorlauf -1 Bild 157: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1770 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1771 Zustand Vorlauf -1 Bild 158: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1771 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1772 Zustand Vorlauf -1 Bild 159: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1772 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1773 Zustand Vorlauf -1 Bild 160: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1773 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1774 Zustand Vorlauf -1 Bild 161: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1774 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1775 Zustand Vorlauf -1 Bild 162: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1775 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1776 Zustand Vorlauf -1 Bild 163: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1776 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1776 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1777 Zustand Vorlauf -1 Bild 164: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1777 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1777 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1778 Zustand Vorlauf -1 Bild 165: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1778 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1778 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1779 Zustand Vorlauf -1 Bild 166: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1779 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1779 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1780 Zustand Vorlauf -1 Bild 167: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1780 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1781 Zustand Vorlauf -1 Bild 168: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1781 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1782 Zustand Vorlauf -1 Bild 169: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1782 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1783 Zustand Vorlauf -1 Bild 170: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1783 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1784 Zustand Vorlauf -1 Bild 171: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1784 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1785 Zustand Vorlauf -1 Bild 172: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1785 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1786 Zustand Vorlauf -1 Bild 173: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1786 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1786 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1787 Zustand Vorlauf -1 Bild 174: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1787 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1787 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1788 Zustand Vorlauf -1 Bild 175: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1788 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1788 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1789 Zustand Vorlauf -1 Bild 176: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1789 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1789 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1790 Zustand Vorlauf -1 Bild 177: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1790 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1791 Zustand Vorlauf -1 Bild 178: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1791 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1792 Zustand Vorlauf -1 Bild 179: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1792 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1793 Zustand Vorlauf -1 Bild 180: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1793 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1794 Zustand Vorlauf -1 Bild 181: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1794 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1795 Zustand Vorlauf -1 Bild 182: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1795 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1796 Zustand Vorlauf -1 Bild 183: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1796 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1796 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1797 Zustand Vorlauf -1 Bild 184: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1797 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1797 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1798 Zustand Vorlauf -1 Bild 185: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1798 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1798 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1799 Zustand Vorlauf -1 Bild 186: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1799 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1799 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1800 Zustand Vorlauf -1 Bild 187: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1800 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1801 Zustand Vorlauf -1 Bild 188: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1801 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1802 Zustand Vorlauf -1 Bild 189: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1802 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1803 Zustand Vorlauf -1 Bild 190: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1803 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1804 Zustand Vorlauf -1 Bild 191: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1804 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1805 Zustand Vorlauf -1 Bild 192: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1805 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1806 Zustand Vorlauf -1 Bild 193: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1806 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1806 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1807 Zustand Vorlauf -1 Bild 194: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1807 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1807 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1808 Zustand Vorlauf -1 Bild 195: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1808 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1808 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1809 Zustand Vorlauf -1 Bild 196: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1809 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1809 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1810 Zustand Vorlauf -1 Bild 197: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1810 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1811 Zustand Vorlauf -1 Bild 198: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1811 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1812 Zustand Vorlauf -1 Bild 199: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1812 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1813 Zustand Vorlauf -1 Bild 200: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1813 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1814 Zustand Vorlauf -1 Bild 201: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1814 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1815 Zustand Vorlauf -1 Bild 202: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1815 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1816 Zustand Vorlauf -1 Bild 203: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1816 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1816 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1817 Zustand Vorlauf -1 Bild 204: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1817 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1817 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1818 Zustand Vorlauf -1 Bild 205: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1818 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1818 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1819 Zustand Vorlauf -1 Bild 206: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1819 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1819 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1820 Zustand Vorlauf -1 Bild 207: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1820 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1821 Zustand Vorlauf -1 Bild 208: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1821 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1822 Zustand Vorlauf -1 Bild 209: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1822 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1823 Zustand Vorlauf -1 Bild 210: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1823 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1824 Zustand Vorlauf -1 Bild 211: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1824 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1825 Zustand Vorlauf -1 Bild 212: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1825 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1826 Zustand Vorlauf -1 Bild 213: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1826 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1826 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1827 Zustand Vorlauf -1 Bild 214: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1827 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1827 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1828 Zustand Vorlauf -1 Bild 215: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1828 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1828 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1829 Zustand Vorlauf -1 Bild 216: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1829 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1829 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1830 Zustand Vorlauf -1 Bild 217: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1830 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1831 Zustand Vorlauf -1 Bild 218: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1831 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1832 Zustand Vorlauf -1 Bild 219: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1832 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1833 Zustand Vorlauf -1 Bild 220: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1833 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1834 Zustand Vorlauf -1 Bild 221: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1834 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1835 Zustand Vorlauf -1 Bild 222: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1835 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1836 Zustand Vorlauf -1 Bild 223: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1836 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1836 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1837 Zustand Vorlauf -1 Bild 224: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1837 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1837 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1838 Zustand Vorlauf -1 Bild 225: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1838 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1838 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1839 Zustand Vorlauf -1 Bild 226: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1839 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1839 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1840 Zustand Vorlauf -1 Bild 227: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1840 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1841 Zustand Vorlauf -1 Bild 228: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1841 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1842 Zustand Vorlauf -1 Bild 229: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1842 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1843 Zustand Vorlauf -1 Bild 230: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1843 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1844 Zustand Vorlauf -1 Bild 231: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1844 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1845 Zustand Vorlauf -1 Bild 232: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1845 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1846 Zustand Vorlauf -1 Bild 233: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1846 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1846 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1847 Zustand Vorlauf -1 Bild 234: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1847 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1847 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1848 Zustand Vorlauf -1 Bild 235: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1848 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1848 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1849 Zustand Vorlauf -1 Bild 236: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1849 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1849 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1850 Zustand Vorlauf -1 Bild 237: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1850 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1851 Zustand Vorlauf -1 Bild 238: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1851 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1852 Zustand Vorlauf -1 Bild 239: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1852 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1853 Zustand Vorlauf -1 Bild 240: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1853 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1854 Zustand Vorlauf -1 Bild 241: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1854 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1855 Zustand Vorlauf -1 Bild 242: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1855 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1856 Zustand Vorlauf -1 Bild 243: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1856 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1856 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1857 Zustand Vorlauf -1 Bild 244: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1857 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1857 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1858 Zustand Vorlauf -1 Bild 245: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1858 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1858 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1859 Zustand Vorlauf -1 Bild 246: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1859 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1859 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1860 Zustand Vorlauf -1 Bild 247: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1860 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1861 Zustand Vorlauf -1 Bild 248: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1861 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1862 Zustand Vorlauf -1 Bild 249: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1862 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1863 Zustand Vorlauf -1 Bild 250: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1863 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1864 Zustand Vorlauf -1 Bild 251: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1864 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1865 Zustand Vorlauf -1 Bild 252: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1865 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1866 Zustand Vorlauf -1 Bild 253: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1866 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1866 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1867 Zustand Vorlauf -1 Bild 254: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1867 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1867 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1868 Zustand Vorlauf -1 Bild 255: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1868 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1868 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1869 Zustand Vorlauf -1 Bild 256: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1869 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1869 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1870 Zustand Vorlauf -1 Bild 257: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1870 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1871 Zustand Vorlauf -1 Bild 258: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1871 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1872 Zustand Vorlauf -1 Bild 259: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1872 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1873 Zustand Vorlauf -1 Bild 260: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1873 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1874 Zustand Vorlauf -1 Bild 261: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1874 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1875 Zustand Vorlauf -1 Bild 262: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1875 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1876 Zustand Vorlauf -1 Bild 263: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1876 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1876 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1877 Zustand Vorlauf -1 Bild 264: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1877 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1877 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1878 Zustand Vorlauf -1 Bild 265: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1878 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1878 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1879 Zustand Vorlauf -1 Bild 266: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1879 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1879 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1880 Zustand Vorlauf -1 Bild 267: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1880 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1881 Zustand Vorlauf -1 Bild 268: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1881 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1882 Zustand Vorlauf -1 Bild 269: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1882 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1883 Zustand Vorlauf -1 Bild 270: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1883 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1884 Zustand Vorlauf -1 Bild 271: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1884 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1885 Zustand Vorlauf -1 Bild 272: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1885 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1886 Zustand Vorlauf -1 Bild 273: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1886 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1886 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1887 Zustand Vorlauf -1 Bild 274: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1887 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1887 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1888 Zustand Vorlauf -1 Bild 275: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1888 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1888 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1889 Zustand Vorlauf -1 Bild 276: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1889 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1889 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1890 Zustand Vorlauf -1 Bild 277: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1890 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1891 Zustand Vorlauf -1 Bild 278: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1891 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1892 Zustand Vorlauf -1 Bild 279: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1892 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1893 Zustand Vorlauf -1 Bild 280: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1893 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1894 Zustand Vorlauf -1 Bild 281: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1894 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1895 Zustand Vorlauf -1 Bild 282: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1895 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1896 Zustand Vorlauf -1 Bild 283: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1896 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1896 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1897 Zustand Vorlauf -1 Bild 284: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1897 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1897 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1898 Zustand Vorlauf -1 Bild 285: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1898 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1898 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1899 Zustand Vorlauf -1 Bild 286: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1899 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1899 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1900 Zustand Vorlauf -1 Bild 287: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1900 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1901 Zustand Vorlauf -1 Bild 288: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1901 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1902 Zustand Vorlauf -1 Bild 289: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1902 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1903 Zustand Vorlauf -1 Bild 290: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1903 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1904 Zustand Vorlauf -1 Bild 291: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1904 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1905 Zustand Vorlauf -1 Bild 292: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1905 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1906 Zustand Vorlauf -1 Bild 293: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1906 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1906 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1907 Zustand Vorlauf -1 Bild 294: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1907 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1907 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1908 Zustand Vorlauf -1 Bild 295: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1908 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1908 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1909 Zustand Vorlauf -1 Bild 296: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1909 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1909 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1910 Zustand Vorlauf -1 Bild 297: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1910 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1911 Zustand Vorlauf -1 Bild 298: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1911 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1912 Zustand Vorlauf -1 Bild 299: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1912 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1913 Zustand Vorlauf -1 Bild 300: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1913 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1914 Zustand Vorlauf -1 Bild 301: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1914 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1915 Zustand Vorlauf -1 Bild 302: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1915 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1916 Zustand Vorlauf -1 Bild 303: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1916 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1916 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1917 Zustand Vorlauf -1 Bild 304: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1917 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1917 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1918 Zustand Vorlauf -1 Bild 305: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1918 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1918 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1919 Zustand Vorlauf -1 Bild 306: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1919 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1919 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1920 Zustand Vorlauf -1 Bild 307: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1920 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1921 Zustand Vorlauf -1 Bild 308: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1921 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1922 Zustand Vorlauf -1 Bild 309: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1922 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1923 Zustand Vorlauf -1 Bild 310: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1923 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1924 Zustand Vorlauf -1 Bild 311: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1924 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1925 Zustand Vorlauf -1 Bild 312: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1925 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1926 Zustand Vorlauf -1 Bild 313: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1926 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1926 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1927 Zustand Vorlauf -1 Bild 314: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1927 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1927 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1928 Zustand Vorlauf -1 Bild 315: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1928 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1928 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1929 Zustand Vorlauf -1 Bild 316: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1929 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1929 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1930 Zustand Vorlauf -1 Bild 317: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1930 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1931 Zustand Vorlauf -1 Bild 318: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1931 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1932 Zustand Vorlauf -1 Bild 319: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1932 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1933 Zustand Vorlauf -1 Bild 320: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1933 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1934 Zustand Vorlauf -1 Bild 321: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1934 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1935 Zustand Vorlauf -1 Bild 322: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1935 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1936 Zustand Vorlauf -1 Bild 323: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1936 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1936 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1937 Zustand Vorlauf -1 Bild 324: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1937 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1937 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1938 Zustand Vorlauf -1 Bild 325: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1938 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1938 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1939 Zustand Vorlauf -1 Bild 326: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1939 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1939 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1940 Zustand Vorlauf -1 Bild 327: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1940 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1941 Zustand Vorlauf -1 Bild 328: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1941 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1942 Zustand Vorlauf -1 Bild 329: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1942 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1943 Zustand Vorlauf -1 Bild 330: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1943 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1944 Zustand Vorlauf -1 Bild 331: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1944 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1945 Zustand Vorlauf -1 Bild 332: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1945 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1946 Zustand Vorlauf -1 Bild 333: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1946 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1946 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1947 Zustand Vorlauf -1 Bild 334: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1947 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1947 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1948 Zustand Vorlauf -1 Bild 335: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1948 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1948 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1949 Zustand Vorlauf -1 Bild 336: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1949 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1949 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1950 Zustand Vorlauf -1 Bild 337: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1950 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1951 Zustand Vorlauf -1 Bild 338: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1951 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1952 Zustand Vorlauf -1 Bild 339: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1952 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1953 Zustand Vorlauf -1 Bild 340: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1953 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1954 Zustand Vorlauf -1 Bild 341: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1954 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1955 Zustand Vorlauf -1 Bild 342: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1955 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1956 Zustand Vorlauf -1 Bild 343: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1956 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1956 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1957 Zustand Vorlauf -1 Bild 344: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1957 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1957 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1958 Zustand Vorlauf -1 Bild 345: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1958 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1958 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1959 Zustand Vorlauf -1 Bild 346: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1959 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1959 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1960 Zustand Vorlauf -1 Bild 347: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1960 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1961 Zustand Vorlauf -1 Bild 348: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1961 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1962 Zustand Vorlauf -1 Bild 349: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1962 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1963 Zustand Vorlauf -1 Bild 350: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1963 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1964 Zustand Vorlauf -1 Bild 351: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1964 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1965 Zustand Vorlauf -1 Bild 352: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1965 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1966 Zustand Vorlauf -1 Bild 353: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1966 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1966 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1967 Zustand Vorlauf -1 Bild 354: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1967 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1967 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1968 Zustand Vorlauf -1 Bild 355: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1968 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1968 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1969 Zustand Vorlauf -1 Bild 356: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1969 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1969 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1970 Zustand Vorlauf -1 Bild 357: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1970 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1971 Zustand Vorlauf -1 Bild 358: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1971 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1972 Zustand Vorlauf -1 Bild 359: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1972 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1973 Zustand Vorlauf -1 Bild 360: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1973 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1974 Zustand Vorlauf -1 Bild 361: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1974 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1975 Zustand Vorlauf -1 Bild 362: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1975 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1976 Zustand Vorlauf -1 Bild 363: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1976 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1976 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1977 Zustand Vorlauf -1 Bild 364: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1977 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1977 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1978 Zustand Vorlauf -1 Bild 365: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1978 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1978 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1979 Zustand Vorlauf -1 Bild 366: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1979 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1979 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1980 Zustand Vorlauf -1 Bild 367: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F1980 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1981 Zustand Vorlauf -1 Bild 368: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F1981 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1982 Zustand Vorlauf -1 Bild 369: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F1982 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1983 Zustand Vorlauf -1 Bild 370: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F1983 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1984 Zustand Vorlauf -1 Bild 371: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F1984 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1985 Zustand Vorlauf -1 Bild 372: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F1985 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1986 Zustand Vorlauf -1 Bild 373: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F1986 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1986 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1987 Zustand Vorlauf -1 Bild 374: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F1987 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1987 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1988 Zustand Vorlauf -1 Bild 375: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F1988 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1988 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1989 Zustand Vorlauf -1 Bild 376: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F1989 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F1989 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1990 Zustand Vorlauf -1 Bild 377: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F1990 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F1991 Zustand Vorlauf -1 Bild 378: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F1991 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F1992 Zustand Vorlauf -1 Bild 379: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F1992 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F1993 Zustand Vorlauf -1 Bild 380: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F1993 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F1994 Zustand Vorlauf -1 Bild 381: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F1994 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F1995 Zustand Vorlauf -1 Bild 382: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F1995 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F1996 Zustand Vorlauf -1 Bild 383: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F1996 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F1996 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F1997 Zustand Vorlauf -1 Bild 384: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F1997 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F1997 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F1998 Zustand Vorlauf -1 Bild 385: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F1998 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F1998 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F1999 Zustand Vorlauf -1 Bild 386: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F1999 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F1999 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F2000 Zustand Vorlauf -1 Bild 387: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F2000 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F2001 Zustand Vorlauf -1 Bild 388: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F2001 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F2002 Zustand Vorlauf -1 Bild 389: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F2002 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F2003 Zustand Vorlauf -1 Bild 390: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F2003 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F2004 Zustand Vorlauf -1 Bild 391: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F2004 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F2005 Zustand Vorlauf -1 Bild 392: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F2005 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F2006 Zustand Vorlauf -1 Bild 393: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F2006 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F2006 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F2007 Zustand Vorlauf -1 Bild 394: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F2007 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F2007 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F2008 Zustand Vorlauf -1 Bild 395: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F2008 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F2008 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F2009 Zustand Vorlauf -1 Bild 396: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F2009 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F2009 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F2010 Zustand Vorlauf -1 Bild 397: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F2010 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F2011 Zustand Vorlauf -1 Bild 398: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F2011 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F2012 Zustand Vorlauf -1 Bild 399: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F2012 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F2013 Zustand Vorlauf -1 Bild 400: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F2013 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F2014 Zustand Vorlauf -1 Bild 401: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F2014 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F2015 Zustand Vorlauf -1 Bild 402: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F2015 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F2016 Zustand Vorlauf -1 Bild 403: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F2016 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F2016 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F2017 Zustand Vorlauf -1 Bild 404: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F2017 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F2017 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F2018 Zustand Vorlauf -1 Bild 405: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F2018 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F2018 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F2019 Zustand Vorlauf -1 Bild 406: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F2019 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F2019 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F2020 Zustand Vorlauf -1 Bild 407: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F2020 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F2021 Zustand Vorlauf -1 Bild 408: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F2021 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F2022 Zustand Vorlauf -1 Bild 409: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F2022 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F2023 Zustand Vorlauf -1 Bild 410: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F2023 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F2024 Zustand Vorlauf -1 Bild 411: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F2024 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F2025 Zustand Vorlauf -1 Bild 412: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F2025 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F2026 Zustand Vorlauf -1 Bild 413: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F2026 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F2026 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F2027 Zustand Vorlauf -1 Bild 414: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F2027 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F2027 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F2028 Zustand Vorlauf -1 Bild 415: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F2028 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F2028 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F2029 Zustand Vorlauf -1 Bild 416: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F2029 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F2029 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F2030 Zustand Vorlauf -1 Bild 417: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F2030 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F2031 Zustand Vorlauf -1 Bild 418: Obj 3 an x -16000, Obj 4 an x -6000, Cut 16, Beben 0
+[g5lampe] F2031 Obj 4 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F2032 Zustand Vorlauf -1 Bild 419: Obj 3 an x -17000, Obj 4 an x -7000, Cut 16, Beben 0
+[g5lampe] F2032 Obj 4 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F2033 Zustand Vorlauf -1 Bild 420: Obj 3 an x -18000, Obj 4 an x -8000, Cut 16, Beben 0
+[g5lampe] F2033 Obj 4 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F2034 Zustand Vorlauf -1 Bild 421: Obj 3 an x -19000, Obj 4 an x -9000, Cut 16, Beben 0
+[g5lampe] F2034 Obj 4 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F2035 Zustand Vorlauf -1 Bild 422: Obj 3 an x -20000, Obj 4 an x -10000, Cut 16, Beben 0
+[g5lampe] F2035 Obj 4 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F2036 Zustand Vorlauf -1 Bild 423: Obj 3 an x -1000, Obj 4 an x -11000, Cut 16, Beben 0
+[g5lampe] F2036 Obj 3 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F2036 Obj 4 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F2037 Zustand Vorlauf -1 Bild 424: Obj 3 an x -2000, Obj 4 an x -12000, Cut 16, Beben 0
+[g5lampe] F2037 Obj 3 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F2037 Obj 4 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F2038 Zustand Vorlauf -1 Bild 425: Obj 3 an x -3000, Obj 4 an x -13000, Cut 16, Beben 0
+[g5lampe] F2038 Obj 3 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F2038 Obj 4 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F2039 Zustand Vorlauf -1 Bild 426: Obj 3 an x -4000, Obj 4 an x -14000, Cut 16, Beben 0
+[g5lampe] F2039 Obj 3 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F2039 Obj 4 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F2040 Zustand Vorlauf -1 Bild 427: Obj 3 an x -5000, Obj 4 an x -15000, Cut 16, Beben 0
+[g5lampe] F2040 Obj 3 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5lampe] F2041 Zustand Vorlauf -1 Bild 428: Obj 3 an x -6000, Obj 4 an x -16000, Cut 16, Beben 0
+[g5lampe] F2041 Obj 3 x -6000 Cut 16 Kasten=(47..122,90..150) Dreiecke 33
+[g5lampe] F2042 Zustand Vorlauf -1 Bild 429: Obj 3 an x -7000, Obj 4 an x -17000, Cut 16, Beben 0
+[g5lampe] F2042 Obj 3 x -7000 Cut 16 Kasten=(35..107,91..151) Dreiecke 34
+[g5lampe] F2043 Zustand Vorlauf -1 Bild 430: Obj 3 an x -8000, Obj 4 an x -18000, Cut 16, Beben 0
+[g5lampe] F2043 Obj 3 x -8000 Cut 16 Kasten=(23..93,93..151) Dreiecke 34
+[g5lampe] F2044 Zustand Vorlauf -1 Bild 431: Obj 3 an x -9000, Obj 4 an x -19000, Cut 16, Beben 0
+[g5lampe] F2044 Obj 3 x -9000 Cut 16 Kasten=(11..80,95..152) Dreiecke 34
+[g5lampe] F2045 Zustand Vorlauf -1 Bild 432: Obj 3 an x -10000, Obj 4 an x -20000, Cut 16, Beben 0
+[g5lampe] F2045 Obj 3 x -10000 Cut 16 Kasten=(0..67,96..152) Dreiecke 34
+[g5lampe] F2046 Zustand Vorlauf -1 Bild 433: Obj 3 an x -11000, Obj 4 an x -1000, Cut 16, Beben 0
+[g5lampe] F2046 Obj 3 x -11000 Cut 16 Kasten=(-11..55,98..153) Dreiecke 34
+[g5lampe] F2046 Obj 4 x -1000 Cut 16 Kasten=(118..206,80..147) Dreiecke 35
+[g5lampe] F2047 Zustand Vorlauf -1 Bild 434: Obj 3 an x -12000, Obj 4 an x -2000, Cut 16, Beben 0
+[g5lampe] F2047 Obj 3 x -12000 Cut 16 Kasten=(-21..43,99..153) Dreiecke 34
+[g5lampe] F2047 Obj 4 x -2000 Cut 16 Kasten=(103..187,82..148) Dreiecke 34
+[g5lampe] F2048 Zustand Vorlauf -1 Bild 435: Obj 3 an x -13000, Obj 4 an x -3000, Cut 16, Beben 0
+[g5lampe] F2048 Obj 3 x -13000 Cut 16 Kasten=(-31..31,100..153) Dreiecke 34
+[g5lampe] F2048 Obj 4 x -3000 Cut 16 Kasten=(88..169,84..149) Dreiecke 36
+[g5lampe] F2049 Zustand Vorlauf -1 Bild 436: Obj 3 an x -14000, Obj 4 an x -4000, Cut 16, Beben 0
+[g5lampe] F2049 Obj 3 x -14000 Cut 16 Kasten=(-41..20,102..154) Dreiecke 34
+[g5lampe] F2049 Obj 4 x -4000 Cut 16 Kasten=(74..152,86..149) Dreiecke 36
+[g5lampe] F2050 Zustand Vorlauf -1 Bild 437: Obj 3 an x -15000, Obj 4 an x -5000, Cut 16, Beben 0
+[g5lampe] F2050 Obj 4 x -5000 Cut 16 Kasten=(60..137,88..150) Dreiecke 34
+[g5auftritt] Schnitt 17: Hintergrund RE2/R704_CUT10.BSS rv=0, Masken-Atlas 0 Byte
+[g5lampe] F2051 Zustand Vorlauf -1 Bild 438: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2052 Zustand Vorlauf -1 Bild 439: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2053 Zustand Vorlauf -1 Bild 440: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2054 Zustand Vorlauf -1 Bild 441: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2055 Zustand Vorlauf -1 Bild 442: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2056 Zustand Vorlauf -1 Bild 443: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2057 Zustand Vorlauf -1 Bild 444: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2058 Zustand Vorlauf -1 Bild 445: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2059 Zustand Vorlauf -1 Bild 446: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
+[g5lampe] F2060 Zustand Vorlauf -1 Bild 447: Obj 3 park x -32000, Obj 4 park x -32000, Cut 17, Beben 0
