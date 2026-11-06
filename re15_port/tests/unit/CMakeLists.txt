@@ -4119,7 +4119,7 @@ if(TARGET re15_pc)
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
-    # Runde 41 Spur GR NB3: zwei Laeufe zu je hoechstens 600 s (Form 1 600 HP, Riesenform 1000 HP, Endbild 5400).
+    # Runde 41 Spur GR NB3: zwei Laeufe zu je hoechstens 600 s (Form 1 600 HP, Riesenform 1000 HP; Endbild 6500 seit der Integration GR + G5A).
     # G5-Auftritt NB2: 2 Laeufe a 5400 Bilder (900 s); Integration Runde 41: GR-Limit 1300 s, beide Spuren laufen zusammen.
     set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 1300)
     # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
