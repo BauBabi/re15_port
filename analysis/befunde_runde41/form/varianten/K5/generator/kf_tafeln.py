@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""K5c Farbe (Runde 1 und 2): Nutzer-Tafeln 01-07 nach MESSBLATT_FARBE_V1 Abschnitt 7 (roh, kein Gamma auf irgendeine Kachel; Szenenlicht neben dem
+"""K5c Farbe (Runde 1 bis 3): Nutzer-Tafeln 01-07 nach MESSBLATT_FARBE_V1 Abschnitt 7 (roh, kein Gamma auf irgendeine Kachel; Szenenlicht neben dem
 Screenshot; Familienkachel mit gleichem Renderer und Licht; Zahlen L*, C*, L*>85 in der Beschriftung).
 
     python kf_tafeln.py <neu-Ordner> <aus-Ordner> [01 .. 07]     (Name der Variante: Umgebung KF_NAME, Standard 'K5c neu (Farbe Runde 2)')
@@ -110,7 +110,7 @@ def szene(n, neu, aus):
         zeilen.append(H.reihe([cv2.resize(k, (k.shape[1] * 2, k.shape[0] * 2), interpolation=cv2.INTER_NEAREST) for k in ks]))
     t = H.stapel(zeilen)
     kopf = H.kopfzeile('%02d Bild %d: Original | K4 heute | %s. Z.1 Disc-Licht x Kanalfaktor k (pruefung/licht.json, beide gleich), '
-                       'Z.2 + Videofilter. Kein Gamma.' % (n, n, NEU), t.shape[1])
+                       'Z.2 + Videofilter. Kein Gamma. Z.1 ist heller als das echte Spielfenster (Tafel 07), Sicht-Pruefer r2 3.' % (n, n, NEU), t.shape[1])
     cv2.imwrite(aus, H.stapel([kopf, t]))
 
 

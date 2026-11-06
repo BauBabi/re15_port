@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Riegel MESSBLATT_FARBE_V1 Abschnitt 6, alle 24 Zeilen, dazu ab Runde 2 die Befund-Riegel B1-B5 (Pruefung r1) (A1-A12 Atlas, K1-K10 Kette, N1-N2 neutraler Render gegen EM30) an einer Variante.
+"""Riegel MESSBLATT_FARBE_V1 Abschnitt 6, alle 24 Zeilen, dazu ab Runde 2 die Befund-Riegel B1-B5 (Pruefung r1) und ab Runde 3 B6-B9 (Pruefung r2) (A1-A12 Atlas, K1-K10 Kette, N1-N2 neutraler Render gegen EM30) an einer Variante.
 Atlas und Kette: Pruefer-Skript farbe_lesung/P_skripte/p_riegel.py (atlas_riegel, kette_riegel; dieselbe Definition, unveraendert).
 N1/N2: Leser-B-Werkzeug farbe_lesung/B_skripte/render.py (form_buehne.rastern, Licht 0,55 + 0,45 max(0, N.L), weiss, Umkugel 0,46, 3 Winkel, roh,
 EM30 Clip 0 Bild 0, Variante Clip 2 Ruhe Bild 0, Kachel 380 px wie lauf_render.py). Grenzen N1 >= 0,75 x EM30 (live gerechnet), N2 <= 0,10 %.
 
     python riegel_farbe.py <Variantenordner> [--gegenprobe <K5c heute>] [--gegenprobe-r1 <Runde 1>] [--json <aus.json>]
-    python riegel_farbe.py --familie   (B1-B3 an EM30/G5/G4)
+    python riegel_farbe.py --familie   (B1-B3 und B6, B7, B9 an EM30/G5/G4)
+    --gegenprobe-r2 <Runde 2>: die Befund-Riegel B6-B9 muessen dort ROT sein (Runde 3)
 
 Exit 1, wenn ein Riegel der Variante ROT ist, oder wenn die Gegenprobe (z. B. K5c heute) NICHT rot ist (dann misst der Riegel nichts)."""
 import argparse
@@ -116,6 +117,120 @@ def b_riegel(vdir):
     return out
 
 
+# ---------------------------------------------------------------- Runde 3: Riegel B6-B9 zu den Befunden der Pruefung r2 (FARBE_PRUEFUNG_r2_sicht.md P1/P2/P5,
+# FARBE_PRUEFUNG_r2_zahlen.md 6.1-6.3). Grenzen aus der Familie mit demselben Code (python riegel_farbe.py --familie), Zahlen im Dossier FARBE.md 4.
+def _wiederholung(L, u):
+    """Zahlen-Pruefer r2 6.1 (pruef_r2/code/zusatz.py wdh, unveraendert): 6x6-L*-Bloecke (Schritt 3, voll genutzt, Streuung > 3), die einen fast
+    gleichen Doppelgaenger (RMS < 1,5 L*) mehr als 12 Texel entfernt haben. Anteil in %."""
+    import numpy as np
+    B, P = [], []
+    for y in range(0, u.shape[0] - 6, 3):
+        for x in range(0, u.shape[1] - 6, 3):
+            if u[y:y + 6, x:x + 6].all():
+                b = L[y:y + 6, x:x + 6, 0]
+                b = b - b.mean()
+                if b.std() > 3:
+                    B.append(b.ravel())
+                    P.append((x, y))
+    if not B:
+        return 0.0
+    B = np.array(B)
+    P = np.array(P)
+    sq = (B ** 2).sum(1)
+    dup = 0
+    for i in range(len(B)):
+        d = np.sqrt(np.maximum(sq + sq[i] - 2 * B @ B[i], 0) / 36)
+        far = np.abs(P - P[i]).max(1) > 12
+        if (d[far] < 1.5).any():
+            dup += 1
+    return 100.0 * dup / len(B)
+
+
+def _rot_ton_streuung(L):
+    """Zahlen-Pruefer r2 6.2: Standardabweichung des Farbtons der Rottexel (Riegel-A3-Klasse) in Grad."""
+    import numpy as np
+    C = np.hypot(L[:, 1], L[:, 2])
+    h = np.degrees(np.arctan2(L[:, 2], L[:, 1]))
+    rot = (L[:, 1] > 15) & (C > 20) & (h > -40) & (h < 70)
+    return float(h[rot].std()) if rot.sum() > 20 else 0.0
+
+
+def _rot_saum(mo, clip):
+    """Sicht-Pruefer r2 P1 "rote Saeume an den Umrisskanten": Anteil der Rotpixel (wie B1) im Umrissband (Figur minus Erosion 5x5, also die
+    aeusseren 2 Bildpunkte), alle drei Winkel zusammen, in %."""
+    import cv2
+    import numpy as np
+    import fl
+    import render as R
+    rot_n, saum_n = 0, 0
+    for wt, az, el in R.WINKEL:
+        img, msk = R.blick(mo, R.kf(mo, clip), az, el, 380, None)
+        L = np.zeros(img.shape, np.float32)
+        L[msk] = fl.lab(img[msk])
+        C = np.hypot(L[..., 1], L[..., 2])
+        rot = msk & (L[..., 1] > 15) & (C > 20)
+        band = msk & ~cv2.erode(msk.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
+        rot_n += int(rot.sum())
+        saum_n += int((rot & band).sum())
+    return 100.0 * saum_n / max(rot_n, 1)
+
+
+def _atlas_lab(mo, nur_koerper):
+    import numpy as np
+    import p_lade as PL
+    from p_messen import atlas as p_atlas
+    per, _ = PL.sammeln(mo)
+    rgb, mid = p_atlas(mo, per)
+    L = PL.lab(rgb.reshape(-1, 3).astype(np.float32)).reshape(rgb.shape)
+    u = mid >= 0
+    if nur_koerper:
+        u = u & (np.arange(L.shape[1])[None, :] < 384)
+    return L, u
+
+
+# Grenzen (Familie EM30 / G5 / G4, --familie, Lauf 2026-11-06; Werte im Dossier FARBE.md 4):
+B6_MAX = 0.28     # Wiederholung %: groesster Familienwert EM30 0,28 (G5 0,19, G4 0,08); K5c heute 0,24, Runde 2 2,82 (Zahlen-Pruefer r2 6.1: 3,1)
+B7_MIN = 5.8      # Rot-Farbton-Streuung Grad: kleinster Familienwert G5 5,8 (G4 9,4, EM30 13,2); Runde 2 4,5 (Zahlen-Pruefer r2 6.2: 4,6)
+B9_MAX = 11.3     # Rot im Umrissband %: groesster Familienwert EM30 11,3 (G4 7,7, G5 7,3); Runde 2 23,3, Runde 1 18,4 (Sicht-Pruefer r2 P1)
+
+
+def b2_riegel(vdir):
+    import numpy as np
+    import fl
+    import p_lade as PL
+    sys.path.insert(0, HIER)
+    import kf_mal as M1
+    out = {}
+    mv = PL.var(vdir)
+    L, u = _atlas_lab(mv, True)
+    w = _wiederholung(L, u)
+    out['B6 Kachelwiederholung Koerper %'] = (round(w, 2), w <= B6_MAX)
+    st = _rot_ton_streuung(L[u])
+    out['B7 Rot-Farbton-Streuung Koerper Grad'] = (round(st, 1), st >= B7_MIN)
+    # B8: Zaehne im Bild-2-Band sichtbar: Hell-Klasse (L* >= 45, nicht rot) der Kette in der Zone Unterkiefer gegen das Original (22,6 %,
+    # Messblatt 2/3 "Zahnflecken 17,5 %"), Fenster 0,6-1,5-fach wie K4 (Messblatt 6). Runde 2: 0,2 % (Zahlen-Pruefer r2 6.3).
+    import p_zonen as PZ
+    import cv2
+    v = cv2.cvtColor(cv2.imread(PZ.FORM + '/bild2.png'), cv2.COLOR_BGR2RGB)
+    T, clip = PZ.rueck(v, 2)
+    oh = PZ.messe(T, clip, PZ.regionen(2))['Unterkiefer']['kl_p']['H']
+    vh = M1.kette_messen(vdir)[2]['Unterkiefer']['kl_p']['H']
+    out['B8 Bild2 Unterkiefer Hell-Klasse % / Original'] = ((vh, oh), 0.6 * oh <= vh <= 1.5 * oh)
+    sm = _rot_saum(fl.lade_var(vdir), 2)
+    out['B9 Rot im Umrissband % (3 Winkel)'] = (round(sm, 1), sm <= B9_MAX)
+    return out
+
+
+def familie2():
+    import fl
+    sys.path.insert(0, HIER)
+    import kf_tafeln as KT
+    for nm, mo, c in (('EM30', fl.lade_em30(), 0), ('G5', KT.re2_mo(0x36), 0), ('G4', KT.re2_mo(0x34), 0)):
+        L, u = _atlas_lab(mo, False)
+        print(nm, 'B6 Wiederholung %.2f %%  B7 Rot-Farbton-Streuung %.1f Grad  B9 Rot im Umrissband %.1f %%' % (
+            _wiederholung(L, u), _rot_ton_streuung(L[u]), _rot_saum(mo, c)))
+
+
 def familie():
     import fl
     sys.path.insert(0, HIER)
@@ -136,6 +251,8 @@ def messen(vdir):
         res[k] = (v, bool(ok))
     for k, (v, ok) in b_riegel(vdir).items():
         res[k] = (v, bool(ok))
+    for k, (v, ok) in b2_riegel(vdir).items():
+        res[k] = (v, bool(ok))
     return res
 
 
@@ -151,11 +268,13 @@ def drucken(name, res):
 if __name__ == '__main__':
     if '--familie' in sys.argv:
         familie()
+        familie2()
         sys.exit(0)
     a = argparse.ArgumentParser()
     a.add_argument('variante')
     a.add_argument('--gegenprobe', default=None, help='K5c heute: jeder Farbriegel muss dort ROT sein (Halteriegel A10-A12 ausgenommen)')
     a.add_argument('--gegenprobe-r1', default=None, help='Runde 1 (farbe/K5c_farbe_r1): die Befund-Riegel B1-B5 muessen dort ROT sein')
+    a.add_argument('--gegenprobe-r2', default=None, help='Runde 2 (farbe/K5c_farbe_r2): die Befund-Riegel B6-B9 muessen dort ROT sein')
     a.add_argument('--json', default=None)
     x = a.parse_args()
     r = messen(x.variante)
@@ -167,7 +286,7 @@ if __name__ == '__main__':
         gg = drucken('Gegenprobe ' + x.gegenprobe, rg)
         out['gegenprobe'] = {k: dict(wert=str(v), ok=ok) for k, (v, ok) in rg.items()}
         # Ausnahmen laut Messblatt 6 (K5c heute GRUEN): A10 Texeldichte, A11 Schwanz, A12 Farbkorn = Halteriegel.
-        halte = ('A10', 'A11', 'A12')
+        halte = ('A10', 'A11', 'A12', 'B6', 'B7', 'B8', 'B9')
         falsch = [k for k, (_v, ok) in rg.items() if ok and not k.startswith(halte)]
         print('  Gegenprobe K5c heute: %d/%d GRUEN; Farbriegel, die dort NICHT rot sind: %s' % (gg, len(rg), falsch or 'keine'))
         out['gegenprobe_nicht_rot'] = falsch
@@ -183,6 +302,17 @@ if __name__ == '__main__':
         out['gegenprobe_r1'] = {k: dict(wert=str(v), ok=ok) for k, (v, ok) in r1.items()}
         out['gegenprobe_r1_nicht_rot'] = falsch1
         if falsch1:
+            exitcode = 1
+    if x.gegenprobe_r2:
+        r2 = {k: (v, bool(ok)) for k, (v, ok) in b2_riegel(x.gegenprobe_r2).items()}
+        print('== Gegenprobe Runde 2 (nur B6-B9) ' + x.gegenprobe_r2)
+        for k, (v, ok) in r2.items():
+            print('  %-44s %-70s %s' % (k, v, 'GRUEN' if ok else 'ROT'))
+        falsch2 = [k for k, (_v, ok) in r2.items() if ok]
+        print('  Gegenprobe Runde 2: B6-B9, die dort NICHT rot sind: %s' % (falsch2 or 'keine'))
+        out['gegenprobe_r2'] = {k: dict(wert=str(v), ok=ok) for k, (v, ok) in r2.items()}
+        out['gegenprobe_r2_nicht_rot'] = falsch2
+        if falsch2:
             exitcode = 1
     print('EXIT %d' % exitcode)
     if x.json:
