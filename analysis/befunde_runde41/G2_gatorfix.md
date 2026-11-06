@@ -633,3 +633,107 @@ mit dem Aligator mitlaeuft. Ansonsten soll er nicht als Stoerkoerper zaehlen." u
 - Der Kanister haengt in jedem Bild fest am Kiefer bzw. Maul, ohne Versatz, Nachziehen oder Springen, auch beim Wenden, Rueckwaerts, auf der Rampe, beim Rammen und Biss.
 - Zweites Modell nur, wenn die Messung zeigt, dass die Kopplung heute nicht bildgenau ist.
 - Riegel: Bewegung mit = ohne Kanister (Gegenprobe Kanister-Huelle rot); Halterung zu Kieferknochen konstant (Gegenprobe ein Bild alte Pose rot).
+
+## G2-RE2 NB2 (Vorschlag 4)
+Stand 2026-11-06, Zweig r41/gator_re2 ab f942f56c0. Spezifikation = Abschnitt "Nutzerentscheid (Koordinator, 2026-11-03)" oben. Laufordner scratchpad `g2v4/` (nicht im Baum);
+Belege `G2_belege/v4/`: Riegel-Ausgaben `fin_v4*.txt`, `fin_re2*.txt`, `fin_gang*.txt`, exe-Mass `exe_mass.txt`, Bildleisten, Werkzeuge `werkzeug/` (lauf.sh, batch.sh/batch_x.sh,
+mass_v4.py, leiste3.py, kontakt.py). Commits: 4b794e625 (Bau), 77d9a9ebc (Riegel), c06bcfefa (Pause wie ohne Kanister, exe-Riegel mit Partnerlauf), dieser Commit (Belege/Dossier).
+
+### Ursache des Haengens in Zahlen (Stand f942f56c0 = der Kanister zaehlt)
+Gemessen mit dem Riegel re2 (je Lage ein frischer Kampf, 1800 Bilder, Pruefhaken `re15_gr2_v4_alt_setzen(1)`; `fin_re2.txt`) und `werkzeug/mass_v4.py` auf den exe-Laeufen von
+f942f56c0 (exe 15aa14b5, Eingaben der Abnahme 4; `exe_mass.txt`):
+- Laengste Zeit ohne Fortschritt zur Figur: Harness Nordbecken-Ost 55,9 s, NO-Ecke 47,2 s, Leiter 18,7 s; exe frei4_leon 38,5 s, frei4_elza 48,1 s, west4_elza 66,5 s.
+- Drehen auf der Stelle fern der Figur (ganzes 120-Bilder-Fenster Kopf > 4500): Harness Nordbecken-Ost 45 %; exe frei4_leon 13,4 %, frei4_elza 18,2 %, west4_elza 27,8 %.
+- Rueckfall: Harness 10,2 % rueckwaerts und 13 Tauchgaenge in 13 min; exe frei4_leon 17,1 % rueckwaerts, west4_leon 30,3 %, frei4_elza 11 Tauchgaenge in 4,1 min.
+- Mechanismus: die Huelle mit Kanister reicht 4589..4666 vor die Wurzel und 2694 nach links (NB5 M2a, `re15_gr2_huelle_ausdehnung`), der Kopf allein 3236 vor. Kopf-Klemme
+  (`re15_gr2_kopf_klemme`, je Bild bis 340 zurueck), Zielkuerzung (`re15_gr2_kk_ziel`, Trag-Lenkung), Kollisions-Antwort (`re15_gr2_rw_kopf_verletzt`) und Kamera-Grenze
+  nahmen die Bewegung zurueck, die die Verfolgung wollte; an der Plattform-NW-Ecke, im Nordbecken-Ost und an der NO-Ecke hat die Kanister-Huelle keinen Weg zur Figur.
+- Dieselben Lagen mit Vorschlag 4: Harness Nordbecken-Ost 4,3 s, NO-Ecke 1,1 s, Leiter 3,2 s, Drehen fern in jeder Lage 0 %, kein Rueckwaerts, kein Tauchen; exe frei4_leon
+  4,1 s / 1,6 %, frei4_elza 7,4 s / 0 %, west4_elza 7,3 s / 29,8 % (siehe Offen 2).
+
+### Was gebaut wurde (PORT-WAHL Nutzerentscheid; Code-Stellen)
+- `engine/src/gator_re2_r41.c`: `gr2_kan_zaehlt()` = Pruefhaken `s_v4_alt` (Stand f942f56c0). Ohne ihn sehen den getragenen Kanister nicht mehr: Kopf-Klemme
+  `re15_gr2_kopf_klemme` (R1-Tod bleibt), Steuerziel `re15_gr2_kk_ziel`, Trag-Lenkung `gr2_trag_ziel_innen` (Kuerzung, Vorbei-Etappe, Kreis, Bahn), Zonen-Dash-Sperre
+  `re15_gr2_trag_dash_erlaubt`, `re15_gr2_kreuz_anfahrt`, `re15_gr2_rw_umweg`, Kollisions-Antwort `re15_gr2_rw_kopf_verletzt`, Huelle der Notloesung (`gr2_tr_huelle_vorrat`
+  ohne Kanister-Punkte). Die Hysterese-Ruhe beim Tragen (RE2 @0x80100ab8-c8, `re15_gr2_hysterese_ruht`) entfaellt: mit ihr wich die Bewegung mit Kanister in 4956 von
+  8100 Bildern der 9 Wasser-Lagen von der ohne Kanister ab (Messung mit zurueckgenommener Ausnahme). Aufnahme (Stufen 1..6) und T2 bleiben RE2.
+- Halterung unveraendert RE2: der Kanister ist Kind der Part-6-Weltmatrix der GEZEICHNETEN Pose (`gr2_kan_folgen` in `re15_gr2_nachtakt`, RE2 `addiu a0,s0,1104` @0x801018d0 /
+  `sw a0,128(s2)` @0x801018e0); Stufe 7 fuehrt die Lokallage 6 Bilder nach dem Anhaengen heran (@0x80101b58-8c). Messhaken `re15_gr2_kanister_sitz` misst jetzt Lage UND
+  Drehung (debug.log "Kanister-Sitz"), `re15_gr2_kanister_rel`, `re15_gr2_rw_nur_kopf_punkte`; Pruefhaken `re15_gr2_kan_vorbild_setzen`; Messhaken env `RE15_G2_OHNE_KANISTER`
+  (PC: der Kanister verschwindet beim Tragen - dieselbe Eingabe zeigt den Gang ohne Kanister).
+- `engine/src/gator_rw_r41.c`: `re15_gr2_rw_an` (G2-RE2-Bausteine mit dem Kanister als Koerper: Kollisions-Antwort, erweiterte Klemme, Umweg, Vorstoss/Rueckzug,
+  Ueberquerungs-Profil, "keine Belagerung") nur mit dem Pruefhaken; `re15_gr2_rw_traegt` = Rueckfall Rueckwaerts/Tauchen, nur noch aus dem Haenge-Fenster (150 Bilder Kasten
+  < 2500, Kopf > 4500 von der Figur, kein Biss) - das 16-Bilder-Fenster "drueckt sich fest" schlug ohne Kopf-Klemme beim Wenden/Beissen an der Figur an (Harness Mitte-Nord
+  8 % rueckwaerts im Angriff). Ein durch Phasenwechsel unterbrochener Rueckwaerts-Durchgang endet (vorher Rampe-x2318 100 % "rueckwaerts" in der Belagerung).
+- `engine/src/enemy_ai_boss_gator.c`: mit dem Kanister dieselben Zweige wie ohne (Querungsbeginn, Wende, Bogen-Regeln, 600er-Ruhezone, Rampen-Uebergang, Belagerung, Pause
+  nach der Querung 300 statt GB_KREUZ_PAUSE). Rampe ("rammen wie gehabt, keine Deckung"): Belagerung wie ohne Kanister; nach der Pause quert er ueber die Figur (Spur-B-Querung,
+  Rammen in GBP_CROSS wie f942f56c0: `gb_biss_abschluss` -> DAT_8006f418[5] = 50 @0x8006f422 + Niederwurf), wenn das Bahn-Ende den Kopf (5644 vor der Wurzel, NB6 Messung 1)
+  mindestens 2500 vor der Kamera laesst (GR2_RW_KAM_NAH), sonst die Seite wie ohne Kanister. Gemessen (Harness): ohne diese Regel Rampe-x2318 (= Abnahme 4 west5_elza) 3 Treffer
+  in 60 s; Querung auch zur Kamera hin: Kopf < 2500 vor der Kamera in 186-192 Querungs-Bildern je Lage; nur von der Kamera weg ohne Rueckfall auf die Belagerungsseite: 0
+  Querungen, 0 Treffer an x2318/Rampe-Nord. Pause 45 statt 300 (exe west4_leon): Querung alle ~6 s, Kopf < 2500 vor der Kamera 8,2 % gegen 1,5 % ohne Kanister.
+- `platform/pc/src/gator_re2_pc.c`: kein Block-Schnitt (der Kanister/Kopf darf sichtbar in Rampe/Plattform ragen - dokumentiert, nicht versteckt); der angehaengte Kanister
+  wird ohne eigenen Regions-Test gezeichnet - ohne Kopf-Klemme ragt er an den Aussenwaenden ueber das Regions-Viereck (Riegel kopfklemme ohne Pruefhaken: Kanister-Ende bis
+  z -29923, Viereck bis -29000) und waere aus dem Maul verschwunden. exe: "Kanister ausserhalb Regions-Viereck" 0 Zeilen in allen Laeufen.
+
+### Halterung: zweites Modell nicht gebaut (Messung)
+- Harness (Riegel v4 (b), Pose wie der Zeichner im Riegel selbst gerechnet: `g2_pose`/`g2_part_welt`): Leon und Elza je 11 700 getragene Bilder in 13 Lagen (Verfolgung,
+  Wenden, Biss, Belagerung, Querung), Lage-Abweichung max 0, Drehungs-Abweichung max 0 (Q12); Gegenprobe "ein Bild alte Pose" (Pruefhaken): 300 von 300 Bildern abweichend,
+  max 12 281 (rot).
+- exe (debug.log "Kanister-Sitz" = Pose aus dem Ueberblend-Schnappschuss des Zeichners, Lage + Drehung): frei4_leon 7830, frei4_elza 7470, west4_leon 2670, west4_elza 2700,
+  west5_elza 2610 angehaengte Bilder - Abweichung max 0 in jedem Lauf (`exe_mass.txt`).
+- Zweites Modell (Mesh als Kind von Part 6 in einer EMD-Variante) waere dieselbe Rechnung mit festem Sitz, braeuchte Asset + Pin, und der Kanister muesste trotzdem eigenes
+  Objekt bleiben (Trefferziel @0x80101ef4-fc, R1-Scherben, Fall/Liegen vor der Aufnahme, Stufe 7 fuehrt die Lokallage noch 6 Bilder heran). Bei Versatz 0 kein Gewinn.
+
+### Riegel Soll | Ist
+| Riegel | Soll | Ist (Leon = Elza im Harness) | Beleg |
+|---|---|---|---|
+| (a) Bewegung mit = ohne Kanister, Harness | Wasser-Lagen bitgleich; Rampe gleich bis zur Querung | 9 Wasser-Lagen x 900 Bilder: 0 abweichend; Rampe-x4428/Weg-Rampe 0, x2318 ab Bild 769, Rampe-Nord ab 766 (erste Abweichung in Querung/Belagerung); Rueckfall 0 Bilder | fin_v4*.txt |
+| (a) Gegenprobe Kanister-Huelle aktiv (f942f56c0) | rot | 9 von 9 Wasser-Lagen weichen ab (11 697 Bilder) | fin_v4*.txt |
+| (a) exe mit = ohne (Messhaken) | gleich bis Querung/Rammen | frei4_leon 7805 und frei4_elza 7454 Bilder: 0 abweichend; west4_leon erste Abweichung F868 in GUARD (Rammen F880); west5_elza F1934 nach Rammen F1103; west4_elza F1444 nach Rammen F1183 | exe_mass.txt |
+| (b) Halterung | Versatz 0 in allen Bildern | Harness 2 x 11 700 Bilder 0/0; exe 23 280 Bilder max 0 | fin_v4*.txt, exe_mass.txt |
+| (b) Gegenprobe ein Bild alte Pose | rot | 300/300 abweichend, max 12 281 | fin_v4*.txt |
+| (c) ohne Fortschritt SO-Ecke/Rampe | <= 20 s | 10,7 s (alle Lagen max 10,7 s; f942 55,9 s) | fin_re2*.txt |
+| (c) Drehen fern der Figur je Lage | <= 15 % | 0 % in jeder Lage (Gegenprobe f942 Nordbecken-Ost 45 %) | fin_re2*.txt |
+| (c) Kopf < 2500 vor / hinter der Kamera | NB1: <= 8 % / <= 0,1 % | 11,6 % / 2,3 % - ohne Kanister 12,5 % / 2,5 % (Riegel jetzt: mit <= ohne) | fin_re2*.txt |
+| (c) Rampe | Rammen | Treffer in jeder Rampen-Lage; Rammen 5 (in jeder Lage mit Querung); x2318 19 Treffer gegen 3 ohne Kanister; ohne Kanister 0 Rammen | fin_re2*.txt |
+| Rueckfall | Tauchen <= 1/min, < 5 % | Harness 0 Tauchgaenge, 0 % rueckwaerts; exe 0 Tauchgaenge, rueckwaerts nur west4_elza 2,1 % (2 Durchgaenge) | fin_re2*.txt, exe_mass.txt |
+| Gang ohne Kanister = NB5 | bitgleich | 0 von 2700 Bildern abweichend (Leon, Elza) | fin_gang*.txt |
+| Kanister in Rampe/Plattform | entfaellt (Nutzerentscheid) | Harness Kopf 13,3 %, Kopf + Kanister 13,3 % der Bilder (ohne Kanister Kopf 14,4 %); exe Kopf + Kanister 3,6-31,7 % | fin_re2*.txt, exe_mass.txt |
+
+### Bildleisten (gdigrab der eigenen exe-Kopien, Normalhelligkeit, Spalten "NB5 ohne Kanister (Messhaken) | f942f56c0 | neu")
+- `G2_belege/v4/west4_leon_rampe_rammen_t61-95.jpg` (Rammen F880 ~t 63, Querung ueber die Rampe mit dem Kanister am Kiefer ~t 91-93; t 95 Kopf gross vor der Kamera)
+- `G2_belege/v4/west4_leon_wenden_biss_t36-59.jpg` (Wenden und Biss mit dem Kanister im Maul, Kamera Cut 2)
+- `G2_belege/v4/west5_elza_rampe_rammen_t68-98.jpg` (Rammen F1103 / F1864)
+- `G2_belege/v4/frei4_leon_plattform_suedkante_t229-241.jpg` (alter M4-Haenger: NB5 stand bei F5850-F7200 an der Plattform-Suedkante (1055,-21484)..(6,-23043); neu bei der
+  Figur im Nordwesten (-7320,-7099)..(2789,-10613), f942 rueckwaerts im Nordbecken; in Cut 0 sind beide nicht im Bild - die Zahlen stehen hier, weil das Bild es nicht zeigt)
+
+### Tests
+- Neue Riegel: unit_r41_gatorfix_v4 / _v4_elza ((a) + (b) mit Gegenproben). Riegel re2 umgebaut (Kopf-Riegel, Staende f942 / neu / ohne Kanister, je Lage ein frischer Kampf).
+- Riegel, deren Mechanismus nur noch der Pruefhaken hat, laufen mit `re15_gr2_v4_alt_setzen(1)` und je einem Vorschlag-4-Satz: gatorfix klemm/fuzz, alligator2 tragen,
+  re2gator sitz/kopfklemme/aufnahme. Auf f942f56c0 waren re2gator aufnahme und kopfklemme schon rot (eigener Bau von f942f56c0 gemessen): aufnahme hielt die Wurzel je Bild
+  fest und loeste damit den G2-RE2-Rueckfall "drueckt sich fest" aus (Clip 10 statt 0), kopfklemme Bild 9 noch 114 ausserhalb der Wand (jetzt ab Bild 10).
+- exe-Riegel frei/rampe/abn2_*: Partnerlauf mit RE15_G2_OHNE_KANISTER=1 und `test_r41_gatorfix tragvergleich` (gleich bis Querung/Belagerung, Rammen oder Rueckfall;
+  Kanister-Sitz 0); Wandreiben und 2-s-Fenster nur noch Ausgabe. gatorszene tod_explosion: Bildfenster bis F1400 (R1 jetzt F1192 statt F1156).
+- Ursache des Abbruchs bei 57/125 (G2-RE2): kein ctest-Fehler, der Lauf brauchte laenger als die Sitzung (Integrationsriegel 3-12 min je Test, Gruppe 49-59 min bei -j 3).
+  Jetzt im Hintergrund mit Ausgabedatei (scratchpad g2v4/ctest_gruppe*.txt).
+- Gruppe `ctest -R "r41_gatorszene|r41_kanister2080|r41_alligator2|r41_re2gator|r41_gatorfix" -j 3` (PowerShell, C:\msys64\mingw64\bin vorn, SDL_ASSERT=always_ignore),
+  Stand c06bcfefa: **98% tests passed, 3 tests failed out of 127** (3520 s). Die drei (integration_r41_gatorfix_rampe, _rampe_elza, _abn2_wand_elza) wichen vom Lauf ohne
+  Kanister erst mit dem Rueckfall ab: ohne Kanister haengt er dort an der Plattform-Suedkante (rampe: Wurzel ab F2499 150 Bilder in (3459..4747, -23087..-22323), Kopf 6830
+  von der Figur; abn2_wand_elza F4778-F4928 in (2314..4342, -23184..-21690), Kopf 9820), mit Kanister setzt der Rueckfall dort rueckwaerts (F2650 / F4929) - so verlangt
+  (Auftrag Punkt 3). tragvergleich laesst die Abweichung ab dem Rueckfall jetzt zu (dieser Commit). Danach mit diesem Werkzeug-Stand die drei Riegel und alle unit_r41_gatorfix_* (-j 3, ohne andere Last aus diesem Baum): **100% tests passed, 0 tests failed out of 27**. Ausgaben: G2_belege/v4/ctest_gruppe3.txt, ctest_nach.txt.
+
+### Offen
+1. Kopf vor der Kamera: die NB1-Schranke (<= 8 % / <= 0,1 %) gilt fuer den Gang ohne Kanister nicht (12,5 % / 2,5 % im Harness, exe west4_elza 10,4 % / 4,3 %); mit Vorschlag 4
+   bleibt es dabei (11,6 % / 2,3 %). Eine Kamera-Grenze fuer den Kopf muesste auch ohne Kanister gelten (NB5 bitgleich ist verbindlich) - Entscheid des Orchestrators.
+2. Nach einem Rammen laeuft er anders als ohne Kanister weiter (die Figur liegt). exe west4_elza: danach Drehen fern 29,8 %, 103 2-s-Fenster fern der Figur, 2 Rueckwaerts-
+   Durchgaenge (Rueckfall) im Nordbecken-Ost - ohne Kanister (ohne Rammen) 17,4 % / 0. Das Haengen im Nordosten ist damit nicht ganz weg, nur seltener.
+3. RE2-Zonen-Dash: mit Vorschlag 4 dasht er wie ohne Kanister (f942: mit Kanister kein Dash). exe frei4_elza: 209 2-s-Fenster fern der Figur, alle in Phase 12 (RE2-Dash, Clip 2/3
+   Vordrehen) - gleich ohne Kanister (209). Kein Haengen, aber 20 s Vordrehen am Stueck (F3377-F3977).
+4. Gegenueber RE2 entfaellt die Hysterese-Ruhe beim Tragen (@0x80100ab8-c8) - bewusst (Vorschlag 4), Pruefhaken behaelt sie.
+5. Querungsbeginn mit dem Kanister springt wie ohne Kanister (Anlaufpunkt, Riegel alligator2 tragen: Lagesprung bis 1413 je Bild); die Spur-P-Regel O1 gilt nur noch mit dem
+   Pruefhaken.
+6. PSX-Bau nicht gemessen (die geaenderten Pfade sind plattformneutral; Zeichner-Aenderungen nur PC).
+7. Auch ohne Kanister (NB5) haengt er an der Plattform-Suedkante (exe rampe/rampe_elza/abn2_wand_elza: 150 Bilder im Kasten, 6830-9820 von der Figur); mit Kanister greift dort
+   jetzt der Rueckfall (je 1-2 Rueckwaerts-Durchgaenge, kein Tauchen). Das ist der Ort des alten M4-Haengers - die Ursache liegt in der Verfolgung ohne Kanister (NB5).
+8. exe rampe: die Figur kommt (wie ohne Kanister) nicht auf die Rampe, sie wird an der Kante angegriffen ("Klettern sub=9" 0 Zeilen) - der fruehere Riegel "Ueberquerung >= 100
+   Bilder, Rammen >= 1" ist darum nur noch Ausgabe; Rammen auf der Rampe belegen Riegel re2 und die Fensterlaeufe west4_leon / west5_elza.

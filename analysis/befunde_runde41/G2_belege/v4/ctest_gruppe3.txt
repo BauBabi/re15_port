@@ -1,0 +1,314 @@
+﻿Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build
+        Start 1177: integration_r41_gatorfix_frei
+        Start 1178: integration_r41_gatorfix_frei_elza
+        Start 1179: integration_r41_gatorfix_rampe
+  1/127 Test #1179: integration_r41_gatorfix_rampe ....................***Failed  307.25 sec
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:47 (message):
+  r41_gatorfix: Lauf rampe - Vorschlag 4 verfehlt: tragvergleich: 2895 Bilder
+  mit Kanister, 2895 gemeinsame Bilder, abweichend 951, erste Abweichung
+  F2650 (Phase mit 2 / ohne 2, erstes Rammen F-1) - NICHT in
+  Belagerung/Querung und nicht nach einem Rammen; Kanister-Sitz 2910 Bilder,
+  Abweichung max 0
+  (C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_rampe_wd/lauf_e00a5efe)
+Call Stack (most recent call first):
+  C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:148 (g2_fehler)
+
+
+
+        Start 1180: integration_r41_gatorfix_rampe_elza
+  2/127 Test #1177: integration_r41_gatorfix_frei .....................   Passed  646.59 sec
+        Start 1181: integration_r41_gatorfix_abn2_leiterecke
+  3/127 Test #1180: integration_r41_gatorfix_rampe_elza ...............***Failed  343.41 sec
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:47 (message):
+  r41_gatorfix: Lauf rampe_elza - Vorschlag 4 verfehlt: tragvergleich: 2895
+  Bilder mit Kanister, 2895 gemeinsame Bilder, abweichend 951, erste
+  Abweichung F2650 (Phase mit 2 / ohne 2, erstes Rammen F-1) - NICHT in
+  Belagerung/Querung und nicht nach einem Rammen; Kanister-Sitz 2910 Bilder,
+  Abweichung max 0
+  (C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_rampe_elza_wd/lauf_95d052fd)
+Call Stack (most recent call first):
+  C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:148 (g2_fehler)
+
+
+
+        Start 1182: integration_r41_gatorfix_abn2_wand_elza
+  4/127 Test #1178: integration_r41_gatorfix_frei_elza ................   Passed  687.79 sec
+        Start 1183: integration_r41_gatorfix_abn2_nordbecken
+  5/127 Test #1183: integration_r41_gatorfix_abn2_nordbecken ..........   Passed  588.52 sec
+        Start 1184: integration_r41_gatorfix_abn2_rampe_west
+  6/127 Test #1181: integration_r41_gatorfix_abn2_leiterecke ..........   Passed  639.49 sec
+        Start 1185: integration_r41_gatorfix_abn2_rampe_west_elza
+  7/127 Test #1182: integration_r41_gatorfix_abn2_wand_elza ...........***Failed  712.83 sec
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:47 (message):
+  r41_gatorfix: Lauf abn2_wand_elza - Vorschlag 4 verfehlt: tragvergleich:
+  8211 Bilder mit Kanister, 8211 gemeinsame Bilder, abweichend 3472, erste
+  Abweichung F4929 (Phase mit 2 / ohne 2, erstes Rammen F-1) - NICHT in
+  Belagerung/Querung und nicht nach einem Rammen; Kanister-Sitz 8220 Bilder,
+  Abweichung max 0
+  (C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_027254c7)
+Call Stack (most recent call first):
+  C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:148 (g2_fehler)
+
+
+
+        Start 1186: integration_r41_gatorfix_abn2_ecken
+  8/127 Test #1184: integration_r41_gatorfix_abn2_rampe_west ..........   Passed  634.59 sec
+        Start 1206: integration_r41_gatorszene_tod_explosion
+  9/127 Test #1186: integration_r41_gatorfix_abn2_ecken ...............   Passed  598.01 sec
+        Start 1207: integration_r41_gatorszene_tod_explosion_elza
+ 10/127 Test #1206: integration_r41_gatorszene_tod_explosion ..........   Passed   63.24 sec
+        Start 1231: integration_r41_kanister2080_kampf
+ 11/127 Test #1185: integration_r41_gatorfix_abn2_rampe_west_elza .....   Passed  688.32 sec
+        Start 1187: integration_r41_gatorfix_abn2_wand
+ 12/127 Test #1207: integration_r41_gatorszene_tod_explosion_elza .....   Passed   84.26 sec
+        Start 1342: integration_r41_re2gator
+ 13/127 Test #1342: integration_r41_re2gator ..........................   Passed  287.84 sec
+        Start 1145: integration_r41_alligator2_schluessel_elza
+ 14/127 Test #1145: integration_r41_alligator2_schluessel_elza ........   Passed  170.96 sec
+        Start 1146: integration_r41_alligator2_schluessel_west_elza
+ 15/127 Test #1187: integration_r41_gatorfix_abn2_wand ................   Passed  679.20 sec
+        Start 1143: integration_r41_alligator2_tragen_elza
+ 16/127 Test #1146: integration_r41_alligator2_schluessel_west_elza ...   Passed  169.97 sec
+        Start 1142: integration_r41_alligator2_tragen
+ 17/127 Test #1143: integration_r41_alligator2_tragen_elza ............   Passed  161.14 sec
+        Start 1205: integration_r41_gatorszene_tod_r1_elza
+ 18/127 Test #1142: integration_r41_alligator2_tragen .................   Passed  144.11 sec
+        Start 1230: integration_r41_kanister2080
+ 19/127 Test #1230: integration_r41_kanister2080 ......................   Passed  147.35 sec
+        Start 1144: integration_r41_alligator2_schluessel
+ 20/127 Test #1205: integration_r41_gatorszene_tod_r1_elza ............   Passed  153.40 sec
+        Start 1204: integration_r41_gatorszene_tod_r1
+ 21/127 Test #1231: integration_r41_kanister2080_kampf ................   Passed  1069.80 sec
+        Start 1203: integration_r41_gatorszene_tod_elza
+ 22/127 Test #1204: integration_r41_gatorszene_tod_r1 .................   Passed  111.53 sec
+        Start 1141: integration_r41_alligator2_k3_elza
+ 23/127 Test #1144: integration_r41_alligator2_schluessel .............   Passed  129.95 sec
+        Start 1137: integration_r41_alligator2_kamera_elza
+ 24/127 Test #1203: integration_r41_gatorszene_tod_elza ...............   Passed  112.00 sec
+        Start 1139: integration_r41_alligator2_uebergabe_elza
+ 25/127 Test #1141: integration_r41_alligator2_k3_elza ................   Passed   87.23 sec
+        Start 1201: integration_r41_gatorszene_elza
+ 26/127 Test #1137: integration_r41_alligator2_kamera_elza ............   Passed   83.22 sec
+        Start 1209: integration_r41_gatorszene_flucht_elza
+ 27/127 Test #1139: integration_r41_alligator2_uebergabe_elza .........   Passed   87.44 sec
+        Start 1202: integration_r41_gatorszene_tod
+ 28/127 Test #1201: integration_r41_gatorszene_elza ...................   Passed   77.46 sec
+        Start 1138: integration_r41_alligator2_uebergabe
+ 29/127 Test #1209: integration_r41_gatorszene_flucht_elza ............   Passed   78.38 sec
+        Start 1136: integration_r41_alligator2_kamera
+ 30/127 Test #1138: integration_r41_alligator2_uebergabe ..............   Passed   67.63 sec
+        Start 1200: integration_r41_gatorszene_leon
+ 31/127 Test #1202: integration_r41_gatorszene_tod ....................   Passed   71.33 sec
+        Start 1232: integration_r41_kanister2080_raumfremd
+ 32/127 Test #1136: integration_r41_alligator2_kamera .................   Passed   62.86 sec
+        Start 1208: integration_r41_gatorszene_flucht
+ 33/127 Test #1200: integration_r41_gatorszene_leon ...................   Passed   56.48 sec
+        Start 1148: integration_r41_alligator2_finisher_elza
+ 34/127 Test #1232: integration_r41_kanister2080_raumfremd ............   Passed   55.68 sec
+        Start 1174: integration_r41_gatorfix_gang_montage_elza
+ 35/127 Test #1208: integration_r41_gatorszene_flucht .................   Passed   56.95 sec
+        Start 1176: integration_r41_gatorfix_gang_szene_elza
+ 36/127 Test #1174: integration_r41_gatorfix_gang_montage_elza ........   Passed   53.74 sec
+        Start 1140: integration_r41_alligator2_k3
+ 37/127 Test #1148: integration_r41_alligator2_finisher_elza ..........   Passed   56.85 sec
+        Start 1147: integration_r41_alligator2_finisher
+ 38/127 Test #1176: integration_r41_gatorfix_gang_szene_elza ..........   Passed   48.18 sec
+        Start 1173: integration_r41_gatorfix_gang_montage
+ 39/127 Test #1173: integration_r41_gatorfix_gang_montage .............   Passed   33.47 sec
+        Start 1175: integration_r41_gatorfix_gang_szene
+ 40/127 Test #1147: integration_r41_alligator2_finisher ...............   Passed   35.65 sec
+        Start 1166: unit_r41_gatorfix_re2_elza
+ 41/127 Test #1140: integration_r41_alligator2_k3 .....................   Passed   45.30 sec
+        Start 1165: unit_r41_gatorfix_re2
+ 42/127 Test #1166: unit_r41_gatorfix_re2_elza ........................   Passed   17.10 sec
+        Start 1129: unit_r41_alligator2_erreichbar
+ 43/127 Test #1165: unit_r41_gatorfix_re2 .............................   Passed   16.67 sec
+        Start 1172: unit_r41_gatorfix_v4_elza
+ 44/127 Test #1175: integration_r41_gatorfix_gang_szene ...............   Passed   27.82 sec
+        Start 1171: unit_r41_gatorfix_v4
+ 45/127 Test #1129: unit_r41_alligator2_erreichbar ....................   Passed   14.48 sec
+        Start 1127: unit_r41_alligator2_schluessel
+ 46/127 Test #1172: unit_r41_gatorfix_v4_elza .........................   Passed   12.52 sec
+        Start 1161: unit_r41_gatorfix_fuzz
+ 47/127 Test #1171: unit_r41_gatorfix_v4 ..............................   Passed   12.67 sec
+        Start 1162: unit_r41_gatorfix_fuzz_elza
+ 48/127 Test #1127: unit_r41_alligator2_schluessel ....................   Passed   11.96 sec
+        Start 1341: unit_r41_re2gator_buehne
+ 49/127 Test #1161: unit_r41_gatorfix_fuzz ............................   Passed   11.20 sec
+        Start 1128: unit_r41_alligator2_tragen
+ 50/127 Test #1162: unit_r41_gatorfix_fuzz_elza .......................   Passed   11.10 sec
+        Start 1150: unit_r41_gatorfix_maul_elza
+ 51/127 Test #1341: unit_r41_re2gator_buehne ..........................   Passed    7.15 sec
+        Start 1149: unit_r41_gatorfix_maul
+ 52/127 Test #1150: unit_r41_gatorfix_maul_elza .......................   Passed    3.20 sec
+        Start 1135: unit_r41_alligator2_kanister_sitz
+ 53/127 Test #1149: unit_r41_gatorfix_maul ............................   Passed    2.83 sec
+        Start 1340: unit_r41_re2gator_maul
+ 54/127 Test #1128: unit_r41_alligator2_tragen ........................   Passed    5.09 sec
+        Start 1169: unit_r41_gatorfix_gang
+ 55/127 Test #1135: unit_r41_alligator2_kanister_sitz .................   Passed    1.45 sec
+        Start 1170: unit_r41_gatorfix_gang_elza
+ 56/127 Test #1340: unit_r41_re2gator_maul ............................   Passed    1.74 sec
+        Start 1167: unit_r41_gatorfix_re2_gegen
+ 57/127 Test #1169: unit_r41_gatorfix_gang ............................   Passed    1.69 sec
+        Start 1168: unit_r41_gatorfix_re2_gegen_elza
+ 58/127 Test #1170: unit_r41_gatorfix_gang_elza .......................   Passed    1.65 sec
+        Start 1198: unit_r41_gatorszene_abstand
+ 59/127 Test #1167: unit_r41_gatorfix_re2_gegen .......................   Passed    1.09 sec
+        Start 1125: unit_r41_alligator2_kamera
+ 60/127 Test #1198: unit_r41_gatorszene_abstand .......................   Passed    0.91 sec
+        Start 1199: unit_r41_gatorszene_abstand_elza
+ 61/127 Test #1168: unit_r41_gatorfix_re2_gegen_elza ..................   Passed    1.22 sec
+        Start 1126: unit_r41_alligator2_kamera_elza
+ 62/127 Test #1125: unit_r41_alligator2_kamera ........................   Passed    1.00 sec
+        Start 1155: unit_r41_gatorfix_marvin
+ 63/127 Test #1199: unit_r41_gatorszene_abstand_elza ..................   Passed    0.79 sec
+        Start 1156: unit_r41_gatorfix_marvin_elza
+ 64/127 Test #1126: unit_r41_alligator2_kamera_elza ...................   Passed    0.80 sec
+        Start 1130: unit_r41_alligator2_weg
+ 65/127 Test #1155: unit_r41_gatorfix_marvin ..........................   Passed    0.47 sec
+        Start 1152: unit_r41_gatorfix_wurf_elza
+ 66/127 Test #1130: unit_r41_alligator2_weg ...........................   Passed    0.42 sec
+        Start 1151: unit_r41_gatorfix_wurf
+ 67/127 Test #1156: unit_r41_gatorfix_marvin_elza .....................   Passed    0.48 sec
+        Start 1222: unit_r41_kanister2080_anschwimmen
+ 68/127 Test #1152: unit_r41_gatorfix_wurf_elza .......................   Passed    0.40 sec
+        Start 1159: unit_r41_gatorfix_klemm
+ 69/127 Test #1151: unit_r41_gatorfix_wurf ............................   Passed    0.32 sec
+        Start 1160: unit_r41_gatorfix_klemm_elza
+ 70/127 Test #1222: unit_r41_kanister2080_anschwimmen .................   Passed    0.32 sec
+        Start 1131: unit_r41_alligator2_koerper
+ 71/127 Test #1159: unit_r41_gatorfix_klemm ...........................   Passed    0.28 sec
+        Start 1132: unit_r41_alligator2_finisher
+ 72/127 Test #1131: unit_r41_alligator2_koerper .......................   Passed    0.22 sec
+        Start 1194: unit_r41_gatorszene_tod
+ 73/127 Test #1160: unit_r41_gatorfix_klemm_elza ......................   Passed    0.28 sec
+        Start 1196: unit_r41_gatorszene_szene
+ 74/127 Test #1132: unit_r41_alligator2_finisher ......................   Passed    0.20 sec
+        Start 1197: unit_r41_gatorszene_szene_elza
+ 75/127 Test #1194: unit_r41_gatorszene_tod ...........................   Passed    0.23 sec
+        Start 1134: unit_r41_alligator2_leiche_elza
+ 76/127 Test #1197: unit_r41_gatorszene_szene_elza ....................   Passed    0.20 sec
+        Start 1133: unit_r41_alligator2_leiche
+ 77/127 Test #1196: unit_r41_gatorszene_szene .........................   Passed    0.22 sec
+        Start 1195: unit_r41_gatorszene_tod_explosion
+ 78/127 Test #1134: unit_r41_alligator2_leiche_elza ...................   Passed    0.15 sec
+        Start 1337: unit_r41_re2gator_anschwimmen
+ 79/127 Test #1195: unit_r41_gatorszene_tod_explosion .................   Passed    0.12 sec
+        Start 1164: unit_r41_gatorfix_haken_elza
+ 80/127 Test #1133: unit_r41_alligator2_leiche ........................   Passed    0.17 sec
+        Start 1163: unit_r41_gatorfix_haken
+ 81/127 Test #1337: unit_r41_re2gator_anschwimmen .....................   Passed    0.16 sec
+        Start 1216: unit_r41_kanister2080_ebene
+ 82/127 Test #1164: unit_r41_gatorfix_haken_elza ......................   Passed    0.16 sec
+        Start 1339: unit_r41_re2gator_gier
+ 83/127 Test #1163: unit_r41_gatorfix_haken ...........................   Passed    0.17 sec
+        Start 1336: unit_r41_re2gator_schleppen
+ 84/127 Test #1339: unit_r41_re2gator_gier ............................   Passed    0.08 sec
+        Start 1332: unit_r41_re2gator_wand
+ 85/127 Test #1336: unit_r41_re2gator_schleppen .......................   Passed    0.07 sec
+        Start 1333: unit_r41_re2gator_kamera
+ 86/127 Test #1216: unit_r41_kanister2080_ebene .......................   Passed    0.15 sec
+        Start 1338: unit_r41_re2gator_sitz
+ 87/127 Test #1332: unit_r41_re2gator_wand ............................   Passed    0.07 sec
+        Start 1192: unit_r41_gatorszene_tor
+ 88/127 Test #1333: unit_r41_re2gator_kamera ..........................   Passed    0.08 sec
+        Start 1153: unit_r41_gatorfix_montage
+ 89/127 Test #1338: unit_r41_re2gator_sitz ............................   Passed    0.08 sec
+        Start 1154: unit_r41_gatorfix_montage_elza
+ 90/127 Test #1192: unit_r41_gatorszene_tor ...........................   Passed    0.07 sec
+        Start 1331: unit_r41_re2gator_putz
+ 91/127 Test #1153: unit_r41_gatorfix_montage .........................   Passed    0.05 sec
+        Start 1326: unit_r41_re2gator_dash
+ 92/127 Test #1154: unit_r41_gatorfix_montage_elza ....................   Passed    0.05 sec
+        Start 1327: unit_r41_re2gator_intro
+ 93/127 Test #1331: unit_r41_re2gator_putz ............................   Passed    0.05 sec
+        Start 1335: unit_r41_re2gator_lauer
+ 94/127 Test #1327: unit_r41_re2gator_intro ...........................   Passed    0.04 sec
+        Start 1328: unit_r41_re2gator_sockel
+ 95/127 Test #1326: unit_r41_re2gator_dash ............................   Passed    0.06 sec
+        Start 1325: unit_r41_re2gator_clips
+ 96/127 Test #1335: unit_r41_re2gator_lauer ...........................   Passed    0.04 sec
+        Start 1334: unit_r41_re2gator_aufnahme
+ 97/127 Test #1325: unit_r41_re2gator_clips ...........................   Passed    0.03 sec
+        Start 1193: unit_r41_gatorszene_schluessel
+ 98/127 Test #1328: unit_r41_re2gator_sockel ..........................   Passed    0.04 sec
+        Start 1158: unit_r41_gatorfix_schluessel_elza
+ 99/127 Test #1334: unit_r41_re2gator_aufnahme ........................   Passed    0.05 sec
+        Start 1157: unit_r41_gatorfix_schluessel
+100/127 Test #1193: unit_r41_gatorszene_schluessel ....................   Passed    0.04 sec
+        Start 1329: unit_r41_re2gator_kanister
+101/127 Test #1158: unit_r41_gatorfix_schluessel_elza .................   Passed    0.04 sec
+        Start 1188: unit_r41_gatorszene_spinnen
+102/127 Test #1157: unit_r41_gatorfix_schluessel ......................   Passed    0.04 sec
+        Start 1190: unit_r41_gatorszene_leiche
+103/127 Test #1329: unit_r41_re2gator_kanister ........................   Passed    0.03 sec
+        Start 1228: unit_r41_kanister2080_scherben
+104/127 Test #1188: unit_r41_gatorszene_spinnen .......................   Passed    0.03 sec
+        Start 1330: unit_r41_re2gator_kiefer
+105/127 Test #1190: unit_r41_gatorszene_leiche ........................   Passed    0.02 sec
+        Start 1229: unit_r41_kanister2080_kopfklemme
+106/127 Test #1228: unit_r41_kanister2080_scherben ....................   Passed    0.02 sec
+        Start 1221: unit_r41_kanister2080_r1wahl
+107/127 Test #1330: unit_r41_re2gator_kiefer ..........................   Passed    0.02 sec
+        Start 1225: unit_r41_kanister2080_fx_op41
+108/127 Test #1221: unit_r41_kanister2080_r1wahl ......................   Passed    0.01 sec
+        Start 1223: unit_r41_kanister2080_fx_register
+109/127 Test #1229: unit_r41_kanister2080_kopfklemme ..................   Passed    0.03 sec
+110/127 Test #1225: unit_r41_kanister2080_fx_op41 .....................   Passed    0.02 sec
+        Start 1211: unit_r41_kanister2080_spawn
+        Start 1227: unit_r41_kanister2080_fx_op37_78
+111/127 Test #1223: unit_r41_kanister2080_fx_register .................   Passed    0.02 sec
+        Start 1217: unit_r41_kanister2080_landung
+112/127 Test #1211: unit_r41_kanister2080_spawn .......................   Passed    0.02 sec
+        Start 1191: unit_r41_gatorszene_texte
+113/127 Test #1227: unit_r41_kanister2080_fx_op37_78 ..................   Passed    0.02 sec
+        Start 1220: unit_r41_kanister2080_blick
+114/127 Test #1217: unit_r41_kanister2080_landung .....................   Passed    0.02 sec
+        Start 1215: unit_r41_kanister2080_texte
+115/127 Test #1191: unit_r41_gatorszene_texte .........................   Passed    0.01 sec
+        Start 1210: unit_r41_kanister2080_lage
+116/127 Test #1220: unit_r41_kanister2080_blick .......................   Passed    0.02 sec
+        Start 1189: unit_r41_gatorszene_programme
+117/127 Test #1215: unit_r41_kanister2080_texte .......................   Passed    0.02 sec
+        Start 1324: unit_r41_re2gator_modell
+118/127 Test #1210: unit_r41_kanister2080_lage ........................   Passed    0.02 sec
+        Start 1212: unit_r41_kanister2080_szene
+119/127 Test #1189: unit_r41_gatorszene_programme .....................   Passed    0.02 sec
+        Start 1219: unit_r41_kanister2080_hals
+120/127 Test #1324: unit_r41_re2gator_modell ..........................   Passed    0.01 sec
+        Start 1226: unit_r41_kanister2080_fx_op4_6
+121/127 Test #1212: unit_r41_kanister2080_szene .......................   Passed    0.01 sec
+        Start 1224: unit_r41_kanister2080_fx_op69
+122/127 Test #1219: unit_r41_kanister2080_hals ........................   Passed    0.02 sec
+        Start 1218: unit_r41_kanister2080_kippen
+123/127 Test #1226: unit_r41_kanister2080_fx_op4_6 ....................   Passed    0.02 sec
+        Start 1214: unit_r41_kanister2080_bahn
+124/127 Test #1224: unit_r41_kanister2080_fx_op69 .....................   Passed    0.02 sec
+        Start 1213: unit_r41_kanister2080_start
+125/127 Test #1218: unit_r41_kanister2080_kippen ......................   Passed    0.02 sec
+126/127 Test #1214: unit_r41_kanister2080_bahn ........................   Passed    0.01 sec
+127/127 Test #1213: unit_r41_kanister2080_start .......................   Passed    0.01 sec
+
+98% tests passed, 3 tests failed out of 127
+
+Total Test time (real) = 3520.79 sec
+
+The following tests FAILED:
+	1179 - integration_r41_gatorfix_rampe (Failed)
+	1180 - integration_r41_gatorfix_rampe_elza (Failed)
+	1182 - integration_r41_gatorfix_abn2_wand_elza (Failed)
+ctest : Errors while running CTest
+In Zeile:1 Zeichen:613
++ ... = Get-Date; ctest -R "r41_gatorszene|r41_kanister2080|r41_alligator2| ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Errors while running CTest:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Dauer: 3520.9306697
