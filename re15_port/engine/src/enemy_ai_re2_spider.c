@@ -72,8 +72,10 @@
  *     Kette 0x8008E1F4/0x8002CE94/0x8008D2F4) hat keinen Port-Kanal (der Port hat keine
  *     per-Bone-Weltmatrix im AI-Tick) -> der Root-Motion-Anteil ist 0, der Tabellen-Anteil
  *     (Speed 100/60/20) laeuft byte-true. Das ist EINE dokumentierte Luecke, kein Ersatzwert.
- *   - OPEN: word0-Bits aus FUN_80106200 (@0x80106200-B8) und FUN_80104DE8 sind Render-/
- *     Draw-Bits ohne Port-Kanal -> nicht modelliert (kein Konsument im Modul).
+ *   - OPEN: word0-Bits aus FUN_80106200 (@0x80106200-B8) und FUN_80104DE8 [0]/[1] (Schatten
+ *     verbergen, word0 0x400 @0x80104e28-64) sind Render-/Draw-Bits ohne Port-Kanal -> nicht
+ *     modelliert (kein Konsument im Modul). FUN_80104DE8 [2]/[3]/[4] (Lache der Leiche) ist seit
+ *     Runde 41 Spur S Nachbesserung 2 gebaut: re15_spinnenlache_re2_boden (spinnenlache_r41.c).
  *   - Rumble 0x8003947C/0x80039514 (@0x80105B44/54): Pad-Aktuator, im Port nicht vorhanden.
  */
 
@@ -90,6 +92,8 @@
 #include "re15_aot.h"        /* re15_aot_water_at (== FUN_800527B4, Wasser-Pull) */
 #include "re15_math.h"      /* re15_squareroot0 (== SquareRoot0 0x8008D2F4) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Spucken (Effekt 0x0d) + RE2-Spieler-Radius 450 */
+#include "re15_spinnengore_r41.h" /* Runde 41 Spur S: RE1.5-Platzen im RE2-Gehirn */
+#include "re15_spinnenlache_r41.h" /* Runde 41 Spur S, Nachbesserung 2: Lache der Leiche, Fleck des Babys */
 
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
 
@@ -1757,6 +1761,34 @@ static void re2s_gore(re15_actor_t *e)
                          e->x, e->y, e->z, (int16_t)e->rot_y);
 }
 
+/* ---- Die BLUT-Records 0, 1 und 3 von FUN_801056DC (Runde 41 Spur S, Nachbesserung 1) -------------------------------
+ * FUN_801056DC baut a0 = (rec[0] & 0x7f) << 24 | rec[1] << 16 | u16 rec[4] (@0x80105860-878) und ruft FUN_8001bf10
+ * (@0x80105874). Die Records @0x80106684 (6 Byte, EMS25.BIN selbst gelesen):
+ *   Record 0 = 00 19 00 00 00 20 -> Effekt 0, Sub 0x19, Skala 0x2000
+ *   Record 1 = 00 19 00 00 00 28 -> Effekt 0, Sub 0x19, Skala 0x2800
+ *   Record 3 = 00 09 00 00 00 10 -> Effekt 0, Sub 0x09, Skala 0x1000
+ * FUN_8001bf10 (RE2 PSX.EXE) zerlegt das Sub-Byte wie RE1.5 FUN_80019700: `andi v0,t5,0x7` @0x8001bf24 waehlt den
+ * Strom, `srl v0,t5,3` / `sll v0,v0,6` @0x8001c01c-20 und `addu v1,v1,v0` / `sh v1,50(t0)` @0x8001c034-38 schieben die
+ * CLUT. RE2 Effekt 0 hat CLUT 0x7a11 (CORE00.ESP, TEX.TIM y 488 = `880000 780000 ...` rot, die Zombie-Zeile); die
+ * Spinne nimmt Zeile +3 (y 491, `888840 808038 ...` oliv-gelb) bzw. +1 (y 489, `386030 305028 ...` gruen). Das
+ * Spinnenblut ist also in RE2 NICHT die rote Grundzeile.
+ * Der Port hat den RE2-Effektraum nicht und stand hier bisher mit dem ZOMBIE-Code 0x1500 (Sub 0 -> RE1.5 y 485, rot).
+ * Stand-in jetzt: das RE1.5-SPINNENBLUT 0x00082000 (Sub 8 -> RE1.5 y 486 gruen), genau der Code, den RE1.5 an jedem
+ * Spinnentreffer (`jal 0x80019700` @0x80113b50, STAGE2.BIN) und am Tod der schwachen Waffen (@0x80114654) setzt.
+ * PORT-WAHL (Stand-in): welcher RE1.5-Code die RE2-Records vertritt. Belegt ist die Richtung (RE1.5 gruen, RE2 nicht
+ * rot, Video S02/S05 gruen). Anker bleibt der Aktor-Ursprung wie bei re2s_gore (Teil-Matrix offen, Dossier S Offen 4).
+ * NICHT hierher: Babyspinne @0x80100EDC Record 1 von EMS26 = 00 01 .. (Sub 1 -> RE2-Grundzeile rot) ist Leons
+ * Blut beim Biss, und die Records 2/4/5/6/7/10 sind keine Effekt-0-Partikel.
+ * HIERHER (Nachbesserung 2): der Babytod @0x80100D14 mit Record 0 von EMS26 = 00 19 00 00 00 10 (Effekt 0, Sub 0x19,
+ * also Spinnenblut wie Record 0/1 der Adult) — re2sb_death. */
+#define RE2SPIDER_BLUT_A0 0x00082000u   /* RE1.5 STAGE2 @0x80113b50 / @0x80114654: Effekt 0, Sub 8, Skala 0x2000 */
+static void re2s_blut(re15_actor_t *e)
+{
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), (uint8_t)(RE2SPIDER_BLUT_A0 >> 24),
+                         (uint8_t)((RE2SPIDER_BLUT_A0 >> 16) & 0xffu), (uint16_t)(RE2SPIDER_BLUT_A0 & 0xffffu),
+                         e->x, e->y, e->z, (int16_t)e->rot_y);
+}
+
 /* ---- FUN_80105BF0 @0x80105BF0-D34 — EIN zufaelliges BEIN abtrennen ------------------------
  *   +0x23C == 14 -> sofort 1 (@0x80105C00-04: die Spark-Shot-Zeile trennt nie ab)
  *   k = rand & 7 (@0x80105C10-28)
@@ -1771,12 +1803,12 @@ static int re2s_sever_leg(re15_actor_t *e)
     if (e->re2s_row23c == 14u) return 1;                   /* @0x80105C00-04 */
     uint32_t k = re2s_rand() & 7u;                         /* @0x80105C10-28 */
     if (e->re2s_legn221 < 3u || ((e->re2s_legs220 >> k) & 1u)) {   /* @0x80105C20/@0x80105C34 */
-        re2s_gore(e);                                      /* FUN_801056DC(self,19,1) @0x80105D18 */
+        re2s_blut(e);                                      /* FUN_801056DC(self,19,1) @0x80105D18 */
         return 1;
     }
     e->re2s_legs220 = (uint8_t)(e->re2s_legs220 | (1u << k));      /* @0x80105C64 */
     e->re2s_legn221--;                                             /* @0x80105C74 */
-    re2s_gore(e);                                          /* FUN_801056DC(self,2k+3,1) @0x80105D00 */
+    re2s_blut(e);                                          /* FUN_801056DC(self,2k+3,1) @0x80105D00 */
     return 0;
 }
 
@@ -1953,10 +1985,10 @@ static void re2s_hurt_row_gore(re15_actor_t *e)
 {
     if (e->sub_state_2 == 0u) {                            /* @0x80103728 */
         (void)re2s_rand();                                 /* Bone-Wahl @0x80103738 */
-        re2s_gore(e);                                      /* FUN_801056DC(...,3) @0x80103754 */
+        re2s_blut(e);                                      /* FUN_801056DC(...,3) @0x80103754 */
         uint32_t k = re2s_rand() & 7u;                     /* @0x8010375C-68 */
         if (((e->re2s_legs220 >> k) & 1u) == 0u)           /* @0x8010376C-70 */
-            re2s_gore(e);                                  /* FUN_801056DC(self,2k+3,3) @0x80103784 */
+            re2s_blut(e);                                  /* FUN_801056DC(self,2k+3,3) @0x80103784 */
         if (e->re2z_pool151 < 0 || e->re2z_pool152 < 0 || e->re2z_pool153 < 0) {
             (void)re2s_sever_leg(e);                       /* @0x801037BC */
             e->re2z_pool151 = 6; e->re2z_pool152 = 6; e->re2z_pool153 = 6;  /* @0x801037C4-D0 */
@@ -2088,8 +2120,7 @@ static void re2s_hurt_row_generic(re15_actor_t *e)
         re2s_clip(e, 0x00030001u);                         /* @0x80102D90/B0/C4 */
         e->sub_state_2 = 1;                                /* @0x80102DBC */
         if (e->re2s_row23c != 1)                           /* +0x23C != 1 @0x80102DC0 */
-            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
-                                 e->x, e->y, e->z, (int16_t)e->rot_y);   /* @0x80102DD0 */
+            re2s_blut(e);                                  /* FUN_801056DC(self,0,0) @0x80102DD0, Record 0 */
         /* fallthrough */
     case 1: {                                              /* @0x80102DD8 */
         int wrapped = re2s_advance(e, 1024);               /* @0x80102DE4 */
@@ -2150,7 +2181,7 @@ static void re2s_death_done_generic(re15_actor_t *e)
     (void)re2s_advance(e, 512);                            /* @0x80104450 */
     re2s_clip(e, 0x0007000du);                             /* Clip 13, Rate 7 @0x80104460 */
     (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 1u);   /* @0x80104470-78 */
-    re2s_gore(e);                                          /* FUN_801056DC(self,0,0) @0x80104488 */
+    re2s_blut(e);                                          /* FUN_801056DC(self,0,0) @0x80104488 */
     re2s_word(e, 7u);                                      /* CORPSE @0x8010449C */
     if (e->re2s_c23a < 0)                                  /* @0x801044B0 */
         e->y = (int32_t)e->re2s_water10c + 70;             /* @0x801044C0 */
@@ -2192,8 +2223,8 @@ static void re2s_death_done_special(re15_actor_t *e)
     (void)re2s_advance(e, 512);                            /* @0x80104814 */
     re2s_clip(e, 0x0007000du);                             /* @0x80104818 */
     (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 6u);   /* @0x80104828-30 */
-    re2s_gore(e);                                          /* @0x80104840 */
-    re2s_gore(e);                                          /* FUN_80104890 @0x80104848 (Sprays) */
+    re2s_blut(e);                                          /* @0x80104840 */
+    re2s_blut(e);                                          /* FUN_80104890 @0x80104848 (Hinterleib, s. @0x80104588) */
     re2s_word(e, 7u);                                      /* @0x80104854 */
     if (e->re2s_c23a < 0)                                  /* @0x80104864 */
         e->y = (int32_t)e->re2s_water10c + 70;             /* @0x80104878 */
@@ -2219,8 +2250,8 @@ static void re2s_death_row_special(re15_actor_t *e)
         /* MODUS 1 @0x80104664 / MODUS 2+3 @0x801046EC — im Port nur der Spawn + der
          * Zustandsfluss; die Sturzbewegung braucht FUN_80015350/FUN_80105360 (OPEN, s.o.). */
         if (e->sub_state_2 == 0u) {
-            re2s_gore(e);                                  /* @0x80104694 / @0x801047BC */
-            re2s_gore(e);                                  /* FUN_80104890 @0x8010469C/@0x801047AC */
+            re2s_blut(e);                                  /* @0x80104694 / @0x801047BC */
+            re2s_blut(e);                                  /* FUN_80104890 @0x8010469C/@0x801047AC */
             (void)re2s_spawn_babies(e, 0x2004u, (re2s_rand() & 3u) + 6u);   /* @0x801046B8 /
                                                                             * @0x801047D8 */
             e->sub_state_2 = 1;
@@ -2238,8 +2269,11 @@ static void re2s_death_row_special(re15_actor_t *e)
         e->sub_state_2 = 1;                                /* @0x80104570 */
         e->re2s_c23a   = 1;                                /* +0x23A = 1 @0x80104574 */
         re2s_clip(e, 0x0007000cu);                         /* Clip 12, Rate 7 @0x80104578 */
-        re2s_gore(e);                                      /* FUN_801056DC(self,19,1) @0x80104580 */
-        re2s_gore(e);                                      /* FUN_80104890(self) @0x80104588 */
+        re2s_blut(e);                                      /* FUN_801056DC(self,19,1) @0x80104580 */
+        re2s_blut(e);                                      /* FUN_80104890(self) @0x80104588 = Hinterleib Teil 19
+                                                            * |= 0x4a, +0x9a -240, +0x9e 15, Farbe 0x2f2f2f
+                                                            * (@0x801048c4-900) + 5x FUN_801056DC an Teil 19;
+                                                            * gezeichnet ueber re15_spinnengore_re2_tod */
         (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 6u);   /* @0x80104590-A4 */
     }
     int fw_wrapped = re2s_advance(e, 512);
@@ -2429,7 +2463,9 @@ static void re2s_sink_drive(re15_actor_t *e)
 static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
 {
     (void)pl;
-    if (e->sub_state_2 == 0) {
+    const int frisch = (e->sub_state_2 == 0);
+    const int waffe  = e->sub_state_1;                     /* RE1.5-Waffen-Id VOR der Uebersetzung (Runde 41 Spur S) */
+    if (frisch) {
         e->sub_state_1 = re2s_row_translate(e->sub_state_1);     /* PORT-ZUORDNUNG, s. HURT */
         e->re2s_row23c = e->sub_state_1;                   /* +0x23C @0x80103C9C-B4 */
     }
@@ -2448,6 +2484,10 @@ static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
      * (Der zweite Tail-Aufruf EXE 0x80018FB0 @0x80103D0C ist ein Render-Helfer ohne
      * Port-Kanal und bleibt OPEN.) */
     if (e->re2s_c23a < 0) re2s_sink_drive(e);              /* @0x80103D04 */
+    /* Runde 41 Spur S (PORT-WAHL Gore-Maximum, RE15_KEIN_80PROZENT_GORE): im frischen Takt der RE1.5-Komplett-Platzer
+     * (0x80113ff8 Phase 0 @0x8011403c) fuer RE1.5-Platzwaffen (@0x80118f38), Krit (@0x801146b0) und die RE2-Platzzeilen
+     * (FUN_80104890 @0x80104588 / Zeile 9 @0x80104A2C, Saeure Teil 19 @0x80104bcc), sonst Blut an Teil 0 (@0x80114654). */
+    if (frisch) re15_spinnengore_re2_tod(e, waffe, (int)e->re2s_row23c);
 }
 
 static void re2s_death_row_generic(re15_actor_t *e)
@@ -2462,7 +2502,7 @@ static void re2s_death_row_generic(re15_actor_t *e)
             re2s_clip(e, 0x0000090cu);                     /* @0x80103F38 */
             e->speed_h = 0; e->re2s_z148 = 0; e->rot_z = 0;/* @0x80103F40-48 */
             e->y += 800;                                   /* @0x80103F50 */
-            if (e->re2s_row23c != 1) re2s_gore(e);         /* @0x80103F58-60 */
+            if (e->re2s_row23c != 1) re2s_blut(e);         /* @0x80103F58-60 */
             e->sub_state_2 = 1;                            /* @0x80103F24 */
             return;
         }
@@ -2490,7 +2530,7 @@ static void re2s_death_row_generic(re15_actor_t *e)
         re2s_clip(e, 0x0007000cu);                         /* Clip 12 @0x80103DC0-C8 */
         e->sub_state_2 = 1;                                /* @0x80103DD4 */
         if (e->re2s_row23c != 1)                           /* +0x23C != 1 @0x80103DDC */
-            re2s_gore(e);                                  /* @0x80103DE4 */
+            re2s_blut(e);                                  /* @0x80103DE4 */
     }
     int fw_wrapped = re2s_advance(e, 512);                 /* @0x80103E08 */
     /* ⛔ DER DOPPELTE TOD SASS HIER (Nutzer 2026-09-12: "die Todesanimation der
@@ -2623,7 +2663,8 @@ static void re2s_corpse(re15_actor_t *e)
  *   nach re15_aot_scan tragen beide Aktoren water_y = -1620.
  *
  * OPEN (kein Port-Kanal, jeweils mit dem Original-Nicht-Treffer-Wert):
- *   FUN_80016480 (Boden-Schatten-Slot @0x8010025C), FUN_80100F28 (ESP-Effekt-Records
+ *   FUN_80016480 (Boden-Schatten-Slot @0x8010025C; Mass 200 x 200 und die Tinte des Todes sind seit
+ *     Runde 41 Spur S Nachbesserung 2 im Zeichner, re15_spinnenlache_r41.h), FUN_80100F28 (ESP-Effekt-Records
  *     @0x801010DC), FUN_8003947C/0x80039514 (Rumble), FUN_80065B9C (Partner-Schaden).
  *   +0x1E8 = 1 (@0x80100164) ist die ANZAHL der Hitbox-Kugeln (FUN_80035408), NICHT Gravitation.
  *   Die X/Z-Anteile von FUN_80015350 (@0x8010079C / @0x801008E8) brauchen die PsyQ-RotMatrix-
@@ -2930,8 +2971,20 @@ static void re2sb_drown(re15_actor_t *e, re15_actor_t *pl)
  *   FUN_800527B4(X,Z) < (s16)+0x1C2 UND +0x222 == 0 -> SINK @0x80100D40, sonst SPLAT
  *   (@0x80100C20-44).
  *   SPLAT @0x80100C84: +0x6 != 0 -> FUN_8001B250(self) = DESPAWN (@0x80100D24); sonst
- *   +0x6 = 1 (@0x80100CA4), Schattenfarbe 0xBF10BF (@0x80100CD8-E0, kein Port-Kanal),
- *   SE 7 (@0x80100CF8), FUN_80100F28(self, 0, tbl[+0x5]) (@0x80100D10-14). */
+ *   +0x6 = 1 (@0x80100CA4), am Boden Schattenfarbe 0xBF10BF (@0x80100CB4-E0, Runde 41 Spur S Nachbesserung 2:
+ *   re15_spinnenlache_baby_platsch; der Record bleibt nach dem DESPAWN als Fleck liegen), sonst word0 |= 0x400
+ *   (@0x80100CE4-F0, Schatten verborgen, kein Port-Kanal), SE 7 (@0x80100CF8), FUN_80100F28(self, 0, tbl[+0x5])
+ *   (@0x80100D10-14).
+ *
+ * Runde 41 Spur S, Nachbesserung 2 (Abnahme 2, Mangel 2): der Todesspritzer nimmt den Record aus der Tabelle
+ * @0x801010C7 (`lbu a2,4295(at)` @0x80100d10), FUN_80100F28 maskiert `andi v1,a2,0x7f` @0x80100f50 und liest den
+ * Record @0x801010dc + 6*Index (`addiu v1,v1,4316` @0x80100f74). Tabelle (EMS26 selbst gelesen):
+ *   Index 0 = 0x80 (Record 0, Bit 0x80 = Wasser-Y @0x80100f84-b4), 1..9 = 0, 10 = 3, 11 = 4, 12..15 = 0, 16 = 3,
+ *   17..21 = 0. Record 0 = `00 19 00 00 00 10` = Effekt 0, Sub 0x19 = Spinnenblut (RE2 y 491, nicht die rote
+ *   Grundzeile y 488) -> der gruene Stand-in re2s_blut wie bei der Adult. Records 3/4 (`05 04 00 00 00 10` = Effekt 5 /
+ *   `04 0f 00 00 00 0c` = Effekt 4, @0x801010ee / @0x801010f4, kein Effekt-0-Blut) bleiben auf re2s_gore. */
+static const uint8_t s_re2sb_tod_rec[22] = {               /* @0x801010C7 */
+    0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0 };
 static void re2sb_death(re15_actor_t *e)
 {
     /* @0x80100C20: `jal 0x800527b4` — der DEATH-Kopf zieht den Wasser-Y FRISCH (nicht +0x10C),
@@ -2949,10 +3002,22 @@ static void re2sb_death(re15_actor_t *e)
         }
         return;
     }
-    if (e->sub_state_2 != 0u) { e->active = 0; return; }   /* DESPAWN @0x80100C9C/@0x80100D24 */
+    if (e->sub_state_2 != 0u) {                            /* DESPAWN @0x80100C9C/@0x80100D24 */
+        re15_spinnenlache_baby_ende(e);                    /* FUN_8001B250 gibt den Record nicht frei (Kopf
+                                                            * re15_spinnenlache_r41.h): der gruene Fleck bleibt */
+        e->active = 0;
+        return;
+    }
     e->sub_state_2 = 1;                                    /* @0x80100CA4 */
+    if (e->re2s_mode222 == 0u)                             /* `lbu v0,546(s0)` / `bne` @0x80100CA8-B0 */
+        re15_spinnenlache_baby_platsch(e);                 /* Tinte 0x00BF10BF @0x80100CB4-E0 */
     re2s_se(7);                                            /* SE 7 @0x80100CF8 */
-    re2s_gore(e);                                          /* FUN_80100F28 @0x80100D14 */
+    {
+        uint8_t i   = e->sub_state_1;                      /* `lbu v0,5(s0)` @0x80100D00 */
+        uint8_t rec = (uint8_t)((i < 22u ? s_re2sb_tod_rec[i] : 0u) & 0x7fu);   /* @0x80100D10 / @0x80100F50 */
+        if (rec == 0u) re2s_blut(e);                       /* FUN_80100F28(self,0,Record 0) @0x80100D14: Spinnenblut */
+        else           re2s_gore(e);                       /* Records 3/4 */
+    }
 }
 
 /* ---- Root @0x8010001C ---------------------------------------------------------------------- */
@@ -2971,6 +3036,10 @@ int re15_re2spider_baby_tick(int slot)
 
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);  /* +0x1F0 (EXE-seitig gefuellt) */
 
+    if (re15_spinnenlache_test_babytod(e)) {               /* MESSHAKEN RE15_BABYTOD_TEST (nur Messlaeufe):
+                                                            * Wirkung des Zertret-Tors +0x4 = 3 @0x80100448 */
+        e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    }
     switch (e->state) {                                    /* Tabelle @0x80101084 */
     case 0: re2sb_init(e); break;                          /* @0x801000DC */
     case 1:                                                /* @0x801002A0, Tabelle @0x801010AC */
@@ -3104,8 +3173,13 @@ int re15_re2spider_tick(int slot)
     switch (e->state) {                                    /* @0x80100118, Tabelle @0x80106420 */
     case 0: re2s_init(e);              break;              /* @0x801001EC */
     case 1: re2s_active(e, pl);        break;              /* @0x801005AC */
-    case 2:
+    case 2: {
+        /* Runde 41 Spur S (PORT-WAHL Gore-Maximum, RE15_KEIN_80PROZENT_GORE): +0x220 vor dem Zeilen-Handler merken;
+         * jedes neu abgetrennte Bein und das RE1.5-Krit-Bein zeichnet re15_spinnengore_re2_treffer (spinnengore_r41.c). */
+        const uint8_t beine_vor = e->re2s_legs220;
+        const int     frisch    = (e->sub_state_2 == 0);   /* +0x6 == 0 = der Takt, an dem +0x23C gelatcht wird */
         re2s_hurt(e, pl);                                  /* @0x80102C78 */
+        re15_spinnengore_re2_treffer(e, beine_vor, frisch);
         /* ⛔ RESOLVER-LATCH-FREIGABE (+0x93 Bit 0) — dieselbe Familie wie beim RE2-Zombie und
          * -Hund (Nutzer-Blocker 2026-08-19, dort GEMESSEN: 1 statt 3-20 Treffer, +0x93 blieb
          * 0x01/0x03). Der flavor-blinde Resolver FUN_80011f50 setzt den Ein-Treffer-Latch
@@ -3122,6 +3196,7 @@ int re15_re2spider_tick(int slot)
          * abgearbeitet UND wieder ACTIVE = die Reaktion ist vorbei. */
         if (e->state == 1) e->hit_react &= (uint8_t)~1u;   /* andi 0xfe @0x80105fa4 */
         break;
+    }
     case 3: re2s_death(e, pl);         break;              /* @0x80103C80 */
     case 4: re2s_state4(e);            break;              /* @0x80104CF0 */
     case 7: re2s_corpse(e);            break;              /* @0x80104CF8 */
@@ -3129,6 +3204,8 @@ int re15_re2spider_tick(int slot)
     }
 
     e->re2s_f106 = (uint8_t)((-e->y) / 1800);              /* @0x80100140-70 (Magic-Div) */
+    re15_spinnenlache_re2_boden(e);                        /* FUN_80104DE8 @0x80100180 (Runde 41 Spur S, Nachbesserung 2:
+                                                            * Lache der Leiche, Zustaende [2]/[3]/[4] von +0x225) */
     re2s_fx_tick(e);                                       /* FUN_80106140 @0x80100188 */
     return 1;
 }

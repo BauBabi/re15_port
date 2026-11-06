@@ -58,6 +58,7 @@
 #include <stdio.h>
 #include <string.h>   /* memset (Testhaken FX-Zaehler) */
 #include "re15_actor.h"
+#include "re15_spinnengore_r41.h" /* Runde 41 Spur S: Hund-Part-Bruecke */
 #include "re15_ai_flavor.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 / re15_atan2_q12 */
 #include "re15_damage.h"     /* re15_ai_arc_test (==FUN_80015614), re15_enemy_bone_world_pos */
@@ -2198,6 +2199,7 @@ static void re2d_kern(re15_actor_t *e, re15_actor_t *pl)
 static void re2d_teile_wurf(re15_actor_t *e)
 {
     static const uint8_t parts[7] = { 2, 3, 4, 7, 8, 9, 10 };   /* @0x80105680 */
+    re15_gore_r41_hund_bruecke(e);   /* Runde 41 Spur S: Part-Bruecke seeden -> die Parts werden gezeichnet */
     for (int i = 0; i < 7; i++) {
         int p = parts[i];
         e->re2z_part_flags[p] = (uint16_t)(e->re2z_part_flags[p] | 0x4Au);

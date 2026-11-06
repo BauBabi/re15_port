@@ -255,8 +255,10 @@ check_tree() {           # $1 = fertiger Paketordner
     local rs
     # Seit Runde 35 (Spur M, Fenster ROOM1120): RE2-Glassplitter-ESP/-TIMs und der Glasknall aus RE2
     # room1090 (fenster_1120.c). Fehlen sie, bricht die Scheibe ohne Splitter und ohne Ton.
+    # Seit Runde 41 (Spur S, Nachbesserung 3): GLAS1090_0C.TIM = room1090 esp0C.tim, das Bild der RE2-Kraehenfeder
+    # (Raumbank 0x0C, glas1120_pc.c). Fehlt es, fliegen bei Treffer und Tod der Kraehe keine Federn.
     for rs in SOUND/ARMS10.EDH SOUND/ARMS10.VB SOUND/ARMS11.EDH SOUND/ARMS11.VB \
-              GLAS1090.ESP GLAS1090_10.TIM GLAS1090_11.TIM GLAS1090_12.TIM GLAS1090_13.TIM GLAS1090_14.TIM \
+              GLAS1090.ESP GLAS1090_10.TIM GLAS1090_11.TIM GLAS1090_12.TIM GLAS1090_13.TIM GLAS1090_14.TIM GLAS1090_0C.TIM \
               GLAS1090.EDT GLAS1090.VH GLAS1090.VB; do
         [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Werfer-Toene bzw. Fenster ROOM1120 waeren stumm/ohne Splitter)"
         cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"

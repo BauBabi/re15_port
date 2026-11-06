@@ -17,6 +17,7 @@
 #include "re15_engine.h"
 #include "re15_damage.h"   /* re15_player_apply_hitbox — wire the player's +0x78 hitbox */
 #include "re15_itemband_r37.h" /* Runde 37 Spur D: Member 0x12 am Spieler = Kollisionsband */
+#include "re15_teile_r15.h"     /* Runde 41 Spur S: Teilschicht beim Belegen des Platzes leeren */
 
 re15_actor_t g_actors[RE15_ACTOR_MAX];
 uint8_t      g_actor_count = 0;
@@ -64,6 +65,10 @@ int re15_actor_alloc(uint8_t type)
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         if (!g_actors[i].active) {
             memset(&g_actors[i], 0, sizeof(g_actors[i]));
+            /* Runde 41 Spur S: die Teilschicht haengt am PLATZ, nicht am Aktor. Ein neu belegter Platz (Babyspinnen aus
+             * FUN_80105D38 kommen in freie Plaetze) erbte sonst die geplatzten Teile des Vorbewohners. Im Original setzt
+             * der Modell-Init FUN_8001ee68 jeden Teil auf Wort 1 / Farbe 0x808080 (re15_teile_reset). */
+            re15_teile_reset(i);
             g_actors[i].active = 1;
             g_actors[i].type   = type;
             g_actors[i].flags  = 0x01;

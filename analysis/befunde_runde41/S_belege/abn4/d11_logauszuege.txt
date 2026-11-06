@@ -1,0 +1,98 @@
+# Abnahme 4 Spur S - Log-Auszuege (eigene Auswerter ana4.py / feder4.py, Messkopie re15_pc_S41abn4.exe md5 34c7dd1640ce7c8986231477248b1938)
+
+## a_leon_2070_w7
+﻿RE15_NO_INTRO=1|RE15_NOAUDIO=1|RE15_WINDOW_SCALE=2|RE15_TITLE_CONFIRM_MS=1500|RE15_PSELECT_AUTO=1|RE15_DEBUG_JUMP=2070@250|RE15_GIVE=7:60|RE15_EQUIP=7|RE15_INPUT_SCRIPT_BASIS=spiel|RE15_INPUT_SCRIPT_START=12|RE15_INPUT_SCRIPT=W0.2,M0.6,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,W12|RE15_SPINNEN_LOG=sp.log|RE15_FX_CLUT_LOG=fxc.log|RE15_LACHE_LOG=lache.log|RE15_STATE_LOG=state.log|RE15_EXIT_AT=560#2070
+F6 Slot 1 Typ 25 st 0->1 s=0.0.0 hp 0->111 h93=00 {G1 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=0}
+F6 Slot 2 Typ 25 st 0->1 s=0.0.0 hp 0->110 h93=00 {G2 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=0}
+F36 Slot 2 Typ 25 st 1->3 s=5.1.0 hp 110->-20 h93=41 {G2 o=1 ta=1 sh=80001 fl=7fff8 un=00000 lg=00 ln=8 z=5}
+F47 Slot 2 Typ 25 st 3->7 s=0.0.0 hp -20->-20 h93=41 {G2 o=1 ta=1 sh=80001 fl=7fff8 un=00000 lg=00 ln=8 z=5}
+F108 Slot 1 Typ 25 st 1->3 s=5.1.0 hp 111->-19 h93=41 {G1 o=1 ta=1 sh=80001 fl=7fff8 un=00000 lg=00 ln=8 z=5}
+F119 Slot 1 Typ 25 st 3->7 s=0.0.0 hp -19->-19 h93=41 {G1 o=1 ta=1 sh=80001 fl=7fff8 un=00000 lg=00 ln=8 z=5}
+Lache Slot 1: F120 1308x1408 bf10bf -> F560 2020x2120, 89 Wachstumsschritte, Tinten ['bf10bf'], sichtbar 0/441, Lage w(-11394,-7180)
+Lache Slot 2: F48 1308x1408 bf10bf -> F560 2020x2120, 89 Wachstumsschritte, Tinten ['bf10bf'], sichtbar 513/513, Lage w(2794,-6333)
+FX (id, sub, clut): Zeichnungen {('3', '0', '7811'): 120, ('0', '0', '7951'): 113, ('0', '8', '7991'): 110, ('2', '0', '7a51'): 72, ('2', '4', '7a91'): 24}
+
+## b_elza_2071_w7
+﻿RE15_NO_INTRO=1|RE15_NOAUDIO=1|RE15_WINDOW_SCALE=2|RE15_TITLE_CONFIRM_MS=1500|RE15_PSELECT_AUTO=1|RE15_PSELECT_AUTO_SWITCH=1|RE15_DEBUG_JUMP=2071@250|RE15_GIVE=7:60|RE15_EQUIP=7|RE15_INPUT_SCRIPT_BASIS=spiel|RE15_INPUT_SCRIPT_START=12|RE15_INPUT_SCRIPT=W0.2,M0.6,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,W12|RE15_SPINNEN_LOG=sp.log|RE15_FX_CLUT_LOG=fxc.log|RE15_LACHE_LOG=lache.log|RE15_STATE_LOG=state.log|RE15_EXIT_AT=560#2071
+F6 Slot 1 Typ 25 st 0->1 s=0.0.0 hp 0->111 h93=00 {G1 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=0}
+F6 Slot 2 Typ 25 st 0->1 s=0.0.0 hp 0->110 h93=00 {G2 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=0}
+F36 Slot 2 Typ 25 st 1->3 s=5.1.0 hp 110->-20 h93=41 {G2 o=1 ta=1 sh=80001 fl=7fff8 un=00000 lg=00 ln=8 z=5}
+F47 Slot 2 Typ 25 st 3->7 s=0.0.0 hp -20->-20 h93=41 {G2 o=1 ta=1 sh=80001 fl=7fff8 un=00000 lg=00 ln=8 z=5}
+F61 Slot 1 Typ 25 st 1->3 s=5.1.0 hp 111->-19 h93=41 {G1 o=1 ta=1 sh=80001 fl=7fff8 un=00000 lg=00 ln=8 z=5}
+F72 Slot 1 Typ 25 st 3->7 s=0.0.0 hp -19->-19 h93=41 {G1 o=1 ta=1 sh=80001 fl=7fff8 un=00000 lg=00 ln=8 z=5}
+Lache Slot 1: F73 1308x1408 bf10bf -> F560 2020x2120, 89 Wachstumsschritte, Tinten ['bf10bf'], sichtbar 0/488, Lage w(-12087,-7194)
+Lache Slot 2: F48 1308x1408 bf10bf -> F560 2020x2120, 89 Wachstumsschritte, Tinten ['bf10bf'], sichtbar 513/513, Lage w(2794,-6333)
+FX (id, sub, clut): Zeichnungen {('0', '0', '7951'): 165, ('0', '8', '7991'): 110, ('3', '0', '7811'): 105, ('2', '0', '7a51'): 63, ('2', '4', '7a91'): 21}
+
+## c_leon_2070_w7_aus
+﻿RE15_NO_INTRO=1|RE15_NOAUDIO=1|RE15_WINDOW_SCALE=2|RE15_TITLE_CONFIRM_MS=1500|RE15_PSELECT_AUTO=1|RE15_KEIN_80PROZENT_GORE=1|RE15_DEBUG_JUMP=2070@250|RE15_GIVE=7:60|RE15_EQUIP=7|RE15_INPUT_SCRIPT_BASIS=spiel|RE15_INPUT_SCRIPT_START=12|RE15_INPUT_SCRIPT=W0.2,M0.6,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,W12|RE15_SPINNEN_LOG=sp.log|RE15_FX_CLUT_LOG=fxc.log|RE15_LACHE_LOG=lache.log|RE15_STATE_LOG=state.log|RE15_EXIT_AT=560#2070
+F6 Slot 1 Typ 25 st 0->1 s=0.0.0 hp 0->111 h93=00 {G1 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=0}
+F6 Slot 2 Typ 25 st 0->1 s=0.0.0 hp 0->110 h93=00 {G2 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=0}
+F36 Slot 2 Typ 25 st 1->3 s=5.1.0 hp 110->-20 h93=41 {G2 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=5}
+F47 Slot 2 Typ 25 st 3->7 s=0.0.0 hp -20->-20 h93=41 {G2 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=5}
+F108 Slot 1 Typ 25 st 1->3 s=5.1.0 hp 111->-19 h93=41 {G1 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=5}
+F119 Slot 1 Typ 25 st 3->7 s=0.0.0 hp -19->-19 h93=41 {G1 o=1 ta=0 sh=00000 fl=00000 un=00000 lg=00 ln=8 z=5}
+Lache Slot 1: F120 1308x1408 bf10bf -> F560 2020x2120, 89 Wachstumsschritte, Tinten ['bf10bf'], sichtbar 0/441, Lage w(-11394,-7180)
+Lache Slot 2: F48 1308x1408 bf10bf -> F560 2020x2120, 89 Wachstumsschritte, Tinten ['bf10bf'], sichtbar 513/513, Lage w(2794,-6333)
+FX (id, sub, clut): Zeichnungen {('3', '0', '7811'): 120, ('0', '0', '7951'): 113, ('2', '0', '7a51'): 72, ('0', '8', '7991'): 44, ('2', '4', '7a91'): 24}
+
+## d_leon_10c0_w7_kraehe
+﻿RE15_NO_INTRO=1|RE15_NOAUDIO=1|RE15_WINDOW_SCALE=2|RE15_TITLE_CONFIRM_MS=1500|RE15_PSELECT_AUTO=1|RE15_DEBUG_JUMP=10C0@250|RE15_PLAYER_POS=4300,5000,581|RE15_FORCE_CUT=1|RE15_GIVE=7:12|RE15_EQUIP=7|RE15_INPUT_SCRIPT_BASIS=spiel|RE15_INPUT_SCRIPT_START=1|RE15_INPUT_SCRIPT=W2.6,M0.5,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,W6|RE15_STATE_LOG=state.log|RE15_FEDER_LOG=feder.log|RE15_EXIT_AT=520#10C0
+F94 Slot 3 gib      n=11 Satz 11, Plaetze [95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85], Versatz-Bereich x -496..268 y -392..492 z -504..360, s8*4 True, Gier rand<<4 True
+Bildzeilen 169: F94..F262, max lebend 11, Bilder mit quads>0 169, davon gezeichnet==quads 169, tex immer 1: True
+F=94 slot=3 anlass=gib i=1/11 platz=95 ofs=(4585,-2800,1421) gier=624 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=2/11 platz=94 ofs=(4365,-3232,1593) gier=2048 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=3/11 platz=93 ofs=(4069,-2784,1477) gier=1168 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=4/11 platz=92 ofs=(4661,-2620,1809) gier=3824 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=5/11 platz=91 ofs=(3945,-3020,2045) gier=1664 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=6/11 platz=90 ofs=(3897,-3108,1877) gier=352 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=7/11 platz=89 ofs=(4273,-2348,1353) gier=288 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=8/11 platz=88 ofs=(4249,-2388,1281) gier=3840 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=9/11 platz=87 ofs=(3989,-2896,1305) gier=0 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=10/11 platz=86 ofs=(4129,-2604,1897) gier=656 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=11/11 platz=85 ofs=(4461,-2964,1181) gier=3152 kraehe=(4393,-2840,1685) boden=0
+
+## e_elza_10c1_w7_kraehe
+﻿RE15_NO_INTRO=1|RE15_NOAUDIO=1|RE15_WINDOW_SCALE=2|RE15_TITLE_CONFIRM_MS=1500|RE15_PSELECT_AUTO=1|RE15_PSELECT_AUTO_SWITCH=1|RE15_DEBUG_JUMP=10C1@250|RE15_PLAYER_POS=4300,5000,581|RE15_FORCE_CUT=1|RE15_GIVE=7:12|RE15_EQUIP=7|RE15_INPUT_SCRIPT_BASIS=spiel|RE15_INPUT_SCRIPT_START=1|RE15_INPUT_SCRIPT=W2.6,M0.5,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,W6|RE15_STATE_LOG=state.log|RE15_FEDER_LOG=feder.log|RE15_EXIT_AT=520#10C1
+F94 Slot 3 gib      n=11 Satz 11, Plaetze [95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85], Versatz-Bereich x -496..268 y -392..492 z -504..360, s8*4 True, Gier rand<<4 True
+Bildzeilen 169: F94..F262, max lebend 11, Bilder mit quads>0 169, davon gezeichnet==quads 169, tex immer 1: True
+F=94 slot=3 anlass=gib i=1/11 platz=95 ofs=(4585,-2800,1421) gier=624 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=2/11 platz=94 ofs=(4365,-3232,1593) gier=2048 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=3/11 platz=93 ofs=(4069,-2784,1477) gier=1168 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=4/11 platz=92 ofs=(4661,-2620,1809) gier=3824 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=5/11 platz=91 ofs=(3945,-3020,2045) gier=1664 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=6/11 platz=90 ofs=(3897,-3108,1877) gier=352 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=7/11 platz=89 ofs=(4273,-2348,1353) gier=288 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=8/11 platz=88 ofs=(4249,-2388,1281) gier=3840 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=9/11 platz=87 ofs=(3989,-2896,1305) gier=0 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=10/11 platz=86 ofs=(4129,-2604,1897) gier=656 kraehe=(4393,-2840,1685) boden=0
+F=94 slot=3 anlass=gib i=11/11 platz=85 ofs=(4461,-2964,1181) gier=3152 kraehe=(4393,-2840,1685) boden=0
+
+## f_leon_10c0_w3_kraehe
+﻿RE15_NO_INTRO=1|RE15_NOAUDIO=1|RE15_WINDOW_SCALE=2|RE15_TITLE_CONFIRM_MS=1500|RE15_PSELECT_AUTO=1|RE15_DEBUG_JUMP=10C0@250|RE15_PLAYER_POS=4300,5000,581|RE15_FORCE_CUT=1|RE15_GIVE=3:60|RE15_EQUIP=3|RE15_INPUT_SCRIPT_BASIS=spiel|RE15_INPUT_SCRIPT_START=1|RE15_INPUT_SCRIPT=W2.4,M0.4,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,MA0.1,M0.5,W5|RE15_STATE_LOG=state.log|RE15_FEDER_LOG=feder.log|RE15_EXIT_AT=600#10C0
+F85 Slot 3 treffer  n=2 Satz 2, Plaetze [95, 94], Versatz-Bereich x -176..-16 y -452..244 z -296..60, s8*4 True, Gier rand<<4 True
+F88 Slot 3 sturz    n=1 Satz 2, Plaetze [93, 92], Versatz-Bereich x 28..436 y -332..476 z -468..-24, s8*4 True, Gier rand<<4 True
+Bildzeilen 173: F85..F257, max lebend 4, Bilder mit quads>0 173, davon gezeichnet==quads 173, tex immer 1: True
+F=85 slot=3 anlass=treffer i=1/2 platz=95 ofs=(3362,-2596,1442) gier=2864 kraehe=(3538,-2840,1382) boden=0
+F=85 slot=3 anlass=treffer i=2/2 platz=94 ofs=(3522,-3292,1086) gier=80 kraehe=(3538,-2840,1382) boden=0
+F=88 slot=3 anlass=sturz i=1/1 platz=93 ofs=(3911,-2244,623) gier=2880 kraehe=(3475,-2720,1091) boden=0
+F=88 slot=3 anlass=sturz i=1/1 platz=92 ofs=(3503,-3052,1067) gier=2384 kraehe=(3475,-2720,1091) boden=0
+
+## g_leon_2070_babytod
+﻿RE15_NO_INTRO=1|RE15_NOAUDIO=1|RE15_WINDOW_SCALE=2|RE15_TITLE_CONFIRM_MS=1500|RE15_PSELECT_AUTO=1|RE15_DEBUG_JUMP=2070@250|RE15_GIVE=7:60|RE15_EQUIP=7|RE15_BABYTOD_TEST=200|RE15_INPUT_SCRIPT_BASIS=spiel|RE15_INPUT_SCRIPT_START=12|RE15_INPUT_SCRIPT=W0.2,M0.6,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,MA0.1,M0.7,W12|RE15_SPINNEN_LOG=sp.log|RE15_LACHE_LOG=lache.log|RE15_STATE_LOG=state.log|RE15_EXIT_AT=560#2070
+Flecken: Zeilen 5400, sichtbar 2880, gezeichnet=1 2880
+F=400 fleck=0 hx=200 hz=200 rgb=bf10bf y=0 w(3285,-5094) sichtbar=1 gezeichnet=1 raum=2070
+F=400 fleck=1 hx=200 hz=200 rgb=bf10bf y=0 w(2561,-6470) sichtbar=1 gezeichnet=1 raum=2070
+F=400 fleck=2 hx=200 hz=200 rgb=bf10bf y=0 w(41,-8172) sichtbar=1 gezeichnet=1 raum=2070
+F=400 fleck=3 hx=200 hz=200 rgb=bf10bf y=0 w(4885,-6176) sichtbar=1 gezeichnet=1 raum=2070
+F=400 fleck=4 hx=200 hz=200 rgb=bf10bf y=0 w(3178,-5276) sichtbar=1 gezeichnet=1 raum=2070
+F=400 fleck=5 hx=200 hz=200 rgb=bf10bf y=0 w(4796,-6730) sichtbar=1 gezeichnet=1 raum=2070
+F=400 fleck=6 hx=200 hz=200 rgb=bf10bf y=0 w(2321,-6710) sichtbar=1 gezeichnet=1 raum=2070
+F=400 fleck=7 hx=200 hz=200 rgb=bf10bf y=0 w(-9730,-7656) sichtbar=0 gezeichnet=0 raum=2070
+F=400 fleck=8 hx=200 hz=200 rgb=bf10bf y=0 w(5356,-5474) sichtbar=1 gezeichnet=1 raum=2070
+F=400 fleck=9 hx=200 hz=200 rgb=bf10bf y=0 w(-4011,-5348) sichtbar=0 gezeichnet=0 raum=2070
+F=400 fleck=10 hx=200 hz=200 rgb=bf10bf y=0 w(-19422,-5410) sichtbar=0 gezeichnet=0 raum=2070
+F=400 fleck=11 hx=200 hz=200 rgb=bf10bf y=0 w(-11026,-4886) sichtbar=0 gezeichnet=0 raum=2070
+F=400 fleck=12 hx=200 hz=200 rgb=bf10bf y=0 w(-3636,-7114) sichtbar=0 gezeichnet=0 raum=2070
+F=400 fleck=13 hx=200 hz=200 rgb=bf10bf y=0 w(-13005,-6235) sichtbar=0 gezeichnet=0 raum=2070
+F=400 fleck=14 hx=200 hz=200 rgb=bf10bf y=0 w(-10782,-6747) sichtbar=0 gezeichnet=0 raum=2070

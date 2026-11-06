@@ -12,6 +12,11 @@
  *      Plaetze der Raum-Banken. Mischmodus wie dort: Code 0x2E (Status 0x1000 von 0xB003) + TPage-OR
  *      0x20 -> ABR 1 = B+F.
  *   4. Knall: re15_fenster1120_se_hook = re15_audio_re2_glas_se (audio_pc.c, Raumbank-Satz 0x21).
+ *   6. Runde 41 Spur S (Nachbesserung 3, Abnahme 3 Mangel 1): die KRAEHENFEDER Raumbank 0x0C derselben Raum-ESP (Bank-Kopf
+ *      @0x994, CLUT-Kopf 0x7840, Skript Sub 0 @0xAD4) mit ihrem Bild GLAS1090_0C.TIM = room1090 esp0C.tim (bytegleich room2110
+ *      esp0C.tim und ROOM1090.RDT; 4 bpp, 256 x 120, CLUT 16 x 1 schwarz-grau) als sechster Streifen v 200..319, CLUT-Zeile 5.
+ *      Gespawnt vom RE2-Kraehengehirn (FUN_80104678, enemy_ai_re2_crow.c). Fehlt die Datei, bleiben nur die Federn weg.
+ *      MESSSCHIENE RE15_FEDER_LOG=<datei> (kein Verhalten): je Bild mit lebender Feder eine Zeile Plaetze/Quads/gezeichnet.
  *   5. Das beschaedigte Fenster: Pixel-Operationen aus gen/fenster1120_schaden.inc in den
  *      Software-Framebuffer direkt nach dem Hintergrund (Ebene 1, wie panel_lampen_pc.c) — unter Leon.
  */
@@ -39,12 +44,19 @@ extern void re15_render_textured_tri(int x0, int y0, int u0, int v0,
                                      uint8_t r, uint8_t g, uint8_t b);
 extern uint32_t *re15_pc_framebuffer(void);   /* render_pc.c: RGBA8888, R in Bit 24..31 */
 
-#define GLAS_BANKEN   5
+#define GLAS_BANKEN   6                       /* 0x10..0x14 Glas + 0x0C Feder (Runde 41 Spur S NB3) */
 #define GLAS_BREITE   256
-#define GLAS_HOEHE    200
+#define GLAS_HOEHE    320
 #define GLAS_CLUT_Y   481                     /* Bankkopf-CLUT 0x7840 -> Zeile 0x7840 >> 6 = 481 */
-static const int k_vbasis[GLAS_BANKEN] = { 0, 32, 64, 128, 168 };
-static const int k_zeilen[GLAS_BANKEN] = { 32, 32, 64, 40, 32 };   /* TIM-Kopf: Hoehe je Datei */
+#define GLAS_FEDER_K  5                       /* Streifen der Raumbank 0x0C */
+static const int k_bank[GLAS_BANKEN]   = { 0x10, 0x11, 0x12, 0x13, 0x14, 0x0C };
+static const int k_vbasis[GLAS_BANKEN] = { 0, 32, 64, 128, 168, 200 };
+static const int k_zeilen[GLAS_BANKEN] = { 32, 32, 64, 40, 32, 120 };   /* TIM-Kopf: Hoehe je Datei (esp0C.tim `40 00 78 00`) */
+static int bank_streifen(int bank)
+{
+    for (int k = 0; k < GLAS_BANKEN; k++) if (k_bank[k] == bank) return k;
+    return -1;
+}
 
 static uint8_t  *s_esp = NULL;                /* lebt bis Prozessende (re2fx haelt den Zeiger) */
 static int       s_esp_sz = 0;
@@ -52,11 +64,15 @@ static int       s_esp_rc = -9;
 static uint8_t   s_pix[GLAS_BREITE / 2 * GLAS_HOEHE];
 static uint16_t  s_clut[GLAS_BANKEN * 16];
 static int       s_tex_ok = 0;
+static int       s_feder_ok = 0;              /* GLAS1090_0C.TIM geladen */
 static int       s_letzte = 0;
+static int       s_letzte_feder = 0;
 
 int re15_pc_glas1120_esp_rc(void)  { return s_esp_rc; }
 int re15_pc_glas1120_tex_ok(void)  { return s_tex_ok; }
 int re15_pc_glas1120_letzte_quads(void) { return s_letzte; }
+int re15_pc_glas1120_feder_ok(void)      { return s_feder_ok; }
+int re15_pc_glas1120_letzte_federn(void) { return s_letzte_feder; }
 
 static uint32_t le32(const uint8_t *b) { return (uint32_t)b[0] | ((uint32_t)b[1] << 8) | ((uint32_t)b[2] << 16) | ((uint32_t)b[3] << 24); }
 static uint16_t le16(const uint8_t *b) { return (uint16_t)(b[0] | (b[1] << 8)); }
@@ -85,12 +101,15 @@ void re15_pc_glas1120_init(void)
     s_esp_rc = s_esp ? re2fx_register_raum(s_esp, (size_t)s_esp_sz) : -9;
     memset(s_pix, 0, sizeof s_pix);
     int fehler = 0;
+    s_feder_ok = 0;
     for (int k = 0; k < GLAS_BANKEN; k++) {
         char name[32];
-        snprintf(name, sizeof name, "GLAS1090_%02X.TIM", 0x10 + k);
+        snprintf(name, sizeof name, "GLAS1090_%02X.TIM", k_bank[k]);
         int sz = 0;
         uint8_t *t = re15_pc_read_re2(name, &sz);
-        if (tim_streifen(k, t, sz) != 0) fehler++;
+        int rc = tim_streifen(k, t, sz);
+        if (k == GLAS_FEDER_K) s_feder_ok = (rc == 0);   /* die Feder ist kein Muss fuer das Glas */
+        else if (rc != 0) fehler++;
         free(t);
     }
     if (!fehler) {
@@ -104,25 +123,26 @@ void re15_pc_glas1120_init(void)
         s_tex_ok = re15_render_pc_dbg_slot_loaded(RE15_GLAS_TIM_SLOT);
     }
     re15_fenster1120_se_hook = re15_audio_re2_glas_se;
-    fprintf(stderr, "[glas1120] GLAS1090.ESP %d B -> re2fx_register_raum rc=%d, Texturen %s (Slot %d)\n",
-            s_esp_sz, s_esp_rc, s_tex_ok ? "ok" : "FEHLEN", RE15_GLAS_TIM_SLOT);
+    if (!s_tex_ok) s_feder_ok = 0;
+    fprintf(stderr, "[glas1120] GLAS1090.ESP %d B -> re2fx_register_raum rc=%d, Texturen %s, Feder 0x0C %s (Slot %d)\n",
+            s_esp_sz, s_esp_rc, s_tex_ok ? "ok" : "FEHLEN", s_feder_ok ? "ok" : "FEHLT", RE15_GLAS_TIM_SLOT);
 }
 
 void re15_pc_glas1120_draw(const re15_camera_view_t *cam, int cx, int cy, int camf,
                            int has_region, const int16_t rxs[4], const int16_t rzs[4])
 {
     static re2fx_quad_t q[128];
-    s_letzte = 0;
-    if (!cam || !s_tex_ok || !re15_render_pc_dbg_slot_loaded(RE15_GLAS_TIM_SLOT)) return;
-    int n = re2fx_quads(cam, cx, cy, camf, has_region, rxs, rzs, q, (int)(sizeof q / sizeof q[0]));
-    if (n <= 0) return;
-    int gebunden = 0;
+    s_letzte = 0; s_letzte_feder = 0;
+    int n = 0, feder_quads = 0, gebunden = 0;
+    if (!cam || !s_tex_ok || !re15_render_pc_dbg_slot_loaded(RE15_GLAS_TIM_SLOT)) goto messen;
+    n = re2fx_quads(cam, cx, cy, camf, has_region, rxs, rzs, q, (int)(sizeof q / sizeof q[0]));
     for (int i = n - 1; i >= 0; i--) {                 /* rueckwaerts wie re2fx_pc_draw (OT vorn) */
         const re2fx_quad_t *e = &q[i];
         const uint8_t *pl = re2fx_platz(e->platz);
         if (!pl) continue;
-        int k = (int)pl[0x1C] - 0x10;                  /* +0x1C Bank (`sw v0,28(t0)` @0x8001cc98) */
-        if (k < 0 || k >= GLAS_BANKEN) continue;
+        int k = bank_streifen((int)pl[0x1C]);          /* +0x1C Bank (`sw v0,28(t0)` @0x8001cc98) */
+        if (k < 0) continue;
+        if (k == GLAS_FEDER_K) { feder_quads++; if (!s_feder_ok) continue; }
         if (!gebunden) { re15_render_pc_bind_tim_slot(RE15_GLAS_TIM_SLOT); gebunden = 1; }
         int abe = (e->code & 2) != 0, abr = (e->tpage >> 5) & 3;
         if (abe) {
@@ -141,6 +161,29 @@ void re15_pc_glas1120_draw(const re15_camera_view_t *cam, int cx, int cy, int ca
                                  e->x0, e->y1, e->u0, v1,  e->tpage, clut, e->vz, 255, 255, 255);
         if (abe) { re15_render_pc_set_tri_blend(0); re15_render_pc_set_tri_alpha(255); }
         s_letzte++;
+        if (k == GLAS_FEDER_K) s_letzte_feder++;
+    }
+messen:
+    {   /* MESSSCHIENE RE15_FEDER_LOG (kein Verhalten): lebende Federplaetze, ihre Weltlage, Quads und gezeichnete Quads. */
+        static FILE *s_fl = NULL; static int s_fl_init = 0;
+        if (!s_fl_init) { s_fl_init = 1; const char *p = getenv("RE15_FEDER_LOG"); if (p && *p) s_fl = fopen(p, "w"); }
+        if (!s_fl) return;
+        int leb = 0, lp = 0;
+        char lagen[400];
+        lagen[0] = 0;
+        for (int i = 0; i < RE2FX_PLAETZE; i++) {
+            const uint8_t *pl = re2fx_platz(i);
+            if (!pl || pl[0x1C] != 0x0C || !(pl[0x18] | pl[0x19])) continue;
+            leb++;
+            if (lp < (int)sizeof lagen - 40)
+                lp += snprintf(lagen + lp, sizeof lagen - (size_t)lp, " p%d(%d,%d,%d)", i,
+                               (int)(int16_t)(pl[0x34] | (pl[0x35] << 8)), (int)(int16_t)(pl[0x36] | (pl[0x37] << 8)),
+                               (int)(int16_t)(pl[0x38] | (pl[0x39] << 8)));
+        }
+        if (!leb) return;
+        fprintf(s_fl, "F=%u federn=%d quads=%d gezeichnet=%d tex=%d%s\n", (unsigned)g_engine.frame_count, leb, feder_quads,
+                s_letzte_feder, s_feder_ok, lagen);
+        fflush(s_fl);
     }
 }
 

@@ -48,12 +48,14 @@
 #include "re15_affen.h"    /* Runde 35 Spur J: NPC-Klemmband +0x82, Gorilla-Trefferzaehler */
 #include "re15_affen3_r38.h"
 #include "re15_birkin_opfer.h"
-#include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Gore) */   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
+#include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Gore) */
+#include "re15_spinnengore_r41.h" /* Runde 41 Spur S: Spinnen-Platzen fuer beide Gehirne */   /* Birkin-Spieler-Haken 0x8011afd8 */   /* Runde 38 Spur S: kleine Affen 0x29 — ACTIVE-Gehirn (alle 16 Subs) in affen3_r38.c */
 #include "re15_brandzombie.h"   /* brennende Zombies (Flag Zone 1/31) */
 #include "re15_gegner_r39.h"   /* Runde 39 Spur E: Gorillas 0x27 (HP x2, Flinch-Schwelle; alle Raeume), Hunde-Riegel-Tick */
 #include "re15_trage1200.h" /* Runde 35 Spur H: Engine-Schwerkraft FUN_8001bd60 (Zombie-Wurzel) */
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
 #include "re15_spinnenanim_r41.h"  /* Runde 41 Spur L: Zeichnen der Adultspinne */
+#include "re15_spinnenlache_r41.h" /* Runde 41 Spur S, Nachbesserung 2: Lache der Spinnenleiche */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
@@ -11082,11 +11084,7 @@ static void re15_zgirl_ai_tick(int slot)
  * @0x801146d0-734 (Farbwort 0x207f60, +0x94 0, +0x96 -50, +0x98 0, +0x9a 3, +0x9c/+0x9e 0, Wort |= 0x4a). */
 static void re15_aspider_teil_platzt(int slot, int k)
 {
-    re15_teil_t *t = re15_teile(slot);
-    if (!t || k < 0 || k >= RE15_TEILE_MAX) return;
-    t[k].col = 0x207f60u; memset(t[k].h94, 0, sizeof t[k].h94);
-    t[k].h94[1] = (uint16_t)(int16_t)-50; t[k].h94[3] = 3; t[k].w |= 0x4a;
-    re15_teile_markieren(slot);
+    re15_spinnengore_teil_platzt(slot, k);   /* Runde 41 Spur S: ein Baustein fuer beide Gehirne (spinnengore_r41.c) */
 }
 /* Bein-Liste @0x80118f30 (Overlay-Daten, von allen Spinnen geteilt; Zaehler je Spinne +0x1de). */
 static uint8_t s_aspider_beine_weg[8];
@@ -11454,24 +11452,45 @@ static void re15_adult_spider_ai_tick(int slot)
         break;
 
     case 3:   /* DEATH 0x80113f40: entry kill-flag 0x8004ef90(0x800b1038,+0x1c6); collapse clip 1 + Se(5)
-               * -> CORPSE (state 7). The 2-stage gore (part-detach x2, phased FX) = OPEN (render). */
+               * -> CORPSE (state 7).
+               * Runde 41 Spur S: die Wurzel springt ueber +0x5 (Waffen-Id) in die Tabelle @0x80118f38 (`lbu v0,5(v0)`
+               * @0x80113fc0, `jalr v0` @0x80113fe0). 7,8,9,10,11,13,16,17,18,21 -> 0x80113ff8: Phase 0 @0x8011403c laesst
+               * die Spinne OHNE Krit- und Zufallstest platzen (Teile 0/19 gruen, alle Beine fliegen, Blut an 0/0/19).
+               * Der Rest -> 0x8011461c: Blut an Teil 0 (@0x80114654), Platzer nur mit Krit (`andi v0,v1,0x40`
+               * @0x801146b0; im Original nur ueber w20-Krit = PORT-WAHL Runde 35 erreichbar). Vorher pruefte der Port nur
+               * das Krit-Bit und warf keine Beine ab (Dossier S_spinnengore.md 2b). Der 4-Phasen-Ablauf von 0x8011461c
+               * (Clip 4, @0x80114b78-e04) bleibt die bisherige Verkuerzung (Clip 1). */
         if (e->sub_state_3 == 0) {
-            if (e->hit_react & 0x40) {                         /* 0x8011461c Krit `andi 0x40` @0x801146b0: Koerper platzt */
+            if (re15_spinnengore_platzwaffe(e->sub_state_1))
+                re15_spinnengore_platzen(e);                   /* @0x8011403c-52c */
+            else if (e->hit_react & 0x40) {
+                re15_spinnengore_platzen(e);                   /* @0x801146bc-b0c */
+                e->sub_state_1 = 7;                            /* Nachbesserung 2: +0x5 = 7 `ori v0,zero,0x7` / `sb v0,5(v1)`
+                                                                * @0x80114b1c-20 -> die Wurzel nimmt danach den Platzweg
+                                                                * (@0x80118f38[7]), die Leiche beginnt in Phase 0 */
+            } else {
                 static const int32_t null3[3] = { 0, 0, 0 };
-                re15_aspider_teil_platzt(slot, 0);             /* @0x801146d0-6f0 */
-                re15_aspider_teil_platzt(slot, 19);            /* +0xcc4 @0x80114708-734 */
-                re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* @0x8011474c */
-                re15_enemy_fx19700(e, 0x00082000u, 19, null3); /* a2 = +3332 @0x80114770 */
+                re15_enemy_fx19700(e, 0x00082000u, 0, null3);  /* 0x8011461c +0x7 == 0 @0x80114654 */
             }
             re15_aspider_clip(e, 1); re15_audio_room_se(5); e->hit_react |= 2;
             if (e->em_flag_id != 0xFF)
                 re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);  /* kill-flag persist @0x80113fa0-ac */
             e->sub_state_3 = 1;
-        } else if (re15_aspider_anim(e)) { e->state = 7; e->sub_state_3 = 0; }
+        } else if (re15_aspider_anim(e)) {
+            e->state = 7;
+            /* Runde 41 Spur S, Nachbesserung 2: Eintritts-Phase der Leiche je Todesweg (+0x7): Platzweg 0x80113ff8
+             * Phase 2 `sw v0(7),4(v1)` @0x80114578-80 -> 0; Weg 0x8011461c Phase 4 `sw v1(0x03000007),4(v0)`
+             * @0x80114d4c-60 -> 3. Die Wurzel waehlt den Weg ueber +0x5 (Tabelle @0x80118f38). */
+            e->sub_state_3 = re15_spinnenlache_r15_eintritt(re15_spinnengore_platzwaffe(e->sub_state_1));
+        }
         break;
 
-    case 7:   /* CORPSE 0x801153d4: settle clip 5, inert. Phased timer(0x5a)/flags(0x2|0x40)/color-tint/
-               * sink(+8/frame)/Se(9) @0x80115414-5cc = OPEN (render/cosmetic). */
+    case 7:   /* CORPSE 0x801153d4 (Phasentabelle @0x801002a4).
+               * Runde 41 Spur S, Nachbesserung 2: die LACHE ist gebaut (spinnenlache_r41.c): Phase 0/3 setzt +0x9E = 90 bzw.
+               * 120 (@0x8011541c / @0x801154c4), Phase 1/4 faerbt den Record 0x00DF809F (@0x8011546c-70) und laesst ihn um 8
+               * je Takt wachsen (@0x801154a8-b8); am Ende Raum-SE 9 (@0x801155bc-cc). Offen bleibt das Flag-Wort |= 2|0x40.
+               * Der Port posiert die Leiche wie bisher mit Clip 5 (Original: Phase 3 `sb 5,148` @0x80115520). */
+        re15_spinnenlache_r15_leiche(e);
         if (e->motion != 5) re15_aspider_clip(e, 5);
         re15_aspider_anim(e);
         break;

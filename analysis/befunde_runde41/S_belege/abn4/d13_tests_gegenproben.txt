@@ -1,0 +1,131 @@
+# Abnahme 4 Spur S - Tests und Gegenproben (Auszug)
+## Unit-Zielauswahl (Kopf)
+
+100% tests passed, 0 tests failed out of 326
+
+Total Test time (real) = 163.27 sec
+dauer s: 164
+## Integration einzeln (Kopf)
+ 1/14 Test  #509: integration_r35_fenster ..................   Passed   26.26 sec
+ 2/14 Test  #525: integration_r35_entladen_j ...............   Passed   51.83 sec
+ 3/14 Test  #553: integration_r35_redhawk ..................   Passed   16.70 sec
+ 4/14 Test  #583: integration_r36_elza_fenster .............   Passed   51.54 sec
+ 5/14 Test  #627: integration_r36_pri_schatten .............   Passed   28.87 sec
+ 6/14 Test  #709: integration_r37_elzaems_elza10c1kraehe ...   Passed   42.28 sec
+ 7/14 Test  #710: integration_r37_elzaems_leon10c0kraehe ...   Passed   51.30 sec
+ 8/14 Test  #766: integration_r37_re2zombie ................   Passed   55.67 sec
+ 9/14 Test  #904: integration_r38_spinnen_echtlauf .........   Passed  120.72 sec
+10/14 Test #1005: integration_r39_gegner_schatten ..........   Passed   60.83 sec
+11/14 Test #1006: integration_r39_gegner_hunde1190 .........   Passed   49.64 sec
+12/14 Test #1028: integration_r39_hund1121 .................   Passed   89.59 sec
+13/14 Test #1322: integration_r41_spinnenanim ..............   Passed  125.58 sec
+14/14 Test #1324: integration_r41_spinnengore ..............   Passed  172.86 sec
+100% tests passed, 0 tests failed out of 14
+dauer s: 944
+## Gegenprobe X (X1 Zeichenaufruf, X2 Raumwechsel-Leeren)
+1/4 Test  #176: unit_re2_spider_ai ...............   Passed    0.01 sec
+2/4 Test  #182: unit_re2_baby_spider_dmg .........   Passed    0.05 sec
+3/4 Test #1323: unit_r41_spinnengore .............***Failed    0.02 sec
+FAIL: M7b: Raumwechsel (re15_re2z_rng_reset) loescht die Flecken nicht (1)
+FAIL: M7c: kein Fleck nach dem DESPAWN (2)
+FAIL: M7c: Raumwechsel (re15_actor_init) loescht die Flecken nicht (2)
+FAIL: M7d: kein Fleck nach dem DESPAWN
+FAIL: M7d: Fleck ohne Raumwechsel weg (3)
+FAIL: M8: Baby in der Luft: pool 0 Flecken 3
+4/4 Test #1324: integration_r41_spinnengore ......***Failed  245.25 sec
+pruef_log platzt: Zeilen 651, RE2-Tod 1, Platzen 1, Bein 0, Teilschicht 1
+pruef_lache re2: Zeilen 802, Basis 1300x1400 1, Lache 1, Endmass 1 (sichtbar 1), falsche Tinte 0
+pruef_log platzt: Zeilen 651, RE2-Tod 1, Platzen 1, Bein 0, Teilschicht 1
+pruef_log bein: Zeilen 651, RE2-Tod 0, Platzen 0, Bein 1, Teilschicht 1
+pruef_log aus: Zeilen 651, RE2-Tod 1, Platzen 0, Bein 0, Teilschicht 0
+pruef_lache r15: Zeilen 802, Basis 1300x1400 1, Lache 1, Endmass 1 (sichtbar 0), falsche Tinte 0
+pruef_flecken: Zeilen 3000, sichtbar 1200, gezeichnet 0, sichtbar ohne Zeichnung 1200, fremd 0
+pruef_federn gib: Saetze 1, Federn 8 (nicht gespawnt 0, ausserhalb +-512 0, Satzgroesse falsch 0), Bilder mit Feder 159, davon gezeichnet 159, Bild geladen 1
+pruef_federn gib: Saetze 1, Federn 8 (nicht gespawnt 0, ausserhalb +-512 0, Satzgroesse falsch 0), Bilder mit Feder 159, davon gezeichnet 159, Bild geladen 1
+  [BT] pruef_flecken exit=1
+  pruef_flecken: Zeilen 3000, sichtbar 1200, gezeichnet 0, sichtbar ohne
+The following tests FAILED:
+	1323 - unit_r41_spinnengore (Failed)
+	1324 - integration_r41_spinnengore (Failed)
+## Gegenprobe Y (Y1..Y5 Federn)
+1/3 Test  #112: unit_re2_crow_ai .................   Passed    0.02 sec
+2/3 Test #1323: unit_r41_spinnengore .............***Failed    0.02 sec
+FAIL: N2 GIB: Platz 89 Versatz (1408,32,352) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N2 GIB: Platz 90 Versatz (1164,-460,392) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N2 GIB: Platz 91 Versatz (1156,-484,336) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N2 GIB: Platz 92 Versatz (1036,292,-172) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N2 GIB: Platz 93 Versatz (1036,284,-196) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N2 GIB: Platz 94 Versatz (1488,160,-448) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N2 GIB: Platz 95 Versatz (560,348,-76) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N2: GIB 7 Federn, gespawnt 7, gezeichnet 7 (Soll 8..11 @0x80102ea8-bc)
+FAIL: N3: Pendel: 0 Richtungswechsel (+0x42 @0x800204b0-bc), groesster Schwung 9538
+N-Messung: GIB 7 Federn ab y -1468, weg nach 105 Bildern, Ops 34/16/5/35/36 = 545/7/538/7/0, Richtungswechsel 0, groesster Schwung 9538, Quads 532
+FAIL: N4 Treffer: Platz 95 Versatz (1396,-60,104) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N4: Flug-Treffer 1 Federn (Soll 2..3 @0x80102a08-1c)
+N-Messung: Flug-Treffer 1 Federn, mit Sturz 3
+FAIL: N5 Launch: Platz 89 Versatz (576,388,12) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N5 Launch: Platz 90 Versatz (948,104,464) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N5 Launch: Platz 91 Versatz (1236,-356,-464) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N5 Launch: Platz 92 Versatz (940,72,384) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N5 Launch: Platz 93 Versatz (1060,300,-196) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N5 Launch: Platz 94 Versatz (1456,64,352) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+FAIL: N5 Launch: Platz 95 Versatz (1100,372,-60) nicht s8*4 um die Kraehe (@0x801046a4-e8)
+N-Messung: Launch 7 Federn
+N-Messung: Abheben 400 x: 45 Flug-Federn gezogen, 0 gezeichnet
+3/3 Test #1324: integration_r41_spinnengore ......***Failed  207.53 sec
+pruef_log platzt: Zeilen 651, RE2-Tod 1, Platzen 1, Bein 0, Teilschicht 1
+pruef_lache re2: Zeilen 802, Basis 1300x1400 1, Lache 1, Endmass 1 (sichtbar 1), falsche Tinte 0
+pruef_log platzt: Zeilen 651, RE2-Tod 1, Platzen 1, Bein 0, Teilschicht 1
+pruef_log bein: Zeilen 651, RE2-Tod 0, Platzen 0, Bein 1, Teilschicht 1
+pruef_log aus: Zeilen 651, RE2-Tod 1, Platzen 0, Bein 0, Teilschicht 0
+pruef_lache r15: Zeilen 802, Basis 1300x1400 1, Lache 1, Endmass 1 (sichtbar 0), falsche Tinte 0
+pruef_flecken: Zeilen 3000, sichtbar 1200, gezeichnet 1200, sichtbar ohne Zeichnung 0, fremd 0
+pruef_federn gib: Saetze 1, Federn 4 (nicht gespawnt 0, ausserhalb +-512 4, Satzgroesse falsch 1), Bilder mit Feder 149, davon gezeichnet 0, Bild geladen 1
+pruef_federn gib: Saetze 1, Federn 4 (nicht gespawnt 0, ausserhalb +-512 4, Satzgroesse falsch 1), Bilder mit Feder 149, davon gezeichnet 0, Bild geladen 1
+  [K] pruef_federn gib exit=1
+  pruef_federn gib: Saetze 1, Federn 4 (nicht gespawnt 0, ausserhalb +-512 4,
+  [KE] pruef_federn gib exit=1
+  pruef_federn gib: Saetze 1, Federn 4 (nicht gespawnt 0, ausserhalb +-512 4,
+The following tests FAILED:
+	1323 - unit_r41_spinnengore (Failed)
+	1324 - integration_r41_spinnengore (Failed)
+## Nach restore
+1/5 Test  #112: unit_re2_crow_ai .................   Passed    0.02 sec
+2/5 Test  #176: unit_re2_spider_ai ...............   Passed    0.01 sec
+3/5 Test  #182: unit_re2_baby_spider_dmg .........   Passed    0.05 sec
+4/5 Test #1323: unit_r41_spinnengore .............   Passed    0.02 sec
+5/5 Test #1324: integration_r41_spinnengore ......   Passed  207.95 sec
+100% tests passed, 0 tests failed out of 5
+## Gegenprobe-Skript
+# Abnahme 4: eigene Gegenproben (einzelne Stellen ausbauen). Aufruf: gegen4.py X|Y|restore
+import sys, subprocess
+R = r"C:/workspace/git/reAi_v2/.claude/worktrees/r41_spinnengore/re15_port/"
+def ers(rel, alt, neu, n=1):
+    p = R + rel; s = open(p, encoding="utf-8").read()
+    k = s.count(alt)
+    if k != n: sys.exit("FEHLER %s: %d Treffer statt %d fuer %r" % (rel, k, n, alt[:60]))
+    open(p, "w", encoding="utf-8", newline="").write(s.replace(alt, neu)); print("ok", rel, alt[:50].replace("\n", " "))
+w = sys.argv[1]
+if w == "X":   # Babyfleck: X1 Zeichenaufruf weg, X2 Leeren beim Raumwechsel weg
+    ers("platform/pc/main.c", """                    re15_render_shadow_quad_c(fsx[0], fsy[0], fsx[1], fsy[1], fsx[2], fsy[2], fsx[3], fsy[3],
+                                              frgb[0], frgb[1], frgb[2]);
+                    fgez""", """                    /* GEGENPROBE-ABN4 X1 */ (void)fsx; (void)fsy;
+                    fgez""")
+    ers("engine/src/enemy_ai_re2_zombie.c", "                                 re15_spinnenlache_raum_reset();   /* Runde 41 Spur S NB2",
+        "                                 /* GEGENPROBE-ABN4 X2 */   /* Runde 41 Spur S NB2")
+elif w == "Y":  # Federn: Y1 GIB 4..7, Y2 Ort +1024 x neben dem Koerper, Y3 kein Kippen +0x42, Y4 Feder nicht zeichnen, Y5 Treffer 0..1
+    ers("engine/src/enemy_ai_re2_crow.c", "re2c_feather(e, (int)(re15_re2_rand() & 0x3u) | 0x8, 1, \"gib\");",
+        "re2c_feather(e, (int)(re15_re2_rand() & 0x3u) | 0x4, 1, \"gib\"); /* GEGENPROBE-ABN4 Y1 */")
+    ers("engine/src/enemy_ai_re2_crow.c", "int16_t ofs[4] = { (int16_t)(e->x + dx),",
+        "int16_t ofs[4] = { (int16_t)(e->x + dx + 1024) /* GEGENPROBE-ABN4 Y2 */,")
+    ers("engine/src/re2_fx.c", "    wr16(b, 0x42, (uint16_t)(int16_t)(int8_t)(-(int32_t)(int8_t)b[0x42]));",
+        "    /* GEGENPROBE-ABN4 Y3 */")
+    ers("platform/pc/src/glas1120_pc.c", "if (k == GLAS_FEDER_K) { feder_quads++; if (!s_feder_ok) continue; }",
+        "if (k == GLAS_FEDER_K) { feder_quads++; continue; /* GEGENPROBE-ABN4 Y4 */ }")
+    ers("engine/src/enemy_ai_re2_crow.c", "re2c_feather(e, (int)(re15_re2_rand() & 0x1u) | 0x2, 1, \"treffer\");",
+        "re2c_feather(e, (int)(re15_re2_rand() & 0x1u), 1, \"treffer\"); /* GEGENPROBE-ABN4 Y5 */")
+elif w == "restore":
+    subprocess.check_call(["git", "-C", R, "checkout", "HEAD", "--", "platform/pc/main.c", "engine/src/enemy_ai_re2_zombie.c",
+                           "engine/src/enemy_ai_re2_crow.c", "engine/src/re2_fx.c", "platform/pc/src/glas1120_pc.c"])
+    out = subprocess.run(["git", "-C", R, "grep", "-c", "GEGENPROBE-ABN4"], capture_output=True, text=True).stdout
+    print("restore ok, GEGENPROBE-ABN4 im Baum:", out.strip() or "keine")

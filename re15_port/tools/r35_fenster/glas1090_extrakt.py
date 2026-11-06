@@ -7,6 +7,8 @@ re15_port/shared_assets/RE2/ und prueft jede Datei gegen die RDT-Bytes selbst:
   GLAS1090.ESP      = effect.esp  (Raum-ESP, Ids 29 10 11 12 13 14 0C 19; Banken 0x10..0x13 Splitter,
                                     0x14 Aufprall-Glitzern; Dossier M_cut11c0_fenster.md 2.3)
   GLAS1090_10.TIM .. GLAS1090_14.TIM = esp10.tim .. esp14.tim (die Texturen dieser fuenf Banken)
+  GLAS1090_0C.TIM   = esp0C.tim (Raumbank 0x0C = Kraehenfeder, Runde 41 Spur S Nachbesserung 3; bytegleich
+                                    room2110/esp0C.tim)
   GLAS1090.EDT/.VH/.VB = snd0.edt/.vh/.vb = RDT-Kopfworte +0x08/+0x0C/+0x10 (Raum-SE-Bank 2;
                                     Satz 0x21 = Glasbruch, Dossier 2.4)
 
@@ -25,7 +27,7 @@ RDT = os.path.join(REPO, "info", "re2leon", "PL0", "RDT", "ROOM1090.RDT")
 DST = os.path.join(REPO, "re15_port", "shared_assets", "RE2")
 
 PAARE = [("effect.esp", "GLAS1090.ESP")] + \
-        [("esp%02X.tim" % b, "GLAS1090_%02X.TIM" % b) for b in (0x10, 0x11, 0x12, 0x13, 0x14)] + \
+        [("esp%02X.tim" % b, "GLAS1090_%02X.TIM" % b) for b in (0x10, 0x11, 0x12, 0x13, 0x14, 0x0C)] + \
         [("snd0.edt", "GLAS1090.EDT"), ("snd0.vh", "GLAS1090.VH"), ("snd0.vb", "GLAS1090.VB")]
 
 

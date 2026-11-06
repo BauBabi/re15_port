@@ -30,6 +30,7 @@
 #include "re15_engine.h"         /* g_engine.frame_count (Protokollzeile des Szenenschutzes) */
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: re15_szenenschutz_haelt (Routine 25, Nachbesserung 1 Mangel 3) */
 #include "re15_spinnenanim_r41.h"   /* Runde 41 Spur L: Zeichen-Merker + Figur-Matrix (Gift-Anker) */
+#include "re15_teile_r15.h"        /* Runde 41 Spur S: Teilschicht in der Messschiene */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -879,6 +880,24 @@ void re15_spinnen_r38_log_frame(unsigned frame)
                 e->motion,
                 (int)e->anim_frame, (int)e->x, (int)e->y, (int)e->z,
                 (int)e->rot_x, (int)e->rot_y, (int)e->rot_z, (int)e->hp, e->hit_react);
+        /* Runde 41 Spur S (Gore-Messung): Gehirn (o=1 RE2-Spinnen-Gehirn), Teilschicht an (ta), Masken ueber die
+         * 20 Teile: sh = Teil-Wort & 0x08 (Scherben @0x80023410), fl = & 0x20 (Flug FUN_8001f024), un = Bit 0 aus
+         * (nicht gezeichnet @0x8001ecc4); lg/ln = RE2-Beinmaske +0x220 / Restbeine +0x221; z = RE2-Zeile +0x23C.
+         * Eigene Klammer {G...} hinter der Spinnen-Klammer: die bisherigen Auswerter lesen nur [..] und {fx..}. */
+        {
+            extern int re15_re2spider_owns(const re15_actor_t *e);
+            int sl = (int)(e - g_actors);
+            const re15_teil_t *tl = re15_teile(sl);
+            unsigned msh = 0, mfl = 0, mun = 0;
+            for (int k = 0; tl && k < 20; k++) {
+                if (tl[k].w & 0x08u) msh |= 1u << k;
+                if (tl[k].w & 0x20u) mfl |= 1u << k;
+                if (!(tl[k].w & 0x01u)) mun |= 1u << k;
+            }
+            fprintf(s_fp, " {G%d o=%d ta=%d sh=%05x fl=%05x un=%05x lg=%02x ln=%d z=%d}", i,
+                    (re15_ai_re2_for_type(e->type) && re15_re2spider_owns(e)) ? 1 : 0, re15_teile_an(sl),
+                    msh, mfl, mun, (unsigned)e->re2s_legs220, (int)e->re2s_legn221, (int)e->re2s_row23c);
+        }
     }
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         const re15_esp_fx_t *f = re15_esp_fx_get(i);

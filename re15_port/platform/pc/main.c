@@ -133,6 +133,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
 #include "re15_spinnenanim_r41.h" /* Runde 41 Spur L: Zeichnen der Adultspinne (Drehung, Bild, Massstab) */
+#include "re15_spinnenlache_r41.h" /* Runde 41 Spur S, Nachbesserung 2: Lache der Spinnenleiche, Flecken toter Babys */
 #include "re15_npckante_r38.h"     /* Runde 38 Spur M: NPC-Schatten auf +0x1ba waehrend Kante/Fall */
 #include "re15_zombieki_r36.h"    /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache (Typ 0x27) */
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
@@ -437,6 +438,20 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
                         (unsigned)f->flags, (unsigned)f->granate_art,
                         (unsigned)g_engine.frame_count);
                 fflush(fl);
+            }
+        }
+        /* RE15_FX_CLUT_LOG (Runde 41 Spur S, Nachbesserung 1): MESSSCHIENE, kein Verhalten. Eigene Datei, weil die
+         * Auswerter von RE15_FX_LOG ` F=<n>` am Zeilenende verankern. Je GEZEICHNETEM Platz: Spielbild, Id, Sub
+         * (Platz +0x71, `sb t7,113(t0)` @0x800197d8), Skala (+0x72, `sh s1,114(t0)` @0x800197dc), CLUT (+0x32,
+         * `sh v0,50(t0)` @0x80019888), das Wort, das der Zeichner wirklich nimmt (cw, 0 = Altweg erste Palette), Lage. */
+        {
+            static FILE *s_cl = NULL; static int s_cl_init = 0;
+            if (!s_cl_init) { s_cl_init = 1; const char *p = getenv("RE15_FX_CLUT_LOG"); if (p && *p) s_cl = fopen(p, "w"); }
+            if (s_cl) {
+                fprintf(s_cl, "F=%u id=%d sub=%d skala=%04x clut=%04x cw=%04x slot=%d w(%d,%d,%d)\n",
+                        (unsigned)g_engine.frame_count, f->effect_id, f->sub_index, (unsigned)f->scale16,
+                        (unsigned)re15_pc_esp_clut(f), (unsigned)clut_wort, slot, (int)wl[0], (int)wl[1], (int)wl[2]);
+                fflush(s_cl);
             }
         }
         /* Near-Gate byte-true: das Original verwirft das Sprite, wenn SZ3>>2 == 0, also SZ3 < 4
@@ -9879,6 +9894,57 @@ re_title:;
              * as a second Leon-shaped character — communicates presence
              * even though wrong model. Bone-by-bone projection mirrors
              * the player loop above. */
+            /* Runde 41 Spur S, Nachbesserung 2: FLECKEN toter RE2-Babyspinnen. Der Schatten-Record bleibt nach dem
+             * DESPAWN (FUN_8001B250 nullt nur word0/word1 @0x8001b258-5c) belegt und wird weiter gezeichnet
+             * (FUN_8001699c, Bit 4 ohne Bit 8 @0x80016a04-18), bis der Raumwechsel den Pool leert (FUN_8001633c
+             * @0x8001639c, Aufruf @0x80026e0c). Lage = letzte Record-Lage (x, +0x1C2, z, +0x76; FUN_800168b4
+             * @0x8001693c-70). Dieselbe Projektion wie der Gegner-Schatten unten. */
+            for (int fi = 0; fi < re15_spinnenlache_flecken_zahl(); fi++) {
+                int32_t fpos[3], fhx = 0, fhz = 0; int16_t fyaw = 0; uint8_t frgb[3];
+                if (!re15_spinnenlache_fleck(fi, fpos, &fyaw, &fhx, &fhz, frgb)) continue;
+                int32_t fym[9], frot[9], ftr[3];
+                re15_camera_yaw_matrix_angle(fyaw, fym);
+                re15_camera_compose_view_bone(&cam_view, fym, fpos, frot, ftr);
+                const int32_t fc[4][3] = { { -fhx, 0, fhz }, { -fhx, 0, -fhz }, { fhx, 0, fhz }, { fhx, 0, -fhz } };
+                int fsx[4], fsy[4], fok = 1; int32_t fvz_summe = 0;
+                for (int v = 0; v < 4; v++) {
+                    int32_t _x = fc[v][0], _y = fc[v][1], _z = fc[v][2];
+                    int32_t _vx = (int32_t)(((int64_t)_x*frot[0] + (int64_t)_y*frot[1] + (int64_t)_z*frot[2]) >> 12) + ftr[0];
+                    int32_t _vy = (int32_t)(((int64_t)_x*frot[3] + (int64_t)_y*frot[4] + (int64_t)_z*frot[5]) >> 12) + ftr[1];
+                    int32_t _vz = (int32_t)(((int64_t)_x*frot[6] + (int64_t)_y*frot[7] + (int64_t)_z*frot[8]) >> 12) + ftr[2];
+                    if (_vz < 64) { fok = 0; break; }
+                    fvz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;
+                    int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
+                    int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
+                    uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
+                    uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                    fsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
+                    fsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                }
+                /* Nachbesserung 3 (Abnahme 3 Mangel 2): die Messzeile steht HINTER dem Einreihen und meldet als
+                 * `gezeichnet=`, ob der Renderer das Viereck angenommen hat (Zaehler der Schatten-Warteschlange vorher/
+                 * nachher). So faellt der Riegel integration_r41_spinnengore (Lauf BT) auch, wenn nur der Zeichenaufruf fehlt. */
+                int fgez = 0;
+                if (fok) {
+                    extern int re15_render_pc_shadow_quads_eingereiht(void);
+                    const int vor = re15_render_pc_shadow_quads_eingereiht();
+                    re15_render_pc_shadow_tiefe(fvz_summe, 0);
+                    re15_render_shadow_quad_c(fsx[0], fsy[0], fsx[1], fsy[1], fsx[2], fsy[2], fsx[3], fsy[3],
+                                              frgb[0], frgb[1], frgb[2]);
+                    fgez = re15_render_pc_shadow_quads_eingereiht() - vor;
+                }
+                {   /* RE15_LACHE_LOG: Messschiene, kein Verhalten */
+                    static FILE *s_fl = NULL; static int s_fl_init = 0;
+                    if (!s_fl_init) { s_fl_init = 1; const char *p = getenv("RE15_LACHE_LOG"); if (p && *p) { char n2[600]; snprintf(n2, sizeof n2, "%s.flecken", p); s_fl = fopen(n2, "w"); } }
+                    if (s_fl) {
+                        fprintf(s_fl, "F=%u fleck=%d hx=%d hz=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d gezeichnet=%d raum=%04X\n",
+                                (unsigned)g_engine.frame_count, fi, (int)fhx, (int)fhz, frgb[0], frgb[1], frgb[2],
+                                (int)fpos[1], (int)fpos[0], (int)fpos[2], fok, fgez, (unsigned)g_current_room_id & 0xFFFFu);
+                        fflush(s_fl);
+                    }
+                }
+            }
+
             for (int npc_i = 1; npc_i < RE15_ACTOR_MAX; npc_i++) {
                 const re15_actor_t *npc = &g_actors[npc_i];
                 if (!npc->active) continue;
@@ -10100,6 +10166,10 @@ re_title:;
                         }
                     }
                     re15_spinnenanim_r41_schatten_groesse(npc, &nhx, &nhz);   /* Runde 41 Spur L: Spinne +-1300 x +-1400 (FUN_8001af5c @0x80110d90) */
+                    /* Runde 41 Spur S, Nachbesserung 2: LACHE der Spinnenleiche (RE1.5 0x00DF809F + 8/Takt @0x8011546c-b8,
+                     * RE2 0x00BF10BF + 8/Takt @0x80104e7c-dc) und die RE2-Babyspinne (Record 200 x 200 @0x8010024c-50,
+                     * Tinte beim Tod @0x80100cb4-e0). Mass und Tinte schreibt die KI (spinnenlache_r41.c). */
+                    re15_spinnenlache_render(npc, &nhx, &nhz, &corpse_pool, &sh_r, &sh_g, &sh_b);
                     int32_t nsh_c[4][3] = {
                         { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
                         {  nhx, 0,  nhz }, {  nhx, 0, -nhz },
@@ -10157,6 +10227,20 @@ re_title:;
                         uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
                         nsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
                         nsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                    }
+                    /* RE15_LACHE_LOG (Runde 41 Spur S, Nachbesserung 2): MESSSCHIENE, kein Verhalten. Je
+                     * Schatten einer Spinne 0x25 oder einer RE2-Babyspinne 0x26: Bild, Platz, Zustand, Halbmasse, Lache an,
+                     * Tinte (R,G,B wie re15_render_shadow_quad sie bekommt), Boden-Y, sichtbar = das Viereck geht an den Zeichner (alle vz >= 64). */
+                    if (npc->type == 0x25u || re15_re2spider_baby_owns(npc)) {
+                        static FILE *s_ll = NULL; static int s_ll_init = 0;
+                        if (!s_ll_init) { s_ll_init = 1; const char *p = getenv("RE15_LACHE_LOG"); if (p && *p) s_ll = fopen(p, "w"); }
+                        if (s_ll) {
+                            fprintf(s_ll, "F=%u slot=%d typ=%02x st=%d/%d/%d/%d hx=%d hz=%d pool=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d\n",
+                                    (unsigned)g_engine.frame_count, (int)(npc - g_actors), (unsigned)npc->type, (int)npc->state,
+                                    (int)npc->sub_state_1, (int)npc->sub_state_2, (int)npc->sub_state_3, (int)nhx, (int)nhz,
+                                    corpse_pool, sh_r, sh_g, sh_b, (int)nsh_y, (int)npc->x, (int)npc->z, (nok && !crow_no_record) ? 1 : 0);
+                            fflush(s_ll);
+                        }
                     }
                     if (nok && !crow_no_record) {
                         re15_render_pc_shadow_tiefe(nsh_vz_summe, 0);   /* Runde 36 Spur O */
@@ -10555,9 +10639,12 @@ re_title:;
                 /* RE1.5-TEILSCHICHT (re15_teile_r15.h): Farbwort +0x68 multipliziert wie RE2 +0x70 (NCCT). */
                 re15_teil_t *r15_teile = re15_teile_an(npc_i) ? re15_teile(npc_i) : NULL;
                 if (r15_teile && !gore_on) {
+                    /* Runde 41 Spur S: neutrale Teile (0x808080 = FUN_8001ee68) behalten die RE2-Part-Tinte von oben
+                     * (Spinnen-Brand 0x202f2f @0x80104B44, Saeure 0x101f3f @0x80104BC0) — vorher ueberschrieb die
+                     * Teilschicht sie mit neutral. Fuer RE1.5-Typen ist gore_tint dort ohnehin neutral: gleiches Bild. */
                     tint_on = 1;
-                    for (int gi = 0; gi < RE15_EMD_MAX_BONES; gi++)
-                        gore_tint[gi] = (gi < RE15_TEILE_MAX) ? (r15_teile[gi].col & 0xFFFFFFu) : 0x808080u;
+                    for (int gi = 0; gi < RE15_EMD_MAX_BONES && gi < RE15_TEILE_MAX; gi++)
+                        if ((r15_teile[gi].col & 0xFFFFFFu) != 0x808080u) gore_tint[gi] = r15_teile[gi].col & 0xFFFFFFu;
                 }
 #define RE2_GORE_TINT(r_, g_, b_) do { if (tint_on && nbi < RE15_EMD_MAX_BONES) {      \
         uint32_t _t = gore_tint[nbi];                                                  \

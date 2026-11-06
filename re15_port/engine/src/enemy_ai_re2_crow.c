@@ -78,7 +78,9 @@
 #include "re15_collision.h"  /* re15_collision_constrain_enemy (SCA-Wand-Klemme) */
 #include "re15_room.h"       /* g_room_rdt / g_room_rdt_ok */
 #include "re15_schuss_r36.h" /* re15_schuss_r36_kraehe_parts_seed / _gib (Runde 36 Spur C) */
-#include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Kraehen-Angriff, solange die Szene den Spieler haelt */
+#include "re15_szenenschutz_r38.h"
+#include "re2_fx.h"           /* Runde 41 Spur S NB3: re2fx_spawn_sofort (FUN_8001bf10), Raumbank 0x0C Feder */
+#include "re15_engine.h"      /* g_engine.frame_count (Messschiene RE15_FEDER_LOG) */ /* Runde 38 Spur B: kein Kraehen-Angriff, solange die Szene den Spieler haelt */
 #include <stdio.h>
 FILE *re15_re2_trace_out(void);   /* Trace-Ziel: Datei neben der exe (stderr ist bei der GUI-exe tot) */
 
@@ -199,25 +201,59 @@ static void re2c_move3d(re15_actor_t *e)                   /* == 0x80015350(0,0)
  * Original-Kette 0 (Spawn, kein INIT-Writer) -> 350/100/50/10 (Vol-Callsites). */
 static void re2c_vol(re15_actor_t *e, int vol) { e->crow_vol90 = (int16_t)vol; }
 
-/* 0x80104678(self, n): n Federn, Offsets ±512 (sll24/sra22 @0x801046A4-E0), FX-Wort
- * 0x0C000800 = Id 0x0C = das RE2-FEDER-FX (@0x801046EC-F0), a1 = rand<<4 (@0x801046F4).
- * ⛔ FIX 2026-08-23 (Nutzer-Report "Bluteffekte ohne Treffer bei den Kraehen"): der alte
- * Stand-in spawnte hier RE1.5-ESP-Effekt 0 = BLUT — an fuenf trefferlosen Callsites
- * (Takeoff @0x80100CA8-C4/@0x80100D9C-B0, Kreisen-P0 @0x80101220-34, Trudeln @0x801019A4-C0,
- * Harass-Vorbeiflug @0x80102690-AC), je 1/8 pro Re-Roll -> regelmaessig Blut im Normalflug.
- * Die RE1.5-Kraehe spawnt im Normalflug KEIN FX (ihr einziges "Feder"-Ereignis ist der
- * 13-Bone-Part-Scatter der GIB-Lane @0x80114a50-aa4) — die korrekte RE1.5-Praesentation
- * eines Fluegelschlags ist also NICHTS. Nur die 4 RNG-Draws pro Feder bleiben
- * (Draw-Count = Verhalten am geteilten RE2-Strom). Das Feder-Sprite selbst bleibt OPEN
- * (RE2-FX-Familie 0x8001bf10 ohne Port-Gegenstueck, wie Hund/Zombie-Kinds). */
-static void re2c_feather(re15_actor_t *e, int n)
+/* 0x80104678(self, n): n Federn (EMOVL21_S0, selbst disassembliert 2026-11-01, Nachbesserung 3 Spur S):
+ *   je Feder 4 Draws: Offset x/y/z = (rand << 24) >> 22 = s8 * 4 (-512..508) auf self+0x38/+0x3C/+0x40 (`jal 0x80015fe8`
+ *   @0x8010469c/b4/cc, `sll v0,v0,24 / sra v0,v0,22` @0x801046a4-ac/bc-c4/d4-dc, `lw v1,56/60/64(s1)` @0x801046a8/c0/d8,
+ *   `sh v1,16/18/20(sp)` @0x801046b8/d0/e8 = SVECTOR), Gier a1 = rand << 4 (`sll a1,v0,4` @0x801046f4);
+ *   FX-Wort 0x0C000800 = Raumbank 0x0C, Sub 0, Skala 0x800 (`lui a0,0xc00 / ori a0,a0,0x800` @0x801046ec-f0),
+ *   Matrix = Einheitsmatrix 0x8009DB44 (`lui a2,0x800a / addiu a2,a2,-9404` @0x801046f8-fc), a3 = sp+16 (@0x80104704),
+ *   `jal 0x8001bf10` @0x80104700 = re2fx_spawn_sofort (Status 0xA003 @0x8001bfa8-ac, keine Draws im Spawner).
+ *   Der Ort ist also die Aktor-Lage (+0x38/+0x3C/+0x40 = e->x/y/z, bei der Kraehe der Koerper in der Luft bzw.
+ *   Boden - 250 im Sitzen, `addiu -250` @0x80102B60), KEINE Teil-Matrix. Das Bild ist RE2 room1090 esp0C.tim
+ *   (GLAS1090_0C.TIM, Zeichner glas1120_pc.c), das Verhalten die Ops 34/16/5/35/36 (re2_fx.c, Block "RUNDE 41 SPUR S").
+ * ⛔ FIX 2026-08-23 (Nutzer-Report "Bluteffekte ohne Treffer bei den Kraehen"): der alte Stand-in spawnte hier RE1.5-ESP-Effekt
+ * 0 = BLUT an fuenf trefferlosen Flug-Stellen. Das bleibt behoben: es gibt kein Blut mehr, nur noch die RE2-Feder.
+ * PORT-WAHL (Nutzerregel "RE2-KI = Angriffsmuster, Treffer usw.; Gore = Maximum", Nachbesserung 3): GEZEICHNET wird die Feder
+ * nur an den Treffer-, Tod- und Griff-Stellen (zeichnen = 1: Flug-Treffer 2..3 @0x80102A08-1C und Sturz @0x80102A68-90, GIB
+ * 8..11 @0x80102EA8-BC, Boden 3..6 @0x80103030-44, Launch 5..8 @0x801032F8-30C, Picken am Spieler 1/4 @0x80102630-4C). An den
+ * fuenf reinen Flug-Stellen (Abheben @0x80100CA8-C4/@0x80100D9C-B0, Kreisen @0x80101220-34, Trudeln @0x801019A4-C0,
+ * Vorbeiflug @0x80102690-AC) zeichnet RE2 sie auch; der Port nicht (zeichnen = 0, nur die 4 Draws je Feder bleiben). */
+static unsigned s_feder_flug, s_feder_gezeichnet, s_feder_gespawnt;
+void re15_re2crow_feder_zaehler(unsigned *flug, unsigned *gezeichnet, unsigned *gespawnt)
 {
-    (void)e;
+    if (flug) *flug = s_feder_flug;
+    if (gezeichnet) *gezeichnet = s_feder_gezeichnet;
+    if (gespawnt) *gespawnt = s_feder_gespawnt;
+}
+static FILE *feder_log(void)
+{
+    static FILE *f = NULL; static int init = 0;
+    if (!init) {
+        init = 1;
+        const char *p = getenv("RE15_FEDER_LOG");          /* Messschiene, kein Verhalten */
+        if (p && *p) { char n[600]; snprintf(n, sizeof n, "%s.spawn", p); f = fopen(n, "w"); }
+    }
+    return f;
+}
+static void re2c_feather(re15_actor_t *e, int n, int zeichnen, const char *anlass)
+{
     for (int i = 0; i < n; i++) {
-        (void)re15_re2_rand();                             /* Offsets @0x801046A4-E0 */
-        (void)re15_re2_rand();
-        (void)re15_re2_rand();
-        (void)re15_re2_rand();                             /* a1 = rand<<4 @0x801046F0-F4 */
+        int32_t dx = (int32_t)(int8_t)(uint8_t)re15_re2_rand() * 4;   /* @0x8010469c-ac */
+        int32_t dy = (int32_t)(int8_t)(uint8_t)re15_re2_rand() * 4;   /* @0x801046b4-c4 */
+        int32_t dz = (int32_t)(int8_t)(uint8_t)re15_re2_rand() * 4;   /* @0x801046cc-dc */
+        int16_t gier = (int16_t)((re15_re2_rand() & 0xffu) << 4);      /* @0x801046e4-f4 */
+        if (!zeichnen) { s_feder_flug++; continue; }
+        s_feder_gezeichnet++;
+        int16_t ofs[4] = { (int16_t)(e->x + dx), (int16_t)(e->y + dy), (int16_t)(e->z + dz), 0 };
+        int platz = re2fx_spawn_sofort(0x0C000800u, gier, re2fx_einheitsmatrix, ofs);   /* @0x801046ec-0x80104704 */
+        if (platz >= 0 && platz < RE2FX_PLAETZE) s_feder_gespawnt++;
+        FILE *lf = feder_log();
+        if (lf) {
+            fprintf(lf, "F=%u slot=%d anlass=%s i=%d/%d platz=%d ofs=(%d,%d,%d) gier=%d kraehe=(%d,%d,%d) boden=%d\n",
+                    (unsigned)g_engine.frame_count, (int)(e - g_actors), anlass, i + 1, n, platz,
+                    (int)ofs[0], (int)ofs[1], (int)ofs[2], (int)gier, (int)e->x, (int)e->y, (int)e->z, (int)e->dog_floor_y);
+            fflush(lf);
+        }
     }
 }
 /* 0x8010459C(self): EIN Federburst, Offsets ±128 (sll24/sra24 @0x801045B0-EC), FX 0x12800,
@@ -522,7 +558,7 @@ static void re2c_exec2_takeoff(re15_actor_t *e, re15_actor_t *pl)
     case 0: {                                              /* P0 @0x80100C84 */
         int s1 = (int)(re15_re2_rand() & 0x7u);            /* Startframe @0x80100C90 */
         if (re15_re2_rand() & 0x1u) re2c_se(1);            /* Fluegelschlag @0x80100C94-A4 */
-        if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1);   /* 1/8 @0x80100CA8-C4 */
+        if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1, 0, "abheben");   /* 1/8 @0x80100CA8-C4 */
         re2c_clip(e, 7, s1);                               /* (s1<<8)|0x70007 @0x80100CC8-D8 */
         e->re2d_pause21d = 0;                              /* sb zero,541 @0x80100CE0 */
         e->speed_h = (int16_t)(100 + (re15_re2_rand() & 0x1fu));  /* @0x80100CDC-EC */
@@ -544,7 +580,7 @@ static void re2c_exec2_takeoff(re15_actor_t *e, re15_actor_t *pl)
         e->re2d_vy146 = -100; e->re2d_air219 = 9; e->re2d_route218 = 4;
         e->sub_state_2 = 5; break;                         /* @0x80100D78-90 */
     case 4:                                                /* P4 @0x80100D94 */
-        if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1);   /* @0x80100D9C-B0 */
+        if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1, 0, "abheben");   /* @0x80100D9C-B0 */
         e->re2d_vy146 = -80; e->re2d_air219 = 255;
         e->sub_state_2 = 5; break;                         /* @0x80100DB4-C8 */
     default: break;                                        /* P5: nur Schwanz */
@@ -637,7 +673,7 @@ static void re2c_exec4_circle(re15_actor_t *e, re15_actor_t *pl)
             e->re2d_route218 = 2;                          /* Accel-Step @0x80101210/3C-40 */
         } else {
             re2c_clip(e, 4, 0);                            /* 0x70004 @0x80101214-1C */
-            if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1);   /* @0x80101220-34 */
+            if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1, 0, "kreisen");   /* @0x80101220-34 */
             e->re2d_route218 = 3;                          /* @0x80101228-40 */
         }
         e->re2d_air219 = (uint8_t)(re15_re2_rand() & 0x1fu);   /* @0x8010123C-48 */
@@ -807,7 +843,7 @@ static void re2c_exec7_land(re15_actor_t *e, re15_actor_t *pl)
 static void re2c_exec8_tumble(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {                             /* P0 @0x801019A4 */
-        if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1);   /* @0x801019A4-C0 */
+        if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1, 0, "trudeln");   /* @0x801019A4-C0 */
         re2c_clip(e, 4, 0);                                /* 0x70004 @0x801019C4-D0 */
         e->re2d_air219 = (uint8_t)(re15_re2_rand() & 0x3fu);      /* @0x801019CC-D8 */
         e->re2z_flags21a = 0;                              /* +0x21A @0x801019E0 */
@@ -1140,7 +1176,7 @@ static void re2c_exec14_grab(re15_actor_t *e, re15_actor_t *pl)
             /* Blut-FX 0x11000 @ (x, y+500, z), a1=+0x76 (@0x801025F8-262C) → Room-Bank-Blut */
             re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
                                  e->x, e->y + 500, e->z, e->rot_y);
-            if ((re15_re2_rand() & 0x3u) == 0u) re2c_feather(e, 1);   /* 1/4 @0x80102630-4C */
+            if ((re15_re2_rand() & 0x3u) == 0u) re2c_feather(e, 1, 1, "picken");   /* 1/4 @0x80102630-4C */
             re2c_se(2);                                    /* Picken @0x80102650-58 */
             {
                 int r = re15_re2_player_damage_mode(pl, 5, (int)e->re2d_route218);
@@ -1152,7 +1188,7 @@ static void re2c_exec14_grab(re15_actor_t *e, re15_actor_t *pl)
                 }
             }
         } else {
-            if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1);   /* @0x80102690-AC */
+            if ((re15_re2_rand() & 0x7u) == 0u) re2c_feather(e, 1, 0, "vorbeiflug");   /* @0x80102690-AC */
         }
         e->re2c_grab21b = 4;                               /* sb 4,539 @0x801026B0-B4 */
         e->sub_state_2 = 2;                                /* @0x801026B8-BC, faellt in P2 */
@@ -1241,7 +1277,7 @@ static void re2c_hurt_flight(re15_actor_t *e, re15_actor_t *pl)
                                                             * @0x801029D8-E8 */
         e->re2d_offx228 = (int16_t)((re15_re2_rand() & 0x1u) ? 200 : -200);   /* Spin @0x801029E4-FC */
         re2c_featherburst(e);                              /* 0x8010459C @0x80102A00-04 */
-        re2c_feather(e, (int)(re15_re2_rand() & 0x1u) | 0x2);   /* 2..3 Federn @0x80102A08-1C */
+        re2c_feather(e, (int)(re15_re2_rand() & 0x1u) | 0x2, 1, "treffer");   /* 2..3 Federn @0x80102A08-1C */
         e->re2d_air219 = 3; e->re2z_flags21a = 3;          /* @0x80102A20-28 */
         e->sub_state_2 = 1;                                /* @0x80102A2C-30 — FAELLT in P1
                                                             * @0x80102A34 (Review-Fix #5) */
@@ -1254,12 +1290,12 @@ static void re2c_hurt_flight(re15_actor_t *e, re15_actor_t *pl)
         {
             uint8_t t = e->re2d_air219;
             e->re2d_air219 = (uint8_t)(t - 1);             /* @0x80102A54-64 */
-            if (t == 0) re2c_feather(e, 1);                /* @0x80102A68-70 */
+            if (t == 0) re2c_feather(e, 1, 1, "sturz");    /* @0x80102A68-70 */
         }
         {
             uint8_t t = (uint8_t)e->re2z_flags21a;
             e->re2z_flags21a = (uint16_t)((uint8_t)(t - 1));   /* @0x80102A74-84 */
-            if (t == 0) re2c_feather(e, 1);                /* @0x80102A88-90 */
+            if (t == 0) re2c_feather(e, 1, 1, "sturz");    /* @0x80102A88-90 */
         }
         e->re2d_turn224 = (int16_t)(e->re2d_turn224 + 20); /* Gravitation @0x80102A94-A4 */
         e->y += (int32_t)e->re2d_turn224;                  /* @0x80102AA8-B4 */
@@ -1331,7 +1367,7 @@ static void re2c_hurt_gib(re15_actor_t *e, re15_actor_t *pl)
     re15_schuss_r36_kraehe_gib(e, a1, m);                  /* @0x80102CE8-E8C */
     e->crow_hide = 0;                                      /* die Teile zeichnen sich selbst (Bit 0 / 0x40) */
     re2c_featherburst(e); re2c_featherburst(e); re2c_featherburst(e);   /* 3× @0x80102E90-A4 */
-    re2c_feather(e, (int)(re15_re2_rand() & 0x3u) | 0x8);  /* 8..11 Federn @0x80102EA8-BC */
+    re2c_feather(e, (int)(re15_re2_rand() & 0x3u) | 0x8, 1, "gib");  /* 8..11 Federn @0x80102EA8-BC */
     /* 0x80018FB0 @0x80102EC0 (EXE-Kill, doc) */
     e->hp = -1;                                            /* Port-Konvention (Corpse-Gate) */
     re2c_state(e, 7, 1);                                   /* CORPSE Sub 1 (KEINE Lache) @0x80102EC8-D4 */
@@ -1347,7 +1383,7 @@ static void re2c_hurt_ground(re15_actor_t *e)
         re2c_vol(e, 100);                                  /* @0x80103014-1C */
         e->hp = -1;                                        /* sh −1,342 @0x80103024-2C */
         re2c_featherburst(e);                              /* @0x80103028 */
-        re2c_feather(e, (int)(re15_re2_rand() & 0x3u) + 3);/* 3..6 @0x80103030-44 */
+        re2c_feather(e, (int)(re15_re2_rand() & 0x3u) + 3, 1, "boden");/* 3..6 @0x80103030-44 */
         re2c_clip(e, 9, 0);                                /* @0x80103048-54 */
         e->speed_h = (int16_t)(e->speed_h >> 1);           /* sra 17 @0x8010304C-74 */
         e->sub_state_2 = 1;                                /* @0x80103058-5C — FAELLT (nach der
@@ -1410,7 +1446,7 @@ static void re2c_hurt_launch(re15_actor_t *e, re15_actor_t *pl)
         re2c_vol(e, 10);                                   /* @0x801032DC-E4 */
         e->hp = -1;                                        /* @0x801032EC-F4 */
         re2c_featherburst(e);                              /* @0x801032F0 */
-        re2c_feather(e, (int)(re15_re2_rand() & 0x3u) + 5);/* 5..8 @0x801032F8-30C */
+        re2c_feather(e, (int)(re15_re2_rand() & 0x3u) + 5, 1, "launch");/* 5..8 @0x801032F8-30C */
         e->speed_h = 600;                                  /* @0x80103320-24 */
         re2c_clip(e, 9, 0);                                /* @0x80103310-2C */
         e->rot_y = pl->rot_y;                              /* Spieler-Yaw 0x800CFC6E @0x80103318-34 */
