@@ -62,3 +62,11 @@
 /varianten/K_alligator/_lauf/
 /varianten/K_alligator/*.npy
 /varianten/K_alligator/generator/__pycache__/
+
+# Variante K5 (FORMBLATT_V2): Bildleisten/Tafeln und Modelle versioniert; Arbeitslaeufe (_lauf) und Raster-Arrays nachbaubar (generator/k5_*.py)
+!/varianten/K5/*.png
+!/varianten/K5/K*/FORM.EMD
+!/varianten/K5/K*/FORM.TIM
+!/varianten/K5/K*/seite3.png
+/varianten/K5/_lauf/
+/varianten/K5/generator/__pycache__/

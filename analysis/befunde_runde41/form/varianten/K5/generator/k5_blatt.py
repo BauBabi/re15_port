@@ -27,6 +27,8 @@ import form_video as FV  # noqa: E402
 REGELN = ('R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10')
 KURZ = {'R1': 'Augen sichtbar', 'R2': 'Augenlinie', 'R3': 'OK-Spitze', 'R4': 'Mittellinie', 'R5': 'UK-Lappen', 'R6': 'Maulwinkel l (W)',
         'R7': 'UK rechts (B)', 'R8': 'Umriss/IoU', 'R9': 'Boden frei B1', 'R10': 'Schwanz oben B1'}
+GRENZE_KURZ = {'R1': '>=3 px, <=6 px', 'R2': '<=3 Grad, 57-69 px', 'R3': '<=6 px', 'R4': '<=5 Grad von -1,9', 'R5': '>=60 %, Punkt drin',
+               'R6': '<=8 px', 'R7': 'rechts (B), 30-47 Grad', 'R8': 'B1>=0,954 B2>=0,948 UK>=0,80', 'R9': '0 px', 'R10': 'Schwanz oben, y<=190'}
 B2 = (110, 130, 510, 480)
 B1 = (150, 160, 470, 480)
 KOPF2 = (170, 225, 370, 425)
@@ -49,6 +51,8 @@ def lade(spec):
     m = json.load(open(os.path.join(d, 'mass.json'), encoding='utf-8'))
     kj = os.path.join(d, 'kopf.json')
     kopf = json.load(open(kj, encoding='utf-8')) if os.path.exists(kj) else None
+    if kopf is not None and 'f4' not in kopf:
+        kopf = None          # K4 (kopf.json im Format von k_kopf_fit2)
     return nm, d, P.Kandidat(os.path.join(d, 'form.json')), m, kopf
 
 
@@ -138,10 +142,12 @@ def blatt_leiste(aus, spec, h=480):
     s1, f1, m1 = renders(k, 1)
     t1, s = ausschnitt(o2, B2, h)
     schrift(t1, 'Bild 2 Original (5090 Cut 11)', 8, 22)
-    t2, s = ausschnitt(s2, B2, h)
+    hell2 = s2.copy()
+    hell2[m2] = np.clip(np.power(s2[m2] / 255.0, 0.6) * 255, 0, 255).astype(np.uint8)      # nur die Figur aufgehellt (Gamma 0,6)
+    t2, s = ausschnitt(hell2, B2, h)
     marken_ziel(t2, B2, s)
     marken_modell(t2, B2, s, m['_lm_bild'])
-    schrift(t2, '%s in Kamera 5090 Cut 11 (Render ohne Filter)' % nm, 8, 22)
+    schrift(t2, '%s in Kamera 5090 Cut 11 (Render, Figur aufgehellt)' % nm, 8, 22)
     schrift(t2, 'gruen + = Ziel L1-L8, gelb o = Modell', 8, 44, 0.45, (200, 255, 200))
     ov = o2.copy().astype(np.float32)
     ov[m2] = 0.5 * ov[m2] + 0.5 * s2[m2].astype(np.float32)
@@ -154,9 +160,11 @@ def blatt_leiste(aus, spec, h=480):
     t4, s = ausschnitt(o1, B1, h)
     schrift(t4, 'Bild 1 Original (Bahnsteig)', 8, 22)
     bl, br = C.boden_masken()
-    t5, s = ausschnitt(s1, B1, h)
+    hell1 = s1.copy()
+    hell1[m1] = np.clip(np.power(s1[m1] / 255.0, 0.6) * 255, 0, 255).astype(np.uint8)
+    t5, s = ausschnitt(hell1, B1, h)
     umrisse(t5, bl | br, (60, 60, 255), B1, s)
-    schrift(t5, '%s in Bild-1-Kamera (Render ohne Filter)' % nm, 8, 22)
+    schrift(t5, '%s in Bild-1-Kamera (Render, Figur aufgehellt)' % nm, 8, 22)
     schrift(t5, 'rot umrandet = Boden (R9)', 8, 44, 0.45, (200, 200, 255))
     r = reihe([t1, t2, t3, t4, t5])
     zeile = np.full((58, r.shape[1], 3), 24, np.uint8)
@@ -191,17 +199,17 @@ def blatt_vergleich(aus, specs, h=520):
         ks.append(t)
         daten.append((nm, m))
     r = reihe(ks)
-    # Tabelle R1-R10
+    # Tabelle R1-R10, Spalten unter den Kacheln (erste Kachel = Original: Regeltexte)
     zh = 30
-    sp0 = 210
-    spw = int((r.shape[1] - sp0) / len(daten))
+    spw = ks[1].shape[1] + 6
+    sp0 = ks[0].shape[1] + 6
     tab = np.full((zh * (len(REGELN) + 1) + 10, r.shape[1], 3), 24, np.uint8)
-    schrift(tab, 'Regel (FORMBLATT_V2 Abschn. 6)', 8, 22, 0.5, (230, 230, 120))
+    schrift(tab, 'Regel (FORMBLATT_V2 Abschnitt 6)', 8, 22, 0.5, (230, 230, 120))
     for j, (nm, m) in enumerate(daten):
         schrift(tab, nm, sp0 + j * spw + 6, 22, 0.55, (230, 230, 120))
     for i, kk in enumerate(REGELN):
         y = zh * (i + 1) + 22
-        schrift(tab, '%s %s' % (kk, KURZ[kk]), 8, y, 0.5)
+        schrift(tab, '%s %s: %s' % (kk, KURZ[kk], GRENZE_KURZ[kk]), 8, y, 0.45)
         for j, (nm, m) in enumerate(daten):
             v = m[kk]
             x = sp0 + j * spw

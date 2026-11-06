@@ -44,9 +44,16 @@ def _b(v, lo, hi, x):
     return lo + (hi - lo) * 0.5 * (1 + math.tanh(x + math.atanh(min(max(2 * (v - lo) / (hi - lo) - 1, -0.999), 0.999))))
 
 
+# F4 lang: die Spitze liegt rund 1100-1500 naeher an der Kamera als die Augen und erscheint perspektivisch groesser; der dunkle Keil ist an der
+# Spitze nur 28 px breit (Formblatt 2.2). Lauf v4-K5b: taper an der Untergrenze 0,25, Schnauze ragt links (B) ueber den Keil. Darum fuer lang 0,15.
+TAPER_LANG = (0.30, 0.15, 0.55)
+
+
 def form_aus(fx, f4):
     """Formvektor -> Kopfparameter; L so, dass die Schnauze (Augenmitte -> Spitze) e * S lang ist (e frei in F4)."""
-    g = FORMGRENZEN
+    g = dict(FORMGRENZEN)
+    if f4 == 'lang':
+        g['taper'] = TAPER_LANG
     S = _b(*g['S'], fx[0])
     p = dict(K5.VORGABE)
     p['S'] = S
