@@ -212,6 +212,60 @@ int main(void)
         fprintf(stderr, "Schwanz: flachstes Glied ohne Ziel %.0f Grad (Abstand zur Grenze %.1f)\n", flach, ueber);
     }
 
+    /* (9) Runde 41 SF V4 Runde 2 (Pruefung V4 r1 Zahlen Abschnitt 3: glaetten() lief fuer V4 nie, 73 von 144 Lauftakten mit einem
+     *     Gelenk ueber 90 Grad): eine Kette mit V4-Gliederteilung (Knochen 17-22 so lang wie EM30_V4 Runde 2: 624/492/589/582/493/258,
+     *     max/min 2,4 > SW_GLATT_V4_VERH 2,0) wird geglaettet - nach einer Drehung um 180 Grad in einem Takt knickt kein Gelenk weiter
+     *     ab als max(16 Grad, Keyframe-Gelenkwinkel + 3 Grad) (+1 Grad Rundung). Gegenprobe mit gleich langen Gliedern
+     *     (Referenz 2, nicht geglaettet) nur ausgegeben. */
+    {
+        static const int16_t v4_l[2][6] = { { 624, 492, 589, 582, 493, 258 }, { 466, 466, 466, 466, 466, 466 } };
+        int16_t alt[6];
+        for (int b = 17; b <= 22; b++) alt[b - 17] = s_skel.bone_relative_pos[b][1];
+      for (int lauf = 0; lauf < 2; lauf++) {      /* lauf 1 = Gegenprobe gleich lange Glieder (Referenz 2): nicht geglaettet */
+        for (int b = 17; b <= 22; b++) s_skel.bone_relative_pos[b][1] = v4_l[lauf][b - 17];
+        re15_schwanz_r41_reset();
+        a->motion = 0; a->anim_frame = 0;
+        for (int i = 0; i < 30; i++) { takt(); pose(a, p, 1); }
+        a->rot_y = (int16_t)(a->rot_y + 2048);
+        double ueber = -90, max_w = 0;
+        for (int i = 0; i < 60; i++) {
+            re15_skel_pose_t q[RE15_EMD_MAX_BONES];
+            double kf[8][3];
+            int32_t g[8][3];
+            takt();
+            pose(a, q, 0);
+            for (int j = 0; j < 7; j++) for (int k = 0; k < 3; k++) kf[j][k] = q[16 + j].trans[k];
+            spitze(q, kf[7]);
+            pose(a, p, 1);
+            int ok = 1;
+            for (int j = 0; j < 8; j++) ok &= re15_schwanz_r41_gelenk(20, j, g[j]);
+            if (!ok) continue;
+            for (int j = 1; j < 7; j++) {
+                double u[3], v[3], ku[3], kv[3];
+                for (int k = 0; k < 3; k++) {
+                    u[k] = g[j][k] - g[j - 1][k]; v[k] = g[j + 1][k] - g[j][k];
+                    ku[k] = kf[j][k] - kf[j - 1][k]; kv[k] = kf[j + 1][k] - kf[j][k];
+                }
+                const double w = acos((u[0] * v[0] + u[1] * v[1] + u[2] * v[2]) /
+                                      (sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]) * sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) + 1e-9))
+                                 * 180.0 / 3.14159265;
+                const double wk = acos((ku[0] * kv[0] + ku[1] * kv[1] + ku[2] * kv[2]) /
+                                       (sqrt(ku[0] * ku[0] + ku[1] * ku[1] + ku[2] * ku[2]) *
+                                        sqrt(kv[0] * kv[0] + kv[1] * kv[1] + kv[2] * kv[2]) + 1e-9)) * 180.0 / 3.14159265;
+                const double grenze = wk + 3.0 > 16.0 ? wk + 3.0 : 16.0;
+                if (w > max_w) max_w = w;
+                if (w - grenze > ueber) ueber = w - grenze;
+            }
+        }
+        if (lauf == 0)
+            CHECK(ueber <= 1.0, "V4-Kette: Gelenk %.1f Grad ueber max(16, Keyframe + 3) (groesster Gelenkwinkel %.1f)", ueber, max_w);
+        fprintf(stderr, "Schwanz %s: groesster Gelenkwinkel %.1f Grad, Abstand zur Grenze %.1f\n",
+                lauf ? "gleiche Glieder (Gegenprobe, ungeglaettet)" : "V4-Gliederung", max_w, ueber);
+        re15_schwanz_r41_reset();
+      }
+        for (int b = 17; b <= 22; b++) s_skel.bone_relative_pos[b][1] = alt[b - 17];
+    }
+
     /* (6) EM30 mit 16 Knochen: keine Kette */
     {
         size_t esz = 0, off = 0, elen = 0;

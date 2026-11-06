@@ -50,12 +50,17 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
 #define SW_GLATT_MAX       0.2793f    /* 16 Grad. Lauf V3 mit 22 Grad (Raum max 22,2): im Bild der Spielkamera bis 55 Grad je Gelenk,
                                        * 5 Gelenke > 20 Grad (Glieder schraeg zur Kamera verkuerzt, riegel_v3 R25b/R26b rot) */
 /* Runde 41 SF "V4" (analysis/befunde_runde41/SF_MESSBLATT_V4.md Abschnitt 4 Punkt 2: die Biegung 70-90 Grad auf <= 0,10 H muss auf
- * ein Gelenk fallen, "SW_GLATT_MAX muss fuer die Biegung angepasst werden"): ein Gelenk, dessen Keyframe-Gelenkwinkel ueber
- * SW_GLATT_KNICK_AB liegt, ist eine gewollte Biegung und darf seinen Keyframe-Winkel + SW_GLATT_RAND behalten; die 16-Grad-Grenze gilt
- * nur fuer die uebrigen Gelenke. V3 bleibt unveraendert: dort begrenzt schon das Nachschwingen der Keyframes (tools/birkin_formen.py
- * schwanz_bewegung knick max 16) jeden Gelenkwinkel auf ~16 Grad. Dieselbe Regel gilt beim Nachschwingen (knick 'ab'). GESTALTUNG
- * (PORT-WAHL), keine Original-Konstante. */
-#define SW_GLATT_KNICK_AB  0.5236f    /* 30 Grad (V4: Ruhe-Gelenkwinkel 6,5 / 6,2 / 60,0 / 11,1 / 12,4 Grad, Biegung am Gelenk 19) */
+ * ein Gelenk fallen, "SW_GLATT_MAX muss fuer die Biegung angepasst werden"). V4 Runde 2 (Pruefung V4 r1 Zahlen Abschnitt 3: im Lauf
+ * sfv4/r/V4 lief glaetten() fuer V4 nie, weil der Bindversatz x -588 nicht unter SW_GLATT_WURZEL_X liegt; 73 von 144 Takten mit einem
+ * Gelenk ueber 90 Grad, bis 160,9 Grad; ausserdem hob die Ausnahme bei V3 in 214 von 1358 Keyframes die 16-Grad-Grenze auf):
+ * Die V4-Kette wird an ihrer Gliederteilung erkannt - die Gelenke kommen direkt aus den Bildmassen (birkin_formen.py kette_ruhe_v4,
+ * keine Neuverteilung), die Glieder sind ungleich lang. Gemessen an den gebauten Formen (Gliedlaengen max/min der Knochen 17-22):
+ * Referenz 2 1,00, V3 1,00, V2 1,15, V1 1,49, V4 2,4. Fuer die V4-Kette laeuft glaetten() immer, und nur dort darf ein Gelenk, dessen
+ * Keyframe-Gelenkwinkel ueber SW_GLATT_KNICK_AB liegt (die gewollte Biegung), seinen Keyframe-Winkel + SW_GLATT_RAND behalten; alle
+ * anderen Gelenke (und alle Gelenke von V1/V2/V3) behalten die Grenze SW_GLATT_MAX. Referenz 2 (Spiel-Asset) wird nicht geglaettet.
+ * GESTALTUNG (PORT-WAHL), keine Original-Konstante. */
+#define SW_GLATT_V4_VERH   2.0f       /* Gliedlaengen max/min ueber 2,0 = V4-Kette (V1 1,49 < 2,0 < V4 2,4) */
+#define SW_GLATT_KNICK_AB  0.5236f    /* 30 Grad (V4: Keyframe-Gelenkwinkel der Biegung ~55-70 Grad, uebrige Gelenke <= 16 Grad) */
 
 static struct {
     int      gueltig;
@@ -225,7 +230,7 @@ static void haengen(float (*p)[3], const float *laenge, float boden, float (*zw)
 /* Runde 41 SF V3: Knick-Grenze je Gelenk (siehe SW_GLATT_*). Von der Wurzel zur Spitze: ist das Glied j -> j+1 staerker gegen
  * das Vorglied abgeknickt als erlaubt, wird es in der Ebene beider Glieder auf die Grenze zurueckgedreht; Laenge bleibt, Boden.
  * Die alte Lage q wird um dieselbe Verschiebung mitgezogen (keine Scheingeschwindigkeit fuer die Feder im naechsten Takt). */
-static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float boden, float (*zw)[3])
+static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float boden, float (*zw)[3], int biegung)
 {
     for (int j = 1; j < SW_J - 1; j++) {
         float a[3] = { p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1], p[j][2] - p[j - 1][2] };
@@ -241,7 +246,7 @@ static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float bo
             lim = kw + SW_GLATT_RAND;
         }
         if (lim < SW_GLATT_MIN) lim = SW_GLATT_MIN;
-        if (lim > SW_GLATT_MAX && kw <= SW_GLATT_KNICK_AB) lim = SW_GLATT_MAX;    /* V4: gewollte Biegung behaelt ihren Winkel */
+        if (lim > SW_GLATT_MAX && !(biegung && kw > SW_GLATT_KNICK_AB)) lim = SW_GLATT_MAX;   /* nur V4: Biegung behaelt ihren Winkel */
         const float c = a[0] * d[0] + a[1] * d[1] + a[2] * d[2];
         if (c < cosf(lim)) {
             float s[3] = { d[0] - a[0] * c, d[1] - a[1] * c, d[2] - a[2] * c };
@@ -428,8 +433,13 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
             if (s_sw[slot].ziel_w <= 0) haengen(p, laenge, (float)a->y, zw);
         }
         if (s_sw[slot].ziel_w > 0) ziel_anwenden(slot, laenge, (float)a->y);
-        if (skel->bone_relative_pos[SW_K0][0] < SW_GLATT_WURZEL_X)                 /* Runde 41 SF V3: Knick-Grenze */
-            glaetten(s_sw[slot].p, s_sw[slot].q, laenge, (float)a->y, zw);
+        {   /* Runde 41 SF V3: Knick-Grenze (hohe Wurzel V1/V2/V3); V4 Runde 2: auch fuer die V4-Kette (ungleiche Glieder) */
+            float lmin = 1e9f, lmax = 0.0f;
+            for (int j = 1; j < SW_J; j++) { if (laenge[j] < lmin) lmin = laenge[j]; if (laenge[j] > lmax) lmax = laenge[j]; }
+            const int v4 = lmin > 1.0f && lmax > SW_GLATT_V4_VERH * lmin;
+            if (skel->bone_relative_pos[SW_K0][0] < SW_GLATT_WURZEL_X || v4)
+                glaetten(s_sw[slot].p, s_sw[slot].q, laenge, (float)a->y, zw, v4);
+        }
         s_sw[slot].takt = g_engine.frame_count;
     }
 
