@@ -840,3 +840,130 @@ Gegen Ref2 schlechter: nichts gefunden. Die Szene beginnt 2 Bilder spaeter wie d
 gleich (Szenenende Takt 135 = Bild 135).
 Tests: unit_birkin_szenen (Riegel; ein Starr-Fehler im Zwischenlauf R16 kam vom Abgang: BF_H_WEG 89 liess den Spider-Man 2 Takte
 am letzten Bahnpunkt stehen -> 87), unit_birkin_formen, unit_schwanz_r41 gruen.
+
+## Schwanz V2 (Runde 41, 2026-11-06, Formblatt V2)
+
+Auftrag: Schwanz nach SF_FORMBLATT_V2.md S1-S15 umbauen, Varianten V1 (Koerper Referenz 2) / V2 (Koerper K1-K10), je Schwanzende
+spitz / Kralle (F2), Kopf nach dem Original plus KI-Kopfdetails (Nutzer-Entscheid F4 2026-11-06: "ja, das soll mit uebernommen werden
+aus der KI Fassung" und "natuerlich in der grafischen Qualitaet des spieles"). Nichts davon ist im Spiel-Asset: EM30_HANGAR.EMD bleibt
+Referenz 2 (sha256 cfd1ac42..., Pin unveraendert). Die Varianten erzeugt "birkin_formen.py --variante NAME --aus DIR".
+⛔ Kein RE-Befund: alle Zahlen sind Bildmessung am Original/KI oder PORT-WAHL (gekennzeichnet), keine @0x-Konstanten.
+
+Werkzeuge re15_port/tools/r41_sichel/v2/: b2 (Buehne der Spielkamera 50A0/12 mit Knochen-Kennung je Bildpunkt), anpassen_v2 (Pose
+an den KI-Freisteller, Koerper ohne Schwanz, Seite = rechte Flanke (W)), mass_v2 / koerper_mass (Masse in H), koerper_suche,
+kopf_entwurf / treffer (KI-Lagen auf das Modell), maul_referenz, riegel_v2, lauf_v2.sh (Szenenlauf mit Overlay-CD-Wurzel, nur
+EMD/EM30_HANGAR.EMD darin; der Port faellt fuer alles andere auf shared_assets zurueck, asset_root_pc.c rr_read_list), leisten_v2.
+Laeufe (Sitzungs-Scratchpad sfv2/r): R2n = Referenz 2 mit dem neuen Bau, V1s/V1k/V2s/V2k = Varianten.
+
+### SV2.1 Ursache je Abweichung (Referenz 2 gegen Original, gleiche Pose, Seitenansicht h85, H = Oberkante bis Sohle im Bild)
+
+| Mass | Original (Formblatt) | Ref2 | Ursache in Ref2 |
+|---|---|---|---|
+| Wurzelmitte unter OK | 0,15-0,17 H (S2) | 0,277 H | Wurzel (-380,120,0) an Knochen 8 = Brustrueckseite, 0,30 H unter der Modell-Oberkante (Gang B0) |
+| Wurzel hinter dem hoechsten Punkt | 0,23-0,28 H (S5) | 0,150 H | dito |
+| Verlauf | Haken: waagerecht nach hinten, dann senkrecht (S6) | gerade schraeg, Glieder 25 -> 57 Grad | Ruhelinie als Gerade definiert |
+| Dicke 0,2 / 0,5 / 0,9 | 0,135 / 0,065-0,07 / 0,034 H (S10) | 0,068 / 0,060 / 0,038 H | Radien 150 -> 72 (Wurzel halb so dick) |
+| Spitze ueber der Sohle | 0,32-0,44 H (S8) | 0,26 H (h85), Gang Welt Mittel 0,16 H | gerade Linie nach unten + Schwere 0,004 im Nachschwingen |
+| Vorderansicht Schwanz sichtbar | hinter dem Koerper (S15) | h118 409 Bildpunkte zwischen den Beinen (Buehne) | Spitze haengt mittig bis fast zum Boden |
+| Formblatt-Port-Ist vorn (Bund 0,52 / Saum 0,71 / Breite 0,74) | 0,42 / 0,57 / 0,57-0,65 | 0,47-0,49 / 0,65-0,68 / 0,65-0,68 | Formblatt nahm die Letterbox als Sohle (H rund 9 % zu klein); mit der wahren Sohle (Buehne, angepasste Pose) bleiben Bund +0,06, Saum +0,09, Breite +0,04 |
+
+### SV2.2 Was geaendert ist
+
+Schwanz V2 (birkin_formen.py SCHWANZ_V2, kette_v2_punkte; GESTALTUNG nach Formblatt V2):
+- Ruhe-Mittellinie direkt aus den Formblatt-Zahlen im Modellraum der Gangpose (Clip 1 B0): Wurzelmitte 0,255 H hinter dem hoechsten
+  Koerperpunkt, 0,19 H unter der Oberkante (Modellraum; die Spielkamera von oben macht daraus im Bild h85 0,16 H), Pfad S6 als Haken.
+- Laenge 3475 E. wie Ref2 (S9). Die Seitenprojektion des Pfads ist rund 2400 E. lang; der Rest (S9/Ae2 "Seitwaertslauf"): Gelenk 16
+  400 E. im Buckel versenkt und zwei seitliche Wellen (+-325 E.) im haengenden Teil, Spitze 0,12 H nach rechts (W) hinter das rechte
+  Bein (PORT-WAHL). Probe vorn h118/h125 (sichtbare Schwanzpunkte, 640er): eine Welle ohne Versenkung 722/612 (trat an der Taille
+  aus), eine Welle + 400 versenkt 252/325, zwei Wellen + 400 versenkt 0/0. Erster Stand mit Welle ab der Wurzel drehte das
+  Wurzelglied 59 Grad aus der Seitenebene (Wurzel in h85 als Scheibe) - verworfen.
+- Radien je sichtbarem Laengenanteil (S10), Gliederprofil 0,90/1,03 (Ref2 0,80/1,05), Wurzelglied mit Kragen 1,15 (S3 ohne Stufe),
+  Nachschwingen ohne Schwere (Ae5).
+- Ende spitz: Endglied verjuengt, Dorn 4 x Endradius. Ende Kralle: Kopie der EM30-Klauenhand (Mesh 12 der Form, Originaltexel) x1,4
+  quer / x1,2 laengs ans Ende (KI-Seitenansicht "Hand mit roter Kralle", Leser A 2.5 Verdickung 0,06-0,07 H).
+
+Feder-Kette (schwanz_r41.c): haengen() erlaubt je Glied den Keyframe-Winkel plus Spielraum (Kosinus 0,10), hoechstens 80 Grad; die feste
+62-Grad-Grenze drueckte die V2-Glieder 4-5 (Keyframe 70-71 Grad) in die Senkrechte. Referenz 2: Glied 1 darf 65-68 statt 62 Grad.
+
+Szene (birkin_formen.c), nur wenn die V2-Wurzel erkannt wird (Bindversatz Gelenk 16 x < -700 im Brustraum; V2 -986, Ref2 -380):
+- Durchgangspunkte (Austritt an der Huefte) 550 hinter der Koerperebene; mit -150 lief das Stueck Wurzel -> Austritt vor dem Bauch
+  (Lauf V1s h22/h24, erster Stand).
+- Freigabe h74-h80 statt Verdeckung bis h102: das Original zeigt h77-h98 den Bogen vom oberen Ruecken (Formblatt S1, Punkt 4); die
+  NB4-Verdeckung stuetzte sich auf "0 kraeftig rote Bildpunkte rechts der Huefte" und hat den Bogen (r-g 2-16) nicht erfasst.
+  Im Lauf haengt der Schwanz ab h80 in seiner Ruhe. Weil Birkin im Port h83-h97 nicht in der rechten Flanke steht (Ae10,
+  Szene/Spur H), liegt der Bogen dort hinter dem Buckel statt seitlich (offen).
+
+Kopf V2 (beide Varianten, KOPF_V2): helle Kuppe oben, rote Zone um und unter dem Maul (Original K1/K2); offenes senkrechtes Maul mit
+Zaehnen oben/unten, Auge oben (KI-Lagen birkin19: Auge (0,415 0,30), Maul x 0,28-0,72 y 0,44-0,93 der Kopfbox), Schulterauge rechts (W)
+= Bild-links auf Mesh 8 (aus KI (705-715, 360-372) zurueckgerechnet: (128,-1156,-589), 75 x 104 E.). PORT-WAHL nach Nutzer-Entscheid
+F4 2026-11-06, Quelle KI-Fassung, kein Original-Beleg. Machart gegen ein Originalmaul (maul_referenz.py):
+
+| Teil | Dreiecke | Texel | Texeldichte (Texel/E.) | helle Texel |
+|---|---|---|---|---|
+| RE2-G4 Kiefer (CDEMD0.EMS kind 0x34, Mesh 26), Originalmaul mit Zaehnen | 118 | 4427 | 0,045 | 7 % |
+| RE2-G4 Rumpf/Kopf (Mesh 10) | 446 | - | 0,041 | - |
+| Kopf V2 (Mesh 9, EM30-Geometrie unveraendert; 74 von 109 Dreiecken tragen das Kopfbild) | 0 neu | 1780 (Flaeche 40 x 64, TPage 128 frei) | 0,068 | 4 % |
+| Schulterauge (Mesh 8) | 2 neu (1 Viereck) | 48 | 0,079 | - |
+| Vergleich EM30-Haut (Mesh 8) / EM30-Kopf | - | - | 0,051 / 0,091 | - |
+
+Farben: eigene CLUT-Zeile 486 aus Hautton (NB2 x1,2), Schwanzrot (92,40,42), dunklem Maulinneren (KI dunkelste 10 % (31,13,13)),
+Zaehne/Augenweiss gedaempft (190,170,162); 8 bpp, kein Weichzeichner, keine Leuchtfarben.
+
+Koerper V2 (KOERPER_V2, nur V2; Formblatt F1 offen): Koordinatensuche koerper_suche.py gegen h118/h125: Oberschenkel x1,48, Schienbein
+x1,08, Rumpf laengs x0,90, Brust quer 1,15 -> 1,09, Becken 163, Arme 9 Grad zur Mitte, Klauen-Ellbogen 20 Grad, Klauen-Unterarm 0,92,
+Wurzel aller Keyframes +420 (sonst standen die laengeren Beine 420 E. im Boden - die Suche mass nur den Umriss).
+
+### SV2.3 Zahlen (Buehne in der Spielkamera, gleiche Pose fuer alle; Leisten 01/02, SF_belege/v2/masse_seite_vorn.json)
+
+| Mass | Original | Ref2 | V1 | V2 |
+|---|---|---|---|---|
+| Wurzelmitte unter OK h85 / h92 / h83 | 0,166 / 0,154 / 0,152 | 0,277 / 0,276 / 0,260 | 0,159 / 0,159 / 0,127 | 0,167 / 0,166 / 0,131 |
+| Wurzel hinter Buckel h85 | 0,23-0,28 | 0,150 | 0,240 | 0,234 |
+| Dicke 0,2 / 0,5 / 0,9 (h85) | 0,135 / 0,065-0,07 / 0,034 | 0,068 / 0,060 / 0,038 | 0,140 / 0,079 / 0,026 | 0,123 / 0,072 / 0,025 |
+| Spitze ueber Sohle h85 / h92 | 0,33 / 0,44 | 0,26 / 0,28 | 0,37 / 0,38 | 0,37 / 0,38 |
+| Spitze Gang h108-h132 (Lauf, Welt, Mittel / Spanne) | (0,32-0,44 im Seitenbild) | 0,16 / 0,10-0,27 | 0,28 / 0,20-0,36 | 0,29 / 0,21-0,38 |
+| Schwanz vorn sichtbar h118 / h125 (Bildpunkte 640er) | hinter dem Koerper | 409 / 0 | 0 / 0 | 29 / 2 |
+| Bund / Saum unter OK h118 | 0,42 / 0,57 | 0,47 / 0,65 | 0,47 / 0,65 | 0,40 / 0,59 |
+| Breite in 0,2 H h118 / h125 | 0,57-0,65 | 0,65 / 0,68 | 0,65 / 0,68 | 0,60 / 0,62 |
+| Krallen / Sichelspitze ueber Sohle h118 | 0,30-0,36 / 0,17-0,27 | 0,44 / 0,15 | 0,44 / 0,15 | 0,37 / 0,17 |
+| Griff h16-h70 (Lauf, groesster Abstand) | < 150 | 128 | 128 | 129 |
+
+Grenzen: Bildmasse sind Projektionen; der Port steht in der Seitenansicht aufrechter als das Original (Koerperhaltung, Spur H), die
+angepasste Pose deckt den KI-Umriss mit IoU 0,62-0,73. Das Weltmass im Gang liegt rund 0,05 H unter dem Bildmass der Seitenansicht
+(Buehne h85: V1 Welt 0,31 / Bild 0,35).
+
+### SV2.4 Riegel (riegel_v2.py, Exit 1 = rot)
+
+R1 Wurzelmitte h85 0,13-0,19 H; R2 Wurzeldicke >= 0,11 H; R3 Spitze Gang (Lauf, Welt) Mittel 0,26-0,42 H, kleinster Wert >= 0,18 H;
+R4 kein Gelenk tiefer als sein Radius (Keyframes Clip 0/1 und Lauf h0-h132); R5 keine Schwanz-Vertices/Gelenke in den Koerper-Huellen
+(Keyframes Clip 0/1, Lauf h108-h132); R6 Griff h16-h70 < 150 E. Ergebnis: V1 spitz/Kralle und V2 spitz/Kralle GRUEN; Gegenprobe
+Referenz 2 ROT (R1 0,277 H, R2 0,068 H, R3 Mittel 0,16 H). ctest unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41,
+integration_r41_sichel_form 4/4 gruen (unit_schwanz_r41 (8) prueft die neue Haengegrenze: max(62 Grad, Keyframe + 8), <= 80 Grad).
+
+### SV2.5 Leisten (analysis/befunde_runde41/SF_belege/v2/)
+
+01_seite_h83_h85_h92 (Original | KI | Ref2 | V1 | V2, Linien und Zahlen), 02_vorn_h118_h125, 03_halten_h24_h61 (Laeufe, Griff-Abstand),
+04_gang_h84-h132 (Laeufe, Kniewinkel, Spitzenhoehe), 05_kopf_nah (KI | Ref2 | V1 | V2), 06a/06b_gesamt_v1 (h0-h132, Ref2 | V1, Griff),
+07_schwanzende_spitz_kralle (V1/V2 je spitz/Kralle, KI, Original), 08_rundum_* (je Variante 6 Blickwinkel, Kopf und Schwanz nah).
+
+### SV2.6 Empfehlung
+
+- Schwanz V2 (in V1 oder V2) erfuellt S2/S5/S6/S8/S10 in der Seitenansicht und S15 von vorn; Referenz 2 erfuellt keinen dieser Punkte.
+  Empfehlung V1 spitz als naechster Spielstand: der Koerper bleibt der gelobte von Referenz 2, nur Schwanz und Kopf aendern sich.
+- V2 nur, wenn der Nutzer F1 bejaht: Bund/Saum/Breite/Krallen naeher am Original (0,40/0,59/0,60/0,37 statt 0,47/0,65/0,65/0,44), aber
+  Oberschenkel x1,48 - die Figur wirkt deutlich hochbeiniger (Leiste 08_rundum_V2); der Saum bleibt 0,02 H zu tief.
+- Ende: spitz entspricht der KI-Vorderansicht h20-h73, Kralle der KI-Seitenansicht; das Original entscheidet nicht (F2) - Nutzerwahl.
+
+### SV2.7 Offen
+
+1. Szene: Birkin steht h83-h97 im Port nicht in der rechten Flanke (Ae10, Spur H) - der Bogen liegt dort hinter dem Buckel statt seitlich.
+2. Halten h24 (V2): der sichtbare Schwanz ist kuerzer als bei Ref2, weil 400 E. im Buckel stecken und die Wurzel hoeher sitzt
+   (Reichweite der NB4-Bahn); V1 erreicht die Videopunkte.
+3. Dicke vor der Spitze 0,022-0,026 H statt 0,034 H (spitzes Endprofil).
+4. Kopf: Maul/Augen sind KI-Gestaltung; im Spielbild h118 wirkt das Maul als dunkles Oval mitten im Kopf - Groesse/Lage nach Sichtung
+   durch den Nutzer nachstellen. Die seitliche Kopf-Nahaufnahme (Leiste 05, h85) zeigt den Kopf in dieser Pose nicht.
+5. F3 (rote Stelle am Innenknie rechts (W)): V1/V2 halten die Spitze hinter dem rechten Bein; im Lauf erscheint sie nicht klar am
+   Innenknie. Die Labor/Gang-Sequenz n780-n840 (F7) zeigt die rote Kreatur zu klein und unscharf, der Schwanz ist nicht trennbar -
+   keine Messung; Final Build 58,5-64,5 s nicht ausgewertet.
+6. PSX: Feder-Kette und CLUT-Zeilen 483-486 nur auf dem PC geprueft.
+7. Nach der Wahl des Nutzers: Variante nach FORMEN['hangar'], Pin release/em30_hangar.sha256, Suite/Paket-Gate (Schritt 5).
