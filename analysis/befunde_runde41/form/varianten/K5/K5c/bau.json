@@ -1,5 +1,5 @@
 {
- "name": "K5c",
+ "name": "arm_K5c",
  "basis": "J_dicker + K5-Kopf",
  "fit": "../_lauf/K5c/fit.json",
  "kopf": {
@@ -497,19 +497,19 @@
    1.0
   ],
   "fleisch": [
-   3.182,
-   3.018,
-   2.387
+   3.29,
+   3.121,
+   2.469
   ],
   "unterseite": [
-   3.182,
-   3.018,
-   2.387
+   3.29,
+   3.121,
+   2.469
   ],
   "hell": [
-   4.808,
-   4.901,
-   4.153
+   4.972,
+   5.069,
+   4.295
   ],
   "kralle_wurzel": [
    1.0,
@@ -591,7 +591,7 @@
  "eichung": [
   {
    "runde": 0,
-   "kiefer_soll_durch_ist": 1.013,
+   "kiefer_soll_durch_ist": 1.048,
    "kiefer_px": 1804,
    "auge_render": [
     31,
@@ -607,7 +607,7 @@
   },
   {
    "runde": 1,
-   "kiefer_soll_durch_ist": 0.993,
+   "kiefer_soll_durch_ist": 1.0,
    "kiefer_px": 1804,
    "auge_render": [
     78,

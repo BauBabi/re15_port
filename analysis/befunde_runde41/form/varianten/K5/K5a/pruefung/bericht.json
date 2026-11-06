@@ -1,5 +1,5 @@
 {
- "name": "K5a",
+ "name": "arm_K5a",
  "licht": "mess",
  "kennzahlen": {
   "flaechen": 3828,
@@ -23,11 +23,11 @@
    "3828 Flaechen, Rahmen rund 1900",
    "Textur 512x256, Rahmen 384x256",
    "Clip 0 tiefster Punkt y=47.7, gefordert 0",
-   "Clip 1 tiefster Punkt y=206.2, gefordert 0"
+   "Clip 1 tiefster Punkt y=23.1, gefordert 0"
   ],
   "boden_y": [
    47.7,
-   206.2,
+   23.1,
    -0.0
   ],
   "fehler": [],
@@ -816,7 +816,7 @@
     "anteil_material": 0.783,
     "anteil_figur": 1.0,
     "groesse": 0.32,
-    "lage_px": 7.8,
+    "lage_px": 7.7,
     "sollmitte": [
      403,
      289
@@ -945,8 +945,8 @@
     "sicherheit": "sicher"
    }
   ],
-  "mae_weiss": 26.3,
-  "ncc_weiss": 0.612
+  "mae_weiss": 26.4,
+  "ncc_weiss": 0.611
  },
  "bild2": {
   "lage": [
@@ -964,43 +964,43 @@
    1.004
   ],
   "umriss": {
-   "iou": 0.9314,
-   "weiss_gedeckt": 0.9432,
+   "iou": 0.9387,
+   "weiss_gedeckt": 0.9481,
    "weiss": 45465,
-   "schwarz_getroffen": 576,
-   "render_pixel": 50076,
-   "render_auf_grau": 6618
+   "schwarz_getroffen": 455,
+   "render_pixel": 50447,
+   "render_auf_grau": 6887
   },
   "weiss_fehlt": [
    [
-    800,
-    253,
-    374,
-    300,
-    443
+    748,
+    168,
+    358,
+    243,
+    397
    ],
    [
-    514,
-    328,
+    436,
+    331,
     283,
     358,
-    305
+    304
    ],
    [
-    188,
+    280,
+    155,
+    386,
     170,
-    366,
-    193,
-    390
+    425
    ]
   ],
   "schwarz_treffer": [
    [
-    236,
-    134,
-    327,
-    159,
-    359
+    104,
+    278,
+    395,
+    291,
+    409
    ],
    [
     87,
@@ -1010,11 +1010,11 @@
     324
    ],
    [
-    77,
-    154,
-    417,
-    161,
-    434
+    63,
+    437,
+    400,
+    445,
+    414
    ]
   ],
   "punkte": [
@@ -1272,9 +1272,9 @@
     "id": "FUGE",
     "text": "Fuge x>=278, y 402-416",
     "flaeche": 883,
-    "treffer": 0,
-    "eindringen_px": 0.0,
-    "ok": true,
+    "treffer": 48,
+    "eindringen_px": 5.0,
+    "ok": false,
     "zaehlt": true,
     "sicherheit": "sicher"
    },
@@ -1386,7 +1386,7 @@
      262.0,
      414.0
     ],
-    "anteil": 0.816,
+    "anteil": 1.0,
     "anteil_innen": 1.0,
     "luecke_px": 0,
     "grenze_enden": [
@@ -1443,7 +1443,7 @@
     "anteil_material": 0.656,
     "anteil_figur": 1.0,
     "groesse": 0.27,
-    "lage_px": 8.5,
+    "lage_px": 8.4,
     "sollmitte": [
      322,
      179
@@ -1512,16 +1512,16 @@
     "material": "untere_streifen",
     "sicherheit": "sicher als Stelle",
     "flaeche": 911,
-    "anteil_material": 0.995,
-    "anteil_figur": 0.956,
-    "groesse": 1.49,
-    "lage_px": 6.4,
+    "anteil_material": 0.954,
+    "anteil_figur": 1.0,
+    "groesse": 1.42,
+    "lage_px": 8.3,
     "sollmitte": [
      313,
      341
     ],
     "y_video": 113.0,
-    "y_render": 93.0,
+    "y_render": 96.0,
     "ok": true,
     "zaehlt": true
    },
@@ -1548,14 +1548,14 @@
    {
     "id": "N1",
     "text": "Rumpfinneres ohne Zeichnung (290-340,225-280)",
-    "anteil_hell": 0.224,
+    "anteil_hell": 0.225,
     "ok": false,
     "zaehlt": true,
     "sicherheit": "sicher"
    }
   ],
-  "mae_weiss": 15.7,
-  "ncc_weiss": 0.589
+  "mae_weiss": 13.9,
+  "ncc_weiss": 0.655
  },
  "teile": {
   "bild1": {
@@ -2729,33 +2729,32 @@
       23
      ],
      "maske_px": 29990,
-     "wertung_px": 29976,
+     "wertung_px": 29988,
      "logo_px": 0,
      "geteilt": {
       "left_arm_front": 48,
       "right_arm_front": 27
      },
-     "treffer_px": 28744,
-     "iou": 0.805,
+     "treffer_px": 28890,
+     "iou": 0.809,
      "fremd": {
       "left_arm_front": 0.002,
-      "right_arm_front": 0.0,
-      "left_leg": 0.004,
+      "left_leg": 0.002,
       "right_arm": 0.006
      },
-     "leer": 0.029,
+     "leer": 0.027,
      "merkmale": [],
-     "render_px": 34488,
+     "render_px": 34628,
      "allein_px": 35093,
-     "deckung": 0.959,
-     "kern_deckung": 0.972,
-     "innen": 0.833,
+     "deckung": 0.963,
+     "kern_deckung": 0.978,
+     "innen": 0.834,
      "innen_saum": 0.869,
-     "verdeckt": 0.017,
+     "verdeckt": 0.013,
      "verdeckt_von": {
       "left_arm_front": 0.012,
       "right_arm_front": 0.0,
-      "right_arm": 0.005
+      "right_arm": 0.001
      },
      "schwerpunkt": {
       "soll": [
@@ -2763,25 +2762,25 @@
        249.5
       ],
       "ist": [
-       302.8,
-       260.5
+       302.7,
+       260.3
       ],
-      "dx": -2.9,
-      "dy": 11.0,
-      "abstand": 11.4
+      "dx": -3.0,
+      "dy": 10.7,
+      "abstand": 11.1
      },
      "achse": {
       "soll_grad": 132.3,
-      "ist_grad": 126.8,
-      "abweichung_grad": 5.4,
-      "quer_px": -5.2,
-      "laengs_px": 10.1,
+      "ist_grad": 126.6,
+      "abweichung_grad": 5.6,
+      "quer_px": -5.0,
+      "laengs_px": 9.9,
       "laenge": [
        233.1,
        219.8
       ],
       "breite": [
-       175.8,
+       175.7,
        160.3
       ],
       "streckung_soll": 1.41
@@ -2964,29 +2963,29 @@
      "geteilt": {
       "face_and_upper_body": 27
      },
-     "treffer_px": 6172,
-     "iou": 0.588,
+     "treffer_px": 6299,
+     "iou": 0.596,
      "fremd": {
       "face_and_upper_body": 0.23,
-      "left_leg": 0.009
+      "right_arm": 0.011
      },
-     "leer": 0.139,
+     "leer": 0.125,
      "merkmale": [
       {
        "name": "Y Hand",
        "flaeche": 4280,
-       "gedeckt": 0.698
+       "gedeckt": 0.899
       }
      ],
-     "render_px": 6739,
-     "allein_px": 12577,
-     "deckung": 0.622,
-     "kern_deckung": 0.681,
-     "innen": 0.916,
-     "innen_saum": 0.965,
-     "verdeckt": 0.333,
+     "render_px": 6936,
+     "allein_px": 13162,
+     "deckung": 0.634,
+     "kern_deckung": 0.693,
+     "innen": 0.908,
+     "innen_saum": 0.957,
+     "verdeckt": 0.346,
      "verdeckt_von": {
-      "face_and_upper_body": 0.333
+      "face_and_upper_body": 0.346
      },
      "schwerpunkt": {
       "soll": [
@@ -2994,25 +2993,25 @@
        396.5
       ],
       "ist": [
-       201.7,
-       403.7
+       215.7,
+       408.9
       ],
-      "dx": -27.5,
-      "dy": 7.2,
-      "abstand": 28.4
+      "dx": -13.4,
+      "dy": 12.4,
+      "abstand": 18.3
      },
      "achse": {
       "soll_grad": 162.7,
-      "ist_grad": 29.1,
-      "abweichung_grad": 46.4,
-      "quer_px": 1.3,
-      "laengs_px": 28.4,
+      "ist_grad": 17.3,
+      "abweichung_grad": 34.6,
+      "quer_px": -7.9,
+      "laengs_px": 16.5,
       "laenge": [
-       138.8,
+       148.1,
        188.1
       ],
       "breite": [
-       92.0,
+       80.8,
        109.6
       ],
       "streckung_soll": 1.91
@@ -3025,12 +3024,12 @@
         315
        ],
        "ist": [
-        286,
-        289
+        306,
+        292
        ],
-       "dx": -46,
-       "dy": -26,
-       "abstand": 52.8,
+       "dx": -26,
+       "dy": -23,
+       "abstand": 34.7,
        "sichtbar": false,
        "unter_logo": false
       },
@@ -3041,12 +3040,12 @@
         353
        ],
        "ist": [
-        134,
-        327
+        139,
+        342
        ],
-       "dx": -11,
-       "dy": -26,
-       "abstand": 28.2,
+       "dx": -6,
+       "dy": -11,
+       "abstand": 12.5,
        "sichtbar": true,
        "unter_logo": false
       }
@@ -3059,10 +3058,10 @@
        ],
        "unter_logo": false,
        "ist": [
-        134,
-        327
+        139,
+        342
        ],
-       "abstand": 28.2,
+       "abstand": 12.5,
        "sichtbar": true
       },
       {
@@ -3072,10 +3071,10 @@
        ],
        "unter_logo": true,
        "ist": [
-        195,
+        208,
         479
        ],
-       "abstand": 3.6,
+       "abstand": 11.4,
        "sichtbar": true
       },
       {
@@ -3085,10 +3084,10 @@
        ],
        "unter_logo": true,
        "ist": [
-        250,
-        463
+        171,
+        472
        ],
-       "abstand": 30.5,
+       "abstand": 51.1,
        "sichtbar": true
       },
       {
@@ -3098,18 +3097,18 @@
        ],
        "unter_logo": false,
        "ist": [
-        160,
-        469
+        272,
+        461
        ],
-       "abstand": 116.9,
+       "abstand": 18.1,
        "sichtbar": true
       },
       {
        "soll": null,
        "unter_logo": false,
        "ist": [
-        154,
-        434
+        158,
+        430
        ],
        "abstand": null,
        "sichtbar": true
@@ -3117,8 +3116,8 @@
      ]
     }
    ],
-   "trefferquote": 0.864,
-   "iou_mittel": 0.701
+   "trefferquote": 0.87,
+   "iou_mittel": 0.705
   }
  }
 }

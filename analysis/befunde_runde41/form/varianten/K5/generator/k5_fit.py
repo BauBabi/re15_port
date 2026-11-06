@@ -191,7 +191,7 @@ class Lauf:
         e += 1.0 * ((q['auge_l'][1] - q['auge_r'][1]) / 2.0) ** 2
         # rechter Kieferast (W) nicht sichtbar (Formblatt 2.3): rechter Maulwinkel (W) nicht links (B) neben dem Oberkiefer-Keil (x 212-233),
         # dort liegen die weissen Flecken (F7, nicht Wesen). Lauf v2-K5b: rechter Maulwinkel bei x 175, sichtbarer UK quer (R7 Achse 2,6 Grad).
-        e += 0.5 * (max(0.0, 214.0 - q['maulwinkel_r'][0]) / 4.0) ** 2
+        e += 0.5 * (max(0.0, RECHTS_MIN - q['maulwinkel_r'][0]) / 4.0) ** 2
         # Augen vor dem statischen Koerper (Tiefe am Zielpunkt) und vor dem Hals/Rumpf; Kopf nicht hinter der Brust
         for nm in ('auge_l', 'auge_r'):
             b = 22
@@ -364,6 +364,7 @@ def start_kopf(lauf, p, yaw_grad=20.0):
 
 
 YAWS = (25.0, 10.0, 40.0)
+RECHTS_MIN = 214.0      # rechter Maulwinkel (W) nicht links davon; Lauf v6-K5b mit 205 = Kopfrand rechts (W) x 204-206 (Formblatt 2.2)
 
 
 def lauf(name, f4, f5, aus, iters=(3000, 700, 300, 400)):
@@ -484,6 +485,8 @@ if __name__ == '__main__':
     a.add_argument('--aus', required=True)
     a.add_argument('--iters', default='3000,700,300,400')
     a.add_argument('--yaws', default='25,10,40')
+    a.add_argument('--rechts-min', type=float, default=214.0)
     x = a.parse_args()
     YAWS = tuple(float(v) for v in x.yaws.split(','))
+    RECHTS_MIN = x.rechts_min
     lauf(x.name, x.f4, x.f5, x.aus, tuple(int(v) for v in x.iters.split(',')))

@@ -1,8 +1,8 @@
-Kandidat K5c
+Kandidat arm_K5c
 
 (g) Kennzahlen: 3828 Flaechen (1270 Dreiecke, 2558 Vierecke), 32 Knochen, 32 Meshes, Textur 512x256 8 bpp, 4 CLUT-Zeilen, 3 Clips, Bilder je Clip [1, 1, 1]
-Rahmen: 3828 Flaechen, Rahmen rund 1900; Textur 512x256, Rahmen 384x256; Clip 0 tiefster Punkt y=47.7, gefordert 0; Clip 1 tiefster Punkt y=242.8, gefordert 0
-Boden je Pose, tiefster Punkt y: [47.7, 242.8, -0.0]
+Rahmen: 3828 Flaechen, Rahmen rund 1900; Textur 512x256, Rahmen 384x256; Clip 0 tiefster Punkt y=47.7, gefordert 0
+Boden je Pose, tiefster Punkt y: [47.7, 0.9, -0.0]
 FE.pruefe: 0 Fehler, 1 Warnungen
   Warnung Tick der Form erwartet Clips, die fehlen (Modulo in re15_compute_actor_kf): 3 BB_C_HIEB, 4 BB_C_HIEB+1, 5 BB_C_GEHEN, 8 BB_C_ZUCKEN, 9 BB_C_NACHHIEB, 10 BB_C_DROHEN, 26 BB_C_BISS, 27 BB_C_GRIFF
 
@@ -68,9 +68,9 @@ FE.pruefe: 0 Fehler, 1 Warnungen
 Bild im Original gegen Filter: MAE in Weiss 26.2, NCC in Weiss 0.615
 
 === Bild 2, Lage [941, 0, -23776] Gier 3874 Clip 1 Bild 0, Licht mess k=[1.198, 1.119, 1.004]
-(a) Umriss gegen ziel2_bild2.png, auf nicht-grauen Pixeln: IoU 0.921, Weiss gedeckt 0.928, Schwarz getroffen 355 px, Render 49429 px, davon auf Grau 6861
-    Weiss fehlt (Pixel, x0,y0,x1,y1): [[1300, 238, 142, 403, 203], [751, 254, 371, 302, 443], [289, 226, 424, 248, 451]]
-    Schwarz getroffen: [[99, 135, 338, 147, 359], [76, 152, 415, 160, 432], [66, 437, 400, 445, 414]]
+(a) Umriss gegen ziel2_bild2.png, auf nicht-grauen Pixeln: IoU 0.938, Weiss gedeckt 0.946, Schwarz getroffen 393 px, Render 51322 px, davon auf Grau 7939
+    Weiss fehlt (Pixel, x0,y0,x1,y1): [[1336, 236, 142, 403, 208], [281, 155, 384, 171, 419], [143, 197, 374, 214, 391]]
+    Schwarz getroffen: [[114, 137, 336, 148, 359], [76, 152, 422, 162, 435], [66, 437, 400, 445, 414]]
 (b) Pruefpunkte 1/7 bestanden  (+ = rechts/unten vom Soll; kontur: + = Soll ausserhalb, Render zu klein)
    1 NEIN b2.kante_1             Kante face_and_upper_body      Soll (354,161)  Abstand   +7.5  Grenze  6.4
    2 NEIN b2.kante_2             Kante face_and_upper_body      Soll (362,165)  Abstand   +8.1  Grenze  4.1
@@ -79,34 +79,34 @@ Bild im Original gegen Filter: MAE in Weiss 26.2, NCC in Weiss 0.615
    5 NEIN b2.kante_5             Kante face_and_upper_body      Soll (390,181)  Abstand  +14.3  Grenze 11.0
    6 NEIN b2.kante_6             Kante face_and_upper_body      Soll (394,187)  Abstand  +12.9  Grenze 11.6
    7 NEIN b2.kante_7             Kante face_and_upper_body      Soll (411,206)  Abstand   +3.1  Grenze  2.5
-   8 --   b2.gelesen_1           Kante gelesen, nur Anhalt      Soll (258,215)  Abstand  -26.3  Grenze  5.3  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
+   8 --   b2.gelesen_1           Kante gelesen, nur Anhalt      Soll (258,215)  Abstand  -21.9  Grenze  5.3  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
    9 --   b2.gelesen_2           Kante gelesen, nur Anhalt      Soll (268,205)  Abstand  -25.9  Grenze  5.3  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
   10 --   b2.gelesen_3           Kante gelesen, nur Anhalt      Soll (278,190)  Abstand  -19.5  Grenze  3.4  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
   11 --   b2.gelesen_4           Kante gelesen, nur Anhalt      Soll (290,170)  Abstand  -13.5  Grenze  4.8  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
   12 --   b2.gelesen_5           Kante gelesen, nur Anhalt      Soll (300,162)  Abstand  -13.7  Grenze 13.1  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
   13 ok   b2.gelesen_6           Kante gelesen, nur Anhalt      Soll (320,156)  Abstand   -2.7  Grenze  7.2  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
   14 ok   b2.gelesen_7           Kante gelesen, nur Anhalt      Soll (345,160)  Abstand   +4.5  Grenze  8.7  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
-(c) Boden frei, Verdeckung 8/9
+(c) Boden frei, Verdeckung 7/9
   ok   BO    Boden frei (345-405,382-396)                   Treffer 0 von 841 px, Eindringen 0.0 px
-  ok   FUGE  Fuge x>=278, y 402-416                         Treffer 0 von 883 px, Eindringen 0.0 px
+  NEIN FUGE  Fuge x>=278, y 402-416                         Treffer 3 von 883 px, Eindringen 1.0 px
   ok   V1    Lichtbalken ganz verdeckt                      gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[8.0, 6.4]
   ok   V2    Bodenlinie ganz verdeckt                       gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[8.0, 4.2]
   ok   V3    Bodenlinie ohne Kontrast: R 0 bis +14 statt +2 gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[8.0, 8.0]
   ok   V4    Rohr fehlt: Video R 68-94, Raum 140-194        gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[6.2, 8.0]
   NEIN V6    Rohr endet: R 194 bei y=204, 117 bei y=208, Ka Kante Abstand 7.5, Grenze 2.5
-  ok   V5    Querfuge ohne Kontrast: 0 +-5 statt +114 bis + gedeckt 0.895, innen 1.000, Luecke 0 px, Enden +-[5.8, 8.0]
+  ok   V5    Querfuge ohne Kontrast: 0 +-5 statt +114 bis + gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[5.8, 8.0]
   ok   HAKEN  Haken gefuellt (205-245,215-262)               gedeckt 1.000  stillgelegt: Haken ist ueberholte Anatomie, die Stelle gehoert zu face_and_upper_body
   ok   RAND413 Rand rechts mindestens x=413 bei y 225-262     kleinstes x 420
 (d) Zeichnung 1/7, Anteil = Sollflaeche mit passendem Material, Y = Mittel im Video gegen gefilterten Render
-  NEIN Q1   feine_linien        Material 0.30  Figur 1.00  Groesse 0.15  Lage 1.6  Y  58/ 40
+  NEIN Q1   feine_linien        Material 0.30  Figur 1.00  Groesse 0.15  Lage 6.0  Y  58/ 41
   NEIN Q2   rotbraun_mittelton  Material 0.34  Figur 1.00  Groesse 0.14  Lage 20.6  Y  32/ 37
   NEIN Q3   feine_linien        Material 0.00  Figur 1.00  Groesse 0.11  Lage 19.1  Y  50/ 21
   NEIN Q4   helle_baender       Material 0.39  Figur 0.86  Groesse 0.16  Lage 17.6  Y  96/ 41
   NEIN Q5   feine_linien        Material 0.00  Figur 1.00  Groesse 0.00  Lage 32.7  Y  34/ 22
-  ok   G    untere_streifen     Material 0.95  Figur 1.00  Groesse 1.23  Lage 5.4  Y 113/ 83
+  ok   G    untere_streifen     Material 0.95  Figur 1.00  Groesse 1.23  Lage 5.4  Y 113/ 84
   NEIN P    weisskerne          Material 0.00  Figur 1.00  Groesse 0.00  Lage 17.2  Y 116/ 23
   NEIN N1   Rumpfinneres ohne Zeichnung (290-340,225-280): heller Anteil 0.151
-Bild im Original gegen Filter: MAE in Weiss 15.5, NCC in Weiss 0.565
+Bild im Original gegen Filter: MAE in Weiss 13.4, NCC in Weiss 0.632
 
 === Teile des Nutzers. Soll: nutzer_teile, Logo-Schrift zaehlt nirgends, Saum 3 px; Abstaende: + = rechts/unten vom Soll
 IoU und Deckung am sichtbaren Teil. Deckung = Maske gedeckt, Kern = Maske minus Saum, Innen = Teil in der Maske, +Saum = Maske plus Saum. Verdeckt = vom Teil allein durch andere Modell-Teile.
@@ -175,9 +175,9 @@ Leer = Maske ohne jedes Modell. Laenge, Breite: Ist/Soll laengs und quer zur Hau
       Ende Ferse      Soll (298,403)  Ist (345,396)  +47,-7  Abstand 47.5
       Ende Zehen      Soll (317,452)  Ist (313,418)  -4,-34  Abstand 34.2
       Spitze Soll (317,452)  Ist (313,418)  Abstand 34.2
---- Bild 2: Anteil aller Nutzerpixel, die der richtige Teil deckt 0.809, mittlere IoU 0.640
+--- Bild 2: Anteil aller Nutzerpixel, die der richtige Teil deckt 0.831, mittlere IoU 0.665
   Teil                 Knochen          Wertung   IoU  Deck  Kern Innen +Saum  Verd  Leer  Schwerpunkt dx,dy    Achse         Laenge    Breite
-  face_and_upper_body  0,7,10,11,21,22,   29977  0.74  0.90  0.93  0.81  0.84  0.06  0.05  +6,+19 (19.7)        1 Grad -17 px 223/220   189/160
+  face_and_upper_body  0,7,10,11,21,22,   29977  0.75  0.91  0.94  0.81  0.84  0.05  0.05  +6,+18 (19.1)        2 Grad -17 px 223/220   190/160
       Schnitt ueberlappt left_arm_front 48 px, right_arm_front 27 px, dort zaehlt jeder der beiden Teile
       in der Maske statt des Teils: right_arm 0.04, left_leg 0.00
       verdeckt von: right_arm 0.05, left_arm_front 0.00, right_leg 0.00
@@ -191,15 +191,15 @@ Leer = Maske ohne jedes Modell. Laenge, Breite: Ist/Soll laengs und quer zur Hau
       Ende Klaue      Soll (468,417)  Ist (467,417)  -1,+0  Abstand 1.0
       Spitze Soll (468,417)  Ist (467,417)  Abstand 1.0
       Spitze Soll (439,418)  Ist (438,417)  Abstand 1.4
-  right_arm_front      17,18,19,20,29,3    9929  0.59  0.62  0.68  0.93  0.98  0.35  0.15  -25,+7 (26.3)        37 Grad +1 px 130/188   90/110
+  right_arm_front      17,18,19,20,29,3    9929  0.66  0.70  0.75  0.92  0.97  0.39  0.07  -18,+9 (19.9)        36 Grad -4 px 151/188   85/110
       Schnitt ueberlappt face_and_upper_body 27 px, dort zaehlt jeder der beiden Teile
       in der Maske statt des Teils: face_and_upper_body 0.23, left_leg 0.00
-      verdeckt von: face_and_upper_body 0.35
-      Merkmal Y Hand: 0.67 vom Teil gedeckt, 4280 px
-      Ende Schulter   Soll (332,315)  Ist (278,287)  -54,-28  Abstand 60.8  verdeckt
-      Ende Klauenhand Soll (145,353)  Ist (135,338)  -10,-15  Abstand 18.0
-      Spitze Soll (145,353)  Ist (135,338)  Abstand 18.0
-      Spitze Soll (197,476)  Ist (197,479)  Abstand 3.0  Soll unter Logo
-      Spitze Soll (222,475)  Ist (165,463)  Abstand 58.2  Soll unter Logo
-      Spitze Soll (274,443)  Ist (254,449)  Abstand 20.9
-      Spitze ueberzaehlig: Ist (152,432)
+      verdeckt von: face_and_upper_body 0.39
+      Merkmal Y Hand: 0.90 vom Teil gedeckt, 4280 px
+      Ende Schulter   Soll (332,315)  Ist (303,264)  -29,-51  Abstand 58.7  verdeckt
+      Ende Klauenhand Soll (145,353)  Ist (137,336)  -8,-17  Abstand 18.8
+      Spitze Soll (145,353)  Ist (137,336)  Abstand 18.8
+      Spitze Soll (197,476)  Ist (203,479)  Abstand 6.7  Soll unter Logo
+      Spitze Soll (222,475)  Ist (170,475)  Abstand 52.0  Soll unter Logo
+      Spitze Soll (274,443)  Ist (272,455)  Abstand 12.2
+      Spitze ueberzaehlig: Ist (151,438)

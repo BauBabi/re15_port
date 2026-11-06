@@ -1,0 +1,625 @@
+{
+ "name": "arm_K5d",
+ "basis": "J_dicker + K5-Kopf",
+ "fit": "../_lauf/K5d/fit.json",
+ "kopf": {
+  "art": "k5",
+  "S": 560.0038979742861,
+  "x_auge": 916.874579953191,
+  "Wk": 581.5608427530752,
+  "L": 2238.1035323341016,
+  "taper": 0.15003154697262444,
+  "x_hinten": -250.0,
+  "yt_k": -224.00155918971447,
+  "yt_s": -142.80490896010951,
+  "yt_t": -140.00097449355403,
+  "y_gaumen": 270.0,
+  "nase": 80.0,
+  "bulbe": 1.15,
+  "zaehne": 11,
+  "zahn_lang": 170.0,
+  "zahn_oben": 0.55,
+  "uk_zaehne": 6,
+  "uk_zahn_lang": 200.0,
+  "kiefer_breit": 0.9998260901004151,
+  "kiefer_boden": 208.92137005211256,
+  "kiefer_boden_t": 120.0,
+  "kiefer_tief": 110.0,
+  "kiefer_kuerzer": 398.91392968653184,
+  "gx": 564.4872400780613,
+  "gy": 650.0,
+  "auge_r": 0.085,
+  "hoecker": 0.17,
+  "hoecker_hoch": 0.55
+ },
+ "halslaenge": 503.0,
+ "krallen": {
+  "14": {
+   "flaechen_kralle": 18,
+   "laenge_kralle": 288,
+   "haken": 0
+  },
+  "15": {
+   "flaechen_kralle": 21,
+   "laenge_kralle": 324,
+   "haken": 0
+  },
+  "28": {
+   "flaechen_kralle": 18,
+   "laenge_kralle": 370,
+   "haken": 0
+  },
+  "30": {
+   "flaechen_kralle": 18,
+   "laenge_kralle": 282,
+   "haken": 0
+  },
+  "19": {
+   "flaechen_kralle": 18,
+   "laenge_kralle": 379,
+   "haken": 0
+  },
+  "20": {
+   "flaechen_kralle": 18,
+   "laenge_kralle": 396,
+   "haken": 0
+  },
+  "29": {
+   "flaechen_kralle": 18,
+   "laenge_kralle": 486,
+   "haken": 0
+  },
+  "31": {
+   "flaechen_kralle": 18,
+   "laenge_kralle": 371,
+   "haken": 0
+  },
+  "13": {
+   "flaechen_kralle": 18,
+   "laenge_kralle": 330,
+   "haken": 0
+  },
+  "18": {
+   "flaechen_kralle": 12,
+   "laenge_kralle": 358,
+   "haken": 0
+  }
+ },
+ "naht": {
+  "Bein l - Huefte": {
+   "kind": 8,
+   "eltern": 0,
+   "aussen": [
+    -0.551,
+    0.462,
+    0.694
+   ],
+   "radius_kind": 330,
+   "quer": 330,
+   "aussen_r": 198,
+   "flaechen": 40
+  },
+  "Bein r - Huefte": {
+   "kind": 9,
+   "eltern": 0,
+   "aussen": [
+    -0.551,
+    0.462,
+    -0.694
+   ],
+   "radius_kind": 330,
+   "quer": 297,
+   "aussen_r": 264,
+   "flaechen": 40
+  },
+  "Arm l - Brust": {
+   "kind": 11,
+   "eltern": 10,
+   "aussen": [
+    0.402,
+    0.319,
+    0.858
+   ],
+   "radius_kind": 547,
+   "quer": 328,
+   "aussen_r": 219,
+   "flaechen": 40
+  },
+  "Arm r - Brust": {
+   "kind": 16,
+   "eltern": 10,
+   "aussen": [
+    0.402,
+    0.319,
+    -0.858
+   ],
+   "radius_kind": 547,
+   "quer": 492,
+   "aussen_r": 547,
+   "flaechen": 40
+  },
+  "Hals - Brust": {
+   "kind": 21,
+   "eltern": 10,
+   "aussen": [
+    0.831,
+    0.557,
+    0.0
+   ],
+   "radius_kind": 540,
+   "quer": 540,
+   "aussen_r": 540,
+   "flaechen": 40
+  },
+  "Schwanz - Becken": {
+   "kind": 1,
+   "eltern": 0,
+   "aussen": [
+    0.009,
+    -1.0,
+    0.0
+   ],
+   "radius_kind": 347,
+   "quer": 347,
+   "aussen_r": 278,
+   "flaechen": 40
+  },
+  "Kopf - Hals": {
+   "kind": 22,
+   "eltern": 21,
+   "aussen": [
+    0.998,
+    -0.061,
+    0.0
+   ],
+   "radius_kind": 371,
+   "quer": 371,
+   "aussen_r": 371,
+   "flaechen": 40
+  },
+  "Wirbel - Huefte": {
+   "kind": 7,
+   "eltern": 0,
+   "aussen": [
+    1.0,
+    -0.023,
+    0.0
+   ],
+   "radius_kind": 811,
+   "quer": 811,
+   "aussen_r": 811,
+   "flaechen": 40
+  },
+  "Brust - Wirbel": {
+   "kind": 10,
+   "eltern": 7,
+   "aussen": [
+    0.997,
+    0.077,
+    0.0
+   ],
+   "radius_kind": 933,
+   "quer": 746,
+   "aussen_r": 933,
+   "flaechen": 40
+  },
+  "Knie l": {
+   "kind": 24,
+   "eltern": 8,
+   "aussen": [
+    0.001,
+    0.998,
+    -0.07
+   ],
+   "radius_kind": 206,
+   "quer": 185,
+   "aussen_r": 206,
+   "flaechen": 40
+  },
+  "Knie r": {
+   "kind": 26,
+   "eltern": 9,
+   "aussen": [
+    0.001,
+    0.998,
+    0.07
+   ],
+   "radius_kind": 211,
+   "quer": 211,
+   "aussen_r": 211,
+   "flaechen": 40
+  },
+  "Ellbogen l": {
+   "kind": 12,
+   "eltern": 11,
+   "aussen": [
+    0.009,
+    0.996,
+    -0.087
+   ],
+   "radius_kind": 447,
+   "quer": 447,
+   "aussen_r": 447,
+   "flaechen": 40
+  },
+  "Ellbogen r": {
+   "kind": 17,
+   "eltern": 16,
+   "aussen": [
+    0.009,
+    0.996,
+    0.087
+   ],
+   "radius_kind": 431,
+   "quer": 301,
+   "aussen_r": 431,
+   "flaechen": 40
+  },
+  "Fuss l": {
+   "kind": 25,
+   "eltern": 24,
+   "aussen": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "radius_kind": 361,
+   "quer": 180,
+   "aussen_r": 144,
+   "flaechen": 40
+  },
+  "Fuss r": {
+   "kind": 27,
+   "eltern": 26,
+   "aussen": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "radius_kind": 233,
+   "quer": 140,
+   "aussen_r": 233,
+   "flaechen": 40
+  },
+  "Hand l": {
+   "kind": 13,
+   "eltern": 12,
+   "aussen": [
+    -0.111,
+    0.99,
+    0.084
+   ],
+   "radius_kind": 192,
+   "quer": 192,
+   "aussen_r": 192,
+   "flaechen": 40
+  },
+  "Hand r": {
+   "kind": 18,
+   "eltern": 17,
+   "aussen": [
+    -0.111,
+    0.99,
+    -0.084
+   ],
+   "radius_kind": 240,
+   "quer": 240,
+   "aussen_r": 240,
+   "flaechen": 40
+  },
+  "Schwanz 1-2": {
+   "kind": 2,
+   "eltern": 1,
+   "aussen": [
+    -0.929,
+    -0.37,
+    0.0
+   ],
+   "radius_kind": 332,
+   "quer": 332,
+   "aussen_r": 332,
+   "flaechen": 40
+  },
+  "Schwanz 2-3": {
+   "kind": 3,
+   "eltern": 2,
+   "aussen": [
+    -0.999,
+    0.032,
+    0.0
+   ],
+   "radius_kind": 332,
+   "quer": 332,
+   "aussen_r": 332,
+   "flaechen": 40
+  },
+  "Schwanz 3-4": {
+   "kind": 4,
+   "eltern": 3,
+   "aussen": [
+    -1.0,
+    -0.0,
+    0.0
+   ],
+   "radius_kind": 264,
+   "quer": 264,
+   "aussen_r": 264,
+   "flaechen": 40
+  },
+  "Schwanz 4-5": {
+   "kind": 5,
+   "eltern": 4,
+   "aussen": [
+    -1.0,
+    -0.007,
+    0.0
+   ],
+   "radius_kind": 173,
+   "quer": 173,
+   "aussen_r": 173,
+   "flaechen": 40
+  },
+  "Schwanz 5-6": {
+   "kind": 6,
+   "eltern": 5,
+   "aussen": [
+    -1.0,
+    -0.021,
+    0.0
+   ],
+   "radius_kind": 221,
+   "quer": 199,
+   "aussen_r": 221,
+   "flaechen": 40
+  },
+  "Kiefer - Kopf": {
+   "kind": 23,
+   "eltern": 22,
+   "aussen": [
+    -0.723,
+    0.691,
+    -0.003
+   ],
+   "radius_kind": 664,
+   "quer": 268,
+   "aussen_r": 335,
+   "flaechen": 40
+  },
+  "Muffe Bein l - Huefte": {
+   "kind": 8,
+   "am": "Kind",
+   "achse": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "radius_kind": 330,
+   "quer": 198,
+   "laengs": 528,
+   "flaechen": 40
+  },
+  "Muffe Bein r - Huefte": {
+   "kind": 9,
+   "am": "Kind",
+   "achse": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "radius_kind": 330,
+   "quer": 231,
+   "laengs": 528,
+   "flaechen": 40
+  },
+  "Muffe Arm r - Brust": {
+   "kind": 16,
+   "am": "Kind",
+   "achse": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "radius_kind": 547,
+   "quer": 437,
+   "laengs": 711,
+   "flaechen": 40
+  },
+  "Muffe Hals - Brust": {
+   "kind": 21,
+   "am": "Kind",
+   "achse": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "radius_kind": 540,
+   "quer": 540,
+   "laengs": 703,
+   "flaechen": 40
+  },
+  "Muffe Kopf - Hals": {
+   "kind": 22,
+   "am": "Kind",
+   "achse": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "radius_kind": 371,
+   "quer": 371,
+   "laengs": 593,
+   "flaechen": 40
+  },
+  "Muffe Schwanz - Becken": {
+   "kind": 1,
+   "am": "Kind",
+   "achse": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "radius_kind": 347,
+   "quer": 278,
+   "laengs": 555,
+   "flaechen": 40
+  },
+  "Muffe Hand l": {
+   "kind": 13,
+   "am": "Kind",
+   "achse": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "radius_kind": 192,
+   "quer": 192,
+   "laengs": 307,
+   "flaechen": 40
+  },
+  "Muffe Hand r": {
+   "kind": 18,
+   "am": "Kind",
+   "achse": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "radius_kind": 240,
+   "quer": 240,
+   "laengs": 384,
+   "flaechen": 40
+  }
+ },
+ "farben": {
+  "haut": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "fleisch": [
+   3.129,
+   2.968,
+   2.348
+  ],
+  "unterseite": [
+   3.129,
+   2.968,
+   2.348
+  ],
+  "hell": [
+   4.728,
+   4.82,
+   4.085
+  ],
+  "kralle_wurzel": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "kralle_spitze": [
+   1.6,
+   1.6,
+   1.6
+  ],
+  "kiefer_eichung": [
+   {
+    "runde": 0,
+    "soll_durch_ist": 1.068,
+    "px": 2890
+   },
+   {
+    "runde": 1,
+    "soll_durch_ist": 1.0,
+    "px": 2890
+   }
+  ]
+ },
+ "flaechen": 3828,
+ "fuss_textur": {
+  "fuss_r": {
+   "vorher": [
+    77,
+    96,
+    114
+   ],
+   "nachher": [
+    37,
+    39,
+    48
+   ],
+   "ziel": [
+    36,
+    39,
+    48
+   ]
+  },
+  "fuss_l": {
+   "vorher": [
+    97,
+    104,
+    116
+   ],
+   "nachher": [
+    64,
+    67,
+    77
+   ],
+   "ziel": [
+    64,
+    67,
+    77
+   ]
+  },
+  "zeh0_r": {
+   "vorher": [
+    69,
+    94,
+    115
+   ],
+   "nachher": [
+    36,
+    39,
+    48
+   ],
+   "ziel": [
+    36,
+    39,
+    48
+   ]
+  }
+ },
+ "eichung": [
+  {
+   "runde": 0,
+   "kiefer_soll_durch_ist": 0.996,
+   "kiefer_px": 1688,
+   "auge_render": [
+    31,
+    15,
+    17
+   ],
+   "auge_px": 73,
+   "auge_textur": [
+    82,
+    36,
+    52
+   ]
+  },
+  {
+   "runde": 1,
+   "kiefer_soll_durch_ist": 1.001,
+   "kiefer_px": 1688,
+   "auge_render": [
+    76,
+    29,
+    47
+   ],
+   "auge_px": 73,
+   "auge_textur": [
+    200,
+    88,
+    155
+   ]
+  }
+ ]
+}
