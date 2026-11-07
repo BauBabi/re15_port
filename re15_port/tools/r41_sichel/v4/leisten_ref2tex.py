@@ -1,11 +1,11 @@
-"""SF V4 Originaltexturen (Bauer, Runde 1 von 2): Bildleisten fuer die Abnahme (analysis/befunde_runde41/SF_belege/v4/).
+"""SF V4 Originaltexturen (Bauer, Runde 2 von 2; Runde 1 in SF_belege/v4/ot1/): Bildleisten fuer die Abnahme (analysis/befunde_runde41/SF_belege/v4/).
 
     python leisten_ref2tex.py [alle|01|02|03|04|05|07|08]
 
 Spalten NUR: Nutzer-Vorlage (Originalbild) | Nutzer-Beschriftung | Referenz 2 (gelobt, Spiel-Asset EM30_HANGAR.EMD sha256 cfd1ac42) |
 V4 neu (Originaltexturen, sfv4/emd/EM30_V4.EMD). Runde-5-Leisten liegen in SF_belege/v4/r5/.
 Render wie leisten_v4.py: b2 in der Spielkamera 50A0 Schnitt 12 (RDT-Licht, Hintergrund BSS 50A0/12), Posen posen_v4 "135" / "85";
-07 = Spiellaeufe (RE15_FRAMEDUMP, Laeufe sfv4/r/R2ot = Spiel-Asset, sfv4/r/V4ot = V4 neu). Unterschriften = riegel_ref2tex.py.
+07 = Spiellaeufe (RE15_FRAMEDUMP, Laeufe sfv4/r/R2ot = Spiel-Asset, sfv4/r/V4ot2 = V4 neu Runde 2). Unterschriften = riegel_ref2tex.py.
 Umgebungsvariablen RE15_LEISTE_NEU (EMD) / RE15_LAUF_NEU / RE15_LAUF_REF2.
 """
 import os, sys
@@ -21,7 +21,7 @@ AUS = LV.AUS
 NAME = {'ref2': 'Referenz 2', 'neu': 'V4 neu'}
 EMD = {'ref2': G.REF2, 'neu': os.environ.get('RE15_LEISTE_NEU', G.EMD_V4)}
 LAUF = {'ref2': os.environ.get('RE15_LAUF_REF2', os.path.join(G.SFV4, 'r', 'R2ot')),
-        'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V4ot'))}
+        'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V4ot2'))}
 KOPFZEILE = 'Spalten: Nutzer-Vorlage (Originalbild) | Nutzer-Beschriftung | Referenz 2 (gelobt) | V4 neu (Originaltexturen)'
 GELB, CYAN = LV.GELB, LV.CYAN
 _cache = {}
