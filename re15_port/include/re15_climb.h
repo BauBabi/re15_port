@@ -79,4 +79,12 @@ int  re15_climb_dbg_phase(void);
 int  re15_climb_dbg_obj(void);
 int  re15_climb_dbg_standing(void);
 
+/* Runde 41 Spur G2-RE2 NB4 (W): die Fallschritte des Substate 10 (Ph2 nach dem Vorschub / Ph3 / Ph4) als gemeinsamer Helfer fuer den Stoss
+ * von der Rampe ins Wasser (gator_treffer_r41.c); Herleitung und Adressen am Kopf der Helfer in climb_common.c. boden = Boden-Zaehler des
+ * Aufrufers (climb_sub10: 0x800acc0e), t = Fallzaehler (0x800acaf0). */
+#include "re15_actor.h"
+void re15_climb_fall_beginn(const re15_rdt_t *rdt, re15_actor_t *p, int16_t *boden);
+int  re15_climb_fall_schritt(re15_actor_t *p, int *t, int16_t boden);
+void re15_climb_fall_landung(re15_actor_t *p, int16_t boden, int frei93);
+
 #endif /* RE15_CLIMB_H */
