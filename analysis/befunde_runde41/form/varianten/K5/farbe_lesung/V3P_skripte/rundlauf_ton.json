@@ -1,0 +1,210 @@
+{
+ "bild1|Original": {
+  "Schwanz": {
+   "anteil": 5.9,
+   "h": -8.9
+  },
+  "Ruecken/Flanke": {
+   "anteil": 11.9,
+   "h": -11.8
+  },
+  "Hinterbein l (W)": {
+   "anteil": 1.9,
+   "h": 43.6
+  },
+  "Hinterbein r (W)": {
+   "anteil": 1.1,
+   "h": -47.1
+  },
+  "Vorderglied r (W)": {
+   "anteil": 0.0,
+   "h": NaN
+  },
+  "Figur": {
+   "anteil": 5.2,
+   "h": -9.5
+  }
+ },
+ "bild1|Rundlauf 15": {
+  "Schwanz": {
+   "anteil": 4.7,
+   "h": -4.8
+  },
+  "Ruecken/Flanke": {
+   "anteil": 10.0,
+   "h": -9.0
+  },
+  "Hinterbein l (W)": {
+   "anteil": 0.8,
+   "h": 48.8
+  },
+  "Hinterbein r (W)": {
+   "anteil": 0.0,
+   "h": NaN
+  },
+  "Vorderglied r (W)": {
+   "anteil": 0.0,
+   "h": NaN
+  },
+  "Figur": {
+   "anteil": 4.0,
+   "h": -6.0
+  }
+ },
+ "bild1|Rundlauf 12345": {
+  "Schwanz": {
+   "anteil": 4.8,
+   "h": -5.5
+  },
+  "Ruecken/Flanke": {
+   "anteil": 9.5,
+   "h": -9.6
+  },
+  "Hinterbein l (W)": {
+   "anteil": 1.0,
+   "h": 49.0
+  },
+  "Hinterbein r (W)": {
+   "anteil": 0.0,
+   "h": NaN
+  },
+  "Vorderglied r (W)": {
+   "anteil": 0.0,
+   "h": NaN
+  },
+  "Figur": {
+   "anteil": 4.0,
+   "h": -6.2
+  }
+ },
+ "bild1|Rundlauf 7": {
+  "Schwanz": {
+   "anteil": 4.7,
+   "h": -4.7
+  },
+  "Ruecken/Flanke": {
+   "anteil": 9.5,
+   "h": -9.2
+  },
+  "Hinterbein l (W)": {
+   "anteil": 0.9,
+   "h": 49.2
+  },
+  "Hinterbein r (W)": {
+   "anteil": 0.0,
+   "h": NaN
+  },
+  "Vorderglied r (W)": {
+   "anteil": 0.0,
+   "h": NaN
+  },
+  "Figur": {
+   "anteil": 3.9,
+   "h": -5.8
+  }
+ },
+ "bild2|Original": {
+  "Oberkiefer": {
+   "anteil": 10.8,
+   "h": 7.2
+  },
+  "Kopf/Rumpf": {
+   "anteil": 14.9,
+   "h": -6.6
+  },
+  "Unterkiefer": {
+   "anteil": 77.1,
+   "h": 28.8
+  },
+  "Klaue r (W)": {
+   "anteil": 69.8,
+   "h": 40.2
+  },
+  "Klaue l (W)": {
+   "anteil": 80.6,
+   "h": 39.0
+  },
+  "Figur": {
+   "anteil": 34.3,
+   "h": 29.6
+  }
+ },
+ "bild2|Rundlauf 15": {
+  "Oberkiefer": {
+   "anteil": 15.7,
+   "h": 12.4
+  },
+  "Kopf/Rumpf": {
+   "anteil": 14.6,
+   "h": -3.2
+  },
+  "Unterkiefer": {
+   "anteil": 72.3,
+   "h": 31.1
+  },
+  "Klaue r (W)": {
+   "anteil": 71.8,
+   "h": 39.9
+  },
+  "Klaue l (W)": {
+   "anteil": 78.8,
+   "h": 37.0
+  },
+  "Figur": {
+   "anteil": 34.5,
+   "h": 29.5
+  }
+ },
+ "bild2|Rundlauf 12345": {
+  "Oberkiefer": {
+   "anteil": 13.9,
+   "h": 12.7
+  },
+  "Kopf/Rumpf": {
+   "anteil": 14.2,
+   "h": -3.7
+  },
+  "Unterkiefer": {
+   "anteil": 72.9,
+   "h": 31.0
+  },
+  "Klaue r (W)": {
+   "anteil": 71.2,
+   "h": 40.0
+  },
+  "Klaue l (W)": {
+   "anteil": 77.2,
+   "h": 37.2
+  },
+  "Figur": {
+   "anteil": 33.8,
+   "h": 29.8
+  }
+ },
+ "bild2|Rundlauf 7": {
+  "Oberkiefer": {
+   "anteil": 18.2,
+   "h": 15.7
+  },
+  "Kopf/Rumpf": {
+   "anteil": 13.8,
+   "h": -3.4
+  },
+  "Unterkiefer": {
+   "anteil": 73.1,
+   "h": 31.0
+  },
+  "Klaue r (W)": {
+   "anteil": 72.3,
+   "h": 39.7
+  },
+  "Klaue l (W)": {
+   "anteil": 75.1,
+   "h": 37.2
+  },
+  "Figur": {
+   "anteil": 34.1,
+   "h": 29.8
+  }
+ }
+}

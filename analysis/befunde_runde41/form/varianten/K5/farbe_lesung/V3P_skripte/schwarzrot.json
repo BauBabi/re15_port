@@ -1,0 +1,762 @@
+{
+ "bild1|Schwanz": {
+  "a_figurlicht": {
+   "n": 11526,
+   "dunkel": 78.7,
+   "dunkelrot": 24.7,
+   "rot": 3.9,
+   "hell": 2.4,
+   "T_dunkel": [
+    37,
+    29,
+    34
+   ],
+   "lab_dunkel": [
+    12.0,
+    5.3,
+    -1.2
+   ],
+   "lab_rot": [
+    39.7,
+    23.6,
+    -0.4
+   ],
+   "ton_rot": -1.1,
+   "L_p5_50_95": [
+    8.3,
+    12.3,
+    43.6
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 11210,
+   "dunkel": 86.1,
+   "dunkelrot": 16.1,
+   "rot": 3.9,
+   "hell": 1.6,
+   "T_dunkel": [
+    29,
+    23,
+    26
+   ],
+   "lab_dunkel": [
+    8.7,
+    3.8,
+    -1.3
+   ],
+   "lab_rot": [
+    43.5,
+    25.4,
+    0.9
+   ],
+   "ton_rot": 2.0,
+   "L_p5_50_95": [
+    4.1,
+    8.6,
+    39.1
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.671,
+   0.6,
+   0.514
+  ]
+ },
+ "bild1|Ruecken/Flanke": {
+  "a_figurlicht": {
+   "n": 7243,
+   "dunkel": 55.9,
+   "dunkelrot": 12.3,
+   "rot": 9.7,
+   "hell": 7.9,
+   "T_dunkel": [
+    40,
+    33,
+    35
+   ],
+   "lab_dunkel": [
+    13.6,
+    4.2,
+    0.0
+   ],
+   "lab_rot": [
+    39.5,
+    20.9,
+    -2.9
+   ],
+   "ton_rot": -7.8,
+   "L_p5_50_95": [
+    10.0,
+    18.3,
+    56.8
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 7204,
+   "dunkel": 54.2,
+   "dunkelrot": 15.3,
+   "rot": 8.1,
+   "hell": 5.5,
+   "T_dunkel": [
+    44,
+    34,
+    35
+   ],
+   "lab_dunkel": [
+    14.3,
+    5.4,
+    1.0
+   ],
+   "lab_rot": [
+    42.9,
+    22.5,
+    -5.2
+   ],
+   "ton_rot": -13.1,
+   "L_p5_50_95": [
+    8.3,
+    18.7,
+    58.0
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.443,
+   0.392,
+   0.337
+  ]
+ },
+ "bild1|Hinterbein l (W)": {
+  "a_figurlicht": {
+   "n": 3767,
+   "dunkel": 51.0,
+   "dunkelrot": 7.2,
+   "rot": 1.3,
+   "hell": 7.4,
+   "T_dunkel": [
+    38,
+    34,
+    40
+   ],
+   "lab_dunkel": [
+    13.9,
+    3.7,
+    -2.8
+   ],
+   "lab_rot": [
+    27.1,
+    17.3,
+    15.2
+   ],
+   "ton_rot": 41.3,
+   "L_p5_50_95": [
+    10.9,
+    19.5,
+    48.3
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 3416,
+   "dunkel": 31.9,
+   "dunkelrot": 6.1,
+   "rot": 1.0,
+   "hell": 11.7,
+   "T_dunkel": [
+    39,
+    33,
+    36
+   ],
+   "lab_dunkel": [
+    13.5,
+    4.2,
+    -0.9
+   ],
+   "lab_rot": [
+    31.9,
+    17.1,
+    8.6
+   ],
+   "ton_rot": 26.8,
+   "L_p5_50_95": [
+    9.2,
+    22.7,
+    57.4
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.416,
+   0.373,
+   0.318
+  ]
+ },
+ "bild1|Hinterbein r (W)": {
+  "a_figurlicht": {
+   "n": 5319,
+   "dunkel": 51.0,
+   "dunkelrot": 8.8,
+   "rot": 0.0,
+   "hell": 6.1,
+   "T_dunkel": [
+    35,
+    36,
+    47
+   ],
+   "lab_dunkel": [
+    14.7,
+    2.8,
+    -6.8
+   ],
+   "lab_rot": null,
+   "ton_rot": null,
+   "L_p5_50_95": [
+    11.1,
+    19.7,
+    47.2
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 3647,
+   "dunkel": 76.4,
+   "dunkelrot": 9.3,
+   "rot": 1.2,
+   "hell": 4.1,
+   "T_dunkel": [
+    29,
+    29,
+    38
+   ],
+   "lab_dunkel": [
+    11.3,
+    2.6,
+    -5.6
+   ],
+   "lab_rot": [
+    24.8,
+    19.6,
+    -7.5
+   ],
+   "ton_rot": -21.0,
+   "L_p5_50_95": [
+    6.3,
+    12.5,
+    42.1
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.647,
+   0.58,
+   0.498
+  ]
+ },
+ "bild1|Vorderglied r (W)": {
+  "a_figurlicht": {
+   "n": 4299,
+   "dunkel": 62.7,
+   "dunkelrot": 3.9,
+   "rot": 0.0,
+   "hell": 6.2,
+   "T_dunkel": [
+    36,
+    36,
+    41
+   ],
+   "lab_dunkel": [
+    14.4,
+    1.2,
+    -2.8
+   ],
+   "lab_rot": null,
+   "ton_rot": null,
+   "L_p5_50_95": [
+    11.0,
+    17.3,
+    46.5
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 4229,
+   "dunkel": 46.8,
+   "dunkelrot": 3.2,
+   "rot": 0.2,
+   "hell": 5.9,
+   "T_dunkel": [
+    34,
+    34,
+    37
+   ],
+   "lab_dunkel": [
+    13.3,
+    1.0,
+    -2.1
+   ],
+   "lab_rot": [
+    21.8,
+    15.5,
+    -7.4
+   ],
+   "ton_rot": -25.6,
+   "L_p5_50_95": [
+    7.0,
+    20.6,
+    46.2
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.4,
+   0.357,
+   0.302
+  ]
+ },
+ "bild1|Figur": {
+  "a_figurlicht": {
+   "n": 32154,
+   "dunkel": 63.6,
+   "dunkelrot": 14.4,
+   "rot": 3.7,
+   "hell": 5.4,
+   "T_dunkel": [
+    37,
+    32,
+    37
+   ],
+   "lab_dunkel": [
+    13.1,
+    4.1,
+    -2.1
+   ],
+   "lab_rot": [
+    39.1,
+    21.7,
+    -1.2
+   ],
+   "ton_rot": -3.2,
+   "L_p5_50_95": [
+    9.4,
+    16.0,
+    49.5
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 29706,
+   "dunkel": 65.3,
+   "dunkelrot": 12.1,
+   "rot": 3.7,
+   "hell": 4.6,
+   "T_dunkel": [
+    33,
+    28,
+    32
+   ],
+   "lab_dunkel": [
+    10.9,
+    3.7,
+    -1.5
+   ],
+   "lab_rot": [
+    41.9,
+    23.3,
+    -2.5
+   ],
+   "ton_rot": -6.1,
+   "L_p5_50_95": [
+    4.8,
+    15.2,
+    50.3
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.576,
+   0.514,
+   0.443
+  ]
+ },
+ "bild2|Oberkiefer": {
+  "a_figurlicht": {
+   "n": 5832,
+   "dunkel": 88.4,
+   "dunkelrot": 87.1,
+   "rot": 9.4,
+   "hell": 0.4,
+   "T_dunkel": [
+    69,
+    23,
+    23
+   ],
+   "lab_dunkel": [
+    15.3,
+    21.8,
+    11.2
+   ],
+   "lab_rot": [
+    24.2,
+    25.4,
+    6.1
+   ],
+   "ton_rot": 13.4,
+   "L_p5_50_95": [
+    12.0,
+    15.9,
+    24.8
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 5832,
+   "dunkel": 88.0,
+   "dunkelrot": 86.5,
+   "rot": 9.7,
+   "hell": 0.4,
+   "T_dunkel": [
+    69,
+    23,
+    23
+   ],
+   "lab_dunkel": [
+    15.4,
+    21.6,
+    11.4
+   ],
+   "lab_rot": [
+    24.3,
+    25.1,
+    6.3
+   ],
+   "ton_rot": 14.1,
+   "L_p5_50_95": [
+    12.1,
+    16.0,
+    25.0
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.384,
+   0.337,
+   0.306
+  ]
+ },
+ "bild2|Kopf/Rumpf": {
+  "a_figurlicht": {
+   "n": 24344,
+   "dunkel": 73.1,
+   "dunkelrot": 69.2,
+   "rot": 11.0,
+   "hell": 3.1,
+   "T_dunkel": [
+    62,
+    22,
+    26
+   ],
+   "lab_dunkel": [
+    14.0,
+    19.8,
+    7.0
+   ],
+   "lab_rot": [
+    27.0,
+    23.5,
+    -0.2
+   ],
+   "ton_rot": -0.5,
+   "L_p5_50_95": [
+    9.7,
+    15.5,
+    39.8
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 22753,
+   "dunkel": 71.6,
+   "dunkelrot": 68.2,
+   "rot": 11.7,
+   "hell": 2.8,
+   "T_dunkel": [
+    63,
+    22,
+    27
+   ],
+   "lab_dunkel": [
+    14.2,
+    20.0,
+    6.8
+   ],
+   "lab_rot": [
+    27.0,
+    23.5,
+    -0.1
+   ],
+   "ton_rot": -0.3,
+   "L_p5_50_95": [
+    10.0,
+    15.8,
+    38.9
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.384,
+   0.337,
+   0.306
+  ]
+ },
+ "bild2|Unterkiefer": {
+  "a_figurlicht": {
+   "n": 3353,
+   "dunkel": 0.0,
+   "dunkelrot": 0.0,
+   "rot": 70.2,
+   "hell": 18.6,
+   "T_dunkel": null,
+   "lab_dunkel": null,
+   "lab_rot": [
+    49.2,
+    32.8,
+    18.8
+   ],
+   "ton_rot": 29.7,
+   "L_p5_50_95": [
+    29.5,
+    56.3,
+    86.3
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 3095,
+   "dunkel": 0.0,
+   "dunkelrot": 0.0,
+   "rot": 66.0,
+   "hell": 22.1,
+   "T_dunkel": null,
+   "lab_dunkel": null,
+   "lab_rot": [
+    50.8,
+    32.7,
+    18.3
+   ],
+   "ton_rot": 29.2,
+   "L_p5_50_95": [
+    30.6,
+    58.9,
+    87.4
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.384,
+   0.337,
+   0.306
+  ]
+ },
+ "bild2|Klaue r (W)": {
+  "a_figurlicht": {
+   "n": 6035,
+   "dunkel": 21.1,
+   "dunkelrot": 21.1,
+   "rot": 68.0,
+   "hell": 7.6,
+   "T_dunkel": [
+    71,
+    30,
+    25
+   ],
+   "lab_dunkel": [
+    17.3,
+    18.5,
+    13.1
+   ],
+   "lab_rot": [
+    32.3,
+    29.5,
+    24.6
+   ],
+   "ton_rot": 39.8,
+   "L_p5_50_95": [
+    15.9,
+    28.2,
+    62.4
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 5444,
+   "dunkel": 21.4,
+   "dunkelrot": 21.3,
+   "rot": 70.3,
+   "hell": 5.2,
+   "T_dunkel": [
+    69,
+    32,
+    25
+   ],
+   "lab_dunkel": [
+    17.3,
+    17.3,
+    12.7
+   ],
+   "lab_rot": [
+    32.1,
+    29.1,
+    24.5
+   ],
+   "ton_rot": 40.1,
+   "L_p5_50_95": [
+    16.0,
+    27.3,
+    58.4
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.384,
+   0.337,
+   0.306
+  ]
+ },
+ "bild2|Klaue l (W)": {
+  "a_figurlicht": {
+   "n": 5559,
+   "dunkel": 6.1,
+   "dunkelrot": 6.1,
+   "rot": 74.5,
+   "hell": 10.8,
+   "T_dunkel": [
+    80,
+    27,
+    27
+   ],
+   "lab_dunkel": [
+    18.4,
+    24.7,
+    13.4
+   ],
+   "lab_rot": [
+    33.0,
+    26.5,
+    20.8
+   ],
+   "ton_rot": 38.2,
+   "L_p5_50_95": [
+    19.8,
+    32.5,
+    60.4
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 5313,
+   "dunkel": 5.8,
+   "dunkelrot": 5.8,
+   "rot": 75.2,
+   "hell": 9.6,
+   "T_dunkel": [
+    80,
+    26,
+    27
+   ],
+   "lab_dunkel": [
+    18.4,
+    24.9,
+    13.2
+   ],
+   "lab_rot": [
+    32.8,
+    26.1,
+    21.1
+   ],
+   "ton_rot": 38.9,
+   "L_p5_50_95": [
+    19.8,
+    32.0,
+    58.2
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.384,
+   0.337,
+   0.306
+  ]
+ },
+ "bild2|Figur": {
+  "a_figurlicht": {
+   "n": 45036,
+   "dunkel": 54.6,
+   "dunkelrot": 52.3,
+   "rot": 30.6,
+   "hell": 5.4,
+   "T_dunkel": [
+    64,
+    23,
+    26
+   ],
+   "lab_dunkel": [
+    14.5,
+    20.2,
+    8.3
+   ],
+   "lab_rot": [
+    34.1,
+    27.8,
+    17.0
+   ],
+   "ton_rot": 31.4,
+   "L_p5_50_95": [
+    10.7,
+    18.6,
+    60.6
+   ]
+  },
+  "b_licht_je_pixel": {
+   "n": 42350,
+   "dunkel": 54.1,
+   "dunkelrot": 52.0,
+   "rot": 30.8,
+   "hell": 5.0,
+   "T_dunkel": [
+    65,
+    23,
+    26
+   ],
+   "lab_dunkel": [
+    14.7,
+    20.3,
+    8.2
+   ],
+   "lab_rot": [
+    33.9,
+    27.4,
+    16.7
+   ],
+   "ton_rot": 31.4,
+   "L_p5_50_95": [
+    11.0,
+    18.7,
+    59.9
+   ]
+  },
+  "licht_je_pixel_median": [
+   0.384,
+   0.337,
+   0.306
+  ]
+ },
+ "G4_atlas_genutzt": {
+  "n": 48820,
+  "dunkel": 60.0,
+  "dunkelrot": 6.7,
+  "rot": 26.1,
+  "hell": 1.8,
+  "T_dunkel": [
+   32,
+   26,
+   28
+  ],
+  "lab_dunkel": [
+   10.3,
+   3.4,
+   -0.2
+  ],
+  "lab_rot": [
+   38.0,
+   35.5,
+   20.8
+  ],
+  "ton_rot": 30.3,
+  "L_p5_50_95": [
+   4.7,
+   16.0,
+   51.7
+  ]
+ }
+}

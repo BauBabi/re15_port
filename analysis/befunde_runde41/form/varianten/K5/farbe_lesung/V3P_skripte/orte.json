@@ -1,0 +1,311 @@
+{
+ "bild1_seed_va_max": [
+  311,
+  250,
+  [
+   33.6,
+   42.2,
+   -17.5
+  ]
+ ],
+ "bild1_flaeche_je_schwelle_video": {
+  "VL>=25,Va>=20": 807,
+  "VL>=30,Va>=15": 856,
+  "VL>=30,Va>=20": 646,
+  "VL>=30,Va>=25": 530,
+  "VL>=30,Va>=30": 373,
+  "VL>=35,Va>=20": 292720,
+  "VL>=35,Va>=25": 295604,
+  "VL>=40,Va>=25": 298852,
+  "VL>=45,Va>=25": 301686,
+  "VL>=50,Va>=25": 303620
+ },
+ "bild1_F1_regel": "Video-Lab L*>=30 und a*>=20 (L*>=35 flutet ueber den Hintergrund ins ganze Bild, gemessen), 8-zusammenhaengend mit dem a*-Maximum in der Auftragsbox (x 300-345, y 225-265); PORT-WAHL Pruefer",
+ "bild1_F1_form": {
+  "px": 646,
+  "bbox": [
+   301,
+   222,
+   330,
+   259
+  ],
+  "schwerpunkt": [
+   317.3,
+   241.2
+  ],
+  "laenge_breite_4sigma": [
+   45.2,
+   19.7
+  ],
+  "achse_grad": 119.0
+ },
+ "bild1_F1_gegen_LeserB": {
+  "B_px": 708,
+  "schnitt": 622,
+  "IoU": 0.85
+ },
+ "bild1_F1_im_K5c_render_px": 646,
+ "bild1_F1_knochen": {
+  "0": 646
+ },
+ "bild1_kopf_unverdeckt": {
+  "px": 4710,
+  "bbox": [
+   319,
+   230,
+   403,
+   314
+  ],
+  "schwerpunkt": [
+   361.9,
+   270.5
+  ],
+  "laenge_breite_4sigma": [
+   100.4,
+   60.5
+  ],
+  "achse_grad": 44.0
+ },
+ "bild1_kopf_sichtbar_px": {
+  "21": 0,
+  "22": 0,
+  "23": 125
+ },
+ "bild1_F1_auf_kopfprojektion_px": 79,
+ "bild1_F1_auf_kopf22_23_unverdeckt_px": 0,
+ "bild1_kopf22_23_unverdeckt": {
+  "px": 3431,
+  "bbox": [
+   336,
+   240,
+   403,
+   314
+  ],
+  "schwerpunkt": [
+   370.4,
+   277.1
+  ],
+  "laenge_breite_4sigma": [
+   80.0,
+   55.6
+  ],
+  "achse_grad": 56.0
+ },
+ "bild1_abstand_F1_schwerpunkt_zu_kopf22_23_px": 21.6,
+ "bild1_F1_auf_becken_unverdeckt_px": 646,
+ "bild1_F1_licht_K5c_median": [
+  0.49,
+  0.431,
+  0.373
+ ],
+ "bild1_F1_licht_K5c_p10_p90": [
+  [
+   0.392,
+   0.349,
+   0.298
+  ],
+  [
+   0.665,
+   0.59,
+   0.508
+  ]
+ ],
+ "bild1_F1_V": [
+  150.6,
+  90.8,
+  136.2
+ ],
+ "bild1_F1_V_lab": [
+  46.6,
+  31.5,
+  -14.8
+ ],
+ "bild1_F1_e": [
+  68.6,
+  43.1,
+  43.4
+ ],
+ "bild1_F1_e_lab": [
+  20.6,
+  11.9,
+  4.6
+ ],
+ "bild2_unterkiefer_form": {
+  "px": 3355,
+  "bbox": [
+   243,
+   318,
+   343,
+   408
+  ],
+  "schwerpunkt": [
+   293.6,
+   364.0
+  ],
+  "laenge_breite_4sigma": [
+   126.0,
+   37.9
+  ],
+  "achse_grad": 141.0
+ },
+ "bild2_unterkiefer_K5c_px": 3097,
+ "bild2_unterkiefer_knochen": {
+  "23": 1896,
+  "22": 807,
+  "18": 235,
+  "24": 114,
+  "17": 21,
+  "31": 21,
+  "-1": 3
+ },
+ "bild2_klassenregel": "e-Lab: rot a*>=10 und Farbton -10..60; neutral-hell C*<10 und L*>=20; gelb C*>=10 und Farbton 60..100; dunkel L*<10; geclippt Video min>=200 (PORT-WAHL Pruefer, andere Grenzen als Leser B)",
+ "bild2_unterkiefer_klassen_e_prozent": {
+  "rot": 66.4,
+  "neutral_hell": 12.2,
+  "gelb": 10.3,
+  "dunkel": 0.4,
+  "geclippt": 0.1,
+  "rest": 10.6
+ },
+ "bild2_band_form": {
+  "px": 2227,
+  "bbox": [
+   243,
+   323,
+   343,
+   408
+  ],
+  "schwerpunkt": [
+   290.2,
+   368.5
+  ],
+  "laenge_breite_4sigma": [
+   129.8,
+   38.5
+  ],
+  "achse_grad": 145.0
+ },
+ "bild2_band_knochen": {
+  "23": 1284,
+  "22": 386,
+  "18": 192,
+  "24": 96,
+  "31": 6,
+  "-1": 3,
+  "17": 2
+ },
+ "bild2_band_V": [
+  159.2,
+  43.0,
+  55.1
+ ],
+ "bild2_band_e_lab": [
+  16.9,
+  17.2,
+  11.2
+ ],
+ "bild2_band_licht_K5c_median": [
+  0.384,
+  0.337,
+  0.306
+ ],
+ "bild2_zaehne_form": {
+  "px": 408,
+  "bbox": [
+   251,
+   318,
+   339,
+   407
+  ],
+  "schwerpunkt": [
+   305.1,
+   345.5
+  ],
+  "laenge_breite_4sigma": [
+   119.8,
+   17.7
+  ],
+  "achse_grad": 141.0
+ },
+ "bild2_zaehne_knochen": {
+  "22": 231,
+  "23": 155,
+  "24": 11,
+  "31": 6,
+  "18": 5
+ },
+ "bild2_zaehne_V": [
+  175.2,
+  104.4,
+  130.9
+ ],
+ "bild2_zaehne_e_lab": [
+  27.8,
+  4.1,
+  2.9
+ ],
+ "bild2_zaehne_licht_K5c_median": [
+  0.384,
+  0.337,
+  0.306
+ ],
+ "bild2_auswahlA": {
+  "px": 561,
+  "im_unterkiefer": 98.9,
+  "davon_zaehne": 29.1,
+  "davon_band": 20.3,
+  "geclippt": 0.4,
+  "e_lab": [
+   31.7,
+   6.3,
+   10.7
+  ]
+ },
+ "bild2_weisse_flecken": {
+  "px": 969,
+  "bbox": [
+   164,
+   331,
+   225,
+   383
+  ],
+  "schwerpunkt": [
+   190.4,
+   353.7
+  ],
+  "laenge_breite_4sigma": [
+   57.7,
+   51.8
+  ],
+  "achse_grad": 176.0,
+  "K5c_px": 5,
+  "knochen": {
+   "0": 5
+  },
+  "in_nutzerteilen": 0
+ },
+ "bild2_oberkiefer_e_lab": [
+  4.0,
+  7.6,
+  2.7
+ ],
+ "bild2_oberkiefer_anteil_eL_unter_10": 98.2,
+ "bild2_oberkiefer_knochen": {
+  "22": 5777,
+  "-1": 55
+ },
+ "bild2_auge_r_W_e_lab": [
+  8.5,
+  1.8,
+  5.8
+ ],
+ "bild2_auge_r_W_knochen": 22,
+ "bild2_auge_l_W_e_lab": [
+  12.4,
+  4.6,
+  4.0
+ ],
+ "bild2_auge_l_W_knochen": 22,
+ "bild2_band_oberkante_y": 323,
+ "bild2_zaehne_oberkante_y": 318
+}
