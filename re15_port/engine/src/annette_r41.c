@@ -682,6 +682,29 @@ static void zug_tick(void)
 }
 
 /* ---- 5090 ----------------------------------------------------------------------------------------------------------- */
+/* Nachbesserung 6 (Abnahme 4 M1, Entscheid Orchestrator nach "Original oder nicht"): Koerper der 0x4D je Raum/Phase.
+ *   - Bis zum Start der RE2-Szene ist sie RE1.5-Inhalt und traegt ihren RE1.5-Kasten {0,-1530,0,450,1530,450}, den
+ *     re15_enemy_apply_hitbox beim Sce_em_set setzt (STAGE5 INIT `lw v0,2012(v0)` @0x8011d88c -> 0x801207d0 / `sw v0,120(v1)`
+ *     @0x8011d894; STAGE6 @0x80101958 -> 0x80102784 / @0x80101960). Das gilt in 6000, 6030 (auch in der Port-Zugstart-Szene
+ *     NB1, die in einem RE1.5-Raum mit RE1.5-Skriptsegmenten laeuft) und in 5090 vor dem Ausloeser.
+ *   - Ab dem Start der RE2-Szene (re15_annette_r41_evt_exec: Evt_exec sub04 @0x01296 laeuft in das Programm nach Claire
+ *     ROOM6141 MAIN sub02 ab @0x01024) und als Leiche (Wiedereintritt, ruhe_setzen = RE2 MAIN sub00 @0x00D16) ist sie die
+ *     RE2-Annette mit dem RE2-Koerpersegment: RE2-Schub FUN_80034D0C (info/re2leon/PSX.EXE; Claire 0x80032904) liest die
+ *     Segmentzahl `lw v0,488(s6)` (+0x1E8) @0x80034d74, die Segmente ab `addiu s5,s6,132` (+0x84) @0x80034d78, den Radius
+ *     `lhu s7,22(s5)` (+0x16) @0x80034dac und die Halbhoehe `lhu v0,26(s5)` (+0x1A) @0x80034e5c. Claire-RAM ROOM6141 lauf3,
+ *     Annette @0x80125d4c (em[0] @0x800c79b0): schon im ersten Abzug der Szene e01 (Skript @0x010B0 in sub02) und bis e30
+ *     lebend wie liegend +0x1E8 = 1, +0x14 = -1350, +0x16 = 350, +0x1A = 1350 (AN_belege/abn4/claire_annette_ram.txt,
+ *     re2_claire/ram_reihe_voll.md Zeile e01) -> r 350, h 1350, Versatz -1350. */
+#define AN_RE2_SEG_R   350      /* +0x16 @0x80034dac, Claire-RAM lauf3 e01..e30 */
+#define AN_RE2_SEG_HH  1350     /* +0x1A @0x80034e5c, Claire-RAM lauf3 e01..e30 */
+#define AN_RE2_SEG_DY  (-1350)  /* +0x14 Segmentmitte = Lage - 1350, Claire-RAM lauf3 e01..e22 (y 0: Mitte -1350) */
+static void re2_segment(re15_actor_t *a)
+{
+    a->hit_radius_min = a->hit_radius_max = AN_RE2_SEG_R;
+    a->hit_height = AN_RE2_SEG_HH;
+    a->hit_offset_x = 0; a->hit_offset_y = AN_RE2_SEG_DY; a->hit_offset_z = 0;
+}
+
 const uint8_t *re15_annette_r41_evt_exec(uint16_t room_id, uint8_t sub_id, const uint8_t *target)
 {
     if (room_id == RE15_AN_ZUG_RAUM) return zug_evt_exec(sub_id, target);
@@ -709,6 +732,7 @@ const uint8_t *re15_annette_r41_evt_exec(uint16_t room_id, uint8_t sub_id, const
     f->no_draw = 1;                                      /* bis zum Sturz unsichtbar (RE2: geparkt auf y -9000, @0x00C82) */
     a->x = AN_A0_X; a->y = 0; a->z = AN_A0_Z; a->rot_x = a->rot_z = 0;   /* PORT-WAHL A0 (s. oben); vorher in Cut 13 nicht im Bild */
     a->rot_y = blick(a, g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+    re2_segment(a);                                      /* NB6: ab hier RE2-Annette (Claire-RAM lauf3 e01 @0x010B0 sub02) */
     ton(RE15_AN_SE_KRACH);                               /* RE2 @0x01040 Se_on(3,0x0B) */
     protokoll("Szenenstart statt sub04 (Krach)");
     return k_prog;
@@ -853,6 +877,7 @@ static void ruhe_setzen(void)
     re15_actor_t *a = &g_actors[as];
     a->state = 0; a->sub_state_1 = 0; a->sub_state_2 = 0; a->walk_active = 0;
     a->hp = -1;                                          /* wie nach dem Treffer: kein Treffer-Kandidat (re15_annette_r41_kein_ziel) */
+    re2_segment(a);                                      /* NB6: Leiche = RE2-Segment (Claire-RAM lauf3 e23..e30) */
     liegen(a);
     s_an.frau = as; s_an.form = -1; s_an.blut_textur = 1;
     s_an.phase = RE15_AN_RUHE;

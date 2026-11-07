@@ -3840,14 +3840,20 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
         case 0x40: case 0x42:
         case 0x47: case 0x49:
                    r = 450;  h = 1530; break;  /* STAGE1-NPC-Familie, Kasten @0x80121658    */
-        /* Runde 41 Spur AN, Nachbesserung 5 (Entscheid nach Dossier N5.3: die Annette-Szene folgt RE2): 0x4D = Annette (nur in
-         * 5090/6000/6030) bekommt das RE2-Koerpersegment statt des NPC-Familienkastens {450,1530}. RE2-Schub FUN_80034D0C (Leon
-         * info/re2leon/PSX.EXE; Claire 0x80032904): Segmentzahl `lw v0,488(s6)` (+0x1E8) @0x80034d74, Segmente ab +0x84
-         * (`addiu s5,s6,132` @0x80034d78), Radius `lhu s7,22(s5)` (+0x16) @0x80034dac, Halbhoehe `lhu v0,26(s5)` (+0x1A)
-         * @0x80034e5c. Claire-RAM ROOM6141 lauf3, Annette (em[0] @0x800c79b0, id 0x49), lebend e01..e22 und liegend e23..e30
-         * gleich: +0x1E8 = 1, +0x14 = -1350 (Segmentmitte = Lage - 1350), +0x16 = 350, +0x1A = 1350 -> r 350, h 1350, Versatz
-         * -1350 (unten, = -h). Gilt damit fuer die lebende Annette und die Leiche. */
-        case 0x4d: r = 350;  h = 1350; break;
+        /* 0x4D (Frau im Kittel / Annette, nur ROOM5090/6000/6030) hat in RE1.5 einen EIGENEN Kasten mit denselben Massen
+         * (Runde 41 Spur AN, Nachbesserung 6 nach Abnahme 4 M1; Bytes in info/Re1.5/PSX/BIN selbst gelesen, Overlay ohne Kopf
+         * @0x80100000):
+         *   STAGE6 (6000/6030): Registrierung `addiu v0,v0,6048` @0x80101df4 / `sw v0,11488(at)` @0x80101dfc -> 0x80072ce0
+         *     (= 0x80072bac + 0x4D*4), Wurzel 0x801017a0; INIT 0x80101918: `lw v0,10128(v0)` @0x80101958 (= [0x80102790] =
+         *     0x80102784) / `sw v0,120(v1)` @0x80101960; @0x80102784 = `00 00 06 fa 00 00 c2 01 fa 05 c2 01`.
+         *   STAGE5 (5090): `sw v0,11488(at)` @0x8011ddb8 -> Wurzel 0x8011d6d4; INIT 0x8011d84c: `lw v0,2012(v0)` @0x8011d88c
+         *     (= [0x801207dc] = 0x801207d0) / `sw v0,120(v1)` @0x8011d894; @0x801207d0 = dieselben 12 Bytes.
+         *   = {ofs 0,-1530,0, r_min 450, h 1530, r_max 450}. Gelesen von der Wand-Klemme der 0x4D-Wurzel (`lw v0,120(a0)` /
+         *   `lhu a1,6(v0)` / `jal 0x8003b0a4` @0x801018c4-d0), der Bodenprobe FUN_8001bd60 (@0x8001bd94-a8) und dem Schub
+         *   FUN_8002aec4 (`lhu t4,6(s6)` / `lhu t4,6(s5)` @0x8002af40/@0x8002af4c).
+         * Das RE2-Koerpersegment 350/1350 (NB5) gilt NUR ab dem Start der RE2-Szene in 5090 und fuer die Leiche; es setzt
+         * annette_r41.c (re2_segment) und nicht diese Tabelle. */
+        case 0x4d: r = 450;  h = 1530; break;
         /* ⛔ RUNDE 34 B2: 0x45 und 0x4b haben EIGENE Kaesten (INIT-Zeiger selbst gelesen):
          *   0x45: `lw v0,5940(v0)` @0x8011d2f8 (*(0x80121734) = 0x80121728) / `sw v0,120(v1)`
          *         @0x8011d300; @0x80121728 = `00 00 60 fa 00 00 f4 01 a0 05 f4 01`

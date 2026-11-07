@@ -419,6 +419,8 @@ static int blut_plaetze_aktiv(void)
     return n;
 }
 
+static int kasten_ist(const re15_actor_t *a, int r, int h);   /* NB6, bei test_leiche_radius */
+
 static void test_szene(void)
 {
     flags(1, 0, 1); zug(1);
@@ -447,6 +449,9 @@ static void test_szene(void)
     const int fs = slot_vom_typ(0x30u), as = slot_vom_typ(0x4Du);
     CHECK(fs > 0 && as > 0, "Riesenform %d / Annette %d", fs, as);
     if (fs <= 0 || as <= 0) { free(b); return; }
+    /* NB6: vor der Szene RE1.5-Kasten der 0x4D (STAGE5 INIT @0x8011d88c -> 0x801207d0) */
+    CHECK(kasten_ist(&g_actors[as], 450, 1530), "5090 vor der Szene: 0x4D-Kasten r %d h %d statt RE1.5 450/1530 (@0x8011d88c)",
+          (int)g_actors[as].hit_radius_min, (int)g_actors[as].hit_height);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = 13775; pl->z = -23550; pl->hp = 100;         /* Ausloeser-Lage im Fensterlauf (debug.log Runde 41) */
     /* Kampfstart-Ausloeser wie im Spiel: Cut 12 in Wagen C (sub01 @0x01290 Cmp(0x0A,12)) */
@@ -580,6 +585,9 @@ static void test_szene(void)
     (void)steh_x; (void)steh_z;   /* NB4: die Liegestelle ist fest (RE2 @0x01162 setzt absolute Werte), nicht vom Stand abhaengig */
     CHECK(re15_game_flag_get(3, 42), "(3,42) nach dem Kampfstart nicht gesetzt (sub01 @0x0129A)");
     leiche_pruefen(&g_actors[as], "nach der Szene");
+    /* NB6: ab dem Szenenstart und als Leiche RE2-Segment (FUN_80034D0C @0x80034dac/@0x80034e5c, Claire-RAM lauf3 e01..e30) */
+    CHECK(kasten_ist(&g_actors[as], 350, 1350), "nach der Szene: Leichen-Kasten r %d h %d Versatz %d statt RE2 350/1350/-1350",
+          (int)g_actors[as].hit_radius_min, (int)g_actors[as].hit_height, (int)g_actors[as].hit_offset_y);
     CHECK(re15_annette_r41_besitzt(as) && !re15_annette_r41_besitzt(fs), "Besitz nach der Szene");
     CHECK(re15_annette_r41_kein_ziel(&g_actors[as]) && !re15_annette_r41_kein_ziel(&g_actors[fs]),
           "kein Schuss-Kandidat: nur die Leiche (NB4 N3)");
@@ -745,45 +753,129 @@ static void test_schuss(void)
     free(b);
 }
 
-/* NB5 (Entscheid nach Dossier N5.3, die Szene folgt RE2): Annette (0x4D) traegt das RE2-Koerpersegment, r 350 / Halbhoehe 1350 /
- * Mitte Lage - 1350 (RE2 FUN_80034D0C: +0x1E8 `lw v0,488(s6)` @0x80034d74, Radius +0x16 @0x80034dac, Halbhoehe +0x1A @0x80034e5c;
- * Claire-RAM ROOM6141 lauf3 e01..e30 lebend und liegend gleich), statt des NPC-Familienkastens {450,1530}.
- * Wirkung an der Leiche: Leon (Port-Spieler r 450) wird erst unter 350 + 450 = 800 weggeschoben. Bei 850 bleibt er stehen
- * (Gegenprobe 450: 900 > 850 -> Schub, rot), bei 750 wird er auf >= 799 geschoben (die Leiche hat wie in RE2 eine Kollision). */
-static void test_leiche_radius(void)
+/* Kasten der 0x4D je Raum/Phase (NB5 Leiche, NB6 nach Abnahme 4 M1, Entscheid Orchestrator "Original oder nicht"):
+ *   - RE1.5-Inhalt = RE1.5-Kasten {0,-1530,0,450,1530,450}: lebend in 6000 und 6030 (STAGE6 INIT `lw v0,10128(v0)` @0x80101958
+ *     -> 0x80102784 / `sw v0,120(v1)` @0x80101960) und in 5090 vor dem Start der RE2-Szene (STAGE5 INIT @0x8011d88c -> 0x801207d0 /
+ *     @0x8011d894). Pult 6030: Leon (Port-Spieler r 450, PSX.EXE Datei 0x64694) wird wie in RE1.5 bei 450 + 450 = 900 gehalten
+ *     (FUN_8002aec4 Radien `lhu t4,6(s6)` / `lhu t4,6(s5)` @0x8002af40/@0x8002af4c); Abnahme 4 an6030_pult mass mit dem RE2-Wert 802.
+ *   - RE2-Inhalt = RE2-Koerpersegment r 350 / Halbhoehe 1350 / Mitte Lage - 1350 (RE2 FUN_80034D0C: +0x1E8 `lw v0,488(s6)`
+ *     @0x80034d74, Radius +0x16 @0x80034dac, Halbhoehe +0x1A @0x80034e5c; Claire-RAM ROOM6141 lauf3 e01 (sub02 @0x010B0) .. e30
+ *     lebend und liegend gleich): ab dem Szenenstart (Evt_exec sub04 @0x01296 -> Programm nach Claire sub02 @0x01024) und als
+ *     Leiche. Wirkung an der Leiche: Leon wird erst unter 350 + 450 = 800 weggeschoben (bei 850 nicht, bei 750 auf 800). */
+static int kasten_ist(const re15_actor_t *a, int r, int h)
 {
-    re15_game_flag_set(3, 89, 1); re15_game_flag_set(3, 42, 1); zug(1);
-    uint8_t *b = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u, 12);
-    CHECK(b != NULL, "ROOM5090 nicht ladbar");
-    if (!b) return;
-    const int s = slot_vom_typ(0x4Du);
-    CHECK(s > 0, "keine 0x4D in 5090 bei (3,42)=1");
-    if (s <= 0) { free(b); return; }
-    re15_annette_r41_reset();
-    re15_annette_r41_tick();                                   /* Wiedereintritt: Leiche gelegt (Phase RUHE) */
-    re15_actor_t *a = &g_actors[s];
-    fprintf(stderr, "Leiche Kasten: r %d/%d h %d Versatz %d (Soll RE2 350/350/1350/-1350)\n", (int)a->hit_radius_min,
-            (int)a->hit_radius_max, (int)a->hit_height, (int)a->hit_offset_y);
-    CHECK(a->hit_radius_min == 350 && a->hit_radius_max == 350 && a->hit_height == 1350 && a->hit_offset_y == -1350,
-          "0x4D-Kasten r %d/%d h %d Versatz %d statt RE2-Segment 350/350/1350/-1350 (@0x80034d74, Claire-RAM e01..e30)",
-          (int)a->hit_radius_min, (int)a->hit_radius_max, (int)a->hit_height, (int)a->hit_offset_y);
-    for (int i = 1; i < RE15_ACTOR_MAX; i++)                  /* nur die Leiche schiebt */
-        if (i != s && g_actors[i].active) g_actors[i].active = 0;
+    return a->hit_radius_min == r && a->hit_radius_max == r && a->hit_height == h && a->hit_offset_x == 0 &&
+           a->hit_offset_y == -h && a->hit_offset_z == 0;
+}
+
+static void kasten_melden(const char *wo, const re15_actor_t *a, int r, int h, const char *beleg)
+{
+    fprintf(stderr, "%s: 0x4D-Kasten r %d/%d h %d Versatz (%d,%d,%d) (Soll %d/%d/%d/-%d)\n", wo, (int)a->hit_radius_min,
+            (int)a->hit_radius_max, (int)a->hit_height, (int)a->hit_offset_x, (int)a->hit_offset_y, (int)a->hit_offset_z, r, r, h, h);
+    CHECK(kasten_ist(a, r, h), "%s: 0x4D-Kasten r %d/%d h %d Versatz %d statt %d/%d/%d/-%d (%s)", wo, (int)a->hit_radius_min,
+          (int)a->hit_radius_max, (int)a->hit_height, (int)a->hit_offset_y, r, r, h, h, beleg);
+}
+
+/* Nur die 0x4D schiebt (nur_aktor); Leon (Port-Spieler-Kasten, y 0) im Abstand d auf der x-Achse (vorzeichenbehaftet), ein
+ * Durchlauf re15_body_push_player. Rueckgabe: Abstand danach, -1 wenn Leon quer verschoben wurde. */
+static int schub_abstand(const re15_actor_t *a, int d)
+{
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_player_apply_hitbox(pl);
     pl->active = 1; pl->hp = 100; pl->y = 0; pl->flags = 1;
-    pl->x = a->x + 850; pl->z = a->z;
+    pl->x = a->x + d; pl->z = a->z;
     re15_body_push_player();
-    fprintf(stderr, "Leiche Schub bei 850: Leon (%d,%d) Abstand %d\n", (int)pl->x, (int)pl->z, (int)(pl->x - a->x));
-    CHECK(pl->x == a->x + 850 && pl->z == a->z, "Leiche schiebt Leon schon bei 850 (Leon nach (%d,%d)) - RE2 350 + 450 = 800",
-          (int)pl->x, (int)pl->z);
-    pl->x = a->x + 750; pl->z = a->z;
-    re15_body_push_player();
-    fprintf(stderr, "Leiche Schub bei 750: Leon (%d,%d) Abstand %d\n", (int)pl->x, (int)pl->z, (int)(pl->x - a->x));
-    CHECK(pl->x - a->x >= 799 && pl->x - a->x <= 801 && pl->z == a->z,
-          "Leiche schiebt Leon bei 750 nicht auf 800 (Abstand %d) - RE2 hat die Kollision (+0x1E8 = 1)", (int)(pl->x - a->x));
+    if (pl->z != a->z) return -1;
+    const int r = (int)(pl->x - a->x);
+    return r < 0 ? -r : r;
+}
+
+static void nur_aktor(int s)
+{
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) if (i != s && g_actors[i].active) g_actors[i].active = 0;
+}
+
+static void test_leiche_radius(void)
+{
+    static const char *k15 = "RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0";
+    static const char *k2 = "RE2 @0x80034d74/@0x80034dac/@0x80034e5c, Claire-RAM lauf3 e01..e30";
+    /* (1) 6000, lebend (RE1.5): sub00 Ck(3,100)=0 -> Sce_em_set @0x00F44 */
+    flags(0, 0, 0); zug(0);
     re15_annette_r41_reset();
-    re15_game_flag_set(3, 42, 0); re15_game_flag_set(3, 89, 0); zug(0);
+    uint8_t *b = raum_laden("STAGE6/ROOM6000.RDT", 0x6000u, 0);
+    CHECK(b != NULL, "ROOM6000 nicht ladbar");
+    int s = b ? slot_vom_typ(0x4Du) : -1;
+    CHECK(s > 0, "6000: keine 0x4D (sub00 @0x00F44)");
+    if (s > 0) kasten_melden("6000 lebend", &g_actors[s], 450, 1530, k15);
+    free(b);
+
+    /* (2) 6030 am Pult vor dem Tor (RE1.5): sub07 @0x010F8 bei (4,23)=1, (3,89)=0; Pult-Riegel: Leon haelt bei 900 */
+    flags(0, 0, 1); zug(0);
+    re15_annette_r41_reset();
+    b = raum_laden("STAGE6/ROOM6030.RDT", 0x6030u, 0);
+    CHECK(b != NULL, "ROOM6030 nicht ladbar");
+    s = b ? slot_vom_typ(0x4Du) : -1;
+    CHECK(s > 0, "6030: keine 0x4D am Pult (sub07 @0x010F8)");
+    if (s > 0) {
+        re15_actor_t *a = &g_actors[s];
+        kasten_melden("6030 Pult", a, 450, 1530, k15);
+        nur_aktor(s);
+        const int d850 = schub_abstand(a, -850), d810 = schub_abstand(a, -810), d950 = schub_abstand(a, -950);
+        fprintf(stderr, "6030 Pult (%d,%d): Leon westlich bei 850 -> %d, bei 810 -> %d, bei 950 -> %d (Soll RE1.5 450 + 450 = 900; "
+                "der RE2-Wert 350 hielte bei 800)\n", (int)a->x, (int)a->z, d850, d810, d950);
+        CHECK(d850 >= 899 && d850 <= 901, "6030 Pult: Leon bei 850 nicht auf 900 geschoben (Abstand %d) - RE1.5 450 + 450 (%s)", d850,
+              k15);
+        CHECK(d810 >= 899 && d810 <= 901, "6030 Pult: Leon bei 810 nicht auf 900 geschoben (Abstand %d, Abnahme 4 an6030_pult)", d810);
+        CHECK(d950 == 950, "6030 Pult: Leon bei 950 verschoben (Abstand %d)", d950);
+    }
+    free(b);
+
+    /* (3) 5090 vor der Szene (RE1.5-Spawn @0x0122A) -> Szenenstart (RE2) */
+    flags(1, 0, 1); zug(1);
+    re15_annette_r41_reset();
+    b = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u, 13);
+    CHECK(b != NULL, "ROOM5090 nicht ladbar");
+    s = b ? slot_vom_typ(0x4Du) : -1;
+    CHECK(s > 0, "5090 vor der Szene: keine 0x4D (sub00 @0x0122A)");
+    if (s > 0) {
+        re15_actor_t *a = &g_actors[s];
+        kasten_melden("5090 vor der Szene", a, 450, 1530, k15);
+        re15_bf_modell_hook(NULL);
+        re15_annette_r41_modell_hook(NULL);
+        CHECK(form_bank(), "Bank der Riesenform");
+        g_actors[RE15_ACTOR_SLOT_PLAYER].x = 13775; g_actors[RE15_ACTOR_SLOT_PLAYER].z = -23550;
+        static const uint8_t dummy[2] = { 1, 0 };
+        const uint8_t *p = re15_annette_r41_evt_exec(0x5090u, 4, dummy);
+        CHECK(p != dummy && re15_annette_r41_phase() == RE15_AN_WARTEN, "5090: Szenenstart lief nicht (Phase %d)",
+              re15_annette_r41_phase());
+        kasten_melden("5090 ab Szenenstart", a, 350, 1350, k2);
+    }
+    re15_annette_r41_reset();
+    free(b);
+
+    /* (4) Leiche (Wiedereintritt nach der Szene, RE2 MAIN sub00 @0x00D16) */
+    flags(1, 1, 1); zug(1);
+    b = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u, 12);
+    CHECK(b != NULL, "ROOM5090 nicht ladbar");
+    if (!b) return;
+    s = slot_vom_typ(0x4Du);
+    CHECK(s > 0, "keine 0x4D in 5090 bei (3,42)=1");
+    if (s <= 0) { free(b); return; }
+    CHECK(kasten_ist(&g_actors[s], 450, 1530), "5090 Wiedereintritt: beim Spawn nicht der RE1.5-Kasten (%s)", k15);
+    re15_annette_r41_reset();
+    re15_annette_r41_tick();                                   /* Wiedereintritt: Leiche gelegt (Phase RUHE) */
+    re15_actor_t *a = &g_actors[s];
+    kasten_melden("Leiche", a, 350, 1350, k2);
+    nur_aktor(s);
+    const int d850 = schub_abstand(a, 850);
+    fprintf(stderr, "Leiche Schub bei 850: Abstand %d\n", d850);
+    CHECK(d850 == 850, "Leiche schiebt Leon schon bei 850 (Abstand %d) - RE2 350 + 450 = 800", d850);
+    const int d750 = schub_abstand(a, 750);
+    fprintf(stderr, "Leiche Schub bei 750: Abstand %d\n", d750);
+    CHECK(d750 >= 799 && d750 <= 801, "Leiche schiebt Leon bei 750 nicht auf 800 (Abstand %d) - RE2 hat die Kollision (+0x1E8 = 1)",
+          d750);
+    re15_annette_r41_reset();
+    flags(0, 0, 0); zug(0);
     free(b);
 }
 
