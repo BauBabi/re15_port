@@ -1044,6 +1044,85 @@ static void pc_masken_schatten_flush(int *mi, int mask_n, const int *mask_order,
     }
 }
 
+/* ===== MESSSCHIENE RE15_SLOTDECKUNG=<datei> (Runde 41 Form Nachbesserung 4) ==========================================
+ * Je Bild, wie viele Bildpunkte jeder TIM-Slot (Figur) am Ende SICHTBAR besitzt und wie viele seine Dreiecke insgesamt bedecken
+ * ("s<slot>=<sichtbar>/<bedeckt>"), plus der gezeigte Cut. Gemalt wird die eingereihte Dreiecksliste in der Zeichenfolge des
+ * Flushs (tief zuerst, Maler-Prinzip wie SDL_RenderGeometry ohne Tiefenpuffer) in einen eigenen 320 x 240 Kennungspuffer;
+ * halbtransparente Dreiecke (Blend != 0) verdecken nicht. Die Vordergrund-Masken (sprite.pri) werden wie im Merge-Walk des Flushs
+ * eingemischt (faellig, sobald re15_pri_mask_camera_z(Tiefe) > Dreieckstiefe) und decken jeden Atlas-Bildpunkt mit Alpha != 0
+ * (Kennung 254, "Hintergrund"); Schatten sind nicht enthalten. Wozu: der Riegel integration_r41_form_wagenweg misst Spieler- und
+ * Formflaeche am gezeichneten Bild statt am Kugelmodell der Schnittwahl (birkin_formen.c bf_bild_mass) - kein selbstbestaetigendes
+ * Mass. Rein env-gegatet: ohne RE15_SLOTDECKUNG ein Zeigervergleich je Bild. */
+static uint8_t s_dk_atlas_a[512 * 512];     /* Alpha != 0 des Masken-Atlas (nur mit RE15_SLOTDECKUNG gefuellt) */
+static int     s_dk_atlas_w = 0, s_dk_atlas_h = 0;
+static void re15_slotdeckung_maske(uint8_t kenn[240][320], const re15_pri_rect_t *r)
+{
+    for (int y = 0; y < r->h; y++)
+        for (int x = 0; x < r->w; x++) {
+            const int sx = r->src_x + x, sy = r->src_y + y, dx = r->dst_x + x, dy = r->dst_y + y;
+            if (dx < 0 || dy < 0 || dx >= 320 || dy >= 240 || sx < 0 || sy < 0 || sx >= s_dk_atlas_w || sy >= s_dk_atlas_h) continue;
+            if (s_dk_atlas_a[sy * s_dk_atlas_w + sx]) kenn[dy][dx] = 254;
+        }
+}
+static void re15_slotdeckung(const int *order, int n, const int *mask_order, int mask_n)
+{
+    int mi = 0;
+    static int init = 0;
+    static FILE *fp = NULL;
+    static uint8_t  kenn[240][320];
+    static uint64_t deck[240][320];
+    int sicht[64], bed[64];
+    if (!init) {
+        const char *e = getenv("RE15_SLOTDECKUNG");
+        init = 1;
+        if (e && *e) fp = fopen(e, "w");
+    }
+    if (!fp) return;
+    memset(kenn, 0xff, sizeof kenn);
+    memset(deck, 0, sizeof deck);
+    memset(sicht, 0, sizeof sicht);
+    memset(bed, 0, sizeof bed);
+    for (int k = 0; k < n; k++) {
+        const textri_verts_t *t = &s_textri_queue[order[k]];
+        const int slot = s_textri_slot[order[k]] & 63;
+        while (mi < mask_n && re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) > s_textri_depth[order[k]])
+            re15_slotdeckung_maske(kenn, &s_pri_rects[mask_order[mi++]]);
+        const int deckt = s_textri_blend[order[k]] == 0;
+        const float x0 = t->v[0].position.x, y0 = t->v[0].position.y;
+        const float x1 = t->v[1].position.x, y1 = t->v[1].position.y;
+        const float x2 = t->v[2].position.x, y2 = t->v[2].position.y;
+        const float fl = (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0);
+        int bx0 = (int)SDL_floorf(SDL_min(x0, SDL_min(x1, x2))), bx1 = (int)SDL_ceilf(SDL_max(x0, SDL_max(x1, x2)));
+        int by0 = (int)SDL_floorf(SDL_min(y0, SDL_min(y1, y2))), by1 = (int)SDL_ceilf(SDL_max(y0, SDL_max(y1, y2)));
+        if (fl == 0.0f) continue;
+        if (bx0 < 0) bx0 = 0;
+        if (by0 < 0) by0 = 0;
+        if (bx1 > 320) bx1 = 320;
+        if (by1 > 240) by1 = 240;
+        for (int y = by0; y < by1; y++)
+            for (int x = bx0; x < bx1; x++) {
+                const float px = (float)x + 0.5f, py = (float)y + 0.5f;
+                const float w0 = (x1 - px) * (y2 - py) - (y1 - py) * (x2 - px);
+                const float w1 = (x2 - px) * (y0 - py) - (y2 - py) * (x0 - px);
+                const float w2 = (x0 - px) * (y1 - py) - (y0 - py) * (x1 - px);
+                if (fl > 0.0f ? (w0 < 0.0f || w1 < 0.0f || w2 < 0.0f) : (w0 > 0.0f || w1 > 0.0f || w2 > 0.0f)) continue;
+                deck[y][x] |= (uint64_t)1 << slot;
+                if (deckt) kenn[y][x] = (uint8_t)slot;
+            }
+    }
+    while (mi < mask_n) re15_slotdeckung_maske(kenn, &s_pri_rects[mask_order[mi++]]);
+    for (int y = 0; y < 240; y++)
+        for (int x = 0; x < 320; x++) {
+            uint64_t d = deck[y][x];
+            if (kenn[y][x] < 64) sicht[kenn[y][x]]++;
+            while (d) { const int b = __builtin_ctzll(d); bed[b]++; d &= d - 1; }
+        }
+    fprintf(fp, "F%u cam=%d", (unsigned)g_engine.frame_count, re15_pri_log_cut());
+    for (int s = 0; s < 64; s++) if (bed[s]) fprintf(fp, " s%d=%d/%d", s, sicht[s], bed[s]);
+    fputc('\n', fp);
+    fflush(fp);
+}
+
 void re15_render_end_frame(void)
 {
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
@@ -1250,6 +1329,7 @@ void re15_render_end_frame(void)
                 }
             }
         }
+        re15_slotdeckung(order, s_textri_count, mask_order, mask_n);   /* Messschiene RE15_SLOTDECKUNG (Form NB4), sonst stumm */
         /* Merge-walk: emit consecutive same-slot tri batches; whenever the next mask
          * is farther than the next tri, flush the pending batch and blit that mask
          * first (it belongs UNDER the nearer tri). I5-round GLOBAL z-sort is
@@ -2381,6 +2461,15 @@ void re15_render_pc_set_pri_atlas(const uint32_t *rgba, int w, int h)
     }
     if (s_pri_atlas_tex)
         SDL_UpdateTexture(s_pri_atlas_tex, NULL, rgba, w * sizeof(uint32_t));
+    {   /* Messschiene RE15_SLOTDECKUNG (Form NB4): Alpha des Atlas fuer den Kennungspuffer; RGBA8888 = Alpha im niedrigsten Byte */
+        static int an = -1;
+        if (an < 0) { const char *e = getenv("RE15_SLOTDECKUNG"); an = (e && *e) ? 1 : 0; }
+        s_dk_atlas_w = s_dk_atlas_h = 0;
+        if (an && w <= 512 && h <= 512) {
+            for (int i = 0; i < w * h; i++) s_dk_atlas_a[i] = (uint8_t)((rgba[i] & 0xFFu) != 0);
+            s_dk_atlas_w = w; s_dk_atlas_h = h;
+        }
+    }
 }
 
 /* AZ-round 2026-05-28: set the active pri mask list for the current cut.
