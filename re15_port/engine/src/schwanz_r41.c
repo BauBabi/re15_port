@@ -61,6 +61,11 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
  * GESTALTUNG (PORT-WAHL), keine Original-Konstante. */
 #define SW_GLATT_V4_VERH   2.0f       /* Gliedlaengen max/min ueber 2,0 = V4-Kette (V1 1,49 < 2,0 < V4 2,4) */
 #define SW_GLATT_KNICK_AB  0.5236f    /* 30 Grad (V4: Keyframe-Gelenkwinkel der Biegung ~55-70 Grad, uebrige Gelenke <= 16 Grad) */
+/* V4 Runde 2 (Messblatt V4 Abschnitt 4 Punkt 4 / Riegel T7: im Gang liegen Beginn, Biegung, Knick, Ende hoechstens 0,06 H neben der
+ * Ruhe-Pose; Lauf sfv4/r/V4r2 ohne Untergrenze: nach der Drehung h85 -> h90 zog der Nachlauf die Biegung bis auf 0-4 Grad gerade, T7 h100
+ * 0,44 H): die Biegung darf hoechstens SW_BIEGUNG_SPIEL weniger abknicken als im Keyframe. 10 Grad: das senkrechte Stueck (Biegung bis
+ * Knick 0,25 H) schwenkt dann am Knick um <= 0,25 x sin 10 Grad = 0,043 H < 0,06 H. GESTALTUNG (PORT-WAHL). */
+#define SW_BIEGUNG_SPIEL   0.1745f    /* 10 Grad */
 
 static struct {
     int      gueltig;
@@ -252,6 +257,19 @@ static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float bo
             float s[3] = { d[0] - a[0] * c, d[1] - a[1] * c, d[2] - a[2] * c };
             if (norm(s) < 1e-6f) { s[0] = -a[1]; s[1] = a[0]; s[2] = 0.0f; if (norm(s) < 1e-6f) { s[0] = 1.0f; s[1] = 0.0f; s[2] = 0.0f; } }
             for (int k = 0; k < 3; k++) d[k] = a[k] * cosf(lim) + s[k] * sinf(lim);
+        }
+        if (biegung && kw > SW_GLATT_KNICK_AB) {         /* V4 Runde 2: die Biegung geht hoechstens SW_BIEGUNG_SPIEL auf */
+            const float lmin = kw - SW_BIEGUNG_SPIEL;
+            const float cd = a[0] * d[0] + a[1] * d[1] + a[2] * d[2];
+            if (cd > cosf(lmin)) {
+                const float ck = a[0] * kd[0] + a[1] * kd[1] + a[2] * kd[2];
+                float sd[3] = { d[0] - a[0] * cd, d[1] - a[1] * cd, d[2] - a[2] * cd };
+                float sk[3] = { kd[0] - a[0] * ck, kd[1] - a[1] * ck, kd[2] - a[2] * ck };
+                norm(sd); norm(sk);
+                float s[3] = { sd[0] + sk[0], sd[1] + sk[1], sd[2] + sk[2] };   /* Biegerichtung: Lauf + Keyframe (nach unten) */
+                if (norm(s) < 1e-6f) memcpy(s, sk, sizeof s);
+                for (int k = 0; k < 3; k++) d[k] = a[k] * cosf(lmin) + s[k] * sinf(lmin);
+            }
         }
         float alt[3] = { p[j + 1][0], p[j + 1][1], p[j + 1][2] };
         for (int k = 0; k < 3; k++) p[j + 1][k] = p[j][k] + d[k] * laenge[j + 1];
