@@ -1,0 +1,17 @@
+SCA-Zellen: 160, Gelenke: 15
+Gelenk  0 (  4856, -154,-22748)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 1048
+Gelenk  1 (  4856, -154,-22748)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 1048
+Gelenk  2 (  4688, -210,-22916)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 1216
+Gelenk  3 (  4763, -425,-23480)  naechste Zelle #29 typ 1 x 5300..20250 z -27200..-25200  Abstand 1720
+Gelenk  4 (  4409, -101,-24135)  naechste Zelle #29 typ 1 x 5300..20250 z -27200..-25200  Abstand 1065
+Gelenk  5 (  4957, -161,-22969)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 1269
+Gelenk  6 (  4888, -253,-23566)  naechste Zelle #29 typ 1 x 5300..20250 z -27200..-25200  Abstand 1634
+Gelenk  7 (  4747,  -97,-24351)  naechste Zelle #29 typ 1 x 5300..20250 z -27200..-25200  Abstand 849
+Gelenk  8 (  5095, -158,-22174)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 474
+Gelenk  9 (  4813, -175,-22110)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 410
+Gelenk 10 (  4662,  -45,-22468)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 768
+Gelenk 11 (  4422,  -34,-22741)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 1041
+Gelenk 12 (  5334, -100,-22328)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 628
+Gelenk 13 (  5347,  -24,-22730)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 1030
+Gelenk 14 (  5120, -308,-22692)  naechste Zelle #28 typ 1 x 4050..20225 z -21700..-19700  Abstand 992
+kleinster Abstand Gelenk-Zelle: 410

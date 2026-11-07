@@ -1,0 +1,16 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build
+    Start 1276: integration_r41_masken36_teile_c2
+1/5 Test #1276: integration_r41_masken36_teile_c2 ...   Passed  469.19 sec
+    Start 1277: integration_r41_masken36_teile_c3
+2/5 Test #1277: integration_r41_masken36_teile_c3 ...   Passed  447.99 sec
+    Start 1279: integration_r41_masken36_teile_d2
+3/5 Test #1279: integration_r41_masken36_teile_d2 ...   Passed  457.84 sec
+    Start 1387: integration_r41_g5_westen
+4/5 Test #1387: integration_r41_g5_westen ...........   Passed  285.35 sec
+    Start 1388: integration_r41_g5_tod
+5/5 Test #1388: integration_r41_g5_tod ..............   Passed  265.78 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) = 1926.22 sec
+EXIT=0

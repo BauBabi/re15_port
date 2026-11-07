@@ -1,0 +1,101 @@
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x800355c4 (37 instr)
+  800355c4: addiu sp,sp,-40                    
+  800355c8: sw s1,20(sp)                       
+  800355cc: addu s1,a0,zero                    
+  800355d0: addiu a1,s1,56                     
+  800355d4: sw ra,32(sp)                       
+  800355d8: sw s3,28(sp)                       
+  800355dc: sw s2,24(sp)                       
+  800355e0: jal 0x80035408                     
+  800355e4: sw s0,16(sp)                       
+  800355e8: ori s2,zero,0x8000                 
+  800355ec: addiu v0,zero,255                  
+  800355f0: sb v0,13(s1)                       
+  800355f4: lui v0,0x800d                      
+  800355f8: lw v0,-7372(v0)                    0x800ce334
+  800355fc: lui s0,0x800d                      
+  80035600: addiu s0,s0,-492                   0x800cfe14
+  80035604: beq v0,s0,0x80035658               
+  80035608: addu s3,zero,zero                  
+  8003560c: lw a0,0(s0)                        0x800d0000
+  80035610: nop                                
+  80035614: beq s1,a0,0x80035644               
+  80035618: nop                                
+  8003561c: lw v0,0(a0)                        
+  80035620: nop                                
+  80035624: andi v0,v0,0x1                     
+  80035628: beq v0,zero,0x80035644             
+  8003562c: nop                                
+  80035630: jal 0x80034d0c                     
+  80035634: addu a1,s1,zero                    
+  80035638: beq v0,zero,0x80035644             
+  8003563c: nop                                
+  80035640: or s3,s3,s2                        
+  80035644: lui v0,0x800d                      
+  80035648: lw v0,-7372(v0)                    0x800ce334
+  8003564c: addiu s0,s0,4                      0x800d0004
+  80035650: bne s0,v0,0x8003560c               
+  80035654: srl s2,s2,1                        
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80034d0c (40 instr)
+  80034d0c: addiu sp,sp,-56                    
+  80034d10: sw s6,40(sp)                       
+  80034d14: addu s6,a0,zero                    
+  80034d18: sw s1,20(sp)                       
+  80034d1c: addu s1,a1,zero                    
+  80034d20: sw ra,48(sp)                       
+  80034d24: sw s7,44(sp)                       
+  80034d28: sw s5,36(sp)                       
+  80034d2c: sw s4,32(sp)                       
+  80034d30: sw s3,28(sp)                       
+  80034d34: sw s2,24(sp)                       
+  80034d38: sw s0,16(sp)                       
+  80034d3c: lw a0,0(s6)                        
+  80034d40: lw v1,0(s1)                        
+  80034d44: nop                                
+  80034d48: or v0,a0,v1                        
+  80034d4c: andi v0,v0,0x2                     
+  80034d50: bne v0,zero,0x8003510c             
+  80034d54: addu v0,zero,zero                  
+  80034d58: and v0,a0,v1                       
+  80034d5c: andi v0,v0,0x1000                  
+  80034d60: bne v0,zero,0x8003510c             
+  80034d64: addu v0,zero,zero                  
+  80034d68: andi v0,v1,0x4                     
+  80034d6c: bne v0,zero,0x8003510c             
+  80034d70: addu v0,zero,zero                  
+  80034d74: lw v0,488(s6)                      
+  80034d78: addiu s5,s6,132                    
+  80034d7c: lui at,0x800c                      
+  80034d80: sw zero,15096(at)                  0x800c3af8
+  80034d84: lui at,0x800c                      
+  80034d88: sw v0,15100(at)                    0x800c3afc
+  80034d8c: lui v0,0x800c                      
+  80034d90: lw v0,15100(v0)                    0x800c3afc
+  80034d94: nop                                
+  80034d98: addiu v0,v0,-1                     0x800bffff
+  80034d9c: lui at,0x800c                      
+  80034da0: sw v0,15100(at)                    0x800c3afc
+  80034da4: bltz v0,0x80035104                 
+  80034da8: addiu s2,s1,132                    
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80034e50 (12 instr)
+  80034e50: lhu a0,26(s2)                      
+  80034e54: lw v1,4(s2)                        
+  80034e58: lw t1,4(s5)                        
+  80034e5c: lhu v0,26(s5)                      
+  80034e60: subu v1,v1,t1                      
+  80034e64: addu a0,a0,v0                      
+  80034e68: subu t0,zero,a0                    
+  80034e6c: slt v0,t0,v1                       
+  80034e70: beq v0,zero,0x800350f4             
+  80034e74: slt v0,v1,a0                       
+  80034e78: beq v0,zero,0x800350f4             
+  80034e7c: mult s3,s0                         
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80026614 (8 instr)
+  80026614: andi v0,v0,0x8000                  
+  80026618: bne v0,zero,0x80026688             
+  8002661c: sw s0,8520(s3)                     
+  80026620: jal 0x8003bfac                     
+  80026624: addu a0,s0,zero                    
+  80026628: jal 0x800355c4                     
+  8002662c: addu a0,s0,zero                    
+  80026630: addu a0,s0,zero                    

@@ -1,0 +1,134 @@
+# Abnahme 4 Spur AN - eigene Disassemblies (re15-psx-disasm/scripts/re2_disasm.py, re15_disasm.py; Claire per werkzeug/cdis4.py)
+# info/re2leon/PSX.EXE und info/re2leon/SLUS_007.48 sind dieselbe Datei: sha256 e576348f64d015ec.. = e576348f64d015ec..
+# Claire PAL SLES_109.72 sha256 41b0d8c830881b56.. (Scratch der Autor-Sitzung, unversioniert)
+
+## 1. RE2 Leon FUN_800410CC - Schusswaffen-Kandidatenschleife
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80041208 (2 instr)
+  80041208: lui fp,0x800d                      
+  8004120c: addiu fp,fp,-484                   0x800cfe1c
+  80041254: lw s2,0(fp)                        
+  80041258: nop                                
+  8004125c: lw v0,0(s2)                        
+  80041260: nop                                
+  80041264: andi v0,v0,0x1                     
+  80041268: beq v0,zero,0x80041300             
+  8004126c: nop                                
+  80041270: lbu v0,467(s2)                     
+  80041274: nop                                
+  80041278: bne v0,zero,0x80041300             
+  8004127c: nop                                
+  80041280: lh v0,342(s2)                      
+  80041284: nop                                
+  80041288: bltz v0,0x80041300                 
+  8004128c: nop                                
+  80041290: lhu v0,270(s2)                     
+  80041294: nop                                
+  80041298: andi v0,v0,0xc000                  
+  8004129c: bne v0,zero,0x80041300             
+  800412a0: addiu a1,sp,16                     
+  800412a4: lw v0,132(s2)                      
+  800412a8: nop                                
+  800412ac: sw v0,16(sp)                       
+  800412b0: lbu v1,449(s2)                     
+  800412b4: lw a0,128(sp)                      
+  800412b8: sll v0,v1,1                        
+  800412bc: addu v0,v0,v1                      
+  800412c0: sll v0,v0,2                        
+  800412c4: subu v0,v0,v1                      
+  800412c8: sll v0,v0,2                        
+  800412cc: subu v0,v0,v1                      
+  800412d0: lw v1,408(s2)                      
+  800412d4: sll v0,v0,2                        
+  800412d8: addu v0,v0,v1                      
+  800412dc: lw v0,96(v0)                       
+  800412e0: addiu a2,zero,128                  
+  800412e4: sw v0,20(sp)                       
+  800412e8: lw v0,140(s2)                      
+  800412ec: addiu a3,zero,1                    
+  800412f0: jal 0x80050858                     
+  800412f4: sw v0,24(sp)                       
+  800412f8: beq v0,zero,0x80041308             
+  800412fc: addu s4,zero,zero                  
+  80041300: j 0x800417d0                       
+  80041304: addiu fp,fp,4                      
+  80041308: lhu t0,154(s2)                     
+
+## 1b. Schleifenende
+  800417d0: lui v0,0x800d                      
+  800417d4: lw v0,-7372(v0)                    0x800ce334
+  800417d8: nop                                
+  800417dc: bne fp,v0,0x80041254               
+
+## 2. RE2 Leon FUN_800470C0 - Messer/Bolzen/Explosion, hp-Tor
+  80047138: lbu v0,467(s0)                     
+  8004713c: nop                                
+  80047140: bne v0,zero,0x8004740c             
+  80047144: nop                                
+  80047148: lh v0,342(s0)                      
+  8004714c: nop                                
+  80047150: bltz v0,0x8004740c                 
+  80047154: nop                                
+
+## 3. RE2 Leon Em-Setzer FUN_8005CF70: hp = -1
+  8005d7ac: lbu v1,8(s0)                       
+  8005d7b0: sh v0,270(s0)                      
+  8005d7b4: addiu v0,zero,-1                   
+  8005d7b8: sh v0,342(s0)                      
+  8005d7bc: sh v0,354(s0)                      
+
+## 4. RE2 Claire SLES_109.72 - dieselbe Schleife: Liste ab 0x800c79b0 (= em[0], dort steht Annette in ROOM6141), hp-Tor
+  8003deb0: lui t0,0x800c                      
+  8003deb4: addiu t0,t0,31152                  0x800c79b0
+  8003df08: lw s2,0(t0)                        
+  8003df0c: nop                                
+  8003df10: lw v0,0(s2)                        
+  8003df14: nop                                
+  8003df18: andi v0,v0,0x1                     
+  8003df1c: beq v0,zero,0x8003dfb8             
+  8003df20: nop                                
+  8003df24: lbu v0,467(s2)                     
+  8003df28: nop                                
+  8003df2c: bne v0,zero,0x8003dfb8             
+  8003df30: nop                                
+  8003df34: lh v0,342(s2)                      
+  8003df38: nop                                
+  8003df3c: bltz v0,0x8003dfb8                 
+  8003df40: nop                                
+  8003df44: lhu v0,270(s2)                     
+
+## 5. RE2 Leon Plc_motion (A1): Opcode-Tabelle 0x800a74c8, Eintrag 0x3F
+  80053f70: lbu v0,0(a1)                       
+  80053f74: andi a2,a2,0xff                    
+  80053f78: sll v0,v0,2                        
+  80053f7c: lui at,0x800a                      
+  80053f80: addu at,at,v0                      
+  80053f84: lw v0,29896(at)                    0x800a74c8
+  80053f88: nop                                
+  80053f8c: jalr v0                            
+  [ 0] 0x800a75c4 -> 0x80056b8c  EXE
+  80056b8c: lw v0,28(a0)                       
+  80056b90: lw v1,340(a0)                      
+  80056b94: lbu a1,2(v0)                       
+  80056b98: lbu a2,3(v0)                       
+  80056b9c: lbu v0,1(v0)                       
+  80056ba0: sb zero,333(v1)                    
+  80056ba4: sh zero,468(v1)                    
+  80056ba8: sh zero,470(v1)                    
+  80056bac: sll v0,v0,8                        
+  80056bb0: ori v0,v0,0x4                      
+  80056bb4: sw v0,4(v1)                        
+  80056bb8: sb a1,332(v1)                      
+  80052ef0: subu v0,v0,v1                      
+
+## 6. RE2 Leon FUN_80034D0C - Koerperschub, Segmentfelder
+  80034d74: lw v0,488(s6)                      
+  80034d78: addiu s5,s6,132                    
+  80034da4: bltz v0,0x80035104                 
+  80034da8: addiu s2,s1,132                    
+  80034dac: lhu s7,22(s5)                      
+  80034e50: lhu a0,26(s2)                      
+  80034e54: lw v1,4(s2)                        
+  80034e58: lw t1,4(s5)                        
+  80034e5c: lhu v0,26(s5)                      
+  80034e60: subu v1,v1,t1                      
+  80034e64: addu a0,a0,v0                      

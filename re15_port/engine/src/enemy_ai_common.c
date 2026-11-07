@@ -19,6 +19,7 @@
  */
 #include "re15_enemy_ai.h"
 #include "re15_fussanker_r41.h"   /* Runde 41 Spur J: Glied-Anker FUN_800369f8 */
+#include "re15_annette_r41.h"     /* Runde 41 Spur AN: Annette-Szene 5090 */
 #include "re15_ai_flavor.h"
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm (Typ 0x2D) fuer die 0x1A-Gitterhaende */
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
@@ -15233,11 +15234,13 @@ void re15_enemy_ai_run_all(int combat_active)
     if (s_grab_mercy_timer > 0) s_grab_mercy_timer--;
     re15_szenenschutz_durchlauf_beginn();   /* Runde 38 Spur B */
     re15_bf_raumtick();                     /* Beta-Birkin-Formen: Hangar-Szene 50A0/50A1 (re15_birkin_formen.h) */
+    re15_annette_r41_tick();                /* Runde 41 Spur AN: Riesenform + Annette in der 5090-Szene */
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
         re15_szenenschutz_gegner(s);        /* Runde 38 Spur B: Sicht je Gegner (re15_szenenschutz_r38.h) */
         if (re15_bf_szene_besitzt(s)) continue;   /* von der Hangar-Szene gefuehrt (birkin_formen.c) */
+        if (re15_annette_r41_besitzt(s)) continue;   /* Runde 41 Spur AN: von der 5090-Szene gefuehrt (annette_r41.c) */
         /* EM-STATUS KILL PERSISTENCE (FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c setzen
          * flag[entity+0x1C6] am Todes-Commit): ist ein Gegner CORPSE (state 7), wird sein
          * em-Status-Kill-Flag gesetzt, damit ein Wieder-Betreten des Raums ihn NICHT respawnt

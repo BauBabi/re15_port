@@ -1,0 +1,62 @@
+# Auswertung Lauf z6030 (Abnahme 4 Spur AN, exe cefd57402)
+z6030 exit=0 Dauer=103 s Bilder: 41
+
+## env
+RE15_DEBUG_JUMP=6000@250
+RE15_EXIT_AT=1700#6030
+RE15_FRAMEDUMP=1440-1600/4:f
+RE15_INPUT_SCRIPT=W5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W0.2,L0.04,U1.3,R0.367,U4.3,A0.1,W3,A0.1,W0.5,R0.7,U6.5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W3,R0.1,U0.47,L0.1,U1.5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W29.7,L0.22,U0.4,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W1.5,U0.8,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W3,L0.04,U0.5,R0.04,U7,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,U15,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,L0.04,U2.17,R0.04,U10.7,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W0.5,U8.5,W60
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=1763,-9700,1024,2
+RE15_SET_FLAG=3:48,3:49,3:100,3:239,4:23,3:89,3:22
+RE15_SE_DEBUG=1
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/z6030/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/z6030/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[walk] F1680 cut=8 mo=200 af=30 frz=0 | pl pos=(-9600,-1800,-23450) rot=2048
+[F1700-leon-root] world=(-9600,-1800,-23450) view=(944,-502,11979) sd=208 screen=(176.4,111.3) cam_pos=(-21366,-1332,-24228) cam_tgt=(-12672,-2646,-22950) cut=8 visible=1
+[flow] EXIT_AT: Bild 1700 in Raum 6030 erreicht -> exit
+
+## Vergleich state.log gegen Abnahme 3 (exe b646c72a6, NB4): logvergleich.py
+Zeilen alt 1968 neu 1968
+abweichende Zeilen: 0 von 1968
+Spieler: groesste Lageabweichung 0 None
+Annette: Zeilen mit anderem Zustand/Lage 0, groesste Lageabweichung 0 None
+
+## Abstand Spieler <-> Annette: abstand4.py
+Abschnitt 2: kleinster Abstand 1226 bei F1502, Spieler (-3080, -23674), Annette (-3260, -22461) (st 4 mo 5)
+
+## Schuesse und Treffer (letzter Raumabschnitt): schuss4.py
+Abschnitte: 3, gewaehlt letzter (1700 Bilder, F1..F1700)
+Schuesse (mg-Abfall): 0
+hp-Wechsel: 3
+  F6 Slot 1 t=49 hp 0 -> -1 (st 4)
+  F6 Slot 2 t=40 hp 0 -> -1 (st 4)
+  F6 Slot 3 t=4b hp 0 -> -1 (st 4)
+NPC-Zustandswechsel (t>=0x40): 2
+  F6 Slot 1 t=49 st 0 -> 4
+  F6 Slot 3 t=4b st 0 -> 4
+
+## Annette-Szene: szene4.py
+F1010  Ton 0 
+FEHLT: Szenenstart statt sub04
+FEHLT: Ton 1 
+FEHLT: Sturz:
+FEHLT: gelandet, Drohen:
+FEHLT: Ton 2 
+FEHLT: Hieb \(RE2
+FEHLT: Ausholen \(RE2
+FEHLT: Blut-Skala
+FEHLT: Treffer:
+FEHLT: Schnitt weg, liegt, Schrei
+FEHLT: Kampfstart \(sub04\), Form frei
+Ersatzmodell RE2/ANNETTE_4D.EMD                  ja
+Ersatzmodell RE2/ANNETTE_4D_BLUT.EMD             nein
+Wiedereintritt nach der Szene: Leiche liegt      nein
+Frau im Kittel (0x4D, @0x0122A) verworfen        nein
+EXIT_AT                                          ja
+Reihenfolge vollstaendig: False

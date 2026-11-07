@@ -1,0 +1,20 @@
+# npc_hp_zensus.py (Abnahme 4 Spur AN) ueber state.log-Dateien vorhandener Laeufe: NPC-Zeilen (t=40..4d) mit hp >= 0
+## Baum r41_annette/re15_port/build (Laeufe der Autor-Sitzung, Abnahmen 1-3 und dieser Abnahme)
+Dateien: 170
+NPC-Zeilen je Typ: {'49': 25803, '40': 30443, '4b': 25803, '4d': 129090, '45': 1333, '42': 480, '47': 13240}
+Spannen mit hp >= 0: 145, davon ausserhalb F1..F5: 0
+## Baeume r41_integration/re15_port/build und Hauptbaum re15_port/build
+Dateien: 386
+NPC-Zeilen je Typ: {'45': 13264, '4d': 80820, '42': 13348, '47': 56361, '49': 8229, '40': 10734, '4b': 2788}
+Spannen mit hp >= 0: 60, davon ausserhalb F1..F5: 0
+## Beispiele (alle Spannen: Bild 1 bis 5 nach dem Laden, hp 0 vor dem NPC-INIT, der hp -1 setzt, @0x8011c744 / STAGE6 @0x80101980-84)
+hp>=0: abn1\p1\state.log Typ 0x40 Slot 2: 5 Bilder, erstes F1 st 4 hp 0, letztes F5 st 4 hp 0
+hp>=0: abn1\p1\state.log Typ 0x49 Slot 1: 5 Bilder, erstes F1 st 0 hp 0, letztes F5 st 0 hp 0
+hp>=0: abn1\p1\state.log Typ 0x4b Slot 3: 5 Bilder, erstes F1 st 0 hp 0, letztes F5 st 0 hp 0
+hp>=0: abn1\voll2\state.log Typ 0x40 Slot 2: 5 Bilder, erstes F1 st 4 hp 0, letztes F5 st 4 hp 0
+hp>=0: abn1\voll2\state.log Typ 0x49 Slot 1: 5 Bilder, erstes F1 st 0 hp 0, letztes F5 st 0 hp 0
+hp>=0: abn1\voll2\state.log Typ 0x4b Slot 3: 5 Bilder, erstes F1 st 0 hp 0, letztes F5 st 0 hp 0
+hp>=0: r39_elzazombies_wd_leon\leon\state.log Typ 0x45 Slot 1: 5 Bilder, erstes F1 st 4 hp 0, letztes F5 st 4 hp 0
+hp>=0: tests\integration\r35_granate_wd\lauf_2f4bf10c\birkin\state.log Typ 0x4d Slot 1: 5 Bilder, erstes F1 st 0 hp 0, letztes F5 st 0 hp 0
+hp>=0: tests\integration\r35_granate_wd\lauf_2f4bf10c\raute\state.log Typ 0x42 Slot 1: 5 Bilder, erstes F1 st 0 hp 0, letztes F5 st 0 hp 0
+hp>=0: tests\integration\r35_granate_wd\lauf_58ba79f8\birkin\state.log Typ 0x4d Slot 1: 5 Bilder, erstes F1 st 0 hp 0, letztes F5 st 0 hp 0

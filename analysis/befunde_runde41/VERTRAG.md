@@ -47,6 +47,9 @@ Ventil-Sicherungskasten 2010, nachgetragen von Spur C nach AUFTRAG.md Nachtrag 1
 (Szene gesehen 110, Schluessel liegt 111, Schluessel genommen 112), **G = 114-119**, **E = 120** (nur wenn kein
 Original-Flag reicht), **J/K = 121-124** bei Bedarf, 125-133 vergibt der Orchestrator. Jedes neu belegte Bit traegt
 die Spur in `tests/unit/test_r36_kartenbits.c` k_port[] ein (eine Zeile) — 104/105 sind Original!
+**AN** (Orchestrator-Entscheid 2026-11-02, Nachbesserung 2 der Spur AN): **133** = Zugstart-Szene 6030 gesehen
+(`RE15_AN_ZUG_BIT`, `include/re15_annette_r41.h`; gesetzt vom Zugstart-Programm in `annette_r41.c`), in k_port[]
+eingetragen. Zensus `bank9_zensus.py` 2026-11-02: im Original frei.
 **ST80** (Nachbesserung 1, 2026-11-07, Orchestrator): **128** = RE15_S80_BIT_NACHTRAG (Zug 6030: Fuehrerstand vor dem Wagen besucht, Sherry-Nachtrag msg 40/25 steht aus; gesetzt in k_s80_6030_sub08_vorne, geloescht in k_s80_6030_sub09_nachtrag). Zensus: Original-Block 110..133 frei, Integrationsbaum und alle r41-Zweige ohne 128 (moosgang 126/127, annette 133); k_port[] eingetragen. Nachrichten-Ids 6030: 31 und 40 (Spur AN belegt 27..30).
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)
@@ -61,6 +64,10 @@ Stimmen `synchro/STAGE2/room2080/main42.wav` und `room2081/main42.wav` — im Do
 Zensus + Eintrag hier; neue RE2-Daten nach shared_assets/RE2/ (Paket-Gate im Dossier nennen).
 
 **O/P/Q** (Nachtrag 34): keine neuen Nachrichten-Ids; Bits nur 126-133 nach Zensus + Eintrag hier. O darf re15_inv_screen.c, aot_common.c, msg_common.c, scd_vm.c mit markierten Haken aendern; die 2010-Stelle der Spur C gehoert O (Logik), N aendert dort nur Bild/Aufklappen.
+
+**AN / ST80** (Welle 2, Integration 2026-11-07, Ids aus den Headern): **AN**: 5090 Ids 40-43 (`RE15_AN_MSG_SATZ..WILLIAM`,
+`re15_annette_r41.h`), 6030 Ids 27-30 (`RE15_AN_MSG_FAEHRT..BLEIB`); **ST80**: 30C1/6030 Ids 21-26 (`RE15_S80_ID_ERSTE_NEUE..
+LETZTE_NEUE`, `re15_story80_r41.h`), 6030 Ids 31 und 40 (`RE15_S80_ID_VORNE`/`_NACHTRAG`). Disjunkt; Bank-9-Bits AN 133, ST80 128 (1.1).
 
 ### 1.3 Gemeinsame Dateien (nur kleine Haken, 1-5 Zeilen, Kommentar "Runde 41 Spur X")
 scd_room_setup.c (Installer-Zeile am ENDE des Blocks: C, E, F, G, I), scd_vm.c (C, F, G), platform/pc/main.c (D

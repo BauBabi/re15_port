@@ -1,0 +1,65 @@
+# Auswertung Lauf elza5031 (Abnahme 4 Spur AN, exe cefd57402)
+elza5031 exit=0 Dauer=28 s Bilder: 26
+
+## env
+RE15_AUDIO_CAP_SYNC=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/elza5031/ton.raw
+RE15_DEBUG_JUMP=5031@250
+RE15_EQUIP=3
+RE15_EXIT_AT=520#5031
+RE15_FRAMEDUMP=270-520/10:f
+RE15_GEGNER_POS=2,18200,17050,2048@1#5031
+RE15_GIVE=3:100
+RE15_INPUT_SCRIPT=W6,MA6,W1
+RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=100
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=11000,17050,0,0
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/elza5031/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/elza5031/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_TITLE_SHOT_CHAR=1
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[framedump] 640x480 -> f000510.ppm
+[framedump] 640x480 -> f000520.ppm
+[flow] EXIT_AT: Bild 520 in Raum 5031 erreicht -> exit
+
+## Abstand Spieler <-> Annette: abstand4.py
+
+## Schuesse und Treffer (letzter Raumabschnitt): schuss4.py
+Abschnitte: 2, gewaehlt letzter (520 Bilder, F1..F520)
+Schuesse (mg-Abfall): 8
+  F289 mg 100->99 PL ('11000', '17050', '0', '100') | [1 t=4b st=4 @(14100,17050) hp=-1] [2 t=29 st=4 @(18200,17050) hp=87]
+  F311 mg 99->98 PL ('11000', '17050', '0', '100') | [1 t=4b st=4 @(14100,17050) hp=-1] [2 t=29 st=4 @(18200,17050) hp=87]
+  F333 mg 98->97 PL ('11000', '17050', '0', '100') | [1 t=4b st=4 @(14100,17050) hp=-1] [2 t=29 st=4 @(18200,17050) hp=87]
+  F355 mg 97->96 PL ('11000', '17050', '0', '100') | [1 t=4b st=4 @(14100,17050) hp=-1] [2 t=29 st=4 @(18200,17050) hp=87]
+  F377 mg 96->95 PL ('11000', '17050', '0', '100') | [1 t=4b st=4 @(14100,17050) hp=-1] [2 t=29 st=4 @(18200,17050) hp=87]
+  F399 mg 95->94 PL ('11000', '17050', '0', '100') | [1 t=4b st=4 @(14100,17050) hp=-1] [2 t=29 st=4 @(18200,17050) hp=87]
+  F421 mg 94->93 PL ('11000', '17050', '0', '100') | [1 t=4b st=4 @(14100,17050) hp=-1] [2 t=29 st=4 @(18200,17050) hp=87]
+  F443 mg 93->92 PL ('11000', '17050', '0', '100') | [1 t=4b st=4 @(14100,17050) hp=-1] [2 t=29 st=4 @(18200,17050) hp=87]
+hp-Wechsel: 1
+  F6 Slot 1 t=4b hp 0 -> -1 (st 4)
+NPC-Zustandswechsel (t>=0x40): 1
+  F6 Slot 1 t=4b st 0 -> 4
+
+## Annette-Szene: szene4.py
+FEHLT: Ton 0 
+FEHLT: Szenenstart statt sub04
+FEHLT: Ton 1 
+FEHLT: Sturz:
+FEHLT: gelandet, Drohen:
+FEHLT: Ton 2 
+FEHLT: Hieb \(RE2
+FEHLT: Ausholen \(RE2
+FEHLT: Blut-Skala
+FEHLT: Treffer:
+FEHLT: Schnitt weg, liegt, Schrei
+FEHLT: Kampfstart \(sub04\), Form frei
+Ersatzmodell RE2/ANNETTE_4D.EMD                  nein
+Ersatzmodell RE2/ANNETTE_4D_BLUT.EMD             nein
+Wiedereintritt nach der Szene: Leiche liegt      nein
+Frau im Kittel (0x4D, @0x0122A) verworfen        nein
+EXIT_AT                                          ja
+Reihenfolge vollstaendig: False

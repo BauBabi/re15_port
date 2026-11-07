@@ -140,6 +140,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_trage1200.h"      /* Runde 35 Spur H: ROOM1200 Trage-Zombie (Messschiene) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_birkin_formen.h"   /* Beta-Birkin-Formen: raumabhaengige Ersatzmodelle */
+#include "re15_annette_r41.h"     /* Runde 41 Spur AN: Aussehen der Frau im Kittel (0x4D), Annette-Szene 5090 */
 #include "re15_teile_r15.h"     /* RE1.5-Teilschicht (Teil-Wort-Bits, Gore) */
 #include "re15_raumlicht.h"       /* Lichtscheine nach dem 80%-Video */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
@@ -946,6 +947,21 @@ static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
             return buf;
         }
         if (datei) fprintf(stderr, "[enemy] EM%02X: %s fehlt -> Auslieferungsmodell\n", type, datei);
+    }
+    /* Runde 41 Spur AN: 0x4D (Frau im Kittel, nur Leon 5090/6000/6030) mit dem Aussehen der RE2-Annette - Gerippe und Clips
+     * bleiben die des 0x4D (tools/r41_annette/annette_modell.py, re15_annette_r41.h). Fehlt die Datei: Auslieferungsmodell. */
+    {
+        static int s_an_hook = 0;
+        if (!s_an_hook) { s_an_hook = 1; re15_annette_r41_modell_hook(pc_enemy_modell_neu);
+                          re15_annette_r41_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank); }
+        const char *an = re15_annette_r41_emd_datei(type);
+        int sz = 0; uint8_t *buf;
+        if (an && (buf = re15_pc_read_re2(an, &sz)) != NULL) {
+            if (out_len) *out_len = (size_t)sz;
+            fprintf(stderr, "[enemy] EM%02X: Ersatzmodell RE2/%s (Raum %04X)\n", type, an, g_current_room_id);
+            return buf;
+        }
+        if (an) fprintf(stderr, "[enemy] EM%02X: RE2/%s fehlt -> Auslieferungsmodell\n", type, an);
     }
     { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K/N: JEDER Typ aus CDEMD1.EMS, */
       uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* wenn das Elza-Bit beim Sce_em_set stand    */
@@ -4165,6 +4181,9 @@ re_title:;
     re15_pc_glas1120_init();   /* Runde 35 Spur M: RE2-Raum-ESP room1090 + Glas-Texturen + Knall-Haken */
     { extern void re15_pc_elza_se_init(void); re15_pc_elza_se_init(); }   /* Runde 36 Spur L: ELZASE.VBS-Haken */
     { extern void re15_pc_lift2030_se_init(void); re15_pc_lift2030_se_init(); }   /* Runde 37 Spur C N1: LIFT6030.VBS-Haken */
+    { extern void re15_pc_annette_se(int); re15_annette_r41_se_hook(re15_pc_annette_se); }   /* Runde 41 Spur AN: ANNETTE_SE.VBS */
+    { extern void re15_audio_stimme(uint16_t, int); re15_annette_r41_stimme_hook(re15_audio_stimme); }   /* Runde 41 Spur AN N1: Schrei 5090 nur als Ton */
+    { extern int re15_pc_annette_tuerbank(void); re15_annette_r41_tuerbank_hook(re15_pc_annette_tuerbank); }   /* Runde 41 Spur AN NB4: Tuerton 6030 (DOOR2A) */
     { extern void re15_pc_w11b0_init(void); re15_pc_w11b0_init(); }   /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (Satz 7 aus ROOM1171) */
     { extern void re15_pc_dining_r38_init(void); re15_pc_dining_r38_init(); }     /* Runde 38 Spur F: Port-Banken 0x3B/0x3C/0x3D */
     { extern void re15_pc_toene_r39_init(void); re15_pc_toene_r39_init(); }   /* Runde 39 Spur B: TOENE39.VBS-Haken (Schublade 11F0, Gitter/Schrank 1190) */
@@ -10567,7 +10586,8 @@ re_title:;
                  * @0x80104bc4 `jal 0x8008e1f4` (RotMatrix) auf e+0x74, Peitsche setzt +0x74/+0x78
                  * (@0x8010143c-5c), Speer/Wedeln/Zug aus den Tabellen @0x80105740/@0x80105770.
                  * Yaw-only (nyaw) == RotMatrix(0, yaw, 0), also fuer alle anderen Typen unveraendert. */
-                if (npc->type == 0x37u || re15_spinnenanim_r41_volle_drehung(npc))   /* Runde 41 Spur L: Spinne RotMatrix(+0x68) @0x8001e8f4 */
+                if (npc->type == 0x37u || re15_spinnenanim_r41_volle_drehung(npc)   /* Runde 41 Spur L: Spinne RotMatrix(+0x68) @0x8001e8f4 */
+                    || re15_annette_r41_volle_drehung(npc))                      /* Runde 41 Spur AN: Leiche gekippt (re15_annette_r41.h) */
                     re15_skel_euler_matrix((int)npc->rot_x, npc_yaw_eff, (int)npc->rot_z, nyaw);
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8

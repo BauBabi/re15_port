@@ -1,0 +1,22 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build
+    Start  571: integration_r35_zgirl_5090
+1/8 Test  #571: integration_r35_zgirl_5090 ..............   Passed  153.71 sec
+    Start  653: integration_r36_story_leon
+2/8 Test  #653: integration_r36_story_leon ..............   Passed  375.99 sec
+    Start  654: integration_r36_story_elza
+3/8 Test  #654: integration_r36_story_elza ..............   Passed  215.50 sec
+    Start 1150: integration_r41_annette
+4/8 Test #1150: integration_r41_annette .................   Passed  249.80 sec
+    Start 1151: integration_r41_begleiter_schusslinie
+5/8 Test #1151: integration_r41_begleiter_schusslinie ...   Passed   52.98 sec
+    Start 1257: integration_r41_kollision_npc3070
+6/8 Test #1257: integration_r41_kollision_npc3070 .......   Passed   83.71 sec
+    Start 1258: integration_r41_kollision_npc3001
+7/8 Test #1258: integration_r41_kollision_npc3001 .......   Passed   85.07 sec
+    Start 1386: integration_r41_birkin_pistole
+8/8 Test #1386: integration_r41_birkin_pistole ..........   Passed  243.26 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Total Test time (real) = 1460.11 sec
+EXIT=0

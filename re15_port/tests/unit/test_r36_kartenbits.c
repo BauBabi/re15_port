@@ -72,6 +72,7 @@
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Bank-9-Bit 97 (VERTRAG Runde 39 1.1) */
 #include "re15_ventilkette_r41.h" /* Runde 41 Spur C: Bank-9-Bits 100-103, 106, 107 (VERTRAG Runde 41 1.1; 107 = Dokument, Nachbesserung 4) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Bank-9-Bits 110-113 (VERTRAG Runde 41 1.1) */
+#include "re15_annette_r41.h"   /* Runde 41 Spur AN: Bank-9-Bit 133 (VERTRAG Runde 41 1.1, Orchestrator 2026-11-02) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -541,6 +542,7 @@ static const port_bit_t k_port[] = {
     { RE15_K2080_BANK, RE15_K2080_BIT_KANISTER, "RE15_K2080_BIT_KANISTER", "Kanister liegt im 2090-Becken, kanister2080_r41.c (Runde 41 G)" },
     { RE15_K2080_BANK, RE15_K2080_BIT_SUEDWURF, "RE15_K2080_BIT_SUEDWURF", "Kanister-Wurf ins Suedbecken (sonst Nord), kanister2080_r41.c (Runde 41 G NB2)" },
     { RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, "RE15_S80_BIT_NACHTRAG", "6030 Sherry-Nachtrag offen (Fuehrerstand vor dem Wagen), gen/story80_szenen.inc Set (Runde 41 ST80 NB1)" },
+    { RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, "RE15_AN_ZUG_BIT", "Zugstart 6030 gesehen, annette_r41.c Zugstart-Programm Set (Runde 41 AN NB1/NB2)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

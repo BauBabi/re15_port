@@ -1,0 +1,18 @@
+FAIL: 5090 vor der Szene: 0x4D-Kasten r 350 h 1350 statt RE1.5 450/1530 (@0x8011d88c)
+6000 lebend: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 450/450/1530/-1530)
+FAIL: 6000 lebend: 0x4D-Kasten r 350/350 h 1350 Versatz -1350 statt 450/450/1530/-1530 (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+6030 Pult: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 450/450/1530/-1530)
+FAIL: 6030 Pult: 0x4D-Kasten r 350/350 h 1350 Versatz -1350 statt 450/450/1530/-1530 (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+6030 Pult (-1790,-22272): Leon westlich bei 850 -> 850, bei 810 -> 810, bei 950 -> 950 (Soll RE1.5 450 + 450 = 900; der RE2-Wert 350 hielte bei 800)
+FAIL: 6030 Pult: Leon bei 850 nicht auf 900 geschoben (Abstand 850) - RE1.5 450 + 450 (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+FAIL: 6030 Pult: Leon bei 810 nicht auf 900 geschoben (Abstand 810, Abnahme 4 an6030_pult)
+5090 vor der Szene: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 450/450/1530/-1530)
+FAIL: 5090 vor der Szene: 0x4D-Kasten r 350/350 h 1350 Versatz -1350 statt 450/450/1530/-1530 (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+5090 ab Szenenstart: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+FAIL: 5090 Wiedereintritt: beim Spawn nicht der RE1.5-Kasten (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+Leiche: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+Leiche Schub bei 850: Abstand 850
+Leiche Schub bei 750: Abstand 801
+test_r41_annette: 7 Fehler
+0% tests passed, 1 tests failed out of 1
+The following tests FAILED:

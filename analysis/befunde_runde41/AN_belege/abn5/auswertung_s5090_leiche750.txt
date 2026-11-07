@@ -1,0 +1,79 @@
+# Auswertung Lauf s5090_leiche750 (Abnahme 5 Spur AN, zweiter Abnehmer, Messkopie re15_pc_anabn5.exe sha256 0e9ece98360bd5b0 = 99bbe97ba)
+s5090_leiche750 exit=0 Dauer=187 s Bilder: 12 exe=0e9ece98360bd5b0 19:15:08
+
+## env
+RE15_AUDIO_CAP_SYNC=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/s5090_leiche750/ton.raw
+RE15_DEBUG_JUMP=6000@250
+RE15_EXIT_AT=1905#5090
+RE15_FRAMEDUMP=1850-1905/5:f
+RE15_GEGNER_POS=1,13025,-23550,1170@1860#5090
+RE15_INPUT_SCRIPT=W5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W0.2,L0.04,U1.3,R0.367,U4.3,A0.1,W3,A0.1,W0.5,R0.7,U6.5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W3,R0.1,U0.47,L0.1,U1.5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W29.7,L0.22,U0.4,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W1.5,U0.8,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W3,L0.04,U0.5,R0.04,U7,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,U15,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,L0.04,U2.17,R0.04,U10.7,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W0.5,U8.5,W60
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=1763,-9700,1024,2
+RE15_SET_FLAG=3:48,3:49,3:100,3:239,4:23,3:89,3:22
+RE15_SE_DEBUG=1
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/s5090_leiche750/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/s5090_leiche750/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[re2se] se=0 layer=0 bank=24 prog=0 tone=1 vag=4 -> Kanal 2 (prio 3)
+[framedump] 640x480 -> f001905.ppm
+[flow] EXIT_AT: Bild 1905 in Raum 5090 erreicht -> exit
+
+## Tuerbank/Audio (debug.log)
+[audio] RE15_AUDIO_CAP_SYNC -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/s5090_leiche750/ton.raw (1470 Frames/Tick, kein SDL-Geraet)
+[tuer] Sequenz Archiv 2 DOOR2A Variante 0 Bit7 0 Tuer 42 Seite S314 T161 Spender FF (11 Skripte)
+[tuer] Sequenz Archiv 2 DOOR2A Variante 1 Bit7 0 Tuer 42 Seite S321 T162 Spender FF (11 Skripte)
+
+## Vergleich state.log gegen Abnahme 4 (exe cefd57402, 0x4D ueberall 350)
+(kein Referenzlauf /c/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/../../w2abn/an4/laeufe/s5090_leiche750/state.log)
+
+## Vergleich state.log gegen Vorgaenger-Abnehmer (exe 99bbe97ba)
+alt 4269 Zeilen, neu 4269 Zeilen, verglichen 4269: gleich 4269, anders 0
+
+## Vergleich state.log gegen Abnahme 3 (exe b646c72a6, 0x4D ueberall 450)
+(kein Referenzlauf /c/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/abn3/s5090_leiche750/state.log)
+
+## Abstand Spieler <-> 0x4D (abstand5.py, letzter Raumabschnitt, ab F1850 bis F999999)
+s5090_leiche750: 4 Abschnitte, Abschnitt -1 mit 1905 Bildern, davon 56 mit Typ 4d in F1850..F999999
+  F1850  Spieler (13775,-23550) pst 1 | 4d (4856,-22748) st 0 hp -1 | Abstand 8955
+  F1860  Spieler (13826,-23550) pst 1 | 4d (13025,-23550) st 0 hp -1 | Abstand 801
+Minimum 801 bei F1860, Maximum 8955 bei F1850
+
+## Schuesse und hp-Wechsel (schuss5.py, letzter Raumabschnitt)
+Abschnitte 4, gewaehlt -1: 1905 Bilder F1..F1905
+Schuesse (mg-Abfall): 0
+hp-Wechsel: 3
+  F6 Slot 1 t=4d hp 0 -> -1 (st 4)
+  F498 Slot 2 t=30 hp 300 -> 150 (st 1)
+  F946 Slot 2 t=30 hp 150 -> 0 (st 1)
+0x4D erstes Bild F1 (600,-25300) st 0 hp 0; letztes F1905 (13025,-23550) st 0 hp -1
+
+## Annette-Protokoll (debug.log)
+[annette] ROOM6030 Wagen (Cut 6): Zugstart nicht gelaufen -> Ausgang = Tuer (main00 @0x00C72), Tuer nach 5090 = msg 10 (sub06 @0x0106A)
+[annette] F704 ROOM6030 Zugstart-Szene statt sub05 (sub07 @0x01132), 422 Byte, Tuerbank DOOR2A geladen
+[annette] F800 Ton 3 (ANNETTE_SE.VBS)
+[annette] F1010 Ton 0 (ANNETTE_SE.VBS)
+[annette] F1168 Ton 0 (ANNETTE_SE.VBS)
+[annette] F1168 Szenenstart statt sub04 (Krach): Phase 1, Form (-14700,0,-23350) Gier 3 Clip 2/37, Annette (8000,0,-24250) Clip 2/43, Cut 12
+[annette] F1350 Ton 1 (ANNETTE_SE.VBS)
+[annette] F1350 Sturz: Phase 2, Form (-1378,-5600,-23395) Gier 3983 Clip 2/0, Annette (4813,0,-22953) Clip 5/19, Cut 11
+[annette] F1365 gelandet, Drohen: Phase 3, Form (-1378,0,-23395) Gier 3983 Clip 10/0, Annette (3903,0,-22582) Clip 5/14, Cut 11
+[annette] F1407 Ton 2 (ANNETTE_SE.VBS)
+[annette] F1598 Hieb (RE2 @0x01142): Phase 4, Form (-1378,0,-23395) Gier 131 Clip 2/47, Annette (3773,0,-22529) Clip 4/0, Cut 11
+[annette] F1611 Ausholen (RE2 70,22 s): Phase 4, Form (-1378,0,-23395) Gier 131 Clip 4/0, Annette (3773,0,-22529) Clip 4/19, Cut 11
+[annette] F1640 Blut-Skala 0x3DB6: Cut 11 H 208, Klaue 14 (4231,-2176,-22579) 4492 vom Auge (RE2 0x2000 bei H 257 / 2878)
+[annette] F1640 Treffer: Phase 4, Form (0,0,-23164) Gier 131 Clip 4/14, Annette (3773,0,-22529) Clip 6/0, Cut 11
+[annette] F1640 Blut 1/15: 2 Aufrufe, 8 Plaetze, Pool 25/96
+[annette] F1654 Blut 15/15: 30 Aufrufe, 99 Plaetze, Pool 96/96
+[annette] F1674 Schnitt weg, liegt, Schrei (RE2 @0x01150/@0x01162): Phase 6, Form (0,0,-23164) Gier 131 Clip 4/49, Annette (4856,900,-22748) Clip 24/0, Cut 13
+[annette] F1776 Kampfstart (sub04), Form frei: Phase 7, Form (0,0,-23164) Gier 4039 Clip 2/40, Annette (4856,900,-22748) Clip 24/0, Cut 13
+
+## Spawn-Diagnose 0x4D (debug.log)
+[spawn-diag] Sce_em_set type=0x4D behavior=0x40 slot=0 pos=(-1790,0,-22272) dir=24
+[spawn-diag] Sce_em_set type=0x4D behavior=0x40 slot=0 pos=(600,0,-25300) dir=0
+[spawn-diag] Sce_em_set type=0x4D behavior=0x40 slot=0 pos=(600,0,-25300) dir=0
+[spawn-diag] Sce_em_set type=0x4D behavior=0x40 slot=0 pos=(600,0,-25300) dir=0

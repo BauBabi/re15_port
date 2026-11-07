@@ -1,0 +1,164 @@
+Device set to use cuda:0
+== xa6/xa00.wav 2.88s
+   [(0.0, 2.0)] Five minutes until detonation.
+== xa6/xa01.wav 1.39s
+   [(0.0, 0.84)] You.
+== xa6/xa02.wav 13.65s
+   [(0.0, 2.92)] You murdered my husband.
+   [(2.92, 5.36)] I know what you're looking for.
+   [(5.36, 8.22)] You came for the G-virus, didn't you?
+   [(8.22, 10.5)] But you'll never take it from me.
+   [(10.5, 13.0)] This is my husband's legacy.
+== xa6/xa03.wav 7.68s
+   [(0.0, 7.44)] Now where's that spy you were working with earlier? You know who I'm talking about.
+== xa6/xa04.wav 1.17s
+   [(0.0, 0.5)] What?
+== xa6/xa05.wav 13.23s
+   [(0.0, 2.64)] You really don't know anything, do you?
+   [(2.64, 5.68)] Hahaha, you're so gullible.
+   [(5.68, 9.26)] She's one of the operatives sent here by the Agency.
+   [(9.26, 12.64)] The only reason why she came here is to obtain the G-Virus.
+== xa6/xa06.wav 1.39s
+   [(0.0, 0.84)] That's a lie.
+== xa6/xa07.wav 11.09s
+   [(0.0, 1.82)] No, it's the truth.
+   [(1.82, 5.0)] I discovered this when I did a background check on her.
+   [(5.0, 6.86)] She specifically got close to John
+   [(6.86, 10.68)] and became his girlfriend to get information about Umbrella.
+== xa6/xa08.wav 5.65s
+   [(0.0, 5.0)] That can't be. I know her. Ada wouldn't do something like that.
+== xa6/xa09.wav 5.44s
+   [(0.0, 2.96)] If you don't want to believe it, I don't really care.
+   [(2.96, 4.88)] You're about to die anyway.
+You seem to be using the pipelines sequentially on GPU. In order to maximize efficiency please use a dataset
+== xa6/xa0A.wav 2.35s
+   [(0.0, 2.0)] W-what happened?
+== xa6/xa0B.wav 2.35s
+   [(0.0, 2.0)] Leon, you made it!
+== xa6/xa0C.wav 3.41s
+   [(0.0, 2.4)] Claire, is that you?
+   [(2.4, 3.24)] Where are you?
+== xa6/xa0D.wav 11.52s
+   [(0.0, 11.36)] I can see you on the monitor. But never mind that right now. Leon, you have to go back and get Sherry for me. I left her in the security office. Please, you must save her!
+== xa6/xa0E.wav 3.41s
+   [(0.0, 3.2)] Wait a second! What are you gonna do? Where are you going?
+== xa6/xa0F.wav 4.59s
+   [(0.0, 4.4)] I still have a few loose ends to take care of. I'm counting on you.
+== xa6/xa10.wav 7.68s
+   [(0.0, 1.44)] Hello?
+   [(1.44, 3.48)] Claire, are you there?
+   [(3.48, 4.32)] Claire!
+   [(5.92, 7.38)] The security office?
+== xa6/xa11.wav 0.96s
+   [(0.0, 0.84)] Run!
+== xa6/xa12.wav 0.64s
+   [(0.0, 0.5)] ADA!
+== xa6/xa13.wav 1.07s
+   [(0.0, 0.84)] Ada!
+== xa6/xa14.wav 4.05s
+   [(0.0, 3.84)] Le- Leon, please, escape.
+== xa6/xa15.wav 6.40s
+   [(0.0, 5.6)] No. We're a team. I can't just leave you behind.
+== xa6/xa16.wav 8.96s
+   [(0.0, 8.72)] I'm just a woman who fell in love with you, nothing more.
+== xa6/xa17.wav 1.07s
+   [(0.0, 0.5)] Ugh...
+== xa6/xa18.wav 2.13s
+   [(0.0, 1.0)] ...Ada...
+== xa6/xa19.wav 2.03s
+   [(0.0, 0.84)] No.
+== xa6/xa1A.wav 4.91s
+   [(0.0, 3.56)] I will always remember you.
+   [(3.56, 4.56)] Goodbye, Ada.
+== xa6/xa1B.wav 4.37s
+   [(0.0, 2.84)] ADA!!!
+== xa6/xa1C.wav 14.51s
+   [(0.0, 3.12)] The self-destruct sequence has been activated.
+   [(3.12, 6.8)] Repeat, the self-destruct sequence has been activated.
+   [(6.8, 9.18)] This sequence may not be aborted.
+   [(9.18, 11.68)] All employees proceed to the emergency car
+   [(11.68, 13.18)] at the bottom platform.
+== xa6/xa1D.wav 1.17s
+   [(0.0, 0.96)] Welcome back!
+== xa6/xa1E.wav 1.81s
+   [(0.0, 2.0)] Oh, oh...
+== xa6/xa1F.wav 8.00s
+   [(0.0, 8.0)] Hey, take it easy. We're inside Umbrella's secret lab. I'll go find something to treat that wound, so just rest here in the meantime.
+== xa6/xa20.wav 6.83s
+   [(0.0, 4.28)] But I'll only slow you down with these injuries.
+   [(4.28, 6.56)] Go, save yourself.
+== xa6/xa21.wav 2.99s
+   [(0.0, 2.52)] I told you, it's my job to look after you.
+== xa6/xa22.wav 10.88s
+   [(0.0, 4.24)] But you'll be in danger if you stay with me.
+   [(4.24, 8.4)] I know I've only known you for a short period of time,
+   [(8.4, 10.28)] but I really enjoy being with you.
+== xa6/xa23.wav 1.39s
+   [(0.0, 1.0)] I...
+== xa6/xa24.wav 7.79s
+   [(0.0, 7.4)] I know I'm not capable of caring about anyone, but I don't want to lose you.
+== xa6/xa25.wav 4.05s
+   [(0.0, 4.0)] We're leaving this place together. Wait here for me. I'll be right back.
+== xa6/xa26.wav 3.31s
+   [(0.0, 2.0)] Ada?
+   [(2.0, 4.0)] Where did she go?
+== xa6/xa27.wav 4.48s
+   [(0.0, 4.4)] Sherry? I've come to get you out of here. Claire is waiting for you.
+== xa6/xa28.wav 1.60s
+   [(0.0, 0.84)] Claire?
+== xa6/xa29.wav 2.77s
+   [(0.0, 2.0)] Ugh...
+== xa6/xa2A.wav 2.35s
+   [(0.0, 2.0)] I've been waiting for you, Leon.
+== xa6/xa2B.wav 2.35s
+   [(0.0, 2.0)] Wha- What are you doing?!
+== xa6/xa2C.wav 5.76s
+   [(0.0, 5.2)] You know what this is about, so just hand over the G-Virus.
+== xa6/xa2D.wav 5.55s
+   [(0.0, 2.24)] I don't believe this.
+   [(2.24, 4.2)] Annette was right.
+   [(4.2, 5.04)] About everything.
+== xa6/xa2E.wav 4.27s
+   [(0.0, 3.68)] That's why I told you to leave without me, but you wouldn't listen!
+== xa6/xa2F.wav 3.73s
+   [(0.0, 1.8)] Now hand it over.
+   [(1.8, 3.52)] Don't make me shoot you.
+== xa6/xa30.wav 1.60s
+   [(0.0, 1.2)] You can't do that.
+== xa6/xa31.wav 2.56s
+   [(0.0, 0.5)] Ugh!
+   [(1.16, 1.66)] Ugh!
+== xa6/xa32.wav 0.85s
+   [(0.0, 0.5)] E.T.A.!
+== xa6/xa33.wav 2.88s
+   [(0.0, 2.8)] G. G-Virus.
+== xa6/xa34.wav 4.16s
+   [(0.0, 4.0)] Ada! I've got you! Don't give up!
+== xa6/xa35.wav 6.93s
+   [(0.0, 6.0)] Leon it's over just let me go
+== xa6/xa36.wav 2.24s
+   [(0.0, 2.0)] Shut up! You're gonna make it!
+== xa6/xa37.wav 6.72s
+   [(0.0, 3.96)] It's too late, Leon.
+   [(3.96, 7.2)] We both know it.
+== xa6/xa38.wav 6.08s
+   [(0.0, 5.84)] No. I promised you that we would escape. You just have to help me out here.
+== xa6/xa39.wav 9.60s
+   [(0.0, 9.44)] I... really wanted to escape with you, Leon. Escape from... everything.
+== xa6/xa3A.wav 2.03s
+   [(0.0, 2.0)] ADA!
+== xa6/xa3B.wav 1.60s
+   [(0.0, 0.84)] No.
+== xa6/xa3C.wav 3.73s
+   [(0.0, 3.2)] G-goodbye.
+== xa6/xa3D.wav 4.80s
+   [(0.0, 4.5)] So, this is what everyone's been dying for.
+== xa6/xa3E.wav 1.39s
+   [(0.0, 0.84)] Leon.
+== xa6/xa3F.wav 21.87s
+   [(0.0, 21.84)] I'll see you next time.
+Whisper did not predict an ending timestamp, which can happen if audio is cut off in the middle of a word. Also make sure WhisperTimeStampLogitsProcessor was used during generation.
+== xa6/xa40.wav 17.81s
+   [(0.0, None)] AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+== xa6/xa41.wav 11.41s
+   [(0.0, 9.84)] I'll see you guys in the next video.

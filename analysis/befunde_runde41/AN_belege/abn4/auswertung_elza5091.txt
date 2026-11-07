@@ -1,0 +1,60 @@
+# Auswertung Lauf elza5091 (Abnahme 4 Spur AN, exe cefd57402)
+elza5091 exit=0 Dauer=61 s Bilder: 61
+
+## env
+RE15_AUDIO_CAP_SYNC=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/elza5091/ton.raw
+RE15_DEBUG_JUMP=5091@250
+RE15_EQUIP=3
+RE15_EXIT_AT=1300#5091
+RE15_FRAMEDUMP=100-1300/20:f
+RE15_GIVE=3:100
+RE15_INPUT_SCRIPT=A0.1,W1,U2,MA3,U8.5,W30
+RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=100
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=500,-9175,2048,0
+RE15_SET_FLAG=3:89,9:133
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/elza5091/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/elza5091/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_TITLE_SHOT_CHAR=1
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[walk] F1290 cut=13 mo=7 af=118 frz=0 | pl pos=(14794,0,-23778) rot=2061
+[framedump] 640x480 -> f001300.ppm
+[flow] EXIT_AT: Bild 1300 in Raum 5091 erreicht -> exit
+
+## Abstand Spieler <-> Annette: abstand4.py
+
+## Schuesse und Treffer (letzter Raumabschnitt): schuss4.py
+Abschnitte: 2, gewaehlt letzter (1300 Bilder, F1..F1300)
+Schuesse (mg-Abfall): 4
+  F202 mg 100->99 PL ('20300', '-23550', '2048', '100') | [1 t=30 st=1 @(-14700,-23350) hp=150]
+  F224 mg 99->98 PL ('20300', '-23550', '2048', '100') | [1 t=30 st=1 @(-14700,-23350) hp=150]
+  F246 mg 98->97 PL ('20300', '-23550', '2048', '100') | [1 t=30 st=1 @(-14700,-23350) hp=150]
+  F268 mg 97->96 PL ('20300', '-23550', '2048', '100') | [1 t=30 st=1 @(-14700,-23350) hp=150]
+hp-Wechsel: 1
+  F100 Slot 1 t=30 hp 300 -> 150 (st 1)
+NPC-Zustandswechsel (t>=0x40): 0
+
+## Annette-Szene: szene4.py
+FEHLT: Ton 0 
+FEHLT: Szenenstart statt sub04
+FEHLT: Ton 1 
+FEHLT: Sturz:
+FEHLT: gelandet, Drohen:
+FEHLT: Ton 2 
+FEHLT: Hieb \(RE2
+FEHLT: Ausholen \(RE2
+FEHLT: Blut-Skala
+FEHLT: Treffer:
+FEHLT: Schnitt weg, liegt, Schrei
+FEHLT: Kampfstart \(sub04\), Form frei
+Ersatzmodell RE2/ANNETTE_4D.EMD                  nein
+Ersatzmodell RE2/ANNETTE_4D_BLUT.EMD             nein
+Wiedereintritt nach der Szene: Leiche liegt      nein
+Frau im Kittel (0x4D, @0x0122A) verworfen        nein
+EXIT_AT                                          ja
+Reihenfolge vollstaendig: False

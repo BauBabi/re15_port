@@ -1,0 +1,4 @@
+ROOM5090: 0x4D Sce_em_set @0x0122A
+ROOM6000: 0x4D Sce_em_set @0x00F44,0x00F68
+ROOM6030: 0x4D Sce_em_set @0x010D4,0x010F8
+NPC-Typen (>= 0x40) ueber alle Skripte, Anzahl Raeume: 40:19 42:15 45:2 47:3 49:22 4B:19 4D:3

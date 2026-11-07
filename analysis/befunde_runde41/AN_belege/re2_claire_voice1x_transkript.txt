@@ -1,0 +1,111 @@
+== Anette/VOICE14.XAS[0].wav 13.76s
+   [(0.0, 5.92)] and that's not even the entire story. Every G-virus bioweapon, including William,
+   [(5.92, 13.52)] has the ability to implant embryos into other life forms. That's why he's after Sherry.
+  r, x = wavfile.read(f)
+== Anette/VOICE14.XAS[11]_03.wav 3.79s
+   [(0.0, 3.68)] I tried to save him, but I'm afraid it's already too late.
+== Anette/VOICE14.XAS[14]_04.wav 2.29s
+   [(0.0, 2.0)] Huh, how did you?
+== Anette/VOICE14.XAS[15]_04.wav 0.92s
+   [(0.0, 0.84)] Who are you?
+== Anette/VOICE14.XAS[15]_07.wav 0.71s
+   [(0.0, 0.5)] What?
+== Anette/VOICE14.XAS[2].wav 13.97s
+   [(0.0, 13.88)] Oh, I see. Another spy sent by Umbrella right? Let me guess, you're here to steal my husband's G-Virus aren't you? You are tenacious, I'll give you that.
+== Anette/VOICE14.XAS[3]_01.wav 8.21s
+   [(0.0, 6.0)] But since Sherry is his daughter, that possibility is non-existent.
+   [(6.0, 8.0)] It's an inherent survival instinct.
+== Anette/VOICE14.XAS[4].wav 13.55s
+   [(0.0, 1.76)] Get away from me.
+   [(1.76, 5.12)] You just want my husband's G sample, don't you?
+   [(5.12, 7.6)] But no one will take that away from me.
+   [(7.6, 8.64)] No one.
+   [(8.64, 9.68)] What?
+   [(9.68, 12.08)] I told her to go to the police building.
+   [(12.08, 13.32)] Why is she here?
+== Anette/VOICE14.XAS[5]_01.wav 7.96s
+   [(0.0, 3.5)] As a result of his virus-induced transmutation,
+   [(3.5, 7.5)] William should have lost any prior memories he had as a human by now.
+== Anette/VOICE14.XAS[6]_02.wav 6.33s
+   [(0.0, 6.0)] That's right. The creature that's been causing all this destruction is none other than my own husband.
+== Anette/VOICE14.XAS[7].wav 13.44s
+   [(0.0, 1.76)] That's impossible.
+   [(1.76, 4.0)] I told her to go to the police station.
+   [(4.0, 5.52)] What's she doing here?
+   [(5.52, 7.16)] William will be after her.
+   [(7.16, 11.2)] Now Sherry and the cheese apple are both in danger.
+   [(11.2, 12.04)] Oh.
+== Anette/VOICE14.XAS[9]_02.wav 5.46s
+   [(0.0, 5.4)] The bodies of individuals with non-related genetic coding are likely to reject the embryo.
+== Anette/VOICE16.XAS[10]_2.wav 3.50s
+   [(0.0, 3.36)] The samples inside the pendant Sherry's wearing.
+== Anette/VOICE16.XAS[10]_4.wav 3.29s
+   [(0.0, 3.2)] You killed William! I'll never forgive you for that!
+Whisper did not predict an ending timestamp, which can happen if audio is cut off in the middle of a word. Also make sure WhisperTimeStampLogitsProcessor was used during generation.
+== Anette/VOICE16.XAS[12]_2.wav 1.50s
+   [(0.0, None)] AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+== Anette/VOICE16.XAS[12]_4.wav 4.50s
+   [(0.0, 2.4)] Which room? Tell me, William.
+   [(2.4, 3.44)] Sucker.
+   [(3.44, 4.44)] Where's Sherry?
+== Anette/VOICE16.XAS[12]_6.wav 0.88s
+   [(0.0, 0.84)] Sherry!
+== Anette/VOICE16.XAS[12]_8.wav 0.62s
+   [(0.0, 0.5)] What?
+== Anette/VOICE16.XAS[3]_1.wav 19.46s
+   [(0.0, 2.72)] Sherry, you have to escape.
+   [(4.4, 6.72)] I know I've been a terrible mother,
+   [(6.72, 9.12)] but I still love you.
+   [(9.12, 10.0)] Forgive me.
+   [(13.04, 15.92)] I have detailed information.
+   [(15.92, 18.56)] Everything you need to know to prepare the antidote
+   [(18.56, 19.4)] is right here.
+== Anette/VOICE16.XAS[4].wav 21.76s
+   [(0.0, 3.4)] I've just prepared a sample of the G-virus.
+   [(3.4, 7.48)] And this time, no one will take it from me.
+   [(7.48, 9.96)] This is the most significant piece of research
+   [(9.96, 12.38)] my husband has ever left in my hands.
+   [(12.38, 13.84)] Save my daughter.
+   [(15.32, 19.08)] And tell her I'm sorry I wasn't a better mother.
+   [(20.04, 21.36)] Tell her I love her.
+== Anette/VOICE16.XAS[5]_2.wav 10.21s
+   [(0.0, 8.0)] William is still alive. He's getting stronger with each skin he casts off.
+   [(9.0, 10.0)] Sherry!
+== Anette/VOICE16.XAS[8]_1.wav 5.17s
+   [(0.0, 2.0)] Sherry...
+== Anette/VOICE16.XAS[9]_3.wav 3.92s
+   [(0.0, 3.84)] W-William! You're alive!
+== Anette/VOICE16.XAS[9]_5.wav 2.29s
+   [(0.0, 0.84)] Mm-hmm.
+== William/VOICE13.XAS[10]_01.wav 8.08s
+   [(0.0, 7.0)] I'll see you next time.
+Whisper did not predict an ending timestamp, which can happen if audio is cut off in the middle of a word. Also make sure WhisperTimeStampLogitsProcessor was used during generation.
+== William/VOICE13.XAS[11]_01.wav 4.83s
+   [(0.0, None)] AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+Whisper did not predict an ending timestamp, which can happen if audio is cut off in the middle of a word. Also make sure WhisperTimeStampLogitsProcessor was used during generation.
+== William/VOICE13.XAS[1]_01.wav 10.92s
+   [(0.0, None)] Grrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+== William/VOICE13.XAS[6]_01.wav 8.83s
+   [(0.0, 7.68)] I'll see you next time.
+== William/VOICE13.XAS[7]_01.wav 8.38s
+   [(0.0, 8.3)] Thank you for watching!
+== William/VOICE15.XAS[0].wav 12.91s
+   [(0.0, 12.56)] Thanks for watching!
+== William/VOICE15.XAS[1]_01.wav 9.92s
+   [(0.0, 8.24)] I'll see you next time.
+Whisper did not predict an ending timestamp, which can happen if audio is cut off in the middle of a word. Also make sure WhisperTimeStampLogitsProcessor was used during generation.
+== William/VOICE16.XAS[1]_1.wav 17.71s
+   [(0.0, None)] AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+== William/VOICE16.XAS[6]_1.wav 11.33s
+   [(0.0, 9.84)] I'll see you next time.
+== William/VOICE17.XAS[0].wav 12.69s
+   [(0.0, 10.0)] Thanks for watching and see you in the next video.
+== William/VOICE17.XAS[1]_1.wav 11.33s
+   [(0.0, 2.0)] Here we go.
+== William/VOICE17.XAS[4]_1.wav 8.88s
+   [(0.0, 8.8)] Thanks for watching!
+Whisper did not predict an ending timestamp, which can happen if audio is cut off in the middle of a word. Also make sure WhisperTimeStampLogitsProcessor was used during generation.
+== William/VOICE17.XAS[5].wav 11.63s
+   [(0.0, None)] BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG BANG 
+== William/VOICE17.XAS[6]_1.wav 6.96s
+   [(0.0, 6.88)] Thanks for watching!

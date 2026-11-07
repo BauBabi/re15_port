@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "re15_annette_r41.h"   /* Runde 41 Spur AN: Spawn-Tor der 0x4d in 5090 */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -483,10 +484,13 @@ static void t_wiedereintritt(void)
     re15_collision_set_band(0);
     raum_start(500, 5125, 0, 0);
     int n0 = re15_enemy_spawn_count();
+    /* Runde 41 Spur AN: die Frau im Kittel (0x4d, sub00 @0x0122A) spawnt im Port erst nach dem Tor (3,89) und vor dem Kampf
+     * (3,42) (re15_annette_r41.h); der Zaehler zaehlt sie nur dann mit. */
+    const int soll = 1 + (re15_annette_r41_spawn_weg(0x5090u, 0x4Du) ? 0 : 1);
     for (int f = 0; f < 5; f++) schritt();
     int gs = -1, hp1 = g5_hp(&gs);
-    snprintf(m, sizeof m, "ROOM5090 Erstbetritt: Boss 0x36 HP %d (Ctor 600 @0x801003fc), Spawns %d", hp1, n0);
-    pruefe(m, hp1 == 600 && n0 == 2);
+    snprintf(m, sizeof m, "ROOM5090 Erstbetritt: Boss 0x36 HP %d (Ctor 600 @0x801003fc), Spawns %d (soll %d)", hp1, n0, soll);
+    pruefe(m, hp1 == 600 && n0 == soll);
     if (gs < 0) return;
 
     g_scd_pending_scenario = -1; g_room_change.pending = 0;
@@ -497,9 +501,9 @@ static void t_wiedereintritt(void)
     pruefe(m, ist_tuer && g_scd_pending_scenario == 14 && !g_room_change.pending);
     schritt();                                       /* Verbraucher: scd_room_reenter(..., 14) */
     int n1 = re15_enemy_spawn_count();
-    snprintf(m, sizeof m, "Wiedereintritt verbraucht (Szenario %d), Spawns dieses Eintritts %d "
-                          "(0x4d + Boss; Zaehler-Reset @0x8003f014)", g_scd_pending_scenario, n1);
-    pruefe(m, g_scd_pending_scenario == -1 && n1 == 2);
+    snprintf(m, sizeof m, "Wiedereintritt verbraucht (Szenario %d), Spawns dieses Eintritts %d soll %d "
+                          "(Boss, 0x4d nur nach dem Tor; Zaehler-Reset @0x8003f014)", g_scd_pending_scenario, n1, soll);
+    pruefe(m, g_scd_pending_scenario == -1 && n1 == soll);
     for (int f = 0; f < 5; f++) schritt();
     int hp2 = g5_hp(&gs);
     snprintf(m, sizeof m, "nach dem Neuspawn: Boss HP %d (erwartet 600, vor dem Fix 0)", hp2);

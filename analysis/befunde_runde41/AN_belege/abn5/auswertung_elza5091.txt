@@ -1,0 +1,58 @@
+# Auswertung Lauf elza5091 (Abnahme 5 Spur AN, zweiter Abnehmer, Messkopie re15_pc_anabn5.exe sha256 0e9ece98360bd5b0 = 99bbe97ba)
+elza5091 exit=0 Dauer=61 s Bilder: 61 exe=0e9ece98360bd5b0 19:23:55
+
+## env
+RE15_AUDIO_CAP_SYNC=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/elza5091/ton.raw
+RE15_DEBUG_JUMP=5091@250
+RE15_EQUIP=3
+RE15_EXIT_AT=1300#5091
+RE15_FRAMEDUMP=100-1300/20:f
+RE15_GIVE=3:100
+RE15_INPUT_SCRIPT=A0.1,W1,U2,MA3,U8.5,W30
+RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=100
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=500,-9175,2048,0
+RE15_SET_FLAG=3:89,9:133
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/elza5091/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/elza5091/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_TITLE_SHOT_CHAR=1
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[walk] F1290 cut=13 mo=7 af=118 frz=0 | pl pos=(14794,0,-23778) rot=2061
+[framedump] 640x480 -> f001300.ppm
+[flow] EXIT_AT: Bild 1300 in Raum 5091 erreicht -> exit
+
+## Tuerbank/Audio (debug.log)
+[audio] RE15_AUDIO_CAP_SYNC -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/elza5091/ton.raw (1470 Frames/Tick, kein SDL-Geraet)
+[tuer] Sequenz Archiv 2 DOOR2A Variante 2 Bit7 0 Tuer 42 Seite S281 T144 Spender FF (11 Skripte)
+
+## Vergleich state.log gegen Abnahme 4 (exe cefd57402, 0x4D ueberall 350)
+alt 1551 Zeilen, neu 1551 Zeilen, verglichen 1551: gleich 1551, anders 0
+
+## Vergleich state.log gegen Vorgaenger-Abnehmer (exe 99bbe97ba)
+alt 1551 Zeilen, neu 1551 Zeilen, verglichen 1551: gleich 1551, anders 0
+
+## Vergleich state.log gegen Abnahme 3 (exe b646c72a6, 0x4D ueberall 450)
+(kein Referenzlauf /c/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/abn3/elza5091/state.log)
+
+## Abstand Spieler <-> 0x4D (abstand5.py, letzter Raumabschnitt, ab F0 bis F999999)
+elza5091: 2 Abschnitte, Abschnitt -1 mit 1300 Bildern, davon 0 mit Typ 4d in F0..F999999
+
+## Schuesse und hp-Wechsel (schuss5.py, letzter Raumabschnitt)
+Abschnitte 2, gewaehlt -1: 1300 Bilder F1..F1300
+Schuesse (mg-Abfall): 4
+  F202 mg 100 -> 99, Spieler (20300,-23550)
+  F224 mg 99 -> 98, Spieler (20300,-23550)
+  F246 mg 98 -> 97, Spieler (20300,-23550)
+  F268 mg 97 -> 96, Spieler (20300,-23550)
+hp-Wechsel: 1
+  F100 Slot 1 t=30 hp 300 -> 150 (st 1)
+keine 0x4D im Abschnitt
+
+## Annette-Protokoll (debug.log)
+
+## Spawn-Diagnose 0x4D (debug.log)

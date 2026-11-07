@@ -1,0 +1,11 @@
+6000 lebend: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+6030 Pult: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+6030 Pult (-1790,-22272): Leon westlich bei 850 -> 901, bei 810 -> 901, bei 950 -> 950 (Soll RE1.5 450 + 450 = 900; der RE2-Wert 350 hielte bei 800)
+5090 vor der Szene: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+5090 ab Szenenstart: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+Leiche: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+Leiche Schub bei 850: Abstand 850
+Leiche Schub bei 750: Abstand 801
+test_r41_annette: OK
+The following tests passed:
+100% tests passed, 0 tests failed out of 1

@@ -1,0 +1,47 @@
+# ctest-Laeufe Abnahme 4 Spur AN (Git-Bash, PATH=/c/msys64/mingw64/bin:$PATH, SDL_ASSERT=always_ignore, --test-dir r41_annette/re15_port/build)
+
+## Auswahl Unit (-j 4)
+ 1/16 Test  #296: unit_r16_aufstehen_schuss ........   Passed    0.07 sec
+ 2/16 Test  #830: unit_r38_elzatoene_schuss1021 ....   Passed    0.15 sec
+ 3/16 Test  #578: unit_r36_elza_schuss .............   Passed    0.15 sec
+ 4/16 Test  #635: unit_r36_schuss ..................   Passed    0.03 sec
+ 5/16 Test  #989: unit_r39_gegner_affen_schuss .....   Passed    0.09 sec
+ 6/16 Test  #646: unit_r36_schuss_kraehe ...........   Passed    0.03 sec
+ 7/16 Test  #168: unit_re2_weapon_rows .............   Passed    0.06 sec
+ 8/16 Test   #24: unit_damage ......................   Passed    0.04 sec
+ 9/16 Test   #34: unit_npc_ai ......................   Passed    0.04 sec
+10/16 Test #1250: unit_r41_kollision_npc ...........   Passed    0.03 sec
+11/16 Test  #312: unit_r17_waffen_loop_pin .........   Passed    0.04 sec
+12/16 Test #1152: unit_r41_annette_se_bank .........   Passed    0.02 sec
+13/16 Test #1153: unit_r41_annette_se_toene ........   Passed    0.02 sec
+14/16 Test #1154: unit_r41_annette_se_lagen ........   Passed    0.01 sec
+15/16 Test #1149: unit_r41_annette .................   Passed    0.17 sec
+16/16 Test  #470: unit_r35_affen_npcband ...........   Passed    0.57 sec
+100% tests passed, 0 tests failed out of 16
+
+## unit_r41_annette -V (Auszug)
+1149: Schuss (a) Leiche: Rueckgabe 3 (G5-Slot 2), Leiche hp -1 st 0, G5 hp 330
+1149: Schuss (b) lebendes NPC: Rueckgabe 3, NPC hp -1 st 0, G5 hp 330
+1149: Leiche Kasten: r 350/350 h 1350 Versatz -1350 (Soll RE2 350/350/1350/-1350)
+1149: Leiche Schub bei 850: Leon (5706,-22748) Abstand 850
+1149: Leiche Schub bei 750: Leon (5657,-22748) Abstand 801
+1149: test_r41_annette: OK
+1/1 Test #1149: unit_r41_annette .................   Passed    0.18 sec
+
+## Integration (-j 1, nacheinander) 2026-11-07 14:48:16 .. 2026-11-07 15:15:48
+ 1/10 Test  #571: integration_r35_zgirl_5090 ..............   Passed  148.00 sec
+ 2/10 Test  #586: integration_r36_elza_schuss .............   Passed   49.45 sec
+ 3/10 Test  #636: integration_r36_schuss ..................   Passed  149.22 sec
+ 4/10 Test  #653: integration_r36_story_leon ..............   Passed  374.41 sec
+ 5/10 Test  #654: integration_r36_story_elza ..............   Passed  215.95 sec
+ 6/10 Test #1150: integration_r41_annette .................   Passed  254.28 sec
+ 7/10 Test #1151: integration_r41_begleiter_schusslinie ...   Passed   52.76 sec
+ 8/10 Test #1257: integration_r41_kollision_npc3070 .......   Passed   82.65 sec
+ 9/10 Test #1258: integration_r41_kollision_npc3001 .......   Passed   82.75 sec
+10/10 Test #1386: integration_r41_birkin_pistole ..........   Passed  242.81 sec
+100% tests passed, 0 tests failed out of 10
+Total Test time (real) = 1652.35 sec
+
+## Suite ^unit_|^prop_|^probe_ ohne releaseskript|titelversion|android|paket|r37_masken36_ausschluss (-j 2) 2026-11-07 15:03:18 .. 2026-11-07 15:10:47
+100% tests passed, 0 tests failed out of 1040
+Total Test time (real) = 448.76 sec

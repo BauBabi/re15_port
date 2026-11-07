@@ -1,0 +1,58 @@
+# Abnahme 5 Spur AN (zweiter Abnehmer): Delta und Bau (eigene Pruefung, 2026-11-07 ab 18:59)
+
+## Zweig und Commits seit Abnahme 4 (f4cb69304)
+94c0e506b 2026-11-07 17:01:01 +0100 docs(r41-annette): Dossier Nachbesserung 6 - Kasten 0x4D je Raum/Phase, Belege, Fensterlauf Pult 6030, Tests
+99bbe97ba 2026-11-07 15:59:57 +0100 fix(r41-annette): Nachbesserung 6 - Kasten 0x4D je Raum/Phase: RE1.5 450/1530, RE2-Segment 350/1350 erst ab Szenenstart 5090 und als Leiche
+
+## Diffstat f4cb69304..HEAD
+ analysis/befunde_runde41/AN_annette.md             | 119 +++++++++++++++-
+ .../AN_belege/n6/an6030_pult_abstand.txt           |  42 ++++++
+ .../AN_belege/n6/an6030_pult_nb6.jpg               | Bin 0 -> 175716 bytes
+ .../befunde_runde41/AN_belege/n6/ctest_nb6.txt     |  52 +++++++
+ .../AN_belege/n6/gegenprobe_cefd57402.txt          |  18 +++
+ .../AN_belege/n6/gegenprobe_ohne_umschaltung.txt   |  16 +++
+ .../AN_belege/n6/unit_r41_annette_nb6.txt          |  11 ++
+ .../AN_belege/werkzeug/n6/abstand6.py              |  24 ++++
+ .../befunde_runde41/AN_belege/werkzeug/n6/lauf6.sh |  29 ++++
+ re15_port/engine/src/annette_r41.c                 |  25 ++++
+ re15_port/engine/src/re15_damage.c                 |  22 +--
+ re15_port/tests/unit/test_r41_annette.c            | 150 +++++++++++++++++----
+ 12 files changed, 470 insertions(+), 38 deletions(-)
+
+## Code-Diffstat (nur 99bbe97ba)
+ re15_port/engine/src/annette_r41.c      |  25 ++++++
+ re15_port/engine/src/re15_damage.c      |  22 +++--
+ re15_port/tests/unit/test_r41_annette.c | 150 ++++++++++++++++++++++++++------
+ 3 files changed, 160 insertions(+), 37 deletions(-)
+
+## Unberuehrt (git diff --stat f4cb69304 HEAD -- pri synchro Version_80% info release): '' (leer = nichts)
+
+## git status --short zu Beginn (18:59, vor jedem eigenen Schritt): nur das unversionierte Rohmaterial des Vorgaengers
+?? analysis/befunde_runde41/AN_abnahme_5.md
+?? analysis/befunde_runde41/AN_belege/abn5/
+
+## Bau: RE15_BUILD_DIR=<Baum>/re15_port/build bash re15_port/tools/local_build.sh build (18:59)
+ninja: no work to do.
+    build OK
+=== LOCAL-BUILD-OK (build)
+
+## Zeitstempel (ls --time-style=full-iso)
+2026-11-07 15:58:10.693173900 re15_port/build/engine/CMakeFiles/re15_engine.dir/src/annette_r41.c.obj
+2026-11-07 15:57:18.691252900 re15_port/build/engine/CMakeFiles/re15_engine.dir/src/re15_damage.c.obj
+2026-11-07 15:58:11.547140000 re15_port/build/engine/libre15_engine.a
+2026-11-07 15:58:12.664779800 re15_port/build/platform/pc/re15_pc.exe
+2026-11-07 15:58:48.254160900 re15_port/build/tests/unit/test_r41_annette.exe
+2026-11-07 15:58:02.306581000 re15_port/engine/src/annette_r41.c
+2026-11-07 15:56:59.944090600 re15_port/engine/src/re15_damage.c
+2026-11-07 15:53:38.909565200 re15_port/tests/unit/test_r41_annette.c
+Commit 99bbe97ba: 2026-11-07 15:59:57 +0100
+
+## Dateien unter re15_port (ohne build/) neuer als die exe: '' (leer = keine)
+
+## exe und Messkopie (sha256)
+0e9ece98360bd5b0b35785f8f73ba93eb3d0188f40fa71db3f86a6f9b9b7f76d *re15_port/build/platform/pc/re15_pc.exe
+0e9ece98360bd5b0b35785f8f73ba93eb3d0188f40fa71db3f86a6f9b9b7f76d *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/exe/re15_pc_anabn5.exe
+
+## Commit-Texte (git log -1 --format=%B, Backticks und Nicht-ASCII per Python gezaehlt)
+99bbe97ba: Backticks 0, nur ASCII, letzte Zeile 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>' (Attributionszeile des Auftrags zur Bauzeit)
+94c0e506b: Backticks 0, nur ASCII, letzte Zeile 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'

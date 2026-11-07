@@ -1,0 +1,197 @@
+# Auswertung Lauf kampf_linie (Abnahme 5 Spur AN, zweiter Abnehmer, Messkopie re15_pc_anabn5.exe sha256 0e9ece98360bd5b0 = 99bbe97ba)
+kampf_linie exit=0 Dauer=319 s Bilder: 41 exe=0e9ece98360bd5b0 19:22:53
+
+## env
+RE15_AUDIO_CAP_SYNC=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/kampf_linie/ton.raw
+RE15_DEBUG_JUMP=6000@250
+RE15_EQUIP=3
+RE15_EXIT_AT=3400#5090
+RE15_FRAMEDUMP=1800-3400/40:f
+RE15_GEGNER_POS=1,9000,-23550,1170@1790#5090
+RE15_GIVE=3:400,21:250
+RE15_INPUT_SCRIPT=W5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W0.2,L0.04,U1.3,R0.367,U4.3,A0.1,W3,A0.1,W0.5,R0.7,U6.5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W3,R0.1,U0.47,L0.1,U1.5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W29.7,L0.22,U0.4,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W1.5,U0.8,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W3,L0.04,U0.5,R0.04,U7,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,U15,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,L0.04,U2.17,R0.04,U10.7,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W0.5,U8.5,W21,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4,MA4
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=1763,-9700,1024,2
+RE15_SET_FLAG=3:48,3:49,3:100,3:239,4:23,3:89,3:22
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/kampf_linie/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/kampf_linie/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[licht] F3390 Latch -> Cut 13 Licht2 Typ 0 Farbe (210,140,80) Lage (13571,-800,-22704) Hell 6000
+[framedump] 640x480 -> f003400.ppm
+[flow] EXIT_AT: Bild 3400 in Raum 5090 erreicht -> exit
+
+## Tuerbank/Audio (debug.log)
+[audio] RE15_AUDIO_CAP_SYNC -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/kampf_linie/ton.raw (1470 Frames/Tick, kein SDL-Geraet)
+[tuer] Sequenz Archiv 2 DOOR2A Variante 0 Bit7 0 Tuer 42 Seite S314 T161 Spender FF (11 Skripte)
+[tuer] Sequenz Archiv 2 DOOR2A Variante 1 Bit7 0 Tuer 42 Seite S321 T162 Spender FF (11 Skripte)
+
+## Vergleich state.log gegen Abnahme 4 (exe cefd57402, 0x4D ueberall 350)
+alt 5764 Zeilen, neu 5764 Zeilen, verglichen 5764: gleich 5764, anders 0
+
+## Vergleich state.log gegen Vorgaenger-Abnehmer (exe 99bbe97ba)
+alt 5764 Zeilen, neu 5764 Zeilen, verglichen 5764: gleich 5764, anders 0
+
+## Vergleich state.log gegen Abnahme 3 (exe b646c72a6, 0x4D ueberall 450)
+(kein Referenzlauf /c/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/abn3/kampf_linie/state.log)
+
+## Abstand Spieler <-> 0x4D (abstand5.py, letzter Raumabschnitt, ab F1790 bis F999999)
+kampf_linie: 4 Abschnitte, Abschnitt -1 mit 3400 Bildern, davon 1611 mit Typ 4d in F1790..F999999
+  F1790  Spieler (13775,-23550) pst 4 | 4d (9000,-23550) st 0 hp -1 | Abstand 4775
+  F2739  Spieler (14200,-23607) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5200
+  F2740  Spieler (14378,-23510) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5378
+  F2755  Spieler (14380,-23509) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5380
+  F2756  Spieler (14408,-23507) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5408
+  F2775  Spieler (14546,-23644) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5547
+  F2776  Spieler (14859,-23856) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5867
+  F2777  Spieler (15177,-23950) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6190
+  F2778  Spieler (15363,-23926) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6374
+  F2841  Spieler (15380,-23895) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6389
+  F2842  Spieler (15399,-23857) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6406
+  F2843  Spieler (15413,-23824) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6419
+  F2844  Spieler (15422,-23797) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6427
+  F2845  Spieler (15429,-23769) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6433
+  F2846  Spieler (15433,-23747) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6436
+  F2847  Spieler (15434,-23732) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6437
+  F2848  Spieler (15434,-23730) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6437
+  F2849  Spieler (15434,-23727) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6436
+  F2978  Spieler (15260,-23541) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 6260
+  F2979  Spieler (14924,-23353) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5927
+  F2980  Spieler (14595,-22699) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5659
+  F2981  Spieler (14572,-22689) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5638
+  F2988  Spieler (14585,-22725) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5646
+  F2989  Spieler (14753,-22961) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5783
+  F2990  Spieler (14807,-23162) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5820
+  F2991  Spieler (14727,-23435) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5728
+  F2992  Spieler (14712,-23575) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5712
+  F2993  Spieler (14782,-23166) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5795
+  F2994  Spieler (14773,-23112) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5790
+  F2998  Spieler (14725,-22970) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5754
+  F2999  Spieler (14624,-22854) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5667
+  F3000  Spieler (14635,-22839) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5680
+  F3001  Spieler (14650,-22808) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5699
+  F3005  Spieler (14672,-22750) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5728
+  F3006  Spieler (14722,-22598) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5801
+  F3007  Spieler (14770,-22412) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5881
+  F3008  Spieler (14808,-22200) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5963
+  F3012  Spieler (14070,-22484) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5181
+  F3038  Spieler (14071,-22486) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5181
+  F3039  Spieler (14109,-22535) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5209
+  F3040  Spieler (14110,-22537) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5209
+  F3066  Spieler (14111,-22539) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5210
+  F3067  Spieler (14117,-22547) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5214
+  F3068  Spieler (14118,-22549) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5215
+  F3069  Spieler (14124,-22557) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5219
+  F3070  Spieler (14130,-22565) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5224
+  F3071  Spieler (14140,-22580) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5231
+  F3072  Spieler (14150,-22596) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5238
+  F3073  Spieler (14163,-22618) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5246
+  F3074  Spieler (14175,-22641) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5254
+  F3075  Spieler (14183,-22658) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5259
+  F3076  Spieler (14192,-22682) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5264
+  F3077  Spieler (14200,-22706) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5268
+  F3078  Spieler (14204,-22724) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5269
+  F3079  Spieler (14207,-22742) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5269
+  F3080  Spieler (14208,-22752) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5269
+  F3081  Spieler (14208,-22763) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5267
+  F3105  Spieler (14263,-22758) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5322
+  F3106  Spieler (14359,-22749) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5419
+  F3107  Spieler (14455,-22740) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5515
+  F3108  Spieler (14551,-22730) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5611
+  F3109  Spieler (14647,-22720) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5708
+  F3110  Spieler (14702,-22715) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5763
+  F3111  Spieler (14757,-22710) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5818
+  F3112  Spieler (14771,-22709) pst 1 | 4d (9000,-23550) st 0 hp -1 | Abstand 5832
+Minimum 4775 bei F1790, Maximum 6437 bei F2847
+
+## Schuesse und hp-Wechsel (schuss5.py, letzter Raumabschnitt)
+Abschnitte 4, gewaehlt -1: 3400 Bilder F1..F3400
+Schuesse (mg-Abfall): 68
+  F1915 mg 144 -> 143, Spieler (13775,-23550)
+  F1937 mg 143 -> 142, Spieler (13775,-23550)
+  F1959 mg 142 -> 141, Spieler (13775,-23550)
+  F1981 mg 141 -> 140, Spieler (13775,-23550)
+  F2003 mg 140 -> 139, Spieler (13775,-23550)
+  F2025 mg 139 -> 138, Spieler (13775,-23550)
+  F2047 mg 138 -> 137, Spieler (13775,-23550)
+  F2069 mg 137 -> 136, Spieler (13775,-23550)
+  F2091 mg 136 -> 135, Spieler (13775,-23550)
+  F2113 mg 135 -> 134, Spieler (13775,-23550)
+  F2135 mg 134 -> 133, Spieler (13775,-23550)
+  F2157 mg 133 -> 132, Spieler (13775,-23550)
+  ... letzter F3389
+hp-Wechsel: 44
+  F6 Slot 1 t=4d hp 0 -> -1 (st 4)
+  F498 Slot 2 t=30 hp 300 -> 150 (st 1)
+  F946 Slot 2 t=30 hp 150 -> 0 (st 1)
+  F1915 Slot 2 t=30 hp 0 -> 1 (st 3)
+  F2377 Slot 2 t=36 hp 600 -> 585 (st 2)
+  F2399 Slot 2 t=36 hp 585 -> 570 (st 2)
+  F2421 Slot 2 t=36 hp 570 -> 555 (st 2)
+  F2443 Slot 2 t=36 hp 555 -> 540 (st 2)
+  F2465 Slot 2 t=36 hp 540 -> 525 (st 2)
+  F2487 Slot 2 t=36 hp 525 -> 510 (st 2)
+  F2509 Slot 2 t=36 hp 510 -> 495 (st 2)
+  F2531 Slot 2 t=36 hp 495 -> 480 (st 2)
+  F2553 Slot 2 t=36 hp 480 -> 465 (st 2)
+  F2575 Slot 2 t=36 hp 465 -> 450 (st 2)
+  F2597 Slot 2 t=36 hp 450 -> 435 (st 2)
+  F2619 Slot 2 t=36 hp 435 -> 420 (st 2)
+  F2641 Slot 2 t=36 hp 420 -> 405 (st 2)
+  F2663 Slot 2 t=36 hp 405 -> 390 (st 2)
+  F2685 Slot 2 t=36 hp 390 -> 375 (st 2)
+  F2707 Slot 2 t=36 hp 375 -> 360 (st 2)
+  F2729 Slot 2 t=36 hp 360 -> 345 (st 2)
+  F2751 Slot 2 t=36 hp 345 -> 330 (st 2)
+  F2773 Slot 2 t=36 hp 330 -> 315 (st 2)
+  F2795 Slot 2 t=36 hp 315 -> 300 (st 2)
+  F2817 Slot 2 t=36 hp 300 -> 285 (st 2)
+  F2839 Slot 2 t=36 hp 285 -> 270 (st 2)
+  F2861 Slot 2 t=36 hp 270 -> 255 (st 2)
+  F2883 Slot 2 t=36 hp 255 -> 240 (st 2)
+  F2905 Slot 2 t=36 hp 240 -> 225 (st 2)
+  F2927 Slot 2 t=36 hp 225 -> 210 (st 2)
+  F2949 Slot 2 t=36 hp 210 -> 195 (st 2)
+  F2971 Slot 2 t=36 hp 195 -> 180 (st 2)
+  F2993 Slot 2 t=36 hp 180 -> 165 (st 2)
+  F3015 Slot 2 t=36 hp 165 -> 150 (st 2)
+  F3037 Slot 2 t=36 hp 150 -> 135 (st 2)
+  F3059 Slot 2 t=36 hp 135 -> 120 (st 2)
+  F3081 Slot 2 t=36 hp 120 -> 105 (st 2)
+  F3103 Slot 2 t=36 hp 105 -> 90 (st 2)
+  F3125 Slot 2 t=36 hp 90 -> 75 (st 2)
+  F3147 Slot 2 t=36 hp 75 -> 60 (st 2)
+  F3169 Slot 2 t=36 hp 60 -> 45 (st 2)
+  F3191 Slot 2 t=36 hp 45 -> 30 (st 2)
+  F3213 Slot 2 t=36 hp 30 -> 15 (st 2)
+  F3235 Slot 2 t=36 hp 15 -> -1 (st 2)
+0x4D erstes Bild F1 (600,-25300) st 0 hp 0; letztes F3400 (9000,-23550) st 0 hp -1
+
+## Annette-Protokoll (debug.log)
+[annette] ROOM6030 Wagen (Cut 6): Zugstart nicht gelaufen -> Ausgang = Tuer (main00 @0x00C72), Tuer nach 5090 = msg 10 (sub06 @0x0106A)
+[annette] F704 ROOM6030 Zugstart-Szene statt sub05 (sub07 @0x01132), 422 Byte, Tuerbank DOOR2A geladen
+[annette] F800 Ton 3 (ANNETTE_SE.VBS)
+[annette] F1010 Ton 0 (ANNETTE_SE.VBS)
+[annette] F1168 Ton 0 (ANNETTE_SE.VBS)
+[annette] F1168 Szenenstart statt sub04 (Krach): Phase 1, Form (-14700,0,-23350) Gier 3 Clip 2/37, Annette (8000,0,-24250) Clip 2/43, Cut 12
+[annette] F1350 Ton 1 (ANNETTE_SE.VBS)
+[annette] F1350 Sturz: Phase 2, Form (-1378,-5600,-23395) Gier 3983 Clip 2/0, Annette (4813,0,-22953) Clip 5/19, Cut 11
+[annette] F1365 gelandet, Drohen: Phase 3, Form (-1378,0,-23395) Gier 3983 Clip 10/0, Annette (3903,0,-22582) Clip 5/14, Cut 11
+[annette] F1407 Ton 2 (ANNETTE_SE.VBS)
+[annette] F1598 Hieb (RE2 @0x01142): Phase 4, Form (-1378,0,-23395) Gier 131 Clip 2/47, Annette (3773,0,-22529) Clip 4/0, Cut 11
+[annette] F1611 Ausholen (RE2 70,22 s): Phase 4, Form (-1378,0,-23395) Gier 131 Clip 4/0, Annette (3773,0,-22529) Clip 4/19, Cut 11
+[annette] F1640 Blut-Skala 0x3DB6: Cut 11 H 208, Klaue 14 (4231,-2176,-22579) 4492 vom Auge (RE2 0x2000 bei H 257 / 2878)
+[annette] F1640 Treffer: Phase 4, Form (0,0,-23164) Gier 131 Clip 4/14, Annette (3773,0,-22529) Clip 6/0, Cut 11
+[annette] F1640 Blut 1/15: 2 Aufrufe, 8 Plaetze, Pool 25/96
+[annette] F1654 Blut 15/15: 30 Aufrufe, 99 Plaetze, Pool 96/96
+[annette] F1674 Schnitt weg, liegt, Schrei (RE2 @0x01150/@0x01162): Phase 6, Form (0,0,-23164) Gier 131 Clip 4/49, Annette (4856,900,-22748) Clip 24/0, Cut 13
+[annette] F1776 Kampfstart (sub04), Form frei: Phase 7, Form (0,0,-23164) Gier 4039 Clip 2/40, Annette (4856,900,-22748) Clip 24/0, Cut 13
+
+## Spawn-Diagnose 0x4D (debug.log)
+[spawn-diag] Sce_em_set type=0x4D behavior=0x40 slot=0 pos=(-1790,0,-22272) dir=24
+[spawn-diag] Sce_em_set type=0x4D behavior=0x40 slot=0 pos=(600,0,-25300) dir=0
+[spawn-diag] Sce_em_set type=0x4D behavior=0x40 slot=0 pos=(600,0,-25300) dir=0
+[spawn-diag] Sce_em_set type=0x4D behavior=0x40 slot=0 pos=(600,0,-25300) dir=0

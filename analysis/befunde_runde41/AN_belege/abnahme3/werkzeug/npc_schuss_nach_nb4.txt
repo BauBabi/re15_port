@@ -1,0 +1,140 @@
+Kontrolle ohne NPC, G5       NPC -- (0,0) Kasten r 0 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME Kontrolle ohne NPC, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+Kontrolle ohne NPC, Zombie   NPC -- (0,0) Kasten r 0 | Gegner 0x10 hp 100 Kasten r 400
+   Schuss 1: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 84 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 68 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 52 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 36 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp 0 st 0 +0x93 00 | Gegner hp 20 st 2
+   SUMME Kontrolle ohne NPC, Zombie: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x40 davor, G5           NPC ja (-3000,0) Kasten r 450 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   SUMME NPC 0x40 davor, G5: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x42 davor, G5           NPC ja (-3000,0) Kasten r 450 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   SUMME NPC 0x42 davor, G5: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x45 davor, G5           NPC ja (-3000,0) Kasten r 500 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   SUMME NPC 0x45 davor, G5: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x47 davor, G5           NPC ja (-3000,0) Kasten r 450 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   SUMME NPC 0x47 davor, G5: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x49 davor, G5           NPC ja (-3000,0) Kasten r 450 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   SUMME NPC 0x49 davor, G5: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x4B davor, G5           NPC ja (-3000,0) Kasten r 300 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   SUMME NPC 0x4B davor, G5: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x4D davor, G5           NPC ja (-3000,0) Kasten r 450 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   SUMME NPC 0x4D davor, G5: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x41 davor, G5           NPC ja (-3000,0) Kasten r 0 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x41 davor, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x43 davor, G5           NPC ja (-3000,0) Kasten r 0 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x43 davor, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x44 davor, G5           NPC ja (-3000,0) Kasten r 0 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x44 davor, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x46 davor, G5           NPC ja (-3000,0) Kasten r 0 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x46 davor, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x48 davor, G5           NPC ja (-3000,0) Kasten r 0 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x48 davor, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x4A davor, G5           NPC ja (-3000,0) Kasten r 0 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x4A davor, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x4C davor, G5           NPC ja (-3000,0) Kasten r 0 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x4C davor, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x40 davor, Zombie       NPC ja (-3000,0) Kasten r 450 | Gegner 0x10 hp 100 Kasten r 400
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 100 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 100 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 100 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 100 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 100 st 0
+   SUMME NPC 0x40 davor, Zombie: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x40 davor quer 900, G5  NPC ja (-3000,900) Kasten r 450 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 2: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 3: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 4: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   Schuss 5: Rueckgabe 0 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 0
+   SUMME NPC 0x40 davor quer 900, G5: NPC getroffen 0, Gegner getroffen 0, ins Leere 5
+NPC 0x40 davor quer 2000, G5 NPC ja (-3000,2000) Kasten r 450 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x40 davor quer 2000, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0
+NPC 0x40 dahinter, G5        NPC ja (-9000,0) Kasten r 450 | Gegner 0x36 hp 345 Kasten r 1000
+   Schuss 1: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 2: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 3: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 4: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   Schuss 5: Rueckgabe 3 | NPC hp -1 st 0 +0x93 00 | Gegner hp 345 st 2
+   SUMME NPC 0x40 dahinter, G5: NPC getroffen 0, Gegner getroffen 5, ins Leere 0

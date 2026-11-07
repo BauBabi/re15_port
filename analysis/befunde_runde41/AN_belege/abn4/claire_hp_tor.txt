@@ -1,0 +1,2 @@
+Leon PSX.EXE: lbu v0,467(s2) @0x80041270, bne -> 0x80041300, lh v0,342(s2) @0x80041280, bltz v0 @0x80041288 -> 0x80041300
+Claire SLES_109.72: lbu v0,467(s2) @0x8003df24, bne -> 0x8003dfb8, lh v0,342(s2) @0x8003df34, bltz v0 @0x8003df3c -> 0x8003dfb8

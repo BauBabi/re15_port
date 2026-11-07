@@ -1,0 +1,141 @@
+# Auswertung Lauf an6000 (Abnahme 5 Spur AN, zweiter Abnehmer, Messkopie re15_pc_anabn5.exe sha256 0e9ece98360bd5b0 = 99bbe97ba)
+an6000 exit=0 Dauer=60 s Bilder: 71 exe=0e9ece98360bd5b0 19:02:57
+
+## env
+RE15_AUDIO_CAP_SYNC=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/an6000/ton.raw
+RE15_DEBUG_JUMP=6000@250
+RE15_EXIT_AT=1500#6000
+RE15_FRAMEDUMP=100-1500/20:f
+RE15_INPUT_SCRIPT=W1,A0.1,W1,A0.1,W1,A0.1,W40
+RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=100
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=4550,-8200,1024,2
+RE15_SET_FLAG=3:48,3:49,3:100
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/an6000/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/an6000/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[walk] F1500 cut=3 mo=211 af=123 frz=0 | pl pos=(4345,-3600,-9925) rot=2603
+[framedump] 640x480 -> f001500.ppm
+[flow] EXIT_AT: Bild 1500 in Raum 6000 erreicht -> exit
+
+## Tuerbank/Audio (debug.log)
+[audio] RE15_AUDIO_CAP_SYNC -> C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/laeufe/an6000/ton.raw (1470 Frames/Tick, kein SDL-Geraet)
+
+## Vergleich state.log gegen Abnahme 4 (exe cefd57402, 0x4D ueberall 350)
+alt 1751 Zeilen, neu 1751 Zeilen, verglichen 1751: gleich 1751, anders 0
+
+## Vergleich state.log gegen Vorgaenger-Abnehmer (exe 99bbe97ba)
+alt 1751 Zeilen, neu 1751 Zeilen, verglichen 1751: gleich 1751, anders 0
+
+## Vergleich state.log gegen Abnahme 3 (exe b646c72a6, 0x4D ueberall 450)
+(kein Referenzlauf /c/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/abn3/an6000/state.log)
+
+## Abstand Spieler <-> 0x4D (abstand5.py, letzter Raumabschnitt, ab F0 bis F999999)
+an6000: 2 Abschnitte, Abschnitt -1 mit 1500 Bildern, davon 1500 mit Typ 4d in F0..F999999
+  F1     Spieler (4550,-8200) pst 1 | 4d (3150,1600) st 0 hp 0 | Abstand 9899
+  F6     Spieler (4550,-8200) pst 1 | 4d (3150,1600) st 1 hp -1 | Abstand 9899
+  F7     Spieler (4550,-8200) pst 1 | 4d (3144,1526) st 1 hp -1 | Abstand 9827
+  F8     Spieler (4550,-8200) pst 1 | 4d (3107,1330) st 1 hp -1 | Abstand 9639
+  F9     Spieler (4550,-8200) pst 1 | 4d (3048,1139) st 1 hp -1 | Abstand 9459
+  F10    Spieler (4550,-8200) pst 1 | 4d (2969,956) st 1 hp -1 | Abstand 9291
+  F11    Spieler (4550,-8200) pst 1 | 4d (2870,783) st 1 hp -1 | Abstand 9139
+  F12    Spieler (4550,-8200) pst 1 | 4d (2752,622) st 1 hp -1 | Abstand 9003
+  F13    Spieler (4550,-8200) pst 1 | 4d (2653,449) st 1 hp -1 | Abstand 8855
+  F14    Spieler (4550,-8200) pst 1 | 4d (2574,266) st 1 hp -1 | Abstand 8694
+  F15    Spieler (4550,-8200) pst 1 | 4d (2515,75) st 1 hp -1 | Abstand 8522
+  F16    Spieler (4550,-8200) pst 4 | 4d (5593,-7854) st 4 hp -1 | Abstand 1099
+  F17    Spieler (4540,-8275) pst 4 | 4d (5523,-7854) st 4 hp -1 | Abstand 1069
+  F18    Spieler (4530,-8350) pst 4 | 4d (5453,-7854) st 4 hp -1 | Abstand 1048
+  F19    Spieler (4520,-8425) pst 4 | 4d (5383,-7854) st 4 hp -1 | Abstand 1035
+  F20    Spieler (4511,-8500) pst 4 | 4d (5313,-7854) st 4 hp -1 | Abstand 1030
+  F21    Spieler (4502,-8575) pst 4 | 4d (5243,-7854) st 4 hp -1 | Abstand 1034
+  F22    Spieler (4493,-8650) pst 4 | 4d (5173,-7854) st 4 hp -1 | Abstand 1047
+  F23    Spieler (4484,-8725) pst 4 | 4d (5103,-7854) st 4 hp -1 | Abstand 1069
+  F24    Spieler (4475,-8800) pst 4 | 4d (5033,-7854) st 4 hp -1 | Abstand 1098
+  F25    Spieler (4466,-8875) pst 4 | 4d (4963,-7854) st 4 hp -1 | Abstand 1136
+  F26    Spieler (4457,-8950) pst 4 | 4d (4893,-7854) st 4 hp -1 | Abstand 1180
+  F27    Spieler (4448,-9025) pst 4 | 4d (4823,-7854) st 4 hp -1 | Abstand 1230
+  F28    Spieler (4439,-9100) pst 4 | 4d (4753,-7854) st 4 hp -1 | Abstand 1285
+  F29    Spieler (4430,-9175) pst 4 | 4d (4683,-7854) st 4 hp -1 | Abstand 1345
+  F30    Spieler (4421,-9250) pst 4 | 4d (4613,-7854) st 4 hp -1 | Abstand 1409
+  F31    Spieler (4412,-9325) pst 4 | 4d (4543,-7854) st 4 hp -1 | Abstand 1477
+  F32    Spieler (4403,-9400) pst 4 | 4d (4473,-7854) st 4 hp -1 | Abstand 1548
+  F33    Spieler (4394,-9475) pst 4 | 4d (4403,-7854) st 4 hp -1 | Abstand 1621
+  F34    Spieler (4385,-9550) pst 4 | 4d (4333,-7854) st 4 hp -1 | Abstand 1697
+  F35    Spieler (4376,-9625) pst 4 | 4d (4263,-7854) st 4 hp -1 | Abstand 1775
+  F36    Spieler (4368,-9700) pst 4 | 4d (4193,-7854) st 4 hp -1 | Abstand 1854
+  F37    Spieler (4360,-9775) pst 4 | 4d (4123,-7854) st 4 hp -1 | Abstand 1936
+  F38    Spieler (4352,-9850) pst 4 | 4d (4053,-7854) st 4 hp -1 | Abstand 2018
+  F39    Spieler (4345,-9925) pst 4 | 4d (3983,-7854) st 4 hp -1 | Abstand 2102
+  F40    Spieler (4345,-9925) pst 4 | 4d (3913,-7854) st 4 hp -1 | Abstand 2116
+  F41    Spieler (4345,-9925) pst 4 | 4d (3843,-7854) st 4 hp -1 | Abstand 2131
+  F42    Spieler (4345,-9925) pst 4 | 4d (3773,-7854) st 4 hp -1 | Abstand 2149
+  F43    Spieler (4345,-9925) pst 4 | 4d (3703,-7854) st 4 hp -1 | Abstand 2168
+  F44    Spieler (4345,-9925) pst 4 | 4d (3633,-7854) st 4 hp -1 | Abstand 2190
+  F45    Spieler (4345,-9925) pst 4 | 4d (3563,-7854) st 4 hp -1 | Abstand 2214
+  F46    Spieler (4345,-9925) pst 4 | 4d (3493,-7854) st 4 hp -1 | Abstand 2239
+  F47    Spieler (4345,-9925) pst 4 | 4d (3423,-7854) st 4 hp -1 | Abstand 2267
+  F48    Spieler (4345,-9925) pst 4 | 4d (3353,-7854) st 4 hp -1 | Abstand 2296
+  F49    Spieler (4345,-9925) pst 4 | 4d (3283,-7854) st 4 hp -1 | Abstand 2327
+  F50    Spieler (4345,-9925) pst 4 | 4d (3213,-7854) st 4 hp -1 | Abstand 2360
+  F51    Spieler (4345,-9925) pst 4 | 4d (3143,-7854) st 4 hp -1 | Abstand 2395
+  F52    Spieler (4345,-9925) pst 4 | 4d (3073,-7854) st 4 hp -1 | Abstand 2430
+  F53    Spieler (4345,-9925) pst 4 | 4d (3003,-7854) st 4 hp -1 | Abstand 2468
+  F54    Spieler (4345,-9925) pst 4 | 4d (2933,-7854) st 4 hp -1 | Abstand 2507
+  F55    Spieler (4345,-9925) pst 4 | 4d (2863,-7854) st 4 hp -1 | Abstand 2547
+  F56    Spieler (4345,-9925) pst 4 | 4d (2793,-7854) st 4 hp -1 | Abstand 2588
+  F57    Spieler (4345,-9925) pst 4 | 4d (2723,-7854) st 4 hp -1 | Abstand 2631
+  F58    Spieler (4345,-9925) pst 4 | 4d (2653,-7854) st 4 hp -1 | Abstand 2674
+  F59    Spieler (4345,-9925) pst 4 | 4d (2583,-7854) st 4 hp -1 | Abstand 2719
+  F231   Spieler (4345,-9925) pst 4 | 4d (2575,-7923) st 4 hp -1 | Abstand 2672
+  F232   Spieler (4345,-9925) pst 4 | 4d (2562,-7991) st 4 hp -1 | Abstand 2630
+  F233   Spieler (4345,-9925) pst 4 | 4d (2544,-8058) st 4 hp -1 | Abstand 2594
+  F234   Spieler (4345,-9925) pst 4 | 4d (2521,-8124) st 4 hp -1 | Abstand 2563
+  F235   Spieler (4345,-9925) pst 4 | 4d (2493,-8188) st 4 hp -1 | Abstand 2539
+  F236   Spieler (4345,-9925) pst 4 | 4d (2465,-8252) st 4 hp -1 | Abstand 2517
+  F237   Spieler (4345,-9925) pst 4 | 4d (2437,-8316) st 4 hp -1 | Abstand 2496
+  F238   Spieler (4345,-9925) pst 4 | 4d (2409,-8380) st 4 hp -1 | Abstand 2477
+  F239   Spieler (4345,-9925) pst 4 | 4d (2381,-8444) st 4 hp -1 | Abstand 2460
+  F240   Spieler (4345,-9925) pst 4 | 4d (2353,-8508) st 4 hp -1 | Abstand 2445
+  F241   Spieler (4345,-9925) pst 4 | 4d (2325,-8572) st 4 hp -1 | Abstand 2431
+  F242   Spieler (4345,-9925) pst 4 | 4d (2297,-8636) st 4 hp -1 | Abstand 2420
+  F243   Spieler (4345,-9925) pst 4 | 4d (2269,-8700) st 4 hp -1 | Abstand 2410
+  F244   Spieler (4345,-9925) pst 4 | 4d (2241,-8764) st 4 hp -1 | Abstand 2403
+  F245   Spieler (4345,-9925) pst 4 | 4d (2213,-8828) st 4 hp -1 | Abstand 2398
+  F246   Spieler (4345,-9925) pst 4 | 4d (2185,-8892) st 4 hp -1 | Abstand 2394
+  F247   Spieler (4345,-9925) pst 4 | 4d (2157,-8956) st 4 hp -1 | Abstand 2393
+  F248   Spieler (4345,-9925) pst 4 | 4d (2129,-9020) st 4 hp -1 | Abstand 2394
+  F249   Spieler (4345,-9925) pst 4 | 4d (2101,-9084) st 4 hp -1 | Abstand 2396
+  F250   Spieler (4345,-9925) pst 4 | 4d (2073,-9148) st 4 hp -1 | Abstand 2401
+  F251   Spieler (4345,-9925) pst 4 | 4d (2045,-9212) st 4 hp -1 | Abstand 2408
+  F252   Spieler (4345,-9925) pst 4 | 4d (2017,-9276) st 4 hp -1 | Abstand 2417
+  F253   Spieler (4345,-9925) pst 4 | 4d (1990,-9340) st 4 hp -1 | Abstand 2427
+  F254   Spieler (4345,-9925) pst 4 | 4d (1963,-9404) st 4 hp -1 | Abstand 2438
+  F255   Spieler (4345,-9925) pst 4 | 4d (1936,-9468) st 4 hp -1 | Abstand 2452
+  F256   Spieler (4345,-9925) pst 4 | 4d (1909,-9532) st 4 hp -1 | Abstand 2467
+  F257   Spieler (4345,-9925) pst 4 | 4d (1882,-9596) st 4 hp -1 | Abstand 2485
+  F258   Spieler (4345,-9925) pst 4 | 4d (1855,-9660) st 4 hp -1 | Abstand 2504
+  F259   Spieler (4345,-9925) pst 4 | 4d (1828,-9724) st 4 hp -1 | Abstand 2525
+  F260   Spieler (4345,-9925) pst 4 | 4d (1801,-9788) st 4 hp -1 | Abstand 2548
+  F261   Spieler (4345,-9925) pst 4 | 4d (1774,-9852) st 4 hp -1 | Abstand 2572
+  F262   Spieler (4345,-9925) pst 4 | 4d (1747,-9916) st 4 hp -1 | Abstand 2598
+  F263   Spieler (4345,-9925) pst 4 | 4d (1721,-9981) st 4 hp -1 | Abstand 2625
+  F294   Spieler (4345,-9925) pst 1 | 4d (-10507,8646) st 4 hp -1 | Abstand 23779
+Minimum 1030 bei F20, Maximum 23779 bei F294
+
+## Schuesse und hp-Wechsel (schuss5.py, letzter Raumabschnitt)
+Abschnitte 2, gewaehlt -1: 1500 Bilder F1..F1500
+Schuesse (mg-Abfall): 0
+hp-Wechsel: 1
+  F6 Slot 1 t=4d hp 0 -> -1 (st 1)
+0x4D erstes Bild F1 (3150,1600) st 0 hp 0; letztes F1500 (-10507,8646) st 4 hp -1
+
+## Annette-Protokoll (debug.log)
+
+## Spawn-Diagnose 0x4D (debug.log)
+[spawn-diag] Sce_em_set type=0x4D behavior=0x00 slot=0 pos=(3150,-3600,1600) dir=1024
