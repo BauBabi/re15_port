@@ -12,7 +12,7 @@
 #     wand_draussen_max=0"), Kamera-Programm DURCHBRUCH/SEITE/ANGRIFF/FREI und FINISHER (RE2 @0x80100fbc-ff4), danach
 #     haelt der Finisher-Schnitt bis zum Ende des Raums (Entscheid B6: kein Kamerawechsel, keine RE1.5-Todeskamera).
 #     Gemessen 2026-10-24 (Nachbesserung 2, Lauf A): Intro F6-F280 (Start (-7345,-13277) Gier 576 -> End-Gier 1600
-#     auf Leon), Biss F403 -> FINISHER Cut 6, Game Over ~F677 -> EXIT_AT 650 liegt davor.
+#     auf Leon), Biss F403 -> FINISHER Cut 6, Game Over ~F677 -> EXIT_AT 650 liegt davor. G2-RE2 NB4 (RE2-Trefferreaktion): toedlicher Biss F310, letzte Finisher-Zeile F571 -> EXIT_AT 560.
 #   Lauf "dash" (Leon im Suedbecken (-4000,-24000) im Bild der Eintrittskamera Cut 0, Messhaken
 #     RE15_R39_MESS_SPIELER_HP=100): der Intro endet im Nordbecken, die Verfolgung kommt durch den Westkanal in Leons
 #     Zone -> RE2-Dash (Clip 2 -> 3, gr2_dash_planen: Vordrehung 1139 -> 624 am Suedausgang), Putz je Stark-Schuetteln (Spur P NB1),
@@ -238,7 +238,9 @@ re15_start_spiel(_rv 300
     RE15_R41_HP_AT=175:60       # Querbezug Runde 41 Spur F: Leons HP wie mit den zwei Spinnen-Treffern (Kopf)
     "RE15_GATOR_KANISTER=-6000,-15000"
     RE15_STATE_LOG=state.log
-    "RE15_EXIT_AT=650#2090"
+    "RE15_EXIT_AT=560#2090"     # G2-RE2 NB4 (T): RE2-Trefferreaktion statt RE1.5-Niederwurf - die Figur ist nach 20 statt 41-92 Bildern wieder treffbar
+                                # (+0x1D3 frei @0x801031d4), der zweite Biss (HP 60 - 60 = 0, dann -60: Tod, FUN_800401d4) kommt F310, Finisher F310..F571, danach
+                                # Game Over (Raum verlassen vor F650, gemessen Bau 3d53ca60). 560 liegt im Finisher (Halt-Zeilen F311..F551, Kamera ab F310).
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")
@@ -334,7 +336,7 @@ endif()
 # demselben Cut, und KEIN cam= im Zustandslog weicht ab dem Finisher-Bild davon ab (keine RE1.5-Todeskamera).
 if(_fin_halt LESS 10 OR NOT "${_fin_halt_falsch}" STREQUAL "")
     file(REMOVE "${_exe_kopie}")
-    message(FATAL_ERROR "r41_re2gator: Finisher-Halt ${_fin_halt} Zeilen (erwartet >= 10 bis EXIT_AT 650), abweichend: '${_fin_halt_falsch}'")
+    message(FATAL_ERROR "r41_re2gator: Finisher-Halt ${_fin_halt} Zeilen (erwartet >= 10 bis EXIT_AT 560), abweichend: '${_fin_halt_falsch}'")
 endif()
 file(STRINGS "${_dir}/state.log" _zl)
 set(_mo6 0)
@@ -491,8 +493,10 @@ re15_start_spiel(_rv 300
     "RE15_GATOR_KANISTER=-1500,-23400"
     "RE15_AUTOPILOT=xz:5500,-25500\;xz:5500,-20500\;xz:-1000,-21000\;xz:-1000,-25500\;xz:5500,-25500\;xz:5500,-20500\;xz:-1000,-21000\;noact"
     RE15_AUTOPILOT_ROOM=2090
-    "RE15_EXIT_AT=1700#2090"   # Querbezug Runde 41 Spur F (Kopf): ohne Spinnen Aufnahme F1227 statt F1119 -> Fenster +100;
-                               # Spur G2 NB3 (f): Aufnahme F1447 statt F1227 -> Fenster +200 (Schranke >= 200 Bilder, Abweichung 0 bleibt)
+    "RE15_EXIT_AT=1900#2090"   # Querbezug Runde 41 Spur F (Kopf): ohne Spinnen Aufnahme F1227 statt F1119 -> Fenster +100;
+                               # Spur G2 NB3 (f): Aufnahme F1447 statt F1227 -> Fenster +200 (Schranke >= 200 Bilder, Abweichung 0 bleibt);
+                               # Spur G2-RE2 NB4 (T): RE2-Trefferreaktion statt Niederwurf, Leon liegt anders am Autopilot-Weg -> Stufe 1 F1653, angehaengt
+                               # F1665 (gemessen Bau 3d53ca60) -> Fenster +200
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")
@@ -527,6 +531,9 @@ re15_start_spiel(_rv 300
     SDL_ASSERT=always_ignore
     RE15_DEBUG_JUMP=20A0@250 "RE15_FIRE_AOT=0@40#20A0" RE15_GB_TEST=1
     RE15_SET_FLAG=9:110,9:113   # Querbezug Runde 41 Spur F (Kopf: Szene gesehen + Tor offen)
+    RE15_R41_HP_AT=175:130      # G2-RE2 NB4 (T): RE2-Schaden 60 je Biss (@0x8010168c-a0) statt 50 - mit HP 100 stirbt Leon schon am zweiten Hochbiss (F522,
+                                # gemessen Bau 3d53ca60), die GIER-WACHE (300 Bildpaare) wird nie erreicht. Messhaken HP 130 = wie bisher drei Hochbisse bis zum Tod
+                                # (130 - 60 - 60 = 10, dann -50 < -14: Tod, FUN_800401d4)
     RE15_STATE_LOG=state.log
     "RE15_EXIT_AT=251#1240"
     "${_exe_kopie}")

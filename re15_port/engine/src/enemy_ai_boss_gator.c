@@ -2824,7 +2824,12 @@ static void gb_takt(int slot)
         if (e->motion == 4) {
             e->anim_frame++;
             if (!g->bite_done && e->anim_frame >= 6 && e->anim_frame <= 34
-                && pl->hit_react == 0 && dist < 3900) {   /* DESIGN: Kantenstand +
+                && pl->hit_react == 0 && dist < 3900
+                && (re15_gator_treffer_alt() || re15_gr2_biss_cd_rest(slot) == 0)) {   /* Runde 41 G2-RE2 NB4 (T): RE2-Bisssperre +0x238 (= 70 nach dem Treffer
+                                               * @0x801016b0-b4; solange != 0 bricht RE2 den Angriff ab: `lbu v0,568(s0) / beq v0,zero / sw 0x101,4(s0)`
+                                               * @0x80100cb4-c4). Vorher deckte der RE1.5-Niederwurf (41-92 Bilder gesperrt) das Hochbiss-Fenster ab; die
+                                               * RE2-Reaktion sperrt nur 20 Bilder -> zweiter Biss im selben Fenster (gemessen exe re2gator belagerung F522/F542) */
+                                              /* DESIGN: Kantenstand +
                                                * gehobener Kopf erreicht die Flaeche;
                                                * 3400->3900 + Fenster geweitet
                                                * (Biss-Sweep 2026-09-11: die
