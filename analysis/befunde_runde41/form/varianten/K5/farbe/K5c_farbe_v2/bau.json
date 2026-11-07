@@ -4,56 +4,176 @@
   "zonen": {
    "b1|Schwanz": {
     "d": [
-     -16.5,
+     -21.3,
+     5.0,
+     -12.7
+    ],
+    "_satt": [
+     true,
+     false,
+     false
+    ],
+    "_kette": [
+     18.0,
+     5.7,
+     1.9
+    ],
+    "_d_vor": [
+     -21.3,
      5.0,
      -12.7
     ]
    },
    "b1|Ruecken/Flanke": {
     "d": [
-     -4.0,
+     -0.8,
+     8.0,
+     -19.2
+    ],
+    "_satt": [
+     false,
+     false,
+     false
+    ],
+    "_kette": [
+     24.2,
+     5.1,
+     1.1
+    ],
+    "_d_vor": [
+     -0.8,
      8.0,
      -19.2
     ]
    },
    "b1|Hinterbein l (W)": {
     "d": [
-     -8.9,
+     -7.0,
+     18.6,
+     -31.6
+    ],
+    "_satt": [
+     false,
+     false,
+     false
+    ],
+    "_kette": [
+     24.2,
+     0.5,
+     -1.3
+    ],
+    "_d_vor": [
+     -7.1,
      18.6,
      -31.6
     ]
    },
    "b1|Hinterbein r (W)": {
     "d": [
-     -17.0,
+     -22.7,
+     14.9,
+     -51.4
+    ],
+    "_satt": [
+     true,
+     false,
+     false
+    ],
+    "_kette": [
+     23.5,
+     -0.5,
+     -3.6
+    ],
+    "_d_vor": [
+     -22.7,
      14.9,
      -51.4
     ]
    },
    "b1|Vorderglied r (W)": {
     "d": [
-     -6.9,
+     -8.1,
+     -5.6,
+     -5.9
+    ],
+    "_satt": [
+     false,
+     false,
+     false
+    ],
+    "_kette": [
+     21.3,
+     -0.4,
+     -2.8
+    ],
+    "_d_vor": [
+     -8.2,
      -5.6,
      -5.9
     ]
    },
    "b2|Oberkiefer": {
     "d": [
-     -0.2,
+     1.6,
+     7.0,
+     -7.5
+    ],
+    "_satt": [
+     false,
+     false,
+     false
+    ],
+    "_kette": [
+     16.7,
+     18.3,
+     10.5
+    ],
+    "_d_vor": [
+     1.6,
      7.0,
      -7.5
     ]
    },
    "b2|Kopf/Rumpf": {
     "d": [
-     1.7,
+     5.8,
+     2.6,
+     -9.2
+    ],
+    "_satt": [
+     false,
+     false,
+     false
+    ],
+    "_kette": [
+     18.8,
+     15.7,
+     4.5
+    ],
+    "_d_vor": [
+     5.8,
      2.6,
      -9.2
     ]
    },
    "b2|Unterkiefer": {
     "d": [
-     43.3,
+     41.9,
+     26.0,
+     19.2
+    ],
+    "_satt": [
+     true,
+     false,
+     false
+    ],
+    "_kette": [
+     57.5,
+     23.5,
+     15.5
+    ],
+    "_d_vor": [
+     41.9,
      26.0,
      19.2
     ]
@@ -63,10 +183,40 @@
      0.0,
      0.0,
      0.0
+    ],
+    "_satt": [
+     false,
+     false,
+     false
+    ],
+    "_kette": [
+     32.4,
+     26.1,
+     21.0
+    ],
+    "_d_vor": [
+     0.0,
+     0.0,
+     0.0
     ]
    },
    "b2|Klaue l (W)": {
     "d": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "_satt": [
+     false,
+     false,
+     false
+    ],
+    "_kette": [
+     30.8,
+     28.0,
+     22.8
+    ],
+    "_d_vor": [
      0.0,
      0.0,
      0.0
@@ -78,7 +228,7 @@
    15.8,
    6.9
   ],
-  "g_haut": 2.2199999999999998,
+  "g_haut": 2.22,
   "start": "kf_eich3.json (r3-Endstand), g = 1,48 x 1,5 (V8)",
   "kettenstreuung": {
    "saaten": [
@@ -242,69 +392,62 @@
   }
  },
  "herkunft": {
-  "koernung": "K5c-eigene Struktur (H2), sigma 2.5; Glanz/Gaumen entfernt 3236 Texel",
+  "koernung": "Fleisch: K5c-eigene Struktur (H2) sigma 2.5 laengs 13.5 Texel; Haut/Kopf: Feinkorn H2 - Gauss 1.0, sd 2.30 (RE2-G4); Glanz/Gaumen entfernt 3236 Texel",
   "farbkarte": "Screenshot T (Bild 1 9357 / Bild 2 13048 Texel sichtbar), Spiegelpunkt +14748, harmonisch, Glaettung 2.5",
-  "form": "Hohlraum K_NAH 755 (pi x 15,5^2), K_FERN je Mesh pi x Gliedhalbbreite^2; L* = -10.43 x Standardwert (G4 14,9)",
-  "fleisch_bereinigung": "vorher 15059, nachher 13813 Texel",
-  "fleisch": "Screenshot-Mehrheit 1211, Rumpf-Unterseite 13768, Bild-1-Ruecken-Wunde 1025 Texel (Start Texel (104,8) Original-a* 28.5; 1025 Texel, Anteil 0.166 der Zonen-Bildpunkte); zusammen 22.0 % der Koerpertexel",
-  "wunden": "Rand < 2 Texel G4-Dunkelrot 6352, Innenrand < 4 Texel G4-Fleischrot 3773, Kern [1797, 1891] Texel",
+  "form": "Hohlraum K_NAH 755 (pi x 15,5^2), K_FERN je Mesh pi x Gliedhalbbreite^2; L* = -11.85 x Standardwert (G4 14,9)",
+  "fleisch_bereinigung": "vorher 16255, nachher 15158 Texel",
+  "fleisch": "Screenshot-Mehrheit 1211, Rumpf-Unterseite 14946, Bild-1-Ruecken-Wunde 1043 Texel (Start Texel (104,8) Original-a* 28.5; 1043 Texel, Anteil 0.181 der Zonen-Bildpunkte); zusammen 24.1 % der Koerpertexel",
+  "wunden": "Rand < 2 Texel G4-Dunkelrot 6716, Innenrand < 4 Texel G4-Fleischrot 4189, Kern [2079, 2174] Texel",
   "hautseiten": "k-Mittel Bild 1 und 2: warm [5.800000190734863, 8.199999809265137], kuehl [2.0, -6.599999904632568]; Warm-Anteil Bildpunkte 0.537 -> Schwelle 0.414; warm 53.9 % der Haut; g 2.220",
   "linien": {
    "adern": {
-    "linien": 331,
-    "saatabstand": 1.15,
-    "mass": 9.42,
-    "je1000": 2.87,
+    "linien": 133,
+    "saatabstand": 8.94,
+    "mass": 9.92,
+    "je1000": 3.19,
     "ziel": 12.65,
     "je1000_max": 3.45,
-    "laenge_med_gezeichnet": 5.8
+    "laenge_med_gezeichnet": 8.7
    },
    "falten": {
-    "linien": 35,
-    "saatabstand": 26.75,
-    "mass": 6.65,
-    "je1000": 2.65,
+    "linien": 234,
+    "saatabstand": 8.94,
+    "mass": 5.08,
+    "je1000": 3.09,
     "ziel": 5.35,
     "je1000_max": 3.5,
-    "laenge_med_gezeichnet": 12.7
+    "laenge_med_gezeichnet": 6.9
    },
-   "kopf_laengs": {
-    "linien": 6,
-    "saatabstand": 40.34,
-    "mass": 1.2,
-    "je1000": 0.0,
-    "ziel": 1.22,
-    "je1000_max": null,
-    "laenge_med_gezeichnet": 19.1
-   },
+   "kopf_laengs": {},
    "kopf_quer": {},
    "texel": {
-    "adern": 3670,
-    "falten": 593,
-    "kopf": 299
+    "adern": 2039,
+    "falten": 2581,
+    "kopf": 0
    }
   },
   "kiefer": "Band Screenshot Bild 2 1161 Texel; Maulinneres RE2-G4 (10, 44, 60, 40), 1 Kopien; Zahnfleisch a*/19.30",
   "kralle": "RE2-G4 (231, 200, 20, 50), 1 Kopien",
   "augen": "Augenfeld + 218 Texel r <= 6 px um E24 -> [13.4, 15.8, 6.9]",
-  "schwanz_e9": "Glied-L* vorher [12.8, 6.0, 10.4, 19.4, 22.4]",
-  "farbfenster": "ausserhalb -125..80 Grad C* <= 5.5: 1260; Blau-Klasse (b* < -6, C* > 8) auf C* 8: 30916"
+  "schwanz_e9": "Glied-L* vorher [14.8, 6.2, 8.3, 18.8, 21.0]",
+  "farbfenster": "ausserhalb -125..80 Grad C* <= 5.5: 1281; Blau-Klasse (b* < -6, C* > 8) auf C* 8: 30073",
+  "haut_bild1_albedo_C": 9.05
  },
  "info": {
   "konflikt_zeilen": 0,
   "b_max_zone": {
-   "b1|Schwanz": 16.867706140852654,
-   "b1|Ruecken/Flanke": 16.375164182552304,
-   "b1|Hinterbein l (W)": 17.27535722924035,
-   "b1|Hinterbein r (W)": 12.939048534838259,
-   "b1|Vorderglied r (W)": 14.52161015587565,
-   "b2|Oberkiefer": 34.19124871922216,
-   "b2|Kopf/Rumpf": 27.172501952464803,
+   "b1|Schwanz": 15.444776332316453,
+   "b1|Ruecken/Flanke": 15.68500286962815,
+   "b1|Hinterbein l (W)": 22.933439868671343,
+   "b1|Hinterbein r (W)": 17.609817690885066,
+   "b1|Vorderglied r (W)": 15.676921471162899,
+   "b2|Oberkiefer": 32.8282108922921,
+   "b2|Kopf/Rumpf": 27.582470103073153,
    "b2|Unterkiefer": 0.0,
-   "b2|Klaue r (W)": 34.28573467263727,
-   "b2|Klaue l (W)": 32.020179447388905
+   "b2|Klaue r (W)": 34.774878383583015,
+   "b2|Klaue l (W)": 33.66381102833388
   },
-  "clut_blau_stufen": 110
+  "clut_blau_stufen": 98
  },
  "konstanten": {
   "mesh_geometrie": {
@@ -484,26 +627,19 @@
    45.0,
    100.0
   ],
-  "K_FORM": 10.432,
-  "rumpf_ny_schwelle": 0.825,
+  "K_FORM": 11.851,
+  "rumpf_ny_schwelle": 0.863,
   "warm_schwelle": 0.414,
   "warm_anteil_bild": 0.537,
   "fleisch_koernung": {
-   "faktor": 1.0,
-   "halbierung_faktor": 0.196,
+   "faktor": 0.0,
+   "halbierung_faktor": 0.0,
    "sdL_pool_ohne": 11.2,
    "ziel": 11.2
   },
-  "kopf_koernung": {
-   "faktor": 2.0,
-   "canny": 25.37,
-   "hf_fft": 0.258,
-   "ziel": 29.6,
-   "hf_max": 0.258
-  },
   "farbton_drehung": {
-   "k_grad": 14.22,
-   "sd": 9.4,
+   "k_grad": 15.26,
+   "sd": 9.41,
    "ziel": 9.4
   },
   "SAAT_MAL": 41,
@@ -520,9 +656,9 @@
    1.4,
    10.5
   ],
-  "KOPF": [
-   2.1,
-   16.2
+  "KORN": [
+   1.0,
+   2.3
   ],
   "SIGMA_WINKEL": 0.5802,
   "WUND": [
@@ -551,7 +687,7 @@
     18.0
    ]
   ],
-  "RUECKEN_ZIEL": 0.165,
+  "RUECKEN_ZIEL": 0.18,
   "A_MAX_HAUT": 11.0,
   "ZAHNFLEISCH_A": 19.3,
   "K_GRAPH": 8,

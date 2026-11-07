@@ -1,0 +1,36 @@
+Saat 15 11/11 GRUEN
+  K3 Bild1 dE je Zone (max)                          {'Schwanz': 3.4, 'Ruecken/Flanke': 3.0, 'Hinterbein l (W)':  GRUEN
+  K4 Bild1 Rot-Klasse Figur % / Original             (5.4, 5.2)                                                   GRUEN
+  K5 Bild1 Hell-Klasse Ruecken % / W Figur %         (10.7, 9.9, 0.3, 0.5)                                        GRUEN
+  K6 Bild2 Figur dE / Chroma                         (1.1, 23.2, 25.6)                                            GRUEN
+  K7 Bild2 Unterkiefer dE / a*                       (1.9, 23.3, 24.9)                                            GRUEN
+  K8 Bild2 Oberkiefer dE                             3.5                                                          GRUEN
+  K9 Bild2 Klauen a* (r, l) / Original               (26.6, 24.1, 27.9, 22.2)                                     GRUEN
+  K10 Bild2 Augenpunkte L*max (r, l)                 (14.6, 15.9)                                                 GRUEN
+  K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)     (7.0, 7.8)                                                   GRUEN
+  K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)  (8.4, 8.0)                                                   GRUEN
+  K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original   (8.8, 11.9)                                                  GRUEN
+Saat 12345 11/11 GRUEN
+  K3 Bild1 dE je Zone (max)                          {'Schwanz': 3.4, 'Ruecken/Flanke': 3.1, 'Hinterbein l (W)':  GRUEN
+  K4 Bild1 Rot-Klasse Figur % / Original             (5.3, 5.2)                                                   GRUEN
+  K5 Bild1 Hell-Klasse Ruecken % / W Figur %         (10.5, 9.9, 0.3, 0.5)                                        GRUEN
+  K6 Bild2 Figur dE / Chroma                         (1.1, 23.2, 25.6)                                            GRUEN
+  K7 Bild2 Unterkiefer dE / a*                       (1.9, 23.3, 24.9)                                            GRUEN
+  K8 Bild2 Oberkiefer dE                             3.4                                                          GRUEN
+  K9 Bild2 Klauen a* (r, l) / Original               (26.6, 24.1, 28.0, 22.2)                                     GRUEN
+  K10 Bild2 Augenpunkte L*max (r, l)                 (17.0, 13.2)                                                 GRUEN
+  K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)     (7.0, 7.9)                                                   GRUEN
+  K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)  (8.4, 8.0)                                                   GRUEN
+  K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original   (9.0, 11.9)                                                  GRUEN
+Saat 7 11/11 GRUEN
+  K3 Bild1 dE je Zone (max)                          {'Schwanz': 3.4, 'Ruecken/Flanke': 3.0, 'Hinterbein l (W)':  GRUEN
+  K4 Bild1 Rot-Klasse Figur % / Original             (5.4, 5.2)                                                   GRUEN
+  K5 Bild1 Hell-Klasse Ruecken % / W Figur %         (10.7, 9.9, 0.3, 0.5)                                        GRUEN
+  K6 Bild2 Figur dE / Chroma                         (1.1, 23.2, 25.6)                                            GRUEN
+  K7 Bild2 Unterkiefer dE / a*                       (2.0, 23.2, 24.9)                                            GRUEN
+  K8 Bild2 Oberkiefer dE                             3.6                                                          GRUEN
+  K9 Bild2 Klauen a* (r, l) / Original               (26.5, 24.1, 28.1, 22.2)                                     GRUEN
+  K10 Bild2 Augenpunkte L*max (r, l)                 (16.7, 14.9)                                                 GRUEN
+  K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)     (6.9, 7.8)                                                   GRUEN
+  K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)  (8.4, 8.0)                                                   GRUEN
+  K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original   (8.9, 11.9)                                                  GRUEN

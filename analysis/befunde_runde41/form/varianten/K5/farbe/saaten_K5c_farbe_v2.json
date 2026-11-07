@@ -1,0 +1,140 @@
+{
+ "15": {
+  "K3 Bild1 dE je Zone (max)": {
+   "wert": "{'Schwanz': 3.4, 'Ruecken/Flanke': 3.0, 'Hinterbein l (W)': 3.2, 'Hinterbein r (W)': 4.4, 'Vorderglied r (W)': 0.9}",
+   "ok": true
+  },
+  "K4 Bild1 Rot-Klasse Figur % / Original": {
+   "wert": "(5.4, 5.2)",
+   "ok": true
+  },
+  "K5 Bild1 Hell-Klasse Ruecken % / W Figur %": {
+   "wert": "(10.7, 9.9, 0.3, 0.5)",
+   "ok": true
+  },
+  "K6 Bild2 Figur dE / Chroma": {
+   "wert": "(1.1, 23.2, 25.6)",
+   "ok": true
+  },
+  "K7 Bild2 Unterkiefer dE / a*": {
+   "wert": "(1.9, 23.3, 24.9)",
+   "ok": true
+  },
+  "K8 Bild2 Oberkiefer dE": {
+   "wert": "3.5",
+   "ok": true
+  },
+  "K9 Bild2 Klauen a* (r, l) / Original": {
+   "wert": "(26.6, 24.1, 27.9, 22.2)",
+   "ok": true
+  },
+  "K10 Bild2 Augenpunkte L*max (r, l)": {
+   "wert": "(14.6, 15.9)",
+   "ok": true
+  },
+  "K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)": {
+   "wert": "(7.0, 7.8)",
+   "ok": true
+  },
+  "K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)": {
+   "wert": "(8.4, 8.0)",
+   "ok": true
+  },
+  "K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original": {
+   "wert": "(8.8, 11.9)",
+   "ok": true
+  }
+ },
+ "12345": {
+  "K3 Bild1 dE je Zone (max)": {
+   "wert": "{'Schwanz': 3.4, 'Ruecken/Flanke': 3.1, 'Hinterbein l (W)': 3.2, 'Hinterbein r (W)': 4.5, 'Vorderglied r (W)': 0.8}",
+   "ok": true
+  },
+  "K4 Bild1 Rot-Klasse Figur % / Original": {
+   "wert": "(5.3, 5.2)",
+   "ok": true
+  },
+  "K5 Bild1 Hell-Klasse Ruecken % / W Figur %": {
+   "wert": "(10.5, 9.9, 0.3, 0.5)",
+   "ok": true
+  },
+  "K6 Bild2 Figur dE / Chroma": {
+   "wert": "(1.1, 23.2, 25.6)",
+   "ok": true
+  },
+  "K7 Bild2 Unterkiefer dE / a*": {
+   "wert": "(1.9, 23.3, 24.9)",
+   "ok": true
+  },
+  "K8 Bild2 Oberkiefer dE": {
+   "wert": "3.4",
+   "ok": true
+  },
+  "K9 Bild2 Klauen a* (r, l) / Original": {
+   "wert": "(26.6, 24.1, 28.0, 22.2)",
+   "ok": true
+  },
+  "K10 Bild2 Augenpunkte L*max (r, l)": {
+   "wert": "(17.0, 13.2)",
+   "ok": true
+  },
+  "K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)": {
+   "wert": "(7.0, 7.9)",
+   "ok": true
+  },
+  "K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)": {
+   "wert": "(8.4, 8.0)",
+   "ok": true
+  },
+  "K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original": {
+   "wert": "(9.0, 11.9)",
+   "ok": true
+  }
+ },
+ "7": {
+  "K3 Bild1 dE je Zone (max)": {
+   "wert": "{'Schwanz': 3.4, 'Ruecken/Flanke': 3.0, 'Hinterbein l (W)': 3.2, 'Hinterbein r (W)': 4.5, 'Vorderglied r (W)': 0.8}",
+   "ok": true
+  },
+  "K4 Bild1 Rot-Klasse Figur % / Original": {
+   "wert": "(5.4, 5.2)",
+   "ok": true
+  },
+  "K5 Bild1 Hell-Klasse Ruecken % / W Figur %": {
+   "wert": "(10.7, 9.9, 0.3, 0.5)",
+   "ok": true
+  },
+  "K6 Bild2 Figur dE / Chroma": {
+   "wert": "(1.1, 23.2, 25.6)",
+   "ok": true
+  },
+  "K7 Bild2 Unterkiefer dE / a*": {
+   "wert": "(2.0, 23.2, 24.9)",
+   "ok": true
+  },
+  "K8 Bild2 Oberkiefer dE": {
+   "wert": "3.6",
+   "ok": true
+  },
+  "K9 Bild2 Klauen a* (r, l) / Original": {
+   "wert": "(26.5, 24.1, 28.1, 22.2)",
+   "ok": true
+  },
+  "K10 Bild2 Augenpunkte L*max (r, l)": {
+   "wert": "(16.7, 14.9)",
+   "ok": true
+  },
+  "K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)": {
+   "wert": "(6.9, 7.8)",
+   "ok": true
+  },
+  "K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)": {
+   "wert": "(8.4, 8.0)",
+   "ok": true
+  },
+  "K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original": {
+   "wert": "(8.9, 11.9)",
+   "ok": true
+  }
+ }
+}
