@@ -1,169 +1,234 @@
-Kette A+C, eigener exe-Lauf Elza (Runde 41 Integration, Kopf 45cc6246)
-exe: re15_port/build/platform/pc/re15_pc_r41int_kette.exe = Kopie von re15_pc.exe (09:29:02), sha256 568087e0b53bd7313519d953fb6d75038bf9a2c99d25a928b4e73c9dbc882aa6
-Start 10:40:11, Ende 10:44:42, exit=0
-Umgebung: RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_MSG_LOG=1 RE15_FLAG_CENSUS=1 RE15_DEBUG_JUMP=2030@250
-  RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125 RE15_PLAYER_POS=-2650,7280,3072,1 RE15_WEGPLAN=kette.txt (Wegplan = integration_r41_ventilkette_kette, Raeume 2031/20B1/2051)
-  RE15_EXIT_AT=60#2051 RE15_STATE_LOG=state.log RE15_SCD_TRACE=1 RE15_FRAMEDUMP=0-99999/3:fd/f RE15_AUDIO_CAP_SYNC=cap.raw; beschleunigter Renderer (direct3d11), KEIN RE15_SOFTWARE_RENDER
+Kette A+C, eigener exe-Lauf Elza (Runde 41 Integration Welle 2, Kopf d5f4f5914)
+exe: re15_port/build/platform/pc/re15_pc_r41int_kette.exe = Kopie von re15_pc.exe (21:42:29), sha256 70a9756d4b65561be033013a63e27ce75c67995b97a9b45b0e65981a4d33d518
+Lauf: start 23:41:13.760627800 | ende 23:46:45.385467200 exit=0 | sortiert 23:46:49
+Umgebung: SDL_ASSERT=always_ignore RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_MSG_LOG=1 RE15_FLAG_CENSUS=1 RE15_SPAWN_DIAG=1
+  RE15_DEBUG_JUMP=2030@250 RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125 RE15_PLAYER_POS=-2650,7280,3072,1
+  RE15_WEGPLAN=kette.txt (wortgleich der Plan des Riegels integration_r41_ventilkette_kette, Raeume 2031/20B1/2051) RE15_WEGPLAN_LOG=wegplan.txt
+  RE15_EXIT_AT=60#2051 RE15_STATE_LOG=state.log RE15_SCD_TRACE=1 RE15_FRAMEDUMP=0-99999/3:fd/f RE15_AUDIO_CAP_SYNC=cap.raw; beschleunigter Renderer, KEIN RE15_SOFTWARE_RENDER, KEIN RE15_NOAUDIO
 
-== Pruefungen des Riegels integration_r41_ventilkette_kette (test_r41_ventilkette_kette.cmake Z. 216-253) auf diesen Lauf ==
-OK    09, dann 07 (Suedwand)                                         debug.log:4846 -> :12139  'Ventil 09 gedreht (Drehung 1/4)' -> 'Ventil 07 gedreht (Drehung 2/4)'
-OK    dann 02 (Nordwand)                                             debug.log:12139 -> :21468  'Ventil 07 gedreht (Drehung 2/4)' -> 'Ventil 02 gedreht (Drehung 3/4)'
-OK    dann 01                                                        debug.log:21468 -> :28364  'Ventil 02 gedreht (Drehung 3/4)' -> 'Ventil 01 gedreht (Drehung 4/4)'
-OK    richtige Folge                                                 debug.log:28364 -> :28365  'Ventil 01 gedreht (Drehung 4/4)' -> '[ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehl'
-OK    Warnung + Zaehler (Ereignis 26)                                debug.log:28366  '[ventilkette41] ROOM2031 Ereignis 26 -> Port-Programm 2030_ventile_flut'
-OK    Warnung 46                                                     debug.log:28378  '[msg] room=2031 id=46'
-OK    Ost-Tuer umgelenkt (Text nennt die Basis-Id 20B0)              debug.log:28561  '[ventilkette41] ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)'
-OK    Ost-Tuer zu Fuss, nicht per RE15_FIRE_AOT                      debug.log  nicht: '[fire-aot]'
-OK    Ost-Tuer zu Fuss gefeuert                                      debug.log:35425  '[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11'
-OK    ROOM20B1 geladen                                               debug.log:35425 -> :35430  '[aot] DOOR FIRE slot=0 rect=(7350,-200' -> '[room] PC loaded room20b1.rdt'
-OK    Bits 103 + 100 beim Verlassen                                  debug.log:35430 -> :35525  '[room] PC loaded room20b1.rdt' -> 'Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100'
-OK    der Weg zur Tuer passt in die 60 s                             debug.log  nicht: 'FLUT: Wasser steigt'
-OK    sub02: Plc_dest Modus 5 (@0x01F24)                             debug.log:35430 -> :35659  '[room] PC loaded room20b1.rdt' -> 'Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355)'
-OK    sub05 @0x01F5C startet (Zone Slot 7, AUTO-Haken Spur A)        debug.log:36172  'thread start slot=11 first_op=0x46'
-OK    sub05: Cut 7 (@0x01F6A)                                        debug.log:36172 -> :36182  'thread start slot=11 first_op=0x46' -> 'Cut_chg(7)'
-OK    sub05: Cut 15 (@0x01F9C)                                       debug.log:36182 -> :36620  'Cut_chg(7)' -> 'Cut_chg(15)'
-OK    sub05: Cut 6 (@0x01FB6)                                        debug.log:36620 -> :36895  'Cut_chg(15)' -> 'Cut_chg(6)'
-OK    sub05: Set(3,235)=1 (@0x01FBC)                                 debug.log:36895 -> :36900  'Cut_chg(6)' -> '[flagcensus] room=20B1 WRITE Set  zone=3 idx=235 op=1'
-OK    Szene beendet, Spieler frei                                    debug.log:36900 -> :36939  'zone=3 idx=235 op=1' -> 'letterbox closed -> gameplay (player_mode=0)'
-OK    Wegplan: (3,235) nach der Szene                                wegplan.txt:228  'FLAG (3,235) = 1'
-OK    Wegplan: Bit 103                                               wegplan.txt:231  'FLAG (9,103) = 1'
-OK    Wegplan: Bit 100 (Leiter frei)                                 wegplan.txt:234  'FLAG (9,100) = 1'
-OK    der Weg zur Leiter klemmte nicht                               wegplan.txt  nicht: 'KLEMME'
-OK    mit Bit 100 ist die Leiter eine Tuer                           debug.log  nicht: '-> Sperrtext 40'
-OK    Leiter feuert                                                  debug.log:37902  '[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)'
-OK    ROOM2051 geladen                                               debug.log:37902 -> :37909  '[aot] DOOR FIRE slot=4' -> '[room] PC loaded room2051.rdt'
-OK    Endbild in ROOM2051                                            debug.log:44028  'EXIT_AT: Bild 60 in Raum 2051'
-OK    Elza gewaehlt (RE15_PSELECT_AUTO_SWITCH)                       debug.log:32  'Spieler-Familie PL04'
-ERGEBNIS: alle Pruefungen erfuellt
+== Pruefungen des Riegels integration_r41_ventilkette_kette (test_r41_ventilkette_kette.cmake Z. 216-253) auf diesen Lauf + Zusatz Spur A ==
+OK    09, dann 02 (Riegel-Text: 09, dann 07 (Suedwand))                      debug.log:4845 -> :13982  'Ventil 09 gedreht (Drehung 1/4)' -> 'Ventil 02 gedreht (Drehung 2/4)'
+OK    dann 01 (Riegel-Text: dann 02 (Nordwand))                              debug.log:13982 -> :20878  'Ventil 02 gedreht (Drehung 2/4)' -> 'Ventil 01 gedreht (Drehung 3/4)'
+OK    dann 08 (Riegel-Text: dann 01)                                         debug.log:20878 -> :29806  'Ventil 01 gedreht (Drehung 3/4)' -> 'Ventil 08 gedreht (Drehung 4/4)'
+OK    richtige Folge                                                         debug.log:29806 -> :29807  'Ventil 08 gedreht (Drehung 4/4)' -> '[ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehl'
+OK    Warnung + Zaehler (Ereignis 26)                                        debug.log:29808  '[ventilkette41] ROOM2031 Ereignis 26 -> Port-Programm 2030_ventile_flu'
+OK    Warnung 46                                                             debug.log:29820  '[msg] room=2031 id=46'
+OK    Ost-Tuer umgelenkt (Text nennt die Basis-Id 20B0)                      debug.log:30003  '[ventilkette41] ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeu'
+OK    Ost-Tuer zu Fuss, nicht per RE15_FIRE_AOT                              debug.log  nicht: '[fire-aot]'
+OK    Ost-Tuer zu Fuss gefeuert                                              debug.log:39548  '[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11'
+OK    ROOM20B1 geladen                                                       debug.log:39548 -> :39553  '[aot] DOOR FIRE slot=0 rect=(7350,-200' -> '[room] PC loaded room20b1.rdt'
+OK    Bits 103 + 100 beim Verlassen                                          debug.log:39553 -> :39683  '[room] PC loaded room20b1.rdt' -> 'Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100'
+OK    der Weg zur Tuer passt in die 60 s                                     debug.log  nicht: 'FLUT: Wasser steigt'
+OK    sub02: Plc_dest Modus 5 (@0x01F24)                                     debug.log:39553 -> :39818  '[room] PC loaded room20b1.rdt' -> 'Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355)'
+OK    sub05 @0x01F5C startet (Zone Slot 7, AUTO-Haken Spur A)                debug.log:40331  '[scd] thread start slot=11 first_op=0x46'
+OK    sub05: Cut 7 (@0x01F6A)                                                debug.log:40331 -> :40341  '[scd] thread start slot=11 first_op=0x46' -> 'Cut_chg(7)'
+OK    sub05: Cut 15 (@0x01F9C)                                               debug.log:40341 -> :40779  'Cut_chg(7)' -> 'Cut_chg(15)'
+OK    sub05: Cut 6 (@0x01FB6)                                                debug.log:40779 -> :41054  'Cut_chg(15)' -> 'Cut_chg(6)'
+OK    sub05: Set(3,235)=1 (@0x01FBC)                                         debug.log:41054 -> :41059  'Cut_chg(6)' -> '[flagcensus] room=20B1 WRITE Set  zone=3 idx=235 op=1'
+OK    Szene beendet, Spieler frei                                            debug.log:41059 -> :41098  'zone=3 idx=235 op=1' -> 'letterbox closed -> gameplay (player_mode=0)'
+OK    Wegplan: (3,235) nach der Szene                                        wegplan.txt:284  'FLAG (3,235) = 1'
+OK    Wegplan: Bit 103                                                       wegplan.txt:287  'FLAG (9,103) = 1'
+OK    Wegplan: Bit 100 (Leiter frei)                                         wegplan.txt:290  'FLAG (9,100) = 1'
+OK    der Weg zur Leiter klemmte nicht                                       wegplan.txt  nicht: 'KLEMME'
+OK    mit Bit 100 ist die Leiter eine Tuer                                   debug.log  nicht: '-> Sperrtext 40'
+OK    Leiter feuert                                                          debug.log:42061  '[aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 '
+OK    ROOM2051 geladen                                                       debug.log:42061 -> :42068  '[aot] DOOR FIRE slot=4' -> '[room] PC loaded room2051.rdt'
+OK    Endbild in ROOM2051                                                    debug.log:48189  'EXIT_AT: Bild 60 in Raum 2051'
+OK    Spielfigur PL04                                                        debug.log:27  '[pl] Spieler-Familie PL04 '
+OK    Spur A: 35 EM024-Spawns in 20B1 (RE15_SPAWN_DIAG)                      debug.log ab :39553  35 x 'spawn-diag] Sce_em_set type=0x24'
+OK    Spur A: EM24-Archiv geladen                                            debug.log:39689  '[enemy] EM24 loaded:'
+OK    Spur A: Flut sichtbar (state.log 20B1: em=35 Typ-0x24-Aktoren, fx>0 in 936 von 942 Bildern, max fx=31) state.log Segment 20B1
+ERGEBNIS: alle Pruefungen erfuellt (31 Pruefungen, 0 nicht erfuellt)
 
 == debug.log: Schluesselzeilen (Zeilennummer: Text) ==
-    32: [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
-  1199: [debug-menu] AUTO-JUMP -> ROOM2030 (Frame 250)
-  1202: [room] PC loaded room2031.rdt (282076 bytes)
-  1343: [scd F15] letterbox closed -> gameplay (player_mode=0)
-  4846: [ventilkette41] Ventil 09 gedreht (Drehung 1/4)
-  4949: [scd F588] letterbox closed -> gameplay (player_mode=0)
- 12139: [ventilkette41] Ventil 07 gedreht (Drehung 2/4)
- 12243: [scd F1666] letterbox closed -> gameplay (player_mode=0)
- 21468: [ventilkette41] Ventil 02 gedreht (Drehung 3/4)
- 21572: [scd F3020] letterbox closed -> gameplay (player_mode=0)
- 28364: [ventilkette41] Ventil 01 gedreht (Drehung 4/4)
- 28365: [ventilkette41] Folge 09 07 02 01 -> RICHTIG: Warnung, Zaehler, Flut
- 28366: [ventilkette41] ROOM2031 Ereignis 26 -> Port-Programm 2030_ventile_flut
- 28378: [msg] room=2031 id=46 savepoint=0
- 28379: [msgtext] room=2031 id=46 "WARNING: The water will rise in one minute. Please leave the room immediately!"
- 28386: [scd F4044] letterbox closed -> gameplay (player_mode=0)
- 28561: [ventilkette41] ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)
- 28562: [ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt
- 35425: [aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11 spawn=(5950,-1800,-6400)
- 35430: [room] PC loaded room20b1.rdt (201460 bytes)
- 35517: [scd F5299] Cut_chg(11)
- 35525: [ventilkette41] Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100 (Flut gelaufen, Leiter frei)
- 35526: [ventilkette41] ROOM20B1: Ring-Tuer Slot 3 nach 2030 gesperrt (geflutet) -> Sperrtext 41
- 35531: [enemy] EM24 loaded: 1 meshes, 1 bones, 3 clips -> slot 11
- 35659: [scd] Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355) flag=0) walk_active=1
- 36172: [scd] thread start slot=11 first_op=0x46
- 36182: [scd F105] Cut_chg(7)
- 36620: [scd F146] Cut_chg(15)
- 36895: [scd F228] Cut_chg(6)
- 36900: [flagcensus] room=20B1 WRITE Set  zone=3 idx=235 op=1
- 36939: [scd F242] letterbox closed -> gameplay (player_mode=0)
- 37902: [aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)
- 37909: [room] PC loaded room2051.rdt (342712 bytes)
- 37967: [ventilkette41] ROOM2051: Tuer Slot 0 -> ROOM20B0 Cut 9 (Ziel ROOM2000)
- 44028: [flow] EXIT_AT: Bild 60 in Raum 2051 erreicht -> exit
+    27: [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+    74: [scd F0] Cut_chg(0)
+   797: [scd F161] Cut_chg(1)
+  1195: [debug-menu] AUTO-JUMP -> ROOM2030 (Frame 250)
+  1198: [room] PC loaded room2031.rdt (282076 bytes)
+  1253: [ventilkette41] ROOM2031: Ventile 01/02/03/07/08/09 (Slots 14-19), Plakat Slot 21, Dokument Slot 20 (Item 0x4E)
+  1342: [scd F15] letterbox closed -> gameplay (player_mode=0)
+  1810: [ventilkette41] ROOM2031 Ereignis 22 -> Port-Programm 2030_ventil_09
+  1820: [msg] room=2031 id=55 savepoint=0
+  2564: [ventilkette41] Bank VENTIL1080 (RE2 ROOM1080 snd0) geladen (9 VAGs, 48 Saetze)
+  4845: [ventilkette41] Ventil 09 gedreht (Drehung 1/4)
+  4948: [scd F588] letterbox closed -> gameplay (player_mode=0)
+ 10946: [ventilkette41] ROOM2031 Ereignis 18 -> Port-Programm 2030_ventil_02
+ 10956: [msg] room=2031 id=51 savepoint=0
+ 13982: [ventilkette41] Ventil 02 gedreht (Drehung 2/4)
+ 14086: [scd F1916] letterbox closed -> gameplay (player_mode=0)
+ 17844: [ventilkette41] ROOM2031 Ereignis 17 -> Port-Programm 2030_ventil_01
+ 17854: [msg] room=2031 id=50 savepoint=0
+ 20878: [ventilkette41] Ventil 01 gedreht (Drehung 3/4)
+ 20981: [scd F2940] letterbox closed -> gameplay (player_mode=0)
+ 26773: [ventilkette41] ROOM2031 Ereignis 21 -> Port-Programm 2030_ventil_08
+ 26784: [msg] room=2031 id=54 savepoint=0
+ 29806: [ventilkette41] Ventil 08 gedreht (Drehung 4/4)
+ 29807: [ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehler, Flut
+ 29808: [ventilkette41] ROOM2031 Ereignis 26 -> Port-Programm 2030_ventile_flut
+ 29820: [msg] room=2031 id=46 savepoint=0
+ 29821: [msgtext] room=2031 id=46 "WARNING: The water will rise in one minute. Please leave the room immediately!"
+ 29830: [scd F4240] letterbox closed -> gameplay (player_mode=0)
+ 30003: [ventilkette41] ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)
+ 30004: [ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt
+ 30007: [ventilkette41] RE2-Countdown-Schrift shared_assets/RE2/TEX.TIM geladen
+ 30008: [ventilkette41] Countdown RE2-Form Bild 0 " 0^59=98" Farbe 2 (x 104 y 32) F4680
+ 30010: [ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AN, ROOM2031, capTick 5718 F4680
+ 30262: [ventilkette41] Countdown RE2-Form Bild 30 " 0^58=98" Farbe 2 (x 104 y 32) F4710
+ 30514: [ventilkette41] Countdown RE2-Form Bild 60 " 0^57=98" Farbe 2 (x 104 y 32) F4740
+ 30766: [ventilkette41] Countdown RE2-Form Bild 90 " 0^56=98" Farbe 2 (x 104 y 32) F4770
+ 31018: [ventilkette41] Countdown RE2-Form Bild 120 " 0^55=98" Farbe 2 (x 104 y 32) F4800
+ 31270: [ventilkette41] Countdown RE2-Form Bild 150 " 0^54=98" Farbe 2 (x 104 y 32) F4830
+ 31522: [ventilkette41] Countdown RE2-Form Bild 180 " 0^53=98" Farbe 2 (x 104 y 32) F4860
+ 31774: [ventilkette41] Countdown RE2-Form Bild 210 " 0^52=98" Farbe 2 (x 104 y 32) F4890
+ 32026: [ventilkette41] Countdown RE2-Form Bild 240 " 0^51=98" Farbe 2 (x 104 y 32) F4920
+ 32278: [ventilkette41] Countdown RE2-Form Bild 270 " 0^50=98" Farbe 2 (x 104 y 32) F4950
+ 32530: [ventilkette41] Countdown RE2-Form Bild 300 " 0^49=98" Farbe 2 (x 104 y 32) F4980
+ 32782: [ventilkette41] Countdown RE2-Form Bild 330 " 0^48=98" Farbe 2 (x 104 y 32) F5010
+ 33034: [ventilkette41] Countdown RE2-Form Bild 360 " 0^47=98" Farbe 2 (x 104 y 32) F5040
+ 33286: [ventilkette41] Countdown RE2-Form Bild 390 " 0^46=98" Farbe 2 (x 104 y 32) F5070
+ 33538: [ventilkette41] Countdown RE2-Form Bild 420 " 0^45=98" Farbe 2 (x 104 y 32) F5100
+ 33790: [ventilkette41] Countdown RE2-Form Bild 450 " 0^44=98" Farbe 2 (x 104 y 32) F5130
+ 34042: [ventilkette41] Countdown RE2-Form Bild 480 " 0^43=98" Farbe 2 (x 104 y 32) F5160
+ 34294: [ventilkette41] Countdown RE2-Form Bild 510 " 0^42=98" Farbe 2 (x 104 y 32) F5190
+ 34546: [ventilkette41] Countdown RE2-Form Bild 540 " 0^41=98" Farbe 2 (x 104 y 32) F5220
+ 34798: [ventilkette41] Countdown RE2-Form Bild 570 " 0^40=98" Farbe 2 (x 104 y 32) F5250
+ 35050: [ventilkette41] Countdown RE2-Form Bild 600 " 0^39=98" Farbe 2 (x 104 y 32) F5280
+ 35302: [ventilkette41] Countdown RE2-Form Bild 630 " 0^38=98" Farbe 2 (x 104 y 32) F5310
+ 35554: [ventilkette41] Countdown RE2-Form Bild 660 " 0^37=98" Farbe 2 (x 104 y 32) F5340
+ 35806: [ventilkette41] Countdown RE2-Form Bild 690 " 0^36=98" Farbe 2 (x 104 y 32) F5370
+ 36058: [ventilkette41] Countdown RE2-Form Bild 720 " 0^35=98" Farbe 2 (x 104 y 32) F5400
+ 36310: [ventilkette41] Countdown RE2-Form Bild 750 " 0^34=98" Farbe 2 (x 104 y 32) F5430
+ 36562: [ventilkette41] Countdown RE2-Form Bild 780 " 0^33=98" Farbe 2 (x 104 y 32) F5460
+ 36814: [ventilkette41] Countdown RE2-Form Bild 810 " 0^32=98" Farbe 2 (x 104 y 32) F5490
+ 37066: [ventilkette41] Countdown RE2-Form Bild 840 " 0^31=98" Farbe 2 (x 104 y 32) F5520
+ 37318: [ventilkette41] Countdown RE2-Form Bild 870 " 0^30=98" Farbe 2 (x 104 y 32) F5550
+ 37570: [ventilkette41] Countdown RE2-Form Bild 900 " 0^29=98" Farbe 2 (x 104 y 32) F5580
+ 37822: [ventilkette41] Countdown RE2-Form Bild 930 " 0^28=98" Farbe 2 (x 104 y 32) F5610
+ 38074: [ventilkette41] Countdown RE2-Form Bild 960 " 0^27=98" Farbe 2 (x 104 y 32) F5640
+ 38326: [ventilkette41] Countdown RE2-Form Bild 990 " 0^26=98" Farbe 2 (x 104 y 32) F5670
+ 38578: [ventilkette41] Countdown RE2-Form Bild 1020 " 0^25=98" Farbe 2 (x 104 y 32) F5700
+ 38834: [ventilkette41] Countdown RE2-Form Bild 1050 " 0^24=98" Farbe 2 (x 104 y 32) F5730
+ 39086: [ventilkette41] Countdown RE2-Form Bild 1080 " 0^23=98" Farbe 2 (x 104 y 32) F5760
+ 39338: [ventilkette41] Countdown RE2-Form Bild 1110 " 0^22=98" Farbe 2 (x 104 y 32) F5790
+ 39548: [aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11 spawn=(5950,-1800,-6400)
+ 39553: [room] PC loaded room20b1.rdt (201460 bytes)
+ 39675: [scd F5814] Cut_chg(11)
+ 39683: [ventilkette41] Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100 (Flut gelaufen, Leiter frei)
+ 39684: [ventilkette41] ROOM20B1: Ring-Tuer Slot 3 nach 2030 gesperrt (geflutet) -> Sperrtext 41
+ 39689: [enemy] EM24 loaded: 1 meshes, 1 bones, 3 clips -> slot 11
+ 39693: [ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AUS, ROOM20B1, capTick 7023 F1
+ 39818: [scd] Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355) flag=0) walk_active=1
+ 40331: [scd] thread start slot=11 first_op=0x46
+ 40341: [scd F105] Cut_chg(7)
+ 40356: [scd] Plc_dest(slot=0 mode=0x05 dest=(-20370,-7305) flag=32) walk_active=1
+ 40615: [scd] Plc_dest(slot=0 mode=0x05 dest=(-21020,-9355) flag=32) walk_active=1
+ 40779: [scd F146] Cut_chg(15)
+ 41054: [scd F228] Cut_chg(6)
+ 41059: [flagcensus] room=20B1 WRITE Set  zone=3 idx=235 op=1
+ 41098: [scd F242] letterbox closed -> gameplay (player_mode=0)
+ 42061: [aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)
+ 42068: [room] PC loaded room2051.rdt (342712 bytes)
+ 42126: [ventilkette41] ROOM2051: Pult Slot 8 (@0x01D38) angelegt, Ereignis 9
+ 42127: [ventilkette41] ROOM2051: Cursor obj 8 (@0x01D4C) angelegt
+ 42128: [ventilkette41] ROOM2051: Tuer Slot 0 -> ROOM20B0 Cut 9 (Ziel ROOM2000)
+ 48189: [flow] EXIT_AT: Bild 60 in Raum 2051 erreicht -> exit
 
 == RE15_SCD_TRACE im 20B1-Teil (Datei-Offsets ROOM20B1.RDT; sub00 @0x1AA6/@0x1DF2, sub02 @0x1EF8-@0x1F24, sub05 @0x1F5C-@0x1FBC) ==
- 35455: [scd] F5299 slot=1 @0x1AA6 op=0x06
- 35501: [scd] F5299 slot=1 @0x1DF2 op=0x2C
- 35512: [scd] F5299 slot=10 @0x1EF8 op=0x22
- 35514: [scd] F5299 slot=10 @0x1EFC op=0x22
- 35516: [scd] F5299 slot=10 @0x1F00 op=0x29
- 35658: [scd] F16 slot=10 @0x1F24 op=0x40
- 36178: [scd] F105 slot=11 @0x1F5C op=0x46
- 36181: [scd] F105 slot=11 @0x1F6A op=0x29
- 36619: [scd] F146 slot=11 @0x1F9C op=0x29
- 36894: [scd] F228 slot=11 @0x1FB6 op=0x29
- 36899: [scd] F228 slot=11 @0x1FBC op=0x22
+ 39578: [scd] F5814 slot=1 @0x1AA6 op=0x06
+ 39659: [scd] F5814 slot=1 @0x1DF2 op=0x2C
+ 39670: [scd] F5814 slot=10 @0x1EF8 op=0x22
+ 39672: [scd] F5814 slot=10 @0x1EFC op=0x22
+ 39674: [scd] F5814 slot=10 @0x1F00 op=0x29
+ 39817: [scd] F16 slot=10 @0x1F24 op=0x40
+ 40337: [scd] F105 slot=11 @0x1F5C op=0x46
+ 40340: [scd] F105 slot=11 @0x1F6A op=0x29
+ 40778: [scd] F146 slot=11 @0x1F9C op=0x29
+ 41053: [scd] F228 slot=11 @0x1FB6 op=0x29
+ 41058: [scd] F228 slot=11 @0x1FBC op=0x22
 
-== wegplan.txt: Raeume, FLAG-Lesungen, Leiter ==
+== wegplan.txt: Raeume, FLAG-Lesungen, Tuer/Leiter ==
+    1: RE15_WEGPLAN kette.txt: 77 Befehle
     2: F1 room=2031 spieler=(-2650,7280) rot=3072 mo=210 pm=0 obj5=(-4850,-3950,7880) b2 | RAUM 2031 geladen, Spieler frei (obj 6 = Slot 5)
-  222: F229 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=1 obj5=(5850,-1800,-4650) b3 |   -> Befehl 46 beendet: gedrueckt
-  223: F230 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=1 obj6=(5850,-1800,-8250) b3 | RAUM 20B1 geladen, Spieler frei (obj 6 = Slot 6)
-  224: F259 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   -> Befehl 47 beendet: Raum bereit
-  227: F290 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 | FLAG (3,235)
-  228: F290 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   FLAG (3,235) = 1
-  230: F291 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 | FLAG (9,103)
-  231: F291 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   FLAG (9,103) = 1
-  233: F292 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 | FLAG (9,100)
-  234: F292 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   FLAG (9,100) = 1
-  292: F941 room=20B1 spieler=(-26014,10245) rot=2096 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   -> Befehl 64 beendet: gewartet
-  294: F2 room=2051 spieler=(9100,4100) rot=1024 mo=210 pm=0 obj6=(2975,-16200,-13950) b5 |   -> Befehl 65 beendet: gedrueckt
-  295: F3 room=2051 spieler=(9100,4100) rot=1024 mo=210 pm=0 obj0=(-1600,-5400,-9348) b3 | RAUM 2051 geladen, Spieler frei (obj 6 = Slot 0)
-  296: F32 room=2051 spieler=(9100,4100) rot=1024 mo=200 pm=0 obj0=(-1600,-5400,-9348) b3 |   -> Befehl 66 beendet: Raum bereit
+    3: F30 room=2031 spieler=(-2650,7280) rot=3072 mo=200 pm=0 obj5=(-4850,-3950,7880) b2 |   -> Befehl 0 beendet: Raum bereit
+  222: F5082 room=2031 spieler=(-1873,-7688) rot=2064 mo=200 pm=0 obj5=(-4850,-3950,7880) b2 |   -> Befehl 46 beendet: gewartet
+  224: F5085 room=2031 spieler=(-1883,-7688) rot=2048 mo=221 pm=0 obj5=(-4850,-3950,7880) b2 |   -> Befehl 47 beendet: gedrueckt
+  279: F230 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=1 obj6=(5850,-1800,-8250) b3 | RAUM 20B1 geladen, Spieler frei (obj 6 = Slot 6)
+  283: F290 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 | FLAG (3,235)
+  284: F290 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   FLAG (3,235) = 1
+  286: F291 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 | FLAG (9,103)
+  287: F291 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   FLAG (9,103) = 1
+  289: F292 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 | FLAG (9,100)
+  290: F292 room=20B1 spieler=(-20657,-9629) rot=2779 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   FLAG (9,100) = 1
+  309: F426 room=20B1 spieler=(-22118,-9618) rot=2048 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   -> Befehl 64 beendet: gewartet
+  311: F480 room=20B1 spieler=(-24593,-9618) rot=2048 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   -> Befehl 65 beendet: angekommen
+  313: F482 room=20B1 spieler=(-24593,-9618) rot=2048 mo=200 pm=0 obj6=(5850,-1800,-8250) b3 |   -> Befehl 66 beendet: Blick steht
+  351: F3 room=2051 spieler=(9100,4100) rot=1024 mo=210 pm=0 obj0=(-1600,-5400,-9348) b3 | RAUM 2051 geladen, Spieler frei (obj 6 = Slot 0)
 
-== state.log 20B1 je 15 Bilder: fx = re15_esp_fx_count() (aktive ESP-Effekte), em = Aktoren Typ 0x24 (EM024), cam = g_scd.cam_id, pm = player_mode ==
-F1    fx=0  em=35 cam=11 pm=2 mo=210 pl=(2380,-6355)
-F2    fx=0  em=35 cam=11 pm=2 mo=210 pl=(2380,-6355)
-F15   fx=18 em=35 cam=11 pm=2 mo=200 pl=(2380,-6355)
-F30   fx=14 em=35 cam=12 pm=2 mo=100 pl=(-420,-6355)
-F45   fx=8  em=35 cam=12 pm=2 mo=100 pl=(-3420,-6355)
-F60   fx=19 em=35 cam=13 pm=2 mo=100 pl=(-6420,-6355)
-F75   fx=6  em=35 cam=13 pm=2 mo=100 pl=(-9420,-6355)
-F90   fx=22 em=35 cam=13 pm=2 mo=100 pl=(-12420,-6355)
-F105  fx=8  em=35 cam=7  pm=2 mo=100 pl=(-15599,-7283)
-F120  fx=8  em=35 cam=7  pm=2 mo=100 pl=(-18399,-7297)
-F135  fx=18 em=35 cam=7  pm=2 mo=100 pl=(-20199,-7304)
-F150  fx=12 em=35 cam=15 pm=2 mo=105 pl=(-20950,-9156)
-F165  fx=22 em=35 cam=15 pm=2 mo=236 pl=(-20716,-9501)
-F180  fx=6  em=35 cam=15 pm=2 mo=1   pl=(-20657,-9629)
-F195  fx=18 em=35 cam=15 pm=2 mo=2   pl=(-20657,-9629)
-F210  fx=18 em=35 cam=15 pm=2 mo=2   pl=(-20657,-9629)
-F225  fx=6  em=35 cam=15 pm=2 mo=2   pl=(-20657,-9629)
-F240  fx=22 em=35 cam=6  pm=1 mo=200 pl=(-20657,-9629)
-F255  fx=6  em=35 cam=6  pm=0 mo=200 pl=(-20657,-9629)
-F270  fx=12 em=35 cam=6  pm=0 mo=200 pl=(-20657,-9629)
-F285  fx=12 em=35 cam=6  pm=0 mo=200 pl=(-20657,-9629)
-F300  fx=6  em=35 cam=6  pm=0 mo=200 pl=(-20657,-9629)
-F315  fx=30 em=35 cam=6  pm=0 mo=105 pl=(-21101,-9618)
-F330  fx=6  em=35 cam=6  pm=0 mo=200 pl=(-21101,-9618)
-F345  fx=12 em=35 cam=6  pm=0 mo=232 pl=(-21101,-9618)
-F360  fx=26 em=35 cam=6  pm=0 mo=234 pl=(-22118,-9618)
-F375  fx=6  em=35 cam=6  pm=0 mo=200 pl=(-22118,-9618)
-F390  fx=22 em=35 cam=6  pm=0 mo=200 pl=(-22118,-9618)
-F405  fx=6  em=35 cam=6  pm=0 mo=200 pl=(-22118,-9618)
-F420  fx=18 em=35 cam=6  pm=0 mo=200 pl=(-22118,-9618)
-F435  fx=12 em=35 cam=6  pm=0 mo=105 pl=(-22643,-9618)
-F450  fx=7  em=35 cam=6  pm=0 mo=105 pl=(-23768,-9618)
-F465  fx=22 em=35 cam=6  pm=0 mo=105 pl=(-24368,-9618)
-F480  fx=12 em=35 cam=6  pm=0 mo=200 pl=(-24593,-9618)
-F495  fx=18 em=35 cam=6  pm=0 mo=231 pl=(-24593,-9618)
-F510  fx=8  em=35 cam=6  pm=0 mo=231 pl=(-24593,-9618)
-F525  fx=14 em=35 cam=6  pm=0 mo=231 pl=(-25741,-9618)
-F540  fx=22 em=35 cam=6  pm=0 mo=231 pl=(-25741,-9618)
-F555  fx=6  em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
-F570  fx=18 em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
-F585  fx=8  em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
-F600  fx=8  em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
-F615  fx=18 em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
-F630  fx=6  em=35 cam=6  pm=0 mo=105 pl=(-25762,-9396)
-F645  fx=28 em=35 cam=6  pm=0 mo=105 pl=(-25867,-8286)
-F660  fx=8  em=35 cam=6  pm=0 mo=105 pl=(-25972,-7176)
-F675  fx=8  em=35 cam=10 pm=0 mo=105 pl=(-26077,-6066)
-F690  fx=24 em=35 cam=10 pm=0 mo=105 pl=(-26182,-4956)
-F705  fx=6  em=35 cam=10 pm=0 mo=105 pl=(-26287,-3846)
-F720  fx=22 em=35 cam=10 pm=0 mo=105 pl=(-26392,-2736)
-F735  fx=6  em=35 cam=10 pm=0 mo=105 pl=(-26497,-1626)
-F750  fx=12 em=35 cam=10 pm=0 mo=105 pl=(-26539,-516)
-F765  fx=18 em=35 cam=10 pm=0 mo=105 pl=(-26541,594)
-F780  fx=6  em=35 cam=10 pm=0 mo=105 pl=(-26537,1704)
-F795  fx=22 em=35 cam=8  pm=0 mo=105 pl=(-26533,2814)
-F810  fx=12 em=35 cam=8  pm=0 mo=105 pl=(-26548,3924)
-F825  fx=12 em=35 cam=8  pm=0 mo=105 pl=(-26544,5034)
-F840  fx=12 em=35 cam=8  pm=0 mo=105 pl=(-26532,6144)
-F855  fx=12 em=35 cam=9  pm=0 mo=105 pl=(-26487,7254)
-F870  fx=24 em=35 cam=9  pm=0 mo=105 pl=(-26418,8364)
-F885  fx=6  em=35 cam=9  pm=0 mo=105 pl=(-26263,9470)
-F900  fx=12 em=35 cam=9  pm=0 mo=105 pl=(-26134,9973)
-F915  fx=12 em=35 cam=9  pm=0 mo=200 pl=(-26014,10245)
-F930  fx=6  em=35 cam=9  pm=0 mo=200 pl=(-26014,10245)
+== state.log 20B1 je 15 Bilder: fx = re15_esp_fx_count() (aktive ESP-Effekte), em = Aktoren Typ 0x24 (EM024), cam = g_scd.cam_id, pm = player_mode, mo = Spieler-motion ==
+F1     fx=0   em=35 cam=11 pm=2 mo=210 pl=(2380,-6355)
+F2     fx=0   em=35 cam=11 pm=2 mo=210 pl=(2380,-6355)
+F15    fx=18  em=35 cam=11 pm=2 mo=200 pl=(2380,-6355)
+F30    fx=14  em=35 cam=12 pm=2 mo=100 pl=(-420,-6355)
+F45    fx=8   em=35 cam=12 pm=2 mo=100 pl=(-3420,-6355)
+F60    fx=19  em=35 cam=13 pm=2 mo=100 pl=(-6420,-6355)
+F75    fx=6   em=35 cam=13 pm=2 mo=100 pl=(-9420,-6355)
+F90    fx=22  em=35 cam=13 pm=2 mo=100 pl=(-12420,-6355)
+F105   fx=8   em=35 cam=7  pm=2 mo=100 pl=(-15599,-7283)
+F120   fx=8   em=35 cam=7  pm=2 mo=100 pl=(-18399,-7297)
+F135   fx=18  em=35 cam=7  pm=2 mo=100 pl=(-20199,-7304)
+F150   fx=12  em=35 cam=15 pm=2 mo=105 pl=(-20950,-9156)
+F165   fx=22  em=35 cam=15 pm=2 mo=236 pl=(-20716,-9501)
+F180   fx=6   em=35 cam=15 pm=2 mo=1   pl=(-20657,-9629)
+F195   fx=18  em=35 cam=15 pm=2 mo=2   pl=(-20657,-9629)
+F210   fx=18  em=35 cam=15 pm=2 mo=2   pl=(-20657,-9629)
+F225   fx=6   em=35 cam=15 pm=2 mo=2   pl=(-20657,-9629)
+F240   fx=22  em=35 cam=6  pm=1 mo=200 pl=(-20657,-9629)
+F255   fx=6   em=35 cam=6  pm=0 mo=200 pl=(-20657,-9629)
+F270   fx=12  em=35 cam=6  pm=0 mo=200 pl=(-20657,-9629)
+F285   fx=12  em=35 cam=6  pm=0 mo=200 pl=(-20657,-9629)
+F300   fx=6   em=35 cam=6  pm=0 mo=200 pl=(-20657,-9629)
+F315   fx=30  em=35 cam=6  pm=0 mo=105 pl=(-21101,-9618)
+F330   fx=6   em=35 cam=6  pm=0 mo=200 pl=(-21101,-9618)
+F345   fx=12  em=35 cam=6  pm=0 mo=232 pl=(-21101,-9618)
+F360   fx=26  em=35 cam=6  pm=0 mo=234 pl=(-22118,-9618)
+F375   fx=6   em=35 cam=6  pm=0 mo=200 pl=(-22118,-9618)
+F390   fx=22  em=35 cam=6  pm=0 mo=200 pl=(-22118,-9618)
+F405   fx=6   em=35 cam=6  pm=0 mo=200 pl=(-22118,-9618)
+F420   fx=18  em=35 cam=6  pm=0 mo=200 pl=(-22118,-9618)
+F435   fx=12  em=35 cam=6  pm=0 mo=105 pl=(-22643,-9618)
+F450   fx=7   em=35 cam=6  pm=0 mo=105 pl=(-23768,-9618)
+F465   fx=22  em=35 cam=6  pm=0 mo=105 pl=(-24368,-9618)
+F480   fx=12  em=35 cam=6  pm=0 mo=200 pl=(-24593,-9618)
+F495   fx=18  em=35 cam=6  pm=0 mo=231 pl=(-24593,-9618)
+F510   fx=8   em=35 cam=6  pm=0 mo=231 pl=(-24593,-9618)
+F525   fx=14  em=35 cam=6  pm=0 mo=231 pl=(-25741,-9618)
+F540   fx=22  em=35 cam=6  pm=0 mo=231 pl=(-25741,-9618)
+F555   fx=6   em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
+F570   fx=18  em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
+F585   fx=8   em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
+F600   fx=8   em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
+F615   fx=18  em=35 cam=6  pm=0 mo=200 pl=(-25741,-9618)
+F630   fx=6   em=35 cam=6  pm=0 mo=105 pl=(-25762,-9396)
+F645   fx=28  em=35 cam=6  pm=0 mo=105 pl=(-25867,-8286)
+F660   fx=8   em=35 cam=6  pm=0 mo=105 pl=(-25972,-7176)
+F675   fx=8   em=35 cam=10 pm=0 mo=105 pl=(-26077,-6066)
+F690   fx=24  em=35 cam=10 pm=0 mo=105 pl=(-26182,-4956)
+F705   fx=6   em=35 cam=10 pm=0 mo=105 pl=(-26287,-3846)
+F720   fx=22  em=35 cam=10 pm=0 mo=105 pl=(-26392,-2736)
+F735   fx=6   em=35 cam=10 pm=0 mo=105 pl=(-26497,-1626)
+F750   fx=12  em=35 cam=10 pm=0 mo=105 pl=(-26539,-516)
+F765   fx=18  em=35 cam=10 pm=0 mo=105 pl=(-26541,594)
+F780   fx=6   em=35 cam=10 pm=0 mo=105 pl=(-26537,1704)
+F795   fx=22  em=35 cam=8  pm=0 mo=105 pl=(-26533,2814)
+F810   fx=12  em=35 cam=8  pm=0 mo=105 pl=(-26548,3924)
+F825   fx=12  em=35 cam=8  pm=0 mo=105 pl=(-26544,5034)
+F840   fx=12  em=35 cam=8  pm=0 mo=105 pl=(-26532,6144)
+F855   fx=12  em=35 cam=9  pm=0 mo=105 pl=(-26487,7254)
+F870   fx=24  em=35 cam=9  pm=0 mo=105 pl=(-26418,8364)
+F885   fx=6   em=35 cam=9  pm=0 mo=105 pl=(-26263,9470)
+F900   fx=12  em=35 cam=9  pm=0 mo=105 pl=(-26134,9973)
+F915   fx=12  em=35 cam=9  pm=0 mo=200 pl=(-26014,10245)
+F930   fx=6   em=35 cam=9  pm=0 mo=200 pl=(-26014,10245)
+
+state.log-Segmente (Raumreihenfolge aus debug.log, Startraum ohne Ladezeile): Start(1240/Titel): F0..F250 (251 Zeilen), 2031: F1..F5814 (5814 Zeilen), 20B1: F1..F942 (942 Zeilen), 2051: F1..F60 (60 Zeilen)

@@ -46,3 +46,31 @@ Befund zu den roten Laeufen 2-5
  * Einordnung: dieselbe Klasse wie Memory reai-v2-gui-tests-flattern-bei-parallelen-agenten (Fenster-Riegel enden unter paralleler
    Last ohne Befund, einzeln gruen; Lauf 1 zeigt sogar die dort genannte SDL-Assertion WIN_AddDisplay). Ungeklaert bleibt, warum die vier
    stillen Enden alle im selben Spielfenster (20B0 F751-F779, ~220 s nach dem Start) liegen.
+
+============================================================================================================================
+Welle 2, Lauf A - 2026-11-07 (Kopf r41/integration d5f4f5914 nach den Merges form_nb4 + annette; exe re15_pc.exe 21:42:29,
+sha256 70a9756d4b65561be033013a63e27ce75c67995b97a9b45b0e65981a4d33d518, ninja -n re15_pc = "no work to do"; Messkopie
+re15_pc_r41int_kette.exe bytegleich). Registriert: integration_r41_ventilkette_kette (probes/r41_ventilkette.cmake:70, Leon)
+und integration_r41_ventilkette_kette_elza (Spur Q, probes/r41_restpunkte.cmake:85). Skript test_r41_ventilkette_kette.cmake
+unveraendert. Last: waehrend aller Laeufe 5-11 fremde exe-Fenster anderer Agenten (G2-Abnahme 7, Sichel, Zug-Riegel).
+
+Laeufe der REGISTRIERTEN Riegel (ctest --test-dir build -R '^integration_r41_ventilkette_kette(_elza)?$' --timeout 900 -VV)
+ Nr  Zeit (exe)            Test                                       Ergebnis
+ W1  23:47:51-23:52:20     #1338 integration_r41_ventilkette_kette_elza   GRUEN: Passed 268.75 s; 20B1-Spiellogik-Zeilen bytegleich mit dem eigenen Lauf
+ W2  23:52:20-23:56:32     #1371 integration_r41_ventilkette_kette        GRUEN: Passed 251.66 s; 20B0-Spiellogik-Zeilen bytegleich mit dem eigenen Lauf; ctest "100% tests passed, 0 tests failed out of 2"
+ Zusatz (Spur A, ctest -R '^integration_r41_wasser20b0$' --timeout 1800)
+ W3  23:56:32-23:58:15     #1387 integration_r41_wasser20b0             GRUEN: Passed 101.31 s; Leon 20B0 + Elza 20B1 je EM024-Spawns=35, fx-Zeilen id=15: 2408,
+                                                                      Cut7=1 Cut6=1 frei=1 zeichnet0x24=0; 3 fremde exe-Fenster
+     Nebenbefund (nur Text, nicht geaendert): CMake-Dev-Warnung "Syntax Warning in cmake code at column 102/130: Argument not separated
+     from preceding token by whitespace" an test_r41_wasser20b0.cmake:97 (verschachtelte Anfuehrungszeichen in der FATAL_ERROR-Meldung
+     "kein \"letterbox closed -> gameplay\""); wirkt nur, wenn diese Meldung ausgeloest wuerde.
+
+Eigene exe-Laeufe derselben Kette (Wegplan des Riegels wortgleich, beschleunigter Renderer, Framedumps jedes 3. Bild,
+state.log, SCD-Trace, Ton-Mitschnitt; Auswertung kette_leon_logzeilen.txt / kette_elza_logzeilen.txt)
+ leon 23:40:49-23:46:28 GRUEN exit 0 (5:39, EXIT_AT Bild 60 in 2050)   elza 23:41:13-23:46:45 GRUEN exit 0 (5:32, EXIT_AT Bild 60 in 2051)
+ beide parallel, dazu 9 fremde exe-Fenster; alle 28 Riegel-Pruefungen + 3 Spur-A-Pruefungen je Figur erfuellt; 20B0/20B1
+ Bild fuer Bild gleich (state.log 942 Zeilen: Lage/rot/cam/pm/mo/msg identisch, 4 Zeilen fx um 1 verschieden).
+
+Befund zu den roten Laeufen 2-5 der Messung 1 (stilles Ende bei 20B0 F750): in Welle 2 nicht aufgetreten - zwei eigene Laeufe
+und beide registrierten Riegel (4 Laeufe) liefen unter vergleichbarer Last (5-11 fremde Fenster) ueber F751-F779 hinweg bis
+ROOM2050/2051. Ursache bleibt offen (UEBERGABE 3b, vor dem Release auf ruhiger Maschine in der vollen Suite pruefen).
