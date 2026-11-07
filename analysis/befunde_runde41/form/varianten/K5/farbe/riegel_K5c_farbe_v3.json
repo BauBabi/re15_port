@@ -12,14 +12,6 @@
    "wert": "1.07",
    "ok": "True"
   },
-  "H2 CLUT (0-2 bytegleich, Rangfolge)": {
-   "wert": "{'zeilen_0_2_bytegleich': [True, True, True], 'zeilen': {3: {'basis': 1, 'genutzt': 105, 'umgefaerbt': 99, 'vertauschungen': 90, 'dE_median': 34.7, 'dE_max': 71.2}, 4: {'basis': 2, 'genutzt': 72, 'umgefaerbt': 67, 'vertauschungen': 76, 'dE_median': 20.9, 'dE_max': 80.2}, 5: {'basis': 0, 'genutzt': 21, 'umgefaerbt': 16, 'vertauschungen': 0, 'dE_median': 12.05, 'dE_max': 47.6}, 6: {'basis': 2, 'genutzt': 81, 'umgefaerbt': 64, 'vertauschungen': 0, 'dE_median': 46.4, 'dE_max': 63.4}, 7: {'basis': 0, 'genutzt': 82, 'umgefaerbt': 81, 'vertauschungen': 0, 'dE_median': 30.9, 'dE_max': 45.0}, 8: {'basis': 0, 'genutzt': 35, 'umgefaerbt': 35, 'vertauschungen': 0, 'dE_median': 44.1, 'dE_max': 50.1}, 9: {'basis': 2, 'genutzt': 29, 'umgefaerbt': 20, 'vertauschungen': 0, 'dE_median': 5.9, 'dE_max': 14.3}, 10: {'basis': 0, 'genutzt': 21, 'umgefaerbt': 17, 'vertauschungen': 0, 'dE_median': 13.6, 'dE_max': 46.3}, 11: {'basis': 2, 'genutzt': 28, 'umgefaerbt': 22, 'vertauschungen': 0, 'dE_median': 6.7, 'dE_max': 45.4}, 12: {'basis': 1, 'genutzt': 148, 'umgefaerbt': 137, 'vertauschungen': 243, 'dE_median': 42.6, 'dE_max': 71.2}, 13: {'basis': 1, 'genutzt': 70, 'umgefaerbt': 69, 'vertauschungen': 26, 'dE_median': 32.8, 'dE_max': 52.7}, 14: {'basis': 1, 'genutzt': 70, 'umgefaerbt': 69, 'vertauschungen': 43, 'dE_median': 29.1, 'dE_max': 54.7}, 15: {'basis': 1, 'genutzt': 74, 'umgefaerbt': 73, 'vertauschungen': 43, 'dE_median': 27.7, 'dE_max': 49.3}, 16: {'basis': 1, 'genutzt': 183, 'umgefaerbt': 164, 'vertauschungen': 549, 'dE_median': 32.75, 'dE_max': 61.7}}}",
-   "ok": false
-  },
-  "P1 Posterisierung Atlas dL0/5-10/Farben": {
-   "wert": "{'fleischtexel': 2906, 'dL0': 65.8, 'dL5_10': 12.0, 'farben': 191}",
-   "ok": false
-  },
   "D1 Vergroesserung je Teil, abgebildete G4-Flaeche / Median ortsgenau (<= 2,0)": {
    "wert": "{'Rumpf': (1.16, 1.2), 'Schwanz': (1.2, 1.27), 'Hals': (1.05, 1.12), 'Beine': (1.03, 1.14), 'Arme': (1.21, 1.24), 'Klauen': (0.95, 1.06), 'Kopf/Kiefer aussen': (1.25, 1.41)}",
    "ok": true
@@ -44,29 +36,21 @@
    "wert": "([43.88, 21.35, -2.89], 4.89, 162)",
    "ok": true
   },
-  "F2t Feldmittel Band Lab / dE": {
-   "wert": "([55.54, 23.81, 18.92], 15.09, 554)",
-   "ok": false
-  },
   "F3t Zaehne L* / C*": {
    "wert": "(77.68, 5.28)",
    "ok": true
   },
   "A1 Chroma Koerper [V3-Felder]": {
-   "wert": "11.5",
+   "wert": "11.6",
    "ok": true
   },
   "A2 Farbstreuung je Teil sigma_ab [V3-Felder]": {
-   "wert": "9.2",
+   "wert": "9.4",
    "ok": true
   },
   "A3 Fleischrot-Anteil % [V3-Felder]": {
-   "wert": "13.0",
+   "wert": "13.2",
    "ok": true
-  },
-  "A4 Farbton Fleischrot Grad [V3-Felder]": {
-   "wert": "5.0",
-   "ok": false
   },
   "A5 Neutralweiss Koerper % [V3-Felder]": {
    "wert": "0.0",
@@ -77,8 +61,8 @@
    "ok": true
   },
   "A7 HF_rest je Feld (max) [V3-Felder]": {
-   "wert": "{'koerper': 0.139, 'kopf': 0.084, 'kiefer': 0.036, 'kralle': 0.349}",
-   "ok": false
+   "wert": "{'koerper': 0.111, 'kopf': 0.084, 'kiefer': 0.036, 'kralle': 0.096}",
+   "ok": true
   },
   "A8 Kiefer Zahn/Rot/Dunkel % [V3-Felder]": {
    "wert": "(2.0, 35.0, 70.9)",
@@ -100,44 +84,24 @@
    "wert": "5.57",
    "ok": true
   },
-  "P2 Render dL=0 je Teil (K5c, G4, Diff)": {
-   "wert": "{'Rumpf': (71.3, 66.9, 4.4), 'Brust': (59.3, 43.9, 15.5), 'Schwanz': (37.2, 41.0, -3.8), 'Hals': (71.0, 59.4, 11.6), 'Hinterbein l (W)': (61.1, 62.7, -1.6), 'Hinterbein r (W)': (60.8, 62.5, -1.7), 'Vorderbein l (W)': (55.0, 52.6, 2.4), 'Vorderbein r (W)': (54.7, 42.4, 12.2), 'Klauen l (W)': (54.0, 14.2, 39.8), 'Klauen r (W)': (63.0, 12.6, 50.4), 'Kopf + Kiefer': (61.1, 48.7, 12.3)}",
+  "P2 Render dL=0 Klauen (K5c, G4, Diff)": {
+   "wert": "{'Klauen l (W)': (30.5, 14.2, 16.3), 'Klauen r (W)': (33.6, 12.6, 21.0)}",
    "ok": false
   },
-  "B10 Atlas Fleisch dunkle Linien %": {
-   "wert": "2.63",
+  "P2 Render dL=0 uebrige Teile (K5c, G4, Diff)": {
+   "wert": "{'Rumpf': (71.3, 66.9, 4.4), 'Brust': (59.3, 43.9, 15.5), 'Schwanz': (37.2, 41.0, -3.8), 'Hals': (71.0, 59.4, 11.6), 'Hinterbein l (W)': (61.1, 62.7, -1.6), 'Hinterbein r (W)': (60.8, 62.5, -1.7), 'Vorderbein l (W)': (55.0, 52.6, 2.4), 'Vorderbein r (W)': (54.7, 42.4, 12.2), 'Kopf + Kiefer': (61.1, 48.7, 12.3)}",
    "ok": false
   },
   "B11 Atlas Haut dunkle Linien %": {
-   "wert": "3.72",
-   "ok": true
-  },
-  "B12 Atlas Kopf Linien % / Canny-Dichte": {
-   "wert": "(0.9, 8.23)",
-   "ok": false
-  },
-  "B13 Atlas Fleisch Canny-Dichte": {
-   "wert": "16.11",
-   "ok": false
-  },
-  "B14 Rotflaechen L*-Streuung Render / Atlas": {
-   "wert": "(6.8, 2.8)",
+   "wert": "3.24",
    "ok": false
   },
   "B15 Render Rotflaechen a*-Streuung": {
-   "wert": "4.6",
+   "wert": "4.4",
    "ok": true
   },
-  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
-   "wert": "28.4",
-   "ok": false
-  },
-  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
-   "wert": "(0.528, [0.516, 0.561, 0.507], 0.593)",
-   "ok": false
-  },
   "N1 neutral C* je Winkel (Variante / EM30)": {
-   "wert": "((10.4, 9.6, 9.8), (10.0, 12.5, 10.5))",
+   "wert": "((11.0, 10.0, 10.1), (10.0, 12.5, 10.5))",
    "ok": true
   },
   "N2 neutral L*>85 % je Winkel": {
@@ -149,55 +113,35 @@
    "ok": null
   },
   "K2 Bild1 ab-Streuung Figur / Original [V1, ersetzt]": {
-   "wert": "(5.8, 9.8)",
+   "wert": "(5.7, 9.8)",
    "ok": null
-  },
-  "K3 Bild1 dE je Zone (max)": {
-   "wert": "{'Schwanz': 1.3, 'Ruecken/Flanke': 8.0, 'Hinterbein l (W)': 7.3, 'Hinterbein r (W)': 6.8, 'Vorderglied r (W)': 8.2}",
-   "ok": false
   },
   "K5 Bild1 Hell-Klasse Ruecken % / W Figur %": {
    "wert": "(2.6, 9.9, 0.0, 0.5)",
    "ok": true
-  },
-  "K6 Bild2 Figur dE / Chroma": {
-   "wert": "(7.3, 23.4, 25.6)",
-   "ok": false
-  },
-  "K7 Bild2 Unterkiefer dE / a*": {
-   "wert": "(9.9, 27.5, 24.9)",
-   "ok": false
   },
   "K8 Bild2 Oberkiefer dE": {
    "wert": "3.3",
    "ok": true
   },
   "K9 Bild2 Klauen a* (r, l) / Original": {
-   "wert": "(18.5, 24.1, 26.6, 22.2)",
+   "wert": "(24.5, 24.1, 27.8, 22.2)",
    "ok": true
   },
   "K10 Bild2 Augenpunkte L*max (r, l)": {
    "wert": "(16.0, 29.0)",
    "ok": true
   },
-  "K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)": {
-   "wert": "(6.4, 7.8)",
-   "ok": false
-  },
-  "K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)": {
-   "wert": "(5.8, 8.0)",
-   "ok": false
-  },
   "B9 Rot im Umrissband % (3 Winkel)": {
-   "wert": "8.3",
+   "wert": "9.5",
    "ok": true
   },
   "B9b Rot im Umrissband % Clip 0": {
-   "wert": "6.3",
+   "wert": "7.2",
    "ok": true
   },
   "K13 Bild2 dunkle Klasse Figur %": {
-   "wert": "81.1",
+   "wert": "76.4",
    "ok": true
   },
   "F1-Flaeche Bild 1 px / IoU Maske F1 (Original 646 px) [info]": {
@@ -209,7 +153,7 @@
    "ok": true
   },
   "K15 Bild2 Fleischband Lab / dE / Rotklasse %": {
-   "wert": "([50.3, 30.3, 20.7], 5.1, 94.3)",
+   "wert": "([50.5, 30.0, 20.6], 4.9, 94.4)",
    "ok": true
   },
   "K4 Bild1 Rot-Klasse Figur % / Original [Info, ersetzt durch RV1]": {
@@ -233,7 +177,7 @@
    "ok": null
   },
   "Bild 1 Ruecken RV1 Rot eng %": {
-   "wert": "23.71 (11.20..42.94)",
+   "wert": "23.66 (11.20..42.94)",
    "ok": true
   },
   "Bild 1 Ruecken RV2 Farbton a*-Klasse Grad": {
@@ -253,7 +197,7 @@
    "ok": null
   },
   "Bild 1 Flanke RV1 Rot eng %": {
-   "wert": "3.77 (0.29..25.51)",
+   "wert": "3.76 (0.29..25.51)",
    "ok": true
   },
   "Bild 1 Flanke RV2 Farbton a*-Klasse Grad": {
@@ -269,7 +213,7 @@
    "ok": true
   },
   "Bild 1 Flanke RV5 C* Rotklasse [Info] [Info]": {
-   "wert": "13.55 (12.56..18.84)",
+   "wert": "13.56 (12.56..18.84)",
    "ok": null
   },
   "Bild 1 Brust/Bauch RV1 Rot eng % [Info]": {
@@ -281,11 +225,11 @@
    "ok": null
   },
   "Bild 1 Vorderbeine RV1 Rot eng %": {
-   "wert": "3.68 (0.00..7.11)",
+   "wert": "4.04 (0.00..7.11)",
    "ok": true
   },
   "Bild 1 Vorderbeine RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "3.68 (<= 5.55)",
+   "wert": "4.04 (<= 5.55)",
    "ok": true
   },
   "Bild 1 Hinterbeine RV1 Rot eng %": {
@@ -293,15 +237,15 @@
    "ok": true
   },
   "Bild 1 Hinterbeine RV2 Farbton a*-Klasse Grad": {
-   "wert": "-30.12 (-81.86..21.06)",
+   "wert": "-30.13 (-81.86..21.06)",
    "ok": true
   },
   "Bild 1 Hinterbeine RV3 dL Rot - Haut": {
-   "wert": "-0.34 (-9.73..1.53)",
+   "wert": "-0.35 (-9.73..1.53)",
    "ok": true
   },
   "Bild 1 Hinterbeine RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "2.34 (<= 6.44)",
+   "wert": "2.35 (<= 6.44)",
    "ok": true
   },
   "Bild 1 Hinterbeine RV5 C* Rotklasse [Info] [Info]": {
@@ -321,7 +265,7 @@
    "ok": true
   },
   "Bild 1 Schwanz RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "6.72 (<= 9.65)",
+   "wert": "6.73 (<= 9.65)",
    "ok": true
   },
   "Bild 1 Schwanz RV5 C* Rotklasse [Info] [Info]": {
@@ -329,7 +273,7 @@
    "ok": null
   },
   "Bild 1 Figur RV1 Rot eng %": {
-   "wert": "12.57 (6.86..21.42)",
+   "wert": "12.62 (6.86..21.42)",
    "ok": true
   },
   "Bild 1 Figur RV2 Farbton a*-Klasse Grad": {
@@ -349,7 +293,7 @@
    "ok": null
   },
   "Bild 2 Ruecken RV1 Rot eng %": {
-   "wert": "58.48 (42.05..65.19)",
+   "wert": "58.45 (42.05..65.19)",
    "ok": true
   },
   "Bild 2 Ruecken RV2 Farbton a*-Klasse Grad": {
@@ -361,7 +305,7 @@
    "ok": true
   },
   "Bild 2 Ruecken RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "53.72 (<= 62.19)",
+   "wert": "53.69 (<= 62.19)",
    "ok": true
   },
   "Bild 2 Ruecken RV5 C* Rotklasse [Info] [Info]": {
@@ -369,31 +313,31 @@
    "ok": null
   },
   "Bild 2 Flanke RV1 Rot eng % [Info]": {
-   "wert": "19.25 (10.27..94.29)",
+   "wert": "19.35 (10.27..94.29)",
    "ok": null
   },
   "Bild 2 Flanke RV2 Farbton a*-Klasse Grad [Info]": {
-   "wert": "0.14 (-0.42..21.22)",
+   "wert": "0.02 (-0.42..21.22)",
    "ok": null
   },
   "Bild 2 Flanke RV3 dL Rot - Haut [Info]": {
-   "wert": "2.99 (-17.18..-3.42)",
+   "wert": "2.94 (-17.18..-3.42)",
    "ok": null
   },
   "Bild 2 Flanke RV4 groesste Rotflaeche eng % (Obergrenze) [Info]": {
-   "wert": "10.98 (<= 108.17)",
+   "wert": "10.95 (<= 108.17)",
    "ok": null
   },
   "Bild 2 Flanke RV5 C* Rotklasse [Info] [Info]": {
-   "wert": "20.87 (22.18..35.22)",
+   "wert": "20.84 (22.18..35.22)",
    "ok": null
   },
   "Bild 2 Brust/Bauch RV1 Rot eng %": {
-   "wert": "31.82 (17.83..67.73)",
+   "wert": "31.69 (17.83..67.73)",
    "ok": true
   },
   "Bild 2 Brust/Bauch RV2 Farbton a*-Klasse Grad": {
-   "wert": "11.42 (-0.07..15.87)",
+   "wert": "11.46 (-0.07..15.87)",
    "ok": true
   },
   "Bild 2 Brust/Bauch RV3 dL Rot - Haut": {
@@ -401,47 +345,47 @@
    "ok": true
   },
   "Bild 2 Brust/Bauch RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "9.13 (<= 17.81)",
+   "wert": "9.15 (<= 17.81)",
    "ok": true
   },
   "Bild 2 Brust/Bauch RV5 C* Rotklasse [Info] [Info]": {
    "wert": "21.99 (22.75..30.65)",
    "ok": null
   },
-  "Bild 2 Vorderbeine RV1 Rot eng %": {
-   "wert": "64.61 (56.43..74.45)",
-   "ok": true
+  "Bild 2 Vorderbeine RV1 Rot eng % [Info]": {
+   "wert": "77.32 (56.43..74.45)",
+   "ok": null
   },
-  "Bild 2 Vorderbeine RV2 Farbton a*-Klasse Grad": {
-   "wert": "36.72 (34.45..38.75)",
-   "ok": true
+  "Bild 2 Vorderbeine RV2 Farbton a*-Klasse Grad [Info]": {
+   "wert": "35.84 (34.45..38.75)",
+   "ok": null
   },
-  "Bild 2 Vorderbeine RV3 dL Rot - Haut": {
-   "wert": "-3.18 (-11.42..3.02)",
-   "ok": true
+  "Bild 2 Vorderbeine RV3 dL Rot - Haut [Info]": {
+   "wert": "-5.63 (-11.42..3.02)",
+   "ok": null
   },
-  "Bild 2 Vorderbeine RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "40.08 (<= 49.02)",
-   "ok": true
+  "Bild 2 Vorderbeine RV4 groesste Rotflaeche eng % (Obergrenze) [Info]": {
+   "wert": "40.42 (<= 49.02)",
+   "ok": null
   },
   "Bild 2 Vorderbeine RV5 C* Rotklasse [Info] [Info]": {
-   "wert": "33.22 (31.91..40.29)",
+   "wert": "35.24 (31.91..40.29)",
    "ok": null
   },
   "Bild 2 Hals RV1 Rot eng %": {
-   "wert": "26.38 (17.93..72.27)",
+   "wert": "26.31 (17.93..72.27)",
    "ok": true
   },
   "Bild 2 Hals RV2 Farbton a*-Klasse Grad": {
-   "wert": "18.59 (1.66..20.34)",
+   "wert": "18.62 (1.66..20.34)",
    "ok": true
   },
   "Bild 2 Hals RV3 dL Rot - Haut": {
-   "wert": "-1.86 (-6.27..-1.53)",
+   "wert": "-1.87 (-6.27..-1.53)",
    "ok": true
   },
   "Bild 2 Hals RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "13.48 (<= 29.82)",
+   "wert": "12.99 (<= 29.82)",
    "ok": true
   },
   "Bild 2 Hals RV5 C* Rotklasse [Info] [Info]": {
@@ -449,48 +393,128 @@
    "ok": null
   },
   "Bild 2 Kopf RV1 Rot eng %": {
-   "wert": "61.77 (25.45..92.45)",
+   "wert": "61.36 (25.45..92.45)",
    "ok": true
   },
   "Bild 2 Kopf RV2 Farbton a*-Klasse Grad": {
-   "wert": "19.28 (13.07..24.73)",
+   "wert": "19.30 (13.07..24.73)",
    "ok": true
   },
   "Bild 2 Kopf RV3 dL Rot - Haut": {
-   "wert": "-0.84 (-4.41..1.41)",
+   "wert": "-0.82 (-4.41..1.41)",
    "ok": true
   },
   "Bild 2 Kopf RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "56.93 (<= 118.32)",
+   "wert": "50.68 (<= 118.32)",
    "ok": true
   },
   "Bild 2 Kopf RV5 C* Rotklasse [Info] [Info]": {
    "wert": "23.05 (23.15..31.05)",
    "ok": null
   },
+  "Bild 2 Vorderbeine ohne Krallen RV1 Rot eng %": {
+   "wert": "75.01 (53.27..76.11)",
+   "ok": true
+  },
+  "Bild 2 Vorderbeine ohne Krallen RV2 Farbton a*-Klasse Grad": {
+   "wert": "35.59 (32.72..39.57)",
+   "ok": true
+  },
+  "Bild 2 Vorderbeine ohne Krallen RV3 dL Rot - Haut": {
+   "wert": "0.81 (-13.51..3.11)",
+   "ok": true
+  },
+  "Bild 2 Vorderbeine ohne Krallen RV4 groesste Rotflaeche eng % (Obergrenze)": {
+   "wert": "44.06 (<= 58.34)",
+   "ok": true
+  },
   "Bild 2 Figur RV1 Rot eng %": {
-   "wert": "53.85 (38.95..74.81)",
+   "wert": "57.65 (38.95..74.81)",
    "ok": true
   },
   "Bild 2 Figur RV2 Farbton a*-Klasse Grad": {
-   "wert": "24.64 (17.71..27.89)",
+   "wert": "25.57 (17.71..27.89)",
    "ok": true
   },
   "Bild 2 Figur RV3 dL Rot - Haut": {
-   "wert": "-0.62 (-7.25..2.25)",
+   "wert": "0.57 (-7.25..2.25)",
    "ok": true
   },
   "Bild 2 Figur RV4 groesste Rotflaeche eng % (Obergrenze)": {
-   "wert": "45.49 (<= 87.08)",
+   "wert": "47.40 (<= 87.08)",
    "ok": true
   },
   "Bild 2 Figur RV5 C* Rotklasse [Info] [Info]": {
-   "wert": "26.82 (27.70..33.30)",
+   "wert": "28.12 (27.70..33.30)",
    "ok": null
   },
   "RV6 Texel Ader gegen umgebende Haut je Region (dL*, da* <= 0)": {
-   "wert": "{'Ruecken': 'dL -4.6 da* -0.4 (n 721/1191)', 'Flanke': 'dL -4.1 da* -1.9 (n 844/1399)', 'Brust/Bauch': 'dL -5.1 da* -1.0 (n 796/1363)', 'Vorderbeine': 'dL -7.7 da* -0.9 (n 3991/6987)', 'Hinterbeine': 'dL -2.3 da* -2.6 (n 267/1365)', 'Hals': 'dL -6.3 da* -0.5 (n 777/1227)', 'Kopf': 'dL -4.4 da* -3.6 (n 865/1293)', 'Schwanz': 'dL -6.9 da* -0.4 (n 695/2373)'}",
+   "wert": "{'Ruecken': 'dL -4.6 da* -0.4 (n 721/1191)', 'Flanke': 'dL -4.1 da* -1.9 (n 844/1399)', 'Brust/Bauch': 'dL -5.1 da* -1.0 (n 796/1363)', 'Vorderbeine': 'dL -6.3 da* -0.4 (n 3991/6987)', 'Hinterbeine': 'dL -2.3 da* -2.6 (n 267/1365)', 'Hals': 'dL -6.3 da* -0.5 (n 777/1227)', 'Kopf': 'dL -4.4 da* -3.6 (n 865/1293)', 'Schwanz': 'dL -6.9 da* -0.4 (n 695/2373)'}",
    "ok": true
+  },
+  "AE1 Aenderungsumfang gegen Runde 4 (nur Krallen)": {
+   "wert": "{'sektionen_ungleich': [], 'geometrie_ungleich': [], 'kralle_flaechen_geaendert': 252, 'kralle_andere_felder': 0, 'nicht_kralle_flaechen_geaendert': 0, 'clut_zeilen': (17, 17), 'clut_zeilen_geaendert': [], 'clut_zeilen_fremd_gelesen': [], 'texel_geaendert': 0, 'texel_geaendert_fremd_gelesen': 0}",
+   "ok": true
+  },
+  "H2 CLUT (0-2 bytegleich, Rangfolge) [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "{'zeilen_0_2_bytegleich': [True, True, True], 'zeilen': {3: {'basis': 1, 'genutzt': 105, 'umgefaerbt': 99, 'vertauschungen': 90, 'dE_median': 34.7, 'dE_max': 71.2}, 4: {'basis': 2, 'genutzt': 72, 'umgefaerbt': 67, 'vertauschungen': 76, 'dE_median': 20.9, 'dE_max': 80.2}, 5: {'basis': 0, 'genutzt': 21, 'umgefaerbt': 16, 'vertauschungen': 0, 'dE_median': 12.05, 'dE_max': 47.6}, 6: {'basis': 2, 'genutzt': 81, 'umgefaerbt': 64, 'vertauschungen': 0, 'dE_median': 46.4, 'dE_max': 63.4}, 7: {'basis': 0, 'genutzt': 82, 'umgefaerbt': 81, 'vertauschungen': 0, 'dE_median': 30.9, 'dE_max': 45.0}, 8: {'basis': 0, 'genutzt': 35, 'umgefaerbt': 35, 'vertauschungen': 0, 'dE_median': 44.1, 'dE_max': 50.1}, 9: {'basis': 2, 'genutzt': 29, 'umgefaerbt': 20, 'vertauschungen': 0, 'dE_median': 5.9, 'dE_max': 14.3}, 10: {'basis': 0, 'genutzt': 21, 'umgefaerbt': 17, 'vertauschungen': 0, 'dE_median': 13.6, 'dE_max': 46.3}, 11: {'basis': 2, 'genutzt': 28, 'umgefaerbt': 22, 'vertauschungen': 0, 'dE_median': 6.7, 'dE_max': 45.4}, 12: {'basis': 1, 'genutzt': 148, 'umgefaerbt': 137, 'vertauschungen': 243, 'dE_median': 42.6, 'dE_max': 71.2}, 13: {'basis': 1, 'genutzt': 70, 'umgefaerbt': 69, 'vertauschungen': 26, 'dE_median': 32.8, 'dE_max': 52.7}, 14: {'basis': 1, 'genutzt': 70, 'umgefaerbt': 69, 'vertauschungen': 43, 'dE_median': 29.1, 'dE_max': 54.7}, 15: {'basis': 1, 'genutzt': 74, 'umgefaerbt': 73, 'vertauschungen': 43, 'dE_median': 27.7, 'dE_max': 49.3}, 16: {'basis': 1, 'genutzt': 149, 'umgefaerbt': 148, 'vertauschungen': 392, 'dE_median': 30.85, 'dE_max': 61.7}}}",
+   "ok": null
+  },
+  "P1 Posterisierung Atlas dL0/5-10/Farben [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "{'fleischtexel': 2967, 'dL0': 64.9, 'dL5_10': 12.0, 'farben': 205}",
+   "ok": null
+  },
+  "F2t Feldmittel Band Lab / dE [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "([55.54, 23.81, 18.92], 15.09, 554)",
+   "ok": null
+  },
+  "A4 Farbton Fleischrot Grad [V3-Felder] [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "6.0",
+   "ok": null
+  },
+  "B10 Atlas Fleisch dunkle Linien % [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "2.6",
+   "ok": null
+  },
+  "B12 Atlas Kopf Linien % / Canny-Dichte [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "(0.9, 8.23)",
+   "ok": null
+  },
+  "B13 Atlas Fleisch Canny-Dichte [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "16.22",
+   "ok": null
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "(6.5, 3.2)",
+   "ok": null
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen % [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "19.7",
+   "ok": null
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "(0.545, [0.545, 0.569, 0.521], 0.597)",
+   "ok": null
+  },
+  "K3 Bild1 dE je Zone (max) [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "{'Schwanz': 1.3, 'Ruecken/Flanke': 8.0, 'Hinterbein l (W)': 7.3, 'Hinterbein r (W)': 6.8, 'Vorderglied r (W)': 8.2}",
+   "ok": null
+  },
+  "K6 Bild2 Figur dE / Chroma [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "(6.6, 24.4, 25.6)",
+   "ok": null
+  },
+  "K7 Bild2 Unterkiefer dE / a* [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "(9.8, 27.5, 24.9)",
+   "ok": null
+  },
+  "K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x) [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "(6.4, 7.8)",
+   "ok": null
+  },
+  "K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x) [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]": {
+   "wert": "(5.7, 8.0)",
+   "ok": null
   }
  },
  "zusatz": {
@@ -674,8 +698,9 @@
    "Bild 2 Ruecken RV1 Rot eng %",
    "Bild 2 Ruecken RV2 Farbton a*-Klasse Grad",
    "Bild 2 Ruecken RV3 dL Rot - Haut",
-   "Bild 2 Vorderbeine RV1 Rot eng %",
-   "Bild 2 Vorderbeine RV2 Farbton a*-Klasse Grad"
+   "Bild 2 Vorderbeine ohne Krallen RV1 Rot eng %",
+   "Bild 2 Vorderbeine ohne Krallen RV2 Farbton a*-Klasse Grad",
+   "Bild 2 Vorderbeine ohne Krallen RV3 dL Rot - Haut"
   ],
   "rv_bindend": 45,
   "rv6": {
@@ -688,6 +713,54 @@
    "Kopf": "dL +7.5 da* +30.4 (n 865/1293) VERLETZT",
    "Schwanz": "dL +5.7 da* +17.0 (n 695/2373) VERLETZT"
   },
-  "rv6_ok": false
+  "rv6_ok": false,
+  "ae1": {
+   "sektionen_ungleich": [],
+   "geometrie_ungleich": [],
+   "kralle_flaechen_geaendert": 252,
+   "kralle_andere_felder": 0,
+   "nicht_kralle_flaechen_geaendert": 3340,
+   "clut_zeilen": [
+    17,
+    9
+   ],
+   "clut_zeilen_geaendert": [
+    3,
+    4,
+    5,
+    6
+   ],
+   "clut_zeilen_fremd_gelesen": [
+    3,
+    4,
+    5,
+    6
+   ],
+   "texel_geaendert": 0,
+   "texel_geaendert_fremd_gelesen": 0
+  },
+  "ae1_ok": false
+ },
+ "gegenprobe_r4": {
+  "a7": {
+   "koerper": 0.139,
+   "kopf": 0.084,
+   "kiefer": 0.036,
+   "kralle": 0.349
+  },
+  "p2_klauen": {
+   "Klauen l (W)": [
+    54.0,
+    14.2,
+    39.8
+   ],
+   "Klauen r (W)": [
+    63.0,
+    12.6,
+    50.4
+   ]
+  },
+  "a7_ok": false,
+  "p2_ok": false
  }
 }

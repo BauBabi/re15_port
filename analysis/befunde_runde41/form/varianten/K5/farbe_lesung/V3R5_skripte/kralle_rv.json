@@ -1,0 +1,338 @@
+{
+ "Bild 1|Vorderbeine|Vorlage|alle": {
+  "rot_eng": 0.02,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.02,
+  "px": 4006
+ },
+ "Bild 1|Vorderbeine|Vorlage|Kralle": {
+  "rot_eng": 0.0,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.0,
+  "px": 3
+ },
+ "Bild 1|Vorderbeine|Vorlage|ohne Kralle": {
+  "rot_eng": 0.02,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.02,
+  "px": 4003
+ },
+ "Bild 1|Figur|Vorlage|alle": {
+  "rot_eng": 9.96,
+  "h_rot": -8.17,
+  "dL": 0.79,
+  "gross_eng_p": 2.09,
+  "px": 28536
+ },
+ "Bild 1|Figur|Vorlage|Kralle": {
+  "rot_eng": 0.0,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.0,
+  "px": 3
+ },
+ "Bild 1|Figur|Vorlage|ohne Kralle": {
+  "rot_eng": 9.96,
+  "h_rot": -8.17,
+  "dL": 0.79,
+  "gross_eng_p": 2.09,
+  "px": 28533
+ },
+ "Bild 1|Vorderbeine|Runde 3|alle": {
+  "rot_eng": 12.28,
+  "h_rot": -6.13,
+  "dL": 7.31,
+  "gross_eng_p": 6.55,
+  "px": 4006
+ },
+ "Bild 1|Vorderbeine|Runde 3|Kralle": {
+  "rot_eng": 0.0,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.0,
+  "px": 3
+ },
+ "Bild 1|Vorderbeine|Runde 3|ohne Kralle": {
+  "rot_eng": 12.29,
+  "h_rot": -6.13,
+  "dL": 7.34,
+  "gross_eng_p": 6.55,
+  "px": 4003
+ },
+ "Bild 1|Figur|Runde 3|alle": {
+  "rot_eng": 20.88,
+  "h_rot": -0.19,
+  "dL": 2.03,
+  "gross_eng_p": 10.59,
+  "px": 28536
+ },
+ "Bild 1|Figur|Runde 3|Kralle": {
+  "rot_eng": 0.0,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.0,
+  "px": 3
+ },
+ "Bild 1|Figur|Runde 3|ohne Kralle": {
+  "rot_eng": 20.88,
+  "h_rot": -0.19,
+  "dL": 2.03,
+  "gross_eng_p": 10.59,
+  "px": 28533
+ },
+ "Bild 1|Vorderbeine|Runde 4|alle": {
+  "rot_eng": 3.68,
+  "h_rot": -25.09,
+  "dL": 3.84,
+  "gross_eng_p": 3.68,
+  "px": 4006
+ },
+ "Bild 1|Vorderbeine|Runde 4|Kralle": {
+  "rot_eng": 0.0,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.0,
+  "px": 3
+ },
+ "Bild 1|Vorderbeine|Runde 4|ohne Kralle": {
+  "rot_eng": 3.68,
+  "h_rot": -25.09,
+  "dL": 3.85,
+  "gross_eng_p": 3.68,
+  "px": 4003
+ },
+ "Bild 1|Figur|Runde 4|alle": {
+  "rot_eng": 12.57,
+  "h_rot": -22.39,
+  "dL": 1.93,
+  "gross_eng_p": 2.63,
+  "px": 28530
+ },
+ "Bild 1|Figur|Runde 4|Kralle": {
+  "rot_eng": 0.0,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.0,
+  "px": 3
+ },
+ "Bild 1|Figur|Runde 4|ohne Kralle": {
+  "rot_eng": 12.57,
+  "h_rot": -22.39,
+  "dL": 1.93,
+  "gross_eng_p": 2.63,
+  "px": 28527
+ },
+ "Bild 1|Vorderbeine|Runde 5|alle": {
+  "rot_eng": 4.04,
+  "h_rot": -24.75,
+  "dL": 3.77,
+  "gross_eng_p": 4.04,
+  "px": 4006
+ },
+ "Bild 1|Vorderbeine|Runde 5|Kralle": {
+  "rot_eng": 0.0,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.0,
+  "px": 3
+ },
+ "Bild 1|Vorderbeine|Runde 5|ohne Kralle": {
+  "rot_eng": 4.04,
+  "h_rot": -24.75,
+  "dL": 3.79,
+  "gross_eng_p": 4.04,
+  "px": 4003
+ },
+ "Bild 1|Figur|Runde 5|alle": {
+  "rot_eng": 12.62,
+  "h_rot": -22.39,
+  "dL": 1.93,
+  "gross_eng_p": 2.63,
+  "px": 28530
+ },
+ "Bild 1|Figur|Runde 5|Kralle": {
+  "rot_eng": 0.0,
+  "h_rot": null,
+  "dL": null,
+  "gross_eng_p": 0.0,
+  "px": 3
+ },
+ "Bild 1|Figur|Runde 5|ohne Kralle": {
+  "rot_eng": 12.62,
+  "h_rot": -22.39,
+  "dL": 1.93,
+  "gross_eng_p": 2.63,
+  "px": 28527
+ },
+ "Bild 2|Vorderbeine|Vorlage|alle": {
+  "rot_eng": 62.61,
+  "h_rot": 36.28,
+  "dL": -7.62,
+  "gross_eng_p": 32.69,
+  "px": 12142
+ },
+ "Bild 2|Vorderbeine|Vorlage|Kralle": {
+  "rot_eng": 51.04,
+  "h_rot": 38.4,
+  "dL": -4.8,
+  "gross_eng_p": 35.74,
+  "px": 3921
+ },
+ "Bild 2|Vorderbeine|Vorlage|ohne Kralle": {
+  "rot_eng": 68.13,
+  "h_rot": 35.42,
+  "dL": -8.03,
+  "gross_eng_p": 42.51,
+  "px": 8221
+ },
+ "Bild 2|Figur|Vorlage|alle": {
+  "rot_eng": 42.83,
+  "h_rot": 25.35,
+  "dL": 0.49,
+  "gross_eng_p": 16.79,
+  "px": 38853
+ },
+ "Bild 2|Figur|Vorlage|Kralle": {
+  "rot_eng": 51.04,
+  "h_rot": 38.4,
+  "dL": -4.8,
+  "gross_eng_p": 35.74,
+  "px": 3921
+ },
+ "Bild 2|Figur|Vorlage|ohne Kralle": {
+  "rot_eng": 41.91,
+  "h_rot": 22.87,
+  "dL": 0.57,
+  "gross_eng_p": 14.36,
+  "px": 34932
+ },
+ "Bild 2|Vorderbeine|Runde 3|alle": {
+  "rot_eng": 82.29,
+  "h_rot": 28.48,
+  "dL": -3.92,
+  "gross_eng_p": 39.8,
+  "px": 12142
+ },
+ "Bild 2|Vorderbeine|Runde 3|Kralle": {
+  "rot_eng": 78.76,
+  "h_rot": 33.26,
+  "dL": -20.76,
+  "gross_eng_p": 45.59,
+  "px": 3921
+ },
+ "Bild 2|Vorderbeine|Runde 3|ohne Kralle": {
+  "rot_eng": 83.98,
+  "h_rot": 25.82,
+  "dL": 7.86,
+  "gross_eng_p": 46.92,
+  "px": 8221
+ },
+ "Bild 2|Figur|Runde 3|alle": {
+  "rot_eng": 70.24,
+  "h_rot": 29.67,
+  "dL": 3.55,
+  "gross_eng_p": 52.43,
+  "px": 38853
+ },
+ "Bild 2|Figur|Runde 3|Kralle": {
+  "rot_eng": 78.76,
+  "h_rot": 33.26,
+  "dL": -20.76,
+  "gross_eng_p": 45.59,
+  "px": 3921
+ },
+ "Bild 2|Figur|Runde 3|ohne Kralle": {
+  "rot_eng": 69.29,
+  "h_rot": 29.04,
+  "dL": 4.78,
+  "gross_eng_p": 55.53,
+  "px": 34932
+ },
+ "Bild 2|Vorderbeine|Runde 4|alle": {
+  "rot_eng": 64.61,
+  "h_rot": 36.72,
+  "dL": -3.18,
+  "gross_eng_p": 40.08,
+  "px": 12142
+ },
+ "Bild 2|Vorderbeine|Runde 4|Kralle": {
+  "rot_eng": 51.61,
+  "h_rot": 37.89,
+  "dL": -7.35,
+  "gross_eng_p": 25.1,
+  "px": 3921
+ },
+ "Bild 2|Vorderbeine|Runde 4|ohne Kralle": {
+  "rot_eng": 70.81,
+  "h_rot": 36.27,
+  "dL": 2.48,
+  "gross_eng_p": 47.87,
+  "px": 8221
+ },
+ "Bild 2|Figur|Runde 4|alle": {
+  "rot_eng": 53.85,
+  "h_rot": 24.64,
+  "dL": -0.62,
+  "gross_eng_p": 45.49,
+  "px": 38853
+ },
+ "Bild 2|Figur|Runde 4|Kralle": {
+  "rot_eng": 51.61,
+  "h_rot": 37.89,
+  "dL": -7.35,
+  "gross_eng_p": 25.1,
+  "px": 3921
+ },
+ "Bild 2|Figur|Runde 4|ohne Kralle": {
+  "rot_eng": 54.1,
+  "h_rot": 22.64,
+  "dL": 0.28,
+  "gross_eng_p": 44.91,
+  "px": 34932
+ },
+ "Bild 2|Vorderbeine|Runde 5|alle": {
+  "rot_eng": 77.32,
+  "h_rot": 35.84,
+  "dL": -5.63,
+  "gross_eng_p": 40.42,
+  "px": 12142
+ },
+ "Bild 2|Vorderbeine|Runde 5|Kralle": {
+  "rot_eng": 78.08,
+  "h_rot": 35.82,
+  "dL": -21.88,
+  "gross_eng_p": 45.37,
+  "px": 3921
+ },
+ "Bild 2|Vorderbeine|Runde 5|ohne Kralle": {
+  "rot_eng": 76.96,
+  "h_rot": 35.86,
+  "dL": 1.49,
+  "gross_eng_p": 47.89,
+  "px": 8221
+ },
+ "Bild 2|Figur|Runde 5|alle": {
+  "rot_eng": 57.65,
+  "h_rot": 25.57,
+  "dL": 0.57,
+  "gross_eng_p": 47.4,
+  "px": 38853
+ },
+ "Bild 2|Figur|Runde 5|Kralle": {
+  "rot_eng": 78.08,
+  "h_rot": 35.82,
+  "dL": -21.88,
+  "gross_eng_p": 45.37,
+  "px": 3921
+ },
+ "Bild 2|Figur|Runde 5|ohne Kralle": {
+  "rot_eng": 55.36,
+  "h_rot": 23.01,
+  "dL": 0.33,
+  "gross_eng_p": 43.9,
+  "px": 34932
+ }
+}
