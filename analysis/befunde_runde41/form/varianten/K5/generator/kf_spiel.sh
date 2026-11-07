@@ -7,7 +7,7 @@ W=$(cd "$(dirname "$0")/../../../../../.." && pwd -W)
 D=$W/analysis/befunde_runde41/form/varianten/K5/farbe/K5c_farbe_v2
 HEUTE=0
 for a in "$@"; do case "$a" in --mit-heute) HEUTE=1 ;; *) D=$a ;; esac; done
-A=$W/analysis/befunde_runde41/form/varianten/K5/farbe/spiel
+A=${KF_SPIEL_AUS:-$W/analysis/befunde_runde41/form/varianten/K5/farbe/spiel}
 mkdir -p "$A"
 cd "$W" || exit 2
 Z=$(python -c "
