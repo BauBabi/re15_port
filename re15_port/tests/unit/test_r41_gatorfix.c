@@ -3072,8 +3072,14 @@ static int obenlog(const char *dir, int ab_kampf)
     {   char pf[1024]; static char zl[4096]; snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
         FILE *fb = fopen(pf, "r");
         if (fb) { while (fgets(zl, sizeof zl, fb)) { if (strstr(zl, "KANISTER angehaengt")) { const char *q = strrchr(zl, 'F'); if (q && auf == 0) auf = atoi(q + 1); } } fclose(fb); } }
-    if (ab_kampf) { auf = -1; for (int f = 0; f < 40000 && auf < 0; f++) if (ph[f] == 2 || ph[f] == 3 || ph[f] == 4 || ph[f] == 5 || ph[f] == 6 || ph[f] == 7 || ph[f] == 12) auf = f;
-                    if (auf < 0) auf = 0; }
+    if (ab_kampf) {   /* Kampfbeginn = Ende des RE2-Intros: gator_boss.log "RE2 KAMERA INTRO frei (Zonenkamera an) Cut c F<n>" (gator_re2_r41.c gr2_kam_frei; ohne Kanister
+                       * schreibt der Boss keine gator_trag.log), sonst das erste Bild einer Kampfphase in gator_trag.log */
+        auf = -1;
+        {   char pf[1024]; static char zl[4096]; snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
+            FILE *fb = fopen(pf, "r");
+            if (fb) { while (fgets(zl, sizeof zl, fb)) { const char *q = strstr(zl, "KAMERA INTRO frei"); if (q && auf < 0) { q = strstr(q, " F"); if (q) auf = atoi(q + 2); } } fclose(fb); } }
+        for (int f = 0; f < 40000 && auf < 0; f++) if (ph[f] == 2 || ph[f] == 3 || ph[f] == 4 || ph[f] == 5 || ph[f] == 6 || ph[f] == 7 || ph[f] == 12) auf = f;
+        if (auf < 0) auf = 0; }
     int oben_n = 0, erst_f = -1, letzt_f = -1, treffer = 0, tr_oben = 0, je[5] = { 0, 0, 0, 0, 0 };
     int erst_offs = -1, erst_tf = -1, pause_max = 0, abschn = 0, verlassen_max = 0, a = -1, letzt_tr = -1, oben_vor_auf = 0;
     const char *erst_art = "-";
@@ -3126,7 +3132,7 @@ static int aussenlog(const char *dir)
     if (!fs) { printf("aussenlog: %s fehlt\n", pf); return 2; }
     snprintf(pf, sizeof pf, "%s/climb.log", dir);
     FILE *fc = fopen(pf, "r");
-    int n = 0, aus = 0, deck = 0, block = 0, erst = -1, ex = 0, ey = 0, ez = 0, emax = 0, letzt = -1, ok_cl = fc != NULL, oben_n = 0;
+    int n = 0, aus = 0, deck = 0, block = 0, erst = -1, ex = 0, ey = 0, ez = 0, emax = 0, letzt = -1, ok_cl = fc != NULL, oben_n = 0, kl = 0;
     char erst_art[16] = "-"; unsigned eraum = 0;
     if (!fc) { const int ns = nb3_state_lesen(dir);   /* letzter Besuch ohne y */
                for (int i = 0; i < ns; i++) { n++; const nb3_st_t *r = &s_nb3_st[i];
@@ -3140,6 +3146,11 @@ static int aussenlog(const char *dir)
         const char *r = strstr(zc, "room="); if (!r || sscanf(r, "room=%x", &raum) != 1) continue;
         const char *q = strstr(zc, "pos=("); if (!q || sscanf(q, "pos=(%d,%d,%d)", &cx, &cy, &cz) != 3) continue;
         if ((raum & 0xFFFEu) != 0x2090u) continue;
+        {   /* Klettern (climb.log sub = Substate 9/10, climb_common.c): die Figur steigt zwischen Deck und Wasser, y laeuft durch (gemessen abn2_rampe_west_elza
+             * F502-F505: sub=10 ph=3/4, y -1210 .. -640 bei z -14032 vor der Nordkante) - kein Bild "oben" und keins "unten", nicht gezaehlt */
+            const char *sb = strstr(zc, " sub="); int sub = 0;
+            if (sb && sscanf(sb, " sub=%d", &sub) == 1 && sub != 0) { kl++; continue; }
+        }
         n++;
         const int oben = cy < -900;
         int a = 0, d = 0, b = 0;
@@ -3156,8 +3167,8 @@ static int aussenlog(const char *dir)
     }
     fclose(fs); if (fc) fclose(fc);
     const int ok = n > 0 && aus == 0 && deck == 0 && block == 0;
-    printf("aussenlog: %d Bilder in ROOM2090/2091%s, davon oben %d; aussen %d, Deck verlassen %d, im Block %d; erstes F%d (%s) bei (%d,%d,%d) Raum %04X, letztes F%d, "
-           "groesster Abstand hinter der Aussenwand %d -> %s (0 verlangt)\n", n, ok_cl ? "" : " (ohne climb.log: letzter Besuch, nur Aussenwaende)", oben_n, aus, deck, block,
+    printf("aussenlog: %d Bilder in ROOM2090/2091%s (Klettern %d nicht gezaehlt), davon oben %d; aussen %d, Deck verlassen %d, im Block %d; erstes F%d (%s) bei (%d,%d,%d) Raum %04X, letztes F%d, "
+           "groesster Abstand hinter der Aussenwand %d -> %s (0 verlangt)\n", n, ok_cl ? "" : " (ohne climb.log: letzter Besuch, nur Aussenwaende)", kl, oben_n, aus, deck, block,
            erst, erst_art, ex, ey, ez, eraum, letzt, emax, ok ? "ok" : "VERFEHLT");
     return ok ? 0 : 1;
 }
