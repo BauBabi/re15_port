@@ -17,10 +17,23 @@
 #   P2b vor1210   ROOM11E0 -> Tuer -> ROOM1210: Text-Platz Slot 9 angelegt; RE15_FIRE_AOT Slot 9 -> msg 20
 #   P4a vor6030   ROOM6000 -> Tuer -> ROOM6030 (Cut 6), 3 s vorwaerts in die Marke: Wagen-Szene; seit Runde 41 ST80-T
 #                 das Programm k_s80_6030_sub02 mit 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8), kein "Where's Elza"
-#   P4b zug_leon  CONTINUE in ROOM6030 (Cut 0): Annette-Szene ZUERST; seit Runde 41 ST80-T msg 11/12 neu und 25/26
-#                 vor "Certainly." (k_s80_6030_sub08), kein "biker girl", kein "Keeping the monsters"
+#   P4b zug_leon  CONTINUE in ROOM6030 (Cut 0), Wagen-Szene NICHT gelaufen ((3,22)=0): Fuehrerstand VOR dem Wagen.
+#                 Seit Runde 41 ST80 Nachbesserung 1 (Abnahme 1 M1) die Fassung k_s80_6030_sub08_vorne: msg 11, 31
+#                 "Everyone we could find. Can you start this thing?", 13 - KEINE Sherry-Zeile (msg 12/25/26/40 nie),
+#                 kein "biker girl", kein "Keeping the monsters". GEGENPROBE: Stand ad8532cd4 zeigt hier msg 12/25 -> rot.
+#   P4h zug_wagen CONTINUE in ROOM6030 (Cut 0) mit (3,22)=1 (Wagen zuerst, sub02 @0x00D7A): Fuehrerstand wie bisher
+#                 (k_s80_6030_sub08): msg 11, 12, 25, 26 vor "Certainly.", kein msg 31/40
+#   P4i nachtrag  CONTINUE in ROOM6030 (Cut 0) mit (3,22)=1, (4,23)=1 und (9,128)=1 (vorne zuerst, danach Wagen):
+#                 sub07 @0x0110C -> Nachtrag k_s80_6030_sub09_nachtrag: msg 40, 25; kein msg 11/13/31 (nichts doppelt)
 #   P4c annette   CONTINUE in ROOM6000: Treffen mit Annette msg 0..3 mit neuem msg 0/3
 #   P4d ada       CONTINUE in ROOM50B0: Adas Szene, msg 1 neu
+# TEIL=zug (Runde 41 ST80 Nachbesserung 1; normale Eingaben, kein CONTINUE im Fuehrerstand, Weg = Abnahme 1 Lauf kabine5):
+#   P4j vorne_weg ROOM6000 -> Tuer -> ROOM6030 (Cut 6) -> Gang -> Treppe (main00 @0x00CB2) -> Tuer Slot 1 (@0x00C52) ->
+#                 Fuehrerstand VOR dem Wagen (11, 31, 13..19) -> Tuer zurueck -> Treppe -> Marke Slot 5 (@0x00CC6) ->
+#                 Wagen (13 Zeilen, "Who are you two?" vor Johns Vorstellung) -> zurueck nach vorne -> Nachtrag (40, 25).
+#                 Reihenfolge geprueft, jede Zeile genau einmal, kein msg 12/26.
+#   P4k wagen_weg ROOM6000 -> ROOM6030 -> Marke (P4a-Weg) -> Wagen -> Gang/Treppe/Tuer -> Fuehrerstand wie bisher
+#                 (11, 12, 25, 26, 13..19), kein msg 31/40.
 # TEIL=elza:
 #   P3a schuppen  CONTINUE in ROOM1091 (Elza): Aktionstaste vor dem Schuppen -> msg 20 "It's a burnt-out shed..."
 #   P3b vor1091   ROOM1051 -> Tuer -> ROOM1091 (Elza): Text-Platz Slot 5 angelegt; RE15_FIRE_AOT Slot 5 -> msg 20
@@ -34,7 +47,7 @@
 # Tick 0 -> F60" nach dem Tuer-Eintritt erneut) — die Tuer-Laeufe enden deshalb mit langem Warten, und der
 # zweite Druck bei F60 im Zielraum trifft dort keinen Platz (Spawn-Vorwaertspunkte geprueft, Dossier).
 #
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_story_karte> -DWORKDIR=<dir> -DTEIL=leon|elza
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_story_karte> -DWORKDIR=<dir> -DTEIL=leon|elza|zug
 #               -P test_r36_story.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -118,6 +131,35 @@ function(darf_nicht _name _text _wort)
     message(STATUS "r36_story[${_name}]: ok   nicht: ${_wort}")
 endfunction()
 
+# Runde 41 ST80 Nachbesserung 1: Reihenfolge (erstes Vorkommen von _a vor dem ersten von _b) und Anzahl.
+function(vor _name _text _a _b)
+    string(FIND "${_text}" "${_a}" _pa)
+    string(FIND "${_text}" "${_b}" _pb)
+    if(_pa LESS 0 OR _pb LESS 0 OR NOT _pa LESS _pb)
+        message(FATAL_ERROR "r36_story[${_name}]: Reihenfolge falsch: '${_a}' (@${_pa}) muss vor '${_b}' (@${_pb}) stehen")
+    endif()
+    message(STATUS "r36_story[${_name}]: ok   '${_a}' vor '${_b}'")
+endfunction()
+
+function(genau_einmal _name _text _wort)
+    string(REPLACE "${_wort}" "\n@@TREFFER@@\n" _t "${_text}")
+    string(REGEX MATCHALL "@@TREFFER@@" _m "${_t}")
+    list(LENGTH _m _n)
+    if(NOT _n EQUAL 1)
+        message(FATAL_ERROR "r36_story[${_name}]: ${_n}x statt genau einmal: ${_wort}")
+    endif()
+    message(STATUS "r36_story[${_name}]: ok   genau einmal: ${_wort}")
+endfunction()
+
+# Sherry darf vor dem Wagengespraech in keiner angezeigten Zeile stehen.
+function(keine_sherry_zeile _name _text)
+    string(REGEX MATCH "\\[msgtext\\][^\n]*(Sherry|daughter|little girl)" _m "${_text}")
+    if(_m)
+        message(FATAL_ERROR "r36_story[${_name}]: Sherry-Zeile vor dem Wagen: ${_m}")
+    endif()
+    message(STATUS "r36_story[${_name}]: ok   keine Sherry-Zeile")
+endfunction()
+
 if(TEIL STREQUAL "leon")
     # --- P1a: Tuer ROOM1010 -> ROOM1020 OHNE Strom -------------------------------------------------------
     lauf(p1a "vor1020" 1010 "A0.3,W30" "400#1020" _d "RE15_FIRE_AOT=5@200#1020")
@@ -142,7 +184,8 @@ if(TEIL STREQUAL "leon")
 
     # --- P4a: Tuer ROOM6000 -> ROOM6030 (Cut 6), vorwaerts in die Marke: Wagen-Szene ----------------------
     lauf(p4a "vor6030" 6000 "A0.3,W8,U3,W40" "3600#6030" _d)
-    muss(p4a "${_d}" "[story36] ROOM6030: 13 Nachrichten umgeschrieben/neu")
+    # 15 = 13 (ST80-T) + msg 31/40 (ST80 Nachbesserung 1)
+    muss(p4a "${_d}" "[story36] ROOM6030: 15 Nachrichten umgeschrieben/neu")
     muss(p4a "${_d}" "[story80] ROOM6030 Evt_exec sub02 -> Programm")
     muss(p4a "${_d}" "[msgtext] room=6030 id=1 \"Leon: Who are you two?\"")
     muss(p4a "${_d}" "[msgtext] room=6030 id=21 \"John: Name's John. This is Sherry. We made it down here with a girl named Elza.\"")
@@ -154,16 +197,45 @@ if(TEIL STREQUAL "leon")
     darf_nicht(p4a "${_d}" "Where's Elza")
     darf_nicht(p4a "${_d}" "I see. Thanks.")
 
-    # --- P4b: CONTINUE in ROOM6030 (Cut 0): Annette-Szene ZUERST ------------------------------------------
+    # --- P4b: CONTINUE in ROOM6030 (Cut 0), (3,22)=0: Fuehrerstand VOR dem Wagen (ST80 Nachbesserung 1) ------
     lauf(p4b "zug_leon" 6030 "W30" "1500#6030" _d)
-    muss(p4b "${_d}" "[story80] ROOM6030 Evt_exec sub08 -> Programm")
+    muss(p4b "${_d}" "[story80] ROOM6030 Evt_exec sub08 -> Programm (576 B): Fuehrerstand vor dem Wagen")
     muss(p4b "${_d}" "[msgtext] room=6030 id=11 \"Annette: Is everyone aboard?\"")
-    muss(p4b "${_d}" "[msgtext] room=6030 id=12 \"Leon: Everyone we could find. There's a little girl in the back... Sherry.\"")
-    muss(p4b "${_d}" "[msgtext] room=6030 id=25 \"Annette: Sherry...? My daughter is on this train? ...Thank God.\"")
-    muss(p4b "${_d}" "[msgtext] room=6030 id=26 \"Leon: Can you start this thing?\"")
+    muss(p4b "${_d}" "[msgtext] room=6030 id=31 \"Leon: Everyone we could find. Can you start this thing?\"")
     muss(p4b "${_d}" "[msgtext] room=6030 id=13 \"Annette: Certainly.\"")
+    vor(p4b "${_d}" "[msgtext] room=6030 id=11 " "[msgtext] room=6030 id=31 ")
+    vor(p4b "${_d}" "[msgtext] room=6030 id=31 " "[msgtext] room=6030 id=13 ")
+    keine_sherry_zeile(p4b "${_d}")
+    darf_nicht(p4b "${_d}" "[msgtext] room=6030 id=12 ")
+    darf_nicht(p4b "${_d}" "[msgtext] room=6030 id=25 ")
+    darf_nicht(p4b "${_d}" "[msgtext] room=6030 id=26 ")
+    darf_nicht(p4b "${_d}" "[msgtext] room=6030 id=40 ")
     darf_nicht(p4b "${_d}" "biker girl")
     darf_nicht(p4b "${_d}" "Keeping the monsters at bay")
+
+    # --- P4h: CONTINUE in ROOM6030 (Cut 0), (3,22)=1: Fuehrerstand NACH dem Wagen wie bisher ----------------
+    lauf(p4h "zug_leon;wagen" 6030 "W30" "1500#6030" _d)
+    muss(p4h "${_d}" "[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26")
+    muss(p4h "${_d}" "[msgtext] room=6030 id=11 \"Annette: Is everyone aboard?\"")
+    muss(p4h "${_d}" "[msgtext] room=6030 id=12 \"Leon: Everyone we could find. There's a little girl in the back... Sherry.\"")
+    muss(p4h "${_d}" "[msgtext] room=6030 id=25 \"Annette: Sherry...? My daughter is on this train? ...Thank God.\"")
+    muss(p4h "${_d}" "[msgtext] room=6030 id=26 \"Leon: Can you start this thing?\"")
+    muss(p4h "${_d}" "[msgtext] room=6030 id=13 \"Annette: Certainly.\"")
+    vor(p4h "${_d}" "[msgtext] room=6030 id=12 " "[msgtext] room=6030 id=25 ")
+    vor(p4h "${_d}" "[msgtext] room=6030 id=26 " "[msgtext] room=6030 id=13 ")
+    darf_nicht(p4h "${_d}" "[msgtext] room=6030 id=31 ")
+    darf_nicht(p4h "${_d}" "[msgtext] room=6030 id=40 ")
+    darf_nicht(p4h "${_d}" "biker girl")
+
+    # --- P4i: CONTINUE in ROOM6030 (Cut 0) nach "vorne zuerst" und Wagen: Nachtrag msg 40, 25 ---------------
+    lauf(p4i "zug_leon;wagen;nachtrag" 6030 "W30" "1500#6030" _d)
+    muss(p4i "${_d}" "[story80] ROOM6030 Evt_exec sub09 -> Programm (238 B): Fuehrerstand nach dem Wagen, Nachtrag")
+    muss(p4i "${_d}" "[msgtext] room=6030 id=40 \"Leon: There's a little girl in the back... Sherry.\"")
+    muss(p4i "${_d}" "[msgtext] room=6030 id=25 \"Annette: Sherry...? My daughter is on this train? ...Thank God.\"")
+    vor(p4i "${_d}" "[msgtext] room=6030 id=40 " "[msgtext] room=6030 id=25 ")
+    darf_nicht(p4i "${_d}" "[msgtext] room=6030 id=11 ")
+    darf_nicht(p4i "${_d}" "[msgtext] room=6030 id=13 ")
+    darf_nicht(p4i "${_d}" "[msgtext] room=6030 id=31 ")
 
     # --- P4c: CONTINUE in ROOM6000: Treffen mit Annette --------------------------------------------------
     lauf(p4c "annette" 6000 "W30" "1500#6000" _d)
@@ -175,6 +247,50 @@ if(TEIL STREQUAL "leon")
     lauf(p4d "ada" 50b0 "W30" "1500#50b0" _d)
     muss(p4d "${_d}" "[msgtext] room=50b0 id=1 \"Ada: Some other survivors are down there with her too.\"")
     darf_nicht(p4d "${_d}" "Your other friends")
+elseif(TEIL STREQUAL "zug")
+    # --- P4j: Weg der Abnahme 1 (Lauf kabine5) als Eingabe, plus Rueckweg nach vorne ------------------------
+    #     6000 Tuer (A0.3) -> 6030 Cut 6 bei (-17970,-20380); Gang nach Suedost bis (-13307,-22758); Treppe (A0.3);
+    #     Tuer Slot 1 (A0.3) -> Fuehrerstand; W68 Szene; Tuer zurueck (A0.3), Treppe (A0.3), XU3 in die Marke;
+    #     W75 Wagen-Szene. Rueckweg (gemessen, ST80 NB1): L0.40 dreht von 1045 auf -107, XU3 laeuft am Gang-Rand
+    #     (SCA #3 / #2) nach (-13307,-22758), R0.07, Treppe, XU1, R0.07, Tuer Slot 1 -> Nachtrag ab F5838.
+    lauf(p4j "vor6030" 6000
+         "A0.3,W8,L0.07,XU0.5,W0.5,L0.38,XU2,R0.12,A0.3,W6,XU1,R0.07,A0.3,W68,A0.3,W11,XU1,A0.3,W2,XU3,W75,L0.40,XU3,W0.5,R0.07,A0.3,W6,XU1,R0.07,A0.3,W30"
+         "6800#6030" _d)
+    muss(p4j "${_d}" "[story80] ROOM6030 Evt_exec sub08 -> Programm (576 B): Fuehrerstand vor dem Wagen")
+    muss(p4j "${_d}" "[story80] ROOM6030 Evt_exec sub02 -> Programm")
+    muss(p4j "${_d}" "[story80] ROOM6030 Evt_exec sub09 -> Programm (238 B): Fuehrerstand nach dem Wagen, Nachtrag")
+    vor(p4j "${_d}" "[msgtext] room=6030 id=11 " "[msgtext] room=6030 id=31 ")
+    vor(p4j "${_d}" "[msgtext] room=6030 id=31 " "[msgtext] room=6030 id=13 ")
+    vor(p4j "${_d}" "[msgtext] room=6030 id=19 " "[msgtext] room=6030 id=0 ")
+    vor(p4j "${_d}" "[msgtext] room=6030 id=1 \"Leon: Who are you two?\"" "[msgtext] room=6030 id=21 ")
+    vor(p4j "${_d}" "[msgtext] room=6030 id=21 " "[msgtext] room=6030 id=40 ")
+    vor(p4j "${_d}" "[msgtext] room=6030 id=8 " "[msgtext] room=6030 id=40 ")
+    vor(p4j "${_d}" "[msgtext] room=6030 id=40 " "[msgtext] room=6030 id=25 ")
+    # bis zur Vorstellung im Wagen (msg 21) keine Sherry-Zeile
+    string(FIND "${_d}" "[msgtext] room=6030 id=21 " _p21)
+    string(SUBSTRING "${_d}" 0 ${_p21} _vor_wagen)
+    keine_sherry_zeile(p4j "${_vor_wagen}")
+    foreach(_id 11 31 13 14 15 16 17 18 19 0 1 21 2 3 22 4 5 6 7 23 24 8 40 25)
+        genau_einmal(p4j "${_d}" "[msgtext] room=6030 id=${_id} ")
+    endforeach()
+    darf_nicht(p4j "${_d}" "[msgtext] room=6030 id=12 ")
+    darf_nicht(p4j "${_d}" "[msgtext] room=6030 id=26 ")
+
+    # --- P4k: Wagen zuerst (P4a-Weg), danach derselbe Rueckweg nach vorne: Fuehrerstand wie bisher ----------
+    lauf(p4k "vor6030" 6000 "A0.3,W8,U3,W62,L0.40,XU3,W0.5,R0.07,A0.3,W6,XU1,R0.07,A0.3,W68" "4800#6030" _d)
+    muss(p4k "${_d}" "[story80] ROOM6030 Evt_exec sub02 -> Programm")
+    muss(p4k "${_d}" "[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26")
+    vor(p4k "${_d}" "[msgtext] room=6030 id=8 " "[msgtext] room=6030 id=11 ")
+    vor(p4k "${_d}" "[msgtext] room=6030 id=11 " "[msgtext] room=6030 id=12 ")
+    vor(p4k "${_d}" "[msgtext] room=6030 id=12 " "[msgtext] room=6030 id=25 ")
+    vor(p4k "${_d}" "[msgtext] room=6030 id=25 " "[msgtext] room=6030 id=26 ")
+    vor(p4k "${_d}" "[msgtext] room=6030 id=26 " "[msgtext] room=6030 id=13 ")
+    foreach(_id 0 1 21 2 3 22 4 5 6 7 23 24 8 11 12 25 26 13 14 15 16 17 18 19)
+        genau_einmal(p4k "${_d}" "[msgtext] room=6030 id=${_id} ")
+    endforeach()
+    darf_nicht(p4k "${_d}" "[msgtext] room=6030 id=31 ")
+    darf_nicht(p4k "${_d}" "[msgtext] room=6030 id=40 ")
+    darf_nicht(p4k "${_d}" "Evt_exec sub09 -> Programm")
 elseif(TEIL STREQUAL "elza")
     # --- P3a: CONTINUE in ROOM1091 (Elza), Aktionstaste vor dem Schuppen --------------------------------
     lauf(p3a "schuppen" 1091 "A0.3,W30" "400#1091" _d)
@@ -217,7 +333,7 @@ elseif(TEIL STREQUAL "elza")
     darf_nicht(p4g "${_d}" "bit me")
     darf_nicht(p4g "${_d}" "medical supplies")
 else()
-    message(FATAL_ERROR "r36_story: TEIL '${TEIL}' unbekannt (leon|elza)")
+    message(FATAL_ERROR "r36_story: TEIL '${TEIL}' unbekannt (leon|elza|zug)")
 endif()
 
 file(REMOVE "${_exe_kopie}")

@@ -32,8 +32,11 @@
  * Zusatz:
  *   strom     (4,0xF3) = 1 (Generator, ROOM11F0 sub18 @0x016F6)
  *   cut=N     gespeicherter Kamera-Cut (CONTINUE stellt ihn her, main.c s_resume_cut) — fuer Bildbelege
+ *   wagen     (3,22) = 1: Wagen-Szene ROOM6030 gelaufen (Schreiber sub02 @0x00D7A `22 03 16 01`) — Runde 41 ST80 NB1
+ *   nachtrag  (4,23) = 1 (Fuehrerstand-Szene gesehen, sub08 @0x0113A `22 04 17 01`) und (9,128) = 1 (Port-Bit
+ *             "Sherry-Nachtrag offen", gesetzt von der Fassung "vorne zuerst", re15_story80_r41.h) — Runde 41 ST80 NB1
  *
- * Aufruf: probe_r36_story_karte <kartendatei> <stand> [strom] [cut=N]
+ * Aufruf: probe_r36_story_karte <kartendatei> <stand> [strom] [cut=N] [wagen] [nachtrag]
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -43,6 +46,7 @@
 #include "re15_aot.h"
 #include "re15_gameflow.h"
 #include "re15_story_r36.h"
+#include "re15_story80_r41.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,9 +79,11 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < sizeof k_staende / sizeof k_staende[0]; i++)
         if (strcmp(argv[2], k_staende[i].name) == 0) s = &k_staende[i];
     if (!s) { printf("FAIL: unbekannter Stand '%s'\n", argv[2]); return 2; }
-    int strom = 0, cut = -1;
+    int strom = 0, cut = -1, wagen = 0, nachtrag = 0;
     for (int a = 3; a < argc; a++) {
         if (strcmp(argv[a], "strom") == 0) strom = 1;
+        else if (strcmp(argv[a], "wagen") == 0) wagen = 1;
+        else if (strcmp(argv[a], "nachtrag") == 0) nachtrag = 1;
         else if (strncmp(argv[a], "cut=", 4) == 0) cut = atoi(argv[a] + 4);
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
@@ -94,6 +100,8 @@ int main(int argc, char **argv)
     if (s->raum == 0x30C1) re15_game_flag_set(3, 0x39, 1);
     if (s->raum == 0x30E1) re15_game_flag_set(3, 0xB5, 1);   /* sub03 @0x00EA8 Ck(3,0xB5)=1 (Runde 41 ST80-T) */
     if (strcmp(s->name, "vor6030") == 0) re15_game_flag_set(3, 0x64, 1);   /* Annette-Treffen 6000 gesehen */
+    if (wagen) re15_game_flag_set(RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT, 1);
+    if (nachtrag) { re15_game_flag_set(4, 23, 1); re15_game_flag_set(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, 1); }
 
     if (cut >= 0) g_scd.cam_id = (uint8_t)cut;   /* gespeicherter Kamera-Cut (re15_savedata camera_cut, v3) */
     re15_savedata_t sd;
