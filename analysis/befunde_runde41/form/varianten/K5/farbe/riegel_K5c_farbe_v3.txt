@@ -2,62 +2,127 @@
   G0 Geometrie-Diff                                          {'geometrie_gleich': True, 'edd_emr_bytegleich': True, 'knochen': 32, 'clips': 3}          GRUEN
   H1 Herkunft G4-Texel je Teil % (>= 95)                     {'Rumpf': 100.0, 'Schwanz': 100.0, 'Hals': 100.0, 'Beine': 100.0, 'Arme': 100.0, 'Klauen': 100.0, 'Kopf/Kiefer aussen': 100.0} GRUEN
   H1b Anteil Sonderfelder % 3D-Flaeche (<= 10)               1.07                                                                                       GRUEN
-  H2 CLUT (0-2 bytegleich, Rangfolge)                        {'zeilen_0_2_bytegleich': [True, True, True], 'zeilen': {3: {'basis': 0, 'genutzt': 21, 'umgefaerbt': 6, 'vertauschungen': 0, 'dE_median': 19.299999999999997, 'dE_max': 25.4}, 4: {'basis': 1, 'genutzt': 148, 'umgefaerbt': 106, 'vertauschungen': 0, 'dE_median': 21.5, 'dE_max': 41.5}, 5: {'basis': 2, 'genutzt': 72, 'umgefaerbt': 33, 'vertauschungen': 0, 'dE_median': 14.6, 'dE_max': 38.3}, 6: {'basis': 2, 'genutzt': 81, 'umgefaerbt': 56, 'vertauschungen': 6, 'dE_median': 46.7, 'dE_max': 63.4}, 7: {'basis': 0, 'genutzt': 82, 'umgefaerbt': 81, 'vertauschungen': 0, 'dE_median': 30.9, 'dE_max': 45.0}, 8: {'basis': 0, 'genutzt': 35, 'umgefaerbt': 35, 'vertauschungen': 0, 'dE_median': 44.1, 'dE_max': 50.1}}} ROT
-  P1 Posterisierung Atlas dL0/5-10/Farben                    {'fleischtexel': 2013, 'dL0': 20.9, 'dL5_10': 27.1, 'farben': 281}                         GRUEN
+  H2 CLUT (0-2 bytegleich, Rangfolge)                        {'zeilen_0_2_bytegleich': [True, True, True], 'zeilen': {3: {'basis': 1, 'genutzt': 105, 'umgefaerbt': 99, 'vertauschungen': 90, 'dE_median': 34.7, 'dE_max': 71.2}, 4: {'basis': 2, 'genutzt': 72, 'umgefaerbt': 67, 'vertauschungen': 76, 'dE_median': 20.9, 'dE_max': 80.2}, 5: {'basis': 0, 'genutzt': 21, 'umgefaerbt': 16, 'vertauschungen': 0, 'dE_median': 12.05, 'dE_max': 47.6}, 6: {'basis': 2, 'genutzt': 81, 'umgefaerbt': 64, 'vertauschungen': 0, 'dE_median': 46.4, 'dE_max': 63.4}, 7: {'basis': 0, 'genutzt': 82, 'umgefaerbt': 81, 'vertauschungen': 0, 'dE_median': 30.9, 'dE_max': 45.0}, 8: {'basis': 0, 'genutzt': 35, 'umgefaerbt': 35, 'vertauschungen': 0, 'dE_median': 44.1, 'dE_max': 50.1}, 9: {'basis': 2, 'genutzt': 29, 'umgefaerbt': 20, 'vertauschungen': 0, 'dE_median': 5.9, 'dE_max': 14.3}, 10: {'basis': 0, 'genutzt': 21, 'umgefaerbt': 17, 'vertauschungen': 0, 'dE_median': 13.6, 'dE_max': 46.3}, 11: {'basis': 2, 'genutzt': 28, 'umgefaerbt': 22, 'vertauschungen': 0, 'dE_median': 6.7, 'dE_max': 45.4}, 12: {'basis': 1, 'genutzt': 148, 'umgefaerbt': 137, 'vertauschungen': 243, 'dE_median': 42.6, 'dE_max': 71.2}, 13: {'basis': 1, 'genutzt': 70, 'umgefaerbt': 69, 'vertauschungen': 26, 'dE_median': 32.8, 'dE_max': 52.7}, 14: {'basis': 1, 'genutzt': 70, 'umgefaerbt': 69, 'vertauschungen': 43, 'dE_median': 29.1, 'dE_max': 54.7}, 15: {'basis': 1, 'genutzt': 74, 'umgefaerbt': 73, 'vertauschungen': 43, 'dE_median': 27.7, 'dE_max': 49.3}, 16: {'basis': 1, 'genutzt': 183, 'umgefaerbt': 164, 'vertauschungen': 549, 'dE_median': 32.75, 'dE_max': 61.7}}} ROT
+  P1 Posterisierung Atlas dL0/5-10/Farben                    {'fleischtexel': 2906, 'dL0': 65.8, 'dL5_10': 12.0, 'farben': 191}                         ROT
   D1 Vergroesserung je Teil, abgebildete G4-Flaeche / Median ortsgenau (<= 2,0) {'Rumpf': (1.16, 1.2), 'Schwanz': (1.2, 1.27), 'Hals': (1.05, 1.12), 'Beine': (1.03, 1.14), 'Arme': (1.21, 1.24), 'Klauen': (0.95, 1.06), 'Kopf/Kiefer aussen': (1.25, 1.41)} GRUEN
   D1 ortsgenau Anteil Flaechen > 2,0 % [info]                {'Rumpf': 12.2, 'Schwanz': 13.1, 'Hals': 1.1, 'Beine': 10.5, 'Arme': 12.8, 'Klauen': 0.0, 'Kopf/Kiefer aussen': 30.6} info
   D1 Messblatt-Formel ohne Wiederholung (Quellmeshes einmal) [info] {'Rumpf': 2.64, 'Schwanz': 2.33, 'Hals': 2.81, 'Beine': 1.03, 'Arme': 1.63, 'Klauen': 1.07, 'Kopf/Kiefer aussen': 2.78} info
   S1b kollabierte UV (Punkt/Linie bei >= 1 Texel^2) % 3D [info] {'Rumpf': 0.0, 'Schwanz': 1.35, 'Hals': 0.0, 'Beine': 1.57, 'Arme': 0.0, 'Klauen': 0.0, 'Kopf/Kiefer aussen': 0.0} info
   S1 fremde Texel je Teil % (<= 1)                           {'Rumpf': 0.0, 'Schwanz': 0.0, 'Hals': 0.0, 'Beine': 0.0, 'Arme': 0.0, 'Klauen': 0.0, 'Kopf/Kiefer aussen': 0.0} GRUEN
-  F1t Feldmittel F1-Stelle Lab / dE                          ([43.81, 23.28, -0.44], 5.84, 162)                                                         GRUEN
+  F1t Feldmittel F1-Stelle Lab / dE                          ([43.88, 21.35, -2.89], 4.89, 162)                                                         GRUEN
   F2t Feldmittel Band Lab / dE                               ([55.54, 23.81, 18.92], 15.09, 554)                                                        ROT
   F3t Zaehne L* / C*                                         (77.68, 5.28)                                                                              GRUEN
-  A1 Chroma Koerper [V3-Felder]                              7.3                                                                                        ROT
-  A2 Farbstreuung je Teil sigma_ab [V3-Felder]               8.7                                                                                        GRUEN
-  A3 Fleischrot-Anteil % [V3-Felder]                         11.1                                                                                       GRUEN
-  A4 Farbton Fleischrot Grad [V3-Felder]                     21.0                                                                                       GRUEN
+  A1 Chroma Koerper [V3-Felder]                              11.5                                                                                       GRUEN
+  A2 Farbstreuung je Teil sigma_ab [V3-Felder]               9.2                                                                                        GRUEN
+  A3 Fleischrot-Anteil % [V3-Felder]                         13.0                                                                                       GRUEN
+  A4 Farbton Fleischrot Grad [V3-Felder]                     5.0                                                                                        ROT
   A5 Neutralweiss Koerper % [V3-Felder]                      0.0                                                                                        GRUEN
   A6 HF_fft je Feld (max) [V3-Felder]                        {'sonder': 0.151}                                                                          GRUEN
-  A7 HF_rest je Feld (max) [V3-Felder]                       {'koerper': 0.086, 'kopf': 0.095, 'kiefer': 0.041, 'kralle': 0.096}                        GRUEN
-  A8 Kiefer Zahn/Rot/Dunkel % [V3-Felder]                    (2.0, 36.3, 67.5)                                                                          ROT
-  A9 Auge L*/C* [V3-Felder]                                  (7.3, 4.4)                                                                                 GRUEN
+  A7 HF_rest je Feld (max) [V3-Felder]                       {'koerper': 0.139, 'kopf': 0.084, 'kiefer': 0.036, 'kralle': 0.349}                        ROT
+  A8 Kiefer Zahn/Rot/Dunkel % [V3-Felder]                    (2.0, 35.0, 70.9)                                                                          GRUEN
+  A9 Auge L*/C* [V3-Felder]                                  (7.3, 3.4)                                                                                 GRUEN
   A10 Texeldichte Teil/Koerper (min,max) [V3-Felder]         (0.59, 2.56)                                                                               GRUEN
-  A11 Schwanz L*-Sprung Glied 1-5 (max) [V3-Felder]          3.2                                                                                        GRUEN
-  A12 Farbkorn Koerper (a*b*-Rest) [V3-Felder]               4.99                                                                                       GRUEN
-  P2 Render dL=0 je Teil (K5c, G4, Diff)                     {'Rumpf': (70.5, 66.9, 3.6), 'Brust': (54.1, 43.9, 10.2), 'Schwanz': (32.0, 41.0, -9.0), 'Hals': (63.3, 59.4, 3.9), 'Hinterbein l (W)': (59.6, 62.7, -3.1), 'Hinterbein r (W)': (58.7, 62.5, -3.8), 'Vorderbein l (W)': (50.3, 52.6, -2.2), 'Vorderbein r (W)': (45.4, 42.4, 3.0), 'Klauen l (W)': (30.5, 14.2, 16.3), 'Klauen r (W)': (33.6, 12.6, 21.0), 'Kopf + Kiefer': (55.5, 48.7, 6.8)} ROT
-  B10 Atlas Fleisch dunkle Linien %                          7.02                                                                                       ROT
-  B11 Atlas Haut dunkle Linien %                             2.73                                                                                       ROT
-  B12 Atlas Kopf Linien % / Canny-Dichte                     (2.62, 17.26)                                                                              ROT
-  B13 Atlas Fleisch Canny-Dichte                             24.63                                                                                      ROT
-  B14 Rotflaechen L*-Streuung Render / Atlas                 (8.0, 10.0)                                                                                ROT
-  B15 Render Rotflaechen a*-Streuung                         5.3                                                                                        GRUEN
-  B16 Render Rotpixel in Flaechen mit >= 2 Stufen %          46.7                                                                                       ROT
-  B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas      (0.541, [0.535, 0.547, 0.54], 0.608)                                                       ROT
-  N1 neutral C* je Winkel (Variante / EM30)                  ((9.1, 7.5, 7.1), (10.0, 12.5, 10.5))                                                      ROT
+  A11 Schwanz L*-Sprung Glied 1-5 (max) [V3-Felder]          2.4                                                                                        GRUEN
+  A12 Farbkorn Koerper (a*b*-Rest) [V3-Felder]               5.57                                                                                       GRUEN
+  P2 Render dL=0 je Teil (K5c, G4, Diff)                     {'Rumpf': (71.3, 66.9, 4.4), 'Brust': (59.3, 43.9, 15.5), 'Schwanz': (37.2, 41.0, -3.8), 'Hals': (71.0, 59.4, 11.6), 'Hinterbein l (W)': (61.1, 62.7, -1.6), 'Hinterbein r (W)': (60.8, 62.5, -1.7), 'Vorderbein l (W)': (55.0, 52.6, 2.4), 'Vorderbein r (W)': (54.7, 42.4, 12.2), 'Klauen l (W)': (54.0, 14.2, 39.8), 'Klauen r (W)': (63.0, 12.6, 50.4), 'Kopf + Kiefer': (61.1, 48.7, 12.3)} ROT
+  B10 Atlas Fleisch dunkle Linien %                          2.63                                                                                       ROT
+  B11 Atlas Haut dunkle Linien %                             3.72                                                                                       GRUEN
+  B12 Atlas Kopf Linien % / Canny-Dichte                     (0.9, 8.23)                                                                                ROT
+  B13 Atlas Fleisch Canny-Dichte                             16.11                                                                                      ROT
+  B14 Rotflaechen L*-Streuung Render / Atlas                 (6.8, 2.8)                                                                                 ROT
+  B15 Render Rotflaechen a*-Streuung                         4.6                                                                                        GRUEN
+  B16 Render Rotpixel in Flaechen mit >= 2 Stufen %          28.4                                                                                       ROT
+  B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas      (0.528, [0.516, 0.561, 0.507], 0.593)                                                      ROT
+  N1 neutral C* je Winkel (Variante / EM30)                  ((10.4, 9.6, 9.8), (10.0, 12.5, 10.5))                                                     GRUEN
   N2 neutral L*>85 % je Winkel                               (0.0, 0.0, 0.0)                                                                            GRUEN
-  K1 Bild1 Chroma Figur / Original [V1, ersetzt]             (6.3, 9.3)                                                                                 info
-  K2 Bild1 ab-Streuung Figur / Original [V1, ersetzt]        (6.0, 9.8)                                                                                 info
-  K3 Bild1 dE je Zone (max)                                  {'Schwanz': 4.7, 'Ruecken/Flanke': 8.4, 'Hinterbein l (W)': 7.4, 'Hinterbein r (W)': 10.5, 'Vorderglied r (W)': 7.8} ROT
-  K4 Bild1 Rot-Klasse Figur % / Original                     (4.3, 5.2)                                                                                 GRUEN
+  K1 Bild1 Chroma Figur / Original [V1, ersetzt]             (6.4, 9.3)                                                                                 info
+  K2 Bild1 ab-Streuung Figur / Original [V1, ersetzt]        (5.8, 9.8)                                                                                 info
+  K3 Bild1 dE je Zone (max)                                  {'Schwanz': 1.3, 'Ruecken/Flanke': 8.0, 'Hinterbein l (W)': 7.3, 'Hinterbein r (W)': 6.8, 'Vorderglied r (W)': 8.2} ROT
   K5 Bild1 Hell-Klasse Ruecken % / W Figur %                 (2.6, 9.9, 0.0, 0.5)                                                                       GRUEN
-  K6 Bild2 Figur dE / Chroma                                 (6.8, 28.0, 25.6)                                                                          ROT
-  K7 Bild2 Unterkiefer dE / a*                               (9.6, 28.1, 24.9)                                                                          ROT
+  K6 Bild2 Figur dE / Chroma                                 (7.3, 23.4, 25.6)                                                                          ROT
+  K7 Bild2 Unterkiefer dE / a*                               (9.9, 27.5, 24.9)                                                                          ROT
   K8 Bild2 Oberkiefer dE                                     3.3                                                                                        GRUEN
-  K9 Bild2 Klauen a* (r, l) / Original                       (27.9, 24.1, 30.6, 22.2)                                                                   GRUEN
-  K10 Bild2 Augenpunkte L*max (r, l)                         (13.0, 29.9)                                                                               GRUEN
-  K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)             (6.3, 7.8)                                                                                 ROT
-  K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)          (6.0, 8.0)                                                                                 ROT
-  K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original           (7.4, 11.9)                                                                                GRUEN
-  B2 groesste Rotflaeche % Figur (3/4 vorn, Seite)           (2.6, 1.98)                                                                                ROT
-  B9 Rot im Umrissband % (3 Winkel)                          14.2                                                                                       ROT
-  B9b Rot im Umrissband % Clip 0                             10.8                                                                                       GRUEN
-  K11 Bild1 Farbton Rotklasse Figur / Ruecken Grad           (0.3, -1.8)                                                                                GRUEN
-  K12 Bild1 Rotklasse je Zone % (Variante, Original, Grenze) {'Schwanz': (6.1, 5.9, 8.9), 'Ruecken/Flanke': (7.4, 11.9, 17.9), 'Hinterbein l (W)': (0.0, 1.9, 4.9), 'Hinterbein r (W)': (0.0, 1.1, 4.1), 'Vorderglied r (W)': (1.7, 0.0, 3.0)} GRUEN
-  K13 Bild2 dunkle Klasse Figur %                            66.7                                                                                       GRUEN
-  F1-Flaeche Bild 1 px / IoU Maske F1 (Original 646 px) [info] (731, 0.75)                                                                                info
-  K14 Bild1 F1-Stelle Lab / dE / Rotklasse %                 ([47.9, 17.5, -1.2], 3.1, 61.6)                                                            GRUEN
-  K15 Bild2 Fleischband Lab / dE / Rotklasse %               ([50.9, 30.7, 20.6], 5.2, 96.2)                                                            GRUEN
-  -> 32/52 GRUEN
+  K9 Bild2 Klauen a* (r, l) / Original                       (18.5, 24.1, 26.6, 22.2)                                                                   GRUEN
+  K10 Bild2 Augenpunkte L*max (r, l)                         (16.0, 29.0)                                                                               GRUEN
+  K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)             (6.4, 7.8)                                                                                 ROT
+  K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)          (5.8, 8.0)                                                                                 ROT
+  B9 Rot im Umrissband % (3 Winkel)                          8.3                                                                                        GRUEN
+  B9b Rot im Umrissband % Clip 0                             6.3                                                                                        GRUEN
+  K13 Bild2 dunkle Klasse Figur %                            81.1                                                                                       GRUEN
+  F1-Flaeche Bild 1 px / IoU Maske F1 (Original 646 px) [info] (727, 0.75)                                                                                info
+  K14 Bild1 F1-Stelle Lab / dE / Rotklasse %                 ([47.9, 16.3, -1.7], 3.0, 59.0)                                                            GRUEN
+  K15 Bild2 Fleischband Lab / dE / Rotklasse %               ([50.3, 30.3, 20.7], 5.1, 94.3)                                                            GRUEN
+  K4 Bild1 Rot-Klasse Figur % / Original [Info, ersetzt durch RV1] (2.6, 5.2)                                                                                 info
+  K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original [Info, ersetzt durch RV1] (6.8, 11.9)                                                                                info
+  B2 groesste Rotflaeche % Figur (3/4 vorn, Seite) [entfaellt, ersetzt durch RV4] (5.03, 2.14)                                                                               info
+  K11 Bild1 Farbton Rotklasse Figur / Ruecken Grad [Info, ersetzt durch RV2] (-12.3, -7.1)                                                                              info
+  K12 Bild1 Rotklasse je Zone % (Variante, Original, Grenze) [Info, ersetzt durch RV1] {'Schwanz': (1.9, 5.9, 8.9), 'Ruecken/Flanke': (6.8, 11.9, 17.9), 'Hinterbein l (W)': (0.0, 1.9, 4.9), 'Hinterbein r (W)': (1.0, 1.1, 4.1), 'Vorderglied r (W)': (1.0, 0.0, 3.0)} info
+  Bild 1 Ruecken RV1 Rot eng %                               23.71 (11.20..42.94)                                                                       GRUEN
+  Bild 1 Ruecken RV2 Farbton a*-Klasse Grad                  -10.04 (-13.23..32.23)                                                                     GRUEN
+  Bild 1 Ruecken RV3 dL Rot - Haut                           1.17 (-5.56..3.16)                                                                         GRUEN
+  Bild 1 Ruecken RV4 groesste Rotflaeche eng % (Obergrenze) [Info] 14.04 (<= 33.83)                                                                           info
+  Bild 1 Ruecken RV5 C* Rotklasse [Info] [Info]              13.35 (12.16..17.24)                                                                       info
+  Bild 1 Flanke RV1 Rot eng %                                3.77 (0.29..25.51)                                                                         GRUEN
+  Bild 1 Flanke RV2 Farbton a*-Klasse Grad                   -21.44 (-33.63..-5.37)                                                                     GRUEN
+  Bild 1 Flanke RV3 dL Rot - Haut                            2.34 (-5.12..4.32)                                                                         GRUEN
+  Bild 1 Flanke RV4 groesste Rotflaeche eng % (Obergrenze)   1.83 (<= 7.54)                                                                             GRUEN
+  Bild 1 Flanke RV5 C* Rotklasse [Info] [Info]               13.55 (12.56..18.84)                                                                       info
+  Bild 1 Brust/Bauch RV1 Rot eng % [Info]                    0.00 (0.00..38.66)                                                                         info
+  Bild 1 Brust/Bauch RV4 groesste Rotflaeche eng % (Obergrenze) [Info] 0.00 (<= 26.96)                                                                            info
+  Bild 1 Vorderbeine RV1 Rot eng %                           3.68 (0.00..7.11)                                                                          GRUEN
+  Bild 1 Vorderbeine RV4 groesste Rotflaeche eng % (Obergrenze) 3.68 (<= 5.55)                                                                             GRUEN
+  Bild 1 Hinterbeine RV1 Rot eng %                           5.19 (0.00..11.10)                                                                         GRUEN
+  Bild 1 Hinterbeine RV2 Farbton a*-Klasse Grad              -30.12 (-81.86..21.06)                                                                     GRUEN
+  Bild 1 Hinterbeine RV3 dL Rot - Haut                       -0.34 (-9.73..1.53)                                                                        GRUEN
+  Bild 1 Hinterbeine RV4 groesste Rotflaeche eng % (Obergrenze) 2.34 (<= 6.44)                                                                             GRUEN
+  Bild 1 Hinterbeine RV5 C* Rotklasse [Info] [Info]          11.83 (13.61..18.39)                                                                       info
+  Bild 1 Schwanz RV1 Rot eng %                               23.45 (12.50..34.48)                                                                       GRUEN
+  Bild 1 Schwanz RV2 Farbton a*-Klasse Grad                  -21.97 (-25.89..1.29)                                                                      GRUEN
+  Bild 1 Schwanz RV3 dL Rot - Haut                           1.34 (-0.58..8.38)                                                                         GRUEN
+  Bild 1 Schwanz RV4 groesste Rotflaeche eng % (Obergrenze)  6.72 (<= 9.65)                                                                             GRUEN
+  Bild 1 Schwanz RV5 C* Rotklasse [Info] [Info]              12.28 (13.03..18.37)                                                                       info
+  Bild 1 Figur RV1 Rot eng %                                 12.57 (6.86..21.42)                                                                        GRUEN
+  Bild 1 Figur RV2 Farbton a*-Klasse Grad                    -22.39 (-30.62..-0.98)                                                                     GRUEN
+  Bild 1 Figur RV3 dL Rot - Haut                             1.93 (-4.23..3.03)                                                                         GRUEN
+  Bild 1 Figur RV4 groesste Rotflaeche eng % (Obergrenze)    2.63 (<= 5.55)                                                                             GRUEN
+  Bild 1 Figur RV5 C* Rotklasse [Info] [Info]                12.30 (13.65..17.35)                                                                       info
+  Bild 2 Ruecken RV1 Rot eng %                               58.48 (42.05..65.19)                                                                       GRUEN
+  Bild 2 Ruecken RV2 Farbton a*-Klasse Grad                  -8.86 (-12.86..2.26)                                                                       GRUEN
+  Bild 2 Ruecken RV3 dL Rot - Haut                           -1.24 (-15.64..0.84)                                                                       GRUEN
+  Bild 2 Ruecken RV4 groesste Rotflaeche eng % (Obergrenze)  53.72 (<= 62.19)                                                                           GRUEN
+  Bild 2 Ruecken RV5 C* Rotklasse [Info] [Info]              24.12 (25.39..34.81)                                                                       info
+  Bild 2 Flanke RV1 Rot eng % [Info]                         19.25 (10.27..94.29)                                                                       info
+  Bild 2 Flanke RV2 Farbton a*-Klasse Grad [Info]            0.14 (-0.42..21.22)                                                                        info
+  Bild 2 Flanke RV3 dL Rot - Haut [Info]                     2.99 (-17.18..-3.42)                                                                       info
+  Bild 2 Flanke RV4 groesste Rotflaeche eng % (Obergrenze) [Info] 10.98 (<= 108.17)                                                                          info
+  Bild 2 Flanke RV5 C* Rotklasse [Info] [Info]               20.87 (22.18..35.22)                                                                       info
+  Bild 2 Brust/Bauch RV1 Rot eng %                           31.82 (17.83..67.73)                                                                       GRUEN
+  Bild 2 Brust/Bauch RV2 Farbton a*-Klasse Grad              11.42 (-0.07..15.87)                                                                       GRUEN
+  Bild 2 Brust/Bauch RV3 dL Rot - Haut                       -1.37 (-9.99..1.39)                                                                        GRUEN
+  Bild 2 Brust/Bauch RV4 groesste Rotflaeche eng % (Obergrenze) 9.13 (<= 17.81)                                                                            GRUEN
+  Bild 2 Brust/Bauch RV5 C* Rotklasse [Info] [Info]          21.99 (22.75..30.65)                                                                       info
+  Bild 2 Vorderbeine RV1 Rot eng %                           64.61 (56.43..74.45)                                                                       GRUEN
+  Bild 2 Vorderbeine RV2 Farbton a*-Klasse Grad              36.72 (34.45..38.75)                                                                       GRUEN
+  Bild 2 Vorderbeine RV3 dL Rot - Haut                       -3.18 (-11.42..3.02)                                                                       GRUEN
+  Bild 2 Vorderbeine RV4 groesste Rotflaeche eng % (Obergrenze) 40.08 (<= 49.02)                                                                           GRUEN
+  Bild 2 Vorderbeine RV5 C* Rotklasse [Info] [Info]          33.22 (31.91..40.29)                                                                       info
+  Bild 2 Hals RV1 Rot eng %                                  26.38 (17.93..72.27)                                                                       GRUEN
+  Bild 2 Hals RV2 Farbton a*-Klasse Grad                     18.59 (1.66..20.34)                                                                        GRUEN
+  Bild 2 Hals RV3 dL Rot - Haut                              -1.86 (-6.27..-1.53)                                                                       GRUEN
+  Bild 2 Hals RV4 groesste Rotflaeche eng % (Obergrenze)     13.48 (<= 29.82)                                                                           GRUEN
+  Bild 2 Hals RV5 C* Rotklasse [Info] [Info]                 21.61 (21.71..30.09)                                                                       info
+  Bild 2 Kopf RV1 Rot eng %                                  61.77 (25.45..92.45)                                                                       GRUEN
+  Bild 2 Kopf RV2 Farbton a*-Klasse Grad                     19.28 (13.07..24.73)                                                                       GRUEN
+  Bild 2 Kopf RV3 dL Rot - Haut                              -0.84 (-4.41..1.41)                                                                        GRUEN
+  Bild 2 Kopf RV4 groesste Rotflaeche eng % (Obergrenze)     56.93 (<= 118.32)                                                                          GRUEN
+  Bild 2 Kopf RV5 C* Rotklasse [Info] [Info]                 23.05 (23.15..31.05)                                                                       info
+  Bild 2 Figur RV1 Rot eng %                                 53.85 (38.95..74.81)                                                                       GRUEN
+  Bild 2 Figur RV2 Farbton a*-Klasse Grad                    24.64 (17.71..27.89)                                                                       GRUEN
+  Bild 2 Figur RV3 dL Rot - Haut                             -0.62 (-7.25..2.25)                                                                        GRUEN
+  Bild 2 Figur RV4 groesste Rotflaeche eng % (Obergrenze)    45.49 (<= 87.08)                                                                           GRUEN
+  Bild 2 Figur RV5 C* Rotklasse [Info] [Info]                26.82 (27.70..33.30)                                                                       info
+  RV6 Texel Ader gegen umgebende Haut je Region (dL*, da* <= 0) {'Ruecken': 'dL -4.6 da* -0.4 (n 721/1191)', 'Flanke': 'dL -4.1 da* -1.9 (n 844/1399)', 'Brust/Bauch': 'dL -5.1 da* -1.0 (n 796/1363)', 'Vorderbeine': 'dL -7.7 da* -0.9 (n 3991/6987)', 'Hinterbeine': 'dL -2.3 da* -2.6 (n 267/1365)', 'Hals': 'dL -6.3 da* -0.5 (n 777/1227)', 'Kopf': 'dL -4.4 da* -3.6 (n 865/1293)', 'Schwanz': 'dL -6.9 da* -0.4 (n 695/2373)'} GRUEN
+  -> 76/93 GRUEN
 == Gegenproben Messblatt V3 5 (V2r2: H1, P1, K11, K14, K15 ROT; G4: P1 und B10-B17 GRUEN; (b2)-Probe A: K11, K12, K13, P2 Kopf ROT; Orange/Gelb: F1t/F2t ROT)
   H1                                                         {'Rumpf': 0.44, 'Schwanz': 0.22, 'Hals': 0.41, 'Beine': 0.17, 'Arme': 0.24, 'Klauen': 0.14, 'Kopf/Kiefer aussen': 0.0} ROT
   P1                                                         {'fleischtexel': 12810, 'dL0': 51.0, 'dL5_10': 4.3, 'farben': 169}                         ROT
@@ -73,4 +138,31 @@
   Orange F1t / F2t dE                                        (74.6, 50.1)                                                                               ROT
   Gelb F1t / F2t dE                                          (87.3, 72.4)                                                                               ROT
   Gegenprobe: falsch ausgefallen: keine
+== Gegenprobe Runde 3 (../farbe/K5c_farbe_v3r3): RV1-RV4 und RV6 muessen ROT sein
+  Bild 1 Figur RV2 Farbton a*-Klasse Grad                    -0.19 (-30.62..-0.98) ROT
+  Bild 1 Figur RV4 groesste Rotflaeche eng % (Obergrenze)    10.59 (<= 5.55) ROT
+  Bild 1 Flanke RV2 Farbton a*-Klasse Grad                   5.85 (-33.63..-5.37) ROT
+  Bild 1 Schwanz RV1 Rot eng %                               43.51 (12.50..34.48) ROT
+  Bild 1 Schwanz RV3 dL Rot - Haut                           -0.67 (-0.58..8.38) ROT
+  Bild 1 Schwanz RV4 groesste Rotflaeche eng % (Obergrenze)  22.94 (<= 9.65) ROT
+  Bild 1 Vorderbeine RV1 Rot eng %                           12.28 (0.00..7.11) ROT
+  Bild 1 Vorderbeine RV4 groesste Rotflaeche eng % (Obergrenze) 6.55 (<= 5.55) ROT
+  Bild 2 Brust/Bauch RV1 Rot eng %                           74.88 (17.83..67.73) ROT
+  Bild 2 Brust/Bauch RV2 Farbton a*-Klasse Grad              30.57 (-0.07..15.87) ROT
+  Bild 2 Brust/Bauch RV4 groesste Rotflaeche eng % (Obergrenze) 24.66 (<= 17.81) ROT
+  Bild 2 Figur RV2 Farbton a*-Klasse Grad                    29.67 (17.71..27.89) ROT
+  Bild 2 Figur RV3 dL Rot - Haut                             3.55 (-7.25..2.25) ROT
+  Bild 2 Hals RV1 Rot eng %                                  87.10 (17.93..72.27) ROT
+  Bild 2 Hals RV2 Farbton a*-Klasse Grad                     30.73 (1.66..20.34) ROT
+  Bild 2 Hals RV3 dL Rot - Haut                              0.83 (-6.27..-1.53) ROT
+  Bild 2 Hals RV4 groesste Rotflaeche eng % (Obergrenze)     51.58 (<= 29.82) ROT
+  Bild 2 Kopf RV2 Farbton a*-Klasse Grad                     30.40 (13.07..24.73) ROT
+  Bild 2 Kopf RV3 dL Rot - Haut                              3.00 (-4.41..1.41) ROT
+  Bild 2 Ruecken RV1 Rot eng %                               71.44 (42.05..65.19) ROT
+  Bild 2 Ruecken RV2 Farbton a*-Klasse Grad                  30.62 (-12.86..2.26) ROT
+  Bild 2 Ruecken RV3 dL Rot - Haut                           1.83 (-15.64..0.84) ROT
+  Bild 2 Vorderbeine RV1 Rot eng %                           82.29 (56.43..74.45) ROT
+  Bild 2 Vorderbeine RV2 Farbton a*-Klasse Grad              28.48 (34.45..38.75) ROT
+  RV1-RV4: 24/45 bindende Zeilen ROT -> ROT wie verlangt
+  RV6 {'Ruecken': 'dL +7.7 da* +30.5 (n 721/1191) VERLETZT', 'Flanke': 'dL +7.6 da* +30.1 (n 844/1399) VERLETZT', 'Brust/Bauch': 'dL +8.0 da* +30.5 (n 796/1363) VERLETZT', 'Vorderbeine': 'dL +11.9 da* +22.2 (n 3991/6987) VERLETZT', 'Hinterbeine': 'dL +10.6 da* +18.8 (n 267/1365) VERLETZT', 'Hals': 'dL +7.4 da* +30.5 (n 777/1227) VERLETZT', 'Kopf': 'dL +7.5 da* +30.4 (n 865/1293) VERLETZT', 'Schwanz': 'dL +5.7 da* +17.0 (n 695/2373) VERLETZT'} -> ROT wie verlangt
 EXIT 1
