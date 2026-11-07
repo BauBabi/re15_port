@@ -1,0 +1,35 @@
+# Abnahme 5 (zweiter Abnehmer): RE15_ASSET_SELFTEST=1 der Messkopie re15_pc_anabn5.exe (Kopie re15_pc_anabn5_selftest_<pid>.exe, timeout 60), 19:29
+## stderr/stdout
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+selftest exit=0
+## debug.log im Laufordner
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX
+[selftest] exe-dir = C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/abn5/mein/exe
+[selftest] cd-root[0] = C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX
+[selftest] OK      cd     DATA/TEX.TIM                            165408  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/TEX.TIM
+[selftest] OK      cd     BIN/DEBUG.BIN                           262144  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/BIN/DEBUG.BIN
+[selftest] OK      cd     DATA/TITLEU.TIM                         153620  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/TITLEU.TIM
+[selftest] OK      cd     DATA/TMOJI.TIM                           66080  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/TMOJI.TIM
+[selftest] OK      cd     DATA/C_BACK2.TIM                        153620  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/C_BACK2.TIM
+[selftest] OK      cd     DATA/CONFIG.TIM                          33312  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/CONFIG.TIM
+[selftest] OK      cd     DATA/SELECTH.TIM                        153620  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/SELECTH.TIM
+[selftest] OK      cd     DATA/ITEMALL.PIX                         86400  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/ITEMALL.PIX
+[selftest] OK      cd     ITEM/ITPS.ITP                           884736  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/ITEM/ITPS.ITP
+[selftest] OK      cd     DATA/ST_00.TIM                           36640  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/ST_00.TIM
+[selftest] OK      cd     ITEM/STPIC_00.TIM                        12492  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/ITEM/STPIC_00.TIM
+[selftest] OK      cd     STAGE1/ROOM1240.RDT                     163744  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/STAGE1/ROOM1240.RDT
+[selftest] OK      cd     BSS/ROOM1240/BG00.BSS                    65536  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/BSS/ROOM1240/BG00.BSS
+[selftest] OK      cd     PLD/PL00.MD1                             28916  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/PLD/PL00.MD1
+[selftest] OK      cd     EMD/CDEMD0.EMS                         4732928  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/EMD/CDEMD0.EMS
+[selftest] OK      cd     SOUND/MAIN28.BGM                        237172  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/SOUND/MAIN28.BGM
+[selftest] OK      cd     SOUND/CORE00.EDH                          3176  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/SOUND/CORE00.EDH
+[selftest] OK      cd     DATA/CORE00.ESP                           7092  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX/DATA/CORE00.ESP
+[selftest] OK      shared extracted_fx/effect0_blood.tim           32832  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/extracted_fx/effect0_blood.tim
+[selftest] OK      shared extracted_fx/effect2_muzzle.tim         131092  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/extracted_fx/effect2_muzzle.tim
+[selftest] OK      shared extracted_fx/effect3_smoke.tim          131092  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/extracted_fx/effect3_smoke.tim
+[selftest] OK      shared extracted_fx/effect4_shell.tim          131092  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/extracted_fx/effect4_shell.tim
+[selftest] OK      shared extracted_fx/effect8_fire.tim            32832  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/extracted_fx/effect8_fire.tim
+[selftest] OK      re2    CDEMD0.EMS                            11124736  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/RE2/CDEMD0.EMS
+[selftest] OK      re2    ENEMSE.VBS                             6694912  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/RE2/ENEMSE.VBS
+[selftest] OK      base   synchro/STAGE1/room1170/main00.wav      292060  <- C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/synchro/STAGE1/room1170/main00.wav
+[selftest] RESULT ok=26 missing=0

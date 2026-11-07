@@ -1,0 +1,8 @@
+735c735
+<     re2_segment(a);                                      /* NB6: ab hier RE2-Annette (Claire-RAM lauf3 e01 @0x010B0 sub02) */
+---
+>     /* GP2 Abnahme 5b: re2_segment entfernt */                                      /* NB6: ab hier RE2-Annette (Claire-RAM lauf3 e01 @0x010B0 sub02) */
+880c880
+<     re2_segment(a);                                      /* NB6: Leiche = RE2-Segment (Claire-RAM lauf3 e23..e30) */
+---
+>     /* GP2 Abnahme 5b: re2_segment entfernt */                                      /* NB6: Leiche = RE2-Segment (Claire-RAM lauf3 e23..e30) */

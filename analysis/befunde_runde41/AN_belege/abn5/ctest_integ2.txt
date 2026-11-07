@@ -1,0 +1,62 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build
+      Start  391: integration_r32_tor_hell
+ 1/28 Test  #391: integration_r32_tor_hell .................   Passed    9.31 sec
+      Start  570: integration_r35_zgirl
+ 2/28 Test  #570: integration_r35_zgirl ....................   Passed  259.38 sec
+      Start  583: integration_r36_elza_fenster
+ 3/28 Test  #583: integration_r36_elza_fenster .............   Passed   52.23 sec
+      Start  584: integration_r36_elza_irons
+ 4/28 Test  #584: integration_r36_elza_irons ...............   Passed   16.87 sec
+      Start  585: integration_r36_elza_unlock
+ 5/28 Test  #585: integration_r36_elza_unlock ..............   Passed   46.96 sec
+      Start  586: integration_r36_elza_schuss
+ 6/28 Test  #586: integration_r36_elza_schuss ..............   Passed   50.89 sec
+      Start  587: integration_r36_elza_stoehnen
+ 7/28 Test  #587: integration_r36_elza_stoehnen ............   Passed   93.18 sec
+      Start  700: integration_r37_elzaems_elza5081
+ 8/28 Test  #700: integration_r37_elzaems_elza5081 .........   Passed   16.46 sec
+      Start  701: integration_r37_elzaems_elza3071
+ 9/28 Test  #701: integration_r37_elzaems_elza3071 .........   Passed   16.32 sec
+      Start  702: integration_r37_elzaems_leon5080
+10/28 Test  #702: integration_r37_elzaems_leon5080 .........   Passed   17.61 sec
+      Start  703: integration_r37_elzaems_elza3091
+11/28 Test  #703: integration_r37_elzaems_elza3091 .........   Passed   17.05 sec
+      Start  704: integration_r37_elzaems_elza1101
+12/28 Test  #704: integration_r37_elzaems_elza1101 .........   Passed   29.89 sec
+      Start  705: integration_r37_elzaems_leon1100
+13/28 Test  #705: integration_r37_elzaems_leon1100 .........   Passed   30.33 sec
+      Start  706: integration_r37_elzaems_elza11b1
+14/28 Test  #706: integration_r37_elzaems_elza11b1 .........   Passed   16.64 sec
+      Start  707: integration_r37_elzaems_elza5091
+15/28 Test  #707: integration_r37_elzaems_elza5091 .........   Passed   16.37 sec
+      Start  708: integration_r37_elzaems_elza1181griff
+16/28 Test  #708: integration_r37_elzaems_elza1181griff ....   Passed   18.45 sec
+      Start  709: integration_r37_elzaems_elza10c1kraehe
+17/28 Test  #709: integration_r37_elzaems_elza10c1kraehe ...   Passed   42.54 sec
+      Start  710: integration_r37_elzaems_leon10c0kraehe
+18/28 Test  #710: integration_r37_elzaems_leon10c0kraehe ...   Passed   63.26 sec
+      Start  711: integration_r37_elzaems_elza1141
+19/28 Test  #711: integration_r37_elzaems_elza1141 .........   Passed   18.83 sec
+      Start  780: integration_r37_sperre1050
+20/28 Test  #780: integration_r37_sperre1050 ...............   Passed  212.11 sec
+      Start  783: integration_r37_szene11c0
+21/28 Test  #783: integration_r37_szene11c0 ................   Passed  125.17 sec
+      Start  835: integration_r38_elzatoene_gunshot1041
+22/28 Test  #835: integration_r38_elzatoene_gunshot1041 ....   Passed   80.88 sec
+      Start  836: integration_r38_elzatoene_szene1021
+23/28 Test  #836: integration_r38_elzatoene_szene1021 ......   Passed   76.00 sec
+      Start  913: integration_r38_tagebuch_lesen
+24/28 Test  #913: integration_r38_tagebuch_lesen ...........   Passed   51.21 sec
+      Start  914: integration_r38_tagebuch_karte
+25/28 Test  #914: integration_r38_tagebuch_karte ...........   Passed   28.14 sec
+      Start  915: integration_r38_tagebuch_leon
+26/28 Test  #915: integration_r38_tagebuch_leon ............   Passed   28.41 sec
+      Start 1366: integration_r41_wasser20b0_npc
+27/28 Test #1366: integration_r41_wasser20b0_npc ...........   Passed  215.91 sec
+      Start 1367: integration_r41_wasser20b0
+28/28 Test #1367: integration_r41_wasser20b0 ...............   Passed   97.49 sec
+
+100% tests passed, 0 tests failed out of 28
+
+Total Test time (real) = 1748.01 sec
+EXIT=0

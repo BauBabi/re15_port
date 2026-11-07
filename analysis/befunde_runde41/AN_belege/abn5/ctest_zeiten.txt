@@ -1,0 +1,13 @@
+== unit_annette start 2026-11-07 19:07:25
+== unit_annette ende 2026-11-07 19:07:26 The following tests passed:
+100% tests passed, 0 tests failed out of 4
+== suite start 2026-11-07 19:26:00
+== integ1 start 2026-11-07 19:30:50
+== suite ende 2026-11-07 19:35:10 100% tests passed, 0 tests failed out of 1040
+== integ1 ende 2026-11-07 19:55:11 100% tests passed, 0 tests failed out of 8
+== integ2 start 2026-11-07 19:55:21
+== integ2 ende 2026-11-07 20:24:29 100% tests passed, 0 tests failed out of 28
+== integ3rot start 2026-11-07 20:24:29
+== integ3rot ende 2026-11-07 20:56:36 100% tests passed, 0 tests failed out of 5
+== integ3rest start 2026-11-07 20:56:48
+== integ3rest ende 2026-11-07 21:13:44 100% tests passed, 0 tests failed out of 3

@@ -1,0 +1,58 @@
+# Abnahme 5 Spur AN (zweiter Abnehmer): eigene Gegenproben zum Riegel test_r41_annette, AUSSERHALB des Arbeitsbaums gebaut (mein/gp/gp.sh)
+# gcc 16.2 (msys64), Flags wie build.ninja; gelinkt: test_r41_annette.c.obj des Baums (99bbe97ba) + [Ersatz-Objekt] + libre15_engine.a + libre15_test_support.a.
+#  basis: kein Ersatz (= 99bbe97ba); gp1: re15_damage.c aus cefd57402 (case 0x4d r 350 / h 1350); gp2: annette_r41.c aus HEAD ohne die beiden re2_segment(a)-Aufrufe (gp2.diff).
+
+## gp2.diff
+735c735
+<     re2_segment(a);                                      /* NB6: ab hier RE2-Annette (Claire-RAM lauf3 e01 @0x010B0 sub02) */
+---
+>     /* GP2 Abnahme 5b: re2_segment entfernt */                                      /* NB6: ab hier RE2-Annette (Claire-RAM lauf3 e01 @0x010B0 sub02) */
+880c880
+<     re2_segment(a);                                      /* NB6: Leiche = RE2-Segment (Claire-RAM lauf3 e23..e30) */
+---
+>     /* GP2 Abnahme 5b: re2_segment entfernt */                                      /* NB6: Leiche = RE2-Segment (Claire-RAM lauf3 e23..e30) */
+
+## basis (Kasten-/Schub-/Ergebniszeilen)
+150:6000 lebend: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+156:6030 Pult: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+157:6030 Pult (-1790,-22272): Leon westlich bei 850 -> 901, bei 810 -> 901, bei 950 -> 950 (Soll RE1.5 450 + 450 = 900; der RE2-Wert 350 hielte bei 800)
+161:5090 vor der Szene: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+164:5090 ab Szenenstart: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+169:Leiche: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+170:Leiche Schub bei 850: Abstand 850
+171:Leiche Schub bei 750: Abstand 801
+172:test_r41_annette: OK
+
+## gp1 (Kasten-/Schub-/Ergebniszeilen)
+39:FAIL: 5090 vor der Szene: 0x4D-Kasten r 350 h 1350 statt RE1.5 450/1530 (@0x8011d88c)
+151:6000 lebend: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 450/450/1530/-1530)
+152:FAIL: 6000 lebend: 0x4D-Kasten r 350/350 h 1350 Versatz -1350 statt 450/450/1530/-1530 (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+158:6030 Pult: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 450/450/1530/-1530)
+159:FAIL: 6030 Pult: 0x4D-Kasten r 350/350 h 1350 Versatz -1350 statt 450/450/1530/-1530 (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+160:6030 Pult (-1790,-22272): Leon westlich bei 850 -> 850, bei 810 -> 810, bei 950 -> 950 (Soll RE1.5 450 + 450 = 900; der RE2-Wert 350 hielte bei 800)
+161:FAIL: 6030 Pult: Leon bei 850 nicht auf 900 geschoben (Abstand 850) - RE1.5 450 + 450 (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+162:FAIL: 6030 Pult: Leon bei 810 nicht auf 900 geschoben (Abstand 810, Abnahme 4 an6030_pult)
+166:5090 vor der Szene: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 450/450/1530/-1530)
+167:FAIL: 5090 vor der Szene: 0x4D-Kasten r 350/350 h 1350 Versatz -1350 statt 450/450/1530/-1530 (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+170:5090 ab Szenenstart: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+174:FAIL: 5090 Wiedereintritt: beim Spawn nicht der RE1.5-Kasten (RE1.5 STAGE6 @0x80101958 -> 0x80102784 / STAGE5 @0x8011d88c -> 0x801207d0)
+176:Leiche: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+177:Leiche Schub bei 850: Abstand 850
+178:Leiche Schub bei 750: Abstand 801
+179:test_r41_annette: 7 Fehler
+
+## gp2 (Kasten-/Schub-/Ergebniszeilen)
+68:FAIL: nach der Szene: Leichen-Kasten r 450 h 1530 Versatz -1530 statt RE2 350/1350/-1350
+151:6000 lebend: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+157:6030 Pult: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+158:6030 Pult (-1790,-22272): Leon westlich bei 850 -> 901, bei 810 -> 901, bei 950 -> 950 (Soll RE1.5 450 + 450 = 900; der RE2-Wert 350 hielte bei 800)
+162:5090 vor der Szene: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+165:5090 ab Szenenstart: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 350/350/1350/-1350)
+166:FAIL: 5090 ab Szenenstart: 0x4D-Kasten r 450/450 h 1530 Versatz -1530 statt 350/350/1350/-1350 (RE2 @0x80034d74/@0x80034dac/@0x80034e5c, Claire-RAM lauf3 e01..e30)
+171:Leiche: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 350/350/1350/-1350)
+172:FAIL: Leiche: 0x4D-Kasten r 450/450 h 1530 Versatz -1530 statt 350/350/1350/-1350 (RE2 @0x80034d74/@0x80034dac/@0x80034e5c, Claire-RAM lauf3 e01..e30)
+173:Leiche Schub bei 850: Abstand 901
+174:FAIL: Leiche schiebt Leon schon bei 850 (Abstand 901) - RE2 350 + 450 = 800
+175:Leiche Schub bei 750: Abstand 901
+176:FAIL: Leiche schiebt Leon bei 750 nicht auf 800 (Abstand 901) - RE2 hat die Kollision (+0x1E8 = 1)
+177:test_r41_annette: 5 Fehler

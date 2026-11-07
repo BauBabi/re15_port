@@ -1,0 +1,236 @@
+UpdateCTestConfiguration  from :C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/DartConfiguration.tcl
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1149
+    Start 1149: unit_r41_annette
+
+1149: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_annette\re15_port\build\tests\unit\test_r41_annette.exe
+1149: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/tests/unit
+1149: Test timeout computed to be: 120
+1149: [annette] ROOM5090: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=0 (9,133)=0 (3,42)=0
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [annette] ROOM5090: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=0 (9,133)=0 (3,42)=0
+1149: [annette] ROOM5090: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=1 (9,133)=0 (3,42)=0
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [annette] ROOM5090: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=1 (9,133)=0 (3,42)=0
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [annette] F0 Wiedereintritt nach der Szene: Leiche liegt (RE2 sub00 @0x00D16): Phase 8, Form -(0,0,0) Gier 0 Clip -1/-1, Annette (4856,900,-22748) Clip 24/0, Cut 12
+1149: Wiedereintritt: Leiche (4856,900,-22748) Gier 1170 rot_z 0 Clip 24/0 hp -1 Phase 8
+1149: Wiedereintritt: Leiche (4856,900,-22748) Gier 1170 rot_x 0 rot_z 0 Clip 24/0 hp -1
+1149: [annette] ROOM5090: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=0 (9,133)=1 (3,42)=0
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [annette] ROOM5090: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=0 (9,133)=1 (3,42)=0
+1149: [annette] ROOM5090: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=0 (9,133)=1 (3,42)=1
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [annette] ROOM5090: Frau im Kittel (0x4D, @0x0122A) verworfen: (3,89)=0 (9,133)=1 (3,42)=1
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x13
+1149: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-17800,0,-25900) rot=(0,3072,0)
+1149: [scd] thread start slot=10 first_op=0x2E
+1149: [scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=1
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x06
+1149: [scd] thread start slot=10 first_op=0x22
+1149: Zugstart: 47 Segmente, 310 Byte Original (ROOM6030), 112 Byte Port-Befehle
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [annette] F0 Ton 0 (ANNETTE_SE.VBS)
+1149: [annette] F0 Szenenstart statt sub04 (Krach): Phase 1, Form (-14700,0,-23350) Gier 0 Clip 0/16, Annette (8000,0,-24250) Clip 0/0, Cut 12
+1149: [scd] thread start slot=11 first_op=0x22
+1149: [scd] Plc_dest(slot=0 mode=0x09 dest=(-1378,-23395) flag=32) walk_active=1
+1149: [scd] Plc_dest(slot=1 mode=0x09 dest=(-1378,-23395)) -> state4/sub9 (Sub-VM-WALK)
+1149: [szenenschutz] F0 an (Szene haelt den Spieler)
+1149: [scd] Plc_dest(slot=1 mode=0x04 dest=(5979,-23427)) -> state4/sub4 (Sub-VM-WALK)
+1149: [scd F0] Cut_chg(15)
+1149: [scd] Plc_dest(slot=1 mode=0x04 dest=(4732,-22920)) -> state4/sub4 (Sub-VM-WALK)
+1149: [scd F0] Cut_chg(11)
+1149: [scd] Plc_dest(slot=1 mode=0x04 dest=(3700,-22500)) -> state4/sub4 (Sub-VM-WALK)
+1149: [annette] F0 Ton 1 (ANNETTE_SE.VBS)
+1149: [annette] F0 Sturz: Phase 2, Form (-1378,-5600,-23395) Gier 3983 Clip 2/0, Annette (4813,0,-22953) Clip 5/19, Cut 11
+1149: [annette] F0 gelandet, Drohen: Phase 3, Form (-1378,0,-23395) Gier 3983 Clip 10/0, Annette (3903,0,-22582) Clip 5/14, Cut 11
+1149: [scd] Plc_dest(slot=1 mode=0x09 dest=(-1378,-23395)) -> state4/sub9 (Sub-VM-WALK)
+1149: [annette] F0 Ton 2 (ANNETTE_SE.VBS)
+1149: [annette] F0 Hieb (RE2 @0x01142): Phase 4, Form (-1378,0,-23395) Gier 131 Clip 2/47, Annette (3773,0,-22529) Clip 4/0, Cut 11
+1149: [annette] F0 Ausholen (RE2 70,22 s): Phase 4, Form (-1378,0,-23395) Gier 131 Clip 4/0, Annette (3773,0,-22529) Clip 4/13, Cut 11
+1149: [annette] F0 Treffer: Phase 4, Form (0,0,-23164) Gier 131 Clip 4/14, Annette (3773,0,-22529) Clip 6/0, Cut 11
+1149: [annette] F0 Blut 1/15: 2 Aufrufe, 8 Plaetze, Pool 25/96
+1149: Blut F471: Klaue 14 (4367,-1402,-22898), 28 (4428,-1385,-22417), Annette (3773,-22529), 8/8 Plaetze an den Klauen
+1149: [annette] F0 Blut 15/15: 30 Aufrufe, 99 Plaetze, Pool 96/96
+1149: [scd F0] Cut_chg(13)
+1149: [annette] F0 Schnitt weg, liegt, Schrei (RE2 @0x01150/@0x01162): Phase 6, Form (0,0,-23164) Gier 131 Clip 4/49, Annette (4856,900,-22748) Clip 24/0, Cut 13
+1149: [annette] F0 Kampfstart (sub04), Form frei: Phase 7, Form (0,0,-23164) Gier 4039 Clip 2/40, Annette (4856,900,-22748) Clip 24/0, Cut 13
+1149: [scd] thread start slot=12 first_op=0x22
+1149: Szene: Phasen-Bilder W0 S181 D196 H429 R471 L505 F607, Sturz ab y -5600 in 15 Bildern, Annette stand (3773,-22529), Treffer Clip 4 Bild 15 Hand 90, Blut 30, Leiche (4856,900,-22748) rot_z 0, Toene K1 S1 B1, Schrei 1, Schnitte 12 15 11 13
+1149: Blut: 30 Aufrufe in F471..F485 (Treffer F471), 4 Zeilen je Aufruf, 99 Plaetze belegt, Wolke max 79, weg ab F498 (27 Bilder nach dem ersten Spawn), Pool max 96/96
+1149: nach der Szene: Leiche (4856,900,-22748) Gier 1170 rot_x 0 rot_z 0 Clip 24/0 hp -1
+1149: [scd F0] Cut_chg(15)
+1149: [scd] Plc_dest(slot=0 mode=0x09 dest=(300,-23400) flag=32) walk_active=1
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x13
+1149: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-17800,0,-25900) rot=(0,3072,0)
+1149: [scd] thread start slot=10 first_op=0x2E
+1149: [scd] Obj_model_set[1] id=0x01 type=0 pos=(-26230,0,-20148) rot=(0,1024,0)
+1149: [annette] ROOM6030 Wagen (Cut 6): Zugstart nicht gelaufen -> Ausgang = Tuer (main00 @0x00C72), Tuer nach 5090 = msg 10 (sub06 @0x0106A)
+1149: [scd] thread start slot=11 first_op=0x3B
+1149: [scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=2
+1149: [scd F0] Plc_flg(subop=0, mask=0x0004) → slot=2 anim_flags=0x0004
+1149: 6030 Wagen ohne Zugstart: Slot 2 Typ 1 Ereignis 0 Ziel 5/0, Slot 3 Typ 5 Ereignis 10
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x13
+1149: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-17800,0,-25900) rot=(0,3072,0)
+1149: [scd] thread start slot=10 first_op=0x2E
+1149: [scd] Obj_model_set[1] id=0x01 type=0 pos=(-26230,0,-20148) rot=(0,1024,0)
+1149: [scd] thread start slot=11 first_op=0x22
+1149: [scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=2
+1149: [scd F0] Plc_flg(subop=0, mask=0x0004) → slot=2 anim_flags=0x0004
+1149: 6030 Wagen nach Zugstart: Slot 2 Typ 5 Ereignis 20, Slot 3 Typ 1
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x13
+1149: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-17800,0,-25900) rot=(0,3072,0)
+1149: [annette] F0 ROOM6030 Zugstart-Szene statt sub05 (sub07 @0x01132), 422 Byte, Tuerbank DOOR2A NICHT geladen
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [scd F0] Cut_chg(1)
+1149: [scd] Plc_dest(slot=0 mode=0x09 dest=(-1790,-22272) flag=32) walk_active=1
+1149: [scd F0] Cut_chg(3)
+1149: [scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=1
+1149: [szenenschutz] F0 aus (523 geschuetzte Gegner-Ticks)
+1149: [scd F0] Cut_chg(4)
+1149: [annette] F0 Ton 3 (ANNETTE_SE.VBS)
+1149: [scd F0] Cut_chg(1)
+1149: [scd] thread start slot=11 first_op=0x22
+1149: [scd] Plc_motion(entity=0, motion=9, flags=0x00) → slot=1
+1149: [szenenschutz] F0 an (Szene haelt den Spieler)
+1149: [scd] Plc_motion(entity=0, motion=9, flags=0x00) → slot=1
+1149: [scd F0] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+1149: [scd] Plc_motion(entity=0, motion=11, flags=0x00) → slot=1
+1149: [scd] Plc_motion(entity=0, motion=16, flags=0x00) → slot=1
+1149: [annette] F0 Ton 0 (ANNETTE_SE.VBS)
+1149: [scd] Plc_dest(slot=0 mode=0x09 dest=(-3873,-22550) flag=32) walk_active=1
+1149: [scd] Plc_dest(slot=1 mode=0x09 dest=(-3873,-22550)) -> state4/sub9 (Sub-VM-WALK)
+1149: [scd] Plc_motion(entity=0, motion=13, flags=0x00) → slot=1
+1149: [scd] Plc_motion(entity=0, motion=13, flags=0x00) → slot=1
+1149: [scd F0] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+1149: [scd] Plc_motion(entity=0, motion=16, flags=0x00) → slot=1
+1149: [scd] Plc_motion(entity=0, motion=4, flags=0x00) → slot=0
+1149: [scd] Plc_motion(entity=0, motion=4, flags=0x00) → slot=0
+1149: [scd F0] Plc_flg(subop=0, mask=0x0080) → slot=0 anim_flags=0x0080
+1149: [scd] Plc_motion(entity=0, motion=7, flags=0x00) → slot=0
+1149: [scd] Plc_motion(entity=0, motion=14, flags=0x00) → slot=1
+1149: [scd] Plc_motion(entity=0, motion=14, flags=0x00) → slot=1
+1149: [scd F0] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+1149: [scd] Plc_motion(entity=0, motion=16, flags=0x00) → slot=1
+1149: [scd F0] Cut_chg(0)
+1149: [scd] Plc_dest(slot=0 mode=0x04 dest=(-3000,-23700) flag=32) walk_active=1
+1149: [scd] Plc_dest(slot=0 mode=0x09 dest=(-3873,-22550) flag=32) walk_active=1
+1149: [scd] Plc_dest(slot=1 mode=0x04 dest=(-3873,-22550)) -> state4/sub4 (Sub-VM-WALK)
+1149: [scd F0] Cut_chg(1)
+1149: [szenenschutz] F0 aus (0 geschuetzte Gegner-Ticks)
+1149: Zugstart: Ton an F31, Krach F241, Ende F745, Annette (-10507,-3600,8646)
+1149: Abgang: Leon zur Seite 1, Tuerton auf F715 zu F745 (2 Se_on Bank 0x0E)
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x13
+1149: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-17800,0,-25900) rot=(0,3072,0)
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [annette] F0 Wiedereintritt nach der Szene: Leiche liegt (RE2 sub00 @0x00D16): Phase 8, Form -(0,0,0) Gier 0 Clip -1/-1, Annette (4856,900,-22748) Clip 24/0, Cut 12
+1149: Schuss (a) Leiche: Rueckgabe 3 (G5-Slot 2), Leiche hp -1 st 0, G5 hp 330
+1149: Schuss (b) lebendes NPC: Rueckgabe 3, NPC hp -1 st 0, G5 hp 330
+1149: [scd] thread start slot=0 first_op=0x54
+1149: [scd] thread start slot=1 first_op=0x06
+1149: [scd] Obj_model_set[0] id=0x00 type=0 pos=(20916,0,-10152) rot=(2048,2048,2048)
+1149: [scd] Obj_model_set[1] id=0x01 type=0 pos=(20916,0,-18540) rot=(0,2048,0)
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [scd F0] Cut_chg(0)
+1149: [scd] Plc_dest(slot=0 mode=0x09 dest=(3150,1600) flag=0) walk_active=1
+1149: [scd] Plc_dest(slot=1 mode=0x09 dest=(5200,1600)) -> state4/sub9 (Sub-VM-WALK)
+1149: 6000 lebend: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x13
+1149: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-17800,0,-25900) rot=(0,3072,0)
+1149: [scd] thread start slot=10 first_op=0x2E
+1149: [scd] Plc_motion(entity=0, motion=18, flags=0x00) → slot=1
+1149: 6030 Pult: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+1149: 6030 Pult (-1790,-22272): Leon westlich bei 850 -> 901, bei 810 -> 901, bei 950 -> 950 (Soll RE1.5 450 + 450 = 900; der RE2-Wert 350 hielte bei 800)
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [scd] thread start slot=10 first_op=0x22
+1149: 5090 vor der Szene: 0x4D-Kasten r 450/450 h 1530 Versatz (0,-1530,0) (Soll 450/450/1530/-1530)
+1149: [annette] F0 Ton 0 (ANNETTE_SE.VBS)
+1149: [annette] F0 Szenenstart statt sub04 (Krach): Phase 1, Form (-14700,0,-23350) Gier 0 Clip 0/16, Annette (8000,0,-24250) Clip 0/0, Cut 13
+1149: 5090 ab Szenenstart: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+1149: [scd] thread start slot=0 first_op=0x3B
+1149: [scd] thread start slot=1 first_op=0x44
+1149: [scd] thread start slot=10 first_op=0x22
+1149: [annette] F0 Wiedereintritt nach der Szene: Leiche liegt (RE2 sub00 @0x00D16): Phase 8, Form -(0,0,0) Gier 0 Clip -1/-1, Annette (4856,900,-22748) Clip 24/0, Cut 12
+1149: Leiche: 0x4D-Kasten r 350/350 h 1350 Versatz (0,-1350,0) (Soll 350/350/1350/-1350)
+1149: Leiche Schub bei 850: Abstand 850
+1149: Leiche Schub bei 750: Abstand 801
+1149: test_r41_annette: OK
+1/4 Test #1149: unit_r41_annette .................   Passed    0.11 sec
+test 1152
+    Start 1152: unit_r41_annette_se_bank
+
+1152: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_annette\re15_port\build\tests\unit\probe_r41_annette_se.exe "bank"
+1152: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/tests/unit
+1152: Test timeout computed to be: 120
+1152: ANNETTE_SE.VBS 47608 B FNV 0xDDFD2496, VH @0x10: Programme 1, Toene 16, Wellen 4
+1152: bank: GRUEN (0 Fehler)
+2/4 Test #1152: unit_r41_annette_se_bank .........   Passed    0.01 sec
+test 1153
+    Start 1153: unit_r41_annette_se_toene
+
+1153: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_annette\re15_port\build\tests\unit\probe_r41_annette_se.exe "toene"
+1153: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/tests/unit
+1153: Test timeout computed to be: 120
+1153: Satz 0: EDT 00 00 02 04 (Quelle 00 00 d2 04)
+1153:   Lage 0: Ton 0 note 72 center 90 shift 57 vol 127 pan 64 -> pitch 0x5F3 = 16397.5 Hz
+1153: Satz 1: EDT 00 00 13 20 (Quelle 00 01 23 20)
+1153:   Lage 0: Ton 1 note 61 center 85 shift 0 vol 127 pan 64 -> pitch 0x400 = 11025.0 Hz
+1153:   Lage 1: Ton 2 note 61 center 85 shift 0 vol 127 pan 64 -> pitch 0x400 = 11025.0 Hz
+1153: Satz 2: EDT 00 00 33 01 (Quelle 00 00 c3 01)
+1153:   Lage 0: Ton 3 note 71 center 110 shift 59 vol 115 pan 64 -> pitch 0x1C4 = 4866.5 Hz
+1153: Satz 3: EDT 00 00 43 00 (Quelle 00 00 93 00)
+1153:   Lage 0: Ton 4 note 68 center 103 shift 59 vol 100 pan 64 -> pitch 0x23A = 6137.0 Hz
+1153: toene: GRUEN (0 Fehler)
+3/4 Test #1153: unit_r41_annette_se_toene ........   Passed    0.01 sec
+test 1154
+    Start 1154: unit_r41_annette_se_lagen
+
+1154: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_annette\re15_port\build\tests\unit\probe_r41_annette_se.exe "lagen"
+1154: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/build/tests/unit
+1154: Test timeout computed to be: 120
+1154: Satz 0 KRACH : 1 Lage(n), Welle 0 13104 B, dekodiert 22904 Abtastwerte, Endblock bei 22904 = 1.397 s, RMS 6238, Spitze 32235
+1154: Satz 1 STURZ : 2 Lage(n), Welle 1 9568 B, dekodiert 16716 Abtastwerte, Endblock bei 16716 = 1.516 s, RMS 5245, Spitze 32414
+1154: Satz 2 BRUELL: 1 Lage(n), Welle 2 9072 B, dekodiert 15848 Abtastwerte, Endblock bei 15848 = 3.257 s, RMS 5166, Spitze 31400
+1154: Satz 3 ZUG_AN: 1 Lage(n), Welle 3 12736 B, dekodiert 22260 Abtastwerte, Endblock bei 22260 = 3.627 s, RMS 6588, Spitze 32768
+1154: lagen: GRUEN (0 Fehler)
+4/4 Test #1154: unit_r41_annette_se_lagen ........   Passed    0.01 sec
+
+The following tests passed:
+	unit_r41_annette
+	unit_r41_annette_se_bank
+	unit_r41_annette_se_toene
+	unit_r41_annette_se_lagen
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.21 sec
+EXIT=0

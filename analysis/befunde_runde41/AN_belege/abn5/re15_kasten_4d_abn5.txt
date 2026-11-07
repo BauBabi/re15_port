@@ -1,0 +1,105 @@
+# Abnahme 5 Spur AN (zweiter Abnehmer): RE1.5-Kasten der 0x4D - Bytes selbst gelesen (2026-11-07)
+# Quelle: re15_port/shared_assets/PSX/BIN/STAGE{5,6}.BIN (bitgleich info/Re1.5/PSX/BIN), Overlay ohne Kopf @0x80100000, Datei-Offset = Adresse - 0x80100000.
+# Dekodierung MIPS R3000 von Hand (op/rs/rt/imm). Gegenprobe: dieselben Bytes auf der echten Disc C:/workspace/git/reAi_v2/Version_40%/PSX/BIN (Dateien sonst verschieden, Memory reai-v2-repobaum-ist-mod).
+
+== re15_port/shared_assets/PSX/BIN/STAGE6.BIN: 10324 Byte, sha256 3c9a9acef8c27764
+== info/Re1.5/PSX/BIN/STAGE6.BIN: 10324 Byte, sha256 3c9a9acef8c27764
+== C:/workspace/git/reAi_v2/Version_40%/PSX/BIN/STAGE6.BIN: 10324 Byte, sha256 50a6dd49ec179398
+-- Registrierung der Wurzel fuer Typ 0x4D: sw in 0x80072bac + 0x4D*4 = 0x80072ce0 (at = lui 0x8007)
+  @0x80101df0  10 80 02 3c  lui v0,0x8010                (Disc 40%: gleich)
+  @0x80101df4  a0 17 42 24  addiu v0,v0,6048             (Disc 40%: gleich)
+  @0x80101df8  07 80 01 3c  lui at,0x8007                (Disc 40%: gleich)
+  @0x80101dfc  e0 2c 22 ac  sw v0,11488(at)              (Disc 40%: gleich)
+-- Zustandstabelle der Wurzel (lui/addiu at), [0] = INIT
+  @0x80101874  10 80 01 3c  lui at,0x8010                (Disc 40%: gleich)
+  @0x80101878  94 27 21 24  addiu at,at,10132            (Disc 40%: gleich)
+  -> Tabelle 0x80102794: [0] = 0x80101918 (INIT), [4] = 0x80101ac0 (EXE-Executor)
+-- INIT: Kasten-Zeiger nach +0x78 (120)
+  @0x80101954  10 80 02 3c  lui v0,0x8010                (Disc 40%: gleich)
+  @0x80101958  90 27 42 8c  lw v0,10128(v0)              (Disc 40%: gleich)
+  @0x8010195c  00 00 00 00  sll zero,zero,zero           (Disc 40%: gleich)
+  @0x80101960  78 00 62 ac  sw v0,120(v1)                (Disc 40%: gleich)
+  Zeiger @0x80102790 = 84 27 10 80 -> 0x80102784
+  Kasten @0x80102784 = 00 00 06 fa 00 00 c2 01 fa 05 c2 01 = {ofs_x,ofs_y,ofs_z,r_min,h,r_max} = (0, -1530, 0, 450, 1530, 450)  (Disc 40%: gleich)
+-- Leser des Kastens in der Wurzel (Bodenprobe jal 0x8001bd60, Schub jal 0x8002aec4, Wand-Klemme lw +0x78 / lhu +6 / jal 0x8003b0a4)
+  @0x80101840  14 00 05 34  ori a1,zero,20               (Disc 40%: gleich)
+  @0x80101844  58 6f 00 0c  jal 0x8001bd60               (Disc 40%: gleich)
+  @0x801018a4  84 c7 a5 8c  lw a1,-14460(a1)             (Disc 40%: gleich)
+  @0x801018a8  b1 ab 00 0c  jal 0x8002aec4               (Disc 40%: gleich)
+  @0x801018c4  78 00 82 8c  lw v0,120(a0)                (Disc 40%: gleich)
+  @0x801018c8  04 00 06 34  ori a2,zero,4                (Disc 40%: gleich)
+  @0x801018cc  06 00 45 94  lhu a1,6(v0)                 (Disc 40%: gleich)
+  @0x801018d0  29 ec 00 0c  jal 0x8003b0a4               (Disc 40%: gleich)
+
+== re15_port/shared_assets/PSX/BIN/STAGE5.BIN: 133280 Byte, sha256 5924508cca02df2b
+== info/Re1.5/PSX/BIN/STAGE5.BIN: 133280 Byte, sha256 5924508cca02df2b
+== C:/workspace/git/reAi_v2/Version_40%/PSX/BIN/STAGE5.BIN: 133280 Byte, sha256 96924dd1c7dd5e4e
+-- Registrierung der Wurzel fuer Typ 0x4D: sw in 0x80072bac + 0x4D*4 = 0x80072ce0 (at = lui 0x8007)
+  @0x8011ddac  12 80 02 3c  lui v0,0x8012                (Disc 40%: gleich)
+  @0x8011ddb0  d4 d6 42 24  addiu v0,v0,-10540           (Disc 40%: gleich)
+  @0x8011ddb4  07 80 01 3c  lui at,0x8007                (Disc 40%: gleich)
+  @0x8011ddb8  e0 2c 22 ac  sw v0,11488(at)              (Disc 40%: gleich)
+-- Zustandstabelle der Wurzel (lui/addiu at), [0] = INIT
+  @0x8011d7a8  12 80 01 3c  lui at,0x8012                (Disc 40%: gleich)
+  @0x8011d7ac  e0 07 21 24  addiu at,at,2016             (Disc 40%: gleich)
+  -> Tabelle 0x801207e0: [0] = 0x8011d84c (INIT), [4] = 0x8011d9f4 (EXE-Executor)
+-- INIT: Kasten-Zeiger nach +0x78 (120)
+  @0x8011d888  12 80 02 3c  lui v0,0x8012                (Disc 40%: gleich)
+  @0x8011d88c  dc 07 42 8c  lw v0,2012(v0)               (Disc 40%: gleich)
+  @0x8011d890  00 00 00 00  sll zero,zero,zero           (Disc 40%: gleich)
+  @0x8011d894  78 00 62 ac  sw v0,120(v1)                (Disc 40%: gleich)
+  Zeiger @0x801207dc = d0 07 12 80 -> 0x801207d0
+  Kasten @0x801207d0 = 00 00 06 fa 00 00 c2 01 fa 05 c2 01 = {ofs_x,ofs_y,ofs_z,r_min,h,r_max} = (0, -1530, 0, 450, 1530, 450)  (Disc 40%: gleich)
+-- Leser des Kastens in der Wurzel (Bodenprobe jal 0x8001bd60, Schub jal 0x8002aec4, Wand-Klemme lw +0x78 / lhu +6 / jal 0x8003b0a4)
+  @0x8011d774  14 00 05 34  ori a1,zero,20               (Disc 40%: gleich)
+  @0x8011d778  58 6f 00 0c  jal 0x8001bd60               (Disc 40%: gleich)
+  @0x8011d7d8  84 c7 a5 8c  lw a1,-14460(a1)             (Disc 40%: gleich)
+  @0x8011d7dc  b1 ab 00 0c  jal 0x8002aec4               (Disc 40%: gleich)
+  @0x8011d7f8  78 00 82 8c  lw v0,120(a0)                (Disc 40%: gleich)
+  @0x8011d7fc  04 00 06 34  ori a2,zero,4                (Disc 40%: gleich)
+  @0x8011d800  06 00 45 94  lhu a1,6(v0)                 (Disc 40%: gleich)
+  @0x8011d804  29 ec 00 0c  jal 0x8003b0a4               (Disc 40%: gleich)
+
+== PSX.EXE (info/Re1.5/PSX.EXE, t_addr 0x80010000, Datei-Offset = Adresse - 0x80010000 + 0x800): EXE-Leser des Kastens
+-- FUN_8001bd60 (Bodenprobe): +0x78 -> Kasten, +6 = r_min, negiert als a1 an FUN_8003b7f0
+  @0x8001bd88  3c02800b  lui v0,0x800b
+  @0x8001bd8c  8c42c784  lw v0,-14460(v0)
+  @0x8001bd90  00000000  sll zero,zero,zero
+  @0x8001bd94  8c430078  lw v1,120(v0)
+  @0x8001bd98  24440034  addiu a0,v0,52
+  @0x8001bd9c  94650006  lhu a1,6(v1)
+  @0x8001bda0  90460082  lbu a2,130(v0)
+  @0x8001bda4  0c00edfc  jal 0x8003b7f0
+  @0x8001bda8  00052823  subu a1,zero,a1
+-- FUN_8002aec4 (Koerperschub): beide +0x78-Kaesten, +6 = Radien
+  @0x8002af38  8e760078  lw s6,120(s3)
+  @0x8002af3c  8e550078  lw s5,120(s2)
+  @0x8002af40  96cc0006  lhu t4,6(s6)
+  @0x8002af44  00000000  sll zero,zero,zero
+  @0x8002af48  a7ac0018  sh t4,24(sp)
+  @0x8002af4c  96ac0006  lhu t4,6(s5)
+-- Spieler-Kasten PSX.EXE Datei 0x64694: 00 00 06 fa 00 00 c2 01 fa 05 c2 01 = (0, -1530, 0, 450, 1530, 450)
+-- Dispatch-Wort 0x80072ce0 in der EXE vor dem Overlay: 0x00000000 (die Overlays tragen die Wurzel ein)
+
+== Zensus: Sce_em_set mit Typ 0x4D in allen 240 RDT (abn4/werkzeug/typ4d_zensus.py, eigener Lauf)
+ROOM5090: 0x4D Sce_em_set @0x0122A
+ROOM6000: 0x4D Sce_em_set @0x00F44,0x00F68
+ROOM6030: 0x4D Sce_em_set @0x010D4,0x010F8
+NPC-Typen (>= 0x40) ueber alle Skripte, Anzahl Raeume: 40:19 42:15 45:2 47:3 49:22 4B:19 4D:3
+
+== Skriptstellen (re15_port/tools/scd_dump_room.py, eigener Lauf)
+  0x0122A (+0000) Sce_em_set       44 00 4d 40 00 00 00 ff 58 02 00 00 2c 9d 00 00 00 00 00 00
+=== sub01  [file 0x1284..0x12C2]  (62 B)
+  0x01288 (+0004) Ck               21 03 2a 00  bank=3 bit=42 val=0
+  0x01290 (+000C) Cmp              23 00 0a 00 0c 00
+  0x01296 (+0012) Evt_exec         04 ff 18 04  cond=0xFF type=0x18 sub=4
+  0x0129A (+0016) Set              22 03 2a 01  bank=3 bit=42 val=1
+  0x00F40 (+0022) Ck               21 03 64 00  bank=3 bit=100 val=0
+  0x00F44 (+0026) Sce_em_set       44 00 4d 40 02 00 00 ff 4e 0c f0 f1 40 06 00 00 00 04 00 00
+  0x00F58 (+003A) Evt_exec         04 ff 18 06  cond=0xFF type=0x18 sub=6
+  0x00F64 (+0046) Ck               21 03 ef 00  bank=3 bit=239 val=0
+  0x00F68 (+004A) Sce_em_set       44 00 4d 00 02 00 00 ff 4e 0c f0 f1 40 06 00 00 00 04 00 00
+=== sub07  [file 0x10CC..0x113A]  (110 B)
+  0x010D4 (+0008) Sce_em_set       44 00 4d 40 00 00 00 ff 02 f9 00 00 00 a9 00 00 18 00 00 00
+  0x010F4 (+0028) Ck               21 03 59 00  bank=3 bit=89 val=0
+  0x010F8 (+002C) Sce_em_set       44 00 4d 40 00 00 00 ff 02 f9 00 00 00 a9 00 00 18 00 00 00
