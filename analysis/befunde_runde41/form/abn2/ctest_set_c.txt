@@ -1,0 +1,178 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build
+      Start 1219: integration_r41_kleinkram_a_gift
+      Start  600: integration_r36_inventar
+      Start  542: integration_r35_inventar1050
+ 1/86 Test  #542: integration_r35_inventar1050 ..................   Passed   65.67 sec
+      Start  342: integration_elza_vollstart
+ 2/86 Test  #600: integration_r36_inventar ......................   Passed  156.58 sec
+      Start 1036: integration_r39_inventar_discard
+ 3/86 Test  #342: integration_elza_vollstart ....................   Passed  100.23 sec
+      Start  855: integration_r38_kleinkram_inventar
+ 4/86 Test #1036: integration_r39_inventar_discard ..............   Passed   63.78 sec
+      Start 1217: integration_r41_kleinkram_a_lautstaerke
+ 5/86 Test  #855: integration_r38_kleinkram_inventar ............   Passed   65.39 sec
+      Start 1228: integration_r41_kleinkram_b_werkstatt_szene
+ 6/86 Test #1228: integration_r41_kleinkram_b_werkstatt_szene ...   Passed   59.44 sec
+      Start  857: integration_r38_kleinkram_flammenwerfer
+ 7/86 Test #1217: integration_r41_kleinkram_a_lautstaerke .......   Passed   92.59 sec
+      Start 1033: integration_r39_inventar_spind
+ 8/86 Test  #857: integration_r38_kleinkram_flammenwerfer .......   Passed   48.88 sec
+      Start 1218: integration_r41_kleinkram_a_blink
+ 9/86 Test #1033: integration_r39_inventar_spind ................   Passed   41.81 sec
+      Start 1233: integration_r41_kleinkram_b_spawn_kante
+10/86 Test #1218: integration_r41_kleinkram_a_blink .............   Passed   46.91 sec
+      Start 1226: integration_r41_kleinkram_b_kurbel
+11/86 Test #1233: integration_r41_kleinkram_b_spawn_kante .......   Passed   34.07 sec
+      Start 1034: integration_r39_inventar_stapeln
+12/86 Test #1034: integration_r39_inventar_stapeln ..............   Passed   33.38 sec
+      Start 1234: integration_r41_kleinkram_b_treppe
+13/86 Test #1226: integration_r41_kleinkram_b_kurbel ............   Passed   38.12 sec
+      Start 1227: integration_r41_kleinkram_b_karte
+14/86 Test #1234: integration_r41_kleinkram_b_treppe ............   Passed   24.01 sec
+      Start  856: integration_r38_kleinkram_irons
+15/86 Test #1227: integration_r41_kleinkram_b_karte .............   Passed   28.33 sec
+      Start 1232: integration_r41_kleinkram_b_renn
+16/86 Test  #856: integration_r38_kleinkram_irons ...............   Passed   26.35 sec
+      Start 1235: integration_r41_kleinkram_b_losl
+17/86 Test #1232: integration_r41_kleinkram_b_renn ..............   Passed   24.66 sec
+      Start 1035: integration_r39_inventar_status
+18/86 Test #1235: integration_r41_kleinkram_b_losl ..............   Passed   24.44 sec
+      Start 1231: integration_r41_kleinkram_b_geh
+19/86 Test #1035: integration_r39_inventar_status ...............   Passed   24.14 sec
+      Start 1229: integration_r41_kleinkram_b_werkstatt_tuer
+20/86 Test #1231: integration_r41_kleinkram_b_geh ...............   Passed   24.18 sec
+      Start 1230: integration_r41_kleinkram_b_kante
+21/86 Test #1229: integration_r41_kleinkram_b_werkstatt_tuer ....   Passed   22.83 sec
+      Start 1407: integration_dark_start_pin
+22/86 Test #1230: integration_r41_kleinkram_b_kante .............   Passed   18.31 sec
+      Start  898: unit_r38_griff_hund2
+23/86 Test  #898: unit_r38_griff_hund2 ..........................   Passed    0.29 sec
+      Start  738: unit_r37_kistenregel_raumstart
+24/86 Test  #738: unit_r37_kistenregel_raumstart ................   Passed    0.33 sec
+      Start  895: unit_r38_griff_zombie2_hinten
+25/86 Test  #895: unit_r38_griff_zombie2_hinten .................   Passed    0.22 sec
+      Start  894: unit_r38_griff_zombie2_vorn
+26/86 Test  #894: unit_r38_griff_zombie2_vorn ...................   Passed    0.24 sec
+      Start  854: unit_r38_kleinkram_flammenwerfer
+27/86 Test  #854: unit_r38_kleinkram_flammenwerfer ..............   Passed    0.17 sec
+      Start  896: unit_r38_griff_kriecher2_1220
+28/86 Test  #896: unit_r38_griff_kriecher2_1220 .................   Passed    0.09 sec
+      Start  853: unit_r38_kleinkram_irons
+29/86 Test  #853: unit_r38_kleinkram_irons ......................   Passed    0.08 sec
+      Start  355: unit_r30_hinweis_anker
+30/86 Test  #355: unit_r30_hinweis_anker ........................   Passed    0.11 sec
+      Start 1242: unit_r41_kleinkram_b_takt_uebernahme
+31/86 Test #1242: unit_r41_kleinkram_b_takt_uebernahme ..........   Passed    0.14 sec
+      Start  358: unit_r30_hinweis_zeichner
+32/86 Test  #358: unit_r30_hinweis_zeichner .....................   Passed    0.13 sec
+      Start 1225: unit_r41_kleinkram_b_kurbel_schleife
+33/86 Test #1225: unit_r41_kleinkram_b_kurbel_schleife ..........   Passed    0.07 sec
+      Start 1240: unit_r41_kleinkram_b_takt_renntempo
+34/86 Test #1240: unit_r41_kleinkram_b_takt_renntempo ...........   Passed    0.02 sec
+      Start 1029: unit_r39_inventar_spind
+35/86 Test #1029: unit_r39_inventar_spind .......................   Passed    0.05 sec
+      Start 1238: unit_r41_kleinkram_b_takt_frage
+36/86 Test #1238: unit_r41_kleinkram_b_takt_frage ...............   Passed    0.03 sec
+      Start  900: unit_r38_griff_spiderman_vorn
+37/86 Test  #900: unit_r38_griff_spiderman_vorn .................   Passed    0.05 sec
+      Start 1241: unit_r41_kleinkram_b_takt_rennpfad
+38/86 Test #1241: unit_r41_kleinkram_b_takt_rennpfad ............   Passed    0.08 sec
+      Start  892: unit_r38_griff_zombie15_vorn
+39/86 Test  #892: unit_r38_griff_zombie15_vorn ..................   Passed    0.03 sec
+      Start 1032: unit_r39_inventar_discard
+40/86 Test #1032: unit_r39_inventar_discard .....................   Passed    0.06 sec
+      Start  893: unit_r38_griff_zombie15_hinten
+41/86 Test  #893: unit_r38_griff_zombie15_hinten ................   Passed    0.03 sec
+      Start  852: unit_r38_kleinkram_inventar
+42/86 Test  #852: unit_r38_kleinkram_inventar ...................   Passed    0.01 sec
+      Start  899: unit_r38_griff_gorilla
+43/86 Test  #899: unit_r38_griff_gorilla ........................   Passed    0.03 sec
+      Start  336: unit_r30_android_r1_toggle
+44/86 Test  #336: unit_r30_android_r1_toggle ....................   Passed    0.09 sec
+      Start 1243: unit_r41_kleinkram_b_takt_sherry
+45/86 Test #1243: unit_r41_kleinkram_b_takt_sherry ..............   Passed    0.04 sec
+      Start 1031: unit_r39_inventar_status
+46/86 Test #1031: unit_r39_inventar_status ......................   Passed    0.02 sec
+      Start 1222: unit_r41_kleinkram_b_11b1_original
+47/86 Test #1222: unit_r41_kleinkram_b_11b1_original ............   Passed    0.04 sec
+      Start  621: unit_r36_klettern_10f0_startlage
+48/86 Test  #621: unit_r36_klettern_10f0_startlage ..............   Passed    0.03 sec
+      Start  537: unit_r35_inventar1050_altstand
+49/86 Test  #537: unit_r35_inventar1050_altstand ................   Passed    0.01 sec
+      Start 1030: unit_r39_inventar_stapeln
+50/86 Test #1030: unit_r39_inventar_stapeln .....................   Passed    0.02 sec
+      Start  357: unit_r30_hinweis_spurlos
+51/86 Test  #357: unit_r30_hinweis_spurlos ......................   Passed    0.02 sec
+      Start 1237: unit_r41_kleinkram_b_takt_kamerahalt
+52/86 Test #1237: unit_r41_kleinkram_b_takt_kamerahalt ..........   Passed    0.01 sec
+      Start  699: unit_r37_elzaems_opfer27
+53/86 Test  #699: unit_r37_elzaems_opfer27 ......................   Passed    0.04 sec
+      Start  538: unit_r35_inventar1050_altpistole
+54/86 Test  #538: unit_r35_inventar1050_altpistole ..............   Passed    0.01 sec
+      Start 1239: unit_r41_kleinkram_b_takt_rennstopp
+55/86 Test #1239: unit_r41_kleinkram_b_takt_rennstopp ...........   Passed    0.01 sec
+      Start 1224: unit_r41_kleinkram_b_kurbel_laenge
+56/86 Test #1224: unit_r41_kleinkram_b_kurbel_laenge ............   Passed    0.05 sec
+      Start 1221: unit_r41_kleinkram_b_11b1_zu
+57/86 Test #1221: unit_r41_kleinkram_b_11b1_zu ..................   Passed    0.04 sec
+      Start  536: unit_r35_inventar1050_ablegen
+58/86 Test  #536: unit_r35_inventar1050_ablegen .................   Passed    0.01 sec
+      Start  534: unit_r35_inventar1050_start
+59/86 Test  #534: unit_r35_inventar1050_start ...................   Passed    0.01 sec
+      Start  535: unit_r35_inventar1050_elza
+60/86 Test  #535: unit_r35_inventar1050_elza ....................   Passed    0.01 sec
+      Start  338: unit_r30_android_n3_plc_aim
+61/86 Test  #338: unit_r30_android_n3_plc_aim ...................   Passed    0.03 sec
+      Start  901: unit_r38_griff_spiderman_hinten
+62/86 Test  #901: unit_r38_griff_spiderman_hinten ...............   Passed    0.04 sec
+      Start  902: unit_r38_griff_affe3_hinten
+63/86 Test  #902: unit_r38_griff_affe3_hinten ...................   Passed    0.03 sec
+      Start  897: unit_r38_griff_hund15
+64/86 Test  #897: unit_r38_griff_hund15 .........................   Passed    0.03 sec
+      Start  541: unit_r35_inventar1050_reserve
+65/86 Test  #541: unit_r35_inventar1050_reserve .................   Passed    0.01 sec
+      Start 1223: unit_r41_kleinkram_b_karte_pin
+66/86 Test #1223: unit_r41_kleinkram_b_karte_pin ................   Passed    0.04 sec
+      Start  539: unit_r35_inventar1050_kiste
+67/86 Test  #539: unit_r35_inventar1050_kiste ...................   Passed    0.01 sec
+      Start  356: unit_r30_hinweis_fsm
+68/86 Test  #356: unit_r30_hinweis_fsm ..........................   Passed    0.02 sec
+      Start 1236: unit_r41_kleinkram_b_takt_msgtakt
+69/86 Test #1236: unit_r41_kleinkram_b_takt_msgtakt .............   Passed    0.02 sec
+      Start  540: unit_r35_inventar1050_breit
+70/86 Test  #540: unit_r35_inventar1050_breit ...................   Passed    0.01 sec
+      Start   41: unit_inv_fsm
+71/86 Test   #41: unit_inv_fsm ..................................   Passed    0.03 sec
+      Start 1027: unit_r39_hund1121_startmaschine
+72/86 Test #1407: integration_dark_start_pin ....................   Passed   17.99 sec
+      Start   78: unit_inv_grant
+73/86 Test #1027: unit_r39_hund1121_startmaschine ...............   Passed    0.04 sec
+      Start  260: unit_pri_inventar_riegel
+74/86 Test   #78: unit_inv_grant ................................   Passed    0.03 sec
+      Start  599: unit_r36_inventar
+75/86 Test  #260: unit_pri_inventar_riegel ......................   Passed    0.03 sec
+      Start  120: unit_debug_menu
+76/86 Test  #120: unit_debug_menu ...............................   Passed    0.02 sec
+      Start  337: unit_r30_android_n1_inventar_cmd
+77/86 Test  #337: unit_r30_android_n1_inventar_cmd ..............   Passed    0.05 sec
+      Start 1216: unit_r41_kleinkram_a
+78/86 Test #1216: unit_r41_kleinkram_a ..........................   Passed    0.03 sec
+      Start 1220: unit_r41_kleinkram_b_11b1_programm
+79/86 Test  #599: unit_r36_inventar .............................   Passed    0.13 sec
+      Start  324: unit_r26_inventar
+80/86 Test #1220: unit_r41_kleinkram_b_11b1_programm ............   Passed    0.03 sec
+      Start  359: unit_r30_hinweis_bank
+81/86 Test  #324: unit_r26_inventar .............................   Passed    0.02 sec
+      Start 1385: unit_birkin_opfer
+82/86 Test  #359: unit_r30_hinweis_bank .........................   Passed    0.02 sec
+      Start 1175: unit_r41_kanister2080_start
+83/86 Test #1385: unit_birkin_opfer .............................   Passed    0.03 sec
+      Start 1378: unit_n2_griff_start
+84/86 Test #1175: unit_r41_kanister2080_start ...................   Passed    0.03 sec
+85/86 Test #1378: unit_n2_griff_start ...........................   Passed    0.14 sec
+86/86 Test #1219: integration_r41_kleinkram_a_gift ..............   Passed  863.22 sec
+
+100% tests passed, 0 tests failed out of 86
+
+Total Test time (real) = 863.29 sec
+ctest rc=0

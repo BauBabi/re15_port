@@ -1,0 +1,59 @@
+# Abnahme 2 Spur Form: Ton der Riesenform (debug.log [se]/[walk], re2se.log)
+# w5090_leon/w5091_elza mit echtem Tongeraet; t5080_leon mit SDL_AUDIODRIVER=dummy (WASAPI-Endpunkt ab ~15:00 weg, Ablauf bildgleich zu b5080_leon)
+
+== w5090_leon: Raum-Ton 10 gespielt 3, vom SE-Tor FUN_80045a18 verworfen 2, re2se SILENT 0
+268:[walk] F1170 cut=15 mo=105 af=1 frz=0 | pl pos=(13775,0,-23550) rot=2055
+276:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+277:[walk] F1200 cut=11 mo=2 af=13 frz=0 | pl pos=(13775,0,-23550) rot=2055
+284:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+290:[walk] F1230 cut=12 mo=215 af=2 frz=0 | pl pos=(13775,0,-23550) rot=2059
+301:[se] GATE: se=10 Stimme=6 prio=2(nib 2) VERWORFEN (laufend prio=3) [FUN_80045a18]
+307:[walk] F1260 cut=12 mo=215 af=1 frz=0 | pl pos=(13775,0,-23550) rot=2059
+314:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+519:[walk] F1740 cut=11 mo=215 af=12 frz=0 | pl pos=(14998,0,-24720) rot=2101
+526:[se] GATE: se=10 Stimme=6 prio=2(nib 2) VERWORFEN (laufend prio=3) [FUN_80045a18]
+
+== w5091_elza: Raum-Ton 10 gespielt 3, vom SE-Tor FUN_80045a18 verworfen 2, re2se SILENT 0
+271:[walk] F1170 cut=15 mo=105 af=1 frz=0 | pl pos=(13775,0,-23550) rot=2055
+279:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+280:[walk] F1200 cut=11 mo=2 af=13 frz=0 | pl pos=(13775,0,-23550) rot=2055
+287:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+293:[walk] F1230 cut=12 mo=215 af=2 frz=0 | pl pos=(13775,0,-23550) rot=2057
+304:[se] GATE: se=10 Stimme=6 prio=2(nib 2) VERWORFEN (laufend prio=3) [FUN_80045a18]
+310:[walk] F1260 cut=12 mo=215 af=1 frz=0 | pl pos=(13775,0,-23550) rot=2057
+317:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+522:[walk] F1740 cut=11 mo=215 af=12 frz=0 | pl pos=(15021,0,-24720) rot=2101
+529:[se] GATE: se=10 Stimme=6 prio=2(nib 2) VERWORFEN (laufend prio=3) [FUN_80045a18]
+
+== t5080_leon: Raum-Ton 10 gespielt 6, vom SE-Tor FUN_80045a18 verworfen 1, re2se SILENT 0
+174:[walk] F870 cut=1 mo=1 af=12 frz=0 | pl pos=(-26468,0,-18200) rot=4065
+180:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+182:[walk] F900 cut=4 mo=200 af=22 frz=0 | pl pos=(-26468,0,-18200) rot=4065
+183:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+188:[walk] F930 cut=4 mo=200 af=52 frz=0 | pl pos=(-26468,0,-18200) rot=4065
+189:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+191:[walk] F960 cut=4 mo=200 af=82 frz=0 | pl pos=(-26468,0,-18200) rot=4065
+192:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+281:[walk] F1260 cut=1 mo=15 af=7 frz=0 | pl pos=(-21122,0,-17137) rot=1889
+303:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+314:[walk] F1290 cut=1 mo=0 af=13 frz=0 | pl pos=(-21122,0,-17137) rot=1889
+330:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+416:[walk] F1440 cut=1 mo=215 af=4 frz=0 | pl pos=(-21122,0,-17137) rot=1889
+423:[se] GATE: se=10 Stimme=6 prio=2(nib 2) VERWORFEN (laufend prio=3) [FUN_80045a18]
+
+== v5090_leon: Raum-Ton 10 gespielt 5, vom SE-Tor FUN_80045a18 verworfen 0, re2se SILENT 0
+264:[walk] F1170 cut=15 mo=105 af=1 frz=0 | pl pos=(13775,0,-23550) rot=2055
+267:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+268:[walk] F1200 cut=11 mo=2 af=13 frz=0 | pl pos=(13775,0,-23550) rot=2055
+272:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+276:[walk] F1230 cut=12 mo=105 af=2 frz=0 | pl pos=(13985,0,-23550) rot=2055
+282:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+283:[walk] F1260 cut=13 mo=105 af=32 frz=0 | pl pos=(16085,0,-23550) rot=2055
+284:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+644:[walk] F1830 cut=11 mo=215 af=0 frz=0 | pl pos=(17815,0,-24477) rot=2087
+656:[se] Stimme: se=10 layer=0 vag=11 note=70 fine=0 center=94 vol=100 pitch=0x400 (11025 Hz) -> SE-Stimme 6 (SPU 22)
+
+== SILENT-Eintraege in allen Laeufen (re2se.log):
+a5090_leon_devicelost: 2 x [re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT 
+k5090_leon: 1 x [re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT 
+s5091_elza: 2 x [re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT 
