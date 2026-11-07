@@ -4119,15 +4119,8 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
     set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 640)
-    # Form Nachbesserung 3 (AN-Abnahme 2 N1): ECHTER Wagenweg A -> B -> C (kein Sprung in Wagen B), die Form kommt mit
-    # RE15_BB_FORM_HP in Wagen C, der Kampf dauert, Leon wird angegriffen. Soll-HP aus dem Kopf gelesen.
-    add_test(NAME integration_r41_form_wagenweg
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_form_wagenweg_wd
-                     -DRE15_FORM_HP_HEADER=${CMAKE_SOURCE_DIR}/include/re15_birkin_formen.h
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_form_wagenweg.cmake)
-    set_tests_properties(integration_r41_form_wagenweg PROPERTIES TIMEOUT 600)
+    # Form Nachbesserung 3 (AN-Abnahme 2 N1): ECHTER Wagenweg A -> B -> C - integration_r41_form_wagenweg samt Elza- und
+    # Zurueckweichen-Teilen und Kamera-Pruefung (Nachbesserung 4) jetzt in probes/r41_form_kamera.cmake.
     # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
     add_test(NAME integration_r41_g5_westen
              COMMAND "${CMAKE_COMMAND}"
