@@ -1,0 +1,126 @@
+== fuzz (Punkt 7, Nachbesserung 1) ==
+    neu   W1     : 900 Bilder, Stillstand  33 (laengster  12), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W2     : 900 Bilder, Stillstand 149 (laengster  23), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt   2
+    neu   W3     : 900 Bilder, Stillstand 113 (laengster  25), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W4     : 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N1     : 900 Bilder, Stillstand  42 (laengster  12), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N2     : 900 Bilder, Stillstand  45 (laengster  15), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N3     : 900 Bilder, Stillstand  19 (laengster  16), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N4     : 900 Bilder, Stillstand   2 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O1     : 900 Bilder, Stillstand  69 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O2     : 900 Bilder, Stillstand   2 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O3     : 900 Bilder, Stillstand  18 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O4     : 900 Bilder, Stillstand  22 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S1     : 900 Bilder, Stillstand  49 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S2     : 900 Bilder, Stillstand  39 (laengster  17), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S3     : 900 Bilder, Stillstand  30 (laengster  25), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S4     : 900 Bilder, Stillstand  11 (laengster   5), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   NW     : 900 Bilder, Stillstand 191 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   NO     : 900 Bilder, Stillstand  73 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   SO     : 900 Bilder, Stillstand  51 (laengster  35), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   3
+    neu   SW     : 900 Bilder, Stillstand   9 (laengster   5), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-mitte: 900 Bilder, Stillstand  49 (laengster  16), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-mitte: Kopf-Abstand im Mittel 5957, Gator im Bild der Spielerkamera (Cut 2) 50 %
+    neu   P-west : 900 Bilder, Stillstand  41 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-west: Kopf-Abstand im Mittel 4351, Gator im Bild der Spielerkamera (Cut 2) 38 %
+    neu   P-nord : 900 Bilder, Stillstand 147 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-nord: Kopf-Abstand im Mittel 6309, Gator im Bild der Spielerkamera (Cut 3) 15 %
+    neu   P-sued : 900 Bilder, Stillstand 108 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-sued: Kopf-Abstand im Mittel 5488, Gator im Bild der Spielerkamera (Cut 2) 8 %
+    neu   Rampe  : 900 Bilder, Stillstand  32 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        Rampe: Kopf-Abstand im Mittel 2910, Gator im Bild der Spielerkamera (Cut 2) 100 %
+    neu   Leiter : 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        Leiter: Kopf-Abstand im Mittel 7269, Gator im Bild der Spielerkamera (Cut 0) 93 %
+    neu   A2-Leiterecke: 900 Bilder, Stillstand  10 (laengster  10), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NW-Ecke: 900 Bilder, Stillstand  13 (laengster   4), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-Ostnische: 900 Bilder, Stillstand  25 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NO-Ecke: 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-RampeWest: 900 Bilder, Stillstand  41 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        A2-RampeWest: Kopf-Abstand im Mittel 3158, Gator im Bild der Spielerkamera (Cut 2) 100 %
+    vorG2 W1     : 900 Bilder, Stillstand 181 (laengster  41), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  10
+    vorG2 W2     : 900 Bilder, Stillstand 107 (laengster  77), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  52
+    vorG2 W3     : 900 Bilder, Stillstand 134 (laengster  79), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  53
+    vorG2 W4     : 900 Bilder, Stillstand  26 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 N1     : 900 Bilder, Stillstand 229 (laengster 121), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt  93
+    vorG2 N2     : 900 Bilder, Stillstand 151 (laengster  37), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   3
+    vorG2 N3     : 900 Bilder, Stillstand 154 (laengster  80), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  57
+    vorG2 N4     : 900 Bilder, Stillstand  84 (laengster  19), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 O1     : 900 Bilder, Stillstand  49 (laengster  14), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 O2     : 900 Bilder, Stillstand  75 (laengster  14), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 O3     : 900 Bilder, Stillstand  43 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 O4     : 900 Bilder, Stillstand 159 (laengster  23), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt   7
+    vorG2 S1     : 900 Bilder, Stillstand 190 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 S2     : 900 Bilder, Stillstand  32 (laengster  14), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 S3     : 900 Bilder, Stillstand 274 (laengster  71), Wandreiben laengstes  17, 2-s-Fenster ohne Fortschritt  83
+    vorG2 S4     : 900 Bilder, Stillstand 150 (laengster  62), Wandreiben laengstes  14, 2-s-Fenster ohne Fortschritt  32
+    vorG2 NW     : 900 Bilder, Stillstand 271 (laengster  25), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt  20
+    vorG2 NO     : 900 Bilder, Stillstand  47 (laengster  14), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 SO     : 900 Bilder, Stillstand  50 (laengster  14), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 SW     : 900 Bilder, Stillstand 108 (laengster  29), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 P-mitte: 900 Bilder, Stillstand 191 (laengster 145), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt 114
+        P-mitte: Kopf-Abstand im Mittel 5756, Gator im Bild der Spielerkamera (Cut 2) 92 %
+    vorG2 P-west : 900 Bilder, Stillstand  50 (laengster  15), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-west: Kopf-Abstand im Mittel 5061, Gator im Bild der Spielerkamera (Cut 2) 90 %
+    vorG2 P-nord : 900 Bilder, Stillstand 158 (laengster  24), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-nord: Kopf-Abstand im Mittel 7996, Gator im Bild der Spielerkamera (Cut 3) 0 %
+    vorG2 P-sued : 900 Bilder, Stillstand 120 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-sued: Kopf-Abstand im Mittel 9103, Gator im Bild der Spielerkamera (Cut 2) 4 %
+    vorG2 Rampe  : 900 Bilder, Stillstand  64 (laengster  14), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        Rampe: Kopf-Abstand im Mittel 6357, Gator im Bild der Spielerkamera (Cut 2) 92 %
+    vorG2 Leiter : 900 Bilder, Stillstand 221 (laengster  77), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  93
+        Leiter: Kopf-Abstand im Mittel 4392, Gator im Bild der Spielerkamera (Cut 0) 100 %
+    vorG2 A2-Leiterecke: 900 Bilder, Stillstand 169 (laengster  77), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  52
+    vorG2 A2-NW-Ecke: 900 Bilder, Stillstand 103 (laengster  80), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  54
+    vorG2 A2-Ostnische: 900 Bilder, Stillstand 307 (laengster  63), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt  41
+    vorG2 A2-NO-Ecke: 900 Bilder, Stillstand  46 (laengster  14), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    vorG2 A2-RampeWest: 900 Bilder, Stillstand  60 (laengster  14), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        A2-RampeWest: Kopf-Abstand im Mittel 3157, Gator im Bild der Spielerkamera (Cut 2) 100 %
+    G2v1  W1     : 900 Bilder, Stillstand 148 (laengster  77), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  52
+    G2v1  W2     : 900 Bilder, Stillstand  74 (laengster  37), Wandreiben laengstes   6, 2-s-Fenster ohne Fortschritt   6
+    G2v1  W3     : 900 Bilder, Stillstand 181 (laengster  77), Wandreiben laengstes   2, 2-s-Fenster ohne Fortschritt  81
+    G2v1  W4     : 900 Bilder, Stillstand 172 (laengster  80), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  54
+    G2v1  N1     : 900 Bilder, Stillstand  40 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  N2     : 900 Bilder, Stillstand 168 (laengster 120), Wandreiben laengstes   3, 2-s-Fenster ohne Fortschritt  89
+    G2v1  N3     : 900 Bilder, Stillstand 151 (laengster  65), Wandreiben laengstes   3, 2-s-Fenster ohne Fortschritt  34
+    G2v1  N4     : 900 Bilder, Stillstand  89 (laengster  20), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  O1     : 900 Bilder, Stillstand  65 (laengster  15), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  O2     : 900 Bilder, Stillstand  49 (laengster  10), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  O3     : 900 Bilder, Stillstand  84 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  O4     : 900 Bilder, Stillstand 145 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  S1     : 900 Bilder, Stillstand 130 (laengster  77), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  52
+    G2v1  S2     : 900 Bilder, Stillstand  68 (laengster  15), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  S3     : 900 Bilder, Stillstand 146 (laengster 113), Wandreiben laengstes   2, 2-s-Fenster ohne Fortschritt  82
+    G2v1  S4     : 900 Bilder, Stillstand  99 (laengster  78), Wandreiben laengstes   4, 2-s-Fenster ohne Fortschritt  47
+    G2v1  NW     : 900 Bilder, Stillstand 268 (laengster  24), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   4
+    G2v1  NO     : 900 Bilder, Stillstand 176 (laengster  45), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt  16
+    G2v1  SO     : 900 Bilder, Stillstand  60 (laengster  12), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  SW     : 900 Bilder, Stillstand 101 (laengster  40), Wandreiben laengstes   2, 2-s-Fenster ohne Fortschritt  14
+    G2v1  P-mitte: 900 Bilder, Stillstand  38 (laengster  18), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-mitte: Kopf-Abstand im Mittel 6276, Gator im Bild der Spielerkamera (Cut 2) 72 %
+    G2v1  P-west : 900 Bilder, Stillstand   8 (laengster   6), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-west: Kopf-Abstand im Mittel 5115, Gator im Bild der Spielerkamera (Cut 2) 92 %
+    G2v1  P-nord : 900 Bilder, Stillstand 102 (laengster  24), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-nord: Kopf-Abstand im Mittel 7957, Gator im Bild der Spielerkamera (Cut 3) 0 %
+    G2v1  P-sued : 900 Bilder, Stillstand 285 (laengster 150), Wandreiben laengstes   5, 2-s-Fenster ohne Fortschritt  99
+        P-sued: Kopf-Abstand im Mittel 8887, Gator im Bild der Spielerkamera (Cut 2) 88 %
+    G2v1  Rampe  : 900 Bilder, Stillstand  76 (laengster  36), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        Rampe: Kopf-Abstand im Mittel 2950, Gator im Bild der Spielerkamera (Cut 2) 100 %
+    G2v1  Leiter : 900 Bilder, Stillstand 140 (laengster  77), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt  52
+        Leiter: Kopf-Abstand im Mittel 3629, Gator im Bild der Spielerkamera (Cut 0) 100 %
+    G2v1  A2-Leiterecke: 900 Bilder, Stillstand  73 (laengster  37), Wandreiben laengstes   6, 2-s-Fenster ohne Fortschritt   6
+    G2v1  A2-NW-Ecke: 900 Bilder, Stillstand  64 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    G2v1  A2-Ostnische: 900 Bilder, Stillstand 166 (laengster  36), Wandreiben laengstes   4, 2-s-Fenster ohne Fortschritt   4
+    G2v1  A2-NO-Ecke: 900 Bilder, Stillstand 166 (laengster  94), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt  63
+    G2v1  A2-RampeWest: 900 Bilder, Stillstand  32 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        A2-RampeWest: Kopf-Abstand im Mittel 2982, Gator im Bild der Spielerkamera (Cut 2) 100 %
+    neu  : 27900 Bilder, Stillstand 1433 (5 %), laengster Stillstand 35, laengstes Wandreiben 1 (W2)
+    vor G2: 27900 Bilder, Stillstand 4003 (14 %), laengster Stillstand 145, laengstes Wandreiben 17 (S3)
+    G2 v1: 27900 Bilder, Stillstand 3564 (12 %), laengster Stillstand 150, laengstes Wandreiben 6 (W2)
+  ok: Fuzz gelaufen (27900 Bilder mit Kanister)
+  ok: kein Wandreiben > 1 s mit dem Kanister (laengstes 1 Bilder bei W2)
+    Etappen ohne Annaeherung (abgebrochen): 9
+  ok: NB3/NB4: Figur oben/an der Leiter - mittlerer Kopf-Abstand der Patrouille hoechstens 7269 (<= 9000: naechster Mittelpunkt im sichtbaren Wasser bis 8930 von der Figur; im Bild misst der Riegel kamera; Bildanteil hier nur berichtet: 8 %)
+  ok: NB2 (M5)/G2-RE2: hoechstens 10 Zeitfenster von 2 s (60 Bilder), in denen die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (5 Fenster; laengste 30-Bilder-Folge 35)
+  ok: Stillstand mit Kanister hoechstens wie vor G2 (1433 / 27900 gegen 4003 / 27900)
+  ok: Gegenprobe G2 vor NB1: Wandreiben 6 / 2-s-Fenster ohne Fortschritt 755 (rot ohne den Bau)
+fuzz: 0 Fehler

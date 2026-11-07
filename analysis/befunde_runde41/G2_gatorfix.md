@@ -1056,3 +1056,103 @@ je 0 Bilder ausserhalb, Raumhalt 20-28 Eingriffe (Nordleiste und Klemmlage -> De
    Figur im Raum, Kanister mit = ohne" weiter.
 7. PSX-Bau nicht gemessen (plattformneutrale Pfade; die Zeile RAUMHALT schreibt wie die uebrigen Boss-Diagnosen mit fopen).
 8. Querbezug re2gator (EXIT_AT 1700, Runde 1 Offen 8) unveraendert; integration_r41_re2gator gruen (291.79 s, "r41_re2gator: ok").
+
+## G2-RE2 NB4 (Trefferreaktion RE2, Kante, Kanister im Vorbeikommen)
+
+Baum `.claude/worktrees/r41_gatorfix`, Zweig `r41/gator_re2`, Runde 1 von 2 auf dem Messblatt-Commit 365a6ef7b (`G2_MESSBLATT_NB4.md`). Belege
+`G2_belege/nb4/bau/` (Bildleisten `nachher_*.jpg`, Harness-Ausgaben `harness/`, Lauf-Auswertungen `laeufe/`, Laufskript `werkzeug/lauf4b.sh`).
+
+Vorgaben (Wortlaut):
+- **(T)** Fuer jeden Alligator-Angriff, der die Figur trifft, gilt die Trefferreaktion der Figur aus RE2 statt des RE1.5-Niederwurfs (Orchestrator-Entscheid
+  nach "Original oder nicht").
+- **(W)** Nutzer 2026-11-07 ~15:00 woertlich: **"er kann den Spieler ruhig In das Wasser stoßen."**
+- **(K)** Nutzer 2026-11-07 ~15:00 woertlich: **"Die Frage stellt sich garnicht, da leon mit den alligator ganz normal seine runden drehen soll. Das heißt der
+  alligator sollte Ganz natürlich irgendwann zum Kanister kommen, während er leo. Auf dem rundweg verfolgt...."**
+
+### Bau
+
+**(T) Trefferreaktion** - neue Maschine `engine/src/gator_treffer_r41.c` (Kopf `include/re15_gator_treffer_r41.h`), RE2-Quelle EM23_OVL_0000.BIN
+(`G2_belege/nb4/mess_re2_em23_treffer_kanister.dis`):
+- Eintritt aus `gb_biss_abschluss` (enemy_ai_boss_gator.c) fuer alle fuenf Angriffsstellen (LUNGE-Biss, B2-Biss, Hochbiss, Rammen, CROSS-Biss; die Stelle gibt die
+  Art mit) statt `re15_player_take_damage(5)` + `re15_player_knockdown_begin`. Treffer-Einstieg 0x80101578: Unterzustand 2, bzw. 3 wenn FUN_80015910(Gator, Figur)
+  (@0x801015b4-ec); FUN_8001569c(Figur, Achse, 1536) (@0x80101684-88); Schaden FUN_800401d4 = `re15_re2_player_damage` 60, ab Gator +0x218 & 0x20 30
+  (@0x8010168c-a0, Bit @0x80101ebc-dc, neu `re15_gr2_geschwaecht_slot`); One-Save -> PL+6 = 4 (@0x80103924-34), Tod -> PL+4 = 3 (@0x80103938-48) und das
+  Fressen wie bisher; Biss-Sperre 70 (@0x801016b0-b4) bleibt.
+- **PORT-WAHL Richtung (Messblatt O-T1, Messvorschlag A90):** Achse a = Gator-Gier auf die naechste der vier RE2-Achsen 0/1024/2048/3072 gerastet; wahr -> a,
+  falsch -> a + 2048 wie @0x80101604-80. Offen fuer den Orchestrator (Abschnitt Offen 1).
+- Spieler-Haken 0x80102D08 Phase fuer Phase: Sub 2 @0x801030bc-0x801031dc (SE 0x04010001, Clip 18 Blend 3, +0x144 = -800 / += 150 / Clip 19 doppelt / += 15 bis 0,
+  Ende), Sub 3 @0x80103238-0x80103370 (SE 0x04020001, Clip 20 Blend 3, +0x144 = +800 / -= 120, Clip 17 doppelt + Sperre frei @0x801032f0, Basis-Clip 6 rueckwaerts).
+  Vorschub FUN_800152c8 ohne Klemme, danach der Dispatcher-Schwanz (`re15_player_body_and_walls`: Koerper-Schub + Klemme) als eigener Zweig in
+  game_step_common.c vor dem Niederwurf-Zweig. Sperre +0x1D3 & 0x80 = `hit_react` Bit 0 (alle Angriffsstellen fragen `pl->hit_react == 0`). Der HP-Flinch-Detektor
+  und das Inventar sperren waehrend der Reaktion wie beim Niederwurf. Kommandowort: `pl->state` = 2 (RE1.5 cmd 2 = Treffer-Klasse), `sub_state_1` = 2/3 (= RE2 +5),
+  Ende 1/0/0 (RE2 `sw 1,4(s1)` @0x801031d0 / @0x80103364); nicht 5 (RE1.5 cmd 5 = Griff).
+- Animation: RE2-Raumbank ROOM40A0 RDT+0x60 @0x65E8 bytegleich als `shared_assets/RE2/GATOR40A0.RBJ` (14 328 B, md5 28589546..., `tools/r41_g2nb4/
+  gator40a0_rbj_export.py`, Ausgabe "Record 0: EMR @0x8 (15 Knochen x 80 B) EDD @0x29A4 Clips 21: 17/18/19/20 = 16/10/30/21 Bilder"). Eigener Kanal wie RE2s
+  +0x190/+0x194 (FUN_80018e08 @0x80018ea4/eb8), nicht der Raum-RBJ-Kanal der Figur (2090/2091 haben keinen, die Szene posiert weiter aus PL00): PC-Zeichner
+  `platform/pc/main.c` (Override nach dem Ziel-/Reach-Override, Knochen der Figur + Keyframes der Bank) mit dem Leser `platform/pc/src/gator_treffer_r41_pc.c`;
+  der Schluss (Basis-Clip 6 rueckwaerts = RE1.5 PL00 Clip 11, `mess_pld_vergleich.txt`) ueber `anim_select_common.c` aus PL00. Gezeichnet wird, was FUN_8002959c
+  zuletzt posiert hat (Sub 3 Ph5 -> Ph6 schreibt das Clip-Wort ohne Vorschub: in Bild 28 steht noch Clip 17). Elza posiert aus Record 0 (O-T2).
+- Pruefhaken `re15_gator_treffer_alt_setzen(1)` = Stand 3d57083b1.
+
+**(W) Kante** - die Fallschritte des Substate 10 als gemeinsamer Helfer (`re15_climb_fall_beginn/_schritt/_landung`, climb_common.c; climb_sub10 ruft sie selbst
+auf, Abstieg per Aktionstaste unveraendert). Fuehrt ein RE2-Schritt die Figur auf Band 1 in eine Zelle mit Abwaerts-Bit 0x2 ([8] @0x754 / [9] @0x760; Bedingung
+wie die Abwaerts-Sonde @0x8002d74c-50 und Boden darunter tiefer @0x8002d764-7c), dann im selben Bild y += 500, Boden, Band = -(h/1800) VOR der Klemme, Klemme auf
+Band 0, y += 90 (Ph2 faellt in Ph3), weiter + 90 + 50 t, Landung y = Boden + Spritzer im Bild nach der Schwelle. Der Raumhalt Band 1 greift dabei nicht (das Band ist
+schon 0), Band 0 und die Waende [6]/[7] bleiben. **PORT-WAHL (O-W1):** RE2 kennt den Sturz nicht (kein erhoehter Boden im RE2-Raum) - die RE2-Haltung (Clip 18/19
+bzw. 20/17) und die waagrechten RE2-Schritte laufen im Sturz weiter; endet die Reaktion vor der Landung, faellt die Figur zu Ende (gemessen nie noetig: Sturz ab
+Bild 0-2, Landung Bild 4-6).
+
+**(K) Kanister** - PORT-WAHL mit dem Nutzer-Wortlaut (K) im Code (kanister2080_r41.c, gator_re2_r41.c): RUNDE (E1) und Anschwimmen (N3) aus dem Spiel
+(`anschwimm_lage` liefert 0, GUARD-Ausnahme damit wirkungslos), fuer den Szenen-Kanister das Zielmodus-Bit (O-K1) und die Zonen-Ruhe (a) der Paddel-Hysterese
+(@0x80100ab8-c8 / @0x80100aec) aus, solange er liegt - ohne diese wich die Verfolgung mit liegendem Kanister ab (Riegel K1 vorher: 5 von 6 Lagen, erstes Bild
+t449..t1718, Clip 1 statt 0). Aufnahmefenster und Stufen 1-6 unveraendert. Pruefhaken `re15_k2080_runde_alt_setzen(1)` = Stand 3d57083b1.
+
+### Riegel und Messung (Bau exe md5 3d53ca60bdf6358685d327b03470e112, test_r41_gatorfix.exe 93092b73)
+
+| Riegel | Messung | Ergebnis |
+|---|---|---|
+| T1 Harness je Angriff | nb4 Teil A 13 eingespeiste Treffer; Teil B 32 Lagen + 3 "oben halten" + Lauf HP 24990 | Teil A 13/13; Teil B 880 Reaktionen, 708 vollstaendig (Sub 2 488, Sub 3 220), **0 Abweichungen** vom RE2-Modell (Unterzustand, Schritte, Dauer 20/54, Clips, Sperre, SE); Rammen 54, CROSS-Biss 24, Hochbiss 10, Biss 792 (B2 nur per env, s. Offen) |
+| T2 Animation | Clipfolge je Bild; GATOR40A0.RBJ Record 0 | 18@0 19@4 / 20@0 17@21 11@29 (rw); RBJ 21 Clips, 16/10/30/21; **0 Bilder RE1.5-Niederwurf** (Harness 0, exe 0 von 4400/8400) |
+| T3 Schaden/Sperre/SE | Teil A + B | 60 (853x), 30 bei +0x218 & 0x20 (27x), One-Save Sub 2 = 1 Bild, Sub 3 = 33 Bilder ab Clip 17; Sperre Bild 0-18 (Ende-Bild 19 frei) bzw. 0-20; SE 1 / 2 |
+| T4 Weg | Harness: Weg des Hakens (Station RE15_SCHRITT_TICK); exe gtrlog: Summe figur - von je Bild | Haken-Weg <= 3735/3080, mit Sturz + 468 (Fall-Klemme): Harness max 4171, exe max 4021 (Sturz) bzw. 3735, **0 ueber**. Luftlinie gesamt mit Koerper-/Boss-Schub: Harness max 6186, exe max 4766 (frei4_leon, 5 von 76 Reaktionen > 3735/3080) - vorher bis 11 312 / 13 059 |
+| T5 Gegenprobe | Pruefhaken treffer_alt; gtrlog auf die Messer-Laeufe 3d57083b1 | Harness: Niederwurf 1804 Bilder, Luftlinie 5630, 0 RE2-Reaktionen - rot; exe nb4_oben_leon / nb4_frei4_leon: 0 Reaktionen, Niederwurf 1128 / 3492 Bilder, RUNDE 2, Zielmodus 1 -> VERFEHLT |
+| W1 Kante -> Wasser | Teil A Nord/Sued je Sub 2/3 + Mitte; Teil B 53 Stuerze; exe oben_leon/elza | y -1210, -1070, -880, -640, 0, Band 0, 0 Raumhalt; Teil B 53/53 richtig, 0 Raumhalt in Sturzbildern; exe F383 Rammen -> KANTE F385 -> LANDUNG F389 (Leon und Elza) |
+| W2 Wand bleibt Wand | Teil A Ostwand [6], Plattform [7], Mitte West | Figur bleibt y -1800 Band 1 (x 6732 / 2318 / 2313) |
+| W3 nie aus dem Raum | raum, nb4 Teil B, aussenlog | 0 aussen, 0 im Block, 0 Deck verlassen ausser Sturzbildern (raum 16 Lagen x 2 mit/ohne, exe 4 Laeufe) |
+| W4 Abstieg | climb_sub10 ruft die Helfer; exe Elza Abstieg per Aktionstaste an der Nordkante (6732,-14968), ohne Gator, neu gegen Stand 3d57083b1 (re15_pc_g2nb4.exe) | 38 sub=10-Bilder, climb.log **bytegleich** (y -1210/-1070/-880/-640/0 bei (6732,-14032)), `laeufe/w4_abstieg/`. Der Abnahme-6-Lauf west4_elza steigt mit dem Bau nicht mehr hinauf (die RE2-Bisse im Wasser treiben die Figur in die SO-Ecke) |
+| K1 kein Holmodus | Teil K 6 Lagen x 1800 mit liegendem Kanister gegen ohne | **0 von 6 abweichend** bis zur Aufnahme; RUNDE/ANSCHWIMMEN 0, Zielmodus 1 0; exe 0/0/0 in allen Laeufen |
+| K2 Aufnahme nur in Reichweite | gator_boss.log Stufe 1 | Harness 6 Aufnahmen (laengs max 5795, quer max 1668), exe 3 (5444/1672, 1708/-1156, 5583/1707), 0 ausserhalb; Gegenprobe Kanister abseits: Stufe 0 bis Laufende |
+| K3 oben ohne 28-s-Pause | Teil K, exe obenlog ab0 | Harness erster Treffer oben spaetestens t288; exe oben_leon/elza erster Treffer oben nach 300 Bildern (vorher Pause 851-856) |
+| K4 Stufen 1-6 | unveraendert (Riegel v4 Sitz 0) | s. ctest |
+| Gegenprobe K | Pruefhaken runde_alt | RUNDE an, 55 Bilder abweichend - rot |
+
+Exe-Laeufe dieses Stands (Umgebung wortgleich den Abnahme-6-Laeufen, `laeufe/c4_*`): oben_leon 49 Treffer = 49 Reaktionen, Kanister im Vorbeikommen F1857
+aufgenommen; oben_elza 59/59, Kanister bleibt liegen (der Gator kommt nicht vorbei); frei4_leon 101/101, Aufnahme F5689; frei4_elza 93/93, Aufnahme F178.
+
+Bildleisten (RE15_FRAMEDUMP, Aufhellung 1.8): `nachher_oben_leon_rammen_kante_F376-F414_hell.jpg`, `nachher_oben_elza_rammen_kante_F376-F414_hell.jpg` (Rammen,
+Sturz, Spritzer, Figur im Wasser), `nachher_oben_leon_biss_wasser_F750-F798_hell.jpg`, `nachher_frei4_leon_biss_wasser_F136-F196_hell.jpg` (Figur ausserhalb
+von Cut 0, Beleg die Lagezeilen: 3155 statt vorher 10 776), `nachher_frei4_elza_biss_wasser_aufnahme_F136-F196_hell.jpg`, `nachher_frei4_leon_aufnahme_F5660-F5712_hell.jpg`.
+Vorher: `G2_belege/nb4/mess_frei4_leon_biss_F1186-F1240_hell.jpg`, `mess_oben_leon_rammen_F1336-F1384_hell.jpg` (Messer).
+
+Neu bewertete Riegel: raum (Sturzbilder kein "Deck verlassen", der Oben-Abschnitt endet mit dem Sturz; Gegenprobe 10603425b mit treffer_alt), nb3 (Gegenproben
+a661eb8aa mit treffer_alt), fuzz (die stehende Figur behaelt ihre Gier: die RE2-Reaktion dreht sie mit FUN_8001569c; ohne das 15 Fenster, mit 5), exe: kein
+Tragen-Riegel ohne Aufnahme (K), E1 entfaellt, obenlog ab0 fuer rampe_oben, aussenlog ohne Sturzbilder, gtrlog in allen Laeufen.
+
+### Tests
+
+- Bau `RE15_BUILD_DIR=<Baum>/re15_port/build bash re15_port/tools/local_build.sh build`: `=== LOCAL-BUILD-OK (build)`.
+- `ctest --test-dir <Baum>/re15_port/build -R "^unit_r41_gatorfix_" -j 2 --timeout 900`: `100% tests passed, 0 tests failed out of 30`,
+  `Total Test time (real) = 173.08 sec` (`G2_belege/nb4/bau/ctest_unit.txt`; neu nb4 und nb4_elza, je ~34 s).
+- exe-Riegel `ctest --test-dir <Baum>/re15_port/build -R "^integration_r41_gatorfix_|^integration_r41_re2gator" -j 2 --timeout 2400 -V`: Ergebnis im Abschnitt "Nachtrag ctest exe" unten.
+
+### Offen
+
+1. **Richtung A90 (O-T1)** ist PORT-WAHL; RE2 nimmt die Korridorachse des Abschnitts. Mit A90 stoesst fast jeder Treffer oben die Figur ueber eine Kante (Harness
+   Teil B: jede Oben-Lage faellt beim ersten Treffer). Entscheid des Orchestrators.
+2. **Animation im Sturz (O-W1)** RE2-Haltung weiter; Sichtpruefung am Bild durch den Nutzer.
+3. **Luftlinie mit Koerper-Schub**: der Haken haelt 3735/3080, der Koerper-/Boss-Schub des Gators (RE1.5 FUN_8002b544 @0x80031cbc im Schwanz, Boss-Push) kommt
+   dazu (exe bis 4766, Harness bis 6186). RE2 schiebt ebenso (FUN_80034D0C @0x80026628); ob der Port-Schub in 2090 RE2s Mass hat, ist nicht gemessen.
+4. **B2-Biss** (env RE15_GB_LUNGE_B2) laeuft ueber dieselbe Stelle gb_biss_abschluss, ist aber in keinem Riegel ausgeloest.
+5. **PSX**: die Maschine ist plattformneutral, der Zeichner-Override fuer die Raumbank nur PC (PSX posiert Clip 17-20 aus der Standardbank) - nicht gebaut/gemessen.
+6. Vibration (0x800eaad8/0x800eac28), Gator-Effekt FUN_80103d80 und die Nacken-Bits +0x1C0 |= 0x12 sind nicht Teil der Reaktion (O-T3).
+7. Elza posiert aus RE2-Leon-Record 0 (O-T2) - Sichtpruefung `nachher_oben_elza_*`.

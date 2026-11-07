@@ -1,0 +1,4 @@
+== Gegenprobe nb4_oben_leon (Stand 3d57083b1, Messer-Lauf)
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 1128 (von 4400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 1, RUNDE 2, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 20 -> VERFEHLT
+== Gegenprobe nb4_frei4_leon (Stand 3d57083b1, Messer-Lauf)
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 3492 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 2, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 60 -> VERFEHLT

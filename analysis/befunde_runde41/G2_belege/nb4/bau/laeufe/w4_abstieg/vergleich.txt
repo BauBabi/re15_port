@@ -1,0 +1,41 @@
+W4 Abstieg per Aktionstaste (Elza, ROOM2091, Figur (6732,-1800,-14968) Blick Nord, kein Gator), exe neu 3d53ca60bdf6358685d327b03470e112 gegen Stand 3d57083b1 5910fc246fc82eaaac9f64795492585a:
+sub=10-Zeilen alt 38, neu 38; cmp climb.log: bytegleich
+
+T313 room=2091 pm=0 pad=8000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=0 obj=-1 stand=-1 mo=230 af=0 frac=7 push=-1 rc_b8=
+T314 room=2091 pm=0 pad=8000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=0 frac=7 push=-1 rc_b8=
+T315 room=2091 pm=0 pad=8000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=1 frac=6 push=-1 rc_b8=
+T316 room=2091 pm=0 pad=8000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=2 frac=5 push=-1 rc_b8=
+T317 room=2091 pm=0 pad=8000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=3 frac=4 push=-1 rc_b8=
+T318 room=2091 pm=0 pad=8000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=4 frac=3 push=-1 rc_b8=
+T319 room=2091 pm=0 pad=8000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=5 frac=2 push=-1 rc_b8=
+T320 room=2091 pm=0 pad=8000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=6 frac=1 push=-1 rc_b8=
+T321 room=2091 pm=0 pad=0000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=7 frac=0 push=-1 rc_b8=
+T322 room=2091 pm=0 pad=0000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=8 frac=0 push=-1 rc_b8=
+T323 room=2091 pm=0 pad=0000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=9 frac=0 push=-1 rc_b8=
+T324 room=2091 pm=0 pad=0000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=10 frac=0 push=-1 rc_b8
+T325 room=2091 pm=0 pad=0000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=1 obj=-1 stand=-1 mo=232 af=11 frac=0 push=-1 rc_b8
+T326 room=2091 pm=0 pad=0000 pos=(6732,-1800,-14968) rot=3072 band=1 sub=10 kind=0x02 ph=2 obj=-1 stand=-1 mo=232 af=12 frac=0 push=-1 rc_b8
+T327 room=2091 pm=0 pad=0000 pos=(6732,-1210,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=3 obj=-1 stand=-1 mo=233 af=0 frac=0 push=-1 rc_b8=
+T328 room=2091 pm=0 pad=0000 pos=(6732,-1070,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=3 obj=-1 stand=-1 mo=233 af=1 frac=0 push=-1 rc_b8=
+T329 room=2091 pm=0 pad=0000 pos=(6732,-880,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=3 obj=-1 stand=-1 mo=233 af=2 frac=0 push=-1 rc_b8=0
+T330 room=2091 pm=0 pad=0000 pos=(6732,-640,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=4 obj=-1 stand=-1 mo=233 af=3 frac=0 push=-1 rc_b8=0
+T331 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=0 frac=0 push=-1 rc_b8=0 rc
+T332 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=1 frac=0 push=-1 rc_b8=0 rc
+T333 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=2 frac=0 push=-1 rc_b8=0 rc
+T334 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=3 frac=0 push=-1 rc_b8=0 rc
+T335 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=4 frac=0 push=-1 rc_b8=0 rc
+T336 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=5 frac=0 push=-1 rc_b8=0 rc
+T337 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=6 frac=0 push=-1 rc_b8=0 rc
+T338 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=7 frac=0 push=-1 rc_b8=0 rc
+T339 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=8 frac=0 push=-1 rc_b8=0 rc
+T340 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=9 frac=0 push=-1 rc_b8=0 rc
+T341 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=10 frac=0 push=-1 rc_b8=0 r
+T342 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=11 frac=0 push=-1 rc_b8=0 r
+T343 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=12 frac=0 push=-1 rc_b8=0 r
+T344 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=13 frac=0 push=-1 rc_b8=0 r
+T345 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=14 frac=0 push=-1 rc_b8=0 r
+T346 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=15 frac=0 push=-1 rc_b8=0 r
+T347 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=16 frac=0 push=-1 rc_b8=0 r
+T348 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=17 frac=0 push=-1 rc_b8=0 r
+T349 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=5 obj=-1 stand=-1 mo=234 af=18 frac=0 push=-1 rc_b8=0 r
+T350 room=2091 pm=0 pad=0000 pos=(6732,0,-14032) rot=3072 band=0 sub=10 kind=0x02 ph=6 obj=-1 stand=-1 mo=234 af=19 frac=0 push=-1 rc_b8=0 r
