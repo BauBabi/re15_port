@@ -20,6 +20,7 @@
 
 #include "re15_md1.h"
 #include "re15_anim_select.h"
+#include "re15_gator_treffer_r41.h"   /* G2-RE2 NB4: RE2-Trefferreaktion (Riegel nb4, raum) */
 #include "../../engine/src/gen/gatorszene_r41_schluessel.inc"   /* RE2-Modell bytegleich (Gegenprobe Punkt 6) */
 
 /* ---- Geometrie-Helfer ------------------------------------------------------------------------------------------------------- */
@@ -1625,8 +1626,9 @@ static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, 
     int32_t hist[30][2], h60[60][2]; uint8_t kk[30], bs60[60]; int hn = 0, still_lauf = 0, rub_lauf = 0;
     memset(bs60, 0, sizeof bs60);
     int32_t schritt[60]; for (int k = 0; k < 60; k++) schritt[k] = 1000;
+    const int16_t rot0 = pl->rot_y;   /* G2-RE2 NB4 (T): die RE2-Reaktion dreht die Figur (FUN_8001569c @0x80101684-88) - die stehende Figur des Riegels behaelt ihre Gier */
     for (int t = 0; t < s_fz_bilder && re15_gr2_traegt(); t++) {
-        pl->x = L->x; pl->y = L->y; pl->z = L->z; pl->hp = 100; pl->hit_react = 0;
+        pl->x = L->x; pl->y = L->y; pl->z = L->z; pl->hp = 100; pl->hit_react = 0; pl->rot_y = rot0;
         if (s_fz_cam >= 0) { g_scd.cam_id = (uint8_t)s_fz_cam;   /* NB4: die Figur steht in dieser Kamera */
             re15_collision_set_band(re15_collision_band_from_y(L->y)); }   /* NB4: Kollisionsband der Lage wie nach dem Klettern (climb_common.c @0x800384bc) - sonst
                                                                               * schob die Kollision die Figur von der Rampe (z -16300 -> -14032) und sie war nie "oben" */
@@ -1674,7 +1676,7 @@ static void g2_fuzz_lage(re15_actor_t *g, re15_actor_t *pl, const g2_lage_t *L, 
             int32_t kx = 0, kz = 0;   /* NB4: Kreispunkte (von 16) des laufenden Kreises im Bild der Spielerkamera, kleinster Wert */
             if (m->cam >= 0 && re15_gr2_trag_kreis((int)(g - g_actors), &kx, &kz)) { const int v = re15_gr2_kreis_sicht(m->cam, kx, kz); if (m->kreis_vis_min < 0 || v < m->kreis_vis_min) m->kreis_vis_min = v; } }   /* NB3: Mittel ueber die zweite Haelfte (angekommen, Patrouille) */
         if (m->cam >= 0 && t >= s_fz_bilder / 2) { const int32_t w[3] = { g->x, -1200, g->z }; int sx = 0, sy = 0; if (re15_gr2_im_bild_cut(m->cam, w, &sx, &sy) && sy >= 24 && sy < 216) m->im_bild++; }
-        if (fenster2 && !biss_im_fenster) { m->fenster2++; if (zeige) printf("        %s t%d FENSTER Gator (%d,%d) Gier %d Clip %d Phase %d Trag %d\n", L->name, t, g->x, g->z, th, (int)g->motion, ph, re15_gr2_trag_modus((int)(g - g_actors))); }
+        if (fenster2 && !biss_im_fenster) { m->fenster2++; if (zeige) printf("        %s t%d FENSTER gtr %d kopf %d Gator (%d,%d) Gier %d Clip %d Phase %d Trag %d\n", L->name, t, re15_gator_treffer_r41_aktiv(), (int)kopf, g->x, g->z, th, (int)g->motion, ph, re15_gr2_trag_modus((int)(g - g_actors))); }
         if (fenster2 && !biss_im_fenster && re15_gr2_kk_aktiv()) rub = 1;   /* NB2: Wandreiben = Kopf-Klemme ohne Weg (2-s-Fenster) */
         if (rub) { rub_lauf++; if (rub_lauf > m->rub_max) m->rub_max = rub_lauf; } else rub_lauf = 0;
         if (zeige && still && (still_lauf == 1 || still_lauf % 60 == 0))
@@ -2797,7 +2799,7 @@ static void nb3_raster(int elza, int stand, int bilder, int oben, const int32_t 
 /* eine Gang-Lage wie g2r_ohne_lauf (Stand alt = Pruefhaken rw_alt + nb3_alt), n Bilder, Rueckgabe = Bilder bis zum Tragen */
 static int nb3_gang_lage(int elza, int alt, const int32_t *lage, int32_t (*z)[6], int n)
 {
-    re15_gr2_rw_alt_setzen(alt); re15_gator_boss_nb3_alt_setzen(alt);
+    re15_gr2_rw_alt_setzen(alt); re15_gator_boss_nb3_alt_setzen(alt); re15_gator_treffer_alt_setzen(alt);   /* NB4: der alte Stand hatte den RE1.5-Niederwurf */
     re15_actor_t *g = szene_bis_kampf(elza);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     int k = 0;
@@ -2806,9 +2808,10 @@ static int nb3_gang_lage(int elza, int alt, const int32_t *lage, int32_t (*z)[6]
         re15_collision_set_band(re15_collision_band_from_y(lage[1]));
         frame(0, 0);
         if (re15_gr2_traegt()) break;
+        if (getenv("G2_NB4_ZEIG") && pl->hp < 100) printf("      nb3_gang_lage alt %d t%d Treffer: Gator (%d,%d) Phase %d\n", alt, t, g->x, g->z, re15_gator_boss_phase(g));
         z[k][0] = g->x; z[k][1] = g->z; z[k][2] = g->rot_y & 0xfff; z[k][3] = g->motion; z[k][4] = g->anim_frame; z[k][5] = g->y; k++;
     }
-    re15_gr2_rw_alt_setzen(0); re15_gator_boss_nb3_alt_setzen(0);
+    re15_gr2_rw_alt_setzen(0); re15_gator_boss_nb3_alt_setzen(0); re15_gator_treffer_alt_setzen(0);
     return k;
 }
 static void teil_nb3(int elza)
@@ -2855,10 +2858,10 @@ static void teil_nb3(int elza)
         static const int32_t Rg[1][3] = { { 2318, -16300, -1 } }, Wg[1][3] = { { 4200, -18800, 2 } };
         nb3_sum_t Ag, Bg;
         printf("  -- Gegenprobe Stand a661eb8aa (Pruefhaken nb3_alt), ohne Kanister --\n");
-        re15_gator_boss_nb3_alt_setzen(1);
+        re15_gator_boss_nb3_alt_setzen(1); re15_gator_treffer_alt_setzen(1);   /* NB4: Stand a661eb8aa = RE1.5-Niederwurf */
         nb3_raster(elza, 3, bilder, 1, Rg, 1, &Ag, 1);
         nb3_raster(elza, 3, bilder, 0, Wg, 1, &Bg, 1);
-        re15_gator_boss_nb3_alt_setzen(0);
+        re15_gator_boss_nb3_alt_setzen(0); re15_gator_treffer_alt_setzen(0);
         PRUEF(Ag.schlecht == 1 || Ag.erst_max > NB3_PAUSE_MAX, "Gegenprobe a661eb8aa R2318/-16300: kein Treffer in %d Bildern (Messblatt 1.2) bzw. erster > %d (ohne Treffer %d, erster t%d) - rot ohne den Bau",
               bilder, NB3_PAUSE_MAX, Ag.schlecht, Ag.erst_max);
         PRUEF(Bg.haeng_sum >= 1, "Gegenprobe a661eb8aa W4200/-18800/c2: Haenge-Fenster >= 1 (%d; Messblatt 2.2: 3) - rot ohne den Bau", Bg.haeng_sum);
@@ -2906,14 +2909,17 @@ static void raum_lauf(re15_actor_t *g, re15_actor_t *pl, int32_t lx, int32_t ly,
     pl->x = lx; pl->y = ly; pl->z = lz; pl->hp = 100; pl->hit_react = 0; pl->rot_y = (int16_t)rot;   /* Blickrichtung wie die exe-Lagen (Niederwurf rueckwaerts dazu) */
     g_scd.cam_id = (uint8_t)cam;
     re15_collision_set_band(re15_collision_band_from_y(ly));
-    int letzt_tr = -1, oben_ab = -1;
+    int letzt_tr = -1, oben_ab = -1, oben_aus = 0;
     for (int t = 0; t < bilder && (stand == 3 || re15_gr2_traegt()); t++) {
         pl->hp = 100;
         frame(0, 0);
-        m->n++;
         const int tr = pl->hp < 100;
         const int oben = pl->y < -900;
         int aus = 0, deck = 0, block = 0;
+        m->n++;
+        /* G2-RE2 NB4 (W, Nutzer 2026-11-07 "er kann den Spieler ruhig In das Wasser stoßen"): ein Sturz von der Rampe (RE2-Reaktion, Fallschritte Substate 10) ist
+         * kein "Deck verlassen" - seine Bilder zaehlen wie Klettern nicht (Riegel W1 im Teil nb4); danach ist die Figur unten (aussen/im Block gelten) */
+        { re15_gtr_info_t gi; re15_gator_treffer_r41_info(&gi); if (gi.aktiv && (gi.fall == 1 || gi.fall == 3)) { if (tr) { m->ntr++; if (m->erst_tr < 0) m->erst_tr = t; } continue; } }
         if (oben) deck = !(pl->x >= RM_RX0 && pl->x <= RM_RX1 && pl->z >= RM_RZ0 && pl->z <= RM_RZ1);
         else {
             aus = pl->x < -8900 || pl->x > 7200 || pl->z < -27000 || pl->z > -5400;
@@ -2922,16 +2928,17 @@ static void raum_lauf(re15_actor_t *g, re15_actor_t *pl, int32_t lx, int32_t ly,
         }
         m->aus += aus; m->deck += deck; m->block += block;
         if ((aus || deck || block) && m->erst_aus < 0) { m->erst_aus = t; m->ax = pl->x; m->ay = pl->y; m->az = pl->z; }
-        if (oben && !deck) { m->oben_n++; if (oben_ab < 0) oben_ab = t; }
+        if (oben && !deck && !oben_aus) { m->oben_n++; if (oben_ab < 0) oben_ab = t; }
+        if (!oben && oben_ab >= 0 && !oben_aus) oben_aus = 1;   /* NB4 (W): nach dem Sturz ins Wasser endet der Oben-Abschnitt (die Figur klettert ohne Pad nicht wieder hinauf) */
         {   static FILE *s_rs = NULL; static int s_rs_init = 0;   /* Werkzeug: G2_RAUM_SPUR=<datei> - je Bild Lage, t, Gator, Phase, Clip, Figur, Treffer */
             if (!s_rs_init) { s_rs_init = 1; if (getenv("G2_RAUM_SPUR")) s_rs = fopen(getenv("G2_RAUM_SPUR"), "a"); }
             if (s_rs) fprintf(s_rs, "%d/%d %d %d g=(%d,%d,%d) gier %d ph %d clip %d/%d pl=(%d,%d,%d) rot %d mo %d hr %d tr %d oo %d\n", (int)lx, (int)lz, stand, t, g->x, g->y, g->z,
                               g->rot_y & 0xfff, re15_gator_boss_phase(g), (int)g->motion, (int)g->anim_frame, pl->x, pl->y, pl->z, pl->rot_y & 0xfff, (int)pl->motion,
                               (int)pl->hit_react, tr, re15_gator_boss_oben_ohne(g)); }
         if (tr) { m->ntr++; if (m->erst_tr < 0) m->erst_tr = t;
-                  if (oben && !deck) { const int p = t - (letzt_tr < 0 ? oben_ab : letzt_tr); if (p > m->pause) m->pause = p; letzt_tr = t; } }
+                  if (oben && !deck && !oben_aus) { const int p = t - (letzt_tr < 0 ? oben_ab : letzt_tr); if (p > m->pause) m->pause = p; letzt_tr = t; } }
     }
-    if (oben_ab >= 0) { const int rest = m->n - 1 - (letzt_tr < 0 ? oben_ab : letzt_tr); if (rest > m->pause) m->pause = rest; }
+    if (oben_ab >= 0 && !oben_aus) { const int rest = m->n - 1 - (letzt_tr < 0 ? oben_ab : letzt_tr); if (rest > m->pause) m->pause = rest; }
 }
 static void teil_raum(int elza)
 {
@@ -2986,7 +2993,7 @@ static void teil_raum(int elza)
         static const int32_t Gl[4][4] = { { 2318, -1800, -16300, 1024 }, { 6500, -1800, -15000, 1024 }, { 2315, -1800, -17642, 3072 }, { 6732, 0, -18598, 1035 } };
         int rot_oben = 0, rot_unten = 0;
         printf("  -- Gegenprobe Stand 10603425b (Pruefhaken raum_alt): oben ohne, Wasserlage mit Kanister --\n");
-        re15_gator_boss_raum_alt_setzen(1);
+        re15_gator_boss_raum_alt_setzen(1); re15_gator_treffer_alt_setzen(1);   /* NB4: Stand 10603425b = RE1.5-Niederwurf (der Wurf aus dem Raum) */
         for (int i = 0; i < 4; i++) {
             re15_actor_t *g = szene_bis_kampf(elza);
             if (!g || !g2_kanister_ins_maul(g, pl)) continue;
@@ -3000,11 +3007,484 @@ static void teil_raum(int elza)
             if (Gl[i][1] < 0 && m.deck) rot_oben++;
             if (Gl[i][1] == 0 && (m.aus || m.block)) rot_unten++;
         }
-        re15_gator_boss_raum_alt_setzen(0);
+        re15_gator_boss_raum_alt_setzen(0); re15_gator_treffer_alt_setzen(0);
         PRUEF(rot_oben >= 1, "Gegenprobe 10603425b oben: >= 1 Lage verlaesst das Deck (%d von 3) - rot ohne den Bau", rot_oben);
         PRUEF(rot_unten >= 1, "Gegenprobe 10603425b unten (6732,-18598): Figur aussen/im Block (%d) - rot ohne den Bau", rot_unten);
     }
 }
+/* ==== Runde 41 Spur G2-RE2 NB4 (Messblatt G2_MESSBLATT_NB4.md): (T) Trefferreaktion wie RE2, (W) Stoss von der Rampe ins Wasser, (K) kein Kanister-Holmodus =========
+ * Riegel nb4(_elza):
+ *  Teil A (Treffer eingespeist, Gator-KI angehalten - Bild fuer Bild exakt): T1 Sub 2 / Sub 3 im freien Wasser = mess_re2_modell.txt (Schritt je Bild, Lage, Dauer 20 / 54),
+ *    T2 Clipfolge 18 -> 19 bzw. 20 -> 17 -> PL00 Clip 11 rueckwaerts, T3 Schaden 60 / 30, One-Save (Sub 2 endet, Sub 3 liegt sofort), Sperre Bild 0-18 / 0-20, SE 1 / 2,
+ *    W1 Stoss ueber die Nord- und Suedkante (Band 1 -> 0 vor der Klemme, y -1800 -> -1210 im Kantenbild, +140/+190/+240 bis ueber Boden - 800, im Bild danach y 0,
+ *    0 Raumhalt-Eingriffe), W2 Ostwand [6] / Plattform [7] bleiben Wand (Figur oben, y -1800, Band 1). T2 Raumbank GATOR40A0.RBJ Record 0.
+ *  Teil B (echter Boss-Takt, freie Figur wie raum): 9 Oben- + 7 Wasserlagen x 2400 Bilder, mit und ohne Kanister: jede vollstaendige Reaktion Schritt fuer Schritt = RE2-Modell,
+ *    Unterzustand = FUN_80015910 aus den Gieren im Trefferbild, Schaden 60 (Gator-HP >= 25000) bzw. 30 (Lauf mit Gator-HP 24990), nie ein RE1.5-Niederwurf (T2),
+ *    jede Angriffsart (Rammen, CROSS-Biss, Hochbiss, Biss) mindestens einmal; W1 jeder Sturz wie Teil A; W3 kein Bild aussen / im Block / oben neben dem Deck ausser den
+ *    Sturzbildern; A1 (NB3 Vorgabe A, neu bewertet): oben erster Treffer <= 600 und keine Pause > 600, solange die Figur oben ist (ein Sturz beendet den Abschnitt).
+ *    Gegenprobe Stand 3d57083b1 (Pruefhaken re15_gator_treffer_alt_setzen): RE1.5-Niederwurf (knockdown aktiv), Luftlinie > 3735.
+ *  Teil K (liegender Szenen-Kanister, Bit 116 + Installer wie die Rueckkehr): K1 Gator-Bewegung mit liegendem Kanister Bild fuer Bild = ohne Kanister bis zur Aufnahme
+ *    (Lagen oben und im Wasser x 1800 Bilder), 0 Zeilen RUNDE / ANSCHWIMMEN / Zielmodus 1; K2 jede Stufe-1-Zeile laengs in [0, 6000) und |quer| < 1733; Gegenprobe
+ *    Kanister abseits der Bahnen: Stufe 0 bis Laufende; K3 oben erster Treffer <= 600; Gegenprobe Pruefhaken re15_k2080_runde_alt_setzen(1): RUNDE an, Bewegung weicht ab. */
+#include "re15_gator_treffer_r41.h"
+void re15_re2z_onesave_reset(void);   /* enemy_ai_re2_zombie.c: One-Save-Latch von FUN_800401d4 */
+static const int k_nb4_s2[19] = { -800, -650, -500, -350, -200, -185, -170, -155, -140, -125, -110, -95, -80, -65, -50, -35, -20, -5, 0 };   /* mess_re2_modell.txt Sub 2 */
+static const int k_nb4_s3[21] = { 800, 680, 560, 440, 320, 200, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };                            /* Sub 3 Ph1 Bild 0-20 */
+static int nb4_clip_soll(int sub, int b) { return sub == 2 ? (b < 4 ? 18 : 19) : (b <= 20 ? 20 : b <= 28 ? 17 : 11); }
+static int nb4_schritt_soll(int sub, int b) { return sub == 2 ? (b < 19 ? k_nb4_s2[b] : 0) : (b < 21 ? k_nb4_s3[b] : 0); }
+static int nb4_sperre_soll(int sub, int b) { return sub == 2 ? (b < 19) : (b <= 20); }
+#define NB4_BMAX 64
+typedef struct { int sub, art, schaden, ret, gpv, gg, n, voll, abbruch, fall_b, fall_ok, se; int32_t sx, sz, ex, ez, ey, hx, hz;
+                 int schritt[NB4_BMAX], clip[NB4_BMAX], sperre[NB4_BMAX], y[NB4_BMAX], band[NB4_BMAX], fall[NB4_BMAX]; } nb4_r_t;
+typedef struct { int n, voll, abbruch, fehl, sub_fehl, art[6], s2, s3, fall, fall_fehl, kd, schaden60, schaden30, schaden_fehl, halt_fall, haken_fehl, luft_ueber;
+                 int32_t luft_max, haken_max, schub_max; char erst_fehl[240]; } nb4_sum_t;
+/* Weg des Hakens je Bild (Lage nach dem Spieler-Takt, Station RE15_SCHRITT_TICK, minus Lage am Bildanfang); der Rest ist Koerper-Schub, Klemme und Boss-Schub */
+static int s_nb4_hook_ok = 0; static int32_t s_nb4_hook_dx = 0, s_nb4_hook_dz = 0;
+/* Sturz Bild fuer Bild (Substate 10 Ph2-Ph4): Kantenbild y = -1800 + 500 + 90, dann + 90 + 50 t bis Boden - 800 < y, im Bild danach y = Boden (0); Band 0 ab dem Kantenbild */
+static int nb4_fall_pruef(const nb4_r_t *r)
+{
+    if (r->fall_b < 0) return 1;
+    int t = 0, y = -1800 + 500;
+    for (int b = r->fall_b; b < r->n && b < NB4_BMAX; b++) {
+        if (r->band[b] != 0) return 0;
+        if (y > -800) return r->y[b] == 0;   /* Landung (Boden 0) */
+        y += 90 + 50 * t; t++;
+        if (r->y[b] != y) return 0;
+    }
+    return r->abbruch;   /* Reaktion vor der Landung durch einen neuen Treffer abgebrochen: Teilfolge stimmt */
+}
+static void nb4_ende(nb4_r_t *r, nb4_sum_t *S, const re15_actor_t *pl)
+{
+    r->ex = pl->x; r->ez = pl->z; r->ey = pl->y;
+    S->n++;
+    r->fall_ok = nb4_fall_pruef(r);
+    if (r->fall_b >= 0) { S->fall++; if (!r->fall_ok) S->fall_fehl++; }
+    if (r->schaden == 60) S->schaden60++; else if (r->schaden == 30) S->schaden30++; else S->schaden_fehl++;
+    if (r->art >= 0 && r->art < 6) S->art[r->art]++;
+    if (r->abbruch) { S->abbruch++; return; }
+    const int soll_n = r->sub == 2 ? 20 : 54;
+    r->voll = 1; S->voll++;
+    if (r->sub == 2) S->s2++; else S->s3++;
+    const int hinten = ((((r->gpv - r->gg) + 0x400) & 0xfff) < 0x800);
+    const int fehl_sub = (r->sub == 3) != hinten;
+    int fs = 0, fc = 0, fk = 0;
+    const int one = r->ret & 1;
+    for (int b = 0; b < r->n && b < NB4_BMAX; b++) {
+        if (!one && r->schritt[b] != nb4_schritt_soll(r->sub, b)) fs++;
+        if (!one && b < soll_n - 1 && r->clip[b] != nb4_clip_soll(r->sub, b)) fc++;
+        if (!one && b < soll_n - 1 && r->sperre[b] != nb4_sperre_soll(r->sub, b)) fk++;
+    }
+    /* Dauer 20 / 54; nur ein noch fallender Sturz darf das Ende bis zur Landung schieben (Sub 2 mit Sturzbeginn spaeter als Bild 14) */
+    const int dauer_ok = one ? (r->sub == 2 ? r->n == 1 : r->n == 33) : (r->n == soll_n || (r->fall_b >= 0 && r->n > soll_n && r->n <= soll_n + 5));
+    const int se_ok = one ? r->se == 0 : r->se == (r->sub == 2 ? 1 : 2);
+    const int64_t dx = r->ex - r->sx, dz = r->ez - r->sz; const int32_t l = (int32_t)sqrt((double)(dx * dx + dz * dz));
+    if (l > S->luft_max) S->luft_max = l;
+    {   const int32_t lh = (int32_t)sqrt((double)((int64_t)r->hx * r->hx + (int64_t)r->hz * r->hz)), soll = r->sub == 2 ? 3735 : 3080;
+        if (lh > S->haken_max) S->haken_max = lh;
+        if (lh > soll + (r->fall_b >= 0 ? 468 : 0)) S->haken_fehl++;   /* + Klemme der Fall-Phase 2 (@0x800384c4): aus dem Rampenblock [5] auf Kante + 468 */
+        if (l > soll) S->luft_ueber++;
+        const int32_t schub = l - lh; if (schub > S->schub_max) S->schub_max = schub; }
+    if (getenv("G2_NB4_ZEIG") && l > (r->sub == 2 ? 3735 : 3080))
+        printf("      LUFT %d Sub %d art %d Sturz %d: (%d,%d) -> (%d,%d,%d)\n", (int)l, r->sub, r->art, r->fall_b, (int)r->sx, (int)r->sz, (int)r->ex, (int)r->ey, (int)r->ez);
+    if (fehl_sub || fs || fc || fk || !dauer_ok || !se_ok || !r->fall_ok) {
+        S->fehl++; if (fehl_sub) S->sub_fehl++;
+        if (!S->erst_fehl[0]) snprintf(S->erst_fehl, sizeof S->erst_fehl, "Sub %d (FUN_80015910 -> %d) art %d: %d Bilder (soll %d), Schritt-/Clip-/Sperr-Abweichungen %d/%d/%d, SE %d, Sturz ab %d %s",
+                                       r->sub, hinten ? 3 : 2, r->art, r->n, soll_n, fs, fc, fk, r->se, r->fall_b, r->fall_ok ? "ok" : "FALSCH");
+    }
+}
+/* Mitschrift je Bild aus re15_gator_treffer_r41_info (nach frame()). Im Bild laeuft erst der Spieler-Takt (Reaktion, ggf. ihr Ende), dann der Gegner-Pass (neuer Einstieg). */
+typedef struct { nb4_r_t r; int an, n_start, n_ende; } nb4_spur_t;
+static void nb4_eintrag(nb4_r_t *r, int b, const re15_gtr_info_t *I, const re15_actor_t *pl, int ende)
+{
+    if (b < 0 || b >= NB4_BMAX) return;
+    r->schritt[b] = ende ? 0 : I->schritt; r->clip[b] = I->clip; r->sperre[b] = ende ? 0 : I->sperre; r->y[b] = pl->y; r->band[b] = re15_collision_debug_band(); r->fall[b] = I->fall;
+    if (!ende && (I->fall == 1 || I->fall == 3) && r->fall_b < 0) r->fall_b = b;
+    if (I->se) r->se = I->se;
+    r->n = b + 1;
+}
+static void nb4_spur_bild(nb4_spur_t *sp, nb4_sum_t *S, const re15_actor_t *pl)
+{
+    re15_gtr_info_t I; re15_gator_treffer_r41_info(&I);
+    if (re15_player_knockdown_active()) S->kd++;
+    const int neu = I.n_start != sp->n_start, fertig = I.n_ende != sp->n_ende;
+    if (sp->an && s_nb4_hook_ok && (fertig || (I.aktiv && !neu))) { sp->r.hx += s_nb4_hook_dx; sp->r.hz += s_nb4_hook_dz; }
+    if (sp->an && fertig) {                      /* Ende-Bild der laufenden Reaktion (Index = bild, im Ende-Bild nicht erhoeht) */
+        if (!neu) nb4_eintrag(&sp->r, I.bild, &I, pl, 1);
+        else sp->r.n = sp->r.n + 1;              /* Ende und neuer Einstieg im selben Bild: das Ende-Bild ist da, seine Werte nicht mehr */
+        nb4_ende(&sp->r, S, pl); sp->an = 0;
+    } else if (sp->an && neu) {                  /* neuer Treffer waehrend der Reaktion (Sub 3 ab Clip 17 treffbar): abgebrochen */
+        sp->r.abbruch = 1; nb4_ende(&sp->r, S, pl); sp->an = 0;
+    }
+    if (neu) {
+        memset(&sp->r, 0, sizeof sp->r); sp->an = 1; sp->r.fall_b = -1;
+        sp->r.sub = I.sub; sp->r.art = I.art; sp->r.schaden = I.schaden; sp->r.ret = I.ret; sp->r.gpv = I.gier_figur_vor; sp->r.gg = I.gier_gator;
+        sp->r.sx = I.start_x; sp->r.sz = I.start_z;
+    } else if (sp->an && I.aktiv) nb4_eintrag(&sp->r, I.bild - 1, &I, pl, 0);
+    sp->n_start = I.n_start; sp->n_ende = I.n_ende;
+}
+static void nb4_spur_start(nb4_spur_t *sp) { re15_gtr_info_t I; re15_gator_treffer_r41_info(&I); memset(sp, 0, sizeof *sp); sp->n_start = I.n_start; sp->n_ende = I.n_ende; }
+
+/* ---- Teil A: eingespeiste Treffer ---- */
+typedef struct { const char *name; int32_t x, y, z; int pl_gier, g_gier, gesch, hp, erw_sub, erw; } nb4_a_t;   /* erw: 0 frei (Lage exakt), 1 Sturz, 2 Wand, 3 One-Save */
+static int32_t s_nb4_wx[NB4_BMAX + 2], s_nb4_wz[NB4_BMAX + 2];
+static int nb4_a_lauf(int elza, const nb4_a_t *L, nb4_r_t *out, int *halt)
+{
+    re15_actor_t *g = szene_bis_kampf(elza);
+    if (!g) return -1;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_enemy_ai_set_paused(1);
+    g->x = -8000; g->z = -6400; g->y = -1200;                /* weit weg: kein Koerper-Schub */
+    g->rot_y = (int16_t)L->g_gier;
+    pl->x = L->x; pl->y = L->y; pl->z = L->z; pl->rot_y = (int16_t)L->pl_gier; pl->hp = (int16_t)L->hp; pl->hit_react = 0;
+    re15_collision_set_band(re15_collision_band_from_y(L->y));
+    frame(0, 0);                                            /* ein Bild stehen (Normal-Zweig) */
+    pl->x = L->x; pl->y = L->y; pl->z = L->z; pl->rot_y = (int16_t)L->pl_gier; pl->hp = (int16_t)L->hp;
+    re15_collision_set_band(re15_collision_band_from_y(L->y));
+    re15_re2z_onesave_reset();
+    nb4_sum_t S; memset(&S, 0, sizeof S); nb4_spur_t sp; nb4_spur_start(&sp);
+    const int h0 = re15_gator_boss_raum_halt_zahl();
+    (void)re15_gator_treffer_r41_einstieg(g, pl, L->gesch, 4);
+    nb4_spur_bild(&sp, &S, pl);
+    memset(s_nb4_wx, 0, sizeof s_nb4_wx); memset(s_nb4_wz, 0, sizeof s_nb4_wz);
+    int32_t lx = pl->x, lz = pl->z;
+    for (int t = 0; t < 80 && sp.an; t++) {
+        frame(0, 0);
+        if (t < NB4_BMAX) { s_nb4_wx[t] = pl->x - lx; s_nb4_wz[t] = pl->z - lz; }
+        lx = pl->x; lz = pl->z;
+        nb4_spur_bild(&sp, &S, pl);
+    }
+    *halt = re15_gator_boss_raum_halt_zahl() - h0;
+    re15_enemy_ai_set_paused(0);
+    *out = sp.r; out->ex = pl->x; out->ez = pl->z; out->ey = pl->y;
+    if (sp.an) return 1;
+    return S.fehl == 0 && S.voll == 1 ? 0 : 1;
+}
+static void nb4_teil_a(int elza)
+{
+    printf("  -- Teil A: Treffer eingespeist (Gator-KI angehalten, Gator weit weg) --\n");
+    /* Gieren: FUN_80015910 = ((pl - gator) + 0x400) & 0xfff < 0x800 -> Sub 3; A90-Achse = Gator-Gier gerastet; Sub 3 Gier = a, Sub 2 Gier = a + 2048.
+     * Gier 0 = +x, 1024 = -z (Sued), 2048 = -x, 3072 = +z (Nord) (FUN_800152c8: dx = cos * v, dz = -sin * v). */
+    static const nb4_a_t A[] = {
+        { "Wasser Sub 2",           -3000,     0, -23000,    0, 2048, 0, 100, 2, 0 },   /* Gier 0, rueckwaerts -> -x */
+        { "Wasser Sub 3",           -3000,     0, -23000,    0,    0, 0, 100, 3, 0 },   /* vorwaerts -> +x */
+        { "Wasser Sub 2 geschw.",   -3000,     0, -23000, 1024, 3072, 1, 100, 2, 0 },   /* Schaden 30; Gier 1024, rueckwaerts -> Nord */
+        { "Wasser Sub 2 One-Save",  -3000,     0, -23000,    0, 2048, 0,  50, 2, 3 },   /* 50 - 60 = -10 -> One-Save, Ende sofort */
+        { "Wasser Sub 3 One-Save",  -3000,     0, -23000,    0,    0, 0,  50, 3, 3 },   /* -> liegt sofort (Ph4 = Clip 17) */
+        { "Deck Sued Sub 3",         4000, -1800, -17632, 1024, 1024, 0, 100, 3, 1 },   /* vorwaerts -> Sued ueber [9] */
+        { "Deck Sued Sub 2",         4000, -1800, -17632, 3072, 1024, 0, 100, 2, 1 },   /* Figur blickt Nord, Gier -> 3072, rueckwaerts -> Sued */
+        { "Deck Nord Sub 2",         4000, -1800, -14968, 1024, 3072, 0, 100, 2, 1 },   /* Figur blickt Sued, rueckwaerts -> Nord ueber [8] */
+        { "Deck Nord Sub 3",         4000, -1800, -14968, 3072, 3072, 0, 100, 3, 1 },
+        { "Deck Mitte Sub 2 Sued",   4428, -1800, -16300, 3072, 1024, 0, 100, 2, 1 },   /* 3735 von der Mitte: Sturz spaet (ab Bild ~4) */
+        { "Deck Ost (Wand [6])",     6500, -1800, -16300,    0,    0, 0, 100, 3, 2 },   /* +x gegen die Ostwand */
+        { "Deck West (Plattf. [7])", 2400, -1800, -16300, 2048, 2048, 0, 100, 3, 2 },   /* -x gegen die Plattform */
+        { "Deck Mitte Sub 2 West",   4428, -1800, -16300,    0, 2048, 0, 100, 2, 2 },   /* rueckwaerts -x: 3735 > 4428 - 2318 -> an [7] */
+    };
+    const int nA = (int)(sizeof A / sizeof A[0]);
+    int fehl = 0, n = 0;
+    for (int i = 0; i < nA; i++) {
+        const nb4_a_t *L = &A[i];
+        nb4_r_t r; int halt = 0;
+        const int rc = nb4_a_lauf(elza, L, &r, &halt);
+        if (rc < 0) { printf("    %s: kein Kampf\n", L->name); fehl++; continue; }
+        n++;
+        const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        const int dmg_soll = L->gesch ? 30 : 60;
+        int ok = (L->erw == 3 || rc == 0) && r.sub == L->erw_sub && r.schaden == dmg_soll &&
+                 (L->erw == 3 ? (r.ret == 1 && pl->hp == 0) : (r.ret == 0 && pl->hp == L->hp - dmg_soll));
+        int lage_fehl = 0;
+        if (L->erw == 0) {   /* freies Wasser: Lage je Bild = RE2-Schritt laengs der Gier (cos/sin der Achse sind 0/+-4096) */
+            const int a = L->erw_sub == 3 ? ((((L->g_gier & 0xfff) + 512) & 0xC00) & 0xfff) : ((((((L->g_gier & 0xfff) + 512) & 0xC00) & 0xfff) + 2048) & 0xfff);
+            const int32_t ux = re15_cos_q12(a), uz = -re15_sin_q12(a);
+            for (int b = 0; b < r.n; b++) { const int s = nb4_schritt_soll(r.sub, b); if (s_nb4_wx[b] != ((ux * s) >> 12) || s_nb4_wz[b] != ((uz * s) >> 12)) lage_fehl++; }
+            const int32_t soll = r.sub == 2 ? 3735 : 3080; const int64_t dx = r.ex - L->x, dz = r.ez - L->z;
+            if ((int32_t)llround(sqrt((double)(dx * dx + dz * dz))) != soll) lage_fehl++;
+            ok = ok && lage_fehl == 0 && r.fall_b < 0;
+        } else if (L->erw == 1) {
+            ok = ok && r.fall_b >= 0 && r.fall_ok && r.ey == 0 && re15_collision_debug_band() == 0 && halt == 0
+                 && r.ex > -8450 && r.ex < 6750 && r.ez > -26550 && r.ez < -5850 && !(r.ex > RM_RX0 && r.ex < RM_RX1 && r.ez > RM_RZ0 && r.ez < RM_RZ1);
+        } else if (L->erw == 2) {
+            ok = ok && r.fall_b < 0 && r.ey == -1800 && re15_collision_debug_band() == 1 && r.ex >= RM_RX0 + 450 && r.ex <= RM_RX1 - 450;
+        } else ok = ok && r.n == (L->erw_sub == 2 ? 1 : 33) && r.fall_b < 0 && (L->erw_sub == 2 || r.clip[0] == 17);
+        printf("    %-24s Sub %d art %d Schaden %d ret %d hp %d->%d | %2d Bilder, SE %d, Sturz ab Bild %d (%s), Ende (%d,%d,%d) Band %d, Raumhalt %d, Lage-Abweichungen %d, Clips",
+               L->name, r.sub, r.art, r.schaden, r.ret, L->hp, pl->hp, r.n, r.se, r.fall_b, r.fall_ok ? "ok" : "FALSCH", (int)r.ex, (int)r.ey, (int)r.ez, re15_collision_debug_band(), halt, lage_fehl);
+        for (int b = 0, last = -2; b < r.n && b < NB4_BMAX; b++) if (r.clip[b] != last) { printf(" %d@%d", r.clip[b], b); last = r.clip[b]; }
+        if (r.fall_b >= 0) { printf(" | y"); for (int b = r.fall_b; b < r.n && b < r.fall_b + 6; b++) printf(" %d", r.y[b]); }
+        printf(" -> %s\n", ok ? "ok" : "FEHLER");
+        if (!ok) fehl++;
+    }
+    PRUEF(n == nA && fehl == 0, "Teil A (T1-T3, W1, W2): %d von %d eingespeisten Treffern wie RE2 (Schritte/Lage/Dauer/Clips/Sperre/SE/Schaden/One-Save) und Kante/Wand wie verlangt",
+          n - fehl, nA);
+    {   /* T2: Raumbank GATOR40A0.RBJ Record 0 = Clips 17/18/19/20 mit 16/10/30/21 Bildern (Knochenzahl 15 wie PL00) */
+        static uint8_t *b = NULL; static size_t bn = 0;
+        if (!b) b = slurp(RE15_ASSET_RE2_DIR "/GATOR40A0.RBJ", &bn);
+        re15_emd_skeleton_t basis; memset(&basis, 0, sizeof basis); basis.bone_count = 15;
+        re15_emd_skeleton_t sk; re15_emd_animation_t an; memset(&an, 0, sizeof an);
+        const int pr = b ? re15_emd_parse_rbj_record(b, bn, 0, &basis, &sk, &an) : -99;
+        const int ok = pr == 0 && an.clip_count == 21 && an.clips[17].frame_count == 16 && an.clips[18].frame_count == 10 && an.clips[19].frame_count == 30 && an.clips[20].frame_count == 21;
+        PRUEF(ok, "T2: shared_assets/RE2/GATOR40A0.RBJ (%d B) Record 0: %d Clips, 17/18/19/20 = %d/%d/%d/%d Bilder (soll 21 Clips, 16/10/30/21; ROOM40A0.RDT @0x65E8, EDD @0x8F8C)",
+              (int)bn, an.clip_count, an.clip_count > 20 ? an.clips[17].frame_count : -1, an.clip_count > 20 ? an.clips[18].frame_count : -1,
+              an.clip_count > 20 ? an.clips[19].frame_count : -1, an.clip_count > 20 ? an.clips[20].frame_count : -1);
+    }
+}
+
+/* ---- Teil B: echter Boss-Takt ---- */
+typedef struct { int n, oben_n, erst_tr, pause, deck, aus, block, sturz_bilder; } nb4_b_m_t;
+static int s_nb4_zurueck = 0;   /* 1 = nach einer Reaktion, die im Wasser endet, steht die Figur wieder auf ihrer Oben-Lage (sie "klettert wieder hinauf") */
+static void nb4_b_lauf(re15_actor_t *g, re15_actor_t *pl, int32_t lx, int32_t ly, int32_t lz, int rot, int cam, int bilder, int stand, nb4_sum_t *S, nb4_b_m_t *m)
+{
+    int bi = 0; int64_t bd = -1;
+    for (int i = 0; i < 5; i++) { const int64_t dx = k_fz_start[i][0] - lx, dz = k_fz_start[i][1] - lz; if (dx * dx + dz * dz > bd) { bd = dx * dx + dz * dz; bi = i; } }
+    g->x = k_fz_start[bi][0]; g->z = k_fz_start[bi][1]; g->anchor_x = g->x; g->anchor_z = g->z;
+    memset(m, 0, sizeof *m); m->erst_tr = -1;
+    pl->x = lx; pl->y = ly; pl->z = lz; pl->hp = 100; pl->hit_react = 0; pl->rot_y = (int16_t)rot;
+    g_scd.cam_id = (uint8_t)cam;
+    re15_collision_set_band(re15_collision_band_from_y(ly));
+    nb4_spur_t sp; nb4_spur_start(&sp);
+    int letzt_tr = -1, oben_ab = -1, oben_aus = 0;
+    for (int t = 0; t < bilder && (stand == 3 || re15_gr2_traegt()); t++) {
+        pl->hp = 100;
+        const int h0 = re15_gator_boss_raum_halt_zahl();
+        const int32_t x0 = pl->x, z0 = pl->z;
+        re15_schritt_station_reset();
+        frame(0, 0);
+        m->n++;
+        {   int32_t tx, tz; s_nb4_hook_ok = re15_schritt_station_hole(RE15_SCHRITT_TICK, &tx, &tz); s_nb4_hook_dx = tx - x0; s_nb4_hook_dz = tz - z0; }
+        nb4_spur_bild(&sp, S, pl);
+        s_nb4_hook_ok = 0;
+        re15_gtr_info_t I; re15_gator_treffer_r41_info(&I);
+        const int sturz = I.aktiv && (I.fall == 1 || I.fall == 3);
+        if (sturz) { m->sturz_bilder++; if (re15_gator_boss_raum_halt_zahl() != h0) S->halt_fall++; }
+        const int tr = pl->hp < 100;
+        const int oben = pl->y < -900;
+        if (!sturz) {
+            if (oben) m->deck += !(pl->x >= RM_RX0 && pl->x <= RM_RX1 && pl->z >= RM_RZ0 && pl->z <= RM_RZ1);
+            else { const int a = pl->x < -8900 || pl->x > 7200 || pl->z < -27000 || pl->z > -5400; m->aus += a;
+                   m->block += !a && ((pl->x > RM_PX0 && pl->x < RM_PX1 && pl->z > RM_PZ0 && pl->z < RM_PZ1) || (pl->x > RM_RX0 && pl->x < RM_RX1 && pl->z > RM_RZ0 && pl->z < RM_RZ1)); }
+        }
+        if (oben && !oben_aus) { m->oben_n++; if (oben_ab < 0) oben_ab = t; }
+        if (tr && m->erst_tr < 0) m->erst_tr = t;
+        if (tr && oben && !oben_aus) { const int p = t - (letzt_tr < 0 ? oben_ab : letzt_tr); if (p > m->pause) m->pause = p; letzt_tr = t; }
+        if (!oben && oben_ab >= 0 && !oben_aus) oben_aus = 1;   /* Sturz ins Wasser: der Oben-Abschnitt endet (ohne Pad klettert die Figur nicht wieder hinauf) */
+        if (s_nb4_zurueck && ly < 0 && !I.aktiv && pl->y == 0) { pl->x = lx; pl->y = ly; pl->z = lz; pl->rot_y = (int16_t)rot; re15_collision_set_band(1); }
+    }
+    if (oben_ab >= 0 && !oben_aus) { const int rest = m->n - 1 - (letzt_tr < 0 ? oben_ab : letzt_tr); if (rest > m->pause) m->pause = rest; }
+}
+static void nb4_teil_b(int elza)
+{
+    const char *bs = getenv("G2_RAUM_BILDER"); const int bilder = bs ? atoi(bs) : 2400;
+    printf("  -- Teil B: echter Boss-Takt, freie Figur, %d Bilder je Lage (Lagen des Riegels raum) --\n", bilder);
+    static const int32_t O[9][3] = { { 2318, -16300, 1024 }, { 6500, -15000, 1024 }, { 2315, -17642, 3072 }, { 2318, -17600, 1024 }, { 2800, -16300, 1024 }, { 4428, -16300, 1024 },
+                                     { 3350, -15000, 1024 }, { 6500, -17600, 3072 }, { 2318, -15000, 3072 } };
+    static const int32_t U[7][4] = { { 6732, -18598, 2, 1035 }, { 4200, -18700, 2, 3072 }, { 2318, -18568, 2, 3072 }, { 6400, -18700, 2, 3072 }, { 1000, -20700, 2, 3072 },
+                                     { 3000, -18800, 0, 3072 }, { 4073, -19322, 0, 3072 } };
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    nb4_sum_t S; memset(&S, 0, sizeof S);
+    int raum_fehl = 0, erst_max = -1, pause_max = 0, lagen = 0;
+    for (int k = 0; k < 2; k++) {
+        const int stand = k == 0 ? 2 : 3;
+        for (int i = 0; i < 16; i++) {
+            const int ob = i < 9;
+            const int32_t lx = ob ? O[i][0] : U[i - 9][0], lz = ob ? O[i][1] : U[i - 9][1], ly = ob ? -1800 : 0;
+            re15_actor_t *g = szene_bis_kampf(elza);
+            if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    %d/%d: kein Tragen\n", (int)lx, (int)lz); raum_fehl++; continue; }
+            if (stand == 3) re15_gr2_kanister_entfernen();
+            int cam = ob ? -1 : U[i - 9][2];
+            if (ob) { g2_lage_t gl = { "nb4", lx, -1800, lz }; cam = g2_lage_kamera(&gl, 0); if (cam < 0) cam = 2; }
+            nb4_b_m_t m; const int n0 = S.n, f0 = S.fall;
+            nb4_b_lauf(g, pl, lx, ly, lz, ob ? O[i][2] : U[i - 9][3], cam, bilder, stand, &S, &m);
+            lagen++;
+            printf("    %s%d/%d %s: %4d B., Reaktionen %2d (Sturz %d), erster Treffer t%d, oben %4d B., Pause oben %3d; aussen %d, im Block %d, Deck verlassen %d (Sturzbilder %d nicht gezaehlt); Ende (%d,%d,%d)\n",
+                   ob ? "R" : "W", (int)lx, (int)lz, stand == 2 ? "mit " : "ohne", m.n, S.n - n0, S.fall - f0, m.erst_tr, m.oben_n, m.pause, m.aus, m.block, m.deck, m.sturz_bilder, pl->x, pl->y, pl->z);
+            if (m.n < bilder * 9 / 10 || m.aus || m.block || m.deck) raum_fehl++;
+            if (ob) { const int e = m.erst_tr < 0 ? m.n : m.erst_tr; if (e > erst_max) erst_max = e; if (m.pause > pause_max) pause_max = m.pause; }
+        }
+    }
+    {   /* Angriffsarten oben (Hochbiss, Rammen, CROSS-Biss): drei Oben-Lagen, die Figur steht nach jedem Sturz wieder oben (zaehlt nicht fuer A1/W3) */
+        static const int32_t H[3][3] = { { 4428, -16300, 1024 }, { 2318, -16300, 1024 }, { 6500, -17600, 3072 } };
+        int a0[6]; memcpy(a0, S.art, sizeof a0);
+        s_nb4_zurueck = 1;
+        for (int i = 0; i < 3; i++) {
+            re15_actor_t *g = szene_bis_kampf(elza);
+            if (!g || !g2_kanister_ins_maul(g, pl)) continue;
+            re15_gr2_kanister_entfernen();
+            g2_lage_t gl = { "nb4h", H[i][0], -1800, H[i][1] }; int cam = g2_lage_kamera(&gl, 0); if (cam < 0) cam = 2;
+            nb4_b_m_t m; nb4_b_lauf(g, pl, H[i][0], -1800, H[i][1], (int)H[i][2], cam, bilder, 3, &S, &m);
+        }
+        s_nb4_zurueck = 0;
+        printf("    Oben halten (3 Lagen, nach dem Sturz wieder oben): Rammen %d, CROSS-Biss %d, Hochbiss %d, Biss %d\n", S.art[1] - a0[1], S.art[2] - a0[2], S.art[3] - a0[3], S.art[4] - a0[4]);
+    }
+    {   /* Schaden 30: Gator-HP 24990 (wie der exe-Messhaken RE15_K2080_GATOR_HP) -> +0x218 |= 0x20 @0x80101ebc-dc (gator_re2_r41.c RE15_GR2_HP_SOCKEL) */
+        re15_actor_t *g = szene_bis_kampf(elza);
+        if (g && g2_kanister_ins_maul(g, pl)) { re15_gr2_kanister_entfernen(); g->hp = 24990; nb4_b_m_t m; const int s30 = S.schaden30;
+            re15_game_flag_set(RE15_K2080_BANK, (uint8_t)RE15_K2080_BIT_SZENE, 1);   /* Szene schon gesehen: "geschwaecht" loest sonst die Marvin/John-Szene aus (Raumwechsel) */
+            (void)re15_gr2_hurt_reaktion((int)(g - g_actors), g, pl, 0);   /* ein Schuss traf: HURT-Selektor @0x80101eac setzt das Bit (@0x80101ebc-dc) */
+            const int nvor = S.n;
+            nb4_b_lauf(g, pl, 4200, 0, -18700, 3072, 2, 2400, 3, &S, &m);
+            printf("    (Lauf Gator-HP 24990: %d Reaktionen, hp des Gators %d)\n", S.n - nvor, (int)g->hp);
+            printf("    Lauf Gator-HP 24990 (W4200/-18700 ohne, ein Treffer am Gator): +0x218 & 0x20 = %d, Reaktionen mit Schaden 30: %d\n",
+                   re15_gr2_geschwaecht_slot((int)(g - g_actors)), S.schaden30 - s30); (void)m; }
+    }
+    printf("    SUMME Teil B: %d Lagen, Reaktionen %d (vollstaendig %d, durch einen neuen Treffer abgebrochen %d; Sub 2 %d, Sub 3 %d), Abweichungen vom RE2-Modell %d (davon Unterzustand %d)%s%s; "
+           "Angriffe: Rammen %d, CROSS-Biss %d, Hochbiss %d, Biss %d, Biss B2 %d; Schaden 60: %d, 30: %d, sonst %d; Stuerze %d (falsch %d), Raumhalt in Sturzbildern %d; "
+           "RE1.5-Niederwurf-Bilder %d; Weg des Hakens (Luftlinie) max %d, ueber RE2 %d; Luftlinie gesamt max %d (%d ueber 3735/3080, Koerper-/Boss-Schub + Klemme bis %d); "
+           "oben spaetester erster Treffer t%d, laengste Pause oben %d\n",
+           lagen, S.n, S.voll, S.abbruch, S.s2, S.s3, S.fehl, S.sub_fehl, S.erst_fehl[0] ? " - erste: " : "", S.erst_fehl, S.art[1], S.art[2], S.art[3], S.art[4], S.art[5],
+           S.schaden60, S.schaden30, S.schaden_fehl, S.fall, S.fall_fehl, S.halt_fall, S.kd, (int)S.haken_max, S.haken_fehl, (int)S.luft_max, S.luft_ueber, (int)S.schub_max,
+           erst_max, pause_max);
+    PRUEF(S.voll >= 50 && S.fehl == 0, "T1/T3: jede vollstaendige Reaktion (%d) Bild fuer Bild = RE2-Modell (Unterzustand FUN_80015910, Schritte, Dauer 20/54, Clips, Sperre, SE) - Abweichungen %d", S.voll, S.fehl);
+    PRUEF(S.art[1] >= 1 && S.art[2] >= 1 && S.art[3] >= 1 && S.art[4] >= 1, "T1: jede Angriffsart nimmt die RE2-Reaktion (Rammen %d, CROSS-Biss %d, Hochbiss %d, Biss %d)", S.art[1], S.art[2], S.art[3], S.art[4]);
+    PRUEF(S.kd == 0, "T2: nach Alligator-Treffern 0 Bilder RE1.5-Niederwurf (%d)", S.kd);
+    PRUEF(S.schaden_fehl == 0 && S.schaden60 >= 1 && S.schaden30 >= 1, "T3: Schaden 60, bei Gator-HP < 25000 30 (60: %d, 30: %d, sonst %d)", S.schaden60, S.schaden30, S.schaden_fehl);
+    PRUEF(S.haken_fehl == 0 && S.haken_max <= 3735 + 468, "T4 (Harness): Weg des RE2-Hakens je Reaktion <= 3735 (Sub 2) / 3080 (Sub 3), mit Sturz + Klemme der Fall-Phase <= +468 "
+          "(max %d, %d ueber); Luftlinie gesamt max %d, davon Koerper-/Boss-Schub und Klemme bis %d (RE2 schiebt ebenso, FUN_80034D0C @0x80026628)",
+          (int)S.haken_max, S.haken_fehl, (int)S.luft_max, (int)S.schub_max);
+    PRUEF(S.fall >= 9 && S.fall_fehl == 0 && S.halt_fall == 0, "W1: %d Stuerze ins Wasser, jeder Bild fuer Bild wie Substate 10 (falsch %d), 0 Raumhalt-Eingriffe in Sturzbildern (%d)", S.fall, S.fall_fehl, S.halt_fall);
+    PRUEF(raum_fehl == 0, "W3: in allen Lagen nie aussen, nie im Block, oben nie neben dem Deck ausser im Sturz (%d Lagen verfehlt)", raum_fehl);
+    PRUEF(erst_max <= NB3_PAUSE_MAX && pause_max <= NB3_PAUSE_MAX, "A1 (NB3 Vorgabe A, mit Sturz neu bewertet): oben erster Treffer <= %d und laengste Pause oben <= %d (t%d, %d)", NB3_PAUSE_MAX, NB3_PAUSE_MAX, erst_max, pause_max);
+    {   /* T5 Gegenprobe: Stand 3d57083b1 */
+        re15_gator_treffer_alt_setzen(1);
+        int kd_n = 0, gtr0; int32_t luft = 0;
+        { re15_gtr_info_t I; re15_gator_treffer_r41_info(&I); gtr0 = I.n_start; }
+        static const int32_t Gl[2][4] = { { 2318, -1800, -16300, 1024 }, { 6732, 0, -18598, 1035 } };
+        for (int i = 0; i < 2; i++) {
+            re15_actor_t *g = szene_bis_kampf(elza);
+            if (!g || !g2_kanister_ins_maul(g, pl)) continue;
+            re15_gr2_kanister_entfernen();
+            g->x = k_fz_start[0][0]; g->z = k_fz_start[0][1]; g->anchor_x = g->x; g->anchor_z = g->z;
+            pl->x = Gl[i][0]; pl->y = Gl[i][1]; pl->z = Gl[i][2]; pl->rot_y = (int16_t)Gl[i][3]; pl->hp = 100; pl->hit_react = 0;
+            re15_collision_set_band(re15_collision_band_from_y(Gl[i][1]));
+            int kd_vor = 0; int32_t vx = pl->x, vz = pl->z;
+            for (int t = 0; t < 2400; t++) {
+                pl->hp = 100; frame(0, 0);
+                const int kd = re15_player_knockdown_active();
+                if (kd) kd_n++;
+                if (kd && !kd_vor) { vx = pl->x; vz = pl->z; }
+                if (!kd && kd_vor) { const int64_t dx = pl->x - vx, dz = pl->z - vz; const int32_t l = (int32_t)sqrt((double)(dx * dx + dz * dz)); if (l > luft) luft = l; }
+                kd_vor = kd;
+            }
+        }
+        re15_gtr_info_t I; re15_gator_treffer_r41_info(&I);
+        re15_gator_treffer_alt_setzen(0);
+        printf("    Gegenprobe Stand 3d57083b1: Niederwurf-Bilder %d, groesste Niederwurf-Luftlinie %d, RE2-Reaktionen %d\n", kd_n, (int)luft, I.n_start - gtr0);
+        PRUEF(kd_n > 0 && luft > 3735 && I.n_start == gtr0, "T5 Gegenprobe Pruefhaken 'Treffer alt': RE1.5-Niederwurf wieder da (%d Bilder, Luftlinie bis %d > 3735, 0 RE2-Reaktionen) - rot ohne den Bau",
+              kd_n, (int)luft);
+    }
+}
+
+/* ---- Teil K: liegender Szenen-Kanister ---- */
+static long nb4_log_ende(void) { FILE *f = fopen("gator_boss.log", "r"); if (!f) return 0; fseek(f, 0, SEEK_END); const long n = ftell(f); fclose(f); return n; }
+typedef struct { int runde, anschw, ziel1, stufe1, stufe1_fehl; int32_t l_max, q_max; } nb4_klog_t;
+static void nb4_log_lesen(long ab, nb4_klog_t *k)
+{
+    memset(k, 0, sizeof *k); k->l_max = -1;
+    FILE *f = fopen("gator_boss.log", "r"); if (!f) return;
+    static char z[4096]; fseek(f, ab, SEEK_SET);
+    while (fgets(z, sizeof z, f)) {
+        if (strstr(z, "RUNDE zum Kanister")) k->runde++;
+        if (strstr(z, "ANSCHWIMMEN an")) k->anschw++;
+        if (strstr(z, "Zielmodus 1")) k->ziel1++;
+        const char *p = strstr(z, "KANISTER Stufe 1 laengs=");
+        int l, q;
+        if (p && sscanf(p, "KANISTER Stufe 1 laengs=%d quer=%d", &l, &q) == 2) {
+            k->stufe1++; if (l > k->l_max) k->l_max = l; if (abs(q) > k->q_max) k->q_max = abs(q);
+            if (!(l >= 0 && l < 6000 && abs(q) < 1733)) k->stufe1_fehl++;
+        }
+    }
+    fclose(f);
+}
+/* Kanister der Szene in 2090/2091 liegend wie nach der Rueckkehr (kanister2080_r41.c Installer: Bit 116 -> re15_gr2_kanister_setzen, s_set_2090), dann an die Lage */
+static int nb4_kanister_legen(int elza, int32_t x, int32_t z)
+{
+    re15_game_flag_set(RE15_K2080_BANK, (uint8_t)RE15_K2080_BIT_KANISTER, 1);
+    re15_kanister2080_r41_install((uint16_t)(0x2090 + elza));
+    re15_gr2_kanister_setzen(x, RE15_K2080_GATOR_WASSER_Y, z);
+    return re15_gr2_kanister_stufe() == 0;
+}
+#define NB4_KN 1800
+static int32_t s_nb4_kz[2][NB4_KN][4];
+static int nb4_k_lauf(int elza, int mit, int32_t kx, int32_t kz, int32_t lx, int32_t ly, int32_t lz, int rot, int cam, int bilder, int32_t (*z)[4], int *auf, int *erst_tr)
+{
+    re15_actor_t *g = szene_bis_kampf(elza);
+    if (!g) return -1;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (mit && !nb4_kanister_legen(elza, kx, kz)) return -1;
+    g->x = k_fz_start[0][0]; g->z = k_fz_start[0][1]; g->anchor_x = g->x; g->anchor_z = g->z;
+    pl->x = lx; pl->y = ly; pl->z = lz; pl->hp = 100; pl->hit_react = 0; pl->rot_y = (int16_t)rot;
+    g_scd.cam_id = (uint8_t)cam;
+    re15_collision_set_band(re15_collision_band_from_y(ly));
+    *auf = -1; *erst_tr = -1;
+    int n = 0;
+    for (int t = 0; t < bilder; t++) {
+        pl->hp = 100; frame(0, 0);
+        if (pl->hp < 100 && *erst_tr < 0) *erst_tr = t;
+        if (mit && *auf < 0 && re15_gr2_kanister_stufe() >= 1) *auf = t;
+        z[t][0] = g->x; z[t][1] = g->z; z[t][2] = g->rot_y; z[t][3] = (int32_t)g->motion * 256 + (int32_t)(g->anim_frame & 0xff);
+        n++;
+    }
+    if (mit) re15_game_flag_set(RE15_K2080_BANK, (uint8_t)RE15_K2080_BIT_KANISTER, 0);
+    return n;
+}
+static void nb4_teil_k(int elza)
+{
+    printf("  -- Teil K: liegender Kanister der Szene (Bit 116), %d Bilder je Lage --\n", NB4_KN);
+    /* Liegestelle der Abnahme 6 (mess_kanister_lebenslauf_abn6.txt): Leon (-6870,-12651), Elza (-6842,-12641) */
+    const int32_t kx = elza ? -6842 : -6870, kz = elza ? -12641 : -12651;
+    static const int32_t L[6][5] = { { 2318, -1800, -16300, 1024, -1 }, { 4428, -1800, -16300, 1024, -1 }, { 6500, -1800, -15000, 1024, -1 },
+                                     { -6000, 0, -16000, 3072, 0 }, { 4200, 0, -18700, 3072, 2 }, { -5000, 0, -9000, 0, 0 } };
+    int k1_fehl = 0, k3_max = -1; nb4_klog_t KL; const long ab = nb4_log_ende(); const int hol0 = re15_k2080_holmodus_zahl();
+    for (int i = 0; i < 6; i++) {
+        int cam = (int)L[i][4];
+        if (cam < 0) { g2_lage_t gl = { "nb4k", L[i][0], L[i][1], L[i][2] }; cam = g2_lage_kamera(&gl, 0); if (cam < 0) cam = 2; }
+        int auf_m = -1, auf_o = -1, tr_m = -1, tr_o = -1;
+        const int nm = nb4_k_lauf(elza, 1, kx, kz, L[i][0], L[i][1], L[i][2], (int)L[i][3], cam, NB4_KN, s_nb4_kz[0], &auf_m, &tr_m);
+        const int no = nb4_k_lauf(elza, 0, kx, kz, L[i][0], L[i][1], L[i][2], (int)L[i][3], cam, NB4_KN, s_nb4_kz[1], &auf_o, &tr_o);
+        const int bis = auf_m >= 0 ? auf_m : NB4_KN;
+        int diff = 0, erst = -1;
+        for (int t = 0; t < bis && t < nm && t < no; t++) if (memcmp(s_nb4_kz[0][t], s_nb4_kz[1][t], sizeof s_nb4_kz[0][t])) { diff++; if (erst < 0) erst = t; }
+        if (diff && getenv("G2_NB4_ZEIG")) for (int t = erst > 2 ? erst - 2 : 0; t < erst + 3; t++)
+            printf("      t%d mit (%d,%d) g%d c%d | ohne (%d,%d) g%d c%d\n", t, s_nb4_kz[0][t][0], s_nb4_kz[0][t][1], s_nb4_kz[0][t][2], s_nb4_kz[0][t][3],
+                   s_nb4_kz[1][t][0], s_nb4_kz[1][t][1], s_nb4_kz[1][t][2], s_nb4_kz[1][t][3]);
+        if (nm < NB4_KN || no < NB4_KN || diff) k1_fehl++;
+        if (L[i][1] < 0) { const int e = tr_m < 0 ? NB4_KN : tr_m; if (e > k3_max) k3_max = e; }
+        printf("    Lage (%d,%d,%d) Cut %d: mit liegendem Kanister %d B. (Aufnahme t%d, erster Treffer t%d), ohne %d B. (erster Treffer t%d); bis zur Aufnahme abweichend %d (erstes t%d)\n",
+               (int)L[i][0], (int)L[i][1], (int)L[i][2], cam, nm, auf_m, tr_m, no, tr_o, diff, erst);
+    }
+    nb4_log_lesen(ab, &KL);
+    KL.runde = re15_k2080_holmodus_zahl() - hol0;   /* RUNDE/ANSCHWIMMEN schreibt K_LOG nach stderr - gezaehlt im Modul */
+    printf("    RUNDE/ANSCHWIMMEN eingeschaltet %d; gator_boss.log: ANSCHWIMMEN an %d, Zielmodus 1 %d, Stufe 1 %d (laengs max %d, |quer| max %d, ausserhalb des Fensters %d)\n",
+           KL.runde, KL.anschw, KL.ziel1, KL.stufe1, (int)KL.l_max, (int)KL.q_max, KL.stufe1_fehl);
+    PRUEF(k1_fehl == 0, "K1: Gator mit liegendem Kanister bis zur Aufnahme Bild fuer Bild wie ohne Kanister (6 Lagen x %d, %d verfehlt)", NB4_KN, k1_fehl);
+    PRUEF(KL.runde == 0 && KL.anschw == 0 && KL.ziel1 == 0, "K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (%d/%d/%d)", KL.runde, KL.anschw, KL.ziel1);
+    PRUEF(KL.stufe1_fehl == 0, "K2: jede Stufe-1-Aufnahme laengs in [0,6000) und |quer| < 1733 (%d Aufnahmen, %d ausserhalb)", KL.stufe1, KL.stufe1_fehl);
+    PRUEF(k3_max <= NB3_PAUSE_MAX, "K3: mit liegendem Kanister oben erster Treffer <= %d (spaetester t%d; Stand 3d57083b1: Pause 851-856)", NB3_PAUSE_MAX, k3_max);
+    {   /* K2 Gegenprobe: Kanister in der SW-Ecke des Beckens, Figur oben auf der Rampe - die Belagerung bleibt an der Rampe (Messblatt 3.3: 0 Besuche) */
+        int auf = -1, tr = -1;
+        const int n = nb4_k_lauf(elza, 1, -8300, -26400, 4428, -1800, -16300, 1024, 2, NB4_KN, s_nb4_kz[0], &auf, &tr);
+        printf("    Gegenprobe Kanister abseits (-8300,-26400), Figur oben (4428,-16300): %d B., Aufnahme t%d\n", n, auf);
+        PRUEF(n == NB4_KN && auf < 0, "K2 Gegenprobe: Kanister abseits der Bahn bleibt bis Laufende auf Stufe 0 (Aufnahme t%d)", auf);
+    }
+    {   /* Gegenprobe Stand 3d57083b1 (RUNDE): mit Pruefhaken laeuft die RUNDE an und die Bewegung weicht ab */
+        re15_k2080_runde_alt_setzen(1);
+        const long ab2 = nb4_log_ende(); const int hol1 = re15_k2080_holmodus_zahl();
+        int auf_m = -1, auf_o = -1, tr = -1;
+        const int nm = nb4_k_lauf(elza, 1, kx, kz, 4428, -1800, -16300, 1024, 2, NB4_KN, s_nb4_kz[0], &auf_m, &tr);
+        const int no = nb4_k_lauf(elza, 0, kx, kz, 4428, -1800, -16300, 1024, 2, NB4_KN, s_nb4_kz[1], &auf_o, &tr);
+        re15_k2080_runde_alt_setzen(0);
+        nb4_klog_t G; nb4_log_lesen(ab2, &G); G.runde = re15_k2080_holmodus_zahl() - hol1;
+        int diff = 0; for (int t = 0; t < nm && t < no && t < (auf_m >= 0 ? auf_m : NB4_KN); t++) if (memcmp(s_nb4_kz[0][t], s_nb4_kz[1][t], sizeof s_nb4_kz[0][t])) diff++;
+        printf("    Gegenprobe Stand 3d57083b1 (re15_k2080_runde_alt_setzen): RUNDE-Zeilen %d, Aufnahme t%d, abweichend %d\n", G.runde, auf_m, diff);
+        PRUEF(G.runde >= 1 && diff > 0, "K Gegenprobe RUNDE (Stand 3d57083b1): RUNDE an (%d Zeilen), Bewegung weicht ab (%d Bilder) - rot ohne den Bau", G.runde, diff);
+    }
+}
+static void teil_nb4(int elza)
+{
+    printf("== nb4%s (G2-RE2 NB4: Trefferreaktion wie RE2, Stoss von der Rampe ins Wasser, kein Kanister-Holmodus) ==\n", elza ? "_elza" : "");
+    const char *nur = getenv("G2_NB4_TEIL");
+    if (!nur || strchr(nur, 'A')) nb4_teil_a(elza);
+    if (!nur || strchr(nur, 'B')) nb4_teil_b(elza);
+    if (!nur || strchr(nur, 'K')) nb4_teil_k(elza);
+}
+
 /* ---- exe-Auswerter (Logs eines Laufordners) ---- */
 typedef struct { int f, px, pz, hp, cam, y, gx, gz, rot, gmo, gaf; } nb3_st_t;
 static nb3_st_t s_nb3_st[40000];
@@ -3072,7 +3552,8 @@ static int obenlog(const char *dir, int ab_kampf)
     {   char pf[1024]; static char zl[4096]; snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
         FILE *fb = fopen(pf, "r");
         if (fb) { while (fgets(zl, sizeof zl, fb)) { if (strstr(zl, "KANISTER angehaengt")) { const char *q = strrchr(zl, 'F'); if (q && auf == 0) auf = atoi(q + 1); } } fclose(fb); } }
-    if (ab_kampf) {   /* Kampfbeginn = Ende des RE2-Intros: gator_boss.log "RE2 KAMERA INTRO frei (Zonenkamera an) Cut c F<n>" (gator_re2_r41.c gr2_kam_frei; ohne Kanister
+    if (ab_kampf == 2) auf = 0;   /* G2-RE2 NB4 (K): ohne Holmodus gibt es die Pause "erst der Kanister" nicht mehr - gezaehlt ab dem ersten Bild des Besuchs */
+    else if (ab_kampf) {   /* Kampfbeginn = Ende des RE2-Intros: gator_boss.log "RE2 KAMERA INTRO frei (Zonenkamera an) Cut c F<n>" (gator_re2_r41.c gr2_kam_frei; ohne Kanister
                        * schreibt der Boss keine gator_trag.log), sonst das erste Bild einer Kampfphase in gator_trag.log */
         auf = -1;
         {   char pf[1024]; static char zl[4096]; snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
@@ -3124,8 +3605,21 @@ static int obenlog(const char *dir, int ab_kampf)
  * des Rampen-Grundrisses SCA [5] = "Deck verlassen"; unten ausserhalb der Aussenwaende x -8900..7200 z -27000..-5400 = "aussen" (wie aussen5.py der Abnahme 5),
  * Mittelpunkt in Plattform [4] / Rampe [5] = "im Block" (Pier, Ostnische zaehlt als aussen). Riegel: 0 Bilder in jeder Art. Ohne climb.log: letzter Besuch, nur
  * die Aussenwaende. */
+static uint8_t s_al_sturz[40000];   /* G2-RE2 NB4: Bilder eines Sturzes der RE2-Reaktion (gator_boss.log GTR KANTE F<a> .. GTR LANDUNG F<b>) */
+static void al_sturz_lesen(const char *dir)
+{
+    char pf[1024]; static char z[4096]; memset(s_al_sturz, 0, sizeof s_al_sturz);
+    snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
+    FILE *f = fopen(pf, "r"); if (!f) return;
+    int a = -1;
+    while (fgets(z, sizeof z, f)) { int fr;
+        if (sscanf(z, "GTR F%d KANTE", &fr) == 1 && strstr(z, " KANTE ")) a = fr;
+        else if (sscanf(z, "GTR F%d LANDUNG", &fr) == 1 && strstr(z, " LANDUNG ") && a >= 0) { for (int k = a; k <= fr && k < 40000; k++) if (k >= 0) s_al_sturz[k] = 1; a = -1; } }
+    fclose(f);
+}
 static int aussenlog(const char *dir)
 {
+    al_sturz_lesen(dir);
     char pf[1024]; static char zs[16384], zc[16384];
     snprintf(pf, sizeof pf, "%s/state.log", dir);
     FILE *fs = fopen(pf, "r");
@@ -3146,6 +3640,7 @@ static int aussenlog(const char *dir)
         const char *r = strstr(zc, "room="); if (!r || sscanf(r, "room=%x", &raum) != 1) continue;
         const char *q = strstr(zc, "pos=("); if (!q || sscanf(q, "pos=(%d,%d,%d)", &cx, &cy, &cz) != 3) continue;
         if ((raum & 0xFFFEu) != 0x2090u) continue;
+        if (fr >= 0 && fr < 40000 && s_al_sturz[fr]) { kl++; continue; }   /* G2-RE2 NB4 (W): Sturz von der Rampe (GTR KANTE .. LANDUNG), wie Klettern */
         {   /* Klettern (climb.log sub = Substate 9/10, climb_common.c): die Figur steigt zwischen Deck und Wasser, y laeuft durch (gemessen abn2_rampe_west_elza
              * F502-F505: sub=10 ph=3/4, y -1210 .. -640 bei z -14032 vor der Nordkante) - kein Bild "oben" und keins "unten", nicht gezaehlt */
             const char *sb = strstr(zc, " sub="); int sub = 0;
@@ -3234,15 +3729,122 @@ static int haenglog(const char *dir, int mit)
     return ok ? 0 : 1;
 }
 
+/* ==== G2-RE2 NB4 exe-Auswerter gtrlog <lauf>: die RE2-Trefferreaktion, der Sturz von der Rampe und der Kanister aus den Logs eines exe-Laufs ====================
+ * gator_boss.log (Zeilen "GTR ..." aus engine/src/gator_treffer_r41.c, "RE2 KANISTER ..." aus gator_re2_r41.c), state.log (Spieler-Clip mo=), debug.log ([k2080]).
+ * Je Reaktion (START bis ENDE): Unterzustand = FUN_80015910 aus den Gieren der START-Zeile, Schritte je Bild = mess_re2_modell.txt, Dauer 20 / 54 (One-Save 1 / 33;
+ * ein Sturz darf das Ende bis zur Landung schieben), Weg des Hakens (Summe figur - von je Bild) <= 3735 / 3080 (+ 468 Klemme der Fall-Phase 2 mit Sturz),
+ * Luftlinie START -> ENDE gesamt (mit Koerper-/Boss-Schub) nur ausgegeben. Je Sturz (KANTE): y -1800 -> -1300 und im selben Bild -1210, dann +140/+190/...,
+ * LANDUNG y 0, Band 0. T2: kein Bild mit Spieler-Clip 12..16 (RE1.5-Niederwurf) in ROOM2090/2091. K: 0 Zeilen "Zielmodus 1", 0 [k2080]-Zeilen "RUNDE zum Kanister" /
+ * "ANSCHWIMMEN an", jede "KANISTER Stufe 1"-Zeile laengs in [0, 6000) und |quer| < 1733. Rueckgabe 0 = alles erfuellt. */
+typedef struct { int sub, ret, n, ende_n, schritt_fehl, ph, vorbei, fall_b, fall_fehl, landung; int32_t hx, hz, sx, sz; int y_soll, t; } gtrl_r_t;
+static int gtrlog(const char *dir)
+{
+    char pf[1024]; static char z[8192];
+    snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
+    FILE *f = fopen(pf, "r");
+    if (!f) { printf("gtrlog: %s fehlt\n", pf); return 2; }
+    int n = 0, voll = 0, abbruch = 0, s2 = 0, s3 = 0, fehl = 0, sub_fehl = 0, dauer_fehl = 0, schr_fehl = 0, haken_fehl = 0, stuerze = 0, sturz_fehl = 0, ziel1 = 0, st1 = 0, st1_fehl = 0;
+    int32_t haken_max = 0, luft_max = 0; int luft_ueber = 0; char erst[300] = "";
+    gtrl_r_t r; memset(&r, 0, sizeof r); int an = 0;
+    while (fgets(z, sizeof z, f)) {
+        if (strstr(z, "Zielmodus 1")) ziel1++;
+        {   const char *p = strstr(z, "KANISTER Stufe 1 laengs="); int l, q;
+            if (p && sscanf(p, "KANISTER Stufe 1 laengs=%d quer=%d", &l, &q) == 2) { st1++; if (!(l >= 0 && l < 6000 && abs(q) < 1733)) st1_fehl++; } }
+        if (strncmp(z, "GTR F", 5)) continue;
+        int fr = 0; if (sscanf(z, "GTR F%d", &fr) != 1) continue;
+        const char *p;
+        if ((p = strstr(z, " START "))) {
+            if (an) { abbruch++; n++; }
+            memset(&r, 0, sizeof r); an = 1; r.fall_b = -1;
+            int art, sub, achse, gv, gn, dmg, ret, hp, gx, gy, gzz, gg, fx, fy, fz;
+            if (sscanf(p, " START art %d sub %d achse %d gier %d->%d schaden %d ret %d hp %d gator (%d,%d,%d) gier %d figur (%d,%d,%d)", &art, &sub, &achse, &gv, &gn, &dmg, &ret, &hp,
+                       &gx, &gy, &gzz, &gg, &fx, &fy, &fz) == 15) {
+                r.sub = sub; r.ret = ret; r.sx = fx; r.sz = fz;
+                const int hinten = ((((gv - gg) + 0x400) & 0xfff) < 0x800);
+                if ((sub == 3) != hinten) { sub_fehl++; if (!erst[0]) snprintf(erst, sizeof erst, "F%d Unterzustand %d, FUN_80015910 -> %d", fr, sub, hinten ? 3 : 2); }
+            }
+            continue;
+        }
+        if (!an) continue;
+        if ((p = strstr(z, " KANTE "))) {
+            int b0, b1, y0, y1; if (sscanf(p, " KANTE band %d -> %d y %d -> %d", &b0, &b1, &y0, &y1) == 4) {
+                stuerze++; r.fall_b = r.n; r.t = 0; r.y_soll = y1;
+                if (!(b0 == 1 && b1 == 0 && y0 == -1800 && y1 == -1300)) { r.fall_fehl++; } }
+            continue;
+        }
+        if ((p = strstr(z, " LANDUNG "))) { int y = 1; sscanf(p, " LANDUNG y %d", &y); r.landung = 1; if (y != 0) r.fall_fehl++; continue; }
+        if (strstr(z, " ENDE wartet")) continue;
+        if ((p = strstr(z, " ENDE "))) {
+            int sub, bilder, weg, vx, vz, luft, fx, fy, fz, band, fall;
+            if (sscanf(p, " ENDE sub %d bilder %d weg %d von (%d,%d) luft %d figur (%d,%d,%d) band %d fall %d", &sub, &bilder, &weg, &vx, &vz, &luft, &fx, &fy, &fz, &band, &fall) == 11) {
+                r.hx += fx - vx; r.hz += fz - vz;
+                const int one = r.ret & 1, soll = one ? (sub == 2 ? 1 : 33) : (sub == 2 ? 20 : 54);
+                const int dauer_ok = bilder == soll || (r.fall_b >= 0 && bilder > soll && bilder <= soll + 5);
+                const int32_t lh = (int32_t)sqrt((double)((int64_t)r.hx * r.hx + (int64_t)r.hz * r.hz)), wsoll = sub == 2 ? 3735 : 3080;
+                if (lh > haken_max) haken_max = lh;
+                if (luft > luft_max) luft_max = luft;
+                if (luft > wsoll) luft_ueber++;
+                const int hf = lh > wsoll + (r.fall_b >= 0 ? 468 : 0);
+                const int ff = r.fall_b >= 0 && (r.fall_fehl || !r.landung || fy != 0 || band != 0);
+                if (!dauer_ok) dauer_fehl++;
+                if (r.schritt_fehl) schr_fehl++;
+                if (hf) haken_fehl++;
+                if (r.fall_b >= 0 && ff) sturz_fehl++;
+                if (!dauer_ok || r.schritt_fehl || hf || ff) { fehl++; if (!erst[0]) snprintf(erst, sizeof erst, "F%d Sub %d: %d Bilder (soll %d), Schritt-Abweichungen %d, Haken-Weg %d, Sturz %s",
+                                                                                         fr, sub, bilder, soll, r.schritt_fehl, (int)lh, ff ? "FALSCH" : "ok"); }
+                voll++; n++; if (sub == 2) s2++; else s3++;
+            }
+            an = 0; continue;
+        }
+        {   int sub, ph, bild, schritt, fx, fy, fz, gier, band, fall, vx, vz; char bank[16];
+            p = strstr(z, " sub ");
+            if (p && sscanf(p, " sub %d ph %d bild %d schritt %d clip %*d/%*d %15s sperre %*d figur (%d,%d,%d) gier %d band %d fall %d von (%d,%d)", &sub, &ph, &bild, &schritt, bank,
+                            &fx, &fy, &fz, &gier, &band, &fall, &vx, &vz) == 13) {
+                r.hx += fx - vx; r.hz += fz - vz;
+                if (!(r.ret & 1) && schritt != nb4_schritt_soll(sub, bild)) r.schritt_fehl++;
+                if (r.fall_b >= 0 && !r.landung) {   /* Fallbilder: Kantenbild -1300 + 90, dann + 90 + 50 t */
+                    if (fall == 1 || fall == 3) { r.y_soll += 90 + 50 * r.t; r.t++; if (fy != r.y_soll || band != 0) r.fall_fehl++; }
+                }
+                r.n++;
+            }
+        }
+    }
+    fclose(f);
+    if (an) { abbruch++; n++; }
+    /* T2: Spieler-Clip 12..16 (RE1.5-Niederwurf-Clips 0xc..0x10) im letzten Besuch (state.log: F faellt zurueck = neuer Besuch, wie nb3_state_lesen) */
+    int kd = 0, rn = 0, treffer = 0;
+    snprintf(pf, sizeof pf, "%s/state.log", dir);
+    if ((f = fopen(pf, "r"))) { int vor = -1, hp_vor = 100;
+        while (fgets(z, sizeof z, f)) { int fr; if (z[0] != 'F' || sscanf(z, "F%d ", &fr) != 1) continue; if (fr < vor) { kd = 0; rn = 0; treffer = 0; } vor = fr;
+                                        const char *pl = strstr(z, " PL("); const char *m = pl ? strstr(pl, " mo=") : NULL; int hp = 100;
+                                        if (pl && sscanf(pl, " PL(%*d,%*d,rot=%*d,hp=%d)", &hp) == 1) { if (hp < 100 && hp_vor >= 100) treffer++; hp_vor = hp; }
+                                        if (m) { const int mo = atoi(m + 4); rn++; if (mo >= 12 && mo <= 16) kd++; } }
+        fclose(f); }
+    /* K1: RUNDE / ANSCHWIMMEN in debug.log ([k2080]-Zeilen) */
+    int runde = 0, anschw = 0;
+    snprintf(pf, sizeof pf, "%s/debug.log", dir);
+    if ((f = fopen(pf, "r"))) { while (fgets(z, sizeof z, f)) { if (strstr(z, "RUNDE zum Kanister")) runde++; if (strstr(z, "ANSCHWIMMEN an")) anschw++; } fclose(f); }
+    /* jeder Treffer im letzten Besuch (hp-Flanke, Messhaken RE15_R39_MESS_SPIELER_HP=100) ist eine RE2-Reaktion (START); ein Treffer im Ende-Bild einer Reaktion
+     * kann zwei Starts in einem Bild nicht erzeugen - die Zahlen muessen gleich sein (Gegenprobe Stand 3d57083b1: 0 Starts) */
+    const int ok = fehl == 0 && sub_fehl == 0 && kd == 0 && ziel1 == 0 && runde == 0 && anschw == 0 && st1_fehl == 0 && n == treffer;
+    printf("gtrlog: %d RE2-Reaktionen (vollstaendig %d: Sub 2 %d, Sub 3 %d; abgebrochen %d); Abweichungen %d (Unterzustand %d, Dauer %d, Schritte %d, Haken-Weg %d, Sturz %d)%s%s; "
+           "Haken-Weg max %d; Luftlinie gesamt max %d (%d ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze %d; RE1.5-Niederwurf-Bilder %d (von %d); "
+           "Kanister Stufe 1 %d (ausserhalb des Fensters %d), Zielmodus 1 %d, RUNDE %d, ANSCHWIMMEN an %d; Treffer (hp-Flanken) %d -> %s\n",
+           n, voll, s2, s3, abbruch, fehl + sub_fehl, sub_fehl, dauer_fehl, schr_fehl, haken_fehl, sturz_fehl, erst[0] ? " - erste: " : "", erst, (int)haken_max, (int)luft_max, luft_ueber,
+           stuerze, kd, rn, st1, st1_fehl, ziel1, runde, anschw, treffer, ok ? "ok" : "VERFEHLT");
+    return ok ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
     re15_door_seq_setze_laeufer(fang);
     if (getenv("G2_RE2_ALT")) re15_gr2_rw_alt_setzen(1);   /* G2-RE2: Werkzeug-Laeufe (fuzz/bahn) im Stand NB5 - Vergleich mit dem NB5-Bau */
     if (getenv("G2_NB3_ALT")) re15_gator_boss_nb3_alt_setzen(1);   /* G2-RE2 NB3: Werkzeug-Laeufe (nb3_oben/nb3_haengt) im Stand a661eb8aa */
-    if (!strcmp(teil, "obenlog") && argc >= 3)  return obenlog(argv[2], argc >= 4 && !strcmp(argv[3], "kampf"));                                            /* NB3 exe-Riegel rampe_oben */
+    if (!strcmp(teil, "obenlog") && argc >= 3)  return obenlog(argv[2], argc >= 4 && !strcmp(argv[3], "kampf") ? 1 : argc >= 4 && !strcmp(argv[3], "ab0") ? 2 : 0);                                            /* NB3 exe-Riegel rampe_oben */
     if (!strcmp(teil, "haenglog") && argc >= 3) return haenglog(argv[2], argc >= 4 && !strcmp(argv[3], "mit"));    /* NB3 exe-Riegel rampe/abn2_wand_elza */
     if (!strcmp(teil, "aussenlog") && argc >= 3) return aussenlog(argv[2]);   /* NB3 Runde 2: Figur nie ausserhalb (Abnahme 5 M1/M2) */
+    if (!strcmp(teil, "gtrlog") && argc >= 3) return gtrlog(argv[2]);         /* G2-RE2 NB4: RE2-Trefferreaktion, Sturz, Kanister (exe-Riegel) */
     if (!strcmp(teil, "projektion") && argc >= 5) return projektion(argc, argv);
     if (!strcmp(teil, "kamerazone") && argc >= 3) return kamerazone(argc, argv);
     if (!strcmp(teil, "begehbar") && argc >= 5) return begehbar(argc, argv);
@@ -3302,6 +3904,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "nb3_elza"))  teil_nb3(1);
     if (alle || !strcmp(teil, "raum"))      teil_raum(0);
     if (alle || !strcmp(teil, "raum_elza")) teil_raum(1);
+    if (alle || !strcmp(teil, "nb4"))       teil_nb4(0);       /* G2-RE2 NB4 (T)+(W)+(K) */
+    if (alle || !strcmp(teil, "nb4_elza"))  teil_nb4(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

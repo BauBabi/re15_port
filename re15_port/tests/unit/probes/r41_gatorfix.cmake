@@ -53,7 +53,12 @@ endforeach()
 #   unit_r41_gatorfix_raum(_elza)    NB3 Runde 2 (Abnahme 5 M1/M2): die FREIE Figur (einmal gesetzt, Niederwurf/Schub/Klemme wie im Spiel, hp 100) bleibt in
 #                                     9 Lagen oben auf dem Deck der Rampe und in 7 Wasserlagen innerhalb der Aussenwaende und ausserhalb von Plattform/Rampe,
 #                                     mit und ohne Kanister; oben erster Treffer und Pause <= 600; Gegenprobe Stand 10603425b (Pruefhaken raum_alt): rot
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza nb3 nb3_elza raum raum_elza)
+#   unit_r41_gatorfix_nb4(_elza)     G2-RE2 NB4 (Messblatt G2_MESSBLATT_NB4.md): (T) Trefferreaktion wie RE2 - eingespeiste Treffer Bild fuer Bild = mess_re2_modell.txt
+#                                     (Sub 2 3735 in 20 Bildern, Sub 3 3080 in 54, Clips 18/19 bzw. 20/17/PL00 11 rw, Sperre, SE, Schaden 60/30, One-Save), echter Boss-Takt in den
+#                                     Lagen von raum: jede Reaktion = Modell, jede Angriffsart, 0 RE1.5-Niederwurf; (W) Stoss ueber Nord-/Suedkante faellt wie Substate 10 ins
+#                                     Wasser, Ostwand/Plattform bleiben Wand, nie aussen/im Block; A1 neu bewertet; (K) liegender Kanister: Gator bis zur Aufnahme bitgleich wie
+#                                     ohne, Aufnahme nur im Fenster, oben erster Treffer <= 600; Gegenproben Pruefhaken treffer_alt / runde_alt rot
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza nb3 nb3_elza raum raum_elza nb4 nb4_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
