@@ -555,3 +555,143 @@ Eigene Durchsicht (keine Pruefung):
 | V2r2-O2 | Unabhaengigkeitsnachweis K_GRAPH nicht erbracht (K_GRAPH 4: K4/K1/K4b, 16: B8/B10); SPIEGEL_ABSTAND 1,0 bestanden, 4,0 nicht (N1, B2) |
 | V2r2-O3 | Wundkanten folgen weiter Polygon- und Texelstufen (P13), Pfoten hell (P12) |
 | V2r2-O4 | Commit-Trailer: gesetzt ist "Claude Opus 5.5" gemaess der Attributionsvorgabe der Sitzung; der Auftragstext verlangt "Claude Fable 5.1" (Formfehler aus Runde 1 bleibt damit bestehen) |
+
+
+# Versuch 3 (G4-Uebertragung), Runde 1 (Bauer, 2026-11-07)
+
+Grundlage: `MESSBLATT_FARBE_V3.md` (Pruefer). Nutzer 2026-11-07: "schwarz rot ... weil er verbrannt ist", "das Gesicht vorne irgendwie in
+flammenfarben leuchtet", "feuer Farbe beim Mund". Kein RE-Wert: K5c ist ein neues Modell (PORT-WAHL "eher c", Nutzer 2026-11-06).
+Spiel-Asset `BAHNSTEIG_FORM` und Pins sind unveraendert. K4 bleibt fuer v0.8.30.
+
+## V3.0 Ergebnis
+
+- **Variante:**
+  - `farbe/K5c_farbe_v3/` (FORM.EMD, FORM.TIM, form.json, bau.json).
+  - Kopien `farbe/K5C_FARBE_V3.EMD` (sha256 6f4d5fb0...) und `farbe/K5C_FARBE_V3.TIM` (sha256 47725110...), dazu Scratchpad `formfarbe3/emd/`.
+- **Riegel** `generator/riegel_farbe_v3.py`: **33 von 52 Zeilen GRUEN, Exit 1** (`farbe/riegel_K5c_farbe_v3.txt`, `.json`).
+  - Gegenprobe Versuch 2 Runde 2: H1, P1, K11, K14 und K15 sind dort ROT, wie verlangt.
+  - G4 selbst ist bei P1 GRUEN (17,3 % / 26,0 % / 422 Farben).
+- **Neu und gruen:**
+  - G0: Geometrie bytegleich.
+  - H1: 99,85-100 % G4-Texel je Teil. H1b: 1,13 %.
+  - H2: Zeilen 0-2 bytegleich, 0 Vertauschungen in den Zeilen 3-8.
+  - P1: 21,0 % / 26,2 % / 401 Farben. S1: <= 0,15 %.
+  - F1t: dE 0,2. Zaehne: L* 76,9, C* 5,2.
+  - K11: -5,0 / -7,9 Grad. K14: dE 5,1, Rotklasse 74,5 %.
+  - Dazu K4, K4b, K5, K6, K9, K10, A2-A12, B10, B13-B16.
+- **Spiel:** 10 von 10 Laeufen mit rc 0 (`farbe/spiel_lauf_v3.log`). Die Form laedt mit 9 CLUT-Zeilen ("32 Meshes, 32 Knochen, 3 Clips -> Slot 12").
+- **Tests:** Form-Gruppe `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: 11 von 11 gruen.
+
+## V3.1 Verfahren (`generator/kf_g4.py`)
+
+1. **TIM:** Die Seiten 0-2 sind die G4-Indizes, bytegleich (CDEMD0.EMS Typ 0x34, TIM @0x65e800). Die CLUT-Zeilen 0-2 sind G4, bytegleich.
+   Seite 3 traegt die Sonderfelder.
+2. **UV je Flaeche (b2, Messblatt 2.2):**
+   - Ein Zylinderrahmen je Teil, ueber alle Meshes in Ruhelage (Versatz aus dem Gerippe).
+   - Rumpf, Hals und Kopf haben die feste Achse x. Grund: Bei der K5c-Brust kippte die PCA-Achse auf (0,04 / 0,02 / -1,00). Lauf 0 legte
+     dadurch die Flanken auf den Ruecken (`formfarbe3/bau/t6.py`).
+   - Die G4-Winkelreferenz ist die K5c-Referenz, zurueckgedreht ueber die kleinste Drehung von der G4-Achse auf die K5c-Achse.
+   - Der Schwerpunkt der K5c-Flaeche liegt in einem G4-Dreieck (theta, T). Dessen affine Abbildung gilt fuer alle Ecken.
+   - Ausgeschlossene Felder (F3, F7, F8, F9, F16) werden in theta und T verdichtet. Die Naht liegt dort, wo die Luecke war.
+3. **Einpassen (S1):**
+   - Ein UV-Dreieck muss in der Insel liegen. Der 1-Texel-Malrand ist erlaubt (gemessen zu 80 % bemalt), hoechstens 1 % fremde Texel.
+   - Reihenfolge: zuerst am Ort mit Groesse 1,0 / 0,85 / 0,7 / 0,55. Dann in voller Groesse auf eines der 300 naechsten Inseltexel verschoben.
+     Erst danach wird es kleiner.
+   - Vorher wurde auf einen Punkt geschrumpft. Das ergab 139 einfarbige Flaechen am Rumpf, sichtbar als flache Bloecke an Schulter und Hals (Lauf 1).
+     Jetzt sind es 10.
+4. **Zeilen 3-5, Bild-1-Aderrot:**
+   - Rote Eintraege (Rampe C* 10..20, Farbton -40..70 Grad) werden auf -3,2 Grad gedreht, L* bleibt fest.
+     Quelle: Messblatt 4, "1 Figur", Rot Lab 39,1/21,7/-1,2.
+   - Buntheit Seite 1 (Schwanz, Vorderglied r, Zehen): mal 0,574. Quelle: Messblatt 4, "1 Schwanz", C* 23,6 gegen G4 41,1.
+   - Seiten 0 und 2 behalten die G4-Buntheit. Grund aus zwei Laeufen:
+     - Lauf 1 (alle Seiten mal 0,53): K1v2 5,7, K2v2 5,7, K4b 5,2 %, alle ROT.
+     - Lauf 2 (alle Seiten mal 1,0): K12 Schwanz 17,1 %, ROT.
+   - Die Bild-1-Zeilen tragen Rumpf 0/7, Schwanz, Hinterbeine und Vorderbein r 16-18 (Messblatt 4, "Bild-1-sichtbare Teile").
+5. **Sonderfelder** (Zeile, Quelle, Ziel, Feldmittel):
+   - **F1-Stelle (Zeile 6):**
+     - Flaechen: Becken-Vierecke qf 7/8/19/20/31/32 (Messblatt 1.2).
+     - Fleck: die Pixel der Maske F1 im Knochenraum (Leser B `fid1.npz`), plus 1 Texel.
+     - Fleisch: G4-F16-Strahlen ohne Iris (288,211, 23 x 13). Haut: G4-F11, gespiegelt.
+     - Rand: im aeussersten Ring bleibt nur die hellere Haelfte der Fleisch-Texel.
+     - Die Haut-Eintraege bleiben. Das Fleisch-L* wird erst oberhalb von L* 28,66 (hellste Haut) gestreckt; so haelt die Rangfolge (H2).
+     - Feldmittel Lab 48,6/21,6/-3,0, Ziel 48,8/21,6/-3,0.
+   - **Maul-Band (Zeile 7):**
+     - 27 Flaechen von 22/23, die in Bild 2 zu >= 30 % im Band liegen.
+     - Quelle G4-F7, Loecher gefuellt.
+     - Bauziel RGB (183,99,92) = Lab 51,5/33,1/19,2 (siehe V3.3).
+   - **Zaehne (Zeile 8):** K5c-Zahnfeld auf G4-F8 (quer gelegt). Feldmittel L* 76,9, C* 5,2.
+   - **Augen:** K5c-Augenfeld auf ein dunkles Rechteck in F10 (91,64). A9: L* 7,3.
+6. **Kopf aussen:** aus F18, ohne Wundoval (G4 16 Insel 72).
+   - Mit F4/F5/F6 (Lauf 2): K13 31,2 % und K6 dE 9,1, beide ROT. Mit F18: 46,2 % und dE 4,7.
+   - Das Wundoval lag am rechten Auge (K10 L* 35,1 > 30). Ohne Oval: 11,7.
+
+## V3.2 Konstanten (Quelle je Zeile; Liste auch in `farbe/K5c_farbe_v3/bau.json`, Schluessel konstanten)
+
+| Konstante | Wert | Quelle |
+|---|---|---|
+| G4_KIND, TIM | 0x34, @0x65e800 | Messblatt 1.1, Leser A 1 |
+| CLUT_Y, Zeile je Seite | 480; Seite p -> Zeile p | FE.tim_lesen beider TIM; 1427 von 1427 G4-Flaechen |
+| KAPPE_NA | 0,8 | Leser A uebertrag.py |
+| T_FEIN | 48 | PORT-WAHL Bauer (4 je Mitte-Abschnitt) |
+| SCHRUMPF, VERSCHIEBE_N | 1,0..0; 300 | PORT-WAHL Bauer, Lauf 1 -> 2 (flache Bloecke) |
+| B1_ROT_LAB, G4_ROT_LAB | (39,1/21,7/-1,2), (38,0/35,5/20,8) | Messblatt 4 |
+| B1_C_JE_SEITE | 1,0 / 0,574 / 1,0 | Messblatt 4 "1 Schwanz"; Laeufe 1 und 2 (V3.1 Punkt 4) |
+| Rot-Rampe | C* 10..20, Farbton -40..70 Grad | V1-A3-Klasse als Rampe, PORT-WAHL Bauer |
+| ZIEL_F1, ZIEL_BAND, ZIEL_ZAHN | (149,103,122), (184,90,85), (199,191,183) | Messblatt 3.1, 3.2, 5 (F1t/F2t) |
+| ZIEL_BAND_BAU | (183,99,92) | PORT-WAHL Bauer nach K15/K7 (V3.3) |
+| BAND_SCHWELLE | 0,3 | PORT-WAHL Bauer; Schwelle 0,2/0,3/0,5 ergibt 43/39/34 Flaechen |
+| FLECK_WEITE, WEICH_RAND | 1, 1 | K14-Rotklasse 51,9 % -> 74,5 %; Auftrag "weiche Uebergaenge" |
+
+## V3.3 Rote Riegel (`farbe/riegel_K5c_farbe_v3.txt`)
+
+- **D1** (<= 2,0):
+  - ROT: Rumpf 2,11, Schwanz 2,33, Kopf/Kiefer 2,77.
+  - GRUEN: Beine 1,03, Arme 1,60, Hals 1,64, Klauen 1,07.
+  - Wirksame Vergroesserung (genutzte Texel, nur Info): Rumpf 2,73, Schwanz 3,45, Kopf/Kiefer 4,38.
+- **P2** (<= G4 + 8 Punkte):
+  - ROT: Rumpf +14,6, Hals +10,5, Vorderbein r +12,7, Klauen +12,4/+12,6, Kopf +13,1.
+  - GRUEN: Schwanz +2,6, Hinterbeine -3,9/-2,4.
+- **F2t:** dE 6,18 > 6. Das Bauziel liegt bei dE 5,1. Der Unterschied kommt aus der Gewichtung: Der Riegel mittelt ueber die Texel einzeln,
+  der Bau gewichtet nach der Abtastzahl.
+- **K15 und K7:**
+  - K15: dE 7,9 (Lab 49,9/35,2/19,7 gegen 49,9/28,2/16,1). K7: dE 10,2 (a* 31,6 gegen 24,9).
+  - Mit ZIEL_BAND selbst ist die Kette noch roter (K15 dE 11,8).
+  - Am Knochen 23 ergibt die Albedo (181,88,86) in der Kette a* 39,8, im Original a* 33,8.
+  - Die 258 Bandpixel ohne K5c (Hintergrund) liegen bei a* 46 gegen 33.
+  - Zwischen F2t und K15 bleibt so kein Spielraum (offen).
+- **K12:** Schwanz 12,4 % > 8,9 %. Mit dem Schrumpf-Einpassen waren es 7,5 %; das Verschieben zeigt mehr Adern.
+- **K13 und K8**, beide knapp: K13 46,2 % gegen 46,4 %, K8 6,1 gegen 6.
+- **K3:** Hinterbein r dE 10,5, Hinterbein l 7,5, Vorderglied 7,9, Ruecken 6,6.
+  - Es fehlt b*: Hinterbein r im Original Lab 23,2/0,3/-8,3, in der Variante 26,0/0,2/2,2.
+  - Die blaeuliche Haut des Originals hat keine G4-Hautzeile. Die Bild-1-Zeilen drehen nur das Aderrot (H2).
+- **K1v2, K2v2, A1:** K1v2 6,6 < 6,6 (knapp), K2v2 6,4 < 6,8, A1 8,5 < 9,5. Die dunklen G4-Glieder haben C* 2-7 (F10, F11, F13, F17, F19).
+- **N1, N2:**
+  - N1: C* 3/4 vorn 6,9 < 9,4.
+  - N2: L* > 85 bei 0,12-0,41 %, an den Krallenspitzen G4-F21 (L* p95 97,4) und an den Zaehnen.
+- **B-Riegel:** B2 2,5/2,33 < 3,2; B9 15,5 > 11,3; B11 2,42 < 3,3; B12 Canny 19,9 < 25,2; B17 Render 0,588 < 0,60.
+
+GRUEN: G0, H1, H1b, H2, P1, S1, F1t, Zaehne, A2-A12 (V3-Felder), B10, B13-B16, K4, K4b, K5, K6, K9, K10, K11, K14, B9b.
+
+## V3.4 Tafeln (`farbe/`, `generator/kf_tafeln_v3.py`, Messblatt 6; die Tafeln von Versuch 2 liegen in `farbe/v2r2/`)
+
+- `01_szene_bild1.png`, `02_szene_bild2.png`: Original | K4 heute | V3, Spiellicht roh und durch form_video, dazu je eine Nahkachel der Feuerstelle.
+- `03_familie.png`: EM30 | G5 | G4 | V3 | K4 heute, roh, gleiches Licht.
+- `04_atlas.png`: G4-Atlas | V3 (G4-Zeilen und Sonderfelder) | V3 (Bild-1-Zeilen) | Herkunftskarte in Falschfarbe mit Legende.
+- `05_rundum_neu.png`.
+- `06_kopf_nah.png`: Bild 2 und Bild 1 nah, dazu der Kopf neben dem G4-Kopf, neutral.
+- `07_spiel.png`: eigene exe-Kopie, Bilder in `spiel_v3/`.
+- `08_binnenzeichnung.png`: G4 | EM30 | Versuch 2 | V3.
+
+Gesehen (Bauer, keine Abnahme):
+- Der Koerper wirkt schwarz mit roten Adern. Die F1-Stelle ist ein rosa-mauve Fleck.
+- Am Hals und an der Schulteroberkante bleiben einzelne flache rote bzw. pfirsichfarbene Flaechen.
+- Der Kopf ist dunkel. Die Adern dort sind grob, weil der Kopf 2,8-fach vergroessert ist.
+
+## V3.5 Offen
+
+1. **D1/P2 an Rumpf und Kopf:** Die Quellflaechen sind zu klein (Kopf aus F18: 15,8 Mio. gegen etwa 2 Mio. Einheiten^2).
+   Moeglicher Weg: Kopf auf F18, F17 und F19 aufteilen (Schaedel, Schnauze, Kiefer je eigenes Feld), Rumpf-Brust zusaetzlich aus F11.
+2. **K15 gegen F2t:** Fuer die K5c-Kette widersprechen sich beide um etwa 10 a*. Rueckfrage an den Pruefer, welcher Riegel gilt.
+3. **K3 b*** (blaeuliche Haut in Bild 1): Laut H2 duerfen die Bild-1-Zeilen nur das Aderrot aendern. Soll eine Bild-1-Hautzeile erlaubt werden?
+4. **N2:** Die G4-Krallenspitzen sind heller als L* 85, und G4 selbst hat sie so. Sollen sie ohne eigene Zeile bleiben?
+5. **Messblatt 7.1** (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer.
