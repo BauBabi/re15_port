@@ -522,6 +522,9 @@ static void test_m4_toedlich(unsigned raum, const char *rdt)
     uint8_t *buf; re15_actor_t *b = em30_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (!b) return;
     re15_bf_modell_hook(hook_form);
+    /* Runde 41 Spur WS: die Rakete macht an Form 1 RE2-G1 200 (Zeile 17 K0 @0x800A58B0, re15_rakete_schaden) statt 1000. Thema
+     * ist der toedliche ERST-Treffer -> Form 1 vorher auf 199 (unter 200: 199 - 200 = -1 < 0, Zustand 3). */
+    b->hp = 199;
     CHECK(re15_enemy_take_damage(b, 9) == 1 && b->state == 3, "M4 %s: Rakete nicht toedlich (hp %d st %d)", rdt, b->hp, b->state);
     int m;
     for (m = 0; m < 900 && re15_bf_mutation_offen(); m++) { pl->x = b->x + 7000; pl->z = b->z; tick(1); }

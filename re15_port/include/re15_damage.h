@@ -28,10 +28,22 @@
  *   [5]=50                                               [9]=1000  [10]=0          */
 extern const int16_t re15_damage_table[11];
 
-/* Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL, Nutzerentscheid): Schaden der Handgranate (Art 2) an `e` - 1000
- * (@0x8006f41c) fuer jeden normalen Gegner unter jeder KI, Bosse nach Form (Gorilla 320, Alligator 250, Birkin 190/90/40);
- * Herleitung am Block in re15_damage.c. Der G5-Wert (80) steht danach im Gegnerzweig. */
+/* Runde 41 Spur WS (Nutzerentscheid 2026-11-07 "mach wie resident evil 2. Auch bei der Granate. mach sie so stark, dass
+ * sie gerade so die Standard Gegner mit einer Granate toeten kann"; Dossier analysis/befunde_runde41/WS_waffenschaden.md):
+ * D_G = der kleinste Schaden, der JEDEN Standard-Gegner aus voller HP toetet = max HP + 1.
+ *   250 = Maximum der Standard-Gegner in allen Menue-Modi, Typ 0x11 (RE2-EM011): `addiu v1,zero,250` @0x801008C8 /
+ *         `sh v1,342(s2)` @0x801008CC (info/re2leon/COMMON/BIN/EMOVL10_S0.BIN; Port re15_re2_init_hp)
+ *   + 1 = Todesregel hp < 0: RE1.5 `bgez v1,0x80013024` @0x80013014, RE2 `bgez v1,0x80047294` @0x80047284 (0 HP lebt).
+ * Bosse nehmen denselben Wert (die Boss-Regel der Spur GR entfaellt). */
+#define RE15_GRANATE_DG (250 + 1)
+
+/* Schaden der Handgranate (Art 2) an `e`: RE15_GRANATE_DG fuer jeden Gegner, Herleitung oben. */
 int re15_granate_schaden(const re15_actor_t *e);
+
+/* Runde 41 Spur WS: Schaden der Rakete (Art 9) an `e` = RE2-Schadenstabelle Zeile 17, Klammer 0, je Gegnertyp
+ * (Zeiger *(0x800A6A88 + Typ*4), Satz + 16*20, (w0 >> 0) & 0x3FF wie `srlv` @0x80047254 / `andi v1,v1,0x3ff` @0x8004725c).
+ * Tabelle mit Adressen am Rumpf in re15_damage.c (Riesenform = RE2-G4 301 @0x800A5D24, Vorgabe 900 @0x800A426C). */
+int re15_rakete_schaden(const re15_actor_t *e);
 
 /* Attack-type → hit-reaction code. Byte-true DAT_8006f430 (ghidra1_V2.txt:223480-
  * 223490; read @80012fe8). Written to the TARGET's reaction sub-state in the ENEMY

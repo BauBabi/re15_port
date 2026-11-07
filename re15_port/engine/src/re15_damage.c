@@ -37,10 +37,7 @@
 #include "re15_treffer_r39.h" /* re15_treffer_r39_zielhilfe_verdeckt — RE2 FUN_80042144 @0x800422a8 (Runde 39 D) */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht kein Ziel (@0x8003710c / @0x80111C14-20) */
 #include "re15_spinnen_r38.h"  /* Runde 38 Integration: Schachtspinne ohne Band (@0x800120e4-ec), Latch im Schacht */
-#include "re15_birkin_formen.h" /* Runde 41 Spur GR NB2: re15_bf_granate_form (Bossschaden der Handgranate) */
-#include "re15_gegner_r39.h"    /* Runde 41 Spur GR NB2: re15_r39_affen_regel (Gorilla-HP x2) */
-#include "re15_boss_gator.h"    /* Runde 41 Spur GR NB2: re15_gator_boss_active */
-#include "re15_gator_re2_r41.h"  /* Runde 41 Spur GR NB3: RE15_GR2_HP_INIT / RE15_GR2_HP_SOCKEL (Gator-Boss nach der Boss-Regel) */
+#include "re15_birkin_formen.h" /* Runde 41 Spur WS: re15_bf_granate_form + RE15_BB_FORM_HP (Riesenform-Praedikat der Rakete) */
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
 static int re2_gl_explosion_stempel(re15_actor_t *e, uint8_t attack_type, const int32_t p[3]);
@@ -3110,66 +3107,78 @@ static int re15_e4_modell(const re15_actor_t *e)
            (re15_re2_model_owns(e->type) || re15_re15_import_owns(e->type));
 }
 
-/* ⛔ RUNDE 41 SPUR GR, NACHBESSERUNG 2 — PORT-WAHL: DER SCHADEN DER HANDGRANATE (Art 2) JE GEGNER.
- * Nutzerentscheide 2026-11-02 (Dossier analysis/befunde_runde41/GR_granate.md N2):
- *   "die Granate hat halt einen Schaden, sind die Gegner damit tot, sind sie tot. Der Gorilla ist ein Endgegner, wenn der
- *    mit einer Granate stirbt ist das etwas schwach." / "Gorilla, Handgranate und ein paar Schuss, und ja auch Birkin und
- *    Aligator, wobei die an sich schon staerker sein muessen als der Gorilla."
- * (1) JEDER NORMALE GEGNER, gleich unter welcher KI: die eigene Zahl des Gegenstands DAT_8006f418[2] = 1000 (`e8 03`
- *     @0x8006f41c; Aufruf FUN_80012d60(500,&P,2) @0x80018598-bc). Bis hier bekamen die Typen unter dem RE2-Modell (E4,
- *     Runde 34) die RE2-GRANATWERFER-Zeile 9 Klammer 0 - Hund 300 @0x800A44C4, Kraehe 60 @0x800A4640, Spinne/Baby 60
- *     @0x800A4C30 - obwohl RE2 keine Handgranate hat (BAUPLAN Runde 34 E1); dieselbe Begruendung, mit der Spur GR die
- *     Zombie-Familie schon auf 1000 stellte. Die Werfer-Explosivrunde (Art 6, Zeile 9) behaelt ihre Werte.
- * (2) BOSSE: eine Granate aus VOLLER Form-HP laesst den Rest R stehen; danach toeten genau N Pistolenschuesse
- *     (Waffe 3 BROWNING HP; Waffe 4 hat in allen drei Zeilen denselben Wert). Schaden = Form-HP - Ende - R.
- *       Gorilla 0x27   R = 40 :  N = 4 (Nutzer "ein paar Schuss")   Pistole 12 `0c 00` @0x8006ee44: 40-3*12 = 4 >= 0,
- *                                                                     40-4*12 < 0
- *       Birkin 0x30    R = 110:  N = 8 ("staerker als der Gorilla", Pistole 15 `0f 00` @0x8006f15c: 110-7*15 = 5 >= 0,
- *                                       Faktor 2)                      110-8*15 < 0
- *       Alligator 0x23 R = 50 :  N = 8 (wie Birkin)                   Pistole 7 `07 00` @0x8006ece4: 50-7*7 = 1 >= 0,
- *                                                                     50-8*7 < 0
- *     Form-HP: Gorilla 180 (STAGE1 @0x8011f514, alle 16 Spalten, INIT `sh v0,154(a1)` @0x80117104) x 2 (Runde 39 Spur E,
- *     re15_r39_affen_regel) = 360; Alligator 300 (STAGE2 @0x801175dc, alle 16 Spalten, `sh v0,154(a1)` @0x8010c6d4);
- *     Birkin je Form re15_bf_granate_form. NACHBESSERUNG 3 (Nutzer F1/F2 "ja", re15_birkin_formen.h): die Birkin-HP-Skala
- *     laeuft x 2 - 600 (0x12c @0x8011690c x 2) bis hp < 0 bzw. bis hp < 200 (`slti 100` @0x8011667c x 2) = Mutation; 300
- *     (0x96 @0x80118094 x 2) waehrend/nach der Mutation; Bahnsteig-Form 1000 (G4-Ctor @0x8010067c). Ergebnis: Gorilla 320,
- *     Alligator 250, Birkin 490 / 290 / 190 / Bahnsteig-Form 890 - keine Form stirbt an EINER Granate (es bleibt R >= 0
- *     bzw. >= 200 vor der Mutation).
- * (3) GATOR-BOSS 2090/2091 (NACHBESSERUNG 3, Nutzer F4: "nicht einfach mit einer Granate beenden"): seine "Form" ist der
- *     Abstand Sockel -> Schwaeche: Start 25300 (RE15_GR2_HP_INIT, INIT @0x80100518-580), Ende hp < 25000 (`slti v0,v0,25000`
- *     @0x80101ec4 -> +0x218 |= 0x20 @0x80101ed8-dc, loest die Kanister-Szene aus). Die Luecke 300 ist genau die HP des
- *     RE1.5-Alligators (@0x801175dc), der Pistolenschaden derselbe (7 @0x8006ece4): dieselbe Boss-Regel wie der Alligator,
- *     R = 50, N = 8 -> 25300 - 25000 - 50 = 250. Vorher 1000 (eine Granate 25300 -> 24300 = sofort geschwaecht). Toedlich
- *     bleibt nur der Kanister.
- * (4) UNVERAENDERT: G5 (0x36 in 5090/5091, E16-Block unten: 80), 0x36 ausserhalb 5090 (ROOM3080-Szene, waffen-immun
- *     @0x8006f360, Spieler in der ganzen Szene gesperrt (1,27)/(2,7) - Nutzerfrage im Dossier N3).
- * Haengt NICHT am Schalter RE15_KEIN_80PROZENT_GORE (Schaden ist Nutzerentscheid, kein 80%-Gore). */
-#define GR_REST_GORILLA     40
-#define GR_REST_BIRKIN     110
-#define GR_REST_ALLIGATOR   50
-#define GR_HP_GORILLA      180    /* STAGE1 @0x8011f514 */
-#define GR_HP_ALLIGATOR    300    /* STAGE2 @0x801175dc */
+/* ⛔ RUNDE 41 SPUR WS — DER SCHADEN DER HANDGRANATE (Art 2) JE GEGNER.
+ * Nutzerentscheid 2026-11-07 (Dossier analysis/befunde_runde41/WS_waffenschaden.md, Pruefblatt WS_ENTSCHEIDUNG.md):
+ *   "mach wie resident evil 2. Auch bei der Granate. mach sie so stark, dass sie gerade so die Standard Gegner mit einer
+ *    Granate toeten kann."
+ * Lesung (G): EIN Wert D_G = RE15_GRANATE_DG = 250 + 1 fuer JEDEN Gegner unter jeder KI, ohne Sonderfall.
+ *   250 = Maximum der Standard-Gegner (Typ 0x11, `addiu v1,zero,250` @0x801008C8 / `sh v1,342(s2)` @0x801008CC,
+ *         EMOVL10_S0.BIN); + 1 = Todesregel hp < 0 (`bgez v1` @0x80013014 RE1.5 / @0x80047284 RE2).
+ * RE2 hat keine Handgranate (BAUPLAN Runde 34 E1, Musterscan 0 Treffer) und keinen Explosionsabfall (Applier FUN_800470C0
+ * @0x80047208-0x8004727c ohne Abstand/Zufall/Schwierigkeit): im Kasten {-2000,0,1000,500} (@0x80010918) an P und P+900 wirkt
+ * der volle Wert, ausserhalb nichts (granate_r35.c).
+ * UEBERHOLT (Spur GR NB2/NB3, Nutzer 2026-11-02): die Boss-Regel "eine Granate aus voller Form laesst den Rest R, danach N
+ * Pistolenschuesse" (Rest 40/110/50, Gorilla 320, Alligator 250, Birkin 490/290/190/890, Gator-Boss 250) und die
+ * G5-Werferzeile 80 (@0x800A5F7C). Bosse nehmen D_G. Haengt NICHT am Schalter RE15_KEIN_80PROZENT_GORE. */
 int re15_granate_schaden(const re15_actor_t *e)
 {
-    int voll = re15_damage_table[2];                               /* 1000 @0x8006f41c */
-    if (!e) return voll;
-    switch (e->type) {
-    case 0x27: {
-        int hp0 = re15_r39_affen_regel(e) ? GR_HP_GORILLA * RE15_R39_AFFEN_HP_FAKTOR : GR_HP_GORILLA;
-        return hp0 - GR_REST_GORILLA;
-    }
-    case 0x23:
-        if (re15_gator_boss_active(e))                             /* Gator-Boss (3): 25300 - 25000 - 50 = 250 */
-            return RE15_GR2_HP_INIT - RE15_GR2_HP_SOCKEL - GR_REST_ALLIGATOR;
-        return GR_HP_ALLIGATOR - GR_REST_ALLIGATOR;
-    case 0x30: {
+    (void)e;
+    return RE15_GRANATE_DG;
+}
+
+/* ⛔ RUNDE 41 SPUR WS — DER SCHADEN DER RAKETE (Art 9) JE GEGNER = RE2 (Lesung R des Nutzerentscheids 2026-11-07).
+ * RE2-Rakete Op 24 (FUN_8001F6E0): Gegnerkontakt Hitcode 0x00030011 (`lui a3,0x3` @0x8001f7b0 / `ori a3,a3,0x11`
+ * @0x8001f7c0, `jal 0x800470c0` @0x8001f7bc), Boden 0x00020011 (@0x8001f820-3c) = Zeile 17, Klammer 0. Der Applier liest den
+ * Satz *(0x800A6A88 + Typ*4) + (17-1)*20 (`lw a1,27272(at)` @0x8004722c, `addiu v0,v0,-20` @0x8004723c) und zieht
+ * (w0 >> 10*K) & 0x3FF ab (`srlv` @0x80047254 / `andi v1,v1,0x3ff` @0x8004725c). Die Explosion Op 47 Sub 13 ruft den Applier
+ * nicht (`bne v1,v0,0x80020dc0` @0x80020d38). Der RE1.5-Wert DAT_8006f418[9] = 1000 (`e8 03` @0x8006f42a) hat im Original
+ * keinen Aufrufer (Beta -> Retail: RE2). Alle Zeilen 17 tragen in K0/K1/K2 denselben Wert (Leser A Tabelle 1.4).
+ * w0 der Zeile 17 je RE2-Tabelle (info/re2leon/PSX.EXE, im Pruefblatt 1.2 nachgelesen): */
+static const uint32_t s_rak_zombie   = 0x384E1384u;   /* RE2 0x10..0x14/0x18/0x19, Vorgabezeiger: @0x800A426C -> 900 */
+static const uint32_t s_rak_zombie16 = 0x384E1384u;   /* RE2 0x15..0x17: @0x800A43E8 -> 900 */
+static const uint32_t s_rak_arm      = 0x0280A028u;   /* RE2 0x2D Zombie-Arme: @0x800A52C0 -> 40 */
+static const uint32_t s_rak_hund     = 0x12C4B12Cu;   /* RE2 0x20 Hund: @0x800A4564 -> 300 */
+static const uint32_t s_rak_kraehe   = 0x12C4B12Cu;   /* RE2 0x21 Kraehe: @0x800A46E0 -> 300 */
+static const uint32_t s_rak_licker   = 0x0C8320C8u;   /* RE2 0x22 Licker rot: @0x800A485C -> 200 */
+static const uint32_t s_rak_gator    = 0x06E1B86Eu;   /* RE2 0x23 Alligator: @0x800A4B54 -> 110 */
+static const uint32_t s_rak_spinne   = 0x0C8320C8u;   /* RE2 0x25/0x26 Spinne/Baby: @0x800A4CD0 -> 200 */
+static const uint32_t s_rak_kakerl   = 0x12C4B12Cu;   /* RE2 0x29 Kakerlake: @0x800A5144 -> 300 */
+static const uint32_t s_rak_tyrant   = 0x1F47D1F4u;   /* RE2 0x2B Tyrant: @0x800A55B8 (= 0x2A @0x800A543C) -> 500 */
+static const uint32_t s_rak_ivy      = 0x12C4B12Cu;   /* RE2 0x2E Ivy: @0x800A5734 -> 300 */
+static const uint32_t s_rak_g1       = 0x0C8320C8u;   /* RE2 0x30 G1: @0x800A58B0 -> 200 */
+static const uint32_t s_rak_g4       = 0x12D4B52Du;   /* RE2 0x34 G4: @0x800A5D24 -> 301 */
+static const uint32_t s_rak_g5       = 0x0C8320C8u;   /* RE2 0x36 G5: @0x800A601C -> 200 */
+int re15_rakete_schaden(const re15_actor_t *e)
+{
+    uint32_t w0 = s_rak_zombie;                       /* Vorgabe: RE2-Typen ohne eigene Tabelle zeigen auf 0x800A412C
+                                                       * (z. B. Zeiger 0x14 @0x800A6AD8) */
+    if (e) switch (e->type) {
+    case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x18: case 0x19:
+        w0 = s_rak_zombie;   break;
+    case 0x15: case 0x16: case 0x17:
+        w0 = s_rak_zombie16; break;
+    case 0x1A: w0 = s_rak_arm;    break;              /* Gitterhaende: Port-Gehirn ist RE2-EM2D (enemy_ai_re2_zombie.c) */
+    case 0x20: w0 = s_rak_hund;   break;
+    case 0x21: w0 = s_rak_kraehe; break;
+    case 0x23: w0 = s_rak_gator;  break;              /* RE1.5-Alligator und Gator-Boss 2090/2091 (RE2-EM23-Modul) */
+    case 0x25: case 0x26: w0 = s_rak_spinne; break;   /* 0x26 auch der Feuer-Emitter von ROOM1090 (gleiche Id, H9) */
+    case 0x27: w0 = s_rak_licker; break;              /* Gorilla: RE2 hat keinen Affen (RE2-0x27 = G-Embryo 201 @0x800A4E4C);
+                                                       * naechster vergleichbarer Typ = Licker (agiler Springer und
+                                                       * Nahkaempfer). 200 und 201 ergeben bei 360 HP beide 2 Raketen */
+    case 0x29: w0 = s_rak_kakerl; break;              /* kleiner Affe: alle kleinen RE2-Tiere tragen 300 (Hund/Kraehe/Kakerlake) */
+    case 0x2B: w0 = s_rak_tyrant; break;
+    case 0x2D: w0 = s_rak_ivy;    break;              /* Port-Ivy 0x2D = RE2 0x2E (RE2-0x2D sind die Arme) */
+    case 0x30: {                                      /* Birkin: Riesenform = RE2-G4 (G4-Overlay, HP 1000 @0x80100678), sonst G1;
+                                                       * Praedikat wie birkin_formen.c re15_bf_granate_form */
         int hp0, ende;
         re15_bf_granate_form(e, &hp0, &ende);
-        return hp0 - ende - GR_REST_BIRKIN;
+        w0 = (hp0 == RE15_BB_FORM_HP) ? s_rak_g4 : s_rak_g1;
+        break;
     }
-    default:
-        return voll;
+    case 0x36: w0 = s_rak_g5;     break;
+    default: break;
     }
+    return (int)((w0 >> 0) & 0x3FFu);                 /* Klammer 0: `srlv` @0x80047254 / `andi v1,v1,0x3ff` @0x8004725c */
 }
 static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p,
                                      const re2gl_treffer_t *gl)
@@ -3217,10 +3226,16 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
      * RE2-HP hoechstens 250 (Brad = dicker Zombie 0x11, `addiu v1,zero,250` @0x801008C8; sonst 128 + 15
      * @0x8010C670 / @0x80100810), RE1.5-HP hoechstens 111 ausser dem Einzelwert 1058 der Zeile 0x18 (@0x8011f33a, nur
      * ohne RE2-Modell). Saeure/Brand (Art 3/4), Werfer (6..9) und alle Nicht-Zombies bleiben bei E4/E16.
-     * ⛔ NACHBESSERUNG 2: nicht mehr nur die Zombie-Familie - alle normalen Gegner 1000, Bosse nach Form (Block ueber
-     * re15_granate_schaden). G5 bleibt beim E16-Block unten (80). */
+     * ⛔ NACHBESSERUNG 2: nicht mehr nur die Zombie-Familie - alle normalen Gegner 1000, Bosse nach Form.
+     * ⛔ RUNDE 41 SPUR WS (Nutzer 2026-11-07): ueberholt - jeder Gegner nimmt D_G = 251 (re15_granate_schaden, Herleitung
+     * dort), auch Bosse und der G5. */
     if (type == 2u)
         dmg = (int16_t)re15_granate_schaden(e);
+    /* ⛔ RUNDE 41 SPUR WS: die Rakete (Art 9; einziger Erzeuger im Port = Applier-Zeile 17 fuer RE1.5-KI-Kandidaten,
+     * re15_re2_gl_apply) traegt den RE2-Wert Zeile 17 K0 je Typ (re15_rakete_schaden) statt DAT_8006f418[9] = 1000
+     * (@0x8006f42a, im Original ohne Aufrufer). Der gl-Block danach gibt den Typen unter dem RE2-Modell dieselben Werte. */
+    if (type == 9u)
+        dmg = (int16_t)re15_rakete_schaden(e);
     /* ⛔ NACHBESSERUNG M1 — das Bodenfeuer (RE2-GL-Applier, O-VB4 Art 5) an einem RE1.5-KI-Typ
      * UNTER DEM RE2-MODELL (Import-Zombies im RE1.5-Flavor = Vorgabe): RE2-HP gegen die RE1.5-Zahl
      * 50 (@0x8006f422) waere dieselbe verbotene Haelften-Mischung wie oben. Er bekommt deshalb den
@@ -3244,9 +3259,11 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
      * (0x00511846 @0x800A5F90); Zeiger *(0x800A6A88 + 0x36*4) = 0x800A5EDC. Art 3 = Saeure =
      * RE2-Zeile 11, Art 4 = Brand = Zeile 10 (Item-Namen RE1.5 0x0A "Acid" / 0x0B "Incendiary",
      * RE2 Zeile 10 = Brand / 11 = Saeure — Bosse-GP §12). */
+    /* ⛔ RUNDE 41 SPUR WS: nur noch Art 3/4. Die Handgranate (Art 2) nimmt am G5 D_G (re15_granate_schaden); die frueheren 80
+     * (Zeile 9 = RE2-Granatwerfer) hat Spur GR fuer die Zombies schon verworfen, Lesung (G) verlangt einen Wert ohne Sonderfall. */
     if (e->type == 0x36u && (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
-        type >= 2u && type <= 4u)
-        dmg = (type == 2u) ? 80 : 70;
+        type >= 3u && type <= 4u)
+        dmg = 70;                                                  /* Z11 @0x800A5FA4 / Z10 @0x800A5F90, K0 */
     e->sub_state_3 = 0;                                            /* +0x7 = 0 (@80012fd4) */
     e->sub_state_2 = 1;                                            /* +0x6 = 1 (@80012fd8) */
     e->sub_state_1 = (type < 11) ? re15_react_table[type] : 0;     /* +0x5 = RE1.5-WAFFEN-Id

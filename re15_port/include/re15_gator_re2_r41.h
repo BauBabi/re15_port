@@ -23,9 +23,21 @@
 extern "C" {
 #endif
 
-/* ---- HP-Sockel (INIT @0x80100518-580: 25000 + Tabelle[0x800cfb74 & 0x40/0x20] = 300) ---- */
+/* ---- HP-Sockel (INIT @0x80100518-580: 25000 + Tabelle[0x800cfb74 & 0x40/0x20]) ----------------------------------------
+ * Runde 41 Spur WS (H3, "Original oder nicht"): der Zweig mit GESETZTEM Bit 0x40, selbst nachgelesen (re2_disasm.py):
+ *   `lw v1,-1164(v1)` (0x800cfb74) @0x8010051c, `andi v0,v1,0x40` @0x80100524, `beq v0,zero,0x80100558` @0x80100528;
+ *   Bit 0x40 gesetzt: `andi v0,v1,0x20` @0x8010052c -> `lhu v0,17900(v0)` = [0x801045ec] @0x8010053c (Bit 0x20) bzw.
+ *   `lhu v0,17902(v0)` = [0x801045ee] @0x8010054c (ohne 0x20), beide 240; `addiu v0,v0,25000` @0x80100544/@0x80100554,
+ *   `sh v0,342(s0)` @0x80100580. Nur OHNE Bit 0x40 laese er [0x801045bc]/[0x801045be] = 300 (@0x80100564/@0x80100574).
+ *   Das Bit setzt der RE2-Spielstart bedingungslos: `lw v0,-1164(v0)` @0x8002b4a4 / `ori v0,v0,0x40` @0x8002b4ac /
+ *   `sw v0,-1164(at)` @0x8002b4b4 (FUN_8002b48c, gerufen `jal 0x8002b48c` @0x8002af00); kein Schreiber von 0x800cfb74
+ *   in PSX.EXE und COMMON/BIN loescht es (Scan aller 34 Stores; Masken 0x7fffffff, 0xfeffffff, 0xfffbffff, 0xffdfffff,
+ *   -2, -9, 0x010008d9 lassen 0x40 stehen, MEM_CARD @0x80103af4 setzt es). Den Zweig mit Bit 0x40 nimmt der Port auch fuer
+ *   die Zombie-Tabelle (@0x801006d4), den G4 (1000) und den G5 (600). Bit 0x20 (Schwierigkeit) waehlt nur zwischen zwei
+ *   gleichen 240. Vorher 25300 mit dem Kommentar "Bit 0x40 aus". */
 #define RE15_GR2_HP_SOCKEL  25000   /* `slti v0,v0,25000` @0x80101ec4 -> +0x218 |= 0x20 (geschwaecht) */
-#define RE15_GR2_HP_INIT    25300   /* 25000 + [0x801045bc] = 300 (Bit 0x40 aus) */
+#define RE15_GR2_HP_INIT    (RE15_GR2_HP_SOCKEL + 240)   /* 25240 = 25000 + [0x801045ec]/[0x801045ee] = 240 (Bit 0x40 gesetzt
+                                                         * @0x8002b4ac; Laden @0x8010053c/@0x8010054c) */
 
 /* ---- Hysterese Schwimmen (Clip 0) <-> Paddeln (Clip 1), Sub 1/2 ------------------------- */
 #define RE15_GR2_PADDEL_AB  0x65    /* +0x1F0 >= 101 -> 0x201  `sltiu v0,v0,0x65` @0x80100b88/@0x80100ba4 */
@@ -181,7 +193,7 @@ int  re15_gr2_fx_quelle(int i, uint8_t m[32]);
 void re15_gr2_kanister_env(void);
 
 /* ---- Fuer Spur F/G ------------------------------------------------------------------------ */
-int  re15_gr2_geschwaecht(void);     /* +0x218 & 0x20: HP < 25000 (= 300 Schaden genommen) */
+int  re15_gr2_geschwaecht(void);     /* +0x218 & 0x20: HP < 25000 (= mehr als 240 Schaden genommen, RE15_GR2_HP_INIT) */
 int  re15_gr2_treffer(void);         /* Treffer seit INIT */
 int  re15_gr2_tot(void);             /* R1-Endzustand erreicht (Leiche, +0x10E |= 0x4000 @0x80102654-64) */
 int  re15_gr2_traegt(void);          /* Stufe 7 */

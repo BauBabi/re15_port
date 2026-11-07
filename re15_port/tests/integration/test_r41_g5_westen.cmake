@@ -20,6 +20,9 @@
 # Game over -> Neustart (Bildzaehler 1672 -> 0), kein G5, Zellen-/Weg-Masse unsinnig. Deshalb MA9 (Feuer bis F658): die naechste
 # Rakete bei ~F636 toetet die 0-HP-Form -> Rueckstoss F638 -> G5 F737, Armierung F792, Szenenende F1954 (integration_r41_g5_tod,
 # gleiche Vorgeschichte A0.1,W1,U8.5,MA9). Die Tasten ab W56.5 liegen damit weiter hinter dem Szenenende.
+# RUNDE 41 SPUR WS: Rakete RE2 je Typ (Form 1 G1 200 @0x800A58B0, Riesenform G4 301 @0x800A5D24): die Riesenform braucht 4 Raketen
+# (gemessen F666 699, F698 398, F730 97, F761 -204; G5 F866, Kopf von integration_r41_g5_tod). MA9 endete vor der ersten -> MA13;
+# alle Tasten danach ruecken mit dem Feuerende um 4 s (120 Bilder) nach, der G5 um 129 Bilder (F737 -> F866).
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_g5_westen.cmake
 # =============================================================================
@@ -158,9 +161,9 @@ endfunction()
 
 # Eingaben der Abnahme: z_w4 (Leon im Westen ohne Feuer) und z_fern (Suedwand im Armbereich), danach laufen, drehen, rennen
 set(_tasten ",W56.5,U2,W1,D2,W1,L0.5,U2,R1.1,XU2,W10")
-ein_lauf(leon_w4 5090 "A0.1,W1,U8.5,MA9,W4.2,XU1.9${_tasten}")
-ein_lauf(elza_w4 5091 "A0.1,W1,U8.5,MA9,W4.2,XU2.2${_tasten}")
-ein_lauf(leon_fern 5090 "A0.1,W1,U8.5,MA9,W4.2,R1.08,XU2.4${_tasten}")
+ein_lauf(leon_w4 5090 "A0.1,W1,U8.5,MA13,W4.2,XU1.9${_tasten}")
+ein_lauf(elza_w4 5091 "A0.1,W1,U8.5,MA13,W4.2,XU2.2${_tasten}")
+ein_lauf(leon_fern 5090 "A0.1,W1,U8.5,MA13,W4.2,R1.08,XU2.4${_tasten}")
 file(REMOVE "${_exe_kopie}")
 
 if(_f)

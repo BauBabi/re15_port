@@ -79,6 +79,9 @@ int re15_bf_hangar_aktiv(void)
 }
 
 /* Runde 41 Spur GR, Nachbesserung 2 (Kopf: re15_birkin_formen.h): Start-HP und Ende der LAUFENDEN Form eines 0x30.
+ * Runde 41 Spur WS: die Handgranate fragt die Form nicht mehr (D_G 251 fuer jeden Gegner, re15_granate_schaden); gebraucht wird
+ * die Funktion als Riesenform-Praedikat der Rakete (form_hp == RE15_BB_FORM_HP -> RE2-G4 301 @0x800A5D24, re15_rakete_schaden)
+ * und von den Tests (Formende).
  * (Zahlen nach Nachbesserung 3: x RE15_BIRKIN_HP_FAKTOR = 2, Bahnsteig-Form = G4-HP 1000, re15_birkin_formen.h)
  *   Bahnsteig-Form (G4-Bank oder 5090 nach der Mutation) 1000 bis hp < 0   (birkin_bahnsteig.c Eintritt RE15_BB_FORM_HP,
  *                                                                            G4-Ctor `sh v0,342(s1)` @0x8010067c)

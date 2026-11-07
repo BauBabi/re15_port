@@ -10,7 +10,8 @@
 #                                Ereigniskette: Rumble-Rampe (10,120,50), Bit 4 fuer 5 Bilder (Tabelle @0x8009db14),
 #                                dann Bit 8 fuer 10 Bilder (@0x8009daf4) = Hintergrundversatz 0..3 px
 #   unit_r41_re2gator_intro      Aggro -> Clip 6 (125) -> Clip 3 (150) -> Biss-Sperre 110 (@0x8010091c), dann CHASE Clip 0
-#   unit_r41_re2gator_sockel     HP 25300; 100 Pistolentreffer toeten nicht (Sockel), geschwaecht sobald HP < 25000;
+#   unit_r41_re2gator_sockel     HP 25240 (Spur WS H3: Bit 0x40 @0x8002b4ac -> [0x801045ec] = 240); 100 Pistolentreffer toeten
+#                                nicht (Sockel), geschwaecht sobald HP < 25000;
 #                                Treffer-Reaktion nur 0 (SE 5) oder 4 (SE 0 + Clip 10, Sperre 120..183), nie beides
 #   unit_r41_re2gator_kanister   RE15_GATOR_KANISTER-Lage vor der Schnauze -> Stufe 1..7 (12+6+6+7+7 Bilder nach dem Fenster-Takt,
 #                                NB3: Stufe 1 + erster Stufe-2-Schritt im Fenster-Takt @0x8010183c-5c -> @0x80101860; Kopf/Kiefer-az

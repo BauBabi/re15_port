@@ -246,10 +246,10 @@ static void abschnitt_wand(void)
     PRUEF(110, geo == 1, "RE2-Kontaktgeometrie (@0x80010900, Band @0x8004716c-a4) meldet den Gegner 600 vor dem Spawn: %d (1)", geo);
     PRUEF(111, nw == 1 && ne == 1 && bild_x3 >= 3,
           "Flug geht weiter bis zur Wand: Wand %u, Explosionen %u, Explosionsbild %d (>= 3, nicht beim Kontakt)", nw, ne, bild_x3);
-    /* Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL, Nutzerentscheid): 0x27 = Gorilla = Boss, Handgranate an ihm 360 - 40 =
-     * 320 (re15_granate_schaden) statt 1000 (@0x8006f41c); die Reichweite der Wandexplosion ist das Thema dieser Pruefung. */
-    PRUEF(112, d->hp == 180 - 320 && d->state == 3 && d->sub_state_1 == 9,
-          "Gegner 0x27 ueber die Reichweite der Wandexplosion getroffen: hp %d (-140), Zustand %u (3), +0x5 %u (9)",
+    /* Runde 41 Spur WS (Nutzer 2026-11-07): Handgranate an jedem Gegner D_G 251 (250 @0x801008C8 + 1, re15_granate_schaden),
+     * auch am Gorilla 0x27 (vorher Boss-Regel 320); die Reichweite der Wandexplosion ist das Thema dieser Pruefung. */
+    PRUEF(112, d->hp == 180 - RE15_GRANATE_DG && d->state == 3 && d->sub_state_1 == 9,
+          "Gegner 0x27 ueber die Reichweite der Wandexplosion getroffen: hp %d (-71), Zustand %u (3), +0x5 %u (9)",
           d->hp, d->state, d->sub_state_1);
     g_actors[1].active = 0;
     g_room_rdt_ok = 0;
@@ -293,10 +293,10 @@ static void abschnitt_reichweite(void)
         PRUEF(nr, getroffen == faelle[i].soll && n == faelle[i].soll,
               "%s: getroffen %d, Rueckgabe %d (soll %d); hp %d", faelle[i].was, getroffen, n, faelle[i].soll, d->hp);
         if (getroffen)
-            /* Runde 41 Spur GR (PORT-WAHL, GR_granate.md par.4): die Handgranate traegt an der Zombie-Familie wieder ihre
-             * eigene Zahl DAT_8006f418[2] = 1000 (@0x8006f41c) statt E4 (Zeile 9 K0 = 200 @0x800A41CC). */
-            PRUEF(nr, d->hp == 100 - 1000 && d->state == 3 && d->sub_state_1 == 9,
-                  "   Schaden 1000 (@0x8006f41c, Runde 41 GR): hp %d, Zustand %u, +0x5 %u (soll -900/3/9)",
+            /* Runde 41 Spur GR (GR_granate.md par.4): die Handgranate traegt an der Zombie-Familie ihren eigenen Wert statt E4
+             * (Zeile 9 K0 = 200 @0x800A41CC); Spur WS: D_G 251 (250 @0x801008C8 + 1), vorher 1000 (@0x8006f41c). */
+            PRUEF(nr, d->hp == 100 - RE15_GRANATE_DG && d->state == 3 && d->sub_state_1 == 9,
+                  "   Schaden D_G 251 (Runde 41 WS): hp %d, Zustand %u, +0x5 %u (soll -151/3/9)",
                   d->hp, d->state, d->sub_state_1);
     }
     /* Mehrere Gegner in einer Explosion: alle im Quadrat werden getroffen (Hitcode-Bit 0x10000 "alle"). */
@@ -806,8 +806,8 @@ static void abschnitt_strecke(void)
           unsigned r0 = re15_esp_granate_resolver_calls(); int32_t py = 0;
           for (int k = 0; k < 20 && re15_esp_granate_resolver_calls() == r0; k++) re15_esp_fx_tick(NULL);
           for (int i = 0; i < s_re2se_n; i++) if (s_re2se_code[i] == RE15_GRANATE_R35_SE_EXPLOSION) py = s_re2se_pos[i][1];
-          PRUEF(234, d->hp == 100 - 1000 && py < -3100 && py > -4000,   /* Runde 41 GR: 1000 @0x8006f41c */
-                "HOCH-Wandzuendung bei P.y %d (ueber der ersten Pruefhoehe -3100, unter -4000): stehender Zombie 700 vor der Wand getroffen, hp %d (-900)",
+          PRUEF(234, d->hp == 100 - RE15_GRANATE_DG && py < -3100 && py > -4000,   /* Runde 41 WS: D_G 251 (vorher 1000) */
+                "HOCH-Wandzuendung bei P.y %d (ueber der ersten Pruefhoehe -3100, unter -4000): stehender Zombie 700 vor der Wand getroffen, hp %d (-151)",
                 (int)py, d->hp);
           g_actors[1].active = 0; }
 

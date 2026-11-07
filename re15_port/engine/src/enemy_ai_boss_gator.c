@@ -76,9 +76,10 @@ extern void    re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, i
 extern re15_actor_t g_actors[];
 
 /* ==== DESIGN-Konstanten (Nutzer-Auftrag 2026-09-10; KEINE Original-Werte) ==== */
-#define GB_HP   RE15_GR2_HP_INIT /* Runde 41 Spur B: RE2-Sockel 25300 = 25000 + [0x801045bc] (INIT
-                                 * @0x80100518-580); Beschuss toetet nicht, < 25000 = geschwaecht
-                                 * (@0x80101ebc-dc). Vorher DESIGN 3000. */
+#define GB_HP   RE15_GR2_HP_INIT /* Runde 41 Spur B: RE2-Sockel; Spur WS H3: 25240 = 25000 + [0x801045ec]/[0x801045ee]
+                                 * = 240 mit Bit 0x40 (`ori v0,v0,0x40` @0x8002b4ac; INIT @0x80100518-580, Laden
+                                 * @0x8010053c/@0x8010054c), vorher 25300 = [0x801045bc] ohne das Bit. Beschuss toetet
+                                 * nicht, < 25000 = geschwaecht (@0x80101ebc-dc). Vorher DESIGN 3000. */
 #define GB_AGGRO         9000   /* DESIGN: ~halbe Pool-Diagonale (Pool 16100x21600) */
 #define GB_BITE_TYPE        5   /* byte-true dmg_table[5] = 50 (DAT_8006f418) */
 #define GB_FLINCH_STEP    300   /* DESIGN: 10%-Schwellen von GB_HP */

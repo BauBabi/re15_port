@@ -3,7 +3,8 @@
  * als Bausteine fuer den ROOM2090-Boss. Belege: analysis/befunde_runde41/B_re2gator.md §2.
  *
  * Was aus RE2 kommt (byte-belegt, Adresse je Konstante):
- *   - HP-Sockel 25300 / Schwaeche < 25000 (INIT @0x80100518-580, Selektor @0x80101ebc-dc)
+ *   - HP-Sockel 25240 (Spur WS H3: Bit 0x40 gesetzt @0x8002b4ac -> [0x801045ec]/[0x801045ee] = 240) / Schwaeche < 25000
+ *     (INIT @0x80100518-580, Selektor @0x80101ebc-dc)
  *   - Hysterese Schwimmen (Clip 0, Blend 32 @0x80100c38) <-> Paddeln (Clip 1, Blend 4 @0x80100cfc)
  *     ueber +0x1F0 >= 0x65 / < 0x5a und die Biss-Sperre +0x238 (Sub-1-Pre @0x80100b20-c08)
  *   - Wurzelgeschwindigkeit je Bild = Differenz der kumulierten Versatz-Bytes 6..11 zweier

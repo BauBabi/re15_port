@@ -358,7 +358,7 @@ static void teil_f(void)
     const int32_t P[3] = { 100800, -800, 100000 };
     static const int16_t box[4] = { -800, 0, 400, 200 };
     int n = re15_re2_gl_apply(P, 0, box, 0x30011u);
-    CHECK(84, n != 0 && z->hp < 0 && z->state == 3 && z->sub_state_1 == 18, "Rakete: Applier-Treffer -> Art 9 (1000/900) -> Tod, +0x5 = 18; hp=%d ss1=%d", z->hp, z->sub_state_1);
+    CHECK(84, n != 0 && z->hp < 0 && z->state == 3 && z->sub_state_1 == 18, "Rakete: Applier-Treffer -> Art 9 (900 @0x800A426C, Spur WS) -> Tod, +0x5 = 18; hp=%d ss1=%d", z->hp, z->sub_state_1);
     /* GL Explosiv ueber den Applier (0x10020009 -> Art 6, +0x5 = 15) */
     z = mk(RE15_ACTOR_SLOT_PLAYER + 1, 0x10, 100800, 0, 100000, 250);
     static const int16_t box2[4] = { -2000, 0, 1000, 500 };

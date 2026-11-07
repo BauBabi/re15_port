@@ -1,0 +1,129 @@
+Spur WS - Abnahme 1 - eigene Gegenprobe: test_r41_granate.c des Kopfes ac72cd3cb gegen die Engine 9e0066c26
+(git archive, 232 Objekte selbst uebersetzt mit den Flags aus ninja -t commands; Link wie der echte Bau).
+
+== alt_ws.log (FAIL-/ok-Zeilen und Summe)
+FAIL 140: eine Granate (D_G 251) toetet jeden Standard-Typ aus seiner hoechsten HP unter RE2-KI, RE1.5-KI und MIXED: 0/39
+FAIL 141: 0x11 mit 250 HP: eine Granate -> HP -750 Zustand 3 (soll -1, 3: 'gerade so')
+FAIL 142: Dummy mit D_G = 251 HP: eine Granate -> HP -749 Zustand 3 (soll 0, 2: lebt mit 0 HP, `bgez` @0x80013014 - kleinerer Wert als 251 toetete den 0x11 nicht)
+ok   143: RE15_GRANATE_DG = 251 (soll 250 + 1)
+FAIL 144: Rakete je Port-Typ = RE2 Zeile 17 K0 unter RE2-KI, RE1.5-KI und MIXED: 29/60
+ok   145: Gegenprobe: alle 8 Werte des alten Stands (Riesenform 1000, G5 80, Gorilla 320, 1000 an Standard, Gorilla-Rakete 1000, Gator 25300/250, Birkin-Rakete 1000) und D_G 250 verfehlen die Sollzahlen: 8/8
+ok   146: Rechnung neu: Riesenform 4 Raketen, G5 4 Raketen, 0x11 1 Granate, Gator 1 Granate / 3 Raketen bis zur Schwaeche
+test_r41_granate: 4 Fehler, erste Pruefung 140
+
+== alt_boss.log (FAIL-/ok-Zeilen und Summe)
+FAIL 70: Gorilla 0x27 (1141): Form-HP 360 (soll 360), Granate 320 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+FAIL 110: Gorilla 0x27 (1141): Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 2)
+FAIL 71: Alligator 0x23 RE1.5-KI (ausserhalb 2090): Form-HP 300 (soll 300), Granate 250 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+FAIL 111: Alligator 0x23 RE1.5-KI (ausserhalb 2090): Rakete 1000 (soll 110 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 3)
+FAIL 72: Birkin 0x30 Mensch 3070 (grid 0x10): Form-HP 600 (soll 600), Granate 490 (soll D_G 251), 2 Granaten bis zum Formende (soll 3)
+FAIL 112: Birkin 0x30 Mensch 3070 (grid 0x10): Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 4)
+FAIL 73: Birkin 0x30 5080 (grid 0x13): Form-HP 600 (soll 600), Granate 490 (soll D_G 251), 2 Granaten bis zum Formende (soll 3)
+FAIL 113: Birkin 0x30 5080 (grid 0x13): Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 4)
+FAIL 74: Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10): Form-HP 600 (soll 600), Granate 490 (soll D_G 251), 2 Granaten bis zum Formende (soll 3)
+FAIL 114: Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10): Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 4)
+FAIL 75: Birkin 0x30 Labor 50E0 (grid 0x10): Form-HP 600 (soll 600), Granate 490 (soll D_G 251), 2 Granaten bis zum Formende (soll 3)
+FAIL 115: Birkin 0x30 Labor 50E0 (grid 0x10): Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 4)
+FAIL 76: Birkin 0x30 Form 1 3071 (grid 0x01): Form-HP 600 (soll 600), Granate 290 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+FAIL 116: Birkin 0x30 Form 1 3071 (grid 0x01): Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 3)
+FAIL 77: Birkin 0x30 Form 1 5090 (grid 0x13): Form-HP 600 (soll 600), Granate 290 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+FAIL 117: Birkin 0x30 Form 1 5090 (grid 0x13): Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 3)
+FAIL 78: Birkin 0x30 waehrend der Mutation (3071): Form-HP 300 (soll 300), Granate 190 (soll D_G 251), 999 Granaten bis zum Formende (soll 999)
+FAIL 118: Birkin 0x30 waehrend der Mutation (3071): Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 999 Raketen bis zum Formende (soll 999)
+FAIL 79: Birkin 0x30 nach der Mutation 3071: Form-HP 300 (soll 300), Granate 190 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+FAIL 119: Birkin 0x30 nach der Mutation 3071: Rakete 1000 (soll 200 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 2)
+FAIL 80: Bahnsteig-/Riesenform 5090 (G4-Eintritt): Form-HP 1000 (soll 1000), Granate 890 (soll D_G 251), 2 Granaten bis zum Formende (soll 4)
+FAIL 120: Bahnsteig-/Riesenform 5090 (G4-Eintritt): Rakete 1000 (soll 301 = RE2 Zeile 17 K0), 2 Raketen bis zum Formende (soll 4)
+FAIL 130: Riesenform: HP nach jeder Rakete 0, -1000, -99999, -99999 (soll 699, 398, 97, -204; nach 3 Raketen lebt sie mit 97)
+FAIL 81: G5 0x36 5090: Form-HP 600 (soll 600), Granate 80 (soll D_G 251), 8 Granaten bis zum Formende (soll 3)
+ok   121: G5 0x36 5090: Rakete 200 (soll 200 = RE2 Zeile 17 K0), 4 Raketen bis zum Formende (soll 4)
+ok   131: G5: HP nach jeder Rakete 400, 200, 0, -200 (soll 400, 200, 0, -200; mit 0 HP lebt er, `bgez` @0x80047284)
+FAIL 82: Gator-Boss 0x23 2090 (bis zur Schwaeche): Form-HP 25300 (soll 25240), Granate 250 (soll D_G 251), 2 Granaten bis zum Formende (soll 1)
+FAIL 122: Gator-Boss 0x23 2090 (bis zur Schwaeche): Rakete 1000 (soll 110 = RE2 Zeile 17 K0), 1 Raketen bis zum Formende (soll 3)
+FAIL 132: Gator-Boss: eine Granate 25240 -> 25050 < 25000 (Schwaeche @0x80101ec4, H3)
+test_r41_granate: 27 Fehler, erste Pruefung 70
+
+== neu_ws.log (FAIL-/ok-Zeilen und Summe)
+ok   140: eine Granate (D_G 251) toetet jeden Standard-Typ aus seiner hoechsten HP unter RE2-KI, RE1.5-KI und MIXED: 39/39
+ok   141: 0x11 mit 250 HP: eine Granate -> HP -1 Zustand 3 (soll -1, 3: 'gerade so')
+ok   142: Dummy mit D_G = 251 HP: eine Granate -> HP 0 Zustand 2 (soll 0, 2: lebt mit 0 HP, `bgez` @0x80013014 - kleinerer Wert als 251 toetete den 0x11 nicht)
+ok   143: RE15_GRANATE_DG = 251 (soll 250 + 1)
+ok   144: Rakete je Port-Typ = RE2 Zeile 17 K0 unter RE2-KI, RE1.5-KI und MIXED: 60/60
+ok   145: Gegenprobe: alle 8 Werte des alten Stands (Riesenform 1000, G5 80, Gorilla 320, 1000 an Standard, Gorilla-Rakete 1000, Gator 25300/250, Birkin-Rakete 1000) und D_G 250 verfehlen die Sollzahlen: 8/8
+ok   146: Rechnung neu: Riesenform 4 Raketen, G5 4 Raketen, 0x11 1 Granate, Gator 1 Granate / 3 Raketen bis zur Schwaeche
+test_r41_granate: ALLE PRUEFUNGEN GRUEN
+
+== neu_boss.log (FAIL-/ok-Zeilen und Summe)
+ok   70: Gorilla 0x27 (1141): Form-HP 360 (soll 360), Granate 251 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+ok   110: Gorilla 0x27 (1141): Rakete 200 (soll 200 = RE2 Zeile 17 K0), 2 Raketen bis zum Formende (soll 2)
+ok   71: Alligator 0x23 RE1.5-KI (ausserhalb 2090): Form-HP 300 (soll 300), Granate 251 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+ok   111: Alligator 0x23 RE1.5-KI (ausserhalb 2090): Rakete 110 (soll 110 = RE2 Zeile 17 K0), 3 Raketen bis zum Formende (soll 3)
+ok   72: Birkin 0x30 Mensch 3070 (grid 0x10): Form-HP 600 (soll 600), Granate 251 (soll D_G 251), 3 Granaten bis zum Formende (soll 3)
+ok   112: Birkin 0x30 Mensch 3070 (grid 0x10): Rakete 200 (soll 200 = RE2 Zeile 17 K0), 4 Raketen bis zum Formende (soll 4)
+ok   73: Birkin 0x30 5080 (grid 0x13): Form-HP 600 (soll 600), Granate 251 (soll D_G 251), 3 Granaten bis zum Formende (soll 3)
+ok   113: Birkin 0x30 5080 (grid 0x13): Rakete 200 (soll 200 = RE2 Zeile 17 K0), 4 Raketen bis zum Formende (soll 4)
+ok   74: Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10): Form-HP 600 (soll 600), Granate 251 (soll D_G 251), 3 Granaten bis zum Formende (soll 3)
+ok   114: Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10): Rakete 200 (soll 200 = RE2 Zeile 17 K0), 4 Raketen bis zum Formende (soll 4)
+ok   75: Birkin 0x30 Labor 50E0 (grid 0x10): Form-HP 600 (soll 600), Granate 251 (soll D_G 251), 3 Granaten bis zum Formende (soll 3)
+ok   115: Birkin 0x30 Labor 50E0 (grid 0x10): Rakete 200 (soll 200 = RE2 Zeile 17 K0), 4 Raketen bis zum Formende (soll 4)
+ok   76: Birkin 0x30 Form 1 3071 (grid 0x01): Form-HP 600 (soll 600), Granate 251 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+ok   116: Birkin 0x30 Form 1 3071 (grid 0x01): Rakete 200 (soll 200 = RE2 Zeile 17 K0), 3 Raketen bis zum Formende (soll 3)
+ok   77: Birkin 0x30 Form 1 5090 (grid 0x13): Form-HP 600 (soll 600), Granate 251 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+ok   117: Birkin 0x30 Form 1 5090 (grid 0x13): Rakete 200 (soll 200 = RE2 Zeile 17 K0), 3 Raketen bis zum Formende (soll 3)
+ok   78: Birkin 0x30 waehrend der Mutation (3071): Form-HP 300 (soll 300), Granate 251 (soll D_G 251), 999 Granaten bis zum Formende (soll 999)
+ok   118: Birkin 0x30 waehrend der Mutation (3071): Rakete 200 (soll 200 = RE2 Zeile 17 K0), 999 Raketen bis zum Formende (soll 999)
+ok   79: Birkin 0x30 nach der Mutation 3071: Form-HP 300 (soll 300), Granate 251 (soll D_G 251), 2 Granaten bis zum Formende (soll 2)
+ok   119: Birkin 0x30 nach der Mutation 3071: Rakete 200 (soll 200 = RE2 Zeile 17 K0), 2 Raketen bis zum Formende (soll 2)
+ok   80: Bahnsteig-/Riesenform 5090 (G4-Eintritt): Form-HP 1000 (soll 1000), Granate 251 (soll D_G 251), 4 Granaten bis zum Formende (soll 4)
+ok   120: Bahnsteig-/Riesenform 5090 (G4-Eintritt): Rakete 301 (soll 301 = RE2 Zeile 17 K0), 4 Raketen bis zum Formende (soll 4)
+ok   130: Riesenform: HP nach jeder Rakete 699, 398, 97, -204 (soll 699, 398, 97, -204; nach 3 Raketen lebt sie mit 97)
+ok   81: G5 0x36 5090: Form-HP 600 (soll 600), Granate 251 (soll D_G 251), 3 Granaten bis zum Formende (soll 3)
+ok   121: G5 0x36 5090: Rakete 200 (soll 200 = RE2 Zeile 17 K0), 4 Raketen bis zum Formende (soll 4)
+ok   131: G5: HP nach jeder Rakete 400, 200, 0, -200 (soll 400, 200, 0, -200; mit 0 HP lebt er, `bgez` @0x80047284)
+ok   82: Gator-Boss 0x23 2090 (bis zur Schwaeche): Form-HP 25240 (soll 25240), Granate 251 (soll D_G 251), 1 Granaten bis zum Formende (soll 1)
+ok   122: Gator-Boss 0x23 2090 (bis zur Schwaeche): Rakete 110 (soll 110 = RE2 Zeile 17 K0), 3 Raketen bis zum Formende (soll 3)
+ok   132: Gator-Boss: eine Granate 25240 -> 24989 < 25000 (Schwaeche @0x80101ec4, H3)
+test_r41_granate: ALLE PRUEFUNGEN GRUEN
+
+=== Umgekehrte Gegenprobe: die Riegel-Dateien VOR WS (9e0066c26) gegen die Engine des Kopfes (engine/libre15_engine.a des Baus)
+    (zeigt: die Riegel mussten wegen der Engine-Aenderung nachgezogen werden, und zwar genau an diesen Stellen)
+
+== probe_r34_schaden (Datei 9e0066c26)
+FAIL 13: freier Gegner (Gorilla, Bossschaden 320): hp=-71 state=3 +5=9 +6=1 n=1
+FAIL 13: 13b normaler Gegner 0x29: hp=-71 (-820, 1000 @0x8006f41c) state=3 n=1
+FAIL 99: Import-Zombie Direktaufruf: Art 5 -> 50 (50), Art 2 -> 251 (1000)
+FAIL 31: HE 0x10 (1000): n=1 hp=-171 st=3 +5=9 +6=0 1D2=1 1D3=15 gl=1 pool152=13
+FAIL 34: Brad: hp=-1 st=3 +5=9 1D2=1 (1)
+FAIL 35: 0x16: HE 49 (-700) Saeure 100 (100) Brand 220 (220)
+FAIL 37: RE1.5 ohne Import: hp=-171 +6=1 1D3=0 gl=0
+FAIL 38: RE1.5 mit Import: hp=-171 +6=1 +5=9 gl=0
+probe_r34_schaden alle: 8 Fehler (erste Pruefung 13)
+
+== probe_r34_wurf (Datei 9e0066c26)
+FAIL 24: Dummy 0x27: hp -71 state 3 +5 9 +6 1 (soll -140/3/9/1)
+probe_r34_wurf: 1 Fehler, erste Pruefung 24
+
+== test_r35_granate (Datei 9e0066c26)
+FAIL 112: Gegner 0x27 ueber die Reichweite der Wandexplosion getroffen: hp -71 (-140), Zustand 3 (3), +0x5 9 (9)
+FAIL 120:    Schaden 1000 (@0x8006f41c, Runde 41 GR): hp -151, Zustand 3, +0x5 9 (soll -900/3/9)
+FAIL 121:    Schaden 1000 (@0x8006f41c, Runde 41 GR): hp -151, Zustand 3, +0x5 9 (soll -900/3/9)
+FAIL 122:    Schaden 1000 (@0x8006f41c, Runde 41 GR): hp -151, Zustand 3, +0x5 9 (soll -900/3/9)
+FAIL 124:    Schaden 1000 (@0x8006f41c, Runde 41 GR): hp -151, Zustand 3, +0x5 9 (soll -900/3/9)
+FAIL 126:    Schaden 1000 (@0x8006f41c, Runde 41 GR): hp -151, Zustand 3, +0x5 9 (soll -900/3/9)
+FAIL 127:    Schaden 1000 (@0x8006f41c, Runde 41 GR): hp -151, Zustand 3, +0x5 9 (soll -900/3/9)
+FAIL 130:    Schaden 1000 (@0x8006f41c, Runde 41 GR): hp -151, Zustand 3, +0x5 9 (soll -900/3/9)
+FAIL 234: HOCH-Wandzuendung bei P.y -3525 (ueber der ersten Pruefhoehe -3100, unter -4000): stehender Zombie 700 vor der Wand getroffen, hp -151 (-900)
+test_r35_granate: 9 Fehler, erste Pruefung 112
+
+== probe_r34_reaktion (Datei 9e0066c26)
+ok   103: DoT: 50 HP-Stufen in 397 Gang-Bildern, Takt-Fehler 0, Abstand != 8: 0
+ok   113: DoT: 51 HP-Stufen in 416 Gang-Bildern, Takt-Fehler 0, Abstand != 8: 0
+FAIL 190: G5 HE: hp 600 -> 349 (600 - 80), +0x1D3 15 (15), +0x93 0x01, +0x5 9 (9)
+FAIL 194: 2. Treffer: Sub 0xf (0xF STAGGER), Akku 0 / Fenster 0 (zurueckgesetzt @0x80102a84-90), hp 98 (440)
+FAIL 212: Feuer 0x26 (RE2-Flavor, kein Baby): hp 100 -> -151 (-900), Zustand 3 (3)
+probe_r34_reaktion alle: 3 Fehler (erste Pruefung 190)
+
+== test_birkin_bahnsteig (Datei 9e0066c26)
+FAIL: M4 STAGE5/ROOM5090.RDT: Rakete nicht toedlich (hp 100 st 2)
+FAIL: M4 STAGE5/ROOM5091.RDT: Rakete nicht toedlich (hp 100 st 2)
+test_birkin_bahnsteig: 2 Fehler

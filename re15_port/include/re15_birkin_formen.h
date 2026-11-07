@@ -60,7 +60,8 @@ void re15_bf_modell_hook(void (*fn)(uint8_t type));
 #define RE15_BIRKIN_HP_MUTATION   (150 * RE15_BIRKIN_HP_FAKTOR)   /* 0x96 @0x80118094 */
 #define RE15_BIRKIN_HP_REVIVE     ( 50 * RE15_BIRKIN_HP_FAKTOR)   /* 0x32 @0x8011a530 */
 
-/* Runde 41 Spur GR, Nachbesserung 2 (Bossschaden der Handgranate, re15_damage.c): Start-HP und Ende (hp < ende) der
+/* Runde 41 Spur GR, Nachbesserung 2 (damals Bossschaden der Handgranate; seit Spur WS nur noch das Riesenform-Praedikat der
+ * Rakete in re15_rakete_schaden, re15_damage.c): Start-HP und Ende (hp < ende) der
  * laufenden Form eines 0x30 - INIT/0 (Form-2-Bit vom Spawn), INIT/MUT_TOR (Form 1 bis zur Mutation), MUTATION/0
  * (Mutation laeuft, danach), RE15_BB_FORM_HP/0 (Bahnsteig-Form). RE15_BB_FORM_HP = die Zuweisung im Eintritt von re15_bb_tick
  * (birkin_bahnsteig.c).

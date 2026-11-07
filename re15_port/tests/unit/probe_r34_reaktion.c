@@ -387,7 +387,7 @@ static void teil_ausgang(void)
               "Spalte 0 von Hand: Ende %d (7), hp %d (<0), f10e 0x%04X (kein Bit 0), Zelle %d (1 = 0x80108530)", ende,
               e->hp, e->re2z_f10e, re15_re2z_last_death_handler());
         else   /* Lauf unit_r34_reaktion_ohne80 (Spur GR N1): ohne 80%-Gore der RE2-Kriecher 0x80107438 wie vor Spur GR;
-                * HP -990 statt 10, weil die Handgranate 1000 macht (haengt nicht am Schalter) */
+                * HP negativ, weil die Handgranate toetet (Spur WS: D_G 251; haengt nicht am Schalter) */
         CHECK(221, ende == 1 && (e->re2z_f10e & 1u) && re15_re2z_last_death_handler() == 2,
               "Spalte 0 von Hand (80%%-Gore aus): Ende %d (1), hp %d, f10e 0x%04X (Bit 0), Zelle %d (2 = 0x80107438)", ende,
               e->hp, e->re2z_f10e, re15_re2z_last_death_handler());
@@ -408,8 +408,8 @@ static void teil_ausgang(void)
         const int sp_br = e->re2z_hits1d2;
         frame();
         const int h_br = re15_re2z_last_hit_handler();
-        /* Runde 35 Spur A: HE-Spalte 1. Runde 41 Spur GR: Brad (dicker Zombie) STIRBT jetzt an HE (250 - 1000
-         * @0x8006f41c) -> Zustand 3, kein HURT; Brand (200) laesst ihn weiter in HURT[10][0] = 0x80105BC0. */
+        /* Runde 35 Spur A: HE-Spalte 1. Runde 41 Spur GR: Brad (dicker Zombie) STIRBT an HE -> Zustand 3, kein HURT;
+         * Spur WS: "gerade so" 250 - 251 = -1 (D_G @0x801008C8 + 1). Brand (200) laesst ihn weiter in HURT[10][0] = 0x80105BC0. */
         (void)h_he;
         CHECK(222, st_he == 3 && sp_he == 1 && sp_br == 0 && h_br == 2,
               "Brad HE: st %d (3) Spalte %d (1); Brand: Spalte %d (0) Handler %d (2 = 0x80105BC0)",
@@ -850,9 +850,8 @@ static void teil_re15(void)
     /* ---- 0x23 Alligator (Land, grid ungerade): Clip 13, Leiche nach Bild 20 ---- */
     {
         re15_actor_t *e = re15_arena(0x23, 1);
-        /* Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL, Nutzerentscheid): Bosse sterben nicht mehr an EINER Granate aus
-         * voller HP (Alligator 300 - 250 = 50 bleibt, re15_granate_schaden). Geprueft wird der Todesablauf nach Zeile 9 ->
-         * angeschlagener Alligator (HP 100 < 250), die Granate bleibt der toedliche Treffer. */
+        /* Runde 41 Spur WS: eine Granate (D_G 251) aus voller HP laesst den Alligator mit 300 - 251 = 49 stehen. Geprueft wird
+         * der Todesablauf nach Zeile 9 -> angeschlagener Alligator (HP 100 < 251), die Granate bleibt der toedliche Treffer. */
         e->hp = 100;
         explosion_rel(e, 300, 2);
         const int st = e->state;
@@ -892,7 +891,7 @@ static void teil_re15(void)
     {
         re15_actor_t *e = re15_arena(0x30, 0x13);
         e->birkin_flags = 0; e->birkin_grab = 0;                  /* kein Mutations-Riegel (+0x1dd & 8) wie test_birkin_ai (3) */
-        e->hp = 100;   /* Runde 41 Spur GR NB2: 300-Form, Handgranate 190 (re15_granate_schaden) -> angeschlagen, damit
+        e->hp = 100;   /* Runde 41 Spur WS: Handgranate D_G 251 (re15_granate_schaden) -> angeschlagen (100 < 251), damit
                         * die Granate der toedliche Treffer bleibt (Thema: Todes-Schwanz, nicht der Schaden) */
         explosion_rel(e, 300, 2);
         const int st = e->state;
@@ -984,12 +983,12 @@ static void teil_g5(void)
 {
     printf("== g5 (B9)\n");
     int akku, takt, fenster, sub;
-    /* (190) Granate Zeile 9: HP 600 - 80 (E16, Record @0x800A5F7C), Sperre 15 (w1 @0x800A5F80). */
+    /* (190) Granate: HP 600 - 251 (Spur WS: D_G 250 @0x801008C8 + 1; vorher E16 80 @0x800A5F7C), Sperre 15 (w1 @0x800A5F80). */
     re15_actor_t *e = g5_arena();
     const int16_t hp0 = e->hp;
     explosion_bei(e, 300, 2);
-    CHECK(190, hp0 == 600 && e->hp == 520 && e->re2z_self1d3 == 15 && (e->hit_react & 1u) && e->sub_state_1 == 9,
-          "G5 HE: hp %d -> %d (600 - 80), +0x1D3 %d (15), +0x93 0x%02X, +0x5 %d (9)", hp0, e->hp,
+    CHECK(190, hp0 == 600 && e->hp == 600 - RE15_GRANATE_DG && e->re2z_self1d3 == 15 && (e->hit_react & 1u) && e->sub_state_1 == 9,
+          "G5 HE: hp %d -> %d (600 - 251 = 349), +0x1D3 %d (15), +0x93 0x%02X, +0x5 %d (9)", hp0, e->hp,
           e->re2z_self1d3, e->hit_react, e->sub_state_1);
     g5_bild(e);
     re15_g5_flinch_zustand(&akku, &takt, &fenster, &sub);
@@ -1015,8 +1014,8 @@ static void teil_g5(void)
     explosion_bei(e, 300, 2);
     g5_bild(e);
     re15_g5_flinch_zustand(&akku, &takt, &fenster, &sub);
-    CHECK(194, sub == 0xF && akku == 0 && fenster == 0 && e->hp == 440,
-          "2. Treffer: Sub 0x%x (0xF STAGGER), Akku %d / Fenster %d (zurueckgesetzt @0x80102a84-90), hp %d (440)",
+    CHECK(194, sub == 0xF && akku == 0 && fenster == 0 && e->hp == 600 - 2 * RE15_GRANATE_DG,
+          "2. Treffer: Sub 0x%x (0xF STAGGER), Akku %d / Fenster %d (zurueckgesetzt @0x80102a84-90), hp %d (600 - 2 x 251 = 98)",
           sub, akku, fenster, e->hp);
     /* (195) NEGATIV: ein einzelner Treffer taumelt nie; der Akku zerfaellt je 16 Bilder, das Fenster schliesst
      *       bei 0 (@0x80100150). */
@@ -1112,7 +1111,8 @@ static void teil_treppe(void)
     while (re15_stair_active() && n < 900) { re15_stair_tick(&s_rdt, NULL, NULL); n++; }
     CHECK(202, !re15_stair_active() && !(pl->hit_react & 1u),
           "Treppe beendet nach %d Takten, +0x93 0x%02X (Bit 0 frei @0x80038eb8-c0)", n, pl->hit_react);
-    /* (203) NEGATIV-Gegenstueck: nach der Treppe toetet dieselbe Explosion (1000 @DAT_8006f41c), cmd 3 ->
+    /* (203) NEGATIV-Gegenstueck: nach der Treppe toetet dieselbe Explosion (Spielerzweig: 1000 @DAT_8006f41c, Spur WS
+     *       aendert nur den Gegnerzweig), cmd 3 ->
      *       Clip 7 (@0x80036778-80). */
     pl->hp = 100; pl->state = 0;
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1;
@@ -1288,8 +1288,8 @@ static void teil_zensus(void)
     CHECK(210, haenger == 0, "Zensus: %d Laeufe, %d Haenger (Zustand 2/3 nach 1500 Bildern nicht verlassen)", laeufe,
           haenger);
     CHECK(211, unerwartet == 0, "Zensus: %d unerwartete Treffer-Ergebnisse (Immunitaet/Ausschluss)", unerwartet);
-    /* (212) Feuer-Emitter 0x26 (ROOM1090, RE1.5-Typ, KEIN RE2-Baby) im RE2-Flavor: Granate = 1000
-     *       (DAT_8006f41c) wie im RE1.5-Flavor, nicht die Baby-Zeile des RE2-Modells. */
+    /* (212) Feuer-Emitter 0x26 (ROOM1090, RE1.5-Typ, KEIN RE2-Baby) im RE2-Flavor: Granate = D_G 251 (Spur WS; vorher 1000
+     *       @0x8006f41c) wie im RE1.5-Flavor, nicht die Baby-Zeile des RE2-Modells. 100 - 251 = -151. */
     {
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
         re15_actor_init(); re15_enemy_reset();
@@ -1302,8 +1302,8 @@ static void teil_zensus(void)
         e->active = 1; e->type = 0x26; e->hp = 100; e->state = 1;
         re15_enemy_apply_hitbox(e, 0x26);
         explosion_rel(e, 300, 2);
-        CHECK(212, e->hp == -900 && e->state == 3,
-              "Feuer 0x26 (RE2-Flavor, kein Baby): hp 100 -> %d (-900), Zustand %d (3)", e->hp, e->state);
+        CHECK(212, e->hp == 100 - RE15_GRANATE_DG && e->state == 3,
+              "Feuer 0x26 (RE2-Flavor, kein Baby): hp 100 -> %d (-151), Zustand %d (3)", e->hp, e->state);
     }
 }
 

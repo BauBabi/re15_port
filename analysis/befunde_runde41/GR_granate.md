@@ -5,6 +5,12 @@ Dossier wird FORTLAUFEND geschrieben (Sitzungslimit-Schutz).
 
 ## N3. NACHBESSERUNG 3 (2026-11-02) — Birkin-HP x 2, Riesenform 1000, Gator-Boss nach der Boss-Regel, ROOM3080 gemessen
 
+> ⛔ **ÜBERHOLT durch Spur WS (Nutzerentscheid 2026-11-07, `WS_waffenschaden.md`):** "mach wie resident evil 2. Auch bei der Granate.
+> mach sie so stark, daß sie gerade so die Standard Gegner mit einer Granate töten kann." Die Boss-Regel (Rest R, danach N
+> Pistolenschüsse), die Boss-Tabelle N3.3 und der Gator-Boss nach der Boss-Regel (250) gelten nicht mehr: jeder Gegner nimmt
+> D_G = 251 (250 @0x801008C8 + 1). Der Gator-Boss startet byte-true mit 25240 statt 25300 (WS H3, Bit 0x40 @0x8002b4ac).
+> Gültig bleiben die Birkin-HP x 2 (F1), die Riesenform-HP 1000 (F2) und der Befund ROOM3080 (N3.4).
+
 > Nutzer auf F1-F5: "1. ja, 2. ja, 3. huh, wie jetzt das ist doch ein Boss fight. Warum soll die Granate nicht wirken ?...
 > zu 4. Ja, nicht einfach mit einer Granate beenden."
 
@@ -230,6 +236,11 @@ Zusammenfuehren:
 ---
 
 ## N2. NACHBESSERUNG 2 (2026-11-02) — Schaden der Handgranate: normale Gegner 1000, Bosse nach Form (Nutzerentscheide)
+
+> ⛔ **ÜBERHOLT durch Spur WS (Nutzerentscheid 2026-11-07, `WS_waffenschaden.md`):** Die Handgranate macht nicht mehr 1000 an
+> normalen Gegnern und nicht mehr "Form-HP − Ende − R" an Bossen, sondern an JEDEM Gegner D_G = 251 (250 @0x801008C8 + 1,
+> Todesregel `bgez` @0x80013014). Die G5-Ausnahme (80) entfällt ebenfalls. Gültig bleibt nur "ein Wert für alle normalen Gegner,
+> unabhängig von der KI".
 
 > "Naja, die Granate hat halt einen Schaden, sind die Gegner damit tot, sind sie tot. Der Gorilla ist ein Endgegner, wenn
 > der mit einer Granate stirbt ist das etwas schwach."

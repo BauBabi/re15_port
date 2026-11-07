@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+S="C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/ws/abn1"
+B="C:/workspace/git/reAi_v2/.claude/worktrees/r41_waffen/analysis/befunde_runde41/WS_belege/abn1"
+M="$S/montage.py"
+mkdir -p "$B"
+python "$M" "$S/laeufe/zl_wurf" 2,4 112,116,120,124,132,148 "$B/abn1_01_zombies1140_leon_echter_wurf.jpg" "ROOM1140 Leon, echter TIEF-Wurf (Aufstellung integration_r35_granate zombie), eine Granate trifft vier Zombies (eingriffe=4): 0x10 s2 50 -> -201, s3 80 -> -171, 0x11 s4/s5 250 -> -1 ('gerade so'), alle Zustand 3 -> 7. Z = Zustand" 3
+python "$M" "$S/laeufe/ze_16" 1,2 116,120,128,152 "$B/abn1_02_zombie16_1221_elza.jpg" "ROOM1221 Elza, Zombie 0x16: RE15_FORCE_EXPLOSION=2@120:1 (echte Explosionsroutine Art 2), Treffer=2: s1 95 -> -156, s2 75 -> -176, beide Zustand 3 -> 7" 2
+python "$M" "$S/laeufe/hund_e" 2 116,120,128,152 "$B/abn1_03_hund11c1_elza.jpg" "ROOM11C1 Elza, Hund 0x20: Explosion Art 2 an s2, 98 -> -153, Zustand 3 -> 7 (F142)" 2
+python "$M" "$S/laeufe/hund_l" 1 116,120,128,152 "$B/abn1_04_hund1230_leon.jpg" "ROOM1230 Leon, Hund 0x20: Explosion Art 2 an s1, 96 -> -155, Zustand 3 -> 7 (F142)" 2
+python "$M" "$S/laeufe/spinne_l" 2 116,120,128,152 "$B/abn1_05_spinne2030_leon.jpg" "ROOM2030 Leon, Spinne 0x25: Explosion Art 2 an s2, 111 -> -140, Zustand 3 -> 7 (F132)" 2
+python "$M" "$S/laeufe/spinne_e" 2 116,120,128,152 "$B/abn1_06_spinne2031_elza.jpg" "ROOM2031 Elza, Spinne 0x25: Explosion Art 2 an s2, 111 -> -140, Zustand 3 -> 7 (F132)" 2
+python "$M" "$S/laeufe/gorilla_l2" 2 296,306,356,416,426,436 "$B/abn1_07_gorilla11c0_leon_zwei_granaten.jpg" "ROOM11C0 Leon, Gorilla 0x27 (Boss, 360 HP, ausserhalb des Kamerabilds): F300 360 -> 109 (Z2), F360 kein Treffer (Zustand 2 = Treffer-Riegel), F420 109 -> -142 (Z3), F461 Leiche = 2 Granaten" 3
+python "$M" "$S/laeufe/gator_l2" 35 296,300 "$B/abn1_08_gator2090_leon_eine_granate.jpg" "ROOM2090 Leon, Gator-Boss 0x23 (s35): Start 25240 (H3), Explosion Art 2 F300 -> 24989 < 25000, F302 AUSLOESER geschwaecht Treffer 1 -> ROOM2080 Kanister-Szene" 2
+python "$M" "$S/laeufe/birkin_l" 1 146,158,206,218,266,278 "$B/abn1_09_birkin3070_leon_drei_granaten.jpg" "ROOM3070 Leon (Flag 4:215), Birkin 0x30 600-Form (ausserhalb des Kamerabilds): F150 600 -> 349 (+5 Fern-Rueckgabe -> 354), F210 -> 103 (+5 -> 108), F270 -> -143 Zustand 3 = 3 Granaten" 3
+python "$M" "$S/laeufe/endk_l_ma13" 2 658,666,698,730,762,778 "$B/abn1_10_riesenform5090_leon_vier_raketen.jpg" "ROOM5090 Leon, Rakete (Skript wie integration_r41_g5_tod, MA13): Riesenform F654 1000; Raketen F666 699, F698 398, F730 97 (lebt), F761 -204 Zustand 3 -> Rueckstoss-Szene (HP 1); G5 F866 600 = 4 Raketen (G4 301 @0x800A5D24)" 3
+python "$M" "$S/laeufe/endk_l_gr" 2 690,710,770,830,880,890 "$B/abn1_11_riesenform5090_leon_vier_granaten.jpg" "ROOM5090 Leon, Rakete nur bis zur Mutation (MA9), danach Explosionen Art 2 an s2: Riesenform 1000 -> 749 (F700), 498 (F760), 247 (F820), -4 (F880, Zustand 3, Rueckstoss HP 1) = 4 Granaten; G5 F991 600" 3
+python "$M" "$S/laeufe/endk_e_ma13" 1 658,666,698,730,762,778 "$B/abn1_12_riesenform5091_elza_vier_raketen.jpg" "ROOM5091 Elza, Rakete (MA13): Birkin in s1; Riesenform F654 1000; Raketen F666 699, F698 398, F730 97 (lebt), F761 -204 Zustand 3 -> Rueckstoss (HP 1); G5 F866 600 = 4 Raketen" 3
+python "$M" "$S/laeufe/endk_e_gr2" 1 690,710,770,830,880,890 "$B/abn1_13_riesenform5091_elza_vier_granaten.jpg" "ROOM5091 Elza, Rakete nur bis zur Mutation (MA9), danach Explosionen Art 2 an s1: Riesenform 1000 -> 749 (F700), 498 (F760), 247 (F820), -4 (F880, Zustand 3, Rueckstoss HP 1) = 4 Granaten; G5 F991 600" 3
+python "$M" "$S/laeufe/g5_l_fd" 2 2108,2116,2148,2180,2204,2236 "$B/abn1_14_g5_5090_leon_vier_raketen.jpg" "ROOM5090 Leon, Rakete Dauerfeuer (Skript MA80), G5 0x36 nach dem Szenenende: F2113 600 -> 400, F2144 200, F2173 0 (lebt, Z2, bgez @0x80047284), F2204 -200 (Z3) = 4 Raketen (G5 200 @0x800A601C)" 3
