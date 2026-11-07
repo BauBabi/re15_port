@@ -1,0 +1,128 @@
+# ST80 Abnahme 2 - eigene Testlaeufe (Git-Bash, PATH=/c/msys64/mingw64/bin:$PATH, SDL_ASSERT=always_ignore, --test-dir .../r41_integration/re15_port/build)
+## Bau: bash re15_port/tools/local_build.sh build
+    ninja  = /c/Python310/Scripts/ninja
+ninja: no work to do.
+=== LOCAL-BUILD-OK (build)
+
+## ctest -R "^(unit_r41_story80_|unit_r36_story_|unit_r36_kartenbits$)" -j 4
+ 1/13 Test #1348: unit_r41_story80_ablauf30c1 ........   Passed    0.08 sec
+ 2/13 Test  #652: unit_r36_story_sweep ...............   Passed    0.05 sec
+ 3/13 Test #1346: unit_r41_story80_hebetisch1151 .....   Passed    0.04 sec
+ 4/13 Test  #610: unit_r36_kartenbits ................   Passed    0.25 sec
+ 5/13 Test  #648: unit_r36_story_roy .................   Passed    0.07 sec
+ 6/13 Test  #650: unit_r36_story_schuppen ............   Passed    0.03 sec
+ 7/13 Test  #651: unit_r36_story_texte ...............   Passed    0.03 sec
+ 8/13 Test #1350: unit_r41_story80_stimmen ...........   Passed    0.01 sec
+ 9/13 Test  #653: unit_r36_story_reihenfolge .........   Passed    0.04 sec
+10/13 Test  #649: unit_r36_story_zelle ...............   Passed    0.02 sec
+11/13 Test #1347: unit_r41_story80_texte .............   Passed    0.01 sec
+12/13 Test #1349: unit_r41_story80_ablauf6030 ........   Passed    0.34 sec
+13/13 Test #1351: unit_r41_story80_reihenfolge6030 ...   Passed    0.44 sec
+100% tests passed, 0 tests failed out of 13
+Total Test time (real) =   0.53 sec
+
+## ctest -R "^(unit_r41_story80_|unit_r36_story_|unit_r36_kartenbits$|unit_r35_affen_|unit_r36_dachkiste_|unit_r37_fahrstuhl_|unit_r41_stage3szenen_a_|unit_r41_wasser20b0_|unit_r37_sperre1050_)" -j 4
+100% tests passed, 0 tests failed out of 64
+Total Test time (real) =  21.90 sec
+
+## unit_r41_story80_reihenfolge6030 -V (Auszug)
+1351: == reihenfolge6030: 1. Fuehrerstand vor dem Wagen ==
+1351:   ok: Vorbedingung (3,22)=0 (Wagen-Szene nicht gelaufen)
+1351:   ok: ROOM6030 Programm 3 lief von Bild 1 bis 1585 (1584 Bilder)
+1351:     1. Bild   28 msg 11 "Annette: Is everyone aboard?"
+1351:     2. Bild  148 msg 31 "Leon: Everyone we could find. Can you start this thing?"
+1351:     3. Bild  268 msg 13 "Annette: Certainly."
+1351:     4. Bild  466 msg 14 "Annette: If I remember the startup sequence correctly..."
+1351:     5. Bild  776 msg 15 "Leon: What's wrong?"
+1351:     6. Bild  914 msg 16 "Annette: Not enough power! The train's batteries are too low!"
+1351:     7. Bild 1034 msg 17 "Leon: I'll take care of it!"
+1351:     8. Bild 1154 msg 18 "Annette: I'll be ready to start the train when you do!"
+1351:     9. Bild 1274 msg 19 "Leon: Good luck to both of us!"
+1351:   ok: ROOM6030: genau 9 Zeilen in der Soll-Folge (gemessen 9)
+1351:   ok: ROOM6030: Stimmen-Ids = Message-Ids in derselben Folge (9)
+1351:   ok: ROOM6030: jeder angezeigte Wortlaut = Nutzerliste
+1351:   ok: vorne zuerst: keine Sherry-Zeile (kein 'Sherry'/'daughter'/'girl')
+1351:   ok: sub08 -> Fassung 'vorne zuerst' (1), volle Fassung nie (0)
+1351:   ok: danach (4,23)=1 (sub08 @0x0113A), (9,128)=1 (Nachtrag offen), (3,22)=0
+1351:   ok: Sperren (2,7)/(1,27) frei (sub08 @0x01368/@0x0136C)
+1351: == reihenfolge6030: 2. erneut vorne, noch vor dem Wagen ==
+1351:   ok: vorne vor dem Wagen, erneut: kein Text (0), keine Umleitung, Sperren (2,7)=0 (1,27)=0
+1351:   ok: (9,128) bleibt offen, solange (3,22)=0
+1351: == reihenfolge6030: 3. Wagen ==
+1351:   ok: ROOM6030 Programm 1 lief von Bild 2 bis 1811 (1809 Bilder)
+1351:     1. Bild   62 msg  0 "Leon: Hang on, Marvin. We're getting out of here."
+1351:     2. Bild  288 msg  1 "Leon: Who are you two?"
+1351:     3. Bild  409 msg 21 "John: Name's John. This is Sherry. We made it down here with a girl named Elza."
+1351:     4. Bild  555 msg  2 "Sherry: She's out there fighting the monsters!"
+1351:     5. Bild  656 msg  3 "John: She's trying to keep the outside clear so we can escape."
+1351:     6. Bild  776 msg 22 "John: She said she'd catch up with us."
+1351:     7. Bild  896 msg  4 "Leon: Why aren't you out there?"
+1351:     8. Bild 1016 msg  5 "John: She told me to stay with the kid... and look after your friend here."
+1351:     9. Bild 1161 msg  6 "Leon: Where's Annette?"
+1351:    10. Bild 1281 msg  7 "John: The woman in the lab coat? Up front, trying to start the train."
+1351:    11. Bild 1430 msg 23 "Sherry: A lab coat...? Is it Mom?!"
+1351:    12. Bild 1532 msg 24 "John: Easy, kid. Stay with me."
+1351:    13. Bild 1677 msg  8 "Leon: I'll find out. Stay here."
+1351:   ok: ROOM6030: genau 13 Zeilen in der Soll-Folge (gemessen 13)
+1351:   ok: ROOM6030: Stimmen-Ids = Message-Ids in derselben Folge (13)
+1351:   ok: ROOM6030: jeder angezeigte Wortlaut = Nutzerliste
+1351:   ok: Wagen: 'Who are you two?' (msg 1), dann Johns Vorstellung (msg 21) - Leon kennt Sherry noch nicht
+1351:   ok: (3,22)=1 nach dem Wagen (sub02 @0x00D7A)
+1351: == reihenfolge6030: 4. vorne nach dem Wagen: Nachtrag ==
+1351:   ok: ROOM6030 Programm 4 lief von Bild 1 bis 479 (478 Bilder)
+1351:     1. Bild   28 msg 40 "Leon: There's a little girl in the back... Sherry."
+1351:     2. Bild  148 msg 25 "Annette: Sherry...? My daughter is on this train? ...Thank God."
+1351:   ok: ROOM6030: genau 2 Zeilen in der Soll-Folge (gemessen 2)
+1351:   ok: ROOM6030: Stimmen-Ids = Message-Ids in derselben Folge (2)
+1351:   ok: ROOM6030: jeder angezeigte Wortlaut = Nutzerliste
+1351:   ok: sub09 -> Nachtrag genau einmal (1)
+1351:   ok: danach (9,128)=0, Sperren (2,7)=0 (1,27)=0, Cut 0 (soll 0, sub08 @0x01336)
+1351: == reihenfolge6030: 5. nochmals vorne ==
+1351:   ok: nach dem Nachtrag, erneut vorne: kein Text (0), keine Umleitung, Sperren (2,7)=0 (1,27)=0
+1351:    ganzer Weg (24 Zeilen): 11 31 13 14 15 16 17 18 19 0 1 21 2 3 22 4 5 6 7 23 24 8 40 25
+1351:   ok: jede Zeile hoechstens einmal (24 Zeilen, doppelt: -1)
+1351: reihenfolge6030: 0 Fehler
+
+## ctest -R "^(integration_r36_story_leon|integration_r36_story_elza|integration_r36_story_zug|integration_r35_zgirl_5090)$" -j 4 --timeout 3000
+1/4 Test #572: integration_r35_zgirl_5090 .......   Passed  148.57 sec
+2/4 Test #655: integration_r36_story_elza .......   Passed  273.39 sec
+3/4 Test #656: integration_r36_story_zug ........   Passed  453.20 sec
+4/4 Test #654: integration_r36_story_leon .......   Passed  524.38 sec
+100% tests passed, 0 tests failed out of 4
+Total Test time (real) = 524.46 sec
+
+## Textfolgen der Riegel-Laeufe dieses ctest-Laufs (debug.log je Lauf, nur [story80] und Message-Ids)
+== r36_story_leon_wd/lauf_bca1f985_p4b
+[story80] ROOM6030 Evt_exec sub08 -> Programm (576 B): Fuehrerstand vor dem Wagen msg 11,31 vor 'Certainly.' (NB1)
+11 31 13 14 15 16 17 18 19 
+[flow] EXIT_AT: Bild 1500 in Raum 6030 erreicht -> exit
+== r36_story_leon_wd/lauf_bca1f985_p4h
+[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26 vor 'Certainly.'
+11 12 25 26 13 14 15 16 17 18 
+[flow] EXIT_AT: Bild 1500 in Raum 6030 erreicht -> exit
+== r36_story_leon_wd/lauf_bca1f985_p4i
+[story80] ROOM6030 Evt_exec sub09 -> Programm (238 B): Fuehrerstand nach dem Wagen, Nachtrag msg 40,25 (NB1)
+40 25 
+[flow] EXIT_AT: Bild 1500 in Raum 6030 erreicht -> exit
+== r36_story_zug_wd/lauf_c6f9f7d3_p4j
+[story80] ROOM6030 Evt_exec sub08 -> Programm (576 B): Fuehrerstand vor dem Wagen msg 11,31 vor 'Certainly.' (NB1)
+11 31 13 14 15 16 17 18 19 
+[story80] ROOM6030 Evt_exec sub02 -> Programm (900 B): Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)
+0 1 21 2 3 22 4 5 6 7 23 24 8 
+[story80] ROOM6030 Evt_exec sub09 -> Programm (238 B): Fuehrerstand nach dem Wagen, Nachtrag msg 40,25 (NB1)
+40 25 
+[flow] EXIT_AT: Bild 6800 in Raum 6030 erreicht -> exit
+== r36_story_zug_wd/lauf_c6f9f7d3_p4k
+[story80] ROOM6030 Evt_exec sub02 -> Programm (900 B): Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)
+0 1 21 2 3 22 4 5 6 7 23 24 8 
+[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26 vor 'Certainly.'
+11 12 25 26 13 14 15 16 17 18 19 
+[flow] EXIT_AT: Bild 4800 in Raum 6030 erreicht -> exit
+
+## PSX-Syntax (PSn00bSDK 0.24, mipsel-none-elf-gcc -fsyntax-only -ffreestanding -DRE15_PLATFORM_PSX -Iinclude -Iengine/src -I<sdk>/include/libpsn00b)
+story80_r41.c: rc=0, 0 Byte Meldungen
+story_r36.c: rc=0, 0 Byte Meldungen
+
+## Generatoren (logs/gen_repro.py, OUT in Scratch umgebogen)
+szenen rc 0 bytegleich mit eingecheckter .inc: True
+texte rc 0 bytegleich mit eingecheckter .inc: True

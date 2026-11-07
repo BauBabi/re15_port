@@ -1,0 +1,205 @@
+# SCD-Auszuege (re15_port/tools/scd_dump_room.py auf re15_port/shared_assets/PSX/STAGE6/ROOM6030.RDT bzw. ROOM6000.RDT), ST80 Abnahme 2
+## ROOM6030 main00 (Tueren/Marken) + sub00 + sub01 + sub02 Kopf
+ROOM6030.RDT  368996 B
+header: nSprite=0 nCut=14 nOmodel=2 nItem=0 nDoor=0 nRoom_at=0 reverb=0
+main_scd=0xC30 sub_scd=0xD14
+
+### main: 0xC30..0xD14, 1 Regionen
+
+=== main00  [file 0xC32..0xD14]  (226 B)
+  0x00C32 (+0000) Door_aot_set     3b 00 02 31 00 00 14 ec 78 a1 84 03 a4 06 80 da f8 f8 66 a4 00 08 05 03 08 01 00 00 00 00 00 00  slot=0 sce=2 flags=0x31 floor=0 follow=0 rect=(-5100,-24200,900,1700)
+  0x00C52 (+0020) Door_aot_set     3b 01 02 31 01 00 ac db 78 a1 84 03 78 05 df f0 00 00 41 a4 00 00 05 03 00 00 00 00 00 00 00 00  slot=1 sce=2 flags=0x31 floor=1 follow=0 rect=(-9300,-24200,900,1400)
+  0x00C72 (+0040) Door_aot_set     3b 02 02 31 00 00 f4 b6 c0 ae dc 05 b0 04 9d 06 f0 f1 ba d8 00 0c 05 00 03 02 00 00 00 00 00 00  slot=2 sce=2 flags=0x31 floor=0 follow=0 rect=(-18700,-20800,1500,1200)
+  0x00C92 (+0060) Door_aot_set     3b 03 02 31 00 00 fe 93 46 a1 84 03 d0 07 40 6a 00 00 24 13 00 08 04 09 04 00 00 00 00 00 00 00  slot=3 sce=2 flags=0x31 floor=0 follow=0 rect=(-27650,-24250,900,2000)
+  0x00CB2 (+0080) Aot_set          2c 04 0c 31 80 00 60 cd 34 a4 84 08 a8 02 00 00 01 00 00 00  slot=4 sce=12 flags=0x31 floor=128 follow=0 rect=(-12960,-23500,2180,680)
+  0x00CC6 (+0094) Aot_set          2c 05 05 41 00 00 ee b2 1e 9c 40 06 9c 18 00 00 00 00 00 00  slot=5 sce=5 flags=0x41 floor=0 follow=0 rect=(-19730,-25570,1600,6300)
+  0x00CDA (+00A8) Aot_set          2c 06 03 31 00 00 58 b7 70 9a 40 06 e8 03 ff 00 18 04 00 00  slot=6 sce=3 flags=0x31 floor=0 follow=0 rect=(-18600,-26000,1600,1000)
+  0x00CEE (+00BC) Obj_model_set    2d 00 00 00 01 00 00 00 00 00 78 ba 00 00 d4 9a 00 00 00 0c 00 00 00 00 00 00 00 00 84 03 38 04 d0 02  obj=0x00 type=0 band=1 pos=(-17800,0,-25900) rot=(0,3072,0) box=c(0,0,0)h(900,1080,720)
+  0x00D10 (+00DE) Evt_end          01 00
+
+### sub: 0xD14..0x138C, 10 Regionen
+
+=== sub00  [file 0xD28..0xD5E]  (54 B)
+  0x00D28 (+0000) Switch           13 0a 0c 00
+  0x00D2C (+0004) Case             14 00 04 00 00 00
+  0x00D32 (+000A) Gosub            18 07
+  0x00D34 (+000C) Break            1a 00
+  0x00D36 (+000E) Eswitch          16 00
+  0x00D38 (+0010) Switch           13 0a 20 00
+  0x00D3C (+0014) Case             14 00 04 00 06 00
+  0x00D42 (+001A) Gosub            18 06
+  0x00D44 (+001C) Break            1a 00
+  0x00D46 (+001E) Case             14 00 04 00 08 00
+  0x00D4C (+0024) Gosub            18 06
+  0x00D4E (+0026) Break            1a 00
+  0x00D50 (+0028) Case             14 00 04 00 0c 00
+  0x00D56 (+002E) Gosub            18 06
+  0x00D58 (+0030) Break            1a 00
+  0x00D5A (+0032) Eswitch          16 00
+  0x00D5C (+0034) Evt_end          01 00
+
+=== sub01  [file 0xD5E..0xD7A]  (28 B)
+  0x00D5E (+0000) Ifel_ck          06 00 16 00
+  0x00D62 (+0004) Ck               21 03 16 00  bank=3 bit=22 val=0
+  0x00D66 (+0008) Ifel_ck          06 00 0c 00
+  0x00D6A (+000C) Cmp              23 00 01 00 05 00
+  0x00D70 (+0012) Evt_exec         04 ff 18 02  cond=0xFF type=0x18 sub=2
+  0x00D74 (+0016) Endif            08 00
+  0x00D76 (+0018) Endif            08 00
+  0x00D78 (+001A) Evt_end          01 00
+
+=== sub02  [file 0xD7A..0xFE8]  (622 B)
+  0x00D7A (+0000) Set              22 03 16 01  bank=3 bit=22 val=1
+  0x00D7E (+0004) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x00D82 (+0008) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x00D86 (+000C) Work_set         2e 01 00  kind=1 idx=0
+  0x00D89 (+000F) Nop              00
+  0x00D8A (+0010) Plc_neck         41 01 07 ad 00 00 fa 99 64 64
+...
+## ROOM6030 sub07 (Fuehrerstand-Eintritt), sub08 Kopf/Schluss, sub09
+=== sub07  [file 0x10CC..0x113A]  (110 B)
+  0x010CC (+0000) Ifel_ck          06 00 20 00
+  0x010D0 (+0004) Ck               21 04 17 00  bank=4 bit=23 val=0
+  0x010D4 (+0008) Sce_em_set       44 00 4d 40 00 00 00 ff 02 f9 00 00 00 a9 00 00 18 00 00 00
+  0x010E8 (+001C) Evt_exec         04 ff 18 08  cond=0xFF type=0x18 sub=8
+  0x010EC (+0020) Else_ck          07 00 28 00
+  0x010F0 (+0024) Ifel_ck          06 00 1e 00
+  0x010F4 (+0028) Ck               21 03 59 00  bank=3 bit=89 val=0
+  0x010F8 (+002C) Sce_em_set       44 00 4d 40 00 00 00 ff 02 f9 00 00 00 a9 00 00 18 00 00 00
+  0x0110C (+0040) Evt_exec         04 ff 18 09  cond=0xFF type=0x18 sub=9
+  0x01110 (+0044) Endif            08 00
+  0x01112 (+0046) Nop              00
+  0x01113 (+0047) Nop              00
+  0x01114 (+0048) Ifel_ck          06 00 0c 00
+  0x01118 (+004C) Ck               21 03 59 00  bank=3 bit=89 val=0
+  0x0111C (+0050) Sce_bgm_control  54 01 01 00 00 00
+  0x01122 (+0056) Endif            08 00
+  0x01124 (+0058) Ifel_ck          06 00 10 00
+  0x01128 (+005C) Ck               21 03 59 01  bank=3 bit=89 val=1
+  0x0112C (+0060) Sce_bgm_control  54 00 01 00 00 00
+  0x01132 (+0066) Evt_exec         04 ff 18 05  cond=0xFF type=0x18 sub=5
+  0x01136 (+006A) Endif            08 00
+  0x01138 (+006C) Evt_end          01 00
+
+=== sub08  [file 0x113A..0x1376]  (572 B)
+  0x0113A (+0000) Set              22 04 17 01  bank=4 bit=23 val=1
+  0x0113E (+0004) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x01142 (+0008) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x01146 (+000C) Sleep            09 0a 01 00
+  0x0114A (+0010) Cut_chg          29 01
+  0x0114C (+0012) Work_set         2e 01 00  kind=1 idx=0
+  0x0114F (+0015) Nop              00
+  0x01150 (+0016) Plc_dest         40 00 09 20 02 f9 00 a9
+  0x01158 (+001E) Sleep            09 0a 0a 00
+...
+  0x01348 (+020E) Sleep            09 0a 3c 00
+  0x0134C (+0212) Work_set         2e 01 00  kind=1 idx=0
+  0x0134F (+0215) Nop              00
+  0x01350 (+0216) Plc_dest         40 00 09 20 03 eb 41 a4
+  0x01358 (+021E) Do               11 00 08 00
+  0x0135C (+0222) Evt_next         02
+  0x0135D (+0223) Nop              00
+  0x0135E (+0224) Edwhile          12 04
+  0x01360 (+0226) Ck               21 05 20 00  bank=5 bit=32 val=0
+  0x01364 (+022A) Sleep            09 0a 1e 00
+  0x01368 (+022E) Set              22 02 07 00  bank=2 bit=7 val=0
+  0x0136C (+0232) Set              22 01 1b 00  bank=1 bit=27 val=0
+  0x01370 (+0236) Cut_auto         3c 01
+  0x01372 (+0238) Plc_ret          42
+  0x01373 (+0239) Nop              00
+  0x01374 (+023A) Evt_end          01 00
+
+=== sub09  [file 0x1376..0x138C]  (22 B)
+  0x01376 (+0000) Work_set         2e 02 00  kind=2 idx=0
+  0x01379 (+0003) Nop              00
+  0x0137A (+0004) Plc_motion       3f 00 12 00  a=0 b=18 c=0
+  0x0137E (+0008) Sleep            09 0a 50 00
+  0x01382 (+000C) Plc_motion       3f 00 13 00  a=0 b=19 c=0
+  0x01386 (+0010) Plc_flg          43 00 04 00
+  0x0138A (+0014) Evt_end          01 00
+
+## ROOM6000 sub07 (Torschalter 'A device to open the tunnel gate. Will you turn on the switch?' msg 5): zweiter Schreiber von (3,22)
+=== sub07  [file 0x11A6..0x1212]  (108 B)
+  0x011A6 (+0000) Message_on       2b 05 ff ff
+  0x011AA (+0004) Evt_next         02
+  0x011AB (+0005) Nop              00
+  0x011AC (+0006) Ifel_ck          06 00 60 00
+  0x011B0 (+000A) Ck               21 0c 1f 00  bank=12 bit=31 val=0
+  0x011B4 (+000E) Set              22 03 59 01  bank=3 bit=89 val=1
+  0x011B8 (+0012) Ifel_ck          06 00 0a 00
+  0x011BC (+0016) Ck               21 03 16 00  bank=3 bit=22 val=0
+  0x011C0 (+001A) Set              22 03 16 01  bank=3 bit=22 val=1
+  0x011C4 (+001E) Endif            08 00
+  0x011C6 (+0020) Ifel_ck          06 00 0a 00
+  0x011CA (+0024) Ck               21 04 17 00  bank=4 bit=23 val=0
+  0x011CE (+0028) Set              22 04 17 01  bank=4 bit=23 val=1
+  0x011D2 (+002C) Endif            08 00
+  0x011D4 (+002E) Aot_reset        46 05 00 00 00 00 00 00 00 00  slot=5 sce=0 flags=0x00 p=(0,0,0)
+  0x011DE (+0038) Set              22 02 07 01  bank=2 bit=7 val=1
+  0x011E2 (+003C) Set              22 01 1b 01  bank=1 bit=27 val=1
+  0x011E6 (+0040) Sleep            09 0a 14 00
+  0x011EA (+0044) Cut_chg          29 0c
+  0x011EC (+0046) Evt_exec         04 ff 18 08  cond=0xFF type=0x18 sub=8
+  0x011F0 (+004A) Work_set         2e 03 00  kind=3 idx=0
+  0x011F3 (+004D) Nop              00
+  0x011F4 (+004E) Speed_set        2f 04 05 00
+  0x011F8 (+0052) For              0d 00 04 00 cd 00
+  0x011FE (+0058) Add_speed        30
+  0x011FF (+0059) Evt_next         02
+  0x01200 (+005A) Next             0e 00
+  0x01202 (+005C) Cut_chg          29 08
+  0x01204 (+005E) Cut_auto         3c 01
+  0x01206 (+0060) Set              22 02 07 00  bank=2 bit=7 val=0
+  0x0120A (+0064) Set              22 01 1b 00  bank=1 bit=27 val=0
+  0x0120E (+0068) Endif            08 00
+  0x01210 (+006A) Evt_end          01 00
+
+## Alle Leser/Schreiber (3,22) / (3,89) / (4,23) in STAGE5/STAGE6
+ROOM6000.RDT:   0x00E62 (+0110) Ck               21 03 59 00  bank=3 bit=89 val=0
+ROOM6000.RDT:   0x011B4 (+000E) Set              22 03 59 01  bank=3 bit=89 val=1
+ROOM6000.RDT:   0x011BC (+0016) Ck               21 03 16 00  bank=3 bit=22 val=0
+ROOM6000.RDT:   0x011C0 (+001A) Set              22 03 16 01  bank=3 bit=22 val=1
+ROOM6000.RDT:   0x011CA (+0024) Ck               21 04 17 00  bank=4 bit=23 val=0
+ROOM6000.RDT:   0x011CE (+0028) Set              22 04 17 01  bank=4 bit=23 val=1
+ROOM6001.RDT:   0x00E62 (+0110) Ck               21 03 59 00  bank=3 bit=89 val=0
+ROOM6001.RDT:   0x00F26 (+000E) Set              22 03 59 01  bank=3 bit=89 val=1
+ROOM6001.RDT:   0x00F2E (+0016) Ck               21 03 16 00  bank=3 bit=22 val=0
+ROOM6001.RDT:   0x00F32 (+001A) Set              22 03 16 01  bank=3 bit=22 val=1
+ROOM6001.RDT:   0x00F3C (+0024) Ck               21 04 17 00  bank=4 bit=23 val=0
+ROOM6001.RDT:   0x00F40 (+0028) Set              22 04 17 01  bank=4 bit=23 val=1
+ROOM6030.RDT:   0x00D62 (+0004) Ck               21 03 16 00  bank=3 bit=22 val=0
+ROOM6030.RDT:   0x00D7A (+0000) Set              22 03 16 01  bank=3 bit=22 val=1
+ROOM6030.RDT:   0x01060 (+0044) Ck               21 03 59 00  bank=3 bit=89 val=0
+ROOM6030.RDT:   0x0108E (+0072) Ck               21 03 59 01  bank=3 bit=89 val=1
+ROOM6030.RDT:   0x010D0 (+0004) Ck               21 04 17 00  bank=4 bit=23 val=0
+ROOM6030.RDT:   0x010F4 (+0028) Ck               21 03 59 00  bank=3 bit=89 val=0
+ROOM6030.RDT:   0x01118 (+004C) Ck               21 03 59 00  bank=3 bit=89 val=0
+ROOM6030.RDT:   0x01128 (+005C) Ck               21 03 59 01  bank=3 bit=89 val=1
+ROOM6030.RDT:   0x0113A (+0000) Set              22 04 17 01  bank=4 bit=23 val=1
+ROOM6031.RDT:   0x00D60 (+0004) Ck               21 03 16 00  bank=3 bit=22 val=0
+ROOM6031.RDT:   0x00D78 (+0000) Set              22 03 16 01  bank=3 bit=22 val=1
+ROOM6031.RDT:   0x00E86 (+0044) Ck               21 03 59 00  bank=3 bit=89 val=0
+ROOM6031.RDT:   0x00EB4 (+0072) Ck               21 03 59 01  bank=3 bit=89 val=1
+ROOM6031.RDT:   0x00EF6 (+0004) Ck               21 04 17 00  bank=4 bit=23 val=0
+ROOM6031.RDT:   0x00F1A (+0028) Ck               21 03 59 00  bank=3 bit=89 val=0
+ROOM6031.RDT:   0x00F3A (+0048) Ck               21 03 59 00  bank=3 bit=89 val=0
+ROOM6031.RDT:   0x00F4A (+0058) Ck               21 03 59 01  bank=3 bit=89 val=1
+ROOM6031.RDT:   0x00F5C (+0000) Set              22 04 17 01  bank=4 bit=23 val=1
+ROOM5090.RDT:   0x01278 (+004E) Ck               21 03 59 01  bank=3 bit=89 val=1
+ROOM5091.RDT:   0x0125C (+0032) Ck               21 03 59 01  bank=3 bit=89 val=1
+
+## Bank-9-Zensus (tools/r36_kartenbits/bank9_zensus.py), Auszug
+== ORIGINAL: Bank-9-Bits in allen ausgelieferten RDTs (shared_assets/PSX/STAGE*/ROOM*.RDT) ==
+RDT-Dateien: 240, davon mit Kopf (>= 0x48 B): 206
+Abdeckung: 40674 Opcodes, 0 Desync-Stopps, 164 Item_aot_set, 54 Ck(9,..), 1 Set(9,..)
+Flag-Ck2 0x58 mit Bank 9: 0 []
+Flag-Set2 0x59 mit Bank 9: 0 []
+FLAG_CHG-Saetze (Aot_set/Aot_reset sce 4) je Bank: {5: 26}
+Item_aot_set mit Bit >= 256 (liefe in Bank 10 ueber): 0 []
+
+BELEGT im Original: 85 von 256 Bits
+  2 6 10 11 12 14 15 16 18 19 20 21 22 52 85 86 90 91 92 98 99 104 105 108 109 134 135 136 138 140 141 142 143 144 146 147 148 149 150 151 152 153 154 155 162 163 164 165 166 167 168 169 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 216 217 218 223 224 225 226 227 228 229 230 231 252 253
+FREI im Original (Bloecke): 0..1, 3..5, 7..9, 13, 17, 23..51, 53..84, 87..89, 93..97, 100..103, 106..107, 110..133, 137, 139, 145, 156..161, 170..179, 199..215, 219..222, 232..251, 254..255
+
+487:  engine/src/gen/story80_szenen.inc:208  SCD 0x22 Bank 0x09 Bit 0x80  = Bit 128
+488:  engine/src/gen/story80_szenen.inc:262  SCD 0x22 Bank 0x09 Bit 0x80  = Bit 128

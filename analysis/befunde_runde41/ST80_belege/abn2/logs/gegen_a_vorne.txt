@@ -1,0 +1,74 @@
+# Gegenprobe: Stand ad8532cd4, selbst gebaut (git archive ad8532cd4 re15_port ohne shared_assets -> local_build.sh configure/build, RE15_TESTS=OFF), exe sha1 8eb9002d8a9e4d60259f1160bfbff776e6cf3b2d
+# Assets per RE15_CD_ROOT aus dem Integrationsbaum (shared_assets zwischen ad8532cd4 und HEAD unveraendert). Eingaben wie Lauf a_vorne.
+exe re15_pc_st80abn_altstand_gegen_a_vorne PID 67640 sha1 8eb9002d8a9e4d60259f1160bfbff776e6cf3b2d
+exit=0 dauer=290s
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/shared_assets/PSX (+Fallbacks)
+[story36] ROOM6000: 2 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[story36] ROOM6030: 13 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+## Folge der Texte: 11 12 25 26 13 14 15 16 17 18 19 0 1 21 2 3 22 4 5 6 7 23 24 8
+## doppelt: keine
+## Soll-Folge: 11 31 13 14 15 16 17 18 19 0 1 21 2 3 22 4 5 6 7 23 24 8 40 25 -> ABWEICHUNG
+## Sherry-Zeilen vor Johns Vorstellung (msg 21): [12, 25]
+## Stimmen-Zeilen: 24
+## Untertitel im Bild (state.log msg a=1): Id Bildbereich Kamera
+  id=11 F671-F769 (99 Bilder) cam=1
+  id=12 F791-F922 (132 Bilder) cam=1
+  id=25 F924-F1071 (148 Bilder) cam=1
+  id=26 F1073-F1171 (99 Bilder) cam=1
+  id=13 F1193-F1291 (99 Bilder) cam=1
+  id=14 F1391-F1489 (99 Bilder) cam=3
+  id=15 F1701-F1799 (99 Bilder) cam=1
+  id=16 F1839-F1941 (103 Bilder) cam=1
+  id=17 F1959-F2057 (99 Bilder) cam=1
+  id=18 F2079-F2177 (99 Bilder) cam=1
+  id=19 F2199-F2297 (99 Bilder) cam=1
+  id= 0 F3200-F3298 (99 Bilder) cam=11
+  id= 1 F3426-F3524 (99 Bilder) cam=10
+  id=21 F3547-F3698 (152 Bilder) cam=10
+  id= 2 F3700-F3798 (99 Bilder) cam=10
+  id= 3 F3801-F3914 (114 Bilder) cam=10
+  id=22 F3921-F4019 (99 Bilder) cam=10
+  id= 4 F4041-F4139 (99 Bilder) cam=10
+  id= 5 F4161-F4330 (170 Bilder) cam=10
+  id= 6 F4332-F4430 (99 Bilder) cam=10
+  id= 7 F4452-F4585 (134 Bilder) cam=10
+  id=23 F4601-F4699 (99 Bilder) cam=10
+  id=24 F4703-F4801 (99 Bilder) cam=10
+  id= 8 F4848-F4946 (99 Bilder) cam=10
+## Spielerzustand-Wechsel (pst): Bild alt->neu Kamera Lage
+  F1 pst 0->1 cam=6 PL(-17970, -20380, 1100)
+  F643 pst 1->4 cam=1 PL(-3873, -23487, 4000)
+  F2505 pst 4->1 cam=0 PL(-3873, -23487, 2047)
+  F3150 pst 1->4 cam=7 PL(-18376, -23453, 1952)
+  F4981 pst 4->1 cam=12 PL(-25012, -24133, 1045)
+## stimme.log
+  raum=6030 nachricht=11  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=12  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=25  laeuft=1 rest=0  13 gewartet
+  raum=6030 nachricht=26  laeuft=1 rest=0  29 gewartet
+  raum=6030 nachricht=13  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=14  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=15  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=16  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=17  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=18  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=19  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=0  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=1  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=21  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=2  laeuft=1 rest=0  7 gewartet
+  raum=6030 nachricht=3  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=22  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=4  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=5  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=6  laeuft=1 rest=0  26 gewartet
+  raum=6030 nachricht=7  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=23  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=24  laeuft=0 rest=0  0 gewartet
+  raum=6030 nachricht=8  laeuft=0 rest=0  0 gewartet
+## letztes Bild F7240 PL(-9600, -23450, 2048, 1, 8)
+## Hinweis: im alten Stand laeuft beim Rueckweg (F5830) das Original-sub09 ohne Szene; Leon steht dann mit Gier 0, deshalb verfehlt der spaetere Tuerdruck F6413 die Tuer und der Lauf endet in Cut 8 (fuer die Gegenprobe ohne Belang).
+F5830 pad=0000 PL(-3873,-23487,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0 [1 t=4d st=4 ss1=0 ss2=1 ss3=0 g=40 mo=18 af=21 s
+F6420 pad=8000 PL(-3873,-23487,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0 [1 t=4d st=4 ss1=0 ss2=1 ss3=0 g=40 mo=19 af=27 s
+F6800 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0 [1 t=49 st=4 ss1=6 ss2=3 ss3=0 g=40 mo=2 af=5 
+F7240 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0 [1 t=49 st=4 ss1=6 ss2=3 ss3=0 g=40 mo=2 af=29

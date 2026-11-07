@@ -1,0 +1,91 @@
+== k_s80_30c1_sub03 ROOM30C1 sub03 458 B (Deklaration 458)
+  +0000 orig @00C2C..00D9E 370 B bytegleich
+  +0172 orig @00D9E..00DA2   4 B bytegleich
+  +0176 orig @00E16..00E6A  84 B bytegleich
+  Bausteine lueckenlos bis Programmende: ja
+  Original-sub03 @0x00C2C, Signatur = erste 16 Bytes: ja
+  SCD-Lauf: ohne Versatz, Ende Evt_end: True
+  Message_on: [1, 2, 3, 4, 5]
+  Ck/Set: Set(3,57)=0@+0000 Set(3,71)=1@+0004 Set(2,7)=1@+0008 Set(1,27)=1@+000C Set(2,7)=0@+01AE Set(1,27)=0@+01B2
+  Folge-Tabelle [1, 2, 3, 4, 5] = Message_on-Folge: ja
+== k_s80_6030_sub02 ROOM6030 sub02 900 B (Deklaration 900)
+  +0000 orig @00D7A..00E5C 226 B bytegleich
+  +00E2 orig @00E5C..00E80  36 B bytegleich
+  +0106 orig @00E88..00E9A  18 B bytegleich
+  +011C orig @00EEE..00F22  52 B bytegleich
+  +0150 orig @00E88..00E8C   4 B bytegleich
+  +0154 orig @00DEC..00DFA  14 B bytegleich
+  +0162 orig @00E80..00E88   8 B bytegleich
+  +016A orig @00E88..00EC6  62 B bytegleich
+  +01AC orig @00E9E..00EC6  40 B bytegleich
+  +01D4 orig @00EC6..00EEA  36 B bytegleich
+  +01F8 orig @00EEA..00F22  56 B bytegleich
+  +0230 orig @00F22..00F46  36 B bytegleich
+  +0254 orig @00F46..00F7E  56 B bytegleich
+  +028C orig @00E4A..00E4E   4 B bytegleich
+  +0298 orig @01168..01174  12 B bytegleich
+  +02A4 orig @00E88..00E8C   4 B bytegleich
+  +02A8 orig @00DEC..00DFA  14 B bytegleich
+  +02BA orig @00E84..00E88   4 B bytegleich
+  +02BE orig @00E9E..00EA2   4 B bytegleich
+  +02C2 orig @00DEC..00DFA  14 B bytegleich
+  +02D0 orig @00E88..00E9A  18 B bytegleich
+  +02E6 orig @00F4A..00F7E  52 B bytegleich
+  +031A orig @00F7E..00FA2  36 B bytegleich
+  +033E orig @00FA2..00FE8  70 B bytegleich
+  +0118 op   2b 15 00 00 Vorlage @00E9A 2b 03 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  +01A8 op   2b 16 00 00 Vorlage @00E9A 2b 03 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  +0290 op   40 00 09 21 11 9e bb a1 Vorlage @01160 40 00 09 21 df f0 41 a4 = RDT, im Programm ja, getauscht Byte [4, 5, 6, 7]
+  +02B6 op   2b 17 00 00 Vorlage @00E80 2b 02 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  +02E2 op   2b 18 00 00 Vorlage @00E9A 2b 03 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  Bausteine lueckenlos bis Programmende: ja
+  Original-sub02 @0x00D7A, Signatur = erste 16 Bytes: ja
+  SCD-Lauf: ohne Versatz, Ende Evt_end: True
+  Message_on: [0, 1, 21, 2, 3, 22, 4, 5, 6, 7, 23, 24, 8]
+  Ck/Set: Set(3,22)=1@+0000 Set(2,7)=1@+0004 Set(1,27)=1@+0008 Ck(5,32)=0@+002E Ck(5,32)=0@+0042 Ck(5,32)=0@+0090 Ck(5,32)=0@+00A4 Ck(5,32)=0@+00B8 Ck(5,33)=0@+02A0 Set(2,7)=0@+0374 Set(1,27)=0@+0378
+  Folge-Tabelle [0, 1, 21, 2, 3, 22, 4, 5, 6, 7, 23, 24, 8] = Message_on-Folge: ja
+== k_s80_6030_sub08 ROOM6030 sub08 644 B (Deklaration 644)
+  +0000 orig @0113A..011CC 146 B bytegleich
+  +0092 orig @011CC..011D0   4 B bytegleich
+  +009A orig @012EA..01306  28 B bytegleich
+  +00B6 orig @01306..0130A   4 B bytegleich
+  +00BE orig @012C6..012E2  28 B bytegleich
+  +00DA orig @011CC..01376 426 B bytegleich
+  +0096 op   2b 19 00 00 Vorlage @011D0 2b 0d 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  +00BA op   2b 1a 00 00 Vorlage @0130A 2b 13 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  Bausteine lueckenlos bis Programmende: ja
+  Original-sub08 @0x0113A, Signatur = erste 16 Bytes: ja
+  SCD-Lauf: ohne Versatz, Ende Evt_end: True
+  Message_on: [11, 12, 25, 26, 13, 14, 15, 16, 17, 18, 19]
+  Ck/Set: Set(4,23)=1@+0000 Set(2,7)=1@+0004 Set(1,27)=1@+0008 Ck(5,33)=0@+0036 Ck(5,33)=0@+0100 Set(1,28)=1@+011E Set(1,28)=0@+012E Set(1,29)=1@+0132 Set(1,29)=0@+014A Set(1,28)=1@+014E Set(1,28)=0@+015E Ck(5,33)=0@+01A0 Ck(5,33)=0@+0240 Ck(5,32)=0@+026E Set(2,7)=0@+0276 Set(1,27)=0@+027A
+  Folge-Tabelle [11, 12, 25, 26, 13, 14, 15, 16, 17, 18, 19] = Message_on-Folge: ja
+== k_s80_6030_sub08_vorne ROOM6030 sub08 576 B (Deklaration 576)
+  +0000 orig @0113A..0113E   4 B bytegleich
+  +0008 orig @0113E..01198  90 B bytegleich
+  +0066 orig @0119C..011CC  48 B bytegleich
+  +0096 orig @011CC..01376 426 B bytegleich
+  +0004 op   22 09 80 01 Vorlage @0113A 22 04 17 01 = RDT, im Programm ja, getauscht Byte [1, 2]
+  +0062 op   2b 1f 00 00 Vorlage @01198 2b 0c 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  Bausteine lueckenlos bis Programmende: ja
+  Original-sub08 @0x0113A, Signatur = erste 16 Bytes: ja
+  SCD-Lauf: ohne Versatz, Ende Evt_end: True
+  Message_on: [11, 31, 13, 14, 15, 16, 17, 18, 19]
+  Ck/Set: Set(4,23)=1@+0000 Set(9,128)=1@+0004 Set(2,7)=1@+0008 Set(1,27)=1@+000C Ck(5,33)=0@+003A Ck(5,33)=0@+00BC Set(1,28)=1@+00DA Set(1,28)=0@+00EA Set(1,29)=1@+00EE Set(1,29)=0@+0106 Set(1,28)=1@+010A Set(1,28)=0@+011A Ck(5,33)=0@+015C Ck(5,33)=0@+01FC Ck(5,32)=0@+022A Set(2,7)=0@+0232 Set(1,27)=0@+0236
+  Folge-Tabelle [11, 31, 13, 14, 15, 16, 17, 18, 19] = Message_on-Folge: ja
+== k_s80_6030_sub09_nachtrag ROOM6030 sub09 238 B (Deklaration 238)
+  +0004 orig @0113E..01174  54 B bytegleich
+  +003A orig @01194..01198   4 B bytegleich
+  +0042 orig @0119C..011CC  48 B bytegleich
+  +0072 orig @011CC..011D0   4 B bytegleich
+  +007A orig @012EA..01306  28 B bytegleich
+  +0096 orig @0131E..01376  88 B bytegleich
+  +0000 op   22 09 80 00 Vorlage @0136C 22 01 1b 00 = RDT, im Programm ja, getauscht Byte [1, 2]
+  +003E op   2b 28 00 00 Vorlage @01198 2b 0c 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  +0076 op   2b 19 00 00 Vorlage @011D0 2b 0d 00 00 = RDT, im Programm ja, getauscht Byte [1]
+  Bausteine lueckenlos bis Programmende: ja
+  Original-sub09 @0x01376, Signatur = erste 16 Bytes: ja
+  SCD-Lauf: ohne Versatz, Ende Evt_end: True
+  Message_on: [40, 25]
+  Ck/Set: Set(9,128)=0@+0000 Set(2,7)=1@+0004 Set(1,27)=1@+0008 Ck(5,33)=0@+0036 Ck(5,33)=0@+00AA Ck(5,32)=0@+00D8 Set(2,7)=0@+00E0 Set(1,27)=0@+00E4
+  Folge-Tabelle [40, 25] = Message_on-Folge: ja
+FEHLER 0

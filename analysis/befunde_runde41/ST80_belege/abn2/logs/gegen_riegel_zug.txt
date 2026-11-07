@@ -1,0 +1,40 @@
+# Gegenprobe Riegel: eingecheckter test_r36_story.cmake TEIL=zug mit der exe von ad8532cd4 (sha1 8eb9002d), RE15_CD_ROOT = Integrationsbaum-Assets
+# cmake -DRE15_PC_EXE=<alt> -DRE15_KARTE_TOOL=<probe_r36_story_karte (Integrationsbaum)> -DWORKDIR=... -DTEIL=zug -P re15_port/tests/integration/test_r36_story.cmake
+-- r36_story[p4j]: Lauf ok (C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/st80nb1/abn2/gegen_riegel_zug/wd/lauf_f7b80c1e_p4j)
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/tests/integration/test_r36_story.cmake:121 (message):
+  r36_story[p4j]: erwartet, aber fehlt: [story80] ROOM6030 Evt_exec sub08 ->
+  Programm (576 B): Fuehrerstand vor dem Wagen
+Call Stack (most recent call first):
+  C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/tests/integration/test_r36_story.cmake:259 (muss)
+
+
+rc=1
+## debug.log des P4j-Laufs (Auszug: alle [story80]/[msgtext])
+[story36] ROOM6000: 2 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[story36] ROOM6030: 13 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26 vor 'Certainly.'
+[msgtext] room=6030 id=11 "Annette: Is everyone aboard?"
+[msgtext] room=6030 id=12 "Leon: Everyone we could find. There's a little girl in the back... Sherry."
+[msgtext] room=6030 id=25 "Annette: Sherry...? My daughter is on this train? ...Thank God."
+[msgtext] room=6030 id=26 "Leon: Can you start this thing?"
+[msgtext] room=6030 id=13 "Annette: Certainly."
+[msgtext] room=6030 id=14 "Annette: If I remember the startup sequence correctly..."
+[msgtext] room=6030 id=15 "Leon: What's wrong?"
+[msgtext] room=6030 id=16 "Annette: Not enough power! The train's batteries are too low!"
+[msgtext] room=6030 id=17 "Leon: I'll take care of it!"
+[msgtext] room=6030 id=18 "Annette: I'll be ready to start the train when you do!"
+[msgtext] room=6030 id=19 "Leon: Good luck to both of us!"
+[story80] ROOM6030 Evt_exec sub02 -> Programm (900 B): Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)
+[msgtext] room=6030 id=0 "Leon: Hang on, Marvin. We're getting out of here."
+[msgtext] room=6030 id=1 "Leon: Who are you two?"
+[msgtext] room=6030 id=21 "John: Name's John. This is Sherry. We made it down here with a girl named Elza."
+[msgtext] room=6030 id=2 "Sherry: She's out there fighting the monsters!"
+[msgtext] room=6030 id=3 "John: She's trying to keep the outside clear so we can escape."
+[msgtext] room=6030 id=22 "John: She said she'd catch up with us."
+[msgtext] room=6030 id=4 "Leon: Why aren't you out there?"
+[msgtext] room=6030 id=5 "John: She told me to stay with the kid... and look after your friend here."
+[msgtext] room=6030 id=6 "Leon: Where's Annette?"
+[msgtext] room=6030 id=7 "John: The woman in the lab coat? Up front, trying to start the train."
+[msgtext] room=6030 id=23 "Sherry: A lab coat...? Is it Mom?!"
+[msgtext] room=6030 id=24 "John: Easy, kid. Stay with me."
+[msgtext] room=6030 id=8 "Leon: I'll find out. Stay here."
