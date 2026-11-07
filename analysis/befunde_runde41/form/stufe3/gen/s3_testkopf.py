@@ -23,8 +23,9 @@ def main():
     r = S.Rig()
     namen = {0: 'BILD1', 1: 'BILD2', 2: 'RUHE'}
     z = ['/* form_j_posen.h - ERZEUGT von analysis/befunde_runde41/form/stufe3/gen/s3_testkopf.py, nicht von Hand aendern.',
-         ' * Referenz Formtreue: Variante J mit Kopf K4 Krokodil (stufe3/basis_n2 = K4_kroko + Textur-Bau s3_n2_textur, E19-E22): MD1/TIM,',
-         ' * Posen Bild 1/Bild 2 von K4, Ruhe = Ruhe von J mit Kiefer zu. Makronamen FORM_J_* wie bisher. Kein RE-Wert. */',
+         ' * Referenz Formtreue seit E30 (2026-11-07): Riesenform K5c V3 Runde 5 mit 16 CLUT-Zeilen (stufe3/basis_k5c = varianten/K5/farbe/',
+         ' * K5c_farbe_v3 + kf_zeilen16.py; vorher K4: stufe3/basis_n2): MD1/TIM, Posen Bild 1/Bild 2 von K5c, Ruhe = Ruhe von J mit Kiefer zu.',
+         ' * Makronamen FORM_J_* wie bisher. Kein RE-Wert. */',
          '#ifndef FORM_J_POSEN_H', '#define FORM_J_POSEN_H', '#include <stdint.h>', '',
          '#define FORM_J_MD1_LEN %du' % len(md1), '#define FORM_J_MD1_CRC 0x%08xu' % (zlib.crc32(md1) & 0xffffffff),
          '#define FORM_J_TIM_LEN %du' % len(tim), '#define FORM_J_TIM_CRC 0x%08xu' % (zlib.crc32(tim) & 0xffffffff), '']

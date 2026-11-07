@@ -27,7 +27,11 @@ K3_DIR = os.path.join(FORM_DIR, 'varianten/K_alligator/K3_fit')
 # Nachbesserung 2 (E22): Kopf K4 (Krokodilkeil, varianten/K_alligator/K4_kroko, Kopfart 'kroko' in k_form) und Textur-Bau
 # s3_n2_textur.py bauen (Gelenkkoerper-Hautkacheln, haut_stoff auf Seite 3, Kappen planar) -> stufe3/basis_n2. basis_n1 bleibt als Stand NB1.
 K4_DIR = os.path.join(FORM_DIR, 'varianten/K_alligator/K4_kroko')
-BASIS_DIR = os.path.join(FORM_DIR, 'stufe3/basis_n2')
+# Einbau v0.8.30 (E30, 2026-11-07): Basis = K5c V3 Runde 5 (varianten/K5/farbe/K5c_farbe_v3, Form K5c + G4-Uebertragung der Farbe) mit
+# 16 statt 17 CLUT-Zeilen (varianten/K5/generator/kf_zeilen16.py: Zeile 2 unreferenziert entfernt) -> stufe3/basis_k5c. basis_n2 bleibt als
+# Stand K4/NB2 (varianten/K4). Das K5c-Gerippe ist das von J bis auf den Kieferversatz (Knochen 23: [784, 420, 0] statt [500, 400, 0],
+# K5-Kopfbau k5_kopf.py), s. Rig.__init__. Umschaltbar fuer Vergleiche: Umgebungsvariable S3_BASIS_DIR.
+BASIS_DIR = os.environ.get('S3_BASIS_DIR') or os.path.join(FORM_DIR, 'stufe3/basis_k5c')
 RUHE_KIEFER = [0, 0, 0]
 sys.path.insert(0, os.path.join(WURZEL, 're15_port/tools'))
 import form_emd as FE           # noqa: E402
@@ -135,7 +139,11 @@ class Rig:
         self.emd_pfad = emd_pfad or os.path.join(BASIS_DIR, 'FORM.EMD')
         self.form = FE.lese_emd(open(self.emd_pfad, 'rb').read())
         self.form_j = FE.lese_emd(open(os.path.join(J_DIR, 'FORM.EMD'), 'rb').read())
-        if [k['versatz'] for k in self.form['knochen']] != [k['versatz'] for k in self.form_j['knochen']] or            [k['eltern'] for k in self.form['knochen']] != [k['eltern'] for k in self.form_j['knochen']]:
+        # Gerippe-Pruefung: Eltern und Versaetze wie J; nur der Kieferversatz (Knochen 23) darf abweichen (K5c: Kiefergelenk des
+        # K5-Kopfs [784, 420, 0], J/K4 [500, 400, 0]). Die Clips rechnen mit dem Versatz der Basis (self.versatz), nicht mit dem von J.
+        v_b = [k['versatz'] for k in self.form['knochen']]
+        v_j = [k['versatz'] for k in self.form_j['knochen']]
+        if [k['eltern'] for k in self.form['knochen']] != [k['eltern'] for k in self.form_j['knochen']] or                 any(v_b[i] != v_j[i] for i in range(len(v_j)) if i != KIEFER):
             raise SystemExit('Gerippe von %s weicht von J ab' % self.emd_pfad)
         self.eltern = [k['eltern'] for k in self.form['knochen']]
         self.versatz = [np.array(k['versatz'], float) for k in self.form['knochen']]
