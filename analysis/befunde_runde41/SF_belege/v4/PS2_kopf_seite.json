@@ -1,0 +1,32 @@
+{
+ "orig_box412-467x190-263": {
+  "L_lt8": 0.009,
+  "L_lt12": 0.038,
+  "L_min": 3.3,
+  "L_p5": 13.8,
+  "grad_mittel": 20.1
+ },
+ "orig_box440-474x205-255": {
+  "L_lt8": 0.001,
+  "L_lt12": 0.018,
+  "L_min": 7.6,
+  "L_p5": 14.4,
+  "grad_mittel": 27.0
+ },
+ "V4_Id9_videoraum": {
+  "L_lt8": 0.0,
+  "L_lt12": 0.086,
+  "L_min": 8.1,
+  "L_p5": 10.8,
+  "grad_mittel": 20.4
+ },
+ "V4_Id9_schirm": {
+  "L_lt8": 0.169,
+  "grad_mittel": 26.4,
+  "grad_lt4_anteil": 0.131
+ },
+ "V4_Id8_Rumpf_schirm": {
+  "grad_mittel": 54.8,
+  "grad_lt4_anteil": 0.037
+ }
+}
