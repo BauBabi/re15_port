@@ -1,0 +1,4 @@
+RE2 KANISTER gesetzt (-6870,-1200,-12651)
+RE2 KANISTER Stufe 1 laengs=4104 quer=1726 sub 2 -> 1 F558
+RE2 KANISTER angehaengt lokal=(4328,-190,2336) F570
+RE2 KANISTER getragen (Stufe 7)

@@ -1,0 +1,40 @@
+[k2080] F7 MESSHAKEN RE15_K2080_GATOR_HP: Slot 35 hp = 24990
+[k2080] F284 FG-E3: Alligator gesichert Slot 35 (-2754,-1200,-22840) Gier 2624 hp 24983 Phase 2
+[k2080] F284 AUSLOESER geschwaecht (RE2 +0x218&0x20 @0x80101ebc-dc), Treffer 1: Spieler (-6288,0,-15068) Gier 593 Cut 0 -> ROOM2080 (Programm START Faden 12)
+[k2080] F284 Wurfrichtung 3072 (Nordbecken, Alligator beim Ausloesen (-2754,-22840)) -> Nennlandung (-6807,-12659)
+[k2080] F284 MESSHAKEN RE15_K2080_RUECK_LAGE: Rueckschnitt auf Cut 2 statt 0
+[k2080] F284 MESSHAKEN RE15_K2080_RUECK_LAGE: Rueckkehr nach (4200,-18750) Gier 3072 statt (-6288,-15068) Gier 593
+[k2080] F284 ROOM2080 SZENE (Marvin 0x40, 3 lebende Zombies, 366 B Programm) Faden 10
+[k2080] Kanister-Modell geladen: 1 Meshes, TIM-Platz 53
+[k2080] F0 Kanister pos=(-6745,-14400,-17625) Cut 2 Kasten=(173..215,202..320) Dreiecke 45
+[k2080] F8 Tuer-Ton: DOOR06-Tonteil 19608 B nicht geladen (kein Audiogeraet), Satz 1 (Door_exit @0x800141f0)
+[k2080] F8 Tuer-Ton DOOR06 Satz 1 (Door_exit @0x800141f0) - Szene
+[k2080] F28 Ziel 1: Slot 1
+[k2080] F28 Ziel Slot 1 ausgerichtet (Gier 3953)
+[k2080] F30 Ebene: 3 Zombies x -12694..-9749 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F39 Schuss 1: Treffer Slot 1 (Ziel 1) hp=-1 state=3 zeile=5
+[k2080] F40 Kopf ab: Slot 1 (Part 8 Flagwort 0x4B, RE2 FUN_801092C4 @0x80109460-98), 1 von 1
+[k2080] F55 Ziel 2: Slot 2
+[k2080] F55 Ziel Slot 2 ausgerichtet (Gier 4087)
+[k2080] F56 Schuss 2: Treffer Slot 2 (Ziel 2) hp=-1 state=3 zeile=5
+[k2080] F57 Kopf ab: Slot 2 (Part 8 Flagwort 0x4B, RE2 FUN_801092C4 @0x80109460-98), 2 von 2
+[k2080] F60 Ebene: 3 Zombies x -12489..-9873 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F72 Ziel 3: Slot 3
+[k2080] F72 Ziel Slot 3 ausgerichtet (Gier 4009)
+[k2080] F73 Schuss 3: Treffer Slot 3 (Ziel 3) hp=-1 state=3 zeile=5
+[k2080] F74 Kopf ab: Slot 3 (Part 8 Flagwort 0x4B, RE2 FUN_801092C4 @0x80109460-98), 3 von 3
+[k2080] F90 Ebene: 3 Zombies x -12440..-9959 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F109 Spieler von der Leiter auf den Parkplatz (-23200,-9000,-16700) Band 5 (Schnitt Cut 5)
+[k2080] F109 Kanister pos=(-6745,-14400,-17625) Cut 5 Kasten=(159..177,75..158) Dreiecke 46
+[k2080] F120 Ebene: 3 Zombies x -12355..-9959 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-23200,-9000,-16700)
+[k2080] F120 NPC Lauf Sub 5 Phase 2 (-12664,-16711) Gier 93 Ziel (-6995,-17625)
+[k2080] F135 NPC Lauf Sub 5 Phase 2 (-9730,-17122) Gier 119 Ziel (-6995,-17625)
+[k2080] F150 Ebene: 3 Zombies x -12355..-9959 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-23200,-9000,-16700)
+[k2080] F173 Kanister aufgehoben (Loco c11 Bild 24, Hinknien ROOM11B0 sub06 @0x01650)
+[k2080] F173 Kippen Bild 1: Bruch 0/4096 (RE2 ROOM40A0 sub10: a -4 @0x066E, 23 Bilder @0x0676, -1024 @0x0682)
+[k2080] F174 Kanister pos=(-6746,-14397,-17617) Cut 5 Kasten=(159..178,75..158) Dreiecke 48
+[k2080] F178 Kippen Bild 6: Bruch 240/4096 (RE2 ROOM40A0 sub10: a -4 @0x066E, 23 Bilder @0x0676, -1024 @0x0682)
+[k2080] F180 Ebene: 3 Zombies x -12355..-9959 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-23200,-9000,-16700)
+[k2080] F184 Kippen Bild 12: Bruch 1056/4096 (RE2 ROOM40A0 sub10: a -4 @0x066E, 23 Bilder @0x0676, -1024 @0x0682)
+[k2080] F190 Kippen Bild 18: Bruch 2448/4096 (RE2 ROOM40A0 sub10: a -4 @0x066E, 23 Bilder @0x0676, -1024 @0x0682)
+[k2080] F196 Kippen Bild 24: Bruch 4096/4096 (RE2 ROOM40A0 sub10: a -4 @0x066E, 23 Bilder @0x0676, -1024 @0x0682)
