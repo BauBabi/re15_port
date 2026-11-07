@@ -1326,3 +1326,93 @@ SF_belege/v4/ctest_v4.txt).
    dunkel (F9 14,8 L*); A1 entscheidet am Bild.
 7. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme. Bis dahin liegt die EMD im Scratchpad sfv4/emd/EM30_V4.EMD und ist
    reproduzierbar mit "birkin_formen.py --variante v4 --aus DIR".
+
+### V4 Runde 2 (Bauer, 2026-11-07, nach Pruefung V4 r1)
+
+Nutzer-Wortlaut und Lesung wie oben: "Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben." Grundlage ist SF_MESSBLATT_V4.md,
+dazu die beiden Pruefberichte SF_PRUEFUNG_V4_r1_zahlen.md und SF_PRUEFUNG_V4_r1_sicht.md (Commit 49f4c00f6). Kein RE-Befund: die Form
+gibt es auf der Disc nicht, keine Zahl ist eine @0x-Konstante. Jede Konstante nennt im Generator bzw. im Werkzeug ihre Messblatt-Zeile
+oder ist als PORT-WAHL mit dem Lauf gekennzeichnet, der sie festgelegt hat.
+
+**Befunde Runde 1 und was geaendert ist** (Commits 5a89f427e, 28e928138, 3e603a4c0, 951fde6ed, 2b50e6414)
+
+| Befund (Pruefung V4 r1) | Aenderung | Ergebnis (riegel_V4r2) |
+|---|---|---|
+| glaetten() lief fuer V4 nie (Bindversatz -588 >= -700): 73/144 Takte mit einem Gelenk > 90 Grad. Die Ausnahme hob bei V3 die 16-Grad-Grenze auf | schwanz_r41.c: V4-Kette = Gliedlaengen max/min > 2,0 (Ref2 1,00, V3 1,00, V2 1,15, V1 1,49, V4 2,4). Fuer sie laeuft glaetten() immer, nur fuer sie gilt die Biegungs-Ausnahme. Untergrenze der Biegung: Keyframe - 10 Grad (SW_BIEGUNG_SPIEL) | Lauf sfv4/r/V4r2: 0/144 Takte > 90 Grad, Biegung 44,4-67,7 Grad, uebrige Gelenke <= 16,3 Grad. Unit-Test Teil 9: V4-Gliederung 13,3 Grad; Gegenprobe mit gleich langen Gliedern 134,7 Grad |
+| T1 rot (0,218 / 0,727 H), Schwanz 11-12 px hinter den Nutzerpunkten | beginn (0,15, 0,767) wie im Messblatt. Der Ansatz liegt 0,12 H zur Kamera hin vor der Flanke ('tiefe'). Gelenke auf die Mitte aus Messblatt-Mass und Nutzer-Linienende nachgestellt (r2_form_suche.py). T1 misst jetzt wie das Messblatt an Id 16 | T1 0,165 / 0,750 H; TA: Beginn +0,011/-0,027, Knick -0,001/-0,029, Ende +0,003/-0,012 H |
+| T2-Drehung 54 Grad (Pruefer-Mass), Original 66-70 | Biegung geschaerft: Gelenk 2 flacher, Gelenk 3 nach hinten oben, Gelenk 4 senkrecht darunter. Der Riegel misst nach dem Pruefer-Verfahren (Tangenten +-0,025 H) | 67,3 Grad |
+| T4: Sohlenhoehe nicht geprueft (0,336 H) | Riegel prueft 0,37 +-0,03 H | 0,357 H |
+| Knick-Durchmesser 0,022 lag unter der gemessenen Taille | 0,027 H (Mitte von 0,024-0,032) | Taille 0,025 H, schmalste Stelle |
+| Kopf seitlich: Keil-Vorbau mit Spaltenhoehe 18-21 px, schwarzer Lappen (Straehne), Auge 0,023 x 0,030 H in 5 Teilen | Haarvorhang mit senkrechter Kante im Bild der Vorlage-2-Kamera (Ebene 0,06 H vor dem Augenpunkt), keine Straehne, Breite x1,55. Auge seitlich als Ellipse an der S2-Stelle, Lichtausgleich je Texel. Vorhangtexel im Vorderbild in der seitlichen Haarzone | Spaltenhoehe an der Kante 31-36 px; S1 0,034 x 0,049 H in 1 Komponente; S2 0,058 / 0,811 H; K10 0,154 x 0,187 H |
+| Schwanz oben hellgrau (Achse dE00 8,6-12,4) | 6 Farbklassen: Wurzel, Aussenkante (c > 0,5 der Aussennormale der Bogenlinie), Mitte, senkrecht, Unterseite, Endstueck. Die 7 Achsenpunkte sind Regionen der Eichung; neuer Riegel T9 | T9 Mittel dE00 2,9 (L*/a* 11,3/6,3 gegen 11,6/6,1); T8 F17 26,6 (Aussenkante, 971 px) |
+| Koerper: Rumpf wie ein rotes Hemd (Rotanteil 0,83), Oberarme doppelt so hell, Unterarme rot; F8 rot | r2_koerper_farben.py: Texel je (Texel, CLUT-Zeile) per kleinsten Quadraten aus einem Histogramm-Angleich je Region an die Original-Fenster (Messblatt F6-F10/F14/F19, Sicht-Boxen). Getrennt: Rumpf rot/nicht rot, Oberarme oben/unten nach Fensterlage, Hals (K8), heller Buckel (F14). 256 Indizes per k-Mittel | FS Rumpf+Schultern 17,9/6,7/2,8 mit Rotanteil 0,36 (Original 17,3 / 0,31); Unterarme 28,5/1,7/-1,5 mit Rotanteil 0,00; F6-F10, F19 und F-Mittel 3,1 gruen |
+| Konstanten ohne Quelle (vorbau, schwelle, Bogenmitte, Tiefe 1,3) | Alle im Generator mit Quelle bzw. Lauf: vorbau neu, schwelle = cos 87 Grad, Bogenmitte = Kruemmungsmitte, Tiefe = groesste mit K10-Hoehe <= 0,20 | - |
+
+**Riegel-Tabelle** (riegel_v4.py, EM30_V4.EMD sha256 174b7879, Lauf sfv4/r/V4r2; volle Tabelle in SF_belege/v4/riegel_V4r2.md; Exit 1)
+
+| Mass | Soll | Ist | |
+|---|---|---|---|
+| G1 Koerper = Ref2 | Meshes 0-8, 10-15 byte-gleich, Skelett/KF 0-15, EDD | abweichend keine, alle True, Ref2 cfd1ac42 | OK |
+| M1 / M2 / M3 / M4 | <= 212 / <= 118 / 8 bpp / 0,045-0,091 | 160 / 109 / 8 bpp, Zeilen 486/487 / Kopf 0,054, Schwanz 0,051-0,066 | OK |
+| K1 Augen vorn | 1 Komponente, Kontrast >= 20 | 1; 20,3 | OK |
+| K2 Augenfleck Farbe | 46,9/7,2/-1,1, dE00 <= 6 | 46,7/7,5/-0,6, dE00 0,5 | OK |
+| K3 Augenfleck Groesse | 0,016-0,036 x 0,023-0,043 H | 0,030 x 0,036 | OK |
+| K4 Augenlage vorn | 0,035-0,065 links; 0,07-0,12 unter OK | 0,059; 0,107 | OK |
+| K5 / K6 / K7 / K8 / K9 | Haarfeld / Spiegelstelle / Nase / Kinn / Kuppe | dE00 0,8 / L* 9,0 / dE00 1,4 / dE00 3,3 mit Anteil 0 / dE00 1,1 | OK |
+| K10 Kopfbox vorn | 0,14-0,18 x 0,15-0,20 H | 0,154 x 0,187 | OK |
+| S1 Auge seitlich | 1 Komponente; 48,4/4,0/0,5; 0,028-0,052 x 0,040-0,070 H | 1; 47,8/3,8/0,9, dE00 0,8; 0,034 x 0,049 | OK |
+| S2 Augenlage seitlich | 0,03-0,07; 0,76-0,82 H | 0,058; 0,811 | OK |
+| S3 Haarkante seitlich | L* <= 22, dE00 <= 6, Abstand <= 0,01 H | 13,8; dE00 3,7; **Abstand 0,011 H** | ROT |
+| S4 Kuppe seitlich | 27,6/15,3/3,3, dE00 <= 6 | 27,3/14,8/3,1, dE00 0,4 | OK |
+| T1 Beginn | 0,15 / 0,767 H +-0,03 | 0,165 / 0,750 | OK |
+| T2 Biegung | -0,245 / +0,036; 60-100 Grad | -0,252 / 0,022; 67,3 | OK |
+| T3 Knick | -0,265 / +0,257 | -0,266 / 0,244 | OK |
+| T4 Ende | -0,245 / +0,397; 0,37 H ueber der Sohle | -0,243 / 0,393; 0,357 | OK |
+| TA absolut | je Achse +-0,03 H | hoechstens 0,029 H | OK |
+| T5 Breite nach oben | 0,03 / 0,065 / 0,125 / 0,14 | 0,036 / 0,066 / 0,127 / 0,129, Abfall 0,008 | OK |
+| T6 Endstueck | B 0,025-0,05; L 0,12-0,17; 75-95 Grad | 0,034; 0,152; 81 Grad; Taille 0,025 | OK |
+| T8 Schwanzfarbe | F15-F18 dE00 <= 6 | 1,0 / 1,1 / 1,3 / 1,2 | OK |
+| T9 Schwanzachse | Mittel dE00 <= 6, L*/a* +-4/+-3 | 2,9; 11,3/6,3 | OK |
+| T7 Gang h118 / h135 | +-0,06 H | hoechstens 0,019 / 0,025 | OK |
+| T7 Gang h85 / h100 / h110 / h125 | +-0,06 H | **0,294 / 0,436 / 0,255 / 0,088** | ROT |
+| F0 Licht h118 / h135 | dE00 <= 3 | 0,1 / 0,3 | OK |
+| F6 / F7 / F8 / F9 / F10 | dE00 <= 5, \|dL\| <= 4 | 3,3 / 3,9 / 3,0 / 2,1 / 2,7 | OK |
+| F14 Buckel | 60,0/11,0/1,2, \|dL\| <= 4 | 54,8/10,6/2,9, dE00 5,0, **dL -5,2** | ROT |
+| F19 / F-Mittel | dE00 <= 5 / <= 4 | 1,7 / 3,11 | OK |
+| FS Oberarme unten, Rumpf, Unterarme, Unterschenkel | Sicht-Boxen: dE00 <= 5, \|dL\| <= 4, Rotanteil +-0,15 | dE00 2,8 / 1,5 / 2,2 / 1,5 / 4,4 | OK |
+| F0 Wand | dE00 <= 2 | 0,52 | OK |
+
+Gegenprobe V3 r2 (riegel_V3r2_gegenprobe_r2.*): 36 von 44 Riegeln rot. Darunter sind K4 (-0,035 H, falsche Seite) und S2 (0,086 / 0,906 H),
+T1-T6 und TA (Schwanzverlauf) sowie T8, T9, F6-F19 und FS (Farben). Tests: unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41 und
+integration_r41_sichel_form laufen 4/4 Passed (SF_belege/v4/ctest_v4_r2.txt). Spiel-Asset EM30_HANGAR.EMD und Pin cfd1ac42 sind
+unveraendert. Die Varianten-EMD sfv4/emd/EM30_V4.EMD (sha256 174b7879) ist reproduzierbar mit "birkin_formen.py --variante v4 --aus DIR".
+
+**Leisten** (SF_belege/v4/, Spalten Nutzer-Vorlage | Nutzer-Beschriftung | V3 r2 | V4 neu): 01_vorn_kamera12, 02_seite_wie_bild2,
+03_kopf_nah_vorn_x4 und 04_kopf_nah_seite_x4 (je Zeile 1 ohne, Zeile 2 mit Messpunkten), 05_schwanz_x3 (Polygonzug der Vorlage),
+06_farben (mit den Sicht-Boxen), 07_gang (Lauf sfv4/r/V4r2), 08_rundum_V4.
+
+**Offen**
+1. S3: Der helle Teil des Seitenauges endet an der Naht zu den Vorderbild-Flaechen; dort liegt das Licht bei 0,24-0,9. Das Fenster KS2
+   (0,84-0,96 der Kopfbox) beginnt 3 px dahinter: 0,011 H statt <= 0,010. Versucht wurden: Augenmitte 0,042-0,049 H, Malgroesse 1,25-2,0,
+   Vorhang z0/z1 und vor 0,05-0,06, Vorderbild-Texel bis 360 E. als Auge sowie das Seitenbild fuer Flaechen am Auge. Letzteres ist verworfen,
+   weil K1-S3 dann rot wurden. Laeufe r2 Eichung 7-20.
+2. F14 (Buckel hell 54,8 statt 60, dL -5,2): Die Buckel-Texel sind dieselben wie die der Schultern vorn. Mit der Helligkeitsdecke Lum 200,
+   215 oder ganz ohne laege dL bei -4,6, -4,4 bzw. -4,2. Dann zeigt die (B)-linke Schulter vorn aber zwei weisse Texel wie ein Augenpaar.
+   Gewaehlt ist Lum 190 ohne diese Punkte. Entscheid durch den Nutzer: Schulterpunkte oder Buckel 1 L* dunkler.
+3. F7/F8 auf die ganzen Ids 13/10 (Runde-1-Mass) liegen weiter auseinander: 22,4 statt 33,3 bzw. 20,9 statt 16,4. Die Oberarme teilen
+   5798 Texel und die CLUT-Zeile 480, und UVs sowie CLUT-Feld sind G1. Das hellere Licht des Originals auf dem (B)-linken Arm laesst sich so
+   nicht nachbilden. Gemessen wird deshalb an der Lage der Messblatt-Fenster im Oberarm (oben 58 / 56 %): F7 3,9 und F8 3,0 sind gruen,
+   unten (Sicht-Boxen) ebenfalls. Abhilfe waere eine eigene UV/CLUT-Zeile fuer Mesh 10; dafuer muesste G1 geaendert werden (Nutzerentscheid).
+4. T7: h118 und h135 liegen innerhalb +-0,06 H. h85 gehoert zu Clip 11 (Halten, Gier 1893), bei h90 dreht die Szene auf Gier 1515.
+   Danach haengt die Kette dem Rumpf nach und steht bei h100 waagerecht nach hinten (Spitze 2057 E. ueber dem Boden); h110 und h125
+   schwingen aus. Die Biegung bleibt dabei erhalten (Gelenk 3 >= 44 Grad). Den Nachlauf zu daempfen hiesse, die Feder (k_feder,
+   SW_ERHALT) fuer alle Formen zu aendern. Das gehoert zum Szenenablauf G2 und ist nicht angefasst.
+5. Kopf im Spielbild: Die Spielpose h135 (Clip 1 Bild 45, Gier 1513) weicht von der angepassten Pose "135" (Clip 0 Bild 9, Gier 1737)
+   ab. Dort wirkt der Kopf mit den Zonenfarben flaechig (Leiste 07). Die K-Riegel gelten fuer Pose "135" (Pruefung V4 r1 4.3).
+6. Schwanzansatz vor der Flanke: Damit der Schwanz an den Nutzerpunkten aus dem Ruecken tritt, liegt der Ansatz 0,12 H zur Kamera hin.
+   Der Koerper Ref2 (G1) reicht 0,06 H weiter nach hinten als das Video. Aus anderen Blickwinkeln (08_rundum) steht der Ansatz deshalb
+   seitlich etwas vom Buckel ab.
+7. Die Sichel (B)-links (Id 15) behaelt die Farben von Referenz 2; im Original ist sie nicht abgrenzbar (Messblatt 9.3).
+8. Die Hautfaktoren in eichen_v4.py ('haut') wirken nur noch auf die Zeilen 483/485. Die Zeilen 480/481/482/484 und die Koerpertexel kommen
+   aus farben_koerper_v4.npz.
+9. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme.
