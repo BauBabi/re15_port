@@ -582,6 +582,17 @@ V4_KOERPER = os.environ.get('RE15_V4_KOERPER', os.path.join(V4_DIR, 'farben_koer
 # V4 Runde 5: Schwanztexel (Indizes 256 x 64, uv art 'achse') und Zeile 487 aus tools/r41_sichel/v4/r5_schwanz_textur.py (Projektion
 # von Vorlage 2), committet; ersetzt die Schwanzbaender aus V4_FARBEN
 V4_SCHWANZ = os.environ.get('RE15_V4_SCHWANZ', os.path.join(V4_DIR, 'farben_schwanz_v4.npz'))
+# V4 Originaltexturen (Vorgabe des Orchestrators 2026-11-07 nach dem Nutzer: "Bei der Sichel Form V4, warum sind denn da die Farben so
+# extrem scheisse? ... die Form baut von Farben und Texturen her ja nun wirklich auf die Urspruengliche Birkin Form auf"): ersetzt Messblatt
+# V4 Abschnitt 5 (Farbeichung an den Videobildern, V4 Runde 1-5). RE15_V4_TEXTUR=ref2 (Standard): Koerper = Referenz 2 unveraendert
+# (keine eigenen Koerperzeilen 488-491, keine Koerpertexel aus farben_koerper_v4.npz, keine geeichten Hautzeilen, keine Farbklammer), die CLUT
+# bleibt bytegleich Referenz 2; Kopf (Mesh 9) und Schwanz (Meshes 16-22) zeigen auf die Referenz-2-Hautzeile V4_REF2_ZEILE und tragen Texel
+# aus dem Referenz-2-Atlas (tools/r41_sichel/v4/ref2tex_v4.py, Datei V4_REF2TEX). RE15_V4_TEXTUR=eichung baut V4 Runde 5 (a762bd66) nach.
+V4_TEXTUR = os.environ.get('RE15_V4_TEXTUR', 'ref2')
+V4_REF2TEX = os.environ.get('RE15_V4_REF2TEX', os.path.join(V4_DIR, 'farben_ref2tex_v4.npz'))
+# Zeile 480 = CLUT der Oberarm-/Rueckenhaut von Referenz 2 (Mesh 13 Oberarm (W)-rechts nur Zeile 480, Mesh 8 Rumpf Zeilen 480/481;
+# Zaehlung ref2tex_v4.py atlas(), Protokoll SF_belege/v4/ref2tex_protokoll.json)
+V4_REF2_ZEILE = 480
 # Posen der beiden Vorlage-Kameras (Spielkamera 50A0 Schnitt 12): tools/r41_sichel/v4/posen_v4.json
 V4_POSE_VORN = dict(clip=0, bild=9, gier=1737, x=-9279, z=-22511)    # "135": Silhouette n1485, IoU 0,619 (posen_v4.py)
 V4_POSE_SEITE = dict(clip=1, bild=26, gier=556, x=-8070, z=-21202)   # "85" = sfv2/posen_seite.json "85" (Messblatt V4 Abschnitt 7)
@@ -756,6 +767,10 @@ def _variante_v4():
     f['schwanz_kette'] = dict(f['schwanz_kette'], **SCHWANZ_V4)
     f['kopf_v4'] = KOPF_V4
     f['koerper_zeilen_v4'] = KOERPER_ZEILEN_V4
+    if V4_TEXTUR == 'ref2':                    # V4 Originaltexturen: Koerper-UV/CLUT wie Referenz 2, Kopf/Schwanz in Zeile 480
+        f['kopf_v4'] = dict(KOPF_V4, clut=V4_REF2_ZEILE)
+        f['schwanz_kette'] = dict(f['schwanz_kette'], uv=dict(SCHWANZ_V4['uv'], clut=V4_REF2_ZEILE << 6))
+        f['koerper_zeilen_v4'] = None
     return f
 
 
@@ -1166,6 +1181,29 @@ def farbklammer(rgb):
     for i in np.nonzero(lab[:, 1] > FARB_A_MAX)[0]:
         out[i] = _lab_rgb(lab[i, 0], FARB_A_MAX, lab[i, 2])
     return out
+
+
+def v4_ref2tex_einsetzen(tim, kp, sw):
+    """V4 Originaltexturen (V4_TEXTUR 'ref2'): nur die Texel der freien Atlasflaechen Kopf vorn/seitlich (TPage 128 v 160-223) und Schwanz
+    (TPage 130 u 64-127) aus V4_REF2TEX (Indizes in die Referenz-2-Zeile V4_REF2_ZEILE); CLUT-Block und alle uebrigen Texel bleiben
+    bytegleich. Ohne Datei: Index 0 der Flaechen bleibt (Bau des ersten Stands fuer ref2tex_v4.py)."""
+    tim = bytearray(tim)
+    _cx, _cy, _cw, _ch, _c, ende = _clut(tim)
+    iw, ih = struct.unpack_from('<HH', tim, ende + 8)
+    breite = iw * 2
+    pix = np.frombuffer(bytes(tim[ende + 12:ende + 12 + breite * ih]), np.uint8).reshape(ih, breite).copy()
+    f = dict(np.load(V4_REF2TEX)) if os.path.exists(V4_REF2TEX) else {}
+    pb = 128 * (kp['page'] & 0xF)
+    for name, ans in (('kopf_vorn', kp['vorn']), ('kopf_seite', kp['seite'])):
+        u0, u1 = ans['u']; v0, v1 = ans['v']
+        if name in f:
+            pix[v0:v1 + 1, pb + u0:pb + u1 + 1] = f[name]
+    uv = sw['uv']
+    pbs = 128 * (uv['page'] & 0xF)
+    if 'schwanz' in f:
+        pix[uv['v'][0]:uv['v'][1] + 1, pbs + uv['u'][0]:pbs + uv['u'][1] + 1] = f['schwanz']
+    tim[ende + 12:ende + 12 + breite * ih] = pix.tobytes()
+    return bytes(tim)
 
 
 def v4_farben_einsetzen(tim, kp, sw, kz=None):
@@ -2542,7 +2580,9 @@ def baue(blob, form):
         tim = schwanz_textur(tim, form['schwanz_textur'])
     if form.get('kopf_v2') and not form.get('kopf_v3'):     # V3 malt nach dem Bau (kopf_v3_malen)
         tim = kopf_v2_textur(tim, form['kopf_v2'])
-    if form.get('kopf_v4'):                                 # V4: Texel/CLUT aus der Eichung (v4_farben_einsetzen)
+    if form.get('kopf_v4') and V4_TEXTUR == 'ref2':         # V4 Originaltexturen: nur Kopf-/Schwanztexel, CLUT = Referenz 2
+        tim = v4_ref2tex_einsetzen(tim, form['kopf_v4'], form['schwanz_kette'])
+    elif form.get('kopf_v4'):                               # V4 Runde 1-5: Texel/CLUT aus der Eichung (v4_farben_einsetzen)
         tim = v4_farben_einsetzen(tim, form['kopf_v4'], form['schwanz_kette'], form.get('koerper_zeilen_v4'))
     if len(tim) % 4:
         tim += bytes(4 - len(tim) % 4)
