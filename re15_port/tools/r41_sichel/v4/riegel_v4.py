@@ -8,7 +8,12 @@ H_port = Sohle - Oberkante der Koerper-Ids ohne 16-22 auf der nach unten verlaen
 Zeile 479). Kopfbox = Bbox der Pixel mit Id 9. Farben: Vergleichsregel (Gauss sigma 1,5, V' = a + b x P, Lab D65, dE00 skimage).
 Messfenster der Id-Masken 2 px erodiert (Regel "2 px erodiertes Fenster" der Lesung).
 Abweichungen vom Riegeltext (im Ausdruck vermerkt):
-  T1: Id 16 liegt in V4 ganz im Buckel (versenkt) - gemessen wird der unterste Schwanz-Pixel (Ids 16-22) an der Grenze zum Rumpf (7/8).
+  T1: Runde 2 misst wie das Messblatt (unterster Pixel von Id 16 an Id 7/8); nur wenn Id 16 nicht sichtbar ist, die Ersatzregel von
+      Runde 1 (unterster Schwanz-Pixel an Id 7/8).
+Runde 2 (Pruefung V4 r1): T2-Drehung nach dem Zahlen-Pruefer (Tangenten +-0,025 H an den Enden eines 0,10-H-Fensters; Original 66-70
+  Grad), T4 prueft die Sohlenhoehe, neuer Riegel TA (Nutzerpunkte absolut), T9 (Achsenfarbe, Sicht-Pruefung), Komponenten von K1/S1 im
+  2 px erodierten Kopf gezaehlt, S1 verlangt 1 Komponente, F7/F8 an der Lage der Messblatt-Fenster im Oberarm (obere 58/56 % der
+  Zeilen; Id ganz als F7g/F8g ausgegeben), FS-Zeilen (Sicht-Boxen: Oberarme unten, Rumpf + Schultern mit Rotanteil, Unterarme, Beine).
   F10: die Klaue (B)-rechts = (W)-links ist Id 12 (EM30-Knochen 10-12 = Arm links); Id 15 ist die dunkle Sichel (B)-links. Gemessen
        wird Id 12 (Lage wie das Originalfenster x 482-507), Id 15 wird mit ausgegeben.
 """
@@ -33,6 +38,47 @@ ZIEL = dict(  # Messblatt V4 Abschnitt 5 (Ziele, Videoraum) und Abschnitt 7
 FENSTER = dict(KV1=(0.40, 0.02, 0.80, 0.32), KV2=(0.52, 0.25, 0.85, 0.75), KV3=(0.44, 0.66, 0.62, 0.81),
                KV4=(0.21, 0.88, 0.62, 1.05), KV5=(0.05, 0.62, 0.35, 0.85), KS1=(0.11, 0.04, 0.53, 0.29),
                KS2=(0.84, 0.52, 0.96, 0.80))
+
+
+# V4 Runde 2 (Sicht-Pruefung V4 r1 1.3): Schwanzfarbe entlang der Achse - 7 Achsenpunkte der Original-Maske (Leser A,
+# pruefung_sicht/messen_sicht.py ACHSE), Ziel = Lab-Mittel des 5x5-Fensters in Vorlage 2 (roh); am Port der naechste Schwanzpixel.
+ACHSE = [(330, 236), (310, 243), (292, 262), (289, 280), (288, 300), (287, 318), (290, 335)]
+ACHSE_MITTE = ACHSE[1:5]          # Bogen und senkrechtes Stueck (Klasse 'mitte' im Generator)
+_achse_ziel = {}
+
+
+def achse_ziele():
+    if not _achse_ziel:
+        o2 = G.vorlage(2)
+        for (x, y) in ACHSE:
+            _achse_ziel[(x, y)] = G.lab(o2[y - 2:y + 3, x - 2:x + 3].reshape(-1, 3)).mean(0)
+    return _achse_ziel
+
+
+def ziel(k):
+    """Ziel-Lab (Videoraum) einer Region: ZIEL, dazu T9M = Mittel der Achsenpunkte ACHSE_MITTE."""
+    z = achse_ziele()
+    if k == 'T9M':
+        return tuple(float(v) for v in np.mean([z[p] for p in ACHSE_MITTE], 0))
+    if k == 'T9O':
+        return tuple(float(v) for v in np.mean([z[p] for p in ACHSE[1:3]], 0))
+    if k == 'T9S':
+        return tuple(float(v) for v in np.mean([z[p] for p in ACHSE[3:5]], 0))
+    return ZIEL[k]
+
+
+def achse_regionen(ids, V=None):
+    """Je Achsenpunkt: Maske 5x5 um den naechsten Schwanzpixel (nur Schwanz-Ids) und Ziel-Lab."""
+    sw = np.isin(ids, SCHW)
+    sy, sx = np.nonzero(sw)
+    out = {}
+    if not len(sx):
+        return out
+    for (x, y), z in achse_ziele().items():
+        j = int(np.argmin((sx - x) ** 2 + (sy - y) ** 2)); qx, qy = int(sx[j]), int(sy[j])
+        m = np.zeros(ids.shape, bool); m[qy - 2:qy + 3, qx - 2:qx + 3] = True
+        out['A%d_%d' % (x, y)] = (m & sw, tuple(float(v) for v in z))
+    return out
 
 
 def er(m, k=2):
@@ -64,10 +110,13 @@ def kopf_blob(V, Lab, maske, box):
     ext = float(win[iy, ix]); umg = float(np.median(L[py - 10:py + 11, px - 10:px + 11]))
     thr = 0.5 * (ext + umg)
     hell = (L > thr) & maske
-    lb, k = nd.label(hell)                           # 4er wie p_blob
+    # Komponenten gezaehlt im 2 px erodierten Kopf (Regel "2 px erodiertes Fenster" der Lesung, wie der Zahlen-Pruefer pz_mess.blob):
+    # an der Kopfkontur mischt die Weichzeichnung sigma 1,5 den hellen Hintergrund ein (Runde 2: 1-px-Saum an der Oberkante seitlich)
+    lb, k = nd.label(hell & er(maske, 2))                # 4er wie p_blob
     groessen = nd.sum(hell, lb, range(1, k + 1)) if k else []
     n_komp = int(sum(1 for g in groessen if g >= 4))
-    mk = lb == lb[py, px]
+    lb_v, _kv = nd.label(hell)
+    mk = lb_v == lb_v[py, px]
     ys, xs = np.nonzero(mk)
     return dict(maske=mk, n=n_komp, ext=ext, umg=umg, thr=thr, Lmax=float(L[mk].max()), kontrast=float(L[mk].max() - umg),
                 bbox=(int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())), wh=(int(xs.ptp() + 1), int(ys.ptp() + 1)),
@@ -139,8 +188,8 @@ def kopf_seite(mo, P):
     d1 = G.de00(la, ZIEL['auge_s'])
     w, h = b['wh'][0] / H, b['wh'][1] / H
     Z = []
-    Z.append(zeile('S1 Auge seitlich', '48,4/4,0/0,5 dE00 <= 6; 0,028-0,052 x 0,040-0,070 H', '%s dE00 %.1f; %.3f x %.3f H; %d Komp.' % (
-        '/'.join('%.1f' % v for v in la), d1, w, h, b['n']), d1 <= 6 and 0.028 <= w <= 0.052 and 0.040 <= h <= 0.070))
+    Z.append(zeile('S1 Auge seitlich', '1 heller Fleck (1 Komponente); 48,4/4,0/0,5 dE00 <= 6; 0,028-0,052 x 0,040-0,070 H', '%s dE00 %.1f; %.3f x %.3f H; %d Komp.' % (
+        '/'.join('%.1f' % v for v in la), d1, w, h, b['n']), d1 <= 6 and 0.028 <= w <= 0.052 and 0.040 <= h <= 0.070 and b['n'] == 1))
     hv = (x1 - b['sp'][0]) / H; ue = (so - b['sp'][1]) / H
     Z.append(zeile('S2 Augenlage seitlich', '0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle',
                    '%.3f H; %.3f H' % (hv, ue), 0.03 <= hv <= 0.07 and 0.76 <= ue <= 0.82))
@@ -179,13 +228,23 @@ def schwanz_mass_h(img, ids, ok, so):
     xs_top = np.nonzero(body[ok])[0]
     scheitel = float(xs_top.mean())
     rumpf = np.isin(ids, (7, 8))
-    grenze = m & nd.binary_dilation(rumpf, structure=np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]]))
+    kreuz = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
+    # T1 (Messblatt V4 Abschnitt 7): unterster Pixel von Id 16 an der Grenze zum Rumpf (Id 7/8). Runde 2: Id 16 ist sichtbar (der
+    # Ansatz liegt vor der Flanke, Pruefung V4 r1 Zahlen 4.1); nur wenn Id 16 fehlt, gilt die Ersatzregel von Runde 1 (Ids 16-22).
+    g16 = m & (ids == 16) & nd.binary_dilation(rumpf, structure=kreuz)
+    t1_regel = 'Id 16 an Id 7/8'
+    grenze = g16
     if not grenze.any():
-        grenze = m & nd.binary_dilation(body)
+        grenze = m & nd.binary_dilation(rumpf, structure=kreuz); t1_regel = 'Ersatz: Ids 16-22 an Id 7/8 (Id 16 nicht sichtbar)'
+    if not grenze.any():
+        grenze = m & nd.binary_dilation(body); t1_regel = 'Ersatz: Ids 16-22 am Koerper'
     gy, gx = np.nonzero(grenze)
     i = int(np.argmax(gy + 1e-3 * gx))
     beg = np.array([float(gx[i]), float(gy[i])])
-    Q = m & nd.binary_dilation(body)
+    # Mittellinie ab dem vordersten Schwanzpixel (Saat wie Pruefer pz_mess.schwanz: groesstes x an der Koerpergrenze)
+    an = m & nd.binary_dilation(body)
+    ay, ax_ = np.nonzero(an if an.any() else m)
+    Q = np.zeros_like(m); Q[ay[ax_ >= ax_.max() - 1], ax_[ax_ >= ax_.max() - 1]] = True
     C, _d = mittellinie(m, Q, H)
     n = len(C)
     w = max(1, int(round(0.01 * H)))
@@ -202,6 +261,18 @@ def schwanz_mass_h(img, ids, ok, so):
     jj = np.arange(rand, n - rand)
     jb = int(jj[np.argmax(np.abs(dth[jj]))])
     breite = np.array([dicke(m, C, j)[0] for j in range(n)])
+    # T2-Drehung nach dem Zahlen-Pruefer (V4 r1, pz_t2orig.drehung): in jedem 0,10-H-Fenster der Bogenlaenge hinter beginn - 0,10 H die
+    # Richtungsaenderung zwischen der zentrierten Tangente +-0,025 H am Fensteranfang und am Fensterende; Maximum. Am Original-Schwanz
+    # (Leser-Masken) ergibt dasselbe Verfahren 66-70 Grad (SF_PRUEFUNG_V4_r1_zahlen.md 4.2).
+    sl = np.r_[0, np.cumsum(np.hypot(*np.diff(C, axis=0).T))]
+    at = lambda x: np.array([np.interp(x, sl, C[:, 0]), np.interp(x, sl, C[:, 1])])
+    dreh_t = 0.0
+    for x in np.arange(0, sl[-1] - 0.10 * H, 0.5):
+        if at(x)[0] > beg[0] - 0.10 * H:
+            continue
+        t0 = at(x + 0.025 * H) - at(max(0.0, x - 0.025 * H)); t1 = at(min(sl[-1], x + 0.125 * H)) - at(x + 0.075 * H)
+        w2 = np.degrees(np.arctan2(t1[1], -t1[0]) - np.arctan2(t0[1], -t0[0]))
+        dreh_t = max(dreh_t, float(w2))
     je = int(np.argmax(C[:, 1]))
     # Knick: schmalste Stelle zwischen Biegung (+0,03 H) und Ende (-0,03 H)
     a0, a1 = jb + rand, max(jb + rand + 1, je - rand)
@@ -209,9 +280,11 @@ def schwanz_mass_h(img, ids, ok, so):
     P = lambda j: C[j]
     rel = lambda p: ((p[0] - beg[0]) / H, (p[1] - beg[1]) / H)
     # T5: Breite bei f der Achse Knick -> Beginn (Index jk -> 0)
+    # Runde 2: die Achse beginnt am gemessenen Beginn (der Ansatz liegt vor der Flanke, die Mittellinie davor gehoert nicht zu T5)
+    j0 = int(np.argmin(np.hypot(C[:jk + 1, 0] - beg[0], C[:jk + 1, 1] - beg[1]))) if jk > 0 else 0
     f_br = {}
     for f in np.round(np.arange(0.05, 0.96, 0.05), 2):
-        f_br[float(f)] = float(breite[int(round(jk * (1 - f)))] / H)
+        f_br[float(f)] = float(breite[int(round(j0 + (jk - j0) * (1 - f)))] / H)
     # T6 Endstueck
     end_b = breite[jk:je + 1]
     end_mittel = float(np.median(end_b[int(0.15 * len(end_b)):max(int(0.85 * len(end_b)), int(0.15 * len(end_b)) + 1)]) / H) \
@@ -223,7 +296,7 @@ def schwanz_mass_h(img, ids, ok, so):
     taille = float(breite[jk] / H)
     schmal_kette = float(np.min(breite[rand:max(rand + 1, jk + 1)]) / H)
     return dict(H=H, ok=ok, sohle=so, scheitel=scheitel, beginn=beg, T1=((scheitel - beg[0]) / H, (so - beg[1]) / H),
-                biegung=P(jb), T2=rel(P(jb)), drehung=float(abs(dth[jb])), knick=P(jk), T3=rel(P(jk)), ende=P(je), T4=rel(P(je)),
+                biegung=P(jb), T2=rel(P(jb)), drehung=dreh_t, drehung_alt=float(abs(dth[jb])), t1_regel=t1_regel, knick=P(jk), T3=rel(P(jk)), ende=P(je), T4=rel(P(je)),
                 ende_ueber_sohle=(so - C[je][1]) / H, T5=f_br, taille=taille, schmal_vor_knick=schmal_kette, end_breite=end_mittel,
                 end_laenge=end_len, end_richtung=end_dir, end_vor=float(vor), C=C, breite=breite, jb=jb, jk=jk, je=je, maske=m)
 
@@ -235,16 +308,25 @@ def schwanz(mo, P):
     Z = []
     t1 = s['T1']
     Z.append(zeile('T1 Schwanz Beginn', '0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03)', '%.3f H hinter, %.3f H ueber' % t1,
-                   abs(t1[0] - 0.15) <= 0.03 and abs(t1[1] - 0.767) <= 0.03, 'unterster Schwanz-Pixel an Id 7/8 (Id 16 versenkt)'))
+                   abs(t1[0] - 0.15) <= 0.03 and abs(t1[1] - 0.767) <= 0.03, s['t1_regel']))
     t2 = s['T2']
-    Z.append(zeile('T2 Biegung', 'dx -0,245 dy +0,036 (+-0,03); Drehung 60-100 Grad auf 0,10 H', 'dx %.3f dy %.3f; %.0f Grad' % (
-        t2[0], t2[1], s['drehung']), abs(t2[0] + 0.245) <= 0.03 and abs(t2[1] - 0.036) <= 0.03 and 60 <= s['drehung'] <= 100))
+    Z.append(zeile('T2 Biegung', 'dx -0,245 dy +0,036 (+-0,03); Drehung 60-100 Grad auf 0,10 H (Tangenten +-0,025 H)',
+                   'dx %.3f dy %.3f; %.1f Grad (Runde-1-Mass %.0f)' % (t2[0], t2[1], s['drehung'], s['drehung_alt']),
+                   abs(t2[0] + 0.245) <= 0.03 and abs(t2[1] - 0.036) <= 0.03 and 60 <= s['drehung'] <= 100))
     t3 = s['T3']
     Z.append(zeile('T3 Knick (Taille)', 'dx -0,265 dy +0,257 (+-0,03)', 'dx %.3f dy %.3f' % t3,
                    abs(t3[0] + 0.265) <= 0.03 and abs(t3[1] - 0.257) <= 0.03))
     t4 = s['T4']
     Z.append(zeile('T4 Ende', 'dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle', 'dx %.3f dy %.3f; %.3f H ueber Sohle' % (
-        t4[0], t4[1], s['ende_ueber_sohle']), abs(t4[0] + 0.245) <= 0.03 and abs(t4[1] - 0.397) <= 0.03))
+        t4[0], t4[1], s['ende_ueber_sohle']), abs(t4[0] + 0.245) <= 0.03 and abs(t4[1] - 0.397) <= 0.03 and
+        abs(s['ende_ueber_sohle'] - 0.37) <= 0.03))
+    # Runde 2 (Pruefung V4 r1 Zahlen 4.1): die beschrifteten Punkte absolut in derselben Kamera (Pose 85 = Vorlage 2), Abstand je Achse
+    # <= 0,03 H; Nutzer-Linienenden Messblatt V4 Abschnitt 1a: Beginn (357,243), Knick (290,308), Ende (295,343)
+    nutzer = dict(Beginn=((357, 243), s['beginn']), Knick=((290, 308), s['knick']), Ende=((295, 343), s['ende']))
+    ab = {k: ((q[0] - p[0]) / s['H'], (q[1] - p[1]) / s['H']) for k, (p, q) in nutzer.items()}
+    Z.append(zeile('TA Schwanz absolut', 'Beginn (357,243), Knick (290,308), Ende (295,343) je Achse +-0,03 H',
+                   '; '.join('%s (%.0f,%.0f) %+.3f/%+.3f H' % (k, nutzer[k][1][0], nutzer[k][1][1], *ab[k]) for k in ab),
+                   all(abs(v[0]) <= 0.03 and abs(v[1]) <= 0.03 for v in ab.values())))
     f = s['T5']
     soll = {0.1: (0.03, 0.015), 0.3: (0.065, 0.02), 0.5: (0.125, 0.025), 0.7: (0.14, 0.025)}
     ok5 = all(abs(f[k] - v) <= t for k, (v, t) in soll.items())
@@ -276,6 +358,19 @@ def schwanz(mo, P):
     ok8 = all(x <= 6 for x in d.values()) and fr['F15'][0][1] >= 7 and fr['F18'][0][1] <= 6
     Z.append(zeile('T8 Schwanzfarbe', 'F15 9,3/11,4/1,5; F16 8,7/8,4/2,2; F17 26,8/-0,1/2,4; F18 15,2/3,2/1,6; dE00 <= 6; a* Wurzel >= 7, Ende <= 6',
                    '; '.join('%s %s dE00 %.1f (%d px)' % (k, '/'.join('%.1f' % x for x in fr[k][0]), d[k], fr[k][1]) for k in fr), ok8))
+    # T9 (Sicht-Pruefung V4 r1 1.3): Farbe entlang der Achse, je Punkt 5x5 um den naechsten Schwanzpixel (Videoraum) gegen das Original;
+    # Riegel: Mittel dE00 <= 6 (Regionsregel des Messblatts) und Mittel-L* / a* der 7 Punkte innerhalb 4 / 3 vom Original
+    ar = achse_regionen(ids)
+    werte = []
+    for k9, (m9, z9) in ar.items():
+        la9 = lab1(V[m9].mean(0)) if m9.sum() else np.full(3, np.nan)
+        werte.append((k9, la9, z9, G.de00(la9, z9) if m9.sum() else 99.0))
+    if werte:
+        dm = float(np.mean([w[3] for w in werte]))
+        lo = np.mean([w[2] for w in werte], 0); lp = np.mean([w[1] for w in werte], 0)
+        ok9 = dm <= 6 and abs(lp[0] - lo[0]) <= 4 and abs(lp[1] - lo[1]) <= 3
+        Z.append(zeile('T9 Schwanzachse', '7 Achsenpunkte: Mittel dE00 <= 6; L*/a* Mittel +-4/+-3 zum Original %.1f/%.1f' % (lo[0], lo[1]),
+                       'Mittel dE00 %.1f; L*/a* %.1f/%.1f; je Punkt %s' % (dm, lp[0], lp[1], ' '.join('%.1f' % w[3] for w in werte)), ok9))
     return Z, s, (img, ids, V, fr, dict(F15=r15, F16=r16, F17=r17, F18=r18))
 
 
@@ -284,8 +379,23 @@ def koerper_farben(mo, P):
     img, ids = G.zeichne(mo, P['135'])
     V = G.videoraum(img); Lab = G.lab(V)
     rg = (V[..., 0] - V[..., 1]) >= 15
-    reg = {'F6': er(ids == 8) & rg, 'F7': er(ids == 13), 'F8': er(ids == 10), 'F9': er(np.isin(ids, (0, 1, 4))) & (Lab[..., 2] < 0),
-           'F10': er(ids == 12, 1) & rg, 'F10_id15': er(ids == 15, 1) & rg}
+
+    def zeilenteil(m, f0, f1):
+        ys_ = np.nonzero(m.any(1))[0]
+        if not len(ys_):
+            return m
+        y0_, y1_ = ys_.min(), ys_.max() + 1
+        b_ = np.zeros(m.shape, bool); b_[int(round(y0_ + f0 * (y1_ - y0_))):int(round(y0_ + f1 * (y1_ - y0_)))] = True
+        return m & b_
+    # Runde 2: F7/F8 an der Lage der Messblatt-Fenster im Oberarm (F7 y 167-212 im Arm y 160-250 = obere 58 %, F8 y 182-227 im Arm
+    # y 182-262 = obere 56 %); die Id-Masken ganz (Runde-1-Mass) werden als F7g/F8g mit ausgegeben
+    reg = {'F6': er(ids == 8) & rg, 'F7': zeilenteil(er(ids == 13), 0.0, 0.58), 'F8': zeilenteil(er(ids == 10), 0.0, 0.56),
+           'F9': er(np.isin(ids, (0, 1, 4))) & (Lab[..., 2] < 0),
+           'F10': er(ids == 12, 1) & rg, 'F10_id15': er(ids == 15, 1) & rg, 'F7g': er(ids == 13), 'F8g': er(ids == 10),
+           # Sicht-Pruefung V4 r1 1.4 (Boxen pruefung_sicht/messen_sicht.py BOX1, Original-Ziele hier gemessen): Oberarme unten, Rumpf
+           # gesamt, Unterarme, Beine
+           'FS_oa_bl_u': zeilenteil(er(ids == 13), 0.58, 1.0), 'FS_oa_br_u': zeilenteil(er(ids == 10), 0.56, 1.0),
+           'FS_rumpf': er(np.isin(ids, (7, 8))), 'FS_unterarm': er(np.isin(ids, (11, 14))), 'FS_beine': er(np.isin(ids, (2, 3, 5, 6)))}
     img2, ids2 = G.zeichne(mo, P['85'])
     V2 = G.videoraum(img2); Lab2 = G.lab(V2)
     b8 = er(ids2 == 8)
@@ -309,6 +419,29 @@ def koerper_farben(mo, P):
                                                                        erg['F10_id15'][1]) if k == 'F10' else ''))
     mt = float(np.mean(des))
     Z.append(zeile('F Mittel', 'Mittel dE00 <= 4', '%.2f' % mt, mt <= 4))
+    for k in ('F7g', 'F8g'):
+        la, n = erg[k]; zk = ZIEL[k[:2]]
+        Z.append(zeile('F %s (Id ganz, Runde-1-Mass)' % k, '%s (nur Angabe)' % '/'.join('%.1f' % v for v in zk),
+                       '%s dE00 %.1f dL %+.1f (%d px)' % ('/'.join('%.1f' % v for v in la), G.de00(la, zk), la[0] - zk[0], n), True,
+                       'Meshes 10/13 teilen 5798 Texel und die CLUT-Zeile 480 (G1): das hellere Licht des Originals auf dem (B)-linken Arm '
+                       'ist mit gemeinsamen Texeln nicht nachzubilden'))
+    o1 = G.vorlage(1)
+    sicht = dict(FS_oa_bl_u=([(300, 213, 345, 250)], 'Oberarm (B)-links unten'), FS_oa_br_u=([(455, 228, 500, 262)], 'Oberarm (B)-rechts unten'),
+                 FS_rumpf=([(352, 196, 448, 292), (318, 160, 360, 190), (425, 165, 470, 195)], 'Rumpf + Schultern'),
+                 FS_unterarm=([(468, 268, 500, 330)], 'Unterarme'), FS_beine=([(356, 352, 392, 430)], 'Unterschenkel'))
+    for k, (boxen, nm) in sicht.items():
+        mm = np.zeros((480, 640), bool)
+        for (x0, y0, x1, y1) in boxen:
+            b_ = np.zeros((480, 640), bool); b_[y0:y1 + 1, x0:x1 + 1] = True; mm |= er(b_)
+        op = o1[mm]
+        zo = lab1(op.mean(0)); rot_o = float(((op[:, 0] - op[:, 1]) >= 15).mean())
+        la, n = erg[k]
+        rp = V[reg[k]]; rot_p = float(((rp[:, 0] - rp[:, 1]) >= 15).mean()) if len(rp) else float('nan')
+        dd = G.de00(la, zo) if n else 99.0
+        Z.append(zeile('FS %s' % nm, '%s, Rotanteil %.2f; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15' % ('/'.join('%.1f' % v for v in zo), rot_o),
+                       '%s dE00 %.1f dL %+.1f; Rotanteil %.2f (%d px)' % ('/'.join('%.1f' % v for v in la), dd, la[0] - zo[0], rot_p, n),
+                       dd <= 5 and abs(la[0] - zo[0]) <= 4 and abs(rot_p - rot_o) <= 0.15,
+                       'Sicht-Pruefung V4 r1 1.4, Boxen %s' % boxen))
     # F0 Gueltigkeit: Wand links im Render (BSS-Hintergrund)
     w = lab1(G.mittel(V, (40, 150, 119, 299)))
     d0 = G.de00(w, ZIEL['F0'])

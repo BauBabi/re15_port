@@ -13,6 +13,10 @@ Verfahren (Messblatt V4 Abschnitt 5 "Umrechnung auf Texel", hier fuer alle Regio
      Koerper (Zeilen 480-482, Texel unveraendert): je Zeile Faktoren R,G,B und ein Helligkeitsexponent (Kontrast) fuer die Haut,
      eigene Faktoren fuer die blauen Eintraege (Jeans), geloest gegen F6-F10, F14, F19 (scipy least_squares in Lab, Grenzen).
   5. Pruefung mit riegel_v4.py (Bauer und Pruefer gleich). Die Runden wiederholen 1-4 mit den neuen Masken.
+  Runde 2 (Pruefung V4 r1): Koerperfarben kommen aus r2_koerper_farben.py (farben_koerper_v4.npz ersetzt im Generator die Zeilen
+  480/481/482/484 und die Koerpertexel; die Hautfaktoren 'haut' hier wirken nur noch auf die Zeilen 483/485); Augenpunkt = KOPF_V4 auge;
+  Auge seitlich als Ellipse im Bild (S2/S1) mit Lichtausgleich je Texel; Haarvorhang-Texel im Vorderbild -> seitliche Haarzone;
+  Schwanz in 6 Baendern (Wurzel, Aussenkante, Mitte, senkrecht, Unterseite, Endstueck) mit den Achsenpunkten T9 als Regionen.
 Zonen Kopf vorn/seitlich (Anteile der Port-Kopfbox = Bbox Id 9, x von (B)-links, y von oben; Messblatt Abschnitt 2/3/7):
   Fenster KV1-KV5, KS1-KS3 wie p_riegelfenster.py; zusaetzliche Zonen KV6-KV8, KS4-KS6 mit Zielwerten aus Vorlage 1 (entblendet) bzw.
   Vorlage 2, gemessen mit v4_gemein.fenster/mittel auf der Original-Kopfbox (Ausgabe dieses Skripts, Protokoll eichung_v4.json).
@@ -56,7 +60,10 @@ ZONEN = [
     ('s_haar', 'seite', 'KS2', 'Messblatt S3 / F13: 19,1 / 1,2 / 1,1'),
     ('s_auge', 'seite', 'AUGE_S', 'Messblatt S1 / F12: 48,4 / 4,0 / 0,5'),
 ]
-BAENDER = [('wurzel', 'F15'), ('aussen', 'F17'), ('unten', 'F16'), ('ende', 'F18')]   # Schwanz-Zeile 487 (Messblatt T8)
+# Schwanz-Zeile 487 (Messblatt T8); V4 Runde 2: Klassen 'mitte' (Ansatz + Biegung) und 'senkrecht' (bis zum Knick) fuer die Achse
+# (Sicht-Pruefung V4 r1 1.3), Ziele T9O / T9S = Mittel der 5x5-Fenster an den Achsenpunkten (310,243)+(292,262) bzw. (289,280)+(288,300)
+# der Vorlage 2 (Leser A, pruefung_sicht/messen_sicht.py ACHSE), roh
+BAENDER = [('wurzel', 'F15'), ('aussen', 'F17'), ('mitte', 'T9O'), ('senkrecht', 'T9S'), ('unten', 'F16'), ('ende', 'F18')]
 FENSTER_ZUS = dict(KV6=(0.0, 0.0, 0.40, 0.32), KV7=(0.0, 0.32, 0.12, 0.62), KV8=(0.85, 0.25, 1.0, 0.75), KV9=(0.12, 0.32, 0.52, 0.62),
                    KS3=(0.44, 0.82, 0.89, 0.99), KS4=(0.11, 0.30, 0.70, 0.55), KS5=(0.0, 0.55, 0.44, 0.82), KS6=(0.53, 0.04, 1.0, 0.30))
 
@@ -158,6 +165,7 @@ def zonen_karte(kb, H, ok_so, ansicht, shape=(480, 640), auge_seite=None):
         # Haarkante (S3): dunkler Streifen vor dem Auge = vom Augenrand bis zur Vorderkante, ueber die Augenhoehe und das Fenster KS2
         haar = (xx + 0.5 >= cx + ax) & (((yy >= cy - ay) & (yy <= cy + ay)) | ((fy >= 0.52) & (fy < 0.80)))
         setz('s_haar', haar)
+        setz('s_auge', ((xx + 0.5 - cx) / ax) ** 2 + ((yy + 0.5 - cy) / ay) ** 2 <= 1.0)   # Runde 2: Auge seitlich im Bild (S1/S2)
     return lab
 
 
@@ -179,15 +187,28 @@ def texel_zonen(mo, info, ansicht, karte, kp):
 # Augenzone (Kopfraum, Halbachsen x vorn / y Hoehe / z Breite in E.): Fleck K3 vorn 0,026 x 0,033 H (H 364: 9,5 x 12 px bei
 # ~0,095 px/E. = 100 x 126 E.), S1 seitlich 0,040 x 0,055 H (H 264: 10,6 x 14,5 px bei ~0,069 px/E. = 153 x 210 E.); gemalt groesser, weil
 # die Halbwert-Maske nach sigma 1,5 kleiner misst (Eichlauf 1 vorn: gemalt 1,0 -> gemessen 0,6). Nachgestellt im Dossier V4.
-AUGE_ACHSEN = (95.0, 80.0, 95.0)   # Eichlauf 6 mit y 95: Auge vorn durch eine Flaechennaht geteilt (K1); Lauf 11 mit x/z 75/70: Auge seitlich 0,015 x 0,023 H in 4 Teilen (S1)
+AUGE_ACHSEN = (88.0, 74.0, 88.0)   # Runde 2: x0,93 (K3 mit 95/80/95 und Breite x1,55: 0,036 x 0,044 H, Grenze 0,036 x 0,043). Runde 1: Eichlauf 6 mit y 95: Auge vorn durch eine Flaechennaht geteilt (K1); Lauf 11 mit x/z 75/70: Auge seitlich 0,015 x 0,023 H in 4 Teilen (S1)
 # Augenpunkt: K4 0,050 H (B)-links der Kopfmitte (Messblatt-Mitte), 0,11 H unter der Oberkante (Toleranz 0,07-0,12) statt 0,093: nur
 # so liegt derselbe Oberflaechenpunkt in der Seitenansicht auch im S2-Band (0,034 H hinter der Kante, 0,814 H ueber der Sohle; mit 0,093
 # 0,83 H > 0,82; Pruefung im Dossier V4). Eichlauf 5 mit 0,11: S2 0,829 H -> 0,118 (gemessen K4 y 0,105 bei 0,11). Ein Auge fuer beide Ansichten (Messblatt Abschnitt 3: das sichtbare Auge ist das (W)-rechte).
 # Eichlauf 4 mit 0,055: Auge vorn als schmaler Streifen am Kopfrand (streifender Blick), daher die Mitte 0,050.
-AUGE_K4 = (0.05, 0.12)
+AUGE_K4 = (0.05, 0.12)      # nur noch fuer auge_3d (Runde 1); Runde 2 nimmt KOPF_V4 auge
+# Radialer Verlauf der Augen (Faktor 1 +- AUGE_RADIAL von der Mitte zum Rand): das Original-Auge hat nach der Weichzeichnung L*-Max 56,2 bei
+# Mittel 46,9 (Messblatt K1/F2, Kontrast 29,5); nachgestellt an K1/S1 (Dossier V4 Runde 2)
+AUGE_RADIAL = 0.40
+AUGE_RAND = 0.5               # Randbreite des Augenprofils seitlich (Anteil des Ellipsenradius); PORT-WAHL, nachgestellt an S1
+AUGE_RAND_VORN = 0.8          # vorn spitzer (K1-Kontrast: mit 0,5 19,4 < 20, Lauf r2 Eichung 19); PORT-WAHL
+AUGE_NAH = 360.0           # E.: Abstand zum Augenpunkt, bis zu dem Vorderbild-Texel in der Seitenellipse zum Auge zaehlen; 200 liess die Kante
+                           # vor dem Auge aus (S1 0,038 H hoch), 280 ebenso, 360 = S1 0,042 H (Laeufe r2 Eichung 10-11); PORT-WAHL
+S2_MITTE = (0.045, 0.79)     # Messblatt V4 S2: Augenmitte 0,049 H hinter der Vorderkante, 0,79 H ueber der Sohle
+AUGE_S_GEMALT = 1.40         # gemalt groesser als S1, weil die Halbwert-Maske nach sigma 1,5 kleiner misst (Runde 1 vorn: gemalt 1,0 ->
+                             # gemessen 0,6); nachgestellt an S1 (Dossier V4 Runde 2)
 # Struktur halbiert in den Zonen, deren helle Stufen im Eichlauf 8 eigene Komponenten ueber der Halbwertschwelle von K1/S1 bildeten
 # (Code-Render: vorn (333,178) s_basis lambda 0,98; seitlich (480,210) s_haar lambda 1,0); das Original hat dort genau 1 Komponente.
-STRUKTUR_ZONE = dict(s_basis=0.5, s_haar=0.5, v_oben_links=0.5, s_hinten_unten=0.5)
+STRUKTUR_ZONE = dict(s_basis=0.5, s_haar=0.5, v_oben_links=0.5, s_hinten_unten=0.5,
+                     # Runde 2: Augen ohne Struktur - das Original-Auge ist ein weicher heller Fleck (Messblatt Abschnitt 2/3, kein Ring, keine
+                     # Pupille aufloesbar); mit voller Struktur zerfiel das Seitenauge in 2 Komponenten (Lauf r2 Eichung 1); vorn halbe Struktur (ohne: K1-Kontrast 17,8 < 20, Lauf r2 Eichung 2)
+                     v_auge=0.5, s_auge=0.0)
 
 
 def auge_3d(mo, kb, H, P):
@@ -233,6 +254,14 @@ def texel_3d(mo, kp):
                         continue
                     out[ans][vv - v0, uu - u0] = w0 * P3[0] + w1 * P3[1] + w2 * P3[2]
     return out
+
+
+def texel_bild(info, ansicht, kp):
+    """Bildpunkt (x, y) je Texel der Flaeche einer Ansicht (Abbildung aus kopf_v4_form_uv, ohne Streuung)."""
+    a = info[ansicht]
+    u0, u1 = kp[ansicht]['u']; v0, v1 = kp[ansicht]['v']
+    vv, uu = np.mgrid[v0:v1 + 1, u0:u1 + 1].astype(float)
+    return a['x0'] + (uu + 0.5 - a['ou']) / a['s'], a['y0'] + (vv + 0.5 - a['ov']) / a['s']
 
 
 def struktur_feld(mo, shape, amp):
@@ -385,7 +414,7 @@ def main():
         os.remove(npz)
     # Startfarben: Ziel im Port-Schirm / 0,6 (mittleres lambda der Kopf-/Schwanzflaechen im ersten Licht-Render)
     start_z = np.array([np.clip((lab_rgb(ziel[z[2]]) - G.EA_) / G.EB_ / 0.6, 0, 248) for z in ZONEN])
-    start_b = np.array([np.clip((lab_rgb(RV.ZIEL[k]) - G.EA_) / G.EB_ / 0.6, 0, 248) for _n, k in BAENDER])
+    start_b = np.array([np.clip((lab_rgb(RV.ziel(k)) - G.EA_) / G.EB_ / 0.6, 0, 248) for _n, k in BAENDER])
     ref2 = b2.modell(G.REF2)
     basis = np.array([[RV.np.array(c, float) for c in ref2.lut[z][:, :3]] for z in range(6)], float)
     klassen = klassen_haut(basis[:3])
@@ -398,47 +427,92 @@ def main():
         vorn_r = G.zeichne(mo, P['135'], voll=True); seite_r = G.zeichne(mo, P['85'], voll=True)
         kv = G.kopfbox(vorn_r[1]); ks = G.kopfbox(seite_r[1])
         okv, sov, Hv = G.h_port(vorn_r[2]); oks, sos, Hs = G.h_port(seite_r[2])
-        pa = auge_3d(mo, kv, Hv, P)
+        # Runde 2: Augenpunkt = KOPF_V4 auge (Bezug des Haarvorhangs, in beiden Kameras sichtbar); vorn als 3D-Zone wie Runde 1.
+        # Seitlich als Ellipse im Bild der Vorlage-2-Kamera an der S2-Stelle mit der S1-Groesse (Runde 1: die 3D-Zone lag dort auf
+        # streifend gesehenen Flaechen, 0,023 x 0,030 H in 5 Teilen, Riegel S1 rot): Mitte 0,049 H hinter der Box-Vorderkante,
+        # 0,79 H ueber der Sohle (Messblatt S2), Halbachsen AUGE_S_GEMALT x S1 0,040 x 0,055 H / 2.
         import augenpunkt_v4 as AP
-        xs_a, _w = AP.proj(mo, P['85'], pa[None])
-        sx = AP.proj(mo, P['85'], (pa + np.array([AUGE_ACHSEN[0], 0, AUGE_ACHSEN[2]]))[None])[0][0] - xs_a[0]
-        sy = AP.proj(mo, P['85'], (pa + np.array([0, AUGE_ACHSEN[1], 0]))[None])[0][0] - xs_a[0]
-        auge_s = (xs_a[0][0], xs_a[0][1], float(np.hypot(*sx)), float(np.hypot(*sy)))
+        pa = np.array(kp['auge'], float)
+        auge_s = (ks[2] - S2_MITTE[0] * Hs, sos - S2_MITTE[1] * Hs, AUGE_S_GEMALT * 0.5 * 0.040 * Hs, AUGE_S_GEMALT * 0.5 * 0.055 * Hs)
         karte_v = zonen_karte(kv, Hv, (okv, sov), 'vorn'); karte_s = zonen_karte(ks, Hs, (oks, sos), 'seite', auge_seite=auge_s)
         tz_v = texel_zonen(mo, info, 'vorn', karte_v, kp); tz_s = texel_zonen(mo, info, 'seite', karte_s, kp)
         t3 = texel_3d(mo, kp)
         nm = {z[0]: i for i, z in enumerate(ZONEN)}
-        for ans, tz, zn in (('vorn', tz_v, 'v_auge'), ('seite', tz_s, 's_auge')):
+        for ans, tz, zn in (('vorn', tz_v, 'v_auge'),):
             d = (t3[ans] - pa) / np.array(AUGE_ACHSEN)
             im_auge = np.nan_to_num((d ** 2).sum(2), nan=9.0) <= 1.0
             tz[im_auge] = nm[zn]
-        # Haarstraehne (KOPF_V4 straehne = letztes Viereck von Mesh 9): ihre Texel ganz in der Haarzone (Eichlauf 7: Zonenstreuung an
-        # der Kante zeigte ein Schachbrett auf der Straehne)
-        m9 = mo.meshes[9]
-        if len(m9.qf) > 18:
-            uvq = m9.quv[-1]
-            poly = np.array([(uvq[0], uvq[1]), (uvq[3], uvq[4]), (uvq[9], uvq[10]), (uvq[6], uvq[7])], np.int32)
-            su0, su1 = kp['seite']['u']; sv0, sv1 = kp['seite']['v']
-            mk = np.zeros((sv1 - sv0 + 1, su1 - su0 + 1), np.uint8)
-            cv2.fillConvexPoly(mk, poly - np.array([su0, sv0], np.int32), 1)
-            tz_s[mk > 0] = nm['s_haar']
+        # Runde 2: Vorderbild-Texel, die in der Seitenansicht in die Augenellipse fallen und nahe am Augenpunkt liegen (< AUGE_NAH E.),
+        # gehoeren zum selben Auge: die vordersten Flaechen an der Kante tragen das Vorderbild, ohne sie zerfiel das Seitenauge (S1
+        # 2 Komponenten, Lauf r2 Eichung 2)
+        tv3 = t3['vorn'].reshape(-1, 3); ok3 = ~np.isnan(tv3[:, 0])
+        if ok3.any():
+            xs3, _w3 = AP.proj(mo, P['85'], tv3[ok3])
+            cx, cy, ax, ay = auge_s
+            inn = (((xs3[:, 0] - cx) / ax) ** 2 + ((xs3[:, 1] - cy) / ay) ** 2 <= 1.0) & (np.linalg.norm(tv3[ok3] - pa, axis=1) < AUGE_NAH)
+            flat = tz_v.reshape(-1); idx_ok = np.nonzero(ok3)[0]
+            flat[idx_ok[inn]] = nm['v_auge']
+            # Runde 2: Vorderbild-Texel des Haarvorhangs ((W)-links der Mittelebene, Kopfraum z > -29), die in der Seitenansicht vor dem
+            # Auge im Haarband liegen, bekommen die seitliche Haarzone (Sicht-Pruefung V4 r1 1.2: duenne dunkle Vorderkante; Lauf r2 Eichung 3:
+            # helle 2-6-px-Reste an der Kante x 476-482, S1 2 Komponenten). In Vorlage 1 liegen sie im Haarfeld (K5/K6).
+            kz = G.kopfbox(seite_r[1]); fy3 = (xs3[:, 1] - kz[1]) / max(kz[3] - kz[1], 1)
+            # alle Zeilen vor dem Auge (Lauf r2 Eichung 5: mit nur dem Haarband blieb die Kante darueber hell, x 476-482 / y 201-217,
+            # S1 2 Komponenten); im Vorderbild liegen diese Texel im Haarfeld
+            haar3 = (xs3[:, 0] >= cx + ax) & (fy3 < 0.80)
+            haar3 &= (tv3[ok3][:, 2] > -29.0) & ~inn
+            flat[idx_ok[haar3]] = nm['s_haar']     # Farbe der seitlichen Haarkante (S3); mit 'v_haar' teilten sich KV2 und KS2 eine Farbe
+                                                   # (Lauf r2 Eichung 4: K5 18,6 statt 13,3, K7 rot)
         st_v, f_v = struktur_feld(mo, tz_v.shape, amp); st_s, f_s = struktur_feld(mo, tz_s.shape, amp)
+        # Runde 2: Augen mit radialem Verlauf statt Hautstruktur (heller Kern, dunklerer Rand): Stufe = (1 - Ellipsenabstand) x 15;
+        # vorn aus dem 3D-Abstand zur Augenzone, seitlich aus dem Abstand zur Augenellipse im Bild
+        dv = np.sqrt(np.nan_to_num(((t3['vorn'] - pa) / np.array(AUGE_ACHSEN)) ** 2, nan=9.0).sum(2))
+        if ok3.any():          # ueber die Seitenellipse markierte Vorderbild-Texel: Abstand zur Seitenellipse (Lauf r2 Eichung 6: sonst Stufe 0)
+            dvf = dv.reshape(-1)
+            d_s3 = np.sqrt(((xs3[:, 0] - cx) / ax) ** 2 + ((xs3[:, 1] - cy) / ay) ** 2)
+            dvf[idx_ok[inn]] = np.minimum(dvf[idx_ok[inn]], d_s3[inn])
+        xs_t, ys_t = texel_bild(info, 'seite', kp)
+        ds = np.sqrt(((xs_t - auge_s[0]) / auge_s[2]) ** 2 + ((ys_t - auge_s[1]) / auge_s[3]) ** 2)
+        # Licht je Texel (Messblatt V4 Abschnitt 5 Schritt 3 "Texel-Ziel T = P / lambda"): das Auge liegt seitlich halb im Schatten
+        # (lambda 1,0 oben -> 0,5 unten, Lauf r2 Eichung 16: S1 nur 0,034 H hoch) - die Stufe gleicht lambda aus
+        import r2_koerper_farben as RK
+        lam_t = {}
+        for ans_, pose_ in (('vorn', P['135']), ('seite', P['85'])):
+            _i, _d, U_, V_, Z_, LAM_ = RK.raster(mo, pose_)
+            u0_, u1_ = kp[ans_]['u']; v0_, v1_ = kp[ans_]['v']; pb_ = 128 * (kp['page'] & 0xF)
+            q = (Z_ == kp['clut']) & (U_ >= pb_ + u0_) & (U_ <= pb_ + u1_) & (V_ >= v0_) & (V_ <= v1_)
+            sm = np.zeros((v1_ - v0_ + 1, u1_ - u0_ + 1)); n_ = np.zeros_like(sm)
+            np.add.at(sm, (V_[q] - v0_, U_[q] - pb_ - u0_), LAM_[q].mean(1)); np.add.at(n_, (V_[q] - v0_, U_[q] - pb_ - u0_), 1)
+            lam_t[ans_] = np.where(n_ > 0, sm / np.maximum(n_, 1), np.nan)
+        for tz_, st_, d_, zn, ans_ in ((tz_v, st_v, dv, 'v_auge', 'vorn'), (tz_s, st_s, ds, 's_auge', 'seite')):
+            q_ = tz_ == nm[zn]
+            # Profil: Plateau bis Ellipsenabstand 1 - Rand, dann linear auf 0 am Rand (weicher Fleck mit stabiler Halbwertbreite; mit linearem
+            # Verlauf ab der Mitte schwankte S1 zwischen den Eichlaeufen 0,034-0,042 H)
+            prof = np.clip((1.0 - d_) / (AUGE_RAND_VORN if ans_ == 'vorn' else AUGE_RAND), 0, 1)
+            # nur seitlich (vorn mit Ausgleich: Fleck 12 x 18 px, K3 rot, KV5 30 L*, Lauf r2 Eichung 18)
+            lt = np.nan_to_num(lam_t[ans_], nan=1.0) if ans_ == 'seite' else np.ones_like(prof)
+            g = (1.0 - AUGE_RADIAL + 2 * AUGE_RADIAL * prof) / np.clip(lt, 0.5, 1.0)
+            if q_.any():                       # auf den Stufenbereich normiert (die Zonenfarbe traegt die absolute Helligkeit)
+                g = g * (1.0 + AUGE_RADIAL) / max(float(g[q_].max()), 1e-6)
+            st_[q_] = np.clip(np.round((g[q_] - (1.0 - AUGE_RADIAL)) / (2 * AUGE_RADIAL) * (STUFEN - 1)), 0, STUFEN - 1).astype(int)
         idx_v = 1 + tz_v * STUFEN + st_v; idx_s = 1 + tz_s * STUFEN + st_s
         zone_je_index = np.full(256, -1); fak_je_index = np.zeros(256)
         for zz in range(len(ZONEN)):
-            a_z = amp * STRUKTUR_ZONE.get(ZONEN[zz][0], 1.0)
+            a_z = AUGE_RADIAL if ZONEN[zz][0] in ('v_auge', 's_auge') else amp * STRUKTUR_ZONE.get(ZONEN[zz][0], 1.0)
             for s in range(STUFEN):
                 zone_je_index[1 + zz * STUFEN + s] = zz
                 fak_je_index[1 + zz * STUFEN + s] = 1.0 + a_z * (s - (STUFEN - 1) / 2.0) / ((STUFEN - 1) / 2.0)
-        # Schwanz: Baender je 64 Zeilen (SCHWANZ_V4 uv baender), Stufen aus der Struktur
+        # Schwanz: Baender nach SCHWANZ_V4 uv baender (Runde 2: 5 x 51 Zeilen), Stufen aus der Struktur
         st_t, f_t = struktur_feld(mo, (256, 64), amp)
         idx_t = np.zeros((256, 64), int)
-        for bi in range(len(BAENDER)):
-            idx_t[bi * 64:(bi + 1) * 64] = 1 + bi * STUFEN + st_t[bi * 64:(bi + 1) * 64]
+        for bi, (bn, _k) in enumerate(BAENDER):
+            v0_, v1_ = sw['uv']['baender'][bn]
+            idx_t[v0_:v1_ + 1] = 1 + bi * STUFEN + st_t[v0_:v1_ + 1]
         zone_t = np.full(256, -1); fak_t = np.zeros(256)
         for bi in range(len(BAENDER)):
             for s in range(STUFEN):
-                zone_t[1 + bi * STUFEN + s] = bi; fak_t[1 + bi * STUFEN + s] = fak_je_index[1 + s]
+                # Runde 2: Schwanz mit halber Hautstruktur - mit voller Struktur fielen die dunklen Stufen der Wurzel unter Chroma 6 und
+                # zaehlten in die Region F17 (Aussenkante, Chroma < 6), Lauf r2 Koerper 1: F17 L* 14,0 statt 26,8
+                zone_t[1 + bi * STUFEN + s] = bi; fak_t[1 + bi * STUFEN + s] = 1.0 + 0.5 * amp * (s - (STUFEN - 1) / 2.0) / ((STUFEN - 1) / 2.0)
         if runde > 0:
             # Loesen an den Renders dieses Stands
             mo_cl = dict(mo=mo)
@@ -452,14 +526,18 @@ def main():
                     for zz in range(n_):
                         q = zp == zz
                         if q.sum() >= 3:
-                            ziel_lab = ziel[ZONEN[zz][2]] if zi_ is zone_je_index else RV.ZIEL[BAENDER[zz][1]]
+                            ziel_lab = ziel[ZONEN[zz][2]] if zi_ is zone_je_index else RV.ziel(BAENDER[zz][1])
                             st_[zz] = np.clip((lab_rgb(ziel_lab) - G.EA_) / G.EB_ / np.maximum(cl_['lam'][q].mean(0), 0.05), 0, 248)
             rv = regionen(mo_cl, None, 'vorn', ziel, P); rs = regionen(mo_cl, None, 'seite', ziel, P)
             zonen_c = loese_zonen([(cv, rv), (cs, rs)], len(ZONEN), 6, None, fak_je_index, zone_je_index, start_z)
             # Schwanz-Regionen (riegel_v4.schwanz Masken)
             # Regionen genau wie riegel_v4 T8 (Kreise um T1/T2 mit Chroma >= 6, Chroma < 6 oberhalb T2, Ids zwischen T3 und T4)
             zt, s_, (img_t, ids_t, V_t, fr, rmask) = RV.schwanz(mo, P)
-            rt = [(k, rmask[k], RV.ZIEL[k], 1.0) for k in ('F15', 'F16', 'F17', 'F18')]
+            # F17 doppelt gewichtet: die Region (Chroma < 6 ueber T2) enthaelt auch Mischpixel Kante/Mitte (Lauf r2 Eichung 2: 17,7 statt 26,8)
+            rt = [(k, rmask[k], RV.ZIEL[k], 2.0 if k == 'F17' else 1.0) for k in ('F15', 'F16', 'F17', 'F18')]
+            # Runde 2: die 7 Achsenpunkte (T9) als eigene Regionen mit dem Original-5x5-Mittel als Ziel
+            for k9, (m9, z9) in RV.achse_regionen(ids_t, V_t).items():
+                rt.append((k9, m9, z9, 1.0))
             baender_c = loese_zonen([(cs, rt)], len(BAENDER), 7, None, fak_t, zone_t, start_b)
             # Koerper
             zf, ef, (img1, ids1, V1, img2, ids2, V2, reg, reg2) = RV.koerper_farben(mo, P)

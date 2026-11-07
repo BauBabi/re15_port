@@ -577,69 +577,95 @@ def _variante_v3(schulterauge=None, seite_uv=None):
 # Farben (Texel/CLUT aus der Eichung tools/r41_sichel/v4/eichen_v4.py, Datei V4_FARBEN). Erzeugt nur mit --variante v4 --aus DIR.
 V4_DIR = os.path.join(HIER, 'r41_sichel', 'v4')
 V4_FARBEN = os.environ.get('RE15_V4_FARBEN', os.path.join(V4_DIR, 'farben_v4.npz'))   # Eichung (Messblatt V4 Abschnitt 5), committet
+# V4 Runde 2: Koerpertexel und -zeilen 480/481/482/484 aus tools/r41_sichel/v4/r2_koerper_farben.py (Sicht-Pruefung V4 r1 1.4), committet
+V4_KOERPER = os.environ.get('RE15_V4_KOERPER', os.path.join(V4_DIR, 'farben_koerper_v4.npz'))
 # Posen der beiden Vorlage-Kameras (Spielkamera 50A0 Schnitt 12): tools/r41_sichel/v4/posen_v4.json
 V4_POSE_VORN = dict(clip=0, bild=9, gier=1737, x=-9279, z=-22511)    # "135": Silhouette n1485, IoU 0,619 (posen_v4.py)
 V4_POSE_SEITE = dict(clip=1, bild=26, gier=556, x=-8070, z=-21202)   # "85" = sfv2/posen_seite.json "85" (Messblatt V4 Abschnitt 7)
 SCHWANZ_V4 = dict(
     pose=V4_POSE_SEITE,                    # Ruhe-Pose = Vorlage 2 (Messblatt V4 Abschnitt 4 "Darstellung" Punkt 1)
     # T1 (Abschnitt 4 Zeile "Beginn"): Beginn = Unterseite des Ansatzes 0,15 H hinter dem Buckelscheitel, 0,767 H ueber der Sohle.
-    # PORT-WAHL x 0,21 statt 0,15: sichtbar beginnt der Schwanz an der Rueckenkontur der Figur, und die liegt beim Koerper Referenz 2
-    # (Riegel G1: unveraendert) in Pose "85" in 0,767 H Hoehe 0,21 H hinter dem Scheitel (riegel_v4 T1, form_suche_v4.py: Gelenke 0-2
-    # bis 0,49 H nach vorn und 0-0,20 H zur Kamera versetzt aendern den Wert nicht, 0,203-0,225). Die Masse T2-T6 beziehen sich auf den
-    # Beginn; so behalten Ansatz, Biegung, Knick und Ende ihre gemessenen Abstaende. T1 x bleibt rot (Dossier V4, Offen).
-    beginn=(0.21, 0.767),
+    # V4 Runde 2 (Pruefung V4 r1 Zahlen 4.1: Schwanz 11-12 px hinter den Nutzerpunkten, T1 0,218 / 0,727 H): Beginn wie gemessen; der
+    # Koerper Referenz 2 (G1) reicht in Pose "85" auf dieser Hoehe 0,06 H weiter nach hinten als das Video (Rueckenkontur 0,21 H hinter
+    # dem Scheitel), deshalb liegt der Ansatz (Gelenke 0-3, 'tiefe') zur Kamera hin VOR der Flanke und tritt dort aus dem Ruecken.
+    beginn=(0.15, 0.767),
     # Mittellinie: Gelenke 16..22 und Ende des Glieds 22 (vor dem Dorn) im Bild der Vorlage-2-Kamera, (dx, dy) in H ab dem Beginn,
-    # dx < 0 = nach hinten (Bild-links), dy > 0 = nach unten. Quelle Abschnitt 4: Ansatzmitte ~0,15 H unter der Oberkante = 0,079 H ueber
-    # dem Beginn (0,229 - 0,15); Achse "fast waagerecht nach hinten" (x 356 -> 298, y 231 -> 247: 15 Grad abwaerts); Biegung bei dx
-    # -0,245 / dy +0,036 (Achse 70-90 Grad nach unten auf <= 0,10 H); "Biegung -> Knick nahezu senkrecht"; Knick dx -0,265 / dy +0,257;
-    # Ende dx -0,245 / dy +0,397 (Endstueck 82-84 Grad, 6-8 Grad wieder nach vorn). Gliederteilung nach Abschnitt 4 Punkt 2 (Vorschlag):
-    # Glied 16 im Buckel (versenkt), 17-18 waagerechter Ansatz bis zur Biegung, 19-20 senkrecht bis zum Knick, 21-22 Endstueck. Die
-    # Werte unten sind diese Messpunkte, nachgestellt an der Riegelmessung (riegel_v4.py T1-T6): form_suche_v4.py 6 Runden ab
-    # (0,12 -0,08) (0,03 -0,05) (-0,12 -0,02) (-0,24 0,015) (-0,268 0,135) (-0,265 0,257) (-0,256 0,33) (-0,248 0,39), dann
-    # gitter_v4.py (Gelenk 2 y / 3 y / 4 x): gewaehlt 0,014 / 0,06 / -0,268 = T2 -0,244/0,025 68 Grad, T3 -0,263/0,255, T4 -0,242/0,398.
-    gelenke=[(0.12, -0.080), (0.03, -0.050), (-0.107, 0.014), (-0.244, 0.060), (-0.268, 0.191), (-0.268, 0.303),
-             (-0.256, 0.363), (-0.245, 0.422)],
+    # dx < 0 = nach hinten (Bild-links), dy > 0 = nach unten. Quelle Abschnitt 4: Achse "fast waagerecht nach hinten" (x 356 -> 298,
+    # y 231 -> 247: am Beginn 0,047 H ueber ihm); Biegung bei dx -0,245 / dy +0,036 (Achse 70-90 Grad nach unten auf <= 0,10 H);
+    # "Biegung -> Knick nahezu senkrecht"; Knick dx -0,265 / dy +0,257; Ende dx -0,245 / dy +0,397 (Endstueck 82-84 Grad, 6-8 Grad
+    # wieder nach vorn). Gliederteilung nach Abschnitt 4 Punkt 2: Glied 16 vom Buckel bis zum Beginn (Gelenk 1 = Ende von Id 16, Riegel
+    # T1 misst Id 16), 17-18 waagerechter Ansatz bis zur Biegung (Gelenk 3), 19-20 senkrecht bis zum Knick (Gelenk 5), 21-22 Endstueck.
+    # Nachgestellt (tools/r41_sichel/v4/r2_form_suche.py, 5 Runden): Ziel je Punkt = Mitte aus Messblatt-Mass (relativ, Port-H 264) und
+    # Nutzer-Linienende (absolut, Riegel TA), weil Port- und Video-Figur verschieden gross sind (H 264 / 253, relativ und absolut bis
+    # 0,044 H auseinander); danach die Biegung von Hand geschaerft (Gelenk 2 flacher, Gelenk 3 nach hinten oben, Gelenk 4 senkrecht
+    # darunter: Drehung nach dem Pruefer-Mass 59,9 -> 67,3 Grad, Original 66-70) und der Knick so gesetzt, dass das Endstueck 0,15 H
+    # lang bleibt (r2_expt.py Laeufe b-e, Dossier V4 Runde 2).
+    gelenke=[(0.12, -0.080), (-0.037, -0.040), (-0.135, 0.003), (-0.245, 0.035), (-0.256, 0.165), (-0.259, 0.280),
+             (-0.238, 0.337), (-0.218, 0.393)],
     # Durchmesser je Gelenk in H (Abschnitt 4 "breiter nach oben": vom Knick zum Ruecken f 0,1/0,3/0,5/0,7 = 0,03/0,065/0,125/0,14 H,
-    # f 0,9 geht in den Buckel >= 0,09; Taille am Knick 0,024-0,032 H; unter dem Knick gleich breit 0,035 H). Nachgestellt mit
-    # form_suche_v4.py (Gelenke 2-4 nach f 0,7 / 0,5 / 0,3); der Knick (Gelenk 5) 0,022 H, damit er die schmalste Stelle bleibt (T6).
-    durchmesser=[0.16, 0.15, 0.153, 0.128, 0.0475, 0.022, 0.038, 0.038],
+    # f 0,9 geht in den Buckel >= 0,09; Taille am Knick 0,024-0,032 H; unter dem Knick gleich breit 0,035 H). Gelenke 2-4 nachgestellt
+    # (r2_form_suche.py nach f 0,7 / 0,5 / 0,3); Gelenk 1 0,13 H: Unterseite am Beginn (Achse 0,04 H darueber); Gelenk 0 im Buckel wie
+    # Runde 1. Knick (Gelenk 5) 0,027 H: Mitte der gemessenen Taille 0,024-0,032 H (Runde 1: 0,022 lag darunter, Pruefung V4 r1 Zahlen 5);
+    # gemessen 0,025-0,028 H und die schmalste Stelle (T6). Endstueck 0,038 H (gemessen 0,032-0,036 H, Ziel 0,035).
+    durchmesser=[0.16, 0.13, 0.1368, 0.131, 0.0518, 0.027, 0.038, 0.038],
+    # Versatz zur Kamera (H, Bildmassstab am Gelenk) - Ansatz vor der Flanke (s. beginn): Strahl durch (357,243) trifft Mesh 8 bei
+    # Modell-z -475 (Mittelebene -134, kopf3d_v4.treffer); mit 0,05 H blieb der Ansatz hinter der Flanke (Malreihenfolge nach mittlerer
+    # Tiefe wie die PSX-Ordnungstabelle, r2_expt Lauf a1), mit 0,12 H liegt er sichtbar davor (Lauf a2). Ab der Biegung 0 (Mittelebene).
+    tiefe=[0.12, 0.12, 0.08, 0.03, 0.0, 0.0, 0.0, 0.0],
     dorn=0.8,                              # Spitze 0,8 x Endradius (Spitzenform nicht aufloesbar, Abschnitt 9 Punkt 2; PORT-WAHL kurz)
     glieder=7, seiten=10,                  # M1: 7 x 20 + Deckel 10 + Spitze 10 = 160 Dreiecke <= 212 (EM30-Arm 13-15)
     ueberlapp=0.45, deckel=True,           # wie V3 (Manschette ins Vorglied, Deckel in den Rumpf)
     # Textur: eigene Flaeche TPage 130 u 64-127 v 0-255 (frei, Atlasbelegung Referenz 2: Seite 2 belegt u 0-47 und u 0-63 ab v 176),
-    # Zeile 487; je Flaeche eine Farbklasse (Abschnitt 4 "zweitoenig"): Wurzel (Glied 16), Aussenseite des Bogens (Normale weg von der
-    # Bogenmitte), Unterseite (zur Bogenmitte), Endstueck unter dem Knick (Glieder 21-22); je Klasse ein Band von 64 Zeilen.
+    # Zeile 487; je Flaeche eine Farbklasse (Abschnitt 4 "zweitoenig"): Wurzel (Glied 16; Glied 17 ohne die Aussenkante), Aussenkante
+    # des Bogens (Normale weg von der Bogenmitte, c > 0,5), Mitte (|c| <= 0,5: die zur Kamera gewandte Seite um die Achse), Unterseite
+    # (c < -0,5), Endstueck unter dem Knick (Glieder 21-22); die Mitte getrennt fuer den waagerechten Ansatz mit Biegung (Glieder
+    # 17-18, 'mitte') und das senkrechte Stueck bis zum Knick (Glieder 19-20, 'senkrecht'), weil das Original dort grauer und dunkler
+    # ist (Achsenpunkte (310,243)/(292,262): a* 8,8 / 6,6; (289,280)/(288,300): a* 5,0 / 1,7); Baender: Wurzel 56 Zeilen (Glied 16 ist das
+    # dickste, M4 >= 0,045 Texel/E.), die uebrigen je 40. V4 Runde 2 (Sicht-Pruefung V4 r1 1.3:
+    # die Klasse "aussen" deckte die ganze breite Flaeche, im Original ist das helle Grau nur die Aussenkante, die Achse ist dunkel
+    # mauve, L* 11,6 / a* 6,1 an 7 Achsenpunkten): neue Klasse "mitte". c = Normale . Richtung Bogenmitte -> Gliedmitte; die Grenze 0,5
+    # = cos 60 Grad teilt die 10 Seiten in 4 / 2 / 4 (Aussenkante / Mitte / Unterseite), im Bild je etwa ein Drittel der Breite.
     # dichte = Texel je E. (M4: 0,045-0,091, EM30-Haut 0,046-0,087 -> Mitte 0,068): je Glied u-Spanne = Laenge x dichte, v-Spanne =
-    # halber Umfang x dichte (Umfang gespiegelt wie V3), beide hoechstens 63.
-    uv=dict(clut=487 << 6, page=130, u=(64, 127), dichte=0.068,
-            baender=dict(wurzel=(0, 63), aussen=(64, 127), unten=(128, 191), ende=(192, 255))),
-    # Nachschwingen wie V3 (Ae5), Knick-Grenze mit Ausnahme fuer die Biegung (ab 30 Grad Ruhewinkel, schwanz_r41.c SW_GLATT_KNICK_AB)
+    # halber Umfang x dichte (Umfang gespiegelt wie V3), hoechstens 63 bzw. die Hoehe des Bands der Klasse.
+    uv=dict(clut=487 << 6, page=130, u=(64, 127), dichte=0.068, grenze=0.5,
+            baender=dict(wurzel=(0, 55), aussen=(56, 95), mitte=(96, 135), senkrecht=(136, 175), unten=(176, 215), ende=(216, 255))),
+    # Nachschwingen wie V3 (Ae5), Knick-Grenze mit Ausnahme fuer die Biegung (ab 30 Grad Ruhewinkel). Dieselbe Regel im Spiel:
+    # schwanz_r41.c glaetten() mit SW_GLATT_KNICK_AB, dort seit V4 Runde 2 fuer die V4-Kette (ungleiche Glieder, SW_GLATT_V4_VERH)
+    # wirksam (Runde 1 lief glaetten() fuer V4 nicht, Pruefung V4 r1 Zahlen 3). PORT-WAHL wie V3.
     bewegung=dict(steif=(0.22, 0.08), traeg=(0.55, 0.92), daempfung=0.80, schwere=0.0, grenze=55,
                   knick=dict(rand=3.0, min=12.0, max=16.0, ab=30.0)),
 )
 KOPF_V4 = dict(
     # Form (Mesh 9 frei, Riegel G1): K10 Kopfbox vorn 0,159 x 0,172 H (0,14-0,18 x 0,15-0,20); Referenz 2 in Pose "135": 0,126 x 0,170 H.
-    # Mesh-lokal x = vorn (Tiefe), y = Hoehe, z = Breite. Breite x1,2 (K10), Tiefe x1,3 (seitlich ist der Originalkopf 0,22 H tief,
-    # Referenz 2 0,11 H, Kopfbox seitlich Abschnitt 3 / p_riegelfenster.py x 412-467), Hoehe unveraendert. Nachgestellt im Dossier V4.
-    # Eichlauf 1 mit (1,3 1,0 1,2): K10 0,137 x 0,192 H (Breite unter 0,14, Hoehe ueber 0,172) -> Breite x1,4, Hoehe x0,9.
-    skal=(1.3, 0.9, 1.4),
-    # Vorbau der (W)-linken Gesichtshaelfte (Messblatt V4 Abschnitt 3: "die Haare haengen ueber die (W)-linke Gesichtshaelfte und
-    # bilden von der Seite die dunkle Vorderkante"; das Auge liegt seitlich 0,049 H HINTER der Vorderkante). Ohne Vorbau liegt das
-    # Auge an der K4-Stelle in der Seitenansicht 0,00-0,02 H hinter der Kante (augenpunkt_v4.py / Dossier V4): ein Auge kann nicht
-    # beide Riegel K4 und S2 erfuellen. Ecken mit Kopfraum-z > z0 (z > 0 = (W)-links) werden im vorderen Teil (x > xa) nach vorn
-    # geschoben: dx = d x glatt((z - z0) / (z1 - z0)) x glatt((x - xa) / (xb - xa)). d = Abstand, der S2 x 0,049 H herstellt
-    # (0,049 H = 13 px bei H 264 in Pose "85" = ~190 E. bei 0,069 px/E.), nachgestellt im Dossier V4.
-    # Nur oberhalb des Mauls (y < ya, voll ab yb; Kopfraum y < 0 = oben): mit Vorbau bis zum Kinn mass K10 0,209-0,212 H (Hoehe > 0,20).
-    vorbau=dict(d=200.0, z0=-60.0, z1=60.0, xa=100.0, xb=320.0, ya=-50.0, yb=-150.0),
+    # Mesh-lokal x = vorn (Tiefe), y = Hoehe (y < 0 oben), z = Breite (z > 0 = (W)-links; Mittelebene z -29 = Nasenspitze (482,-126,-29),
+    # die Ecken liegen paarweise symmetrisch dazu). V4 Runde 2 (r2_kopf_expt.py, Laeufe k6/k9/k10):
+    #   Breite x1,55: K10-Breite 0,154 H (Runde 1 x1,4: 0,143 an der Untergrenze, Pruefung V4 r1 Zahlen K10/4.3: das Auge sass fast auf
+    #   der Kontur). Tiefe x1,3: groesste Tiefe, bei der die K10-Hoehe <= 0,20 H bleibt (der Kopf zeigt in Pose "135" nach unten links,
+    #   Tiefe wird dort Bildhoehe: x1,3 0,187 H, x1,5 0,203, x1,7 0,214); die Seitenbox des Originals (0,221 H2, Messblatt-Kopfbox
+    #   seitlich x 412-467) ist damit nicht erreichbar (Port 0,170 H, Offen). Hoehe x0,9 (Runde 1, K10-Hoehe).
+    skal=(1.3, 0.9, 1.55),
+    # Auge (Kopfraum nach skal): der Punkt der (W)-rechten Gesichtsflaeche, den der Sehstrahl der Vorderkamera an der K4-Stelle trifft
+    # (augenpunkt_v4.suche / r2_auge_suche.py: K4 0,049 H (B)-links, 0,107 H unter OK; in beiden Vorlage-Kameras sichtbar, Abstand
+    # Treffer-Punkt 1,1 / 2,0 E.). Bezug fuer den Haarvorhang (vorbau) und die Augenzone vorn (eichen_v4.py).
+    auge=(360.0, -306.0, -71.0),
+    # Haarvorhang (Messblatt V4 Abschnitt 3: "die Haare haengen ueber die (W)-linke Gesichtshaelfte und bilden von der Seite die dunkle
+    # Vorderkante", Auge 0,049 H HINTER der Vorderkante; Sicht-Pruefung V4 r1 1.2: Runde 1 bildete einen spitzen Keil, Spaltenhoehe an
+    # der Spitze 18-21 px, gefordert eine fast senkrechte Vorderseite >= 0,12 H). Die Ecken der (W)-linken Gesichtshaelfte werden in
+    # Richtung "Bild-x der Vorlage-2-Kamera" (n, Kopfraum der Pose "85") bis zur Ebene n . q = n . auge + vor x H / Bildmassstab
+    # geschoben - im Bild von Vorlage 2 eine senkrechte Vorderkante. vor 0,06 H: S2-Mitte 0,049 H plus die Rundung der Kante (Lauf k5:
+    # vor 0,049 -> Augenpunkt 0,039 H hinter der Box-Vorderkante, vor 0,06 -> 0,050). Gewicht = glatt in z (z0 -10 .. z1 30: erst ab der
+    # ersten Eckenspalte (W)-links der Mittelebene (Ecken z 5/9/23); mit z0 -60 .. z1 -29 verdeckte der Vorhang das Auge in Vorlage 1,
+    # Treffer 218 E. davor, Lauf "n"), glatt in x (xa 100 .. xb 250: Eckenreihen x 104 / 254 = Uebergang Hinterkopf -> Gesicht) und
+    # in y bis zum Kinn (y1 40 .. y2 170: Eckenreihen y 77-81 / 168). Ergebnis (Lauf k7): Spaltenhoehen an der Vorderkante 31-36 px =
+    # 0,12-0,14 H (Runde 1: 18-21 px), K10 unveraendert 0,154 x 0,187 H. PORT-WAHL (Eckenreihen), Quelle der Masse: Messblatt S2/S3.
+    vorbau=dict(art='bild', vor=0.06, z0=-10.0, z1=30.0, xa=100.0, xb=250.0, y1=40.0, y2=170.0),
     clut=486, page=128,
     # Ansichten: Flaechen von Mesh 9 mit Blick zur Kamera (Normale . Blick >= schwelle) bekommen das Bild der Ansicht, in der sie
     # frontaler liegen (Parallelprojektion aus der Spielkamera): vorn = Pose "135" (Vorlage 1), seitlich = Pose "85" (Vorlage 2).
-    # Haarstraehne seitlich (Messblatt V4 Abschnitt 8 zu N27: "bei Bedarf hoechstens 2 flache Dreiecke an Knochen 9 fuer die
-    # Vorderkante"; S3: dunkler Streifen vor dem Auge im Fenster KS2 = Anteile 0,84-0,96 x 0,52-0,80 der Kopfbox seitlich). Der Kopf
-    # Referenz 2 laeuft seitlich als Keil nach vorn unten aus; im Fenster KS2 lag Hintergrund (Eichlauf 5: L* 38,6, S3 rot). Ein
-    # Viereck in der Seitenansicht ueber x 0,80-0,99 / y 0,46-0,84 der Kopfbox (Ecken der projizierten Mesh-9-Ecken), Ebene Kopfraum-
-    # nah an der Kopfoberflaeche (Modell-z der naechsten Ecke) plus 'vor' E. zur Kamera, Texel = Seitenbild (Zone Haar).
-    straehne=dict(x=(0.86, 0.99), y=(0.50, 0.84), vor=100.0),   # Eichlauf 6: x 0,80 / vor 30 teilte das Auge (S1 4 Komp.); Lauf 8: Kopfflaechen vor dem oberen Ende -> y 0,50, vor 100
+    # schwelle 0,05 = cos 87 Grad: noch streifender gesehene Flaechen gelten als abgewandt (sie sind im Bild unter 1 px breit); PORT-WAHL.
+    # Runde 2: keine Haarstraehne mehr (Sicht-Pruefung V4 r1 1.2: das Viereck ragte als schwarzer 14 x 23 px Lappen vor den Kopf; die
+    # Vorderkante bildet jetzt der Haarvorhang).
+    straehne=None,
     vorn=dict(pose=V4_POSE_VORN, u=(0, 47), v=(160, 223)),
     seite=dict(pose=V4_POSE_SEITE, u=(56, 111), v=(160, 223)),     # TPage 128 v 160-255 frei (Atlasbelegung Referenz 2)
     schwelle=0.05,
@@ -761,7 +787,7 @@ def kette_ruhe_v4(pk, rad):
     return dict(p=p, L=[int(round(x)) for x in L], lokal=lokal, rel=rel, radien=np.array(rad, float), s=s)
 
 
-def kette_meshes_v4(sw, ruhe, welt, bogenmitte):
+def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
     """Schwanz V4: Kegelstuempfe wie kette_meshes_v3 (Gehrung an den Gelenken, Deckel, Spitze), Textur je Flaeche nach Farbklasse
     (SCHWANZ_V4 uv baender): Glied 0 'wurzel', Glieder 5-6 'ende', sonst 'aussen'/'unten' nach der Flaechennormale in der Ruhe-Pose:
     aussen = Normale zeigt weg von der Bogenmitte (welt[i] = (Drehung, Ursprung) des Glieds im Ankerraum, bogenmitte im Ankerraum)."""
@@ -794,15 +820,29 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte):
             if i >= 5:
                 return 'ende'
             nw = W @ nrm_lokal
-            return 'aussen' if float(nw @ (achse_mitte - bogenmitte)) > 0 else 'unten'
+            u_ = achse_mitte - bogenmitte
+            if ebene_n is not None:                # nur die Richtung in der Ebene des Bogens (der Ansatz liegt 'tiefe' vor der Flanke)
+                u_ = u_ - ebene_n * float(u_ @ ebene_n)
+                ga = W @ ey                        # V4 Runde 2: Aussennormale der Bogenlinie = Anteil quer zur Gliedachse
+                u_ = u_ - ga * float(u_ @ ga)
+            c = float(nw @ u_) / max(float(np.linalg.norm(nw) * np.linalg.norm(u_)), 1e-9)
+            if 'mitte' not in uv['baender']:
+                return 'aussen' if c > 0 else 'unten'
+            if c > uv['grenze']:
+                return 'aussen'
+            if i == 1:
+                return 'wurzel'
+            if c < -uv['grenze']:
+                return 'unten'
+            return 'senkrecht' if (i >= 3 and 'senkrecht' in uv['baender']) else 'mitte'
 
         us = min(uv['u'][1] - uv['u'][0], Li * uv['dichte'])
         vs_ = min(63.0, np.pi * 0.5 * (r0 + r1) * uv['dichte'])
 
         def tx(kl, k, t):
-            v0, _v1 = uv['baender'][kl]
+            v0, v1 = uv['baender'][kl]
             a = 1.0 - abs(1.0 - 2.0 * (k % (S + 1)) / S)
-            return (int(round(uv['u'][0] + us * t)), int(round(v0 + vs_ * a)))
+            return (int(round(uv['u'][0] + us * t)), int(round(v0 + min(vs_, float(v1 - v0)) * a)))
 
         def orient(ia, ib, ic):
             P = [np.array(m['v'][j][:3], float) for j in (ia, ib, ic)]
@@ -854,10 +894,38 @@ def kopf_v4_form_uv(meshes, kp, mo):
     def glatt(t):
         t = np.clip(t, 0.0, 1.0)
         return t * t * (3 - 2 * t)
+    if vb:
+        # V4 Runde 2: Haarvorhang mit senkrechter Vorderkante IM BILD der Vorlage-2-Kamera. n = Richtung "Bild-x nach rechts" (vorn)
+        # im Kopfraum der Pose "85" (Kamera-Zeile 0 -> Modell (Gier) -> Kopfraum (Knochen 9)); Ebene n . q = n . auge + vor (E.),
+        # vor = kp['vorbau']['vor'] x H / Bildmassstab am Auge (H und Massstab aus den projizierten Koerperecken wie kette_v4_punkte).
+        pose_s = kp['seite']['pose']
+        kam, _M = _v4_kamera()
+        g = int(pose_s['gier'])
+        sg, cg = EA.sin_q12(g) / 4096.0, EA.cos_q12(g) / 4096.0
+        Yg = np.array([[cg, 0, sg], [0, 1, 0], [-sg, 0, cg]])
+        kf_s = _v4_kf(mo, pose_s)
+        R_s, T_s = mo.pose(kf_s)
+        R9s, T9s = R_s[9].astype(float) / 4096.0, T_s[9].astype(float)
+        n_bild = R9s.T @ (Yg.T @ (kam.V[0].astype(float) / 4096.0))
+        n_bild /= np.linalg.norm(n_bild)
+        Vk, _Nk, Fk = mo.geometrie(kf_s)
+        ecken = sorted({i for f in Fk if f['bone'] < 16 for i in f['v']})
+        xy_k = v4_proj(pose_s, Vk[ecken])
+        H_s = float(xy_k[:, 1].max() - xy_k[:, 1].min())
+        a_m = np.array(kp['auge'], float) @ R9s.T + T9s
+        e2 = v4_proj(pose_s, np.vstack([a_m, a_m + R9s @ n_bild * 100.0]))
+        pxu = float(abs(e2[1, 0] - e2[0, 0])) / 100.0
+        ebene_n = float(np.array(kp['auge'], float) @ n_bild) + vb['vor'] * H_s / pxu
+        BAU_INFO['kopf_v4_vorhang'] = dict(n=n_bild.tolist(), ebene=ebene_n, H=H_s, pxu=pxu)
     for v in m['v']:
         q = np.array(v[:3], float) * sk
         if vb:
-            q[0] += vb['d'] * glatt((q[2] - vb['z0']) / (vb['z1'] - vb['z0'])) * glatt((q[0] - vb['xa']) / (vb['xb'] - vb['xa'])) *                 glatt((q[1] - vb['ya']) / (vb['yb'] - vb['ya']))
+            # Haarvorhang (KOPF_V4 vorbau): Gewicht glatt in z, x und y; Schub entlang n bis zur Ebene (eine Richtung im Bild von Vorlage 2).
+            # Verworfen (r2_kopf_expt): Schub entlang der Kopf-x-Achse (K10-Hoehe 0,209-0,272 H) und entlang der Blickrichtung der
+            # Vorderkamera (die Rueckseite des Kopfes kam vor das Auge, Treffer 57-139 E. davor).
+            w = glatt((q[2] - vb['z0']) / (vb['z1'] - vb['z0'])) * glatt((q[0] - vb['xa']) / (vb['xb'] - vb['xa'])) * \
+                (1.0 - glatt((q[1] - vb['y1']) / (vb['y2'] - vb['y1'])))
+            q = q + w * max(0.0, ebene_n - float(q @ n_bild)) * n_bild
         v[0], v[1], v[2] = (int(round(c)) for c in np.clip(q, -32768, 32767))
     for nn in m['n']:
         a = np.array(nn[:3], float); L = np.linalg.norm(a)
@@ -962,6 +1030,13 @@ def v4_farben_einsetzen(tim, kp, sw):
     if 'haut' in f:                                   # geeichte Zeilen 480.. (RGB 0..255 je Eintrag; transparente bleiben)
         for z in range(min(ch, f['haut'].shape[0])):
             neu[z] = _pack(np.asarray(f['haut'][z], float), c[z])
+    if os.path.exists(V4_KOERPER):                    # Runde 2: Koerpertexel (Indizes) und ihre Zeilen, UVs/Primitive unveraendert (G1)
+        fk = dict(np.load(V4_KOERPER))
+        ki = fk['koerper_idx']
+        m = ki >= 0
+        pix[m] = ki[m].astype(np.uint8)
+        for j, zn in enumerate(fk['koerper_zeilen_nr']):
+            neu[int(zn) - cy] = _pack(np.asarray(fk['koerper_zeilen'][j], float), c[int(zn) - cy])
     alle = np.zeros((max(ch, max(zeilen) + 1), cw), np.int64)
     alle[:ch] = neu
     for z, rgb in zeilen.items():
@@ -2264,11 +2339,16 @@ def baue(blob, form):
                     W = W @ ruhe['lokal'][i]
                     welt.append((W.copy(), P.copy()))
                     P = P + W @ np.array([0.0, ruhe['L'][i], 0.0])
-                # Bogenmitte (Ankerraum): innen im Bogen, auf Hoehe des Knicks (Gelenk 5) unter dem waagerechten Ansatz (Gelenk 2):
-                # x/z von Gelenk 2, y von Gelenk 5 - liegt zwischen Ansatz und senkrechtem Stueck (Messblatt V4 Abschnitt 4 Biegung)
+                # Bogenmitte (Ankerraum) = Kruemmungsmitte der Biegung: halber Weg vom Biegegelenk (Gelenk 3) zur Innenecke des L, das der
+                # Schwanz nach Messblatt V4 Abschnitt 4 bildet (Ansatz waagerecht bis zur Biegung, dann senkrecht bis zum Knick): Innenecke
+                # = x/z von Gelenk 2 (Mitte des waagerechten Stuecks), y von Gelenk 5 (Knick). Fuer das waagerechte Stueck zeigt "aussen"
+                # damit nach oben, fuer das senkrechte nach hinten. ebene_n = Normale der Bogenebene (Gelenke 1, 3, 5): die Richtung
+                # Bogenmitte -> Glied wird in diese Ebene gelegt (V4 Runde 2, der Ansatz liegt 'tiefe' vor der Flanke).
                 bm = np.array([ruhe['p'][2][0], ruhe['p'][5][1], ruhe['p'][2][2]])
                 bm = ruhe['p'][3] + 0.5 * (bm - ruhe['p'][3])
-                meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes_v4(kette, ruhe, welt, bm)
+                en = np.cross(ruhe['p'][3] - ruhe['p'][1], ruhe['p'][5] - ruhe['p'][3])
+                en = en / max(np.linalg.norm(en), 1e-9)
+                meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes_v4(kette, ruhe, welt, bm, en)
             elif 'fenster' in kette['uv']:                   # Schwanz V3: Kegelstuempfe mit Hautfenstern
                 meshes = meshes[:EA.emr_parse(emr0).bone_count] + kette_meshes_v3(kette, ruhe)
             else:
