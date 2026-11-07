@@ -1,0 +1,402 @@
+{
+ "A_rueckrechnung": {
+  "name": "A_rueckrechnung",
+  "texel": 62367,
+  "T2_farben_je_teil": 2.07,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.0314,
+  "T3_texeldichte_median": 0.0298,
+  "T4_glanz_L85_proz": 0.22,
+  "T5_hf": 0.1349,
+  "T6_chroma_mittel": 13.7,
+  "T6_chroma_streu": 8.1,
+  "L_mittel": 12.8,
+  "L_p5_p95": [
+   0.4,
+   34.5
+  ],
+  "T7_rot_anteil_proz": 16.1,
+  "T7_rot_cluster": 3,
+  "T7_rot_L_p5_p95": [
+   20.4,
+   41.2
+  ],
+  "T7_rot_mittel_lab": [
+   28.3,
+   23.5,
+   1.8
+  ],
+  "klassen": {
+   "D": 0.789,
+   "M": 0.168,
+   "R": 0.025,
+   "H": 0.017,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   12.8,
+   13.0,
+   0.1
+  ]
+ },
+ "B_screenshot": {
+  "name": "B_screenshot",
+  "texel": 62367,
+  "T2_farben_je_teil": 3.28,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.0314,
+  "T3_texeldichte_median": 0.0298,
+  "T4_glanz_L85_proz": 0.22,
+  "T5_hf": 0.1375,
+  "T6_chroma_mittel": 15.2,
+  "T6_chroma_streu": 10.4,
+  "L_mittel": 13.1,
+  "L_p5_p95": [
+   2.4,
+   35.7
+  ],
+  "T7_rot_anteil_proz": 5.8,
+  "T7_rot_cluster": 5,
+  "T7_rot_L_p5_p95": [
+   21.2,
+   46.8
+  ],
+  "T7_rot_mittel_lab": [
+   33.2,
+   28.8,
+   12.8
+  ],
+  "klassen": {
+   "D": 0.779,
+   "M": 0.144,
+   "R": 0.062,
+   "H": 0.014,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   13.1,
+   10.8,
+   -8.3
+  ]
+ },
+ "C_mitte": {
+  "name": "C_mitte",
+  "texel": 62367,
+  "T2_farben_je_teil": 2.72,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.0314,
+  "T3_texeldichte_median": 0.0298,
+  "T4_glanz_L85_proz": 0.22,
+  "T5_hf": 0.1367,
+  "T6_chroma_mittel": 13.3,
+  "T6_chroma_streu": 9.1,
+  "L_mittel": 13.0,
+  "L_p5_p95": [
+   2.4,
+   35.3
+  ],
+  "T7_rot_anteil_proz": 15.0,
+  "T7_rot_cluster": 5,
+  "T7_rot_L_p5_p95": [
+   21.6,
+   43.1
+  ],
+  "T7_rot_mittel_lab": [
+   29.3,
+   24.4,
+   -2.6
+  ],
+  "klassen": {
+   "D": 0.787,
+   "M": 0.152,
+   "R": 0.044,
+   "H": 0.017,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   13.0,
+   11.6,
+   -4.1
+  ]
+ },
+ "D_fleisch": {
+  "name": "D_fleisch",
+  "texel": 62367,
+  "T2_farben_je_teil": 4.55,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.0314,
+  "T3_texeldichte_median": 0.0298,
+  "T4_glanz_L85_proz": 0.92,
+  "T5_hf": 0.2051,
+  "T6_chroma_mittel": 18.1,
+  "T6_chroma_streu": 13.4,
+  "L_mittel": 23.3,
+  "L_p5_p95": [
+   5.9,
+   54.9
+  ],
+  "T7_rot_anteil_proz": 22.9,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   21.2,
+   54.9
+  ],
+  "T7_rot_mittel_lab": [
+   32.3,
+   28.3,
+   17.1
+  ],
+  "klassen": {
+   "D": 0.527,
+   "M": 0.302,
+   "R": 0.112,
+   "H": 0.058,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   23.3,
+   12.4,
+   6.3
+  ]
+ },
+ "F_sauber": {
+  "name": "F_sauber",
+  "texel": 62367,
+  "T2_farben_je_teil": 1.55,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.0314,
+  "T3_texeldichte_median": 0.0298,
+  "T4_glanz_L85_proz": 0.61,
+  "T5_hf": 0.0906,
+  "T6_chroma_mittel": 4.6,
+  "T6_chroma_streu": 4.7,
+  "L_mittel": 22.0,
+  "L_p5_p95": [
+   9.0,
+   44.7
+  ],
+  "T7_rot_anteil_proz": 0.6,
+  "T7_rot_cluster": 5,
+  "T7_rot_L_p5_p95": [
+   22.0,
+   61.2
+  ],
+  "T7_rot_mittel_lab": [
+   35.1,
+   20.4,
+   1.4
+  ],
+  "klassen": {
+   "D": 0.412,
+   "M": 0.541,
+   "R": 0.003,
+   "H": 0.044,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   22.0,
+   2.4,
+   -2.0
+  ]
+ },
+ "G_treu": {
+  "name": "G_treu",
+  "texel": 62367,
+  "T2_farben_je_teil": 1.45,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.0314,
+  "T3_texeldichte_median": 0.0298,
+  "T4_glanz_L85_proz": 0.69,
+  "T5_hf": 0.0662,
+  "T6_chroma_mittel": 4.6,
+  "T6_chroma_streu": 5.0,
+  "L_mittel": 22.1,
+  "L_p5_p95": [
+   9.0,
+   44.7
+  ],
+  "T7_rot_anteil_proz": 0.6,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   24.3,
+   56.5
+  ],
+  "T7_rot_mittel_lab": [
+   39.1,
+   28.3,
+   -2.2
+  ],
+  "klassen": {
+   "D": 0.412,
+   "M": 0.539,
+   "R": 0.005,
+   "H": 0.043,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   22.1,
+   2.3,
+   -2.1
+  ]
+ },
+ "H_stoff/h2": {
+  "name": "H_stoff/h2",
+  "texel": 62367,
+  "T2_farben_je_teil": 1.55,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.0314,
+  "T3_texeldichte_median": 0.0298,
+  "T4_glanz_L85_proz": 0.74,
+  "T5_hf": 0.132,
+  "T6_chroma_mittel": 4.7,
+  "T6_chroma_streu": 4.6,
+  "L_mittel": 21.9,
+  "L_p5_p95": [
+   7.5,
+   47.5
+  ],
+  "T7_rot_anteil_proz": 0.7,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   24.7,
+   63.5
+  ],
+  "T7_rot_mittel_lab": [
+   42.2,
+   25.8,
+   -1.2
+  ],
+  "klassen": {
+   "D": 0.49,
+   "M": 0.456,
+   "R": 0.006,
+   "H": 0.048,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   21.9,
+   2.5,
+   -2.3
+  ]
+ },
+ "J_dicker": {
+  "name": "J_dicker",
+  "texel": 62369,
+  "T2_farben_je_teil": 1.72,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.0368,
+  "T3_texeldichte_median": 0.0308,
+  "T4_glanz_L85_proz": 0.9,
+  "T5_hf": 0.1077,
+  "T6_chroma_mittel": 5.2,
+  "T6_chroma_streu": 4.8,
+  "L_mittel": 24.3,
+  "L_p5_p95": [
+   8.2,
+   51.4
+  ],
+  "T7_rot_anteil_proz": 0.6,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.4,
+   66.3
+  ],
+  "T7_rot_mittel_lab": [
+   42.0,
+   26.1,
+   -2.0
+  ],
+  "klassen": {
+   "D": 0.383,
+   "M": 0.542,
+   "R": 0.005,
+   "H": 0.07,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   24.3,
+   2.3,
+   -3.1
+  ]
+ },
+ "K_alligator/K4_kroko": {
+  "name": "K_alligator/K4_kroko",
+  "texel": 73315,
+  "T2_farben_je_teil": 1.86,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.038,
+  "T3_texeldichte_median": 0.031,
+  "T4_glanz_L85_proz": 0.74,
+  "T5_hf": 0.1502,
+  "T6_chroma_mittel": 5.4,
+  "T6_chroma_streu": 4.5,
+  "L_mittel": 26.7,
+  "L_p5_p95": [
+   9.0,
+   51.4
+  ],
+  "T7_rot_anteil_proz": 0.5,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.4,
+   66.3
+  ],
+  "T7_rot_mittel_lab": [
+   42.0,
+   26.0,
+   -2.0
+  ],
+  "klassen": {
+   "D": 0.32,
+   "M": 0.592,
+   "R": 0.004,
+   "H": 0.084,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   26.7,
+   2.1,
+   -3.0
+  ]
+ },
+ "K5/K5c": {
+  "name": "K5/K5c",
+  "texel": 73315,
+  "T2_farben_je_teil": 1.69,
+  "T2_meshes": 29,
+  "T3_texeldichte_mittel": 0.038,
+  "T3_texeldichte_median": 0.031,
+  "T4_glanz_L85_proz": 0.62,
+  "T5_hf": 0.1511,
+  "T6_chroma_mittel": 5.1,
+  "T6_chroma_streu": 4.1,
+  "L_mittel": 25.5,
+  "L_p5_p95": [
+   9.0,
+   48.6
+  ],
+  "T7_rot_anteil_proz": 0.5,
+  "T7_rot_cluster": 6,
+  "T7_rot_L_p5_p95": [
+   22.4,
+   66.3
+  ],
+  "T7_rot_mittel_lab": [
+   42.0,
+   26.0,
+   -2.0
+  ],
+  "klassen": {
+   "D": 0.341,
+   "M": 0.589,
+   "R": 0.004,
+   "H": 0.065,
+   "W": 0.0
+  },
+  "lab_mittel": [
+   25.5,
+   2.3,
+   -2.7
+  ]
+ }
+}

@@ -1,0 +1,282 @@
+{
+ "Ellbogen": {
+  "A": {
+   "kerbe_max": [
+    0.002,
+    "ellbogen_l",
+    30
+   ],
+   "kerbe_mittel": 0.0,
+   "dicke_min": [
+    1.02,
+    "ellbogen_r",
+    30
+   ],
+   "krater_max": [
+    0.441,
+    "ellbogen_r",
+    150
+   ]
+  },
+  "B": {
+   "kerbe_max": [
+    0.0,
+    "ellbogen_r",
+    150
+   ],
+   "kerbe_mittel": 0.0,
+   "dicke_min": [
+    1.2,
+    "ellbogen_l",
+    30
+   ],
+   "krater_max": [
+    0.0,
+    "ellbogen_r",
+    150
+   ]
+  },
+  "C": {
+   "kerbe_max": [
+    0.088,
+    "ellbogen_r",
+    30
+   ],
+   "kerbe_mittel": 0.009,
+   "dicke_min": [
+    1.23,
+    "ellbogen_l",
+    60
+   ],
+   "krater_max": [
+    0.0,
+    "ellbogen_r",
+    150
+   ]
+  }
+ },
+ "Knie": {
+  "A": {
+   "kerbe_max": [
+    0.002,
+    "knie_l",
+    30
+   ],
+   "kerbe_mittel": 0.0,
+   "dicke_min": [
+    0.96,
+    "knie_r",
+    30
+   ],
+   "krater_max": [
+    0.6,
+    "knie_r",
+    150
+   ]
+  },
+  "B": {
+   "kerbe_max": [
+    0.0,
+    "knie_r",
+    150
+   ],
+   "kerbe_mittel": 0.0,
+   "dicke_min": [
+    1.15,
+    "knie_l",
+    30
+   ],
+   "krater_max": [
+    0.0,
+    "knie_r",
+    150
+   ]
+  },
+  "C": {
+   "kerbe_max": [
+    0.0,
+    "knie_r",
+    150
+   ],
+   "kerbe_mittel": 0.0,
+   "dicke_min": [
+    0.84,
+    "knie_r",
+    30
+   ],
+   "krater_max": [
+    0.0,
+    "knie_r",
+    150
+   ]
+  }
+ },
+ "Wirbelsaeule": {
+  "A": {
+   "kerbe_max": [
+    0.032,
+    "brust_y-1",
+    30
+   ],
+   "kerbe_mittel": 0.004,
+   "dicke_min": [
+    0.96,
+    "brust_z+1",
+    45
+   ],
+   "krater_max": [
+    0.038,
+    "brust_z+1",
+    45
+   ]
+  },
+  "B": {
+   "kerbe_max": [
+    0.002,
+    "wirbel_z+1",
+    30
+   ],
+   "kerbe_mittel": 0.0,
+   "dicke_min": [
+    1.0,
+    "wirbel_y+1",
+    45
+   ],
+   "krater_max": [
+    0.069,
+    "brust_y+1",
+    15
+   ]
+  },
+  "C": {
+   "kerbe_max": [
+    0.088,
+    "brust_z-1",
+    45
+   ],
+   "kerbe_mittel": 0.013,
+   "dicke_min": [
+    0.82,
+    "brust_z-1",
+    45
+   ],
+   "krater_max": [
+    0.0,
+    "wirbel_z-1",
+    45
+   ]
+  }
+ },
+ "Schwanzglieder": {
+  "A": {
+   "kerbe_max": [
+    0.004,
+    "schwanz5_y-1",
+    30
+   ],
+   "kerbe_mittel": 0.0,
+   "dicke_min": [
+    0.94,
+    "schwanz4_y+1",
+    30
+   ],
+   "krater_max": [
+    0.338,
+    "schwanz1_y+1",
+    15
+   ]
+  },
+  "B": {
+   "kerbe_max": [
+    0.191,
+    "schwanz1_z-1",
+    30
+   ],
+   "kerbe_mittel": 0.01,
+   "dicke_min": [
+    0.91,
+    "schwanz4_y+1",
+    30
+   ],
+   "krater_max": [
+    0.0,
+    "schwanz5_z-1",
+    45
+   ]
+  },
+  "C": {
+   "kerbe_max": [
+    0.102,
+    "schwanz5_y-1",
+    30
+   ],
+   "kerbe_mittel": 0.005,
+   "dicke_min": [
+    0.86,
+    "schwanz1_y-1",
+    45
+   ],
+   "krater_max": [
+    0.0,
+    "schwanz5_z-1",
+    45
+   ]
+  }
+ },
+ "Schwanzwurzel": {
+  "A": {
+   "kerbe_max": [
+    0.193,
+    "schwanzwurzel_z-1",
+    45
+   ],
+   "kerbe_mittel": 0.069,
+   "dicke_min": [
+    1.05,
+    "schwanzwurzel_z+1",
+    45
+   ],
+   "krater_max": [
+    0.35,
+    "schwanzwurzel_z-1",
+    45
+   ]
+  },
+  "B": {
+   "kerbe_max": [
+    0.023,
+    "schwanzwurzel_z-1",
+    30
+   ],
+   "kerbe_mittel": 0.003,
+   "dicke_min": [
+    1.06,
+    "schwanzwurzel_y+1",
+    30
+   ],
+   "krater_max": [
+    0.0,
+    "schwanzwurzel_z-1",
+    45
+   ]
+  },
+  "C": {
+   "kerbe_max": [
+    0.0,
+    "schwanzwurzel_z-1",
+    45
+   ],
+   "kerbe_mittel": 0.0,
+   "dicke_min": [
+    0.96,
+    "schwanzwurzel_z-1",
+    45
+   ],
+   "krater_max": [
+    0.0,
+    "schwanzwurzel_z-1",
+    45
+   ]
+  }
+ }
+}

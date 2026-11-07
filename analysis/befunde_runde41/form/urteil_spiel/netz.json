@@ -1,0 +1,2569 @@
+{
+ "A": {
+  "S": {
+   "knochen": 32,
+   "flaechen": 1917,
+   "drei": 178,
+   "vier": 1739,
+   "ecken": 1932,
+   "offen": 0,
+   "nonman": 0,
+   "inseln": 343,
+   "einzel": 303,
+   "teile_mehr": 20,
+   "entartet": 0,
+   "split": 13,
+   "norm_med": 18.7,
+   "norm_p90": 57.5,
+   "flaeche_cv": 0.89,
+   "kante": 221.5,
+   "split_ant": 0.004
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "huefte",
+    "eltern": -1,
+    "flaechen": 90,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 11
+   },
+   {
+    "b": 1,
+    "name": "schwanz1",
+    "eltern": 0,
+    "flaechen": 40,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 2,
+    "name": "schwanz2",
+    "eltern": 1,
+    "flaechen": 40,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 3,
+    "name": "schwanz3",
+    "eltern": 2,
+    "flaechen": 32,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 4,
+    "name": "schwanz4",
+    "eltern": 3,
+    "flaechen": 32,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 5,
+    "name": "schwanz5",
+    "eltern": 4,
+    "flaechen": 32,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 6,
+    "name": "schwanz6",
+    "eltern": 5,
+    "flaechen": 52,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 7,
+    "name": "wirbel",
+    "eltern": 0,
+    "flaechen": 100,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 11
+   },
+   {
+    "b": 8,
+    "name": "oberschenkel_l",
+    "eltern": 0,
+    "flaechen": 72,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 9,
+    "name": "oberschenkel_r",
+    "eltern": 0,
+    "flaechen": 72,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 10,
+    "name": "brust",
+    "eltern": 7,
+    "flaechen": 90,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 11
+   },
+   {
+    "b": 11,
+    "name": "oberarm_l",
+    "eltern": 10,
+    "flaechen": 76,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 12,
+    "name": "unterarm_l",
+    "eltern": 11,
+    "flaechen": 72,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 13,
+    "name": "hand_l",
+    "eltern": 12,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 14,
+    "name": "klaue_l1",
+    "eltern": 13,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 15,
+    "name": "klaue_l2",
+    "eltern": 13,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 16,
+    "name": "oberarm_r",
+    "eltern": 10,
+    "flaechen": 76,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 17,
+    "name": "unterarm_r",
+    "eltern": 16,
+    "flaechen": 72,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 18,
+    "name": "hand_r",
+    "eltern": 17,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 19,
+    "name": "klaue_r1",
+    "eltern": 18,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 20,
+    "name": "klaue_r2",
+    "eltern": 18,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 21,
+    "name": "hals",
+    "eltern": 10,
+    "flaechen": 32,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 22,
+    "name": "kopf",
+    "eltern": 21,
+    "flaechen": 203,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 9,
+    "inseln": 50
+   },
+   {
+    "b": 23,
+    "name": "kiefer",
+    "eltern": 22,
+    "flaechen": 92,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 7,
+    "inseln": 45
+   },
+   {
+    "b": 24,
+    "name": "unterschenkel_l",
+    "eltern": 8,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 25,
+    "name": "fuss_l",
+    "eltern": 24,
+    "flaechen": 101,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 4,
+    "inseln": 21
+   },
+   {
+    "b": 26,
+    "name": "unterschenkel_r",
+    "eltern": 9,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 27,
+    "name": "fuss_r",
+    "eltern": 26,
+    "flaechen": 101,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 4,
+    "inseln": 21
+   },
+   {
+    "b": 28,
+    "name": "klaue_l3",
+    "eltern": 13,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 29,
+    "name": "klaue_r3",
+    "eltern": 18,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 30,
+    "name": "klaue_l4",
+    "eltern": 13,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 31,
+    "name": "klaue_r4",
+    "eltern": 18,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   }
+  ]
+ },
+ "B": {
+  "S": {
+   "knochen": 32,
+   "flaechen": 1876,
+   "drei": 542,
+   "vier": 1334,
+   "ecken": 1780,
+   "offen": 174,
+   "nonman": 0,
+   "inseln": 118,
+   "einzel": 78,
+   "teile_mehr": 34,
+   "entartet": 0,
+   "split": 153,
+   "norm_med": 23.8,
+   "norm_p90": 57.3,
+   "flaeche_cv": 0.9,
+   "kante": 250.1,
+   "split_ant": 0.048
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "huefte",
+    "eltern": -1,
+    "flaechen": 110,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 1,
+    "name": "schwanz1",
+    "eltern": 0,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 2,
+    "name": "schwanz2",
+    "eltern": 1,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 3,
+    "name": "schwanz3",
+    "eltern": 2,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 4,
+    "name": "schwanz4",
+    "eltern": 3,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 5,
+    "name": "schwanz5",
+    "eltern": 4,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 6,
+    "name": "schwanz6",
+    "eltern": 5,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 7,
+    "name": "wirbel",
+    "eltern": 0,
+    "flaechen": 90,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 8,
+    "name": "oberschenkel_l",
+    "eltern": 0,
+    "flaechen": 72,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 9,
+    "name": "oberschenkel_r",
+    "eltern": 0,
+    "flaechen": 72,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 10,
+    "name": "brust",
+    "eltern": 7,
+    "flaechen": 120,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 11,
+    "name": "oberarm_l",
+    "eltern": 10,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 12,
+    "name": "unterarm_l",
+    "eltern": 11,
+    "flaechen": 82,
+    "offen": 18,
+    "nonman": 0,
+    "teile": 7,
+    "inseln": 19
+   },
+   {
+    "b": 13,
+    "name": "hand_l",
+    "eltern": 12,
+    "flaechen": 40,
+    "offen": 8,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 14,
+    "name": "klaue_l1",
+    "eltern": 13,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 15,
+    "name": "klaue_l2",
+    "eltern": 13,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 16,
+    "name": "oberarm_r",
+    "eltern": 10,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 17,
+    "name": "unterarm_r",
+    "eltern": 16,
+    "flaechen": 82,
+    "offen": 18,
+    "nonman": 0,
+    "teile": 7,
+    "inseln": 19
+   },
+   {
+    "b": 18,
+    "name": "hand_r",
+    "eltern": 17,
+    "flaechen": 40,
+    "offen": 8,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 19,
+    "name": "klaue_r1",
+    "eltern": 18,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 20,
+    "name": "klaue_r2",
+    "eltern": 18,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 21,
+    "name": "hals",
+    "eltern": 10,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 22,
+    "name": "kopf",
+    "eltern": 21,
+    "flaechen": 150,
+    "offen": 32,
+    "nonman": 0,
+    "teile": 11,
+    "inseln": 27
+   },
+   {
+    "b": 23,
+    "name": "kiefer",
+    "eltern": 22,
+    "flaechen": 58,
+    "offen": 18,
+    "nonman": 0,
+    "teile": 7,
+    "inseln": 19
+   },
+   {
+    "b": 24,
+    "name": "unterschenkel_l",
+    "eltern": 8,
+    "flaechen": 80,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 25,
+    "name": "fuss_l",
+    "eltern": 24,
+    "flaechen": 72,
+    "offen": 12,
+    "nonman": 0,
+    "teile": 4,
+    "inseln": 4
+   },
+   {
+    "b": 26,
+    "name": "unterschenkel_r",
+    "eltern": 9,
+    "flaechen": 80,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 27,
+    "name": "fuss_r",
+    "eltern": 26,
+    "flaechen": 72,
+    "offen": 12,
+    "nonman": 0,
+    "teile": 4,
+    "inseln": 4
+   },
+   {
+    "b": 28,
+    "name": "klaue_l3",
+    "eltern": 13,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 29,
+    "name": "klaue_r3",
+    "eltern": 18,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 30,
+    "name": "klaue_l4",
+    "eltern": 13,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 31,
+    "name": "klaue_r4",
+    "eltern": 18,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   }
+  ]
+ },
+ "C": {
+  "S": {
+   "knochen": 32,
+   "flaechen": 1807,
+   "drei": 587,
+   "vier": 1220,
+   "ecken": 1673,
+   "offen": 91,
+   "nonman": 0,
+   "inseln": 91,
+   "einzel": 51,
+   "teile_mehr": 25,
+   "entartet": 0,
+   "split": 0,
+   "norm_med": 23.8,
+   "norm_p90": 44.6,
+   "flaeche_cv": 1.01,
+   "kante": 243.2,
+   "split_ant": 0.0
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "huefte",
+    "eltern": -1,
+    "flaechen": 70,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 1,
+    "name": "schwanz1",
+    "eltern": 0,
+    "flaechen": 56,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 2,
+    "name": "schwanz2",
+    "eltern": 1,
+    "flaechen": 40,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 3,
+    "name": "schwanz3",
+    "eltern": 2,
+    "flaechen": 40,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 4,
+    "name": "schwanz4",
+    "eltern": 3,
+    "flaechen": 40,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 5,
+    "name": "schwanz5",
+    "eltern": 4,
+    "flaechen": 40,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 6,
+    "name": "schwanz6",
+    "eltern": 5,
+    "flaechen": 40,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 7,
+    "name": "wirbel",
+    "eltern": 0,
+    "flaechen": 60,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 8,
+    "name": "oberschenkel_l",
+    "eltern": 0,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 9,
+    "name": "oberschenkel_r",
+    "eltern": 0,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 10,
+    "name": "brust",
+    "eltern": 7,
+    "flaechen": 60,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 11,
+    "name": "oberarm_l",
+    "eltern": 10,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 12,
+    "name": "unterarm_l",
+    "eltern": 11,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 13,
+    "name": "hand_l",
+    "eltern": 12,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 14,
+    "name": "klaue_l1",
+    "eltern": 13,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 15,
+    "name": "klaue_l2",
+    "eltern": 13,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 16,
+    "name": "oberarm_r",
+    "eltern": 10,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 17,
+    "name": "unterarm_r",
+    "eltern": 16,
+    "flaechen": 64,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 18,
+    "name": "hand_r",
+    "eltern": 17,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 19,
+    "name": "klaue_r1",
+    "eltern": 18,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 20,
+    "name": "klaue_r2",
+    "eltern": 18,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 21,
+    "name": "hals",
+    "eltern": 10,
+    "flaechen": 48,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 22,
+    "name": "kopf",
+    "eltern": 21,
+    "flaechen": 157,
+    "offen": 37,
+    "nonman": 0,
+    "teile": 12,
+    "inseln": 30
+   },
+   {
+    "b": 23,
+    "name": "kiefer",
+    "eltern": 22,
+    "flaechen": 72,
+    "offen": 24,
+    "nonman": 0,
+    "teile": 9,
+    "inseln": 25
+   },
+   {
+    "b": 24,
+    "name": "unterschenkel_l",
+    "eltern": 8,
+    "flaechen": 56,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 25,
+    "name": "fuss_l",
+    "eltern": 24,
+    "flaechen": 78,
+    "offen": 15,
+    "nonman": 0,
+    "teile": 4,
+    "inseln": 4
+   },
+   {
+    "b": 26,
+    "name": "unterschenkel_r",
+    "eltern": 9,
+    "flaechen": 56,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 27,
+    "name": "fuss_r",
+    "eltern": 26,
+    "flaechen": 78,
+    "offen": 15,
+    "nonman": 0,
+    "teile": 4,
+    "inseln": 4
+   },
+   {
+    "b": 28,
+    "name": "klaue_l3",
+    "eltern": 13,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 29,
+    "name": "klaue_r3",
+    "eltern": 18,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 30,
+    "name": "klaue_l4",
+    "eltern": 13,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 31,
+    "name": "klaue_r4",
+    "eltern": 18,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   }
+  ]
+ },
+ "K34": {
+  "S": {
+   "knochen": 27,
+   "flaechen": 1427,
+   "drei": 941,
+   "vier": 486,
+   "ecken": 1031,
+   "offen": 19,
+   "nonman": 0,
+   "inseln": 145,
+   "einzel": 6,
+   "teile_mehr": 8,
+   "entartet": 0,
+   "split": 55,
+   "norm_med": 9.4,
+   "norm_p90": 27.0,
+   "flaeche_cv": 0.99,
+   "kante": 256.6,
+   "split_ant": 0.029
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "b0",
+    "eltern": -1,
+    "flaechen": 58,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 1,
+    "name": "b1",
+    "eltern": 0,
+    "flaechen": 49,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 2,
+    "name": "b2",
+    "eltern": 1,
+    "flaechen": 36,
+    "offen": 3,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 3,
+    "name": "b3",
+    "eltern": 2,
+    "flaechen": 18,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 4,
+    "name": "b4",
+    "eltern": 3,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 3,
+    "inseln": 6
+   },
+   {
+    "b": 5,
+    "name": "b5",
+    "eltern": 0,
+    "flaechen": 56,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 6,
+    "name": "b6",
+    "eltern": 5,
+    "flaechen": 36,
+    "offen": 3,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 7,
+    "name": "b7",
+    "eltern": 6,
+    "flaechen": 18,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 8,
+    "name": "b8",
+    "eltern": 7,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 3,
+    "inseln": 6
+   },
+   {
+    "b": 9,
+    "name": "b9",
+    "eltern": 0,
+    "flaechen": 30,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 10,
+    "name": "b10",
+    "eltern": 9,
+    "flaechen": 347,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 34
+   },
+   {
+    "b": 11,
+    "name": "b11",
+    "eltern": 10,
+    "flaechen": 43,
+    "offen": 5,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 12,
+    "name": "b12",
+    "eltern": 11,
+    "flaechen": 41,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 13,
+    "name": "b13",
+    "eltern": 12,
+    "flaechen": 29,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 14,
+    "name": "b14",
+    "eltern": 13,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 3,
+    "inseln": 6
+   },
+   {
+    "b": 15,
+    "name": "b15",
+    "eltern": 10,
+    "flaechen": 36,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 16,
+    "name": "b16",
+    "eltern": 15,
+    "flaechen": 125,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 17,
+    "name": "b17",
+    "eltern": 16,
+    "flaechen": 41,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 18,
+    "name": "b18",
+    "eltern": 17,
+    "flaechen": 29,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 19,
+    "name": "b19",
+    "eltern": 18,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 3,
+    "inseln": 6
+   },
+   {
+    "b": 20,
+    "name": "b20",
+    "eltern": 10,
+    "flaechen": 52,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 21,
+    "name": "b21",
+    "eltern": 20,
+    "flaechen": 25,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 22,
+    "name": "b22",
+    "eltern": 21,
+    "flaechen": 39,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 8
+   },
+   {
+    "b": 23,
+    "name": "b23",
+    "eltern": 10,
+    "flaechen": 52,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 24,
+    "name": "b24",
+    "eltern": 23,
+    "flaechen": 25,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 25,
+    "name": "b25",
+    "eltern": 24,
+    "flaechen": 37,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 26,
+    "name": "b26",
+    "eltern": 10,
+    "flaechen": 97,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   }
+  ]
+ },
+ "K33": {
+  "S": {
+   "knochen": 29,
+   "flaechen": 1065,
+   "drei": 696,
+   "vier": 369,
+   "ecken": 788,
+   "offen": 44,
+   "nonman": 0,
+   "inseln": 110,
+   "einzel": 11,
+   "teile_mehr": 0,
+   "entartet": 0,
+   "split": 9,
+   "norm_med": 7.6,
+   "norm_p90": 21.9,
+   "flaeche_cv": 0.77,
+   "kante": 252.3,
+   "split_ant": 0.006
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "b0",
+    "eltern": -1,
+    "flaechen": 34,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 1,
+    "name": "b1",
+    "eltern": 0,
+    "flaechen": 28,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 2,
+    "name": "b2",
+    "eltern": 1,
+    "flaechen": 118,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 6
+   },
+   {
+    "b": 3,
+    "name": "b3",
+    "eltern": 2,
+    "flaechen": 91,
+    "offen": 11,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 4,
+    "name": "b4",
+    "eltern": 2,
+    "flaechen": 54,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 5,
+    "name": "b5",
+    "eltern": 4,
+    "flaechen": 21,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 6,
+    "name": "b6",
+    "eltern": 5,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 6
+   },
+   {
+    "b": 7,
+    "name": "b7",
+    "eltern": 2,
+    "flaechen": 54,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 8,
+    "name": "b8",
+    "eltern": 7,
+    "flaechen": 21,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 9,
+    "name": "b9",
+    "eltern": 8,
+    "flaechen": 34,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 12
+   },
+   {
+    "b": 10,
+    "name": "b10",
+    "eltern": 2,
+    "flaechen": 31,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 11,
+    "name": "b11",
+    "eltern": 10,
+    "flaechen": 125,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 12,
+    "name": "b12",
+    "eltern": 11,
+    "flaechen": 44,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 13,
+    "name": "b13",
+    "eltern": 12,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 14,
+    "name": "b14",
+    "eltern": 13,
+    "flaechen": 12,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 15,
+    "name": "b15",
+    "eltern": 13,
+    "flaechen": 9,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 16,
+    "name": "b16",
+    "eltern": 13,
+    "flaechen": 9,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 17,
+    "name": "b17",
+    "eltern": 2,
+    "flaechen": 32,
+    "offen": 5,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 18,
+    "name": "b18",
+    "eltern": 17,
+    "flaechen": 41,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 19,
+    "name": "b19",
+    "eltern": 18,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 20,
+    "name": "b20",
+    "eltern": 19,
+    "flaechen": 12,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 21,
+    "name": "b21",
+    "eltern": 19,
+    "flaechen": 9,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 22,
+    "name": "b22",
+    "eltern": 19,
+    "flaechen": 9,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 23,
+    "name": "b23",
+    "eltern": 0,
+    "flaechen": 47,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 6
+   },
+   {
+    "b": 24,
+    "name": "b24",
+    "eltern": 23,
+    "flaechen": 35,
+    "offen": 3,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 25,
+    "name": "b25",
+    "eltern": 24,
+    "flaechen": 16,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 26,
+    "name": "b26",
+    "eltern": 0,
+    "flaechen": 47,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 27,
+    "name": "b27",
+    "eltern": 26,
+    "flaechen": 35,
+    "offen": 3,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 28,
+    "name": "b28",
+    "eltern": 27,
+    "flaechen": 16,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   }
+  ]
+ },
+ "K28": {
+  "S": {
+   "knochen": 23,
+   "flaechen": 913,
+   "drei": 539,
+   "vier": 374,
+   "ecken": 710,
+   "offen": 49,
+   "nonman": 0,
+   "inseln": 87,
+   "einzel": 7,
+   "teile_mehr": 3,
+   "entartet": 0,
+   "split": 7,
+   "norm_med": 7.6,
+   "norm_p90": 20.7,
+   "flaeche_cv": 0.89,
+   "kante": 242.2,
+   "split_ant": 0.005
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "b0",
+    "eltern": -1,
+    "flaechen": 45,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 6
+   },
+   {
+    "b": 1,
+    "name": "b1",
+    "eltern": 0,
+    "flaechen": 234,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 16
+   },
+   {
+    "b": 2,
+    "name": "b2",
+    "eltern": 1,
+    "flaechen": 49,
+    "offen": 17,
+    "nonman": 0,
+    "teile": 2,
+    "inseln": 6
+   },
+   {
+    "b": 3,
+    "name": "b3",
+    "eltern": 2,
+    "flaechen": 2,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 4,
+    "name": "b4",
+    "eltern": 3,
+    "flaechen": 102,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 5,
+    "name": "b5",
+    "eltern": 1,
+    "flaechen": 52,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 6,
+    "name": "b6",
+    "eltern": 5,
+    "flaechen": 25,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 7,
+    "name": "b7",
+    "eltern": 6,
+    "flaechen": 27,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 8,
+    "name": "b8",
+    "eltern": 7,
+    "flaechen": 29,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 2,
+    "inseln": 3
+   },
+   {
+    "b": 9,
+    "name": "b9",
+    "eltern": 1,
+    "flaechen": 53,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 10,
+    "name": "b10",
+    "eltern": 9,
+    "flaechen": 25,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 11,
+    "name": "b11",
+    "eltern": 10,
+    "flaechen": 30,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 6
+   },
+   {
+    "b": 12,
+    "name": "b12",
+    "eltern": 11,
+    "flaechen": 28,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 2,
+    "inseln": 3
+   },
+   {
+    "b": 13,
+    "name": "b13",
+    "eltern": 0,
+    "flaechen": 33,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 14,
+    "name": "b14",
+    "eltern": 13,
+    "flaechen": 31,
+    "offen": 3,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 15,
+    "name": "b15",
+    "eltern": 14,
+    "flaechen": 14,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 16,
+    "name": "b16",
+    "eltern": 0,
+    "flaechen": 64,
+    "offen": 10,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 17,
+    "name": "b17",
+    "eltern": 16,
+    "flaechen": 9,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 18,
+    "name": "b18",
+    "eltern": 16,
+    "flaechen": 15,
+    "offen": 5,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 19,
+    "name": "b19",
+    "eltern": 18,
+    "flaechen": 15,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 20,
+    "name": "b20",
+    "eltern": 19,
+    "flaechen": 12,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 21,
+    "name": "b21",
+    "eltern": 20,
+    "flaechen": 12,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 22,
+    "name": "b22",
+    "eltern": 21,
+    "flaechen": 7,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   }
+  ]
+ },
+ "K23": {
+  "S": {
+   "knochen": 22,
+   "flaechen": 978,
+   "drei": 515,
+   "vier": 463,
+   "ecken": 866,
+   "offen": 173,
+   "nonman": 0,
+   "inseln": 105,
+   "einzel": 3,
+   "teile_mehr": 26,
+   "entartet": 0,
+   "split": 19,
+   "norm_med": 6.8,
+   "norm_p90": 22.2,
+   "flaeche_cv": 1.27,
+   "kante": 527.3,
+   "split_ant": 0.013
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "b0",
+    "eltern": -1,
+    "flaechen": 42,
+    "offen": 10,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 5
+   },
+   {
+    "b": 1,
+    "name": "b1",
+    "eltern": 0,
+    "flaechen": 74,
+    "offen": 12,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 6
+   },
+   {
+    "b": 2,
+    "name": "b2",
+    "eltern": 1,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 3,
+    "name": "b3",
+    "eltern": 2,
+    "flaechen": 32,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 4,
+    "name": "b4",
+    "eltern": 3,
+    "flaechen": 31,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 5,
+    "name": "b5",
+    "eltern": 1,
+    "flaechen": 56,
+    "offen": 12,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 6,
+    "name": "b6",
+    "eltern": 5,
+    "flaechen": 190,
+    "offen": 44,
+    "nonman": 0,
+    "teile": 11,
+    "inseln": 16
+   },
+   {
+    "b": 7,
+    "name": "b7",
+    "eltern": 6,
+    "flaechen": 242,
+    "offen": 59,
+    "nonman": 0,
+    "teile": 17,
+    "inseln": 22
+   },
+   {
+    "b": 8,
+    "name": "b8",
+    "eltern": 1,
+    "flaechen": 42,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 9,
+    "name": "b9",
+    "eltern": 8,
+    "flaechen": 32,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 10,
+    "name": "b10",
+    "eltern": 9,
+    "flaechen": 31,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 11,
+    "name": "b11",
+    "eltern": 0,
+    "flaechen": 32,
+    "offen": 8,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 12,
+    "name": "b12",
+    "eltern": 11,
+    "flaechen": 24,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 13,
+    "name": "b13",
+    "eltern": 12,
+    "flaechen": 16,
+    "offen": 5,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 14,
+    "name": "b14",
+    "eltern": 13,
+    "flaechen": 12,
+    "offen": 5,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 15,
+    "name": "b15",
+    "eltern": 14,
+    "flaechen": 8,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 16,
+    "name": "b16",
+    "eltern": 11,
+    "flaechen": 12,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 17,
+    "name": "b17",
+    "eltern": 16,
+    "flaechen": 9,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 18,
+    "name": "b18",
+    "eltern": 17,
+    "flaechen": 15,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 19,
+    "name": "b19",
+    "eltern": 11,
+    "flaechen": 12,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 20,
+    "name": "b20",
+    "eltern": 19,
+    "flaechen": 9,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 21,
+    "name": "b21",
+    "eltern": 20,
+    "flaechen": 15,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   }
+  ]
+ },
+ "K22": {
+  "S": {
+   "knochen": 22,
+   "flaechen": 556,
+   "drei": 284,
+   "vier": 272,
+   "ecken": 468,
+   "offen": 36,
+   "nonman": 0,
+   "inseln": 119,
+   "einzel": 38,
+   "teile_mehr": 0,
+   "entartet": 0,
+   "split": 13,
+   "norm_med": 11.6,
+   "norm_p90": 25.8,
+   "flaeche_cv": 0.71,
+   "kante": 192.2,
+   "split_ant": 0.016
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "b0",
+    "eltern": -1,
+    "flaechen": 46,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 11
+   },
+   {
+    "b": 1,
+    "name": "b1",
+    "eltern": 0,
+    "flaechen": 24,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 6
+   },
+   {
+    "b": 2,
+    "name": "b2",
+    "eltern": 1,
+    "flaechen": 57,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 11
+   },
+   {
+    "b": 3,
+    "name": "b3",
+    "eltern": 2,
+    "flaechen": 17,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 4,
+    "name": "b4",
+    "eltern": 3,
+    "flaechen": 29,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 5,
+    "name": "b5",
+    "eltern": 4,
+    "flaechen": 20,
+    "offen": 6,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 6,
+    "name": "b6",
+    "eltern": 5,
+    "flaechen": 33,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 9
+   },
+   {
+    "b": 7,
+    "name": "b7",
+    "eltern": 2,
+    "flaechen": 19,
+    "offen": 9,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 8,
+    "name": "b8",
+    "eltern": 7,
+    "flaechen": 54,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 6
+   },
+   {
+    "b": 9,
+    "name": "b9",
+    "eltern": 8,
+    "flaechen": 20,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 10
+   },
+   {
+    "b": 10,
+    "name": "b10",
+    "eltern": 2,
+    "flaechen": 17,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 11,
+    "name": "b11",
+    "eltern": 10,
+    "flaechen": 29,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 12,
+    "name": "b12",
+    "eltern": 11,
+    "flaechen": 28,
+    "offen": 5,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 10
+   },
+   {
+    "b": 13,
+    "name": "b13",
+    "eltern": 12,
+    "flaechen": 21,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 14,
+    "name": "b14",
+    "eltern": 0,
+    "flaechen": 26,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 15,
+    "name": "b15",
+    "eltern": 14,
+    "flaechen": 16,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 16,
+    "name": "b16",
+    "eltern": 15,
+    "flaechen": 11,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 7
+   },
+   {
+    "b": 17,
+    "name": "b17",
+    "eltern": 16,
+    "flaechen": 18,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 18,
+    "name": "b18",
+    "eltern": 0,
+    "flaechen": 26,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   },
+   {
+    "b": 19,
+    "name": "b19",
+    "eltern": 18,
+    "flaechen": 16,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 20,
+    "name": "b20",
+    "eltern": 19,
+    "flaechen": 11,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 7
+   },
+   {
+    "b": 21,
+    "name": "b21",
+    "eltern": 20,
+    "flaechen": 18,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 3
+   }
+  ]
+ },
+ "K20": {
+  "S": {
+   "knochen": 17,
+   "flaechen": 550,
+   "drei": 435,
+   "vier": 115,
+   "ecken": 372,
+   "offen": 21,
+   "nonman": 0,
+   "inseln": 22,
+   "einzel": 1,
+   "teile_mehr": 0,
+   "entartet": 0,
+   "split": 6,
+   "norm_med": 9.1,
+   "norm_p90": 24.9,
+   "flaeche_cv": 0.78,
+   "kante": 156.9,
+   "split_ant": 0.009
+  },
+  "zeilen": [
+   {
+    "b": 0,
+    "name": "b0",
+    "eltern": -1,
+    "flaechen": 70,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 1,
+    "name": "b1",
+    "eltern": 0,
+    "flaechen": 86,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 2,
+    "name": "b2",
+    "eltern": 1,
+    "flaechen": 22,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 3,
+    "name": "b3",
+    "eltern": 2,
+    "flaechen": 73,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 4
+   },
+   {
+    "b": 4,
+    "name": "b4",
+    "eltern": 3,
+    "flaechen": 20,
+    "offen": 5,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 2
+   },
+   {
+    "b": 5,
+    "name": "b5",
+    "eltern": 1,
+    "flaechen": 35,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 6,
+    "name": "b6",
+    "eltern": 5,
+    "flaechen": 18,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 7,
+    "name": "b7",
+    "eltern": 6,
+    "flaechen": 11,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 8,
+    "name": "b8",
+    "eltern": 1,
+    "flaechen": 38,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 9,
+    "name": "b9",
+    "eltern": 8,
+    "flaechen": 18,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 10,
+    "name": "b10",
+    "eltern": 9,
+    "flaechen": 11,
+    "offen": 4,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 11,
+    "name": "b11",
+    "eltern": 0,
+    "flaechen": 36,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 12,
+    "name": "b12",
+    "eltern": 11,
+    "flaechen": 16,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 13,
+    "name": "b13",
+    "eltern": 12,
+    "flaechen": 20,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 14,
+    "name": "b14",
+    "eltern": 0,
+    "flaechen": 40,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 15,
+    "name": "b15",
+    "eltern": 14,
+    "flaechen": 16,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   },
+   {
+    "b": 16,
+    "name": "b16",
+    "eltern": 15,
+    "flaechen": 20,
+    "offen": 0,
+    "nonman": 0,
+    "teile": 1,
+    "inseln": 1
+   }
+  ]
+ }
+}

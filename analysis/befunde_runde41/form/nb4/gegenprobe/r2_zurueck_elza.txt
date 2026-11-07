@@ -1,0 +1,19 @@
+# Gegenprobe Runde 2: exe b9b3d574 (Stand b9ab865af, Wache nach dem Bildmass), Riegel test_r41_form_wagenweg.cmake TEIL=zurueck_elza (Stand vor der Schranke 650 / warten 9; Zahlen gelten unveraendert)
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[zurueck_elza]: Kamera Taumeln F1544-F1842 (299 Bilder, Schnitte 13;15;11), Form-Slot 11 min sichtbar 2723, Elza max 1626, Form max 113 Promille verdeckt, max 544 Promille fast schwarz (299 Bilder)
+-- r41_form_wagenweg[zurueck_elza]: Kampfkamera F1150-F1543 394 Bilder, 28 > 600 Promille fast schwarz (erlaubt 0), max 773 (F1347)
+-- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 150 (F946), Treffer 10 (Abzug 150, groesster 15) ab F1297, Rueckstoss F1544, Form-HP zuletzt 0, Elza getroffen 1x, exit=0, Lauf C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formnb4/r2/gegenprobe/zurueck_elza/lauf_b2e32fe7
+CMake Error at tests/integration/test_r41_form_wagenweg.cmake:491 (message):
+  r41_form_wagenweg[zurueck_elza]: FEHLER
+
+   Kampfkamera vor der Szene (F1150-F1543): 28 Bilder > 600 Promille fast schwarz, erlaubt 0
+     F1341: 741 Promille fast schwarz
+     F1342: 769 Promille fast schwarz
+     F1343: 770 Promille fast schwarz
+     F1344: 770 Promille fast schwarz
+     F1345: 772 Promille fast schwarz
+     F1346: 772 Promille fast schwarz
+     F1347: 773 Promille fast schwarz
+     F1348: 772 Promille fast schwarz
+
+

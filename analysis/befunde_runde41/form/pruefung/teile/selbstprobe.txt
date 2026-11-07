@@ -1,0 +1,82 @@
+--- Logo: 10069 Pixel. Bild 1 gegen Bild 2, mittlerer Y-Abstand in der Schrift 6.3, in der Zone sonst 44.8
+--- Handschnitt gegen gemessene Kanten: 36 Punkte, Median 1.6, 80 % 3.5, 90 % 5.9, groesster 20.1 px; ueber 8 px: b1.schulterkuppe 11.5, b1.rand_rechts 20.1
+--- Maske als Render: alle Werte muessen 1 oder 0 sein
+  face_and_upper_body  IoU 1.000 Deck 1.000 Kern 1.000 Innen 1.000 +Saum 1.000 Verd 0.000 Leer 0.000 SP 0.0 Achse 0.0 Grad +0.0 px Enden [0.0, 0.0] Logo aus Maske 0
+  left_arm_front       IoU 1.000 Deck 1.000 Kern 1.000 Innen 1.000 +Saum 1.000 Verd 0.000 Leer 0.000 SP 0.0 Achse 0.0 Grad +0.0 px Enden [0.0, 0.0] Logo aus Maske 0
+  left_leg             IoU 1.000 Deck 1.000 Kern 1.000 Innen 1.000 +Saum 1.000 Verd 0.000 Leer 0.000 SP 0.0 Achse 0.0 Grad +0.0 px Enden [0.0, 5.0] Logo aus Maske 92
+  part_of_Body         IoU 1.000 Deck 1.000 Kern 1.000 Innen 1.000 +Saum 1.000 Verd 0.000 Leer 0.000 SP 0.0 Achse 0.0 Grad +0.0 px Enden [0.0, 0.0] Logo aus Maske 0
+  right_arm            IoU 1.000 Deck 1.000 Kern 1.000 Innen 1.000 +Saum 1.000 Verd 0.000 Leer 0.000 SP 0.0 Achse 0.0 Grad +0.0 px Enden [0.0, 0.0] Logo aus Maske 0
+  right_arm_front      IoU 1.000 Deck 1.000 Kern 1.000 Innen 1.000 +Saum 1.000 Verd 0.000 Leer 0.000 SP 0.0 Achse 0.0 Grad +0.0 px Enden [0.0, 0.0] Logo aus Maske 2371
+  right_leg            IoU 1.000 Deck 1.000 Kern 1.000 Innen 1.000 +Saum 1.000 Verd 0.000 Leer 0.000 SP 0.0 Achse 0.0 Grad +0.0 px Enden [0.0, 0.0] Logo aus Maske 0
+  tail                 IoU 1.000 Deck 1.000 Kern 1.000 Innen 1.000 +Saum 1.000 Verd 0.000 Leer 0.000 SP 0.0 Achse 0.0 Grad +0.0 px Enden [0.0, 42.0] Logo aus Maske 1278
+--- Versatz +7,-4 und Drehung 20 Grad um den Schwerpunkt: Soll SP +7,-4 und Abweichung 20 Grad bei quer 0
+  part_of_Body         SP +7.0,-4.0  IoU 0.771   Drehung: Abweichung 20.0 Grad, quer +0.0 px, Streckung 1.40
+  right_arm            SP +7.0,-4.0  IoU 0.612   Drehung: Abweichung 20.0 Grad, quer +0.0 px, Streckung 3.65
+  left_arm_front       SP +7.0,-4.0  IoU 0.605   Drehung: Abweichung 19.9 Grad, quer +0.0 px, Streckung 3.26
+  face_and_upper_body  SP +7.0,-4.0  IoU 0.904   Drehung: Abweichung 20.0 Grad, quer -0.0 px, Streckung 1.41
+--- Verdeckung: tail allein = Maske, Streifen y 250-300 von right_leg verdeckt
+  Soll verdeckt 0.189, gemessen 0.189, von {'right_leg': 0.189}; Fremd in der Maske {'right_leg': 0.209}
+--- Ueberlappung der Schnitte: part_of_Body als Render, im Ueberlapp steht right_leg. Soll: nichts fehlt
+  Maske 7293 px, Ueberlapp 1316: mit right_leg davor IoU 1.000 Deck 1.000; mit tail davor IoU 0.820 Deck 0.820, das muss fehlen
+--- Logo zaehlt nicht: right_arm_front mit und ohne Schrift als Render
+  Maske ohne Schrift         IoU 1.000 Deck 1.000 Innen 1.000
+  Maske plus ganze Schrift   IoU 1.000 Deck 1.000 Innen 1.000
+  Schrift in den Masken: left_leg 92, right_arm_front 2371, tail 1278
+--- Enden und Spitzen der Masken
+  face_and_upper_body  oben (340,150)  unten (236,374)  Weg 267
+  left_arm_front       Schulter (406,260)  Klaue (468,417)  Weg 183 Spitzen (468,417) (439,418) +19
+  left_leg             oben (242,264)  Fuss (208,447)  Weg 197 Spitzen (203,447)
+  part_of_Body         oben (363,212)  unten (300,314)  Weg 128
+  right_arm            Schulter (380,242)  Hand (425,363)  Weg 142 Spitzen (425,363)
+  right_arm_front      Schulter (332,315)  Klauenhand (145,353)  Weg 236 Spitzen (145,353) (197,476) +19 (222,475) +29 (274,443) +12
+  right_leg            oben (329,285)  Fuss (290,459)  Weg 190 Spitzen (290,459)
+  tail                 Ansatz (307,185)  Spitze (251,477)  Weg 315
+--- Zeichnung und Verdeckungen in den Teilen: Anteil der Stelle in der Maske
+  Z1   Bild 1 {'part_of_Body': 1.0}
+  Z2   Bild 1 {'part_of_Body': 1.0}
+  Z3   Bild 1 {'part_of_Body': 1.0, 'right_leg': 1.0}
+  Z4   Bild 1 {'part_of_Body': 1.0, 'right_leg': 1.0}
+  Z5   Bild 1 {'right_arm': 0.94}
+  Z6a  Bild 1 {'right_leg': 1.0}
+  Z6b  Bild 1 {'right_leg': 1.0}
+  Z6c  Bild 1 {'right_leg': 1.0}
+  Z7   Bild 1 {'left_leg': 0.37}
+  Z8   Bild 1 {'left_leg': 0.3, 'tail': 0.7}
+  Z9   Bild 1 in keinem Teil
+  Q1   Bild 2 {'face_and_upper_body': 1.0}
+  Q2   Bild 2 {'face_and_upper_body': 1.0}
+  Q3   Bild 2 {'face_and_upper_body': 1.0}
+  Q4   Bild 2 {'face_and_upper_body': 1.0}
+  Q5   Bild 2 {'face_and_upper_body': 0.99}
+  G    Bild 2 {'face_and_upper_body': 0.05, 'right_arm_front': 0.76}
+  P    Bild 2 {'face_and_upper_body': 0.01, 'left_arm_front': 0.05}
+  V1   Bild 2 {'face_and_upper_body': 1.0}
+  V2   Bild 2 {'face_and_upper_body': 0.93}
+  V3   Bild 2 in keinem Teil
+  V4   Bild 2 {'face_and_upper_body': 0.95}
+  V6   Bild 2 in keinem Teil
+  V5   Bild 2 {'right_arm_front': 1.0}
+--- Nutzer-Soll als Render gegen ziel2 und die verbliebenen Pruefungen
+  Bild 1: IoU 1.000, Weiss gedeckt 1.000, Schwarz 0; Punkte 26/29, nein: b1.scheitel_x322(+14.5/8.6) b1.rand_rechts(-24.5/3.6) b1.nl_y330_rechts(-3.5/3.3); Flaechen 3/3, nein: -
+  Bild 2: IoU 1.000, Weiss gedeckt 1.000, Schwarz 0; Punkte 7/7, nein: -; Flaechen 7/9, nein: V3 RAND413
+--- Dummy: je Teil zwei Ellipsoide auf der Hauptachse der Maske, Tiefen frei gewaehlt
+  17 Knochen, 768 Flaechen
+  Bild 1: Kennung gegen Kandidat.rendern, abweichende Pixel 0 von 36958; Warnungen []; Teile des anderen Bildes im Bild: -
+    left_leg             IoU 0.61 SP -1,-4 Achse 0 Grad; wahres Ende oben (250,274) gefunden [249, 274], unten (200,450) gefunden [197, 448]
+    part_of_Body         IoU 0.72 SP +4,-11 Achse 16 Grad; wahres Ende oben (355,211) gefunden [353, 209], unten (320,323) gefunden [315, 322]
+    right_arm            IoU 0.77 SP -1,-1 Achse 0 Grad; wahres Ende oben (391,245) gefunden [390, 244], unten (402,381) gefunden [406, 377]
+    right_leg            IoU 0.79 SP -2,-1 Achse 0 Grad; wahres Ende oben (326,280) gefunden [325, 278], unten (308,460) gefunden [302, 459]
+    tail                 IoU 0.65 SP -1,-4 Achse 0 Grad; wahres Ende oben (286,165) gefunden [285, 163], unten (260,466) gefunden [253, 463]
+  Bild 2: Kennung gegen Kandidat.rendern, abweichende Pixel 0 von 53463; Warnungen []; Teile des anderen Bildes im Bild: -
+    face_and_upper_body  IoU 0.72 SP +2,-8 Achse 5 Grad; wahres Ende oben (384,163) gefunden [351, 138], unten (228,336) gefunden [256, 359]
+    left_arm_front       IoU 0.67 SP -1,-1 Achse 0 Grad; wahres Ende oben (377,270) gefunden [375, 268], unten (442,419) gefunden [437, 418]
+    right_arm_front      IoU 0.49 SP +2,-5 Achse 7 Grad; wahres Ende oben (324,367) gefunden [323, 365], unten (134,426) gefunden [130, 441]
+  Verdeckung im Render: part_of_Body hinter right_leg, Soll 0.202, gemessen {'right_leg': 0.202, 'tail': 0.038}; right_leg selbst verdeckt von {}
+  Wiederholung: zweiter Lauf gleich
+  Tausch left_leg gegen right_leg: IoU left_leg 0.61 -> 0.00, part_of_Body 0.72 -> 0.62, right_arm 0.77 -> 0.77, right_leg 0.79 -> 0.00, tail 0.65 -> 0.64
+  Schub 300,-200 left_leg       Schwerpunkt verschoben +26.2,-2.6, projiziert +27.2,-5.7
+  Schub 300,-200 part_of_Body   Schwerpunkt verschoben +17.1,-1.6, projiziert +17.1,-0.9
+  Schub 300,-200 right_arm      Schwerpunkt verschoben +14.0,-1.8, projiziert +13.9,-2.5
+  Schub 300,-200 right_leg      Schwerpunkt verschoben +22.9,-5.9, projiziert +22.8,-6.0
+  Schub 300,-200 tail           Schwerpunkt verschoben +23.1,+0.6, projiziert +23.0,-3.3
+  pruefe durchgelaufen: Ziel ziel2_bild1.png, ziel2_bild2.png; Blaetter in pruefung/teile/dummy/lauf

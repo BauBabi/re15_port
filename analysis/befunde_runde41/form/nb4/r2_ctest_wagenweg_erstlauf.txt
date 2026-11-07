@@ -1,0 +1,15 @@
+1155: -- r41_form_wagenweg[warten_elza]: Kampfkamera F1150-F1931 782 Bilder, 1 > 600 Promille fast schwarz (erlaubt 7), max 619 (F1889)
+1/6 Test #1155: integration_r41_form_wagenweg_warten_elza ....   Passed  122.56 sec
+1154: -- r41_form_wagenweg[warten_leon]: Kampfkamera F1150-F1931 782 Bilder, 9 > 600 Promille fast schwarz (erlaubt 7), max 622 (F1889)
+1154:    Kampfkamera vor der Szene (F1150-F1931): 9 Bilder > 600 Promille fast schwarz, erlaubt 7
+2/6 Test #1154: integration_r41_form_wagenweg_warten_leon ....***Failed  123.05 sec
+1153: -- r41_form_wagenweg[zurueck_elza]: Kampfkamera F1150-F1543 394 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+1151: -- r41_form_wagenweg[elza]: Kampfkamera F1150-F1485 336 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+3/6 Test #1153: integration_r41_form_wagenweg_zurueck_elza ...   Passed  126.07 sec
+4/6 Test #1151: integration_r41_form_wagenweg_elza ...........   Passed  126.21 sec
+1152: -- r41_form_wagenweg[zurueck_leon]: Kampfkamera F1150-F1543 394 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+5/6 Test #1152: integration_r41_form_wagenweg_zurueck_leon ...   Passed  127.36 sec
+1150: -- r41_form_wagenweg[leon]: Kampfkamera F1150-F1485 336 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+6/6 Test #1150: integration_r41_form_wagenweg ................   Passed  128.20 sec
+The following tests passed:
+83% tests passed, 1 tests failed out of 6

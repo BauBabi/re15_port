@@ -1,0 +1,41 @@
+{
+ "winkel_bild1": {
+  "24": [
+   866,
+   4,
+   -592
+  ],
+  "25": [
+   -456,
+   -164,
+   -136
+  ],
+  "26": [
+   -565,
+   349,
+   428
+  ],
+  "27": [
+   392,
+   -634,
+   -683
+  ]
+ },
+ "j": {
+  "boden": 329,
+  "iou": 0.729,
+  "umriss_e26": 0.9367
+ },
+ "start_flach": {
+  "boden": 343,
+  "iou": 0.674,
+  "umriss_e26": 0.919
+ },
+ "neu": {
+  "boden": 0,
+  "iou": 0.624,
+  "umriss_e26": 0.9066
+ },
+ "anmerkung": "Umriss gegen ziel2_bild1 mit den Bodenpixeln (Pruefer) als Hintergrund (E26)",
+ "sekunden": 115
+}

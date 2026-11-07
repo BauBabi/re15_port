@@ -1,0 +1,246 @@
+{
+ "name": "K6",
+ "form": {
+  "art": "kroko",
+  "L": 1561.5402426194464,
+  "Wk": 343.6118765844764,
+  "taper": 0.4999999802946569,
+  "x_hinten": -250.0,
+  "x_auge": 520.0,
+  "yt_k": -180.07302995113437,
+  "yt_s": -219.99978289660294,
+  "yt_t": -79.97582913528443,
+  "y_gaumen": 270.0,
+  "nase": 239.99999999198357,
+  "augen": 1,
+  "auge_hoch": 140.0,
+  "zaehne": 11,
+  "zahn_lang": 150.0,
+  "kiefer_kuerzer": -161.37254390581785,
+  "kiefer_boden": 386.9458743940834,
+  "kiefer_boden_t": 120.0,
+  "kiefer_breit": 1.049999997807591,
+  "kiefer_tief": 110.0,
+  "uk_zaehne": 10,
+  "bulbe": 1.449962508024028,
+  "zahn_oben": 0.5007362948850488
+ },
+ "bild2": {
+  "winkel": {
+   "21": [
+    -1403,
+    879,
+    1961
+   ],
+   "22": [
+    -18,
+    -94,
+    -416
+   ],
+   "23": [
+    0,
+    -39,
+    220
+   ]
+  },
+  "mass": {
+   "umriss": 0.9428,
+   "iou_ok": 0.6161,
+   "iou_ok_ohne_rumpf": 0.6928,
+   "iou_uk": 0.8222,
+   "kopf_px": 5196,
+   "kiefer_px": 3298,
+   "kopf_sichtbar_px": 14307
+  },
+  "mass_ohne_koerper": {
+   "umriss": 0.9428,
+   "iou_ok": 0.6182,
+   "iou_ok_ohne_rumpf": 0.6905,
+   "iou_uk": 0.8221,
+   "kopf_px": 4989,
+   "kiefer_px": 3325,
+   "kopf_sichtbar_px": 14151
+  }
+ },
+ "bild1": {
+  "winkel": {
+   "21": [
+    33,
+    314,
+    437
+   ],
+   "22": [
+    141,
+    -95,
+    171
+   ],
+   "23": [
+    0,
+    0,
+    0
+   ]
+  },
+  "mass": {
+   "umriss": 0.9471,
+   "kopf_sichtbar_px": 388
+  }
+ },
+ "kiefer_offen_grad": 19.7,
+ "starts": [
+  {
+   "start": 0,
+   "ziel": "Suche 0",
+   "wert": 1.7515,
+   "aufrufe": 1600,
+   "mass": {
+    "umriss": 0.9429,
+    "iou_ok": 0.6171,
+    "iou_ok_ohne_rumpf": 0.6937,
+    "iou_uk": 0.8259,
+    "kopf_px": 5206,
+    "kiefer_px": 3295,
+    "kopf_sichtbar_px": 14316
+   },
+   "form": {
+    "L": 1561.5,
+    "Wk": 343.6,
+    "taper": 0.5,
+    "yt_s": -220.0,
+    "yt_k": -180.1,
+    "yt_t": -80.0,
+    "nase": 240.0,
+    "bulbe": 1.4,
+    "kiefer_breit": 1.0,
+    "zahn_oben": 0.5,
+    "kiefer_kuerzer": -161.4,
+    "kiefer_boden": 386.9
+   },
+   "winkel": {
+    "21": [
+     -1403,
+     879,
+     1961
+    ],
+    "22": [
+     -18,
+     -94,
+     -416
+    ],
+    "23": [
+     0,
+     -39,
+     220
+    ]
+   }
+  },
+  {
+   "start": 1,
+   "ziel": "Suche 1",
+   "wert": 1.6385,
+   "aufrufe": 1600,
+   "mass": {
+    "umriss": 0.9427,
+    "iou_ok": 0.5587,
+    "iou_ok_ohne_rumpf": 0.6611,
+    "iou_uk": 0.8005,
+    "kopf_px": 5978,
+    "kiefer_px": 3505,
+    "kopf_sichtbar_px": 15060
+   },
+   "form": {
+    "L": 1640.2,
+    "Wk": 394.4,
+    "taper": 0.5,
+    "yt_s": -170.9,
+    "yt_k": -180.0,
+    "yt_t": -79.9,
+    "nase": 240.0,
+    "bulbe": 1.4,
+    "kiefer_breit": 1.0,
+    "zahn_oben": 0.5,
+    "kiefer_kuerzer": -27.0,
+    "kiefer_boden": 354.8
+   },
+   "winkel": {
+    "21": [
+     -1382,
+     853,
+     1999
+    ],
+    "22": [
+     37,
+     -203,
+     -512
+    ],
+    "23": [
+     0,
+     3,
+     269
+    ]
+   }
+  }
+ ],
+ "grenzen": {
+  "L": [
+   1675,
+   1500,
+   2400
+  ],
+  "Wk": [
+   412,
+   300,
+   460
+  ],
+  "taper": [
+   0.48,
+   0.3,
+   0.5
+  ],
+  "yt_s": [
+   -215,
+   -220,
+   -60
+  ],
+  "yt_k": [
+   -182,
+   -330,
+   -180
+  ],
+  "yt_t": [
+   -76,
+   -80,
+   30
+  ],
+  "nase": [
+   60,
+   30,
+   240
+  ],
+  "bulbe": [
+   1.3,
+   1.0,
+   1.45
+  ],
+  "kiefer_breit": [
+   0.99,
+   0.8,
+   1.05
+  ],
+  "zahn_oben": [
+   0.52,
+   0.5,
+   1.0
+  ],
+  "kiefer_kuerzer": [
+   60,
+   -200,
+   120
+  ],
+  "kiefer_boden": [
+   260,
+   180,
+   400
+  ]
+ },
+ "sekunden": 838
+}

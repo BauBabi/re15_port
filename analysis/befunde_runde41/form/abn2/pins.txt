@@ -1,0 +1,48 @@
+# Abnahme 2 Spur Form: exe, Zweig, Asset-Pins (gemessen 2026-11-07)
+
+## Zweig r41/form
+HEAD ccdecce8ff0837a4032ee25bc0a410dcb7b2dade
+letzte Abnahme 1: d8eab158b 2026-11-02 17:26:37 +0100
+Code-Commits seit d8eab158b (re15_port release):
+  56050f737 2026-11-03 06:22:40 +0100 test(form-n3): Wagenweg-Pruefung haelt auch hoehere Form-HP (Probelauf 1000), HP-Ruecksetzen im Kampf rot
+  8ae5263fb 2026-11-03 06:00:15 +0100 test(form-n3): integration_r41_form_wagenweg - echter Wagenweg A -> B -> C statt Sprung in Wagen B
+  20998731f 2026-11-03 06:00:15 +0100 fix(form-n3): Riesenform-Eintritt bei jeder neuen Anlage, HP in Wagen C wieder 150 (AN-Abnahme 2 N1)
+  67408cfcb 2026-11-03 03:20:53 +0100 feat(form-n2): Spiel-Asset mit Kopf K4 und Textur NB2, Biss-Probe an der neuen Kieferspitze (Nachbesserung 2, E22)
+  11427ea54 2026-11-03 01:27:10 +0100 fix(form-n2): START im Griff der Riesenform verworfen wie RE1.5/RE2 (Zusatzpunkt GR-Abnahme 2)
+  fbef4bcc7 2026-11-02 20:37:46 +0100 fix(form-n1): Riesenform-Tick, Rueckstoss, Kamera, Ton, Koerper und Biss am Kiefer (Nachbesserung 1, M1 M3-M8, D)
+  a452893f1 2026-11-02 20:34:00 +0100 feat(form-n1): K3 im Spiel-Asset, Texturfix der Gelenkkoerper, Clips 12/13, Gelenkspruenge (Nachbesserung 1, Asset-Spur)
+Commits nach 56050f737: 42, davon Merges: 0
+git diff --stat 56050f737..HEAD -- re15_port release: [] (leer)
+Pfade ausserhalb analysis/ seit 56050f737: [] (leer)
+git status re15_port release: [] (leer)
+
+## exe
+  -rwxr-xr-x 1 mjoedicke 197121 8693228 2026-11-03 06:19:27.788687200 +0100 re15_port/build/platform/pc/re15_pc.exe
+  sha256 f4deb1a33feb4d59b1a90baa8da055c1cbf9cc7d88016079975e3553c209756c
+  Messkopie scratchpad/w2abn/exe/re15_pc_w2abn.exe sha256 f4deb1a33feb4d59b1a90baa8da055c1cbf9cc7d88016079975e3553c209756c
+  Objekte: birkin_bahnsteig.c.obj 2026-11-03 06:19:25.000217300 +0100, Kopf re15_birkin_formen.h 2026-11-03 06:19:23.238641000 +0100
+  ninja -n -d explain (Bauverzeichnis re15_port/build, Trockenlauf): ninja: no work to do.
+  Lesart: exe 06:19:27 nach 20998731f/8ae5263fb (06:00:15), vor 56050f737 (06:22:40, aendert nur tests/integration/test_r41_form_wagenweg.cmake, das ctest zur Laufzeit liest) -> exe = Stand Zweigkopf fuer re15_port
+
+## Asset RE2/BAHNSTEIG_FORM
+  EMD sha256 16eb6ea89a40df179ef08cb538b12d7d038183f01b88b47baf05c97ebf8d8bd0 blob 1fba8a34963b54e9cd1f0ecf0f1798b0810ab1ce HEAD-blob 1fba8a34963b54e9cd1f0ecf0f1798b0810ab1ce 917195879-blob 1fba8a34963b54e9cd1f0ecf0f1798b0810ab1ce
+  TIM sha256 ec280802dd785e9238535ba90830f7e6b8a690cc4aa3609fc91f1638b3df2072 blob 4e7db099b84420e17230b6bc5dc9eae7bbebe0ee HEAD-blob 4e7db099b84420e17230b6bc5dc9eae7bbebe0ee 917195879-blob 4e7db099b84420e17230b6bc5dc9eae7bbebe0ee
+  MD1 (EMD dir[7]..dir) Laenge 167644 CRC32 0xc0b6c82a; TIM Laenge 362528 CRC32 0x76775364
+  stufe3/basis_n2 (K4 + Textur NB2): MD1 gleich Spiel-Asset True, TIM gleich True
+  stufe3/asset = Spiel-Asset: EMD True TIM True
+  Pin tests/unit/form_j_posen.h:
+    8:#define FORM_J_MD1_LEN 167644u
+    9:#define FORM_J_MD1_CRC 0xc0b6c82au
+    10:#define FORM_J_TIM_LEN 362528u
+    11:#define FORM_J_TIM_CRC 0x76775364u
+  release/make_package.sh:294-297 prueft BAHNSTEIG_FORM.EMD/.TIM nur auf vorhanden, nicht leer, bytegleich Quellbaum/Paket (kein sha256-Pin unter release/; git grep der sha256 ohne Treffer)
+  Laeufe der Abnahme: RE15_RE2_ASSET_ROOT = Kopie der HEAD-Blobs (sha256 wie oben), Baum-Datei vor/nach ctest:
+    vorher: Sat Nov  7 14:56:39     2026
+    vorher: f4deb1a33feb4d59b1a90baa8da055c1cbf9cc7d88016079975e3553c209756c *re15_port/build/platform/pc/re15_pc.exe
+    vorher: 1fba8a34963b54e9cd1f0ecf0f1798b0810ab1ce
+    vorher: 4e7db099b84420e17230b6bc5dc9eae7bbebe0ee
+    vorher: 819990a3657e71ad9b256254a79c7d335d4e8658
+    nachher: Sat Nov  7 15:44:37     2026
+    nachher: f4deb1a33feb4d59b1a90baa8da055c1cbf9cc7d88016079975e3553c209756c *re15_port/build/platform/pc/re15_pc.exe
+    nachher: 1fba8a34963b54e9cd1f0ecf0f1798b0810ab1ce 4e7db099b84420e17230b6bc5dc9eae7bbebe0ee
+    nachher: HEAD ccdecce8ff0837a4032ee25bc0a410dcb7b2dade, git diff 56050f737..HEAD -- re15_port release: []

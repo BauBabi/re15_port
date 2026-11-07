@@ -1,0 +1,684 @@
+{
+ "kacheln": [
+  {
+   "nr": 0,
+   "zeile": 0,
+   "ton": 48.912,
+   "koerper": [
+    "Bein l - Huefte",
+    "Wirbel - Huefte",
+    "Arm l - Brust",
+    "Arm r - Brust",
+    "Hals - Brust",
+    "Kopf - Hals",
+    "Muffe Hals - Brust",
+    "Brust - Wirbel"
+   ],
+   "x0": 512,
+   "y0": 0,
+   "quellbloecke": 3610,
+   "ton_vor_angleich": 50.0,
+   "ton_kachel": 50.0,
+   "farbe_ziel": [
+    50.0,
+    48.0,
+    55.0
+   ],
+   "farbe_kachel": [
+    51.7,
+    48.5,
+    53.4
+   ],
+   "koernung_kachel": 10.2
+  },
+  {
+   "nr": 1,
+   "zeile": 0,
+   "ton": 63.519999999999996,
+   "koerper": [
+    "Bein r - Huefte"
+   ],
+   "x0": 512,
+   "y0": 128,
+   "quellbloecke": 50,
+   "ton_vor_angleich": 56.3,
+   "ton_kachel": 60.7,
+   "farbe_ziel": [
+    64.0,
+    56.0,
+    72.0
+   ],
+   "farbe_kachel": [
+    65.7,
+    56.4,
+    69.7
+   ],
+   "koernung_kachel": 10.6
+  },
+  {
+   "nr": 2,
+   "zeile": 0,
+   "ton": 36.784,
+   "koerper": [
+    "Schwanz - Becken"
+   ],
+   "x0": 640,
+   "y0": 0,
+   "quellbloecke": 1271,
+   "ton_vor_angleich": 37.2,
+   "ton_kachel": 39.2,
+   "farbe_ziel": [
+    48.0,
+    32.0,
+    40.0
+   ],
+   "farbe_kachel": [
+    49.0,
+    34.4,
+    38.3
+   ],
+   "koernung_kachel": 10.2
+  },
+  {
+   "nr": 3,
+   "zeile": 2,
+   "ton": 63.431999999999995,
+   "koerper": [
+    "Knie l",
+    "Muffe Bein l - Huefte"
+   ],
+   "x0": 640,
+   "y0": 128,
+   "quellbloecke": 192,
+   "ton_vor_angleich": 44.1,
+   "ton_kachel": 60.5,
+   "farbe_ziel": [
+    60.0,
+    60.0,
+    68.0
+   ],
+   "farbe_kachel": [
+    59.9,
+    59.4,
+    67.6
+   ],
+   "koernung_kachel": 15.8
+  },
+  {
+   "nr": 4,
+   "zeile": 2,
+   "ton": 40.912,
+   "koerper": [
+    "Knie r",
+    "Fuss r",
+    "Muffe Schwanz - Becken",
+    "Schwanz 2-3",
+    "Schwanz 3-4",
+    "Schwanz 4-5",
+    "Schwanz 5-6"
+   ],
+   "x0": 768,
+   "y0": 0,
+   "quellbloecke": 415,
+   "ton_vor_angleich": 35.5,
+   "ton_kachel": 38.1,
+   "farbe_ziel": [
+    41.1,
+    37.7,
+    41.7
+   ],
+   "farbe_kachel": [
+    39.4,
+    37.1,
+    39.8
+   ],
+   "koernung_kachel": 10.7
+  },
+  {
+   "nr": 5,
+   "zeile": 2,
+   "ton": 88.912,
+   "koerper": [
+    "Muffe Bein r - Huefte"
+   ],
+   "x0": 768,
+   "y0": 128,
+   "quellbloecke": 333,
+   "ton_vor_angleich": 40.7,
+   "ton_kachel": 88.1,
+   "farbe_ziel": [
+    88.0,
+    88.0,
+    96.0
+   ],
+   "farbe_kachel": [
+    87.9,
+    86.6,
+    96.6
+   ],
+   "koernung_kachel": 25.9
+  },
+  {
+   "nr": 6,
+   "zeile": 1,
+   "ton": 48.0,
+   "koerper": [
+    "Ellbogen l",
+    "Muffe Arm r - Brust",
+    "Muffe Hand r"
+   ],
+   "x0": 896,
+   "y0": 0,
+   "quellbloecke": 257,
+   "ton_vor_angleich": 50.2,
+   "ton_kachel": 49.7,
+   "farbe_ziel": [
+    48.0,
+    48.0,
+    53.3
+   ],
+   "farbe_kachel": [
+    49.9,
+    49.0,
+    53.1
+   ],
+   "koernung_kachel": 9.9
+  },
+  {
+   "nr": 7,
+   "zeile": 2,
+   "ton": 73.824,
+   "koerper": [
+    "Fuss l"
+   ],
+   "x0": 896,
+   "y0": 128,
+   "quellbloecke": 233,
+   "ton_vor_angleich": 43.8,
+   "ton_kachel": 74.0,
+   "farbe_ziel": [
+    72.0,
+    72.0,
+    88.0
+   ],
+   "farbe_kachel": [
+    72.1,
+    72.5,
+    86.7
+   ],
+   "koernung_kachel": 23.2
+  },
+  {
+   "nr": 8,
+   "zeile": 1,
+   "ton": 56.0,
+   "koerper": [
+    "Hand l",
+    "Muffe Hand l"
+   ],
+   "x0": 1024,
+   "y0": 0,
+   "quellbloecke": 164,
+   "ton_vor_angleich": 51.0,
+   "ton_kachel": 57.2,
+   "farbe_ziel": [
+    56.0,
+    56.0,
+    56.0
+   ],
+   "farbe_kachel": [
+    57.3,
+    57.6,
+    55.3
+   ],
+   "koernung_kachel": 11.1
+  },
+  {
+   "nr": 9,
+   "zeile": 1,
+   "ton": 40.0,
+   "koerper": [
+    "Hand r"
+   ],
+   "x0": 1024,
+   "y0": 128,
+   "quellbloecke": 84,
+   "ton_vor_angleich": 38.1,
+   "ton_kachel": 38.1,
+   "farbe_ziel": [
+    40.0,
+    40.0,
+    40.0
+   ],
+   "farbe_kachel": [
+    37.4,
+    37.9,
+    41.4
+   ],
+   "koernung_kachel": 11.1
+  },
+  {
+   "nr": 10,
+   "zeile": 2,
+   "ton": 28.784,
+   "koerper": [
+    "Schwanz 1-2"
+   ],
+   "x0": 1152,
+   "y0": 0,
+   "quellbloecke": 932,
+   "ton_vor_angleich": 31.3,
+   "ton_kachel": 26.7,
+   "farbe_ziel": [
+    32.0,
+    24.0,
+    28.0
+   ],
+   "farbe_kachel": [
+    33.8,
+    22.7,
+    28.1
+   ],
+   "koernung_kachel": 7.8
+  },
+  {
+   "nr": 11,
+   "zeile": 3,
+   "ton": 141.352,
+   "koerper": [
+    "Kiefer - Kopf"
+   ],
+   "x0": 1152,
+   "y0": 128,
+   "quellbloecke": 5495,
+   "ton_vor_angleich": 142.9,
+   "ton_kachel": 142.9,
+   "farbe_ziel": [
+    160.0,
+    136.0,
+    120.0
+   ],
+   "farbe_kachel": [
+    160.8,
+    137.6,
+    123.2
+   ],
+   "koernung_kachel": 9.4
+  },
+  {
+   "nr": 12,
+   "zeile": 3,
+   "ton": 51.303999999999995,
+   "koerper": [
+    "Muffe Kopf - Hals"
+   ],
+   "x0": 1280,
+   "y0": 0,
+   "quellbloecke": 7229,
+   "ton_vor_angleich": 50.4,
+   "ton_kachel": 51.3,
+   "farbe_ziel": [
+    56.0,
+    48.0,
+    56.0
+   ],
+   "farbe_kachel": [
+    55.1,
+    49.0,
+    53.6
+   ],
+   "koernung_kachel": 8.6
+  }
+ ],
+ "koerper": {
+  "Ellbogen r": {
+   "art": "projektion (NB1)",
+   "zeile": 1
+  },
+  "Bein l - Huefte": {
+   "art": "kachel",
+   "kachel": 0,
+   "zeile": 0,
+   "ton_umgebung": 48.9,
+   "dichte": 30.8,
+   "umfang": 2077,
+   "abbildung": "azimutal",
+   "dichte_ist": 30.8,
+   "flaechen_ueber_feld": 0
+  },
+  "Bein r - Huefte": {
+   "art": "kachel",
+   "kachel": 1,
+   "zeile": 0,
+   "ton_umgebung": 63.5,
+   "dichte": 30.8,
+   "umfang": 1871,
+   "abbildung": "azimutal",
+   "dichte_ist": 30.8,
+   "flaechen_ueber_feld": 0
+  },
+  "Schwanz - Becken": {
+   "art": "kachel",
+   "kachel": 2,
+   "zeile": 0,
+   "ton_umgebung": 36.8,
+   "dichte": 33.8,
+   "umfang": 2187,
+   "abbildung": "azimutal",
+   "dichte_ist": 33.8,
+   "flaechen_ueber_feld": 0
+  },
+  "Wirbel - Huefte": {
+   "art": "kachel",
+   "kachel": 0,
+   "zeile": 0,
+   "ton_umgebung": 51.3,
+   "dichte": 37.6,
+   "umfang": 5111,
+   "abbildung": "azimutal",
+   "dichte_ist": 37.6,
+   "flaechen_ueber_feld": 0
+  },
+  "Arm l - Brust": {
+   "art": "kachel",
+   "kachel": 0,
+   "zeile": 0,
+   "ton_umgebung": 48.9,
+   "dichte": 42.3,
+   "umfang": 2067,
+   "abbildung": "azimutal",
+   "dichte_ist": 42.3,
+   "flaechen_ueber_feld": 0
+  },
+  "Arm r - Brust": {
+   "art": "kachel",
+   "kachel": 0,
+   "zeile": 0,
+   "ton_umgebung": 48.9,
+   "dichte": 41.9,
+   "umfang": 3100,
+   "abbildung": "azimutal",
+   "dichte_ist": 41.9,
+   "flaechen_ueber_feld": 0
+  },
+  "Hals - Brust": {
+   "art": "kachel",
+   "kachel": 0,
+   "zeile": 0,
+   "ton_umgebung": 48.0,
+   "dichte": 27.9,
+   "umfang": 3405,
+   "abbildung": "azimutal",
+   "dichte_ist": 27.9,
+   "flaechen_ueber_feld": 0
+  },
+  "Kopf - Hals": {
+   "art": "kachel",
+   "kachel": 0,
+   "zeile": 0,
+   "ton_umgebung": 51.3,
+   "dichte": 50.0,
+   "umfang": 2682,
+   "abbildung": "azimutal",
+   "dichte_ist": 50.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Muffe Hals - Brust": {
+   "art": "kachel",
+   "kachel": 0,
+   "zeile": 0,
+   "ton_umgebung": 48.9,
+   "dichte": 34.5,
+   "umfang": 3404,
+   "abbildung": "azimutal",
+   "dichte_ist": 34.5,
+   "flaechen_ueber_feld": 0
+  },
+  "Brust - Wirbel": {
+   "art": "kachel",
+   "kachel": 0,
+   "zeile": 0,
+   "ton_umgebung": 48.9,
+   "dichte": 31.0,
+   "umfang": 4704,
+   "abbildung": "azimutal",
+   "dichte_ist": 31.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Knie l": {
+   "art": "kachel",
+   "kachel": 3,
+   "zeile": 2,
+   "ton_umgebung": 63.4,
+   "dichte": 32.7,
+   "umfang": 1169,
+   "abbildung": "azimutal",
+   "dichte_ist": 32.7,
+   "flaechen_ueber_feld": 0
+  },
+  "Muffe Bein l - Huefte": {
+   "art": "kachel",
+   "kachel": 3,
+   "zeile": 2,
+   "ton_umgebung": 59.3,
+   "dichte": 23.0,
+   "umfang": 1248,
+   "abbildung": "azimutal",
+   "dichte_ist": 23.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Knie r": {
+   "art": "kachel",
+   "kachel": 4,
+   "zeile": 2,
+   "ton_umgebung": 40.9,
+   "dichte": 32.7,
+   "umfang": 1333,
+   "abbildung": "azimutal",
+   "dichte_ist": 32.7,
+   "flaechen_ueber_feld": 0
+  },
+  "Muffe Bein r - Huefte": {
+   "art": "kachel",
+   "kachel": 5,
+   "zeile": 2,
+   "ton_umgebung": 88.9,
+   "dichte": 23.1,
+   "umfang": 1456,
+   "abbildung": "azimutal",
+   "dichte_ist": 23.1,
+   "flaechen_ueber_feld": 0
+  },
+  "Ellbogen l": {
+   "art": "kachel",
+   "kachel": 6,
+   "zeile": 1,
+   "ton_umgebung": 48.0,
+   "dichte": 33.9,
+   "umfang": 2817,
+   "abbildung": "azimutal",
+   "dichte_ist": 33.9,
+   "flaechen_ueber_feld": 0
+  },
+  "Muffe Arm r - Brust": {
+   "art": "kachel",
+   "kachel": 6,
+   "zeile": 1,
+   "ton_umgebung": 48.9,
+   "dichte": 29.0,
+   "umfang": 2754,
+   "abbildung": "azimutal",
+   "dichte_ist": 29.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Fuss l": {
+   "art": "kachel",
+   "kachel": 7,
+   "zeile": 2,
+   "ton_umgebung": 73.8,
+   "dichte": 23.7,
+   "umfang": 1137,
+   "abbildung": "azimutal",
+   "dichte_ist": 23.7,
+   "flaechen_ueber_feld": 0
+  },
+  "Fuss r": {
+   "art": "kachel",
+   "kachel": 4,
+   "zeile": 2,
+   "ton_umgebung": 46.5,
+   "dichte": 22.0,
+   "umfang": 882,
+   "abbildung": "azimutal",
+   "dichte_ist": 22.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Hand l": {
+   "art": "kachel",
+   "kachel": 8,
+   "zeile": 1,
+   "ton_umgebung": 56.0,
+   "dichte": 22.0,
+   "umfang": 1208,
+   "abbildung": "azimutal",
+   "dichte_ist": 22.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Hand r": {
+   "art": "kachel",
+   "kachel": 9,
+   "zeile": 1,
+   "ton_umgebung": 40.0,
+   "dichte": 22.0,
+   "umfang": 1511,
+   "abbildung": "azimutal",
+   "dichte_ist": 22.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Schwanz 1-2": {
+   "art": "kachel",
+   "kachel": 10,
+   "zeile": 2,
+   "ton_umgebung": 28.8,
+   "dichte": 39.5,
+   "umfang": 2095,
+   "abbildung": "azimutal",
+   "dichte_ist": 39.5,
+   "flaechen_ueber_feld": 0
+  },
+  "Muffe Schwanz - Becken": {
+   "art": "kachel",
+   "kachel": 4,
+   "zeile": 2,
+   "ton_umgebung": 40.0,
+   "dichte": 35.1,
+   "umfang": 1750,
+   "abbildung": "azimutal",
+   "dichte_ist": 35.1,
+   "flaechen_ueber_feld": 0
+  },
+  "Schwanz 2-3": {
+   "art": "kachel",
+   "kachel": 4,
+   "zeile": 2,
+   "ton_umgebung": 34.4,
+   "dichte": 40.7,
+   "umfang": 2094,
+   "abbildung": "azimutal",
+   "dichte_ist": 40.7,
+   "flaechen_ueber_feld": 0
+  },
+  "Schwanz 3-4": {
+   "art": "kachel",
+   "kachel": 4,
+   "zeile": 2,
+   "ton_umgebung": 35.3,
+   "dichte": 38.4,
+   "umfang": 1663,
+   "abbildung": "azimutal",
+   "dichte_ist": 38.4,
+   "flaechen_ueber_feld": 0
+  },
+  "Schwanz 4-5": {
+   "art": "kachel",
+   "kachel": 4,
+   "zeile": 2,
+   "ton_umgebung": 35.3,
+   "dichte": 31.4,
+   "umfang": 1091,
+   "abbildung": "azimutal",
+   "dichte_ist": 31.4,
+   "flaechen_ueber_feld": 0
+  },
+  "Schwanz 5-6": {
+   "art": "kachel",
+   "kachel": 4,
+   "zeile": 2,
+   "ton_umgebung": 40.5,
+   "dichte": 36.2,
+   "umfang": 1252,
+   "abbildung": "azimutal",
+   "dichte_ist": 36.2,
+   "flaechen_ueber_feld": 0
+  },
+  "Kiefer - Kopf": {
+   "art": "kachel",
+   "kachel": 11,
+   "zeile": 3,
+   "ton_umgebung": 141.4,
+   "dichte": 22.0,
+   "umfang": 1688,
+   "abbildung": "azimutal",
+   "dichte_ist": 22.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Muffe Kopf - Hals": {
+   "art": "kachel",
+   "kachel": 12,
+   "zeile": 3,
+   "ton_umgebung": 51.3,
+   "dichte": 22.0,
+   "umfang": 2683,
+   "abbildung": "azimutal",
+   "dichte_ist": 22.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Muffe Hand l": {
+   "art": "kachel",
+   "kachel": 8,
+   "zeile": 1,
+   "ton_umgebung": 56.0,
+   "dichte": 22.0,
+   "umfang": 1209,
+   "abbildung": "azimutal",
+   "dichte_ist": 22.0,
+   "flaechen_ueber_feld": 0
+  },
+  "Muffe Hand r": {
+   "art": "kachel",
+   "kachel": 6,
+   "zeile": 1,
+   "ton_umgebung": 49.8,
+   "dichte": 22.0,
+   "umfang": 1514,
+   "abbildung": "azimutal",
+   "dichte_ist": 22.0,
+   "flaechen_ueber_feld": 0
+  }
+ },
+ "kappen": {
+  "22": {
+   "kappen": 1,
+   "flaechen": 10
+  }
+ },
+ "uv_geklemmt": 35,
+ "tim": {
+  "breite": 1408,
+  "hoehe": 256,
+  "seiten_neu": 7,
+  "feld": 128,
+  "periode": 64
+ },
+ "quelle": "..\\..\\varianten\\K_alligator\\K4_kroko"
+}

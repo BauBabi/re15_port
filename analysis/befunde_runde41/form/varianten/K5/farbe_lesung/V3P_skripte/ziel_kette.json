@@ -1,0 +1,122 @@
+{
+ "F1|Original": {
+  "lab_mittel": [
+   46.5,
+   19.2,
+   -2.6
+  ],
+  "rotklasse_px": 516,
+  "rotklasse_anteil": 79.9,
+  "ton_mittel": -7.8
+ },
+ "F1|Rundlauf 15": {
+  "lab_mittel": [
+   45.0,
+   16.6,
+   -1.9
+  ],
+  "rotklasse_px": 448,
+  "rotklasse_anteil": 69.3,
+  "ton_mittel": -6.7
+ },
+ "F1|Rundlauf 12345": {
+  "lab_mittel": [
+   45.0,
+   16.7,
+   -2.2
+  ],
+  "rotklasse_px": 445,
+  "rotklasse_anteil": 68.9,
+  "ton_mittel": -7.6
+ },
+ "F1|Rundlauf 7": {
+  "lab_mittel": [
+   45.0,
+   16.6,
+   -1.9
+  ],
+  "rotklasse_px": 449,
+  "rotklasse_anteil": 69.5,
+  "ton_mittel": -6.7
+ },
+ "F1|K5c_heute": {
+  "lab_mittel": [
+   51.2,
+   16.3,
+   -4.4
+  ],
+  "rotklasse_px": 390,
+  "rotklasse_anteil": 60.4,
+  "ton_mittel": -15.1
+ },
+ "F1|b2_probe_A": {
+  "lab_mittel": [
+   14.6,
+   2.1,
+   1.9
+  ],
+  "rotklasse_px": 0,
+  "rotklasse_anteil": 0.0,
+  "ton_mittel": 42.3
+ },
+ "Band|Original": {
+  "lab_mittel": [
+   48.7,
+   33.6,
+   18.5
+  ],
+  "rotklasse_px": 2213,
+  "rotklasse_anteil": 99.4,
+  "ton_mittel": 28.8
+ },
+ "Band|Rundlauf 15": {
+  "lab_mittel": [
+   50.0,
+   28.2,
+   16.0
+  ],
+  "rotklasse_px": 2146,
+  "rotklasse_anteil": 96.4,
+  "ton_mittel": 29.5
+ },
+ "Band|Rundlauf 12345": {
+  "lab_mittel": [
+   49.8,
+   28.3,
+   16.0
+  ],
+  "rotklasse_px": 2156,
+  "rotklasse_anteil": 96.8,
+  "ton_mittel": 29.5
+ },
+ "Band|Rundlauf 7": {
+  "lab_mittel": [
+   49.8,
+   28.2,
+   16.3
+  ],
+  "rotklasse_px": 2160,
+  "rotklasse_anteil": 97.0,
+  "ton_mittel": 30.0
+ },
+ "Band|K5c_heute": {
+  "lab_mittel": [
+   54.0,
+   16.6,
+   13.5
+  ],
+  "rotklasse_px": 1488,
+  "rotklasse_anteil": 66.8,
+  "ton_mittel": 39.2
+ },
+ "Band|b2_probe_A": {
+  "lab_mittel": [
+   36.5,
+   28.9,
+   22.5
+  ],
+  "rotklasse_px": 1937,
+  "rotklasse_anteil": 87.0,
+  "ton_mittel": 37.9
+ }
+}

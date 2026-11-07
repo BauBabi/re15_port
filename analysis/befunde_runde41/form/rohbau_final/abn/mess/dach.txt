@@ -1,0 +1,42 @@
+Spalte: erste Zeile unter y=175 mit Y<70 im Original (stabil 6 px), oberste Modellzeile, Differenz
+x 300  Original 175  Modell 185  +10
+x 305  Original 175  Modell 185  +10
+x 310  Original 175  Modell 187  +12
+x 315  Original 175  Modell 188  +13
+x 320  Original 175  Modell 188  +13
+x 325  Original 175  Modell 191  +16
+x 330  Original 195  Modell 193  -2
+x 335  Original 199  Modell 197  -2
+x 340  Original 206  Modell 205  -1
+x 345  Original 207  Modell 205  -2
+x 350  Original 210  Modell 208  -2
+x 355  Original 212  Modell 211  -1
+x 360  Original 214  Modell 215  +1
+x 365  Original 218  Modell 218  +0
+x 370  Original 226  Modell 224  -2
+x 375  Original 234  Modell 232  -2
+x 380  Original 244  Modell 245  +1
+x 385  Original 247  Modell 243  -4
+x 390  Original 247  Modell 242  -5
+x 395  Original 244  Modell 242  -2
+x 400  Original 240  Modell 243  +3
+x 405  Original 236  Modell 244  +8
+x 410  Original 218  Modell 245  +27
+x 415  Original 232  Modell 248  +16
+x 420  Original 245  Modell 250  +5
+x 425  Original 247  Modell 253  +6
+x 430  Original 241  Modell None  
+x 435  Original 223  Modell None  
+Zeile: rechte Kante der dunklen Masse, Original gegen Modell (x 380-445)
+y 236  Original 416  Modell None
+y 242  Original 419  Modell 396
+y 248  Original 438  Modell 416
+y 254  Original 433  Modell 427
+y 260  Original 431  Modell 427
+y 266  Original 429  Modell 428
+y 272  Original 429  Modell 429
+y 278  Original 392  Modell 425
+y 284  Original 388  Modell 422
+y 290  Original 385  Modell 425
+y 296  Original 445  Modell 427
+y 302  Original 430  Modell 425

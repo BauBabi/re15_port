@@ -80,6 +80,9 @@ typedef struct {
      * 0 = RE1.5-Skelett (RE1.5-Bank, auch der Rueckfall im RE2-Flavor ohne RE2-Archiv). Leser:
      * der PC-Zeichner der RE2-Part-Tinte (fx_plattform_pc.c re15_pc_re2_part_tint). */
     uint8_t re2_rig;
+    /* Runde 41: 1 = die Bank traegt die Bahnsteig-Form (Lader pc_enemy_load_bahnsteig). Die Knochenzahl ist damit frei
+     * (tools/form_emd.py); re15_bb_bank_da liest dieses Bit, die Zahl 27 bleibt nur fuer Baenke von Hand (Tests). */
+    uint8_t bb_form;
     /* GORE-SEITENBANK (Stumpf-Geometrie, gore-vollausbau.md 4.2): das ORIGINALE RE2-MD1
      * mit den Reserve-Meshes 15 (Bein-Stumpf) / 16 (Rumpf-Stumpf) - re2_hybrid_apply
      * ersetzt eb->md1 durch das RE1.5-MD1 und legt die RE2-Fassung hier ab. Die Zeiger

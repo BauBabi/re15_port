@@ -1,0 +1,241 @@
+# Abnahme 2 Spur Form: eigene Disassemblierung der im Delta zitierten Adressen (capstone MIPS32 LE, Werkzeug werkzeug/mipsabn.py)
+# G4-Overlay = info/re2leon/PL0/PLD/CDEMD0.EMS Datei 0x653000, 0xB2D4 Byte, @0x80100000; RE1.5 = Version_40%/PSX.EXE bzw. Version_40%/PSX/BIN/STAGE*.BIN (Disc), Gegenstueck info/Re1.5 (Mod) gleich, wo angegeben; RE2 = info/re2leon/PSX.EXE
+
+## G4-Ctor-Verteilung (Wurzel) @0x80100314-30 und Tabelle @0x8010af60
+80100314: 04 00 a2 92  lbu $v0, 4($s5)
+80100318: 7c 01 a6 8e  lw $a2, 0x17c($s5)
+8010031c: 80 10 02 00  sll $v0, $v0, 2
+80100320: 11 80 01 3c  lui $at, 0x8011
+80100324: 21 08 22 00  addu $at, $at, $v0
+80100328: 60 af 22 8c  lw $v0, -0x50a0($at)
+8010032c: 00 00 00 00  nop 
+80100330: 09 f8 40 00  jalr $v0
+8010af60: 8010062c
+8010af64: 80100bbc
+8010af68: 80106d3c
+8010af6c: 801076ec
+
+## G4-Ctor 0x8010062c: +0x4 = 1 (@0x80100638 / @0x80100654), HP 1000 (@0x80100678 / @0x8010067c)
+8010062c: c0 ff bd 27  addiu $sp, $sp, -0x40
+80100630: 2c 00 b1 af  sw $s1, 0x2c($sp)
+80100634: 21 88 80 00  move $s1, $a0
+80100638: 01 00 02 24  addiu $v0, $zero, 1
+8010063c: 0d 80 03 3c  lui $v1, 0x800d
+80100640: 74 fb 63 24  addiu $v1, $v1, -0x48c
+80100644: 38 00 bf af  sw $ra, 0x38($sp)
+80100648: 34 00 b3 af  sw $s3, 0x34($sp)
+8010064c: 30 00 b2 af  sw $s2, 0x30($sp)
+80100650: 28 00 b0 af  sw $s0, 0x28($sp)
+80100654: 04 00 22 ae  sw $v0, 4($s1)
+80100670: 40 00 42 30  andi $v0, $v0, 0x40
+80100674: 09 00 40 10  beqz $v0, 0x8010069c
+80100678: e8 03 02 24  addiu $v0, $zero, 0x3e8
+8010067c: 56 01 22 a6  sh $v0, 0x156($s1)
+
+## G4-Ctor Koerper-Segmente: +0x1e8 = 2, x 400, r 0x44c/0x3e8, Halbhoehe 0x7d0
+80100708: 02 00 02 24  addiu $v0, $zero, 2
+8010070c: 10 12 60 a4  sh $zero, 0x1210($v1)
+80100710: 12 12 60 a4  sh $zero, 0x1212($v1)
+80100714: e8 01 22 ae  sw $v0, 0x1e8($s1)
+80100718: 90 01 02 24  addiu $v0, $zero, 0x190
+8010071c: 94 00 22 a6  sh $v0, 0x94($s1)
+80100720: 4c 04 02 24  addiu $v0, $zero, 0x44c
+80100724: d0 07 03 24  addiu $v1, $zero, 0x7d0
+8010076c: 9a 00 22 a6  sh $v0, 0x9a($s1)
+80100770: 9e 00 23 a6  sh $v1, 0x9e($s1)
+80100780: e8 03 02 24  addiu $v0, $zero, 0x3e8
+80100784: ba 00 22 a6  sh $v0, 0xba($s1)
+80100798: b4 00 20 a6  sh $zero, 0xb4($s1)
+801007a4: be 00 23 a6  sh $v1, 0xbe($s1)
+
+## G4 Schatten 2300 x 1300 @0x801002cc / @0x80100300
+801002cc: fc 08 63 24  addiu $v1, $v1, 0x8fc
+80100300: 14 05 63 24  addiu $v1, $v1, 0x514
+
+## G4 FUN_80034d0c im Wurzel-Schwanz @0x80100520-2c
+80100520: 0d 80 04 3c  lui $a0, 0x800d
+80100524: 14 fe 84 8c  lw $a0, -0x1ec($a0)
+80100528: 21 28 a0 02  move $a1, $s5
+8010052c: 43 d3 00 0c  jal 0x80034d0c
+
+## G4 Biss-Entscheid dist < 0xce4 @0x8010243c, sw 0xe01 @0x80102464, Rest @0x80102468-6c
+80102434: 00 14 10 00  sll $v0, $s0, 0x10
+80102438: 0d 00 40 14  bnez $v0, 0x80102470
+8010243c: e4 0c 42 2e  sltiu $v0, $s2, 0xce4
+80102440: 0b 00 40 10  beqz $v0, 0x80102470
+80102444: 00 00 00 00  nop 
+80102448: 1e 02 22 92  lbu $v0, 0x21e($s1)
+8010244c: 00 00 00 00  nop 
+80102450: 07 00 40 14  bnez $v0, 0x80102470
+80102454: 01 0e 02 24  addiu $v0, $zero, 0xe01
+80102458: 3a 02 23 92  lbu $v1, 0x23a($s1)
+8010245c: 00 00 00 00  nop 
+80102460: 03 00 60 10  beqz $v1, 0x80102470
+80102464: 04 00 22 ae  sw $v0, 4($s1)
+80102468: ff ff 62 24  addiu $v0, $v1, -1
+8010246c: 3a 02 22 a2  sb $v0, 0x23a($s1)
+
+## G4 Biss-Probe Teil 10 (+0x700) + 1400, Radius 1500 @0x80104f88-a8
+80104f88: dc 05 06 24  addiu $a2, $zero, 0x5dc
+80104f8c: 10 00 a7 27  addiu $a3, $sp, 0x10
+80104f90: 98 01 44 8e  lw $a0, 0x198($s2)
+80104f94: 78 05 02 24  addiu $v0, $zero, 0x578
+80104f98: 10 00 a2 a7  sh $v0, 0x10($sp)
+80104f9c: 12 00 a0 a7  sh $zero, 0x12($sp)
+80104fa0: 14 00 a0 a7  sh $zero, 0x14($sp)
+80104fa4: 0d 56 00 0c  jal 0x80015834
+80104fa8: 00 07 84 24  addiu $a0, $a0, 0x700
+
+## G4 Lenken: Kegel 824 + Rate 32 @0x801018ec-908; Weichen Rate 32 @0x80104204; a3 0x10080 @0x8010427c-84
+801018ec: 85 55 00 0c  jal 0x80015614
+801018f0: 38 03 07 24  addiu $a3, $zero, 0x338
+801018f4: 06 00 40 10  beqz $v0, 0x80101910
+801018f8: 21 20 00 02  move $a0, $s0
+801018fc: c4 01 05 86  lh $a1, 0x1c4($s0)
+80101900: c6 01 06 86  lh $a2, 0x1c6($s0)
+80101904: 20 00 07 24  addiu $a3, $zero, 0x20
+80101908: 56 55 00 0c  jal 0x80015558
+80104204: 56 55 00 0c  jal 0x80015558
+80104208: 20 00 07 24  addiu $a3, $zero, 0x20
+8010427c: 01 00 07 3c  lui $a3, 1
+80104280: 67 a5 00 0c  jal 0x8002959c
+80104284: 80 00 e7 34  ori $a3, $a3, 0x80
+
+## RE1.5 re15exe40: Sce_em_set +0x4 = 0 @0x800421e0
+800421e0: 04 00 00 ae  sw $zero, 4($s0)
+## RE1.5 re15exe40: Raumwechsel @0x8001d968 / @0x8001d988, Pool nullen @0x8001a4e8
+8001d968: 07 00 62 10  beq $v1, $v0, 0x8001d988
+8001d988: bf e5 00 0c  jal 0x800396fc
+8001a4e8: 00 00 20 ac  sw $zero, ($at)
+## RE1.5 re15exe40: START-Block aca3c & 0x40 @0x8001ccf4-08
+8001ccf4: 0b 80 05 3c  lui $a1, 0x800b
+8001ccf8: 3c ca a5 24  addiu $a1, $a1, -0x35c4
+8001ccfc: 00 00 a4 8c  lw $a0, ($a1)
+8001cd00: 00 00 00 00  nop 
+8001cd04: 40 00 82 30  andi $v0, $a0, 0x40
+8001cd08: 38 00 40 14  bnez $v0, 0x8001cdec
+
+## RE1.5 re15exe: Sce_em_set +0x4 = 0 @0x800421e0
+800421e0: 04 00 00 ae  sw $zero, 4($s0)
+## RE1.5 re15exe: Raumwechsel @0x8001d968 / @0x8001d988, Pool nullen @0x8001a4e8
+8001d968: 07 00 62 10  beq $v1, $v0, 0x8001d988
+8001d988: bf e5 00 0c  jal 0x800396fc
+8001a4e8: 00 00 20 ac  sw $zero, ($at)
+## RE1.5 re15exe: START-Block aca3c & 0x40 @0x8001ccf4-08
+8001ccf4: 0b 80 05 3c  lui $a1, 0x800b
+8001ccf8: 3c ca a5 24  addiu $a1, $a1, -0x35c4
+8001ccfc: 00 00 a4 8c  lw $a0, ($a1)
+8001cd00: 00 00 00 00  nop 
+8001cd04: 40 00 82 30  andi $v0, $a0, 0x40
+8001cd08: 38 00 40 14  bnez $v0, 0x8001cdec
+
+## stage5_40 Birkin-Haken aca3c |= 0x40 / &= ~0x40 ([0] @0x8011b0b4/c0, @0x8011b3e0/ec; [1] @0x8011b4a0/ac, @0x8011b6b8/c4; [2] @0x8011b770/7c, @0x8011b95c/68)
+8011b0b4: 40 00 42 34  ori $v0, $v0, 0x40
+8011b0c0: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b3e0: bf ff 03 24  addiu $v1, $zero, -0x41
+8011b3ec: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b4a0: 40 00 42 34  ori $v0, $v0, 0x40
+8011b4ac: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b6b8: bf ff 03 24  addiu $v1, $zero, -0x41
+8011b6c4: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b770: 40 00 42 34  ori $v0, $v0, 0x40
+8011b77c: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b95c: bf ff 03 24  addiu $v1, $zero, -0x41
+8011b968: 3c ca 22 ac  sw $v0, -0x35c4($at)
+## stage5_40 Raum-Ton 10 bei Bild 0x3c @0x8011af48-5c
+8011af48: 95 00 43 90  lbu $v1, 0x95($v0)
+8011af4c: 3c 00 02 34  ori $v0, $zero, 0x3c
+8011af50: 03 00 62 14  bne $v1, $v0, 0x8011af60
+8011af54: 00 00 00 00  nop 
+8011af58: f4 14 01 0c  jal 0x800453d0
+8011af5c: 0a 00 04 34  ori $a0, $zero, 0xa
+## stage5_40 Flag (5,0x1c) @0x8011aea4-cc
+8011aea4: 0b 80 04 3c  lui $a0, 0x800b
+8011aea8: 28 10 84 24  addiu $a0, $a0, 0x1028
+8011aeac: 1c 00 05 34  ori $a1, $zero, 0x1c
+8011aeb0: 0b 80 03 3c  lui $v1, 0x800b
+8011aeb4: 84 c7 63 8c  lw $v1, -0x387c($v1)
+8011aeb8: 2c 01 02 34  ori $v0, $zero, 0x12c
+8011aebc: 9c 00 62 a4  sh $v0, 0x9c($v1)
+8011aec0: 0b 80 03 3c  lui $v1, 0x800b
+8011aec4: 84 c7 63 8c  lw $v1, -0x387c($v1)
+8011aec8: 03 00 02 34  ori $v0, $zero, 3
+8011aecc: e4 3b 01 0c  jal 0x8004ef90
+## stage5_40 0x30-INIT HP 0x12c @0x80117120-24
+80117120: 2c 01 02 34  ori $v0, $zero, 0x12c
+80117124: 9a 00 62 a4  sh $v0, 0x9a($v1)
+
+## stage5 Birkin-Haken aca3c |= 0x40 / &= ~0x40 ([0] @0x8011b0b4/c0, @0x8011b3e0/ec; [1] @0x8011b4a0/ac, @0x8011b6b8/c4; [2] @0x8011b770/7c, @0x8011b95c/68)
+8011b0b4: 40 00 42 34  ori $v0, $v0, 0x40
+8011b0c0: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b3e0: bf ff 03 24  addiu $v1, $zero, -0x41
+8011b3ec: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b4a0: 40 00 42 34  ori $v0, $v0, 0x40
+8011b4ac: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b6b8: bf ff 03 24  addiu $v1, $zero, -0x41
+8011b6c4: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b770: 40 00 42 34  ori $v0, $v0, 0x40
+8011b77c: 3c ca 22 ac  sw $v0, -0x35c4($at)
+8011b95c: bf ff 03 24  addiu $v1, $zero, -0x41
+8011b968: 3c ca 22 ac  sw $v0, -0x35c4($at)
+## stage5 Raum-Ton 10 bei Bild 0x3c @0x8011af48-5c
+8011af48: 95 00 43 90  lbu $v1, 0x95($v0)
+8011af4c: 3c 00 02 34  ori $v0, $zero, 0x3c
+8011af50: 03 00 62 14  bne $v1, $v0, 0x8011af60
+8011af54: 00 00 00 00  nop 
+8011af58: f4 14 01 0c  jal 0x800453d0
+8011af5c: 0a 00 04 34  ori $a0, $zero, 0xa
+## stage5 Flag (5,0x1c) @0x8011aea4-cc
+8011aea4: 0b 80 04 3c  lui $a0, 0x800b
+8011aea8: 28 10 84 24  addiu $a0, $a0, 0x1028
+8011aeac: 1c 00 05 34  ori $a1, $zero, 0x1c
+8011aeb0: 0b 80 03 3c  lui $v1, 0x800b
+8011aeb4: 84 c7 63 8c  lw $v1, -0x387c($v1)
+8011aeb8: 2c 01 02 34  ori $v0, $zero, 0x12c
+8011aebc: 9c 00 62 a4  sh $v0, 0x9c($v1)
+8011aec0: 0b 80 03 3c  lui $v1, 0x800b
+8011aec4: 84 c7 63 8c  lw $v1, -0x387c($v1)
+8011aec8: 03 00 02 34  ori $v0, $zero, 3
+8011aecc: e4 3b 01 0c  jal 0x8004ef90
+## stage5 0x30-INIT HP 0x12c @0x80117120-24
+80117120: 2c 01 02 34  ori $v0, $zero, 0x12c
+80117124: 9a 00 62 a4  sh $v0, 0x9a($v1)
+
+## stage3_40 Mutation HP 0x96 @0x80118094-98
+80118094: 96 00 02 34  ori $v0, $zero, 0x96
+80118098: 9a 00 62 a4  sh $v0, 0x9a($v1)
+## stage3 Mutation HP 0x96 @0x80118094-98
+80118094: 96 00 02 34  ori $v0, $zero, 0x96
+80118098: 9a 00 62 a4  sh $v0, 0x9a($v1)
+
+## STAGE3.BIN 0x30-Kasten @0x8011ee64 (s16): {0,-1440,0,1000,1440,1000} (in STAGE5.BIN dort Nullen)
+8011ee64: 0
+8011ee66: -1440
+8011ee68: 0
+8011ee6a: 1000
+8011ee6c: 1440
+8011ee6e: 1000
+
+## RE2-EXE START-Tor: s3 = 0x800cc1e8 @0x800257cc-d0; lbu 0x3be3(s3) = 0x800cfdcb / bnez @0x80026438-40
+800257cc: 0d 80 13 3c  lui $s3, 0x800d
+800257d0: e8 c1 73 26  addiu $s3, $s3, -0x3e18
+80026438: e3 3b 62 92  lbu $v0, 0x3be3($s3)
+8002643c: 00 00 00 00  nop 
+80026440: 3f 00 40 14  bnez $v0, 0x80026540
+
+## RE2-EXE Spieler-Ctor r 450 / y -1530 / h 1530 @0x8003bdc0-ec (Kommentar birkin_bahnsteig.c nennt die EXE nicht; in der RE1.5-EXE steht dort anderer Code)
+8003bdc0: c2 01 03 24  addiu $v1, $zero, 0x1c2
+8003bdc4: 9a 00 43 a6  sh $v1, 0x9a($s2)
+8003bdc8: 9c 00 43 a6  sh $v1, 0x9c($s2)
+8003bdcc: 90 00 43 a6  sh $v1, 0x90($s2)
+8003bdd0: 92 00 43 a6  sh $v1, 0x92($s2)
+8003bdd4: 08 00 43 92  lbu $v1, 8($s2)
+8003bdd8: 01 00 02 24  addiu $v0, $zero, 1
+8003bddc: e8 01 42 ae  sw $v0, 0x1e8($s2)
+8003bde0: 06 fa 02 24  addiu $v0, $zero, -0x5fa
+8003bde4: 98 00 42 a6  sh $v0, 0x98($s2)
+8003bde8: fa 05 02 24  addiu $v0, $zero, 0x5fa
+8003bdec: 9e 00 42 a6  sh $v0, 0x9e($s2)
+
+## ENEMSE.VBS @0x1d8000 (Bank 24) SE-Karte 32 Worte: Ids 9-15 = FFFFFFFF
+0:02130000 1:02230000 2:02330000 3:03430000 4:03530000 5:02630000 6:04730000 7:04830000 8:02930000 9:ffffffff 10:ffffffff 11:ffffffff 12:ffffffff 13:ffffffff 14:ffffffff 15:ffffffff 16:02130100 17:02230100 18:02330100 19:02430100 20:02530100 21:03630100 22:03730100 23:02830100 24:03930100 25:03a30100 26:04b30100 27:04c30100 28:04d30100 29:04e30100 30:04f30100 31:ffffffff

@@ -1,0 +1,311 @@
+F250 mittel=49.2 dunkel<24=27.5%
+F253 mittel=49.0 dunkel<24=27.6%
+F256 mittel=48.7 dunkel<24=27.8%
+F259 mittel=48.3 dunkel<24=28.3%
+F262 mittel=48.0 dunkel<24=28.7%
+F265 mittel=47.6 dunkel<24=29.4%
+F268 mittel=47.3 dunkel<24=29.8%
+F271 mittel=47.2 dunkel<24=30.2%
+F274 mittel=47.0 dunkel<24=30.7%
+F277 mittel=46.5 dunkel<24=31.4%
+F280 mittel=55.3 dunkel<24=21.9%
+F283 mittel=29.1 dunkel<24=56.5%  <-- DUNKEL
+F286 mittel=28.1 dunkel<24=58.8%  <-- DUNKEL
+F289 mittel=30.1 dunkel<24=56.3%  <-- DUNKEL
+F292 mittel=31.3 dunkel<24=57.2%  <-- DUNKEL
+F295 mittel=27.6 dunkel<24=58.6%  <-- DUNKEL
+F298 mittel=30.3 dunkel<24=56.3%  <-- DUNKEL
+F301 mittel=27.8 dunkel<24=58.7%  <-- DUNKEL
+F304 mittel=27.9 dunkel<24=58.3%  <-- DUNKEL
+F307 mittel=29.4 dunkel<24=57.2%  <-- DUNKEL
+F310 mittel=27.2 dunkel<24=58.3%  <-- DUNKEL
+F313 mittel=31.5 dunkel<24=56.6%  <-- DUNKEL
+F316 mittel=28.1 dunkel<24=57.2%  <-- DUNKEL
+F319 mittel=30.4 dunkel<24=55.8%  <-- DUNKEL
+F322 mittel=32.9 dunkel<24=55.8%  <-- DUNKEL
+F325 mittel=33.0 dunkel<24=51.4%  <-- DUNKEL
+F328 mittel=44.0 dunkel<24=43.1%
+F331 mittel=39.1 dunkel<24=46.1%
+F334 mittel=38.4 dunkel<24=46.1%
+F337 mittel=39.7 dunkel<24=44.3%
+F340 mittel=37.6 dunkel<24=45.1%
+F343 mittel=60.0 dunkel<24=17.2%
+F346 mittel=59.6 dunkel<24=17.2%
+F349 mittel=60.3 dunkel<24=16.9%
+F352 mittel=60.7 dunkel<24=17.6%
+F355 mittel=59.4 dunkel<24=18.3%
+F358 mittel=60.7 dunkel<24=18.0%
+F361 mittel=59.7 dunkel<24=18.1%
+F364 mittel=59.4 dunkel<24=18.1%
+F367 mittel=59.6 dunkel<24=17.9%
+F370 mittel=59.5 dunkel<24=17.9%
+F373 mittel=60.7 dunkel<24=16.6%
+F376 mittel=60.2 dunkel<24=16.6%
+F379 mittel=60.9 dunkel<24=16.4%
+F382 mittel=61.5 dunkel<24=16.5%
+F385 mittel=60.4 dunkel<24=16.5%
+F388 mittel=61.4 dunkel<24=16.3%
+F391 mittel=60.5 dunkel<24=16.6%
+F394 mittel=60.4 dunkel<24=16.6%
+F397 mittel=60.9 dunkel<24=16.4%
+F400 mittel=60.5 dunkel<24=16.5%
+F403 mittel=60.8 dunkel<24=16.5%
+F406 mittel=60.2 dunkel<24=16.6%
+F409 mittel=60.8 dunkel<24=16.4%
+F412 mittel=61.4 dunkel<24=16.4%
+F415 mittel=60.4 dunkel<24=16.6%
+F418 mittel=61.4 dunkel<24=16.4%
+F421 mittel=60.7 dunkel<24=16.6%
+F424 mittel=60.6 dunkel<24=16.6%
+F427 mittel=60.8 dunkel<24=16.5%
+F430 mittel=60.2 dunkel<24=16.7%
+F433 mittel=60.3 dunkel<24=16.8%
+F436 mittel=59.9 dunkel<24=16.9%
+F439 mittel=60.5 dunkel<24=16.8%
+F442 mittel=61.2 dunkel<24=16.8%
+F445 mittel=60.4 dunkel<24=16.9%
+F448 mittel=61.3 dunkel<24=16.7%
+F451 mittel=60.4 dunkel<24=16.9%
+F454 mittel=60.2 dunkel<24=16.9%
+F457 mittel=60.5 dunkel<24=16.8%
+F460 mittel=60.1 dunkel<24=16.9%
+F463 mittel=60.4 dunkel<24=16.8%
+F466 mittel=60.1 dunkel<24=16.8%
+F469 mittel=60.7 dunkel<24=16.6%
+F472 mittel=61.1 dunkel<24=16.7%
+F475 mittel=60.2 dunkel<24=16.8%
+F478 mittel=61.0 dunkel<24=16.6%
+F481 mittel=60.3 dunkel<24=16.9%
+F484 mittel=60.2 dunkel<24=16.9%
+F487 mittel=60.6 dunkel<24=16.7%
+F490 mittel=60.2 dunkel<24=16.8%
+F493 mittel=60.4 dunkel<24=16.8%
+F496 mittel=59.8 dunkel<24=16.8%
+F499 mittel=60.4 dunkel<24=16.7%
+F502 mittel=60.9 dunkel<24=16.8%
+F505 mittel=60.1 dunkel<24=16.9%
+F508 mittel=61.2 dunkel<24=16.8%
+F511 mittel=60.4 dunkel<24=17.0%
+F514 mittel=60.3 dunkel<24=16.9%
+F517 mittel=60.5 dunkel<24=16.8%
+F520 mittel=60.1 dunkel<24=16.9%
+F523 mittel=60.2 dunkel<24=16.9%
+F526 mittel=59.9 dunkel<24=17.0%
+F529 mittel=60.5 dunkel<24=16.8%
+F532 mittel=61.1 dunkel<24=16.9%
+F535 mittel=60.2 dunkel<24=16.9%
+F538 mittel=61.1 dunkel<24=16.8%
+F541 mittel=60.1 dunkel<24=17.1%
+F544 mittel=59.9 dunkel<24=17.1%
+F547 mittel=60.3 dunkel<24=17.0%
+F550 mittel=59.9 dunkel<24=17.2%
+F553 mittel=60.2 dunkel<24=17.2%
+F556 mittel=59.9 dunkel<24=17.3%
+F559 mittel=60.2 dunkel<24=17.0%
+F562 mittel=60.7 dunkel<24=17.2%
+F565 mittel=59.9 dunkel<24=17.3%
+F568 mittel=60.7 dunkel<24=17.1%
+F571 mittel=60.0 dunkel<24=17.4%
+F574 mittel=60.0 dunkel<24=17.3%
+F577 mittel=60.4 dunkel<24=17.2%
+F580 mittel=59.9 dunkel<24=17.3%
+F583 mittel=60.0 dunkel<24=17.2%
+F586 mittel=59.6 dunkel<24=17.3%
+F589 mittel=60.0 dunkel<24=17.1%
+F592 mittel=60.6 dunkel<24=17.3%
+F595 mittel=59.9 dunkel<24=17.4%
+F598 mittel=61.0 dunkel<24=17.1%
+F601 mittel=60.1 dunkel<24=17.4%
+F604 mittel=59.9 dunkel<24=17.4%
+F607 mittel=60.1 dunkel<24=17.3%
+F610 mittel=59.6 dunkel<24=17.5%
+F613 mittel=59.8 dunkel<24=17.4%
+F616 mittel=59.5 dunkel<24=17.5%
+F619 mittel=60.1 dunkel<24=17.3%
+F622 mittel=60.7 dunkel<24=17.4%
+F625 mittel=59.9 dunkel<24=17.5%
+F628 mittel=60.6 dunkel<24=17.3%
+F631 mittel=59.7 dunkel<24=17.6%
+F634 mittel=59.7 dunkel<24=17.5%
+F637 mittel=60.0 dunkel<24=17.3%
+F640 mittel=59.8 dunkel<24=17.4%
+F643 mittel=60.0 dunkel<24=17.5%
+F646 mittel=59.5 dunkel<24=17.6%
+F649 mittel=59.9 dunkel<24=17.4%
+F652 mittel=60.3 dunkel<24=17.6%
+F655 mittel=59.5 dunkel<24=17.7%
+F658 mittel=60.4 dunkel<24=17.5%
+F661 mittel=59.7 dunkel<24=17.8%
+F664 mittel=59.6 dunkel<24=17.9%
+F667 mittel=59.9 dunkel<24=17.7%
+F670 mittel=59.3 dunkel<24=17.9%
+F673 mittel=59.6 dunkel<24=17.9%
+F676 mittel=59.2 dunkel<24=17.9%
+F679 mittel=59.6 dunkel<24=17.8%
+F682 mittel=60.1 dunkel<24=17.9%
+F685 mittel=59.5 dunkel<24=17.9%
+F688 mittel=60.5 dunkel<24=17.7%
+F691 mittel=59.6 dunkel<24=18.0%
+F694 mittel=59.4 dunkel<24=17.9%
+F697 mittel=59.5 dunkel<24=17.7%
+F700 mittel=59.3 dunkel<24=17.9%
+F703 mittel=59.5 dunkel<24=18.0%
+F706 mittel=59.1 dunkel<24=18.1%
+F709 mittel=59.7 dunkel<24=17.9%
+F712 mittel=60.2 dunkel<24=18.0%
+F715 mittel=59.2 dunkel<24=18.2%
+F718 mittel=59.9 dunkel<24=18.0%
+F721 mittel=58.8 dunkel<24=18.6%
+F724 mittel=58.4 dunkel<24=19.3%
+F727 mittel=58.5 dunkel<24=19.7%
+F730 mittel=56.6 dunkel<24=22.6%
+F733 mittel=47.6 dunkel<24=29.4%
+F736 mittel=48.4 dunkel<24=28.6%
+F739 mittel=48.6 dunkel<24=28.2%
+F742 mittel=48.7 dunkel<24=28.2%
+F745 mittel=48.7 dunkel<24=28.2%
+F748 mittel=48.7 dunkel<24=28.1%
+F751 mittel=48.6 dunkel<24=28.3%
+F754 mittel=48.6 dunkel<24=28.4%
+F757 mittel=48.6 dunkel<24=28.5%
+F760 mittel=48.6 dunkel<24=28.5%
+F763 mittel=48.6 dunkel<24=28.5%
+F766 mittel=48.7 dunkel<24=28.2%
+F769 mittel=48.7 dunkel<24=28.2%
+F772 mittel=48.7 dunkel<24=28.2%
+F775 mittel=48.7 dunkel<24=28.2%
+F778 mittel=48.7 dunkel<24=28.2%
+F781 mittel=48.7 dunkel<24=28.2%
+F784 mittel=48.7 dunkel<24=28.2%
+F787 mittel=48.7 dunkel<24=28.2%
+F790 mittel=48.7 dunkel<24=28.2%
+F793 mittel=48.7 dunkel<24=28.2%
+F796 mittel=48.7 dunkel<24=28.2%
+F799 mittel=48.7 dunkel<24=28.2%
+F802 mittel=48.7 dunkel<24=28.2%
+F805 mittel=48.7 dunkel<24=28.2%
+F808 mittel=48.7 dunkel<24=28.2%
+F811 mittel=48.7 dunkel<24=28.2%
+F814 mittel=48.7 dunkel<24=28.2%
+F817 mittel=48.7 dunkel<24=28.2%
+F820 mittel=48.7 dunkel<24=28.2%
+F823 mittel=48.7 dunkel<24=28.2%
+F826 mittel=48.7 dunkel<24=28.2%
+F829 mittel=48.7 dunkel<24=28.2%
+F832 mittel=48.7 dunkel<24=28.2%
+F835 mittel=48.7 dunkel<24=28.2%
+F838 mittel=48.7 dunkel<24=28.2%
+F841 mittel=48.7 dunkel<24=28.2%
+F844 mittel=48.7 dunkel<24=28.2%
+F847 mittel=48.5 dunkel<24=30.8%
+F850 mittel=48.3 dunkel<24=31.1%
+F853 mittel=48.3 dunkel<24=31.1%
+F856 mittel=48.2 dunkel<24=31.1%
+F859 mittel=48.5 dunkel<24=31.0%
+F862 mittel=48.5 dunkel<24=31.1%
+F865 mittel=48.4 dunkel<24=31.1%
+F868 mittel=48.7 dunkel<24=31.0%
+F871 mittel=48.3 dunkel<24=31.2%
+F874 mittel=48.1 dunkel<24=31.3%
+F877 mittel=48.3 dunkel<24=31.4%
+F880 mittel=48.2 dunkel<24=31.5%
+F883 mittel=48.2 dunkel<24=31.7%
+F886 mittel=47.8 dunkel<24=31.9%
+F889 mittel=48.0 dunkel<24=32.0%
+F892 mittel=47.9 dunkel<24=32.2%
+F895 mittel=47.6 dunkel<24=32.4%
+F898 mittel=48.1 dunkel<24=32.3%
+F901 mittel=47.8 dunkel<24=32.3%
+F904 mittel=47.7 dunkel<24=32.2%
+F907 mittel=47.8 dunkel<24=32.2%
+F910 mittel=47.7 dunkel<24=32.3%
+F913 mittel=47.6 dunkel<24=32.4%
+F916 mittel=47.3 dunkel<24=32.9%
+F919 mittel=47.5 dunkel<24=32.9%
+F922 mittel=47.5 dunkel<24=32.9%
+F925 mittel=47.3 dunkel<24=33.0%
+F928 mittel=47.7 dunkel<24=33.0%
+F931 mittel=47.4 dunkel<24=33.1%
+F934 mittel=46.8 dunkel<24=34.1%
+F937 mittel=46.6 dunkel<24=34.4%
+F940 mittel=46.4 dunkel<24=34.4%
+F943 mittel=46.4 dunkel<24=34.5%
+F946 mittel=46.3 dunkel<24=34.4%
+F949 mittel=46.4 dunkel<24=34.2%
+F952 mittel=46.5 dunkel<24=34.1%
+F955 mittel=46.4 dunkel<24=34.1%
+F958 mittel=46.4 dunkel<24=34.3%
+F961 mittel=46.2 dunkel<24=34.6%
+F964 mittel=46.0 dunkel<24=34.8%
+F967 mittel=45.9 dunkel<24=35.3%
+F970 mittel=45.7 dunkel<24=36.2%
+F973 mittel=45.3 dunkel<24=37.0%
+F976 mittel=45.3 dunkel<24=36.6%
+F979 mittel=45.1 dunkel<24=36.7%
+F982 mittel=44.8 dunkel<24=37.4%
+F985 mittel=45.1 dunkel<24=36.6%
+F988 mittel=45.1 dunkel<24=36.6%
+F991 mittel=45.2 dunkel<24=36.5%
+F994 mittel=45.2 dunkel<24=36.4%
+F997 mittel=45.0 dunkel<24=36.5%
+F1000 mittel=44.4 dunkel<24=37.0%
+F1003 mittel=44.2 dunkel<24=37.2%
+F1006 mittel=43.3 dunkel<24=37.6%
+F1009 mittel=42.8 dunkel<24=38.0%
+F1012 mittel=44.5 dunkel<24=36.8%
+F1015 mittel=44.8 dunkel<24=36.4%
+F1018 mittel=40.7 dunkel<24=44.0%
+F1021 mittel=38.9 dunkel<24=48.8%
+F1024 mittel=39.7 dunkel<24=45.3%
+F1027 mittel=41.8 dunkel<24=41.3%
+F1030 mittel=41.9 dunkel<24=41.2%
+F1033 mittel=40.4 dunkel<24=43.9%
+F1036 mittel=39.0 dunkel<24=44.8%
+F1039 mittel=38.8 dunkel<24=45.2%
+F1042 mittel=38.6 dunkel<24=45.7%
+F1045 mittel=39.5 dunkel<24=44.0%
+F1048 mittel=39.6 dunkel<24=43.7%
+F1051 mittel=28.4 dunkel<24=66.6%  <-- DUNKEL
+F1054 mittel=28.5 dunkel<24=66.7%  <-- DUNKEL
+F1057 mittel=27.9 dunkel<24=68.3%  <-- DUNKEL
+F1060 mittel=27.5 dunkel<24=70.1%  <-- DUNKEL
+F1063 mittel=27.3 dunkel<24=70.2%  <-- DUNKEL
+F1066 mittel=30.0 dunkel<24=61.2%  <-- DUNKEL
+F1069 mittel=30.2 dunkel<24=60.8%  <-- DUNKEL
+F1072 mittel=30.1 dunkel<24=61.0%  <-- DUNKEL
+F1075 mittel=30.1 dunkel<24=60.9%  <-- DUNKEL
+F1078 mittel=30.1 dunkel<24=61.2%  <-- DUNKEL
+F1081 mittel=30.4 dunkel<24=60.6%  <-- DUNKEL
+F1084 mittel=29.8 dunkel<24=62.2%  <-- DUNKEL
+F1087 mittel=28.3 dunkel<24=67.3%  <-- DUNKEL
+F1090 mittel=28.6 dunkel<24=66.5%  <-- DUNKEL
+F1093 mittel=28.7 dunkel<24=65.6%  <-- DUNKEL
+F1096 mittel=28.7 dunkel<24=65.1%  <-- DUNKEL
+F1099 mittel=28.8 dunkel<24=64.4%  <-- DUNKEL
+F1102 mittel=29.1 dunkel<24=63.4%  <-- DUNKEL
+F1105 mittel=29.8 dunkel<24=61.9%  <-- DUNKEL
+F1108 mittel=30.5 dunkel<24=60.3%  <-- DUNKEL
+F1111 mittel=31.4 dunkel<24=57.8%  <-- DUNKEL
+F1114 mittel=31.6 dunkel<24=56.9%  <-- DUNKEL
+F1117 mittel=31.4 dunkel<24=57.2%  <-- DUNKEL
+F1120 mittel=30.9 dunkel<24=58.5%  <-- DUNKEL
+F1123 mittel=30.4 dunkel<24=60.0%  <-- DUNKEL
+F1126 mittel=30.4 dunkel<24=60.1%  <-- DUNKEL
+F1129 mittel=34.1 dunkel<24=53.4%  <-- DUNKEL
+F1132 mittel=34.1 dunkel<24=53.4%  <-- DUNKEL
+F1135 mittel=34.1 dunkel<24=53.5%  <-- DUNKEL
+F1138 mittel=34.0 dunkel<24=53.6%  <-- DUNKEL
+F1141 mittel=34.0 dunkel<24=53.5%  <-- DUNKEL
+F1144 mittel=33.7 dunkel<24=54.0%  <-- DUNKEL
+F1147 mittel=32.8 dunkel<24=55.7%  <-- DUNKEL
+F1150 mittel=30.7 dunkel<24=58.9%  <-- DUNKEL
+F1153 mittel=31.1 dunkel<24=58.2%  <-- DUNKEL
+F1156 mittel=31.7 dunkel<24=57.4%  <-- DUNKEL
+F1159 mittel=31.7 dunkel<24=57.6%  <-- DUNKEL
+F1162 mittel=32.3 dunkel<24=56.8%  <-- DUNKEL
+F1165 mittel=33.0 dunkel<24=55.6%  <-- DUNKEL
+F1168 mittel=33.7 dunkel<24=54.3%  <-- DUNKEL
+F1171 mittel=34.1 dunkel<24=53.6%  <-- DUNKEL
+F1174 mittel=34.8 dunkel<24=51.8%  <-- DUNKEL
+F1177 mittel=35.1 dunkel<24=50.8%
+F1180 mittel=35.2 dunkel<24=50.3%

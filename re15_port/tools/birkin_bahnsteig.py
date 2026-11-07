@@ -4,9 +4,13 @@
     python re15_port/tools/birkin_bahnsteig.py               # Asset schreiben
     python re15_port/tools/birkin_bahnsteig.py --blatt DIR   # + Ansichtsblatt
 
-Ausgabe (RE2-Format: 8 Verzeichnis-Eintraege, TIM getrennt; geladen vom PC-Port, platform/pc/main.c):
-    re15_port/shared_assets/RE2/BAHNSTEIG_G4.EMD
-    re15_port/shared_assets/RE2/BAHNSTEIG_G4.TIM
+Ausgabe (RE2-Format: 8 Verzeichnis-Eintraege, TIM getrennt), Vorgabe seit Nachbesserung 1 der Stufe 3 (Abnahme 1 M8c):
+    build/extracted/bahnsteig_g4/BAHNSTEIG_G4.EMD
+    build/extracted/bahnsteig_g4/BAHNSTEIG_G4.TIM
+    ⛔ Seit Stufe 3 der Bahnsteig-Form NICHT mehr im Spiel und nicht mehr im Repo: der Port laedt RE2/BAHNSTEIG_FORM.EMD
+    (Riesenform, Generator analysis/befunde_runde41/form/stufe3/gen). Dieses Werkzeug bleibt als Beleg von Spur R und schreibt
+    deshalb NICHT mehr nach re15_port/shared_assets (dort entstand sonst ein verwaistes Asset); --aus in shared_assets wird
+    abgelehnt.
 
 ⛔ KEIN BYTE-TRUE-ASSET. Die Form gibt es auf keiner Disc, nur als zwei Standbilder in
 "Biohazard 1.5 Final Build.mp4" (1:54.8 Bahnsteig, 1:56.3 roter Gang = ROOM5090 Cut 11).
@@ -39,6 +43,7 @@ RE2_DIR  = os.path.join(EA.REPO, 're15_port', 'shared_assets', 'RE2')
 EMS_PFAD = os.path.join(RE2_DIR, 'CDEMD0.EMS')
 TOC_PFAD = os.path.join(EA.REPO, 're15_port', 'engine', 'src', 'gen', 're2_ems_toc.inc')
 EMD_DATEI, TIM_DATEI = 'BAHNSTEIG_G4.EMD', 'BAHNSTEIG_G4.TIM'
+AUS_VORGABE = os.path.join(EA.REPO, 'build', 'extracted', 'bahnsteig_g4')   # Zwischenablage, nicht im Spiel
 
 # Knochen RE2-G4 (aus dem EMR gelesen): 0 Becken, 1-4 Bein rechts, 5-8 Bein links, 9 Taille, 10 Rumpf,
 # 11-14 Arm links, 15-19 Arm rechts, 20-22 / 23-25 kleine Arme, 26 Kiefer.
@@ -196,8 +201,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--blatt', help='Verzeichnis fuer das Ansichtsblatt (PNG)')
     ap.add_argument('--clip', type=lambda s: int(s, 0), default=5)
-    ap.add_argument('--aus', default=RE2_DIR, help='Zielverzeichnis')
+    ap.add_argument('--aus', default=AUS_VORGABE, help='Zielverzeichnis (nicht shared_assets)')
     a = ap.parse_args()
+    if os.path.normcase(os.path.abspath(a.aus)).startswith(os.path.normcase(os.path.join(EA.REPO, 're15_port', 'shared_assets'))):
+        sys.exit('birkin_bahnsteig.py: Ausgabe nach re15_port/shared_assets abgelehnt (BAHNSTEIG_G4 ist nicht mehr im Spiel)')
     emd, tim = lade_rohdaten()
     assert len(emd) == 273812 and len(tim) == 99872, 'CDEMD0.EMS kind 0x34 unerwartet'
     fertig = baue(emd, tim)

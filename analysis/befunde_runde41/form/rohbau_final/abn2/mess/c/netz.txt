@@ -1,0 +1,5 @@
+Knochen 32 Dreiecke 616 Vierecke 1284
+['bone_count', 'kf_count', 'kf_data', 'kf_size', 'parent', 'rel']
+Clip 0 min [-3272. -2945. -1518.] max [3906.   -0. 1482.] Ausdehnung [7178. 2945. 3000.]
+Clip 1 min [-3796. -3100. -2558.] max [3109.   -0. 1779.] Ausdehnung [6906. 3099. 4337.]
+Clip 2 min [-3460. -2857. -1878.] max [4283.    0. 1825.] Ausdehnung [7743. 2857. 3703.]

@@ -1,0 +1,50 @@
+== C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formfarbe2/j_sp1
+  A1 Chroma Koerper                            15.1                                                                   GRUEN
+  A2 Farbstreuung je Teil sigma_ab             9.2                                                                    GRUEN
+  A3 Fleischrot-Anteil %                       22.9                                                                   GRUEN
+  A4 Farbton Fleischrot Grad                   28.0                                                                   GRUEN
+  A5 Neutralweiss Koerper %                    0.0                                                                    GRUEN
+  A6 HF_fft je Feld (max)                      {'koerper': 0.133, 'kopf': 0.064, 'kiefer': 0.065, 'kralle': 0.066}    GRUEN
+  A7 HF_rest je Feld (max)                     {'koerper': 0.094, 'kopf': 0.026, 'kiefer': 0.056, 'kralle': 0.06}     GRUEN
+  A8 Kiefer Zahn/Rot/Dunkel %                  (5.8, 28.6, 39.1)                                                      GRUEN
+  A9 Auge L*/C*                                (13.1, 18.0)                                                           GRUEN
+  A10 Texeldichte Teil/Koerper (min,max)       (0.64, 2.33)                                                           GRUEN
+  A11 Schwanz L*-Sprung Glied 1-5 (max)        0.7                                                                    GRUEN
+  A12 Farbkorn Koerper (a*b*-Rest)             4.55                                                                   GRUEN
+  K1 Bild1 Chroma Figur / Original [V1, ersetzt] (7.0, 9.3)                                                             info
+  K2 Bild1 ab-Streuung Figur / Original [V1, ersetzt] (8.6, 9.8)                                                             info
+  K3 Bild1 dE je Zone (max)                    {'Schwanz': 3.6, 'Ruecken/Flanke': 3.1, 'Hinterbein l (W)': 3.2, 'Hinterbein r (W)': 4.8, 'Vorderglied r (W)': 0.6} GRUEN
+  K4 Bild1 Rot-Klasse Figur % / Original       (5.2, 5.2)                                                             GRUEN
+  K5 Bild1 Hell-Klasse Ruecken % / W Figur %   (11.1, 9.9, 0.4, 0.5)                                                  GRUEN
+  K6 Bild2 Figur dE / Chroma                   (1.2, 23.1, 25.6)                                                      GRUEN
+  K7 Bild2 Unterkiefer dE / a*                 (1.8, 23.2, 24.9)                                                      GRUEN
+  K8 Bild2 Oberkiefer dE                       3.7                                                                    GRUEN
+  K9 Bild2 Klauen a* (r, l) / Original         (26.4, 24.1, 28.1, 22.2)                                               GRUEN
+  K10 Bild2 Augenpunkte L*max (r, l)           (14.6, 16.0)                                                           GRUEN
+  K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x) (7.0, 7.8)                                                             GRUEN
+  K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x) (8.6, 8.0)                                                             GRUEN
+  K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original (10.7, 11.9)                                                           GRUEN
+  N1 neutral C* je Winkel (Variante / EM30)    ((11.2, 9.7, 13.1), (10.0, 12.5, 10.5))                                GRUEN
+  N2 neutral L*>85 % je Winkel                 (0.0, 0.01, 0.0)                                                       GRUEN
+  B1 Rot erosionsfest % (3 Winkel zus.)        40.7                                                                   GRUEN
+  B2 groesste Rotflaeche % Figur (3/4 vorn, Seite) (4.96, 4.62)                                                           GRUEN
+  B3 Blau-Klasse % je Winkel                   (0.0, 0.0, 0.0)                                                        GRUEN
+  B4 Glanzrest L* p90 ehemalige Keime          47.8                                                                   GRUEN
+  B5 Kopffeld Zahn-/Gaumenklasse %             0.0                                                                    GRUEN
+  B6 Kachelwiederholung Koerper %              0.12                                                                   GRUEN
+  B7 Rot-Farbton-Streuung Koerper Grad         10.2                                                                   GRUEN
+  B8 Bild2 Unterkiefer Hell-Klasse % / Original (17.4, 22.6)                                                           GRUEN
+  B9 Rot im Umrissband % (3 Winkel)            8.7                                                                    GRUEN
+  B9b Rot im Umrissband % Clip 0 (3 Winkel)    5.1                                                                    GRUEN
+  B6 Feld Kiefer Wiederholung %                0.0                                                                    GRUEN
+  B6 Feld Krallen Wiederholung %               0.0                                                                    GRUEN
+  B10 Atlas Fleisch dunkle Linien %            9.52                                                                   GRUEN
+  B11 Atlas Haut dunkle Linien %               4.66                                                                   GRUEN
+  B12 Atlas Kopf Linien % / Canny-Dichte       (0.06, 4.14)                                                           ROT
+  B13 Atlas Fleisch Canny-Dichte               32.07                                                                  GRUEN
+  B14 Rotflaechen L*-Streuung Render / Atlas   (9.6, 12.0)                                                            GRUEN
+  B15 Render Rotflaechen a*-Streuung           6.4                                                                    GRUEN
+  B16 Render Rotpixel in Flaechen mit >= 2 Stufen % 67.0                                                                   GRUEN
+  B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas (0.539, [0.538, 0.548, 0.531], 0.557)                                  ROT
+  -> 43/45 GRUEN
+EXIT 1

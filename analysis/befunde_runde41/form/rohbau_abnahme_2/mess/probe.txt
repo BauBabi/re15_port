@@ -1,0 +1,13 @@
+Rumpf/Schwanz-Rueckenlinie Pose 1 und Ruhe nach Probe
+   Pose 1 -600: 2807/2569  -400: 2878/2658  -200: 2867/2658  0: 2867/2640  200: 2778/2627  400: 2687/2570  600: 2716/2573  800: -/2630
+   Ruhe -600: 2409/2026  -400: 2409/2161  -200: 2417/2183  0: 2343/2200  200: 2267/2159  400: 2309/2263  600: 2309/2416  800: -/2540
+Bild 1: Maske alt 40250 neu 40084, verschieden 548 px Lage x 212-341 y 186-462
+    Fleck 357 px x 297-342 y 186-213, alt Modell True
+    Fleck 126 px x 212-231 y 437-452, alt Modell False
+    Fleck 65 px x 278-298 y 457-463, alt Modell False
+Traceback (most recent call last):
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\rohbau_abnahme_2\a2_probe.py", line 84, in <module>
+    print('   ', nmx, 'Ueberdeckung', P.ueberdeckung(mm, z))
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\re15_port\tools\form_pruefung.py", line 634, in ueberdeckung
+    return dict(iou=round(t / vereinigt, 4) if vereinigt else 0.0, weiss_gedeckt=round(t / int(w.sum()), 4), weiss=int(w.sum()),
+AttributeError: 'bool' object has no attribute 'sum'

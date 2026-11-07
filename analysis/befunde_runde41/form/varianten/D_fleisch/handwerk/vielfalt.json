@@ -1,0 +1,62 @@
+{
+ "C_mitte": {
+  "textur_hue_streu_chroma90": [
+   20.1,
+   22.8
+  ],
+  "bild1": {
+   "hue_streu_gefiltert": [
+    12.8,
+    36.8
+   ],
+   "lichter_gefiltert": 0.107,
+   "lichter_screenshot": 0.103,
+   "hue_streu_screenshot": [
+    26.5,
+    32.0
+   ]
+  },
+  "bild2": {
+   "hue_streu_gefiltert": [
+    15.2,
+    49.1
+   ],
+   "lichter_gefiltert": 0.029,
+   "lichter_screenshot": 0.034,
+   "hue_streu_screenshot": [
+    15.4,
+    45.6
+   ]
+  }
+ },
+ "D_fleisch": {
+  "textur_hue_streu_chroma90": [
+   60.5,
+   34.8
+  ],
+  "bild1": {
+   "hue_streu_gefiltert": [
+    18.3,
+    25.2
+   ],
+   "lichter_gefiltert": 0.101,
+   "lichter_screenshot": 0.103,
+   "hue_streu_screenshot": [
+    26.5,
+    32.0
+   ]
+  },
+  "bild2": {
+   "hue_streu_gefiltert": [
+    11.5,
+    56.7
+   ],
+   "lichter_gefiltert": 0.046,
+   "lichter_screenshot": 0.034,
+   "hue_streu_screenshot": [
+    15.4,
+    45.6
+   ]
+  }
+ }
+}

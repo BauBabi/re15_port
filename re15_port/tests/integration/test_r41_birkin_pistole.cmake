@@ -8,12 +8,14 @@
 #
 # Je ein Lauf Leon (ROOM5090) und Elza (ROOM5091), seit Runde 41 Spur GR NB3 mit dem Messhaken RE15_R39_MESS_SPIELER_HP (unten):
 # Debug-Sprung, Tuer 2, laufen, Zielen und Feuer gehalten. RE15_GIVE liefert nur die Patronen. Geprueft aus state.log/debug.log:
-#   1  Mutation genau einmal (Sub 6 Phase 0 in einem einzigen Bild)
+#   1  Stufe 3 (analysis/befunde_runde41/form/STUFE3.md): KEINE Mutation mehr in 5090 (Sub 6 nie), die Riesenform ist ab
+#      der Raumladung da
 #   1b Runde 41 Spur GR NB3: Form 1 (EM30) startet mit HP 600 = 0x12c @0x8011690c x RE15_BIRKIN_HP_FAKTOR 2 (PORT-WAHL, Nutzer F1)
-#   2  Modelltausch (debug.log "Bahnsteig-Form"), danach kommt die Form mit HP 1000 und laeuft (Clip 10, Clip 5); 1000 = RE2-G4-Ctor
-#      `addiu v0,zero,1000` @0x80100678 / `sh v0,342(s1)` @0x8010067c (Runde 41 Spur GR NB3, Nutzer F2; vorher 150)
+#   2  debug.log "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips" (BAHNSTEIG_FORM.EMD), die Form kommt mit HP 1000 und laeuft
+#      (Clip 10, Clip 5); 1000 = RE2-G4-Ctor `addiu v0,zero,1000` @0x80100678 / `sh v0,342(s1)` @0x8010067c (Runde 41 Spur GR
+#      NB3, Nutzer F2; vorher 150)
 #   3  Die Form nimmt weiter Schaden: HP faellt unter 100
-#   4  Rueckstoss-Szene (Clip 8, HP 1), danach Typ 0x36 mit HP 600 (G5)
+#   4  Rueckstoss-Szene (Clip 13 Taumeln, Nachbesserung 1; HP 1), Sturz aus dem Wagen (Clip 12, Stufe 3), danach Typ 0x36 mit HP 600 (G5)
 #   5  Abnahme 2: der G5 faellt unter derselben Pistole (HP < 0), der Spieler lebt dabei noch. Bis zur Nachbesserung frass er den
 #      gesunden Spieler bei F2879 kurz vor dem Ziel (Polaritaet `bgtz` @0x801008e0 / @0x80103e80).
 #   5b G5-Rueckzug (Integration Runde 41, Gegenpruefung Welle 1 B1): vom Ende der G5-Szene (state.log pm 2 -> nicht 2 nach dem
@@ -146,8 +148,8 @@ function(ein_lauf _name _raum)
         return()
     endif()
     file(READ "${WORKDIR}/debug.log" _dbg)
-    if(NOT _dbg MATCHES "Bahnsteig-Form: 27 Meshes")
-        string(APPEND _g "\n ${_name}: kein Modelltausch (debug.log)")
+    if(NOT _dbg MATCHES "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips")
+        string(APPEND _g "\n ${_name}: Riesenform nicht geladen (debug.log, BAHNSTEIG_FORM.EMD)")
     endif()
     # Abnahme 3 N3: der NPC-Zweig des Zeichners verwirft die Rueckseiten der Birkin-Formen (FUN_80027bec, re15_nclip_r41_weg).
     if(NOT _dbg MATCHES "nclip-r41")
@@ -184,6 +186,7 @@ function(ein_lauf _name _raum)
     set(_hp_min_fenster 9999)
     set(_dx_min "?")
     set(_x_g5tod "?")
+    set(_sturz 0)
     foreach(_z IN LISTS _zeilen)
         string(REGEX MATCH "^F([0-9]+) .* mg=(-?[0-9]+) " _fm "${_z}")
         set(_bild "${CMAKE_MATCH_1}")
@@ -267,7 +270,7 @@ function(ein_lauf _name _raum)
         endif()
         if(_st EQUAL 1 AND _s1 EQUAL 6)
             set(_war_mut 1)
-        elseif(_war_mut EQUAL 1 AND _st EQUAL 1 AND _s1 EQUAL 0 AND _mo EQUAL 10)
+        elseif(_st EQUAL 1 AND _s1 EQUAL 0 AND _mo EQUAL 10)
             set(_clip10 1)
             if(_form_hp LESS 0)
                 set(_form_hp "${_hp}")
@@ -280,15 +283,19 @@ function(ein_lauf _name _raum)
         if(_clip10 AND _st EQUAL 1 AND _hp LESS _form_min)
             set(_form_min "${_hp}")
         endif()
-        if(_clip10 AND _st EQUAL 2 AND _mo EQUAL 8 AND _hp EQUAL 1)
+        # Nachbesserung 1 M5: die Riesenform taumelt in Phase 1 (Clip 13), Clip 8 nur noch am Platz an der Sturzgrenze
+        if(_clip10 AND _st EQUAL 2 AND (_mo EQUAL 13 OR _mo EQUAL 8) AND _hp EQUAL 1)
             if(NOT _rueck)
                 set(_bild_rueck "${_bild}")
             endif()
             set(_rueck 1)
         endif()
+        if(_rueck AND _st EQUAL 2 AND _mo EQUAL 12 AND _hp EQUAL 1)
+            set(_sturz 1)
+        endif()
     endforeach()
-    if(NOT _mut EQUAL 1)
-        string(APPEND _g "\n ${_name}: Mutation ${_mut}-mal gestartet, erwartet 1")
+    if(NOT _mut EQUAL 0)
+        string(APPEND _g "\n ${_name}: Mutation ${_mut}-mal gestartet, erwartet 0 (Riesenform ab der Raumladung)")
     endif()
     if(NOT _form1_max EQUAL 600)
         string(APPEND _g "\n ${_name}: Form 1 hat hoechstens HP ${_form1_max}, erwartet 600 (0x12c @0x8011690c x 2, GR NB3)")
@@ -304,6 +311,9 @@ function(ein_lauf _name _raum)
     endif()
     if(NOT _rueck)
         string(APPEND _g "\n ${_name}: keine Rueckstoss-Szene")
+    endif()
+    if(NOT _sturz)
+        string(APPEND _g "\n ${_name}: kein Sturz aus dem Wagen (Clip 12)")
     endif()
     if(NOT _g5)
         string(APPEND _g "\n ${_name}: kein G5 (Typ 0x36)")
@@ -334,8 +344,29 @@ function(ein_lauf _name _raum)
             set(_mg "${CMAKE_MATCH_1}")
         endif()
     endif()
+    # 5b (Gegenpruefung Welle 1 B1): der Rueckzug haelt den Spieler aus dem Biss - kein Treffer vom Szenenende bis zum G5-Tod
+    if(_bild_ende LESS 0)
+        string(APPEND _g "\n ${_name}: kein Ende der G5-Szene im Protokoll (pm 2 -> nicht 2 nach dem G5-Auftritt), 5b ungeprueft")
+    elseif(_n_fenster LESS 2)
+        string(APPEND _g "\n ${_name}: ${_n_fenster} Bilder zwischen Szenenende F${_bild_ende} und G5-Tod, 5b ungeprueft")
+    elseif(_treffer GREATER 0 OR _hp_min_fenster LESS _hp_ende)
+        string(APPEND _g "\n ${_name}: ${_treffer} Treffer am Spieler zwischen Szenenende F${_bild_ende} und G5-Tod (erster ${_treffer_erst}; "
+                         "kleinste HP ${_hp_min_fenster}, am Szenenende ${_hp_ende}; kleinster x-Abstand zum G5 ${_dx_min}) - der Rueckzug "
+                         "haelt ihn nicht aus dem Biss (5b)")
+    endif()
+    # Patronen am Ende: Magazin (mg=) und Vorrat (Zeile "Patronen" fehlt im Log; Vorrat = RE15_GIVE 21:250 minus Nachladen).
+    file(STRINGS "${WORKDIR}/state.log" _letzte REGEX "^F[0-9]+ .* mg=")
+    list(LENGTH _letzte _nl)
+    set(_mg "?")
+    if(_nl GREATER 0)
+        math(EXPR _il "${_nl} - 1")
+        list(GET _letzte ${_il} _lz)
+        if(_lz MATCHES " mg=(-?[0-9]+) ")
+            set(_mg "${CMAKE_MATCH_1}")
+        endif()
+    endif()
     message(STATUS "r41_birkin_pistole ${_name}: Mutationen ${_mut} (F${_bild_mut}), Form 1 HP max ${_form1_max}, Form-HP ${_form_hp} "
-                   "(F${_bild_form}) bis ${_form_min}, Rueckstoss ${_rueck} (F${_bild_rueck}), G5 ${_g5} (F${_bild_g5}), G5 tot ${_g5_tot} "
+                   "(F${_bild_form}) bis ${_form_min}, Rueckstoss ${_rueck} (F${_bild_rueck}), Sturz ${_sturz}, G5 ${_g5} (F${_bild_g5}), G5 tot ${_g5_tot} "
                    "(F${_bild_g5_tot}), Spieler-HP dabei ${_pl_hp_tod}, Patronen in der Waffe ${_mg_start} -> ${_mg_g5_tot} beim G5-Tod, am Ende ${_mg}; "
                    "5b: Szenenende F${_bild_ende} x ${_x_ende} HP ${_hp_ende}, ${_n_fenster} Bilder bis zum G5-Tod, Treffer ${_treffer}, "
                    "kleinste HP ${_hp_min_fenster}, Spieler x beim G5-Tod ${_x_g5tod}, kleinster x-Abstand zum G5 ${_dx_min} "

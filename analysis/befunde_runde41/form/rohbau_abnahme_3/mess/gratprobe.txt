@@ -1,0 +1,53 @@
+CUT -200 SENK 400, veraenderte Ecken 56
+vorher  IoU 0.9798, Weiss gedeckt 0.9832, Schwarz getroffen 116, tail-Umriss gedeckt 0.9956
+Probe   IoU 0.9722, Weiss gedeckt 0.9755, Schwarz getroffen 116, tail-Umriss gedeckt 0.9771
+verlorene Pixel 598, davon Ziel Figur 258, im tail-Umriss 252, Lage x 294-340 y 185-212
+  x 290: Oberkante vorher 187, Probe 187, Ziel 187
+  x 300: Oberkante vorher 185, Probe 189, Ziel 184
+  x 305: Oberkante vorher 185, Probe 192, Ziel 185
+  x 311: Oberkante vorher 187, Probe 199, Ziel 187
+  x 316: Oberkante vorher 188, Probe 206, Ziel 191
+  x 322: Oberkante vorher 189, Probe 212, Ziel 202
+  x 330: Oberkante vorher 193, Probe 212, Ziel 215
+  x 340: Oberkante vorher 205, Probe 207, Ziel 205
+
+CUT 0 SENK 400, veraenderte Ecken 44
+vorher  IoU 0.9798, Weiss gedeckt 0.9832, Schwarz getroffen 116, tail-Umriss gedeckt 0.9956
+Probe   IoU 0.9797, Weiss gedeckt 0.9831, Schwarz getroffen 116, tail-Umriss gedeckt 0.9956
+verlorene Pixel 283, davon Ziel Figur 6, im tail-Umriss 0, Lage x 317-340 y 187-212
+  x 290: Oberkante vorher 187, Probe 187, Ziel 187
+  x 300: Oberkante vorher 185, Probe 185, Ziel 184
+  x 305: Oberkante vorher 185, Probe 185, Ziel 185
+  x 311: Oberkante vorher 187, Probe 187, Ziel 187
+  x 316: Oberkante vorher 188, Probe 188, Ziel 191
+  x 322: Oberkante vorher 189, Probe 198, Ziel 202
+  x 330: Oberkante vorher 193, Probe 212, Ziel 215
+  x 340: Oberkante vorher 205, Probe 207, Ziel 205
+
+CUT 200 SENK 400, veraenderte Ecken 28
+vorher  IoU 0.9798, Weiss gedeckt 0.9832, Schwarz getroffen 116, tail-Umriss gedeckt 0.9956
+Probe   IoU 0.9797, Weiss gedeckt 0.9831, Schwarz getroffen 116, tail-Umriss gedeckt 0.9956
+verlorene Pixel 165, davon Ziel Figur 6, im tail-Umriss 0, Lage x 317-340 y 187-210
+  x 290: Oberkante vorher 187, Probe 187, Ziel 187
+  x 300: Oberkante vorher 185, Probe 185, Ziel 184
+  x 305: Oberkante vorher 185, Probe 185, Ziel 185
+  x 311: Oberkante vorher 187, Probe 187, Ziel 187
+  x 316: Oberkante vorher 188, Probe 188, Ziel 191
+  x 322: Oberkante vorher 189, Probe 192, Ziel 202
+  x 330: Oberkante vorher 193, Probe 204, Ziel 215
+  x 340: Oberkante vorher 205, Probe 207, Ziel 205
+
+CUT -500 SENK 400, veraenderte Ecken 72
+vorher  IoU 0.9798, Weiss gedeckt 0.9832, Schwarz getroffen 116, tail-Umriss gedeckt 0.9956
+Probe   IoU 0.9636, Weiss gedeckt 0.9669, Schwarz getroffen 116, tail-Umriss gedeckt 0.9560
+verlorene Pixel 890, davon Ziel Figur 547, im tail-Umriss 541, Lage x 285-340 y 185-212
+  x 290: Oberkante vorher 187, Probe 193, Ziel 187
+  x 300: Oberkante vorher 185, Probe 200, Ziel 184
+  x 305: Oberkante vorher 185, Probe 206, Ziel 185
+  x 311: Oberkante vorher 187, Probe 208, Ziel 187
+  x 316: Oberkante vorher 188, Probe 210, Ziel 191
+  x 322: Oberkante vorher 189, Probe 212, Ziel 202
+  x 330: Oberkante vorher 193, Probe 212, Ziel 215
+  x 340: Oberkante vorher 205, Probe 207, Ziel 205
+
+Bild 2: Pixel vorher 47381, Probe 47328, verschieden 53, davon Ziel Figur 0

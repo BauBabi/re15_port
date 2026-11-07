@@ -1,0 +1,22 @@
+Fenster 97 px, helles Original in der Zone 27 px
+Pose 1 unveraendert: Fenster gedeckt 0.82, helles Original gedeckt 0.15
+Hals 15 Grad tiefer: Fenster gedeckt 0.99, helles Original gedeckt 0.63, Kopf tiefster Punkt Hoehe 120
+Hals 25 Grad tiefer: Fenster gedeckt 1.00, helles Original gedeckt 1.00, Kopf tiefster Punkt Hoehe -50
+Hals 35 Grad tiefer: Fenster gedeckt 1.00, helles Original gedeckt 1.00, Kopf tiefster Punkt Hoehe -164
+Hals 45 Grad tiefer: Fenster gedeckt 1.00, helles Original gedeckt 1.00, Kopf tiefster Punkt Hoehe -218
+Hals 55 Grad tiefer: Fenster gedeckt 1.00, helles Original gedeckt 0.96, Kopf tiefster Punkt Hoehe -211
+Hals 65 Grad tiefer: Fenster gedeckt 0.97, helles Original gedeckt 0.74, Kopf tiefster Punkt Hoehe -142
+Pose 1 Seitenkontur oben: groesster Sprung 348 Einheiten auf 120 bei x -1551 (Hoehe 1821 auf 2168)
+Pose 2 Seitenkontur oben: groesster Sprung 1760 Einheiten auf 120 bei x 2844 (Hoehe 2172 auf 411)
+Ruhe Seitenkontur oben: groesster Sprung 667 Einheiten auf 120 bei x 4060 (Hoehe 1945 auf 1278)
+Finger r 19          Laenge   842  Breite   332  Dicke   320
+Finger r 20          Laenge   880  Breite   447  Dicke   386
+Finger r 29 aussen   Laenge  1080  Breite   319  Dicke   260
+Daumen r 31          Laenge   824  Breite   165  Dicke   160
+Finger l 14          Laenge   639  Breite   252  Dicke   243
+Finger l 15          Laenge   669  Breite   341  Dicke   294
+Finger l 28          Laenge   822  Breite   243  Dicke   197
+Daumen l 30          Laenge   627  Breite   125  Dicke   121
+Pose 1 Rumpfdach: Spanne -891..2269, Hoehe 1882..2781, groesster Sprung 145 auf 40 bei x -891, flaches Dach 360 Einheiten ab x -291 auf Hoehe 2635
+Pose 2 Rumpfdach: Spanne -731..1949, Hoehe 1216..3098, groesster Sprung 172 auf 40 bei x -131, flaches Dach 240 Einheiten ab x 1069 auf Hoehe 3093
+Ruhe Rumpfdach: Spanne -862..2378, Hoehe 1770..2856, groesster Sprung 182 auf 40 bei x -862, flaches Dach 360 Einheiten ab x 1298 auf Hoehe 2848

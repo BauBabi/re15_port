@@ -1132,24 +1132,26 @@ void pc_gator_se_re15(int se_id, int flag2000)
     re15_audio_re2_enemy_se(se_id, flag2000);
 }
 
-/* BAHNSTEIG-FORM (Runde 41 Spur R, re15_birkin_formen.h): RE2-G4 umgeformt, tools/birkin_bahnsteig.py. RE2-Format
- * (8 Verzeichnis-Eintraege, TIM getrennt), liegt deshalb unter shared_assets/RE2/. Die Spieler-Haken der
+/* BAHNSTEIG-FORM (Runde 41, re15_birkin_formen.h): seit Stufe 3 die Riesenform J nach den zwei 80%-Screenshots mit eigenen
+ * Clips (RE2/BAHNSTEIG_FORM.EMD/.TIM, Generator analysis/befunde_runde41/form/stufe3/gen; vorher RE2-G4 umgeformt,
+ * BAHNSTEIG_G4.EMD). RE2-Format (8 Verzeichnis-Eintraege, TIM getrennt), liegt deshalb unter shared_assets/RE2/. Die Spieler-Haken der
  * Birkin-Treffer (birkin_opfer.c) sind auf die Opfer-Bank von EM30 zugeschnitten (3 Clips 25/66/5 Bilder, dir[5]/[6]);
  * die G4-Bank fuehrt unter denselben Nummern andere Ablaeufe (78/84/48), also bleibt die Opfer-Bank die von EM30. */
 static int pc_enemy_load_bahnsteig(uint8_t type, re15_enemy_bank_t *eb)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     int esz = 0, tsz = 0;
-    uint8_t *emd = re15_pc_read_re2("BAHNSTEIG_G4.EMD", &esz);
-    uint8_t *tb  = re15_pc_read_re2("BAHNSTEIG_G4.TIM", &tsz);
+    uint8_t *emd = re15_pc_read_re2("BAHNSTEIG_FORM.EMD", &esz);
+    uint8_t *tb  = re15_pc_read_re2("BAHNSTEIG_FORM.TIM", &tsz);
     if (!emd || !tb || re2_emd_parse_bank(emd, (size_t)esz, eb) != 0) {
         free(emd); free(tb);
-        fprintf(stderr, "[enemy] Bahnsteig-Form: RE2/BAHNSTEIG_G4.EMD/.TIM fehlt oder defekt -> Auslieferungsmodell\n");
+        fprintf(stderr, "[enemy] Bahnsteig-Form: RE2/BAHNSTEIG_FORM.EMD/.TIM fehlt oder defekt -> Auslieferungsmodell\n");
         memset(eb, 0, sizeof *eb); eb->type = type; eb->pc_tex_slot = -1; eb->pc_tex_slot_gore = -1;
         return 0;
     }
     eb->buf = emd;                                     /* md1/skel/anim zeigen in diesen Puffer */
     eb->re2_rig = 1;
+    eb->bb_form = 1;                                   /* re15_bb_bank_da: Knochenzahl frei (tools/form_emd.py) */
     {   /* Opfer-Bank EM30: privater Blob, bleibt fuer die Laufzeit des Prozesses (Bank zeigt hinein) */
         static uint8_t *s_em30 = NULL; static size_t s_em30_len = 0;
         if (!s_em30) s_em30 = pc_enemy_read_re15_emd(type, &s_em30_len);
@@ -1443,8 +1445,8 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
 /* Default: der RE2-Zweig darf greifen (unveraendertes Verhalten fuer alle Typen ausser 0x26,
  * dessen Aufrufer die Herkunft mitgeben — s. Block ueber pc_enemy_load_ex). */
 static void pc_enemy_load(uint8_t type) { pc_enemy_load_ex(type, 1); }
-/* BETA-FORMEN (re15_birkin_formen.h): Bank eines Typs mitten im Raum neu laden - der 5090-Birkin wechselt
- * nach seiner Mutation vom Original-EM30 auf die Bahnsteig-Form (RE2/BAHNSTEIG_G4.EMD). */
+/* BETA-FORMEN (re15_birkin_formen.h): Bank eines Typs mitten im Raum neu laden (Haken re15_bf_modell_hook; der 5090-Wechsel
+ * EM30 -> Bahnsteig-Form nach der Mutation entfaellt seit Stufe 3, die Form ist dort ab der Raumladung geladen). */
 static void pc_enemy_modell_neu(uint8_t type)
 {
     re15_enemy_bank_t *eb = re15_enemy_find(type);
@@ -8111,6 +8113,12 @@ re_title:;
                         /* Runde 30 (N1-Messung, nachschliff-room5080.md 9.6): der Griff-Kanal des Ports
                          * (s_player_grabbed), damit Halte-Laeufe im Echtlauf direkt zaehlbar sind. */
                         fprintf(s_state_log, " gr=%d", re15_player_is_grabbed());
+                        /* Runde 41 Form NB2 (Zusatzpunkt START im Griff): Birkin-Haken (aca58/aca5a), Statusschirm-Erlaubnis
+                         * des Ports und Spieler+0x93 (0x800acae7, Tor des Originals @0x8001cdb0-b8), Menue-Stufe. Nur Messung. */
+                        {   extern int re15_bk_opfer_cmd(void); extern int re15_bk_opfer_phase(void);
+                            extern int re15_inv_open_allowed(void); extern int re15_menu_stage(void);
+                            fprintf(s_state_log, " hk=%d/%d io=%d hr=%02x ms=%d", re15_bk_opfer_cmd(), re15_bk_opfer_phase(),
+                                    re15_inv_open_allowed(), (unsigned)pl->hit_react, re15_menu_stage()); }
                     }
                     /* Runde 34 VERTRAG V5 (C0): je Gegner " hp=<HP>" DIREKT HINTER seiner schliessenden
                      * Klammer — die Klammer selbst bleibt Zeichen fuer Zeichen wie bisher, weil drei
@@ -10208,6 +10216,12 @@ re_title:;
                         { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
                         {  nhx, 0,  nhz }, {  nhx, 0, -nhz },
                     };
+                    if (re15_bb_bank_da(npc)) {   /* Nachbesserung 1 (D, PORT-WAHL): Riesenform K3, Huefte bis Schnauze */
+                        int32_t bx0, bx1, bhz;
+                        re15_bb_schatten(&bx0, &bx1, &bhz);
+                        nsh_c[0][0] = nsh_c[1][0] = bx0; nsh_c[2][0] = nsh_c[3][0] = bx1;
+                        nsh_c[0][2] = nsh_c[2][2] = bhz; nsh_c[1][2] = nsh_c[3][2] = -bhz;
+                    }
                     /* Quad-Hoehe = BODEN, nicht Actor-Y: FUN_8001b064 setzt `t[1] = param_2`
                      * (Decompile RE_15_Quellcode_V2) — das Y kommt als a1 rein, und der
                      * Kraehen-Root-Post-Pass uebergibt a1 = +0x1ba = die Floor-Referenz
@@ -10674,7 +10688,10 @@ re_title:;
                                                      gore_draw, gore_tint, gore_mesh);
                 /* BIRKIN-ROHR (Typ 0x30): Teil 15 traegt die Geometrie von Mesh 16 (Hand mit Rohr), s. birkin_rohr
                  * in re15_actor.h (@0x80116980-9e4 / @0x80116c28-8c / @0x80119754-7b8). */
+                /* Die Bahnsteig-Form erbt birkin_rohr aus dem Spawn (INIT @0x80116974: grid 0x33 hat Bit 0x10), ihr Teil 15 ist aber kein
+                 * Klauenarm: ohne das Tor zeichnete jede Form mit mehr als 16 Meshes an Teil 15 die Geometrie von Mesh 16. */
                 int bk_rohr = (npc->type == 0x30u && npc->birkin_rohr && npc_md1->mesh_count > 16 && npc_bones > 15 &&
+                               !re15_bb_bank_da(npc) &&
                                !getenv("RE15_KEIN_BIRKIN_ROHR"));   /* Mess-Schalter A/B */
                 /* Runde 34 C7 (O-VB3 geklaert, Belege fx_plattform_pc.h): RE2 faerbt JEDE Entity
                  * ueber denselben Part-Zeichner (Entity-Schleife `jal 0x80027160` @0x8002689c,

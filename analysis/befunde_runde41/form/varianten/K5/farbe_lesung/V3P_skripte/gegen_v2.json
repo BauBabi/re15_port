@@ -1,0 +1,78 @@
+{
+ "H1_v2_bloecke_8x8_gleich_G4_prozent": 0.0,
+ "H1_bloecke": 2048,
+ "bild1_zonen": {
+  "Schwanz": {
+   "anteil": 8.5,
+   "h": 46.0
+  },
+  "Ruecken/Flanke": {
+   "anteil": 8.8,
+   "h": 23.5
+  },
+  "Hinterbein l (W)": {
+   "anteil": 0.0,
+   "h": null
+  },
+  "Hinterbein r (W)": {
+   "anteil": 0.0,
+   "h": null
+  },
+  "Vorderglied r (W)": {
+   "anteil": 0.0,
+   "h": null
+  },
+  "Figur": {
+   "anteil": 5.4,
+   "h": 38.1
+  }
+ },
+ "bild1_stelle": {
+  "lab": [
+   28.9,
+   6.6,
+   7.9
+  ],
+  "rot": {
+   "anteil": 9.0,
+   "h": 41.0
+  }
+ },
+ "bild2_zonen": {
+  "Oberkiefer": {
+   "anteil": 22.0,
+   "h": 22.8
+  },
+  "Kopf/Rumpf": {
+   "anteil": 11.1,
+   "h": 21.3
+  },
+  "Unterkiefer": {
+   "anteil": 76.8,
+   "h": 35.8
+  },
+  "Klaue r (W)": {
+   "anteil": 92.3,
+   "h": 38.1
+  },
+  "Klaue l (W)": {
+   "anteil": 92.9,
+   "h": 39.4
+  },
+  "Figur": {
+   "anteil": 38.0,
+   "h": 35.7
+  }
+ },
+ "bild2_stelle": {
+  "lab": [
+   55.8,
+   28.9,
+   20.2
+  ],
+  "rot": {
+   "anteil": 92.7,
+   "h": 36.6
+  }
+ }
+}

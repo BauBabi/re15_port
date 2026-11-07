@@ -1,0 +1,138 @@
+{
+ "C Mitte": {
+  "bild1": {
+   "dE_mittel": 5.5,
+   "dE_feld": 14.7,
+   "rgb_render": [
+    65.4,
+    46.6,
+    77.9
+   ],
+   "rgb_bild": [
+    52.0,
+    46.0,
+    72.7
+   ],
+   "lab_render": [
+    21.8,
+    15.5,
+    -15.8
+   ],
+   "lab_bild": [
+    20.3,
+    10.2,
+    -15.1
+   ],
+   "sauber": {
+    "dE_mittel": 20.6,
+    "dE_feld": 23.3,
+    "rgb_render": [
+     27.8,
+     16.6,
+     20.1
+    ]
+   }
+  },
+  "bild2": {
+   "dE_mittel": 2.2,
+   "dE_feld": 11.8,
+   "rgb_render": [
+    71.7,
+    13.6,
+    27.7
+   ],
+   "rgb_bild": [
+    72.9,
+    20.3,
+    30.0
+   ],
+   "lab_render": [
+    14.2,
+    26.8,
+    6.3
+   ],
+   "lab_bild": [
+    15.4,
+    24.9,
+    6.6
+   ],
+   "sauber": {
+    "dE_mittel": 20.8,
+    "dE_feld": 22.9,
+    "rgb_render": [
+     28.7,
+     14.1,
+     16.3
+    ]
+   }
+  }
+ },
+ "G1600 nur Ansicht": {
+  "bild1": {
+   "dE_mittel": 7.0,
+   "dE_feld": 15.5,
+   "rgb_render": [
+    68.9,
+    48.2,
+    81.3
+   ],
+   "rgb_bild": [
+    52.0,
+    46.0,
+    72.7
+   ],
+   "lab_render": [
+    22.9,
+    16.6,
+    -16.4
+   ],
+   "lab_bild": [
+    20.3,
+    10.2,
+    -15.1
+   ],
+   "sauber": {
+    "dE_mittel": 20.1,
+    "dE_feld": 23.0,
+    "rgb_render": [
+     29.4,
+     17.6,
+     21.5
+    ]
+   }
+  },
+  "bild2": {
+   "dE_mittel": 2.7,
+   "dE_feld": 12.1,
+   "rgb_render": [
+    74.2,
+    14.2,
+    28.6
+   ],
+   "rgb_bild": [
+    72.9,
+    20.3,
+    30.0
+   ],
+   "lab_render": [
+    14.8,
+    27.6,
+    6.6
+   ],
+   "lab_bild": [
+    15.4,
+    24.9,
+    6.6
+   ],
+   "sauber": {
+    "dE_mittel": 20.2,
+    "dE_feld": 22.5,
+    "rgb_render": [
+     29.9,
+     14.5,
+     16.7
+    ]
+   }
+  }
+ }
+}

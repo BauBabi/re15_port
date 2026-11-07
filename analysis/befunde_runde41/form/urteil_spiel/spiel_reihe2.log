@@ -1,0 +1,73 @@
+exe re15_pc_form_23654_081658 PID 46976 Fenster 132713592
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/A_kauer_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 3172 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/23654_081658
+== A_kauer_g3172 rc=0
+exe re15_pc_form_23739_081720 PID 118232 Fenster 56233924
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/A_kauer_g1100.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 1100 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/23739_081720
+== A_kauer_g1100 rc=0
+exe re15_pc_form_23811_081742 PID 91384 Fenster 56299460
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/A_kurve_g2145.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 2145 clip 3 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/23811_081742
+== A_kurve_g2145 rc=0
+exe re15_pc_form_23887_081803 PID 20336 Fenster 56364996
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/B_kauer_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 3172 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/23887_081803
+== B_kauer_g3172 rc=0
+exe re15_pc_form_23962_081825 PID 64348 Fenster 65671292
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/B_kauer_g1100.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 1100 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/23962_081825
+== B_kauer_g1100 rc=0
+exe re15_pc_form_24046_081847 PID 47892 Fenster 65736828
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/B_kurve_g2145.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 2145 clip 3 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/24046_081847
+== B_kurve_g2145 rc=0
+exe re15_pc_form_24134_081908 PID 67300 Fenster 65802364
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/C_kauer_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 3172 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/24134_081908
+== C_kauer_g3172 rc=0
+exe re15_pc_form_24233_081930 PID 53764 Fenster 65867900
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/C_kauer_g1100.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 1100 clip 1 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/24233_081930
+== C_kauer_g1100 rc=0
+exe re15_pc_form_24366_081952 PID 116204 Fenster 188942288
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/urteil_spiel/spiel/C_kurve_g2145.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 4 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18545,0,-18368) gier 2145 clip 3 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/24366_081952
+== C_kurve_g2145 rc=0
+FERTIG

@@ -1,0 +1,24 @@
+## av_leon (exit=0 dauer=58s; exe f4deb1a33feb4d59)
+HP Form: A F251 150 | B F- None | C F- None; Kampfstart (Clip 10) FNone; Treffer bis Rueckstoss 0 (ab FNone); Rueckstoss None; Sturz None; G5 None; Spieler-HP F504 100->90, F567 90->80, F619 80->70, F678 70->60, F725 60->25, F1016 25->15, F1069 15->5, F1132 5->-1
+av_leon: Raum-Ton 10 gespielt 6, verworfen 0, SILENT 2 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT', '[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formnb4/abn4e/laeufe/av_leon: keine Rueckstoss-Szene
+av_leon: Fenster F700-F1200 (501 Bilder), Form-Slot -1; Beginn: Spieler (10150,-23582) Form (5708,-23355)
+  Cut 12 F700-F730 ( 31 Bilder): Form x   5708..  6369, Spieler x  10150.. 14484 | dunkel 177..225 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F731-F844 (114 Bilder): Form x   6369..  7395, Spieler x  14932.. 16722 | dunkel 225..295 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F845-F1047 (203 Bilder): Form x   7439.. 12105, Spieler x  16722.. 17218 | dunkel 282..491 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F1048-F1200 (153 Bilder): Form x  12148.. 14974, Spieler x  17218.. 17714 | dunkel 0..710 (>600: 62) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Pruefmass (501 Bilder, 501 mit Bild): Form sichtbar min - (F-), Spieler sichtbar max - (F-), Form verdeckt max - (F-), fast schwarz max 710 (F1062), > 600: 62; Verstoesse: 62
+    F1049 Cut 13: fast schwarz 671 > 600
+    F1050 Cut 13: fast schwarz 669 > 600
+    F1051 Cut 13: fast schwarz 665 > 600
+    F1052 Cut 13: fast schwarz 662 > 600
+    F1053 Cut 13: fast schwarz 664 > 600
+    F1054 Cut 13: fast schwarz 666 > 600
+    F1055 Cut 13: fast schwarz 670 > 600
+    F1056 Cut 13: fast schwarz 674 > 600
+    F1057 Cut 13: fast schwarz 682 > 600
+    F1058 Cut 13: fast schwarz 689 > 600
+    F1059 Cut 13: fast schwarz 695 > 600
+    F1060 Cut 13: fast schwarz 700 > 600
+    ... 50 weitere
+werkzeug/../blatt/av_leon_kampf.png 63 Bilder

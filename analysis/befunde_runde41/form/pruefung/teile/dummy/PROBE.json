@@ -1,0 +1,56 @@
+{
+ "name": "PROBE",
+ "emd": "PROBE.EMD",
+ "tim": "PROBE.TIM",
+ "licht": "disc",
+ "bild1": {
+  "lage": [
+   -18759,
+   0,
+   -18629
+  ],
+  "gier": 0
+ },
+ "bild2": {
+  "lage": [
+   2604,
+   0,
+   -43577
+  ],
+  "gier": 0
+ },
+ "teile": {
+  "face_and_upper_body": [
+   1,
+   2
+  ],
+  "left_arm_front": [
+   3,
+   4
+  ],
+  "left_leg": [
+   5,
+   6
+  ],
+  "part_of_Body": [
+   7,
+   8
+  ],
+  "right_arm": [
+   9,
+   10
+  ],
+  "right_arm_front": [
+   11,
+   12
+  ],
+  "right_leg": [
+   13,
+   14
+  ],
+  "tail": [
+   15,
+   16
+  ]
+ }
+}

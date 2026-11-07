@@ -1,0 +1,56 @@
+=== Netz je Knochen (Clip 2)
+dicht: 32 von 32  Volumenvorzeichen je Teil: ['-']
+offene Kanten 0
+
+=== Flache Deckel: zusammenhaengende Flaechen, Knick <= 6 Grad, Flaeche >= 0.08 m2, frei = Anteil der Flaechen mit freiem Blick nach aussen
+--- Pose 1
+  wirbel        Flaechen 10  1.56 m2  Durchm 1.41  aussen (-0.98 +0.19 -0.02)  Hoehe 1.92  frei 0.00  in huefte
+  hals          Flaechen  8  0.80 m2  Durchm 1.01  aussen (-0.91 +0.38 +0.17)  Hoehe 1.86  frei 0.00  in brust
+  hals          Flaechen  8  0.51 m2  Durchm 0.81  aussen (+0.91 -0.38 -0.17)  Hoehe 1.56  frei 0.00  in kopf
+  wirbel        Flaechen  9  0.47 m2  Durchm 0.77  aussen (+0.13 -0.66 -0.74)  Hoehe 1.37  frei 0.78  in -
+  wirbel        Flaechen  8  0.43 m2  Durchm 0.74  aussen (+0.06 -0.97 -0.24)  Hoehe 1.14  frei 1.00  in -
+  brust         Flaechen  4  0.42 m2  Durchm 0.73  aussen (-0.90 -0.44 -0.07)  Hoehe 1.36  frei 0.00  in wirbel
+  brust         Flaechen  4  0.40 m2  Durchm 0.71  aussen (-0.65 -0.76 -0.01)  Hoehe 1.82  frei 0.00  in huefte,wirbel
+  brust         Flaechen  6  0.37 m2  Durchm 0.69  aussen (-0.08 +0.80 -0.60)  Hoehe 2.60  frei 1.00  in -
+  s1            Flaechen  8  0.36 m2  Durchm 0.68  aussen (+0.94 +0.35 -0.02)  Hoehe 2.63  frei 0.75  in -
+  s3            Flaechen  8  0.34 m2  Durchm 0.66  aussen (+0.58 +0.77 +0.26)  Hoehe 2.13  frei 0.00  in s2
+  hals          Flaechen  6  0.30 m2  Durchm 0.61  aussen (-0.12 +0.03 -0.99)  Hoehe 1.76  frei 0.17  in -
+  hals          Flaechen  6  0.30 m2  Durchm 0.61  aussen (+0.43 +0.62 +0.66)  Hoehe 2.03  frei 1.00  in -
+  hals          Flaechen  6  0.29 m2  Durchm 0.61  aussen (+0.15 +0.69 -0.71)  Hoehe 2.05  frei 0.50  in -
+  hals          Flaechen  6  0.29 m2  Durchm 0.61  aussen (+0.38 +0.93 -0.04)  Hoehe 2.16  frei 0.67  in -
+  brust         Flaechen  7  0.29 m2  Durchm 0.61  aussen (+0.23 -0.24 -0.94)  Hoehe 1.93  frei 0.00  in -
+  wirbel        Flaechen  6  0.29 m2  Durchm 0.61  aussen (+0.18 -0.49 +0.85)  Hoehe 1.47  frei 0.67  in -
+--- Pose 2
+  wirbel        Flaechen 10  1.56 m2  Durchm 1.41  aussen (-0.58 -0.74 -0.34)  Hoehe 1.12  frei 0.00  in huefte
+  hals          Flaechen  8  0.80 m2  Durchm 1.01  aussen (-0.20 -0.46 +0.86)  Hoehe 1.85  frei 0.00  in -
+  hals          Flaechen  8  0.51 m2  Durchm 0.81  aussen (+0.20 +0.46 -0.86)  Hoehe 2.33  frei 0.00  in kopf
+  wirbel        Flaechen  9  0.47 m2  Durchm 0.77  aussen (+0.72 +0.07 -0.69)  Hoehe 1.52  frei 0.56  in -
+  wirbel        Flaechen  8  0.43 m2  Durchm 0.74  aussen (+0.92 -0.29 -0.25)  Hoehe 1.30  frei 0.12  in -
+  brust         Flaechen  4  0.42 m2  Durchm 0.73  aussen (-0.95 -0.28 +0.10)  Hoehe 1.78  frei 0.00  in wirbel
+  brust         Flaechen  4  0.40 m2  Durchm 0.71  aussen (-0.76 -0.64 +0.13)  Hoehe 2.29  frei 0.00  in wirbel
+  brust         Flaechen  6  0.37 m2  Durchm 0.69  aussen (-0.06 +0.80 -0.60)  Hoehe 2.94  frei 1.00  in -
+  s1            Flaechen  8  0.36 m2  Durchm 0.68  aussen (+0.62 +0.75 -0.21)  Hoehe 1.78  frei 0.25  in huefte,wirbel
+  s3            Flaechen  8  0.34 m2  Durchm 0.66  aussen (+0.74 +0.46 -0.49)  Hoehe 0.75  frei 0.00  in s2
+  hals          Flaechen  6  0.30 m2  Durchm 0.62  aussen (-0.97 +0.03 -0.26)  Hoehe 2.07  frei 0.00  in brust
+  hals          Flaechen  6  0.30 m2  Durchm 0.61  aussen (+0.61 +0.65 +0.45)  Hoehe 2.35  frei 1.00  in -
+  hals          Flaechen  6  0.29 m2  Durchm 0.61  aussen (-0.76 +0.63 +0.16)  Hoehe 2.35  frei 0.00  in brust
+  hals          Flaechen  6  0.29 m2  Durchm 0.61  aussen (-0.12 +0.89 +0.45)  Hoehe 2.47  frei 0.17  in brust
+  brust         Flaechen  7  0.29 m2  Durchm 0.61  aussen (+0.02 -0.27 -0.96)  Hoehe 2.24  frei 0.29  in -
+  wirbel        Flaechen  6  0.29 m2  Durchm 0.61  aussen (+0.44 -0.33 +0.84)  Hoehe 1.35  frei 1.00  in -
+--- Ruhe
+  wirbel        Flaechen 10  1.56 m2  Durchm 1.41  aussen (-0.98 -0.21 -0.00)  Hoehe 1.41  frei 0.00  in huefte
+  hals          Flaechen  8  0.80 m2  Durchm 1.01  aussen (-0.93 -0.38 -0.00)  Hoehe 1.50  frei 0.50  in brust
+  hals          Flaechen  8  0.51 m2  Durchm 0.81  aussen (+0.93 +0.38 -0.00)  Hoehe 1.90  frei 0.00  in kopf
+  wirbel        Flaechen  9  0.47 m2  Durchm 0.77  aussen (+0.35 -0.49 -0.80)  Hoehe 1.17  frei 0.89  in -
+  wirbel        Flaechen  8  0.43 m2  Durchm 0.74  aussen (+0.42 -0.84 -0.33)  Hoehe 0.92  frei 1.00  in -
+  brust         Flaechen  4  0.42 m2  Durchm 0.73  aussen (-0.96 -0.29 -0.00)  Hoehe 1.40  frei 0.00  in wirbel
+  brust         Flaechen  4  0.40 m2  Durchm 0.71  aussen (-0.76 -0.64 -0.00)  Hoehe 1.91  frei 0.00  in wirbel
+  brust         Flaechen  6  0.37 m2  Durchm 0.69  aussen (-0.02 +0.86 -0.51)  Hoehe 2.59  frei 1.00  in -
+  s1            Flaechen  8  0.36 m2  Durchm 0.68  aussen (+0.91 +0.41 +0.00)  Hoehe 2.21  frei 0.50  in wirbel
+  s3            Flaechen  8  0.34 m2  Durchm 0.66  aussen (+0.76 +0.65 -0.00)  Hoehe 1.68  frei 0.00  in s2
+  hals          Flaechen  6  0.30 m2  Durchm 0.61  aussen (-0.11 +0.38 +0.92)  Hoehe 1.84  frei 0.50  in -
+  hals          Flaechen  6  0.30 m2  Durchm 0.61  aussen (-0.11 +0.38 -0.92)  Hoehe 1.84  frei 0.67  in -
+  hals          Flaechen  6  0.29 m2  Durchm 0.61  aussen (-0.35 +0.86 +0.37)  Hoehe 2.07  frei 0.17  in brust
+  hals          Flaechen  6  0.29 m2  Durchm 0.61  aussen (-0.35 +0.86 -0.37)  Hoehe 2.07  frei 0.17  in brust
+  brust         Flaechen  7  0.29 m2  Durchm 0.61  aussen (+0.09 -0.17 -0.98)  Hoehe 1.92  frei 0.14  in -
+  wirbel        Flaechen  6  0.29 m2  Durchm 0.61  aussen (+0.39 -0.45 +0.80)  Hoehe 1.23  frei 0.67  in -

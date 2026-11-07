@@ -1,0 +1,24 @@
+## k_leon (exit=0 dauer=110s; exe aa370951fe9768dd)
+HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 1 (ab F1897); Rueckstoss None; Sturz None; G5 None; Spieler-HP F1322 100->95, F1473 95->50, F1731 50->40, F1793 40->30, F1850 30->20, F1902 20->10
+k_leon: Raum-Ton 10 gespielt 6, verworfen 0, SILENT 1 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formnb4/abn4e/laeufe/k_leon: keine Rueckstoss-Szene
+k_leon: Fenster F1150-F1931 (782 Bilder), Form-Slot 12; Beginn: Spieler (15050,-23550) Form (-14700,-23350)
+  Cut 13 F1150-F1166 ( 17 Bilder): Form x -14700..-14700, Spieler x  15050.. 13850 | dunkel 287..317 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 7612, verdeckt max 0
+  Cut 12 F1167-F1168 (  2 Bilder): Form x -14700..  1200, Spieler x  13775.. 13775 | dunkel 218..317 (>600: 0) | Form sichtbar min 1117, verdeckt max 222 | Spieler sichtbar max 3270, verdeckt max 0
+  Cut 15 F1169-F1169 (  1 Bilder): Form x   1203..  1203, Spieler x  13775.. 13775 | dunkel 218..218 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1203..  1245, Spieler x  13775.. 13775 | dunkel 218..589 (>600: 0) | Form sichtbar min 11462, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1323 ( 95 Bilder): Form x   1193.. 10913, Spieler x  13775.. 13975 | dunkel 191..443 (>600: 0) | Form sichtbar min 952, verdeckt max 348 | Spieler sichtbar max 3376, verdeckt max 54
+  Cut 13 F1324-F1324 (  1 Bilder): Form x  11338.. 11338, Spieler x  14125.. 14125 | dunkel 258..258 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F1325-F1331 (  7 Bilder): Form x  11738.. 13403, Spieler x  14225.. 14809 | dunkel 258..461 (>600: 0) | Form sichtbar min 10399, verdeckt max 168 | Spieler sichtbar max 4561, verdeckt max 429
+  Cut 13 F1332-F1896 (565 Bilder): Form x  13414.. 15486, Spieler x  14816.. 12559 | dunkel 384..618 (>600: 2) | Form sichtbar min 8564, verdeckt max 453 | Spieler sichtbar max 14079, verdeckt max 913
+  Cut 12 F1897-F1899 (  3 Bilder): Form x  15487.. 15628, Spieler x  12559.. 12559 | dunkel 422..498 (>600: 0) | Form sichtbar min 25566, verdeckt max 0 | Spieler sichtbar max 538, verdeckt max 785
+  Cut 13 F1900-F1931 ( 32 Bilder): Form x  15630.. 15519, Spieler x  12558.. 12084 | dunkel 498..610 (>600: 5) | Form sichtbar min 10627, verdeckt max 647 | Spieler sichtbar max 17033, verdeckt max 271
+  Pruefmass (782 Bilder, 782 mit Bild): Form sichtbar min 0 (F1150), Spieler sichtbar max 17033 (F1927), Form verdeckt max 647 (F1907), fast schwarz max 618 (F1889), > 600: 7; Verstoesse: 7
+    F1889 Cut 13: fast schwarz 618 > 600
+    F1890 Cut 13: fast schwarz 604 > 600
+    F1923 Cut 13: fast schwarz 601 > 600
+    F1924 Cut 13: fast schwarz 602 > 600
+    F1925 Cut 13: fast schwarz 603 > 600
+    F1926 Cut 13: fast schwarz 610 > 600
+    F1927 Cut 13: fast schwarz 604 > 600
+werkzeug/../blatt/k_leon_kampf.png 98 Bilder

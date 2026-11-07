@@ -1,0 +1,2809 @@
+{
+ "linse": "GESAMTBAU",
+ "koordinaten": "Originalbild 640x480, x nach rechts, y nach unten",
+ "stand": "fertig; Polygone an Ueberlagerungen geprueft und berichtigt",
+ "polygon_arten": "koerper, gliedmasse, helle_flaeche = Figur; boden_leer, bodenschatten, raum = ausdruecklich NICHT Figur; unklar = nicht zuordenbar; umriss = abgeleitet",
+ "lesung": {
+  "bild1": {
+   "koerper": {
+    "aussage": "Gedrungene, sehr breite Masse: eine geschlossene Kuppel oben, darunter dicke kurze Gliedmassen und eine tiefe, kameranahe Gruppe. Gesamt x200-430, y187-442 (230 x 255 px). Leon y205-362 (157 px).",
+    "sicherheit": "sicher"
+   },
+   "rumpf": {
+    "aussage": "Kuppel x247-381, y187-318; dazu rechte Beule x381-430, y238-300. Breite bei y240: 134 px. Ein heller Stapel x300-340, y221-318 (rosa_oval, lichtband_1, lichtfleck_2, lichtband_3) teilt die dunkle Flaeche in links und rechts; oberhalb y221 und unterhalb y318 laeuft das Dunkel durch, also ein Rumpf.",
+    "sicherheit": "wahrscheinlich"
+   },
+   "buckel": {
+    "aussage": "Genau ein Buckel, Scheitel (300-322, 187), 18 px ueber Leons Scheitel. Rechter Hang frei und konvex von (322,187) bis (381,246). Nebenerhebung rechte Beule, Scheitel (405,238).",
+    "sicherheit": "sicher"
+   },
+   "gliedmassen": {
+    "anzahl": "3 Stuetzen sicher getrennt durch zwei Bodenluecken (x283-320, y320-372 und x342-384, y322-366). Eine vierte nur wahrscheinlich: die linke Saeule teilt sich unterhalb y345 in Kugel und Innenglied.",
+    "A_rechts": "rechte_beule, Gelenkkeil (Scheitel 400,278), pfeiler_A x381-416 y300-358 (32 px breit, senkrecht), fuss_A x379-427 y356-378 mit Spitze nach rechts. Pfeiler sicher, Gliederfolge wahrscheinlich, Fuss-Anteil Schlagschatten offen.",
+    "C_mitte": "bein_C_oben x300-346 y318-350, verjuengt von 44 auf 29 px; querband_C y347-358; untermasse_C x290-346 y353-400; rundling_C x305-367 y396-442. Oberstueck sicher, Fortsetzung wahrscheinlich. Der Lichtstapel im Rumpf liegt in derselben x-Spanne, das Glied kann oben also bei y221 beginnen: offen.",
+    "B_links": "saeule_B x227-288 y298-346 (57 px breit), darunter kugel_B zwei Lappen x200-252 y341-426 und innenglied_B x250-285 y346-420; Ende unter dem Logo nicht erkennbar. Saeule und oberer Lappen sicher, Rest wahrscheinlich.",
+    "schraegstab": "gerade Kante (320,350)-(285,375), bildet mit innenglied_B ein V bei (285,392). Zuordnung offen.",
+    "glieder_je_gliedmasse": "Mindestens zwei Abschnitte plus Endstueck bei A und C, bei B Saeule plus Endstuecke. Gelenke sind nur als Lichtkeil, Querband und Breitensprung lesbar, nicht als Knick im Umriss."
+   },
+   "kopf": {
+    "aussage": "Nicht erkennbar. Kein Hals, keine Kerbe im freien Umriss x300-381; links x250-300 ist die Kante gegen dunkles Wandband nicht pruefbar (+-10 px). Lichtpunkt (290,207) ist kein Gesichtsmerkmal. Kugel B und rundling_C zeigen weder Augen noch Kiefer.",
+    "sicherheit": "offen"
+   },
+   "blickrichtung": {
+    "aussage": "Nicht erkennbar.",
+    "sicherheit": "offen"
+   },
+   "haltung": {
+    "aussage": "Rumpf liegt in diesem Bild NICHT auf: Boden ist unter ihm bis y320 sichtbar. Unterseite y300-318, Fuss A y376, Scheitel y187: Unterseite 31-40 % der Hoehe ueber Fuss A, also tief getragen, nicht aufliegend. Tief am Boden liegt nur die vordere Gruppe y341-442, deren Stuetzen 65 px tiefer im Bild enden als Fuss A, also naeher zur Kamera.",
+    "sicherheit": "sicher"
+   }
+  },
+  "bild2": {
+   "koerper": {
+    "aussage": "Fast nur Streiflicht auf dunkler Masse. Lesbar ist eine grosse Kuppel x262-397, y157-358 und ein schraeges Glied unten; Fuesse und Bodenkontakt nicht erkennbar. Frau y183-320 (137 px).",
+    "sicherheit": "sicher"
+   },
+   "rumpf": {
+    "aussage": "Oben und rechts durch Bogen bestimmt, Breite bei y235: 130 px. Linke Kante unterhalb y232 und Innenflaeche nicht erkennbar; im Inneren keine Struktur ausser punkt (280,275) und schwachem Blau um (305-335, 265-282).",
+    "sicherheit": "wahrscheinlich"
+   },
+   "buckel": {
+    "aussage": "Ein Buckel, Scheitel (300-345, 157-162), 26 px ueber dem Scheitel der Frau. Lichtsichel bis y195, dunkler Schlitz (295,175-190) zwischen bogen_links und Sichel liegt innen, Aussenkante laeuft darueber durch.",
+    "sicherheit": "sicher"
+   },
+   "gliedmassen": {
+    "anzahl": "1 sicher (grat_unten), 2 wahrscheinlich (haken, innenlinie_rechts_unten mit lichtspitze). Mehr gibt das Bild nicht her.",
+    "grat_unten": "(338,320) bis (285,358), 15 px Lichtkante, mit Rotstreifen 25-30 px breit; endet in faecher x262-300 y352-402, dessen Bedeutung offen ist.",
+    "haken": "(215,222)-(243,218)-(245,236)-(222,262). Blau/Rot 0.93 wie Aermel 0.93 und Boegen 0.83-0.94, Rahmenstrich nur 0.55: Modellteil, kein Raum. Anschluss an den Rumpf nicht sichtbar.",
+    "rechts": "Linie (392,240)-(362,296) endet in lichtspitze (358-374, 296-313). rechte_beule x386-426 y205-300 mit Schraegkante (398,205)-(425,232).",
+    "glieder_je_gliedmasse": "Nicht erkennbar."
+   },
+   "kopf": {
+    "aussage": "Nicht erkennbar. Kein Hals und keine Erhebung ueber dem Bogen x262-392. punkt (280,275) ist zu klein fuer eine Aussage.",
+    "sicherheit": "offen"
+   },
+   "blickrichtung": {
+    "aussage": "Nicht erkennbar. Der Haken weist zur Frau nach links, das ist keine Blickaussage.",
+    "sicherheit": "offen"
+   },
+   "haltung": {
+    "aussage": "Kuppel hoch und breit, das schraege Glied laeuft flach nach links unten. Ob der Rumpf aufliegt: nicht erkennbar, die Zone unter ihm ist unbeleuchtet.",
+    "sicherheit": "offen"
+   }
+  },
+  "vergleich": [
+   {
+    "aussage": "Gleiche Groessenordnung: Kuppelbreite 134 px und 130 px, Scheitel je knapp ueber dem Personenkopf.",
+    "sicherheit": "sicher"
+   },
+   {
+    "aussage": "Rechte Beule mit Schraegkante und schraeges Unterglied (Richtung 131 Grad in Bild 1, 143 Grad in Bild 2) kommen in beiden Bildern vor.",
+    "sicherheit": "wahrscheinlich"
+   },
+   {
+    "aussage": "Bild 1 um (+10,-25) verschoben passt rechts und unten auf Bild 2, links nicht. Gleiche Grobhaltung ist damit moeglich, nicht belegt. Der Haken hat an dieser Stelle in Bild 1 kein Gegenstueck.",
+    "sicherheit": "offen"
+   }
+  ],
+  "nicht_modellieren": [
+   {
+    "aussage": "Blauzone x345-378, y362-402 ist Boden im Schatten (25/135/170 bei (370,385), weicher Rand).",
+    "sicherheit": "wahrscheinlich"
+   },
+   {
+    "aussage": "Weisse Lappen in Bild 2 x165-224, y328-386 sind Raumlicht.",
+    "sicherheit": "wahrscheinlich"
+   },
+   {
+    "aussage": "rosa_feld_unten, streifenfeld_unten, hellfeld_unten in Bild 1 sind nicht zuordenbar; das Logo verdeckt unten links ab y440.",
+    "sicherheit": "offen"
+   }
+  ]
+ },
+ "teile": [
+  {
+   "name": "rumpf_kuppel",
+   "bild": 1,
+   "art": "koerper",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     250,
+     222
+    ],
+    [
+     256,
+     209
+    ],
+    [
+     266,
+     201
+    ],
+    [
+     278,
+     197
+    ],
+    [
+     290,
+     191
+    ],
+    [
+     300,
+     187
+    ],
+    [
+     322,
+     187
+    ],
+    [
+     330,
+     196
+    ],
+    [
+     340,
+     205
+    ],
+    [
+     357,
+     212
+    ],
+    [
+     365,
+     218
+    ],
+    [
+     372,
+     230
+    ],
+    [
+     378,
+     240
+    ],
+    [
+     381,
+     246
+    ],
+    [
+     380,
+     262
+    ],
+    [
+     384,
+     280
+    ],
+    [
+     372,
+     298
+    ],
+    [
+     362,
+     318
+    ],
+    [
+     346,
+     320
+    ],
+    [
+     330,
+     318
+    ],
+    [
+     300,
+     318
+    ],
+    [
+     288,
+     312
+    ],
+    [
+     260,
+     300
+    ],
+    [
+     240,
+     298
+    ],
+    [
+     241,
+     270
+    ],
+    [
+     246,
+     254
+    ],
+    [
+     247,
+     235
+    ]
+   ],
+   "beleg": "Oberkante aus Rot/Gruen-Zeilen: rechts x=339@y206 bis x=381@y242, links x=247@y224-242; oben-links gegen dunkles Wandband nur +-10 px"
+  },
+  {
+   "name": "rechte_beule",
+   "bild": 1,
+   "art": "koerper",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     381,
+     246
+    ],
+    [
+     393,
+     243
+    ],
+    [
+     405,
+     238
+    ],
+    [
+     414,
+     246
+    ],
+    [
+     420,
+     250
+    ],
+    [
+     425,
+     256
+    ],
+    [
+     428,
+     262
+    ],
+    [
+     429,
+     278
+    ],
+    [
+     430,
+     300
+    ],
+    [
+     418,
+     300
+    ],
+    [
+     400,
+     298
+    ],
+    [
+     385,
+     297
+    ],
+    [
+     372,
+     298
+    ],
+    [
+     384,
+     280
+    ],
+    [
+     380,
+     262
+    ]
+   ],
+   "beleg": "Rot<80 reicht y248-308 bis x=420-430; grauer Schraegstrich (405,240)-(425,268) ist die Aussenkante"
+  },
+  {
+   "name": "dreieck_gelenk_A",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     400,
+     278
+    ],
+    [
+     408,
+     282
+    ],
+    [
+     420,
+     292
+    ],
+    [
+     418,
+     296
+    ],
+    [
+     386,
+     296
+    ],
+    [
+     391,
+     288
+    ]
+   ],
+   "beleg": "heller Keil, Scheitel (400,278), Basis y296"
+  },
+  {
+   "name": "pfeiler_A",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     382,
+     300
+    ],
+    [
+     418,
+     300
+    ],
+    [
+     414,
+     320
+    ],
+    [
+     414,
+     332
+    ],
+    [
+     416,
+     340
+    ],
+    [
+     415,
+     350
+    ],
+    [
+     410,
+     358
+    ],
+    [
+     384,
+     358
+    ],
+    [
+     385,
+     348
+    ],
+    [
+     384,
+     338
+    ],
+    [
+     382,
+     328
+    ],
+    [
+     381,
+     318
+    ]
+   ],
+   "beleg": "Gruen<75: x381-413@y322, 384-416@y338, 385-408@y354; beidseits heller Boden"
+  },
+  {
+   "name": "fuss_A",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     384,
+     356
+    ],
+    [
+     412,
+     356
+    ],
+    [
+     420,
+     358
+    ],
+    [
+     427,
+     362
+    ],
+    [
+     418,
+     368
+    ],
+    [
+     408,
+     375
+    ],
+    [
+     386,
+     378
+    ],
+    [
+     379,
+     370
+    ],
+    [
+     380,
+     361
+    ]
+   ],
+   "beleg": "dunkel bis y376; Spitze rechts (426,362). Farbe 34/46/81 gleicht Leons Fusszone, Anteil Schlagschatten nicht trennbar"
+  },
+  {
+   "name": "saeule_B",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     229,
+     306
+    ],
+    [
+     240,
+     298
+    ],
+    [
+     260,
+     300
+    ],
+    [
+     288,
+     312
+    ],
+    [
+     286,
+     322
+    ],
+    [
+     285,
+     330
+    ],
+    [
+     282,
+     338
+    ],
+    [
+     283,
+     346
+    ],
+    [
+     256,
+     346
+    ],
+    [
+     250,
+     342
+    ],
+    [
+     232,
+     342
+    ],
+    [
+     229,
+     338
+    ],
+    [
+     228,
+     330
+    ],
+    [
+     227,
+     322
+    ],
+    [
+     228,
+     314
+    ]
+   ],
+   "beleg": "Gruen<75: x228-289@y314, 227-286@y322, 229-282@y338; 57 px breit"
+  },
+  {
+   "name": "kugel_B_oben",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     232,
+     341
+    ],
+    [
+     244,
+     342
+    ],
+    [
+     250,
+     352
+    ],
+    [
+     252,
+     362
+    ],
+    [
+     247,
+     374
+    ],
+    [
+     236,
+     386
+    ],
+    [
+     222,
+     384
+    ],
+    [
+     210,
+     376
+    ],
+    [
+     212,
+     362
+    ],
+    [
+     216,
+     352
+    ],
+    [
+     224,
+     346
+    ]
+   ],
+   "beleg": "runder Lappen, helle Kappe (232-250, 340-365)"
+  },
+  {
+   "name": "kugel_B_unten",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     208,
+     375
+    ],
+    [
+     222,
+     384
+    ],
+    [
+     236,
+     386
+    ],
+    [
+     246,
+     398
+    ],
+    [
+     244,
+     410
+    ],
+    [
+     240,
+     420
+    ],
+    [
+     220,
+     426
+    ],
+    [
+     216,
+     404
+    ],
+    [
+     200,
+     400
+    ],
+    [
+     202,
+     388
+    ]
+   ],
+   "beleg": "zweiter Lappen, linke Kante x=200@y394; Einkerbung bei (206,374)"
+  },
+  {
+   "name": "innenglied_B",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     254,
+     346
+    ],
+    [
+     283,
+     346
+    ],
+    [
+     282,
+     370
+    ],
+    [
+     284,
+     386
+    ],
+    [
+     281,
+     404
+    ],
+    [
+     276,
+     420
+    ],
+    [
+     258,
+     420
+    ],
+    [
+     250,
+     410
+    ],
+    [
+     254,
+     398
+    ],
+    [
+     252,
+     380
+    ],
+    [
+     253,
+     362
+    ]
+   ],
+   "beleg": "rechte Fortsetzung der Saeule; dunkler Streifen x252-256 trennt von der Kugel, Lichter (262,356) und (266,392)"
+  },
+  {
+   "name": "masse_unter_B",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     218,
+     424
+    ],
+    [
+     240,
+     420
+    ],
+    [
+     258,
+     420
+    ],
+    [
+     276,
+     420
+    ],
+    [
+     282,
+     426
+    ],
+    [
+     268,
+     428
+    ],
+    [
+     250,
+     428
+    ],
+    [
+     244,
+     438
+    ],
+    [
+     226,
+     440
+    ],
+    [
+     216,
+     436
+    ]
+   ],
+   "beleg": "dunkel y402-434, unten vom Logo verdeckt; Ende nicht erkennbar"
+  },
+  {
+   "name": "bein_C_oben",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     300,
+     318
+    ],
+    [
+     330,
+     318
+    ],
+    [
+     346,
+     320
+    ],
+    [
+     346,
+     330
+    ],
+    [
+     344,
+     340
+    ],
+    [
+     342,
+     348
+    ],
+    [
+     332,
+     350
+    ],
+    [
+     320,
+     346
+    ],
+    [
+     312,
+     346
+    ],
+    [
+     305,
+     332
+    ]
+   ],
+   "beleg": "Gruen<75: x302-346@y322, 308-344@y338, 312-341@y346; verjuengt nach unten"
+  },
+  {
+   "name": "querband_C",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     320,
+     347
+    ],
+    [
+     332,
+     349
+    ],
+    [
+     345,
+     353
+    ],
+    [
+     345,
+     358
+    ],
+    [
+     332,
+     357
+    ],
+    [
+     320,
+     352
+    ]
+   ],
+   "beleg": "heller Balken 145/145/170, leicht nach rechts fallend"
+  },
+  {
+   "name": "untermasse_C",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     323,
+     353
+    ],
+    [
+     332,
+     357
+    ],
+    [
+     345,
+     359
+    ],
+    [
+     346,
+     372
+    ],
+    [
+     345,
+     396
+    ],
+    [
+     318,
+     400
+    ],
+    [
+     300,
+     398
+    ],
+    [
+     290,
+     392
+    ],
+    [
+     305,
+     370
+    ]
+   ],
+   "beleg": "dunkel mit Innenflecken; scharfe Oberkante (320,350)-(285,375)"
+  },
+  {
+   "name": "schraegstab",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     320,
+     350
+    ],
+    [
+     323,
+     353
+    ],
+    [
+     305,
+     370
+    ],
+    [
+     290,
+     392
+    ],
+    [
+     282,
+     393
+    ],
+    [
+     280,
+     384
+    ],
+    [
+     285,
+     375
+    ],
+    [
+     302,
+     364
+    ]
+   ],
+   "beleg": "gerade Kante plus parallele Lichtlinie (302,372)-(288,388), Ende Cyan-Punkt (286,391)"
+  },
+  {
+   "name": "rundling_C",
+   "bild": 1,
+   "art": "gliedmasse",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     305,
+     400
+    ],
+    [
+     318,
+     400
+    ],
+    [
+     345,
+     396
+    ],
+    [
+     360,
+     398
+    ],
+    [
+     367,
+     402
+    ],
+    [
+     364,
+     420
+    ],
+    [
+     357,
+     426
+    ],
+    [
+     344,
+     434
+    ],
+    [
+     336,
+     442
+    ],
+    [
+     322,
+     430
+    ],
+    [
+     317,
+     418
+    ],
+    [
+     306,
+     410
+    ]
+   ],
+   "beleg": "runder Abschluss: x=364@y418, 357@y426, 344@y434, 335@y442"
+  },
+  {
+   "name": "streifenfeld_unten",
+   "bild": 1,
+   "art": "unklar",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     282,
+     426
+    ],
+    [
+     296,
+     426
+    ],
+    [
+     318,
+     432
+    ],
+    [
+     336,
+     442
+    ],
+    [
+     332,
+     450
+    ],
+    [
+     318,
+     456
+    ],
+    [
+     294,
+     456
+    ],
+    [
+     280,
+     450
+    ]
+   ],
+   "beleg": "abwechselnd dunkel/hell, Zehen oder Boden nicht erkennbar"
+  },
+  {
+   "name": "rosa_oval",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     326,
+     221
+    ],
+    [
+     331,
+     232
+    ],
+    [
+     329,
+     244
+    ],
+    [
+     322,
+     256
+    ],
+    [
+     312,
+     258
+    ],
+    [
+     304,
+     254
+    ],
+    [
+     306,
+     242
+    ],
+    [
+     312,
+     232
+    ],
+    [
+     318,
+     224
+    ]
+   ],
+   "beleg": "169/97/149; Chroma-Karte zeigt echtes Magenta"
+  },
+  {
+   "name": "lichtband_1",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     300,
+     256
+    ],
+    [
+     312,
+     258
+    ],
+    [
+     324,
+     262
+    ],
+    [
+     336,
+     272
+    ],
+    [
+     336,
+     281
+    ],
+    [
+     322,
+     281
+    ],
+    [
+     308,
+     272
+    ],
+    [
+     299,
+     264
+    ]
+   ],
+   "beleg": "130/137/197"
+  },
+  {
+   "name": "lichtfleck_2",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     312,
+     288
+    ],
+    [
+     328,
+     285
+    ],
+    [
+     338,
+     292
+    ],
+    [
+     339,
+     300
+    ],
+    [
+     330,
+     306
+    ],
+    [
+     316,
+     306
+    ],
+    [
+     309,
+     298
+    ]
+   ],
+   "beleg": "182/184/205"
+  },
+  {
+   "name": "lichtband_3",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     300,
+     312
+    ],
+    [
+     312,
+     305
+    ],
+    [
+     330,
+     304
+    ],
+    [
+     340,
+     303
+    ],
+    [
+     336,
+     312
+    ],
+    [
+     318,
+     318
+    ],
+    [
+     303,
+     318
+    ]
+   ],
+   "beleg": "schliesst unten an lichtfleck_2 an"
+  },
+  {
+   "name": "lichtknoten_links",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     266,
+     272
+    ],
+    [
+     272,
+     280
+    ],
+    [
+     280,
+     292
+    ],
+    [
+     272,
+     296
+    ],
+    [
+     264,
+     288
+    ],
+    [
+     262,
+     280
+    ]
+   ],
+   "beleg": "lavendelfarbener Fleck, Teil einer Reihe bei y285 mit (240,288) und (253,286)"
+  },
+  {
+   "name": "kappe_und_winkel_B",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     232,
+     341
+    ],
+    [
+     244,
+     341
+    ],
+    [
+     251,
+     352
+    ],
+    [
+     252,
+     362
+    ],
+    [
+     252,
+     396
+    ],
+    [
+     246,
+     396
+    ],
+    [
+     236,
+     386
+    ],
+    [
+     246,
+     372
+    ],
+    [
+     246,
+     360
+    ],
+    [
+     238,
+     350
+    ]
+   ],
+   "beleg": "Kappe plus Winkel aus (250,365)-(235,387)-(252,397); 101/125/175"
+  },
+  {
+   "name": "cyan_oval",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     254,
+     398
+    ],
+    [
+     257,
+     402
+    ],
+    [
+     250,
+     410
+    ],
+    [
+     244,
+     412
+    ],
+    [
+     243,
+     408
+    ],
+    [
+     248,
+     401
+    ]
+   ],
+   "beleg": "78/114/128"
+  },
+  {
+   "name": "rosa_feld_unten",
+   "bild": 1,
+   "art": "unklar",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     252,
+     426
+    ],
+    [
+     284,
+     434
+    ],
+    [
+     286,
+     450
+    ],
+    [
+     280,
+     478
+    ],
+    [
+     250,
+     478
+    ],
+    [
+     256,
+     462
+    ],
+    [
+     256,
+     440
+    ]
+   ],
+   "beleg": "181/125/168, unten 175/72/111; Koerper, Blut oder Boden nicht entscheidbar; Logo daneben"
+  },
+  {
+   "name": "luecke_boden_1",
+   "bild": 1,
+   "art": "boden_leer",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     296,
+     320
+    ],
+    [
+     304,
+     326
+    ],
+    [
+     312,
+     346
+    ],
+    [
+     320,
+     350
+    ],
+    [
+     300,
+     364
+    ],
+    [
+     286,
+     372
+    ],
+    [
+     283,
+     358
+    ],
+    [
+     286,
+     338
+    ]
+   ],
+   "beleg": "222/224/222 = Boden; trennt saeule_B von bein_C"
+  },
+  {
+   "name": "luecke_boden_2",
+   "bild": 1,
+   "art": "boden_leer",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     362,
+     322
+    ],
+    [
+     381,
+     322
+    ],
+    [
+     384,
+     340
+    ],
+    [
+     382,
+     366
+    ],
+    [
+     346,
+     362
+    ],
+    [
+     342,
+     356
+    ],
+    [
+     345,
+     338
+    ],
+    [
+     352,
+     328
+    ]
+   ],
+   "beleg": "223/222/223 = Boden; trennt bein_C von pfeiler_A"
+  },
+  {
+   "name": "blauzone_kein_koerper",
+   "bild": 1,
+   "art": "bodenschatten",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     346,
+     362
+    ],
+    [
+     372,
+     366
+    ],
+    [
+     378,
+     380
+    ],
+    [
+     376,
+     396
+    ],
+    [
+     367,
+     402
+    ],
+    [
+     345,
+     396
+    ],
+    [
+     346,
+     372
+    ]
+   ],
+   "beleg": "weicher Rand, Rot sehr niedrig bei hohem Gruen/Blau (25/135/170 bei (370,385)): Boden im Schatten, kein Koerper"
+  },
+  {
+   "name": "rumpf_kuppel",
+   "bild": 2,
+   "art": "koerper",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     262,
+     232
+    ],
+    [
+     265,
+     218
+    ],
+    [
+     272,
+     205
+    ],
+    [
+     279,
+     192
+    ],
+    [
+     285,
+     178
+    ],
+    [
+     292,
+     167
+    ],
+    [
+     300,
+     161
+    ],
+    [
+     325,
+     157
+    ],
+    [
+     345,
+     168
+    ],
+    [
+     362,
+     190
+    ],
+    [
+     372,
+     203
+    ],
+    [
+     382,
+     218
+    ],
+    [
+     392,
+     236
+    ],
+    [
+     397,
+     250
+    ],
+    [
+     388,
+     268
+    ],
+    [
+     376,
+     284
+    ],
+    [
+     366,
+     297
+    ],
+    [
+     352,
+     305
+    ],
+    [
+     338,
+     320
+    ],
+    [
+     315,
+     338
+    ],
+    [
+     298,
+     348
+    ],
+    [
+     285,
+     356
+    ],
+    [
+     262,
+     358
+    ],
+    [
+     262,
+     300
+    ]
+   ],
+   "beleg": "Oben/rechts aus Streiflicht-Bogen; unten aus Grat; links unterhalb y232 keine Kante, dort willkuerlich bei x262 geschnitten"
+  },
+  {
+   "name": "bogen_links",
+   "bild": 2,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     292,
+     166
+    ],
+    [
+     296,
+     172
+    ],
+    [
+     288,
+     190
+    ],
+    [
+     280,
+     204
+    ],
+    [
+     270,
+     222
+    ],
+    [
+     264,
+     230
+    ],
+    [
+     259,
+     226
+    ],
+    [
+     268,
+     206
+    ],
+    [
+     276,
+     190
+    ],
+    [
+     284,
+     174
+    ]
+   ],
+   "beleg": "Lavendel/Rosa, staerkster Abschnitt (280-294, 168-195), Grat-Karte"
+  },
+  {
+   "name": "scheitel_sichel",
+   "bild": 2,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     298,
+     162
+    ],
+    [
+     325,
+     157
+    ],
+    [
+     345,
+     168
+    ],
+    [
+     352,
+     190
+    ],
+    [
+     340,
+     195
+    ],
+    [
+     325,
+     197
+    ],
+    [
+     300,
+     197
+    ],
+    [
+     296,
+     178
+    ]
+   ],
+   "beleg": "Rotkanal: helle Sichel, Unterkante y195 = Lichtgrenze, Lavendelfleck (325,167)"
+  },
+  {
+   "name": "bogen_rechts",
+   "bild": 2,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     345,
+     180
+    ],
+    [
+     362,
+     190
+    ],
+    [
+     372,
+     203
+    ],
+    [
+     382,
+     218
+    ],
+    [
+     394,
+     238
+    ],
+    [
+     388,
+     240
+    ],
+    [
+     376,
+     221
+    ],
+    [
+     366,
+     207
+    ],
+    [
+     354,
+     196
+    ],
+    [
+     343,
+     188
+    ]
+   ],
+   "beleg": "Grat von (345,182) bis (392,238)"
+  },
+  {
+   "name": "innenlinie_rechts_unten",
+   "bild": 2,
+   "art": "helle_flaeche",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     388,
+     240
+    ],
+    [
+     398,
+     244
+    ],
+    [
+     392,
+     256
+    ],
+    [
+     380,
+     272
+    ],
+    [
+     370,
+     290
+    ],
+    [
+     362,
+     297
+    ],
+    [
+     358,
+     292
+    ],
+    [
+     368,
+     274
+    ],
+    [
+     378,
+     256
+    ]
+   ],
+   "beleg": "schwacher Grat (392,240)-(362,296), nur in Gruen/Blau"
+  },
+  {
+   "name": "rechte_beule",
+   "bild": 2,
+   "art": "koerper",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     398,
+     205
+    ],
+    [
+     410,
+     216
+    ],
+    [
+     426,
+     232
+    ],
+    [
+     419,
+     246
+    ],
+    [
+     408,
+     260
+    ],
+    [
+     403,
+     276
+    ],
+    [
+     403,
+     296
+    ],
+    [
+     390,
+     300
+    ],
+    [
+     376,
+     284
+    ],
+    [
+     388,
+     268
+    ],
+    [
+     397,
+     250
+    ],
+    [
+     392,
+     236
+    ],
+    [
+     386,
+     222
+    ],
+    [
+     392,
+     212
+    ]
+   ],
+   "beleg": "Rahmenstrich x~410 endet bei y205 an der Schraegkante (398,205)-(425,232): dort Verdeckung; Rotkanal rechts begrenzt: x~419@y246, x~403@y280"
+  },
+  {
+   "name": "lichtspitze",
+   "bild": 2,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     360,
+     297
+    ],
+    [
+     367,
+     296
+    ],
+    [
+     374,
+     308
+    ],
+    [
+     372,
+     313
+    ],
+    [
+     364,
+     309
+    ],
+    [
+     358,
+     302
+    ]
+   ],
+   "beleg": "weiss-lavendel, liegt auf dem Ende der innenlinie"
+  },
+  {
+   "name": "haken",
+   "bild": 2,
+   "art": "gliedmasse",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     214,
+     219
+    ],
+    [
+     243,
+     216
+    ],
+    [
+     248,
+     226
+    ],
+    [
+     247,
+     238
+    ],
+    [
+     240,
+     252
+    ],
+    [
+     225,
+     264
+    ],
+    [
+     219,
+     260
+    ],
+    [
+     234,
+     246
+    ],
+    [
+     240,
+     234
+    ],
+    [
+     238,
+     225
+    ],
+    [
+     215,
+     227
+    ]
+   ],
+   "beleg": "gleiche Lavendel-Farbe wie die Boegen; kein Teil der Frau; Anschluss an den Rumpf nicht sichtbar"
+  },
+  {
+   "name": "grat_unten",
+   "bild": 2,
+   "art": "gliedmasse",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     326,
+     319
+    ],
+    [
+     340,
+     318
+    ],
+    [
+     338,
+     328
+    ],
+    [
+     322,
+     344
+    ],
+    [
+     306,
+     356
+    ],
+    [
+     296,
+     362
+    ],
+    [
+     282,
+     362
+    ],
+    [
+     286,
+     352
+    ],
+    [
+     298,
+     346
+    ],
+    [
+     314,
+     334
+    ]
+   ],
+   "beleg": "Lavendel zu Rosa, 15 px breit, ca. 60 px lang, gleiche Richtung wie schraegstab in Bild 1"
+  },
+  {
+   "name": "faecher",
+   "bild": 2,
+   "art": "unklar",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     282,
+     358
+    ],
+    [
+     300,
+     352
+    ],
+    [
+     300,
+     372
+    ],
+    [
+     292,
+     386
+    ],
+    [
+     284,
+     400
+    ],
+    [
+     268,
+     402
+    ],
+    [
+     262,
+     392
+    ],
+    [
+     268,
+     370
+    ]
+   ],
+   "beleg": "gekreuzte Streifen (292,355)-(278,398) und (278,358)-(292,378); Zehen oder Reflex offen"
+  },
+  {
+   "name": "lavendelfleck_unten",
+   "bild": 2,
+   "art": "helle_flaeche",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     252,
+     380
+    ],
+    [
+     260,
+     380
+    ],
+    [
+     264,
+     392
+    ],
+    [
+     258,
+     396
+    ],
+    [
+     250,
+     390
+    ]
+   ],
+   "beleg": "gleiche Farbe wie das obere Grat-Ende"
+  },
+  {
+   "name": "punkt",
+   "bild": 2,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     277,
+     272
+    ],
+    [
+     283,
+     272
+    ],
+    [
+     284,
+     278
+    ],
+    [
+     278,
+     280
+    ],
+    [
+     275,
+     276
+    ]
+   ],
+   "beleg": "kleiner Fleck, Bedeutung nicht erkennbar"
+  },
+  {
+   "name": "dunkel_links_unten",
+   "bild": 2,
+   "art": "unklar",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     205,
+     260
+    ],
+    [
+     262,
+     262
+    ],
+    [
+     262,
+     358
+    ],
+    [
+     245,
+     368
+    ],
+    [
+     235,
+     360
+    ],
+    [
+     222,
+     335
+    ],
+    [
+     205,
+     318
+    ]
+   ],
+   "beleg": "keine Kante zur Tueroeffnung; Unterkante (203,318)-(240,367) deckt roten Boden ab: Figur oder Schatten"
+  },
+  {
+   "name": "rotstreifen",
+   "bild": 2,
+   "art": "unklar",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     360,
+     310
+    ],
+    [
+     384,
+     306
+    ],
+    [
+     386,
+     340
+    ],
+    [
+     382,
+     372
+    ],
+    [
+     362,
+     372
+    ],
+    [
+     358,
+     340
+    ]
+   ],
+   "beleg": "Rot 122-128 bei x370, y310-350, dunkler bei x350 und x390: Boden-Luecke oder Glied"
+  },
+  {
+   "name": "hellfeld_unten",
+   "bild": 1,
+   "art": "unklar",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     296,
+     404
+    ],
+    [
+     306,
+     410
+    ],
+    [
+     317,
+     418
+    ],
+    [
+     322,
+     430
+    ],
+    [
+     300,
+     428
+    ],
+    [
+     292,
+     416
+    ]
+   ],
+   "beleg": "128/153/196 bis 75/132/168, blaustichig hell: Boden zwischen Gliedern oder Lichtflaeche; bei der Ueberpruefung nachgetragen"
+  },
+  {
+   "name": "lichtpunkt_oben",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     286,
+     204
+    ],
+    [
+     292,
+     202
+    ],
+    [
+     296,
+     208
+    ],
+    [
+     292,
+     213
+    ],
+    [
+     286,
+     211
+    ]
+   ],
+   "beleg": "64/58/74, darunter Cyan (280-296, 212-218); ein Lichtpunkt, kein Gesichtsmerkmal belegbar"
+  },
+  {
+   "name": "blaufleck_schulter",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     378,
+     243
+    ],
+    [
+     400,
+     240
+    ],
+    [
+     400,
+     252
+    ],
+    [
+     388,
+     256
+    ],
+    [
+     379,
+     252
+    ]
+   ],
+   "beleg": "63/69/110 unter dem gelben Hintergrundschein; beleuchtete Flaeche"
+  },
+  {
+   "name": "schraegstrich_beule",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "sicher",
+   "polygon": [
+    [
+     404,
+     238
+    ],
+    [
+     410,
+     238
+    ],
+    [
+     427,
+     264
+    ],
+    [
+     423,
+     270
+    ],
+    [
+     415,
+     256
+    ]
+   ],
+   "beleg": "grau, trennt Beule vom orangen Wandstueck"
+  },
+  {
+   "name": "strichstueck_unten",
+   "bild": 1,
+   "art": "helle_flaeche",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     250,
+     428
+    ],
+    [
+     254,
+     431
+    ],
+    [
+     236,
+     453
+    ],
+    [
+     231,
+     450
+    ]
+   ],
+   "beleg": "duenner Lavendelstrich auf der Verlaengerung von schraegstab (Richtung 131 Grad), aber 55 px dunkle Luecke dazwischen (Abstand 60-115 auf der Geraden): EIN Stab nicht belegt"
+  },
+  {
+   "name": "grat_koerper",
+   "bild": 2,
+   "art": "gliedmasse",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     338,
+     328
+    ],
+    [
+     346,
+     336
+    ],
+    [
+     326,
+     352
+    ],
+    [
+     306,
+     370
+    ],
+    [
+     298,
+     372
+    ],
+    [
+     300,
+     352
+    ],
+    [
+     322,
+     344
+    ]
+   ],
+   "beleg": "roter Streifen unter dem Grat, darunter dunkles Band (300,385)-(345,345); ergibt ca. 25-30 px Gliedbreite"
+  },
+  {
+   "name": "hakenband_unten",
+   "bild": 2,
+   "art": "unklar",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     205,
+     246
+    ],
+    [
+     222,
+     250
+    ],
+    [
+     245,
+     256
+    ],
+    [
+     262,
+     262
+    ],
+    [
+     245,
+     268
+    ],
+    [
+     222,
+     264
+    ],
+    [
+     205,
+     258
+    ]
+   ],
+   "beleg": "Blau/Rot-Karte zeigt schwaches Band vom Aermel zum Haken-Ende; kann Farbsaum des Aermels sein"
+  },
+  {
+   "name": "dunkelstreifen_rechts",
+   "bild": 2,
+   "art": "unklar",
+   "sicherheit": "offen",
+   "polygon": [
+    [
+     378,
+     304
+    ],
+    [
+     404,
+     300
+    ],
+    [
+     408,
+     330
+    ],
+    [
+     414,
+     368
+    ],
+    [
+     420,
+     380
+    ],
+    [
+     398,
+     376
+    ],
+    [
+     388,
+     352
+    ],
+    [
+     382,
+     322
+    ]
+   ],
+   "beleg": "Rotprofil: Minimum wandert von x388@y318 ueber x394@y330 und x403@y354 nach x412@y378; Wandkante oder Glied nicht entscheidbar"
+  },
+  {
+   "name": "raum_weisslappen",
+   "bild": 2,
+   "art": "raum",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     165,
+     345
+    ],
+    [
+     178,
+     328
+    ],
+    [
+     190,
+     335
+    ],
+    [
+     205,
+     328
+    ],
+    [
+     222,
+     345
+    ],
+    [
+     224,
+     362
+    ],
+    [
+     212,
+     378
+    ],
+    [
+     196,
+     386
+    ],
+    [
+     186,
+     372
+    ],
+    [
+     170,
+     360
+    ]
+   ],
+   "beleg": "neutral ueberstrahlt 217/212/207 bis 225/223/224 wie Wandblock und Bodenreflex, nicht lavendel: kein Figurteil"
+  },
+  {
+   "name": "gesamtumriss",
+   "bild": 1,
+   "art": "umriss",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     299,
+     187
+    ],
+    [
+     263,
+     203
+    ],
+    [
+     256,
+     209
+    ],
+    [
+     250,
+     221
+    ],
+    [
+     247,
+     233
+    ],
+    [
+     246,
+     255
+    ],
+    [
+     241,
+     269
+    ],
+    [
+     240,
+     298
+    ],
+    [
+     230,
+     305
+    ],
+    [
+     228,
+     310
+    ],
+    [
+     227,
+     326
+    ],
+    [
+     230,
+     342
+    ],
+    [
+     216,
+     352
+    ],
+    [
+     212,
+     361
+    ],
+    [
+     211,
+     372
+    ],
+    [
+     202,
+     387
+    ],
+    [
+     200,
+     400
+    ],
+    [
+     216,
+     405
+    ],
+    [
+     220,
+     426
+    ],
+    [
+     240,
+     420
+    ],
+    [
+     246,
+     398
+    ],
+    [
+     237,
+     385
+    ],
+    [
+     249,
+     373
+    ],
+    [
+     252,
+     375
+    ],
+    [
+     254,
+     394
+    ],
+    [
+     250,
+     410
+    ],
+    [
+     258,
+     420
+    ],
+    [
+     276,
+     420
+    ],
+    [
+     282,
+     395
+    ],
+    [
+     290,
+     392
+    ],
+    [
+     305,
+     400
+    ],
+    [
+     306,
+     410
+    ],
+    [
+     317,
+     418
+    ],
+    [
+     322,
+     430
+    ],
+    [
+     336,
+     442
+    ],
+    [
+     345,
+     433
+    ],
+    [
+     364,
+     420
+    ],
+    [
+     367,
+     402
+    ],
+    [
+     345,
+     394
+    ],
+    [
+     345,
+     359
+    ],
+    [
+     331,
+     357
+    ],
+    [
+     323,
+     353
+    ],
+    [
+     321,
+     349
+    ],
+    [
+     324,
+     347
+    ],
+    [
+     331,
+     350
+    ],
+    [
+     342,
+     348
+    ],
+    [
+     346,
+     332
+    ],
+    [
+     346,
+     322
+    ],
+    [
+     351,
+     319
+    ],
+    [
+     362,
+     318
+    ],
+    [
+     370,
+     301
+    ],
+    [
+     379,
+     297
+    ],
+    [
+     382,
+     299
+    ],
+    [
+     381,
+     323
+    ],
+    [
+     385,
+     344
+    ],
+    [
+     385,
+     352
+    ],
+    [
+     380,
+     361
+    ],
+    [
+     379,
+     370
+    ],
+    [
+     386,
+     378
+    ],
+    [
+     404,
+     376
+    ],
+    [
+     426,
+     363
+    ],
+    [
+     426,
+     361
+    ],
+    [
+     414,
+     356
+    ],
+    [
+     413,
+     353
+    ],
+    [
+     416,
+     344
+    ],
+    [
+     414,
+     318
+    ],
+    [
+     417,
+     303
+    ],
+    [
+     421,
+     300
+    ],
+    [
+     430,
+     300
+    ],
+    [
+     428,
+     262
+    ],
+    [
+     422,
+     252
+    ],
+    [
+     405,
+     238
+    ],
+    [
+     391,
+     244
+    ],
+    [
+     381,
+     245
+    ],
+    [
+     363,
+     216
+    ],
+    [
+     340,
+     205
+    ],
+    [
+     322,
+     187
+    ]
+   ],
+   "beleg": "abgeleitet: Vereinigung aller koerper/gliedmasse-Teile ohne 'offen', Flaeche 33753 px"
+  },
+  {
+   "name": "gesamtumriss",
+   "bild": 2,
+   "art": "umriss",
+   "sicherheit": "wahrscheinlich",
+   "polygon": [
+    [
+     325,
+     157
+    ],
+    [
+     300,
+     161
+    ],
+    [
+     291,
+     168
+    ],
+    [
+     265,
+     218
+    ],
+    [
+     262,
+     230
+    ],
+    [
+     262,
+     358
+    ],
+    [
+     280,
+     356
+    ],
+    [
+     283,
+     358
+    ],
+    [
+     282,
+     362
+    ],
+    [
+     296,
+     362
+    ],
+    [
+     299,
+     364
+    ],
+    [
+     298,
+     372
+    ],
+    [
+     306,
+     370
+    ],
+    [
+     346,
+     336
+    ],
+    [
+     338,
+     328
+    ],
+    [
+     340,
+     318
+    ],
+    [
+     353,
+     304
+    ],
+    [
+     365,
+     298
+    ],
+    [
+     374,
+     287
+    ],
+    [
+     378,
+     287
+    ],
+    [
+     390,
+     300
+    ],
+    [
+     403,
+     296
+    ],
+    [
+     403,
+     275
+    ],
+    [
+     407,
+     262
+    ],
+    [
+     419,
+     246
+    ],
+    [
+     426,
+     232
+    ],
+    [
+     398,
+     205
+    ],
+    [
+     387,
+     219
+    ],
+    [
+     383,
+     219
+    ],
+    [
+     347,
+     170
+    ]
+   ],
+   "beleg": "abgeleitet: Vereinigung aller koerper/gliedmasse-Teile ohne 'offen', Flaeche 21562 px"
+  }
+ ]
+}

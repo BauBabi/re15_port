@@ -1,0 +1,10 @@
+Flaechen 1900
+e   0 L 2.2115 tail 0.017/0.026 left_ 0.052/0.040 right 0.023/0.037 right 0.034/0.072 part_ 0.061/0.066 verst 5.000/73.000 face_ 0.107/0.011 left_ 0.056/0.061 right 0.098/0.135 verst 1577.000/3301.000 kopf 0.021/0.092
+      boden hr 0 hl 4 fr 2 fl 2 | hr 2 hl 3 fr 2 fl 1 reg 0.022 0.008 2.585 2.431 0.004 0.000 0.105  1s
+e 100 L 2.1993 tail 0.017/0.026 left_ 0.046/0.045 right 0.022/0.037 right 0.032/0.072 part_ 0.061/0.064 verst 14.000/84.000 face_ 0.098/0.011 left_ 0.052/0.063 right 0.096/0.133 verst 1614.000/3505.000 kopf 0.020/0.075
+      boden hr 0 hl 4 fr 2 fl 3 | hr 3 hl 3 fr 1 fl 2 reg 0.019 0.007 2.470 2.329 0.004 0.402 0.116  72s
+e 199 L 2.2333 tail 0.017/0.025 left_ 0.048/0.045 right 0.025/0.035 right 0.033/0.071 part_ 0.062/0.063 verst 11.000/106.000 face_ 0.096/0.011 left_ 0.054/0.059 right 0.097/0.127 verst 1603.000/3673.000 kopf 0.020/0.078
+      boden hr -0 hl 4 fr 3 fl 2 | hr 3 hl 3 fr 2 fl 2 reg 0.021 0.007 2.445 2.304 0.004 0.993 0.104  146s
+      innen 1 
+      innen 2 
+fertig zw/s12.json

@@ -1,0 +1,39 @@
+
+========= A
+Clip 0 Lochpixel Summe 14 Richtungen 217 je Richtung [3, 3, 1, 103, 5, 0, 18, 69, 3, 1, 3, 6, 0, 2] Zerfall []  (Masstab 0.062 px/E)
+Clip 1 Lochpixel Summe 14 Richtungen 107 je Richtung [3, 0, 8, 50, 6, 0, 0, 9, 1, 27, 2, 0, 0, 1] Zerfall []  (Masstab 0.062 px/E)
+Clip 2 Lochpixel Summe 14 Richtungen 186 je Richtung [3, 3, 1, 102, 7, 0, 39, 11, 3, 8, 2, 6, 0, 1] Zerfall []  (Masstab 0.062 px/E)
+Eltern-Kind-Abstand (kleinster Abstand der Oberflaechen, 0 = beruehrt; - = Drehpunkt im Kind) je Clip:
+ Clip 0 groesster Abstand 11 ueber 45: []
+ Clip 1 groesster Abstand 8 ueber 45: []
+ Clip 2 groesster Abstand 8 ueber 45: []
+Stand: {0: {'volumen': 8.5, 'schwerpunkt': [-202, -1630, -146], 'boden_ecken': 27, 'standflaeche': 4.73, 'rand_abstand': 731}, 1: {'volumen': 8.5, 'schwerpunkt': [-182, -1625, -77], 'boden_ecken': 29, 'standflaeche': 4.23, 'rand_abstand': 828}, 2: {'volumen': 8.6, 'schwerpunkt': [-193, -1631, -153], 'boden_ecken': 27, 'standflaeche': 4.73, 'rand_abstand': 724}}
+Gelenkkugeln (Knochen, Radius in Kind, Radius in Rest; negativ = Drehpunkt ausserhalb):
+  [('huefte_r', 281, -166), ('huefte_l', 354, 33), ('fr_ober', 202, 91), ('fr_unter', 10, 60), ('fr_fuss', 243, 212), ('fl_ober', 303, 28), ('fl_unter', 220, 25), ('fl_fuss', 197, 84), ('rumpf_mitte', 412, -387), ('rumpf', 246, 19), ('nl_ober', 314, -87), ('nl_unter', 204, 292), ('nl_hand', 65, 193), ('nl_innen', 148, 146), ('nl_daumen', 171, 176), ('nr_ober', 238, 77), ('nr_unter', 100, 102), ('nr_hand', 172, 126), ('nr_daumen', 36, 40), ('hals', 313, 241), ('kopf', 137, 35), ('kiefer', 144, 21)]
+ Gelenke Drehpunkt ausserhalb Kind: []  ausserhalb Rest: ['huefte_r', 'rumpf_mitte', 'nl_ober']
+
+========= B
+Clip 0 Lochpixel Summe 14 Richtungen 26 je Richtung [2, 0, 4, 6, 1, 1, 3, 1, 1, 1, 2, 2, 0, 2] Zerfall []  (Masstab 0.065 px/E)
+Clip 1 Lochpixel Summe 14 Richtungen 27 je Richtung [1, 0, 2, 3, 2, 5, 1, 6, 1, 1, 0, 2, 3, 0] Zerfall []  (Masstab 0.065 px/E)
+Clip 2 Lochpixel Summe 14 Richtungen 30 je Richtung [1, 0, 0, 1, 3, 5, 4, 7, 2, 2, 0, 2, 1, 2] Zerfall []  (Masstab 0.065 px/E)
+Eltern-Kind-Abstand (kleinster Abstand der Oberflaechen, 0 = beruehrt; - = Drehpunkt im Kind) je Clip:
+ Clip 0 groesster Abstand 140 ueber 45: [('nr_ober', 140)]
+ Clip 1 groesster Abstand 154 ueber 45: [('nl_ober', 54), ('nr_ober', 154)]
+ Clip 2 groesster Abstand 128 ueber 45: [('nr_ober', 128)]
+Stand: {0: {'volumen': 6.4, 'schwerpunkt': [-337, -1741, -205], 'boden_ecken': 3, 'standflaeche': 0.02, 'rand_abstand': -1097}, 1: {'volumen': 6.1, 'schwerpunkt': [-302, -1783, -125], 'boden_ecken': 3, 'standflaeche': 0.01, 'rand_abstand': -1073}, 2: {'volumen': 6.5, 'schwerpunkt': [-332, -1744, -214], 'boden_ecken': 3, 'standflaeche': 0.02, 'rand_abstand': -1108}}
+Gelenkkugeln (Knochen, Radius in Kind, Radius in Rest; negativ = Drehpunkt ausserhalb):
+  [('fl_ober', 228, 37), ('fl_unter', 155, 208), ('fl_fuss', 61, 74), ('fl_zeh', 91, 36), ('fr_ober', 111, -275), ('fr_unter', 223, 238), ('fr_fuss', 265, 266), ('fr_zeh', 186, 42), ('rumpf_m', -605, -735), ('rumpf', -628, 348), ('nl_ober', 367, 445), ('nl_unter', 313, 278), ('nl_faust', 118, 101), ('nl_innen', 278, 277), ('maul_l', -169, 125), ('nr_ober', 221, 349), ('nr_unter', 155, 126), ('nr_faust', 51, 33), ('nr_innen', 45, 33), ('maul_r', -183, 37)]
+ Gelenke Drehpunkt ausserhalb Kind: ['rumpf_m', 'rumpf', 'maul_l', 'maul_r']  ausserhalb Rest: ['fr_ober', 'rumpf_m']
+
+========= C
+Clip 0 Lochpixel Summe 14 Richtungen 35 je Richtung [0, 1, 6, 5, 0, 0, 4, 4, 2, 2, 2, 3, 1, 5] Zerfall []  (Masstab 0.063 px/E)
+Clip 1 Lochpixel Summe 14 Richtungen 52 je Richtung [1, 4, 2, 3, 0, 3, 11, 4, 5, 1, 0, 5, 4, 9] Zerfall []  (Masstab 0.063 px/E)
+Clip 2 Lochpixel Summe 14 Richtungen 35 je Richtung [0, 1, 6, 5, 0, 0, 4, 4, 2, 2, 2, 3, 1, 5] Zerfall []  (Masstab 0.063 px/E)
+Eltern-Kind-Abstand (kleinster Abstand der Oberflaechen, 0 = beruehrt; - = Drehpunkt im Kind) je Clip:
+ Clip 0 groesster Abstand 19 ueber 45: []
+ Clip 1 groesster Abstand 14 ueber 45: []
+ Clip 2 groesster Abstand 11 ueber 45: []
+Stand: {0: {'volumen': 5.4, 'schwerpunkt': [-108, -1736, -110], 'boden_ecken': 44, 'standflaeche': 3.03, 'rand_abstand': 463}, 1: {'volumen': 5.3, 'schwerpunkt': [-85, -1738, -169], 'boden_ecken': 18, 'standflaeche': 0.53, 'rand_abstand': 60}, 2: {'volumen': 5.4, 'schwerpunkt': [-108, -1736, -110], 'boden_ecken': 44, 'standflaeche': 3.03, 'rand_abstand': 463}}
+Gelenkkugeln (Knochen, Radius in Kind, Radius in Rest; negativ = Drehpunkt ausserhalb):
+  [('fr_huefte', 42, -213), ('fr_bein', 42, 165), ('fr_fuss', 23, 33), ('fr_zeh', 69, -60), ('fl_huefte', 49, 205), ('fl_bein', -26, 165), ('fl_fuss', -11, 20), ('fl_zeh', 56, -81), ('rumpf_m', 532, -452), ('rumpf_v', 246, 283), ('nr_ober', 21, 134), ('nr_unter', 42, 69), ('nr_hand', 43, -53), ('hals', 157, -144), ('vorsprung', -35, 52), ('nl_ober', -15, 74), ('nl_kugel_o', 32, -46), ('nl_kugel_u', -31, 77), ('nl_unter', 34, 119), ('kiefer', 36, 20)]
+ Gelenke Drehpunkt ausserhalb Kind: ['fl_bein', 'fl_fuss', 'vorsprung', 'nl_ober', 'nl_kugel_u']  ausserhalb Rest: ['fr_huefte', 'fr_zeh', 'fl_zeh', 'rumpf_m', 'nr_hand', 'hals', 'nl_kugel_o']

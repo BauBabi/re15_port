@@ -1,0 +1,21 @@
+{
+ "name": "DUMMY",
+ "emd": "DUMMY.EMD",
+ "tim": "DUMMY.TIM",
+ "bild1": {
+  "lage": [
+   -18514,
+   0,
+   -18726
+  ],
+  "gier": 97
+ },
+ "bild2": {
+  "lage": [
+   2625,
+   0,
+   -23625
+  ],
+  "gier": 3129
+ }
+}

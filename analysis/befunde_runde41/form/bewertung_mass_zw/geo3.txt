@@ -1,0 +1,50 @@
+
+===== A
+Gesehene Flaeche: {'nur1': 0.093, 'nur2': 0.134, 'beide': 0.088, 'keine': 0.685, 'beide_von_gesehen': 0.28, 'px2_auch_in_1': 0.489, 'px1_auch_in_2': 0.525}
+Grau Bild 1: {'render': 35416, 'auf_grau': 12462, 'grau_video_ueber_60': 3612, 'grau_video_ueber_90': 1790, 'grau_video_ueber_120': 830, 'grau_video_ueber_150': 331, 'grau_render_dunkler_40': 945, 'grau_render_dunkler_80': 181, 'grau_ohne_render_video_dunkel': 4050, 'ncc_weit': 0.802, 'mae_weit': 22.6}
+Grau Bild 2: {'render': 42823, 'auf_grau': 18264, 'grau_video_ueber_60': 10063, 'grau_video_ueber_90': 7099, 'grau_video_ueber_120': 5407, 'grau_video_ueber_150': 4389, 'grau_render_dunkler_40': 8407, 'grau_render_dunkler_80': 5630, 'grau_ohne_render_video_dunkel': 20887, 'ncc_weit': 0.342, 'mae_weit': 34.0}
+Frau: {'naechster_abstand': 686, 'tiefe_figur': [5113, 6178, 7683], 'tiefe_frau': 7174}
+  Bild1 FR {'h': 0, 'bild': [403, 376], 'Y_video': 134, 'welt': [-17262, -19617]}
+  Bild1 FL {'h': 2, 'bild': [334, 373], 'Y_video': 52, 'welt': [-17450, -18446]}
+  Bild1 NL {'h': 13, 'bild': [227, 426], 'Y_video': 25, 'welt': [-19697, -17775]}
+  Bild1 NR {'h': 10, 'bild': [334, 437], 'Y_video': 28, 'welt': [-19641, -19144]}
+  Bild1 NL_innen {'h': 40, 'bild': [275, 425], 'Y_video': 106, 'welt': [-19584, -18372]}
+  Bild2 FR {'h': 7, 'bild': [444, 385], 'Y_video': 86, 'welt': [2819, -21745]}
+  Bild2 FL {'h': 8, 'bild': [355, 353], 'Y_video': 36, 'welt': [1593, -22549]}
+  Bild2 NL {'h': 0, 'bild': [235, 355], 'Y_video': 33, 'welt': [1063, -24419]}
+  Bild2 NR {'h': 5, 'bild': [255, 395], 'Y_video': 54, 'welt': [2305, -24362]}
+  Bild2 NL_innen {'h': 17, 'bild': [248, 372], 'Y_video': 35, 'welt': [1686, -24328]}
+
+===== B
+Gesehene Flaeche: {'nur1': 0.219, 'nur2': 0.176, 'beide': 0.012, 'keine': 0.594, 'beide_von_gesehen': 0.029, 'px2_auch_in_1': 0.034, 'px1_auch_in_2': 0.024}
+Grau Bild 1: {'render': 32241, 'auf_grau': 9375, 'grau_video_ueber_60': 2205, 'grau_video_ueber_90': 878, 'grau_video_ueber_120': 349, 'grau_video_ueber_150': 108, 'grau_render_dunkler_40': 267, 'grau_render_dunkler_80': 8, 'grau_ohne_render_video_dunkel': 5135, 'ncc_weit': 0.765, 'mae_weit': 26.6}
+Grau Bild 2: {'render': 40579, 'auf_grau': 16927, 'grau_video_ueber_60': 4106, 'grau_video_ueber_90': 2365, 'grau_video_ueber_120': 1489, 'grau_video_ueber_150': 926, 'grau_render_dunkler_40': 3366, 'grau_render_dunkler_80': 1708, 'grau_ohne_render_video_dunkel': 16447, 'ncc_weit': 0.455, 'mae_weit': 22.8}
+Frau: {'naechster_abstand': 1009, 'tiefe_figur': [3750, 5601, 7474], 'tiefe_frau': 7174}
+  Bild1 FR {'h': 0, 'bild': [383, 373], 'Y_video': 74, 'welt': [-17225, -19263]}
+  Bild1 FL {'h': 104, 'bild': [324, 367], 'Y_video': 77, 'welt': [-17486, -18291]}
+  Bild1 NL {'h': 252, 'bild': [231, 412], 'Y_video': 29, 'welt': [-19853, -17930]}
+  Bild1 NR {'h': 122, 'bild': [357, 422], 'Y_video': 51, 'welt': [-19440, -19363]}
+  Bild1 NL_innen {'h': 131, 'bild': [269, 409], 'Y_video': 30, 'welt': [-19383, -18185]}
+  Bild1 NR_innen {'h': 544, 'bild': [323, 396], 'Y_video': 30, 'welt': [-19881, -19093]}
+  Bild2 FR {'h': 127, 'bild': [245, 474], 'Y_video': 160, 'welt': [3869, -24802]}
+  Bild2 FL {'h': 469, 'bild': [348, 363], 'Y_video': 49, 'welt': [2666, -23150]}
+  Bild2 NL {'h': 149, 'bild': [300, 338], 'Y_video': 28, 'welt': [1096, -23308]}
+  Bild2 NR {'h': 0, 'bild': [236, 383], 'Y_video': 50, 'welt': [1908, -24560]}
+  Bild2 NL_innen {'h': 82, 'bild': [284, 362], 'Y_video': 107, 'welt': [1671, -23755]}
+  Bild2 NR_innen {'h': 353, 'bild': [250, 336], 'Y_video': 23, 'welt': [1234, -24182]}
+
+===== C
+Gesehene Flaeche: {'nur1': 0.125, 'nur2': 0.125, 'beide': 0.137, 'keine': 0.613, 'beide_von_gesehen': 0.354, 'px2_auch_in_1': 0.632, 'px1_auch_in_2': 0.516}
+Grau Bild 1: {'render': 33562, 'auf_grau': 10602, 'grau_video_ueber_60': 2477, 'grau_video_ueber_90': 1067, 'grau_video_ueber_120': 478, 'grau_video_ueber_150': 144, 'grau_render_dunkler_40': 355, 'grau_render_dunkler_80': 21, 'grau_ohne_render_video_dunkel': 4389, 'ncc_weit': 0.804, 'mae_weit': 23.2}
+Grau Bild 2: {'render': 39784, 'auf_grau': 16539, 'grau_video_ueber_60': 4192, 'grau_video_ueber_90': 2231, 'grau_video_ueber_120': 1418, 'grau_video_ueber_150': 998, 'grau_render_dunkler_40': 2726, 'grau_render_dunkler_80': 1451, 'grau_ohne_render_video_dunkel': 17632, 'ncc_weit': 0.433, 'mae_weit': 22.9}
+Frau: {'naechster_abstand': 1081, 'tiefe_figur': [4641, 5647, 7257], 'tiefe_frau': 7174}
+  Bild1 FR {'h': 0, 'bild': [392, 372], 'Y_video': 57, 'welt': [-17099, -19401]}
+  Bild1 FL {'h': 0, 'bild': [340, 373], 'Y_video': 40, 'welt': [-17399, -18541]}
+  Bild1 NL {'h': 64, 'bild': [220, 425], 'Y_video': 43, 'welt': [-19808, -17759]}
+  Bild1 NR {'h': 20, 'bild': [331, 437], 'Y_video': 32, 'welt': [-19679, -19110]}
+  Bild1 NL_innen {'h': 0, 'bild': [269, 416], 'Y_video': 31, 'welt': [-19290, -18137]}
+  Bild2 FR {'h': 189, 'bild': [380, 371], 'Y_video': 86, 'welt': [2514, -22582]}
+  Bild2 FL {'h': 0, 'bild': [365, 370], 'Y_video': 67, 'welt': [2104, -22607]}
+  Bild2 NL {'h': 115, 'bild': [246, 352], 'Y_video': 25, 'welt': [1262, -24262]}
+  Bild2 NR {'h': 12, 'bild': [230, 428], 'Y_video': 29, 'welt': [2927, -24813]}
+  Bild2 NL_innen {'h': 60, 'bild': [267, 372], 'Y_video': 75, 'welt': [1861, -24078]}

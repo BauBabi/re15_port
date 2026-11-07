@@ -1,0 +1,9 @@
+Z5     Y>=110   Orig 98 px, 15x9, x391-405 y278-286 | A 501 px, 28x31, x385-412 y276-306 | B 502 px, 35x22, x381-415 y277-298 | C 579 px, 29x28, x385-413 y271-298
+Z1     Y>=110   Orig 290 px, 20x26, x310-329 y224-249 | A 514 px, 28x29, x310-337 y221-249 | B 820 px, 33x41, x302-334 y218-258 | C 426 px, 25x28, x309-333 y221-248
+Z3/4   Y>=130   Orig 308 px, 23x21, x313-335 y286-306 | A 679 px, 29x31, x309-337 y281-311 | B 489 px, 27x27, x309-335 y283-309 | C 568 px, 28x28, x307-334 y283-310
+X      Y>=130   Orig 911 px, 40x50, x240-279 y429-478 | A 2589 px, 54x60, x240-293 y420-479 | B 414 px, 27x25, x252-278 y421-445 | C 652 px, 31x36, x251-281 y424-459
+--- Unterarm Bild 2: Streifen um die Linie (333,322)-(268,392), Breite 30 px, Anteil der Laenge mit Y>=70 und R-Mittel
+Orig  Laenge mit Y>=70: 100 %, obere Haelfte 100 %, untere Haelfte 100 %, Rot-Mittel 157
+A     Laenge mit Y>=70: 100 %, obere Haelfte 100 %, untere Haelfte 100 %, Rot-Mittel 109
+B     Laenge mit Y>=70: 100 %, obere Haelfte 100 %, untere Haelfte 100 %, Rot-Mittel 107
+C     Laenge mit Y>=70: 77 %, obere Haelfte 60 %, untere Haelfte 94 %, Rot-Mittel 80

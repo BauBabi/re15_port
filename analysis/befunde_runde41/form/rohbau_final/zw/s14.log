@@ -1,0 +1,16 @@
+Flaechen 1900
+A   0 L 2.6543 tail 0.021/0.044 left_ 0.047/0.099 right 0.033/0.054 right 0.027/0.124 part_ 0.056/0.090 verst 12.000/112.000 face_ 0.108/0.015 left_ 0.046/0.116 right 0.091/0.152 verst 1466.000/3738.000 kopf 0.026/0.082
+      boden hr -0 hl 4 fr 2 fl 2 | hr 2 hl 3 fr 2 fl 2 reg 0.018 0.006 2.389 2.270 0.003 0.000 0.104  1s
+A  79 L 2.6024 tail 0.024/0.040 left_ 0.060/0.074 right 0.035/0.049 right 0.028/0.118 part_ 0.057/0.086 verst 0.000/120.000 face_ 0.109/0.014 left_ 0.048/0.109 right 0.095/0.152 verst 1451.000/3737.000 kopf 0.027/0.081
+      boden hr -0 hl 4 fr 2 fl 1 | hr 4 hl 3 fr 2 fl 2 reg 0.018 0.006 2.389 2.270 0.003 0.401 0.083  50s
+      innen 1 
+      innen 2 
+e   0 L 2.1905 tail 0.021/0.024 left_ 0.075/0.032 right 0.033/0.028 right 0.033/0.070 part_ 0.063/0.055 verst 3.000/110.000 face_ 0.116/0.011 left_ 0.057/0.053 right 0.103/0.131 verst 1478.000/3678.000 kopf 0.022/0.046
+      boden hr -1 hl 4 fr 2 fl 1 | hr 4 hl 3 fr 2 fl 2 reg 0.018 0.006 2.389 2.270 0.003 0.391 0.083  1s
+e 100 L 2.1657 tail 0.017/0.026 left_ 0.054/0.044 right 0.032/0.031 right 0.029/0.076 part_ 0.063/0.057 verst 6.000/121.000 face_ 0.106/0.012 left_ 0.053/0.057 right 0.096/0.128 verst 1482.000/3759.000 kopf 0.019/0.075
+      boden hr -0 hl 4 fr 2 fl 2 | hr 4 hl 3 fr 3 fl 2 reg 0.020 0.006 2.444 2.299 0.003 0.473 0.100  67s
+e 199 L 2.1400 tail 0.017/0.026 left_ 0.056/0.041 right 0.034/0.031 right 0.029/0.077 part_ 0.063/0.056 verst 7.000/109.000 face_ 0.106/0.012 left_ 0.052/0.057 right 0.096/0.128 verst 1420.000/3707.000 kopf 0.018/0.077
+      boden hr -1 hl 4 fr 2 fl 2 | hr 3 hl 4 fr 3 fl 2 reg 0.021 0.006 2.466 2.335 0.003 0.636 0.114  136s
+      innen 1 
+      innen 2 
+fertig zw/s14.json

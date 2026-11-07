@@ -1,0 +1,34 @@
+## x3_leon (exit=0 dauer=131s; exe aa370951fe9768dd)
+HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1327); Rueckstoss (1665, 20124); Sturz (1949, -2516); G5 (2050, 600); Spieler-HP F1340 100->95, F1415 95->50
+x3_leon: Raum-Ton 10 gespielt 7, verworfen 0, SILENT 1 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+x3_leon: Fenster F1665-F2049 (385 Bilder), Form-Slot 12; Beginn: Spieler (23870,-24298) Form (20124,-23682)
+  Cut 13 mo13 F1665-F1752 ( 88 Bilder): Form x  20124.. 13164, Spieler x  23870.. 23870 | dunkel 301..777 (>600: 1) | Form sichtbar min 4974, verdeckt max 39 | Spieler sichtbar max 76, verdeckt max 1000
+  Cut 12 mo13 F1753-F1879 (127 Bilder): Form x  13084..  3004, Spieler x  23870.. 23870 | dunkel 164..595 (>600: 0) | Form sichtbar min 1924, verdeckt max 94 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo13 F1880-F1948 ( 69 Bilder): Form x   2924.. -2516, Spieler x  23870.. 23870 | dunkel 165..504 (>600: 0) | Form sichtbar min 5071, verdeckt max 50 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1949-F2049 (101 Bilder): Form x  -2516..-10786, Spieler x  23870.. 23870 | dunkel 329..364 (>600: 0) | Form sichtbar min 0, verdeckt max 121 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (284 Bilder, 284 mit Bild): Form sichtbar min 1924 (F1878), Spieler sichtbar max 76 (F1739), Form verdeckt max 94 (F1846), fast schwarz max 777 (F1665), > 600: 1; Verstoesse: 1
+    F1665 Cut 13: fast schwarz 777 > 600
+x3_leon: Fenster F1150-F1664 (515 Bilder), Form-Slot 12; Beginn: Spieler (15050,-23550) Form (-14700,-23350)
+  Cut 13 F1150-F1166 ( 17 Bilder): Form x -14700..-14700, Spieler x  15050.. 13850 | dunkel 287..317 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 7612, verdeckt max 0
+  Cut 12 F1167-F1168 (  2 Bilder): Form x -14700..  1200, Spieler x  13775.. 13775 | dunkel 218..317 (>600: 0) | Form sichtbar min 1117, verdeckt max 222 | Spieler sichtbar max 3270, verdeckt max 0
+  Cut 15 F1169-F1169 (  1 Bilder): Form x   1203..  1203, Spieler x  13775.. 13775 | dunkel 218..218 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1203..  1245, Spieler x  13775.. 13845 | dunkel 218..589 (>600: 0) | Form sichtbar min 11462, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1230 (  2 Bilder): Form x   1193..  1193, Spieler x  13915.. 13985 | dunkel 196..443 (>600: 0) | Form sichtbar min 1224, verdeckt max 191 | Spieler sichtbar max 3592, verdeckt max 0
+  Cut 13 F1231-F1340 (110 Bilder): Form x   1196.. 16857, Spieler x  14055.. 20075 | dunkel 196..584 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 6921, verdeckt max 972
+  Cut 14 F1341-F1664 (324 Bilder): Form x  17332.. 20124, Spieler x  20275.. 23870 | dunkel 353..792 (>600: 323) | Form sichtbar min 4275, verdeckt max 138 | Spieler sichtbar max 955, verdeckt max 638
+  Pruefmass (515 Bilder, 515 mit Bild): Form sichtbar min 0 (F1150), Spieler sichtbar max 7612 (F1166), Form verdeckt max 222 (F1168), fast schwarz max 792 (F1583), > 600: 323; Verstoesse: 323
+    F1342 Cut 14: fast schwarz 770 > 600
+    F1343 Cut 14: fast schwarz 771 > 600
+    F1344 Cut 14: fast schwarz 773 > 600
+    F1345 Cut 14: fast schwarz 773 > 600
+    F1346 Cut 14: fast schwarz 771 > 600
+    F1347 Cut 14: fast schwarz 770 > 600
+    F1348 Cut 14: fast schwarz 768 > 600
+    F1349 Cut 14: fast schwarz 767 > 600
+    F1350 Cut 14: fast schwarz 767 > 600
+    F1351 Cut 14: fast schwarz 767 > 600
+    F1352 Cut 14: fast schwarz 767 > 600
+    F1353 Cut 14: fast schwarz 767 > 600
+    ... 311 weitere
+werkzeug/../blatt/x3_leon_szene.png 65 Bilder
+werkzeug/../blatt/x3_leon_kampf.png 65 Bilder

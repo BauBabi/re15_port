@@ -1,0 +1,1372 @@
+{
+ "EM30_haut": {
+  "atlas": {
+   "name": "EM30_haut",
+   "zone_texel": 28856,
+   "gueltig_texel": 24329,
+   "rot_anteil_p": 18.0,
+   "fleisch_texel": 14938,
+   "haut_texel": 13918,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 27.97,
+     "lang_p": 93.0
+    },
+    "fleisch": {
+     "dichte": 29.63,
+     "lang_p": 84.3
+    },
+    "haut": {
+     "dichte": 26.21,
+     "lang_p": 84.5
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 32.53,
+     "lang_p": 91.3
+    },
+    "fleisch": {
+     "dichte": 33.85,
+     "lang_p": 83.1
+    },
+    "haut": {
+     "dichte": 31.14,
+     "lang_p": 83.1
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 7.86,
+    "je1000": 1.69,
+    "breite": 1.79,
+    "laenge_med": 12.5,
+    "laenge_p90": 26.7,
+    "kontrast": 12.2
+   },
+   "linien_fleisch": {
+    "anteil_p": 12.65,
+    "je1000": 1.52,
+    "breite": 1.62,
+    "laenge_med": 12.6,
+    "laenge_p90": 26.5,
+    "kontrast": 15.2
+   },
+   "linien_haut": {
+    "anteil_p": 5.35,
+    "je1000": 2.37,
+    "breite": 1.36,
+    "laenge_med": 9.5,
+    "laenge_p90": 18.4,
+    "kontrast": 10.6
+   },
+   "felder": 21,
+   "felder_mit_kanten": 18,
+   "koh_feld_gew": 0.214,
+   "koh_feld_med": 0.299,
+   "koh_lokal_gew": 0.576,
+   "laengs_felder": 11,
+   "dw_achse_med": 31.1,
+   "dw_achse_lt30_gew_p": 72.4,
+   "dw_achse_gt60_gew_p": 8.5,
+   "kdir_u_med": 59.6,
+   "rot": {
+    "n_flaechen": 19,
+    "texel": 4346,
+    "groesste": 945,
+    "dL_rand_med": -0.2,
+    "dL_rand_gew": -10.7,
+    "dunkler_rand_p": 10.5,
+    "dunkler_rand_gew_p": 4.0,
+    "stufen_med": 1.0,
+    "stufen_gew": 2.87,
+    "stufen_ge2_gew_p": 54.3,
+    "sdL_pool": 10.9,
+    "sda_pool": 5.4,
+    "kern_n": 5,
+    "hellkern_p": 0.0,
+    "hellkern_gew_p": 0.0,
+    "dL_kern_med": -0.6
+   },
+   "rot_sdL_ges": 14.7,
+   "rot_sda_ges": 7.0
+  },
+  "render": {
+   "name": "EM30_haut",
+   "winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "px": 28967,
+     "rot_p": 7.7,
+     "dichte": 20.55,
+     "lang_p": 95.4,
+     "dichte_fleisch": 27.78,
+     "dichte_haut": 18.71,
+     "koh_lokal": 0.596,
+     "rot": {
+      "n_flaechen": 10,
+      "texel": 1993,
+      "groesste": 1034,
+      "dL_rand_med": -0.8,
+      "dL_rand_gew": -3.2,
+      "dunkler_rand_p": 0.0,
+      "dunkler_rand_gew_p": 0.0,
+      "stufen_med": 1.0,
+      "stufen_gew": 3.62,
+      "stufen_ge2_gew_p": 54.2,
+      "sdL_pool": 9.1,
+      "sda_pool": 4.7,
+      "kern_n": 5,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": -1.5
+     },
+     "rot_sdL_ges": 12.2,
+     "rot_sda_ges": 6.1,
+     "rot_Lmed": 20.4
+    },
+    {
+     "winkel": "Seite",
+     "px": 20186,
+     "rot_p": 13.2,
+     "dichte": 23.31,
+     "lang_p": 96.7,
+     "dichte_fleisch": 28.7,
+     "dichte_haut": 19.95,
+     "koh_lokal": 0.611,
+     "rot": {
+      "n_flaechen": 16,
+      "texel": 2344,
+      "groesste": 962,
+      "dL_rand_med": -2.9,
+      "dL_rand_gew": -6.2,
+      "dunkler_rand_p": 12.5,
+      "dunkler_rand_gew_p": 13.1,
+      "stufen_med": 1.0,
+      "stufen_gew": 3.43,
+      "stufen_ge2_gew_p": 57.4,
+      "sdL_pool": 9.0,
+      "sda_pool": 5.0,
+      "kern_n": 3,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": -1.6
+     },
+     "rot_sdL_ges": 11.7,
+     "rot_sda_ges": 6.2,
+     "rot_Lmed": 19.9
+    },
+    {
+     "winkel": "3/4 hinten",
+     "px": 29022,
+     "rot_p": 7.3,
+     "dichte": 23.62,
+     "lang_p": 95.8,
+     "dichte_fleisch": 32.01,
+     "dichte_haut": 20.46,
+     "koh_lokal": 0.637,
+     "rot": {
+      "n_flaechen": 9,
+      "texel": 1599,
+      "groesste": 875,
+      "dL_rand_med": -5.1,
+      "dL_rand_gew": -5.5,
+      "dunkler_rand_p": 11.1,
+      "dunkler_rand_gew_p": 6.2,
+      "stufen_med": 1.0,
+      "stufen_gew": 4.02,
+      "stufen_ge2_gew_p": 69.4,
+      "sdL_pool": 11.2,
+      "sda_pool": 5.5,
+      "kern_n": 3,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": 0.5
+     },
+     "rot_sdL_ges": 13.0,
+     "rot_sda_ges": 6.3,
+     "rot_Lmed": 22.0
+    }
+   ],
+   "rot_alle": {
+    "n_flaechen": 35,
+    "texel": 5936,
+    "groesste": 1034,
+    "dL_rand_med": -1.6,
+    "dL_rand_gew": -5.0,
+    "dunkler_rand_p": 8.6,
+    "dunkler_rand_gew_p": 6.8,
+    "stufen_med": 1.0,
+    "stufen_gew": 3.65,
+    "stufen_ge2_gew_p": 59.6,
+    "sdL_pool": 9.6,
+    "sda_pool": 5.0,
+    "kern_n": 11,
+    "hellkern_p": 0.0,
+    "hellkern_gew_p": 0.0,
+    "dL_kern_med": -1.4
+   }
+  }
+ },
+ "G4_koerper": {
+  "atlas": {
+   "name": "G4_koerper",
+   "zone_texel": 40063,
+   "gueltig_texel": 32303,
+   "rot_anteil_p": 23.9,
+   "fleisch_texel": 18289,
+   "haut_texel": 21774,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 20.85,
+     "lang_p": 95.6
+    },
+    "fleisch": {
+     "dichte": 29.55,
+     "lang_p": 92.8
+    },
+    "haut": {
+     "dichte": 12.71,
+     "lang_p": 89.5
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 26.9,
+     "lang_p": 93.8
+    },
+    "fleisch": {
+     "dichte": 33.68,
+     "lang_p": 91.0
+    },
+    "haut": {
+     "dichte": 20.57,
+     "lang_p": 85.9
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 5.66,
+    "je1000": 1.89,
+    "breite": 1.49,
+    "laenge_med": 10.8,
+    "laenge_p90": 23.8,
+    "kontrast": 10.1
+   },
+   "linien_fleisch": {
+    "anteil_p": 9.5,
+    "je1000": 3.01,
+    "breite": 1.5,
+    "laenge_med": 10.8,
+    "laenge_p90": 21.2,
+    "kontrast": 11.2
+   },
+   "linien_haut": {
+    "anteil_p": 3.89,
+    "je1000": 2.22,
+    "breite": 1.34,
+    "laenge_med": 9.9,
+    "laenge_p90": 18.1,
+    "kontrast": 9.2
+   },
+   "felder": 35,
+   "felder_mit_kanten": 31,
+   "koh_feld_gew": 0.37,
+   "koh_feld_med": 0.473,
+   "koh_lokal_gew": 0.618,
+   "laengs_felder": 22,
+   "dw_achse_med": 3.7,
+   "dw_achse_lt30_gew_p": 97.7,
+   "dw_achse_gt60_gew_p": 0.0,
+   "kdir_u_med": 82.9,
+   "rot": {
+    "n_flaechen": 39,
+    "texel": 9227,
+    "groesste": 2969,
+    "dL_rand_med": 11.8,
+    "dL_rand_gew": 10.8,
+    "dunkler_rand_p": 73.7,
+    "dunkler_rand_gew_p": 59.1,
+    "stufen_med": 3.0,
+    "stufen_gew": 4.1,
+    "stufen_ge2_gew_p": 88.5,
+    "sdL_pool": 11.2,
+    "sda_pool": 11.4,
+    "kern_n": 18,
+    "hellkern_p": 50.0,
+    "hellkern_gew_p": 29.0,
+    "dL_kern_med": 5.5
+   },
+   "rot_sdL_ges": 14.3,
+   "rot_sda_ges": 14.9
+  },
+  "render": {
+   "name": "G4_koerper",
+   "winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "px": 35476,
+     "rot_p": 23.7,
+     "dichte": 17.82,
+     "lang_p": 96.2,
+     "dichte_fleisch": 23.73,
+     "dichte_haut": 10.94,
+     "koh_lokal": 0.631,
+     "rot": {
+      "n_flaechen": 21,
+      "texel": 7760,
+      "groesste": 4382,
+      "dL_rand_med": 4.9,
+      "dL_rand_gew": 6.9,
+      "dunkler_rand_p": 42.9,
+      "dunkler_rand_gew_p": 20.5,
+      "stufen_med": 1.0,
+      "stufen_gew": 3.12,
+      "stufen_ge2_gew_p": 89.7,
+      "sdL_pool": 11.8,
+      "sda_pool": 6.1,
+      "kern_n": 5,
+      "hellkern_p": 20.0,
+      "hellkern_gew_p": 3.8,
+      "dL_kern_med": 2.4
+     },
+     "rot_sdL_ges": 13.3,
+     "rot_sda_ges": 7.6,
+     "rot_Lmed": 30.3
+    },
+    {
+     "winkel": "Seite",
+     "px": 39249,
+     "rot_p": 15.8,
+     "dichte": 13.49,
+     "lang_p": 95.3,
+     "dichte_fleisch": 22.51,
+     "dichte_haut": 7.14,
+     "koh_lokal": 0.639,
+     "rot": {
+      "n_flaechen": 31,
+      "texel": 5597,
+      "groesste": 1297,
+      "dL_rand_med": 6.5,
+      "dL_rand_gew": 6.1,
+      "dunkler_rand_p": 51.6,
+      "dunkler_rand_gew_p": 54.0,
+      "stufen_med": 1.0,
+      "stufen_gew": 2.78,
+      "stufen_ge2_gew_p": 63.9,
+      "sdL_pool": 9.9,
+      "sda_pool": 5.8,
+      "kern_n": 10,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": 2.4
+     },
+     "rot_sdL_ges": 12.8,
+     "rot_sda_ges": 6.9,
+     "rot_Lmed": 27.7
+    },
+    {
+     "winkel": "3/4 hinten",
+     "px": 35258,
+     "rot_p": 22.4,
+     "dichte": 14.76,
+     "lang_p": 96.4,
+     "dichte_fleisch": 24.52,
+     "dichte_haut": 7.22,
+     "koh_lokal": 0.602,
+     "rot": {
+      "n_flaechen": 20,
+      "texel": 7478,
+      "groesste": 3961,
+      "dL_rand_med": 6.7,
+      "dL_rand_gew": 13.2,
+      "dunkler_rand_p": 60.0,
+      "dunkler_rand_gew_p": 83.2,
+      "stufen_med": 1.5,
+      "stufen_gew": 4.7,
+      "stufen_ge2_gew_p": 85.2,
+      "sdL_pool": 11.0,
+      "sda_pool": 10.5,
+      "kern_n": 6,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": 1.7
+     },
+     "rot_sdL_ges": 13.6,
+     "rot_sda_ges": 11.3,
+     "rot_Lmed": 34.3
+    }
+   ],
+   "rot_alle": {
+    "n_flaechen": 72,
+    "texel": 20835,
+    "groesste": 4382,
+    "dL_rand_med": 6.2,
+    "dL_rand_gew": 8.9,
+    "dunkler_rand_p": 51.4,
+    "dunkler_rand_gew_p": 52.0,
+    "stufen_med": 1.0,
+    "stufen_gew": 3.6,
+    "stufen_ge2_gew_p": 81.1,
+    "sdL_pool": 11.0,
+    "sda_pool": 7.9,
+    "kern_n": 21,
+    "hellkern_p": 4.8,
+    "hellkern_gew_p": 1.5,
+    "dL_kern_med": 2.4
+   }
+  }
+ },
+ "G5_koerper": {
+  "atlas": {
+   "name": "G5_koerper",
+   "zone_texel": 53197,
+   "gueltig_texel": 49935,
+   "rot_anteil_p": 38.0,
+   "fleisch_texel": 40592,
+   "haut_texel": 12605,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 27.35,
+     "lang_p": 95.9
+    },
+    "fleisch": {
+     "dichte": 30.17,
+     "lang_p": 93.8
+    },
+    "haut": {
+     "dichte": 17.85,
+     "lang_p": 80.9
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 30.2,
+     "lang_p": 95.1
+    },
+    "fleisch": {
+     "dichte": 32.55,
+     "lang_p": 92.9
+    },
+    "haut": {
+     "dichte": 22.3,
+     "lang_p": 81.8
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 16.52,
+    "je1000": 2.4,
+    "breite": 1.82,
+    "laenge_med": 17.8,
+    "laenge_p90": 54.5,
+    "kontrast": 11.9
+   },
+   "linien_fleisch": {
+    "anteil_p": 19.32,
+    "je1000": 3.45,
+    "breite": 1.79,
+    "laenge_med": 15.6,
+    "laenge_p90": 42.9,
+    "kontrast": 12.1
+   },
+   "linien_haut": {
+    "anteil_p": 8.29,
+    "je1000": 3.5,
+    "breite": 1.53,
+    "laenge_med": 11.2,
+    "laenge_p90": 22.6,
+    "kontrast": 11.5
+   },
+   "felder": 5,
+   "felder_mit_kanten": 5,
+   "koh_feld_gew": 0.513,
+   "koh_feld_med": 0.631,
+   "koh_lokal_gew": 0.753,
+   "laengs_felder": 4,
+   "dw_achse_med": 45.7,
+   "dw_achse_lt30_gew_p": 59.1,
+   "dw_achse_gt60_gew_p": 40.9,
+   "kdir_u_med": 82.4,
+   "rot": {
+    "n_flaechen": 40,
+    "texel": 18802,
+    "groesste": 4650,
+    "dL_rand_med": 5.2,
+    "dL_rand_gew": 7.5,
+    "dunkler_rand_p": 42.5,
+    "dunkler_rand_gew_p": 63.0,
+    "stufen_med": 2.0,
+    "stufen_gew": 4.17,
+    "stufen_ge2_gew_p": 96.7,
+    "sdL_pool": 14.5,
+    "sda_pool": 5.7,
+    "kern_n": 10,
+    "hellkern_p": 50.0,
+    "hellkern_gew_p": 63.5,
+    "dL_kern_med": 6.7
+   },
+   "rot_sdL_ges": 15.9,
+   "rot_sda_ges": 6.6
+  },
+  "render": {
+   "name": "G5_koerper",
+   "winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "px": 26690,
+     "rot_p": 29.6,
+     "dichte": 23.86,
+     "lang_p": 98.4,
+     "dichte_fleisch": 25.19,
+     "dichte_haut": 21.45,
+     "koh_lokal": 0.667,
+     "rot": {
+      "n_flaechen": 26,
+      "texel": 7091,
+      "groesste": 3795,
+      "dL_rand_med": 0.3,
+      "dL_rand_gew": -3.0,
+      "dunkler_rand_p": 15.4,
+      "dunkler_rand_gew_p": 3.6,
+      "stufen_med": 1.0,
+      "stufen_gew": 3.23,
+      "stufen_ge2_gew_p": 60.2,
+      "sdL_pool": 9.9,
+      "sda_pool": 6.1,
+      "kern_n": 6,
+      "hellkern_p": 16.7,
+      "hellkern_gew_p": 17.1,
+      "dL_kern_med": -1.4
+     },
+     "rot_sdL_ges": 14.0,
+     "rot_sda_ges": 8.1,
+     "rot_Lmed": 30.5
+    },
+    {
+     "winkel": "Seite",
+     "px": 26534,
+     "rot_p": 23.3,
+     "dichte": 22.03,
+     "lang_p": 98.4,
+     "dichte_fleisch": 22.24,
+     "dichte_haut": 21.78,
+     "koh_lokal": 0.669,
+     "rot": {
+      "n_flaechen": 21,
+      "texel": 5487,
+      "groesste": 3272,
+      "dL_rand_med": -0.2,
+      "dL_rand_gew": -1.6,
+      "dunkler_rand_p": 4.8,
+      "dunkler_rand_gew_p": 2.0,
+      "stufen_med": 1.0,
+      "stufen_gew": 3.51,
+      "stufen_ge2_gew_p": 70.2,
+      "sdL_pool": 9.0,
+      "sda_pool": 5.6,
+      "kern_n": 7,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": 0.6
+     },
+     "rot_sdL_ges": 13.2,
+     "rot_sda_ges": 6.8,
+     "rot_Lmed": 25.9
+    },
+    {
+     "winkel": "3/4 hinten",
+     "px": 18745,
+     "rot_p": 41.7,
+     "dichte": 25.57,
+     "lang_p": 96.6,
+     "dichte_fleisch": 26.82,
+     "dichte_haut": 22.24,
+     "koh_lokal": 0.664,
+     "rot": {
+      "n_flaechen": 14,
+      "texel": 7510,
+      "groesste": 4942,
+      "dL_rand_med": 1.4,
+      "dL_rand_gew": 0.4,
+      "dunkler_rand_p": 7.1,
+      "dunkler_rand_gew_p": 0.8,
+      "stufen_med": 1.0,
+      "stufen_gew": 3.67,
+      "stufen_ge2_gew_p": 68.4,
+      "sdL_pool": 13.5,
+      "sda_pool": 12.0,
+      "kern_n": 4,
+      "hellkern_p": 25.0,
+      "hellkern_gew_p": 19.0,
+      "dL_kern_med": 2.5
+     },
+     "rot_sdL_ges": 15.4,
+     "rot_sda_ges": 15.0,
+     "rot_Lmed": 35.3
+    }
+   ],
+   "rot_alle": {
+    "n_flaechen": 61,
+    "texel": 20088,
+    "groesste": 4942,
+    "dL_rand_med": 0.3,
+    "dL_rand_gew": -1.3,
+    "dunkler_rand_p": 9.8,
+    "dunkler_rand_gew_p": 2.1,
+    "stufen_med": 1.0,
+    "stufen_gew": 3.47,
+    "stufen_ge2_gew_p": 66.0,
+    "sdL_pool": 11.2,
+    "sda_pool": 8.7,
+    "kern_n": 17,
+    "hellkern_p": 11.8,
+    "hellkern_gew_p": 13.2,
+    "dL_kern_med": 0.6
+   }
+  }
+ },
+ "r3_koerper": {
+  "atlas": {
+   "name": "r3_koerper",
+   "zone_texel": 61896,
+   "gueltig_texel": 54488,
+   "rot_anteil_p": 20.3,
+   "fleisch_texel": 19157,
+   "haut_texel": 42739,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 22.33,
+     "lang_p": 94.6
+    },
+    "fleisch": {
+     "dichte": 19.05,
+     "lang_p": 90.3
+    },
+    "haut": {
+     "dichte": 23.8,
+     "lang_p": 92.7
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 30.59,
+     "lang_p": 93.9
+    },
+    "fleisch": {
+     "dichte": 29.34,
+     "lang_p": 90.5
+    },
+    "haut": {
+     "dichte": 31.15,
+     "lang_p": 91.9
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 3.22,
+    "je1000": 1.41,
+    "breite": 1.41,
+    "laenge_med": 10.1,
+    "laenge_p90": 19.3,
+    "kontrast": 9.5
+   },
+   "linien_fleisch": {
+    "anteil_p": 3.71,
+    "je1000": 1.84,
+    "breite": 1.31,
+    "laenge_med": 8.4,
+    "laenge_p90": 24.4,
+    "kontrast": 9.0
+   },
+   "linien_haut": {
+    "anteil_p": 2.99,
+    "je1000": 1.43,
+    "breite": 1.45,
+    "laenge_med": 9.9,
+    "laenge_p90": 17.5,
+    "kontrast": 10.0
+   },
+   "felder": 29,
+   "felder_mit_kanten": 29,
+   "koh_feld_gew": 0.229,
+   "koh_feld_med": 0.217,
+   "koh_lokal_gew": 0.561,
+   "laengs_felder": 25,
+   "dw_achse_med": 9.2,
+   "dw_achse_lt30_gew_p": 82.2,
+   "dw_achse_gt60_gew_p": 6.8,
+   "kdir_u_med": 12.8,
+   "rot": {
+    "n_flaechen": 36,
+    "texel": 11922,
+    "groesste": 1838,
+    "dL_rand_med": -1.8,
+    "dL_rand_gew": 10.6,
+    "dunkler_rand_p": 25.0,
+    "dunkler_rand_gew_p": 85.5,
+    "stufen_med": 1.0,
+    "stufen_gew": 3.17,
+    "stufen_ge2_gew_p": 85.7,
+    "sdL_pool": 8.6,
+    "sda_pool": 5.8,
+    "kern_n": 13,
+    "hellkern_p": 46.2,
+    "hellkern_gew_p": 64.4,
+    "dL_kern_med": 4.9
+   },
+   "rot_sdL_ges": 11.7,
+   "rot_sda_ges": 6.5
+  },
+  "render": {
+   "name": "r3_koerper",
+   "winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "px": 14976,
+     "rot_p": 10.4,
+     "dichte": 21.65,
+     "lang_p": 94.2,
+     "dichte_fleisch": 22.74,
+     "dichte_haut": 21.2,
+     "koh_lokal": 0.521,
+     "rot": {
+      "n_flaechen": 8,
+      "texel": 1303,
+      "groesste": 431,
+      "dL_rand_med": -1.1,
+      "dL_rand_gew": 2.1,
+      "dunkler_rand_p": 25.0,
+      "dunkler_rand_gew_p": 36.0,
+      "stufen_med": 1.0,
+      "stufen_gew": 1.0,
+      "stufen_ge2_gew_p": 0.0,
+      "sdL_pool": 5.9,
+      "sda_pool": 3.3,
+      "kern_n": 3,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": 3.0
+     },
+     "rot_sdL_ges": 9.3,
+     "rot_sda_ges": 3.5,
+     "rot_Lmed": 20.8
+    },
+    {
+     "winkel": "Seite",
+     "px": 17288,
+     "rot_p": 9.5,
+     "dichte": 18.35,
+     "lang_p": 95.3,
+     "dichte_fleisch": 19.05,
+     "dichte_haut": 18.15,
+     "koh_lokal": 0.514,
+     "rot": {
+      "n_flaechen": 11,
+      "texel": 1504,
+      "groesste": 820,
+      "dL_rand_med": 0.4,
+      "dL_rand_gew": 2.8,
+      "dunkler_rand_p": 27.3,
+      "dunkler_rand_gew_p": 10.0,
+      "stufen_med": 1.0,
+      "stufen_gew": 1.0,
+      "stufen_ge2_gew_p": 0.0,
+      "sdL_pool": 4.8,
+      "sda_pool": 2.6,
+      "kern_n": 3,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": 0.6
+     },
+     "rot_sdL_ges": 8.4,
+     "rot_sda_ges": 2.9,
+     "rot_Lmed": 17.7
+    },
+    {
+     "winkel": "3/4 hinten",
+     "px": 15534,
+     "rot_p": 9.6,
+     "dichte": 16.65,
+     "lang_p": 95.4,
+     "dichte_fleisch": 21.4,
+     "dichte_haut": 15.16,
+     "koh_lokal": 0.508,
+     "rot": {
+      "n_flaechen": 9,
+      "texel": 1347,
+      "groesste": 493,
+      "dL_rand_med": 2.2,
+      "dL_rand_gew": 2.8,
+      "dunkler_rand_p": 33.3,
+      "dunkler_rand_gew_p": 37.1,
+      "stufen_med": 1.0,
+      "stufen_gew": 1.07,
+      "stufen_ge2_gew_p": 6.6,
+      "sdL_pool": 5.6,
+      "sda_pool": 3.3,
+      "kern_n": 5,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": -0.2
+     },
+     "rot_sdL_ges": 8.9,
+     "rot_sda_ges": 3.7,
+     "rot_Lmed": 18.5
+    }
+   ],
+   "rot_alle": {
+    "n_flaechen": 28,
+    "texel": 4154,
+    "groesste": 820,
+    "dL_rand_med": 0.6,
+    "dL_rand_gew": 2.6,
+    "dunkler_rand_p": 28.6,
+    "dunkler_rand_gew_p": 26.9,
+    "stufen_med": 1.0,
+    "stufen_gew": 1.02,
+    "stufen_ge2_gew_p": 2.1,
+    "sdL_pool": 5.4,
+    "sda_pool": 3.1,
+    "kern_n": 11,
+    "hellkern_p": 0.0,
+    "hellkern_gew_p": 0.0,
+    "dL_kern_med": 0.6
+   }
+  }
+ },
+ "K4_koerper": {
+  "atlas": {
+   "name": "K4_koerper",
+   "zone_texel": 61896,
+   "gueltig_texel": 54488,
+   "rot_anteil_p": 0.5,
+   "fleisch_texel": 1358,
+   "haut_texel": 60538,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 20.51,
+     "lang_p": 93.4
+    },
+    "fleisch": {
+     "dichte": 33.13,
+     "lang_p": 90.7
+    },
+    "haut": {
+     "dichte": 20.21,
+     "lang_p": 92.7
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 30.09,
+     "lang_p": 93.4
+    },
+    "fleisch": {
+     "dichte": 35.14,
+     "lang_p": 88.8
+    },
+    "haut": {
+     "dichte": 29.97,
+     "lang_p": 92.9
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 5.14,
+    "je1000": 1.43,
+    "breite": 1.67,
+    "laenge_med": 11.5,
+    "laenge_p90": 25.9,
+    "kontrast": 9.8
+   },
+   "linien_fleisch": {
+    "anteil_p": 1.32,
+    "je1000": 1.55,
+    "breite": 0.97,
+    "laenge_med": 8.7,
+    "laenge_p90": 8.8,
+    "kontrast": 9.0
+   },
+   "linien_haut": {
+    "anteil_p": 5.3,
+    "je1000": 1.45,
+    "breite": 1.68,
+    "laenge_med": 11.6,
+    "laenge_p90": 26.0,
+    "kontrast": 9.9
+   },
+   "felder": 29,
+   "felder_mit_kanten": 29,
+   "koh_feld_gew": 0.201,
+   "koh_feld_med": 0.231,
+   "koh_lokal_gew": 0.554,
+   "laengs_felder": 25,
+   "dw_achse_med": 26.6,
+   "dw_achse_lt30_gew_p": 68.8,
+   "dw_achse_gt60_gew_p": 15.9,
+   "kdir_u_med": 21.6,
+   "rot": {
+    "n_flaechen": 5,
+    "texel": 261,
+    "groesste": 99,
+    "dL_rand_med": 9.2,
+    "dL_rand_gew": 9.6,
+    "dunkler_rand_p": 80.0,
+    "dunkler_rand_gew_p": 84.3,
+    "stufen_med": 4.0,
+    "stufen_gew": 4.15,
+    "stufen_ge2_gew_p": 100.0,
+    "sdL_pool": 11.4,
+    "sda_pool": 9.9,
+    "kern_n": 0,
+    "hellkern_p": null,
+    "hellkern_gew_p": null,
+    "dL_kern_med": null
+   },
+   "rot_sdL_ges": 15.2,
+   "rot_sda_ges": 11.0
+  },
+  "render": {
+   "name": "K4_koerper",
+   "winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "px": 14550,
+     "rot_p": 1.8,
+     "dichte": 17.06,
+     "lang_p": 93.2,
+     "dichte_fleisch": 30.68,
+     "dichte_haut": 16.19,
+     "koh_lokal": 0.509,
+     "rot": {
+      "n_flaechen": 4,
+      "texel": 250,
+      "groesste": 156,
+      "dL_rand_med": 8.7,
+      "dL_rand_gew": 10.2,
+      "dunkler_rand_p": 50.0,
+      "dunkler_rand_gew_p": 78.8,
+      "stufen_med": 4.0,
+      "stufen_gew": 4.32,
+      "stufen_ge2_gew_p": 100.0,
+      "sdL_pool": 9.9,
+      "sda_pool": 10.8,
+      "kern_n": 1,
+      "hellkern_p": 0.0,
+      "hellkern_gew_p": 0.0,
+      "dL_kern_med": -1.5
+     },
+     "rot_sdL_ges": 14.0,
+     "rot_sda_ges": 11.1,
+     "rot_Lmed": 43.1
+    },
+    {
+     "winkel": "Seite",
+     "px": 16952,
+     "rot_p": 1.3,
+     "dichte": 15.38,
+     "lang_p": 93.7,
+     "dichte_fleisch": 29.95,
+     "dichte_haut": 14.52,
+     "koh_lokal": 0.531,
+     "rot": {
+      "n_flaechen": 4,
+      "texel": 186,
+      "groesste": 81,
+      "dL_rand_med": 5.5,
+      "dL_rand_gew": 1.9,
+      "dunkler_rand_p": 50.0,
+      "dunkler_rand_gew_p": 44.1,
+      "stufen_med": 2.5,
+      "stufen_gew": 3.05,
+      "stufen_ge2_gew_p": 87.6,
+      "sdL_pool": 7.9,
+      "sda_pool": 8.9,
+      "kern_n": 0,
+      "hellkern_p": null,
+      "hellkern_gew_p": null,
+      "dL_kern_med": null
+     },
+     "rot_sdL_ges": 14.7,
+     "rot_sda_ges": 9.8,
+     "rot_Lmed": 36.2
+    },
+    {
+     "winkel": "3/4 hinten",
+     "px": 14890,
+     "rot_p": 0.1,
+     "dichte": 13.01,
+     "lang_p": 94.8,
+     "dichte_fleisch": 28.99,
+     "dichte_haut": 12.93,
+     "koh_lokal": 0.498,
+     "rot": {
+      "n_flaechen": 0
+     },
+     "rot_sdL_ges": 0.6,
+     "rot_sda_ges": 0.4,
+     "rot_Lmed": 39.2
+    }
+   ],
+   "rot_alle": {
+    "n_flaechen": 8,
+    "texel": 436,
+    "groesste": 156,
+    "dL_rand_med": 6.7,
+    "dL_rand_gew": 6.7,
+    "dunkler_rand_p": 50.0,
+    "dunkler_rand_gew_p": 64.0,
+    "stufen_med": 3.0,
+    "stufen_gew": 3.78,
+    "stufen_ge2_gew_p": 94.7,
+    "sdL_pool": 9.1,
+    "sda_pool": 10.0,
+    "kern_n": 1,
+    "hellkern_p": 0.0,
+    "hellkern_gew_p": 0.0,
+    "dL_kern_med": -1.5
+   }
+  }
+ },
+ "EM30_kopf": {
+  "atlas": {
+   "name": "EM30_kopf",
+   "zone_texel": 6300,
+   "gueltig_texel": 5752,
+   "rot_anteil_p": 22.7,
+   "fleisch_texel": 2822,
+   "haut_texel": 3478,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 29.62,
+     "lang_p": 94.4
+    },
+    "fleisch": {
+     "dichte": 33.07,
+     "lang_p": 85.0
+    },
+    "haut": {
+     "dichte": 26.88,
+     "lang_p": 91.0
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 32.13,
+     "lang_p": 93.2
+    },
+    "fleisch": {
+     "dichte": 34.56,
+     "lang_p": 84.4
+    },
+    "haut": {
+     "dichte": 30.19,
+     "lang_p": 89.4
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 5.39,
+    "je1000": 1.22,
+    "breite": 2.08,
+    "laenge_med": 12.5,
+    "laenge_p90": 28.7,
+    "kontrast": 16.2
+   },
+   "linien_fleisch": {
+    "anteil_p": 7.17,
+    "je1000": 1.57,
+    "breite": 1.78,
+    "laenge_med": 13.1,
+    "laenge_p90": 31.4,
+    "kontrast": 18.4
+   },
+   "linien_haut": {
+    "anteil_p": 6.59,
+    "je1000": 1.88,
+    "breite": 2.04,
+    "laenge_med": 12.7,
+    "laenge_p90": 22.4,
+    "kontrast": 12.9
+   },
+   "felder": 1,
+   "felder_mit_kanten": 1,
+   "koh_feld_gew": 0.073,
+   "koh_feld_med": 0.073,
+   "koh_lokal_gew": 0.605,
+   "laengs_felder": 1,
+   "dw_achse_med": 74.8,
+   "dw_achse_lt30_gew_p": 0.0,
+   "dw_achse_gt60_gew_p": 100.0,
+   "kdir_u_med": 19.5,
+   "rot": {
+    "n_flaechen": 3,
+    "texel": 1364,
+    "groesste": 1277,
+    "dL_rand_med": 1.0,
+    "dL_rand_gew": 0.4,
+    "dunkler_rand_p": 0.0,
+    "dunkler_rand_gew_p": 0.0,
+    "stufen_med": 3.0,
+    "stufen_gew": 4.84,
+    "stufen_ge2_gew_p": 100.0,
+    "sdL_pool": 15.5,
+    "sda_pool": 8.7,
+    "kern_n": 1,
+    "hellkern_p": 0.0,
+    "hellkern_gew_p": 0.0,
+    "dL_kern_med": 5.1
+   },
+   "rot_sdL_ges": 16.2,
+   "rot_sda_ges": 9.4
+  }
+ },
+ "G4_kopf": {
+  "atlas": {
+   "name": "G4_kopf",
+   "zone_texel": 2331,
+   "gueltig_texel": 1959,
+   "rot_anteil_p": 40.1,
+   "fleisch_texel": 1588,
+   "haut_texel": 743,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 30.07,
+     "lang_p": 93.4
+    },
+    "fleisch": {
+     "dichte": 33.81,
+     "lang_p": 89.7
+    },
+    "haut": {
+     "dichte": 22.4,
+     "lang_p": 86.8
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 32.92,
+     "lang_p": 93.3
+    },
+    "fleisch": {
+     "dichte": 36.25,
+     "lang_p": 87.6
+    },
+    "haut": {
+     "dichte": 26.13,
+     "lang_p": 87.5
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 46.45,
+    "je1000": 1.02,
+    "breite": 8.04,
+    "laenge_med": 53.6,
+    "laenge_p90": 66.6,
+    "kontrast": 17.0
+   },
+   "linien_fleisch": {
+    "anteil_p": 55.47,
+    "je1000": 2.28,
+    "breite": 5.47,
+    "laenge_med": 37.4,
+    "laenge_p90": 61.6,
+    "kontrast": 16.5
+   },
+   "linien_haut": {
+    "anteil_p": 0.0,
+    "je1000": 0.0,
+    "breite": null,
+    "laenge_med": null,
+    "laenge_p90": null,
+    "kontrast": null
+   },
+   "felder": 2,
+   "felder_mit_kanten": 2,
+   "koh_feld_gew": 0.197,
+   "koh_feld_med": 0.333,
+   "koh_lokal_gew": 0.539,
+   "laengs_felder": 2,
+   "dw_achse_med": 33.4,
+   "dw_achse_lt30_gew_p": 24.9,
+   "dw_achse_gt60_gew_p": 75.1,
+   "kdir_u_med": 73.7,
+   "rot": {
+    "n_flaechen": 5,
+    "texel": 889,
+    "groesste": 515,
+    "dL_rand_med": 1.1,
+    "dL_rand_gew": 9.6,
+    "dunkler_rand_p": 25.0,
+    "dunkler_rand_gew_p": 46.8,
+    "stufen_med": 3.0,
+    "stufen_gew": 3.37,
+    "stufen_ge2_gew_p": 89.7,
+    "sdL_pool": 10.6,
+    "sda_pool": 9.2,
+    "kern_n": 1,
+    "hellkern_p": 0.0,
+    "hellkern_gew_p": 0.0,
+    "dL_kern_med": -0.1
+   },
+   "rot_sdL_ges": 11.2,
+   "rot_sda_ges": 13.7
+  }
+ },
+ "r3_kopf": {
+  "atlas": {
+   "name": "r3_kopf",
+   "zone_texel": 12992,
+   "gueltig_texel": 12536,
+   "rot_anteil_p": 20.8,
+   "fleisch_texel": 5371,
+   "haut_texel": 7621,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 8.85,
+     "lang_p": 96.5
+    },
+    "fleisch": {
+     "dichte": 11.34,
+     "lang_p": 94.1
+    },
+    "haut": {
+     "dichte": 7.14,
+     "lang_p": 85.5
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 22.81,
+     "lang_p": 96.2
+    },
+    "fleisch": {
+     "dichte": 24.94,
+     "lang_p": 93.6
+    },
+    "haut": {
+     "dichte": 21.36,
+     "lang_p": 89.2
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 1.28,
+    "je1000": 0.96,
+    "breite": 0.94,
+    "laenge_med": 8.7,
+    "laenge_p90": 15.4,
+    "kontrast": 7.8
+   },
+   "linien_fleisch": {
+    "anteil_p": 0.69,
+    "je1000": 0.78,
+    "breite": 0.94,
+    "laenge_med": 7.1,
+    "laenge_p90": 9.4,
+    "kontrast": 7.9
+   },
+   "linien_haut": {
+    "anteil_p": 1.88,
+    "je1000": 1.21,
+    "breite": 1.14,
+    "laenge_med": 8.8,
+    "laenge_p90": 15.5,
+    "kontrast": 7.6
+   },
+   "felder": 1,
+   "felder_mit_kanten": 1,
+   "koh_feld_gew": 0.19,
+   "koh_feld_med": 0.19,
+   "koh_lokal_gew": 0.563,
+   "kdir_u_med": 88.2,
+   "rot": {
+    "n_flaechen": 10,
+    "texel": 2619,
+    "groesste": 513,
+    "dL_rand_med": -0.7,
+    "dL_rand_gew": -0.2,
+    "dunkler_rand_p": 0.0,
+    "dunkler_rand_gew_p": 0.0,
+    "stufen_med": 1.0,
+    "stufen_gew": 1.38,
+    "stufen_ge2_gew_p": 24.9,
+    "sdL_pool": 4.6,
+    "sda_pool": 3.5,
+    "kern_n": 6,
+    "hellkern_p": 0.0,
+    "hellkern_gew_p": 0.0,
+    "dL_kern_med": 0.3
+   },
+   "rot_sdL_ges": 10.5,
+   "rot_sda_ges": 3.8
+  }
+ },
+ "K4_kopf": {
+  "atlas": {
+   "name": "K4_kopf",
+   "zone_texel": 12992,
+   "gueltig_texel": 12536,
+   "rot_anteil_p": 0.0,
+   "fleisch_texel": 0,
+   "haut_texel": 12992,
+   "kanten_6/12": {
+    "zone": {
+     "dichte": 4.79,
+     "lang_p": 91.2
+    },
+    "fleisch": {
+     "dichte": 0.0,
+     "lang_p": 0.0
+    },
+    "haut": {
+     "dichte": 4.79,
+     "lang_p": 91.2
+    }
+   },
+   "kanten_4/8": {
+    "zone": {
+     "dichte": 24.51,
+     "lang_p": 94.9
+    },
+    "fleisch": {
+     "dichte": 0.0,
+     "lang_p": 0.0
+    },
+    "haut": {
+     "dichte": 24.51,
+     "lang_p": 94.9
+    }
+   },
+   "linien_zone": {
+    "anteil_p": 2.16,
+    "je1000": 1.04,
+    "breite": 1.53,
+    "laenge_med": 11.5,
+    "laenge_p90": 19.8,
+    "kontrast": 7.9
+   },
+   "linien_fleisch": {
+    "anteil_p": 0.0,
+    "je1000": 0.0,
+    "breite": null,
+    "laenge_med": null,
+    "laenge_p90": null,
+    "kontrast": null
+   },
+   "linien_haut": {
+    "anteil_p": 2.16,
+    "je1000": 1.04,
+    "breite": 1.53,
+    "laenge_med": 11.5,
+    "laenge_p90": 19.8,
+    "kontrast": 7.9
+   },
+   "felder": 1,
+   "felder_mit_kanten": 1,
+   "koh_feld_gew": 0.681,
+   "koh_feld_med": 0.681,
+   "koh_lokal_gew": 0.644,
+   "kdir_u_med": 89.9,
+   "rot": {
+    "n_flaechen": 0
+   },
+   "rot_sdL_ges": null,
+   "rot_sda_ges": null
+  }
+ }
+}

@@ -1,0 +1,143 @@
+=== Rueckenlinie: hoechster Punkt je x (Hoehe in Einheiten)
+--- Pose 1   x: Schwanz / Rumpf / Stufe (Schwanz minus Rumpf)
+   x -1400  Schwanz  2350  Rumpf     -  Stufe     -
+   x -1200  Schwanz  2513  Rumpf     -  Stufe     -
+   x -1000  Schwanz  2631  Rumpf  1726  Stufe  +904
+   x  -800  Schwanz  2742  Rumpf  2340  Stufe  +402
+   x  -600  Schwanz  2807  Rumpf  2569  Stufe  +238
+   x  -400  Schwanz  2878  Rumpf  2658  Stufe  +219
+   x  -200  Schwanz  2912  Rumpf  2658  Stufe  +254
+   x     0  Schwanz  2912  Rumpf  2640  Stufe  +272
+   x   200  Schwanz  2910  Rumpf  2627  Stufe  +283
+   x   400  Schwanz  2942  Rumpf  2570  Stufe  +372
+   x   600  Schwanz  2607  Rumpf  2573  Stufe   +34
+   x   800  Schwanz     -  Rumpf  2630  Stufe     -
+   x  1000  Schwanz     -  Rumpf  2674  Stufe     -
+   x  1200  Schwanz     -  Rumpf  2747  Stufe     -
+   x  1400  Schwanz     -  Rumpf  2747  Stufe     -
+   x  1600  Schwanz     -  Rumpf  2777  Stufe     -
+   x  1800  Schwanz     -  Rumpf  2764  Stufe     -
+   x  2000  Schwanz     -  Rumpf  2663  Stufe     -
+   x  2200  Schwanz     -  Rumpf  2443  Stufe     -
+--- Ruhe   x: Schwanz / Rumpf / Stufe (Schwanz minus Rumpf)
+   x -1400  Schwanz  2094  Rumpf     -  Stufe     -
+   x -1200  Schwanz  2192  Rumpf     -  Stufe     -
+   x -1000  Schwanz  2240  Rumpf  1127  Stufe +1113
+   x  -800  Schwanz  2324  Rumpf  1767  Stufe  +557
+   x  -600  Schwanz  2409  Rumpf  2026  Stufe  +383
+   x  -400  Schwanz  2409  Rumpf  2161  Stufe  +248
+   x  -200  Schwanz  2461  Rumpf  2183  Stufe  +278
+   x     0  Schwanz  2472  Rumpf  2200  Stufe  +272
+   x   200  Schwanz  2516  Rumpf  2159  Stufe  +357
+   x   400  Schwanz  2191  Rumpf  2263  Stufe   -72
+   x   600  Schwanz     -  Rumpf  2416  Stufe     -
+   x   800  Schwanz     -  Rumpf  2540  Stufe     -
+   x  1000  Schwanz     -  Rumpf  2682  Stufe     -
+   x  1200  Schwanz     -  Rumpf  2682  Stufe     -
+   x  1400  Schwanz     -  Rumpf  2729  Stufe     -
+   x  1600  Schwanz     -  Rumpf  2729  Stufe     -
+   x  1800  Schwanz     -  Rumpf  2723  Stufe     -
+   x  2000  Schwanz     -  Rumpf  2678  Stufe     -
+   x  2200  Schwanz     -  Rumpf  2439  Stufe     -
+--- Pose 2   x: Schwanz / Rumpf / Stufe (Schwanz minus Rumpf)
+   x -1400  Schwanz  1273  Rumpf     -  Stufe     -
+   x -1200  Schwanz  1413  Rumpf     -  Stufe     -
+   x -1000  Schwanz  1590  Rumpf     -  Stufe     -
+   x  -800  Schwanz  1757  Rumpf  1346  Stufe  +411
+   x  -600  Schwanz  1857  Rumpf  1507  Stufe  +351
+   x  -400  Schwanz  1986  Rumpf  1664  Stufe  +322
+   x  -200  Schwanz  1949  Rumpf  2195  Stufe  -247
+   x     0  Schwanz  1804  Rumpf  2609  Stufe  -806
+   x   200  Schwanz  1633  Rumpf  2660  Stufe -1027
+   x   400  Schwanz     -  Rumpf  2873  Stufe     -
+   x   600  Schwanz     -  Rumpf  3054  Stufe     -
+   x   800  Schwanz     -  Rumpf  3054  Stufe     -
+   x  1000  Schwanz     -  Rumpf  3100  Stufe     -
+   x  1200  Schwanz     -  Rumpf  3100  Stufe     -
+   x  1400  Schwanz     -  Rumpf  3092  Stufe     -
+   x  1600  Schwanz     -  Rumpf  3047  Stufe     -
+   x  1800  Schwanz     -  Rumpf  2846  Stufe     -
+   x  2000  Schwanz     -  Rumpf  2455  Stufe     -
+
+=== Fuss: Hauptachse gegen Boden, Laenge, Zehenlaenge
+   Pose 1  fuss_l  Achse gegen Boden   8 Grad  Ausdehnung x 1207 y 509 z 1070  hoechster Punkt 513  Ring-/Spitzenzahl Ecken 120
+   Pose 1  fuss_r  Achse gegen Boden  16 Grad  Ausdehnung x 1208 y 567 z 838  hoechster Punkt 572  Ring-/Spitzenzahl Ecken 120
+   Pose 2  fuss_l  Achse gegen Boden   8 Grad  Ausdehnung x 496 y 611 z 1313  hoechster Punkt 612  Ring-/Spitzenzahl Ecken 120
+   Pose 2  fuss_r  Achse gegen Boden   4 Grad  Ausdehnung x 1222 y 556 z 1050  hoechster Punkt 556  Ring-/Spitzenzahl Ecken 120
+   Ruhe    fuss_l  Achse gegen Boden  11 Grad  Ausdehnung x 1270 y 526 z 863  hoechster Punkt 528  Ring-/Spitzenzahl Ecken 120
+   Ruhe    fuss_r  Achse gegen Boden  11 Grad  Ausdehnung x 1270 y 526 z 864  hoechster Punkt 527  Ring-/Spitzenzahl Ecken 120
+
+=== Zehen und Krallen im Knochenraum (Laenge entlang der Knochenachse, Dicke am Ansatz)
+   fuss_l  Ausdehnung x 1315 y 520 z 654 Ecken 120
+   fuss_r  Ausdehnung x 1315 y 520 z 654 Ecken 120
+   hand_l  Ausdehnung x 1117 y 421 z 678 Ecken 140
+   f14     Ausdehnung x 609 y 214 z 272 Ecken 52
+   f15     Ausdehnung x 700 y 276 z 261 Ecken 52
+   f28     Ausdehnung x 684 y 168 z 440 Ecken 52
+   k30     Ausdehnung x 457 y 174 z 327 Ecken 52
+   hand_r  Ausdehnung x 1692 y 638 z 1028 Ecken 140
+   f19     Ausdehnung x 922 y 325 z 412 Ecken 52
+   f20     Ausdehnung x 1060 y 419 z 395 Ecken 52
+   f29     Ausdehnung x 1037 y 254 z 668 Ecken 52
+   k31     Ausdehnung x 693 y 263 z 496 Ecken 52
+   fuss_r Laengsachse x Stufen der Ecken: [-150, -100, 150, 450, 750, 800, 900, 1000, 1100, 1200]
+
+=== Handflaeche: kleinste Hauptachse von hand_r / hand_l gegen die Senkrechte (0 = Hand liegt flach)
+   Pose 1  hand_r Normale gegen senkrecht  60 Grad   Fingerspitzen hoechste f19 932 f20 610 f29 273 k31 795
+   Pose 1  hand_l Normale gegen senkrecht  10 Grad   Fingerspitzen hoechste f14 284 f15 326 f28 301 k30 256
+   Pose 2  hand_r Normale gegen senkrecht   9 Grad   Fingerspitzen hoechste f19 444 f20 567 f29 599 k31 422
+   Pose 2  hand_l Normale gegen senkrecht  11 Grad   Fingerspitzen hoechste f14 256 f15 327 f28 357 k30 260
+   Ruhe    hand_r Normale gegen senkrecht   4 Grad   Fingerspitzen hoechste f19 384 f20 467 f29 399 k31 288
+   Ruhe    hand_l Normale gegen senkrecht   4 Grad   Fingerspitzen hoechste f14 267 f15 310 f28 260 k30 205
+
+=== Haende in Bild 2: Spitzen projiziert, Tiefe am Handgelenk, Laenge Gelenk-Spitze im Bild und im Modell
+   rechts Handgelenk Bild (273,380) Tiefe 5617
+      f19  Spitze Bild (221,475), Modell-Laenge ab Gelenk 1647, Bild-Laenge 108 px, Tiefe 4068
+      f20  Spitze Bild (166,446), Modell-Laenge ab Gelenk 1649, Bild-Laenge 126 px, Tiefe 4327
+      f29  Spitze Bild (143,353), Modell-Laenge ab Gelenk 1797, Bild-Laenge 133 px, Tiefe 5741
+      k31  Spitze Bild (274,443), Modell-Laenge ab Gelenk 1180, Bild-Laenge 64 px, Tiefe 4483
+   links Handgelenk Bild (403,358) Tiefe 6508
+      f14  Spitze Bild (448,415), Modell-Laenge ab Gelenk 1052, Bild-Laenge 73 px, Tiefe 5663
+      f15  Spitze Bild (465,415), Modell-Laenge ab Gelenk 1151, Bild-Laenge 85 px, Tiefe 5666
+      f28  Spitze Bild (463,392), Modell-Laenge ab Gelenk 1105, Bild-Laenge 70 px, Tiefe 5578
+      k30  Spitze Bild (413,394), Modell-Laenge ab Gelenk 757, Bild-Laenge 38 px, Tiefe 5807
+
+=== Soll aus den Masken: Spitzen right_arm_front, left_arm_front, Laenge ab Handgelenk bei Tiefe des Modells
+   rechts (145, 353): 124 px, mal Tiefe 5281 = 656
+   rechts (197, 476): 104 px, mal Tiefe 5281 = 548
+   rechts (222, 475): 89 px, mal Tiefe 5281 = 472
+   rechts (274, 443): 49 px, mal Tiefe 5281 = 261
+   links (468, 417): 82 px, mal Tiefe 6685 = 546
+   links (439, 418): 63 px, mal Tiefe 6685 = 421
+
+=== Eindringen: Anteil der Ecken eines Teils im Inneren anderer Teile
+--- Pose 1
+   oarm_r in Hals/Kopf/Kiefer       0 von  58 Ecken  0.00
+   oarm_l in Hals/Kopf/Kiefer       1 von  58 Ecken  0.02
+   oarm_r im Rumpf                  2 von  58 Ecken  0.03
+   oarm_l im Rumpf                  0 von  58 Ecken  0.00
+   hals im Rumpf                    5 von  42 Ecken  0.12
+   kopf im Rumpf                    0 von 134 Ecken  0.00
+   oschenkel_r im Rumpf             2 von  58 Ecken  0.03
+   oschenkel_l im Rumpf             0 von  58 Ecken  0.00
+   s1 im Rumpf                     18 von  50 Ecken  0.36
+--- Pose 2
+   oarm_r in Hals/Kopf/Kiefer      11 von  58 Ecken  0.19
+   oarm_l in Hals/Kopf/Kiefer       0 von  58 Ecken  0.00
+   oarm_r im Rumpf                  3 von  58 Ecken  0.05
+   oarm_l im Rumpf                  0 von  58 Ecken  0.00
+   hals im Rumpf                    8 von  42 Ecken  0.19
+   kopf im Rumpf                    6 von 134 Ecken  0.04
+   oschenkel_r im Rumpf             0 von  58 Ecken  0.00
+   oschenkel_l im Rumpf             0 von  58 Ecken  0.00
+   s1 im Rumpf                     20 von  50 Ecken  0.40
+--- Ruhe
+   oarm_r in Hals/Kopf/Kiefer       0 von  58 Ecken  0.00
+   oarm_l in Hals/Kopf/Kiefer       0 von  58 Ecken  0.00
+   oarm_r im Rumpf                  0 von  58 Ecken  0.00
+   oarm_l im Rumpf                  0 von  58 Ecken  0.00
+   hals im Rumpf                    8 von  42 Ecken  0.19
+   kopf im Rumpf                    1 von 134 Ecken  0.01
+   oschenkel_r im Rumpf             2 von  58 Ecken  0.03
+   oschenkel_l im Rumpf             3 von  58 Ecken  0.05
+   s1 im Rumpf                     19 von  50 Ecken  0.38

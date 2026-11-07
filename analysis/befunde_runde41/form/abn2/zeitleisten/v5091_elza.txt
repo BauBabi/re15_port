@@ -1,0 +1,60 @@
+S0 F0     PL( 27200,  4900) hp=100  cam=0  gr=0 hk=0/255 ms=0
+S0 F161   PL( 27200,  4900) hp=100  cam=1  gr=0 hk=0/255 ms=0
+S1 F1     PL( 27200,  4900) hp=100  cam=0  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=9 ss2=0 mo=0 af=16 @(-14700,-23350,r0) hp=300
+S1 F6     PL( 27200,  4900) hp=100  cam=0  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=9 ss2=0 mo=2 af=1 @(-14700,-23350,r0) hp=300
+S1 F342   PL(  5075,  4900) hp=100  cam=1  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=9 ss2=0 mo=2 af=37 @(-14700,-23350,r0) hp=300
+S1 F362   PL(  3575,  4900) hp=100  cam=0  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=9 ss2=0 mo=2 af=57 @(-14700,-23350,r0) hp=300
+S1 F498   PL( 24700, -9250) hp=100  cam=9  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=1 @(-14700,-23350,r4080) hp=150
+S1 F623   PL( 19890, -9900) hp=100  cam=8  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=1 @(-14700,-23350,r4080) hp=150
+S1 F624   PL( 19890, -9900) hp=100  cam=9  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=2 @(-14700,-23350,r4080) hp=150
+S1 F625   PL( 19815, -9900) hp=100  cam=8  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=3 @(-14700,-23350,r4080) hp=150
+S1 F678   PL( 15840, -9900) hp=100  cam=7  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=56 @(-14700,-23350,r4080) hp=150
+S1 F729   PL( 12015, -9900) hp=100  cam=6  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=47 @(-14700,-23350,r4080) hp=150
+S1 F842   PL(  3540, -9900) hp=100  cam=5  gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=40 @(-14700,-23350,r4080) hp=150
+S1 F946   PL( 24800,-23550) hp=100  cam=14 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=1 @(-14700,-23350,r3) hp=150
+S1 F1082  PL( 20150,-23550) hp=100  cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=12 @(-14700,-23350,r3) hp=150
+S1 F1167  PL( 13775,-23550) hp=100  cam=12 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=0 mo=2 af=37 @(-14700,-23350,r3) hp=150
+S1 F1169  PL( 13775,-23550) hp=100  cam=15 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=1 mo=10 af=1 @(1200,-23350,r11) hp=150
+S1 F1170  PL( 13775,-23550) hp=100  cam=11 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=1 mo=10 af=2 @(1200,-23350,r11) hp=150
+S1 F1229  PL( 13915,-23550) hp=100  cam=12 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=1 mo=10 af=61 @(1191,-23365,r9) hp=150
+S1 F1231  PL( 14055,-23550) hp=100  cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=0 ss2=1 mo=10 af=63 @(1195,-23366,r9) hp=150
+S1 F1294  PL( 17975,-23550) hp=100  cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=0 mo=10 af=125 @(1343,-23392,r7) hp=150
+S1 F1295  PL( 17975,-23550) hp=100  cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=1 mo=5 af=1 @(1361,-23393,r7) hp=150
+S1 F1296  PL( 17975,-23550) hp=100  cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=4 ss2=1 mo=0 af=1 @(1373,-23394,r7) hp=150
+S1 F1297  PL( 17975,-23550) hp=100  cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=4 ss2=1 mo=0 af=2 @(1557,-23396,r7) hp=135
+S1 F1319  PL( 17975,-23550) hp=100  cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=4 ss2=1 mo=0 af=6 @(8926,-23483,r3) hp=120
+S1 F1336  PL( 17975,-23550) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=4 ss2=1 mo=0 af=5 @(14894,-23476,r3955) hp=120
+S1 F1367  PL( 19310,-24749) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=0 mo=0 af=0 @(20124,-23218,r3875) hp=120
+S1 F1368  PL( 19310,-24749) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=1 mo=5 af=1 @(20141,-23213,r3907) hp=105
+S1 F1387  PL( 19310,-24749) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=14 ss2=1 mo=26 af=1 @(20124,-23332,r543) hp=105
+S1 F1390  PL( 19310,-24749) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=14 ss2=1 mo=26 af=4 @(20124,-23332,r543) hp=90
+S1 F1412  PL( 19250,-24749) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=14 ss2=1 mo=26 af=26 @(20139,-23233,r703) hp=75
+S1 F1421  PL( 19184,-24749) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=0 mo=26 af=34 @(20124,-23239,r783) hp=75
+S1 F1422  PL( 19166,-24749) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=1 mo=5 af=1 @(20124,-23254,r783) hp=75
+S1 F1434  PL( 18926,-24748) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=1 mo=5 af=13 @(20124,-23654,r903) hp=60
+S1 F1436  PL( 18890,-24744) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=14 ss2=1 mo=26 af=1 @(20140,-23698,r915) hp=60
+S1 F1456  PL( 18733,-24749) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=20 ss2=1 mo=8 af=6 @(20125,-23628,r979) hp=45
+S1 F1478  PL( 18640,-24746) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=20 ss2=1 mo=8 af=28 @(20124,-23631,r979) hp=30
+S1 F1480  PL( 18640,-24746) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=0 mo=8 af=29 @(20124,-23631,r979) hp=30
+S1 F1481  PL( 18640,-24746) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=1 mo=5 af=1 @(20125,-23649,r979) hp=30
+S1 F1482  PL( 18640,-24746) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=14 ss2=1 mo=26 af=1 @(20125,-23649,r979) hp=30
+S1 F1500  PL( 18640,-24746) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=14 ss2=1 mo=26 af=19 @(20140,-23650,r1027) hp=15
+S1 F1516  PL( 18327,-24595) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=0 mo=26 af=34 @(20119,-23685,r1219) hp=15
+S1 F1517  PL( 18326,-24595) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=1 mo=5 af=1 @(20126,-23682,r1219) hp=15
+S1 F1522  PL( 18262,-24584) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=3 ss2=1 mo=5 af=6 @(20138,-23682,r1255) hp=0
+S1 F1531  PL( 17850,-24529) hp=95   cam=13 gr=0 hk=0/255 ms=0 | FORM s1 st=1 ss1=14 ss2=1 mo=26 af=1 @(20124,-23682,r1479) hp=0
+S1 F1544  PL( 17665,-24475) hp=95   cam=12 gr=0 hk=0/255 ms=0 | FORM s1 st=3 ss1=3 ss2=1 mo=13 af=0 @(20124,-23682,r1479) hp=1
+S1 F1545  PL( 17665,-24475) hp=95   cam=12 gr=0 hk=0/255 ms=0 | FORM s1 st=2 ss1=3 ss2=1 mo=13 af=1 @(20169,-23617,r1415) hp=1
+S1 F1773  PL( 17665,-24475) hp=95   cam=11 gr=0 hk=0/255 ms=0 | FORM s1 st=2 ss1=3 ss2=1 mo=13 af=29 @(2955,-23117,r4073) hp=1
+S1 F1843  PL( 17665,-24475) hp=95   cam=11 gr=0 hk=0/255 ms=0 | FORM s1 st=2 ss1=3 ss2=1 mo=12 af=0 @(-2565,-23328,r4073) hp=1
+S1 F1944  PL( 17665,-24475) hp=95   cam=11 gr=0 hk=0/255 ms=0 | G5 st=0 ss1=0 hp=600 @(-9000,-23400)
+S1 F2204  PL( 17665,-24475) hp=95   cam=11 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=585 @(-2210,-23400)
+S1 F2215  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=585 @(-1986,-23400)
+S1 F2226  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=570 @(-1986,-23400)
+S1 F2248  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=555 @(-1986,-23400)
+S1 F2270  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=540 @(-1986,-23400)
+S1 F2292  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=525 @(-1842,-23400)
+S1 F2314  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=510 @(-1922,-23400)
+S1 F2336  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=495 @(-2190,-23400)
+S1 F2358  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=480 @(-1291,-23400)
+S1 F2380  PL( 17665,-24475) hp=95   cam=13 gr=0 hk=0/255 ms=0 | G5 st=2 ss1=3 hp=465 @(-1395,-23400)

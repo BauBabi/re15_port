@@ -1,0 +1,12 @@
+
+==== A Rumpf, (Grad, neue Lochpixel, zerfallene Richtungen)
+  rumpf_mitte [(5, 0, 0), (10, 0, 0), (15, 0, 0), (20, 0, 0), (30, 0, 0)]
+  rumpf [(5, 0, 0), (10, 27, 0), (15, 69, 0), (20, 46, 0), (30, 0, 0)]
+
+==== B Rumpf, (Grad, neue Lochpixel, zerfallene Richtungen)
+  rumpf_m [(5, 70, 0), (10, 217, 0), (15, 478, 0), (20, 1185, 0), (30, 3091, 0)]
+  rumpf [(5, 191, 0), (10, 514, 0), (15, 1043, 0), (20, 1975, 0), (30, 3740, 0)]
+
+==== C Rumpf, (Grad, neue Lochpixel, zerfallene Richtungen)
+  rumpf_m [(5, 114, 0), (10, 262, 0), (15, 499, 0), (20, 871, 0), (30, 2656, 0)]
+  rumpf_v [(5, 210, 0), (10, 486, 0), (15, 849, 0), (20, 1409, 0), (30, 2857, 0)]

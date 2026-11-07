@@ -1,0 +1,15 @@
+
+==== A
+Bild 1 {'ncc': 0.837, 'band_ncc': 0.767, 'farbe_mittel_video': [44, 38, 64], 'farbe_mittel_render': [43, 31, 52], 'hell_gesamt': 4205, 'hell_fremd': 1239, 'fremd_Y_render': 74, 'fremd_Y_video': 59, 'fremd_ueberstrahlt_30': 341, 'form_ncc': -0.048, 'form_band_ncc': 0.425}
+Bild 2 {'ncc': 0.823, 'band_ncc': 0.616, 'farbe_mittel_video': [54, 13, 26], 'farbe_mittel_render': [47, 11, 21], 'hell_gesamt': 6286, 'hell_fremd': 2433, 'fremd_Y_render': 45, 'fremd_Y_video': 78, 'fremd_ueberstrahlt_30': 168, 'form_ncc': 0.406, 'form_band_ncc': -0.243}
+offen Bild 2 {'band_210_250_376_384': {'deck': 0.26, 'R_video_gedeckt': 127}, 'flaeche_Y': {'deck': 0.06, 'R_video_gedeckt': 142}, 'F_v_form': {'deck': 0.65, 'R_video_gedeckt': 179}, 'feuer_rechts': {'deck': 0.99, 'R_video_gedeckt': 190}, 'feuer_unten_rechts': {'deck': 0.44, 'R_video_gedeckt': 181}, 'feuer_links': {'deck': 0.1, 'R_video_gedeckt': 134}}
+
+==== B
+Bild 1 {'ncc': 0.751, 'band_ncc': 0.67, 'farbe_mittel_video': [44, 38, 64], 'farbe_mittel_render': [43, 35, 53], 'hell_gesamt': 3213, 'hell_fremd': 303, 'fremd_Y_render': 66, 'fremd_Y_video': 76, 'fremd_ueberstrahlt_30': 62, 'form_ncc': 0.01, 'form_band_ncc': 0.314}
+Bild 2 {'ncc': 0.86, 'band_ncc': 0.638, 'farbe_mittel_video': [54, 13, 26], 'farbe_mittel_render': [45, 11, 20], 'hell_gesamt': 5423, 'hell_fremd': 1020, 'fremd_Y_render': 45, 'fremd_Y_video': 40, 'fremd_ueberstrahlt_30': 50, 'form_ncc': 0.454, 'form_band_ncc': -0.226}
+offen Bild 2 {'band_210_250_376_384': {'deck': 1.0, 'R_video_gedeckt': 159}, 'flaeche_Y': {'deck': 0.81, 'R_video_gedeckt': 90}, 'F_v_form': {'deck': 0.17, 'R_video_gedeckt': 141}, 'feuer_rechts': {'deck': 0.1, 'R_video_gedeckt': 117}, 'feuer_unten_rechts': {'deck': 0.0, 'R_video_gedeckt': None}, 'feuer_links': {'deck': 0.25, 'R_video_gedeckt': 149}}
+
+==== C
+Bild 1 {'ncc': 0.852, 'band_ncc': 0.759, 'farbe_mittel_video': [44, 38, 64], 'farbe_mittel_render': [49, 36, 58], 'hell_gesamt': 5842, 'hell_fremd': 1445, 'fremd_Y_render': 77, 'fremd_Y_video': 64, 'fremd_ueberstrahlt_30': 266, 'form_ncc': -0.15, 'form_band_ncc': 0.378}
+Bild 2 {'ncc': 0.803, 'band_ncc': 0.556, 'farbe_mittel_video': [54, 13, 26], 'farbe_mittel_render': [48, 11, 20], 'hell_gesamt': 7447, 'hell_fremd': 3189, 'fremd_Y_render': 43, 'fremd_Y_video': 40, 'fremd_ueberstrahlt_30': 200, 'form_ncc': 0.318, 'form_band_ncc': -0.148}
+offen Bild 2 {'band_210_250_376_384': {'deck': 0.0, 'R_video_gedeckt': None}, 'flaeche_Y': {'deck': 0.64, 'R_video_gedeckt': 88}, 'F_v_form': {'deck': 0.75, 'R_video_gedeckt': 183}, 'feuer_rechts': {'deck': 0.41, 'R_video_gedeckt': 177}, 'feuer_unten_rechts': {'deck': 0.01, 'R_video_gedeckt': 131}, 'feuer_links': {'deck': 0.0, 'R_video_gedeckt': 62}}

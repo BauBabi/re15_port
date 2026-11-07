@@ -1,0 +1,36 @@
+{
+ "oberkiefer": {
+  "bild": 2,
+  "skala": 1.0,
+  "x": 216,
+  "y": 279,
+  "w": 121,
+  "h": 97,
+  "mse": -5.4960705211778604e-05,
+  "quelle": "Version_80%/Oberkiefer.png",
+  "screenshot": "Version_80%/vlcsnap-2026-10-31-00h29m02s830.png",
+  "schwelle_alpha": 200,
+  "px": 5832,
+  "ueberlappt": {
+   "face_and_upper_body": 5609,
+   "right_arm_front": 12
+  }
+ },
+ "unterkiefer": {
+  "bild": 2,
+  "skala": 1.0,
+  "x": 239,
+  "y": 318,
+  "w": 105,
+  "h": 92,
+  "mse": -0.0003073921837802286,
+  "quelle": "Version_80%/Unterkiefer.png",
+  "screenshot": "Version_80%/vlcsnap-2026-10-31-00h29m02s830.png",
+  "schwelle_alpha": 200,
+  "px": 3355,
+  "ueberlappt": {
+   "face_and_upper_body": 75,
+   "right_arm_front": 2477
+  }
+ }
+}

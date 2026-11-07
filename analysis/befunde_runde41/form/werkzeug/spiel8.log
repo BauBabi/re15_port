@@ -1,0 +1,20 @@
+exe re15_pc_form_30960_143018 PID 35012 Fenster 56042744
+gdigrab: leeres Bild, Sitzung: > mjoedicke 1 Getr. 
+PrintWindow=True Fenster=656x519 Innen=640x480 Versatz=8,31
+PrintWindow=True Fenster=656x519 Innen=640x480 Versatz=8,31
+PrintWindow=True Fenster=656x519 Innen=640x480 Versatz=8,31
+PrintWindow=True Fenster=656x519 Innen=640x480 Versatz=8,31
+PrintWindow=True Fenster=656x519 Innen=640x480 Versatz=8,31
+PrintWindow=True Fenster=656x519 Innen=640x480 Versatz=8,31
+kein Bild: alle Versuche schwarz
+exe beendet
+[enemy] Bahnsteig-Form: 3 Meshes, 3 Knochen, 2 Clips -> Slot 12
+t1201 slot2 typ 0x30 st 1/9 pos (1500,0,-23000) gier 0 clip 1 bild 8 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/30960_143018
+SPIEL_EXIT=1
+ SITZUNGSNAME               BENUTZERNAME                 ID  STATUS   TYP        GERŽT 
+ services                                            0  Getr.                       
+>                          mjoedicke                 1  Getr.                       
+ console                                             5  Verb.                       
+ rdp-tcp                                         65536  Abh”r.                      
+FERTIG

@@ -1,0 +1,534 @@
+UpdateCTestConfiguration  from :C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/DartConfiguration.tcl
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1385
+      Start 1385: integration_r41_g5_westen
+
+1385: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_g5_westen_wd" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r41_g5_westen.cmake"
+1385: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1385: Test timeout computed to be: 640
+test 1386
+      Start 1386: integration_r41_g5_tod
+
+1386: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_g5_tod_wd" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r41_g5_tod.cmake"
+1386: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1386: Test timeout computed to be: 640
+test 1384
+      Start 1384: integration_r41_birkin_pistole
+
+1384: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_birkin_pistole_wd" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r41_birkin_pistole.cmake"
+1384: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1384: Test timeout computed to be: 640
+test 1152
+      Start 1152: integration_r41_form_wagenweg_zurueck_leon
+
+1152: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_form_wagenweg_zurueck_leon_wd" "-DRE15_FORM_HP_HEADER=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/include/re15_birkin_formen.h" "-DRE15_BILD_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit/probe_r41_form_kamera_bild.exe" "-DTEIL=zurueck_leon" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r41_form_wagenweg.cmake"
+1152: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1152: Test timeout computed to be: 600
+1385: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1386: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1384: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1152: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1385: -- r41_g5_westen leon_w4: 2201 Bilder, in fester Zelle 0, Weg ab F1600 5537
+1385: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1152: -- r41_form_wagenweg[zurueck_leon]: Kamera Taumeln F1544-F1840 (297 Bilder, Schnitte 13;15;11), Form-Slot 12 min sichtbar 2796, Leon max 2161, Form max 166 Promille verdeckt, max 550 Promille fast schwarz (99 Bilder)
+1152: -- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 150 (F946), Treffer 10 (Abzug 150, groesster 15) ab F1297, Rueckstoss F1544, Form-HP zuletzt 0, Leon getroffen 1x, exit=0, Lauf C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_form_wagenweg_zurueck_leon_wd/lauf_21379df3
+1152: -- r41_form_wagenweg[zurueck_leon]: alle Pruefungen gruen
+ 1/17 Test #1152: integration_r41_form_wagenweg_zurueck_leon ...   Passed  104.18 sec
+test 1150
+      Start 1150: integration_r41_form_wagenweg
+
+1150: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_form_wagenweg_leon_wd" "-DRE15_FORM_HP_HEADER=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/include/re15_birkin_formen.h" "-DRE15_BILD_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit/probe_r41_form_kamera_bild.exe" "-DTEIL=leon" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r41_form_wagenweg.cmake"
+1150: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1150: Test timeout computed to be: 600
+1150: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1384: -- r41_birkin_pistole leon: Mutationen 0, Form-HP 150 bis 0, Rueckstoss 1, Sturz 1, G5 1, G5 tot 1
+1384: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1386: -- r41_g5_tod leon: HP 0 gesehen 1, Tod bei HP 0, exit 0
+1386: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1385: -- r41_g5_westen elza_w4: 2201 Bilder, in fester Zelle 0, Weg ab F1600 5532
+1385: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1150: -- r41_form_wagenweg[leon]: Kamera Taumeln F1486-F1748 (263 Bilder, Schnitte 13;12;11), Form-Slot 12 min sichtbar 1247, Leon max 5866, Form max 405 Promille verdeckt, max 538 Promille fast schwarz (88 Bilder)
+1150: -- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 150 (F946), Treffer 10 (Abzug 150, groesster 15) ab F1237, Rueckstoss F1486, Form-HP zuletzt 0, Leon getroffen 1x, exit=0, Lauf C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_form_wagenweg_leon_wd/lauf_7beef794
+1150: -- r41_form_wagenweg[leon]: alle Pruefungen gruen
+ 2/17 Test #1150: integration_r41_form_wagenweg ................   Passed  102.27 sec
+test 1153
+      Start 1153: integration_r41_form_wagenweg_zurueck_elza
+
+1153: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_form_wagenweg_zurueck_elza_wd" "-DRE15_FORM_HP_HEADER=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/include/re15_birkin_formen.h" "-DRE15_BILD_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit/probe_r41_form_kamera_bild.exe" "-DTEIL=zurueck_elza" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r41_form_wagenweg.cmake"
+1153: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1153: Test timeout computed to be: 600
+1153: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1384: -- r41_birkin_pistole elza: Mutationen 0, Form-HP 150 bis 0, Rueckstoss 1, Sturz 1, G5 1, G5 tot 1
+1384: -- r41_birkin_pistole: alle Pruefungen gruen
+ 3/17 Test #1384: integration_r41_birkin_pistole ...............   Passed  242.70 sec
+test 1151
+      Start 1151: integration_r41_form_wagenweg_elza
+
+1151: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_form_wagenweg_elza_wd" "-DRE15_FORM_HP_HEADER=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/include/re15_birkin_formen.h" "-DRE15_BILD_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit/probe_r41_form_kamera_bild.exe" "-DTEIL=elza" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r41_form_wagenweg.cmake"
+1151: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1151: Test timeout computed to be: 600
+1151: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1386: -- r41_g5_tod elza: HP 0 gesehen 1, Tod bei HP 0, exit 0
+1386: -- r41_g5_tod: alle Pruefungen gruen
+ 4/17 Test #1386: integration_r41_g5_tod .......................   Passed  263.34 sec
+test 560
+      Start  560: integration_r35_werfer_form
+
+560: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r35_werfer_form_wd" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r35_werfer_form.cmake"
+560: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+560: Test timeout computed to be: 600
+560: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+560: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+1385: -- r41_g5_westen leon_fern: 2201 Bilder, in fester Zelle 0, Weg ab F1600 5409
+1385: -- r41_g5_westen: alle Pruefungen gruen
+ 5/17 Test #1385: integration_r41_g5_westen ....................   Passed  283.57 sec
+test 410
+      Start  410: integration_r34_plattform_takt
+
+410: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r34_plattform_takt_wd" "-DR34_PIN=takt" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/unit/probes/r34_plattform.cmake"
+410: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+410: Test timeout computed to be: 420
+410: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+560: -- r35_werfer_form: OK — Rakete 10E0 explodiert vor der Hypotenuse (    SE  re2fx code=0x01140001 -> RE2 ARMS11 Satz 20 @(-2331,-2629,-388)), 3 Flug-Lagen ausserhalb des festen Dreiecks; Python-Treffer Platz 2 -> hp -1 (Kritklasse)
+ 6/17 Test  #560: integration_r35_werfer_form ..................   Passed   26.24 sec
+test 411
+      Start  411: integration_r34_plattform_esp_eintritt
+
+411: Test command: "C:\Program Files\CMake\bin\cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r34_plattform_esp_eintritt_wd" "-DR34_PIN=esp_eintritt" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/tests/unit/probes/r34_plattform.cmake"
+411: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+411: Test timeout computed to be: 420
+411: [lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+411: -- r34_plattform_esp_eintritt: OK — ROOM2000-Eintritt: 3x Effekt 0x0b mit 6 Stroemen, 3x Effekt 0x06 mit 1 Strom (Raumbank vor dem Eintrittstakt) (C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r34_plattform_esp_eintritt_wd/lauf_0301c61d)
+ 7/17 Test  #411: integration_r34_plattform_esp_eintritt .......   Passed    9.18 sec
+test 1378
+      Start 1378: unit_birkin_bahnsteig
+
+1378: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_form_nb4\re15_port\build\tests\unit\test_birkin_bahnsteig.exe
+1378: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1378: Test timeout computed to be: 60
+1378: Form: Hoehe Clip 5 im Mittel 3123, Boden-Abweichung 22/111
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT: Gang 2446 Einheiten je Clip-5-Durchlauf
+1378: STAGE5/ROOM5090.RDT: Rueckstoss + G5 nach 210 Ticks
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT: Gang 2666 Einheiten je Clip-5-Durchlauf
+1378: STAGE5/ROOM5091.RDT: Rueckstoss + G5 nach 210 Ticks
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-25742,0,-13810) rot=(3040,0,0)
+1378: [scd] Obj_model_set[1] id=0x01 type=0 pos=(-27000,-3610,-11970) rot=(0,0,0)
+1378: [scd] Obj_model_set[2] id=0x02 type=0 pos=(-27000,10,-11970) rot=(2048,0,0)
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-26650,-1150,-13810) rot=(3520,0,0)
+1378: [scd] Obj_model_set[1] id=0x01 type=0 pos=(-26650,-2250,-12000) rot=(1280,0,0)
+1378: [scd] Obj_model_set[2] id=0x02 type=0 pos=(-27000,-3610,-11970) rot=(0,0,0)
+1378: [scd] Obj_model_set[3] id=0x03 type=0 pos=(-27000,10,-11970) rot=(2048,0,0)
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] Obj_model_set[0] id=0x00 type=0 pos=(-26650,-1150,-13810) rot=(3520,0,0)
+1378: [scd] Obj_model_set[1] id=0x01 type=0 pos=(-26650,-2250,-12000) rot=(1280,0,0)
+1378: [scd] Obj_model_set[2] id=0x02 type=0 pos=(-27000,-3610,-11970) rot=(0,0,0)
+1378: [scd] Obj_model_set[3] id=0x03 type=0 pos=(-27000,10,-11970) rot=(2048,0,0)
+1378: ROOM3071: Auftritt endet nach 500 Ticks bei (-24079,-10917)
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT Wagenweg: A hp 300 st 1/9 (Bank fehlte beim Spawn)
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT Wagenweg: B hp 150 st 1/0 grid 0x33
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT Wagenweg: C hp 150 st 1/0 grid 0x33
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT Wagenweg: C2 hp 150 st 1/0 grid 0x33
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT M6: Weichen 0 von 40 Ticks ohne Pose-Aenderung
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT M10: 3 Wechsel, groesster Schritt im Hieb 227
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT Nordspur: Leon 191 Einheiten nach dem Treffer, 2 Treffer, Lage (13195,-22303)
+1378: STAGE5/ROOM5090.RDT Diagonale: Leon z min -25633, Lage (3079,-25633), 3 Treffer
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT Clip-Ende Biss: 0
+1378: STAGE5/ROOM5090.RDT Clip-Ende Griff: 0
+1378: STAGE5/ROOM5090.RDT Clip-Ende Hieb: 0
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT N4: Weichen -> Hieb 6 Austritte, Sprung 61; -> Gehen 6 Austritte, Sprung 105
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: STAGE5/ROOM5090.RDT D: Abstand 2600 Treffer 0 Kiefer-min 1390 Brustpunkt-min 54
+1378: STAGE5/ROOM5090.RDT D: Abstand 2800 Treffer 0 Kiefer-min 1390 Brustpunkt-min 54
+1378: STAGE5/ROOM5090.RDT D: Abstand 3000 Treffer 0 Kiefer-min 1384 Brustpunkt-min 60
+1378: STAGE5/ROOM5090.RDT D: Abstand 3200 Treffer 1 Kiefer-min 1390 Brustpunkt-min 56
+1378: STAGE5/ROOM5090.RDT D: Abstand 3400 Treffer 1 Kiefer-min 1247 Brustpunkt-min 195
+1378: STAGE5/ROOM5090.RDT D: Abstand 3600 Treffer 1 Kiefer-min 1047 Brustpunkt-min 395
+1378: STAGE5/ROOM5090.RDT D: Abstand 3800 Treffer 1 Kiefer-min 853 Brustpunkt-min 593
+1378: STAGE5/ROOM5090.RDT D: Abstand 4000 Treffer 1 Kiefer-min 652 Brustpunkt-min 794
+1378: STAGE5/ROOM5090.RDT D: Abstand 4200 Treffer 1 Kiefer-min 453 Brustpunkt-min 995
+1378: STAGE5/ROOM5090.RDT D: Abstand 4400 Treffer 1 Kiefer-min 253 Brustpunkt-min 1193
+1378: STAGE5/ROOM5090.RDT D: Abstand 4600 Treffer 1 Kiefer-min 53 Brustpunkt-min 1390
+1378: STAGE5/ROOM5090.RDT D: Abstand 4800 Treffer 1 Kiefer-min 145 Brustpunkt-min 1593
+1378: STAGE5/ROOM5090.RDT D: Abstand 5000 Treffer 1 Kiefer-min 344 Brustpunkt-min 1792
+1378: STAGE5/ROOM5090.RDT D: Abstand 5200 Treffer 1 Kiefer-min 543 Brustpunkt-min 1995
+1378: STAGE5/ROOM5090.RDT D: Abstand 5400 Treffer 1 Kiefer-min 743 Brustpunkt-min 2187
+1378: STAGE5/ROOM5090.RDT D: Abstand 5600 Treffer 1 Kiefer-min 944 Brustpunkt-min 2387
+1378: STAGE5/ROOM5090.RDT D: Abstand 5800 Treffer 1 Kiefer-min 1144 Brustpunkt-min 2585
+1378: STAGE5/ROOM5090.RDT D: Abstand 6000 Treffer 1 Kiefer-min 1342 Brustpunkt-min 2792
+1378: STAGE5/ROOM5090.RDT D: Abstand 6200 Treffer 0 Kiefer-min 1525 Brustpunkt-min 2985
+1378: STAGE5/ROOM5090.RDT D: Abstand 6400 Treffer 0 Kiefer-min 1726 Brustpunkt-min 3187
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x44
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT Wagenweg: A hp 300 st 1/9 (Bank fehlte beim Spawn)
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT Wagenweg: B hp 150 st 1/0 grid 0x33
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT Wagenweg: C hp 150 st 1/0 grid 0x33
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT Wagenweg: C2 hp 150 st 1/0 grid 0x33
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT M6: Weichen 0 von 40 Ticks ohne Pose-Aenderung
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT M10: 3 Wechsel, groesster Schritt im Hieb 227
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT Nordspur: Leon 191 Einheiten nach dem Treffer, 2 Treffer, Lage (13195,-22303)
+1378: STAGE5/ROOM5091.RDT Diagonale: Leon z min -25633, Lage (3079,-25633), 3 Treffer
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT Clip-Ende Biss: 0
+1378: STAGE5/ROOM5091.RDT Clip-Ende Griff: 0
+1378: STAGE5/ROOM5091.RDT Clip-Ende Hieb: 0
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT N4: Weichen -> Hieb 6 Austritte, Sprung 61; -> Gehen 6 Austritte, Sprung 105
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5091.RDT D: Abstand 2600 Treffer 0 Kiefer-min 1390 Brustpunkt-min 54
+1378: STAGE5/ROOM5091.RDT D: Abstand 2800 Treffer 0 Kiefer-min 1390 Brustpunkt-min 54
+1378: STAGE5/ROOM5091.RDT D: Abstand 3000 Treffer 0 Kiefer-min 1384 Brustpunkt-min 60
+1378: STAGE5/ROOM5091.RDT D: Abstand 3200 Treffer 1 Kiefer-min 1390 Brustpunkt-min 56
+1378: STAGE5/ROOM5091.RDT D: Abstand 3400 Treffer 1 Kiefer-min 1247 Brustpunkt-min 195
+1378: STAGE5/ROOM5091.RDT D: Abstand 3600 Treffer 1 Kiefer-min 1047 Brustpunkt-min 395
+1378: STAGE5/ROOM5091.RDT D: Abstand 3800 Treffer 1 Kiefer-min 853 Brustpunkt-min 593
+1378: STAGE5/ROOM5091.RDT D: Abstand 4000 Treffer 1 Kiefer-min 652 Brustpunkt-min 794
+1378: STAGE5/ROOM5091.RDT D: Abstand 4200 Treffer 1 Kiefer-min 453 Brustpunkt-min 995
+1378: STAGE5/ROOM5091.RDT D: Abstand 4400 Treffer 1 Kiefer-min 253 Brustpunkt-min 1193
+1378: STAGE5/ROOM5091.RDT D: Abstand 4600 Treffer 1 Kiefer-min 53 Brustpunkt-min 1390
+1378: STAGE5/ROOM5091.RDT D: Abstand 4800 Treffer 1 Kiefer-min 145 Brustpunkt-min 1593
+1378: STAGE5/ROOM5091.RDT D: Abstand 5000 Treffer 1 Kiefer-min 344 Brustpunkt-min 1792
+1378: STAGE5/ROOM5091.RDT D: Abstand 5200 Treffer 1 Kiefer-min 543 Brustpunkt-min 1995
+1378: STAGE5/ROOM5091.RDT D: Abstand 5400 Treffer 1 Kiefer-min 743 Brustpunkt-min 2187
+1378: STAGE5/ROOM5091.RDT D: Abstand 5600 Treffer 1 Kiefer-min 944 Brustpunkt-min 2387
+1378: STAGE5/ROOM5091.RDT D: Abstand 5800 Treffer 1 Kiefer-min 1144 Brustpunkt-min 2585
+1378: STAGE5/ROOM5091.RDT D: Abstand 6000 Treffer 1 Kiefer-min 1342 Brustpunkt-min 2792
+1378: STAGE5/ROOM5091.RDT D: Abstand 6200 Treffer 0 Kiefer-min 1525 Brustpunkt-min 2985
+1378: STAGE5/ROOM5091.RDT D: Abstand 6400 Treffer 0 Kiefer-min 1726 Brustpunkt-min 3187
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5080.RDT: Flucht nach 150 Ticks fort, Treffer 2, Drehen 56 Bilder (max 32 je Bild), Clip 11 56 Bilder, Schwanz min 2721
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: STAGE5/ROOM5081.RDT: Flucht nach 150 Ticks fort, Treffer 2, Drehen 56 Bilder (max 32 je Bild), Clip 11 56 Bilder, Schwanz min 2721
+1378: [scd] thread start slot=0 first_op=0x3B
+1378: [scd] thread start slot=1 first_op=0x06
+1378: test_birkin_bahnsteig: OK
+ 8/17 Test #1378: unit_birkin_bahnsteig ........................   Passed    0.78 sec
+test 980
+      Start  980: unit_r39_funk10f1_form
+
+980: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_form_nb4\re15_port\build\tests\unit\test_r39_funk10f1.exe "form"
+980: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+980: Test timeout computed to be: 240
+980: test_r39_funk10f1 [form]
+980:   Programm 208 Bytes
+980:   ok: Opcode-Laengen schliessen genau auf das Evt_end am Ende (+00CE); Plc_dest-Bit 0x20
+980:   ok: ERSTES Opcode = Set(9,70)=1 `22 09 46 01` (Einmal-Riegel)
+980:   ok: Rahmen Set(2,7)/Set(1,27)/Work_set(1,0) == ROOM1031 sub13 @0x02986/@0x0298A/@0x02990
+980:   ok: Warteschleife == ROOM1031 sub14 @0x02A5A `11 00 08 00 02 00 12 04 21 05 20 00`, jedes Ck = (5,0x20)
+980:   ok: Message_on genau 40 -> 41 -> 42 (3 Stueck)
+980:   ok: Plc_dest-Folge drehen/gehen/gehen/gehen/drehen (ROOM1031 sub13 @0x029CC/@0x029D6/@0x029E0)
+980:   ok: erster Wegpunkt rechts vom Eintritt (z 2900 > -350, Blick -X => rechts = +Z), Platz (6900,6400), Blick auf (7400,6400)
+980:   ok: Pruefpunkt vor dem Platz (7520,6400) liegt in Slot 2 msg 0 'A large communications device' (7000..7800, 2600..12300)
+980:   ok: Weg frei: kleinster Abstand zu einer Kollisionszelle 500 (Zelle 10) > Spielerradius 468
+980:   ok: Cut_chg 1 (Dialogkamera) direkt vor dem Druck
+980:   ok: DRUCK = Plc_motion(0,11) + Plc_flg 4 + Sleep 20 == ROOM1031 @0x029A4/@0x029A8/@0x029AC (Rolltor-Notschalter)
+980:   ok: msg 40 WAEHREND des Drueckens (nach dem Griff, vor dem Senken)
+980:   ok: SENKEN = Plc_motion(0,0) + Plc_flg 0x80 + Sleep 30 == ROOM1031 @0x029BE/@0x029C2/@0x029C6
+980:   ok: msg 41 '...' = Huefte + Plc_neck 4 (horchen/umsehen) == ROOM1031 @0x02A32..@0x02A44 (nach 'Hey, is anyone here?!')
+980:   ok: msg 42 'broken' = Plc_motion(0,12) Hand an die Stirn + Sleep 100 == ROOM1031 @0x02A00/@0x02A04
+980:   ok: Schwanz Cut_auto 1 / Set(2,7)=0 / Set(1,27)=0 / Work_set / Plc_ret / Evt_end == ROOM1031 @0x02A48..@0x02A59
+980: form: 0 Fehler
+ 9/17 Test  #980: unit_r39_funk10f1_form .......................   Passed    0.01 sec
+test 409
+      Start  409: unit_r34_plattform_ton
+
+409: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_form_nb4\re15_port\build\tests\unit\probe_r34_plattform_ton.exe
+409: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+409: Test timeout computed to be: 120
+409: [audio] RE15_AUDIO_CAP_SYNC -> r34_plattform_ton.pcm (1470 Frames/Tick, kein SDL-Geraet)
+409: === probe_r34_plattform_ton (echtes audio_pc.c, CAP_SYNC) ===
+409: Energie: Ruhe 0 | ARMS10 S10 156008740 (Rest 0) | ARMS10 S11 0 | ARMS11 S10 228798044 (Rest 0) | ESP 0x010A0601 1354640 (Rest 0) | ESP 0x04080001 11661880 (Rest 0) | Bank 0 0
+409:   PASS  1: Grundzustand stumm (0)
+409:   PASS  2: ARMS10 Satz 10 (Saeure) klingt und ist nach 50 Bildern aus
+409:   PASS  3: ARMS10 Satz 11 (ff ff ff ff) stumm
+409:   PASS  4: ARMS11 Satz 10 (Brand) klingt
+409:   PASS  5: ESP-Haken 0x010A0601 -> ARMS09 Satz 0x0A klingt (Waffenbank unberuehrt von den Zusatzbaenken)
+409:   PASS  6: ESP-Haken 0x04080001 -> CORE00 Satz 8 klingt
+409:   PASS  7: Bank 0 (nicht resident) stumm
+409:   PASS  8: Saeure- und Brandton sind verschiedene Samples (ARMS10 VAG 3 10992 B / ARMS11 VAG 3 11664 B)
+409: === GRUEN: 8 bestanden, erste Verletzung 0 ===
+10/17 Test  #409: unit_r34_plattform_ton .......................   Passed    0.03 sec
+test 1377
+      Start 1377: unit_birkin_formen
+
+1377: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_form_nb4\re15_port\build\tests\unit\test_birkin_formen.exe
+1377: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1377: Test timeout computed to be: 30
+1377: EM30_HANGAR.EMD: 17 Meshes, 16 Knochen, 21 Clips, 369 Tri-Vertices umgeformt, 133 Zusatz-Faces
+1377: test_birkin_formen: OK
+11/17 Test #1377: unit_birkin_formen ...........................   Passed    0.01 sec
+test 1149
+      Start 1149: unit_r41_form_emd
+
+1149: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_form_nb4\re15_port\build\tests\unit\test_r41_form_emd.exe
+1149: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+1149: Test timeout computed to be: 30
+1149: test_r41_form_emd: OK
+12/17 Test #1149: unit_r41_form_emd ............................   Passed    0.01 sec
+test 408
+      Start  408: unit_r34_plattform
+
+408: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_form_nb4\re15_port\build\tests\unit\probe_r34_plattform.exe
+408: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+408: Test timeout computed to be: 120
+408: === probe_r34_plattform (Runde 34, Spur C) ===
+408:   PASS 200: CORE00.ESP (RE1.5 DATA) geladen + geparst (rc 0)
+408: 
+408: [H] C4 Haken-Bindung
+408:   PASS  10: vor der Bindung alle vier Haken NULL (C0-Vertrag)
+408:   PASS  11: re15_esp_se_hook -> re15_pc_esp_se
+408:   PASS  12: re15_esp_aufschlag_hook -> re2fx_aufschlag (V1d/E8)
+408:   PASS  13: re2fx_se_hook -> re15_pc_re2fx_se (E9)
+408:   PASS  14: re2fx_applier -> re15_re2_gl_apply (V2b)
+408: 
+408: [T] C1 Takt (re15_pc_fx_takt)
+408:   PASS   1: Spawn Muendung 2/0: 2 Stroeme, Flags 0x03 (Spawner 0x03)
+408:   PASS   2: ohne Freigabe: kein Takt (lief=0, Flags 0x03)
+408:   PASS   3: Freigabe steht
+408:   PASS   4: freigegeben: Takt lief, Routine 8 -> Flags 0x93 (Soll 0x93)
+408:   PASS   5: Freigabe verbraucht: zweiter Aufruf tickt nicht
+408:   PASS   6: RE15_PAUSE_ACTION: Takt verbraucht, Platz unveraendert (0x03)
+408: 
+408: [W] C4 Ton-Weiche (FUN_80045024 / FUN_8005ba28)
+408:   PASS  20: 0x010A0601 -> ARMS Satz 10 (Byte1 0x06 ignoriert): k=1 satz=10
+408:   PASS  21: 0x010A0001 (Liegen) -> ARMS Satz 10
+408:   PASS  22: 0x04080001 (Explosion @0x800185e4-ec) -> CORE Satz 8: k=4 satz=8
+408:   PASS  23: Bank 0 (0x801fdd00, nicht resident) -> verworfen
+408:   PASS  24: Bank 6 -> verworfen (Tor sltiu 0x6 @0x80045094)
+408:   PASS  25: Satz-Tor 0x21 (@0x800450d0): Satz 0x21 verworfen, 0x20 gespielt
+408:   PASS  26: snd1-Tor 0x19 (@0x800450f8): 0x19 verworfen, 0x18 gespielt
+408:   PASS  27: Bank 5 = snd0 (@0x8004513c)
+408:   PASS  28: Haken spielt CORE Satz 8 (Spion: 8)
+408:   PASS  29: Bank 0: kein Aufruf
+408:   PASS  30: 0x01130001 (Op 49 @0x80021678-7c) -> ARMS10 Satz 10
+408:   PASS  31: 0x01120001 (Op 48 @0x80020fd4/@0x80021028) -> ARMS11 Satz 10
+408:   PASS  32: andere Codes -> stumm (keine Raterei)
+408:   PASS  33: Haken: Zusatzbank ARMS10 Satz 10
+408:   PASS  34: Haken: Zusatzbank ARMS11 Satz 10
+408:   PASS  35: ARMS10/11.EDH @0x28 (Satz 10) = 00 00 33 20 (Prog 0 Ton 3)
+408:   PASS  36: ARMS09.EDH @0x28 (Satz 0x0A, Abprall) = 00 00 13 10
+408:   PASS  37: CORE00.EDH @0x20 (Satz 8, Explosion) = 00 00 93 00
+408: 
+408: [S] C2 TEX.TIM-Effektseiten
+408:   PASS  40: DATA/TEX.TIM geladen (165408 B; Soll 0x620 + 320*256*2)
+408:   PASS  41: Seiten 0x1e / 0x1f gebaut (rc 0 / 0)
+408:   PASS  42: TIM-Beschreibung: 4 bpp 256x256, CLUT (272,480) 16 Zeilen, Seite x 896/960 y 256
+408:   PASS  43: Zeile 481 = 0000 9ce7 98c6 94a5 (K3 CLUT_RAUCH, TEX.TIM @0x074)
+408:   PASS  44: Zeile 483 = 0000 ffff ebde d7de (K3 CLUT_FEUERBALL, TEX.TIM @0x0F4)
+408:   PASS  45: Zeile 492 = 0000 b631 b1ef adce (K3 CLUT_GRANATE, TEX.TIM @0x334)
+408:   PASS  46: Gegenprobe Datei-Offsets @0x334 / @0x0F4 / @0x074
+408:   PASS  47: Seite 0x1e == effect8_fire.tim-Pixel (32768 Halbworte, file-route-Pin)
+408:   PASS  48: Seite 0x1f == effect0_blood.tim-Pixel (32768 Halbworte)
+408:   PASS  49: Paletten 484 (Feuer) / 485 (Blut) == die CLUT der beiden Blaetter
+408:   PASS  50: tpage 0x0e (y 0) -> abgelehnt
+408:   PASS  51: tpage 0x1d (VRAM 832, ausserhalb des Messrechtecks) -> abgelehnt
+408:   PASS  52: falsche Magic -> abgelehnt
+408:   PASS  53: CLUT-Worte 0x7B11 (492) / 0x7811 (480) / 0x7BD1 (495) in der Spanne
+408:   PASS  54: 0x7C11 (496) / 0x77D1 (479) / 0x7B10 (x 256) ausserhalb
+408: 
+408: [Z] C2 Zeichen-Helfer
+408:   PASS  60: Flags 0x03 sichtbar
+408:   PASS  61: Flags 0x13 sichtbar
+408:   PASS  62: Flags 0x0a (Bit0 fehlt, Kind vor der Init) unsichtbar (@0x800532fc)
+408:   PASS  63: Flags 0x61 (Bit1 fehlt) unsichtbar (@0x80053308)
+408:   PASS  64: Altpfad ohne Row-VM: sichtbar wie bisher
+408:   PASS  65: wpos 0 -> Rueckfall x+xlat (110,-180,330)
+408:   PASS  66: wpos gesetzt -> slot+0x28 (-6851,12,-18279)
+408:   PASS  67: Granate 4/0x0D: CLUT 0x7b11 (Soll 0x7B11 = 0x7AD1 + 1*0x40), TPAGE 0x001f (Soll 0x001f)
+408:   PASS  68: Feuerball 3/0x19 (Altpfad): CLUT 0x78d1 (Soll 0x78D1 = 0x7811 + 3*0x40), TPAGE 0x001e
+408:   PASS  69: Huelse 4/0 Zeile 0: defW/defH = 1/1 (Soll 1/1, CORE00.ESP-Zeile)
+408:   PASS  70: Muendung 2/3: defW/defH = 0x1320 (Soll 0x1320)
+408:   PASS  71: Altpfad: defW/defH 0x1000
+408: 
+408: [L] C3 Licht-Latch (K2 LICHT_LESER)
+408:   PASS  80: Typ Licht 2 := 0 (@0x8001cef8)
+408:   PASS  81: Farbe = max(alt, D2/8C/50): (d2,f0,50) Soll (d2,f0,50) (@0x8001cf20-ac)
+408:   PASS  82: Gier 0: Lage (-6400,-800,-17600) Soll (-6400,-800,-17600) = Leon + (1200,-800,0)
+408:   PASS  83: Helligkeit 0x1770 (@0x8001d080)
+408:   PASS  84: Licht 0 unberuehrt
+408:   PASS  85: Gier 1024: Lage (100,-750,-1000) Soll (100,-750,-1000)
+408:   PASS  86: Gier 1024 zeigt nach -z (cos 0, sin 4096 in der Spieltabelle)
+408:   PASS  87: Latch 0: nichts umgestellt
+408:   PASS  88: Latch 1: NUR der aktive Cut 1 umgestellt
+408:   PASS  89: zurueck: Satz bitgleich (@0x8001d1ac), Latch 0 (@0x8001d1b4)
+408:   PASS  90: ungueltiger Cut: nichts umgestellt, Latch trotzdem geloescht
+408: 
+408: [A] C8 RE15_FORCE_AUFSCHLAG-Parse
+408:   PASS 100: 2@400: Saeure, q (-6100,0,-17600) = 1500 vor Leon
+408:   PASS 101: 1@500 bei Gier 1024: Brand, q (0,-10,-1500)
+408:   PASS 102: Bild 401: kein Eintrag
+408:   PASS 103: Art 3 / Unsinn / NULL -> nichts
+408:   PASS 104: 4@60:2: Art 4 Slot 2
+408:   PASS 105: 3@35:5: Art 3 Slot 5
+408:   PASS 106: falsches Bild / Art 5 / ohne Slot / Slot 0 (Spieler) / NULL -> nichts
+408: 
+408: [F] C7 RE2-Part-Farbwort (+0x70)
+408:   PASS 110: RE1.5-KI-Hund: keine Tinte (neutral)
+408:   PASS 111: RE2-KI-Hund: Part 3 = 0x00202020 (Soll 0x00202020, Verkohlung H_TOD_BRAND), ungesetzte Parts neutral
+408:   PASS 112: alle Parts neutral 0x808080 -> kein Tint-Pfad (Renderpfad bitgleich)
+408:   PASS 113: n = 4 Bones: Part 5 liegt ausserhalb -> neutral
+408:   PASS 114: Part 5 = 0x00003F2F (H_TOD_SAEURE)
+408:   PASS 115: RE2-Rig Hund: Part 16 -> Bone 16 = 0x00202020 (Soll 0x00202020; vorher Grenze 16 -> neutral), Bone 17 ausserhalb neutral
+408:   PASS 116: RE1.5-Rig Hund: Bone 7 = 0x00202020 (Part 8), Bone 14 = 0x00101f3f (Part 16), Part 7 (Pfote) faellt weg
+408:   PASS 117: NEGATIV-KONTROLLE: dieselben Woerter als RE2-Rig gelesen landen auf Bone 7 = Part 7 (0x00003f2f)
+408:   PASS 118: RE2-Rig Spinne: Part 19 -> Bone 19 = 0x00202f2f (Soll 0x00202F2F)
+408:   PASS 119: RE1.5-Rig Spinne (Identitaet): Part 19 -> Bone 19 = 0x00202f2f
+408: 
+408: === GRUEN: 85 bestanden, erste Verletzung 0 ===
+13/17 Test  #408: unit_r34_plattform ...........................   Passed    0.01 sec
+test 508
+      Start  508: unit_r35_fenster_satzform
+
+508: Test command: C:\workspace\git\reAi_v2\.claude\worktrees\r41_form_nb4\re15_port\build\tests\unit\probe_r35_fenster.exe "satzform"
+508: Working Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/unit
+508: Test timeout computed to be: 120
+508: [scd] thread start slot=10 first_op=0x01
+508: [scd] thread start slot=11 first_op=0x01
+508: STAGE1/ROOM1050.RDT @0x0c22: op 0x2c sce 3 sat 0x31 p0 0x00ff p1 0x0218
+508: STAGE1/ROOM1020.RDT @0x1e18: op 0x2c sce 3 sat 0x41 p0 0x00ff p1 0x0318
+508: Ereignis-Faeden: 10 dann 11 (erster freier ab 10)
+14/17 Test  #508: unit_r35_fenster_satzform ....................   Passed    0.01 sec
+410: -- r34_plattform_takt: OK — frame=1 fl=93 im Spawnbild 360; 2 Muendungszeile(n) im Spawnbild, alle getickt (C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r34_plattform_takt_wd/lauf_0051b9b6)
+15/17 Test  #410: integration_r34_plattform_takt ...............   Passed   22.49 sec
+1153: -- r41_form_wagenweg[zurueck_elza]: Kamera Taumeln F1544-F1842 (299 Bilder, Schnitte 13;15;11), Form-Slot 11 min sichtbar 2723, Elza max 1626, Form max 113 Promille verdeckt, max 544 Promille fast schwarz (100 Bilder)
+1153: -- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 150 (F946), Treffer 10 (Abzug 150, groesster 15) ab F1297, Rueckstoss F1544, Form-HP zuletzt 0, Leon getroffen 1x, exit=0, Lauf C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_form_wagenweg_zurueck_elza_wd/lauf_f763f02f
+1153: -- r41_form_wagenweg[zurueck_elza]: alle Pruefungen gruen
+16/17 Test #1153: integration_r41_form_wagenweg_zurueck_elza ...   Passed  101.31 sec
+1151: -- r41_form_wagenweg[elza]: Kamera Taumeln F1486-F1748 (263 Bilder, Schnitte 13;12;11), Form-Slot 11 min sichtbar 1596, Elza max 4147, Form max 238 Promille verdeckt, max 526 Promille fast schwarz (88 Bilder)
+1151: -- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 150 (F946), Treffer 10 (Abzug 150, groesster 15) ab F1237, Rueckstoss F1486, Form-HP zuletzt 0, Leon getroffen 1x, exit=0, Lauf C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build/tests/integration/r41_form_wagenweg_elza_wd/lauf_81371661
+1151: -- r41_form_wagenweg[elza]: alle Pruefungen gruen
+17/17 Test #1151: integration_r41_form_wagenweg_elza ...........   Passed   96.77 sec
+
+The following tests passed:
+	integration_r41_form_wagenweg_zurueck_leon
+	integration_r41_form_wagenweg
+	integration_r41_birkin_pistole
+	integration_r41_g5_tod
+	integration_r41_g5_westen
+	integration_r35_werfer_form
+	integration_r34_plattform_esp_eintritt
+	unit_birkin_bahnsteig
+	unit_r39_funk10f1_form
+	unit_r34_plattform_ton
+	unit_birkin_formen
+	unit_r41_form_emd
+	unit_r34_plattform
+	unit_r35_fenster_satzform
+	integration_r34_plattform_takt
+	integration_r41_form_wagenweg_zurueck_elza
+	integration_r41_form_wagenweg_elza
+
+100% tests passed, 0 tests failed out of 17
+
+Total Test time (real) = 339.52 sec
+ctest rc=0

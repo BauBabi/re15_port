@@ -1,0 +1,226 @@
+
+===========================  Rohbau A
+Bild 1 Lage [-19141, 0, -18630] Gier 83 (7.3 Grad): Tiefe Huefte 5212, Brust 6446, Kopf 7878, Wurzelhoehe 1870
+Bild 2 Lage [745, 0, -23923] Gier 3917 (344.3 Grad): Tiefe Huefte 7159, Brust 6156, Kopf 5058, Wurzelhoehe 1540
+Bild 1: Schulter L (302,275) R (398,258), Huefte L (244,294) R (325,306); Brust +X gegen Blick 17 Grad (0 = von der Kamera weg), Kopf +X zum Auge 174 Grad, Kopf gegen Brust 30 Grad
+   Links/Rechts Schulter richtig, Huefte richtig
+Bild 2: Schulter L (384,222) R (276,265), Huefte L (279,273) R (221,288); Brust +X gegen Blick 141 Grad (0 = von der Kamera weg), Kopf +X zum Auge 3 Grad, Kopf gegen Brust 42 Grad
+   Links/Rechts Schulter richtig, Huefte richtig
+Gelenkgrenzen (gerippe.json): Ueberschreitung je Pose. ax ay az Grad.
+  Pose 1: 15 Ueberschreitungen
+      ('unterarm_l', 'x', 17.1, [-12, 12])
+      ('klaue_l1', 'x', -8.2, [0, 0])
+      ('klaue_l2', 'x', 2.7, [0, 0])
+      ('unterarm_r', 'z', 3.5, [-155, 2])
+      ('klaue_r1', 'x', -1.1, [0, 0])
+      ('klaue_r2', 'x', 1.1, [0, 0])
+      ('kiefer', 'y', -1.7, [0, 0])
+      ('kiefer', 'z', -7.9, [0, 50])
+      ('unterschenkel_r', 'x', 13.9, [-12, 12])
+      ('fuss_r', 'y', -46.6, [-40, 40])
+      ('klaue_l3', 'x', 17.8, [0, 0])
+      ('klaue_l3', 'y', -33.5, [-30, 30])
+      ('klaue_r3', 'x', 1.2, [0, 0])
+      ('klaue_l4', 'x', 42.6, [0, 0])
+      ('klaue_r4', 'x', -1.8, [0, 0])
+  Pose 2: 14 Ueberschreitungen
+      ('klaue_l1', 'x', 6.9, [0, 0])
+      ('klaue_l2', 'x', 1.6, [0, 0])
+      ('unterarm_r', 'x', 32.2, [-12, 12])
+      ('klaue_r1', 'x', 35.5, [0, 0])
+      ('klaue_r1', 'y', -47.7, [-30, 30])
+      ('klaue_r2', 'x', 37.6, [0, 0])
+      ('klaue_r2', 'y', -31.6, [-30, 30])
+      ('kiefer', 'y', 2.1, [0, 0])
+      ('klaue_l3', 'x', -7.9, [0, 0])
+      ('klaue_r3', 'x', -47.1, [0, 0])
+      ('klaue_r3', 'y', 99.1, [-30, 30])
+      ('klaue_l4', 'x', 36.7, [0, 0])
+      ('klaue_r4', 'x', 33.0, [0, 0])
+      ('klaue_r4', 'y', -52.7, [-30, 30])
+  Ruhe: 2 Ueberschreitungen
+      ('klaue_l4', 'y', 40.0, [-30, 30])
+      ('klaue_r4', 'y', -40.0, [-30, 30])
+Ellbogen/Knie/Handgelenk: lokale Rotation. Beuge = Swing um die Gliedachse +Y, Drehung = Twist um die eigene Achse.
+  Pose 1: Ellbogen L Beuge 18 (Achse 0.97 0.00 -0.24) Dreh -5; Ellbogen R Beuge 10 (Achse 0.94 -0.00 0.34) Dreh +1; Knie L Beuge 10 (Achse 0.98 0.00 -0.22) Dreh -0; Knie R Beuge 21 (Achse 0.64 0.00 0.77) Dreh -2
+  Pose 2: Ellbogen L Beuge 39 (Achse 0.33 0.00 -0.94) Dreh -3; Ellbogen R Beuge 63 (Achse -0.03 0.00 -1.00) Dreh +37; Knie L Beuge 74 (Achse 0.01 0.00 1.00) Dreh -12; Knie R Beuge 95 (Achse -0.07 0.00 1.00) Dreh +6
+  Ruhe: Ellbogen L Beuge 15 (Achse 0.00 0.00 -1.00) Dreh +0; Ellbogen R Beuge 15 (Achse 0.00 0.00 -1.00) Dreh +0; Knie L Beuge 64 (Achse 0.00 0.00 1.00) Dreh +0; Knie R Beuge 64 (Achse 0.00 0.00 1.00) Dreh +0
+  Pose 1: Oberarm L Schwenk 61 Dreh -8; Oberarm R Schwenk 63 Dreh -7; Oberschenkel L Schwenk 45 Dreh -22; Oberschenkel R Schwenk 52 Dreh +9
+  Pose 2: Oberarm L Schwenk 21 Dreh -3; Oberarm R Schwenk 8 Dreh +95; Oberschenkel L Schwenk 68 Dreh -43; Oberschenkel R Schwenk 62 Dreh +36
+Hoehe tiefster Punkt ueber Boden je Gruppe (Einheiten):
+  Pose 1: hand_l -7, hand_r -5, fuss_l 11, fuss_r 106, schwanz 374, kopf 964, rumpf 984
+  Pose 2: hand_l 0, hand_r 55, fuss_l -0, fuss_r -2, schwanz 482, kopf 1507, rumpf 1000
+  Ruhe: hand_l 5, hand_r -4, fuss_l 60, fuss_r 60, schwanz 274, kopf 1421, rumpf 1458
+Klauenspitzen Bild 2 (Ecke weitest vom Gelenk), Hoehe ueber Boden, Soll-Spitze naechste:
+   klaue_r1 Laenge  740  Spitze Bild (236,473) Hoehe 586  naechste Soll (222, 475) Abstand 13.6
+   klaue_r2 Laenge  775  Spitze Bild (197,472) Hoehe 501  naechste Soll (197, 476) Abstand 3.5
+   klaue_r3 Laenge  916  Spitze Bild (146,353) Hoehe 829  naechste Soll (145, 353) Abstand 1.2
+   klaue_r4 Laenge  642  Spitze Bild (272,441) Hoehe 588  naechste Soll (274, 443) Abstand 3.0
+   klaue_l1 Laenge  740  Spitze Bild (460,392) Hoehe 480  naechste Soll (461, 392) Abstand 1.3
+   klaue_l2 Laenge  775  Spitze Bild (468,417) Hoehe 187  naechste Soll (468, 417) Abstand 0.6
+   klaue_l3 Laenge  916  Spitze Bild (438,417) Hoehe 355  naechste Soll (439, 418) Abstand 1.4
+   klaue_l4 Laenge  642  Spitze Bild (420,399) Hoehe 0  naechste Soll (410, 392) Abstand 11.7
+Klauenspitzen Bild 1 rechte Hand:
+   klaue_r1 Spitze Bild (398,372) Hoehe -5  Abstand zu (425,363) 28.1
+   klaue_r2 Spitze Bild (413,372) Hoehe 3  Abstand zu (425,363) 15.6
+   klaue_r3 Spitze Bild (423,365) Hoehe 97  Abstand zu (425,363) 2.6
+   klaue_r4 Spitze Bild (388,371) Hoehe 162  Abstand zu (425,363) 37.9
+Spreizung Finger rechte Hand: Winkel Finger gegen Handachse je Pose
+  Pose 1: r1 5 r2 7 r3 18 r4 9 l1 28 l2 7 l3 34 l4 23
+  Pose 2: r1 51 r2 41 r3 99 r4 53 l1 30 l2 11 l3 7 l4 31
+  Ruhe: r1 12 r2 6 r3 12 r4 40 l1 12 l2 6 l3 12 l4 40
+
+===========================  Rohbau B
+Bild 1 Lage [-18545, 0, -18368] Gier 83 (7.3 Grad): Tiefe Huefte 5842, Brust 7093, Kopf 8511, Wurzelhoehe 1862
+Bild 2 Lage [776, 0, -23713] Gier 3917 (344.3 Grad): Tiefe Huefte 7125, Brust 6166, Kopf 5069, Wurzelhoehe 1286
+Bild 1: Schulter L (297,260) R (387,256), Huefte L (249,287) R (320,301); Brust +X gegen Blick 23 Grad (0 = von der Kamera weg), Kopf +X zum Auge 148 Grad, Kopf gegen Brust 58 Grad
+   Links/Rechts Schulter richtig, Huefte richtig
+Bild 2: Schulter L (398,225) R (280,269), Huefte L (302,296) R (244,312); Brust +X gegen Blick 147 Grad (0 = von der Kamera weg), Kopf +X zum Auge 14 Grad, Kopf gegen Brust 43 Grad
+   Links/Rechts Schulter richtig, Huefte richtig
+Gelenkgrenzen (gerippe.json): Ueberschreitung je Pose. ax ay az Grad.
+  Pose 1: 6 Ueberschreitungen
+      ('unterarm_r', 'z', 4.1, [-155, 2])
+      ('klaue_r1', 'x', -18.1, [0, 0])
+      ('klaue_r2', 'x', 1.1, [0, 0])
+      ('klaue_l4', 'y', 152.1, [-30, 30])
+      ('klaue_r4', 'x', 10.4, [0, 0])
+      ('klaue_r4', 'y', -56.5, [-30, 30])
+  Pose 2: 20 Ueberschreitungen
+      ('huefte', 'y', 1.1, [0, 0])
+      ('unterarm_l', 'x', -24.5, [-12, 12])
+      ('unterarm_l', 'y', -41.8, [-20, 20])
+      ('klaue_l1', 'x', 12.5, [0, 0])
+      ('klaue_l2', 'x', 9.0, [0, 0])
+      ('klaue_r1', 'x', 20.0, [0, 0])
+      ('klaue_r1', 'y', -53.6, [-30, 30])
+      ('klaue_r2', 'x', 12.8, [0, 0])
+      ('klaue_r2', 'y', -31.0, [-30, 30])
+      ('hals', 'y', 65.0, [-60, 60])
+      ('fuss_l', 'y', 77.5, [-40, 40])
+      ('fuss_r', 'x', 173.8, [-40, 40])
+      ('fuss_r', 'y', -61.2, [-40, 40])
+      ('fuss_r', 'z', -147.1, [-80, 80])
+      ('klaue_l3', 'x', 16.0, [0, 0])
+      ('klaue_r3', 'x', 12.8, [0, 0])
+      ('klaue_l4', 'y', 152.1, [-30, 30])
+      ('klaue_r4', 'x', -12.8, [0, 0])
+      ('klaue_r4', 'y', 38.0, [-30, 30])
+      ('klaue_r4', 'z', -33.3, [-30, 95])
+  Ruhe: 9 Ueberschreitungen
+      ('oberarm_l', 'x', -168.8, [-70, 130])
+      ('oberarm_l', 'y', 151.7, [-100, 100])
+      ('unterarm_l', 'x', -102.5, [-12, 12])
+      ('unterarm_r', 'x', 62.6, [-12, 12])
+      ('unterschenkel_l', 'x', 48.4, [-12, 12])
+      ('unterschenkel_l', 'y', 22.6, [-20, 20])
+      ('fuss_l', 'y', 60.6, [-40, 40])
+      ('unterschenkel_r', 'x', 47.6, [-12, 12])
+      ('unterschenkel_r', 'y', 34.8, [-20, 20])
+Ellbogen/Knie/Handgelenk: lokale Rotation. Beuge = Swing um die Gliedachse +Y, Drehung = Twist um die eigene Achse.
+  Pose 1: Ellbogen L Beuge 13 (Achse -0.99 0.00 0.15) Dreh -20; Ellbogen R Beuge 13 (Achse 0.94 0.00 0.33) Dreh -7; Knie L Beuge 12 (Achse 0.99 0.00 -0.12) Dreh +2; Knie R Beuge 22 (Achse 0.44 0.00 0.90) Dreh -2
+  Pose 2: Ellbogen L Beuge 35 (Achse 0.29 0.00 -0.96) Dreh -50; Ellbogen R Beuge 65 (Achse 0.03 -0.00 -1.00) Dreh -4; Knie L Beuge 104 (Achse 0.33 0.00 0.94) Dreh +16; Knie R Beuge 138 (Achse -0.15 0.00 0.99) Dreh -12
+  Ruhe: Ellbogen L Beuge 101 (Achse -0.20 0.00 -0.98) Dreh -89; Ellbogen R Beuge 101 (Achse 0.36 -0.00 -0.93) Dreh +37; Knie L Beuge 105 (Achse 0.30 0.00 0.95) Dreh -28; Knie R Beuge 105 (Achse 0.56 0.00 0.83) Dreh -5
+  Pose 1: Oberarm L Schwenk 87 Dreh +42; Oberarm R Schwenk 55 Dreh -15; Oberschenkel L Schwenk 46 Dreh -20; Oberschenkel R Schwenk 52 Dreh +7
+  Pose 2: Oberarm L Schwenk 21 Dreh -3; Oberarm R Schwenk 3 Dreh +96; Oberschenkel L Schwenk 49 Dreh +49; Oberschenkel R Schwenk 81 Dreh +45
+Hoehe tiefster Punkt ueber Boden je Gruppe (Einheiten):
+  Pose 1: hand_l 799, hand_r -3, fuss_l -3, fuss_r 37, schwanz 231, kopf 704, rumpf 695
+  Pose 2: hand_l 36, hand_r -1, fuss_l 51, fuss_r 54, schwanz -2, kopf 1460, rumpf 481
+  Ruhe: hand_l -4, hand_r -3, fuss_l 69, fuss_r 69, schwanz 273, kopf 787, rumpf 546
+Klauenspitzen Bild 2 (Ecke weitest vom Gelenk), Hoehe ueber Boden, Soll-Spitze naechste:
+   klaue_r1 Laenge  446  Spitze Bild (272,443) Hoehe 124  naechste Soll (274, 443) Abstand 1.6
+   klaue_r2 Laenge  573  Spitze Bild (208,488) Hoehe 112  naechste Soll (197, 476) Abstand 16.3
+   klaue_r3 Laenge  573  Spitze Bild (170,478) Hoehe -1  naechste Soll (197, 476) Abstand 26.7
+   klaue_r4 Laenge  968  Spitze Bild (144,353) Hoehe 682  naechste Soll (145, 353) Abstand 1.1
+   klaue_l1 Laenge  573  Spitze Bild (463,415) Hoehe 36  naechste Soll (468, 417) Abstand 5.5
+   klaue_l2 Laenge  573  Spitze Bild (438,411) Hoehe 131  naechste Soll (439, 418) Abstand 6.8
+   klaue_l3 Laenge  446  Spitze Bild (407,390) Hoehe 164  naechste Soll (410, 392) Abstand 3.6
+   klaue_l4 Laenge  968  Spitze Bild (382,377) Hoehe 187  naechste Soll (410, 392) Abstand 31.6
+Klauenspitzen Bild 1 rechte Hand:
+   klaue_r1 Spitze Bild (385,367) Hoehe -3  Abstand zu (425,363) 40.0
+   klaue_r2 Spitze Bild (386,357) Hoehe 48  Abstand zu (425,363) 39.5
+   klaue_r3 Spitze Bild (400,354) Hoehe 89  Abstand zu (425,363) 26.1
+   klaue_r4 Spitze Bild (421,356) Hoehe 12  Abstand zu (425,363) 8.3
+Spreizung Finger rechte Hand: Winkel Finger gegen Handachse je Pose
+  Pose 1: r1 30 r2 5 r3 25 r4 57 l1 60 l2 60 l3 60 l4 152
+  Pose 2: r1 63 r2 31 r3 30 r4 49 l1 9 l2 14 l3 31 l4 152
+  Ruhe: r1 6 r2 6 r3 6 r4 3 l1 6 l2 6 l3 6 l4 3
+
+===========================  Rohbau C
+Bild 1 Lage [-18545, 0, -18368] Gier 83 (7.3 Grad): Tiefe Huefte 5842, Brust 7073, Kopf 8494, Wurzelhoehe 1880
+Bild 2 Lage [776, 0, -23713] Gier 3917 (344.3 Grad): Tiefe Huefte 7194, Brust 6203, Kopf 5102, Wurzelhoehe 1575
+Bild 1: Schulter L (305,263) R (394,258), Huefte L (249,287) R (319,300); Brust +X gegen Blick 21 Grad (0 = von der Kamera weg), Kopf +X zum Auge 167 Grad, Kopf gegen Brust 32 Grad
+   Links/Rechts Schulter richtig, Huefte richtig
+Bild 2: Schulter L (400,228) R (291,254), Huefte L (289,273) R (232,284); Brust +X gegen Blick 142 Grad (0 = von der Kamera weg), Kopf +X zum Auge 18 Grad, Kopf gegen Brust 56 Grad
+   Links/Rechts Schulter richtig, Huefte richtig
+Gelenkgrenzen (gerippe.json): Ueberschreitung je Pose. ax ay az Grad.
+  Pose 1: 11 Ueberschreitungen
+      ('huefte', 'y', 1.1, [0, 0])
+      ('klaue_l1', 'x', -2.2, [0, 0])
+      ('klaue_l2', 'x', -8.0, [0, 0])
+      ('unterarm_r', 'z', 6.2, [-155, 2])
+      ('klaue_r1', 'x', 3.1, [0, 0])
+      ('klaue_r2', 'x', -2.5, [0, 0])
+      ('kiefer', 'z', -0.7, [0, 50])
+      ('klaue_l3', 'x', -5.5, [0, 0])
+      ('klaue_r3', 'x', -17.8, [0, 0])
+      ('klaue_r4', 'x', 13.7, [0, 0])
+      ('klaue_r4', 'y', 51.1, [-30, 30])
+  Pose 2: 19 Ueberschreitungen
+      ('oberschenkel_r', 'x', 34.0, [-30, 50])
+      ('klaue_l1', 'x', 8.3, [0, 0])
+      ('klaue_l2', 'x', -11.2, [0, 0])
+      ('klaue_r1', 'x', 22.9, [0, 0])
+      ('klaue_r1', 'y', -57.3, [-30, 30])
+      ('klaue_r1', 'z', -52.6, [-30, 95])
+      ('klaue_r2', 'x', 28.1, [0, 0])
+      ('klaue_r2', 'y', -56.0, [-30, 30])
+      ('klaue_r2', 'z', -30.8, [-30, 95])
+      ('unterschenkel_r', 'y', 21.4, [-20, 20])
+      ('klaue_l3', 'x', -17.6, [0, 0])
+      ('klaue_l3', 'y', 44.4, [-30, 30])
+      ('klaue_r3', 'x', 17.4, [0, 0])
+      ('klaue_r3', 'y', 40.7, [-30, 30])
+      ('klaue_r3', 'z', -50.0, [-30, 95])
+      ('klaue_l4', 'x', 1.1, [0, 0])
+      ('klaue_r4', 'x', 5.6, [0, 0])
+      ('klaue_r4', 'y', -53.3, [-30, 30])
+      ('klaue_r4', 'z', -79.4, [-30, 95])
+  Ruhe: 10 Ueberschreitungen
+      ('huefte', 'y', 1.1, [0, 0])
+      ('klaue_l1', 'x', -2.2, [0, 0])
+      ('klaue_l2', 'x', -8.0, [0, 0])
+      ('unterarm_r', 'z', 6.2, [-155, 2])
+      ('klaue_r1', 'x', 3.1, [0, 0])
+      ('klaue_r2', 'x', -2.5, [0, 0])
+      ('klaue_l3', 'x', -5.5, [0, 0])
+      ('klaue_r3', 'x', -17.8, [0, 0])
+      ('klaue_r4', 'x', 13.7, [0, 0])
+      ('klaue_r4', 'y', 51.1, [-30, 30])
+Ellbogen/Knie/Handgelenk: lokale Rotation. Beuge = Swing um die Gliedachse +Y, Drehung = Twist um die eigene Achse.
+  Pose 1: Ellbogen L Beuge 13 (Achse -1.00 -0.00 -0.10) Dreh +0; Ellbogen R Beuge 11 (Achse 0.84 0.00 0.54) Dreh -1; Knie L Beuge 12 (Achse 0.99 0.00 -0.15) Dreh -1; Knie R Beuge 19 (Achse 0.63 0.00 0.78) Dreh -0
+  Pose 2: Ellbogen L Beuge 36 (Achse 0.32 0.00 -0.95) Dreh -3; Ellbogen R Beuge 61 (Achse -0.06 0.00 -1.00) Dreh +4; Knie L Beuge 74 (Achse -0.07 0.00 1.00) Dreh -13; Knie R Beuge 76 (Achse 0.33 0.00 0.94) Dreh +28
+  Ruhe: Ellbogen L Beuge 13 (Achse -1.00 -0.00 -0.10) Dreh +0; Ellbogen R Beuge 11 (Achse 0.84 0.00 0.54) Dreh -1; Knie L Beuge 12 (Achse 0.99 0.00 -0.15) Dreh -1; Knie R Beuge 19 (Achse 0.63 0.00 0.78) Dreh -0
+  Pose 1: Oberarm L Schwenk 56 Dreh +3; Oberarm R Schwenk 65 Dreh -14; Oberschenkel L Schwenk 44 Dreh -21; Oberschenkel R Schwenk 52 Dreh +6
+  Pose 2: Oberarm L Schwenk 21 Dreh -4; Oberarm R Schwenk 12 Dreh +98; Oberschenkel L Schwenk 68 Dreh -41; Oberschenkel R Schwenk 59 Dreh +53
+Hoehe tiefster Punkt ueber Boden je Gruppe (Einheiten):
+  Pose 1: hand_l 3, hand_r -6, fuss_l 10, fuss_r 1, schwanz 353, kopf 731, rumpf 901
+  Pose 2: hand_l 18, hand_r 31, fuss_l -4, fuss_r 263, schwanz 101, kopf 1329, rumpf 889
+  Ruhe: hand_l 3, hand_r -6, fuss_l 10, fuss_r 1, schwanz 353, kopf 1054, rumpf 901
+Klauenspitzen Bild 2 (Ecke weitest vom Gelenk), Hoehe ueber Boden, Soll-Spitze naechste:
+   klaue_r1 Laenge  763  Spitze Bild (222,472) Hoehe 284  naechste Soll (222, 475) Abstand 2.8
+   klaue_r2 Laenge  804  Spitze Bild (197,474) Hoehe 316  naechste Soll (197, 476) Abstand 2.4
+   klaue_r3 Laenge  961  Spitze Bild (144,350) Hoehe 1357  naechste Soll (145, 353) Abstand 3.1
+   klaue_r4 Laenge  712  Spitze Bild (274,440) Hoehe 301  naechste Soll (274, 443) Abstand 2.7
+   klaue_l1 Laenge  775  Spitze Bild (462,390) Hoehe 545  naechste Soll (461, 392) Abstand 2.1
+   klaue_l2 Laenge  809  Spitze Bild (468,415) Hoehe 300  naechste Soll (468, 417) Abstand 2.0
+   klaue_l3 Laenge  966  Spitze Bild (465,420) Hoehe 152  naechste Soll (468, 417) Abstand 4.7
+   klaue_l4 Laenge  707  Spitze Bild (440,413) Hoehe 36  naechste Soll (439, 418) Abstand 5.1
+Klauenspitzen Bild 1 rechte Hand:
+   klaue_r1 Spitze Bild (389,359) Hoehe 81  Abstand zu (425,363) 35.9
+   klaue_r2 Spitze Bild (402,358) Hoehe 81  Abstand zu (425,363) 23.2
+   klaue_r3 Spitze Bild (425,362) Hoehe 26  Abstand zu (425,363) 1.2
+   klaue_r4 Spitze Bild (381,371) Hoehe 89  Abstand zu (425,363) 44.4
+Spreizung Finger rechte Hand: Winkel Finger gegen Handachse je Pose
+  Pose 1: r1 17 r2 12 r3 28 r4 54 l1 15 l2 8 l3 6 l4 22
+  Pose 2: r1 71 r2 61 r3 61 r4 84 l1 27 l2 28 l3 46 l4 2
+  Ruhe: r1 17 r2 12 r3 28 r4 54 l1 15 l2 8 l3 6 l4 22

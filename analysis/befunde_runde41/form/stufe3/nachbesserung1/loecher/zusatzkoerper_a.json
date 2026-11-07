@@ -1,0 +1,109 @@
+{
+ "koerper": [
+  {
+   "naht": "Bein r - Huefte",
+   "am": "eltern",
+   "mitte": [
+    -442,
+    480,
+    -512
+   ],
+   "achse": [
+    0,
+    1.0,
+    0
+   ],
+   "rq": 350.0,
+   "rn": 350.0,
+   "deckung": 0.929,
+   "runde": 0
+  },
+  {
+   "naht": "Arm l - Brust",
+   "am": "eltern",
+   "mitte": [
+    769,
+    234,
+    707
+   ],
+   "achse": [
+    0,
+    1.0,
+    0
+   ],
+   "rq": 400.0,
+   "rn": 400.0,
+   "deckung": 0.75,
+   "runde": 0
+  },
+  {
+   "naht": "Arm r - Brust",
+   "am": "eltern",
+   "mitte": [
+    257,
+    329,
+    -707
+   ],
+   "achse": [
+    0,
+    1.0,
+    0
+   ],
+   "rq": 150.0,
+   "rn": 150.0,
+   "deckung": 1.0,
+   "runde": 0
+  },
+  {
+   "naht": "Bein r - Huefte",
+   "am": "eltern",
+   "mitte": [
+    -696,
+    92,
+    -553
+   ],
+   "achse": [
+    0,
+    1.0,
+    0
+   ],
+   "rq": 150.0,
+   "rn": 150.0,
+   "deckung": 1.0,
+   "runde": 1
+  },
+  {
+   "naht": "Arm l - Brust",
+   "am": "eltern",
+   "mitte": [
+    473,
+    90,
+    1111
+   ],
+   "achse": [
+    0,
+    1.0,
+    0
+   ],
+   "rq": 150.0,
+   "rn": 150.0,
+   "deckung": 1.0,
+   "runde": 1
+  }
+ ],
+ "quelle": "../roh/n1_punkte.json",
+ "grenzen": [
+  10,
+  150
+ ],
+ "bild": {
+  "1": [
+   1,
+   16
+  ],
+  "2": [
+   0,
+   85
+  ]
+ }
+}

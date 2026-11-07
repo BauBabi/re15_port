@@ -1,0 +1,138 @@
+{
+ "bild": "bild1.png",
+ "standbild": "Video Version_80%/Biohazard 1.5 Final Build.mp4, Standbild 143, 114.51-115.28 s",
+ "raum": "inhaltlich ROOM5080 (keine Kamera auf der Disc)",
+ "cut": null,
+ "quelle": "geschaetzt aus dem Bild gegen die Raumgeometrie von ROOM5080 (Cuts 0-4 trianguliert, SCA), Herleitung kamera.md",
+ "sicherheit": "wahrscheinlich: Hoehe und Horizont; offen: Tiefe entlang der Blickachse, Hauptpunkt, Gierwinkel",
+ "auge": [
+  -24116.3,
+  -2180.0,
+  -20595.1
+ ],
+ "ziel": [
+  -12280.9,
+  -2620.1,
+  -18664.0
+ ],
+ "fov_rid": null,
+ "H": 208.0,
+ "H_hinweis": "208 ist Rechengroesse. Nur das Produkt aus H und B ist bestimmt, siehe kamera.md",
+ "port_groesse": [
+  320,
+  240
+ ],
+ "port_mitte": [
+  160,
+  120
+ ],
+ "bild_groesse": [
+  640,
+  480
+ ],
+ "bodenebene_y": 0.0,
+ "abbildung_port_nach_bild": {
+  "art": "Homographie, (x,y,1) ~ B*(u,w,1); Trapezanteil gemessen an 22 Kontrollbildern, Massstab und Lage aus Bild 1",
+  "B": [
+   [
+    1.7396176644914507,
+    0.12180370070581084,
+    84.13422933697521
+   ],
+   [
+    -0.08928314479758163,
+    2.027462615161228,
+    -11.771231184292608
+   ],
+   [
+    -0.00038333726553526796,
+    0.00020602013778453292,
+    1.0
+   ]
+  ]
+ },
+ "formeln": [
+  "v = R*(welt-auge), R = Blickmatrix aus auge/ziel (form_kamera.blickmatrix)",
+  "u = 160+H*v.x/v.z, w = 120+H*v.y/v.z",
+  "(x,y,1) ~ B*(u,w,1)"
+ ],
+ "brennweite_bild_px": {
+  "fx": 408.0,
+  "fy": 427.8,
+  "hauptpunkt": [
+   391.4,
+   225.5
+  ]
+ },
+ "restfehler": {
+  "merkmale": 14,
+  "rms_px": 5.6,
+  "max_px": 13.8,
+  "grubenkante_px": [
+   7.2,
+   -1.4
+  ],
+  "gelaender_px": [
+   -0.1,
+   0.2
+  ],
+  "hut_rand_px": [
+   -1.7,
+   15.2
+  ],
+  "leon_modell_bbox": [
+   94,
+   153,
+   192,
+   373
+  ],
+  "leon_bild_bbox_ca": [
+   104,
+   150,
+   200,
+   368
+  ]
+ },
+ "belastbar": {
+  "augenhoehe": 2180,
+  "horizont_zeile": 241,
+  "hoehe_3000_px_je_bodenzeile": {
+   "372": 180,
+   "405": 226,
+   "440": 274
+  },
+  "streuung_prozent": 4
+ },
+ "alternativen": [
+  {
+   "name": "Nord",
+   "auge": [
+    -26003,
+    -2348,
+    -11973
+   ],
+   "gier_grad": -8.6,
+   "nick_grad": 1.0
+  },
+  {
+   "name": "West",
+   "auge": [
+    -27980,
+    -2371,
+    -17040
+   ],
+   "gier_grad": 5.8,
+   "nick_grad": 0.0
+  },
+  {
+   "name": "Suedwest",
+   "auge": [
+    -26494,
+    -2157,
+    -18864
+   ],
+   "gier_grad": 11.4,
+   "nick_grad": 0.0
+  }
+ ]
+}

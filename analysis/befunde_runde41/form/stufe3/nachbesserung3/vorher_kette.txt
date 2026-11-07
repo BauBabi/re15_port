@@ -1,0 +1,77 @@
+# Lauf nb3/vorher_kette (exe 917195879, Eingabe = AN-Abnahme 2 kette_ohne, NOAUDIO+SOFTWARE_RENDER), Zustandswechsel Slot 2 / Spieler
+F0 Spieler hp=100 cam=0 @(27200,4900)
+F161 Spieler hp=100 cam=1 @(27200,4900)
+F1 Spieler hp=100 cam=0 @(27200,4900)
+F1  Slot 2 t=30 st=1 ss1=9 ss2=0 mo=0 af=16 hp=300 @(-14700,-23350)
+F6  Slot 2 t=30 st=1 ss1=9 ss2=0 mo=2 af=1 hp=300 @(-14700,-23350)
+F342 Spieler hp=100 cam=1 @(5075,4900)
+F362 Spieler hp=100 cam=0 @(3575,4900)
+F498 Spieler hp=100 cam=9 @(24700,-9250)
+F498  Slot 2 t=30 st=1 ss1=0 ss2=0 mo=2 af=1 hp=150 @(-14700,-23350)
+F623 Spieler hp=100 cam=8 @(19890,-9900)
+F624 Spieler hp=100 cam=9 @(19890,-9900)
+F625 Spieler hp=100 cam=8 @(19815,-9900)
+F678 Spieler hp=100 cam=7 @(15840,-9900)
+F729 Spieler hp=100 cam=6 @(12015,-9900)
+F842 Spieler hp=100 cam=5 @(3540,-9900)
+F946 Spieler hp=100 cam=14 @(24800,-23550)
+F946  Slot 2 t=30 st=1 ss1=0 ss2=0 mo=2 af=1 hp=0 @(-14700,-23350)
+F1082 Spieler hp=100 cam=13 @(20150,-23550)
+F1167 Spieler hp=100 cam=12 @(13775,-23550)
+F1169 Spieler hp=100 cam=15 @(13775,-23550)
+F1169  Slot 2 t=30 st=1 ss1=0 ss2=1 mo=10 af=1 hp=0 @(1200,-23350)
+F1170 Spieler hp=100 cam=11 @(13775,-23550)
+F1229 Spieler hp=100 cam=12 @(13775,-23550)
+F1294  Slot 2 t=30 st=1 ss1=3 ss2=0 mo=10 af=125 hp=0 @(1343,-23392)
+F1295  Slot 2 t=30 st=1 ss1=3 ss2=1 mo=5 af=1 hp=0 @(1361,-23393)
+F1296  Slot 2 t=30 st=1 ss1=4 ss2=1 mo=0 af=1 hp=0 @(1373,-23394)
+F1322 Spieler hp=95 cam=12 @(13775,-23550)
+F1324 Spieler hp=95 cam=13 @(14125,-23555)
+F1325 Spieler hp=95 cam=12 @(14225,-23557)
+F1343 Spieler hp=95 cam=13 @(15109,-24749)
+F1349  Slot 2 t=30 st=1 ss1=3 ss2=0 mo=0 af=0 hp=0 @(16074,-23218)
+F1350  Slot 2 t=30 st=1 ss1=3 ss2=1 mo=5 af=1 hp=0 @(16091,-23213)
+F1376  Slot 2 t=30 st=1 ss1=14 ss2=1 mo=26 af=1 hp=0 @(16997,-23639)
+F1410  Slot 2 t=30 st=1 ss1=3 ss2=0 mo=26 af=34 hp=0 @(16971,-23634)
+F1411  Slot 2 t=30 st=1 ss1=3 ss2=1 mo=5 af=1 hp=0 @(16968,-23652)
+F1425  Slot 2 t=30 st=1 ss1=14 ss2=1 mo=26 af=1 hp=0 @(16999,-23682)
+F1459  Slot 2 t=30 st=1 ss1=3 ss2=0 mo=26 af=34 hp=0 @(17531,-23607)
+F1460  Slot 2 t=30 st=1 ss1=3 ss2=1 mo=5 af=1 hp=0 @(17518,-23621)
+F1466  Slot 2 t=30 st=1 ss1=15 ss2=1 mo=27 af=1 hp=0 @(17551,-23617)
+F1473 Spieler hp=50 cam=13 @(14012,-24749)
+F1565  Slot 2 t=30 st=1 ss1=3 ss2=0 mo=27 af=99 hp=0 @(18098,-23381)
+F1566  Slot 2 t=30 st=1 ss1=3 ss2=1 mo=5 af=1 hp=0 @(18081,-23389)
+F1715  Slot 2 t=30 st=1 ss1=14 ss2=1 mo=26 af=1 hp=0 @(16369,-23491)
+F1731 Spieler hp=40 cam=13 @(13953,-24750)
+F1749  Slot 2 t=30 st=1 ss1=3 ss2=0 mo=26 af=34 hp=0 @(16836,-23244)
+F1750  Slot 2 t=30 st=1 ss1=3 ss2=1 mo=5 af=1 hp=0 @(16819,-23251)
+F1777  Slot 2 t=30 st=1 ss1=14 ss2=1 mo=26 af=1 hp=0 @(16012,-23682)
+F1793 Spieler hp=30 cam=13 @(13491,-24749)
+F1811  Slot 2 t=30 st=1 ss1=3 ss2=0 mo=26 af=34 hp=0 @(16491,-23484)
+F1812  Slot 2 t=30 st=1 ss1=3 ss2=1 mo=5 af=1 hp=0 @(16473,-23490)
+F1834  Slot 2 t=30 st=1 ss1=14 ss2=1 mo=26 af=1 hp=0 @(15762,-23682)
+F1850 Spieler hp=20 cam=13 @(13030,-24749)
+F1868  Slot 2 t=30 st=1 ss1=3 ss2=0 mo=26 af=34 hp=0 @(16064,-23568)
+F1869  Slot 2 t=30 st=1 ss1=3 ss2=1 mo=5 af=1 hp=0 @(16046,-23574)
+F1886  Slot 2 t=30 st=1 ss1=14 ss2=1 mo=26 af=1 hp=0 @(15493,-23682)
+F1897 Spieler hp=20 cam=12 @(12570,-24749)
+F1897  Slot 2 t=30 st=3 ss1=3 ss2=1 mo=13 af=0 hp=1 @(15493,-23695)
+F1898  Slot 2 t=30 st=2 ss1=3 ss2=1 mo=13 af=1 hp=1 @(15565,-23661)
+F2078 Spieler hp=20 cam=11 @(12570,-24749)
+F2147  Slot 2 t=30 st=2 ss1=3 ss2=1 mo=12 af=0 hp=1 @(-2513,-23244)
+
+# debug.log: Spawns, Bank, Tueren
+77:[debug-menu] AUTO-JUMP -> ROOM5090 (Frame 250)
+79:[debug-menu] JUMP -> 509 TRAIN CAR ABC  (ROOM5090) spawn=(27200,0,4900) cut=0
+89:[spawn-diag] Sce_em_set type=0x30 behavior=0x33 slot=1 pos=(-14700,0,-23350) dir=0
+95:[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12
+157:[aot] DOOR FIRE slot=0 rect=(-550,5125,hw=450,hh=1975) target_cut=9 spawn=(24700,0,-9250)
+177:[spawn-diag] Sce_em_set type=0x30 behavior=0x33 slot=1 pos=(-14700,0,-23350) dir=0
+222:[aot] DOOR FIRE slot=2 rect=(-550,-9175,hw=450,hh=1975) target_cut=14 spawn=(24800,0,-23550)
+228:[spawn-diag] Sce_em_set type=0x30 behavior=0x33 slot=1 pos=(-14700,0,-23350) dir=0
+
+# state.log an den Wagenwechseln
+F497 pad=0010 PL(-12,4900,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=17 mg=144 bx=250 sl=1111 cam=0 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=4 ss1=6 ss2=3 ss3=0 g=40 mo=2 af=6 stun=0 d=0 @(600,-25300,r0)] hp=-1 [2 t=30 st=1 ss1=9 ss2=0 ss3=0 g=33 mo=2 af=12 stun=9 d=0 @(-14700,-23350,r0)] hp=300
+F498 pad=8000 PL(24700,-9250,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=210 ac=6 fx=17 mg=144 bx=250 sl=1111 cam=9 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=4 ss1=6 ss2=0 ss3=0 g=40 mo=2 af=0 stun=0 d=0 @(600,-25300,r0)] hp=-1 [2 t=30 st=1 ss1=0 ss2=0 ss3=0 g=33 mo=2 af=1 stun=0 d=0 @(-14700,-23350,r4080)] hp=150
+F945 pad=0010 PL(1,-9900,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=105 ac=6 fx=17 mg=144 bx=250 sl=1111 cam=5 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=4 ss1=6 ss2=3 ss3=0 g=40 mo=2 af=9 stun=0 d=0 @(600,-25300,r0)] hp=-1 [2 t=30 st=1 ss1=0 ss2=0 ss3=0 g=33 mo=2 af=23 stun=0 d=0 @(-14700,-23350,r4080)] hp=150
+F946 pad=8000 PL(24800,-23550,rot=2048,hp=100) pst=1 ps1=0 ps2=0 mo=210 ac=6 fx=17 mg=144 bx=250 sl=1111 cam=14 msg(a=0 fsm=0 id=0 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=4 ss1=6 ss2=0 ss3=0 g=40 mo=2 af=0 stun=0 d=0 @(600,-25300,r0)] hp=-1 [2 t=30 st=1 ss1=0 ss2=0 ss3=0 g=33 mo=2 af=1 stun=0 d=0 @(-14700,-23350,r3)] hp=0

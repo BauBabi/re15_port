@@ -1,0 +1,65 @@
+=== Teile des Nutzers. Soll: nutzer_teile, Logo-Schrift zaehlt nirgends, Saum 3 px; Abstaende: + = rechts/unten vom Soll
+IoU und Deckung am sichtbaren Teil. Deckung = Maske gedeckt, Kern = Maske minus Saum, Innen = Teil in der Maske, +Saum = Maske plus Saum. Verdeckt = vom Teil allein durch andere Modell-Teile.
+Leer = Maske ohne jedes Modell. Laenge, Breite: Ist/Soll laengs und quer zur Hauptachse. Spalte Wertung = Maskenpixel, die zaehlen.
+--- Bild 1: Anteil aller Nutzerpixel, die der richtige Teil deckt 0.945, mittlere IoU 0.775
+  Teil                 Knochen          Wertung   IoU  Deck  Kern Innen +Saum  Verd  Leer  Schwerpunkt dx,dy    Achse         Laenge    Breite
+  left_leg             8,24,25             4224  0.66  0.96  1.00  0.68  0.76  0.15  0.04  +3,+13 (12.9)        6 Grad -6 px  166/172   52/39
+      Schnitt ueberlappt tail 90 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: tail 0.00
+      verdeckt von: tail 0.15
+      Ende oben       Soll (242,264)  Ist (238,268)  -4,+4  Abstand 5.7
+      Ende Fuss       Soll (208,447)  Ist (209,443)  +1,-4  Abstand 4.1  Soll unter Logo
+      Spitze Soll (203,447)  Ist (209,443)  Abstand 7.2  Soll unter Logo
+  part_of_Body         0,7,10              6423  0.80  0.87  0.91  0.91  0.95  0.47  0.01  -3,-9 (9.9)          7 Grad +6 px  110/111   78/84
+      Schnitt ueberlappt right_leg 1316 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: face_and_upper_body 0.08, tail 0.02, right_leg 0.02, right_arm 0.01, left_arm_front 0.00
+      verdeckt von: tail 0.39, right_leg 0.08, right_arm 0.00
+      Ende oben       Soll (363,212)  Ist (367,288)  +4,+76  Abstand 76.1
+      Ende unten      Soll (300,314)  Ist (247,234)  -53,-80  Abstand 96.0  verdeckt
+  right_arm            16,17,18,19,20,2    4299  0.72  0.97  1.00  0.74  0.86  0.00  0.03  +2,-9 (9.4)          2 Grad -3 px  130/129   51/41
+      in der Maske statt des Teils: face_and_upper_body 0.00
+      verdeckt von: part_of_Body 0.00
+      Ende Schulter   Soll (380,242)  Ist (378,240)  -2,-2  Abstand 2.8
+      Ende Hand       Soll (425,363)  Ist (416,375)  -9,+12  Abstand 15.0
+      Spitze Soll (425,363)  Ist (416,375)  Abstand 15.0
+  right_leg            9,26,27             6313  0.82  0.97  1.00  0.84  0.90  0.22  0.02  -2,+4 (4.6)          1 Grad +2 px  176/171   52/50
+      Schnitt ueberlappt part_of_Body 1316 px, tail 190 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: left_arm_front 0.01, tail 0.00, face_and_upper_body 0.00
+      verdeckt von: tail 0.22
+      Ende oben       Soll (329,285)  Ist (323,278)  -6,-7  Abstand 9.2
+      Ende Fuss       Soll (290,459)  Ist (275,456)  -15,-3  Abstand 15.3  verdeckt
+      Spitze Soll (290,459)  Ist (275,456)  Abstand 15.3  verdeckt
+  tail                 1,2,3,4,5,6        12257  0.87  0.96  0.98  0.91  0.96  0.04  0.01  +1,-0 (0.8)          1 Grad -1 px  287/285   84/66
+      Schnitt ueberlappt left_leg 90 px, right_leg 190 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: part_of_Body 0.03, right_leg 0.00, left_leg 0.00
+      verdeckt von: part_of_Body 0.04, left_leg 0.00, right_leg 0.00
+      Merkmal X Schwanzspitze: 0.87 vom Teil gedeckt, 1473 px
+      Ende Ansatz     Soll (307,185)  Ist (319,187)  +12,+2  Abstand 12.2
+      Ende Spitze     Soll (251,477)  Ist (204,479)  -47,+2  Abstand 47.0  Soll unter Logo
+--- Bild 2: Anteil aller Nutzerpixel, die der richtige Teil deckt 0.849, mittlere IoU 0.764
+  Teil                 Knochen          Wertung   IoU  Deck  Kern Innen +Saum  Verd  Leer  Schwerpunkt dx,dy    Achse         Laenge    Breite
+  face_and_upper_body  0,7,10,11,21,22,   29963  0.82  0.86  0.89  0.94  0.96  0.02  0.04  +11,-7 (12.7)        25 Grad -4 px 213/220   159/160
+      Schnitt ueberlappt left_arm_front 48 px, right_arm_front 27 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: right_arm_front 0.05, right_leg 0.04, right_arm 0.00, left_leg 0.00, left_arm_front 0.00, tail 0.00
+      verdeckt von: right_leg 0.01, left_arm_front 0.01, right_arm 0.00, right_arm_front 0.00, tail 0.00
+      Ende oben       Soll (340,150)  Ist (428,225)  +88,+75  Abstand 115.6
+      Ende unten      Soll (236,374)  Ist (206,284)  -30,-90  Abstand 94.9
+  left_arm_front       12,13,14,15,28,3    5559  0.79  0.83  0.92  0.94  0.99  0.16  0.07  +0,+7 (7.2)          4 Grad +3 px  136/153   46/52
+      Schnitt ueberlappt face_and_upper_body 48 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: face_and_upper_body 0.10
+      verdeckt von: face_and_upper_body 0.16, left_leg 0.00
+      Ende Schulter   Soll (406,260)  Ist (379,267)  -27,+7  Abstand 27.9  verdeckt
+      Ende Klaue      Soll (468,417)  Ist (462,412)  -6,-5  Abstand 7.8
+      Spitze Soll (468,417)  Ist (462,412)  Abstand 7.8
+      Spitze Soll (439,418)  Ist (432,417)  Abstand 7.1
+  right_arm_front      17,18,19,20,29,3    9943  0.68  0.82  0.89  0.80  0.87  0.11  0.16  +13,-9 (15.4)        14 Grad +4 px 186/188   113/110
+      Schnitt ueberlappt face_and_upper_body 27 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: right_leg 0.01, left_leg 0.01, right_arm 0.00
+      verdeckt von: face_and_upper_body 0.11, right_arm 0.00
+      Merkmal Y Hand: 0.89 vom Teil gedeckt, 4280 px
+      Ende Schulter   Soll (332,315)  Ist (309,281)  -23,-34  Abstand 41.0  verdeckt
+      Ende Klauenhand Soll (145,353)  Ist (185,479)  +40,+126  Abstand 132.2
+      Spitze Soll (145,353)  Ist (141,352)  Abstand 4.1
+      Spitze Soll (197,476)  Ist (185,479)  Abstand 12.4  Soll unter Logo
+      Spitze Soll (222,475)  Ist (221,471)  Abstand 4.1  Soll unter Logo
+      Spitze Soll (274,443)  Ist (165,444)  Abstand 109.0

@@ -1,0 +1,5 @@
+Aus varianten/gen (liest C_mitte/FORM.EMD fuer die Wurzelhoehe und I_fuesse/_g/textur.png):
+  python vm_beine.py fit2   (Anpassung, schreibt zw/beine.json; Abgabe: links fit2 mit Abdeckung 2,5, rechts Stand beine_v5)
+  PYTHONIOENCODING=utf-8 python vm_bau.py --farbe C --schwanz e9 --treu --beine --aus ../I_fuesse/_g --name I_g --ohne-pruefung
+  PYTHONIOENCODING=utf-8 python vm_bau.py --farbe C --schwanz e9 --stoff h2 --beine --g-textur ../I_fuesse/_g/textur.png --aus ../I_fuesse --name I_fuesse
+  python vm_beinblatt.py ../I_fuesse/form.json ../I_fuesse "H2 (vorher)=../H_stoff/h2/form.json"

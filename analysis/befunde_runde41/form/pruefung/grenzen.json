@@ -1,0 +1,566 @@
+{
+ "b1.sohle_fr": {
+  "grenze": 6.8,
+  "breite": 12.6,
+  "versatz": 2.2,
+  "kanal": "Y",
+  "hub": 190.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.kappe_spitze": {
+  "grenze": 2.8,
+  "breite": 4.9,
+  "versatz": 0.6,
+  "kanal": "Y",
+  "hub": 146.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.kappe_basis": {
+  "grenze": 13.3,
+  "breite": 20.4,
+  "versatz": -8.5,
+  "kanal": "B",
+  "hub": 175.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.schulterkuppe": {
+  "grenze": 11.6,
+  "breite": 15.4,
+  "versatz": 8.6,
+  "kanal": "Y",
+  "hub": 129.0,
+  "normale": [
+   -4.932,
+   -6.471
+  ],
+  "ohne_kante": false
+ },
+ "b1.scheitel_x300": {
+  "grenze": 3.7,
+  "breite": 6.9,
+  "versatz": 0.6,
+  "kanal": "B",
+  "hub": 47.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.scheitel_x305": {
+  "grenze": 3.6,
+  "breite": 6.7,
+  "versatz": 0.6,
+  "kanal": "B",
+  "hub": 40.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.scheitel_x311": {
+  "grenze": 6.9,
+  "breite": 10.6,
+  "versatz": 4.2,
+  "kanal": "G",
+  "hub": 33.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.scheitel_x316": {
+  "grenze": 7.1,
+  "breite": 12.2,
+  "versatz": 3.5,
+  "kanal": "R",
+  "hub": 42.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.scheitel_x322": {
+  "grenze": 8.6,
+  "breite": 12.8,
+  "versatz": 5.6,
+  "kanal": "Y",
+  "hub": 39.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.flanke_1": {
+  "grenze": 6.3,
+  "breite": 10.3,
+  "versatz": 3.4,
+  "kanal": "Y",
+  "hub": 185.0,
+  "normale": [
+   14.949,
+   -19.867
+  ],
+  "ohne_kante": false
+ },
+ "b1.flanke_2": {
+  "grenze": 2.6,
+  "breite": 4.5,
+  "versatz": -0.4,
+  "kanal": "Y",
+  "hub": 188.0,
+  "normale": [
+   28.523,
+   -26.87
+  ],
+  "ohne_kante": false
+ },
+ "b1.flanke_3": {
+  "grenze": 9.1,
+  "breite": 17.9,
+  "versatz": -0.4,
+  "kanal": "Y",
+  "hub": 173.0,
+  "normale": [
+   17.65,
+   -20.526
+  ],
+  "ohne_kante": false
+ },
+ "b1.rand_links_y224": {
+  "grenze": 5.0,
+  "breite": 8.1,
+  "versatz": 2.5,
+  "kanal": "R",
+  "hub": 63.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.rand_links_y233": {
+  "grenze": 6.9,
+  "breite": 13.5,
+  "versatz": 0.8,
+  "kanal": "Y",
+  "hub": 51.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.rand_links_y242": {
+  "grenze": 4.0,
+  "breite": 7.3,
+  "versatz": -1.1,
+  "kanal": "Y",
+  "hub": 61.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.rand_rechts": {
+  "grenze": 3.6,
+  "breite": 6.7,
+  "versatz": 0.4,
+  "kanal": "Y",
+  "hub": 67.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.fr_y324_links": {
+  "grenze": 3.0,
+  "breite": 5.5,
+  "versatz": 0.4,
+  "kanal": "Y",
+  "hub": 87.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.fr_y324_rechts": {
+  "grenze": 2.8,
+  "breite": 4.9,
+  "versatz": -0.6,
+  "kanal": "Y",
+  "hub": 81.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.fr_y344_links": {
+  "grenze": 3.2,
+  "breite": 5.8,
+  "versatz": 0.4,
+  "kanal": "Y",
+  "hub": 189.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.fr_y344_rechts": {
+  "grenze": 3.6,
+  "breite": 6.5,
+  "versatz": -0.7,
+  "kanal": "Y",
+  "hub": 185.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nr_y322_links": {
+  "grenze": 2.8,
+  "breite": 4.6,
+  "versatz": 1.1,
+  "kanal": "Y",
+  "hub": 114.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nr_y322_rechts": {
+  "grenze": 5.8,
+  "breite": 11.1,
+  "versatz": 1.4,
+  "kanal": "Y",
+  "hub": 71.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nr_y346_links": {
+  "grenze": 3.2,
+  "breite": 5.1,
+  "versatz": 1.5,
+  "kanal": "Y",
+  "hub": 186.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nr_y346_rechts": {
+  "grenze": 2.6,
+  "breite": 4.5,
+  "versatz": -0.6,
+  "kanal": "Y",
+  "hub": 185.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nl_y318_links": {
+  "grenze": 3.6,
+  "breite": 6.6,
+  "versatz": -0.6,
+  "kanal": "Y",
+  "hub": 156.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nl_y318_rechts": {
+  "grenze": 3.2,
+  "breite": 5.5,
+  "versatz": 1.1,
+  "kanal": "Y",
+  "hub": 127.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nl_y330_links": {
+  "grenze": 2.8,
+  "breite": 5.0,
+  "versatz": 0.3,
+  "kanal": "Y",
+  "hub": 164.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nl_y330_rechts": {
+  "grenze": 3.3,
+  "breite": 6.1,
+  "versatz": -0.1,
+  "kanal": "Y",
+  "hub": 163.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nl_y342_links": {
+  "grenze": 3.2,
+  "breite": 5.8,
+  "versatz": -0.5,
+  "kanal": "Y",
+  "hub": 159.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.nl_y342_rechts": {
+  "grenze": 3.9,
+  "breite": 4.5,
+  "versatz": -2.9,
+  "kanal": "Y",
+  "hub": 211.0,
+  "normale": [
+   1.0,
+   0.0
+  ],
+  "ohne_kante": false
+ },
+ "b1.rundling_1": {
+  "grenze": 7.5,
+  "breite": 6.0,
+  "versatz": 6.8,
+  "kanal": "Y",
+  "hub": 141.0,
+  "normale": [
+   -3.962,
+   4.199
+  ],
+  "ohne_kante": false
+ },
+ "b1.rundling_2": {
+  "grenze": 3.2,
+  "breite": 5.8,
+  "versatz": 0.5,
+  "kanal": "Y",
+  "hub": 139.0,
+  "normale": [
+   -8.591,
+   24.418
+  ],
+  "ohne_kante": false
+ },
+ "b1.stange": {
+  "grenze": 3.2,
+  "breite": 5.8,
+  "versatz": -0.2,
+  "kanal": "Y",
+  "hub": 119.0,
+  "normale": [
+   0.0,
+   1.0
+  ],
+  "ohne_kante": false
+ },
+ "b2.kante_1": {
+  "grenze": 6.4,
+  "breite": 11.2,
+  "versatz": 2.8,
+  "kanal": "Y",
+  "hub": 46.0,
+  "normale": [
+   3.791,
+   -3.809
+  ],
+  "ohne_kante": false
+ },
+ "b2.kante_2": {
+  "grenze": 4.1,
+  "breite": 7.6,
+  "versatz": 1.0,
+  "kanal": "Y",
+  "hub": 49.0,
+  "normale": [
+   6.033,
+   -6.882
+  ],
+  "ohne_kante": false
+ },
+ "b2.kante_3": {
+  "grenze": 4.2,
+  "breite": 8.0,
+  "versatz": 0.5,
+  "kanal": "Y",
+  "hub": 41.0,
+  "normale": [
+   3.633,
+   -6.57
+  ],
+  "ohne_kante": false
+ },
+ "b2.kante_4": {
+  "grenze": 9.5,
+  "breite": 18.6,
+  "versatz": 1.2,
+  "kanal": "Y",
+  "hub": 47.0,
+  "normale": [
+   0.878,
+   -5.679
+  ],
+  "ohne_kante": false
+ },
+ "b2.kante_5": {
+  "grenze": 11.0,
+  "breite": 13.9,
+  "versatz": 8.5,
+  "kanal": "R",
+  "hub": 95.0,
+  "normale": [
+   -0.896,
+   -0.863
+  ],
+  "ohne_kante": false
+ },
+ "b2.kante_6": {
+  "grenze": 11.6,
+  "breite": 23.1,
+  "versatz": -0.0,
+  "kanal": "Rest",
+  "hub": 58.0,
+  "normale": [
+   0.824,
+   -0.494
+  ],
+  "ohne_kante": false
+ },
+ "b2.kante_7": {
+  "grenze": 2.5,
+  "breite": 4.2,
+  "versatz": -0.5,
+  "kanal": "Y",
+  "hub": 89.0,
+  "normale": [
+   -6.455,
+   -10.009
+  ],
+  "ohne_kante": false
+ },
+ "b2.gelesen_1": {
+  "grenze": 5.3,
+  "breite": 9.4,
+  "versatz": 2.1,
+  "kanal": "B",
+  "hub": 19.0,
+  "normale": [
+   0.662,
+   -0.702
+  ],
+  "ohne_kante": false
+ },
+ "b2.gelesen_2": {
+  "grenze": 5.3,
+  "breite": 10.0,
+  "versatz": 1.2,
+  "kanal": "R",
+  "hub": 39.0,
+  "normale": [
+   3.497,
+   1.928
+  ],
+  "ohne_kante": false
+ },
+ "b2.gelesen_3": {
+  "grenze": 3.4,
+  "breite": 5.8,
+  "versatz": -1.4,
+  "kanal": "Y",
+  "hub": 70.0,
+  "normale": [
+   12.419,
+   1.803
+  ],
+  "ohne_kante": false
+ },
+ "b2.gelesen_4": {
+  "grenze": 4.8,
+  "breite": 8.7,
+  "versatz": -1.4,
+  "kanal": "Y",
+  "hub": 71.0,
+  "normale": [
+   -1.773,
+   8.887
+  ],
+  "ohne_kante": false
+ },
+ "b2.gelesen_5": {
+  "grenze": 13.1,
+  "breite": 25.6,
+  "versatz": -2.5,
+  "kanal": "Rest",
+  "hub": 80.0,
+  "normale": [
+   -0.476,
+   0.847
+  ],
+  "ohne_kante": false
+ },
+ "b2.gelesen_6": {
+  "grenze": 7.2,
+  "breite": 10.7,
+  "versatz": 4.6,
+  "kanal": "B",
+  "hub": 48.0,
+  "normale": [
+   0.041,
+   2.78
+  ],
+  "ohne_kante": false
+ },
+ "b2.gelesen_7": {
+  "grenze": 8.7,
+  "breite": 15.0,
+  "versatz": -4.2,
+  "kanal": "Rest",
+  "hub": 71.0,
+  "normale": [
+   1.436,
+   0.162
+  ],
+  "ohne_kante": false
+ }
+}

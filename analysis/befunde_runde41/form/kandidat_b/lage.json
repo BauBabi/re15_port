@@ -1,0 +1,34 @@
+{
+ "bild1": {
+  "lage": [
+   -18514,
+   0,
+   -18726
+  ],
+  "gier": 2145,
+  "clip": 0,
+  "bild": 0,
+  "hinweis": "Vorderseite +X = Ende N in Bild 1 zur Kamera; Weltlage aus dem Formblatt, Kamera geschaetzt"
+ },
+ "bild2": {
+  "lage": [
+   2342,
+   0,
+   -23862
+  ],
+  "gier": 1985,
+  "clip": 1,
+  "bild": 0,
+  "schnitt": 11,
+  "raum": "5090",
+  "hinweis": "Sicht Ende: Ende F zur Kamera"
+ },
+ "ruhe": {
+  "clip": 2,
+  "bild": 0
+ },
+ "form_spiel": {
+  "pose1": "-18514,-18726,2145,0,0,1 --raum 5080",
+  "pose2": "2342,-23862,1985,1,0,11"
+ }
+}

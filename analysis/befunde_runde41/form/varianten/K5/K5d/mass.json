@@ -1,0 +1,155 @@
+{
+ "R1": {
+  "ok": false,
+  "wert": "L1 38 px 8.3 / L2 35 px 8.6",
+  "augen": {
+   "L1": {
+    "px": 38,
+    "schwerpunkt": [
+     284.7,
+     268.2
+    ],
+    "projektion": [
+     285.4,
+     270.3
+    ],
+    "abstand": 8.3
+   },
+   "L2": {
+    "px": 35,
+    "schwerpunkt": [
+     225.2,
+     272.3
+    ],
+    "projektion": [
+     226.0,
+     274.4
+    ],
+    "abstand": 8.6
+   }
+  }
+ },
+ "R2": {
+  "ok": false,
+  "wert": "-3.9 Grad, 59.6 px",
+  "grad": -3.9,
+  "abstand": 59.6
+ },
+ "R3": {
+  "ok": false,
+  "wert": "6.2 px (239/373)",
+  "abstand": 6.2,
+  "punkt": [
+   239.1,
+   373.0
+  ],
+  "sichtbar": true
+ },
+ "R4": {
+  "ok": false,
+  "wert": "-8.8 Grad (Ziel -1.9)",
+  "grad": -8.8
+ },
+ "R5": {
+  "ok": true,
+  "wert": "Lappen 64 %, (279,399) drin",
+  "deckung": 0.635,
+  "nutzerpunkt": true,
+  "uk_spitze": [
+   268.1,
+   399.3
+  ]
+ },
+ "R6": {
+  "ok": false,
+  "wert": "8.8 px (320/324)",
+  "abstand": 8.8,
+  "punkt": [
+   320.4,
+   324.2
+  ]
+ },
+ "R7": {
+  "ok": true,
+  "wert": "+47 px, Achse 30.7 Grad",
+  "seite": 46.9,
+  "achse": 30.7,
+  "schwerpunkt": [
+   286.4,
+   374.1
+  ],
+  "px": 2195
+ },
+ "iou": {
+  "ok": 0.498,
+  "uk": 0.437
+ },
+ "R9": {
+  "ok": true,
+  "wert": "0 + 0 von 189 + 160 px gedeckt",
+  "links": 0,
+  "rechts": 0
+ },
+ "R10": {
+  "ok": true,
+  "wert": "Schwanz y 184, Rest y 186",
+  "schwanz_y": 184,
+  "rest_y": 186,
+  "oben": [
+   1
+  ]
+ },
+ "R8": {
+  "ok": false,
+  "wert": "B1 0.905 (31/31), B2 0.897 (0/7), UK 0.44, OK 0.50",
+  "umriss1": 0.905,
+  "umriss2": 0.8971,
+  "punkte1": [
+   31,
+   31
+  ],
+  "punkte2": [
+   0,
+   7
+  ],
+  "iou_uk": 0.437,
+  "iou_ok": 0.498,
+  "umriss1_raster_e26": 0.9142,
+  "umriss1_raster": 0.9049,
+  "umriss2_raster": 0.8993
+ },
+ "_lm_bild": {
+  "auge_l": [
+   285.4,
+   270.3
+  ],
+  "auge_r": [
+   226.0,
+   274.4
+  ],
+  "ok_spitze": [
+   239.1,
+   373.0
+  ],
+  "augenmitte": [
+   255.2,
+   272.4
+  ],
+  "gaumen_hinten": [
+   264.9,
+   320.2
+  ],
+  "uk_spitze": [
+   268.1,
+   399.3
+  ],
+  "maulwinkel_l": [
+   320.4,
+   324.2
+  ],
+  "maulwinkel_r": [
+   209.8,
+   334.2
+  ]
+ }
+}

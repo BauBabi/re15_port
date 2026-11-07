@@ -1,0 +1,125 @@
+[
+[
+"B1 Scheitel y, Soll 187",
+[
+187,
+187,
+195
+]
+],
+[
+"B1 Flanke (348, 205) Abstand px",
+5.0
+],
+[
+"B1 Flanke (366, 215) Abstand px",
+2.2
+],
+[
+"B1 Flanke (378, 233) Abstand px",
+1.0
+],
+[
+"B1 Rand links x bei y=232, Soll 247",
+[
+252,
+339
+]
+],
+[
+"B1 Arm x bei y=324, Soll 381-414",
+[
+381,
+411
+]
+],
+[
+"B1 Arm x bei y=344, Soll 381-418",
+[
+381,
+410
+]
+],
+[
+"B1 Bein rechts x bei y=322, Soll 300-347",
+[
+301,
+345
+]
+],
+[
+"B1 Bein rechts x bei y=346, Soll 308-344",
+[
+307,
+344
+]
+],
+[
+"B1 Sohle Hand y unter x=398, Soll 374",
+377
+],
+[
+"B1 frei L1: Figurpixel",
+"231 von 1586"
+],
+[
+"B1 frei L2: Figurpixel",
+"292 von 1064"
+],
+[
+"B1 frei SCH: Figurpixel",
+"0 von 1120"
+],
+[
+"B2 Kante belegt Abstand px",
+[
+0.0,
+1.0,
+1.0,
+0.0,
+1.4,
+0.0,
+1.0
+]
+],
+[
+"B2 Kante gelesen Abstand px",
+[
+27.7,
+26.2,
+23.9,
+19.4,
+16.5,
+7.2,
+1.0
+]
+],
+[
+"B2 V1 Anteil auf Figur",
+1.0
+],
+[
+"B2 V2 Anteil auf Figur",
+0.95
+],
+[
+"B2 V3 Anteil auf Figur",
+1.0
+],
+[
+"B2 V4 Anteil auf Figur",
+1.0
+],
+[
+"B2 V6 Anteil auf Figur",
+0.38
+],
+[
+"B2 V5 Anteil auf Figur",
+1.0
+],
+[
+"B2 BO Anteil auf Figur",
+0.0
+]
+]

@@ -1,0 +1,43 @@
+# Gegenprobe integration_r41_form_wagenweg auf exe 917195879, Lauf lauf_be57f230
+F0 Spieler hp=100 cam=0 @(27200,4900)
+F161 Spieler hp=100 cam=1 @(27200,4900)
+F1 Spieler hp=100 cam=0 @(27200,4900)
+F1  Slot 2 t=30 st=1 ss1=9 ss2=0 mo=0 af=16 hp=300 @(-14700,-23350)
+F6  Slot 2 t=30 st=1 ss1=9 ss2=0 mo=2 af=1 hp=300 @(-14700,-23350)
+F342 Spieler hp=100 cam=1 @(5075,4900)
+F362 Spieler hp=100 cam=0 @(3575,4900)
+F498 Spieler hp=100 cam=9 @(24700,-9250)
+F498  Slot 2 t=30 st=1 ss1=0 ss2=0 mo=2 af=1 hp=150 @(-14700,-23350)
+F623 Spieler hp=100 cam=8 @(19890,-9900)
+F624 Spieler hp=100 cam=9 @(19890,-9900)
+F625 Spieler hp=100 cam=8 @(19815,-9900)
+F678 Spieler hp=100 cam=7 @(15840,-9900)
+F729 Spieler hp=100 cam=6 @(12015,-9900)
+F842 Spieler hp=100 cam=5 @(3540,-9900)
+F946 Spieler hp=100 cam=14 @(24800,-23550)
+F946  Slot 2 t=30 st=1 ss1=0 ss2=0 mo=2 af=1 hp=0 @(-14700,-23350)
+F1082 Spieler hp=100 cam=13 @(20150,-23550)
+F1167 Spieler hp=100 cam=12 @(13775,-23550)
+F1169 Spieler hp=100 cam=15 @(13775,-23550)
+F1169  Slot 2 t=30 st=1 ss1=0 ss2=1 mo=10 af=1 hp=0 @(1200,-23350)
+F1170 Spieler hp=100 cam=11 @(13775,-23550)
+F1229 Spieler hp=100 cam=12 @(13775,-23550)
+F1237  Slot 2 t=30 st=3 ss1=3 ss2=1 mo=13 af=0 hp=1 @(1218,-23368)
+F1238 Spieler hp=100 cam=11 @(13775,-23550)
+F1238  Slot 2 t=30 st=2 ss1=3 ss2=1 mo=13 af=1 hp=1 @(1138,-23369)
+F1285  Slot 2 t=30 st=2 ss1=3 ss2=1 mo=8 af=5 hp=1 @(-2542,-23422)
+F1327  Slot 2 t=30 st=2 ss1=3 ss2=1 mo=12 af=0 hp=1 @(-2542,-23422)
+F1699 Spieler hp=100 cam=12 @(13775,-23550)
+F2049 Spieler hp=100 cam=13 @(14091,-23391)
+
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 0 (F946), Treffer 0 (Abzug 0, groesster 0) ab F, Rueckstoss F1237, Form-HP zuletzt 0, Leon getroffen 0x, exit=0, Lauf C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/nb3/gegenprobe_wagenweg/lauf_be57f230
+CMake Error at .claude/worktrees/r41_form/re15_port/tests/integration/test_r41_form_wagenweg.cmake:235 (message):
+  r41_form_wagenweg: FEHLER
+
+   Wagen C (F946): Form mit HP '0', erwartet 150 (RE15_BB_FORM_HP, N1: 0)
+   Kampf: 0 Treffer auf die Form bis zur Rueckstoss-Szene bzw. F2100, erwartet >= 5
+   Kampf: Rueckstoss-Szene F1237 schon nach 0 HP Abzug, erwartet >= 150 (150 - Einzelabzug 0)
+   Kampf: Leon wird zwischen dem ersten Treffer (F) und dem Kampfende (Rueckstoss F1237) nicht getroffen
+
+

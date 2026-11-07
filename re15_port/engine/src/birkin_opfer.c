@@ -10,7 +10,9 @@
  * aca5a Phase, acae0 = +0x8c Tempo, acae3 = +0x8f Ueberblendung (anim_frac), acae8 = +0x94 Clip (motion),
  * acae9 = +0x95 Bild, acaf0 = Ringkampf-Zaehler, acaf2 = Biss-Wiederholung, acad8/acbc0 = Leons eigene Bank,
  * acbcc/acbd0 = Opfer-Bank des Greifers (Birkin+0x178/+0x17c, EM30 dir[5]/[6] = 3 Clips 25/66/5 Bilder, 15 Bones).
- * aca3c |= 0x40 / acc0c sind Anzeige-/Sperrbits ohne Port-Gegenstueck (dokumentiert, nicht gebaut).
+ * aca3c |= 0x40 / acc0c sind Anzeige-/Sperrbits ohne eigenes Port-Feld. Die Wirkung von aca3c & 0x40 auf den START-Block
+ * @0x8001cd04-08 bildet menu_common.c (re15_menu_start_poll) ueber re15_bk_opfer_cmd() nach (Runde 41 Form NB2: START im Griff
+ * wird verworfen); acc0c bleibt ungebaut.
  */
 #include "re15_birkin_opfer.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */

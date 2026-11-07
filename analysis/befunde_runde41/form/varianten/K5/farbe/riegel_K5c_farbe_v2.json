@@ -1,0 +1,484 @@
+{
+ "variante": {
+  "A1 Chroma Koerper": {
+   "wert": "15.4",
+   "ok": true
+  },
+  "A2 Farbstreuung je Teil sigma_ab": {
+   "wert": "9.3",
+   "ok": true
+  },
+  "A3 Fleischrot-Anteil %": {
+   "wert": "22.6",
+   "ok": true
+  },
+  "A4 Farbton Fleischrot Grad": {
+   "wert": "27.0",
+   "ok": true
+  },
+  "A5 Neutralweiss Koerper %": {
+   "wert": "0.0",
+   "ok": true
+  },
+  "A6 HF_fft je Feld (max)": {
+   "wert": "{'koerper': 0.139, 'kopf': 0.069, 'kiefer': 0.065, 'kralle': 0.065}",
+   "ok": true
+  },
+  "A7 HF_rest je Feld (max)": {
+   "wert": "{'koerper': 0.092, 'kopf': 0.027, 'kiefer': 0.056, 'kralle': 0.058}",
+   "ok": true
+  },
+  "A8 Kiefer Zahn/Rot/Dunkel %": {
+   "wert": "(6.1, 28.4, 40.1)",
+   "ok": true
+  },
+  "A9 Auge L*/C*": {
+   "wert": "(13.1, 18.0)",
+   "ok": true
+  },
+  "A10 Texeldichte Teil/Koerper (min,max)": {
+   "wert": "(0.64, 2.33)",
+   "ok": true
+  },
+  "A11 Schwanz L*-Sprung Glied 1-5 (max)": {
+   "wert": "0.6",
+   "ok": true
+  },
+  "A12 Farbkorn Koerper (a*b*-Rest)": {
+   "wert": "4.53",
+   "ok": true
+  },
+  "K1 Bild1 Chroma Figur / Original [V1, ersetzt]": {
+   "wert": "(7.0, 9.3)",
+   "ok": null
+  },
+  "K2 Bild1 ab-Streuung Figur / Original [V1, ersetzt]": {
+   "wert": "(8.4, 9.8)",
+   "ok": null
+  },
+  "K3 Bild1 dE je Zone (max)": {
+   "wert": "{'Schwanz': 3.4, 'Ruecken/Flanke': 3.0, 'Hinterbein l (W)': 3.2, 'Hinterbein r (W)': 4.4, 'Vorderglied r (W)': 0.9}",
+   "ok": true
+  },
+  "K4 Bild1 Rot-Klasse Figur % / Original": {
+   "wert": "(5.4, 5.2)",
+   "ok": true
+  },
+  "K5 Bild1 Hell-Klasse Ruecken % / W Figur %": {
+   "wert": "(10.7, 9.9, 0.3, 0.5)",
+   "ok": true
+  },
+  "K6 Bild2 Figur dE / Chroma": {
+   "wert": "(1.1, 23.2, 25.6)",
+   "ok": true
+  },
+  "K7 Bild2 Unterkiefer dE / a*": {
+   "wert": "(1.9, 23.3, 24.9)",
+   "ok": true
+  },
+  "K8 Bild2 Oberkiefer dE": {
+   "wert": "3.5",
+   "ok": true
+  },
+  "K9 Bild2 Klauen a* (r, l) / Original": {
+   "wert": "(26.6, 24.1, 27.9, 22.2)",
+   "ok": true
+  },
+  "K10 Bild2 Augenpunkte L*max (r, l)": {
+   "wert": "(14.6, 15.9)",
+   "ok": true
+  },
+  "K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)": {
+   "wert": "(7.0, 7.8)",
+   "ok": true
+  },
+  "K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)": {
+   "wert": "(8.4, 8.0)",
+   "ok": true
+  },
+  "K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original": {
+   "wert": "(8.8, 11.9)",
+   "ok": true
+  },
+  "N1 neutral C* je Winkel (Variante / EM30)": {
+   "wert": "((11.0, 9.5, 13.4), (10.0, 12.5, 10.5))",
+   "ok": true
+  },
+  "N2 neutral L*>85 % je Winkel": {
+   "wert": "(0.0, 0.01, 0.0)",
+   "ok": true
+  },
+  "B1 Rot erosionsfest % (3 Winkel zus.)": {
+   "wert": "41.9",
+   "ok": true
+  },
+  "B2 groesste Rotflaeche % Figur (3/4 vorn, Seite)": {
+   "wert": "(4.9, 3.95)",
+   "ok": true
+  },
+  "B3 Blau-Klasse % je Winkel": {
+   "wert": "(0.0, 0.0, 0.0)",
+   "ok": true
+  },
+  "B4 Glanzrest L* p90 ehemalige Keime": {
+   "wert": "43.7",
+   "ok": true
+  },
+  "B5 Kopffeld Zahn-/Gaumenklasse %": {
+   "wert": "0.0",
+   "ok": true
+  },
+  "B6 Kachelwiederholung Koerper %": {
+   "wert": "0.14",
+   "ok": true
+  },
+  "B7 Rot-Farbton-Streuung Koerper Grad": {
+   "wert": "10.3",
+   "ok": true
+  },
+  "B8 Bild2 Unterkiefer Hell-Klasse % / Original": {
+   "wert": "(17.7, 22.6)",
+   "ok": true
+  },
+  "B9 Rot im Umrissband % (3 Winkel)": {
+   "wert": "8.7",
+   "ok": true
+  },
+  "B9b Rot im Umrissband % Clip 0 (3 Winkel)": {
+   "wert": "5.0",
+   "ok": true
+  },
+  "B6 Feld Kiefer Wiederholung %": {
+   "wert": "0.0",
+   "ok": true
+  },
+  "B6 Feld Krallen Wiederholung %": {
+   "wert": "0.0",
+   "ok": true
+  },
+  "B10 Atlas Fleisch dunkle Linien %": {
+   "wert": "8.81",
+   "ok": true
+  },
+  "B11 Atlas Haut dunkle Linien %": {
+   "wert": "5.09",
+   "ok": true
+  },
+  "B12 Atlas Kopf Linien % / Canny-Dichte": {
+   "wert": "(0.12, 4.08)",
+   "ok": false
+  },
+  "B13 Atlas Fleisch Canny-Dichte": {
+   "wert": "30.87",
+   "ok": true
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas": {
+   "wert": "(9.4, 11.8)",
+   "ok": true
+  },
+  "B15 Render Rotflaechen a*-Streuung": {
+   "wert": "6.5",
+   "ok": true
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
+   "wert": "80.7",
+   "ok": true
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
+   "wert": "(0.543, [0.548, 0.551, 0.53], 0.562)",
+   "ok": false
+  }
+ },
+ "gegenprobe": {
+  "A1 Chroma Koerper": {
+   "wert": "4.9",
+   "ok": false
+  },
+  "A2 Farbstreuung je Teil sigma_ab": {
+   "wert": "4.0",
+   "ok": false
+  },
+  "A3 Fleischrot-Anteil %": {
+   "wert": "0.5",
+   "ok": false
+  },
+  "A4 Farbton Fleischrot Grad": {
+   "wert": "-10.0",
+   "ok": false
+  },
+  "A5 Neutralweiss Koerper %": {
+   "wert": "0.79",
+   "ok": false
+  },
+  "A6 HF_fft je Feld (max)": {
+   "wert": "{'koerper': 0.105, 'kopf': 0.119, 'kiefer': 0.461, 'kralle': 0.324}",
+   "ok": false
+  },
+  "A7 HF_rest je Feld (max)": {
+   "wert": "{'koerper': 0.085, 'kopf': 0.04, 'kiefer': 0.436, 'kralle': 0.327}",
+   "ok": false
+  },
+  "A8 Kiefer Zahn/Rot/Dunkel %": {
+   "wert": "(77.1, 0.0, 0.0)",
+   "ok": false
+  },
+  "A9 Auge L*/C*": {
+   "wert": "(56.1, 53.7)",
+   "ok": false
+  },
+  "A10 Texeldichte Teil/Koerper (min,max)": {
+   "wert": "(0.64, 2.33)",
+   "ok": true
+  },
+  "A11 Schwanz L*-Sprung Glied 1-5 (max)": {
+   "wert": "3.4",
+   "ok": true
+  },
+  "A12 Farbkorn Koerper (a*b*-Rest)": {
+   "wert": "2.63",
+   "ok": true
+  },
+  "K1 Bild1 Chroma Figur / Original [V1, ersetzt]": {
+   "wert": "(6.3, 9.3)",
+   "ok": null
+  },
+  "K2 Bild1 ab-Streuung Figur / Original [V1, ersetzt]": {
+   "wert": "(6.3, 9.8)",
+   "ok": null
+  },
+  "K3 Bild1 dE je Zone (max)": {
+   "wert": "{'Schwanz': 2.1, 'Ruecken/Flanke': 8.3, 'Hinterbein l (W)': 2.1, 'Hinterbein r (W)': 4.6, 'Vorderglied r (W)': 3.3}",
+   "ok": false
+  },
+  "K4 Bild1 Rot-Klasse Figur % / Original": {
+   "wert": "(2.5, 5.2)",
+   "ok": false
+  },
+  "K5 Bild1 Hell-Klasse Ruecken % / W Figur %": {
+   "wert": "(21.9, 9.9, 1.0, 0.5)",
+   "ok": false
+  },
+  "K6 Bild2 Figur dE / Chroma": {
+   "wert": "(9.9, 16.7, 25.6)",
+   "ok": false
+  },
+  "K7 Bild2 Unterkiefer dE / a*": {
+   "wert": "(12.4, 13.7, 24.9)",
+   "ok": false
+  },
+  "K8 Bild2 Oberkiefer dE": {
+   "wert": "12.0",
+   "ok": false
+  },
+  "K9 Bild2 Klauen a* (r, l) / Original": {
+   "wert": "(13.8, 24.1, 22.8, 22.2)",
+   "ok": false
+  },
+  "K10 Bild2 Augenpunkte L*max (r, l)": {
+   "wert": "(51.5, 36.2)",
+   "ok": false
+  },
+  "K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)": {
+   "wert": "(6.3, 7.8)",
+   "ok": false
+  },
+  "K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)": {
+   "wert": "(6.3, 8.0)",
+   "ok": false
+  },
+  "K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original": {
+   "wert": "(6.8, 11.9)",
+   "ok": false
+  },
+  "N1 neutral C* je Winkel (Variante / EM30)": {
+   "wert": "((4.6, 5.0, 4.0), (10.0, 12.5, 10.5))",
+   "ok": false
+  },
+  "N2 neutral L*>85 % je Winkel": {
+   "wert": "(0.83, 1.3, 0.11)",
+   "ok": false
+  },
+  "B1 Rot erosionsfest % (3 Winkel zus.)": {
+   "wert": "21.6",
+   "ok": false
+  },
+  "B2 groesste Rotflaeche % Figur (3/4 vorn, Seite)": {
+   "wert": "(1.21, 0.57)",
+   "ok": false
+  },
+  "B3 Blau-Klasse % je Winkel": {
+   "wert": "(3.97, 5.03, 2.41)",
+   "ok": false
+  },
+  "B4 Glanzrest L* p90 ehemalige Keime": {
+   "wert": "100.0",
+   "ok": false
+  },
+  "B5 Kopffeld Zahn-/Gaumenklasse %": {
+   "wert": "15.06",
+   "ok": false
+  },
+  "B6 Kachelwiederholung Koerper %": {
+   "wert": "0.24",
+   "ok": true
+  },
+  "B7 Rot-Farbton-Streuung Koerper Grad": {
+   "wert": "19.9",
+   "ok": true
+  },
+  "B8 Bild2 Unterkiefer Hell-Klasse % / Original": {
+   "wert": "(41.1, 22.6)",
+   "ok": false
+  },
+  "B9 Rot im Umrissband % (3 Winkel)": {
+   "wert": "10.2",
+   "ok": true
+  },
+  "B9b Rot im Umrissband % Clip 0 (3 Winkel)": {
+   "wert": "8.7",
+   "ok": true
+  },
+  "B6 Feld Kiefer Wiederholung %": {
+   "wert": "3.89",
+   "ok": false
+  },
+  "B6 Feld Krallen Wiederholung %": {
+   "wert": "0.0",
+   "ok": true
+  },
+  "B10 Atlas Fleisch dunkle Linien %": {
+   "wert": "1.32",
+   "ok": false
+  },
+  "B11 Atlas Haut dunkle Linien %": {
+   "wert": "5.17",
+   "ok": true
+  },
+  "B12 Atlas Kopf Linien % / Canny-Dichte": {
+   "wert": "(2.03, 4.53)",
+   "ok": false
+  },
+  "B13 Atlas Fleisch Canny-Dichte": {
+   "wert": "33.13",
+   "ok": true
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas": {
+   "wert": "(9.2, 11.4)",
+   "ok": true
+  },
+  "B15 Render Rotflaechen a*-Streuung": {
+   "wert": "9.9",
+   "ok": true
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
+   "wert": "94.0",
+   "ok": true
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
+   "wert": "(0.554, [0.552, 0.558, 0.552], 0.555)",
+   "ok": false
+  }
+ },
+ "gegenprobe_nicht_rot": [],
+ "gegenprobe_r1": {
+  "B1 Rot erosionsfest % (3 Winkel zus.)": {
+   "wert": "20.1",
+   "ok": false
+  },
+  "B2 groesste Rotflaeche % Figur (3/4 vorn, Seite)": {
+   "wert": "(3.23, 1.65)",
+   "ok": false
+  },
+  "B3 Blau-Klasse % je Winkel": {
+   "wert": "(11.63, 15.81, 16.16)",
+   "ok": false
+  },
+  "B4 Glanzrest L* p90 ehemalige Keime": {
+   "wert": "80.1",
+   "ok": false
+  },
+  "B5 Kopffeld Zahn-/Gaumenklasse %": {
+   "wert": "9.02",
+   "ok": false
+  }
+ },
+ "gegenprobe_r1_nicht_rot": [],
+ "gegenprobe_r2": {
+  "B6 Kachelwiederholung Koerper %": {
+   "wert": "2.82",
+   "ok": false
+  },
+  "B7 Rot-Farbton-Streuung Koerper Grad": {
+   "wert": "4.5",
+   "ok": false
+  },
+  "B8 Bild2 Unterkiefer Hell-Klasse % / Original": {
+   "wert": "(0.2, 22.6)",
+   "ok": false
+  },
+  "B9 Rot im Umrissband % (3 Winkel)": {
+   "wert": "23.3",
+   "ok": false
+  }
+ },
+ "gegenprobe_r2_nicht_rot": [],
+ "gegenprobe_r3": {
+  "K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)": {
+   "wert": "(6.1, 7.8)",
+   "ok": false
+  },
+  "K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)": {
+   "wert": "(6.2, 8.0)",
+   "ok": false
+  },
+  "K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original": {
+   "wert": "(2.3, 11.9)",
+   "ok": false
+  },
+  "B2 groesste Rotflaeche % Figur (3/4 vorn, Seite) [float]": {
+   "wert": "(2.88, 4.74)",
+   "ok": false
+  },
+  "B9 Rot im Umrissband % (3 Winkel)": {
+   "wert": "17.8",
+   "ok": false
+  },
+  "B9b Rot im Umrissband % Clip 0 (3 Winkel)": {
+   "wert": "9.9",
+   "ok": true
+  },
+  "B10 Atlas Fleisch dunkle Linien %": {
+   "wert": "3.71",
+   "ok": false
+  },
+  "B11 Atlas Haut dunkle Linien %": {
+   "wert": "2.99",
+   "ok": false
+  },
+  "B12 Atlas Kopf Linien % / Canny-Dichte": {
+   "wert": "(1.28, 8.85)",
+   "ok": false
+  },
+  "B13 Atlas Fleisch Canny-Dichte": {
+   "wert": "19.05",
+   "ok": false
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas": {
+   "wert": "(5.4, 8.6)",
+   "ok": false
+  },
+  "B15 Render Rotflaechen a*-Streuung": {
+   "wert": "3.1",
+   "ok": false
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
+   "wert": "2.1",
+   "ok": false
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
+   "wert": "(0.561, [0.569, 0.554, 0.559], 0.561)",
+   "ok": false
+  }
+ },
+ "gegenprobe_r3_nicht_rot": []
+}

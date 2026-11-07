@@ -1,0 +1,6 @@
+F ruhe je Knochen {}
+    lose Stuecke (wahrer Abstand > 8): [('kopf', 10, 22.1), ('kopf', 10, 25.3), ('kiefer', 42, 14.3), ('kiefer', 6, 9.4), ('kiefer', 6, 13.1), ('fuss_l', 10, 15.0), ('fuss_r', 42, 9.1), ('fuss_r', 10, 8.7)]
+F pose1 je Knochen {}
+    lose Stuecke (wahrer Abstand > 8): [('kopf', 10, 20.4), ('kopf', 10, 22.5), ('fuss_l', 10, 15.0), ('fuss_r', 10, 8.7)]
+F pose2 je Knochen {}
+    lose Stuecke (wahrer Abstand > 8): [('hand_r', 20, 8.0), ('kopf', 10, 22.1), ('kopf', 10, 26.3), ('kiefer', 6, 9.4), ('kiefer', 6, 13.1), ('fuss_l', 10, 15.0)]

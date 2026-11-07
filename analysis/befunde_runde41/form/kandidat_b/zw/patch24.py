@@ -1,0 +1,6 @@
+s = open('b_fein.py', encoding='utf-8').read()
+s = s.replace("""                    ziehe(teile, s, (313.0, 353.0), (0.5, 3.0), sigma=36.0, radius=10.0, nur=['k16', 'k17', 'k18', 'k19'])
+""", """                    ziehe(teile, s, (311.0, 349.0), (4.0, 0.0), sigma=80.0, radius=26.0, nur=['k02', 'k01'])
+                    ziehe(teile, s, (314.0, 352.0), (1.5, 2.5), sigma=34.0, radius=14.0, nur=['k17'])
+""")
+open('b_fein.py', 'w', encoding='utf-8').write(s)

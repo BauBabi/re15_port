@@ -1,0 +1,35 @@
+Bild 1: Maskenpixel ohne jedes Modell, Flecken ab 40 px, Y = Mittel im Original
+  right_arm              74 px  x 377-405  y 362-376  Mitte (385,371)  Y 123
+  right_arm              43 px  x 413-426  y 361-369  Mitte (419,364)  Y 119
+  right_leg              47 px  x 315-332  y 429-455  Mitte (323,444)  Y  39
+Bild 2: Maskenpixel ohne jedes Modell, Flecken ab 40 px, Y = Mittel im Original
+  face_and_upper_body   851 px  x 236-295  y 146-216  Mitte (260,178)  Y  15
+  face_and_upper_body   214 px  x 236-255  y 353-372  Mitte (243,363)  Y  31
+  face_and_upper_body   160 px  x 417-426  y 215-253  Mitte (421,235)  Y  86
+  face_and_upper_body   152 px  x 201-219  y 252-306  Mitte (206,275)  Y  66
+  face_and_upper_body    70 px  x 372-389  y 176-191  Mitte (380,185)  Y  18
+  face_and_upper_body    68 px  x 308-348  y 142-156  Mitte (329,147)  Y  16
+  left_arm_front        180 px  x 407-420  y 296-348  Mitte (412,318)  Y  71
+  left_arm_front        106 px  x 417-440  y 397-419  Mitte (430,406)  Y 122
+  left_arm_front         87 px  x 386-397  y 360-377  Mitte (390,367)  Y  55
+  left_arm_front         52 px  x 398-408  y 381-396  Mitte (402,389)  Y 110
+  left_arm_front         42 px  x 462-469  y 406-418  Mitte (465,412)  Y 110
+  right_arm_front       498 px  x 145-217  y 349-395  Mitte (187,376)  Y  92
+  right_arm_front       265 px  x 226-262  y 425-452  Mitte (245,437)  Y  41
+  right_arm_front       225 px  x 155-170  y 385-416  Mitte (160,400)  Y  48
+  right_arm_front       179 px  x 269-280  y 413-444  Mitte (274,427)  Y  93
+  right_arm_front       158 px  x 223-236  y 351-376  Mitte (229,363)  Y  52
+  right_arm_front       125 px  x 160-179  y 426-436  Mitte (168,430)  Y  38
+  right_arm_front        70 px  x 301-317  y 352-373  Mitte (307,362)  Y  76
+  right_arm_front        60 px  x 197-205  y 463-473  Mitte (200,466)  Y  79
+Farbproben Bild 1
+  Fenster links (352-362,304-314)    RGB  22  31  51  Y  31
+  Fenster mitte (362-372,302-312)    RGB  25  23  41  Y  26
+  Fenster rechts (372-380,304-314)   RGB  35  21  45  Y  28
+  Band im Fenster (364-376,288-298)  RGB  51  41  62  Y  46
+  Figur Arm (390-410,310-340)        RGB  29  28  47  Y  30
+  Figur Schwanz (262-280,280-320)    RGB  37  32  66  Y  37
+  Raum rechts vom Arm, gleiche Zeilen RGB 158 149 147  Y 152
+  Raum rechts, Band y 286-296        RGB  91  66  61  Y  73
+  Raum links, gleiche Zeilen         RGB 153 107  80  Y 118
+  Boden im Spalt (360-378,330-345)   RGB 177 195 205  Y 191

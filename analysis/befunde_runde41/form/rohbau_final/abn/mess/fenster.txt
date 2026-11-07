@@ -1,0 +1,31 @@
+Bild 1
+  A Modell fehlt (Original dunkel, Render hell) Summe 998
+      673 px  x 319-366  y 407-456  Mitte (343,428)  im Modell 0.00
+       83 px  x 360-371  y 215-232  Mitte (365,223)  im Modell 0.98
+       59 px  x 254-260  y 426-441  Mitte (256,433)  im Modell 1.00
+       58 px  x 341-351  y 369-378  Mitte (345,373)  im Modell 0.00
+       46 px  x 346-354  y 224-232  Mitte (349,227)  im Modell 1.00
+       27 px  x 343-349  y 311-316  Mitte (345,312)  im Modell 0.15
+  B Modell zu viel oder Raum anders (Original hell, Render dunkel) Summe 324
+      154 px  x 293-314  y 409-424  Mitte (303,416)  im Modell 1.00
+      126 px  x 197-216  y 417-426  Mitte (205,421)  im Modell 1.00
+       44 px  x 416-422  y 350-359  Mitte (418,354)  im Modell 1.00
+Bild 2
+  A Modell fehlt (Original dunkel, Render hell) Summe 995
+      409 px  x 146-166  y 160-195  Mitte (156,174)  im Modell 0.00
+      369 px  x 163-176  y 242-287  Mitte (169,261)  im Modell 0.00
+       93 px  x 243-257  y 431-440  Mitte (250,435)  im Modell 0.00
+       65 px  x 301-312  y 379-387  Mitte (305,382)  im Modell 0.00
+       34 px  x 231-238  y 444-450  Mitte (234,446)  im Modell 0.00
+       25 px  x 230-237  y 354-358  Mitte (233,355)  im Modell 0.00
+  B Modell zu viel oder Raum anders (Original hell, Render dunkel) Summe 11866
+     6797 px  x 416-480  y 225-401  Mitte (445,309)  im Modell 0.03
+     2003 px  x 160-226  y 328-386  Mitte (189,351)  im Modell 0.00
+     1506 px  x 170-211  y 193-304  Mitte (190,247)  im Modell 0.00
+      476 px  x 144-157  y 262-310  Mitte (149,285)  im Modell 0.00
+      415 px  x 277-315  y 344-389  Mitte (296,367)  im Modell 1.00
+      193 px  x 318-338  y 320-340  Mitte (328,329)  im Modell 1.00
+      133 px  x 465-480  y 276-293  Mitte (474,285)  im Modell 0.00
+      117 px  x 140-151  y 227-241  Mitte (144,233)  im Modell 0.00
+       60 px  x 253-262  y 381-390  Mitte (257,384)  im Modell 1.00
+       46 px  x 184-191  y 317-325  Mitte (186,320)  im Modell 0.00

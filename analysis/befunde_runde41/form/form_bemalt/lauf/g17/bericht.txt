@@ -1,0 +1,176 @@
+Kandidat F
+
+(g) Kennzahlen: 2474 Flaechen (656 Dreiecke, 1818 Vierecke), 32 Knochen, 32 Meshes, Textur 384x256 8 bpp, 1 CLUT-Zeilen, 3 Clips, Bilder je Clip [1, 1, 1]
+Rahmen: 2474 Flaechen, Rahmen rund 1900
+Boden je Pose, tiefster Punkt y: [-0.0, -0.1, -0.0]
+FE.pruefe: 0 Fehler, 1 Warnungen
+  Warnung Tick der Form erwartet Clips, die fehlen (Modulo in re15_compute_actor_kf): 3 BB_C_HIEB, 4 BB_C_HIEB+1, 5 BB_C_GEHEN, 8 BB_C_ZUCKEN, 9 BB_C_NACHHIEB, 10 BB_C_DROHEN, 26 BB_C_BISS, 27 BB_C_GRIFF
+
+=== Bild 1, Lage [-18564, 0, -18386] Gier 80 Clip 0 Bild 0, Licht mess k=[1.061, 0.953, 0.825]
+(a) Umriss gegen ziel2_bild1.png, auf nicht-grauen Pixeln: IoU 0.980, Weiss gedeckt 0.985, Schwarz getroffen 169 px, Render 40629 px, davon auf Grau 7450
+    Weiss fehlt (Pixel, x0,y0,x1,y1): [[71, 377, 362, 404, 375], [43, 413, 361, 425, 368], [38, 355, 211, 367, 218]]
+    Schwarz getroffen: [[33, 242, 378, 248, 384], [32, 425, 287, 427, 302], [29, 291, 399, 297, 404]]
+(b) Pruefpunkte 31/31 bestanden  (+ = rechts/unten vom Soll; kontur: + = Soll ausserhalb, Render zu klein)
+   1 ok   b1.sohle_fr            Unterkante right_arm           Soll (398,374)  Abstand   -0.5  Grenze  6.8
+   2 ok   b1.kappe_spitze        Z5 Spitze                      Soll (400,277)  Abstand   +1.5  Grenze  2.8
+   3 ok   b1.kappe_basis         Z5 Basis                       Soll (398,296)  Abstand   -9.5  Grenze 13.3
+   4 ok   b1.schulterkuppe       Oberkante right_arm            Soll (405,238)  Abstand   +5.5  Grenze 11.6
+   5 ok   b1.scheitel_x300       Oberkante tail                 Soll (300,187)  Abstand   -2.5  Grenze  3.7
+   6 ok   b1.scheitel_x305       Oberkante tail                 Soll (305,187)  Abstand   -2.5  Grenze  3.6
+   7 ok   b1.scheitel_x311       Oberkante tail                 Soll (311,187)  Abstand   -0.5  Grenze  6.9
+   8 ok   b1.scheitel_x316       Oberkante tail                 Soll (316,187)  Abstand   +1.5  Grenze  7.1
+   9 ok   b1.scheitel_x322       Oberkante tail                 Soll (322,187)  Abstand   +8.5  Grenze  8.6
+  10 ok   b1.flanke_1            Kante part_of_Body             Soll (348,205)  Abstand   +0.9  Grenze  6.3
+  11 ok   b1.flanke_2            Kante part_of_Body             Soll (366,215)  Abstand   +2.5  Grenze  2.6
+  12 ok   b1.flanke_3            Kante part_of_Body             Soll (378,233)  Abstand   -4.5  Grenze  9.1
+  13 ok   b1.rand_links_y224     Kante links tail               Soll (247,224)  Abstand   +2.5  Grenze  5.0
+  14 ok   b1.rand_links_y233     Kante links tail               Soll (247,233)  Abstand   +0.5  Grenze  6.9
+  15 ok   b1.rand_links_y242     Kante links tail               Soll (247,242)  Abstand   -2.5  Grenze  4.0
+  16 ok   b1.rand_rechts         Kante rechts neben right_arm   Soll (429,272)  Abstand   +2.5  Grenze  3.6
+  17 ok   b1.fr_y324_links       right_arm Kante links          Soll (381,324)  Abstand   -0.5  Grenze  3.0
+  18 ok   b1.fr_y324_rechts      right_arm Kante rechts         Soll (414,324)  Abstand   -0.5  Grenze  2.8
+  19 ok   b1.fr_y344_links       right_arm Kante links          Soll (381,344)  Abstand   -2.5  Grenze  3.2
+  20 ok   b1.fr_y344_rechts      right_arm Kante rechts         Soll (418,344)  Abstand   +0.5  Grenze  3.6
+  21 ok   b1.nr_y322_links       right_leg Kante links          Soll (300,322)  Abstand   -0.5  Grenze  2.8
+  22 ok   b1.nr_y322_rechts      right_leg Kante rechts         Soll (347,322)  Abstand   -2.5  Grenze  5.8
+  23 ok   b1.nr_y346_links       right_leg Kante links          Soll (308,346)  Abstand   +1.5  Grenze  3.2
+  24 ok   b1.nr_y346_rechts      right_leg Kante rechts         Soll (344,346)  Abstand   -1.5  Grenze  2.6
+  25 ok   b1.nl_y318_links       left_leg Kante links           Soll (226,318)  Abstand   +1.5  Grenze  3.6
+  26 ok   b1.nl_y318_rechts      tail Kante rechts              Soll (287,318)  Abstand   +2.5  Grenze  3.2
+  27 ok   b1.nl_y330_links       left_leg Kante links           Soll (226,330)  Abstand   +0.5  Grenze  2.8
+  28 ok   b1.nl_y330_rechts      tail Kante rechts              Soll (287,330)  Abstand   +1.5  Grenze  3.3
+  29 ok   b1.nl_y342_links       left_leg Kante links           Soll (226,342)  Abstand   -1.5  Grenze  3.2
+  30 ok   b1.nl_y342_rechts      tail Kante rechts              Soll (287,342)  Abstand   +0.5  Grenze  3.9
+  31 --   b1.rundling_1          Rundling linke Kante           Soll (306,405)  Abstand  -25.7  Grenze  7.5  zaehlt nicht: C4 und C5 sind getrennt gelesen, liegt 8 px innen in right_leg
+  32 --   b1.rundling_2          Rundling linke Kante           Soll (312,414)  Abstand  -21.5  Grenze  3.2  zaehlt nicht: C4 und C5 sind getrennt gelesen, liegt 18 px innen in right_leg
+  33 ok   b1.stange              tail Oberkante vor der Stange  Soll (280,191)  Abstand   +1.5  Grenze  3.2
+(c) Boden frei, Verdeckung 5/7
+  NEIN L1    Boden frei L1                                  Treffer 3 von 969 px, Eindringen 1.0 px
+  NEIN L2    Boden frei L2                                  Treffer 9 von 629 px, Eindringen 1.4 px
+  ok   SCH   Boden frei (345-378,362-402)                   Treffer 0 von 679 px, Eindringen 0.0 px
+  ok   KERBE  E3 Keil frei (424-432,279-288), Kern Y>=45     gedeckt 0.000
+  ok   KERB_S E3 Spitze: rechte Kante Zeile 284, Soll x 423  Kante Abstand 1, Grenze 2.5
+  ok   KERB_O E3 Masse ueber dem Keil gedeckt (417-427,264-277) gedeckt 1.000
+  ok   KERB_U E3 Arm unter dem Keil gedeckt (413-420,289-296) gedeckt 1.000
+(d) Zeichnung 8/9, Anteil = Sollflaeche mit passendem Material, Y = Mittel im Video gegen gefilterten Render
+  ok   Z1   rosa_stelle         Material 1.00  Figur 1.00  Groesse 1.09  Lage 1.5  Y 142/162
+  ok   Z2   helle_baender       Material 0.99  Figur 1.00  Groesse 0.76  Lage 3.4  Y 130/ 80
+  ok   Z3   weisskerne          Material 0.75  Figur 1.00  Groesse 0.45  Lage 6.1  Y 172/184
+  ok   Z4   helle_baender       Material 0.99  Figur 1.00  Groesse 1.43  Lage 7.5  Y 141/179
+  NEIN Z5   helle_baender       Material 0.42  Figur 1.00  Groesse 0.34  Lage 9.5  Y  75/ 62
+  ok   Z6a  helle_baender       Material 0.97  Figur 1.00  Groesse 0.77  Lage 0.7  Y 134/116
+  --   Z6b  helle_baender       Material 0.00  Figur 1.00  Groesse 0.00  Lage 15.1  Y  72/ 85  zaehlt nicht
+  --   Z6c  helle_baender       Material 0.00  Figur 1.00  Groesse 0.00  Lage -  Y  56/ 57  zaehlt nicht
+  ok   Z7   feine_linien        Material 0.91  Figur 1.00  Groesse 0.81  Lage 6.8  Y 101/133
+  ok   Z8   feine_linien        Material 0.65  Figur 1.00  Groesse 0.43  Lage 11.0  Y  96/ 74
+  ok   Z9   z9                  Material 0.75  Figur 0.72  Groesse 0.51  Lage 4.8  Y  55/ 70
+  ok   N2   right_arm unter Z5 ohne Band (384-411,302-354): heller Anteil 0.005
+Bild im Original gegen Filter: MAE in Weiss 18.6, NCC in Weiss 0.695
+
+=== Bild 2, Lage [941, 0, -23776] Gier 3874 Clip 1 Bild 0, Licht mess k=[1.198, 1.119, 1.004]
+(a) Umriss gegen ziel2_bild2.png, auf nicht-grauen Pixeln: IoU 0.934, Weiss gedeckt 0.938, Schwarz getroffen 181 px, Render 48663 px, davon auf Grau 5846
+    Weiss fehlt (Pixel, x0,y0,x1,y1): [[429, 145, 349, 215, 393], [355, 236, 150, 283, 212], [287, 226, 423, 261, 451]]
+    Schwarz getroffen: [[61, 437, 400, 445, 414], [42, 146, 365, 153, 380], [28, 154, 417, 159, 425]]
+(b) Pruefpunkte 7/7 bestanden  (+ = rechts/unten vom Soll; kontur: + = Soll ausserhalb, Render zu klein)
+   1 ok   b2.kante_1             Kante face_and_upper_body      Soll (354,161)  Abstand   -0.5  Grenze  6.4
+   2 ok   b2.kante_2             Kante face_and_upper_body      Soll (362,165)  Abstand   +0.5  Grenze  4.1
+   3 ok   b2.kante_3             Kante face_and_upper_body      Soll (370,171)  Abstand   -0.9  Grenze  4.2
+   4 ok   b2.kante_4             Kante face_and_upper_body      Soll (378,175)  Abstand   +1.7  Grenze  9.5
+   5 ok   b2.kante_5             Kante face_and_upper_body      Soll (390,181)  Abstand   +5.9  Grenze 11.0
+   6 ok   b2.kante_6             Kante face_and_upper_body      Soll (394,187)  Abstand   +4.5  Grenze 11.6
+   7 ok   b2.kante_7             Kante face_and_upper_body      Soll (411,206)  Abstand   +0.9  Grenze  2.5
+   8 --   b2.gelesen_1           Kante gelesen, nur Anhalt      Soll (258,215)  Abstand  -18.7  Grenze  5.3  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
+   9 --   b2.gelesen_2           Kante gelesen, nur Anhalt      Soll (268,205)  Abstand  -25.5  Grenze  5.3  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
+  10 --   b2.gelesen_3           Kante gelesen, nur Anhalt      Soll (278,190)  Abstand  -19.9  Grenze  3.4  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
+  11 --   b2.gelesen_4           Kante gelesen, nur Anhalt      Soll (290,170)  Abstand  -17.7  Grenze  4.8  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
+  12 --   b2.gelesen_5           Kante gelesen, nur Anhalt      Soll (300,162)  Abstand  -19.7  Grenze 13.1  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
+  13 --   b2.gelesen_6           Kante gelesen, nur Anhalt      Soll (320,156)  Abstand  -11.5  Grenze  7.2  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
+  14 ok   b2.gelesen_7           Kante gelesen, nur Anhalt      Soll (345,160)  Abstand   -4.5  Grenze  8.7  zaehlt nicht: gelesene Kuppelkante, der Nutzerumriss liegt 5-28 px weiter aussen
+(c) Boden frei, Verdeckung 9/9
+  ok   BO    Boden frei (345-405,382-396)                   Treffer 0 von 841 px, Eindringen 0.0 px
+  ok   FUGE  Fuge x>=278, y 402-416                         Treffer 0 von 883 px, Eindringen 0.0 px
+  ok   V1    Lichtbalken ganz verdeckt                      gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[8.0, 6.4]
+  ok   V2    Bodenlinie ganz verdeckt                       gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[8.0, 4.2]
+  ok   V3    Bodenlinie ohne Kontrast: R 0 bis +14 statt +2 gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[8.0, 8.0]
+  ok   V4    Rohr fehlt: Video R 68-94, Raum 140-194        gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[6.2, 8.0]
+  ok   V6    Rohr endet: R 194 bei y=204, 117 bei y=208, Ka Kante Abstand 1.5, Grenze 2.5
+  ok   V5    Querfuge ohne Kontrast: 0 +-5 statt +114 bis + gedeckt 1.000, innen 1.000, Luecke 0 px, Enden +-[5.8, 8.0]
+  ok   HAKEN  Haken gefuellt (205-245,215-262)               gedeckt 0.696  stillgelegt: Haken ist ueberholte Anatomie, die Stelle gehoert zu face_and_upper_body
+  ok   RAND413 Rand rechts mindestens x=413 bei y 225-262     kleinstes x 417
+(d) Zeichnung 7/7, Anteil = Sollflaeche mit passendem Material, Y = Mittel im Video gegen gefilterten Render
+  ok   Q1   feine_linien        Material 0.62  Figur 1.00  Groesse 0.58  Lage 10.6  Y  58/ 39
+  ok   Q2   rotbraun_mittelton  Material 0.70  Figur 1.00  Groesse 0.40  Lage 5.4  Y  32/ 26
+  ok   Q3   feine_linien        Material 0.95  Figur 1.00  Groesse 0.81  Lage 3.5  Y  50/ 39
+  ok   Q4   helle_baender       Material 0.99  Figur 0.92  Groesse 0.67  Lage 3.8  Y  96/ 53
+  ok   Q5   feine_linien        Material 0.71  Figur 1.00  Groesse 0.27  Lage 3.9  Y  34/ 29
+  ok   G    untere_streifen     Material 0.82  Figur 1.00  Groesse 0.85  Lage 20.4  Y 113/ 62
+  ok   P    weisskerne          Material 0.76  Figur 0.74  Groesse 0.47  Lage 4.5  Y 116/ 84
+  ok   N1   Rumpfinneres ohne Zeichnung (290-340,225-280): heller Anteil 0.000
+Bild im Original gegen Filter: MAE in Weiss 14.7, NCC in Weiss 0.650
+
+=== Teile des Nutzers. Soll: nutzer_teile, Logo-Schrift zaehlt nirgends, Saum 3 px; Abstaende: + = rechts/unten vom Soll
+IoU und Deckung am sichtbaren Teil. Deckung = Maske gedeckt, Kern = Maske minus Saum, Innen = Teil in der Maske, +Saum = Maske plus Saum. Verdeckt = vom Teil allein durch andere Modell-Teile.
+Leer = Maske ohne jedes Modell. Laenge, Breite: Ist/Soll laengs und quer zur Hauptachse. Spalte Wertung = Maskenpixel, die zaehlen.
+--- Bild 1: Anteil aller Nutzerpixel, die der richtige Teil deckt 0.943, mittlere IoU 0.781
+  Teil                 Knochen          Wertung   IoU  Deck  Kern Innen +Saum  Verd  Leer  Schwerpunkt dx,dy    Achse         Laenge    Breite
+  left_leg             8,24,25             4209  0.68  0.96  1.00  0.69  0.77  0.14  0.03  +3,+12 (12.5)        6 Grad -6 px  170/172   51/39
+      Schnitt ueberlappt tail 90 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: tail 0.00
+      verdeckt von: tail 0.14
+      Ende oben       Soll (242,264)  Ist (247,264)  +5,+0  Abstand 5.0  verdeckt
+      Ende Fuss       Soll (208,447)  Ist (211,445)  +3,-2  Abstand 3.6  Soll unter Logo
+      Spitze Soll (203,447)  Ist (211,445)  Abstand 8.2  Soll unter Logo
+  part_of_Body         0,7,10              6410  0.76  0.88  0.92  0.85  0.91  0.47  0.01  +0,-12 (12.1)        15 Grad +3 px 111/111   84/84
+      Schnitt ueberlappt right_leg 1316 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: face_and_upper_body 0.06, right_arm 0.02, right_leg 0.02, tail 0.01
+      verdeckt von: tail 0.39, right_leg 0.07, right_arm 0.01
+      Ende oben       Soll (363,212)  Ist (399,253)  +36,+41  Abstand 54.6  verdeckt
+      Ende unten      Soll (300,314)  Ist (249,281)  -51,-33  Abstand 60.7  verdeckt
+  right_arm            16,17,18,19,20,2    4939  0.77  0.93  0.98  0.81  0.92  0.03  0.03  +0,-3 (2.6)          3 Grad -0 px  125/128   54/49
+      in der Maske statt des Teils: part_of_Body 0.03
+      verdeckt von: part_of_Body 0.03
+      Ende Schulter   Soll (380,242)  Ist (407,244)  +27,+2  Abstand 27.1
+      Ende Hand       Soll (425,363)  Ist (384,374)  -41,+11  Abstand 42.4
+      Spitze Soll (425,363)  Ist (384,374)  Abstand 42.4
+  right_leg            9,26,27             6365  0.82  0.97  1.00  0.84  0.90  0.22  0.02  -2,+6 (6.3)          2 Grad +1 px  181/171   54/50
+      Schnitt ueberlappt part_of_Body 1316 px, tail 190 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: part_of_Body 0.00, tail 0.00, face_and_upper_body 0.00, left_arm_front 0.00
+      verdeckt von: tail 0.22, part_of_Body 0.00
+      Ende oben       Soll (329,285)  Ist (317,274)  -12,-11  Abstand 16.3
+      Ende Fuss       Soll (290,459)  Ist (274,462)  -16,+3  Abstand 16.3  verdeckt
+      Spitze Soll (290,459)  Ist (274,462)  Abstand 16.3  verdeckt
+  tail                 1,2,3,4,5,6        12232  0.88  0.96  0.98  0.92  0.98  0.09  0.00  -1,+3 (3.0)          0 Grad +0 px  287/285   68/66
+      Schnitt ueberlappt left_leg 90 px, right_leg 190 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: part_of_Body 0.03, right_leg 0.01, left_leg 0.01
+      verdeckt von: part_of_Body 0.09
+      Merkmal X Schwanzspitze: 0.86 vom Teil gedeckt, 1473 px
+      Ende Ansatz     Soll (307,185)  Ist (314,188)  +7,+3  Abstand 7.6
+      Ende Spitze     Soll (251,477)  Ist (204,479)  -47,+2  Abstand 47.0  Soll unter Logo
+--- Bild 2: Anteil aller Nutzerpixel, die der richtige Teil deckt 0.859, mittlere IoU 0.761
+  Teil                 Knochen          Wertung   IoU  Deck  Kern Innen +Saum  Verd  Leer  Schwerpunkt dx,dy    Achse         Laenge    Breite
+  face_and_upper_body  0,7,10,11,21,22,   29962  0.84  0.88  0.91  0.94  0.97  0.01  0.03  +7,-8 (10.4)         21 Grad +0 px 207/220   167/160
+      Schnitt ueberlappt left_arm_front 48 px, right_arm_front 27 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: right_arm_front 0.04, right_leg 0.04, right_arm 0.01, left_leg 0.00
+      verdeckt von: right_leg 0.01, left_arm_front 0.00, right_arm_front 0.00, right_arm 0.00
+      Ende oben       Soll (340,150)  Ist (416,214)  +76,+64  Abstand 99.4
+      Ende unten      Soll (236,374)  Ist (207,294)  -29,-80  Abstand 85.1
+  left_arm_front       12,13,14,15,28,3    5560  0.75  0.81  0.89  0.92  0.98  0.18  0.08  +3,+9 (9.2)          8 Grad +1 px  145/153   45/52
+      Schnitt ueberlappt face_and_upper_body 48 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: face_and_upper_body 0.11, left_leg 0.00
+      verdeckt von: face_and_upper_body 0.18, left_leg 0.00
+      Ende Schulter   Soll (406,260)  Ist (385,261)  -21,+1  Abstand 21.0  verdeckt
+      Ende Klaue      Soll (468,417)  Ist (467,417)  -1,+0  Abstand 1.0
+      Spitze Soll (468,417)  Ist (467,417)  Abstand 1.0
+      Spitze Soll (439,418)  Ist (445,414)  Abstand 7.2
+  right_arm_front      17,18,19,20,29,3    9943  0.70  0.82  0.91  0.82  0.88  0.12  0.15  +9,-8 (11.9)         11 Grad +5 px 190/188   108/110
+      Schnitt ueberlappt face_and_upper_body 27 px, dort zaehlt jeder der beiden Teile
+      in der Maske statt des Teils: right_leg 0.02, left_leg 0.01
+      verdeckt von: face_and_upper_body 0.10, right_arm 0.01, right_leg 0.01
+      Merkmal Y Hand: 0.83 vom Teil gedeckt, 4280 px
+      Ende Schulter   Soll (332,315)  Ist (306,283)  -26,-32  Abstand 41.2  verdeckt
+      Ende Klauenhand Soll (145,353)  Ist (141,352)  -4,-1  Abstand 4.1
+      Spitze Soll (145,353)  Ist (141,352)  Abstand 4.1
+      Spitze Soll (197,476)  Ist (205,471)  Abstand 9.4  Soll unter Logo
+      Spitze Soll (222,475)  Ist (173,459)  Abstand 51.5  Soll unter Logo
+      Spitze Soll (274,443)  Ist (270,439)  Abstand 5.7
+      Spitze ueberzaehlig: Ist (154,424)

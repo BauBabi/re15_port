@@ -1,0 +1,508 @@
+[
+{
+"name": "huefte",
+"knochen": 0,
+"feld": null,
+"rechteck": [
+0,
+0,
+184,
+60
+]
+},
+{
+"name": "wirbel",
+"knochen": 7,
+"feld": null,
+"rechteck": [
+222,
+62,
+144,
+44
+]
+},
+{
+"name": "brust",
+"knochen": 10,
+"feld": null,
+"rechteck": [
+82,
+62,
+138,
+51
+]
+},
+{
+"name": "schwanz1",
+"knochen": 1,
+"feld": null,
+"rechteck": [
+200,
+118,
+70,
+38
+]
+},
+{
+"name": "schwanz2",
+"knochen": 2,
+"feld": null,
+"rechteck": [
+264,
+202,
+66,
+27
+]
+},
+{
+"name": "schwanz3",
+"knochen": 3,
+"feld": null,
+"rechteck": [
+136,
+202,
+68,
+28
+]
+},
+{
+"name": "schwanz4",
+"knochen": 4,
+"feld": null,
+"rechteck": [
+0,
+202,
+46,
+29
+]
+},
+{
+"name": "schwanz5",
+"knochen": 5,
+"feld": null,
+"rechteck": [
+48,
+202,
+38,
+29
+]
+},
+{
+"name": "schwanz6",
+"knochen": 6,
+"feld": null,
+"rechteck": [
+78,
+164,
+42,
+33
+]
+},
+{
+"name": "oberschenkel_r",
+"knochen": 9,
+"feld": null,
+"rechteck": [
+68,
+118,
+54,
+43
+]
+},
+{
+"name": "unterschenkel_r",
+"knochen": 26,
+"feld": null,
+"rechteck": [
+124,
+118,
+74,
+39
+]
+},
+{
+"name": "fuss_r",
+"knochen": 27,
+"feld": null,
+"rechteck": [
+88,
+202,
+46,
+29
+]
+},
+{
+"name": "zeh0_r",
+"knochen": 27,
+"feld": "zeh",
+"rechteck": [
+308,
+233,
+10,
+8
+]
+},
+{
+"name": "zeh1_r",
+"knochen": 27,
+"feld": "zeh",
+"rechteck": [
+308,
+233,
+10,
+8
+]
+},
+{
+"name": "zeh2_r",
+"knochen": 27,
+"feld": "zeh",
+"rechteck": [
+308,
+233,
+10,
+8
+]
+},
+{
+"name": "oberschenkel_l",
+"knochen": 8,
+"feld": null,
+"rechteck": [
+272,
+118,
+46,
+36
+]
+},
+{
+"name": "unterschenkel_l",
+"knochen": 24,
+"feld": null,
+"rechteck": [
+122,
+164,
+62,
+33
+]
+},
+{
+"name": "fuss_l",
+"knochen": 25,
+"feld": null,
+"rechteck": [
+332,
+202,
+40,
+26
+]
+},
+{
+"name": "zeh0_l",
+"knochen": 25,
+"feld": "zeh",
+"rechteck": [
+308,
+233,
+10,
+8
+]
+},
+{
+"name": "zeh1_l",
+"knochen": 25,
+"feld": "zeh",
+"rechteck": [
+308,
+233,
+10,
+8
+]
+},
+{
+"name": "zeh2_l",
+"knochen": 25,
+"feld": "zeh",
+"rechteck": [
+308,
+233,
+10,
+8
+]
+},
+{
+"name": "oberarm_r",
+"knochen": 16,
+"feld": null,
+"rechteck": [
+186,
+164,
+76,
+33
+]
+},
+{
+"name": "unterarm_r",
+"knochen": 17,
+"feld": null,
+"rechteck": [
+0,
+62,
+80,
+54
+]
+},
+{
+"name": "hand_r",
+"knochen": 18,
+"feld": null,
+"rechteck": [
+0,
+164,
+76,
+36
+]
+},
+{
+"name": "klaue_r1",
+"knochen": 19,
+"feld": null,
+"rechteck": [
+152,
+233,
+16,
+14
+]
+},
+{
+"name": "klaue_r2",
+"knochen": 20,
+"feld": null,
+"rechteck": [
+128,
+233,
+22,
+15
+]
+},
+{
+"name": "klaue_r3",
+"knochen": 29,
+"feld": null,
+"rechteck": [
+112,
+233,
+14,
+17
+]
+},
+{
+"name": "klaue_r4",
+"knochen": 31,
+"feld": null,
+"rechteck": [
+248,
+233,
+14,
+11
+]
+},
+{
+"name": "kralle_r",
+"knochen": 18,
+"feld": null,
+"rechteck": [
+170,
+233,
+20,
+14
+]
+},
+{
+"name": "oberarm_l",
+"knochen": 11,
+"feld": null,
+"rechteck": [
+264,
+164,
+76,
+33
+]
+},
+{
+"name": "unterarm_l",
+"knochen": 12,
+"feld": null,
+"rechteck": [
+0,
+118,
+66,
+44
+]
+},
+{
+"name": "hand_l",
+"knochen": 13,
+"feld": null,
+"rechteck": [
+0,
+233,
+42,
+21
+]
+},
+{
+"name": "klaue_l1",
+"knochen": 14,
+"feld": null,
+"rechteck": [
+280,
+233,
+10,
+10
+]
+},
+{
+"name": "klaue_l2",
+"knochen": 15,
+"feld": null,
+"rechteck": [
+264,
+233,
+14,
+11
+]
+},
+{
+"name": "klaue_l3",
+"knochen": 28,
+"feld": null,
+"rechteck": [
+192,
+233,
+10,
+12
+]
+},
+{
+"name": "klaue_l4",
+"knochen": 30,
+"feld": null,
+"rechteck": [
+320,
+233,
+10,
+8
+]
+},
+{
+"name": "kralle_l",
+"knochen": 13,
+"feld": null,
+"rechteck": [
+292,
+233,
+14,
+9
+]
+},
+{
+"name": "hals",
+"knochen": 21,
+"feld": null,
+"rechteck": [
+44,
+233,
+66,
+20
+]
+},
+{
+"name": "kopf",
+"knochen": 22,
+"feld": null,
+"rechteck": [
+186,
+0,
+160,
+59
+]
+},
+{
+"name": "kiefer",
+"knochen": 23,
+"feld": null,
+"rechteck": [
+206,
+202,
+56,
+28
+]
+},
+{
+"name": "fang_o_r",
+"knochen": 22,
+"feld": "zahn",
+"rechteck": [
+332,
+233,
+10,
+8
+]
+},
+{
+"name": "fang_u_r",
+"knochen": 23,
+"feld": "zahn",
+"rechteck": [
+332,
+233,
+10,
+8
+]
+},
+{
+"name": "wange_r",
+"knochen": 22,
+"feld": null,
+"rechteck": [
+204,
+233,
+20,
+12
+]
+},
+{
+"name": "fang_o_l",
+"knochen": 22,
+"feld": "zahn",
+"rechteck": [
+332,
+233,
+10,
+8
+]
+},
+{
+"name": "fang_u_l",
+"knochen": 23,
+"feld": "zahn",
+"rechteck": [
+332,
+233,
+10,
+8
+]
+},
+{
+"name": "wange_l",
+"knochen": 22,
+"feld": null,
+"rechteck": [
+226,
+233,
+20,
+12
+]
+}
+]

@@ -1,0 +1,41 @@
+--- Zeichnung Y Video/Filter je Stelle
+Bild 1
+  Z1   A 142.0/193.0 ok  B 142.0/213.0 ok  C 142.0/196.0 ok
+  Z2   A 130.0/68.0 ok  B 130.0/87.0 ok  C 130.0/61.0 ok
+  Z3   A 172.0/226.0 ok  B 172.0/222.0 ok  C 172.0/215.0 ok
+  Z4   A 141.0/203.0 ok  B 141.0/178.0 ok  C 141.0/224.0 ok
+  Z5   A 75.0/155.0 ok  B 75.0/186.0 ok  C 75.0/196.0 ok
+  Z6a  A 134.0/135.0 ok  B 134.0/195.0 ok  C 134.0/155.0 ok
+  Z6b  A 72.0/181.0 ok  B 72.0/95.0 NEIN  C 72.0/173.0 ok
+  Z6c  A 56.0/184.0 ok  B 56.0/75.0 NEIN  C 56.0/145.0 ok
+  Z7   A 101.0/108.0 ok  B 101.0/131.0 ok  C 101.0/156.0 ok
+  Z8   A 96.0/78.0 ok  B 96.0/72.0 ok  C 96.0/111.0 ok
+  Z9   A 55.0/88.0 NEIN  B 55.0/88.0 NEIN  C 55.0/88.0 NEIN
+Bild 2
+  Q1   A 58.0/43.0 ok  B 58.0/40.0 ok  C 58.0/30.0 ok
+  Q2   A 32.0/30.0 ok  B 32.0/35.0 ok  C 32.0/22.0 ok
+  Q3   A 50.0/52.0 ok  B 50.0/30.0 ok  C 50.0/22.0 ok
+  Q4   A 96.0/45.0 ok  B 96.0/62.0 ok  C 96.0/52.0 ok
+  Q5   A 34.0/58.0 ok  B 34.0/42.0 ok  C 34.0/42.0 ok
+  G    A 113.0/87.0 ok  B 113.0/103.0 ok  C 113.0/61.0 ok
+  P    A 116.0/138.0 ok  B 116.0/28.0 NEIN  C 116.0/43.0 ok
+--- Flaechen und Punkte, die fehlen
+A Bild 1 Punkte ['b1.scheitel_x305', 'b1.scheitel_x322', 'b1.flanke_2', 'b1.rand_links_y224', 'b1.nr_y346_links', 'b1.nr_y346_rechts', 'b1.nl_y318_rechts', 'b1.nl_y330_rechts', 'b1.nl_y342_links', 'b1.nl_y342_rechts', 'b1.stange'] Flaechen ['L1(192)', 'L2(104)', 'SCH(62)'] NCC 0.525 MAE 35.5
+A Bild 2 Punkte ['b2.kante_3', 'b2.kante_7'] Flaechen ['V1(0.883)', 'V6()', 'RAND413()'] NCC 0.551 MAE 15.5
+B Bild 1 Punkte ['b1.scheitel_x300', 'b1.scheitel_x305', 'b1.scheitel_x322', 'b1.flanke_2', 'b1.rand_links_y242', 'b1.rand_rechts', 'b1.fr_y324_links', 'b1.fr_y344_rechts', 'b1.nl_y342_links'] Flaechen ['L1(32)', 'L2(39)'] NCC 0.497 MAE 26.1
+B Bild 2 Punkte [] Flaechen ['BO(5)'] NCC 0.621 MAE 15.3
+C Bild 1 Punkte ['b1.scheitel_x300', 'b1.scheitel_x322', 'b1.flanke_2', 'b1.rand_rechts', 'b1.nl_y330_rechts', 'b1.nl_y342_rechts'] Flaechen ['L1(29)', 'L2(25)'] NCC 0.566 MAE 24.8
+C Bild 2 Punkte [] Flaechen [] NCC 0.642 MAE 17.4
+--- Feuer im Original (Y>=170), vom Modell ueberdeckt
+links A 414 von 1587 (26 %)  B 30 von 1587 (2 %)  C 93 von 1587 (6 %)
+rechts A 618 von 4751 (13 %)  B 781 von 4751 (16 %)  C 83 von 4751 (2 %)
+--- Helle Luecke Bild 1 zwischen Schwanz und rechtem Bein: im Original Y>=150 in (280-320,310-385), Abgleich mit Render
+Original hell 711 y 324 363
+A Luecke im Render 1378 davon im Original hell 563 Luecke auf Dunkel 815 Original hell verdeckt 148 y 310 384
+B Luecke im Render 1250 davon im Original hell 645 Luecke auf Dunkel 605 Original hell verdeckt 66 y 310 384
+C Luecke im Render 1039 davon im Original hell 667 Luecke auf Dunkel 372 Original hell verdeckt 44 y 310 372
+--- Breite right_arm Bild 1 je Zeile, Render
+A y310 384-416  y330 381-414  y350 372-427  y360 365-438  y365 365-439  y370 370-435
+B y310 378-415  y330 380-413  y350 379-425  y360 374-420  y365 376-419  y370 -
+C y310 384-414  y330 378-413  y350 377-416  y360 377-423  y365 379-421  y370 384-413
+Nutzer y310 385-418  y330 383-415  y350 383-417  y360 378-423  y365 377-422  y370 378-409

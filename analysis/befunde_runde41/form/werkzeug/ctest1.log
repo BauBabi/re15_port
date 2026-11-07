@@ -1,0 +1,40 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build
+      Start   44: unit_birkin_ai
+ 1/17 Test   #44: unit_birkin_ai ....................   Passed    0.02 sec
+      Start  292: probe_p2_birkin_g5
+ 2/17 Test  #292: probe_p2_birkin_g5 ................   Passed    0.76 sec
+      Start  303: probe_p3_birkin_rest
+ 3/17 Test  #303: probe_p3_birkin_rest ..............   Passed    1.00 sec
+      Start  308: unit_r17_birkin_1zu1_pin
+ 4/17 Test  #308: unit_r17_birkin_1zu1_pin ..........   Passed    0.29 sec
+      Start  314: unit_r18_birkin_restluecken_pin
+ 5/17 Test  #314: unit_r18_birkin_restluecken_pin ...   Passed    0.23 sec
+      Start  320: unit_r20_birkin_push_pin
+ 6/17 Test  #320: unit_r20_birkin_push_pin ..........   Passed    1.11 sec
+      Start  339: unit_r30_birkin_frost
+ 7/17 Test  #339: unit_r30_birkin_frost .............   Passed    0.83 sec
+      Start  363: unit_r30_n_room5080_birkin_wand
+ 8/17 Test  #363: unit_r30_n_room5080_birkin_wand ...   Passed    0.10 sec
+      Start 1149: unit_r41_form_emd
+ 9/17 Test #1149: unit_r41_form_emd .................   Passed    0.01 sec
+      Start 1345: unit_birkin_formen
+10/17 Test #1345: unit_birkin_formen ................   Passed    0.02 sec
+      Start 1346: unit_birkin_bahnsteig
+11/17 Test #1346: unit_birkin_bahnsteig .............   Passed    0.18 sec
+      Start 1347: unit_r41_birkin_wand_rein
+12/17 Test #1347: unit_r41_birkin_wand_rein .........   Passed    0.02 sec
+      Start 1348: unit_r41_birkin_wand_g5
+13/17 Test #1348: unit_r41_birkin_wand_g5 ...........   Passed   39.78 sec
+      Start 1349: unit_r41_birkin_wand_griff
+14/17 Test #1349: unit_r41_birkin_wand_griff ........   Passed  196.27 sec
+      Start 1350: unit_birkin_szenen
+15/17 Test #1350: unit_birkin_szenen ................   Passed    0.18 sec
+      Start 1351: integration_r41_birkin_pistole
+16/17 Test #1351: integration_r41_birkin_pistole ....   Passed  241.28 sec
+      Start 1355: unit_birkin_opfer
+17/17 Test #1355: unit_birkin_opfer .................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Total Test time (real) = 482.17 sec
+CTEST_EXIT=0

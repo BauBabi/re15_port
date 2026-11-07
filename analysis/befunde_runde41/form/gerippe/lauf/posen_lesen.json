@@ -1,0 +1,390 @@
+{
+"1": {
+"huefte": {
+"bild": [
+303,
+262
+],
+"hoehe": 1882,
+"tiefe": 5842
+},
+"schwanz1": {
+"bild": [
+306,
+208
+],
+"hoehe": 2635,
+"tiefe": 5817
+},
+"schwanz2": {
+"bild": [
+287,
+221
+],
+"hoehe": 2436,
+"tiefe": 5273
+},
+"schwanz3": {
+"bild": [
+273,
+252
+],
+"hoehe": 2053,
+"tiefe": 4806
+},
+"schwanz4": {
+"bild": [
+268,
+299
+],
+"hoehe": 1563,
+"tiefe": 4404
+},
+"schwanz5": {
+"bild": [
+270,
+357
+],
+"hoehe": 1055,
+"tiefe": 3980
+},
+"schwanz6": {
+"bild": [
+266,
+423
+],
+"hoehe": 642,
+"tiefe": 3442
+},
+"wirbel": {
+"bild": [
+316,
+262
+],
+"hoehe": 1871,
+"tiefe": 6224
+},
+"brust": {
+"bild": [
+336,
+266
+],
+"hoehe": 1760,
+"tiefe": 7084
+},
+"hals": {
+"bild": [
+349,
+255
+],
+"hoehe": 1909,
+"tiefe": 8000
+},
+"kopf": {
+"bild": [
+355,
+259
+],
+"hoehe": 1830,
+"tiefe": 8488
+},
+"kiefer": {
+"bild": [
+359,
+288
+],
+"hoehe": 1222,
+"tiefe": 8660
+},
+"oberarm_r": {
+"bild": [
+392,
+254
+],
+"hoehe": 1939,
+"tiefe": 7705
+},
+"unterarm_r": {
+"bild": [
+398,
+294
+],
+"hoehe": 1280,
+"tiefe": 7240
+},
+"hand_r": {
+"bild": [
+394,
+357
+],
+"hoehe": 378,
+"tiefe": 6560
+},
+"oberarm_l": {
+"bild": [
+304,
+259
+],
+"hoehe": 1842,
+"tiefe": 7973
+},
+"unterarm_l": {
+"bild": [
+307,
+297
+],
+"hoehe": 1169,
+"tiefe": 7541
+},
+"hand_l": {
+"bild": [
+324,
+353
+],
+"hoehe": 307,
+"tiefe": 6936
+},
+"oberschenkel_r": {
+"bild": [
+320,
+300
+],
+"hoehe": 1452,
+"tiefe": 5192
+},
+"unterschenkel_r": {
+"bild": [
+326,
+366
+],
+"hoehe": 836,
+"tiefe": 4466
+},
+"fuss_r": {
+"bild": [
+306,
+436
+],
+"hoehe": 390,
+"tiefe": 3757
+},
+"oberschenkel_l": {
+"bild": [
+249,
+286
+],
+"hoehe": 1580,
+"tiefe": 5513
+},
+"unterschenkel_l": {
+"bild": [
+236,
+350
+],
+"hoehe": 891,
+"tiefe": 4832
+},
+"fuss_l": {
+"bild": [
+209,
+420
+],
+"hoehe": 292,
+"tiefe": 4247
+}
+},
+"2": {
+"huefte": {
+"bild": [
+268,
+249
+],
+"hoehe": 1543,
+"tiefe": 7201
+},
+"schwanz1": {
+"bild": [
+253,
+204
+],
+"hoehe": 2189,
+"tiefe": 7355
+},
+"schwanz2": {
+"bild": [
+245,
+220
+],
+"hoehe": 1850,
+"tiefe": 7851
+},
+"schwanz3": {
+"bild": [
+240,
+237
+],
+"hoehe": 1475,
+"tiefe": 8354
+},
+"schwanz4": {
+"bild": [
+237,
+252
+],
+"hoehe": 1084,
+"tiefe": 8884
+},
+"schwanz5": {
+"bild": [
+233,
+264
+],
+"hoehe": 712,
+"tiefe": 9464
+},
+"schwanz6": {
+"bild": [
+228,
+270
+],
+"hoehe": 415,
+"tiefe": 10083
+},
+"wirbel": {
+"bild": [
+279,
+241
+],
+"hoehe": 1730,
+"tiefe": 6877
+},
+"brust": {
+"bild": [
+311,
+221
+],
+"hoehe": 2144,
+"tiefe": 6202
+},
+"hals": {
+"bild": [
+359,
+247
+],
+"hoehe": 1968,
+"tiefe": 5559
+},
+"kopf": {
+"bild": [
+344,
+240
+],
+"hoehe": 2142,
+"tiefe": 5104
+},
+"kiefer": {
+"bild": [
+331,
+284
+],
+"hoehe": 1816,
+"tiefe": 4665
+},
+"oberarm_r": {
+"bild": [
+292,
+262
+],
+"hoehe": 1900,
+"tiefe": 5149
+},
+"unterarm_r": {
+"bild": [
+312,
+322
+],
+"hoehe": 1143,
+"tiefe": 5449
+},
+"hand_r": {
+"bild": [
+257,
+397
+],
+"hoehe": 340,
+"tiefe": 5281
+},
+"oberarm_l": {
+"bild": [
+399,
+223
+],
+"hoehe": 2113,
+"tiefe": 6187
+},
+"unterarm_l": {
+"bild": [
+384,
+276
+],
+"hoehe": 1353,
+"tiefe": 6542
+},
+"hand_l": {
+"bild": [
+410,
+349
+],
+"hoehe": 318,
+"tiefe": 6685
+},
+"oberschenkel_r": {
+"bild": [
+234,
+287
+],
+"hoehe": 953,
+"tiefe": 7234
+},
+"unterschenkel_r": {
+"bild": [
+253,
+313
+],
+"hoehe": 860,
+"tiefe": 6436
+},
+"fuss_r": {
+"bild": [
+295,
+348
+],
+"hoehe": 295,
+"tiefe": 6676
+},
+"oberschenkel_l": {
+"bild": [
+291,
+274
+],
+"hoehe": 991,
+"tiefe": 7864
+},
+"unterschenkel_l": {
+"bild": [
+342,
+278
+],
+"hoehe": 1031,
+"tiefe": 7518
+},
+"fuss_l": {
+"bild": [
+352,
+330
+],
+"hoehe": 300,
+"tiefe": 7329
+}
+}
+}

@@ -1,0 +1,56 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build
+      Start 1382: integration_r41_g5_westen
+      Start 1383: integration_r41_g5_tod
+      Start 1377: unit_r41_birkin_wand_griff
+ 1/25 Test #1377: unit_r41_birkin_wand_griff .........   Passed  197.10 sec
+      Start 1380: integration_r41_birkin_pistole
+ 2/25 Test #1383: integration_r41_g5_tod .............   Passed  263.77 sec
+      Start  571: integration_r35_zgirl_5090
+ 3/25 Test #1382: integration_r41_g5_westen ..........   Passed  284.67 sec
+      Start 1376: unit_r41_birkin_wand_g5
+ 4/25 Test #1376: unit_r41_birkin_wand_g5 ............   Passed   48.57 sec
+      Start  702: integration_r37_elzaems_leon5080
+ 5/25 Test  #702: integration_r37_elzaems_leon5080 ...   Passed   11.52 sec
+      Start  320: unit_r20_birkin_push_pin
+ 6/25 Test  #320: unit_r20_birkin_push_pin ...........   Passed    2.02 sec
+      Start  303: probe_p3_birkin_rest
+ 7/25 Test  #303: probe_p3_birkin_rest ...............   Passed    1.15 sec
+      Start  339: unit_r30_birkin_frost
+ 8/25 Test  #339: unit_r30_birkin_frost ..............   Passed    1.07 sec
+      Start  292: probe_p2_birkin_g5
+ 9/25 Test  #292: probe_p2_birkin_g5 .................   Passed    0.91 sec
+      Start  274: unit_g5_boss
+10/25 Test  #274: unit_g5_boss .......................   Passed    0.45 sec
+      Start  308: unit_r17_birkin_1zu1_pin
+11/25 Test  #308: unit_r17_birkin_1zu1_pin ...........   Passed    0.37 sec
+      Start  314: unit_r18_birkin_restluecken_pin
+12/25 Test  #314: unit_r18_birkin_restluecken_pin ....   Passed    0.29 sec
+      Start 1378: unit_n2_griff_start
+13/25 Test #1378: unit_n2_griff_start ................   Passed    0.11 sec
+      Start  363: unit_r30_n_room5080_birkin_wand
+14/25 Test  #363: unit_r30_n_room5080_birkin_wand ....   Passed    0.16 sec
+      Start 1379: unit_birkin_szenen
+15/25 Test #1379: unit_birkin_szenen .................   Passed    0.18 sec
+      Start  272: unit_g5_tentakel
+16/25 Test  #272: unit_g5_tentakel ...................   Passed    0.06 sec
+      Start  273: unit_g5_morph
+17/25 Test  #273: unit_g5_morph ......................   Passed    0.02 sec
+      Start 1375: unit_r41_birkin_wand_rein
+18/25 Test #1375: unit_r41_birkin_wand_rein ..........   Passed    0.01 sec
+      Start   44: unit_birkin_ai
+19/25 Test   #44: unit_birkin_ai .....................   Passed    0.02 sec
+      Start  409: unit_r34_plattform_ton
+20/25 Test  #409: unit_r34_plattform_ton .............   Passed    0.05 sec
+      Start 1385: unit_birkin_opfer
+21/25 Test #1385: unit_birkin_opfer ..................   Passed    0.03 sec
+      Start 1373: unit_birkin_formen
+22/25 Test #1373: unit_birkin_formen .................   Passed    0.02 sec
+      Start  408: unit_r34_plattform
+23/25 Test  #408: unit_r34_plattform .................   Passed    0.04 sec
+24/25 Test  #571: integration_r35_zgirl_5090 .........   Passed  148.01 sec
+25/25 Test #1380: integration_r41_birkin_pistole .....   Passed  243.34 sec
+
+100% tests passed, 0 tests failed out of 25
+
+Total Test time (real) = 440.51 sec
+ctest rc=0

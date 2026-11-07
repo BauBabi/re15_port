@@ -4096,6 +4096,15 @@ set_tests_properties(unit_r41_birkin_wand_g5 PROPERTIES TIMEOUT 240 ENVIRONMENT 
 set_tests_properties(unit_r41_birkin_wand_griff PROPERTIES TIMEOUT 360)
 set_tests_properties(unit_r41_birkin_wand_g5saat PROPERTIES TIMEOUT 1200 ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
 
+# --- Runde 41 Form, Nachbesserung 2 (Zusatzpunkt): START waehrend des Riesenform-Griffs -> kein Schirm im Griff, kein Einfrieren ---
+add_executable(test_n2_griff_start test_n2_griff_start.c)
+target_link_libraries(test_n2_griff_start PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_n2_griff_start PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_n2_griff_start PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_n2_griff_start COMMAND test_n2_griff_start)
+set_tests_properties(unit_n2_griff_start PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+
 # --- BETA-BIRKIN-AUFTRITTE (2026-10-30): Hangar-Wurfszene ROOM50A0 + Morph Vierbein -> G5 ROOM5090 ---
 add_executable(test_birkin_szenen test_birkin_szenen.c)
 target_link_libraries(test_birkin_szenen PRIVATE re15_engine re15_test_support m)
@@ -4122,6 +4131,8 @@ if(TARGET re15_pc)
     # Runde 41 Spur GR NB3: zwei Laeufe zu je hoechstens 600 s (Form 1 600 HP, Riesenform 1000 HP; Endbild 6500 seit der Integration GR + G5A).
     # G5-Auftritt NB2: 2 Laeufe a 5400 Bilder (900 s); Integration Runde 41: GR-Limit 1300 s, beide Spuren laufen zusammen.
     set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 1300)
+    # Form Nachbesserung 3 (AN-Abnahme 2 N1): ECHTER Wagenweg A -> B -> C - integration_r41_form_wagenweg samt Elza- und
+    # Zurueckweichen-Teilen und Kamera-Pruefung (Nachbesserung 4) jetzt in probes/r41_form_kamera.cmake.
     # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
     add_test(NAME integration_r41_g5_westen
              COMMAND "${CMAKE_COMMAND}"

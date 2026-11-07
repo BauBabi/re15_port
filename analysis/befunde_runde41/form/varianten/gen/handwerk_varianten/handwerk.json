@@ -1,0 +1,1513 @@
+[
+ {
+  "name": "form_bemalt",
+  "flaechen": 2208,
+  "meshes": 32,
+  "tim": [
+   384,
+   256
+  ],
+  "clut_zeilen": 1,
+  "hoehe": 2926,
+  "breite": 7178,
+  "tiefe": 3037,
+  "dichte_median": 0.0278,
+  "dichte_p10": 0.0157,
+  "dichte_p90": 0.0373,
+  "texel_ueber_hoehe": 81.2,
+  "bedeckt": 73565,
+  "farben": [
+   {
+    "zeile": 0,
+    "texel": 73565,
+    "indizes": 255,
+    "farben15": 255,
+    "fuer_90_prozent": 39
+   }
+  ],
+  "stil": {
+   "nachbar_gleich": 0.614,
+   "nachbar_klein_1_6": 0.228,
+   "nachbar_hart_ab_20": 0.029,
+   "mittel_Y": 35.5
+  },
+  "je_mesh": [
+   {
+    "mesh": 0,
+    "flaechen": 132,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0348
+   },
+   {
+    "mesh": 1,
+    "flaechen": 80,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0278
+   },
+   {
+    "mesh": 2,
+    "flaechen": 50,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0289
+   },
+   {
+    "mesh": 3,
+    "flaechen": 50,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0313
+   },
+   {
+    "mesh": 4,
+    "flaechen": 50,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.032
+   },
+   {
+    "mesh": 5,
+    "flaechen": 50,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0327
+   },
+   {
+    "mesh": 6,
+    "flaechen": 60,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0292
+   },
+   {
+    "mesh": 7,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0241
+   },
+   {
+    "mesh": 8,
+    "flaechen": 64,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0359
+   },
+   {
+    "mesh": 9,
+    "flaechen": 64,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0359
+   },
+   {
+    "mesh": 10,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.027
+   },
+   {
+    "mesh": 11,
+    "flaechen": 72,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0283
+   },
+   {
+    "mesh": 12,
+    "flaechen": 80,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0332
+   },
+   {
+    "mesh": 13,
+    "flaechen": 100,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0274
+   },
+   {
+    "mesh": 14,
+    "flaechen": 30,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0159
+   },
+   {
+    "mesh": 15,
+    "flaechen": 42,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0163
+   },
+   {
+    "mesh": 16,
+    "flaechen": 72,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0297
+   },
+   {
+    "mesh": 17,
+    "flaechen": 80,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0407
+   },
+   {
+    "mesh": 18,
+    "flaechen": 88,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0317
+   },
+   {
+    "mesh": 19,
+    "flaechen": 30,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0158
+   },
+   {
+    "mesh": 20,
+    "flaechen": 30,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0153
+   },
+   {
+    "mesh": 21,
+    "flaechen": 40,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0158
+   },
+   {
+    "mesh": 22,
+    "flaechen": 184,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0306
+   },
+   {
+    "mesh": 23,
+    "flaechen": 72,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0232
+   },
+   {
+    "mesh": 24,
+    "flaechen": 64,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0362
+   },
+   {
+    "mesh": 25,
+    "flaechen": 100,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0215
+   },
+   {
+    "mesh": 26,
+    "flaechen": 64,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0362
+   },
+   {
+    "mesh": 27,
+    "flaechen": 100,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0227
+   },
+   {
+    "mesh": 28,
+    "flaechen": 30,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0155
+   },
+   {
+    "mesh": 29,
+    "flaechen": 30,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0161
+   },
+   {
+    "mesh": 30,
+    "flaechen": 30,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.018
+   },
+   {
+    "mesh": 31,
+    "flaechen": 30,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0173
+   }
+  ]
+ },
+ {
+  "name": "A_rueckrechnung",
+  "flaechen": 2398,
+  "meshes": 32,
+  "tim": [
+   384,
+   256
+  ],
+  "clut_zeilen": 3,
+  "hoehe": 2930,
+  "breite": 7178,
+  "tiefe": 3037,
+  "dichte_median": 0.0287,
+  "dichte_p10": 0.0198,
+  "dichte_p90": 0.0359,
+  "texel_ueber_hoehe": 84.0,
+  "bedeckt": 75963,
+  "farben": [
+   {
+    "zeile": 0,
+    "texel": 32357,
+    "indizes": 199,
+    "farben15": 199,
+    "fuer_90_prozent": 29
+   },
+   {
+    "zeile": 1,
+    "texel": 21858,
+    "indizes": 219,
+    "farben15": 219,
+    "fuer_90_prozent": 80
+   },
+   {
+    "zeile": 2,
+    "texel": 21748,
+    "indizes": 194,
+    "farben15": 194,
+    "fuer_90_prozent": 25
+   }
+  ],
+  "stil": {
+   "nachbar_gleich": 0.361,
+   "nachbar_klein_1_6": 0.335,
+   "nachbar_hart_ab_20": 0.05,
+   "mittel_Y": 33.7
+  },
+  "je_mesh": [
+   {
+    "mesh": 0,
+    "flaechen": 132,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0299
+   },
+   {
+    "mesh": 1,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0264
+   },
+   {
+    "mesh": 2,
+    "flaechen": 80,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0239
+   },
+   {
+    "mesh": 3,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0264
+   },
+   {
+    "mesh": 4,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0275
+   },
+   {
+    "mesh": 5,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0293
+   },
+   {
+    "mesh": 6,
+    "flaechen": 80,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0278
+   },
+   {
+    "mesh": 7,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0262
+   },
+   {
+    "mesh": 8,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 9,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 10,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0251
+   },
+   {
+    "mesh": 11,
+    "flaechen": 72,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0305
+   },
+   {
+    "mesh": 12,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0323
+   },
+   {
+    "mesh": 13,
+    "flaechen": 100,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0322
+   },
+   {
+    "mesh": 14,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0318
+   },
+   {
+    "mesh": 15,
+    "flaechen": 42,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0317
+   },
+   {
+    "mesh": 16,
+    "flaechen": 72,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0305
+   },
+   {
+    "mesh": 17,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0323
+   },
+   {
+    "mesh": 18,
+    "flaechen": 88,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0321
+   },
+   {
+    "mesh": 19,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 20,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0314
+   },
+   {
+    "mesh": 21,
+    "flaechen": 40,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0249
+   },
+   {
+    "mesh": 22,
+    "flaechen": 184,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0315
+   },
+   {
+    "mesh": 23,
+    "flaechen": 72,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0302
+   },
+   {
+    "mesh": 24,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0328
+   },
+   {
+    "mesh": 25,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0291
+   },
+   {
+    "mesh": 26,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0328
+   },
+   {
+    "mesh": 27,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0291
+   },
+   {
+    "mesh": 28,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0318
+   },
+   {
+    "mesh": 29,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0316
+   },
+   {
+    "mesh": 30,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0336
+   },
+   {
+    "mesh": 31,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0329
+   }
+  ]
+ },
+ {
+  "name": "B_screenshot",
+  "flaechen": 2398,
+  "meshes": 32,
+  "tim": [
+   384,
+   256
+  ],
+  "clut_zeilen": 3,
+  "hoehe": 2930,
+  "breite": 7178,
+  "tiefe": 3037,
+  "dichte_median": 0.0287,
+  "dichte_p10": 0.0198,
+  "dichte_p90": 0.0359,
+  "texel_ueber_hoehe": 84.0,
+  "bedeckt": 75963,
+  "farben": [
+   {
+    "zeile": 0,
+    "texel": 32357,
+    "indizes": 217,
+    "farben15": 217,
+    "fuer_90_prozent": 38
+   },
+   {
+    "zeile": 1,
+    "texel": 21858,
+    "indizes": 235,
+    "farben15": 235,
+    "fuer_90_prozent": 86
+   },
+   {
+    "zeile": 2,
+    "texel": 21748,
+    "indizes": 214,
+    "farben15": 214,
+    "fuer_90_prozent": 30
+   }
+  ],
+  "stil": {
+   "nachbar_gleich": 0.357,
+   "nachbar_klein_1_6": 0.351,
+   "nachbar_hart_ab_20": 0.05,
+   "mittel_Y": 34.4
+  },
+  "je_mesh": [
+   {
+    "mesh": 0,
+    "flaechen": 132,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0299
+   },
+   {
+    "mesh": 1,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0264
+   },
+   {
+    "mesh": 2,
+    "flaechen": 80,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0239
+   },
+   {
+    "mesh": 3,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0264
+   },
+   {
+    "mesh": 4,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0275
+   },
+   {
+    "mesh": 5,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0293
+   },
+   {
+    "mesh": 6,
+    "flaechen": 80,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0278
+   },
+   {
+    "mesh": 7,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0262
+   },
+   {
+    "mesh": 8,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 9,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 10,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0251
+   },
+   {
+    "mesh": 11,
+    "flaechen": 72,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0305
+   },
+   {
+    "mesh": 12,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0323
+   },
+   {
+    "mesh": 13,
+    "flaechen": 100,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0322
+   },
+   {
+    "mesh": 14,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0318
+   },
+   {
+    "mesh": 15,
+    "flaechen": 42,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0317
+   },
+   {
+    "mesh": 16,
+    "flaechen": 72,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0305
+   },
+   {
+    "mesh": 17,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0323
+   },
+   {
+    "mesh": 18,
+    "flaechen": 88,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0321
+   },
+   {
+    "mesh": 19,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 20,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0314
+   },
+   {
+    "mesh": 21,
+    "flaechen": 40,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0249
+   },
+   {
+    "mesh": 22,
+    "flaechen": 184,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0315
+   },
+   {
+    "mesh": 23,
+    "flaechen": 72,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0302
+   },
+   {
+    "mesh": 24,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0328
+   },
+   {
+    "mesh": 25,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0291
+   },
+   {
+    "mesh": 26,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0328
+   },
+   {
+    "mesh": 27,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0291
+   },
+   {
+    "mesh": 28,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0318
+   },
+   {
+    "mesh": 29,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0316
+   },
+   {
+    "mesh": 30,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0336
+   },
+   {
+    "mesh": 31,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0329
+   }
+  ]
+ },
+ {
+  "name": "C_mitte",
+  "flaechen": 2398,
+  "meshes": 32,
+  "tim": [
+   384,
+   256
+  ],
+  "clut_zeilen": 3,
+  "hoehe": 2930,
+  "breite": 7178,
+  "tiefe": 3037,
+  "dichte_median": 0.0287,
+  "dichte_p10": 0.0198,
+  "dichte_p90": 0.0359,
+  "texel_ueber_hoehe": 84.0,
+  "bedeckt": 75963,
+  "farben": [
+   {
+    "zeile": 0,
+    "texel": 32357,
+    "indizes": 212,
+    "farben15": 212,
+    "fuer_90_prozent": 33
+   },
+   {
+    "zeile": 1,
+    "texel": 21858,
+    "indizes": 225,
+    "farben15": 225,
+    "fuer_90_prozent": 69
+   },
+   {
+    "zeile": 2,
+    "texel": 21748,
+    "indizes": 206,
+    "farben15": 206,
+    "fuer_90_prozent": 25
+   }
+  ],
+  "stil": {
+   "nachbar_gleich": 0.349,
+   "nachbar_klein_1_6": 0.366,
+   "nachbar_hart_ab_20": 0.047,
+   "mittel_Y": 34.3
+  },
+  "je_mesh": [
+   {
+    "mesh": 0,
+    "flaechen": 132,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0299
+   },
+   {
+    "mesh": 1,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0264
+   },
+   {
+    "mesh": 2,
+    "flaechen": 80,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0239
+   },
+   {
+    "mesh": 3,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0264
+   },
+   {
+    "mesh": 4,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0275
+   },
+   {
+    "mesh": 5,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0293
+   },
+   {
+    "mesh": 6,
+    "flaechen": 80,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0278
+   },
+   {
+    "mesh": 7,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0262
+   },
+   {
+    "mesh": 8,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 9,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 10,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0251
+   },
+   {
+    "mesh": 11,
+    "flaechen": 72,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0305
+   },
+   {
+    "mesh": 12,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0323
+   },
+   {
+    "mesh": 13,
+    "flaechen": 100,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0322
+   },
+   {
+    "mesh": 14,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0318
+   },
+   {
+    "mesh": 15,
+    "flaechen": 42,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0317
+   },
+   {
+    "mesh": 16,
+    "flaechen": 72,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0305
+   },
+   {
+    "mesh": 17,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0323
+   },
+   {
+    "mesh": 18,
+    "flaechen": 88,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0321
+   },
+   {
+    "mesh": 19,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 20,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0314
+   },
+   {
+    "mesh": 21,
+    "flaechen": 40,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0249
+   },
+   {
+    "mesh": 22,
+    "flaechen": 184,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0315
+   },
+   {
+    "mesh": 23,
+    "flaechen": 72,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0302
+   },
+   {
+    "mesh": 24,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0328
+   },
+   {
+    "mesh": 25,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0291
+   },
+   {
+    "mesh": 26,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0328
+   },
+   {
+    "mesh": 27,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0291
+   },
+   {
+    "mesh": 28,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0318
+   },
+   {
+    "mesh": 29,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0316
+   },
+   {
+    "mesh": 30,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0336
+   },
+   {
+    "mesh": 31,
+    "flaechen": 30,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0329
+   }
+  ]
+ },
+ {
+  "name": "G_flaechen",
+  "flaechen": 2100,
+  "meshes": 32,
+  "tim": [
+   384,
+   256
+  ],
+  "clut_zeilen": 3,
+  "hoehe": 2932,
+  "breite": 7178,
+  "tiefe": 3037,
+  "dichte_median": 0.0288,
+  "dichte_p10": 0.0201,
+  "dichte_p90": 0.0355,
+  "texel_ueber_hoehe": 84.3,
+  "bedeckt": 75909,
+  "farben": [
+   {
+    "zeile": 0,
+    "texel": 32357,
+    "indizes": 218,
+    "farben15": 218,
+    "fuer_90_prozent": 33
+   },
+   {
+    "zeile": 1,
+    "texel": 21804,
+    "indizes": 222,
+    "farben15": 222,
+    "fuer_90_prozent": 70
+   },
+   {
+    "zeile": 2,
+    "texel": 21748,
+    "indizes": 205,
+    "farben15": 205,
+    "fuer_90_prozent": 25
+   }
+  ],
+  "stil": {
+   "nachbar_gleich": 0.347,
+   "nachbar_klein_1_6": 0.368,
+   "nachbar_hart_ab_20": 0.047,
+   "mittel_Y": 34.5
+  },
+  "je_mesh": [
+   {
+    "mesh": 0,
+    "flaechen": 132,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0299
+   },
+   {
+    "mesh": 1,
+    "flaechen": 90,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0265
+   },
+   {
+    "mesh": 2,
+    "flaechen": 60,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0241
+   },
+   {
+    "mesh": 3,
+    "flaechen": 70,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0267
+   },
+   {
+    "mesh": 4,
+    "flaechen": 70,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0277
+   },
+   {
+    "mesh": 5,
+    "flaechen": 70,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0295
+   },
+   {
+    "mesh": 6,
+    "flaechen": 70,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0279
+   },
+   {
+    "mesh": 7,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0262
+   },
+   {
+    "mesh": 8,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 9,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0325
+   },
+   {
+    "mesh": 10,
+    "flaechen": 120,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0251
+   },
+   {
+    "mesh": 11,
+    "flaechen": 64,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0306
+   },
+   {
+    "mesh": 12,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0323
+   },
+   {
+    "mesh": 13,
+    "flaechen": 88,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0322
+   },
+   {
+    "mesh": 14,
+    "flaechen": 20,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.032
+   },
+   {
+    "mesh": 15,
+    "flaechen": 28,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.032
+   },
+   {
+    "mesh": 16,
+    "flaechen": 64,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0306
+   },
+   {
+    "mesh": 17,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0323
+   },
+   {
+    "mesh": 18,
+    "flaechen": 80,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0322
+   },
+   {
+    "mesh": 19,
+    "flaechen": 20,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0327
+   },
+   {
+    "mesh": 20,
+    "flaechen": 20,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0317
+   },
+   {
+    "mesh": 21,
+    "flaechen": 24,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0252
+   },
+   {
+    "mesh": 22,
+    "flaechen": 136,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0317
+   },
+   {
+    "mesh": 23,
+    "flaechen": 58,
+    "zeilen": [
+     0
+    ],
+    "dichte": 0.0308
+   },
+   {
+    "mesh": 24,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0328
+   },
+   {
+    "mesh": 25,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0291
+   },
+   {
+    "mesh": 26,
+    "flaechen": 64,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0328
+   },
+   {
+    "mesh": 27,
+    "flaechen": 100,
+    "zeilen": [
+     2
+    ],
+    "dichte": 0.0291
+   },
+   {
+    "mesh": 28,
+    "flaechen": 20,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.032
+   },
+   {
+    "mesh": 29,
+    "flaechen": 20,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0317
+   },
+   {
+    "mesh": 30,
+    "flaechen": 20,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.0337
+   },
+   {
+    "mesh": 31,
+    "flaechen": 20,
+    "zeilen": [
+     1
+    ],
+    "dichte": 0.033
+   }
+  ]
+ }
+]

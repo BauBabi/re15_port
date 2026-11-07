@@ -1,0 +1,1912 @@
+{
+ "stand": "2026-10-31",
+ "einheiten": {
+  "schirm": "Spielfarbe auf dem Bildschirm, gammakodiert 0..255, nach Textur mal Licht",
+  "oberflaeche": "Texturfarbe 0..255, Schaetzung",
+  "video": "Rohwert im Standbild",
+  "fehler": "etwa 1 Sigma je Kanal"
+ },
+ "lesart": "schirm = Oberflaeche * Licht. oberflaeche_rgb ist der Wert fuer die Textur. video_* nur zum Vergleich, nie als Farbe verwenden.",
+ "licht": {
+  "bild2": {
+   "faktor": [
+    0.385,
+    0.342,
+    0.307
+   ],
+   "quelle": "Mantel der Frau, Textur (201,209,213), zurueckgerechnet [77, 72, 65]",
+   "disc": "ROOM5090.RDT @0x55c, alle 16 Schnitte: Ambient (83,78,78), alle Lichtfarben 0",
+   "ambient_durch_256": [
+    0.324,
+    0.305,
+    0.305
+   ],
+   "art": "flach, kein Seitenlicht messbar",
+   "sicherheit": "wahrscheinlich"
+  },
+  "bild1": {
+   "faktor_figur": [
+    0.487,
+    0.432,
+    0.374
+   ],
+   "faktor_leon_gesicht": [
+    0.339,
+    0.338,
+    0.349
+   ],
+   "faktor_leon_hellste": [
+    0.702,
+    0.633,
+    0.493
+   ],
+   "quelle": "Rotbraun und Baender Bild 1 gegen Bild 2; Leon Textur PL00.TIM",
+   "disc": "ROOM5080.RDT @0x208: Ambient (74,73,73), L0 (238,238,238) Reichweite 4800, L1 (218,218,148) Reichweite 3500",
+   "art": "Punktlichter, Bereich 0.34 bis 0.7, Blau im Licht schwaecher",
+   "sicherheit": "wahrscheinlich"
+  }
+ },
+ "materialien": [
+  {
+   "name": "grundhaut_dunkel",
+   "titel": "Dunkle Grundhaut",
+   "oberflaeche_rgb": [
+    44,
+    18,
+    27
+   ],
+   "oberflaeche_fehler": [
+    22,
+    19,
+    22
+   ],
+   "oberflaeche_von": [
+    22,
+    0,
+    4
+   ],
+   "oberflaeche_bis": [
+    67,
+    37,
+    49
+   ],
+   "art": "Oberflaeche",
+   "sicherheit": "dunkel: sicher, Farbton: wahrscheinlich",
+   "quelle_oberflaeche": "Mittel aus Bild 1 und Bild 2; am Schwarzende Bias +8/+4/+5 aus Leon-Weste und Hose eingerechnet",
+   "schirm_bild1_rgb": [
+    18,
+    11,
+    13
+   ],
+   "schirm_bild1_fehler": [
+    9,
+    8,
+    8
+   ],
+   "schirm_bild2_rgb": [
+    20,
+    4,
+    5
+   ],
+   "schirm_bild2_fehler": [
+    9,
+    6,
+    6
+   ],
+   "video_bild1_rgb": [
+    31,
+    23,
+    42
+   ],
+   "video_bild2_rgb": [
+    46,
+    8,
+    17
+   ],
+   "hinweis": "Der Rotanteil in Bild 2 ist auf 20 gedeckelt: dunkle Teile der Frau zeigen dort bis +21 Rot-Einstreuung.",
+   "grenze": "Alles bis etwa (70,40,45) waere im Video fast ebenso schwarz. Die Oberkante ist belegt, die Unterkante nicht."
+  },
+  {
+   "name": "rotbraun_mittelton",
+   "titel": "Rotbraune Mitteltoene",
+   "oberflaeche_rgb": [
+    103,
+    63,
+    84
+   ],
+   "oberflaeche_fehler": [
+    21,
+    17,
+    17
+   ],
+   "oberflaeche_von": [
+    82,
+    46,
+    68
+   ],
+   "oberflaeche_bis": [
+    124,
+    80,
+    101
+   ],
+   "art": "Oberflaeche",
+   "sicherheit": "wahrscheinlich",
+   "quelle_oberflaeche": "Bild 2, Mantel-Bezug",
+   "schirm_bild1_rgb": [
+    44,
+    26,
+    30
+   ],
+   "schirm_bild1_fehler": [
+    10,
+    9,
+    9
+   ],
+   "schirm_bild2_rgb": [
+    40,
+    22,
+    26
+   ],
+   "schirm_bild2_fehler": [
+    7,
+    5,
+    4
+   ],
+   "video_bild1_rgb": [
+    84,
+    47,
+    87
+   ],
+   "video_bild2_rgb": [
+    76,
+    19,
+    45
+   ],
+   "hinweis": "Im Video violett. R/G 1.7-1.9 in beiden Bildern.",
+   "merkmale": [
+    "A35",
+    "A25",
+    "A26",
+    "B04",
+    "B02",
+    "B15"
+   ]
+  },
+  {
+   "name": "rosa_stelle",
+   "titel": "Rosa Stelle A01",
+   "oberflaeche_rgb": [
+    181,
+    137,
+    150
+   ],
+   "oberflaeche_fehler": [
+    25,
+    20,
+    22
+   ],
+   "oberflaeche_von": [
+    155,
+    117,
+    128
+   ],
+   "oberflaeche_bis": [
+    206,
+    158,
+    172
+   ],
+   "art": "Oberflaeche wahrscheinlich, Lichtanteil offen",
+   "sicherheit": "Farbton: wahrscheinlich, Helligkeit: offen",
+   "quelle_oberflaeche": "Bild 1, Lichtfaktor der Figur aus Rotbraun und Baendern",
+   "schirm_bild1_rgb": [
+    88,
+    59,
+    56
+   ],
+   "schirm_bild1_fehler": [
+    9,
+    7,
+    6
+   ],
+   "video_bild1_rgb": [
+    203,
+    144,
+    183
+   ],
+   "hinweis": "Fleischton, nah an Leons Gesicht (R/G 1.6), B/G 0.95. Kein Pendant in Bild 2. Waere es Rotbraun im Licht, braeuchte es F (0.84,0.88,0.65); Leons hellste Stelle hat (0.70,0.63,0.49).",
+   "merkmale": [
+    "A01"
+   ]
+  },
+  {
+   "name": "helle_baender",
+   "titel": "Helle Baender",
+   "oberflaeche_rgb": [
+    126,
+    145,
+    156
+   ],
+   "oberflaeche_fehler": [
+    23,
+    28,
+    32
+   ],
+   "oberflaeche_von": [
+    102,
+    117,
+    124
+   ],
+   "oberflaeche_bis": [
+    149,
+    173,
+    187
+   ],
+   "art": "Oberflaeche, in Bild 1 zusaetzlich mehr Licht",
+   "sicherheit": "wahrscheinlich",
+   "quelle_oberflaeche": "Bild 2, Mantel-Bezug; Werte mit Schmalheitskorrektur",
+   "schirm_bild1_rgb": [
+    69,
+    65,
+    62
+   ],
+   "schirm_bild1_fehler": [
+    7,
+    7,
+    7
+   ],
+   "schirm_bild2_rgb": [
+    48,
+    50,
+    48
+   ],
+   "schirm_bild2_fehler": [
+    8,
+    8,
+    8
+   ],
+   "video_bild1_rgb": [
+    152,
+    153,
+    189
+   ],
+   "video_bild2_rgb": [
+    97,
+    57,
+    84
+   ],
+   "hinweis": "Neutrales Hellgrau, leicht kuehl wie der Mantel. Im Video Lavendel. R/G 0.96-1.04.",
+   "merkmale": [
+    "A02",
+    "A04",
+    "A12",
+    "A14",
+    "B07",
+    "B08",
+    "B09"
+   ]
+  },
+  {
+   "name": "feine_linien",
+   "titel": "Feine helle Linien",
+   "oberflaeche_rgb": [
+    114,
+    123,
+    143
+   ],
+   "oberflaeche_fehler": [
+    30,
+    28,
+    35
+   ],
+   "oberflaeche_von": [
+    84,
+    94,
+    108
+   ],
+   "oberflaeche_bis": [
+    144,
+    151,
+    178
+   ],
+   "art": "Oberflaeche",
+   "sicherheit": "wahrscheinlich",
+   "quelle_oberflaeche": "Bild 2, Mantel-Bezug; Breiten 4-7 px, Schmalheitskorrektur",
+   "schirm_bild1_rgb": [
+    57,
+    55,
+    56
+   ],
+   "schirm_bild1_fehler": [
+    11,
+    11,
+    9
+   ],
+   "schirm_bild2_rgb": [
+    44,
+    42,
+    44
+   ],
+   "schirm_bild2_fehler": [
+    11,
+    9,
+    10
+   ],
+   "video_bild1_rgb": [
+    108,
+    116,
+    162
+   ],
+   "video_bild2_rgb": [
+    78,
+    42,
+    70
+   ],
+   "merkmale": [
+    "A07",
+    "A09",
+    "A11",
+    "A20",
+    "A22",
+    "A23",
+    "B01",
+    "B06",
+    "B14"
+   ]
+  },
+  {
+   "name": "untere_streifen",
+   "titel": "Untere Streifen",
+   "oberflaeche_rgb": [
+    225,
+    209,
+    229
+   ],
+   "oberflaeche_fehler": [
+    31,
+    38,
+    40
+   ],
+   "oberflaeche_von": [
+    194,
+    171,
+    189
+   ],
+   "oberflaeche_bis": [
+    255,
+    248,
+    255
+   ],
+   "art": "Oberflaeche, Feuerschein nicht ganz abgezogen",
+   "sicherheit": "Obergrenze",
+   "quelle_oberflaeche": "Bild 2, Mantel-Bezug",
+   "schirm_bild2_rgb": [
+    87,
+    72,
+    70
+   ],
+   "schirm_bild2_fehler": [
+    8,
+    11,
+    10
+   ],
+   "video_bild2_rgb": [
+    201,
+    116,
+    150
+   ],
+   "hinweis": "Neben den Flammen. Deren Licht ist im Video geclippt, also zu klein abgezogen. Reine Obergrenze.",
+   "merkmale": [
+    "B17",
+    "B18",
+    "B19",
+    "B20"
+   ]
+  },
+  {
+   "name": "weisskerne",
+   "titel": "Weisse Kerne",
+   "oberflaeche_rgb": [
+    238,
+    255,
+    255
+   ],
+   "oberflaeche_fehler": [
+    31,
+    36,
+    37
+   ],
+   "oberflaeche_von": [
+    206,
+    245,
+    247
+   ],
+   "oberflaeche_bis": [
+    255,
+    255,
+    255
+   ],
+   "art": "keine Farbinformation",
+   "sicherheit": "offen",
+   "quelle_oberflaeche": "Bild 2; geclippte Kanaele, Untergrenze",
+   "schirm_bild1_rgb": [
+    74,
+    71,
+    69
+   ],
+   "schirm_bild1_fehler": [
+    9,
+    8,
+    7
+   ],
+   "schirm_bild2_rgb": [
+    91,
+    96,
+    87
+   ],
+   "schirm_bild2_fehler": [
+    8,
+    8,
+    7
+   ],
+   "video_bild1_rgb": [
+    201,
+    204,
+    219
+   ],
+   "video_bild2_rgb": [
+    206,
+    173,
+    186
+   ],
+   "hinweis": "Weiss im Video heisst nicht weiss im Spiel: rote Lampe (161,12,8) wird (208,198,199). A03 und B13 sagen nur: mindestens so hell.",
+   "merkmale": [
+    "A03",
+    "B13"
+   ]
+  }
+ ],
+ "fremdfarben": [
+  {
+   "name": "boden_cyan",
+   "merkmale": [
+    "A13",
+    "A16",
+    "A17",
+    "A19",
+    "A24",
+    "A27",
+    "A34"
+   ],
+   "urteil": "Boden blutet ein, keine Figurfarbe",
+   "schirm_rgb": [
+    37,
+    55,
+    43
+   ],
+   "sicherheit": "wahrscheinlich"
+  },
+  {
+   "name": "violett_lavendel_blau",
+   "urteil": "Keine Figurfarbe. Neutrales Grau e=60 wird im Video (116,134,186) in Bild 1 und (117,84,119) in Bild 2.",
+   "sicherheit": "sicher"
+  },
+  {
+   "name": "rosa_band_unten_A29",
+   "urteil": "Liegt am offenen rosa-weissen Gegenstand, nicht als Haut gewertet",
+   "schirm_rgb": [
+    84,
+    51,
+    56
+   ],
+   "sicherheit": "offen"
+  }
+ ],
+ "merkmale": [
+  {
+   "id": "A35",
+   "name": "violettfleck_340_222",
+   "V": [
+    84.0999984741211,
+    46.599998474121094,
+    87.0
+   ],
+   "e": [
+    40.6,
+    23.3,
+    27.3
+   ],
+   "e_lo": [
+    34.9,
+    18.1,
+    22.7
+   ],
+   "e_hi": [
+    46.2,
+    28.4,
+    32.4
+   ],
+   "schmal_faktor": 1.086,
+   "e_kern": [
+    44.1,
+    25.3,
+    29.6
+   ],
+   "rg": 1.73,
+   "bg": 1.18,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "rotbraun_mittelton"
+  },
+  {
+   "id": "A25",
+   "name": "streifen_265_390",
+   "V": [
+    58.900001525878906,
+    46.599998474121094,
+    77.0
+   ],
+   "e": [
+    31.4,
+    24.0,
+    23.7
+   ],
+   "e_lo": [
+    26.5,
+    19.3,
+    19.1
+   ],
+   "e_hi": [
+    36.3,
+    29.0,
+    28.1
+   ],
+   "schmal_faktor": 1.09,
+   "e_kern": [
+    34.2,
+    26.1,
+    25.8
+   ],
+   "rg": 1.3,
+   "bg": 0.98,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "rotbraun_mittelton"
+  },
+  {
+   "id": "A26",
+   "name": "punkt_281_410",
+   "V": [
+    112.0,
+    88.69999694824219,
+    136.0
+   ],
+   "e": [
+    52.5,
+    41.0,
+    41.9
+   ],
+   "e_lo": [
+    46.9,
+    35.3,
+    36.3
+   ],
+   "e_hi": [
+    59.1,
+    46.1,
+    47.3
+   ],
+   "schmal_faktor": 1.119,
+   "e_kern": [
+    58.8,
+    45.9,
+    46.9
+   ],
+   "rg": 1.3,
+   "bg": 1.02,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "rotbraun_mittelton"
+  },
+  {
+   "id": "B04",
+   "name": "innenbogen_rot_308_188",
+   "V": [
+    97.30000305175781,
+    18.899999618530273,
+    45.29999923706055
+   ],
+   "e": [
+    46.4,
+    21.6,
+    27.3
+   ],
+   "e_lo": [
+    41.4,
+    16.3,
+    22.9
+   ],
+   "e_hi": [
+    51.4,
+    26.5,
+    31.4
+   ],
+   "schmal_faktor": 1.002,
+   "e_kern": [
+    46.5,
+    21.7,
+    27.4
+   ],
+   "rg": 2.14,
+   "bg": 1.25,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "rotbraun_mittelton"
+  },
+  {
+   "id": "B02",
+   "name": "bogen_links_unten",
+   "V": [
+    75.9000015258789,
+    19.100000381469727,
+    41.0
+   ],
+   "e": [
+    39.0,
+    22.1,
+    25.3
+   ],
+   "e_lo": [
+    34.4,
+    16.3,
+    20.7
+   ],
+   "e_hi": [
+    44.3,
+    27.1,
+    29.4
+   ],
+   "schmal_faktor": 1.016,
+   "e_kern": [
+    39.6,
+    22.5,
+    25.7
+   ],
+   "rg": 1.75,
+   "bg": 1.15,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "rotbraun_mittelton"
+  },
+  {
+   "id": "B15",
+   "name": "band_rechts_390_240",
+   "V": [
+    74.4000015258789,
+    28.200000762939453,
+    52.29999923706055
+   ],
+   "e": [
+    32.4,
+    21.0,
+    25.7
+   ],
+   "e_lo": [
+    27.2,
+    15.4,
+    21.1
+   ],
+   "e_hi": [
+    37.7,
+    26.7,
+    30.6
+   ],
+   "schmal_faktor": 1.007,
+   "e_kern": [
+    32.7,
+    21.1,
+    25.9
+   ],
+   "rg": 1.52,
+   "bg": 1.22,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "rotbraun_mittelton"
+  },
+  {
+   "id": "A01",
+   "name": "pink_linse",
+   "V": [
+    202.89999389648438,
+    144.10000610351562,
+    182.8000030517578
+   ],
+   "e": [
+    88.0,
+    59.2,
+    56.2
+   ],
+   "e_lo": [
+    79.0,
+    52.7,
+    49.8
+   ],
+   "e_hi": [
+    96.1,
+    65.8,
+    61.8
+   ],
+   "schmal_faktor": 1.001,
+   "e_kern": [
+    88.1,
+    59.3,
+    56.2
+   ],
+   "rg": 1.49,
+   "bg": 0.95,
+   "clip": [
+    0.07,
+    0.0,
+    0.0
+   ],
+   "material": "rosa_flaeche"
+  },
+  {
+   "id": "A29",
+   "name": "pinkband_272_427",
+   "V": [
+    168.3000030517578,
+    101.19999694824219,
+    160.0
+   ],
+   "e": [
+    73.3,
+    44.9,
+    48.9
+   ],
+   "e_lo": [
+    66.0,
+    39.6,
+    43.5
+   ],
+   "e_hi": [
+    80.9,
+    50.4,
+    55.5
+   ],
+   "schmal_faktor": 1.143,
+   "e_kern": [
+    83.7,
+    51.3,
+    55.8
+   ],
+   "rg": 1.63,
+   "bg": 1.11,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "rosa_band_unten"
+  },
+  {
+   "id": "A02",
+   "name": "querband_oben",
+   "V": [
+    155.89999389648438,
+    137.1999969482422,
+    191.3000030517578
+   ],
+   "e": [
+    68.0,
+    57.6,
+    60.4
+   ],
+   "e_lo": [
+    61.3,
+    51.4,
+    52.8
+   ],
+   "e_hi": [
+    75.4,
+    64.7,
+    67.4
+   ],
+   "schmal_faktor": 1.02,
+   "e_kern": [
+    69.4,
+    58.8,
+    61.6
+   ],
+   "rg": 1.18,
+   "bg": 1.04,
+   "clip": [
+    0.0,
+    0.0,
+    0.01
+   ],
+   "material": "helle_baender"
+  },
+  {
+   "id": "A04",
+   "name": "lavendelband_unter_weiss",
+   "V": [
+    147.60000610351562,
+    158.6999969482422,
+    202.10000610351562
+   ],
+   "e": [
+    64.3,
+    63.9,
+    64.2
+   ],
+   "e_lo": [
+    58.4,
+    57.1,
+    57.3
+   ],
+   "e_hi": [
+    71.4,
+    70.9,
+    71.2
+   ],
+   "schmal_faktor": 1.034,
+   "e_kern": [
+    66.5,
+    66.1,
+    66.4
+   ],
+   "rg": 1.0,
+   "bg": 1.01,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "helle_baender"
+  },
+  {
+   "id": "A12",
+   "name": "dreieck_kern",
+   "V": [
+    156.0,
+    162.5,
+    187.0
+   ],
+   "e": [
+    68.2,
+    66.4,
+    58.8
+   ],
+   "e_lo": [
+    60.9,
+    60.6,
+    52.6
+   ],
+   "e_hi": [
+    76.0,
+    73.3,
+    66.0
+   ],
+   "schmal_faktor": 1.056,
+   "e_kern": [
+    72.0,
+    70.1,
+    62.1
+   ],
+   "rg": 1.02,
+   "bg": 0.88,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "helle_baender"
+  },
+  {
+   "id": "A14",
+   "name": "querband_unten_333_354",
+   "V": [
+    142.0,
+    146.89999389648438,
+    179.6999969482422
+   ],
+   "e": [
+    62.9,
+    60.0,
+    55.7
+   ],
+   "e_lo": [
+    56.1,
+    53.5,
+    49.3
+   ],
+   "e_hi": [
+    70.0,
+    67.2,
+    61.6
+   ],
+   "schmal_faktor": 1.078,
+   "e_kern": [
+    67.8,
+    64.7,
+    60.1
+   ],
+   "rg": 1.04,
+   "bg": 0.92,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "helle_baender"
+  },
+  {
+   "id": "B07",
+   "name": "randband_rechts_410_218",
+   "V": [
+    139.5,
+    92.4000015258789,
+    119.69999694824219
+   ],
+   "e": [
+    58.5,
+    58.2,
+    56.7
+   ],
+   "e_lo": [
+    53.4,
+    53.1,
+    51.7
+   ],
+   "e_hi": [
+    64.1,
+    64.0,
+    62.2
+   ],
+   "schmal_faktor": 1.094,
+   "e_kern": [
+    64.1,
+    63.7,
+    62.1
+   ],
+   "rg": 1.0,
+   "bg": 0.98,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "helle_baender"
+  },
+  {
+   "id": "B08",
+   "name": "haken_oben_230_220",
+   "V": [
+    88.9000015258789,
+    57.29999923706055,
+    83.5999984741211
+   ],
+   "e": [
+    43.3,
+    45.6,
+    43.9
+   ],
+   "e_lo": [
+    38.4,
+    40.8,
+    39.1
+   ],
+   "e_hi": [
+    48.3,
+    50.0,
+    48.9
+   ],
+   "schmal_faktor": 1.09,
+   "e_kern": [
+    47.2,
+    49.7,
+    47.8
+   ],
+   "rg": 0.95,
+   "bg": 0.97,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "helle_baender"
+  },
+  {
+   "id": "B09",
+   "name": "haken_rechts_236_240",
+   "V": [
+    97.0,
+    50.20000076293945,
+    74.5
+   ],
+   "e": [
+    46.0,
+    41.6,
+    39.9
+   ],
+   "e_lo": [
+    41.6,
+    37.0,
+    35.6
+   ],
+   "e_hi": [
+    51.0,
+    46.2,
+    44.7
+   ],
+   "schmal_faktor": 1.05,
+   "e_kern": [
+    48.4,
+    43.7,
+    41.9
+   ],
+   "rg": 1.11,
+   "bg": 0.96,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "helle_baender"
+  },
+  {
+   "id": "A03",
+   "name": "weissfleck",
+   "V": [
+    200.6999969482422,
+    203.6999969482422,
+    219.1999969482422
+   ],
+   "e": [
+    73.9,
+    70.8,
+    68.6
+   ],
+   "e_lo": [
+    65.2,
+    62.8,
+    61.0
+   ],
+   "e_hi": [
+    82.5,
+    79.5,
+    75.8
+   ],
+   "schmal_faktor": 1.002,
+   "e_kern": [
+    74.0,
+    70.9,
+    68.7
+   ],
+   "rg": 1.04,
+   "bg": 0.96,
+   "clip": [
+    0.04,
+    0.07,
+    0.23
+   ],
+   "material": "weisskern_baender"
+  },
+  {
+   "id": "B13",
+   "name": "glanzpunkt_366_303",
+   "V": [
+    206.39999389648438,
+    173.39999389648438,
+    186.3000030517578
+   ],
+   "e": [
+    85.7,
+    90.2,
+    81.6
+   ],
+   "e_lo": [
+    78.5,
+    83.1,
+    74.5
+   ],
+   "e_hi": [
+    94.1,
+    98.2,
+    88.7
+   ],
+   "schmal_faktor": 1.068,
+   "e_kern": [
+    91.5,
+    96.3,
+    87.1
+   ],
+   "rg": 0.94,
+   "bg": 0.9,
+   "clip": [
+    0.09,
+    0.0,
+    0.0
+   ],
+   "material": "weisskern_baender"
+  },
+  {
+   "id": "B17",
+   "name": "unterstreifen_spitze_332_323",
+   "V": [
+    196.60000610351562,
+    100.19999694824219,
+    140.10000610351562
+   ],
+   "e": [
+    81.6,
+    61.7,
+    65.2
+   ],
+   "e_lo": [
+    74.6,
+    55.9,
+    59.9
+   ],
+   "e_hi": [
+    87.8,
+    67.4,
+    71.2
+   ],
+   "schmal_faktor": 1.016,
+   "e_kern": [
+    82.9,
+    62.7,
+    66.3
+   ],
+   "rg": 1.31,
+   "bg": 1.06,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "untere_streifen"
+  },
+  {
+   "id": "B18",
+   "name": "unterstreifen_325_335",
+   "V": [
+    205.3000030517578,
+    125.80000305175781,
+    159.60000610351562
+   ],
+   "e": [
+    85.7,
+    71.8,
+    72.0
+   ],
+   "e_lo": [
+    79.6,
+    66.2,
+    65.6
+   ],
+   "e_hi": [
+    92.3,
+    77.6,
+    77.7
+   ],
+   "schmal_faktor": 1.099,
+   "e_kern": [
+    94.2,
+    78.9,
+    79.2
+   ],
+   "rg": 1.19,
+   "bg": 1.0,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "untere_streifen"
+  },
+  {
+   "id": "B19",
+   "name": "unterstreifen_308_350",
+   "V": [
+    194.10000610351562,
+    106.4000015258789,
+    115.0
+   ],
+   "e": [
+    79.2,
+    63.9,
+    54.0
+   ],
+   "e_lo": [
+    73.5,
+    58.4,
+    49.0
+   ],
+   "e_hi": [
+    85.4,
+    69.3,
+    59.8
+   ],
+   "schmal_faktor": 1.01,
+   "e_kern": [
+    80.0,
+    64.6,
+    54.5
+   ],
+   "rg": 1.24,
+   "bg": 0.85,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "untere_streifen"
+  },
+  {
+   "id": "B20",
+   "name": "unterstreifen_hell_293_354",
+   "V": [
+    212.6999969482422,
+    162.10000610351562,
+    169.6999969482422
+   ],
+   "e": [
+    89.9,
+    84.8,
+    73.6
+   ],
+   "e_lo": [
+    83.6,
+    78.4,
+    67.9
+   ],
+   "e_hi": [
+    96.4,
+    91.5,
+    79.9
+   ],
+   "schmal_faktor": 1.006,
+   "e_kern": [
+    90.5,
+    85.4,
+    74.0
+   ],
+   "rg": 1.06,
+   "bg": 0.88,
+   "clip": [
+    0.18,
+    0.0,
+    0.0
+   ],
+   "material": "untere_streifen"
+  },
+  {
+   "id": "A07",
+   "name": "streifen_272_282",
+   "V": [
+    106.5999984741211,
+    94.69999694824219,
+    158.39999389648438
+   ],
+   "e": [
+    51.3,
+    44.4,
+    49.6
+   ],
+   "e_lo": [
+    44.8,
+    39.5,
+    43.3
+   ],
+   "e_hi": [
+    58.1,
+    50.1,
+    56.0
+   ],
+   "schmal_faktor": 1.094,
+   "e_kern": [
+    56.1,
+    48.6,
+    54.2
+   ],
+   "rg": 1.16,
+   "bg": 1.12,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "A09",
+   "name": "randoval_241_290",
+   "V": [
+    158.60000610351562,
+    156.60000610351562,
+    189.89999389648438
+   ],
+   "e": [
+    69.2,
+    64.4,
+    60.3
+   ],
+   "e_lo": [
+    62.5,
+    57.7,
+    52.0
+   ],
+   "e_hi": [
+    77.0,
+    71.6,
+    67.1
+   ],
+   "schmal_faktor": 1.071,
+   "e_kern": [
+    74.1,
+    69.0,
+    64.5
+   ],
+   "rg": 1.07,
+   "bg": 0.92,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "A11",
+   "name": "blau_rueckenrand",
+   "V": [
+    109.5,
+    119.0999984741211,
+    160.89999389648438
+   ],
+   "e": [
+    50.4,
+    50.8,
+    50.4
+   ],
+   "e_lo": [
+    43.9,
+    45.1,
+    45.0
+   ],
+   "e_hi": [
+    56.1,
+    56.9,
+    55.9
+   ],
+   "schmal_faktor": 1.136,
+   "e_kern": [
+    57.2,
+    57.7,
+    57.2
+   ],
+   "rg": 0.98,
+   "bg": 0.98,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "A20",
+   "name": "bogen_oben_240_346",
+   "V": [
+    93.4000015258789,
+    113.0999984741211,
+    162.10000610351562
+   ],
+   "e": [
+    45.1,
+    49.3,
+    49.7
+   ],
+   "e_lo": [
+    39.7,
+    44.3,
+    44.2
+   ],
+   "e_hi": [
+    50.5,
+    55.1,
+    55.7
+   ],
+   "schmal_faktor": 1.048,
+   "e_kern": [
+    47.3,
+    51.7,
+    52.1
+   ],
+   "rg": 0.91,
+   "bg": 1.01,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "A22",
+   "name": "streifen_252_370",
+   "V": [
+    117.80000305175781,
+    136.0,
+    185.39999389648438
+   ],
+   "e": [
+    54.3,
+    56.7,
+    57.0
+   ],
+   "e_lo": [
+    47.0,
+    49.9,
+    51.1
+   ],
+   "e_hi": [
+    61.5,
+    63.3,
+    64.2
+   ],
+   "schmal_faktor": 1.163,
+   "e_kern": [
+    63.2,
+    66.0,
+    66.3
+   ],
+   "rg": 0.96,
+   "bg": 1.01,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "A23",
+   "name": "band_242_386",
+   "V": [
+    89.80000305175781,
+    107.19999694824219,
+    150.3000030517578
+   ],
+   "e": [
+    43.1,
+    47.1,
+    45.7
+   ],
+   "e_lo": [
+    37.6,
+    41.0,
+    39.7
+   ],
+   "e_hi": [
+    49.2,
+    53.3,
+    51.6
+   ],
+   "schmal_faktor": 1.014,
+   "e_kern": [
+    43.7,
+    47.7,
+    46.3
+   ],
+   "rg": 0.92,
+   "bg": 0.97,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "B01",
+   "name": "bogen_links_oben",
+   "V": [
+    130.1999969482422,
+    53.599998474121094,
+    96.5999984741211
+   ],
+   "e": [
+    58.3,
+    44.1,
+    50.0
+   ],
+   "e_lo": [
+    53.7,
+    39.1,
+    45.1
+   ],
+   "e_hi": [
+    63.6,
+    49.2,
+    54.8
+   ],
+   "schmal_faktor": 1.016,
+   "e_kern": [
+    59.2,
+    44.8,
+    50.7
+   ],
+   "rg": 1.34,
+   "bg": 1.13,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "B06",
+   "name": "bogen_rechts_375_205",
+   "V": [
+    77.5,
+    41.79999923706055,
+    69.5
+   ],
+   "e": [
+    37.2,
+    35.7,
+    37.3
+   ],
+   "e_lo": [
+    31.4,
+    31.1,
+    33.1
+   ],
+   "e_hi": [
+    42.2,
+    41.1,
+    42.1
+   ],
+   "schmal_faktor": 1.179,
+   "e_kern": [
+    43.9,
+    42.1,
+    44.0
+   ],
+   "rg": 1.02,
+   "bg": 1.04,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "B14",
+   "name": "strang_375_275",
+   "V": [
+    67.30000305175781,
+    28.299999237060547,
+    46.400001525878906
+   ],
+   "e": [
+    29.5,
+    22.7,
+    23.6
+   ],
+   "e_lo": [
+    24.0,
+    16.6,
+    18.9
+   ],
+   "e_hi": [
+    35.0,
+    28.3,
+    28.2
+   ],
+   "schmal_faktor": 1.071,
+   "e_kern": [
+    31.6,
+    24.3,
+    25.2
+   ],
+   "rg": 1.31,
+   "bg": 1.06,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "feine_linien"
+  },
+  {
+   "id": "A13",
+   "name": "blau_tuerkis_347_326",
+   "V": [
+    69.30000305175781,
+    142.0,
+    179.89999389648438
+   ],
+   "e": [
+    33.5,
+    59.0,
+    55.1
+   ],
+   "e_lo": [
+    25.2,
+    51.1,
+    48.4
+   ],
+   "e_hi": [
+    41.4,
+    65.4,
+    61.8
+   ],
+   "schmal_faktor": 1.119,
+   "e_kern": [
+    37.4,
+    66.0,
+    61.6
+   ],
+   "rg": 0.57,
+   "bg": 0.93,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "boden_cyan_fremd"
+  },
+  {
+   "id": "A16",
+   "name": "band_tuerkis_312_385",
+   "V": [
+    41.099998474121094,
+    64.69999694824219,
+    92.0
+   ],
+   "e": [
+    19.5,
+    31.3,
+    28.4
+   ],
+   "e_lo": [
+    12.8,
+    26.2,
+    23.4
+   ],
+   "e_hi": [
+    25.9,
+    36.3,
+    33.4
+   ],
+   "schmal_faktor": 1.05,
+   "e_kern": [
+    20.5,
+    32.9,
+    29.9
+   ],
+   "rg": 0.62,
+   "bg": 0.91,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "boden_cyan_fremd"
+  },
+  {
+   "id": "A17",
+   "name": "blaupunkt_304_371",
+   "V": [
+    54.20000076293945,
+    80.19999694824219,
+    124.80000305175781
+   ],
+   "e": [
+    27.1,
+    37.6,
+    37.8
+   ],
+   "e_lo": [
+    21.9,
+    32.1,
+    33.0
+   ],
+   "e_hi": [
+    32.7,
+    42.8,
+    43.3
+   ],
+   "schmal_faktor": 1.136,
+   "e_kern": [
+    30.8,
+    42.8,
+    43.0
+   ],
+   "rg": 0.72,
+   "bg": 1.02,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "boden_cyan_fremd"
+  },
+  {
+   "id": "A19",
+   "name": "knoten_286_390",
+   "V": [
+    73.0,
+    106.80000305175781,
+    115.0999984741211
+   ],
+   "e": [
+    38.5,
+    48.1,
+    36.4
+   ],
+   "e_lo": [
+    32.7,
+    42.4,
+    31.2
+   ],
+   "e_hi": [
+    43.7,
+    54.1,
+    42.4
+   ],
+   "schmal_faktor": 1.143,
+   "e_kern": [
+    43.9,
+    54.9,
+    41.6
+   ],
+   "rg": 0.8,
+   "bg": 0.75,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "boden_cyan_fremd"
+  },
+  {
+   "id": "A24",
+   "name": "tuerkisbalken_251_402",
+   "V": [
+    106.19999694824219,
+    144.89999389648438,
+    162.0
+   ],
+   "e": [
+    50.7,
+    61.0,
+    50.1
+   ],
+   "e_lo": [
+    44.4,
+    54.1,
+    43.9
+   ],
+   "e_hi": [
+    57.3,
+    67.5,
+    56.2
+   ],
+   "schmal_faktor": 1.113,
+   "e_kern": [
+    56.4,
+    67.9,
+    55.8
+   ],
+   "rg": 0.83,
+   "bg": 0.82,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "boden_cyan_fremd"
+  },
+  {
+   "id": "A27",
+   "name": "fleck_246_415",
+   "V": [
+    42.79999923706055,
+    60.900001525878906,
+    80.30000305175781
+   ],
+   "e": [
+    17.9,
+    30.1,
+    23.8
+   ],
+   "e_lo": [
+    10.4,
+    24.9,
+    19.4
+   ],
+   "e_hi": [
+    24.1,
+    34.6,
+    28.3
+   ],
+   "schmal_faktor": 1.094,
+   "e_kern": [
+    19.6,
+    32.9,
+    26.1
+   ],
+   "rg": 0.61,
+   "bg": 0.8,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "boden_cyan_fremd"
+  },
+  {
+   "id": "A34",
+   "name": "tuerkis_210_423",
+   "V": [
+    133.8000030517578,
+    169.5,
+    194.60000610351562
+   ],
+   "e": [
+    58.7,
+    66.8,
+    60.1
+   ],
+   "e_lo": [
+    51.4,
+    61.6,
+    53.7
+   ],
+   "e_hi": [
+    64.4,
+    74.1,
+    66.7
+   ],
+   "schmal_faktor": 1.03,
+   "e_kern": [
+    60.4,
+    68.8,
+    61.9
+   ],
+   "rg": 0.87,
+   "bg": 0.9,
+   "clip": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "material": "boden_cyan_fremd"
+  }
+ ]
+}

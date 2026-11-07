@@ -78,7 +78,7 @@ static uint8_t *s_form_emd = NULL;
 static int bank_form_laden(void)
 {
     size_t len = 0;
-    if (!s_form_emd) s_form_emd = slurp(RE15_ASSET_PSX_DIR "/../RE2/BAHNSTEIG_G4.EMD", &len);
+    if (!s_form_emd) s_form_emd = slurp(RE15_ASSET_PSX_DIR "/../RE2/BAHNSTEIG_FORM.EMD", &len);
     else return 0;
     if (!s_form_emd) return 0;
     re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
@@ -86,7 +86,7 @@ static int bank_form_laden(void)
     uint8_t typ = eb->type;
     memset(eb, 0, sizeof *eb); eb->type = typ;
     if (re2_emd_parse_bank(s_form_emd, len, eb) != 0) return 0;
-    eb->ok = 1; eb->re2_rig = 1; eb->buf = NULL;
+    eb->ok = 1; eb->re2_rig = 1; eb->buf = NULL; eb->bb_form = 1;
     return 1;
 }
 
@@ -165,8 +165,9 @@ static void test_bahnsteig(void)
     uint8_t *buf = raum_laden("STAGE5/ROOM5090.RDT", 0x5090u);
     CHECK(buf != NULL, "ROOM5090 nicht ladbar");
     if (!buf) return;
-    CHECK(re15_bf_emd_datei(0x30u) == NULL, "5090 vor der Mutation muss das Original-EM30 sein");
-    static int s_hook_rufe = 0;
+    /* Stufe 3: die Riesenform ist ab der Raumladung da (keine EM30-Runde, keine Mutation in 5090, E5/E6/E17). */
+    CHECK(re15_bf_emd_datei(0x30u) == NULL && re15_bf_bahnsteig_bank_faellig(0x30u) && !re15_bf_mutation_offen(),
+          "5090: Riesenform nicht ab der Raumladung");
     re15_bf_modell_hook(NULL);
     int bs = -1;
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
@@ -174,23 +175,9 @@ static void test_bahnsteig(void)
     CHECK(bs > 0 && g_actors[bs].type == 0x30u, "5090-Spawn nicht 0x30 (slot %d type 0x%02X)",
           bs, bs > 0 ? g_actors[bs].type : 0);
     if (bs <= 0) { free(buf); return; }
-    CHECK(bank_laden(0x30u, 0, NULL), "EM30-Original-Bank");
+    CHECK(bank_laden(0x30u, 0, NULL), "EM30-Opfer-Bank");
     re15_actor_t *b = &g_actors[bs];
     re15_game_flag_set(5, 0x1c, 0);
-    (void)s_hook_rufe;
-    /* 1. ORIGINAL -> BAHNSTEIG-FORM: toedlicher Treffer vor der Mutation fuehrt in die Mutation (sub 6, Clip 0x14) */
-    b->x = 1200; b->z = -23350; b->grid_id = 0x13;
-    b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
-    int m, mut_clip = 0;
-    for (m = 0; m < 600 && re15_bf_mutation_offen(); m++) {
-        re15_enemy_ai_run_all(0);
-        if (b->sub_state_1 == 6 && b->motion == 0x14) mut_clip = 1;
-    }
-    CHECK(mut_clip, "Mutations-Clip 0x14 nicht gespielt");
-    CHECK(!re15_bf_mutation_offen(), "Mutation endet nicht (%d Ticks)", m);
-    CHECK(b->hp == RE15_BIRKIN_HP_MUTATION && b->type == 0x30u, "nach Mutation hp %d type 0x%02X", b->hp, b->type);   /* 0x96 @0x80118094 x Faktor (GR NB3) */
-    CHECK(re15_bf_emd_datei(0x30u) == NULL && re15_bf_bahnsteig_bank_faellig(0x30u), "nach Mutation keine Bahnsteig-Form");
-    fprintf(stderr, "Bahnsteig: Mutation Original->Form nach %d Ticks\n", m);
     CHECK(bank_form_laden(), "Bank der Bahnsteig-Form");
     /* Kampfposition wie nach sub04 (Pos_set(1200,0,-23350) @0x12FE), Spieler an der Kampfmarke (300,-23400) */
     b->x = 1200; b->z = -23350; b->grid_id = 0x13;
@@ -199,7 +186,7 @@ static void test_bahnsteig(void)
     re15_enemy_ai_run_all(0);                            /* erster Formen-Tick: Ctor-Teil, eigene HP RE15_BB_FORM_HP */
     CHECK(b->hp == RE15_BB_FORM_HP, "Form kommt mit HP %d statt %d (G4-Ctor @0x8010067c, GR NB3)", b->hp, RE15_BB_FORM_HP);
     b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
-    int f, gefeuert = 0, versteckt = 0, zonen_an = 0;
+    int f, gefeuert = 0, versteckt = 0, zonen_an = 0, sturz = 0;
     int32_t x_min = b->x;
     g_scd.cut_auto_enabled = 1;                          /* ROOM5090 sub04 Cut_auto 01 @0x134C */
     for (f = 0; f < 900 && b->type == 0x30u; f++) {
@@ -209,9 +196,11 @@ static void test_bahnsteig(void)
             uint16_t pr = 0, pad = re15_bf_pad(0, &pr);
             if ((pad & 0x0800u) && (pad & 0x8000u)) gefeuert = 1;
         }
+        if (re15_bf_rueckstoss_phase() == 3 && b->motion == 12 && !b->no_draw) sturz = 1;
         if (b->no_draw) versteckt = 1;
         if (b->x < x_min) x_min = b->x;
     }
+    CHECK(sturz, "Stufe 3: kein Sturz-Clip 12 am Zugende");
     CHECK(zonen_an == 0, "M9: Kamerazonen in %d Szenen-Bildern an", zonen_an);
     CHECK(gefeuert, "Spieler zielt/feuert in der Rueckstoss-Szene nicht");
     CHECK(x_min < -5683, "Birkin verlaesst den Zug nicht nach Westen (min x %d)", x_min);
@@ -262,7 +251,17 @@ static void test_modellwahl(void)
     CHECK(re15_bf_emd_datei(0x29u) != NULL, "4081: kein roter Affe");
     g_current_room_id = 0x50A0u;
     CHECK(re15_bf_emd_datei(0x29u) == NULL, "50A0: Affe darf Auslieferung bleiben");
+    /* Stufe 3: Riesenform in 5080/5081 (Flucht) und 5090/5091 (Rueckstoss), nirgends sonst */
+    g_current_room_id = 0x5080u;
+    CHECK(re15_bf_bahnsteig_bank_faellig(0x30u) && re15_bf_flucht_raum() && !re15_bf_bahnsteig_aktiv(), "5080: keine Riesenform/Flucht");
+    g_current_room_id = 0x5081u;
+    CHECK(re15_bf_bahnsteig_bank_faellig(0x30u) && re15_bf_flucht_raum(), "5081: keine Riesenform/Flucht");
+    g_current_room_id = 0x5091u;
+    CHECK(re15_bf_bahnsteig_bank_faellig(0x30u) && !re15_bf_flucht_raum() && re15_bf_bahnsteig_aktiv(), "5091: keine Riesenform");
+    g_current_room_id = 0x50A0u;
+    CHECK(!re15_bf_bahnsteig_bank_faellig(0x30u), "50A0: Riesenform im Hangar");
     g_current_room_id = 0x3070u;
+    CHECK(!re15_bf_bahnsteig_bank_faellig(0x30u), "3070: Riesenform");
     CHECK(re15_bf_emd_datei(0x30u) == NULL, "3070: Birkin muss EM30 bleiben");
     CHECK(!re15_bf_bahnsteig_aktiv() && !re15_bf_hangar_aktiv(), "3070: Formen aktiv");
 }

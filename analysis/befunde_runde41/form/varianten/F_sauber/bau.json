@@ -1,0 +1,662 @@
+{
+"farbe": "C",
+"schwanz": "e9",
+"flaechen_art": "voll",
+"flaechen": 2398,
+"dichte": 0.0307,
+"farben_je_zeile": [
+255,
+255,
+255
+],
+"gain": 1.0,
+"gain_schwanz": 1.0,
+"eichung": {
+"teile": 38,
+"inseln": 1580,
+"texel": 76890,
+"aus_bild": 25666,
+"marken_faktoren": {
+"Z1": 1.156,
+"Z2": 1.261,
+"Z3": 1.311,
+"Z4": 1.031,
+"Z5": 0.5,
+"Z6a": 1.304,
+"Z6b": 1.084,
+"Z6c": 1.05,
+"Z7": 1.043,
+"Z8": 1.381,
+"Z9": 0.5,
+"Xa": 0.643,
+"Xb": 1.111,
+"Xc": 0.997,
+"Q2": 1.669,
+"Qa": 1.474,
+"Qb": 1.163,
+"Qc": 1.606,
+"Q1": 2.298,
+"Q3": 2.339,
+"Q4": 2.159,
+"H8": 4.0,
+"H9": 2.385,
+"Gg": 4.0,
+"Gr": 4.0,
+"P": 4.0
+},
+"wunden_y_screenshot_render": {
+"Z1": [
+142,
+136
+],
+"Z2": [
+137,
+134
+],
+"Z3": [
+186,
+164
+],
+"Z4": [
+152,
+126
+],
+"Z5": [
+68,
+149
+],
+"Z6a": [
+136,
+136
+],
+"Z6b": [
+72,
+72
+],
+"Z6c": [
+58,
+58
+],
+"Z7": [
+107,
+107
+],
+"Z8": [
+130,
+126
+],
+"Z9": [
+66,
+87
+],
+"Xa": [
+111,
+111
+],
+"Xb": [
+150,
+151
+],
+"Xc": [
+110,
+110
+],
+"Q2": [
+40,
+26
+],
+"Qa": [
+38,
+22
+],
+"Qb": [
+38,
+27
+],
+"Qc": [
+46,
+45
+],
+"Q1": [
+73,
+41
+],
+"Q3": [
+52,
+33
+],
+"Q4": [
+114,
+111
+],
+"H8": [
+66,
+27
+],
+"H9": [
+63,
+61
+],
+"Gg": [
+119,
+104
+],
+"Gr": [
+150,
+105
+],
+"P": [
+151,
+135
+]
+}
+},
+"atlas": [
+{
+"name": "huefte",
+"knochen": 0,
+"rechteck": [
+0,
+0,
+158,
+52
+],
+"zeile": 0
+},
+{
+"name": "wirbel",
+"knochen": 7,
+"rechteck": [
+0,
+54,
+154,
+48
+],
+"zeile": 0
+},
+{
+"name": "brust",
+"knochen": 10,
+"rechteck": [
+156,
+54,
+130,
+47
+],
+"zeile": 0
+},
+{
+"name": "schwanz1",
+"knochen": 1,
+"rechteck": [
+294,
+0,
+66,
+50
+],
+"zeile": 2
+},
+{
+"name": "schwanz2",
+"knochen": 2,
+"rechteck": [
+0,
+222,
+66,
+26
+],
+"zeile": 2
+},
+{
+"name": "schwanz3",
+"knochen": 3,
+"rechteck": [
+290,
+188,
+68,
+27
+],
+"zeile": 2
+},
+{
+"name": "schwanz4",
+"knochen": 4,
+"rechteck": [
+198,
+188,
+46,
+28
+],
+"zeile": 2
+},
+{
+"name": "schwanz5",
+"knochen": 5,
+"rechteck": [
+160,
+188,
+36,
+29
+],
+"zeile": 2
+},
+{
+"name": "schwanz6",
+"knochen": 6,
+"rechteck": [
+246,
+188,
+42,
+28
+],
+"zeile": 2
+},
+{
+"name": "oberschenkel_r",
+"knochen": 9,
+"rechteck": [
+332,
+104,
+48,
+37
+],
+"zeile": 2
+},
+{
+"name": "unterschenkel_r",
+"knochen": 26,
+"rechteck": [
+0,
+149,
+68,
+37
+],
+"zeile": 2
+},
+{
+"name": "fuss_r",
+"knochen": 27,
+"rechteck": [
+258,
+149,
+56,
+35
+],
+"zeile": 2
+},
+{
+"name": "zeh0_r",
+"knochen": 27,
+"rechteck": [
+294,
+222,
+26,
+11
+],
+"zeile": 2
+},
+{
+"name": "zeh1_r",
+"knochen": 27,
+"rechteck": [
+294,
+222,
+26,
+11
+],
+"zeile": 2
+},
+{
+"name": "zeh2_r",
+"knochen": 27,
+"rechteck": [
+294,
+222,
+26,
+11
+],
+"zeile": 2
+},
+{
+"name": "oberschenkel_l",
+"knochen": 8,
+"rechteck": [
+140,
+149,
+48,
+37
+],
+"zeile": 2
+},
+{
+"name": "unterschenkel_l",
+"knochen": 24,
+"rechteck": [
+70,
+149,
+68,
+37
+],
+"zeile": 2
+},
+{
+"name": "fuss_l",
+"knochen": 25,
+"rechteck": [
+316,
+149,
+56,
+35
+],
+"zeile": 2
+},
+{
+"name": "zeh0_l",
+"knochen": 25,
+"rechteck": [
+294,
+222,
+26,
+11
+],
+"zeile": 2
+},
+{
+"name": "zeh1_l",
+"knochen": 25,
+"rechteck": [
+294,
+222,
+26,
+11
+],
+"zeile": 2
+},
+{
+"name": "zeh2_l",
+"knochen": 25,
+"rechteck": [
+294,
+222,
+26,
+11
+],
+"zeile": 2
+},
+{
+"name": "oberarm_r",
+"knochen": 16,
+"rechteck": [
+68,
+104,
+92,
+39
+],
+"zeile": 1
+},
+{
+"name": "unterarm_r",
+"knochen": 17,
+"rechteck": [
+288,
+54,
+66,
+43
+],
+"zeile": 1
+},
+{
+"name": "hand_r",
+"knochen": 18,
+"rechteck": [
+256,
+104,
+74,
+39
+],
+"zeile": 1
+},
+{
+"name": "klaue_r1",
+"knochen": 19,
+"rechteck": [
+112,
+222,
+32,
+23
+],
+"zeile": 1
+},
+{
+"name": "klaue_r2",
+"knochen": 20,
+"rechteck": [
+68,
+222,
+42,
+24
+],
+"zeile": 1
+},
+{
+"name": "klaue_r3",
+"knochen": 29,
+"rechteck": [
+356,
+54,
+26,
+29
+],
+"zeile": 1
+},
+{
+"name": "klaue_r4",
+"knochen": 31,
+"rechteck": [
+360,
+188,
+18,
+22
+],
+"zeile": 1
+},
+{
+"name": "kralle_r",
+"knochen": 18,
+"rechteck": [
+146,
+222,
+38,
+21
+],
+"zeile": 1
+},
+{
+"name": "oberarm_l",
+"knochen": 11,
+"rechteck": [
+162,
+104,
+92,
+39
+],
+"zeile": 1
+},
+{
+"name": "unterarm_l",
+"knochen": 12,
+"rechteck": [
+0,
+104,
+66,
+43
+],
+"zeile": 1
+},
+{
+"name": "hand_l",
+"knochen": 13,
+"rechteck": [
+102,
+188,
+56,
+30
+],
+"zeile": 1
+},
+{
+"name": "klaue_l1",
+"knochen": 14,
+"rechteck": [
+220,
+222,
+24,
+18
+],
+"zeile": 1
+},
+{
+"name": "klaue_l2",
+"knochen": 15,
+"rechteck": [
+186,
+222,
+32,
+19
+],
+"zeile": 1
+},
+{
+"name": "klaue_l3",
+"knochen": 28,
+"rechteck": [
+362,
+0,
+20,
+23
+],
+"zeile": 1
+},
+{
+"name": "klaue_l4",
+"knochen": 30,
+"rechteck": [
+278,
+222,
+14,
+17
+],
+"zeile": 1
+},
+{
+"name": "kralle_l",
+"knochen": 13,
+"rechteck": [
+246,
+222,
+30,
+17
+],
+"zeile": 1
+},
+{
+"name": "hals",
+"knochen": 21,
+"rechteck": [
+0,
+188,
+100,
+32
+],
+"zeile": 0
+},
+{
+"name": "kopf",
+"knochen": 22,
+"rechteck": [
+160,
+0,
+132,
+50
+],
+"zeile": 0
+},
+{
+"name": "kiefer",
+"knochen": 23,
+"rechteck": [
+190,
+149,
+66,
+35
+],
+"zeile": 0
+},
+{
+"name": "fang_o_r",
+"knochen": 22,
+"rechteck": [
+366,
+222,
+16,
+8
+],
+"zeile": 0
+},
+{
+"name": "fang_u_r",
+"knochen": 23,
+"rechteck": [
+366,
+222,
+16,
+8
+],
+"zeile": 0
+},
+{
+"name": "wange_r",
+"knochen": 22,
+"rechteck": [
+322,
+222,
+20,
+9
+],
+"zeile": 0
+},
+{
+"name": "fang_o_l",
+"knochen": 22,
+"rechteck": [
+366,
+222,
+16,
+8
+],
+"zeile": 0
+},
+{
+"name": "fang_u_l",
+"knochen": 23,
+"rechteck": [
+366,
+222,
+16,
+8
+],
+"zeile": 0
+},
+{
+"name": "wange_l",
+"knochen": 22,
+"rechteck": [
+344,
+222,
+20,
+9
+],
+"zeile": 0
+}
+]
+}

@@ -1,0 +1,25 @@
+huefte  x -920..790  Radius je Abschnitt [465, 695, 856, 950, 934, 796, 723, 603]  y -776..704  z -881..881
+wirbel  x -400..1160  Radius je Abschnitt [878, 866, 840, 811, 895, 901, 841, 611]  y -930..829  z -823..823
+brust  x -690..1160  Radius je Abschnitt [600, 760, 724, 865, 835, 780, 695, 540]  y -985..605  z -611..611
+oberarm l        y -330..950  Radius [416, 511, 592, 0, 0, 529, 452, 502]  Bauch/Ende 1.42
+oberarm r        y -330..950  Radius [416, 511, 592, 0, 0, 529, 452, 502]  Bauch/Ende 1.42
+unterarm l       y -180..1220  Radius [328, 387, 411, 355, 344, 417, 273, 237]  Bauch/Ende 1.76
+unterarm r       y -180..1220  Radius [328, 387, 411, 355, 344, 417, 273, 237]  Bauch/Ende 1.76
+oberschenkel l   y -180..1045  Radius [349, 220, 0, 313, 0, 287, 0, 365]  Bauch/Ende 1.05
+unterschenkel l  y -100..1060  Radius [227, 247, 377, 0, 414, 0, 383, 74]  Bauch/Ende 5.59
+fuss l           y -320..256  Radius [731, 753, 259, 841, 480, 756, 731, 775]  Bauch/Ende 1.15
+Pose 1: Knick Huefte/Wirbel 10, Wirbel/Brust 33, Brust/Hals 46, Hals/Kopf 20; Neigung Brust gegen Boden 22, Huefte -1
+    huefte  Hoehe 1181..2663  x -931..780
+    wirbel  Hoehe 1067..2679  x -96..1582
+    brust   Hoehe 1037..2781  x 413..2335
+    kopf    Hoehe 510..2153  x 2350..3906
+Pose 2: Knick Huefte/Wirbel 13, Wirbel/Brust 47, Brust/Hals 68, Hals/Kopf 25; Neigung Brust gegen Boden 12, Huefte 51
+    huefte  Hoehe 232..1871  x -771..950
+    wirbel  Hoehe 633..2659  x -374..1302
+    brust   Hoehe 1430..3099  x 74..1999
+    kopf    Hoehe 1590..2801  x 1435..2831
+Ruhe: Knick Huefte/Wirbel 1, Wirbel/Brust 2, Brust/Hals 10, Hals/Kopf 8; Neigung Brust gegen Boden 3, Huefte 5
+    huefte  Hoehe 1069..2517  x -902..789
+    wirbel  Hoehe 962..2785  x -10..1552
+    brust   Hoehe 1249..2856  x 566..2444
+    kopf    Hoehe 1003..2254  x 2378..4154

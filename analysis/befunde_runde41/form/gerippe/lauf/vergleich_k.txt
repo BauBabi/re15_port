@@ -1,0 +1,105 @@
+Starts 32 beste (5.981060028076172, 'k91.pt', 0)
+  5.98 k91.pt 0 boden
+  7.49 k91.pt 2 boden
+  7.81 k91.pt 6 boden
+  7.96 k91.pt 3 boden
+  8.12 k91.pt 5 boden
+  8.31 k91.pt 4 boden
+  8.83 k93.pt 6 boden
+  9.49 k94.pt 5 boden
+  9.65 k93.pt 0 boden
+  9.68 k92.pt 0 boden
+  9.70 k91.pt 1 boden
+  9.93 k93.pt 5 boden
+  10.10 k92.pt 5 boden
+  10.21 k94.pt 4 boden
+  10.26 k93.pt 7 boden
+  10.71 k93.pt 4 boden
+  13.20 k91.pt 7 boden
+  14.08 k92.pt 6 boden
+  14.48 k94.pt 7 boden
+  14.66 k94.pt 1 boden
+  14.68 k94.pt 3 boden
+  15.45 k94.pt 6 boden
+  16.00 k92.pt 7 boden
+  16.64 k94.pt 0 boden
+  17.54 k93.pt 3 boden
+  18.10 k93.pt 1 boden
+  19.01 k94.pt 2 boden
+  19.29 k92.pt 1 boden
+  19.33 k92.pt 2 boden
+  20.77 k93.pt 2 boden
+Innerhalb Faktor 1.45 : 6
+Tabelle gute Starts: Kosten Datei Start Hand2 | Gier1 Gier2 Tiefe1 Tiefe2 Nick1 Nick2 | Kopf Bild2 (x,y) Hoehe | Hand_r Hoehe Bild2 | Fuesse Bild2 Hoehe
+  5.98 k91      0 boden |  351   15  5160  7114   12  -21 | (330,243)  2043 |   438 |   201   208
+  7.49 k91      2 boden |  332   28  4457  7297   17   -1 | (359,224)  2230 |   292 |   239   258
+  7.81 k91      6 boden |  337  354  4763  6636    6  -15 | (285,259)  2007 |   318 |   490   278
+  7.96 k91      3 boden |  340  332  4925  6543   17   -7 | (314,252)  2092 |   300 |   204   258
+  8.12 k91      5 boden |  341  358  4930  7150    5  -22 | (303,242)  2191 |   287 |   240   223
+  8.31 k91      4 boden |  342   50  4924  6704   12  -42 | (309,213)  2519 |   301 |   235   342
+Spanne ueber 6 gute Starts (min, Median, max)
+ L huefte                292      319      371  rel   25%
+ L wirbel                619      683      890  rel   40%
+ L brust                 599      703      989  rel   56%
+ L hals                  350      394      503  rel   39%
+ L kopf                  708     1014     1172  rel   46%
+ L kiefer                520      550      573  rel   10%
+ L oberarm               837      968     1127  rel   30%
+ L unterarm              811      989     1103  rel   30%
+ L hand                  327      400      563  rel   59%
+ L klaue                 480      635      720  rel   38%
+ L oberschenkel          869      907     1148  rel   31%
+ L unterschenkel         688      832      934  rel   30%
+ L fuss                  344      631      900  rel   88%
+ L schwanz1              470      516      593  rel   24%
+ L schwanz2              485      537      601  rel   22%
+ L schwanz3              512      574      608  rel   17%
+ L schwanz4              535      575      627  rel   16%
+ L schwanz5              501      565      597  rel   17%
+ L schwanz6              470      564      588  rel   21%
+ L schwanz_summe        3160     3327     3488  rel   10%
+ L arm_summe            1753     1940     2074  rel   17%
+ L bein_summe           1580     1819     1961  rel   21%
+ L rumpf_summe          1630     1931     2090  rel   24%
+ V huefte_hinten          50       64      155  rel  164%
+ V schwanz_y            -565     -472     -363  rel   43%
+ V schenkel_x           -180      240      279  rel  191%
+ V schenkel_y             23      127      378  rel  280%
+ V schenkel_z            320      363      395  rel   21%
+ V schulter_x            471      540      745  rel   51%
+ V schulter_y           -134       -6       61  rel 3171%
+ V schulter_z            904      967     1017  rel   12%
+ V hals_y               -471     -281      228  rel  249%
+ V kiefer_x                0      176      500  rel  284%
+ V kiefer_y               50      244      400  rel  144%
+ V klaue_z                38       60       96  rel   95%
+ D huefte           a0      557      607      648  rel   15% a2      621      678      734  rel   17% bm      672      704      774  rel   14%
+ D wirbel           a0      621      676      725  rel   15% a2      687      838      877  rel   23% bm      839      907      946  rel   12%
+ D brust            a0      685      870      912  rel   26% a2      470      655      939  rel   71% bm      820      973     1049  rel   23%
+ D hals             a0      341      469      539  rel   42% a2      376      449      650  rel   61% bm      400      460      551  rel   33%
+ D kopf             a0      373      447      641  rel   60% a2      327      453      750  rel   93% bm      434      488      800  rel   75%
+ D kiefer           a0      235      235      340  rel   45% a2      128      128      138  rel    7% bm      291      291      311  rel    7%
+ D oberarm          a0      262      359      385  rel   34% a2      230      258      402  rel   67% bm      256      292      382  rel   43%
+ D unterarm         a0      237      250      315  rel   31% a2      220      239      296  rel   32% bm      227      238      249  rel   10%
+ D hand             a0      238      268      311  rel   27% a2      126      164      320  rel  119% bm      279      339      520  rel   71%
+ D klaue            a0      118      142      178  rel   42% a2       79       99      143  rel   64% bm      105      117      149  rel   38%
+ D oberschenkel     a0      295      302      406  rel   37% a2      170      209      220  rel   24% bm      200      260      294  rel   36%
+ D unterschenkel    a0      181      199      207  rel   13% a2      104      147      180  rel   52% bm      125      153      187  rel   40%
+ D fuss             a0      108      152      220  rel   74% a2       90      224      320  rel  103% bm      183      202      277  rel   47%
+ D schwanz1         a0      302      313      364  rel   20% a2      291      327      332  rel   12% bm      296      317      340  rel   14%
+ D schwanz2         a0      291      323      351  rel   19% a2      264      283      336  rel   26% bm      286      305      343  rel   19%
+ D schwanz3         a0      261      280      322  rel   22% a2      169      235      260  rel   39% bm      200      255      284  rel   33%
+ D schwanz4         a0      168      228      254  rel   38% a2      139      157      167  rel   17% bm      161      173      192  rel   18%
+ D schwanz5         a0      143      161      178  rel   22% a2      168      186      213  rel   24% bm      152      170      194  rel   25%
+ D schwanz6         a0      187      207      227  rel   19% a2      118      216      246  rel   59% bm      165      213      227  rel   29%
+p1 Gier      332      341      351  rel    6% Tiefe     4457     4924     5160  rel   14% Nick        5       12       17  rel  103% Scheitel     2746     2797     2836  rel    3%
+p2 Gier       15      191      358  rel  180% Tiefe     6543     6909     7297  rel   11% Nick      -42      -18       -1  rel  227% Scheitel     2989     3147     3189  rel    6%
+Restfehler (IoU je Teil), gute Starts:
+   1 tail IoU 0.82 0.83 0.84
+   1 left_leg IoU 0.49 0.58 0.77
+   1 right_leg IoU 0.70 0.73 0.79
+   1 right_arm IoU 0.74 0.81 0.82
+   1 part_of_Body IoU 0.64 0.74 0.83
+   2 face_and_upper_body IoU 0.82 0.89 0.91
+   2 left_arm_front IoU 0.70 0.77 0.84
+   2 right_arm_front IoU 0.64 0.68 0.73

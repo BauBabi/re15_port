@@ -1,0 +1,82 @@
+{
+ "A1 Chroma Koerper": {
+  "wert": "18.2",
+  "ok": true
+ },
+ "A2 Farbstreuung je Teil sigma_ab": {
+  "wert": "13.0",
+  "ok": true
+ },
+ "A3 Fleischrot-Anteil %": {
+  "wert": "37.8",
+  "ok": true
+ },
+ "A4 Farbton Fleischrot Grad": {
+  "wert": "25.0",
+  "ok": true
+ },
+ "A5 Neutralweiss Koerper %": {
+  "wert": "0.55",
+  "ok": false
+ },
+ "A6 HF_fft je Feld (max)": {
+  "wert": "{'koerper': 0.226}",
+  "ok": true
+ },
+ "A7 HF_rest je Feld (max)": {
+  "wert": "{'koerper': 0.158}",
+  "ok": true
+ },
+ "A10 Texeldichte Teil/Koerper (min,max)": {
+  "wert": "(0.81, 1.17)",
+  "ok": true
+ },
+ "A11 Schwanz L*-Sprung Glied 1-5 (max)": {
+  "wert": "3.6",
+  "ok": true
+ },
+ "A12 Farbkorn Koerper (a*b*-Rest)": {
+  "wert": "6.32",
+  "ok": false
+ },
+ "K1 Bild1 Chroma Figur / Original": {
+  "wert": "(6.5, 9.3)",
+  "ok": false
+ },
+ "K2 Bild1 ab-Streuung Figur / Original": {
+  "wert": "(6.7, 9.8)",
+  "ok": false
+ },
+ "K3 Bild1 dE je Zone (max)": {
+  "wert": "{'Schwanz': 2.0, 'Ruecken/Flanke': 3.7, 'Hinterbein l (W)': 4.1, 'Hinterbein r (W)': 4.3, 'Vorderglied r (W)': 6.9}",
+  "ok": false
+ },
+ "K4 Bild1 Rot-Klasse Figur % / Original": {
+  "wert": "(3.0, 5.2)",
+  "ok": false
+ },
+ "K5 Bild1 Hell-Klasse Ruecken % / W Figur %": {
+  "wert": "(15.6, 9.9, 1.6, 0.5)",
+  "ok": false
+ },
+ "K6 Bild2 Figur dE / Chroma": {
+  "wert": "(5.3, 29.3, 25.6)",
+  "ok": true
+ },
+ "K7 Bild2 Unterkiefer dE / a*": {
+  "wert": "(6.2, 26.9, 24.9)",
+  "ok": false
+ },
+ "K8 Bild2 Oberkiefer dE": {
+  "wert": "5.1",
+  "ok": true
+ },
+ "K9 Bild2 Klauen a* (r, l) / Original": {
+  "wert": "(31.5, 24.1, 34.0, 22.2)",
+  "ok": true
+ },
+ "K10 Bild2 Augenpunkte L*max (r, l)": {
+  "wert": "(15.7, 16.5)",
+  "ok": true
+ }
+}

@@ -1,0 +1,168 @@
+{
+ "EM30": {
+  "B10 Atlas Fleisch dunkle Linien %": {
+   "wert": "12.65",
+   "ok": true
+  },
+  "B11 Atlas Haut dunkle Linien %": {
+   "wert": "5.35",
+   "ok": true
+  },
+  "B12 Atlas Kopf Linien % / Canny-Dichte": {
+   "wert": "(5.39, 29.62)",
+   "ok": true
+  },
+  "B13 Atlas Fleisch Canny-Dichte": {
+   "wert": "29.63",
+   "ok": true
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas": {
+   "wert": "(9.6, 10.9)",
+   "ok": true
+  },
+  "B15 Render Rotflaechen a*-Streuung": {
+   "wert": "5.0",
+   "ok": true
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
+   "wert": "59.6",
+   "ok": true
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
+   "wert": "(0.621, [0.601, 0.623, 0.64], 0.576)",
+   "ok": true
+  }
+ },
+ "G4": {
+  "B10 Atlas Fleisch dunkle Linien %": {
+   "wert": "9.5",
+   "ok": true
+  },
+  "B11 Atlas Haut dunkle Linien %": {
+   "wert": "3.89",
+   "ok": true
+  },
+  "B12 Atlas Kopf Linien % / Canny-Dichte": {
+   "wert": "(46.45, 30.07)",
+   "ok": true
+  },
+  "B13 Atlas Fleisch Canny-Dichte": {
+   "wert": "29.55",
+   "ok": true
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas": {
+   "wert": "(11.0, 11.2)",
+   "ok": true
+  },
+  "B15 Render Rotflaechen a*-Streuung": {
+   "wert": "7.9",
+   "ok": true
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
+   "wert": "81.1",
+   "ok": true
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
+   "wert": "(0.616, [0.618, 0.628, 0.603], 0.618)",
+   "ok": true
+  }
+ },
+ "G5": {
+  "B10 Atlas Fleisch dunkle Linien %": {
+   "wert": "19.32",
+   "ok": true
+  },
+  "B11 Atlas Haut dunkle Linien %": {
+   "wert": "8.29",
+   "ok": true
+  },
+  "B13 Atlas Fleisch Canny-Dichte": {
+   "wert": "30.17",
+   "ok": true
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas": {
+   "wert": "(11.2, 14.5)",
+   "ok": true
+  },
+  "B15 Render Rotflaechen a*-Streuung": {
+   "wert": "8.7",
+   "ok": true
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
+   "wert": "66.0",
+   "ok": true
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
+   "wert": "(0.68, [0.674, 0.69, 0.677], 0.753)",
+   "ok": true
+  }
+ },
+ "r3": {
+  "B10 Atlas Fleisch dunkle Linien %": {
+   "wert": "3.71",
+   "ok": false
+  },
+  "B11 Atlas Haut dunkle Linien %": {
+   "wert": "2.99",
+   "ok": false
+  },
+  "B12 Atlas Kopf Linien % / Canny-Dichte": {
+   "wert": "(1.28, 8.85)",
+   "ok": false
+  },
+  "B13 Atlas Fleisch Canny-Dichte": {
+   "wert": "19.05",
+   "ok": false
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas": {
+   "wert": "(5.4, 8.6)",
+   "ok": false
+  },
+  "B15 Render Rotflaechen a*-Streuung": {
+   "wert": "3.1",
+   "ok": false
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
+   "wert": "2.1",
+   "ok": false
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
+   "wert": "(0.561, [0.569, 0.554, 0.559], 0.561)",
+   "ok": false
+  }
+ },
+ "K4": {
+  "B10 Atlas Fleisch dunkle Linien %": {
+   "wert": "1.32",
+   "ok": false
+  },
+  "B11 Atlas Haut dunkle Linien %": {
+   "wert": "5.3",
+   "ok": true
+  },
+  "B12 Atlas Kopf Linien % / Canny-Dichte": {
+   "wert": "(2.16, 4.79)",
+   "ok": false
+  },
+  "B13 Atlas Fleisch Canny-Dichte": {
+   "wert": "33.13",
+   "ok": true
+  },
+  "B14 Rotflaechen L*-Streuung Render / Atlas": {
+   "wert": "(9.1, 11.4)",
+   "ok": true
+  },
+  "B15 Render Rotflaechen a*-Streuung": {
+   "wert": "10.0",
+   "ok": true
+  },
+  "B16 Render Rotpixel in Flaechen mit >= 2 Stufen %": {
+   "wert": "94.7",
+   "ok": true
+  },
+  "B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas": {
+   "wert": "(0.548, [0.543, 0.551, 0.55], 0.554)",
+   "ok": false
+  }
+ }
+}

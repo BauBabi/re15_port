@@ -1,0 +1,143 @@
+{
+ "R1": {
+  "ok": false,
+  "wert": "L1 0 px 22.9 / L2 0 px 70.0",
+  "augen": {
+   "L1": {
+    "px": 0,
+    "schwerpunkt": [
+     302.9,
+     274.1
+    ],
+    "projektion": [
+     302.9,
+     274.1
+    ],
+    "abstand": 22.9
+   },
+   "L2": {
+    "px": 0,
+    "schwerpunkt": [
+     286.9,
+     271.2
+    ],
+    "projektion": [
+     286.9,
+     271.2
+    ],
+    "abstand": 70.0
+   }
+  }
+ },
+ "R2": {
+  "ok": false,
+  "wert": "10.3 Grad, 16.3 px",
+  "grad": 10.3,
+  "abstand": 16.3
+ },
+ "R3": {
+  "ok": false,
+  "wert": "23.0 px (229/355)",
+  "abstand": 23.0,
+  "punkt": [
+   228.5,
+   354.9
+  ],
+  "sichtbar": true
+ },
+ "R4": {
+  "ok": false,
+  "wert": "-38.9 Grad (Ziel -1.9)",
+  "grad": -38.9
+ },
+ "R5": {
+  "ok": false,
+  "wert": "Lappen 77 %, (279,399) nicht drin",
+  "deckung": 0.77,
+  "nutzerpunkt": false,
+  "uk_spitze": [
+   253.7,
+   404.4
+  ]
+ },
+ "R6": {
+  "ok": false,
+  "wert": "13.2 px (319/335)",
+  "abstand": 13.2,
+  "punkt": [
+   319.0,
+   334.6
+  ]
+ },
+ "R7": {
+  "ok": true,
+  "wert": "+56 px, Achse 38.8 Grad",
+  "seite": 56.5,
+  "achse": 38.8,
+  "schwerpunkt": [
+   296.1,
+   361.1
+  ],
+  "px": 3126
+ },
+ "iou": {
+  "ok": 0.573,
+  "uk": 0.805
+ },
+ "R9": {
+  "ok": false,
+  "wert": "169 + 160 von 189 + 160 px gedeckt",
+  "links": 169,
+  "rechts": 160
+ },
+ "R10": {
+  "ok": true,
+  "wert": "Schwanz y 184, Rest y 186",
+  "schwanz_y": 184,
+  "rest_y": 186,
+  "oben": [
+   1
+  ]
+ },
+ "R8": {
+  "ok": true,
+  "wert": "B1 0.954 (31/31), B2 0.949 (7/7), UK 0.81, OK 0.57",
+  "umriss1": 0.9537,
+  "umriss2": 0.9485,
+  "punkte1": [
+   31,
+   31
+  ],
+  "punkte2": [
+   7,
+   7
+  ],
+  "iou_uk": 0.805,
+  "iou_ok": 0.573,
+  "umriss1_raster_e26": 0.9452,
+  "umriss1_raster": 0.9546,
+  "umriss2_raster": 0.9441
+ },
+ "_lm_bild": {
+  "ok_spitze": [
+   228.5,
+   354.9
+  ],
+  "auge_l": [
+   302.9,
+   274.1
+  ],
+  "auge_r": [
+   286.9,
+   271.2
+  ],
+  "uk_spitze": [
+   253.7,
+   404.4
+  ],
+  "maulwinkel_l": [
+   319.0,
+   334.6
+  ]
+ }
+}

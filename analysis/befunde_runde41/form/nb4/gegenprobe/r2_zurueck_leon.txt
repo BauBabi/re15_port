@@ -1,0 +1,19 @@
+# Gegenprobe Runde 2: exe b9b3d574 (Stand b9ab865af, Wache nach dem Bildmass), Riegel test_r41_form_wagenweg.cmake TEIL=zurueck_leon (Stand vor der Schranke 650 / warten 9; Zahlen gelten unveraendert)
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[zurueck_leon]: Kamera Taumeln F1544-F1840 (297 Bilder, Schnitte 13;15;11), Form-Slot 12 min sichtbar 2796, Leon max 2161, Form max 166 Promille verdeckt, max 550 Promille fast schwarz (297 Bilder)
+-- r41_form_wagenweg[zurueck_leon]: Kampfkamera F1150-F1543 394 Bilder, 28 > 600 Promille fast schwarz (erlaubt 0), max 775 (F1347)
+-- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 150 (F946), Treffer 10 (Abzug 150, groesster 15) ab F1297, Rueckstoss F1544, Form-HP zuletzt 0, Leon getroffen 1x, exit=0, Lauf C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formnb4/r2/gegenprobe/zurueck_leon/lauf_af8a19f9
+CMake Error at tests/integration/test_r41_form_wagenweg.cmake:491 (message):
+  r41_form_wagenweg[zurueck_leon]: FEHLER
+
+   Kampfkamera vor der Szene (F1150-F1543): 28 Bilder > 600 Promille fast schwarz, erlaubt 0
+     F1341: 744 Promille fast schwarz
+     F1342: 771 Promille fast schwarz
+     F1343: 772 Promille fast schwarz
+     F1344: 772 Promille fast schwarz
+     F1345: 774 Promille fast schwarz
+     F1346: 774 Promille fast schwarz
+     F1347: 775 Promille fast schwarz
+     F1348: 774 Promille fast schwarz
+
+

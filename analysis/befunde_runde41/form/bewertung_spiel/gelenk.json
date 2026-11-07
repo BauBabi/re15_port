@@ -1,0 +1,1799 @@
+{
+ "A": {
+  "gelenke": [
+   {
+    "b": 0,
+    "name": "becken",
+    "eltern": -1,
+    "gelenk": [
+     -454,
+     -1887,
+     -17
+    ],
+    "laenge": 0,
+    "bbox": [
+     1018,
+     1905,
+     2077
+    ],
+    "in_teil": -1,
+    "in_eltern": -1,
+    "abstand": -1.0
+   },
+   {
+    "b": 1,
+    "name": "huefte_r",
+    "eltern": 0,
+    "gelenk": [
+     -1310,
+     -1837,
+     621
+    ],
+    "laenge": 1069,
+    "bbox": [
+     782,
+     834,
+     918
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.01,
+    "abstand": 1.6
+   },
+   {
+    "b": 2,
+    "name": "huefte_l",
+    "eltern": 0,
+    "gelenk": [
+     -1267,
+     -1894,
+     -649
+    ],
+    "laenge": 1030,
+    "bbox": [
+     840,
+     946,
+     928
+    ],
+    "in_teil": 0.84,
+    "in_eltern": 0.89,
+    "abstand": 1.0
+   },
+   {
+    "b": 3,
+    "name": "fr_ober",
+    "eltern": 1,
+    "gelenk": [
+     -1397,
+     -1599,
+     641
+    ],
+    "laenge": 254,
+    "bbox": [
+     790,
+     794,
+     906
+    ],
+    "in_teil": 0.98,
+    "in_eltern": 0.99,
+    "abstand": 1.4
+   },
+   {
+    "b": 4,
+    "name": "fr_unter",
+    "eltern": 3,
+    "gelenk": [
+     -1401,
+     -1248,
+     609
+    ],
+    "laenge": 352,
+    "bbox": [
+     788,
+     1253,
+     683
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 2.8
+   },
+   {
+    "b": 5,
+    "name": "fr_fuss",
+    "eltern": 4,
+    "gelenk": [
+     -1424,
+     -284,
+     600
+    ],
+    "laenge": 964,
+    "bbox": [
+     694,
+     583,
+     717
+    ],
+    "in_teil": 0.96,
+    "in_eltern": 1.0,
+    "abstand": 2.1
+   },
+   {
+    "b": 6,
+    "name": "fl_ober",
+    "eltern": 2,
+    "gelenk": [
+     -1173,
+     -1616,
+     -659
+    ],
+    "laenge": 294,
+    "bbox": [
+     839,
+     1066,
+     866
+    ],
+    "in_teil": 0.98,
+    "in_eltern": 0.72,
+    "abstand": 3.1
+   },
+   {
+    "b": 7,
+    "name": "fl_unter",
+    "eltern": 6,
+    "gelenk": [
+     -1136,
+     -1236,
+     -631
+    ],
+    "laenge": 383,
+    "bbox": [
+     728,
+     1589,
+     739
+    ],
+    "in_teil": 0.94,
+    "in_eltern": 0.99,
+    "abstand": 1.9
+   },
+   {
+    "b": 8,
+    "name": "fl_fuss",
+    "eltern": 7,
+    "gelenk": [
+     -1196,
+     -300,
+     -621
+    ],
+    "laenge": 938,
+    "bbox": [
+     636,
+     549,
+     697
+    ],
+    "in_teil": 0.97,
+    "in_eltern": 1.0,
+    "abstand": 2.9
+   },
+   {
+    "b": 9,
+    "name": "rumpf_mitte",
+    "eltern": 0,
+    "gelenk": [
+     -136,
+     -1974,
+     -2
+    ],
+    "laenge": 330,
+    "bbox": [
+     1057,
+     1993,
+     2364
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.01,
+    "abstand": 0.6
+   },
+   {
+    "b": 10,
+    "name": "rumpf",
+    "eltern": 9,
+    "gelenk": [
+     267,
+     -1969,
+     6
+    ],
+    "laenge": 403,
+    "bbox": [
+     1079,
+     1957,
+     2354
+    ],
+    "in_teil": 0.97,
+    "in_eltern": 1.0,
+    "abstand": 0.5
+   },
+   {
+    "b": 11,
+    "name": "nl_ober",
+    "eltern": 10,
+    "gelenk": [
+     738,
+     -1499,
+     -555
+    ],
+    "laenge": 870,
+    "bbox": [
+     963,
+     1272,
+     961
+    ],
+    "in_teil": 0.86,
+    "in_eltern": 0.46,
+    "abstand": 1.4
+   },
+   {
+    "b": 12,
+    "name": "nl_unter",
+    "eltern": 11,
+    "gelenk": [
+     841,
+     -987,
+     -633
+    ],
+    "laenge": 528,
+    "bbox": [
+     889,
+     832,
+     807
+    ],
+    "in_teil": 0.77,
+    "in_eltern": 0.97,
+    "abstand": 1.0
+   },
+   {
+    "b": 13,
+    "name": "nl_hand",
+    "eltern": 12,
+    "gelenk": [
+     1217,
+     -620,
+     -764
+    ],
+    "laenge": 542,
+    "bbox": [
+     571,
+     710,
+     727
+    ],
+    "in_teil": 0.96,
+    "in_eltern": 0.93,
+    "abstand": 2.4
+   },
+   {
+    "b": 14,
+    "name": "nl_innen",
+    "eltern": 12,
+    "gelenk": [
+     928,
+     -951,
+     -482
+    ],
+    "laenge": 178,
+    "bbox": [
+     723,
+     1162,
+     632
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.84,
+    "abstand": 0.8
+   },
+   {
+    "b": 15,
+    "name": "nl_daumen",
+    "eltern": 13,
+    "gelenk": [
+     1336,
+     -220,
+     -694
+    ],
+    "laenge": 423,
+    "bbox": [
+     586,
+     447,
+     497
+    ],
+    "in_teil": 0.99,
+    "in_eltern": 1.0,
+    "abstand": 1.3
+   },
+   {
+    "b": 16,
+    "name": "nr_ober",
+    "eltern": 10,
+    "gelenk": [
+     628,
+     -1410,
+     223
+    ],
+    "laenge": 700,
+    "bbox": [
+     828,
+     1263,
+     708
+    ],
+    "in_teil": 0.74,
+    "in_eltern": 0.98,
+    "abstand": 2.1
+   },
+   {
+    "b": 17,
+    "name": "nr_unter",
+    "eltern": 16,
+    "gelenk": [
+     614,
+     -762,
+     219
+    ],
+    "laenge": 648,
+    "bbox": [
+     923,
+     766,
+     888
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.91,
+    "abstand": 1.9
+   },
+   {
+    "b": 18,
+    "name": "nr_hand",
+    "eltern": 17,
+    "gelenk": [
+     1007,
+     -426,
+     564
+    ],
+    "laenge": 622,
+    "bbox": [
+     656,
+     606,
+     750
+    ],
+    "in_teil": 0.94,
+    "in_eltern": 0.97,
+    "abstand": 3.0
+   },
+   {
+    "b": 19,
+    "name": "nr_daumen",
+    "eltern": 18,
+    "gelenk": [
+     1230,
+     -166,
+     546
+    ],
+    "laenge": 343,
+    "bbox": [
+     391,
+     370,
+     349
+    ],
+    "in_teil": 0.95,
+    "in_eltern": 0.99,
+    "abstand": 1.5
+   },
+   {
+    "b": 20,
+    "name": "hals",
+    "eltern": 10,
+    "gelenk": [
+     688,
+     -1852,
+     88
+    ],
+    "laenge": 445,
+    "bbox": [
+     1131,
+     1153,
+     923
+    ],
+    "in_teil": 0.54,
+    "in_eltern": 0.95,
+    "abstand": 1.0
+   },
+   {
+    "b": 21,
+    "name": "kopf",
+    "eltern": 20,
+    "gelenk": [
+     1000,
+     -2059,
+     -1
+    ],
+    "laenge": 385,
+    "bbox": [
+     610,
+     577,
+     637
+    ],
+    "in_teil": 0.95,
+    "in_eltern": 0.8,
+    "abstand": 3.1
+   },
+   {
+    "b": 22,
+    "name": "kiefer",
+    "eltern": 21,
+    "gelenk": [
+     1085,
+     -1980,
+     -72
+    ],
+    "laenge": 136,
+    "bbox": [
+     453,
+     478,
+     463
+    ],
+    "in_teil": 0.95,
+    "in_eltern": 0.98,
+    "abstand": 2.3
+   }
+  ],
+  "durchblick_ruhe": 3174,
+  "schlechtester": [
+   723,
+   [
+    180,
+    -35
+   ]
+  ],
+  "massstab": 0.1738248617213083
+ },
+ "B": {
+  "gelenke": [
+   {
+    "b": 0,
+    "name": "rumpf_f",
+    "eltern": -1,
+    "gelenk": [
+     -940,
+     -2111,
+     -100
+    ],
+    "laenge": 0,
+    "bbox": [
+     2067,
+     2079,
+     2210
+    ],
+    "in_teil": -1,
+    "in_eltern": -1,
+    "abstand": -1.0
+   },
+   {
+    "b": 1,
+    "name": "fl_ober",
+    "eltern": 0,
+    "gelenk": [
+     -1274,
+     -2114,
+     -786
+    ],
+    "laenge": 763,
+    "bbox": [
+     814,
+     1517,
+     956
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.76,
+    "abstand": 2.7
+   },
+   {
+    "b": 2,
+    "name": "fl_unter",
+    "eltern": 1,
+    "gelenk": [
+     -1107,
+     -1159,
+     -966
+    ],
+    "laenge": 986,
+    "bbox": [
+     680,
+     1204,
+     515
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.9
+   },
+   {
+    "b": 3,
+    "name": "fl_fuss",
+    "eltern": 2,
+    "gelenk": [
+     -1235,
+     -412,
+     -1010
+    ],
+    "laenge": 759,
+    "bbox": [
+     601,
+     526,
+     556
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.8
+   },
+   {
+    "b": 4,
+    "name": "fl_zeh",
+    "eltern": 3,
+    "gelenk": [
+     -1307,
+     -339,
+     -843
+    ],
+    "laenge": 196,
+    "bbox": [
+     622,
+     447,
+     643
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.4
+   },
+   {
+    "b": 5,
+    "name": "fr_ober",
+    "eltern": 0,
+    "gelenk": [
+     -1298,
+     -2084,
+     657
+    ],
+    "laenge": 838,
+    "bbox": [
+     713,
+     1380,
+     842
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.12,
+    "abstand": 8.4
+   },
+   {
+    "b": 6,
+    "name": "fr_unter",
+    "eltern": 5,
+    "gelenk": [
+     -1179,
+     -1115,
+     694
+    ],
+    "laenge": 977,
+    "bbox": [
+     647,
+     1362,
+     614
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 0.7
+   },
+   {
+    "b": 7,
+    "name": "fr_fuss",
+    "eltern": 6,
+    "gelenk": [
+     -1240,
+     -472,
+     691
+    ],
+    "laenge": 646,
+    "bbox": [
+     807,
+     688,
+     600
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 0.8
+   },
+   {
+    "b": 8,
+    "name": "fr_zeh",
+    "eltern": 7,
+    "gelenk": [
+     -1416,
+     -291,
+     617
+    ],
+    "laenge": 263,
+    "bbox": [
+     580,
+     508,
+     783
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 0.9
+   },
+   {
+    "b": 9,
+    "name": "rumpf_m",
+    "eltern": 0,
+    "gelenk": [
+     -420,
+     -2131,
+     -100
+    ],
+    "laenge": 520,
+    "bbox": [
+     2067,
+     2079,
+     2210
+    ],
+    "in_teil": 0.5,
+    "in_eltern": 0.26,
+    "abstand": 0.3
+   },
+   {
+    "b": 10,
+    "name": "rumpf",
+    "eltern": 9,
+    "gelenk": [
+     -420,
+     -2131,
+     -100
+    ],
+    "laenge": 0,
+    "bbox": [
+     2067,
+     2079,
+     2210
+    ],
+    "in_teil": 0.41,
+    "in_eltern": 0.5,
+    "abstand": 0.2
+   },
+   {
+    "b": 11,
+    "name": "nl_ober",
+    "eltern": 9,
+    "gelenk": [
+     108,
+     -2355,
+     -707
+    ],
+    "laenge": 835,
+    "bbox": [
+     1557,
+     1803,
+     903
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.42,
+    "abstand": 14.1
+   },
+   {
+    "b": 12,
+    "name": "nl_unter",
+    "eltern": 11,
+    "gelenk": [
+     938,
+     -1275,
+     -566
+    ],
+    "laenge": 1369,
+    "bbox": [
+     665,
+     970,
+     873
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 0.8
+   },
+   {
+    "b": 13,
+    "name": "nl_faust",
+    "eltern": 12,
+    "gelenk": [
+     1022,
+     -864,
+     -854
+    ],
+    "laenge": 509,
+    "bbox": [
+     782,
+     804,
+     685
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.0
+   },
+   {
+    "b": 14,
+    "name": "nl_innen",
+    "eltern": 12,
+    "gelenk": [
+     938,
+     -1275,
+     -566
+    ],
+    "laenge": 0,
+    "bbox": [
+     879,
+     1480,
+     675
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.7
+   },
+   {
+    "b": 15,
+    "name": "maul_l",
+    "eltern": 10,
+    "gelenk": [
+     344,
+     -2032,
+     -17
+    ],
+    "laenge": 775,
+    "bbox": [
+     510,
+     1479,
+     475
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 0.76,
+    "abstand": 1.3
+   },
+   {
+    "b": 16,
+    "name": "nr_ober",
+    "eltern": 9,
+    "gelenk": [
+     -19,
+     -2170,
+     389
+    ],
+    "laenge": 634,
+    "bbox": [
+     1455,
+     1420,
+     566
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.3,
+    "abstand": 116.2
+   },
+   {
+    "b": 17,
+    "name": "nr_unter",
+    "eltern": 16,
+    "gelenk": [
+     964,
+     -1216,
+     373
+    ],
+    "laenge": 1370,
+    "bbox": [
+     488,
+     894,
+     505
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.4
+   },
+   {
+    "b": 18,
+    "name": "nr_faust",
+    "eltern": 17,
+    "gelenk": [
+     927,
+     -730,
+     517
+    ],
+    "laenge": 508,
+    "bbox": [
+     879,
+     740,
+     560
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 2.4
+   },
+   {
+    "b": 19,
+    "name": "nr_innen",
+    "eltern": 17,
+    "gelenk": [
+     927,
+     -730,
+     517
+    ],
+    "laenge": 508,
+    "bbox": [
+     635,
+     472,
+     418
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.0
+   },
+   {
+    "b": 20,
+    "name": "maul_r",
+    "eltern": 10,
+    "gelenk": [
+     255,
+     -1989,
+     192
+    ],
+    "laenge": 749,
+    "bbox": [
+     481,
+     1432,
+     656
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 0.75,
+    "abstand": 1.3
+   }
+  ],
+  "durchblick_ruhe": 0,
+  "schlechtester": [
+   0,
+   null
+  ],
+  "massstab": 0.1812964902297242
+ },
+ "C": {
+  "gelenke": [
+   {
+    "b": 0,
+    "name": "rumpf_h",
+    "eltern": -1,
+    "gelenk": [
+     -520,
+     -1900,
+     0
+    ],
+    "laenge": 0,
+    "bbox": [
+     1180,
+     1727,
+     1895
+    ],
+    "in_teil": -1,
+    "in_eltern": -1,
+    "abstand": -1.0
+   },
+   {
+    "b": 1,
+    "name": "fr_huefte",
+    "eltern": 0,
+    "gelenk": [
+     -1150,
+     -2150,
+     660
+    ],
+    "laenge": 946,
+    "bbox": [
+     677,
+     1161,
+     926
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.09,
+    "abstand": 2.7
+   },
+   {
+    "b": 2,
+    "name": "fr_bein",
+    "eltern": 1,
+    "gelenk": [
+     -1288,
+     -1269,
+     684
+    ],
+    "laenge": 892,
+    "bbox": [
+     353,
+     1083,
+     611
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 2.1
+   },
+   {
+    "b": 3,
+    "name": "fr_fuss",
+    "eltern": 2,
+    "gelenk": [
+     -1447,
+     -389,
+     616
+    ],
+    "laenge": 897,
+    "bbox": [
+     431,
+     452,
+     608
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 3.7
+   },
+   {
+    "b": 4,
+    "name": "fr_zeh",
+    "eltern": 3,
+    "gelenk": [
+     -1601,
+     -183,
+     908
+    ],
+    "laenge": 389,
+    "bbox": [
+     163,
+     189,
+     302
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 1.4
+   },
+   {
+    "b": 5,
+    "name": "fl_huefte",
+    "eltern": 0,
+    "gelenk": [
+     -730,
+     -2150,
+     -540
+    ],
+    "laenge": 631,
+    "bbox": [
+     677,
+     1161,
+     926
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.74,
+    "abstand": 1.9
+   },
+   {
+    "b": 6,
+    "name": "fl_bein",
+    "eltern": 5,
+    "gelenk": [
+     -868,
+     -1269,
+     -564
+    ],
+    "laenge": 892,
+    "bbox": [
+     318,
+     975,
+     550
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 1.6
+   },
+   {
+    "b": 7,
+    "name": "fl_fuss",
+    "eltern": 6,
+    "gelenk": [
+     -1027,
+     -389,
+     -496
+    ],
+    "laenge": 897,
+    "bbox": [
+     388,
+     476,
+     520
+    ],
+    "in_teil": 0.01,
+    "in_eltern": 1.0,
+    "abstand": 0.9
+   },
+   {
+    "b": 8,
+    "name": "fl_zeh",
+    "eltern": 7,
+    "gelenk": [
+     -1181,
+     -183,
+     -788
+    ],
+    "laenge": 389,
+    "bbox": [
+     147,
+     169,
+     272
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 2.5
+   },
+   {
+    "b": 9,
+    "name": "rumpf_m",
+    "eltern": 0,
+    "gelenk": [
+     -120,
+     -1900,
+     0
+    ],
+    "laenge": 400,
+    "bbox": [
+     1192,
+     1752,
+     2024
+    ],
+    "in_teil": 0.53,
+    "in_eltern": 0.4,
+    "abstand": 0.2
+   },
+   {
+    "b": 10,
+    "name": "rumpf_v",
+    "eltern": 9,
+    "gelenk": [
+     320,
+     -1900,
+     40
+    ],
+    "laenge": 442,
+    "bbox": [
+     1158,
+     1740,
+     2024
+    ],
+    "in_teil": 0.63,
+    "in_eltern": 0.42,
+    "abstand": 0.0
+   },
+   {
+    "b": 11,
+    "name": "nr_ober",
+    "eltern": 10,
+    "gelenk": [
+     -44,
+     -1354,
+     -72
+    ],
+    "laenge": 666,
+    "bbox": [
+     803,
+     747,
+     716
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.33,
+    "abstand": 1.7
+   },
+   {
+    "b": 12,
+    "name": "nr_unter",
+    "eltern": 11,
+    "gelenk": [
+     384,
+     -776,
+     163
+    ],
+    "laenge": 757,
+    "bbox": [
+     476,
+     738,
+     735
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 2.8
+   },
+   {
+    "b": 13,
+    "name": "nr_hand",
+    "eltern": 12,
+    "gelenk": [
+     561,
+     -230,
+     330
+    ],
+    "laenge": 598,
+    "bbox": [
+     965,
+     445,
+     994
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 1.3
+   },
+   {
+    "b": 14,
+    "name": "hals",
+    "eltern": 10,
+    "gelenk": [
+     860,
+     -1740,
+     260
+    ],
+    "laenge": 605,
+    "bbox": [
+     574,
+     585,
+     613
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.15,
+    "abstand": 2.1
+   },
+   {
+    "b": 15,
+    "name": "vorsprung",
+    "eltern": 14,
+    "gelenk": [
+     1000,
+     -2080,
+     330
+    ],
+    "laenge": 374,
+    "bbox": [
+     496,
+     414,
+     370
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 2.5
+   },
+   {
+    "b": 16,
+    "name": "nl_ober",
+    "eltern": 10,
+    "gelenk": [
+     966,
+     -1532,
+     -512
+    ],
+    "laenge": 926,
+    "bbox": [
+     587,
+     884,
+     736
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 0.88,
+    "abstand": 2.2
+   },
+   {
+    "b": 17,
+    "name": "nl_kugel_o",
+    "eltern": 16,
+    "gelenk": [
+     1282,
+     -963,
+     -681
+    ],
+    "laenge": 672,
+    "bbox": [
+     404,
+     628,
+     501
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 1.3
+   },
+   {
+    "b": 18,
+    "name": "nl_kugel_u",
+    "eltern": 17,
+    "gelenk": [
+     1354,
+     -569,
+     -724
+    ],
+    "laenge": 403,
+    "bbox": [
+     406,
+     564,
+     488
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 0.6
+   },
+   {
+    "b": 19,
+    "name": "nl_unter",
+    "eltern": 16,
+    "gelenk": [
+     945,
+     -902,
+     -392
+    ],
+    "laenge": 642,
+    "bbox": [
+     406,
+     935,
+     507
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.9
+   },
+   {
+    "b": 20,
+    "name": "kiefer",
+    "eltern": 14,
+    "gelenk": [
+     1021,
+     -1835,
+     514
+    ],
+    "laenge": 315,
+    "bbox": [
+     334,
+     560,
+     500
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 2.3
+   }
+  ],
+  "durchblick_ruhe": 1215,
+  "schlechtester": [
+   97,
+   [
+    270,
+    65
+   ]
+  ],
+  "massstab": 0.17826929406564598
+ },
+ "G4": {
+  "gelenke": [
+   {
+    "b": 0,
+    "name": "k0",
+    "eltern": -1,
+    "gelenk": [
+     0,
+     -2345,
+     0
+    ],
+    "laenge": 0,
+    "bbox": [
+     1450,
+     828,
+     1349
+    ],
+    "in_teil": -1,
+    "in_eltern": -1,
+    "abstand": -1.0
+   },
+   {
+    "b": 1,
+    "name": "k1",
+    "eltern": 0,
+    "gelenk": [
+     -720,
+     -2273,
+     -504
+    ],
+    "laenge": 882,
+    "bbox": [
+     1488,
+     1427,
+     979
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 2.5
+   },
+   {
+    "b": 2,
+    "name": "k2",
+    "eltern": 1,
+    "gelenk": [
+     -910,
+     -1314,
+     -479
+    ],
+    "laenge": 978,
+    "bbox": [
+     1211,
+     835,
+     704
+    ],
+    "in_teil": 0.07,
+    "in_eltern": 1.0,
+    "abstand": 1.9
+   },
+   {
+    "b": 3,
+    "name": "k3",
+    "eltern": 2,
+    "gelenk": [
+     -1894,
+     -1450,
+     -136
+    ],
+    "laenge": 1051,
+    "bbox": [
+     662,
+     1068,
+     651
+    ],
+    "in_teil": 0.17,
+    "in_eltern": 1.0,
+    "abstand": 3.2
+   },
+   {
+    "b": 4,
+    "name": "k4",
+    "eltern": 3,
+    "gelenk": [
+     -2264,
+     -424,
+     -398
+    ],
+    "laenge": 1122,
+    "bbox": [
+     459,
+     279,
+     546
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 1.3
+   },
+   {
+    "b": 5,
+    "name": "k5",
+    "eltern": 0,
+    "gelenk": [
+     -537,
+     -2255,
+     754
+    ],
+    "laenge": 930,
+    "bbox": [
+     1348,
+     1430,
+     1045
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 2.5
+   },
+   {
+    "b": 6,
+    "name": "k6",
+    "eltern": 5,
+    "gelenk": [
+     -239,
+     -1335,
+     855
+    ],
+    "laenge": 972,
+    "bbox": [
+     1164,
+     842,
+     583
+    ],
+    "in_teil": 0.07,
+    "in_eltern": 1.0,
+    "abstand": 2.5
+   },
+   {
+    "b": 7,
+    "name": "k7",
+    "eltern": 6,
+    "gelenk": [
+     -1334,
+     -1448,
+     919
+    ],
+    "laenge": 1103,
+    "bbox": [
+     651,
+     950,
+     535
+    ],
+    "in_teil": 0.17,
+    "in_eltern": 1.0,
+    "abstand": 2.2
+   },
+   {
+    "b": 8,
+    "name": "k8",
+    "eltern": 7,
+    "gelenk": [
+     -934,
+     -464,
+     1083
+    ],
+    "laenge": 1075,
+    "bbox": [
+     445,
+     316,
+     564
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.0
+   },
+   {
+    "b": 9,
+    "name": "k9",
+    "eltern": 0,
+    "gelenk": [
+     0,
+     -2345,
+     0
+    ],
+    "laenge": 0,
+    "bbox": [
+     2098,
+     877,
+     1405
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.2
+   },
+   {
+    "b": 10,
+    "name": "k10",
+    "eltern": 9,
+    "gelenk": [
+     1180,
+     -2388,
+     0
+    ],
+    "laenge": 1181,
+    "bbox": [
+     2806,
+     1804,
+     2050
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 1.3
+   },
+   {
+    "b": 11,
+    "name": "k11",
+    "eltern": 10,
+    "gelenk": [
+     1247,
+     -1978,
+     875
+    ],
+    "laenge": 969,
+    "bbox": [
+     932,
+     928,
+     759
+    ],
+    "in_teil": 0.99,
+    "in_eltern": 0.0,
+    "abstand": 2.9
+   },
+   {
+    "b": 12,
+    "name": "k12",
+    "eltern": 11,
+    "gelenk": [
+     892,
+     -1534,
+     1166
+    ],
+    "laenge": 639,
+    "bbox": [
+     771,
+     1458,
+     849
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.89,
+    "abstand": 1.3
+   },
+   {
+    "b": 13,
+    "name": "k13",
+    "eltern": 12,
+    "gelenk": [
+     1017,
+     -478,
+     1396
+    ],
+    "laenge": 1088,
+    "bbox": [
+     790,
+     536,
+     784
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 2.4
+   },
+   {
+    "b": 14,
+    "name": "k14",
+    "eltern": 13,
+    "gelenk": [
+     1603,
+     -203,
+     1436
+    ],
+    "laenge": 649,
+    "bbox": [
+     550,
+     444,
+     867
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 3.7
+   },
+   {
+    "b": 15,
+    "name": "k15",
+    "eltern": 10,
+    "gelenk": [
+     1477,
+     -1993,
+     -834
+    ],
+    "laenge": 969,
+    "bbox": [
+     647,
+     658,
+     499
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 2.5
+   },
+   {
+    "b": 16,
+    "name": "k16",
+    "eltern": 15,
+    "gelenk": [
+     1555,
+     -2038,
+     -834
+    ],
+    "laenge": 90,
+    "bbox": [
+     1165,
+     1338,
+     1103
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 0.9
+   },
+   {
+    "b": 17,
+    "name": "k17",
+    "eltern": 16,
+    "gelenk": [
+     1433,
+     -1353,
+     -906
+    ],
+    "laenge": 699,
+    "bbox": [
+     1046,
+     1231,
+     667
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 0.8
+   },
+   {
+    "b": 18,
+    "name": "k18",
+    "eltern": 17,
+    "gelenk": [
+     2110,
+     -502,
+     -928
+    ],
+    "laenge": 1088,
+    "bbox": [
+     813,
+     474,
+     797
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 1.6
+   },
+   {
+    "b": 19,
+    "name": "k19",
+    "eltern": 18,
+    "gelenk": [
+     2718,
+     -295,
+     -1010
+    ],
+    "laenge": 647,
+    "bbox": [
+     560,
+     496,
+     816
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 2.6
+   },
+   {
+    "b": 20,
+    "name": "k20",
+    "eltern": 10,
+    "gelenk": [
+     2161,
+     -1972,
+     -709
+    ],
+    "laenge": 1280,
+    "bbox": [
+     816,
+     934,
+     547
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 0.0,
+    "abstand": 1.4
+   },
+   {
+    "b": 21,
+    "name": "k21",
+    "eltern": 20,
+    "gelenk": [
+     1890,
+     -1553,
+     -753
+    ],
+    "laenge": 501,
+    "bbox": [
+     520,
+     816,
+     352
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 2.0
+   },
+   {
+    "b": 22,
+    "name": "k22",
+    "eltern": 21,
+    "gelenk": [
+     2209,
+     -768,
+     -782
+    ],
+    "laenge": 848,
+    "bbox": [
+     747,
+     497,
+     442
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 3.4
+   },
+   {
+    "b": 23,
+    "name": "k23",
+    "eltern": 10,
+    "gelenk": [
+     1940,
+     -1959,
+     931
+    ],
+    "laenge": 1276,
+    "bbox": [
+     846,
+     955,
+     525
+    ],
+    "in_teil": 1.0,
+    "in_eltern": 1.0,
+    "abstand": 2.2
+   },
+   {
+    "b": 24,
+    "name": "k24",
+    "eltern": 23,
+    "gelenk": [
+     1685,
+     -1529,
+     894
+    ],
+    "laenge": 501,
+    "bbox": [
+     770,
+     662,
+     413
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 1.6
+   },
+   {
+    "b": 25,
+    "name": "k25",
+    "eltern": 24,
+    "gelenk": [
+     2342,
+     -1008,
+     1015
+    ],
+    "laenge": 847,
+    "bbox": [
+     677,
+     366,
+     451
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 1.0,
+    "abstand": 1.2
+   },
+   {
+    "b": 26,
+    "name": "k26",
+    "eltern": 10,
+    "gelenk": [
+     2333,
+     -2315,
+     154
+    ],
+    "laenge": 1166,
+    "bbox": [
+     1107,
+     962,
+     868
+    ],
+    "in_teil": 0.0,
+    "in_eltern": 0.0,
+    "abstand": 1.0
+   }
+  ],
+  "durchblick_ruhe": 921,
+  "schlechtester": [
+   125,
+   [
+    210,
+    65
+   ]
+  ],
+  "massstab": 0.12859089182116384
+ }
+}

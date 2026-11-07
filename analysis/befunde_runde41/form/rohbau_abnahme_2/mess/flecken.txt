@@ -1,0 +1,46 @@
+=== Bild 1
+fehlt (Original dunkel, Render hell) gesamt 4565
+    1788 px  x 315-383  y 393-465  im Modell 31
+     772 px  x 341-381  y 310-346  im Modell 141
+     620 px  x 340-409  y 193-243  im Modell 192
+     238 px  x 287-301  y 308-330  im Modell 50
+     210 px  x 340-355  y 363-381  im Modell 13
+     205 px  x 252-271  y 426-449  im Modell 205
+     110 px  x 228-242  y 337-348  im Modell 110
+      93 px  x 232-245  y 372-384  im Modell 93
+      92 px  x 345-356  y 223-236  im Modell 92
+      74 px  x 395-408  y 372-379  im Modell 10
+zu viel (Original hell, Render dunkel) gesamt 3265
+    1147 px  x 204-252  y 437-480  im Modell 1131
+     390 px  x 291-317  y 407-431  im Modell 390
+     273 px  x 196-218  y 414-430  im Modell 273
+     169 px  x 308-332  y 261-278  im Modell 169
+     152 px  x 409-424  y 343-361  im Modell 122
+     146 px  x 267-282  y 425-443  im Modell 146
+     117 px  x 220-237  y 293-304  im Modell 47
+     106 px  x 326-342  y 185-193  im Modell 1
+      88 px  x 310-325  y 246-255  im Modell 88
+      84 px  x 411-421  y 366-376  im Modell 71
+=== Bild 2
+fehlt (Original dunkel, Render hell) gesamt 2122
+     638 px  x 144-167  y 160-201  im Modell 0
+     491 px  x 162-178  y 239-290  im Modell 0
+     370 px  x 292-316  y 377-405  im Modell 0
+     106 px  x 150-165  y 467-480  im Modell 0
+      88 px  x 157-166  y 209-221  im Modell 0
+      87 px  x 147-164  y 457-465  im Modell 0
+      79 px  x 328-342  y 398-407  im Modell 0
+      51 px  x 230-240  y 353-359  im Modell 0
+      44 px  x 154-160  y 447-456  im Modell 0
+      41 px  x 252-258  y 434-443  im Modell 0
+zu viel (Original hell, Render dunkel) gesamt 19076
+    8849 px  x 413-485  y 224-415  im Modell 704
+    3130 px  x 153-232  y 315-389  im Modell 508
+    2127 px  x 168-214  y 190-307  im Modell 9
+     835 px  x 161-208  y 434-460  im Modell 423
+     675 px  x 139-158  y 262-319  im Modell 0
+     368 px  x 400-435  y 399-420  im Modell 92
+     353 px  x 251-289  y 376-397  im Modell 353
+     312 px  x 140-159  y 224-244  im Modell 0
+     281 px  x 174-198  y 465-480  im Modell 97
+     267 px  x 130-152  y 439-461  im Modell 0

@@ -1,0 +1,174 @@
+
+=========== Rohbau A
+Bild 1 sichtbare Pixel: Rumpf 6720, Schwanz 12367, Hals/Kopf/Kiefer 0, Oberarm L 36, Unterarm+Hand L 729, Oberarm R 1423, Unterarm+Hand R 4086, Bein L 6868, Bein R 7005
+Bild 2 sichtbare Pixel: Rumpf 8179, Schwanz 502, Hals/Kopf/Kiefer 15000, Oberarm L 1437, Unterarm+Hand L 6065, Oberarm R 1730, Unterarm+Hand R 11993, Bein L 1068, Bein R 2698
+Pose 1: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.30  0.00  0.00
+   unterarm_l       0.07  0.00  0.00
+   hand_l           0.00  0.00  0.00
+   oberarm_r        0.13  0.00  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.08  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.11  0.00  0.00
+   unterschenkel_r  0.00  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.42  -     0.00
+   kopf             0.05  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: hals
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): oberschenkel_l 83, schwanz1 79, hals 69, wirbel 69, schwanz5 60
+Pose 2: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.19  0.00  0.00
+   unterarm_l       0.00  0.00  0.00
+   hand_l           0.00  0.00  0.00
+   oberarm_r        0.07  0.12  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.07  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.04  0.00  0.00
+   unterschenkel_r  0.00  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.48  -     0.00
+   kopf             0.11  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: hals, kopf
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): schwanz1 97, hals 94, oberschenkel_l 75, klaue_l3 61, schwanz5 60
+Ruhe: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.19  0.00  0.00
+   unterarm_l       0.00  0.00  0.00
+   hand_l           0.00  0.00  0.00
+   oberarm_r        0.10  0.00  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.08  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.06  0.00  0.00
+   unterschenkel_r  0.00  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.40  -     0.00
+   kopf             0.04  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: hals
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): hals 82, klaue_r3 78, klaue_l4 60, schwanz5 60, schwanz1 59
+
+=========== Rohbau B
+Bild 1 sichtbare Pixel: Rumpf 6855, Schwanz 14591, Hals/Kopf/Kiefer 0, Oberarm L 0, Unterarm+Hand L 0, Oberarm R 1139, Unterarm+Hand R 3226, Bein L 4946, Bein R 6970
+Bild 2 sichtbare Pixel: Rumpf 8689, Schwanz 14, Hals/Kopf/Kiefer 15874, Oberarm L 2187, Unterarm+Hand L 6508, Oberarm R 909, Unterarm+Hand R 11921, Bein L 1242, Bein R 2796
+Pose 1: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.44  0.00  0.00
+   unterarm_l       0.97  0.00  0.00
+   hand_l           0.85  0.00  0.00
+   oberarm_r        0.25  0.00  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.18  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.15  0.00  0.00
+   unterschenkel_r  0.00  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.43  -     0.00
+   kopf             0.02  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: schwanz1, schwanz2, oberschenkel_l, oberschenkel_r, unterarm_l, hand_l, klaue_l1, klaue_l2, hals, klaue_l3
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): oberschenkel_r 113, klaue_r4 109, hals 98, klaue_r2 75, brust 74
+Pose 2: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.25  0.03  0.00
+   unterarm_l       0.00  0.00  0.00
+   hand_l           0.00  0.00  0.00
+   oberarm_r        0.15  0.24  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.29  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.26  0.00  0.00
+   unterschenkel_r  0.00  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.50  -     0.00
+   kopf             0.10  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: schwanz1, schwanz2, oberschenkel_l, oberschenkel_r, hals
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): hals 88, oberarm_r 86, oberarm_l 83, oberschenkel_l 81, klaue_r2 81
+Ruhe: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.24  0.00  0.00
+   unterarm_l       0.00  0.00  0.00
+   hand_l           0.00  0.00  0.00
+   oberarm_r        0.23  0.00  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.23  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.26  0.00  0.00
+   unterschenkel_r  0.00  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.43  -     0.00
+   kopf             0.00  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: schwanz1, schwanz2, oberschenkel_l, oberschenkel_r, hals
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): oberarm_r 109, oberschenkel_r 91, oberarm_l 90, klaue_r3 86, klaue_l2 86
+
+=========== Rohbau C
+Bild 1 sichtbare Pixel: Rumpf 6828, Schwanz 14068, Hals/Kopf/Kiefer 16, Oberarm L 0, Unterarm+Hand L 19, Oberarm R 884, Unterarm+Hand R 3396, Bein L 4196, Bein R 7361
+Bild 2 sichtbare Pixel: Rumpf 7943, Schwanz 1040, Hals/Kopf/Kiefer 14797, Oberarm L 1703, Unterarm+Hand L 5349, Oberarm R 621, Unterarm+Hand R 11297, Bein L 1278, Bein R 4733
+Pose 1: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.04  0.00  0.00
+   unterarm_l       0.00  0.00  0.00
+   hand_l           0.00  0.00  0.00
+   oberarm_r        0.04  0.00  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.08  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.08  0.00  0.00
+   unterschenkel_r  0.00  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.26  -     0.00
+   kopf             0.00  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: schwanz2, hals
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): klaue_r2 100, schwanz4 92, oberarm_l 81, schwanz5 78, kopf 75
+Pose 2: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.01  0.00  0.00
+   unterarm_l       0.00  0.00  0.00
+   hand_l           0.00  0.00  0.00
+   oberarm_r        0.00  0.27  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.17  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.12  0.00  0.00
+   unterschenkel_r  0.01  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.35  -     0.00
+   kopf             0.06  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: hals
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): oberschenkel_r 115, schwanz4 114, hals 112, schwanz3 111, oberarm_r 105
+Ruhe: Anteil der Oberflaeche im Rumpf / im Kopf / im Schwanz
+   oberarm_l        0.05  0.00  0.00
+   unterarm_l       0.00  0.00  0.00
+   hand_l           0.00  0.00  0.00
+   oberarm_r        0.04  0.00  0.00
+   unterarm_r       0.00  0.00  0.00
+   hand_r           0.00  0.00  0.00
+   oberschenkel_l   0.08  0.00  0.00
+   unterschenkel_l  0.00  0.00  0.00
+   fuss_l           0.00  0.00  0.00
+   oberschenkel_r   0.08  0.00  0.00
+   unterschenkel_r  0.00  0.00  0.00
+   fuss_r           0.00  0.00  0.00
+   hals             0.27  -     0.00
+   kopf             0.00  -     0.00
+   kiefer           0.00  -     0.00
+   Gelenkpunkte im Rumpf: schwanz2, hals
+   groesste Luecken Eltern-Kind (Ecke zu Ecke): hals 111, klaue_r2 100, schwanz4 92, oberarm_l 81, schwanz5 78

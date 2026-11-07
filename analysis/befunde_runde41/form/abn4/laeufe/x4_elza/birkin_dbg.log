@@ -1,0 +1,65 @@
+tick=0 st=1 sub=9 ph2=0 ph3=0 clip=0 af=16 pos=(-14700,0,-23350) rot=0 dist=36632 hp=300 grid=0x13 flags=0x00 atk_cd=0 stun=9 timer=100
+FORM t=0 st=1 sub=0 ph=1 clip=10 bild=1 pos=(-14700,0,-23350) gier=4080 dist=29676 hp=150 cd=0/0/0 biss=0 tempo=0
+FORM t=15 st=1 sub=0 ph=1 clip=10 bild=14 pos=(1015,0,-23350) gier=11 dist=12748 hp=150 cd=0/0/0 biss=0 tempo=0
+FORM t=30 st=1 sub=0 ph=1 clip=10 bild=29 pos=(1109,0,-23355) gier=11 dist=12666 hp=150 cd=0/0/0 biss=0 tempo=35
+FORM t=45 st=1 sub=0 ph=1 clip=10 bild=44 pos=(1823,0,-23370) gier=9 dist=11984 hp=150 cd=0/0/0 biss=0 tempo=36
+FORM t=60 st=1 sub=0 ph=1 clip=10 bild=59 pos=(1292,0,-23365) gier=9 dist=12414 hp=150 cd=0/0/0 biss=0 tempo=-62
+FORM t=75 st=1 sub=0 ph=1 clip=10 bild=74 pos=(1343,0,-23373) gier=9 dist=13506 hp=150 cd=0/0/0 biss=0 tempo=30
+FORM t=90 st=1 sub=0 ph=1 clip=10 bild=89 pos=(1564,0,-23384) gier=9 dist=14298 hp=150 cd=0/0/0 biss=0 tempo=-12
+FORM t=105 st=1 sub=0 ph=1 clip=10 bild=104 pos=(1346,0,-23384) gier=7 dist=15528 hp=150 cd=0/0/0 biss=0 tempo=-25
+FORM t=120 st=1 sub=0 ph=1 clip=10 bild=119 pos=(1275,0,-23389) gier=7 dist=16636 hp=150 cd=0/0/0 biss=0 tempo=23
+FORM t=135 st=1 sub=4 ph=1 clip=0 bild=7 pos=(3034,0,-23414) gier=7 dist=16384 hp=150 cd=0/0/0 biss=0 tempo=495
+FORM t=150 st=1 sub=4 ph=1 clip=0 bild=4 pos=(8239,0,-23467) gier=3 dist=11984 hp=150 cd=0/0/0 biss=0 tempo=162
+FORM t=165 st=1 sub=4 ph=1 clip=0 bild=1 pos=(14147,0,-23501) gier=3 dist=6982 hp=150 cd=0/0/0 biss=0 tempo=12
+FORM t=180 st=1 sub=4 ph=1 clip=0 bild=16 pos=(19748,0,-23172) gier=3907 dist=3050 hp=150 cd=0/0/0 biss=0 tempo=393
+FORM t=195 st=1 sub=4 ph=1 clip=0 bild=13 pos=(20501,0,-23086) gier=3875 dist=2442 hp=150 cd=0/0/0 biss=0 tempo=400
+FORM t=210 st=1 sub=3 ph=1 clip=5 bild=10 pos=(20157,0,-23189) gier=3815 dist=2941 hp=150 cd=0/0/80 biss=0 tempo=37
+FORM t=225 st=1 sub=15 ph=1 clip=27 bild=3 pos=(20111,0,-23217) gier=89 dist=2952 hp=150 cd=0/0/65 biss=5 tempo=0
+FORM t=240 st=1 sub=15 ph=1 clip=27 bild=18 pos=(19688,0,-23212) gier=89 dist=5394 hp=150 cd=0/0/50 biss=5 tempo=0
+FORM t=255 st=1 sub=15 ph=1 clip=27 bild=33 pos=(19688,0,-23212) gier=89 dist=5394 hp=150 cd=0/0/35 biss=5 tempo=0
+FORM t=270 st=1 sub=15 ph=1 clip=27 bild=48 pos=(19688,0,-23212) gier=89 dist=5394 hp=150 cd=0/0/20 biss=5 tempo=0
+FORM t=285 st=1 sub=15 ph=1 clip=27 bild=63 pos=(19688,0,-23212) gier=89 dist=5394 hp=150 cd=0/0/5 biss=5 tempo=0
+FORM t=300 st=1 sub=15 ph=1 clip=27 bild=78 pos=(19688,0,-23212) gier=89 dist=5394 hp=150 cd=0/0/0 biss=5 tempo=0
+FORM t=315 st=1 sub=15 ph=1 clip=27 bild=93 pos=(19688,0,-23212) gier=89 dist=5394 hp=150 cd=0/0/0 biss=5 tempo=0
+FORM t=330 st=1 sub=3 ph=1 clip=5 bild=8 pos=(19915,0,-23276) gier=93 dist=5196 hp=135 cd=142/142/142 biss=5 tempo=36
+FORM t=345 st=1 sub=3 ph=1 clip=5 bild=23 pos=(20171,0,-23205) gier=103 dist=4964 hp=135 cd=127/127/127 biss=5 tempo=44
+FORM t=360 st=1 sub=3 ph=1 clip=5 bild=38 pos=(20142,0,-23205) gier=107 dist=4964 hp=120 cd=112/112/112 biss=5 tempo=18
+FORM t=375 st=1 sub=3 ph=1 clip=5 bild=53 pos=(20158,0,-23262) gier=101 dist=4964 hp=105 cd=97/97/97 biss=5 tempo=37
+FORM t=390 st=1 sub=3 ph=1 clip=5 bild=68 pos=(20155,0,-23573) gier=61 dist=4937 hp=105 cd=82/82/82 biss=5 tempo=33
+FORM t=405 st=1 sub=3 ph=1 clip=5 bild=83 pos=(20150,0,-23634) gier=51 dist=4910 hp=90 cd=67/67/67 biss=5 tempo=13
+FORM t=420 st=1 sub=3 ph=1 clip=5 bild=9 pos=(20158,0,-23684) gier=43 dist=4910 hp=75 cd=52/52/52 biss=5 tempo=35
+FORM t=435 st=1 sub=3 ph=1 clip=5 bild=24 pos=(20169,0,-23539) gier=59 dist=4937 hp=75 cd=37/37/37 biss=5 tempo=43
+FORM t=450 st=1 sub=20 ph=1 clip=8 bild=18 pos=(20124,0,-23493) gier=67 dist=4937 hp=60 cd=22/22/22 biss=5 tempo=0
+FORM t=465 st=1 sub=3 ph=1 clip=5 bild=3 pos=(20150,0,-23508) gier=67 dist=4937 hp=45 cd=7/7/7 biss=5 tempo=27
+FORM t=480 st=1 sub=14 ph=1 clip=26 bild=9 pos=(20124,0,-23550) gier=61 dist=4937 hp=45 cd=0/0/0 biss=4 tempo=0
+FORM t=495 st=1 sub=14 ph=1 clip=26 bild=24 pos=(20124,0,-23537) gier=71 dist=4937 hp=30 cd=0/0/0 biss=4 tempo=0
+FORM t=510 st=1 sub=3 ph=1 clip=5 bild=4 pos=(20153,0,-23605) gier=71 dist=4937 hp=30 cd=14/0/86 biss=4 tempo=30
+FORM t=525 st=1 sub=14 ph=1 clip=26 bild=2 pos=(20124,0,-23646) gier=57 dist=4910 hp=15 cd=0/0/71 biss=3 tempo=0
+FORM t=540 st=1 sub=14 ph=1 clip=26 bild=17 pos=(20124,0,-23633) gier=59 dist=4937 hp=15 cd=0/0/56 biss=3 tempo=0
+FORM t=555 st=1 sub=14 ph=1 clip=26 bild=32 pos=(20124,0,-23592) gier=79 dist=4937 hp=15 cd=0/0/41 biss=3 tempo=0
+FORM t=570 st=1 sub=3 ph=1 clip=5 bild=12 pos=(20164,0,-23702) gier=59 dist=4910 hp=15 cd=10/0/78 biss=3 tempo=41
+FORM t=585 st=1 sub=14 ph=1 clip=26 bild=6 pos=(20124,0,-23601) gier=67 dist=4937 hp=0 cd=0/0/63 biss=2 tempo=0
+opfer var=-1 ph=0 clip=215 af=11 plpos=(25041,-24133) hp=30 vstate=0 vtyp=30 bank(ok=-1 clips=-1)
+g5 tick=0 sub=2 ph=1 clip=1 af=0 u=-9000 dist=31460 hp=600 blob=3/1 gw0=0 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=19 plyaw=2061 dirx=0 letzte=(0,0,0)
+  DRAW f=2160 part=0/4 (bones=2 meshes=4) welt=(-9000,0,-23400) aktorY=0
+  DRAW f=2160 part=1/4 (bones=2 meshes=4) welt=(-6855,-3727,-23443) aktorY=0
+  DRAW f=2160 part=2/4 (bones=2 meshes=4) welt=(-7201,-34,-23437) aktorY=0
+  DRAW f=2160 part=3/4 (bones=2 meshes=4) welt=(-8201,-4034,-23417) aktorY=0
+g5 tick=15 sub=2 ph=1 clip=1 af=0 u=-9000 dist=31460 hp=600 blob=3/1 gw0=90 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=22 plyaw=2061 dirx=0 letzte=(0,0,0)
+g5 tick=30 sub=2 ph=1 clip=1 af=0 u=-9000 dist=31460 hp=600 blob=3/1 gw0=180 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=18 plyaw=2061 dirx=0 letzte=(0,0,0)
+g5 tick=45 sub=2 ph=1 clip=1 af=0 u=-9000 dist=31460 hp=600 blob=3/1 gw0=270 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=19 plyaw=2061 dirx=0 letzte=(0,0,0)
+g5 tick=60 sub=2 ph=1 clip=1 af=0 u=-9000 dist=31460 hp=600 blob=3/1 gw0=360 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=21 plyaw=2061 dirx=0 letzte=(0,0,0)
+  DRAW f=2220 part=0/4 (bones=2 meshes=4) welt=(-9000,0,-23400) aktorY=0
+  DRAW f=2220 part=1/4 (bones=2 meshes=4) welt=(-6855,-3727,-23443) aktorY=0
+  DRAW f=2220 part=2/4 (bones=2 meshes=4) welt=(-7201,-34,-23437) aktorY=0
+  DRAW f=2220 part=3/4 (bones=2 meshes=4) welt=(-8201,-4034,-23417) aktorY=0
+g5 tick=75 sub=2 ph=1 clip=1 af=0 u=-9000 dist=31460 hp=600 blob=3/1 gw0=450 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=18 plyaw=2061 dirx=0 letzte=(0,0,0)
+g5 tick=90 sub=2 ph=2 clip=1 af=0 u=-9000 dist=31460 hp=600 blob=3/1 gw0=540 akku=0 pos=(-9000,-23400) blut=0/0/0/0 esp=19 plyaw=2061 dirx=0 letzte=(0,0,0)
+g5 tick=105 sub=2 ph=2 clip=1 af=15 u=-8960 dist=31528 hp=600 blob=3/1 gw0=630 akku=0 pos=(-8960,-23400) blut=0/0/0/0 esp=20 plyaw=2061 dirx=0 letzte=(0,0,0)
+g5 tick=120 sub=2 ph=2 clip=1 af=30 u=-8854 dist=31592 hp=600 blob=3/1 gw0=720 akku=0 pos=(-8854,-23400) blut=0/0/0/0 esp=18 plyaw=2061 dirx=0 letzte=(0,0,0)
+  DRAW f=2280 part=0/4 (bones=2 meshes=4) welt=(-8383,0,-23400) aktorY=0
+  DRAW f=2280 part=1/4 (bones=2 meshes=4) welt=(-6296,-3042,-23442) aktorY=0
+  DRAW f=2280 part=2/4 (bones=2 meshes=4) welt=(-6885,620,-23431) aktorY=0
+  DRAW f=2280 part=3/4 (bones=2 meshes=4) welt=(-7619,-3437,-23416) aktorY=0
+g5 tick=135 sub=2 ph=2 clip=1 af=45 u=-8292 dist=32056 hp=600 blob=3/1 gw0=810 akku=0 pos=(-8292,-23400) blut=0/0/0/0 esp=19 plyaw=2061 dirx=0 letzte=(0,0,0)
+g5 tick=150 sub=2 ph=2 clip=1 af=60 u=-6104 dist=31328 hp=600 blob=3/1 gw0=900 akku=0 pos=(-6104,-23400) blut=0/0/0/0 esp=20 plyaw=2061 dirx=0 letzte=(0,0,0)

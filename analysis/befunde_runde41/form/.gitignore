@@ -1,0 +1,82 @@
+# Bahnsteig-Form, Stufe 1 und 2: grosse, nachbaubare Zwischenstaende bleiben lokal (rund 2,4 GB Bilder,
+# Netze, Arrays). Versioniert sind Generator (*.py, *.sh), Entscheide und Dossiers (*.md), Messdaten und
+# Berichte (*.json, *.txt, *.log), das abgenommene Ergebnis J (varianten/J_dicker/ ganz), die Modelle und
+# Texturen jeder Variante (Eingaenge des Generators: J liest C_mitte/FORM.EMD, H_stoff/h2, J_dicker/_g),
+# die Eingangsbilder und Masken der Pruefung und alles unter stufe3/.
+*.npy
+*.pkl
+*.pt
+*.obj
+*.png
+*.EMD
+*.TIM
+
+# Eingaenge von form_pruefung.py / form_kamera.py (Zielmasken, Bilder, Hintergruende, Nutzerteile)
+!/bild1.png
+!/bild2.png
+!/maske_bild1.png
+!/maske_bild2.png
+!/ziel_bild1.png
+!/ziel_bild2.png
+!/ziel2_bild1.png
+!/ziel2_bild2.png
+!/farbe_bild1_echt.png
+!/farbe_bild2_echt.png
+!/pruefung/figur_bild*.png
+!/pruefung/hintergrund_bild*.png
+!/pruefung/logo_maske.png
+!/pruefung/teile/*.png
+!/nutzer_teile/*.png
+!/varianten/I_fuesse/ziel_bild1_verfeinert.png
+
+# Modelle und Texturen der Varianten (Generator-Eingaenge), abgenommenes Ergebnis J
+!/varianten/*/FORM.EMD
+!/varianten/*/FORM.TIM
+!/varianten/*/textur.png
+!/varianten/*/_g/FORM.*
+!/varianten/*/_g/textur.png
+!/varianten/H_stoff/h*/FORM.*
+!/varianten/H_stoff/h*/textur.png
+!/varianten/gen/FORM.*
+!/varianten/J_dicker/**
+
+# Belege des Bauwerkzeugs
+!/werkzeug/belege/*.png
+
+# Stufe 3 (Bewegung und Angriffe): Kontaktblaetter und Bildfolgen fuer den Nutzer
+!/stufe3/**
+
+/varianten/_probe/
+
+# Stufe 3: Arbeitsbilder (nachbaubar mit stufe3/gen)
+/stufe3/roh/
+/stufe3/**/__pycache__/
+*.pyc
+
+# Variante K (E20): Kontaktblaetter, Modelle, Berichte versioniert; Arbeitslaeufe (_lauf) und Pruefbilder je Variante nachbaubar (generator/k_variante.sh)
+!/varianten/K_alligator/*.png
+!/varianten/K_alligator/blaetter/*.png
+!/varianten/K_alligator/K*_*/FORM.EMD
+!/varianten/K_alligator/K*_*/FORM.TIM
+!/varianten/K_alligator/K*_*/seite3.png
+/varianten/K_alligator/_lauf/
+/varianten/K_alligator/*.npy
+/varianten/K_alligator/generator/__pycache__/
+
+# Variante K5 (FORMBLATT_V2): Bildleisten/Tafeln und Modelle versioniert; Arbeitslaeufe (_lauf) und Raster-Arrays nachbaubar (generator/k5_*.py)
+!/varianten/K5/*.png
+!/varianten/K5/K*/FORM.EMD
+!/varianten/K5/K*/FORM.TIM
+!/varianten/K5/K*/seite3.png
+/varianten/K5/_lauf/
+/varianten/K5/generator/__pycache__/
+
+# K5c Farbe (Runde 1/2): Nutzer-Tafeln, Spielbilder und Variantenmodelle versioniert (generator/kf_*.py, riegel_farbe.py)
+!/varianten/K5/farbe/*.png
+!/varianten/K5/farbe/K5C_FARBE.*
+!/varianten/K5/farbe/K5c_farbe*/FORM.*
+!/varianten/K5/farbe/spiel*/*.png
+
+# K5c Farbe Versuch 2: Belegbilder des Messblatt-Nachtrags V2 (farbe_lesung/N2_skripte/n2_mass.py, n2_linienbild.py)
+!/varianten/K5/farbe_lesung/N2_*.png
+/varianten/K5/farbe_lesung/N2_skripte/__pycache__/

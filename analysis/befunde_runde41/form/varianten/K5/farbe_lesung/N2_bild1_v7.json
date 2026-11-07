@@ -1,0 +1,319 @@
+{
+ "gegenprobe": {
+  "max": 2,
+  "anteil": 0.09596932504082044
+ },
+ "v6": [
+  {
+   "L_ziel": 35,
+   "anteil": 0.1,
+   "ruecken_rot": 2.4,
+   "figur_rot": 2.76,
+   "figur_C": 6.25,
+   "figur_ab": 6.44,
+   "ruecken_lab": [
+    24.8,
+    5.7,
+    -1.0
+   ]
+  },
+  {
+   "L_ziel": 35,
+   "anteil": 0.15,
+   "ruecken_rot": 5.4,
+   "figur_rot": 3.5,
+   "figur_C": 6.46,
+   "figur_ab": 6.8,
+   "ruecken_lab": [
+    25.3,
+    6.5,
+    -0.3
+   ]
+  },
+  {
+   "L_ziel": 35,
+   "anteil": 0.2,
+   "ruecken_rot": 12.0,
+   "figur_rot": 5.1,
+   "figur_C": 6.74,
+   "figur_ab": 7.26,
+   "ruecken_lab": [
+    26.0,
+    7.5,
+    1.1
+   ]
+  },
+  {
+   "L_ziel": 45,
+   "anteil": 0.1,
+   "ruecken_rot": 5.4,
+   "figur_rot": 3.48,
+   "figur_C": 6.31,
+   "figur_ab": 6.53,
+   "ruecken_lab": [
+    25.5,
+    5.9,
+    -0.8
+   ]
+  },
+  {
+   "L_ziel": 45,
+   "anteil": 0.15,
+   "ruecken_rot": 12.7,
+   "figur_rot": 5.27,
+   "figur_C": 6.49,
+   "figur_ab": 6.82,
+   "ruecken_lab": [
+    26.7,
+    6.6,
+    0.0
+   ]
+  },
+  {
+   "L_ziel": 45,
+   "anteil": 0.2,
+   "ruecken_rot": 19.0,
+   "figur_rot": 6.81,
+   "figur_C": 6.77,
+   "figur_ab": 7.23,
+   "ruecken_lab": [
+    28.2,
+    7.5,
+    1.4
+   ]
+  },
+  {
+   "L_ziel": 55,
+   "anteil": 0.1,
+   "ruecken_rot": 6.7,
+   "figur_rot": 3.81,
+   "figur_C": 6.37,
+   "figur_ab": 6.59,
+   "ruecken_lab": [
+    26.3,
+    6.0,
+    -0.7
+   ]
+  },
+  {
+   "L_ziel": 55,
+   "anteil": 0.15,
+   "ruecken_rot": 12.4,
+   "figur_rot": 5.2,
+   "figur_C": 6.52,
+   "figur_ab": 6.81,
+   "ruecken_lab": [
+    28.2,
+    6.6,
+    0.2
+   ]
+  },
+  {
+   "L_ziel": 55,
+   "anteil": 0.2,
+   "ruecken_rot": 17.9,
+   "figur_rot": 6.54,
+   "figur_C": 6.75,
+   "figur_ab": 7.14,
+   "ruecken_lab": [
+    30.6,
+    7.4,
+    1.6
+   ]
+  }
+ ],
+ "v7": [
+  {
+   "modus": "ab",
+   "g": 1.0,
+   "figur_C": 6.47,
+   "figur_ab": 6.8,
+   "figur_rot": 5.26,
+   "ruecken_rot": 12.8,
+   "albedo_C": 7.9,
+   "albedo_blau_p": 0.0,
+   "zonen_C": {
+    "Schwanz": 7.3,
+    "Ruecken/Flanke": 8.1,
+    "Hinterbein l (W)": 3.4,
+    "Hinterbein r (W)": 5.3,
+    "Vorderglied r (W)": 4.7
+   },
+   "zonen_ab": {
+    "Schwanz": 6.6,
+    "Ruecken/Flanke": 7.1,
+    "Hinterbein l (W)": 3.6,
+    "Hinterbein r (W)": 5.6,
+    "Vorderglied r (W)": 4.8
+   }
+  },
+  {
+   "modus": "ab",
+   "g": 1.5,
+   "figur_C": 8.63,
+   "figur_ab": 8.44,
+   "figur_rot": 8.04,
+   "ruecken_rot": 19.1,
+   "albedo_C": 11.2,
+   "albedo_blau_p": 45.1,
+   "zonen_C": {
+    "Schwanz": 10.4,
+    "Ruecken/Flanke": 10.1,
+    "Hinterbein l (W)": 4.6,
+    "Hinterbein r (W)": 6.8,
+    "Vorderglied r (W)": 6.1
+   },
+   "zonen_ab": {
+    "Schwanz": 8.6,
+    "Ruecken/Flanke": 8.2,
+    "Hinterbein l (W)": 4.3,
+    "Hinterbein r (W)": 6.6,
+    "Vorderglied r (W)": 5.9
+   }
+  },
+  {
+   "modus": "ab",
+   "g": 2.0,
+   "figur_C": 10.89,
+   "figur_ab": 10.1,
+   "figur_rot": 9.83,
+   "ruecken_rot": 23.5,
+   "albedo_C": 14.5,
+   "albedo_blau_p": 74.3,
+   "zonen_C": {
+    "Schwanz": 13.6,
+    "Ruecken/Flanke": 12.1,
+    "Hinterbein l (W)": 6.1,
+    "Hinterbein r (W)": 8.4,
+    "Vorderglied r (W)": 7.5
+   },
+   "zonen_ab": {
+    "Schwanz": 10.5,
+    "Ruecken/Flanke": 9.5,
+    "Hinterbein l (W)": 5.2,
+    "Hinterbein r (W)": 7.7,
+    "Vorderglied r (W)": 7.0
+   }
+  },
+  {
+   "modus": "ab",
+   "g": 2.5,
+   "figur_C": 13.14,
+   "figur_ab": 11.6,
+   "figur_rot": 10.94,
+   "ruecken_rot": 26.0,
+   "albedo_C": 17.6,
+   "albedo_blau_p": 77.6,
+   "zonen_C": {
+    "Schwanz": 16.8,
+    "Ruecken/Flanke": 14.1,
+    "Hinterbein l (W)": 7.6,
+    "Hinterbein r (W)": 10.1,
+    "Vorderglied r (W)": 8.9
+   },
+   "zonen_ab": {
+    "Schwanz": 12.2,
+    "Ruecken/Flanke": 10.7,
+    "Hinterbein l (W)": 6.0,
+    "Hinterbein r (W)": 8.8,
+    "Vorderglied r (W)": 8.0
+   }
+  },
+  {
+   "modus": "warm",
+   "g": 1.0,
+   "figur_C": 6.47,
+   "figur_ab": 6.8,
+   "figur_rot": 5.26,
+   "ruecken_rot": 12.8,
+   "albedo_C": 7.9,
+   "albedo_blau_p": 0.0,
+   "zonen_C": {
+    "Schwanz": 7.3,
+    "Ruecken/Flanke": 8.1,
+    "Hinterbein l (W)": 3.4,
+    "Hinterbein r (W)": 5.3,
+    "Vorderglied r (W)": 4.7
+   },
+   "zonen_ab": {
+    "Schwanz": 6.6,
+    "Ruecken/Flanke": 7.1,
+    "Hinterbein l (W)": 3.6,
+    "Hinterbein r (W)": 5.6,
+    "Vorderglied r (W)": 4.8
+   }
+  },
+  {
+   "modus": "warm",
+   "g": 1.5,
+   "figur_C": 7.6,
+   "figur_ab": 8.04,
+   "figur_rot": 7.92,
+   "ruecken_rot": 18.8,
+   "albedo_C": 9.6,
+   "albedo_blau_p": 0.8,
+   "zonen_C": {
+    "Schwanz": 9.2,
+    "Ruecken/Flanke": 9.4,
+    "Hinterbein l (W)": 3.8,
+    "Hinterbein r (W)": 5.4,
+    "Vorderglied r (W)": 5.0
+   },
+   "zonen_ab": {
+    "Schwanz": 8.3,
+    "Ruecken/Flanke": 7.8,
+    "Hinterbein l (W)": 3.7,
+    "Hinterbein r (W)": 5.7,
+    "Vorderglied r (W)": 5.2
+   }
+  },
+  {
+   "modus": "warm",
+   "g": 2.0,
+   "figur_C": 8.74,
+   "figur_ab": 9.36,
+   "figur_rot": 9.59,
+   "ruecken_rot": 22.9,
+   "albedo_C": 11.2,
+   "albedo_blau_p": 0.8,
+   "zonen_C": {
+    "Schwanz": 11.1,
+    "Ruecken/Flanke": 10.8,
+    "Hinterbein l (W)": 4.3,
+    "Hinterbein r (W)": 5.5,
+    "Vorderglied r (W)": 5.2
+   },
+   "zonen_ab": {
+    "Schwanz": 10.0,
+    "Ruecken/Flanke": 8.5,
+    "Hinterbein l (W)": 3.9,
+    "Hinterbein r (W)": 5.8,
+    "Vorderglied r (W)": 5.7
+   }
+  },
+  {
+   "modus": "warm",
+   "g": 2.5,
+   "figur_C": 9.84,
+   "figur_ab": 10.63,
+   "figur_rot": 10.9,
+   "ruecken_rot": 26.1,
+   "albedo_C": 12.8,
+   "albedo_blau_p": 0.8,
+   "zonen_C": {
+    "Schwanz": 12.9,
+    "Ruecken/Flanke": 12.1,
+    "Hinterbein l (W)": 4.9,
+    "Hinterbein r (W)": 5.7,
+    "Vorderglied r (W)": 5.5
+   },
+   "zonen_ab": {
+    "Schwanz": 11.6,
+    "Ruecken/Flanke": 9.4,
+    "Hinterbein l (W)": 4.2,
+    "Hinterbein r (W)": 5.9,
+    "Vorderglied r (W)": 6.2
+   }
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "C": {
+  "iou_ziel2": 0.9811,
+  "iou_verfeinert": 0.9843
+ },
+ "H2": {
+  "iou_ziel2": 0.9811,
+  "iou_verfeinert": 0.9843
+ },
+ "I_g": {
+  "iou_ziel2": 0.9425,
+  "iou_verfeinert": 0.9646
+ }
+}

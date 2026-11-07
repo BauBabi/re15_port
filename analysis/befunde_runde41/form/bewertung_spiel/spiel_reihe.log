@@ -1,0 +1,121 @@
+exe re15_pc_form_24665_215107 PID 22568 Fenster 21498388
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_A_r5080_ruhe_g2145.png
+exe beendet
+[enemy] Bahnsteig-Form: 23 Meshes, 23 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 2145 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/24665_215107
+== spiel_A_r5080_ruhe_g2145 rc=0
+exe re15_pc_form_24754_215130 PID 79876 Fenster 76287170
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_A_r5080_ruhe_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 23 Meshes, 23 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/24754_215130
+== spiel_A_r5080_ruhe_g3172 rc=0
+exe re15_pc_form_24840_215152 PID 50548 Fenster 86055438
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_A_r5090_ruhe_g1166.png
+exe beendet
+[enemy] Bahnsteig-Form: 23 Meshes, 23 Knochen, 3 Clips -> Slot 12
+t451 slot2 typ 0x30 st 1/9 pos (2625,0,-23625) gier 1166 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/24840_215152
+== spiel_A_r5090_ruhe_g1166 rc=0
+exe re15_pc_form_24913_215213 PID 104804 Fenster 86120974
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_A_r5080_biss_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 23 Meshes, 23 Knochen, 5 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/24913_215213
+== spiel_A_r5080_biss_g3172 rc=0
+exe re15_pc_form_25011_215235 PID 62748 Fenster 86186510
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_A_r5080_seitenhieb_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 23 Meshes, 23 Knochen, 5 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 4 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/25011_215235
+== spiel_A_r5080_seitenhieb_g3172 rc=0
+exe re15_pc_form_25095_215257 PID 108572 Fenster 155717750
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_B_r5080_ruhe_g2145.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 2145 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/25095_215257
+== spiel_B_r5080_ruhe_g2145 rc=0
+exe re15_pc_form_25193_215319 PID 54408 Fenster 155783286
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_B_r5080_ruhe_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/25193_215319
+== spiel_B_r5080_ruhe_g3172 rc=0
+exe re15_pc_form_25336_215341 PID 86892 Fenster 155848822
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_B_r5090_ruhe_g1166.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 3 Clips -> Slot 12
+t451 slot2 typ 0x30 st 1/9 pos (2625,0,-23625) gier 1166 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/25336_215341
+== spiel_B_r5090_ruhe_g1166 rc=0
+exe re15_pc_form_25511_215402 PID 53772 Fenster 126683788
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_B_r5080_biss_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 5 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/25511_215402
+== spiel_B_r5080_biss_g3172 rc=0
+exe re15_pc_form_25721_215424 PID 23104 Fenster 3540388
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_B_r5080_seitenhieb_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 5 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 4 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/25721_215424
+== spiel_B_r5080_seitenhieb_g3172 rc=0
+exe re15_pc_form_25901_215445 PID 98004 Fenster 23662644
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_C_r5080_ruhe_g2145.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 2145 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/25901_215445
+== spiel_C_r5080_ruhe_g2145 rc=0
+exe re15_pc_form_26055_215507 PID 8520 Fenster 23728180
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_C_r5080_ruhe_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 3 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/26055_215507
+== spiel_C_r5080_ruhe_g3172 rc=0
+exe re15_pc_form_26209_215528 PID 75768 Fenster 126945932
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_C_r5090_ruhe_g1166.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 3 Clips -> Slot 12
+t451 slot2 typ 0x30 st 1/9 pos (2625,0,-23625) gier 1166 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/26209_215528
+== spiel_C_r5090_ruhe_g1166 rc=0
+exe re15_pc_form_26402_215550 PID 63552 Fenster 638715510
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_C_r5080_biss_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 5 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 2 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/26402_215550
+== spiel_C_r5080_biss_g3172 rc=0
+exe re15_pc_form_26577_215615 PID 69620 Fenster 343607014
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/bewertung_spiel/spiel_C_r5080_seitenhieb_g3172.png
+exe beendet
+[enemy] Bahnsteig-Form: 21 Meshes, 21 Knochen, 5 Clips -> Slot 11
+t451 slot1 typ 0x30 st 1/9 pos (-18514,0,-18726) gier 3172 clip 4 bild 0 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/26577_215615
+== spiel_C_r5080_seitenhieb_g3172 rc=0
+FERTIG

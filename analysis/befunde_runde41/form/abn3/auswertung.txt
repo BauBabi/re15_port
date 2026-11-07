@@ -1,0 +1,267 @@
+# Abnahme 3 Stufe 3 - eigene Laeufe des Abnehmers (exe b9b3d574 = Kopf b9ab865af; *v_* = Vorher-exe f4deb1a3 = Stand 2e3713c74). Werkzeug abn3/werkzeug/mass.py; BP = Bildpunkte im 320x240-Puffer (deck.log), fast schwarz = Promille Bildpunkte mit Luma < 24 im 640x480-Framedump.
+
+## 1 Rueckstoss-Szene (--szene; Pruefmass ueber die Taumelbilder Clip 13)
+w_leon: Fenster F1486-F1849 (364 Bilder), Form-Slot 12; Beginn: Spieler (14998,-24720) Form (17290,-23682)
+  Cut 13 mo13 F1486-F1544 ( 59 Bilder): Form x  17290.. 13782, Spieler x  14998.. 14998 | dunkel 300..533 (>600: 0) | Form sichtbar min 9734, verdeckt max 199 | Spieler sichtbar max 5866, verdeckt max 448
+  Cut 12 mo13 F1545-F1678 (134 Bilder): Form x  13702..  3062, Spieler x  14998.. 14998 | dunkel 210..526 (>600: 0) | Form sichtbar min 1247, verdeckt max 405 | Spieler sichtbar max 5772, verdeckt max 13
+  Cut 11 mo13 F1679-F1748 ( 70 Bilder): Form x   2982.. -2538, Spieler x  14998.. 14998 | dunkel 214..521 (>600: 0) | Form sichtbar min 4950, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1749-F1849 (101 Bilder): Form x  -2538..-10808, Spieler x  14998.. 14998 | dunkel 331..365 (>600: 0) | Form sichtbar min 0, verdeckt max 96 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (263 Bilder, 263 mit Bild): Form sichtbar min 1247 (F1678), Spieler sichtbar max 5866 (F1512), Form verdeckt max 405 (F1667), fast schwarz max 533 (F1540), > 600: 0; Verstoesse: 0
+w_elza: Fenster F1486-F1849 (364 Bilder), Form-Slot 11; Beginn: Spieler (15021,-24720) Form (17313,-23682)
+  Cut 13 mo13 F1486-F1544 ( 59 Bilder): Form x  17313.. 13799, Spieler x  15021.. 15021 | dunkel 281..508 (>600: 0) | Form sichtbar min 9882, verdeckt max 129 | Spieler sichtbar max 4147, verdeckt max 642
+  Cut 12 mo13 F1545-F1678 (134 Bilder): Form x  13719..  3079, Spieler x  15021.. 15021 | dunkel 191..499 (>600: 0) | Form sichtbar min 1596, verdeckt max 238 | Spieler sichtbar max 3972, verdeckt max 28
+  Cut 11 mo13 F1679-F1748 ( 70 Bilder): Form x   2999.. -2521, Spieler x  15021.. 15021 | dunkel 193..524 (>600: 0) | Form sichtbar min 4990, verdeckt max 17 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1749-F1849 (101 Bilder): Form x  -2521..-10791, Spieler x  15021.. 15021 | dunkel 333..367 (>600: 0) | Form sichtbar min 0, verdeckt max 81 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (263 Bilder, 263 mit Bild): Form sichtbar min 1596 (F1678), Spieler sichtbar max 4147 (F1528), Form verdeckt max 238 (F1668), fast schwarz max 524 (F1680), > 600: 0; Verstoesse: 0
+v_leon: Fenster F1544-F1941 (398 Bilder), Form-Slot 12; Beginn: Spieler (17815,-24477) Form (20124,-23682)
+  Cut 13 mo13 F1544-F1661 (118 Bilder): Form x  20124.. 11804, Spieler x  17815.. 17815 | dunkel 264..546 (>600: 0) | Form sichtbar min 4267, verdeckt max 166 | Spieler sichtbar max 2161, verdeckt max 378
+  Cut 15 mo13 F1662-F1767 (106 Bilder): Form x  11724..  3324, Spieler x  17815.. 17815 | dunkel 79..522 (>600: 0) | Form sichtbar min 2796, verdeckt max 0 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo13 F1768-F1840 ( 73 Bilder): Form x   3244.. -2516, Spieler x  17815.. 17815 | dunkel 343..534 (>600: 0) | Form sichtbar min 4781, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1841-F1941 (101 Bilder): Form x  -2516..-10786, Spieler x  17815.. 17815 | dunkel 332..366 (>600: 0) | Form sichtbar min 0, verdeckt max 96 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (297 Bilder, 297 mit Bild): Form sichtbar min 2796 (F1670), Spieler sichtbar max 2161 (F1572), Form verdeckt max 166 (F1563), fast schwarz max 546 (F1652), > 600: 0; Verstoesse: 0
+v_elza: Fenster F1544-F1943 (400 Bilder), Form-Slot 11; Beginn: Spieler (17665,-24475) Form (20124,-23682)
+  Cut 13 mo13 F1544-F1662 (119 Bilder): Form x  20124.. 11835, Spieler x  17665.. 17665 | dunkel 258..533 (>600: 0) | Form sichtbar min 4316, verdeckt max 113 | Spieler sichtbar max 1626, verdeckt max 457
+  Cut 15 mo13 F1663-F1768 (106 Bilder): Form x  11755..  3355, Spieler x  17665.. 17665 | dunkel 79..514 (>600: 0) | Form sichtbar min 2723, verdeckt max 0 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo13 F1769-F1842 ( 74 Bilder): Form x   3275.. -2565, Spieler x  17665.. 17665 | dunkel 345..538 (>600: 0) | Form sichtbar min 4717, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1843-F1943 (101 Bilder): Form x  -2565..-10835, Spieler x  17665.. 17665 | dunkel 333..368 (>600: 0) | Form sichtbar min 0, verdeckt max 82 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (299 Bilder, 299 mit Bild): Form sichtbar min 2723 (F1670), Spieler sichtbar max 1626 (F1589), Form verdeckt max 113 (F1565), fast schwarz max 538 (F1772), > 600: 0; Verstoesse: 0
+e_leon: Fenster F1624-F2020 (397 Bilder), Form-Slot 12; Beginn: Spieler (15088,-24749) Form (19011,-23682)
+  Cut 13 mo13 F1624-F1712 ( 89 Bilder): Form x  19011.. 14013, Spieler x  15088.. 15088 | dunkel 304..535 (>600: 0) | Form sichtbar min 5633, verdeckt max 239 | Spieler sichtbar max 5600, verdeckt max 84
+  Cut 12 mo13 F1713-F1849 (137 Bilder): Form x  13933..  3053, Spieler x  15088.. 15088 | dunkel 211..527 (>600: 0) | Form sichtbar min 1162, verdeckt max 382 | Spieler sichtbar max 6055, verdeckt max 5
+  Cut 11 mo13 F1850-F1919 ( 70 Bilder): Form x   2973.. -2547, Spieler x  15088.. 15088 | dunkel 215..534 (>600: 0) | Form sichtbar min 4724, verdeckt max 34 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1920-F2020 (101 Bilder): Form x  -2547..-10817, Spieler x  15088.. 15088 | dunkel 331..371 (>600: 0) | Form sichtbar min 0, verdeckt max 88 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (296 Bilder, 296 mit Bild): Form sichtbar min 1162 (F1849), Spieler sichtbar max 6055 (F1717), Form verdeckt max 382 (F1846), fast schwarz max 535 (F1709), > 600: 0; Verstoesse: 0
+e_elza: Fenster F1624-F2020 (397 Bilder), Form-Slot 11; Beginn: Spieler (15091,-24749) Form (19014,-23682)
+  Cut 13 mo13 F1624-F1712 ( 89 Bilder): Form x  19014.. 14016, Spieler x  15091.. 15091 | dunkel 284..510 (>600: 0) | Form sichtbar min 5658, verdeckt max 146 | Spieler sichtbar max 4022, verdeckt max 50
+  Cut 12 mo13 F1713-F1849 (137 Bilder): Form x  13936..  3056, Spieler x  15091.. 15091 | dunkel 192..499 (>600: 0) | Form sichtbar min 1536, verdeckt max 203 | Spieler sichtbar max 4248, verdeckt max 11
+  Cut 11 mo13 F1850-F1919 ( 70 Bilder): Form x   2976.. -2544, Spieler x  15091.. 15091 | dunkel 193..537 (>600: 0) | Form sichtbar min 4729, verdeckt max 31 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1920-F2020 (101 Bilder): Form x  -2544..-10814, Spieler x  15091.. 15091 | dunkel 333..373 (>600: 0) | Form sichtbar min 0, verdeckt max 77 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (296 Bilder, 296 mit Bild): Form sichtbar min 1536 (F1849), Spieler sichtbar max 4248 (F1714), Form verdeckt max 203 (F1846), fast schwarz max 537 (F1852), > 600: 0; Verstoesse: 0
+u_leon: Fenster F1651-F1862 (212 Bilder), Form-Slot 12; Beginn: Spieler (9649,-23708) Form (6262,-23347)
+  Cut 12 mo13 F1651-F1691 ( 41 Bilder): Form x   6262..  3062, Spieler x   9649..  9649 | dunkel 160..180 (>600: 0) | Form sichtbar min 1540, verdeckt max 226 | Spieler sichtbar max 883, verdeckt max 289
+  Cut 11 mo13 F1692-F1761 ( 70 Bilder): Form x   2982.. -2538, Spieler x   9649..  9649 | dunkel 170..510 (>600: 0) | Form sichtbar min 4902, verdeckt max 7 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1762-F1862 (101 Bilder): Form x  -2538..-10808, Spieler x   9649..  9649 | dunkel 271..368 (>600: 0) | Form sichtbar min 0, verdeckt max 151 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (111 Bilder, 111 mit Bild): Form sichtbar min 1540 (F1688), Spieler sichtbar max 883 (F1676), Form verdeckt max 226 (F1689), fast schwarz max 510 (F1697), > 600: 0; Verstoesse: 0
+u_elza: Fenster F1651-F1862 (212 Bilder), Form-Slot 11; Beginn: Spieler (9645,-23683) Form (6255,-23356)
+  Cut 12 mo13 F1651-F1691 ( 41 Bilder): Form x   6255..  3055, Spieler x   9645..  9645 | dunkel 156..179 (>600: 0) | Form sichtbar min 1708, verdeckt max 146 | Spieler sichtbar max 603, verdeckt max 306
+  Cut 11 mo13 F1692-F1761 ( 70 Bilder): Form x   2975.. -2545, Spieler x   9645..  9645 | dunkel 166..513 (>600: 0) | Form sichtbar min 4894, verdeckt max 290 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 11 mo12 F1762-F1862 (101 Bilder): Form x  -2545..-10815, Spieler x   9645..  9645 | dunkel 334..370 (>600: 0) | Form sichtbar min 0, verdeckt max 81 | Spieler sichtbar max 0, verdeckt max 0
+  Pruefmass (111 Bilder, 111 mit Bild): Form sichtbar min 1708 (F1689), Spieler sichtbar max 603 (F1673), Form verdeckt max 290 (F1743), fast schwarz max 513 (F1697), > 600: 0; Verstoesse: 0
+vv_leon: Fenster F1544-F1941 (398 Bilder), Form-Slot -1; Beginn: Spieler (17815,-24477) Form (20124,-23682)
+  Cut 12 mo13 F1544-F1771 (228 Bilder): Form x  20124..  3004, Spieler x  17815.. 17815 | dunkel 136..658 (>600: 10) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 mo13 F1772-F1840 ( 69 Bilder): Form x   2924.. -2516, Spieler x  17815.. 17815 | dunkel 343..520 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 mo12 F1841-F1941 (101 Bilder): Form x  -2516..-10786, Spieler x  17815.. 17815 | dunkel 332..366 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Pruefmass (297 Bilder, 297 mit Bild): Form sichtbar min - (F-), Spieler sichtbar max - (F-), Form verdeckt max - (F-), fast schwarz max 658 (F1613), > 600: 10; Verstoesse: 10
+ev_leon: Fenster F1624-F2020 (397 Bilder), Form-Slot -1; Beginn: Spieler (15088,-24749) Form (19011,-23682)
+  Cut 12 mo13 F1624-F1849 (226 Bilder): Form x  19011..  3053, Spieler x  15088.. 15088 | dunkel 168..967 (>600: 10) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 mo13 F1850-F1919 ( 70 Bilder): Form x   2973.. -2547, Spieler x  15088.. 15088 | dunkel 215..534 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 mo12 F1920-F2020 (101 Bilder): Form x  -2547..-10817, Spieler x  15088.. 15088 | dunkel 331..371 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Pruefmass (296 Bilder, 296 mit Bild): Form sichtbar min - (F-), Spieler sichtbar max - (F-), Form verdeckt max - (F-), fast schwarz max 967 (F1634), > 600: 10; Verstoesse: 10
+uv_leon: Fenster F1651-F1862 (212 Bilder), Form-Slot -1; Beginn: Spieler (9649,-23708) Form (6262,-23347)
+  Cut 12 mo13 F1651-F1691 ( 41 Bilder): Form x   6262..  3062, Spieler x   9649..  9649 | dunkel 160..180 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 mo13 F1692-F1761 ( 70 Bilder): Form x   2982.. -2538, Spieler x   9649..  9649 | dunkel 170..510 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 mo12 F1762-F1862 (101 Bilder): Form x  -2538..-10808, Spieler x   9649..  9649 | dunkel 271..368 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Pruefmass (111 Bilder, 111 mit Bild): Form sichtbar min - (F-), Spieler sichtbar max - (F-), Form verdeckt max - (F-), fast schwarz max 510 (F1697), > 600: 0; Verstoesse: 0
+
+## 2 Kampf vor der Szene (Wache), Fenster Kampfstart F1169 bis Szenenbeginn
+w_leon: Fenster F1169-F1485 (317 Bilder), Form-Slot 12; Beginn: Spieler (13775,-23550) Form (1203,-23338)
+  Cut 12 F1169-F1169 (  1 Bilder): Form x   1203..  1203, Spieler x  13775.. 13775 | dunkel 218..218 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1203..  1245, Spieler x  13775.. 13775 | dunkel 218..589 (>600: 0) | Form sichtbar min 11462, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1353 (125 Bilder): Form x   1193.. 16115, Spieler x  13775.. 15099 | dunkel 186..558 (>600: 0) | Form sichtbar min 1078, verdeckt max 314 | Spieler sichtbar max 7407, verdeckt max 428
+  Cut 13 F1354-F1485 (132 Bilder): Form x  16147.. 17290, Spieler x  15099.. 14998 | dunkel 289..545 (>600: 0) | Form sichtbar min 8845, verdeckt max 189 | Spieler sichtbar max 5612, verdeckt max 377
+  Pruefmass (317 Bilder, 317 mit Bild): Form sichtbar min 1078 (F1296), Spieler sichtbar max 7407 (F1342), Form verdeckt max 314 (F1318), fast schwarz max 589 (F1187), > 600: 0; Verstoesse: 0
+w_elza: Fenster F1169-F1485 (317 Bilder), Form-Slot 11; Beginn: Spieler (13775,-23550) Form (1200,-23350)
+  Cut 12 F1169-F1169 (  1 Bilder): Form x   1200..  1200, Spieler x  13775.. 13775 | dunkel 199..199 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1200..  1243, Spieler x  13775.. 13775 | dunkel 199..590 (>600: 0) | Form sichtbar min 11469, verdeckt max 21 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1353 (125 Bilder): Form x   1191.. 16166, Spieler x  13775.. 15106 | dunkel 170..535 (>600: 0) | Form sichtbar min 1174, verdeckt max 273 | Spieler sichtbar max 4983, verdeckt max 531
+  Cut 13 F1354-F1485 (132 Bilder): Form x  16198.. 17313, Spieler x  15106.. 15021 | dunkel 278..517 (>600: 0) | Form sichtbar min 9133, verdeckt max 145 | Spieler sichtbar max 3909, verdeckt max 514
+  Pruefmass (317 Bilder, 317 mit Bild): Form sichtbar min 1174 (F1296), Spieler sichtbar max 4983 (F1352), Form verdeckt max 273 (F1305), fast schwarz max 590 (F1187), > 600: 0; Verstoesse: 0
+v_leon: Fenster F1169-F1543 (375 Bilder), Form-Slot 12; Beginn: Spieler (13775,-23550) Form (1203,-23338)
+  Cut 12 F1169-F1169 (  1 Bilder): Form x   1203..  1203, Spieler x  13775.. 13775 | dunkel 218..218 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1203..  1245, Spieler x  13775.. 13845 | dunkel 218..589 (>600: 0) | Form sichtbar min 11462, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1275 ( 47 Bilder): Form x   1193..  1268, Spieler x  13915.. 17135 | dunkel 196..443 (>600: 0) | Form sichtbar min 1224, verdeckt max 191 | Spieler sichtbar max 19799, verdeckt max 0
+  Cut 13 F1276-F1339 ( 64 Bilder): Form x   1248.. 16099, Spieler x  17205.. 18425 | dunkel 255..577 (>600: 0) | Form sichtbar min 0, verdeckt max 40 | Spieler sichtbar max 2379, verdeckt max 998
+  Cut 14 F1340-F1367 ( 28 Bilder): Form x  16432.. 20124, Spieler x  18553.. 19311 | dunkel 375..772 (>600: 27) | Form sichtbar min 0, verdeckt max 148 | Spieler sichtbar max 948, verdeckt max 182
+  Cut 13 F1368-F1543 (176 Bilder): Form x  20141.. 20124, Spieler x  19311.. 17864 | dunkel 261..765 (>600: 1) | Form sichtbar min 3284, verdeckt max 212 | Spieler sichtbar max 1809, verdeckt max 519
+  Pruefmass (375 Bilder, 375 mit Bild): Form sichtbar min 0 (F1277), Spieler sichtbar max 19799 (F1275), Form verdeckt max 212 (F1375), fast schwarz max 772 (F1347), > 600: 28; Verstoesse: 28
+    ... 16 weitere
+v_elza: Fenster F1169-F1543 (375 Bilder), Form-Slot 11; Beginn: Spieler (13775,-23550) Form (1200,-23350)
+  Cut 12 F1169-F1169 (  1 Bilder): Form x   1200..  1200, Spieler x  13775.. 13775 | dunkel 199..199 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1200..  1243, Spieler x  13775.. 13845 | dunkel 199..590 (>600: 0) | Form sichtbar min 11469, verdeckt max 21 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1275 ( 47 Bilder): Form x   1191..  1278, Spieler x  13915.. 17135 | dunkel 176..443 (>600: 0) | Form sichtbar min 1365, verdeckt max 99 | Spieler sichtbar max 13974, verdeckt max 0
+  Cut 13 F1276-F1339 ( 64 Bilder): Form x   1258.. 16112, Spieler x  17205.. 18425 | dunkel 205..578 (>600: 0) | Form sichtbar min 0, verdeckt max 43 | Spieler sichtbar max 1605, verdeckt max 1000
+  Cut 14 F1340-F1367 ( 28 Bilder): Form x  16451.. 20124, Spieler x  18557.. 19310 | dunkel 374..769 (>600: 27) | Form sichtbar min 0, verdeckt max 116 | Spieler sichtbar max 653, verdeckt max 263
+  Cut 13 F1368-F1543 (176 Bilder): Form x  20141.. 20124, Spieler x  19310.. 17732 | dunkel 257..762 (>600: 1) | Form sichtbar min 3373, verdeckt max 164 | Spieler sichtbar max 1332, verdeckt max 731
+  Pruefmass (375 Bilder, 375 mit Bild): Form sichtbar min 0 (F1277), Spieler sichtbar max 13974 (F1275), Form verdeckt max 164 (F1375), fast schwarz max 769 (F1346), > 600: 28; Verstoesse: 28
+    ... 16 weitere
+vv_leon: Fenster F1169-F1543 (375 Bilder), Form-Slot -1; Beginn: Spieler (13775,-23550) Form (1203,-23338)
+  Cut 15 F1169-F1169 (  1 Bilder): Form x   1203..  1203, Spieler x  13775.. 13775 | dunkel 218..218 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1203..  1245, Spieler x  13775.. 13845 | dunkel 218..589 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F1229-F1230 (  2 Bilder): Form x   1193..  1193, Spieler x  13915.. 13985 | dunkel 196..443 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F1231-F1543 (313 Bilder): Form x   1196.. 20124, Spieler x  14055.. 17864 | dunkel 196..577 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Pruefmass (375 Bilder, 375 mit Bild): Form sichtbar min - (F-), Spieler sichtbar max - (F-), Form verdeckt max - (F-), fast schwarz max 589 (F1187), > 600: 0; Verstoesse: 0
+e_leon: Fenster F1169-F1623 (455 Bilder), Form-Slot 12; Beginn: Spieler (13775,-23550) Form (1203,-23338)
+  Cut 12 F1169-F1169 (  1 Bilder): Form x   1203..  1203, Spieler x  13775.. 13775 | dunkel 218..218 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1203..  1245, Spieler x  13775.. 13845 | dunkel 218..589 (>600: 0) | Form sichtbar min 11462, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1266 ( 38 Bilder): Form x   1193..  1434, Spieler x  13915.. 15875 | dunkel 196..443 (>600: 0) | Form sichtbar min 1224, verdeckt max 191 | Spieler sichtbar max 8857, verdeckt max 0
+  Cut 13 F1267-F1316 ( 50 Bilder): Form x   1410..  8068, Spieler x  15875.. 15875 | dunkel 237..287 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 3074, verdeckt max 17
+  Cut 12 F1317-F1347 ( 31 Bilder): Form x   8230.. 17267, Spieler x  15875.. 17217 | dunkel 272..699 (>600: 5) | Form sichtbar min 4447, verdeckt max 364 | Spieler sichtbar max 29124, verdeckt max 485
+  Cut 13 F1348-F1623 (276 Bilder): Form x  17392.. 19011, Spieler x  17216.. 15088 | dunkel 250..681 (>600: 1) | Form sichtbar min 6376, verdeckt max 254 | Spieler sichtbar max 6663, verdeckt max 634
+  Pruefmass (455 Bilder, 455 mit Bild): Form sichtbar min 0 (F1268), Spieler sichtbar max 29124 (F1347), Form verdeckt max 364 (F1326), fast schwarz max 699 (F1345), > 600: 6; Verstoesse: 6
+e_elza: Fenster F1169-F1623 (455 Bilder), Form-Slot 11; Beginn: Spieler (13775,-23550) Form (1200,-23350)
+  Cut 12 F1169-F1169 (  1 Bilder): Form x   1200..  1200, Spieler x  13775.. 13775 | dunkel 199..199 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1200..  1243, Spieler x  13775.. 13845 | dunkel 199..590 (>600: 0) | Form sichtbar min 11469, verdeckt max 21 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1266 ( 38 Bilder): Form x   1191..  1445, Spieler x  13915.. 15875 | dunkel 176..443 (>600: 0) | Form sichtbar min 1365, verdeckt max 99 | Spieler sichtbar max 6046, verdeckt max 0
+  Cut 13 F1267-F1316 ( 50 Bilder): Form x   1420..  8077, Spieler x  15875.. 15875 | dunkel 190..280 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 2293, verdeckt max 22
+  Cut 12 F1317-F1347 ( 31 Bilder): Form x   8239.. 17268, Spieler x  15875.. 17212 | dunkel 228..557 (>600: 0) | Form sichtbar min 4754, verdeckt max 263 | Spieler sichtbar max 16248, verdeckt max 603
+  Cut 13 F1348-F1623 (276 Bilder): Form x  17393.. 19014, Spieler x  17211.. 15091 | dunkel 245..520 (>600: 0) | Form sichtbar min 6502, verdeckt max 159 | Spieler sichtbar max 4689, verdeckt max 607
+  Pruefmass (455 Bilder, 455 mit Bild): Form sichtbar min 0 (F1268), Spieler sichtbar max 16248 (F1347), Form verdeckt max 263 (F1325), fast schwarz max 590 (F1187), > 600: 0; Verstoesse: 0
+ev_leon: Fenster F1169-F1623 (455 Bilder), Form-Slot -1; Beginn: Spieler (13775,-23550) Form (1203,-23338)
+  Cut 15 F1169-F1169 (  1 Bilder): Form x   1203..  1203, Spieler x  13775.. 13775 | dunkel 218..218 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1203..  1245, Spieler x  13775.. 13845 | dunkel 218..589 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F1229-F1230 (  2 Bilder): Form x   1193..  1193, Spieler x  13915.. 13985 | dunkel 196..443 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F1231-F1312 ( 82 Bilder): Form x   1196..  7388, Spieler x  14055.. 15875 | dunkel 196..310 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F1313-F1339 ( 27 Bilder): Form x   7739.. 15557, Spieler x  15875.. 16901 | dunkel 251..540 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F1340-F1623 (284 Bilder): Form x  15875.. 19011, Spieler x  16909.. 15088 | dunkel 250..502 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Pruefmass (455 Bilder, 455 mit Bild): Form sichtbar min - (F-), Spieler sichtbar max - (F-), Form verdeckt max - (F-), fast schwarz max 589 (F1187), > 600: 0; Verstoesse: 0
+u_leon: Fenster F1169-F1650 (482 Bilder), Form-Slot 12; Beginn: Spieler (13775,-23550) Form (1203,-23338)
+  Cut 12 F1169-F1169 (  1 Bilder): Form x   1203..  1203, Spieler x  13775.. 13775 | dunkel 218..218 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1203..  1245, Spieler x  13775.. 13700 | dunkel 218..589 (>600: 0) | Form sichtbar min 11462, verdeckt max 19 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1650 (422 Bilder): Form x   1193..  6262, Spieler x  13625..  9649 | dunkel 157..443 (>600: 0) | Form sichtbar min 871, verdeckt max 426 | Spieler sichtbar max 3060, verdeckt max 422
+  Pruefmass (482 Bilder, 482 mit Bild): Form sichtbar min 871 (F1299), Spieler sichtbar max 3060 (F1230), Form verdeckt max 426 (F1297), fast schwarz max 589 (F1187), > 600: 0; Verstoesse: 0
+u_elza: Fenster F1169-F1650 (482 Bilder), Form-Slot 11; Beginn: Spieler (13775,-23550) Form (1200,-23350)
+  Cut 12 F1169-F1169 (  1 Bilder): Form x   1200..  1200, Spieler x  13775.. 13775 | dunkel 199..199 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1200..  1243, Spieler x  13775.. 13700 | dunkel 199..590 (>600: 0) | Form sichtbar min 11469, verdeckt max 21 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1650 (422 Bilder): Form x   1191..  6255, Spieler x  13625..  9645 | dunkel 154..443 (>600: 0) | Form sichtbar min 1004, verdeckt max 342 | Spieler sichtbar max 2128, verdeckt max 515
+  Pruefmass (482 Bilder, 482 mit Bild): Form sichtbar min 1004 (F1299), Spieler sichtbar max 2128 (F1230), Form verdeckt max 342 (F1297), fast schwarz max 590 (F1187), > 600: 0; Verstoesse: 0
+
+## 3 k-Weg (w8 + 24 s warten, spaet feuern), Fenster F1300-F1931
+k_leon: Fenster F1300-F1931 (632 Bilder), Form-Slot 12; Beginn: Spieler (13775,-23550) Form (2103,-23353)
+  Cut 12 F1300-F1354 ( 55 Bilder): Form x   2103.. 16164, Spieler x  13775.. 15105 | dunkel 195..562 (>600: 0) | Form sichtbar min 1281, verdeckt max 348 | Spieler sichtbar max 7440, verdeckt max 429
+  Cut 13 F1355-F1722 (368 Bilder): Form x  16198.. 16365, Spieler x  15105.. 13960 | dunkel 384..550 (>600: 0) | Form sichtbar min 9396, verdeckt max 264 | Spieler sichtbar max 9703, verdeckt max 721
+  Cut 12 F1723-F1753 ( 31 Bilder): Form x  16365.. 16737, Spieler x  13960.. 13493 | dunkel 411..704 (>600: 30) | Form sichtbar min 40374, verdeckt max 4 | Spieler sichtbar max 1888, verdeckt max 818
+  Cut 13 F1754-F1784 ( 31 Bilder): Form x  16705.. 16016, Spieler x  13493.. 13493 | dunkel 416..629 (>600: 1) | Form sichtbar min 17147, verdeckt max 133 | Spieler sichtbar max 7726, verdeckt max 806
+  Cut 12 F1785-F1788 (  4 Bilder): Form x  16016.. 16240, Spieler x  13493.. 13492 | dunkel 416..679 (>600: 3) | Form sichtbar min 41107, verdeckt max 0 | Spieler sichtbar max 1479, verdeckt max 717
+  Cut 13 F1789-F1840 ( 52 Bilder): Form x  16421.. 15761, Spieler x  13492.. 13026 | dunkel 420..640 (>600: 1) | Form sichtbar min 15090, verdeckt max 387 | Spieler sichtbar max 11141, verdeckt max 911
+  Cut 12 F1841-F1847 (  7 Bilder): Form x  15761.. 16068, Spieler x  13026.. 13025 | dunkel 420..639 (>600: 3) | Form sichtbar min 32233, verdeckt max 0 | Spieler sichtbar max 1230, verdeckt max 774
+  Cut 13 F1848-F1878 ( 31 Bilder): Form x  16070.. 15752, Spieler x  13024.. 12559 | dunkel 496..567 (>600: 0) | Form sichtbar min 14844, verdeckt max 453 | Spieler sichtbar max 14079, verdeckt max 533
+  Cut 12 F1879-F1931 ( 53 Bilder): Form x  15715.. 15519, Spieler x  12559.. 12084 | dunkel 464..591 (>600: 0) | Form sichtbar min 23535, verdeckt max 1 | Spieler sichtbar max 1033, verdeckt max 838
+  Pruefmass (632 Bilder, 632 mit Bild): Form sichtbar min 1281 (F1300), Spieler sichtbar max 14079 (F1859), Form verdeckt max 453 (F1859), fast schwarz max 704 (F1724), > 600: 38; Verstoesse: 38
+    ... 26 weitere
+k_elza: Fenster F1300-F1931 (632 Bilder), Form-Slot 11; Beginn: Spieler (13775,-23550) Form (2126,-23406)
+  Cut 12 F1300-F1354 ( 55 Bilder): Form x   2126.. 16203, Spieler x  13775.. 15104 | dunkel 177..532 (>600: 0) | Form sichtbar min 1458, verdeckt max 274 | Spieler sichtbar max 5045, verdeckt max 531
+  Cut 13 F1355-F1722 (368 Bilder): Form x  16237.. 16369, Spieler x  15104.. 13957 | dunkel 368..518 (>600: 0) | Form sichtbar min 10059, verdeckt max 169 | Spieler sichtbar max 6809, verdeckt max 764
+  Cut 12 F1723-F1753 ( 31 Bilder): Form x  16369.. 16739, Spieler x  13957.. 13493 | dunkel 387..697 (>600: 30) | Form sichtbar min 40456, verdeckt max 3 | Spieler sichtbar max 1566, verdeckt max 892
+  Cut 13 F1754-F1784 ( 31 Bilder): Form x  16707.. 16012, Spieler x  13493.. 13493 | dunkel 389..627 (>600: 1) | Form sichtbar min 19310, verdeckt max 43 | Spieler sichtbar max 5416, verdeckt max 903
+  Cut 12 F1785-F1788 (  4 Bilder): Form x  16012.. 16233, Spieler x  13493.. 13493 | dunkel 389..674 (>600: 3) | Form sichtbar min 41028, verdeckt max 0 | Spieler sichtbar max 1312, verdeckt max 613
+  Cut 13 F1789-F1840 ( 52 Bilder): Form x  16420.. 15762, Spieler x  13492.. 13031 | dunkel 402..636 (>600: 1) | Form sichtbar min 18666, verdeckt max 234 | Spieler sichtbar max 6198, verdeckt max 977
+  Cut 12 F1841-F1847 (  7 Bilder): Form x  15762.. 16075, Spieler x  13031.. 13031 | dunkel 402..635 (>600: 3) | Form sichtbar min 32420, verdeckt max 0 | Spieler sichtbar max 1033, verdeckt max 762
+  Cut 13 F1848-F1878 ( 31 Bilder): Form x  16077.. 15759, Spieler x  13030.. 12570 | dunkel 454..555 (>600: 0) | Form sichtbar min 20191, verdeckt max 257 | Spieler sichtbar max 7305, verdeckt max 936
+  Cut 12 F1879-F1931 ( 53 Bilder): Form x  15722.. 15529, Spieler x  12570.. 12095 | dunkel 463..587 (>600: 0) | Form sichtbar min 23697, verdeckt max 0 | Spieler sichtbar max 870, verdeckt max 818
+  Pruefmass (632 Bilder, 632 mit Bild): Form sichtbar min 1458 (F1300), Spieler sichtbar max 7305 (F1858), Form verdeckt max 274 (F1321), fast schwarz max 697 (F1724), > 600: 38; Verstoesse: 38
+    ... 26 weitere
+kv_leon: Fenster F1300-F1931 (632 Bilder), Form-Slot -1; Beginn: Spieler (13775,-23550) Form (2103,-23353)
+  Cut 12 F1300-F1323 ( 24 Bilder): Form x   2103.. 10913, Spieler x  13775.. 13975 | dunkel 195..258 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F1324-F1324 (  1 Bilder): Form x  11338.. 11338, Spieler x  14125.. 14125 | dunkel 258..258 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F1325-F1331 (  7 Bilder): Form x  11738.. 13403, Spieler x  14225.. 14809 | dunkel 258..461 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F1332-F1896 (565 Bilder): Form x  13414.. 15486, Spieler x  14816.. 12559 | dunkel 384..618 (>600: 2) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F1897-F1899 (  3 Bilder): Form x  15487.. 15628, Spieler x  12559.. 12559 | dunkel 422..498 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F1900-F1931 ( 32 Bilder): Form x  15630.. 15519, Spieler x  12558.. 12084 | dunkel 498..610 (>600: 5) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Pruefmass (632 Bilder, 632 mit Bild): Form sichtbar min - (F-), Spieler sichtbar max - (F-), Form verdeckt max - (F-), fast schwarz max 618 (F1889), > 600: 7; Verstoesse: 7
+k_leon vs kv_leon F1300-F1931: 632 Bilder gemeinsam, Spieler+Form gleich 632, ungleich 0; Kamera gleich 516
+k_leon vs k_elza F1300-F1931: 632 Bilder gemeinsam, Spieler+Form gleich 0, ungleich 632; Kamera gleich 632
+  ungleich F1300: ((13775, -23550, 100), (2103, -23353, 0, 5, 150, 1)) | ((13775, -23550, 100), (2126, -23406, 0, 5, 150, 1))
+  ungleich F1301: ((13775, -23550, 100), (2515, -23360, 0, 6, 150, 1)) | ((13775, -23550, 100), (2539, -23412, 0, 6, 150, 1))
+  ungleich F1302: ((13775, -23550, 100), (3009, -23369, 0, 7, 150, 1)) | ((13775, -23550, 100), (3034, -23419, 0, 7, 150, 1))
+  ungleich F1303: ((13775, -23550, 100), (3544, -23379, 0, 8, 150, 1)) | ((13775, -23550, 100), (3570, -23427, 0, 8, 150, 1))
+  ungleich F1304: ((13775, -23550, 100), (4075, -23388, 0, 9, 150, 1)) | ((13775, -23550, 100), (4102, -23435, 0, 9, 150, 1))
+
+## 4 a-Weg (Debug-Sprung Wagen B, stehender Spieler; M-B), Fenster F700-F1200
+a_leon: Fenster F700-F1200 (501 Bilder), Form-Slot 12; Beginn: Spieler (10150,-23582) Form (5708,-23355)
+  Cut 12 F700-F730 ( 31 Bilder): Form x   5708..  6369, Spieler x  10150.. 14484 | dunkel 177..225 (>600: 0) | Form sichtbar min 1920, verdeckt max 312 | Spieler sichtbar max 2860, verdeckt max 375
+  Cut 13 F731-F741 ( 11 Bilder): Form x   6369..  6369, Spieler x  14932.. 16722 | dunkel 225..295 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 4493, verdeckt max 0
+  Cut 12 F742-F1017 (276 Bilder): Form x   6369.. 11699, Spieler x  16722.. 16921 | dunkel 270..393 (>600: 0) | Form sichtbar min 2154, verdeckt max 478 | Spieler sichtbar max 15878, verdeckt max 0
+  Cut 13 F1018-F1200 (183 Bilder): Form x  11699.. 14974, Spieler x  17070.. 17714 | dunkel 0..710 (>600: 92) | Form sichtbar min 21241, verdeckt max 2 | Spieler sichtbar max 1261, verdeckt max 960
+  Pruefmass (501 Bilder, 501 mit Bild): Form sichtbar min 0 (F732), Spieler sichtbar max 15878 (F761), Form verdeckt max 478 (F969), fast schwarz max 710 (F1062), > 600: 92; Verstoesse: 92
+    ... 80 weitere
+a_elza: Fenster F700-F1200 (501 Bilder), Form-Slot 11; Beginn: Spieler (10150,-23582) Form (5944,-23388)
+  Cut 12 F700-F723 ( 24 Bilder): Form x   5944..  6364, Spieler x  10150.. 14484 | dunkel 175..206 (>600: 0) | Form sichtbar min 2298, verdeckt max 209 | Spieler sichtbar max 1809, verdeckt max 477
+  Cut 13 F724-F734 ( 11 Bilder): Form x   6364..  6364, Spieler x  14932.. 16722 | dunkel 206..274 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 3114, verdeckt max 0
+  Cut 12 F735-F1011 (277 Bilder): Form x   6364.. 11725, Spieler x  16722.. 16921 | dunkel 202..316 (>600: 0) | Form sichtbar min 2798, verdeckt max 302 | Spieler sichtbar max 10654, verdeckt max 0
+  Cut 13 F1012-F1200 (189 Bilder): Form x  11725.. 15191, Spieler x  17070.. 17714 | dunkel 0..706 (>600: 83) | Form sichtbar min 20025, verdeckt max 1 | Spieler sichtbar max 810, verdeckt max 997
+  Pruefmass (501 Bilder, 501 mit Bild): Form sichtbar min 0 (F725), Spieler sichtbar max 10654 (F753), Form verdeckt max 302 (F1007), fast schwarz max 706 (F1056), > 600: 83; Verstoesse: 83
+    ... 71 weitere
+av_leon: Fenster F700-F1200 (501 Bilder), Form-Slot -1; Beginn: Spieler (10150,-23582) Form (5708,-23355)
+  Cut 12 F700-F730 ( 31 Bilder): Form x   5708..  6369, Spieler x  10150.. 14484 | dunkel 177..225 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F731-F844 (114 Bilder): Form x   6369..  7395, Spieler x  14932.. 16722 | dunkel 225..295 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F845-F1047 (203 Bilder): Form x   7439.. 12105, Spieler x  16722.. 17218 | dunkel 282..491 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 13 F1048-F1200 (153 Bilder): Form x  12148.. 14974, Spieler x  17218.. 17714 | dunkel 0..710 (>600: 62) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Pruefmass (501 Bilder, 501 mit Bild): Form sichtbar min - (F-), Spieler sichtbar max - (F-), Form verdeckt max - (F-), fast schwarz max 710 (F1062), > 600: 62; Verstoesse: 62
+    ... 50 weitere
+a_leon vs av_leon F700-F1200: 501 Bilder gemeinsam, Spieler+Form gleich 501, ungleich 0; Kamera gleich 368
+a_leon dunkle Bilder (>600): F1019 F1020 F1021 F1022 F1023 F1024 F1025 F1026 F1027 F1028 F1029 F1030 F1031 F1032 F1033 F1034 F1035 F1036 F1037 F1038 F1039 F1040 F1041 F1042 F1043 F1044 F1045 F1046 F1047 F1048 F1049 F1050 F1051 F1052 F1053 F1054 F1055 F1056 F1057 F1058 F1059 F1060 F1061 F1062 F1063 F1064 F1065 F1066 F1067 F1068 F1069 F1070 F1071 F1072 F1073 F1074 F1075 F1076 F1077 F1078 F1079 F1080 F1081 F1082 F1083 F1084 F1085 F1086 F1087 F1088 F1089 F1090 F1091 F1092 F1093 F1094 F1095 F1096 F1097 F1098 F1099 F1100 F1101 F1102 F1103 F1104 F1105 F1106 F1107 F1108 F1124 F1125 
+av_leon dunkle Bilder (>600): F1049 F1050 F1051 F1052 F1053 F1054 F1055 F1056 F1057 F1058 F1059 F1060 F1061 F1062 F1063 F1064 F1065 F1066 F1067 F1068 F1069 F1070 F1071 F1072 F1073 F1074 F1075 F1076 F1077 F1078 F1079 F1080 F1081 F1082 F1083 F1084 F1085 F1086 F1087 F1088 F1089 F1090 F1091 F1092 F1093 F1094 F1095 F1096 F1097 F1098 F1099 F1100 F1101 F1102 F1103 F1104 F1105 F1106 F1107 F1108 F1124 F1125 
+a_elza dunkle Bilder (>600): F1013 F1014 F1015 F1016 F1017 F1018 F1019 F1020 F1021 F1022 F1023 F1024 F1025 F1026 F1027 F1028 F1029 F1030 F1031 F1032 F1033 F1034 F1035 F1036 F1037 F1038 F1039 F1040 F1041 F1042 F1043 F1044 F1045 F1046 F1047 F1048 F1049 F1050 F1051 F1052 F1053 F1054 F1055 F1056 F1057 F1058 F1059 F1060 F1061 F1062 F1063 F1064 F1065 F1066 F1070 F1071 F1072 F1073 F1078 F1079 F1080 F1081 F1082 F1083 F1084 F1085 F1086 F1087 F1088 F1089 F1090 F1091 F1092 F1093 F1094 F1095 F1096 F1097 F1098 F1099 F1100 F1101 F1119 
+
+## 5 Vergleiche Spiel je Bild (Spieler+Form) nachher/vorher
+v_leon vs vv_leon F1169-F1943: 775 Bilder gemeinsam, Spieler+Form gleich 775, ungleich 0; Kamera gleich 473
+e_leon vs ev_leon F1169-F2020: 852 Bilder gemeinsam, Spieler+Form gleich 852, ungleich 0; Kamera gleich 714
+u_leon vs uv_leon F1169-F1862: 694 Bilder gemeinsam, Spieler+Form gleich 694, ungleich 0; Kamera gleich 693
+
+## 6 HP-Weg, Treffer, Rueckstoss, Sturz, G5, Spieler-HP
+w_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1237); Rueckstoss (1486, 17290); Sturz (1749, -2538); G5 (1850, 600); Spieler-HP F1322 100->95
+w_elza: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1237); Rueckstoss (1486, 17313); Sturz (1749, -2521); G5 (1850, 600); Spieler-HP F1322 100->95
+v_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1297); Rueckstoss (1544, 20124); Sturz (1841, -2516); G5 (1942, 600); Spieler-HP F1336 100->95
+v_elza: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1297); Rueckstoss (1544, 20124); Sturz (1843, -2565); G5 (1944, 600); Spieler-HP F1336 100->95
+e_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1267); Rueckstoss (1624, 19011); Sturz (1920, -2547); G5 (2021, 600); Spieler-HP F1326 100->95, F1419 95->85, F1430 85->75, F1506 75->40
+e_elza: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1267); Rueckstoss (1624, 19014); Sturz (1920, -2544); G5 (2021, 600); Spieler-HP F1326 100->95, F1419 95->85, F1430 85->75, F1506 75->40
+u_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1327); Rueckstoss (1651, 6262); Sturz (1762, -2538); G5 (1863, 600); Spieler-HP F1332 100->90, F1390 90->80, F1443 80->70, F1494 70->60, F1553 60->50, F1565 50->40
+u_elza: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1327); Rueckstoss (1651, 6255); Sturz (1762, -2545); G5 (1863, 600); Spieler-HP F1332 100->90, F1390 90->80, F1443 80->70, F1494 70->60, F1553 60->50, F1565 50->40
+k_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 1 (ab F1897); Rueckstoss None; Sturz None; G5 None; Spieler-HP F1322 100->95, F1473 95->50, F1731 50->40, F1793 40->30, F1850 30->20, F1902 20->10
+k_elza: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 1 (ab F1897); Rueckstoss None; Sturz None; G5 None; Spieler-HP F1322 100->95, F1473 95->50, F1731 50->40, F1793 40->30, F1850 30->20, F1902 20->10
+kv_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 1 (ab F1897); Rueckstoss None; Sturz None; G5 None; Spieler-HP F1322 100->95, F1473 95->50, F1731 50->40, F1793 40->30, F1850 30->20, F1902 20->10
+vv_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1297); Rueckstoss (1544, 20124); Sturz (1841, -2516); G5 (1942, 600); Spieler-HP F1336 100->95
+ev_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1267); Rueckstoss (1624, 19011); Sturz (1920, -2547); G5 (2021, 600); Spieler-HP F1326 100->95, F1419 95->85, F1430 85->75, F1506 75->40
+uv_leon: HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 10 (ab F1327); Rueckstoss (1651, 6262); Sturz (1762, -2538); G5 (1863, 600); Spieler-HP F1332 100->90, F1390 90->80, F1443 80->70, F1494 70->60, F1553 60->50, F1565 50->40
+
+## 7 Ton (Raum-Ton 10)
+w_leon: Raum-Ton 10 gespielt 3, verworfen 2, SILENT 0 []
+w_elza: Raum-Ton 10 gespielt 3, verworfen 2, SILENT 0 []
+v_leon: Raum-Ton 10 gespielt 5, verworfen 0, SILENT 0 []
+v_elza: Raum-Ton 10 gespielt 5, verworfen 0, SILENT 0 []
+e_leon: Raum-Ton 10 gespielt 6, verworfen 1, SILENT 0 []
+e_elza: Raum-Ton 10 gespielt 7, verworfen 0, SILENT 0 []
+u_leon: Raum-Ton 10 gespielt 4, verworfen 1, SILENT 0 []
+u_elza: Raum-Ton 10 gespielt 4, verworfen 1, SILENT 0 []
+k_leon: Raum-Ton 10 gespielt 6, verworfen 0, SILENT 1 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+k_elza: Raum-Ton 10 gespielt 6, verworfen 0, SILENT 1 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+b_leon: Raum-Ton 10 gespielt 6, verworfen 1, SILENT 0 []
+b_elza: Raum-Ton 10 gespielt 6, verworfen 1, SILENT 0 []
+a_leon: Raum-Ton 10 gespielt 6, verworfen 0, SILENT 2 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT', '[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+a_elza: Raum-Ton 10 gespielt 6, verworfen 0, SILENT 2 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT', '[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+
+## 8 Bahnsteig 5080/5081, START im Griff (siehe Bericht 3.2); Zeitleisten mit abn2/werkzeug/zustand.py gegen abn2/zeitleisten: b_leon=b5080_leon, b_elza=b5081_elza bildgleich; s_leon/s_elza bis F999 bildgleich zu a_leon/a_elza; g_leon ms=2 ab F770
+
+## 9 exe-Hashes je Lauf
+a_elza: b9b3d5743c65d32a exit=0 dauer=72s
+a_leon: b9b3d5743c65d32a exit=0 dauer=73s
+av_leon: f4deb1a33feb4d59 exit=0 dauer=69s
+b_elza: b9b3d5743c65d32a exit=0 dauer=86s
+b_leon: b9b3d5743c65d32a exit=0 dauer=86s
+e_elza: b9b3d5743c65d32a exit=0 dauer=104s
+e_leon: b9b3d5743c65d32a exit=0 dauer=106s
+ev_leon: f4deb1a33feb4d59 exit=0 dauer=103s
+g_leon: b9b3d5743c65d32a exit=0 dauer=46s
+k_elza: b9b3d5743c65d32a exit=0 dauer=104s
+k_leon: b9b3d5743c65d32a exit=0 dauer=96s
+kv_leon: f4deb1a33feb4d59 exit=0 dauer=99s
+s_elza: b9b3d5743c65d32a exit=0 dauer=52s
+s_leon: b9b3d5743c65d32a exit=0 dauer=53s
+u_elza: b9b3d5743c65d32a exit=0 dauer=109s
+u_leon: b9b3d5743c65d32a exit=0 dauer=112s
+uv_leon: f4deb1a33feb4d59 exit=0 dauer=110s
+v_elza: b9b3d5743c65d32a exit=0 dauer=97s
+v_leon: b9b3d5743c65d32a exit=0 dauer=100s
+vv_leon: f4deb1a33feb4d59 exit=0 dauer=103s
+w_elza: b9b3d5743c65d32a exit=0 dauer=98s
+w_leon: b9b3d5743c65d32a exit=0 dauer=99s

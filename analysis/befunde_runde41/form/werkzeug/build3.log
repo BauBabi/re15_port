@@ -1,0 +1,33 @@
+
+=== [local_build] Preflight — Toolchain messen
+    PATH   = /c/msys64/mingw64/bin:/c/Program Files/CMake/bin:/c/Python310/Scripts:/usr/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem
+    CC     = C:/msys64/mingw64/bin/gcc.exe
+    cmake  = /c/Program Files/CMake/bin/cmake
+    ninja  = /c/Python310/Scripts/ninja
+    ctest  = /c/Program Files/CMake/bin/ctest
+    cc1    = C:/msys64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/16.2.0/cc1.exe
+    cc1 --version EXIT=0  -> Toolchain OK
+    Mini-Compile OK (95539 Bytes exe)
+
+=== [local_build] build — re15_port/build
+[1/2] Building C object platform/pc/CMakeFiles/re15_pc.dir/main.c.obj
+C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/platform/pc/main.c: In function 'main':
+C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/platform/pc/main.c:8991:35: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+ 8991 |                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
+      |                                   ^
+C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/platform/pc/main.c:10350:35: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+10350 |                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
+      |                                   ^
+C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/platform/pc/main.c:10765:58: warning: passing argument 1 of 're15_re2z_gore_part_matrix' discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+10765 |                         (void)re15_re2z_gore_part_matrix(npc, nbi,
+      |                                                          ^~~
+In file included from C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/include/re15_affen.h:75,
+                 from C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/platform/pc/main.c:76:
+C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/include/re15_actor.h:1256:46: note: expected 're15_actor_t *' but argument is of type 'const re15_actor_t *'
+ 1256 | int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
+      |                                ~~~~~~~~~~~~~~^
+[2/2] Linking C executable platform\pc\re15_pc.exe
+    build OK
+
+=== LOCAL-BUILD-OK (build)
+BUILD_EXIT=0

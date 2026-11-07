@@ -1,0 +1,19 @@
+Knochen 0: 204 Ecken, Bild y min 204; Ecken mit y<200: 0, Modell-x -, Hoehe -
+    Modell-x -1000.. -600: Bild y 226..300, x 249..306
+    Modell-x  -600.. -200: Bild y 204..304, x 247..347
+    Modell-x  -200..  200: Bild y 206..310, x 250..363
+    Modell-x   200..  600: Bild y 218..308, x 278..358
+    Modell-x   600.. 1400: Bild y 242..284, x 306..344
+Knochen 7: 184 Ecken, Bild y min 210; Ecken mit y<200: 0, Modell-x -, Hoehe -
+    Modell-x  -200..  200: Bild y 214..316, x 258..359
+    Modell-x   200..  600: Bild y 210..316, x 265..365
+    Modell-x   600.. 1400: Bild y 210..312, x 288..371
+Knochen 1: 100 Ecken, Bild y min 185; Ecken mit y<200: 32, Modell-x -780..378, Hoehe 2685..2945
+    Modell-x -1000.. -600: Bild y 190..222, x 263..303
+    Modell-x  -600.. -200: Bild y 185..248, x 270..318
+    Modell-x  -200..  200: Bild y 185..240, x 284..327
+    Modell-x   200..  600: Bild y 187..230, x 295..345
+    Modell-x   600.. 1400: Bild y 218..218, x 343..343
+Knochen 2: 68 Ecken, Bild y min 194; Ecken mit y<200: 4, Modell-x -724..-644, Hoehe 2687..2746
+    Modell-x -1000.. -600: Bild y 194..274, x 258..303
+    Modell-x  -600.. -200: Bild y 210..248, x 269..307

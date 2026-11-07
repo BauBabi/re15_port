@@ -1,0 +1,40 @@
+Clip 0: Rumpf x -931..2335 (Laenge 3266), Huefte x -931..781 Mitte -66
+   Schwanz s1 x -779..1306, Hoehe 2069..2945; vorderster Schwanzpunkt x 1306 = 68 % der Rumpflaenge von hinten
+     x -1000  Rumpf oben   2008  Schwanz oben   2633  Differenz    625
+     x  -700  Rumpf oben   2574  Schwanz oben   2820  Differenz    246
+     x  -400  Rumpf oben   2663  Schwanz oben   2883  Differenz    220
+     x  -100  Rumpf oben   2645  Schwanz oben   2917  Differenz    272
+     x   200  Rumpf oben   2632  Schwanz oben   2945  Differenz    313
+     x   500  Rumpf oben   2578  Schwanz oben   2858  Differenz    280
+     x   800  Rumpf oben   2635  Schwanz oben    nan  Differenz    nan
+     x  1100  Rumpf oben   2679  Schwanz oben    nan  Differenz    nan
+     x  1400  Rumpf oben   2782  Schwanz oben   2555  Differenz   -227
+     x  1700  Rumpf oben   2769  Schwanz oben    nan  Differenz    nan
+     x  2000  Rumpf oben   2668  Schwanz oben    nan  Differenz    nan
+     x  2300  Rumpf oben   2361  Schwanz oben    nan  Differenz    nan
+Clip 1: Rumpf x -771..2000 (Laenge 2771), Huefte x -771..950 Mitte 86
+   Schwanz s1 x -1180..684, Hoehe 808..2110; vorderster Schwanzpunkt x 684 = 53 % der Rumpflaenge von hinten
+     x  -800  Rumpf oben   1346  Schwanz oben   1757  Differenz    411
+     x  -500  Rumpf oben   1627  Schwanz oben   1851  Differenz    224
+     x  -200  Rumpf oben   2395  Schwanz oben   1985  Differenz   -410
+     x   100  Rumpf oben   2660  Schwanz oben   1807  Differenz   -853
+     x   400  Rumpf oben   2873  Schwanz oben    nan  Differenz    nan
+     x   700  Rumpf oben   3054  Schwanz oben   2110  Differenz   -944
+     x  1000  Rumpf oben   3100  Schwanz oben    nan  Differenz    nan
+     x  1300  Rumpf oben   3092  Schwanz oben    nan  Differenz    nan
+     x  1600  Rumpf oben   3047  Schwanz oben    nan  Differenz    nan
+     x  1900  Rumpf oben   2668  Schwanz oben    nan  Differenz    nan
+Clip 2: Rumpf x -903..2445 (Laenge 3348), Huefte x -903..790 Mitte -56
+   Schwanz s1 x -846..1245, Hoehe 1923..2834; vorderster Schwanzpunkt x 1245 = 64 % der Rumpflaenge von hinten
+     x -1000  Rumpf oben   1805  Schwanz oben   2512  Differenz    707
+     x  -700  Rumpf oben   2398  Schwanz oben   2672  Differenz    274
+     x  -400  Rumpf oben   2512  Schwanz oben   2744  Differenz    232
+     x  -100  Rumpf oben   2517  Schwanz oben   2790  Differenz    273
+     x   200  Rumpf oben   2470  Schwanz oben   2834  Differenz    364
+     x   500  Rumpf oben   2541  Schwanz oben   2503  Differenz    -38
+     x   800  Rumpf oben   2764  Schwanz oben    nan  Differenz    nan
+     x  1100  Rumpf oben   2786  Schwanz oben   2482  Differenz   -304
+     x  1400  Rumpf oben   2857  Schwanz oben    nan  Differenz    nan
+     x  1700  Rumpf oben   2847  Schwanz oben    nan  Differenz    nan
+     x  2000  Rumpf oben   2804  Schwanz oben    nan  Differenz    nan
+     x  2300  Rumpf oben   2572  Schwanz oben    nan  Differenz    nan
