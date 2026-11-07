@@ -1,0 +1,56 @@
+# Abnahme 5: Truemmer/Staub - Bewegungssignal je Bild in den zwei Fallsaeulen (truemmer_mass5.py), RE2 echt gegen Port (Pistolenweg)
+  k | RE2 A  B | Leon A  B | Elza A  B
+ 15 |    0   93 |    0   88 |    0   88
+ 16 |    0  154 |    0  121 |    0  121
+ 17 |    0  217 |    0  179 |    0  179
+ 18 |    0  228 |    0  204 |    0  204
+ 19 |    0  234 |    0  202 |    0  202
+ 20 |    0  223 |    0  219 |    0  219
+ 21 |    0  199 |    0  192 |    0  192
+ 22 |    0  164 |    0  177 |    0  177
+ 23 |    1  152 |    0  155 |    0  155
+ 24 |   17  120 |   19  149 |   19  149
+ 25 |   35  145 |   35  146 |   35  146
+ 26 |   67  186 |   64  176 |   64  176
+ 27 |  113  195 |   97  189 |   97  189
+ 28 |  103  191 |   92  197 |   92  197
+ 29 |  105  240 |   95  216 |   95  216
+ 30 |   90  289 |   95  263 |   95  263
+ 31 |  100  311 |  107  284 |  107  284
+ 32 |   87  315 |   90  272 |   90  272
+ 33 |   65  241 |   67  236 |   67  236
+ 34 |   27  202 |   33  221 |   33  221
+ 35 |    0  179 |    0  192 |    0  192
+ 36 |    1  171 |    0  174 |    0  174
+ 37 |   16  126 |   19  161 |   19  161
+ 38 |   35  133 |   35  144 |   35  144
+ 39 |   67  149 |   64  141 |   64  141
+ 40 |  113  137 |   97  123 |   97  123
+ 41 |  105   97 |   92   95 |   92   95
+ 42 |  104   79 |   95   98 |   95   88
+ 43 |   89   63 |   95   85 |   95   68
+ 44 |   99   71 |  107   56 |  107   56
+ 45 |   86   67 |   90   57 |   90   57
+ 46 |   65  105 |   67   39 |   67   39
+ 47 |   28   85 |   33   21 |   33   21
+ 48 |    0   29 |    0   21 |    0   14
+ 49 |    0    1 |    0    8 |    0    8
+ 50 |    0    0 |    0    0 |    0    0
+ 51 |    0    0 |    0    0 |    0    0
+ 52 |    0    1 |    0    0 |    0    0
+ 53 |    0    0 |    0    0 |    0    0
+ 54 |    0    0 |    0    0 |    0    0
+ 55 |    0    0 |    0    0 |    0    0
+ 56 |    0    0 |    0    0 |    0    0
+ 57 |    0    0 |    0    0 |    0    0
+ 58 |    0    0 |    0    0 |    0    0
+ 59 |    0    1 |    0    0 |    0    0
+ 60 |    0    0 |    0    0 |    0    0
+Saeule A: Summe RE2 1618 Leon 1588 Elza 1588; Korrelation RE2-Leon 0.99, RE2-Elza 0.99; letztes Bild mit Signal >5: RE2 47 Leon 47 Elza 47
+Saeule B: Summe RE2 5593 Leon 5301 Elza 5267; Korrelation RE2-Leon 0.98, RE2-Elza 0.98; letztes Bild mit Signal >5: RE2 48 Leon 49 Elza 49
+
+# RE2-FX-Pool der exe (RE15_GATOR_FX_LOG) je Bild ab sub05-Bild 1 (F3552) - Plaetze gesamt / Bank 3 (Staub) / sonst (Brocken 0x19)
+== fdp_leon
+F3552 5090 Plaetze 2 Staub 0 Brocken 2 op_unbekannt 0;F3553 5090 Plaetze 4 Staub 2 Brocken 2 op_unbekannt 0;F3554 5090 Plaetze 6 Staub 4 Brocken 2 op_unbekannt 0;F3555 5090 Plaetze 8 Staub 6 Brocken 2 op_unbekannt 0;F3556 5090 Plaetze 10 Staub 8 Brocken 2 op_unbekannt 0;F3557 5090 Plaetze 13 Staub 10 Brocken 3 op_unbekannt 0;F3558 5090 Plaetze 14 Staub 11 Brocken 3 op_unbekannt 0;F3559 5090 Plaetze 15 Staub 12 Brocken 3 op_unbekannt 0;F3560 5090 Plaetze 16 Staub 13 Brocken 3 op_unbekannt 0;F3561 5090 Plaetze 17 Staub 14 Brocken 3 op_unbekannt 0;F3562 5090 Plaetze 19 Staub 15 Brocken 4 op_unbekannt 0;F3563 5090 Plaetze 20 Staub 16 Brocken 4 op_unbekannt 0;F3564 5090 Plaetze 21 Staub 17 Brocken 4 op_unbekannt 0;F3565 5090 Plaetze 23 Staub 18 Brocken 5 op_unbekannt 0;F3566 5090 Plaetze 25 Staub 20 Brocken 5 op_unbekannt 0;F3567 5090 Plaetze 27 Staub 22 Brocken 5 op_unbekannt 0;F3568 5090 Plaetze 28 Staub 23 Brocken 5 op_unbekannt 0;F3569 5090 Plaetze 29 Staub 24 Brocken 5 op_unbekannt 0;F3570 5090 Plaetze 32 Staub 25 Brocken 7 op_unbekannt 0;F3571 5090 Plaetze 34 Staub 27 Brocken 7 op_unbekannt 0;F3572 5090 Plaetze 34 Staub 27 Brocken 7 op_unbekannt 0;F3573 5090 Plaetze 34 Staub 27 Brocken 7 op_unbekannt 0;F3574 5090 Plaetze 34 Staub 27 Brocken 7 op_unbekannt 0;F3575 5090 Plaetze 35 Staub 27 Brocken 8 op_unbekannt 0;F3576 5090 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3577 5090 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3578 5090 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3579 5090 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3580 5090 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3581 5090 Plaetze 33 Staub 25 Brocken 8 op_unbekannt 0;F3582 5090 Plaetze 30 Staub 24 Brocken 6 op_unbekannt 0;F3583 5090 Plaetze 29 Staub 23 Brocken 6 op_unbekannt 0;F3584 5090 Plaetze 28 Staub 22 Brocken 6 op_unbekannt 0;F3585 5090 Plaetze 26 Staub 20 Brocken 6 op_unbekannt 0;F3586 5090 Plaetze 24 Staub 18 Brocken 6 op_unbekannt 0;F3587 5090 Plaetze 22 Staub 17 Brocken 5 op_unbekannt 0;F3588 5090 Plaetze 21 Staub 16 Brocken 5 op_unbekannt 0;F3589 5090 Plaetze 20 Staub 15 Brocken 5 op_unbekannt 0;F3590 5090 Plaetze 18 Staub 13 Brocken 5 op_unbekannt 0;F3591 5090 Plaetze 16 Staub 11 Brocken 5 op_unbekannt 0;F3592 5090 Plaetze 13 Staub 9 Brocken 4 op_unbekannt 0;F3593 5090 Plaetze 11 Staub 7 Brocken 4 op_unbekannt 0;F3594 5090 Plaetze 9 Staub 5 Brocken 4 op_unbekannt 0;F3595 5090 Plaetze 7 Staub 4 Brocken 3 op_unbekannt 0;F3596 5090 Plaetze 6 Staub 3 Brocken 3 op_unbekannt 0;F3597 5090 Plaetze 5 Staub 2 Brocken 3 op_unbekannt 0;F3598 5090 Plaetze 4 Staub 1 Brocken 3 op_unbekannt 0;F3599 5090 Plaetze 3 Staub 0 Brocken 3 op_unbekannt 0;F3600 5090 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;F3601 5090 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;F3602 5090 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;F3603 5090 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;F3604 5090 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;
+== fdp_elza
+F3552 5091 Plaetze 2 Staub 0 Brocken 2 op_unbekannt 0;F3553 5091 Plaetze 4 Staub 2 Brocken 2 op_unbekannt 0;F3554 5091 Plaetze 6 Staub 4 Brocken 2 op_unbekannt 0;F3555 5091 Plaetze 8 Staub 6 Brocken 2 op_unbekannt 0;F3556 5091 Plaetze 10 Staub 8 Brocken 2 op_unbekannt 0;F3557 5091 Plaetze 13 Staub 10 Brocken 3 op_unbekannt 0;F3558 5091 Plaetze 14 Staub 11 Brocken 3 op_unbekannt 0;F3559 5091 Plaetze 15 Staub 12 Brocken 3 op_unbekannt 0;F3560 5091 Plaetze 16 Staub 13 Brocken 3 op_unbekannt 0;F3561 5091 Plaetze 17 Staub 14 Brocken 3 op_unbekannt 0;F3562 5091 Plaetze 19 Staub 15 Brocken 4 op_unbekannt 0;F3563 5091 Plaetze 20 Staub 16 Brocken 4 op_unbekannt 0;F3564 5091 Plaetze 21 Staub 17 Brocken 4 op_unbekannt 0;F3565 5091 Plaetze 23 Staub 18 Brocken 5 op_unbekannt 0;F3566 5091 Plaetze 25 Staub 20 Brocken 5 op_unbekannt 0;F3567 5091 Plaetze 27 Staub 22 Brocken 5 op_unbekannt 0;F3568 5091 Plaetze 28 Staub 23 Brocken 5 op_unbekannt 0;F3569 5091 Plaetze 29 Staub 24 Brocken 5 op_unbekannt 0;F3570 5091 Plaetze 32 Staub 25 Brocken 7 op_unbekannt 0;F3571 5091 Plaetze 34 Staub 27 Brocken 7 op_unbekannt 0;F3572 5091 Plaetze 34 Staub 27 Brocken 7 op_unbekannt 0;F3573 5091 Plaetze 34 Staub 27 Brocken 7 op_unbekannt 0;F3574 5091 Plaetze 34 Staub 27 Brocken 7 op_unbekannt 0;F3575 5091 Plaetze 35 Staub 27 Brocken 8 op_unbekannt 0;F3576 5091 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3577 5091 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3578 5091 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3579 5091 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3580 5091 Plaetze 34 Staub 26 Brocken 8 op_unbekannt 0;F3581 5091 Plaetze 33 Staub 25 Brocken 8 op_unbekannt 0;F3582 5091 Plaetze 30 Staub 24 Brocken 6 op_unbekannt 0;F3583 5091 Plaetze 29 Staub 23 Brocken 6 op_unbekannt 0;F3584 5091 Plaetze 28 Staub 22 Brocken 6 op_unbekannt 0;F3585 5091 Plaetze 26 Staub 20 Brocken 6 op_unbekannt 0;F3586 5091 Plaetze 24 Staub 18 Brocken 6 op_unbekannt 0;F3587 5091 Plaetze 22 Staub 17 Brocken 5 op_unbekannt 0;F3588 5091 Plaetze 21 Staub 16 Brocken 5 op_unbekannt 0;F3589 5091 Plaetze 20 Staub 15 Brocken 5 op_unbekannt 0;F3590 5091 Plaetze 18 Staub 13 Brocken 5 op_unbekannt 0;F3591 5091 Plaetze 16 Staub 11 Brocken 5 op_unbekannt 0;F3592 5091 Plaetze 13 Staub 9 Brocken 4 op_unbekannt 0;F3593 5091 Plaetze 11 Staub 7 Brocken 4 op_unbekannt 0;F3594 5091 Plaetze 9 Staub 5 Brocken 4 op_unbekannt 0;F3595 5091 Plaetze 7 Staub 4 Brocken 3 op_unbekannt 0;F3596 5091 Plaetze 6 Staub 3 Brocken 3 op_unbekannt 0;F3597 5091 Plaetze 5 Staub 2 Brocken 3 op_unbekannt 0;F3598 5091 Plaetze 4 Staub 1 Brocken 3 op_unbekannt 0;F3599 5091 Plaetze 3 Staub 0 Brocken 3 op_unbekannt 0;F3600 5091 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;F3601 5091 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;F3602 5091 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;F3603 5091 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;F3604 5091 Plaetze 1 Staub 0 Brocken 1 op_unbekannt 0;

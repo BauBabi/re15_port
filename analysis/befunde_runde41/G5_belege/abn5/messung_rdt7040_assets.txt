@@ -1,0 +1,69 @@
+# Abnahme 5: ROOM7040.RDT (info/re2leon/PL0/RDT, = Integrationsbaum info/) - Kopf, Skriptbytes, RID/RVD (rdt7040_5.py)
+Groesse 245348 Kopf 00 0f 07 00 00 00 00 29
+  [ 0] 0x06018
+  [ 1] 0x060D8
+  [ 2] 0x06EF8
+  [ 3] 0x00000
+  [ 4] 0x00000
+  [ 5] 0x06018
+  [ 6] 0x00F80
+  [ 7] 0x00064
+  [ 8] 0x0027C
+  [ 9] 0x00500
+  [10] 0x00244
+  [11] 0x010B0
+  [12] 0x010A0
+  [13] 0x01C4C
+  [14] 0x01CF4
+  [15] 0x00000
+  [16] 0x010FC
+  [17] 0x01120
+  [18] 0x035D8
+  [19] 0x036F8
+  [20] 0x18984
+  [21] 0x1B1E4
+  [22] 0x036FC
+@0x01892 sub06 Cut_chg(9)           29 09
+@0x01894 sub06 Evt_exec(7,sub09)    04 07 18 09
+@0x01898 Evt_next?                  02 00
+@0x0189A Evt_exec(6,sub04)          04 06 18 04
+@0x0193A Cut_chg(10)                29 0a
+@0x0193C Evt_exec(7,sub10)          04 07 18 0a
+@0x01B20 sub09 Evt_exec(4,sub11)    04 04 18 0b
+@0x01B24 Sleep 10                   09 0a 0a 00
+@0x01B28 Evt_exec(3,sub12)          04 03 18 0c
+@0x01B2E sub10                      05 03 05 04 2e 04 03 00 32 00 00 83 00 00 00 83 2e 04 04 00 32 00 00 83 00 00 00 83 01 00 2e 04
+@0x01B4C sub11                      2e 04 03 00 32 00 00 00 d0 ee 60 be 33 00 00 0c 00 0c 00 04 2e 04 03 00 06 00 14 00 3e 00 0b 04 e0 b1 2e 04 03 00 32 00 00 00 d0 ee 60 be 08 00 2e 04 03 00 3d 10 0b 00 26 00 01 10 e8 03 35 0b 10 00 02 00 17 ff ff 00 d0 ff 01 00
+@0x01B98 sub12                      2e 04 04 00 32 00 00 00 d0 ee 60 be 33 00 00 0c 00 0c 00 04 2e 04 04 00 06 00 14 00 3e 00 0b 04 e0 b1 2e 04 04 00 32 00 00 00 d0 ee 60 be 08 00 2e 04 04 00 3d 10 0b 00 26 00 01 10 e8 03 35 0b 10 00 02 00 17 ff ff 00 d0 ff 01 00
+@0x0169E sub04                      04 08 18 05 18 0e 5c 00 fd 02 5c 00 fb 02 36 02 0c 00 01 00 00 00 00 00 00 00 0d 00 06 00 05 00 5c 00 f9 02 0e 00 5c 00 fa 02 5c 00 fb 02 5c 00 fc 02 5c 00 fd 02 5c 00 fe 02 5c 00 ff 02 01 00
+@0x016DE sub05                      3a 00 19 00 00 00 00 10 24 04 50 ec f0 ab 00 00 3a 00 19 00 00 00 00 10 b8 0b 50 ec 1f a0 00 00 09 0a 05 00 3a 00 19 00 00 00 00 10 6e 0a 50 ec 84 a4 00 00 09 0a 05 00 3a 00 19 00 00 00 00 10 f4 01 50 ec 0e 9d 00 00 09 0a 03 00 3a 00 19 00 00 00 00 10 b8 0b 50 ec 1f a0 00 00 09 0a 05 00 3a 00 19 00 00 00 00 10 6e 0a 50 ec 84 a4 00 00 3a 00 19 00 00 00 00 10 0e 0b 50 ec 9e ad 00 00 09 0a 05 00 3a 00 19 00 00 00 00 10 f4 01 50 ec 0e 9d 00 00 09 0a 03 00 01 00
+@0x01BE4 sub13                      8a 00 0d 00 01 00 8b 96 02 00 00 00 8c 00 96 fa 05 00 02 00 8c 00 fa c8 0a 00 07 00 01 00
+@0x01C02 sub14                      8c 00 64 c8 07 00 00 00 8b fa 05 00 02 00 8c 00 c8 32 11 00 05 00 01 00
+@0x01C1A sub15                      8b 6e 03 00 00 00 8b 46 03 00 07 00 8b 46 03 00 14 00 8b 6e 03 00 20 00 8b 46 03 00 27 00 8b 46 03 00 34 00 09 0a 34 00 17 ff ff 00 d8 ff 01 00
+@0x01778 sub06 Anfang               22 02 07 01 22 01 1b 01 3c 00 29 03 05 06 2e 01 00 00 32 00 b4 e2 00 00 ee a3 33 00 00 00 00 08 00 00 04 07 18 03 18 0d 2e 03 01 00 32 00 00 ce
+@0x0179E sub06 Gosub sub13          18 0d
+@0x01290 MAIN sub00 @0x01290        02 0d 04 09 18 02 04 06
+@0x00184 RID Schnitt 9              00 00 b7 73 8c 0a 00 00
+@0x001A4 RID Schnitt 10             00 00 3c 68 f2 22 00 00
+@0x0045C RVD @0x45C                 01 ff 09 00 18 ca 79 88 88 c8 d8 c3 b0 1d d8 c3 88 2c 78 88
+@0x00470 RVD @0x470                 01 ff 0a 00 bc d0 34 8b 3c dd 1c c1 d0 20 d8 c3 88 2c 78 88
+@0x00244 Objektmodell-Liste         e4 b1 01 00 dc 1d 00 00 04 34 02 00 00 00 00 00 24 b6 02 00 f0 24 00 00 44 38 03 00 a4 28 00 00 44 38 03 00 a4 28 00 00 44 38 03 00 80 30 00 00 44 38 03 00 4c 35 00 00
+@0x035D8 ESP-Ids                    19 ff ff ff ff ff ff ff
+@0x036F8 ESP-Daten Anfang           08 00 00 00 14 29 00 00
+@0x18984 ESP-TIM Kopf               10 00 00 00 08 00 00 00 2c 00 00 00 00 00 f0 01 10 00 01 00
+RID9 +2 = 29623 -> >>7 = 231
+RID10 +2 = 26684 -> >>7 = 208
+
+# RE2-Assets der NB5/NB6 gegen ROOM7040.RDT (assets5.py, eigene Ausschnitte)
+Objektmodell 3/4: (211012, 10404) (211012, 10404) Modell 5 MD1 0x3080
+R704_LAMPE.MD1       2012 B  == RDT[0x028A4:0x03080] True  sha256 f2583694652e93b9
+R704_LAMPE.TIM      34336 B  == RDT[0x33844:0x3BE64] True  sha256 5b1ea0407fc2e4f0
+R704.ESP              292 B  == RDT[0x035D8:0x036FC] True  sha256 518c89ade773f718
+GATOR40A0_19.TIM    10304 B  == RDT[0x18984:0x1B1C4] True  sha256 13acbbdc88b37be2
+RDT-Laenge 245348 TIM-Ende 245348
+Tafelwort vor RDT[21] (0x1B1E4-4): 0  R704.ESP[288..292] = 8
+EDT[12] = 00 01 13 20  VH-Magie b'pBAV'
+prog 1 tone 1 lagen 2
+VAG-Nummern der Lagen [17, 17]
+VAG 17: RDT@0x16228 Laenge 10064, in R704_BEBEN.VBS ab 3144: True
+VBS-Laenge 13208 Trailer vh_off 32

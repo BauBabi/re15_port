@@ -1,0 +1,298 @@
+[asset] exe-dir: C:/Users/mjoedicke/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/testint/w_abn3/bin
+[asset] cd-root: C:/workspace/git/reAi_v2/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[render] SDL-Renderer direct3d11, Videotreiber windows, ABR2 (B-F) ok
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] kein Controller gefunden (Tastatur bleibt aktiv)
+[pad] Diese Sitzung ist eine REMOTEDESKTOP-Sitzung. RDP leitet Gamepads nicht
+[pad] weiter — ein am Client (z.B. Steam Deck) steckendes Pad ist hier unsichtbar.
+[pad] Abhilfe: re15_port/tools/re15_pad_bridge_host.py auf DIESEM Rechner starten
+[pad] und re15_pad_bridge_client.py auf dem Client. Der Host legt dann ueber ViGEm
+[pad] ein virtuelles Pad an, das SDL wie ein echtes sieht.
+[titel_r39] alte Beschriftung entfernt: 929 Pixel; neu "Ver.0.8.29 dev" (RE15_VERSION "v0.8.29 dev") Spalten 200..283
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1241.RDT (163748 bytes)
+[rdt] nCut=9 nDoor=0 nItem=0 zones=9 main_scd=34B sub=4 props=0
+[esp] room 1241: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok (Slot 55)
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 21 meshes
+[pl-part] PL04W01.EDD aus PLD/PL04W01.PLW geschnitten (+8, 1336 B)
+[pl-part] PL04W01.EMR aus PLD/PL04W01.PLW geschnitten (+1344, 17368 B)
+[w01] PL04W01 weapon-track: 15 bones, 14 clips, 217 kf
+[w03] PL04W03 gun-track: 15 bones, 14 clips, 243 kf
+[wpn] loaded 21/21 PL04W** in-hand meshes (textured from body-skin slot 0)
+[pl-part] PL04.EDD aus PLD/PL04.PLD geschnitten (+8, 3156 B)
+[skel] PL04: 15 bones, 24 clips, 705 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1241.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 217 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 243 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL04W**.PLW
+[messer] Startinventar Charakter 4: | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 9 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1241 = (-26214,0,-3861) yaw=0
+[parity] player teleported to (-7000,-25659) rot=1976
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] thread start slot=10 first_op=0x22
+[evt] F0 room=1241 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd F0] Cut_chg(0)
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x3A0 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[szenenschutz] F0 an (Szene haelt den Spieler)
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[gator-fx] F0 Kern-Zeilen 485..498 (RE2 TEX.TIM) Slot 56 ok - spielweit ab dem Start (G-E4)
+[walk] F30 cut=0 mo=200 af=30 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F60 cut=0 mo=200 af=60 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[bone]  0: rel=(0,-1723,0) world=(-7000,-3523,-25659)
+[F60] cut=0 sd=208
+  cut.pos=(-12834,-3114,-9774)
+  cut.target=(-7794,-2196,-22446)
+  cut.fov=26684
+  VT=(-15554,3393,-4125)
+  VR0=(-3810,0,-1515) VR1=(-102,4084,255) VR2=(1510,275,-3799)
+  Player=(-7000,-1800,-25659) rot_y=1976
+  pose[0].trans=(0,-1723,0)
+  bone_world=(-7000,-3523,-25659)
+  combined_trans=(447,-1543,16856)
+  combined_rot[0..2]=(3950,109,1091)
+  proj sx=166 sy=101
+[bone]  1: rel=(0,-1723,0) world=(-7000,-3523,-25659)
+[bone]  2: rel=(-30,-1525,-140) world=(-6986,-3325,-25517)
+[bone]  3: rel=(-65,-918,-165) world=(-6954,-2718,-25488)
+[bone]  4: rel=(-113,-106,-196) world=(-6909,-1906,-25452)
+[bone]  5: rel=(-30,-1525,139) world=(-6956,-3325,-25794)
+[bone]  6: rel=(-62,-917,157) world=(-6922,-2717,-25809)
+[bone]  7: rel=(-105,-104,180) world=(-6877,-1904,-25827)
+[bone]  8: rel=(-39,-2346,0) world=(-6962,-4146,-25655)
+[bone]  9: rel=(-56,-2293,-285) world=(-6976,-4093,-25370)
+[bone] 10: rel=(-75,-1885,-298) world=(-6958,-3685,-25355)
+[bone] 11: rel=(-20,-1530,-345) world=(-7018,-3330,-25314)
+[bone] 12: rel=(-56,-2293,285) world=(-6914,-4093,-25937)
+[bone] 13: rel=(-101,-1887,299) world=(-6868,-3687,-25946)
+[bone] 14: rel=(-24,-1536,340) world=(-6940,-3336,-25995)
+[bone] 15: rel=(0,-1723,0) world=(-6839,-4488,-25642)
+[bone] 16: rel=(0,-1723,0) world=(-6795,-4520,-25637)
+[bone] 17: rel=(0,-1723,0) world=(-6662,-4478,-25624)
+[bone] 18: rel=(0,-1723,0) world=(-6661,-4372,-25628)
+[walk] F90 cut=0 mo=200 af=90 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F120 cut=0 mo=200 af=120 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F150 cut=0 mo=200 af=150 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[scd F161] Cut_chg(1)
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x3A4 masks=0 fg_atlas=0
+[walk] F180 cut=1 mo=200 af=180 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F210 cut=1 mo=200 af=210 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F240 cut=1 mo=200 af=240 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[debug-menu] AUTO-JUMP -> ROOM2000 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-7000,-25659) rot=1976 band=1
+[debug-menu] JUMP -> 200 L TUNNEL       (ROOM2001) spawn=(-7000,-1800,-25659) cut=0
+[room] PC loaded room2001.rdt (360660 bytes)
+[esp] room 2001: 7 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x06) -> slot 37: 256x128
+[esp] effect TIM (id 0x07) -> slot 38: 256x32
+[esp] effect TIM (id 0x0b) -> slot 39: 256x104
+[esp] effect TIM (id 0x0c) -> slot 40: 256x184
+[esp] effect TIM (id 0x0d) -> slot 41: 256x88
+[esp] effect TIM (id 0x0f) -> slot 42: 256x96
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(-19800,-900,10800) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x01 type=3 pos=(-25200,-900,-19800) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(-22450,-5400,16600) rot=(0,2048,0)
+[scd] thread start slot=10 first_op=0x3A
+[evt] F250 room=2001 Evt_exec sub=8 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[ventilkette41] ROOM2001: Leiter Slot 4 (@0x0169E) -> Sperrtext 40 (Form ROOM2030 @0x01B12)
+[wasserlauf41] ROOM2001: 6 Strahlen, Lauf ueber den Weg Effekt 0x0F
+[rbj-binder] ROOM2001 Spieler rec0 (alt rec0) Gegner 0:rec1(alt rec1)
+[rbj] room 2001 cinematic overlay: 20 clips, 524 kf
+[prop-render] pi=0 oid=0x00 pos=(-19800,-900,10800) rot=(0,2048,0) meshes=1
+[prop-render] pi=1 oid=0x01 pos=(-25200,-900,-19800) rot=(0,1024,0) meshes=1
+[prop-render] pi=2 oid=0x02 pos=(-22450,-5400,16600) rot=(0,2048,0) meshes=1
+[pri] cut=0 pri_offset=0x934 masks=0 fg_atlas=0
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x938 masks=0 fg_atlas=0
+[light] cut 2 tint=(128,128,128)
+[pri] cut=2 pri_offset=0x93C masks=10 fg_atlas=1
+[szenenschutz] F6 aus (0 geschuetzte Gegner-Ticks)
+[scd F15] letterbox closed -> gameplay (player_mode=0)
+[walk] F30 cut=2 mo=200 af=24 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F60 cut=2 mo=200 af=54 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[bone]  0: rel=(0,-1723,0) world=(-7000,-3523,-25659)
+[F60] cut=2 sd=208
+  cut.pos=(1926,-4590,-25164)
+  cut.target=(-13392,234,-20556)
+  cut.fov=26684
+  VT=(23540,1776,10069)
+  VR0=(1180,0,3922) VR1=(1136,3937,-342) VR2=(-3770,1187,1134)
+  Player=(-7000,-1800,-25659) rot_y=1976
+  pose[0].trans=(0,-1723,0)
+  bone_world=(-7000,-3523,-25659)
+  combined_trans=(-3046,-1410,8387)
+  combined_rot[0..2]=(-1599,-46,-3770)
+  proj sx=84 sy=85
+[bone]  1: rel=(0,-1723,0) world=(-7000,-3523,-25659)
+[bone]  2: rel=(-30,-1525,-140) world=(-6986,-3325,-25517)
+[bone]  3: rel=(-65,-918,-165) world=(-6954,-2718,-25488)
+[bone]  4: rel=(-113,-106,-196) world=(-6909,-1906,-25452)
+[bone]  5: rel=(-30,-1525,139) world=(-6956,-3325,-25794)
+[bone]  6: rel=(-62,-917,157) world=(-6922,-2717,-25809)
+[bone]  7: rel=(-105,-104,180) world=(-6877,-1904,-25827)
+[bone]  8: rel=(-39,-2346,0) world=(-6962,-4146,-25655)
+[bone]  9: rel=(-56,-2293,-285) world=(-6976,-4093,-25370)
+[bone] 10: rel=(-75,-1885,-298) world=(-6958,-3685,-25355)
+[bone] 11: rel=(-20,-1530,-345) world=(-7018,-3330,-25314)
+[bone] 12: rel=(-56,-2293,285) world=(-6914,-4093,-25937)
+[bone] 13: rel=(-101,-1887,299) world=(-6868,-3687,-25946)
+[bone] 14: rel=(-24,-1536,340) world=(-6940,-3336,-25995)
+[bone] 15: rel=(0,-1723,0) world=(-6839,-4488,-25642)
+[bone] 16: rel=(0,-1723,0) world=(-6795,-4520,-25637)
+[bone] 17: rel=(0,-1723,0) world=(-6662,-4480,-25624)
+[bone] 18: rel=(0,-1723,0) world=(-6661,-4374,-25625)
+WARN: 
+
+Assertion failure at WIN_AddDisplay (C:/workspace/git/reAi_v2/re15_port/build/_deps/sdl2-src/src/video/windows/SDL_windowsmodes.c:380), triggered 1 time:
+  'index == *display_index'
+
+[walk] F90 cut=2 mo=200 af=84 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F120 cut=2 mo=211 af=7 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F150 cut=2 mo=211 af=37 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F180 cut=2 mo=211 af=67 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F210 cut=2 mo=211 af=97 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F240 cut=2 mo=211 af=127 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F270 cut=2 mo=211 af=157 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F300 cut=2 mo=212 af=19 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F330 cut=2 mo=212 af=49 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F360 cut=2 mo=211 af=29 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F390 cut=2 mo=211 af=59 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F420 cut=2 mo=211 af=89 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F450 cut=2 mo=211 af=119 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F480 cut=2 mo=212 af=17 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F510 cut=2 mo=212 af=47 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[framedump] 320x240 -> a_000520.ppm
+[framedump] 320x240 -> a_000522.ppm
+[framedump] 320x240 -> a_000524.ppm
+[framedump] 320x240 -> a_000526.ppm
+[framedump] 320x240 -> a_000528.ppm
+[framedump] 320x240 -> a_000530.ppm
+[framedump] 320x240 -> a_000532.ppm
+[framedump] 320x240 -> a_000534.ppm
+[framedump] 320x240 -> a_000536.ppm
+[framedump] 320x240 -> a_000538.ppm
+[walk] F540 cut=2 mo=211 af=27 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[framedump] 320x240 -> a_000540.ppm
+[framedump] 320x240 -> a_000542.ppm
+[framedump] 320x240 -> a_000544.ppm
+[framedump] 320x240 -> a_000546.ppm
+[framedump] 320x240 -> a_000548.ppm
+[framedump] 320x240 -> a_000550.ppm
+[framedump] 320x240 -> a_000552.ppm
+[framedump] 320x240 -> a_000554.ppm
+[framedump] 320x240 -> a_000556.ppm
+[framedump] 320x240 -> a_000558.ppm
+[framedump] 320x240 -> a_000560.ppm
+[framedump] 320x240 -> a_000562.ppm
+[framedump] 320x240 -> a_000564.ppm
+[framedump] 320x240 -> a_000566.ppm
+[framedump] 320x240 -> a_000568.ppm
+[walk] F570 cut=2 mo=211 af=57 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[framedump] 320x240 -> a_000570.ppm
+[framedump] 320x240 -> a_000572.ppm
+[framedump] 320x240 -> a_000574.ppm
+[framedump] 320x240 -> a_000576.ppm
+[framedump] 320x240 -> a_000578.ppm
+[framedump] 320x240 -> a_000580.ppm
+[framedump] 320x240 -> a_000582.ppm
+[framedump] 320x240 -> a_000584.ppm
+[framedump] 320x240 -> a_000586.ppm
+[framedump] 320x240 -> a_000588.ppm
+[framedump] 320x240 -> a_000590.ppm
+[framedump] 320x240 -> a_000592.ppm
+[framedump] 320x240 -> a_000594.ppm
+[framedump] 320x240 -> a_000596.ppm
+[framedump] 320x240 -> a_000598.ppm
+[walk] F600 cut=2 mo=211 af=87 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[framedump] 320x240 -> a_000600.ppm
+[framedump] 320x240 -> a_000602.ppm
+[framedump] 320x240 -> a_000604.ppm
+[framedump] 320x240 -> a_000606.ppm
+[framedump] 320x240 -> a_000608.ppm
+[framedump] 320x240 -> a_000610.ppm
+[framedump] 320x240 -> a_000612.ppm
+[framedump] 320x240 -> a_000614.ppm
+[framedump] 320x240 -> a_000616.ppm
+[framedump] 320x240 -> a_000618.ppm
+[framedump] 320x240 -> a_000620.ppm
+[framedump] 320x240 -> a_000622.ppm
+[framedump] 320x240 -> a_000624.ppm
+[framedump] 320x240 -> a_000626.ppm
+[framedump] 320x240 -> a_000628.ppm
+[walk] F630 cut=2 mo=211 af=117 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[framedump] 320x240 -> a_000630.ppm
+[framedump] 320x240 -> a_000632.ppm
+[framedump] 320x240 -> a_000634.ppm
+[framedump] 320x240 -> a_000636.ppm
+[framedump] 320x240 -> a_000638.ppm
+[framedump] 320x240 -> a_000640.ppm
+[framedump] 320x240 -> a_000642.ppm
+[framedump] 320x240 -> a_000644.ppm
+[framedump] 320x240 -> a_000646.ppm
+[framedump] 320x240 -> a_000648.ppm
+[framedump] 320x240 -> a_000650.ppm
+[framedump] 320x240 -> a_000652.ppm
+[framedump] 320x240 -> a_000654.ppm
+[framedump] 320x240 -> a_000656.ppm
+[framedump] 320x240 -> a_000658.ppm
+[walk] F660 cut=2 mo=211 af=147 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[framedump] 320x240 -> a_000660.ppm
+[framedump] 320x240 -> a_000662.ppm
+[framedump] 320x240 -> a_000664.ppm
+[framedump] 320x240 -> a_000666.ppm
+[framedump] 320x240 -> a_000668.ppm
+[framedump] 320x240 -> a_000670.ppm
+[framedump] 320x240 -> a_000672.ppm
+[framedump] 320x240 -> a_000674.ppm
+[framedump] 320x240 -> a_000676.ppm
+[framedump] 320x240 -> a_000678.ppm
+[framedump] 320x240 -> a_000680.ppm
+[framedump] 320x240 -> a_000682.ppm
+[framedump] 320x240 -> a_000684.ppm
+[framedump] 320x240 -> a_000686.ppm
+[framedump] 320x240 -> a_000688.ppm
+[walk] F690 cut=2 mo=211 af=177 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[framedump] 320x240 -> a_000690.ppm
+[framedump] 320x240 -> a_000692.ppm
+[framedump] 320x240 -> a_000694.ppm
+[framedump] 320x240 -> a_000696.ppm
+[framedump] 320x240 -> a_000698.ppm
+[framedump] 320x240 -> a_000700.ppm
+[framedump] 320x240 -> a_000702.ppm
+[framedump] 320x240 -> a_000704.ppm
+[framedump] 320x240 -> a_000706.ppm
+[framedump] 320x240 -> a_000708.ppm
+[framedump] 320x240 -> a_000710.ppm
+[framedump] 320x240 -> a_000712.ppm
+[framedump] 320x240 -> a_000714.ppm
+[framedump] 320x240 -> a_000716.ppm
+[framedump] 320x240 -> a_000718.ppm
+[walk] F720 cut=2 mo=211 af=207 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[framedump] 320x240 -> a_000720.ppm
+[flow] EXIT_AT: Bild 720 in Raum 2001 erreicht -> exit

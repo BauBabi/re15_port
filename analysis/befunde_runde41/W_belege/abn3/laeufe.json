@@ -1,0 +1,393 @@
+{
+ "smoke_leon": {
+  "pid": 68056,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 35.6,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_FRAMEDUMP": "290:s.ppm",
+   "RE15_EXIT_AT": "300#2000"
+  }
+ },
+ "LD_L": {
+  "pid": 68260,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 38.0,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_CONTINUE_TEST": "1",
+   "RE15_CARD_AUTO": "1",
+   "RE15_CARD_SLOT": "0",
+   "RE15_FRAMEDUMP": "520-720/2:l_",
+   "RE15_EXIT_AT": "720#2000"
+  }
+ },
+ "RW_L": {
+  "pid": 61652,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 109.0,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_FIRE_AOT": "2@300#2000",
+   "RE15_WEGPLAN": "C:/Users/mjoedicke/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/testint/w_abn3/plaene/rw_leon.txt",
+   "RE15_WEGPLAN_LOG": "wegplan.txt",
+   "RE15_FRAMEDUMP": "520-900/2:r_",
+   "RE15_EXIT_AT": "900#2000"
+  }
+ },
+ "L5_cut": {
+  "pid": 15228,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 54.5,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_FORCE_CUT": "5",
+   "RE15_FRAMEDUMP": "520-720/2:c_",
+   "RE15_EXIT_AT": "720#2000"
+  }
+ },
+ "L2_marke": {
+  "pid": 68888,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 74.9,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_FRAMEDUMP": "520-1300/2:a_",
+   "RE15_EXIT_AT": "1300#2000"
+  }
+ },
+ "L7_cut": {
+  "pid": 68796,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 54.6,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_FORCE_CUT": "7",
+   "RE15_FRAMEDUMP": "520-720/2:c_",
+   "RE15_EXIT_AT": "720#2000"
+  }
+ },
+ "L10_cut": {
+  "pid": 63540,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 53.4,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_FORCE_CUT": "10",
+   "RE15_FRAMEDUMP": "300-420/1:w_",
+   "RE15_EXIT_AT": "600#2000"
+  }
+ },
+ "K_L5_cut": {
+  "pid": 64468,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 55.0,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_FORCE_CUT": "5",
+   "RE15_SUBSTART": "7@1#2000",
+   "RE15_FRAMEDUMP": "520-720/2:c_",
+   "RE15_EXIT_AT": "720#2000"
+  }
+ },
+ "K_L2_marke": {
+  "pid": 63316,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 70.4,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_SUBSTART": "7@1#2000",
+   "RE15_FRAMEDUMP": "520-720/2:a_",
+   "RE15_EXIT_AT": "720#2000"
+  }
+ },
+ "K_L7_cut": {
+  "pid": 55052,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 54.2,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_FORCE_CUT": "7",
+   "RE15_SUBSTART": "7@1#2000",
+   "RE15_FRAMEDUMP": "520-720/2:c_",
+   "RE15_EXIT_AT": "720#2000"
+  }
+ },
+ "E2_marke": {
+  "pid": 64192,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 73.9,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_FRAMEDUMP": "520-1300/2:a_",
+   "RE15_EXIT_AT": "1300#2001"
+  }
+ },
+ "E5_cut": {
+  "pid": 52884,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 54.1,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_FORCE_CUT": "5",
+   "RE15_FRAMEDUMP": "520-720/2:c_",
+   "RE15_EXIT_AT": "720#2001"
+  }
+ },
+ "E7_cut": {
+  "pid": 66716,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 54.0,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_FORCE_CUT": "7",
+   "RE15_FRAMEDUMP": "520-720/2:c_",
+   "RE15_EXIT_AT": "720#2001"
+  }
+ },
+ "E10_cut": {
+  "pid": 68224,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 49.8,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_FORCE_CUT": "10",
+   "RE15_FRAMEDUMP": "300-420/1:w_",
+   "RE15_EXIT_AT": "600#2001"
+  }
+ },
+ "K_E2_marke": {
+  "pid": 67872,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 49.8,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_SUBSTART": "8@1#2001",
+   "RE15_FRAMEDUMP": "520-720/2:a_",
+   "RE15_EXIT_AT": "720#2001"
+  }
+ },
+ "LD_E": {
+  "pid": 68960,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 30.4,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_CONTINUE_TEST": "1",
+   "RE15_CARD_AUTO": "1",
+   "RE15_CARD_SLOT": "0",
+   "RE15_FRAMEDUMP": "520-720/2:l_",
+   "RE15_EXIT_AT": "720#2001"
+  }
+ },
+ "RW_E": {
+  "pid": 48644,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 80.0,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_FIRE_AOT": "2@300#2001",
+   "RE15_WEGPLAN": "C:/Users/mjoedicke/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/testint/w_abn3/plaene/rw_elza.txt",
+   "RE15_WEGPLAN_LOG": "wegplan.txt",
+   "RE15_FRAMEDUMP": "520-900/2:r_",
+   "RE15_EXIT_AT": "900#2001"
+  }
+ },
+ "E2_marke_b": {
+  "pid": 61324,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 50.5,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_FRAMEDUMP": "520-720/2:a_",
+   "RE15_EXIT_AT": "720#2001"
+  }
+ },
+ "K_E2_marke_b": {
+  "pid": 19060,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 50.2,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_SUBSTART": "8@1#2001",
+   "RE15_FRAMEDUMP": "520-720/2:a_",
+   "RE15_EXIT_AT": "720#2001"
+  }
+ },
+ "N_E": {
+  "pid": 66548,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 60.7,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_SET_FLAG": "3:65",
+   "RE15_EXIT_AT": "400#2001"
+  }
+ },
+ "N_L": {
+  "pid": 67856,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 72.8,
+  "exe": "re15_wa3.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_SET_FLAG": "4:244",
+   "RE15_EXIT_AT": "400#2000"
+  }
+ },
+ "V_L2_nutzer": {
+  "pid": 73188,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 52.3,
+  "exe": "re15_wa3_nutzer.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_FRAMEDUMP": "520-720/2:a_",
+   "RE15_EXIT_AT": "720#2000"
+  }
+ },
+ "V_E2_nutzer": {
+  "pid": 74000,
+  "rc": 0,
+  "status": "ok",
+  "dauer_s": 51.3,
+  "exe": "re15_wa3_nutzer.exe",
+  "env": {
+   "RE15_FX_LOG": "fx.log",
+   "RE15_WAFFEN_LOG": "wf.log",
+   "RE15_EVT_TRACE": "1",
+   "RE15_DEBUG_JUMP": "2000@250",
+   "RE15_PLAYER_POS": "-7000,-25659,1976,1",
+   "RE15_FRAMEDUMP": "520-720/2:a_",
+   "RE15_PSELECT_AUTO_SWITCH": "1",
+   "RE15_EXIT_AT": "720#2001"
+  }
+ }
+}

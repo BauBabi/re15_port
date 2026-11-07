@@ -1,0 +1,7 @@
+===== .claude/worktrees/r41_integration/re15_port/shared_assets/PSX
+  ROOM2000.RDT: sub07 (8x ab @0x01B06) -> Evt_exec main00 @0x0177C
+  ROOM2001.RDT: sub08 (8x ab @0x01D32) -> Evt_exec main00 @0x0177C
+===== Version_40%/PSX
+  ROOM2000.RDT: sub03 (8x ab @0x015B6) -> NIE gestartet
+  ROOM2001.RDT: sub03 (8x ab @0x015B6) -> NIE gestartet
+  ROOM20B1.RDT: sub03 (8x ab @0x014EA) -> NIE gestartet

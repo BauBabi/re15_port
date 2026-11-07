@@ -1,0 +1,1860 @@
+{
+ "E2_marke_b": {
+  "lauf": "E2_marke_b",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "720",
+   "2001"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 101,
+  "bild_von_bis": [
+   "a_000520.ppm",
+   "a_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 154,
+  "karte_kasten": [
+   73,
+   96,
+   58,
+   125
+  ]
+ },
+ "K_E2_marke_b": {
+  "lauf": "K_E2_marke_b",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "720",
+   "2001"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [
+   "sub_scd[8] at F1"
+  ],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 11,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 1065,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": 186,
+  "bilder": 101,
+  "bild_von_bis": [
+   "a_000520.ppm",
+   "a_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 45,
+    "paare": 100,
+    "groesster": 21,
+    "ort_haeufigst": [
+     83,
+     1,
+     42
+    ],
+    "erster_wechsel": "a_000546.ppm"
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 154,
+  "karte_kasten": [
+   73,
+   96,
+   58,
+   125
+  ]
+ },
+ "N_L": {
+  "lauf": "N_L",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "400",
+   "2000"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "11"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [
+   [
+    "2000",
+    "2"
+   ]
+  ],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 35,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 0
+ },
+ "N_E": {
+  "lauf": "N_E",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "400",
+   "2001"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "12",
+   "4"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [
+   [
+    "2001",
+    "2"
+   ],
+   [
+    "2001",
+    "3"
+   ]
+  ],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 40,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 0
+ },
+ "E10_cut": {
+  "lauf": "E10_cut",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "600",
+   "2001"
+  ],
+  "cuts": [
+   "8",
+   "10"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 54,
+  "fx_6_0": 0,
+  "fx_11": 31725,
+  "fx_6_andere": 691,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 121,
+  "bild_von_bis": [
+   "w_000300.ppm",
+   "w_000420.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 120,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 120,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 120,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 120,
+    "paare": 120,
+    "groesster": 173,
+    "ort_haeufigst": [
+     128,
+     100,
+     120
+    ],
+    "erster_wechsel": "w_000301.ppm"
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 120,
+    "paare": 120,
+    "groesster": 170,
+    "ort_haeufigst": [
+     111,
+     163,
+     120
+    ],
+    "erster_wechsel": "w_000301.ppm"
+   }
+  },
+  "karte_punkte_ge6": 11137,
+  "karte_kasten": [
+   2,
+   173,
+   33,
+   210
+  ]
+ },
+ "E2_marke": {
+  "lauf": "E2_marke",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "1300",
+   "2001"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 117,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 391,
+  "bild_von_bis": [
+   "a_000520.ppm",
+   "a_001300.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 631,
+  "karte_kasten": [
+   73,
+   99,
+   58,
+   125
+  ]
+ },
+ "E5_cut": {
+  "lauf": "E5_cut",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "720",
+   "2001"
+  ],
+  "cuts": [
+   "5"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 0,
+  "fx_11": 37863,
+  "fx_6_andere": 832,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 101,
+  "bild_von_bis": [
+   "c_000520.ppm",
+   "c_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 0,
+  "karte_kasten": null
+ },
+ "E7_cut": {
+  "lauf": "E7_cut",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "720",
+   "2001"
+  ],
+  "cuts": [
+   "7"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 0,
+  "fx_11": 38205,
+  "fx_6_andere": 832,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 101,
+  "bild_von_bis": [
+   "c_000520.ppm",
+   "c_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 0,
+  "karte_kasten": null
+ },
+ "K_E2_marke": {
+  "lauf": "K_E2_marke",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "720",
+   "2001"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [
+   "sub_scd[8] at F1"
+  ],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 11,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 1065,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": 186,
+  "bilder": 101,
+  "bild_von_bis": [
+   "a_000520.ppm",
+   "a_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 45,
+    "paare": 100,
+    "groesster": 21,
+    "ort_haeufigst": [
+     83,
+     1,
+     42
+    ],
+    "erster_wechsel": "a_000546.ppm"
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 154,
+  "karte_kasten": [
+   73,
+   96,
+   58,
+   125
+  ]
+ },
+ "K_L2_marke": {
+  "lauf": "K_L2_marke",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "720",
+   "2000"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [
+   "sub_scd[7] at F1"
+  ],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 11,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 1065,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": 186,
+  "bilder": 101,
+  "bild_von_bis": [
+   "a_000520.ppm",
+   "a_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 47,
+    "paare": 100,
+    "groesster": 58,
+    "ort_haeufigst": [
+     83,
+     1,
+     44
+    ],
+    "erster_wechsel": "a_000546.ppm"
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 286,
+  "karte_kasten": [
+   73,
+   99,
+   1,
+   126
+  ]
+ },
+ "K_L5_cut": {
+  "lauf": "K_L5_cut",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "720",
+   "2000"
+  ],
+  "cuts": [
+   "5"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [
+   "sub_scd[7] at F1"
+  ],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 11,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 2755,
+  "fx_11": 37863,
+  "fx_6_andere": 832,
+  "fx_6_0_erstes_bild": 6,
+  "bilder": 101,
+  "bild_von_bis": [
+   "c_000520.ppm",
+   "c_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 88,
+    "paare": 100,
+    "groesster": 73,
+    "ort_haeufigst": [
+     194,
+     1,
+     83
+    ],
+    "erster_wechsel": "c_000546.ppm"
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 2,
+  "karte_kasten": [
+   193,
+   193,
+   1,
+   2
+  ]
+ },
+ "K_L7_cut": {
+  "lauf": "K_L7_cut",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "720",
+   "2000"
+  ],
+  "cuts": [
+   "7"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [
+   "sub_scd[7] at F1"
+  ],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 11,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 2755,
+  "fx_11": 38205,
+  "fx_6_andere": 832,
+  "fx_6_0_erstes_bild": 6,
+  "bilder": 101,
+  "bild_von_bis": [
+   "c_000520.ppm",
+   "c_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 47,
+    "paare": 100,
+    "groesster": 60,
+    "ort_haeufigst": [
+     169,
+     15,
+     44
+    ],
+    "erster_wechsel": "c_000546.ppm"
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 1,
+  "karte_kasten": [
+   169,
+   169,
+   15,
+   15
+  ]
+ },
+ "L10_cut": {
+  "lauf": "L10_cut",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "600",
+   "2000"
+  ],
+  "cuts": [
+   "8",
+   "10"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 54,
+  "fx_6_0": 0,
+  "fx_11": 31725,
+  "fx_6_andere": 691,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 121,
+  "bild_von_bis": [
+   "w_000300.ppm",
+   "w_000420.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 120,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 120,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 120,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 120,
+    "paare": 120,
+    "groesster": 173,
+    "ort_haeufigst": [
+     128,
+     100,
+     120
+    ],
+    "erster_wechsel": "w_000301.ppm"
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 120,
+    "paare": 120,
+    "groesster": 170,
+    "ort_haeufigst": [
+     111,
+     163,
+     120
+    ],
+    "erster_wechsel": "w_000301.ppm"
+   }
+  },
+  "karte_punkte_ge6": 11137,
+  "karte_kasten": [
+   2,
+   173,
+   33,
+   210
+  ]
+ },
+ "L2_marke": {
+  "lauf": "L2_marke",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "1300",
+   "2000"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 117,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 391,
+  "bild_von_bis": [
+   "a_000520.ppm",
+   "a_001300.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 390,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 668,
+  "karte_kasten": [
+   68,
+   99,
+   51,
+   126
+  ]
+ },
+ "L5_cut": {
+  "lauf": "L5_cut",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "720",
+   "2000"
+  ],
+  "cuts": [
+   "5"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 0,
+  "fx_11": 37863,
+  "fx_6_andere": 832,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 101,
+  "bild_von_bis": [
+   "c_000520.ppm",
+   "c_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 0,
+  "karte_kasten": null
+ },
+ "L7_cut": {
+  "lauf": "L7_cut",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "720",
+   "2000"
+  ],
+  "cuts": [
+   "7"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 0,
+  "fx_11": 38205,
+  "fx_6_andere": 832,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 101,
+  "bild_von_bis": [
+   "c_000520.ppm",
+   "c_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 0,
+  "karte_kasten": null
+ },
+ "LD_E": {
+  "lauf": "LD_E",
+  "raeume": [],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "720",
+   "2001"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [
+   "resumed in room 2001"
+  ],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 101,
+  "bild_von_bis": [
+   "l_000520.ppm",
+   "l_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 154,
+  "karte_kasten": [
+   73,
+   96,
+   58,
+   125
+  ]
+ },
+ "LD_L": {
+  "lauf": "LD_L",
+  "raeume": [],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "720",
+   "2000"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [
+   "resumed in room 2000"
+  ],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 101,
+  "bild_von_bis": [
+   "l_000520.ppm",
+   "l_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 285,
+  "karte_kasten": [
+   73,
+   99,
+   51,
+   126
+  ]
+ },
+ "RW_E": {
+  "lauf": "RW_E",
+  "raeume": [
+   "2001",
+   "2011",
+   "2001"
+  ],
+  "tropfen41": 2,
+  "tropfen41_zeilen": [
+   "ROOM2001 main00 @0x0177C Evt_exec sub08"
+  ],
+  "exit_at": [
+   "900",
+   "2001"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2",
+   "0",
+   "14"
+  ],
+  "wasserlauf41": 2,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [
+   "2",
+   "0"
+  ],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 18,
+  "wf_spawn_6_andere": 107,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 191,
+  "bild_von_bis": [
+   "r_000520.ppm",
+   "r_000900.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 190,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 190,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 190,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 188,
+    "paare": 190,
+    "groesster": 70,
+    "ort_haeufigst": [
+     174,
+     149,
+     93
+    ],
+    "erster_wechsel": "r_000522.ppm"
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 190,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 433,
+  "karte_kasten": [
+   156,
+   185,
+   85,
+   169
+  ]
+ },
+ "RW_L": {
+  "lauf": "RW_L",
+  "raeume": [
+   "2000",
+   "2010",
+   "2000"
+  ],
+  "tropfen41": 2,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "900",
+   "2000"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2",
+   "0",
+   "14"
+  ],
+  "wasserlauf41": 2,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [
+   "2",
+   "0"
+  ],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 18,
+  "wf_spawn_6_andere": 107,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 191,
+  "bild_von_bis": [
+   "r_000520.ppm",
+   "r_000900.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 0,
+    "paare": 190,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 190,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 190,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 188,
+    "paare": 190,
+    "groesster": 83,
+    "ort_haeufigst": [
+     161,
+     136,
+     67
+    ],
+    "erster_wechsel": "r_000522.ppm"
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 190,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 578,
+  "karte_kasten": [
+   150,
+   190,
+   75,
+   173
+  ]
+ },
+ "smoke_leon": {
+  "lauf": "smoke_leon",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 1,
+  "tropfen41_zeilen": [
+   "ROOM2000 main00 @0x0177C Evt_exec sub07"
+  ],
+  "exit_at": [
+   "300",
+   "2000"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [],
+  "door_fire": [],
+  "wf_spawn_6_0": 0,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 26,
+  "fx_6_0": 0,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": null,
+  "bilder": 0
+ },
+ "V_L2_nutzer": {
+  "lauf": "V_L2_nutzer",
+  "raeume": [
+   "2000"
+  ],
+  "tropfen41": 0,
+  "tropfen41_zeilen": [],
+  "exit_at": [
+   "720",
+   "2000"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL00"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [
+   [
+    "2000",
+    "7"
+   ]
+  ],
+  "door_fire": [],
+  "wf_spawn_6_0": 11,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 1072,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": 0,
+  "bilder": 101,
+  "bild_von_bis": [
+   "a_000520.ppm",
+   "a_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 45,
+    "paare": 100,
+    "groesster": 21,
+    "ort_haeufigst": [
+     83,
+     1,
+     42
+    ],
+    "erster_wechsel": "a_000546.ppm"
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 32,
+    "paare": 100,
+    "groesster": 131,
+    "ort_haeufigst": [
+     181,
+     156,
+     12
+    ],
+    "erster_wechsel": "a_000540.ppm"
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 383,
+  "karte_kasten": [
+   73,
+   187,
+   51,
+   159
+  ]
+ },
+ "V_E2_nutzer": {
+  "lauf": "V_E2_nutzer",
+  "raeume": [
+   "2001"
+  ],
+  "tropfen41": 0,
+  "tropfen41_zeilen": [],
+  "exit_at": [
+   "720",
+   "2001"
+  ],
+  "cuts": [
+   "0",
+   "1",
+   "0",
+   "1",
+   "2"
+  ],
+  "wasserlauf41": 1,
+  "figur": [
+   "PL04"
+  ],
+  "substart": [],
+  "continue": [],
+  "evt_200x": [
+   [
+    "2001",
+    "8"
+   ]
+  ],
+  "door_fire": [],
+  "wf_spawn_6_0": 11,
+  "wf_spawn_11_0": 9,
+  "wf_spawn_6_andere": 65,
+  "fx_6_0": 1072,
+  "fx_11": 0,
+  "fx_6_andere": 0,
+  "fx_6_0_erstes_bild": 0,
+  "bilder": 101,
+  "bild_von_bis": [
+   "a_000520.ppm",
+   "a_000720.ppm"
+  ],
+  "fenster": {
+   "rand2": {
+    "wechsel_gt8": 45,
+    "paare": 100,
+    "groesster": 21,
+    "ort_haeufigst": [
+     83,
+     1,
+     42
+    ],
+    "erster_wechsel": "a_000546.ppm"
+   },
+   "rand5": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "rand7": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   },
+   "kanal": {
+    "wechsel_gt8": 32,
+    "paare": 100,
+    "groesster": 131,
+    "ort_haeufigst": [
+     181,
+     156,
+     12
+    ],
+    "erster_wechsel": "a_000540.ppm"
+   },
+   "wasserlauf": {
+    "wechsel_gt8": 0,
+    "paare": 100,
+    "groesster": 0,
+    "ort_haeufigst": null,
+    "erster_wechsel": null
+   }
+  },
+  "karte_punkte_ge6": 252,
+  "karte_kasten": [
+   73,
+   187,
+   58,
+   159
+  ]
+ }
+}

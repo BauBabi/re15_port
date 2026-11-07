@@ -1,0 +1,25 @@
+FUN_8003ee3c Thread-Start                     @0x8003EE3C..@0x8003EF6C   304 Bytes  GLEICH
+FUN_8003ef6c Raum-Init (main00/sub00)         @0x8003EF6C..@0x8003F038   204 Bytes  GLEICH
+FUN_8003f038 sub01 je Bild                    @0x8003F038..@0x8003F0A0   104 Bytes  GLEICH
+Opcode 0x04 Evt_exec LAB_8003f2a0             @0x8003F2A0..@0x8003F2D0    48 Bytes  GLEICH
+AOT sce 3 LAB_800430f0                        @0x800430F0..@0x80043120    48 Bytes  GLEICH
+Opcode-Tabelle 0x800744a8 (95 Eintraege)      @0x800744A8..@0x80074624   380 Bytes  GLEICH
+AOT-Typ-Tabelle 0x8007469c (16 Eintraege)     @0x8007469C..@0x800746DC    64 Bytes  GLEICH
+Aufrufer @0x8004c720..@0x8004c740             @0x8004C720..@0x8004C740    32 Bytes  GLEICH
+Aufrufer @0x8004cd00..@0x8004cd20             @0x8004CD00..@0x8004CD20    32 Bytes  GLEICH
+Aufrufer @0x8004d740..@0x8004d7b8             @0x8004D740..@0x8004D7B8   120 Bytes  GLEICH
+Opcode 0x04: Tabelle @0x800744B8 -> Mod 0x8003F2A0, 40% 0x8003F2A0
+Opcode 0x18: Tabelle @0x80074508 -> Mod 0x8003FBE8, 40% 0x8003FBE8
+AOT sce 3: Tabelle @0x800746A8 -> Mod 0x800430F0, 40% 0x800430F0
+  @0x8003F2A0  e8 ff bd 27
+  @0x8003F2A4  10 00 bf af
+  @0x8003F2A8  1c 00 82 8c
+  @0x8003F2AC  00 00 00 00
+  @0x8003F2B0  01 00 43 90
+  @0x8003F2B4  03 00 45 90
+  @0x8003F2B8  04 00 42 24
+  @0x8003F2BC  1c 00 82 ac
+  @0x8003F2C0  8f fb 00 0c
+  @0x8003F2C4  21 20 60 00
+  @0x8003F2C8  01 00 02 34
+  @0x8003F2CC  10 00 bf 8f

@@ -1,0 +1,61 @@
+# Lauf kabine4
+exe re15_pc_st80a1_kabine4 PID 57708 Fenster 1575656
+exit=0 dauer=123s
+## Eingabe/Umgebung
+[input-script] RE15_INPUT_SCRIPT="A0.3,W8,L0.07,XU0.5,W0.5,L0.38,XU2,R0.12,A0.3,W6,XU1,R0.07,A0.3,W45" -> 1936 ticks @ 30 fps, start frame 60
+## debug.log (Auszug)
+[story36] ROOM6000: 2 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[save] CONTINUE: resumed in room 6000 (hp=100)
+[tuer] Sequenz fertig: 301 Bilder + 11 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[story36] ROOM6030: 13 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[tuer] Sequenz fertig: 301 Bilder + 11 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26 vor 'Certainly.'
+[msgtext] room=6030 id=11 "Annette: Is everyone aboard?"
+[voice] clip loaded: main11.wav (32000 Hz x1 → 61952 @44100 Hz)
+[msgtext] room=6030 id=12 "Leon: Everyone we could find. There's a little girl in the back... Sherry."
+[voice] clip loaded: main12.wav (32000 Hz x1 → 194560 @44100 Hz)
+[msgtext] room=6030 id=25 "Annette: Sherry...? My daughter is on this train? ...Thank God."
+[voice] clip loaded: main25.wav (32000 Hz x1 → 213504 @44100 Hz)
+[msgtext] room=6030 id=26 "Leon: Can you start this thing?"
+[voice] clip loaded: main26.wav (32000 Hz x1 → 63488 @44100 Hz)
+[msgtext] room=6030 id=13 "Annette: Certainly."
+[voice] clip loaded: main13.wav (32000 Hz x1 → 43008 @44100 Hz)
+[msgtext] room=6030 id=14 "Annette: If I remember the startup sequence correctly..."
+[voice] clip loaded: main14.wav (32000 Hz x1 → 137728 @44100 Hz)
+[msgtext] room=6030 id=15 "Leon: What's wrong?"
+[voice] clip loaded: main15.wav (32000 Hz x1 → 45055 @44100 Hz)
+[msgtext] room=6030 id=16 "Annette: Not enough power! The train's batteries are too low!"
+[voice] clip loaded: main16.wav (32000 Hz x1 → 148993 @44100 Hz)
+[msgtext] room=6030 id=17 "Leon: I'll take care of it!"
+[voice] clip loaded: main17.wav (32000 Hz x1 → 63488 @44100 Hz)
+[msgtext] room=6030 id=18 "Annette: I'll be ready to start the train when you do!"
+[voice] clip loaded: main18.wav (32000 Hz x1 → 111104 @44100 Hz)
+[msgtext] room=6030 id=19 "Leon: Good luck to both of us!"
+[voice] clip loaded: main19.wav (32000 Hz x1 → 59904 @44100 Hz)
+[flow] EXIT_AT: Bild 2400 in Raum 6030 erreicht -> exit
+## stimme.log
+raum=6030 nachricht=11  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=12  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=25  laeuft=1 rest=0  12 gewartet
+raum=6030 nachricht=26  laeuft=1 rest=0  25 gewartet
+raum=6030 nachricht=13  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=14  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=15  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=16  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=17  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=18  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=19  laeuft=0 rest=0  0 gewartet
+## Texte je Bild (state.log)
+id=11 F671-F769 (99 Bilder) cam=1
+id=12 F791-F921 (131 Bilder) cam=1
+id=25 F923-F1066 (144 Bilder) cam=1
+id=26 F1068-F1166 (99 Bilder) cam=1
+id=13 F1188-F1286 (99 Bilder) cam=1
+id=14 F1386-F1484 (99 Bilder) cam=3
+id=15 F1696-F1794 (99 Bilder) cam=1
+id=16 F1834-F1933 (100 Bilder) cam=1
+id=17 F1954-F2052 (99 Bilder) cam=1
+id=18 F2074-F2172 (99 Bilder) cam=1
+id=19 F2194-F2292 (99 Bilder) cam=1
+## letzte state.log-Zeile
+F2400 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(a=0 fsm=0 id=19 q=0) pf=00000007 pm=2 gr=0 [1 t=4d st=4 ss1=0 ss2=1 ss3=0 g=40 mo=19 af=8 

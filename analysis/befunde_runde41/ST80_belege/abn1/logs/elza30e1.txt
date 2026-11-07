@@ -1,0 +1,85 @@
+# Lauf elza30e1
+exe re15_pc_st80a1_elza30e1 PID 57628 Fenster 2752626
+exit=0 dauer=96s
+## Eingabe/Umgebung
+[input-script] RE15_INPUT_SCRIPT="W30" -> 900 ticks @ 30 fps, start frame 60
+## debug.log (Auszug)
+[story36] ROOM30E1: 2 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[save] CONTINUE: resumed in room 30e1 (hp=100)
+[msgtext] room=30e1 id=0 "Elza: John!"
+[voice] clip loaded: main00.wav (32000 Hz x1 → 40960 @44100 Hz)
+[msgtext] room=30e1 id=1 "John: Elza! So this is where you were?"
+[voice] clip loaded: main01.wav (32000 Hz x1 → 141824 @44100 Hz)
+[msgtext] room=30e1 id=2 "John: This is bad... those monsters have us surrounded!"
+[voice] clip loaded: main02.wav (32000 Hz x1 → 156672 @44100 Hz)
+[msgtext] room=30e1 id=3 "John: ...Damn it, there's no place around here to hide..."
+[voice] clip loaded: main03.wav (32000 Hz x1 → 136193 @44100 Hz)
+[msgtext] room=30e1 id=4 "John: Elza, how are things on your end? Did you find any tasty food or something?"
+[voice] clip loaded: main04.wav (32000 Hz x1 → 200193 @44100 Hz)
+[msgtext] room=30e1 id=5 "Elza: No, nothing like that..."
+[voice] clip loaded: main05.wav (32000 Hz x1 → 111104 @44100 Hz)
+[msgtext] room=30e1 id=6 "John: Wh-what's wrong? Are those walking corpses over there as well..."
+[voice] clip loaded: main06.wav (32000 Hz x1 → 209920 @44100 Hz)
+[msgtext] room=30e1 id=7 "Elza: No... not at all... That's..."
+[voice] clip loaded: main07.wav (32000 Hz x1 → 151041 @44100 Hz)
+[msgtext] room=30e1 id=8 "John: What is that...?"
+[voice] clip loaded: main08.wav (32000 Hz x1 → 48640 @44100 Hz)
+[msgtext] room=30e1 id=9 "John: What are you talking about? Is there something in there?"
+[voice] clip loaded: main09.wav (32000 Hz x1 → 173569 @44100 Hz)
+[msgtext] room=30e1 id=10 "Elza: I'm not sure what it is, but... That can't be... human, can it...?"
+[voice] clip loaded: main10.wav (32000 Hz x1 → 287232 @44100 Hz)
+[msgtext] room=30e1 id=11 "John: Elza, is that thing still in there?"
+[voice] clip loaded: main11.wav (32000 Hz x1 → 132096 @44100 Hz)
+[msgtext] room=30e1 id=12 "Elza: Yes, I think so... But I believe it got scared and hid when it was attacked..."
+[voice] clip loaded: main12.wav (32000 Hz x1 → 207872 @44100 Hz)
+[msgtext] room=30e1 id=13 "Elza: I don't know where it could've gone, though."
+[voice] clip loaded: main13.wav (32000 Hz x1 → 92160 @44100 Hz)
+[msgtext] room=30e1 id=14 "Elza: ...Anyway, there are too many walking corpses outside. We can't really turn back."
+[voice] clip loaded: main14.wav (32000 Hz x1 → 228352 @44100 Hz)
+[msgtext] room=30e1 id=15 "Elza: We have no choice but to go inside..."
+[voice] clip loaded: main15.wav (32000 Hz x1 → 113152 @44100 Hz)
+[msgtext] room=30e1 id=16 "John: But... that beast might still be in there, right?"
+[voice] clip loaded: main16.wav (32000 Hz x1 → 182784 @44100 Hz)
+[msgtext] room=30e1 id=17 "Elza: We can probably deal with it if we stay alert... Let's go!"
+[voice] clip loaded: main17.wav (32000 Hz x1 → 160256 @44100 Hz)
+[flow] EXIT_AT: Bild 2600 in Raum 30e1 erreicht -> exit
+## stimme.log
+raum=30e1 nachricht=0  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=1  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=2  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=3  laeuft=1 rest=0  7 gewartet
+raum=30e1 nachricht=4  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=5  laeuft=1 rest=0  18 gewartet
+raum=30e1 nachricht=6  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=7  laeuft=1 rest=0  26 gewartet
+raum=30e1 nachricht=8  laeuft=0 rest=0  5 gewartet
+raum=30e1 nachricht=9  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=10  laeuft=0 rest=0  1 gewartet
+raum=30e1 nachricht=11  laeuft=1 rest=0  80 gewartet
+raum=30e1 nachricht=12  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=13  laeuft=1 rest=0  44 gewartet
+raum=30e1 nachricht=14  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=15  laeuft=1 rest=0  58 gewartet
+raum=30e1 nachricht=16  laeuft=0 rest=0  0 gewartet
+raum=30e1 nachricht=17  laeuft=1 rest=0  7 gewartet
+## Texte je Bild (state.log)
+id= 0 F20-F118 (99 Bilder) cam=0
+id= 1 F140-F238 (99 Bilder) cam=0
+id= 2 F260-F365 (106 Bilder) cam=0
+id= 3 F367-F465 (99 Bilder) cam=0
+id= 4 F467-F603 (137 Bilder) cam=0
+id= 5 F605-F703 (99 Bilder) cam=0
+id= 6 F725-F869 (145 Bilder) cam=0
+id= 7 F871-F974 (104 Bilder) cam=0
+id= 8 F976-F1074 (99 Bilder) cam=0
+id= 9 F1076-F1195 (120 Bilder) cam=0
+id=10 F1197-F1395 (199 Bilder) cam=0
+id=11 F1397-F1495 (99 Bilder) cam=0
+id=12 F1517-F1659 (143 Bilder) cam=0
+id=13 F1661-F1759 (99 Bilder) cam=0
+id=14 F1761-F1917 (157 Bilder) cam=0
+id=15 F1919-F2017 (99 Bilder) cam=0
+id=16 F2039-F2164 (126 Bilder) cam=0
+id=17 F2166-F2276 (111 Bilder) cam=0
+## letzte state.log-Zeile
+F2600 pad=0000 PL(-23335,-23174,rot=127,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(a=0 fsm=0 id=17 q=0) pf=00000000 pm=1 gr=0 [1 t=49 st=1 ss1=0 ss2=1 ss3=0 g=00 mo=2 af=3

@@ -1,0 +1,330 @@
+{
+ "STAGE3/room30C1/main01.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.15,
+  "whisper-large-v3-turbo": "Who are you?",
+  "whisper-medium.en": "Who are you?"
+ },
+ "STAGE3/room30C1/main02.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.22,
+  "whisper-large-v3-turbo": "Marvin Brenna, RPD.",
+  "whisper-medium.en": "Marvin Brenna, RPD."
+ },
+ "STAGE3/room30C1/main03.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.31,
+  "whisper-large-v3-turbo": "Are there any others still alive?",
+  "whisper-medium.en": "Are there any others still alive?"
+ },
+ "STAGE3/room30C1/main04.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.55,
+  "whisper-large-v3-turbo": "A few. There are other survivors out there.",
+  "whisper-medium.en": "A few. There are other survivors out there."
+ },
+ "STAGE3/room30C1/main05.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.83,
+  "whisper-large-v3-turbo": "Then I hope they make it out.",
+  "whisper-medium.en": "Then I hope they make it out."
+ },
+ "STAGE3/room30E1/main00.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 0.93,
+  "whisper-large-v3-turbo": "John.",
+  "whisper-medium.en": "John"
+ },
+ "STAGE3/room30E1/main01.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.22,
+  "whisper-large-v3-turbo": "Elza! So this is where you were?",
+  "whisper-medium.en": "Elza! So this is where you were?"
+ },
+ "STAGE3/room30E1/main02.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.55,
+  "whisper-large-v3-turbo": "This is bad! Those monsters have us surrounded!",
+  "whisper-medium.en": "This is bad! Those monsters have us surrounded!"
+ },
+ "STAGE3/room30E1/main03.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.09,
+  "whisper-large-v3-turbo": "Dammit! There's no place around here to hide!",
+  "whisper-medium.en": "Damn it! There's no place around here to hide!"
+ },
+ "STAGE3/room30E1/main04.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 4.54,
+  "whisper-large-v3-turbo": "Elza, how are things on your end? Did you find any tasty food or something?",
+  "whisper-medium.en": "Elza, how are things on your end? Did you find any tasty food or something?"
+ },
+ "STAGE3/room30E1/main05.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.52,
+  "whisper-large-v3-turbo": "No, nothing like that.",
+  "whisper-medium.en": "No, nothing like that."
+ },
+ "STAGE6/room6030/main00.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.12,
+  "whisper-large-v3-turbo": "Hang on, Marvin. We're getting out of here.",
+  "whisper-medium.en": "Hang on, Marvin. We're getting out of here."
+ },
+ "STAGE6/room6030/main01.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.1,
+  "whisper-large-v3-turbo": "Who are you two?",
+  "whisper-medium.en": "Who are you two?"
+ },
+ "STAGE6/room6030/main02.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.52,
+  "whisper-large-v3-turbo": "She's out there fighting the monsters.",
+  "whisper-medium.en": "She's out there fighting the monsters!"
+ },
+ "STAGE6/room6030/main03.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.73,
+  "whisper-large-v3-turbo": "She's trying to keep the outside clear so we can escape.",
+  "whisper-medium.en": "She's trying to keep the outside clear so we can escape."
+ },
+ "STAGE6/room6030/main04.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.61,
+  "whisper-large-v3-turbo": "Why aren't you out there?",
+  "whisper-medium.en": "Why aren't you out there?"
+ },
+ "STAGE6/room6030/main05.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 5.57,
+  "whisper-large-v3-turbo": "She told me to stay with the kid and look after your friend here.",
+  "whisper-medium.en": "She told me to stay with the kid and look after your friend here."
+ },
+ "STAGE6/room6030/main06.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 0.98,
+  "whisper-large-v3-turbo": "Where's Annette?",
+  "whisper-medium.en": "Where's a net?"
+ },
+ "STAGE6/room6030/main07.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 4.38,
+  "whisper-large-v3-turbo": "The woman in the lab coat, up front, trying to start the train.",
+  "whisper-medium.en": "The woman in the lab coat? Up front trying to start the train."
+ },
+ "STAGE6/room6030/main08.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.22,
+  "whisper-large-v3-turbo": "I'll find out. Stay here.",
+  "whisper-medium.en": "I'll find out. Stay here."
+ },
+ "STAGE6/room6030/main11.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.4,
+  "whisper-large-v3-turbo": "Is everyone aboard?",
+  "whisper-medium.en": "Is everyone aboard?"
+ },
+ "STAGE6/room6030/main12.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 4.41,
+  "whisper-large-v3-turbo": "Everyone we could find. There's a little girl in the back. Sherry.",
+  "whisper-medium.en": "Everyone we could find. There's a little girl in the back. Sherry."
+ },
+ "STAGE6/room6030/main13.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 0.98,
+  "whisper-large-v3-turbo": "Certainly.",
+  "whisper-medium.en": "Certainly."
+ },
+ "STAGE6/room6030/main14.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.12,
+  "whisper-large-v3-turbo": "If I remember the startup sequence correctly,",
+  "whisper-medium.en": "If I remember the startup sequence correctly…"
+ },
+ "STAGE6/room6030/main15.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.02,
+  "whisper-large-v3-turbo": "What's wrong?",
+  "whisper-medium.en": "What's wrong?"
+ },
+ "STAGE6/room6030/main16.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.38,
+  "whisper-large-v3-turbo": "Not enough power. The train's batteries are too low.",
+  "whisper-medium.en": "Not enough power. The train's batteries are too low."
+ },
+ "STAGE6/room6030/main17.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.44,
+  "whisper-large-v3-turbo": "I'll take care of it.",
+  "whisper-medium.en": "I'll take care of it."
+ },
+ "STAGE6/room6030/main18.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.52,
+  "whisper-large-v3-turbo": "I'll be ready to start the train when you do.",
+  "whisper-medium.en": "I'll be ready to start the train when you do."
+ },
+ "STAGE6/room6030/main19.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.36,
+  "whisper-large-v3-turbo": "Good luck to both of us.",
+  "whisper-medium.en": "Good luck to both of us."
+ },
+ "STAGE6/room6030/main21.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 5.02,
+  "whisper-large-v3-turbo": "Name's John. This is Sherry. We made it down here with a girl named Elsa.",
+  "whisper-medium.en": "Name's John. This is Sherry. We made it down here with a girl named Elza."
+ },
+ "STAGE6/room6030/main22.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.18,
+  "whisper-large-v3-turbo": "She said she'd catch up with us.",
+  "whisper-medium.en": "She said she'd catch up with us."
+ },
+ "STAGE6/room6030/main23.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.12,
+  "whisper-large-v3-turbo": "A lab coat? Is it mom?",
+  "whisper-medium.en": "A lab coat? Is it Mom?"
+ },
+ "STAGE6/room6030/main24.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.77,
+  "whisper-large-v3-turbo": "Easy, kid. Stay with me.",
+  "whisper-medium.en": "Easy, kid. Stay with me."
+ },
+ "STAGE6/room6030/main25.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 4.84,
+  "whisper-large-v3-turbo": "Sherry? My daughter is on this train? Thank God.",
+  "whisper-medium.en": "Sherry? My daughter is on this train? Thank God."
+ },
+ "STAGE6/room6030/main26.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 1.44,
+  "whisper-large-v3-turbo": "Can you start this thing?",
+  "whisper-medium.en": "Can you start this thing?"
+ },
+ "STAGE6/room6031/main00.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.52,
+  "whisper-large-v3-turbo": "Sherry, is anyone else here?",
+  "whisper-medium.en": "Sherry, is anyone else here?"
+ },
+ "STAGE6/room6031/main01.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 5.18,
+  "whisper-large-v3-turbo": "A policeman. He's fighting off monsters. He wants us to start the train.",
+  "whisper-medium.en": "A policeman. He's fighting off monsters. He wants us to start the train."
+ },
+ "STAGE6/room6031/main02.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 0.93,
+  "whisper-large-v3-turbo": "I'll do it.",
+  "whisper-medium.en": "I'll do it."
+ },
+ "STAGE6/room6000/main00.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 4.14,
+  "whisper-large-v3-turbo": "You must be that cop. Your friend is already here.",
+  "whisper-medium.en": "You must be that cop. Your friend is already here."
+ },
+ "STAGE6/room6000/main03.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 3.34,
+  "whisper-large-v3-turbo": "Come on, let's join the others and get out of here.",
+  "whisper-medium.en": "Come on, let's join the others and get out of here."
+ },
+ "STAGE5/room50B0/main01.wav": {
+  "sr": 32000,
+  "kanaele": 1,
+  "bits": 16,
+  "dauer_s": 2.69,
+  "whisper-large-v3-turbo": "Some other survivors are down there with her too.",
+  "whisper-medium.en": "Some other survivors are down there with her too."
+ }
+}

@@ -1,0 +1,68 @@
+# Lauf leon6030wagen
+exe re15_pc_st80a1_leon6030wagen PID 55272 Fenster 4194454
+exit=0 dauer=136s
+## Eingabe/Umgebung
+[input-script] RE15_INPUT_SCRIPT="A0.3,W8,U3,W62" -> 2199 ticks @ 30 fps, start frame 60
+## debug.log (Auszug)
+[story36] ROOM6000: 2 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[save] CONTINUE: resumed in room 6000 (hp=100)
+[tuer] Sequenz fertig: 301 Bilder + 11 Warten, 1 Se_on, Schliesston 1, Ton geladen, Notizen 0x0
+[story36] ROOM6030: 13 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[story80] ROOM6030 Evt_exec sub02 -> Programm (900 B): Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)
+[msgtext] room=6030 id=0 "Leon: Hang on, Marvin. We're getting out of here."
+[voice] clip loaded: main00.wav (32000 Hz x1 → 137728 @44100 Hz)
+[msgtext] room=6030 id=1 "Leon: Who are you two?"
+[voice] clip loaded: main01.wav (32000 Hz x1 → 48640 @44100 Hz)
+[msgtext] room=6030 id=21 "John: Name's John. This is Sherry. We made it down here with a girl named Elza."
+[voice] clip loaded: main21.wav (32000 Hz x1 → 221184 @44100 Hz)
+[msgtext] room=6030 id=2 "Sherry: She's out there fighting the monsters!"
+[voice] clip loaded: main02.wav (32000 Hz x1 → 111104 @44100 Hz)
+[msgtext] room=6030 id=3 "John: She's trying to keep the outside clear so we can escape."
+[voice] clip loaded: main03.wav (32000 Hz x1 → 164352 @44100 Hz)
+[msgtext] room=6030 id=22 "John: She said she'd catch up with us."
+[voice] clip loaded: main22.wav (32000 Hz x1 → 96256 @44100 Hz)
+[msgtext] room=6030 id=4 "Leon: Why aren't you out there?"
+[voice] clip loaded: main04.wav (32000 Hz x1 → 71169 @44100 Hz)
+[msgtext] room=6030 id=5 "John: She told me to stay with the kid... and look after your friend here."
+[voice] clip loaded: main05.wav (32000 Hz x1 → 245761 @44100 Hz)
+[msgtext] room=6030 id=6 "Leon: Where's Annette?"
+[voice] clip loaded: main06.wav (32000 Hz x1 → 43008 @44100 Hz)
+[msgtext] room=6030 id=7 "John: The woman in the lab coat? Up front, trying to start the train."
+[voice] clip loaded: main07.wav (32000 Hz x1 → 193024 @44100 Hz)
+[msgtext] room=6030 id=23 "Sherry: A lab coat...? Is it Mom?!"
+[voice] clip loaded: main23.wav (32000 Hz x1 → 137728 @44100 Hz)
+[msgtext] room=6030 id=24 "John: Easy, kid. Stay with me."
+[voice] clip loaded: main24.wav (32000 Hz x1 → 122369 @44100 Hz)
+[msgtext] room=6030 id=8 "Leon: I'll find out. Stay here."
+[voice] clip loaded: main08.wav (32000 Hz x1 → 97793 @44100 Hz)
+[flow] EXIT_AT: Bild 2700 in Raum 6030 erreicht -> exit
+## stimme.log
+raum=6030 nachricht=0  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=1  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=21  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=2  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=3  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=22  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=4  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=5  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=6  laeuft=1 rest=0  1 gewartet
+raum=6030 nachricht=7  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=23  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=24  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=8  laeuft=0 rest=0  0 gewartet
+## Texte je Bild (state.log)
+id= 0 F392-F490 (99 Bilder) cam=11
+id= 1 F618-F716 (99 Bilder) cam=10
+id=21 F739-F870 (132 Bilder) cam=10
+id= 2 F885-F983 (99 Bilder) cam=10
+id= 3 F986-F1084 (99 Bilder) cam=10
+id=22 F1106-F1204 (99 Bilder) cam=10
+id= 4 F1226-F1324 (99 Bilder) cam=10
+id= 5 F1346-F1490 (145 Bilder) cam=10
+id= 6 F1492-F1590 (99 Bilder) cam=10
+id= 7 F1612-F1721 (110 Bilder) cam=10
+id=23 F1761-F1859 (99 Bilder) cam=10
+id=24 F1863-F1961 (99 Bilder) cam=10
+id= 8 F2008-F2106 (99 Bilder) cam=10
+## letzte state.log-Zeile
+F2700 pad=0000 PL(-25026,-24133,rot=1039,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=12 msg(a=0 fsm=0 id=8 q=0) pf=00000007 pm=0 gr=0 [1 t=49 st=4 ss1=0 ss2=2 ss3=0 g=40 mo=7 af=

@@ -1,0 +1,93 @@
+Datei .claude/worktrees/r41_integration/re15_port/shared_assets/PSX/STAGE2/ROOM2001.RDT Groesse 360660  main_scd @0x0161C  sub_scd @0x01784  naechste Sektion @0x01DE4
+--- main00 @0x0161E .. @0x01784 (358 Bytes, 17 Zeilen)
+  @0x0161E  Door_aot_set  3b 00 02 31 01 00 3c 0f 18 b1 e8 03 e8 03 d2 dd f8 
+  @0x0163E  Door_aot_set  3b 01 02 31 01 00 30 94 84 9f e8 03 e8 03 f4 4c f8 
+  @0x0165E  Door_aot_set  3b 02 02 31 01 00 30 94 be f1 e8 03 d0 07 08 ee 00 
+  @0x0167E  Door_aot_set  3b 03 02 31 01 00 b4 b0 f8 df e8 03 a0 0f 26 b7 00 
+  @0x0169E  Door_aot_set  3b 04 02 31 01 00 30 94 48 26 e8 03 e8 03 8c 23 e8 
+  @0x016BE  Aot_set       2c 05 08 47 00 00 90 9d a0 ab de 0d 90 7e 7c fc 00 id 5 sce 8 sat 0x47 ... daten 7c fc 00 00 00 00
+  @0x016D2  Aot_set       2c 06 08 47 00 00 90 9d 90 9d ba 77 10 0e 7c fc 00 id 6 sce 8 sat 0x47 ... daten 7c fc 00 00 00 00
+  @0x0174C  Sce_espr_on   3a 00 0b 00 00 00 00 19 a4 a2 4c eb c0 2b 00 04    Effekt 11 Sub 0 skala 0x1900 x -23900 y -5300 z 11200
+  @0x0175C  Sce_espr_on   3a 00 0b 00 00 00 00 19 fc a4 4c eb c0 2b 00 04    Effekt 11 Sub 0 skala 0x1900 x -23300 y -5300 z 11200
+  @0x0176C  Sce_espr_on   3a 00 0b 00 00 00 00 19 54 a7 4c eb c0 2b 00 04    Effekt 11 Sub 0 skala 0x1900 x -22700 y -5300 z 11200
+  @0x0177C  Evt_exec      04 ff 18 08                                        cond 0xFF sub08
+  @0x01780  Evt_end       01 00                                              
+--- sub00 @0x01796 .. @0x0185C (198 Bytes, 26 Zeilen)
+  @0x017B2  Aot_set       2c 07 00 41 01 00 98 08 e4 a8 3c 0f f0 0a ff 00 18 id 7 sce 0 sat 0x41 ... daten ff 00 18 04 00 00
+  @0x017C6  Evt_exec      04 ff 18 02                                        cond 0xFF sub02
+  @0x017EA  Aot_set       2c 07 03 41 01 00 98 08 e4 a8 3c 0f f0 0a ff 00 18 id 7 sce 3 sat 0x41 ... daten ff 00 18 04 00 00
+  @0x0181E  Evt_exec      04 ff 18 05                                        cond 0xFF sub05
+  @0x0185A  Evt_end       01 00                                              
+--- sub01 @0x0185C .. @0x0185E (2 Bytes, 1 Zeilen)
+  @0x0185C  Evt_end       01 00                                              
+--- sub02 @0x0185E .. @0x01900 (162 Bytes, 42 Zeilen)
+  @0x018B4  Gosub         18 06                                              sub06
+  @0x018DA  Evt_exec      04 ff 18 03                                        cond 0xFF sub03
+  @0x018FE  Evt_end       01 00                                              
+--- sub03 @0x01900 .. @0x01954 (84 Bytes, 17 Zeilen)
+  @0x01916  Gosub         18 07                                              sub07
+  @0x01920  Gosub         18 07                                              sub07
+  @0x0192A  Gosub         18 07                                              sub07
+  @0x01934  Gosub         18 07                                              sub07
+  @0x0193E  Gosub         18 07                                              sub07
+  @0x01948  Aot_reset     46 07 03 41 ff 00 18 04 00 00                      Aot_reset id 7 sce 3 daten 41 ff 00 18 04 00 00
+  @0x01952  Evt_end       01 00                                              
+--- sub04 @0x01954 .. @0x01A8A (310 Bytes, 81 Zeilen)
+  @0x0195C  Aot_reset     46 07 00 00 00 00 00 00 00 00                      Aot_reset id 7 sce 0 daten 00 00 00 00 00 00 00
+  @0x0198E  Gosub         18 06                                              sub06
+  @0x019A6  Gosub         18 06                                              sub06
+  @0x01A84  Gosub         18 06                                              sub06
+  @0x01A86  Aot_on        47 00                                              Aot_on id 0
+  @0x01A88  Evt_end       01 00                                              
+--- sub05 @0x01A8A .. @0x01D16 (652 Bytes, 163 Zeilen)
+  @0x01D06  Aot_on        47 02                                              Aot_on id 2
+  @0x01D14  Evt_end       01 00                                              
+--- sub06 @0x01D16 .. @0x01D24 (14 Bytes, 6 Zeilen)
+  @0x01D22  Evt_end       01 00                                              
+--- sub07 @0x01D24 .. @0x01D32 (14 Bytes, 6 Zeilen)
+  @0x01D30  Evt_end       01 00                                              
+--- sub08 @0x01D32 .. @0x01DE4 (178 Bytes, 28 Zeilen)
+  @0x01D32  Sce_espr_on   3a 00 06 00 00 00 00 10 08 9c f0 d8 69 08 00 00    Effekt 6 Sub 0 skala 0x1000 x -25592 y -10000 z 2153
+  @0x01D42  Sce_espr_on   3a 00 06 00 00 00 00 10 33 0e f0 d8 0d a1 00 00    Effekt 6 Sub 0 skala 0x1000 x 3635 y -10000 z -24307
+  @0x01D52  Sce_espr_on   3a 00 06 00 00 00 00 10 b3 ad f0 d8 ff b8 00 00    Effekt 6 Sub 0 skala 0x1000 x -21069 y -10000 z -18177
+  @0x01D62  For           0d 00 04 00 b4 00                                  
+  @0x01D6C  Sce_espr_on   3a 00 06 00 00 00 00 10 5c ea f0 d8 2b ad 00 00    Effekt 6 Sub 0 skala 0x1000 x -5540 y -10000 z -21205
+  @0x01D7C  Sce_espr_on   3a 00 06 00 00 00 00 10 94 a7 f0 d8 55 ec 00 00    Effekt 6 Sub 0 skala 0x1000 x -22636 y -10000 z -5035
+  @0x01D8C  For           0d 00 04 00 b4 00                                  
+  @0x01D96  Sce_espr_on   3a 00 06 00 00 00 00 10 74 c7 f0 d8 7d a5 00 00    Effekt 6 Sub 0 skala 0x1000 x -14476 y -10000 z -23171
+  @0x01DA6  Sce_espr_on   3a 00 06 00 00 00 00 10 04 a1 f0 d8 01 c9 00 00    Effekt 6 Sub 0 skala 0x1000 x -24316 y -10000 z -14079
+  @0x01DB6  For           0d 00 04 00 b4 00                                  
+  @0x01DC0  Sce_espr_on   3a 00 06 00 00 00 00 10 14 a6 f0 d8 65 9b 00 00    Effekt 6 Sub 0 skala 0x1000 x -23020 y -10000 z -25755
+  @0x01DD0  For           0d 00 04 00 2d 00                                  
+  @0x01DDA  Goto          17 ff ff 00 58 ff                                  
+  @0x01DE0  Evt_end       01 00                                              
+=== Zensus Start-/Tropfen-Zeilen
+  main00  @0x016BE Aot_set      id 5 sce 8 sat 0x47 ... daten 7c fc 00 00 00 00
+  main00  @0x016D2 Aot_set      id 6 sce 8 sat 0x47 ... daten 7c fc 00 00 00 00
+  main00  @0x0177C Evt_exec     cond 0xFF sub08
+  sub00   @0x017B2 Aot_set      id 7 sce 0 sat 0x41 ... daten ff 00 18 04 00 00
+  sub00   @0x017C6 Evt_exec     cond 0xFF sub02
+  sub00   @0x017EA Aot_set      id 7 sce 3 sat 0x41 ... daten ff 00 18 04 00 00
+  sub00   @0x0181E Evt_exec     cond 0xFF sub05
+  sub02   @0x018B4 Gosub        sub06
+  sub02   @0x018DA Evt_exec     cond 0xFF sub03
+  sub03   @0x01916 Gosub        sub07
+  sub03   @0x01920 Gosub        sub07
+  sub03   @0x0192A Gosub        sub07
+  sub03   @0x01934 Gosub        sub07
+  sub03   @0x0193E Gosub        sub07
+  sub03   @0x01948 Aot_reset    Aot_reset id 7 sce 3 daten 41 ff 00 18 04 00 00
+  sub04   @0x0195C Aot_reset    Aot_reset id 7 sce 0 daten 00 00 00 00 00 00 00
+  sub04   @0x0198E Gosub        sub06
+  sub04   @0x019A6 Gosub        sub06
+  sub04   @0x01A84 Gosub        sub06
+  sub04   @0x01A86 Aot_on       Aot_on id 0
+  sub05   @0x01D06 Aot_on       Aot_on id 2
+  sub08   @0x01D32 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -25592 y -10000 z 2153
+  sub08   @0x01D42 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x 3635 y -10000 z -24307
+  sub08   @0x01D52 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -21069 y -10000 z -18177
+  sub08   @0x01D6C Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -5540 y -10000 z -21205
+  sub08   @0x01D7C Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -22636 y -10000 z -5035
+  sub08   @0x01D96 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -14476 y -10000 z -23171
+  sub08   @0x01DA6 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -24316 y -10000 z -14079
+  sub08   @0x01DC0 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -23020 y -10000 z -25755

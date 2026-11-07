@@ -1,0 +1,81 @@
+Datei .claude/worktrees/r41_integration/re15_port/shared_assets/PSX/STAGE2/ROOM2000.RDT Groesse 359612  main_scd @0x0161C  sub_scd @0x01784  naechste Sektion @0x01BB8
+--- main00 @0x0161E .. @0x01784 (358 Bytes, 17 Zeilen)
+  @0x0161E  Door_aot_set  3b 00 02 31 01 00 3c 0f 18 b1 e8 03 e8 03 d2 dd f8 
+  @0x0163E  Door_aot_set  3b 01 02 31 01 00 30 94 84 9f e8 03 e8 03 f4 4c f8 
+  @0x0165E  Door_aot_set  3b 02 02 31 01 00 30 94 be f1 e8 03 d0 07 08 ee 00 
+  @0x0167E  Door_aot_set  3b 03 02 31 01 00 b4 b0 f8 df e8 03 a0 0f 26 b7 00 
+  @0x0169E  Door_aot_set  3b 04 02 31 01 00 30 94 48 26 e8 03 e8 03 8c 23 e8 
+  @0x016BE  Aot_set       2c 05 08 47 00 00 90 9d a0 ab de 0d 90 7e 7c fc 00 id 5 sce 8 sat 0x47 ... daten 7c fc 00 00 00 00
+  @0x016D2  Aot_set       2c 06 08 47 00 00 90 9d 90 9d ba 77 10 0e 7c fc 00 id 6 sce 8 sat 0x47 ... daten 7c fc 00 00 00 00
+  @0x0174C  Sce_espr_on   3a 00 0b 00 00 00 00 19 a4 a2 4c eb c0 2b 00 04    Effekt 11 Sub 0 skala 0x1900 x -23900 y -5300 z 11200
+  @0x0175C  Sce_espr_on   3a 00 0b 00 00 00 00 19 fc a4 4c eb c0 2b 00 04    Effekt 11 Sub 0 skala 0x1900 x -23300 y -5300 z 11200
+  @0x0176C  Sce_espr_on   3a 00 0b 00 00 00 00 19 54 a7 4c eb c0 2b 00 04    Effekt 11 Sub 0 skala 0x1900 x -22700 y -5300 z 11200
+  @0x0177C  Evt_exec      04 ff 18 07                                        cond 0xFF sub07
+  @0x01780  Evt_end       01 00                                              
+--- sub00 @0x01794 .. @0x017F8 (100 Bytes, 11 Zeilen)
+  @0x0179C  Evt_exec      04 ff 18 02                                        cond 0xFF sub02
+  @0x017F6  Evt_end       01 00                                              
+--- sub01 @0x017F8 .. @0x017FA (2 Bytes, 1 Zeilen)
+  @0x017F8  Evt_end       01 00                                              
+--- sub02 @0x017FA .. @0x01A7C (642 Bytes, 167 Zeilen)
+  @0x01830  Gosub         18 04                                              sub04
+  @0x01976  Gosub         18 06                                              sub06
+  @0x01A32  Evt_exec      04 ff 18 03                                        cond 0xFF sub03
+  @0x01A42  Gosub         18 06                                              sub06
+  @0x01A4C  Gosub         18 06                                              sub06
+  @0x01A56  Gosub         18 06                                              sub06
+  @0x01A60  Gosub         18 06                                              sub06
+  @0x01A7A  Evt_end       01 00                                              
+--- sub03 @0x01A7C .. @0x01AD0 (84 Bytes, 19 Zeilen)
+  @0x01A88  Gosub         18 05                                              sub05
+  @0x01A92  Gosub         18 05                                              sub05
+  @0x01A9C  Gosub         18 05                                              sub05
+  @0x01ABA  Gosub         18 05                                              sub05
+  @0x01AC4  Gosub         18 05                                              sub05
+  @0x01ACE  Evt_end       01 00                                              
+--- sub04 @0x01AD0 .. @0x01AE2 (18 Bytes, 7 Zeilen)
+  @0x01AE0  Evt_end       01 00                                              
+--- sub05 @0x01AE2 .. @0x01AF4 (18 Bytes, 7 Zeilen)
+  @0x01AF2  Evt_end       01 00                                              
+--- sub06 @0x01AF4 .. @0x01B06 (18 Bytes, 7 Zeilen)
+  @0x01B04  Evt_end       01 00                                              
+--- sub07 @0x01B06 .. @0x01BB8 (178 Bytes, 28 Zeilen)
+  @0x01B06  Sce_espr_on   3a 00 06 00 00 00 00 10 08 9c f0 d8 69 08 00 00    Effekt 6 Sub 0 skala 0x1000 x -25592 y -10000 z 2153
+  @0x01B16  Sce_espr_on   3a 00 06 00 00 00 00 10 33 0e f0 d8 0d a1 00 00    Effekt 6 Sub 0 skala 0x1000 x 3635 y -10000 z -24307
+  @0x01B26  Sce_espr_on   3a 00 06 00 00 00 00 10 b3 ad f0 d8 ff b8 00 00    Effekt 6 Sub 0 skala 0x1000 x -21069 y -10000 z -18177
+  @0x01B36  For           0d 00 04 00 b4 00                                  
+  @0x01B40  Sce_espr_on   3a 00 06 00 00 00 00 10 5c ea f0 d8 2b ad 00 00    Effekt 6 Sub 0 skala 0x1000 x -5540 y -10000 z -21205
+  @0x01B50  Sce_espr_on   3a 00 06 00 00 00 00 10 94 a7 f0 d8 55 ec 00 00    Effekt 6 Sub 0 skala 0x1000 x -22636 y -10000 z -5035
+  @0x01B60  For           0d 00 04 00 b4 00                                  
+  @0x01B6A  Sce_espr_on   3a 00 06 00 00 00 00 10 74 c7 f0 d8 7d a5 00 00    Effekt 6 Sub 0 skala 0x1000 x -14476 y -10000 z -23171
+  @0x01B7A  Sce_espr_on   3a 00 06 00 00 00 00 10 04 a1 f0 d8 01 c9 00 00    Effekt 6 Sub 0 skala 0x1000 x -24316 y -10000 z -14079
+  @0x01B8A  For           0d 00 04 00 b4 00                                  
+  @0x01B94  Sce_espr_on   3a 00 06 00 00 00 00 10 14 a6 f0 d8 65 9b 00 00    Effekt 6 Sub 0 skala 0x1000 x -23020 y -10000 z -25755
+  @0x01BA4  For           0d 00 04 00 2d 00                                  
+  @0x01BAE  Goto          17 ff ff 00 58 ff                                  
+  @0x01BB4  Evt_end       01 00                                              
+=== Zensus Start-/Tropfen-Zeilen
+  main00  @0x016BE Aot_set      id 5 sce 8 sat 0x47 ... daten 7c fc 00 00 00 00
+  main00  @0x016D2 Aot_set      id 6 sce 8 sat 0x47 ... daten 7c fc 00 00 00 00
+  main00  @0x0177C Evt_exec     cond 0xFF sub07
+  sub00   @0x0179C Evt_exec     cond 0xFF sub02
+  sub02   @0x01830 Gosub        sub04
+  sub02   @0x01976 Gosub        sub06
+  sub02   @0x01A32 Evt_exec     cond 0xFF sub03
+  sub02   @0x01A42 Gosub        sub06
+  sub02   @0x01A4C Gosub        sub06
+  sub02   @0x01A56 Gosub        sub06
+  sub02   @0x01A60 Gosub        sub06
+  sub03   @0x01A88 Gosub        sub05
+  sub03   @0x01A92 Gosub        sub05
+  sub03   @0x01A9C Gosub        sub05
+  sub03   @0x01ABA Gosub        sub05
+  sub03   @0x01AC4 Gosub        sub05
+  sub07   @0x01B06 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -25592 y -10000 z 2153
+  sub07   @0x01B16 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x 3635 y -10000 z -24307
+  sub07   @0x01B26 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -21069 y -10000 z -18177
+  sub07   @0x01B40 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -5540 y -10000 z -21205
+  sub07   @0x01B50 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -22636 y -10000 z -5035
+  sub07   @0x01B6A Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -14476 y -10000 z -23171
+  sub07   @0x01B7A Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -24316 y -10000 z -14079
+  sub07   @0x01B94 Sce_espr_on  Effekt 6 Sub 0 skala 0x1000 x -23020 y -10000 z -25755

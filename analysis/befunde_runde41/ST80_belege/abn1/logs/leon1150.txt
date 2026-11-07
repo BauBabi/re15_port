@@ -1,0 +1,15 @@
+# Lauf leon1150
+exe re15_pc_st80a1_leon1150 PID 50732 Fenster 5309930
+exit=0 dauer=62s
+## Eingabe/Umgebung
+[input-script] RE15_INPUT_SCRIPT="W1,A0.2,W0.7,A0.1,W2,X0.1,W0.5,X0.1,W3" -> 231 ticks @ 30 fps, start frame 60
+## debug.log (Auszug)
+[save] CONTINUE: resumed in room 1150 (hp=100)
+[msgtext] room=1150 id=21 "Nothing happened."
+[fire-aot] slot=2 at F450 (Raum 1150)
+[flow] EXIT_AT: Bild 800 in Raum 1150 erreicht -> exit
+## stimme.log
+## Texte je Bild (state.log)
+id=21 F118-F180 (63 Bilder) cam=4
+## letzte state.log-Zeile
+F800 pad=0000 PL(-22250,-18500,rot=0,hp=100) pst=0 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(a=0 fsm=0 id=21 q=0) pf=00000000 pm=0 gr=0 [1 t=45 st=4 ss1=0 ss2=1 ss3=0 g=00 mo=3 af=27 s

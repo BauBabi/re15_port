@@ -1,0 +1,19 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/build
+    Start 1377: integration_r41_wasserblink_tropfen_elza
+    Start 1376: integration_r41_wasserblink_tropfen_leon
+1/7 Test #1377: integration_r41_wasserblink_tropfen_elza ...   Passed   80.46 sec
+    Start 1373: integration_r41_wasserblink_leon
+2/7 Test #1376: integration_r41_wasserblink_tropfen_leon ...   Passed   80.57 sec
+    Start 1374: integration_r41_wasserblink_elza
+3/7 Test #1373: integration_r41_wasserblink_leon ...........   Passed   79.59 sec
+    Start 1375: integration_r41_wasserblink_gegen
+4/7 Test #1374: integration_r41_wasserblink_elza ...........   Passed   79.59 sec
+    Start  410: integration_r34_plattform_takt
+5/7 Test  #410: integration_r34_plattform_takt .............   Passed   23.18 sec
+    Start  411: integration_r34_plattform_esp_eintritt
+6/7 Test  #411: integration_r34_plattform_esp_eintritt .....   Passed    9.73 sec
+7/7 Test #1375: integration_r41_wasserblink_gegen ..........   Passed   62.03 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) = 222.19 sec

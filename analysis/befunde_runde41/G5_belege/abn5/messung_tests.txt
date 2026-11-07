@@ -1,0 +1,123 @@
+# Abnahme 5 G5A: eigene ctest-Laeufe im Integrationsbaum (Kopf 9867e3913, build/ nicht neu gebaut), Git-Bash: PATH=/c/msys64/mingw64/bin:$PATH, SDL_ASSERT=always_ignore
+# Parallel liefen fremde Agenten (u.a. ein fremder integration_r41_birkin_pistole-Lauf 12:11 im selben build/).
+
+## Gruppe A: ctest --test-dir .../re15_port/build -R 'g5|birkin|tentak|granat' -j 3 --timeout 3000 --output-on-failure   (Start Sat Nov  7 11:46:44     2026)
+ 1/32 Test #1399: integration_r41_g5_tod ............   Passed  260.43 sec
+ 2/32 Test #1398: integration_r41_g5_westen .........   Passed  412.36 sec
+ 3/32 Test #1397: integration_r41_birkin_pistole ....   Passed  476.54 sec
+ 4/32 Test #1393: unit_r41_birkin_wand_griff ........   Passed  218.10 sec
+ 5/32 Test  #599: integration_r36_granate ...........   Passed   93.41 sec
+ 6/32 Test #1392: unit_r41_birkin_wand_g5 ...........   Passed   51.90 sec
+ 7/32 Test  #407: integration_r34_granaten ..........   Passed  229.68 sec
+ 8/32 Test  #320: unit_r20_birkin_push_pin ..........   Passed    1.10 sec
+ 9/32 Test  #530: integration_r35_granate ...........   Passed  167.25 sec
+10/32 Test  #303: probe_p3_birkin_rest ..............   Passed    0.79 sec
+11/32 Test  #292: probe_p2_birkin_g5 ................   Passed    0.66 sec
+12/32 Test  #339: unit_r30_birkin_frost .............   Passed    0.81 sec
+13/32 Test  #343: unit_r30_granate ..................   Passed    0.21 sec
+14/32 Test  #274: unit_g5_boss ......................   Passed    0.47 sec
+15/32 Test #1172: unit_r41_granate ..................   Passed    0.30 sec
+16/32 Test  #529: unit_r35_granate ..................   Passed    0.22 sec
+17/32 Test  #308: unit_r17_birkin_1zu1_pin ..........   Passed    0.25 sec
+18/32 Test  #314: unit_r18_birkin_restluecken_pin ...   Passed    0.22 sec
+19/32 Test #1396: unit_r41_g5auftritt ...............   Passed    0.18 sec
+20/32 Test  #598: unit_r36_granate ..................   Passed    0.12 sec
+21/32 Test #1390: unit_birkin_bahnsteig .............   Passed    0.17 sec
+22/32 Test  #363: unit_r30_n_room5080_birkin_wand ...   Passed    0.11 sec
+23/32 Test #1395: unit_birkin_szenen ................   Passed    0.13 sec
+24/32 Test   #44: unit_birkin_ai ....................   Passed    0.02 sec
+25/32 Test  #272: unit_g5_tentakel ..................   Passed    0.04 sec
+26/32 Test  #273: unit_g5_morph .....................   Passed    0.02 sec
+27/32 Test #1391: unit_r41_birkin_wand_rein .........   Passed    0.02 sec
+28/32 Test #1173: unit_r41_granate_aus ..............   Passed    0.02 sec
+29/32 Test #1389: unit_birkin_formen ................   Passed    0.02 sec
+30/32 Test #1402: unit_birkin_opfer .................   Passed    0.02 sec
+31/32 Test #1394: unit_r41_birkin_wand_g5saat .......   Passed   28.22 sec
+32/32 Test  #344: integration_r30_granate_laden .....   Passed   71.92 sec
+100% tests passed, 0 tests failed out of 32
+Total Test time (real) = 717.85 sec
+CTEST_EXIT=0
+
+## unit_r41_g5auftritt einzeln: ctest ... -R '^unit_r41_g5auftritt$' -V (NB5/NB6-Zeilen)
+1396: 5090: NB5 Lampe x -4000: Gehaeusekasten Schnitt 16 (107..149, 113..120), RE2-Aufnahme Fleck (108.8,119.3) Bild -44
+1396: 5090: NB5 Lampe x -5000: Gehaeusekasten Schnitt 16 (93..132, 115..121), RE2-Aufnahme Fleck (95.1,120.8) Bild -43
+1396: 5090: NB5 Lampe x -6000: Gehaeusekasten Schnitt 16 (79..117, 116..122), RE2-Aufnahme Fleck (80.6,121.6) Bild -42
+1396: 5090: NB6 Ring B Platz 0 nach Vorlaufbild 2: Wert 114 Vorlauf 0 Rest 6 Schritt 1828 Akku 14628
+1396: 5090: NB6 Ring B Platz 1 nach Vorlaufbild 2: Wert 250 Vorlauf 1 Rest 5 Schritt 0 Akku 0
+1396: 5090: NB6 Ring B Platz 2 nach Vorlaufbild 2: Wert 0 Vorlauf 4 Rest 17 Schritt -1129 Akku 25600
+1396: 5090: NB5 Beben falsch in 0 Vorlaufbildern, Ton 1 x bei Vorlaufbild 4, Lampe vor sub11 0, Vorlaufbild 2 x -5000 1, RE2-Lampenfleck im Gehaeusekasten 3/3 (max 0.0 px daneben)
+1396: 5090: NB6 Brocken 8 gespawnt; RE2-FX-Pool bei sub05-Bild 39: 18 Plaetze, 18 von 18 gleich RE2-RAM s02; op_unbekannt 0; Ring B nach sub14 wie FUN_80039514/FUN_800395B8; Ringe bei sub05-Bild 39 leer 1 (RE2-RAM s02: leer)
+1396: 5090: NB6 Vibration Aktuator 1 je sub04-Bild 0..23: 0 von 24 Bildern falsch, Aktuator 0 in 0 Bildern != 0; Brocken-Takt sub05-Bild 1..40: 0 Bilder falsch
+1396: 5090: NB5 Lampen gegen RE2-RAM 20 von 20 gleich (s03..s12), sichtbar (Ankerzone) in 438 Szenenbildern, nach Bild 437: 0
+1396: 5091: NB5 Lampe x -4000: Gehaeusekasten Schnitt 16 (107..149, 113..120), RE2-Aufnahme Fleck (108.8,119.3) Bild -44
+1396: 5091: NB5 Lampe x -5000: Gehaeusekasten Schnitt 16 (93..132, 115..121), RE2-Aufnahme Fleck (95.1,120.8) Bild -43
+1396: 5091: NB5 Lampe x -6000: Gehaeusekasten Schnitt 16 (79..117, 116..122), RE2-Aufnahme Fleck (80.6,121.6) Bild -42
+1396: 5091: NB6 Ring B Platz 0 nach Vorlaufbild 2: Wert 114 Vorlauf 0 Rest 6 Schritt 1828 Akku 14628
+1396: 5091: NB6 Ring B Platz 1 nach Vorlaufbild 2: Wert 250 Vorlauf 1 Rest 5 Schritt 0 Akku 0
+1396: 5091: NB6 Ring B Platz 2 nach Vorlaufbild 2: Wert 0 Vorlauf 4 Rest 17 Schritt -1129 Akku 25600
+1396: 5091: NB5 Beben falsch in 0 Vorlaufbildern, Ton 1 x bei Vorlaufbild 4, Lampe vor sub11 0, Vorlaufbild 2 x -5000 1, RE2-Lampenfleck im Gehaeusekasten 3/3 (max 0.0 px daneben)
+1396: 5091: NB6 Brocken 8 gespawnt; RE2-FX-Pool bei sub05-Bild 39: 18 Plaetze, 18 von 18 gleich RE2-RAM s02; op_unbekannt 0; Ring B nach sub14 wie FUN_80039514/FUN_800395B8; Ringe bei sub05-Bild 39 leer 1 (RE2-RAM s02: leer)
+1396: 5091: NB6 Vibration Aktuator 1 je sub04-Bild 0..23: 0 von 24 Bildern falsch, Aktuator 0 in 0 Bildern != 0; Brocken-Takt sub05-Bild 1..40: 0 Bilder falsch
+1396: 5091: NB5 Lampen gegen RE2-RAM 20 von 20 gleich (s03..s12), sichtbar (Ankerzone) in 438 Szenenbildern, nach Bild 437: 0
+1396: test_r41_g5auftritt: OK
+The following tests passed:
+100% tests passed, 0 tests failed out of 1
+Total Test time (real) =   0.25 sec
+
+## Gruppe B (Querbezug gator_fx_r41_pc.c Raum-ESP-Saetze 2090/5090, 5090/5091-Riegel): ctest ... -R '^(integration_r41_gatorszene_.*|integration_r41_re2gator|integration_r41_kanister2080|integration_r35_zgirl_5090|integration_r37_elzaems_elza5091|integration_r37_elzaems_leon5080|integration_pri_masken|integration_r36_pri_schatten|unit_r41_kanister2080_fx_.*|unit_r41_re2gator_kanister|unit_r41_restpunkte_gator)$' -j 3 --timeout 3000   (Start Sat Nov  7 11:59:44     2026)
+ 1/24 Test  #572: integration_r35_zgirl_5090 ......................   Passed  147.47 sec
+ 2/24 Test #1194: integration_r41_kanister2080 ....................   Passed  166.12 sec
+ 3/24 Test #1427: integration_pri_masken ..........................   Passed    0.40 sec
+ 4/24 Test #1307: unit_r41_restpunkte_gator .......................   Passed    0.02 sec
+ 5/24 Test #1293: unit_r41_re2gator_kanister ......................   Passed    0.04 sec
+ 6/24 Test #1190: unit_r41_kanister2080_fx_op4_6 ..................   Passed    0.02 sec
+ 7/24 Test #1191: unit_r41_kanister2080_fx_op37_78 ................   Passed    0.01 sec
+ 8/24 Test #1188: unit_r41_kanister2080_fx_op69 ...................   Passed    0.01 sec
+ 9/24 Test #1189: unit_r41_kanister2080_fx_op41 ...................   Passed    0.01 sec
+10/24 Test #1187: unit_r41_kanister2080_fx_register ...............   Passed    0.01 sec
+11/24 Test  #628: integration_r36_pri_schatten ....................   Passed   29.27 sec
+12/24 Test  #703: integration_r37_elzaems_leon5080 ................   Passed   16.24 sec
+13/24 Test  #708: integration_r37_elzaems_elza5091 ................   Passed   15.55 sec
+14/24 Test #1162: integration_r41_gatorszene_leon .................   Passed   54.81 sec
+15/24 Test #1163: integration_r41_gatorszene_elza .................   Passed   74.02 sec
+16/24 Test #1306: integration_r41_re2gator ........................   Passed  281.00 sec
+17/24 Test #1164: integration_r41_gatorszene_tod ..................   Passed   67.18 sec
+18/24 Test #1165: integration_r41_gatorszene_tod_elza .............   Passed  109.73 sec
+19/24 Test #1166: integration_r41_gatorszene_tod_r1 ...............   Passed  106.17 sec
+20/24 Test #1168: integration_r41_gatorszene_tod_explosion ........   Passed   58.16 sec
+21/24 Test #1167: integration_r41_gatorszene_tod_r1_elza ..........   Passed  147.56 sec
+22/24 Test #1169: integration_r41_gatorszene_tod_explosion_elza ...   Passed   78.74 sec
+23/24 Test #1170: integration_r41_gatorszene_flucht ...............   Passed   55.37 sec
+24/24 Test #1171: integration_r41_gatorszene_flucht_elza ..........   Passed   74.35 sec
+100% tests passed, 0 tests failed out of 24
+Total Test time (real) = 526.91 sec
+CTEST_EXIT=0
+
+## Gruppe C (render_pc.c/objpoly/rumble/re2fx/Fenster): ctest ... -R 'objpoly|rumble|abtast|re2fx|fenster|boot_bg' -j 3 --timeout 3000
+ 1/16 Test #1423: integration_boot_bg_pin ..........   Passed   11.63 sec
+ 2/16 Test  #414: unit_r34_re2fx_bild ..............   Passed    2.10 sec
+ 3/16 Test  #945: unit_r39_dining1141_fenster ......   Passed    0.28 sec
+ 4/16 Test  #508: unit_r35_fenster_knall ...........   Passed    0.10 sec
+ 5/16 Test  #412: unit_r34_re2fx ...................   Passed    0.04 sec
+ 6/16 Test  #509: unit_r35_fenster_satzform ........   Passed    0.03 sec
+ 7/16 Test  #415: unit_r34_re2fx_raum ..............   Passed    0.04 sec
+ 8/16 Test  #416: unit_r34_re2fx_pc ................   Passed    0.09 sec
+ 9/16 Test  #413: unit_r34_re2fx_knochen ...........   Passed    0.05 sec
+10/16 Test  #505: unit_r35_fenster_glas ............   Passed    0.04 sec
+11/16 Test  #576: unit_r36_elza_fenster ............   Passed    0.08 sec
+12/16 Test  #506: unit_r35_fenster_kraehe ..........   Passed    0.02 sec
+13/16 Test  #507: unit_r35_fenster_ereignis ........   Passed    0.04 sec
+14/16 Test  #329: unit_abtastphase_11f0 ............   Passed    0.03 sec
+15/16 Test  #510: integration_r35_fenster ..........   Passed   34.93 sec
+16/16 Test  #584: integration_r36_elza_fenster .....   Passed   61.19 sec
+100% tests passed, 0 tests failed out of 16
+Total Test time (real) =  61.30 sec
+CTEST_EXIT=0
+
+## Nachgefahren am neuen Kopf 8495d82ff (8495d82ff, Pistolenriegel mit Pruefung 5b): ctest ... -R '^integration_r41_birkin_pistole$' --timeout 3000 -V
+-- r41_birkin_pistole leon: Mutationen 1 (F1274), Form 1 HP max 600, Form-HP 1000 (F1455) bis 10, Rueckstoss 1 (F3431), G5 1 (F3550), G5 tot 1 (F5861), Spieler-HP dabei 100, Patronen in der Waffe 255 -> 102 beim G5-Tod, am Ende 77; 5b: Szenenende F4767 x 13873 HP 100, 1095 Bilder bis zum G5-Tod, Treffer 0, kleinste HP 100, Spieler x beim G5-Tod 23113, kleinster x-Abstand zum G5 10725 (Rueckzug nach 34 x MA4, D12)
+-- r41_birkin_pistole elza: Mutationen 1 (F1274), Form 1 HP max 600, Form-HP 1000 (F1455) bis 10, Rueckstoss 1 (F3431), G5 1 (F3550), G5 tot 1 (F5861), Spieler-HP dabei 100, Patronen in der Waffe 255 -> 102 beim G5-Tod, am Ende 77; 5b: Szenenende F4767 x 13873 HP 100, 1095 Bilder bis zum G5-Tod, Treffer 0, kleinste HP 100, Spieler x beim G5-Tod 23113, kleinster x-Abstand zum G5 10725 (Rueckzug nach 34 x MA4, D12)
+The following tests passed:
+100% tests passed, 0 tests failed out of 1
+Total Test time (real) = 483.12 sec
+CTEST_EXIT=0

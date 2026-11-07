@@ -1,0 +1,7 @@
+Lauf RW_E: Zeilen 'SPAWN' im RE15_WAFFEN_LOG (Anzahl je Art), Bildzeilen 1535
+    716     SPAWN id=15 sub=3 scale=0x1000 streams=1
+    476     SPAWN id=15 sub=6 scale=0x1000 streams=1
+    107     SPAWN id=6 sub=5 scale=0xd00 streams=1
+     12     SPAWN id=11 sub=0 scale=0xc00 streams=6
+      6     SPAWN id=11 sub=0 scale=0x1900 streams=6
+fx.log: nicht angelegt (kein Effekt gezeichnet)

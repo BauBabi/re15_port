@@ -1,0 +1,300 @@
+# Lauf kabine5
+exe re15_pc_st80a1_kabine5 PID 50060 Fenster 852074
+exit=0 dauer=237s
+## Eingabe/Umgebung
+[input-script] RE15_INPUT_SCRIPT="A0.3,W8,L0.07,XU0.5,W0.5,L0.38,XU2,R0.12,A0.3,W6,XU1,R0.07,A0.3,W68,A0.3,W11,XU1,A0.3,W2,XU3,W75" -> 5404 ticks @ 30 fps, start frame 60
+## debug.log (Auszug)
+[audio] SDL_OpenAudioDevice failed: WASAPI can't find requested audio endpoint: Element nicht gefunden.
+[audio] SDL_OpenAudioDevice failed: WASAPI can't find requested audio endpoint: Element nicht gefunden.
+[story36] ROOM6000: 2 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[save] CONTINUE: resumed in room 6000 (hp=100)
+[tuer] Sequenz fertig: 301 Bilder + 11 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+[story36] ROOM6030: 13 Nachrichten umgeschrieben/neu (Runde 36 + Runde 41 ST80-T)
+[tuer] Sequenz fertig: 301 Bilder + 11 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26 vor 'Certainly.'
+[msgtext] room=6030 id=11 "Annette: Is everyone aboard?"
+[msgtext] room=6030 id=12 "Leon: Everyone we could find. There's a little girl in the back... Sherry."
+[msgtext] room=6030 id=25 "Annette: Sherry...? My daughter is on this train? ...Thank God."
+[msgtext] room=6030 id=26 "Leon: Can you start this thing?"
+[msgtext] room=6030 id=13 "Annette: Certainly."
+[msgtext] room=6030 id=14 "Annette: If I remember the startup sequence correctly..."
+[msgtext] room=6030 id=15 "Leon: What's wrong?"
+[msgtext] room=6030 id=16 "Annette: Not enough power! The train's batteries are too low!"
+[msgtext] room=6030 id=17 "Leon: I'll take care of it!"
+[msgtext] room=6030 id=18 "Annette: I'll be ready to start the train when you do!"
+[msgtext] room=6030 id=19 "Leon: Good luck to both of us!"
+[tuer] Sequenz fertig: 301 Bilder + 11 Warten, 0 Se_on, Schliesston 1, Ton STUMM, Notizen 0x0
+[story80] ROOM6030 Evt_exec sub02 -> Programm (900 B): Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)
+[msgtext] room=6030 id=0 "Leon: Hang on, Marvin. We're getting out of here."
+[msgtext] room=6030 id=1 "Leon: Who are you two?"
+[msgtext] room=6030 id=21 "John: Name's John. This is Sherry. We made it down here with a girl named Elza."
+[msgtext] room=6030 id=2 "Sherry: She's out there fighting the monsters!"
+[msgtext] room=6030 id=3 "John: She's trying to keep the outside clear so we can escape."
+[msgtext] room=6030 id=22 "John: She said she'd catch up with us."
+[msgtext] room=6030 id=4 "Leon: Why aren't you out there?"
+[msgtext] room=6030 id=5 "John: She told me to stay with the kid... and look after your friend here."
+[msgtext] room=6030 id=6 "Leon: Where's Annette?"
+[msgtext] room=6030 id=7 "John: The woman in the lab coat? Up front, trying to start the train."
+[msgtext] room=6030 id=23 "Sherry: A lab coat...? Is it Mom?!"
+[msgtext] room=6030 id=24 "John: Easy, kid. Stay with me."
+[msgtext] room=6030 id=8 "Leon: I'll find out. Stay here."
+[flow] EXIT_AT: Bild 5600 in Raum 6030 erreicht -> exit
+## stimme.log
+raum=6030 nachricht=11  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=12  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=25  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=26  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=13  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=14  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=15  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=16  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=17  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=18  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=19  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=0  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=1  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=21  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=2  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=3  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=22  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=4  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=5  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=6  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=7  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=23  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=24  laeuft=0 rest=0  0 gewartet
+raum=6030 nachricht=8  laeuft=0 rest=0  0 gewartet
+## Texte je Bild (state.log)
+id=11 F671-F769 (99 Bilder) cam=1
+id=12 F791-F889 (99 Bilder) cam=1
+id=25 F911-F1009 (99 Bilder) cam=1
+id=26 F1031-F1129 (99 Bilder) cam=1
+id=13 F1151-F1249 (99 Bilder) cam=1
+id=14 F1349-F1447 (99 Bilder) cam=3
+id=15 F1659-F1757 (99 Bilder) cam=1
+id=16 F1797-F1895 (99 Bilder) cam=1
+id=17 F1917-F2015 (99 Bilder) cam=1
+id=18 F2037-F2135 (99 Bilder) cam=1
+id=19 F2157-F2255 (99 Bilder) cam=1
+id= 0 F3200-F3298 (99 Bilder) cam=11
+id= 1 F3426-F3524 (99 Bilder) cam=10
+id=21 F3547-F3645 (99 Bilder) cam=10
+id= 2 F3693-F3791 (99 Bilder) cam=10
+id= 3 F3794-F3892 (99 Bilder) cam=10
+id=22 F3914-F4012 (99 Bilder) cam=10
+id= 4 F4034-F4132 (99 Bilder) cam=10
+id= 5 F4154-F4252 (99 Bilder) cam=10
+id= 6 F4299-F4397 (99 Bilder) cam=10
+id= 7 F4419-F4517 (99 Bilder) cam=10
+id=23 F4568-F4666 (99 Bilder) cam=10
+id=24 F4670-F4768 (99 Bilder) cam=10
+id= 8 F4815-F4913 (99 Bilder) cam=10
+## letzte state.log-Zeile
+F5600 pad=0000 PL(-25012,-24133,rot=1045,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=12 msg(a=0 fsm=0 id=8 q=0) pf=00000007 pm=0 gr=0 [1 t=49 st=4 ss1=0 ss2=2 ss3=0 g=40 mo=7 af=
+
+## Weg (state.log, jede 6. Zeile F300..F660 und F2400..F3260): Spieler-Lage, Zustand pst (4 = Szene), Kamera
+F300 pad=0000 PL(-17970,-20380,rot=1100,hp=100) pst=1 cam=6
+F306 pad=0000 PL(-17970,-20380,rot=1100,hp=100) pst=1 cam=6
+F312 pad=4010 PL(-17900,-20778,rot=908,hp=100) pst=1 cam=6
+F318 pad=4010 PL(-17693,-21953,rot=908,hp=100) pst=1 cam=7
+F324 pad=4010 PL(-17497,-23067,rot=908,hp=100) pst=1 cam=7
+F330 pad=0000 PL(-17392,-23684,rot=908,hp=100) pst=1 cam=7
+F336 pad=0000 PL(-17398,-23650,rot=908,hp=100) pst=1 cam=7
+F342 pad=0080 PL(-17398,-23650,rot=716,hp=100) pst=1 cam=7
+F348 pad=0080 PL(-17398,-23650,rot=140,hp=100) pst=1 cam=7
+F354 pad=4010 PL(-16893,-23535,rot=-148,hp=100) pst=1 cam=7
+F360 pad=4010 PL(-15674,-23257,rot=-148,hp=100) pst=1 cam=7
+F366 pad=4010 PL(-14556,-23002,rot=-148,hp=100) pst=1 cam=7
+F372 pad=4010 PL(-13426,-22745,rot=-148,hp=100) pst=1 cam=8
+F378 pad=4010 PL(-13307,-22758,rot=-148,hp=100) pst=1 cam=8
+F384 pad=4010 PL(-13307,-22758,rot=-148,hp=100) pst=1 cam=8
+F390 pad=4010 PL(-13307,-22758,rot=-148,hp=100) pst=1 cam=8
+F396 pad=4010 PL(-13307,-22758,rot=-148,hp=100) pst=1 cam=8
+F402 pad=4010 PL(-13307,-22758,rot=-148,hp=100) pst=1 cam=8
+F408 pad=4010 PL(-13307,-22758,rot=-148,hp=100) pst=1 cam=8
+F414 pad=0020 PL(-13307,-22758,rot=92,hp=100) pst=1 cam=8
+F420 pad=8000 PL(-13160,-22759,rot=0,hp=100) pst=1 cam=8
+F426 pad=0000 PL(-12872,-22752,rot=0,hp=100) pst=1 cam=8
+F432 pad=0000 PL(-12267,-22754,rot=0,hp=100) pst=1 cam=8
+F438 pad=0000 PL(-11909,-22755,rot=0,hp=100) pst=1 cam=8
+F444 pad=0000 PL(-11547,-22762,rot=0,hp=100) pst=1 cam=8
+F450 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F456 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F462 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F468 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F474 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F480 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F486 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F492 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F498 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F504 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F510 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F516 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F522 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F528 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F534 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F540 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F546 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F552 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F558 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F564 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F570 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F576 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F582 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F588 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F594 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F600 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 cam=8
+F606 pad=4010 PL(-10143,-22798,rot=0,hp=100) pst=1 cam=8
+F612 pad=4010 PL(-9488,-22798,rot=0,hp=100) pst=1 cam=8
+F618 pad=4010 PL(-9488,-22798,rot=0,hp=100) pst=1 cam=8
+F624 pad=4010 PL(-9488,-22798,rot=0,hp=100) pst=1 cam=8
+F630 pad=4010 PL(-9488,-22798,rot=0,hp=100) pst=1 cam=8
+F636 pad=0020 PL(-9488,-22815,rot=144,hp=100) pst=1 cam=8
+F642 pad=8000 PL(-3873,-23487,rot=0,hp=100) pst=1 cam=0
+F648 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 cam=1
+F654 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 cam=1
+F660 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 cam=1
+F2400 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 cam=0
+F2406 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 cam=0
+F2412 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 cam=0
+F2418 pad=0000 PL(-3873,-23487,rot=3371,hp=100) pst=4 cam=0
+F2424 pad=0000 PL(-3873,-23487,rot=2795,hp=100) pst=4 cam=0
+F2430 pad=0000 PL(-3873,-23487,rot=2219,hp=100) pst=4 cam=0
+F2436 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=4 cam=0
+F2442 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=4 cam=0
+F2448 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=4 cam=0
+F2454 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=4 cam=0
+F2460 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=4 cam=0
+F2466 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2472 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2478 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2484 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2490 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2496 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2502 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2508 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2514 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2520 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2526 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2532 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2538 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2544 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2550 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2556 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2562 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2568 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2574 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2580 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2586 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2592 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2598 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2604 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2610 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2616 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2622 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2628 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2634 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2640 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2646 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2652 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2658 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2664 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2670 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2676 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2682 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 cam=0
+F2688 pad=8000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2694 pad=8000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2700 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2706 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2712 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2718 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2724 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2730 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2736 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2742 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2748 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2754 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2760 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2766 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2772 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2778 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2784 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2790 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2796 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2802 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2808 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2814 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2820 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2826 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2832 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2838 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2844 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2850 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2856 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2862 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2868 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2874 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2880 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2886 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2892 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2898 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2904 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2910 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2916 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2922 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2928 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2934 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2940 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2946 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2952 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2958 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2964 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2970 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2976 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2982 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2988 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F2994 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F3000 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F3006 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F3012 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F3018 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F3024 pad=0000 PL(-9600,-23450,rot=2048,hp=100) pst=1 cam=8
+F3030 pad=4010 PL(-10551,-23450,rot=2048,hp=100) pst=1 cam=8
+F3036 pad=4010 PL(-10551,-23450,rot=2048,hp=100) pst=1 cam=8
+F3042 pad=4010 PL(-10551,-23450,rot=2048,hp=100) pst=1 cam=8
+F3048 pad=4010 PL(-10551,-23450,rot=2048,hp=100) pst=1 cam=8
+F3054 pad=4010 PL(-10551,-23450,rot=2048,hp=100) pst=1 cam=8
+F3060 pad=8000 PL(-10951,-23447,rot=2048,hp=100) pst=1 cam=8
+F3066 pad=0000 PL(-11246,-23432,rot=2048,hp=100) pst=1 cam=8
+F3072 pad=0000 PL(-11715,-23431,rot=2048,hp=100) pst=1 cam=8
+F3078 pad=0000 PL(-12322,-23445,rot=2048,hp=100) pst=1 cam=8
+F3084 pad=0000 PL(-12508,-23454,rot=2048,hp=100) pst=1 cam=8
+F3090 pad=0000 PL(-13307,-23453,rot=2048,hp=100) pst=1 cam=8
+F3096 pad=0000 PL(-13307,-23453,rot=2048,hp=100) pst=1 cam=8
+F3102 pad=0000 PL(-13307,-23453,rot=2048,hp=100) pst=1 cam=8
+F3108 pad=0000 PL(-13307,-23453,rot=2048,hp=100) pst=1 cam=8
+F3114 pad=0000 PL(-13307,-23453,rot=2048,hp=100) pst=1 cam=8
+F3120 pad=0000 PL(-13307,-23453,rot=2048,hp=100) pst=1 cam=8
+F3126 pad=4010 PL(-13879,-23453,rot=2048,hp=100) pst=1 cam=8
+F3132 pad=4010 PL(-15101,-23453,rot=2048,hp=100) pst=1 cam=7
+F3138 pad=4010 PL(-16253,-23453,rot=2048,hp=100) pst=1 cam=7
+F3144 pad=4010 PL(-17416,-23453,rot=2048,hp=100) pst=1 cam=7
+F3150 pad=4010 PL(-18376,-23453,rot=1952,hp=100) pst=4 cam=7
+F3156 pad=4010 PL(-18820,-23555,rot=1899,hp=100) pst=4 cam=7
+F3162 pad=4010 PL(-19264,-23657,rot=1899,hp=100) pst=4 cam=7
+F3168 pad=4010 PL(-19708,-23759,rot=1899,hp=100) pst=4 cam=7
+F3174 pad=4010 PL(-20152,-23862,rot=1897,hp=100) pst=4 cam=7
+F3180 pad=4010 PL(-20596,-23965,rot=1899,hp=100) pst=4 cam=7
+F3186 pad=4010 PL(-21040,-24068,rot=1899,hp=100) pst=4 cam=7
+F3192 pad=4010 PL(-21262,-24120,rot=1609,hp=100) pst=4 cam=7
+F3198 pad=4010 PL(-21262,-24120,rot=1033,hp=100) pst=4 cam=7
+F3204 pad=4010 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3210 pad=4010 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3216 pad=0000 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3222 pad=0000 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3228 pad=0000 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3234 pad=0000 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3240 pad=0000 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3246 pad=0000 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3252 pad=0000 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11
+F3258 pad=0000 PL(-21262,-24120,rot=1015,hp=100) pst=4 cam=11

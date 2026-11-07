@@ -1,0 +1,58 @@
+== fdp_leon (Tick-Versatz 426); Messzeile: [g5lampe] F3554 Beben-Ton R704_BEBEN.VBS Satz 0 (ROOM7040 sub04 Se_on @0x016AC)
+  Schnitt+-2  Port F3549 RMS   2537   | RE2 61.400 s RMS   8931
+  Schnitt+-1  Port F3550 RMS   1906   | RE2 61.433 s RMS  10143
+  Schnitt+ 0  Port F3551 RMS   1642   | RE2 61.467 s RMS   9042
+  Schnitt+ 1  Port F3552 RMS   1977   | RE2 61.500 s RMS   7742
+  Schnitt+ 2  Port F3553 RMS   1383   | RE2 61.533 s RMS   6985
+  Schnitt+ 3  Port F3554 RMS   6827   | RE2 61.567 s RMS  23205
+  Schnitt+ 4  Port F3555 RMS   5858   | RE2 61.600 s RMS  16699
+  Schnitt+ 5  Port F3556 RMS   6987   | RE2 61.633 s RMS  22322
+  Schnitt+ 6  Port F3557 RMS   6594   | RE2 61.667 s RMS  16948
+  Schnitt+ 7  Port F3558 RMS   6170   | RE2 61.700 s RMS  18461
+  Schnitt+ 8  Port F3559 RMS   6623   | RE2 61.733 s RMS  20734
+  Schnitt+ 9  Port F3560 RMS   7175   | RE2 61.767 s RMS  19554
+  Schnitt+10  Port F3561 RMS   8439   | RE2 61.800 s RMS  19760
+  Schnitt+11  Port F3562 RMS   7045   | RE2 61.833 s RMS  18633
+  Schnitt+12  Port F3563 RMS   6197   | RE2 61.867 s RMS  19832
+  Schnitt+13  Port F3564 RMS   8310   | RE2 61.900 s RMS  21020
+  Schnitt+14  Port F3565 RMS   6088   | RE2 61.933 s RMS  17142
+  Schnitt+15  Port F3566 RMS   5086   | RE2 61.967 s RMS  17735
+  Schnitt+16  Port F3567 RMS   5079   | RE2 62.000 s RMS  17866
+  Schnitt+17  Port F3568 RMS   6222   | RE2 62.033 s RMS  18775
+  Schnitt+18  Port F3569 RMS   4904   | RE2 62.067 s RMS  16285
+  Schnitt+19  Port F3570 RMS   5211   | RE2 62.100 s RMS  16125
+  Schnitt+20  Port F3571 RMS   4860   | RE2 62.133 s RMS  15555
+  Schnitt+21  Port F3572 RMS   4662   | RE2 62.167 s RMS  12966
+  Schnitt+22  Port F3573 RMS   6213   | RE2 62.200 s RMS  15593
+  Schnitt+23  Port F3574 RMS   4075   | RE2 62.233 s RMS  10763
+  Schnitt+24  Port F3575 RMS   3474   | RE2 62.267 s RMS  12477
+  Schnitt+25  Port F3576 RMS   3102   | RE2 62.300 s RMS  12603
+== fdp_elza (Tick-Versatz 426); Messzeile: [g5lampe] F3554 Beben-Ton R704_BEBEN.VBS Satz 0 (ROOM7040 sub04 Se_on @0x016AC)
+  Schnitt+-2  Port F3549 RMS   2537   | RE2 61.400 s RMS   8931
+  Schnitt+-1  Port F3550 RMS   2027   | RE2 61.433 s RMS  10143
+  Schnitt+ 0  Port F3551 RMS   1682   | RE2 61.467 s RMS   9042
+  Schnitt+ 1  Port F3552 RMS   1877   | RE2 61.500 s RMS   7742
+  Schnitt+ 2  Port F3553 RMS   1359   | RE2 61.533 s RMS   6985
+  Schnitt+ 3  Port F3554 RMS   6826   | RE2 61.567 s RMS  23205
+  Schnitt+ 4  Port F3555 RMS   5847   | RE2 61.600 s RMS  16699
+  Schnitt+ 5  Port F3556 RMS   6981   | RE2 61.633 s RMS  22322
+  Schnitt+ 6  Port F3557 RMS   6590   | RE2 61.667 s RMS  16948
+  Schnitt+ 7  Port F3558 RMS   6168   | RE2 61.700 s RMS  18461
+  Schnitt+ 8  Port F3559 RMS   6624   | RE2 61.733 s RMS  20734
+  Schnitt+ 9  Port F3560 RMS   7175   | RE2 61.767 s RMS  19554
+  Schnitt+10  Port F3561 RMS   8439   | RE2 61.800 s RMS  19760
+  Schnitt+11  Port F3562 RMS   7045   | RE2 61.833 s RMS  18633
+  Schnitt+12  Port F3563 RMS   6197   | RE2 61.867 s RMS  19832
+  Schnitt+13  Port F3564 RMS   8310   | RE2 61.900 s RMS  21020
+  Schnitt+14  Port F3565 RMS   6088   | RE2 61.933 s RMS  17142
+  Schnitt+15  Port F3566 RMS   5086   | RE2 61.967 s RMS  17735
+  Schnitt+16  Port F3567 RMS   5079   | RE2 62.000 s RMS  17866
+  Schnitt+17  Port F3568 RMS   6222   | RE2 62.033 s RMS  18775
+  Schnitt+18  Port F3569 RMS   4904   | RE2 62.067 s RMS  16285
+  Schnitt+19  Port F3570 RMS   5211   | RE2 62.100 s RMS  16125
+  Schnitt+20  Port F3571 RMS   4860   | RE2 62.133 s RMS  15555
+  Schnitt+21  Port F3572 RMS   4717   | RE2 62.167 s RMS  12966
+  Schnitt+22  Port F3573 RMS   6225   | RE2 62.200 s RMS  15593
+  Schnitt+23  Port F3574 RMS   4029   | RE2 62.233 s RMS  10763
+  Schnitt+24  Port F3575 RMS   3465   | RE2 62.267 s RMS  12477
+  Schnitt+25  Port F3576 RMS   3091   | RE2 62.300 s RMS  12603

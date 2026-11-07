@@ -1,0 +1,17 @@
+# Lauf elza1151
+exe re15_pc_st80a1_elza1151 PID 22724 Fenster 16713606
+exit=0 dauer=31s
+## Eingabe/Umgebung
+[input-script] RE15_INPUT_SCRIPT="W1,A0.2,W0.7,A0.1,W2,X0.1,W0.5,X0.1,W3" -> 231 ticks @ 30 fps, start frame 60
+## debug.log (Auszug)
+[save] CONTINUE: resumed in room 1151 (hp=100)
+[msgtext] room=1151 id=21 "Nothing happened."
+[fire-aot] slot=2 at F450 (Raum 1151)
+[msgtext] room=1151 id=20 "He has already passed..."
+[flow] EXIT_AT: Bild 700 in Raum 1151 erreicht -> exit
+## stimme.log
+## Texte je Bild (state.log)
+id=21 F118-F180 (63 Bilder) cam=4
+id=20 F451-F700 (250 Bilder) cam=0
+## letzte state.log-Zeile
+F700 pad=0000 PL(-22250,-18500,rot=0,hp=100) pst=0 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(a=1 fsm=1 id=20 q=0) pf=FFFF0000 pm=0 gr=0 [1 t=45 st=4 ss1=0 ss2=2 ss3=0 g=00 mo=2 af=89 s

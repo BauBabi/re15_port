@@ -1,0 +1,22 @@
+# Abnahme 5: Spieler-HP-Verlauf und G5-HP - eigene exe-Laeufe OHNE Messhaken (Raketenweg wie integration_r41_g5_tod bis zur Szene,
+# dann Rueckzug D4,5 s ab Szenenende und Raketen MA4/W0,2; RE15_GIVE=18:200; EXIT_AT 4200; Laeufe unter gdb fuer die Vibration)
+== gdb_leon
+   [g5auftritt] F737 Raum 5090: Vorlauf, Schnitt 16 (RE2 room7040 Cut 9), Spieler x -3800, Slot 2, Frau 1
+   [g5auftritt] F792 Raum 5090: Armierung nach 55 Vorlaufbildern, Schnitt 16, Spieler x 1208
+   [g5auftritt] F1954 Szenenende Bild 1162: G5 Sub 1 Ph 1, Spieler x 13873, Cut 12
+   Spieler-HP-Wechsel (Bild, HP, x): [(0, 100, 500)]
+   G5 (Bild, Zustand, HP, x) bei Wechsel: [(737, 0, 600, -32000), (2129, 2, 400, 5166), (2161, 2, 200, 5052), (2192, 2, 0, 5848), (2224, 3, -200, 5684), (2389, 3, -1, 9172)]
+   letztes Bild (4200, 100, 23323)
+== gdb_elza
+   [g5auftritt] F737 Raum 5091: Vorlauf, Schnitt 16 (RE2 room7040 Cut 9), Spieler x -3800, Slot 1, Frau -1
+   [g5auftritt] F792 Raum 5091: Armierung nach 55 Vorlaufbildern, Schnitt 16, Spieler x 1208
+   [g5auftritt] F1954 Szenenende Bild 1162: G5 Sub 1 Ph 1, Spieler x 13873, Cut 12
+   Spieler-HP-Wechsel (Bild, HP, x): [(0, 100, 500)]
+   G5 (Bild, Zustand, HP, x) bei Wechsel: [(737, 0, 600, -32000), (2129, 2, 400, 5166), (2161, 2, 200, 5052), (2192, 2, 0, 5848), (2224, 3, -200, 5684), (2389, 3, -1, 9172)]
+   letztes Bild (4200, 100, 23323)
+
+# Pistolenweg (eigener ctest-Lauf integration_r41_birkin_pistole, build/tests/integration/r41_birkin_pistole_wd/lauf_c6ee345a, MIT GR-Messhaken RE15_R39_MESS_SPIELER_HP=100)
+== leon
+  Szenenende F4767; Bilder mit Spieler-HP < 100: vor dem Szenenende 23 (Riesenform-Kampf, Haken hebt auf 100), danach 0; G5 tot (Bild, HP, Spieler-HP) (5861, -1, 100)
+== elza
+  Szenenende F4767; Bilder mit Spieler-HP < 100: vor dem Szenenende 23 (Riesenform-Kampf, Haken hebt auf 100), danach 0; G5 tot (Bild, HP, Spieler-HP) (5861, -1, 100)

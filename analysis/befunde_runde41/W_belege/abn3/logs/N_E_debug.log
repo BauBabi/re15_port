@@ -1,0 +1,199 @@
+[asset] exe-dir: C:/Users/mjoedicke/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/testint/w_abn3/bin
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/shared_assets/PSX
+[window] windowed 320x240
+[render] SDL-Renderer direct3d11, Videotreiber windows, ABR2 (B-F) ok
+[audio] RE15_NOAUDIO set -> audio disabled
+[pad] kein Controller gefunden (Tastatur bleibt aktiv)
+[pad] Diese Sitzung ist eine REMOTEDESKTOP-Sitzung. RDP leitet Gamepads nicht
+[pad] weiter — ein am Client (z.B. Steam Deck) steckendes Pad ist hier unsichtbar.
+[pad] Abhilfe: re15_port/tools/re15_pad_bridge_host.py auf DIESEM Rechner starten
+[pad] und re15_pad_bridge_client.py auf dem Client. Der Host legt dann ueber ViGEm
+[pad] ein virtuelles Pad an, das SDL wie ein echtes sieht.
+[titel_r39] alte Beschriftung entfernt: 929 Pixel; neu "Ver.0.8.29 dev" (RE15_VERSION "v0.8.29 dev") Spalten 200..283
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[boot] room RDT: STAGE1/ROOM1241.RDT (163748 bytes)
+[rdt] nCut=9 nDoor=0 nItem=0 zones=9 main_scd=34B sub=4 props=0
+[esp] room 1241: 2 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x07) -> slot 37: 256x32
+[esp] global bank CORE00.ESP: 5 effects (incl effect-id 0 hit fx)
+[esp] global effect-0 blood TIM -> slot 20: 256x256 4bpp
+[esp] global effect-2 muzzle TIM -> slot 21: 256x256 16bpp
+[esp] global effect-3 smoke TIM -> slot 22: 256x256 16bpp
+[esp] global effect-4 shell TIM -> slot 23: 256x256 16bpp
+[esp] global effect-8 fire TIM -> slot 44: 256x256 4bpp
+[esp] Effektseite tpage 0x001e (TEX.TIM) -> slot 50: 256x256 4bpp, Paletten 480..495
+[esp] Effektseite tpage 0x001f (TEX.TIM) -> slot 51: 256x256 4bpp, Paletten 480..495
+[audio] RE15_NOAUDIO set -> audio disabled
+[re2fx] RE2 CORE00.ESP 8572 B -> re2fx_register_core rc=0
+[re2fx] RE2 TEX.TIM 132320 B -> re2fx_pc_lade_tex rc=0 (Slot 52)
+[glas1120] GLAS1090.ESP 3092 B -> re2fx_register_raum rc=0, Texturen ok, Feder 0x0C ok (Slot 55)
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[md1] loaded test.md1: 21 meshes
+[pl-part] PL04W01.EDD aus PLD/PL04W01.PLW geschnitten (+8, 1336 B)
+[pl-part] PL04W01.EMR aus PLD/PL04W01.PLW geschnitten (+1344, 17368 B)
+[w01] PL04W01 weapon-track: 15 bones, 14 clips, 217 kf
+[w03] PL04W03 gun-track: 15 bones, 14 clips, 243 kf
+[wpn] loaded 21/21 PL04W** in-hand meshes (textured from body-skin slot 0)
+[pl-part] PL04.EDD aus PLD/PL04.PLD geschnitten (+8, 3156 B)
+[skel] PL04: 15 bones, 24 clips, 705 keyframes
+[rbj] loading cinematic bank: RBJ/ROOM1241.RBJ (0 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 217 kf
+[w03-composite] PL00 bind + W03 keyframes: 15 bones, 243 kf
+[wpn-bank] 21/21 Animationsbaenke aus PL04W**.PLW
+[messer] Startinventar Charakter 4: | Ausruest-Platz 0x80, Waffe 1
+[sicherung] Ladestelle main.c: Modal-Bild 0x40 weicht in 0 von 8064 Punkten ab, Icon-Tile 0x40 in 0 von 1200 Bytes
+[light] RDT: 9 cuts, cut 0 tint=(128,128,128)
+[boot] player spawn for ROOM1241 = (-26214,0,-3861) yaw=0
+[parity] player teleported to (-7000,-25659) rot=1976
+[scd] thread start slot=0 first_op=0x3B
+[setflag] flag(3,65/0x41) = 1
+[scd] thread start slot=1 first_op=0x04
+[scd] thread start slot=10 first_op=0x22
+[evt] F0 room=1241 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd F0] Cut_chg(0)
+[light] cut 0 tint=(128,128,128)
+[pri] cut=0 pri_offset=0x3A0 masks=0 fg_atlas=0
+[tfade] ingame sub=0 add=0 (Rest vom Titel: 0)
+[szenenschutz] F0 an (Szene haelt den Spieler)
+[walk] F0 cut=0 mo=200 af=0 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[equip] W-bank -> W01 (Clips 14, Rueckstoss-Clip7 fc=25)
+[gator-fx] F0 Kern-Zeilen 485..498 (RE2 TEX.TIM) Slot 56 ok - spielweit ab dem Start (G-E4)
+[walk] F30 cut=0 mo=200 af=30 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F60 cut=0 mo=200 af=60 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[bone]  0: rel=(0,-1723,0) world=(-7000,-3523,-25659)
+[F60] cut=0 sd=208
+  cut.pos=(-12834,-3114,-9774)
+  cut.target=(-7794,-2196,-22446)
+  cut.fov=26684
+  VT=(-15554,3393,-4125)
+  VR0=(-3810,0,-1515) VR1=(-102,4084,255) VR2=(1510,275,-3799)
+  Player=(-7000,-1800,-25659) rot_y=1976
+  pose[0].trans=(0,-1723,0)
+  bone_world=(-7000,-3523,-25659)
+  combined_trans=(447,-1543,16856)
+  combined_rot[0..2]=(3950,109,1091)
+  proj sx=166 sy=101
+[bone]  1: rel=(0,-1723,0) world=(-7000,-3523,-25659)
+[bone]  2: rel=(-30,-1525,-140) world=(-6986,-3325,-25517)
+[bone]  3: rel=(-65,-918,-165) world=(-6954,-2718,-25488)
+[bone]  4: rel=(-113,-106,-196) world=(-6909,-1906,-25452)
+[bone]  5: rel=(-30,-1525,139) world=(-6956,-3325,-25794)
+[bone]  6: rel=(-62,-917,157) world=(-6922,-2717,-25809)
+[bone]  7: rel=(-105,-104,180) world=(-6877,-1904,-25827)
+[bone]  8: rel=(-39,-2346,0) world=(-6962,-4146,-25655)
+[bone]  9: rel=(-56,-2293,-285) world=(-6976,-4093,-25370)
+[bone] 10: rel=(-75,-1885,-298) world=(-6958,-3685,-25355)
+[bone] 11: rel=(-20,-1530,-345) world=(-7018,-3330,-25314)
+[bone] 12: rel=(-56,-2293,285) world=(-6914,-4093,-25937)
+[bone] 13: rel=(-101,-1887,299) world=(-6868,-3687,-25946)
+[bone] 14: rel=(-24,-1536,340) world=(-6940,-3336,-25995)
+[bone] 15: rel=(0,-1723,0) world=(-6839,-4488,-25642)
+[bone] 16: rel=(0,-1723,0) world=(-6795,-4520,-25637)
+[bone] 17: rel=(0,-1723,0) world=(-6662,-4478,-25624)
+[bone] 18: rel=(0,-1723,0) world=(-6661,-4372,-25628)
+[walk] F90 cut=0 mo=200 af=90 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F120 cut=0 mo=200 af=120 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F150 cut=0 mo=200 af=150 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[scd F161] Cut_chg(1)
+[light] cut 1 tint=(128,128,128)
+[pri] cut=1 pri_offset=0x3A4 masks=0 fg_atlas=0
+[walk] F180 cut=1 mo=200 af=180 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F210 cut=1 mo=200 af=210 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[walk] F240 cut=1 mo=200 af=240 frz=0 | pl pos=(-7000,-1800,-25659) rot=1976
+[debug-menu] AUTO-JUMP -> ROOM2000 (Frame 250)
+[parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-7000,-25659) rot=1976 band=1
+[debug-menu] JUMP -> 200 L TUNNEL       (ROOM2001) spawn=(-7000,-1800,-25659) cut=0
+[room] PC loaded room2001.rdt (360660 bytes)
+[esp] room 2001: 7 effect bank(s) parsed (e.g. id 0x05: 9 anim/29 cells)
+[esp] effect TIM (id 0x05) -> slot 36: 256x72
+[esp] effect TIM (id 0x06) -> slot 37: 256x128
+[esp] effect TIM (id 0x07) -> slot 38: 256x32
+[esp] effect TIM (id 0x0b) -> slot 39: 256x104
+[esp] effect TIM (id 0x0c) -> slot 40: 256x184
+[esp] effect TIM (id 0x0d) -> slot 41: 256x88
+[esp] effect TIM (id 0x0f) -> slot 42: 256x96
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(-19800,-900,10800) rot=(0,2048,0)
+[scd] Obj_model_set[1] id=0x01 type=3 pos=(-25200,-900,-19800) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=3 pos=(-22450,-5400,16600) rot=(0,2048,0)
+[tropfen41] ROOM2001 main00 @0x0177C Evt_exec sub08 (Deckentropfen Effekt 6 Sub 0 @0x01D32) ausgelassen, wie Version_40% (main00 endet @0x01598 01 00)
+[scd] thread start slot=10 first_op=0x22
+[evt] F250 room=2001 Evt_exec sub=2 cond=0xff -> slot 10 (aktive Event-Slots 1) flag(3,0x80)=0
+[scd F250] Cut_chg(12)
+[ventilkette41] ROOM2001: Leiter Slot 4 (@0x0169E) -> Sperrtext 40 (Form ROOM2030 @0x01B12)
+[wasserlauf41] ROOM2001: 6 Strahlen, Lauf ueber den Weg Effekt 0x0F
+[rbj-binder] ROOM2001 Spieler rec0 (alt rec0) Gegner 0:rec1(alt rec1)
+[rbj] room 2001 cinematic overlay: 20 clips, 524 kf
+[elzaems] Typ 0x49 aus EMD/CDEMD1.EMS Sektor 1709 (137200 B) crc 285C67D3 - Elza-Archiv (@0x800223ac)
+[enemy] EM49 loaded: 15 meshes, 15 bones, 24 clips -> slot 11
+[prop-render] pi=0 oid=0x00 pos=(-19800,-900,10800) rot=(0,2048,0) meshes=1
+[prop-render] pi=1 oid=0x01 pos=(-25200,-900,-19800) rot=(0,1024,0) meshes=1
+[prop-render] pi=2 oid=0x02 pos=(-22450,-5400,16600) rot=(0,2048,0) meshes=1
+[pri] cut=12 pri_offset=0x11E4 masks=0 fg_atlas=0
+[scd] Plc_motion(entity=0, motion=8, flags=0x00) → slot=1
+[rbj-binder] ROOM2001 Aktor 1 Typ 0x49 Marker-Slot 1 -> rec1 gebunden
+[scd] Plc_dest(slot=0 mode=0x09 dest=(-26003,-26062) flag=32) walk_active=1
+[scd] Plc_motion(entity=0, motion=4, flags=0x00) → slot=0
+[walk] F30 cut=12 mo=4 af=8 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[walk] F60 cut=12 mo=4 af=23 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[bone]  0: rel=(-34,-1681,1) world=(-26002,-3481,-24278)
+[F60] cut=12 sd=208
+  cut.pos=(-20556,-2754,-21708)
+  cut.target=(-24066,-3510,-25488)
+  cut.fov=26684
+  VT=(-294,-1633,-30075)
+  VR0=(-3009,0,2794) VR1=(-406,4055,-438) VR2=(-2767,-595,-2979)
+  Player=(-26003,-1800,-24312) rot_y=1024
+  pose[0].trans=(-34,-1681,1)
+  bone_world=(-26002,-3481,-24278)
+  combined_trans=(2246,94,5653)
+  combined_rot[0..2]=(-2784,90,-3017)
+  proj sx=243 sy=123
+[bone]  1: rel=(-34,-1681,1) world=(-26002,-3481,-24278)
+[bone]  2: rel=(-44,-1509,-172) world=(-26175,-3309,-24268)
+[bone]  3: rel=(31,-906,-182) world=(-26185,-2706,-24343)
+[bone]  4: rel=(-111,-105,-192) world=(-26195,-1905,-24201)
+[bone]  5: rel=(-43,-1460,102) world=(-25901,-3260,-24269)
+[bone]  6: rel=(164,-902,225) world=(-25778,-2702,-24476)
+[bone]  7: rel=(161,-105,385) world=(-25618,-1905,-24473)
+[bone]  8: rel=(-55,-2304,19) world=(-25984,-4104,-24257)
+[bone]  9: rel=(-75,-2261,-268) world=(-26271,-4061,-24237)
+[bone] 10: rel=(-164,-1863,-302) world=(-26305,-3663,-24148)
+[bone] 11: rel=(-30,-1534,-370) world=(-26373,-3334,-24282)
+[bone] 12: rel=(-73,-2244,302) world=(-25701,-4044,-24239)
+[bone] 13: rel=(-287,-1927,446) world=(-25557,-3727,-24025)
+[bone] 14: rel=(-70,-1719,243) world=(-25760,-3519,-24242)
+[bone] 15: rel=(-34,-1681,1) world=(-26014,-4449,-24146)
+[bone] 16: rel=(-34,-1681,1) world=(-26015,-4481,-24102)
+[bone] 17: rel=(-34,-1681,1) world=(-26013,-4441,-23968)
+[bone] 18: rel=(-34,-1681,1) world=(-26003,-4335,-23967)
+[walk] F90 cut=12 mo=4 af=23 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[scd] Plc_motion(entity=0, motion=0, flags=0x00) → slot=1
+[scd F102] Plc_flg(subop=0, mask=0x0080) → slot=1 anim_flags=0x0080
+[walk] F120 cut=12 mo=4 af=23 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[walk] F150 cut=12 mo=4 af=23 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[scd] thread start slot=11 first_op=0x2E
+[evt] F153 room=2001 Evt_exec sub=3 cond=0xff -> slot 11 (aktive Event-Slots 2) flag(3,0x80)=0
+[scd] Plc_dest(slot=1 mode=0x09 dest=(-9503,-26062)) -> state4/sub9 (Sub-VM-WALK)
+[scd] Plc_dest(slot=1 mode=0x05 dest=(-9503,-26062)) -> state4/sub5 (Sub-VM-WALK)
+[walk] F180 cut=12 mo=4 af=23 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[scd F193] Cut_chg(4)
+[szenenschutz] F193 aus (0 geschuetzte Gegner-Ticks)
+[light] cut 4 tint=(128,128,128)
+[pri] cut=4 pri_offset=0xAD0 masks=44 fg_atlas=1
+[scd F207] letterbox closed -> gameplay (player_mode=0)
+[walk] F210 cut=4 mo=200 af=17 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[walk] F240 cut=4 mo=200 af=47 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[scd] Plc_dest(slot=1 mode=0x04 dest=(-5003,-20962)) -> state4/sub4 (Sub-VM-WALK)
+[npckante] ROOM2001 slot 1 Typ 49: Sonde 2 bei (-9511,-1800,-25830) Band 1 -> Sub 0x12
+[walk] F270 cut=4 mo=200 af=77 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[walk] F300 cut=4 mo=211 af=0 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[walk] F330 cut=4 mo=211 af=30 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[walk] F360 cut=4 mo=211 af=60 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[npckante] ROOM2001 slot 1 Typ 49: Sonde 1 bei (-6010,0,-22014) Band 0 -> Sub 0x12
+[walk] F390 cut=4 mo=211 af=90 frz=0 | pl pos=(-26003,-1800,-24312) rot=1024
+[flow] EXIT_AT: Bild 400 in Raum 2001 erreicht -> exit

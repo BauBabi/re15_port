@@ -1,0 +1,11 @@
+Soll Aktuator 1 je Ring-Takt nach sub14 (Takt 1..26): 114 128 250 250 250 250 250 173 164 155 147 138 129 120 111 102 94 85 76 67 58 50 0 0 0 0
+== gdb_leon: Ringbefehle im Szenenvorlauf: RAMP F739 dauer 7 von 100 bis 200 vorlauf 0 | LARGE F739 dauer 5 amp 250 vorlauf 2 | RAMP F739 dauer 17 von 200 bis 50 vorlauf 5
+   Aktuator 1 ab F740 (Takt 1..26): 114 128 250 250 250 250 250 173 164 155 147 138 129 120 111 102 94 85 76 67 58 50 0 0 0 0
+   Aktuator 0: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   gleich Soll: True, erster Wert im Bild nach sub14 (F740) - RE2: Pad-Handler @0x8002b2d0 vor Task-Scheduler @0x8002b320 (Skript im Spiel-Task)
+   weitere Ringbefehle des Laufs (G5-Kampf, nicht NB6): 32
+== gdb_elza: Ringbefehle im Szenenvorlauf: RAMP F739 dauer 7 von 100 bis 200 vorlauf 0 | LARGE F739 dauer 5 amp 250 vorlauf 2 | RAMP F739 dauer 17 von 200 bis 50 vorlauf 5
+   Aktuator 1 ab F740 (Takt 1..26): 114 128 250 250 250 250 250 173 164 155 147 138 129 120 111 102 94 85 76 67 58 50 0 0 0 0
+   Aktuator 0: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+   gleich Soll: True, erster Wert im Bild nach sub14 (F740) - RE2: Pad-Handler @0x8002b2d0 vor Task-Scheduler @0x8002b320 (Skript im Spiel-Task)
+   weitere Ringbefehle des Laufs (G5-Kampf, nicht NB6): 32

@@ -1,0 +1,59 @@
+Fenster x 70..99 / y 115..126 (RE2-Median 13.3)
+  fdp_leon   direct3d 1x (von SDL gewaehlt)   F3573  Rohsumme 1.012 | ueber 13.3: 1.01 | ueber 20: 0.97 | ueber 40: 0.98
+  fdp_elza   direct3d 1x (von SDL gewaehlt)   F3573  Rohsumme 1.012 | ueber 13.3: 1.01 | ueber 20: 0.97 | ueber 40: 0.98
+  n1d11_leon direct3d11 1x (erzwungen)        F3573  Rohsumme 1.012 | ueber 13.3: 1.01 | ueber 20: 0.97 | ueber 40: 0.98
+  x3d9_leon  direct3d 3x (erzwungen)          F3573  Rohsumme 0.991 | ueber 13.3: 0.96 | ueber 20: 0.92 | ueber 40: 0.87
+  x3d9_elza  direct3d 3x (erzwungen)          F3573  Rohsumme 0.991 | ueber 13.3: 0.96 | ueber 20: 0.92 | ueber 40: 0.87
+  x3_leon    direct3d11 3x (von SDL gewaehlt) F3573  Rohsumme 0.969 | ueber 13.3: 0.92 | ueber 20: 0.87 | ueber 40: 0.80
+  x3_elza    direct3d11 3x (von SDL gewaehlt) F3573  Rohsumme 0.969 | ueber 13.3: 0.92 | ueber 20: 0.87 | ueber 40: 0.80
+Fenster x 60..124 / y 110..134 (RE2-Median 8.0)
+  fdp_leon   direct3d 1x (von SDL gewaehlt)   F3573  Rohsumme 0.949 | ueber 8.0: 0.86 | ueber 20: 0.81 | ueber 40: 0.96
+  fdp_elza   direct3d 1x (von SDL gewaehlt)   F3573  Rohsumme 0.949 | ueber 8.0: 0.86 | ueber 20: 0.81 | ueber 40: 0.96
+  n1d11_leon direct3d11 1x (erzwungen)        F3573  Rohsumme 0.949 | ueber 8.0: 0.86 | ueber 20: 0.81 | ueber 40: 0.96
+  x3d9_leon  direct3d 3x (erzwungen)          F3573  Rohsumme 0.941 | ueber 8.0: 0.82 | ueber 20: 0.76 | ueber 40: 0.84
+  x3d9_elza  direct3d 3x (erzwungen)          F3573  Rohsumme 0.941 | ueber 8.0: 0.82 | ueber 20: 0.76 | ueber 40: 0.84
+  x3_leon    direct3d11 3x (von SDL gewaehlt) F3573  Rohsumme 0.930 | ueber 8.0: 0.80 | ueber 20: 0.72 | ueber 40: 0.77
+  x3_elza    direct3d11 3x (von SDL gewaehlt) F3573  Rohsumme 0.930 | ueber 8.0: 0.80 | ueber 20: 0.72 | ueber 40: 0.77
+NB6-Rechnung (Schwelle je 3x-Pixel, /9), Fenster x 70..99 / y 115..126, F3573:
+  x3d9_leon  direct3d 3x    Rohsumme/9 0.991 | ueber 13.3: 0.97 | ueber 20.0: 0.93 | ueber 40.0: 0.94
+  x3d9_elza  direct3d 3x    Rohsumme/9 0.991 | ueber 13.3: 0.97 | ueber 20.0: 0.93 | ueber 40.0: 0.94
+  x3_leon    direct3d11 3x  Rohsumme/9 0.969 | ueber 13.3: 0.93 | ueber 20.0: 0.88 | ueber 40.0: 0.88
+  x3_elza    direct3d11 3x  Rohsumme/9 0.969 | ueber 13.3: 0.93 | ueber 20.0: 0.88 | ueber 40.0: 0.88
+
+# Raketenweg (fd_leon/fd_elza, SDL waehlte selbst direct3d11, 320x240): an JEDER Lage x -6000 (F760 Vorlaufbild 23, F800 Szenenbild 8) fehlen
+# dieselben Pixel der linken Gehaeusespalte x 78 (Zeilen 119..122) und (83,122) - deterministisch je Lampenlage, nicht Spieler/Partikel.
+# Der Pistolenweg mit ERZWUNGENEM direct3d11 (n1d11_leon) ist dagegen pixelgleich zu direct3d (0 Pixel |d|>8 im Lampenfeld).
+# Ursache nicht aufgeklaert (Verdacht: von SDL selbst gewaehltes D3D11 unter Last = anderer Rasterer, z.B. WARP); Wirkung: Lampe 0,94/0,90/0,90.
+
+## Pixelzeilen RE2-VRAM | D3D9 1x (fdp_leon F3573) | D3D11 1x von SDL gewaehlt (fd_leon F760)
+118 RE2     8  10  13  16  18  18  24  24  24  24  10  16  16  21  21  24
+    D3D9    8  14  14  18  20  22  21  22  22  20  12  15  21  21  21  24
+    D3D11   8  14  14  18  20  22  21  22  22  20  12  15  21  21  21  24
+119 RE2     8  10  53  66  64  64  64  64  66  69  26  29  29  32  32  32
+    D3D9    8  15  53  67  66  64  63  62  66  71  30  30  30  33  33  37
+    D3D11   8  15  14  67  66  64  63  62  66  71  30  30  30  33  33  37
+120 RE2    10  16  93  93  88  85  80  77  80  85  40  37  37  32  32  32
+    D3D9   14  17  91  95  90  86  82  78  83  88  42  37  37  33  33  33
+    D3D11  14  17  11  95  90  86  82  78  83  88  37  37  37  33  33  33
+121 RE2    10  16 120 133 125 125 117 114  72  72  26  24  24  24  21  21
+    D3D9   14  18 106 132 128 124 119 115  73  88  27  24  24  21  21  21
+    D3D11  14  18  20 132 128 124 119 115  88  88  27  24  24  21  21  21
+122 RE2    13  18  64 181 176 173 160 157  85  85  85  85  72  16  16  13
+    D3D9   17  20  64 182 178 173 163 159  88  88  88  88  18  18  18  14
+    D3D11  17  20  22 182 178 173 163  74  88  88  88  88  18  18  18  14
+123 RE2    13  18  24  18  72  85  85  85  85  85  85  85  72  16  16  13
+    D3D9   17  20  22  22  88  88  88  88  88  88  88  88  18  19  16  14
+    D3D11  17  20  22  22  88  88  88  88  88  88  88  88  18  19  16  14
+124 RE2    16  18  24  24  72  85  72  72  72  72  72  72  72  18  16  13
+    D3D9   18  20  22  20  73  73  73  73  73  73  73  20  20  19  18  14
+    D3D11  18  20  22  20  73  73  73  73  73  73  73  20  20  19  18  14
+
+## Gesamtwerte (eigene 3x3-Mittelung je logischem Pixel, s. oben) - Pistolen-/Raketenweg
+== Raketenweg (D3D11 nativ) gegen D3D9 nativ
+  fdp_leon F3573 D3D9 1x  Rohsumme 1.012 | ueber RE2-Median 13.3: 1.01 | ueber 20: 0.97 | ueber 40: 0.98
+  fdp_elza F3573 D3D9 1x  Rohsumme 1.012 | ueber RE2-Median 13.3: 1.01 | ueber 20: 0.97 | ueber 40: 0.98
+  fd_leon  F760  D3D11 1x Rohsumme 0.976 | ueber RE2-Median 13.3: 0.94 | ueber 20: 0.90 | ueber 40: 0.90
+  fd_elza  F760  D3D11 1x Rohsumme 0.976 | ueber RE2-Median 13.3: 0.94 | ueber 20: 0.90 | ueber 40: 0.90
+  x3_leon  F3573 D3D11 3x Rohsumme 0.969 | ueber RE2-Median 13.3: 0.92 | ueber 20: 0.87 | ueber 40: 0.80
+  x3_elza  F3573 D3D11 3x Rohsumme 0.969 | ueber RE2-Median 13.3: 0.92 | ueber 20: 0.87 | ueber 40: 0.80
+

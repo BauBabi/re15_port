@@ -1,0 +1,47 @@
+# Abnahme 5: echtes Fenster (PrintWindow PW_CLIENTONLY|PW_RENDERFULLCONTENT nur auf das hwnd der eigenen exe-Kopie, RE15_WINDOW_SCALE=2, Client 640x480)
+# gegen den Framedump desselben Laufs (fenster5.py). gdigrab scheiterte in dieser Sitzung: hwnd 'Failed to capture image (error 8)', desktop '(error 5)'.
+== fenster_leon
+[window] windowed 640x480
+[render] SDL-Renderer direct3d11, Videotreiber windows, ABR2 (B-F) ok
+PrintWindow: 28 Bilder, 0 Fehlschlaege, Client 640x480
+w_0004221.png -> F3564  mittl |d| 0.00
+w_0004755.png -> F3580  mittl |d| 0.00
+w_0005289.png -> F3592  mittl |d| 0.00
+w_0005818.png -> F3604  mittl |d| 0.00
+w_0006348.png -> F3620  mittl |d| 0.00
+w_0006880.png -> F3636  mittl |d| 0.00
+w_0007396.png -> F3650  mittl |d| 0.00
+w_0007926.png -> F3666  mittl |d| 0.00
+w_0008455.png -> F3680  mittl |d| 0.00
+w_0008984.png -> F3696  mittl |d| 0.00
+w_0009516.png -> F3710  mittl |d| 0.00
+w_0010044.png -> F3722  mittl |d| 0.00
+w_0010575.png -> F3738  mittl |d| 0.00
+w_0011094.png -> F3754  mittl |d| 0.00
+w_0011612.png -> F3760  mittl |d| 0.00
+Fenster-Bilder 28, Framedump 221 ((640, 480)), Median mittl |d| 0.00, Max 42.17
+== fenster_elza
+[window] windowed 640x480
+[render] SDL-Renderer direct3d11, Videotreiber windows, ABR2 (B-F) ok
+PrintWindow: 27 Bilder, 0 Fehlschlaege, Client 640x480
+w_0004062.png -> F3555  mittl |d| 0.00
+w_0004587.png -> F3569  mittl |d| 0.00
+w_0005118.png -> F3585  mittl |d| 0.00
+w_0005648.png -> F3601  mittl |d| 0.00
+w_0006179.png -> F3615  mittl |d| 0.00
+w_0006707.png -> F3629  mittl |d| 0.00
+w_0007237.png -> F3643  mittl |d| 0.00
+w_0007767.png -> F3659  mittl |d| 0.00
+w_0008285.png -> F3675  mittl |d| 0.00
+w_0008802.png -> F3689  mittl |d| 0.00
+w_0009067.png -> F3697  mittl |d| 0.00
+w_0009331.png -> F3703  mittl |d| 0.00
+w_0009599.png -> F3711  mittl |d| 0.00
+w_0009865.png -> F3719  mittl |d| 0.00
+w_0010132.png -> F3727  mittl |d| 0.00
+w_0010399.png -> F3735  mittl |d| 0.00
+w_0010664.png -> F3743  mittl |d| 0.00
+w_0010918.png -> F3751  mittl |d| 0.00
+w_0011184.png -> F3759  mittl |d| 0.00
+w_0011452.png -> F3551  mittl |d| 34.79
+Fenster-Bilder 27, Framedump 221 ((640, 480)), Median mittl |d| 0.00, Max 41.57

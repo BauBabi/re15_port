@@ -1,0 +1,7 @@
+Lauf E10_cut: Zeilen 'SPAWN' im RE15_WAFFEN_LOG (Anzahl je Art), Bildzeilen 846
+    357     SPAWN id=15 sub=3 scale=0x1000 streams=1
+    237     SPAWN id=15 sub=6 scale=0x1000 streams=1
+     54     SPAWN id=6 sub=5 scale=0xd00 streams=1
+      6     SPAWN id=11 sub=0 scale=0xc00 streams=6
+      3     SPAWN id=11 sub=0 scale=0x1900 streams=6
+fx.log: 80144 Zeilen, id=6 sub=0: 0, id=11: 31725
