@@ -1,0 +1,1332 @@
+{
+ "emd": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V4ot2.EMD",
+ "sha256": "415a921f436fe8e18140a1b7148317f4b2cca5dab00f6bafffe167865ee2d304",
+ "zeilen": [
+  {
+   "mass": "T-K1a Koerper-Meshes = Ref2",
+   "soll": "Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV inkl. CLUT-Feld und TPage bytegleich",
+   "ist": "abweichend: keine",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K1b CLUT = Ref2",
+   "soll": "Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie",
+   "ist": "Zeilen 480-485 gleich; TIM 6 Zeilen; weitere keine",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K1c Koerper-Texel = Ref2",
+   "soll": "jeder von einer Koerperflaeche (Meshes 0-8, 10-15) abgedeckte Texel bytegleich",
+   "ist": "0 von 34716 abgedeckten Texeln abweichend; ausserhalb der Koerperflaechen geaendert 22995 Texel (Kopf-/Schwanzflaechen)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K2 Ref2-Farbe oder belegte Ableitung (Kopf, Schwanz)",
+   "soll": "jeder abgedeckte Texel von Mesh 9 und 16-22: 15-Bit-Wert in der Ref2-CLUT oder eine im Protokoll belegte Ableitung (0); Zeilen = Ref2-Zeile oder Kopie",
+   "ist": "0 von 14008 Texeln mit Farbe ausserhalb Ref2 und Ableitungen (0 Ableitungs-Texel); 161 verschiedene Farben; Kopf: Zeile 480 (Kopie/gleich [480]) 3652 Texel, nicht in Ref2: 0; Schwanz: Zeile 480 (Kopie/gleich [480]) 10356 Texel, nicht in Ref2: 0",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K3a Schwanz ohne Quernaht",
+   "soll": "groesster Sprung (dE76, 3-px-Abschnitte entlang der Kette) zwischen Gliedern <= groesster Sprung innerhalb eines Glieds",
+   "ist": "zwischen Gliedern max 13.0 (Id 20|21 bei 177 px), innerhalb max 14.0; je Gelenk 16|17 5.7, 17|18 8.9, 18|19 4.3, 19|20 10.0, 20|21 13.0, 21|22 3.5",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K3b keine einfarbigen Bloecke",
+   "soll": "je Glied Std(L*) >= 0,5 x Oberarm Id 13 (10.9 -> 5.4) und >= 16 Texel-Indizes",
+   "ist": "Id 16 Std 14.6 / 107 Indizes; Id 17 Std 13.0 / 124 Indizes; Id 18 Std 11.1 / 154 Indizes; Id 19 Std 12.2 / 139 Indizes; Id 20 Std 11.5 / 136 Indizes; Id 21 Std 10.9 / 92 Indizes; Id 22 Std 8.8 / 86 Indizes",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K3c Wurzel ohne Kante",
+   "soll": "Sprung Id 16 <-> Rumpf Id 7/8 (je 3-px-Band an der Grenze) <= groesster Sprung innerhalb eines Glieds",
+   "ist": "Sprung 4.7 (Wurzel 28.6/15.8/8.8 / Rumpf 26.7/12.6/5.9, 269 / 307 px), Grenze 14.0",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K3d Wurzel Id 16 ohne Streifen (Anisotropie je Teilflaeche)",
+   "soll": "waagerecht/senkrecht je Teilflaeche in der Spanne von Rumpf Id 8 und Oberarm Id 13 (0.67-1.44)",
+   "ist": "ganz 0.81; oben14 1.29; Qol 0.99; Qor 0.83; Qul 0.71; Qur 0.94",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K3d Glied Id 17 (Anisotropie)",
+   "soll": "ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe",
+   "ist": "ganz 1.03; oben14 0.88; Qol 1.12; Qor 0.94; Qul 1.02; Qur 1.05",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
+   "mass": "T-K3d Glied Id 18 (Anisotropie)",
+   "soll": "ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe",
+   "ist": "ganz 0.97; oben14 0.90; Qol 1.29; Qor 0.85; Qul 1.01; Qur 0.67",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
+   "mass": "T-K3d Glied Id 19 (Anisotropie)",
+   "soll": "ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe",
+   "ist": "ganz 1.14; oben14 1.12; Qol 1.03; Qor 1.42; Qul 1.18; Qur 1.04",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
+   "mass": "T-K3d Glied Id 20 (Anisotropie)",
+   "soll": "ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe",
+   "ist": "ganz 1.46; oben14 1.31; Qol 1.86; Qor 1.13; Qul 1.44; Qur 1.77",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
+   "mass": "T-K3d Glied Id 21 (Anisotropie)",
+   "soll": "ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe",
+   "ist": "ganz 1.11; oben14 1.11; Qol nan; Qor nan; Qul nan; Qur 1.28",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
+   "mass": "T-K3d Glied Id 22 (Anisotropie)",
+   "soll": "ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe",
+   "ist": "ganz 1.35; oben14 1.44; Qol 0.88; Qor 2.30; Qul 2.24; Qur 1.25",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
+   "mass": "T-K4 K1 Augen vorn",
+   "soll": "1 Komponente; Kontrast >= 20 (Original 29,5)",
+   "ist": "1 Komp.; 20.7",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K2 Augenfleck vorn",
+   "soll": "L* >= KV5 + 20; hell und unbunt (a* <= 15, b* >= 0); Video 46,9/7,2/-1,1 nur Richtung",
+   "ist": "54.5/6.9/2.7; KV5 23.8",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K3 Augenfleck Groesse",
+   "soll": "B 0,016-0,036 / H 0,023-0,043 H",
+   "ist": "0.030 x 0.033 H (11 x 12 px)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K4 Augenlage vorn",
+   "soll": "(B)-links 0,035-0,065 H; 0,07-0,12 H unter OK",
+   "ist": "0.054 H links; 0.095 H unter OK",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K5 Haarfeld vorn (KV2)",
+   "soll": "braeunlich: L* 17.1-24.8 (0.62-0.90 x Kopf-Median 27.6, Videoraum), a* > 0, b* > 0; Video 13,3/7,4/1,5 nur Richtung",
+   "ist": "12.9/6.8/4.8",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K6 zweites Auge verdeckt",
+   "soll": "Spiegelstelle in der Haarflaeche: Mittel L* <= Kopf-Median - 3 (24.6), kein heller Fleck (max L* <= Auge - 15 = 39.5)",
+   "ist": "Mittel 10.1, max 22.1 (Box (367, 183, 377, 194))",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K7 Nase (KV3)",
+   "soll": "Zonengrenze, mitteldunkel wie die Wange gleicher Hoehe: |L* - KV5| <= 4 (KV5 23.8; Vorlage -0,7) und L* >= Haar rechts daneben KV3r + 1 (11.1; Vorlage +4,9); Zonen-P50 Videoraum Haar 22.0 / grau 33.3",
+   "ist": "21.7/9.1/4.8",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K8 Kinn/Maulzone (KV4, Kopf-Id 9 erodiert)",
+   "soll": "kein dunkles Maul in der Textur: Albedo-L* P50 >= Ref2-Kopfhaut 37.2 - 8; b* >= 0 (Ref2 KV4 30.3/8.2/4.0 nur Ausgabe; das Kinn liegt in Pose 135 im Schatten der V4-Kopfform)",
+   "ist": "Albedo 34.8; 22.8/7.0/3.3 (dE00 zu Ref2 KV4 5.7)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K9 Kopf-Oberseite vorn (KV1)",
+   "soll": "dunkel rotbraun: a* >= 8, b* > 0; L* <= Kopf-Median + 8 (35.6) und >= Haar KV2; Video 22,6/15,4/5,2 nur Richtung",
+   "ist": "38.0/22.5/7.7",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 K10 Kopfbox vorn",
+   "soll": "0,14-0,18 x 0,15-0,20 H",
+   "ist": "0.154 x 0.187 H",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 S1 Auge seitlich",
+   "soll": "1 heller Fleck; 0,028-0,052 x 0,040-0,070 H; hell und unbunt (a* <= 15, b* >= 0)",
+   "ist": "53.4/6.6/2.6; 0.042 x 0.049 H; 1 Komp.",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 S2 Augenlage seitlich",
+   "soll": "0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle",
+   "ist": "0.050 H; 0.818 H",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 S3 Haarkante seitlich (KS2)",
+   "soll": "dunkler Streifen vor dem Auge: L* <= Kopf-Median (Pose 85, Videoraum 37.8) - 5; Abstand zum Fleck <= 0,01 H; Video 19,1/1,2/1,1 nur Richtung",
+   "ist": "22.0/6.1/3.5; Abstand 0.000 H",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K4 S4 Kopf-Oberseite seitlich (KS1)",
+   "soll": "dunkel rotbraun: a* >= 8, b* > 0; L* <= Kopf-Median (Pose 85) + 8 (45.8); Video 27,6/15,3/3,3 nur Richtung",
+   "ist": "36.8/16.0/3.9",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5a Kopf-Grundton L* P50 Pose 135",
+   "soll": "graue Zone (ausserhalb Haar/Kuppe) wie Ref2 (dort 30.8, ganzer Kopf 30.8) +- 4",
+   "ist": "30.9 (Haar+Kuppe 32 % der Kopfpixel; Albedo 36.7, Ref2 37.2)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5b Kopf-Grundton/Rumpf Pose 135",
+   "soll": "graue Zone >= Ref2 - 0,2 (Ref2 dort 1.18, ganzer Kopf 1.28)",
+   "ist": "0.98",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5c violett Pose 135",
+   "soll": "Anteil b* < 0 <= 0,02 (Ref2 0.00)",
+   "ist": "0.000",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5d dunkle Textur nur in Haar/Kuppe Pose 135",
+   "soll": "Anteil Albedo-L* < 25 in der grauen Zone <= Ref2 + 0,05 (Ref2 0.00)",
+   "ist": "0.23 (Render L* < 20 ausserhalb 0.39, Ref2 0.18; in Haar/Kuppe 0.61)",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5 ganzer Kopf Pose 135",
+   "soll": "Ref2 L* P50 30.8, Kopf/Rumpf 1.28, L* < 20 0.12",
+   "ist": "L* P50 23.9, Kopf/Rumpf 0.87, L* < 20 0.46",
+   "ok": true,
+   "note": "gewertet in T-K9e",
+   "info": true
+  },
+  {
+   "mass": "T-K5a Kopf-Grundton L* P50 Pose 85",
+   "soll": "graue Zone (ausserhalb Haar/Kuppe) wie Ref2 (dort 30.8, ganzer Kopf 30.8) +- 4",
+   "ist": "37.0 (Haar+Kuppe 25 % der Kopfpixel; Albedo 37.4, Ref2 30.8)",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5b Kopf-Grundton/Rumpf Pose 85",
+   "soll": "graue Zone >= Ref2 - 0,2 (Ref2 dort 1.06, ganzer Kopf 1.05)",
+   "ist": "1.16",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5c violett Pose 85",
+   "soll": "Anteil b* < 0 <= 0,02 (Ref2 0.00)",
+   "ist": "0.000",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5d dunkle Textur nur in Haar/Kuppe Pose 85",
+   "soll": "Anteil Albedo-L* < 25 in der grauen Zone <= Ref2 + 0,05 (Ref2 0.00)",
+   "ist": "0.00 (Render L* < 20 ausserhalb 0.14, Ref2 0.16; in Haar/Kuppe 0.62)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K5 ganzer Kopf Pose 85",
+   "soll": "Ref2 L* P50 30.8, Kopf/Rumpf 1.05, L* < 20 0.16",
+   "ist": "L* P50 33.1, Kopf/Rumpf 1.00, L* < 20 0.26",
+   "ok": true,
+   "note": "gewertet in T-K9e",
+   "info": true
+  },
+  {
+   "mass": "T-K9a graue Zone (Pose 135)",
+   "soll": "Chroma P50 <= 0,5 x Rumpf Id 8 (7.8 -> 3.9); L* P50 = Ref2-Kopf 30.8 +- 5; Lage: >= 0,80 der grauen Pixel links der Nase (x 354), >= 0,70 der Kopfpixel links der Nase grau (Rest Kuppe oben, Rand)",
+   "ist": "Chroma 6.1; L* 42.0; links 0.85; Kopf links grau 0.15; Anteil 0.09 der Kopfpixel (250)",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K9b Haarflaeche braun (Pose 135)",
+   "soll": "L* P50 0.62-0.90 x Kopf-Median (23.9 -> 14.8-21.5, \"um 22-24\"); a* > 0, b* > 0; Flaeche Haar+Kuppe 0,40-0,55 der Kopfpixel",
+   "ist": "L* 6.2 (0.26 x Median), a* 1.3, b* 3.4; Flaeche 0.32 (Haar 0.13, Kuppe 0.19)",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K9b Rand und Kanten (Pose 135)",
+   "soll": "Randgradient (Sobel/8, L*) 3-8 (\"um 6\", Ref2-Kopf innen 2.5); Grenze je Zeile: Std zur Geraden > 4 px (keine gerade Kante)",
+   "ist": "Rand 5.2 (277 px); Kante Std 6.1 px (36 Zeilen)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K9c Kuppe dunkel rotbraun (Pose 135)",
+   "soll": "L* P50 <= Kopf-Median + 6 (29.9) und >= Haar (6.2); a* >= 8, b* > 0; Anteil > 0,03 der Kopfpixel",
+   "ist": "L* 23.7, a* 17.1, b* 7.1; Anteil 0.19",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K9d Auge / Nase / Seite",
+   "soll": "Augenfleck (K1-Schwerpunkt) in der grauen Zone und K4 OK; Nase: Fenster KV3 zu 0,3-0,7 grau (Grenze); S2 OK; KS2 (roh) <= Kopf-Median Pose 85 - 4 (29.1)",
+   "ist": "Auge Zone 1, K4 OK; KV3 grau 0.02; S2 OK; KS2 L* 13.8 (Zonen grau 0.19, Haar 0.09, Kuppe 0.72)",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K9e ganzer Kopf (Pose 135)",
+   "soll": "L* P50 >= 23; Kopf/Rumpf (Mittel L*) >= 0,9 (Ref2 30.8 / 1.28)",
+   "ist": "L* P50 23.9; Kopf/Rumpf 0.87",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-K9f Rundum kein schwarzes Oval",
+   "soll": "Gier +120 / +180 Grad (neutral): groesster Fleck L* < 15 im Kopf <= 100 px",
+   "ist": "+120: Fleck 494 px (dunkel 494 von 1335); +180: Fleck 360 px (dunkel 360 von 784)",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "G1 Koerper-Geometrie = Ref2",
+   "soll": "Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV gleich (O1: CLUT-Feld frei); Skelett/Keyframes 0-15, EDD gleich",
+   "ist": "Geometrie abweichend keine; CLUT-Feld geaendert keine; byte-gleich 15 von 15; Skelett True; Keyframes True; EDD True; uebrige Sektionen True; Ref2 sha256 cfd1ac42",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "M1 Dreiecke Schwanz",
+   "soll": "<= 212",
+   "ist": "198 ([33, 22, 44, 22, 22, 22, 33])",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "M2 Dreiecke Kopf",
+   "soll": "<= 118",
+   "ist": "109",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "M3 Farbtiefe",
+   "soll": "8-bpp-TIM, Texel aus der CLUT",
+   "ist": "8 bpp True; CLUT-Zeilen Kopf [480], Schwanz [480], Koerper [480, 481, 482, 484] (TIM 6 Zeilen)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "M4 Texeldichte",
+   "soll": "Kopf und Schwanz 0,045-0,091 Texel/E.",
+   "ist": "Kopf 0.057; Schwanz [0.06, 0.07, 0.065, 0.072, 0.07, 0.069, 0.065]",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T1 Schwanz Beginn",
+   "soll": "0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03)",
+   "ist": "0.172 H hinter, 0.742 H ueber",
+   "ok": true,
+   "note": "Id 16 an Id 7/8",
+   "info": false
+  },
+  {
+   "mass": "T2 Biegung",
+   "soll": "Lage dx -0,245 dy +0,036 (+-0,03) nach t2_mass_v4 (Original -0.268 / 0.056); Drehung 68.4 +-5.0 Grad (Original 70.1/65.8/69.5)",
+   "ist": "dx -0.259 dy 0.049; 64.0 Grad (Bauer-Mittellinie: dx -0.266 dy 0.061)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T3 Knick (Taille)",
+   "soll": "dx -0,265 dy +0,257 (+-0,03)",
+   "ist": "dx -0.239 dy 0.247",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T4 Ende",
+   "soll": "dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle",
+   "ist": "dx -0.218 dy 0.388; 0.354 H ueber Sohle",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "TA Schwanz absolut",
+   "soll": "Beginn (357,243), Knick (290,308), Ende (295,343) je Achse +-0,03 H",
+   "ist": "Beginn (358,238) +0.004/-0.019 H; Knick (295,303) +0.019/-0.018 H; Ende (300,340) +0.020/-0.010 H",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T5 Breite nach oben",
+   "soll": "f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01",
+   "ist": "0.032/0.049/0.098/0.163 H; Abfall 0.000",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T5q Breite quer (unabhaengig)",
+   "soll": "f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 (Original 3 Masken: Abfall 0.016/0.020/0.000)",
+   "ist": "0.032/0.047/0.110/0.161 H; Abfall 0.002; Profil f 0..1 [0.025, 0.032, 0.045, 0.047, 0.081, 0.11, 0.133, 0.161, 0.157, 0.142, 0.144]",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T6 Endstueck",
+   "soll": "B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste",
+   "ist": "B 0.036; L 0.144 H; 82 Grad (vorn); Taille 0.021, schmalste davor 0.021",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "TK Schwanz Oberkontur",
+   "soll": "x 284-332: RMS zur Geraden >= 3.02 px (Original 3.87/4.71/4.69 minus Spanne); Oberkante x 276-292 je Spalte <= 0,03 H vom Original 251/250/243/236/234",
+   "ist": "RMS 3.69 px; Oberkante 249/243/238/233/228 (max 0.027 H)",
+   "ok": true,
+   "note": "Sicht-Pruefung V4 r3 1.3: V4 r3 0,6 px, Oberkante 237/235/232/230/228; Toleranz Oberkante = TA (0,03 H)",
+   "info": false
+  }
+ ],
+ "info": {
+  "tk3": {
+   "stat": [
+    [
+     3,
+     [
+      40.0,
+      39.4,
+      24.8
+     ],
+     16
+    ],
+    [
+     4,
+     [
+      40.8,
+      28.4,
+      16.2
+     ],
+     16
+    ],
+    [
+     5,
+     [
+      42.5,
+      21.8,
+      12.7
+     ],
+     16
+    ],
+    [
+     6,
+     [
+      40.0,
+      17.3,
+      8.3
+     ],
+     16
+    ],
+    [
+     7,
+     [
+      27.8,
+      15.4,
+      6.9
+     ],
+     16
+    ],
+    [
+     8,
+     [
+      25.0,
+      15.3,
+      8.1
+     ],
+     16
+    ],
+    [
+     9,
+     [
+      24.9,
+      15.9,
+      8.6
+     ],
+     16
+    ],
+    [
+     10,
+     [
+      23.5,
+      14.1,
+      8.3
+     ],
+     16
+    ],
+    [
+     11,
+     [
+      27.6,
+      12.7,
+      8.5
+     ],
+     16
+    ],
+    [
+     12,
+     [
+      28.6,
+      11.0,
+      6.3
+     ],
+     16
+    ],
+    [
+     13,
+     [
+      29.1,
+      10.6,
+      6.2
+     ],
+     16
+    ],
+    [
+     14,
+     [
+      26.4,
+      12.6,
+      7.1
+     ],
+     16
+    ],
+    [
+     15,
+     [
+      24.0,
+      17.2,
+      9.4
+     ],
+     17
+    ],
+    [
+     16,
+     [
+      18.8,
+      15.5,
+      8.3
+     ],
+     17
+    ],
+    [
+     17,
+     [
+      22.5,
+      13.5,
+      7.4
+     ],
+     17
+    ],
+    [
+     18,
+     [
+      21.6,
+      10.6,
+      5.5
+     ],
+     17
+    ],
+    [
+     19,
+     [
+      22.1,
+      12.8,
+      7.0
+     ],
+     17
+    ],
+    [
+     20,
+     [
+      27.4,
+      9.1,
+      4.9
+     ],
+     17
+    ],
+    [
+     21,
+     [
+      30.0,
+      6.4,
+      3.7
+     ],
+     17
+    ],
+    [
+     22,
+     [
+      19.6,
+      10.2,
+      3.9
+     ],
+     17
+    ],
+    [
+     23,
+     [
+      23.6,
+      9.7,
+      3.9
+     ],
+     17
+    ],
+    [
+     24,
+     [
+      32.5,
+      9.0,
+      3.6
+     ],
+     18
+    ],
+    [
+     25,
+     [
+      28.1,
+      7.3,
+      3.1
+     ],
+     18
+    ],
+    [
+     26,
+     [
+      27.0,
+      8.1,
+      3.8
+     ],
+     18
+    ],
+    [
+     27,
+     [
+      26.5,
+      8.7,
+      3.8
+     ],
+     18
+    ],
+    [
+     28,
+     [
+      28.0,
+      8.0,
+      3.5
+     ],
+     18
+    ],
+    [
+     29,
+     [
+      28.3,
+      8.3,
+      4.0
+     ],
+     18
+    ],
+    [
+     30,
+     [
+      28.0,
+      9.0,
+      3.8
+     ],
+     18
+    ],
+    [
+     31,
+     [
+      28.3,
+      8.4,
+      3.8
+     ],
+     18
+    ],
+    [
+     32,
+     [
+      28.4,
+      8.8,
+      4.2
+     ],
+     18
+    ],
+    [
+     33,
+     [
+      28.2,
+      8.1,
+      3.6
+     ],
+     18
+    ],
+    [
+     34,
+     [
+      30.0,
+      7.4,
+      4.1
+     ],
+     18
+    ],
+    [
+     35,
+     [
+      25.6,
+      11.4,
+      4.8
+     ],
+     18
+    ],
+    [
+     36,
+     [
+      24.9,
+      11.4,
+      3.9
+     ],
+     18
+    ],
+    [
+     37,
+     [
+      28.9,
+      9.9,
+      5.3
+     ],
+     18
+    ],
+    [
+     38,
+     [
+      25.0,
+      10.3,
+      3.3
+     ],
+     18
+    ],
+    [
+     39,
+     [
+      20.1,
+      12.6,
+      5.6
+     ],
+     18
+    ],
+    [
+     40,
+     [
+      22.9,
+      7.0,
+      4.1
+     ],
+     18
+    ],
+    [
+     41,
+     [
+      12.6,
+      10.0,
+      3.5
+     ],
+     18
+    ],
+    [
+     42,
+     [
+      16.3,
+      7.7,
+      3.2
+     ],
+     19
+    ],
+    [
+     43,
+     [
+      20.1,
+      7.9,
+      3.2
+     ],
+     19
+    ],
+    [
+     44,
+     [
+      24.8,
+      7.9,
+      4.2
+     ],
+     19
+    ],
+    [
+     45,
+     [
+      21.9,
+      11.9,
+      5.2
+     ],
+     19
+    ],
+    [
+     46,
+     [
+      21.8,
+      10.5,
+      5.2
+     ],
+     19
+    ],
+    [
+     47,
+     [
+      20.7,
+      12.4,
+      5.5
+     ],
+     19
+    ],
+    [
+     48,
+     [
+      21.8,
+      13.1,
+      7.3
+     ],
+     19
+    ],
+    [
+     49,
+     [
+      20.6,
+      15.2,
+      7.1
+     ],
+     19
+    ],
+    [
+     50,
+     [
+      29.5,
+      10.7,
+      6.0
+     ],
+     20
+    ],
+    [
+     51,
+     [
+      30.1,
+      9.6,
+      5.3
+     ],
+     20
+    ],
+    [
+     52,
+     [
+      33.0,
+      9.4,
+      4.6
+     ],
+     20
+    ],
+    [
+     53,
+     [
+      31.8,
+      8.6,
+      4.1
+     ],
+     20
+    ],
+    [
+     54,
+     [
+      27.3,
+      7.0,
+      2.5
+     ],
+     20
+    ],
+    [
+     55,
+     [
+      27.8,
+      11.5,
+      5.5
+     ],
+     20
+    ],
+    [
+     56,
+     [
+      26.1,
+      12.3,
+      5.8
+     ],
+     20
+    ],
+    [
+     57,
+     [
+      33.0,
+      12.1,
+      6.1
+     ],
+     20
+    ],
+    [
+     58,
+     [
+      34.1,
+      6.6,
+      3.2
+     ],
+     20
+    ],
+    [
+     59,
+     [
+      26.3,
+      12.9,
+      4.6
+     ],
+     20
+    ],
+    [
+     60,
+     [
+      13.7,
+      15.0,
+      6.4
+     ],
+     21
+    ],
+    [
+     61,
+     [
+      26.3,
+      17.0,
+      6.9
+     ],
+     21
+    ],
+    [
+     62,
+     [
+      28.9,
+      11.5,
+      3.2
+     ],
+     21
+    ],
+    [
+     63,
+     [
+      26.9,
+      11.5,
+      4.9
+     ],
+     21
+    ],
+    [
+     64,
+     [
+      30.3,
+      11.1,
+      5.0
+     ],
+     22
+    ],
+    [
+     65,
+     [
+      34.4,
+      12.3,
+      4.3
+     ],
+     22
+    ],
+    [
+     66,
+     [
+      33.4,
+      11.4,
+      4.0
+     ],
+     22
+    ],
+    [
+     67,
+     [
+      32.9,
+      9.1,
+      4.6
+     ],
+     22
+    ],
+    [
+     68,
+     [
+      31.8,
+      9.8,
+      3.9
+     ],
+     22
+    ],
+    [
+     69,
+     [
+      31.5,
+      7.4,
+      3.2
+     ],
+     22
+    ],
+    [
+     70,
+     [
+      26.5,
+      7.7,
+      2.7
+     ],
+     22
+    ]
+   ]
+  },
+  "tk4": {
+   "vorn": {
+    "H": 364,
+    "ok": 145,
+    "sohle": 509,
+    "kopfbox": [
+     325,
+     154,
+     380,
+     221
+    ],
+    "blob": {
+     "n": 1,
+     "ext": 58.251380920410156,
+     "umg": 37.732394314630774,
+     "thr": 47.99188761752046,
+     "Lmax": 58.391490480105276,
+     "kontrast": 20.6590961654745,
+     "bbox": [
+      328,
+      183,
+      338,
+      194
+     ],
+     "wh": [
+      11,
+      12
+     ],
+     "sp": [
+      332.7,
+      188.46
+     ],
+     "rgb": [
+      144.4588074173126,
+      126.21239997356412,
+      125.91666684140013
+     ],
+     "px": 100
+    },
+    "fenster": {
+     "KV1": [
+      [
+       347,
+       155,
+       369,
+       175
+      ],
+      [
+       38.0,
+       22.5,
+       7.7
+      ]
+     ],
+     "KV2": [
+      [
+       354,
+       171,
+       372,
+       204
+      ],
+      [
+       12.9,
+       6.8,
+       4.8
+      ]
+     ],
+     "KV3": [
+      [
+       349,
+       198,
+       359,
+       208
+      ],
+      [
+       21.7,
+       9.1,
+       4.8
+      ]
+     ],
+     "KV4": [
+      [
+       337,
+       213,
+       359,
+       224
+      ],
+      [
+       34.7,
+       3.4,
+       2.7
+      ]
+     ],
+     "KV5": [
+      [
+       328,
+       196,
+       344,
+       211
+      ],
+      [
+       23.8,
+       7.1,
+       3.4
+      ]
+     ]
+    }
+   },
+   "seite": {
+    "H": 264,
+    "kopfbox": [
+     438,
+     185,
+     479,
+     236
+    ],
+    "blob": {
+     "n": 1,
+     "ext": 57.624813079833984,
+     "umg": 39.54237097071471,
+     "thr": 48.58359202527434,
+     "Lmax": 58.22320796883602,
+     "kontrast": 18.680836998121315,
+     "bbox": [
+      461,
+      211,
+      471,
+      223
+     ],
+     "wh": [
+      11,
+      13
+     ],
+     "sp": [
+      465.8875,
+      217.9375
+     ],
+     "rgb": [
+      140.98069254509926,
+      123.67392120873451,
+      123.36436810009005
+     ],
+     "px": 80
+    }
+   }
+  },
+  "tk9": {
+   "zonen": {
+    "135": {
+     "grau": 0.09170946441672781,
+     "haar": 0.1302274394717535,
+     "kuppe": 0.18818782098312545
+    },
+    "85": {
+     "grau": 0.16246741963509992,
+     "haar": 0.03214596003475239,
+     "kuppe": 0.21894005212858383
+    }
+   },
+   "nase_x": 354.15,
+   "kante": {
+    "std": 6.102219244685636,
+    "zeilen": 36
+   }
+  },
+  "schwanz": {
+   "H": 264.0,
+   "ok": 170,
+   "sohle": 434,
+   "scheitel": 403.5,
+   "beginn": [
+    358.0,
+    238.0
+   ],
+   "T1": [
+    0.17234848484848486,
+    0.7424242424242424
+   ],
+   "biegung": [
+    287.87677573864585,
+    253.99370164472987
+   ],
+   "T2": [
+    -0.26561827371725055,
+    0.06058220319973435
+   ],
+   "drehung": 85.65030558068503,
+   "drehung_alt": 94.40796262094378,
+   "t1_regel": "Id 16 an Id 7/8",
+   "knick": [
+    294.94149858662615,
+    303.13110320570325
+   ],
+   "T3": [
+    -0.23885795989914335,
+    0.24670872426402748
+   ],
+   "ende": [
+    300.3423485199228,
+    340.4140247198124
+   ],
+   "T4": [
+    -0.2184001950002925,
+    0.3879319118174712
+   ],
+   "ende_ueber_sohle": 0.3544923306067712,
+   "T5": {
+    "0.05": 0.028409090909090908,
+    "0.1": 0.032196969696969696,
+    "0.15": 0.03787878787878788,
+    "0.2": 0.041666666666666664,
+    "0.25": 0.045454545454545456,
+    "0.3": 0.04924242424242424,
+    "0.35": 0.05303030303030303,
+    "0.4": 0.07575757575757576,
+    "0.45": 0.09659090909090909,
+    "0.5": 0.09848484848484848,
+    "0.55": 0.11363636363636363,
+    "0.6": 0.13068181818181818,
+    "0.65": 0.15151515151515152,
+    "0.7": 0.16287878787878787,
+    "0.75": 0.16287878787878787,
+    "0.8": 0.14772727272727273,
+    "0.85": 0.14204545454545456,
+    "0.9": 0.14015151515151514,
+    "0.95": 0.14393939393939395
+   },
+   "taille": 0.020833333333333332,
+   "schmal_vor_knick": 0.020833333333333332,
+   "end_breite": 0.03598484848484849,
+   "end_laenge": 0.14393488078852215,
+   "end_richtung": 81.75740003627246,
+   "end_vor": 5.400849933296627,
+   "jb": 112,
+   "jk": 165,
+   "je": 203
+  }
+ }
+}
