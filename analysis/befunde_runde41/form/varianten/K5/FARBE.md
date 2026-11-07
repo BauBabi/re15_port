@@ -992,3 +992,101 @@ q und kappa <= 1 (Nutzer), uebrige Suchgrenzen in `r4_par.json`. Das sind Eichwe
 2. **Krallen** (A7, P2): eigene Zeile mit der Runde-3-Farbe waere moeglich, aendert aber RV Bild 2 Vorderbeine (Klauen-Feuerschein 36,6 Grad).
 3. **17 CLUT-Zeilen** = 4352 Texel hohe Port-Textur (render_pc.c: je Zeile eine Kopie). Fuer ein Spiel-Asset auf GLES2-Geraeten (4096) offen.
 4. Messblatt V3 7.1 (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer; die Leuchtstellen sind wie Runde 3.
+
+# Versuch 3 Runde 5 (Krallen) (Bauer, 2026-11-07 Abend)
+
+Auftrag (Orchestrator nach den Pruefberichten der Runde 4, letzte Runde vor der Vorlage beim Nutzer): NUR die Vorderkrallen. Runde 4 hatte sie
+gesprenkelt (Sicht-Pruefer: linke Klaue 1099 px / 83 Komponenten gegen Runde 3 426 / 53; Zahlen-Pruefer: A7 Kralle 0,349, P2 Klauen +39,8 / +50,4).
+Ziel: Runde-3-Klauenfarbe (dunkelrote Klaue, khaki Spitze, durchgehender Verlauf), alles andere bytegleich Runde 4.
+Runde-4-Stand: `farbe/K5c_farbe_v3r4/`, `farbe/v3r4/`. Skripte und Messungen: `farbe_lesung/V3R5_skripte/`.
+
+## V3R5.0 Ergebnis
+
+- **Variante:** `farbe/K5c_farbe_v3/` = `farbe/K5C_FARBE_V3.EMD/.TIM` (FORM.EMD sha256 090e0b80..., FORM.TIM 51282806... = **bytegleich Runde 4**).
+- **Aenderungsumfang (neuer Riegel AE1, GRUEN):** EMD gegen Runde 4 an 504 Bytes verschieden = das CLUT-Feld der 252 Krallenflaechen
+  (Meshes 14/15/28/30, 19/20/29/31) von Zeile 16 (Gruppe Vorderbeine) auf Zeile 1. Keine andere Flaeche, keine Geometrie, keine Knochen/Clips,
+  kein Texel, keine CLUT-Zeile geaendert (17 Zeilen wie Runde 4). Die 252 Krallenflaechen sind damit feldgleich mit Runde 3.
+- **Krallen:** A7 Kralle 0,096 (Runde 4 0,349, Runde 3 0,096) **GRUEN**. Tupfen (Tafel 10, eigene Zaehlung, fuer alle Spalten gleich: L\* >
+  Umfeld 9 px + 10 in der Krallenmaske aus dem Kennungs-Render):
+
+| Ansicht | Runde 3 | Runde 4 | Runde 5 |
+|---|---|---|---|
+| Bild 2, Disc-Licht roh (6265 Krallenpixel) | 67 px / 38 Komp. | 393 / 90 | **67 / 38** |
+| Bild 2, + Videofilter Saat 15 | 29 / 6 | 39 / 17 | **31 / 8** |
+| Spielfenster 5090 Schnitt 11 (gdigrab, 1356 Krallenpixel) | 21 / 7 | 77 / 26 | **19 / 8** |
+
+  Die Original-Spalte trifft mit derselben Maske Hintergrund (Video-Krallen liegen nicht deckungsgleich), darum nur Info (388 / 28 bzw. 67 / 8).
+  Das Spielbild der Runde 3 stammt aus einem anderen Feuer-Frame; Runde 4 und 5 aus demselben Lauf-Verfahren.
+- **P2 Klauen +16,3 / +21,0: ROT** (Grenze +8). Das ist genau der Runde-3-Stand (Dossier V3R3, Lauf v12 "+16,3/+21,0"), nicht besser: P2 misst
+  flache Renderflaechen und haengt an der UV-Vergroesserung der Krallenwurzel (1,73-2,22, `krallen_uv`), nicht an der Farbzeile. Runde 4 war
+  +39,8 / +50,4.
+- **RV (riegel_rot.py) 45/45 GRUEN** (Saaten 15/12345/7; mit Saaten 1/2/3 ebenfalls 45/45, `farbe_lesung/V3R5_skripte/rot_r5_saat123.txt`).
+  Rundlauf der Vorlage 45/45, Runde 3 20/45 (Exit 1), Runde 4 45/45.
+- **Gesamtriegel** `riegel_farbe_v3.py`: **77 von 80 bindenden Zeilen GRUEN, Exit 1** (`farbe/riegel_K5c_farbe_v3.txt`). ROT: P2 Klauen (oben),
+  P2 uebrige Teile (Brust +15,5, Hals +11,6, Vorderbein r +12,2, Kopf +12,3; bytegleich Runde 4, wie Runde 3 ROT), B11 (V3R5.2).
+  Gegenproben: "falsch ausgefallen: keine"; Runde 3: RV 25/45 ROT, RV6 ROT, AE1 ROT; Runde 4: A7 Kralle 0,349 ROT, P2 Klauen +39,8 / +50,4 ROT.
+- **Spiel:** 10 von 10 Bildern rc 0, alle gdigrab Versuch 1 (`farbe/spiel_lauf_v3.log`, `farbe/spiel_v3/`). Zusaetzlich ein Kennungs-Spielbild
+  (Krallen gruen) fuer die Krallenmaske im Spielfenster: `farbe/spiel_v3/kennung_krallen_pose2_r5090_s11.png`.
+- **Tests:** `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: 11 von 11 gruen, 96,7 s (`farbe_lesung/V3R5_skripte/ctest.log`).
+- Spiel-Asset `BAHNSTEIG_FORM`, Pins und `re15_port` unveraendert; K4 bleibt fuer v0.8.30.
+
+## V3R5.1 Verfahren
+
+- `kf_g4.py` R5_KRALLEN: Nach der Gruppenstatistik werden die Krallenflaechen auf ihre G4-Zeile `Z_G4[seite]` = Zeile 1 zurueckgehaengt. Quelle:
+  `farbe/K5c_farbe_v3r3/bau.json` flaechen_herkunft (alle 252 Krallenflaechen Zeile 1). Gemessener Diff Runde 3 / Runde 4: Zeilen 0-2 gleich,
+  0 Texel und 0 UV/TPage verschieden. Die Runde-3-Klauenfarbe liegt also unveraendert in Zeile 1; eine "eigene" Zeile waere eine bytegleiche Kopie
+  und machte die Port-Textur 256 Texel hoeher (V3R4.5 Punkt 3). Die Gruppenzeile Vorderbeine (16) zaehlt die Kralltexel in ihrer Statistik weiter mit,
+  damit sie bytegleich bleibt.
+- **RV Bild 2 Vorderbeine (Auftrag: "sonst die Krallen-Texel aus der RV-Messregion ausnehmen und das im Nachtrag mit Zahl belegen"):**
+  - Mit Krallen liegt Runde 5 bei 77,32 % Rot eng (Fenster 56,43..74,45): **ROT**. Getrennt per Kennungs-Render (`kralle_rv.py` -> `kralle_rv.json`, Kette T, 3 Saaten):
+    Krallen allein Vorlage 51,0 %, Runde 3/5 78,1 %, Runde 4 51,6 %. Die Runde-3-Klaue ist im Feuerlicht roeter als die Video-Klaue.
+  - Buntheit oder Helligkeit der Klauenzeile helfen kaum (`kralle_f.py`, Pixelprobe, kein Bau): Buntheit x 0,6 -> 74,40 (RV2 35,1); x 0,5 -> 72,95,
+    aber RV2 34,32 unter 34,45; lineares Abdunkeln x 0,25 -> 74,38. Das Fenster zwischen RV1 und RV2 ist schmaler als die Saatenstreuung; damit
+    waere es auch nicht mehr die Runde-3-Farbe.
+  - Nur die Variante ohne Krallen messen reicht nicht: Ohne Krallenpixel sind es 76,96 % gegen dasselbe Fenster (Optik-Unschaerfe der Kette).
+  - Darum gilt fuer **Vorlage und Variante dieselbe Pixelmenge**: Vorderbeine ohne Krallen samt 2 px Saum (`krallen_bild2.npz`, 4566 von 12 142 px,
+    109 Bloecke). Das Ziel wurde nach demselben Verfahren wie `ziele.py` gebildet (`ziel_ohne_krallen.py`): O 64,7 %, Fenster 53,27..76,11;
+    Farbton 32,72..39,57; dL -13,51..3,11; groesste Rotflaeche <= 58,34.
+    Runde 5 75,01 / 35,59 / 0,81 / 44,06 GRUEN, mit Saaten 1/2/3 74,31. Runde 4 70,76. Runde 3 82,73 ROT / 25,53 ROT / 6,88 ROT.
+  - Die alte Zeile "Bild 2 Vorderbeine" laeuft als Info weiter (77,32 ROT (Info)).
+
+## V3R5.2 Rote Riegel und warum (3)
+
+- **P2 Klauen** (+16,3 / +21,0): Runde-3-Stand, siehe V3R5.0. Die Tupfen sind weg, die Flaechigkeit der Krallenwurzel bleibt. Behebbar waere das
+  nur ueber die Krallen-UV (Runde 3 hat v1/v2/v12 versucht: +13,5..+24,4). Das ist nicht Gegenstand dieser Runde.
+- **P2 uebrige Teile** (Brust +15,5, Hals +11,6, Vorderbein r +12,2, Kopf +12,3): bytegleich Runde 4 (AE1), seit Runde 3 ROT.
+- **B11** Atlas Haut dunkle Linien 3,24 % (Fenster 3,3..9,9; Runde 4 3,72 GRUEN, Runde 3 2,73 ROT). Ohne die Kralltexel misst die Haut in
+  Runde 4 und Runde 5 gleich **3,25 %**. Runde 4 war also nur ueber die Tupfen-Adern der Krallen gruen (3,72 mit, 3,25 ohne Krallen).
+
+## V3R5.3 Info-Zeilen (Orchestrator-Entscheid 2026-11-07, je ein Satz)
+
+Im Riegel markiert als "Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)":
+- **P1:** zaehlt seit Runde 4 die flaechig gemalte dunkelrote G4-Haut (a\* > 15). Ein Mass fuer Fleisch-Posterisierung gibt es ohne helles Fleisch nicht mehr.
+- **A4:** misst gegen das G4-Fleischrot der Familie. Die Vorlage verlangt mauve (RV2), das widerspricht A4 direkt.
+- **H2:** Vertauschungen kommen aus den Rampen-Eintraegen und der 15-Bit-Rundung dunkler Farben. Die Rangfolge der Adern unter der Haut ist der Nutzerauftrag; RV6 prueft ihn.
+- **F2t:** Maul-Band wie Runde 3, unveraendert bis zur offenen Nutzerfrage zu den Leuchtstellen.
+- **B10, B12, B13, B14, B16, B17:** Binnenzeichnung duenner als die Familie. Das ist die Folge der entfernten hellen Adern (Nutzer: Feuerrillen weg); RV6 und RV3 ersetzen diese Zeilen.
+- **K3:** dE gegen die Bild-1-Zonen. Der Rot-Anteil ist durch RV1/RV2 je Region gebunden; der Rest liegt in b\*/Helligkeit und ist nicht Gegenstand der Runde 5.
+- **K6:** Hauthelligkeit Bild 2 (Mittel-L\* 15,6 gegen Vorlage 22,1, Zahlen-Pruefer Runde 4). Sie wird dem Nutzer gezeigt, nicht geaendert.
+- **K7:** Unterkiefer und Band wie Runde 3 (Leuchtstelle), offene Nutzerfrage.
+- **K1v2, K2v2:** Bild-1-Chroma. Der Mangel liegt in b\* (Nachtrag 4.1) und ist mit Rot nicht zu erfuellen.
+
+## V3R5.4 Tafeln (`farbe/`, Runde 4 in `farbe/v3r4/`)
+
+- Neu: 02 (Bild 2, Krallen im Vordergrund), 03 Familie, 04 Atlas, 05 rundum, 07 Spiel (neuer Spiellauf), 09 (Spalte "Runde 5 (neu)",
+  zusaetzlich Region "Vorderbeine ohne Krallen"; alte Vorderbeine-Zeile als Info gekennzeichnet).
+- Unveraendert und nicht neu gerechnet: 01 (Bild 1, Krallen 3 px sichtbar), 06 Kopf, 08 Binnenzeichnung. Diese Ansichten sind bytegleich, weil sich
+  ausser den Krallen nichts geaendert hat (AE1).
+- **10_krallen_r3_r4_r5** (`generator/kf_tafel10_krallen.py`): Original | Runde 3 | Runde 4 | Runde 5. Z.1 Disc-Licht roh, Z.2 mit Videofilter,
+  Z.3 echtes Spielfenster 5090. Gleicher Ausschnitt und gleiches Licht je Zeile, kein Gamma, Tupfenzahl in der Unterschrift.
+- Gesehen (Bauer, keine Abnahme): Runde 5 zeigt dieselbe dunkelrote Klaue mit khaki Spitze wie Runde 3, einen durchgehenden Verlauf und keine
+  Sprenkel. Unterarm und Hand sind dunkel wie in Runde 4 (Gruppenzeile unveraendert).
+
+## V3R5.5 Offen (dem Nutzer vorlegen, nicht weiter polieren)
+
+1. **Krallen roeter als die Video-Klaue** unter Feuerlicht: Krallen allein 78,1 % Rot eng gegen 51,0 %. Das ist die vom Pruefer gewuenschte Runde-3-Farbe.
+2. **Zweifarbigkeit unter weissem Licht**, unveraendert (Sicht-Pruefer Runde 4): Rumpf, Flanke und Schwanz violett, Vorderbeine, Brust und Hals
+   braunrot. Dazu die Kachel `d_spiel5080_lage_r3_r4.png` (Scratchpad `formfarbe4/sicht_v3r4/`) bzw. Tafel 07 Z.2 zeigen.
+3. **Hauthelligkeit Bild 2** (Mittel-L\* 15,6 gegen 22,1) und der Kopf unter Bahnsteiglicht: zeigen, nicht aendern (Zahlen-Pruefer Runde 4).
+4. **Leuchtstellen** (Gesicht oder Becken in Bild 1, Messblatt V3 7.1): Rueckfrage an den Nutzer bleibt offen.
+5. **P2 Klauen** (+16,3 / +21,0) und **B11** (3,24 gegen >= 3,3): Restabweichungen aus Runde 3 bzw. aus der Haut selbst (V3R5.2).
