@@ -1,20 +1,22 @@
-"""SF V4 Originaltexturen (Bauer, Runde 1 von 2): Kopf- und Schwanztexel der Sichel-Form V4 aus dem Atlas der gelobten Referenz 2.
+"""SF V4 Originaltexturen (Bauer, Runde 2 von 2): Kopf- und Schwanztexel der Sichel-Form V4 aus dem Atlas der gelobten Referenz 2.
 
-    python ref2tex_v4.py [--runden 6]   -> tools/r41_sichel/v4/farben_ref2tex_v4.npz (+ Protokoll SF_belege/v4/ref2tex_protokoll.json)
+    python ref2tex_v4.py   -> tools/r41_sichel/v4/farben_ref2tex_v4.npz (+ Protokoll SF_belege/v4/ref2tex_protokoll.json)
 
 Vorgabe (Orchestrator 2026-11-07 nach dem Nutzer "Bei der Sichel Form V4, warum sind denn da die Farben so extrem scheisse? ... die Form
 baut von Farben und Texturen her ja nun wirklich auf die Urspruengliche Birkin Form auf"; ersetzt Messblatt V4 Abschnitt 5):
   (1) Koerper = Referenz 2 unveraendert (birkin_formen.py V4_TEXTUR 'ref2': keine Koerperzeilen/-texel, CLUT bytegleich).
   (2) Schwanz: Texel aus der KOERPERHAUT desselben Atlas (Oberarm, Mesh 13, Zeile 480), UV entlang der Achse durchgehend (uv art 'achse'
       aus V4 Runde 5: v = Bogenlaenge, u = Lage um den Umfang). Keine neue Farbe.
-  (3) Kopf: Texel nur mit Farben der Referenz-2-Zeile 480, und zwar nur mit Eintraegen, die Referenz 2 auf ihren Koerper-Meshes in Zeile 480
-      tatsaechlich zeigt; rote Kopfoberseite aus den roten Wundeintraegen, Auge aus den hellen, Haare aus den dunklen. Feinstruktur = die
-      Original-Kopftexel von Referenz 2 (TPage 128 u 66-126 v 4-90, dieselben Indizes, Helligkeit in Zeile 480), keine Videostruktur.
-      Orte der Merkmale: die Zonenkarte des Kopfes aus V4 Runde 5 (farben_v4.npz, Index = 1 + Zone x 16 + Stufe; die Zonen sind die
-      Messblatt-Fenster KV1-KV9 / KS1-KS6 und die Augenorte K4/S2), weil Kopfform und Kopf-UV seit Runde 5 unveraendert sind (Vorgabe 4).
-      Helligkeit je Zone: so, dass die Kopf-Riegel K1-K10 / S1-S4 (Messblatt V4 Abschnitt 7, Ziele Abschnitt 2/3) gruen sind; die
-      Zonenhelligkeit wird nach der Vergleichsregel (Abschnitt 5, nur als Messverfahren) nachgefuehrt, gewaehlt wird immer ein vorhandener
-      Eintrag der Zeile 480 (naechster in Lab), nie eine neue Farbe.
+  (3) Kopf: Texel nur mit Eintraegen der Referenz-2-Zeile 480, die Referenz 2 auf ihren Koerper-Meshes zeigt; rote Kopfoberseite aus den
+      roten Wundeintraegen, Auge aus den hellen, Haare aus den dunklen.
+Runde 2 (Sicht-Pruefung Runde 1, SF_PRUEFUNG_REF2TEX_r1_sicht.md; Orchestrator Runde 2 (a)-(c)):
+  - Kopf (main / kopf_bild_r2): Grundton = die Original-Kopftexel von Referenz 2 in IHRER Zeile 485 (Lab), je Texel auf den naechsten
+    Eintrag der Zeile 480 abgebildet - keine Nachfuehrung an Video-L*-Zielen mehr (Runde 1 main_r1: Zonenhelligkeit an K5/K7/K8 13-18 L*
+    nachgefuehrt -> Kopf L* P50 11,4, 80 % L* < 20). Dunkel nur das Haarfeld (vorn: Fenster KV2 + K6-Stelle, haar_vorn; seitlich: Fenster
+    KS2, haar_seite - nicht mehr die Runde-5-Zone s_haar, die im Vorderbild 569 Texel der Gesichtsmitte belegte). Keine violettstichigen
+    Eintraege (nicht_violett). Abnahme gegen Referenz 2: riegel_ref2tex.tk4 (T-K4 ohne Video-Farbziele, T-K5).
+  - Schwanz (schwanz_textur_r2): Glieder 17-22 ab Texelzeile 56 texelgleich Runde 1; im Wurzelband (Glied 16) die Quelle laengs gedehnt
+    (WURZEL_K) und je Texel ueber die ueberdeckten Quellspalten gemittelt - ohne den senkrecht gestreiften Block (Riegel T-K3d).
 Kein RE-Befund: die Sichel-Form gibt es auf der Disc nicht, keine Zahl hier ist eine @0x-Konstante. Atlas-Orte sind gezaehlt (atlas()).
 """
 import os, sys, json, argparse
@@ -251,7 +253,7 @@ def kopf_bild(A, K, zn, w, quelle, T, namen, ansicht, auge_rand=0.6):
     logT[auge] = (t_um[auge] + np.log(AUGE_HOF)) * (1 - w2[auge][:, None]) + logA[None, :] * w2[auge][:, None]
     glatt = np.stack([cv2.GaussianBlur(logT[..., c].astype(np.float32), (0, 0), GLATT) for c in range(3)], -1)
     glatt = np.where(auge[..., None], logT, glatt)          # Auge selbst ungeglaettet (sein Rand ist schon weich)
-    kern = nd.binary_fill_holes(nd.binary_closing(auge & (w2 >= AUGE_KERN))) & auge     # Kern ohne Loecher und Einzeltexel
+    kern = nd.binary_fill_holes(nd.binary_closing(auge & (w2 >= (AUGE_KERN if ansicht == 'vorn' else AUGE_KERN_S)))) & auge     # Kern ohne Loecher und Einzeltexel
     kern = nd.binary_opening(kern) | (kern & (w2 >= 0.9))
     # Augenkern nur mit schwacher Feinstruktur (+-10 %): die hellsten blassen Hauteintraege liegen bei L* 55 (Texel, Zeile 480); mit voller
     # Struktur blieb der Fleck nach der Vergleichsregel bei L* 41 (S1 Soll 48,4, Lauf ref2tex 3). PORT-WAHL nach Riegel K2/S1.
@@ -312,7 +314,8 @@ def code_render(mo, kp, pose, zn, name):
     return np.where(ids == 9, img[..., 0].astype(int) - 1, -2)
 
 
-def main():
+def main_r1():
+    """Runde 1 (Zonenhelligkeit an Video-L*-Zielen nachgefuehrt; ueberholt nach der Sicht-Pruefung Runde 1 b1)."""
     ap = argparse.ArgumentParser()
     ap.add_argument('--runden', type=int, default=6)
     a = ap.parse_args()
@@ -403,6 +406,286 @@ def main():
     _k, rb, bv, bs = best
     prot['gewaehlt'] = rb
     print('gewaehlt Runde', rb, _k)
+    np.savez(AUS, kopf_vorn=bv, kopf_seite=bs, schwanz=schwanz)
+    os.makedirs(os.path.dirname(PROT), exist_ok=True)
+    json.dump(prot, open(PROT, 'w'), indent=1)
+    print('geschrieben', AUS)
+
+
+# ---------------------------------------------------------------------------------------------------- Runde 2 (Sicht-Pruefung Runde 1)
+# Kopf Runde 2: Grundton = die Original-Kopftexel von Referenz 2 SELBST (ihre Farbe in der Ref2-Kopfzeile 485, nicht in 480), je Texel auf
+# den naechsten Eintrag der Zeile 480 abgebildet; KEINE Nachfuehrung an Video-L*-Zielen (K5/K7/K8 ueberholt). Abnahme gegen den Ref2-Kopf
+# im selben Render (riegel_ref2tex T-K5). Dunkel nur das Haarfeld (Zonen v_haar / s_haar), rot die Kuppe, hell der Augenkern.
+KOPF_ZEILE_REF2 = 485       # CLUT-Zeile der Ref2-Kopfflaechen (Mesh 9: alle Flaechen Zeile 485, TPage 128; Zaehlung atlas().ms[9])
+# Violettstich (Sicht-Pruefung Runde 1 b1: 23 % der Kopfpixel b* < 0): Eintraege mit b* < 0 oder rot mit b* < 2 (a* > 8) sind auf dem
+# Original-Koerper Randfarben; sie fallen aus allen Kopf-/Schwanzklassen (gezaehlt klassen_r2(), Protokoll 'violett_ausgenommen').
+VIOLETT_B, VIOLETT_A, VIOLETT_B_ROT = 0.0, 8.0, 2.0
+# Alle folgenden Zahlen sind PORT-WAHL (kein RE-Befund, keine @0x-Konstante); gewaehlt am Riegel riegel_ref2tex.tk4 (T-K4/T-K5, Abnahme
+# gegen Ref2), Gitter ref2tex_gitter.py, Ausgabe SF_belege/v4/ot2/ref2tex_gitter.txt (36 Punkte, 6 ohne rote Zeile; gewaehlt der erste).
+# Hauthelligkeit: Faktor auf die Ref2-Kopftexel, vorn / seitlich (Gitter: s 1,20 und 1,25 vorn ohne Rot; seitlich 1,0, weil Pose 85 das
+# Seitenbild heller beleuchtet: mit 1,25 Grundton 35,0-35,1 bei Ref2 30,8 +- 4).
+S_VORN, S_SEITE = 1.2, 1.0
+# Kuppe: Farbe der Ref2-Kopftexel, a* um KUPPE_DA angehoben, Helligkeit x KUPPE_L, je Texel naechster roter Eintrag (rote Wundeintraege
+# a* >= 12 bis HAUT_L2). Riegel K9 / S4 (a* >= 11, |dL*| zu Ref2 <= 8; mit KUPPE_L 0,7 lag KV1 bei 28,6 gegen Ref2 41,8).
+KUPPE_DA, KUPPE_L = 6.0, 1.0
+# Knie der Hauthelligkeit (Texel-L*): oberhalb KNIE nur KNIE_F der Ref2-Kopfstruktur, damit die Lichtpunkte der Original-Kopftexel (P90
+# L* 57,4) unter der Fleckschwelle des Riegels K1 bleiben (Schwelle = Mitte zwischen Augenfleck und Umgebung), ohne die Struktur zu kappen
+# (erster Lauf mit harter Kappe bei HAUT_L 40: Gesicht flach, 2 K1-Komponenten).
+KNIE, KNIE_F = 30.0, 0.4
+# Obergrenze der Hauteintraege (Texel-L*): Runde 1 kappte bei HAUT_L 40; mit dem Knie bleibt die Struktur darunter (T-K5a: mit 40 Grundton
+# vorn 22,8-25,5).
+HAUT_L2 = 44.0
+# Haarfeld vorn: Texel von KV2 + K6-Stelle (haar_vorn) um HAAR_ERO Texel erodiert; 0 = das ganze Fenster (K5 KV2 L* <= 22,8 braucht es).
+HAAR_ERO = 0
+# Haar: Helligkeit HAAR_F x Median der dunklen Eintraege (haar_l 16,1; mit 1,0: K6 L* 18,4-20,8 > 18, S3 KS2 24,4-25,8); gewaehlt wird je
+# Texel ein vorhandener dunkler Eintrag.
+HAAR_F = 0.5
+HAAR_F_V = 0.5   # vorn (s. main-Lauf); seitlich HAAR_F
+# Augenhof: Haut um den Augenkern dunkler, Faktor 1 - (1 - HOF_F) x exp(-(d / HOF_R)^2), d = Abstand zum Kern in Texeln, nicht unter
+# HOF_MIN (Texel-L*; darunter waere es dunkle Textur, T-K5d Albedo < 25). Ohne Hof K1-Kontrast 12,1-13,9 (Grenze 20): die Ref2-Haut ist
+# blass, der hellste blasse Eintrag der Zeile 480 hat L* 55. Seitlich HOF_F_S (S1 braucht keinen Hof; mit HOF_F lag die Haut ums
+# Seitenauge bei Texel-L* 24-25).
+HOF_F, HOF_R, HOF_MIN = 0.62, 8.0, 29.0
+HOF_F_S = 0.9
+# Haarrand: Anteil Haar = Gauss(Maske, HAAR_SIGMA) + HAAR_STRUKTUR x (Ref2-Kopfstruktur - 1), Haar ab 0,5 - der Rand folgt der Original-
+# Kopftextur statt der Fensterkante (ohne: Haarfeld als scharfes Rechteck).
+HAAR_SIGMA, HAAR_STRUKTUR = 1.5, 0.8
+# Augenkern seitlich: Gewichtsschwelle (vorn AUGE_KERN 0,3); mit 0,3: S1 0,030 x 0,027 H (Soll 0,028-0,052 x 0,040-0,070).
+AUGE_KERN_S = 0.15
+# Kinn (Zone v_kinn): die Ref2-Kopftexel ohne Knie, x KINN_F, bis KINN_L (Texel-L*) - die Original-Kopftextur ist am Kinn hell (Ref2
+# Albedo-L* im Fenster KV4 47,9); das Kinn liegt in Pose 135 im Schatten (weisser Pruefkoerper L* P50 ~50), keine K1-Komponente moeglich.
+KINN_F, KINN_L = 1.15, 56.0
+# Nase (Texel, die Pose 135 im Fenster KV3 zeigt): Ref2-Kopftexel ohne Knie x NASE_F bis HAUT_L2 (Riegel K7 Nase >= Haarfeld + 8: ohne
+# lag KV3 bei 21,2-23,2 und damit nur 4-8 ueber dem Haar).
+NASE_F = 1.1
+
+
+def nicht_violett(lab):
+    return ~((lab[:, 2] < VIOLETT_B) | ((lab[:, 1] > VIOLETT_A) & (lab[:, 2] < VIOLETT_B_ROT)))
+
+
+def klassen_r2(A):
+    """Wie klassen(), aber ohne violettstichige Eintraege; 'haut' = alle nicht violetten Eintraege bis HAUT_L2."""
+    z = ZEILE - A['cy']
+    used = np.unique(A['tex'][A['zeile'] == ZEILE])
+    used = used[A['clut'][z][used] != 0]
+    lab = G.lab(A['rgb'][z][used].astype(float))
+    nv = nicht_violett(lab)
+    # rot nur bis HAUT_L2: Lauf exp 1.3:1.0 zweite K1-Komponente in der Kuppe (x 355-359 y 159-165, L* 53) aus einem hellen Wundeintrag
+    K = dict(haut=used[nv & (lab[:, 0] < HAUT_L2)], rot=used[nv & (lab[:, 1] >= ROT_A) & (lab[:, 0] < HAUT_L2)],
+             hell=used[nv & (lab[:, 0] >= HELL_L) & (lab[:, 1] <= 15)], dunkel=used[nv & (lab[:, 0] <= DUNKEL_L)],
+             kinn=used[nv & (lab[:, 0] < KINN_L)])
+    haar_l = float(np.median(G.lab(A['rgb'][z][K['dunkel']].astype(float))[:, 0]))
+    return K, used, haar_l, int((~nv).sum())
+
+
+def quelle_kopf(A, shape, versatz):
+    """Original-Kopftexel von Referenz 2 (KOPF_QUELLE, ganz Mesh 9) in IHRER Zeile 485 als Lab, gespiegelt gekachelt auf shape."""
+    x0, y0, x1, y1 = KOPF_QUELLE
+    idx = A['tex'][y0:y1 + 1, x0:x1 + 1]
+    lab = G.lab(A['rgb'][KOPF_ZEILE_REF2 - A['cy']][idx].astype(float))
+    h, w = idx.shape
+    vv = np.arange(shape[0])[:, None] + versatz[0]; uu = np.arange(shape[1])[None, :] + versatz[1]
+    return lab[spiegel(vv, h), spiegel(uu, w)]
+
+
+def haar_vorn(mo, kp, P, shape):
+    """Haarfeld im Vorderbild: die Texel, die Pose 135 (Vorlage-1-Kamera) im Haarfenster KV2 (Messblatt V4 Abschnitt 7, K5) zeigt,
+    geschlossen (3 x 3) und ohne Loecher. Grund (Sicht-Pruefung Runde 1 b1/c2): die Zonenkarte der Runde 5 legte die Zone s_haar (das
+    Haar der SEITENansicht) auch ins Vorderbild, dort auf 569 Texel der Gesichtsmitte (u 10-35, v 18-46; Pose 85 sieht diese Flaechen
+    nur als schmalen Streifen an der Kopfvorderkante) - von vorn wurde damit 80 % des Kopfes dunkel."""
+    _img, _ids, iv = G.zeichne(mo, P['135'], voll=True)
+    _ok, _so, H = G.h_port(iv)
+    ids, bild, uu, vv = texel_lage(mo, kp, P['135'])
+    kb = G.kopfbox(ids)
+    bx = G.fenster(kb, RV.FENSTER['KV2'])
+    # dazu die an der Kopfmitte gespiegelte Augenstelle (Riegel K6 "zweites Auge verdeckt", Original L* 12,9): Soll-Augenmitte K4 0,050 H
+    # (B)-links der Kopfmitte, 0,093 H unter der Oberkante; gespiegelt in der groessten Fleckbox, die K3 zulaesst (0,036 x 0,043 H; der
+    # Riegel spiegelt die gemessene Fleckbox). Lauf exp 1.3:1.0: die K6-Box (x 367-377) ragte 5 px rechts aus KV2 (x 354-372) heraus.
+    xm = 0.5 * (kb[0] + kb[2])
+    sx, sy = xm + 0.050 * H, kb[1] + 0.093 * H
+    b6 = (sx - 0.018 * H, sy - 0.0215 * H, sx + 0.018 * H, sy + 0.0215 * H)
+    m = np.zeros(shape, bool)
+    ys, xs = np.nonzero(bild == 0)
+    sel = ((xs >= bx[0]) & (xs <= bx[2]) & (ys >= bx[1]) & (ys <= bx[3])) | \
+          ((xs + 0.5 >= b6[0]) & (xs + 0.5 <= b6[2]) & (ys + 0.5 >= b6[1]) & (ys + 0.5 <= b6[3]))
+    m[vv[ys[sel], xs[sel]], uu[ys[sel], xs[sel]]] = True
+    m = nd.binary_fill_holes(nd.binary_closing(m, np.ones((3, 3)), iterations=2))
+    return nd.binary_erosion(m, iterations=int(HAAR_ERO)) if HAAR_ERO >= 1 else m
+
+
+def fenster_texel(mo, kp, P, pose, fenster, bild_nr, shape):
+    """Texel des Kopfbilds bild_nr (0 vorn, 1 seitlich), die die Pose im Messblatt-Fenster zeigt (geschlossen, ohne Loecher)."""
+    ids, bild, uu, vv = texel_lage(mo, kp, P[pose])
+    bx = G.fenster(G.kopfbox(ids), RV.FENSTER[fenster])
+    m = np.zeros(shape, bool)
+    ys, xs = np.nonzero(bild == bild_nr)
+    sel = (xs >= bx[0]) & (xs <= bx[2]) & (ys >= bx[1]) & (ys <= bx[3])
+    m[vv[ys[sel], xs[sel]], uu[ys[sel], xs[sel]]] = True
+    return nd.binary_fill_holes(nd.binary_closing(m, np.ones((3, 3)), iterations=1))
+
+
+def haar_seite(mo, kp, P, shape):
+    """Haarfeld im Seitenbild: die Texel des Seitenbilds, die Pose 85 (Vorlage-2-Kamera) im Haarfenster KS2 (Messblatt V4 Abschnitt 7, S3)
+    zeigt, geschlossen und ohne Loecher. Die Runde-5-Zone s_haar reicht im Seitenbild ueber das Fenster hinaus (Lauf exp HOF 0,72/10:
+    dunkle Textur ausserhalb des Haarfelds Pose 85 Anteil 0,07-0,09, Ref2 0,00)."""
+    ids, bild, uu, vv = texel_lage(mo, kp, P['85'])
+    bx = G.fenster(G.kopfbox(ids), RV.FENSTER['KS2'])
+    m = np.zeros(shape, bool)
+    ys, xs = np.nonzero(bild == 1)
+    sel = (xs >= bx[0]) & (xs <= bx[2]) & (ys >= bx[1]) & (ys <= bx[3])
+    m[vv[ys[sel], xs[sel]], uu[ys[sel], xs[sel]]] = True
+    return nd.binary_fill_holes(nd.binary_closing(m, np.ones((3, 3)), iterations=2))
+
+
+def kopf_bild_r2(A, K, zn, w, src, namen, ansicht, s_haut, haar_l, haar_m=None, nase_m=None):
+    """Texelbild einer Kopf-Ansicht, Runde 2: Sollfarbe je Texel = Ref2-Kopftexel (Lab, Zeile 485) mit Hauthelligkeit s_haut; Haarzone
+    dunkel (Helligkeit relativ x haar_l), Kuppe rot, Augenkern hell; weich an den Zonengrenzen; je Texel der naechste Eintrag (Lab) der
+    Klasse. Keine Videowerte."""
+    pal = A['rgb'][ZEILE - A['cy']].astype(float)
+    sh = zn.shape
+    z_auge = namen.index('v_auge' if ansicht == 'vorn' else 's_auge')
+    if ansicht == 'vorn':           # vorn: nur das Haarfeld aus haar_vorn (nicht s_haar, s. haar_vorn)
+        haar = haar_m if haar_m is not None else (zn == namen.index('v_haar'))
+    else:                           # seitlich: das Haarfeld aus haar_seite (Fenster KS2), sonst die Zone s_haar
+        haar = haar_m if haar_m is not None else (zn == namen.index('s_haar'))
+    kuppe = np.isin(zn, [namen.index(n) for n in ('v_kuppe', 's_kuppe')])
+    L, a, b = src[..., 0], src[..., 1], src[..., 2]
+    rel = L / max(float(L.mean()), 1e-6)
+    soll = np.zeros(sh + (3,))
+    Lk = np.where(L <= KNIE, L, KNIE + (L - KNIE) * KNIE_F)
+    soll[..., 0] = np.minimum(Lk * s_haut, HAUT_L2 - 0.5); soll[..., 1] = a; soll[..., 2] = b
+    # Uebergaenge: Anteil Haar / Kuppe weich (Gauss GLATT Texel), Sollfarbe gemischt; Klasse nach dem groesseren Anteil
+    rel_g = cv2.GaussianBlur(rel.astype(np.float32), (0, 0), 1.0)
+    wh = np.clip(cv2.GaussianBlur(haar.astype(np.float32), (0, 0), HAAR_SIGMA) + HAAR_STRUKTUR * (rel_g - 1.0) * (haar.any()), 0, 1)
+    wh = np.clip((wh - 0.5) * 3.0 + 0.5, 0, 1)                 # Uebergang ~1 Texel breit, Rand nach der Struktur
+    wk = cv2.GaussianBlur(kuppe.astype(np.float32), (0, 0), GLATT)
+    dk = G.lab(pal[K['dunkel']])
+    s_h = np.stack([(HAAR_F_V if ansicht == 'vorn' else HAAR_F) * haar_l * rel, np.full(sh, float(np.median(dk[:, 1]))), np.full(sh, float(np.median(dk[:, 2])))], -1)
+    s_k = np.stack([Lk * s_haut * KUPPE_L, a + KUPPE_DA, b], -1)
+    kinn = zn == namen.index('v_kinn') if 'v_kinn' in namen else np.zeros(sh, bool)
+    soll[kinn, 0] = np.minimum(L[kinn] * s_haut * KINN_F, KINN_L - 0.5)
+    if nase_m is not None:          # Nase (Fenster KV3): Ref2-Kopftexel ohne Knie x NASE_F bis HAUT_L2 - heller Nasenruecken
+        soll[nase_m, 0] = np.minimum(L[nase_m] * s_haut * NASE_F, HAUT_L2 - 0.5)
+    soll = soll * (1 - wh - wk)[..., None] + s_h * wh[..., None] + s_k * wk[..., None]
+    # Auge: Kern hell (Gewicht >= AUGE_KERN, ohne Loecher), Rand weich nach der Feinstruktur, Hof AUGE_HOF
+    auge = (zn == z_auge) | (w > 0)
+    w2 = np.clip(w + 0.6 * (cv2.GaussianBlur(rel.astype(np.float32), (0, 0), 1.0) - 1.0), 0, 1); w2[w <= 0] = 0
+    kern = nd.binary_fill_holes(nd.binary_closing(auge & (w2 >= (AUGE_KERN if ansicht == 'vorn' else AUGE_KERN_S)))) & auge
+    kern = nd.binary_opening(kern) | (kern & (w2 >= 0.9))
+    hl = G.lab(pal[K['hell']]); e = hl[np.argmax(hl[:, 0])]
+    hof = auge & ~kern
+    if kern.any():
+        dk_ = nd.distance_transform_edt(~kern)
+        fak = 1.0 - (1.0 - (HOF_F if ansicht == 'vorn' else HOF_F_S)) * np.exp(-(dk_ / HOF_R) ** 2)
+        soll[..., 0] = np.where(kern, soll[..., 0], np.minimum(soll[..., 0], np.maximum(soll[..., 0] * fak, HOF_MIN)))
+    soll[kern] = e[None, :]
+    kl = np.full(sh, 'haut', object)
+    kl[kinn] = 'kinn'
+    kl[wh >= 0.5] = 'dunkel'; kl[(wk >= 0.5) & (wh < 0.5)] = 'rot'; kl[kern] = 'hell'
+    out = np.zeros(sh, np.uint8)
+    for k in set(kl.ravel()):
+        sel = kl == k
+        ein = K[k]
+        lab_e = G.lab(pal[ein])
+        d = ((soll[sel][:, None, :] - lab_e[None, :, :]) ** 2).sum(-1)
+        out[sel] = ein[np.argmin(d, 1)].astype(np.uint8)
+    return out
+
+
+# Wurzel (Glied 16): Quellzeilen je Texelzeile v. In Pose 85 (Vorlage-2-Kamera) liegt die Oberseite der Wurzel laengs im Bild; gemessen
+# (Kenn-Render u/v, scratchpad r2ot/wurzel.py): in den oberen 14 Zeilen von Id 16 aendert sich v um 1 Texel je Bildpunkt waagerecht (v 19-53
+# ueber x 349-381), u um ~0,3 Texel je Bildpunkt senkrecht (u 0-5 ueber 12 Zeilen) - die Hautstruktur erscheint dort ~3-fach laengs
+# gestaucht: senkrechte Streifen (Sicht-Pruefung Runde 1 b2b, waagerecht 7,45 / senkrecht 4,36). Im Wurzelband (v < WURZEL_V1) wird die
+# Quelle mit WURZEL_K Quellzeilen je Texelzeile gelesen, bis WURZEL_V2 linear auf 1; ab WURZEL_V2 ist die Quellzeile = v wie in Runde 1
+# (Glieder 17-22 bleiben texelgleich zu Runde 1: Sicht-Pruefung Runde 1 "Abweichung klein", Orchestrator Runde 2 (c)). Die Zeilenfolge ist
+# stetig (kein Sprung). WURZEL_V1/V2: Glied 16 endet bei v 54 (Bogenlaenge 141,6 + 624 von 3632,6, x 255). PORT-WAHL nach Riegel T-K3d.
+WURZEL_K, WURZEL_V1, WURZEL_V2 = 0.55, 50, 56
+
+
+def quellzeile(n=256):
+    """Quellzeile (Gleitkomma) je Texelzeile v: ab WURZEL_V2 gleich v, davor rueckwaerts mit Schrittweite k(v) (WURZEL_K, Rampe)."""
+    v = np.arange(n, dtype=float)
+    k = np.where(v < WURZEL_V1, WURZEL_K, np.where(v < WURZEL_V2, WURZEL_K + (1 - WURZEL_K) * (v - WURZEL_V1) / (WURZEL_V2 - WURZEL_V1), 1.0))
+    q = v.copy()
+    for i in range(WURZEL_V2 - 1, -1, -1):
+        q[i] = q[i + 1] - k[i]
+    return q
+
+
+def schwanz_textur_r2(A, sp):
+    """Schwanzflaeche Runde 2: schwanz_textur (Runde 1: Oberarm-/Rueckenhaut, gespiegelt entlang v, quer nach dem Umfangswinkel), aber
+    die Quellzeile je Texelzeile aus quellzeile() - im Wurzelband gedehnt (s. WURZEL_K), ab WURZEL_V2 texelgleich zu Runde 1."""
+    x0, y0, x1, y1 = SCHWANZ_QUELLE
+    src = A['tex'][y0:y1 + 1, x0:x1 + 1]
+    assert (A['zeile'][y0:y1 + 1, x0:x1 + 1] == ZEILE).all() and np.isin(A['mesh'][y0:y1 + 1, x0:x1 + 1], (8, 10, 13)).all()
+    W = src.shape[1]
+    my = spiegel(np.rint(quellzeile(256)).astype(int), src.shape[0])
+    uu = np.arange(64)[None, :].astype(float)
+    th = np.arccos(np.clip(1.0 - 2.0 * uu / sp[:, None], -1.0, 1.0))
+    mx = np.clip(np.rint(th / np.pi * (W - 1)), 0, W - 1).astype(int)
+    out = src[my[:, None], mx].astype(np.uint8)
+    # Wurzelband: je Texel die mittlere Farbe (Lab) aller Quellspalten seines Winkelbereichs [theta(u), theta(u + 1)], dann der naechste
+    # nicht violette Eintrag der Quelle. Am Rand (u 0-1, Oberseite der Wurzel in Pose 85) ueberdeckt ein Texel ~5 Quellspalten; mit EINER
+    # Spalte (Runde 1) bestimmte eine einzelne Ader-/Lichtspalte der Quelle den ganzen Oberseitenstreifen (rosa-roter Block, Sicht-
+    # Pruefung Runde 1 b2b; Kenn-Render scratchpad r2ot/wurzel_vgl.png).
+    pal = A['rgb'][ZEILE - A['cy']].astype(float)
+    lab_src = G.lab(pal[src])
+    ein = np.unique(src); lab_e = G.lab(pal[ein]); ein = ein[nicht_violett(lab_e)]; lab_e = G.lab(pal[ein])
+    for v in range(WURZEL_V2):
+        tv = np.arccos(np.clip(1.0 - 2.0 * np.arange(65) / sp[v], -1.0, 1.0)) / np.pi * (W - 1)
+        for u in range(64):
+            k0 = int(np.floor(min(tv[u], tv[u + 1]))); k1 = int(np.ceil(max(tv[u], tv[u + 1])))
+            k0 = min(k0, W - 1); k1 = min(max(k1, k0 + 1), W)
+            m = lab_src[my[v], k0:k1].mean(0)
+            out[v, u] = ein[np.argmin(((lab_e - m[None, :]) ** 2).sum(1))]
+    return out
+
+
+def kopf_mass(mo, P, pose):
+    """Kopf (Id 9) im rohen Render: L* P50, Kopf/Rumpf (Mittel L*, Id 8), Anteile L* < 20 / < 12, b* < 0 (Messverfahren der Sicht-Pruefung
+    Runde 1: Lab je Id-Maske, gleiches Licht)."""
+    img, ids = G.zeichne(mo, P[pose])
+    Lab = G.lab(img.astype(float))
+    k, r = Lab[ids == 9], Lab[ids == 8]
+    return dict(p50=float(np.median(k[:, 0])), verh=float(k[:, 0].mean() / r[:, 0].mean()), d20=float((k[:, 0] < 20).mean()),
+                d12=float((k[:, 0] < 12).mean()), viol=float((k[:, 2] < 0).mean()))
+
+
+def main():
+    """Runde 2: Kopf mit den festen PORT-WAHLen (S_VORN / S_SEITE ...), Schwanz schwanz_textur_r2; T-K4/T-K5 werden ausgegeben."""
+    A = atlas()
+    K, used, haar_l, n_viol = klassen_r2(A)
+    namen = [z[0] for z in E.ZONEN]
+    P = G.posen()
+    zk = zonenkarte()
+    blob, _info = bauen()
+    mo = b2.modell(blob)
+    form = BF._variante_v4(); kp, sw = form['kopf_v4'], form['schwanz_kette']
+    src_v = quelle_kopf(A, zk['kopf_vorn'][0].shape, (0, 0))
+    src_s = quelle_kopf(A, zk['kopf_seite'][0].shape, (20, 6))
+    schwanz = schwanz_textur_r2(A, schwanz_spanne(mo, sw))
+    w_v, w_s = augen_gewicht(mo, kp, P, (zk['kopf_vorn'][0].shape, zk['kopf_seite'][0].shape))
+    hv = haar_vorn(mo, kp, P, zk['kopf_vorn'][0].shape)
+    hs = haar_seite(mo, kp, P, zk['kopf_seite'][0].shape)
+    nv_ = fenster_texel(mo, kp, P, '135', 'KV3', 0, zk['kopf_vorn'][0].shape) & ~hv
+    bv = kopf_bild_r2(A, K, zk['kopf_vorn'][0], w_v, src_v, namen, 'vorn', S_VORN, haar_l, hv, nv_)
+    bs = kopf_bild_r2(A, K, zk['kopf_seite'][0], w_s, src_s, namen, 'seite', S_SEITE, haar_l, hs)
+    setze(mo, kp, sw, dict(kopf_vorn=bv, kopf_seite=bs, schwanz=schwanz))
+    import riegel_ref2tex as RR
+    z4, _i4 = RR.tk4(mo, P)
+    ref = b2.modell(G.REF2)
+    prot = dict(runde=2, quelle=dict(kopf=KOPF_QUELLE, kopf_zeile=KOPF_ZEILE_REF2, schwanz=SCHWANZ_QUELLE, zeile=ZEILE),
+                klassen={k: [int(x) for x in v] for k, v in K.items()}, eintraege_koerper=int(len(used)), violett_ausgenommen=n_viol,
+                haar_l=round(haar_l, 2), haarfeld_texel=dict(vorn=int(hv.sum()), seite=int(hs.sum())),
+                port_wahl=dict(S_VORN=S_VORN, S_SEITE=S_SEITE, KUPPE_DA=KUPPE_DA, KUPPE_L=KUPPE_L, KNIE=KNIE, KNIE_F=KNIE_F, HAUT_L2=HAUT_L2,
+                               HAAR_ERO=HAAR_ERO, HAAR_F=HAAR_F, HOF_F=HOF_F, HOF_R=HOF_R, HOF_MIN=HOF_MIN, HOF_F_S=HOF_F_S,
+                               HAAR_SIGMA=HAAR_SIGMA, HAAR_STRUKTUR=HAAR_STRUKTUR, AUGE_KERN=AUGE_KERN, AUGE_KERN_S=AUGE_KERN_S,
+                               KINN_F=KINN_F, KINN_L=KINN_L, NASE_F=NASE_F, HAAR_F_V=HAAR_F_V),
+                ref2_kopf={p: kopf_mass(ref, P, p) for p in ('135', '85')}, ist_kopf={p: kopf_mass(mo, P, p) for p in ('135', '85')},
+                tk4=[dict(mass=z['mass'], ist=z['ist'], ok=z['ok']) for z in z4])
+    for z in z4:
+        print('INFO' if z.get('info') else ('OK  ' if z['ok'] else 'ROT '), z['mass'], '|', z['ist'])
     np.savez(AUS, kopf_vorn=bv, kopf_seite=bs, schwanz=schwanz)
     os.makedirs(os.path.dirname(PROT), exist_ok=True)
     json.dump(prot, open(PROT, 'w'), indent=1)
