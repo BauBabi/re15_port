@@ -134,7 +134,7 @@ def kopf_nah(neu, aus):
     for wt, az, el in (('3/4 vorn', 60, 10), ('Seite', 0, 5), ('unten vorn', 80, -30)):
         ks = []
         for nm, mo, c, teile in ((NEU + ' Kopf+Kiefer', fl.lade_var(neu), 1, (21, 22, 23)), ('K4 heute Kopf+Kiefer', fl.lade_var(KT.K4), 1, (21, 22, 23)),
-                                 ('RE2-G4 Kopf (Mesh 26)', g4, 0, (26,))):
+                                 ('RE2-G4 Kopf (Mesh 26)', g4, 0, (26,)), ('RE2-G4 Mesh 16 = Quelle F18', g4, 0, (16,))):
             img, msk = KT.blick_teile(mo, R.kf(mo, c), az, el, 300, teile)
             ks.append(KT.kachel(img, nm, KT.masse_text(img, msk), '%s, neutral (0,55 + 0,45 N.L), roh' % wt))
         zeilen.append(H.reihe(ks))
@@ -146,7 +146,7 @@ def kopf_nah(neu, aus):
         return out
     t = H.stapel([auf(z) for z in zeilen])
     kopf = H.kopfzeile('06 Gesicht/Maul nah. Z.1 Bild 2 (x 150-360, y 290-425, 3-fach): Maul-Band lachsrot, Zaehne hell. Z.2 Bild 1 (x 270-410, '
-                       'y 200-300, 4-fach): Stelle F1 rosa-mauve auf dem Becken. Z.3-5 Kopf+Kiefer (Clip 1, Maul offen) neben dem RE2-G4-Kopf, neutral, roh.',
+                       'y 200-300, 4-fach): Stelle F1 rosa-mauve auf dem Becken. Z.3-5 Kopf+Kiefer (Clip 1, Maul offen) neben dem RE2-G4-Kopf und der Hautquelle G4 16 (F18), neutral, roh.',
                        t.shape[1])
     cv2.imwrite(aus, H.stapel([kopf, t]))
 

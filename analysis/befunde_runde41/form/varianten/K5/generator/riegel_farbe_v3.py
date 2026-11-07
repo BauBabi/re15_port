@@ -58,10 +58,12 @@ SAAT = 15
 
 TEILE = KG.TEILE_H1
 # P2: K5c-Teil <- G4-Quellteil (Messblatt V3 2.3), gleicher Weltmassstab, 3 Ansichten (stich.py)
-P2_TEILE = [('Rumpf', [0, 7, 10], [0, 9, 10]), ('Schwanz', [1, 2, 3, 4, 5, 6], [11, 12]), ('Hals', [21], [10]),
+P2_TEILE = [('Rumpf', [0, 7], [0, 9]), ('Brust', [10], [16]), ('Schwanz', [1, 2, 3, 4, 5, 6], [11, 12]), ('Hals', [21], [16]),
             ('Hinterbein l (W)', [8, 24, 25], [5, 6, 7]), ('Hinterbein r (W)', [9, 26, 27], [1, 2, 3]),
             ('Vorderbein l (W)', [11, 12, 13], [11, 12, 13]), ('Vorderbein r (W)', [16, 17, 18], [15, 16, 17, 18]),
-            ('Klauen l (W)', [14, 15, 28, 30], [14]), ('Klauen r (W)', [19, 20, 29, 31], [19]), ('Kopf + Kiefer', [22, 23], [10])]
+            ('Klauen l (W)', [14, 15, 28, 30], [14]), ('Klauen r (W)', [19, 20, 29, 31], [19]), ('Kopf + Kiefer', [22, 23], [16])]
+# Runde 2: jedes Teil gegen seine tatsaechliche Quelle laut kf_g4.ZUORDNUNG (Zahlen-Pruefer P2: Runde 1 mass den Kopf gegen G4 10 statt 16).
+# Kopf, Brust und Hals kommen aus G4 16 (F18), der Rumpf hinten aus G4 0/9.
 KLAUEN = [14, 15, 28, 30, 19, 20, 29, 31]
 
 
@@ -83,6 +85,20 @@ class Var:
         t = FE.tim_lesen(self.tim)
         self.px, self.cl, self.clut_y = t['pixel'], t['cluts'], t['clut_y']
         self.rgb_zeilen = np.stack([KG.wort_rgb(z) for z in self.cl])           # Zeilen x 256 x 3
+        # Herkunftskarte des Baus (Runde 2): je Texel G4-Quelle (hx, hy) und Art (1 G4-Texel, 2 F1-Fleisch, 3 Band). Ohne Datei (V2r2, Runde 1):
+        # Seiten 0-2 an Ort, Seite 3 ohne Quelle.
+        hp = os.path.join(vdir, 'herkunft.npz')
+        if os.path.exists(hp):
+            z_ = np.load(hp)
+            self.hx, self.hy, self.hart = z_['hx'].astype(int), z_['hy'].astype(int), z_['art']
+        else:
+            H_, W_ = self.px.shape
+            self.hx = np.full((H_, W_), -1, int)
+            self.hy = np.full((H_, W_), -1, int)
+            self.hart = np.zeros((H_, W_), np.uint8)
+            self.hx[:, :384] = np.arange(384)[None, :]
+            self.hy[:, :384] = np.arange(H_)[:, None]
+            self.hart[:, :384] = 1
         self.flaechen = []                                                      # (key, mesh, zeile, Atlas-Ecken, 3D-Flaeche)
         for mi, m in enumerate(self.mo.meshes):
             for teil, verts, faces, uvs in (('t', m.tv, m.tf, m.tuv), ('q', m.qv, m.qf, m.quv)):
@@ -148,36 +164,62 @@ def g0(v, k5c_emd, k5c):
 
 # ================================================================ H1, H1b, S1, D1 (am echten Atlas)
 def herkunft(v, G, sonder, px_g4):
-    """je Teil: H1 (Index gleich G4 und in G4-Inselmaske, flaechengewichtet), S1 (fremde Texel), D1 (Vergroesserung)."""
+    """je Teil (Runde 2, Abtastung wie die PSX: kf_g4.texel_psx, auch UV-Punkte und -Linien; Herkunft ueber die Karte des Baus):
+    H1   = Anteil der gelesenen Texel (flaechengewichtet), deren Index gleich dem G4-Index an der Quelle ist und deren Quelle in der G4-Maske liegt;
+    S1   = Anteil ohne G4-Quelle in der G4-Maske (fremde Texel);
+    D1   = sqrt(Summe 3D-Flaeche / Summe (UV-Flaeche x G4-3D-Flaeche je Texel an der Quelle)): die Messblatt-Formel mit den G4-Flaechen, die
+           die Flaechen tatsaechlich abbilden (Wiederholungen mitgezaehlt); dazu ortsgenau je Flaeche Median und Anteil > 2 (Zahlen-Pruefer, vergr.py);
+    koll = 3D-Anteil der Flaechen, deren UV ein Punkt/eine Linie ist, obwohl sie bei G4-Dichte >= 1 Texel^2 decken (Befund A)."""
     gm = G.global_maske
+    tf = G.texel_flaeche
     res = {}
     for nm, meshes in TEILE.items():
         w_ok = w_all = w_fremd = 0.0
-        a_k5 = 0.0
+        a3s = auvg = 0.0
+        lok, lok_w = [], []
+        a_koll = a_ges = 0.0
         used = set()
         for key, mi, z, ecken, a3 in v.flaechen:
             if mi not in meshes or key in sonder:
                 continue
             xy = v.texel(ecken)
-            a_k5 += a3
+            a_ges += a3
             if not len(xy):
                 continue
             xs, ys = xy[:, 0], xy[:, 1]
-            inn = (xs < 384) & (ys < 256)
+            inn = (xs >= 0) & (xs < v.px.shape[1]) & (ys >= 0) & (ys < v.px.shape[0])
+            sx = np.full(len(xy), -1)
+            sy = np.full(len(xy), -1)
+            sx[inn], sy[inn] = v.hx[ys[inn], xs[inn]], v.hy[ys[inn], xs[inn]]
+            q = inn.copy()
+            q[inn] &= (v.hart[ys[inn], xs[inn]] == 1) & (sx[inn] >= 0)
+            src_ok = np.zeros(len(xy), bool)
+            src_ok[q] = gm[sy[q], sx[q]]
             gl = np.zeros(len(xy), bool)
-            gl[inn] = (v.px[ys[inn], xs[inn]] == px_g4[ys[inn], xs[inn]]) & gm[ys[inn], xs[inn]]
+            gl[q] = src_ok[q] & (v.px[ys[q], xs[q]] == px_g4[sy[q], sx[q]])
             w = a3 / len(xy)
             w_ok += w * gl.sum()
             w_all += w * len(xy)
-            fr = np.ones(len(xy), bool)
-            fr[inn] = ~gm[ys[inn], xs[inn]]
-            w_fremd += w * fr.sum()
-            for x, y in xy[inn]:
-                used.add((int(x), int(y)))
-        a_g4 = sum(G.texel_flaeche[y, x] for x, y in used)
+            w_fremd += w * (~src_ok).sum()
+            auv = KG._flaeche2(ecken)
+            ag = float(tf[sy[src_ok], sx[src_ok]].mean()) if src_ok.any() else float('nan')
+            if ag == ag and ag > 0:
+                a3s += a3
+                auvg += auv * ag
+                lok.append(math.sqrt(a3 / (auv * ag)) if auv > 0 else float('inf'))
+                lok_w.append(a3)
+                if auv == 0 and a3 / ag >= 1.0:
+                    a_koll += a3
+            for x_, y_ in zip(sx[src_ok], sy[src_ok]):
+                used.add((int(x_), int(y_)))
+        lok, lok_w = np.array(lok), np.array(lok_w)
+        o = np.argsort(lok)
+        cw = np.cumsum(lok_w[o]) / max(lok_w.sum(), 1e-9)
+        med = float(lok[o][np.searchsorted(cw, 0.5)]) if len(lok) else float('nan')
         res[nm] = dict(H1=round(100 * w_ok / max(w_all, 1e-9), 2), S1=round(100 * w_fremd / max(w_all, 1e-9), 2),
-                       D1=round(math.sqrt(a_k5 / max(a_g4, 1e-9)), 2), texel=len(used))
-    # Sonderfelder: fremde Texel = ausserhalb des eigenen Felds (Rechteck auf Seite 3 bzw. Feldmaske F8/F10)
+                       D1=round(math.sqrt(a3s / max(auvg, 1e-9)), 2), D1_median=round(med, 2),
+                       D1_ueber2=round(100 * float(lok_w[lok > 2.0].sum() / max(lok_w.sum(), 1e-9)), 1),
+                       kollabiert=round(100 * a_koll / max(a_ges, 1e-9), 2), texel=len(used))
     tot = sum(f[4] for f in v.flaechen)
     sa = sum(f[4] for f in v.flaechen if f[0] in sonder)
     return res, round(100 * sa / tot, 2)
@@ -298,9 +340,14 @@ def feldmittel(v, cl_g4):
             if zz == z:
                 for x, y in v.texel(ecken):
                     xy_all.add((int(x), int(y)))
-        idx = [int(v.px[y, x]) for x, y in xy_all]
         if nm == 'F1t':
-            idx = [i for i in idx if v.cl[z][i] != cl_g4[b][i]]
+            # Runde 2: das Feld = alle gelesenen Texel der Art "F1-Fleisch" (Herkunftskarte); die G4-Hautkopie der F1-Flaechen ist G4-Texel (H1)
+            fl_ = [(x, y) for x, y in xy_all if v.hart[y, x] == 2]
+            if not fl_:          # ohne Herkunftskarte (Runde 1, V2r2): alle gelesenen Texel der Zeile
+                fl_ = list(xy_all)
+            out['F1_feld'] = dict(gelesen=len(xy_all), fleisch=len(fl_), g4_haut=sum(1 for x, y in xy_all if v.hart[y, x] == 1))
+            xy_all = fl_
+        idx = [int(v.px[y, x]) for x, y in xy_all]
         L = lab(v.rgb_zeilen[z][idx]) if idx else np.zeros((1, 3))
         out[nm] = dict(texel=len(idx), lab=[round(float(x), 2) for x in L.mean(0)], C=round(float(np.hypot(*L.mean(0)[1:])), 2))
     return out
@@ -363,23 +410,26 @@ def _dl0(img, m):
     return 100 * float((d == 0).mean()) if len(d) else 0.0
 
 
-def p2(v, g4, g4tim):
-    tv, tg = FB.Textur(v.tim), FB.Textur(g4tim)
-    kfv = v.mo.frames[v.mo.clips[2][0]] & 0xFFF
+def p2(v, g4, g4tim, mo=None, tv=None, teile=None, clip=2):
+    """mo/tv/teile: fuer die Gegenprobe (b2)-Probe A (RGB-Textur, Kopf aus G4-F1 gegen G4 26)."""
+    mo_v = v.mo if mo is None else mo
+    tv = FB.Textur(v.tim) if tv is None else tv
+    tg = FB.Textur(g4tim)
+    kfv = mo_v.frames[mo_v.clips[clip if clip < len(mo_v.clips) else 0][0]] & 0xFFF
     kfg = g4.frames[g4.clips[0][0]] & 0xFFF
     res, ok = {}, True
-    for nm, kb, gb in P2_TEILE:
+    for nm, kb, gb in (P2_TEILE if teile is None else teile):
         def pkt(mo, kf, bones):
             R, T = mo.pose(kf)
             return np.vstack([np.array([x[:3] for x in mo.meshes[b].tv + mo.meshes[b].qv], float) @ (R[b].astype(float) / 4096.0).T + T[b].astype(float)
                               for b in bones])
-        Pk, Pg = pkt(v.mo, kfv, kb), pkt(g4, kfg, gb)
+        Pk, Pg = pkt(mo_v, kfv, kb), pkt(g4, kfg, gb)
         mk, mg = (Pk.max(0) + Pk.min(0)) / 2, (Pg.max(0) + Pg.min(0)) / 2
         rad = max(np.linalg.norm(Pk - mk, axis=1).max(), np.linalg.norm(Pg - mg, axis=1).max())
         s = 300 * 0.46 / rad
         dk, dg = [], []
         for az, el in ((0, 10), (-90, 10), (45, 25)):
-            dk.append(_dl0(*_p2_bild(v.mo, kfv, kb, tv, az, el, s, mk)))
+            dk.append(_dl0(*_p2_bild(mo_v, kfv, kb, tv, az, el, s, mk)))
             dg.append(_dl0(*_p2_bild(g4, kfg, gb, tg, az, el, s, mg)))
         a, b = float(np.mean(dk)), float(np.mean(dg))
         res[nm] = (round(a, 1), round(b, 1), round(a - b, 1))
@@ -405,7 +455,8 @@ def atlas_v3(v, sonder, aug):
         xs, ys = np.clip(xy[:, 0], 0, w - 1), np.clip(xy[:, 1] + 256 * z, 0, h - 1)
         if key in aug:
             masken['auge'][ys, xs] = True
-        elif key in band_keys:
+        elif key in band_keys or (z == KG.Z_ZAHN and mi == 23):
+            # Runde 2: Kieferfeld = Unterkiefer aussen + Band + Zaehne des Unterkiefers (Messblatt V3 1.3 A8: "Bild 2 zeigt dort 66 % Rot und 12 % Zahn")
             masken['kiefer'][ys, xs] = True
         elif key in sonder:
             masken['sonder'][ys, xs] = True
@@ -447,9 +498,11 @@ def _rot(T, m):
                 dunkel=round(100 * float((L[:, 0] < 20).mean()), 1) if len(L) else 0.0, lab=[round(float(x), 1) for x in lab(T[m].mean(0))[0]] if m.any() else None)
 
 
-def ketten_v3(vdir, masken):
+def ketten_v3(vdir, masken, mo=None, tex=None):
     import p_zonen as PZ
     k = PZ.P.Kandidat(os.path.join(vdir, 'form.json'))
+    if mo is not None:                       # Gegenprobe (b2)-Probe A: Modell und RGB-Textur der Probe in der K5c-Lage (wie Pruefer kette_b2.py)
+        k.mo, k.tex = mo, tex
     out = {}
     R = {}
     for n in (1, 2):
@@ -485,7 +538,8 @@ def ketten_v3(vdir, masken):
     d2 = _rot(r2['T'], r2['fig'] & r2['m'])['dunkel']
     out['K13 Bild2 dunkle Klasse Figur %'] = (d2, d2 >= K13_MIN)
     # K14 / K15
-    for nm, n, mk, ziel, rmin in (('K14 Bild1 F1-Stelle', 1, masken['F1'], K14_ZIEL, K14_ROT), ('K15 Bild2 Fleischband', 2, masken['band'], K15_ZIEL, K15_ROT)):
+    for nm, n, mk, ziel, rmin in (() if masken.get('nur_k11_13') else (('K14 Bild1 F1-Stelle', 1, masken['F1'], K14_ZIEL, K14_ROT),
+                                                                      ('K15 Bild2 Fleischband', 2, masken['band'], K15_ZIEL, K15_ROT))):
         T = R[n]['T']
         mu = lab(T[mk].mean(0))[0]
         rr = _rot(T, mk)['anteil']
@@ -517,8 +571,11 @@ def messen(vdir, schnell=False):
     res['H2 CLUT (0-2 bytegleich, Rangfolge)'] = h2(v, cl_g4)
     res['P1 Posterisierung Atlas dL0/5-10/Farben'] = p1(v)
     d1 = d1_messblatt(v, G, sonder)
-    res['D1 lineare Vergroesserung je Teil (<= 2,0)'] = (d1, all(x <= D1_MAX for x in d1.values()))
-    res['D1eff wirksame Vergroesserung (genutzte Texel) [info]'] = ({k: x['D1'] for k, x in hk.items()}, None)
+    res['D1 Vergroesserung je Teil, abgebildete G4-Flaeche / Median ortsgenau (<= 2,0)'] = (
+        {k: (x['D1'], x['D1_median']) for k, x in hk.items()}, all(x['D1'] <= D1_MAX and x['D1_median'] <= D1_MAX for x in hk.values()))
+    res['D1 ortsgenau Anteil Flaechen > 2,0 % [info]'] = ({k: x['D1_ueber2'] for k, x in hk.items()}, None)
+    res['D1 Messblatt-Formel ohne Wiederholung (Quellmeshes einmal) [info]'] = (d1, None)
+    res['S1b kollabierte UV (Punkt/Linie bei >= 1 Texel^2) % 3D [info]'] = ({k: x['kollabiert'] for k, x in hk.items()}, None)
     res['S1 fremde Texel je Teil % (<= 1)'] = ({k: x['S1'] for k, x in hk.items()}, all(x['S1'] <= S1_MAX for x in hk.values()))
     fm_ = feldmittel(v, cl_g4)
     zf1, zb = lab(np.array([KG.ZIEL_F1]))[0], lab(np.array([KG.ZIEL_BAND]))[0]
@@ -589,6 +646,65 @@ def gegenprobe_v2(vdir_v2):
     return out
 
 
+A_PROBE = r'C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formfarbe3/A'
+ORANGE, GELB = (255, 140, 40), (255, 200, 60)     # Messblatt V3 3.3 Tabelle "Orange (255,140,40) / Gelb (255,200,60)"
+
+
+def gegenproben_weitere(vdir):
+    """Runde 2 (Zahlen-Pruefer (4): "Nicht im Riegel, obwohl in Messblatt 5 als Gegenprobe gefuehrt"), als Lauf mit denselben Funktionen:
+    - G4 selbst bei B10-B17 (n2_riegel.messen wie --familie): muss 8/8 GRUEN sein.
+    - (b2)-Probe A (Leser A voll2_uv.pkl, Kopf aus G4-F1, ohne Feuerstellen; Modell wie Pruefer kette_b2.py): K11, K12, K13 und P2 Kopf
+      (Kopf + Kiefer gegen G4 26) muessen ROT sein.
+    - Orange und Gelb als Feldfarbe (CLUT-Zeilen 6/7 der Variante einfarbig): F1t und F2t muessen ROT sein."""
+    out = {}
+    import n2_riegel as NR
+    import n2_mass as N2M
+    import kf_tafeln as KT
+    Z = N2M.zonen()
+    r = NR.riegel(NR.messen(KT.re2_mo(0x34), 0, Z['g4'], Z['g4kopf']))
+    out['G4 B10-B17 (muss 8/8 GRUEN)'] = ('%d/%d' % (sum(1 for _v, ok in r.values() if ok), len(r)), all(ok for _v, ok in r.values()))
+    # (b2)-Probe A
+    alt = os.getcwd()
+    # Leser As Module (render.py, kern3.py, ...) heissen wie Module der B-Skripte: fuer den Import der Probe kurz aus sys.modules nehmen
+    gesichert = {n: sys.modules.pop(n) for n in ('render', 'kern3', 'uebertrag', 'uvprojekt', 'probe', 'lade') if n in sys.modules}
+    try:
+        os.chdir(A_PROBE)
+        sys.path.insert(0, A_PROBE)
+        import pickle
+        from uvprojekt import modell_mit, RGBTextur, kombi_atlas  # noqa: F401
+        from probe import mo as g4mo, tg, k5, k5_rgba
+        alle = pickle.load(open('voll2_uv.pkl', 'rb'))
+        m2 = modell_mit(k5, alle)
+        tex = RGBTextur(kombi_atlas(k5_rgba(), g4mo, tg))
+    finally:
+        os.chdir(alt)
+        sys.path.remove(A_PROBE)
+        for n in ('render', 'kern3', 'uebertrag', 'uvprojekt', 'probe', 'lade'):
+            sys.modules.pop(n, None)
+        sys.modules.update(gesichert)
+    kv = ketten_v3(vdir, dict(nur_k11_13=True), mo=m2, tex=tex)
+    for k, val in kv.items():
+        if k.startswith(('K11', 'K12', 'K13')):
+            out['(b2)-Probe A ' + k] = val
+    g4, g4tim, _q = KG.g4_modell()
+    v = Var(vdir)
+    pr, ok = p2(v, g4, g4tim, mo=m2, tv=tex, teile=[('Kopf + Kiefer (G4-F1)', [22, 23], [26])])
+    out['(b2)-Probe A P2 Kopf aus G4-F1 (K5c, G4 26, Diff)'] = (pr, ok)
+    # Orange / Gelb
+    px_g4, cl_g4 = KG.g4_cluts(g4tim)
+    for nm, rgb in (('Orange', ORANGE), ('Gelb', GELB)):
+        w = copy.copy(v)
+        w.cl = [list(z) for z in v.cl]
+        for zz in (KG.Z_F1, KG.Z_BAND):
+            w.cl[zz] = [KG.wort(rgb) if c != 0 else 0 for c in v.cl[zz]]
+        w.rgb_zeilen = np.stack([KG.wort_rgb(z) for z in w.cl])
+        fm_ = feldmittel(w, cl_g4)
+        zf1, zb = lab(np.array([KG.ZIEL_F1]))[0], lab(np.array([KG.ZIEL_BAND]))[0]
+        d1_, d2_ = de(fm_['F1t']['lab'], zf1), de(fm_['F2t']['lab'], zb)
+        out['%s F1t / F2t dE' % nm] = ((round(d1_, 1), round(d2_, 1)), d1_ <= F_DE or d2_ <= F_DE)
+    return out
+
+
 def drucken(name, res):
     print('== %s' % name)
     for k, (v, ok) in res.items():
@@ -612,10 +728,12 @@ def main():
     out = dict(variante={k: dict(wert=str(v), ok=ok) for k, (v, ok) in r.items()}, zusatz=zus)
     if x.gegenprobe_v2:
         gp = gegenprobe_v2(x.gegenprobe_v2)
-        print('== Gegenprobe V2r2 %s (H1, P1, K11, K14, K15 muessen ROT sein; P1 G4 GRUEN)' % x.gegenprobe_v2)
+        gp.update(gegenproben_weitere(x.variante))
+        print('== Gegenproben Messblatt V3 5 (V2r2: H1, P1, K11, K14, K15 ROT; G4: P1 und B10-B17 GRUEN; (b2)-Probe A: K11, K12, K13, P2 Kopf ROT;'
+              ' Orange/Gelb: F1t/F2t ROT)')
         falsch = []
         for k, (v, ok) in gp.items():
-            soll_gruen = k.startswith('P1 G4')
+            soll_gruen = k.startswith(('P1 G4', 'G4 '))
             print('  %-58s %-90s %s' % (k, v, 'GRUEN' if ok else 'ROT'))
             if ok != soll_gruen:
                 falsch.append(k)
