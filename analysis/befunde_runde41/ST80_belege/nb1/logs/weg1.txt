@@ -1,0 +1,84 @@
+# Lauf weg1 (ST80 Nachbesserung 1, exe sha1 f896e5a29e5c45bac77095d7fad84f537775985a)
+exe re15_pc_st80nb1_weg1 PID 74984
+exit=0 dauer=265s
+## Karte
+Karte re15_card.mcr: Stand vor6030 Raum 0x6000 Figur 0 (1763,-3600,-9700) Gierung 1024, (4,0xF3)=0
+## debug.log (Auszug)
+[input-script] RE15_INPUT_SCRIPT="A0.3,W8,L0.07,XU0.5,W0.5,L0.38,XU2,R0.12,A0.3,W6,XU1,R0.07,A0.3,W68,A0.3,W11,XU1,A0.3,W2,XU3,W75,L0.40,XU3,W0.5,R0.07,A0.3,W6,XU1,R0.07,A0.3,W30" -> 6653 ticks @ 30 fps, start frame 60
+[save] CONTINUE: resumed in room 6000 (hp=100)
+[story80] ROOM6030 Evt_exec sub08 -> Programm (576 B): Fuehrerstand vor dem Wagen msg 11,31 vor 'Certainly.' (NB1)
+[msgtext] room=6030 id=11 "Annette: Is everyone aboard?"
+[msgtext] room=6030 id=31 "Leon: Everyone we could find. Can you start this thing?"
+[msgtext] room=6030 id=13 "Annette: Certainly."
+[msgtext] room=6030 id=14 "Annette: If I remember the startup sequence correctly..."
+[msgtext] room=6030 id=15 "Leon: What's wrong?"
+[msgtext] room=6030 id=16 "Annette: Not enough power! The train's batteries are too low!"
+[msgtext] room=6030 id=17 "Leon: I'll take care of it!"
+[msgtext] room=6030 id=18 "Annette: I'll be ready to start the train when you do!"
+[msgtext] room=6030 id=19 "Leon: Good luck to both of us!"
+[story80] ROOM6030 Evt_exec sub02 -> Programm (900 B): Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)
+[msgtext] room=6030 id=0 "Leon: Hang on, Marvin. We're getting out of here."
+[msgtext] room=6030 id=1 "Leon: Who are you two?"
+[msgtext] room=6030 id=21 "John: Name's John. This is Sherry. We made it down here with a girl named Elza."
+[msgtext] room=6030 id=2 "Sherry: She's out there fighting the monsters!"
+[msgtext] room=6030 id=3 "John: She's trying to keep the outside clear so we can escape."
+[msgtext] room=6030 id=22 "John: She said she'd catch up with us."
+[msgtext] room=6030 id=4 "Leon: Why aren't you out there?"
+[msgtext] room=6030 id=5 "John: She told me to stay with the kid... and look after your friend here."
+[msgtext] room=6030 id=6 "Leon: Where's Annette?"
+[msgtext] room=6030 id=7 "John: The woman in the lab coat? Up front, trying to start the train."
+[msgtext] room=6030 id=23 "Sherry: A lab coat...? Is it Mom?!"
+[msgtext] room=6030 id=24 "John: Easy, kid. Stay with me."
+[msgtext] room=6030 id=8 "Leon: I'll find out. Stay here."
+[story80] ROOM6030 Evt_exec sub09 -> Programm (238 B): Fuehrerstand nach dem Wagen, Nachtrag msg 40,25 (NB1)
+[msgtext] room=6030 id=40 "Leon: There's a little girl in the back... Sherry."
+[msgtext] room=6030 id=25 "Annette: Sherry...? My daughter is on this train? ...Thank God."
+[flow] EXIT_AT: Bild 6800 in Raum 6030 erreicht -> exit
+## state.log jede 30. Zeile ab F5400
+F5400 pad=0000 PL(-25012,-24133,rot=1045,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=12 
+F5430 pad=0000 PL(-25012,-24133,rot=1045,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=12 
+F5460 pad=0000 PL(-25012,-24133,rot=1045,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=12 
+F5490 pad=4010 PL(-22137,-23669,rot=-107,hp=100) pst=1 ps1=0 ps2=0 mo=100 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=9 m
+F5520 pad=4010 PL(-16375,-22758,rot=-107,hp=100) pst=1 ps1=0 ps2=0 mo=100 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=7 m
+F5550 pad=4010 PL(-13307,-22758,rot=-107,hp=100) pst=1 ps1=0 ps2=0 mo=100 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 m
+F5580 pad=0000 PL(-13329,-22762,rot=-107,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 m
+F5610 pad=0000 PL(-11679,-22766,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=221 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(
+F5640 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(
+F5670 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(
+F5700 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(
+F5730 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(
+F5760 pad=0000 PL(-10551,-22798,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(
+F5790 pad=4010 PL(-9488,-22798,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=100 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=8 msg(a
+F5820 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=1 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F5850 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=1 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F5880 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=1 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F5910 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=0 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F5940 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F5970 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F6000 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F6030 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F6060 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F6090 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=1 msg(
+F6120 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(
+F6150 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(
+F6180 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(
+F6210 pad=0000 PL(-3873,-23487,rot=3755,hp=100) pst=4 ps1=0 ps2=0 mo=7 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(
+F6240 pad=0000 PL(-3873,-23487,rot=3275,hp=100) pst=4 ps1=0 ps2=0 mo=105 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6270 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=4 ps1=0 ps2=0 mo=2 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 msg(
+F6300 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6330 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6360 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6390 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6420 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6450 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6480 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6510 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6540 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6570 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6600 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6630 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6660 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6690 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=212 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6720 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=212 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6750 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms
+F6780 pad=0000 PL(-3873,-23487,rot=2047,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=0 bx=-1 sl=1111 cam=0 ms

@@ -155,7 +155,8 @@ Sherry (@0x00DEC), Leon zu John.
 
 ## 5. Message-Ids ROOM6030 und Integrationsstelle r41/annette
 
-ROOM6030: RDT-Nachrichten 0..20 (Sektion @0x01394). Diese Spur belegt **21..26**. Frei für andere Spuren: **27..31**
+ROOM6030: RDT-Nachrichten 0..20 (Sektion @0x01394). Diese Spur belegt **21..26** (Nachbesserung 1 dazu **31** und **40**,
+Abschnitt 8; 27..30 hat Spur AN genommen). Ursprünglich frei für andere Spuren: **27..31**
 (< 32 = PSX `MSG_TABLE_N`, VERTRAG Runde 36 §1.2) bzw. ab 40 auf dem PC (Spur AN nahm in 5090 die Ids 40..42). Stimmen
 gehen bis Id 63 (`VOICE_MAX_MSG` 64).
 
@@ -228,3 +229,122 @@ Aufnahme (`op_message_on`, Stimmen-Riegel).
   unter den neuen Untertiteln: 30E1 main02/03, 30C1 main02..05, 6030 main01, main03, main05, main07, main08, main11,
   main12. Für 6030 main21..26 gibt es noch keine Datei (die Zeilen bleiben stumm, `[voice] ... keine Aufnahme`).
 - r41/annette: Integrationsstelle Abschnitt 5.
+
+## 8. Nachbesserung 1 (Zug 6030, Reihenfolge)
+
+Anlass: Abnahme 1 (`analysis/befunde_runde41/ST80_abnahme_1.md`) M1, blockierend. Entscheid des Orchestrators:
+Variante (a) — vorne ohne Wagengespräch eine Fassung ohne Sherry, Annettes Sherry-Zeilen erst nach dem Wagengespräch.
+
+### 8.1 Beleg (ROOM6030, `tools/scd_dump_room.py` auf `shared_assets/PSX/STAGE6/ROOM6030.RDT`)
+
+| Stelle | Bytes | Bedeutung |
+|---|---|---|
+| main00 @0x00C52 | `3b 01 02 31 01 00 ac db ...` | Tür Slot 1, Ziel 6030 Cut 0 (Führerstand) |
+| main00 @0x00CB2 | `2c 04 0c 31 80 00 60 cd ...` | Treppe Slot 4 sce 12, Rechteck (-12960,-23500,2180,680) |
+| main00 @0x00CC6 | `2c 05 05 41 00 00 ee b2 ...` | Wagen-Marke Slot 5, (-19730,-25570,1600,6300) |
+| sub00 @0x00D28 / @0x00D2C / @0x00D32 | `13 0a 0c 00` / `14 00 04 00 00 00` / `18 07` | Switch(work_vars[10]) Case 0 -> Gosub sub07 |
+| sub01 @0x00D62 / @0x00D6A / @0x00D70 | `21 03 16 00` / `23 00 01 00 05 00` / `04 ff 18 02` | einziger Leser des Wagen-Flags: Ck(3,22)=0, Marke 5 -> Evt_exec sub02 |
+| sub02 @0x00D7A | `22 03 16 01` | einziger Schreiber: Set(3,22)=1 (erste Zeile der Wagen-Szene) |
+| sub07 @0x010D0 / @0x010E8 | `21 04 17 00` / `04 ff 18 08` | Ck(4,23)=0 -> Evt_exec sub08 — **ohne** Abfrage von (3,22) |
+| sub07 @0x010EC / @0x010F4 / @0x0110C | `07 00 28 00` / `21 03 59 00` / `04 ff 18 09` | sonst: Ck(3,89)=0 (Annette da) -> Annette + Evt_exec sub09 |
+| sub08 @0x0113A | `22 04 17 01` | Set(4,23)=1, Führerstand-Szene gesehen |
+| sub09 @0x01376..@0x0138C | `2e 02 00 00 3f 00 12 00 09 0a 50 00 3f 00 13 00 43 00 04 00 01 00` | Annette am Pult (Haltung 18/19, Plc_flg 4) |
+
+Die Lücke ist damit im Original selbst angelegt: sub07 startet sub08 unabhängig davon, ob die Wagen-Szene lief. Der Port
+macht die Verzweigung am Wagen-Flag (3,22) — `story80_r41.c` liest es mit `re15_game_flag_get` (dieselbe Tabelle wie Ck,
+Handler 0x8003fcf4) vor dem Umleiten des Evt_exec.
+
+### 8.2 Umsetzung (kein Asset-Patch, Programme aus Original-Bytes, `szenen_bauen.py`)
+
+| Aufruf | Bedingung | Programm | Zeilen |
+|---|---|---|---|
+| sub07 @0x010E8 -> sub08 | (3,22)=1 (Wagen zuerst) | `k_s80_6030_sub08` (644 B, unverändert) | 11, 12, 25, 26, 13..19 |
+| sub07 @0x010E8 -> sub08 | (3,22)=0 (vorne zuerst) | `k_s80_6030_sub08_vorne` (576 B) | 11, **31**, 13..19; setzt (9,128) |
+| sub07 @0x0110C -> sub09 | (9,128)=1 und (3,22)=1 | `k_s80_6030_sub09_nachtrag` (238 B) | **40**, 25; löscht (9,128) |
+| sub07 @0x0110C -> sub09 | sonst | Original-sub09 | — |
+
+`k_s80_6030_sub08_vorne`: Original @0x0113A..@0x0113E (Set(4,23)), Set(9,128)=1 (`22 09 80 01`, Form @0x0113A),
+Original @0x0113E..@0x01198 (Sperren, Cut 1, Drehungen, msg 11 + Gesten, Work_set Leon), msg 31 (`2b 1f 00 00`, Form
+msg 12 @0x01198), Leons Gesten nach msg 12 @0x0119C..@0x011CC, dann Original @0x011CC..@0x01376 (ab „Certainly.“ bis
+Evt_end).
+
+`k_s80_6030_sub09_nachtrag`: Set(9,128)=0 (`22 09 80 00`, Form @0x0136C), sub08 @0x0113E..@0x01174 (Sperren, Cut 1,
+Leon und Annette drehen sich zueinander, Warten auf (5,0x21)), Work_set Leon @0x01194, msg 40 (`2b 28 00 00`, Form
+@0x01198), Leons Gesten @0x0119C..@0x011CC, Work_set Annette @0x011CC, msg 25 (Form msg 13 @0x011D0), Annettes Gesten
+@0x012EA..@0x01306 (wie im bisherigen Programm), Schluss wie sub08 @0x0131E..@0x01376: Annette dreht zum Pult, Cut 0,
+Pult-Haltung 18/19 + Plc_flg 4 (= Inhalt von sub09), Leon dreht ab, Sperren auf, Cut_auto, Plc_ret, Evt_end.
+
+Port-Bit (9,128) „Sherry-Nachtrag offen“ (`RE15_S80_BIT_NACHTRAG`): Bank-9-Zensus 2026-11-07
+(`tools/r36_kartenbits/bank9_zensus.py`) — im Original frei (Block 110..133), im Integrationsbaum und in allen
+r41-Zweigen unbelegt (belegt sind dort 110-117, 125; moosgang 126/127, annette 133). Eingetragen in
+`tests/unit/test_r36_kartenbits.c` k_port[]. **Nachtrag im VERTRAG Runde 41 §1.1 steht noch aus (Orchestrator).**
+Gespeichert mit g_game.flags; alte Spielstände tragen 0 -> nie ein Nachtrag (kein Widerspruch).
+
+### 8.3 Texte (Herkunft je Satz; `texte_bauen.py`, Kopf/Schwanz Leon = msg 12 @0x015FC)
+
+| Id | Zeile | Herkunft | Aufnahme |
+|---|---|---|---|
+| 31 | Leon: Everyone we could find. / Can you start this thing? | Satz 1 = msg 12 (Nutzerwortlaut ST80); Satz 2 = msg 26 (Nutzer ST80), zugleich Schluss der Runde-36-Zeile 12 und der Mod-Zeile ROOM6030 msg 12 @0x015FC („Keeping the monsters at bay. Can you start this thing?“) | **keine** — stumm |
+| 40 | Leon: There's a little girl / in the back... Sherry. | Satz 2 von msg 12 (Nutzerwortlaut ST80) | **keine** — stumm |
+
+Kein Satz ist neu erfunden; beide Zeilen sind Teile vorhandener Nutzerzeilen. Für beide gibt es keine Aufnahme
+(`synchro/STAGE6/room6030/main31.wav` / `main40.wav` fehlen), sie bleiben stumm, bis der Nutzer sie liefert.
+Id 31 liegt unter PSX `MSG_TABLE_N` 32; Id 40 folgt VERTRAG Runde 41 §1.2 („Port-Ids ab 40“, 27..30 hat Spur AN) und
+wird nur auf dem PC angezeigt (PSX: `re15_msg_install_text` verwirft Ids >= 32 ohne Absturz). PSX-Syntaxprüfung
+`story80_r41.c`, `story_r36.c` mit PSn00bSDK 0.24 `mipsel-none-elf-gcc -fsyntax-only -ffreestanding`: ohne Fehler.
+
+### 8.4 Ablauf beider Reihenfolgen (gemessen, echte exe, normale Eingaben)
+
+**Vorne zuerst** (Lauf `weg1`/`bild_vorne`, Weg der Abnahme 1 Lauf kabine5 als Eingabe plus Rückweg; = Riegel P4j):
+
+| Bild | Zeile |
+|---|---|
+| F671 | Annette: Is everyone aboard? (11) |
+| F791 | Leon: Everyone we could find. Can you start this thing? (31) |
+| F911..F1917 | 13..19 („Certainly.“ .. „Good luck to both of us!“), Spieler frei ab F2466 |
+| F3200..F4815 | Wagen: 0, **1 „Who are you two?“**, **21 Johns Vorstellung (Sherry)**, 2, 3, 22, 4, 5, 6, 7, 23, 24, 8 |
+| F5460..F5820 | Rückweg: L0.40 (Gier 1045 -> -107), XU3 (an SCA #3/#2 entlang nach (-13307,-22758)), Treppe, Tür Slot 1 |
+| F5838 | Leon: There's a little girl in the back... Sherry. (40) |
+| F5958 | Annette: Sherry...? My daughter is on this train? ...Thank God. (25) |
+| F6300 | Szene aus, Cut 0, Spieler frei |
+
+Jede Zeile genau einmal (24 Zeilen), kein msg 12/26. Erneutes Betreten danach: sub09 Original, kein Text (Unit-Riegel).
+Bildleiste: `analysis/befunde_runde41/ST80_belege/nb1/6030_vorne_zuerst.jpg` (+ `_klein`; RE15_FRAMEDUMP-Serie,
+F720 .. F6330, Renderer des Nutzers, kein SOFTWARE_RENDER/AUTOSHOT). Laufauszüge (Eingabe, Karte, `[msgtext]`, Lagen):
+`ST80_belege/nb1/logs/weg1.txt`, `weg2.txt`, `bild_vorne.txt`, `gegenprobe_alt_p4b.txt`, Laufskript `lauf.sh`
+(Messkopie unter eigenem Namen, nur eigene PID). exe sha1 f896e5a29e5c45bac77095d7fad84f537775985a.
+
+**Wagen zuerst** (Lauf `weg2`, P4a-Weg plus derselbe Rückweg; = Riegel P4k): Wagen 0, 1, 21, 2, 3, 22, 4, 5, 6, 7, 23,
+24, 8, dann vorne 11, 12, 25, 26, 13..19 wie bisher; kein msg 31/40, kein Nachtrag.
+
+Danach geht das Spiel in beiden Reihenfolgen gleich weiter: (4,23)=1 nach dem Führerstand, (3,22)=1 nach dem Wagen,
+Sperren (2,7)/(1,27) frei, keine anderen Flags berührt ((3,89), Batterien, Tür nach 5090 unverändert).
+Bleibt schief (wie Runde 36 und Abnahme 1 vermerkt): Leon fragt in der Reihenfolge „vorne zuerst“ im Wagen „Where's
+Annette?“ (msg 6), obwohl er sie schon getroffen hat.
+
+### 8.5 Riegel
+
+| Test | Inhalt |
+|---|---|
+| `unit_r41_story80_reihenfolge6030` (neu) | VM: vorne vor dem Wagen (11, 31, 13..19, keine Sherry-Zeile, (9,128)=1) -> erneut vorne (nichts) -> Wagen (13 Zeilen, msg 1 vor 21) -> vorne (Nachtrag 40, 25, (9,128)=0, Cut 0, Sperren frei) -> nochmals vorne (nichts); jede Zeile höchstens einmal |
+| `unit_r41_story80_ablauf6030` | Wagen -> Führerstand mit reisenden Flags (volle Fassung, (9,128)=0), danach erneut vorne: nichts |
+| `unit_r41_story80_texte` / `_stimmen` | + msg 31/40 (Breiten 203/166 bzw. 171/137 px), beide als stumm ausgewiesen |
+| `unit_r36_story_texte` | 8 neue Dialog-Ids; Ids < 32 oder 40..63 |
+| `unit_r36_kartenbits` | Bit 128 in k_port[] |
+| `integration_r36_story_leon` | P4a „15 Nachrichten“; **P4b** CONTINUE vorne mit (3,22)=0: 11, 31, 13, keine Sherry-Zeile, kein msg 12/25/26/40; **P4h** mit (3,22)=1: 11, 12, 25, 26, 13 wie bisher; **P4i** mit (3,22)=1, (4,23)=1, (9,128)=1: Nachtrag 40, 25, kein 11/13/31 |
+| `integration_r36_story_zug` (neu) | **P4j** vorne zuerst mit normalen Eingaben (kabine5 + Rückweg): Reihenfolge, jede der 24 Zeilen genau einmal, bis msg 21 keine Sherry-Zeile; **P4k** Wagen zuerst mit normalen Eingaben: heutiger Ablauf, kein 31/40 |
+
+Läufe (Git-Bash, `PATH=/c/msys64/mingw64/bin:$PATH`, `SDL_ASSERT=always_ignore`, Integrationsbaum-Bau):
+- `-R "^(unit_r41_story80_|unit_r36_story_|unit_r36_kartenbits$)" -j 4` -> `100% tests passed, 0 tests failed out of 13`
+- `-R "^(unit_r41_story80_|unit_r36_story_|unit_r36_kartenbits$|unit_r35_affen_|unit_r36_dachkiste_|unit_r37_fahrstuhl_|unit_r41_stage3szenen_a_|unit_r41_wasser20b0_|unit_r37_sperre1050_)" -j 4`
+  -> `100% tests passed, 0 tests failed out of 64`
+- `integration_r36_story_elza` Passed 271.57 sec, `integration_r36_story_zug` Passed 451.04 sec (erster Lauf; leon dort rot
+  an der eigenen alten P4a-Zahl „13 Nachrichten“, berichtigt auf 15)
+- `-R "^(integration_r36_story_leon|integration_r35_zgirl_5090)$" -j 2` -> `100% tests passed, 0 tests failed out of 2`
+  (leon 528.16 sec, zgirl_5090 150.06 sec)
+
+Gegenproben (Stand ad8532cd4 = exe sha1 d8529b34, Bau 2026-11-06 20:12, letzte Engine-Änderung davor c9297033c):
+- neuer `test_r36_story.cmake` TEIL=leon mit der alten exe: **rot** in P4b; die alte exe zeigt vorne
+  `id=12 "Leon: Everyone we could find. There's a little girl in the back... Sherry."` und `id=25`.
+- `unit_r41_story80_reihenfolge6030` mit abgeschaltetem Gate der vollen Fassung (= alter Ablauf): **rot** (Texte
+  11 12 25 26 ..., keine Sherry-freie Fassung, kein Nachtrag).

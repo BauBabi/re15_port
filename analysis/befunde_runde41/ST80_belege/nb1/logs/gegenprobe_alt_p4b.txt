@@ -1,0 +1,25 @@
+# Gegenprobe: test_r36_story.cmake (neu) TEIL=leon mit exe Stand ad8532cd4 (sha1 d8529b34dea9d2db508e0302186d056ce7b7c3e9)
+-- r36_story[p4a]: ok   [msgtext] room=6030 id=2 "Sherry: She's out there fighting the monsters!"
+-- r36_story[p4a]: ok   [msgtext] room=6030 id=22 "John: She said she'd catch up with us."
+-- r36_story[p4a]: ok   [msgtext] room=6030 id=23 "Sherry: A lab coat...? Is it Mom?!"
+-- r36_story[p4a]: ok   [msgtext] room=6030 id=24 "John: Easy, kid. Stay with me."
+-- r36_story[p4a]: ok   [msgtext] room=6030 id=8 "Leon: I'll find out. Stay here."
+-- r36_story[p4a]: ok   nicht: Where's Elza
+-- r36_story[p4a]: ok   nicht: I see. Thanks.
+-- r36_story[p4b]: Lauf ok (C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/st80nb1/gegen_leon/lauf_a857c018_p4b)
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/tests/integration/test_r36_story.cmake:121 (message):
+  r36_story[p4b]: erwartet, aber fehlt: [story80] ROOM6030 Evt_exec sub08 ->
+  C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/tests/integration/test_r36_story.cmake:201 (muss)
+rc=1
+## debug.log P4b
+[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26 vor 'Certainly.'
+[msgtext] room=6030 id=11 "Annette: Is everyone aboard?"
+[msgtext] room=6030 id=12 "Leon: Everyone we could find. There's a little girl in the back... Sherry."
+[msgtext] room=6030 id=25 "Annette: Sherry...? My daughter is on this train? ...Thank God."
+[msgtext] room=6030 id=26 "Leon: Can you start this thing?"
+[msgtext] room=6030 id=13 "Annette: Certainly."
+[msgtext] room=6030 id=14 "Annette: If I remember the startup sequence correctly..."
+[msgtext] room=6030 id=15 "Leon: What's wrong?"
+[msgtext] room=6030 id=16 "Annette: Not enough power! The train's batteries are too low!"
+[msgtext] room=6030 id=17 "Leon: I'll take care of it!"
+[msgtext] room=6030 id=18 "Annette: I'll be ready to start the train when you do!"
