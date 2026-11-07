@@ -12,6 +12,12 @@
 #include "re15_room.h"          /* g_current_room_id */
 #include "re15_audio.h"        /* re15_audio_room_se */
 #include "re15_skeleton.h"     /* re15_skel_bone_to_world (Nahsicht-Wache) */
+#include "re15_camera.h"       /* Nachbesserung 4: re15_camera_build_view (Bildlage je Kamera) */
+#include "re15_aot.h"          /* Nachbesserung 4: re15_aot_point_in_quad (Ankerzone des Wagens) */
+#include "re15_anim_select.h"  /* Nachbesserung 4: re15_compute_actor_kf (Pose der Form) */
+#include "re15_engine.h"       /* Nachbesserung 4: g_engine.frame_count (Messschiene) */
+#include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -143,6 +149,8 @@ static struct {
 } s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0 };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
+static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
+#define BF_RS_KAM_HALT 30      /* Gestaltung: 1 s wie die Haltezeit der Nahsicht-Wache (Nachbesserung 1) */
 static int s_kam_g5 = 0;       /* G5-Auftritt: Kamera aufs Zugende halten (Slot+1, 0 = aus) */
 static int s_kam_auftritt = 0, s_kam_wache = 0, s_kam_wache_halt = 0;   /* Nachbesserung 1 M4, s. bf_nahsicht_wache */
 static void bf_nahsicht_wache(void);
@@ -156,7 +164,7 @@ void re15_bf_reset(void)
     s_bf_mutiert = 0; s_kam_g5 = 0;
     s_kam_auftritt = 0; s_kam_wache = 0; s_kam_wache_halt = 0;
     re15_bb_reset();
-    s_rs.slot = -1; s_rs.phase = 0; s_rs.t = 0;
+    s_rs.slot = -1; s_rs.phase = 0; s_rs.t = 0; s_rs_kam_halt = 0;
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = 0; s_h.t = 0; s_h.birkin_start = 0;
 }
 
@@ -385,16 +393,11 @@ static void bf_kamera_frei(void) { g_scd.cut_auto_enabled = 1; }
  * Cut 11 auf (Auge (7626,-3256,-25360) -> (-1504,-986,-21970)), der Kamera von Bild 2 (form/kamera_bild2.json, Lage (941,-23776)) -
  * Clip 10 Bild 45-52 ist Pose Bild 2. Gehalten bis Clip 10 Bild BF_AUFTRITT_KAM_BIS, dann der Schnitt der Spielerlage
  * (re15_bf_schnitt_aus_lage) und die Zonen wieder frei, wie das Szenenende der Rueckstoss-Szene.
- * (b) Cut 13 (Auge x 11050, Blick +x) und Cut 12 (Auge x 18526, Blick -x) schauen den Gang entlang gegeneinander. Steht die Form
- * weniger als BF_NAH_ACHSE vor dem Auge und der Spieler dahinter (Abnahme: Leon x 15191, Form 8223 -> 13380, 8 s 60-90 % des Bildes),
- * schaltet die Wache auf die Gegenkamera, wenn der Spieler dort mindestens 1500 vor dem Auge steht und die Form hinter ihm. Haltezeit
- * 30 Bilder gegen Flattern; danach Zonen frei. */
+ * (b) Cut 13 (Auge x 11050, Blick +x) und Cut 12 (Auge x 18526, Blick -x) schauen den Gang entlang gegeneinander. Stand die Form
+ * zwischen Auge und Spieler (Abnahme 1: Leon x 15191, Form 8223 -> 13380, 8 s 60-90 % des Bildes), schaltete die Wache bis Nachbesserung 3
+ * nach einer Achsenregel (Form < 4500 vor dem Auge, Spieler >= 1500 vor dem Auge der Gegenkamera) um. Abnahme 2 M-B: steht der Spieler
+ * 800-1300 vor dem Auge von Cut 12, griff die Regel nicht. Seit Nachbesserung 4 entscheidet das Bildmass (bf_schnitt_waehlen, s. unten). */
 #define BF_AUFTRITT_KAM_BIS 60
-#define BF_NAH_ACHSE      4500
-static const struct { uint8_t cut; int32_t auge_x; int8_t blick; } k_gang_kam[2] = {
-    { 0x0C, 18526, -1 },   /* RID ROOM5090 Cut 12 */
-    { 0x0D, 11050, +1 },   /* RID ROOM5090 Cut 13 */
-};
 
 static int bf_riesenform_slot(void)
 {
@@ -403,6 +406,257 @@ static int bf_riesenform_slot(void)
         if (e->active && !e->no_draw && e->type == 0x30u && re15_bb_bank_da(e) && !(e->grid_id & 0x20)) return i;
     }
     return -1;
+}
+
+/* ---- Nachbesserung 4 (Abnahme 2 M-A, M-B): Schnittwahl nach der Bildlage von Form und Spieler (PORT-WAHL) ----------------
+ * Abnahme 2 M-A: die Rueckstoss-Szene hielt fest Cut 12 (Auge x 18526, Blick -x). Im echten Wagenweg stand die Form bei Szenenbeginn
+ * 1240 vor dem Auge (16 Bilder 77-100 % fast schwarz) bzw. hinter dem Auge, waehrend der Spieler 711 davor stand (7,5 s nur sein Ruecken).
+ * M-B: nach dem Wurf stand der Spieler 800-1300 vor dem Auge von Cut 12, die Wache schaltete nicht, Cut 13 zeigte 4 s die Form vor ihm.
+ * Statt fester Schnitte prueft die Szene (und die Wache) je Bild, was jede Kamera des Wagens zeigt:
+ *   Kameras des Wagens = jeder Cut, dessen Ankerzone (erste RVD-Zone seiner Gruppe, Such-Anker FUN_80014230/FUN_80014324,
+ *   rdt_common.c) den Spieler enthaelt. ROOM5090/5091 Wagen C (Datei-Offsets, 20 Byte je Zone): Cut 11 @0x47c, 12 @0x4a4,
+ *   13 @0x4e0 (je x -5600..28100, z -29700..-16975), 14 @0x51c (x 17000..28050), 15 @0x544 (wie 11). Augen/Ziele aus der RID
+ *   (32 Byte je Cut ab 0x60): Cut 11 @0x1c0, 12 @0x1e0, 13 @0x200, 14 @0x220, 15 @0x240. Keine eigene Kamera.
+ *   Original-Zonenkamera = re15_bf_schnitt_aus_lage (RVD-Streifen @0x490-@0x530, s. dort).
+ *   Projektion wie der Zeichner: Blickmatrix re15_camera_build_view (FUN_80053ca4), H = fov >> 7, Bild 320 x 240, Mitte (160,120).
+ *   Form = Kugeln um alle Knochen der Pose (re15_skel_compute_pose wie re15_enemy_part_point), Spieler = Kugeln y 0..-3000 (wie
+ *   gatorszene_r41.c spieler_punkte, dort an der exe gemessen: ~3000 Einheiten hoch, Rumpf r 500).
+ * Schranken = Pruefmass der Abnahme 2 (Abschnitt 5 M-A): kein Szenenbild mit mehr als 60 % Form (dort: Bildpunkte < 24), kein
+ * Spielerkoerper ueber einem Drittel des Bildes; dazu Form nicht von der Kamera geschnitten und nicht hinter dem Spieler.
+ * Das Kugelmodell misst Rahmen, nicht Bildpunkte; geeicht an den GEZEICHNETEN Dreiecken (Messschiene RE15_SLOTDECKUNG, render_pc.c,
+ * Laeufe n2_w_leon/n2_v_leon, STUFE3.md Nachbesserung 4): Formrahmen / Formbildpunkte 1,65-2,6, Spielerrahmen / Spielerbildpunkte
+ * 2,3-3,2, Modell-Verdeckung / gezeichnete Verdeckung 1,4-3,2 (bei Modell 443-500 gezeichnet 275-355 Promille). Die Modellschranken
+ * unten halten damit die Bildpunkt-Schranken auch beim kleinsten gemessenen Verhaeltnis ein. */
+#define BF_BM_FORM_R      700    /* PORT-WAHL: Kugel je Formknochen; Schulter +-1470, Haende +-1590 (am Asset, birkin_bahnsteig.c:723) */
+#define BF_BM_PL_R        500    /* = GSZ_SPIELER_RADIUS (gatorszene_r41.c, an der exe gemessen) */
+#define BF_BM_PL_N        5      /* = gatorszene_r41.c spieler_punkte: Kugeln y 0..-3000 in Vierteln (an der exe gemessen ~3000 hoch) */
+#define BF_BM_PL_Y0       0
+#define BF_BM_PL_DY       750
+#define BF_BM_NAH         1000   /* PORT-WAHL: Formkugel naeher als das an der Bildebene (im Bild) = von der Kamera geschnitten; der
+                                  * gezeigte Schnitt bleibt bis zur Bildebene selbst (Grenze 0), gegen Flattern (Laeufe n3: Cut 11/15) */
+#define BF_BM_FORM_MAX    900    /* Promille Rahmen; / 1,65 = 545 Promille Bildpunkte < 60 % (Abnahme 2 M-A) */
+#define BF_BM_PL_MAX      490    /* Promille Rahmen; kleinstes gemessenes Verhaeltnis 1,49 (n3_a F1077: 665 -> 447) -> <= 329 Promille
+                                  * Bildpunkte < ein Drittel (Abnahme 2 M-A); dazu keine Spielerkugel an der Bildebene (pl_nah) */
+#define BF_BM_DECK_MAX    650    /* Promille Rahmen; kleinstes gemessenes Verhaeltnis 1,41 (500 -> 355) -> <= 461 Promille verdeckt, Form zu mehr als der Haelfte sichtbar */
+#define BF_BM_INNEN_MIN   500    /* PORT-WAHL: mindestens die Haelfte der Formknochen (Kugelmitten) im Bild */
+#define BF_BM_PUNKTE      32
+typedef struct {
+    int ok;                       /* Kamera da (RID), Form projiziert */
+    int nah;                      /* Formkugel an der Bildebene im Bild */
+    int hinter;                   /* Formkugeln hinter der Kamera */
+    int form;                     /* Promille: Formrahmen im Bild (geklemmt) */
+    int innen;                    /* Promille: Formkugel-Mitten im Bild (von allen Formkugeln) */
+    int mitte_in;                 /* Schwerpunkt der Formkugel-Mitten im Bild */
+    int pl;                       /* Promille: Spielerrahmen im Bild */
+    int pl_in;                    /* Spielerrahmen-Mitte im Bild */
+    int pl_nah;                   /* Spielerkugel naeher als BF_BM_NAH an der Bildebene (im Bild): Rahmen unzuverlaessig, Spieler zu nah */
+    int deck_form;                /* Promille der Formflaeche hinter dem naeheren Spieler */
+    int deck_pl;                  /* Promille der Spielerflaeche hinter der naeheren Form */
+} bf_bild_t;
+
+static int bf_form_punkte(const re15_actor_t *e, int32_t pk[BF_BM_PUNKTE][3])
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    int n = 0;
+    if (b && b->ok && b->skel.bone_count > 0) {
+        re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+        const int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+        void *save = g_anim_pose_actor;
+        int rv;
+        g_anim_pose_actor = NULL;                        /* QUERY wie re15_enemy_part_point */
+        rv = re15_skel_compute_pose(&b->skel, kf, poses);
+        g_anim_pose_actor = save;
+        if (rv == 0)
+            for (int i = 0; i < b->skel.bone_count && n < BF_BM_PUNKTE; i++, n++)
+                re15_skel_bone_to_world(poses[i].trans, e->rot_y, e->x, e->y, e->z, pk[n]);
+    }
+    if (n == 0) { pk[0][0] = e->x; pk[0][1] = e->y; pk[0][2] = e->z; n = 1; }
+    return n;
+}
+
+/* Rahmen (x0,y0,x1,y1) der Kugeln im Bild; Tiefe = Mittel der vorderen. Rueckgabe Zahl der Kugeln vor der Kamera.
+ * innen/sp: Zahl der Kugelmitten im Bild und Summe ihrer Bildlagen (Schwerpunkt). */
+static int bf_rahmen(const re15_camera_view_t *v, int32_t pk[][3], int n, int32_t r, int64_t rm[4], int64_t *tief, int *hinter, int *nah,
+                     int32_t nah_grenze, int *innen, int64_t sp[2])
+{
+    const int64_t h = v->fov_screen_dist;
+    int vorn = 0;
+    int64_t summe = 0;
+    if (innen) *innen = 0;
+    if (sp) sp[0] = sp[1] = 0;
+    rm[0] = rm[1] = INT64_MAX; rm[2] = rm[3] = INT64_MIN;
+    for (int i = 0; i < n; i++) {
+        const int64_t px = pk[i][0], py = pk[i][1], pz = pk[i][2];
+        const int32_t vx = (int32_t)(((int64_t)v->rot[0]*px + (int64_t)v->rot[1]*py + (int64_t)v->rot[2]*pz) >> 12) + v->trans[0];
+        const int32_t vy = (int32_t)(((int64_t)v->rot[3]*px + (int64_t)v->rot[4]*py + (int64_t)v->rot[5]*pz) >> 12) + v->trans[1];
+        const int32_t vz = (int32_t)(((int64_t)v->rot[6]*px + (int64_t)v->rot[7]*py + (int64_t)v->rot[8]*pz) >> 12) + v->trans[2];
+        if (vz + r <= 0) { if (hinter) (*hinter)++; continue; }
+        {
+            const int64_t d = vz > r ? vz : r;
+            const int64_t bx = 160 + (vx * h) / d, by = 120 + (vy * h) / d, br = (r * h) / d;
+            if (bx - br < rm[0]) rm[0] = bx - br;
+            if (by - br < rm[1]) rm[1] = by - br;
+            if (bx + br > rm[2]) rm[2] = bx + br;
+            if (by + br > rm[3]) rm[3] = by + br;
+            if (nah && vz - r < nah_grenze && bx + br > 0 && bx - br < 320 && by + br > 0 && by - br < 240) *nah = 1;
+            if (vz > 0 && bx >= 0 && bx < 320 && by >= 0 && by < 240) {
+                if (innen) (*innen)++;
+                if (sp) { sp[0] += bx; sp[1] += by; }
+            }
+        }
+        summe += vz; vorn++;
+    }
+    *tief = vorn ? summe / vorn : 0;
+    return vorn;
+}
+
+static int64_t bf_flaeche(const int64_t a[4]) { return (a[2] > a[0] && a[3] > a[1]) ? (a[2] - a[0]) * (a[3] - a[1]) : 0; }
+static void bf_klemmen(const int64_t a[4], int64_t k[4])
+{
+    k[0] = a[0] < 0 ? 0 : a[0]; k[1] = a[1] < 0 ? 0 : a[1];
+    k[2] = a[2] > 320 ? 320 : a[2]; k[3] = a[3] > 240 ? 240 : a[3];
+}
+static int64_t bf_schnitt(const int64_t a[4], const int64_t b[4])
+{
+    const int64_t s[4] = { a[0] > b[0] ? a[0] : b[0], a[1] > b[1] ? a[1] : b[1], a[2] < b[2] ? a[2] : b[2], a[3] < b[3] ? a[3] : b[3] };
+    return bf_flaeche(s);
+}
+
+static int bf_bild_mass(int cut, int32_t pk[][3], int npk, int gezeigt, bf_bild_t *m)
+{
+    re15_camera_view_t v;
+    int32_t sp[BF_BM_PL_N][3];
+    int64_t fr[4], fk[4], pr[4], pkl[4], ft = 0, pt = 0;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int nf, np, fin = 0;
+    int64_t fsp[2];
+    memset(m, 0, sizeof *m);
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cut < 0 || cut >= g_room_rdt.cut_count) return 0;
+    if (re15_camera_build_view(&g_room_rdt.cuts[cut], &v) != 0) return 0;
+    nf = bf_rahmen(&v, pk, npk, BF_BM_FORM_R, fr, &ft, &m->hinter, &m->nah, gezeigt ? 0 : BF_BM_NAH, &fin, fsp);
+    for (int i = 0; i < BF_BM_PL_N; i++) { sp[i][0] = pl->x; sp[i][1] = pl->y + BF_BM_PL_Y0 - BF_BM_PL_DY * i; sp[i][2] = pl->z; }
+    np = pl->active ? bf_rahmen(&v, sp, BF_BM_PL_N, BF_BM_PL_R, pr, &pt, NULL, &m->pl_nah, BF_BM_NAH, NULL, NULL) : 0;
+    m->ok = 1;
+    if (nf > 0) {
+        bf_klemmen(fr, fk);
+        m->form = (int)(bf_flaeche(fk) * 1000 / (320 * 240));
+        m->innen = fin * 1000 / npk;
+        m->mitte_in = fin > 0 && fsp[0] / fin >= 0 && fsp[0] / fin < 320 && fsp[1] / fin >= 0 && fsp[1] / fin < 240;
+    }
+    if (np > 0) {
+        bf_klemmen(pr, pkl);
+        m->pl = (int)(bf_flaeche(pkl) * 1000 / (320 * 240));
+        m->pl_in = (pr[0] + pr[2]) / 2 >= 0 && (pr[0] + pr[2]) / 2 < 320 && (pr[1] + pr[3]) / 2 >= 0 && (pr[1] + pr[3]) / 2 < 240;
+        if (nf > 0) {
+            const int64_t s = bf_schnitt(fk, pkl), af = bf_flaeche(fk), ap = bf_flaeche(pkl);
+            if (pt < ft && af > 0) m->deck_form = (int)(s * 1000 / af);
+            if (ft < pt && ap > 0) m->deck_pl = (int)(s * 1000 / ap);
+        }
+    }
+    return 1;
+}
+
+/* Szene: die Form ist das Motiv. */
+static int bf_bild_szene_gut(const bf_bild_t *m)
+{
+    return m->ok && !m->nah && !(m->hinter && m->form > 0) && m->mitte_in && m->innen >= BF_BM_INNEN_MIN
+        && m->form <= BF_BM_FORM_MAX && m->pl <= BF_BM_PL_MAX && !m->pl_nah && m->deck_form <= BF_BM_DECK_MAX;
+}
+/* Kampf (Wache): der Spieler ist das Motiv, die Form darf das Bild nicht fuellen und ihn nicht verdecken. */
+static int bf_bild_kampf_gut(const bf_bild_t *m)
+{
+    return m->ok && !m->nah && m->pl_in && m->form <= BF_BM_FORM_MAX && m->pl <= BF_BM_PL_MAX && !m->pl_nah && m->deck_pl <= BF_BM_DECK_MAX;
+}
+
+/* Kameras des Wagens fuer ein Motiv bei (x,z):
+ * - Ankerzone (erste Zone der Gruppe, FUN_80014324 sucht sie) enthaelt das Motiv: ROOM5090/5091 Cut 11 @0x47c, 12 @0x4a4, 13 @0x4e0,
+ *   15 @0x544 (je x -5600..28100), Cut 14 @0x51c (x 17000..28050).
+ * - Steht das Auge AUSSERHALB der Wechselstreifen des Wagens (z-Bereich aller Nicht-Anker-Zonen der Kandidaten, Wagen C z -28225..-18700),
+ *   blickt die Kamera durch die Aussenwand (Cut 14, Auge z -29130 @0x220); sie zeigt nur ihren Anzeigebereich: x-Spanne ihrer Wechselstreifen
+ *   (Cut 14: 14->13 @0x530 x 18502..20252, 13->14 @0x508 x 20250..21750), zur Wagenseite hin offen, wenn sie die aeusserste ist. Gemessen:
+ *   die Form bei x 12044-14764 (Lauf n1_v F1624-F1656) und Leon bei x 17714 (Lauf n3_a F1125-F1179) sind in Cut 14 nicht zu sehen. */
+static int bf_wagen_kameras(int32_t x, int32_t z, int out[8])
+{
+    int n = 0, kand[8], nk = 0;
+    int32_t zmin = INT32_MAX, zmax = INT32_MIN, lo[8], hi[8], lo_min = INT32_MAX, hi_max = INT32_MIN;
+    if (!g_room_rdt_ok) return 0;
+    for (int i = 0; i < g_room_rdt.zone_count && nk < 8; i++) {
+        const re15_rdt_zone_t *zn = &g_room_rdt.zones[i];
+        if (i > 0 && g_room_rdt.zones[i - 1].cam_from == zn->cam_from) continue;     /* nur der Anker */
+        if (zn->cam_from >= g_room_rdt.cut_count) continue;
+        if (re15_aot_point_in_quad(x, z, zn->xs, zn->zs)) kand[nk++] = zn->cam_from;
+    }
+    for (int c = 0; c < nk; c++) {
+        lo[c] = INT32_MAX; hi[c] = INT32_MIN;
+        for (int i = 1; i < g_room_rdt.zone_count; i++) {
+            const re15_rdt_zone_t *zn = &g_room_rdt.zones[i];
+            if (g_room_rdt.zones[i - 1].cam_from != zn->cam_from) continue;           /* Anker auslassen */
+            if (zn->cam_from != kand[c] && zn->cam_to != kand[c]) continue;
+            for (int q = 0; q < 4; q++) {
+                if (zn->xs[q] < lo[c]) lo[c] = zn->xs[q];
+                if (zn->xs[q] > hi[c]) hi[c] = zn->xs[q];
+                if (zn->zs[q] < zmin) zmin = zn->zs[q];
+                if (zn->zs[q] > zmax) zmax = zn->zs[q];
+            }
+        }
+        if (lo[c] <= hi[c]) { if (lo[c] < lo_min) lo_min = lo[c]; if (hi[c] > hi_max) hi_max = hi[c]; }
+    }
+    for (int c = 0; c < nk; c++) {
+        const int32_t az = g_room_rdt.cuts[kand[c]].pos_z;
+        if (zmin <= zmax && (az < zmin || az > zmax)) {                                  /* Auge ausserhalb des Wagens */
+            const int32_t l = lo[c] == lo_min ? INT32_MIN : lo[c], h = hi[c] == hi_max ? INT32_MAX : hi[c];
+            if (lo[c] > hi[c] || x < l || x > h) continue;
+        }
+        out[n++] = kand[c];
+    }
+    return n;
+}
+
+/* MESSSCHIENE RE15_BF_KAMLOG=<datei>: je Bild der Szene/Wache die Masse aller Wagenkameras (kein Spielverhalten). */
+static void bf_kamlog(const char *wer, int gewaehlt, const int *k, const bf_bild_t *m, int n, const re15_actor_t *e)
+{
+    static FILE *fp = NULL; static int init = 0;
+    if (!init) { const char *p = getenv("RE15_BF_KAMLOG"); init = 1; if (p && *p) fp = fopen(p, "w"); }
+    if (!fp) return;
+    fprintf(fp, "F%u %s wahl=%d form=(%d,%d) pl=(%d,%d)", (unsigned)g_engine.frame_count, wer, gewaehlt, (int)e->x, (int)e->z,
+            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+    for (int i = 0; i < n; i++)
+        fprintf(fp, " | c%d ok=%d nah=%d hi=%d f=%d in=%d mi=%d p=%d pi=%d df=%d dp=%d pn=%d sz=%d kp=%d", k[i], m[i].ok, m[i].nah, m[i].hinter,
+                m[i].form, m[i].innen, m[i].mitte_in, m[i].pl, m[i].pl_in, m[i].deck_form, m[i].deck_pl, m[i].pl_nah,
+                bf_bild_szene_gut(&m[i]), bf_bild_kampf_gut(&m[i]));
+    fputc('\n', fp); fflush(fp);
+}
+
+/* Wahl je Bild (Szene: Motiv Form, Wache: Motiv Spieler), in dieser Reihenfolge die erste gute Kamera:
+ *   Szene: (1) Original-Zonenkamera der FORMLAGE (re15_bf_schnitt_aus_lage auf die Form: der Schnitt, den der Raum fuer diese Stelle des
+ *          Wagens zeigt), (2) der aktuelle Schnitt, (3) die Original-Zonenkamera der Spielerlage, (4) die gute Kamera mit dem groessten Formbild;
+ *          in den BF_RS_KAM_HALT Bildern nach einem Schnitt tauschen (1) und (2) (Haltezeit gegen Flattern).
+ *   Wache: (1) der aktuelle Schnitt, (2) die Original-Zonenkamera der Spielerlage, (3) die gute Kamera mit dem groessten Spielerbild.
+ * Gibt es keine, gilt die Original-Zonenkamera (Auftrag NB4: wo der Raum fuer eine Lage keinen passenden Schnitt hat): in der Szene die der
+ * Formlage (der Schnitt, den der Raum fuer diese Stelle zeigt), in der Wache die der Spielerlage. */
+static int bf_schnitt_waehlen(const re15_actor_t *e, int szene, int halten, const char *wer)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int32_t pk[BF_BM_PUNKTE][3];
+    int k[8], n, npk, wahl = -1, best = -1;
+    const int cur = g_scd.cam_change_pending ? (int)g_scd.cam_id : (int)g_scd.work_vars[0x0A];
+    const int zone_pl = re15_bf_schnitt_aus_lage(pl->x), zone_form = re15_bf_schnitt_aus_lage(e->x);
+    /* halten: in den BF_RS_KAM_HALT Bildern nach einem Szenenschnitt geht der aktuelle Schnitt vor (gegen Flattern) */
+    const int vorzug[3] = { szene ? (halten ? cur : zone_form) : cur, szene ? (halten ? zone_form : cur) : zone_pl, szene ? zone_pl : -1 };
+    bf_bild_t m[8];
+    n = szene ? bf_wagen_kameras(e->x, e->z, k) : bf_wagen_kameras(pl->x, pl->z, k);
+    if (n == 0) return -1;
+    npk = bf_form_punkte(e, pk);
+    for (int i = 0; i < n; i++) bf_bild_mass(k[i], pk, npk, k[i] == cur, &m[i]);
+    for (int v = 0; v < 3 && wahl < 0; v++)
+        for (int i = 0; i < n && wahl < 0; i++)
+            if (k[i] == vorzug[v] && (szene ? bf_bild_szene_gut(&m[i]) : bf_bild_kampf_gut(&m[i]))) wahl = k[i];
+    for (int i = 0; i < n && wahl < 0; i++)
+        if (szene ? bf_bild_szene_gut(&m[i]) : bf_bild_kampf_gut(&m[i]))
+            if (best < 0 || (szene ? m[i].form > m[best].form : m[i].pl > m[best].pl)) best = i;
+    if (wahl < 0) wahl = best >= 0 ? k[best] : (szene ? zone_form : zone_pl);
+    bf_kamlog(wer, wahl, k, m, n, e);
+    return wahl;
 }
 
 static void bf_kamera_zurueck(void)
@@ -424,36 +678,25 @@ static void bf_nahsicht_wache(void)
         return;
     }
     if (s_kam_auftritt) { s_kam_auftritt = 0; bf_kamera_zurueck(); }
-    /* (b) Gegenkamera, wenn die Form zwischen Auge und Spieler die Sicht fuellt */
+    /* (b) Nachbesserung 4 (M-B): zeigt der Schnitt die Form zu nah oder den Spieler hinter ihr (bf_bild_kampf_gut), schaltet die Wache
+     * auf eine gute Kamera des Wagens (bf_schnitt_waehlen); Haltezeit 30 Bilder gegen Flattern (Nachbesserung 1), danach zurueck auf
+     * die Zonen, sobald die Original-Zonenkamera der Spielerlage wieder gut ist. Ohne RID/RVD (g_room_rdt_ok 0) bleibt alles aus. */
     if (!e || e->state != 1) {
         if (s_kam_wache) { s_kam_wache = 0; bf_kamera_zurueck(); }
         return;
     }
+    if (s_kam_wache && s_kam_wache_halt > 0) { s_kam_wache_halt--; bf_kamera(s_kam_wache - 1); return; }
     {
-        int cur = (int)g_scd.work_vars[0x0A], k, ziel = -1;
-        int32_t mitte;
-        {   /* Kastenmitte (hit_offset_x laengs der Gier) als Lage der Masse */
-            const int32_t v[3] = { e->hit_offset_x, 0, 0 };
-            int32_t w[3];
-            re15_skel_bone_to_world(v, e->rot_y, e->x, e->y, e->z, w);
-            mitte = w[0];
+        const int cur = g_scd.cam_change_pending ? (int)g_scd.cam_id : (int)g_scd.work_vars[0x0A];
+        const int ziel = bf_schnitt_waehlen(e, 0, 0, "wache");
+        if (ziel < 0) return;
+        if (!s_kam_wache) {
+            if (ziel != cur) { bf_kamera(ziel); s_kam_wache = ziel + 1; s_kam_wache_halt = 30; }
+            return;
         }
-        for (k = 0; k < 2; k++) {
-            if (cur != k_gang_kam[k].cut && !(s_kam_wache && s_kam_wache == k_gang_kam[k ^ 1].cut + 1)) continue;
-            {
-                const int32_t form_achse = (mitte - k_gang_kam[k].auge_x) * k_gang_kam[k].blick;
-                const int32_t pl_achse   = (pl->x - k_gang_kam[k].auge_x) * k_gang_kam[k].blick;
-                const int32_t g_form = (mitte - k_gang_kam[k ^ 1].auge_x) * k_gang_kam[k ^ 1].blick;
-                const int32_t g_pl   = (pl->x - k_gang_kam[k ^ 1].auge_x) * k_gang_kam[k ^ 1].blick;
-                if (form_achse > -2000 && form_achse < BF_NAH_ACHSE && pl_achse > form_achse && g_pl >= 1500 && g_form > g_pl)
-                    ziel = k_gang_kam[k ^ 1].cut;
-            }
-        }
-        if (ziel >= 0) { bf_kamera(ziel); s_kam_wache = ziel + 1; s_kam_wache_halt = 30; return; }
-        if (s_kam_wache) {
-            if (s_kam_wache_halt > 0) { s_kam_wache_halt--; bf_kamera(s_kam_wache - 1); return; }
-            s_kam_wache = 0; bf_kamera_zurueck();
-        }
+        if (ziel == re15_bf_schnitt_aus_lage(pl->x)) { s_kam_wache = 0; bf_kamera_zurueck(); return; }
+        if (ziel != s_kam_wache - 1) s_kam_wache_halt = 30;
+        bf_kamera(ziel); s_kam_wache = ziel + 1;
     }
 }
 
@@ -481,7 +724,11 @@ void re15_bf_rueckstoss_start(int slot)
     e->hp = 1;                                           /* bleibt "am Ende", stirbt aber nicht */
     if (re15_bb_bank_da(e)) re15_bb_taumeln_start(slot);  /* Nachbesserung 1 M5: Riesenform taumelt (Clip 13) */
     else bf_zucken(e);
-    bf_kamera(0x0C);
+    {   /* Nachbesserung 4 (M-A): Schnitt nach der Bildlage statt fest Cut 12 (bf_schnitt_waehlen); ohne RID/RVD wie bisher Cut 12 */
+        const int w = re15_bb_bank_da(e) ? bf_schnitt_waehlen(e, 1, 0, "rs") : -1;
+        bf_kamera(w >= 0 ? w : 0x0C);
+        s_rs_kam_halt = BF_RS_KAM_HALT;
+    }
 }
 
 uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed)
@@ -535,10 +782,17 @@ static void bf_rs_riesenform_phase1(re15_actor_t *e, const re15_actor_t *pl)
         re15_enemy_steer_point(e, 2 * e->x - ax, 2 * e->z - az, 64);
     }
     re15_bb_taumeln_tick(s_rs.slot);
-    /* Kamera: Cut 12 (Kampfkamera, Auge x 18526) zeigt die taumelnde Form 12000-21000 entfernt, hinter Leon (Lauf n1 l5090_feuer
-     * Bild 372-420). Ab x <= BF_RS_TAUMEL_KAM_X zeigt Cut 11 (Auge x 7626, Blick -x, Kamera von Bild 2) sie von vorn, >= 4600 vor dem
+    /* Kamera: bis Nachbesserung 3 fest Cut 12 (Kampfkamera, Auge x 18526; im Debug-Sprung-Weg die Form 12000-21000 entfernt, hinter Leon,
+     * Lauf n1 l5090_feuer Bild 372-420; im echten Wagenweg nicht, Abnahme 2 M-A). Ab x <= BF_RS_TAUMEL_KAM_X zeigt Cut 11 (Auge x 7626, Blick -x, Kamera von Bild 2) sie von vorn, >= 4600 vor dem
      * Auge, wie sie zum Wagenende zurueckgedraengt wird (PORT-WAHL). */
-    bf_kamera(e->x <= BF_RS_TAUMEL_KAM_X ? 0x0B : 0x0C);
+    if (e->x <= BF_RS_TAUMEL_KAM_X) bf_kamera(0x0B);
+    else {   /* Nachbesserung 4 (M-A): bis dahin der Schnitt nach der Bildlage (bf_schnitt_waehlen), ohne RID/RVD Cut 12 */
+        const int cur = g_scd.cam_change_pending ? (int)g_scd.cam_id : (int)g_scd.work_vars[0x0A];
+        const int w = bf_schnitt_waehlen(e, 1, s_rs_kam_halt > 0, "rs");
+        if (w >= 0 && w != cur) s_rs_kam_halt = BF_RS_KAM_HALT;
+        else if (s_rs_kam_halt > 0) s_rs_kam_halt--;
+        bf_kamera(w >= 0 ? w : 0x0C);
+    }
 }
 
 static void bf_rueckstoss_tick(void)
