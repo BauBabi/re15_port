@@ -1973,9 +1973,14 @@ static void teil_fuzz(int elza)
 {
     /* G2-RE2 NB2 "Vorschlag 4": der Mechanismus dieses Riegels (Trag-Lenkung mit Kopf + Kanister: Kuerzung, Vorbei-Etappe, Kreis) gilt nur noch mit dem Pruefhaken v4_alt (Stand f942f56c0);
      * der Riegel prueft ihn dort weiter. Die Bewegung mit Vorschlag 4 pruefen unit_r41_gatorfix_v4 / _re2 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"). */
-    re15_gr2_v4_alt_setzen(1);
+    /* NB4 Runde 2 (Abnahme 7 M1): auch die Trefferreaktion dieses Stands - f942f56c0 hatte den RE1.5-Niederwurf und keine RE2-Bisssperre (Pruefhaken treffer_alt,
+     * gb_biss_frei = 1). Mit der Spiel-Reaktion (RE2 + Bisssperre) verschiebt das andere Treffer-Muster an der stehenden Figur die Lagen-Kette dieses Riegels
+     * (der Gator laeuft von Lage zu Lage weiter) und damit, WO die alte Trag-Lenkung an einer Etappe pendelt (60 Bilder bis "Etappe ohne Annaeherung"):
+     * gemessen 2-s-Fenster neu 12 (N4 3 + O4 9; ohne Sperre 5: W2 2 + SO 3; RE1.5-Reaktion 8: N2 3 + O4 5) - dieselbe O4-Etappe in jeder Fassung, das Spiel
+     * benutzt diese Lenkung seit NB2 Vorschlag 4 nicht mehr (gr2_kan_zaehlt nur mit v4_alt). Die Spiel-Reaktion pruefen nb4/raum/nb3/re2/v4. */
+    re15_gr2_v4_alt_setzen(1); re15_gator_treffer_alt_setzen(1);
     teil_fuzz_innen(elza);
-    re15_gr2_v4_alt_setzen(0);
+    re15_gr2_v4_alt_setzen(0); re15_gator_treffer_alt_setzen(0);
 }
 static void teil_fuzz_innen(int elza)
 {
@@ -3883,6 +3888,8 @@ int main(int argc, char **argv)
     re15_door_seq_setze_laeufer(fang);
     if (getenv("G2_RE2_ALT")) re15_gr2_rw_alt_setzen(1);   /* G2-RE2: Werkzeug-Laeufe (fuzz/bahn) im Stand NB5 - Vergleich mit dem NB5-Bau */
     if (getenv("G2_NB3_ALT")) re15_gator_boss_nb3_alt_setzen(1);   /* G2-RE2 NB3: Werkzeug-Laeufe (nb3_oben/nb3_haengt) im Stand a661eb8aa */
+    if (getenv("G2_SPERRE_ALT")) re15_gator_boss_sperre_alt_setzen(1);   /* NB4 Runde 2: Werkzeug-Laeufe im Stand cfa775ae8 (LUNGE/B2/Rammen ohne +0x238) */
+    if (getenv("G2_TREFFER_ALT")) re15_gator_treffer_alt_setzen(1);   /* NB4 Runde 2: Werkzeug-Laeufe mit dem RE1.5-Niederwurf (Stand 3d57083b1) */
     if (!strcmp(teil, "obenlog") && argc >= 3)  return obenlog(argv[2], argc >= 4 && !strcmp(argv[3], "kampf") ? 1 : argc >= 4 && !strcmp(argv[3], "ab0") ? 2 : 0);                                            /* NB3 exe-Riegel rampe_oben */
     if (!strcmp(teil, "haenglog") && argc >= 3) return haenglog(argv[2], argc >= 4 && !strcmp(argv[3], "mit"));    /* NB3 exe-Riegel rampe/abn2_wand_elza */
     if (!strcmp(teil, "aussenlog") && argc >= 3) return aussenlog(argv[2]);   /* NB3 Runde 2: Figur nie ausserhalb (Abnahme 5 M1/M2) */
