@@ -1,0 +1,168 @@
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_018651a2
+climb.log debug.log gator_boss.log 
+gtrlog: 94 RE2-Reaktionen (vollstaendig 65: Sub 2 26, Sub 3 39; abgebrochen 29); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4292 (6 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_018651a2_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 94 RE2-Reaktionen (vollstaendig 65: Sub 2 26, Sub 3 39; abgebrochen 29); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4292 (6 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_105e120b
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_105e120b_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_1263cee5
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 1356 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_28a4e6f6
+climb.log debug.log gator_boss.log 
+gtrlog: 94 RE2-Reaktionen (vollstaendig 65: Sub 2 26, Sub 3 39; abgebrochen 29); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4292 (6 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_28a4e6f6_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 94 RE2-Reaktionen (vollstaendig 65: Sub 2 26, Sub 3 39; abgebrochen 29); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4292 (6 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_423efca5
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_423efca5_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_445ea159
+debug.log 
+gtrlog: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_445ea159/gator_boss.log fehlt
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_51456ea8
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2816 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_5dec5a5f
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_5dec5a5f_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_9de93177
+climb.log debug.log gator_boss.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_9de93177_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_9f9ede12
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2816 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_9f9ede12_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2575 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_a2f3392b
+climb.log debug.log gator_boss.log 
+gtrlog: 94 RE2-Reaktionen (vollstaendig 65: Sub 2 26, Sub 3 39; abgebrochen 29); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4292 (6 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_a2f3392b_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 94 RE2-Reaktionen (vollstaendig 65: Sub 2 26, Sub 3 39; abgebrochen 29); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4292 (6 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_b1c7a4d0
+climb.log debug.log gator_boss.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_b1c7a4d0_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_c36f71cf
+climb.log debug.log gator_boss.log 
+gtrlog: 94 RE2-Reaktionen (vollstaendig 65: Sub 2 26, Sub 3 39; abgebrochen 29); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4292 (6 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_c36f71cf_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 94 RE2-Reaktionen (vollstaendig 65: Sub 2 26, Sub 3 39; abgebrochen 29); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4292 (6 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_cc442323
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2816 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_cc442323_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2575 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_f0af90a6
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 2840 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_f0af90a6_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 244 (von 2097); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd/lauf_f2bf3042
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 496 (von 2032); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 1, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_027254c7
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 3598 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_027254c7_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 3363 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_07da713d
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 3598 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_07da713d_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 3363 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_13e0d309
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 747 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_17453926
+climb.log debug.log gator_boss.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4454 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_17453926_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4454 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_260cc093
+climb.log debug.log gator_boss.log 
+gtrlog: 99 RE2-Reaktionen (vollstaendig 68: Sub 2 26, Sub 3 42; abgebrochen 31); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4993 (7 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_260cc093_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 99 RE2-Reaktionen (vollstaendig 68: Sub 2 26, Sub 3 42; abgebrochen 31); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4993 (7 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_39a3de46
+climb.log debug.log gator_boss.log 
+gtrlog: 99 RE2-Reaktionen (vollstaendig 68: Sub 2 26, Sub 3 42; abgebrochen 31); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4993 (7 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_39a3de46_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 99 RE2-Reaktionen (vollstaendig 68: Sub 2 26, Sub 3 42; abgebrochen 31); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4993 (7 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_4171bc2e
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4441 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_4171bc2e_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4441 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_4f290abb
+climb.log debug.log gator_boss.log 
+gtrlog: 99 RE2-Reaktionen (vollstaendig 68: Sub 2 26, Sub 3 42; abgebrochen 31); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4993 (7 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_4f290abb_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 99 RE2-Reaktionen (vollstaendig 68: Sub 2 26, Sub 3 42; abgebrochen 31); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4993 (7 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_7008dfd7
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4441 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_7008dfd7_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 958 (von 2440); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_84e59288
+climb.log debug.log gator_boss.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4454 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_84e59288_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4454 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_98bcb385
+climb.log debug.log gator_boss.log 
+gtrlog: 99 RE2-Reaktionen (vollstaendig 68: Sub 2 26, Sub 3 42; abgebrochen 31); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4993 (7 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_98bcb385_ohne
+climb.log debug.log gator_boss.log 
+gtrlog: 99 RE2-Reaktionen (vollstaendig 68: Sub 2 26, Sub 3 42; abgebrochen 31); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4993 (7 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_ada778be
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 3598 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_ada778be_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 3363 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_d0b5badd
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 3598 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_e1f2a2ae
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4441 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_e1f2a2ae_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4441 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_e79b54a9
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4441 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)
+== C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd/lauf_e79b54a9_ohne
+debug.log gator_boss.log gator_trag.log 
+gtrlog: 0 RE2-Reaktionen (vollstaendig 0: Sub 2 0, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 0; Luftlinie gesamt max 0 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 4441 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken)

@@ -1,0 +1,109 @@
+== a7_frei4_leon: 8400 Bilder (F1..F8400), Treffer 101, RE1.5-Niederwurf-Clips 12..16 gesamt 0 Bilder
+   F139   Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  3155 Schritt max  800  von (-2168, -12267) nach (-2168, 0, -9112)  Clips 200@F139 20@F140 17@F161 11@F169
+   F557   Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft  1226 Schritt max 1039  von (6732, -14032) nach (5622, 0, -13511)  Clips 200@F557 20@F558
+   F579   Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   603 Schritt max  310  von (5622, -13511) nach (5317, 0, -14032)  Clips 17@F579 20@F580 17@F601 11@F609
+   F686   Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft  2807 Schritt max  898  von (6732, -10386) nach (5168, 0, -8055)  Clips 200@F686 18@F687 19@F691
+   F706   Biss       Wasser hp  70 Sub 2 Dauer 20 Luft  1330 Schritt max  315  von (5168, -8055) nach (6330, 0, -7406)  Clips 19@F706 18@F707 19@F711
+   F822   Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   677 Schritt max  268  von (6749, -5857) nach (6072, 0, -5863)  Clips 211@F822 18@F823 19@F827
+   F944   Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   417 Schritt max  247  von (6732, -5868) nach (6315, 0, -5863)  Clips 105@F944 18@F945 19@F949
+   F1064  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max   38  von (6732, -5868) nach (6732, 0, -5868)  Clips 200@F1064 18@F1065 19@F1069
+   F1175  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   783 Schritt max  170  von (6407, -6332) nach (5650, 0, -6129)  Clips 100@F1175 20@F1176
+   F1197  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  1105 Schritt max  374  von (5650, -6129) nach (6731, 0, -5897)  Clips 17@F1197 20@F1198 17@F1219 11@F1227
+   F1315  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft    13 Schritt max  320  von (6746, -5868) nach (6740, 0, -5856)  Clips 200@F1315 20@F1316 17@F1337 11@F1345
+   F1422  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   145 Schritt max  143  von (6710, -5865) nach (6728, 0, -6009)  Clips 100@F1422 20@F1423
+   F1444  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  1023 Schritt max  110  von (6728, -6009) nach (5708, 0, -5919)  Clips 17@F1444 20@F1445 17@F1466 11@F1474
+   F1558  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   185 Schritt max  266  von (3705, -5868) nach (3554, 0, -5976)  Clips 100@F1558 20@F1559
+   F1580  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   564 Schritt max  325  von (3554, -5976) nach (3000, 0, -5868)  Clips 17@F1580 20@F1581 17@F1602 11@F1610
+   F1694  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  4766 Schritt max  600  von (5067, -5852) nach (6517, 0, -10393)  Clips 200@F1694 20@F1695 17@F1716 11@F1724
+   F1801  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft  3653 Schritt max  879  von (6703, -7606) nach (3305, 0, -6264)  Clips 210@F1801 20@F1802
+   F1823  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   521 Schritt max  280  von (3305, -6264) nach (2909, 0, -5925)  Clips 17@F1823 20@F1824 17@F1845 11@F1853
+   F1930  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft     7 Schritt max   44  von (6736, -5864) nach (6730, 0, -5859)  Clips 211@F1930 20@F1931
+   F1952  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft     9 Schritt max  103  von (6730, -5859) nach (6732, 0, -5868)  Clips 17@F1952 20@F1953 17@F1974 11@F1982
+   F2064  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   247 Schritt max  171  von (6732, -5869) nach (6714, 0, -6116)  Clips 100@F2064 20@F2065
+   F2086  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   248 Schritt max  145  von (6714, -6116) nach (6732, 0, -5868)  Clips 17@F2086 20@F2087 17@F2108 11@F2116
+   F2194  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft    64 Schritt max   88  von (6747, -5854) nach (6683, 0, -5865)  Clips 100@F2194 20@F2195
+   F2216  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft    49 Schritt max  105  von (6683, -5865) nach (6732, 0, -5868)  Clips 17@F2216 20@F2217 17@F2238 11@F2246
+   F2327  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   367 Schritt max  272  von (6732, -5868) nach (6714, 0, -6235)  Clips 200@F2327 20@F2328
+   F2349  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   367 Schritt max  234  von (6714, -6235) nach (6732, 0, -5868)  Clips 17@F2349 20@F2350 17@F2371 11@F2379
+   F2456  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft    55 Schritt max   25  von (6732, -5921) nach (6714, 0, -5868)  Clips 210@F2456 20@F2457
+   F2478  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   399 Schritt max  110  von (6714, -5868) nach (6608, 0, -6253)  Clips 17@F2478 20@F2479 17@F2500 11@F2508
+   F2585  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft  2793 Schritt max  917  von (6430, -8938) nach (4925, 0, -6585)  Clips 200@F2585 18@F2586 19@F2590
+   F2605  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   707 Schritt max  350  von (4925, -6585) nach (4286, 0, -6281)  Clips 19@F2605 18@F2606 19@F2610
+   F2727  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   410 Schritt max  234  von (5263, -5868) nach (4853, 0, -5862)  Clips 200@F2727 18@F2728 19@F2732
+   F2834  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft     5 Schritt max  153  von (6558, -13015) nach (6557, 0, -13020)  Clips 100@F2834 20@F2835
+   F2856  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   175 Schritt max  104  von (6557, -13020) nach (6732, 0, -13026)  Clips 17@F2856 20@F2857 17@F2878 11@F2886
+   F2963  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft    84 Schritt max   36  von (6732, -13962) nach (6732, 0, -14046)  Clips 200@F2963 20@F2964
+   F2985  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft    14 Schritt max   20  von (6732, -14046) nach (6732, 0, -14032)  Clips 17@F2985 20@F2986 17@F3007 11@F3015
+   F3110  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  3139 Schritt max  470  von (6732, -13613) nach (6744, 0, -10474)  Clips 105@F3110 20@F3111 17@F3132 11@F3140
+   F3217  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft   188 Schritt max   79  von (6532, -14032) nach (6720, 0, -14031)  Clips 100@F3217 18@F3218 19@F3222
+   F3237  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft    12 Schritt max   14  von (6720, -14031) nach (6732, 0, -14032)  Clips 19@F3237 18@F3238 19@F3242
+   F3344  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft    85 Schritt max   37  von (6732, -13961) nach (6732, 0, -14046)  Clips 200@F3344 18@F3345 19@F3349
+   F3364  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft    14 Schritt max   14  von (6732, -14046) nach (6732, 0, -14032)  Clips 19@F3364 18@F3365 19@F3369
+   F3481  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  1422 Schritt max  336  von (6732, -12395) nach (6549, 0, -13806)  Clips 100@F3481 20@F3482 17@F3503 11@F3511
+   F3588  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft   212 Schritt max  101  von (4225, -14032) nach (4013, 0, -14038)  Clips 100@F3588 18@F3589 19@F3593
+   F3608  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft  3407 Schritt max  888  von (4013, -14038) nach (1849, 0, -11406)  Clips 19@F3608 18@F3609 19@F3613
+   F3715  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft  2738 Schritt max  907  von (6732, -10499) nach (5345, 0, -12860)  Clips 100@F3715 20@F3716
+   F3737  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  1295 Schritt max  345  von (5345, -12860) nach (6476, 0, -13491)  Clips 17@F3737 20@F3738 17@F3759 11@F3767
+   F3844  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft    85 Schritt max   37  von (6732, -13961) nach (6732, 0, -14046)  Clips 200@F3844 20@F3845
+   F3866  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft    14 Schritt max   20  von (6732, -14046) nach (6732, 0, -14032)  Clips 17@F3866 20@F3867 17@F3888 11@F3896
+   F3973  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft    85 Schritt max   37  von (6732, -13961) nach (6732, 0, -14046)  Clips 200@F3973 20@F3974
+   F3995  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft    14 Schritt max   20  von (6732, -14046) nach (6732, 0, -14032)  Clips 17@F3995 20@F3996 17@F4017 11@F4025
+   F4107  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft  4676 Schritt max  570  von (4072, -13389) nach (3893, 0, -8716)  Clips 100@F4107 20@F4108
+   F4129  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  2527 Schritt max  325  von (3893, -8716) nach (6330, 0, -8046)  Clips 17@F4129 20@F4130 17@F4151 11@F4159
+   F4244  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft  1408 Schritt max  377  von (6732, -10260) nach (5529, 0, -10992)  Clips 200@F4244 18@F4245 19@F4249
+   F4264  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   182 Schritt max   70  von (5529, -10992) nach (5380, 0, -11098)  Clips 19@F4264 18@F4265 19@F4269
+   F4371  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 100@F4371 18@F4372 19@F4376
+   F4391  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 19@F4391 18@F4392 19@F4396
+   F4498  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 200@F4498 18@F4499 19@F4503
+   F4518  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 19@F4518 18@F4519 19@F4523
+   F4625  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 200@F4625 18@F4626 19@F4630
+   F4645  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 19@F4645 18@F4646 19@F4650
+   F4752  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 211@F4752 18@F4753 19@F4757
+   F4772  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 19@F4772 18@F4773 19@F4777
+   F4879  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 100@F4879 18@F4880 19@F4884
+   F4899  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 19@F4899 18@F4900 19@F4904
+   F5006  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 200@F5006 18@F5007 19@F5011
+   F5026  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 19@F5026 18@F5027 19@F5031
+   F5133  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 211@F5133 18@F5134 19@F5138
+   F5153  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 19@F5153 18@F5154 19@F5158
+   F5260  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 212@F5260 18@F5261 19@F5265
+   F5280  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 19@F5280 18@F5281 19@F5285
+   F5387  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 200@F5387 20@F5388
+   F5409  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft     0 Schritt max    0  von (5380, -14032) nach (5380, 0, -14032)  Clips 17@F5409 20@F5410 17@F5431 11@F5439
+   F5518  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  3425 Schritt max  800  von (-2032, -10594) nach (-5457, 0, -10634)  Clips 100@F5518 20@F5519 17@F5540 11@F5548
+   F5652  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft  3964 Schritt max  316  von (-8432, -11058) nach (-8432, 0, -15022)  Clips 100@F5652 20@F5653
+   F5674  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  3171 Schritt max  800  von (-8432, -15022) nach (-8432, 0, -18193)  Clips 17@F5674 20@F5675 17@F5696 11@F5704
+   F6389  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   949 Schritt max  301  von (-8249, -21509) nach (-7317, 0, -21326)  Clips 100@F6389 20@F6390
+   F6411  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  1122 Schritt max  379  von (-7317, -21326) nach (-8432, 0, -21198)  Clips 17@F6411 20@F6412 17@F6433 11@F6441
+   F6518  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft   584 Schritt max  335  von (-7874, -22096) nach (-7301, 0, -22211)  Clips 200@F6518 18@F6519 19@F6523
+   F6538  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   185 Schritt max   70  von (-7301, -22211) nach (-7298, 0, -22396)  Clips 19@F6538 18@F6539 19@F6543
+   F6645  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft    64 Schritt max   24  von (-8432, -26360) nach (-8431, 0, -26424)  Clips 211@F6645 18@F6646 19@F6650
+   F6665  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   114 Schritt max   74  von (-8431, -26424) nach (-8362, 0, -26515)  Clips 19@F6665 18@F6666 19@F6670
+   F6778  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft   325 Schritt max  207  von (-8432, -26532) nach (-8432, 0, -26207)  Clips 211@F6778 18@F6779 19@F6783
+   F6798  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   325 Schritt max  194  von (-8432, -26207) nach (-8432, 0, -26532)  Clips 19@F6798 18@F6799 19@F6803
+   F6924  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   100 Schritt max  244  von (-3341, -26532) nach (-3311, 0, -26436)  Clips 200@F6924 20@F6925
+   F6946  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   587 Schritt max  376  von (-3311, -26436) nach (-2730, 0, -26520)  Clips 17@F6946 20@F6947 17@F6968 11@F6976
+   F7061  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   327 Schritt max  145  von (-1140, -26511) nach (-1467, 0, -26534)  Clips 105@F7061 20@F7062 17@F7083 11@F7091
+   F7168  Biss       Wasser hp  70 Sub 2 Dauer 19 (abgebr.) Luft    15 Schritt max   14  von (-6402, -26523) nach (-6390, 0, -26533)  Clips 105@F7168 18@F7169 19@F7173
+   F7188  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   165 Schritt max   59  von (-6390, -26533) nach (-6555, 0, -26532)  Clips 19@F7188 18@F7189 19@F7193
+   F7308  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft    17 Schritt max   44  von (-8450, -26548) nach (-8442, 0, -26532)  Clips 200@F7308 18@F7309 19@F7313
+   F7428  Biss       Wasser hp  70 Sub 2 Dauer 20 Luft   411 Schritt max  277  von (-8447, -26532) nach (-8432, 0, -26121)  Clips 200@F7428 18@F7429 19@F7433
+   F7535  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  2013 Schritt max  800  von (4719, -26532) nach (6732, 0, -26532)  Clips 100@F7535 20@F7536 17@F7557 11@F7565
+   F7642  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft    10 Schritt max   64  von (6731, -26532) nach (6732, 0, -26522)  Clips 100@F7642 20@F7643
+   F7664  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft    10 Schritt max  100  von (6732, -26522) nach (6732, 0, -26532)  Clips 17@F7664 20@F7665 17@F7686 11@F7694
+   F7772  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   253 Schritt max  169  von (6746, -26542) nach (6493, 0, -26534)  Clips 200@F7772 20@F7773
+   F7794  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   239 Schritt max  138  von (6493, -26534) nach (6732, 0, -26532)  Clips 17@F7794 20@F7795 17@F7816 11@F7824
+   F7915  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   221 Schritt max  296  von (5502, -26532) nach (5281, 0, -26548)  Clips 210@F7915 20@F7916 17@F7937 11@F7945
+   F8022  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft  2859 Schritt max  797  von (4405, -26308) nach (2297, 0, -24376)  Clips 211@F8022 20@F8023
+   F8044  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft  2053 Schritt max  361  von (2297, -24376) nach (1539, 0, -26285)  Clips 17@F8044 20@F8045 17@F8066 11@F8074
+   F8173  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   351 Schritt max  190  von (-7344, -26413) nach (-7605, 0, -26177)  Clips 200@F8173 20@F8174
+   F8195  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   637 Schritt max  397  von (-7605, -26177) nach (-8200, 0, -26405)  Clips 17@F8195 20@F8196 17@F8217 11@F8225
+   F8308  Biss       Wasser hp  70 Sub 3 Dauer 21 (abgebr.) Luft   306 Schritt max  180  von (-8432, -26532) nach (-8126, 0, -26534)  Clips 200@F8308 20@F8309
+   F8330  Biss       Wasser hp  70 Sub 3 Dauer 54 Luft   306 Schritt max  173  von (-8126, -26534) nach (-8432, 0, -26532)  Clips 17@F8330 20@F8331 17@F8352 11@F8360
+   oben-Abschnitte (F von..bis, Bilder, Treffer darin): [] | erster Treffer oben nach None Bildern, laengste Pause oben 0
+
+== SUMME ueber 1 Laeufe ==
+Treffer 101; Sub 2 42, Sub 3 59, ohne Reaktion 0; RE1.5-Niederwurf-Clips nach Treffern 0, gesamt 0
+  Biss       101: Dauer [(19, 18), (20, 24), (21, 25), (54, 34)], Luftlinie max 4766 (Mittel 748), Schritt max 1039, oben 0, Stuerze 0
+vollstaendige Reaktionen: Sub 2 Dauer [(20, 24)] | Sub 3 Dauer [(54, 34)]
+Luftlinie > 3735: 3, > 3080 bei Sub 3: 8; Stuerze 0, davon gelandet 0; y-Folgen: Counter()

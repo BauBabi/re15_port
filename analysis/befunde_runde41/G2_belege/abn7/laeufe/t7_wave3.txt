@@ -1,0 +1,24 @@
+== a7_spawn_mitte_leon_r0: 4200 Bilder (F1..F4200), Treffer 48, RE1.5-Niederwurf-Clips 12..16 gesamt 0 Bilder
+   F950   Rammen     oben   hp  40 Sub 2 Dauer 20 Luft  2368 Schritt max  918  von (2313, -16200) nach (2318, 0, -18568) STURZ y[-1210, -1070, -880, -640, 0, 0, 0] gelandet  Clips 211@F950 18@F951 19@F955
+   oben-Abschnitte (F von..bis, Bilder, Treffer darin): [(1, 952, 952, True)] | erster Treffer oben nach 500 Bildern, laengste Pause oben 500
+== a7_spawn_nord_leon_r1024: 4200 Bilder (F1..F4200), Treffer 36, RE1.5-Niederwurf-Clips 12..16 gesamt 0 Bilder
+   F732   Rammen     oben   hp  40 Sub 3 Dauer 54 Luft  3216 Schritt max  936  von (3000, -17632) nach (3000, 0, -20848) STURZ y[-1210, -1070, -880, -640, 0, 0, 0] gelandet  Clips 211@F732 20@F733 17@F754 11@F762
+   oben-Abschnitte (F von..bis, Bilder, Treffer darin): [(1, 732, 732, True)] | erster Treffer oben nach 398 Bildern, laengste Pause oben 398
+== a7_spawn_nw_elza_r3072: 4200 Bilder (F1..F4200), Treffer 48, RE1.5-Niederwurf-Clips 12..16 gesamt 0 Bilder
+   F981   ?          oben   hp  40 Sub 2 Dauer 20 Luft  4018 Schritt max  931  von (2313, -17637) nach (2314, 0, -21655) STURZ y[-1210, -1070, -880, -640, 0, 0, 0] gelandet  Clips 211@F981 18@F982 19@F986
+   oben-Abschnitte (F von..bis, Bilder, Treffer darin): [(1, 981, 981, True)] | erster Treffer oben nach 506 Bildern, laengste Pause oben 506
+== a7_spawn_ost_elza_r1024: 4200 Bilder (F1..F4200), Treffer 59, RE1.5-Niederwurf-Clips 12..16 gesamt 0 Bilder
+   F533   ?          oben   hp  40 Sub 3 Dauer 54 Luft  2265 Schritt max  936  von (6732, -16300) nach (6732, 0, -14035) STURZ y[-1210, -1070, -880, -640, 0, 0, 0] gelandet  Clips 212@F533 20@F534 17@F555 11@F563
+   oben-Abschnitte (F von..bis, Bilder, Treffer darin): [(1, 535, 535, True)] | erster Treffer oben nach 427 Bildern, laengste Pause oben 427
+== a7_spawn_sued_elza_r1024: 4200 Bilder (F1..F4200), Treffer 52, RE1.5-Niederwurf-Clips 12..16 gesamt 0 Bilder
+   F368   Rammen     oben   hp  40 Sub 3 Dauer 54 Luft  3198 Schritt max  918  von (5800, -17650) nach (5800, 0, -20848) STURZ y[-1210, -1070, -880, -640, 0, 0, 0] gelandet  Clips 211@F368 20@F369 17@F390 11@F398
+   oben-Abschnitte (F von..bis, Bilder, Treffer darin): [(1, 368, 368, True)] | erster Treffer oben nach 367 Bildern, laengste Pause oben 367
+== a7_spawn_sued_leon_r2048: 4200 Bilder (F1..F4200), Treffer 49, RE1.5-Niederwurf-Clips 12..16 gesamt 0 Bilder
+   F364   Rammen     oben   hp  40 Sub 2 Dauer 20 Luft  4103 Schritt max 1168  von (6000, -17400) nach (6000, 0, -21503) STURZ y[-1210, -1070, -880, -640, 0, 0, 0] gelandet  Clips 211@F364 18@F365 19@F369
+   oben-Abschnitte (F von..bis, Bilder, Treffer darin): [(1, 364, 364, True)] | erster Treffer oben nach 363 Bildern, laengste Pause oben 363
+== SUMME ueber 6 Laeufe ==
+Treffer 292; Sub 2 193, Sub 3 99, ohne Reaktion 0; RE1.5-Niederwurf-Clips nach Treffern 0, gesamt 0
+  ?          288: Dauer [(4, 1), (18, 1), (19, 88), (20, 102), (21, 43), (43, 1), (54, 52)], Luftlinie max 4954 (Mittel 519), Schritt max 991, oben 7, Stuerze 2
+  Rammen       4: Dauer [(20, 2), (54, 2)], Luftlinie max 4103 (Mittel 3221), Schritt max 1168, oben 4, Stuerze 4
+vollstaendige Reaktionen: Sub 2 Dauer [(4, 1), (20, 104)] | Sub 3 Dauer [(18, 1), (43, 1), (54, 54)]
+Luftlinie > 3735: 6, > 3080 bei Sub 3: 10; Stuerze 6, davon gelandet 6; y-Folgen: Counter({(-1210, -1070, -880, -640, 0, 0, 0): 6})
