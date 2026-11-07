@@ -1,0 +1,12 @@
+22132:1178:     SUMME Teil B: 32 Lagen, Reaktionen 605 (vollstaendig 605, durch einen neuen Treffer abgebrochen 0; Sub 2 374, Sub 3 231), Abweichungen vom RE2-Modell 0 (davon Unterzustand 0); Angriffe: Rammen 55, CROSS-Biss 22, Hochbiss 11, Biss 517, Biss B2 0; Schaden 60: 589, 30: 16, sonst 0; Stuerze 51 (falsch 0), Raumhalt in Sturzbildern 0; RE1.5-Niederwurf-Bilder 0; Weg des Hakens (Luftlinie)
+22141:1178:     Bisssperre (Abnahme 7 M1): 589 Treffer-Paare, kleinster Abstand 70 Bilder, Treffer waehrend +0x238 > 0: 0, Reaktionen durch einen neuen Treffer abgebrochen 0
+22142:1178:   ok: T3 Unverwundbarkeit / Angriffstakt wie RE2 (Abnahme 7 M1): kein Treffer, solange die Bisssperre +0x238 > 0 ist - Abstand zweier Treffer >= 70 (70 @0x801016b0-b4, -1 je Bild @0x801004a8-b8, Pruefstellen @0x80100b5c / @0x80100cb4-c4): 589 Paare, kleinster Abstand 70, Zweitbisse 0, abgebrochen 0
+22143:1178:     Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): 56 Treffer-Paare, kleinster Abstand 20, Zweitbisse 27, abgebrochen 13 - erster: F1029 art 4 nach F1009 (Abstand 20, Bisssperre +0x238 noch 50)
+22144:1178:   ok: Gegenprobe M1 Pruefhaken 'S[scd] thread start slot=0 first_op=0x3B
+22278:1177:     SUMME Teil B: 32 Lagen, Reaktionen 605 (vollstaendig 605, durch einen neuen Treffer abgebrochen 0; Sub 2 374, Sub 3 231), Abweichungen vom RE2-Modell 0 (davon Unterzustand 0); Angriffe: Rammen 55, CROSS-Biss 22, Hochbiss 11, Biss 517, Biss B2 0; Schaden 60: 589, 30: 16, sonst 0; Stuerze 51 (falsch 0), Raumhalt in Sturzbildern 0; RE1.5-Niederwurf-Bilder 0; Weg des Hakens (Luftlinie)
+22287:1177:     Bisssperre (Abnahme 7 M1): 589 Treffer-Paare, kleinster Abstand 70 Bilder, Treffer waehrend +0x238 > 0: 0, Reaktionen durch einen neuen Treffer abgebrochen 0
+22288:1177:   ok: T3 Unverwundbarkeit / Angriffstakt wie RE2 (Abnahme 7 M1): kein Treffer, solange die Bisssperre +0x238 > 0 ist - Abstand zweier Treffer >= 70 (70 @0x801016b0-b4, -1 je Bild @0x801004a8-b8, Pruefstellen @0x80100b5c / @0x80100cb4-c4): 589 Paare, kleinster Abstand 70, Zweitbisse 0, abgebrochen 0
+22289:1177:     Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): 56 Treffer-Paare, kleinster Abstand 20, Zweitbisse 27, abgebrochen 13 - erster: F1029 art 4 nach F1009 (Abstand 20, Bisssperre +0x238 noch 50)
+22304:1177:   ok: Gegenprobe M1 Pruefhaken 'Sperre[scd] thread start slot=0 first_op=0x3B
+29956:1178: nb4_elza: 0 Fehler
+29977:1177: nb4: 0 Fehler

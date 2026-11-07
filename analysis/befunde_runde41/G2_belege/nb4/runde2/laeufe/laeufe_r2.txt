@@ -1,0 +1,45 @@
+NB4 Runde 2 - eigene exe-Laeufe, Messkopie re15_pc_g2nb4r2.exe md5 42a1c8f76e83e13818bb43648c0f825a (Bau d8bf728b0/4437cdfd1), Umgebung wortgleich Abnahme 7 (werkzeug/welle_r2*.sh)
+
+== r2_tod_leon ([pl] Spieler-Familie PL00 (character=0, ; exit=0 ende=22:06:17)
+gtrlog: 1 RE2-Reaktionen (vollstaendig 1: Sub 2 1, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 1696 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 1100); Kanister Stufe 1 0 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 1; Treffer waehrend +0x238 > 0 0 -> ok
+gtrlog Bisssperre: 1 Treffer-Paare, kleinster Abstand 107, Treffer waehrend +0x238 > 0 (Abstand < 70): 0
+GTR F1049 TOT art 4 schaden 60 hp -20
+
+== r2_tod_elza ([pl] Spieler-Familie PL04 (character=4, ; exit=0 ende=22:06:33)
+gtrlog: 1 RE2-Reaktionen (vollstaendig 1: Sub 2 1, Sub 3 0; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 1696 (0 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 1100); Kanister Stufe 1 0 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 1; Treffer waehrend +0x238 > 0 0 -> ok
+gtrlog Bisssperre: 1 Treffer-Paare, kleinster Abstand 107, Treffer waehrend +0x238 > 0 (Abstand < 70): 0
+GTR F1049 TOT art 4 schaden 60 hp -20
+
+== r2_oben_leon ([pl] Spieler-Familie PL00 (character=0, ; exit=0 ende=22:09:33)
+gtrlog: 35 RE2-Reaktionen (vollstaendig 35: Sub 2 2, Sub 3 33; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 4021; Luftlinie gesamt max 3980 (2 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 1; RE1.5-Niederwurf-Bilder 0 (von 4400); Kanister Stufe 1 0 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 35; Treffer waehrend +0x238 > 0 0 -> ok
+gtrlog Bisssperre: 34 Treffer-Paare, kleinster Abstand 107, Treffer waehrend +0x238 > 0 (Abstand < 70): 0
+GTR F385 KANTE band 1 -> 0 y -1800 -> -1300 boden 0 figur (4200,-14032) sub 2 bild 1
+GTR F389 LANDUNG y 0 figur (4200,-12797) band 0
+
+== r2_oben_elza ([pl] Spieler-Familie PL04 (character=4, ; exit=0 ende=22:09:52)
+gtrlog: 33 RE2-Reaktionen (vollstaendig 33: Sub 2 11, Sub 3 22; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 4021; Luftlinie gesamt max 3980 (2 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 1; RE1.5-Niederwurf-Bilder 0 (von 4400); Kanister Stufe 1 0 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 33; Treffer waehrend +0x238 > 0 0 -> ok
+gtrlog Bisssperre: 32 Treffer-Paare, kleinster Abstand 107, Treffer waehrend +0x238 > 0 (Abstand < 70): 0
+GTR F385 KANTE band 1 -> 0 y -1800 -> -1300 boden 0 figur (3600,-14032) sub 2 bild 1
+GTR F389 LANDUNG y 0 figur (3600,-12797) band 0
+
+== r2_frei4_leon ([pl] Spieler-Familie PL00 (character=0, ; exit=0 ende=22:15:11)
+gtrlog: 68 RE2-Reaktionen (vollstaendig 68: Sub 2 12, Sub 3 56; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 5052 (9 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 68; Treffer waehrend +0x238 > 0 0 -> ok
+gtrlog Bisssperre: 67 Treffer-Paare, kleinster Abstand 107, Treffer waehrend +0x238 > 0 (Abstand < 70): 0
+RE2 KANISTER Stufe 1 laengs=5920 quer=1451 sub 2 -> 1 F2851
+RE2 KANISTER angehaengt lokal=(4344,-182,2126) F2863
+
+== r2_frei4_elza ([pl] Spieler-Familie PL04 (character=4, ; exit=0 ende=22:15:25)
+gtrlog: 75 RE2-Reaktionen (vollstaendig 74: Sub 2 24, Sub 3 50; abgebrochen 1); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4213 (3 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 8400); Kanister Stufe 1 0 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 75; Treffer waehrend +0x238 > 0 0 -> ok
+gtrlog Bisssperre: 74 Treffer-Paare, kleinster Abstand 107, Treffer waehrend +0x238 > 0 (Abstand < 70): 0
+
+== r2_aufn_leon ([pl] Spieler-Familie PL00 (character=0, ; exit=0 ende=22:18:20)
+gtrlog: 22 RE2-Reaktionen (vollstaendig 22: Sub 2 2, Sub 3 20; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 5052 (3 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 3000); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 22; Treffer waehrend +0x238 > 0 0 -> ok
+gtrlog Bisssperre: 21 Treffer-Paare, kleinster Abstand 107, Treffer waehrend +0x238 > 0 (Abstand < 70): 0
+RE2 KANISTER Stufe 1 laengs=5920 quer=1451 sub 2 -> 1 F2851
+RE2 KANISTER angehaengt lokal=(4344,-182,2126) F2863
+
+== r2_aufn_elza ([pl] Spieler-Familie PL04 (character=4, ; exit=0 ende=22:20:26)
+gtrlog: 8 RE2-Reaktionen (vollstaendig 8: Sub 2 1, Sub 3 7; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 3735; Luftlinie gesamt max 4795 (2 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 0; RE1.5-Niederwurf-Bilder 0 (von 1400); Kanister Stufe 1 1 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 8; Treffer waehrend +0x238 > 0 0 -> ok
+gtrlog Bisssperre: 7 Treffer-Paare, kleinster Abstand 107, Treffer waehrend +0x238 > 0 (Abstand < 70): 0
+RE2 KANISTER Stufe 1 laengs=2396 quer=93 sub 2 -> 1 F1209
+RE2 KANISTER angehaengt lokal=(3875,-14,-479) F1221
