@@ -48,6 +48,7 @@
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Szenen-Ende ROOM10F0 (re15_cut10f0_tick) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13, Irons-Kopf, 11B0-Erweiterung */
 #include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
+#include "re15_boss_gator.h"    /* Runde 41 Spur G2-RE2 NB3 Runde 2: Raumhalt im Alligator-Kampf (re15_gator_boss_raum_halt) */
 #include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
 #include "re15_gegner_r39.h"
 #include "re15_birkin_opfer.h"   /* Birkin-Spieler-Haken (Vorschub vor dem Schwanz) */    /* Runde 39 Spur E: Querungs-Wache im Gorilla-Wurf (re15_r39_wurf_querung) */
@@ -523,7 +524,13 @@ int re15_birkin_klemme_aktiv(void)
 static void spieler_klemme(const re15_rdt_t *rdt, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z)
 {
     if (re15_birkin_klemme_aktiv()) re15_collision_constrain_re2(rdt, alt_x, alt_z, x, z);   /* FUN_8003567c */
-    else                            re15_collision_constrain(rdt, alt_x, alt_z, x, z);       /* FUN_8003b0a4 @0x80031d70 */
+    else {
+        re15_collision_constrain(rdt, alt_x, alt_z, x, z);       /* FUN_8003b0a4 @0x80031d70 */
+        /* Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2): PORT-WAHL Raumhalt im Alligator-Kampf ROOM2090/2091 - die Klemme selbst laesst dort zwei
+         * Loecher (Band 1 ohne Aussenwaende hinter 1000 tiefen Leisten, Fixpunkt Rampe/Ostwand auf Band 0); Herleitung und Belege enemy_ai_boss_gator.c
+         * re15_gator_boss_raum_halt. Ohne Alligator-Boss im Raum kein Eingriff. */
+        (void)re15_gator_boss_raum_halt(&g_actors[RE15_ACTOR_SLOT_PLAYER], alt_x, alt_z, x, z);
+    }
     s_klemme_ende.x = *x; s_klemme_ende.z = *z; s_klemme_ende.da = 1;
 }
 

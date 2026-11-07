@@ -70,6 +70,12 @@ void re15_gator_boss_tempo_alt_setzen(int an);  /* Pruefhaken: 1 = RE1.5-Tempo B
 void re15_gator_boss_nb3_alt_setzen(int an);
 int  re15_gator_boss_nb3_alt(void);
 int  re15_gator_boss_oben_ohne(const re15_actor_t *e);
+/* Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2): RAUMHALT der Figur in der Spieler-Klemme waehrend ein Alligator-Boss im Raum ist (oben: Deck der
+ * Rampe, unten: innerhalb der Aussenwaende, nicht in Plattform-/Rampenblock; Herleitung enemy_ai_boss_gator.c). (*x,*z) = geklemmte Lage, alt = Lage vor
+ * dem Schritt; Rueckgabe 1 = eingegriffen. Pruefhaken 1 = Stand 10603425b (kein Halt), Messhaken Eingriffe seit Programmstart. */
+int  re15_gator_boss_raum_halt(const re15_actor_t *pl, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z);
+void re15_gator_boss_raum_alt_setzen(int an);
+int  re15_gator_boss_raum_halt_zahl(void);
 void re15_gator_boss_takt_schritt(int32_t *dx, int32_t *dz);   /* Messhaken: Takt-Schritt des letzten Boss-Takts vor den Klemmen */
 void re15_gator_boss_zeit_letzt(int64_t *ns, int64_t *zyk);    /* Messhaken: Wanduhr ns / Faden-Zyklen des letzten Boss-Takts (PC) */
 /* gator_zeit_r41.c (aus r41/gatorfix NB9, Messhaken): Wanduhr ns, Faden-Zyklen (Windows QueryThreadCycleTime), Zyklen je us; Zeile je Takt in gator_zeit.log

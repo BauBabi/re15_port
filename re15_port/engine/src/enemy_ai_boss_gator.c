@@ -737,6 +737,83 @@ static int gb_pl_oben(const re15_actor_t *pl)
            || gb_pl_unerreichbar(pl);
 }
 
+/* ==== Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2, analysis/befunde_runde41/G2_abnahme_5.md Abschnitt 4): RAUMHALT DER FIGUR IM ALLIGATOR-KAMPF ====
+ * ROOM2090.RDT/ROOM2091.RDT (md5 a48d11a4, bytegleich): SCA-Kopf @0x6dc, 5 Quadranten x 10 Zellen ab Datei 0x6f4 (12 Byte), selbst geparst:
+ *   Band 0: [0] Westwand x -10900..-8900 (0x6f4), [1] Suedwand z -29000..-27000, [2] Nordwand z -5400..-3400, [3] Ostwand x 7200..9200 (0x718),
+ *           [4] Plattform x -1700..1850 z -20000..-12450 (0x724), [5] Rampe x 1850..7200 z -18100..-14500 (0x730, u1 0x01);
+ *   Band 1: [6] Ostwand x 7200..9200, [7] Plattform, [8] Nordleiste z -14500..-13500 (0x754) und [9] Suedleiste z -19100..-18100 (0x760), je x 1850..7200,
+ *           1000 tief, u1 0x02 - KEINE Sued-, Nord- oder Westwand.
+ * Die Spieler-Klemme FUN_8003b0a4/FUN_8003bca8 schiebt aus jeder Zelle ihres Bandes auf Kante + Spielerradius 450 (DAT_80073e94+6 = 0x01c2, `lhu a1,6(v0)`
+ * @0x80036210) + 0x12 (`addiu t1,v0,18` / `addiu a0,a0,-18` @0x8003bce0-e8 fuer x, @0x8003bd20-2c fuer z). Zwei Loecher, die erst die Angriffe der
+ * NB3 erreichen (Abnahme 5, gemessen):
+ *  (M2) oben: der Niederwurf (s_kd_speed 1000 `ori v0,zero,0x3e8` @0x8003615c, -15*Bild @0x800361c8-e0) schiebt die Figur im ersten Bild 2062, dann 985, 955 ...
+ *       Einheiten - durch die Leiste [8]/[9] (1000 + 2 x 450) in einem Bild, danach ohne Wand ueber das Becken hinter die Aussenwand (west5_elza F2752 CROSS-Biss
+ *       an (2315,-17642) -> (2318,-1800,-29914); Lagen (2318,-16300) F1201 und (6500,-15000) Rammen F1209 -> Nordwand); die Sonde FUN_8001c2dc stoppt dort nicht
+ *       (Zellwort 0x1002: Bit 0x2 -> Flag 0, @0x8001c390-ac).
+ *  (M1) unten: [5] stoesst an [3]; [3] wird VOR [5] geklemmt, [5] schiebt nach Osten auf 7200 + 468 = 7668 IN die Ostwand (Fixpunkt "Ostnische", abn2_wand
+ *       F1045 Biss -> F1046 (7668,-17081)); ein Schub nach Osten loest [3] dann auf der Aussenseite auf (9200 + 468 = 9668, F1500) -> Figur ausserhalb des
+ *       Raums, Absturz F7374 (re15_squareroot0 in re15_autolook_scan, Abstand ~100000). Dieselbe Fuge [4]/[5] (Pier (1382,-17036), exe wand_elza F7920) und
+ *       oben [7]/[8] (Klemmlage (1382,-14013), Abnahme 5 Abschnitt 3a).
+ * PORT-WAHL (Abnahme 5 M1/M2 "Figur oben nicht sicher, Figur bleibt im Raum"; Nutzer 2026-11-06, Vorgabe A: "Er soll nur den Spieler oben auf der Rampe auch
+ * rammen koennen, das der Spieler oben nicht ausweichen kann ... aber er darf halt oben nicht sicher sein" - getroffen werden, nicht aus dem Level fliegen):
+ * waehrend ein Alligator-Boss im Raum ist, gilt fuer die Spieler-Klemme zusaetzlich
+ *   Band 1: die Figur bleibt auf dem Deck der Rampe = dem Rechteck, das [6]/[7]/[8]/[9] beim Gehen freilassen (x 1850 + 450 .. 7200 - 450, z -18100 + 450 ..
+ *           -14500 - 450); eine Lage ausserhalb wird auf die Lage geklemmt, an die FUN_8003bca8 aus der Zelle schiebt (Kante +- 468) - die Leisten
+ *           halten auch einen Schritt, der breiter ist als sie.
+ *   Band 0: eine Lage ausserhalb der Aussenwaende (x -8900 + 450 .. 7200 - 450, z -27000 + 450 .. -5400 - 450) oder mit dem Mittelpunkt in [4]/[5] gilt nicht;
+ *           die Figur bleibt auf der Lage vor diesem Schritt.
+ * Nur wenn die Lage vor dem Schritt (alt) selbst gueltig war (eine Spawn-/Szenenlage wird nie verschoben) und die Figur lebt (Finisher setzt die Leiche).
+ * Beim Gehen schieben die Zellen selbst schon dorthin (Schrittweite < Zelltiefe) - der Halt greift nur in den Loechern; Pruefhaken
+ * re15_gator_boss_raum_alt_setzen(1) = Stand 10603425b (Gegenproben der Riegel raum). */
+#define GB_PR    450                    /* Spielerradius DAT_80073e94+6 (s. o.) */
+#define GB_PRK   (GB_PR + 18)           /* Klemmlage FUN_8003bca8: Kante + Radius + 0x12 */
+static int s_gb_raum_alt = 0;
+static int s_gb_raum_n = 0;
+void re15_gator_boss_raum_alt_setzen(int an) { s_gb_raum_alt = an; }
+int  re15_gator_boss_raum_halt_zahl(void) { return s_gb_raum_n; }
+static int gb_kampf_raum(void)
+{
+    for (int i = 1; i < RE15_ACTOR_MAX; i++)
+        if (g_actors[i].active && re15_gator_boss_active(&g_actors[i])) return 1;
+    return 0;
+}
+static int gb_deck_gueltig(int32_t x, int32_t z)      /* Band 1 */
+{
+    return x >= GB_RAMP_X0 + GB_PR && x <= GB_RAMP_X1 - GB_PR && z >= GB_RAMP_Z0 + GB_PR && z <= GB_RAMP_Z1 - GB_PR;
+}
+static int gb_wasser_gueltig(int32_t x, int32_t z)    /* Band 0 */
+{
+    if (x < -8900 + GB_PR || x > 7200 - GB_PR || z < -27000 + GB_PR || z > -5400 - GB_PR) return 0;
+    if (x > GB_PLAT_X0 && x < GB_PLAT_X1 && z > GB_PLAT_Z0 && z < GB_PLAT_Z1) return 0;
+    if (x > GB_RAMP_X0 && x < GB_RAMP_X1 && z > GB_RAMP_Z0 && z < GB_RAMP_Z1) return 0;
+    return 1;
+}
+int re15_gator_boss_raum_halt(const re15_actor_t *pl, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z)
+{
+    if (s_gb_raum_alt || !pl || pl->hp < 0 || (*x == alt_x && *z == alt_z) || !gb_kampf_raum()) return 0;
+    const int band = re15_collision_debug_band();
+    const int32_t vx = *x, vz = *z;
+    if (band == 1) {
+        if (gb_deck_gueltig(vx, vz) || !gb_deck_gueltig(alt_x, alt_z)) return 0;
+        if (*x < GB_RAMP_X0 + GB_PR) *x = GB_RAMP_X0 + GB_PRK;
+        if (*x > GB_RAMP_X1 - GB_PR) *x = GB_RAMP_X1 - GB_PRK;
+        if (*z < GB_RAMP_Z0 + GB_PR) *z = GB_RAMP_Z0 + GB_PRK;
+        if (*z > GB_RAMP_Z1 - GB_PR) *z = GB_RAMP_Z1 - GB_PRK;
+    } else if (band == 0) {
+        if (gb_wasser_gueltig(vx, vz) || !gb_wasser_gueltig(alt_x, alt_z)) return 0;
+        *x = alt_x; *z = alt_z;
+    } else return 0;
+    s_gb_raum_n++;
+    if (s_gb_stumm < 0) s_gb_stumm = (getenv("RE15_GB_STUMM") != NULL);
+    if (!s_gb_stumm) {
+        static FILE *s_rh = NULL;
+        if (!s_rh) s_rh = fopen("gator_boss.log", "a");
+        if (s_rh) { fprintf(s_rh, "RAUMHALT F%u Band %d (%d,%d) -> (%d,%d) vorher (%d,%d) hr=%d mo=%d\n", (unsigned)g_engine.frame_count, band, (int)vx, (int)vz,
+                            (int)*x, (int)*z, (int)alt_x, (int)alt_z, (int)pl->hit_react, (int)pl->motion); fflush(s_rh); }
+    }
+    return 1;
+}
+
 static int     gb_zone(int32_t z);       /* fwd (definiert unten) */
 static int32_t gb_becken_draussen(int32_t x, int32_t z, int32_t m);   /* fwd (Nachbesserung 2, M2) */
 static int32_t gb_iabs(int32_t v);       /* fwd */
@@ -2439,6 +2516,7 @@ static void gb_takt(int slot)
              * er schwimmt sichtbar an der Kante unter Leon her. */
             int32_t gx, gz;
             int64_t gdx, gdz;
+            int quer_anl = 0;   /* NB3 Runde 2: Anlauf der Zaehler-Querung (Vorgabe A) - ohne 600er-Ruhezone (s. Vortrieb unten) */
             /* Randpunkt auf der EIGENEN Seite konstruieren (Nutzer-Marken
              * F2579-F2809, 2026-09-10: Leon oben auf der Rampe, der Gator
              * kreiste ewig im Nordbecken an der Plattform-NO-Ecke - der
@@ -2535,6 +2613,7 @@ static void gb_takt(int slot)
                         }
                         gx = rx; gz = rz_ein;   /* Anlauf; Weg via Umweg unten */
                         g->umlauf = 0;          /* kein West-Commit noetig */
+                        quer_anl = quer_frei && !s_gb_raum_alt;   /* Pruefhaken raum_alt = Stand 10603425b */
                         quer_anlauf = quer_frei;   /* NB3: der Anlauf der Zaehler-Querung ohne das Kanten-Pendel - mit ihm stand das Ziel bis 90 Bilder
                                                     * 1500 oestlich des Anlaufs (Harness R2318/-16300: t300 Zaehler, t378 Start) */
                     } else {
@@ -2689,8 +2768,12 @@ static void gb_takt(int slot)
                 if ((gdlt <= 0x300 && gdlt >= -0x300
                      || (re15_gr2_traegt_lenkung() && !re15_gr2_kk_ziel_alt()))   /* Runde 41 Spur G2 NB1 (M3): mit Kanister im Bogen weiter, s. CHASE */
                     && (gdx * gdx + gdz * gdz > (int64_t)600 * 600
-                        || (re15_gr2_traegt_lenkung() && !re15_gr2_kk_ziel_alt())))   /* NB1 (M3): mit Kanister keine 600er-Ruhezone (Lauf n3_plat_leon: 2165
+                        || (re15_gr2_traegt_lenkung() && !re15_gr2_kk_ziel_alt())   /* NB1 (M3): mit Kanister keine 600er-Ruhezone (Lauf n3_plat_leon: 2165
                                                                                 * Bilder Stand 591 vor dem Etappenziel) - RE2 Stufe 7 ohne Wartezustand */
+                        || quer_anl))   /* NB3 Runde 2 (Vorgabe A "darf halt oben nicht sicher sein"): auch der Anlauf der Zaehler-Querung ohne 600er-Ruhezone. Gemessen
+                                         * (Harness raum, Figur frei, R2800/-16300 nach zwei Niederwuerfen bei (2300,-1800,-16680)): QUERPRUEF trifft vom Anlauf
+                                         * x 4450, aber nicht von der Wurzel x 5004; die Wurzel stand 554 vor dem Anlauf (4450,-20700) in der Ruhezone, startete nie
+                                         * (Start erst, wenn die Bahn von hier trifft) - 1195 Bilder ohne Treffer oben. Weiter zum Anlauf, bis die Bahn trifft. */
                     re15_ai_advance(e, GB_SWIM_SPEED);
             }
             {   /* Feindiagnose Haenger (temporaer aussagekraeftig, billig) */
@@ -3252,6 +3335,7 @@ static void gb_takt(int slot)
                 int32_t nx = pl->x, nz = pl->z;
                 re15_collision_ensure_band(pl->y);
                 re15_collision_constrain(&g_room_rdt, plox, ploz, &nx, &nz);
+                (void)re15_gator_boss_raum_halt(pl, plox, ploz, &nx, &nz);   /* NB3 Runde 2 (Abnahme 5 M1/M2): Raumhalt (s. dort) - auch dieser Schub */
                 pl->x = nx; pl->z = nz;
             }
             /* Runde 41 Spur G2-RE2 (5) - aus r41/gatorfix NB8 Punkt 1b: mit dem Kanister (Rammen) haelt der Push eine Figur oben auf dem Deck (y < -900) auf der
