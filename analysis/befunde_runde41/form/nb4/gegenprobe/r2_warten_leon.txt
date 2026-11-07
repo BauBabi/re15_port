@@ -1,0 +1,19 @@
+# Gegenprobe Runde 2: exe b9b3d574 (Stand b9ab865af, Wache nach dem Bildmass), Riegel test_r41_form_wagenweg.cmake TEIL=warten_leon (Stand vor der Schranke 650 / warten 9; Zahlen gelten unveraendert)
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[warten_leon]: Kamera keine Szene bis F1931 (Teil warten)
+-- r41_form_wagenweg[warten_leon]: Kampfkamera F1150-F1931 782 Bilder, 38 > 600 Promille fast schwarz (erlaubt 7), max 707 (F1724)
+-- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 150 (F946), Treffer 1 (Abzug 15, groesster 15) ab F1897, Rueckstoss F, Form-HP zuletzt 135, Leon getroffen 1x, exit=0, Lauf C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formnb4/r2/gegenprobe/warten_leon/lauf_161b6e8e
+CMake Error at tests/integration/test_r41_form_wagenweg.cmake:491 (message):
+  r41_form_wagenweg[warten_leon]: FEHLER
+
+   Kampfkamera vor der Szene (F1150-F1931): 38 Bilder > 600 Promille fast schwarz, erlaubt 7
+     F1724: 707 Promille fast schwarz
+     F1725: 695 Promille fast schwarz
+     F1726: 664 Promille fast schwarz
+     F1727: 637 Promille fast schwarz
+     F1728: 625 Promille fast schwarz
+     F1729: 626 Promille fast schwarz
+     F1730: 626 Promille fast schwarz
+     F1731: 623 Promille fast schwarz
+
+

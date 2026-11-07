@@ -9,8 +9,11 @@ add_executable(probe_r41_form_kamera_bild ${CMAKE_CURRENT_LIST_DIR}/../probe_r41
 #   integration_r41_form_wagenweg_elza          dasselbe mit Elza (ROOM5091)
 #   integration_r41_form_wagenweg_zurueck_leon  Leon weicht nach dem Kampfstart 2 s zurueck (Abnahme 2 Lauf v5090)
 #   integration_r41_form_wagenweg_zurueck_elza  Elza dasselbe (Abnahme 2 Lauf v5091)
+#   integration_r41_form_wagenweg_warten_leon   Leon wartet nach dem Kampfstart 24 s (Abnahme 2/3 Lauf k5090), Pruefung 7
+#                                               Kampfkamera (Nachbesserung 4 Runde 2, Abnahme 3 N1)
+#   integration_r41_form_wagenweg_warten_elza   Elza dasselbe
 if(TARGET re15_pc)
-    foreach(_teil leon elza zurueck_leon zurueck_elza)
+    foreach(_teil leon elza zurueck_leon zurueck_elza warten_leon warten_elza)
         if(_teil STREQUAL "leon")
             set(_name integration_r41_form_wagenweg)
         else()

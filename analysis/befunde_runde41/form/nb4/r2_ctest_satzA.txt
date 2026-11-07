@@ -1,0 +1,32 @@
+1154: -- r41_form_wagenweg[warten_leon]: Kampfkamera F1150-F1931 782 Bilder, 9 > 600 Promille fast schwarz (erlaubt 9), max 622 (F1889)
+ 1/19 Test #1154: integration_r41_form_wagenweg_warten_leon ....   Passed  109.36 sec
+1155: -- r41_form_wagenweg[warten_elza]: Kampfkamera F1150-F1931 782 Bilder, 1 > 600 Promille fast schwarz (erlaubt 9), max 619 (F1889)
+ 2/19 Test #1155: integration_r41_form_wagenweg_warten_elza ....   Passed   93.24 sec
+ 3/19 Test #1386: integration_r41_birkin_pistole ...............   Passed  246.13 sec
+ 4/19 Test #1388: integration_r41_g5_tod .......................   Passed  266.98 sec
+ 5/19 Test #1387: integration_r41_g5_westen ....................   Passed  287.40 sec
+1152: -- r41_form_wagenweg[zurueck_leon]: Kamera Taumeln F1544-F1840 (297 Bilder, Schnitte 13;15;11), Form-Slot 12 min sichtbar 2796, Leon max 2161, Form max 166 Promille verdeckt, max 550 Promille fast schwarz (297 Bilder)
+1152: -- r41_form_wagenweg[zurueck_leon]: Kampfkamera F1150-F1543 394 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+ 6/19 Test #1152: integration_r41_form_wagenweg_zurueck_leon ...   Passed   99.68 sec
+ 7/19 Test  #560: integration_r35_werfer_form ..................   Passed   26.47 sec
+1150: -- r41_form_wagenweg[leon]: Kamera Taumeln F1486-F1748 (263 Bilder, Schnitte 13;12;11), Form-Slot 12 min sichtbar 1247, Leon max 5866, Form max 405 Promille verdeckt, max 540 Promille fast schwarz (263 Bilder)
+1150: -- r41_form_wagenweg[leon]: Kampfkamera F1150-F1485 336 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+ 8/19 Test #1150: integration_r41_form_wagenweg ................   Passed   99.14 sec
+ 9/19 Test  #410: integration_r34_plattform_takt ...............   Passed   22.94 sec
+10/19 Test #1380: unit_birkin_bahnsteig ........................   Passed    1.13 sec
+11/19 Test  #409: unit_r34_plattform_ton .......................   Passed    0.07 sec
+12/19 Test  #980: unit_r39_funk10f1_form .......................   Passed    0.02 sec
+13/19 Test #1379: unit_birkin_formen ...........................   Passed    0.02 sec
+14/19 Test #1149: unit_r41_form_emd ............................   Passed    0.02 sec
+15/19 Test  #408: unit_r34_plattform ...........................   Passed    0.02 sec
+16/19 Test  #508: unit_r35_fenster_satzform ....................   Passed    0.02 sec
+17/19 Test  #411: integration_r34_plattform_esp_eintritt .......   Passed    9.55 sec
+1153: -- r41_form_wagenweg[zurueck_elza]: Kamera Taumeln F1544-F1842 (299 Bilder, Schnitte 13;15;11), Form-Slot 11 min sichtbar 2723, Elza max 1626, Form max 113 Promille verdeckt, max 544 Promille fast schwarz (299 Bilder)
+1153: -- r41_form_wagenweg[zurueck_elza]: Kampfkamera F1150-F1543 394 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+18/19 Test #1153: integration_r41_form_wagenweg_zurueck_elza ...   Passed   98.35 sec
+1151: -- r41_form_wagenweg[elza]: Kamera Taumeln F1486-F1748 (263 Bilder, Schnitte 13;12;11), Form-Slot 11 min sichtbar 1596, Elza max 4147, Form max 238 Promille verdeckt, max 530 Promille fast schwarz (263 Bilder)
+1151: -- r41_form_wagenweg[elza]: Kampfkamera F1150-F1485 336 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+19/19 Test #1151: integration_r41_form_wagenweg_elza ...........   Passed   99.83 sec
+The following tests passed:
+100% tests passed, 0 tests failed out of 19
+Total Test time (real) = 387.28 sec
