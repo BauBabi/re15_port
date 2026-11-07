@@ -18,7 +18,7 @@ import v4_gemein as G, b2, riegel_v4 as RV
 from PIL import Image
 
 AUS = os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4')
-LAUF = {'V3r2': os.path.join(os.path.dirname(G.SFV4), 'sfv3', 'r', 'V3r2'), 'V4': os.path.join(G.SFV4, 'r', 'V4')}
+LAUF = {'V3r2': os.path.join(os.path.dirname(G.SFV4), 'sfv3', 'r', 'V3r2'), 'V4': os.path.join(G.SFV4, 'r', 'V4r2')}   # Runde 2: Lauf V4r2
 PKT1 = {'Auge': (382, 164), 'Haare': (404, 160), 'Nase': (395, 177)}
 PKT2 = {'Auge': (460, 234), 'Haare': (468, 241), 'Beginn': (357, 243), 'Knick': (290, 308), 'Ende': (295, 343)}
 BIEG2 = (295, 252)
@@ -64,6 +64,7 @@ def riegel(k):
         P = G.posen(); m = mo(k)
         zk, ik, _ = RV.kopf_vorn(m, P); zs, is_, _ = RV.kopf_seite(m, P); zt, st, rest = RV.schwanz(m, P)
         zf, ef, _ = RV.koerper_farben(m, P)
+        zt = zt + []
         _cache[key] = dict(zk={z['mass'].split()[0]: z for z in zk}, zs={z['mass'].split()[0]: z for z in zs},
                            zt={z['mass'].split()[0]: z for z in zt}, zf=zf, ef=ef, ik=ik, is_=is_, st=st, fr=rest[3])
     return _cache[key]
@@ -123,41 +124,50 @@ def kopfbox_rand(kb, m=8):
 
 
 def l03():
-    o = vorlage_u8(1); bsch = beschriftung(1)
+    # Runde 2: Zeile 1 ohne Marken (Sicht-Pruefung: Beschriftung deckte den Kopf zu), Zeile 2 mit kleinen Marken ohne Text
+    # (gelb = Auge / Nutzerpunkt Auge, cyan = Haare und Nase)
+    o0 = vorlage_u8(1); bsch = beschriftung(1)
     ob = kopfbox_rand(G.KB_ORIG[1])
+    o = o0.copy()
     for n, p in PKT1.items():
-        punkt(o, p, GELB, 2, n)
-    t = [kachel(o, ob, 4, 'Vorlage 1 Kopf x4', ['Auge hell 46,9/7,2/-1,1', 'Haarfeld 13,3/7,4/1,5']),
-         kachel(bsch, ob, 4, 'Beschreibung1 Kopf x4', ['Nase 18,2/7,1/1,3', 'Kuppe rot 22,6/15,4/5,2'])]
+        punkt(o, p, GELB if n == 'Auge' else CYAN, 1)
+    z1 = [kachel(o0, ob, 4, 'Vorlage 1 Kopf x4', ['Auge hell 46,9/7,2/-1,1', 'Haarfeld 13,3/7,4/1,5']),
+          kachel(bsch, ob, 4, 'Beschreibung1 Kopf x4', ['Nase 18,2/7,1/1,3', 'Kuppe rot 22,6/15,4/5,2'])]
+    z2 = [kachel(o, ob, 4, 'Vorlage 1 mit Nutzerpunkten', ['gelb Auge, cyan Haare/Nase']), kachel(bsch, ob, 4, 'Beschreibung1', [''])]
     for k in ('V3r2', 'V4'):
-        img, ids, iv = render(k, '135'); r = riegel(k); img = img.copy()
+        img, ids, iv = render(k, '135'); r = riegel(k); img0 = img.copy(); img = img.copy()
         kb = r['ik']['kopfbox']
-        punkt(img, r['ik']['blob']['sp'], GELB, 2, 'Auge')
+        punkt(img, r['ik']['blob']['sp'], GELB, 1)
         for n, kk in (('Haare', 'KV2'), ('Nase', 'KV3')):
             bx = r['ik']['fenster'][kk][0]
-            punkt(img, (0.5 * (bx[0] + bx[2]), 0.5 * (bx[1] + bx[3])), CYAN, 2, n)
-        t.append(kachel(img, kopfbox_rand(kb), 4, '%s Kopf x4' % k,
-                        ['K1 ' + kurz(r['zk']['K1']), 'K2 ' + kurz(r['zk']['K2'])[:58], 'K5 ' + kurz(r['zk']['K5'])[:58],
-                         'K7 ' + kurz(r['zk']['K7']), 'K9 ' + kurz(r['zk']['K9'])]))
-    speichern('03_kopf_nah_vorn_x4', [t], ['SF V4 - 03 Kopf vorn x4 (Kopfbox +8 px; Port = Bbox Id 9)', KOPFZEILE])
+            punkt(img, (0.5 * (bx[0] + bx[2]), 0.5 * (bx[1] + bx[3])), CYAN, 1)
+        zl = ['K1 ' + kurz(r['zk']['K1']), 'K2 ' + kurz(r['zk']['K2'])[:58], 'K3 ' + kurz(r['zk']['K3'])[:58],
+              'K4 ' + kurz(r['zk']['K4'])[:58], 'K5 ' + kurz(r['zk']['K5'])[:58], 'K7 ' + kurz(r['zk']['K7']), 'K9 ' + kurz(r['zk']['K9'])]
+        z1.append(kachel(img0, kopfbox_rand(kb), 4, '%s Kopf x4' % k, zl))
+        z2.append(kachel(img, kopfbox_rand(kb), 4, '%s mit Messpunkten' % k, ['gelb Augenfleck (Schwerpunkt), cyan KV2/KV3']))
+    speichern('03_kopf_nah_vorn_x4', [z1, z2], ['SF V4 - 03 Kopf vorn x4 (Kopfbox +8 px; Port = Bbox Id 9); Zeile 1 ohne, Zeile 2 mit Marken',
+                                               KOPFZEILE])
 
 
 def l04():
-    o = vorlage_u8(2); bsch = beschriftung(2)
+    o0 = vorlage_u8(2); bsch = beschriftung(2)
     ob = kopfbox_rand(G.KB_ORIG[2])
+    o = o0.copy()
     for n in ('Auge', 'Haare'):
-        punkt(o, PKT2[n], GELB, 2, n)
-    t = [kachel(o, ob, 4, 'Vorlage 2 Kopf x4', ['Auge hell 48,4/4,0/0,5', 'Haarkante 19,1/1,2/1,1']),
-         kachel(bsch, ob, 4, 'Beschreibung2 Kopf x4', ['Kuppe rot 27,6/15,3/3,3'])]
+        punkt(o, PKT2[n], GELB if n == 'Auge' else CYAN, 1)
+    z1 = [kachel(o0, ob, 4, 'Vorlage 2 Kopf x4', ['Auge hell 48,4/4,0/0,5', 'Haarkante 19,1/1,2/1,1']),
+          kachel(bsch, ob, 4, 'Beschreibung2 Kopf x4', ['Kuppe rot 27,6/15,3/3,3'])]
+    z2 = [kachel(o, ob, 4, 'Vorlage 2 mit Nutzerpunkten', ['gelb Auge, cyan Haare']), kachel(bsch, ob, 4, 'Beschreibung2', [''])]
     for k in ('V3r2', 'V4'):
-        img, ids, iv = render(k, '85'); r = riegel(k); img = img.copy()
-        punkt(img, r['is_']['blob']['sp'], GELB, 2, 'Auge')
+        img, ids, iv = render(k, '85'); r = riegel(k); img0 = img.copy(); img = img.copy()
+        punkt(img, r['is_']['blob']['sp'], GELB, 1)
         kb = r['is_']['kopfbox']
-        bx = G.fenster(kb, RV.FENSTER['KS2']); punkt(img, (0.5 * (bx[0] + bx[2]), 0.5 * (bx[1] + bx[3])), CYAN, 2, 'Haare')
-        t.append(kachel(img, kopfbox_rand(kb, 14), 4, '%s Kopf seitlich x4' % k,
-                        ['S1 ' + kurz(r['zs']['S1'])[:62], 'S2 ' + kurz(r['zs']['S2']), 'S3 ' + kurz(r['zs']['S3'])[:62],
-                         'S4 ' + kurz(r['zs']['S4'])]))
-    speichern('04_kopf_nah_seite_x4', [t], ['SF V4 - 04 Kopf seitlich x4', KOPFZEILE])
+        bx = G.fenster(kb, RV.FENSTER['KS2']); punkt(img, (0.5 * (bx[0] + bx[2]), 0.5 * (bx[1] + bx[3])), CYAN, 1)
+        z1.append(kachel(img0, kopfbox_rand(kb, 14), 4, '%s Kopf seitlich x4' % k,
+                         ['S1 ' + kurz(r['zs']['S1'])[:62], 'S2 ' + kurz(r['zs']['S2']), 'S3 ' + kurz(r['zs']['S3'])[:62],
+                          'S4 ' + kurz(r['zs']['S4'])]))
+        z2.append(kachel(img, kopfbox_rand(kb, 14), 4, '%s mit Messpunkten' % k, ['gelb Augenfleck, cyan KS2']))
+    speichern('04_kopf_nah_seite_x4', [z1, z2], ['SF V4 - 04 Kopf seitlich x4; Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
 
 
 # ═══════════════════════════════════════════════════ 05 Schwanz
@@ -232,6 +242,18 @@ def l06():
             d = G.de00(la, ziel) if n else 99
             z.append(feld(BF._lab_rgb(*la) if n else None, '%s %s dE00 %.1f' % ('OK' if d <= 5 and abs(la[0] - ziel[0]) <= 4 else 'ROT',
                                                                          '/'.join('%.1f' % v for v in la), d)))
+        reihen.append(z)
+    # Runde 2: Sicht-Boxen (FS) und Schwanzachse (T9) aus den Riegelzeilen
+    for k in ('V3r2', 'V4'):
+        riegel(k)
+    for mass_ in [z['mass'] for z in riegel('V4')['zf'] if z['mass'].startswith('FS')]:
+        zv = {k: next(z for z in riegel(k)['zf'] if z['mass'] == mass_) for k in ('V3r2', 'V4')}
+        ziel = [float(x) for x in zv['V4']['soll'].split(',')[0].split('/')]
+        z = [feld(BF._lab_rgb(*ziel), '%s Ziel %s' % (mass_[3:], zv['V4']['soll'][:22])), feld(None, 'Sicht-Box (Pruefung V4 r1)')]
+        for k in ('V3r2', 'V4'):
+            ist = zv[k]['ist']
+            la = [float(x) for x in ist.split()[0].split('/')]
+            z.append(feld(BF._lab_rgb(*la), '%s %s' % ('OK' if zv[k]['ok'] else 'ROT', ist[:46])))
         reihen.append(z)
     for k_ in ('F15', 'F16', 'F17', 'F18'):
         ziel = RV.ZIEL[k_]
