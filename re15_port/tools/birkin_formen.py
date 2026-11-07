@@ -579,6 +579,9 @@ V4_DIR = os.path.join(HIER, 'r41_sichel', 'v4')
 V4_FARBEN = os.environ.get('RE15_V4_FARBEN', os.path.join(V4_DIR, 'farben_v4.npz'))   # Eichung (Messblatt V4 Abschnitt 5), committet
 # V4 Runde 2: Koerpertexel und -zeilen 480/481/482/484 aus tools/r41_sichel/v4/r2_koerper_farben.py (Sicht-Pruefung V4 r1 1.4), committet
 V4_KOERPER = os.environ.get('RE15_V4_KOERPER', os.path.join(V4_DIR, 'farben_koerper_v4.npz'))
+# V4 Runde 5: Schwanztexel (Indizes 256 x 64, uv art 'achse') und Zeile 487 aus tools/r41_sichel/v4/r5_schwanz_textur.py (Projektion
+# von Vorlage 2), committet; ersetzt die Schwanzbaender aus V4_FARBEN
+V4_SCHWANZ = os.environ.get('RE15_V4_SCHWANZ', os.path.join(V4_DIR, 'farben_schwanz_v4.npz'))
 # Posen der beiden Vorlage-Kameras (Spielkamera 50A0 Schnitt 12): tools/r41_sichel/v4/posen_v4.json
 V4_POSE_VORN = dict(clip=0, bild=9, gier=1737, x=-9279, z=-22511)    # "135": Silhouette n1485, IoU 0,619 (posen_v4.py)
 V4_POSE_SEITE = dict(clip=1, bild=26, gier=556, x=-8070, z=-21202)   # "85" = sfv2/posen_seite.json "85" (Messblatt V4 Abschnitt 7)
@@ -612,8 +615,12 @@ SCHWANZ_V4 = dict(
     # Ziel = Ober-/Unterkontur des waagerechten Teils wie die Leser-Maske; Protokoll SF_belege/v4/r4/r4_form_suche_saat1.log).
     # Gelenke 5-7 (Knick, Endstueck) danach mit RE15_R4_ENDE=1 r4_form_suche.py (Saat 22, Schritt 35: T4 dx -0,214 -> -0,215, Strafe 2,36 ->
     # 2,00; Protokoll SF_belege/v4/r4/r4_form_suche_ende22.log).
-    gelenke=[(0.12, -0.080), (-0.037, -0.040), (-0.1462, -0.0115), (-0.2871, 0.0604), (-0.2456, 0.1649), (-0.2605, 0.2792),
-             (-0.2393, 0.3385), (-0.2163, 0.3924)],
+    # V4 Runde 5 (Pruefung V4 r4 Zahlen 4.1: T3 dx -0,234, Grenze -0,235; Entscheid O11): Knick und Endstueck (Gelenke 5-7) 0,0075 / 0,015 H
+    # nach hinten, Knick 0,006 / Endstueck 0,002 H tiefer (Laeufe r5 Form, formprobe: T3 -0,240 / +0,253, T4 -0,217 / +0,390). Gelenk 3
+    # (Biegung) aus tools/r41_sichel/v4/r5_form_suche.py Lauf "bauch" (RE15_R5_BAUCH=1, Saat 5, Schritt 46; Nebenbedingungen wie r4_form_suche
+    # und TK, Protokoll SF_belege/v4/r5/r5_form_suche_bauch5.log).
+    gelenke=[(0.12, -0.080), (-0.037, -0.040), (-0.1462, -0.0115), (-0.3003, 0.0743), (-0.2456, 0.1649), (-0.268, 0.2852),
+             (-0.2543, 0.3405), (-0.2313, 0.3924)],
     # Durchmesser je Gelenk in H (Abschnitt 4 "breiter nach oben": vom Knick zum Ruecken f 0,1/0,3/0,5/0,7 = 0,03/0,065/0,125/0,14 H,
     # f 0,9 geht in den Buckel >= 0,09; Taille am Knick 0,024-0,032 H; unter dem Knick gleich breit 0,035 H). Gelenke 2-4 nachgestellt
     # (r2_form_suche.py nach f 0,7 / 0,5 / 0,3); Gelenk 1 0,13 H: Unterseite am Beginn (Achse 0,04 H darueber); Gelenk 0 im Buckel wie
@@ -621,7 +628,9 @@ SCHWANZ_V4 = dict(
     # gemessen 0,025-0,028 H und die schmalste Stelle (T6). Endstueck 0,038 H (gemessen 0,032-0,036 H, Ziel 0,035).
     # V4 Runde 3: Gelenke 2-4 aus r3_form_suche.py (Saat 2, Schritt 78, s. gelenke); T5 0,028 / 0,080 / 0,140 / 0,131 H
     # V4 Runde 4: Gelenke 1-4 aus r4_form_suche.py (Saat 1, Schritt 253), monoton fallend 0,139 -> 0,130 -> 0,079 -> 0,046 H
-    durchmesser=[0.16, 0.1391, 0.1301, 0.0789, 0.0459, 0.027, 0.038, 0.038],
+    # V4 Runde 5: Gelenk 3 0,0636 H (r5_form_suche Lauf "bauch", Saat 5, Schritt 46) - die Breite an der Biegung traegt jetzt der
+    # Zwischenring 'bauch' (s. unten)
+    durchmesser=[0.16, 0.1391, 0.1301, 0.0636, 0.0459, 0.027, 0.038, 0.038],
     # Versatz zur Kamera (H, Bildmassstab am Gelenk) - Ansatz vor der Flanke (s. beginn): Strahl durch (357,243) trifft Mesh 8 bei
     # Modell-z -475 (Mittelebene -134, kopf3d_v4.treffer); mit 0,05 H blieb der Ansatz hinter der Flanke (Malreihenfolge nach mittlerer
     # Tiefe wie die PSX-Ordnungstabelle, r2_expt Lauf a1), mit 0,12 H liegt er sichtbar davor (Lauf a2). Ab der Biegung 0 (Mittelebene).
@@ -632,7 +641,13 @@ SCHWANZ_V4 = dict(
     dorn=0.8,                              # Spitze 0,8 x Endradius (Spitzenform nicht aufloesbar, Abschnitt 9 Punkt 2; PORT-WAHL kurz)
     # V4 Runde 4 (Sicht-Pruefung V4 r3 1.3 "Vierkant-Balken", Empfehlung "runder Querschnitt (mehr Seiten, wie Referenz 2)"): 12 Seiten.
     # M1: 7 x 24 + Deckel 12 + Spitze 12 = 192 Dreiecke <= 212 (EM30-Arm 13-15); 13 Seiten ergaeben 208, 14 Seiten 224 > 212.
-    glieder=7, seiten=12,
+    # V4 Runde 5 (Entscheid O8 "die Ober- und Unterkontur des waagerechten Teils darf nicht gerade sein (TK)", Messblatt Abschnitt 4 "von da
+    # an breiter nach oben"): Zwischenring im Glied 2 (Gelenk 2 -> Biegung) bei 0,15 der Gliedlaenge, Radius 1,374 x Gelenkradius, Versatz
+    # 0,011 x Radius nach aussen (kette_meshes_v4 'bauch'; r5_form_suche Lauf "bauch", Saat 5, Schritt 46: TK RMS 3,69 px (Original
+    # 3,87-4,71), T5q f 0,5 0,110 H, T2 64,0 Grad / dx -0,259 dy +0,049). Dafuer 11 statt 12 Seiten - M1: 7 x 22 + Deckel 11 + Spitze 11
+    # + Zwischenring 22 = 198 <= 212 (mit 12 Seiten 216).
+    bauch=dict(glied=2, t=0.15, radius=1.374, aussen=0.011),
+    glieder=7, seiten=11,
     ueberlapp=0.45, deckel=True,           # wie V3 (Manschette ins Vorglied, Deckel in den Rumpf)
     # Textur: eigene Flaeche TPage 130 u 64-127 v 0-255 (frei, Atlasbelegung Referenz 2: Seite 2 belegt u 0-47 und u 0-63 ab v 176),
     # Zeile 487; je Flaeche eine Farbklasse (Abschnitt 4 "zweitoenig"): Wurzel (Glied 16; Glied 17 ohne die Aussenkante), Aussenkante
@@ -655,8 +670,14 @@ SCHWANZ_V4 = dict(
     # Grenze), Lauf r4 Dichte 2 mit 22/24/14/22 -> 0,046-0,086. PORT-WAHL (Machart, Messblatt M4).
     # Grenze 0,5 wie Runde 3 (Klassen und Farben der Runde 3, T8/T9 bestanden); der Verlauf liegt nur an den Klassengrenzen
     # (eichen_v4.UEBERGANG). Laeufe r4 Eichung h-p mit 0,8 und durchgehendem Verlauf: nicht stabil an T8/T9 zu eichen (Dossier V4 Runde 4).
-    # Zeilen je c fuer M4 (Lauf r4 Dichte 4: senkrecht 10 -> Glied 20 0,092 > 0,091, daher 9).
-    uv=dict(clut=487 << 6, page=130, u=(64, 127), dichte=0.068, grenze=0.5,
+    # Zeilen je c fuer M4 (Lauf r4 Dichte 4: senkrecht 10 -> Glied 20 0,092 > 0,091, daher 9). PORT-WAHL (Machart, Messblatt M4),
+    # Nutzer-Wortlaut "Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben"; seit V4 Runde 5 (uv art 'achse') ohne Wirkung - nur noch fuer den Nachbau der Staende Runde 2-4.
+    # V4 Runde 5 (Entscheid O8 "durchgehende Texturierung entlang der Achse, UV ueber die Glieder fortlaufend"): art 'achse' -
+    # v 0-255 = Bogenlaenge (kette_meshes_v4 tx), u = Lage um den Umfang; die Texel malt tools/r41_sichel/v4/r5_schwanz_textur.py aus
+    # Vorlage 2 (Datei V4_SCHWANZ). Die Klassen-/Band-Angaben (grenze, verlauf, baender) gelten nur ohne 'art' (Runde 2-4,
+    # eichen_v4.py); sie bleiben stehen, damit aeltere Staende nachgebaut werden koennen. dichte 0,068 (u, wie Runde 2-4) und
+    # v-Dichte 255 / 3593 E. = 0,071 ergeben je Glied sqrt(0,068 x 0,071) ~ 0,07 Texel/E. (Messblatt M4 0,045-0,091).
+    uv=dict(art='achse', v=(0, 255), clut=487 << 6, page=130, u=(64, 127), dichte=0.068, grenze=0.5,
             verlauf=dict(zeilen_je_c=dict(aussen=22, mitte=24, senkrecht=9, unten=22)),
             baender=dict(wurzel=(0, 55), aussen=(56, 95), mitte=(96, 135), senkrecht=(136, 175), unten=(176, 215), ende=(216, 255))),
     # Nachschwingen wie V3 (Ae5), Knick-Grenze mit Ausnahme fuer die Biegung (ab 30 Grad Ruhewinkel). Dieselbe Regel im Spiel:
@@ -688,12 +709,14 @@ KOPF_V4 = dict(
     # Treffer 218 E. davor, Lauf "n"), glatt in x (xa 100 .. xb 250: Eckenreihen x 104 / 254 = Uebergang Hinterkopf -> Gesicht) und
     # in y bis zum Kinn (y1 40 .. y2 170: Eckenreihen y 77-81 / 168). Ergebnis (Lauf k7): Spaltenhoehen an der Vorderkante 31-36 px =
     # 0,12-0,14 H (Runde 1: 18-21 px), K10 unveraendert 0,154 x 0,187 H. PORT-WAHL (Eckenreihen), Quelle der Masse: Messblatt S2/S3.
-    # V4 Runde 4 (Pruefung V4 r3 Zahlen S3 ROT: Abstand Haarkante -> Augenfleck 0,015-0,019 H, erlaubt 0,01 H): vor 0,06 -> 0,053 H. Das
+    # V4 Runde 4 (Pruefung V4 r3 Zahlen S3 ROT: Abstand Haarkante -> Augenfleck 0,015-0,019 H, erlaubt 0,01 H): vor 0,06 -> 0,053 H (erster
+    # Versuch, Lauf r4 Eichung f), Endstand 0,048 H (s. unten; V4 Runde 5, Pruefung V4 r4 Zahlen 5: der Kommentar nannte nur 0,053). Das
     # Fenster KS2 (Messblatt S3) liegt bei 0,84-0,96 der Kopfbox-Breite; der Augenfleck endet an der Naht zu den Vorderbild-Flaechen
     # (Runde 3: Vorderkante der Ellipse vorgezogen ohne Wirkung). Mit der Vorderkante des Vorhangs 0,007 H weiter hinten rueckt das
     # Fenster um 0,84 x 0,007 H an den Fleck: Lauf r4 Eichung f S3 Abstand 0,004 H, S2 0,054 H (Soll 0,03-0,07, Messblatt 0,049). Mit dem
     # Endstand der Kopfstruktur schwankte S3 bei 0,053 / 0,050 zwischen 0,004 und 0,011 H (Laeufe r4 Eichung h-o: ein Pixel Fleckrand);
-    # 0,048 H: S3 0,004 H, S2 0,054 H, K10 unveraendert 0,154 x 0,187 H (Lauf r4 Eichung n). PORT-WAHL, Quelle der Masse Messblatt S2/S3.
+    # 0,048 H: S3 0,004 H, S2 0,054 H, K10 unveraendert 0,154 x 0,187 H (Lauf r4 Eichung n). PORT-WAHL, Quelle der Masse Messblatt S2/S3,
+    # Nutzer-Wortlaut "Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben" (Beschreibung2: "Haare von der Seite" unmittelbar vor dem "Auge von der Seite").
     vorbau=dict(art='bild', vor=0.048, z0=-10.0, z1=30.0, xa=100.0, xb=250.0, y1=40.0, y2=170.0),
     clut=486, page=128,
     # Ansichten: Flaechen von Mesh 9 mit Blick zur Kamera (Normale . Blick >= schwelle) bekommen das Bild der Ansicht, in der sie
@@ -858,6 +881,10 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
     aussen = Normale zeigt weg von der Bogenmitte (welt[i] = (Drehung, Ursprung) des Glieds im Ankerraum, bogenmitte im Ankerraum)."""
     S, uv = sw['seiten'], sw['uv']
     out, n = [], sw['glieder']
+    # V4 Runde 5 (uv art 'achse'): Bogenlaenge je Gliedanfang und gesamt (ab dem Deckel des Glieds 16, -ueberlapp x Radius 0)
+    s_anf = np.r_[0.0, np.cumsum([float(x) for x in ruhe['L']])]
+    ue0 = sw['ueberlapp'] * float(ruhe['radien'][0])
+    s_ges = ue0 + float(s_anf[-1])
     ey = np.array([0.0, 1.0, 0.0])
     for i in range(n):
         Li, r0, r1 = ruhe['L'][i], ruhe['radien'][i], ruhe['radien'][i + 1]
@@ -866,7 +893,26 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
         t0 = ey if i == 0 else (ruhe['lokal'][i].T @ ey + ey)
         t1 = ey if i == n - 1 else (ey + ruhe['lokal'][i + 1] @ ey)
         ringe = []
-        for c0, t, r in ((np.array([0.0, -ue, 0.0]), t0, r0), (np.array([0.0, float(Li), 0.0]), t1, r1)):
+        W, P0 = welt[i]
+        achse_mitte = P0 + W @ np.array([0.0, Li / 2.0, 0.0])
+        # V4 Runde 5 (Pruefung V4 r4 Zahlen 4.1 / Sicht 1.3, Entscheid O8: "Ober- und Unterkontur des waagerechten Teils nicht gerade",
+        # Messblatt Abschnitt 4 "von da an breiter nach oben"): ein Zwischenring ('bauch') im Glied bauch['glied'] bei bauch['t'] der
+        # Gliedlaenge, Radius bauch['radius'] x linear zwischen den Gelenkradien, Mitte um bauch['aussen'] x Radius nach aussen (weg von der
+        # Bogenmitte, in der Bogenebene) - die Oberkontur bekommt die Rundung der Original-Bogenecke (Leser-Maske A, Spalten x 284-316).
+        ringdef = [(np.array([0.0, -ue, 0.0]), t0, r0, 0.0)]
+        bauch = sw.get('bauch')
+        if bauch and i == bauch['glied']:
+            ft = float(bauch['t'])
+            rm = float(bauch['radius']) * ((1.0 - ft) * r0 + ft * r1)
+            u_ = achse_mitte - bogenmitte
+            if ebene_n is not None:
+                u_ = u_ - ebene_n * float(u_ @ ebene_n)
+            u_l = W.T @ u_
+            u_l[1] = 0.0
+            u_l = u_l / max(float(np.linalg.norm(u_l)), 1e-9)
+            ringdef.append((np.array([0.0, ft * float(Li), 0.0]) + u_l * float(bauch['aussen']) * rm, ey, rm, ft))
+        ringdef.append((np.array([0.0, float(Li), 0.0]), t1, r1, 1.0))
+        for c0, t, r, _tt in ringdef:
             Rt = _min_rot(ey, t / np.linalg.norm(t))
             ring = []
             for k in range(S):
@@ -876,8 +922,6 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
                 m['v'].append([int(round(x)) for x in c0 + q * r] + [0])
                 m['n'].append([int(round(x)) for x in q * 4096] + [0])
             ringe.append(ring)
-        W, P0 = welt[i]
-        achse_mitte = P0 + W @ np.array([0.0, Li / 2.0, 0.0])
 
         vl = uv.get('verlauf')
 
@@ -910,6 +954,19 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
         vs_ = min(63.0, np.pi * 0.5 * (r0 + r1) * uv['dichte'])
 
         def tx(kl, k, t):
+            if uv.get('art') == 'achse':
+                # V4 Runde 5 (Entscheid O8, Sicht-Pruefung V4 r4 1.3: drei einfarbige Bloecke je Mesh mit Quernaehten 16,7 dE76): EINE
+                # durchgehende Textur ueber alle Glieder. v = Bogenlaenge der Ruhe-Kette ab dem Deckel (Ring am Gliedanfang -ue, am Ende L),
+                # fortlaufend ueber die Gliedgrenzen; u = Lage um den Umfang (1 - c) / 2 x Spanne des Rings (c wie die Klassen der Runde 4:
+                # +1 Aussenkante, -1 Innenseite; Vorder- und Rueckseite teilen den Texel). Spanne = pi x Ringradius x dichte, hoechstens
+                # die Breite der Flaeche - Texeldichte damit je Glied sqrt(dichte x v-Dichte) (Messblatt M4 0,045-0,091).
+                wk = 2 * np.pi * (k % S) / S
+                c = max(-1.0, min(1.0, c_wert(np.array([np.cos(wk), 0.0, np.sin(wk)]))))
+                r_ = {rd[3]: rd[2] for rd in ringdef}.get(t, r1)
+                s_ = ue0 + s_anf[i] + (-ue if t == 0.0 else t * float(Li))
+                sp = min(float(uv['u'][1] - uv['u'][0]), np.pi * r_ * uv['dichte'])
+                return (int(round(uv['u'][0] + 0.5 * (1.0 - c) * sp)),
+                        int(round(uv['v'][0] + (uv['v'][1] - uv['v'][0]) * min(max(s_ / s_ges, 0.0), 1.0))))
             v0, v1 = uv['baender'][kl]
             if vl and kl in ('aussen', 'mitte', 'senkrecht', 'unten'):
                 # V4 Runde 4 (Pruefung V4 r3 Sicht 1.3 Klasse A, "Vierkant-Balken"): Zeile = Lage um den Umfang (c der Eckennormale), nicht
@@ -931,13 +988,14 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
             P = [np.array(m['v'][j][:3], float) for j in (ia, ib, ic)]
             N = sum(np.array(m['n'][j][:3], float) for j in (ia, ib, ic))
             return np.cross(P[1] - P[0], P[2] - P[0]) @ N < 0
-        for k in range(S):
+        for j_, k in [(j_, k) for j_ in range(len(ringe) - 1) for k in range(S)]:
             k2 = (k + 1) % S
-            a, b = ringe[0][k], ringe[0][k2]
-            c, d = ringe[1][k], ringe[1][k2]
+            ta_, tb_ = ringdef[j_][3], ringdef[j_ + 1][3]
+            a, b = ringe[j_][k], ringe[j_][k2]
+            c, d = ringe[j_ + 1][k], ringe[j_ + 1][k2]
             w = 2 * np.pi * (k + 0.5) / S
             kl = klasse(np.array([np.cos(w), 0.0, np.sin(w)]))
-            uvs = [tx(kl, k, 0.0), tx(kl, k + 1, 0.0), tx(kl, k, 1.0), tx(kl, k + 1, 1.0)]
+            uvs = [tx(kl, k, ta_), tx(kl, k + 1, ta_), tx(kl, k, tb_), tx(kl, k + 1, tb_)]
             if not orient(a, b, c):
                 a, b, c, d = b, a, d, c
                 uvs = [uvs[1], uvs[0], uvs[3], uvs[2]]
@@ -948,7 +1006,7 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
         if i == 0 and sw.get('deckel', True):
             kegel.append((ringe[0], [0, int(round(-ue - 0.8 * r0)), 0], [0, -4096, 0], 0.0))
         if i == n - 1:
-            kegel.append((ringe[1], [0, int(round(Li + sw['dorn'] * r1)), 0], [0, 4096, 0], 1.0))
+            kegel.append((ringe[-1], [0, int(round(Li + sw['dorn'] * r1)), 0], [0, 4096, 0], 1.0))
         for ring, p, nn, t in kegel:
             sv = len(m['v'])
             m['v'].append(p + [0]); m['n'].append(nn + [0])
@@ -1090,6 +1148,26 @@ def kopf_v4_form_uv(meshes, kp, mo):
     BAU_INFO['kopf_v4'] = dict(wahl=wahl, **{k: dict(x0=v['x0'], y0=v['y0'], s=v['s'], ou=v['ou'], ov=v['ov']) for k, v in ab.items()})
 
 
+# V4 Runde 5 (Entscheide O9 "keine Farbe, die im Original-Bild an der Stelle nicht vorkommt" / O10 "kraeftiges Rot a* > 22 im Spielbild
+# in der Groessenordnung des Videos"; Pruefung V4 r4 Sicht 1.5: h85 1170 / h100 531 Bildpunkte a* > 22 gegen 2 / 107 im Video): Obergrenze
+# fuer a* der Kopf-, Schwanz- und Koerperzeilen. FARB_A_MAX = p99 von a* der Vorlage 1 (entblendet) im Oberkoerper-Polygon der Sicht-Pruefung
+# (r4_mass.POLY_135; gemessen 21,7, p99,9 25,1, max 29,3). Eintraege darueber behalten L* und b*, a* wird auf die Grenze gesetzt
+# (Entscheid O9: die Farbmenge des Originals). Ohne Wirkung, wenn RE15_V4_A_MAX=0.
+FARB_A_MAX = float(os.environ.get('RE15_V4_A_MAX', '21.7'))
+
+
+def farbklammer(rgb):
+    """rgb (N x 3, 0..255) -> dieselben Farben mit a* <= FARB_A_MAX (L*, b* bleiben)."""
+    rgb = np.asarray(rgb, float)
+    if FARB_A_MAX <= 0:
+        return rgb
+    lab = _lab(rgb)
+    out = rgb.copy()
+    for i in np.nonzero(lab[:, 1] > FARB_A_MAX)[0]:
+        out[i] = _lab_rgb(lab[i, 0], FARB_A_MAX, lab[i, 2])
+    return out
+
+
 def v4_farben_einsetzen(tim, kp, sw, kz=None):
     """Eichung (V4_FARBEN, tools/r41_sichel/v4/eichen_v4.py) in den TIM: Texelbilder Kopf vorn/seitlich und Schwanzbaender (Indizes),
     CLUT-Zeilen 486 (Kopf) / 487 (Schwanz) und die geeichten Hautzeilen 480-485 (Koerperfarben F6-F19 nur ueber die CLUT, Texel der
@@ -1100,6 +1178,10 @@ def v4_farben_einsetzen(tim, kp, sw, kz=None):
     breite = iw * 2
     pix = np.frombuffer(bytes(tim[ende + 12:ende + 12 + breite * ih]), np.uint8).reshape(ih, breite).copy()
     f = dict(np.load(V4_FARBEN)) if os.path.exists(V4_FARBEN) else {}
+    if sw['uv'].get('art') == 'achse':               # V4 Runde 5: Schwanz aus der Projektion (r5_schwanz_textur.py), sonst Platzhalter
+        fs = dict(np.load(V4_SCHWANZ)) if os.path.exists(V4_SCHWANZ) else {}
+        f['schwanz'] = fs.get('schwanz', np.full((256, 64), 128, np.uint8))
+        f['clut487'] = fs.get('clut487', np.stack([np.arange(256)] * 3, -1).astype(float))
     pb = 128 * (kp['page'] & 0xF)
     for name, ans in (('kopf_vorn', kp['vorn']), ('kopf_seite', kp['seite'])):
         u0, u1 = ans['u']; v0, v1 = ans['v']
@@ -1108,7 +1190,7 @@ def v4_farben_einsetzen(tim, kp, sw, kz=None):
     pbs = 128 * (uv['page'] & 0xF)
     pix[0:256, pbs + uv['u'][0]:pbs + uv['u'][1] + 1] = f.get('schwanz', np.full((256, 64), 128, np.uint8))
     grau = np.stack([np.arange(256)] * 3, -1).astype(float)
-    zeilen = {kp['clut'] - cy: f.get('clut486', grau), (uv['clut'] >> 6) - cy: f.get('clut487', grau)}
+    zeilen = {kp['clut'] - cy: farbklammer(f.get('clut486', grau)), (uv['clut'] >> 6) - cy: farbklammer(f.get('clut487', grau))}
     neu = c.copy()
     if 'haut' in f:                                   # geeichte Zeilen 480.. (RGB 0..255 je Eintrag; transparente bleiben)
         for z in range(min(ch, f['haut'].shape[0])):
@@ -1127,7 +1209,7 @@ def v4_farben_einsetzen(tim, kp, sw, kz=None):
         for j, zn in enumerate(fk['koerper_zeilen_nr']):
             ziel = int(zn) - cy
             if ziel < hoch:
-                alle[ziel] = _pack(np.asarray(fk['koerper_zeilen'][j], float), alle[ziel] if ziel >= ch else c[ziel])
+                alle[ziel] = _pack(farbklammer(fk['koerper_zeilen'][j]), alle[ziel] if ziel >= ch else c[ziel])
         for zn, za in (kz or {}).values():            # Datei ohne die eigene Zeile (Stand Runde 2): Kopie der geeichten Startzeile
             if zn not in set(int(x) for x in fk['koerper_zeilen_nr']):
                 alle[zn - cy] = alle[za - cy]
@@ -1605,6 +1687,10 @@ def kette_meshes_v3(sw, ruhe):
     Normalen radial (Laenge 4096), Windung wie haenge_schwanz_an / kette_meshes (Kreuzprodukt gegen die Normale)."""
     S, uv = sw['seiten'], sw['uv']
     out, n = [], sw['glieder']
+    # V4 Runde 5 (uv art 'achse'): Bogenlaenge je Gliedanfang und gesamt (ab dem Deckel des Glieds 16, -ueberlapp x Radius 0)
+    s_anf = np.r_[0.0, np.cumsum([float(x) for x in ruhe['L']])]
+    ue0 = sw['ueberlapp'] * float(ruhe['radien'][0])
+    s_ges = ue0 + float(s_anf[-1])
     for i in range(n):
         Li, r0, r1 = ruhe['L'][i], ruhe['radien'][i], ruhe['radien'][i + 1]
         fu0, fv0, fu1, fv1 = uv['fenster'][i]
