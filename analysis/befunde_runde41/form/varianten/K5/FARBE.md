@@ -1090,3 +1090,140 @@ Im Riegel markiert als "Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 b
 3. **Hauthelligkeit Bild 2** (Mittel-L\* 15,6 gegen 22,1) und der Kopf unter Bahnsteiglicht: zeigen, nicht aendern (Zahlen-Pruefer Runde 4).
 4. **Leuchtstellen** (Gesicht oder Becken in Bild 1, Messblatt V3 7.1): Rueckfrage an den Nutzer bleibt offen.
 5. **P2 Klauen** (+16,3 / +21,0) und **B11** (3,24 gegen >= 3,3): Restabweichungen aus Runde 3 bzw. aus der Haut selbst (V3R5.2).
+
+## Einbau v0.8.30 (Nutzerentscheid E30)
+
+Nutzerentscheid 2026-11-07 ~22:20 (`form/NUTZER_ENTSCHEIDE.md` E30): "Nein, wie lassen es so wie es jetzt ist. Sieht doch gut aus. Auch die
+Leuchtstelle sieht gut aus." Frage 1 -> A (so uebernehmen), Frage 2 -> Leuchtstelle bleibt (Becken Bild 1, Gesicht am Maul). Die Variante
+`farbe/K5c_farbe_v3` (Runde 5, EMD 090e0b80..., TIM 51282806...) wird ohne Farbaenderung das Spiel-Asset; keine weitere Gestaltungsrunde.
+
+### E.1 Zeilenmessung 17 -> 16 (`generator/kf_zeilen16.py`, Bericht `stufe3/basis_k5c/zeilen.json`)
+
+Pflicht: der PC-Port legt je CLUT-Zeile eine Texturkopie untereinander (`re15_port/platform/pc/src/render_pc.c`
+re15_render_pc_upload_tim_slot: n_cluts = clut_entries / 256, tex_h = tim->height * n_cluts, keine Maximalpruefung; SDL_CreateTexture gibt
+ueber dem Renderer-Maximum NULL zurueck, der Fehler wird in `if (st->tex)` still uebergangen; GLES2 oft GL_MAX_TEXTURE_SIZE 4096; der Port haelt
+16 Zeilen = 4096 als Grenze in re2fx_pc.c:35-45, fx_plattform_pc.h:106-110, gator_fx_r41_pc.c:79). 17 x 256 = 4352 > 4096.
+
+Referenzzaehlung je CLUT-Zeile (Zeile = ((clut >> 6) & 0x1ff) - clut_y, render_pc.c re15_render_pc_push_tri; 3828 Flaechen in 32 Meshes):
+
+| Zeile | Flaechen | Meshes |
+|---|---|---|
+| 0 | 155 | 22, 23 (Kopf, Kiefer; G4-Zeile) |
+| 1 | 252 | 14, 15, 19, 20, 28-31 (Krallen; G4-Zeile) |
+| **2** | **0** | **keine (G4-Zeile 2, von keiner Flaeche gelesen)** |
+| 3 | 770 | 1-6 Schwanz |
+| 4 | 696 | 8, 9, 24-27 Hinterbeine |
+| 5 | 62 | 0, 7 |
+| 6 | 6 | 0 (F1-Leuchtstelle) |
+| 7 | 25 | 22, 23 (Maul-Band) |
+| 8 | 114 | 22, 23 (Zaehne/Maul) |
+| 9 | 45 | 0, 7 |
+| 10 | 187 | 0, 7 |
+| 11 | 152 | 0, 7 |
+| 12 | 204 | 16, 17, 18 Vorderbein r |
+| 13 | 131 | 10 Brust |
+| 14 | 229 | 10, 21 Hals |
+| 15 | 232 | 22, 23 Kopf/Kiefer |
+| 16 | 568 | 11, 12, 13, 16, 17 Vorderbeine |
+
+Ergebnis: Zeile 2 ist unreferenziert und entfaellt; Zeilen 3-16 werden 2-15 (3421 Flaechen umgehaengt, nur das clut-Wort). Keine
+Zusammenlegung noetig, max dE 0, 0 Texel geaendert. Pixel, UV, TPage, Geometrie, Knochen und die 3 Clips sind byte-gleich (Rundlauf
+form_emd lese/schreibe byte-gleich). Basis16 = `stufe3/basis_k5c/FORM.EMD` (sha256 a2e87fb84e73c7d7bd173ea11d56482df731175c1e12af26cebd48063eb09adf)
+und `FORM.TIM` (sha256 7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3; 512 x 256, 16 Zeilen, Port-Texturhoehe 4096).
+
+### E.2 Riegel Einbau (`generator/riegel_einbau.py`, Exit 1 bei Rot; `einbau/riegel_einbau_basis.json`, `einbau/riegel_einbau_asset.json`)
+
+| Zeile | Ergebnis |
+|---|---|
+| E-Z1 Basis16: Zeilen <= 16, tim->height x n_cluts <= 4096 | GRUEN: 16 Zeilen, 256 x 16 = 4096 |
+| E-Z1 Gegenprobe Variante17 muss ROT sein | ROT wie verlangt: 17 Zeilen, 4352 |
+| E-Z2 jede Flaeche liest eine gueltige Zeile | GRUEN: 3828/3828 (Zeilen 0-15 belegt, keine leer) |
+| E-Z3 Render 17 gegen 16, Szene 01 (Kandidat.rendern Bild 1, Disc-Licht x k, roh) | Pixel-Diff 0 |
+| E-Z3 Szene 02 (Bild 2) | Pixel-Diff 0 |
+| E-Z3 Szene 05 rundum, 6 Winkel x Clip 0 und Clip 2 (render.blick, roh) | 12 x Pixel-Diff 0 |
+| E-Z3 Szene 07 echtes Spielfenster 5080 Schnitt 1 (Variante17 ueber RE15_RE2_ASSET_ROOT gegen Basis16, Clip 0 Bild 0, gdigrab) | **ROT nach der 1,0-Schwelle**: 2 Pixel, max dE76 2,71 (Ort 331/265 und 311/190, Werte RGB 15/10/12 gegen 12/7/10 und 12/7/12 gegen 12/12/12). Reproduzierbar: zwei Laeufe je Seite byte-gleich (Rauschboden 0) |
+| E-Z3 Szene 07 echtes Spielfenster 5090 Schnitt 11 | nicht pixelgenau messbar: Feuer-Szene, Rauschboden Basis16 gegen Basis16 43 386 Pixel, dE 108 (zwei Laeufe gleicher Pose); Variante17 gegen Basis16 38 936-48 474 Pixel, im Rauschen |
+| E-Z4 Spiel-Asset: MD1 byte-gleich Basis16, TIM byte-gleich, 32/32/28 | GRUEN |
+
+Empfindlichkeit der Render-Gegenprobe (einmalige Messung, kein Riegel): Basis16 mit vertauschten Zeilen 0 und 5 gerendert ergibt in Szene 01
+2164 Pixel Diff, max dE76 83,0 (Ort 321/213), in Szene 02 516 Pixel, dE 32,2. Die Kette liest die Zeile aus dem clut-Wort (form_buehne.py:223/270),
+E-Z3 misst also die Zeilenumhaengung wirklich. Tafel `einbau/ez3_gegenprobe.png` (17 | 16 | Diff x 32, roh).
+
+### E.3 Asset (28 Clips) und Pins
+
+Das Spiel-Asset braucht die 28 Clips der Stufe 3 (Tick-Clips 0/3/4/5/8/9/10/26/27 in `engine/src/birkin_bahnsteig.c` BB_C_*, Test
+`test_birkin_bahnsteig.c` verlangt 32/32/28, `test_r41_birkin_pistole.cmake` die Logzeile "28 Clips"); die Variante hat nur die 3 Posen-Clips.
+Die Auftragserwartung "32/32/3" ist damit nicht erfuellbar - ein 3-Clip-Asset liesse den Tick ins Leere greifen. Kette wie bei K4:
+`stufe3/gen/s3_rig.py` BASIS_DIR -> `stufe3/basis_k5c` (Umgebungsvariable S3_BASIS_DIR fuer Vergleiche; die Gerippe-Pruefung laesst nur den
+Kieferversatz Knochen 23 abweichen: K5c [784, 420, 0], J/K4 [500, 400, 0]); `python s3_clips.py` -> `stufe3/asset` -> `shared_assets/RE2`.
+Deterministisch: zweiter Lauf byte-gleich. Ruhe = Ruhe von J mit Kiefer zu (wie K4; die eigene Ruhe der Variante, Kopf 150 / Kiefer 60,
+war nur fuer die Rundumblaetter), Bild 1 = Clip 0 Bild 11, Bild 2 = Clip 10 Bild 45-52 und Clip 12 Bild 0 (s3_pruef.py bestaetigt die Lagen).
+
+| Datei | vorher K4 (67408cfcb) | nachher K5c V3 R5 |
+|---|---|---|
+| `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` | 16eb6ea89a40df179ef08cb538b12d7d038183f01b88b47baf05c97ebf8d8bd0 (291 816 Byte) | 1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041 (293 516 Byte, 32/32/28, 799 Bilder) |
+| `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.TIM` | ec280802dd785e9238535ba90830f7e6b8a690cc4aa3609fc91f1638b3df2072 (1408 x 256, 4 Zeilen) | 7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3 (512 x 256, 16 Zeilen) |
+
+K4 gesichert: `varianten/K4/` (BAHNSTEIG_FORM.EMD/.TIM = Spiel-Asset bis E30, FORM.EMD/.TIM = basis_n2, K4.md mit Hashes).
+`form_emd.py rundlauf` am Asset: alle Sektionen gleich, 799 Bilder 0 abweichend, Pruefung 0 Fehler 0 Warnungen.
+
+Pins (`git grep BAHNSTEIG_FORM` in release/, re15_port/tests, re15_port/tools, analysis):
+- `re15_port/tests/unit/form_j_posen.h` (erzeugt, `s3_testkopf.py`): FORM_J_MD1_LEN 167644 -> 169500, MD1_CRC 0xc0b6c82a -> 0x2456b5cc,
+  TIM_LEN 362528 -> 139296, TIM_CRC 0x76775364 -> 0x9234618d, Posen Bild 1/Bild 2 = K5c, Ruhe unveraendert, FORM_HOEHE_GEHEN 3126 unveraendert.
+- `re15_port/tests/unit/test_birkin_bahnsteig.c`: nur Kommentar (Referenz seit E30).
+- `release/make_package.sh:294`: Tor fuehrt BAHNSTEIG_FORM.EMD/.TIM (vorhanden, nicht leer, byte-gleich Quellbaum) - kein Hash-Pin, nichts zu aendern.
+- Kein weiterer Pin: `release/*.sha256`, `pri_hashes.py`, `SHA256SUMS*.txt` fuehren das Asset nicht; die alten Hashes 16eb6ea8/ec280802 stehen nur
+  in Berichten (`STUFE3_abnahme_2.md`, `abn2/pins.txt`, FARBE_PRUEFUNG_*).
+- Engine-Code unveraendert (gleiche Dateinamen).
+
+Zahlen je Clip (`s3_pruef.py`, `stufe3/einbau_k5c/pruef.json`) gegen K4 (`nachbesserung2/pruef.json`): Bildzahl, Treffer- und Tonbilder
+und Tempo aller Clips gleich; abweichend nur Clip 0 tief_max 49,7 (K4 333,5; Bild 11 = Pose Bild 1 von K5c), Clip 10 tief_min -47,2 (-48,5),
+Clip 11 Gleiten 5,8 (15,0), Clip 12 Sprung 26,0 (25,7).
+
+### E.4 Bau und Tests
+
+- `RE15_BUILD_DIR=.../r41_form/re15_port/build bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`;
+  `... build` -> `=== LOCAL-BUILD-OK (build)` (nur `test_birkin_bahnsteig.exe` neu gelinkt: form_j_posen.h; Engine-Code unveraendert, re15_pc.exe gleich).
+- `ctest --test-dir re15_port/build -R "form|bahnsteig|birkin_form|r41_form" -j 3`: **100% tests passed, 0 tests failed out of 11** (Total Test time
+  (real) = 75.44 sec; darunter unit_birkin_bahnsteig, unit_birkin_formen, unit_r41_form_emd, integration_r41_form_wagenweg 75,3 s).
+- Zusaetzlich alle Tests, die BAHNSTEIG_FORM lesen (`git grep -l BAHNSTEIG_FORM re15_port/tests`): `ctest -R "n2_griff_start|birkin_szenen|r41_birkin_pistole|birkin_opfer" -j 3`:
+  **100% tests passed, 0 tests failed out of 4** (integration_r41_birkin_pistole 245,5 s; debug.log "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12").
+- Paket-Tor: `release/make_package.sh:294` fuehrt BAHNSTEIG_FORM.EMD und BAHNSTEIG_FORM.TIM (vorhanden, nicht leer, byte-gleich Quellbaum). make_package selbst nicht gelaufen (kein Release-Bau).
+
+### E.5 Spiellauf am echten Asset (`generator/kf_einbau_spiel.sh`, `einbau/spiel/`, Tafel `farbe/11_einbau_spiel.png`)
+
+`form_spiel.sh` ohne --emd/--tim (keine RE15_RE2_ASSET_ROOT-Umleitung; das Spiel liest shared_assets/RE2), eigene exe-Kopie je Lauf
+(re15_port/build/form_spiel/<pid>_<zeit>), echtes Fenster per gdigrab (Fenster-Handle), nur eigene PID; kein AUTOSHOT, kein SOFTWARE_RENDER.
+Log `einbau/spiel_lauf.log`, 4 von 4 Laeufen rc 0, "Verfahren: gdigrab (Versuch 1)":
+
+| Szene | debug.log | bb_pose.log |
+|---|---|---|
+| ROOM5080 Schnitt 1, Nachstellung Bild 1 (Lage -20711,-15984, Gier 756, Clip 0 Bild 11) | `[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 11` | `t751 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 756 clip 0 bild 11 grid 0x33 kein_bild 0` |
+| ROOM5080 Schnitt 1, Ruhe (Clip 2 Bild 0) | dito Slot 11 | `t601 ... clip 2 bild 0 ... kein_bild 0` |
+| ROOM5090 Schnitt 11, Pose Bild 2 (Lage 941,-23776, Gier 3874, Clip 12 Bild 0) | `... 28 Clips -> Slot 12` | `t601 slot2 typ 0x30 st 1/9 pos (941,0,-23776) gier 3874 clip 12 bild 0 grid 0x33 kein_bild 0` |
+| ROOM5090 Schnitt 11, Ruhe (Clip 2 Bild 0) | dito Slot 12 | `... clip 2 bild 0 ... kein_bild 0` |
+
+CLUT-Zeilen im Spiel (Lauf mit RE15_TIM_LOG=1, debug.log): `[tim] slot 11: 512x4096 8bpp cluts=16 — 0.0% transparent, 22.6% opak-schwarz`
+(Port-Texturhoehe 4096 = 16 Zeilen). Keine FAILED-, slot-not-loaded- oder "[tim] WARNUNG"-Zeile in exe_stderr.log/debug.log der vier Laeufe
+(einzige stderr-Zeile: "[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo").
+Tafel `farbe/11_einbau_spiel.png` (`generator/kf_tafel11_einbau.py`): je Zeile Original-Standbild | K4 vorher (Bilder der Tafel 07,
+`farbe/spiel_v3/heute_*`) | Asset neu; 4 Zeilen (5080 Nachstellung Bild 1, 5080 Ruhe, 5090 Pose Bild 2, 5090 Ruhe), roh. Gesehen (Bauer): die
+Form laedt texturiert in beiden Raeumen, 5080 dunkel violett/braunrot wie in Tafel 07 (E30 Frage 1 A), 5090 Pose Bild 2 mit offenem Maul zur Frau,
+Ruhe mit geschlossenem Kiefer (Ruhe von J, wie K4).
+
+### E.6 Offen
+
+1. **Biss-Probe im Tick**: `birkin_bahnsteig.c` BB_BISS (Teil 23 + (928, -85, 0)) wurde an K4 gemessen (Zahnreihen-Mitte, Spitze 1190).
+   Am K5c-Kiefer (`s3_kopfmass.py`, `stufe3/einbau_k5c/kopfmass.json`): Spitze (949, -105, 0), Mitte vordere Zahnreihe (689, -105, 0). Der
+   Bisspunkt liegt jetzt 21 Einheiten vor der Spitze statt in der Zahnreihe; Reichweite im Biss (Clip 26 Bild 16, Abstand zum alten
+   Brustpunkt 1758) unveraendert. Engine-Aenderung (PORT-WAHL-Konstante) ist nicht Teil dieses Auftrags -> Runde 2 / Integration entscheidet.
+2. Die Auftragserwartung "32/32/3" weicht vom Engine-Bedarf (28 Clips) ab; umgesetzt sind 28 Clips (E.3).
+3. `varianten/K5/generator/k5_rueckbild.py` und `K_alligator/generator/k_s3*.py` lesen `stufe3/asset/BAHNSTEIG_FORM.EMD` als "Spiel-Asset K4";
+   seit E30 liegt dort K5c (K4 unter `varianten/K4`). Fuer K4-Nachbauten `S3_BASIS_DIR=.../stufe3/basis_n2`.
+4. **E-Z3 Szene 07 (Spiel)**: 5080 zeigt 2 abweichende Pixel (dE 2,71) zwischen 17- und 16-Zeilen-Textur, deterministisch (beide Seiten
+   je zwei Laeufe byte-gleich). Wahrscheinliche Ursache, nicht nachgewiesen: SDL_RenderGeometry normiert v / tex_h (4352 gegen 4096), an einer
+   Texelkante faellt die Abtastung auf den Nachbartexel; beide Pixel sind nahezu schwarz (8-Bit-Abstand <= 5). Nach der Auftragsschwelle
+   (Pixel-Diff 0 oder dE <= 1) ist die Zeile ROT; die Offline-Kette (01/02/05, gleiche CLUT-Logik) ist 0. 5090 ist wegen des Feuers nicht
+   pixelgenau messbar (Rauschboden 43 386 px). Entscheidung Pruefer/Integration: Schwelle fuer 07 als Rauschboden-Vergleich fassen oder die
+   zwei Pixel als hinnehmbar werten.
+5. Spiellauf-Bilder liegen in `einbau/spiel/` (roh, 640 x 480); `einbau/riegel_einbau_spiel07.json` dokumentiert die Szene-07-Messung mit Exit 1.
