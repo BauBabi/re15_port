@@ -77,7 +77,10 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
  *   Mitnahme 0,95, Feder x1,5, Erhalt 0,50               alle Takte <= 0,016 H (Lauf V4r3f1.5) - Kette fast starr
  *   Mitnahme 0,60, Feder x1,5, Erhalt 0,50               h85 0,103 H (Lauf V4r3g0.60)
  *   Mitnahme 0,80, Feder x1,5, Erhalt 0,50 (gewaehlt)    alle Takte <= 0,045 H, im Gang Mittel 0,010 H (Lauf V4r3g0.80): die Kette
- *                                                        schwingt noch, bleibt aber in der Ruheform */
+ *                                                        schwingt noch, bleibt aber in der Ruheform
+ * Nutzer-Wortlaut (2026-11-06, zu Beschreibung2 "Schwanz Beginn ..., Knick - von da an breiter nach oben, Schwanzspitze Ende"): "Ich will
+ * EXAKT diese Umsetzung" - die Form der Vorlage 2 soll im Gang erhalten bleiben (Entscheid O3 des Orchestrators: Knick und Breitenprofil
+ * bleiben im Gang erhalten); die drei Werte sind die Wahl des Ports dafuer, gemessen an T7a (Pruefung V4 r3 Zahlen: 0/47 Takte). */
 #define SW_V4_ERHALT       0.50f      /* erhaltene Geschwindigkeit der V4-Kette je Takt (Referenz 2: SW_ERHALT 0,80) */
 #define SW_V4_FEDER        1.5f       /* Federfaktor der V4-Kette (k_feder x 1,5) */
 #define SW_V4_MITNAHME     0.80f      /* Anteil der Zielbewegung, um den die V4-Kette je Schritt mitgeht */
@@ -546,7 +549,8 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
              * die gezeichnete Pose (Ueberblendung aus dem Kriechen, Rumpf vorgeneigt) traegt die Ruhe-Pose des Schwanzes (Vorlage 2,
              * am Knochen 8) nach hinten oben (Ziel-Gelenk 3 838 E. ueber der Wurzel); haengen() drueckte jedes Glied auf >= 10 Grad
              * unter die Waagerechte (SW_HANG_COS_MIN), die Kette lag 0,4 H neben ihrem Keyframe. Fuer V4 gelten nur Feder, Knick-Grenze
-             * und Boden (glaetten), die Form bleibt am Koerper. V1/V2/V3/Referenz 2 unveraendert. GESTALTUNG (PORT-WAHL). */
+             * und Boden (glaetten), die Form bleibt am Koerper. V1/V2/V3/Referenz 2 unveraendert. GESTALTUNG (PORT-WAHL), Nutzer-
+             * Wortlaut "Ich will EXAKT diese Umsetzung" (Beschreibung2: Beginn, Knick, breiter nach oben, Spitze), Entscheid O3. */
             if (s_sw[slot].ziel_w <= 0 && !kette_v4) haengen(p, laenge, (float)a->y, zw);
         }
         if (s_sw[slot].ziel_w > 0) ziel_anwenden(slot, laenge, (float)a->y);

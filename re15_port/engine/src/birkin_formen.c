@@ -288,7 +288,9 @@ static int bf_schwanz_v2(void)
  * freigegeben, und zwar schon nach dem Bodenkontakt der Bahn (h60-h70): Vorlage 2 = Videobild n1435 = h85 zeigt den Schwanz in
  * seiner Ruheform (Messblatt V4 Abschnitt 4 Punkt 1 "Ruhe-Pose = Vorlage 2"); mit der V2-Freigabe h74-h80 lag die Spitze bei h85 noch
  * 0,48 H neben dem Keyframe (Lauf sfv4/r/V4r3m0.95, Feder braucht ~15 Takte). Freigabe h70 -> h74 (k_schwanz_gewicht_v4). Im Gang
- * haengt die Kette dann in ihrer Ruhe (Keyframe) mit der Feder. Referenz 2 und V2 bleiben unveraendert. */
+ * haengt die Kette dann in ihrer Ruhe (Keyframe) mit der Feder. Referenz 2 und V2 bleiben unveraendert. Quelle der Stuetzpunkte:
+ * 15/19 = Referenz 2 / V2 (Uebernahme), 70/74 = Lauf sfv4/r/V4r3m0.95 (s. oben); GESTALTUNG (PORT-WAHL), Nutzer-Wortlaut "Ich will
+ * EXAKT diese Umsetzung" (Vorlage 2 = h85 zeigt den Schwanz frei in seiner Form). */
 static const int16_t k_schwanz_gewicht_v4[][2] = { { 15, 0 }, { 19, 4096 }, { 70, 4096 }, { 74, 0 } };
 static int bf_schwanz_v4(void)
 {
