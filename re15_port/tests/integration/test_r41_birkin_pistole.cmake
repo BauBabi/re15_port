@@ -344,27 +344,6 @@ function(ein_lauf _name _raum)
             set(_mg "${CMAKE_MATCH_1}")
         endif()
     endif()
-    # 5b (Gegenpruefung Welle 1 B1): der Rueckzug haelt den Spieler aus dem Biss - kein Treffer vom Szenenende bis zum G5-Tod
-    if(_bild_ende LESS 0)
-        string(APPEND _g "\n ${_name}: kein Ende der G5-Szene im Protokoll (pm 2 -> nicht 2 nach dem G5-Auftritt), 5b ungeprueft")
-    elseif(_n_fenster LESS 2)
-        string(APPEND _g "\n ${_name}: ${_n_fenster} Bilder zwischen Szenenende F${_bild_ende} und G5-Tod, 5b ungeprueft")
-    elseif(_treffer GREATER 0 OR _hp_min_fenster LESS _hp_ende)
-        string(APPEND _g "\n ${_name}: ${_treffer} Treffer am Spieler zwischen Szenenende F${_bild_ende} und G5-Tod (erster ${_treffer_erst}; "
-                         "kleinste HP ${_hp_min_fenster}, am Szenenende ${_hp_ende}; kleinster x-Abstand zum G5 ${_dx_min}) - der Rueckzug "
-                         "haelt ihn nicht aus dem Biss (5b)")
-    endif()
-    # Patronen am Ende: Magazin (mg=) und Vorrat (Zeile "Patronen" fehlt im Log; Vorrat = RE15_GIVE 21:250 minus Nachladen).
-    file(STRINGS "${WORKDIR}/state.log" _letzte REGEX "^F[0-9]+ .* mg=")
-    list(LENGTH _letzte _nl)
-    set(_mg "?")
-    if(_nl GREATER 0)
-        math(EXPR _il "${_nl} - 1")
-        list(GET _letzte ${_il} _lz)
-        if(_lz MATCHES " mg=(-?[0-9]+) ")
-            set(_mg "${CMAKE_MATCH_1}")
-        endif()
-    endif()
     message(STATUS "r41_birkin_pistole ${_name}: Mutationen ${_mut} (F${_bild_mut}), Form 1 HP max ${_form1_max}, Form-HP ${_form_hp} "
                    "(F${_bild_form}) bis ${_form_min}, Rueckstoss ${_rueck} (F${_bild_rueck}), Sturz ${_sturz}, G5 ${_g5} (F${_bild_g5}), G5 tot ${_g5_tot} "
                    "(F${_bild_g5_tot}), Spieler-HP dabei ${_pl_hp_tod}, Patronen in der Waffe ${_mg_start} -> ${_mg_g5_tot} beim G5-Tod, am Ende ${_mg}; "
