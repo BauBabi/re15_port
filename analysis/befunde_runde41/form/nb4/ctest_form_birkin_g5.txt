@@ -1,0 +1,39 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build
+      Start 1152: integration_r41_form_wagenweg_zurueck_leon
+      Start 1150: integration_r41_form_wagenweg
+      Start 1153: integration_r41_form_wagenweg_zurueck_elza
+      Start 1151: integration_r41_form_wagenweg_elza
+ 1/17 Test #1151: integration_r41_form_wagenweg_elza ...........   Passed  130.18 sec
+      Start 1378: unit_birkin_bahnsteig
+ 2/17 Test #1153: integration_r41_form_wagenweg_zurueck_elza ...   Passed  131.44 sec
+      Start 1149: unit_r41_form_emd
+ 3/17 Test #1149: unit_r41_form_emd ............................   Passed    0.02 sec
+      Start 1377: unit_birkin_formen
+ 4/17 Test #1377: unit_birkin_formen ...........................   Passed    0.03 sec
+      Start  408: unit_r34_plattform
+ 5/17 Test  #408: unit_r34_plattform ...........................   Passed    0.03 sec
+      Start  409: unit_r34_plattform_ton
+ 6/17 Test  #409: unit_r34_plattform_ton .......................   Passed    0.11 sec
+      Start  410: integration_r34_plattform_takt
+ 7/17 Test #1378: unit_birkin_bahnsteig ........................   Passed    1.57 sec
+      Start  411: integration_r34_plattform_esp_eintritt
+ 8/17 Test #1152: integration_r41_form_wagenweg_zurueck_leon ...   Passed  132.91 sec
+      Start  508: unit_r35_fenster_satzform
+ 9/17 Test  #508: unit_r35_fenster_satzform ....................   Passed    0.03 sec
+      Start  560: integration_r35_werfer_form
+10/17 Test #1150: integration_r41_form_wagenweg ................   Passed  133.11 sec
+      Start  980: unit_r39_funk10f1_form
+11/17 Test  #980: unit_r39_funk10f1_form .......................   Passed    0.14 sec
+      Start 1384: integration_r41_birkin_pistole
+12/17 Test  #411: integration_r34_plattform_esp_eintritt .......   Passed   10.05 sec
+      Start 1385: integration_r41_g5_westen
+13/17 Test  #410: integration_r34_plattform_takt ...............   Passed   24.46 sec
+      Start 1386: integration_r41_g5_tod
+14/17 Test  #560: integration_r35_werfer_form ..................   Passed   28.46 sec
+15/17 Test #1384: integration_r41_birkin_pistole ...............   Passed  243.93 sec
+16/17 Test #1386: integration_r41_g5_tod .......................   Passed  264.54 sec
+17/17 Test #1385: integration_r41_g5_westen ....................   Passed  285.48 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Total Test time (real) = 427.44 sec

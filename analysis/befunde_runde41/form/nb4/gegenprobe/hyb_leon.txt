@@ -1,0 +1,11 @@
+-- r41_form_wagenweg[leon]: Kamera Taumeln F1486-F1748 (263 Bilder, Schnitte 12;11), Form-Slot 12 min sichtbar 1247, Leon max 6890, Form max 405 Promille verdeckt, max 1000 Promille fast schwarz (88 Bilder)
+-- r41_form_wagenweg: Soll-HP 150, Wagen B 150, Wagen C 150 (F946), Treffer 10 (Abzug 150, groesster 15) ab F1237, Rueckstoss F1486, Form-HP zuletzt 0, Leon getroffen 1x, exit=0, Lauf C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formnb4/gegenprobe/hyb_leon/lauf_022796f7
+CMake Error at .claude/worktrees/r41_form_nb4/re15_port/tests/integration/test_r41_form_wagenweg.cmake:417 (message):
+  r41_form_wagenweg[leon]: FEHLER
+   Kamera der Rueckstoss-Szene: 6 Verstoesse in F1486-F1748
+     F1487: 776 Promille fast schwarz (> 600)
+     F1490: 966 Promille fast schwarz (> 600)
+     F1493: 997 Promille fast schwarz (> 600)
+     F1496: 960 Promille fast schwarz (> 600)
+     F1499: 964 Promille fast schwarz (> 600)
+     F1502: 1000 Promille fast schwarz (> 600)

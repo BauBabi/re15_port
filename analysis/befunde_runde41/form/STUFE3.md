@@ -1,5 +1,152 @@
 # Stufe 3 Bahnsteig-Form: Bewegung, Angriffe, Einbau (laufendes Dossier)
 
+## Nachbesserung 4 (Rueckstoss-Kamera)
+
+Auftrag: Abnahme 2 (`STUFE3_abnahme_2.md`) M-A (blockierend), M-B (mittel), M-D (Doku). Zweig r41/form_nb4 ab 2e3713c74, Worktree
+`.claude/worktrees/r41_form_nb4`. Belege `nb4/` (Leisten `vorher_*.png` / `nachher_*.png`, Laeufe `nb4/laeufe/<lauf>/` mit kam.log,
+deck.log, dunkel.txt, pruef.txt, env.txt, exe_sha.txt; Eichung `nb4/eichung_*.txt`; Gegenprobe `nb4/gegenprobe/`; Werkzeug `nb4/werkzeug/`;
+RDT-Auszug `nb4/rdt_5090_kameras_zonen.txt`). Alle Bilder: eigene exe-Kopie, Renderer des Nutzers (kein AUTOSHOT/SOFTWARE_RENDER),
+RE15_FRAMEDUMP-Serie, Fenster 640x480, Eingabe = Tastenskript w8 der Abnahme (Standardweg) bzw. w8 + D2.0 (2 s zurueck).
+
+Commits: 7ebda1d64 (NUTZER_ENTSCHEIDE E23/E29), c81a3a931 (Messschiene RE15_SLOTDECKUNG), 4a22c3dbc (Schnittwahl), 63b3b02a0 (Riegel),
+dieser Abschnitt + Belege im Folgecommit.
+
+### NB4-1. Reproduktion (exe 2e3713c74, Laeufe v0_*)
+
+| Lauf | Taumeln (Clip 13, HP 1) | Schnitte | Bilder > 60 % fast schwarz (Luma < 24) | Bild |
+|---|---|---|---|---|
+| v0_w_leon | F1486-F1748, Form bei x 17290, Leon x 14998 | 12 -> 11 | 9 von 132 gemessenen (F1488-F1504), max 100,0 % | vorher_w_leon.png |
+| v0_w_elza | F1486-F1748 | 12 -> 11 | 9 (F1488-F1504), max 99,7 % | vorher_w_elza.png |
+| v0_v_leon | F1544-F1840, Form x 20124, Leon x 17815 | 12 -> 11 | 6 (F1612-F1636), max 65,2 %; F1546-F1771 Leons Ruecken/Kopf gross, Form dahinter | vorher_v_leon.png |
+| v0_v_elza | F1544-F1842, Elza x 17665 | 12 -> 11 | 0, max 52,0 %; Elzas Kopf/Ruecken gross | vorher_v_elza.png |
+
+Wie Abnahme 2 M-A. Mit der Messschiene (unten) und birkin_formen.c von 2e3713c74 gezaehlt: zurueck_leon Form 0 sichtbare Bildpunkte in
+Cut 12, Leon bis 56690 Bildpunkte (74 % des Bildes), Form bis 1000 Promille verdeckt (NB4-6 Gegenprobe).
+
+### NB4-2. Kameras und Zonen des Raums (ROOM5090 = ROOM5091 in RID/RVD, selbst gelesen: `nb4/rdt_5090_kameras_zonen.txt`)
+
+RID ab 0x60 (Kopf +0x24), 32 Byte je Cut (flag, fov, pos xyz, ziel xyz); H = fov >> 7 (re15_camera_build_view = FUN_80053ca4). Wagen C:
+
+| Cut | RID @ | Auge | Ziel | H | Blick |
+|---|---|---|---|---|---|
+| 11 | 0x1c0 | (7626,-3256,-25360) | (-1504,-986,-21970) | 208 | -x (Wagenende West) |
+| 12 | 0x1e0 | (18526,-2656,-24660) | (1496,1514,-20370) | 208 | -x |
+| 13 | 0x200 | (11050,-3110,-24812) | (15974,-1894,-23306) | 231 | +x |
+| 14 | 0x220 | (23870,-7450,-29130) | (22450,-1442,-23356) | 188 | +z, Auge ausserhalb des Wagens |
+| 15 | 0x240 | (46,-1236,-24302) | (5190,-2246,-20090) | 208 | +x+z (sub04 Cut_chg 0x0f @0x130E, Kampfstart) |
+
+RVD ab 0x260 (Kopf +0x28), 20 Byte je Zone (be, Boden, von, nach, 4 Ecken x/z); die erste Zone jeder Gruppe ist der Such-Anker
+(FUN_80014230 / FUN_80014324, rdt_common.c), die uebrigen sind Wechselstreifen:
+
+| Zone @ | von -> nach | x | Bedeutung |
+|---|---|---|---|
+| 0x47c / 0x4a4 / 0x4e0 / 0x544 | 11/12/13/15 -> 0 | -5600..28100, z -29700..-16975 | Anker Cut 11/12/13/15 |
+| 0x51c | 14 -> 0 | 17000..28050 | Anker Cut 14 |
+| 0x490 | 11 -> 12 | 2800..4200 | |
+| 0x4b8 | 12 -> 11 | 1203..2703 | |
+| 0x4cc | 12 -> 13 | 14000..15400 | |
+| 0x4f4 | 13 -> 12 | 12249..13873 | |
+| 0x508 | 13 -> 14 | 20250..21750 | |
+| 0x530 | 14 -> 13 | 18502..20252 | |
+
+Original-Kameraregel = "welche Zone welchen Schnitt zeigt": x < 2750 Cut 11, < 14000 Cut 12, < 20250 Cut 13, sonst Cut 14
+(re15_bf_schnitt_aus_lage, Riegel unit_birkin_szenen test_schnitt_aus_lage gegen die RVD-Bytes). Eine Original-Routine, die einen Schnitt
+nach der Lage eines GEGNERS waehlt, gibt es fuer diese Szene nicht (die Rueckstoss-Szene ist Gestaltung, Nutzer 2026-10-30); der Raum
+kennt nur die Zonenregel auf der Spielerlage und den Cut_chg des Skripts. Die Nachbesserung wendet deshalb die Zonenregel auf die FORM an
+und prueft jedes Bild, keine eigene Kamera.
+
+### NB4-3. Behebung (birkin_formen.c, Commit 4a22c3dbc)
+
+`bf_schnitt_waehlen` statt fester Schnitte, fuer die Szene (Motiv Form) und die Nahsicht-Wache (Motiv Spieler):
+1. Kameras des Wagens: Anker enthaelt das Motiv. Steht das Auge ausserhalb des z-Bereichs der Wechselstreifen (Wagen C z -28225..-18700),
+   zeigt die Kamera nur ihren Anzeigebereich (x-Spanne ihrer Streifen, zum Wagenende offen): Cut 14 nur fuer x >= 18502. Gemessen (Lauf
+   n1_v F1624-F1656): Form bei x 12044-14764 in Cut 14 nicht zu sehen (Hintergrund davor, 73,7 % schwarz); Leon bei x 17714 ebenso (n3_a
+   F1125-F1179).
+2. Bildmass je Kamera (`bf_bild_mass`): Kugeln r 700 um alle 27 Knochen der Formpose (re15_skel_compute_pose wie re15_enemy_part_point),
+   Spieler 5 Kugeln r 500 y 0..-3000 (gatorszene_r41.c spieler_punkte, dort an der exe gemessen); Projektion wie der Zeichner (160/120,
+   H). Masse: Formrahmen, Formknochen im Bild, Spielerrahmen, Verdeckung (Rahmenschnitt, der Naehere deckt), "nah" = Kugel naeher als 1000
+   an der Bildebene (gezeigter Schnitt: erst an der Bildebene, Haltegrenze gegen Flattern, Laeufe n3: Cut 11/15 schalteten je Bild).
+3. Szene: zuerst die Original-Zonenkamera der FORMLAGE, dann der aktuelle Schnitt, dann die Zonenkamera der Spielerlage, dann die gute
+   Kamera mit dem groessten Formbild; 30 Bilder nach einem Schnitt geht der aktuelle vor; gibt es keine gute: Zonenkamera der Formlage.
+   Cut 11 ab x <= 3000 (BF_RS_TAUMEL_KAM_X, Nachbesserung 1) und die Sturz-/Pausen-Kamera bleiben unveraendert.
+4. Wache: aktueller Schnitt, Zonenkamera der Spielerlage, gute Kamera mit dem groessten Spielerbild; keine gute: Zonenkamera der
+   Spielerlage (das ist der Zonen-Schnitt, die Wache greift dann nicht ein); Haltezeit 30 Bilder wie Nachbesserung 1.
+5. Messschiene `RE15_BF_KAMLOG=<datei>`: je Bild alle Masse aller Wagenkameras (kein Spielverhalten).
+
+Konstanten: BF_BM_FORM_MAX 900 / BF_BM_PL_MAX 490 / BF_BM_DECK_MAX 650 Promille Rahmen = Pruefmass der Abnahme 2 (60 % Form, ein Drittel
+Spieler) umgerechnet mit dem kleinsten gemessenen Verhaeltnis Rahmen/Bildpunkte (NB4-4); BF_BM_FORM_R 700, BF_BM_NAH 1000,
+BF_BM_INNEN_MIN 500, BF_RS_KAM_HALT 30 sind PORT-WAHL/Gestaltung mit Beleg im Kommentar. Keine RE1.5-Verhaltenskonstante neu.
+
+### NB4-4. Eichung Kugelmodell gegen gezeichnete Bildpunkte (Messschiene RE15_SLOTDECKUNG, Commit c81a3a931)
+
+`RE15_SLOTDECKUNG=<datei>` (render_pc.c): die gezeichneten Dreiecke in Zeichenfolge samt Vordergrund-Masken in einen eigenen
+Kennungspuffer, je TIM-Slot sichtbare/bedeckte Bildpunkte. Spieler = Slot 0, Form = Slot 12 (Leon) / 11 (Elza).
+
+| Mass | Modell (Promille Rahmen) -> gezeichnet (Promille Bild) | kleinstes Verhaeltnis | Quelle |
+|---|---|---|---|
+| Formflaeche | 485 -> 237, 549 -> 333, 592 -> 240, 468 -> 277 | 1,65 | eichung_n2_w_leon.txt, eichung_n2_v_leon.txt |
+| Spielerflaeche | 201 -> 62-69, 169 -> 72, 665 -> 447 (nah), 500 -> 258 | 1,49 | eichung_n3_a_leon.txt |
+| Verdeckung der Form | 318 -> 99, 463 -> 311, 500 -> 355 | 1,41 | eichung_n2_w_leon.txt |
+
+Ein Spielermodell mit 3 Kugeln bis y -1500 unterschaetzte die Naehe (130 -> 188, Lauf n4_a; eichung_n4_v_leon_spielermodell3.txt: Cut 12
+Spieler 711 vor dem Auge Modell 65, gezeichnet 400-500 Promille) und ist verworfen; zusaetzlich gilt "Spielerkugel nah" als Ausschluss.
+
+### NB4-5. Messwerte nachher (exe sha256 b4cc39be..., Laeufe n5_*; Bilder nachher_*.png)
+
+| Lauf | Schnitte im Taumeln | Form min sichtbar | Spieler max | Form max verdeckt | max fast schwarz | Bilder > 60 % |
+|---|---|---|---|---|---|---|
+| n5_w_leon F1486-F1748 | 13 -> 12 (ab F1545, Form x 13702) -> 11 (x <= 3000) | 1247 | 5866 (7,6 %) | 405 | 53,4 % | 0 |
+| n5_w_elza | 13 -> 12 -> 11 | 1596 | 4147 | 238 | 52,4 % | 0 |
+| n5_v_leon F1544-F1840 | 13 -> 15 (ab F1662, Form x 11724) -> 11 (F1768) | 2796 | 2161 | 166 | 54,6 % | 0 |
+| n5_v_elza F1544-F1842 | 13 -> 15 -> 11 | 2723 | 1626 | 113 | 53,9 % | 0 |
+
+Keine Wechsel hin und zurueck (kam.log je Lauf: genau 2 bzw. 3 Schnitte). Im 2-s-Lauf ist die Form in Cut 13 kurz vor dem Wechsel auf
+Cut 15 gross (F1640-F1660, Form 1500-2400 vor dem Auge, Bild nachher_v_leon.png Kacheln F1640/F1652), aber nicht schwarz (max 54,6 %)
+und vor dem Spieler. In Cut 15 steht die Form rechts im Bild, ganz zu sehen; Cut 15 ist die Kamera, die der Raum selbst fuer die Form im
+Wagen benutzt (sub04 Cut_chg 0x0f @0x130E).
+
+### NB4-6. M-B (Nahsicht-Wache nach dem Wurf, Lauf n6_a_leon, Bild nachher_a_leon_wache.png)
+
+Ablauf wie a5090_leon der Abnahme (Debug-Sprung Wagen B, ohne Feuer). Die Wache haelt nach dem Wurf Cut 12 (F742-F1017: Spieler 17-19 %
+des Bildes, Form hinter ihm) und schaltet bei F1018 auf Cut 13 zurueck. **Rest offen:** F1018-F1180 (Leon x 17070-17714, Form x
+11883-14505 laeuft auf ihn zu) zeigt Cut 13 die Form mit 28-62 % des Bildes, 50-71 % fast schwarz, Leon zeitweise bis 960 Promille
+verdeckt. Fuer diese Lage hat der Raum keinen passenden Schnitt (kam.log je Bild): Cut 13 Form 650-3450 vor dem Auge (nah), Cut 12 Leon
+800-1300 vor dem Auge (Spielerkugel nah; gezeichnet 26-48 % des Bildes, n3_a F1029-F1093), Cut 15 Form zwischen Auge und Leon (Leon
+verdeckt), Cut 14 Leon hinter dem Hintergrund (n3_a F1125-F1179), Cut 11 Leon hinter dem Auge. Nach Auftrag gilt dann die
+Original-Zonenkamera der Spielerlage = Cut 13 (x 14000..20250). Gegenueber Abnahme 2 (Cut 13 F1051-F1174) ist dieser Rest NICHT kleiner geworden (F1018-F1180); geaendert ist nur, dass die Wache
+nach dem Bildmass schon ab F742 (Abnahme 2: F845) auf Cut 12 schaltet. **M-B ist damit NICHT geloest**; der Rest
+braucht eine Entscheidung (Cut 12 mit grossem Spielerruecken oder Cut 13 mit grosser Form), siehe NB4-9 Offen.
+
+### NB4-7. Tests
+
+- Riegel (probes/r41_form_kamera.cmake, test_r41_form_wagenweg.cmake): integration_r41_form_wagenweg, _elza, _zurueck_leon,
+  _zurueck_elza; je Taumelbild 6a Form >= 768 sichtbare Bildpunkte, 6b Spieler <= 25600, 6c Form <= 500 Promille verdeckt, 6d <= 600
+  Promille fast schwarz (probe_r41_form_kamera_bild). Renderer des Nutzers (der Software-Renderer dunkelt Cut 11 um 40-50 Promille ab:
+  zurueck_elza 599 statt 544).
+- Gegenprobe (nb4/gegenprobe/): exe 2e3713c74 -> rot "kein deck.log"; birkin_formen.c von 2e3713c74 + Messschiene -> leon und elza 6d
+  rot (F1487-F1502: 776-1000 Promille), zurueck_leon 231 und zurueck_elza 94 Verstoesse (Form 0 sichtbar, Leon bis 56690, Form bis 1000
+  Promille verdeckt).
+- Summenzeilen: NB4-9.
+
+### NB4-8. M-D
+
+(a) erledigt: NUTZER_ENTSCHEIDE.md E23 (2026-11-03, "passt erst einmal", Pose nicht drehen) und E29 (2026-11-07, "K4 bleibt fuer v0.8.30
+im Spiel, der G4-Ansatz danach", Wortlaut "Das koennte schon passen mit der riesen Form ..."), Commit 7ebda1d64. (b) und (c) (Kommentar
+"drei Segmente ... K3" in enemy_ai_common.c, EXE-Angabe der Spieler-Ctor-Adressen) nicht Teil dieses Auftrags, offen.
+
+### NB4-9. Testlage und Offen (re15_port/build, Kopf 63b3b02a0, ctest aus Git-Bash, PATH msys64 zuerst, SDL_ASSERT=always_ignore)
+
+- `ctest -R "form|bahnsteig|birkin_form|r41_form|integration_r41_birkin_pistole|integration_r41_g5_tod|integration_r41_g5_westen" -j 4`:
+  **100% tests passed, 0 tests failed out of 17** (Total Test time (real) = 427.44 sec), Log `nb4/ctest_form_birkin_g5.txt`; darin die vier
+  Wagenweg-Teile (130-133 s), integration_r41_birkin_pistole 243,9 s, integration_r41_g5_tod 264,5 s, integration_r41_g5_westen 285,5 s,
+  unit_birkin_bahnsteig, unit_birkin_formen, unit_r41_form_emd, integration_r34_plattform_takt/_esp_eintritt. Kein roter Riegel.
+- Zusaetzlich `ctest -R "^unit_(birkin|r41_form|bb_|g5|n2_griff|r41_birkin)" -j 6`: 100% tests passed, 0 tests failed out of 13.
+- Offen: (1) M-B-Rest F1018-F1180 (NB4-6): fuer Leon 800-1300 vor dem Auge von Cut 12 mit der Form vor Cut 13 hat der Raum keinen Schnitt
+  innerhalb des Pruefmasses; Entscheidung noetig. (2) M-C (Gebruell unter Dauerfeuer) und M-D (b)/(c) nicht Teil dieses Auftrags.
+  (3) Die Messschiene RE15_SLOTDECKUNG zaehlt Schatten nicht und Masken als Atlas-Alpha; der Linux-Lauf des Riegels steht aus (Pixelgrenzen
+  sind Windows-gemessen, Memory reai-v2-pixelgrenze-rasterer; die Schranken haben Abstand: Form min 1247 gegen 768, Spieler max 5866 gegen
+  25600, verdeckt max 405 gegen 500, schwarz max 550 gegen 600).
+
 ## Nachbesserung 3 (AN-Abnahme 2 N1: Riesenform kommt im echten Wagenweg mit HP 0 in Wagen C)
 
 Auftrag: Mangel N1 aus `.claude/worktrees/r41_annette/analysis/befunde_runde41/AN_abnahme_2.md` (Laeufe `kette_ohne`, `form_kette_ohne`).

@@ -1,0 +1,211 @@
+F1480 cam=13 dunkel=44.9% mittel=39.5 st1 mo26 x17385
+F1482 cam=13 dunkel=45.1% mittel=39.4 st1 mo5 x17357
+F1484 cam=13 dunkel=45.3% mittel=39.3 st1 mo5 x17315
+F1486 cam=13 dunkel=45.6% mittel=39.8 st3 mo13 x17290
+F1488 cam=13 dunkel=43.3% mittel=41.9 st2 mo13 x17371
+F1490 cam=13 dunkel=42.8% mittel=41.9 st2 mo13 x17423
+F1492 cam=13 dunkel=41.9% mittel=42.5 st2 mo13 x17445
+F1494 cam=13 dunkel=41.7% mittel=42.7 st2 mo13 x17435
+F1496 cam=13 dunkel=41.3% mittel=42.8 st2 mo13 x17395
+F1498 cam=13 dunkel=41.8% mittel=42.4 st2 mo13 x17326
+F1500 cam=13 dunkel=41.2% mittel=42.6 st2 mo13 x17230
+F1502 cam=13 dunkel=41.4% mittel=42.9 st2 mo13 x17111
+F1504 cam=13 dunkel=41.9% mittel=42.6 st2 mo13 x16973
+F1506 cam=13 dunkel=42.1% mittel=42.0 st2 mo13 x16821
+F1508 cam=13 dunkel=42.3% mittel=41.7 st2 mo13 x16662
+F1510 cam=13 dunkel=42.6% mittel=41.4 st2 mo13 x16502
+F1512 cam=13 dunkel=43.5% mittel=41.2 st2 mo13 x16342
+F1514 cam=13 dunkel=44.4% mittel=40.7 st2 mo13 x16182
+F1516 cam=13 dunkel=44.7% mittel=40.2 st2 mo13 x16022
+F1518 cam=13 dunkel=44.6% mittel=39.7 st2 mo13 x15862
+F1520 cam=13 dunkel=44.8% mittel=39.3 st2 mo13 x15702
+F1522 cam=13 dunkel=45.0% mittel=38.8 st2 mo13 x15542
+F1524 cam=13 dunkel=46.5% mittel=37.6 st2 mo13 x15382
+F1526 cam=13 dunkel=47.6% mittel=36.8 st2 mo13 x15222
+F1528 cam=13 dunkel=50.4% mittel=35.2 st2 mo13 x15062
+F1530 cam=13 dunkel=52.1% mittel=34.2 st2 mo13 x14902
+F1532 cam=13 dunkel=52.5% mittel=34.0 st2 mo13 x14742
+F1534 cam=13 dunkel=53.1% mittel=33.7 st2 mo13 x14582
+F1536 cam=13 dunkel=53.0% mittel=33.7 st2 mo13 x14422
+F1538 cam=13 dunkel=52.9% mittel=33.6 st2 mo13 x14262
+F1540 cam=13 dunkel=53.4% mittel=33.4 st2 mo13 x14102
+F1542 cam=13 dunkel=53.3% mittel=33.6 st2 mo13 x13942
+F1544 cam=13 dunkel=52.6% mittel=34.0 st2 mo13 x13782
+F1546 cam=12 dunkel=45.5% mittel=40.2 st2 mo13 x13622
+F1548 cam=12 dunkel=44.2% mittel=40.3 st2 mo13 x13462
+F1550 cam=12 dunkel=43.5% mittel=40.1 st2 mo13 x13302
+F1552 cam=12 dunkel=43.1% mittel=40.5 st2 mo13 x13142
+F1554 cam=12 dunkel=42.2% mittel=41.1 st2 mo13 x12982
+F1556 cam=12 dunkel=41.3% mittel=41.2 st2 mo13 x12822
+F1558 cam=12 dunkel=40.3% mittel=41.8 st2 mo13 x12662
+F1560 cam=12 dunkel=39.2% mittel=42.5 st2 mo13 x12502
+F1562 cam=12 dunkel=38.1% mittel=43.2 st2 mo13 x12342
+F1564 cam=12 dunkel=37.0% mittel=43.9 st2 mo13 x12182
+F1566 cam=12 dunkel=35.8% mittel=44.6 st2 mo13 x12022
+F1568 cam=12 dunkel=34.2% mittel=45.7 st2 mo13 x11862
+F1570 cam=12 dunkel=32.6% mittel=46.7 st2 mo13 x11702
+F1572 cam=12 dunkel=32.3% mittel=47.6 st2 mo13 x11542
+F1574 cam=12 dunkel=31.4% mittel=48.6 st2 mo13 x11382
+F1576 cam=12 dunkel=30.5% mittel=48.7 st2 mo13 x11222
+F1578 cam=12 dunkel=29.3% mittel=49.9 st2 mo13 x11062
+F1580 cam=12 dunkel=28.7% mittel=50.4 st2 mo13 x10902
+F1582 cam=12 dunkel=27.9% mittel=51.1 st2 mo13 x10742
+F1584 cam=12 dunkel=27.7% mittel=51.6 st2 mo13 x10582
+F1586 cam=12 dunkel=28.1% mittel=51.1 st2 mo13 x10422
+F1588 cam=12 dunkel=27.6% mittel=51.9 st2 mo13 x10262
+F1590 cam=12 dunkel=27.3% mittel=52.1 st2 mo13 x10102
+F1592 cam=12 dunkel=27.0% mittel=52.5 st2 mo13 x9942
+F1594 cam=12 dunkel=26.9% mittel=53.0 st2 mo13 x9782
+F1596 cam=12 dunkel=26.6% mittel=52.9 st2 mo13 x9622
+F1598 cam=12 dunkel=26.1% mittel=53.6 st2 mo13 x9462
+F1600 cam=12 dunkel=25.6% mittel=53.6 st2 mo13 x9302
+F1602 cam=12 dunkel=25.3% mittel=53.7 st2 mo13 x9142
+F1604 cam=12 dunkel=24.7% mittel=54.3 st2 mo13 x8982
+F1606 cam=12 dunkel=24.8% mittel=53.9 st2 mo13 x8822
+F1608 cam=12 dunkel=24.9% mittel=54.3 st2 mo13 x8662
+F1610 cam=12 dunkel=24.6% mittel=54.2 st2 mo13 x8502
+F1612 cam=12 dunkel=24.5% mittel=54.3 st2 mo13 x8342
+F1614 cam=12 dunkel=24.3% mittel=54.9 st2 mo13 x8182
+F1616 cam=12 dunkel=24.2% mittel=54.8 st2 mo13 x8022
+F1618 cam=12 dunkel=23.7% mittel=55.6 st2 mo13 x7862
+F1620 cam=12 dunkel=23.8% mittel=55.3 st2 mo13 x7702
+F1622 cam=12 dunkel=23.7% mittel=55.5 st2 mo13 x7542
+F1624 cam=12 dunkel=23.2% mittel=55.9 st2 mo13 x7382
+F1626 cam=12 dunkel=23.0% mittel=55.6 st2 mo13 x7222
+F1628 cam=12 dunkel=22.9% mittel=56.0 st2 mo13 x7062
+F1630 cam=12 dunkel=23.0% mittel=55.8 st2 mo13 x6902
+F1632 cam=12 dunkel=22.9% mittel=55.9 st2 mo13 x6742
+F1634 cam=12 dunkel=23.0% mittel=56.2 st2 mo13 x6582
+F1636 cam=12 dunkel=23.0% mittel=55.9 st2 mo13 x6422
+F1638 cam=12 dunkel=22.6% mittel=56.6 st2 mo13 x6262
+F1640 cam=12 dunkel=22.5% mittel=56.5 st2 mo13 x6102
+F1642 cam=12 dunkel=22.5% mittel=56.5 st2 mo13 x5942
+F1644 cam=12 dunkel=22.3% mittel=57.1 st2 mo13 x5782
+F1646 cam=12 dunkel=22.1% mittel=56.6 st2 mo13 x5622
+F1648 cam=12 dunkel=22.0% mittel=57.1 st2 mo13 x5462
+F1650 cam=12 dunkel=21.8% mittel=56.7 st2 mo13 x5302
+F1652 cam=12 dunkel=21.9% mittel=56.8 st2 mo13 x5142
+F1654 cam=12 dunkel=21.7% mittel=57.3 st2 mo13 x4982
+F1656 cam=12 dunkel=22.0% mittel=56.7 st2 mo13 x4822
+F1658 cam=12 dunkel=21.7% mittel=57.4 st2 mo13 x4662
+F1660 cam=12 dunkel=21.8% mittel=57.0 st2 mo13 x4502
+F1662 cam=12 dunkel=21.7% mittel=57.2 st2 mo13 x4342
+F1664 cam=12 dunkel=21.6% mittel=57.7 st2 mo13 x4182
+F1666 cam=12 dunkel=21.6% mittel=57.1 st2 mo13 x4022
+F1668 cam=12 dunkel=21.4% mittel=57.8 st2 mo13 x3862
+F1670 cam=12 dunkel=21.3% mittel=57.3 st2 mo13 x3702
+F1672 cam=12 dunkel=21.3% mittel=57.2 st2 mo13 x3542
+F1674 cam=12 dunkel=21.3% mittel=57.7 st2 mo13 x3382
+F1676 cam=12 dunkel=21.4% mittel=57.1 st2 mo13 x3222
+F1678 cam=12 dunkel=21.4% mittel=57.7 st2 mo13 x3062
+F1680 cam=11 dunkel=52.2% mittel=34.3 st2 mo13 x2902
+F1682 cam=11 dunkel=51.7% mittel=33.2 st2 mo13 x2742
+F1684 cam=11 dunkel=49.9% mittel=39.7 st2 mo13 x2582
+F1686 cam=11 dunkel=51.2% mittel=36.3 st2 mo13 x2422
+F1688 cam=11 dunkel=46.7% mittel=42.6 st2 mo13 x2262
+F1690 cam=11 dunkel=48.5% mittel=37.4 st2 mo13 x2102
+F1692 cam=11 dunkel=49.1% mittel=35.7 st2 mo13 x1942
+F1694 cam=11 dunkel=46.6% mittel=42.4 st2 mo13 x1782
+F1696 cam=11 dunkel=48.0% mittel=38.1 st2 mo13 x1622
+F1698 cam=11 dunkel=45.8% mittel=41.6 st2 mo13 x1462
+F1700 cam=11 dunkel=43.9% mittel=39.1 st2 mo13 x1302
+F1702 cam=11 dunkel=43.3% mittel=38.1 st2 mo13 x1142
+F1704 cam=11 dunkel=41.2% mittel=44.2 st2 mo13 x982
+F1706 cam=11 dunkel=43.9% mittel=39.0 st2 mo13 x822
+F1708 cam=11 dunkel=42.3% mittel=43.6 st2 mo13 x662
+F1710 cam=11 dunkel=41.8% mittel=40.5 st2 mo13 x502
+F1712 cam=11 dunkel=41.7% mittel=39.7 st2 mo13 x342
+F1714 cam=11 dunkel=36.9% mittel=48.9 st2 mo13 x182
+F1716 cam=11 dunkel=39.2% mittel=42.8 st2 mo13 x22
+F1718 cam=11 dunkel=38.1% mittel=47.5 st2 mo13 x-138
+F1720 cam=11 dunkel=39.0% mittel=43.0 st2 mo13 x-298
+F1722 cam=11 dunkel=39.5% mittel=41.4 st2 mo13 x-458
+F1724 cam=11 dunkel=35.6% mittel=50.8 st2 mo13 x-618
+F1726 cam=11 dunkel=38.1% mittel=44.2 st2 mo13 x-778
+F1728 cam=11 dunkel=36.3% mittel=50.0 st2 mo13 x-938
+F1730 cam=11 dunkel=37.2% mittel=44.9 st2 mo13 x-1098
+F1732 cam=11 dunkel=37.7% mittel=43.3 st2 mo13 x-1258
+F1734 cam=11 dunkel=34.4% mittel=52.4 st2 mo13 x-1418
+F1736 cam=11 dunkel=37.0% mittel=45.4 st2 mo13 x-1578
+F1738 cam=11 dunkel=35.7% mittel=50.2 st2 mo13 x-1738
+F1740 cam=11 dunkel=36.6% mittel=45.2 st2 mo13 x-1898
+F1742 cam=11 dunkel=37.1% mittel=43.3 st2 mo13 x-2058
+F1744 cam=11 dunkel=34.3% mittel=52.4 st2 mo13 x-2218
+F1746 cam=11 dunkel=36.2% mittel=46.0 st2 mo13 x-2378
+F1748 cam=11 dunkel=34.7% mittel=50.7 st2 mo13 x-2538
+F1750 cam=11 dunkel=36.2% mittel=45.6 st2 mo12 x-2538
+F1752 cam=11 dunkel=36.4% mittel=43.8 st2 mo12 x-2538
+F1754 cam=11 dunkel=33.1% mittel=54.3 st2 mo12 x-2718
+F1756 cam=11 dunkel=36.2% mittel=46.4 st2 mo12 x-2898
+F1758 cam=11 dunkel=34.5% mittel=51.9 st2 mo12 x-3078
+F1760 cam=11 dunkel=35.9% mittel=45.9 st2 mo12 x-3258
+F1762 cam=11 dunkel=36.5% mittel=43.9 st2 mo12 x-3438
+F1764 cam=11 dunkel=34.3% mittel=52.6 st2 mo12 x-3618
+F1766 cam=11 dunkel=36.4% mittel=46.0 st2 mo12 x-3858
+F1768 cam=11 dunkel=34.7% mittel=51.3 st2 mo12 x-4158
+F1770 cam=11 dunkel=36.0% mittel=45.8 st2 mo12 x-4458
+F1772 cam=11 dunkel=36.3% mittel=44.3 st2 mo12 x-4758
+F1774 cam=11 dunkel=33.8% mittel=53.7 st2 mo12 x-5058
+F1776 cam=11 dunkel=36.5% mittel=46.3 st2 mo12 x-5358
+F1778 cam=11 dunkel=34.1% mittel=52.0 st2 mo12 x-5658
+F1780 cam=11 dunkel=35.5% mittel=45.8 st2 mo12 x-6008
+F1782 cam=11 dunkel=36.0% mittel=43.9 st2 mo12 x-6408
+F1784 cam=11 dunkel=33.7% mittel=52.9 st2 mo12 x-6808
+F1786 cam=11 dunkel=36.1% mittel=45.7 st2 mo12 x-7208
+F1788 cam=11 dunkel=34.5% mittel=50.9 st2 mo12 x-7608
+F1790 cam=11 dunkel=35.6% mittel=45.7 st2 mo12 x-8008
+F1792 cam=11 dunkel=36.0% mittel=43.9 st2 mo12 x-8408
+F1794 cam=11 dunkel=33.3% mittel=53.6 st2 mo12 x-8808
+F1796 cam=11 dunkel=35.8% mittel=46.2 st2 mo12 x-9208
+F1798 cam=11 dunkel=34.0% mittel=52.3 st2 mo12 x-9608
+F1800 cam=11 dunkel=35.4% mittel=45.9 st2 mo12 x-10008
+F1802 cam=11 dunkel=35.9% mittel=44.0 st2 mo12 x-10408
+F1804 cam=11 dunkel=33.6% mittel=53.1 st2 mo12 x-10808
+F1806 cam=11 dunkel=36.0% mittel=45.9 st2 mo12 x-10808
+F1808 cam=11 dunkel=34.5% mittel=50.8 st2 mo12 x-10808
+F1810 cam=11 dunkel=35.7% mittel=45.6 st2 mo12 x-10808
+F1812 cam=11 dunkel=36.1% mittel=43.8 st2 mo12 x-10808
+F1814 cam=11 dunkel=33.5% mittel=53.2 st2 mo12 x-10808
+F1816 cam=11 dunkel=35.8% mittel=46.2 st2 mo12 x-10808
+F1818 cam=11 dunkel=34.0% mittel=52.1 st2 mo12 x-10808
+F1820 cam=11 dunkel=35.4% mittel=46.0 st2 mo12 x-10808
+F1822 cam=11 dunkel=35.8% mittel=44.2 st2 mo12 x-10808
+F1824 cam=11 dunkel=33.4% mittel=53.4 st2 mo12 x-10808
+F1826 cam=11 dunkel=36.0% mittel=46.0 st2 mo12 x-10808
+F1828 cam=11 dunkel=34.4% mittel=51.1 st2 mo12 x-10808
+F1830 cam=11 dunkel=35.7% mittel=45.6 st2 mo12 x-10808
+F1832 cam=11 dunkel=36.2% mittel=43.6 st2 mo12 x-10808
+F1834 cam=11 dunkel=33.7% mittel=52.9 st2 mo12 x-10808
+F1836 cam=11 dunkel=35.9% mittel=46.0 st2 mo12 x-10808
+F1838 cam=11 dunkel=34.1% mittel=51.9 st2 mo12 x-10808
+F1840 cam=11 dunkel=35.4% mittel=45.9 st2 mo12 x-10808
+F1842 cam=11 dunkel=35.7% mittel=44.3 st2 mo12 x-10808
+F1844 cam=11 dunkel=33.3% mittel=53.6 st2 mo12 x-10808
+F1846 cam=11 dunkel=35.9% mittel=46.1 st2 mo12 x-10808
+F1848 cam=11 dunkel=34.3% mittel=51.3 st2 mo12 x-10808
+F1850 cam=11 dunkel=34.5% mittel=46.2 
+F1852 cam=11 dunkel=35.1% mittel=44.2 
+F1854 cam=11 dunkel=32.7% mittel=53.2 
+F1856 cam=11 dunkel=34.9% mittel=46.5 
+F1858 cam=11 dunkel=33.1% mittel=52.0 
+F1860 cam=11 dunkel=34.3% mittel=46.6 
+F1862 cam=11 dunkel=34.7% mittel=44.8 
+F1864 cam=11 dunkel=32.1% mittel=54.5 
+F1866 cam=11 dunkel=34.7% mittel=46.8 
+F1868 cam=11 dunkel=33.1% mittel=52.3 
+F1870 cam=11 dunkel=34.4% mittel=46.3 
+F1872 cam=11 dunkel=35.0% mittel=44.3 
+F1874 cam=11 dunkel=32.8% mittel=53.0 
+F1876 cam=11 dunkel=35.0% mittel=46.4 
+F1878 cam=11 dunkel=33.3% mittel=51.8 
+F1880 cam=11 dunkel=34.4% mittel=46.3 
+F1882 cam=11 dunkel=34.8% mittel=44.8 
+F1884 cam=11 dunkel=32.1% mittel=54.3 
+F1886 cam=11 dunkel=34.7% mittel=46.9 
+F1888 cam=11 dunkel=33.0% mittel=52.6 
+F1890 cam=11 dunkel=34.3% mittel=46.4 
+F1892 cam=11 dunkel=35.0% mittel=44.5 
+F1894 cam=11 dunkel=32.6% mittel=53.5 
+F1896 cam=11 dunkel=35.0% mittel=46.3 
+F1898 cam=11 dunkel=33.4% mittel=51.5 
+F1900 cam=11 dunkel=34.5% mittel=46.3 
