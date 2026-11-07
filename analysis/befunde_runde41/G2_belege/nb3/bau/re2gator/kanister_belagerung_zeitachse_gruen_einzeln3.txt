@@ -1,0 +1,23 @@
+# integration_r41_re2gator Einzellauf 3 (gruen, exe 029efac6 nach Patch 9, Fenster 1700): lauf_70f77700
+
+== kanister (KANISTER-Zeilen, Kanister-Sitz):
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6214 Stufe 0 F1129
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5885 Stufe 0 F1141
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6203 Stufe 0 F1252
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5649 Stufe 0 F1261
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6134 Stufe 0 F1327
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5664 Stufe 0 F1336
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=5968 Stufe 0 F1427
+RE2 KANISTER Stufe 1 laengs=5928 quer=1040 sub 2 -> 1 F1435
+RE2 KANISTER angehaengt lokal=(3995,-80,2783) F1447
+RE2 KANISTER getragen (Stufe 7)
+[gator-re2] Kanister-Sitz F1686: angehaengt 240 Bilder, Abweichung max 0 (F1447), jetzt 0 clip=1 bild=9 gier=2037 frac=0
+
+== belagerung (hp-Flanken, QUERPRUEF/CROSS/RAMMEN/GIER-WACHE/FINISHER):
+  F0 hp 100
+  F417 hp 50
+  F522 hp 0
+  F627 hp -50
+  F0 hp 100
+91:GIER-WACHE bis F581: 300 Bildpaare CHASE/GUARD, max |Gier-Delta| 64 (ohne +1024), Spruenge > 0x60: 0, Befreiungen 0
+102:RE2 KAMERA FINISHER FINISHER RE2-Cut 7 -> Cut 6 F627 clip=4 bild=0 frontal=4112 soll=4094 massstab=1332 re2_m=1354 grenze=1892 (Buehne)

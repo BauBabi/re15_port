@@ -737,3 +737,173 @@ f942f56c0 (exe 15aa14b5, Eingaben der Abnahme 4; `exe_mass.txt`):
    jetzt der Rueckfall (je 1-2 Rueckwaerts-Durchgaenge, kein Tauchen). Das ist der Ort des alten M4-Haengers - die Ursache liegt in der Verfolgung ohne Kanister (NB5).
 8. exe rampe: die Figur kommt (wie ohne Kanister) nicht auf die Rampe, sie wird an der Kante angegriffen ("Klettern sub=9" 0 Zeilen) - der fruehere Riegel "Ueberquerung >= 100
    Bilder, Rammen >= 1" ist darum nur noch Ausgabe; Rammen auf der Rampe belegen Riegel re2 und die Fensterlaeufe west4_leon / west5_elza.
+
+## G2-RE2 NB3 (Rampe oben, Plattform-Suedkante)
+Stand 2026-11-07, Zweig r41/gator_re2 ab e92356e8e (Messblatt des Messers, G2_MESSBLATT_NB3.md). Rolle: Bauer (NB3, Runde 1 von 2). Laufordner scratchpad `g2nb3/`
+(Bauer: `harness_neu*/`, `bau_runs/`, `final_runs/`, `final_runs2/`, nicht im Baum); Belege `G2_belege/nb3/bau/` (Harness-Ausgaben je Bauschritt, Werkzeuge, exe-Messung, Bildleisten).
+Commits: a7415b225 (Engine Vorgabe A + B), 8bfcf864c (Riegel nb3, gang/re2/fuzz, obenlog/haenglog, exe-Riegel rampe_oben), 466901ffe (Figur im Block = belagern), d3762d778 (obenlog ab Kanister-Anhaengen), bb2803202 (Zaehler oben_ohne nur in Kampfphasen + Querbezug re2gator Fenster 1700), dieser Commit (Dossier, Belege). Finale exe `re15_port/build/platform/pc/re15_pc.exe` md5 029efac644499f92ef0a5572ee3aa43d (nach Patch 9; alle exe-Belege `final_runs2/`, die exe vor Patch 9
+5581916f nur noch fuer die re2gator-Laeufe der Gruppe 1), alter Stand = Kopie der
+Abnahme-4-exe d872c8e6 (`g2nb3/exe_alt/`).
+
+### Nutzerentscheid 2026-11-06 ~21:15 (woertlich, bindend) auf die vier Fragen der Abnahme 4
+- F1 (Kopf-Kameragrenze auch ohne Kanister): "Zu F1, noe, wozu wenn es gut funktioniert?" -> keine Kameragrenze; der Riegel bleibt "mit Kanister nicht haeufiger als ohne".
+- F2 (Sprung am Querungsbeginn): "Verstehe ich nicht..." -> bleibt wie im gelobten Stand (nicht angefasst; gb_cross_begin unveraendert).
+- F3 (Takt der Rampen-Querung): "Verstehe ich auch nicht... ist damit gemeint, das er oefter schneller laeuft? Das kann er gerne machen. Er soll nur den Spieler oben auf
+  der Rampe auch rammen koennen, das der Spieler oben nicht ausweichen kann. Alternativ kann er auch hoch beissen oder sowas, aber er darf halt oben nicht sicher sein."
+  -> **Vorgabe A**: die Figur oben ist nicht sicher - Rammen oder Hochbiss, Takt frei.
+- F4 (Haenger an der Plattform-Suedkante ohne Kanister): "Wenn er haengt muessen wir nachbessern denke ich. Er darf nicht zu lange haengen. Wenn es kurz ist, kann man mit
+  dem tauchen abhilfe schaffen, aber das hilft natuerlich nicht bei der Platform." -> **Vorgabe B**: der Haenger wird in der Verfolgung selbst beseitigt (auch ohne
+  Kanister), "nicht zu lange" in Zahlen (Messblatt B3: <= 450 Bilder ohne Fortschritt).
+Alles andere ohne Kanister bleibt NB5 (Memory reai-v2-gelobter-stand-ist-referenz); der Pruefhaken `re15_gator_boss_nb3_alt_setzen(1)` stellt den Stand a661eb8aa her.
+
+### Ursache (Messblatt NB3 Abschnitte 1.4 und 2.3, hier nachgemessen)
+- **B, Haenger:** `gb_seg_hits_rect` (enemy_ai_boss_gator.c) meldet "Punkt innen -> Schnitt", wenn der ENDPUNKT der Strecke (die Figur) im um GB_KOERPER_M 1800 aufgeblasenen
+  Block-Rechteck liegt - auch wenn sie im Wasser steht (Rampe x 50..9000 z -19900..-12700; Plattform x -3500..3650 z -21800..-10650). Der CHASE-Zweig "verbunden" lief
+  dann in Ring-/Westumlauf-Ecke (zw 5/6), `gb_kanten_umweg` in die "Schattenlage" (zw 11): Pendel im Kasten (3156..4879, -24085..-21690), Kopf 6830-10057 von der Figur.
+  Harness `nb3_haengt` (Stand a661eb8aa, Gegenprobe im Riegel nb3): W4200/-18800/c2 **3 Haenge-Fenster** in 3600 Bildern; exe (Messer-Laeufe, `haenglog`): rampe_leon 1
+  Fenster F2649, mit Kanister 2 Fenster + 2 x RUECKWAERTS, rampe_elza 1, wand_elza 1 (F4928).
+- **A, Rampe oben:** ohne Kanister quert er nur beim Seitenwechsel (Leons naehere Kante, gb_seite_latch) und belagert danach diese Kante; der Hochbiss reicht von der
+  Kantenlinie (Kante + GB_GPAT_M 1900, x >= 4450) 3900 weit: im Mittelband bei x < ~3400 nie. Harness `nb3_oben` (a661eb8aa): R2318/-16300 und R2800/-16300 **kein
+  Treffer in 3600 Bildern**, R3350/-16300 erster Treffer t1236; mit Kanister in der Suedreihe Pausen 697-959 Bilder (Belagerung der fernen Kante nach der Querung).
+
+### Was gebaut wurde (PORT-WAHL nach dem Nutzer-Wortlaut; RE2 kennt im Alligator-Raum keine erhoehte Flaeche, Messblatt Abschnitt 3; Code enemy_ai_boss_gator.c)
+**Vorgabe B (Verfolgung vor der Kante):**
+1. `gb_punkt_im_band(x,z)`: Punkt im Koerper-Band (GB_KOERPER_M 1800) vor einer Blockkante, nicht im Block. CHASE "verbunden": steht die Figur im Band und ist die
+   Strecke gegen den Block SELBST (m = 0) frei -> Ziel = die Figur, ohne Vorhalte (Zweig 7); `gb_kanten_umweg(..., direkt)` laesst diesen Zweig ohne Umweg durch
+   (die SCA-Klemme hit_radius_min 1466 haelt die Wurzel von der Kante). Sonst alles wie NB5 (Ring/Westumlauf, Dijkstra mit 1800).
+2. `gb_wand_dazwischen`: steht die Figur im Band und naeher an der Wurzel als der Maulpunkt (2600 voraus, k_gb_seg[0]), ist die Wand-Frage die Strecke Wurzel -> Figur
+   gegen den Block (ein Biss DURCH den Block bleibt unmoeglich). Gemessen (erster Bau ohne diese Regel, `bau/harness/patch1_haengt_leon_ohne.txt`): er stand still an der
+   Klemmlinie (W1000/-20700: Wurzel (1000,-21484), 784 vor der Figur, Maulpunkt hinter ihr im Block -> 104 s ohne Biss; W4073/W4200/W3000: 96 / 96 / 87 s) - ein Haenger,
+   den das RW-Mass (Kopf > 4500) nicht sieht. Mit der Regel: GBP_LUNGE zieht rueckwaerts, bis das Maul vor der Figur liegt (dort seit dem Biss-Sweep 2026-09-11), Treffer
+   bei Maul <= 1500 - W1000/-20700 337 Treffer, Pause max 456 Bilder.
+3. Unerreichbare Figur = belagern wie oben (`gb_pl_unerreichbar` -> player_on_platform / oben -> GBP_GUARD, Kantenziel): (a) Ostnische (`gb_pl_nische`: x > GB_RAMP_X1 im
+   Rampenband; die Figur kommt nur dort ueber x 7200 hinaus - exe wand_elza x 7668 bei z -17577..-14994): durch das Wasser unerreichbar (Wurzel klemmt an Ostwand
+   7200 - 1466 und Suedkante, der Maulpunkt laege im Rampenblock); die Querung der Vorgabe A ueberstreicht sie (Bahn-x bis 6500, Maul <= 1500 / Koerperkreis 1050 + 450
+   > 1168). (b) Figur IM Block-Rechteck auf Wasserhoehe (`gb_pl_im_block`): nur im Defektfall - exe wand_elza (NB3-Bau) F7920 Biss-Wegstoss aus der Taschen-Ecke
+   (2318,-18568) in den Pier (1382,-16749) -> (1382,-17036) (fuer die Figur nicht begehbar: `test_r41_gatorfix begehbar 2091`, Raster "weggeschoben"; beim Klettern
+   springen y und z im selben Bild, probe4 F82); dort pendelte NB5 an der SW-Ecke (2 Haenge-Fenster F8239/F8389, Kopf 9076-11182). In 7 Laeufen vor/nach NB3 sonst 0 Bilder.
+**Vorgabe A (oben nicht sicher):**
+4. Zaehler `oben_ohne` (gb_state_t): Bilder, die die Figur oben (Rampe/Plattform y < -900) oder unerreichbar steht, ohne Treffer (0 in gb_biss_abschluss und sobald
+   sie nicht mehr oben ist). Ab **GB_OBEN_OHNE 300** (= der NB5-Wert der Pause nach einer Querung mit der Figur oben, cross_cd 300 "Leon OBEN: 10 s auf der Seite
+   bleiben", GBP_CROSS) quert die Belagerung ueber die Figur hinweg (QUER-CROSS, Bahn-Ende folgt ihr, GBP_CROSS (b)) - fuer alle, mit und ohne Kanister (Vorschlag 4),
+   ohne die Kamera-Bedingung der NB2 (F1 "noe"), auch mitten in der Pause nach der letzten Querung; waehrend der Pause (cross_cd) belagert er die EIGENE Kante statt des
+   Westumlaufs zur fernen (Seite wie mit dem Kanister in NB2). Die alte Kanister-Regel (nur mit Kanister, nur von der Kamera weg) bleibt unter dem Pruefhaken.
+5. `gb_quer_trifft(cx0, von_sued, pl)`: die Zaehler-Querung startet erst, wenn die geplante Bahn die Figur RAMMT - Nachbildung der Bahn von gb_cross_begin / GBP_CROSS
+   Bild fuer Bild (Start-x geklemmt auf [4450..6500], Kante +- GB_BAHN_M, Ende-x = Figur-x geklemmt auf [3350..6500] bzw. im Rampen-Fenster (gb_seg_rect_span, Marge 300)
+   auf [2550..6500], Dauer len/32 in [90..240], Blick = Snap auf (cx1,cz1), Treffer = gb_koerper_kontakt wie das Rammen; das letzte Bild zaehlt nicht, GBP_CROSS endet
+   bei t >= cframes vor dem Rammen-Test). Gemessen (R2318/-16300, `bau/harness/patch4_spur2318_gator_boss.log` QUERPRUEF-Zeilen): vom Ost-Ende des Kanten-Pendels
+   (x 5625) lief die Bahn 1757 seitlich vorbei (kein Treffer in 240 Bildern, erst die zweite Querung ab dem Anlauf rammte bei t603); eine Vorpruefung mit dem Maulpunkt
+   <= 1500 ueber die vereinfachte Bahn hielt bei x 5230 einen Grenzfall (~1500, echte Bahn mit Ende-x 3350 vor dem Fenster und gb_maul_dist in 16er-Schritten verfehlt)
+   fuer einen Treffer (t682). Mit der Bahn selbst: Start bei x 5211 (Vorpruefung t 129), Rammen t450 an (3781,-16630).
+6. Der Anlauf der Zaehler-Querung laeuft ohne das Kanten-Pendel (+-1500): mit ihm stand das Ziel bis 90 Bilder 1500 oestlich des Anlaufs (t300 Zaehler, t378 Start).
+7. Rammen (GBP_CROSS, gb_koerper_kontakt, Schaden gb_biss_abschluss = DAT_8006f418[5] = 50 @0x8006f422 + Niederwurf) auch ohne Kanister, wenn die Figur OBEN steht
+   (gb_pl_oben); eine Figur im Wasser wird in der Verfolgungs-Querung wie in NB5 nur vom Maul getroffen (CROSS-Biss) - mit Kanister wie in Abnahme 4 auch im Wasser.
+8. (Patch 9, aus dem Querbezug unten) Der Zaehler `oben_ohne` laeuft nur in den Kampfphasen (`gb_phase_kampf`: CHASE / LUNGE / FLINCH / GUARD / CROSS_APPR /
+   CROSS / RE2_DASH), nicht im RE2-Intro (GBP_RE2_INTRO, Durchbruch -> Schnapper, ~300 Bilder ab dem Betreten), in der Lauerstellung oder nach dem Tod - dort kann er
+   die Figur oben nicht angreifen, "oben nicht sicher" meint die Belagerung. Gemessen am fremden exe-Riegel integration_r41_re2gator, Lauf "belagerung" (Figur ab F0 auf
+   der Rampe (6300,-16250), Intro bis F305): mit dem Zaehler im Intro quert er im 71. Bild der Belagerung (QUERPRUEF F305 t 1, CROSS F376, Rammen F377) VOR dem
+   ersten Hochbiss (alter Stand F417), die GIER-WACHE (300 Bildpaare CHASE/GUARD ohne Gier-Sprung) wird nie erreicht und der Finisher kommt F751 statt F627 (Riegel
+   rot: "keine 300 Bildpaare CHASE/GUARD"). Nur im Kampf gezaehlt laeuft die Belagerung wie im Stand a661eb8aa (Hochbiss F417 / F522 / F627 nullt den Zaehler).
+   Harness-Lagen (Gator ab t0 in CHASE/GUARD): SUMME-/ok-Zeilen bitgleich (`bau/riegel_nb3*.txt`); exe-Szenario Rampe oben: die erste Querung rueckt von F383
+   (= F83 + 300, Zaehler lief im Intro) auf unveraendert F383 - in der Rueckkehr-Lage des Szenarios ist der Gator vom ersten Bild an im Kampf (das RE2-Intro lief im ersten Besuch, F0-F282; der Zaehler laeuft ab dem Klettern F83); alle exe-Belege nach Patch 9 bitgleich zu den Laeufen davor (exe_final.txt, Auswertung verglichen) (Zaehler ab dem Intro-Ende). Alle exe-Belege unten sind mit der exe nach Patch 9 neu gelaufen (`final_runs2/`).
+**Abgrenzung (bitgleich NB5):** alle NB3-Zweige sind aus unter dem Pruefhaken nb3_alt UND unter v4_alt (Stand f942f56c0, Kanister als Koerper: dort lief die direkte
+Anfahrt mit der Kanister-Huelle in die Kopf-Klemme und endete rueckwaerts an der Westwand - Riegel fuzz P-mitte 92 2-s-Fenster ab t673 bei (-7416,-15904)). Die Band-Regel
+prueft die FIGUR, nicht das Steuerziel: der VORHALTE-Punkt (Figur vom Koerper geschoben, Vorhalte 20 Bilder) lag in der Westkanal-Lage (-6000,-16000) im Plattform-Band
+und wich mit der Zielpruefung von NB5 ab (Riegel gang, erster Bau: 1944 von 2700 Bildern; `bau/harness/gang_spur_lage3_1000_-22500.txt`).
+Keine neue Zahl ohne Quelle: 300 (NB5 cross_cd, PORT-WAHL "darf halt oben nicht sicher sein"), 1800 (GB_KOERPER_M), 2600 (Maulpunkt), 1500/1050+450/3350/2550/6500/
+4450/90..240 (bestehende Querungs- und Kontaktwerte), x > 7200 (GB_RAMP_X1, Nische). RE2-Vorbild (Messblatt Abschnitt 3): Angriffsausloeser ist die Korridorlage
+(@0x80100990-98 / @0x801009d8-e0), Treffer ohne Hoehen-/Abstandsbedingung im Overlay (@0x80101578 ff.), Rammen/Hochbiss sind PORT-WAHL.
+
+### Bauschritte mit Messung (Harness, Leon = Elza bitgleich; `bau/harness/`)
+| Schritt | Aenderung | A1 Rampe oben (18 Lagen, ohne Kanister) | B1 Wasser (11 Lagen) |
+|---|---|---|---|
+| a661eb8aa | - | 2 Lagen ohne Treffer, spaetester erster t1236, Pause max 1236 | Fenster 1-3 (W4073/W4200/W4428), Pause max 482 |
+| Patch 1 (Band-Regel, Zaehler 300, Rammen) | B1, A4, A7 | 0 ohne Treffer, erster t603 (R2318/-16300), Pause 604 | Fenster 0, aber Pause bis 3116 (W1000/-20700: still an der Klemmlinie, kein Biss) |
+| Patch 2 (Wand-Regel, Vorpruefung mit Maulpunkt) | B2, A5 vereinfacht | erster t682 (Grenzfall der Vorpruefung) | Fenster 0, Pause max 520, Treffer 287-350 |
+| Patch 3/4 (Bahn-Nachbildung, Anlauf ohne Pendel) | A5/A6 | erster t450, Pause 537 | unveraendert |
+| Patch 5 (Rammen nur Figur oben) | A7 | unveraendert | Rammen 0 (nur CROSS-Biss), Pause max 530 |
+| Patch 6/7 (Band-Regel an der Figur; aus unter v4_alt) | Abgrenzung | unveraendert | unveraendert |
+| Patch 8 (Figur im Block = belagern) | B3b | unveraendert | unveraendert (Harness-Lagen nie im Block) |
+| Patch 9 (Zaehler oben_ohne nur in Kampfphasen) | A8 | unveraendert (Gator ab t0 im Kampf) | unveraendert |
+
+### exe-Szenario Rampe oben (Riegel A2, rampe_oben / rampe_oben_elza) - warum die Eingabe des Messers nicht mehr traegt
+Mit der Eingabe des Messers (Schuesse bei F180-213 je Raum, Klettern bei F636) kommt die Figur im neuen Stand nicht mehr hinauf: der Alligator steht mit Vorgabe B ab
+~F100 an der Kante (erster Biss F122-125, `bau_runs/runs/ohne_oben_leon`: sub=9 0 Zeilen, Figur ab F180 an der Ostwand, danach durchs Becken geworfen). Das Skript
+startet je Raum neu, und das Zielen (M) dreht die Figur im Rueckkehr-Besuch per Auto-Aim auf den anrueckenden Alligator (rot 3072 -> 1699 / 1637, Probelaeufe 1/2); die
+ersten Bilder der Rueckkehr sind Szenen-Haltung (Cut 12, pst=1, Eingaben bis mindestens F9 verschluckt, Probelauf 3), und bei z -18800 greift der Klettertritt nicht
+(Kletterzellen z >= -18000, `kletterkarte 2090`; Probelauf 1). Eingabe jetzt `W1.6,U0.1,A0.2,W1.2,U1.2,W1.7,M0.6,MA0.1,M0.3,MA0.1,W170` mit RUECK_LAGE z -18750:
+Klettern F48-F82, Figur ab F83 oben, Gang auf die Rampe, Schuesse unveraendert bei F180 (Kanister-Szene im ersten Besuch wie bisher). Nach der ersten Querung
+(Rammen F383) holt der Alligator im RE2-Zielmodus (+0x1C0 & 4 @0x80100a34-5c) den geworfenen Kanister aus dem Nordwesten (angehaengt F1013; beim Messer lag das
+Anhaengen F625 VOR dem Klettern F636) - 856 Bilder Kanister-Szene, kein Haengen: `obenlog` zaehlt darum ab "KANISTER angehaengt F<n>" (wie traglog).
+
+### Riegel Soll | Ist (Messblatt Abschnitt 4; Harness `test_r41_gatorfix nb3 / nb3_elza`, exe `obenlog` / `haenglog`)
+| Riegel | Soll | Ist (Leon = Elza) | Beleg |
+|---|---|---|---|
+| A1 Harness Rampe oben, mit und ohne Kanister | je Lage erster Treffer <= 600 Bilder und laengste Pause ohne Treffer <= 600, Rammen >= 1 | 0 von 18 Lagen ohne Treffer; spaetester erster Treffer t450 (R2318/-16300); laengste Pause 537 B. = 17,9 s (R2318/-16300); Rammen 36; mit = ohne bitgleich | bau/harness/patch5_oben_*.txt, ctest nb3 |
+| A2 exe Rampe oben (rampe_oben / rampe_oben_elza, mit und ohne) | ab dem Anhaengen: erster Treffer oben <= 600, keine Pause > 600 | Leon ohne / mit: Klettern F48-F82, oben ab F83; Kanister angehaengt F1013 (RE2-Zielmodus, davor 930 Bilder oben, erste Querung mit Rammen F383 / CROSS-Biss F483 schon davor); ab dem Anhaengen erster Treffer nach 326 Bildern (Rammen F1339), laengste Pause 343, 18 Treffer oben (5 Rammen, 4 CROSS-Biss, 9 Hochbiss) - mit = ohne bitgleich; Elza ohne / mit: 324 (Rammen F1337) / 343 / 18, bitgleich. Alter Stand a661eb8aa mit derselben Eingabe (oben_leon_ohne_alt): Kanister F602, Figur 3799 Bilder oben (F602..F4400), 0 Treffer (Mittelband (4200,-15727), Hochbiss reicht nicht, keine Querung) | bau/exe_final.txt |
+| B1 Harness Suedkante, mit und ohne | Haenge-Fenster 0 in 11 Lagen | 0 (vor NB3 1-3) | bau/harness/patch5_haengt_*.txt |
+| B1b (PORT-WAHL, Schranke wie A1) | laengste Pause ohne Treffer in den Wasser-Lagen <= 600 | 530 B. (W2318/-18568/c2), mit Kanister 520; Treffer je Lage >= 287 | dto. |
+| B2 exe Suedkante (rampe, rampe_elza, abn2_wand_elza, mit und ohne) | Haenge-Fenster 0; mit Kanister 0 Zeilen HAENGT / RUECKWAERTS an / TAUCHEN an | rampe_leon ohne / mit, rampe_elza ohne (exe 029efac6, nach Patch 9; bitgleich zu den Laeufen mit der exe 5581916f vor Patch 9): Haenge-Fenster 0, ohne Fortschritt max 16 Bilder = 0,5 s, 31 Treffer, mit Kanister 0 Zeilen HAENGT / RUECKWAERTS an / TAUCHEN an (alter Stand: 1 / 2 (+2 RUECKWAERTS) / 1 Fenster F2649, haenglog auf den Messer-Laeufen und rampe_leon_ohne_alt); abn2_wand_elza ohne / mit: Fenster 0, ohne Fortschritt max 56 Bilder = 1,9 s, 71 Treffer, 0 Rueckfall-Zeilen (alter Stand 1 Fenster F4928; Bau vor Patch 8: 2 Fenster F8239/F8389 mit der Figur im Pier); Cut-2-Lage west4_leon (4200,-18800,3072,2): alt 1 Fenster F2367, neu 0, 31 Treffer | bau/exe_final.txt |
+| B3 ohne Fortschritt | <= 450 Bilder | Harness 327 B. = 10,9 s (W2318/-18568/c2, RE2-Zonen-Dash nach der Querung); exe rampe 16 Bilder, wand_elza 56, Cut-2-Lage 32 (alter Stand 229 / 191 / 134) | dto. |
+| B4 bitgleich ausserhalb | gang / v4 / re2 gruen | gang (Westkanal, NO-Ecke, SO-Ecke; alter Stand = rw_alt + nb3_alt) 0 von 2700 abweichend; v4 / re2 gruen | ctest |
+| Gegenproben a661eb8aa (Pruefhaken) | rot ohne den Bau | R2318/-16300 kein Treffer in 3600 Bildern; W4200/-18800/c2 3 Haenge-Fenster; Gang-Lagen (6732,0,-13687) 579/900 und (4428,-1800,-16300) 29/900 Bilder abweichend | ctest nb3 |
+
+### Bildleisten (RE15_FRAMEDUMP-Serien, F-genau; `G2_belege/nb3/bau/`)
+- `nb3_bau_oben_leon_F90-F1440.jpg` und `nb3_bau_oben_leon_F1590-F2520.jpg` (Spalten a661eb8aa ohne | neu ohne | neu mit Kanister, dieselbe Eingabe, Cut 2): F90 Leon oben an der Suedkante; F390 neu: Rammen F383 (der Alligator quert ueber ihn, Leon an der Kante geworfen), alt: Leon unbehelligt; F480 CROSS-Biss F483 (neu), alt: NB5-Querung ohne Treffer; F1020 Kanister geholt (neu: kein Alligator im Bild), alt: Alligator belagert; F1350 Leon liegt (Rammen F1339), F1440 Leon taumelt, Alligator hinter ihm (CROSS-Biss F1439; mit Kanister: Kanister am Kiefer); F1590 / F1890 / F2100 Hochbiss trifft (neu, Kopf ueber dem Deck), alt: Hochbiss-Versuche ohne Treffer, Leon steht; F2430 Rammen F2410 (Alligator auf dem Deck), F2520 CROSS-Biss. Alt: 0 Treffer in 3799 Bildern oben.
+- `nb3_bau_oben_elza_F90-F2430.jpg` (neu ohne | neu mit): F390 Rammen F383, F480 CROSS-Biss, F1350 Elza liegt (Rammen F1337), F1440 CROSS-Biss (Kanister am Kiefer), F1590 Hochbiss F1583, F2430 Rammen F2408.
+- `nb3_bau_suedkante_cut2_leon_F200-F2800.jpg` (Lage west4_leon (4200,-18800), Cut 2, ohne Kanister; a661eb8aa | neu): alt F600-F2350 Leon steht im Wasser an der Rampen-Suedkante, der Alligator pendelt mit dem Ruecken zur Kamera an der Plattform-SO-Ecke (Haenge-Fenster F2218-F2367, Kopf 4876 von der Figur); neu F200 direkte Anfahrt, F600 Leon geworfen, F1000 / F1500 Biss an Leon (Maul offen), F2250-F2350 Alligator an Leon, Leon liegt (31 Treffer, 0 Fenster). (Die Lage des exe-Riegels rampe (3000,-18800, Cut 0) zeigt beide nicht im Bild - darum die Cut-2-Lage.)
+
+### Querbezug: exe-Riegel integration_r41_re2gator, Lauf "kanister" (fremder Riegel, Spuren alligator2 / gatorszene)
+In der ctest-Gruppe der exe-Riegel (-j 2, `bau/ctest_exe_riegel_gruppe1.txt`) fiel `integration_r41_re2gator` im Lauf 4 "kanister" (Leon per Autopilot im Suedbecken
+(5500,-25500) -> (5500,-20500) -> (-1000,-21000) -> ..., Kanister liegend bei (-1500,-23400); Schranke "Kanister als Kind der Part-6-Weltmatrix >= 200 Bilder bei
+Abweichung 0" bis EXIT_AT 1500): "nur 30 angehaengte Bilder". Einzeln nachgefahren (`re2gator/ctest_einzeln1_rot.txt`): bitgleich - Zielmodus 1/0 F1129/1141,
+1252/1261, 1327/1336, 1427, Stufe 1 F1435 (quer 1040), angehaengt F1447 -, also kein Last-Flackern, sondern eine verschobene Zeitachse durch Vorgabe B: der
+Autopilot fuehrt Leon durch das Rampenband ((5600,-19698) F1115, 1598 vor der Kante z -18100), die Verfolgung faehrt ihn direkt an (Zweig 7; alter Stand:
+Westumlauf Zweig 6 mit Ziel (-4300,-22600)), und die Bahn des Gators liegt danach anders zum liegenden Kanister: dreimal laengs < 8880 ohne das Aufnahme-Fenster
+(quer > Koerper 1466 + 267; RE2 (b) @0x80100a74-b4 loescht das Zielbit), Aufnahme erst im vierten Vorbeilauf. Alter Stand a661eb8aa: erster Vorbeilauf F1215
+(quer -478), angehaengt F1227, 270 Bilder - in drei Laeufen vom 2026-11-06 bitgleich (`re2gator/kanister_zeitachse_alt_neu.txt`). Die Aufnahme selbst
+(RE2-Fenster, Part-6-Sitz, Abweichung 0) ist unveraendert, nur das Messfenster war fuer die neue Zeitachse zu kurz. Nachgezogen wie beim Querbezug Spur F (c)
+desselben Riegels: RE15_EXIT_AT 1500 -> 1700 (+200 = Verschiebung 220 auf die naechsten 100 gerundet), Schranken unveraendert, Kopfkommentar (f) in
+`re15_port/tests/integration/test_r41_re2gator.cmake`. Nachlauf 2 (`re2gator/ctest_einzeln2_fenster1700_rot_belagerung.txt`): Lauf kanister gruen (240 angehaengte Bilder, Abweichung
+0), dann Lauf 5 "belagerung" rot ("keine 300 Bildpaare CHASE/GUARD ohne Sprung/Befreiung") - Ursache der Zaehler im RE2-Intro, behoben mit Patch 9 (Punkt 8 oben;
+Belege `re2gator/belagerung_*`); danach Gruppe und Einzellauf gruen (Abschnitt Tests). Fuer den Riegel B4 "bitgleich ausserhalb" heisst das: die Figur im Band VOR
+der Kante ist innerhalb der Aenderung (Vorgabe B), auch wenn sie nur durchlaeuft; die Belagerung bis zum ersten Treffer ist es nicht (Patch 9).
+
+### Tests
+- `ctest -R "^unit_r41_gatorfix_" -j 2` (Engine nach Patch 9, `bau/ctest_unit_riegel.txt`): `100% tests passed, 0 tests failed out of 26`, `Total Test time (real) =  85.56 sec`
+  (nb3 33.75 s, nb3_elza 33.67 s, re2 21.06 s, re2_elza 21.09 s, v4 11.62 s, v4_elza 10.72 s, fuzz 11.99 s, fuzz_elza 11.63 s, gang 1.25 s, gang_elza 1.14 s, maul / marvin /
+  wurf / klemm / haken / montage / schluessel / re2_gegen je Leon + Elza). Vor Patch 9 (Engine 5581916f): `100% tests passed, 0 tests failed out of 26`, 67.73 s; die
+  SUMME-/ok-Zeilen von nb3 / nb3_elza sind fuer beide Engines bitgleich (`bau/riegel_nb3.txt`, `riegel_nb3_elza.txt`).
+- `ctest -R "^integration_r41_gatorfix_(rampe|rampe_elza|abn2_wand_elza|rampe_oben|rampe_oben_elza|frei|frei_elza)$|^integration_r41_re2gator" -j 2 --timeout 1800`,
+  Gruppe 2 (exe 029efac6 nach Patch 9, Fenster 1700; `bau/ctest_exe_riegel.txt`): `100% tests passed, 0 tests failed out of 8`, `Total Test time (real) = 2053.73 sec` -
+  abn2_wand_elza 707.59 s, frei_elza 718.20 s, rampe_oben_elza 420.71 s, frei 677.44 s, rampe_oben 391.05 s, rampe_elza 368.28 s, rampe 327.48 s, re2gator 300.36 s.
+  Gruppe 1 (exe 5581916f vor Patch 9, Fenster 1500; `bau/ctest_exe_riegel_gruppe1.txt`): `88% tests passed, 1 tests failed out of 8` - re2gator rot (126.20 s, Lauf
+  kanister 30 angehaengte Bilder), die sieben gatorfix-Riegel gruen (abn2_wand_elza 679.97 s, frei_elza 697.79 s, rampe_elza 362.76 s, frei 672.72 s, rampe 318.71 s,
+  rampe_oben 389.80 s, rampe_oben_elza 437.31 s).
+- `ctest -R "^integration_r41_re2gator$" --timeout 1800` einzeln (`re2gator/ctest_einzeln*.txt`): Lauf 1 (vor dem Fenster, exe 5581916f) `0% tests passed, 1 tests failed
+  out of 1`, 124.67 s - kanister 30 Bilder, bitgleich zur Gruppe; Lauf 2 (Fenster 1700, exe 5581916f) rot 202.43 s - kanister 240 Bilder gruen, belagerung "keine 300
+  Bildpaare CHASE/GUARD"; Lauf 3 (Fenster 1700, exe 029efac6 nach Patch 9): `100% tests passed, 0 tests failed out of 1`, `Total Test time (real) = 300.63 sec` (kanister angehaengt F1447, 240 Bilder, Abweichung 0; belagerung wie a661eb8aa: Hochbiss F417 / F522 / F627, GIER-WACHE bis F581 300 Bildpaare, Finisher F627; `re2gator/kanister_belagerung_zeitachse_gruen_einzeln3.txt`).
+
+### Offen
+1. **Spieler-Wegstoss in den Pier (Spieler-Kollision, nicht diese Spur):** exe wand_elza F7920 wirft der Biss-Wegstoss die an der Taschen-Ecke (2318,-18568)
+   festhaengende Figur in den Pier ((1382,-16749) -> (1382,-17036), fuer die Figur nicht begehbar, `begehbar 2091`); sie bleibt bis zum Laufende (488 Bilder)
+   darin. Der Alligator belagert sie dort jetzt (gb_pl_im_block) statt an der SW-Ecke zu pendeln; die Ursache (Wegstoss durch die konkave Ecke) liegt in der
+   Spieler-Kollision - Entscheid des Orchestrators, ob das eine eigene Spur wird.
+2. **exe-Szenario wand_elza degeneriert:** die blind gesteuerte Wand-Tour bleibt mit Vorgabe B ab F2400 in der Taschen-Ecke (2318,-18568) haengen (der Alligator greift
+   sie dort alle ~105 Bilder an, das Skript kommt nicht mehr heraus); NW-Ecke und Ostnische erreicht sie nicht mehr. Die Ostnischen-Regel (gb_pl_nische) ist darum
+   nur im Code und am Messer-Lauf (a661eb8aa, Figur x 7668 bei z -17577..-14994) belegt, nicht im neuen exe-Lauf.
+3. **Kanister-Zielmodus waehrend der Belagerung:** nach der ersten Querung holt der Alligator den geworfenen Kanister (RE2 @0x80100a34-5c; exe rampe_oben: F483..F1013,
+   856 Bilder ohne Angriff auf die Figur oben). Byte-true RE2, aber die Figur oben ist so lange "sicher"; obenlog zaehlt ab dem Anhaengen. Im Messer-Szenario lag das
+   Anhaengen (F625) vor dem Klettern (F636).
+4. **Takt (Rand der Schranke 600):** laengste Pause ohne Treffer oben 537 Bilder (R2318/-16300, Harness: Belagerung 300 ohne Hochbiss-Reichweite + Anlauf + Querung bis
+   zum Kontakt) und 530 in der Wasser-Lage W2318/-18568 (RE2-Zonen-Dash nach der Querung) - innerhalb der Schranke, aber nur 63 / 70 Bilder Rand.
+5. **Kopf vor der Kamera (F1 "noe"):** die Querung der Vorgabe A laeuft jetzt auch zur Kamera hin (mit und ohne Kanister gleich); Riegel re2 "mit nicht haeufiger als
+   ohne" bleibt gruen, die absoluten Werte stehen in der Ausgabe.
+6. **Fuzz-Mass:** die Ausnahme "Kopf an der Figur (< 2400)" fuer das 2-s-Fenster ist neu (Lage P-mitte = Wasserlage 468 vor der Pier-Westkante, Biss alle ~105 Bilder,
+   Stillstand zwischen den Bissen); ohne sie 92 Fenster.
+7. PSX-Bau nicht gemessen (plattformneutrale Pfade).
+8. **Querbezug fremder Riegel integration_r41_re2gator (Spuren alligator2 / gatorszene):** (a) Lauf kanister - Messfenster RE15_EXIT_AT 1500 -> 1700, weil die
+   Vorgabe-B-Anfahrt (Leon per Autopilot im Rampenband) die Kanister-Aufnahme von F1227 auf F1447 verschiebt; Aufnahme/Sitz unveraendert - Entscheid der
+   Spur-Eigner, ob das Fenster so bleibt. (b) Lauf belagerung - Patch 9 (Zaehler oben_ohne nur in Kampfphasen) stellt den alten Ablauf her; ohne ihn quert er
+   im 71. Bild der Belagerung VOR dem ersten Hochbiss. Der Nutzer hat diesen Takt ("300 Bilder Belagerung ohne Treffer, dann Querung") noch nicht gesehen.
+9. Runde 2 (Abnahme 5 / Nachbesserung) steht aus.

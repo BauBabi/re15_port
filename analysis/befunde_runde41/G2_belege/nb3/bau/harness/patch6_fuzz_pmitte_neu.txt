@@ -1,0 +1,365 @@
+== fuzz (Punkt 7, Nachbesserung 1) ==
+        W1 t61 STILL Gator (2303,-8969) Gier 2051 Clip 0 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17256
+        W1 t257 STILL Gator (-4871,-22600) Gier 2091 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 2757
+        W1 t371 STILL Gator (-3831,-20880) Gier 3891 Clip 10 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 10084
+        W1 t702 STILL Gator (-7382,-18283) Gier 721 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4127
+        W1 t840 STILL Gator (-3992,-22022) Gier 2803 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7348
+    neu   W1     : 900 Bilder, Stillstand  40 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        W2 t209 STILL Gator (-5205,-23398) Gier 183 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8504
+        W2 t239 STILL Gator (-4826,-23350) Gier 199 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 8868
+        W2 t255 STILL Gator (-4868,-23184) Gier 209 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8748
+        W2 t284 STILL Gator (-5033,-23043) Gier 209 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8504
+        W2 t314 STILL Gator (-4703,-23039) Gier 217 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 8808
+        W2 t359 STILL Gator (-4911,-22747) Gier 225 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8504
+        W2 t439 STILL Gator (-256,-23995) Gier 2311 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4857
+        W2 t557 STILL Gator (-4964,-23463) Gier 193 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8748
+        W2 t577 STILL Gator (-4865,-23433) Gier 289 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8984
+        W2 t606 STILL Gator (-4737,-23184) Gier 213 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 8868
+        W2 t614 STILL Gator (-4691,-23132) Gier 217 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8868
+        W2 t652 STILL Gator (-4959,-22861) Gier 219 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8504
+        W2 t682 STILL Gator (-4650,-22904) Gier 227 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 8808
+        W2 t727 STILL Gator (-4875,-22649) Gier 235 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8504
+        W2 t817 STILL Gator (339,-23600) Gier 2301 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 5246
+    neu   W2     : 900 Bilder, Stillstand 135 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        W3 t155 STILL Gator (-4913,-23084) Gier 299 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 12288
+        W3 t182 STILL Gator (-4999,-22948) Gier 233 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 11896
+        W3 t212 STILL Gator (-4699,-23008) Gier 239 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 12158
+        W3 t257 STILL Gator (-4933,-22781) Gier 239 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 11852
+        W3 t287 STILL Gator (-4636,-22859) Gier 247 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 12116
+        W3 t448 STILL Gator (-4906,-22858) Gier 237 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 11896
+        W3 t477 STILL Gator (-4636,-22907) Gier 245 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 12158
+        W3 t523 STILL Gator (-4886,-22674) Gier 245 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 11808
+        W3 t553 STILL Gator (-4597,-22772) Gier 249 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 12072
+        W3 t598 STILL Gator (-4824,-22531) Gier 255 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 11764
+        W3 t683 STILL Gator (445,-23851) Gier 2087 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 9768
+        W3 t801 STILL Gator (-4905,-23151) Gier 265 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 12244
+        W3 t829 STILL Gator (-5022,-22997) Gier 227 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 11896
+        W3 t859 STILL Gator (-4718,-23055) Gier 237 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 12202
+    neu   W3     : 900 Bilder, Stillstand 155 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        W4 t442 STILL Gator (-3594,-21116) Gier 2801 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7898
+        W4 t459 STILL Gator (-3635,-20932) Gier 2861 Clip 1 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 7747
+        W4 t579 STILL Gator (-4163,-10796) Gier 3103 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 5585
+        W4 t691 STILL Gator (-4722,-8953) Gier 693 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 6270
+        W4 t771 STILL Gator (-5202,-9548) Gier 413 Clip 4 Phase 3 Trag 3 Klemme 0 Kopf-Abstand 6869
+        W4 t816 STILL Gator (-4614,-10103) Gier 1201 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4910
+        W4 t833 STILL Gator (-4635,-9950) Gier 721 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 6734
+        W4 t877 STILL Gator (-4666,-10300) Gier 49 Clip 10 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 7931
+    neu   W4     : 900 Bilder, Stillstand  59 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        N1 t221 STILL Gator (-3864,-9128) Gier 1541 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 6228
+        N1 t403 STILL Gator (-3677,-20430) Gier 2795 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 10690
+        N1 t421 STILL Gator (-3747,-20287) Gier 2795 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 10542
+        N1 t561 STILL Gator (-3792,-8778) Gier 1435 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 6270
+        N1 t877 STILL Gator (-3945,-8513) Gier 2189 Clip 0 Phase 2 Trag 1 Klemme 0 Kopf-Abstand 2660
+    neu   N1     : 900 Bilder, Stillstand  34 (laengster  13), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        N2 t75 STILL Gator (742,-22417) Gier 1935 Clip 0 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17132
+        N2 t158 STILL Gator (-1150,-22716) Gier 1927 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17616
+        N2 t187 STILL Gator (-863,-22646) Gier 1925 Clip 0 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17616
+        N2 t282 STILL Gator (-1711,-24943) Gier 2295 Clip 0 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17616
+        N2 t377 STILL Gator (-3131,-23915) Gier 2977 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 13852
+        N2 t405 STILL Gator (-3103,-24171) Gier 2977 Clip 0 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 14114
+        N2 t443 FENSTER Gator (-3150,-23944) Gier 2979 Clip 0 Phase 2 Trag 4
+        N2 t444 FENSTER Gator (-3156,-23907) Gier 2979 Clip 0 Phase 2 Trag 4
+        N2 t445 FENSTER Gator (-3162,-23869) Gier 2979 Clip 0 Phase 2 Trag 4
+        N2 t623 STILL Gator (-2992,-9709) Gier 1717 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 6888
+    neu   N2     : 900 Bilder, Stillstand 158 (laengster  37), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   3
+        N3 t90 STILL Gator (-4179,-21083) Gier 3009 Clip 0 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 11896
+        N3 t174 STILL Gator (-4392,-19215) Gier 3011 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 10290
+        N3 t202 STILL Gator (-4383,-19471) Gier 3013 Clip 0 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 10492
+        N3 t410 STILL Gator (-567,-10073) Gier 2691 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 2952
+        N3 t815 STILL Gator (-56,-9782) Gier 1929 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 6228
+    neu   N3     : 900 Bilder, Stillstand 102 (laengster  37), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        N4 t66 STILL Gator (-2409,-23767) Gier 2143 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 19640
+        N4 t77 STILL Gator (-2762,-23730) Gier 2107 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 20064
+    neu   N4     : 900 Bilder, Stillstand   5 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        O1 t29 STILL Gator (-4975,-23223) Gier 31 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17132
+        O1 t247 STILL Gator (3176,-8840) Gier 1103 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 6415
+        O1 t358 STILL Gator (3456,-8827) Gier 1135 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 6333
+        O1 t476 STILL Gator (3456,-8827) Gier 1135 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 6333
+        O1 t594 STILL Gator (3456,-8827) Gier 1135 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 6333
+        O1 t685 STILL Gator (1682,-8404) Gier 885 Clip 0 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 6101
+    neu   O1     : 900 Bilder, Stillstand  93 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        O2 t75 STILL Gator (-1774,-23581) Gier 2287 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 15962
+        O2 t80 STILL Gator (-1679,-23615) Gier 2287 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 15896
+        O2 t86 STILL Gator (-2103,-23450) Gier 2285 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 16158
+        O2 t440 STILL Gator (-4616,-10746) Gier 4033 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 7312
+        O2 t818 STILL Gator (-4433,-10688) Gier 4035 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 7149
+    neu   O2     : 900 Bilder, Stillstand  10 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        O3 t118 STILL Gator (-4829,-23083) Gier 80 Clip 10 Phase 2 Trag 1 Klemme 0 Kopf-Abstand 7798
+        O3 t137 STILL Gator (-4717,-23062) Gier 4063 Clip 1 Phase 2 Trag 1 Klemme 0 Kopf-Abstand 7454
+        O3 t268 STILL Gator (-4187,-22899) Gier 4073 Clip 1 Phase 2 Trag 1 Klemme 0 Kopf-Abstand 6907
+        O3 t284 STILL Gator (-4501,-22891) Gier 4075 Clip 10 Phase 2 Trag 1 Klemme 0 Kopf-Abstand 7204
+        O3 t306 STILL Gator (-4477,-22873) Gier 4075 Clip 1 Phase 2 Trag 1 Klemme 0 Kopf-Abstand 7186
+        O3 t345 STILL Gator (-3596,-22300) Gier 1007 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 11538
+        O3 t568 STILL Gator (-1826,-23751) Gier 2603 Clip 10 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 11264
+        O3 t575 STILL Gator (-2117,-23417) Gier 2603 Clip 1 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 11584
+        O3 t825 STILL Gator (-2218,-24245) Gier 2679 Clip 10 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 11264
+        O3 t833 STILL Gator (-2101,-24415) Gier 2679 Clip 10 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 11170
+        O3 t841 STILL Gator (-2341,-24067) Gier 2679 Clip 1 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 11402
+    neu   O3     : 900 Bilder, Stillstand  25 (laengster   5), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        O4 t206 STILL Gator (-3993,-21331) Gier 239 Clip 1 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 7094
+        O4 t229 STILL Gator (-3904,-21288) Gier 239 Clip 1 Phase 2 Trag 2 Klemme 1 Kopf-Abstand 7038
+        O4 t240 STILL Gator (-3719,-21586) Gier 435 Clip 1 Phase 2 Trag 2 Klemme 1 Kopf-Abstand 7168
+        O4 t276 STILL Gator (-4349,-21404) Gier 217 Clip 1 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 7419
+        O4 t306 STILL Gator (-4010,-21410) Gier 233 Clip 1 Phase 2 Trag 2 Klemme 1 Kopf-Abstand 7094
+        O4 t351 STILL Gator (-4280,-21257) Gier 239 Clip 1 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 7401
+        O4 t435 STILL Gator (1277,-23428) Gier 2327 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 9768
+        O4 t645 STILL Gator (-2681,-23080) Gier 2521 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 13350
+        O4 t658 STILL Gator (-2908,-22880) Gier 2521 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 13622
+        O4 t777 STILL Gator (-4091,-21286) Gier 237 Clip 1 Phase 2 Trag 2 Klemme 0 Kopf-Abstand 7204
+        O4 t800 STILL Gator (-3897,-21270) Gier 243 Clip 1 Phase 2 Trag 2 Klemme 1 Kopf-Abstand 7038
+        O4 t815 FENSTER Gator (-3984,-21270) Gier 243 Clip 1 Phase 2 Trag 2
+        O4 t816 FENSTER Gator (-3984,-21270) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t817 FENSTER Gator (-4017,-21257) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t818 FENSTER Gator (-4050,-21244) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t819 FENSTER Gator (-4081,-21232) Gier 239 Clip 10 Phase 2 Trag 2
+    neu   O4     : 900 Bilder, Stillstand 119 (laengster  23), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt   5
+        S1 t276 STILL Gator (-5259,-23401) Gier 3379 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7330
+        S1 t571 STILL Gator (-5247,-23505) Gier 3377 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7240
+        S1 t842 STILL Gator (-5247,-23410) Gier 3377 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7312
+    neu   S1     : 900 Bilder, Stillstand   7 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        S2 t537 STILL Gator (-3992,-21540) Gier 267 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 4344
+        S2 t599 STILL Gator (-4303,-21333) Gier 315 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4015
+        S2 t629 STILL Gator (-4052,-21507) Gier 273 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 4283
+        S2 t674 STILL Gator (-4296,-21314) Gier 315 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4039
+        S2 t704 STILL Gator (-4047,-21496) Gier 273 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 4314
+        S2 t749 STILL Gator (-4293,-21303) Gier 317 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4031
+        S2 t779 STILL Gator (-4042,-21483) Gier 275 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 4314
+        S2 t824 STILL Gator (-4288,-21293) Gier 317 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4047
+    neu   S2     : 900 Bilder, Stillstand 137 (laengster  38), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        S3 t321 STILL Gator (-3366,-19504) Gier 1295 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 5948
+        S3 t805 STILL Gator (-378,-21484) Gier 1567 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 4096
+        S3 t824 STILL Gator (-502,-21749) Gier 1609 Clip 1 Phase 2 Trag 1 Klemme 0 Kopf-Abstand 4344
+    neu   S3     : 900 Bilder, Stillstand   6 (laengster   4), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        S4 t30 STILL Gator (-5002,-9824) Gier 265 Clip 0 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 15562
+        S4 t578 STILL Gator (1827,-22398) Gier 1375 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 3357
+        S4 t830 STILL Gator (2281,-22189) Gier 2321 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 7542
+    neu   S4     : 900 Bilder, Stillstand  18 (laengster   7), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        NW t40 STILL Gator (3644,-22573) Gier 3269 Clip 10 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 18316
+        NW t131 STILL Gator (109,-23148) Gier 1881 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 18768
+        NW t150 STILL Gator (-22,-23129) Gier 2005 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17968
+        NW t194 STILL Gator (-307,-22729) Gier 1949 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17852
+        NW t225 STILL Gator (-77,-22627) Gier 1941 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17852
+        NW t255 STILL Gator (-387,-22526) Gier 1925 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 17736
+        NW t270 STILL Gator (-339,-22355) Gier 1899 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17736
+        NW t300 STILL Gator (-155,-22229) Gier 1889 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17736
+        NW t506 STILL Gator (-3823,-11790) Gier 1933 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 6616
+        NW t646 STILL Gator (-398,-21637) Gier 1777 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17852
+        NW t675 STILL Gator (-586,-21840) Gier 1829 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 17736
+        NW t721 STILL Gator (-352,-21641) Gier 1811 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17616
+        NW t751 STILL Gator (-573,-21829) Gier 1829 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 17616
+        NW t796 STILL Gator (-352,-21639) Gier 1797 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 17736
+        NW t826 STILL Gator (-572,-21832) Gier 1829 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 17616
+    neu   NW     : 900 Bilder, Stillstand 131 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        NO t438 STILL Gator (-507,-22045) Gier 1857 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 20580
+        NO t442 STILL Gator (-524,-22040) Gier 1855 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 20580
+        NO t483 STILL Gator (-275,-21839) Gier 1843 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 20376
+        NO t512 STILL Gator (-546,-21960) Gier 1845 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 20580
+        NO t558 STILL Gator (-303,-21762) Gier 1833 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 20376
+        NO t588 STILL Gator (-548,-21911) Gier 1839 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 20580
+    neu   NO     : 900 Bilder, Stillstand  60 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        SO t36 STILL Gator (-4924,-10162) Gier 1045 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 16888
+        SO t43 STILL Gator (-4942,-10595) Gier 1045 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 16508
+        SO t275 STILL Gator (2325,-23900) Gier 2293 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 9216
+    neu   SO     : 900 Bilder, Stillstand   5 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        SW t280 STILL Gator (-667,-22073) Gier 1257 Clip 1 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 6270
+        SW t297 STILL Gator (-1055,-22449) Gier 585 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 9980
+    neu   SW     : 900 Bilder, Stillstand   9 (laengster   5), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-mitte t86 STILL Gator (-6951,-18032) Gier 3761 Clip 0 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 3288
+        P-mitte t107 STILL Gator (-6709,-17755) Gier 3777 Clip 1 Phase 2 Trag 0 Klemme 1 Kopf-Abstand 3007
+        P-mitte t138 STILL Gator (-7283,-17899) Gier 591 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7001
+        P-mitte t195 STILL Gator (-3184,-20175) Gier 143 Clip 4 Phase 3 Trag 4 Klemme 0 Kopf-Abstand 5145
+        P-mitte t228 STILL Gator (-3184,-20491) Gier 447 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 7149
+        P-mitte t322 STILL Gator (-3184,-20083) Gier 4047 Clip 4 Phase 3 Trag 4 Klemme 1 Kopf-Abstand 3899
+        P-mitte t427 STILL Gator (-7181,-17530) Gier 3851 Clip 0 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 3268
+        P-mitte t456 STILL Gator (-6952,-17346) Gier 3861 Clip 1 Phase 2 Trag 0 Klemme 1 Kopf-Abstand 3018
+        P-mitte t486 STILL Gator (-7422,-17232) Gier 649 Clip 10 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7001
+        P-mitte t642 STILL Gator (-7418,-15914) Gier 13 Clip 0 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 3217
+        P-mitte t673 FENSTER Gator (-7416,-15904) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t674 FENSTER Gator (-7416,-15903) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t675 FENSTER Gator (-7416,-15902) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t676 FENSTER Gator (-7416,-15901) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t677 FENSTER Gator (-7416,-15900) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t678 FENSTER Gator (-7416,-15899) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t679 FENSTER Gator (-7416,-15898) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t680 FENSTER Gator (-7416,-15897) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t681 FENSTER Gator (-7416,-15896) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t682 FENSTER Gator (-7416,-15895) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t683 FENSTER Gator (-7416,-15894) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t684 FENSTER Gator (-7416,-15893) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t685 FENSTER Gator (-7416,-15892) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t686 FENSTER Gator (-7416,-15891) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t687 FENSTER Gator (-7416,-15890) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t688 FENSTER Gator (-7429,-15889) Gier 19 Clip 10 Phase 2 Trag 0
+        P-mitte t689 FENSTER Gator (-7431,-15888) Gier 19 Clip 10 Phase 2 Trag 0
+        P-mitte t690 FENSTER Gator (-7428,-15888) Gier 19 Clip 10 Phase 2 Trag 0
+        P-mitte t691 FENSTER Gator (-7432,-15888) Gier 19 Clip 10 Phase 2 Trag 0
+        P-mitte t692 FENSTER Gator (-7416,-15888) Gier 19 Clip 10 Phase 2 Trag 0
+        P-mitte t693 FENSTER Gator (-7416,-15888) Gier 19 Clip 1 Phase 2 Trag 0
+        P-mitte t694 FENSTER Gator (-7416,-15888) Gier 19 Clip 1 Phase 2 Trag 0
+        P-mitte t695 FENSTER Gator (-7416,-15888) Gier 19 Clip 1 Phase 2 Trag 0
+        P-mitte t696 FENSTER Gator (-7416,-15888) Gier 19 Clip 1 Phase 2 Trag 0
+        P-mitte t697 FENSTER Gator (-7416,-15888) Gier 19 Clip 1 Phase 2 Trag 0
+        P-mitte t698 FENSTER Gator (-7317,-15893) Gier 19 Clip 1 Phase 2 Trag 0
+        P-mitte t699 FENSTER Gator (-7327,-15893) Gier 19 Clip 1 Phase 2 Trag 0
+        P-mitte t700 FENSTER Gator (-7342,-15893) Gier 19 Clip 1 Phase 2 Trag 0
+        P-mitte t701 FENSTER Gator (-7356,-15893) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t701 STILL Gator (-7356,-15893) Gier 17 Clip 1 Phase 2 Trag 0 Klemme 1 Kopf-Abstand 3156
+        P-mitte t702 FENSTER Gator (-7364,-15893) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t703 FENSTER Gator (-7366,-15895) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t704 FENSTER Gator (-7363,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t705 FENSTER Gator (-7364,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t706 FENSTER Gator (-7364,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t707 FENSTER Gator (-7364,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t708 FENSTER Gator (-7364,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t709 FENSTER Gator (-7364,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t710 FENSTER Gator (-7380,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t711 FENSTER Gator (-7405,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t712 FENSTER Gator (-7418,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t713 FENSTER Gator (-7418,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t714 FENSTER Gator (-7418,-15897) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t715 FENSTER Gator (-7400,-15899) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t716 FENSTER Gator (-7377,-15900) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t717 FENSTER Gator (-7364,-15901) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t718 FENSTER Gator (-7363,-15901) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t719 FENSTER Gator (-7363,-15901) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t720 FENSTER Gator (-7416,-15901) Gier 17 Clip 4 Phase 3 Trag 0
+        P-mitte t721 FENSTER Gator (-7416,-15902) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t722 FENSTER Gator (-7408,-15903) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t723 FENSTER Gator (-7345,-15904) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t724 FENSTER Gator (-7282,-15905) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t725 FENSTER Gator (-7259,-15906) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t726 FENSTER Gator (-7238,-15907) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t727 FENSTER Gator (-7208,-15908) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t728 FENSTER Gator (-7184,-15909) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t729 FENSTER Gator (-7164,-15910) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t730 FENSTER Gator (-7145,-15911) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t731 FENSTER Gator (-7125,-15912) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t748 STILL Gator (-7108,-15924) Gier 11 Clip 4 Phase 3 Trag 0 Klemme 1 Kopf-Abstand 2907
+        P-mitte t762 STILL Gator (-7416,-15924) Gier 9 Clip 4 Phase 3 Trag 0 Klemme 1 Kopf-Abstand 3207
+        P-mitte t777 STILL Gator (-7369,-15926) Gier 11 Clip 1 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 3166
+        P-mitte t790 FENSTER Gator (-7416,-15917) Gier 13 Clip 10 Phase 2 Trag 0
+        P-mitte t794 FENSTER Gator (-7416,-15913) Gier 13 Clip 10 Phase 2 Trag 0
+        P-mitte t800 FENSTER Gator (-7416,-15907) Gier 13 Clip 10 Phase 2 Trag 0
+        P-mitte t809 FENSTER Gator (-7432,-15900) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t810 FENSTER Gator (-7416,-15900) Gier 17 Clip 10 Phase 2 Trag 0
+        P-mitte t811 FENSTER Gator (-7416,-15900) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t812 FENSTER Gator (-7416,-15900) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t813 FENSTER Gator (-7416,-15900) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t814 FENSTER Gator (-7416,-15900) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t815 FENSTER Gator (-7416,-15900) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t816 FENSTER Gator (-7317,-15904) Gier 17 Clip 1 Phase 2 Trag 0
+        P-mitte t817 FENSTER Gator (-7416,-15908) Gier 17 Clip 4 Phase 3 Trag 0
+        P-mitte t818 FENSTER Gator (-7416,-15909) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t819 FENSTER Gator (-7408,-15910) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t820 FENSTER Gator (-7345,-15911) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t821 FENSTER Gator (-7282,-15912) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t822 FENSTER Gator (-7259,-15913) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t823 FENSTER Gator (-7238,-15914) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t824 FENSTER Gator (-7208,-15915) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t825 FENSTER Gator (-7184,-15916) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t826 FENSTER Gator (-7164,-15917) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t827 FENSTER Gator (-7145,-15918) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t828 FENSTER Gator (-7125,-15919) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t829 FENSTER Gator (-7113,-15920) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t830 FENSTER Gator (-7120,-15921) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t830 STILL Gator (-7120,-15921) Gier 11 Clip 4 Phase 3 Trag 0 Klemme 1 Kopf-Abstand 2918
+        P-mitte t831 FENSTER Gator (-7138,-15922) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t832 FENSTER Gator (-7189,-15922) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t833 FENSTER Gator (-7236,-15922) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t834 FENSTER Gator (-7266,-15923) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t835 FENSTER Gator (-7270,-15923) Gier 9 Clip 4 Phase 3 Trag 0
+        P-mitte t836 FENSTER Gator (-7216,-15923) Gier 9 Clip 4 Phase 3 Trag 0
+        P-mitte t837 FENSTER Gator (-7153,-15924) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t838 FENSTER Gator (-7090,-15925) Gier 11 Clip 4 Phase 3 Trag 0
+        P-mitte t845 STILL Gator (-7113,-15929) Gier 9 Clip 4 Phase 3 Trag 0 Klemme 1 Kopf-Abstand 2907
+        P-mitte t859 STILL Gator (-7416,-15929) Gier 9 Clip 4 Phase 3 Trag 0 Klemme 1 Kopf-Abstand 3207
+        P-mitte t874 STILL Gator (-7369,-15931) Gier 11 Clip 1 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 3166
+    neu   P-mitte: 900 Bilder, Stillstand 288 (laengster  99), Wandreiben laengstes  15, 2-s-Fenster ohne Fortschritt  92
+        P-mitte: Kopf-Abstand im Mittel 4004, Gator im Bild der Spielerkamera (Cut 2) 0 %
+        P-west t231 STILL Gator (-7234,-14768) Gier 3801 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 3683
+        P-west t247 STILL Gator (-7338,-14555) Gier 4041 Clip 1 Phase 2 Trag 0 Klemme 1 Kopf-Abstand 2495
+        P-west t353 STILL Gator (-7255,-15076) Gier 3933 Clip 1 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 2648
+        P-west t758 STILL Gator (-7234,-14758) Gier 3801 Clip 1 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 3692
+        P-west t774 STILL Gator (-7338,-14545) Gier 4041 Clip 1 Phase 2 Trag 0 Klemme 1 Kopf-Abstand 2508
+    neu   P-west : 900 Bilder, Stillstand   7 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-west: Kopf-Abstand im Mittel 2656, Gator im Bild der Spielerkamera (Cut 2) 11 %
+        P-nord t88 STILL Gator (-4640,-16273) Gier 2885 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5837
+        P-nord t107 STILL Gator (-4650,-16142) Gier 3013 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5068
+        P-nord t136 STILL Gator (-4629,-15902) Gier 3007 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5145
+        P-nord t182 STILL Gator (-4516,-16164) Gier 3001 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5016
+        P-nord t211 STILL Gator (-4513,-15884) Gier 2997 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5094
+        P-nord t257 STILL Gator (-4391,-16146) Gier 2991 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 4964
+        P-nord t355 STILL Gator (-4899,-10262) Gier 807 Clip 1 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 3805
+        P-nord t544 STILL Gator (-4862,-16280) Gier 2873 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 6122
+        P-nord t563 STILL Gator (-4865,-16149) Gier 3033 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5170
+        P-nord t592 STILL Gator (-4794,-15926) Gier 3023 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5196
+        P-nord t638 STILL Gator (-4636,-16181) Gier 3011 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5068
+        P-nord t667 STILL Gator (-4627,-15902) Gier 3007 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5145
+        P-nord t713 STILL Gator (-4513,-16164) Gier 3001 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5016
+        P-nord t809 STILL Gator (-4915,-10282) Gier 891 Clip 1 Phase 2 Trag 0 Klemme 0 Kopf-Abstand 4344
+    neu   P-nord : 900 Bilder, Stillstand 151 (laengster  24), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-nord: Kopf-Abstand im Mittel 6052, Gator im Bild der Spielerkamera (Cut 3) 9 %
+        P-sued t75 STILL Gator (-4939,-16103) Gier 1055 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5170
+        P-sued t94 STILL Gator (-4953,-16215) Gier 1055 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5196
+        P-sued t124 STILL Gator (-4836,-16522) Gier 1067 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 5196
+        P-sued t169 STILL Gator (-4766,-16217) Gier 1073 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5120
+        P-sued t199 STILL Gator (-4710,-16534) Gier 1079 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 5145
+        P-sued t244 STILL Gator (-4656,-16230) Gier 1083 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5068
+        P-sued t545 STILL Gator (-5585,-16080) Gier 1024 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5608
+        P-sued t564 STILL Gator (-5587,-16192) Gier 999 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5466
+        P-sued t639 STILL Gator (-4777,-16217) Gier 1069 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5094
+        P-sued t669 STILL Gator (-4719,-16533) Gier 1079 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 5170
+        P-sued t714 STILL Gator (-4647,-16231) Gier 1083 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5068
+        P-sued t883 STILL Gator (-6223,-20122) Gier 321 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 3481
+    neu   P-sued : 900 Bilder, Stillstand 115 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        P-sued: Kopf-Abstand im Mittel 5288, Gator im Bild der Spielerkamera (Cut 2) 7 %
+        Rampe t434 STILL Gator (2325,-8563) Gier 909 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 3873
+        Rampe t578 STILL Gator (2877,-8564) Gier 935 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 3727
+        Rampe t717 STILL Gator (3269,-8564) Gier 955 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 3647
+        Rampe t853 STILL Gator (3556,-8564) Gier 971 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 3602
+    neu   Rampe  : 900 Bilder, Stillstand  32 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        Rampe: Kopf-Abstand im Mittel 2888, Gator im Bild der Spielerkamera (Cut 2) 100 %
+        Leiter t362 STILL Gator (-7418,-18221) Gier 717 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4463
+        Leiter t439 STILL Gator (-6701,-20014) Gier 887 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 2757
+        Leiter t523 STILL Gator (-6183,-22143) Gier 609 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 4492
+        Leiter t541 STILL Gator (-6321,-22095) Gier 3889 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7542
+        Leiter t615 STILL Gator (-4543,-22157) Gier 3907 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 8926
+        Leiter t719 STILL Gator (-3883,-22048) Gier 2805 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 7815
+        Leiter t779 STILL Gator (-4318,-20452) Gier 3269 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 10442
+        Leiter t864 STILL Gator (-4407,-18685) Gier 3351 Clip 0 Phase 2 Trag 3 Klemme 0 Kopf-Abstand 12028
+    neu   Leiter : 900 Bilder, Stillstand 124 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        Leiter: Kopf-Abstand im Mittel 8337, Gator im Bild der Spielerkamera (Cut 0) 100 %
+        A2-Leiterecke t499 STILL Gator (-3674,-20030) Gier 257 Clip 10 Phase 2 Trag 3 Klemme 1 Kopf-Abstand 9874
+    neu   A2-Leiterecke: 900 Bilder, Stillstand   1 (laengster   1), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NW-Ecke: 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        A2-Ostnische t109 STILL Gator (1595,-8016) Gier 583 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 6036
+        A2-Ostnische t156 STILL Gator (1395,-8883) Gier 171 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 6656
+        A2-Ostnische t184 STILL Gator (1233,-8845) Gier 4053 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 7997
+        A2-Ostnische t238 STILL Gator (2441,-8898) Gier 2433 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 13032
+        A2-Ostnische t262 STILL Gator (3109,-9644) Gier 3009 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 11852
+        A2-Ostnische t415 STILL Gator (1621,-8794) Gier 4057 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 7915
+        A2-Ostnische t444 STILL Gator (1794,-8799) Gier 553 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5296
+        A2-Ostnische t477 STILL Gator (2000,-9201) Gier 585 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 4830
+        A2-Ostnische t484 STILL Gator (1576,-8938) Gier 457 Clip 10 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 5418
+        A2-Ostnische t516 STILL Gator (1579,-8581) Gier 121 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 7168
+        A2-Ostnische t523 STILL Gator (1605,-8713) Gier 409 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 5724
+        A2-Ostnische t617 STILL Gator (243,-9785) Gier 3963 Clip 1 Phase 2 Trag 4 Klemme 0 Kopf-Abstand 8030
+        A2-Ostnische t887 STILL Gator (3041,-8880) Gier 1091 Clip 1 Phase 2 Trag 4 Klemme 1 Kopf-Abstand 5970
+    neu   A2-Ostnische: 900 Bilder, Stillstand  46 (laengster   7), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NO-Ecke: 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        A2-RampeWest t195 STILL Gator (1326,-8518) Gier 909 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 4039
+        A2-RampeWest t358 STILL Gator (1941,-8563) Gier 945 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 3949
+        A2-RampeWest t521 STILL Gator (2369,-8564) Gier 969 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 3949
+        A2-RampeWest t687 STILL Gator (2675,-8564) Gier 985 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 3974
+        A2-RampeWest t855 STILL Gator (2888,-8564) Gier 999 Clip 0 Phase 7 Trag 4 Klemme 0 Kopf-Abstand 3990
+    neu   A2-RampeWest: 900 Bilder, Stillstand  40 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        A2-RampeWest: Kopf-Abstand im Mittel 3158, Gator im Bild der Spielerkamera (Cut 2) 100 %
+    neu  : 27900 Bilder, Stillstand 2112 (7 %), laengster Stillstand 99, laengstes Wandreiben 15 (P-mitte)
+    vor G2: 0 Bilder, Stillstand 0 (0 %), laengster Stillstand 0, laengstes Wandreiben 0 (-)
+    G2 v1: 0 Bilder, Stillstand 0 (0 %), laengster Stillstand 0, laengstes Wandreiben 0 (-)
+  ok: Fuzz gelaufen (27900 Bilder mit Kanister)
+  ok: kein Wandreiben > 1 s mit dem Kanister (laengstes 15 Bilder bei P-mitte)
+    Etappen ohne Annaeherung (abgebrochen): 8
+  ok: NB3/NB4: Figur oben/an der Leiter - mittlerer Kopf-Abstand der Patrouille hoechstens 8337 (<= 9000: naechster Mittelpunkt im sichtbaren Wasser bis 8930 von der Figur; im Bild misst der Riegel kamera; Bildanteil hier nur berichtet: 0 %)
+  FEHLER: NB2 (M5)/G2-RE2: hoechstens 10 Zeitfenster von 2 s (60 Bilder), in denen die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (100 Fenster; laengste 30-Bilder-Folge 99)
+fuzz: 1 Fehler

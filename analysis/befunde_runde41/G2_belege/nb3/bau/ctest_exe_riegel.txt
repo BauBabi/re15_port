@@ -1,0 +1,23 @@
+# ctest -R "^integration_r41_gatorfix_(rampe|rampe_elza|abn2_wand_elza|rampe_oben|rampe_oben_elza|frei|frei_elza)$|^integration_r41_re2gator" -j 2 --timeout 1800  (Gruppe 2: exe nach Patch 9, md5 029efac6; test_r41_re2gator.cmake EXIT_AT 1700) 2026-11-07 01:25:13
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build
+    Start 1184: integration_r41_gatorfix_abn2_wand_elza
+    Start 1180: integration_r41_gatorfix_frei_elza
+1/8 Test #1184: integration_r41_gatorfix_abn2_wand_elza ....   Passed  707.59 sec
+    Start 1179: integration_r41_gatorfix_frei
+2/8 Test #1180: integration_r41_gatorfix_frei_elza .........   Passed  718.20 sec
+    Start 1191: integration_r41_gatorfix_rampe_oben_elza
+3/8 Test #1191: integration_r41_gatorfix_rampe_oben_elza ...   Passed  420.71 sec
+    Start 1190: integration_r41_gatorfix_rampe_oben
+4/8 Test #1179: integration_r41_gatorfix_frei ..............   Passed  677.44 sec
+    Start 1182: integration_r41_gatorfix_rampe_elza
+5/8 Test #1190: integration_r41_gatorfix_rampe_oben ........   Passed  391.05 sec
+    Start 1181: integration_r41_gatorfix_rampe
+6/8 Test #1182: integration_r41_gatorfix_rampe_elza ........   Passed  368.28 sec
+    Start 1346: integration_r41_re2gator
+7/8 Test #1181: integration_r41_gatorfix_rampe .............   Passed  327.48 sec
+8/8 Test #1346: integration_r41_re2gator ...................   Passed  300.36 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Total Test time (real) = 2053.73 sec
+ENDE 01:59:27

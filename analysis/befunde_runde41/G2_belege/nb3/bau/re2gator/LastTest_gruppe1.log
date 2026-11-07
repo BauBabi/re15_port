@@ -1,0 +1,153 @@
+Start testing: Nov 07 00:06 Mitteleuropäische Zeit
+----------------------------------------------------------
+1184/1450 Testing: integration_r41_gatorfix_abn2_wand_elza
+1184/1450 Test: integration_r41_gatorfix_abn2_wand_elza
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe" "-DRE15_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_elza_wd" "-DTEIL=abn2_wand_elza" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake"
+Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit
+"integration_r41_gatorfix_abn2_wand_elza" start time: Nov 07 00:06 Mitteleuropäische Zeit
+Output:
+----------------------------------------------------------
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_gatorfix abn2_wand_elza: traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F164 (121 Bilder = 4.0 s), 8237 Trag-Bilder: ohne Fortschritt 4471 (54 %), davon keine Ausnahme ausser Biss am Spieler (2920 Bilder), laengste Folge ohne Fortschritt 119 Bilder (bis F488), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 282 (erstes F370); Figur oben 84 Bilder, Kopf-Abstand mittel 3847, Gator im Bild der Spielerkamera 100 %; 2-s-Fenster fern der Figur 0 (erstes F-1); tragvergleich: 8211 Bilder mit Kanister, 8211 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1, erster Rueckfall F-1); Kanister-Sitz 8220 Bilder, Abweichung max 0; ohne Kanister: 2-s-Fenster fern der Figur 0; NB3 mit Kanister: haenglog: 8211 TRAG-Bilder F190..F8400; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 56 Bilder = 1.9 s (bis F1340); Treffer 71; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0 (mit Kanister: je 0 verlangt); Phasen 2:4530 3:3010 5:49 7:240 12:382 -> ok (Fenster 0, ohne Fortschritt <= 450); ohne Kanister: haenglog: 8211 TRAG-Bilder F190..F8400; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 56 Bilder = 1.9 s (bis F1340); Treffer 71; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:4530 3:3010 5:49 7:240 12:382 -> ok (Fenster 0, ohne Fortschritt <= 450)
+<end of output>
+Test time = 679.97 sec
+----------------------------------------------------------
+Test Passed.
+"integration_r41_gatorfix_abn2_wand_elza" end time: Nov 07 00:18 Mitteleuropäische Zeit
+"integration_r41_gatorfix_abn2_wand_elza" time elapsed: 00:11:19
+----------------------------------------------------------
+
+1180/1450 Testing: integration_r41_gatorfix_frei_elza
+1180/1450 Test: integration_r41_gatorfix_frei_elza
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe" "-DRE15_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_elza_wd" "-DTEIL=frei_elza" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake"
+Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit
+"integration_r41_gatorfix_frei_elza" start time: Nov 07 00:06 Mitteleuropäische Zeit
+Output:
+----------------------------------------------------------
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_gatorfix frei_elza: traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F532 (489 Bilder = 16.3 s), 7869 Trag-Bilder: ohne Fortschritt 3678 (46 %), davon keine Ausnahme ausser Biss am Spieler (1803 Bilder), laengste Folge ohne Fortschritt 120 Bilder (bis F6161), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 473 (erstes F664); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %; 2-s-Fenster fern der Figur 285 (erstes F1205); tragvergleich: 7843 Bilder mit Kanister, 7843 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1, erster Rueckfall F-1); Kanister-Sitz 7860 Bilder, Abweichung max 0; ohne Kanister: 2-s-Fenster fern der Figur 285
+<end of output>
+Test time = 697.79 sec
+----------------------------------------------------------
+Test Passed.
+"integration_r41_gatorfix_frei_elza" end time: Nov 07 00:18 Mitteleuropäische Zeit
+"integration_r41_gatorfix_frei_elza" time elapsed: 00:11:37
+----------------------------------------------------------
+
+1182/1450 Testing: integration_r41_gatorfix_rampe_elza
+1182/1450 Test: integration_r41_gatorfix_rampe_elza
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe" "-DRE15_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_rampe_elza_wd" "-DTEIL=rampe_elza" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake"
+Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit
+"integration_r41_gatorfix_rampe_elza" start time: Nov 07 00:18 Mitteleuropäische Zeit
+Output:
+----------------------------------------------------------
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_gatorfix rampe_elza: traglog: 3600 Bilder 2090, Aufschlag F43, angehaengt F619 (576 Bilder = 19.2 s), 2982 Trag-Bilder: ohne Fortschritt 1662 (55 %), davon keine Ausnahme ausser Biss am Spieler (1110 Bilder), laengste Folge ohne Fortschritt 77 Bilder (bis F1148), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 89 (erstes F1072); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %; 2-s-Fenster fern der Figur 0 (erstes F-1); tragvergleich: 2956 Bilder mit Kanister, 2956 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1, erster Rueckfall F-1); Kanister-Sitz 2970 Bilder, Abweichung max 0; ohne Kanister: 2-s-Fenster fern der Figur 0; Klettern sub=9 0 Zeilen, Ueberquerung mit Kanister 0 Bilder, Rammen 0; NB3 mit Kanister: haenglog: 2956 TRAG-Bilder F645..F3600; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 16 Bilder = 0.5 s (bis F1259); Treffer 31; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0 (mit Kanister: je 0 verlangt); Phasen 2:1795 3:1161 5:0 7:0 12:0 -> ok (Fenster 0, ohne Fortschritt <= 450); ohne Kanister: haenglog: 2956 TRAG-Bilder F645..F3600; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 16 Bilder = 0.5 s (bis F1259); Treffer 31; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:1795 3:1161 5:0 7:0 12:0 -> ok (Fenster 0, ohne Fortschritt <= 450)
+<end of output>
+Test time = 362.76 sec
+----------------------------------------------------------
+Test Passed.
+"integration_r41_gatorfix_rampe_elza" end time: Nov 07 00:24 Mitteleuropäische Zeit
+"integration_r41_gatorfix_rampe_elza" time elapsed: 00:06:02
+----------------------------------------------------------
+
+1179/1450 Testing: integration_r41_gatorfix_frei
+1179/1450 Test: integration_r41_gatorfix_frei
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe" "-DRE15_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_frei_wd" "-DTEIL=frei" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake"
+Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit
+"integration_r41_gatorfix_frei" start time: Nov 07 00:18 Mitteleuropäische Zeit
+Output:
+----------------------------------------------------------
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_gatorfix frei: traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F625 (582 Bilder = 19.4 s), 7776 Trag-Bilder: ohne Fortschritt 3586 (46 %), davon keine Ausnahme ausser Biss am Spieler (2679 Bilder), laengste Folge ohne Fortschritt 75 Bilder (bis F4602), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 41 (erstes F846); Figur oben 39 Bilder, Kopf-Abstand mittel 4256, Gator im Bild der Spielerkamera 100 %; 2-s-Fenster fern der Figur 0 (erstes F-1); tragvergleich: 7750 Bilder mit Kanister, 7750 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1, erster Rueckfall F-1); Kanister-Sitz 7770 Bilder, Abweichung max 0; ohne Kanister: 2-s-Fenster fern der Figur 0
+<end of output>
+Test time = 672.72 sec
+----------------------------------------------------------
+Test Passed.
+"integration_r41_gatorfix_frei" end time: Nov 07 00:29 Mitteleuropäische Zeit
+"integration_r41_gatorfix_frei" time elapsed: 00:11:12
+----------------------------------------------------------
+
+1181/1450 Testing: integration_r41_gatorfix_rampe
+1181/1450 Test: integration_r41_gatorfix_rampe
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe" "-DRE15_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_rampe_wd" "-DTEIL=rampe" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake"
+Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit
+"integration_r41_gatorfix_rampe" start time: Nov 07 00:24 Mitteleuropäische Zeit
+Output:
+----------------------------------------------------------
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_gatorfix rampe: traglog: 3600 Bilder 2090, Aufschlag F43, angehaengt F619 (576 Bilder = 19.2 s), 2982 Trag-Bilder: ohne Fortschritt 1662 (55 %), davon keine Ausnahme ausser Biss am Spieler (1110 Bilder), laengste Folge ohne Fortschritt 77 Bilder (bis F1148), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 89 (erstes F1072); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %; 2-s-Fenster fern der Figur 0 (erstes F-1); tragvergleich: 2956 Bilder mit Kanister, 2956 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1, erster Rueckfall F-1); Kanister-Sitz 2970 Bilder, Abweichung max 0; ohne Kanister: 2-s-Fenster fern der Figur 0; Klettern sub=9 0 Zeilen, Ueberquerung mit Kanister 0 Bilder, Rammen 0; NB3 mit Kanister: haenglog: 2956 TRAG-Bilder F645..F3600; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 16 Bilder = 0.5 s (bis F1259); Treffer 31; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0 (mit Kanister: je 0 verlangt); Phasen 2:1795 3:1161 5:0 7:0 12:0 -> ok (Fenster 0, ohne Fortschritt <= 450); ohne Kanister: haenglog: 2956 TRAG-Bilder F645..F3600; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 16 Bilder = 0.5 s (bis F1259); Treffer 31; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:1795 3:1161 5:0 7:0 12:0 -> ok (Fenster 0, ohne Fortschritt <= 450)
+<end of output>
+Test time = 318.71 sec
+----------------------------------------------------------
+Test Passed.
+"integration_r41_gatorfix_rampe" end time: Nov 07 00:29 Mitteleuropäische Zeit
+"integration_r41_gatorfix_rampe" time elapsed: 00:05:18
+----------------------------------------------------------
+
+1346/1450 Testing: integration_r41_re2gator
+1346/1450 Test: integration_r41_re2gator
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_re2gator_wd" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_re2gator.cmake"
+Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit
+"integration_r41_re2gator" start time: Nov 07 00:29 Mitteleuropäische Zeit
+Output:
+----------------------------------------------------------
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_re2gator.cmake:507 (message):
+  r41_re2gator: Lauf kanister - Kanister 0 neben Part6(gezeichnet) x
+  Lokallage bzw.  nur 30 angehaengte Bilder (Abnahme 3 M1: Kind der
+  Part-6-Weltmatrix @0x801018d0-e0, >= 200 Bilder verlangt)
+
+
+<end of output>
+Test time = 126.20 sec
+----------------------------------------------------------
+Test Failed.
+"integration_r41_re2gator" end time: Nov 07 00:31 Mitteleuropäische Zeit
+"integration_r41_re2gator" time elapsed: 00:02:06
+----------------------------------------------------------
+
+1190/1450 Testing: integration_r41_gatorfix_rampe_oben
+1190/1450 Test: integration_r41_gatorfix_rampe_oben
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe" "-DRE15_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_rampe_oben_wd" "-DTEIL=rampe_oben" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake"
+Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit
+"integration_r41_gatorfix_rampe_oben" start time: Nov 07 00:29 Mitteleuropäische Zeit
+Output:
+----------------------------------------------------------
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_gatorfix rampe_oben: traglog: 4400 Bilder 2090, Aufschlag F43, angehaengt F1013 (970 Bilder = 32.3 s), 3388 Trag-Bilder: ohne Fortschritt 1322 (39 %), davon keine Ausnahme ausser Biss am Spieler (68 Bilder), laengste Folge ohne Fortschritt 181 Bilder (bis F2097), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 365 (erstes F1771); Figur oben 3388 Bilder, Kopf-Abstand mittel 5219, Gator im Bild der Spielerkamera 100 %; 2-s-Fenster fern der Figur 223 (erstes F1771); tragvergleich: 3362 Bilder mit Kanister, 3362 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F383, erster Rueckfall F-1); Kanister-Sitz 3360 Bilder, Abweichung max 0; ohne Kanister: 2-s-Fenster fern der Figur 223; Klettern sub=9 52 Zeilen, Ueberquerung mit Kanister 1042 Bilder, Rammen 6; NB3 mit Kanister: obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F1013 (gezaehlt ab dann, davor 930 Bilder oben); Figur oben 3388 Bilder (erstes F1013, letztes F4400, 1 Abschnitte); Treffer gesamt 20, oben 18 (Rammen 5, CROSS-Biss 4, Hochbiss 9, Biss 0, sonst 0); erster Treffer oben nach 326 Bildern (Rammen F1339); laengste Pause ohne Treffer oben 343 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -> ok (Schranke 600); ohne Kanister: obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F1013 (gezaehlt ab dann, davor 930 Bilder oben); Figur oben 3388 Bilder (erstes F1013, letztes F4400, 1 Abschnitte); Treffer gesamt 20, oben 18 (Rammen 5, CROSS-Biss 4, Hochbiss 9, Biss 0, sonst 0); erster Treffer oben nach 326 Bildern (Rammen F1339); laengste Pause ohne Treffer oben 343 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -> ok (Schranke 600)
+<end of output>
+Test time = 389.80 sec
+----------------------------------------------------------
+Test Passed.
+"integration_r41_gatorfix_rampe_oben" end time: Nov 07 00:36 Mitteleuropäische Zeit
+"integration_r41_gatorfix_rampe_oben" time elapsed: 00:06:29
+----------------------------------------------------------
+
+1191/1450 Testing: integration_r41_gatorfix_rampe_oben_elza
+1191/1450 Test: integration_r41_gatorfix_rampe_oben_elza
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DRE15_PC_EXE=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe" "-DRE15_TOOL=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix.exe" "-DWORKDIR=C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_rampe_oben_elza_wd" "-DTEIL=rampe_oben_elza" "-P" "C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake"
+Directory: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit
+"integration_r41_gatorfix_rampe_oben_elza" start time: Nov 07 00:31 Mitteleuropäische Zeit
+Output:
+----------------------------------------------------------
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_gatorfix rampe_oben_elza: traglog: 4400 Bilder 2090, Aufschlag F43, angehaengt F1013 (970 Bilder = 32.3 s), 3388 Trag-Bilder: ohne Fortschritt 1322 (39 %), davon keine Ausnahme ausser Biss am Spieler (68 Bilder), laengste Folge ohne Fortschritt 181 Bilder (bis F2095), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 365 (erstes F1769); Figur oben 3388 Bilder, Kopf-Abstand mittel 5212, Gator im Bild der Spielerkamera 100 %; 2-s-Fenster fern der Figur 223 (erstes F1769); tragvergleich: 3362 Bilder mit Kanister, 3362 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F383, erster Rueckfall F-1); Kanister-Sitz 3360 Bilder, Abweichung max 0; ohne Kanister: 2-s-Fenster fern der Figur 223; Klettern sub=9 52 Zeilen, Ueberquerung mit Kanister 1044 Bilder, Rammen 6; NB3 mit Kanister: obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F1013 (gezaehlt ab dann, davor 930 Bilder oben); Figur oben 3388 Bilder (erstes F1013, letztes F4400, 1 Abschnitte); Treffer gesamt 20, oben 18 (Rammen 5, CROSS-Biss 4, Hochbiss 9, Biss 0, sonst 0); erster Treffer oben nach 324 Bildern (Rammen F1337); laengste Pause ohne Treffer oben 343 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -> ok (Schranke 600); ohne Kanister: obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F1013 (gezaehlt ab dann, davor 930 Bilder oben); Figur oben 3388 Bilder (erstes F1013, letztes F4400, 1 Abschnitte); Treffer gesamt 20, oben 18 (Rammen 5, CROSS-Biss 4, Hochbiss 9, Biss 0, sonst 0); erster Treffer oben nach 324 Bildern (Rammen F1337); laengste Pause ohne Treffer oben 343 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -> ok (Schranke 600)
+<end of output>
+Test time = 437.31 sec
+----------------------------------------------------------
+Test Passed.
+"integration_r41_gatorfix_rampe_oben_elza" end time: Nov 07 00:38 Mitteleuropäische Zeit
+"integration_r41_gatorfix_rampe_oben_elza" time elapsed: 00:07:17
+----------------------------------------------------------
+
+End testing: Nov 07 00:38 Mitteleuropäische Zeit

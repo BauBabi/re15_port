@@ -1,0 +1,14 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build
+    Start 1346: integration_r41_re2gator
+1/1 Test #1346: integration_r41_re2gator .........***Failed  124.67 sec
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) = 124.71 sec
+
+The following tests FAILED:
+	1346 - integration_r41_re2gator (Failed)
+Errors while running CTest
+Output from these tests are in: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.
+00:42:36

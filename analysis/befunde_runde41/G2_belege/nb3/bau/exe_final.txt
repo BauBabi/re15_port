@@ -1,0 +1,168 @@
+# NB3 Bauer - exe-Laeufe mit der finalen exe nach Patch 9 (md5 je Lauf), Auswertung 2026-11-07 01:25:26
+# Laeufe: final_bau.sh (Eingaben = exe-Riegel test_r41_gatorfix.cmake rampe / abn2_wand_elza / rampe_oben; *_alt = exe a661eb8aa d872c8e6 mit derselben Eingabe);
+# kante2_* = kante2_bau.sh (Cut-2-Lage west4_leon 4200,-18800,3072,2 mit der rampe-Eingabe, Leon ohne Kanister) fuer die Bildleiste nb3_bau_suedkante_cut2_leon
+
+== oben_leon_ohne: pid=9647 start=01:06:28 exit=0 ende=01:09:28  exe 029efac6; Kanister: KANISTER angehaengt F1013
+   climb.log sub=9 Zeilen: 52
+    Treffer F1339  Rammen     Figur (6732,-1800,-15855) oben | Gator Wurzel (5434,-11936) Gier 943 Clip 0 Bild 1 | cam 2
+    Treffer F1439  CROSS-Biss Figur (2318,-1800,-17304) oben | Gator Wurzel (4218,-15603) Gier 1231 Clip 0 Bild 101 | cam 2
+    Treffer F1585  Hochbiss   Figur (2311,-1800,-17045) oben | Gator Wurzel (3359,-20663) Gier 797 Clip 4 Bild 6 | cam 2
+    Treffer F1690  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (4678,-20318) Gier 1093 Clip 4 Bild 6 | cam 2
+    Treffer F1881  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5301,-20038) Gier 2257 Clip 4 Bild 7 | cam 2
+    Treffer F1986  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5014,-20013) Gier 1233 Clip 4 Bild 6 | cam 2
+    Treffer F2107  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5320,-19996) Gier 2587 Clip 4 Bild 22 | cam 2
+    Treffer F2410  Rammen     Figur (6454,-1800,-14959) oben | Gator Wurzel (5555,-20590) Gier 3141 Clip 0 Bild 3 | cam 2
+    Treffer F2510  CROSS-Biss Figur (6732,-1800,-15658) oben | Gator Wurzel (5954,-16924) Gier 3145 Clip 0 Bild 103 | cam 2
+    Treffer F2699  Hochbiss   Figur (6732,-1800,-15869) oben | Gator Wurzel (5224,-12314) Gier 1161 Clip 4 Bild 31 | cam 2
+    Treffer F2968  Rammen     Figur (4980,-1800,-17609) oben | Gator Wurzel (5713,-11936) Gier 1079 Clip 0 Bild 1 | cam 2
+    Treffer F3068  CROSS-Biss Figur (2318,-1800,-17488) oben | Gator Wurzel (4384,-15603) Gier 1251 Clip 0 Bild 101 | cam 2
+    Treffer F3214  Hochbiss   Figur (2301,-1800,-17179) oben | Gator Wurzel (3360,-20663) Gier 815 Clip 4 Bild 6 | cam 2
+    Treffer F3393  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5291,-20005) Gier 2301 Clip 4 Bild 8 | cam 2
+    Treffer F3736  Rammen     Figur (6454,-1800,-14959) oben | Gator Wurzel (5484,-20554) Gier 3147 Clip 0 Bild 4 | cam 2
+    Treffer F3836  CROSS-Biss Figur (6732,-1800,-15649) oben | Gator Wurzel (5915,-16887) Gier 3151 Clip 0 Bild 104 | cam 2
+    Treffer F4019  Hochbiss   Figur (6732,-1800,-15906) oben | Gator Wurzel (5716,-12211) Gier 729 Clip 4 Bild 26 | cam 2
+    Treffer F4320  Rammen     Figur (4980,-1800,-17609) oben | Gator Wurzel (5713,-11936) Gier 1079 Clip 0 Bild 1 | cam 2
+  oben F1013..F4400 (3388 Bilder = 112.9 s): Treffer im Abschnitt ja, Rest nach dem letzten Treffer 80 Bilder (bis zum Laufende)
+obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F1013 (gezaehlt ab dann, davor 930 Bilder oben); Figur oben 3388 Bilder (erstes F1013, letztes F4400, 1 Abschnitte); Treffer gesamt 20, oben 18 (Rammen 5, CROSS-Biss 4, Hochbiss 9, Biss 0, sonst 0); erster Treffer oben nach 326 Bildern (Rammen F1339); laengste Pause ohne Treffer oben 343 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -
+   -- oben3.py (Messer-Skript, ohne Kanister-Regel):
+  oben F83..F4400 (4318 Bilder = 143.9 s): Treffer 20 (erster nach 300 Bildern = 10.0 s), laengste Pause ohne Treffer 856 Bilder = 28.5 s; Phasen -1:956, 2:44, 5:2276, 7:1042; cam 2:4318
+
+== oben_leon_neu: pid=10624 start=01:12:02 exit=0 ende=01:15:01  exe 029efac6; Kanister: KANISTER angehaengt F1013
+   climb.log sub=9 Zeilen: 52
+    Treffer F1339  Rammen     Figur (6732,-1800,-15855) oben | Gator Wurzel (5434,-11936) Gier 943 Clip 0 Bild 1 | cam 2
+    Treffer F1439  CROSS-Biss Figur (2318,-1800,-17304) oben | Gator Wurzel (4218,-15603) Gier 1231 Clip 0 Bild 101 | cam 2
+    Treffer F1585  Hochbiss   Figur (2311,-1800,-17045) oben | Gator Wurzel (3359,-20663) Gier 797 Clip 4 Bild 6 | cam 2
+    Treffer F1690  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (4678,-20318) Gier 1093 Clip 4 Bild 6 | cam 2
+    Treffer F1881  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5301,-20038) Gier 2257 Clip 4 Bild 7 | cam 2
+    Treffer F1986  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5014,-20013) Gier 1233 Clip 4 Bild 6 | cam 2
+    Treffer F2107  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5320,-19996) Gier 2587 Clip 4 Bild 22 | cam 2
+    Treffer F2410  Rammen     Figur (6454,-1800,-14959) oben | Gator Wurzel (5555,-20590) Gier 3141 Clip 0 Bild 3 | cam 2
+    Treffer F2510  CROSS-Biss Figur (6732,-1800,-15658) oben | Gator Wurzel (5954,-16924) Gier 3145 Clip 0 Bild 103 | cam 2
+    Treffer F2699  Hochbiss   Figur (6732,-1800,-15869) oben | Gator Wurzel (5224,-12314) Gier 1161 Clip 4 Bild 31 | cam 2
+    Treffer F2968  Rammen     Figur (4980,-1800,-17609) oben | Gator Wurzel (5713,-11936) Gier 1079 Clip 0 Bild 1 | cam 2
+    Treffer F3068  CROSS-Biss Figur (2318,-1800,-17488) oben | Gator Wurzel (4384,-15603) Gier 1251 Clip 0 Bild 101 | cam 2
+    Treffer F3214  Hochbiss   Figur (2301,-1800,-17179) oben | Gator Wurzel (3360,-20663) Gier 815 Clip 4 Bild 6 | cam 2
+    Treffer F3393  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5291,-20005) Gier 2301 Clip 4 Bild 8 | cam 2
+    Treffer F3736  Rammen     Figur (6454,-1800,-14959) oben | Gator Wurzel (5484,-20554) Gier 3147 Clip 0 Bild 4 | cam 2
+    Treffer F3836  CROSS-Biss Figur (6732,-1800,-15649) oben | Gator Wurzel (5915,-16887) Gier 3151 Clip 0 Bild 104 | cam 2
+    Treffer F4019  Hochbiss   Figur (6732,-1800,-15906) oben | Gator Wurzel (5716,-12211) Gier 729 Clip 4 Bild 26 | cam 2
+    Treffer F4320  Rammen     Figur (4980,-1800,-17609) oben | Gator Wurzel (5713,-11936) Gier 1079 Clip 0 Bild 1 | cam 2
+  oben F1013..F4400 (3388 Bilder = 112.9 s): Treffer im Abschnitt ja, Rest nach dem letzten Treffer 80 Bilder (bis zum Laufende)
+obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F1013 (gezaehlt ab dann, davor 930 Bilder oben); Figur oben 3388 Bilder (erstes F1013, letztes F4400, 1 Abschnitte); Treffer gesamt 20, oben 18 (Rammen 5, CROSS-Biss 4, Hochbiss 9, Biss 0, sonst 0); erster Treffer oben nach 326 Bildern (Rammen F1339); laengste Pause ohne Treffer oben 343 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -
+   -- oben3.py (Messer-Skript, ohne Kanister-Regel):
+  oben F83..F4400 (4318 Bilder = 143.9 s): Treffer 20 (erster nach 300 Bildern = 10.0 s), laengste Pause ohne Treffer 856 Bilder = 28.5 s; Phasen -1:956, 2:44, 5:2276, 7:1042; cam 2:4318
+
+== oben_elza_ohne: pid=10623 start=01:12:02 exit=0 ende=01:15:18  exe 029efac6; Kanister: KANISTER angehaengt F1013
+   climb.log sub=9 Zeilen: 52
+    Treffer F1337  Rammen     Figur (6732,-1800,-15848) oben | Gator Wurzel (5423,-11936) Gier 943 Clip 0 Bild 1 | cam 2
+    Treffer F1437  CROSS-Biss Figur (2318,-1800,-17295) oben | Gator Wurzel (4212,-15603) Gier 1231 Clip 0 Bild 101 | cam 2
+    Treffer F1583  Hochbiss   Figur (2312,-1800,-17041) oben | Gator Wurzel (3359,-20663) Gier 797 Clip 4 Bild 6 | cam 2
+    Treffer F1688  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (4678,-20318) Gier 1093 Clip 4 Bild 6 | cam 2
+    Treffer F1879  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5301,-20038) Gier 2257 Clip 4 Bild 7 | cam 2
+    Treffer F1984  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5014,-20013) Gier 1233 Clip 4 Bild 6 | cam 2
+    Treffer F2105  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5320,-19996) Gier 2587 Clip 4 Bild 22 | cam 2
+    Treffer F2408  Rammen     Figur (6454,-1800,-14959) oben | Gator Wurzel (5555,-20590) Gier 3141 Clip 0 Bild 3 | cam 2
+    Treffer F2508  CROSS-Biss Figur (6732,-1800,-15658) oben | Gator Wurzel (5954,-16924) Gier 3145 Clip 0 Bild 103 | cam 2
+    Treffer F2697  Hochbiss   Figur (6732,-1800,-15869) oben | Gator Wurzel (5224,-12314) Gier 1161 Clip 4 Bild 31 | cam 2
+    Treffer F2966  Rammen     Figur (4980,-1800,-17609) oben | Gator Wurzel (5713,-11936) Gier 1079 Clip 0 Bild 1 | cam 2
+    Treffer F3066  CROSS-Biss Figur (2318,-1800,-17488) oben | Gator Wurzel (4384,-15603) Gier 1251 Clip 0 Bild 101 | cam 2
+    Treffer F3212  Hochbiss   Figur (2301,-1800,-17179) oben | Gator Wurzel (3360,-20663) Gier 815 Clip 4 Bild 6 | cam 2
+    Treffer F3391  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5291,-20005) Gier 2301 Clip 4 Bild 8 | cam 2
+    Treffer F3734  Rammen     Figur (6454,-1800,-14959) oben | Gator Wurzel (5484,-20554) Gier 3147 Clip 0 Bild 4 | cam 2
+    Treffer F3834  CROSS-Biss Figur (6732,-1800,-15649) oben | Gator Wurzel (5915,-16887) Gier 3151 Clip 0 Bild 104 | cam 2
+    Treffer F4017  Hochbiss   Figur (6732,-1800,-15906) oben | Gator Wurzel (5716,-12211) Gier 729 Clip 4 Bild 26 | cam 2
+    Treffer F4318  Rammen     Figur (4980,-1800,-17609) oben | Gator Wurzel (5713,-11936) Gier 1079 Clip 0 Bild 1 | cam 2
+  oben F1013..F4400 (3388 Bilder = 112.9 s): Treffer im Abschnitt ja, Rest nach dem letzten Treffer 82 Bilder (bis zum Laufende)
+obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F1013 (gezaehlt ab dann, davor 930 Bilder oben); Figur oben 3388 Bilder (erstes F1013, letztes F4400, 1 Abschnitte); Treffer gesamt 20, oben 18 (Rammen 5, CROSS-Biss 4, Hochbiss 9, Biss 0, sonst 0); erster Treffer oben nach 324 Bildern (Rammen F1337); laengste Pause ohne Treffer oben 343 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -
+   -- oben3.py (Messer-Skript, ohne Kanister-Regel):
+  oben F83..F4400 (4318 Bilder = 143.9 s): Treffer 20 (erster nach 300 Bildern = 10.0 s), laengste Pause ohne Treffer 854 Bilder = 28.5 s; Phasen -1:956, 2:44, 5:2274, 7:1044; cam 2:4318
+
+== oben_elza_neu: pid=10625 start=01:12:02 exit=0 ende=01:15:18  exe 029efac6; Kanister: KANISTER angehaengt F1013
+   climb.log sub=9 Zeilen: 52
+    Treffer F1337  Rammen     Figur (6732,-1800,-15848) oben | Gator Wurzel (5423,-11936) Gier 943 Clip 0 Bild 1 | cam 2
+    Treffer F1437  CROSS-Biss Figur (2318,-1800,-17295) oben | Gator Wurzel (4212,-15603) Gier 1231 Clip 0 Bild 101 | cam 2
+    Treffer F1583  Hochbiss   Figur (2312,-1800,-17041) oben | Gator Wurzel (3359,-20663) Gier 797 Clip 4 Bild 6 | cam 2
+    Treffer F1688  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (4678,-20318) Gier 1093 Clip 4 Bild 6 | cam 2
+    Treffer F1879  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5301,-20038) Gier 2257 Clip 4 Bild 7 | cam 2
+    Treffer F1984  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5014,-20013) Gier 1233 Clip 4 Bild 6 | cam 2
+    Treffer F2105  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5320,-19996) Gier 2587 Clip 4 Bild 22 | cam 2
+    Treffer F2408  Rammen     Figur (6454,-1800,-14959) oben | Gator Wurzel (5555,-20590) Gier 3141 Clip 0 Bild 3 | cam 2
+    Treffer F2508  CROSS-Biss Figur (6732,-1800,-15658) oben | Gator Wurzel (5954,-16924) Gier 3145 Clip 0 Bild 103 | cam 2
+    Treffer F2697  Hochbiss   Figur (6732,-1800,-15869) oben | Gator Wurzel (5224,-12314) Gier 1161 Clip 4 Bild 31 | cam 2
+    Treffer F2966  Rammen     Figur (4980,-1800,-17609) oben | Gator Wurzel (5713,-11936) Gier 1079 Clip 0 Bild 1 | cam 2
+    Treffer F3066  CROSS-Biss Figur (2318,-1800,-17488) oben | Gator Wurzel (4384,-15603) Gier 1251 Clip 0 Bild 101 | cam 2
+    Treffer F3212  Hochbiss   Figur (2301,-1800,-17179) oben | Gator Wurzel (3360,-20663) Gier 815 Clip 4 Bild 6 | cam 2
+    Treffer F3391  Hochbiss   Figur (2310,-1800,-17609) oben | Gator Wurzel (5291,-20005) Gier 2301 Clip 4 Bild 8 | cam 2
+    Treffer F3734  Rammen     Figur (6454,-1800,-14959) oben | Gator Wurzel (5484,-20554) Gier 3147 Clip 0 Bild 4 | cam 2
+    Treffer F3834  CROSS-Biss Figur (6732,-1800,-15649) oben | Gator Wurzel (5915,-16887) Gier 3151 Clip 0 Bild 104 | cam 2
+    Treffer F4017  Hochbiss   Figur (6732,-1800,-15906) oben | Gator Wurzel (5716,-12211) Gier 729 Clip 4 Bild 26 | cam 2
+    Treffer F4318  Rammen     Figur (4980,-1800,-17609) oben | Gator Wurzel (5713,-11936) Gier 1079 Clip 0 Bild 1 | cam 2
+  oben F1013..F4400 (3388 Bilder = 112.9 s): Treffer im Abschnitt ja, Rest nach dem letzten Treffer 82 Bilder (bis zum Laufende)
+obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F1013 (gezaehlt ab dann, davor 930 Bilder oben); Figur oben 3388 Bilder (erstes F1013, letztes F4400, 1 Abschnitte); Treffer gesamt 20, oben 18 (Rammen 5, CROSS-Biss 4, Hochbiss 9, Biss 0, sonst 0); erster Treffer oben nach 324 Bildern (Rammen F1337); laengste Pause ohne Treffer oben 343 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -
+   -- oben3.py (Messer-Skript, ohne Kanister-Regel):
+  oben F83..F4400 (4318 Bilder = 143.9 s): Treffer 20 (erster nach 300 Bildern = 10.0 s), laengste Pause ohne Treffer 854 Bilder = 28.5 s; Phasen -1:956, 2:44, 5:2274, 7:1044; cam 2:4318
+
+== oben_leon_ohne_alt: pid=12232 start=01:18:08 exit=0 ende=01:21:08  exe d872c8e6; Kanister: KANISTER angehaengt F602
+   climb.log sub=9 Zeilen: 52
+  oben F602..F4400 (3799 Bilder = 126.6 s): Treffer im Abschnitt keiner, Rest nach dem letzten Treffer 3798 Bilder (bis zum Laufende)
+obenlog: 4400 Bilder (F1..F4400); Kanister angehaengt F602 (gezaehlt ab dann, davor 519 Bilder oben); Figur oben 3799 Bilder (erstes F602, letztes F4400, 1 Abschnitte); Treffer gesamt 0, oben 0 (Rammen 0, CROSS-Biss 0, Hochbiss 0, Biss 0, sonst 0); erster Treffer oben nach -1 Bildern (- F-1); laengste Pause ohne Treffer oben 3798 Bilder; ohne Treffer verlassener Abschnitt bis 0 Bilder -> VERFEHLT 
+   -- oben3.py (Messer-Skript, ohne Kanister-Regel):
+  oben F83..F4400 (4318 Bilder = 143.9 s): Treffer 0 (erster nach - Bildern = - s), laengste Pause ohne Treffer 4317 Bilder = 143.9 s; Phasen -1:545, 5:3773; cam 2:4318
+
+== rampe_leon_ohne: pid=11326 start=01:15:19 exit=0 ende=01:17:52  exe 029efac6
+haenglog: 2956 TRAG-Bilder F645..F3600; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 16 Bilder = 0.5 s (bis F1259); Treffer 31; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:1795 3:1161 5:0 7:0 12:0 -> ok (Fenster 0, ohne Fortschritt <= 450)
+   -- haeng3.py (Messer-Skript):
+  laengste Zeit ohne Fortschritt zur Figur: 16 Bilder = 0.5 s (bis F1259)
+  Haenge-Fenster (RW-Mass, 150 Bilder Kasten < 2500, Kopf > 4500, netto < 600/60 B.): 0
+   -- Treffer (hp<100 Flanken) im Rueckkehr-Besuch: Treffer (hp<100) 31
+
+== rampe_leon_neu: pid=11327 start=01:15:19 exit=0 ende=01:17:52  exe 029efac6
+haenglog: 2956 TRAG-Bilder F645..F3600; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 16 Bilder = 0.5 s (bis F1259); Treffer 31; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0 (mit Kanister: je 0 verlangt); Phasen 2:1795 3:1161 5:0 7:0 12:0 -> ok (Fenster 0, ohne Fortschritt <= 450)
+   -- haeng3.py (Messer-Skript):
+  laengste Zeit ohne Fortschritt zur Figur: 16 Bilder = 0.5 s (bis F1259)
+  Haenge-Fenster (RW-Mass, 150 Bilder Kasten < 2500, Kopf > 4500, netto < 600/60 B.): 0
+   -- Treffer (hp<100 Flanken) im Rueckkehr-Besuch: Treffer (hp<100) 31
+
+== rampe_elza_ohne: pid=11328 start=01:15:19 exit=0 ende=01:18:08  exe 029efac6
+haenglog: 2956 TRAG-Bilder F645..F3600; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 16 Bilder = 0.5 s (bis F1259); Treffer 31; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:1795 3:1161 5:0 7:0 12:0 -> ok (Fenster 0, ohne Fortschritt <= 450)
+   -- haeng3.py (Messer-Skript):
+  laengste Zeit ohne Fortschritt zur Figur: 16 Bilder = 0.5 s (bis F1259)
+  Haenge-Fenster (RW-Mass, 150 Bilder Kasten < 2500, Kopf > 4500, netto < 600/60 B.): 0
+   -- Treffer (hp<100 Flanken) im Rueckkehr-Besuch: Treffer (hp<100) 31
+
+== wand_elza_ohne: pid=9644 start=01:06:28 exit=0 ende=01:12:01  exe 029efac6
+haenglog: 8211 TRAG-Bilder F190..F8400; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 56 Bilder = 1.9 s (bis F1340); Treffer 71; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:4530 3:3010 5:49 7:240 12:382 -> ok (Fenster 0, ohne Fortschritt <= 450)
+   -- haeng3.py (Messer-Skript):
+  laengste Zeit ohne Fortschritt zur Figur: 56 Bilder = 1.9 s (bis F1340)
+  Haenge-Fenster (RW-Mass, 150 Bilder Kasten < 2500, Kopf > 4500, netto < 600/60 B.): 0
+   -- Treffer (hp<100 Flanken) im Rueckkehr-Besuch: Treffer (hp<100) 18
+
+== wand_elza_neu: pid=9643 start=01:06:28 exit=0 ende=01:12:01  exe 029efac6
+haenglog: 8211 TRAG-Bilder F190..F8400; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 56 Bilder = 1.9 s (bis F1340); Treffer 71; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0 (mit Kanister: je 0 verlangt); Phasen 2:4530 3:3010 5:49 7:240 12:382 -> ok (Fenster 0, ohne Fortschritt <= 450)
+   -- haeng3.py (Messer-Skript):
+  laengste Zeit ohne Fortschritt zur Figur: 56 Bilder = 1.9 s (bis F1340)
+  Haenge-Fenster (RW-Mass, 150 Bilder Kasten < 2500, Kopf > 4500, netto < 600/60 B.): 0
+   -- Treffer (hp<100 Flanken) im Rueckkehr-Besuch: Treffer (hp<100) 18
+
+== rampe_leon_ohne_alt: pid=12231 start=01:18:08 exit=0 ende=01:20:41  exe d872c8e6
+    Haenge-Fenster F2649 (ab F2500): Wurzel (3459..4747, -23087..-22323) jetzt (3467,-23087) Gier 1023 Clip 1 Bild 11 | Figur (4073,0,-19322) cam 0 hp 100 | Kopf 7026 von der Figur
+haenglog: 2895 TRAG-Bilder F706..F3600; Haenge-Fenster 1 (erstes F2649); ohne Fortschritt max 229 Bilder = 7.6 s (bis F2745); Treffer 22; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:2078 3:817 5:0 7:0 12:0 -> VERFEHLT (Fenster 0, ohne Fortschritt <= 450)
+   -- haeng3.py (Messer-Skript):
+  laengste Zeit ohne Fortschritt zur Figur: 229 Bilder = 7.6 s (bis F2745)
+  Haenge-Fenster (RW-Mass, 150 Bilder Kasten < 2500, Kopf > 4500, netto < 600/60 B.): 1
+   -- Treffer (hp<100 Flanken) im Rueckkehr-Besuch: Treffer (hp<100) 22
+
+== kante2_leon_ohne: pid=12997 start=01:21:08 exit=0 ende=01:23:42  exe 029efac6
+haenglog: 2809 TRAG-Bilder F792..F3600; Haenge-Fenster 0 (erstes F-1); ohne Fortschritt max 32 Bilder = 1.1 s (bis F1956); Treffer 31; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:1701 3:1108 5:0 7:0 12:0 -> ok (Fenster 0, ohne Fortschritt <= 450)
+   -- haeng3.py (Messer-Skript):
+  laengste Zeit ohne Fortschritt zur Figur: 32 Bilder = 1.1 s (bis F1956)
+  Haenge-Fenster (RW-Mass, 150 Bilder Kasten < 2500, Kopf > 4500, netto < 600/60 B.): 0
+   -- Treffer (hp<100 Flanken) im Rueckkehr-Besuch: Treffer (hp<100) 31
+
+== kante2_leon_ohne_alt: pid=12998 start=01:21:08 exit=0 ende=01:23:40  exe d872c8e6
+    Haenge-Fenster F2367 (ab F2218): Wurzel (3304..4068, -23605..-22170) jetzt (3508,-23605) Gier 99 Clip 1 Bild 11 | Figur (4131,0,-19954) cam 2 hp 100 | Kopf 4876 von der Figur
+haenglog: 2950 TRAG-Bilder F651..F3600; Haenge-Fenster 1 (erstes F2367); ohne Fortschritt max 134 Bilder = 4.5 s (bis F2368); Treffer 24; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0; Phasen 2:2047 3:903 5:0 7:0 12:0 -> VERFEHLT (Fenster 0, ohne Fortschritt <= 450)
+   -- haeng3.py (Messer-Skript):
+  laengste Zeit ohne Fortschritt zur Figur: 134 Bilder = 4.5 s (bis F2368)
+  Haenge-Fenster (RW-Mass, 150 Bilder Kasten < 2500, Kopf > 4500, netto < 600/60 B.): 1
+   -- Treffer (hp<100 Flanken) im Rueckkehr-Besuch: Treffer (hp<100) 24
