@@ -48,16 +48,16 @@
     W1000/-20700 ohne: 2400 B., Reaktionen 30 (Sturz 0), erster Treffer t456, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (2318,0,-18568)
     W3000/-18800 ohne: 2400 B., Reaktionen 10 (Sturz 0), erster Treffer t232, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (-2168,0,-15717)
     W4073/-19322 ohne: 2400 B., Reaktionen 14 (Sturz 0), erster Treffer t313, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (-5633,0,-26042)
-    Oben halten (3 Lagen, nach dem Sturz wieder oben): Rammen 29, CROSS-Biss 4, Hochbiss 10, Biss 0
+    Oben halten (3 Lagen, nach dem Sturz wieder oben): Rammen 41, CROSS-Biss 2, Hochbiss 8, Biss 0
     (Lauf Gator-HP 24990: 27 Reaktionen, hp des Gators 24990)
     Lauf Gator-HP 24990 (W4200/-18700 ohne, ein Treffer am Gator): +0x218 & 0x20 = 1, Reaktionen mit Schaden 30: 27
-    SUMME Teil B: 32 Lagen, Reaktionen 880 (vollstaendig 708, durch einen neuen Treffer abgebrochen 172; Sub 2 488, Sub 3 220), Abweichungen vom RE2-Modell 0 (davon Unterzustand 0); Angriffe: Rammen 54, CROSS-Biss 24, Hochbiss 10, Biss 792, Biss B2 0; Schaden 60: 853, 30: 27, sonst 0; Stuerze 53 (falsch 0), Raumhalt in Sturzbildern 0; RE1.5-Niederwurf-Bilder 0; Weg des Hakens (Luftlinie) max 4171, ueber RE2 0; Luftlinie gesamt max 6186 (87 ueber 3735/3080, Koerper-/Boss-Schub + Klemme bis 3106); oben spaetester erster Treffer t450, laengste Pause oben 450
-  ok: T1/T3: jede vollstaendige Reaktion (708) Bild fuer Bild = RE2-Modell (Unterzustand FUN_80015910, Schritte, Dauer 20/54, Clips, Sperre, SE) - Abweichungen 0
-  ok: T1: jede Angriffsart nimmt die RE2-Reaktion (Rammen 54, CROSS-Biss 24, Hochbiss 10, Biss 792)
+    SUMME Teil B: 32 Lagen, Reaktionen 888 (vollstaendig 717, durch einen neuen Treffer abgebrochen 171; Sub 2 498, Sub 3 219), Abweichungen vom RE2-Modell 0 (davon Unterzustand 0); Angriffe: Rammen 66, CROSS-Biss 22, Hochbiss 8, Biss 792, Biss B2 0; Schaden 60: 861, 30: 27, sonst 0; Stuerze 64 (falsch 0), Raumhalt in Sturzbildern 0; RE1.5-Niederwurf-Bilder 0; Weg des Hakens (Luftlinie) max 4171, ueber RE2 0; Luftlinie gesamt max 6186 (98 ueber 3735/3080, Koerper-/Boss-Schub + Klemme bis 3106); oben spaetester erster Treffer t450, laengste Pause oben 450
+  ok: T1/T3: jede vollstaendige Reaktion (717) Bild fuer Bild = RE2-Modell (Unterzustand FUN_80015910, Schritte, Dauer 20/54, Clips, Sperre, SE) - Abweichungen 0
+  ok: T1: jede Angriffsart nimmt die RE2-Reaktion (Rammen 66, CROSS-Biss 22, Hochbiss 8, Biss 792)
   ok: T2: nach Alligator-Treffern 0 Bilder RE1.5-Niederwurf (0)
-  ok: T3: Schaden 60, bei Gator-HP < 25000 30 (60: 853, 30: 27, sonst 0)
+  ok: T3: Schaden 60, bei Gator-HP < 25000 30 (60: 861, 30: 27, sonst 0)
   ok: T4 (Harness): Weg des RE2-Hakens je Reaktion <= 3735 (Sub 2) / 3080 (Sub 3), mit Sturz + Klemme der Fall-Phase <= +468 (max 4171, 0 ueber); Luftlinie gesamt max 6186, davon Koerper-/Boss-Schub und Klemme bis 3106 (RE2 schiebt ebenso, FUN_80034D0C @0x80026628)
-  ok: W1: 53 Stuerze ins Wasser, jeder Bild fuer Bild wie Substate 10 (falsch 0), 0 Raumhalt-Eingriffe in Sturzbildern (0)
+  ok: W1: 64 Stuerze ins Wasser, jeder Bild fuer Bild wie Substate 10 (falsch 0), 0 Raumhalt-Eingriffe in Sturzbildern (0)
   ok: W3: in allen Lagen nie aussen, nie im Block, oben nie neben dem Deck ausser im Sturz (0 Lagen verfehlt)
   ok: A1 (NB3 Vorgabe A, mit Sturz neu bewertet): oben erster Treffer <= 600 und laengste Pause oben <= 600 (t450, 450)
     Gegenprobe Stand 3d57083b1: Niederwurf-Bilder 1804, groesste Niederwurf-Luftlinie 5630, RE2-Reaktionen 0
