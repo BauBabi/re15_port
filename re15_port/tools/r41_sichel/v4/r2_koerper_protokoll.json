@@ -9,9 +9,9 @@
      6.2
     ],
     "port_vorher": [
-     18.6,
-     13.7,
-     5.8
+     18.7,
+     13.8,
+     5.9
     ]
    },
    "rumpf": {
@@ -22,9 +22,9 @@
      0.9
     ],
     "port_vorher": [
-     17.9,
-     2.9,
-     1.7
+     17.8,
+     3.4,
+     1.6
     ]
    },
    "oberarm_bl_oben": {
@@ -35,9 +35,9 @@
      2.8
     ],
     "port_vorher": [
-     30.7,
+     31.4,
      8.5,
-     2.6
+     2.5
     ]
    },
    "oberarm_bl_unten": {
@@ -48,48 +48,48 @@
      0.9
     ],
     "port_vorher": [
-     14.7,
-     3.1,
-     0.8
+     14.2,
+     2.6,
+     0.6
     ]
    },
-   "oberarm_br_oben": {
-    "px": 2315,
+   "oberarm_br": {
+    "px": 3743,
     "orig_mittel": [
      16.5,
      8.0,
      1.7
     ],
     "port_vorher": [
-     20.4,
-     6.5,
-     1.7
-    ]
-   },
-   "oberarm_br_unten": {
-    "px": 1428,
-    "orig_mittel": [
-     20.8,
-     3.2,
-     -0.4
-    ],
-    "port_vorher": [
-     21.7,
-     4.1,
-     0.1
+     21.0,
+     6.3,
+     1.3
     ]
    },
    "unterarm": {
-    "px": 4211,
+    "px": 1790,
     "orig_mittel": [
      28.6,
      0.8,
      -1.7
     ],
     "port_vorher": [
-     26.8,
-     1.5,
+     26.6,
+     1.8,
      -1.3
+    ]
+   },
+   "unterarm_wr": {
+    "px": 2421,
+    "orig_mittel": [
+     9.1,
+     -3.5,
+     3.2
+    ],
+    "port_vorher": [
+     11.3,
+     -1.5,
+     2.1
     ]
    },
    "klaue": {
@@ -100,9 +100,9 @@
      1.4
     ],
     "port_vorher": [
-     12.5,
-     6.9,
-     0.9
+     13.0,
+     7.4,
+     1.0
     ]
    },
    "jeans": {
@@ -113,9 +113,9 @@
      -2.1
     ],
     "port_vorher": [
-     15.3,
-     0.9,
-     -2.2
+     15.4,
+     1.0,
+     -2.4
     ]
    },
    "beine": {
@@ -126,9 +126,9 @@
      -1.5
     ],
     "port_vorher": [
-     17.6,
+     18.1,
      3.9,
-     0.3
+     0.4
     ]
    },
    "hals": {
@@ -139,37 +139,37 @@
      3.7
     ],
     "port_vorher": [
-     13.7,
-     6.6,
-     2.9
+     14.4,
+     7.1,
+     2.1
     ]
    }
   },
   "85": {
    "buckel_s_hell": {
-    "px": 1285,
+    "px": 1274,
     "orig_mittel": [
      52.1,
      11.6,
      1.6
     ],
     "port_vorher": [
-     51.0,
+     51.7,
      10.2,
-     3.1
+     2.9
     ]
    },
    "buckel_s": {
-    "px": 2999,
+    "px": 2973,
     "orig_mittel": [
      24.4,
      10.4,
      2.6
     ],
     "port_vorher": [
-     24.1,
-     8.2,
-     2.1
+     24.2,
+     8.1,
+     1.9
     ]
    },
    "arm_s": {
@@ -180,9 +180,9 @@
      0.1
     ],
     "port_vorher": [
-     16.9,
-     5.1,
-     0.9
+     16.7,
+     4.5,
+     1.6
     ]
    },
    "jeans_s": {
@@ -193,25 +193,25 @@
      -3.5
     ],
     "port_vorher": [
-     17.8,
-     1.3,
-     -2.8
+     17.9,
+     1.6,
+     -3.2
     ]
    }
   }
  },
  "texel": 34726,
  "k": 256,
- "quant_rmse": 2.93,
+ "quant_rmse": 3.57,
  "mu": 0.25,
  "quellen": {
   "rumpf_rot": "Messblatt F6 (372-424 x 197-232, R-G >= 15)",
   "rumpf": "Sicht-Pruefung V4 r1 1.4: Rumpf (352-448 x 196-292) + Schultern (B)-links (318-360 x 160-190) / (B)-rechts (425-470 x 165-195), ohne die roten Bildpunkte (R-G >= 15)",
   "oberarm_bl_oben": "Messblatt F7 (307-347 x 167-212)",
   "oberarm_bl_unten": "Sicht OA_Bl (300-345 x 186-250) unterhalb des F7-Fensters",
-  "oberarm_br_oben": "Messblatt F8 (437-477 x 182-227)",
-  "oberarm_br_unten": "Sicht OA_Br (455-500 x 196-262) unterhalb des F8-Fensters",
-  "unterarm": "Sicht UA_Br (468-508 x 268-330) ohne den Wandrand x > 500; der (B)-linke Unterarm ist im Bild nicht abgrenzbar und nimmt dieselbe Verteilung (PORT-WAHL)",
+  "oberarm_br": "Messblatt F8 (437-477 x 182-227), Id 10 ganz",
+  "unterarm": "Sicht UA_Br (468-508 x 268-330) ohne den Wandrand x > 500 - Unterarm (B)-rechts = (W)-links (Id 11)",
+  "unterarm_wr": "Sicht-Pruefung V4 r2 1.4: Unterarm (B)-links = (W)-rechts, Box 298-325 x 262-340 (deckt die Id-14-Box 289-334 x 264-334)",
   "klaue": "Messblatt F10 (482-507 x 330-356)",
   "jeans": "Messblatt F9 (374-437 x 264-297) + Sicht Jeans (362-428 x 298-344)",
   "beine": "Sicht US_Bl (356-392 x 352-430)",

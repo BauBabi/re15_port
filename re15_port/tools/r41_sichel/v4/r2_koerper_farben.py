@@ -32,7 +32,10 @@ import r2_uv_belegung as UB
 
 AUS = os.path.join(HIER, 'farben_koerper_v4.npz')
 PROT = os.path.join(HIER, 'r2_koerper_protokoll.json')
-ZEILEN = (480, 481, 482, 484)
+ZEILEN = (480, 481, 482, 484, 488, 489)
+# V4 Runde 3 (Entscheid O1): eigene Zeilen 488 (Mesh 14, Unterarm (W)-rechts) und 489 (Mesh 10, Oberarm (W)-links), birkin_formen.py
+# KOERPER_ZEILEN_V4; Startwert (Referenz 2) = Zeile 482 bzw. 480
+START = {488: 482, 489: 480}
 KOERPER = [b for b in range(16) if b != 9]
 LAM_MIN = 0.35       # Bildpunkte mit Licht < 0,35 (streifend) zaehlen nicht - sie trieben einzelne Texel auf Weiss; PORT-WAHL
 LUM_MAX = 190.0      # hellster erlaubter Koerpertexel (Lum); PORT-WAHL gegen Einzel-Ausreisser (200: zwei helle Punkte auf der Schulter
@@ -53,11 +56,19 @@ REGIONEN = [
     # Anteile der Zeilen von Id 13 / Id 10 (Sicht-Pruefung V4 r1: "dunkel, hell nur die Schulterkuppe"; Messblatt F7 33,3 / F8 16,4)
     ('oberarm_bl_oben', '135', (13,), [(307, 167, 347, 212)], 'Messblatt F7 (307-347 x 167-212)', (0.0, 0.58)),
     ('oberarm_bl_unten', '135', (13,), [(300, 213, 345, 250)], 'Sicht OA_Bl (300-345 x 186-250) unterhalb des F7-Fensters', (0.58, 1.0)),
-    ('oberarm_br_oben', '135', (10,), [(437, 182, 477, 227)], 'Messblatt F8 (437-477 x 182-227)', (0.0, 0.56)),
-    ('oberarm_br_unten', '135', (10,), [(455, 228, 500, 262)], 'Sicht OA_Br (455-500 x 196-262) unterhalb des F8-Fensters', (0.56, 1.0)),
-    ('unterarm', '135', (11, 14), [(468, 268, 500, 330)],
-     'Sicht UA_Br (468-508 x 268-330) ohne den Wandrand x > 500; der (B)-linke Unterarm ist im Bild nicht abgrenzbar und nimmt '
-     'dieselbe Verteilung (PORT-WAHL)'),
+    # V4 Runde 3: Mesh 10 hat eine eigene CLUT-Zeile 489 (O1) und teilt keine Texel mehr mit dem hellen (B)-linken Arm -> EINE Region
+    # fuer den ganzen Oberarm (B)-rechts (Messblatt F8 misst Id 10 ganz) mit der Verteilung von F8-Fenster + Sicht-Box darunter
+    # (Runde 2 oben/unten getrennt: Id ganz 20,5 L*, F8 16,4 -> dL +4,1, Riegel 'F F8 Messblatt-Wortlaut' rot)
+    # Verteilung = Messblatt-Fenster F8 allein (Wortlaut F8: Id 10 ganz gegen dieses Fenster); mit F8 + Sicht-Box unten (Mittel 18,5 L*)
+    # blieb Id 10 ganz bei 20,8 L* (dL +4,4, Lauf r3 Koerper 2)
+    ('oberarm_br', '135', (10,), [(437, 182, 477, 227)], 'Messblatt F8 (437-477 x 182-227), Id 10 ganz'),
+    ('unterarm', '135', (11,), [(468, 268, 500, 330)],
+     'Sicht UA_Br (468-508 x 268-330) ohne den Wandrand x > 500 - Unterarm (B)-rechts = (W)-links (Id 11)'),
+    # V4 Runde 3 (Pruefung V4 r2 Sicht 1.4, Klasse A; Entscheid O5): der (B)-linke = (W)-rechte Unterarm (Id 14) hat ein eigenes Ziel
+    # aus der Box des Sicht-Pruefers 298-325 x 262-340 (8,8 / -3,4 / 3,2, L* p90 11,1, kein Pixel L* > 30). Runde 2 nahm fuer beide
+    # Unterarme die Verteilung der (B)-rechten Box (29,3 L*) -> weiss gefleckt (35 % L* > 30). Eigene CLUT-Zeile 488 (O1).
+    ('unterarm_wr', '135', (14,), [(298, 262, 325, 340)],
+     'Sicht-Pruefung V4 r2 1.4: Unterarm (B)-links = (W)-rechts, Box 298-325 x 262-340 (deckt die Id-14-Box 289-334 x 264-334)'),
     ('klaue', '135', (12,), [(482, 330, 507, 356)], 'Messblatt F10 (482-507 x 330-356)'),
     ('jeans', '135', (0, 1, 4), [(374, 264, 437, 297), (362, 298, 428, 344)],
      'Messblatt F9 (374-437 x 264-297) + Sicht Jeans (362-428 x 298-344)'),
@@ -78,7 +89,7 @@ REGIONEN = [
 # Ziele; F8 (Oberarm (B)-rechts oben) und F14 (Buckel hell) lagen nach Lauf r2 Koerper 5 an bzw. ueber der Grenze (dL +4,0 / -5,4),
 # F7 mit -3,0 innerhalb - die schwaecheren Regionen bekommen mehr Gewicht (Lauf r2 Koerper 6: F14 -4,4, Oberarm (B)-links unten
 # +4,3 -> 4,0 / 1,5; nach LAM_MIN Lauf r2 Koerper 10: F14 -4,2, Oberarm +4,1 -> 5,0 / 2,0; nach LUM_MAX F14 -5,2 -> 8,0). PORT-WAHL (Ausgleich zwischen Messblatt-Riegeln und Sicht-Boxen).
-GEWICHT = dict(oberarm_br_oben=1.6, oberarm_bl_unten=2.0, buckel_s_hell=8.0, hals=2.0)
+GEWICHT = dict(oberarm_bl_unten=2.0, buckel_s_hell=8.0, hals=2.0)   # Runde 3: oberarm_br_oben entfaellt (eine Region 'oberarm_br')
 # Id 15 (Sichel (B)-links, Zeile 484): Ziel = eigener Render (bleibt wie Referenz 2; nicht beschriftet, im Original nicht abgrenzbar)
 
 
@@ -224,7 +235,7 @@ def main():
     # Vorlauf: Verstaerkung je Mesh (Median t / Referenz-2-Texel ueber gesehene Texel), dann t0 fuer ungesehene Texel
     t0 = {}
     for z in ZEILEN:
-        alt = ref.lut[z - 480][ref.tex][..., :3].astype(float)
+        alt = ref.lut[START.get(z, z) - 480][ref.tex][..., :3].astype(float)
         frei = num[z] / np.maximum(den[z], 1e-6)
         ges = den[z][..., 0] > 0.05
         t0z = alt.copy()

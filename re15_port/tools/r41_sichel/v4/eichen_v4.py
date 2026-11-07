@@ -196,11 +196,21 @@ AUGE_K4 = (0.05, 0.12)      # nur noch fuer auge_3d (Runde 1); Runde 2 nimmt KOP
 # Radialer Verlauf der Augen (Faktor 1 +- AUGE_RADIAL von der Mitte zum Rand): das Original-Auge hat nach der Weichzeichnung L*-Max 56,2 bei
 # Mittel 46,9 (Messblatt K1/F2, Kontrast 29,5); nachgestellt an K1/S1 (Dossier V4 Runde 2)
 AUGE_RADIAL = 0.40
+# V4 Runde 3: vorn eigener Wert (Lauf r3 Struktur 8/9: mit der Kopfstruktur fiel der K1-Kontrast auf 18,3-19,4; vorn 0,55 -> 20,6 bei
+# K2 dE00 1,3 und K3 0,030 x 0,038 H; seitlich mit 0,55 S1-Breite 0,027 < 0,028 H, daher seitlich 0,40 wie Runde 2). PORT-WAHL.
+AUGE_RADIAL_VORN = float(os.environ.get('RE15_V4_RADIAL', '0.55'))
 AUGE_RAND = 0.5               # Randbreite des Augenprofils seitlich (Anteil des Ellipsenradius); PORT-WAHL, nachgestellt an S1
 AUGE_RAND_VORN = 0.8          # vorn spitzer (K1-Kontrast: mit 0,5 19,4 < 20, Lauf r2 Eichung 19); PORT-WAHL
 AUGE_NAH = 360.0           # E.: Abstand zum Augenpunkt, bis zu dem Vorderbild-Texel in der Seitenellipse zum Auge zaehlen; 200 liess die Kante
                            # vor dem Auge aus (S1 0,038 H hoch), 280 ebenso, 360 = S1 0,042 H (Laeufe r2 Eichung 10-11); PORT-WAHL
-S2_MITTE = (0.045, 0.79)     # Messblatt V4 S2: Augenmitte 0,049 H hinter der Vorderkante, 0,79 H ueber der Sohle
+# Messblatt V4 S2: Augenmitte 0,049 H hinter der Vorderkante, 0,79 H ueber der Sohle. Gemalt wird 0,045 H (nicht 0,049): die gemessene
+# Mitte des Flecks liegt nach Licht und Weichzeichnung hinter der gemalten (Runde 2: gemalt 0,045 -> gemessen S2 0,058 H, mit 0,049
+# laege sie bei ~0,062 und der Abstand zur Haarkante S3 wuerde groesser). PORT-WAHL (Pruefung V4 r2 Zahlen 5: Abweichung erklaert).
+S2_MITTE = (0.045, 0.79)
+# V4 Runde 3 (S3): Vorderkante der gemalten Seitenellipse nach vorn - versucht mit 0,006 / 0,010 H (Laeufe r3 S3 1/2): der gemessene
+# Fleck rueckt nicht vor (Abstand bleibt 0,015 H, S2 0,057), weil er an der Naht zu den Vorderbild-Flaechen endet (Dossier V4 Runde 2
+# Offen 1), und die Vorderbild-Texel in der groesseren Ellipse senkten K1 auf 16,7-18,7. Daher 0 (aus); S3 bleibt offen.
+AUGE_S_VOR = float(os.environ.get('RE15_V4_SVOR', '0.0'))
 AUGE_S_GEMALT = 1.40         # gemalt groesser als S1, weil die Halbwert-Maske nach sigma 1,5 kleiner misst (Runde 1 vorn: gemalt 1,0 ->
                              # gemessen 0,6); nachgestellt an S1 (Dossier V4 Runde 2)
 # Struktur halbiert in den Zonen, deren helle Stufen im Eichlauf 8 eigene Komponenten ueber der Halbwertschwelle von K1/S1 bildeten
@@ -209,6 +219,80 @@ STRUKTUR_ZONE = dict(s_basis=0.5, s_haar=0.5, v_oben_links=0.5, s_hinten_unten=0
                      # Runde 2: Augen ohne Struktur - das Original-Auge ist ein weicher heller Fleck (Messblatt Abschnitt 2/3, kein Ring, keine
                      # Pupille aufloesbar); mit voller Struktur zerfiel das Seitenauge in 2 Komponenten (Lauf r2 Eichung 1); vorn halbe Struktur (ohne: K1-Kontrast 17,8 < 20, Lauf r2 Eichung 2)
                      v_auge=0.5, s_auge=0.0)
+
+
+# V4 Runde 3 (O4): Struktur aus dem Original. STRUKTUR_SIGMA = Hochpass wie struktur_amplitude (Gauss sigma 3 px, Runde 1);
+# STRUKTUR_GAIN = Verstaerkung im Log-Raum, weil das Video schon weich ist und der Vergleich den Port noch einmal mit sigma 1,5
+# weichzeichnet (Vergleichsregel): nachgestellt am Riegel K11 (Lum-Gradient im Kopf, Ziel aus dem Original), Laeufe r3 Struktur 1-n.
+STRUKTUR_SIGMA = 3.0
+STRUKTUR_GAIN = float(os.environ.get('RE15_V4_GAIN', '10.0'))
+STRUKTUR_GAIN_FARBE = float(os.environ.get('RE15_V4_GAINF', '1.5'))       # Farbton (rot/grau-Flecken des Originals), PORT-WAHL
+STRUKTUR_FARBE_KLAMMER = 0.4
+STRUKTUR_KLAMMER = float(os.environ.get('RE15_V4_KLAMMER', '2.0'))       # log Faktor >= -1,0 (Faktor >= 0,37): Kanten zum Hintergrund in den Ecken der Original-Kopfbox
+STRUKTUR_HELL = float(os.environ.get('RE15_V4_HELL', '0.15'))   # log Faktor <= STRUKTUR_HELL: helle Flecken ueber der Halbwertschwelle
+                              # des Auges bildeten eigene Komponenten (Lauf r3 Struktur 2, Gain 3,5 ohne Grenze: K1 2, S1 3 Komponenten)
+# Exponent je Zone (1 = volle Originalstruktur). Wie Runde 2 (STRUKTUR_ZONE): halbe Struktur in den Zonen, deren helle Stufen neben
+# dem Auge eigene Komponenten ueber der Halbwertschwelle von K1/S1 bildeten; Runde 3 dazu v_basis (Lauf r3 Struktur 6/7: Komponenten
+# bei (338,181) und (370,164) in v_oben_links / v_basis, seitlich (455,220) in s_basis, je 4-15 px, L* 41,6-45 bei Schwelle 40-43)
+# (348,205): Zone v_nase Stufe 15 = (218,131,145) - der rosa Fleck am Mund der Sicht-Pruefung V4 r2 1.1 (Kinn/Maulzone); die Nasenzone
+# ist hell (Zonenfarbe ~(160,94,104)), weil nur wenige Nasentexel im Fenster KV3 liegen -> auch dort nur halbe helle Struktur
+STRUKTUR_ZONE_R3 = {k: float(os.environ.get('RE15_V4_ZEXP', '0.0')) for k in ('s_basis', 's_haar', 'v_oben_links', 's_hinten_unten',
+                                                                            'v_basis')}
+STRUKTUR_ZONE_R3['v_nase'] = 0.0
+
+
+# Augenhof (Lauf r3 Struktur 3/4: die Struktur hob den Median 21 x 21 um das Auge vorn auf 33,9 L* (Original 26,7, Messblatt K1), der
+# Kontrast fiel unter 20 und helle Flecken neben dem Auge wurden eigene Komponenten): bis AUGE_HOF_1 x Augenradius im Bild keine
+# Struktur, bis AUGE_HOF_2 x Radius linear auf volle Struktur. PORT-WAHL, nachgestellt an K1/S1 (Laeufe r3 Struktur 5-n).
+AUGE_HOF_1 = float(os.environ.get('RE15_V4_HOF1', '2.0'))
+AUGE_HOF_2 = float(os.environ.get('RE15_V4_HOF2', '4.0'))
+# Hof dunkler als die Zone: Median 21 x 21 um das Auge vorn im Port 36 L* auf den Kopfpixeln (Original 26,7, Messblatt K1), Lauf r3
+# Struktur 10; Faktor im Hof (Original-Ring um den hellen Fleck). PORT-WAHL, nachgestellt an K1.
+AUGE_HOF_DUNKEL = float(os.environ.get('RE15_V4_HOFD', '0.5'))
+
+
+AUGE_HOF_DUNKEL_S = float(os.environ.get('RE15_V4_HOFDS', '0.6'))   # seitlich (Lauf r3 Struktur 15: mit 0,45 auch seitlich wurde die
+                              # Kopfoberseite seitlich zur hellsten Stelle, S1/S2 fanden dort den Fleck)
+
+
+def struktur_original(info, ansicht, kp, kb_port, bild, auge=None, hof_dunkel=None):
+    """Je Texel der Flaeche einer Ansicht: log der relativen Farbe des Originals (Vorlage 1 entblendet / Vorlage 2) an der Stelle mit
+    denselben Anteilen der Original-Kopfbox (G.KB_ORIG) wie der Texel in der Port-Kopfbox kb_port. Rueckgabe (v, u, 3)."""
+    o = G.vorlage(bild).astype(np.float32)
+    tief = cv2.GaussianBlur(o, (0, 0), STRUKTUR_SIGMA)
+    rel = np.log(np.maximum(o, 4.0) / np.maximum(tief, 4.0))
+    x, y = texel_bild(info, ansicht, kp)
+    x0, y0, x1, y1 = kb_port
+    fx = (x - x0) / max(x1 - x0, 1); fy = (y - y0) / max(y1 - y0, 1)
+    X0, Y0, X1, Y1 = G.KB_ORIG[bild]
+    xo = np.clip(np.round(X0 + fx * (X1 - X0)).astype(int), 0, 639); yo = np.clip(np.round(Y0 + fy * (Y1 - Y0)).astype(int), 0, 479)
+    # Helligkeit (Mittel der log-Kanaele) und Farbton (Rest) getrennt: je Kanal geklammert ergab die Klammer -2 auf R allein tuerkise
+    # Flecken (Lauf r3 Struktur 17, Bild 'Kopf 135'); der Farbton bekommt STRUKTUR_GAIN_FARBE und +-STRUKTUR_FARBE_KLAMMER
+    q = rel[yo, xo]
+    hell = q.mean(-1, keepdims=True)
+    r = np.clip(STRUKTUR_GAIN * hell, -STRUKTUR_KLAMMER, STRUKTUR_HELL) +         np.clip(STRUKTUR_GAIN_FARBE * (q - hell), -STRUKTUR_FARBE_KLAMMER, STRUKTUR_FARBE_KLAMMER)
+    if auge is not None:                      # (cx, cy, rx, ry) im Bild der Ansicht
+        d = np.sqrt(((x - auge[0]) / auge[2]) ** 2 + ((y - auge[1]) / auge[3]) ** 2)
+        t = np.clip((d - AUGE_HOF_1) / (AUGE_HOF_2 - AUGE_HOF_1), 0.0, 1.0)[..., None]
+        r = r * t + np.log(AUGE_HOF_DUNKEL if hof_dunkel is None else hof_dunkel) * (1.0 - t)
+    return r
+
+
+def struktur_stufen(rel_v, rel_s):
+    """16 Stufen = k-Mittel (log-RGB) ueber die Texel beider Ansichten; Rueckgabe Stufe je Texel und Faktor je Stufe (RGB, Mittel 1)."""
+    X = np.vstack([rel_v.reshape(-1, 3), rel_s.reshape(-1, 3)])
+    X = X - X.mean(0)
+    rng = np.random.default_rng(41)
+    C = X[rng.choice(len(X), STUFEN, replace=False)].copy()
+    for _ in range(30):
+        k = ((X[:, None, :] - C[None]) ** 2).sum(2).argmin(1)
+        for j in range(STUFEN):
+            if (k == j).any():
+                C[j] = X[k == j].mean(0)
+    def zu(rel):
+        R = rel.reshape(-1, 3) - (np.vstack([rel_v.reshape(-1, 3), rel_s.reshape(-1, 3)]).mean(0))
+        return ((R[:, None, :] - C[None]) ** 2).sum(2).argmin(1).reshape(rel.shape[:2])
+    return zu(rel_v), zu(rel_s), np.exp(C)
 
 
 def auge_3d(mo, kb, H, P):
@@ -313,7 +397,9 @@ def loese_zonen(daten, n_zonen, zeile, alt, fak_je_index, zone_je_index, regl_zi
         idx, zl, lam, img = cl['idx'], cl['zeile'], cl['lam'], cl['img']
         sel = zl == zeile
         z_pix = np.where(sel, zone_je_index[np.clip(idx, 0, 255)], -1)
-        f_pix = np.where(sel, fak_je_index[np.clip(idx, 0, 255)], 0.0)
+        fji = np.asarray(fak_je_index, float)
+        fji = fji[:, None].repeat(3, 1) if fji.ndim == 1 else fji          # Runde 3: Faktor je Index RGB (Struktur des Originals)
+        f_pix = np.where(sel[..., None], fji[np.clip(idx, 0, 255)], 0.0)
         konst_bild = np.where(sel[..., None], 0.0, img)
         for name, m, ziel_lab, wgt in regs:
             if m.sum() < 2:
@@ -324,7 +410,7 @@ def loese_zonen(daten, n_zonen, zeile, alt, fak_je_index, zone_je_index, regl_zi
             for zz in range(n_zonen):
                 q = (z_pix == zz)
                 if q.any():
-                    A[zz] = (w[q][:, None] * lam[q] * f_pix[q][:, None]).sum(0)
+                    A[zz] = (w[q][:, None] * lam[q] * f_pix[q]).sum(0)
             ziel_rgb = lab_rgb(ziel_lab)
             p_ziel = (ziel_rgb - G.EA_) / G.EB_
             for c in range(3):
@@ -434,6 +520,9 @@ def main():
         import augenpunkt_v4 as AP
         pa = np.array(kp['auge'], float)
         auge_s = (ks[2] - S2_MITTE[0] * Hs, sos - S2_MITTE[1] * Hs, AUGE_S_GEMALT * 0.5 * 0.040 * Hs, AUGE_S_GEMALT * 0.5 * 0.055 * Hs)
+        # V4 Runde 3 (S3 rot, Pruefung V4 r2 Zahlen 4.5: Abstand Haarkante -> Augenfleck 0,015 H statt <= 0,01 H): die Vorderkante der
+        # gemalten Ellipse um 2 x AUGE_S_VOR nach vorn (Mitte +AUGE_S_VOR, Halbachse +AUGE_S_VOR), die Hinterkante bleibt
+        auge_s = (auge_s[0] + AUGE_S_VOR * Hs, auge_s[1], auge_s[2] + AUGE_S_VOR * Hs, auge_s[3])
         karte_v = zonen_karte(kv, Hv, (okv, sov), 'vorn'); karte_s = zonen_karte(ks, Hs, (oks, sos), 'seite', auge_seite=auge_s)
         tz_v = texel_zonen(mo, info, 'vorn', karte_v, kp); tz_s = texel_zonen(mo, info, 'seite', karte_s, kp)
         t3 = texel_3d(mo, kp)
@@ -463,6 +552,15 @@ def main():
             flat[idx_ok[haar3]] = nm['s_haar']     # Farbe der seitlichen Haarkante (S3); mit 'v_haar' teilten sich KV2 und KS2 eine Farbe
                                                    # (Lauf r2 Eichung 4: K5 18,6 statt 13,3, K7 rot)
         st_v, f_v = struktur_feld(mo, tz_v.shape, amp); st_s, f_s = struktur_feld(mo, tz_s.shape, amp)
+        # V4 Runde 3 (Pruefung V4 r2 Sicht 1.1 Klasse A, Entscheid O4): Hautstruktur des Kopfes aus dem ORIGINAL statt aus dem
+        # Wundfleisch-Muster - je Texel die relative Farbe des Originals (Pixel / Gauss sigma STRUKTUR_SIGMA) an der Stelle, die dieselbe
+        # Lage in der Original-Kopfbox hat (Anteile wie die Zonen), im Log-Raum mit STRUKTUR_GAIN verstaerkt, 16 RGB-Stufen (k-Mittel)
+        _xa, _wa = AP.proj(mo, P['135'], pa[None, :])
+        auge_v = (float(_xa[0, 0]), float(_xa[0, 1]), 0.5 * 0.026 * Hv, 0.5 * 0.033 * Hv)      # Messblatt K3 0,026 x 0,033 H
+        rel_v = struktur_original(info, 'vorn', kp, kv, 1, auge_v)
+        rel_s = struktur_original(info, 'seite', kp, ks, 2, (auge_s[0], auge_s[1], auge_s[2] / AUGE_S_GEMALT, auge_s[3] / AUGE_S_GEMALT),
+                                 AUGE_HOF_DUNKEL_S)
+        st_v, st_s, stufen_rgb = struktur_stufen(rel_v, rel_s)
         # Runde 2: Augen mit radialem Verlauf statt Hautstruktur (heller Kern, dunklerer Rand): Stufe = (1 - Ellipsenabstand) x 15;
         # vorn aus dem 3D-Abstand zur Augenzone, seitlich aus dem Abstand zur Augenellipse im Bild
         dv = np.sqrt(np.nan_to_num(((t3['vorn'] - pa) / np.array(AUGE_ACHSEN)) ** 2, nan=9.0).sum(2))
@@ -490,17 +588,23 @@ def main():
             prof = np.clip((1.0 - d_) / (AUGE_RAND_VORN if ans_ == 'vorn' else AUGE_RAND), 0, 1)
             # nur seitlich (vorn mit Ausgleich: Fleck 12 x 18 px, K3 rot, KV5 30 L*, Lauf r2 Eichung 18)
             lt = np.nan_to_num(lam_t[ans_], nan=1.0) if ans_ == 'seite' else np.ones_like(prof)
-            g = (1.0 - AUGE_RADIAL + 2 * AUGE_RADIAL * prof) / np.clip(lt, 0.5, 1.0)
+            ra = AUGE_RADIAL_VORN if ans_ == 'vorn' else AUGE_RADIAL
+            g = (1.0 - ra + 2 * ra * prof) / np.clip(lt, 0.5, 1.0)
             if q_.any():                       # auf den Stufenbereich normiert (die Zonenfarbe traegt die absolute Helligkeit)
-                g = g * (1.0 + AUGE_RADIAL) / max(float(g[q_].max()), 1e-6)
-            st_[q_] = np.clip(np.round((g[q_] - (1.0 - AUGE_RADIAL)) / (2 * AUGE_RADIAL) * (STUFEN - 1)), 0, STUFEN - 1).astype(int)
+                g = g * (1.0 + ra) / max(float(g[q_].max()), 1e-6)
+            st_[q_] = np.clip(np.round((g[q_] - (1.0 - ra)) / (2 * ra) * (STUFEN - 1)), 0, STUFEN - 1).astype(int)
         idx_v = 1 + tz_v * STUFEN + st_v; idx_s = 1 + tz_s * STUFEN + st_s
-        zone_je_index = np.full(256, -1); fak_je_index = np.zeros(256)
+        zone_je_index = np.full(256, -1); fak_je_index = np.zeros((256, 3))
         for zz in range(len(ZONEN)):
-            a_z = AUGE_RADIAL if ZONEN[zz][0] in ('v_auge', 's_auge') else amp * STRUKTUR_ZONE.get(ZONEN[zz][0], 1.0)
+            auge = ZONEN[zz][0] in ('v_auge', 's_auge')
             for s in range(STUFEN):
                 zone_je_index[1 + zz * STUFEN + s] = zz
-                fak_je_index[1 + zz * STUFEN + s] = 1.0 + a_z * (s - (STUFEN - 1) / 2.0) / ((STUFEN - 1) / 2.0)
+                if auge:                       # Augen: radialer Verlauf (Runde 2, K1-K4/S1-S2 bestanden) bleibt
+                    ra = AUGE_RADIAL_VORN if ZONEN[zz][0] == 'v_auge' else AUGE_RADIAL
+                    fak_je_index[1 + zz * STUFEN + s] = 1.0 + ra * (s - (STUFEN - 1) / 2.0) / ((STUFEN - 1) / 2.0)
+                else:                          # Runde 3: Stufe = RGB-Faktor der Originalstruktur (Exponent je Zone, STRUKTUR_ZONE_R3)
+                    lg = np.log(stufen_rgb[s])           # Exponent nur auf die hellen Stufen (dunkle Flecken bleiben voll)
+                    fak_je_index[1 + zz * STUFEN + s] = np.exp(np.where(lg > 0, lg * STRUKTUR_ZONE_R3.get(ZONEN[zz][0], 1.0), lg))
         # Schwanz: Baender nach SCHWANZ_V4 uv baender (Runde 2: 5 x 51 Zeilen), Stufen aus der Struktur
         st_t, f_t = struktur_feld(mo, (256, 64), amp)
         idx_t = np.zeros((256, 64), int)

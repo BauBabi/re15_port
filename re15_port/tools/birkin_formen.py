@@ -600,18 +600,26 @@ SCHWANZ_V4 = dict(
     # 0,044 H auseinander); danach die Biegung von Hand geschaerft (Gelenk 2 flacher, Gelenk 3 nach hinten oben, Gelenk 4 senkrecht
     # darunter: Drehung nach dem Pruefer-Mass 59,9 -> 67,3 Grad, Original 66-70) und der Knick so gesetzt, dass das Endstueck 0,15 H
     # lang bleibt (r2_expt.py Laeufe b-e, Dossier V4 Runde 2).
-    gelenke=[(0.12, -0.080), (-0.037, -0.040), (-0.135, 0.003), (-0.245, 0.035), (-0.256, 0.165), (-0.259, 0.280),
+    # V4 Runde 3 (Pruefung V4 r2 Zahlen 4.1, Entscheid O2: T2-Drehung nach EINEM Verfahren, t2_mass_v4.py = Pruefer-Mittellinie, Original
+    # 65,8 / 69,5 / 70,1 Grad, Ziel 68,4 +-5; Runde 2 hatte damit 52,5 Grad, Biegung auf zwei Stufen 0,30-0,35 / 0,40-0,45 H): Gelenke 2-4,
+    # Durchmesser 2-4 und Tiefe 2-3 nachgestellt mit tools/r41_sichel/v4/r3_form_suche.py (Saat 2, Schritt 78; T1-T6/TA mit Marge
+    # 0,003 H, Protokoll SF_belege/v4/r3/r3_form_suche_saat2.log): 70,6 Grad. Der Ansatz faellt jetzt wie im Original schraeg zur
+    # Biegung ab (Gelenk 2 0,016 H ueber dem Beginn, Gelenk 3 0,058 H darunter; Original-Mittellinie 20-27 Grad vor der Biegung).
+    gelenke=[(0.12, -0.080), (-0.037, -0.040), (-0.1345, -0.0163), (-0.2617, 0.0582), (-0.2577, 0.1834), (-0.259, 0.280),
              (-0.238, 0.337), (-0.218, 0.393)],
     # Durchmesser je Gelenk in H (Abschnitt 4 "breiter nach oben": vom Knick zum Ruecken f 0,1/0,3/0,5/0,7 = 0,03/0,065/0,125/0,14 H,
     # f 0,9 geht in den Buckel >= 0,09; Taille am Knick 0,024-0,032 H; unter dem Knick gleich breit 0,035 H). Gelenke 2-4 nachgestellt
     # (r2_form_suche.py nach f 0,7 / 0,5 / 0,3); Gelenk 1 0,13 H: Unterseite am Beginn (Achse 0,04 H darueber); Gelenk 0 im Buckel wie
     # Runde 1. Knick (Gelenk 5) 0,027 H: Mitte der gemessenen Taille 0,024-0,032 H (Runde 1: 0,022 lag darunter, Pruefung V4 r1 Zahlen 5);
     # gemessen 0,025-0,028 H und die schmalste Stelle (T6). Endstueck 0,038 H (gemessen 0,032-0,036 H, Ziel 0,035).
-    durchmesser=[0.16, 0.13, 0.1368, 0.131, 0.0518, 0.027, 0.038, 0.038],
+    # V4 Runde 3: Gelenke 2-4 aus r3_form_suche.py (Saat 2, Schritt 78, s. gelenke); T5 0,028 / 0,080 / 0,140 / 0,131 H
+    durchmesser=[0.16, 0.13, 0.1243, 0.1599, 0.0452, 0.027, 0.038, 0.038],
     # Versatz zur Kamera (H, Bildmassstab am Gelenk) - Ansatz vor der Flanke (s. beginn): Strahl durch (357,243) trifft Mesh 8 bei
     # Modell-z -475 (Mittelebene -134, kopf3d_v4.treffer); mit 0,05 H blieb der Ansatz hinter der Flanke (Malreihenfolge nach mittlerer
     # Tiefe wie die PSX-Ordnungstabelle, r2_expt Lauf a1), mit 0,12 H liegt er sichtbar davor (Lauf a2). Ab der Biegung 0 (Mittelebene).
-    tiefe=[0.12, 0.12, 0.08, 0.03, 0.0, 0.0, 0.0, 0.0],
+    # PORT-WAHL (Pruefung V4 r2 Zahlen 4.4/5: als solche kennzeichnen): Gelenke 0/1 0,12 H aus r2_expt Lauf a1/a2 (Sichtbarkeit nach der
+    # Malreihenfolge); Gelenke 2/3 V4 Runde 3 aus r3_form_suche.py (Saat 2, Schritt 78) 0,0822 / 0,0443 H.
+    tiefe=[0.12, 0.12, 0.0822, 0.0443, 0.0, 0.0, 0.0, 0.0],
     dorn=0.8,                              # Spitze 0,8 x Endradius (Spitzenform nicht aufloesbar, Abschnitt 9 Punkt 2; PORT-WAHL kurz)
     glieder=7, seiten=10,                  # M1: 7 x 20 + Deckel 10 + Spitze 10 = 160 Dreiecke <= 212 (EM30-Arm 13-15)
     ueberlapp=0.45, deckel=True,           # wie V3 (Manschette ins Vorglied, Deckel in den Rumpf)
@@ -674,11 +682,34 @@ KOPF_V4 = dict(
 )
 
 
+# V4 Runde 3 (Entscheid O1 des Orchestrators: Riegel G1 meint die Geometrie - Ecken, Normalen, Dreiecke, Knochen, Clips; die
+# Texel-Zuordnung (UV/CLUT) der Koerper-Meshes darf geaendert werden, wenn eine Region sonst nicht in ihrer Farbe zu faerben ist):
+# eigene CLUT-Zeilen fuer zwei Koerper-Meshes, deren Texel ein anderes Mesh mit anderer Zielfarbe teilt (r2_uv_belegung.py):
+#   Mesh 10 = Oberarm (W)-links = (B)-rechts: teilt 5798 Texel mit Mesh 13 (Oberarm (W)-rechts) in Zeile 480; Messblatt V4 F8 16,4 L*
+#            gegen F7 33,3 L* (Pruefung V4 r2 Zahlen 4.2) -> Zeile 489 (Startwert = Zeile 480).
+#   Mesh 14 = Unterarm (W)-rechts = (B)-links: teilt 1832 Texel mit Mesh 11 (Unterarm (W)-links) in Zeile 482; Original-Box
+#            298-325 x 262-340 8,8 / -3,4 / 3,2 L*, kein Pixel L* > 30, gegen Unterarm (B)-rechts 29,3 L* (Pruefung V4 r2 Sicht 1.4,
+#            Klasse A) -> Zeile 488 (Startwert = Zeile 482).
+# Die Zeilen 488/489 liegen hinter Kopf 486 / Schwanz 487 (dieselbe CLUT-Spalte; NB3 nutzte 488/489 schon fuer Klaue/Kappe).
+KOERPER_ZEILEN_V4 = {10: (489, 480), 14: (488, 482)}       # Mesh -> (neue Zeile, Startzeile)
+
+
 def _variante_v4():
     f = dict(FORMEN['hangar'])
     f['schwanz_kette'] = dict(f['schwanz_kette'], **SCHWANZ_V4)
     f['kopf_v4'] = KOPF_V4
+    f['koerper_zeilen_v4'] = KOERPER_ZEILEN_V4
     return f
+
+
+def koerper_zeilen_v4(meshes, zeilen):
+    """V4 Runde 3 (O1): CLUT-Feld (Zeile, Spalte 0 wie EM30) der Flaechen eines Koerper-Meshes auf eine eigene Zeile; UV, Ecken,
+    Normalen und Dreiecke bleiben (Riegel G1 Geometrie)."""
+    for b, (z, _alt) in zeilen.items():
+        m = meshes[b]
+        for ul in (m['tuv'], m['quv']):
+            for uv in ul:
+                uv[2] = (z << 6) | (uv[2] & 0x3F)
 
 
 _V4_KAM = {}
@@ -1007,7 +1038,7 @@ def kopf_v4_form_uv(meshes, kp, mo):
     BAU_INFO['kopf_v4'] = dict(wahl=wahl, **{k: dict(x0=v['x0'], y0=v['y0'], s=v['s'], ou=v['ou'], ov=v['ov']) for k, v in ab.items()})
 
 
-def v4_farben_einsetzen(tim, kp, sw):
+def v4_farben_einsetzen(tim, kp, sw, kz=None):
     """Eichung (V4_FARBEN, tools/r41_sichel/v4/eichen_v4.py) in den TIM: Texelbilder Kopf vorn/seitlich und Schwanzbaender (Indizes),
     CLUT-Zeilen 486 (Kopf) / 487 (Schwanz) und die geeichten Hautzeilen 480-485 (Koerperfarben F6-F19 nur ueber die CLUT, Texel der
     Meshes 0-15 unveraendert). Ohne Datei: Platzhalter (Index 128, Zeilen grau), damit die Eichung den ersten Stand rendern kann."""
@@ -1030,15 +1061,24 @@ def v4_farben_einsetzen(tim, kp, sw):
     if 'haut' in f:                                   # geeichte Zeilen 480.. (RGB 0..255 je Eintrag; transparente bleiben)
         for z in range(min(ch, f['haut'].shape[0])):
             neu[z] = _pack(np.asarray(f['haut'][z], float), c[z])
+    # Runde 3 (O1): eigene Koerperzeilen (KOERPER_ZEILEN_V4) zuerst als Kopie ihrer Startzeile, dann ggf. aus farben_koerper_v4.npz
+    hoch = max([ch] + [z + 1 for z in zeilen] + [zn - cy + 1 for zn, _a in (kz or {}).values()])
+    alle = np.zeros((hoch, cw), np.int64)
+    alle[:ch] = neu
+    for zn, za in (kz or {}).values():
+        alle[zn - cy] = neu[za - cy]
     if os.path.exists(V4_KOERPER):                    # Runde 2: Koerpertexel (Indizes) und ihre Zeilen, UVs/Primitive unveraendert (G1)
         fk = dict(np.load(V4_KOERPER))
         ki = fk['koerper_idx']
         m = ki >= 0
         pix[m] = ki[m].astype(np.uint8)
         for j, zn in enumerate(fk['koerper_zeilen_nr']):
-            neu[int(zn) - cy] = _pack(np.asarray(fk['koerper_zeilen'][j], float), c[int(zn) - cy])
-    alle = np.zeros((max(ch, max(zeilen) + 1), cw), np.int64)
-    alle[:ch] = neu
+            ziel = int(zn) - cy
+            if ziel < hoch:
+                alle[ziel] = _pack(np.asarray(fk['koerper_zeilen'][j], float), alle[ziel] if ziel >= ch else c[ziel])
+        for zn, za in (kz or {}).values():            # Datei ohne die eigene Zeile (Stand Runde 2): Kopie der geeichten Startzeile
+            if zn not in set(int(x) for x in fk['koerper_zeilen_nr']):
+                alle[zn - cy] = alle[za - cy]
     for z, rgb in zeilen.items():
         a = np.full(256, 0x7FFF, np.int64); a[0] = 0
         alle[z] = _pack(np.asarray(rgb, float), a)
@@ -2331,6 +2371,8 @@ def baue(blob, form):
                 kopf_v2_uv(meshes, form['kopf_v2'])
             if form.get('kopf_v4'):
                 kopf_v4_form_uv(meshes, form['kopf_v4'], BAU_INFO['mo_v4'])
+            if form.get('koerper_zeilen_v4'):
+                koerper_zeilen_v4(meshes, form['koerper_zeilen_v4'])
             if 'baender' in kette['uv']:                   # Schwanz V4: Farbklassen je Flaeche in der Ruhe-Pose
                 mo4 = BAU_INFO['mo_v4']
                 R, T = mo4.pose(_v4_kf(mo4, kette['pose']))
@@ -2363,7 +2405,7 @@ def baue(blob, form):
     if form.get('kopf_v2') and not form.get('kopf_v3'):     # V3 malt nach dem Bau (kopf_v3_malen)
         tim = kopf_v2_textur(tim, form['kopf_v2'])
     if form.get('kopf_v4'):                                 # V4: Texel/CLUT aus der Eichung (v4_farben_einsetzen)
-        tim = v4_farben_einsetzen(tim, form['kopf_v4'], form['schwanz_kette'])
+        tim = v4_farben_einsetzen(tim, form['kopf_v4'], form['schwanz_kette'], form.get('koerper_zeilen_v4'))
     if len(tim) % 4:
         tim += bytes(4 - len(tim) % 4)
     sek = [bytes(vor[d[i]:d[i+1]]) for i in range(7)]
