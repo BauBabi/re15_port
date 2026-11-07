@@ -1781,3 +1781,112 @@ und der Pin cfd1ac42 sind unveraendert.
    Glied); die Textur laeuft dort durch.
 5. Der Einbau ins Spiel-Asset folgt erst nach der Nutzer-Abnahme. Bis dahin liegt die Variante im Scratchpad als sfv4/emd/EM30_V4.EMD
    (= EM30_V4ot.EMD, a9da924f), reproduzierbar mit "birkin_formen.py --variante v4 --aus DIR". Runde 5 liegt als EM30_V4r5.EMD (a762bd66).
+
+
+## V4 Originaltexturen - Runde 2 (Bauer, Runde 2 von 2, 2026-11-07)
+
+Grundlage: Sicht-Pruefung Runde 1 (SF_PRUEFUNG_REF2TEX_r1_sicht.md, Commit 29debe4b1), Ergebnis "nicht bestanden" mit drei Befunden
+(b1, b2b, c2). Orchestrator Runde 2: (a) Kopf-Grundton = blasse Ref2-Haut, dunkel nur das Haarfeld, keine violettstichigen Eintraege,
+keine Nachfuehrung an Video-L*-Zielen, Abnahme gegen Ref2; (b) Schwanzwurzel ohne Streifenblock, Riegel mit Anisotropie-Mass je
+Teilflaeche; (c) was in Runde 1 wie Vorlage oder klein war, bleibt. Der Zahlen-Pruefer der Runde 1 fiel dem Modell-Limit zum Opfer.
+
+### Befunde und Ursachen (gemessen)
+| Befund | Ursache (gemessen) | Aenderung |
+|---|---|---|
+| (b1) Kopf fast schwarz, violettstichig (L* P50 11,4, 80 % L* < 20, 23 % b* < 0) | 1. Die Zonenhelligkeit wurde an Video-L*-Ziele nachgefuehrt (K5/K7/K8, 13-18 L*). 2. Die Runde-5-Zonenkarte legt die Zone s_haar (Haar der SEITENansicht) auch ins Vorderbild, dort auf 569 Texel der Gesichtsmitte (u 10-35, v 18-46). Pose 85 sieht diese Flaechen nur als Streifen an der Kopfvorderkante (Kenn-Render, scratchpad r2ot/sicht.py). 3. Die Klassen enthielten 21 violettstichige Eintraege (b* < 0) der Zeile 480. | Grundton = die Original-Kopftexel von Ref2 in IHRER Zeile 485 (Lab), je Texel der naechste Eintrag der Zeile 480. Keine Nachfuehrung an Videowerten. Haar nur auf den Texeln, die Pose 135 im Fenster KV2 und an der K6-Stelle zeigt (haar_vorn), seitlich nur im Fenster KS2 (haar_seite). Violettstichige Eintraege (b* < 0, oder a* > 8 mit b* < 2) entfallen. |
+| (c2) Haarfeld bedeckt 80 %, Nase nicht erkennbar | Folge von (b1) | wie (b1); Nase (Texel im Fenster KV3) mit hellem Nasenruecken (NASE_F) |
+| (b2b) Wurzel Glied 16 oben senkrecht gestreift (waagerecht 7,45 / senkrecht 4,36) | Kenn-Render u/v (scratchpad r2ot/wurzel.py): die oberen 14 Zeilen von Id 16 zeigen v 19-53 ueber 33 px waagerecht (1 Texel je px), aber u nur 0-5 ueber 12 Zeilen. Die Hautstruktur erscheint dort ~3-fach laengs gestaucht. Am Rand (u 0-1) bestimmte zudem eine einzelne Quellspalte (Ader/Licht) den ganzen Streifen. | Im Wurzelband (v < 56) die Quelle laengs gedehnt (WURZEL_K 0,55), und je Texel die mittlere Farbe der ueberdeckten Quellspalten; ab Texelzeile 56 texelgleich Runde 1 (Glieder 17-22, Vorgabe (c)). |
+
+Ein erster Versuch mit gleichmaessiger Umfangs-UV (u nach dem Winkel, birkin_formen) wurde verworfen und nicht committet. Er hob die
+Wurzel nicht (oben 14 Zeilen 1,60) und veraenderte die Glieder 17-22 (Id 20-22 1,6-1,8 statt 1,3-1,5).
+
+### Aenderungen (Commits)
+- fd2cb8534 **ref2tex_v4.py** Runde 2 (main; Runde 1 bleibt als main_r1), farben_ref2tex_v4.npz, Protokoll ref2tex_protokoll.json,
+  **ref2tex_gitter.py** mit SF_belege/v4/ot2/ref2tex_gitter.txt.
+- b08d1c79a **riegel_ref2tex.py**: T-K4 gegen Ref2 statt Video, T-K5 neu, T-K3d neu, tk4_r1 fuer die Gegenprobe. Belege
+  SF_belege/v4/ot2/, Leisten SF_belege/v4/01-05, 07, 08, ctest.
+- 7baaa0eec **SF_MESSBLATT_V4.md**: Nachtrag Runde 2 in Abschnitt 5, Ersatztabelle in Abschnitt 7, ueberholte Ziele markiert.
+- a5db68416 Leisten der Runde 1 nach SF_belege/v4/ot1/.
+- 29debe4b1 Pruefbericht Sicht Runde 1.
+- Geometrie, UV und birkin_formen.py unveraendert; Spiel-Asset EM30_HANGAR.EMD (cfd1ac42) und Pin unveraendert. Die Variante liegt
+  im Scratchpad: sfv4/emd/EM30_V4.EMD = EM30_V4ot2.EMD (sha256 415a921f436fe8e1...); Runde 1 = EM30_V4ot.EMD (a9da924f), Runde 5 =
+  EM30_V4r5.EMD (a762bd66). Reproduzierbar: "python ref2tex_v4.py" und dann "python birkin_formen.py --variante v4 --aus DIR".
+
+PORT-WAHLen (kein RE-Befund, keine @0x-Konstante; je mit Lauf im Code-Kommentar):
+- aus dem Gitter (36 Punkte, 6 ohne rote Zeile, gewaehlt der erste): S_VORN 1,2, S_SEITE 1,0, HOF_F 0,62, HOF_R 8, HOF_MIN 29;
+- KNIE 30 / 0,4, HAUT_L2 44, HAAR_F 0,5, KUPPE_DA 6 / KUPPE_L 1,0, KINN_F 1,15 / KINN_L 56, NASE_F 1,1;
+- HAAR_SIGMA 1,5 / HAAR_STRUKTUR 0,8 (Haarrand folgt der Ref2-Kopfstruktur, kein Rechteck), AUGE_KERN_S 0,15, HOF_F_S 0,9;
+- WURZEL_K 0,55 (Rampe 50-56).
+
+### Riegel (riegel_ref2tex.py, Lauf sfv4/r/V4ot2 mit 191 FRAMEDUMPs)
+Ausgabe: SF_belege/v4/ot2/riegel_ref2tex_V4ot2.txt/.md/.json. **Exit 1: 1 rot von 49** (T5, Geometrie seit Runde 5), 8 INFO-Zeilen.
+
+| Mass | Soll | Ist Runde 2 | Ist Runde 1 (Gegenprobe) |
+|---|---|---|---|
+| T-K1a/b/c Koerper = Ref2 | bytegleich | OK, 0 von 34716 Texeln | OK |
+| T-K2 keine neue Farbe | Ref2-CLUT | OK, 0 von 14008, 161 Farben | OK |
+| T-K3a/b/c Schwanz | Quernaht, Bloecke, Wurzelkante | OK (13,0 <= 14,0; Std 8,8-14,6, 86-154 Indizes; Sprung 4,7) | OK |
+| T-K3d Wurzel Id 16 waagerecht/senkrecht | je Teilflaeche in 0,67-1,44 (Rumpf Id 8 / Oberarm Id 13) | OK: ganz 0,81, oben 14 Zeilen 1,29 (1,92 / 1,49), Quadranten 0,71-0,99 | **ROT**: oben 14 Zeilen 1,70 (7,41 / 4,36) |
+| T-K4 K1 Auge vorn | 1 Komponente, Kontrast >= 20 | OK 1; 20,7 | OK 20,7 |
+| T-K4 K2 Augenfleck | L* >= KV5 + 20, blass | OK 54,5/6,9/2,7 (KV5 23,8) | OK |
+| T-K4 K3 / K4 | Groesse / Lage | OK 0,030 x 0,033 H; 0,054 H links, 0,095 H unter OK | OK |
+| T-K4 K5 Haarfeld | <= Auge - 25 und <= 22,8 | OK 12,9 | OK 14,2 |
+| T-K4 K6 Spiegelstelle | L* <= 18 | OK 10,1 | OK 11,5 |
+| T-K4 K7 Nase | zwischen Haar und Auge, >= Haar + 8 | OK 21,7 (Haar 12,9) | **ROT** 16,4 (Haar 14,2) |
+| T-K4 K8 Kinn | Albedo >= 29,2; dE00 <= 10 zu Ref2 | OK Albedo 34,8; dE00 5,7 | **ROT** |
+| T-K4 K9 / S4 Kuppe | a* >= 11; dL* zu Ref2 <= 8 | OK 38,0/22,5/7,7; 36,8/16,0/3,9 | **ROT** K9 22,7 L* |
+| T-K4 K10, S1, S2 | wie Messblatt | OK (0,154 x 0,187 H; S1 1 Komp. 0,042 x 0,049 H; S2 0,050 / 0,818 H) | OK |
+| T-K4 S3 Haarkante seitlich | KS2 L* <= 22,8; Abstand <= 0,01 H | OK 22,0; 0,000 H | OK |
+| T-K5a Grundton L* P50 ausserhalb Haarfeld, vorn / seitlich | Ref2 30,8 +- 4 | OK 30,9 / 34,2 | **ROT** 13,5 / 20,7 |
+| T-K5b Grundton/Rumpf, vorn / seitlich | >= Ref2 - 0,2 (1,18 / 1,06) | OK 1,07 / 1,05 | **ROT** 0,57 / 0,66 |
+| T-K5c Anteil b* < 0, vorn / seitlich | <= 0,02 | OK 0,000 / 0,000 | **ROT** 0,257 / 0,206 |
+| T-K5d dunkle Textur ausserhalb Haarfeld | <= Ref2 + 0,05 (0,00) | OK 0,03 / 0,00 | **ROT** 0,86 / 0,60 |
+| INFO ganzer Kopf mit Haarfeld, vorn | Ref2 30,8 / 1,28 / 0,12 | L* P50 23,9, Kopf/Rumpf 0,87, L* < 20 0,46 | 11,5 / 0,52 / 0,85 |
+| G1, M1-M4, T1-T4, TA, T5q, T6, TK, T7a-d, Boden | wie Riegel V4 | OK | - |
+| T5 | f 0,5 >= 0,100 H | **ROT** 0,098 (Geometrie seit Runde 5) | ROT 0,098 |
+
+Gegenproben (SF_belege/v4/ot2/riegel_ref2tex_*_gegenprobe.*):
+- V4 Runde 5 (a762bd66): 19 rot, darunter T-K1a/b/c und T-K2.
+- Runde 1 (a9da924f): 13 rot, darunter T-K3d und alle T-K5.
+
+### Leisten (SF_belege/v4/; Runde 1 in v4/ot1/, Runde 5 in v4/r5/)
+Spalten Nutzer-Vorlage | Nutzer-Beschriftung | Referenz 2 (gelobt) | V4 neu (Originaltexturen):
+- 01_vorn_kamera12
+- 02_seite_wie_bild2
+- 03_kopf_nah_vorn_x4
+- 04_kopf_nah_seite_x4
+- 05_schwanz_x3
+- 07_gang: Laeufe sfv4/r/R2ot und sfv4/r/V4ot2.
+- 08_rundum_V4
+
+Am Bild:
+- Kopf vorn: rosa-braune Ref2-Haut mit der Feinstruktur der Original-Kopftextur, rote Kuppe und blasser, unregelmaessiger Augenfleck
+  (B)-links. Das dunkle Haarfeld liegt (B)-rechts daneben; sein Rand folgt der Hautstruktur.
+- Kopf seitlich: rosa Haut, rote Oberseite, blasser Augenfleck an der Vorderkante, dunkle Haarkante davor.
+- Wurzel: die Oberseite ist ein ruhiger, grau-rosa Streifen ohne gesaettigte Adern (scratchpad r2ot/wurzel_vgl.png, oben Runde 1,
+  unten Runde 2).
+- Glieder 17-22 und der Koerper sind unveraendert.
+
+### Tests
+- ctest (unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41, integration_r41_sichel_form): "100% tests passed, 0 tests failed
+  out of 4" (64,9 s; SF_belege/v4/ot2/ctest_v4_ot2.txt).
+- Bau "LOCAL-BUILD-OK (build)". Engine unveraendert.
+
+### Offen
+1. **T5 bleibt rot.** Grund ist die Geometrie, die nach Vorgabe 4 unveraendert bleibt: f 0,5 = 0,098 H bei Grenze 0,100. T5q quer zur
+   Pruefer-Mittellinie ist gruen.
+2. **Ganzer Kopf vorn dunkler als Ref2.** Mit Haarfeld liegt der ganze Kopf vorn bei L* P50 23,9 und Kopf/Rumpf 0,87 (Ref2 30,8 / 1,28).
+   Das Haarfeld nimmt 26 % der Kopfpixel ein, so gross wie die Messblatt-Fenster KV2 und die K6-Stelle; dort verlangen K5/K6 Dunkel.
+   Ausserhalb des Haarfelds:
+   - Grundton 30,9 (Ref2 30,8), Albedo 36,7 (Ref2 37,2);
+   - Render-Anteil L* < 20 bei 0,30 (Ref2 0,18). Das ist Schattierung der V4-Kopfform, deren Geometrie seit Runde 5 unveraendert ist;
+     die Textur ist dort nicht dunkel (T-K5d Albedo 0,03).
+3. **K1 haelt nur mit einem Augenhof.** Mit Hof steht K1 bei 20,7 (Grenze 20), ohne Hof bei 12,1-13,9. Der hellste blasse Eintrag der
+   Zeile 480 hat L* 55, die Ref2-Haut um das Auge ist blass. Der Hof dunkelt die Haut um den Augenkern auf hoechstens 0,62 ab, mit
+   Boden Texel-L* 29; er ist kein dunkler Ring (T-K5d).
+4. **T-K3d an der Wurzeloberseite.** Die oberen 14 Zeilen stehen bei 1,29, innerhalb der Rumpf-/Oberarm-Spanne, aber ueber dem
+   Pruefer-Richtwert 0,8-1,0. Die Spruenge sind dort klein (1,92 / 1,49 gegen 7,41 / 4,36 in Runde 1).
+5. Die Glieder 20 und 22 haben Anisotropie 1,35-1,46 (INFO). Sie sind ab Texelzeile 56 texelgleich Runde 1, die die Sicht-Pruefung als
+   "klein" bewertet hat (Vorgabe (c)).
+6. Der Einbau ins Spiel-Asset folgt erst nach der Abnahme. Nach dem Nutzerentscheid ist dies die letzte Nachbesserungsrunde vor
+   v0.8.30.
