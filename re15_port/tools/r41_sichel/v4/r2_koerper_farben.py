@@ -40,7 +40,10 @@ KOERPER = [b for b in range(16) if b != 9]
 LAM_MIN = 0.35       # Bildpunkte mit Licht < 0,35 (streifend) zaehlen nicht - sie trieben einzelne Texel auf Weiss; PORT-WAHL
 LUM_MAX = 190.0      # hellster erlaubter Koerpertexel (Lum); PORT-WAHL gegen Einzel-Ausreisser (200: zwei helle Punkte auf der Schulter
                      # noch sichtbar, 215 deutlich; F14 dL 190 / 200 / 215: -5,2 / -4,6 / -4,4, Laeufe r2 Koerper 11-13)
-MU = float(os.environ.get("RE15_R4_MU", "0.25"))            # Vorwissen: wie ein Viertel Bildpunkt mit lambda 1 (haelt kaum gesehene Texel bei Referenz 2 x Verstaerkung); PORT-WAHL
+# Vorwissen: wie ein Viertel Bildpunkt mit lambda 1 (haelt kaum gesehene Texel bei Referenz 2 x Verstaerkung). PORT-WAHL (Regularisierung
+# der Texel-Loesung, keine Spielkonstante; Laeufe r4 Koerper 1-8), Nutzer-Wortlaut "Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben" - der Nutzer hat den Koerper Referenz 2 gelobt
+# (Dossier "Referenz 2"), ungesehene Texel bleiben deshalb nahe an ihm.
+MU = float(os.environ.get("RE15_R4_MU", "0.25"))
 
 # Regionen: (Name, Ansicht, Port-Ids, Original-Boxen (x0, y0, x1, y1), Quelle)
 REGIONEN = [
@@ -111,7 +114,12 @@ KORR = json.load(open(KORR_DATEI)).get('korrektur', {}) if os.path.exists(KORR_D
 # Lauf r4 Koerper 7 (0,5): 2,01 / 0,016 / 291; Lauf r4 Koerper 8 (0,0): 2,18 / 0,009 / 281 - 0,5 behaelt die Hautstruktur (Original
 # fleckig) bei fast gleicher Rot-Verteilung. PORT-WAHL, Nutzer-Wortlaut "Ich will ... auch EXAKT seine Farben".
 HF_OBERKOERPER = float(os.environ.get('RE15_R4_HF', '0.5'))
-KACHEL_MIN = 30      # Mindestzahl Bildpunkte je Kachel (Original und Port), sonst bleibt die Region davor; PORT-WAHL
+KACHEL_ORT = os.environ.get('RE15_R5_KACHEL_RANG') != '1'
+KACHEL_Y_BOX = os.environ.get('RE15_R5_Y_H') != '1'          # V4 Runde 5 (O10): y-Abbildung ueber die Oberkoerper-Spanne (s. ziel_bild)   # V4 Runde 5 (O10): Farbe nach Anteilslage statt Rangabbildung je Kachel
+HF_NUR_HELL = os.environ.get('RE15_R5_HF_FARBE') != '1'     # V4 Runde 5 (O10): Feinanteil nur als Helligkeit (s. ziel_bild)
+# Mindestzahl Bildpunkte je Kachel (Original und Port), sonst bleibt die Region davor. PORT-WAHL (Zaehlgrenze fuer eine Farbverteilung, Laeufe
+# r4 Koerper 6-8), Nutzer-Wortlaut "Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben". Seit Runde 5 (KACHEL_ORT) nur noch in der Rangabbildung (RE15_R5_KACHEL_RANG=1) wirksam.
+KACHEL_MIN = 30
 
 
 def oberkoerper_flaeche(shape=(480, 640)):
@@ -175,12 +183,29 @@ def raster(mo, pose):
     return ziel, ids, U, Vt, Z, LAM
 
 
+_gelb = {}
+def gelb_grenze():
+    """V4 Runde 5 (Pruefung V4 r4 Sicht 1.5 Klasse A "gelber Fleck (B)-linke Schulter", Entscheid O9): Hoechstes b* der Figur im Original =
+    Maximum von b* in der Rumpfbox 352-448 x 196-292 (Sicht-Pruefung V4 r1 1.4) und der Kopfbox 368-416 x 139-191 (Messblatt Abschnitt 2)
+    der Vorlage 1 (gemessen: 9,9 / 9,1). Bildpunkte mit hoeherem b* sind Hintergrund: die gelbe Lampe hinter der (B)-linken Schulter liegt in
+    der Schulterbox 318-360 x 160-190 und im Polygon POLY_VORN (x 306-341, y 145-167, b* bis 28) - von dort kamen die 45 gelben Texel."""
+    if not _gelb:
+        L = G.lab(G.vorlage(1))
+        _gelb['b'] = max(float(L[196:293, 352:449, 2].max()), float(L[139:192, 368:417, 2].max()))
+    return _gelb['b']
+
+
+def ohne_gelb(px):
+    """Original-Bildpunkte ohne Hintergrund-Gelb (b* > gelb_grenze())."""
+    return px[G.lab(px)[:, 2] <= gelb_grenze()] if len(px) else px
+
+
 def box_pixel(img, boxen):
     m = np.zeros(img.shape[:2], bool)
     for (x0, y0, x1, y1) in boxen:
         mm = np.zeros(img.shape[:2], np.uint8); mm[y0:y1 + 1, x0:x1 + 1] = 1
         m |= cv2.erode(mm, np.ones((5, 5), np.uint8)).astype(bool)       # 2 px erodiert
-    return img[m]
+    return ohne_gelb(img[m])
 
 
 def ziel_bild(img, ids, ansicht):
@@ -224,17 +249,41 @@ def ziel_bild(img, ids, ansicht):
             pny0 = float(np.array(POLY_VORN)[:, 1].min())
             xo = pnx0 + (xx - px0) * (pnx1 - pnx0) / max(px1 - px0, 1.0)
             yo = pny0 + (yy - top) * G.H_ORIG[1] / max(Hp, 1.0)
+            if KACHEL_Y_BOX:
+                # V4 Runde 5 (O10): y wie x ueber die Spanne - Port-Oberkante .. 0,37 H_port (Oberkoerper der Sicht-Pruefung, r4_mass.
+                # oberkoerper_buehne) -> Polygon-Oberkante .. -Unterkante; mit dem Massstab H1/H_port lag die Port-Brust 0,03-0,05 H1 zu hoch im
+                # Original (Pose "135" ist aufrechter als n1485, Messblatt Abschnitt 9 Punkt 5)
+                pny1 = float(np.array(POLY_VORN)[:, 1].max())
+                yo = pny0 + (yy - top) * (pny1 - pny0) / max(0.37 * Hp, 1.0)
             Ao = np.zeros(m.shape, bool)
             ok_ = (xo >= 0) & (xo < m.shape[1]) & (yo >= 0) & (yo < m.shape[0])
             Ao[ok_] = A[np.clip(yo[ok_].astype(int), 0, m.shape[0] - 1), np.clip(xo[ok_].astype(int), 0, m.shape[1] - 1)]
             n_k = 0
+            if KACHEL_ORT:
+                # V4 Runde 5 (Pruefung V4 r4 Sicht 1.5 Klasse A, Entscheid O10 "Rot nur in der Brustmitte wie im Original"): die
+                # Rangabbildung je Kachel verteilte das Rot der Kachel auf die DUNKLEN Port-Bildpunkte (Spalten des Referenz-2-Musters) -
+                # rote Sprenkel ueber den ganzen Oberkoerper (Mitte/aussen 1,5 im Spielbild, Video 2,8). Jetzt bekommt jeder Port-Bildpunkt
+                # die Farbe des Originals an seiner Anteilslage (xo, yo) - die Raumverteilung des Rots kommt ganz aus dem Original. Quelle =
+                # Bildpunkte der Flaeche A ohne Hintergrund-Gelb (gelb_grenze); ausserhalb der naechste Quellpunkt.
+                from scipy import ndimage as nd_
+                quelle = A & (o_lab_all[..., 2] <= gelb_grenze())
+                _d, (qy, qx) = nd_.distance_transform_edt(~quelle, return_indices=True)
+                pm = m & Ao
+                yi = np.clip(np.round(yo[pm]).astype(int), 0, m.shape[0] - 1); xi = np.clip(np.round(xo[pm]).astype(int), 0, m.shape[1] - 1)
+                T[pm] = orig[qy[yi, xi], qx[yi, xi]]
+                gesetzt |= pm; gew[pm] = GEWICHT.get(name, 1.0); kachel_px |= pm
+                info[name] = dict(ort=True, px=int(pm.sum()), port_x=(px0, px1), port_top=top, port_H=Hp)
+                continue
             for i in range(KACHELN[0]):
                 for j in range(KACHELN[1]):
                     k_ = A & (xx >= gx[i]) & (xx < gx[i + 1]) & (yy >= gy[j]) & (yy < gy[j + 1])
                     pm = m & Ao & (xo >= gx[i]) & (xo < gx[i + 1]) & (yo >= gy[j]) & (yo < gy[j + 1])
                     if pm.sum() < KACHEL_MIN or k_.sum() < KACHEL_MIN:
                         continue
-                    ol = o_lab_all[k_]; pl = Lab[pm]
+                    ol = o_lab_all[k_]; ol = ol[ol[:, 2] <= gelb_grenze()]      # V4 Runde 5: ohne Hintergrund-Gelb (O9)
+                    pl = Lab[pm]
+                    if len(ol) < KACHEL_MIN:
+                        continue
                     # Lab-Tripel des Originals nach L*-Rang (nicht kanalweise): kanalweise trennte die Abbildung Helligkeit und Rot - die
                     # roten Port-Bildpunkte bekamen helle L*-Werte (F6 dL +5,1, Lauf r4 Koerper 3); im Original sind die roten Stellen dunkel
                     q = (np.argsort(np.argsort(pl[:, 0])) + 0.5) / len(pl)
@@ -251,7 +300,7 @@ def ziel_bild(img, ids, ansicht):
             fx0, fy0, fx1, fy1 = G.fenster(kb_, (0.21, 0.88, 0.62, 1.05))
             bm = np.zeros(m.shape, bool); bm[fy0:fy1 + 1, fx0:fx1 + 1] = True
             m &= bm
-            o_pix = orig[boxen[0][1]:boxen[0][3] + 1, boxen[0][0]:boxen[0][2] + 1].reshape(-1, 3)
+            o_pix = ohne_gelb(orig[boxen[0][1]:boxen[0][3] + 1, boxen[0][0]:boxen[0][2] + 1].reshape(-1, 3))
         elif teil is not None and teil[0] in ('rot', 'nicht_rot') and m.any():   # Rotanteil: Port nach a*-Rang, Original nach R-G
             ar = Lab[..., 1]; grenze = np.percentile(ar[m], 100.0 * (1.0 - teil[1]))
             m &= (ar >= grenze) if teil[0] == 'rot' else (ar < grenze)
@@ -307,14 +356,178 @@ def ziel_bild(img, ids, ansicht):
         # kraeftig rote Bildpunkte a* > 18 wie das Video): im Oberkoerper den Feinanteil des Port-Bildes (Bild - Gauss sigma 1,5, das
         # Referenz-2-Wundmuster) nur zu HF_OBERKOERPER uebernehmen. D = HF x (Bild - Gauss) + (T - a) / b (HF 1 = Formel oben)
         glatt = cv2.GaussianBlur(img.astype(np.float32), (0, 0), G.SIGMA).astype(float)
-        Dk = HF_OBERKOERPER * (img.astype(float) - glatt) + (T - G.EA_) / G.EB_
+        hf = img.astype(float) - glatt
+        if HF_NUR_HELL:
+            # V4 Runde 5 (Pruefung V4 r4 Sicht 1.5 Klasse A: "mauve-braun mit roten Adern ueberall", Schultern a* > 12 0,07-0,08 im
+            # Spielbild, Video 0,00-0,05; Entscheid O10 "Rot nur in der Brustmitte"): der Feinanteil des Referenz-2-Musters traegt die roten
+            # Adern als Farbton - nur seine Helligkeit wird uebernommen (gleicher Wert auf R, G, B), der Farbton kommt allein aus dem Original
+            hf = np.repeat(G.lum(hf)[..., None], 3, axis=2)
+        Dk = HF_OBERKOERPER * hf + (T - G.EA_) / G.EB_
         D[kachel_px] = Dk[kachel_px]
     return D, gesetzt, info, gew
+
+
+# V4 Runde 5 (Pruefung V4 r4 Sicht 1.5 Klasse A "Rot-Verteilung Oberkoerper vorn", Entscheid O10 "Rot nur in der Brustmitte wie im
+# Original"): die Farbe der Texel kommt aus ZWEI Messansichten (Pose "135" und "85"); im Spielbild h118/h135 ist die Figur vorgebeugt und
+# zeigt die (B)-linke Schulter/den Buckel breiter - dort lag das Rot (Drittel (B)-links 0,35-0,39, Video 0,18-0,23). Ausgleich je Drittel
+# des Oberkoerpers: jeder Texel bekommt einen Farbtonfaktor k (a*, b* x k) = Mittel der Drittelfaktoren ueber die Bildpunkte, an denen er in
+# den drei Vorderansichten (Buehne Pose "135", Laufposen h118 / h135 aus dem Lauf DRITTEL_LAUF) sichtbar ist. Die Faktoren werden so
+# bestimmt (Halbierung), dass der Rotanteil (R - G >= 15, Schirm x Licht, Eichung a/b) je Drittel das Mittel der Originale trifft
+# (Vorlage 1 Polygon POLY_135: 0,18 / 0,58 / 0,24; Video h118 Polygon PV_SPIEL: 0,23 / 0,55 / 0,14; Vorlage 1 h135 wie Buehne) - Ziel ist
+# die gemessene Original-Verteilung, nicht die Riegelgrenze. Drittel und Polygone: r4_mass (Sicht-Pruefung V4 r3).
+DRITTEL_AUSGLEICH = os.environ.get('RE15_R5_DRITTEL') != '0'
+DRITTEL_NUR_SPIEL = os.environ.get('RE15_R5_DRITTEL_BUEHNE') != '1'   # Ziel/Messung nur an den Spielbildern h118/h135 (Buehne besteht FO)
+DRITTEL_LAUF = os.path.join(G.SFV4, 'r', 'V4r4', 'debug.log')
+
+
+def drittel_ausgleich(mo, T_, P):
+    import r4_mass as R4
+    sys.path.insert(0, os.path.join(os.path.dirname(HIER), 'nb2neu'))
+    import riegel_v3 as R3
+    import cv2 as cv2_
+    from skimage.color import rgb2lab, lab2rgb as l2r
+    PO = R3.lauf_posen(DRITTEL_LAUF)
+    os.environ['NB6_RUNS'] = os.path.dirname(os.path.dirname(DRITTEL_LAUF))
+    import c6
+    ansichten = []
+    o1 = G.vorlage(1)
+    vid118 = cv2_.cvtColor(c6.vid(118), cv2_.COLOR_BGR2RGB).astype(float)
+    ziele = []
+    for nm, pose, poly in (('135', P['135'], None), ('h118', PO[118], R4.PS_SPIEL[118]), ('h135', PO[135], R4.PS_SPIEL[135])):
+        img, ids, U, Vt, Z, LAM = raster(mo, pose)
+        if poly is None:
+            top = np.nonzero((ids >= 0).any(1))[0].min(); Hp = float(np.nonzero((ids >= 0) & ~np.isin(ids, G.SCHWANZ))[0].max() - top)
+            m = np.isin(ids, (8, 9, 10, 13)) & (np.arange(ids.shape[0])[:, None] <= int(round(top + 0.37 * Hp)))
+            m = cv2_.erode(m.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+            vd = R4.drittel(o1, R4.poly_maske(R4.POLY_135))
+        else:
+            m = R4.poly_maske(poly)
+            vd = R4.drittel(vid118 if nm == 'h118' else o1, R4.poly_maske(R4.PV_SPIEL[118 if nm == 'h118' else 135]))
+        ys, xs = np.nonzero(m)
+        x0, x1 = xs.min(), xs.max()
+        dr = np.clip(((np.arange(640) - x0) * 3 // max(x1 - x0, 1)), 0, 2)
+        q = m & np.isin(Z, ZEILEN) & (ids >= 0) & (ids != 9)
+        ansichten.append(dict(nm=nm, q=q, m=m, img=img.astype(float), dr=np.broadcast_to(dr[None, :], q.shape)[q], z=Z[q], u=U[q], v=Vt[q],
+                              lam=LAM[q].astype(float)))
+        ziele.append([vd[k]['rot'] for k in ('B_links', 'Mitte', 'B_rechts')])
+    ziel = np.mean(ziele, 0)
+    # Gewicht je Texel und Drittel (Zahl der Bildpunkte in allen drei Ansichten)
+    w = {z: np.zeros(T_[z].shape[:2] + (3,)) for z in ZEILEN}
+    for a in ansichten:
+        for t in range(3):
+            s_ = a['dr'] == t
+            for z in ZEILEN:
+                zz = s_ & (a['z'] == z)
+                np.add.at(w[z][..., t], (a['v'][zz], a['u'][zz]), 1.0)
+    lab_ = {z: rgb2lab(np.clip(T_[z] / 255.0, 0, 1)) for z in ZEILEN}
+    import birkin_formen as BF_
+    A_MAX_ = BF_.FARB_A_MAX if BF_.FARB_A_MAX > 0 else 1e9
+
+    def anwenden(k):
+        out = {}
+        for z in ZEILEN:
+            n = w[z].sum(2)
+            kk = np.where(n > 0, (w[z] * np.asarray(k)[None, None, :]).sum(2) / np.maximum(n, 1e-9), 1.0)
+            L = lab_[z].copy(); L[..., 1:] *= kk[..., None]
+            L[..., 1] = np.minimum(L[..., 1], A_MAX_)          # wie birkin_formen.farbklammer (a* <= FARB_A_MAX) im Generator
+            out[z] = np.clip(l2r(L) * 255.0, 0, 248)
+        return out
+
+    def anteile(Tk):
+        # Messung wie der Riegel (r4_mass.drittel nach der Vergleichsregel sigma 1,5 / a / b) am Bild mit den neuen Texelfarben
+        r_ = np.zeros(3)
+        for a in ansichten:
+            px = np.zeros((len(a['z']), 3))
+            for z in ZEILEN:
+                zz = a['z'] == z
+                px[zz] = Tk[z][a['v'][zz], a['u'][zz]] * a['lam'][zz]
+            bild = a['img'].copy(); bild[a['q']] = px
+            d_ = R4.drittel(G.videoraum(bild), a['m'])
+            r_ += np.array([d_[k_]['rot'] for k_ in ('B_links', 'Mitte', 'B_rechts')])
+        return r_ / len(ansichten)
+    # Gemessen wird an den beiden Spielbildern (h118, h135); die Buehne (Pose "135") sieht die Texel mit, ihr Rot geht in die Gewichte w
+    ansichten_alle = ansichten
+    k = np.ones(3)
+    ansichten = [a for a in ansichten_alle if a['nm'] != '135'] if DRITTEL_NUR_SPIEL else ansichten_alle
+    ziel = np.mean([zz for zz, a in zip(ziele, ansichten_alle) if a in ansichten], 0)
+    ziel_video = ziel.copy()
+    for _it in range(3):                                  # je Drittel halbieren (die Drittel teilen Texel, daher 3 Durchgaenge)
+        # Die Mitte erreicht im Port mit Faktor <= 1 nur ~0,48 (der Kopf liegt im Mitteldrittel, Video 0,55-0,58). Ziel fuer die
+        # Aussendrittel ist deshalb die VERTEILUNG des Videos: Aussen-Ziel = Video-Aussenanteil x (Port-Mitte / Video-Mitte), d. h. das
+        # Verhaeltnis Mitte / aussen des Videos (h118 2,91, h135 2,75) bei der erreichten Port-Mitte
+        if _it > 0:
+            cm = anteile(anwenden(k))[1]
+            ziel = ziel_video * np.array([cm / ziel_video[1], 1.0, cm / ziel_video[1]])
+        for t in (1, 0, 2):
+            # Mitte hoechstens 1 (kein kraeftigeres Rot als der Fit: Lauf r5 Koerper g mit Mitte 1,125 -> Buehne a* > 18 ueber dem Original,
+            # Spielbild-Mitte trotzdem nicht roeter, weil die a*-Grenze FARB_A_MAX die Mitte kappt)
+            lo_, hi_ = 0.0, (1.0 if t == 1 else 2.0)
+            for _ in range(12):
+                k[t] = 0.5 * (lo_ + hi_)
+                if anteile(anwenden(k))[t] > ziel[t]:
+                    hi_ = k[t]
+                else:
+                    lo_ = k[t]
+    DRITTEL_INFO.update(ziel_video=[round(float(x), 3) for x in ziel_video], ziel=[round(float(x), 3) for x in ziel], faktoren=[round(float(x), 3) for x in k],
+                        anteile_vorher=[round(float(x), 3) for x in anteile(T_)], anteile_nachher=[round(float(x), 3) for x in anteile(anwenden(k))])
+    print('Drittel-Ausgleich', DRITTEL_INFO, flush=True)
+    return anwenden(k)
+
+
+DRITTEL_INFO = {}
+
+# V4 Runde 5 (Entscheid O9 "keine Farbe, die im Original-Bild an der Stelle nicht vorkommt"; Pruefung V4 r4 Sicht 1.5: gelber Fleck und
+# 253 grelle Bildpunkte C* > 45 an Jeans/Beinen): jeder Koerper-Bildpunkt der beiden Messansichten, dessen Farbe (Schirm in der Eichung
+# a + b x P) weiter als r5_mass.AF_DE von jeder Farbe der Original-Region seines Meshes liegt (r5_mass.regionen_mengen, dasselbe Mass wie der
+# Riegel AF), bekommt als Ziel die naechste Farbe dieser Menge; die betroffenen Texel werden aus diesen Zielen neu geloest (wie Schritt 3).
+FARBMENGE = os.environ.get('RE15_R5_FARBMENGE') != '0'
+FARBMENGE_INFO = {}
+
+
+def farbmenge(mo, T_, P):
+    import r5_mass as M5
+    from scipy.spatial import cKDTree
+    from skimage.color import lab2rgb as l2r
+    num = {z: np.zeros_like(T_[z]) for z in ZEILEN}; den = {z: np.zeros_like(T_[z]) for z in ZEILEN}
+    for ans in ('135', '85'):
+        img, ids, U, Vt, Z, LAM = raster(mo, P[ans])
+        mengen = M5.regionen_mengen(ids, ans)
+        n_aus = 0
+        for b, S in mengen.items():
+            q = (ids == b) & np.isin(Z, ZEILEN) & (LAM.mean(2) >= LAM_MIN)
+            if not q.any():
+                continue
+            zz, uu, vv, lam = Z[q], U[q], Vt[q], LAM[q].astype(float)
+            sch = np.zeros((len(zz), 3))
+            for z in ZEILEN:
+                k = zz == z
+                sch[k] = T_[z][vv[k], uu[k]] * lam[k]
+            pl = G.lab(np.clip(G.EA_ + G.EB_ * sch, 0, 255))
+            d, j = cKDTree(S).query(pl)
+            aus = d > M5.AF_DE
+            n_aus += int(aus.sum())
+            if not aus.any():
+                continue
+            ziel = (np.clip(l2r(S[j[aus]].reshape(-1, 1, 3)).reshape(-1, 3) * 255.0, 0, 255) - G.EA_) / G.EB_
+            for z in ZEILEN:
+                k = zz[aus] == z
+                np.add.at(num[z], (vv[aus][k], uu[aus][k]), lam[aus][k] * ziel[k])
+                np.add.at(den[z], (vv[aus][k], uu[aus][k]), lam[aus][k] ** 2)
+        FARBMENGE_INFO[ans] = n_aus
+    out = {}
+    for z in ZEILEN:
+        g = den[z][..., 0] > 0
+        out[z] = T_[z].copy()
+        out[z][g] = np.clip(num[z][g] / den[z][g], 0, 248)
+        FARBMENGE_INFO['texel_%d' % z] = int(g.sum())
+    print('Farbmenge', FARBMENGE_INFO, flush=True)
+    return out
 
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--emd', default=os.path.join(G.SFV4, 'r2', 'emd', 'EM30_V4.EMD'))
     ap.add_argument('--k', type=int, default=256)
+    ap.add_argument('--aus', default=AUS)                     # V4 Runde 5: Versuchslaeufe in den Scratchpad
     a = ap.parse_args()
     mo = b2.modell(a.emd)
     ref = b2.modell(G.REF2)
@@ -370,6 +583,10 @@ def main():
         lu, l0 = G.lum(t_), G.lum(t0[z])
         f_ = np.clip(lu, 0.2 * l0, 2.0 * l0 + 16.0) / np.maximum(lu, 1e-6)
         T_[z] = np.clip(t_ * f_[..., None], 0, 248)
+    if DRITTEL_AUSGLEICH:
+        T_ = drittel_ausgleich(mo, T_, P)
+    if FARBMENGE:
+        T_ = farbmenge(mo, T_, P)
     # Helligkeitsdecke: kein Texel heller als Lum LUM_MAX (Leiste 03 Runde 2: zwei weisse Texel, Lum 233, auf der (B)-linken Schulter
     # wirkten wie ein aufgemaltes Augenpaar neben dem Kopf)
     for z in ZEILEN:
@@ -414,13 +631,13 @@ def main():
     idx = np.full((mo.texh, mo.texw), -1, np.int16)
     idx[ys, xs] = k_
     zeilen = np.stack([C[:, r, :] for r in range(len(ZEILEN))], 0)  # 4 x 256 x 3
-    np.savez(AUS, koerper_idx=idx, koerper_zeilen=zeilen, koerper_zeilen_nr=np.array(ZEILEN))
+    np.savez(a.aus, koerper_idx=idx, koerper_zeilen=zeilen, koerper_zeilen_nr=np.array(ZEILEN))
     if os.environ.get('RE15_R4_DEBUG'):
         np.savez(os.environ['RE15_R4_DEBUG'], **{'T%d' % z: T_[z] for z in ZEILEN}, **{'t0_%d' % z: t0[z] for z in ZEILEN},
                  **{'num%d' % z: num[z] for z in ZEILEN}, **{'den%d' % z: den[z] for z in ZEILEN})
-    prot.update(texel=int(len(X)), k=K, quant_rmse=round(float(fehler), 2), mu=MU, quellen={r[0]: r[4] for r in REGIONEN})
-    json.dump(prot, open(PROT, 'w'), indent=1)
-    print('geschrieben', AUS, 'Texel', len(X), 'Quantisierung RMSE', round(float(fehler), 2))
+    prot.update(drittel=DRITTEL_INFO, farbmenge=FARBMENGE_INFO, texel=int(len(X)), k=K, quant_rmse=round(float(fehler), 2), mu=MU, quellen={r[0]: r[4] for r in REGIONEN})
+    json.dump(prot, open(PROT if a.aus == AUS else os.path.splitext(a.aus)[0] + '_protokoll.json', 'w'), indent=1)
+    print('geschrieben', a.aus, 'Texel', len(X), 'Quantisierung RMSE', round(float(fehler), 2))
     for ans, d in prot['regionen'].items():
         for k, v in d.items():
             print(ans, k, v)

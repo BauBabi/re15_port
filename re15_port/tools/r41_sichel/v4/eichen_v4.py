@@ -780,15 +780,20 @@ def main():
                 st_ = (np.clip(cs['idx'], 0, 255) - 1) % STUFEN
                 mitte_b = np.isin(bp, [na_.index('mitte'), na_.index('senkrecht')])
                 r17 = me_ & (yy_ <= bi_[1]) & ((bp == na_.index('aussen')) | (mitte_b & (st_ <= 3)))
-                rt = [('F15', kreis15, RV.ZIEL['F15'], 1.0),     # (Lauf r4 Eichung n mit Gewicht 2: F17 kippte auf 4,9 L*, verworfen) ('F16', kreis16, RV.ZIEL['F16'], 1.0), ('F17', r17, RV.ZIEL['F17'], 2.0),
-                      ('F18', rmask['F18'], RV.ZIEL['F18'], 1.0)]
+                # Stand der committeten farben_v4.npz (Runde 4, vom Zahlen-Pruefer V4 r4 bitgleich nachgebaut): geloest nur mit F15, F18 und den
+                # Achspunkten; F16 / F17 waren aus (Lauf r4 Eichung n mit F16/F17, F17-Gewicht 2: F17 kippte auf 4,9 L*, verworfen). Das
+                # Dossier V4 Runde 4 nannte irrtuemlich F15/F16/F17 (berichtigt im Dossier V4 Runde 5). Seit V4 Runde 5 kommt der Schwanz
+                # nicht mehr aus dieser Eichung (birkin_formen SCHWANZ_V4 uv art 'achse', tools/r41_sichel/v4/r5_schwanz_textur.py).
+                # Nicht benutzt: ('F16', kreis16, RV.ZIEL['F16'], 1.0), ('F17', r17, RV.ZIEL['F17'], 2.0)
+                rt = [('F15', kreis15, RV.ZIEL['F15'], 1.0), ('F18', rmask['F18'], RV.ZIEL['F18'], 1.0)]
             # Runde 2: die 7 Achsenpunkte (T9) als eigene Regionen mit dem Original-5x5-Mittel als Ziel
             for k9, (m9, z9) in RV.achse_regionen(ids_t, V_t).items():
                 rt.append((k9, m9, z9, 1.0))
             # Aussenkante stark an ihre Startfarbe (F17-Ziel / mittleres Licht ihrer Bildpunkte) gebunden: im Verlauf mischt sie in die
             # Seitenbaender, und die dunkelroten Achsenpunkte (T9) zogen sie rot (Lauf r4 Eichung final 2: Aussenkante (68,24,37), F17 4,9 L*).
             # Gewicht 3,0 (Laeufe r4 Eichung r/s/t/u/v mit 1,0 / 0,4 / 0,6 / 3,0 / 10,0: F17 20,5 / 6,2 / 12,3 / 20,8 / 20,8 L*, T8 nur ab 3,0
-            # gruen). PORT-WAHL (Regularisierung der Eichung, keine Spielkonstante).
+            # gruen). PORT-WAHL (Regularisierung der Eichung, keine Spielkonstante), Nutzer-Wortlaut "Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben"; seit V4 Runde 5 ohne Wirkung auf
+            # das Modell (Schwanz aus r5_schwanz_textur.py).
             rgw = [float(os.environ.get('RE15_V4_RGW', '3.0')) if b[0] == 'aussen' else 0.15 for b in BAENDER]
             neu_b = loese_zonen_misch([(cs, rt)], len(BAENDER), 7, misch_t, start_b, rgw)
             # V4 Runde 4: gedaempft (halber Schritt ab Runde 2), die Regionen haengen am Render der vorigen Runde
