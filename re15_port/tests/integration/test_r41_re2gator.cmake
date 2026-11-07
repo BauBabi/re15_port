@@ -13,6 +13,8 @@
 #     haelt der Finisher-Schnitt bis zum Ende des Raums (Entscheid B6: kein Kamerawechsel, keine RE1.5-Todeskamera).
 #     Gemessen 2026-10-24 (Nachbesserung 2, Lauf A): Intro F6-F280 (Start (-7345,-13277) Gier 576 -> End-Gier 1600
 #     auf Leon), Biss F403 -> FINISHER Cut 6, Game Over ~F677 -> EXIT_AT 650 liegt davor. G2-RE2 NB4 (RE2-Trefferreaktion): toedlicher Biss F310, letzte Finisher-Zeile F571 -> EXIT_AT 560.
+#     NB4 Runde 2 (Abnahme 7 M1, RE2-Bisssperre +0x238 auch fuer den Biss im Wasser): F310 war der Zweitbiss 20 Bilder nach F290; jetzt Biss F416
+#     (HP 60 -> 0), toedlicher Biss F523 (Abstand 107 >= 70), letzte Finisher-Zeile F784, danach Game Over -> EXIT_AT 770.
 #   Lauf "dash" (Leon im Suedbecken (-4000,-24000) im Bild der Eintrittskamera Cut 0, Messhaken
 #     RE15_R39_MESS_SPIELER_HP=100): der Intro endet im Nordbecken, die Verfolgung kommt durch den Westkanal in Leons
 #     Zone -> RE2-Dash (Clip 2 -> 3, gr2_dash_planen: Vordrehung 1139 -> 624 am Suedausgang), Putz je Stark-Schuetteln (Spur P NB1),
@@ -238,9 +240,12 @@ re15_start_spiel(_rv 300
     RE15_R41_HP_AT=175:60       # Querbezug Runde 41 Spur F: Leons HP wie mit den zwei Spinnen-Treffern (Kopf)
     "RE15_GATOR_KANISTER=-6000,-15000"
     RE15_STATE_LOG=state.log
-    "RE15_EXIT_AT=560#2090"     # G2-RE2 NB4 (T): RE2-Trefferreaktion statt RE1.5-Niederwurf - die Figur ist nach 20 statt 41-92 Bildern wieder treffbar
+    "RE15_EXIT_AT=770#2090"     # G2-RE2 NB4 (T): RE2-Trefferreaktion statt RE1.5-Niederwurf - die Figur ist nach 20 statt 41-92 Bildern wieder treffbar
                                 # (+0x1D3 frei @0x801031d4), der zweite Biss (HP 60 - 60 = 0, dann -60: Tod, FUN_800401d4) kommt F310, Finisher F310..F571, danach
-                                # Game Over (Raum verlassen vor F650, gemessen Bau 3d53ca60). 560 liegt im Finisher (Halt-Zeilen F311..F551, Kamera ab F310).
+                                # Game Over (Raum verlassen vor F650, gemessen Bau 3d53ca60). 560 lag im Finisher (Halt-Zeilen F311..F551, Kamera ab F310).
+                                # NB4 Runde 2 (Abnahme 7 M1): der Biss im Wasser fragt die RE2-Bisssperre +0x238 (70 @0x801016b0-b4, nach dem Intro 110
+                                # @0x8010091c-20; Pruefstelle @0x80100cb4-c4) - Biss F416 (HP 0), toedlicher Biss F523, Finisher F523..F784 (Halt-Zeilen
+                                # F524..F784, gemessen Bau 42a1c8f7 mit EXIT_AT 1100: danach Game Over). 770 = 523 + 247 liegt im Finisher (13 Halt-Zeilen bis F764).
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")
@@ -336,7 +341,7 @@ endif()
 # demselben Cut, und KEIN cam= im Zustandslog weicht ab dem Finisher-Bild davon ab (keine RE1.5-Todeskamera).
 if(_fin_halt LESS 10 OR NOT "${_fin_halt_falsch}" STREQUAL "")
     file(REMOVE "${_exe_kopie}")
-    message(FATAL_ERROR "r41_re2gator: Finisher-Halt ${_fin_halt} Zeilen (erwartet >= 10 bis EXIT_AT 560), abweichend: '${_fin_halt_falsch}'")
+    message(FATAL_ERROR "r41_re2gator: Finisher-Halt ${_fin_halt} Zeilen (erwartet >= 10 bis EXIT_AT 770), abweichend: '${_fin_halt_falsch}'")
 endif()
 file(STRINGS "${_dir}/state.log" _zl)
 set(_mo6 0)
