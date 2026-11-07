@@ -107,8 +107,9 @@ def chroma(L):
     return np.hypot(L[..., 1], L[..., 2])
 
 
-def zeile(name, soll, ist, ok, note=''):
-    return dict(mass=name, soll=soll, ist=ist, ok=bool(ok), note=note)
+def zeile(name, soll, ist, ok, note='', info=False):
+    """info=True: Ausgabe ohne Bewertung (z. B. die Messblatt-Lesart 'Id ganz' von F6/F7 nach Entscheid O7)."""
+    return dict(mass=name, soll=soll, ist=ist, ok=True if info else bool(ok), note=note, info=bool(info))
 
 
 # ---------------------------------------------------------------------------------------------------- Kopf vorn / seitlich
@@ -457,7 +458,11 @@ def koerper_farben(mo, P):
         return m & b_
     # Runde 2: F7/F8 an der Lage der Messblatt-Fenster im Oberarm (F7 y 167-212 im Arm y 160-250 = obere 58 %, F8 y 182-227 im Arm
     # y 182-262 = obere 56 %); die Id-Masken ganz (Runde-1-Mass) werden als F7g/F8g mit ausgegeben
-    reg = {'F6': er(ids == 8) & rg, 'F7': zeilenteil(er(ids == 13), 0.0, 0.58), 'F8': zeilenteil(er(ids == 10), 0.0, 0.56),
+    # Runde 5 (Entscheid O7): F6 an der Fensterlage des Messblatts (rote Id-8-Bildpunkte im Fenster 372-424 x 197-232); 'F6g' = Id 8 ganz
+    # (Messblatt-Wortlaut, nur noch Ausgabe)
+    fb6 = np.zeros(ids.shape, bool); fb6[197:233, 372:425] = True
+    reg = {'F6': er(ids == 8) & rg & fb6, 'F6g': er(ids == 8) & rg,
+           'F7': zeilenteil(er(ids == 13), 0.0, 0.58), 'F8': zeilenteil(er(ids == 10), 0.0, 0.56),
            'F9': er(np.isin(ids, (0, 1, 4))) & (Lab[..., 2] < 0),
            'F10': er(ids == 12, 1) & rg, 'F10_id15': er(ids == 15, 1) & rg, 'F7g': er(ids == 13), 'F8g': er(ids == 10),
            # Sicht-Pruefung V4 r1 1.4 (Boxen pruefung_sicht/messen_sicht.py BOX1, Original-Ziele hier gemessen): Oberarme unten, Rumpf
@@ -483,31 +488,23 @@ def koerper_farben(mo, P):
         dd = G.de00(la, ZIEL[k]) if n else 99.0
         dl = la[0] - ZIEL[k][0] if n else 99.0
         des.append(dd)
-        Z.append(zeile('F %s' % k, '%s dE00 <= 5, |dL| <= 4' % '/'.join('%.1f' % v for v in ZIEL[k]),
+        Z.append(zeile('F %s' % k + (' (Fensterlage, O7)' if k in ('F6', 'F7') else ''), '%s dE00 <= 5, |dL| <= 4' % '/'.join('%.1f' % v for v in ZIEL[k]),
                        '%s dE00 %.1f dL %+.1f (%d px)' % ('/'.join('%.1f' % v for v in la), dd, dl, n), dd <= 5 and abs(dl) <= 4,
                        'Id 12 (Klaue (B)-rechts); Id 15: %s (%d px)' % ('/'.join('%.1f' % v for v in erg['F10_id15'][0]),
                                                                        erg['F10_id15'][1]) if k == 'F10' else ''))
     mt = float(np.mean(des))
     Z.append(zeile('F Mittel', 'Mittel dE00 <= 4', '%.2f' % mt, mt <= 4))
-    # Runde 4: F6 an der Fensterlage (rote Bildpunkte von Id 8 im Fenster 372-424 x 197-232) und die Lesart "ganzer Oberkoerper" des
-    # Originals (rote Bildpunkte in Polygon + Rumpfbox 19,6 / 11,1 / 3,1) - F6 nach Wortlaut vergleicht alle roten Id-8-Bildpunkte mit dem
-    # roten Fenster der Brustmitte (Widerspruch zur Rot-Verteilung der Sicht-Pruefung V4 r3 1.5, Dossier V4 Runde 4)
-    fb = np.zeros(ids.shape, bool); fb[197:233, 372:425] = True
-    r6 = er(ids == 8) & rg & fb
-    if r6.sum():
-        la6 = lab1(V[r6].mean(0)); d6 = G.de00(la6, ZIEL['F6'])
-        Z.append(zeile('F F6 Fensterlage', '16.6/17.3/6.2 dE00 <= 5, |dL| <= 4 (rote Id-8-Bildpunkte im Fenster 372-424 x 197-232)',
-                       '%s dE00 %.1f dL %+.1f (%d px)' % ('/'.join('%.1f' % v for v in la6), d6, la6[0] - ZIEL['F6'][0], int(r6.sum())),
-                       d6 <= 5 and abs(la6[0] - ZIEL['F6'][0]) <= 4))
-    for k in ('F7g', 'F8g'):          # Runde 3: Messblatt-Wortlaut (Id ganz gegen das Fensterziel), echt bewertet (Pruefung V4 r2 Zahlen 4.2)
+    # Runde 5 (Entscheid O7, Messblatt V4 "Nachtrag Runde 5"): F6 und F7 an der Fensterlage; die Lesart "Id ganz" verlangt einen ganz roten
+    # Rumpf bzw. einen hellen ganzen Oberarm und widerspricht dem Original (Sicht-Pruefung V4 r4 1.5) - nur noch Ausgabe (INFO).
+    # F8 nach Wortlaut (Id 10 ganz) bleibt ein Riegel (nicht Gegenstand von O7).
+    for k in ('F6g', 'F7g', 'F8g'):
         la, n = erg[k]; zk = ZIEL[k[:2]]
         dd, dl = G.de00(la, zk), la[0] - zk[0]
-        Z.append(zeile('F %s Messblatt-Wortlaut (Id ganz)' % k[:2], '%s dE00 <= 5, |dL| <= 4' % '/'.join('%.1f' % v for v in zk),
-                       '%s dE00 %.1f dL %+.1f (%d px)' % ('/'.join('%.1f' % v for v in la), dd, dl, n), dd <= 5 and abs(dl) <= 4,
-                       'Runde 3: Mesh 10 hat eine eigene CLUT-Zeile 489 (O1). Das Fenster F7 (x 307-347, y 167-212) liegt nur auf der hellen '
-                       'Schulterkuppe; der ganze Oberarm (B)-links ist im Original 17,3 L* (Sicht-Pruefung V4 r2 1.4, Box 300-345 x 186-250) - '
-                       'Widerspruch im Messblatt-Wortlaut, Offen' if k == 'F7g' else 'Runde 3: Mesh 10 mit eigener CLUT-Zeile 489 (O1), '
-                       'Verteilung des F8-Fensters fuer Id 10 ganz (r2_koerper_farben oberarm_br)'))
+        Z.append(zeile('F %s Messblatt-Wortlaut (Id ganz)' % k[:2], '%s dE00 <= 5, |dL| <= 4%s' % (
+            '/'.join('%.1f' % v for v in zk), ' (INFO, O7: kein Riegel)' if k != 'F8g' else ''),
+            '%s dE00 %.1f dL %+.1f (%d px)' % ('/'.join('%.1f' % v for v in la), dd, dl, n), dd <= 5 and abs(dl) <= 4,
+            'Entscheid O7: gemessen wird an der Fensterlage' if k != 'F8g' else 'Runde 3: Mesh 10 mit eigener CLUT-Zeile 489 (O1)',
+            info=(k != 'F8g')))
     o1 = G.vorlage(1)
     sicht = dict(FS_oa_bl_u=([(300, 213, 345, 250)], 'Oberarm (B)-links unten'), FS_oa_br_u=([(455, 228, 500, 262)], 'Oberarm (B)-rechts unten'),
                  FS_rumpf=([(352, 196, 448, 292), (318, 160, 360, 190), (425, 165, 470, 195)], 'Rumpf + Schultern'),
@@ -533,6 +530,11 @@ def koerper_farben(mo, P):
             '/'.join('%.1f' % v for v in zo), rot_o, '; Anteil L* > 30 <= Original + 0,05' if k == 'FS_unterarm_wr' else ''),
             '%s dE00 %.1f dL %+.1f; Rotanteil %.2f (%d px)%s' % ('/'.join('%.1f' % v for v in la), dd, la[0] - zo[0], rot_p, n, zus),
             ok_, 'Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen %s' % boxen))
+    # Runde 5 (O7): F7 an der Fensterlage zusammen mit der Sicht-Box des unteren Oberarms
+    f7 = next(z for z in Z if z['mass'].startswith('F F7 (Fensterlage'))
+    fs7 = next(z for z in Z if z['mass'] == 'FS Oberarm (B)-links unten')
+    f7['ok'] = f7['ok'] and fs7['ok']
+    f7['note'] = 'O7: obere 58 %% von Id 13 (Fensterlage) und FS Oberarm (B)-links unten (%s)' % ('OK' if fs7['ok'] else 'ROT')
     # F0 Gueltigkeit: Wand links im Render (BSS-Hintergrund)
     w = lab1(G.mittel(V, (40, 150, 119, 299)))
     d0 = G.de00(w, ZIEL['F0'])
@@ -566,6 +568,61 @@ def schwanz_form(mo, P):
     return Z, dict(port=fp, original=fo)
 
 
+# ---------------------------------------------------------------------------------------------------- Runde 5 (Entscheide O8-O10)
+def schwanz_verlauf(mo, P):
+    """O8 (Pruefung V4 r4 Sicht 1.3 Klasse A): Quernaht im waagerechten Teil (r5_mass.naht_waagerecht = Sicht-Pruefer schwanz_naehte.py),
+    Farbe/Helligkeit an 5 Stationen entlang der Achse (r5_mass.schwanz_achse_*), Rotanteil a* > 12 im waagerechten Teil."""
+    import r5_mass as M5
+    img, ids, iv = G.zeichne(mo, P['85'], voll=True)
+    _ok, _so, H = G.h_port(iv)
+    s = schwanz_mass_h(img, ids, _ok, _so)
+    V = G.videoraum(img); sw = np.isin(ids, SCHW)
+    o2 = G.vorlage(2); mo_ = R4.masken_original()
+    no = [M5.naht_waagerecht(o2, t)['max'] for t in mo_]
+    npt = M5.naht_waagerecht(V, sw)
+    Z = [zeile('TN Schwanz Quernaht waagerecht', 'groesster Sprung dE76 ueber 3 Spalten (x 280-376, Mitte der Maske) <= %.1f (Original-Maximum, 3 Masken %s)' % (
+        max(no), '/'.join('%.1f' % v for v in no)), '%.1f bei x %s' % (npt['max'], npt['bei']), npt['max'] <= max(no) + 1e-9,
+        'Sicht-Pruefung V4 r4 1.3: V4 r4 16,7 an Mesh 17|18 / 16|17')]
+    ao = M5.schwanz_achse_original()
+    ap = M5.schwanz_achse_port(img, ids, H, s['beginn'], s['knick'], s['ende'])
+    teile, ok_v = [], True
+    for nm, _a, _f in M5.STATIONEN:
+        lo = np.nanmean([d['stationen'][nm]['lab'] for d in ao], 0)       # Maske hi endet vor dem Endstueck (nan)
+        lp = np.array(ap['stationen'][nm]['lab']) if ap else np.full(3, np.nan)
+        okk = abs(lp[0] - lo[0]) <= 4 and abs(lp[1] - lo[1]) <= 3
+        ok_v &= bool(okk)
+        teile.append('%s %.1f/%.1f (Original %.1f/%.1f)%s' % (nm, lp[0], lp[1], lo[0], lo[1], '' if okk else ' ROT'))
+    Z.append(zeile('TV Schwanz Verlauf entlang der Achse', 'L*/a* an Wurzel, Mitte, Biegung, senkrecht, Endstueck je +-4 / +-3 zum Original (Toleranz '
+                   'wie T9; Stationen r5_mass.STATIONEN)', '; '.join(teile), ok_v, 'Sicht-Pruefung V4 r4 1.3: Helligkeit verkehrt, an der Biegung L* 7,3'))
+    ro = [M5.schwanz_rot(o2, t, False) for t in mo_]
+    rp = M5.schwanz_rot(img, sw)
+    Z.append(zeile('TR Schwanz Rotanteil waagerecht', 'Anteil a* > 12 (x 284-356, y < 262) %.3f +-0,05 (Original %s; Toleranz wie FO-Schultern)' % (
+        float(np.mean(ro)), '/'.join('%.3f' % v for v in ro)), '%.3f' % rp, abs(rp - float(np.mean(ro))) <= 0.05,
+        'Sicht-Pruefung V4 r4 1.3: V4 r4 0,19'))
+    return Z, dict(naht=npt, achse=ap, achse_original=ao, rot=rp)
+
+
+def ausreisser_farben(mo, P):
+    """O9: Ausreisserfarben je Koerper-Mesh (r5_mass.ausreisser) in beiden Messansichten."""
+    import r5_mass as M5
+    Z, info = [], {}
+    for ans, vl in (('135', 'Vorlage 1'), ('85', 'Vorlage 2')):
+        img, ids = G.zeichne(mo, P[ans])
+        r = M5.ausreisser(img, ids, ans)
+        info[ans] = r
+        bew = {b: v for b, v in r.items() if v['anteil'] is not None}
+        schlecht = {b: round(v['anteil'], 3) for b, v in bew.items() if v['anteil'] > M5.AF_ANTEIL}
+        gelb = sum(v['gelb'] for v in r.values())
+        bmax = max(bew, key=lambda b: bew[b]['anteil'])
+        Z.append(zeile('AF Ausreisserfarben Pose %s' % ans,
+                       'je Mesh 0-14 Anteil Bildpunkte > %.0f dE76 von jeder Farbe der Original-Region (%s) <= %.2f; gelbe Bildpunkte gezaehlt' % (
+                           M5.AF_DE, vl, M5.AF_ANTEIL),
+                       'max %.3f (Id %d); ueber der Grenze %s; gelb %d px (je Id %s)' % (
+                           bew[bmax]['anteil'], bmax, schlecht or 'keine', gelb, {b: v['gelb'] for b, v in r.items() if v['gelb']} or '-'),
+                       not schlecht, 'Pruefung V4 r4 Sicht 1.5: V4 r4 Mesh 13 45 gelbe Texel; Id 15 ohne Region (Referenz-2-Farben)'))
+    return Z, info
+
+
 def oberkoerper_vorn(mo, P):
     """Sicht-Pruefung V4 r3 1.5 (Klasse A "Rot-Verteilung"): Buehne Pose 135 gegen Vorlage 1 (r4_mass.oberkoerper_*), Riegel nach dem
     Vorschlag des Sicht-Pruefers: Rot Mitte/aussen >= 2,75, Schultern a* > 12 <= 0,05; dazu Anteil a* > 18 <= Original."""
@@ -591,6 +648,24 @@ def spielbild(lauf):
     g = R4._grad_lum(G.vorlage(1)); x0, y0, x1, y1 = R4.KOPF_INNEN_ORIG
     glatt_max = max(float((g[y0 + dy:y1 + dy + 1, x0 + dx:x1 + dx + 1] < 8).mean()) for dx in (-3, 0, 3) for dy in (-3, 0, 3))
     Z, info = [], {}
+    # Runde 5 (O10): kraeftiges Rot a* > 22 im Spielbild "in der Groessenordnung des Videos" - Fenster des Sicht-Pruefers V4 r4
+    # (pruefung_sicht_r4/rotkappe_spiel.py: h85 300-480 x 150-380, h100 300-480 x 150-330) bzw. die Oberkoerper-Polygone (h118/h135);
+    # Grenze: hoechstens 10 x Video (eine Groessenordnung), mindestens 1 Promille der Flaeche (Zaehlgrenze bei Video 0)
+    for h, fen in ((85, (300, 150, 480, 380)), (100, (300, 150, 480, 330)), (118, None), (135, None)):
+        fd = c6.port(os.path.abspath(d), h)
+        if fd is None:
+            continue
+        fd = cv2.cvtColor(fd, cv2.COLOR_BGR2RGB).astype(float)
+        vid = cv2.cvtColor(c6.vid(h), cv2.COLOR_BGR2RGB).astype(float) if h != 135 else G.vorlage(1)
+        if fen is not None:
+            x0, y0, x1, y1 = fen
+            mp = np.zeros((480, 640), bool); mp[y0:y1, x0:x1] = True; mv = mp
+        else:
+            mp = R4.poly_maske(R4.PS_SPIEL[h]); mv = R4.poly_maske(R4.PV_SPIEL[h])
+        np_ = int((G.lab(G.videoraum(fd)[mp])[:, 1] > 22).sum()); nv = int((G.lab(vid[mv])[:, 1] > 22).sum())
+        gr = max(10 * nv, int(0.001 * mp.sum()))
+        Z.append(zeile('FR Kraeftiges Rot Spielbild h%d' % h, 'Anzahl a* > 22 <= max(10 x Video %d, 1 Promille %d) = %d' % (
+            nv, int(0.001 * mp.sum()), gr), '%d' % np_, np_ <= gr, 'Pruefung V4 r4 Sicht 1.5: V4 r4 h85 1170 / h100 531 (Video 2 / 107)'))
     for h in (118, 135):
         fd = c6.port(os.path.abspath(d), h)
         if fd is None:
@@ -775,6 +850,8 @@ def main():
     zf, ef, _ = koerper_farben(mo, P); Z += zf
     # Runde 4 (Pruefung V4 r3): Schwanzform, Oberkoerper-Rotverteilung, Kopfstruktur im Spielbild
     zq, iq = schwanz_form(mo, P); Z += zq
+    zv, iv_ = schwanz_verlauf(mo, P); Z += zv               # Runde 5 (O8)
+    za, ia = ausreisser_farben(mo, P); Z += za              # Runde 5 (O9)
     zo, io = oberkoerper_vorn(mo, P); Z += zo
     Z += kopf_buehne320(mo, P)
     ispiel = {}
@@ -782,9 +859,10 @@ def main():
         zs4, ispiel = spielbild(a.lauf); Z += zs4
     rot = [z for z in Z if not z['ok']]
     for z in Z:
-        print('%-4s %-34s soll: %-60s ist: %s %s' % ('OK' if z['ok'] else 'ROT', z['mass'], z['soll'], z['ist'],
+        print('%-4s %-34s soll: %-60s ist: %s %s' % ('INFO' if z.get('info') else ('OK' if z['ok'] else 'ROT'), z['mass'], z['soll'], z['ist'],
                                                      ('[' + z['note'] + ']') if z['note'] else ''))
-    print('ROT: %d von %d' % (len(rot), len(Z)))
+    print('ROT: %d von %d (INFO-Zeilen nicht gezaehlt: %d)' % (len(rot), len([z for z in Z if not z.get('info')]),
+                                                            len([z for z in Z if z.get('info')])))
     if a.json:
         json.dump(dict(emd=a.emd, sha256=hashlib.sha256(open(a.emd, 'rb').read()).hexdigest(), zeilen=Z,
                        kopf_vorn=ik, kopf_seite=is_, schwanz={k: v for k, v in st.items() if k not in ('C', 'breite', 'maske')}),
@@ -794,7 +872,7 @@ def main():
             f.write('| Mass | Soll | Ist | |\n|---|---|---|---|\n')
             for z in Z:
                 f.write('| %s | %s | %s | %s |\n' % (z['mass'], z['soll'], z['ist'] + ((' (' + z['note'] + ')') if z['note'] else ''),
-                                                     'OK' if z['ok'] else 'ROT'))
+                                                     'INFO' if z.get('info') else ('OK' if z['ok'] else 'ROT')))
     if rot and not a.kein_exit:
         sys.exit(1)
 

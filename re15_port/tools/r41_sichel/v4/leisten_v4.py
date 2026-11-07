@@ -13,6 +13,9 @@ Spalten NUR: Nutzer-Vorlage (Originalbild) | Nutzer-Beschriftung | vorher | neu.
   V3 r2 / V4 = b2-Render in der Spielkamera 50A0 Schnitt 12 (RDT-Licht, Hintergrund BSS 50A0/12) in posen_v4 "135" / "85"
   (Lichtgegenprobe gegen RE15_FRAMEDUMP: dE00 0,1, riegel_v4). 07 = Spiellaeufe (RE15_FRAMEDUMP, auf das Videobild registriert).
 Nutzerpunkte (Linienenden, Messblatt V4 Abschnitt 1a) gelb in den Original-Spalten; im Port die gemessenen Gegenstuecke (riegel_v4).
+  Runde 5: vorher = V4 Runde 4 (sfv4/emd/EM30_V4r4.EMD sha256 00d642b7, Lauf sfv4/r/V4r4), neu = V4 Runde 5 (sfv4/emd/EM30_V4.EMD, Lauf
+  sfv4/r/V4r5); Runde-4-Leisten in SF_belege/v4/r4/. Neue Riegel in den Unterschriften: TN/TV/TR (05), AF/FO (01), dazu 09 Schwanzverlauf
+  (Farbe und Helligkeit entlang der Achse: Original | V4 r4 | neu, als Kurve und als Streifen).
 """
 import os, sys, json
 import numpy as np, cv2
@@ -23,11 +26,11 @@ import v4_gemein as G, b2, riegel_v4 as RV
 from PIL import Image
 
 AUS = os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4')
-NAME = {'vorher': 'V4 r3', 'neu': 'V4 r4'}
-EMD = {'vorher': os.environ.get('RE15_LEISTE_VORHER', os.path.join(G.SFV4, 'emd', 'EM30_V4r3.EMD')),     # sha256 dfbc30bc (V4 Runde 3)
-       'neu': os.environ.get('RE15_LEISTE_NEU', G.EMD_V4)}                                                 # V4 Runde 4
-LAUF = {'vorher': os.environ.get('RE15_LAUF_VORHER', os.path.join(G.SFV4, 'r', 'V4r3')),
-        'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V4r4'))}
+NAME = {'vorher': 'V4 r4', 'neu': 'V4 r5'}
+EMD = {'vorher': os.environ.get('RE15_LEISTE_VORHER', os.path.join(G.SFV4, 'emd', 'EM30_V4r4.EMD')),     # sha256 00d642b7 (V4 Runde 4)
+       'neu': os.environ.get('RE15_LEISTE_NEU', G.EMD_V4)}                                                 # V4 Runde 5
+LAUF = {'vorher': os.environ.get('RE15_LAUF_VORHER', os.path.join(G.SFV4, 'r', 'V4r4')),
+        'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V4r5'))}
 PKT1 = {'Auge': (382, 164), 'Haare': (404, 160), 'Nase': (395, 177)}
 PKT2 = {'Auge': (460, 234), 'Haare': (468, 241), 'Beginn': (357, 243), 'Knick': (290, 308), 'Ende': (295, 343)}
 BIEG2 = (295, 252)
@@ -74,8 +77,9 @@ def riegel(k):
         zk, ik, _ = RV.kopf_vorn(m, P); zs, is_, _ = RV.kopf_seite(m, P); zt, st, rest = RV.schwanz(m, P)
         zf, ef, _ = RV.koerper_farben(m, P)
         zq, _iq = RV.schwanz_form(m, P); zo, _io = RV.oberkoerper_vorn(m, P); zk2 = RV.kopf_buehne320(m, P)
-        zt = zt + zq
-        zf = zf + zo
+        zv, _iv = RV.schwanz_verlauf(m, P); za, _ia = RV.ausreisser_farben(m, P)          # Runde 5 (O8 / O9)
+        zt = zt + zq + zv
+        zf = zf + zo + za
         zk = zk + zk2
         _cache[key] = dict(zk={z['mass'].split()[0]: z for z in zk}, zs={z['mass'].split()[0]: z for z in zs},
                            zt={z['mass'].split()[0]: z for z in zt}, zf=zf, ef=ef, ik=ik, is_=is_, st=st, fr=rest[3])
@@ -92,7 +96,7 @@ def speichern(name, zeilen, kopf):
     print('geschrieben', p)
 
 
-KOPFZEILE = 'Spalten: Nutzer-Vorlage (Originalbild) | Nutzer-Beschriftung | V4 Runde 3 (vorher) | V4 Runde 4 (neu)'
+KOPFZEILE = 'Spalten: Nutzer-Vorlage (Originalbild) | Nutzer-Beschriftung | V4 Runde 4 (vorher) | V4 Runde 5 (neu)'
 
 
 # ═══════════════════════════════════════════════════ 01 / 02 ganze Figur
@@ -110,7 +114,8 @@ def l01():
         t.append(kachel(img, box, 2, '%s Pose 135 (Kamera 50A0/12)' % NAME[k],
                         ['K4 ' + kurz(r['zk']['K4']), 'K2 ' + kurz(r['zk']['K2'])[:60], 'K5 ' + kurz(r['zk']['K5'])[:60],
                          'K11 ' + kurz(r['zk']['K11'])[:60],
-                         'FO ' + kurz(next(z for z in r['zf'] if z['mass'].startswith('FO')))[:66]]))
+                         'FO ' + kurz(next(z for z in r['zf'] if z['mass'].startswith('FO')))[:66],
+                         'AF ' + kurz(next(z for z in r['zf'] if z['mass'].startswith('AF Ausreisserfarben Pose 135')))[:66]]))
     speichern('01_vorn_kamera12', [t], ['SF V4 - 01 vorn: Spielkamera 50A0 Cut 12 wie Vorlagebild 1 (h135), Figur in Pose posen_v4 "135"',
                                          KOPFZEILE])
 
@@ -205,7 +210,8 @@ def l05():
         t.append(kachel(img, box, 3, '%s Schwanz x3 (gelb Vorlage am Port-Beginn, H-skaliert; cyan Mittellinie)' % NAME[k],
                         ['T2 ' + kurz(r['zt']['T2']), 'T3 ' + kurz(r['zt']['T3']), 'T4 ' + kurz(r['zt']['T4'])[:60],
                          'T5 %.3f/%.3f/%.3f/%.3f H' % (f[0.1], f[0.3], f[0.5], f[0.7]), 'T5q ' + kurz(r['zt']['T5q'])[:64],
-                         'T6 ' + kurz(r['zt']['T6'])[:64], 'TQ ' + kurz(r['zt']['TQ'])[:66], 'TK ' + kurz(r['zt']['TK'])[:66]]))
+                         'T6 ' + kurz(r['zt']['T6'])[:64], 'TQ ' + kurz(r['zt']['TQ'])[:66], 'TK ' + kurz(r['zt']['TK'])[:66],
+                         'TN ' + kurz(r['zt']['TN'])[:66], 'TR ' + kurz(r['zt']['TR'])[:66], 'TV ' + kurz(r['zt']['TV'])[:66]]))
     speichern('05_schwanz_x3', [t], ['SF V4 - 05 Schwanz x3: Polygonzug der Vorlage (Beginn, Biegung, Knick, Ende) ueber dem Port',
                                      KOPFZEILE])
 
@@ -282,7 +288,7 @@ def l06():
             z.append(feld(BF._lab_rgb(*la) if n >= 3 else None, '%s %s dE00 %.1f' % ('OK' if d <= 6 else 'ROT',
                                                                                '/'.join('%.1f' % v for v in la), d)))
         reihen.append(z)
-    speichern('06_farben', reihen, ['SF V4 - 06 Farben: Ziel (Videoraum, Messblatt V4 Abschnitt 5) | Fenster | V4 r3 | V4 r4 '
+    speichern('06_farben', reihen, ['SF V4 - 06 Farben: Ziel (Videoraum, Messblatt V4 Abschnitt 5) | Fenster | V4 r4 | V4 r5 '
                                     '(Vergleichsregel sigma 1,5, V = a + b x P, Lab D65, dE00)', KOPFZEILE])
 
 
@@ -336,7 +342,7 @@ def l07():
                              ['koerperfest max %.3f H' % max(t['abw'].values()) if t else '']))
     zeilen.append(tz)
     speichern('07_gang', zeilen, ['SF V4 - 07 Gang: Spiellaeufe (RE15_FRAMEDUMP, registriert), T7 koerperfest (Kette gegen das Feder-Ziel '
-                                  'der gezeichneten Pose, H = Figurhoehe, Riegel <= 0,06 H)', KOPFZEILE + '; letzte Zeile: nur V4 r4',
+                                  'der gezeichneten Pose, H = Figurhoehe, Riegel <= 0,06 H)', KOPFZEILE + '; letzte Zeile: nur V4 r5',
                                   ' | '.join(zs[0])[:300], ' | '.join(zs[1])[:300]])
 
 
@@ -352,13 +358,72 @@ def l08():
         t.append(kachel(img, (max(cx - 150, 0), max(cy - 150, 0), min(cx + 150, 640), min(cy + 150, 480)), 1,
                         '%s Gier +%d Grad (neutral)' % (NAME['neu'], dg), ['']))
     speichern('08_rundum_V4', [t[:3], t[3:]], ['SF V4 - 08 rundum: 6 Blickwinkel, neutrales Licht (Texelfarbe), Pose 85 gedreht',
-                                               'nur V4 Runde 4 (neu)'])
+                                               'nur V4 Runde 5 (neu)'])
+
+
+# ═══════════════════════════════════════════════════ 09 Schwanzverlauf (Runde 5, Entscheid O8)
+def _verlauf(img_v, maske, P, punkte):
+    """Lab (3x3 in der Maske) entlang der Mittellinie P, Bogenlaenge auf die Punkte Beginn / Biegung / Knick / Ende normiert (0 / 1 / 2 / 3)."""
+    L = G.lab(img_v)
+    lab = []
+    for x, y in np.round(P).astype(int):
+        mm = maske[y - 1:y + 2, x - 1:x + 2]
+        lab.append(L[y - 1:y + 2, x - 1:x + 2][mm].mean(0) if mm.any() else L[y, x])
+    s = np.r_[0, np.cumsum(np.linalg.norm(np.diff(P, axis=0), axis=1))]
+    k = [s[int(np.argmin(np.linalg.norm(P - np.asarray(q, float), axis=1)))] for q in punkte]
+    t = np.interp(s, k, [0, 1, 2, 3], left=np.nan, right=np.nan)
+    vor = s < k[0]
+    t[vor] = (s[vor] - k[0]) / max(k[1] - k[0], 1e-6)
+    return t, np.array(lab)
+
+
+def l09():
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from skimage.color import lab2rgb
+    import r5_schwanz_textur as ST
+    import t2_mass_v4 as T2M
+    from scipy import ndimage as nd
+    Po, mo_, lm_o = ST.achse_original()
+    reihen = [('Original Vorlage 2 (n1435, roh)', ) + _verlauf(G.vorlage(2), nd.binary_erosion(mo_), Po, lm_o)]
+    for k in ('vorher', 'neu'):
+        img, ids, iv = render(k, '85'); r = riegel(k); s = r['st']
+        tp = T2M.port(ids, s['H'])
+        P = np.asarray(tp['P'], float); P = np.array([P[max(0, j - 2):j + 3].mean(0) for j in range(len(P))])
+        lm = [tuple(s['beginn']), tuple(tp['mitte']), tuple(s['knick']), tuple(s['ende'])]
+        reihen.append(('%s (Pose 85, Vergleichsregel)' % NAME[k], ) + _verlauf(G.videoraum(img), nd.binary_erosion(np.isin(ids, G.SCHWANZ)), P, lm))
+    fig = plt.figure(figsize=(14, 9), dpi=100)
+    ax1 = fig.add_axes([0.06, 0.58, 0.9, 0.34]); ax2 = fig.add_axes([0.06, 0.20, 0.9, 0.30])
+    farben = ['black', 'tab:red', 'tab:blue']
+    for (nm, t, lab), c in zip(reihen, farben):
+        ok = np.isfinite(t)
+        ax1.plot(t[ok], lab[ok, 0], color=c, label=nm); ax2.plot(t[ok], lab[ok, 1], color=c, label=nm)
+    for ax, yl in ((ax1, 'L*'), (ax2, 'a*')):
+        for x0, txt in ((0, 'Beginn'), (1, 'Biegung'), (2, 'Knick'), (3, 'Ende')):
+            ax.axvline(x0, color='grey', lw=0.6, ls='--'); ax.text(x0, ax.get_ylim()[1], txt, fontsize=8, va='top')
+        ax.set_ylabel(yl); ax.set_xlim(-0.6, 3.05); ax.grid(alpha=0.3)
+    ax1.legend(fontsize=8, loc='upper right')
+    ax1.set_title('SF V4 - 09 Schwanzverlauf entlang der Achse (Mittellinie t2_mass_v4; x = Abschnitt Beginn-Biegung-Knick-Ende, < 0 = Ruecken)',
+                  fontsize=10)
+    # Streifen: je Quelle die Farbe entlang der Achse (gleiche x-Achse)
+    for i, (nm, t, lab) in enumerate(reihen):
+        ax = fig.add_axes([0.06, 0.13 - i * 0.045, 0.9, 0.035])
+        xs = np.linspace(-0.6, 3.05, 400)
+        ok = np.isfinite(t)
+        streif = np.stack([np.interp(xs, t[ok], lab[ok, c], left=np.nan, right=np.nan) for c in range(3)], -1)
+        rgb = np.where(np.isfinite(streif), lab2rgb(np.nan_to_num(streif).reshape(1, -1, 3)).reshape(-1, 3), 1.0)
+        ax.imshow(np.repeat(rgb[None], 8, 0), aspect='auto', extent=(-0.6, 3.05, 0, 1))
+        ax.set_yticks([]); ax.set_xticks([]); ax.set_ylabel(nm.split(' (')[0], rotation=0, ha='right', fontsize=8, va='center')
+    pfad = os.path.join(AUS, '09_schwanz_verlauf.jpg')
+    fig.savefig(pfad, dpi=100); plt.close(fig)
+    print('geschrieben', pfad)
 
 
 def main():
     os.makedirs(AUS, exist_ok=True)
     w = sys.argv[1] if len(sys.argv) > 1 else 'alle'
-    for k, f in (('01', l01), ('02', l02), ('03', l03), ('04', l04), ('05', l05), ('06', l06), ('07', l07), ('08', l08)):
+    for k, f in (('01', l01), ('02', l02), ('03', l03), ('04', l04), ('05', l05), ('06', l06), ('07', l07), ('08', l08), ('09', l09)):
         if w in ('alle', k):
             f()
 
