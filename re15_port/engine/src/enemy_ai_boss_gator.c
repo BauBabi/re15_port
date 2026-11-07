@@ -151,6 +151,19 @@ int  re15_gator_boss_nb3_alt(void) { return s_gb_nb3_alt; }
  * lief die direkte Anfahrt (Vorgabe B) an die Pier-Westkante in die Kopf-Klemme und endete rueckwaerts an der Westwand (Riegel fuzz, Lage P-mitte:
  * 92 2-s-Fenster ab t673 bei (-7416,-15904), Clip 10). Im Spiel ist kein Pruefhaken gesetzt. */
 static int gb_nb3_aus(void) { return s_gb_nb3_alt || re15_gr2_v4_alt(); }
+/* Runde 41 Spur G2-RE2 NB4 Runde 2 (Abnahme 7 M1): RE2-Bisssperre +0x238 fuer JEDEN Alligator-Treffer auf die Figur. RE2 setzt sie im Treffer-Einstieg
+ * auf 70 (`addiu v0,zero,0x46 / sb v0,0x238(a0)` @0x801016b0-b4), zaehlt sie je Bild im Root herunter (`lbu / beqz / addiu -1 / sb` @0x801004a8-b8) und
+ * laesst keinen Angriff zu, solange sie != 0 ist (`lbu v0,0x238(s0) / bnez v0,0x80100c08` @0x80100b5c: kein Wechsel in den Angriff;
+ * `lbu v0,0x238(s0) / beqz / addiu v0,zero,0x101 / sw v0,4(s0)` @0x80100bf4-0x80100c04 und @0x80100cb4-c4: zurueck zum Schwimmen). Der Treffer-Einstieg
+ * 0x80101578 wird nur aus den Schliess-Stufen 4/5 der Biss-Maschine +0x224 erreicht (Tafel @0x80100004, `jal 0x80101578` @0x8010155c) - ein Treffer je
+ * Biss, der naechste fruehestens 70 Bilder spaeter. Im Port fragte nur der Hochbiss (88ff3f990) die Sperre; der Biss im Wasser (LUNGE, Fenster Bild 6..34)
+ * traf 20 / 22 Bilder nach dem ersten Treffer im selben Clip ein zweites Mal (Abnahme 7: 400 von 895 Treffern, 100 -> 40 -> -20 TOT in 20 Bildern).
+ * gb_biss_frei: LUNGE, Biss B2 und Rammen fragen sie wie der Hochbiss. Pruefhaken s_gb_sperre_alt = 1: Stand cfa775ae8 (nur der Hochbiss fragt sie;
+ * Gegenprobe Riegel nb4, kein Spielweg);
+ * mit dem Pruefhaken 'Treffer alt' (Stand 3d57083b1) gilt sie ebenfalls nicht. */
+static int s_gb_sperre_alt = 0;
+void re15_gator_boss_sperre_alt_setzen(int an) { s_gb_sperre_alt = an; }
+static int gb_biss_frei(int slot) { return s_gb_sperre_alt || re15_gator_treffer_alt() || re15_gr2_biss_cd_rest(slot) == 0; }
 #define GB_OBEN_OHNE     300    /* Bilder oben ohne Treffer bis zur Querung ueber die Figur = der NB5-Wert der Pause nach einer Querung mit
                                  * der Figur oben (cross_cd 300, Spur B "Leon OBEN: 10 s auf der Seite bleiben", GBP_CROSS unten) - PORT-WAHL
                                  * nach dem Nutzer-Wortlaut "darf halt oben nicht sicher sein" (Takt frei: "Das kann er gerne machen"); RE2 hat
@@ -2434,6 +2447,7 @@ static void gb_takt(int slot)
                 if (e->anim_frame >= 150) { e->motion = 3; e->anim_frame = 0; }
             } else {
                 if (!g->bite_done && e->anim_frame >= 114 && pl->hit_react == 0
+                    && gb_biss_frei(slot)   /* NB4 Runde 2 (Abnahme 7 M1): RE2-Bisssperre +0x238 @0x801016b0-b4 / @0x80100cb4-c4 */
                     && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
                     && !gb_wand_dazwischen(e, pl))
                     gb_biss_abschluss(e, g, pl, 5);   /* NB4: Angriff Biss B2 */
@@ -2453,6 +2467,8 @@ static void gb_takt(int slot)
                                                             * 8..20 liess Leon in
                                                             * F21-42 entkommen */
             && pl->hit_react == 0
+            && gb_biss_frei(slot)   /* NB4 Runde 2 (Abnahme 7 M1): kein zweiter Treffer im selben Clip-4-Lauf - RE2-Bisssperre +0x238 = 70 nach dem Treffer
+                                     * (@0x801016b0-b4, je Bild -1 @0x801004a8-b8, Pruefstelle @0x80100cb4-c4); die RE2-Reaktion sperrt die Figur nur 19/21 Bilder */
             && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
             && !gb_wand_dazwischen(e, pl)) {
             /* dist<1000 = Leon IM Kopf-Segment-Radius (900+Puffer): Nahkontakt
@@ -3001,7 +3017,7 @@ static void gb_takt(int slot)
          * -> DAT_8006f418[5] = 50 (@0x8006f422, Tafel @0x8006f418-42c) + Niederwurf re15_player_knockdown_begin(facing). */
         if ((re15_gr2_rw_traegt() || (!gb_nb3_aus() && gb_pl_oben(pl)))   /* NB3 (Vorgabe A): Rammen auch ohne Kanister, wenn die Figur OBEN steht - "den Spieler oben auf
                                                                              * der Rampe auch rammen koennen"; Figur im Wasser: wie NB5 nur der CROSS-Biss unten */
-            && !s_gb_ramm_alt && !g->bite_done && g->kz_rueck != 2 && pl->hit_react == 0 && pl->hp >= 0   /* G2-RE2 NB2 Vorschlag 4 ("Rampe: rammen wie gehabt"): Rammen mit dem Kanister auch in der Ueberquerung wie ohne Kanister */
+            && !s_gb_ramm_alt && !g->bite_done && g->kz_rueck != 2 && pl->hit_react == 0 && pl->hp >= 0 && gb_biss_frei(slot)   /* NB4 Runde 2 (Abnahme 7 M1): +0x238 @0x80100b5c; G2-RE2 NB2 Vorschlag 4 ("Rampe: rammen wie gehabt"): Rammen mit dem Kanister auch in der Ueberquerung wie ohne Kanister */
             && gb_koerper_kontakt(e->x, e->z, (int)e->rot_y, pl->x, pl->z)) {
             g->bite_done = 1; s_gb_rammen++;
             if (!s_gb_stumm) { FILE *fr = fopen("gator_boss.log", "a");

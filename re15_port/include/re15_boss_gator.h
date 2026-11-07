@@ -69,6 +69,9 @@ void re15_gator_boss_tempo_alt_setzen(int an);  /* Pruefhaken: 1 = RE1.5-Tempo B
  * Bilder, die die Figur oben/in der Ostnische steht, ohne Treffer (GUARD quert ab GB_OBEN_OHNE 300 ueber sie). */
 void re15_gator_boss_nb3_alt_setzen(int an);
 int  re15_gator_boss_nb3_alt(void);
+/* Runde 41 Spur G2-RE2 NB4 Runde 2 (Abnahme 7 M1): Pruefhaken 1 = Stand cfa775ae8 - LUNGE, Biss B2 und Rammen fragen die RE2-Bisssperre +0x238 nicht
+ * (Gegenprobe Riegel nb4 'Zweitbiss'); im Spiel nicht gesetzt. */
+void re15_gator_boss_sperre_alt_setzen(int an);
 int  re15_gator_boss_oben_ohne(const re15_actor_t *e);
 /* Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2): RAUMHALT der Figur in der Spieler-Klemme waehrend ein Alligator-Boss im Raum ist (oben: Deck der
  * Rampe, unten: innerhalb der Aussenwaende, nicht in Plattform-/Rampenblock; Herleitung enemy_ai_boss_gator.c). (*x,*z) = geklemmte Lage, alt = Lage vor
