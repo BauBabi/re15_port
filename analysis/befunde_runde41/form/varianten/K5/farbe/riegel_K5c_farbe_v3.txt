@@ -1,0 +1,76 @@
+== ../farbe/K5c_farbe_v3
+  G0 Geometrie-Diff                                          {'geometrie_gleich': True, 'edd_emr_bytegleich': True, 'knochen': 32, 'clips': 3}          GRUEN
+  H1 Herkunft G4-Texel je Teil % (>= 95)                     {'Rumpf': 100.0, 'Schwanz': 100.0, 'Hals': 100.0, 'Beine': 100.0, 'Arme': 100.0, 'Klauen': 100.0, 'Kopf/Kiefer aussen': 100.0} GRUEN
+  H1b Anteil Sonderfelder % 3D-Flaeche (<= 10)               1.07                                                                                       GRUEN
+  H2 CLUT (0-2 bytegleich, Rangfolge)                        {'zeilen_0_2_bytegleich': [True, True, True], 'zeilen': {3: {'basis': 0, 'genutzt': 21, 'umgefaerbt': 6, 'vertauschungen': 0, 'dE_median': 19.299999999999997, 'dE_max': 25.4}, 4: {'basis': 1, 'genutzt': 148, 'umgefaerbt': 106, 'vertauschungen': 0, 'dE_median': 21.5, 'dE_max': 41.5}, 5: {'basis': 2, 'genutzt': 72, 'umgefaerbt': 33, 'vertauschungen': 0, 'dE_median': 14.6, 'dE_max': 38.3}, 6: {'basis': 2, 'genutzt': 81, 'umgefaerbt': 56, 'vertauschungen': 6, 'dE_median': 46.7, 'dE_max': 63.4}, 7: {'basis': 0, 'genutzt': 82, 'umgefaerbt': 81, 'vertauschungen': 0, 'dE_median': 30.9, 'dE_max': 45.0}, 8: {'basis': 0, 'genutzt': 35, 'umgefaerbt': 35, 'vertauschungen': 0, 'dE_median': 44.1, 'dE_max': 50.1}}} ROT
+  P1 Posterisierung Atlas dL0/5-10/Farben                    {'fleischtexel': 2013, 'dL0': 20.9, 'dL5_10': 27.1, 'farben': 281}                         GRUEN
+  D1 Vergroesserung je Teil, abgebildete G4-Flaeche / Median ortsgenau (<= 2,0) {'Rumpf': (1.16, 1.2), 'Schwanz': (1.2, 1.27), 'Hals': (1.05, 1.12), 'Beine': (1.03, 1.14), 'Arme': (1.21, 1.24), 'Klauen': (0.95, 1.06), 'Kopf/Kiefer aussen': (1.25, 1.41)} GRUEN
+  D1 ortsgenau Anteil Flaechen > 2,0 % [info]                {'Rumpf': 12.2, 'Schwanz': 13.1, 'Hals': 1.1, 'Beine': 10.5, 'Arme': 12.8, 'Klauen': 0.0, 'Kopf/Kiefer aussen': 30.6} info
+  D1 Messblatt-Formel ohne Wiederholung (Quellmeshes einmal) [info] {'Rumpf': 2.64, 'Schwanz': 2.33, 'Hals': 2.81, 'Beine': 1.03, 'Arme': 1.63, 'Klauen': 1.07, 'Kopf/Kiefer aussen': 2.78} info
+  S1b kollabierte UV (Punkt/Linie bei >= 1 Texel^2) % 3D [info] {'Rumpf': 0.0, 'Schwanz': 1.35, 'Hals': 0.0, 'Beine': 1.57, 'Arme': 0.0, 'Klauen': 0.0, 'Kopf/Kiefer aussen': 0.0} info
+  S1 fremde Texel je Teil % (<= 1)                           {'Rumpf': 0.0, 'Schwanz': 0.0, 'Hals': 0.0, 'Beine': 0.0, 'Arme': 0.0, 'Klauen': 0.0, 'Kopf/Kiefer aussen': 0.0} GRUEN
+  F1t Feldmittel F1-Stelle Lab / dE                          ([43.81, 23.28, -0.44], 5.84, 162)                                                         GRUEN
+  F2t Feldmittel Band Lab / dE                               ([55.54, 23.81, 18.92], 15.09, 554)                                                        ROT
+  F3t Zaehne L* / C*                                         (77.68, 5.28)                                                                              GRUEN
+  A1 Chroma Koerper [V3-Felder]                              7.3                                                                                        ROT
+  A2 Farbstreuung je Teil sigma_ab [V3-Felder]               8.7                                                                                        GRUEN
+  A3 Fleischrot-Anteil % [V3-Felder]                         11.1                                                                                       GRUEN
+  A4 Farbton Fleischrot Grad [V3-Felder]                     21.0                                                                                       GRUEN
+  A5 Neutralweiss Koerper % [V3-Felder]                      0.0                                                                                        GRUEN
+  A6 HF_fft je Feld (max) [V3-Felder]                        {'sonder': 0.151}                                                                          GRUEN
+  A7 HF_rest je Feld (max) [V3-Felder]                       {'koerper': 0.086, 'kopf': 0.095, 'kiefer': 0.041, 'kralle': 0.096}                        GRUEN
+  A8 Kiefer Zahn/Rot/Dunkel % [V3-Felder]                    (2.0, 36.3, 67.5)                                                                          ROT
+  A9 Auge L*/C* [V3-Felder]                                  (7.3, 4.4)                                                                                 GRUEN
+  A10 Texeldichte Teil/Koerper (min,max) [V3-Felder]         (0.59, 2.56)                                                                               GRUEN
+  A11 Schwanz L*-Sprung Glied 1-5 (max) [V3-Felder]          3.2                                                                                        GRUEN
+  A12 Farbkorn Koerper (a*b*-Rest) [V3-Felder]               4.99                                                                                       GRUEN
+  P2 Render dL=0 je Teil (K5c, G4, Diff)                     {'Rumpf': (70.5, 66.9, 3.6), 'Brust': (54.1, 43.9, 10.2), 'Schwanz': (32.0, 41.0, -9.0), 'Hals': (63.3, 59.4, 3.9), 'Hinterbein l (W)': (59.6, 62.7, -3.1), 'Hinterbein r (W)': (58.7, 62.5, -3.8), 'Vorderbein l (W)': (50.3, 52.6, -2.2), 'Vorderbein r (W)': (45.4, 42.4, 3.0), 'Klauen l (W)': (30.5, 14.2, 16.3), 'Klauen r (W)': (33.6, 12.6, 21.0), 'Kopf + Kiefer': (55.5, 48.7, 6.8)} ROT
+  B10 Atlas Fleisch dunkle Linien %                          7.02                                                                                       ROT
+  B11 Atlas Haut dunkle Linien %                             2.73                                                                                       ROT
+  B12 Atlas Kopf Linien % / Canny-Dichte                     (2.62, 17.26)                                                                              ROT
+  B13 Atlas Fleisch Canny-Dichte                             24.63                                                                                      ROT
+  B14 Rotflaechen L*-Streuung Render / Atlas                 (8.0, 10.0)                                                                                ROT
+  B15 Render Rotflaechen a*-Streuung                         5.3                                                                                        GRUEN
+  B16 Render Rotpixel in Flaechen mit >= 2 Stufen %          46.7                                                                                       ROT
+  B17 Kohaerenz Render (flaechengleich, Mittel) / Atlas      (0.541, [0.535, 0.547, 0.54], 0.608)                                                       ROT
+  N1 neutral C* je Winkel (Variante / EM30)                  ((9.1, 7.5, 7.1), (10.0, 12.5, 10.5))                                                      ROT
+  N2 neutral L*>85 % je Winkel                               (0.0, 0.0, 0.0)                                                                            GRUEN
+  K1 Bild1 Chroma Figur / Original [V1, ersetzt]             (6.3, 9.3)                                                                                 info
+  K2 Bild1 ab-Streuung Figur / Original [V1, ersetzt]        (6.0, 9.8)                                                                                 info
+  K3 Bild1 dE je Zone (max)                                  {'Schwanz': 4.7, 'Ruecken/Flanke': 8.4, 'Hinterbein l (W)': 7.4, 'Hinterbein r (W)': 10.5, 'Vorderglied r (W)': 7.8} ROT
+  K4 Bild1 Rot-Klasse Figur % / Original                     (4.3, 5.2)                                                                                 GRUEN
+  K5 Bild1 Hell-Klasse Ruecken % / W Figur %                 (2.6, 9.9, 0.0, 0.5)                                                                       GRUEN
+  K6 Bild2 Figur dE / Chroma                                 (6.8, 28.0, 25.6)                                                                          ROT
+  K7 Bild2 Unterkiefer dE / a*                               (9.6, 28.1, 24.9)                                                                          ROT
+  K8 Bild2 Oberkiefer dE                                     3.3                                                                                        GRUEN
+  K9 Bild2 Klauen a* (r, l) / Original                       (27.9, 24.1, 30.6, 22.2)                                                                   GRUEN
+  K10 Bild2 Augenpunkte L*max (r, l)                         (13.0, 29.9)                                                                               GRUEN
+  K1v2 Bild1 Chroma Figur / Rundlauf (0,85-1,2x)             (6.3, 7.8)                                                                                 ROT
+  K2v2 Bild1 ab-Streuung Figur / Rundlauf (>=0,85x)          (6.0, 8.0)                                                                                 ROT
+  K4b Bild1 Rot-Klasse Ruecken/Flanke % / Original           (7.4, 11.9)                                                                                GRUEN
+  B2 groesste Rotflaeche % Figur (3/4 vorn, Seite)           (2.6, 1.98)                                                                                ROT
+  B9 Rot im Umrissband % (3 Winkel)                          14.2                                                                                       ROT
+  B9b Rot im Umrissband % Clip 0                             10.8                                                                                       GRUEN
+  K11 Bild1 Farbton Rotklasse Figur / Ruecken Grad           (0.3, -1.8)                                                                                GRUEN
+  K12 Bild1 Rotklasse je Zone % (Variante, Original, Grenze) {'Schwanz': (6.1, 5.9, 8.9), 'Ruecken/Flanke': (7.4, 11.9, 17.9), 'Hinterbein l (W)': (0.0, 1.9, 4.9), 'Hinterbein r (W)': (0.0, 1.1, 4.1), 'Vorderglied r (W)': (1.7, 0.0, 3.0)} GRUEN
+  K13 Bild2 dunkle Klasse Figur %                            66.7                                                                                       GRUEN
+  F1-Flaeche Bild 1 px / IoU Maske F1 (Original 646 px) [info] (731, 0.75)                                                                                info
+  K14 Bild1 F1-Stelle Lab / dE / Rotklasse %                 ([47.9, 17.5, -1.2], 3.1, 61.6)                                                            GRUEN
+  K15 Bild2 Fleischband Lab / dE / Rotklasse %               ([50.9, 30.7, 20.6], 5.2, 96.2)                                                            GRUEN
+  -> 32/52 GRUEN
+== Gegenproben Messblatt V3 5 (V2r2: H1, P1, K11, K14, K15 ROT; G4: P1 und B10-B17 GRUEN; (b2)-Probe A: K11, K12, K13, P2 Kopf ROT; Orange/Gelb: F1t/F2t ROT)
+  H1                                                         {'Rumpf': 0.44, 'Schwanz': 0.22, 'Hals': 0.41, 'Beine': 0.17, 'Arme': 0.24, 'Klauen': 0.14, 'Kopf/Kiefer aussen': 0.0} ROT
+  P1                                                         {'fleischtexel': 12810, 'dL0': 51.0, 'dL5_10': 4.3, 'farben': 169}                         ROT
+  K11 Bild1 Farbton Rotklasse Figur / Ruecken Grad           (38.1, 23.5)                                                                               ROT
+  K14 Bild1 F1-Stelle Lab / dE / Rotklasse %                 ([28.9, 6.6, 7.9], 21.3, 9.0)                                                              ROT
+  K15 Bild2 Fleischband Lab / dE / Rotklasse %               ([55.8, 28.9, 20.2], 7.2, 92.7)                                                            ROT
+  P1 G4 (muss GRUEN)                                         {'fleischtexel': 9492, 'dL0': 17.9, 'dL5_10': 25.9, 'farben': 425}                         GRUEN
+  G4 B10-B17 (muss 8/8 GRUEN)                                8/8                                                                                        GRUEN
+  (b2)-Probe A K11 Bild1 Farbton Rotklasse Figur / Ruecken Grad (24.8, 44.3)                                                                               ROT
+  (b2)-Probe A K12 Bild1 Rotklasse je Zone % (Variante, Original, Grenze) {'Schwanz': (21.3, 5.9, 8.9), 'Ruecken/Flanke': (0.0, 11.9, 17.9), 'Hinterbein l (W)': (0.0, 1.9, 4.9), 'Hinterbein r (W)': (0.0, 1.1, 4.1), 'Vorderglied r (W)': (12.1, 0.0, 3.0)} ROT
+  (b2)-Probe A K13 Bild2 dunkle Klasse Figur %               17.2                                                                                       ROT
+  (b2)-Probe A P2 Kopf aus G4-F1 (K5c, G4 26, Diff)          {'Kopf + Kiefer (G4-F1)': (57.5, 46.3, 11.2)}                                              ROT
+  Orange F1t / F2t dE                                        (74.6, 50.1)                                                                               ROT
+  Gelb F1t / F2t dE                                          (87.3, 72.4)                                                                               ROT
+  Gegenprobe: falsch ausgefallen: keine
+EXIT 1
