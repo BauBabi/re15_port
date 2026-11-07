@@ -61,9 +61,15 @@ if(CMAKE_SCRIPT_MODE_FILE)
     # @0x1B06/16/26: 3x `3a 00 06 00 00 00 00 10 ...` (Effekt 0x06 sub 0); Raum-ESP 0x0b sub 0 = 6
     # Stroeme, 0x06 sub 0 = 1 Strom.
     # ERWARTUNG (Waffen-Log, Debug-Sprung = derselbe re15_room_apply_pending-Weg wie eine Tuer):
-    #   genau 3x "SPAWN id=11 sub=0 scale=0x1900 streams=6" und 3x "SPAWN id=6 sub=0 scale=0x1000
-    #   streams=1", KEIN "streams=-1" (= Bank beim Spawn leer, row-loser Ersatzplatz — der Stand vor
-    #   der Nachbesserung, gemessen build/r34g_c/nb_2000_tuer).
+    #   genau 3x "SPAWN id=11 sub=0 scale=0x1900 streams=6", KEIN "streams=-1" (= Bank beim Spawn
+    #   leer, row-loser Ersatzplatz — der Stand vor der Nachbesserung, gemessen build/r34g_c/nb_2000_tuer).
+    #   Effekt 0x06 sub 0 (Deckentropfen, sub07): KEIN "SPAWN id=6 sub=0" mehr — Runde 41 Spur W,
+    #   Orchestrator-Entscheid OFFEN 4 Variante B (2026-11-01, W_wasserblink.md §6, Commit 9fceaa57b):
+    #   die Schleife sub07 startet nur der Repo-Baum (Fan-Mod) per Evt_exec ROOM2000.RDT @0x0177C
+    #   `04 ff 18 07`; die 40%-Disc (Version_40%/PSX/STAGE2/ROOM2000.RDT) endet main00 @0x01598 mit
+    #   `01 00` und hat zwischen 0x1426 und 0x159A kein `04 ff 18` (Integration v0.8.30 nachgemessen).
+    #   Der Port laesst den Evt_exec aus (tropfen_r41.c; debug.log "[tropfen41] ROOM2000 main00
+    #   @0x0177C Evt_exec sub07 ... ausgelassen"); dieser Pin verlangt genau diese Zeile und 0 Spawns.
     # =============================================================================================
     if(NOT R34_PIN)
         set(R34_PIN takt)
@@ -285,12 +291,23 @@ if(CMAKE_SCRIPT_MODE_FILE)
                                 "Eintrittstakt noch nicht — Original parst sie im Raumlader "
                                 "@0x8003996c VOR der SCD-Init @0x80039a00). ${WORKDIR}")
         endif()
-        if(NOT _n06 EQUAL 3 OR NOT _g06 EQUAL 3)
-            message(FATAL_ERROR "${_tag}: Effekt 0x06 beim Eintritt ${_n06}x gespawnt, davon ${_g06}x "
-                                "mit 1 Strom (erwartet 3/3). ${WORKDIR}")
+        # Runde 41 Spur W (OFFEN 4 Variante B, Commit 9fceaa57b): die Deckentropfen-Schleife sub07
+        # (Effekt 0x06 sub 0 @0x01B06) wird nicht mehr gestartet - wie die 40%-Disc (main00 endet
+        # @0x01598 `01 00`, kein Evt_exec). Vorher erwartete dieser Pin 3x "SPAWN id=6 sub=0" (Mod-RDT).
+        if(NOT _n06 EQUAL 0)
+            message(FATAL_ERROR "${_tag}: Effekt 0x06 beim Eintritt ${_n06}x gespawnt (erwartet 0: der "
+                                "Evt_exec sub07 @0x0177C wird seit Runde 41 Spur W ausgelassen, wie "
+                                "Version_40%). ${WORKDIR}")
         endif()
-        message(STATUS "${_tag}: OK — ROOM2000-Eintritt: 3x Effekt 0x0b mit 6 Stroemen, 3x Effekt "
-                       "0x06 mit 1 Strom (Raumbank vor dem Eintrittstakt) (${WORKDIR})")
+        file(STRINGS "${WORKDIR}/debug.log" _tr
+             REGEX "\\[tropfen41\\] ROOM2000 main00 @0x0177C Evt_exec sub07 .*ausgelassen")
+        list(LENGTH _tr _n_tr)
+        if(NOT _n_tr EQUAL 1)
+            message(FATAL_ERROR "${_tag}: [tropfen41]-Zeile fuer ROOM2000 ${_n_tr}x im debug.log (erwartet "
+                                "genau 1x: Evt_exec sub07 @0x0177C ausgelassen, Runde 41 Spur W). ${WORKDIR}")
+        endif()
+        message(STATUS "${_tag}: OK — ROOM2000-Eintritt: 3x Effekt 0x0b mit 6 Stroemen (Raumbank vor dem "
+                       "Eintrittstakt), 0x Effekt 0x06 (sub07 ausgelassen wie Version_40%, Spur W) (${WORKDIR})")
     else()
         message(FATAL_ERROR "r34_plattform: unbekannter Pin R34_PIN='${R34_PIN}'")
     endif()
@@ -359,6 +376,8 @@ endif()
 #                        re15_room_apply_pending): die Raum-Effektbank ist geparst, BEVOR der SCD den
 #                        Eintrittstakt faehrt (Raumlader @0x8003996c vor SCD-Init @0x80039a00) — die drei
 #                        Sce_espr_on 0x0b aus main00 bekommen ihre 6 Stroeme (vorher streams=-1).
+#                        Seit Runde 41 Spur W (OFFEN 4 Variante B, 9fceaa57b): Effekt 0x06 sub 0 (sub07)
+#                        startet nicht mehr - 0 Spawns + die [tropfen41]-Zeile sind Teil des Pins.
 if(TARGET re15_pc)
     add_test(NAME integration_r34_plattform_esp_eintritt
              COMMAND "${CMAKE_COMMAND}"
