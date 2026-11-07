@@ -1890,3 +1890,155 @@ Am Bild:
    "klein" bewertet hat (Vorgabe (c)).
 6. Der Einbau ins Spiel-Asset folgt erst nach der Abnahme. Nach dem Nutzerentscheid ist dies die letzte Nachbesserungsrunde vor
    v0.8.30.
+
+## V4 Kopf nach Nutzerbeschreibung (Bauer, Runde 3, 2026-11-07)
+
+Grundlage: der Kopf der Runde 2 (EM30_V4ot2.EMD, sha256 415a921f; Leiste SF_belege/v4/ot2/03_kopf_nah_vorn_x4.jpg) wurde vom Nutzer
+abgelehnt. Nutzerentscheid: letzte Runde dieser Spur vor v0.8.30; eine Umsetzung genau dieser Lesung, keine Experimente.
+
+### Nutzer-Wortlaut
+- 2026-11-07 ~17:40: "die Form baut von Farben und Texturen her ja nun wirklich auf die Urspruengliche Birkin Form auf.... Die Farben
+  koennen doch dann im Prinzip garnicht so scheisse aussehen"
+- 2026-11-07 abends (nach dem Kopf der Runde 2): "Nein, es passt eben nicht.... ich weiss nicht wie ich das noch beschreiben soll.... da ist
+  links ein Auge. Linke Seite ist so graeulich. Bis Nase. Dann rechts Seite sieht man Haare - braeunlich.... Warum mischst du die Farben so
+  daemlich?"
+- Abgelehnt (Runde 2): rosa-roter Kopf mit lachsroter heller Kuppe (L* 38), weissem Augenfleck, fast schwarzem rechteckigem Haarblock (L* 9)
+  und rosa Haut - vier Farben nebeneinander.
+
+### Lesung (bindend; Seiten = Bildkoordinaten der Spielkamera 50A0 Cut 12 wie Beschreibung1)
+1. Linke Bildhaelfte = graeuliche Haut mit dem Auge (heller, unbunter Fleck, Ort K4), bis zur Nase (K7) - die Nase ist die Grenze.
+2. Rechte Bildhaelfte = Haare, braeunlich (a* > 0, b* > 0, nicht schwarz), etwa 25 % dunkler als der Kopf-Median (Video 12,9 / 17,3), eine
+   Flaeche mit weichem, strukturfolgendem Rand; seitlich bleiben Auge (S2) und Haarkante (KS2) an den gemessenen Orten.
+3. Keine Farbmischung: Kopfoberseite dunkel rotbraun (hoechstens Kopf-Median + 6 L*), nahtlos zu den Haaren.
+4. Farbquelle zuerst die Ref2-Palette; Ableitungen nur bei Bedarf und belegt. Nie Texel an Video-Farbwerte eichen.
+
+### Seitenbestimmung (Id-Puffer, ref2tex_v4.geometrie_r3, Protokoll 'geometrie')
+- Pose 135 (Kamera 50A0/12, Kopfbox x 325-380, y 154-221): die lokale z-Koordinate des Kopf-Meshes (Mesh 9; z > 0 = (W)-links, KOPF_V4)
+  ist bei den Kopfpixeln LINKS der Kopfmitte im Median 14,3 E., RECHTS 215,4 E. Also: **Bild-rechts = (W)-links = Haare, Bild-links =
+  (W)-rechts = graue Seite mit dem Auge** - wie die Messblatt-Konvention "(B)-links = (W)-rechts" (Abschnitt 1).
+- Nasenebene: Mitte des Messblatt-Fensters KV3 (Bild 354,0 / 203,0) liegt im Kopfraum bei (498,5 / -196,0 / 185,1) E.; die Ebene enthaelt
+  Sehstrahl und Bild-oben der Pose 135 (Normale lokal (-0,316 / 0,521 / 0,793), Bild-rechts positiv). 13,2 / 11,9 E. je Bildpunkt an der
+  Nase. Auge K4 (Bild 334,3 / 187,9) liegt im Kopfraum bei (336 / -331 / -43): grau-Seite, 150 E. von der Ebene.
+- Haarkante aus Beschreibung2 (KS2, Pose 85): die 82 Bildpunkte des Fensters KS2 zeigen 77 Texel des VORDERbilds (kein Seitenbild-Texel);
+  dieselben Texel erscheinen in Pose 135 zwischen Auge und Nase (Bbox x 333-350, y 183-207, Schwerpunkt 340,5 / 194,4; Scratchpad
+  ot3/explore3.py). Die Haarkante der Seitenansicht und die graue Zone "Auge bis Nase" der Vorderansicht sind also dieselben Texel. Nach der
+  Lesung (1) bleiben sie grau; der dunkle Streifen in KS2 entsteht - wie schon in Runde 2 - aus dem Augenhof und dem streifenden RDT-Licht
+  an der Kopfvorderkante (KS2 roh L* 14,9; S3 Videoraum 23,1 <= Kopf-Median 37,0 - 5). Ein Haarfleck dort haette der Lesung (1)
+  widersprochen (Nutzer: "Warum mischst du die Farben so daemlich?").
+
+### Farbquelle (Ref2-Zeile 480, Eintraege, die Referenz 2 auf Koerperflaechen zeigt; 226 Eintraege, 22 violettstichige ausgenommen)
+Klassen disjunkt (ref2tex_v4.klassen_r3; Lab der Texelfarbe, Liste im Protokoll 'klassen' / 'klassen_lab'):
+- **grau** (32): Chroma <= 7,5, L* >= 26 - z. B. 72/64/64 (27,9), 72/72/72 (30,6), 88/72/72 (32,2), 88/80/80 (34,8), 88/88/88 (37,4),
+  96/88/88 (38,1), 104/88/88 (38,9), 104/96/96 (41,5), 112/104/104 (44,7), 120/112/112 (47,9) ... 144/128/128 (55,0).
+- **braun** (13): a* > 0, b* > 0, b* >= 0,6 a*, L* 12-40, Chroma <= 17 - 40/32/24 (12,9/2,3/6,9), 48/32/16 (13,8/5,5/13,5),
+  56/40/24 (17,6/5,1/13,4), 56/48/32 (20,3/0,7/11,6), 64/56/40 (23,9/0,6/11,3), 72/56/40 (24,8/4,5/12,7), 96/64/56 (30,5/12,8/10,5),
+  88/72/56 (31,8/4,1/12,2), 88/72/64 (32,0/5,4/7,3), 104/80/72 (36,3/8,7/8,6), 112/88/80 (39,6/8,6/8,4).
+- **kuppe** (9, dunkel rotbraun): a* 12-22, b* >= 0,4 a*, L* 20-36, Chroma > 17 - 80/40/40 (21,5/18,6/8,4), 88/40/32 (22,6/21,3/15,5),
+  88/48/48 (25,0/18,2/8,0), 96/48/48 (26,2/21,7/9,9), 104/64/64 (31,8/17,4/7,3), 112/72/48 (34,6/14,3/21,3), 112/72/72 (35,1/17,1/7,1).
+- **hell** (12, Auge; Teilmenge von grau): L* >= 45, Chroma <= 7,5 - Kern = hellster Eintrag 144/128/128 (55,0/6,1/2,2).
+Die Ref2-Palette reicht fuer "graeulich" und "braeunlich"; **keine Ableitungen** angelegt (Protokoll ableitungen = [], T-K2 0 Ableitungs-
+Texel). Haut- und Schwanzfarben unveraendert.
+
+### Aenderungen
+- ref2tex_v4.py Runde 3 (main; Runde 2 als main_r2): Zonen aus der Kopfgeometrie (tex3d: Ort je Texel aus den UV-Flaechen von Mesh 9;
+  Nasenebene s; Kuppe = Ellipse um die rote Zone des Messblatts im Bild der Pose 135 (Mitte 0,60 / 0,17, Halbachsen 0,19 / 0,15 der Kopfbox)
+  bzw. Pose 85 (0,32 / 0,16; 0,21 / 0,12), Halbachsen x 1,3), Raender strukturfolgend (Ref2-Kopfstruktur Gauss 2 Texel, 200 E. Hub, Rampe
+  8 E.), Haaransatz als Saum (25 E., Faktor 0,6, nicht unter 0,85 der Kopfbox). Helligkeit = oertliche Struktur der Ref2-Kopftexel
+  (L / Gauss 6, Knie 0,4) x 40 (Ref2-Kopf-Albedo 37,2 bei Render 30,8); Haar 0,8 x Grau, Kuppe 0,9 x Grau, Nase (KV3, Grau-Seite) 0,9.
+  Auge wie Runde 2 mit Hof nur um das Auge der eigenen Kamera (vorn 0,5 / 6 Texel; seitlich 0,7, Kernschwelle 0,10). Eintragswahl mit
+  a*/b*-Gewicht 0,15 (braun / kuppe) bzw. 0,4 (grau). Schwanz texelgleich Runde 2 (assert). Alle Zahlen PORT-WAHL, Laeufe 1-9 im
+  Code-Kommentar; kein RE-Befund.
+- riegel_ref2tex.py: T-K4 nach der Lesung (K5, K6, K7, K8, K9, S3, S4), T-K5 Grundton = graue Zone, NEU T-K9 Zonen (a-f) und T-K8
+  Aenderungsumfang (--vorher), T-K2 "Ref2-Farbe oder belegte Ableitung". Zonen am EMD = Klasse des Texel-Index (zonen_emd), so sind sie
+  auch an Gegenproben messbar.
+- leisten_ref2tex.py: Runde-3-Texte, neue Leiste 09_kopf_zonen_x6.
+- SF_MESSBLATT_V4.md: Nachtrag Runde 3 (Abschnitt 5, Ersatztabelle Abschnitt 7).
+- Nicht geaendert: birkin_formen.py, Geometrie/UV aller Meshes, Koerper-Texel, Schwanz-Texel, CLUT, Spiel-Asset EM30_HANGAR.EMD
+  (cfd1ac42) und Pin, Engine. T-K8: Sektionen 0-7 und CLUT bytegleich zu EM30_V4ot2, Texel geaendert nur in den Kopf-UV-Flaechen (vorn
+  2989 von 3072, seite 3413 von 3584; ausserhalb 0).
+- Variante: sfv4/emd/EM30_V4ot3.EMD = EM30_V4.EMD (sha256 a1bc9309e5dd9ce8a948371ec4fef8595bd86310e3ea5e01dc3326552d5f8998,
+  262004 Byte); Vorstand EM30_V4ot2.EMD (415a921f) behalten. Reproduzierbar: "python ref2tex_v4.py", dann
+  "python birkin_formen.py --variante v4 --aus DIR".
+
+### Zonen-Masse (Ziele aus dem Auftrag; Texel = Lab der gewaehlten Eintraege, Render = Pose 135 roh, RDT-Licht; Protokoll 'zonen_texel' /
+'zonen_bild', Riegel T-K9)
+| Ziel | Soll | Ist Texel (P50) | Ist Render (Pose 135, roh) |
+|---|---|---|---|
+| graue Zone Chroma | <= 0,5 x Rumpf (Rumpf Id 8 7,8 -> 3,9) | 3,5 (34,8/3,3/1,2) | 3,5 |
+| graue Zone L* | um Ref2-Kopf P50 30,8 (+- 5) | 34,8 | 27,9 |
+| Haar L* | 0,62-0,90 x Kopf-Median ("um 22-24") | 31,8 (31,8/4,1/12,2) | 18,4 = 0,67 x Median 27,4 |
+| Haar a* / b* | > 0 / > 0 | 4,1 / 12,2 | 3,3 / 7,5 |
+| Haarflaeche (Haar + Kuppe) | 0,40-0,55 der Kopfpixel | - | 0,52 (Haar 0,36, Kuppe 0,16) |
+| Rand | Gradient 3-8, Kante Std > 4 px | - | 3,2 (704 Randpixel); 6,9 px (61 Zeilen) |
+| Kuppe L* | <= Median + 6 (33,4), >= Haar | 31,8 (31,8/17,4/7,3) | 31,8; a* 17,4, b* 7,3 |
+| Auge | heller unbunter Fleck am Ort K4 | Kern 55,0/6,1/2,2 | K1 1 Komp., Kontrast 20,2; K2 54,5/4,9/1,9 (Videoraum); K3 0,030 x 0,033 H; K4 0,054 H links, 0,095 H unter OK; Zone grau |
+| Nase | K7 mitteldunkel an der Grenze | Grau-Soll x 0,9 | KV3 23,2 (Videoraum; KV5 25,3, Haar rechts 17,7); Fenster KV3 0,37 grau |
+| seitlich S2 / KS2 | gemessene Orte | - | S2 0,051 H / 0,817 H; S1 0,045 x 0,049 H; KS2 roh 14,9, Videoraum 23,1 (<= 32,0) |
+| ganzer Kopf Pose 135 | L* P50 >= 23, Kopf/Rumpf >= 0,9 | - | 27,4; 0,99 (Ref2 30,8 / 1,28) |
+| Rundum +120 / +180 | kein Fleck L* < 15 > 100 px | - | 2 px / 0 px |
+
+### Riegel (riegel_ref2tex.py, EM30_V4ot3.EMD, --vorher EM30_V4ot2.EMD, --lauf sfv4/r/V4ot3 mit 191 FRAMEDUMPs)
+Ausgabe: SF_belege/v4/ot3/riegel_ref2tex_V4ot3.txt/.md/.json. **Exit 1: 1 rot von 57** (T5, Geometrie seit Runde 5), 8 INFO-Zeilen.
+
+| Mass | Soll | Ist Runde 3 | Gegenprobe Runde 2 (EM30_V4ot2) |
+|---|---|---|---|
+| T-K1a/b/c Koerper = Ref2 | bytegleich | OK, 0 von 34716 Texeln | OK |
+| T-K2 Ref2-Farbe oder belegte Ableitung | 0 Texel ausserhalb | OK 0 von 14008, 160 Farben, 0 Ableitungen | OK |
+| T-K3a/b/c/d Schwanz | wie Runde 2 | OK (texelgleich Runde 2: 13,0 <= 14,0; Std 8,8-14,6; Sprung 4,7; Anisotropie 0,71-1,29) | OK |
+| T-K4 K1 Auge vorn | 1 Komp., Kontrast >= 20 | OK 1; 20,2 | OK 20,7 |
+| T-K4 K2 Augenfleck | >= KV5 + 20, hell und unbunt | OK 54,5/4,9/1,9 (KV5 25,3) | OK |
+| T-K4 K3 / K4 | Groesse / Lage | OK 0,030 x 0,033 H; 0,054 H links, 0,095 H unter OK | OK |
+| T-K4 K5 Haarfeld (KV2) | 0,62-0,90 x Median (20,2-29,3), a*/b* > 0 | OK 28,0/4,6/7,2 | **ROT** 12,9 |
+| T-K4 K6 Spiegelstelle | in der Haarflaeche, <= Median - 3, kein Fleck | OK Mittel 23,1, max 31,6 | OK |
+| T-K4 K7 Nase (KV3) | Wange +- 4, >= Haar rechts + 1 | OK 23,2 (KV5 25,3, KV3r 17,7) | OK |
+| T-K4 K8 Kinn | Albedo >= 29,2, b* >= 0 | OK Albedo 31,9 | OK |
+| T-K4 K9 / S4 Kuppe | a* >= 8, b* > 0, <= Median + 8 | OK 37,3/14,4/6,7; 34,5/10,1/4,0 | **ROT** K9 38,0 > 35,6 |
+| T-K4 K10, S1, S2 | wie Messblatt | OK (0,154 x 0,187 H; S1 1 Komp. 0,045 x 0,049 H; S2 0,051 / 0,817 H) | OK |
+| T-K4 S3 Haarkante seitlich | KS2 <= Median (85) - 5 (32,0); Abstand <= 0,01 H | OK 23,1; 0,000 H | OK |
+| T-K5a Grundton graue Zone, vorn / seitlich | Ref2 30,8 +- 4 | OK 27,9 / 30,6 | OK / **ROT** 37,0 |
+| T-K5b Grundton/Rumpf | >= Ref2 - 0,2 | OK 1,10 / 0,98 | OK |
+| T-K5c violett | <= 0,02 | OK 0,000 / 0,000 | OK |
+| T-K5d dunkle Textur in der grauen Zone | <= Ref2 + 0,05 | OK 0,03 / 0,00 | **ROT** 0,23 |
+| T-K9a graue Zone | Chroma <= 3,9; L* 30,8 +- 5; Lage | OK Chroma 3,5; 27,9; links 0,83; Kopf links grau 0,73; 0,44 der Kopfpixel | **ROT** |
+| T-K9b Haar | 17,0-24,7; a*/b* > 0; Flaeche 0,40-0,55 | OK 18,4 (0,67 x); 3,3 / 7,5; 0,52 | **ROT** 6,2 (0,26 x), Flaeche 0,32 |
+| T-K9b Rand / Kanten | 3-8; Std > 4 px | OK 3,2; 6,9 px | OK (7,8; Block) |
+| T-K9c Kuppe | <= 33,4, >= Haar; a* >= 8 | OK 31,8, a* 17,4, b* 7,3; 0,16 | OK |
+| T-K9d Auge / Nase / Seite | grau, K4, KV3 0,3-0,7, S2, KS2 | OK Zone 1; 0,37; KS2 14,9 | **ROT** |
+| T-K9e ganzer Kopf | P50 >= 23, Kopf/Rumpf >= 0,9 | OK 27,4; 0,99 | **ROT** 23,9; 0,87 |
+| T-K9f Rundum | kein Fleck L* < 15 > 100 px | OK 2 / 0 px | **ROT** 494 / 360 px |
+| T-K8 Aenderungsumfang | Sektionen/CLUT gleich, Texel nur Kopf | OK vorn 2989, seite 3413, ausserhalb 0 | - |
+| G1, M1-M4, T1-T4, TA, T5q, T6, TK, T7a-d, Boden | wie Riegel V4 | OK | OK |
+| T5 | f 0,5 >= 0,100 H | **ROT** 0,098 (Geometrie seit Runde 5, unveraendert) | ROT 0,098 |
+
+Gegenprobe gesamt (SF_belege/v4/ot3/riegel_ref2tex_V4ot2_gegenprobe.*): **10 rot von 51** - die Runde-2-Fassung faellt an T-K9a/b/d/e/f,
+K5, K9, T-K5a (85), T-K5d (135) und T5.
+
+### Leisten (SF_belege/v4/; Runde 2 in v4/ot2/, Runde 1 in v4/ot1/)
+Spalten Nutzer-Vorlage | Nutzer-Beschriftung | Referenz 2 (gelobt) | V4 neu (Runde 3); roh, gleiches Licht; keine Spalten frueherer
+V4-Runden:
+- 01_vorn_kamera12, 02_seite_wie_bild2, 03_kopf_nah_vorn_x4, 04_kopf_nah_seite_x4, 08_rundum_V4,
+- 09_kopf_zonen_x6 (neu): Vorlage-Kopf x6 mit den Nutzerpunkten (Auge gelb, Haare / Nase cyan) | Beschreibung1 | Ref2-Kopf | neu mit
+  Messpunkten; Zeile 2 neu mit Zonenkarte grau / braun / Kuppe und den T-K9-Zeilen.
+- 05 (Schwanz) und 07 (Gang) unveraendert gegenueber Runde 2 (T-K8: Schwanz-Texel und Geometrie bytegleich; Spiellauf sfv4/r/V4ot3 mit
+  191 FRAMEDUMPs, T7a-d und Boden gruen) - nicht neu erzeugt.
+Am Bild (03 / 09): links graue Haut mit dem hellen Augenfleck, rechts eine braune Haarflaeche mit weichem, der Kopftextur folgendem Rand,
+oben rechts die dunkel rotbraune Kuppe; keine rosa Haut und kein schwarzer Block mehr. Seitlich (04): grauer Kopf, heller Augenfleck,
+dunkle Vorderkante, rotbraune Oberseite. Spielbild (RE15_FRAMEDUMP h135, sfv4/r/V4ot3): gleiche Verteilung.
+
+### Tests
+- ctest (unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41, integration_r41_sichel_form): "100% tests passed, 0 tests failed
+  out of 4" (64,44 s; SF_belege/v4/ot3/ctest_v4_ot3.txt).
+- Bau "=== LOCAL-BUILD-OK (build)". Engine unveraendert.
+
+### Offen
+1. **T5 bleibt rot** (f 0,5 = 0,098 H bei Grenze 0,100): Geometrie seit Runde 5, nach Vorgabe nicht angefasst. T5q gruen.
+2. **Haar im Render dunkler als "um 22-24"**: Pose 135 L* 18,4 = 0,67 x Kopf-Median (Band 0,62-0,90 gruen). Die Haarseite liegt im Schatten
+   des RDT-Lichts (Lauf 1 mit texelgleich hellem Haar schon 0,75 x Median); die Texel sind nur 0,8 x so hell wie die graue Haut (31,8 gegen
+   34,8). Heller ginge nur mit Haar-Texeln heller als die Haut.
+3. **Graue Zone im Render 27,9** statt Ref2 30,8 (T-K5a +- 4 gruen, T-K9a +- 5 gruen): die Eintragswahl zieht zu den neutralen grauen
+   Eintraegen; Basis 40 statt 37,2 gleicht das nur zum Teil aus.
+4. **Randgradient 3,2** (Soll "um 6"): ein Saum von 0,6 am Haaransatz liefert 3,2; die 6 der Vorgabe stammen aus den Kanten fast schwarzer
+   Wundflecken der Ref2-Textur. Der Rand ist bewusst weich ("Rand weich und strukturfolgend").
+5. **KS2 ist kein Haar**: die Haarkante der Seitenansicht liegt auf denselben Texeln wie "Auge bis Nase" der Vorderansicht (s.
+   Seitenbestimmung); sie bleibt grau, dunkel durch Hof und Licht. S3 gruen.
+6. Der Einbau ins Spiel-Asset folgt erst nach der Abnahme; nach dem Nutzerentscheid wird nicht weiter poliert.
