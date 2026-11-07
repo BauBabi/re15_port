@@ -1,0 +1,35 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build
+    Start 1186: integration_r41_gatorfix_abn2_rampe_west
+    Start 1189: integration_r41_gatorfix_abn2_wand
+1/2 Test #1189: integration_r41_gatorfix_abn2_wand .........***Failed  642.17 sec
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:52 (message):
+  r41_gatorfix: Lauf abn2_wand - exe (ohne Kanister) exit=Access violation
+  (erwartet 0 bis RE15_EXIT_AT)
+  (C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_wand_wd/lauf_6c01a577)
+Call Stack (most recent call first):
+  C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:161 (g2_fehler)
+
+
+
+2/2 Test #1186: integration_r41_gatorfix_abn2_rampe_west ...***Failed  914.26 sec
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:52 (message):
+  r41_gatorfix: Lauf abn2_rampe_west - exe exit=Process terminated due to
+  timeout (erwartet 0 bis RE15_EXIT_AT)
+  (C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/integration/r41_gatorfix_abn2_rampe_west_wd/lauf_149fc26f)
+Call Stack (most recent call first):
+  C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/tests/integration/test_r41_gatorfix.cmake:145 (g2_fehler)
+
+
+
+
+0% tests passed, 2 tests failed out of 2
+
+Total Test time (real) = 914.30 sec
+
+The following tests FAILED:
+	1186 - integration_r41_gatorfix_abn2_rampe_west (Failed)
+	1189 - integration_r41_gatorfix_abn2_wand (Failed)
+Errors while running CTest

@@ -1,0 +1,8 @@
+west4_leon neu FDR=600-3300/30
+west4_leon ohne FDR=600-3300/30
+spawn_2318_-16300_leon ohne FDR=250-4200/30
+west5_elza neu FDR=600-3300/30
+west5_elza ohne FDR=600-3300/30
+spawn_2800_-16300_elza ohne FDR=250-4200/30
+west4_elza neu FDR=600-3300/30
+west4_elza ohne FDR=600-3300/30

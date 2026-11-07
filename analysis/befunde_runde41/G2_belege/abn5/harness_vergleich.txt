@@ -1,0 +1,46 @@
+# Abnahme 5 - eigene Harness-Lagen (test_r41_gatorfix.exe nb3_oben / nb3_haengt, Messwerkzeuge des Messers e92356e8e), Bau 029efac6-Engine (test-exe 01:04:26),
+# alter Stand = Pruefhaken G2_NB3_ALT=1 (re15_gator_boss_nb3_alt_setzen(1) = a661eb8aa); Figur je Bild festgehalten, hp je Bild 100; 3600 Bilder je Lage; Werkzeug harness5.sh
+
+## 1. FERN: Wasser-Lagen > 1800 vor jeder Blockkante (nicht oben) - Spur je Bild (G2_NB3_SPUR) neu gegen alt
+### alt_fern_leon_ohne gegen fern_leon_ohne
+   W-6500/-22000/c0   Bilder 3600/3600, abweichend 0
+   W-6000/-16000/c0   Bilder 3600/3600, abweichend 0
+   W-7000/-10000/c0   Bilder 3600/3600, abweichend 0
+   W-4000/-7000/c0    Bilder 3600/3600, abweichend 0
+   W2000/-7500/c4     Bilder 3600/3600, abweichend 0
+   W5500/-8000/c4     Bilder 3600/3600, abweichend 0
+   W5500/-11500/c4    Bilder 3600/3600, abweichend 3144; erste Abweichung t456: Steuerziel alt (4450,-9850) neu (5500,-13196), Kopf-Abstand alt 3114 neu 3029, Wurzel alt (5497,-11454) neu (5507,-11536)
+   W-1000/-25000/c0   Bilder 3600/3600, abweichend 0
+   W5500/-25000/c0    Bilder 3600/3600, abweichend 0
+   W4000/-21000/c0    Bilder 3600/3600, abweichend 2797; erste Abweichung t803: Steuerziel alt (4450,-22600) neu (3519,-20339), Kopf-Abstand alt 2884 neu 2896, Wurzel alt (4619,-21922) neu (4738,-21686)
+   W6500/-21500/c0    Bilder 3600/3600, abweichend 0
+   W-4500/-13500/c0   Bilder 3600/3600, abweichend 3080; erste Abweichung t520: Steuerziel alt (-4300,-9850) neu (-2855,-12533), Kopf-Abstand alt 2827 neu 2804, Wurzel alt (-4393,-13680) neu (-4384,-13688)
+   W-4200/-19500/c0   Bilder 3600/3600, abweichend 2948; erste Abweichung t652: Steuerziel alt (-4300,-22600) neu (-3400,-19500), Kopf-Abstand alt 211 neu 791, Wurzel alt (-3732,-22675) neu (-3734,-22690)
+### alt_fern_leon_neu gegen fern_leon_neu
+   W-6500/-22000/c0   Bilder 3600/3600, abweichend 0
+   W-6000/-16000/c0   Bilder 3600/3600, abweichend 0
+   W-7000/-10000/c0   Bilder 3600/3600, abweichend 0
+   W-4000/-7000/c0    Bilder 3600/3600, abweichend 0
+   W2000/-7500/c4     Bilder 3600/3600, abweichend 0
+   W5500/-8000/c4     Bilder 3600/3600, abweichend 0
+   W5500/-11500/c4    Bilder 3600/3600, abweichend 3208; erste Abweichung t392: Steuerziel alt (4450,-9850) neu (5500,-13028), Kopf-Abstand alt 3308 neu 3007, Wurzel alt (5489,-11245) neu (5506,-11540)
+   W-1000/-25000/c0   Bilder 3600/3600, abweichend 0
+   W5500/-25000/c0    Bilder 3600/3600, abweichend 0
+   W4000/-21000/c0    Bilder 3600/3600, abweichend 2797; erste Abweichung t803: Steuerziel alt (4450,-22600) neu (3519,-20339), Kopf-Abstand alt 2884 neu 2896, Wurzel alt (4619,-21922) neu (4738,-21686)
+   W6500/-21500/c0    Bilder 3600/3600, abweichend 0
+   W-4500/-13500/c0   Bilder 3600/3600, abweichend 3080; erste Abweichung t520: Steuerziel alt (-4300,-9850) neu (-2855,-12533), Kopf-Abstand alt 2827 neu 2804, Wurzel alt (-4393,-13680) neu (-4384,-13688)
+   W-4200/-19500/c0   Bilder 3600/3600, abweichend 2948; erste Abweichung t652: Steuerziel alt (-4300,-22600) neu (-3400,-19500), Kopf-Abstand alt 211 neu 791, Wurzel alt (-3732,-22675) neu (-3734,-22690)
+### alt_fern_elza_ohne gegen fern_elza_ohne
+   W-6500/-22000/c0   Bilder 3600/3600, abweichend 0
+   W-6000/-16000/c0   Bilder 3600/3600, abweichend 0
+   W-7000/-10000/c0   Bilder 3600/3600, abweichend 0
+   W-4000/-7000/c0    Bilder 3600/3600, abweichend 0
+   W2000/-7500/c4     Bilder 3600/3600, abweichend 0
+   W5500/-8000/c4     Bilder 3600/3600, abweichend 0
+   W5500/-11500/c4    Bilder 3600/3600, abweichend 3144; erste Abweichung t456: Steuerziel alt (4450,-9850) neu (5500,-13196), Kopf-Abstand alt 3114 neu 3029, Wurzel alt (5497,-11454) neu (5507,-11536)
+   W-1000/-25000/c0   Bilder 3600/3600, abweichend 0
+   W5500/-25000/c0    Bilder 3600/3600, abweichend 0
+   W4000/-21000/c0    Bilder 3600/3600, abweichend 2797; erste Abweichung t803: Steuerziel alt (4450,-22600) neu (3519,-20339), Kopf-Abstand alt 2884 neu 2896, Wurzel alt (4619,-21922) neu (4738,-21686)
+   W6500/-21500/c0    Bilder 3600/3600, abweichend 0
+   W-4500/-13500/c0   Bilder 3600/3600, abweichend 3080; erste Abweichung t520: Steuerziel alt (-4300,-9850) neu (-2855,-12533), Kopf-Abstand alt 2827 neu 2804, Wurzel alt (-4393,-13680) neu (-4384,-13688)
+   W-4200/-19500/c0   Bilder 3600/3600, abweichend 2948; erste Abweichung t652: Steuerziel alt (-4300,-22600) neu (-3400,-19500), Kopf-Abstand alt 211 neu 791, Wurzel alt (-3732,-22675) neu (-3734,-22690)

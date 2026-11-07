@@ -1,0 +1,13 @@
+abn2wand_leon ohne FDR=1380-1520/10
+abn2wand_leon ohne alt
+abn2wand_leon neu
+abn2wand_leon neu alt
+kante_-2300_-16000_0_leon ohne FDR=200-3600/100
+kante_-2300_-16000_0_leon ohne alt FDR=200-3600/100
+kante_1000_-21000_2_leon ohne
+kante_1000_-21000_2_leon ohne alt
+kante_4073_-19322_0_elza ohne
+kante_4073_-19322_0_elza ohne alt
+kante_-1000_-21300_0_elza neu
+kante_6500_-19000_2_leon neu
+west5_elza ohne FDR=2745-2830/5

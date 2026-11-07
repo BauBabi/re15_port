@@ -1,0 +1,2 @@
+kante_-2300_-16000_7_leon ohne FDR=300-3600/150
+kante_-2300_-16000_7_leon ohne alt FDR=300-3600/150

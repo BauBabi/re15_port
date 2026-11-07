@@ -1,0 +1,57 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build
+      Start 1173: unit_r41_gatorfix_nb3
+      Start 1174: unit_r41_gatorfix_nb3_elza
+ 1/26 Test #1173: unit_r41_gatorfix_nb3 ...............   Passed   18.76 sec
+      Start 1166: unit_r41_gatorfix_re2_elza
+ 2/26 Test #1174: unit_r41_gatorfix_nb3_elza ..........   Passed   18.96 sec
+      Start 1165: unit_r41_gatorfix_re2
+ 3/26 Test #1166: unit_r41_gatorfix_re2_elza ..........   Passed   12.39 sec
+      Start 1162: unit_r41_gatorfix_fuzz_elza
+ 4/26 Test #1165: unit_r41_gatorfix_re2 ...............   Passed   12.38 sec
+      Start 1172: unit_r41_gatorfix_v4_elza
+ 5/26 Test #1172: unit_r41_gatorfix_v4_elza ...........   Passed    7.92 sec
+      Start 1171: unit_r41_gatorfix_v4
+ 6/26 Test #1162: unit_r41_gatorfix_fuzz_elza .........   Passed    8.75 sec
+      Start 1161: unit_r41_gatorfix_fuzz
+ 7/26 Test #1171: unit_r41_gatorfix_v4 ................   Passed    7.71 sec
+      Start 1150: unit_r41_gatorfix_maul_elza
+ 8/26 Test #1161: unit_r41_gatorfix_fuzz ..............   Passed    8.60 sec
+      Start 1149: unit_r41_gatorfix_maul
+ 9/26 Test #1150: unit_r41_gatorfix_maul_elza .........   Passed    2.17 sec
+      Start 1170: unit_r41_gatorfix_gang_elza
+10/26 Test #1170: unit_r41_gatorfix_gang_elza .........   Passed    0.86 sec
+      Start 1168: unit_r41_gatorfix_re2_gegen_elza
+11/26 Test #1168: unit_r41_gatorfix_re2_gegen_elza ....   Passed    0.70 sec
+      Start 1167: unit_r41_gatorfix_re2_gegen
+12/26 Test #1149: unit_r41_gatorfix_maul ..............   Passed    2.25 sec
+      Start 1155: unit_r41_gatorfix_marvin
+13/26 Test #1155: unit_r41_gatorfix_marvin ............   Passed    0.37 sec
+      Start 1156: unit_r41_gatorfix_marvin_elza
+14/26 Test #1167: unit_r41_gatorfix_re2_gegen .........   Passed    0.68 sec
+      Start 1152: unit_r41_gatorfix_wurf_elza
+15/26 Test #1156: unit_r41_gatorfix_marvin_elza .......   Passed    0.40 sec
+      Start 1151: unit_r41_gatorfix_wurf
+16/26 Test #1152: unit_r41_gatorfix_wurf_elza .........   Passed    0.31 sec
+      Start 1159: unit_r41_gatorfix_klemm
+17/26 Test #1151: unit_r41_gatorfix_wurf ..............   Passed    0.29 sec
+      Start 1160: unit_r41_gatorfix_klemm_elza
+18/26 Test #1159: unit_r41_gatorfix_klemm .............   Passed    0.26 sec
+      Start 1169: unit_r41_gatorfix_gang
+19/26 Test #1160: unit_r41_gatorfix_klemm_elza ........   Passed    0.26 sec
+      Start 1164: unit_r41_gatorfix_haken_elza
+20/26 Test #1164: unit_r41_gatorfix_haken_elza ........   Passed    0.09 sec
+      Start 1163: unit_r41_gatorfix_haken
+21/26 Test #1163: unit_r41_gatorfix_haken .............   Passed    0.11 sec
+      Start 1154: unit_r41_gatorfix_montage_elza
+22/26 Test #1154: unit_r41_gatorfix_montage_elza ......   Passed    0.05 sec
+      Start 1153: unit_r41_gatorfix_montage
+23/26 Test #1153: unit_r41_gatorfix_montage ...........   Passed    0.05 sec
+      Start 1158: unit_r41_gatorfix_schluessel_elza
+24/26 Test #1158: unit_r41_gatorfix_schluessel_elza ...   Passed    0.03 sec
+      Start 1157: unit_r41_gatorfix_schluessel
+25/26 Test #1157: unit_r41_gatorfix_schluessel ........   Passed    0.02 sec
+26/26 Test #1169: unit_r41_gatorfix_gang ..............   Passed    0.86 sec
+
+100% tests passed, 0 tests failed out of 26
+
+Total Test time (real) =  52.87 sec
