@@ -147,20 +147,21 @@ ZUORDNUNG = [
     # Ohne das rosa Wundoval (G4 16 Insel 72, L* 21,4, 38 % rot, gemessen t7.py): es laege sonst am rechten Auge (K10 L* 35,1 > 30).
     ('Kopf + Kiefer aussen', [22, 23], [16], 'kopf', dict(achse=(1, 0, 0), nur=['F18'], ohne_inseln={16: [72]}, zeilen='g4')),
 ]
-# Runde 3: Bild-1-Zeilen am Vorderglied r (W) nur auf den Flaechen, die Bild 1 zeigt (Sicht-Pruefer V3 r2: "2-3 waagerechte rosa Strichel an
+# Runde 3: Bild-1-Zeilen an Oberarm r 16 und Unterarm r 17 nur auf den Flaechen, die Bild 1 zeigt (Sicht-Pruefer V3 r2: "2-3 waagerechte rosa Strichel an
 # Flaechengrenzen" an Schulter/Brust, "Hand A ... mauve-lila ... Ursache sind die Bild-1-Zeilen (Magenta) am Vorderglied"). Gemessen
 # (Scratchpad formfarbe3/r3/strichel.py): rosa-magenta Texel (Rotklasse, Farbton < 10 Grad) gibt es nur auf Mesh 16 in den Bild-1-Zeilen,
 # 7,1 % im Inselinneren und 3,8 % am Inselrand; es sind also die umgefaerbten G4-Adern, kein Randtexel einer Sonderzeile.
 # Flaechen-Nr. (tf, danach qf) mit mindestens 1 px in Bild 1: Leser B fid1.npz (flaechen_id.py, K5c-Geometrie = G0), Knochen 16: 2521 px auf 39,
-# 17: 1667 px auf 37, 18: 1213 px auf 31 Flaechen. Die uebrigen Flaechen dieser Meshes nehmen die G4-Zeile (Messblatt V3 4: das Bild-1-Aderrot
+# 17: 1667 px auf 37 Flaechen. Die uebrigen Flaechen dieser Meshes nehmen die G4-Zeile (Messblatt V3 4: das Bild-1-Aderrot
 # dient Bild 1; H2: G4-CLUT bytegleich).
 B1_SICHTBAR_NR = {
     16: (1, 3, 5, 7, 16, 17, 18, 19, 20, 21, 22, 66, 67, 68, 74, 75, 76, 81, 82, 83, 84, 90, 91, 92, 93, 98, 99, 105, 106, 107, 108, 109, 114, 115,
          116, 130, 131, 132, 139),
     17: (18, 27, 28, 36, 37, 42, 43, 44, 45, 50, 51, 52, 53, 58, 59, 60, 61, 66, 67, 68, 69, 74, 75, 76, 77, 82, 84, 85, 93, 98, 106, 107, 108, 114,
          115, 116, 117),
-    18: (0, 2, 14, 36, 37, 38, 39, 40, 41, 42, 43, 56, 57, 58, 59, 64, 65, 66, 73, 115, 116, 117, 118, 120, 121, 122, 123, 124, 125, 126, 127),
 }
+# Hand 18 (Bild 1: 1213 px auf 31 Flaechen) behaelt die Bild-1-Zeilen auf allen Flaechen: Mit der Teilung lag die Hand in Bild 2 auf der Bandmaske
+# (192 px Knochen 18) rot statt mauve, K15 dE 5,2 -> 6,0 ROT und K6 6,7 -> 7,5 (Lauf farbe/riegel vor dem Endstand, Dossier V3R3.1).
 TEILE_H1 = {   # Messblatt 5 H1 "je Teil (Rumpf, Schwanz, Hals, Beine, Arme, Klauen, Kopf/Kiefer aussen)"; Rumpf = Huefte, Wirbel, Brust
     'Rumpf': [0, 7, 10], 'Schwanz': [1, 2, 3, 4, 5, 6], 'Hals': [21], 'Beine': [8, 24, 25, 9, 26, 27],
     'Arme': [11, 12, 13, 16, 17, 18], 'Klauen': [14, 15, 28, 30, 19, 20, 29, 31], 'Kopf/Kiefer aussen': [22, 23],
