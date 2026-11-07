@@ -143,6 +143,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
+#include "re15_gator_treffer_r41.h"   /* Runde 41 G2-RE2 NB4: RE2-Trefferreaktion, Raumbank-Override */
 #include "re15_esp.h"          /* Phase ESP-C: op-0x3a effect-sprite bank + particle pool */
 #include "re15_gameflow.h"     /* FE-0.2 top-level mode machine (BOOT/TITLE/INGAME/GAMEOVER) */
 #include "re15_str.h"          /* FE-3 STR/MDEC opening-movie demux+decode (CAPCOM.STR) */
@@ -8971,6 +8972,23 @@ re_title:;
                     p_skel = wact_skel;
                     p_anim = wact_anim;
                     p_clip_override = erc;
+                }
+            }
+            /* Runde 41 Spur G2-RE2 NB4 (T): die RE2-Trefferreaktion auf den Alligator posiert die Figur aus der RE2-Raumbank ROOM40A0
+             * (PL+0x190/+0x194, FUN_80018e08 @0x80018ea4/@0x80018eb8; Clips 18/19 bzw. 20/17 @0x801030cc/@0x80103150/@0x80103248/@0x801032dc),
+             * Knochen = die eigenen der Figur (wie die Opfer-/Ziel-Overrides oben). Der Schluss (Basis-Clip 6 rueckwaerts) kommt aus der
+             * PL00-Bank ueber anim_select_common.c. Herleitung engine/src/gator_treffer_r41.c. */
+            {
+                extern void re15_pc_gator_treffer_r41_init(void);
+                static int s_gtr_init = 0;
+                if (!s_gtr_init) { s_gtr_init = 1; re15_pc_gator_treffer_r41_init(); }
+                const int gtc = re15_gator_treffer_r41_rbj_clip();
+                const re15_emd_skeleton_t *gts = NULL; const re15_emd_animation_t *gta = NULL;
+                if (gtc >= 0 && pl00_ok && re15_player_victim_state() == 0 &&
+                    re15_gator_treffer_r41_bank(&pl00_skel, &gts, &gta)) {
+                    p_skel = gts;
+                    p_anim = gta;
+                    p_clip_override = gtc;
                 }
             }
             int kf_idx = 0;

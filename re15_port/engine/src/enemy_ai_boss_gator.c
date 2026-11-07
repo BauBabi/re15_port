@@ -48,6 +48,7 @@
 #include <string.h>
 #include <stdlib.h>   /* getenv - RE15_GB_TEST (Sichtlauf-Hebel) */
 #include "re15_boss_gator.h"
+#include "re15_gator_treffer_r41.h"   /* Runde 41 G2-RE2 NB4 (T) */
 #include "re15_damage.h"     /* re15_enemy_player_dist, re15_player_take_damage, rand8, bone_world_pos */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex + re15_esp_room_bank */
 #include "re15_room.h"       /* g_current_room_id */
@@ -449,10 +450,16 @@ static int gb_seg_hits_ramp(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int3
 /* Biss-Treffer-Abschluss: normal = Schaden + Knockdown; TOEDLICH = die
  * FRESS-Sequenz (Nutzer-Design 2026-09-11: "Kopf zu Leon runter machen,
  * ihn Fressen - Leon verschwindet, und danach geht er einfach weg"). */
-static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
+static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl, int art)
 {
     g->oben_ohne = 0;                          /* NB3 (Vorgabe A): Treffer - die Figur war nicht sicher */
-    re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
+    /* Runde 41 Spur G2-RE2 NB4 (T): JEDER Alligator-Angriff, der die Figur trifft, nimmt den RE2-Treffer-Einstieg 0x80101578 (Schaden FUN_800401d4
+     * 60 / 30 @0x8010168c-a0, Unterzustand 2/3 @0x801015b4-ec, Gier FUN_8001569c @0x80101684-88) und die RE2-Spieler-Routine 5 (Haken 0x80102D08)
+     * statt re15_player_take_damage(GB_BITE_TYPE 5) = 50 + RE1.5-Niederwurf (Herleitung engine/src/gator_treffer_r41.c). Pruefhaken
+     * re15_gator_treffer_alt_setzen(1) = Stand 3d57083b1. */
+    const int re2 = !re15_gator_treffer_alt();
+    if (re2) (void)re15_gator_treffer_r41_einstieg(e, pl, re15_gr2_geschwaecht_slot((int)(e - g_actors)), art);
+    else { (void)art; re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z); }
     if (pl->hp < 0) {
         g->phase = GBP_FRESSEN; g->timer = 0;
         /* VICTIM-MODUS SOFORT armen (Runde 7, victim-render-gate.md): hp<0 wuerde
@@ -480,7 +487,7 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
         re15_gr2_finisher_buehne((int)(e - g_actors), e);
         re15_gr2_kamera_finisher((int)(e - g_actors), e, pl);
     } else {
-        re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
+        if (!re2) re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
         re15_gr2_biss_cd((int)(e - g_actors), RE15_GR2_BISS_CD_BISS);   /* Runde 41 Spur B: +0x238 = 70 @0x801016b0-b4 */
     }
     pl->hit_react |= 1;
@@ -1620,7 +1627,9 @@ static void gb_boss_tick_innen(int slot)
     {   /* Runde 41 Spur G2 (Punkt 7, MESSZEILE env RE15_G2_TRAG_LOG, kein Spielverhalten): mit dem Kanister im Maul je Bild Takt-Schritt, Schritt nach
          * der Wand-Klemme (2) und der Kopf-Klemme (2b), Phase, Clip - wer frisst die Bewegung, wenn er "haengt". */
         static int s_tl = -1; if (s_tl < 0) s_tl = getenv("RE15_G2_TRAG_LOG") != NULL;
-        if (s_tl && (re15_gr2_traegt() || re15_gr2_ohne_kanister_entfernt())) {   /* G2-RE2 NB2: auch nach dem Messhaken RE15_G2_OHNE_KANISTER (Gang ohne Kanister) */
+        /* G2-RE2 NB4 (K): auch solange der Kanister liegt (Stufe 0..6) - ohne Holmodus kommt die Aufnahme nur, wenn der Gator vorbeikommt; die exe-Riegel
+         * (haenglog/tragvergleich) messen dann den ganzen Kampf mit dem Kanister im Raum. Messzeile, kein Spielverhalten. */
+        if (s_tl && (re15_gr2_traegt() || re15_gr2_ohne_kanister_entfernt() || (re15_gr2_kanister_stufe() >= 0 && re15_gr2_kanister_stufe() < 7))) {
             FILE *f = fopen("gator_trag.log", "a");
             if (f) { fprintf(f, "TRAG F%u ph=%d mo=%d af=%d gier=%d pos=(%d,%d) takt=(%d,%d) nach_klemmen=(%d,%d) spieler=(%d,%d)\n", (unsigned)g_engine.frame_count,
                              (int)s_gb[slot].phase, (int)e->motion, (int)e->anim_frame, (int)(e->rot_y & 0xfff), e->x, e->z, g2_tx - ox, g2_tz - oz, e->x - ox, e->z - oz,
@@ -2427,7 +2436,7 @@ static void gb_takt(int slot)
                 if (!g->bite_done && e->anim_frame >= 114 && pl->hit_react == 0
                     && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
                     && !gb_wand_dazwischen(e, pl))
-                    gb_biss_abschluss(e, g, pl);
+                    gb_biss_abschluss(e, g, pl, 5);   /* NB4: Angriff Biss B2 */
                 e->anim_frame += 2;
                 if (e->anim_frame >= 150) {
                     e->rot_y = (int16_t)((e->rot_y + 0x400) & 0x0fff);
@@ -2454,7 +2463,7 @@ static void gb_takt(int slot)
              * attack_type 5 -> dmg_table[5] = 50 + Knockdown-Latch. EIN Biss pro
              * Lunge (bite_done): ohne den Latch traefen alle drei Fensterframes
              * (gemessen 2026-09-10: Leon 100 HP -> Game Over in <2 s). */
-                            gb_biss_abschluss(e, g, pl);
+                            gb_biss_abschluss(e, g, pl, 4);   /* NB4: Angriff Biss (LUNGE) */
         }
         e->anim_frame++;
         if (e->anim_frame > 42) {             /* Clip 4 (45 F) ausklingen lassen */
@@ -2504,6 +2513,7 @@ static void gb_takt(int slot)
             if (tv6 && *tv6 == '6') oben = 1;   /* Sichtlauf: Belagerung erzwingen */
         }
         if (re15_k2080_r41_anschwimmen_aktiv(e)) oben = 0;   /* Runde 41 Spur G (NB2, N3): erst der Kanister (Zielmodus) */
+                                                              /* NB4 (K): ohne Holmodus immer 0 - nur noch unter den Pruefhaken runde_alt / anschwimmen_alt */
         if (!oben) {                          /* heruntergesprungen -> Verfolgung
                                                * (deren blocked-Regel klettert) */
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
@@ -2820,7 +2830,7 @@ static void gb_takt(int slot)
                                                * (Biss-Sweep 2026-09-11: die
                                                * Plattform-MITTE liegt 3675 von
                                                * der besten Kanten-Position) */
-                                gb_biss_abschluss(e, g, pl);
+                                gb_biss_abschluss(e, g, pl, 3);   /* NB4: Angriff Hochbiss */
             }
             if (e->anim_frame > 42) { e->motion = 0; e->anim_frame = 0; }
         } else {
@@ -2992,7 +3002,7 @@ static void gb_takt(int slot)
             if (!s_gb_stumm) { FILE *fr = fopen("gator_boss.log", "a");
                 if (fr) { fprintf(fr, "RAMMEN F%u gator=(%d,%d,%d) spieler=(%d,%d,%d) hp=%d\n", (unsigned)g_engine.frame_count, e->x, e->y, e->z, pl->x, pl->y, pl->z,
                                   (int)pl->hp); fclose(fr); } }
-            gb_biss_abschluss(e, g, pl);
+            gb_biss_abschluss(e, g, pl, 1);   /* NB4: Angriff Rammen */
             if (g->phase != GBP_CROSS) break;            /* toedlich -> FRESSEN */
         }
         /* Biss-Fenster auch auf der Plattform (Leon vertreiben): Reichweiten-Test,
@@ -3002,7 +3012,7 @@ static void gb_takt(int slot)
                                                * Hilflosigkeit 2026-09-11) */
             && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500
             && re15_gr2_biss_erlaubt(slot)) {   /* R41 B NB2 M3: kein Biss in Kanister-Stufe 1..6 @0x80101360-70 */
-                            gb_biss_abschluss(e, g, pl);
+                            gb_biss_abschluss(e, g, pl, 2);   /* NB4: Angriff CROSS-Biss */
         }
         break; }
 
