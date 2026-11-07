@@ -381,3 +381,177 @@ ocker); Wunden im Nahbild pixelig-fleckig, G4-Adern sind klarer (Tafel 08); Auss
 | V2-O4 | Kopf wirkt im Atlas haarig (Sicht-Pruefung); Farbe der warmen Hautseite x 2,22 ocker |
 | V2-O5 | Commit aee1a1b71 enthaelt bereits die Verschiebung r3 -> K5c_farbe_r3 (Nachricht nennt sie in 1984269ca); die Zahlen der Nachricht 1984269ca zu B7/B10/B11/B13-B16 stammen aus Lauf v20, gueltig sind die Werte in V2.1 / riegel_K5c_farbe_v2.txt |
 | V2-O6 | Zweiter Pruefer rechnet Rundlauf (7,8/8,0) und K1v2/K2v2 nach (V2 6.1) |
+
+
+# Versuch 2, Runde 2 (Bauer, 2026-11-07)
+
+Auftrag: Orchestrator, Spur Form, Versuch 2 Runde 2 von 2. Grundlage wie Runde 1 (`MESSBLATT_FARBE_V1.md`, `MESSBLATT_FARBE_V2.md`) und die Pruefberichte
+`FARBE_PRUEFUNG_v2_r1_sicht.md` (P2 Laengsstreifung = Fell/Holz, Klasse "Nutzer lehnt ab") und `FARBE_PRUEFUNG_v2_r1_zahlen.md` (38/45; K5, N1, B2, B6 Koerper,
+B6 Kiefer, B12, B17 ROT; Unabhaengigkeitsnachweis fehlt; SIG_GROB/Mehrheitsschwelle ohne Tabellenzeile; FLEISCH_KOERNUNG gewaehlt; Textfehler; Tafel 08
+ungleiche Anatomie; Commit-Trailer). Generator `generator/kf_mal4.py` (weitergefuehrt), Eichstand `generator/kf_eich4.json`, Variante `farbe/K5c_farbe_v2/`
+(+ `farbe/K5C_FARBE_V2.EMD/.TIM`, Scratchpad `formfarbe2/emd/K5C_FARBE_V2.*`). Runde 1 liegt in `farbe/K5c_farbe_v2r1/`, `farbe/riegel_K5c_farbe_v2r1.*`,
+`farbe/spiel_v2r1/`, `farbe/spiel_lauf_v2r1.log` (Scratchpad `formfarbe2/emd/v2r1/`).
+FORM.EMD = `K5c/FORM.EMD` (sha256 a71f8d08..., cmp gleich), neu nur FORM.TIM (sha256 085bb433...). Nachbau `python generator/kf_mal4.py bauen <aus>` mit
+frischem Cache bytegleich (cmp). Spiel-Asset `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.*`, Pins und `re15_port/` unveraendert.
+
+## V2r2.0 Ergebnis
+
+**Riegel 43/45 GRUEN, EXIT 1** (`farbe/riegel_K5c_farbe_v2.txt/.json`). Gruen geworden gegen Runde 1: K5, N1, B2, B6 Koerper, B6 Kiefer. ROT:
+
+| Riegel | Soll | Runde 2 | Runde 1 | Grund |
+|---|---|---|---|---|
+| B12 Kopf Canny-Dichte / Linien | >= 25,2 / >= 4,6 % | 4,1 / 0,1 % | 24,5 / 20,1 % | Runde 1 erreichte den Wert nur ueber die Laengsstriche, die der Sicht-Pruefer als Fell ablehnt (P2). Kopflinien und Kopf-Koernung sind entfernt, V2r2.4 |
+| B17 Kohaerenz Render (Mittel) / Atlas | >= 0,60 / >= 0,576 | 0,543 / 0,562 | 0,599 / 0,586 | ebenso: die Laengs-Koernung lieferte die kohaerenten Kanten. Ohne sie 0,54-0,57 in allen Laeufen, V2r2.4 |
+
+Messblatt V2 6.3 sagt, B17 sei schwach (Familie/r3 nur 0,03-0,05 auseinander) und bei ROT allein entscheide die Sichtpruefung. B12 steht dort nicht.
+Beide ROT sind also Befund, und nach V1 7.5 geht die Tafel damit nicht als Abnahmevorlage an den Nutzer. Was das kostet, steht in V2r2.4: Der Kopf
+wuerde mit diesen Riegeln zu Rinde oder Zebra.
+
+Die Gegenproben verhalten sich wie verlangt. K5c heute, Runde 1 (B1-B5), Runde 2 (B6-B9) und Runde 3 (alle V2-Riegel) sind ROT, und an Runde 3 ist
+B9b mit 9,9 die Bezugsprobe. Die Familie (Pruefer-Lauf `farbe_lesung/N2_riegel_familie.json`) steht bei EM30 8/8, G4 8/8 und G5 7/7.
+
+Ketten-Riegel mit drei Saaten des Videofilters (`generator/kf_saaten.py`, `farbe/saaten_K5c_farbe_v2.*`, V2 3.2 letzter Absatz) sind je 11/11 gruen. Werte fuer die Saaten 15 / 12345 / 7:
+
+| Riegel | Werte |
+|---|---|
+| K1v2 | 7,0 / 7,0 / 6,9 |
+| K2v2 | 8,4 / 8,4 / 8,4 |
+| K3 max | Hinterbein r (W) 4,4 bei allen Saaten |
+| K4 | 5,4 / 5,3 / 5,4 |
+| K4b | 8,8 / 9,0 / 8,9 |
+| K5 geclippt | 0,3 / 0,3 / 0,3 |
+| K6 dE | 1,1 bei allen Saaten |
+| K7 dE | 1,9 / 1,9 / 2,0 |
+| K8 dE | 3,5 / 3,4 / 3,6 |
+
+## V2r2.1 Ursache in Zahlen (Runde 1 -> Runde 2)
+
+| Befund | Ursache (gemessen) | Runde 1 | Runde 2 |
+|---|---|---|---|
+| P2 Laengsstreifung Haut/Kopf | Laengs-Koernung (r3-Struktur, laengs 13,5 Texel gemittelt) auf Haut und Kopf, Kopflinien laengs 1,22 je 1000, Kopf-Koernung x 2,0 | dunkle duenne Linien im Kopf-Render 14,9 / 18,0 / 15,3 % (elong. 6,6 / 6,6 / 6,2) | 9,7 / 7,5 / 12,0 % (2,2 / 2,3 / 4,0); G4 7,9 / 5,5 / 18,9, K5c heute 10,2 / 9,0 / 11,3 (`farbe/sicht_mass_v2r2.txt`) |
+| K5 geclippt | Schwanzspitze vor der Bahnsteiglampe (Bildpunkte x 260-270, y 430-450, Albedo L* 45): Kette Schwanz L* 21,8 gegen Original 17,4 | 0,8 % | 0,3 % (L*-Eichung) |
+| K4 (nach Wegfall der Streifen) | ohne die dunklen Laengsstriche besteht die warme Haut (a* <= 11) die Ketten-Rotklasse; Haut grau gesetzt: 0,2 % Rot, Fleisch grau: 6,1 % (Laeufe d_gh/d_gf) | (6,5) | 5,4 % (L*-Eichung) |
+| B6 Koerper | glatte Hautverlaeufe werden von der CLUT in gleiche Stufen zerlegt (Doppelgaenger 1,41 RMS, Lauf m4), ohne Korn 9,7 % (x_kh0) | 0,29 % | 0,14 % (Feinkorn) |
+| B6 Kiefer | G4-Maul um 90 Grad gedreht, gestreckt 3,2 x 1,2 | 1,83 % | 0,00 % (Lage, 2,1 x 1,8, naechster Nachbar + Feinkorn) |
+| N1 Seite | Fleischanteil nach der Bereinigung 22,0 % statt 23,9 % | 9,3 | 9,5 (Fleisch 24,1 %) |
+| B2 3/4 vorn | wie N1, dazu konzentrische Wundbaender | 3,11 | 4,90 |
+| P1 Fleckenmosaik | Hell-Kern je Texel nach Form und Screenshot, Farbton je Texel nach der Laengs-Koernung gedreht | B16 81,0 | B16 80,7, B14 9,4 / 11,8, B15 6,5 (konzentrisch, Farbton glatt) |
+
+## V2r2.2 Verfahren (Aenderungen gegen V2.2)
+
+1. **Haut, Kopf, Kiefer: Feinkorn statt Laengs-Koernung.**
+   - Das Korn ist der Rest der K5c-eigenen Struktur (H2) gegen eine Glaettung entlang der Oberflaeche mit sigma 1 Texel.
+   - Es wird auf die Streuung KORN_SD 2,30 L* gebracht. Das ist das RE2-G4-Feinkorn, neu gemessen mit derselben Definition an der Haut der Familie: EM30 3,53 / RE2-G4 2,30 / RE2-G5 3,02 (`generator/kf_korn_mass.py`, `farbe_lesung/N2_korn.json`).
+   - Das Ergebnis liegt bei 3,05 und damit in der Familie; r3 lag bei 3,26.
+   - Kopflinien und Kopf-Koernung entfallen.
+2. **Fleisch.** Die Laengs-Koernung (Fasern) wird nur noch mit c_f aus der Halbierung auf den Familien-Median B14-Atlas 11,2 aufgetragen. Das Ergebnis ist c_f = 0, denn die Stufen allein ergeben 11,2.
+3. **Wunden konzentrisch.**
+   - Baender nach dem geodaetischen Abstand zum Rand: < 2 Texel G4-Dunkelrot, < 4 Texel G4-Fleischrot, Kern EM30-Rot. Die innere Haelfte des Kerns je Wunde ist Familienwunde (Hell-Kern 50 %, G4-Leitwert).
+   - Die Farbton-Drehung folgt der geglaetteten r3-Struktur (SIG_GROB) statt jedem einzelnen Texel; k = 15,3 Grad je sigma, Farbton-Streuung 9,41 bei Ziel 9,4.
+4. **Fleischanteil.** Nach der Bereinigung wird nachgewachsen, bis FLEISCH_ANTEIL 23,9 % erreicht ist (hoechstens 4 Durchgaenge). Ergebnis 24,1 %: Rumpf 14 946, Screenshot 1 211, Ruecken-Wunde 1 043 Texel.
+5. **Ruecken-Wunde.** RUECKEN_ZIEL steht auf 18 %, der Obergrenze von V2 3.2. Bei 16,5 % lag K4b auf der Untergrenze (7,1 gegen 7,14, Lauf f3), bei 18 % auf 8,8.
+6. **Maul.**
+   - Eine G4-Kopie in Lage, also nicht gedreht, gestreckt mit dem naechsten Nachbarn, dazu das Feinkorn.
+   - Bilinear ergab B6 Kiefer 0,0, aber HF_fft Kiefer 0,030 < 0,04 (Laeufe m1/m4/m5).
+   - Mit naechstem Nachbarn plus Korn ergibt sich HF 0,063-0,067 bei allen K_GRAPH und B6 Kiefer 0,0.
+7. **Eichung `eichen --nur-l`.**
+   - Nur der L*-Anteil der Zonenversaetze wird nachgefuehrt, a*/b* bleiben auf dem r3-Stand.
+   - Abbruch nach V2 4, wenn der Schritt kleiner als 2 x Kettenstreuung (0,125) ist. Erreicht in Runde 3 mit 0,10 (`formfarbe2/eichL2.log`); g bleibt 2,22.
+   - Der volle Lab-Schritt (Lauf e3, `formfarbe2/kf_eich4_lauf_e3.json`) trieb b* in die Blau-Grenze (Ruecken -21,9 -> -25,5, Hinterbein r -55,5) und senkte K1 7,3 -> 6,3, ohne in 3 Runden abzubrechen.
+   - Versaetze L* neu: Schwanz -21,3, Ruecken -0,8, Hinterbein l -7,0, Hinterbein r -22,7, Vorderglied -8,1, Oberkiefer 1,6, Kopf/Rumpf 5,8, Unterkiefer 41,9.
+   - Ueber 6 dE bleiben dieselben Zonen wie in V2.5. Sie gleichen die Kette und die Blau-Kappe aus; b* der Beine wirkt nicht (gesperrt durch C* <= 8).
+8. **Tafel 08.** Der Ausschnitt ist je Modell auf dieselbe Anatomie gesetzt (`kf_tafeln.ANAT`, abgelesen am Figurrahmen mit Viertelraster): Rumpfseite, Schultergelenk, Rueckenmitte.
+
+## V2r2.3 Konstanten (neu oder geaendert; uebrige wie V2.3)
+
+| Konstante | Wert | Quelle |
+|---|---|---|
+| KORN_SIG / KORN_SD | 1,0 Texel / 2,30 L* | Messgroesse und RE2-G4-Wert aus `kf_korn_mass.py` (Familie 2,30-3,53); G4 = Vorbild (V1 1) |
+| c_f (Fleisch-Koernung) | 0 | Halbierung auf B14-Atlas = Familien-Median 11,2 (V2 4), nicht mehr gewaehlt |
+| Kopflinien, Kopf-Koernung, HF_MAX, JE1000_KOPF, KOPF_BREITE/KONTRAST, ZIEL_KOPF_CANNY | entfallen | Sicht-Pruefer v2 r1 P2 |
+| SIG_GROB (neu verwendet: Muskelachse, Wundkante, Farbton-Drehung) | 2,5 Texel | `kf_mal.py:40-42`: PORT-WAHL nach E12 (Nutzer: "Screenshot-Farben nur grossflaechig je Bereich, geglaettet entlang der Glieder") und G4-Atlas Feld (130,96,20,62), halbe Breite einer Adergruppe |
+| Mehrheitsschwelle Wundkante | 0,5 | Definition: geglaettete Fleisch-Indikatorfunktion >= 1/2 bedeutet mehr Fleisch- als Hautgewicht in der Nachbarschaft (Mehrheitsregel, keine Wahl) |
+| HELLKERN_ANTEIL | 0,50 nach Abstand | G4-Leitwert Hell-Kern 50 % (V2 1 (f)) |
+| RUECKEN_ZIEL | 0,18 | V2 3.2 "15-18 %" (Obergrenze, Begruendung V2r2.2 Nr. 5) |
+| Eichung L* | Abbruch 2 x 0,125 | V2 4 (Kettenstreuung `kf_eich4.json`) |
+| ANAT (Tafel 08) | je Modell | Sichtwahl derselben Anatomie (kein Malwert) |
+
+Textfehler im Kopf von `kf_mal4.py` sind berichtigt: KOPF_QUER faellt weg, g ist als "Startwert 1,48 x 1,5 = 2,22 (= Obergrenze)" beschrieben.
+
+## V2r2.4 Was B12 und B17 kosten wuerden (Laeufe, Scratchpad `formfarbe2/`)
+
+| Lauf | Aenderung | B12 Canny | B17 Render / Atlas | gesehen |
+|---|---|---|---|---|
+| w0 | Runde-1-Stand | 24,5 | 0,599 / 0,586 | Kopf haarig (P2) |
+| x_kh0 | ohne Haut-Koernung (Kopf-Koernung laengs bleibt) | 26,2 | 0,572 / 0,584 | B6 9,7 % |
+| q1 / r1 | Kopf-Koernung quer (EM30-/G4-Kopf: Kanten quer zur Feldachse 74,8 Grad / 75 % > 60 Grad) | 29,7 | 0,585 | Kopf wie Rinde (`t_r1/06c.png`) |
+| p1-p8 | Kopf als gestufte Platten | 19,3-25,9 | 0,574-0,594 / 0,586 | erst bei Stufen 48 L* (c_k 16 x 3) ueber 25,2; Zebra (`t_p5/06c.png`) |
+| b1-b4, c1-c4 | Kopf glatt; Haut: Feinkorn 1,5-2,3 / Straenge laengs (gestuft und ungestuft) / Fleischfasern x 1-3 | 3,5-4,5 | 0,541-0,559 / 0,537-0,579 | Kopf glatt dunkel (wie Endstand) |
+| t1-t4 | Kopf quer gestreift; Haut: Feinkorn 1,2-2,3 | 28,9-29,8 | 0,560-0,569 / 0,576-0,597 | Kopf wie Rinde |
+| a_oa/a_of/a_ok | Adern / Falten / Kopflinien einzeln aus | — | 0,576-0,588 | — |
+| g_* | Krallen, Kiefer, Kopf, Fleisch, Haut grau | — | +0,002 / 0,000 / +0,008 / +0,009 / -0,043 | die Haut-Laengsstreifen trugen die Kohaerenz |
+
+Ergebnis:
+- B12 >= 25,2 verlangt eine Kante je etwa 4 Texel ueber den ganzen Kopf.
+- Das gibt es nur als Laengsstriche (Fell), Querrippen (Rinde) oder Platten mit 48 L* Stufe (Zebra). Alle drei widersprechen Bild 2 (dunkle glatte Masse), E16 und E22.
+- B17 >= 0,60 erreichten nur die Laufe mit Laengs-Koernung auf der Haut.
+
+## V2r2.5 Unabhaengigkeitsnachweis (V2 4), Endstand, `farbe/unabh_v2r2/`
+
+| Riegel | Endstand (K_GRAPH 8, SPIEGEL 2,0) | K_GRAPH 4 | K_GRAPH 16 | SPIEGEL 1,0 | SPIEGEL 4,0 |
+|---|---|---|---|---|---|
+| Summe | 43/45 | 40/45 | 41/45 | **43/45 (keine Entscheidung kippt)** | 41/45 |
+| K4 | 5,4 | **3,1** | 6,0 | 5,2 | 4,2 |
+| K1v2 | 7,0 | **6,6** | 7,6 | 7,0 | 6,9 |
+| K4b | 8,8 | **3,8** | 11,6 | 10,7 | 8,3 |
+| N1 Seite | 9,5 | 9,5 | 9,6 | 9,7 | **9,2** |
+| B2 Seite | 3,95 | 3,46 | 4,69 | 4,62 | **3,18** |
+| B8 | 17,7 | 20,5 | **10,0** | 17,4 | 16,2 |
+| B10 | 8,81 | 9,01 | **7,0** | 9,52 | 9,04 |
+
+Ergebnis:
+- SPIEGEL_ABSTAND 1,0: bestanden. 4,0: N1/B2 kippen um 0,2 / 0,02.
+- K_GRAPH: nicht bestanden.
+- Messung `generator/kf_kgraph_mass.py` (`farbe_lesung/N2_kgraph.json`):
+
+| k | deckt Atlas-8-Nachbarschaft | Zusammenhangsteile | Querkanten |
+|---|---|---|---|
+| 4 | 43 % | 109 | — |
+| 8 | 80 % | 31 | 19 % |
+| 16 | 95 % | — | 43 % |
+
+  - Bei k = 4 zerfaellt die Ruecken-Wunde (K4b 3,8).
+  - Bei k = 16 verbinden 43 % der Kanten Texel ueber Mesh- bzw. Inselgrenzen.
+- Die Werte haengen am Graphen selbst. Nach V2 4 ist K_GRAPH damit **nicht zulaessig belegt** (Offen V2r2-O2).
+
+## V2r2.6 Tafeln (`farbe/`, Messblatt 7: roh, kein Gamma, gleiche Behandlung)
+
+| Tafel | Inhalt |
+|---|---|
+| `01_szene_bild1.png` / `02_szene_bild2.png` | Original - K4 heute - V2 R2, Zeile 1 Disc-Licht x k (beide gleich), Zeile 2 + Videofilter |
+| `03_familie.png` | EM30 - G5 - G4 - V2 R2 - K4 heute. V2 R2: L* 19,1 / 16,3 / 18,3, C* 11,0 / 9,5 / 13,4 |
+| `04_atlas.png` | EM30 - V2 R2 - K5c heute mit Paletten, Kanten-/Richtungsbild G4 und V2 R2 |
+| `05_rundum_neu.png` | wie bisher |
+| `06_kopf_nah.png` | wie bisher. Kopf glatt dunkelbraun mit Feinkorn, Augenwuelste, Kieferband hell |
+| `07_spiel.png` | `kf_spiel.sh --mit-heute`, eigene exe-Kopie, gdigrab mit freigestelltem Fenster, 10/10 rc=0 (`farbe/spiel_lauf.log`, `farbe/spiel/`) |
+| `08_binnenzeichnung.png` | Ausschnitt je Modell auf derselben Anatomie |
+
+Eigene Durchsicht (keine Pruefung):
+- Kopf und Ruecken sind nicht mehr gestreift.
+- Die Wunden an Flanke und Ruecken sind gestuft (dunkler Rand, Rot, rosa Kern), haben aber weiterhin Polygonkanten und Texelstufen (P13).
+- Im Spiel 5080 wirkt die Figur roter als K4 heute. Der Chain-Riegel K4 steht auf 5,4 % bei 5,2 % im Original.
+
+## V2r2.7 Tests
+
+- Bau: `RE15_BUILD_DIR=.../re15_port/build bash re15_port/tools/local_build.sh build` meldet LOCAL-BUILD-OK (no work to do).
+- Tests: `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3 --timeout 600` ist **11/11 gruen** in 95,1 s, nichts wiederholt (`formfarbe2/ctest_r2.log`).
+- Die Tests pruefen das unveraenderte Spiel-Asset.
+
+## V2r2.8 Offen
+
+| # | Punkt |
+|---|---|
+| V2r2-O1 | B12 und B17 ROT, beide im gemessenen Zielkonflikt mit P2 (V2r2.4). Ob B12/B17 oder die Sicht gilt, entscheidet Pruefer/Nutzer; die Tafeln gehen nach V1 7.5 nicht als Abnahmevorlage raus |
+| V2r2-O2 | Unabhaengigkeitsnachweis K_GRAPH nicht erbracht (K_GRAPH 4: K4/K1/K4b, 16: B8/B10); SPIEGEL_ABSTAND 1,0 bestanden, 4,0 nicht (N1, B2) |
+| V2r2-O3 | Wundkanten folgen weiter Polygon- und Texelstufen (P13), Pfoten hell (P12) |
+| V2r2-O4 | Commit-Trailer: gesetzt ist "Claude Opus 5.5" gemaess der Attributionsvorgabe der Sitzung; der Auftragstext verlangt "Claude Fable 5.1" (Formfehler aus Runde 1 bleibt damit bestehen) |
