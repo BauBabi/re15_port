@@ -323,3 +323,24 @@ Ueberholt (KI-Quelle oder durch die Beschriftung widerlegt):
 6. Keine Nutzerfrage: Die Beschriftung beantwortet Auge, Haare, Nase und die Schwanzpunkte eindeutig (Belegung 1,000
    gegen hoechstens 0,82). Wo ein Leser abwich (Auge seitlich, Kopf seitlich rot, Bildnummer), entscheidet die Messung
    oben.
+
+## Nachtrag Runde 5 (Entscheid O7 des Orchestrators, 2026-11-07, eingetragen vom Bauer)
+
+**F6 und F7 werden an der Fensterlage dieses Blatts gemessen, nicht ueber die ganze Id.** F7 gilt dazu nur zusammen mit der Sicht-Box
+des unteren Oberarms (Riegel FS Oberarm (B)-links unten, Box 300-345 x 213-250 der Sicht-Pruefung V4 r1/r2).
+
+| Riegel | bisher (Wortlaut Abschnitt 7 "Koerper-Ids") | ab Runde 5 | Messung am Port (riegel_v4.py) |
+|---|---|---|---|
+| F6 | Id 8 mit R-G >= 15, ganz | rote Id-8-Bildpunkte (R-G >= 15) im Fenster x 372-424, y 197-232 | Zeile "F F6 (Fensterlage, O7)"; "F F6 Messblatt-Wortlaut (Id ganz)" nur noch INFO |
+| F7 | Id 13 ganz | obere 58 % der Zeilen von Id 13 (Lage des Fensters y 167-212 im Original-Oberarm y 160-250) UND FS Oberarm (B)-links unten | Zeile "F F7 (Fensterlage, O7)"; "F F7 Messblatt-Wortlaut (Id ganz)" nur noch INFO |
+| F-Mittel | ueber F6-F10, F14, F19 | dieselben Zeilen in der Lesart oben | Zeile "F Mittel" |
+
+Begruendung (Zahlen aus dem Original, Vorlage 1 entblendet):
+- F6: Das Fenster liegt auf der Brustmitte (16,6 / 17,3 / 6,2). Die roten Bildpunkte des ganzen Oberkoerpers (Polygon der Sicht-Pruefung V4 r3
+  + Rumpfbox 352-448 x 196-292) haben im Original 19,6 / 11,1 / 3,1 (dE00 zum Fenster 5,3, Betrag dL 3,0). Wer "Id 8 ganz" auf das Fensterziel bringt,
+  faerbt den ganzen Rumpf so rot wie die Brustmitte; Lauf r4 Koerper-Eichung 1 ergab damit Rot Mitte / aussen 1,81 und Schultern a* > 12
+  0,24 (Original 2,75-2,91 / 0,00-0,05) - das widerspricht der Rot-Verteilung des Originals (Sicht-Pruefung V4 r3 1.5 / r4 1.5).
+- F7: Id 13 besteht aus der Fensterlage (1031 px, Original 33,3 L*) und dem unteren Oberarm (1150 px, Sicht-Box Original 11,0 L*). Fuer
+  "Id 13 ganz" mit |dL| <= 4 (>= 29,3 L*) muesste der untere Teil (29,3 x 2181 - 33,3 x 1031) / 1150 = 25,7 L* haben: dL +14,7 gegen die
+  Sicht-Box. Der ganze Oberarm (B)-links misst im Original 17,3 L* (Sicht-Pruefung V4 r2 1.4, Box 300-345 x 186-250).
+- Die Original-Gegenprobe (Abschnitt 7 letzte Zeile) bleibt gueltig: an der Fensterlage misst das Original genau die Fensterwerte.
