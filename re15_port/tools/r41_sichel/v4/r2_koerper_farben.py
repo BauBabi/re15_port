@@ -34,6 +34,9 @@ AUS = os.path.join(HIER, 'farben_koerper_v4.npz')
 PROT = os.path.join(HIER, 'r2_koerper_protokoll.json')
 ZEILEN = (480, 481, 482, 484)
 KOERPER = [b for b in range(16) if b != 9]
+LAM_MIN = 0.35       # Bildpunkte mit Licht < 0,35 (streifend) zaehlen nicht - sie trieben einzelne Texel auf Weiss; PORT-WAHL
+LUM_MAX = 190.0      # hellster erlaubter Koerpertexel (Lum); PORT-WAHL gegen Einzel-Ausreisser (200: zwei helle Punkte auf der Schulter
+                     # noch sichtbar, 215 deutlich; F14 dL 190 / 200 / 215: -5,2 / -4,6 / -4,4, Laeufe r2 Koerper 11-13)
 MU = 0.25            # Vorwissen: wie ein Viertel Bildpunkt mit lambda 1 (haelt kaum gesehene Texel bei Referenz 2 x Verstaerkung); PORT-WAHL
 
 # Regionen: (Name, Ansicht, Port-Ids, Original-Boxen (x0, y0, x1, y1), Quelle)
@@ -74,8 +77,8 @@ REGIONEN = [
 # Gewicht je Region in den kleinsten Quadraten (Standard 1): geteilte Texel (Oberarme 10/13, Rumpf vorn / Buckel seitlich) mitteln die
 # Ziele; F8 (Oberarm (B)-rechts oben) und F14 (Buckel hell) lagen nach Lauf r2 Koerper 5 an bzw. ueber der Grenze (dL +4,0 / -5,4),
 # F7 mit -3,0 innerhalb - die schwaecheren Regionen bekommen mehr Gewicht (Lauf r2 Koerper 6: F14 -4,4, Oberarm (B)-links unten
-# +4,3 -> 4,0 / 1,5). PORT-WAHL (Ausgleich zwischen Messblatt-Riegeln und Sicht-Boxen).
-GEWICHT = dict(oberarm_br_oben=1.6, oberarm_bl_unten=1.5, buckel_s_hell=4.0, hals=2.0)
+# +4,3 -> 4,0 / 1,5; nach LAM_MIN Lauf r2 Koerper 10: F14 -4,2, Oberarm +4,1 -> 5,0 / 2,0; nach LUM_MAX F14 -5,2 -> 8,0). PORT-WAHL (Ausgleich zwischen Messblatt-Riegeln und Sicht-Boxen).
+GEWICHT = dict(oberarm_br_oben=1.6, oberarm_bl_unten=2.0, buckel_s_hell=8.0, hals=2.0)
 # Id 15 (Sichel (B)-links, Zeile 484): Ziel = eigener Render (bleibt wie Referenz 2; nicht beschriftet, im Original nicht abgrenzbar)
 
 
@@ -215,6 +218,7 @@ def main():
                 continue
             uu, vv = U[q], Vt[q]
             lam = LAM[q].astype(float); d = D[q]; w = gew[q][:, None]
+            w = w * (lam.mean(1, keepdims=True) >= LAM_MIN)          # streifend beleuchtete Bildpunkte nicht (Ausreisser, s. LAM_MIN)
             np.add.at(num[z], (vv, uu), w * lam * d)
             np.add.at(den[z], (vv, uu), w * lam * lam)
     # Vorlauf: Verstaerkung je Mesh (Median t / Referenz-2-Texel ueber gesehene Texel), dann t0 fuer ungesehene Texel
@@ -234,7 +238,16 @@ def main():
             mm = bel[b] & ~ges
             t0z[mm] = alt[mm] * g
         t0[z] = np.clip(t0z, 0, 248)
-    T_ = {z: np.clip((num[z] + MU * t0[z]) / (den[z] + MU), 0, 248) for z in ZEILEN}
+    # Ausreisser begrenzen: je Texel hoechstens Faktor 2,0 ueber t0 (+16) und 0,2 darunter (mit 0,4 unten blieben die Oberarme zu hell,
+    # F8 dL +4,6, Lauf r2 Koerper 8; mit 1,5 oben wurde der Buckel zu dunkel, F14 dL -6,3, Lauf 9). Ohne Grenze bekamen Buckel-Texel mit kleinem
+    # lambda seitlich und hohem F14-Gewicht Weiss (248) und zeigten vorn auf der Schulter weisse Punkte (Leiste 03 Runde 2, Lauf r2 Koerper 7)
+    T_ = {z: np.clip(np.clip((num[z] + MU * t0[z]) / (den[z] + MU), 0.2 * t0[z], 2.0 * t0[z] + 16.0), 0, 248) for z in ZEILEN}
+    # Helligkeitsdecke: kein Texel heller als Lum LUM_MAX (Leiste 03 Runde 2: zwei weisse Texel, Lum 233, auf der (B)-linken Schulter
+    # wirkten wie ein aufgemaltes Augenpaar neben dem Kopf)
+    for z in ZEILEN:
+        lu = G.lum(T_[z])
+        f = np.where(lu > LUM_MAX, LUM_MAX / np.maximum(lu, 1e-6), 1.0)
+        T_[z] = T_[z] * f[..., None]
     nutz = np.zeros((mo.texh, mo.texw, len(ZEILEN)), bool)
     for b in KOERPER:
         for z in zl[b]:
