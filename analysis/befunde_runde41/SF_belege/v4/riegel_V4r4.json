@@ -1,0 +1,662 @@
+{
+ "emd": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V4.EMD",
+ "sha256": "9f6b854c79b90d6f96e5a2a4ba4cfd56e18e6280ae5022961fe71078c1be23a3",
+ "zeilen": [
+  {
+   "mass": "G1 Koerper-Geometrie = Ref2",
+   "soll": "Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV gleich (O1: CLUT-Feld frei); Skelett/Keyframes 0-15, EDD gleich",
+   "ist": "Geometrie abweichend keine; CLUT-Feld geaendert {2: '[480] -> [491]', 3: '[480] -> [491]', 5: '[480] -> [491]', 6: '[480] -> [491]', 10: '[480] -> [489]', 13: '[480] -> [490]', 14: '[482] -> [488]'}; byte-gleich 8 von 15; Skelett True; Keyframes True; EDD True; uebrige Sektionen True; Ref2 sha256 cfd1ac42",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "M1 Dreiecke Schwanz",
+   "soll": "<= 212",
+   "ist": "192 ([36, 24, 24, 24, 24, 24, 36])",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "M2 Dreiecke Kopf",
+   "soll": "<= 118",
+   "ist": "109",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "M3 Farbtiefe",
+   "soll": "8-bpp-TIM, Texel aus der CLUT",
+   "ist": "8 bpp True; CLUT-Zeilen Kopf [486], Schwanz [487], Koerper [480, 481, 482, 484, 488, 489, 490, 491] (TIM 12 Zeilen)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "M4 Texeldichte",
+   "soll": "Kopf und Schwanz 0,045-0,091 Texel/E.",
+   "ist": "Kopf 0.057; Schwanz [0.051, 0.05, 0.056, 0.066, 0.091, 0.065, 0.06]",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K1 Augen vorn",
+   "soll": "1 Komponente; Kontrast >= 20 (Original 29,5)",
+   "ist": "1 Komp.; 26.1",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K2 Augenfleck Farbe",
+   "soll": "46,9/7,2/-1,1 dE00 <= 6; L* >= KV5 + 20",
+   "ist": "47.2/8.0/-1.2 dE00 0.8; L* 47.2 vs KV5 22.6 + 20",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K3 Augenfleck Groesse",
+   "soll": "B 0,016-0,036 / H 0,023-0,043 H",
+   "ist": "0.030 x 0.025 H (11 x 9 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K4 Augenlage vorn",
+   "soll": "(B)-links 0,035-0,065 H; 0,07-0,12 H unter OK",
+   "ist": "0.057 H links; 0.102 H unter OK",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K5 Haarfeld vorn",
+   "soll": "13,3/7,4/1,5 dE00 <= 6; L* <= Auge - 25",
+   "ist": "13.9/8.2/0.9 dE00 1.0; L* 13.9 vs 22.2",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K6 zweites Auge verdeckt",
+   "soll": "L* <= 18 (Original 12,9)",
+   "ist": "L* 12.5 (Box (369, 187, 379, 195))",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K7 Nase",
+   "soll": "18,2/7,1/1,3 dE00 <= 6; L* zwischen Haar und Auge",
+   "ist": "18.1/7.1/-0.1 dE00 1.2",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K8 Kinn/Maulzone",
+   "soll": "9,9/9,9/3,8 dE00 <= 6; Anteil L*>35 <= 0,05",
+   "ist": "11.7/8.4/3.6 dE00 1.8; Anteil 0.000",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K9 Kopf-Oberseite rot vorn",
+   "soll": "22,6/15,4/5,2 dE00 <= 6; a* >= 11",
+   "ist": "20.5/16.7/4.9 dE00 1.7",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K10 Kopfbox vorn",
+   "soll": "0,14-0,18 x 0,15-0,20 H",
+   "ist": "0.154 x 0.187 H",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "K11 Kopf-Struktur vorn",
+   "soll": "Lum-Gradient Kopf 41.0 +-6.1 (Original, 9 Boxen 39.4-42.9, Viertel 34.9-47.0); Kopf >= Rumpf (Original 1.57 x)",
+   "ist": "Kopf 37.5, Rumpf 36.8 (1.02 x)",
+   "ok": true,
+   "note": "Pruefung V4 r2 Sicht 1.1: Runde 2 Kopf 27,8 / Rumpf 32,4"
+  },
+  {
+   "mass": "S1 Auge seitlich",
+   "soll": "1 heller Fleck (1 Komponente); 48,4/4,0/0,5 dE00 <= 6; 0,028-0,052 x 0,040-0,070 H",
+   "ist": "48.5/3.1/0.9 dE00 1.2; 0.042 x 0.049 H; 1 Komp.",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "S2 Augenlage seitlich",
+   "soll": "0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle",
+   "ist": "0.054 H; 0.809 H",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "S3 Haarkante seitlich",
+   "soll": "L* <= 22; 19,1/1,2/1,1 dE00 <= 6; Abstand zum Fleck <= 0,01 H",
+   "ist": "17.2/2.8/0.6 dE00 2.5; Abstand 0.004 H",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "S4 Kopf-Oberseite rot seitlich",
+   "soll": "27,6/15,3/3,3 dE00 <= 6; a* >= 11",
+   "ist": "27.6/15.5/2.9 dE00 0.3",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T1 Schwanz Beginn",
+   "soll": "0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03)",
+   "ist": "0.172 H hinter, 0.742 H ueber",
+   "ok": true,
+   "note": "Id 16 an Id 7/8"
+  },
+  {
+   "mass": "T2 Biegung",
+   "soll": "Lage dx -0,245 dy +0,036 (+-0,03) nach t2_mass_v4 (Original -0.268 / 0.056); Drehung 68.4 +-5.0 Grad (Original 70.1/65.8/69.5)",
+   "ist": "dx -0.251 dy 0.051; 66.6 Grad (Bauer-Mittellinie: dx -0.256 dy 0.054)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T3 Knick (Taille)",
+   "soll": "dx -0,265 dy +0,257 (+-0,03)",
+   "ist": "dx -0.233 dy 0.266",
+   "ok": false,
+   "note": ""
+  },
+  {
+   "mass": "T4 Ende",
+   "soll": "dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle",
+   "ist": "dx -0.215 dy 0.385; 0.357 H ueber Sohle",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "TA Schwanz absolut",
+   "soll": "Beginn (357,243), Knick (290,308), Ende (295,343) je Achse +-0,03 H",
+   "ist": "Beginn (358,238) +0.004/-0.019 H; Knick (296,308) +0.024/+0.000 H; Ende (301,340) +0.023/-0.013 H",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T5 Breite nach oben",
+   "soll": "f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01",
+   "ist": "0.028/0.053/0.095/0.121 H; Abfall 0.008",
+   "ok": false,
+   "note": ""
+  },
+  {
+   "mass": "T5q Breite quer (unabhaengig)",
+   "soll": "f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 (Original 3 Masken: Abfall 0.016/0.020/0.000)",
+   "ist": "0.032/0.055/0.095/0.129 H; Abfall 0.000; Profil f 0..1 [0.025, 0.032, 0.045, 0.055, 0.066, 0.095, 0.104, 0.129, 0.14, 0.146, 0.144]",
+   "ok": false,
+   "note": ""
+  },
+  {
+   "mass": "T6 Endstueck",
+   "soll": "B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste",
+   "ist": "B 0.032; L 0.121 H; 81 Grad (vorn); Taille 0.021, schmalste davor 0.021",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T8 Schwanzfarbe",
+   "soll": "F15 9,3/11,4/1,5; F16 8,7/8,4/2,2; F17 26,8/-0,1/2,4; F18 15,2/3,2/1,6; dE00 <= 6; a* Wurzel >= 7, Ende <= 6",
+   "ist": "F15 11.5/8.4/3.0 dE00 3.3 (165 px); F16 7.1/6.8/3.0 dE00 2.1 (38 px); F17 20.8/2.8/2.1 dE00 6.0 (1298 px); F18 14.7/4.0/2.1 dE00 1.0 (201 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T9 Schwanzachse",
+   "soll": "7 Achsenpunkte: Mittel dE00 <= 6; L*/a* Mittel +-4/+-3 zum Original 11.6/6.1",
+   "ist": "Mittel dE00 3.9; L*/a* 12.1/4.7; je Punkt 6.6 6.0 2.2 2.8 5.4 1.5 3.0",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T7a Gang koerperfest Lage",
+   "soll": "Gelenke 1/3/5/7 je <= 0,06 H vom Ziel (Keyframe der gezeichneten Pose), alle Gangtakte",
+   "ist": "0 von 47 Takten > 0,06 H; max 0.048 H (h85 {'Beginn': 0.003, 'Biegung': 0.016, 'Knick': 0.037, 'Ende': 0.048})",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T7b Biegung/Knick im Gang",
+   "soll": "Gelenk 3 >= Keyframe - 10 Grad; Gelenk 5 >= halber Keyframe-Winkel",
+   "ist": "Biegung 61.2-70.5 Grad (Keyframe 62.2-69.7), 0 Takte darunter; Knick 10.6-16.2 (Keyframe 15.6-16.3), 0 darunter",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T7c keine waagerechte Kette",
+   "soll": "Strecke Biegung -> Ende in Zielrichtung >= 0,75 x Keyframe",
+   "ist": "min 0.389 H (Keyframe 0.382 H); 0 Takte darunter []",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "T7d keine Rueckfaltung",
+   "soll": "alle Gelenkwinkel <= 90 Grad, ganzer Lauf",
+   "ist": "max 72.7 Grad; 0 von 144 Takten > 90",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "Boden Mesh",
+   "soll": "kein Glied-Mesh und keine Dornspitze unter dem Boden, ganzer Lauf",
+   "ist": "tiefster Mesh-Punkt -13 E. (h34, Dornspitze -64 E.); 0 Takte darunter",
+   "ok": true,
+   "note": "Radien je Gelenk [315, 315, 281, 266, 166, 98, 82, 82] E., Dorn 315 E. (Mesh 22)"
+  },
+  {
+   "mass": "F0 Lichtgegenprobe h118",
+   "soll": "Rumpf b2 gegen FRAMEDUMP dE00 <= 3",
+   "ist": "b2 22.8/6.2/2.4 / Spiel 22.9/6.2/2.4 dE00 0.1 (11192 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F0 Lichtgegenprobe h135",
+   "soll": "Rumpf b2 gegen FRAMEDUMP dE00 <= 3",
+   "ist": "b2 21.3/6.2/2.5 / Spiel 21.2/6.0/2.5 dE00 0.2 (12464 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F6",
+   "soll": "16.6/17.3/6.2 dE00 <= 5, |dL| <= 4",
+   "ist": "22.1/9.8/4.0 dE00 6.9 dL +5.5 (4714 px)",
+   "ok": false,
+   "note": ""
+  },
+  {
+   "mass": "F F7",
+   "soll": "33.3/5.5/2.7 dE00 <= 5, |dL| <= 4",
+   "ist": "31.2/6.3/4.1 dE00 2.2 dL -2.1 (1031 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F8",
+   "soll": "16.4/8.3/1.5 dE00 <= 5, |dL| <= 4",
+   "ist": "19.0/6.5/1.0 dE00 2.6 dL +2.6 (1991 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F9",
+   "soll": "12.7/-0.9/-1.5 dE00 <= 5, |dL| <= 4",
+   "ist": "14.2/0.1/-4.0 dE00 2.8 dL +1.5 (4270 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F10",
+   "soll": "11.2/14.0/2.5 dE00 <= 5, |dL| <= 4",
+   "ist": "13.6/11.1/1.7 dE00 2.8 dL +2.4 (327 px)",
+   "ok": true,
+   "note": "Id 12 (Klaue (B)-rechts); Id 15: nan/nan/nan (0 px)"
+  },
+  {
+   "mass": "F F14",
+   "soll": "60.0/11.0/1.2 dE00 <= 5, |dL| <= 4",
+   "ist": "57.6/11.0/1.8 dE00 2.2 dL -2.4 (885 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F19",
+   "soll": "18.4/0.5/-3.5 dE00 <= 5, |dL| <= 4",
+   "ist": "18.2/-0.1/-5.1 dE00 1.6 dL -0.2 (1488 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F Mittel",
+   "soll": "Mittel dE00 <= 4",
+   "ist": "3.02",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F6 Fensterlage",
+   "soll": "16.6/17.3/6.2 dE00 <= 5, |dL| <= 4 (rote Id-8-Bildpunkte im Fenster 372-424 x 197-232)",
+   "ist": "19.5/11.3/4.8 dE00 4.9 dL +2.9 (1737 px)",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "F F7 Messblatt-Wortlaut (Id ganz)",
+   "soll": "33.3/5.5/2.7 dE00 <= 5, |dL| <= 4",
+   "ist": "22.8/5.3/2.9 dE00 8.0 dL -10.5 (2181 px)",
+   "ok": false,
+   "note": "Runde 3: Mesh 10 hat eine eigene CLUT-Zeile 489 (O1). Das Fenster F7 (x 307-347, y 167-212) liegt nur auf der hellen Schulterkuppe; der ganze Oberarm (B)-links ist im Original 17,3 L* (Sicht-Pruefung V4 r2 1.4, Box 300-345 x 186-250) - Widerspruch im Messblatt-Wortlaut, Offen"
+  },
+  {
+   "mass": "F F8 Messblatt-Wortlaut (Id ganz)",
+   "soll": "16.4/8.3/1.5 dE00 <= 5, |dL| <= 4",
+   "ist": "20.5/5.7/0.9 dE00 3.9 dL +4.1 (3293 px)",
+   "ok": false,
+   "note": "Runde 3: Mesh 10 mit eigener CLUT-Zeile 489 (O1), Verteilung des F8-Fensters fuer Id 10 ganz (r2_koerper_farben oberarm_br)"
+  },
+  {
+   "mass": "FS Oberarm (B)-links unten",
+   "soll": "11.0/2.0/0.9, Rotanteil 0.00; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15",
+   "ist": "14.8/4.3/1.8 dE00 3.9 dL +3.8; Rotanteil 0.11 (1150 px)",
+   "ok": true,
+   "note": "Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(300, 213, 345, 250)]"
+  },
+  {
+   "mass": "FS Oberarm (B)-rechts unten",
+   "soll": "20.9/3.2/-0.4, Rotanteil 0.02; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15",
+   "ist": "22.7/4.5/0.8 dE00 2.3 dL +1.8; Rotanteil 0.02 (1302 px)",
+   "ok": true,
+   "note": "Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(455, 228, 500, 262)]"
+  },
+  {
+   "mass": "FS Rumpf + Schultern",
+   "soll": "17.3/4.8/1.9, Rotanteil 0.31; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15",
+   "ist": "20.2/6.0/2.5 dE00 2.5 dL +2.9; Rotanteil 0.37 (13358 px)",
+   "ok": true,
+   "note": "Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(352, 196, 448, 292), (318, 160, 360, 190), (425, 165, 470, 195)]"
+  },
+  {
+   "mass": "FS Unterarm (B)-rechts = (W)-links Id 11",
+   "soll": "29.3/0.7/-1.6, Rotanteil 0.00; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15",
+   "ist": "27.4/1.7/-1.5 dE00 2.0 dL -1.9; Rotanteil 0.00 (1486 px)",
+   "ok": true,
+   "note": "Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(468, 268, 500, 330)]"
+  },
+  {
+   "mass": "FS Unterschenkel",
+   "soll": "15.1/1.7/-1.5, Rotanteil 0.03; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15",
+   "ist": "18.4/3.9/0.3 dE00 4.0 dL +3.3; Rotanteil 0.18 (1901 px)",
+   "ok": false,
+   "note": "Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(356, 352, 392, 430)]"
+  },
+  {
+   "mass": "FS Unterarm (B)-links = (W)-rechts Id 14",
+   "soll": "9.0/-3.8/3.5, Rotanteil 0.00; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15; Anteil L* > 30 <= Original + 0,05",
+   "ist": "11.4/-2.0/2.3 dE00 2.9 dL +2.3; Rotanteil 0.00 (2041 px); Anteil L* > 30 0.000 (Original 0.000, <= +0,05); L* p90 15.5 (Original 11.2)",
+   "ok": true,
+   "note": "Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(298, 262, 325, 340)]"
+  },
+  {
+   "mass": "F0 Gueltigkeit Farbvergleich",
+   "soll": "Wand links 64,7/0,3/-2,1 dE00 <= 2",
+   "ist": "65.2/0.2/-2.5 dE00 0.52",
+   "ok": true,
+   "note": ""
+  },
+  {
+   "mass": "TQ Schwanz Querprofil",
+   "soll": "x 310/320/330/340: Stufe auf 3 px <= 9.6 L*, Plateau-Anteil <= 0.31 (Original-Maximum, 3 Masken)",
+   "ist": "x 310 Stufe 8.2 Plateau 0.53; x 320 Stufe 8.2 Plateau 0.41; x 330 Stufe 8.7 Plateau 0.46; x 340 Stufe 8.7 Plateau 0.42",
+   "ok": false,
+   "note": "Sicht-Pruefung V4 r3 1.3: V4 r3 16,6-19,9 L*, 0,33-0,43"
+  },
+  {
+   "mass": "TK Schwanz Oberkontur",
+   "soll": "x 284-332: RMS zur Geraden >= 3.02 px (Original 3.87/4.71/4.69 minus Spanne); Oberkante x 276-292 je Spalte <= 0,03 H vom Original 251/250/243/236/234",
+   "ist": "RMS 1.77 px; Oberkante 246/242/238/235/232 (max 0.030 H)",
+   "ok": false,
+   "note": "Sicht-Pruefung V4 r3 1.3: V4 r3 0,6 px, Oberkante 237/235/232/230/228; Toleranz Oberkante = TA (0,03 H)"
+  },
+  {
+   "mass": "FO Oberkoerper vorn Rot-Verteilung (Buehne)",
+   "soll": "Rot Mitte/aussen >= 2,75 (Original 2.75); Schultern a*>12 <= 0,05 (Original 0.031); Anteil a*>18 <= 0.041 (Original)",
+   "ist": "Mitte/aussen 2.43 (Drittel 0.27/0.59/0.21); Schultern 0.018; a*>18 0.014",
+   "ok": false,
+   "note": "Sicht-Pruefung V4 r3 1.5 / Riegelvorschlag Abschnitt 3; V4 r3 1,21 / 0,089"
+  },
+  {
+   "mass": "KS Kopf-Struktur Buehne 320 x 240",
+   "soll": "Innenflaeche Gradient 29.1-40.4 (Original); Naeherung des Spielbilds",
+   "ist": "Gradient 32.6; glatt 0.054",
+   "ok": true,
+   "note": "Buehne Pose 135 ueber 320 x 240 (INTER_AREA wie c6.port); V4 r3 28,0"
+  },
+  {
+   "mass": "KS Kopf-Struktur Spielbild h118",
+   "soll": "Innenflaeche Gradient 29.1-40.4 (Original, Box +-3 px); glatte Pixel <= 0.098 (Original max)",
+   "ist": "Gradient 30.9; glatt 0.071",
+   "ok": true,
+   "note": "Sicht-Pruefung V4 r3 1.1: V4 r3 h135 27,2 / 0,197, h118 26,9 / 0,126"
+  },
+  {
+   "mass": "FO Oberkoerper Spielbild h118",
+   "soll": "Rot Mitte/aussen >= 2,75 (Video 2.91); Schultern a*>12 <= 0,05 (Video 0.049); Anteil a*>18 <= Video 0.019",
+   "ist": "Mitte/aussen 1.55 (Drittel 0.35/0.48/0.27); Schultern 0.082; a*>18 0.016; L* p10 10.3 (Video 7.5)",
+   "ok": false,
+   "note": "Sicht-Pruefung V4 r3 1.5 (Polygone von Hand, oberkoerper_spiel.py); V4 r3 h118 1,18 / 0,13"
+  },
+  {
+   "mass": "KS Kopf-Struktur Spielbild h135",
+   "soll": "Innenflaeche Gradient 29.1-40.4 (Original, Box +-3 px); glatte Pixel <= 0.098 (Original max)",
+   "ist": "Gradient 36.8; glatt 0.134",
+   "ok": false,
+   "note": "Sicht-Pruefung V4 r3 1.1: V4 r3 h135 27,2 / 0,197, h118 26,9 / 0,126"
+  },
+  {
+   "mass": "FO Oberkoerper Spielbild h135",
+   "soll": "Rot Mitte/aussen >= 2,75 (Video 2.75); Schultern a*>12 <= 0,05 (Video 0.031); Anteil a*>18 <= Video 0.041",
+   "ist": "Mitte/aussen 1.46 (Drittel 0.30/0.43/0.28); Schultern 0.073; a*>18 0.013; L* p10 10.6 (Video 7.5)",
+   "ok": false,
+   "note": "Sicht-Pruefung V4 r3 1.5 (Polygone von Hand, oberkoerper_spiel.py); V4 r3 h118 1,18 / 0,13"
+  }
+ ],
+ "kopf_vorn": {
+  "H": 364,
+  "ok": 145,
+  "sohle": 509,
+  "kopfbox": [
+   325,
+   154,
+   380,
+   221
+  ],
+  "blob": {
+   "n": 1,
+   "ext": 54.467063903808594,
+   "umg": 29.853244982067615,
+   "thr": 42.16015444293811,
+   "Lmax": 55.93538009434205,
+   "kontrast": 26.082135112274436,
+   "bbox": [
+    326,
+    187,
+    336,
+    195
+   ],
+   "wh": [
+    11,
+    9
+   ],
+   "sp": [
+    331.6231884057971,
+    191.0144927536232
+   ],
+   "rgb": [
+    124.49860392847475,
+    107.39474665004343,
+    114.02787713194031
+   ],
+   "px": 69
+  },
+  "fenster": {
+   "KV1": [
+    [
+     347,
+     155,
+     369,
+     175
+    ],
+    [
+     20.5,
+     16.7,
+     4.9
+    ]
+   ],
+   "KV2": [
+    [
+     354,
+     171,
+     372,
+     204
+    ],
+    [
+     13.9,
+     8.2,
+     0.9
+    ]
+   ],
+   "KV3": [
+    [
+     349,
+     198,
+     359,
+     208
+    ],
+    [
+     18.1,
+     7.1,
+     -0.1
+    ]
+   ],
+   "KV4": [
+    [
+     337,
+     213,
+     359,
+     224
+    ],
+    [
+     11.7,
+     8.4,
+     3.6
+    ]
+   ],
+   "KV5": [
+    [
+     328,
+     196,
+     344,
+     211
+    ],
+    [
+     22.6,
+     3.4,
+     -0.1
+    ]
+   ]
+  }
+ },
+ "kopf_seite": {
+  "H": 264,
+  "kopfbox": [
+   438,
+   185,
+   479,
+   236
+  ],
+  "blob": {
+   "n": 1,
+   "ext": 53.557151794433594,
+   "umg": 30.918962815398118,
+   "thr": 42.238057304915856,
+   "Lmax": 54.07808238154436,
+   "kontrast": 23.159119566146245,
+   "bbox": [
+    460,
+    215,
+    470,
+    227
+   ],
+   "wh": [
+    11,
+    13
+   ],
+   "sp": [
+    464.7142857142857,
+    220.53333333333333
+   ],
+   "rgb": [
+    121.23285466652281,
+    113.40130521908713,
+    113.69378359328496
+   ],
+   "px": 105
+  }
+ },
+ "schwanz": {
+  "H": 264.0,
+  "ok": 170,
+  "sohle": 434,
+  "scheitel": 403.5,
+  "beginn": [
+   358.0,
+   238.0
+  ],
+  "T1": [
+   0.17234848484848486,
+   0.7424242424242424
+  ],
+  "biegung": [
+   290.45365813294654,
+   252.13321022826878
+  ],
+  "T2": [
+   -0.25585735555702066,
+   0.053534887228290834
+  ],
+  "drehung": 80.54885642127124,
+  "drehung_alt": 89.93513629897569,
+  "t1_regel": "Id 16 an Id 7/8",
+  "knick": [
+   296.40122107907143,
+   308.1124350466575
+  ],
+  "T3": [
+   -0.23332870803382033,
+   0.26557740547976316
+  ],
+  "ende": [
+   301.1871998866573,
+   339.6996123856503
+  ],
+  "T4": [
+   -0.21520000042932838,
+   0.38522580449109967
+  ],
+  "ende_ueber_sohle": 0.35719843793314277,
+  "T5": {
+   "0.05": 0.02462121212121212,
+   "0.1": 0.028409090909090908,
+   "0.15": 0.03598484848484849,
+   "0.2": 0.041666666666666664,
+   "0.25": 0.04734848484848485,
+   "0.3": 0.05303030303030303,
+   "0.35": 0.056818181818181816,
+   "0.4": 0.07196969696969698,
+   "0.45": 0.08712121212121213,
+   "0.5": 0.0946969696969697,
+   "0.55": 0.08712121212121213,
+   "0.6": 0.10227272727272728,
+   "0.65": 0.11363636363636363,
+   "0.7": 0.12121212121212122,
+   "0.75": 0.13257575757575757,
+   "0.8": 0.13825757575757575,
+   "0.85": 0.14015151515151514,
+   "0.9": 0.14015151515151514,
+   "0.95": 0.14204545454545456
+  },
+  "taille": 0.020833333333333332,
+  "schmal_vor_knick": 0.020833333333333332,
+  "end_breite": 0.032196969696969696,
+  "end_laenge": 0.12120850656082337,
+  "end_richtung": 81.38427583987927,
+  "end_vor": 4.785978807585877,
+  "jb": 108,
+  "jk": 167,
+  "je": 199
+ }
+}

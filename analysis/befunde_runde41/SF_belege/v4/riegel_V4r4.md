@@ -1,0 +1,65 @@
+| Mass | Soll | Ist | |
+|---|---|---|---|
+| G1 Koerper-Geometrie = Ref2 | Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV gleich (O1: CLUT-Feld frei); Skelett/Keyframes 0-15, EDD gleich | Geometrie abweichend keine; CLUT-Feld geaendert {2: '[480] -> [491]', 3: '[480] -> [491]', 5: '[480] -> [491]', 6: '[480] -> [491]', 10: '[480] -> [489]', 13: '[480] -> [490]', 14: '[482] -> [488]'}; byte-gleich 8 von 15; Skelett True; Keyframes True; EDD True; uebrige Sektionen True; Ref2 sha256 cfd1ac42 | OK |
+| M1 Dreiecke Schwanz | <= 212 | 192 ([36, 24, 24, 24, 24, 24, 36]) | OK |
+| M2 Dreiecke Kopf | <= 118 | 109 | OK |
+| M3 Farbtiefe | 8-bpp-TIM, Texel aus der CLUT | 8 bpp True; CLUT-Zeilen Kopf [486], Schwanz [487], Koerper [480, 481, 482, 484, 488, 489, 490, 491] (TIM 12 Zeilen) | OK |
+| M4 Texeldichte | Kopf und Schwanz 0,045-0,091 Texel/E. | Kopf 0.057; Schwanz [0.051, 0.05, 0.056, 0.066, 0.091, 0.065, 0.06] | OK |
+| K1 Augen vorn | 1 Komponente; Kontrast >= 20 (Original 29,5) | 1 Komp.; 26.1 | OK |
+| K2 Augenfleck Farbe | 46,9/7,2/-1,1 dE00 <= 6; L* >= KV5 + 20 | 47.2/8.0/-1.2 dE00 0.8; L* 47.2 vs KV5 22.6 + 20 | OK |
+| K3 Augenfleck Groesse | B 0,016-0,036 / H 0,023-0,043 H | 0.030 x 0.025 H (11 x 9 px) | OK |
+| K4 Augenlage vorn | (B)-links 0,035-0,065 H; 0,07-0,12 H unter OK | 0.057 H links; 0.102 H unter OK | OK |
+| K5 Haarfeld vorn | 13,3/7,4/1,5 dE00 <= 6; L* <= Auge - 25 | 13.9/8.2/0.9 dE00 1.0; L* 13.9 vs 22.2 | OK |
+| K6 zweites Auge verdeckt | L* <= 18 (Original 12,9) | L* 12.5 (Box (369, 187, 379, 195)) | OK |
+| K7 Nase | 18,2/7,1/1,3 dE00 <= 6; L* zwischen Haar und Auge | 18.1/7.1/-0.1 dE00 1.2 | OK |
+| K8 Kinn/Maulzone | 9,9/9,9/3,8 dE00 <= 6; Anteil L*>35 <= 0,05 | 11.7/8.4/3.6 dE00 1.8; Anteil 0.000 | OK |
+| K9 Kopf-Oberseite rot vorn | 22,6/15,4/5,2 dE00 <= 6; a* >= 11 | 20.5/16.7/4.9 dE00 1.7 | OK |
+| K10 Kopfbox vorn | 0,14-0,18 x 0,15-0,20 H | 0.154 x 0.187 H | OK |
+| K11 Kopf-Struktur vorn | Lum-Gradient Kopf 41.0 +-6.1 (Original, 9 Boxen 39.4-42.9, Viertel 34.9-47.0); Kopf >= Rumpf (Original 1.57 x) | Kopf 37.5, Rumpf 36.8 (1.02 x) (Pruefung V4 r2 Sicht 1.1: Runde 2 Kopf 27,8 / Rumpf 32,4) | OK |
+| S1 Auge seitlich | 1 heller Fleck (1 Komponente); 48,4/4,0/0,5 dE00 <= 6; 0,028-0,052 x 0,040-0,070 H | 48.5/3.1/0.9 dE00 1.2; 0.042 x 0.049 H; 1 Komp. | OK |
+| S2 Augenlage seitlich | 0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle | 0.054 H; 0.809 H | OK |
+| S3 Haarkante seitlich | L* <= 22; 19,1/1,2/1,1 dE00 <= 6; Abstand zum Fleck <= 0,01 H | 17.2/2.8/0.6 dE00 2.5; Abstand 0.004 H | OK |
+| S4 Kopf-Oberseite rot seitlich | 27,6/15,3/3,3 dE00 <= 6; a* >= 11 | 27.6/15.5/2.9 dE00 0.3 | OK |
+| T1 Schwanz Beginn | 0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03) | 0.172 H hinter, 0.742 H ueber (Id 16 an Id 7/8) | OK |
+| T2 Biegung | Lage dx -0,245 dy +0,036 (+-0,03) nach t2_mass_v4 (Original -0.268 / 0.056); Drehung 68.4 +-5.0 Grad (Original 70.1/65.8/69.5) | dx -0.251 dy 0.051; 66.6 Grad (Bauer-Mittellinie: dx -0.256 dy 0.054) | OK |
+| T3 Knick (Taille) | dx -0,265 dy +0,257 (+-0,03) | dx -0.233 dy 0.266 | ROT |
+| T4 Ende | dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle | dx -0.215 dy 0.385; 0.357 H ueber Sohle | OK |
+| TA Schwanz absolut | Beginn (357,243), Knick (290,308), Ende (295,343) je Achse +-0,03 H | Beginn (358,238) +0.004/-0.019 H; Knick (296,308) +0.024/+0.000 H; Ende (301,340) +0.023/-0.013 H | OK |
+| T5 Breite nach oben | f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 | 0.028/0.053/0.095/0.121 H; Abfall 0.008 | ROT |
+| T5q Breite quer (unabhaengig) | f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 (Original 3 Masken: Abfall 0.016/0.020/0.000) | 0.032/0.055/0.095/0.129 H; Abfall 0.000; Profil f 0..1 [0.025, 0.032, 0.045, 0.055, 0.066, 0.095, 0.104, 0.129, 0.14, 0.146, 0.144] | ROT |
+| T6 Endstueck | B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste | B 0.032; L 0.121 H; 81 Grad (vorn); Taille 0.021, schmalste davor 0.021 | OK |
+| T8 Schwanzfarbe | F15 9,3/11,4/1,5; F16 8,7/8,4/2,2; F17 26,8/-0,1/2,4; F18 15,2/3,2/1,6; dE00 <= 6; a* Wurzel >= 7, Ende <= 6 | F15 11.5/8.4/3.0 dE00 3.3 (165 px); F16 7.1/6.8/3.0 dE00 2.1 (38 px); F17 20.8/2.8/2.1 dE00 6.0 (1298 px); F18 14.7/4.0/2.1 dE00 1.0 (201 px) | OK |
+| T9 Schwanzachse | 7 Achsenpunkte: Mittel dE00 <= 6; L*/a* Mittel +-4/+-3 zum Original 11.6/6.1 | Mittel dE00 3.9; L*/a* 12.1/4.7; je Punkt 6.6 6.0 2.2 2.8 5.4 1.5 3.0 | OK |
+| T7a Gang koerperfest Lage | Gelenke 1/3/5/7 je <= 0,06 H vom Ziel (Keyframe der gezeichneten Pose), alle Gangtakte | 0 von 47 Takten > 0,06 H; max 0.048 H (h85 {'Beginn': 0.003, 'Biegung': 0.016, 'Knick': 0.037, 'Ende': 0.048}) | OK |
+| T7b Biegung/Knick im Gang | Gelenk 3 >= Keyframe - 10 Grad; Gelenk 5 >= halber Keyframe-Winkel | Biegung 61.2-70.5 Grad (Keyframe 62.2-69.7), 0 Takte darunter; Knick 10.6-16.2 (Keyframe 15.6-16.3), 0 darunter | OK |
+| T7c keine waagerechte Kette | Strecke Biegung -> Ende in Zielrichtung >= 0,75 x Keyframe | min 0.389 H (Keyframe 0.382 H); 0 Takte darunter [] | OK |
+| T7d keine Rueckfaltung | alle Gelenkwinkel <= 90 Grad, ganzer Lauf | max 72.7 Grad; 0 von 144 Takten > 90 | OK |
+| Boden Mesh | kein Glied-Mesh und keine Dornspitze unter dem Boden, ganzer Lauf | tiefster Mesh-Punkt -13 E. (h34, Dornspitze -64 E.); 0 Takte darunter (Radien je Gelenk [315, 315, 281, 266, 166, 98, 82, 82] E., Dorn 315 E. (Mesh 22)) | OK |
+| F0 Lichtgegenprobe h118 | Rumpf b2 gegen FRAMEDUMP dE00 <= 3 | b2 22.8/6.2/2.4 / Spiel 22.9/6.2/2.4 dE00 0.1 (11192 px) | OK |
+| F0 Lichtgegenprobe h135 | Rumpf b2 gegen FRAMEDUMP dE00 <= 3 | b2 21.3/6.2/2.5 / Spiel 21.2/6.0/2.5 dE00 0.2 (12464 px) | OK |
+| F F6 | 16.6/17.3/6.2 dE00 <= 5, |dL| <= 4 | 22.1/9.8/4.0 dE00 6.9 dL +5.5 (4714 px) | ROT |
+| F F7 | 33.3/5.5/2.7 dE00 <= 5, |dL| <= 4 | 31.2/6.3/4.1 dE00 2.2 dL -2.1 (1031 px) | OK |
+| F F8 | 16.4/8.3/1.5 dE00 <= 5, |dL| <= 4 | 19.0/6.5/1.0 dE00 2.6 dL +2.6 (1991 px) | OK |
+| F F9 | 12.7/-0.9/-1.5 dE00 <= 5, |dL| <= 4 | 14.2/0.1/-4.0 dE00 2.8 dL +1.5 (4270 px) | OK |
+| F F10 | 11.2/14.0/2.5 dE00 <= 5, |dL| <= 4 | 13.6/11.1/1.7 dE00 2.8 dL +2.4 (327 px) (Id 12 (Klaue (B)-rechts); Id 15: nan/nan/nan (0 px)) | OK |
+| F F14 | 60.0/11.0/1.2 dE00 <= 5, |dL| <= 4 | 57.6/11.0/1.8 dE00 2.2 dL -2.4 (885 px) | OK |
+| F F19 | 18.4/0.5/-3.5 dE00 <= 5, |dL| <= 4 | 18.2/-0.1/-5.1 dE00 1.6 dL -0.2 (1488 px) | OK |
+| F Mittel | Mittel dE00 <= 4 | 3.02 | OK |
+| F F6 Fensterlage | 16.6/17.3/6.2 dE00 <= 5, |dL| <= 4 (rote Id-8-Bildpunkte im Fenster 372-424 x 197-232) | 19.5/11.3/4.8 dE00 4.9 dL +2.9 (1737 px) | OK |
+| F F7 Messblatt-Wortlaut (Id ganz) | 33.3/5.5/2.7 dE00 <= 5, |dL| <= 4 | 22.8/5.3/2.9 dE00 8.0 dL -10.5 (2181 px) (Runde 3: Mesh 10 hat eine eigene CLUT-Zeile 489 (O1). Das Fenster F7 (x 307-347, y 167-212) liegt nur auf der hellen Schulterkuppe; der ganze Oberarm (B)-links ist im Original 17,3 L* (Sicht-Pruefung V4 r2 1.4, Box 300-345 x 186-250) - Widerspruch im Messblatt-Wortlaut, Offen) | ROT |
+| F F8 Messblatt-Wortlaut (Id ganz) | 16.4/8.3/1.5 dE00 <= 5, |dL| <= 4 | 20.5/5.7/0.9 dE00 3.9 dL +4.1 (3293 px) (Runde 3: Mesh 10 mit eigener CLUT-Zeile 489 (O1), Verteilung des F8-Fensters fuer Id 10 ganz (r2_koerper_farben oberarm_br)) | ROT |
+| FS Oberarm (B)-links unten | 11.0/2.0/0.9, Rotanteil 0.00; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15 | 14.8/4.3/1.8 dE00 3.9 dL +3.8; Rotanteil 0.11 (1150 px) (Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(300, 213, 345, 250)]) | OK |
+| FS Oberarm (B)-rechts unten | 20.9/3.2/-0.4, Rotanteil 0.02; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15 | 22.7/4.5/0.8 dE00 2.3 dL +1.8; Rotanteil 0.02 (1302 px) (Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(455, 228, 500, 262)]) | OK |
+| FS Rumpf + Schultern | 17.3/4.8/1.9, Rotanteil 0.31; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15 | 20.2/6.0/2.5 dE00 2.5 dL +2.9; Rotanteil 0.37 (13358 px) (Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(352, 196, 448, 292), (318, 160, 360, 190), (425, 165, 470, 195)]) | OK |
+| FS Unterarm (B)-rechts = (W)-links Id 11 | 29.3/0.7/-1.6, Rotanteil 0.00; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15 | 27.4/1.7/-1.5 dE00 2.0 dL -1.9; Rotanteil 0.00 (1486 px) (Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(468, 268, 500, 330)]) | OK |
+| FS Unterschenkel | 15.1/1.7/-1.5, Rotanteil 0.03; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15 | 18.4/3.9/0.3 dE00 4.0 dL +3.3; Rotanteil 0.18 (1901 px) (Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(356, 352, 392, 430)]) | ROT |
+| FS Unterarm (B)-links = (W)-rechts Id 14 | 9.0/-3.8/3.5, Rotanteil 0.00; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15; Anteil L* > 30 <= Original + 0,05 | 11.4/-2.0/2.3 dE00 2.9 dL +2.3; Rotanteil 0.00 (2041 px); Anteil L* > 30 0.000 (Original 0.000, <= +0,05); L* p90 15.5 (Original 11.2) (Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen [(298, 262, 325, 340)]) | OK |
+| F0 Gueltigkeit Farbvergleich | Wand links 64,7/0,3/-2,1 dE00 <= 2 | 65.2/0.2/-2.5 dE00 0.52 | OK |
+| TQ Schwanz Querprofil | x 310/320/330/340: Stufe auf 3 px <= 9.6 L*, Plateau-Anteil <= 0.31 (Original-Maximum, 3 Masken) | x 310 Stufe 8.2 Plateau 0.53; x 320 Stufe 8.2 Plateau 0.41; x 330 Stufe 8.7 Plateau 0.46; x 340 Stufe 8.7 Plateau 0.42 (Sicht-Pruefung V4 r3 1.3: V4 r3 16,6-19,9 L*, 0,33-0,43) | ROT |
+| TK Schwanz Oberkontur | x 284-332: RMS zur Geraden >= 3.02 px (Original 3.87/4.71/4.69 minus Spanne); Oberkante x 276-292 je Spalte <= 0,03 H vom Original 251/250/243/236/234 | RMS 1.77 px; Oberkante 246/242/238/235/232 (max 0.030 H) (Sicht-Pruefung V4 r3 1.3: V4 r3 0,6 px, Oberkante 237/235/232/230/228; Toleranz Oberkante = TA (0,03 H)) | ROT |
+| FO Oberkoerper vorn Rot-Verteilung (Buehne) | Rot Mitte/aussen >= 2,75 (Original 2.75); Schultern a*>12 <= 0,05 (Original 0.031); Anteil a*>18 <= 0.041 (Original) | Mitte/aussen 2.43 (Drittel 0.27/0.59/0.21); Schultern 0.018; a*>18 0.014 (Sicht-Pruefung V4 r3 1.5 / Riegelvorschlag Abschnitt 3; V4 r3 1,21 / 0,089) | ROT |
+| KS Kopf-Struktur Buehne 320 x 240 | Innenflaeche Gradient 29.1-40.4 (Original); Naeherung des Spielbilds | Gradient 32.6; glatt 0.054 (Buehne Pose 135 ueber 320 x 240 (INTER_AREA wie c6.port); V4 r3 28,0) | OK |
+| KS Kopf-Struktur Spielbild h118 | Innenflaeche Gradient 29.1-40.4 (Original, Box +-3 px); glatte Pixel <= 0.098 (Original max) | Gradient 30.9; glatt 0.071 (Sicht-Pruefung V4 r3 1.1: V4 r3 h135 27,2 / 0,197, h118 26,9 / 0,126) | OK |
+| FO Oberkoerper Spielbild h118 | Rot Mitte/aussen >= 2,75 (Video 2.91); Schultern a*>12 <= 0,05 (Video 0.049); Anteil a*>18 <= Video 0.019 | Mitte/aussen 1.55 (Drittel 0.35/0.48/0.27); Schultern 0.082; a*>18 0.016; L* p10 10.3 (Video 7.5) (Sicht-Pruefung V4 r3 1.5 (Polygone von Hand, oberkoerper_spiel.py); V4 r3 h118 1,18 / 0,13) | ROT |
+| KS Kopf-Struktur Spielbild h135 | Innenflaeche Gradient 29.1-40.4 (Original, Box +-3 px); glatte Pixel <= 0.098 (Original max) | Gradient 36.8; glatt 0.134 (Sicht-Pruefung V4 r3 1.1: V4 r3 h135 27,2 / 0,197, h118 26,9 / 0,126) | ROT |
+| FO Oberkoerper Spielbild h135 | Rot Mitte/aussen >= 2,75 (Video 2.75); Schultern a*>12 <= 0,05 (Video 0.031); Anteil a*>18 <= Video 0.041 | Mitte/aussen 1.46 (Drittel 0.30/0.43/0.28); Schultern 0.073; a*>18 0.013; L* p10 10.6 (Video 7.5) (Sicht-Pruefung V4 r3 1.5 (Polygone von Hand, oberkoerper_spiel.py); V4 r3 h118 1,18 / 0,13) | ROT |
