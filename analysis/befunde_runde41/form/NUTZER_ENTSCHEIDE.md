@@ -194,3 +194,27 @@ Berichtigt 2026-11-06 nach FORMBLATT_V2.md (Pruefer des Workflows "birkin-refere
 - **E27 Maul:** Das Tripo-Maul ist falsch (Nutzer). Massstab fuer Kopf und Maul ist allein `Vorderseite_Beschreibung.png`: Kopf frontal, Augen oben, Schnauze nach UNTEN (Spitze (245/371) 1,9 Grad neben der Senkrechten unter der Augenmitte); das Maul oeffnet sich vom Maulwinkel (329/326) nach links unten im Bild = **nach rechts aus Sicht des Wesens, zur Frau hin** (die Frau steht links im Bild = rechts vom Wesen). Unterkiefer = helles Band mit 5-6 Zahnflecken, Achse 38,5 Grad, Ende (279/400); Maulspalt 23-27 Grad. K4 hat die Maulrichtung richtig, ist aber ein 3/4-Profil (Augen 16,8 px auseinander, verdeckt), rund halb so breit wie gemessen und sitzt an der falschen Stelle (Augenmitte 94 px vom J-Halsende, erreichbar ~40 px). Die Tripo-Ansichten liefern nur Koerperbau/Silhouette.
 - **E28 Zweibeiner (Sichel-Form, Spur SF):** Nutzer zur KI-Hochrechnung von Video 4 (`..._slp.mp4`, Freisteller `birkin01-24.png`, Tripo `image_1.png`/`image_2 (2).png`/`image_3 (3).png`): "Man sieht klar Kopf und den langen dicken Schwanz der bis in den oberen Ruecken reicht. So moechte ich das haben dem Original entsprechend." Lesung (SF_LESER_A/B): Schwanzwurzel oben am Ruecken (Buckel), Verlauf erst waagerecht nach hinten, dann Haken nach unten, Spitze frei in Knie-/Oberschenkelhoehe, Wurzel 0,11-0,17 H dick; Port-Wurzel sitzt 0,2-0,3 H zu tief und halb so dick. Original bleibt Massstab, die KI-Bilder sind Lesehilfe.
 - Lese-Ergebnis: `FORMBLATT_V2.md` (Riesenform, Fragen F1-F9, Aenderungen AE1-AE12, Regeln R1-R10) und `r41_sichel/analysis/befunde_runde41/SF_FORMBLATT_V2.md` (Sichel).
+
+## E30 (2026-11-07 ~22:20): Riesenform K5c V3 Runde 5 wird ohne Farbaenderung das Spiel-Asset fuer v0.8.30
+
+Vorlage: `C:/workspace/git/reAi_v2_entscheidung_2026-11-06/7_riesenform_runde5_krallen_farben/LIESMICH.txt` (Frage 1 Zweifarbigkeit unter dem
+Bahnsteiglicht A/B/C, Frage 2 Leuchtstelle in Bild 1: Becken wie jetzt oder nur das Gesicht).
+
+Wortlaut Nutzer: "Nein, wie lassen es so wie es jetzt ist. Sieht doch gut aus. Auch die Leuchtstelle sieht gut aus."
+
+Lesung:
+- Frage 1 -> **A**: so uebernehmen. Keine gemeinsame Hautfarbe (B), kein Verbleib von K4 (C).
+- Frage 2 -> **Leuchtstelle bleibt wie jetzt**: Becken in der Bild-1-Lage (F1-Stelle, Knochen 0) und Gesicht am Maul (Bild 2).
+
+Folgen:
+- Die Variante `varianten/K5/farbe/K5c_farbe_v3/FORM.EMD` (sha256 090e0b80e214ae455788a383da6dd8f1b44ec6b26f771b281780a24953c5cfb0) und
+  `FORM.TIM` (sha256 512828067ea7f0480763110b4820ae311bc5cd7423796d58274b07ef776e7e6d) = Runde 5 ist OHNE jede Farbaenderung die Basis des
+  Spiel-Assets `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM` fuer v0.8.30. Keine weitere Gestaltungsrunde.
+- Technik ohne Rueckfrage (in der Vorlage angekuendigt): 17 CLUT-Zeilen -> 16, weil der PC-Port je CLUT-Zeile eine Texturkopie untereinander
+  legt (`re15_port/platform/pc/src/render_pc.c` re15_render_pc_upload_tim_slot: tex_h = tim->height * n_cluts, keine Maximalpruefung;
+  SDL_CreateTexture liefert ueber dem Renderer-Maximum NULL, GLES2 oft 4096) - 17 x 256 = 4352 > 4096. Gemessen: Zeile 2 wird von keiner
+  Flaeche gelesen; sie entfaellt, das Bild bleibt gleich (Riegel `varianten/K5/generator/riegel_einbau.py`).
+- Clips: das Spiel-Asset braucht die 28 Clips der Stufe 3 (Tick-Clips 0/3/4/5/8/9/10/26/27, `engine/src/birkin_bahnsteig.c`,
+  Test `test_birkin_bahnsteig.c` 28 Clips). Die Kette `stufe3/gen/s3_clips.py` baut sie auf der K5c-Basis (`stufe3/basis_k5c`), wie bei K4
+  auf `stufe3/basis_n2`. K4 bleibt als Variante unter `varianten/K4/`.
+- Dossier: `varianten/K5/FARBE.md` Abschnitt "Einbau v0.8.30 (Nutzerentscheid E30)".
