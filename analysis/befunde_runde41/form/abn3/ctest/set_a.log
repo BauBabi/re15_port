@@ -1,0 +1,40 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build
+      Start 1385: integration_r41_g5_westen
+      Start 1386: integration_r41_g5_tod
+      Start 1384: integration_r41_birkin_pistole
+      Start 1152: integration_r41_form_wagenweg_zurueck_leon
+ 1/17 Test #1152: integration_r41_form_wagenweg_zurueck_leon ...   Passed  112.74 sec
+      Start 1150: integration_r41_form_wagenweg
+ 2/17 Test #1150: integration_r41_form_wagenweg ................   Passed  113.03 sec
+      Start 1153: integration_r41_form_wagenweg_zurueck_elza
+ 3/17 Test #1384: integration_r41_birkin_pistole ...............   Passed  244.60 sec
+      Start 1151: integration_r41_form_wagenweg_elza
+ 4/17 Test #1386: integration_r41_g5_tod .......................   Passed  264.81 sec
+      Start  560: integration_r35_werfer_form
+ 5/17 Test #1385: integration_r41_g5_westen ....................   Passed  285.92 sec
+      Start  410: integration_r34_plattform_takt
+ 6/17 Test  #560: integration_r35_werfer_form ..................   Passed   26.97 sec
+      Start  411: integration_r34_plattform_esp_eintritt
+ 7/17 Test  #411: integration_r34_plattform_esp_eintritt .......   Passed    9.58 sec
+      Start 1378: unit_birkin_bahnsteig
+ 8/17 Test #1378: unit_birkin_bahnsteig ........................   Passed    1.04 sec
+      Start  980: unit_r39_funk10f1_form
+ 9/17 Test  #980: unit_r39_funk10f1_form .......................   Passed    0.02 sec
+      Start  409: unit_r34_plattform_ton
+10/17 Test  #409: unit_r34_plattform_ton .......................   Passed    0.06 sec
+      Start 1377: unit_birkin_formen
+11/17 Test #1377: unit_birkin_formen ...........................   Passed    0.02 sec
+      Start 1149: unit_r41_form_emd
+12/17 Test #1149: unit_r41_form_emd ............................   Passed    0.02 sec
+      Start  408: unit_r34_plattform
+13/17 Test  #408: unit_r34_plattform ...........................   Passed    0.02 sec
+      Start  508: unit_r35_fenster_satzform
+14/17 Test  #508: unit_r35_fenster_satzform ....................   Passed    0.02 sec
+15/17 Test  #410: integration_r34_plattform_takt ...............   Passed   23.36 sec
+16/17 Test #1153: integration_r41_form_wagenweg_zurueck_elza ...   Passed  111.85 sec
+17/17 Test #1151: integration_r41_form_wagenweg_elza ...........   Passed  110.02 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Total Test time (real) = 354.67 sec
+exit=0

@@ -1,0 +1,32 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build
+      Start 1381: unit_r41_birkin_wand_griff
+      Start 1380: unit_r41_birkin_wand_g5
+      Start 1378: unit_birkin_bahnsteig
+      Start  274: unit_g5_boss
+      Start 1383: unit_birkin_szenen
+      Start 1382: unit_n2_griff_start
+ 1/13 Test #1382: unit_n2_griff_start ..............   Passed    0.13 sec
+      Start   44: unit_birkin_ai
+ 2/13 Test   #44: unit_birkin_ai ...................   Passed    0.02 sec
+      Start  272: unit_g5_tentakel
+ 3/13 Test #1383: unit_birkin_szenen ...............   Passed    0.22 sec
+ 4/13 Test  #272: unit_g5_tentakel .................   Passed    0.07 sec
+      Start  273: unit_g5_morph
+      Start 1379: unit_r41_birkin_wand_rein
+ 5/13 Test #1379: unit_r41_birkin_wand_rein ........   Passed    0.02 sec
+      Start 1377: unit_birkin_formen
+ 6/13 Test  #273: unit_g5_morph ....................   Passed    0.06 sec
+      Start 1149: unit_r41_form_emd
+ 7/13 Test #1149: unit_r41_form_emd ................   Passed    0.03 sec
+      Start 1388: unit_birkin_opfer
+ 8/13 Test #1377: unit_birkin_formen ...............   Passed    0.07 sec
+ 9/13 Test #1388: unit_birkin_opfer ................   Passed    0.03 sec
+10/13 Test  #274: unit_g5_boss .....................   Passed    0.53 sec
+11/13 Test #1378: unit_birkin_bahnsteig ............   Passed    1.31 sec
+12/13 Test #1380: unit_r41_birkin_wand_g5 ..........   Passed   47.94 sec
+13/13 Test #1381: unit_r41_birkin_wand_griff .......   Passed  166.13 sec
+
+100% tests passed, 0 tests failed out of 13
+
+Total Test time (real) = 166.20 sec
+ctest rc=0

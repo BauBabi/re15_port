@@ -1,0 +1,48 @@
+# Abnahme 3: RID/RVD ROOM5090/5091 selbst gelesen (werkzeug/rdt_kam.py; Kopf +0x24 RID, +0x28 RVD, RE15_KNOWLEDGE.md 1.1)
+# Datei-Byte-Offsets, Eintraege roh als Hex. Nur Wagen C (Cut 11-15).
+2580e8a414e569feabb570b137e246dafa17adab011e610455ebcfdd62aa3899 *re15_port/shared_assets/PSX/STAGE5/ROOM5090.RDT
+54705beabfb0c03a2984546f819db7381c08e6118b785b3dafea250a46afca3d *re15_port/shared_assets/PSX/STAGE5/ROOM5091.RDT
+ROOM5090.RDT  Laenge 187708  nCut(+1)=16  RID(+0x24)=0x60  RVD(+0x28)=0x260
+  Cut 11 @0x1c0  00 00 3c 68 ca 1d 00 00 48 f3 ff ff f0 9c ff ff 20 fa ff ff 26 fc ff ff 2e aa ff ff  flag=0 fov=26684 H=fov>>7=208  Auge=(7626,-3256,-25360) Ziel=(-1504,-986,-21970)
+  Cut 12 @0x1e0  00 00 3c 68 5e 48 00 00 a0 f5 ff ff ac 9f ff ff d8 05 00 00 ea 05 00 00 6e b0 ff ff  flag=0 fov=26684 H=fov>>7=208  Auge=(18526,-2656,-24660) Ziel=(1496,1514,-20370)
+  Cut 13 @0x200  00 00 b7 73 2a 2b 00 00 da f3 ff ff 14 9f ff ff 66 3e 00 00 9a f8 ff ff f6 a4 ff ff  flag=0 fov=29623 H=fov>>7=231  Auge=(11050,-3110,-24812) Ziel=(15974,-1894,-23306)
+  Cut 14 @0x220  00 00 41 5e 3e 5d 00 00 e6 e2 ff ff 36 8e ff ff b2 57 00 00 5e fa ff ff c4 a4 ff ff  flag=0 fov=24129 H=fov>>7=188  Auge=(23870,-7450,-29130) Ziel=(22450,-1442,-23356)
+  Cut 15 @0x240  01 00 3c 68 2e 00 00 00 2c fb ff ff 12 a1 ff ff 46 14 00 00 3a f7 ff ff 86 b1 ff ff  flag=1 fov=26684 H=fov>>7=208  Auge=(46,-1236,-24302) Ziel=(5190,-2246,-20090)
+  RVD @0x47c  01 ff 0b 00 20 ea fc 8b 9d ea b1 bd c4 6d 34 bd fc 6c fc 8b  11-> 0  x (-5600, -5475, 28100, 27900) z (-29700, -16975, -17100, -29700)
+  RVD @0x490  01 ff 0b 0c f0 0a 04 93 f0 0a c8 b5 68 10 c8 b5 68 10 3c 92  11->12  x (2800, 2800, 4200, 4200) z (-27900, -19000, -19000, -28100)
+  RVD @0x4a4  01 ff 0c 00 20 ea fc 8b 9d ea b1 bd c4 6d 34 bd fc 6c fc 8b  12-> 0  x (-5600, -5475, 28100, 27900) z (-29700, -16975, -17100, -29700)
+  RVD @0x4b8  01 ff 0c 0b b4 04 3c 92 b3 04 64 b5 8f 0a 64 b5 8f 0a 3c 92  12->11  x (1204, 1203, 2703, 2703) z (-28100, -19100, -19100, -28100)
+  RVD @0x4cc  01 ff 0c 0d b0 36 3d 92 14 37 90 b6 28 3c 90 b6 28 3c 3c 92  12->13  x (14000, 14100, 15400, 15400) z (-28099, -18800, -18800, -28100)
+  RVD @0x4e0  01 ff 0d 00 20 ea fc 8b 9d ea b1 bd c4 6d 34 bd fc 6c fc 8b  13-> 0  x (-5600, -5475, 28100, 27900) z (-29700, -16975, -17100, -29700)
+  RVD @0x4f4  01 ff 0d 0c d9 2f f1 91 23 30 f4 b6 31 36 f4 b6 fe 35 bf 91  13->12  x (12249, 12323, 13873, 13822) z (-28175, -18700, -18700, -28225)
+  RVD @0x508  01 ff 0d 0e 1a 4f 1d 93 33 4f db b6 f6 54 f4 b6 f6 54 1d 93  13->14  x (20250, 20275, 21750, 21750) z (-27875, -18725, -18700, -27875)
+  RVD @0x51c  01 ff 0e 00 68 42 ca 8b 68 42 2e be 92 6d 2e be 92 6d ca 8b  14-> 0  x (17000, 17000, 28050, 28050) z (-29750, -16850, -16850, -29750)
+  RVD @0x530  01 ff 0e 0d 79 48 d8 91 46 48 2c b6 9f 4e 2c b6 1c 4f 3c 92  14->13  x (18553, 18502, 20127, 20252) z (-28200, -18900, -18900, -28100)
+  RVD @0x544  01 ff 0f 00 20 ea fc 8b 9d ea b1 bd c4 6d 34 bd fc 6c fc 8b  15-> 0  x (-5600, -5475, 28100, 27900) z (-29700, -16975, -17100, -29700)
+  RVD-Ende @0x558
+ROOM5091.RDT  Laenge 191696  nCut(+1)=16  RID(+0x24)=0x60  RVD(+0x28)=0x260
+  Cut 11 @0x1c0  00 00 3c 68 ca 1d 00 00 48 f3 ff ff f0 9c ff ff 20 fa ff ff 26 fc ff ff 2e aa ff ff  flag=0 fov=26684 H=fov>>7=208  Auge=(7626,-3256,-25360) Ziel=(-1504,-986,-21970)
+  Cut 12 @0x1e0  00 00 3c 68 5e 48 00 00 a0 f5 ff ff ac 9f ff ff d8 05 00 00 ea 05 00 00 6e b0 ff ff  flag=0 fov=26684 H=fov>>7=208  Auge=(18526,-2656,-24660) Ziel=(1496,1514,-20370)
+  Cut 13 @0x200  00 00 b7 73 2a 2b 00 00 da f3 ff ff 14 9f ff ff 66 3e 00 00 9a f8 ff ff f6 a4 ff ff  flag=0 fov=29623 H=fov>>7=231  Auge=(11050,-3110,-24812) Ziel=(15974,-1894,-23306)
+  Cut 14 @0x220  00 00 41 5e 3e 5d 00 00 e6 e2 ff ff 36 8e ff ff b2 57 00 00 5e fa ff ff c4 a4 ff ff  flag=0 fov=24129 H=fov>>7=188  Auge=(23870,-7450,-29130) Ziel=(22450,-1442,-23356)
+  Cut 15 @0x240  01 00 3c 68 2e 00 00 00 2c fb ff ff 12 a1 ff ff 46 14 00 00 3a f7 ff ff 86 b1 ff ff  flag=1 fov=26684 H=fov>>7=208  Auge=(46,-1236,-24302) Ziel=(5190,-2246,-20090)
+  RVD @0x47c  01 ff 0b 00 20 ea fc 8b 9d ea b1 bd c4 6d 34 bd fc 6c fc 8b  11-> 0  x (-5600, -5475, 28100, 27900) z (-29700, -16975, -17100, -29700)
+  RVD @0x490  01 ff 0b 0c f0 0a 04 93 f0 0a c8 b5 68 10 c8 b5 68 10 3c 92  11->12  x (2800, 2800, 4200, 4200) z (-27900, -19000, -19000, -28100)
+  RVD @0x4a4  01 ff 0c 00 20 ea fc 8b 9d ea b1 bd c4 6d 34 bd fc 6c fc 8b  12-> 0  x (-5600, -5475, 28100, 27900) z (-29700, -16975, -17100, -29700)
+  RVD @0x4b8  01 ff 0c 0b b4 04 3c 92 b3 04 64 b5 8f 0a 64 b5 8f 0a 3c 92  12->11  x (1204, 1203, 2703, 2703) z (-28100, -19100, -19100, -28100)
+  RVD @0x4cc  01 ff 0c 0d b0 36 3d 92 14 37 90 b6 28 3c 90 b6 28 3c 3c 92  12->13  x (14000, 14100, 15400, 15400) z (-28099, -18800, -18800, -28100)
+  RVD @0x4e0  01 ff 0d 00 20 ea fc 8b 9d ea b1 bd c4 6d 34 bd fc 6c fc 8b  13-> 0  x (-5600, -5475, 28100, 27900) z (-29700, -16975, -17100, -29700)
+  RVD @0x4f4  01 ff 0d 0c d9 2f f1 91 23 30 f4 b6 31 36 f4 b6 fe 35 bf 91  13->12  x (12249, 12323, 13873, 13822) z (-28175, -18700, -18700, -28225)
+  RVD @0x508  01 ff 0d 0e 1a 4f 1d 93 33 4f db b6 f6 54 f4 b6 f6 54 1d 93  13->14  x (20250, 20275, 21750, 21750) z (-27875, -18725, -18700, -27875)
+  RVD @0x51c  01 ff 0e 00 68 42 ca 8b 68 42 2e be 92 6d 2e be 92 6d ca 8b  14-> 0  x (17000, 17000, 28050, 28050) z (-29750, -16850, -16850, -29750)
+  RVD @0x530  01 ff 0e 0d 79 48 d8 91 46 48 2c b6 9f 4e 2c b6 1c 4f 3c 92  14->13  x (18553, 18502, 20127, 20252) z (-28200, -18900, -18900, -28100)
+  RVD @0x544  01 ff 0f 00 20 ea fc 8b 9d ea b1 bd c4 6d 34 bd fc 6c fc 8b  15-> 0  x (-5600, -5475, 28100, 27900) z (-29700, -16975, -17100, -29700)
+  RVD-Ende @0x558
+
+# SCD-Bytes ROOM5090 (Datei-Offset): Pos_set 0x32 / Cut_chg 0x29
+  @0x12fe: 32 00 b0 04 00 00 ca a4  Pos_set x=0x04b0 (1200) z=0xa4ca (-23350)
+  @0x130e: 29 0f 54 00 02 00 00 00  Cut_chg 0x0F (Cut 15, Kampfstart)
+  @0x1342: 29 0c 22 01 1b 00 22 02  Cut_chg 0x0C (Cut 12)
+
+# Stabile Zonenabbildung re15_bf_schnitt_aus_lage (birkin_formen.c:709): x < 2750 Cut 11 (zwischen @0x4b8 max 2703 und @0x490 min 2800), < 14000 Cut 12 (@0x4cc min 14000), < 20250 Cut 13 (@0x508 min 20250), sonst Cut 14.
+# Hysterese-Baender (Zonenzustand haengt vom Weg ab): x 2703..2800, 13873..14000 (@0x4f4 max 13873), 20250..20252 (@0x530 max 20252).

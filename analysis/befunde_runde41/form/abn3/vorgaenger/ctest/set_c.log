@@ -1,0 +1,134 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form_nb4/re15_port/build
+      Start  127: unit_marvin_render_pose
+      Start  174: unit_re2_gore_render
+      Start  212: unit_11f0_cut_after_puzzle
+      Start  226: unit_cut_old_displayed
+ 1/64 Test  #127: unit_marvin_render_pose ..................   Passed    0.04 sec
+      Start  260: unit_pri_inventar_riegel
+ 2/64 Test  #174: unit_re2_gore_render .....................   Passed    0.04 sec
+      Start  267: unit_pri_kopfschnitt
+ 3/64 Test  #226: unit_cut_old_displayed ...................   Passed    0.03 sec
+      Start  268: unit_pri_eingemessen
+ 4/64 Test  #260: unit_pri_inventar_riegel .................   Passed    0.03 sec
+      Start  301: unit_pri_hashes
+ 5/64 Test  #268: unit_pri_eingemessen .....................   Passed    0.02 sec
+      Start  302: unit_pri_silhouette
+ 6/64 Test  #212: unit_11f0_cut_after_puzzle ...............   Passed    0.09 sec
+      Start  340: integration_r30_cut_blitz
+ 7/64 Test  #301: unit_pri_hashes ..........................   Passed    0.13 sec
+      Start  426: unit_r34n_b_cut_old
+ 8/64 Test  #426: unit_r34n_b_cut_old ......................   Passed    0.05 sec
+      Start  549: unit_r35_raeume_hundeschatten
+ 9/64 Test  #549: unit_r35_raeume_hundeschatten ............   Passed    0.03 sec
+      Start  625: unit_r36_pri_absperrung
+10/64 Test  #625: unit_r36_pri_absperrung ..................   Passed    0.02 sec
+      Start  626: unit_r36_pri_schatten
+11/64 Test  #626: unit_r36_pri_schatten ....................   Passed    0.02 sec
+      Start  627: integration_r36_pri_schatten
+12/64 Test  #302: unit_pri_silhouette ......................   Passed    0.41 sec
+      Start  691: unit_r37_codepanel_kamera
+13/64 Test  #691: unit_r37_codepanel_kamera ................   Passed    1.05 sec
+      Start  742: unit_r37_masken36_zensus
+14/64 Test  #742: unit_r37_masken36_zensus .................   Passed    2.00 sec
+      Start  743: unit_r37_masken36_ausschluss
+15/64 Test  #267: unit_pri_kopfschnitt .....................   Passed   15.11 sec
+      Start  744: unit_r37_masken36_verdeckung
+16/64 Test  #744: unit_r37_masken36_verdeckung .............   Passed    0.06 sec
+      Start  745: integration_r37_masken36_stage3
+17/64 Test  #627: integration_r36_pri_schatten .............   Passed   28.96 sec
+      Start  746: integration_r37_masken36_stage4
+18/64 Test  #340: integration_r30_cut_blitz ................   Passed   71.45 sec
+      Start  747: integration_r37_masken36_stage5
+19/64 Test  #746: integration_r37_masken36_stage4 ..........   Passed  130.74 sec
+      Start  748: integration_r37_masken36_stage6
+20/64 Test  #747: integration_r37_masken36_stage5 ..........   Passed  131.17 sec
+      Start  749: integration_r37_masken36_nb2
+21/64 Test  #743: unit_r37_masken36_ausschluss .............   Passed  246.98 sec
+      Start  750: unit_r37_pri1100_leck
+22/64 Test  #750: unit_r37_pri1100_leck ....................   Passed    0.02 sec
+      Start  751: unit_r37_pri1100_marke
+23/64 Test  #751: unit_r37_pri1100_marke ...................   Passed    0.01 sec
+      Start  752: unit_r37_pri1100_zwilling
+24/64 Test  #752: unit_r37_pri1100_zwilling ................   Passed    0.31 sec
+      Start  753: unit_r37_pri1100_elza
+25/64 Test  #753: unit_r37_pri1100_elza ....................   Passed    0.01 sec
+      Start  754: integration_r37_pri1100_marke
+26/64 Test  #748: integration_r37_masken36_stage6 ..........   Passed  130.51 sec
+      Start  755: integration_r37_pri1100_elza
+27/64 Test  #754: integration_r37_pri1100_marke ............   Passed   70.21 sec
+      Start  858: unit_r38_montage_kameras
+28/64 Test  #858: unit_r38_montage_kameras .................   Passed    0.02 sec
+      Start  996: unit_r39_gegner_schatten
+29/64 Test  #996: unit_r39_gegner_schatten .................   Passed    0.02 sec
+      Start 1005: integration_r39_gegner_schatten
+30/64 Test  #745: integration_r37_masken36_stage3 ..........   Passed  311.14 sec
+      Start 1100: unit_r39_titelversion_maske
+31/64 Test #1100: unit_r39_titelversion_maske ..............   Passed    0.01 sec
+      Start 1125: unit_r41_alligator2_kamera
+32/64 Test #1125: unit_r41_alligator2_kamera ...............   Passed    0.36 sec
+      Start 1126: unit_r41_alligator2_kamera_elza
+33/64 Test #1126: unit_r41_alligator2_kamera_elza ..........   Passed    0.34 sec
+      Start 1136: integration_r41_alligator2_kamera
+34/64 Test #1005: integration_r39_gegner_schatten ..........   Passed   60.40 sec
+      Start 1137: integration_r41_alligator2_kamera_elza
+35/64 Test #1136: integration_r41_alligator2_kamera ........   Passed   61.47 sec
+      Start 1241: unit_r41_kleinkram_b_takt_kamerahalt
+36/64 Test #1241: unit_r41_kleinkram_b_takt_kamerahalt .....   Passed    0.02 sec
+      Start 1257: unit_r41_masken36_loecher
+37/64 Test  #755: integration_r37_pri1100_elza .............   Passed   98.41 sec
+      Start 1258: unit_r41_masken36_kurbel
+38/64 Test #1258: unit_r41_masken36_kurbel .................   Passed    0.02 sec
+      Start 1259: integration_r41_masken36_stage2
+39/64 Test #1257: unit_r41_masken36_loecher ................   Passed    1.07 sec
+      Start 1260: integration_r41_masken36_zelle
+40/64 Test #1137: integration_r41_alligator2_kamera_elza ...   Passed   81.52 sec
+      Start 1261: unit_r41_masken36_zellen3d
+41/64 Test  #749: integration_r37_masken36_nb2 .............   Passed  295.60 sec
+      Start 1262: integration_r41_masken36_zellen3d
+42/64 Test #1261: unit_r41_masken36_zellen3d ...............   Passed   79.99 sec
+      Start 1263: unit_r41_masken36_fern
+43/64 Test #1263: unit_r41_masken36_fern ...................   Passed   83.54 sec
+      Start 1264: integration_r41_masken36_fern
+44/64 Test #1260: integration_r41_masken36_zelle ...........   Passed  419.16 sec
+      Start 1265: unit_r41_masken36_stirn
+45/64 Test #1265: unit_r41_masken36_stirn ..................   Passed    0.01 sec
+      Start 1266: integration_r41_masken36_laufpruefung
+46/64 Test #1266: integration_r41_masken36_laufpruefung ....   Passed   24.89 sec
+      Start 1267: unit_r41_masken36_platziert
+47/64 Test #1267: unit_r41_masken36_platziert ..............   Passed    1.26 sec
+      Start 1268: unit_r41_masken36_teile
+48/64 Test #1268: unit_r41_masken36_teile ..................   Passed    0.13 sec
+      Start 1269: integration_r41_masken36_teile_a1
+49/64 Test #1259: integration_r41_masken36_stage2 ..........   Passed  473.87 sec
+      Start 1270: integration_r41_masken36_teile_a2
+50/64 Test #1262: integration_r41_masken36_zellen3d ........   Passed  393.12 sec
+      Start 1271: integration_r41_masken36_teile_b1
+51/64 Test #1264: integration_r41_masken36_fern ............   Passed  529.52 sec
+      Start 1272: integration_r41_masken36_teile_b2
+52/64 Test #1269: integration_r41_masken36_teile_a1 ........   Passed  456.05 sec
+      Start 1273: integration_r41_masken36_teile_c1
+53/64 Test #1270: integration_r41_masken36_teile_a2 ........   Passed  453.36 sec
+      Start 1274: integration_r41_masken36_teile_c2
+54/64 Test #1271: integration_r41_masken36_teile_b1 ........   Passed  526.91 sec
+      Start 1275: integration_r41_masken36_teile_c3
+55/64 Test #1272: integration_r41_masken36_teile_b2 ........   Passed  430.57 sec
+      Start 1276: integration_r41_masken36_teile_d1
+56/64 Test #1273: integration_r41_masken36_teile_c1 ........   Passed  453.31 sec
+      Start 1277: integration_r41_masken36_teile_d2
+57/64 Test #1274: integration_r41_masken36_teile_c2 ........   Passed  465.83 sec
+      Start 1278: unit_r41_masken36_ordner
+58/64 Test #1278: unit_r41_masken36_ordner .................   Passed    0.02 sec
+      Start 1299: unit_r41_re2gator_kamera
+59/64 Test #1299: unit_r41_re2gator_kamera .................   Passed    0.13 sec
+      Start 1320: integration_r41_restpunkte_masken
+60/64 Test #1275: integration_r41_masken36_teile_c3 ........   Passed  442.17 sec
+      Start 1413: integration_pri_masken
+61/64 Test #1413: integration_pri_masken ...................   Passed    0.08 sec
+62/64 Test #1276: integration_r41_masken36_teile_d1 ........   Passed  427.33 sec
+63/64 Test #1320: integration_r41_restpunkte_masken ........   Passed  390.92 sec
+64/64 Test #1277: integration_r41_masken36_teile_d2 ........   Passed  429.90 sec
+
+100% tests passed, 0 tests failed out of 64
+
+Total Test time (real) = 2174.44 sec
+ctest rc=0

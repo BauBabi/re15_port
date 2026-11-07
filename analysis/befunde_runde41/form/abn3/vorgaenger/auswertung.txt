@@ -1,0 +1,121 @@
+# Abnahme 3 Stufe 3: Auswertung aller eigenen Laeufe (exe b9b3d574 = Kopf b9ab865af; vorher-Laeufe exe f4deb1a3 = Abnahme-2-Stand 2e3713c74)
+
+## 1 Rueckstoss-Szene (werkzeug/auswert.py; fast schwarz = PIL-L < 24, Promille; Deckung aus RE15_SLOTDECKUNG, Form-Slot = groesste bedeckte Flaeche)
+w_leon: Szene F1486-F1849 (364 Bilder), Form-Slot 12, Spieler bei Szenenbeginn (14998,-24720), Form (17290,-23682)
+  Schnitte: Cut 13 F1486-F1544 (mo 13), Cut 12 F1545-F1678 (mo 13), Cut 11 F1679-F1748 (mo 13), Cut 11 F1749-F1849 (mo 12)
+  Taumeln: Form min sichtbar 1247 (F1678), Spieler max 5866 (F1512), Form max verdeckt 405 Promille (F1667); fast schwarz max 533 Promille (F1540), > 600: 0 von 364 Bildern
+w_elza: Szene F1486-F1849 (364 Bilder), Form-Slot 11, Spieler bei Szenenbeginn (15021,-24720), Form (17313,-23682)
+  Schnitte: Cut 13 F1486-F1544 (mo 13), Cut 12 F1545-F1678 (mo 13), Cut 11 F1679-F1748 (mo 13), Cut 11 F1749-F1849 (mo 12)
+  Taumeln: Form min sichtbar 1596 (F1678), Spieler max 4147 (F1528), Form max verdeckt 238 Promille (F1668); fast schwarz max 524 Promille (F1680), > 600: 0 von 364 Bildern
+v_leon: Szene F1544-F1941 (398 Bilder), Form-Slot 12, Spieler bei Szenenbeginn (17815,-24477), Form (20124,-23682)
+  Schnitte: Cut 13 F1544-F1661 (mo 13), Cut 15 F1662-F1767 (mo 13), Cut 11 F1768-F1840 (mo 13), Cut 11 F1841-F1941 (mo 12)
+  Taumeln: Form min sichtbar 2796 (F1670), Spieler max 2161 (F1572), Form max verdeckt 166 Promille (F1563); fast schwarz max 546 Promille (F1652), > 600: 0 von 398 Bildern
+v_elza: Szene F1544-F1943 (400 Bilder), Form-Slot 11, Spieler bei Szenenbeginn (17665,-24475), Form (20124,-23682)
+  Schnitte: Cut 13 F1544-F1662 (mo 13), Cut 15 F1663-F1768 (mo 13), Cut 11 F1769-F1842 (mo 13), Cut 11 F1843-F1943 (mo 12)
+  Taumeln: Form min sichtbar 2723 (F1670), Spieler max 1626 (F1589), Form max verdeckt 113 Promille (F1565); fast schwarz max 538 Promille (F1772), > 600: 0 von 400 Bildern
+x_leon: Szene F1761-F2145 (385 Bilder), Form-Slot 12, Spieler bei Szenenbeginn (25041,-24134), Form (20124,-23593)
+  Schnitte: Cut 13 F1761-F1848 (mo 13), Cut 12 F1849-F1975 (mo 13), Cut 11 F1976-F2044 (mo 13), Cut 11 F2045-F2145 (mo 12)
+  Taumeln: Form min sichtbar 1924 (F1974), Spieler max 92 (F1841), Form max verdeckt 83 Promille (F1942); fast schwarz max 785 Promille (F1761), > 600: 1 von 385 Bildern
+x_elza: Szene F1761-F2145 (385 Bilder), Form-Slot 11, Spieler bei Szenenbeginn (25041,-24133), Form (20124,-23593)
+  Schnitte: Cut 13 F1761-F1848 (mo 13), Cut 12 F1849-F1975 (mo 13), Cut 11 F1976-F2044 (mo 13), Cut 11 F2045-F2145 (mo 12)
+  Taumeln: Form min sichtbar 1924 (F1974), Spieler max 40 (F1841), Form max verdeckt 83 Promille (F1942); fast schwarz max 782 Promille (F1761), > 600: 1 von 385 Bildern
+f_leon: Szene F1629-F1955 (327 Bilder), Form-Slot 12, Spieler bei Szenenbeginn (9529,-24749), Form (13454,-23682)
+  Schnitte: Cut 12 F1629-F1785 (mo 13), Cut 11 F1786-F1854 (mo 13), Cut 11 F1855-F1955 (mo 12)
+  Taumeln: Form min sichtbar 1582 (F1785), Spieler max 1077 (F1706), Form max verdeckt 133 Promille (F1783); fast schwarz max 527 Promille (F1787), > 600: 0 von 327 Bildern
+f_elza: Szene F1628-F1954 (327 Bilder), Form-Slot 11, Spieler bei Szenenbeginn (10355,-24749), Form (13533,-23682)
+  Schnitte: Cut 12 F1628-F1784 (mo 13), Cut 11 F1785-F1853 (mo 13), Cut 11 F1854-F1954 (mo 12)
+  Taumeln: Form min sichtbar 1601 (F1783), Spieler max 957 (F1685), Form max verdeckt 123 Promille (F1782); fast schwarz max 526 Promille (F1786), > 600: 0 von 327 Bildern
+
+## 2 Bilder >= 550 Promille fast schwarz in der Szene (alle Bilder gemessen)
+w_leon: 
+w_elza: 
+v_leon: 
+v_elza: 
+x_leon: F1761(cam=13,785) F1843(cam=13,566) F1844(cam=13,572) F1845(cam=13,578) F1846(cam=13,581) F1847(cam=13,584) F1848(cam=13,590) F1849(cam=12,590) 
+x_elza: F1761(cam=13,782) F1843(cam=13,566) F1844(cam=13,572) F1845(cam=13,578) F1846(cam=13,581) F1847(cam=13,584) F1848(cam=13,590) F1849(cam=12,590) 
+f_leon: 
+f_elza: 
+
+## 3 HP der Form je Wagen, Treffer, Rueckstoss, Sturz, G5, Spieler-HP (werkzeug/hp_weg.py, ohne Messhaken)
+w_leon: HP Form: A F1 300 | B F498 150 | C F946 150; Treffer bis Rueckstoss 10 (ab F1237); Rueckstoss (1486, 17290); Sturz (1749, -2538); G5 (1850, 600); Spieler-HP F1322 100->95
+w_elza: HP Form: A F1 300 | B F498 150 | C F946 150; Treffer bis Rueckstoss 10 (ab F1237); Rueckstoss (1486, 17313); Sturz (1749, -2521); G5 (1850, 600); Spieler-HP F1322 100->95
+v_leon: HP Form: A F1 300 | B F498 150 | C F946 150; Treffer bis Rueckstoss 10 (ab F1297); Rueckstoss (1544, 20124); Sturz (1841, -2516); G5 (1942, 600); Spieler-HP F1336 100->95
+v_elza: HP Form: A F1 300 | B F498 150 | C F946 150; Treffer bis Rueckstoss 10 (ab F1297); Rueckstoss (1544, 20124); Sturz (1843, -2565); G5 (1944, 600); Spieler-HP F1336 100->95
+x_leon: HP Form: A F1 300 | B F498 150 | C F946 150; Treffer bis Rueckstoss 10 (ab F1495); Rueckstoss (1761, 20124); Sturz (2045, -2516); G5 (2146, 600); Spieler-HP F1344 100->95, F1367 95->90, F1397 90->50, F1655 50->40, F1707 40->30
+x_elza: HP Form: A F1 300 | B F498 150 | C F946 150; Treffer bis Rueckstoss 10 (ab F1495); Rueckstoss (1761, 20124); Sturz (2045, -2516); G5 (2146, 600); Spieler-HP F1344 100->95, F1367 95->90, F1397 90->50, F1655 50->40, F1707 40->30
+f_leon: HP Form: A F1 300 | B F498 150 | C F946 150; Treffer bis Rueckstoss 10 (ab F1282); Rueckstoss (1629, 13454); Sturz (1855, -2504); G5 (1956, 600); Spieler-HP F1311 100->95, F1402 95->85, F1413 85->75, F1511 75->40
+f_elza: HP Form: A F1 300 | B F498 150 | C F946 150; Treffer bis Rueckstoss 10 (ab F1282); Rueckstoss (1628, 13533); Sturz (1854, -2515); G5 (1955, 600); Spieler-HP F1311 100->95, F1402 95->85, F1413 85->75, F1511 75->40
+
+## 4 Ton (debug.log [se] / re2se.log): Raum-Ton 10 gespielt / vom SE-Tor verworfen / SILENT
+w_leon: gespielt 3, verworfen 2, SILENT 0
+w_elza: gespielt 3, verworfen 2, SILENT 0
+v_leon: gespielt 5, verworfen 0, SILENT 0
+v_elza: gespielt 5, verworfen 0, SILENT 0
+x_leon: gespielt 7, verworfen 0, SILENT 1
+f_leon: gespielt 6, verworfen 1, SILENT 0
+b_leon: gespielt 6, verworfen 1, SILENT 0
+b_elza: gespielt 6, verworfen 1, SILENT 0
+Abnahme 2: w5090 3/2/0, v5090 5/0/0, t5080 6/1/0
+
+## 5 Bahnsteig 5080/5081 (Zeitleiste abn2/werkzeug/zustand.py gegen abn2/zeitleisten)
+b_leon vs b5080_leon: bildgleich
+b_elza vs b5081_elza: bildgleich
+F1521 	msg(a=0 fsm=0 id=1 q=0)
+F1522 	msg(a=1 fsm=1 id=3 q=0)
+
+## 6 START im Griff (RE15_PAD_AT) und Gegenprobe
+s_leon:      33 gr=0 ms=0       3 gr=1 ms=0 RE15_PAD_AT=726:S,735:S,745:S,755:S
+s_elza:      33 gr=0 ms=0       3 gr=1 ms=0 RE15_PAD_AT=719:S,728:S,738:S,748:S
+s_leon bis F999 gegen a_leon: bildgleich (START verworfen, keine Vormerkung)
+s_elza bis F999 gegen a_elza: bildgleich (START verworfen, keine Vormerkung)
+s_leon je Bild F700-F999 (zeitleiste_alle):     266 gr=0 ms=0      34 gr=1 ms=0 
+s_elza je Bild F700-F999 (zeitleiste_alle):     266 gr=0 ms=0      34 gr=1 ms=0 
+g_leon (START F770 nach dem Loslassen F759): F770  ms=2
+
+## 7 Nahsicht-Wache (Kampf, kein Szenenteil): Schnittfolge und fast schwarz, vorher (exe f4deb1a3) / nachher (exe b9b3d574), gleiche Eingabe
+av_leon F700-F1131: Schnitte 12:F700-F730 13:F731-F844 12:F845-F1047 13:F1048-F1131; 432 Bilder, > 600 Promille fast schwarz: 62 {13: 62}, max 710 (F1062)
+a_leon F700-F1131: Schnitte 12:F700-F730 13:F731-F741 12:F742-F1017 13:F1018-F1131; 432 Bilder, > 600 Promille fast schwarz: 92 {13: 92}, max 710 (F1062)
+kv_leon F1300-F1931: Schnitte 12:F1300-F1323 13:F1324-F1324 12:F1325-F1331 13:F1332-F1896 12:F1897-F1899 13:F1900-F1931; 632 Bilder, > 600 Promille fast schwarz: 7 {13: 7}, max 618 (F1889)
+k_leon F1300-F1931: Schnitte 12:F1300-F1354 13:F1355-F1722 12:F1723-F1753 13:F1754-F1784 12:F1785-F1788 13:F1789-F1840 12:F1841-F1847 13:F1848-F1878 12:F1879-F1931; 632 Bilder, > 600 Promille fast schwarz: 38 {12: 36, 13: 2}, max 704 (F1724)
+vv2_leon F1320-F1390: Schnitte 13:F1320-F1390; 71 Bilder, > 600 Promille fast schwarz: 0 {}, max 577 (F1325)
+v2_leon F1320-F1390: Schnitte 13:F1320-F1339 14:F1340-F1367 13:F1368-F1390; 71 Bilder, > 600 Promille fast schwarz: 28 {14: 27, 13: 1}, max 772 (F1347)
+kv_leon/k_leon: Spieler und Form je Bild F1300-F1931 (state.log): identisch (632 Bilder) - nur die Kamera unterscheidet sich
+
+## 8 Wache je Schnittabschnitt (werkzeug/wache.py, Deckung aus RE15_SLOTDECKUNG)
+a_leon F700-F1200: 92 Bilder > 600 Promille fast schwarz, max 710 (F1062), Spieler max 15878 Bildpunkte (F761)
+  Cut 12 F700-F730: fast schwarz 177..225 Promille, Spieler max 2860 Bildpunkte, Spieler max 375 Promille verdeckt
+  Cut 13 F731-F741: fast schwarz 225..295 Promille, Spieler max 4493 Bildpunkte, Spieler max 0 Promille verdeckt
+  Cut 12 F742-F1017: fast schwarz 270..393 Promille, Spieler max 15878 Bildpunkte, Spieler max 0 Promille verdeckt
+  Cut 13 F1018-F1200: fast schwarz 0..710 Promille, Spieler max 1261 Bildpunkte, Spieler max 960 Promille verdeckt
+a_elza F700-F1200: 83 Bilder > 600 Promille fast schwarz, max 706 (F1056), Spieler max 10654 Bildpunkte (F753)
+  Cut 12 F700-F723: fast schwarz 175..206 Promille, Spieler max 1809 Bildpunkte, Spieler max 477 Promille verdeckt
+  Cut 13 F724-F734: fast schwarz 206..274 Promille, Spieler max 3114 Bildpunkte, Spieler max 0 Promille verdeckt
+  Cut 12 F735-F1011: fast schwarz 202..316 Promille, Spieler max 10654 Bildpunkte, Spieler max 0 Promille verdeckt
+  Cut 13 F1012-F1200: fast schwarz 0..706 Promille, Spieler max 810 Bildpunkte, Spieler max 997 Promille verdeckt
+k_leon F1169-F1931: 38 Bilder > 600 Promille fast schwarz, max 704 (F1724), Spieler max 14079 Bildpunkte (F1859)
+  Cut 12 F1169-F1169: fast schwarz 218..218 Promille, Spieler max 0 Bildpunkte, Spieler max 0 Promille verdeckt
+  Cut 11 F1170-F1228: fast schwarz 218..589 Promille, Spieler max 0 Bildpunkte, Spieler max 0 Promille verdeckt
+  Cut 12 F1229-F1354: fast schwarz 191..562 Promille, Spieler max 7440 Bildpunkte, Spieler max 429 Promille verdeckt
+  Cut 13 F1355-F1722: fast schwarz 384..550 Promille, Spieler max 9703 Bildpunkte, Spieler max 721 Promille verdeckt
+  Cut 12 F1723-F1753: fast schwarz 411..704 Promille, Spieler max 1888 Bildpunkte, Spieler max 818 Promille verdeckt
+  Cut 13 F1754-F1784: fast schwarz 416..629 Promille, Spieler max 7726 Bildpunkte, Spieler max 806 Promille verdeckt
+  Cut 12 F1785-F1788: fast schwarz 416..679 Promille, Spieler max 1479 Bildpunkte, Spieler max 717 Promille verdeckt
+  Cut 13 F1789-F1840: fast schwarz 420..640 Promille, Spieler max 11141 Bildpunkte, Spieler max 911 Promille verdeckt
+  Cut 12 F1841-F1847: fast schwarz 420..639 Promille, Spieler max 1230 Bildpunkte, Spieler max 774 Promille verdeckt
+  Cut 13 F1848-F1878: fast schwarz 496..567 Promille, Spieler max 14079 Bildpunkte, Spieler max 533 Promille verdeckt
+  Cut 12 F1879-F1931: fast schwarz 464..591 Promille, Spieler max 1033 Bildpunkte, Spieler max 838 Promille verdeckt
+k_elza F1169-F1931: 38 Bilder > 600 Promille fast schwarz, max 697 (F1724), Spieler max 7305 Bildpunkte (F1858)
+  Cut 12 F1169-F1169: fast schwarz 199..199 Promille, Spieler max 0 Bildpunkte, Spieler max 0 Promille verdeckt
+  Cut 11 F1170-F1228: fast schwarz 199..590 Promille, Spieler max 0 Bildpunkte, Spieler max 0 Promille verdeckt
+  Cut 12 F1229-F1354: fast schwarz 172..532 Promille, Spieler max 5045 Bildpunkte, Spieler max 531 Promille verdeckt
+  Cut 13 F1355-F1722: fast schwarz 368..518 Promille, Spieler max 6809 Bildpunkte, Spieler max 764 Promille verdeckt
+  Cut 12 F1723-F1753: fast schwarz 387..697 Promille, Spieler max 1566 Bildpunkte, Spieler max 892 Promille verdeckt
+  Cut 13 F1754-F1784: fast schwarz 389..627 Promille, Spieler max 5416 Bildpunkte, Spieler max 903 Promille verdeckt
+  Cut 12 F1785-F1788: fast schwarz 389..674 Promille, Spieler max 1312 Bildpunkte, Spieler max 613 Promille verdeckt
+  Cut 13 F1789-F1840: fast schwarz 402..636 Promille, Spieler max 6198 Bildpunkte, Spieler max 977 Promille verdeckt
+  Cut 12 F1841-F1847: fast schwarz 402..635 Promille, Spieler max 1033 Bildpunkte, Spieler max 762 Promille verdeckt
+  Cut 13 F1848-F1878: fast schwarz 454..555 Promille, Spieler max 7305 Bildpunkte, Spieler max 936 Promille verdeckt
+  Cut 12 F1879-F1931: fast schwarz 463..587 Promille, Spieler max 870 Bildpunkte, Spieler max 818 Promille verdeckt
+
+## 9 Gegenprobe ohne Messschienen (RE15_BF_KAMLOG/RE15_SLOTDECKUNG nicht gesetzt, werkzeug/lauf_ohne_schienen.sh)
+k3_leon F1300-F1931: Schnitte 12:F1300-F1354 13:F1355-F1722 12:F1723-F1753 13:F1754-F1784 12:F1785-F1788 13:F1789-F1840 12:F1841-F1847 13:F1848-F1878 12:F1879-F1931; 632 Bilder, > 600 Promille fast schwarz: 38 {12: 36, 13: 2}, max 704 (F1724)
