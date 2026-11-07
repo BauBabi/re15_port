@@ -1,0 +1,1304 @@
+Spur WS - Abnahme 1 - H3: eigener Schreiber-Scan auf 0x800cfb74..0x800cfb77 (RE2-Leon PSX.EXE + COMMON/BIN/*.BIN)
+Werkzeug: scan_cfb74.py (Konstantenverfolgung je Register: lui/addiu/ori/addu; Stores sb/sh/sw/swl/swr).
+Adressen der Overlays = Werkzeug-Adressen (Datei-Offset + 0x80100000). Gelinkt sind TITLE.BIN @0x8019xxxx, RESULT.BIN @0x8015xxxx,
+ENDING.BIN @0x8011xxxx, MEM_CARD.BIN @0x801Bxxxx-0x801Cxxxx (Sprungziele); EM23_OVL_0000 / EMOVL10_S0 @0x80100000.
+
+PSX.EXE            @0x80013cbc  sw   v0,0(a0)  -> ea 0x800cfb74
+PSX.EXE            @0x80025c08  sw   v0,0(s0)  -> ea 0x800cfb74
+PSX.EXE            @0x80025c3c  sw   v0,0(s0)  -> ea 0x800cfb74
+PSX.EXE            @0x80025ca4  sw   v0,0(s0)  -> ea 0x800cfb74
+PSX.EXE            @0x80026320  sw   v1,-1164(at)  -> ea 0x800cfb74
+PSX.EXE            @0x80026488  sw   v0,-1164(at)  -> ea 0x800cfb74
+PSX.EXE            @0x80026734  sw   v0,0(s0)  -> ea 0x800cfb74
+PSX.EXE            @0x80026a68  sw   v0,0(s1)  -> ea 0x800cfb74
+PSX.EXE            @0x80026ad8  sw   v0,0(s0)  -> ea 0x800cfb74
+PSX.EXE            @0x80026bc4  sw   v0,14732(s0)  -> ea 0x800cfb74
+PSX.EXE            @0x8002b418  sw   v0,0(s3)  -> ea 0x800cfb74
+PSX.EXE            @0x8002b4b4  sw   v0,-1164(at)  -> ea 0x800cfb74
+PSX.EXE            @0x8002b928  sw   v0,-1164(at)  -> ea 0x800cfb74
+PSX.EXE            @0x8002bebc  sw   v0,14732(s2)  -> ea 0x800cfb74
+PSX.EXE            @0x8002c698  sw   v0,-1164(at)  -> ea 0x800cfb74
+PSX.EXE            @0x80032324  sw   v0,0(a0)  -> ea 0x800cfb74
+PSX.EXE            @0x8003282c  sw   v0,0(v1)  -> ea 0x800cfb74
+PSX.EXE            @0x80032aa4  sw   v1,0(v0)  -> ea 0x800cfb74
+PSX.EXE            @0x80032c78  sw   v1,0(v0)  -> ea 0x800cfb74
+PSX.EXE            @0x80032cb4  sw   v0,0(a0)  -> ea 0x800cfb74
+PSX.EXE            @0x80038fe0  sw   v0,-1164(at)  -> ea 0x800cfb74
+PSX.EXE            @0x80039408  sw   v0,-1164(at)  -> ea 0x800cfb74
+PSX.EXE            @0x80039438  sw   v1,0(v0)  -> ea 0x800cfb74
+PSX.EXE            @0x800402e4  sw   v1,0(a1)  -> ea 0x800cfb74
+PSX.EXE            @0x80051bdc  sw   v0,-1164(at)  -> ea 0x800cfb74
+PSX.EXE            @0x80065294  sw   v0,0(a0)  -> ea 0x800cfb74
+PSX.EXE            @0x800776b8  sw   v1,0(v0)  -> ea 0x800cfb74
+PSX.EXE            @0x800776f8  sw   v0,0(v1)  -> ea 0x800cfb74
+PSX.EXE            @0x80077728  sw   v0,0(v1)  -> ea 0x800cfb74
+PSX.EXE            @0x80077768  sw   v1,0(v0)  -> ea 0x800cfb74
+CONFIG.BIN         @0x801008c0  sw   v0,0(v1)  -> ea 0x800cfb74
+DIEDEMO.BIN        @0x80100564  sw   v0,-1164(at)  -> ea 0x800cfb74
+EM23_OVL_0000.BIN  @0x80102fcc  sw   v0,0(a0)  -> ea 0x800cfb74
+EMD0G_MOD0.BIN     @0x80102060  sw   v0,0(a0)  -> ea 0x800cfb74
+EMD0G_MOD0.BIN     @0x80104f60  sw   v0,0(v1)  -> ea 0x800cfb74
+EMOVL10_S0.BIN     @0x8010295c  sw   v1,-1164(at)  -> ea 0x800cfb74
+EMOVL10_S1.BIN     @0x8010295c  sw   v1,-1164(at)  -> ea 0x800cfb74
+EMZ0.BIN           @0x8010295c  sw   v1,-1164(at)  -> ea 0x800cfb74
+EMZ0_d1.BIN        @0x8010295c  sw   v1,-1164(at)  -> ea 0x800cfb74
+ENDING.BIN         @0x80101168  sw   v0,-1164(at)  -> ea 0x800cfb74
+ENDING.BIN         @0x80101194  sw   v0,-1164(at)  -> ea 0x800cfb74
+ENDING.BIN         @0x80101378  sw   v0,-1164(at)  -> ea 0x800cfb74
+ENDING.BIN         @0x801013a4  sw   v0,-1164(at)  -> ea 0x800cfb74
+ENDING.BIN         @0x801013e8  sw   v0,-1164(at)  -> ea 0x800cfb74
+ENDING.BIN         @0x80101adc  sw   v0,-1164(at)  -> ea 0x800cfb74
+ENDING.BIN         @0x80101b08  sw   v0,-1164(at)  -> ea 0x800cfb74
+ENDING.BIN         @0x80101b60  sw   v1,-1164(at)  -> ea 0x800cfb74
+MEM_CARD.BIN       @0x80101424  sw   v0,-1164(at)  -> ea 0x800cfb74
+MEM_CARD.BIN       @0x80101448  sw   v0,-1164(at)  -> ea 0x800cfb74
+MEM_CARD.BIN       @0x80101508  sw   v0,0(a1)  -> ea 0x800cfb74
+MEM_CARD.BIN       @0x801019e0  sw   v0,0(v1)  -> ea 0x800cfb74
+MEM_CARD.BIN       @0x80103ab0  sw   v0,-1164(at)  -> ea 0x800cfb74
+MEM_CARD.BIN       @0x80103ad8  sw   v0,-1164(at)  -> ea 0x800cfb74
+MEM_CARD.BIN       @0x80103afc  sw   v0,-1164(at)  -> ea 0x800cfb74
+RESULT.BIN         @0x801004e8  sw   v0,-1164(at)  -> ea 0x800cfb74
+RESULT.BIN         @0x8010051c  sw   v0,-1164(at)  -> ea 0x800cfb74
+TITLE.BIN          @0x80100b44  sw   v0,0(a0)  -> ea 0x800cfb74
+TITLE.BIN          @0x80100c98  sw   v0,0(a0)  -> ea 0x800cfb74
+TITLE.BIN          @0x80100cf0  sw   v0,-1164(at)  -> ea 0x800cfb74
+TITLE.BIN          @0x80101a3c  sw   v1,0(v0)  -> ea 0x800cfb74
+TITLE.BIN          @0x80102984  sw   a0,-1164(at)  -> ea 0x800cfb74
+TITLE.BIN          @0x8010299c  sw   v0,-1164(at)  -> ea 0x800cfb74
+TITLE.BIN          @0x80102ce4  sw   v0,-1164(at)  -> ea 0x800cfb74
+TITLE.BIN          @0x80103198  sw   v0,0(s1)  -> ea 0x800cfb74
+TITLE.BIN          @0x801031c8  sw   a0,0(s1)  -> ea 0x800cfb74
+TITLE.BIN          @0x80103224  sw   v0,0(s1)  -> ea 0x800cfb74
+TITLE.BIN          @0x80103280  sw   v0,0(s0)  -> ea 0x800cfb74
+TITLE.BIN          @0x801032ac  sw   v0,0(s0)  -> ea 0x800cfb74
+TITLE.BIN          @0x801037a0  sw   v0,-1164(at)  -> ea 0x800cfb74
+TITLE.BIN          @0x801038d8  sw   v0,-1164(at)  -> ea 0x800cfb74
+TITLE.BIN          @0x80103e50  sw   v0,0(v1)  -> ea 0x800cfb74
+TITLE.BIN          @0x80105fac  sw   v0,0(s2)  -> ea 0x800cfb74
+Treffer: 72
+
+Kontext je Store (10 Instruktionen davor):
+===== PSX.EXE 0x80013cbc
+  80013c94: addiu a3,a3,19964                  
+  80013c98: lui a1,0x801b                      
+  80013c9c: ori a1,a1,0xddf8                   
+  80013ca0: lui a0,0x800d                      
+  80013ca4: addiu a0,a0,-1164                  0x800cfb74
+  80013ca8: lui at,0x800c                      
+  80013cac: sw v0,14976(at)                    0x800c3a80
+  80013cb0: lw v0,0(a0)                        0x800d0000
+  80013cb4: lui v1,0x200                       
+  80013cb8: or v0,v0,v1                        
+  80013cbc: sw v0,0(a0)                        0x800d0000
+  80013cc0: sw a1,0(a3)                        
+===== PSX.EXE 0x80025c08
+  80025be0: sw v0,0(a0)                        
+  80025be4: lui v0,0x4                         
+  80025be8: and v0,v1,v0                       
+  80025bec: beq v0,zero,0x80025c48             
+  80025bf0: lui v0,0xfffb                      
+  80025bf4: ori v0,v0,0xffff                   
+  80025bf8: addiu a0,zero,1                    
+  80025bfc: addiu a1,zero,1                    
+  80025c00: and v0,v1,v0                       
+  80025c04: jal 0x80031e80                     
+  80025c08: sw v0,0(s0)                        
+  80025c0c: lui v0,0x800e                      
+===== PSX.EXE 0x80025c3c
+  80025c14: lw v1,0(v0)                        
+  80025c18: sw zero,0(v0)                      
+  80025c1c: lui at,0x800c                      
+  80025c20: sw v1,14984(at)                    0x800c3a88
+  80025c24: jal 0x80031f94                     
+  80025c28: addiu a0,zero,1                    
+  80025c2c: lw v0,0(s0)                        
+  80025c30: addiu v1,zero,-1025                
+  80025c34: and v0,v0,v1                       
+  80025c38: jal 0x80029c94                     
+  80025c3c: sw v0,0(s0)                        
+  80025c40: j 0x80025c54                       
+===== PSX.EXE 0x80025ca4
+  80025c7c: lw v0,14984(v0)                    
+  80025c80: lw v1,14836(s3)                    
+  80025c84: lui s0,0x800d                      
+  80025c88: addiu s0,s0,-1164                  0x800cfb74
+  80025c8c: or v0,v0,v1                        
+  80025c90: lui at,0x800c                      
+  80025c94: sw v0,14984(at)                    0x800c3a88
+  80025c98: lw v0,0(s0)                        0x800d0000
+  80025c9c: addiu v1,zero,-16385               
+  80025ca0: and v0,v0,v1                       
+  80025ca4: sw v0,0(s0)                        0x800d0000
+  80025ca8: lui v0,0x800d                      
+===== PSX.EXE 0x80026320
+  800262f8: addu s6,zero,zero                  
+  800262fc: lui a0,0x800d                      
+  80026300: addiu a0,a0,-1064                  0x800cfbd8
+  80026304: lw v0,0(a0)                        0x800d0000
+  80026308: lui v1,0x800d                      
+  8002630c: lw v1,-1164(v1)                    0x800cfb74
+  80026310: and v0,v0,a1                       
+  80026314: ori v1,v1,0x4                      
+  80026318: sw v0,0(a0)                        0x800d0000
+  8002631c: lui at,0x800d                      
+  80026320: sw v1,-1164(at)                    0x800cfb74
+  80026324: j 0x80026738                       
+===== PSX.EXE 0x80026488
+  80026460: lui v0,0x800d                      
+  80026464: lhu v0,-7418(v0)                   0x800ce306
+  80026468: nop                                
+  8002646c: andi v0,v0,0x100                   
+  80026470: beq v0,zero,0x80026494             
+  80026474: andi v0,a0,0x8000                  
+  80026478: bne v0,zero,0x80026494             
+  8002647c: lui v0,0x800                       
+  80026480: or v0,v1,v0                        
+  80026484: lui at,0x800d                      
+  80026488: sw v0,-1164(at)                    0x800cfb74
+  8002648c: ori v0,a0,0x8000                   
+===== PSX.EXE 0x80026734
+  8002670c: lbu v0,-1038(v0)                   
+  80026710: nop                                
+  80026714: bne v1,v0,0x80026738               
+  80026718: addiu a0,zero,1                    
+  8002671c: jal 0x80031e80                     
+  80026720: addiu a1,zero,2                    
+  80026724: lui v1,0xfbff                      
+  80026728: lw v0,0(s0)                        
+  8002672c: ori v1,v1,0xffff                   
+  80026730: and v0,v0,v1                       
+  80026734: sw v0,0(s0)                        
+  80026738: lui v0,0x800d                      
+===== PSX.EXE 0x80026a68
+  80026a40: nop                                
+  80026a44: lui at,0x1                         
+  80026a48: addu at,s3,at                      
+  80026a4c: lhu v0,-31524(at)                  
+  80026a50: nop                                
+  80026a54: bne v0,zero,0x80026a6c             
+  80026a58: nop                                
+  80026a5c: lw v0,0(s1)                        
+  80026a60: nop                                
+  80026a64: ori v0,v0,0x80                     
+  80026a68: sw v0,0(s1)                        
+  80026a6c: jal 0x80039694                     
+===== PSX.EXE 0x80026ad8
+  80026ab0: jal 0x8002c610                     
+  80026ab4: nop                                
+  80026ab8: addiu a0,zero,1                    
+  80026abc: lw v0,0(s0)                        
+  80026ac0: lui a1,0x8002                      
+  80026ac4: addiu a1,a1,27436                  0x80026b2c
+  80026ac8: lui at,0x800e                      
+  80026acc: sb zero,-679(at)                   0x800dfd59
+  80026ad0: ori v0,v0,0x2                      
+  80026ad4: jal 0x80031f6c                     
+  80026ad8: sw v0,0(s0)                        
+  80026adc: j 0x80026af4                       
+===== PSX.EXE 0x80026bc4
+  80026b9c: lw v0,14732(s0)                    
+  80026ba0: lui s1,0x100                       
+  80026ba4: and v0,v0,s1                       
+  80026ba8: beq v0,zero,0x80026bb8             
+  80026bac: nop                                
+  80026bb0: jal 0x80015128                     
+  80026bb4: nop                                
+  80026bb8: lw v0,14732(s0)                    
+  80026bbc: lui s2,0x200                       
+  80026bc0: or v0,v0,s2                        
+  80026bc4: sw v0,14732(s0)                    
+  80026bc8: and v0,v0,s1                       
+===== PSX.EXE 0x8002b418
+  8002b3f0: lhu v0,316(s1)                     
+  8002b3f4: nop                                
+  8002b3f8: addiu v0,v0,-1                     
+  8002b3fc: sh v0,316(s1)                      
+  8002b400: sll v0,v0,16                       
+  8002b404: bgez v0,0x8002b41c                 
+  8002b408: lui v1,0xfffe                      
+  8002b40c: lw v0,0(s3)                        
+  8002b410: ori v1,v1,0xffff                   
+  8002b414: and v0,v0,v1                       
+  8002b418: sw v0,0(s3)                        
+  8002b41c: jal 0x800903a0                     
+===== PSX.EXE 0x8002b4b4
+  8002b48c: addiu sp,sp,-64                    
+  8002b490: sw ra,56(sp)                       
+  8002b494: sw s1,52(sp)                       
+  8002b498: jal 0x80031cc0                     
+  8002b49c: sw s0,48(sp)                       
+  8002b4a0: lui v0,0x800d                      
+  8002b4a4: lw v0,-1164(v0)                    0x800cfb74
+  8002b4a8: nop                                
+  8002b4ac: ori v0,v0,0x40                     
+  8002b4b0: lui at,0x800d                      
+  8002b4b4: sw v0,-1164(at)                    0x800cfb74
+  8002b4b8: jal 0x80086084                     
+===== PSX.EXE 0x8002b928
+  8002b900: jal 0x8009609c                     
+  8002b904: addiu a2,zero,2                    
+  8002b908: lui v1,0xd270                      
+  8002b90c: ori v1,v1,0x6ca4                   
+  8002b910: lui v0,0x800d                      
+  8002b914: lw v0,-1164(v0)                    0x800cfb74
+  8002b918: lui at,0x800d                      
+  8002b91c: sw v1,-7400(at)                    0x800ce318
+  8002b920: ori v0,v0,0x2                      
+  8002b924: lui at,0x800d                      
+  8002b928: sw v0,-1164(at)                    0x800cfb74
+  8002b92c: jal 0x80031f00                     
+===== PSX.EXE 0x8002bebc
+  8002be94: lui v0,0x2000                      
+  8002be98: lw v1,14732(s2)                    
+  8002be9c: lui s1,0x800d                      
+  8002bea0: lw s1,-1304(s1)                    0x800cfae8
+  8002bea4: and v0,v1,v0                       
+  8002bea8: beq v0,zero,0x8002bec0             
+  8002beac: lui v0,0xdfff                      
+  8002beb0: ori v0,v0,0xffff                   
+  8002beb4: and v0,v1,v0                       
+  8002beb8: j 0x8002bf9c                       
+  8002bebc: sw v0,14732(s2)                    
+  8002bec0: lui s0,0x800d                      
+===== PSX.EXE 0x8002c698
+  8002c670: sw v0,-7464(at)                    
+  8002c674: lui v0,0x800d                      
+  8002c678: lw v0,-1164(v0)                    0x800cfb74
+  8002c67c: lui v1,0x800e                      
+  8002c680: lbu v1,-682(v1)                    0x800dfd56
+  8002c684: ori a0,a0,0x8d9                    
+  8002c688: lui at,0x800f                      
+  8002c68c: sb zero,-30916(at)                 0x800e873c
+  8002c690: and v0,v0,a0                       
+  8002c694: lui at,0x800d                      
+  8002c698: sw v0,-1164(at)                    0x800cfb74
+  8002c69c: lui at,0x800d                      
+===== PSX.EXE 0x80032324
+  800322fc: sh zero,24(t1)                     
+  80032300: sb zero,23(t1)                     
+  80032304: lw v0,0(a0)                        
+  80032308: ori a1,a1,0x7fff                   
+  8003230c: ori v0,v0,0x200                    
+  80032310: mfhi t2                            
+  80032314: sra v1,t2,5                        
+  80032318: sh v1,14(t1)                       
+  8003231c: lhu v1,8(a3)                       
+  80032320: and v0,v0,a1                       
+  80032324: sw v0,0(a0)                        
+  80032328: jal 0x80039694                     
+===== PSX.EXE 0x8003282c
+  80032804: addu a3,zero,zero                  
+  80032808: lhu v0,24(s0)                      
+  8003280c: nop                                
+  80032810: bne v0,zero,0x8003284c             
+  80032814: nop                                
+  80032818: lui v1,0x800d                      
+  8003281c: addiu v1,v1,-1164                  0x800cfb74
+  80032820: lw v0,0(v1)                        0x800d0000
+  80032824: nop                                
+  80032828: ori v0,v0,0x8000                   
+  8003282c: sw v0,0(v1)                        0x800d0000
+  80032830: lui v1,0x800d                      
+===== PSX.EXE 0x80032aa4
+  80032a7c: j 0x80032aa8                       
+  80032a80: nop                                
+  80032a84: lui v0,0x800d                      
+  80032a88: addiu v0,v0,-1164                  0x800cfb74
+  80032a8c: lui at,0x800d                      
+  80032a90: sh zero,16952(at)                  0x800d4238
+  80032a94: lw v1,0(v0)                        0x800d0000
+  80032a98: lui at,0x800d                      
+  80032a9c: sh a0,30338(at)                    0x800d7682
+  80032aa0: ori v1,v1,0x8000                   
+  80032aa4: sw v1,0(v0)                        0x800d0000
+  80032aa8: lw ra,24(sp)                       
+===== PSX.EXE 0x80032c78
+  80032c50: j 0x80032cb8                       
+  80032c54: nop                                
+  80032c58: lui v0,0x800d                      
+  80032c5c: addiu v0,v0,-1164                  0x800cfb74
+  80032c60: lui at,0x800e                      
+  80032c64: sb zero,-997(at)                   0x800dfc1b
+  80032c68: lw v1,0(v0)                        0x800d0000
+  80032c6c: addiu a0,zero,-513                 
+  80032c70: and v1,v1,a0                       
+  80032c74: j 0x80032cb8                       
+  80032c78: sw v1,0(v0)                        0x800d0000
+  80032c7c: lui v1,0x800d                      
+===== PSX.EXE 0x80032cb4
+  80032c8c: addiu v0,zero,1                    
+  80032c90: bne v1,v0,0x80032cb8               
+  80032c94: lui v1,0xffff                      
+  80032c98: lui a0,0x800d                      
+  80032c9c: addiu a0,a0,-1164                  0x800cfb74
+  80032ca0: lw v0,0(a0)                        0x800d0000
+  80032ca4: ori v1,v1,0x7fff                   
+  80032ca8: and v0,v0,v1                       
+  80032cac: addiu v1,zero,-513                 
+  80032cb0: and v0,v0,v1                       
+  80032cb4: sw v0,0(a0)                        0x800d0000
+  80032cb8: lbu v0,23(s3)                      
+===== PSX.EXE 0x80038fe0
+  80038fb8: sb v0,-677(at)                     
+  80038fbc: lhu v0,0(a0)                       
+  80038fc0: lui at,0x800d                      
+  80038fc4: sw zero,-7428(at)                  0x800ce2fc
+  80038fc8: addiu v0,v0,1                      
+  80038fcc: lui at,0x800d                      
+  80038fd0: sh v0,16946(at)                    0x800d4232
+  80038fd4: j 0x80039014                       
+  80038fd8: nop                                
+  80038fdc: lui at,0x800d                      
+  80038fe0: sw v0,-1164(at)                    0x800cfb74
+  80038fe4: j 0x80039014                       
+===== PSX.EXE 0x80039408
+  800393e0: beq v0,zero,0x800393f0             
+  800393e4: addiu v0,v1,-1                     
+  800393e8: lui at,0x800a                      
+  800393ec: sb v0,9988(at)                     0x800a2704
+  800393f0: lui v1,0x7fff                      
+  800393f4: lui v0,0x800d                      
+  800393f8: lw v0,-1164(v0)                    0x800cfb74
+  800393fc: ori v1,v1,0xffff                   
+  80039400: and v0,v0,v1                       
+  80039404: lui at,0x800d                      
+  80039408: sw v0,-1164(at)                    0x800cfb74
+  8003940c: j 0x8003943c                       
+===== PSX.EXE 0x80039438
+  80039410: nop                                
+  80039414: lui v0,0x800e                      
+  80039418: lbu v0,-999(v0)                    0x800dfc19
+  8003941c: lui at,0x800a                      
+  80039420: sb v0,9988(at)                     0x800a2704
+  80039424: lui v0,0x800d                      
+  80039428: addiu v0,v0,-1164                  0x800cfb74
+  8003942c: lw v1,0(v0)                        0x800d0000
+  80039430: lui a0,0x8000                      
+  80039434: or v1,v1,a0                        
+  80039438: sw v1,0(v0)                        0x800d0000
+  8003943c: lw ra,40(sp)                       
+===== PSX.EXE 0x800402e4
+  800402bc: sh v1,340(a2)                      
+  800402c0: lbu v1,467(a2)                     
+  800402c4: lui a1,0x800d                      
+  800402c8: addiu a1,a1,-1164                  0x800cfb74
+  800402cc: ori v1,v1,0x80                     
+  800402d0: sb v1,467(a2)                      
+  800402d4: lw v1,0(a1)                        0x800d0000
+  800402d8: lui a0,0x400                       
+  800402dc: or v1,v1,a0                        
+  800402e0: j 0x800402ec                       
+  800402e4: sw v1,0(a1)                        0x800d0000
+  800402e8: addu v0,zero,zero                  
+===== PSX.EXE 0x80051bdc
+  80051bb4: andi v0,v1,0x1                     
+  80051bb8: bne v0,zero,0x80051be8             
+  80051bbc: addiu v0,zero,1                    
+  80051bc0: lui at,0x800e                      
+  80051bc4: sb v0,-3256(at)                    0x800df348
+  80051bc8: lui v0,0x800d                      
+  80051bcc: lw v0,-1164(v0)                    0x800cfb74
+  80051bd0: lui v1,0x4                         
+  80051bd4: or v0,v0,v1                        
+  80051bd8: lui at,0x800d                      
+  80051bdc: sw v0,-1164(at)                    0x800cfb74
+  80051be0: j 0x80051bf8                       
+===== PSX.EXE 0x80065294
+  8006526c: sh zero,328(s0)                    
+  80065270: sb v1,448(s0)                      
+  80065274: ori v0,v0,0x80                     
+  80065278: jal 0x8005bd6c                     
+  8006527c: sb v0,467(s0)                      
+  80065280: lui a0,0x800d                      
+  80065284: addiu a0,a0,-1164                  0x800cfb74
+  80065288: lw v0,0(a0)                        0x800d0000
+  8006528c: lui v1,0x400                       
+  80065290: or v0,v0,v1                        
+  80065294: sw v0,0(a0)                        0x800d0000
+  80065298: addu a0,s0,zero                    
+===== PSX.EXE 0x800776b8
+  80077690: addiu sp,sp,32                     
+  80077694: jr ra                              
+  80077698: nop                                
+  8007769c: lui v0,0x800d                      
+  800776a0: addiu v0,v0,-1164                  0x800cfb74
+  800776a4: lui a0,0x1000                      
+  800776a8: lw v1,0(v0)                        0x800d0000
+  800776ac: lui a1,0x800c                      
+  800776b0: addiu a1,a1,15400                  0x800c3c28
+  800776b4: or v1,v1,a0                        
+  800776b8: sw v1,0(v0)                        0x800d0000
+  800776bc: addu t0,a1,zero                    
+===== PSX.EXE 0x800776f8
+  800776d0: jr ra                              
+  800776d4: nop                                
+  800776d8: lui a0,0xefff                      
+  800776dc: lui v1,0x800d                      
+  800776e0: addiu v1,v1,-1164                  0x800cfb74
+  800776e4: ori a0,a0,0xffff                   
+  800776e8: lw v0,0(v1)                        0x800d0000
+  800776ec: lui a1,0x800c                      
+  800776f0: lw a1,15400(a1)                    0x800c3c28
+  800776f4: and v0,v0,a0                       
+  800776f8: sw v0,0(v1)                        0x800d0000
+  800776fc: addu sp,a1,zero                    
+===== PSX.EXE 0x80077728
+  80077700: jr ra                              
+  80077704: nop                                
+  80077708: lui a0,0xefff                      
+  8007770c: lui v1,0x800d                      
+  80077710: addiu v1,v1,-1164                  0x800cfb74
+  80077714: ori a0,a0,0xffff                   
+  80077718: lw v0,0(v1)                        0x800d0000
+  8007771c: lui a1,0x800d                      
+  80077720: addiu a1,a1,-6828                  0x800ce554
+  80077724: and v0,v0,a0                       
+  80077728: sw v0,0(v1)                        0x800d0000
+  8007772c: addu t0,a1,zero                    
+===== PSX.EXE 0x80077768
+  80077740: lw sp,0(t0)                        
+  80077744: jr ra                              
+  80077748: nop                                
+  8007774c: lui v0,0x800d                      
+  80077750: addiu v0,v0,-1164                  0x800cfb74
+  80077754: lui a0,0x1000                      
+  80077758: lw v1,0(v0)                        0x800d0000
+  8007775c: lui a1,0x800d                      
+  80077760: addiu a1,a1,-6828                  0x800ce554
+  80077764: or v1,v1,a0                        
+  80077768: sw v1,0(v0)                        0x800d0000
+  8007776c: addu t0,a1,zero                    
+===== CONFIG.BIN 0x801008c0
+  80100898: andi v0,v0,0x10                    
+  8010089c: lui at,0x800e                      
+  801008a0: sb v1,-681(at)                     0x800dfd57
+  801008a4: beq v0,zero,0x801008c4             
+  801008a8: nop                                
+  801008ac: lui v1,0x800d                      
+  801008b0: addiu v1,v1,-1164                  0x800cfb74
+  801008b4: lw v0,0(v1)                        0x800d0000
+  801008b8: nop                                
+  801008bc: ori v0,v0,0x1000                   
+  801008c0: sw v0,0(v1)                        0x800d0000
+  801008c4: lui v0,0x800d                      
+===== DIEDEMO.BIN 0x80100564
+  8010053c: sb zero,14500(at)                  
+  80100540: jal 0x801932b0                     
+  80100544: sb v0,0(s0)                        
+  80100548: addiu a0,zero,2                    
+  8010054c: sb zero,0(s0)                      
+  80100550: lui v0,0x800d                      
+  80100554: lw v0,-1164(v0)                    0x800cfb74
+  80100558: lui v1,0x10                        
+  8010055c: or v0,v0,v1                        
+  80100560: lui at,0x800d                      
+  80100564: sw v0,-1164(at)                    0x800cfb74
+  80100568: jal 0x8002bda8                     
+===== EM23_OVL_0000.BIN 0x80102fcc
+  80102fa4: addiu a2,zero,40                   
+  80102fa8: jal 0x800395b8                     
+  80102fac: addu a3,zero,zero                  
+  80102fb0: addiu v0,zero,768                  
+  80102fb4: lui a0,0x800d                      
+  80102fb8: addiu a0,a0,-1164                  0x800cfb74
+  80102fbc: sw v0,332(s0)                      
+  80102fc0: lw v0,0(a0)                        0x800d0000
+  80102fc4: lui v1,0x400                       
+  80102fc8: or v0,v0,v1                        
+  80102fcc: sw v0,0(a0)                        0x800d0000
+  80102fd0: lbu v0,6(s0)                       
+===== EMD0G_MOD0.BIN 0x80102060
+  80102038: ori a1,a1,0x100                    
+  8010203c: addiu v0,zero,1                    
+  80102040: lui a0,0x800d                      
+  80102044: addiu a0,a0,-1164                  0x800cfb74
+  80102048: sb v0,8(s4)                        
+  8010204c: lw v0,0(a0)                        0x800d0000
+  80102050: lui v1,0x800d                      
+  80102054: lhu v1,-1036(v1)                   0x800cfbf4
+  80102058: or v0,v0,a1                        
+  8010205c: ori v1,v1,0x40                     
+  80102060: sw v0,0(a0)                        0x800d0000
+  80102064: lui at,0x800d                      
+===== EMD0G_MOD0.BIN 0x80104f60
+  80104f38: ori v0,v0,0xa                      
+  80104f3c: sw v0,0(s1)                        
+  80104f40: lhu v0,118(s0)                     
+  80104f44: lui v1,0x800d                      
+  80104f48: addiu v1,v1,-1164                  0x800cfb74
+  80104f4c: addiu v0,v0,2048                   
+  80104f50: sh v0,118(s1)                      
+  80104f54: lw v0,0(v1)                        0x800d0000
+  80104f58: ori a0,a0,0xffff                   
+  80104f5c: and v0,v0,a0                       
+  80104f60: sw v0,0(v1)                        0x800d0000
+  80104f64: lbu v0,467(s0)                     
+===== EMOVL10_S0.BIN 0x8010295c
+  80102934: jal 0x80015910                     
+  80102938: sw v0,4(a0)                        
+  8010293c: sll v0,v0,8                        
+  80102940: lui v1,0x800d                      
+  80102944: lw v1,-1164(v1)                    0x800cfb74
+  80102948: ori v0,v0,0x6                      
+  8010294c: lui at,0x800d                      
+  80102950: sw v0,-1028(at)                    0x800cfbfc
+  80102954: ori v1,v1,0x100                    
+  80102958: lui at,0x800d                      
+  8010295c: sw v1,-1164(at)                    0x800cfb74
+  80102960: j 0x80102ebc                       
+===== EMOVL10_S1.BIN 0x8010295c
+  80102934: jal 0x80015910                     
+  80102938: sw v0,4(a0)                        
+  8010293c: sll v0,v0,8                        
+  80102940: lui v1,0x800d                      
+  80102944: lw v1,-1164(v1)                    0x800cfb74
+  80102948: ori v0,v0,0x6                      
+  8010294c: lui at,0x800d                      
+  80102950: sw v0,-1028(at)                    0x800cfbfc
+  80102954: ori v1,v1,0x100                    
+  80102958: lui at,0x800d                      
+  8010295c: sw v1,-1164(at)                    0x800cfb74
+  80102960: j 0x8010febc                       
+===== EMZ0.BIN 0x8010295c
+  80102934: jal 0x80015910                     
+  80102938: sw v0,4(a0)                        
+  8010293c: sll v0,v0,8                        
+  80102940: lui v1,0x800d                      
+  80102944: lw v1,-1164(v1)                    0x800cfb74
+  80102948: ori v0,v0,0x6                      
+  8010294c: lui at,0x800d                      
+  80102950: sw v0,-1028(at)                    0x800cfbfc
+  80102954: ori v1,v1,0x100                    
+  80102958: lui at,0x800d                      
+  8010295c: sw v1,-1164(at)                    0x800cfb74
+  80102960: j 0x80102ebc                       
+===== EMZ0_d1.BIN 0x8010295c
+  80102934: jal 0x80015910                     
+  80102938: sw v0,4(a0)                        
+  8010293c: sll v0,v0,8                        
+  80102940: lui v1,0x800d                      
+  80102944: lw v1,-1164(v1)                    0x800cfb74
+  80102948: ori v0,v0,0x6                      
+  8010294c: lui at,0x800d                      
+  80102950: sw v0,-1028(at)                    0x800cfbfc
+  80102954: ori v1,v1,0x100                    
+  80102958: lui at,0x800d                      
+  8010295c: sw v1,-1164(at)                    0x800cfb74
+  80102960: j 0x80102ebc                       
+===== ENDING.BIN 0x80101168
+  80101140: addiu a0,a0,18084                  
+  80101144: lui a1,0x8012                      
+  80101148: addiu a1,a1,21176                  0x801252b8
+  8010114c: jal 0x80010778                     
+  80101150: addiu a2,zero,1432                 
+  80101154: lui v0,0x800d                      
+  80101158: lw v0,-1164(v0)                    0x800cfb74
+  8010115c: nop                                
+  80101160: ori v0,v0,0x8                      
+  80101164: lui at,0x800d                      
+  80101168: sw v0,-1164(at)                    0x800cfb74
+  8010116c: jal 0x8011cad8                     
+===== ENDING.BIN 0x80101194
+  8010116c: jal 0x8011cad8                     
+  80101170: nop                                
+  80101174: lui v1,0xfffb                      
+  80101178: ori v1,v1,0xffff                   
+  8010117c: addiu a0,zero,1                    
+  80101180: lui v0,0x800d                      
+  80101184: lw v0,-1164(v0)                    0x800cfb74
+  80101188: nop                                
+  8010118c: and v0,v0,v1                       
+  80101190: lui at,0x800d                      
+  80101194: sw v0,-1164(at)                    0x800cfb74
+  80101198: jal 0x80031e80                     
+===== ENDING.BIN 0x80101378
+  80101350: addiu a0,a0,18084                  
+  80101354: lui a1,0x8012                      
+  80101358: addiu a1,a1,21176                  0x801252b8
+  8010135c: jal 0x80010778                     
+  80101360: addiu a2,zero,1432                 
+  80101364: lui v0,0x800d                      
+  80101368: lw v0,-1164(v0)                    0x800cfb74
+  8010136c: nop                                
+  80101370: ori v0,v0,0x9                      
+  80101374: lui at,0x800d                      
+  80101378: sw v0,-1164(at)                    0x800cfb74
+  8010137c: jal 0x8011cad8                     
+===== ENDING.BIN 0x801013a4
+  8010137c: jal 0x8011cad8                     
+  80101380: nop                                
+  80101384: lui v1,0xfffb                      
+  80101388: ori v1,v1,0xffff                   
+  8010138c: addiu a0,zero,1                    
+  80101390: lui v0,0x800d                      
+  80101394: lw v0,-1164(v0)                    0x800cfb74
+  80101398: nop                                
+  8010139c: and v0,v0,v1                       
+  801013a0: lui at,0x800d                      
+  801013a4: sw v0,-1164(at)                    0x800cfb74
+  801013a8: jal 0x80031e80                     
+===== ENDING.BIN 0x801013e8
+  801013c0: sw v0,4932(at)                     
+  801013c4: lui v0,0x800d                      
+  801013c8: lw v0,-1164(v0)                    0x800cfb74
+  801013cc: addiu v1,zero,-9                   
+  801013d0: lui at,0x8012                      
+  801013d4: sw zero,5120(at)                   0x80121400
+  801013d8: and v0,v0,v1                       
+  801013dc: addiu v1,zero,-2                   
+  801013e0: and v0,v0,v1                       
+  801013e4: lui at,0x800d                      
+  801013e8: sw v0,-1164(at)                    0x800cfb74
+  801013ec: j 0x8011bb64                       
+===== ENDING.BIN 0x80101adc
+  80101ab4: lw v0,-1064(v0)                    
+  80101ab8: nop                                
+  80101abc: ori v0,v0,0x4000                   
+  80101ac0: lui at,0x800d                      
+  80101ac4: sw v0,-1064(at)                    0x800cfbd8
+  80101ac8: lui v0,0x800d                      
+  80101acc: lw v0,-1164(v0)                    0x800cfb74
+  80101ad0: lui v1,0x100                       
+  80101ad4: or v0,v0,v1                        
+  80101ad8: lui at,0x800d                      
+  80101adc: sw v0,-1164(at)                    0x800cfb74
+  80101ae0: jal 0x8011cad8                     
+===== ENDING.BIN 0x80101b08
+  80101ae0: jal 0x8011cad8                     
+  80101ae4: nop                                
+  80101ae8: lui v1,0xfffb                      
+  80101aec: ori v1,v1,0xffff                   
+  80101af0: addiu a0,zero,1                    
+  80101af4: lui v0,0x800d                      
+  80101af8: lw v0,-1164(v0)                    0x800cfb74
+  80101afc: nop                                
+  80101b00: and v0,v0,v1                       
+  80101b04: lui at,0x800d                      
+  80101b08: sw v0,-1164(at)                    0x800cfb74
+  80101b0c: jal 0x80031e80                     
+===== ENDING.BIN 0x80101b60
+  80101b38: lui v1,0x800d                      
+  80101b3c: lw v1,-1164(v1)                    0x800cfb74
+  80101b40: addiu a0,zero,-16385               
+  80101b44: lui at,0x8012                      
+  80101b48: sw zero,5120(at)                   0x80121400
+  80101b4c: and v0,v0,a0                       
+  80101b50: and v1,v1,a1                       
+  80101b54: lui at,0x800d                      
+  80101b58: sw v0,-1064(at)                    0x800cfbd8
+  80101b5c: lui at,0x800d                      
+  80101b60: sw v1,-1164(at)                    0x800cfb74
+  80101b64: lui v0,0x8012                      
+===== MEM_CARD.BIN 0x80101424
+  801013fc: beq v0,zero,0x80101454             
+  80101400: addiu v0,zero,-2                   
+  80101404: lui v1,0x800d                      
+  80101408: lw v1,-1164(v1)                    0x800cfb74
+  8010140c: nop                                
+  80101410: and a0,v1,v0                       
+  80101414: lui v1,0x800d                      
+  80101418: lhu v1,18464(v1)                   0x800d4820
+  8010141c: ori v0,a0,0x8                      
+  80101420: lui at,0x800d                      
+  80101424: sw v0,-1164(at)                    0x800cfb74
+  80101428: addiu v0,zero,13                   
+===== MEM_CARD.BIN 0x80101448
+  80101420: lui at,0x800d                      
+  80101424: sw v0,-1164(at)                    0x800cfb74
+  80101428: addiu v0,zero,13                   
+  8010142c: lui at,0x800d                      
+  80101430: sb v1,-1038(at)                    0x800cfbf2
+  80101434: andi v1,a3,0xff                    
+  80101438: bne v1,v0,0x8010196c               
+  8010143c: addiu s5,zero,1                    
+  80101440: ori v0,a0,0x9                      
+  80101444: lui at,0x800d                      
+  80101448: sw v0,-1164(at)                    0x800cfb74
+  8010144c: j 0x801c1384                       
+===== MEM_CARD.BIN 0x80101508
+  801014e0: addiu a1,zero,254                  
+  801014e4: bne v0,zero,0x8010151c             
+  801014e8: nop                                
+  801014ec: lui a1,0x800d                      
+  801014f0: addiu a1,a1,-1164                  0x800cfb74
+  801014f4: lui v1,0x100                       
+  801014f8: lw v0,0(a1)                        0x800d0000
+  801014fc: lui a0,0x800d                      
+  80101500: lhu a0,18464(a0)                   0x800d4820
+  80101504: or v0,v0,v1                        
+  80101508: sw v0,0(a1)                        0x800d0000
+  8010150c: lui at,0x800d                      
+===== MEM_CARD.BIN 0x801019e0
+  801019b8: nop                                
+  801019bc: lbu v1,600(sp)                     
+  801019c0: addiu v0,zero,1                    
+  801019c4: bne v1,v0,0x801019e4               
+  801019c8: nop                                
+  801019cc: lui v1,0x800d                      
+  801019d0: addiu v1,v1,-1164                  0x800cfb74
+  801019d4: lw v0,0(v1)                        0x800d0000
+  801019d8: nop                                
+  801019dc: ori v0,v0,0x400                    
+  801019e0: sw v0,0(v1)                        0x800d0000
+  801019e4: lbu t1,600(sp)                     
+===== MEM_CARD.BIN 0x80103ab0
+  80103a88: and v0,a0,v0                       
+  80103a8c: lui at,0x800d                      
+  80103a90: sw a0,-1064(at)                    0x800cfbd8
+  80103a94: beq v0,zero,0x80103ab8             
+  80103a98: lui v0,0x2000                      
+  80103a9c: lui v0,0x800d                      
+  80103aa0: lw v0,-1164(v0)                    0x800cfb74
+  80103aa4: nop                                
+  80103aa8: ori v0,v0,0x20                     
+  80103aac: lui at,0x800d                      
+  80103ab0: sw v0,-1164(at)                    0x800cfb74
+  80103ab4: lui v0,0x2000                      
+===== MEM_CARD.BIN 0x80103ad8
+  80103ab0: sw v0,-1164(at)                    
+  80103ab4: lui v0,0x2000                      
+  80103ab8: and v0,a0,v0                       
+  80103abc: beq v0,zero,0x80103adc             
+  80103ac0: lui v1,0x8                         
+  80103ac4: lui v0,0x800d                      
+  80103ac8: lw v0,-1164(v0)                    0x800cfb74
+  80103acc: nop                                
+  80103ad0: or v0,v0,v1                        
+  80103ad4: lui at,0x800d                      
+  80103ad8: sw v0,-1164(at)                    0x800cfb74
+  80103adc: andi v0,a0,0x2                     
+===== MEM_CARD.BIN 0x80103afc
+  80103ad4: lui at,0x800d                      
+  80103ad8: sw v0,-1164(at)                    0x800cfb74
+  80103adc: andi v0,a0,0x2                     
+  80103ae0: beq v0,zero,0x80103b00             
+  80103ae4: nop                                
+  80103ae8: lui v0,0x800d                      
+  80103aec: lw v0,-1164(v0)                    0x800cfb74
+  80103af0: nop                                
+  80103af4: ori v0,v0,0x40                     
+  80103af8: lui at,0x800d                      
+  80103afc: sw v0,-1164(at)                    0x800cfb74
+  80103b00: lui v0,0x800d                      
+===== RESULT.BIN 0x801004e8
+  801004c0: lui at,0x800d                      
+  801004c4: sh a2,18474(at)                    0x800d482a
+  801004c8: lui at,0x800d                      
+  801004cc: sb v0,-1024(at)                    0x800cfc00
+  801004d0: sb zero,0(s0)                      
+  801004d4: lui v0,0x800d                      
+  801004d8: lw v0,-1164(v0)                    0x800cfb74
+  801004dc: lui v1,0x20                        
+  801004e0: or v0,v0,v1                        
+  801004e4: lui at,0x800d                      
+  801004e8: sw v0,-1164(at)                    0x800cfb74
+  801004ec: jal 0x80031e80                     
+===== RESULT.BIN 0x8010051c
+  801004f4: jal 0x80031f94                     
+  801004f8: addiu a0,zero,1                    
+  801004fc: lui a0,0xffdf                      
+  80100500: ori a0,a0,0xffff                   
+  80100504: lui v0,0x800d                      
+  80100508: lw v0,-1164(v0)                    0x800cfb74
+  8010050c: addiu v1,zero,1                    
+  80100510: sb v1,0(s0)                        
+  80100514: and v0,v0,a0                       
+  80100518: lui at,0x800d                      
+  8010051c: sw v0,-1164(at)                    0x800cfb74
+  80100520: j 0x8015853c                       
+===== TITLE.BIN 0x80100b44
+  80100b1c: sb v0,4(s0)                        
+  80100b20: addiu v0,zero,2                    
+  80100b24: sb v0,0(s0)                        
+  80100b28: addiu v0,zero,3                    
+  80100b2c: lui a0,0x800d                      
+  80100b30: addiu a0,a0,-1164                  0x800cfb74
+  80100b34: sb v0,1(s0)                        
+  80100b38: lw v0,0(a0)                        0x800d0000
+  80100b3c: lui v1,0x2                         
+  80100b40: or v0,v0,v1                        
+  80100b44: sw v0,0(a0)                        0x800d0000
+  80100b48: lbu a0,7(s0)                       
+===== TITLE.BIN 0x80100c98
+  80100c70: sb v0,0(s0)                        
+  80100c74: addiu v0,zero,3                    
+  80100c78: lui a0,0x800d                      
+  80100c7c: addiu a0,a0,-1164                  0x800cfb74
+  80100c80: lui at,0x8019                      
+  80100c84: sb v0,28673(at)                    0x80197001
+  80100c88: lw v0,0(a0)                        0x800d0000
+  80100c8c: lui v1,0x2                         
+  80100c90: or v0,v0,v1                        
+  80100c94: j 0x80190d0c                       
+  80100c98: sw v0,0(a0)                        0x800d0000
+  80100c9c: sb v0,0(s0)                        
+===== TITLE.BIN 0x80100cf0
+  80100cc8: jal 0x80076a28                     
+  80100ccc: sw zero,0(a0)                      
+  80100cd0: lui v1,0xfeff                      
+  80100cd4: ori v1,v1,0xffff                   
+  80100cd8: addiu a0,zero,17                   
+  80100cdc: lui v0,0x800d                      
+  80100ce0: lw v0,-1164(v0)                    0x800cfb74
+  80100ce4: nop                                
+  80100ce8: and v0,v0,v1                       
+  80100cec: lui at,0x800d                      
+  80100cf0: sw v0,-1164(at)                    0x800cfb74
+  80100cf4: jal 0x80059a00                     
+===== TITLE.BIN 0x80101a3c
+  80101a14: lbu v1,-677(v1)                    
+  80101a18: addiu v0,zero,2                    
+  80101a1c: bne v1,v0,0x80101a54               
+  80101a20: addiu v0,zero,1                    
+  80101a24: lui v0,0x800d                      
+  80101a28: addiu v0,v0,-1164                  0x800cfb74
+  80101a2c: lw v1,0(v0)                        0x800d0000
+  80101a30: addiu a0,zero,-3                   
+  80101a34: and v1,v1,a0                       
+  80101a38: j 0x80191a50                       
+  80101a3c: sw v1,0(v0)                        0x800d0000
+  80101a40: jal 0x80191aa8                     
+===== TITLE.BIN 0x80102984
+  8010295c: addiu v0,zero,1                    
+  80102960: beq v1,v0,0x801029e8               
+  80102964: lui a0,0x405                       
+  80102968: j 0x80192a8c                       
+  8010296c: nop                                
+  80102970: lui v1,0x800d                      
+  80102974: lw v1,-1164(v1)                    0x800cfb74
+  80102978: lui v0,0x2                         
+  8010297c: or a0,v1,v0                        
+  80102980: lui at,0x800d                      
+  80102984: sw a0,-1164(at)                    0x800cfb74
+  80102988: lbu v1,14(s0)                      
+===== TITLE.BIN 0x8010299c
+  80102974: lw v1,-1164(v1)                    
+  80102978: lui v0,0x2                         
+  8010297c: or a0,v1,v0                        
+  80102980: lui at,0x800d                      
+  80102984: sw a0,-1164(at)                    0x800cfb74
+  80102988: lbu v1,14(s0)                      
+  8010298c: addiu v0,zero,1                    
+  80102990: bne v1,v0,0x801029a0               
+  80102994: ori v0,a0,0x20                     
+  80102998: lui at,0x800d                      
+  8010299c: sw v0,-1164(at)                    0x800cfb74
+  801029a0: addiu a0,zero,7                    
+===== TITLE.BIN 0x80102ce4
+  80102cbc: addiu v0,zero,1                    
+  80102cc0: sb v0,6(s0)                        
+  80102cc4: lui v0,0x800d                      
+  80102cc8: lw v0,-1164(v0)                    0x800cfb74
+  80102ccc: addiu v1,zero,3                    
+  80102cd0: sb v1,2(s0)                        
+  80102cd4: lui v1,0x2                         
+  80102cd8: or v0,v0,a2                        
+  80102cdc: or v0,v0,v1                        
+  80102ce0: lui at,0x800d                      
+  80102ce4: sw v0,-1164(at)                    0x800cfb74
+  80102ce8: jal 0x8003947c                     
+===== TITLE.BIN 0x80103198
+  80103170: sw s0,16(sp)                       
+  80103174: lui s0,0x800e                      
+  80103178: addiu s0,s0,-681                   0x800dfd57
+  8010317c: sw ra,28(sp)                       
+  80103180: sw s2,24(sp)                       
+  80103184: lw v0,0(s1)                        
+  80103188: addiu a1,zero,1                    
+  8010318c: sb zero,0(s0)                      0x800e0000
+  80103190: ori v0,v0,0x400                    
+  80103194: jal 0x80031e80                     
+  80103198: sw v0,0(s1)                        
+  8010319c: jal 0x80031f94                     
+===== TITLE.BIN 0x801031c8
+  801031a0: addiu a0,zero,1                    
+  801031a4: lw v1,0(s1)                        
+  801031a8: addiu s2,zero,1                    
+  801031ac: andi v0,v1,0x400                   
+  801031b0: beq v0,zero,0x80103218             
+  801031b4: sb s2,0(s0)                        
+  801031b8: addiu v0,zero,-1025                
+  801031bc: and a0,v1,v0                       
+  801031c0: andi v0,v1,0x8                     
+  801031c4: beq v0,zero,0x801031e0             
+  801031c8: sw a0,0(s1)                        
+  801031cc: addiu v0,zero,3                    
+===== TITLE.BIN 0x80103224
+  801031fc: nop                                
+  80103200: jal 0x80191b10                     
+  80103204: nop                                
+  80103208: lui at,0x8019                      
+  8010320c: sb s2,28672(at)                    0x80197000
+  80103210: j 0x80193234                       
+  80103214: nop                                
+  80103218: lui v0,0xfffd                      
+  8010321c: ori v0,v0,0xffff                   
+  80103220: and v0,v1,v0                       
+  80103224: sw v0,0(s1)                        
+  80103228: addiu v0,zero,3                    
+===== TITLE.BIN 0x80103280
+  80103258: sw s0,16(sp)                       
+  8010325c: lui s0,0x800d                      
+  80103260: addiu s0,s0,-1164                  0x800cfb74
+  80103264: lui v1,0x800                       
+  80103268: sw ra,24(sp)                       
+  8010326c: sw s1,20(sp)                       
+  80103270: lw v0,0(s0)                        0x800d0000
+  80103274: addiu a1,zero,4                    
+  80103278: or v0,v0,v1                        
+  8010327c: jal 0x80031e80                     
+  80103280: sw v0,0(s0)                        0x800d0000
+  80103284: jal 0x80031f94                     
+===== TITLE.BIN 0x801032ac
+  80103284: jal 0x80031f94                     
+  80103288: addiu a0,zero,1                    
+  8010328c: lui v1,0xf7ff                      
+  80103290: ori v1,v1,0xffff                   
+  80103294: lw v0,0(s0)                        
+  80103298: addiu s1,zero,1                    
+  8010329c: lui at,0x800e                      
+  801032a0: sb s1,-681(at)                     0x800dfd57
+  801032a4: and v0,v0,v1                       
+  801032a8: jal 0x80191b10                     
+  801032ac: sw v0,0(s0)                        
+  801032b0: lui at,0x8019                      
+===== TITLE.BIN 0x801037a0
+  80103778: addiu v0,zero,2                    
+  8010377c: sb v0,0(s0)                        
+  80103780: addiu v0,zero,3                    
+  80103784: lui at,0x8019                      
+  80103788: sb v0,28673(at)                    0x80197001
+  8010378c: lui v0,0x800d                      
+  80103790: lw v0,-1164(v0)                    0x800cfb74
+  80103794: lui v1,0x2                         
+  80103798: or v0,v0,v1                        
+  8010379c: lui at,0x800d                      
+  801037a0: sw v0,-1164(at)                    0x800cfb74
+  801037a4: andi v0,v0,0x1                     
+===== TITLE.BIN 0x801038d8
+  801038b0: addiu a1,zero,6144                 
+  801038b4: addiu a2,zero,7                    
+  801038b8: addiu a3,zero,1                    
+  801038bc: lui v0,0x800d                      
+  801038c0: lw v0,-1164(v0)                    0x800cfb74
+  801038c4: addiu v1,zero,-9                   
+  801038c8: and v0,v0,v1                       
+  801038cc: addiu v1,zero,-2                   
+  801038d0: and v0,v0,v1                       
+  801038d4: lui at,0x800d                      
+  801038d8: sw v0,-1164(at)                    0x800cfb74
+  801038dc: jal 0x8002c1a0                     
+===== TITLE.BIN 0x80103e50
+  80103e28: addiu s1,zero,6                    
+  80103e2c: jal 0x80032150                     
+  80103e30: addiu a0,zero,5                    
+  80103e34: j 0x80193eb8                       
+  80103e38: addiu v1,s5,20                     
+  80103e3c: lui v1,0x800d                      
+  80103e40: addiu v1,v1,-1164                  0x800cfb74
+  80103e44: lw v0,0(v1)                        0x800d0000
+  80103e48: nop                                
+  80103e4c: ori v0,v0,0x8                      
+  80103e50: sw v0,0(v1)                        0x800d0000
+  80103e54: jal 0x8003210c                     
+===== TITLE.BIN 0x80105fac
+  80105f84: lui s0,0x91a2                      
+  80105f88: ori s0,s0,0xb3c5                   
+  80105f8c: ori a0,zero,0x8854                 
+  80105f90: addu a0,s1,a0                      
+  80105f94: lui v1,0x800e                      
+  80105f98: addiu v1,v1,-3184                  0x800df390
+  80105f9c: addiu a1,v1,8                      0x800e0008
+  80105fa0: addiu a2,zero,44                   
+  80105fa4: addiu v0,zero,-33                  
+  80105fa8: and v0,a3,v0                       
+  80105fac: sw v0,0(s2)                        
+  80105fb0: addiu v0,zero,8                    
+
+Aufrufe mit konstantem Zielzeiger a0 in 0x800c0000..0x800cfb77 (Block-Kopie/-Loeschung, scan_calls.py):
+PSX.EXE            jal@0x8001421c -> 0x80031fe4  a0=0x800cfb74 a1=0xfdffffff a2=None
+PSX.EXE            jal@0x80016234 -> 0x8008e1f4  a0=0x800ce654 a1=0x800ce604 a2=0xff000000
+PSX.EXE            jal@0x80016244 -> 0x8002ce94  a0=0x800ce604 a1=None a2=None
+PSX.EXE            jal@0x800163a0 -> 0x8008fa80  a0=0x800ce6b0 a1=None a2=None
+PSX.EXE            jal@0x800163ac -> 0x8008f9cc  a0=0x800ce6b0 a1=None a2=None
+PSX.EXE            jal@0x80016418 -> 0x80076a00  a0=0x800ce6d8 a1=0x800ce6b0 a2=None
+PSX.EXE            jal@0x80026670 -> 0x8004c1bc  a0=0x800c3a90 a1=None a2=None
+PSX.EXE            jal@0x80026850 -> 0x8004fba0  a0=0x800c3aa0 a1=None a2=None
+PSX.EXE            jal@0x8002b588 -> 0x80097c74  a0=0x800ce2b4 a1=0x800ce2d8 a2=None
+PSX.EXE            jal@0x80032328 -> 0x80039694  a0=0x800cfb74 a1=0xffff7fff a2=None
+PSX.EXE            jal@0x8005eb14 -> 0x8008fc1c  a0=0x800c3bb8 a1=None a2=None
+PSX.EXE            jal@0x800773c8 -> 0x8008dba4  a0=0x800c3be0 a1=None a2=None
+PSX.EXE            jal@0x80077444 -> 0x8008dba4  a0=0x800c3c00 a1=None a2=None
+PSX.EXE            jal@0x80089a78 -> 0x800873ac  a0=0x800c3d70 a1=None a2=0x800c3d70
+PSX.EXE            jal@0x80089ebc -> 0x8008bd88  a0=0x800c3d8d a1=None a2=None
+PSX.EXE            jal@0x8008a1ac -> 0x80089ab4  a0=0x800c3db8 a1=None a2=None
+PSX.EXE            jal@0x8008a2e8 -> 0x80089ab4  a0=0x800c3db8 a1=None a2=None
+PSX.EXE            jal@0x8008abe4 -> 0x8008c8d8  a0=0x800c3dd0 a1=None a2=None
+PSX.EXE            jal@0x8008ae2c -> 0x8008bd88  a0=0x800c3dad a1=None a2=None
+PSX.EXE            jal@0x80091e4c -> 0x800923bc  a0=0x800c3f18 a1=0x2000000 a2=None
+PSX.EXE            jal@0x80092adc -> 0x80092f48  a0=0x800c3f5c a1=None a2=None
+PSX.EXE            jal@0x80097d28 -> 0x80098864  a0=0x800c4168 a1=None a2=None
+PSX.EXE            jal@0x80097da8 -> 0x8009624c  a0=0x800c4298 a1=0x800c41c6 a2=0x800c40fb
+DIEDEMO.BIN        jal@0x80101308 -> 0x80059514  a0=0x800cfb74 a1=0xbfffffff a2=0xffefffff
+ENDING.BIN         jal@0x80100338 -> 0x80059e54  a0=0x800ce32c a1=0x8012a000 a2=None
+ENDING.BIN         jal@0x80102e14 -> 0x80068068  a0=0x800cc1f0 a1=None a2=None
+TITLE.BIN          jal@0x801018f8 -> 0x80059e54  a0=0x800ce32c a1=0x80168000 a2=None
+27
+
+=== Zusatz: RE2-Gegnermodule build/extracted/re2_ems/CDEMD0|1_EM*_ai0|ai1.BIN (112 Dateien, je @0x80100000 geladen)
+84 Stores auf 0x800cfb74 (42 je Archiv CDEMD0/CDEMD1, ai0 = ai1). Wertbildung je Store (CDEMD0, ai1):
+== EM10 0x8010295c
+  8010292c: addu a1,s3,zero                    
+  80102930: addiu v0,zero,1537                 
+  80102934: jal 0x80015910                     
+  80102938: sw v0,4(a0)                        
+  8010293c: sll v0,v0,8                        
+  80102940: lui v1,0x800d                      
+  80102944: lw v1,-1164(v1)                    0x800cfb74
+  80102948: ori v0,v0,0x6                      
+  8010294c: lui at,0x800d                      
+  80102950: sw v0,-1028(at)                    0x800cfbfc
+  80102954: ori v1,v1,0x100                    
+  80102958: lui at,0x800d                      
+  8010295c: sw v1,-1164(at)                    0x800cfb74
+== EM20 0x80102060
+  80102030: addu a0,s2,zero                    
+  80102034: lui a1,0x400                       
+  80102038: ori a1,a1,0x100                    
+  8010203c: addiu v0,zero,1                    
+  80102040: lui a0,0x800d                      
+  80102044: addiu a0,a0,-1164                  0x800cfb74
+  80102048: sb v0,8(s4)                        
+  8010204c: lw v0,0(a0)                        0x800d0000
+  80102050: lui v1,0x800d                      
+  80102054: lhu v1,-1036(v1)                   0x800cfbf4
+  80102058: or v0,v0,a1                        
+  8010205c: ori v1,v1,0x40                     
+  80102060: sw v0,0(a0)                        0x800d0000
+== EM20 0x80104f60
+  80104f30: lui a0,0xfbff                      
+  80104f34: sb v1,467(s1)                      
+  80104f38: ori v0,v0,0xa                      
+  80104f3c: sw v0,0(s1)                        
+  80104f40: lhu v0,118(s0)                     
+  80104f44: lui v1,0x800d                      
+  80104f48: addiu v1,v1,-1164                  0x800cfb74
+  80104f4c: addiu v0,v0,2048                   
+  80104f50: sh v0,118(s1)                      
+  80104f54: lw v0,0(v1)                        0x800d0000
+  80104f58: ori a0,a0,0xffff                   
+  80104f5c: and v0,v0,a0                       
+  80104f60: sw v0,0(v1)                        0x800d0000
+== EM22 0x801040d0
+  801040a0: lui a1,0x800d                      
+  801040a4: addiu a1,a1,-1028                  0x800cfbfc
+  801040a8: addiu v0,zero,3                    
+  801040ac: sw v0,0(a1)                        0x800d0000
+  801040b0: lw v1,552(s0)                      
+  801040b4: addiu v0,zero,-1                   
+  801040b8: sh v0,342(v1)                      
+  801040bc: lui v0,0x800d                      
+  801040c0: lw v0,-1164(v0)                    0x800cfb74
+  801040c8: or v0,v0,a2                        
+  801040cc: lui at,0x800d                      
+  801040d0: sw v0,-1164(at)                    0x800cfb74
+== EM23 0x80102fcc
+  80102f9c: addiu a0,zero,53                   
+  80102fa0: addiu a1,zero,240                  
+  80102fa4: addiu a2,zero,40                   
+  80102fa8: jal 0x800395b8                     
+  80102fac: addu a3,zero,zero                  
+  80102fb0: addiu v0,zero,768                  
+  80102fb4: lui a0,0x800d                      
+  80102fb8: addiu a0,a0,-1164                  0x800cfb74
+  80102fbc: sw v0,332(s0)                      
+  80102fc0: lw v0,0(a0)                        0x800d0000
+  80102fc4: lui v1,0x400                       
+  80102fc8: or v0,v0,v1                        
+  80102fcc: sw v0,0(a0)                        0x800d0000
+== EM24 0x80103880
+  80103850: lui a1,0x800d                      
+  80103854: addiu a1,a1,-1028                  0x800cfbfc
+  80103858: addiu v0,zero,3                    
+  8010385c: sw v0,0(a1)                        0x800d0000
+  80103860: lw v1,552(s0)                      
+  80103864: addiu v0,zero,-1                   
+  80103868: sh v0,342(v1)                      
+  8010386c: lui v0,0x800d                      
+  80103870: lw v0,-1164(v0)                    0x800cfb74
+  80103878: or v0,v0,a2                        
+  8010387c: lui at,0x800d                      
+  80103880: sw v0,-1164(at)                    0x800cfb74
+== EM27 0x80101910
+  801018e0: addiu v1,zero,2                    
+  801018e4: bne v0,v1,0x80101928               
+  801018e8: addu a0,s3,zero                    
+  801018ec: addiu v0,zero,11                   
+  801018f0: lui a0,0x800d                      
+  801018f4: addiu a0,a0,-1164                  0x800cfb74
+  801018f8: sb v0,6(s3)                        
+  801018fc: lw v0,0(a0)                        0x800d0000
+  80101900: lui v1,0x800d                      
+  80101904: lbu v1,-565(v1)                    0x800cfdcb
+  80101908: ori v0,v0,0x100                    
+  8010190c: ori v1,v1,0x80                     
+  80101910: sw v0,0(a0)                        0x800d0000
+== EM29 0x80100e54
+  80100e24: sh v0,-690(at)                     
+  80100e28: addiu v0,zero,128                  
+  80100e2c: lui at,0x800d                      
+  80100e30: sb v0,-565(at)                     0x800cfdcb
+  80100e34: addiu v0,zero,1                    
+  80100e38: lui at,0x8010                      
+  80100e3c: sw v0,7920(at)                     0x80101ef0
+  80100e40: lui v0,0x800d                      
+  80100e44: lw v0,-1164(v0)                    0x800cfb74
+  80100e48: lui v1,0x400                       
+  80100e4c: or v0,v0,v1                        
+  80100e50: lui at,0x800d                      
+  80100e54: sw v0,-1164(at)                    0x800cfb74
+== EM2A 0x80102174
+  80102144: bgez v0,0x801021d0                 
+  80102148: lui a0,0x400                       
+  8010214c: ori a0,a0,0x100                    
+  80102150: addiu v0,zero,-1                   
+  80102154: lui at,0x800d                      
+  80102158: sh v0,-690(at)                     0x800cfd4e
+  8010215c: lui v0,0x800d                      
+  80102160: lw v0,-1164(v0)                    0x800cfb74
+  80102164: addiu v1,zero,517                  
+  80102168: sw v1,4(s2)                        
+  8010216c: or v0,v0,a0                        
+  80102170: lui at,0x800d                      
+  80102174: sw v0,-1164(at)                    0x800cfb74
+== EM2B 0x80102454
+  80102424: bgez v0,0x80102488                 
+  80102428: andi v0,s3,0x1                     
+  8010242c: lui v1,0x400                       
+  80102430: lhu v0,540(s2)                     
+  80102434: ori v1,v1,0x100                    
+  80102438: ori v0,v0,0x8                      
+  8010243c: sh v0,540(s2)                      
+  80102440: lui v0,0x800d                      
+  80102444: lw v0,-1164(v0)                    0x800cfb74
+  8010244c: or v0,v0,v1                        
+  80102450: lui at,0x800d                      
+  80102454: sw v0,-1164(at)                    0x800cfb74
+== EM2E 0x80102110
+  801020e0: lw v0,-1164(v0)                    
+  801020e4: lui at,0x800d                      
+  801020e8: sb s0,-1027(at)                    0x800cfbfd
+  801020ec: lui at,0x800d                      
+  801020f0: sb zero,-1026(at)                  0x800cfbfe
+  801020f4: lui at,0x800d                      
+  801020f8: sb zero,-1025(at)                  0x800cfbff
+  801020fc: addiu v1,v1,2048                   
+  80102100: or v0,v0,a2                        
+  80102104: lui at,0x800d                      
+  80102108: sh v1,-914(at)                     0x800cfc6e
+  8010210c: lui at,0x800d                      
+  80102110: sw v0,-1164(at)                    0x800cfb74
+== EM2E 0x80102e2c
+  80102dfc: lw v1,-1164(v1)                    
+  80102e00: addiu v0,zero,2                    
+  80102e04: lui at,0x800d                      
+  80102e08: sb s0,-1028(at)                    0x800cfbfc
+  80102e0c: lui at,0x800d                      
+  80102e10: sb v0,-1027(at)                    0x800cfbfd
+  80102e14: lui at,0x800d                      
+  80102e18: sb zero,-1026(at)                  0x800cfbfe
+  80102e1c: lui at,0x800d                      
+  80102e20: sb zero,-1025(at)                  0x800cfbff
+  80102e24: or v1,v1,a0                        
+  80102e28: lui at,0x800d                      
+  80102e2c: sw v1,-1164(at)                    0x800cfb74
+== EM30 0x8010217c
+  8010214c: jal 0x800401d4                     
+  80102150: addu a1,zero,zero                  
+  80102154: lui v0,0x800d                      
+  80102158: lw v0,-1164(v0)                    0x800cfb74
+  8010215c: lui v1,0x800d                      
+  80102160: lbu v1,-565(v1)                    0x800cfdcb
+  80102164: addiu a0,zero,1                    
+  80102168: lui at,0x800d                      
+  8010216c: sw s1,-596(at)                     0x800cfdac
+  80102170: ori v0,v0,0x100                    
+  80102174: ori v1,v1,0x80                     
+  80102178: lui at,0x800d                      
+  8010217c: sw v0,-1164(at)                    0x800cfb74
+== EM31 0x8010207c
+  8010204c: sb v0,467(s2)                      
+  80102050: sw v1,0(s2)                        
+  80102054: lw v0,-56(s0)                      
+  8010205c: ori v0,v0,0x1000                   
+  80102060: sw v0,-56(s0)                      
+  80102064: lui v0,0x800d                      
+  80102068: lw v0,-1164(v0)                    0x800cfb74
+  8010206c: lhu v1,118(s2)                     
+  80102070: ori v0,v0,0x100                    
+  80102074: addiu v1,v1,2048                   
+  80102078: lui at,0x800d                      
+  8010207c: sw v0,-1164(at)                    0x800cfb74
+== EM33 0x801026f4
+  801026c4: sh v0,-914(at)                     
+  801026c8: sw v1,0(s1)                        
+  801026cc: lw v0,408(s2)                      
+  801026d0: lui v1,0x400                       
+  801026d4: sb s0,552(s2)                      
+  801026d8: sb s0,553(s2)                      
+  801026dc: sw a0,1144(v0)                     
+  801026e0: lui v0,0x800d                      
+  801026e4: lw v0,-1164(v0)                    0x800cfb74
+  801026e8: ori v1,v1,0x100                    
+  801026ec: or v0,v0,v1                        
+  801026f0: lui at,0x800d                      
+  801026f4: sw v0,-1164(at)                    0x800cfb74
+== EM34 0x80101e38
+  80101e08: addiu v0,v0,6                      
+  80101e0c: lui at,0x800d                      
+  80101e10: sw v0,-1028(at)                    0x800cfbfc
+  80101e14: lbu v0,467(s2)                     
+  80101e1c: ori v0,v0,0x80                     
+  80101e20: sb v0,467(s2)                      
+  80101e24: lui v0,0x800d                      
+  80101e28: lw v0,-1164(v0)                    0x800cfb74
+  80101e30: ori v0,v0,0x100                    
+  80101e34: lui at,0x800d                      
+  80101e38: sw v0,-1164(at)                    0x800cfb74
+== EM34 0x801052f8
+  801052c8: addiu v0,zero,518                  
+  801052cc: lui at,0x800d                      
+  801052d0: sw v0,-1028(at)                    0x800cfbfc
+  801052d4: lbu v0,467(s1)                     
+  801052dc: ori v0,v0,0x80                     
+  801052e0: sb v0,467(s1)                      
+  801052e4: lui v0,0x800d                      
+  801052e8: lw v0,-1164(v0)                    0x800cfb74
+  801052f0: ori v0,v0,0x100                    
+  801052f4: lui at,0x800d                      
+  801052f8: sw v0,-1164(at)                    0x800cfb74
+== EM36 0x80100944
+  80100918: ori v0,v0,0x80                     
+  8010091c: lui at,0x800d                      
+  80100920: sb v0,-565(at)                     0x800cfdcb
+  80100924: addiu v0,zero,4                    
+  80100928: sb v0,536(s0)                      
+  8010092c: sb zero,537(s0)                    
+  80100930: lui v0,0x800d                      
+  80100934: lw v0,-1164(v0)                    0x800cfb74
+  8010093c: ori v0,v0,0x100                    
+  80100940: lui at,0x800d                      
+  80100944: sw v0,-1164(at)                    0x800cfb74
+== EM36 0x80103ee0
+  80103eb4: ori v0,v0,0x80                     
+  80103eb8: lui at,0x800d                      
+  80103ebc: sb v0,-565(at)                     0x800cfdcb
+  80103ec0: addiu v0,zero,4                    
+  80103ec4: sb v0,536(s0)                      
+  80103ec8: sb zero,537(s0)                    
+  80103ecc: lui v0,0x800d                      
+  80103ed0: lw v0,-1164(v0)                    0x800cfb74
+  80103ed8: ori v0,v0,0x100                    
+  80103edc: lui at,0x800d                      
+  80103ee0: sw v0,-1164(at)                    0x800cfb74
+(EM39 = EM2E bytegleich an @0x80102110/@0x80102e2c.) Ergebnis: alle ODER, EM20 @0x80104f60 UND mit 0xfbffffff (lui a0,0xfbff @0x80104f30) - keiner loescht 0x40.

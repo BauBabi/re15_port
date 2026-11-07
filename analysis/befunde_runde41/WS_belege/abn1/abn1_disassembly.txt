@@ -1,0 +1,222 @@
+Spur WS - Abnahme 1 - eigene Disassembly (Werkzeuge re2_disasm.py / re15_disasm.py, Repo C:/workspace/git/reAi_v2)
+
+### 0x11-HP 250 (EMOVL10_S0.BIN)
+; C:\workspace\git\reAi_v2\info\re2leon\COMMON\BIN\EMOVL10_S0.BIN  @0x801008a0 (12 instr)
+  801008a0: addiu v0,zero,17                   
+  801008a4: sb zero,560(s2)                    
+  801008a8: sb zero,561(s2)                    
+  801008ac: sh zero,566(s2)                    
+  801008b0: sb zero,569(s2)                    
+  801008b4: sb zero,570(s2)                    
+  801008b8: sb zero,571(s2)                    
+  801008bc: bne v1,v0,0x801008d8               
+  801008c0: sb zero,572(s2)                    
+  801008c4: lhu v0,538(s2)                     
+  801008c8: addiu v1,zero,250                  
+  801008cc: sh v1,342(s2)                      
+
+### Todesregel RE1.5 (PSX.EXE FUN_80012d60)
+; C:\workspace\git\reAi_v2\info\Re1.5\PSX.EXE  @0x80012ffc (10 instr)
+  80012ffc: subu v1,v1,a0                      
+  80013000: sh v1,154(s1)                      
+  80013004: lh v1,154(s1)                      
+  80013008: ori v0,v0,0x1                      
+  8001300c: sb v0,147(s1)                      
+  80013010: ori v0,zero,0x2                    
+  80013014: bgez v1,0x80013024                 
+  80013018: sb v0,4(s1)                        
+  8001301c: ori v0,zero,0x3                    
+  80013020: sb v0,4(s1)                        
+
+### Todesregel + Applier RE2 (PSX.EXE FUN_800470C0)
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80047110 (3 instr)
+  80047110: sw s0,16(sp)                       
+  80047114: srl s6,s5,28                       
+  80047118: addiu s2,s7,15412                  
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80047144 (4 instr)
+  80047144: nop                                
+  80047148: lh v0,342(s0)                      
+  8004714c: nop                                
+  80047150: bltz v0,0x8004740c                 
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80047208 (36 instr)
+  80047208: lui v0,0x1                         
+  8004720c: and v0,s5,v0                       
+  80047210: beq v0,zero,0x80047434             
+  80047214: andi v1,s5,0xffff                  
+  80047218: lbu v0,8(s1)                       
+  8004721c: nop                                
+  80047220: sll v0,v0,2                        
+  80047224: lui at,0x800a                      
+  80047228: addu at,at,v0                      
+  8004722c: lw a1,27272(at)                    0x800a6a88
+  80047230: sll v0,v1,2                        
+  80047234: addu v0,v0,v1                      
+  80047238: sll v0,v0,2                        
+  8004723c: addiu v0,v0,-20                    
+  80047240: addu a1,a1,v0                      
+  80047244: sll v0,s6,2                        
+  80047248: addu v0,v0,s6                      
+  8004724c: lw v1,0(a1)                        
+  80047250: sll v0,v0,1                        
+  80047254: srlv v1,v1,v0                      
+  80047258: lhu v0,342(s1)                     
+  8004725c: andi v1,v1,0x3ff                   
+  80047260: subu v0,v0,v1                      
+  80047264: lw v1,4(s1)                        
+  80047268: sh v0,342(s1)                      
+  8004726c: addiu v0,zero,3074                 
+  80047270: beq v1,v0,0x8004727c               
+  80047274: nop                                
+  80047278: sw v1,508(s1)                      
+  8004727c: lh v1,342(s1)                      
+  80047280: addiu v0,zero,2                    
+  80047284: bgez v1,0x80047294                 
+  80047288: sw v0,4(s1)                        
+  8004728c: addiu v0,zero,3                    
+  80047290: sw v0,4(s1)                        
+  80047294: addiu v0,zero,1                    
+
+### Rakete Op 24 Hitcodes (RE2 PSX.EXE)
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x8001f7b0 (5 instr)
+  8001f7b0: lui a3,0x3                         
+  8001f7b4: sw v0,24(sp)                       
+  8001f7b8: lh a1,34(v1)                       
+  8001f7bc: jal 0x800470c0                     
+  8001f7c0: ori a3,a3,0x11                     
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x8001f820 (8 instr)
+  8001f820: lui a3,0x2                         
+  8001f824: lui v1,0x800e                      
+  8001f828: lw v1,-13360(v1)                   0x800dcbd0
+  8001f82c: ori a3,a3,0x11                     
+  8001f830: sw v0,20(sp)                       
+  8001f834: lh a1,34(v1)                       0x800e0022
+  8001f838: addiu v0,v0,-10                    
+  8001f83c: jal 0x800470c0                     
+
+### Op 47 Sub-Pruefung und Kasten
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x80020d34 (2 instr)
+  80020d34: addiu v0,zero,12                   
+  80020d38: bne v1,v0,0x80020dc0               
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  read 4 x u16(s) @0x80010908 stride 2
+  0x80010908: [-800, 0, 400, 200]
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  read 4 x u16(s) @0x80010918 stride 2
+  0x80010918: [-2000, 0, 1000, 500]
+
+### Zeile 17 je Typ (eigener Dekoder)
+t_addr 0x80010000
+typ 0x10 ptr@0x800a6ac8 -> 0x800a412c Z17@0x800a426c w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x11 ptr@0x800a6acc -> 0x800a412c Z17@0x800a426c w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x14 ptr@0x800a6ad8 -> 0x800a412c Z17@0x800a426c w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x15 ptr@0x800a6adc -> 0x800a42a8 Z17@0x800a43e8 w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x16 ptr@0x800a6ae0 -> 0x800a42a8 Z17@0x800a43e8 w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x17 ptr@0x800a6ae4 -> 0x800a42a8 Z17@0x800a43e8 w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x18 ptr@0x800a6ae8 -> 0x800a412c Z17@0x800a426c w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x19 ptr@0x800a6aec -> 0x800a412c Z17@0x800a426c w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x1a ptr@0x800a6af0 -> 0x800a412c Z17@0x800a426c w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+typ 0x20 ptr@0x800a6b08 -> 0x800a4424 Z17@0x800a4564 w0=12c4b12c K0=300 K1=300 K2=300 sperre=15
+typ 0x21 ptr@0x800a6b0c -> 0x800a45a0 Z17@0x800a46e0 w0=12c4b12c K0=300 K1=300 K2=300 sperre=15
+typ 0x22 ptr@0x800a6b10 -> 0x800a471c Z17@0x800a485c w0=0c8320c8 K0=200 K1=200 K2=200 sperre=15
+typ 0x23 ptr@0x800a6b14 -> 0x800a4a14 Z17@0x800a4b54 w0=06e1b86e K0=110 K1=110 K2=110 sperre=15
+typ 0x25 ptr@0x800a6b1c -> 0x800a4b90 Z17@0x800a4cd0 w0=0c8320c8 K0=200 K1=200 K2=200 sperre=15
+typ 0x26 ptr@0x800a6b20 -> 0x800a4b90 Z17@0x800a4cd0 w0=0c8320c8 K0=200 K1=200 K2=200 sperre=15
+typ 0x27 ptr@0x800a6b24 -> 0x800a4d0c Z17@0x800a4e4c w0=0c9324c9 K0=201 K1=201 K2=201 sperre=15
+typ 0x29 ptr@0x800a6b2c -> 0x800a5004 Z17@0x800a5144 w0=12c4b12c K0=300 K1=300 K2=300 sperre=15
+typ 0x2a ptr@0x800a6b30 -> 0x800a52fc Z17@0x800a543c w0=1f47d1f4 K0=500 K1=500 K2=500 sperre=15
+typ 0x2b ptr@0x800a6b34 -> 0x800a5478 Z17@0x800a55b8 w0=1f47d1f4 K0=500 K1=500 K2=500 sperre=15
+typ 0x2d ptr@0x800a6b3c -> 0x800a5180 Z17@0x800a52c0 w0=0280a028 K0=40 K1=40 K2=40 sperre=15
+typ 0x2e ptr@0x800a6b40 -> 0x800a55f4 Z17@0x800a5734 w0=12c4b12c K0=300 K1=300 K2=300 sperre=15
+typ 0x30 ptr@0x800a6b48 -> 0x800a5770 Z17@0x800a58b0 w0=0c8320c8 K0=200 K1=200 K2=200 sperre=15
+typ 0x31 ptr@0x800a6b4c -> 0x800a58ec Z17@0x800a5a2c w0=12c4b12c K0=300 K1=300 K2=300 sperre=15
+typ 0x33 ptr@0x800a6b54 -> 0x800a5a68 Z17@0x800a5ba8 w0=19064190 K0=400 K1=400 K2=400 sperre=15
+typ 0x34 ptr@0x800a6b58 -> 0x800a5be4 Z17@0x800a5d24 w0=12d4b52d K0=301 K1=301 K2=301 sperre=15
+typ 0x36 ptr@0x800a6b60 -> 0x800a5edc Z17@0x800a601c w0=0c8320c8 K0=200 K1=200 K2=200 sperre=15
+typ 0x37 ptr@0x800a6b64 -> 0x800a412c Z17@0x800a426c w0=384e1384 K0=900 K1=900 K2=900 sperre=15
+
+### H3: Gator-Init EM23_OVL_0000.BIN und Daten
+; C:\workspace\git\reAi_v2\info\re2leon\COMMON\BIN\EM23_OVL_0000.BIN  @0x80100518 (27 instr)
+  80100518: lui v1,0x800d                      
+  8010051c: lw v1,-1164(v1)                    0x800cfb74
+  80100520: nop                                
+  80100524: andi v0,v1,0x40                    
+  80100528: beq v0,zero,0x80100558             
+  8010052c: andi v0,v1,0x20                    
+  80100530: beq v0,zero,0x80100548             
+  80100534: nop                                
+  80100538: lui v0,0x8010                      
+  8010053c: lhu v0,17900(v0)                   0x801045ec
+  80100540: j 0x80100580                       
+  80100544: addiu v0,v0,25000                  0x801061a8
+  80100548: lui v0,0x8010                      
+  8010054c: lhu v0,17902(v0)                   0x801045ee
+  80100550: j 0x80100580                       
+  80100554: addiu v0,v0,25000                  0x801061a8
+  80100558: beq v0,zero,0x80100570             
+  8010055c: nop                                
+  80100560: lui v0,0x8010                      
+  80100564: lhu v0,17852(v0)                   0x801045bc
+  80100568: j 0x80100580                       
+  8010056c: addiu v0,v0,25000                  0x801061a8
+  80100570: lui v0,0x8010                      
+  80100574: lhu v0,17854(v0)                   0x801045be
+  80100578: nop                                
+  8010057c: addiu v0,v0,25000                  0x801061a8
+  80100580: sh v0,342(s0)                      
+; C:\workspace\git\reAi_v2\info\re2leon\COMMON\BIN\EM23_OVL_0000.BIN  read 32 x u16 @0x801045b0 stride 2
+  0x801045b0: [48, 10173, 8, 992, 0, 0, 300, 300, 250, 450, 300, 300, 220, 300, 400, 300, 400, 350, 180, 340, 220, 240, 175, 240, 310, 240, 310, 300, 250, 200, 240, 240]
+
+### H3: Setter RE2 PSX.EXE FUN_8002b48c, Aufruf in main
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x8002b48c (12 instr)
+  8002b48c: addiu sp,sp,-64                    
+  8002b490: sw ra,56(sp)                       
+  8002b494: sw s1,52(sp)                       
+  8002b498: jal 0x80031cc0                     
+  8002b49c: sw s0,48(sp)                       
+  8002b4a0: lui v0,0x800d                      
+  8002b4a4: lw v0,-1164(v0)                    0x800cfb74
+  8002b4a8: nop                                
+  8002b4ac: ori v0,v0,0x40                     
+  8002b4b0: lui at,0x800d                      
+  8002b4b4: sw v0,-1164(at)                    0x800cfb74
+  8002b4b8: jal 0x80086084                     
+; C:\workspace\git\reAi_v2\info\re2leon\PSX.EXE  @0x8002aef8 (3 instr)
+  8002aef8: jal 0x80078400                     
+  8002aefc: sw s0,40(sp)                       
+  8002af00: jal 0x8002b48c                     
+
+### H3: dieselbe Adresse in der RE1.5-EXE
+; C:\workspace\git\reAi_v2\info\Re1.5\PSX.EXE  @0x8002b4a8 (3 instr)
+  8002b4a8: sw s3,84(sp)                       
+  8002b4ac: addiu s3,sp,40                     
+  8002b4b0: sw ra,88(sp)                       
+
+### Port-Konsistenz: Zombie-Tabelle (EMOVL10_S0) und G4-HP (CDEMD0_EM34_ai1, build/extracted/re2_ems)
+; C:\workspace\git\reAi_v2\info\re2leon\COMMON\BIN\EMOVL10_S0.BIN  @0x801006cc (4 instr)
+  801006cc: lw v0,0(s1)                        
+  801006d0: nop                                
+  801006d4: andi v0,v0,0x40                    
+  801006d8: beq v0,zero,0x8010075c             
+; build/extracted/re2_ems\CDEMD0_EM34_ai1.BIN  @0x80100668 (20 instr)
+  80100668: lw v0,0(v1)                        
+  8010066c: nop                                
+  80100670: andi v0,v0,0x40                    
+  80100674: beq v0,zero,0x8010069c             
+  80100678: addiu v0,zero,1000                 
+  8010067c: sh v0,342(s1)                      
+  80100680: lw v0,0(v1)                        
+  80100684: nop                                
+  80100688: andi v0,v0,0x20                    
+  8010068c: beq v0,zero,0x801006bc             
+  80100690: addiu v0,zero,900                  
+  80100694: j 0x801006bc                       
+  80100698: sh v0,342(s1)                      
+  8010069c: addiu v0,zero,1100                 
+  801006a0: sh v0,342(s1)                      
+  801006a4: lw v0,0(v1)                        
+  801006a8: nop                                
+  801006ac: andi v0,v0,0x20                    
+  801006b0: beq v0,zero,0x801006bc             
+  801006b4: addiu v0,zero,1000                 
+
+### Pistole am Alligator (RE1.5 @0x8006ece4, fuer Mangel M1)
+; C:\workspace\git\reAi_v2\info\Re1.5\PSX.EXE  read 1 x u16 @0x8006ece4 stride 2
+  0x8006ece4: [7]

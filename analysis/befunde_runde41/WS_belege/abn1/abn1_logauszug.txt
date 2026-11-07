@@ -1,0 +1,800 @@
+Spur WS - Abnahme 1 - Log-Auszuege (eigene Laeufe, Messkopie re15_pc_wsabn.exe = Kopie von re15_port/build/platform/pc/re15_pc.exe,
+Bau 12:45:37 auf ac72cd3cb, ninja: no work to do). HP-Folgen: nur Wechsel von Typ/Zustand/HP je Slot aus RE15_STATE_LOG,
+Bildnummern F = Spielbilder nach dem Debug-Sprung (seg1). Gemeinsame Umgebung: SDL_ASSERT=always_ignore RE15_NO_INTRO=1
+RE15_NOAUDIO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_WINDOW_SCALE=1 RE15_STATE_LOG=state.log, beschleunigter Renderer.
+
+== zl_wurf
+   lauf zl_wurf exit=0 dauer=20s
+   RE15_DEBUG_JUMP=1140@250
+   RE15_PLAYER_POS=-1676,-18070,1076
+   RE15_AI_FLAVOR=re2
+   RE15_GIVE=9:5
+   RE15_EQUIP=9
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=1
+   RE15_INPUT_SCRIPT=MD0.6,MDA0.2,MD2.5,W5
+   RE15_EXIT_AT=320#1140
+   RE15_GR_LOG=1
+   RE15_GRANATE_LOG=gr.log
+   RE15_FRAMEDUMP=100-148/4:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM1140 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-1676,-18070) rot=1076 band=-1
+   [gr] RE2 Slot 2 Typ 0x10 Zeile 9: ZERFETZT (HP -201)
+   [gr] RE2 Slot 3 Typ 0x10 Zeile 9: ZERFETZT (HP -171)
+   [gr] RE2 Slot 4 Typ 0x11 Zeile 9: ZERFETZT (HP -1)
+   [gr] RE2 Slot 5 Typ 0x11 Zeile 9: ZERFETZT (HP -1)
+   [flow] EXIT_AT: Bild 320 in Raum 1140 erreicht -> exit
+   T=365 EV resolver art=2 P=(-2199,-480,-20548) r=2000 eingriffe=4
+   seg1 F1 slot 2 t=10 st=0 ss1=0 mo=18 hp=0  PL(-1676,-18070,rot=1076,hp=100)
+   seg1 F6 slot 2 t=10 st=1 ss1=8 mo=18 hp=50  PL(-1676,-18070,rot=1076,hp=100)
+   seg1 F119 slot 2 t=10 st=3 ss1=9 mo=6 hp=-201  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F180 slot 2 t=10 st=7 ss1=0 mo=1 hp=-201  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F181 slot 2 t=10 st=7 ss1=8 mo=23 hp=-1  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F1 slot 3 t=10 st=0 ss1=0 mo=18 hp=0  PL(-1676,-18070,rot=1076,hp=100)
+   seg1 F6 slot 3 t=10 st=1 ss1=8 mo=18 hp=80  PL(-1676,-18070,rot=1076,hp=100)
+   seg1 F119 slot 3 t=10 st=3 ss1=9 mo=0 hp=-171  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F180 slot 3 t=10 st=7 ss1=0 mo=1 hp=-171  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F181 slot 3 t=10 st=7 ss1=8 mo=23 hp=-1  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F1 slot 4 t=11 st=0 ss1=0 mo=18 hp=0  PL(-1676,-18070,rot=1076,hp=100)
+   seg1 F6 slot 4 t=11 st=1 ss1=8 mo=18 hp=250  PL(-1676,-18070,rot=1076,hp=100)
+   seg1 F119 slot 4 t=11 st=3 ss1=9 mo=0 hp=-1  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F170 slot 4 t=11 st=7 ss1=0 mo=2 hp=-1  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F1 slot 5 t=11 st=0 ss1=0 mo=18 hp=0  PL(-1676,-18070,rot=1076,hp=100)
+   seg1 F6 slot 5 t=11 st=1 ss1=8 mo=18 hp=250  PL(-1676,-18070,rot=1076,hp=100)
+   seg1 F119 slot 5 t=11 st=3 ss1=9 mo=6 hp=-1  PL(-1676,-18070,rot=1079,hp=100)
+   seg1 F180 slot 5 t=11 st=7 ss1=0 mo=1 hp=-1  PL(-1676,-18070,rot=1079,hp=100)
+
+== zl_11
+   lauf zl_11 exit=0 dauer=16s
+   RE15_DEBUG_JUMP=1140@250
+   RE15_FORCE_EXPLOSION=2@120:4
+   RE15_EXIT_AT=200#1140
+   RE15_FRAMEDUMP=116-152/4:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM1140 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=4 t=11 P=(200,-500,-21600) Treffer=0
+   [flow] EXIT_AT: Bild 200 in Raum 1140 erreicht -> exit
+   seg1 F1 slot 4 t=11 st=0 ss1=0 mo=18 hp=0  PL(-7600,-17600,rot=0,hp=100)
+   seg1 F6 slot 4 t=11 st=1 ss1=8 mo=18 hp=250  PL(-7600,-17600,rot=0,hp=100)
+
+== zl_10
+   lauf zl_10 exit=0 dauer=17s
+   RE15_DEBUG_JUMP=1140@250
+   RE15_FORCE_EXPLOSION=2@120:2
+   RE15_EXIT_AT=200#1140
+   RE15_FRAMEDUMP=116-152/4:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM1140 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=2 t=10 P=(-1800,-500,-19600) Treffer=0
+   [flow] EXIT_AT: Bild 200 in Raum 1140 erreicht -> exit
+   seg1 F1 slot 2 t=10 st=0 ss1=0 mo=18 hp=0  PL(-7600,-17600,rot=0,hp=100)
+   seg1 F6 slot 2 t=10 st=1 ss1=8 mo=18 hp=50  PL(-7600,-17600,rot=0,hp=100)
+
+== ze_16
+   lauf ze_16 exit=0 dauer=15s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=1221@250
+   RE15_FORCE_EXPLOSION=2@120:1
+   RE15_EXIT_AT=200#1221
+   RE15_FRAMEDUMP=116-152/4:fd_
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM1221 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=1 t=16 P=(-25398,-500,-6739) Treffer=2
+   [flow] EXIT_AT: Bild 200 in Raum 1221 erreicht -> exit
+   seg1 F1 slot 1 t=16 st=0 ss1=0 mo=23 hp=0  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F6 slot 1 t=16 st=1 ss1=2 mo=23 hp=95  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F120 slot 1 t=16 st=3 ss1=9 mo=23 hp=-156  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F191 slot 1 t=16 st=7 ss1=0 mo=7 hp=-156  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F192 slot 1 t=16 st=7 ss1=1 mo=23 hp=-1  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F1 slot 2 t=16 st=0 ss1=0 mo=23 hp=0  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F6 slot 2 t=16 st=1 ss1=2 mo=23 hp=75  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F120 slot 2 t=16 st=3 ss1=9 mo=23 hp=-176  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F191 slot 2 t=16 st=7 ss1=0 mo=7 hp=-176  PL(-22400,-6500,rot=0,hp=100)
+   seg1 F192 slot 2 t=16 st=7 ss1=8 mo=23 hp=-1  PL(-22400,-6500,rot=0,hp=100)
+
+== hund_e
+   lauf hund_e exit=0 dauer=15s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=11C1@250
+   RE15_FORCE_EXPLOSION=2@120:2
+   RE15_EXIT_AT=200#11C1
+   RE15_FRAMEDUMP=116-152/4:fd_
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM11C1 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=2 t=20 P=(-13202,-500,361) Treffer=1
+   [flow] EXIT_AT: Bild 200 in Raum 11c1 erreicht -> exit
+   seg1 F1 slot 2 t=20 st=0 ss1=0 mo=0 hp=0  PL(-22604,14455,rot=0,hp=100)
+   seg1 F6 slot 2 t=20 st=1 ss1=0 mo=1 hp=98  PL(-22604,14455,rot=0,hp=100)
+   seg1 F120 slot 2 t=20 st=3 ss1=9 mo=1 hp=-153  PL(-22604,14455,rot=0,hp=100)
+   seg1 F142 slot 2 t=20 st=7 ss1=0 mo=18 hp=-153  PL(-22604,14455,rot=0,hp=100)
+   seg1 F143 slot 2 t=20 st=7 ss1=1 mo=18 hp=-1  PL(-22604,14455,rot=0,hp=100)
+
+== hund_l
+   lauf hund_l exit=0 dauer=15s
+   RE15_DEBUG_JUMP=1230@250
+   RE15_FORCE_EXPLOSION=2@120:1
+   RE15_EXIT_AT=200#1230
+   RE15_FRAMEDUMP=116-152/4:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM1230 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=1 t=20 P=(-172,-500,12820) Treffer=1
+   [flow] EXIT_AT: Bild 200 in Raum 1230 erreicht -> exit
+   seg1 F1 slot 1 t=20 st=0 ss1=0 mo=0 hp=0  PL(-4729,-16018,rot=0,hp=100)
+   seg1 F6 slot 1 t=20 st=1 ss1=0 mo=1 hp=96  PL(-4729,-15916,rot=0,hp=100)
+   seg1 F120 slot 1 t=20 st=3 ss1=9 mo=0 hp=-155  PL(-4729,-15916,rot=0,hp=100)
+   seg1 F142 slot 1 t=20 st=7 ss1=0 mo=18 hp=-155  PL(-4729,-15916,rot=0,hp=100)
+   seg1 F143 slot 1 t=20 st=7 ss1=1 mo=18 hp=-1  PL(-4729,-15916,rot=0,hp=100)
+
+== spinne_l
+   lauf spinne_l exit=0 dauer=16s
+   RE15_DEBUG_JUMP=2030@250
+   RE15_FORCE_EXPLOSION=2@120:2
+   RE15_EXIT_AT=200#2030
+   RE15_FRAMEDUMP=116-152/4:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM2030 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=2 t=25 P=(2331,-5900,8982) Treffer=1
+   [flow] EXIT_AT: Bild 200 in Raum 2030 erreicht -> exit
+   seg1 F1 slot 2 t=25 st=0 ss1=0 mo=0 hp=0  PL(6550,-100,rot=0,hp=100)
+   seg1 F6 slot 2 t=25 st=1 ss1=0 mo=1 hp=111  PL(6550,-100,rot=0,hp=100)
+   seg1 F120 slot 2 t=25 st=3 ss1=9 mo=2 hp=-140  PL(6782,-100,rot=0,hp=78)
+   seg1 F132 slot 2 t=25 st=7 ss1=0 mo=12 hp=-140  PL(6782,-100,rot=0,hp=77)
+
+== spinne_e
+   lauf spinne_e exit=0 dauer=16s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=2031@250
+   RE15_FORCE_EXPLOSION=2@120:2
+   RE15_EXIT_AT=200#2031
+   RE15_FRAMEDUMP=116-152/4:fd_
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM2031 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=2 t=25 P=(2331,-5900,8982) Treffer=1
+   [flow] EXIT_AT: Bild 200 in Raum 2031 erreicht -> exit
+   seg1 F1 slot 2 t=25 st=0 ss1=0 mo=0 hp=0  PL(6550,-100,rot=0,hp=100)
+   seg1 F6 slot 2 t=25 st=1 ss1=0 mo=1 hp=111  PL(6550,-100,rot=0,hp=100)
+   seg1 F120 slot 2 t=25 st=3 ss1=9 mo=2 hp=-140  PL(6782,-100,rot=0,hp=78)
+   seg1 F132 slot 2 t=25 st=7 ss1=0 mo=12 hp=-140  PL(6782,-100,rot=0,hp=77)
+
+== gorilla_l
+   lauf gorilla_l exit=0 dauer=21s
+   RE15_DEBUG_JUMP=11C0@250
+   RE15_FORCE_EXPLOSION=2@120:2,2@180:2,2@240:2
+   RE15_EXIT_AT=300#11C0
+   RE15_FRAMEDUMP=116-260/12:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM11C0 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=2 t=27 P=(-1220,-500,-21568) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F180 art=2 slot=2 t=27 P=(-1220,-500,-21568) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F240 art=2 slot=2 t=27 P=(-1220,-500,-21568) Treffer=0
+   [flow] EXIT_AT: Bild 300 in Raum 11c0 erreicht -> exit
+   seg1 F1 slot 2 t=27 st=1 ss1=0 mo=0 hp=360  PL(-22604,14455,rot=0,hp=100)
+
+== gorilla_l2
+   lauf gorilla_l2 exit=0 dauer=25s
+   RE15_DEBUG_JUMP=11C0@240
+   RE15_SET_FLAG=4:0x40
+   RE15_PLAYER_POS=-6729,-12800,1486
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_FORCE_EXPLOSION=2@300:2,2@360:2,2@420:2
+   RE15_EXIT_AT=480#11C0
+   RE15_FRAMEDUMP=296-436/10:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [setflag] flag(4,64/0x40) = 1
+   [debug-menu] AUTO-JUMP -> ROOM11C0 (Frame 240)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-6729,-12800) rot=1486 band=-1
+   [harness] RE15_FORCE_EXPLOSION F300 art=2 slot=2 t=27 P=(-8795,-500,-12506) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F360 art=2 slot=2 t=27 P=(-8835,-500,-12466) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F420 art=2 slot=2 t=27 P=(-8842,-500,-12502) Treffer=1
+   [flow] EXIT_AT: Bild 480 in Raum 11c0 erreicht -> exit
+   seg1 F1 slot 2 t=27 st=1 ss1=0 mo=0 hp=360  PL(-6729,-12800,rot=1486,hp=100)
+   seg1 F300 slot 2 t=27 st=2 ss1=9 mo=18 hp=109  PL(-6355,-12762,rot=1486,hp=100)
+   seg1 F361 slot 2 t=27 st=1 ss1=3 mo=17 hp=109  PL(-6355,-12762,rot=1486,hp=100)
+   seg1 F420 slot 2 t=27 st=3 ss1=9 mo=5 hp=-142  PL(-6348,-12768,rot=1486,hp=100)
+   seg1 F461 slot 2 t=27 st=7 ss1=0 mo=11 hp=-142  PL(-6348,-12768,rot=1486,hp=100)
+
+== birkin_l
+   lauf birkin_l exit=0 dauer=21s
+   RE15_DEBUG_JUMP=3070@250
+   RE15_SET_FLAG=4:215
+   RE15_FORCE_EXPLOSION=2@150:1,2@210:1,2@270:1
+   RE15_EXIT_AT=330#3070
+   RE15_FRAMEDUMP=146-290/12:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [setflag] flag(4,215/0xd7) = 1
+   [debug-menu] AUTO-JUMP -> ROOM3070 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F150 art=2 slot=1 t=30 P=(-21118,-500,-14118) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F210 art=2 slot=1 t=30 P=(-21118,-500,-14611) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F270 art=2 slot=1 t=30 P=(-21118,-500,-15010) Treffer=1
+   [flow] EXIT_AT: Bild 330 in Raum 3070 erreicht -> exit
+   seg1 F1 slot 1 t=30 st=1 ss1=0 mo=0 hp=600  PL(-12500,-17000,rot=0,hp=100)
+   seg1 F150 slot 1 t=30 st=2 ss1=9 mo=1 hp=349  PL(-12500,-17000,rot=0,hp=100)
+   seg1 F151 slot 1 t=30 st=1 ss1=1 mo=1 hp=354  PL(-12500,-17000,rot=0,hp=100)
+   seg1 F210 slot 1 t=30 st=2 ss1=9 mo=1 hp=103  PL(-12500,-17000,rot=0,hp=100)
+   seg1 F211 slot 1 t=30 st=1 ss1=1 mo=1 hp=108  PL(-12500,-17000,rot=0,hp=100)
+   seg1 F270 slot 1 t=30 st=3 ss1=9 mo=1 hp=-143  PL(-12500,-17000,rot=0,hp=100)
+
+== birkin_e
+   lauf birkin_e exit=0 dauer=50s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=3071@250
+   RE15_FORCE_EXPLOSION=2@150:1,2@210:1
+   RE15_EXIT_AT=1200#3071
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM3071 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F150 art=2 slot=1 t=30 P=(-29000,-500,-11850) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F210 art=2 slot=1 t=30 P=(-29000,-500,-11850) Treffer=0
+   [flow] EXIT_AT: Bild 1200 in Raum 3071 erreicht -> exit
+   seg1 F1 slot 1 t=30 st=1 ss1=10 mo=0 hp=600  PL(-12500,-17000,rot=0,hp=100)
+   seg1 F150 slot 1 t=30 st=2 ss1=9 mo=0 hp=349  PL(-12500,-17000,rot=0,hp=100)
+
+== birkin_e5081
+   lauf birkin_e5081 exit=0 dauer=22s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=5081@250
+   RE15_FORCE_EXPLOSION=2@150:1,2@210:1,2@270:1,2@330:1
+   RE15_EXIT_AT=380#5081
+   RE15_FRAMEDUMP=146-290/12:fd_
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM5081 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F150 art=2 slot=1 t=30 P=(-18100,-500,200) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F210 art=2 slot=1 t=30 P=(-18100,-500,200) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F270 art=2 slot=1 t=30 P=(-18100,-500,200) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F330 art=2 slot=1 t=30 P=(-18100,-500,200) Treffer=0
+   [flow] EXIT_AT: Bild 380 in Raum 5081 erreicht -> exit
+   seg1 F1 slot 1 t=30 st=1 ss1=9 mo=0 hp=600  PL(-9950,-18200,rot=0,hp=100)
+
+== birkin_l5080
+   lauf birkin_l5080 exit=0 dauer=22s
+   RE15_DEBUG_JUMP=5080@250
+   RE15_FORCE_EXPLOSION=2@150:1,2@210:1,2@270:1,2@330:1
+   RE15_EXIT_AT=380#5080
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM5080 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F150 art=2 slot=1 t=30 P=(-18100,-500,200) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F210 art=2 slot=1 t=30 P=(-18100,-500,200) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F270 art=2 slot=1 t=30 P=(-18100,-500,200) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F330 art=2 slot=1 t=30 P=(-18100,-500,200) Treffer=0
+   [flow] EXIT_AT: Bild 380 in Raum 5080 erreicht -> exit
+   seg1 F1 slot 1 t=30 st=1 ss1=9 mo=0 hp=600  PL(-9950,-18200,rot=0,hp=100)
+
+== gator_l
+   lauf gator_l exit=0 dauer=12s
+   RE15_DEBUG_JUMP=2090@250
+   RE15_FORCE_EXPLOSION=2@60:35
+   RE15_EXIT_AT=100#2090
+   RE15_FRAMEDUMP=56-96/4:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM2090 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F60 art=2 slot=35 t=23 P=(-7200,-500,-9200) Treffer=1
+   [flow] EXIT_AT: Bild 100 in Raum 2090 erreicht -> exit
+   seg1 F1 slot 35 t=23 st=0 ss1=0 mo=0 hp=0  PL(-8200,-25550,rot=0,hp=100)
+   seg1 F6 slot 35 t=23 st=1 ss1=0 mo=0 hp=25240  PL(-8200,-25550,rot=0,hp=100)
+   seg1 F60 slot 35 t=23 st=2 ss1=9 mo=0 hp=24989  PL(-8200,-25550,rot=0,hp=100)
+   seg1 F61 slot 35 t=23 st=1 ss1=9 mo=0 hp=24989  PL(-8200,-25550,rot=0,hp=100)
+
+== gator_e
+   lauf gator_e exit=0 dauer=12s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=2091@250
+   RE15_FORCE_EXPLOSION=2@60:35
+   RE15_EXIT_AT=100#2091
+   RE15_FRAMEDUMP=56-96/4:fd_
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM2091 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F60 art=2 slot=35 t=23 P=(-7200,-500,-9200) Treffer=1
+   [flow] EXIT_AT: Bild 100 in Raum 2091 erreicht -> exit
+   seg1 F1 slot 35 t=23 st=0 ss1=0 mo=0 hp=0  PL(-8200,-25550,rot=0,hp=100)
+   seg1 F6 slot 35 t=23 st=1 ss1=0 mo=0 hp=25240  PL(-8200,-25550,rot=0,hp=100)
+   seg1 F60 slot 35 t=23 st=2 ss1=9 mo=0 hp=24989  PL(-8200,-25550,rot=0,hp=100)
+   seg1 F61 slot 35 t=23 st=1 ss1=9 mo=0 hp=24989  PL(-8200,-25550,rot=0,hp=100)
+
+== gator_l2
+   lauf gator_l2 exit=0 dauer=22s
+   RE15_DEBUG_JUMP=2090@250
+   RE15_SET_FLAG=9:110,3:245
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_PLAYER_POS=-6000,-17500,3072
+   RE15_FORCE_EXPLOSION=2@300:35
+   RE15_EXIT_AT=60#2080
+   RE15_FRAMEDUMP=296-332/4:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [setflag] flag(9,110/0x6e) = 1
+   [setflag] flag(3,245/0xf5) = 1
+   [debug-menu] AUTO-JUMP -> ROOM2090 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-6000,-17500) rot=3072 band=-1
+   [harness] RE15_FORCE_EXPLOSION F300 art=2 slot=35 t=23 P=(-2634,-500,-22754) Treffer=1
+   [k2080] F302 AUSLOESER geschwaecht (RE2 +0x218&0x20 @0x80101ebc-dc), Treffer 1: Spieler (-6288,0,-17993) Gier 3072 Cut 0 -> ROOM2080 (Programm START Faden 12)
+   [flow] EXIT_AT: Bild 60 in Raum 2080 erreicht -> exit
+   seg1 F1 slot 35 t=23 st=0 ss1=0 mo=0 hp=0  PL(-6000,-17500,rot=3072,hp=100)
+   seg1 F6 slot 35 t=23 st=1 ss1=0 mo=6 hp=25240  PL(-6288,-17993,rot=3072,hp=100)
+   seg1 F300 slot 35 t=23 st=2 ss1=9 mo=0 hp=24989  PL(-6288,-17993,rot=3072,hp=100)
+   seg1 F301 slot 35 t=23 st=1 ss1=9 mo=0 hp=24989  PL(-6288,-17993,rot=3072,hp=100)
+
+== gator_e2
+   lauf gator_e2 exit=0 dauer=23s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=2091@250
+   RE15_SET_FLAG=9:110,3:245
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_PLAYER_POS=-6000,-17500,3072
+   RE15_FORCE_EXPLOSION=2@300:35
+   RE15_EXIT_AT=60#2081
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [setflag] flag(9,110/0x6e) = 1
+   [setflag] flag(3,245/0xf5) = 1
+   [debug-menu] AUTO-JUMP -> ROOM2091 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-6000,-17500) rot=3072 band=-1
+   [harness] RE15_FORCE_EXPLOSION F300 art=2 slot=35 t=23 P=(-2634,-500,-22754) Treffer=1
+   [k2080] F302 AUSLOESER geschwaecht (RE2 +0x218&0x20 @0x80101ebc-dc), Treffer 1: Spieler (-6288,0,-17993) Gier 3072 Cut 0 -> ROOM2081 (Programm START Faden 12)
+   [flow] EXIT_AT: Bild 60 in Raum 2081 erreicht -> exit
+   seg1 F1 slot 35 t=23 st=0 ss1=0 mo=0 hp=0  PL(-6000,-17500,rot=3072,hp=100)
+   seg1 F6 slot 35 t=23 st=1 ss1=0 mo=6 hp=25240  PL(-6288,-17993,rot=3072,hp=100)
+   seg1 F300 slot 35 t=23 st=2 ss1=9 mo=0 hp=24989  PL(-6288,-17993,rot=3072,hp=100)
+   seg1 F301 slot 35 t=23 st=1 ss1=9 mo=0 hp=24989  PL(-6288,-17993,rot=3072,hp=100)
+
+== gator_rak
+   lauf gator_rak exit=0 dauer=25s
+   RE15_DEBUG_JUMP=2090@250
+   RE15_SET_FLAG=9:110,3:245
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_PLAYER_POS=-6000,-17500,3072
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=1
+   RE15_INPUT_SCRIPT=W8,MA25,W5
+   RE15_EXIT_AT=60#2080
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [setflag] flag(9,110/0x6e) = 1
+   [setflag] flag(3,245/0xf5) = 1
+   [debug-menu] AUTO-JUMP -> ROOM2090 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-6000,-17500) rot=3072 band=-1
+   [k2080] F370 AUSLOESER geschwaecht (RE2 +0x218&0x20 @0x80101ebc-dc), Treffer 3: Spieler (-8432,0,-14421) Gier 603 Cut 0 -> ROOM2080 (Programm START Faden 12)
+   [flow] EXIT_AT: Bild 60 in Raum 2080 erreicht -> exit
+   seg1 F1 slot 35 t=23 st=0 ss1=0 mo=0 hp=0  PL(-6000,-17500,rot=3072,hp=100)
+   seg1 F6 slot 35 t=23 st=1 ss1=0 mo=6 hp=25240  PL(-6288,-17993,rot=3072,hp=100)
+   seg1 F266 slot 35 t=23 st=2 ss1=18 mo=3 hp=25130  PL(-6288,-17993,rot=603,hp=100)
+   seg1 F267 slot 35 t=23 st=1 ss1=18 mo=3 hp=25130  PL(-6288,-17993,rot=603,hp=100)
+   seg1 F296 slot 35 t=23 st=2 ss1=18 mo=0 hp=25020  PL(-6288,-17993,rot=603,hp=100)
+   seg1 F297 slot 35 t=23 st=1 ss1=18 mo=0 hp=25020  PL(-6288,-17993,rot=603,hp=100)
+   seg1 F328 slot 35 t=23 st=2 ss1=18 mo=4 hp=24910  PL(-6463,-17753,rot=603,hp=100)
+   seg1 F329 slot 35 t=23 st=1 ss1=18 mo=4 hp=24910  PL(-6501,-17701,rot=603,hp=100)
+
+== endk_l_ma13
+   lauf endk_l_ma13 exit=0 dauer=50s
+   RE15_DEBUG_JUMP=5090@250
+   RE15_PLAYER_POS=500,-9175,2048,0
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=100
+   RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA13,W260
+   RE15_SPAWN_DIAG=1
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_EXIT_AT=1000#5090
+   RE15_FRAMEDUMP=650-778/8:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM5090 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+   [flow] EXIT_AT: Bild 1000 in Raum 5090 erreicht -> exit
+   seg1 F1 slot 2 t=30 st=1 ss1=9 mo=0 hp=600  PL(500,-9175,rot=2048,hp=100)
+   seg1 F413 slot 2 t=30 st=2 ss1=18 mo=1 hp=400  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F414 slot 2 t=30 st=1 ss1=1 mo=1 hp=405  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F444 slot 2 t=30 st=2 ss1=18 mo=1 hp=205  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F445 slot 2 t=30 st=1 ss1=1 mo=1 hp=210  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F475 slot 2 t=30 st=2 ss1=18 mo=1 hp=10  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F476 slot 2 t=30 st=1 ss1=6 mo=1 hp=15  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F477 slot 2 t=30 st=1 ss1=6 mo=20 hp=300  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F507 slot 2 t=30 st=2 ss1=18 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F508 slot 2 t=30 st=1 ss1=6 mo=20 hp=105  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F539 slot 2 t=30 st=3 ss1=18 mo=20 hp=-95  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F540 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F571 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F572 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F603 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F604 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F635 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F636 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F654 slot 2 t=30 st=1 ss1=0 mo=10 hp=1000  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F666 slot 2 t=30 st=2 ss1=18 mo=10 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F667 slot 2 t=30 st=1 ss1=20 mo=8 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F698 slot 2 t=30 st=2 ss1=18 mo=5 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F699 slot 2 t=30 st=1 ss1=20 mo=8 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F730 slot 2 t=30 st=2 ss1=18 mo=5 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F731 slot 2 t=30 st=1 ss1=20 mo=8 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F761 slot 2 t=30 st=3 ss1=18 mo=5 hp=-204  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F762 slot 2 t=30 st=3 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F763 slot 2 t=30 st=2 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2059,hp=100)
+   seg1 F866 slot 2 t=36 st=0 ss1=0 mo=0 hp=600  PL(-3800,-23570,rot=0,hp=100)
+
+== endk_e_ma13
+   lauf endk_e_ma13 exit=0 dauer=51s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=5091@250
+   RE15_PLAYER_POS=500,-9175,2048,0
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=100
+   RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA13,W260
+   RE15_SPAWN_DIAG=1
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_EXIT_AT=1000#5091
+   RE15_FRAMEDUMP=650-778/8:fd_
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM5091 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+   [flow] EXIT_AT: Bild 1000 in Raum 5091 erreicht -> exit
+   seg1 F1 slot 1 t=30 st=1 ss1=9 mo=0 hp=600  PL(500,-9175,rot=2048,hp=100)
+   seg1 F413 slot 1 t=30 st=2 ss1=18 mo=1 hp=400  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F414 slot 1 t=30 st=1 ss1=1 mo=1 hp=405  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F444 slot 1 t=30 st=2 ss1=18 mo=1 hp=205  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F445 slot 1 t=30 st=1 ss1=1 mo=1 hp=210  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F475 slot 1 t=30 st=2 ss1=18 mo=1 hp=10  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F476 slot 1 t=30 st=1 ss1=6 mo=1 hp=15  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F477 slot 1 t=30 st=1 ss1=6 mo=20 hp=300  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F507 slot 1 t=30 st=2 ss1=18 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F508 slot 1 t=30 st=1 ss1=6 mo=20 hp=105  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F539 slot 1 t=30 st=3 ss1=18 mo=20 hp=-95  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F540 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F571 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F572 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F603 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F604 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F635 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F636 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F654 slot 1 t=30 st=1 ss1=0 mo=10 hp=1000  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F666 slot 1 t=30 st=2 ss1=18 mo=10 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F667 slot 1 t=30 st=1 ss1=20 mo=8 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F698 slot 1 t=30 st=2 ss1=18 mo=5 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F699 slot 1 t=30 st=1 ss1=20 mo=8 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F730 slot 1 t=30 st=2 ss1=18 mo=5 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F731 slot 1 t=30 st=1 ss1=20 mo=8 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F761 slot 1 t=30 st=3 ss1=18 mo=5 hp=-204  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F762 slot 1 t=30 st=3 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F763 slot 1 t=30 st=2 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2059,hp=100)
+   seg1 F866 slot 1 t=36 st=0 ss1=0 mo=0 hp=600  PL(-3800,-23570,rot=0,hp=100)
+
+== endk_l_gr
+   lauf endk_l_gr exit=0 dauer=50s
+   RE15_DEBUG_JUMP=5090@250
+   RE15_PLAYER_POS=500,-9175,2048,0
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=100
+   RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA9,W260
+   RE15_SPAWN_DIAG=1
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_FORCE_EXPLOSION=2@700:2,2@760:2,2@820:2,2@880:2,2@940:2
+   RE15_EXIT_AT=1000#5090
+   RE15_FRAMEDUMP=690-890/10:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM5090 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+   [harness] RE15_FORCE_EXPLOSION F700 art=2 slot=2 t=30 P=(3550,-500,-23404) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F760 art=2 slot=2 t=30 P=(3062,-500,-23413) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F820 art=2 slot=2 t=30 P=(4507,-500,-23403) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F880 art=2 slot=2 t=30 P=(6679,-500,-23043) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F940 art=2 slot=2 t=30 P=(-2071,-500,-23330) Treffer=0
+   [flow] EXIT_AT: Bild 1000 in Raum 5090 erreicht -> exit
+   seg1 F1 slot 2 t=30 st=1 ss1=9 mo=0 hp=600  PL(500,-9175,rot=2048,hp=100)
+   seg1 F413 slot 2 t=30 st=2 ss1=18 mo=1 hp=400  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F414 slot 2 t=30 st=1 ss1=1 mo=1 hp=405  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F444 slot 2 t=30 st=2 ss1=18 mo=1 hp=205  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F445 slot 2 t=30 st=1 ss1=1 mo=1 hp=210  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F475 slot 2 t=30 st=2 ss1=18 mo=1 hp=10  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F476 slot 2 t=30 st=1 ss1=6 mo=1 hp=15  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F477 slot 2 t=30 st=1 ss1=6 mo=20 hp=300  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F507 slot 2 t=30 st=2 ss1=18 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F508 slot 2 t=30 st=1 ss1=6 mo=20 hp=105  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F539 slot 2 t=30 st=3 ss1=18 mo=20 hp=-95  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F540 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F571 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F572 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F603 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F604 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F635 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F636 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F654 slot 2 t=30 st=1 ss1=0 mo=10 hp=1000  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F700 slot 2 t=30 st=2 ss1=9 mo=10 hp=749  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F701 slot 2 t=30 st=1 ss1=0 mo=10 hp=749  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F760 slot 2 t=30 st=2 ss1=9 mo=10 hp=498  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F761 slot 2 t=30 st=1 ss1=20 mo=8 hp=498  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F820 slot 2 t=30 st=2 ss1=9 mo=4 hp=247  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F821 slot 2 t=30 st=1 ss1=2 mo=4 hp=247  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F880 slot 2 t=30 st=3 ss1=9 mo=9 hp=-4  PL(8653,-23566,rot=2067,hp=100)
+   seg1 F881 slot 2 t=30 st=3 ss1=9 mo=8 hp=1  PL(8653,-23566,rot=2067,hp=100)
+   seg1 F882 slot 2 t=30 st=2 ss1=9 mo=8 hp=1  PL(8653,-23566,rot=2217,hp=100)
+   seg1 F991 slot 2 t=36 st=0 ss1=0 mo=0 hp=600  PL(-3800,-23570,rot=0,hp=100)
+
+== endk_e_gr
+   lauf endk_e_gr exit=0 dauer=50s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=5091@250
+   RE15_PLAYER_POS=500,-9175,2048,0
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=100
+   RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA9,W260
+   RE15_SPAWN_DIAG=1
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_FORCE_EXPLOSION=2@700:2,2@760:2,2@820:2,2@880:2,2@940:2
+   RE15_EXIT_AT=1000#5091
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM5091 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+   [flow] EXIT_AT: Bild 1000 in Raum 5091 erreicht -> exit
+   seg1 F1 slot 1 t=30 st=1 ss1=9 mo=0 hp=600  PL(500,-9175,rot=2048,hp=100)
+   seg1 F413 slot 1 t=30 st=2 ss1=18 mo=1 hp=400  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F414 slot 1 t=30 st=1 ss1=1 mo=1 hp=405  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F444 slot 1 t=30 st=2 ss1=18 mo=1 hp=205  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F445 slot 1 t=30 st=1 ss1=1 mo=1 hp=210  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F475 slot 1 t=30 st=2 ss1=18 mo=1 hp=10  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F476 slot 1 t=30 st=1 ss1=6 mo=1 hp=15  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F477 slot 1 t=30 st=1 ss1=6 mo=20 hp=300  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F507 slot 1 t=30 st=2 ss1=18 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F508 slot 1 t=30 st=1 ss1=6 mo=20 hp=105  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F539 slot 1 t=30 st=3 ss1=18 mo=20 hp=-95  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F540 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F571 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F572 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F603 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F604 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F635 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F636 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F654 slot 1 t=30 st=1 ss1=0 mo=10 hp=1000  PL(8150,-23550,rot=2067,hp=100)
+
+== endk_e_gr2
+   lauf endk_e_gr2 exit=0 dauer=50s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=5091@250
+   RE15_PLAYER_POS=500,-9175,2048,0
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=100
+   RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA9,W260
+   RE15_SPAWN_DIAG=1
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_FORCE_EXPLOSION=2@700:1,2@760:1,2@820:1,2@880:1,2@940:1
+   RE15_EXIT_AT=1000#5091
+   RE15_FRAMEDUMP=690-890/10:fd_
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM5091 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+   [harness] RE15_FORCE_EXPLOSION F700 art=2 slot=1 t=30 P=(3550,-500,-23404) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F760 art=2 slot=1 t=30 P=(3062,-500,-23413) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F820 art=2 slot=1 t=30 P=(4507,-500,-23403) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F880 art=2 slot=1 t=30 P=(6679,-500,-23043) Treffer=1
+   [harness] RE15_FORCE_EXPLOSION F940 art=2 slot=1 t=30 P=(-2071,-500,-23330) Treffer=0
+   [flow] EXIT_AT: Bild 1000 in Raum 5091 erreicht -> exit
+   seg1 F1 slot 1 t=30 st=1 ss1=9 mo=0 hp=600  PL(500,-9175,rot=2048,hp=100)
+   seg1 F413 slot 1 t=30 st=2 ss1=18 mo=1 hp=400  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F414 slot 1 t=30 st=1 ss1=1 mo=1 hp=405  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F444 slot 1 t=30 st=2 ss1=18 mo=1 hp=205  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F445 slot 1 t=30 st=1 ss1=1 mo=1 hp=210  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F475 slot 1 t=30 st=2 ss1=18 mo=1 hp=10  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F476 slot 1 t=30 st=1 ss1=6 mo=1 hp=15  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F477 slot 1 t=30 st=1 ss1=6 mo=20 hp=300  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F507 slot 1 t=30 st=2 ss1=18 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F508 slot 1 t=30 st=1 ss1=6 mo=20 hp=105  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F539 slot 1 t=30 st=3 ss1=18 mo=20 hp=-95  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F540 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F571 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F572 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F603 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F604 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F635 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F636 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F654 slot 1 t=30 st=1 ss1=0 mo=10 hp=1000  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F700 slot 1 t=30 st=2 ss1=9 mo=10 hp=749  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F701 slot 1 t=30 st=1 ss1=0 mo=10 hp=749  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F760 slot 1 t=30 st=2 ss1=9 mo=10 hp=498  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F761 slot 1 t=30 st=1 ss1=20 mo=8 hp=498  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F820 slot 1 t=30 st=2 ss1=9 mo=4 hp=247  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F821 slot 1 t=30 st=1 ss1=2 mo=4 hp=247  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F880 slot 1 t=30 st=3 ss1=9 mo=9 hp=-4  PL(8653,-23566,rot=2067,hp=100)
+   seg1 F881 slot 1 t=30 st=3 ss1=9 mo=8 hp=1  PL(8653,-23566,rot=2067,hp=100)
+   seg1 F882 slot 1 t=30 st=2 ss1=9 mo=8 hp=1  PL(8653,-23566,rot=2217,hp=100)
+   seg1 F991 slot 1 t=36 st=0 ss1=0 mo=0 hp=600  PL(-3800,-23570,rot=0,hp=100)
+
+== g5_l_lang
+   lauf g5_l_lang exit=0 dauer=115s
+   RE15_DEBUG_JUMP=5090@250
+   RE15_PLAYER_POS=500,-9175,2048,0
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=100
+   RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA80,W60
+   RE15_SPAWN_DIAG=1
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_EXIT_AT=2900#5090
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM5090 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+   [flow] EXIT_AT: Bild 2900 in Raum 5090 erreicht -> exit
+   seg1 F1 slot 2 t=30 st=1 ss1=9 mo=0 hp=600  PL(500,-9175,rot=2048,hp=100)
+   seg1 F413 slot 2 t=30 st=2 ss1=18 mo=1 hp=400  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F414 slot 2 t=30 st=1 ss1=1 mo=1 hp=405  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F444 slot 2 t=30 st=2 ss1=18 mo=1 hp=205  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F445 slot 2 t=30 st=1 ss1=1 mo=1 hp=210  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F475 slot 2 t=30 st=2 ss1=18 mo=1 hp=10  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F476 slot 2 t=30 st=1 ss1=6 mo=1 hp=15  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F477 slot 2 t=30 st=1 ss1=6 mo=20 hp=300  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F507 slot 2 t=30 st=2 ss1=18 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F508 slot 2 t=30 st=1 ss1=6 mo=20 hp=105  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F539 slot 2 t=30 st=3 ss1=18 mo=20 hp=-95  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F540 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F571 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F572 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F603 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F604 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F635 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F636 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F654 slot 2 t=30 st=1 ss1=0 mo=10 hp=1000  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F666 slot 2 t=30 st=2 ss1=18 mo=10 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F667 slot 2 t=30 st=1 ss1=20 mo=8 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F698 slot 2 t=30 st=2 ss1=18 mo=5 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F699 slot 2 t=30 st=1 ss1=20 mo=8 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F730 slot 2 t=30 st=2 ss1=18 mo=5 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F731 slot 2 t=30 st=1 ss1=20 mo=8 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F761 slot 2 t=30 st=3 ss1=18 mo=5 hp=-204  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F762 slot 2 t=30 st=3 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F763 slot 2 t=30 st=2 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2059,hp=100)
+   seg1 F866 slot 2 t=36 st=0 ss1=0 mo=0 hp=600  PL(-3800,-23570,rot=0,hp=100)
+   seg1 F2113 slot 2 t=36 st=2 ss1=17 mo=5 hp=400  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2144 slot 2 t=36 st=2 ss1=17 mo=5 hp=200  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2173 slot 2 t=36 st=2 ss1=17 mo=5 hp=0  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2204 slot 2 t=36 st=3 ss1=17 mo=2 hp=-200  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2280 slot 2 t=36 st=3 ss1=17 mo=6 hp=-1  PL(13873,-23570,rot=2057,hp=100)
+
+== g5_e_lang
+   lauf g5_e_lang exit=0 dauer=117s
+   RE15_TITLE_SHOT_CHAR=1
+   RE15_DEBUG_JUMP=5091@250
+   RE15_PLAYER_POS=500,-9175,2048,0
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=100
+   RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA80,W60
+   RE15_SPAWN_DIAG=1
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_EXIT_AT=2900#5091
+   [pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+   [debug-menu] AUTO-JUMP -> ROOM5091 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+   [flow] EXIT_AT: Bild 2900 in Raum 5091 erreicht -> exit
+   seg1 F1 slot 1 t=30 st=1 ss1=9 mo=0 hp=600  PL(500,-9175,rot=2048,hp=100)
+   seg1 F413 slot 1 t=30 st=2 ss1=18 mo=1 hp=400  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F414 slot 1 t=30 st=1 ss1=1 mo=1 hp=405  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F444 slot 1 t=30 st=2 ss1=18 mo=1 hp=205  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F445 slot 1 t=30 st=1 ss1=1 mo=1 hp=210  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F475 slot 1 t=30 st=2 ss1=18 mo=1 hp=10  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F476 slot 1 t=30 st=1 ss1=6 mo=1 hp=15  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F477 slot 1 t=30 st=1 ss1=6 mo=20 hp=300  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F507 slot 1 t=30 st=2 ss1=18 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F508 slot 1 t=30 st=1 ss1=6 mo=20 hp=105  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F539 slot 1 t=30 st=3 ss1=18 mo=20 hp=-95  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F540 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F571 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F572 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F603 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F604 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F635 slot 1 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F636 slot 1 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F654 slot 1 t=30 st=1 ss1=0 mo=10 hp=1000  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F666 slot 1 t=30 st=2 ss1=18 mo=10 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F667 slot 1 t=30 st=1 ss1=20 mo=8 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F698 slot 1 t=30 st=2 ss1=18 mo=5 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F699 slot 1 t=30 st=1 ss1=20 mo=8 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F730 slot 1 t=30 st=2 ss1=18 mo=5 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F731 slot 1 t=30 st=1 ss1=20 mo=8 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F761 slot 1 t=30 st=3 ss1=18 mo=5 hp=-204  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F762 slot 1 t=30 st=3 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F763 slot 1 t=30 st=2 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2059,hp=100)
+   seg1 F866 slot 1 t=36 st=0 ss1=0 mo=0 hp=600  PL(-3800,-23570,rot=0,hp=100)
+   seg1 F2113 slot 1 t=36 st=2 ss1=17 mo=5 hp=400  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2144 slot 1 t=36 st=2 ss1=17 mo=5 hp=200  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2173 slot 1 t=36 st=2 ss1=17 mo=5 hp=0  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2204 slot 1 t=36 st=3 ss1=17 mo=2 hp=-200  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2280 slot 1 t=36 st=3 ss1=17 mo=6 hp=-1  PL(13873,-23570,rot=2057,hp=100)
+
+== g5_l_fd
+   lauf g5_l_fd exit=0 dauer=94s
+   RE15_DEBUG_JUMP=5090@250
+   RE15_PLAYER_POS=500,-9175,2048,0
+   RE15_INPUT_SCRIPT_BASIS=spiel
+   RE15_INPUT_SCRIPT_START=100
+   RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA80,W60
+   RE15_SPAWN_DIAG=1
+   RE15_GIVE=18:200
+   RE15_EQUIP=18
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_EXIT_AT=2300#5090
+   RE15_FRAMEDUMP=2100-2236/8:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM5090 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (500,-9175) rot=2048 band=0
+   [flow] EXIT_AT: Bild 2300 in Raum 5090 erreicht -> exit
+   seg1 F1 slot 2 t=30 st=1 ss1=9 mo=0 hp=600  PL(500,-9175,rot=2048,hp=100)
+   seg1 F413 slot 2 t=30 st=2 ss1=18 mo=1 hp=400  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F414 slot 2 t=30 st=1 ss1=1 mo=1 hp=405  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F444 slot 2 t=30 st=2 ss1=18 mo=1 hp=205  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F445 slot 2 t=30 st=1 ss1=1 mo=1 hp=210  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F475 slot 2 t=30 st=2 ss1=18 mo=1 hp=10  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F476 slot 2 t=30 st=1 ss1=6 mo=1 hp=15  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F477 slot 2 t=30 st=1 ss1=6 mo=20 hp=300  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F507 slot 2 t=30 st=2 ss1=18 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F508 slot 2 t=30 st=1 ss1=6 mo=20 hp=105  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F539 slot 2 t=30 st=3 ss1=18 mo=20 hp=-95  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F540 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F571 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F572 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F603 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F604 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F635 slot 2 t=30 st=3 ss1=18 mo=20 hp=-100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F636 slot 2 t=30 st=1 ss1=6 mo=20 hp=100  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F654 slot 2 t=30 st=1 ss1=0 mo=10 hp=1000  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F666 slot 2 t=30 st=2 ss1=18 mo=10 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F667 slot 2 t=30 st=1 ss1=20 mo=8 hp=699  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F698 slot 2 t=30 st=2 ss1=18 mo=5 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F699 slot 2 t=30 st=1 ss1=20 mo=8 hp=398  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F730 slot 2 t=30 st=2 ss1=18 mo=5 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F731 slot 2 t=30 st=1 ss1=20 mo=8 hp=97  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F761 slot 2 t=30 st=3 ss1=18 mo=5 hp=-204  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F762 slot 2 t=30 st=3 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2067,hp=100)
+   seg1 F763 slot 2 t=30 st=2 ss1=18 mo=8 hp=1  PL(8150,-23550,rot=2059,hp=100)
+   seg1 F866 slot 2 t=36 st=0 ss1=0 mo=0 hp=600  PL(-3800,-23570,rot=0,hp=100)
+   seg1 F2113 slot 2 t=36 st=2 ss1=17 mo=5 hp=400  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2144 slot 2 t=36 st=2 ss1=17 mo=5 hp=200  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2173 slot 2 t=36 st=2 ss1=17 mo=5 hp=0  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2204 slot 2 t=36 st=3 ss1=17 mo=2 hp=-200  PL(13873,-23570,rot=2057,hp=100)
+   seg1 F2280 slot 2 t=36 st=3 ss1=17 mo=6 hp=-1  PL(13873,-23570,rot=2057,hp=100)
+
+== gitter_l
+   lauf gitter_l exit=0 dauer=20s
+   RE15_DEBUG_JUMP=1210@250
+   RE15_FORCE_EXPLOSION=2@120:1
+   RE15_EXIT_AT=300#1210
+   RE15_FRAMEDUMP=116-236/12:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM1210 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=1 t=1a P=(-21490,-500,-8847) Treffer=0
+   [flow] EXIT_AT: Bild 300 in Raum 1210 erreicht -> exit
+   seg1 F1 slot 1 t=1a st=0 ss1=0 mo=0 hp=0  PL(-26420,-2400,rot=0,hp=100)
+   seg1 F6 slot 1 t=1a st=1 ss1=0 mo=0 hp=250  PL(-26420,-2400,rot=0,hp=100)
+
+== gitter_l2
+   lauf gitter_l2 exit=0 dauer=23s
+   RE15_DEBUG_JUMP=1210@250
+   RE15_PLAYER_POS=-19300,-8850,1024
+   RE15_R39_MESS_SPIELER_HP=100
+   RE15_FORCE_EXPLOSION=2@150:1,2@200:1,2@250:1
+   RE15_EXIT_AT=330#1210
+   RE15_FRAMEDUMP=146-266/10:fd_
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM1210 (Frame 250)
+   [parity] JUMP-Spawn ersetzt durch RE15_PLAYER_POS (-19300,-8850) rot=1024 band=-1
+   [harness] RE15_FORCE_EXPLOSION F150 art=2 slot=1 t=1a P=(-21490,-500,-8847) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F200 art=2 slot=1 t=1a P=(-21490,-500,-8847) Treffer=0
+   [harness] RE15_FORCE_EXPLOSION F250 art=2 slot=1 t=1a P=(-21490,-500,-8847) Treffer=0
+   [flow] EXIT_AT: Bild 330 in Raum 1210 erreicht -> exit
+   seg1 F1 slot 1 t=1a st=0 ss1=0 mo=0 hp=0  PL(-19300,-8850,rot=1024,hp=100)
+   seg1 F6 slot 1 t=1a st=1 ss1=0 mo=0 hp=250  PL(-19300,-8850,rot=1024,hp=100)
+
+== feuer_l
+   lauf feuer_l exit=0 dauer=16s
+   RE15_DEBUG_JUMP=1090@250
+   RE15_FORCE_EXPLOSION=2@120:1
+   RE15_EXIT_AT=200#1090
+   [pl] Spieler-Familie PL00 (character=0, Elza-Bit=0)
+   [debug-menu] AUTO-JUMP -> ROOM1090 (Frame 250)
+   [harness] RE15_FORCE_EXPLOSION F120 art=2 slot=1 t=26 P=(2052,-9500,-1334) Treffer=0
+   [flow] EXIT_AT: Bild 200 in Raum 1090 erreicht -> exit
+   seg1 F1 slot 1 t=26 st=0 ss1=0 mo=0 hp=0  PL(-10200,1400,rot=0,hp=100)
+   seg1 F6 slot 1 t=26 st=1 ss1=0 mo=0 hp=100  PL(-10200,1400,rot=0,hp=100)
+
