@@ -891,3 +891,104 @@ GRUEN: G0, H1, H1b, H2, P1, D1 (ortsgenau), S1, F1t (dE 5,84), F3t, A2-A7, A9-A1
 3. **Krallen-Posterisierung (P2 +16/+21, B13, B16):** Abwaegung Farbe (Sicht) gegen Posterisierung; Pruefer-Entscheid.
 4. **Hand 18 mauve** (Sicht-Befund klein) gegen K15: mit G4-Zeilen auf den Bild-2-Flaechen wird K15 ROT.
 5. Messblatt 7.1 (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer.
+
+# Versuch 3 Runde 4 (weniger Rot) (Bauer, 2026-11-07 Abend)
+
+Auftrag, Nutzer 2026-11-07 ~17:10 (woertlich, bindend): "bist du noch an der Verbesserung von k5c ran, und entfernst die übertriebenen roten
+feuerrillen wieder, und stellst es wieder nach vorlage um?" Ziele und Riegel: `MESSBLATT_FARBE_V3_NACHTRAG_ROT.md` (RV1-RV5).
+Runde-3-Stand: `farbe/K5c_farbe_v3r3/`, `farbe/v3r3/`. Spiel-Asset `BAHNSTEIG_FORM`, Pins und `re15_port` unveraendert; K4 bleibt fuer v0.8.30.
+Such- und Pruefskripte: `farbe_lesung/V3R4_bau/lauf1/` (verworfener Lauf 1) und `lauf2/` (Endstand).
+
+## V3R4.0 Ergebnis
+
+- **Variante:** `farbe/K5c_farbe_v3/` (FORM.EMD sha256 07d679a5..., FORM.TIM 51282806...), Kopien `farbe/K5C_FARBE_V3.EMD/.TIM`.
+  Geometrie, Knochen und Clips wie Runde 3 (G0 GRUEN). 17 CLUT-Zeilen (0-2 G4 bytegleich, 6-8 Leuchtstellen, 11 Gruppenzeilen).
+- **Feuerrillen entfernt:** Die G4-Adern liegen jetzt unter der Haut, nicht darueber. Neuer Riegel **RV6** (Texel, Zeilen-Atlas, Ader gegen die
+  Haut im Umkreis 3 Texel): alle 8 Regionen dL\* -2,3..-7,7 und da\* -0,4..-3,6. Runde 3: dL\* +7,6..+11,9, da\* bis +30,5 (alle verletzt).
+- **Rot nach der Vorlage:** `riegel_rot.py` am gebauten Stand **45/45** bindende Zeilen GRUEN (3 Saaten; Runde 3 21/45),
+  `farbe/riegel_rot_K5c_farbe_v3.txt`. Beispiele (Vorlage | Runde 3 | Runde 4):
+  - Bild 1 Schwanz Rot eng 23,5 | 43,5 | 23,5 %, groesste Rotflaeche 6,0 | 22,9 | 6,7 %.
+  - Bild 1 Figur Farbton -15,8 | -0,2 | -22,4 Grad; groesste Rotflaeche 2,3 | 10,6 | 2,6 %; Vorderglied Rot 2,4 | 12,3 | 3,7 %.
+  - Bild 2 Ruecken 53,6 | 71,4 | 58,5 %, Farbton -5,3 | 30,6 | -8,9 Grad, dL -7,4 | +1,8 | -1,2.
+  - Bild 2 Hals 45,1 | 87,1 | 26,4 %, Farbton 11,0 | 30,7 | 18,6 Grad, dL -3,9 | +0,8 | -1,9.
+  - Bild 2 Figur Farbton 22,8 | 29,7 | 24,6 Grad, dL -2,5 | +3,5 | -0,6.
+- **Baufehler A behoben:** F1-Fleischtexel mit rohem G4-Blutrot Runde 3 11 von 162, jetzt 0 (`V3R4_bau/lauf2/baufehler_a.py`).
+- **Gesamtriegel** `generator/riegel_farbe_v3.py`: **76 von 93 Zeilen GRUEN, Exit 1** (`farbe/riegel_K5c_farbe_v3.txt`). Gegenproben wie verlangt
+  ("falsch ausgefallen: keine"); Gegenprobe Runde 3: RV1-RV4 24 von 45 ROT, RV6 ROT, wie verlangt.
+- **Spiel:** 10 von 10 Bildern (`farbe/spiel_lauf_v3.log`, eigene exe-Kopie, gdigrab), "32 Meshes, 32 Knochen, 3 Clips" (17 CLUT-Zeilen laden).
+- **Tests:** `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: 11 von 11 gruen, 96,8 s (`farbe_lesung/V3R4_bau/ctest.log`).
+
+## V3R4.1 Verfahren und warum Lauf 1 verworfen ist
+
+- **Gruppenzeilen:** Jede Koerperflaeche liest eine aus der G4-Zeile ihrer Seite abgeleitete Zeile ihrer Gruppe (Schwanz, Hinterbeine, Rumpf Ruecken,
+  Rumpf Flanke, Vorderbein r B1, Brust, Hals Bauch, Kopf, Vorderbeine; Region je Flaeche wie Nachtrag 1.2). Je Eintrag eine neue Farbe, Index und
+  Aderzeichnung bleiben (keine Neuquantisierung). Augen lesen G4-Zeile 0 (E24 dunkel, A9 L\* 7,3), Maulinneres bleibt auf den G4-Zeilen.
+- **Haut:** L\* x a (a = 1 fuer die Bild-1-Gruppen: dunkler Grundton), Farbton h, Buntheit C x s(L) x ((1-g) + g x C\*(G4)/C75),
+  s(L) = 1 + beta (Lm - L)/Lm (beta > 0: Rot im Dunkeln, Vorlage Bild 2 dL -2,5..-7,4); weich an den sRGB-Rand: Cmax x tanh(Wunsch/Cmax).
+- **Adern:** rangtreu linear auf [Haut-L\* p10, q x Haut-Median] gestaucht, Buntheit kappa x mittlere Haut-Buntheit; q, kappa <= 1 nach dem Nutzersatz.
+- **Lauf 1 (Seitenzweig `r41/form_rot_r4_abbruch`, nicht verwendet):** RV 45/45, aber
+  1. nur durch einen Fehler in `rgb_aus_lab`: OpenCV kappt negative Kanaele still, darum wurden zu bunte dunkle Eintraege heller
+     (Wunsch L\* 12 / C 60 -> RGB (95,0,0), L\* 17,5). Mit korrekter Gamut-Grenze fiel derselbe Parametersatz auf 29/45.
+  2. Die Deckel min(L\*, q x Hautmedian) und min(C, kappa x C_haut) legten alle helleren Adern auf eine Farbe (Vorderbeine: 40 Ader-Eintraege
+     auf Grau (32,32,32)); beta 5 machte die Haut zweistufig (reinrot (90,0,0) neben grau). P1 dL0 61,5 %.
+  Lauf 2 nutzt `r4_cmax` (Bisektion am ungekappten linearen sRGB) nur in den Gruppenzeilen; die Sonderzeilen 6-8 bleiben bytegleich Runde 3
+  bis auf Baufehler A.
+- **Parameter** (`generator/v3_daten/r4_par.json`, Quelle dort): Koordinatensuche `lauf2/such5.py` gegen RV1-RV4 (Saat 15, 12 % Reserve) plus
+  Ader <= Ring, danach Handscan Hals Bauch mit 3 Saaten (`x1-x3`, `y1-y3`, `z1-z3`; Hals RV4 31,8 -> 13,5 %, RV3 -1,55 -> -1,86).
+
+| Gruppe | h Grad | C | beta | g | a | q | kappa |
+|---|---|---|---|---|---|---|---|
+| Schwanz | -26,24 | 7,18 | -1,00 | 0,80 | 1,00 | 0,70 | 0,61 |
+| Hinterbeine | -27,60 | 18,26 | 2,82 | 0,76 | 1,00 | 0,74 | 0,92 |
+| Vorderbein r B1 | -29,00 | 6,72 | -0,30 | 0,94 | 1,00 | 0,80 | 1,00 |
+| Vorderbeine | 39,85 | 28,68 | 1,50 | 0,61 | 1,44 | 0,70 | 0,67 |
+| Rumpf Ruecken | 33,00 | 12,19 | 3,00 | 1,00 | 1,00 | 0,64 | 0,61 |
+| Rumpf Flanke | -42,78 | 48,60 | 2,09 | 0,60 | 1,00 | 0,74 | 0,61 |
+| Brust | -32,50 | 47,92 | 1,71 | 0,86 | 1,52 | 0,84 | 0,61 |
+| Hals Bauch | -27,65 | 19,27 | 3,00 | 0,90 | 1,60 | 0,76 | 0,67 |
+| Kopf | -9,00 | 28,94 | 2,89 | 0,75 | 1,30 | 0,90 | 0,60 |
+
+Grenzen: a = 1 Bild-1-Gruppen (Messblatt V3 0.1, Figur Bild 1 63,6-65,3 % dunkel), a 1..2 Bild-2-Gruppen (Nutzer: "Haut nach Vorlage"; K6),
+q und kappa <= 1 (Nutzer), uebrige Suchgrenzen in `r4_par.json`. Das sind Eichwerte gegen die Vorlage (RV-Fenster), keine Disc-Konstanten.
+
+## V3R4.2 Riegel-Paket (Nachtrag 4.1 umgesetzt)
+
+- NEU: RV1-RV5 (aus `riegel_rot.py`, eigener Prozess), RV6 (Nutzersatz, Texelraum).
+- K4, K4b, K12 -> Info (durch RV1 ersetzt), K11 -> Info (RV2), B2 entfaellt (RV4).
+- H2: Basiszeile aus `bau.json`; in den Gruppenzeilen Rangfolge je Klasse (Ader unter Adern, Haut unter Haut), weil die Adern nach dem
+  Nutzerauftrag unter die Haut gehen.
+- `--gegenprobe-r3`: RV1-RV4 und RV6 muessen an Runde 3 ROT sein (sind es).
+
+## V3R4.3 Rote Riegel und warum (17)
+
+- **Neu ROT gegen Runde 3:**
+  - **P1** (dL0 65,8 % bei <= 30, Farben 191 < 200): P1 zaehlt Texel mit a\* > 15. Das waren in Runde 3 die hellen G4-Adern; jetzt ist es die
+    dunkelrote Haut. Die G4-Haut ist in grossen Flaechen einfarbig gemalt (z. B. Zeile 10 Rumpf Flanke: Eintrag 151 auf 11 726 Texeln), und
+    Eintrag -> Farbe bleibt eins zu eins. Die Flaechen werden durch das Rot erst Teil der P1-Menge. Rot auf diesen Flaechen verlangt die Vorlage in
+    Bild 2 (Ruecken 53,6 % Rot). Ein P1 im alten Sinn (Posterisierung des Fleischs) gibt es ohne helles Fleisch nicht mehr; Pruefer-Entscheid.
+  - **H2** (Vertauschungen je Klasse, Zeilen 3/4/12-16): kommen von den Rampen-Eintraegen (0 < w < 1, Mischung Haut/Ader) und der
+    15-Bit-Rundung dunkler bunter Farben.
+  - **A4** (Atlas-Fleischrot-Farbton 5,0 Grad; Runde 3 21,0): Familienfenster (G4/EM30/G5), gegen RV2 (Vorlage mauve-karmin). Der Nachtrag
+    fuehrt A4 als unveraendert, weil es in Runde 3 gruen war; der Konflikt mit RV2 ist Pruefer-Entscheid.
+  - **A7** (HF_rest Kralle 0,349; Runde 3 0,096) und **P2 Klauen** (+39,8 / +50,4): Die Krallen liegen in der Gruppe Vorderbeine; ihre dunkelrote
+    Wurzelzone (G4-Adern) ist jetzt gestaucht und dunkel, die hellen Spitzen (L\* >= 52,4) bleiben G4. Mehr Kontrast, weniger Stufen.
+- **Wie Runde 3 ROT:** F2t (Band, Messblatt-Pruefer), P2 Brust/Hals/Kopf, B10, B12, B13, B14, B16, B17 (Binnenzeichnung duenner als die Familie;
+  ohne helle Adern noch duenner), K3 (Hinterbein/Ruecken dE 6,8-8,2, blaeuliche Haut ohne G4-Hautzeile), K6 (7,3; Runde 3 6,8), K7 (9,9),
+  K1v2 / K2v2 (6,4 / 5,8; Mangel in b\*, Nachtrag 4.1: nicht mit Rot zu erfuellen).
+- **Neu GRUEN gegen Runde 3:** RV1-RV4, RV6, A1 (11,5), A8, A12 (5,57), B9 (8,3), B11, N1, K9, K14 (Rotklasse 59,0 bei >= 58,8, knapp).
+
+## V3R4.4 Tafeln (`farbe/`, Runde 3 in `farbe/v3r3/`)
+
+- 01/02 Szene, 03 Familie, 04 Atlas, 05 rundum, 06 Kopf nah, 07 Spiel, 08 Binnenzeichnung wie Runde 3, roh, gleiches Licht.
+- **09_rot_vorlage** neu: je Bild und Region Vorlage | Runde 3 | Runde 4 unter Szenenlicht + Videofilter (Saat 15), gleicher Ausschnitt, Messregion
+  als Linie, Unterschrift RV1 Rot eng und RV2 Farbton (Mittel 3 Saaten).
+- Gesehen (Bauer, keine Abnahme): In Bild 2 keine hellen roten Linien mehr (Runde 3 deutlich), der Koerper dunkel karmin. Unter weissem Licht (05)
+  ist der Rumpf dunkel violett-mauve, die Vorderbeine braunrot, die Adern als dunkle Linien. Die Flanke wirkt unter weissem Licht violetter als
+  "mauve-rosa"; der Farbton ist gegen die Bild-1-Kette geeicht (RV2 Flanke -21,4, Fenster -33,6..-5,4).
+
+## V3R4.5 Offen
+
+1. **P1 / A4** gegen die Nachtragsziele (V3R4.3): Pruefer-Entscheid, ob P1 und A4 fuer eine Variante ohne helles Fleisch gelten.
+2. **Krallen** (A7, P2): eigene Zeile mit der Runde-3-Farbe waere moeglich, aendert aber RV Bild 2 Vorderbeine (Klauen-Feuerschein 36,6 Grad).
+3. **17 CLUT-Zeilen** = 4352 Texel hohe Port-Textur (render_pc.c: je Zeile eine Kopie). Fuer ein Spiel-Asset auf GLES2-Geraeten (4096) offen.
+4. Messblatt V3 7.1 (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer; die Leuchtstellen sind wie Runde 3.
