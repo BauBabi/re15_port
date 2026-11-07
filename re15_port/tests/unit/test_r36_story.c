@@ -323,8 +323,11 @@ static int teil_texte(void)
             vlen += 2;
             for (int k = 0; k + 3 < vlen; k++)
                 if (vo[k] == 0x16 && vo[k + 1] == 0x05 && vo[k + 2] == 0x00 && vo[k + 3] == 0x00) { kopf = k + 4; break; }
-            CHECK(t->id >= nmsg && t->id < 32 && t->off_alt == 0 && t->alt[0] == 0 && t->vorlage < nmsg,
-                  "ROOM%04X msg %d: neue Id (RDT hat %d), < 32, Vorlage msg %d", t->raum, t->id, nmsg, t->vorlage);
+            /* < 32 = PSX MSG_TABLE_N; 40..63 = VERTRAG Runde 41 1.2 "Port-Ids ab 40" (nur PC, ST80 Nachbesserung 1) */
+            CHECK(t->id >= nmsg && (t->id < 32 || (t->id >= 40 && t->id < 64)) && t->off_alt == 0 && t->alt[0] == 0 &&
+                  t->vorlage < nmsg,
+                  "ROOM%04X msg %d: neue Id (RDT hat %d), < 32 oder 40..63, Vorlage msg %d", t->raum, t->id, nmsg,
+                  t->vorlage);
             CHECK(kopf > 4 && memcmp(t->bytes, vo, (size_t)kopf) == 0 &&
                   memcmp(t->bytes + t->len - 4, vo + vlen - 4, 4) == 0,
                   "ROOM%04X msg %d: Kopf %d B und Schwanz 4 B = Vorlage msg %d", t->raum, t->id, kopf, t->vorlage);
@@ -398,7 +401,7 @@ static int teil_texte(void)
     }
     CHECK(umgeschrieben == 19, "P4: %d umgeschriebene Nachrichten (Runde 41 ST80-T: 30C1 2/3/4/5, 30E1 2/3, "
           "6030 1/3/5/7/8/11/12; Runde 36: 6031 0/1, 50B0 1, 6000 0/3; Runde 37 Spur F: 50B1 0)", umgeschrieben);
-    CHECK(neu_dialog == 6, "Runde 41 ST80-T: %d neue Dialog-Ids (6030 21..26)", neu_dialog);
+    CHECK(neu_dialog == 8, "Runde 41 ST80-T: %d neue Dialog-Ids (6030 21..26; Nachbesserung 1: 31, 40)", neu_dialog);
     return 0;
 }
 

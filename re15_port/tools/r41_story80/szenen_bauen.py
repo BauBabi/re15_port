@@ -6,8 +6,22 @@ als engine/src/gen/story80_szenen.inc.
 Kein Asset-Patch: der Port leitet nur den Start des Original-Subs um (op_evt_exec, engine/src/story80_r41.c):
   ROOM30C1 sub00 @0x00C02 `04 ff 18 03` Evt_exec sub03  -> k_s80_30c1_sub03
   ROOM6030 sub01 @0x00D70 `04 ff 18 02` Evt_exec sub02  -> k_s80_6030_sub02
-  ROOM6030 sub07 @0x010E8 `04 ff 18 08` Evt_exec sub08  -> k_s80_6030_sub08
+  ROOM6030 sub07 @0x010E8 `04 ff 18 08` Evt_exec sub08  -> k_s80_6030_sub08        bei (3,22)=1 (Wagen-Szene gelaufen)
+                                                        -> k_s80_6030_sub08_vorne  bei (3,22)=0 (Nachbesserung 1)
+  ROOM6030 sub07 @0x0110C `04 ff 18 09` Evt_exec sub09  -> k_s80_6030_sub09_nachtrag bei (9,128)=1 und (3,22)=1
 Vor dem Umleiten prueft der Port die ersten 16 Bytes des Original-Subs (Signatur unten).
+
+NACHBESSERUNG 1 (Abnahme 1 M1, Entscheid Orchestrator Variante a): der Fuehrerstand ist vor dem Wagen erreichbar
+(Treppe main00 @0x00CB2 Aot_set Slot 4 sce 12, Tuer Slot 1 main00 @0x00C52 Ziel 6030 Cut 0 -> sub00 @0x00D2C Case 0
+-> Gosub sub07; sub07 @0x010D0 `21 04 17 00` Ck(4,23)=0 -> @0x010E8 Evt_exec sub08 fragt das Wagen-Flag NICHT ab).
+Wagen-Flag = (3,22): einziger Schreiber sub02 @0x00D7A `22 03 16 01`, einziger Leser sub01 @0x00D62 `21 03 16 00`
+(Ausloeser der Wagen-Szene). Die Gates liest story80_r41.c (re15_game_flag_get, dieselbe Tabelle wie Ck @0x8003fcf4):
+  vorne  (3,22)=0: msg 11, msg 31 "Everyone we could find. Can you start this thing?", dann 13..19 wie Original;
+         setzt das Port-Bit (9,128) "Sherry-Nachtrag offen" (Bank-9-Zensus frei, test_r36_kartenbits k_port[]).
+  nachtrag  naechstes Betreten des Fuehrerstands mit (4,23)=1 (sub07 @0x010EC Else_ck), (3,89)=0 (@0x010F4, Annette da),
+         (3,22)=1 und (9,128)=1: msg 40 Leon "There's a little girl in the back... Sherry.", msg 25 Annette, Schluss
+         wie sub08 @0x0131E (Annette zurueck ans Pult = sub09-Haltung @0x01338..@0x01348, Leon dreht ab, Sperren auf);
+         loescht (9,128) -> laeuft hoechstens einmal.
 
 FORM: Jede Zeile eines Programms ist entweder ein ausgelieferter Byte-Bereich DESSELBEN Raums (Datei-Offsets in
 re15_port/shared_assets/PSX/STAGE<n>/ROOM<id>.RDT, "orig lo..hi") oder ein Opcode in ausgelieferter Form mit
@@ -52,7 +66,7 @@ def rdt(room):
 
 # Datei-Offsets der Sub-Tabelle (RDT-Kopf, scd_dump_room "sub_scd") und erwartete Sub-Anfaenge.
 SUB_TAB = {"30C1": 0x0BD8, "6030": 0x0D14}
-SUB_SOLL = {("30C1", 3): 0x0C2C, ("6030", 2): 0x0D7A, ("6030", 8): 0x113A}
+SUB_SOLL = {("30C1", 3): 0x0C2C, ("6030", 2): 0x0D7A, ("6030", 8): 0x113A, ("6030", 9): 0x1376}
 
 
 def orig(lo, hi, was):
@@ -146,11 +160,53 @@ P_6030_PULT = [
 ]
 FOLGE_6030_PULT = [11, 12, 25, 26, 13, 14, 15, 16, 17, 18, 19]
 
+# ------------------------------------------------------------------------------------------------------------------
+# Nachbesserung 1: Port-Bit (9,128) "Sherry-Nachtrag offen". Set-Form `22 <Bank> <Bit> <Wert>` (Opcode 0x22, Handler
+# 0x8003fdd0); Vorlagen sub08 @0x0113A `22 04 17 01` (setzen) und @0x0136C `22 01 1b 00` (loeschen).
+BIT_NACHTRAG = 0x80          # = 128 = re15_story80_r41.h RE15_S80_BIT_NACHTRAG
+SET_NACHTRAG = op(0x0113A, [0x22, 0x04, 0x17, 0x01], [0x22, 0x09, BIT_NACHTRAG, 0x01],
+                  "Set(9,128)=1 Port-Bit 'Sherry-Nachtrag offen' (Form Set(4,23) @0x0113A)")
+LOESCH_NACHTRAG = op(0x0136C, [0x22, 0x01, 0x1B, 0x00], [0x22, 0x09, BIT_NACHTRAG, 0x00],
+                     "Set(9,128)=0 Nachtrag verbraucht (Form Set(1,27)=0 @0x0136C)")
+
+# ROOM6030 sub08, Fuehrerstand VOR dem Wagen ((3,22)=0): a = msg 11, b' = msg 31 statt 12/25/26, dann wie Original.
+P_6030_PULT_VORNE = [
+    orig(0x113A, 0x113E, "Set(4,23)=1 @0x0113A (Szene gesehen, Original)"),
+    SET_NACHTRAG,
+    orig(0x113E, 0x1198, "Sperren @0x0113E, Cut 1, Leon/Annette drehen sich zueinander, a = msg 11 Annette + Gesten "
+                         "13/13/16, Work_set 1 Leon @0x01194 (Original)"),
+    msg_on(31, 0x1198, 12, "b' = msg 31 Leon (Form msg 12 @0x01198)"),
+    orig(0x119C, 0x11CC, "Leon-Gesten 1/1/0/0/7 wie nach msg 12 (@0x0119C.., Original)"),
+    orig(0x11CC, 0x1376, "ab Work_set(2,0) + msg 13 'Certainly.' @0x011D0 bis Evt_end @0x01374 (Original)"),
+]
+FOLGE_6030_PULT_VORNE = [11, 31, 13, 14, 15, 16, 17, 18, 19]
+
+# ROOM6030 sub09 (Annette am Pult, gerufen sub07 @0x0110C), Nachtrag NACH dem Wagen ((9,128)=1, (3,22)=1).
+P_6030_NACHTRAG = [
+    LOESCH_NACHTRAG,
+    orig(0x113E, 0x1174, "Sperren (2,7)/(1,27) @0x0113E, Sleep 1, Cut 1, Leon dreht sich zu Annette @0x01150, Annette "
+                         "zu Leon @0x01160, warten bis (5,0x21) @0x01168..@0x01170 (sub08, ohne Set(4,23))"),
+    orig(0x1194, 0x1198, "Work_set 1 Leon (@0x01194)"),
+    msg_on(40, 0x1198, 12, "msg 40 Leon (Form msg 12 @0x01198)"),
+    orig(0x119C, 0x11CC, "Leon-Gesten 1/1/0/0/7 wie nach msg 12 (@0x0119C..)"),
+    orig(0x11CC, 0x11D0, "Work_set(2,0) Annette (@0x011CC)"),
+    msg_on(25, 0x11D0, 13, "msg 25 Annette (Form msg 13 @0x011D0)"),
+    orig(0x12EA, 0x1306, "Annette-Gesten 14/14/16 wie nach msg 18 (@0x012EA..; wie im Programm sub08)"),
+    orig(0x131E, 0x1376, "Schluss wie sub08: Annette dreht zum Pult @0x01322, Cut 0 @0x01336, Pult-Haltung 18/19 + "
+                         "Plc_flg 4 @0x01338..@0x01348 (= sub09 @0x0137A..@0x0138A), Leon dreht ab @0x01350, Sperren auf "
+                         "@0x01368/@0x0136C, Cut_auto, Plc_ret, Evt_end @0x01374"),
+]
+FOLGE_6030_NACHTRAG = [40, 25]
+
 PROGRAMME = [
     # (Raum, Sub, C-Name, Segmente, Folge, Messtext)
     ("30C1", 3, "k_s80_30c1_sub03", P_30C1, FOLGE_30C1, "Elza trifft Marvin, kurze Fassung"),
     ("6030", 2, "k_s80_6030_sub02", P_6030_WAGEN, FOLGE_6030_WAGEN, "Leon, Wagen-Szene"),
     ("6030", 8, "k_s80_6030_sub08", P_6030_PULT, FOLGE_6030_PULT, "Leon, Fuehrerstand"),
+    ("6030", 8, "k_s80_6030_sub08_vorne", P_6030_PULT_VORNE, FOLGE_6030_PULT_VORNE,
+     "Leon, Fuehrerstand vor dem Wagen (NB1)"),
+    ("6030", 9, "k_s80_6030_sub09_nachtrag", P_6030_NACHTRAG, FOLGE_6030_NACHTRAG,
+     "Leon, Fuehrerstand nach dem Wagen, Nachtrag (NB1)"),
 ]
 SIG_N = 16
 

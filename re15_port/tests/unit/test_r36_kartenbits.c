@@ -78,6 +78,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "re15_kanister2080_r41.h"   /* Runde 41 Spur G: Bits 114-117 */
+#include "re15_story80_r41.h"        /* Runde 41 Spur ST80 Nachbesserung 1: Bit 128 */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -539,6 +540,7 @@ static const port_bit_t k_port[] = {
     { RE15_K2080_BANK, RE15_K2080_BIT_SZENE, "RE15_K2080_BIT_SZENE", "Marvin/John-Kanister-Szene gelaufen, kanister2080_r41.c (Runde 41 G)" },
     { RE15_K2080_BANK, RE15_K2080_BIT_KANISTER, "RE15_K2080_BIT_KANISTER", "Kanister liegt im 2090-Becken, kanister2080_r41.c (Runde 41 G)" },
     { RE15_K2080_BANK, RE15_K2080_BIT_SUEDWURF, "RE15_K2080_BIT_SUEDWURF", "Kanister-Wurf ins Suedbecken (sonst Nord), kanister2080_r41.c (Runde 41 G NB2)" },
+    { RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, "RE15_S80_BIT_NACHTRAG", "6030 Sherry-Nachtrag offen (Fuehrerstand vor dem Wagen), gen/story80_szenen.inc Set (Runde 41 ST80 NB1)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

@@ -24,9 +24,10 @@ FORM (belegt, nicht geraten):
     Seiten- und Zeilenzahl muessen der Vorlage gleichen ("Zeilenumbrueche wie das Original"), sonst Abbruch.
 
   * DIALOG_NEU (Runde 41 Spur ST80-T): eine NEUE Dialog-Id hinter den Original-Nachrichten eines Raums (Id >= RDT-Zahl,
-    < 32 = PSX MSG_TABLE_N). Kopf und Schwanz WOERTLICH aus einer Original-Nachricht DESSELBEN Raums mit demselben
-    Sprecher (Spalte "Vorlage", z. B. John = ROOM6030 msg 3 `04 00 05 07 26 4b 44 4a 16 05 00 00`); Abbruch, wenn die
-    Vorlage nicht die Dialogform hat oder die Id belegt ist. Bis zu drei Zeilen (28 Original-Dialoge haben zwei 0x08,
+    < 32 = PSX MSG_TABLE_N; 40..63 nur PC = VERTRAG Runde 41 1.2). Kopf und Schwanz WOERTLICH aus einer Original-
+    Nachricht DESSELBEN Raums mit demselben Sprecher (Spalte "Vorlage", z. B.
+    John = ROOM6030 msg 3 `04 00 05 07 26 4b 44 4a 16 05 00 00`); Abbruch, wenn die Vorlage
+    nicht die Dialogform hat oder die Id belegt ist. Bis zu drei Zeilen (28 Original-Dialoge haben zwei 0x08,
     z. B. ROOM10D0 msg 17).
 
 WORTLAUT = PORT-WAHL (Story, Nachtrag AUFTRAG.md 14:00, P4: "Die duerfen sich niemals begegnet sein");
@@ -213,6 +214,18 @@ DIALOG_NEU = [
      "ST80-T 6030 Fuehrerstand c (Nutzer); Kopf Annette = msg 11 @0x015D1"),
     ("6030", 26, "k_s41_6030_m26", 12, ["Can you start this thing?"],
      "ST80-T 6030 Fuehrerstand d (Nutzer); Kopf Leon = msg 12 @0x015FC"),
+    # Runde 41 ST80 Nachbesserung 1 (Abnahme 1 M1, Entscheid Orchestrator Variante a): Reihenfolge "Fuehrerstand vor dem
+    # Wagen" ((3,22)=0, Flag-Schreiber sub02 @0x00D7A `22 03 16 01`). Beide Saetze stehen schon in den Zug-Texten, keiner
+    # ist neu erfunden: "Everyone we could find." = Satz 1 von msg 12 (Nutzerwortlaut ST80), "Can you start this thing?" =
+    # msg 26 (Nutzer ST80) = Schluss von Runde-36-Zeile 12 und der Mod-Zeile ROOM6030 msg 12 @0x015FC. Keine Aufnahme ->
+    # stumm (main31.wav gibt es nicht).
+    ("6030", 31, "k_s41_6030_m31", 12, ["Everyone we could find.", "Can you start this thing?"],
+     "ST80 NB1 6030 Fuehrerstand vor dem Wagen: Leons Antwort ohne Sherry; Kopf Leon = msg 12 @0x015FC"),
+    # Nachtrag beim naechsten Betreten des Fuehrerstands nach dem Wagen: "There's a little girl in the back... Sherry." =
+    # Satz 2 von msg 12 (Nutzerwortlaut ST80). Id 40: 27..30 belegt Spur AN (Aufnahmen main27..30), 31 oben; ab 40 =
+    # VERTRAG Runde 41 1.2 (Port-Ids ab 40); PC MSG_TABLE_N 256, PSX 32 (dort nicht angezeigt). Stumm (kein main40.wav).
+    ("6030", 40, "k_s41_6030_m40", 12, ["There's a little girl", "in the back... Sherry."],
+     "ST80 NB1 6030 Fuehrerstand nach dem Wagen (Nachtrag): Leon nennt Sherry; Kopf Leon = msg 12 @0x015FC"),
 ]
 
 # (Raum, Id, C-Name, Seiten (je Liste von Zeilen), Grund) — P2/P3 NEU, Untersuchungstext
@@ -265,8 +278,10 @@ def bauen():
         d = rdt(room)
         ms = struct.unpack_from("<I", d, 0x3C)[0]
         n_rdt = (d[ms] | d[ms + 1] << 8) // 2
-        if mid < n_rdt or mid >= 32:
-            raise SystemExit("%s msg %d: neue Id muss hinter den %d RDT-Nachrichten liegen und < 32 sein" % (room, mid, n_rdt))
+        # < 32 = PSX MSG_TABLE_N; 40..63 = VERTRAG Runde 41 1.2 "Port-Ids ab 40" (nur PC: MSG_TABLE_N 256, VOICE_MAX_MSG 64)
+        if mid < n_rdt or not (mid < 32 or 40 <= mid < 64):
+            raise SystemExit("%s msg %d: neue Id muss hinter den %d RDT-Nachrichten liegen und < 32 oder 40..63 sein"
+                             % (room, mid, n_rdt))
         off, orig = msg_raw(room, vorlage)
         kopf, schwanz = split_dialog(orig)
         body = bytes([0x08]).join(enc(z) for z in zeilen)

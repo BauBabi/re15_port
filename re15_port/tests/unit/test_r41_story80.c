@@ -10,6 +10,12 @@
  *   ablauf30c1     ROOM30C1 (Elza trifft Marvin): genau fuenf Zeilen 1..5 in dieser Reihenfolge, Stimmen-Ids = Message-Ids,
  *                  msg 6..8 nie; Marvins Abgang (sub06, Cut 3, Spieler frei) wie bisher
  *   ablauf6030     ROOM6030 (Leon): Wagen-Szene sub02 dreizehn Zeilen, Fuehrerstand sub08 a..d vor "Certainly."
+ *                  (Reihenfolge Wagen -> Fuehrerstand, Flags reisen mit); danach erneut vorne: kein Text, kein Nachtrag
+ *   reihenfolge6030  Nachbesserung 1 (Abnahme 1 M1): Fuehrerstand VOR dem Wagen ((3,22)=0) -> msg 11, 31, 13..19, keine
+ *                  Sherry-Zeile, (9,128)=1; erneut vorne vor dem Wagen: nichts; Wagen: 13 Zeilen widerspruchsfrei;
+ *                  vorne nach dem Wagen: Nachtrag msg 40, 25, (9,128)=0; nochmals vorne: nichts. Jede Zeile hoechstens
+ *                  einmal ueber den ganzen Weg. GEGENPROBE: Stand ad8532cd4 (Fuehrerstand ohne Gate) liefert vorne
+ *                  msg 12/25 mit "Sherry" -> rot (in der echten exe: integration_r36_story_leon P4b).
  *   stimmen        Stimmen-Pfade: keine Umleitung in stimmen_r39 fuer die neuen/umgeschriebenen Ids (Datei = main<Id>.wav)
  */
 #include "re15_rdt.h"
@@ -299,6 +305,9 @@ static const zeile_t k_liste[] = {
     { 0x6030, 25, "Annette: Sherry...? My daughter is on this train? ...Thank God." },
     { 0x6030, 26, "Leon: Can you start this thing?" },
     { 0x6030, 13, "Annette: Certainly." },
+    /* Nachbesserung 1: Reihenfolge Fuehrerstand vor dem Wagen; beide ohne Aufnahme (stumm) */
+    { 0x6030, RE15_S80_ID_VORNE,    "Leon: Everyone we could find. Can you start this thing?" },
+    { 0x6030, RE15_S80_ID_NACHTRAG, "Leon: There's a little girl in the back... Sherry." },
 };
 #define LISTE_N ((int)(sizeof k_liste / sizeof k_liste[0]))
 
@@ -418,6 +427,8 @@ static void teil_ablauf30c1(void)
           (unsigned)g_scd.cam_id, re15_game_flag_get(2, 7), re15_game_flag_get(1, 27), re15_game_flag_get(3, 0x39));
 }
 
+static void vorne_ruhig(const char *was);
+
 static void teil_ablauf6030(void)
 {
     printf("== ablauf6030 Wagen ==\n");
@@ -442,15 +453,114 @@ static void teil_ablauf6030(void)
           "nach der Szene: Cut %u (soll 12, sub02 @0x00FE0), Sperren (2,7)=%d (1,27)=%d, (3,22)=%d (@0x00D7A)",
           (unsigned)g_scd.cam_id, re15_game_flag_get(2, 7), re15_game_flag_get(1, 27), re15_game_flag_get(3, 22));
 
-    printf("== ablauf6030 Fuehrerstand ==\n");
-    re15_game_state_init();
-    re15_inv_init();
-    /* Eintritt Cut 0 (sub00 @0x00D2C Case 0 -> Gosub sub07; @0x010D0 Ck(4,23)=0 -> Annette + Evt_exec sub08) */
+    printf("== ablauf6030 Fuehrerstand (nach dem Wagen) ==\n");
+    /* Flags reisen mit (room_boot behaelt g_game): (3,22)=1 aus der Wagen-Szene -> Programm sub08 wie bisher.
+     * Eintritt Cut 0 (sub00 @0x00D2C Case 0 -> Gosub sub07; @0x010D0 Ck(4,23)=0 -> Annette + Evt_exec sub08) */
     if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
     szene_pruefen(RE15_S80_P_PULT, 0x6030, 9000, &bilder);
-    PRUEF(g_re15_story80_umleitungen[RE15_S80_P_PULT] == 1, "sub08 genau einmal umgeleitet (%u)",
-          g_re15_story80_umleitungen[RE15_S80_P_PULT]);
-    PRUEF(re15_game_flag_get(4, 23), "(4,23)=1 nach der Szene (sub08 @0x0113A)");
+    PRUEF(g_re15_story80_umleitungen[RE15_S80_P_PULT] == 1 && g_re15_story80_umleitungen[RE15_S80_P_PULT_VORNE] == 0,
+          "sub08 genau einmal umgeleitet (%u), Fassung 'vorne zuerst' nie (%u)",
+          g_re15_story80_umleitungen[RE15_S80_P_PULT], g_re15_story80_umleitungen[RE15_S80_P_PULT_VORNE]);
+    PRUEF(re15_game_flag_get(4, 23) && !re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG),
+          "(4,23)=1 nach der Szene (sub08 @0x0113A), (9,128)=%d (kein Nachtrag offen)",
+          re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG));
+    for (int f = 0; f < 60; f++) frame();
+    printf("== ablauf6030 Fuehrerstand erneut ==\n");
+    vorne_ruhig("Wagen zuerst, erneut vorne");
+}
+
+/* Fuehrerstand erneut betreten, wenn nichts mehr zu sagen ist: sub07 @0x010EC Else_ck (4,23)=1 -> @0x010F4 Ck(3,89)=0
+ * -> Annette + Evt_exec sub09 (Pult-Haltung). Erwartet: kein Text, keine Umleitung, Spieler frei. */
+static void vorne_ruhig(const char *was)
+{
+    static const uint8_t k_banken[] = { 0x49, 0x40, 0x4B, 0x4D };
+    unsigned vorher[RE15_S80_P_N];
+    for (int i = 0; i < RE15_S80_P_N; i++) vorher[i] = g_re15_story80_umleitungen[i];
+    if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
+    for (int f = 0; f < 900; f++) frame();
+    int umgeleitet = 0;
+    for (int i = 0; i < RE15_S80_P_N; i++) if (g_re15_story80_umleitungen[i] != vorher[i]) umgeleitet = 1;
+    PRUEF(s_prot_n == 0 && !umgeleitet && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27),
+          "%s: kein Text (%d), keine Umleitung, Sperren (2,7)=%d (1,27)=%d", was, s_prot_n,
+          re15_game_flag_get(2, 7), re15_game_flag_get(1, 27));
+}
+
+/* Ganzer Weg: gesehene Ids sammeln (jede Zeile hoechstens einmal) */
+static int s_weg_ids[64];
+static int s_weg_n = 0;
+static void weg_merken(void)
+{
+    for (int i = 0; i < s_prot_n && s_weg_n < 64; i++) s_weg_ids[s_weg_n++] = s_prot_id[i];
+}
+static int prot_hat_wort(const char *w)
+{
+    for (int i = 0; i < s_prot_n; i++) if (strstr(s_prot_text[i], w)) return 1;
+    return 0;
+}
+
+static void teil_reihenfolge6030(void)
+{
+    static const uint8_t k_banken[] = { 0x49, 0x40, 0x4B, 0x4D };   /* sub06 @0x0101C/@0x01030/@0x01044, sub07 @0x010D4 */
+    int bilder = 0;
+    printf("== reihenfolge6030: 1. Fuehrerstand vor dem Wagen ==\n");
+    re15_game_state_init();
+    re15_inv_init();
+    for (int i = 0; i < RE15_S80_P_N; i++) g_re15_story80_umleitungen[i] = 0;
+    s_weg_n = 0;
+    PRUEF(!re15_game_flag_get(RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT), "Vorbedingung (3,22)=0 (Wagen-Szene nicht gelaufen)");
+    if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
+    szene_pruefen(RE15_S80_P_PULT_VORNE, 0x6030, 9000, &bilder);
+    weg_merken();
+    PRUEF(!prot_hat_wort("Sherry") && !prot_hat_wort("daughter") && !prot_hat_wort("girl"),
+          "vorne zuerst: keine Sherry-Zeile (kein 'Sherry'/'daughter'/'girl')");
+    PRUEF(g_re15_story80_umleitungen[RE15_S80_P_PULT_VORNE] == 1 && g_re15_story80_umleitungen[RE15_S80_P_PULT] == 0,
+          "sub08 -> Fassung 'vorne zuerst' (%u), volle Fassung nie (%u)",
+          g_re15_story80_umleitungen[RE15_S80_P_PULT_VORNE], g_re15_story80_umleitungen[RE15_S80_P_PULT]);
+    PRUEF(re15_game_flag_get(4, 23) && re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG) &&
+          !re15_game_flag_get(RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT),
+          "danach (4,23)=%d (sub08 @0x0113A), (9,128)=%d (Nachtrag offen), (3,22)=%d", re15_game_flag_get(4, 23),
+          re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG),
+          re15_game_flag_get(RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT));
+    for (int f = 0; f < 60; f++) frame();
+    PRUEF(!re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27), "Sperren (2,7)/(1,27) frei (sub08 @0x01368/@0x0136C)");
+
+    printf("== reihenfolge6030: 2. erneut vorne, noch vor dem Wagen ==\n");
+    vorne_ruhig("vorne vor dem Wagen, erneut");
+    PRUEF(re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG), "(9,128) bleibt offen, solange (3,22)=0");
+
+    printf("== reihenfolge6030: 3. Wagen ==\n");
+    if (room_boot(0x6030, -18930, -22420, 0, 6, k_banken, 4) != 0) return;
+    szene_pruefen(RE15_S80_P_WAGEN, 0x6030, 9000, &bilder);
+    weg_merken();
+    PRUEF(s_prot_n >= 3 && s_prot_id[1] == 1 && s_prot_id[2] == 21,
+          "Wagen: 'Who are you two?' (msg 1), dann Johns Vorstellung (msg 21) - Leon kennt Sherry noch nicht");
+    for (int f = 0; f < 60; f++) frame();
+    PRUEF(re15_game_flag_get(RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT), "(3,22)=1 nach dem Wagen (sub02 @0x00D7A)");
+
+    printf("== reihenfolge6030: 4. vorne nach dem Wagen: Nachtrag ==\n");
+    if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
+    szene_pruefen(RE15_S80_P_NACHTRAG, 0x6030, 9000, &bilder);
+    weg_merken();
+    PRUEF(g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG] == 1, "sub09 -> Nachtrag genau einmal (%u)",
+          g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG]);
+    for (int f = 0; f < 60; f++) frame();
+    PRUEF(!re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG) && !re15_game_flag_get(2, 7) &&
+          !re15_game_flag_get(1, 27) && g_scd.cam_id == 0,
+          "danach (9,128)=%d, Sperren (2,7)=%d (1,27)=%d, Cut %u (soll 0, sub08 @0x01336)",
+          re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG), re15_game_flag_get(2, 7),
+          re15_game_flag_get(1, 27), (unsigned)g_scd.cam_id);
+
+    printf("== reihenfolge6030: 5. nochmals vorne ==\n");
+    vorne_ruhig("nach dem Nachtrag, erneut vorne");
+
+    int doppelt = 0;
+    for (int i = 0; i < s_weg_n; i++)
+        for (int k = i + 1; k < s_weg_n; k++) if (s_weg_ids[i] == s_weg_ids[k]) doppelt = s_weg_ids[i] + 1;
+    printf("   ganzer Weg (%d Zeilen):", s_weg_n);
+    for (int i = 0; i < s_weg_n; i++) printf(" %d", s_weg_ids[i]);
+    printf("\n");
+    PRUEF(!doppelt && s_weg_n == 9 + 13 + 2, "jede Zeile hoechstens einmal (%d Zeilen, doppelt: %d)", s_weg_n,
+          doppelt - 1);
 }
 
 static void teil_stimmen(void)
@@ -460,9 +570,12 @@ static void teil_stimmen(void)
         char st[24] = "";
         const int r = re15_stimmen_r39_stamm(k_liste[i].raum, k_liste[i].id, st, sizeof st);
         const char *sd = re15_elza_stimme_datei(k_liste[i].raum, k_liste[i].id);
+        const int stumm = k_liste[i].raum == 0x6030 &&
+                          (k_liste[i].id == RE15_S80_ID_VORNE || k_liste[i].id == RE15_S80_ID_NACHTRAG);
         PRUEF(r == 0 && sd == NULL && k_liste[i].id < 64,
-              "synchro/STAGE%u/room%04X/main%02d.wav (keine Umleitung, Id < VOICE_MAX_MSG 64)",
-              (unsigned)(k_liste[i].raum >> 12), k_liste[i].raum, k_liste[i].id);
+              "synchro/STAGE%u/room%04X/main%02d.wav (keine Umleitung, Id < VOICE_MAX_MSG 64)%s",
+              (unsigned)(k_liste[i].raum >> 12), k_liste[i].raum, k_liste[i].id,
+              stumm ? " - keine Aufnahme geliefert, Zeile bleibt stumm (NB1)" : "");
     }
 }
 
@@ -474,6 +587,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "texte")         || !strcmp(teil, "alle")) teil_texte();
     if (!strcmp(teil, "ablauf30c1")    || !strcmp(teil, "alle")) teil_ablauf30c1();
     if (!strcmp(teil, "ablauf6030")    || !strcmp(teil, "alle")) teil_ablauf6030();
+    if (!strcmp(teil, "reihenfolge6030") || !strcmp(teil, "alle")) teil_reihenfolge6030();
     if (!strcmp(teil, "stimmen")       || !strcmp(teil, "alle")) teil_stimmen();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;
