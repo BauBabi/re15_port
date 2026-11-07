@@ -15,8 +15,8 @@
 # Szenenende.
 #
 # INTEGRATION RUNDE 41 (GR + G5A, gemessen im Integrationsbaum): mit den GR-HP (Riesenform 1000 = RE2-G4-Ctor `addiu v0,zero,1000`
-# @0x80100678) trifft die Rakete (w18 -> Art 9, DAT_8006f418[9] = 1000 `e8 03` @0x8006f42a) die Riesenform auf GENAU 0 (F600 HP 1000,
-# F610 HP 0), 0 ist nicht tot (Todesregel hp < 0); MA7.2 endete bei F604, die 0-HP-Form toetete den Spieler (Leon F1411, Elza F1506),
+# @0x80100678) trifft die Rakete (w18 -> Art 9, DAT_8006f418[9] = 1000 `e8 03` @0x8006f42a) die Riesenform auf GENAU 0 (F592 HP 1000,
+# F604 HP 0), 0 ist nicht tot (Todesregel hp < 0); MA7.2 endete bei F604, die 0-HP-Form toetete den Spieler (Leon F1411, Elza F1506),
 # Game over -> Neustart (Bildzaehler 1672 -> 0), kein G5, Zellen-/Weg-Masse unsinnig. Deshalb MA9 (Feuer bis F658): die naechste
 # Rakete bei ~F636 toetet die 0-HP-Form -> Rueckstoss F638 -> G5 F737, Armierung F792, Szenenende F1954 (integration_r41_g5_tod,
 # gleiche Vorgeschichte A0.1,W1,U8.5,MA9). Die Tasten ab W56.5 liegen damit weiter hinter dem Szenenende.

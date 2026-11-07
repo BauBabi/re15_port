@@ -18,7 +18,7 @@
 # RE2-G4-Ctor `addiu v0,zero,1000` @0x80100678) trifft die Rakete (w18 -> Art 9, DAT_8006f418[9] = 1000 `e8 03` @0x8006f42a) die
 # Riesenform auf GENAU 0: Form 1 F413 600 -> -400 (tot, Mutation mit 300/100), Riesenform F592 HP 1000, Rakete F604 -> 0, und
 # 0 ist nicht tot (Todesregel hp < 0, GR: 'bis hp < 0'). Mit MA7.2 endete das Feuer genau bei F604; die Form stand mit 0 HP,
-# toetete den stehenden Spieler (Griff/Hiebe, HP 0 bei F1520, tot F1592) und der G5 kam nie: FSM-START mit isdead=1.
+# toetete den stehenden Spieler (Griff/Hiebe, HP 0 bei F1485, tot F1592) und der G5 kam nie: FSM-START mit isdead=1.
 # Deshalb MA9 (Feuer bis F658): die Rakete im 32-Bild-Takt (F413, 445, ..., 604, 636) trifft die 0-HP-Form noch einmal ->
 # tot -> Rueckstoss (dort feuert re15_bf_pad selbst) -> G5-Szene -> der Spieler steht danach ohne Taste auf RE2s Linie.
 #
