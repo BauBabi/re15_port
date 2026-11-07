@@ -155,7 +155,10 @@ R3 = os.path.join(K5, 'farbe', 'K5c_farbe_v3r3')
 RV_DIR = os.path.join(K5, 'farbe_lesung', 'V3R4_skripte')
 RV_REGIONEN = ['Ruecken', 'Flanke', 'Brust/Bauch', 'Vorderbeine', 'Hinterbeine', 'Hals', 'Kopf', 'Schwanz']   # riegel_rot.REGIONEN
 RV_BILD = {1: ['Schwanz', 'Ruecken', 'Flanke', 'Vorderbeine', 'Hinterbeine', 'Figur'],
-           2: ['Ruecken', 'Brust/Bauch', 'Vorderbeine', 'Hals', 'Kopf', 'Figur']}          # bindende RV1-Zeilen (Nachtrag 5)
+           2: ['Ruecken', 'Brust/Bauch', 'Vorderbeine', 'Vorderbeine ohne Krallen', 'Hals', 'Kopf', 'Figur']}   # bindende RV1-Zeilen (Nachtrag 5)
+# Runde 5: Bild 2 "Vorderbeine" nur Info, bindend "Vorderbeine ohne Krallen" (riegel_rot.py, Maske V3R5_skripte/krallen_bild2.npz)
+R5_DIR = os.path.join(K5, 'farbe_lesung', 'V3R5_skripte')
+NEU_TITEL = os.environ.get('KF_RUNDE_NEU', 'Runde 5 (neu)')
 
 
 def rot_vorlage(neu, aus, rv_neu=None):
@@ -164,7 +167,10 @@ def rot_vorlage(neu, aus, rv_neu=None):
     import json as _j
     M = np.load(os.path.join(RV_DIR, 'rot_masken.npz'))
     Z = _j.load(open(os.path.join(RV_DIR, 'ziele.json'), encoding='utf-8'))
-    w3 = _j.load(open(os.path.join(RV_DIR, 'gegen_v3r3.json'), encoding='utf-8'))
+    Z['bild2|Vorderbeine ohne Krallen|T'] = _j.load(open(os.path.join(R5_DIR, 'ziel_ohne_krallen.json'), encoding='utf-8'))['ziel']
+    kz = np.load(os.path.join(R5_DIR, 'krallen_bild2.npz'))
+    kralle2 = np.unpackbits(kz['kralle'])[:480 * 640].reshape(480, 640).astype(bool)
+    w3 = _j.load(open(os.path.join(R5_DIR, 'gegen_v3r3_r5.json'), encoding='utf-8'))   # Runde 3 mit dem Runde-5-riegel_rot (neue Region)
     wn = _j.load(open(rv_neu or os.path.join(K5, 'farbe', 'riegel_rot_K5c_farbe_v3.json'), encoding='utf-8'))
     bloecke = []
     for n in (1, 2):
@@ -177,7 +183,10 @@ def rot_vorlage(neu, aus, rv_neu=None):
         basis = np.unpackbits(M['basis%d' % n])[:480 * 640].reshape(480, 640).astype(bool)
         reg = M['reg%d' % n].astype(int)
         for rn in RV_BILD[n]:
-            rm = basis & ((reg == RV_REGIONEN.index(rn)) if rn != 'Figur' else (reg >= 0))
+            if rn == 'Vorderbeine ohne Krallen':
+                rm = basis & (reg == RV_REGIONEN.index('Vorderbeine')) & (~kralle2 if n == 2 else True)
+            else:
+                rm = basis & ((reg == RV_REGIONEN.index(rn)) if rn != 'Figur' else (reg >= 0))
             ys, xs = np.where(rm)
             y0, y1 = max(0, ys.min() - 6), min(480, ys.max() + 7)
             x0, x1 = max(0, xs.min() - 6), min(640, xs.max() + 7)
@@ -188,7 +197,7 @@ def rot_vorlage(neu, aus, rv_neu=None):
             hO = zr['h_rot']['O'] if zr.get('h_rot') else None
             key = 'Bild %d %s ' % (n, rn)
             ks = []
-            for nm, img, quelle in (('Vorlage Bild %d' % n, o, None), ('Runde 3', vids[0], w3), ('Runde 4 (neu)', vids[1], wn)):
+            for nm, img, quelle in (('Vorlage Bild %d' % n, o, None), ('Runde 3', vids[0], w3), (NEU_TITEL, vids[1], wn)):
                 a = cv2.resize(img[y0:y1, x0:x1], ((x1 - x0) * f, (y1 - y0) * f), interpolation=cv2.INTER_NEAREST).copy()
                 cs = [c * f + f // 2 for c in cont]
                 cv2.drawContours(a, cs, -1, (0, 200, 255), 1)
@@ -197,14 +206,14 @@ def rot_vorlage(neu, aus, rv_neu=None):
                 else:
                     r1 = quelle.get(key + 'RV1 Rot eng %')
                     r2 = quelle.get(key + 'RV2 Farbton a*-Klasse Grad')
-                    unter = 'Rot eng %.1f %% %s, Farbton %s' % (r1['wert'], 'GRUEN' if r1['ok'] else 'ROT',
-                                                               ('%.1f Grad %s' % (r2['wert'], 'GRUEN' if r2['ok'] else 'ROT')) if r2 else '-')
+                    unter = 'Rot eng %.1f %% %s%s, Farbton %s' % (r1['wert'], 'GRUEN' if r1['ok'] else 'ROT', '' if r1.get('bindend', True) else ' (Info)',
+                                                                 ('%.1f Grad %s' % (r2['wert'], 'GRUEN' if r2['ok'] else 'ROT')) if r2 else '-')
                 if a.shape[1] < 340:                       # schmale Regionen: Kachel rechts mit Grund auffuellen (Schrift lesbar), Bild unveraendert
                     a = np.concatenate([a, np.full((a.shape[0], 340 - a.shape[1], 3), 24, np.uint8)], 1)
                 ks.append(KT.kachel(a, '%s, %s' % (nm, rn), unter.replace('.', ','), 'Video roh' if quelle is None else 'Spiellicht + Videofilter Saat 15, roh'))
             bloecke.append(H.reihe(ks))
     t = H.stapel(bloecke)
-    kopf = H.kopfzeile('09 Rot wie die Vorlage (MESSBLATT_FARBE_V3_NACHTRAG_ROT 5): je Region Vorlage | Runde 3 | Runde 4, gleicher Ausschnitt, '
+    kopf = H.kopfzeile('09 Rot wie die Vorlage (MESSBLATT_FARBE_V3_NACHTRAG_ROT 5): je Region Vorlage | Runde 3 | ' + NEU_TITEL + ', gleicher Ausschnitt, '
                        'gleiches Licht und Filter, roh, kein Gamma. Linie = Messregion (rot_masken.npz). Zahlen: RV1/RV2, Kette T, Mittel 3 Saaten.', t.shape[1])
     cv2.imwrite(aus, H.stapel([kopf, t]))
 
