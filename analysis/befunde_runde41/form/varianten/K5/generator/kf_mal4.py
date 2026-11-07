@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
-"""K5c Farbe, Versuch 2 (Runde 1): Binnenzeichnung auf den Runde-3-Stand (kf_mal3.py) gelegt.
+"""K5c Farbe, Versuch 2 (Runde 1 und 2): Binnenzeichnung auf den Runde-3-Stand (kf_mal3.py) gelegt.
 Grundlage MESSBLATT_FARBE_V1.md und Nachtrag MESSBLATT_FARBE_V2.md (Abschnitte 1-5); Pruefung r3 (FARBE_PRUEFUNG_r3_sicht.md P1,
-FARBE_PRUEFUNG_r3_zahlen.md 1, 5, 6). Geometrie, Clips, UV, Dreiecke unveraendert (FORM.EMD = K5c), neu nur Texelindizes und CLUTs.
+FARBE_PRUEFUNG_r3_zahlen.md 1, 5, 6) und Pruefung Versuch 2 Runde 1 (FARBE_PRUEFUNG_v2_r1_sicht.md P1/P2, FARBE_PRUEFUNG_v2_r1_zahlen.md).
+Geometrie, Clips, UV, Dreiecke unveraendert (FORM.EMD = K5c), neu nur Texelindizes und CLUTs.
 Kein RE-Wert: neues Modell (PORT-WAHL Form, NUTZER_ENTSCHEIDE E5/E19/E20). Fuer die Malkonstanten liegt KEIN Nutzer-Wortlaut vor
 (V2 Abschnitt 4 letzte Zeile); jede Konstante hier traegt deshalb eine Messquelle: Familienwert aus V2 Abschnitt 1 (EM30-Haut / RE2-G4 /
-RE2-G5, Spalte "Familie"), V1-Zeile, Bild + Koordinaten, oder sie ist ein Rechenparameter mit Unabhaengigkeitsnachweis (Dossier FARBE.md "Versuch 2").
+RE2-G5, Spalte "Familie"), V1-Zeile, Bild + Koordinaten, oder sie ist ein Rechenparameter (Unabhaengigkeitsnachweis im Dossier FARBE.md).
 
-Was bleibt (r3, 28 gruene V1-Riegel): Koernung H2, Screenshot-Farbkarte (sichtbar / Spiegelpunkt / harmonisch), zwei Hautseiten mit Rampen,
+Was bleibt (r3, 28 gruene V1-Riegel): Screenshot-Farbkarte (sichtbar / Spiegelpunkt / harmonisch), zwei Hautseiten mit Rampen,
 Form aus dem Hohlraum-Mass, Fleisch = Screenshot-Mehrheit + verdeckte Rumpf-Unterseite, Kiefer/Krallen/Zaehne/Augen, E9-Schwanz, Farbfenster.
-Was neu ist (V2 Abschnitt 5):
+Was neu ist (V2 Abschnitt 5, Stand Runde 2):
   1. Muskelachse je Mesh (PCA der Ruhepose-Lage der Texel), je Texel als Richtung im Atlas (lokale Jacobi-Matrix Atlas -> 3D).
   2. Adern im Fleisch: Polylinien entlang der Muskelachse, Saat Poisson-Scheibe in 3D, Dichte/Laenge/Breite/Kontrast aus der Familie.
-  3. Wunden in harten Rotstufen: Rand 2 Texel G4-Dunkelrot, Innenrand 2 Texel G4-Fleischrot, Kern gestuft (Familien-Rampe), Abstand geodaetisch
-     auf der Oberflaeche (keine UV-Naehte), Uebergang 0 Texel (keine Verlaeufe).
+  3. Wunden in harten Rotstufen, konzentrisch nach dem geodaetischen Abstand zum Wundrand: Rand 2 Texel G4-Dunkelrot, Innenrand 2 Texel
+     G4-Fleischrot, Kern EM30-Rot, innere Haelfte des Kerns Familienwunde (Hell-Kern 50 %), Uebergang 0 Texel (keine Verlaeufe).
   4. Hautfalten als Linien quer zur Gliedachse an den Maxima des Hohlraum-Masses; die Flaechenfaerbung "dunkelrote Tiefen" (r3) entfaellt.
-  5. Kopf: Platten-/Stirn-/Schnauzenlinien (laengs und quer zur Kopfachse) und Augenhoehlenraender.
+  5. Haut, Kopf und Kiefer (Runde 2): isotropes Feinkorn aus der K5c-eigenen Struktur, Staerke RE2-G4 (KORN_SD 2,30); keine Laengs-Koernung
+     und keine Kopflinien mehr (Runde 1: "Fell/Holzmaserung", Sicht-Pruefer v2 r1 P2). Fleisch: Laengs-Koernung (Fasern) mit c_f aus der
+     Halbierung auf B14-Atlas.
   6. Bild-1-Ruecken: zusammenhaengende helle Wunde an der Stelle, wo das Original in Bild 1 Rot zeigt (E14), Kern Familienwunde L* 51,5.
-  7. Haut-Buntheit wie V2 3.2 (V8): Eichfaktor g ohne V1-Grenze 1,48, gekappt a* <= 11 ausserhalb der Wunden, Blau-Klasse C* <= 8.
+  7. Haut-Buntheit wie V2 3.2 (V8): Eichfaktor g mit Startwert 1,48 x 1,5 = 2,22 (= Obergrenze), gekappt a* <= 11 ausserhalb der Wunden,
+     Blau-Klasse C* <= 8. Zonenversaetze: L* je Zone nachgeeicht ('eichen --nur-l'), a*/b* auf dem r3-Stand.
 
     python kf_mal4.py bauen <aus> [--k-graph N] [--spiegel X]
-    python kf_mal4.py eichen <aus> <runden>
+    python kf_mal4.py eichen <aus> <runden> [--nur-l]
     python kf_mal4.py streuung <aus>          (Kettenstreuung ueber 3 Saaten des Videofilters -> kf_eich4.json 'kettenstreuung')"""
 import json
 import math
@@ -71,22 +75,20 @@ ADER_KONTRAST = 13.0
 FALTE_BREITE = 1.4
 FALTE_KONTRAST = 10.5
 LINIENABSTAND_HAUT = 25.4
-#     Kopf: Breite ~2 Texel, Kontrast ~16 L* (EM30-Kopf 2,1 / 16,2, V2 5.5).
-KOPF_BREITE = 2.1
-KOPF_KONTRAST = 16.2
 #     Richtungsabweichung je Linie: V2 5.2 "Abweichung so, dass die Feldkohaerenz R in 0,21-0,51 bleibt". Fuer Linien mit normalverteilter
 #     Abweichung sigma gilt R = exp(-2 sigma^2) (Doppelwinkel-Mittel); R = 0,51 (Familienmaximum G5) -> sigma = sqrt(-ln(0,51)/2) = 0,580 rad.
 R_FELD_MAX = 0.51
 SIGMA_WINKEL = math.sqrt(-math.log(R_FELD_MAX) / 2.0)
 # --- Wundstufen (V2 5.3): Rand 1-2 Texel G4-Dunkelrot -> 2 Texel (= Aussenrand von Mass (c)); Innenrand 2 Texel (= Mass (f): Kern = Erosion
 #     2 Texel); innen G4-Fleischrot (32,8/43,7/25,8); Kern Familien-Rampe ab EM30-Rot (36,5/37,4/20,5): (51,5/26,5/18,0) bzw. (64,3/24,7/16,3).
+#     Runde 2: alle Baender konzentrisch nach dem geodaetischen Abstand (auch die Kernteilung, siehe Schritt 5).
 WUND_RAND = 2.0
 WUND_INNEN = 4.0
 G4_DUNKELROT = M3.G4_DUNKELROT                  # (18,9/25,6/12,2) V1 1 G4-Palette 7,6 %
 G4_FLEISCHROT = (32.8, 43.7, 25.8)               # V1 1 G4-Palette 4,2 %
 #     Kern zweistufig: dunkler Kern EM30-Rot (36,5/37,4/20,5) (V1 1 EM30 3,5 %), Hell-Kern Familienwunde (51,5/26,5/18,0) (r3 RAMPE_FLEISCH,
-#     V2 3.2 K4b "helles Fleischrot L* 45-55, Farbton 34 Grad, C* 32"). Aufteilung nach der Form (Woelbung hell): Hell-Kern auf der helleren
-#     Haelfte der Kerntexel (Median) = G4-Leitwert "Hell-Kern 50 %" (V2 1 (f), V2 5.3).
+#     V2 3.2 K4b "helles Fleischrot L* 45-55, Farbton 34 Grad, C* 32"). Aufteilung nach dem Abstand zum Wundrand: Hell-Kern = innere
+#     Haelfte der Kerntexel je Wunde (Median des Abstands) = G4-Leitwert "Hell-Kern 50 %" (V2 1 (f), V2 5.3).
 KERN_STUFEN = ((36.5, 37.4, 20.5), (51.5, 26.5, 18.0))
 HELLKERN_ANTEIL = 0.50
 FAMILIENWUNDE = KERN_STUFEN[1]
@@ -95,39 +97,37 @@ FLAECHE_MIN = 20
 # --- Fleischanteil des Koerpers (Atlas): RE2-G4 Fleischrot 23,9 % (V1 1 Tabelle "Fleischrot", G4 = Vorbild der Riesenform)
 FLEISCH_ANTEIL = 0.239
 # --- Liniendichte-Ziele (V2 1 "dunkle Linien % Fleisch / Haut", Familienmitte = Median der drei Werte EM30 / G4 / G5):
-#     Fleisch 12,65 / 9,50 / 19,32 -> 12,65; Haut 5,35 / 3,89 / 8,29 -> 5,35; Kopf (V2 1 Kopf-Zeile) EM30 5,39 / G4 46,45 -> EM30 5,39
-#     (G4-Kopf traegt die Zahnreihen im Kopffeld, K5c hat dafuer ein eigenes Zahnfeld, V1 B5).
-ZIEL_ADERN, ZIEL_FALTEN, ZIEL_KOPF = 12.65, 5.35, 5.39
-ZIEL_KOPF_CANNY = 29.6
+#     Fleisch 12,65 / 9,50 / 19,32 -> 12,65; Haut 5,35 / 3,89 / 8,29 -> 5,35. Kopflinien entfallen in Runde 2 (Schritt 8).
+ZIEL_ADERN, ZIEL_FALTEN = 12.65, 5.35
 # --- Adern ohne Hof (Linie selbst dunkler; Hof nur, wo die Haut zu dunkel ist): Laeufe exp_h0.5 gegen exp_h0: B13 21,9 gegen 22,3, kein Gewinn.
 ADER_HOF = 0.0
-# --- Kopf: Linien laengs zur Kopfachse, parallel (keine Richtungsabweichung), Laengen der laengsten Familie G5 (Median 15,6 / p90 42,9, V2 1).
-#     Laeufe (Dossier): abwechselnd laengs/quer mit Abweichung -> kurze Striche in allen Richtungen ("Leopard"), Render-Kohaerenz B17 0,575-0,58;
-#     laengs parallel 0,596; dazu Koernung laengs 0,616. Platten-/Stirnlinien laufen laengs (G4-Kopf: Rippen laengs, Atlas (0,0,60,40)).
-KOPF_QUER, KOPF_SIGMA = False, 0.0
-KOPF_LAENGE_MED, KOPF_LAENGE_P90 = 15.6, 42.9
-# --- Obergrenze Hochfrequenz je Feld (V1 A6: 0,04-0,26 = Familie EM30-Kopf 0,040 ... Zombie-Kopf 0,259)
-HF_MAX = 0.258   # im Float-Bau: A6-Grenze 0,26 minus gemessene Quantisierungsdrift (Lauf v13: Float 0,260 -> CLUT 0,261) mit Rundung
-# --- Koernung laengs (Muskelstraenge, V2 5.1/5.2): die r3-Koernung (K5c-eigene Struktur H2) wird entlang der Muskelachse gemittelt, Laenge =
-#     Linienlaenge Familienmitte 13,5 Texel, Streuung wie r3. Grund (gemessen): die Wirbel der r3-Koernung sind die inkohaerenten Kanten
-#     (B17 Atlas ohne Koernung 0,747, mit r3-Koernung 0,57; Render 0,635 / 0,563). EM30 und G5 sind laengs gestreift (Tafel 03).
+# --- Koernung laengs = Muskelfasern NUR im Fleisch (Runde 2): die r3-Koernung (K5c-eigene Struktur H2) entlang der Muskelachse gemittelt,
+#     Laenge = Linienlaenge Fleisch Familienmitte 13,5 Texel (V2 1), Staerke c_f aus der Halbierung auf B14-Atlas (Schritt 7).
+#     Haut und Kopf bekommen sie nicht mehr: Sicht-Pruefer v2 r1 P2 (Laengsstreifung = Fell/Holz, E16 "streifige Fasern am Ruecken beheben").
 KOERNUNG_LAENGE = ADER_LAENGE_MED
+# --- Feinkorn Haut/Kopf/Kiefer (Runde 2): isotroper Rest der K5c-eigenen Struktur gegen eine Glaettung entlang der Oberflaeche mit sigma
+#     KORN_SIG = 1 Texel, Streuung KORN_SD = RE2-G4 2,30 L* (Vorbild der Riesenform, V1 1). Dieselbe Groesse an der Haut der Familie
+#     (generator/kf_korn_mass.py, farbe_lesung/N2_korn.json, Rest gegen Gauss 1,0 im selben Mesh): EM30 3,53 / RE2-G4 2,30 / RE2-G5 3,02; r3 3,26.
+#     Grund: ohne Korn ist die Haut glatt gestuft und die CLUT-Quantisierung macht Doppelgaenger-Bloecke (B6 9,7 %, Lauf x_kh0); Korn 1,2 / 1,6 /
+#     2,3: B6 2,19 / 0,98 / 0,30 (Laeufe t2/t4/b4).
+KORN_SIG = 1.0
+KORN_SD = 2.30
 # --- Fleisch-Koernung (V2 4 Zeile "Fleisch-Koernung +-1 sigma"): Faktor auf die Laengs-Koernung im Fleisch so, dass die Atlas-L*-Streuung der
 #     Rotflaechen (gepoolt, n2_mass Mass (e)) den Familien-Median 11,2 (EM30 10,9 / G4 11,2 / G5 14,5, V2 1) trifft; Halbierung 0..3.
 ZIEL_ROT_SDL = 11.2
-FLEISCH_KOERNUNG = 1.0
 RUECKEN_L = (45.0, 55.0)      # V2 3.2 K4b "helles Fleischrot L* 45-55"
 # --- Rot-Farbton-Streuung (V1 B7 >= 5,8 Grad, Familie G5 5,8 / G4 9,4 / EM30 13,2): die harten Stufen der Familien-Rampe liegen bei 25-34 Grad
-#     (Lauf v20: 4,0 Grad). Fleisch-ab je Texel um phi = k x Koernung/sigma gedreht (Farbton folgt den Laengsstreifen), k so, dass die
+#     (Lauf v20: 4,0 Grad). Fleisch-ab je Texel um phi = k x (geglaettete r3-Struktur)/sigma gedreht (Runde 2: glatt, E12), k so, dass die
 #     Farbton-Streuung der Rottexel den Familien-Median G4 9,4 Grad trifft.
 ZIEL_ROT_TON_SD = 9.4
 # --- Obergrenze der Linienzahl (gegen Zellnetz/Rauschen, V2 2 Zusatzbedingung): Linien je 1000 Texel Fleisch / Haut hoechstens Familienmaximum
-#     (V2 1: Fleisch 1,52 / 3,01 / 3,45, Haut 2,37 / 2,22 / 3,50); der Kopf hat keine eigene Zeile und bekommt die Hautgrenze.
+#     (V2 1: Fleisch 1,52 / 3,01 / 3,45, Haut 2,37 / 2,22 / 3,50).
 JE1000_FLEISCH, JE1000_HAUT = 3.45, 3.50
-JE1000_KOPF = 1.22     # EM30-Kopf, Linien je 1000 Texel (n2_mass an EM30 Mesh 9, farbe_lesung/N2_messung.json 'EM30_kopf')
 
-# --- Bild-1-Ruecken (V2 3.2 K4b): 15-18 % der in Bild 1 sichtbaren Ruecken/Flanke-Pixel helles Fleisch -> Ziel Mitte 16,5 % Kernpixel.
-RUECKEN_ZIEL = 0.165
+# --- Bild-1-Ruecken (V2 3.2 K4b): 15-18 % der in Bild 1 sichtbaren Ruecken/Flanke-Pixel helles Fleisch. Runde 2: Obergrenze 18 % statt Mitte
+#     16,5 %: mit Feinkorn statt Laengsstreifen und der L*-Eichung lag K4b bei 16,5 % auf der Untergrenze (7,1 gegen 7,14, Lauf f3), bei 18 %
+#     9,8 % (Lauf f7) = naeher an der Mitte des K4b-Fensters 7,1-17,9 und am Original 11,9. Kein Wert ausserhalb der V2-Vorgabe.
+RUECKEN_ZIEL = 0.18
 # --- Haut-Buntheit (V2 3.2 K1/K2, V8): sichtbare Haut ~1,5 x r3, gekappt a* <= 11 ausserhalb der Wunden (unter der Ketten-Rotklasse a* >= 12),
 #     kuehl C* <= 8 (Blau-Klasse B3, kf_mal3.C_BLAU). Start der Eichung g = 1,48 (r3-Endstand) x 1,5 (V8).
 G_START = 1.48 * 1.5
@@ -483,9 +483,13 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     L0 = M3.harm3d(Lk[:, 0], haut & ~weg, haut, float(Lk[haut & ~weg, 0].mean()))
     struktur = np.where(haut, L0 - M3.glaetten3d(L0, haut, M3.SIG_GROB), 0.0)
     struktur_roh = struktur.copy()
+    # Fleisch: r3-Koernung laengs der Muskelachse = Muskelfasern (nur im Fleisch, Faktor c_f aus der Halbierung auf B14-Atlas, Schritt 7)
     struktur = koernung_laengs(G, struktur, haut, KOERNUNG_LAENGE)
-    struktur_kopf = struktur
-    herkunft['koernung'] = 'K5c-eigene Struktur (H2), sigma %.1f; Glanz/Gaumen entfernt %d Texel' % (M3.SIG_GROB, int(weg.sum()))
+    # Haut und Kopf (Runde 2, Sicht-Pruefer v2 r1 P2 "Laengsstreifung = Fell/Holz"): keine Laengs-Koernung mehr, sondern isotropes Feinkorn
+    # aus der K5c-eigenen Struktur (H2) auf der Skala 1 Texel, Staerke = RE2-G4-Feinkorn KORN_SD (korn_mass.py, farbe_lesung/N2_korn.json).
+    struktur_haut = feinkorn(L0, haut)
+    herkunft['koernung'] = ('Fleisch: K5c-eigene Struktur (H2) sigma %.1f laengs %.1f Texel; Haut/Kopf: Feinkorn H2 - Gauss %.1f, sd %.2f (RE2-G4); '
+                            'Glanz/Gaumen entfernt %d Texel' % (M3.SIG_GROB, KOERNUNG_LAENGE, KORN_SIG, KORN_SD, int(weg.sum())))
 
     # 2. Farbkarte, Hautseiten mit Dezil-Stufen und gemessener Warm-Schwelle
     zentren, hrampen, stufen, warm_anteil = hautseiten4()
@@ -506,7 +510,7 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     hr = M3.glaetten3d(hr_roh, genutzt[ys, xs], M3.SIG_GROB)
     hz = (hr - hr[haut].mean()) / max(hr[haut].std(), 1e-6)
     koerper = haut & (xs < 384)
-    basisL = karte[:, 0] + struktur
+    basisL = karte[:, 0] + struktur_haut
     lo, hi_ = 0.0, 40.0
     for _ in range(40):
         k_ = (lo + hi_) / 2
@@ -534,42 +538,55 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     # Jetzt: verdeckte Rumpftexel nach ny absteigend (Unterseite zuerst, dann untere Flanke), bis das Fleisch FLEISCH_ANTEIL der Koerpertexel
     # deckt = Fleischrot RE2-G4 23,9 % (V1 1, Vorbild der Riesenform). Laeufe ny > -0,2 / -0,4 / -0,6: B9 11,1 / 9,3 / 8,0 %, A3 18,8 / 21,3 / 23,5 %.
     basis = (fl_s | rk) & koerper
-    n_ziel = int(round(FLEISCH_ANTEIL * koerper.sum())) - int(basis.sum())
     kand = np.nonzero(rumpf & ~basis)[0]
-    # Reihenfolge: Flanke vor Bauch (|ny| aufsteigend, V2 5.7 "groesste Wunde an Flanke/Bauch"). Laeufe: Unterseite zuerst (ny absteigend) ->
-    # Rotflaechen im neutralen Render im Schatten (L* 19-24), Render-B14 7,8-8,2; Flanke zuerst -> 10,5, B9 7,9 %; Oberseite zuerst -> 10,8, B10 6,7.
-    # zusammenhaengend gewachsen (Prioritaet |ny|, Start am flankigsten Texel) statt global sortiert: Lauf v21 mit globaler Sortierung -> mehrere
-    # Flecken, groesste Rotflaeche Seite 3,05 % (B2 >= 3,2)
-    fl_u = np.zeros(n_t, bool)
-    if n_ziel > 0 and len(kand):
-        import heapq
-        ok_k = np.zeros(n_t, bool)
-        ok_k[kand] = True
-        A_ = G['A']
-        start_k = int(kand[np.argmin(np.abs(ny[kand]))])
-        heap = [(abs(ny[start_k]), start_k)]
-        drin_ = {start_k}
-        n_ = 0
-        while heap and n_ < n_ziel:
-            _p, i = heapq.heappop(heap)
-            fl_u[i] = True
-            n_ += 1
-            for j in A_.indices[A_.indptr[i]:A_.indptr[i + 1]]:
-                if ok_k[j] and j not in drin_:
-                    drin_.add(j)
-                    heapq.heappush(heap, (abs(ny[j]), j))
+    n_soll = int(round(FLEISCH_ANTEIL * koerper.sum()))
+
+    def wachsen(n_ziel):
+        # Reihenfolge: Flanke vor Bauch (|ny| aufsteigend, V2 5.7 "groesste Wunde an Flanke/Bauch"). Laeufe: Unterseite zuerst (ny absteigend) ->
+        # Rotflaechen im neutralen Render im Schatten (L* 19-24), Render-B14 7,8-8,2; Flanke zuerst -> 10,5, B9 7,9 %; Oberseite zuerst -> 10,8.
+        # zusammenhaengend gewachsen (Prioritaet |ny|, Start am flankigsten Texel) statt global sortiert: Lauf v21 mit globaler Sortierung ->
+        # mehrere Flecken, groesste Rotflaeche Seite 3,05 % (B2 >= 3,2)
+        fl_u = np.zeros(n_t, bool)
+        if n_ziel > 0 and len(kand):
+            import heapq
+            ok_k = np.zeros(n_t, bool)
+            ok_k[kand] = True
+            A_ = G['A']
+            start_k = int(kand[np.argmin(np.abs(ny[kand]))])
+            heap = [(abs(ny[start_k]), start_k)]
+            drin_ = {start_k}
+            n_ = 0
+            while heap and n_ < n_ziel:
+                _p, i = heapq.heappop(heap)
+                fl_u[i] = True
+                n_ += 1
+                for j in A_.indices[A_.indptr[i]:A_.indptr[i + 1]]:
+                    if ok_k[j] and j not in drin_:
+                        drin_.add(j)
+                        heapq.heappush(heap, (abs(ny[j]), j))
+        fl = fl_s | fl_u | rk
+        # Bereinigung (Uebergang <= 1 Texel, V2 5.3): Kante wie r3 (Glaettung SIG_GROB, Mehrheit: geglaettete Fleisch-Indikatorfunktion >= 1/2,
+        # d. h. mehr Fleisch- als Haut-Gewicht in der Nachbarschaft), danach Inseln und Loecher < FLAECHE_MIN
+        roh_fl = fl.copy()
+        fl = haut & (M3.glaetten3d(fl.astype(float), haut, M3.SIG_GROB) >= 0.5)
+        fl = fl | rk
+        fl = flaechen_bereinigen(G, fl, haut)
+        # E14 streng: auf in Bild 1/2 sichtbaren Texeln nur Screenshot-Fleisch bzw. Ruecken-Wunde; Glaettung und Lochfuellung legten sonst 855
+        # sichtbare Texel (Huefte/Wirbel neben der verdeckten Rumpf-Wunde) rot (Lauf dbg, K4b 27 %). Danach nur noch Inseln < FLAECHE_MIN entfernen.
+        fl &= ~sichtbar_fig | fl_s | rk
+        fl = flaechen_bereinigen(G, fl, haut, nur_inseln=True)
+        return fl, fl_u, roh_fl
+    # Runde 2: die Bereinigung nahm in Runde 1 1246 Texel weg (Fleisch 22,0 % statt FLEISCH_ANTEIL 23,9 %). Der Fehlbetrag wird nachgewachsen,
+    # bis der Anteil nach der Bereinigung FLEISCH_ANTEIL erreicht (hoechstens 4 Durchgaenge; Ziel ist der V1-Wert selbst, keine neue Zahl).
+    n_ziel = n_soll - int(basis.sum())
+    for _durchgang in range(4):
+        fl, fl_u, roh_fl = wachsen(n_ziel)
+        fehl = n_soll - int((fl & koerper).sum())
+        if fehl <= 0:
+            break
+        n_ziel += fehl
     ny_schwelle = float(np.abs(ny[fl_u]).max()) if fl_u.any() else 0.0
     konst['rumpf_ny_schwelle'] = round(ny_schwelle, 3)
-    fl = fl_s | fl_u | rk
-    # Bereinigung (Uebergang <= 1 Texel, V2 5.3): Kante wie r3 (Glaettung SIG_GROB, Mehrheit 0,5), danach Inseln und Loecher < FLAECHE_MIN
-    roh_fl = fl.copy()
-    fl = haut & (M3.glaetten3d(fl.astype(float), haut, M3.SIG_GROB) >= 0.5)
-    fl = fl | rk
-    fl = flaechen_bereinigen(G, fl, haut)
-    # E14 streng: auf in Bild 1/2 sichtbaren Texeln nur Screenshot-Fleisch bzw. Ruecken-Wunde; Glaettung und Lochfuellung legten sonst 855 sichtbare
-    # Texel (Huefte/Wirbel neben der verdeckten Rumpf-Wunde) rot (Lauf dbg, K4b 27 %). Danach nur noch Inseln < FLAECHE_MIN entfernen.
-    fl &= ~sichtbar_fig | fl_s | rk
-    fl = flaechen_bereinigen(G, fl, haut, nur_inseln=True)
     herkunft['fleisch_bereinigung'] = 'vorher %d, nachher %d Texel' % (int(roh_fl.sum()), int(fl.sum()))
     herkunft['fleisch'] = 'Screenshot-Mehrheit %d, Rumpf-Unterseite %d, Bild-1-Ruecken-Wunde %d Texel (%s); zusammen %.1f %% der Koerpertexel' % (
         int(fl_s.sum()), int(fl_u.sum()), int(rk.sum()), rinfo, 100.0 * (fl & koerper).sum() / koerper.sum())
@@ -580,8 +597,10 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     u_b = (fl_u & ~fl_s).astype(float)
     kernL = fL_s * (1 - u_b) + M3.FLEISCH_BAUCH_L * u_b + formL
     kern_m = fl & (dist >= WUND_INNEN)
-    # Hell-Kern je Wunde (Zusammenhangskomponente des Fleischs auf dem Oberflaechengraph): helle Haelfte der Kerntexel jeder Wunde (Median
-    # je Wunde). Lauf v18 mit einem globalen Median: grosse Wunden ganz dunkel oder ganz hell -> Render-Streuung der Rotflaechen 7,8 (B14 < 8,2).
+    # Hell-Kern je Wunde (Zusammenhangskomponente des Fleischs auf dem Oberflaechengraph), Runde 2: konzentrisch nach dem geodaetischen Abstand
+    # zum Wundrand (V2 5.3 "Baender nach geodaetischem Abstand", "dunkle Wundraender um hellere Fleischkerne"): innere Haelfte der Kerntexel
+    # jeder Wunde = Hell-Kern (G4-Leitwert 50 %, V2 1 (f)). Runde 1 teilte nach kernL je Texel (Form + Screenshot) -> Fleckenmosaik
+    # (Sicht-Pruefer v2 r1 P1 "Mosaik aus dunkelroten, ocker, rosa Flecken"), inkohaerente Kanten (Lauf q2: B17 Render +0,009).
     fi = np.nonzero(fl)[0]
     _nw, wlab = connected_components(G['A'][fi][:, fi], directed=False)
     kern_i = np.zeros(n_t, int)
@@ -589,7 +608,7 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
         kk_ = fi[(wlab == wnr)]
         kk_ = kk_[kern_m[kk_]]
         if len(kk_):
-            kern_i[kk_] = (kernL[kk_] >= np.quantile(kernL[kk_], 1 - HELLKERN_ANTEIL)).astype(int)
+            kern_i[kk_] = (dist[kk_] >= np.quantile(dist[kk_], 1 - HELLKERN_ANTEIL)).astype(int)
     kern_i = np.where(rk, 1, kern_i)                         # Ruecken-Wunde: Familienwunde (V2 3.2 K4b)
     fleisch = np.zeros((n_t, 3))
     fleisch[:] = np.asarray(KERN_STUFEN)[kern_i]
@@ -646,10 +665,9 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     # Laeufe: Koernung nach den Adern (v16/v17: c_f 0, Fleisch flach) -> Render-B14 7,7-7,8 < 8,2; c_f 1 / 1,5 / 2 nachtraeglich auf die
     # kalibrierten Adern -> B10 5,3 / 3,6 / 2,9 (Streifen verschmelzen mit den Adern). Reihenfolge Koernung -> Adern (wie v4: alle B10-B17 gruen).
     c_kal, sdl0 = fleisch_koernung(G, X, fl, struktur, (xs < 384) & genutzt[ys, xs])
-    # Ergebnis der Halbierung: c 0 (die Stufen allein geben 11,2). Damit bleibt das Fleisch im Render flach (Render-B14 7,8 < 8,2; Rotflaechen
-    # liegen an der Flanke im Halbschatten, Licht 0,55-1,0). Deshalb Faktor 1 = dieselbe Koernung wie die Haut (E8 "aus einem Guss"); Pruefung:
-    # die Atlas-Streuung bleibt in der Familienspanne 10,9-14,5 (V2 4), Laeufe cf 1 / 1,5 / 2,5: Atlas 12,1 / 12,8 / 13,7, B10 7,9 / 4,7 / 1,7.
-    c_f = FLEISCH_KOERNUNG
+    # Runde 2 (Zahlen-Pruefer v2 r1 6.2 Nr. 3: Faktor 1,0 war eine Wahl): c_f = Ergebnis der Halbierung auf den Familien-Median 11,2 (V2 4
+    # "Grenze so gesetzt, dass Atlas-B14 10,9-14,5 erreicht"), keine freie Wahl.
+    c_f = c_kal
     X[:, 0] = np.where(fl, X[:, 0] + c_f * struktur, X[:, 0])
     konst['fleisch_koernung'] = dict(faktor=c_f, halbierung_faktor=round(c_kal, 3), sdL_pool_ohne=round(sdl0, 2), ziel=ZIEL_ROT_SDL)
     # Bild-1-Ruecken-Wunde: Kern helles Fleisch L* 45-55 (V2 3.2 K4b); die Koernung darf ihn nicht darueber heben (K5: geclippte Bildpunkte
@@ -684,50 +702,11 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     frei_a = cv2.dilate(ader.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
     falte, finfo = linien_feld(G, np.nonzero(hk)[0], haut2m, theta, lambda m: mess_h(m, FALTE_KONTRAST, 'haut'),
                                ZIEL_FALTEN, ADER_LAENGE_MED, ADER_LAENGE_P90, FALTE_BREITE, rng + 1, quer=True, je1000_max=JE1000_HAUT, frei=frei_a)
-    # Kopf: Linien abwechselnd laengs (Platten/Stirn) und quer (Schnauzenfalten) zur Kopfachse; Dichte nach der Canny-Dichte des Kopffelds,
-    # Ziel B12 = Familienminimum EM30-Kopf 29,6 (V2 1 Kopf-Zeile: EM30 29,6 / G4 30,1)
-    kopf2m = np.zeros((h, w), bool)
-    kopf2m[ys, xs] = kopf_k
-    mess_kopf = atlas_linien(G, X, kopf)
-    # Kopflinien: Dichte nach Linien je 1000 Texel = EM30-Kopf 1,22 (n2_mass, Familie EM30 1,22 / G4 1,02); Lauf kopf_3.5_2.1: Dichte 6,9 je
-    # 1000 (Canny-Ziel ueber Linien allein) -> HF Kopf 0,262 (A6 > 0,26), A7 0,247 > 0,19, "Leopard"-Striche.
-    def _je(m):
-        v = mess_kopf(m, KOPF_KONTRAST, 'zone')[1]
-        return v, 0.0
-    kl1, k1info = linien_feld(G, np.nonzero(kopf_k)[0], kopf2m, theta, _je, JE1000_KOPF, KOPF_LAENGE_MED, KOPF_LAENGE_P90, KOPF_BREITE,
-                              rng + 2, quer=KOPF_QUER, sigma=KOPF_SIGMA)
-    # Kopf-Koernung: Laengs-Koernung x c_k auf dem Kopffeld, c_k so, dass die Canny-Dichte des Kopffelds (mit Linien) das Familienminimum
-    # EM30-Kopf 29,6 (V2 1) trifft. EM30 holt die Kanten aus gemalter Flaechenstruktur, nicht aus Linien (1,22 je 1000).
-    Lk0 = np.zeros((h, w))
-    Lk0[ys, xs] = X[:, 0]
-    Lk0 = auftragen(Lk0, kl1, KOPF_KONTRAST, genutzt, mesh)
-    kopf_nk = kopf & ~fl
-
-    from p_messen import hf_fft
-    kopf2 = np.zeros((h, w), bool)
-    kopf2[ys[kopf], xs[kopf]] = True
-
-    def _canny(c):
-        Y = X.copy()
-        Y[:, 0] = Lk0[ys, xs] + np.where(kopf_nk, c * struktur_kopf, 0.0)
-        Lm_ = np.zeros((h, w))
-        Lm_[ys, xs] = Y[:, 0]
-        hf = hf_fft(Lm_, np.where(genutzt, mesh, -1), kopf2)
-        return atlas_linien(G, Y, kopf)(np.zeros((h, w), bool), 0.0, 'zone', canny=True)[0], hf
-    # Halbierung: Canny-Ziel 29,6; Obergrenze HF_fft Kopffeld 0,26 (V1 A6, Familienmaximum Zombie-Kopf 0,259) am Float-Atlas
-    lo_, hi_ = 0.0, 8.0
-    for _ in range(10):
-        m_ = (lo_ + hi_) / 2
-        ca, hf = _canny(m_)
-        if ca < ZIEL_KOPF_CANNY and hf <= HF_MAX:
-            lo_ = m_
-        else:
-            hi_ = m_
-    c_k = lo_
-    X[:, 0] = np.where(kopf_nk, X[:, 0] + c_k * struktur_kopf, X[:, 0])
-    ca, hf = _canny(c_k)
-    konst['kopf_koernung'] = dict(faktor=round(c_k, 3), canny=round(ca, 2), hf_fft=round(hf, 3), ziel=ZIEL_KOPF_CANNY, hf_max=HF_MAX)
-    kl2, k2info = np.zeros_like(kl1), {}
+    # Kopf (Runde 2): keine Kopflinien und keine Kopf-Koernung mehr. Sicht-Pruefer v2 r1 P2: Laengsstriche = Fell; Laeufe (Dossier V2r2.4):
+    # quer gelegt (EM30-/G4-Kopf: Kanten quer zur Feldachse, dw 74,8 Grad / 75 % > 60 Grad) wird der Kopf zur Rinde (r1), als Platten zum Zebra
+    # (p5: Canny 25,9 erst bei Stufen 48 L*). B12-Canny >= 25,2 verlangt eine Kante je ~4 Texel; das widerspricht Bild 2 ("dunkle glatte
+    # Masse") und E16/E22. Der Kopf traegt das Feinkorn der Haut (KORN_SD) und die Form; B12 bleibt offen (Dossier).
+    kl1, kl2, k1info, k2info = np.zeros((h, w), bool), np.zeros((h, w), bool), {}, {}
     kopflin = kl1 | kl2
     _ohne = os.environ.get('KF4_OHNE', '')
     if 'ader' in _ohne:
@@ -741,12 +720,14 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     Lm[ys, xs] = X[:, 0]
     Lm = auftragen(Lm, ader, ADER_KONTRAST, genutzt, mesh, ADER_HOF)
     Lm = auftragen(Lm, falte & ~ader, FALTE_KONTRAST, genutzt, mesh)
-    Lm = auftragen(Lm, kopflin & ~ader, KOPF_KONTRAST, genutzt, mesh)
     X[:, 0] = Lm[ys, xs]
     X[ader_k, 1:] = np.asarray(G4_DUNKELROT[1:])
-    k_ton, sd_ton = farbton_streuung(X, fl, struktur, (xs < 384) & haut)
+    # Farbton-Drehung nach der geglaetteten r3-Struktur (Glaettung SIG_GROB 2,5 = Farbkarte, kf_mal.py:40-42, PORT-WAHL nach E12 "Screenshot-
+    # Farben nur grossflaechig je Bereich, geglaettet"): Runde 1 drehte je Texel nach der Laengs-Koernung -> ocker/oliv neben rosa (Sicht P1).
+    s_ton = M3.glaetten3d(struktur_roh, haut, M3.SIG_GROB)
+    k_ton, sd_ton = farbton_streuung(X, fl, s_ton, (xs < 384) & haut)
     konst['farbton_drehung'] = dict(k_grad=round(k_ton, 2), sd=round(sd_ton, 2), ziel=ZIEL_ROT_TON_SD)
-    phi = np.radians(k_ton * struktur / max(float(struktur[haut].std()), 1e-9))
+    phi = np.radians(k_ton * s_ton / max(float(s_ton[haut].std()), 1e-9))
     a_, b_ = X[:, 1].copy(), X[:, 2].copy()
     X[:, 1] = np.where(fl, a_ * np.cos(phi) - b_ * np.sin(phi), a_)
     X[:, 2] = np.where(fl, a_ * np.sin(phi) + b_ * np.cos(phi), b_)
@@ -758,7 +739,7 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     X[:, 0] = np.where(hautm, np.minimum(X[:, 0], M3.L_MAX_HAUT), X[:, 0])
 
     # 9. Kiefer, Krallen, Zaehne, Augen, Schwanz E9, Farbfenster (r3), Zahnfleisch 19,30
-    Xa = kopfseite(G, X, sicht, S, gesehen, kiefer, kralle, dz, eich, F, zahn2, herkunft)
+    Xa = kopfseite(G, X, sicht, S, gesehen, kiefer, kralle, dz, eich, F, zahn2, herkunft, korn_kiefer=feinkorn(Lk[:, 0], kiefer))
     kp2 = genutzt & (np.arange(w)[None, :] < 384)
     gm = [float(Xa[..., 0][kp2 & (mesh == g_)].mean()) for g_ in range(1, 6)]
     for i, g_ in enumerate(range(1, 6)):
@@ -784,8 +765,16 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
             Xa[mm_] = col
     if os.environ.get('KF4_GRAU'):           # nur Diagnose (B9-Zuordnung): Meshes bzw. Felder grau
         for tok in os.environ['KF4_GRAU'].split(','):
-            mm = (mesh == int(tok)) if tok.isdigit() else feld('s3_' + tok)
+            if tok == 'fleisch':
+                mm = fl2
+            elif tok == 'haut':
+                mm = hm2_ = np.zeros((h, w), bool); hm2_[ys, xs] = hautm & (xs < 384)
+            else:
+                mm = (mesh == int(tok)) if tok.isdigit() else feld('s3_' + tok)
             Xa[mm & genutzt] = (30.0, 0.0, 0.0)
+    _v1 = hautm & (sicht['fig1'][ys, xs] > 0)
+    _C = np.hypot(Xa[ys, xs, 1], Xa[ys, xs, 2])
+    herkunft['haut_bild1_albedo_C'] = round(float(_C[_v1].mean()), 2)
     out_rgb = M1.rgb_f(Xa.astype(np.float32))
     out_rgb[~genutzt] = 0
     hm2 = np.zeros((h, w), bool)
@@ -802,7 +791,7 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
     bau['basis'] = 'K5c (varianten/K5/K5c): FORM.EMD byte-gleich, nur FORM.TIM neu (Versuch 2, kf_mal4.py)'
     bau['konstanten'] = dict(konst, SAAT_MAL=SAAT_MAL, K_NAH=K_NAH, LINIENABSTAND_FLEISCH=LINIENABSTAND_FLEISCH, LINIENABSTAND_HAUT=LINIENABSTAND_HAUT,
                              ADER=(ADER_LAENGE_MED, ADER_LAENGE_P90, ADER_BREITE, ADER_KONTRAST), FALTE=(FALTE_BREITE, FALTE_KONTRAST),
-                             KOPF=(KOPF_BREITE, KOPF_KONTRAST), SIGMA_WINKEL=round(SIGMA_WINKEL, 4), WUND=(WUND_RAND, WUND_INNEN),
+                             KORN=(KORN_SIG, KORN_SD), SIGMA_WINKEL=round(SIGMA_WINKEL, 4), WUND=(WUND_RAND, WUND_INNEN),
                              G4_DUNKELROT=G4_DUNKELROT, G4_FLEISCHROT=G4_FLEISCHROT, KERN_STUFEN=KERN_STUFEN, RUECKEN_ZIEL=RUECKEN_ZIEL,
                              A_MAX_HAUT=A_MAX_HAUT, ZAHNFLEISCH_A=ZAHNFLEISCH_A, K_GRAPH=M3.K_GRAPH, SPIEGEL_ABSTAND=M3.SPIEGEL_ABSTAND,
                              SIG_GROB=M3.SIG_GROB, L_MAX_HAUT=M3.L_MAX_HAUT, FLEISCH_SCHWELLE=M3.FLEISCH_SCHWELLE, RUMPF=M3.RUMPF,
@@ -816,6 +805,13 @@ def bauen(aus, eich=None, sicht_pfad=SICHT, roh=None, k_graph=None, spiegel=None
         roh.update(Xa=Xa, fl=fl2, hz=hz, stufe=st2, ader=ader, falte=falte, kopf=kopflin, theta=theta, dist=dist, fl_s=fl_s, fl_u=fl_u, rk=rk,
                    fl_kn=fl, roh_fl=roh_fl)
     return bau
+
+
+def feinkorn(Lwert, gebiet):
+    """Feinkorn (Runde 2): Rest der Helligkeit gegen die Glaettung entlang der Oberflaeche (sigma KORN_SIG) im Gebiet, auf die Streuung KORN_SD
+    gebracht. Quelle des Musters ist die K5c-eigene Struktur (H2), kein Zufallsrauschen."""
+    r = np.where(gebiet, Lwert - M3.glaetten3d(Lwert, gebiet, KORN_SIG), 0.0)
+    return r * KORN_SD / max(float(r[gebiet].std()), 1e-9)
 
 
 def farbton_streuung(X, fl, struktur, zone_kn):
@@ -871,7 +867,7 @@ def fleisch_koernung(G, X, fl, struktur, zone_kn):
     return hi, sd(hi)
 
 
-def koernung_laengs(G, struktur, haut, laenge):
+def koernung_laengs(G, struktur, haut, laenge, quer=False):
     """Koernung entlang der Muskelachse mitteln (Linienfaltung im Atlas, Schritt 0,5 Texel, Gesamtlaenge 'laenge', nur Texel desselben Meshs),
     danach auf die alte Streuung zurueckskaliert: aus den Wirbeln der r3-Koernung werden Straenge laengs der Achse."""
     th = achsfeld(G)
@@ -881,7 +877,7 @@ def koernung_laengs(G, struktur, haut, laenge):
     hm = np.zeros((h, w), bool)
     Sm[ys, xs] = struktur
     hm[ys, xs] = haut
-    t = th[ys, xs]
+    t = th[ys, xs] + (math.pi / 2 if quer else 0.0)
     c, s_ = np.cos(t), np.sin(t)
     acc = np.zeros(len(ys))
     n = np.zeros(len(ys))
@@ -1008,7 +1004,7 @@ def ruecken_wunde(G, sicht, S, rotS, erlaubt, fl, ab_kn):
         xs[start], ys[start], S[start, 1], int(drin.sum()), anteil)
 
 
-def kopfseite(G, X, sicht, S, gesehen, kiefer, kralle, dz, eich, F, zahn2, herkunft):
+def kopfseite(G, X, sicht, S, gesehen, kiefer, kralle, dz, eich, F, zahn2, herkunft, korn_kiefer=0.0):
     """Kiefer (Band = Screenshot, Maulinneres RE2-G4), Krallen RE2-G4, Zaehne, Augen wie r3; Zahnfleisch-Gewicht 19,30 (V2 4)."""
     ys, xs, genutzt = G['ys'], G['xs'], G['genutzt']
     h, w = genutzt.shape
@@ -1019,8 +1015,10 @@ def kopfseite(G, X, sicht, S, gesehen, kiefer, kralle, dz, eich, F, zahn2, herku
     # Jetzt EINE Kopie, 90 Grad gedreht und auf das Feld gestreckt (bilinear); Lueckenfuellung kf_mal.ausschnitt (sigma 2, 4 Durchlaeufe) bleibt
     # nach V2 4 zulaessig, solange A6-A8 und B6 je Feld gruen sind.
     Pm = M1.ausschnitt(Gm, Um, M1.G4_MAUL)
-    Pm = np.rot90(Pm, 1)
-    Pm = cv2.resize(np.ascontiguousarray(Pm).astype(np.float32), (ww, hh), interpolation=cv2.INTER_LINEAR).astype(np.float64)
+    # Runde 2 (B6 Feld Kiefer 1,83 %, Zahlen-Pruefer v2 r1): nicht mehr 90 Grad gedreht (Streckung 3,2 x 1,2 -> Doppelbloecke), sondern in
+    # Lage auf das Feld gestreckt (2,1 x 1,8); Laeufe m1/m3: B6 Kiefer 0,00 % (bilinear) / 0,31 % (naechster Nachbar). Bilinear allein ist zu
+    # glatt (HF_fft Kiefer 0,030 < 0,04, A6) -> dasselbe Feinkorn wie die Haut (KORN_SD, Muster aus der K5c-Kiefertextur).
+    Pm = cv2.resize(np.ascontiguousarray(Pm).astype(np.float32), (ww, hh), interpolation=cv2.INTER_NEAREST).astype(np.float64)
     kop = 1
     maul = np.zeros((h, w, 3))
     maul[y:y + hh, x:x + ww] = Pm
@@ -1035,6 +1033,7 @@ def kopfseite(G, X, sicht, S, gesehen, kiefer, kralle, dz, eich, F, zahn2, herku
     kb_ = M3.harm3d(S, band, kiefer, S[band].mean(0)) if band.any() else S
     w_band = M3.glaetten3d(band.astype(float), kiefer, M3.SIG_GROB)
     X = np.where(kiefer[:, None], maul * (1 - w_band[:, None]) + (kb_ + dz) * w_band[:, None], X)
+    X[:, 0] = X[:, 0] + korn_kiefer
     herkunft['kiefer'] = 'Band Screenshot Bild 2 %d Texel; Maulinneres RE2-G4 %s, %d Kopien; Zahnfleisch a*/%.2f' % (int(band.sum()), M1.G4_MAUL, kop, ZAHNFLEISCH_A)
     x, y, ww, hh = F['s3_kralle']
     # Krallen: r3 8 Kopien -> Wiederholung im Feld 85 % (B6). Jetzt EINE G4-Kralle, auf das Feld gestreckt (wie Maul).
@@ -1096,8 +1095,11 @@ def streuung(aus):
     return out
 
 
-def eichen(aus, runden):
-    """Fixpunkt wie r3 (d <- d + (Original - Kette) je Zone, voller Schritt; Klauen nur a* aufwaerts; b* nicht tiefer als die Blau-Grenze wirkt).
+def eichen(aus, runden, nur_l=False):
+    """nur_l (Runde 2, Aufruf 'eichen <aus> <runden> --nur-l'): nur der L*-Anteil der Zonenversaetze wird nachgefuehrt, a*/b* bleiben auf dem
+    r3-Stand. Grund (Lauf e3, Dossier V2r2.5): der volle Lab-Schritt trieb b* in die Blau-Grenze (Ruecken -21,9 -> -25,5, Hinterbein r -55,5)
+    ohne Wirkung auf die Kette und senkte K1 7,3 -> 6,3 (unter das V2-Fenster 6,67); das Abbruchkriterium wurde in 3 Runden nicht erreicht.
+    Fixpunkt wie r3 (d <- d + (Original - Kette) je Zone, voller Schritt; Klauen nur a* aufwaerts; b* nicht tiefer als die Blau-Grenze wirkt).
     V2 4: Abbruch, wenn die groesste Zonenaenderung < 2 x Kettenstreuung (max ueber Zonen/Kanaele, 3 Saaten); Sperre eines Anteils, wenn eine
     Versatzaenderung > 2 x Kettenstreuung die Kette um weniger als 1 x Kettenstreuung bewegt (statt r3-Regel 0,1); g so, dass die Bild-1-Kette
     C* den Rundlauf 7,85 trifft, solange sie ausserhalb des V2-K1-Fensters 6,67-9,42 liegt (statt 0,95-1,05 x Original)."""
@@ -1117,6 +1119,8 @@ def eichen(aus, runden):
             e = eich['zonen'][z]
             alt = list(e['d'])
             neu = [float(e['d'][i] + (o['lab'][i] - v['lab'][i])) for i in range(3)]
+            if nur_l:
+                neu[1], neu[2] = alt[1], alt[2]
             if z.startswith('b2|Klaue'):
                 neu[0] = 0.0
                 neu[2] = 0.0
@@ -1142,7 +1146,8 @@ def eichen(aus, runden):
         # Obergrenze G_START = 1,5 x r3 (V2 3.2 K1-Zeile "Haut-Buntheit ~1,5 x r3"): Lauf e1 ohne Grenze trieb g 2,22 -> 3,09, die Kette blieb
         # wegen der Kappen a* <= 11 / C*kuehl <= 8 bei C* 6,6-6,7 (Orangestich ohne Wirkung)
         eich['g_haut'] = round(float(min(G_START, max(1.0, g_alt * K1_RUNDLAUF / max(c_v, 1e-3)))), 3)
-        schritt = max(schritt, abs(c_v - K1_RUNDLAUF))
+        if not (K1_FENSTER[0] <= c_v <= K1_FENSTER[1]) or not nur_l:
+            schritt = max(schritt, abs(c_v - K1_RUNDLAUF))
         yy, xx = np.mgrid[:480, :640]
         aug = []
         for (x, y) in M1.AUGE_PUNKTE:
@@ -1173,6 +1178,6 @@ if __name__ == '__main__':
         b = bauen(a[2], k_graph=kg, spiegel=sp)
         print(json.dumps(b['herkunft'], ensure_ascii=False, indent=0, default=str)[:6000])
     elif a[1] == 'eichen':
-        eichen(a[2], int(a[3]))
+        eichen(a[2], int(a[3]), nur_l='--nur-l' in a)
     elif a[1] == 'streuung':
         streuung(a[2])

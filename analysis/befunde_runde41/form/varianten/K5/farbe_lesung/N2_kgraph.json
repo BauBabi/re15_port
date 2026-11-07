@@ -1,0 +1,38 @@
+{
+ "4": {
+  "abdeckung_8nachbarn": 0.431,
+  "kanten": 184909,
+  "quer_kanten_anteil": 0.124,
+  "komponenten_nur_knn": 109
+ },
+ "6": {
+  "abdeckung_8nachbarn": 0.633,
+  "kanten": 282126,
+  "quer_kanten_anteil": 0.163,
+  "komponenten_nur_knn": 53
+ },
+ "8": {
+  "abdeckung_8nachbarn": 0.799,
+  "kanten": 371976,
+  "quer_kanten_anteil": 0.191,
+  "komponenten_nur_knn": 31
+ },
+ "10": {
+  "abdeckung_8nachbarn": 0.869,
+  "kanten": 462643,
+  "quer_kanten_anteil": 0.223,
+  "komponenten_nur_knn": 19
+ },
+ "12": {
+  "abdeckung_8nachbarn": 0.908,
+  "kanten": 559453,
+  "quer_kanten_anteil": 0.316,
+  "komponenten_nur_knn": 12
+ },
+ "16": {
+  "abdeckung_8nachbarn": 0.953,
+  "kanten": 746338,
+  "quer_kanten_anteil": 0.432,
+  "komponenten_nur_knn": 10
+ }
+}

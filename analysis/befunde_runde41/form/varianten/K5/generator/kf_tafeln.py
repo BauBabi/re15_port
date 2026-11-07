@@ -239,39 +239,48 @@ def kopf_nah(neu, aus):
     cv2.imwrite(aus, H.stapel([kopf, t]))
 
 
-def _ausschnitt(img, msk, art):
-    """Nahausschnitt aus einem render.blick-Bild: Figurrahmen, davon Flanke = Mitte, Schulter = vorderes oberes Viertel, Ruecken = Mitte (Blick von oben).
-    Feste Anteile des Figurrahmens fuer alle Modelle gleich (gleiche Behandlung, Messblatt V1 7.1)."""
+# Ausschnittmitte je Modell und Koerperteil als Anteil des Figurrahmens (x, y). Versuch 2 Runde 2 (Zahlen-Pruefer v2 r1 7: die feste Regel traf
+# bei "Schulter" bei K5c den Kopf, bei G4 die Klauen, bei "Flanke" bei G4 das Schulterauge): je Modell auf dieselbe Anatomie gesetzt, abgelesen am
+# Figurrahmen mit Viertel-Raster (scratchpad formfarbe2/anat.png). Flanke = Rumpfseite (Seitenblick), Schulter = Schultergelenk ueber dem
+# Vorderglied / Arm (3/4 vorn), Ruecken = Rueckenmitte (Blick von oben). Ausschnittgroesse wie bisher 0,5 x kleinere Rahmenseite.
+ANAT = {
+    'G4': {'Flanke': (0.25, 0.45), 'Schulter': (0.25, 0.25), 'Ruecken': (0.40, 0.35)},
+    'EM30': {'Flanke': (0.60, 0.25), 'Schulter': (0.30, 0.25), 'Ruecken': (0.60, 0.40)},
+    'K5c': {'Flanke': (0.50, 0.30), 'Schulter': (0.55, 0.30), 'Ruecken': (0.35, 0.35)},
+}
+
+
+def _ausschnitt(img, msk, art, modell):
+    """Nahausschnitt aus einem render.blick-Bild: Figurrahmen, Mitte nach ANAT[modell][art], Kantenlaenge 0,5 x kleinere Rahmenseite."""
     ys, xs = np.nonzero(msk)
     y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
     hh, ww = y1 - y0, x1 - x0
     s = int(min(hh, ww) * 0.5)
-    if art == 'Schulter':
-        cx, cy = x0 + int(0.7 * ww), y0 + int(0.4 * hh)
-    else:
-        cx, cy = x0 + ww // 2, y0 + int(0.45 * hh)
+    fx, fy = ANAT[modell][art]
+    cx, cy = x0 + int(fx * ww), y0 + int(fy * hh)
     a, b = max(cy - s // 2, 0), max(cx - s // 2, 0)
     return img[a:a + s, b:b + s]
 
 
 def binnenzeichnung(neu, aus, r3=None):
-    """08 (Versuch 2): Flanke (Seite), Schulter (3/4 vorn), Ruecken (von oben) nah, 3-fach Ausschnitt auf 360 px, je Zeile RE2-G4 | EM30 | r3 | Variante,
-    render.blick mit dem Licht von 03 (0,55 + 0,45 N.L, weiss), roh, kein Gamma; gleiche Ausschnittregel fuer alle."""
+    """08 (Versuch 2): Flanke (Seite), Schulter (3/4 vorn), Ruecken (von oben) nah, Ausschnitt auf 360 px, je Zeile RE2-G4 | EM30 | r3 | Variante,
+    render.blick mit dem Licht von 03 (0,55 + 0,45 N.L, weiss), roh, kein Gamma; Ausschnitt je Modell auf dieselbe Anatomie (ANAT)."""
     r3 = r3 or os.path.join(K5, 'farbe', 'K5c_farbe_r3')
-    modelle = [('RE2-G4 (Typ 0x34, Clip 0)', re2_mo(0x34), 0), ('EM30_HANGAR (Clip 0)', fl.lade_em30(), 0),
-               ('r3 (Farbe Runde 3, Clip 2)', fl.lade_var(r3), 2), (NEU + ' (Clip 2)', fl.lade_var(neu), 2)]
+    modelle = [('RE2-G4 (Typ 0x34, Clip 0)', re2_mo(0x34), 0, 'G4'), ('EM30_HANGAR (Clip 0)', fl.lade_em30(), 0, 'EM30'),
+               ('r3 (Farbe Runde 3, Clip 2)', fl.lade_var(r3), 2, 'K5c'), (NEU + ' (Clip 2)', fl.lade_var(neu), 2, 'K5c')]
     zeilen = []
     for art, az, el in (('Flanke', 0, 8), ('Schulter', 45, 15), ('Ruecken', 0, 70)):
         ks = []
-        for nm, mo, c in modelle:
+        for nm, mo, c, tag in modelle:
             img, msk = R.blick(mo, R.kf(mo, c), az, el, 760, None)
-            a = _ausschnitt(img, msk, art)
+            a = _ausschnitt(img, msk, art, tag)
             a = cv2.resize(a, (360, 360), interpolation=cv2.INTER_NEAREST)
             ks.append(kachel(a, nm, None, '%s nah, Licht wie 03, roh' % art))
         zeilen.append(H.reihe(ks))
     t = H.stapel(zeilen)
     kopf = H.kopfzeile('08 Binnenzeichnung nah: Flanke | Schulter | Ruecken, je RE2-G4 | EM30 | r3 | ' + NEU + '. Gleicher Renderer und gleiches Licht '
-                       '(0,55 + 0,45 N.L), gleiche Ausschnittregel (Figurrahmen), roh, kein Gamma.', t.shape[1])
+                       '(0,55 + 0,45 N.L), Ausschnitt je Modell auf dieselbe Anatomie (Rumpfseite / Schultergelenk / Rueckenmitte), roh, kein Gamma.',
+                       t.shape[1])
     cv2.imwrite(aus, H.stapel([kopf, t]))
 
 
