@@ -9,7 +9,8 @@ RDT-Auszug `nb4/rdt_5090_kameras_zonen.txt`). Alle Bilder: eigene exe-Kopie, Ren
 RE15_FRAMEDUMP-Serie, Fenster 640x480, Eingabe = Tastenskript w8 der Abnahme (Standardweg) bzw. w8 + D2.0 (2 s zurueck).
 
 Commits: 7ebda1d64 (NUTZER_ENTSCHEIDE E23/E29), c81a3a931 (Messschiene RE15_SLOTDECKUNG), 4a22c3dbc (Schnittwahl), 63b3b02a0 (Riegel),
-dieser Abschnitt + Belege im Folgecommit.
+b9ab865af (Dossier). Runde 2 (Abnahme 3 N1/N2/E1, NB4-10/NB4-11): 128d52e2e (Wache zurueck auf die Achsenregel), 0c53ef647 (Riegel
+Kampfkamera), Dossier + Belege im Folgecommit.
 
 ### NB4-1. Reproduktion (exe 2e3713c74, Laeufe v0_*)
 
@@ -69,7 +70,7 @@ und prueft jedes Bild, keine eigene Kamera.
 3. Szene: zuerst die Original-Zonenkamera der FORMLAGE, dann der aktuelle Schnitt, dann die Zonenkamera der Spielerlage, dann die gute
    Kamera mit dem groessten Formbild; 30 Bilder nach einem Schnitt geht der aktuelle vor; gibt es keine gute: Zonenkamera der Formlage.
    Cut 11 ab x <= 3000 (BF_RS_TAUMEL_KAM_X, Nachbesserung 1) und die Sturz-/Pausen-Kamera bleiben unveraendert.
-4. Wache: aktueller Schnitt, Zonenkamera der Spielerlage, gute Kamera mit dem groessten Spielerbild; keine gute: Zonenkamera der
+4. Wache (in Runde 2 zurueckgenommen, NB4-10): aktueller Schnitt, Zonenkamera der Spielerlage, gute Kamera mit dem groessten Spielerbild; keine gute: Zonenkamera der
    Spielerlage (das ist der Zonen-Schnitt, die Wache greift dann nicht ein); Haltezeit 30 Bilder wie Nachbesserung 1.
 5. Messschiene `RE15_BF_KAMLOG=<datei>`: je Bild alle Masse aller Wagenkameras (kein Spielverhalten).
 
@@ -107,6 +108,9 @@ Wagen benutzt (sub04 Cut_chg 0x0f @0x130E).
 
 ### NB4-6. M-B (Nahsicht-Wache nach dem Wurf, Lauf n6_a_leon, Bild nachher_a_leon_wache.png)
 
+Stand Runde 1; die Wache nach dem Bildmass ist in Runde 2 zurueckgenommen, M-B-Rest siehe NB4-10.
+
+
 Ablauf wie a5090_leon der Abnahme (Debug-Sprung Wagen B, ohne Feuer). Die Wache haelt nach dem Wurf Cut 12 (F742-F1017: Spieler 17-19 %
 des Bildes, Form hinter ihm) und schaltet bei F1018 auf Cut 13 zurueck. **Rest offen:** F1018-F1180 (Leon x 17070-17714, Form x
 11883-14505 laeuft auf ihn zu) zeigt Cut 13 die Form mit 28-62 % des Bildes, 50-71 % fast schwarz, Leon zeitweise bis 960 Promille
@@ -141,11 +145,83 @@ im Spiel, der G4-Ansatz danach", Wortlaut "Das koennte schon passen mit der ries
   Wagenweg-Teile (130-133 s), integration_r41_birkin_pistole 243,9 s, integration_r41_g5_tod 264,5 s, integration_r41_g5_westen 285,5 s,
   unit_birkin_bahnsteig, unit_birkin_formen, unit_r41_form_emd, integration_r34_plattform_takt/_esp_eintritt. Kein roter Riegel.
 - Zusaetzlich `ctest -R "^unit_(birkin|r41_form|bb_|g5|n2_griff|r41_birkin)" -j 6`: 100% tests passed, 0 tests failed out of 13.
-- Offen: (1) M-B-Rest F1018-F1180 (NB4-6): fuer Leon 800-1300 vor dem Auge von Cut 12 mit der Form vor Cut 13 hat der Raum keinen Schnitt
+- Offen (Stand Runde 1, Runde 2 siehe NB4-11): (1) M-B-Rest F1018-F1180 (NB4-6): fuer Leon 800-1300 vor dem Auge von Cut 12 mit der Form vor Cut 13 hat der Raum keinen Schnitt
   innerhalb des Pruefmasses; Entscheidung noetig. (2) M-C (Gebruell unter Dauerfeuer) und M-D (b)/(c) nicht Teil dieses Auftrags.
   (3) Die Messschiene RE15_SLOTDECKUNG zaehlt Schatten nicht und Masken als Atlas-Alpha; der Linux-Lauf des Riegels steht aus (Pixelgrenzen
   sind Windows-gemessen, Memory reai-v2-pixelgrenze-rasterer; die Schranken haben Abstand: Form min 1247 gegen 768, Spieler max 5866 gegen
   25600, verdeckt max 405 gegen 500, schwarz max 550 gegen 600).
+
+### NB4-10. Runde 2 (Abnahme 3 N1/N2/E1: Kampfkamera vor der Szene)
+
+Abnahme 3 (`STUFE3_abnahme_3.md`): M-A behoben, aber die Nahsicht-Wache nach dem Bildmass (NB4-3 Punkt 4) machte die Kampfkamera
+VOR der Szene schlechter als Stand 2e3713c74, bei gleichem Spiel je Bild: N1 (blockierend) k-Weg (w8 + 24 s warten) 38 statt 7 Bilder
+ueber 60 % fast schwarz, Cut 12 mit der Form 1660-2160 vor dem Auge, Kurzschnitte 4 und 7 Bilder (Rueckfall auf die Zonenabbildung
+x 13960 -> Cut 12, Zurueckgeben ohne Haltezeit); N2 v-Weg 28 Bilder dunkler Aussenblick Cut 14; E1 e-Weg Spielerruecken 37,9 %; M-B-Fenster
+groesser als in Abnahme 2 (a_leon 92 statt 62 Bilder).
+
+**Behebung (Commit 128d52e2e):** `bf_nahsicht_wache` (b) ist wieder die Achsenregel von 2e3713c74 (Cut 12 Auge x 18526 RID @0x1e0,
+Cut 13 Auge x 11050 RID @0x200, BF_NAH_ACHSE 4500, Haltezeit 30; Funktion bytegleich bis auf einen Kommentar). Das Bildmass
+(`bf_schnitt_waehlen`) bleibt nur fuer die Rueckstoss-Szene; Kampfzweig und `bf_bild_kampf_gut` sind entfernt. Keine neue Konstante.
+Begruendung: Abnahme 3 hat beide Staende mit gleicher Eingabe gemessen; die Achsenregel ist im Kampf in allen vier Wegen gleich gut oder
+besser (k 7 statt 38, v 0 statt 28, e 0 statt 6, a 62 statt 92), die Szenenwahl in allen acht Szenenlaeufen ohne Verstoss.
+
+**Gemessen** (exe aa370951 = Kopf 128d52e2e, eigene Kopie je Lauf, Renderer des Nutzers, RE15_FRAMEDUMP jedes Bild 640x480, Eingaben =
+`abn3/env/*.env` bytegleich mit Abnahme 3, Werkzeug `abn3/werkzeug/` mass.py / vergleich.py / blatt.py, Laufskript
+`nb4/werkzeug/r2_lauf.sh`; alle Zahlen in `nb4/r2_auswertung.txt`):
+
+| Lauf | Fenster | Runde 1 (b9b3d574, Abnahme 3) | nachher | Stand 2e3713c74 (Abnahme 3) |
+|---|---|---|---|---|
+| k_leon (24 s warten) | F1150-F1931 | 38 Bilder > 60 %, max 70,4 %, 36 in Cut 12 | **7**, max 61,8 %, Cut 13 F1332-F1931 | 7, max 61,8 % |
+| k_elza | F1150-F1931 | 38, max 69,7 % | **1**, max 61,5 % | - |
+| v_leon / v_elza (2 s zurueck), Kampf | F1150-F1543 | 28 / 28 (Cut 14 F1340-F1367) | **0 / 0**, max 58,9 / 59,0 % | 0 |
+| e_leon / e_elza (1 s zurueck), Kampf | F1150-F1623 | 6 / 0, Leon 29124 BP = 37,9 % | **0 / 0**, Leon max 15319 BP = 19,9 % | 0 |
+| w_leon / w_elza, Kampf | F1150-F1485 | 0 / 0 | 0 / 0 | - |
+| a_leon (M-B, Wagen B, steht) | F700-F1200 | 92 (Cut 13 ab F1018) | **62** (Cut 13 ab F1048: F1049-F1108, F1124-F1125) | 62 |
+| a_elza | F700-F1200 | 83 (Cut 13 ab F1012) | **53** (Cut 13 ab F1042) | - |
+
+Spiel und Kamera je Bild gleich der Vorher-exe f4deb1a3 (vergleich.py): k_leon 782/782, a_leon 501/501, v_leon F1150-F1543 394/394,
+e_leon F1150-F1623 474/474. Rueckstoss-Szene je Bild gleich Runde 1 (Spiel und Kamera ab Szenenbeginn: w/v/e/u Leon und Elza
+565/557/477/450 Bilder, 0 Unterschiede), damit unveraendert: 0 Verstoesse in allen acht Szenenlaeufen, Form min 1162 BP sichtbar,
+Spieler max 6055 BP (7,9 %), Form max 405 Promille verdeckt, max 54,6 % fast schwarz; Schnitte w 13 -> 12 -> 11, v 13 -> 15 -> 11,
+e 13 -> 12 -> 11, u 12 -> 11.
+
+Leisten (`nb4/`, selbst angesehen): `r2_kampf_k_<figur>_runde1.png` / `_nachher.png` (F1716-F1860: Runde 1 Cut 12 mit der schwarzen
+Formmasse und Kurzschnitten, nachher durchgehend Cut 13, Leon/Elza in der Mitte sichtbar, die Form rechts von hinten),
+`r2_kampf_v_<figur>_*` (F1320-F1390: Runde 1 Aussenblick Cut 14, nachher Cut 13), `r2_kampf_e_<figur>_*` (F1310-F1360),
+`r2_szene_w_<figur>_nachher.png`, `r2_szene_v_<figur>_nachher.png` (Szene mit der Kopf-exe, wie `nachher_*.png` aus NB4-5),
+`r2_mb_a_<figur>_nachher.png` (M-B-Rest). `nachher_a_leon_wache.png` (NB4-6) zeigt die zurueckgenommene Wache aus Runde 1.
+
+**M-B-Rest (dokumentiert, PORT-WAHL des Orchestrators, kein Nutzerentscheid):** a_leon F1049-F1125 Cut 13 mit der Form gross vor Leon
+(bis 71 % fast schwarz). Abnahme 3 (Abschnitt 3.3) hat bestaetigt, dass der Raum dort keinen Schnitt im Pruefmass hat (Cut 12: Leon
+1308-812 vor dem Auge, gezeichnet 26-48 % des Bildes; Cut 14 hinter dem Hintergrund; Cut 11/15 Leon hinter dem Auge bzw. verdeckt).
+Nach dem Auftrag gilt die Original-Zonenkamera Cut 13 (RVD-Anker @0x4e0, Zonenregel x 14000..20250). Das Fenster ist wieder das von
+Abnahme 2 (dort F1051-F1174 gezaehlt; gleiche exe-Logik wie 2e3713c74, gleiche 62 Bilder), nicht groesser.
+
+**Riegel (Commit 0c53ef647):** test_r41_form_wagenweg.cmake Pruefung 7 "Kampfkamera": je Bild F1150 bis vor die Szene bzw. bis zum
+Laufende Anteil fast schwarzer Bildpunkte (probe_r41_form_kamera_bild, Framedump jetzt jedes Bild 1150-2000), Hoechstzahl Bilder
+> 600 Promille leon/elza/zurueck_* 0, warten_* 9, kein Bild ueber 650 Promille. Neue Teile integration_r41_form_wagenweg_warten_leon /
+_warten_elza (Tastenskript w8, 24 s warten statt 2 s = Lauf k5090, echte Spieler-HP, Laufende F1931; Pruefungen 3 und 5 entfallen dort,
+die Form wird bis F1931 nur einmal getroffen). Schranken = Stand 2e3713c74 in diesem Riegel gemessen (320x240): warten_leon 9 Bilder > 600,
+max 622; warten_elza 1, max 619; die anderen 0, max 596. Gegenprobe exe b9b3d574 (Runde 1, `nb4/gegenprobe/r2_*.txt`): warten_leon 38
+Bilder > 600, max 707; warten_elza 38, max 701; zurueck_leon 28, max 775; zurueck_elza 28, max 773 -> alle vier rot. Der erste Riegellauf
+mit der Schranke 7 (Abnahme-3-Zahl bei 640x480) war fuer warten_leon rot (9 Bilder, max 622; `nb4/r2_ctest_wagenweg_erstlauf.txt`): die
+Fensteraufloesung 320x240 zaehlt zwei Grenzbilder (601-622) mehr; die Schranke ist deshalb im Riegel selbst gemessen und der Abstand zur
+Gegenprobe liegt in der 650.
+
+Kleinkram: die Abschlusszeile des Riegels nennt jetzt die Figur ("Elza getroffen", Abnahme 3 H6).
+
+### NB4-11. Testlage Runde 2 (re15_port/build, Kopf 0c53ef647, ctest aus Git-Bash, PATH msys64 zuerst, SDL_ASSERT=always_ignore)
+
+- `ctest -R "form|bahnsteig|birkin_form|r41_form|integration_r41_birkin_pistole|integration_r41_g5_tod|integration_r41_g5_westen" -j 4`:
+  **100% tests passed, 0 tests failed out of 19** (Total Test time (real) = 387.28 sec), Log `nb4/r2_ctest_satzA.txt`: die sechs
+  Wagenweg-Teile (Kampfkamera leon/elza/zurueck_* 0 Bilder > 600, max 596; warten_leon 9, max 622; warten_elza 1, max 619; Szene
+  unveraendert wie NB4-5), integration_r41_birkin_pistole, integration_r41_g5_tod, integration_r41_g5_westen und die Form-/Bahnsteig-Riegel.
+- `ctest -R "^unit_(birkin|r41_form|bb_|g5|n2_griff|r41_birkin)" -j 6`: **100% tests passed, 0 tests failed out of 13** (Total Test time
+  (real) = 203.60 sec), Log `nb4/r2_ctest_satzD.txt`.
+- Kein roter Fenster-Riegel ausser dem ersten warten_leon-Lauf mit der Abnahme-3-Schranke 7 (NB4-10, Schranke im Riegel nachgemessen).
+- Offen: M-B-Rest (NB4-10, PORT-WAHL Cut 13, dem Nutzer zeigen); M-C, M-D (b)/(c) nicht Teil des Auftrags; Hinweise H1-H4 der Abnahme 3
+  (Cut 15 Form am rechten Rand, Cut 13 bis 55 % vor dem Wechsel, Form am Ende von Cut 12 klein, grau-gruener Effektblock im u-Weg,
+  vorbestehend) unveraendert.
 
 ## Nachbesserung 3 (AN-Abnahme 2 N1: Riesenform kommt im echten Wagenweg mit HP 0 in Wagen C)
 
