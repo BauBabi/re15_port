@@ -1,0 +1,87 @@
+H_E 3775; Ruheform Pose 85: Biegung 55.8, Knick 16.0 Grad, Abfall Biegung->Ende 0.389 H
+Boden B y je Takt: [0]
+Gangtakte (h85 + clip 1): 47 85 .. 135
+(1) gegen Ziel: max 0.042 H (h85), Takte > 0,06: 0
+(2) Form gegen Ruheform Vorlage 2 (Kabsch): max 0.040 H (h85), Median 0.014, Takte > 0,06: 0
+(3) Welt-Abfall Biegung->Ende: min 0.095 H (h94), max 0.387; Ruhe 0.389
+    Biegung w3 51.7-59.2, Knick w5 10.9-16.1 (Ruhe 55.8 / 16.0), wmax ganzer Lauf 60.9
+(4) Boden alle Mesh-Ecken: tiefster Punkt -30 E. (h68), Takte > 0: 0 von 144; die 5 tiefsten: [(68, -30), (32, -33), (33, -38), (34, -42), (35, -44)]
+  h85 {'clip': 11, 'F': 328, 'abw_ziel': {'Beginn': 0.003, 'Biegung': 0.007, 'Knick': 0.013, 'Ende': 0.042}, 'form_rest': 0.04, 'w3': 53.2, 'w5': 10.9, 'wmax': 53.2, 'abfall_37_welt': 0.218, 'tiefster_meshpunkt': -1787}
+  h88 {'clip': 11, 'F': 331, 'abw_ziel': {'Beginn': 0.003, 'Biegung': 0.003, 'Knick': 0.023, 'Ende': 0.023}, 'form_rest': 0.07, 'w3': 46.5, 'w5': 13.9, 'wmax': 46.5, 'abfall_37_welt': 0.091, 'tiefster_meshpunkt': -1849}
+  h90 {'clip': 1, 'F': 333, 'abw_ziel': {'Beginn': 0.003, 'Biegung': 0.003, 'Knick': 0.007, 'Ende': 0.01}, 'form_rest': 0.04, 'w3': 51.9, 'w5': 11.8, 'wmax': 51.9, 'abfall_37_welt': 0.1, 'tiefster_meshpunkt': -1886}
+  h95 {'clip': 1, 'F': 338, 'abw_ziel': {'Beginn': 0.001, 'Biegung': 0.001, 'Knick': 0.002, 'Ende': 0.003}, 'form_rest': 0.037, 'w3': 55.0, 'w5': 11.1, 'wmax': 55.0, 'abfall_37_welt': 0.096, 'tiefster_meshpunkt': -1886}
+
+Geometrie-Abweichungen Koerper (O1 verlangt leer): keine
+CLUT-Feld geaendert (Mesh: Ref2-Zeilen -> V4-Zeilen, x-Teil): {10: ([480], [489], [0]), 14: ([482], [488], [0])}
+Bytegleich: [0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 15]
+EMR rel 0-15 gleich: True Tabelle gleich: True
+Keyframes (912, 116) (912, 116) Bytes 0-83 gleich: True
+Sektionen gleich (0,1,3,4,5,6): {0: True, 1: True, 3: True, 4: True, 5: True, 6: True}
+TIM CLUT Zeilen Ref2 6 ab 480, V4 10 ab 480
+  CLUT 480: geaendert
+  CLUT 481: geaendert
+  CLUT 482: geaendert
+  CLUT 483: gleich
+  CLUT 484: geaendert
+  CLUT 485: gleich
+  CLUT 486: neu
+  CLUT 487: neu
+  CLUT 488: neu
+  CLUT 489: neu
+geteilte Texel Mesh 10/13: 5797
+geteilte Texel Mesh 11/14: 1831
+geteilte Texel Mesh 10/11: 0
+geteilte Texel Mesh 13/14: 0
+Texel geaendert gesamt 57309, davon in Koerper-UVs 34376
+
+Unterarm (W)-rechts Id 14: Original [ 9.  -3.6  3.4] Rot 0.00 L*>30 0.000 p90 12.5 (2212 px)
+   V4    [11.4 -2.   2.3] dE00 2.61 dL +2.3 Rot 0.00 L*>30 0.000 p90 15.5 (2041 px)
+   V4R2  [28.2  1.8 -1.4] dE00 15.75 dL +19.1 Rot 0.00 L*>30 0.337 p90 51.9 (2041 px)
+   V3    [21.3  4.1  0. ] dE00 13.98 dL +12.3 Rot 0.12 L*>30 0.121 p90 30.8 (2041 px)
+Oberarm (B)-rechts unten Id 10: Original [20.6  3.1 -0.5] Rot 0.04 L*>30 0.057 p90 28.0 (1610 px)
+   V4    [21.5  7.   2.1] dE00 4.89 dL +0.8 Rot 0.49 L*>30 0.026 p90 28.0 (1302 px)
+   V4R2  [22.2  4.1  0.1] dE00 1.75 dL +1.5 Rot 0.09 L*>30 0.069 p90 29.1 (1302 px)
+   V3    [32.2  6.9  3.4] dE00 10.09 dL +11.6 Rot 0.58 L*>30 0.647 p90 40.9 (1302 px)
+Oberarm (B)-links unten Id 13: Original [11.3  2.1  0.9] Rot 0.00 L*>30 0.000 p90 19.7 (1748 px)
+   V4    [14.6  3.   0.5] dE00 2.43 dL +3.3 Rot 0.05 L*>30 0.000 p90 22.0 (1150 px)
+   V4R2  [14.8  3.1  0.6] dE00 2.57 dL +3.5 Rot 0.05 L*>30 0.000 p90 22.2 (1150 px)
+   V3    [27.2  6.8  3.3] dE00 12.28 dL +15.9 Rot 0.51 L*>30 0.427 p90 35.4 (1150 px)
+
+V4    ab Saat  f0,1/0,3/0,5/0,7 = [0.032, 0.095, 0.129, 0.142]  Abfall(0,05-0,75) 0.027 -> ROT
+      Profil f 0..1 je 0,05: [0.023, 0.025, 0.032, 0.045, 0.045, 0.08, 0.095, 0.153, 0.138, 0.134, 0.129, 0.127, 0.129, 0.131, 0.142, 0.14, 0.155, 0.155, 0.114, 0.053, 0.011]
+V4    ab T1    f0,1/0,3/0,5/0,7 = [0.032, 0.08, 0.138, 0.127]  Abfall(0,05-0,75) 0.061 -> ROT
+      Profil f 0..1 je 0,05: [0.023, 0.027, 0.032, 0.032, 0.045, 0.045, 0.08, 0.108, 0.188, 0.153, 0.138, 0.134, 0.129, 0.129, 0.127, 0.129, 0.136, 0.134, 0.142, 0.14, 0.142]
+V4R2  ab Saat  f0,1/0,3/0,5/0,7 = [0.04, 0.078, 0.125, 0.138]  Abfall(0,05-0,75) 0.009 -> OK
+      Profil f 0..1 je 0,05: [0.025, 0.032, 0.04, 0.047, 0.059, 0.07, 0.078, 0.102, 0.125, 0.129, 0.125, 0.131, 0.144, 0.148, 0.138, 0.14, 0.142, 0.165, 0.102, 0.051, 0.013]
+V4R2  ab T1    f0,1/0,3/0,5/0,7 = [0.036, 0.07, 0.125, 0.131]  Abfall(0,05-0,75) 0.006 -> OK
+      Profil f 0..1 je 0,05: [0.025, 0.032, 0.036, 0.04, 0.047, 0.059, 0.07, 0.07, 0.083, 0.102, 0.125, 0.131, 0.127, 0.125, 0.131, 0.138, 0.146, 0.144, 0.14, 0.14, 0.138]
+V3    ab Saat  f0,1/0,3/0,5/0,7 = [0.042, 0.074, 0.119, 0.174]  Abfall(0,05-0,75) 0.008 -> ROT
+      Profil f 0..1 je 0,05: [0.032, 0.036, 0.042, 0.051, 0.057, 0.066, 0.074, 0.087, 0.097, 0.11, 0.119, 0.136, 0.146, 0.169, 0.174, 0.167, 0.112, 0.066, 0.021, 0.042, 0.017]
+V3    ab T1    f0,1/0,3/0,5/0,7 = [0.036, 0.064, 0.095, 0.127]  Abfall(0,05-0,75) 0.002 -> ROT
+      Profil f 0..1 je 0,05: [0.032, 0.038, 0.036, 0.045, 0.047, 0.053, 0.064, 0.066, 0.074, 0.076, 0.095, 0.097, 0.11, 0.114, 0.127, 0.136, 0.146, 0.157, 0.169, 0.174, 0.178]
+
+Original schwanz_maske.npz      f 0..1 je 0,1: [0.006, 0.04, 0.073, 0.069, 0.075, 0.121, 0.134, 0.152, 0.168, 0.172, 0.166]  Abfall 0.016
+Original schwanz_maske_hi.npz   f 0..1 je 0,1: [0.028, 0.069, 0.069, 0.069, 0.105, 0.119, 0.123, 0.158, 0.107, 0.123, 0.146]  Abfall 0.020
+Original schwanz_maske_lo.npz   f 0..1 je 0,1: [0.024, 0.038, 0.073, 0.073, 0.081, 0.117, 0.134, 0.154, 0.174, 0.176, 0.176]  Abfall 0.000
+V4    Knick [292.5 307. ] f 0..1 je 0,1: [0.023, 0.032, 0.045, 0.08, 0.188, 0.138, 0.129, 0.127, 0.136, 0.142, 0.142]  Abfall 0.061
+V4R2  Knick [289.8 301. ] f 0..1 je 0,1: [0.025, 0.036, 0.047, 0.07, 0.083, 0.125, 0.127, 0.131, 0.146, 0.14, 0.138]  Abfall 0.006
+
+h100 F343 clip 1 bild 10 gier 1515: Rumpf 7/8 19.0/24.7 dE 4.06 (9129); Kopf 9 25.1/26.0 dE 3.16 (1642); Oberarm 10 19.7/29.6 dE 9.06 (1716); Oberarm 13 22.5/24.7 dE 4.52 (1825); Unterarm 11 28.1/23.7 dE 4.43 (802); Unterarm 14 11.6/18.7 dE 8.42 (1719); Schwanz 16-22 -
+h110 F353 clip 1 bild 20 gier 1515: Rumpf 7/8 19.5/19.6 dE 0.25 (9933); Kopf 9 24.5/24.5 dE 0.11 (1822); Oberarm 10 19.8/20.3 dE 0.37 (1959); Oberarm 13 22.8/23.0 dE 0.46 (1638); Unterarm 11 27.4/27.3 dE 0.48 (944); Unterarm 14 11.2/11.0 dE 0.15 (1528); Schwanz 16-22 -
+h118 F361 clip 1 bild 28 gier 1515: Rumpf 7/8 20.7/20.6 dE 0.08 (10719); Kopf 9 24.0/24.0 dE 0.15 (1997); Oberarm 10 19.7/20.3 dE 0.44 (2159); Oberarm 13 25.3/25.9 dE 0.53 (1527); Unterarm 11 26.2/25.8 dE 0.76 (992); Unterarm 14 10.3/10.5 dE 0.24 (1451); Schwanz 16-22 -
+h125 F368 clip 1 bild 35 gier 1515: Rumpf 7/8 19.8/19.9 dE 0.07 (11257); Kopf 9 24.5/24.6 dE 0.07 (2004); Oberarm 10 19.8/20.3 dE 0.36 (2129); Oberarm 13 24.2/24.2 dE 0.31 (1612); Unterarm 11 24.8/25.2 dE 0.55 (818); Unterarm 14 10.5/10.7 dE 0.33 (1638); Schwanz 16-22 -
+h135 F378 clip 1 bild 45 gier 1513: Rumpf 7/8 19.0/19.0 dE 0.13 (11916); Kopf 9 25.1/24.3 dE 0.67 (2276); Oberarm 10 20.1/21.2 dE 0.85 (1996); Oberarm 13 22.8/23.4 dE 0.44 (2271); Unterarm 11 24.5/23.3 dE 0.91 (885); Unterarm 14 11.2/11.1 dE 0.19 (2124); Schwanz 16-22 -
+
+F7 Id13 ganz                         {'lab': [23.0, 5.7, 1.5], 'n': 2626, 'dE': 7.9, 'dL': -10.3}
+F7 Id13 ganz er2                     {'lab': [22.7, 5.8, 1.3], 'n': 2181, 'dE': 8.08, 'dL': -10.6}
+F7 Id13 obere 58% er2 (Bauer r2)     {'lab': [31.4, 8.7, 2.3], 'n': 1031, 'dE': 3.63, 'dL': -1.9}
+F8 Id10 ganz                         {'lab': [19.9, 8.0, 2.5], 'n': 3743, 'dE': 2.56, 'dL': 3.5}
+F8 Id10 ganz er2                     {'lab': [19.6, 8.4, 2.6], 'n': 3293, 'dE': 2.37, 'dL': 3.2}
+F8 Id10 obere 56% er2 (Bauer r2)     {'lab': [18.4, 9.3, 3.0], 'n': 1991, 'dE': 2.0, 'dL': 2.0}
+F7 Fensterlage er2 (Bauer r3 F7)     {'lab': [31.4, 8.7, 2.3], 'n': 1031, 'dE': 3.63, 'dL': -1.9}
+F6 Id8 RG>=15                        {'lab': [20.0, 12.8, 4.9], 'n': 4299, 'dE': 4.0, 'dL': 3.4}
+F6 Id8 RG>=15 er2                    {'lab': [19.5, 13.0, 5.1], 'n': 4026, 'dE': 3.67, 'dL': 2.9}
+F14 Id8 L>=P70 ohne Erosion          {'lab': [53.7, 10.7, 1.7], 'n': 1132, 'dE': 5.83, 'dL': -6.3}
+F14 Id8 L>=P70 er2                   {'lab': [57.0, 10.8, 1.6], 'n': 890, 'dE': 2.76, 'dL': -3.0}
+F-Mittel Messblatt-Lesart (F7/F8 Id ganz, F14 ohne Erosion): 3.81
+F-Mittel Lesart F7 Fensterlage, F8 Id ganz, F14 er2: 2.73
