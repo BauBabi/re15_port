@@ -3037,7 +3037,8 @@ static int nb4_sperre_soll(int sub, int b) { return sub == 2 ? (b < 19) : (b <= 
 typedef struct { int sub, art, schaden, ret, gpv, gg, n, voll, abbruch, fall_b, fall_ok, se; int32_t sx, sz, ex, ez, ey, hx, hz;
                  int schritt[NB4_BMAX], clip[NB4_BMAX], sperre[NB4_BMAX], y[NB4_BMAX], band[NB4_BMAX], fall[NB4_BMAX]; } nb4_r_t;
 typedef struct { int n, voll, abbruch, fehl, sub_fehl, art[6], s2, s3, fall, fall_fehl, kd, schaden60, schaden30, schaden_fehl, halt_fall, haken_fehl, luft_ueber;
-                 int32_t luft_max, haken_max, schub_max; char erst_fehl[240]; } nb4_sum_t;
+                 int32_t luft_max, haken_max, schub_max; char erst_fehl[240];
+                 int zweit, abst_min, paare; char erst_zweit[160]; } nb4_sum_t;   /* NB4 Runde 2 (Abnahme 7 M1): Treffer < 70 Bilder nach dem vorigen (+0x238 > 0) */
 /* Weg des Hakens je Bild (Lage nach dem Spieler-Takt, Station RE15_SCHRITT_TICK, minus Lage am Bildanfang); der Rest ist Koerper-Schub, Klemme und Boss-Schub */
 static int s_nb4_hook_ok = 0; static int32_t s_nb4_hook_dx = 0, s_nb4_hook_dz = 0;
 /* Sturz Bild fuer Bild (Substate 10 Ph2-Ph4): Kantenbild y = -1800 + 500 + 90, dann + 90 + 50 t bis Boden - 800 < y, im Bild danach y = Boden (0); Band 0 ab dem Kantenbild */
@@ -3093,7 +3094,7 @@ static void nb4_ende(nb4_r_t *r, nb4_sum_t *S, const re15_actor_t *pl)
     }
 }
 /* Mitschrift je Bild aus re15_gator_treffer_r41_info (nach frame()). Im Bild laeuft erst der Spieler-Takt (Reaktion, ggf. ihr Ende), dann der Gegner-Pass (neuer Einstieg). */
-typedef struct { nb4_r_t r; int an, n_start, n_ende; } nb4_spur_t;
+typedef struct { nb4_r_t r; int an, n_start, n_ende; long letzt_f; } nb4_spur_t;
 static void nb4_eintrag(nb4_r_t *r, int b, const re15_gtr_info_t *I, const re15_actor_t *pl, int ende)
 {
     if (b < 0 || b >= NB4_BMAX) return;
@@ -3116,13 +3117,24 @@ static void nb4_spur_bild(nb4_spur_t *sp, nb4_sum_t *S, const re15_actor_t *pl)
         sp->r.abbruch = 1; nb4_ende(&sp->r, S, pl); sp->an = 0;
     }
     if (neu) {
+        /* NB4 Runde 2 (Abnahme 7 M1): RE2 laesst den naechsten Treffer erst zu, wenn die Bisssperre +0x238 (= 70 im Treffer @0x801016b0-b4, je Bild -1
+         * @0x801004a8-b8, Pruefstellen @0x80100b5c / @0x80100cb4-c4) wieder 0 ist - Abstand zweier Treffer-Einstiege >= RE15_GR2_BISS_CD_BISS Bilder */
+        const long f = s_bild;
+        if (sp->letzt_f >= 0 && f >= sp->letzt_f) {
+            const int a = (int)(f - sp->letzt_f); S->paare++;
+            if (S->abst_min == 0 || a < S->abst_min) S->abst_min = a;
+            if (a < RE15_GR2_BISS_CD_BISS) { S->zweit++;
+                if (!S->erst_zweit[0]) snprintf(S->erst_zweit, sizeof S->erst_zweit, "F%ld art %d nach F%ld (Abstand %d, Bisssperre +0x238 noch %d)", f, I.art, sp->letzt_f, a,
+                                                RE15_GR2_BISS_CD_BISS - a); }
+        }
+        sp->letzt_f = f;
         memset(&sp->r, 0, sizeof sp->r); sp->an = 1; sp->r.fall_b = -1;
         sp->r.sub = I.sub; sp->r.art = I.art; sp->r.schaden = I.schaden; sp->r.ret = I.ret; sp->r.gpv = I.gier_figur_vor; sp->r.gg = I.gier_gator;
         sp->r.sx = I.start_x; sp->r.sz = I.start_z;
     } else if (sp->an && I.aktiv) nb4_eintrag(&sp->r, I.bild - 1, &I, pl, 0);
     sp->n_start = I.n_start; sp->n_ende = I.n_ende;
 }
-static void nb4_spur_start(nb4_spur_t *sp) { re15_gtr_info_t I; re15_gator_treffer_r41_info(&I); memset(sp, 0, sizeof *sp); sp->n_start = I.n_start; sp->n_ende = I.n_ende; }
+static void nb4_spur_start(nb4_spur_t *sp) { re15_gtr_info_t I; re15_gator_treffer_r41_info(&I); memset(sp, 0, sizeof *sp); sp->n_start = I.n_start; sp->n_ende = I.n_ende; sp->letzt_f = -1; }
 
 /* ---- Teil A: eingespeiste Treffer ---- */
 typedef struct { const char *name; int32_t x, y, z; int pl_gier, g_gier, gesch, hp, erw_sub, erw; } nb4_a_t;   /* erw: 0 frei (Lage exakt), 1 Sturz, 2 Wand, 3 One-Save */
@@ -3341,6 +3353,28 @@ static void nb4_teil_b(int elza)
     PRUEF(S.fall >= 9 && S.fall_fehl == 0 && S.halt_fall == 0, "W1: %d Stuerze ins Wasser, jeder Bild fuer Bild wie Substate 10 (falsch %d), 0 Raumhalt-Eingriffe in Sturzbildern (%d)", S.fall, S.fall_fehl, S.halt_fall);
     PRUEF(raum_fehl == 0, "W3: in allen Lagen nie aussen, nie im Block, oben nie neben dem Deck ausser im Sturz (%d Lagen verfehlt)", raum_fehl);
     PRUEF(erst_max <= NB3_PAUSE_MAX && pause_max <= NB3_PAUSE_MAX, "A1 (NB3 Vorgabe A, mit Sturz neu bewertet): oben erster Treffer <= %d und laengste Pause oben <= %d (t%d, %d)", NB3_PAUSE_MAX, NB3_PAUSE_MAX, erst_max, pause_max);
+    printf("    Bisssperre (Abnahme 7 M1): %d Treffer-Paare, kleinster Abstand %d Bilder, Treffer waehrend +0x238 > 0: %d, Reaktionen durch einen neuen Treffer abgebrochen %d%s%s\n",
+           S.paare, S.abst_min, S.zweit, S.abbruch, S.erst_zweit[0] ? " - erster: " : "", S.erst_zweit);
+    PRUEF(S.paare >= 50 && S.zweit == 0 && S.abst_min >= RE15_GR2_BISS_CD_BISS && S.abbruch == 0,
+          "T3 Unverwundbarkeit / Angriffstakt wie RE2 (Abnahme 7 M1): kein Treffer, solange die Bisssperre +0x238 > 0 ist - Abstand zweier Treffer >= %d "
+          "(70 @0x801016b0-b4, -1 je Bild @0x801004a8-b8, Pruefstellen @0x80100b5c / @0x80100cb4-c4): %d Paare, kleinster Abstand %d, Zweitbisse %d, abgebrochen %d",
+          RE15_GR2_BISS_CD_BISS, S.paare, S.abst_min, S.zweit, S.abbruch);
+    {   /* Gegenprobe M1: Pruefhaken 'Sperre alt' = Stand cfa775ae8 (LUNGE / Biss B2 / Rammen ohne +0x238) - Zweitbisse im selben Clip-4-Lauf kommen zurueck */
+        nb4_sum_t G; memset(&G, 0, sizeof G);
+        re15_gator_boss_sperre_alt_setzen(1);
+        static const int32_t Ug[2][4] = { { 4200, -18700, 2, 3072 }, { 6732, -18598, 2, 1035 } };
+        for (int i = 0; i < 2; i++) {
+            re15_actor_t *g = szene_bis_kampf(elza);
+            if (!g || !g2_kanister_ins_maul(g, pl)) continue;
+            re15_gr2_kanister_entfernen();
+            nb4_b_m_t m; nb4_b_lauf(g, pl, Ug[i][0], 0, Ug[i][1], (int)Ug[i][3], (int)Ug[i][2], bilder, 3, &G, &m);
+        }
+        re15_gator_boss_sperre_alt_setzen(0);
+        printf("    Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): %d Treffer-Paare, kleinster Abstand %d, Zweitbisse %d, abgebrochen %d%s%s\n",
+               G.paare, G.abst_min, G.zweit, G.abbruch, G.erst_zweit[0] ? " - erster: " : "", G.erst_zweit);
+        PRUEF(G.zweit > 0 && G.abst_min < RE15_GR2_BISS_CD_BISS, "Gegenprobe M1 Pruefhaken 'Sperre alt': Zweitbisse wieder da (%d, kleinster Abstand %d < %d) - rot ohne den Bau",
+              G.zweit, G.abst_min, RE15_GR2_BISS_CD_BISS);
+    }
     {   /* T5 Gegenprobe: Stand 3d57083b1 */
         re15_gator_treffer_alt_setzen(1);
         int kd_n = 0, gtr0; int32_t luft = 0;
@@ -3746,6 +3780,7 @@ static int gtrlog(const char *dir)
     int n = 0, voll = 0, abbruch = 0, s2 = 0, s3 = 0, fehl = 0, sub_fehl = 0, dauer_fehl = 0, schr_fehl = 0, haken_fehl = 0, stuerze = 0, sturz_fehl = 0, ziel1 = 0, st1 = 0, st1_fehl = 0;
     int32_t haken_max = 0, luft_max = 0; int luft_ueber = 0; char erst[300] = "";
     gtrl_r_t r; memset(&r, 0, sizeof r); int an = 0;
+    int zweit = 0, paare = 0, abst_min = 0, letzt_f = -1; char erst_zweit[160] = "";   /* NB4 Runde 2 (Abnahme 7 M1): Treffer (START/TOT) < 70 Bilder nach dem vorigen */
     while (fgets(z, sizeof z, f)) {
         if (strstr(z, "Zielmodus 1")) ziel1++;
         {   const char *p = strstr(z, "KANISTER Stufe 1 laengs="); int l, q;
@@ -3753,6 +3788,11 @@ static int gtrlog(const char *dir)
         if (strncmp(z, "GTR F", 5)) continue;
         int fr = 0; if (sscanf(z, "GTR F%d", &fr) != 1) continue;
         const char *p;
+        if (strstr(z, " START ") || strstr(z, " TOT ")) {   /* +0x238 = 70 @0x801016b0-b4, -1 je Bild @0x801004a8-b8: kein Treffer vor 70 Bildern (@0x80100b5c, @0x80100cb4-c4) */
+            if (letzt_f >= 0 && fr >= letzt_f) { const int a = fr - letzt_f; paare++; if (abst_min == 0 || a < abst_min) abst_min = a;
+                if (a < RE15_GR2_BISS_CD_BISS) { zweit++; if (!erst_zweit[0]) snprintf(erst_zweit, sizeof erst_zweit, "F%d nach F%d (Abstand %d)", fr, letzt_f, a); } }
+            letzt_f = fr;   /* ein kleineres F = neuer Besuch (Bildzaehler neu): kein Paar */
+        }
         if ((p = strstr(z, " START "))) {
             if (an) { abbruch++; n++; }
             memset(&r, 0, sizeof r); an = 1; r.fall_b = -1;
@@ -3826,12 +3866,14 @@ static int gtrlog(const char *dir)
     if ((f = fopen(pf, "r"))) { while (fgets(z, sizeof z, f)) { if (strstr(z, "RUNDE zum Kanister")) runde++; if (strstr(z, "ANSCHWIMMEN an")) anschw++; } fclose(f); }
     /* jeder Treffer im letzten Besuch (hp-Flanke, Messhaken RE15_R39_MESS_SPIELER_HP=100) ist eine RE2-Reaktion (START); ein Treffer im Ende-Bild einer Reaktion
      * kann zwei Starts in einem Bild nicht erzeugen - die Zahlen muessen gleich sein (Gegenprobe Stand 3d57083b1: 0 Starts) */
-    const int ok = fehl == 0 && sub_fehl == 0 && kd == 0 && ziel1 == 0 && runde == 0 && anschw == 0 && st1_fehl == 0 && n == treffer;
+    const int ok = fehl == 0 && sub_fehl == 0 && kd == 0 && ziel1 == 0 && runde == 0 && anschw == 0 && st1_fehl == 0 && n == treffer && zweit == 0;
     printf("gtrlog: %d RE2-Reaktionen (vollstaendig %d: Sub 2 %d, Sub 3 %d; abgebrochen %d); Abweichungen %d (Unterzustand %d, Dauer %d, Schritte %d, Haken-Weg %d, Sturz %d)%s%s; "
            "Haken-Weg max %d; Luftlinie gesamt max %d (%d ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze %d; RE1.5-Niederwurf-Bilder %d (von %d); "
-           "Kanister Stufe 1 %d (ausserhalb des Fensters %d), Zielmodus 1 %d, RUNDE %d, ANSCHWIMMEN an %d; Treffer (hp-Flanken) %d -> %s\n",
+           "Kanister Stufe 1 %d (ausserhalb des Fensters %d), Zielmodus 1 %d, RUNDE %d, ANSCHWIMMEN an %d; Treffer (hp-Flanken) %d; Treffer waehrend +0x238 > 0 %d -> %s\n",
            n, voll, s2, s3, abbruch, fehl + sub_fehl, sub_fehl, dauer_fehl, schr_fehl, haken_fehl, sturz_fehl, erst[0] ? " - erste: " : "", erst, (int)haken_max, (int)luft_max, luft_ueber,
-           stuerze, kd, rn, st1, st1_fehl, ziel1, runde, anschw, treffer, ok ? "ok" : "VERFEHLT");
+           stuerze, kd, rn, st1, st1_fehl, ziel1, runde, anschw, treffer, zweit, ok ? "ok" : "VERFEHLT");
+    printf("gtrlog Bisssperre: %d Treffer-Paare, kleinster Abstand %d, Treffer waehrend +0x238 > 0 (Abstand < %d): %d%s%s\n", paare, abst_min, RE15_GR2_BISS_CD_BISS, zweit,
+           erst_zweit[0] ? " - erster: " : "", erst_zweit);
     return ok ? 0 : 1;
 }
 
