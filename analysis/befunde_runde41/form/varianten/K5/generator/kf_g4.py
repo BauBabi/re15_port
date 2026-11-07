@@ -22,6 +22,16 @@ Runde 3 (Pruefberichte FARBE_PRUEFUNG_v3_r2_*.md): Krallen je K5c-Kralle ein G4-
 dunklem Rand, Band auf das Ketten-Ziel ZIEL_BAND_KETTE, Seite-1-Buntheit auf K12 geeicht, Bild-1-Zeilen am Vorderglied r nur auf den in Bild 1
 sichtbaren Flaechen (B1_SICHTBAR_NR).
 
+Runde 4 (weniger Rot; Nutzer 2026-11-07 ~17:10, woertlich, bindend: "bist du noch an der Verbesserung von k5c ran, und entfernst die
+übertriebenen roten feuerrillen wieder, und stellst es wieder nach vorlage um?"; Ziele MESSBLATT_FARBE_V3_NACHTRAG_ROT.md 5, Riegel RV1-RV4):
+- Zeilen 0-2 bleiben G4 bytegleich (H2). Jede Koerperflaeche liest eine abgeleitete Zeile ihrer Gruppe (Gruppe x Seite, R4_GRUPPEN).
+- Haut (G4-Eintraege ohne Rot-Gewicht): L* x a (a = 1 Bild-1-Gruppen), Farbton der Gruppe, Buntheit C x s(L) x ((1 - g) + g x
+  G4-Hautbuntheit / C75), weich an den sRGB-Rand (r4_cmax am ungekappten linearen sRGB).
+- Adern (G4-Rotklasse, Rampe ROT_C0..ROT_C1): rangtreu linear auf [Haut-p10, q x Haut-Median] gestaucht, Buntheit kappa x mittlere
+  Haut-Buntheit (q, kappa <= 1). Die Feuerrillen sind damit entfernt; die Aderzeichnung bleibt als dunkle Struktur (Riegel RV6).
+- Augen lesen G4-Zeile 0 (F10, dunkel), Maulinneres F2 bleibt auf den G4-Zeilen, Sonderzeilen 6-8 (Leuchtstellen) wie Runde 3.
+- Baufehler A (Zahlen-Pruefer V3 r3): die Rand-Texel des F1-Flecks werden mit umgefaerbt (kein rohes G4-Blutrot mehr).
+
 Aufruf: python kf_g4.py [--aus <Ordner>]   (Default: farbe/K5c_farbe_v3; dazu farbe/K5C_FARBE_V3.EMD/.TIM und Scratchpad formfarbe3/emd)
 """
 import argparse
@@ -46,7 +56,7 @@ import emd_ansichtsblatt as EA  # noqa: E402
 import form_emd as FE  # noqa: E402
 
 DATEN = os.path.join(HIER, 'v3_daten')
-SCRATCH = r'C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formfarbe3'
+SCRATCH = r'C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formfarbe4'   # Runde 4 (vorher formfarbe3)
 K5C_EMD_SHA = 'a71f8d08e8d45b2f00346096dd8fbc7fa3a7dfc078c6e6bc9c80013750edbad2'   # Auftrag / Messblatt V3 Kopf
 
 # ---------------------------------------------------------------- Konstanten (jede mit Quelle)
@@ -166,6 +176,219 @@ TEILE_H1 = {   # Messblatt 5 H1 "je Teil (Rumpf, Schwanz, Hals, Beine, Arme, Kla
     'Rumpf': [0, 7, 10], 'Schwanz': [1, 2, 3, 4, 5, 6], 'Hals': [21], 'Beine': [8, 24, 25, 9, 26, 27],
     'Arme': [11, 12, 13, 16, 17, 18], 'Klauen': [14, 15, 28, 30, 19, 20, 29, 31], 'Kopf/Kiefer aussen': [22, 23],
 }
+
+
+# ================================================================ Runde 4: weniger Rot (Versuch 3 Runde 4)
+R4_NUTZER = ('bist du noch an der Verbesserung von k5c ran, und entfernst die übertriebenen roten feuerrillen wieder, und stellst es wieder '
+             'nach vorlage um?')     # Nutzer 2026-11-07 ~17:10, woertlich, bindend
+# Gruppen: je Gruppe und Seite eine abgeleitete CLUT-Zeile. Begruendung je Teilung (Bauer-Lauf farbe_lesung/V3R4_bau/, Dossier V3R4.2):
+#  - Rumpf Ruecken / Rumpf Flanke: mit EINER Rumpfzeile lag das Bild-1-Rot ganz auf dem Ruecken (Rumpf-Pixel 46 % / 35 % rot) und 0 % auf der
+#    Flanke (such4.diag); die Flanke liegt im Bild-1-Licht tiefer und braucht mehr Buntheit.
+#  - Brust (Mesh 10 Ruecken + Flanke) / Hals Bauch (Hals + Mesh 10 Brust/Bauch) / Kopf: Bild-2-Farbton-Fenster (Nachtrag 5) Ruecken -12,9..2,3,
+#    Brust/Bauch -0,1..15,9, Hals 1,7..20,3, Kopf 13,1..24,7. Mit Kopf + Hals + Bauch in einer Zeile blieb nur ein Fenster von rund 1 Grad
+#    (scan: Gruppenfarbton -24 / -18 / -12 -> Kopf 12,7 / 18,4 / 22,0, Brust/Bauch 14,2 / 18,8 / 22,3, Hals 19,1 / 22,1 / 24,5 Grad): Der Kopf
+#    erscheint in der Kette weniger orange als Hals und Bauch, in der Vorlage ist es umgekehrt. Mit Ruecken + Bauch in einer Zeile kippte
+#    Bild 2 zwischen "Ruecken zu wenig Rot" und "Bauch-Rotflaeche zu gross" (3 Saaten: C 39 -> Ruecken GRUEN, Bauch-Flaeche 19,6 > 17,81).
+#  - Vorderbein r B1 (Flaechen mit Runde-3-Bild-1-Zeile) / Vorderbeine (G4-Zeile): Bild 1 Vorderglied Rot <= 7,1 %, Bild 2 Vorderbeine 56,4-74,5 %
+#    bei 34,5..38,8 Grad (Nachtrag 5).
+#  Zeilenzahl 17 (0-2 G4, 6-8 Sonder, 11 Gruppenzeilen) = 4352 Texel hohe Port-Textur (render_pc.c: je Zeile eine Kopie); Windows-Port
+#  Direct3D 11 (Grenze 16384). Offen fuer ein Spiel-Asset auf GLES2-Geraeten mit 4096 (Dossier V3R4.5).
+R4_GRUPPEN = ('Schwanz', 'Hinterbeine', 'Rumpf Ruecken', 'Rumpf Flanke', 'Vorderbein r B1', 'Brust', 'Hals Bauch', 'Kopf', 'Vorderbeine')
+R4_ZEILEN_FREI = (3, 4, 5) + tuple(range(9, 30))   # 3-5 (Runde-3-Bild-1-Zeilen entfallen), 6-8 Sonderzeilen bleiben, danach 9 ff.
+R4_N_GRENZE = 0.5          # Region je Flaeche wie MESSBLATT_FARBE_V3_NACHTRAG_ROT.md 1.2 (basis.N_GRENZE: Ruecken ny < -0,5, Bauch ny > 0,5)
+# Helle Nicht-Ader-Eintraege behalten ihre G4-Farbe (Horn, Krallenspitzen; Sicht-Pruefer V3 r3: "khakifarbene Spitze ... wie die G4-Krallen").
+# Grenze = Mitte der Luecke in der L*-Verteilung der genutzten Nicht-Ader-Eintraege: kein Eintrag zwischen L* 45,3 und 59,5 (gemessen,
+# Dossier V3R4.2); darueber nur Farbton 71-118 Grad (khaki-gelb).
+R4_L_HELL = 52.4
+# Parameter je Gruppe in v3_daten/r4_par.json (eine Quelle fuer Bau und Riegel; Herkunft je Wert dort unter "quelle"):
+#  h = Farbton der Gruppe (Grad, Texel), C = Haut-Buntheit, beta = Buntheit dunkler Haut (s(L) = 1 + beta (Lm - L) / Lm,
+#  begrenzt auf R4_SMIN..R4_SMAX), g = Anteil G4-Hautmuster, a = Hauthelligkeit, q = obere Aderhelligkeit (x Hautmedian),
+#  kappa = Ader-Buntheit (x mittlere Haut-Buntheit). Lauf 2, Dossier V3R4.
+R4_PAR = None
+R4_PAR_DATEI = os.path.join(HIER, 'v3_daten', 'r4_par.json')
+# s(L) begrenzt auf 0..3: gemessen ohne Einfluss auf das Ergebnis (scan smax 3 / 5, beta 5: Hals dL -1,7 / -1,7, Kopf dL 0,2 / 0,3).
+R4_SMAX = 3.0
+R4_SMIN = 0.0   # Runde 4 Lauf 2: Untergrenze von s(L) (Suchgrenze, Dossier V3R4)
+
+
+def r4_par():
+    global R4_PAR
+    if R4_PAR is None:
+        R4_PAR = json.load(open(R4_PAR_DATEI, encoding='utf-8'))['par']
+    return R4_PAR
+
+
+def r4_flaechen_normalen(mo):
+    """Je Mesh: lokale Normale je Flaeche (tf, dann qf), Mittel der Eckennormalen (wie V3R4_skripte/basis.flaechen_normalen)."""
+    out = []
+    for m in mo.meshes:
+        nn = []
+        for norms, faces in ((m.tn, m.tf), (m.qn, m.qf)):
+            if not faces:
+                continue
+            N = np.array([x[:3] for x in norms], float) / 4096.0
+            for g in faces:
+                v = N[list(g[0::2])].mean(0)
+                nn.append(v / max(np.linalg.norm(v), 1e-9))
+        out.append(np.array(nn) if nn else np.zeros((0, 3)))
+    return out
+
+
+def r4_region(b, nx, ny):
+    """K5c-Region einer Flaeche (wie V3R4_skripte/basis.region_k5c; Nachtrag 1.2)."""
+    if b in (0, 7, 10):
+        if ny < -R4_N_GRENZE:
+            return 'Ruecken'
+        if ny > R4_N_GRENZE or (b == 10 and nx > R4_N_GRENZE):
+            return 'Brust/Bauch'
+        return 'Flanke'
+    if 1 <= b <= 6:
+        return 'Schwanz'
+    if b in (8, 9, 24, 25, 26, 27):
+        return 'Hinterbeine'
+    if 11 <= b <= 20 or 28 <= b <= 31:
+        return 'Vorderbeine'
+    if b == 21:
+        return 'Hals'
+    if b in (22, 23):
+        return 'Kopf'
+    return None
+
+
+def r4_gruppe(key, familie, k5, fn):
+    """Gruppe einer Koerperflaeche. familie = 'b1' / 'g4' (Zeilenfamilie der Runde 3: b1 = Flaeche mit Bild-1-Aderrot)."""
+    mi, teil, fi = key
+    nr = fi if teil == 't' else len(k5.meshes[mi].tf) + fi
+    r = r4_region(mi, fn[mi][nr][0], fn[mi][nr][1])
+    if r in ('Schwanz', 'Hinterbeine', 'Kopf'):
+        return r
+    if r == 'Vorderbeine':
+        return 'Vorderbein r B1' if familie == 'b1' else 'Vorderbeine'
+    if r == 'Hals':
+        return 'Hals Bauch'
+    if mi in (0, 7):
+        return 'Rumpf Ruecken' if r == 'Ruecken' else 'Rumpf Flanke'
+    if mi == 10:
+        return 'Hals Bauch' if r == 'Brust/Bauch' else 'Brust'
+    raise SystemExit('Runde 4: Flaeche %s ohne Gruppe (Region %s)' % (key, r))
+
+
+def r4_eintraege(zeile):
+    """Lab, C*, Farbton und Rot-Gewicht w je Eintrag (w wie zeile_b1: Rampe ROT_C0..ROT_C1 im Farbtonfenster ROT_H0..ROT_H1 = Ader)."""
+    L = lab(wort_rgb(zeile))
+    C = np.hypot(L[:, 1], L[:, 2])
+    h = np.degrees(np.arctan2(L[:, 2], L[:, 1]))
+    w = np.clip((C - ROT_C0) / (ROT_C1 - ROT_C0), 0, 1) * ((h > ROT_H0) & (h < ROT_H1))
+    return L, C, h, w
+
+
+def r4_statistik(zeile, cnt):
+    """Je Gruppe und Seite (texelgewichtet, cnt = Texel je Index): Hautmedian L* (Haut = w 0) und C75 der Haut-Buntheit (Haut unter R4_L_HELL)."""
+    L, C, h, w = r4_eintraege(zeile)
+    cnt = np.asarray(cnt, float)
+    haut = (w == 0) & (cnt > 0) & (np.array(zeile) != 0)
+    haut_d = haut & (L[:, 0] < R4_L_HELL)
+
+    def wq(x, sel, q):
+        o = np.argsort(x[sel])
+        cs = np.cumsum(cnt[sel][o])
+        return float(x[sel][o][np.searchsorted(cs, q * cs[-1])])
+    return dict(cnt=cnt, Lm=wq(L[:, 0], haut, 0.5), C75=wq(C, haut_d, 0.75))
+
+
+def _lab_lin(Lab):
+    """Lab (D65, wie OpenCV float) -> lineares sRGB ohne Kappung (fuer den Gamut-Test; OpenCV kappt negative Kanaele still)."""
+    Lab = np.asarray(Lab, np.float64).reshape(-1, 3)
+    fy = (Lab[:, 0] + 16.0) / 116.0
+    fx = fy + Lab[:, 1] / 500.0
+    fz = fy - Lab[:, 2] / 200.0
+
+    def finv(t):
+        return np.where(t > 6.0 / 29.0, t ** 3, 3 * (6.0 / 29.0) ** 2 * (t - 4.0 / 29.0))
+    X, Y, Z = 0.950456 * finv(fx), finv(fy), 1.088754 * finv(fz)
+    M = np.array([[3.240479, -1.53715, -0.498535], [-0.969256, 1.875991, 0.041556], [0.055648, -0.204043, 1.057311]])
+    return np.stack([X, Y, Z], 1) @ M.T
+
+
+def r4_cmax(L, h_grad):
+    """Groesste Buntheit im sRGB-Raum bei L* und Farbton (Bisektion am ungekappten linearen sRGB)."""
+    L = np.asarray(L, np.float64).reshape(-1)
+    hr = math.radians(h_grad)
+    lo, hi = np.zeros(len(L)), np.full(len(L), 160.0)
+    for _ in range(30):
+        m = 0.5 * (lo + hi)
+        x = _lab_lin(np.stack([L, m * math.cos(hr), m * math.sin(hr)], 1))
+        ok = (x.min(1) >= -1e-6) & (x.max(1) <= 1 + 1e-6)
+        lo, hi = np.where(ok, m, lo), np.where(ok, hi, m)
+    return lo
+
+
+def r4_zeile(g4zeile, par, st):
+    """Abgeleitete Zeile einer Gruppe aus der G4-Zeile ihrer Seite (keine Neuquantisierung: je Eintrag eine neue Farbe, Index bleibt).
+    Runde 4 Lauf 2 (Bauer, nach dem Riegel-Lauf am Lauf-1-Stand, Dossier V3R4):
+    - Haut (w = 0): L* x a (a = 1 Bild-1-Gruppen), Farbton par h, Wunsch-Buntheit C x s(L) x ((1 - g) + g x C*(G4) / C75) mit
+      s(L) = clip(1 + beta (Lm - L) / Lm, R4_SMIN, R4_SMAX) (beta > 0: Rot sitzt im Dunkeln, Vorlage Bild 2 dL -2,5..-7,4).
+    - Ader (w > 0): rangtreu. Die genutzten Ader-L* (G4) werden linear auf [Haut-L*-p10, q x Haut-L*-Median] (genutzte Haut der Gruppe,
+      texelgewichtet) gestaucht; Buntheit = kappa x mittlere Wunsch-Buntheit der Haut der Gruppe.
+      Nutzer 2026-11-07: Adern "nie heller und nie roter als die umgebende Haut" (Auftrag V3 R4) -> q <= 1, kappa <= 1.
+    - Buntheit weich an den sRGB-Rand: C = Cmax(L*, h) x tanh(Wunsch / Cmax) (keine Kappung, die viele Eintraege auf eine Farbe legt).
+    Lauf 1 (Deckel min(L*, q x Hautmedian), min(C, kappa x C_haut), beta bis 5, Gamut ueber rgb_aus_lab) legte Adern und dunkle Haut auf
+    wenige Farben (P1 dL0 61,5 % bei <= 30; je Gruppenzeile 1-10 Fleischfarben) und hob dunkle Eintraege ueber rgb_aus_lab heller
+    (OpenCV kappt negative Kanaele still: L* 12 / C 60 -> RGB (95,0,0) mit L* 17,5). Darum hier r4_cmax am ungekappten linearen sRGB.
+    Helle Nicht-Ader-Eintraege (L* >= R4_L_HELL) und 0x0000 bleiben."""
+    L, C, h, w = r4_eintraege(g4zeile)
+    Lm = st['Lm']
+    q, kap = par['q'], par['kappa']
+    cnt = np.asarray(st['cnt'], float)
+    z0 = np.array(g4zeile) != 0
+    behalten = (w == 0) & (L[:, 0] >= R4_L_HELL)
+    haut = (w == 0) & (cnt > 0) & ~behalten & z0
+
+    def s(Lx):
+        return np.clip(1 + par['beta'] * (Lm - Lx) / Lm, R4_SMIN, R4_SMAX)
+
+    def wquant(x, wt, pp):
+        o = np.argsort(x)
+        cs = np.cumsum(wt[o])
+        return np.interp(pp, (cs - 0.5 * wt[o]) / cs[-1], x[o])
+    Ls = L[:, 0] * par.get('a', 1.0)        # Haut-Helligkeit: a = 1 Bild-1-Gruppen (dunkler Grundton), a >= 1 Bild-2-Gruppen (Haut nach Vorlage)
+    g = par.get('g', 1.0)                   # Anteil G4-Hautmuster an der Buntheit: 1 = nur getoente G4-Eintraege, 0 = gleichmaessig
+    Cs = par['C'] * s(L[:, 0]) * ((1 - g) + g * C / st['C75'])
+    ad = w > 0
+    adg = ad & (cnt > 0) & z0
+    hl = haut & (C >= 0)
+    if adg.any() and hl.any():
+        # Lauf 2b: lineare, rangtreue Stauchung der genutzten Ader-L* (G4) auf [Haut-p10, q x Haut-Median] (Lauf 2a bildete auf die
+        # Haut-Quantile ab; die Haut hat wenige grosse Eintraege, darum fielen viele Adern auf dieselbe Farbe).
+        l_lo, l_hi = float(wquant(Ls[hl], cnt[hl], 0.10)), q * float(wquant(Ls[hl], cnt[hl], 0.50))
+        v0, v1 = float(L[adg, 0].min()), float(L[adg, 0].max())
+        Lv = l_lo + (L[:, 0] - v0) / max(v1 - v0, 1e-6) * max(l_hi - l_lo, 0.0)
+        Lv = np.clip(Lv, min(l_lo, l_hi), l_hi)
+        # Buntheit: kappa x mittlere Wunsch-Buntheit der Haut (texelgewichtet); Lauf 2a nahm den Median der G4-Hautbuntheit, der bei
+        # grauen G4-Hauteintraegen 0 ist (graue Adern).
+        Cv = np.full(len(L), kap * float((Cs[hl] * cnt[hl]).sum() / cnt[hl].sum()))
+        c50 = float(wquant(C[hl], cnt[hl], 0.5))
+    else:
+        Lv = np.minimum(L[:, 0], q * Lm)
+        Cv = np.full(len(L), kap * par['C'])
+        c50 = st['C75']
+    Ln = (1 - w) * Ls + w * Lv
+    Cw = (1 - w) * Cs + w * Cv
+    cm = r4_cmax(Ln, par['h'])
+    Cn = np.where(cm > 1e-6, cm * np.tanh(Cw / np.maximum(cm, 1e-6)), 0.0)
+    hr = math.radians(par['h'])
+    rgb = rgb_aus_lab(np.stack([Ln, Cn * math.cos(hr), Cn * math.sin(hr)], 1))
+    neu = list(g4zeile)
+    for i in range(256):
+        if g4zeile[i] == 0 or behalten[i]:
+            continue
+        wn = wort(rgb[i]) | (g4zeile[i] & 0x8000)
+        neu[i] = wn if wn != 0 else 0x8000          # 0x0000 waere transparent (re15_tim_texel_argb); Schwarz wie G4 als 0x8000
+    Lab_n = lab(wort_rgb(neu))
+    C_haut = float((np.hypot(Lab_n[haut, 1], Lab_n[haut, 2]) * cnt[haut]).sum() / max(cnt[haut].sum(), 1))
+    return neu, dict(Lm=round(Lm, 2), C75=round(st['C75'], 2), C50=round(c50, 2), C_haut=round(C_haut, 2), adern=int(adg.sum()),
+                     haut=int(haut.sum()), behalten=int((behalten & (cnt > 0)).sum()),
+                     farben=len({neu[i] for i in range(256) if cnt[i] > 0}))
 
 
 # ================================================================ Laden
@@ -1202,11 +1425,8 @@ def bau(aus_dir):
     hy[:, :384] = np.arange(H)[:, None]
     hart[:, :384] = ART_G4
     cl = [list(cl_g4[0]), list(cl_g4[1]), list(cl_g4[2])]       # Zeilen 0-2 bytegleich
-    b1 = [zeile_b1(cl_g4[p], B1_C_JE_SEITE[p]) for p in range(3)]
-    cl += [b1[p][0] for p in range(3)]                          # Zeilen 3-5 Bild-1-Aderrot
-    cl += [None, None, None]                                    # Zeilen 6-8 Sonderfelder (unten)
+    cl += [None] * 6                                            # Runde 4: 3-5 Gruppenzeilen (unten), 6-8 Sonderfelder (unten)
     bericht = dict(g4=g4q, k5c_emd_sha256=K5C_EMD_SHA, zeilen={}, teile={}, sonder={})
-    bericht['zeilen']['b1_umgefaerbt'] = {str(3 + p): len(b1[p][1]) for p in range(3)}
     K = klassen(k5, D)
     belegt = set().union(*K.values())
     uv = {}
@@ -1260,9 +1480,10 @@ def bau(aus_dir):
         uv[k] = (v[0], v[1], v[2], v[3], 'Maulinneres F2', dict(zeilen='g4'))
     bericht['teile']['Maulinneres F2'] = dict(k5c=[22, 23], g4=[26], art='kopf', **st)
 
-    # ---- Zeilenfamilie je Flaeche
+    # ---- Zeilenfamilie je Flaeche (Runde 3); Runde 4 ersetzt die Zeile unten durch die Gruppenzeile
     fertig = {}
     quelle_feld = {}
+    familie = {}
     for k, (q, seite, herk, f, nm, op) in uv.items():
         z = op.get('zeilen', 'g4')
         if isinstance(z, dict):
@@ -1274,13 +1495,14 @@ def bau(aus_dir):
         zeile = (Z_B1 if z == 'b1' else Z_G4)[seite]
         fertig[k] = (q, seite, zeile, nm)
         quelle_feld[k] = '%s:%d/%d' % (G.feld(*herk) or '-', herk[0], herk[1])
+        familie[k] = z if nm != 'Maulinneres F2' else None
 
     # ---- Augen: K5c-Augenfeld (24 x 10) -> dunkles Rechteck in G4-F10 (Lende, Lab 5,0/1,7/-2,7, Leser A 1), Zeile der Lende (Bild-1-Familie)
     m10 = G.feldmaske('F10')
     ecke = groesstes_rechteck_in(m10, K5C_AUGENRECHT[2], K5C_AUGENRECHT[3])
     for k in K['auge']:
         q = kopf_uv(k5, k) - np.array(K5C_AUGENRECHT[:2]) + np.array(ecke)
-        fertig[k] = (np.round(q).astype(int), 0, Z_B1[0], 'Augen F10')
+        fertig[k] = (np.round(q).astype(int), 0, Z_G4[0], 'Augen F10')   # Runde 4: G4-Zeile 0 (F10 ohne Rot-Eintraege; Zeile 3 ist Gruppenzeile)
     bericht['sonder']['Augen'] = dict(flaechen=len(K['auge']), ziel_rechteck=[int(ecke[0]), int(ecke[1]), K5C_AUGENRECHT[2], K5C_AUGENRECHT[3]])
 
     # ---- Zaehne: K5c-Zahnfeld (24 x 14) -> G4-F8 (Stachelkranz, oben hellgelb-weiss, Leser A 1), quer gestellt, Zeile 8
@@ -1391,14 +1613,17 @@ def bau(aus_dir):
     for x, y in gelesen:
         if hart[y, x] == ART_F1 and kern[y, x]:
             fleisch_texel[int(px[y, x])] += 1
-    eintr = [i for i in fleisch_texel if i not in haut_eintraege and cl_g4[2][i] != 0]
+    # Runde 4, Baufehler A (Zahlen-Pruefer V3 r3: 12 von 162 Fleck-Texeln mit rohem G4-Blutrot, z. B. (173,16,16)): umgefaerbt werden alle
+    # Fleisch-Eintraege der gelesenen Fleck-Texel (Kern UND Rand); das Gewicht des Ziels bleibt auf dem Kern (Runde 3, r3/schnell.py).
+    rand_eintraege = sorted({int(px[y, x]) for x, y in gelesen if hart[y, x] == ART_F1} - set(fleisch_texel))
+    eintr = [i for i in list(fleisch_texel) + rand_eintraege if i not in haut_eintraege and cl_g4[2][i] != 0]
     z6, info6 = zeile_ziel(cl_g4[2], eintr, fleisch_texel, ZIEL_F1, fest=sorted(haut_eintraege))
     cl[Z_F1] = z6
     bericht['sonder']['F1'] = dict(flaechen=sorted([list(k) for k in K['F1']]), dichte=round(rho_b, 4), feld=[ox, oy, wf, hf], kern_texel=int(kern.sum()),
                                    rand_texel=int(rand.sum()), volle_deckung_punkte=voll, dunkle_quelltexel=int(best16[0]), haut_L_max=round(float(haut_L), 2), fleisch_texel=int(sum(fleisch_texel.values())),
                                    gelesen=len(gelesen), haut_g4_kopie=int(sum(1 for x, y in gelesen if hart[y, x] == ART_G4)),
                                    quelle_fleisch_F16=[int(e16[0]), int(e16[1]), fw, fh], quelle_haut_F11=[int(e11[0]), int(e11[1]), bw, hf],
-                                   umgefaerbt=len(eintr), zeile=info6)
+                                   umgefaerbt=len(eintr), rand_eintraege_r4=len(rand_eintraege), zeile=info6)
 
     # ---- Maul-Band: Bandflaechen (Bild 2) -> eigenes Feld auf Seite 3: G4-F7 (strahlenfoermiges Fleisch, 175 Farben) mit gefuellten Loechern;
     #      Zeile 7 = G4-Zeile 0 mit umgefaerbten F7-Eintraegen (Ziel F2t)
@@ -1446,6 +1671,44 @@ def bau(aus_dir):
     cl[Z_ZAHN] = z8
     bericht['sonder']['Zaehne'] = dict(flaechen=len(K['zahn']), umgefaerbt=len(eintr8), zeile=info8)
 
+    # ---- Runde 4: Gruppenzeilen (R4_GRUPPEN x Seite) aus den G4-Zeilen, jede Koerperflaeche auf ihre Gruppenzeile
+    par4 = r4_par()
+    fn = r4_flaechen_normalen(k5)
+    gruppe = {}
+    for k, fam in familie.items():
+        if fam is None or k not in fertig or fertig[k][2] not in Z_G4 + Z_B1:
+            continue
+        gruppe[k] = r4_gruppe(k, fam, k5, fn)
+    paare = sorted({(g, fertig[k][1]) for k, g in gruppe.items()}, key=lambda p: (R4_GRUPPEN.index(p[0]), p[1]))
+    if len(paare) > len(R4_ZEILEN_FREI):
+        raise SystemExit('Runde 4: %d Gruppenzeilen, frei %d' % (len(paare), len(R4_ZEILEN_FREI)))
+    zplan = {p: R4_ZEILEN_FREI[i] for i, p in enumerate(paare)}
+    zaehl = {p: np.zeros(256) for p in paare}
+    for k, g in gruppe.items():
+        q, seite, _z, nm = fertig[k]
+        xy = texel_set(q)
+        if len(xy):
+            np.add.at(zaehl[(g, seite)], px[xy[:, 1], xy[:, 0]], 1)
+    while len(cl) <= max(zplan.values()):
+        cl.append(None)
+    bericht['zeilen']['r4'] = {}
+    for (g, seite), z in zplan.items():
+        st4 = r4_statistik(cl_g4[seite], zaehl[(g, seite)])
+        cl[z], info = r4_zeile(cl_g4[seite], par4[g], st4)
+        bericht['zeilen']['r4'][str(z)] = dict(gruppe=g, seite=seite, basis=seite, par=par4[g], **info)
+    for z in range(len(cl)):
+        if cl[z] is None:                       # ungenutzte Luecke (nur bei weniger als 3 Gruppenzeilen): G4-Zeile 0
+            cl[z] = list(cl_g4[0])
+    for k, g in gruppe.items():
+        q, seite, _z, nm = fertig[k]
+        fertig[k] = (q, seite, zplan[(g, seite)], nm)
+    bericht['zeilen']['basis'] = {str(z): seite for (g, seite), z in zplan.items()}
+    bericht['zeilen']['basis'].update({str(Z_F1): 2, str(Z_BAND): 0, str(Z_ZAHN): 0})
+    bericht['zeilen']['gruppe'] = {str(z): g for (g, seite), z in zplan.items()}
+    bericht['r4'] = dict(nutzer=R4_NUTZER, par_datei=os.path.relpath(R4_PAR_DATEI, K5).replace(os.sep, '/'), L_HELL=R4_L_HELL, SMAX=R4_SMAX,
+                         flaechen_je_gruppe={g: sum(1 for x in gruppe.values() if x == g) for g in R4_GRUPPEN},
+                         gruppe_je_flaeche={'%d|%s|%d' % k: g for k, g in gruppe.items()})
+
     # ---- Vollstaendigkeit
     fehlt = [k for k in alle_flaechen(k5) if k not in fertig]
     if fehlt:
@@ -1477,8 +1740,10 @@ def bau(aus_dir):
                                                           '3': 'Sonderfeld Maul-Band', '0': 'leer'},
                                g4_kopie_seite3=int(((hart == ART_G4) & (np.arange(W)[None, :] >= 384)).sum()))
     bericht['sha256'] = dict(emd=hashlib.sha256(emd_neu).hexdigest(), tim=hashlib.sha256(tim_neu).hexdigest())
-    bericht['basis'] = 'K5c (varianten/K5/K5c): Geometrie, Knochen, Clips unveraendert; UV/CLUT/TPage je Flaeche und FORM.TIM neu (Versuch 3, kf_g4.py)'
-    bericht['konstanten'] = dict(G4_KIND=hex(G4_KIND), B1_ROT_LAB=B1_ROT_LAB, G4_ROT_LAB=G4_ROT_LAB, B1_TON=round(B1_TON, 2), G4_TON=round(G4_TON, 2),
+    bericht['basis'] = ('K5c (varianten/K5/K5c): Geometrie, Knochen, Clips unveraendert; UV/CLUT/TPage je Flaeche und FORM.TIM neu '
+                        '(Versuch 3, kf_g4.py; Runde 4: Gruppenzeilen, weniger Rot)')
+    bericht['konstanten'] = dict(R4_PAR=r4_par(), R4_L_HELL=R4_L_HELL, R4_SMAX=R4_SMAX, R4_N_GRENZE=R4_N_GRENZE,
+                                 G4_KIND=hex(G4_KIND), B1_ROT_LAB=B1_ROT_LAB, G4_ROT_LAB=G4_ROT_LAB, B1_TON=round(B1_TON, 2), G4_TON=round(G4_TON, 2),
                                  B1_C_JE_SEITE=[round(x, 4) for x in B1_C_JE_SEITE], ROT_RAMPE=(ROT_C0, ROT_C1, ROT_H0, ROT_H1), ZIEL_F1=ZIEL_F1, ZIEL_BAND=ZIEL_BAND, ZIEL_BAND_KETTE=ZIEL_BAND_KETTE,
                                  ZIEL_ZAHN=ZIEL_ZAHN, KAPPE_NA=KAPPE_NA, BAND_MEHRHEIT=BAND_MEHRHEIT, B1_C_SEITE1_EICH=B1_C_SEITE1_EICH,
                                  KRALLE_INSELN=KRALLE_INSELN, B1_SICHTBAR_NR={str(k): len(v) for k, v in B1_SICHTBAR_NR.items()})

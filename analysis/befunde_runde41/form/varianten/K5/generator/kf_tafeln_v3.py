@@ -151,6 +151,64 @@ def kopf_nah(neu, aus):
     cv2.imwrite(aus, H.stapel([kopf, t]))
 
 
+R3 = os.path.join(K5, 'farbe', 'K5c_farbe_v3r3')
+RV_DIR = os.path.join(K5, 'farbe_lesung', 'V3R4_skripte')
+RV_REGIONEN = ['Ruecken', 'Flanke', 'Brust/Bauch', 'Vorderbeine', 'Hinterbeine', 'Hals', 'Kopf', 'Schwanz']   # riegel_rot.REGIONEN
+RV_BILD = {1: ['Schwanz', 'Ruecken', 'Flanke', 'Vorderbeine', 'Hinterbeine', 'Figur'],
+           2: ['Ruecken', 'Brust/Bauch', 'Vorderbeine', 'Hals', 'Kopf', 'Figur']}          # bindende RV1-Zeilen (Nachtrag 5)
+
+
+def rot_vorlage(neu, aus, rv_neu=None):
+    """09 Rot wie die Vorlage: je Bild und Region Vorlage | Runde 3 | neu unter Szenenlicht + Videofilter (Saat 15), roh, gleicher Ausschnitt;
+    Region als duenne Linie (Annotation, nicht im Bild verrechnet). Unterschrift: RV1 Rot eng % (Mittel 3 Saaten, riegel_rot.py) und RV2 Farbton."""
+    import json as _j
+    M = np.load(os.path.join(RV_DIR, 'rot_masken.npz'))
+    Z = _j.load(open(os.path.join(RV_DIR, 'ziele.json'), encoding='utf-8'))
+    w3 = _j.load(open(os.path.join(RV_DIR, 'gegen_v3r3.json'), encoding='utf-8'))
+    wn = _j.load(open(rv_neu or os.path.join(K5, 'farbe', 'riegel_rot_K5c_farbe_v3.json'), encoding='utf-8'))
+    bloecke = []
+    for n in (1, 2):
+        o = cv2.cvtColor(cv2.imread(PZ.FORM + '/bild%d.png' % n), cv2.COLOR_BGR2RGB)
+        vids = []
+        for d in (R3, neu):
+            k = PZ.P.Kandidat(os.path.join(d, 'form.json'))
+            sb, alb, m, kk = k.rendern(n)
+            vids.append(np.asarray(PZ.FV.video_filter(sb, bild=n, entzerren=False, rauschen=True, saat=RV.SAAT), np.uint8))
+        basis = np.unpackbits(M['basis%d' % n])[:480 * 640].reshape(480, 640).astype(bool)
+        reg = M['reg%d' % n].astype(int)
+        for rn in RV_BILD[n]:
+            rm = basis & ((reg == RV_REGIONEN.index(rn)) if rn != 'Figur' else (reg >= 0))
+            ys, xs = np.where(rm)
+            y0, y1 = max(0, ys.min() - 6), min(480, ys.max() + 7)
+            x0, x1 = max(0, xs.min() - 6), min(640, xs.max() + 7)
+            f = max(1, int(220 // (y1 - y0)))
+            cont, _h = cv2.findContours(rm[y0:y1, x0:x1].astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            zr = Z['bild%d|%s|T' % (n, rn)]
+            O, (lo, hi) = zr['rot_eng']['O'], zr['rot_eng']['ziel']
+            hO = zr['h_rot']['O'] if zr.get('h_rot') else None
+            key = 'Bild %d %s ' % (n, rn)
+            ks = []
+            for nm, img, quelle in (('Vorlage Bild %d' % n, o, None), ('Runde 3', vids[0], w3), ('Runde 4 (neu)', vids[1], wn)):
+                a = cv2.resize(img[y0:y1, x0:x1], ((x1 - x0) * f, (y1 - y0) * f), interpolation=cv2.INTER_NEAREST).copy()
+                cs = [c * f + f // 2 for c in cont]
+                cv2.drawContours(a, cs, -1, (0, 200, 255), 1)
+                if quelle is None:
+                    unter = 'Rot eng %.1f %% (Fenster %.1f..%.1f), Farbton %s' % (O, lo, hi, '%.1f Grad' % hO if hO is not None else '-')
+                else:
+                    r1 = quelle.get(key + 'RV1 Rot eng %')
+                    r2 = quelle.get(key + 'RV2 Farbton a*-Klasse Grad')
+                    unter = 'Rot eng %.1f %% %s, Farbton %s' % (r1['wert'], 'GRUEN' if r1['ok'] else 'ROT',
+                                                               ('%.1f Grad %s' % (r2['wert'], 'GRUEN' if r2['ok'] else 'ROT')) if r2 else '-')
+                if a.shape[1] < 340:                       # schmale Regionen: Kachel rechts mit Grund auffuellen (Schrift lesbar), Bild unveraendert
+                    a = np.concatenate([a, np.full((a.shape[0], 340 - a.shape[1], 3), 24, np.uint8)], 1)
+                ks.append(KT.kachel(a, '%s, %s' % (nm, rn), unter.replace('.', ','), 'Video roh' if quelle is None else 'Spiellicht + Videofilter Saat 15, roh'))
+            bloecke.append(H.reihe(ks))
+    t = H.stapel(bloecke)
+    kopf = H.kopfzeile('09 Rot wie die Vorlage (MESSBLATT_FARBE_V3_NACHTRAG_ROT 5): je Region Vorlage | Runde 3 | Runde 4, gleicher Ausschnitt, '
+                       'gleiches Licht und Filter, roh, kein Gamma. Linie = Messregion (rot_masken.npz). Zahlen: RV1/RV2, Kette T, Mittel 3 Saaten.', t.shape[1])
+    cv2.imwrite(aus, H.stapel([kopf, t]))
+
+
 def binnenzeichnung(neu, aus):
     modelle = [('RE2-G4 (Typ 0x34, Clip 0)', KT.re2_mo(0x34), 0, 'G4'), ('EM30_HANGAR (Clip 0)', fl.lade_em30(), 0, 'EM30'),
                ('Versuch 2 Runde 2 (Clip 2)', fl.lade_var(V2), 2, 'K5c'), (NEU + ' (Clip 2)', fl.lade_var(neu), 2, 'K5c')]
@@ -172,7 +230,7 @@ def binnenzeichnung(neu, aus):
 if __name__ == '__main__':
     neu, ausd = sys.argv[1], sys.argv[2]
     os.makedirs(ausd, exist_ok=True)
-    nur = sys.argv[3:] or ['01', '02', '03', '04', '05', '06', '08']
+    nur = sys.argv[3:] or ['01', '02', '03', '04', '05', '06', '08', '09']
     if '07' in nur:
         lg = os.path.join(ausd, 'spiel_lauf_v3.log')
         wege = sorted(set(z.split(':', 1)[1].split('(')[0].strip() for z in open(lg, encoding='utf-8', errors='replace') if z.startswith('Verfahren:'))) if os.path.exists(lg) else []
@@ -191,4 +249,6 @@ if __name__ == '__main__':
         kopf_nah(neu, os.path.join(ausd, '06_kopf_nah.png'))
     if '08' in nur:
         binnenzeichnung(neu, os.path.join(ausd, '08_binnenzeichnung.png'))
+    if '09' in nur:
+        rot_vorlage(neu, os.path.join(ausd, '09_rot_vorlage.png'))
     print('TAFELN-FERTIG', ausd)
