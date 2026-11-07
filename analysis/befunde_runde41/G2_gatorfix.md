@@ -1172,3 +1172,88 @@ Tragen-Riegel ohne Aufnahme (K), E1 entfaellt, obenlog ab0 fuer rampe_oben, auss
 - `ctest --test-dir <Baum>/re15_port/build -R "^integration_r41_(gatorfix_|re2gator)" -j 2 --timeout 1800`: `100% tests passed, 0 tests failed out of 20`,
   `Total Test time (real) = 4582.95 sec` (19 integration_r41_gatorfix_* + integration_r41_re2gator; `G2_belege/nb4/bau/ctest_exe.txt`). Kein roter Riegel,
   kein Nachfahren noetig.
+
+
+### NB4 Runde 2 (Abnahme 7 M1: Zweitbiss im selben Biss-Clip)
+
+Abnahme 7 (47ab6f1fa) NICHT BESTANDEN wegen **M1**: der Biss im Wasser (LUNGE, Gator-Clip 4, Bissfenster Bild 6..34) traf die Figur 20 / 22 Bilder nach
+dem ersten Treffer im selben Clip-Lauf ein zweites Mal, sobald die RE2-Sperre PL+0x1D3 fiel (400 von 895 Treffern; tod_leon 100 -> 40 -> -20 TOT in 20
+Bildern). Die Vorgaben (T), (W) und (K) und ihr Nutzer-Wortlaut gelten unveraendert (oben): (W) "er kann den Spieler ruhig In das Wasser stoßen.", (K) "Die
+Frage stellt sich garnicht, da leon mit den alligator ganz normal seine runden drehen soll. Das heißt der alligator sollte Ganz natürlich irgendwann zum
+Kanister kommen, während er leo. Auf dem rundweg verfolgt...."; (W) und (K) waren in Abnahme 7 erfuellt und sind unten nachgemessen.
+
+**RE2 (EM23_OVL_0000.BIN, Bytes selbst gelesen, Datei-Offset = Adresse - 0x80100000):**
+- Treffer setzt die Bisssperre: `46000224 addiu v0,zero,0x46` / `380282a0 sb v0,0x238(a0)` @0x801016b0-b4 (= 70).
+- je Bild -1 im Root: `38020292 lbu v0,0x238(s0)` / `02004010 beqz` / `ffff4224 addiu v0,v0,-1` / `380202a2 sb` @0x801004a8-b8.
+- kein Angriff, solange != 0: `lbu v0,0x238(s0)` @0x80100b5c, `28004014 bnez v0,0x80100c08` @0x80100b64 (kein Wechsel in den Angriff); im
+  Angriffs-Unterzustand 0x80100c54 (`jal 0x801012fc` @0x80100c60) `38020292 lbu / 02004010 beqz / 01010224 addiu v0,zero,0x101 / 040002ae sw v0,4(s0)`
+  @0x80100cb4-c4 (zurueck zum Schwimmen).
+- der Treffer-Einstieg kommt nur aus der Biss-Maschine: `5e05040c jal 0x80101578` @0x8010155c - ein Treffer je Biss, der naechste fruehestens 70 Bilder spaeter.
+
+**Bau (d8bf728b0, enemy_ai_boss_gator.c, re15_boss_gator.h):** `gb_biss_frei(slot)` = `re15_gr2_biss_cd_rest(slot) == 0` (RE15_GR2_BISS_CD_BISS 70, Takt
+gator_re2_r41.c :1293 je Bild wie @0x801004a8-b8) in der LUNGE-Bissbedingung, im Biss B2 und beim Rammen - wie der Hochbiss seit 88ff3f990. Der CROSS-Biss und
+jeder Angriffsbeginn fragen hit_stun 0x64 (100 > 70) und bleiben. Pruefhaken `re15_gator_boss_sperre_alt_setzen(1)` = Stand cfa775ae8; mit dem Pruefhaken
+'Treffer alt' (Stand 3d57083b1) gilt die Sperre wie bisher nicht. Keine neue Konstante (70 = RE15_GR2_BISS_CD_BISS, belegt @0x801016b0-b4).
+
+**Riegel (4437cdfd1):**
+- nb4 / nb4_elza Teil B: Abstand zweier Treffer-Einstiege >= 70 und 0 durch einen neuen Treffer abgebrochene Reaktionen. Leon und Elza je: **589 Treffer-Paare,
+  kleinster Abstand 70, Zweitbisse 0, abgebrochen 0** (Runde 1: 171 von 888 "abgebrochen").
+- Gegenprobe Pruefhaken 'Sperre alt' (Stand cfa775ae8), zwei Wasserlagen: **27 Zweitbisse, kleinster Abstand 20** (erster F1029 nach F1009) - rot ohne den Bau.
+- gtrlog (exe): START/TOT-Zeilen mit Abstand < 70 = VERFEHLT ("Treffer waehrend +0x238 > 0"). Gegenprobe auf den Abnahme-7-Laeufen (Bau 6f4314fb, Logs aus
+  dem Laufordner der Abnahme): oben_leon 18, oben_elza 29, frei4_leon 43, frei4_elza 42, west4_leon 21, west4_elza 20, west5_elza 24, ohne_frei4_leon 43,
+  ohne_oben_elza 29, tod_leon 1 -> alle VERFEHLT, Zahlen = Abnahme 7 Abschnitt 3a (`G2_belege/nb4/runde2/laeufe/gegenprobe_gtrlog_abn7.txt`).
+
+**Querbezug fuzz (3bd9e1b05):** unit_r41_gatorfix_fuzz(_elza) wurde mit der Sperre rot (12 statt hoechstens 10 2-s-Fenster ohne Fortschritt). Gemessen
+(G2_ZEIGE, `harness/fuzz_fenster_drei_fassungen.txt`): die Fenster liegen nicht an der Figur (Kopf-Abstand 7100 / 15400), sondern an einer Etappe der ALTEN
+Trag-Lenkung (Trag 2/4, Clip 1 / Clip 10 im Wechsel, 60 Bilder bis "Etappe ohne Annaeherung"): mit Sperre N4 3 + O4 9 = 12; ohne Sperre W2 2 + SO 3 = 5; mit
+RE1.5-Reaktion N2 3 + O4 5 = 8. Das Treffer-Muster an der stehenden Figur verschiebt die Lagen-Kette (der Gator laeuft von Lage zu Lage weiter) und damit, wo
+diese Lenkung pendelt; die O4-Etappe pendelt in zwei der drei Fassungen. Die Lenkung gilt nur mit dem Pruefhaken v4_alt (`gr2_kan_zaehlt`), das Spiel benutzt
+sie seit NB2 Vorschlag 4 nicht. Der Riegel prueft laut seinem Kommentar den Stand f942f56c0, und der hatte den RE1.5-Niederwurf ohne RE2-Bisssperre: teil_fuzz
+setzt jetzt v4_alt UND treffer_alt. Ergebnis 8 Fenster, laengste 30-Bilder-Folge 38, Gegenprobe "G2 vor NB1" weiter rot (2-s-Fenster 1535). Die
+Spiel-Reaktion pruefen nb4/raum/nb3/re2/v4 (gruen). Werkzeug-Schalter `G2_SPERRE_ALT` / `G2_TREFFER_ALT` im Harness-main (nur Werkzeug-Laeufe).
+
+**Eigene exe-Laeufe** (Messkopie re15_pc_g2nb4r2.exe md5 42a1c8f76e83e13818bb43648c0f825a = Bau dieses Stands; Umgebung wortgleich Abnahme 7,
+`werkzeug/welle_r2.sh`, `welle_r2b.sh`; Auswertung `laeufe/laeufe_r2.txt`; Figur je Lauf aus debug.log "Spieler-Familie PL00 / PL04"):
+
+| Lauf | Treffer (= RE2-Reaktionen) | kleinster Abstand | Treffer bei +0x238 > 0 | Abweichungen RE2-Modell | RE1.5-Niederwurf-Bilder | Sturz / Kanister | gtrlog |
+|---|---|---|---|---|---|---|---|
+| tod_leon (echte HP) | F942 Biss 100 -> 40, F962 Ende Sub 2 (20 B.), **kein Zweitbiss**; naechster Biss F1049 TOT | 107 | 0 | 0 | 0 | - | ok |
+| tod_elza (echte HP) | dasselbe Bild fuer Bild (F942 / F962 / F1049) | 107 | 0 | 0 | 0 | - | ok |
+| oben_leon | 35 | 107 | 0 | 0 | 0 von 4400 | F383 Rammen -> KANTE F385 -> LANDUNG F389 | ok |
+| oben_elza | 33 | 107 | 0 | 0 | 0 von 4400 | F383 -> F385 -> F389 | ok |
+| frei4_leon | 68 | 107 | 0 | 0 | 0 von 8400 | Stufe 1 F2851 (laengs 5920, quer 1451, Phase CHASE), angehaengt F2863 | ok |
+| frei4_elza | 75 | 107 | 0 | 0 | 0 von 8400 | kommt nicht am Kanister vorbei - bleibt liegen | ok |
+| Elza mit Eingabe frei4_leon | - | - | - | - | - | Stufe 1 F1209 (laengs 2396, quer 93, im Biss-Anlauf LUNGE), angehaengt F1221 | - |
+
+Vorher (Abnahme 7, Bau 6f4314fb): tod_leon F942 Biss, F962 Zweitbiss hp -20 TOT; Zweitbisse oben_leon 18, frei4_leon 43 usw. (s. o.).
+
+**Bildleisten** (`G2_belege/nb4/runde2/leisten/`, RE15_FRAMEDUMP, Aufhellung 1.8, Beschriftung aus state.log/climb.log):
+- Biss im Wasser vorher/nachher: vorher `G2_belege/abn7/abn7_tod_leon_doppelbiss_F936-F996_hell.jpg` (F962 Zweitbiss, TOT); nachher
+  `nb4r2_tod_leon_ein_biss_F936-F1000_hell.jpg`, `nb4r2_tod_elza_ein_biss_F936-F1000_hell.jpg` (F942 Biss hp 40, Taumeln Clip 18/19, F962 kein Biss, hp bleibt 40);
+  `nb4r2_frei4_leon_biss_wasser_F136-F196_hell.jpg`, `nb4r2_frei4_elza_biss_wasser_F136-F196_hell.jpg`.
+- Treffer an der Rampenkante, Figur faellt ins Wasser: `nb4r2_oben_leon_rammen_kante_F376-F414_hell.jpg`, `nb4r2_oben_elza_rammen_kante_F376-F414_hell.jpg`.
+- Kanister-Aufnahme im Vorbeikommen: `nb4r2_frei4_leon_aufnahme_F2836-F2886_hell.jpg`, `nb4r2_elza_aufnahme_F1194-F1244_hell.jpg`.
+
+**Tests:**
+- Bau `RE15_BUILD_DIR=<Baum>/re15_port/build bash re15_port/tools/local_build.sh build`: `=== LOCAL-BUILD-OK (build)`.
+- `ctest -R "^unit_r41_(gatorfix|re2gator)_" -j 2 --timeout 1800`: `100% tests passed, 0 tests failed out of 48`, `Total Test time (real) = 113.14 sec`
+  (`G2_belege/nb4/runde2/ctest_unit.txt`); nb4 / nb4_elza: `nb4: 0 Fehler` / `nb4_elza: 0 Fehler`.
+- exe-Riegel: `ctest -R "^integration_r41_(gatorfix_|re2gator)" -j 2 --timeout 1800 -V` (HEAD 3bd9e1b05, 21:59-23:11): `95% tests passed, 1 tests failed out of 20`,
+  `Total Test time (real) = 4233.92 sec` - 19 integration_r41_gatorfix_* gruen, jede gtrlog-Zeile "Treffer waehrend +0x238 > 0 0 -> ok"; rot nur
+  integration_r41_re2gator ("Finisher-Halt 2 Zeilen (erwartet >= 10 bis EXIT_AT 560)") - kein Flattern, Querbezug: der toedliche Biss F310 des Laufs nische war
+  der Zweitbiss 20 Bilder nach F290 (M1). Gemessen (eigener Lauf EXIT_AT 1100, `laeufe/nische_lang_gator_boss.log`): Biss F416 (HP 60 -> 0; der LUNGE-Biss davor
+  faellt in die Intro-Sperre 110 @0x8010091c-20), toedlicher Biss F523 (Abstand 107), Finisher-Halt F524..F784, danach Game Over -> EXIT_AT 770 (cf9a2ac3f).
+  Einzeln danach: `r41_re2gator: ok`, `100% tests passed, 0 tests failed out of 1`, `Total Test time (real) = 299.78 sec`. Damit 20 von 20
+  (`G2_belege/nb4/runde2/ctest_exe.txt`, `ctest_re2gator_einzeln.txt`).
+
+**Offen (Runde 2):**
+1. **A90 (O-T1)** bleibt PORT-WAHL ohne Nutzer-Wortlaut (Entscheid Orchestrator / Nutzer, Abnahme 7 F1).
+2. **fuzz** prueft die alte Trag-Lenkung jetzt im Stand f942f56c0 auch mit dessen Trefferreaktion; die O4-Etappe pendelt dort 60-70 Bilder (Lenkung nicht
+   im Spiel). Bewertung durch den Abnehmer.
+3. RE2 bricht den Angriffs-Unterzustand nach dem Treffer sofort ab (`sw 0x101,4(s0)` @0x80100cc4); der Port laesst den Clip-4-Lauf bis Bild 42 ausklingen,
+   nur ohne zweiten Biss (Bild und Weg wie in Abnahme 7, nicht weiter umgebaut).
+4. Elzas Aufnahme mit der Leon-Eingabe fiel in den Biss-Anlauf (LUNGE); Riegel K2 prueft das RE2-Fenster (laengs/quer), nicht die Phase.
+5. Ein LUNGE-Anlauf in der Intro-Sperre (+0x238 = 110 @0x8010091c-20) beisst jetzt nicht (Lauf nische: kein Biss um F290, erster Biss F416); RE2 wuerde
+   den Angriff in dieser Zeit gar nicht beginnen (@0x80100b5c). Der Angriffsbeginn fragt im Port weiter nur hit_stun (wie beim Hochbiss seit 88ff3f990);
+   nach einem Treffer deckt hit_stun 100 > 70 das ab, nur das Intro-Fenster bleibt - nicht umgebaut (letzte Runde).
+6. Unveraendert aus Runde 1: Animation im Sturz (O-W1), Koerper-/Boss-Schub, B2 nur per env (jetzt mit Sperre), PSX nicht gebaut.

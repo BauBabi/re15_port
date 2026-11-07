@@ -1,0 +1,241 @@
+F2 R2090 gator da
+RE2 KANISTER gesetzt (-6000,-1200,-15000)
+RE2 INTRO Lage (Pos_set-Zwilling, Nachbesserung 2): von (-7200,-9200) yaw 1089 -> (-7345,-13277) yaw 576, End-Gier 1600, Peilung zu Leon (-8200,-25550) Abw. |95| (Toleranz 128), Kopf-Leon am Ende 2482
+RE2 INTRO start pos=(-7345,-13277) yaw=576 bahn_ende=(-3348,-18182)
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 0 kopf_bild=(271,119) massstab=753 frontal=4101 |f-soll|=9
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 1 kopf_bild=(-161,182) draussen massstab=1541 frontal=2521 |f-soll|=1571
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 2 kopf_bild=(-57,154) draussen massstab=991 frontal=4104 |f-soll|=12
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 3 kopf_bild=(399,164) draussen massstab=1122 frontal=-707 |f-soll|=4799
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 4 kopf_bild=(401,175) draussen massstab=1419 frontal=-3735 |f-soll|=7827
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 5 kopf_bild=(61,120) massstab=792 frontal=-663 |f-soll|=4755
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 6 kopf_bild=(145,150) massstab=922 frontal=-3735 |f-soll|=7827
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 7 kopf_bild=(169,144) massstab=841 frontal=2519 |f-soll|=1573
+RE2 KAMERA INTRO DURCHBRUCH RE2-Cut 10 -> Cut 0 F6 clip=6 bild=0 frontal=4101 soll=4092 massstab=753 re2_m=1161 grenze=1892
+RE2 AUFTAUCHEN F6 pos=(-7345,-13277) yaw=576 phase=11 clip=6 bild=0 r=1466
+TICK ph=11 pos=(-5364,-15605) y=-1200 dist=10392 mo=6 cd=0 rt=0 zw=0 ziel=(0,0)
+RE2 PUTZ Stoss 1 Seite 0 Cut 0 F41
+TICK ph=11 pos=(-4387,-16995) y=-1200 dist=9328 mo=6 cd=0 rt=0 zw=0 ziel=(0,0)
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 0 kopf_bild=(268,102) massstab=1184 frontal=4098 |f-soll|=2653
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 1 kopf_bild=(24,114) massstab=1303 frontal=1408 |f-soll|=37
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 2 kopf_bild=(-68,134) draussen massstab=1621 frontal=4083 |f-soll|=2638
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 3 kopf_bild=(284,109) massstab=753 frontal=-2476 |f-soll|=3921
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 4 kopf_bild=(362,104) draussen massstab=901 frontal=-4048 |f-soll|=5493
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 5 kopf_bild=(-52,93) draussen massstab=914 frontal=-2429 |f-soll|=3874
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 6 kopf_bild=(118,107) massstab=657 frontal=-4048 |f-soll|=5493
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 7 kopf_bild=(272,123) massstab=1252 frontal=1365 |f-soll|=80
+RE2 KAMERA INTRO SEITE RE2-Cut 0 -> Cut 1 F76 clip=6 bild=70 frontal=1408 soll=1445 massstab=1303 re2_m=1892 grenze=1892
+TICK ph=11 pos=(-3995,-17524) y=-1200 dist=9042 mo=6 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(-3573,-18093) y=-1200 dist=8748 mo=6 cd=0 rt=0 zw=0 ziel=(0,0)
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 0 kopf_bild=(216,96) massstab=1168 frontal=1796 |f-soll|=1590
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 1 kopf_bild=(39,117) massstab=1625 frontal=3598 |f-soll|=212
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 2 kopf_bild=(-211,147) draussen massstab=2398 >grenze frontal=1792 |f-soll|=1594
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 3 kopf_bild=(289,104) massstab=672 frontal=-4058 |f-soll|=7444
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 4 kopf_bild=(406,100) draussen massstab=917 frontal=-3608 |f-soll|=6994
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 5 kopf_bild=(-48,86) draussen massstab=803 frontal=-4041 |f-soll|=7427
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 6 kopf_bild=(138,102) massstab=595 frontal=-3608 |f-soll|=6994
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 7 kopf_bild=(287,128) massstab=1672 frontal=3577 |f-soll|=191
+RE2 KAMERA INTRO ANGRIFF RE2-Cut 1 -> Cut 7 F130 clip=6 bild=124 frontal=3577 soll=3386 massstab=1672 re2_m=927 grenze=1892
+TICK ph=11 pos=(-3412,-18143) y=-1200 dist=8808 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(-3459,-18219) y=-1200 dist=8688 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(-3221,-18984) y=-1200 dist=8254 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(-3570,-20152) y=-1200 dist=7149 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(-4358,-21422) y=-1200 dist=5678 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+RE2 INTRO ende pos=(-4506,-21480) yaw=1600 wand_draussen_max=0 kopf_x_min=-6889
+RE2 KAMERA INTRO zurueck -> Cut 0 F280 clip=3 bild=149
+RE2 KAMERA INTRO frei (Zonenkamera an) Cut 0 F280 clip=3 bild=149
+WECHSEL zw=0 rt=0
+DREH rot=1600 soll=1427 dlt=-173 pos=(-4506,-21480) ziel=(-7300,-25400)
+BISS af=6 dist=5701 maul=3056 wand=0 hr=0
+BISS af=7 dist=5701 maul=3056 wand=0 hr=0
+BISS af=8 dist=5701 maul=3056 wand=0 hr=0
+BISS af=9 dist=5701 maul=3056 wand=0 hr=0
+BISS af=10 dist=5655 maul=3024 wand=0 hr=0
+BISS af=11 dist=5585 maul=2960 wand=0 hr=0
+BISS af=12 dist=5538 maul=2896 wand=0 hr=0
+BISS af=13 dist=5466 maul=2832 wand=0 hr=0
+BISS af=14 dist=5394 maul=2768 wand=0 hr=0
+BISS af=15 dist=5345 maul=2704 wand=0 hr=0
+BISS af=16 dist=5271 maul=2640 wand=0 hr=0
+BISS af=17 dist=5221 maul=2576 wand=0 hr=0
+BISS af=18 dist=5145 maul=2512 wand=0 hr=0
+BISS af=19 dist=5094 maul=2448 wand=0 hr=0
+BISS af=20 dist=5016 maul=2384 wand=0 hr=0
+BISS af=21 dist=4964 maul=2320 wand=0 hr=0
+TICK ph=3 pos=(-5455,-22628) y=-1200 dist=4964 mo=4 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+BISS af=22 dist=4884 maul=2256 wand=0 hr=0
+BISS af=23 dist=4830 maul=2192 wand=0 hr=0
+BISS af=24 dist=4775 maul=2128 wand=0 hr=0
+BISS af=25 dist=4692 maul=2064 wand=0 hr=0
+BISS af=26 dist=4636 maul=2000 wand=0 hr=0
+BISS af=27 dist=3916 maul=1328 wand=0 hr=0
+BISS af=28 dist=3453 maul=864 wand=0 hr=0
+BISS af=29 dist=3444 maul=864 wand=0 hr=0
+BISS af=30 dist=3444 maul=864 wand=0 hr=0
+BISS af=31 dist=3444 maul=864 wand=0 hr=0
+BISS af=32 dist=3444 maul=864 wand=0 hr=0
+BISS af=33 dist=3444 maul=864 wand=0 hr=0
+BISS af=34 dist=3444 maul=864 wand=0 hr=0
+DREH rot=1431 soll=1401 dlt=-30 pos=(-5708,-22948) ziel=(-7300,-25400)
+DREH rot=1401 soll=1401 dlt=0 pos=(-5724,-22969) ziel=(-7300,-25400)
+TICK ph=2 pos=(-5692,-22916) y=-1200 dist=3647 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+DREH rot=1403 soll=1403 dlt=0 pos=(-5678,-22893) ziel=(-7300,-25364)
+DREH rot=1403 soll=1403 dlt=0 pos=(-5650,-22848) ziel=(-7300,-25364)
+DREH rot=1403 soll=1403 dlt=0 pos=(-5629,-22812) ziel=(-7300,-25364)
+BISS af=6 dist=3444 maul=864 wand=0 hr=0
+BISS af=7 dist=3444 maul=864 wand=0 hr=0
+BISS af=8 dist=3444 maul=864 wand=0 hr=0
+BISS af=9 dist=3444 maul=864 wand=0 hr=0
+BISS af=10 dist=3444 maul=864 wand=0 hr=0
+BISS af=11 dist=3444 maul=864 wand=0 hr=0
+BISS af=12 dist=3444 maul=864 wand=0 hr=0
+BISS af=13 dist=3444 maul=864 wand=0 hr=0
+BISS af=14 dist=3444 maul=864 wand=0 hr=0
+BISS af=15 dist=3444 maul=864 wand=0 hr=0
+BISS af=16 dist=3444 maul=864 wand=0 hr=0
+BISS af=17 dist=3444 maul=864 wand=0 hr=0
+BISS af=18 dist=3444 maul=864 wand=0 hr=0
+TICK ph=3 pos=(-5623,-22802) y=-1200 dist=3444 mo=4 cd=0 rt=0 zw=0 ziel=(-7300,-25364)
+BISS af=19 dist=3444 maul=864 wand=0 hr=0
+BISS af=20 dist=3444 maul=864 wand=0 hr=0
+BISS af=21 dist=3444 maul=864 wand=0 hr=0
+BISS af=22 dist=3444 maul=864 wand=0 hr=0
+BISS af=23 dist=3444 maul=864 wand=0 hr=0
+BISS af=24 dist=3444 maul=864 wand=0 hr=0
+BISS af=25 dist=3444 maul=864 wand=0 hr=0
+BISS af=26 dist=3444 maul=864 wand=0 hr=0
+BISS af=27 dist=3444 maul=864 wand=0 hr=0
+BISS af=28 dist=3444 maul=864 wand=0 hr=0
+BISS af=29 dist=3444 maul=864 wand=0 hr=0
+BISS af=30 dist=3444 maul=864 wand=0 hr=0
+BISS af=31 dist=3444 maul=864 wand=0 hr=0
+BISS af=32 dist=3444 maul=864 wand=0 hr=0
+BISS af=33 dist=3444 maul=864 wand=0 hr=0
+BISS af=34 dist=3444 maul=864 wand=0 hr=0
+DREH rot=1431 soll=1387 dlt=-44 pos=(-5894,-23148) ziel=(-7300,-25400)
+TICK ph=2 pos=(-6454,-23909) y=-1200 dist=2304 mo=1 cd=0 rt=0 zw=0 ziel=(-7300,-24737)
+DREH rot=1491 soll=2889 dlt=1398 pos=(-6454,-23909) ziel=(-7300,-20915)
+DREH rot=1731 soll=1981 dlt=250 pos=(-6794,-24121) ziel=(-7300,-24173)
+DREH rot=1923 soll=2917 dlt=994 pos=(-7216,-24240) ziel=(-7300,-23890)
+RE2 PUTZ Stoss 2 Seite 0 Cut 0 F407
+DREH rot=2307 soll=3013 dlt=706 pos=(-7216,-24240) ziel=(-7300,-23259)
+BISS af=6 dist=1498 maul=1104 wand=0 hr=0
+GTR F416 START art 4 sub 2 achse 1024 gier 0->1024 schaden 60 ret 0 hp 0 gator (-7393,-1200,-24150) gier 2607 figur (-8373,0,-23016) band 0
+GTR F417 sub 2 ph 1 bild 0 schritt -800 clip 18/0 raum sperre 1 figur (-8373,0,-22217) gier 1024 band 0 fall 0 von (-8373,-23017)
+BISS af=7 dist=2157 maul=528 wand=0 hr=1
+GTR F418 sub 2 ph 1 bild 1 schritt -650 clip 18/1 raum sperre 1 figur (-7628,0,-21930) gier 1024 band 0 fall 0 von (-7628,-22580)
+BISS af=8 dist=2231 maul=944 wand=0 hr=1
+GTR F419 sub 2 ph 1 bild 2 schritt -500 clip 18/2 raum sperre 1 figur (-7223,0,-21473) gier 1024 band 0 fall 0 von (-7223,-21973)
+BISS af=9 dist=2672 maul=1072 wand=0 hr=1
+GTR F420 sub 2 ph 2 bild 3 schritt -350 clip 18/3 raum sperre 1 figur (-6951,0,-21064) gier 1024 band 0 fall 0 von (-6951,-21414)
+BISS af=10 dist=3114 maul=1152 wand=0 hr=1
+GTR F421 sub 2 ph 3 bild 4 schritt -200 clip 19/1 raum sperre 1 figur (-6778,0,-20770) gier 1024 band 0 fall 0 von (-6778,-20970)
+BISS af=11 dist=3434 maul=1184 wand=0 hr=1
+GTR F422 sub 2 ph 3 bild 5 schritt -185 clip 19/3 raum sperre 1 figur (-6651,0,-20469) gier 1024 band 0 fall 0 von (-6651,-20654)
+BISS af=12 dist=3753 maul=1280 wand=0 hr=1
+GTR F423 sub 2 ph 3 bild 6 schritt -170 clip 19/5 raum sperre 1 figur (-6579,0,-20285) gier 1024 band 0 fall 0 von (-6579,-20455)
+BISS af=13 dist=3949 maul=1376 wand=0 hr=1
+GTR F424 sub 2 ph 3 bild 7 schritt -155 clip 19/7 raum sperre 1 figur (-6486,0,-20567) gier 1024 band 0 fall 0 von (-6486,-20722)
+BISS af=14 dist=3692 maul=1104 wand=0 hr=1
+GTR F425 sub 2 ph 3 bild 8 schritt -140 clip 19/9 raum sperre 1 figur (-6570,0,-20657) gier 1024 band 0 fall 0 von (-6570,-20797)
+BISS af=15 dist=3584 maul=992 wand=0 hr=1
+TICK ph=3 pos=(-7393,-24150) y=-1200 dist=3584 mo=4 cd=0 rt=0 zw=0 ziel=(-7300,-23129)
+GTR F426 sub 2 ph 3 bild 9 schritt -125 clip 19/11 raum sperre 1 figur (-6619,0,-20661) gier 1024 band 0 fall 0 von (-6619,-20786)
+BISS af=16 dist=3565 maul=976 wand=0 hr=1
+GTR F427 sub 2 ph 3 bild 10 schritt -110 clip 19/13 raum sperre 1 figur (-6667,0,-20666) gier 1024 band 0 fall 0 von (-6667,-20776)
+BISS af=17 dist=3556 maul=960 wand=0 hr=1
+GTR F428 sub 2 ph 3 bild 11 schritt -95 clip 19/15 raum sperre 1 figur (-6714,0,-20670) gier 1024 band 0 fall 0 von (-6714,-20765)
+BISS af=18 dist=3537 maul=960 wand=0 hr=1
+GTR F429 sub 2 ph 3 bild 12 schritt -80 clip 19/17 raum sperre 1 figur (-6727,0,-20683) gier 1024 band 0 fall 0 von (-6727,-20763)
+BISS af=19 dist=3528 maul=944 wand=0 hr=1
+GTR F430 sub 2 ph 3 bild 13 schritt -65 clip 19/19 raum sperre 1 figur (-6753,0,-20692) gier 1024 band 0 fall 0 von (-6753,-20757)
+BISS af=20 dist=3510 maul=928 wand=0 hr=1
+GTR F431 sub 2 ph 3 bild 14 schritt -50 clip 19/21 raum sperre 1 figur (-6780,0,-20704) gier 1024 band 0 fall 0 von (-6780,-20754)
+BISS af=21 dist=3491 maul=912 wand=0 hr=1
+GTR F432 sub 2 ph 3 bild 15 schritt -35 clip 19/23 raum sperre 1 figur (-6790,0,-20716) gier 1024 band 0 fall 0 von (-6790,-20751)
+BISS af=22 dist=3481 maul=896 wand=0 hr=1
+GTR F433 sub 2 ph 3 bild 16 schritt -20 clip 19/25 raum sperre 1 figur (-6793,0,-20730) gier 1024 band 0 fall 0 von (-6793,-20750)
+BISS af=23 dist=3463 maul=880 wand=0 hr=1
+GTR F434 sub 2 ph 3 bild 17 schritt -5 clip 19/27 raum sperre 1 figur (-6794,0,-20745) gier 1024 band 0 fall 0 von (-6794,-20750)
+BISS af=24 dist=3453 maul=864 wand=0 hr=1
+GTR F435 sub 2 ph 4 bild 18 schritt 0 clip 19/29 raum sperre 1 figur (-6809,0,-20748) gier 1024 band 0 fall 0 von (-6809,-20748)
+BISS af=25 dist=3444 maul=864 wand=0 hr=1
+GTR F436 ENDE sub 2 bilder 20 weg 3735 von (-6828,-20745) luft 2746 figur (-6828,0,-20745) band 0 fall 0
+BISS af=26 dist=3444 maul=864 wand=0 hr=0
+BISS af=27 dist=3444 maul=864 wand=0 hr=0
+BISS af=28 dist=3444 maul=864 wand=0 hr=0
+BISS af=29 dist=3444 maul=864 wand=0 hr=0
+BISS af=30 dist=3444 maul=864 wand=0 hr=0
+BISS af=31 dist=3444 maul=864 wand=0 hr=0
+BISS af=32 dist=3444 maul=864 wand=0 hr=0
+BISS af=33 dist=3453 maul=864 wand=0 hr=0
+BISS af=34 dist=3444 maul=864 wand=0 hr=0
+DREH rot=3141 soll=3237 dlt=96 pos=(-7386,-24027) ziel=(-6494,-20527)
+TICK ph=2 pos=(-7380,-23989) y=-1200 dist=3611 mo=0 cd=0 rt=0 zw=0 ziel=(-6494,-20527)
+WECHSEL zw=10 rt=0
+DREH rot=3199 soll=3801 dlt=602 pos=(-7421,-24114) ziel=(-4300,-22600)
+WECHSEL zw=0 rt=0
+DREH rot=3247 soll=3685 dlt=438 pos=(-7424,-24124) ziel=(-5096,-22405)
+DREH rot=3247 soll=3721 dlt=474 pos=(-7425,-24124) ziel=(-4561,-22270)
+DREH rot=3247 soll=3095 dlt=-152 pos=(-7419,-24096) ziel=(-7300,-20278)
+TICK ph=2 pos=(-7411,-24035) y=-1200 dist=3444 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-20815)
+DREH rot=3151 soll=3239 dlt=88 pos=(-7411,-24035) ziel=(-6512,-20565)
+DREH rot=3343 soll=3461 dlt=118 pos=(-7122,-23133) ziel=(-5031,-20052)
+DREH rot=3535 soll=3651 dlt=116 pos=(-6696,-22487) ziel=(-3823,-20145)
+WECHSEL zw=7 rt=0
+DREH rot=3631 soll=3745 dlt=114 pos=(-6515,-22318) ziel=(-3354,-20417)
+DREH rot=3823 soll=3933 dlt=110 pos=(-6135,-22103) ziel=(-2564,-21198)
+RE2 PUTZ Stoss 3 Seite 0 Cut 0 F503
+WECHSEL zw=0 rt=0
+DREH rot=3967 soll=4085 dlt=118 pos=(-5522,-21932) ziel=(-1801,-21869)
+DREH rot=63 soll=175 dlt=112 pos=(-4831,-21911) ziel=(-1266,-22895)
+DREH rot=255 soll=357 dlt=102 pos=(-4530,-21987) ziel=(-1419,-23893)
+DREH rot=447 soll=563 dlt=116 pos=(-3968,-22384) ziel=(-1559,-25221)
+TICK ph=2 pos=(-3782,-22561) y=-1200 dist=3718 mo=1 cd=0 rt=0 zw=0 ziel=(-1559,-25221)
+RE2 PUTZ Stoss 4 Seite 0 Cut 0 F517
+BISS af=6 dist=3444 maul=864 wand=0 hr=0
+GTR F523 TOT art 4 schaden 60 hp -60
+RE2 FINISHER Buehne (Nachbesserung 5, RE2-P0 @0x80101048-4c): von (-3616,-22744) Gier 703 -> (-5650,-16000) Gier 2929 Cut 6, Versatz 7038 Drehung 1870 | Koppelbild Kopf (152,98) Leon (83,150) Massstab max 1594 (Grenze 1892) F523 | NB6: laufende Kamera 0/0 ausgeschlossen, Raum-Objekte 2, Leon-Stichpunkte 15, wegen Verdeckung verworfen 8 (zuletzt Bild 0), Massstab Koppelbild 1357 (RE2-Finisher 1354), Lagen geprueft 46
+RE2 KAMERA FINISHER FINISHER RE2-Cut 7 -> Cut 6 F523 clip=4 bild=0 frontal=4112 soll=4094 massstab=1332 re2_m=1354 grenze=1892 (Buehne)
+RE2 KAMERA FINISHER Halt Cut 6 F524
+RE2 FINISHER P0: Kanister-Objekt aus (Stufe 0, @0x80101008-0c) F524
+FRESS-P2 Anker=(-5044,-18735) yaw=2929
+RE2 KAMERA FINISHER Halt Cut 6 F544
+FSYNC2 sf=8 gaf=8 laf=8 pl=(-5626,-1200,-10944) b0y=-1200 y_vor=-1200
+TICK ph=8 pos=(-6215,-15043) y=-1200 dist=4079 mo=5 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
+FSYNC2 sf=16 gaf=16 laf=16 pl=(-7412,-1200,-10953) b0y=-1200 y_vor=-1200
+FSYNC2 sf=24 gaf=24 laf=24 pl=(-6512,-1200,-10568) b0y=-1200 y_vor=-1200
+RE2 KAMERA FINISHER Halt Cut 6 F564
+FSYNC2 sf=32 gaf=32 laf=32 pl=(-5794,-1200,-10557) b0y=-1200 y_vor=-1200
+TICK ph=8 pos=(-5718,-14959) y=-1200 dist=4374 mo=5 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
+FSYNC2 sf=40 gaf=40 laf=40 pl=(-6072,-1200,-10579) b0y=-1200 y_vor=-1200
+RE2 KAMERA FINISHER Halt Cut 6 F584
+FSYNC2 sf=48 gaf=48 laf=48 pl=(-6500,-1200,-10640) b0y=-1200 y_vor=-1200
+RE2 KAMERA FINISHER haelt Cut 6: RE1.5-Todesbild unterdrueckt (cam=0 weiss=1 schwarz=0) ab F588
+FSYNC2 sf=56 gaf=56 laf=56 pl=(-6622,-1200,-10624) b0y=-1200 y_vor=-1200
+FSYNC2 sf=64 gaf=64 laf=64 pl=(-6224,-1200,-12362) b0y=-1200 y_vor=-1200
+RE2 KAMERA FINISHER Halt Cut 6 F604
+TICK ph=8 pos=(-5737,-15493) y=-1200 dist=2930 mo=5 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
+FSYNC2 sf=72 gaf=72 laf=72 pl=(-6341,-1200,-12625) b0y=-1200 y_vor=-1200
+FSYNC2 sf=80 gaf=80 laf=80 pl=(-5358,-1200,-12430) b0y=-1200 y_vor=-1200
+RE2 KAMERA FINISHER Halt Cut 6 F624
+FSYNC2 sf=88 gaf=88 laf=88 pl=(-4915,-1200,-12031) b0y=-1200 y_vor=-1200
+FSYNC2 sf=96 gaf=96 laf=96 pl=(-5653,-1200,-11263) b0y=-1200 y_vor=-1200
+TICK ph=8 pos=(-5726,-15680) y=-1200 dist=4434 mo=5 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
+FSYNC2 sf=104 gaf=104 laf=104 pl=(-6283,-1200,-12742) b0y=-1200 y_vor=-1200
+RE2 KAMERA FINISHER Halt Cut 6 F644
+FSYNC2 sf=112 gaf=112 laf=112 pl=(-6504,-1200,-12456) b0y=-1200 y_vor=-1200
+FSYNC2 sf=120 gaf=120 laf=119 pl=(-6609,-1200,-12281) b0y=-1200 y_vor=-1200
+RE2 FRESS P3: Spieler-Modell aus F658
+FSYNC3 P3 pl=(-6609,-1200,-12281) y_vor=-1200
+RE2 KAMERA FINISHER Halt Cut 6 F664
+TICK ph=8 pos=(-5801,-15696) y=-1200 dist=3500 mo=11 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
+RE2 KAMERA FINISHER Halt Cut 6 F684
+TICK ph=8 pos=(-5613,-15654) y=-1200 dist=3510 mo=11 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
+RE2 KAMERA FINISHER Halt Cut 6 F704
+RE2 KAMERA FINISHER Halt Cut 6 F724
+TICK ph=8 pos=(-5812,-15699) y=-1200 dist=3500 mo=11 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
+RE2 KAMERA FINISHER Halt Cut 6 F744
+TICK ph=8 pos=(-5599,-15651) y=-1200 dist=3510 mo=11 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
+RE2 KAMERA FINISHER Halt Cut 6 F764
+RE2 KAMERA FINISHER Halt Cut 6 F784
+TICK ph=8 pos=(-5822,-15701) y=-1200 dist=3500 mo=11 cd=0 rt=0 zw=0 ziel=(-1590,-25400)
