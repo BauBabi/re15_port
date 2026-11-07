@@ -281,6 +281,20 @@ static int bf_schwanz_v2(void)
     const re15_enemy_bank_t *bk = re15_enemy_find(0x30u);
     return bk && bk->skel.bone_count == 23 && bk->skel.bone_relative_pos[16][0] < BF_V2_WURZEL_X;
 }
+/* Runde 41 SF V4 Runde 3 (Pruefung V4 r2 Zahlen Abschnitt 3 / T7, Entscheid O3 "keine waagerechte Kette im Gang"): im Lauf sfv4/r/V4r2
+ * stand die V4-Kette bei h100 waagerecht (Gelenke 3-7 auf y -2051..-2157, Abfall Biegung -> Ende -0,001 H statt 0,358 H), weil das
+ * Szenenziel bis h102 mit Gewicht 4096 die Spitze auf den verdeckten Punkt hinter dem Koerper zieht (k_schwanz_bahn h74-h102, art 1
+ * tiefe 1800: FABRIK hebt die ganze Kette an der Wurzel). Die V4-Kette (Ansatz oben am Ruecken wie V2) wird deshalb wie V2 ab h74
+ * freigegeben, und zwar schon nach dem Bodenkontakt der Bahn (h60-h70): Vorlage 2 = Videobild n1435 = h85 zeigt den Schwanz in
+ * seiner Ruheform (Messblatt V4 Abschnitt 4 Punkt 1 "Ruhe-Pose = Vorlage 2"); mit der V2-Freigabe h74-h80 lag die Spitze bei h85 noch
+ * 0,48 H neben dem Keyframe (Lauf sfv4/r/V4r3m0.95, Feder braucht ~15 Takte). Freigabe h70 -> h74 (k_schwanz_gewicht_v4). Im Gang
+ * haengt die Kette dann in ihrer Ruhe (Keyframe) mit der Feder. Referenz 2 und V2 bleiben unveraendert. */
+static const int16_t k_schwanz_gewicht_v4[][2] = { { 15, 0 }, { 19, 4096 }, { 70, 4096 }, { 74, 0 } };
+static int bf_schwanz_v4(void)
+{
+    const re15_enemy_bank_t *bk = re15_enemy_find(0x30u);
+    return bk && bk->skel.bone_count == 23 && re15_schwanz_r41_v4_kette(&bk->skel);
+}
 
 
 /* ---- Runde 41 Spur H "hangar": Ausloeser, Riegel, Kamera ----------------------------------------
@@ -634,7 +648,8 @@ static void bf_bild_versatz(int32_t p[3], int dx, int dy)
 static void bf_schwanz_ziel(const re15_actor_t *b, int h)
 {
     const int v2 = bf_schwanz_v2();
-    const int32_t w = v2 ? bf_tab(k_schwanz_gewicht_v2, BF_N(k_schwanz_gewicht_v2), h)
+    const int32_t w = bf_schwanz_v4() ? bf_tab(k_schwanz_gewicht_v4, BF_N(k_schwanz_gewicht_v4), h)
+                    : v2 ? bf_tab(k_schwanz_gewicht_v2, BF_N(k_schwanz_gewicht_v2), h)
                          : bf_tab(k_schwanz_gewicht, BF_N(k_schwanz_gewicht), h);
     int32_t a[3], e[3], z[3], va[3], ve[3], vz[3], bg[3];
     int i = 0;
@@ -840,6 +855,13 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             if (log && re15_schwanz_r41_gelenk(s_h.birkin, 0, sp)) {   /* Runde 41 SF "Schwanz V2": alle Gelenke (Riegel) */
                 fprintf(stderr, "[hangar-takt] h%d Schwanz B y %d", h, (int)b->y);
                 for (int j = 0; j < 8 && re15_schwanz_r41_gelenk(s_h.birkin, j, sp); j++)
+                    fprintf(stderr, " %d(%d,%d,%d)", j, (int)sp[0], (int)sp[1], (int)sp[2]);
+                fprintf(stderr, "\n");
+                /* V4 Runde 3 (Entscheid O3, T7 koerperfest): das Feder-Ziel desselben Schritts (Keyframe-Gelenke der gezeichneten Pose,
+                 * Welt) - die Abweichung Kette -> Ziel ist koerperfest, auch wenn die geloggte Clip-Nummer nicht das gezeichnete Bild ist
+                 * (Ueberblendung h85-h100). Nur Messung. */
+                fprintf(stderr, "[hangar-takt] h%d Schwanz Ziel", h);
+                for (int j = 0; j < 8 && re15_schwanz_r41_ziel_gelenk(s_h.birkin, j, sp); j++)
                     fprintf(stderr, " %d(%d,%d,%d)", j, (int)sp[0], (int)sp[1], (int)sp[2]);
                 fprintf(stderr, "\n");
             } } }

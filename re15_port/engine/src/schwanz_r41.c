@@ -5,6 +5,7 @@
  * Seite durch die Knie auf die linke; Dossier SF_sichel.md N1.9). */
 #include "re15_schwanz_r41.h"
 #include "re15_engine.h"     /* g_engine.frame_count: ein Kettenschritt je Spieltakt */
+#include "re15_enemy.h"      /* V4 Runde 3: Meshes 16-22 der Bank (Radien, Dornspitze) fuer die Bodenpruefung */
 #include <math.h>
 #include <string.h>
 
@@ -66,11 +67,53 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
  * 0,44 H): die Biegung darf hoechstens SW_BIEGUNG_SPIEL weniger abknicken als im Keyframe. 10 Grad: das senkrechte Stueck (Biegung bis
  * Knick 0,25 H) schwenkt dann am Knick um <= 0,25 x sin 10 Grad = 0,043 H < 0,06 H. GESTALTUNG (PORT-WAHL). */
 #define SW_BIEGUNG_SPIEL   0.1745f    /* 10 Grad */
+/* V4 Runde 3 (Pruefung V4 r2 Zahlen Abschnitt 3 / T7, Entscheid O3: T7 koerperfest - die Kette gegen ihr Feder-Ziel, die Keyframe-
+ * Gelenke der gezeichneten Pose; Werkzeug tools/r41_sichel/v4/t7_koerperfest_v4.py, Riegel T7a <= 0,06 H in h85 und allen Gangtakten).
+ * Nur fuer die V4-Kette (re15_schwanz_r41_v4_kette), V1/V2/V3/Referenz 2 unveraendert. GESTALTUNG (PORT-WAHL), nachgestellt am Riegel
+ * T7a in den Laeufen sfv4/r/V4r3c..V4r3g (Spielstand EM30_V4r3y, Dossier SF_sichel.md "V4 Runde 3"):
+ *   ohne Mitnahme (Feder Referenz 2)                     37/46 Gangtakte > 0,06 H, h102 0,42 H, h100-h104 fast waagerecht (Lauf V4r3c)
+ *   Mitnahme 0,80 / 0,95 (Feder Referenz 2)              6 bzw. 3 Takte, h90 0,14 / 0,13 H (Laeufe V4r3m0.80 / V4r3m0.95)
+ *   Mitnahme 0,95, Freigabe h70-h74, Feder Referenz 2    h85 0,108 H (Lauf V4r3d); Feder x2,0 ohne Daempfung schwingt: h85 0,114 (V4r3e)
+ *   Mitnahme 0,95, Feder x1,5, Erhalt 0,50               alle Takte <= 0,016 H (Lauf V4r3f1.5) - Kette fast starr
+ *   Mitnahme 0,60, Feder x1,5, Erhalt 0,50               h85 0,103 H (Lauf V4r3g0.60)
+ *   Mitnahme 0,80, Feder x1,5, Erhalt 0,50 (gewaehlt)    alle Takte <= 0,045 H, im Gang Mittel 0,010 H (Lauf V4r3g0.80): die Kette
+ *                                                        schwingt noch, bleibt aber in der Ruheform */
+#define SW_V4_ERHALT       0.50f      /* erhaltene Geschwindigkeit der V4-Kette je Takt (Referenz 2: SW_ERHALT 0,80) */
+#define SW_V4_FEDER        1.5f       /* Federfaktor der V4-Kette (k_feder x 1,5) */
+#define SW_V4_MITNAHME     0.80f      /* Anteil der Zielbewegung, um den die V4-Kette je Schritt mitgeht */
+
+/* V4 Runde 3 (Pruefung V4 r2 Zahlen Abschnitt 3 "Boden", Entscheid O3 "Schwanz und Dornspitze nie unter dem Boden, glaetten() prueft
+ * auch die Mesh-Spitze"): im Lauf sfv4/r/V4r2 lag kein Kettenpunkt unter dem Boden, wohl aber die Spitze von Mesh 22 (Knochenraum bis
+ * y 319, 63 E. ueber das Gliedende hinaus) in h33/h34/h35 bis 57 E. darunter. Die Bodenpruefung der V4-Kette nimmt deshalb die
+ * Ausdehnung der Glied-Meshes aus der geladenen Bank: je Glied der groesste Abstand einer Ecke von der Gliedachse (Radius) und fuer das
+ * letzte Glied die groesste Ecke entlang der Achse (Dornspitze). Gemessen, keine Konstante. */
+static int sw_mesh_mass(const re15_emd_skeleton_t *skel, float radius[], float *dorn_y)
+{
+    const re15_enemy_bank_t *bk = re15_enemy_find(0x30u);
+    if (!bk || &bk->skel != skel || bk->md1.mesh_count < SW_K0 + SW_N) return 0;
+    for (int j = 0; j < SW_J; j++) radius[j] = 0.0f;
+    *dorn_y = 0.0f;
+    for (int g = 0; g < SW_N; g++) {
+        const re15_md1_mesh_t *m = &bk->md1.meshes[SW_K0 + g];
+        for (int sec = 0; sec < 2; sec++) {
+            const re15_md1_vertex_t *v = sec ? m->quad_vertices : m->tri_vertices;
+            const int n = sec ? m->quad_vertex_count : m->tri_vertex_count;
+            for (int i = 0; v && i < n; i++) {
+                const float r = sqrtf((float)v[i].x * v[i].x + (float)v[i].z * v[i].z);
+                if (r > radius[g]) radius[g] = r;          /* Glied g liegt zwischen Gelenk g und g+1 */
+                if (r > radius[g + 1]) radius[g + 1] = r;
+                if (g == SW_N - 1 && (float)v[i].y > *dorn_y) *dorn_y = (float)v[i].y;
+            }
+        }
+    }
+    return 1;
+}
 
 static struct {
     int      gueltig;
     uint32_t takt;
     float    p[SW_J][3], q[SW_J][3];          /* Lage jetzt / vorher (Welt) */
+    float    zw[SW_J][3];                      /* V4 Runde 3: Feder-Ziel des letzten Schritts (Keyframe-Gelenke, Welt), nur Messung */
     int32_t  seite;                            /* Szenenvorgabe, Birkin-Raum (+ = rechte Seite = -z) */
     int32_t  ziel[3];                          /* NB3: Szenenziel der Spitze (Welt) */
     int32_t  ziel_w;                           /* NB3: Gewicht des Ziels Q12, 0 = aus */
@@ -118,6 +161,29 @@ void re15_schwanz_r41_dicke(int slot, int32_t dicke_q12)
 void re15_schwanz_r41_verdeckt(int slot, int glieder)
 {
     if (slot >= 0 && slot < RE15_ACTOR_MAX) s_sw[slot].verdeckt = glieder < 0 ? 0 : glieder > SW_N ? SW_N : glieder;
+}
+
+static int kette_ok(const re15_emd_skeleton_t *s);
+
+/* V4 Runde 3: die V4-Kette (ungleiche Glieder, SW_GLATT_V4_VERH) am Skelett erkennen - Gliedlaengen = |rel| der Knochen 17-22. */
+int re15_schwanz_r41_v4_kette(const re15_emd_skeleton_t *s)
+{
+    if (!s || !kette_ok(s)) return 0;
+    float lmin = 1e9f, lmax = 0.0f;
+    for (int b = SW_K0 + 1; b < SW_K0 + SW_N; b++) {
+        const int16_t *r = s->bone_relative_pos[b];
+        const float l = sqrtf((float)r[0] * r[0] + (float)r[1] * r[1] + (float)r[2] * r[2]);
+        if (l < lmin) lmin = l;
+        if (l > lmax) lmax = l;
+    }
+    return lmin > 1.0f && lmax > SW_GLATT_V4_VERH * lmin;
+}
+
+int re15_schwanz_r41_ziel_gelenk(int slot, int j, int32_t out[3])
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || j < 0 || j >= SW_J || !s_sw[slot].gueltig) return 0;
+    for (int k = 0; k < 3; k++) out[k] = (int32_t)lrintf(s_sw[slot].zw[j][k]);
+    return 1;
 }
 
 int re15_schwanz_r41_gelenk(int slot, int j, int32_t out[3])
@@ -235,7 +301,8 @@ static void haengen(float (*p)[3], const float *laenge, float boden, float (*zw)
 /* Runde 41 SF V3: Knick-Grenze je Gelenk (siehe SW_GLATT_*). Von der Wurzel zur Spitze: ist das Glied j -> j+1 staerker gegen
  * das Vorglied abgeknickt als erlaubt, wird es in der Ebene beider Glieder auf die Grenze zurueckgedreht; Laenge bleibt, Boden.
  * Die alte Lage q wird um dieselbe Verschiebung mitgezogen (keine Scheingeschwindigkeit fuer die Feder im naechsten Takt). */
-static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float boden, float (*zw)[3], int biegung)
+static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float boden, float (*zw)[3], int biegung,
+                     const float *radius, float dorn)
 {
     for (int j = 1; j < SW_J - 1; j++) {
         float a[3] = { p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1], p[j][2] - p[j - 1][2] };
@@ -286,28 +353,41 @@ static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float bo
      * danach noch ein Gelenk unter dem Boden, die ganze Kette starr um das Gelenk 0 hochdrehen - alle Gelenkwinkel bleiben, es
      * entsteht kein Knick. Achse waagerecht quer zur Richtung Gelenk 0 -> tiefstes Gelenk, Schritt 1 Grad (Aufloesung der Messung
      * Gelenkwinkel), hoechstens 90 Grad (dann liegt die Strecke Gelenk 0 -> tiefstes Gelenk waagerecht oder hoeher). */
+    /* V4 Runde 3: Bodenabstand je Gelenk = Radius des Glied-Meshes (radius != NULL), dazu die Dornspitze des letzten Glieds
+     * (Gelenk 6 + Achse x dorn, dorn = groesste Ecke von Mesh 22 entlang der Achse); ohne Mesh-Masse (V1/V2/V3) wie bisher. */
+    float rand_j[SW_J + 1], rr[SW_J + 1][3];
+    int np = SW_J;
+    for (int j = 0; j < SW_J; j++) { rand_j[j] = radius ? radius[j] : 0.0f; for (int k = 0; k < 3; k++) rr[j][k] = p[j][k]; }
+    if (radius && dorn > 0.0f) {
+        float d7[3] = { p[SW_J - 1][0] - p[SW_J - 2][0], p[SW_J - 1][1] - p[SW_J - 2][1], p[SW_J - 1][2] - p[SW_J - 2][2] };
+        const float l7 = norm(d7);
+        const float sk = (laenge[SW_J - 1] > 1e-3f) ? l7 / laenge[SW_J - 1] : 1.0f;
+        for (int k = 0; k < 3; k++) rr[SW_J][k] = p[SW_J - 2][k] + d7[k] * dorn * sk;
+        rand_j[SW_J] = 0.0f;
+        np = SW_J + 1;
+    }
     int tief = -1;
     float ymax = boden;
-    for (int j = 1; j < SW_J; j++)
-        if (p[j][1] > ymax) { ymax = p[j][1]; tief = j; }
+    for (int j = 1; j < np; j++)
+        if (rr[j][1] + rand_j[j] > ymax) { ymax = rr[j][1] + rand_j[j]; tief = j; }
     if (tief > 0) {
-        float v[3] = { p[tief][0] - p[0][0], 0.0f, p[tief][2] - p[0][2] };
+        float v[3] = { rr[tief][0] - p[0][0], 0.0f, rr[tief][2] - p[0][2] };
         float ax[3] = { -v[2], 0.0f, v[0] };                /* waagerecht, quer zu v */
         if (norm(ax) < 1e-3f) { ax[0] = 1.0f; ax[1] = 0.0f; ax[2] = 0.0f; }
-        float r0[SW_J][3];
-        for (int j = 0; j < SW_J; j++)
-            for (int k = 0; k < 3; k++) r0[j][k] = p[j][k] - p[0][k];
+        float r0[SW_J + 1][3];
+        for (int j = 0; j < np; j++)
+            for (int k = 0; k < 3; k++) r0[j][k] = rr[j][k] - p[0][k];
         const float schritt = 0.0174533f;                   /* 1 Grad */
         float best = 0.0f;
         for (int sg = -1; sg <= 1 && best == 0.0f; sg += 2) {
             for (int n = 1; n <= 90; n++) {
                 const float w = sg * n * schritt, c = cosf(w), sn = sinf(w);
                 int ok = 1;
-                for (int j = 1; j < SW_J && ok; j++) {
+                for (int j = 1; j < np && ok; j++) {
                     const float *r = r0[j];
                     const float kd = ax[0] * r[0] + ax[1] * r[1] + ax[2] * r[2];
                     const float y = r[1] * c + (ax[2] * r[0] - ax[0] * r[2]) * sn + ax[1] * kd * (1.0f - c);
-                    if (p[0][1] + y > boden) ok = 0;
+                    if (p[0][1] + y + rand_j[j] > boden) ok = 0;
                 }
                 if (ok) { best = w; break; }
             }
@@ -427,7 +507,17 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
 
     /* Ein Kettenschritt je Spieltakt. */
     if (!s_sw[slot].gueltig || s_sw[slot].takt != g_engine.frame_count) {
+        float dz[SW_J][3];                                                    /* V4 Runde 3: Bewegung des Ziels seit dem letzten Schritt */
+        for (int j = 0; j < SW_J; j++) for (int k = 0; k < 3; k++) dz[j][k] = zw[j][k] - s_sw[slot].zw[j][k];
+        memcpy(s_sw[slot].zw, zw, sizeof zw);                                 /* V4 Runde 3: Messzugang re15_schwanz_r41_ziel_gelenk */
         float sp[3] = { s_sw[slot].p[0][0] - zw[0][0], s_sw[slot].p[0][1] - zw[0][1], s_sw[slot].p[0][2] - zw[0][2] };
+        const int kette_v4 = re15_schwanz_r41_v4_kette(skel);
+        if (s_sw[slot].gueltig && norm(sp) <= SW_SPRUNG && kette_v4) {
+            /* V4 Runde 3: die V4-Kette wird mit dem Anteil SW_V4_MITNAHME der Zielbewegung mitgenommen (Lage und Vorlage gleich
+             * verschoben, die eigene Schwinggeschwindigkeit bleibt); Messreihe bei SW_V4_MITNAHME. */
+            for (int j = 1; j < SW_J; j++)
+                for (int k = 0; k < 3; k++) { s_sw[slot].p[j][k] += SW_V4_MITNAHME * dz[j][k]; s_sw[slot].q[j][k] += SW_V4_MITNAHME * dz[j][k]; }
+        }
         if (!s_sw[slot].gueltig || norm(sp) > SW_SPRUNG) {
             memcpy(s_sw[slot].p, zw, sizeof zw);
             memcpy(s_sw[slot].q, zw, sizeof zw);
@@ -435,11 +525,15 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
         } else {
             float (*p)[3] = s_sw[slot].p, (*q)[3] = s_sw[slot].q;
             for (int k = 0; k < 3; k++) { q[0][k] = p[0][k]; p[0][k] = zw[0][k]; }     /* Wurzel haengt am Rumpf */
+            /* V4 Runde 3: Feder x SW_V4_FEDER und Daempfung SW_V4_ERHALT fuer die V4-Kette (wirksam nur ohne Szenenziel: h19-h70 legt
+             * das Szenenziel die Kette mit Gewicht 4096 fest) - nach der Freigabe h70-h74 ist sie bis Vorlage 2 = h85 in ihrer
+             * Ruheform; Messreihe bei SW_V4_MITNAHME. */
+            const float fk = kette_v4 ? SW_V4_FEDER : 1.0f, erhalt = kette_v4 ? SW_V4_ERHALT : SW_ERHALT;
             for (int j = 1; j < SW_J; j++)
                 for (int k = 0; k < 3; k++) {
-                    const float v = (p[j][k] - q[j][k]) * SW_ERHALT;
+                    const float v = (p[j][k] - q[j][k]) * erhalt;
                     q[j][k] = p[j][k];
-                    p[j][k] += v + (zw[j][k] - p[j][k]) * k_feder[j];
+                    p[j][k] += v + (zw[j][k] - p[j][k]) * k_feder[j] * fk;
                 }
             for (int j = 1; j < SW_J; j++) {                                  /* feste Gliedlaengen, Boden */
                 float d[3] = { p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1], p[j][2] - p[j - 1][2] };
@@ -448,15 +542,22 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
                 for (int k = 0; k < 3; k++) p[j][k] = p[j - 1][k] + d[k] * laenge[j];
                 if (p[j][1] > (float)a->y) p[j][1] = (float)a->y;            /* nicht unter den Boden (y+ = unten) */
             }
-            if (s_sw[slot].ziel_w <= 0) haengen(p, laenge, (float)a->y, zw);
+            /* V4 Runde 3 (Entscheid O3 "T7 koerperfest"): die V4-Kette haengt nicht nach der Welt-Senkrechten. Lauf sfv4/r/V4r3b h90-h100:
+             * die gezeichnete Pose (Ueberblendung aus dem Kriechen, Rumpf vorgeneigt) traegt die Ruhe-Pose des Schwanzes (Vorlage 2,
+             * am Knochen 8) nach hinten oben (Ziel-Gelenk 3 838 E. ueber der Wurzel); haengen() drueckte jedes Glied auf >= 10 Grad
+             * unter die Waagerechte (SW_HANG_COS_MIN), die Kette lag 0,4 H neben ihrem Keyframe. Fuer V4 gelten nur Feder, Knick-Grenze
+             * und Boden (glaetten), die Form bleibt am Koerper. V1/V2/V3/Referenz 2 unveraendert. GESTALTUNG (PORT-WAHL). */
+            if (s_sw[slot].ziel_w <= 0 && !kette_v4) haengen(p, laenge, (float)a->y, zw);
         }
         if (s_sw[slot].ziel_w > 0) ziel_anwenden(slot, laenge, (float)a->y);
         {   /* Runde 41 SF V3: Knick-Grenze (hohe Wurzel V1/V2/V3); V4 Runde 2: auch fuer die V4-Kette (ungleiche Glieder) */
             float lmin = 1e9f, lmax = 0.0f;
             for (int j = 1; j < SW_J; j++) { if (laenge[j] < lmin) lmin = laenge[j]; if (laenge[j] > lmax) lmax = laenge[j]; }
             const int v4 = lmin > 1.0f && lmax > SW_GLATT_V4_VERH * lmin;
+            float rad[SW_J], dorn = 0.0f;
+            const int mm = v4 && sw_mesh_mass(skel, rad, &dorn);
             if (skel->bone_relative_pos[SW_K0][0] < SW_GLATT_WURZEL_X || v4)
-                glaetten(s_sw[slot].p, s_sw[slot].q, laenge, (float)a->y, zw, v4);
+                glaetten(s_sw[slot].p, s_sw[slot].q, laenge, (float)a->y, zw, v4, mm ? rad : NULL, mm ? dorn : 0.0f);
         }
         s_sw[slot].takt = g_engine.frame_count;
     }

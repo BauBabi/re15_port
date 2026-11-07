@@ -49,7 +49,12 @@ void re15_schwanz_r41_verdeckt(int slot, int glieder);
 /* Zuruecksetzen (Raumwechsel, Tests). */
 void re15_schwanz_r41_reset(void);
 
+/* V4 Runde 3: 1 = Skelett traegt die V4-Kette (Gliedlaengen max/min > 2,0, schwanz_r41.c SW_GLATT_V4_VERH). */
+int  re15_schwanz_r41_v4_kette(const re15_emd_skeleton_t *s);
+
 /* Messzugang fuer Tests: Gelenk j (0 = Wurzel .. 7 = Spitze) der Kette von Slot `slot` in Weltkoordinaten. */
 int  re15_schwanz_r41_gelenk(int slot, int j, int32_t out[3]);
+/* V4 Runde 3: Messzugang - Feder-Ziel (Keyframe-Gelenk j der gezeichneten Pose, Welt) des letzten Kettenschritts. */
+int  re15_schwanz_r41_ziel_gelenk(int slot, int j, int32_t out[3]);
 
 #endif
