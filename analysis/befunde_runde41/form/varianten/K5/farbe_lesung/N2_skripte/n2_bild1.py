@@ -110,4 +110,4 @@ def main(vdir, aus):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1] if len(sys.argv) > 1 else K5 + '/farbe/K5c_farbe', sys.argv[2] if len(sys.argv) > 2 else os.path.join(FL, 'N2_bild1.json'))
+    main(sys.argv[1] if len(sys.argv) > 1 else K5 + '/farbe/K5c_farbe_r3', sys.argv[2] if len(sys.argv) > 2 else os.path.join(FL, 'N2_bild1.json'))

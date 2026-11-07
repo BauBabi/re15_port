@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""K5c Farbe (Runde 1 bis 3): Nutzer-Tafeln 01-07 nach MESSBLATT_FARBE_V1 Abschnitt 7 (roh, kein Gamma auf irgendeine Kachel; Szenenlicht neben dem
+"""K5c Farbe (Runde 1 bis 3, Versuch 2): Nutzer-Tafeln 01-08 nach MESSBLATT_FARBE_V1 Abschnitt 7 (roh, kein Gamma auf irgendeine Kachel; Szenenlicht neben dem
 Screenshot; Familienkachel mit gleichem Renderer und Licht; Zahlen L*, C*, L*>85 in der Beschriftung).
 
     python kf_tafeln.py <neu-Ordner> <aus-Ordner> [01 .. 07]     (Name der Variante: Umgebung KF_NAME, Standard 'K5c neu (Farbe Runde 2)')
@@ -10,6 +10,9 @@ Screenshot; Familienkachel mit gleichem Renderer und Licht; Zahlen L*, C*, L*>85
 03_familie.png      EM30_HANGAR | RE2-G5 | RE2-G4 | K5c neu | K4 heute, render.blick (Licht 0,55 + 0,45 max(0, N.L), weiss), Umkugel 0,46, 3 Winkel
 04_atlas.png        EM30 | K5c neu | K5c heute, je 2 Texel/Bildpunkt (gleiche Texelskala), darunter 8 Palettenfelder (k-Mittel Lab) mit Lab und Anteil
 05_rundum_neu.png   K5c neu in Pose Bild 1 (Clip 0) und Ruhe/Stehen (Clip 2), 6 Winkel, Licht wie 03; EM30 als Vergleichskachel je Zeile
+08_binnenzeichnung.png  (Versuch 2) Flanke / Schulter / Ruecken nah, 3-fach: RE2-G4 | EM30 | r3 | Variante, render.blick (Licht wie 03), roh
+04_atlas.png (Versuch 2) zusaetzlich Zeile 2: Kanten (weiss) und Richtungsfeld (Farbton = Kantenrichtung, Helligkeit = Kohaerenz) nach
+                    farbe_lesung/N2_skripte/n2_mass.bild_atlas fuer RE2-G4 | Variante
 06_kopf_nah.png     Kopf/Kiefer: Zeile 1 Bild-2-Ausschnitt x 200-360, y 290-420, 3-fach: Original | Original T | K5c neu Kette | K5c heute Kette;
                     Zeile 2 Kopf+Kiefer (Mesh 21-23) neu, K5c heute und RE2-G4-Kopf (Mesh 26) unter dem Licht von 03, 3 Winkel"""
 import json
@@ -162,8 +165,29 @@ def atlas(neu, aus):
                   (230, 230, 120))
         ks.append(H.stapel([im, palette_feld(rgb[u], im.shape[1])]))
     t = H.reihe(ks)
+    # Versuch 2: Kanten-/Richtungsbild (n2_mass.bild_atlas, 3-fach, hier auf 1-fach verkleinert): G4-Koerper | Variante-Koerper
+    sys.path.insert(0, os.path.join(FL, 'N2_skripte'))
+    import n2_mass as N
+    Z = N.zonen()
+    zb = []
+    for nm, mo, zf in (('RE2-G4 Koerper', re2_mo(0x34), Z['g4']), (NEU + ' Koerper (x < 384)', fl.lade_var(neu), Z['k5'])):
+        tmp = os.path.join(os.path.dirname(aus), '_n2_atlas_tmp.png')
+        N.atlas_mass(mo, zf, nm, bild=tmp)
+        b = cv2.imread(tmp)
+        os.remove(tmp)
+        b = cv2.resize(b, None, fx=1 / 3, fy=1 / 3, interpolation=cv2.INTER_AREA)
+        b = cv2.resize(b, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
+        H.schrift(b, nm + ': Atlas | Kanten (Canny 6/12 L*) weiss, Rotflaechen-Umriss gelb | Richtung (Farbton) x Kohaerenz (Helligkeit)', 6, 18, 0.5)
+        zb.append(b)
+    breite = max(t.shape[1], max(b.shape[1] for b in zb))
+
+    def auf(b):
+        o = np.zeros((b.shape[0], breite, 3), np.uint8)
+        o[:, :b.shape[1]] = b
+        return o
+    t = H.stapel([auf(t)] + [auf(b) for b in zb])
     kopf = H.kopfzeile('04 Atlas in gleicher Texelskala (2 Bildpunkte je Texel), roh. Darunter 8 Palettenfelder (k-Mittel in Lab ueber alle '
-                       'genutzten Texel) mit Lab und Anteil.', t.shape[1])
+                       'genutzten Texel) mit Lab und Anteil; unten Kanten- und Richtungsbild (n2_mass) RE2-G4 und Variante.', t.shape[1])
     cv2.imwrite(aus, H.stapel([kopf, t]))
 
 
@@ -215,6 +239,42 @@ def kopf_nah(neu, aus):
     cv2.imwrite(aus, H.stapel([kopf, t]))
 
 
+def _ausschnitt(img, msk, art):
+    """Nahausschnitt aus einem render.blick-Bild: Figurrahmen, davon Flanke = Mitte, Schulter = vorderes oberes Viertel, Ruecken = Mitte (Blick von oben).
+    Feste Anteile des Figurrahmens fuer alle Modelle gleich (gleiche Behandlung, Messblatt V1 7.1)."""
+    ys, xs = np.nonzero(msk)
+    y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
+    hh, ww = y1 - y0, x1 - x0
+    s = int(min(hh, ww) * 0.5)
+    if art == 'Schulter':
+        cx, cy = x0 + int(0.7 * ww), y0 + int(0.4 * hh)
+    else:
+        cx, cy = x0 + ww // 2, y0 + int(0.45 * hh)
+    a, b = max(cy - s // 2, 0), max(cx - s // 2, 0)
+    return img[a:a + s, b:b + s]
+
+
+def binnenzeichnung(neu, aus, r3=None):
+    """08 (Versuch 2): Flanke (Seite), Schulter (3/4 vorn), Ruecken (von oben) nah, 3-fach Ausschnitt auf 360 px, je Zeile RE2-G4 | EM30 | r3 | Variante,
+    render.blick mit dem Licht von 03 (0,55 + 0,45 N.L, weiss), roh, kein Gamma; gleiche Ausschnittregel fuer alle."""
+    r3 = r3 or os.path.join(K5, 'farbe', 'K5c_farbe_r3')
+    modelle = [('RE2-G4 (Typ 0x34, Clip 0)', re2_mo(0x34), 0), ('EM30_HANGAR (Clip 0)', fl.lade_em30(), 0),
+               ('r3 (Farbe Runde 3, Clip 2)', fl.lade_var(r3), 2), (NEU + ' (Clip 2)', fl.lade_var(neu), 2)]
+    zeilen = []
+    for art, az, el in (('Flanke', 0, 8), ('Schulter', 45, 15), ('Ruecken', 0, 70)):
+        ks = []
+        for nm, mo, c in modelle:
+            img, msk = R.blick(mo, R.kf(mo, c), az, el, 760, None)
+            a = _ausschnitt(img, msk, art)
+            a = cv2.resize(a, (360, 360), interpolation=cv2.INTER_NEAREST)
+            ks.append(kachel(a, nm, None, '%s nah, Licht wie 03, roh' % art))
+        zeilen.append(H.reihe(ks))
+    t = H.stapel(zeilen)
+    kopf = H.kopfzeile('08 Binnenzeichnung nah: Flanke | Schulter | Ruecken, je RE2-G4 | EM30 | r3 | ' + NEU + '. Gleicher Renderer und gleiches Licht '
+                       '(0,55 + 0,45 N.L), gleiche Ausschnittregel (Figurrahmen), roh, kein Gamma.', t.shape[1])
+    cv2.imwrite(aus, H.stapel([kopf, t]))
+
+
 SPIEL = (('spiel_pose1_nachstellung_r5080.png', 1, 'ROOM5080 Schnitt 1, Nachstellung Bild 1 (Clip 0)'),
          ('spiel_pose1_r5080_s1.png', 1, 'ROOM5080 Schnitt 1, Lage Bild 1 (Clip 0)'),
          ('spiel_ruhe_r5080_s1.png', 1, 'ROOM5080 Schnitt 1, Ruhe (Clip 2)'),
@@ -246,7 +306,7 @@ def spiel(spd, aus):
 if __name__ == '__main__':
     neu, ausd = sys.argv[1], sys.argv[2]
     os.makedirs(ausd, exist_ok=True)
-    nur = sys.argv[3:] or ['01', '02', '03', '04', '05', '06']
+    nur = sys.argv[3:] or ['01', '02', '03', '04', '05', '06', '08']
     if '07' in nur:
         spiel(os.path.join(ausd, 'spiel'), os.path.join(ausd, '07_spiel.png'))
     if '01' in nur:
@@ -261,4 +321,6 @@ if __name__ == '__main__':
         rundum(neu, os.path.join(ausd, '05_rundum_neu.png'))
     if '06' in nur:
         kopf_nah(neu, os.path.join(ausd, '06_kopf_nah.png'))
+    if '08' in nur:
+        binnenzeichnung(neu, os.path.join(ausd, '08_binnenzeichnung.png'))
     print('TAFELN-FERTIG', ausd)

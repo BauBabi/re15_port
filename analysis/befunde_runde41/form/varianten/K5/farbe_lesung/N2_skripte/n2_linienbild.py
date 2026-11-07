@@ -40,7 +40,7 @@ if __name__ == '__main__':
     import kf_tafeln as KT
     Z = N.zonen()
     for nm, mo, zf, zk in (('EM30', fl.lade_em30(), Z['em30'], Z['em30kopf']), ('G4', KT.re2_mo(0x34), Z['g4'], Z['g4kopf']),
-                           ('G5', KT.re2_mo(0x36), Z['g5'], None), ('r3', fl.lade_var(N.K5 + '/farbe/K5c_farbe'), Z['k5'], Z['k5kopf']),
+                           ('G5', KT.re2_mo(0x36), Z['g5'], None), ('r3', fl.lade_var(N.K5 + '/farbe/K5c_farbe_r3'), Z['k5'], Z['k5kopf']),
                            ('K4', fl.lade_var(N.K5 + '/K4_heute'), Z['k5'], Z['k5kopf'])):
         bild(mo, zf, os.path.join(N.FL, 'N2_linien_%s.png' % nm), zk)
         print(nm)

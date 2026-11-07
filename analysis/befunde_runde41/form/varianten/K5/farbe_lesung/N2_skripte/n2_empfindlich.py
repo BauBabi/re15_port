@@ -10,7 +10,7 @@ import fl, kf_tafeln as KT
 Z = N.zonen()
 out = {}
 for nm, mo, zf, zk, clip in (('EM30', fl.lade_em30(), Z['em30'], Z['em30kopf'], 0), ('G4', KT.re2_mo(0x34), Z['g4'], Z['g4kopf'], 0),
-                             ('G5', KT.re2_mo(0x36), Z['g5'], None, 0), ('r3', fl.lade_var(N.K5 + '/farbe/K5c_farbe'), Z['k5'], Z['k5kopf'], 2)):
+                             ('G5', KT.re2_mo(0x36), Z['g5'], None, 0), ('r3', fl.lade_var(N.K5 + '/farbe/K5c_farbe_r3'), Z['k5'], Z['k5kopf'], 2)):
     per, _ = N.PL.sammeln(mo); rgb, mid = p_atlas(mo, per); u = mid >= 0
     L = N.lab_map(rgb, u)
     mmin = ND.minimum_filter(np.where(u, mid, -1), 3, mode='constant', cval=-1)

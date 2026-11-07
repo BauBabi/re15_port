@@ -388,7 +388,7 @@ if __name__ == '__main__':
     em = fl.lade_em30()
     g4 = KT.re2_mo(0x34)
     g5 = KT.re2_mo(0x36)
-    r3 = fl.lade_var(K5 + '/farbe/K5c_farbe')
+    r3 = fl.lade_var(K5 + '/farbe/K5c_farbe_r3')
     k4 = fl.lade_var(K5 + '/K4_heute')
     Z = zonen()
     out = {}

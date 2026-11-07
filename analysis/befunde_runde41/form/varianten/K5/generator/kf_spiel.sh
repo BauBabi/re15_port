@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # K5c Farbe (Runde 1, ab Runde 2 mit Vergleich K4 heute): echtes Spiel, echtes Fenster (re15_port/tools/form_spiel.sh: eigene exe-Kopie, Kandidat ueber RE15_RE2_ASSET_ROOT,
 # gdigrab bzw. PrintWindow, nur eigene PID; kein RE15_AUTOSHOT, kein RE15_SOFTWARE_RENDER). Spiel-Asset bleibt unberuehrt.
-#   bash kf_spiel.sh [Variantenordner] [--mit-heute]   (Standard ../farbe/K5c_farbe) -> ../farbe/spiel/*.png
+#   bash kf_spiel.sh [Variantenordner] [--mit-heute]   (Standard ../farbe/K5c_farbe_v2) -> ../farbe/spiel/*.png
 #   --mit-heute: dieselben Szenen zusaetzlich ohne Kandidat (Spiel-Asset shared_assets/RE2 = K4 heute) -> ../farbe/spiel/heute_*.png
 W=$(cd "$(dirname "$0")/../../../../../.." && pwd -W)
-D=$W/analysis/befunde_runde41/form/varianten/K5/farbe/K5c_farbe
+D=$W/analysis/befunde_runde41/form/varianten/K5/farbe/K5c_farbe_v2
 HEUTE=0
 for a in "$@"; do case "$a" in --mit-heute) HEUTE=1 ;; *) D=$a ;; esac; done
 A=$W/analysis/befunde_runde41/form/varianten/K5/farbe/spiel

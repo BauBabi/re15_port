@@ -1,0 +1,242 @@
+{
+ "zonen": {
+  "b1|Schwanz": {
+   "d": [
+    -16.5,
+    5.0,
+    -12.7
+   ]
+  },
+  "b1|Ruecken/Flanke": {
+   "d": [
+    -4.0,
+    8.0,
+    -19.2
+   ]
+  },
+  "b1|Hinterbein l (W)": {
+   "d": [
+    -8.9,
+    18.6,
+    -31.6
+   ]
+  },
+  "b1|Hinterbein r (W)": {
+   "d": [
+    -17.0,
+    14.9,
+    -51.4
+   ]
+  },
+  "b1|Vorderglied r (W)": {
+   "d": [
+    -6.9,
+    -5.6,
+    -5.9
+   ]
+  },
+  "b2|Oberkiefer": {
+   "d": [
+    -0.2,
+    7.0,
+    -7.5
+   ]
+  },
+  "b2|Kopf/Rumpf": {
+   "d": [
+    1.7,
+    2.6,
+    -9.2
+   ]
+  },
+  "b2|Unterkiefer": {
+   "d": [
+    43.3,
+    26.0,
+    19.2
+   ]
+  },
+  "b2|Klaue r (W)": {
+   "d": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "b2|Klaue l (W)": {
+   "d": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "auge": [
+  13.4,
+  15.8,
+  6.9
+ ],
+ "g_haut": 2.2199999999999998,
+ "runden": [],
+ "start": "kf_eich3.json (r3-Endstand), g = 1,48 x 1,5 (V8)",
+ "kettenstreuung": {
+  "saaten": [
+   15,
+   12345,
+   7
+  ],
+  "je_zone": {
+   "b1|Schwanz": [
+    0.047,
+    0.047,
+    0.047,
+    0.047,
+    0.0
+   ],
+   "b1|Ruecken/Flanke": [
+    0.047,
+    0.0,
+    0.0,
+    0.047,
+    0.0
+   ],
+   "b1|Hinterbein l (W)": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.047
+   ],
+   "b1|Hinterbein r (W)": [
+    0.125,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "b1|Vorderglied r (W)": [
+    0.094,
+    0.0,
+    0.0,
+    0.0,
+    0.047
+   ],
+   "b1|Figur": [
+    0.0,
+    0.0,
+    0.0,
+    0.047,
+    0.0
+   ],
+   "b2|Oberkiefer": [
+    0.125,
+    0.082,
+    0.0,
+    0.082,
+    0.047
+   ],
+   "b2|Kopf/Rumpf": [
+    0.047,
+    0.047,
+    0.047,
+    0.047,
+    0.0
+   ],
+   "b2|Unterkiefer": [
+    0.047,
+    0.0,
+    0.0,
+    0.0,
+    0.047
+   ],
+   "b2|Klaue r (W)": [
+    0.047,
+    0.082,
+    0.0,
+    0.047,
+    0.0
+   ],
+   "b2|Klaue l (W)": [
+    0.094,
+    0.094,
+    0.047,
+    0.094,
+    0.047
+   ],
+   "b2|Figur": [
+    0.047,
+    0.047,
+    0.047,
+    0.0,
+    0.0
+   ]
+  },
+  "mittel": 0.036,
+  "max": 0.125,
+  "k1_C": [
+   6.7,
+   6.8,
+   6.7
+  ],
+  "k2_ab": [
+   8.2,
+   8.2,
+   8.2
+  ]
+ },
+ "laeufe_verworfen": {
+  "e1": [
+   {
+    "runde": 0,
+    "chroma_b1": 6.7,
+    "ab_b1": 8.2,
+    "g": 2.601,
+    "schritt": 5.119570294468085,
+    "rest_dE_max": 7.836453279386025
+   },
+   {
+    "runde": 1,
+    "chroma_b1": 6.6,
+    "ab_b1": 8.2,
+    "g": 3.094,
+    "schritt": 4.860041152089146,
+    "rest_dE_max": 8.16945530620004
+   }
+  ],
+  "e2": [
+   {
+    "runde": 0,
+    "chroma_b1": 5.9,
+    "ab_b1": 7.0,
+    "g": 2.22,
+    "schritt": 5.000999900019992,
+    "rest_dE_max": 7.713624310270755
+   },
+   {
+    "runde": 1,
+    "chroma_b1": 5.8,
+    "ab_b1": 6.6,
+    "g": 2.22,
+    "schritt": 4.617358552246072,
+    "rest_dE_max": 7.640026177965623
+   },
+   {
+    "runde": 2,
+    "chroma_b1": 5.6,
+    "ab_b1": 6.4,
+    "g": 2.22,
+    "schritt": 4.799999999999997,
+    "rest_dE_max": 7.655716818169281
+   },
+   {
+    "runde": 3,
+    "chroma_b1": 5.6,
+    "ab_b1": 6.4,
+    "g": 2.22,
+    "schritt": 2.25,
+    "rest_dE_max": 7.470609078247905
+   }
+  ],
+  "befund": "Fixpunkt der Zonenmittel senkt die Bild-1-Kette C* 6,7 -> 5,6 und ab-Streuung 8,2 -> 6,4 (K1/K2 rot), ohne g-Grenze treibt g 2,22 -> 3,09 ohne Wirkung (Kappen). Endstand: r3-Zonenversaetze (kf_eich3.json) unveraendert, g 2,22 = 1,5 x r3 (V2 3.2); K3/K6-K8 mit diesen Werten gruen (riegel_farbe), zweite Saat im Dossier."
+ }
+}
