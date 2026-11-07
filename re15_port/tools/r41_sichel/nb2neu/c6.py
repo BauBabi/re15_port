@@ -28,6 +28,7 @@ def off(run):
             if not os.path.exists(q): continue
             im = cv2.imread(q)
             g = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+            g = cv2.resize(g, (960, 720), interpolation=cv2.INTER_NEAREST)   # SF V4 Runde 3: Dumps auch in 320 x 240 (Laeufe V4r3*)
             if g[:50].mean() < 1 and g[-50:].mean() < 1 and g[100:600].mean() > 20:
                 o = F; break
         _off[run] = o

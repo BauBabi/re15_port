@@ -1,1 +1,3 @@
-174b787939214f4a9020af98a9dc870614f0f63ead38ec6eed2772b76e3e738f   sfv4/emd/EM30_V4.EMD (V4 Runde 2, Commit-Stand Farben siehe farben_v4.npz / farben_koerper_v4.npz)
+dfbc30bc8215b7632ba09fe88870d5920a776a370a9ea4a7b1090916384ef181   sfv4/emd/EM30_V4.EMD = sfv4/emd/EM30_V4r3.EMD (V4 Runde 3; Neubau "birkin_formen.py --variante v4 --aus DIR" bitgleich)
+174b787939214f4a9020af98a9dc870614f0f63ead38ec6eed2772b76e3e738f   sfv4/emd/EM30_V4r2.EMD (V4 Runde 2, vorher sfv4/emd/EM30_V4.EMD)
+cfd1ac42729e56365847db42b352337d7f0c06fdcc1ef3413d0aee32d4a97a95   re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD (Spiel-Asset = Pin, unveraendert)

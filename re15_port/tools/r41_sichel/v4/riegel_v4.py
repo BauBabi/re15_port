@@ -16,6 +16,18 @@ Runde 2 (Pruefung V4 r1): T2-Drehung nach dem Zahlen-Pruefer (Tangenten +-0,025 
   Zeilen; Id ganz als F7g/F8g ausgegeben), FS-Zeilen (Sicht-Boxen: Oberarme unten, Rumpf + Schultern mit Rotanteil, Unterarme, Beine).
   F10: die Klaue (B)-rechts = (W)-links ist Id 12 (EM30-Knochen 10-12 = Arm links); Id 15 ist die dunkle Sichel (B)-links. Gemessen
        wird Id 12 (Lage wie das Originalfenster x 482-507), Id 15 wird mit ausgegeben.
+Runde 3 (Pruefung V4 r2 Zahlen/Sicht, Entscheide O1-O6 des Orchestrators):
+  G1 (O1): Geometrie = Ecken, Normalen, Dreiecke/Vierecke, UV-Koordinaten, Skelett, Keyframes, EDD; das CLUT-Feld der Koerper-Meshes darf
+      sich aendern (eigene Zeilen 488/489 fuer Mesh 14/10) und wird ausgegeben.
+  T2 (O2): Drehung nach t2_mass_v4.py (Pruefer-Mittellinie), Ziel = Mittel der Original-Masken, Toleranz = max(Spanne, 5 Grad).
+  T7 (O3): koerperfest am Lauf (t7_koerperfest_v4.py: Kette gegen das Feder-Ziel der gezeichneten Pose, Biegung/Knick, Strecke,
+      Rueckfaltung, Boden mit Mesh-Radien und Dornspitze) statt Bildhoehe in der Vorlage-2-Kamera.
+  K11 (O4): Struktur des Kopfes vorn = mittlerer Lum-Gradient (Sobel) im 2 px erodierten Kopf (Id 9) im Videoraum; Ziel und Toleranz aus
+      dem Original (9 um +-3 px verschobene Kopfboxen: Mittel; Toleranz = groesser von Spanne der 9 Boxen und halber Spanne der 4
+      Kopfviertel), dazu Kopf >= Rumpf (Original 1,57 x).
+  FS Unterarm (W)-rechts (O5): Id 14 gegen die Box 298-325 x 262-340 der Sicht-Pruefung V4 r2 (dE00, dL, Anteil L* > 30).
+  F7/F8: Lage der Messblatt-Fenster im Oberarm (Runde 2) UND Messblatt-Wortlaut (Id ganz) als eigene Zeilen mit echter Bewertung
+      (Pruefung V4 r2 Zahlen 4.2: nicht fest OK); dazu der ganze Oberarm gegen die Oberarm-Boxen der Sicht-Pruefung.
 """
 import os, sys, json, argparse, hashlib
 import numpy as np, cv2
@@ -27,6 +39,7 @@ import b2
 import emd_ansichtsblatt as EA
 import birkin_formen as BF
 from P_schwanz import mittellinie, dicke
+import t2_mass_v4 as T2M
 
 SCHW = G.SCHWANZ
 ZIEL = dict(  # Messblatt V4 Abschnitt 5 (Ziele, Videoraum) und Abschnitt 7
@@ -173,9 +186,48 @@ def kopf_vorn(mo, P):
         '/'.join('%.1f' % v for v in kv['KV1'][0]), d9), d9 <= 6 and kv['KV1'][0][1] >= 11))
     kw, kh = (x1 - x0 + 1) / H, (y1 - y0 + 1) / H
     Z.append(zeile('K10 Kopfbox vorn', '0,14-0,18 x 0,15-0,20 H', '%.3f x %.3f H' % (kw, kh), 0.14 <= kw <= 0.18 and 0.15 <= kh <= 0.20))
+    so_ = struktur_original(); gk, gr = kopf_struktur(V, ids)
+    Z.append(zeile('K11 Kopf-Struktur vorn', 'Lum-Gradient Kopf %.1f +-%.1f (Original, 9 Boxen %.1f-%.1f, Viertel %.1f-%.1f); Kopf >= Rumpf (Original %.2f x)' % (
+        so_['ziel'], so_['tol'], min(so_['werte']), max(so_['werte']), min(so_['viertel']), max(so_['viertel']), so_['verh']),
+        'Kopf %.1f, Rumpf %.1f (%.2f x)' % (gk, gr, gk / max(gr, 1e-6)), abs(gk - so_['ziel']) <= so_['tol'] and gk >= gr,
+        'Pruefung V4 r2 Sicht 1.1: Runde 2 Kopf 27,8 / Rumpf 32,4'))
     info = dict(H=H, ok=ok, sohle=so, kopfbox=kb, blob=dict((k, v) for k, v in b.items() if k != 'maske'),
                 fenster={k: (v[1], [round(float(x), 1) for x in v[0]]) for k, v in kv.items()})
     return Z, info, (img, ids, V, b)
+
+
+def _grad(Lm):
+    return np.hypot(cv2.Sobel(Lm.astype(np.float32), cv2.CV_32F, 1, 0), cv2.Sobel(Lm.astype(np.float32), cv2.CV_32F, 0, 1))
+
+
+def _box(b):
+    m = np.zeros((480, 640), bool); m[b[1]:b[3] + 1, b[0]:b[2] + 1] = True
+    return m
+
+
+_struktur = {}
+
+
+def struktur_original():
+    """K11 (O4): Lum-Gradient (Sobel) des Originals (Vorlage 1 entblendet) in der Kopfbox (Messblatt Abschnitt 2, x 368-416 y 139-191)
+    und der Rumpfbox (Sicht-Pruefung V4 r1/r2, x 352-448 y 196-292), je 2 px erodiert. Ziel = Mittel ueber 9 um +-3 px verschobene
+    Kopfboxen; Toleranz = groesser von (Spanne der 9 Boxen, halbe Spanne der 4 Kopfviertel)."""
+    if not _struktur:
+        g = _grad(G.lum(G.vorlage(1)))
+        K, R = G.KB_ORIG[1], (352, 196, 448, 292)
+        werte = [float(g[er(_box((K[0] + dx, K[1] + dy, K[2] + dx, K[3] + dy)))].mean()) for dx in (-3, 0, 3) for dy in (-3, 0, 3)]
+        xm, ym = (K[0] + K[2]) // 2, (K[1] + K[3]) // 2
+        viertel = [float(g[er(_box(b), 1)].mean()) for b in ((K[0], K[1], xm, ym), (xm, K[1], K[2], ym), (K[0], ym, xm, K[3]),
+                                                              (xm, ym, K[2], K[3]))]
+        rumpf = float(g[er(_box(R))].mean())
+        _struktur.update(ziel=float(np.mean(werte)), tol=max(float(np.ptp(werte)), 0.5 * float(np.ptp(viertel))), werte=werte,
+                         viertel=viertel, rumpf=rumpf, verh=float(np.mean(werte)) / rumpf)
+    return _struktur
+
+
+def kopf_struktur(V, ids):
+    g = _grad(G.lum(V))
+    return float(g[er(ids == 9)].mean()), float(g[er(ids == 8)].mean())
 
 
 def kopf_seite(mo, P):
@@ -310,9 +362,13 @@ def schwanz(mo, P):
     Z.append(zeile('T1 Schwanz Beginn', '0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03)', '%.3f H hinter, %.3f H ueber' % t1,
                    abs(t1[0] - 0.15) <= 0.03 and abs(t1[1] - 0.767) <= 0.03, s['t1_regel']))
     t2 = s['T2']
-    Z.append(zeile('T2 Biegung', 'dx -0,245 dy +0,036 (+-0,03); Drehung 60-100 Grad auf 0,10 H (Tangenten +-0,025 H)',
-                   'dx %.3f dy %.3f; %.1f Grad (Runde-1-Mass %.0f)' % (t2[0], t2[1], s['drehung'], s['drehung_alt']),
-                   abs(t2[0] + 0.245) <= 0.03 and abs(t2[1] - 0.036) <= 0.03 and 60 <= s['drehung'] <= 100))
+    # Runde 3 (O2): EIN Verfahren (t2_mass_v4.py, Pruefer-Mittellinie), Ziel/Toleranz aus den Original-Masken
+    to = T2M.original(); tp = T2M.port(ids, s['H'])
+    dp = tp['drehung'] if tp else float('nan')
+    Z.append(zeile('T2 Biegung', 'dx -0,245 dy +0,036 (+-0,03); Drehung %.1f +-%.1f Grad (t2_mass_v4, Original %s)' % (
+        to['ziel'], to['tol'], '/'.join('%.1f' % w for w in to['werte'])),
+        'dx %.3f dy %.3f; %.1f Grad (Bauer-Mittellinie Runde 2: %.1f)' % (t2[0], t2[1], dp, s['drehung']),
+        abs(t2[0] + 0.245) <= 0.03 and abs(t2[1] - 0.036) <= 0.03 and abs(dp - to['ziel']) <= to['tol']))
     t3 = s['T3']
     Z.append(zeile('T3 Knick (Taille)', 'dx -0,265 dy +0,257 (+-0,03)', 'dx %.3f dy %.3f' % t3,
                    abs(t3[0] + 0.265) <= 0.03 and abs(t3[1] - 0.257) <= 0.03))
@@ -395,7 +451,9 @@ def koerper_farben(mo, P):
            # Sicht-Pruefung V4 r1 1.4 (Boxen pruefung_sicht/messen_sicht.py BOX1, Original-Ziele hier gemessen): Oberarme unten, Rumpf
            # gesamt, Unterarme, Beine
            'FS_oa_bl_u': zeilenteil(er(ids == 13), 0.58, 1.0), 'FS_oa_br_u': zeilenteil(er(ids == 10), 0.56, 1.0),
-           'FS_rumpf': er(np.isin(ids, (7, 8))), 'FS_unterarm': er(np.isin(ids, (11, 14))), 'FS_beine': er(np.isin(ids, (2, 3, 5, 6)))}
+           'FS_rumpf': er(np.isin(ids, (7, 8))), 'FS_unterarm': er(ids == 11), 'FS_beine': er(np.isin(ids, (2, 3, 5, 6))),
+           # Runde 3: Unterarm (W)-rechts = (B)-links (O5) und die ganzen Oberarme gegen die Oberarm-Boxen der Sicht-Pruefung
+           'FS_unterarm_wr': er(ids == 14), 'FS_oa_bl': er(ids == 13), 'FS_oa_br': er(ids == 10)}
     img2, ids2 = G.zeichne(mo, P['85'])
     V2 = G.videoraum(img2); Lab2 = G.lab(V2)
     b8 = er(ids2 == 8)
@@ -419,16 +477,20 @@ def koerper_farben(mo, P):
                                                                        erg['F10_id15'][1]) if k == 'F10' else ''))
     mt = float(np.mean(des))
     Z.append(zeile('F Mittel', 'Mittel dE00 <= 4', '%.2f' % mt, mt <= 4))
-    for k in ('F7g', 'F8g'):
+    for k in ('F7g', 'F8g'):          # Runde 3: Messblatt-Wortlaut (Id ganz gegen das Fensterziel), echt bewertet (Pruefung V4 r2 Zahlen 4.2)
         la, n = erg[k]; zk = ZIEL[k[:2]]
-        Z.append(zeile('F %s (Id ganz, Runde-1-Mass)' % k, '%s (nur Angabe)' % '/'.join('%.1f' % v for v in zk),
-                       '%s dE00 %.1f dL %+.1f (%d px)' % ('/'.join('%.1f' % v for v in la), G.de00(la, zk), la[0] - zk[0], n), True,
-                       'Meshes 10/13 teilen 5798 Texel und die CLUT-Zeile 480 (G1): das hellere Licht des Originals auf dem (B)-linken Arm '
-                       'ist mit gemeinsamen Texeln nicht nachzubilden'))
+        dd, dl = G.de00(la, zk), la[0] - zk[0]
+        Z.append(zeile('F %s Messblatt-Wortlaut (Id ganz)' % k[:2], '%s dE00 <= 5, |dL| <= 4' % '/'.join('%.1f' % v for v in zk),
+                       '%s dE00 %.1f dL %+.1f (%d px)' % ('/'.join('%.1f' % v for v in la), dd, dl, n), dd <= 5 and abs(dl) <= 4,
+                       'Runde 3: Mesh 10 hat eine eigene CLUT-Zeile 489 (O1). Das Fenster F7 (x 307-347, y 167-212) liegt nur auf der hellen '
+                       'Schulterkuppe; der ganze Oberarm (B)-links ist im Original 17,3 L* (Sicht-Pruefung V4 r2 1.4, Box 300-345 x 186-250) - '
+                       'Widerspruch im Messblatt-Wortlaut, Offen' if k == 'F7g' else 'Runde 3: Mesh 10 mit eigener CLUT-Zeile 489 (O1), '
+                       'Verteilung des F8-Fensters fuer Id 10 ganz (r2_koerper_farben oberarm_br)'))
     o1 = G.vorlage(1)
     sicht = dict(FS_oa_bl_u=([(300, 213, 345, 250)], 'Oberarm (B)-links unten'), FS_oa_br_u=([(455, 228, 500, 262)], 'Oberarm (B)-rechts unten'),
                  FS_rumpf=([(352, 196, 448, 292), (318, 160, 360, 190), (425, 165, 470, 195)], 'Rumpf + Schultern'),
-                 FS_unterarm=([(468, 268, 500, 330)], 'Unterarme'), FS_beine=([(356, 352, 392, 430)], 'Unterschenkel'))
+                 FS_unterarm=([(468, 268, 500, 330)], 'Unterarm (B)-rechts = (W)-links Id 11'), FS_beine=([(356, 352, 392, 430)], 'Unterschenkel'),
+                 FS_unterarm_wr=([(298, 262, 325, 340)], 'Unterarm (B)-links = (W)-rechts Id 14'))
     for k, (boxen, nm) in sicht.items():
         mm = np.zeros((480, 640), bool)
         for (x0, y0, x1, y1) in boxen:
@@ -438,10 +500,17 @@ def koerper_farben(mo, P):
         la, n = erg[k]
         rp = V[reg[k]]; rot_p = float(((rp[:, 0] - rp[:, 1]) >= 15).mean()) if len(rp) else float('nan')
         dd = G.de00(la, zo) if n else 99.0
-        Z.append(zeile('FS %s' % nm, '%s, Rotanteil %.2f; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15' % ('/'.join('%.1f' % v for v in zo), rot_o),
-                       '%s dE00 %.1f dL %+.1f; Rotanteil %.2f (%d px)' % ('/'.join('%.1f' % v for v in la), dd, la[0] - zo[0], rot_p, n),
-                       dd <= 5 and abs(la[0] - zo[0]) <= 4 and abs(rot_p - rot_o) <= 0.15,
-                       'Sicht-Pruefung V4 r1 1.4, Boxen %s' % boxen))
+        ok_ = dd <= 5 and abs(la[0] - zo[0]) <= 4 and abs(rot_p - rot_o) <= 0.15
+        zus = ''
+        if k == 'FS_unterarm_wr':     # O5: keine weissen Flecken - Anteil L* > 30 hoechstens Original + 0,05 (Original 0)
+            hell_o = float((G.lab(op)[:, 0] > 30).mean()); hell_p = float((G.lab(rp)[:, 0] > 30).mean()) if len(rp) else 1.0
+            p90 = float(np.percentile(G.lab(rp)[:, 0], 90)) if len(rp) else 99.0; p90o = float(np.percentile(G.lab(op)[:, 0], 90))
+            ok_ = ok_ and hell_p <= hell_o + 0.05
+            zus = '; Anteil L* > 30 %.3f (Original %.3f, <= +0,05); L* p90 %.1f (Original %.1f)' % (hell_p, hell_o, p90, p90o)
+        Z.append(zeile('FS %s' % nm, '%s, Rotanteil %.2f; dE00 <= 5, |dL| <= 4, Rotanteil +-0,15%s' % (
+            '/'.join('%.1f' % v for v in zo), rot_o, '; Anteil L* > 30 <= Original + 0,05' if k == 'FS_unterarm_wr' else ''),
+            '%s dE00 %.1f dL %+.1f; Rotanteil %.2f (%d px)%s' % ('/'.join('%.1f' % v for v in la), dd, la[0] - zo[0], rot_p, n, zus),
+            ok_, 'Sicht-Pruefung V4 r1 1.4 / r2 1.4, Boxen %s' % boxen))
     # F0 Gueltigkeit: Wand links im Render (BSS-Hintergrund)
     w = lab1(G.mittel(V, (40, 150, 119, 299)))
     d0 = G.de00(w, ZIEL['F0'])
@@ -485,7 +554,17 @@ def machart(pfad):
     blob = open(pfad, 'rb').read(); rb = open(G.REF2, 'rb').read()
     mo, mr = BF.modell_aus_blob(blob), BF.modell_aus_blob(rb)
     d, dr = EA.emd_dir(blob), EA.emd_dir(rb)
-    abw = [b for b in list(range(9)) + list(range(10, 16)) if MV.mesh_bytes(mo.meshes[b]) != MV.mesh_bytes(mr.meshes[b])]
+    # Runde 3 (O1): Geometrie je Mesh = Ecken, Normalen, Flaechen-Indizes, UV-Koordinaten; das CLUT-Feld darf abweichen (ausgegeben)
+    def geo(m):
+        return (tuple(map(tuple, m.tv)), tuple(map(tuple, m.tn)), tuple(map(tuple, m.tf)), tuple(map(tuple, m.qv)), tuple(map(tuple, m.qn)),
+                tuple(map(tuple, m.qf)), tuple(tuple(u[i] for i in range(len(u)) if i % 3 != 2) for u in m.tuv),
+                tuple(tuple(u[i] for i in range(len(u)) if i % 3 != 2) for u in m.quv), tuple(u[5] for u in m.tuv), tuple(u[5] for u in m.quv))
+    abw = [b for b in list(range(9)) + list(range(10, 16)) if geo(mo.meshes[b]) != geo(mr.meshes[b])]
+    clut_neu = {b: (sorted({u[2] >> 6 for u in list(mr.meshes[b].tuv) + list(mr.meshes[b].quv)}),
+                    sorted({u[2] >> 6 for u in list(mo.meshes[b].tuv) + list(mo.meshes[b].quv)}))
+                for b in list(range(9)) + list(range(10, 16))}
+    clut_neu = {b: v for b, v in clut_neu.items() if v[0] != v[1]}
+    bytegleich = [b for b in list(range(9)) + list(range(10, 16)) if MV.mesh_bytes(mo.meshes[b]) == MV.mesh_bytes(mr.meshes[b])]
     sk, skr = mo.skel, mr.skel
     skel = all(tuple(sk.rel[b]) == tuple(skr.rel[b]) and sk.parent[b] == skr.parent[b] for b in range(16))
     kf = sk.kf_count == skr.kf_count and all(
@@ -494,9 +573,10 @@ def machart(pfad):
     edd = blob[d[1]:d[2]] == rb[dr[1]:dr[2]]
     sonst = all(blob[d[i]:d[i + 1]] == rb[dr[i]:dr[i + 1]] for i in (0, 3, 4, 5, 6))
     Z = []
-    Z.append(zeile('G1 Koerper-Geometrie = Ref2', 'Meshes 0-8, 10-15 byte-gleich; Skelett/Keyframes 0-15, EDD gleich',
-                   'abweichend %s; Skelett %s; Keyframes %s; EDD %s; uebrige Sektionen %s; Ref2 sha256 %s' % (
-                       abw or 'keine', skel, kf, edd, sonst, hashlib.sha256(rb).hexdigest()[:8]), not abw and skel and kf and edd))
+    Z.append(zeile('G1 Koerper-Geometrie = Ref2', 'Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV gleich (O1: CLUT-Feld frei); Skelett/Keyframes 0-15, EDD gleich',
+                   'Geometrie abweichend %s; CLUT-Feld geaendert %s; byte-gleich %d von 15; Skelett %s; Keyframes %s; EDD %s; uebrige Sektionen %s; Ref2 sha256 %s' % (
+                       abw or 'keine', {b: '%s -> %s' % v for b, v in clut_neu.items()} or 'keine', len(bytegleich), skel, kf, edd, sonst,
+                       hashlib.sha256(rb).hexdigest()[:8]), not abw and skel and kf and edd))
     ds = sum(MV.dreiecke(mo.meshes[b]) for b in SCHW)
     Z.append(zeile('M1 Dreiecke Schwanz', '<= 212', '%d (%s)' % (ds, [MV.dreiecke(mo.meshes[b]) for b in SCHW]), ds <= 212))
     dk = MV.dreiecke(mo.meshes[9])
@@ -506,9 +586,10 @@ def machart(pfad):
     zeilen9 = sorted({uv[2] >> 6 for uv in list(mo.meshes[9].tuv) + list(mo.meshes[9].quv)})
     zeilen_s = sorted({uv[2] >> 6 for b in SCHW for uv in list(mo.meshes[b].tuv) + list(mo.meshes[b].quv)})
     clut_h = mo.pal.shape[0]
-    ok3 = bpp8 and all(480 <= z < 480 + clut_h for z in zeilen9 + zeilen_s)
-    Z.append(zeile('M3 Farbtiefe', '8-bpp-TIM, Texel aus der CLUT', '8 bpp %s; CLUT-Zeilen Kopf %s, Schwanz %s (TIM %d Zeilen)' % (
-        bpp8, zeilen9, zeilen_s, clut_h), ok3))
+    zeilen_k = sorted({uv[2] >> 6 for b in list(range(9)) + list(range(10, 16)) for uv in list(mo.meshes[b].tuv) + list(mo.meshes[b].quv)})
+    ok3 = bpp8 and all(480 <= z < 480 + clut_h for z in zeilen9 + zeilen_s + zeilen_k)
+    Z.append(zeile('M3 Farbtiefe', '8-bpp-TIM, Texel aus der CLUT', '8 bpp %s; CLUT-Zeilen Kopf %s, Schwanz %s, Koerper %s (TIM %d Zeilen)' % (
+        bpp8, zeilen9, zeilen_s, zeilen_k, clut_h), ok3))
     dsch = [round(MV.dichte(mo.meshes[b]), 3) for b in SCHW]
     dkopf = round(MV.dichte(mo.meshes[9]), 3)
     Z.append(zeile('M4 Texeldichte', 'Kopf und Schwanz 0,045-0,091 Texel/E.', 'Kopf %.3f; Schwanz %s' % (dkopf, dsch),
@@ -579,12 +660,9 @@ def main():
     zs, is_, _ = kopf_seite(mo, P); Z += zs
     zt, st, _ = schwanz(mo, P); Z += zt
     if a.lauf:
-        gg = gang(a.emd, a.lauf, [int(x) for x in a.takte.split(',')])
-        for h, v in gg.items():
-            if 'fehler' in v:
-                Z.append(zeile('T7 Gang h%d' % h, 'T1-T4 +-0,06 H', v['fehler'], False)); continue
-            Z.append(zeile('T7 Gang h%d' % h, 'T1-T4 je +-0,06 H', ' '.join('%s %s (%.3f)' % (k, v[k], v['abw'][k]) for k in ('T1', 'T2', 'T3', 'T4')),
-                           v['ok'], 'Laufpose clip %(clip)d bild %(bild)d gier %(gier)d' % v['pose']))
+        # Runde 3 (O3): T7 koerperfest (t7_koerperfest_v4.py) statt Bildhoehe in der Vorlage-2-Kamera (gang(), Runde 1/2)
+        import t7_koerperfest_v4 as T7K
+        Z += T7K.riegel(T7K.messen(a.emd, a.lauf))
         lp = lichtprobe(a.lauf)
         for h, (x, y, d, n) in lp.items():
             Z.append(zeile('F0 Lichtgegenprobe h%d' % h, 'Rumpf b2 gegen FRAMEDUMP dE00 <= 3', 'b2 %s / Spiel %s dE00 %.1f (%d px)' % (
