@@ -2042,3 +2042,133 @@ dunkle Vorderkante, rotbraune Oberseite. Spielbild (RE15_FRAMEDUMP h135, sfv4/r/
 5. **KS2 ist kein Haar**: die Haarkante der Seitenansicht liegt auf denselben Texeln wie "Auge bis Nase" der Vorderansicht (s.
    Seitenbestimmung); sie bleibt grau, dunkel durch Hof und Licht. S3 gruen.
 6. Der Einbau ins Spiel-Asset folgt erst nach der Abnahme; nach dem Nutzerentscheid wird nicht weiter poliert.
+
+## V5 Kopf aus RE2 (KI-Bilder) (Bauer, Runde 1 von 2, 2026-11-07)
+
+Grundlage: der Kopf der Runde 3 (EM30_V4ot3.EMD, sha256 a1bc9309) ist ein eigener Klotz mit gemalten Zonen. Nutzerentscheid heute Abend: der
+Kopf kommt aus Resident Evil 2 (Birkin-Formen in CDEMD0.EMS), die KI-Bilder sind die Vorlage fuer Kopf, Maul, Auge, Haare, Schwanz.
+
+### Nutzer-Wortlaut (bindend)
+- "Gerade bei den Sichel Kopf verstehe ich es einfach nicht.... bei den KI Bildern kann man so verdammt gut sehen wie das verschwommene Bild
+  eigentlich aussehen muss.... Man sieht alles einwandfrei! Das Auge die Haare, den Mund, den Schwanz.... Ich raffe wirklich nicht, warum du das
+  nicht genauso hin bekommst...."
+- "Vielleicht kannst du dir auch einen Birkin aus Resident Evil 2 nehmen. Ich nehme an die duerften aehnlich aufgebaut sein die anderen Formen...."
+- frueher heute: "die Form baut von Farben und Texturen her ja nun wirklich auf die Urspruengliche Birkin Form auf" (Koerper = Referenz 2) und
+  "da ist links ein Auge. Linke Seite ist so graeulich. Bis Nase. Dann rechts Seite sieht man Haare - braeunlich...." (Beschreibung1).
+
+### Leser-Ergebnisse (SF_belege/re2kopf/, committet 0b6d20c63)
+- Leser A (00_koepfe_re2_vs_ki.png, koepfe.json, mess.json): die Nutzer-Annahme stimmt - 0x30/0x31/0x33 haben denselben Aufbau (8 dir-Eintraege,
+  Kopf = Mesh 3 am Knochen 3, Kopftextur TIM page 0 / CLUT-Zeile 0). Formidentitaet am Render: 0x30 = G1 (Menschenkopf, Kittel, Augenarm,
+  Rohr), 0x31 = G2 (Keilkopf, Brustgesicht, Dreifingerklaue), 0x33 = G3 (vier Arme, Schaedelkopf, Zahnmaul). Naechster Einzelkandidat zu
+  KI-Front / Beschreibung1 / Beschreibung2: **G2-Kopf** (dE00 3,0 / 6,6 / 6,5; G1 12,4 / 15,2 / 10,2; G3 14,6 / 19,2 / 10,5; Ref2-Kopf 14,9 /
+  19,4 / 15,6). Zaehne nur im G3-Kopf (Zahn-Anteil 0,0225); Haare nur im G1 (0,286). Der Ref2-Kopf (Mesh 9) ist ein rosa Klumpen ohne Auge,
+  Maul oder Haar.
+- Leser B (01_ki_merkmale.png, KI_LESUNG.md): glatte haarlose Kuppel mit Schnauze (Hai/Robbe), Achse 30-35 Grad vorn-unten, Kopf haengt vor dem
+  Buckel; Maul offen an der Unterseite (0,07-0,10 x 0,05-0,06 H) mit zwei Reihen kleiner weisser Zaehne, Inneres dunkelrot; ein kleines dunkles
+  Auge im oberen Drittel, mittig bis (B)-links (V2: zwei); "Haare" = (B)-rechte Kuppelhaelfte 9-21 L* dunkler, braun-grau, weicher Uebergang,
+  keine Straehnen; roter Fleischkamm vom Scheitel ueber den Nacken; Schwanz: C-Bogen 1,2-1,4 H bis zum Boden (Widerspruch zu Beschreibung2,
+  Entscheid noetig); Arme: kein Delta.
+
+### Herkunft (byte-true, Zaehlung re2_leser.rec: Index ((kind-0x10)*4+rec)*2 der TOC re2_ems_toc.inc; Protokoll SF_belege/v4/re2/kopf_re2_protokoll.json)
+| Teil | Quelle | Bytes | im EMD |
+|---|---|---|---|
+| Kopf-Geometrie (Mesh 9) | CDEMD0.EMS (sha256 8724200c...) kind 0x31 (G2) EMD Sektor 2944, 193124 B, sha256 bb966cd5...; MD1 dir[7] Mesh 3: 48 Ecken, 48 Normalen, 56 Dreiecke, 14 Vierecke | Ecken/Normalen transformiert (s. u.), Flaechen-Indizes gleich | Mesh 9 am Ref2-Knochen 9 (rel (111,-971,-133) unveraendert) |
+| Kopf-Texel | G2 TIM Sektor 2895, 99872 B, sha256 e0929cef..., 384 x 256 8 bpp, Texel u 0-125 v 0-89 (11340 Texel, 6524 belegt) | 7519 Texel bytegleich, 3821 auf dunklere Eintraege DERSELBEN Zeile (s. Andunkeln) | TPage 128 (x 0-125), Zeilen 160-249 |
+| Kopf-CLUT | G2 TIM CLUT-Zeile 0 (y 480), 256 Eintraege, 15-Bit-Rohwerte | bytegleich | Zeile 486 |
+| Maul (11 Dreiecke des G2-Kopfes) | kind 0x33 (G3) TIM Sektor 3065, 99872 B, sha256 99b793e2..., Zahn-Kachel u 2-13 v 5-40 (432 Texel: obere Zahnreihe v 6-12, rote Kehle v 13-22, untere Zahnreihe v 22-28, Kinn v 30-40; Spalten 0-1 / 14-20 der Kachel tragen den blauen Stirnstreifen des G3, b* < -15, nicht uebernommen) | bytegleich | TPage 130 (x 256-267), Zeilen 200-235 |
+| Maul-CLUT | G3 TIM CLUT-Zeile 0 (y 480) | bytegleich | Zeile 487 |
+| Koerper Meshes 0-8, 10-15, Schwanz 16-22, Skelett, Clips, EDD | EM30_V4ot3.EMD (Sektionen 0-6 und alle Meshes ausser 9 bytegleich; Koerper = Referenz 2 cfd1ac42) | bytegleich | - |
+Die alten Kopfflaechen der Runde 3 (TPage 128 u 0-47 / 56-111 v 160-223, 6656 Texel) sind geloescht (0); Schwanz-Texel unveraendert.
+Maul-UV: die 11 unteren Vorderflaechen des G2 (T25, T26, T34, T35, T42, T44, T28, T29, T22, T43, T5 - unter den Augen, Normale +x, y -186..118
+vor der Drehung) sind als Parallelprojektion (u aus z, v aus y) auf die Zahn-Kachel gelegt: obere Zahnreihe oben, Kinn unten. Das ist die
+einzige UV-Aenderung am G2-Kopf (Riegel T-R1a: UV abweichend 0, Maul 11).
+
+### Transformation (PORT-WAHL nach den Messblatt-Fenstern; Suche Scratchpad re2kopf_bau/grid1-4.log, Masse kopf_re2_mess.py)
+q = Rz(+10 Grad) . Ry(-34 Grad) . 1,50 v + (140, +10, 0) E. im Raum des Knochens 9 (Normalen mitgedreht). Gewaehlt ist die Messblatt-Kopfbox
+K10 (0,14-0,18 x 0,15-0,20 H), weil die Riegel T-R2 dort messen: Skala 1,50 -> K10 0,165 x 0,170 H (Leser A rechnete 1,577 auf 724 E.
+Kopfhoehe; Leser B: Kuppel 0,13-0,15 x 0,15 H, mit Maul 0,19-0,22 H). Neigung 10 Grad nach unten: ab 20 Grad kippt die Schnauze aus der Kamera
+50A0/12 (K10-Hoehe 0,137 H), das Gesicht der Beschreibung1 waere nicht mehr zu sehen (Leser B 30-35 Grad bleibt Offen). Gieren -34 Grad zur
+(W)-linken Seite: das G2-Auge sitzt bei z -110 = 0,6 der halben Kopfbreite weit aussen; ohne Gieren laege es 0,08 H links der Kopfmitte
+(Fenster 0,035-0,065). Versatz y +10: S2 Augenhoehe 0,812 H (mit y -20 lag sie bei 0,8203).
+
+### Andunkeln (3821 von 11340 Texeln, nur Eintraege der G2-Zeile 486, kein Texel heller als die Quelle; Riegel T-R1b)
+Ziel je Texel (L* x f, a* x g, b* x g), f = 1 - (1 - faktor) x w, g = 1 - 0,6 w, dann der Lab-naechste Eintrag derselben Zeile mit L* <= Quelle:
+- Haar (Nutzer "rechts Seite sieht man Haare - braeunlich"; Leser B D4): (W)-linke Kopfhaelfte, w = glatt((z + 80) / 80), faktor 0,65; das
+  (W)-rechte Auge (Flaechen T19/T20/T41, z -98..-125) bleibt unberuehrt; das (W)-linke Auge (T49/T55/T38/T40) liegt unter der Andunkelung
+  (K6 "zweites Auge verdeckt": vorher 34 rote Bildpunkte a* > 25 Bild-rechts oben, Lauf c6).
+- Nase (Nutzer "Bis Nase"; Messblatt K7 Nase mitteldunkel 18,2 L*): die leuchtende Mittelspalte der G2-Textur (u 41-60 = Gesichtsspalt,
+  Flaechen Q1/T1/T33/T27/T32), faktor 0,50 - sonst laege der hellste Punkt des Gesichts in der Mitte statt am Auge (Messblatt Abschnitt 2).
+- Spitze (Beschreibung2 KS2 dunkle Vorderkante, Messblatt Streifen L* 12,6): Flaechen mit Mittelpunkt x > 150..175 (Q0 173, T33/T31 177,
+  T27 184, T0 192, T32 196, T2 204, T21 223), faktor 0,50; das Fenster KS2 zeigt in Pose 85 zu 0,93 die Flaeche Q0 (probe6).
+- Mittel dL* -8,1 (P10 -15,6). Keine gemalten Augen, kein gemaltes Maul, keine Farbe ausserhalb der RE2-Zeilen.
+
+### Kopfmasse (kopf_re2_mess.py, Render b2 Kamera 50A0/12, RDT-Licht; Auge = Marker-Render des (W)-rechten G2-Augenkerns auf T19/T20/T41,
+Zaehne = Marker-Render der Zahn-Texel L* > 60 / Chroma < 20)
+| Mass | Soll (Messblatt V4) | Ist neu | ot3 (Runde 3) |
+|---|---|---|---|
+| K10 Kopfbox vorn | 0,14-0,18 x 0,15-0,20 H | 0,165 x 0,170 H (Box 325-384 x 160-221, H 364) | 0,154 x 0,187 |
+| K4 Auge vorn | 0,035-0,065 H links; 0,07-0,12 H unter OK | 0,060 / 0,097 H (19 px) | 0,054 / 0,095 |
+| K7 Nase/Maul-Lage | Zahn-Schwerpunkt x 0,3-0,7 / y 0,55-1,0 der Kopfbox | 0,60 / 0,66 (58 px) | kein Maul |
+| S2 Auge seitlich | 0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle | 0,043 / 0,812 H (16 px) | 0,051 / 0,817 |
+| KS2 Haarkante seitlich | Kopf-Bildpunkte im Fenster L* <= Kopf-Median (Videoraum 22,5) - 5 = 17,5 | 14,8 (68 % des Fensters Kopf; ganzes Fenster 22,8) | 23,1 (ganzes Fenster) |
+| Zaehne (T-R3) | >= 20 Marker-Bildpunkte, >= 5 helle unbunte | 58 Marker; 44 helle; Pose 85: 0 | 0 |
+| CLUT-Zeilen (T-R4) | <= 16, Port-Texturhoehe <= 4096 | 8 Zeilen (480-485 Ref2, 486 G2, 487 G3); 256 x 8 = 2048 | 6 |
+Kopf-Median Pose 135 roh L* 15 (Haelften links 15,4 / rechts 15,9); Ref2-Kopf 30,8, KI-Koepfe 23-26 (Leser B) - s. Offen.
+
+### Riegel (riegel_re2kopf.py, EM30_V4re2.EMD, --basis EM30_V4ot3.EMD, --lauf sfv4/r/V4re2/debug.log mit 191 FRAMEDUMPs)
+Ausgabe SF_belege/v4/re2/riegel_re2kopf_V4re2.txt/.md/.json. **Exit 1: 1 rot von 39** (T5, Geometrie seit Runde 5), 6 INFO-Zeilen.
+| Mass | Soll | Ist |
+|---|---|---|
+| T-K1a/b/c Koerper = Ref2 | Meshes/Texel bytegleich, Zeilen 480-485 bytegleich, weitere = Ref2-Kopie oder RE2-Kopfzeile | OK: keine Abweichung; 0 von 34716 Texeln; weitere 486 = G2 Zeile 0, 487 = G3 Zeile 0 |
+| T-K2s Schwanz Ref2-Farben | 0 Texel ausserhalb | OK 0 von 10356 |
+| T-K3a-d Schwanz | wie Runde 3 | OK (texelgleich: 13,0 <= 14,0; Std 8,8-14,6; Sprung 4,7; Anisotropie 0,71-1,29) |
+| T-R0 Aenderungsumfang gegen ot3 | Sektionen 0-6, andere Meshes, CLUT 480-485, Texel ausserhalb | OK: gleich / keine / gleich / 0 |
+| T-R1a Kopf-Geometrie = G2 Mesh 3 | Ecken <= 1 E., Normalen <= 2, Flaechen gleich, UV = Quelle + (0,160) ausser 11 Maulflaechen | OK 0,50 E. / 0,50 / gleich / UV abweichend 0, Maul 11 |
+| T-R1b Kopf-Texel = G2-TIM | abweichend nur die angedunkelten, selbe Zeile, nie heller | OK 3821 = 3821 = 3821; 7519 unveraendert |
+| T-R1c Zahn-Kachel = G3-TIM | bytegleich | OK 0 von 432 |
+| T-R1d Zeilen 486/487 = RE2 | 15-Bit-Rohwerte bytegleich | OK gleich / gleich |
+| T-R2 K10 / K4 / K7 / S2 / KS2 | Messblatt-Fenster | OK (Tabelle oben) |
+| T-R3 Zaehne sichtbar | >= 20 / >= 5 | OK 58 / 44 |
+| T-R4 Zeilen | <= 16, <= 4096 | OK 8, 2048 |
+| G1, M1-M4 | wie Riegel V4 | OK (M2 Kopf 84 Dreiecke, M4 Dichte Kopf 0,072) |
+| T1-T4, TA, T5q, T6, TK, T7a-d, Boden | wie Riegel V4 | OK |
+| T5 | f 0,5 >= 0,100 H | **ROT** 0,098 (Geometrie seit Runde 5, nicht angefasst) |
+Gegenprobe ot3 (riegel_re2kopf_V4ot3_gegenprobe.*): **9 rot von 34** - T-R1a (61 Ecken / 73 Tri / 18 Quad statt 48 / 56 / 14), T-R1b (11254 von
+11340 Texeln abweichend), T-R1c (753 von 756 der alten Kachelgroesse), T-R1d (Zeilen fehlen), T-R2 K4 / K7 / S2 (kein G2-Auge, keine Zaehne),
+T-R3, T5. Der Riegel unterscheidet die Fassungen.
+
+### Leisten (SF_belege/v4/; Runde 3 in v4/ot3/, Runde 2 in v4/ot2/, Runde 1 in v4/ot1/; Spalten KI-Bild | Nutzer-Beschriftung | Referenz 2 | neu)
+- 01_vorn_kamera12, 02_seite_wie_bild2, 03_kopf_nah_vorn_x4 (Zeile 2 mit Marken: Auge gelb, Zaehne cyan), 04_kopf_nah_seite_x4 (Zeile 2 Auge
+  gelb, Fenster KS2 cyan), 08_rundum_V4 (Zeile 1 KI 4 Ansichten + Beschriftungen, Zeile 2 Referenz 2, Zeile 3 neu).
+- 10_kopf_ki_re2_neu_x6: je Zeile ein KI-Bild (FRONT | RIGHT) und drei Modell-Kacheln unter gleichem Licht (emd_ansichtsblatt.render, Kopfbox
+  240 px): Zeile 1 G2-Quelle vorn | neu vorn | neu rechts; Zeile 2 G2 rechts | neu links (Haarseite) | neu oben (Kuppe mit roten Adern); Zeile 3
+  G3-Zahnquelle | neu von unten (Maul mit Zahnreihen) | neu hinten.
+- 11_spiel_koepfe: RE15_FRAMEDUMP h135 (Kopf x3) und h85 (Oberkoerper x2; der Kopf liegt im Spielbild h85 hinter dem Buckel) fuer Referenz 2
+  (Lauf R2ot) und neu (Lauf V4re2); Lauf-Log SF_belege/v4/re2/lauf_V4re2.txt (EXIT=0, 191 Bilder, "EM30 loaded: 23 meshes, 23 bones, 21 clips").
+Am Bild: dunkelgrauer Keilkopf mit Schnauze, rote Adern auf der Kuppe, ein rot gluehendes Auge mit hellem Kern Bild-links, Mitte und Bild-rechts
+dunkler (Nase / Haarseite), unten das offene Maul mit zwei Zahnreihen und dunkelrotem Inneren; seitlich eine nach vorn-unten weisende dunkle
+Schnauze mit dem Auge nahe der Spitze.
+
+### Tests
+- ctest (unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41, integration_r41_sichel_form): "100% tests passed, 0 tests failed out of 4"
+  (64,52 s; SF_belege/v4/re2/ctest_v4_re2.txt). Engine unveraendert, kein Neubau noetig (Bau vom 2026-11-07 12:37).
+- Variante: sfv4/emd/EM30_V4re2.EMD = EM30_V4.EMD (sha256 f37bc5514c6892186d90a808dfd20f646aeecb59b0667933b3daa84f296ff18d, 262284 Byte);
+  Spiel-Asset EM30_HANGAR.EMD (cfd1ac42) und Pin release/em30_hangar.sha256 unveraendert. Reproduzierbar: "python kopf_re2_bau.py --json PROT"
+  (Basis EM30_V4ot3.EMD a1bc9309).
+
+### Offen
+1. **Kopf-Helligkeit**: die G2-Textur ist dunkel (Texel L* 27 flach, Leser A); im RDT-Licht der Pose 135 liegt der Kopf-Median bei L* 15, der
+   Ref2-Kopf bei 30,8, die KI-Koepfe bei 23-26 (Leser B D6: 5-8 L* dunkler als die beleuchtete Haut, hier ~13). Heller nur mit helleren
+   Eintraegen der G2-Zeile (waere wieder Eintragswahl) oder mit einer eigenen, helleren Kopie der Zeile 486 - nicht gemacht (Nutzer: "Warum
+   mischst du die Farben so daemlich?").
+2. **Schnauzenwinkel**: Leser B 30-35 Grad vorn-unten; gebaut 10 Grad, weil die Beschreibung1 (Gesicht mit Auge/Haaren/Nase in Cut 12) bindend
+   ist und das Gesicht ab 20 Grad aus der Kamera kippt (K10-Hoehe 0,137 H).
+3. **Auge klein**: der G2-Augenkern ist in Pose 135 19 Bildpunkte, in Pose 85 16 (Marker-Render); im rohen Render ein dunkelroter Punkt mit
+   hellem Kern (G2: "rot leuchtend"), KI: dunkle Pupille mit weissem Glanzpunkt (Leser B D3). Kein gemaltes Auge.
+4. **Haarseite in Pose 135 kaum zu sehen**: durch das Gieren -34 Grad (noetig fuer K4) wendet sich die (W)-linke Haelfte von der Kamera ab;
+   Haelften-Median links 15,4 / rechts 15,9 L*. Sichtbar ist sie in 08 (rundum) und 10 (Zeile 2).
+5. **Schwanz**: Leser B D7 (C-Bogen 1,2-1,4 H bis zum Boden) widerspricht Beschreibung2 (0,70 H2 mit Knick); kein Delta ohne Entscheid, Schwanz
+   bytegleich Runde 3 (T-R0). T5 bleibt rot (0,098).
+6. **Texel-Zeilen der Zaehne**: die Zahn-Kachel ist 12 x 36 Texel auf 11 Flaechen (Texeldichte des Maulbereichs unter der des G2-Kopfes); im
+   Spielbild h135 sind die Zaehne als helle Punkte zu sehen (Leiste 11, Zeile 1).
+7. Der Einbau ins Spiel-Asset folgt erst nach der Abnahme; Runde 2 dieser Spur ist die letzte.
