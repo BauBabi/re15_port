@@ -9,7 +9,7 @@ B2/B9/B9b, K11-K15, F1t/F2t (+ Zaehne). Exit 1, wenn eine Zeile der Variante ROT
 Atlas mit mehreren CLUT-Zeilen: Ein Texel, das zwei Teile mit verschiedenen Zeilen nutzen, ist zwei Farben. Gemessen wird darum am
 "Zeilen-Atlas" (wie der Port: je CLUT-Zeile eine Kopie der Textur untereinander, render_pc.c re15_render_pc_upload_tim_slot): jede Flaeche
 liegt in der Kopie ihrer Zeile. Felder der V3-Anordnung (Messblatt V3 1.3 "Felder im Riegel-Skript nachtragen"): Koerper = alle Flaechen
-ausser Kopf 22, Kiefer 23 und Sonderfeldern; Kopf = Mesh 22 ohne Sonderfelder; Kiefer = Mesh 23 ohne Sonderfelder plus Maul-Band (A8);
+ausser Kopf 22, Kiefer 23 und Sonderfeldern; Kopf = Mesh 22 ohne Sonderfelder; Kiefer = Mesh 23 ohne Sonderfelder plus Maul-Band (A8, ohne Zaehne);
 Auge = Augenflaechen (K5c-Augenfeld); Kralle = Klauen 14/15/19/20/28-31; Sonderfelder = Zeilen 6-8 (F1-Stelle, Band, Zaehne) und Augen.
 """
 import argparse
@@ -246,7 +246,7 @@ def d1_messblatt(v, G, sonder):
         return A
     q = {}
     for nm, zm, qm, art, op in KG.ZUORDNUNG:
-        ag = g4_flaeche(qm, op) * (len(zm) if art == 'einzeln' else 1)
+        ag = g4_flaeche(qm, op) * (len(zm) if art in ('einzeln', 'kralle') else 1)
         for t, ms in TEILE.items():
             if set(zm) <= set(ms):
                 q.setdefault(t, [0.0, 0.0])
@@ -455,8 +455,9 @@ def atlas_v3(v, sonder, aug):
         xs, ys = np.clip(xy[:, 0], 0, w - 1), np.clip(xy[:, 1] + 256 * z, 0, h - 1)
         if key in aug:
             masken['auge'][ys, xs] = True
-        elif key in band_keys or (z == KG.Z_ZAHN and mi == 23):
-            # Runde 2: Kieferfeld = Unterkiefer aussen + Band + Zaehne des Unterkiefers (Messblatt V3 1.3 A8: "Bild 2 zeigt dort 66 % Rot und 12 % Zahn")
+        elif key in band_keys:
+            # Runde 3: Kieferfeld nach dem Wortlaut von Messblatt V3 5 A8 / 1.3 "Unterkiefer aussen samt Band", ohne die Zaehne (Zahlen-Pruefer
+            # V3 r2 Befund B: Runde 2 hatte die Zaehne von Mesh 23 dazugenommen, eine Umdefinition in eigener Sache)
             masken['kiefer'][ys, xs] = True
         elif key in sonder:
             masken['sonder'][ys, xs] = True
@@ -516,7 +517,7 @@ def ketten_v3(vdir, masken, mo=None, tex=None):
         fig = np.zeros((480, 640), bool)
         for g in regs.values():
             fig |= g
-        R[n] = dict(T=T, To=To, regs=regs, fig=fig, f=f, m=m)
+        R[n] = dict(T=T, To=To, regs=regs, fig=fig, f=f, m=m, vid=vid, kn=None)
     # K11
     r1 = R[1]
     fi = _rot(r1['T'], r1['fig'] & r1['f'])
@@ -537,6 +538,18 @@ def ketten_v3(vdir, masken, mo=None, tex=None):
     r2 = R[2]
     d2 = _rot(r2['T'], r2['fig'] & r2['m'])['dunkel']
     out['K13 Bild2 dunkle Klasse Figur %'] = (d2, d2 >= K13_MIN)
+    # Runde 3, nur Info (keine Messblatt-Zeile): Flaeche der Leuchtstelle F1 nach der Regel des Sicht-Pruefers V3 r2 (gefiltertes Bild 1, Video-Lab
+    # L* >= 30 und a* >= 20, 8-zusammenhaengend mit dem a*-Maximum der Box x 300-345, y 225-265; Original 646 px)
+    if not masken.get('nur_k11_13'):
+        Lv = cv2.cvtColor(np.asarray(R[1]['vid'], np.float32) / 255.0, cv2.COLOR_RGB2LAB)
+        mf = (Lv[..., 0] >= 30) & (Lv[..., 1] >= 20)
+        bx = np.zeros(mf.shape, bool)
+        bx[225:266, 300:346] = True
+        y_, x_ = np.unravel_index(np.argmax(np.where(bx & mf, Lv[..., 1], -1e9)), mf.shape)
+        _n, cc = cv2.connectedComponents(mf.astype(np.uint8), connectivity=8)
+        fl = cc == cc[y_, x_]
+        o_ = masken['F1']
+        out['F1-Flaeche Bild 1 px / IoU Maske F1 (Original 646 px) [info]'] = ((int(fl.sum()), round(float((fl & o_).sum() / max((fl | o_).sum(), 1)), 2)), None)
     # K14 / K15
     for nm, n, mk, ziel, rmin in (() if masken.get('nur_k11_13') else (('K14 Bild1 F1-Stelle', 1, masken['F1'], K14_ZIEL, K14_ROT),
                                                                       ('K15 Bild2 Fleischband', 2, masken['band'], K15_ZIEL, K15_ROT))):
@@ -619,7 +632,7 @@ def messen(vdir, schnell=False):
     res['B9b Rot im Umrissband % Clip 0'] = (round(s0, 1), s0 <= RF.B9_MAX)
     M = masken_daten()
     for k, (val, ok) in ketten_v3(vdir, M).items():
-        res[k] = (val, bool(ok))
+        res[k] = (val, None if ok is None else bool(ok))
     zus = dict(teile=hk, h1b=h1b, feldmittel=fm_)
     return res, zus
 
@@ -692,11 +705,19 @@ def gegenproben_weitere(vdir):
     out['(b2)-Probe A P2 Kopf aus G4-F1 (K5c, G4 26, Diff)'] = (pr, ok)
     # Orange / Gelb
     px_g4, cl_g4 = KG.g4_cluts(g4tim)
+    # Runde 3 (Zahlen-Pruefer V3 r2 (4): "Die Orange/Gelb-Probe faerbt die ganzen Zeilen 6/7 ein ... eine Probe nur mit den Fleck-Eintraegen waere
+    # schaerfer"): nur die Eintraege, die die Feld-Texel nutzen (Zeile 6: Texel der Art F1-Fleisch; Zeile 7: alle gelesenen Band-Texel)
+    genutzt = {KG.Z_F1: set(), KG.Z_BAND: set()}
+    for key, mi, zz, ecken, a3 in v.flaechen:
+        if zz in genutzt:
+            for x, y in v.texel(ecken):
+                if zz == KG.Z_BAND or v.hart[y, x] == 2:
+                    genutzt[zz].add(int(v.px[y, x]))
     for nm, rgb in (('Orange', ORANGE), ('Gelb', GELB)):
         w = copy.copy(v)
         w.cl = [list(z) for z in v.cl]
         for zz in (KG.Z_F1, KG.Z_BAND):
-            w.cl[zz] = [KG.wort(rgb) if c != 0 else 0 for c in v.cl[zz]]
+            w.cl[zz] = [KG.wort(rgb) if (c != 0 and i in genutzt[zz]) else c for i, c in enumerate(v.cl[zz])]
         w.rgb_zeilen = np.stack([KG.wort_rgb(z) for z in w.cl])
         fm_ = feldmittel(w, cl_g4)
         zf1, zb = lab(np.array([KG.ZIEL_F1]))[0], lab(np.array([KG.ZIEL_BAND]))[0]

@@ -174,7 +174,9 @@ if __name__ == '__main__':
     os.makedirs(ausd, exist_ok=True)
     nur = sys.argv[3:] or ['01', '02', '03', '04', '05', '06', '08']
     if '07' in nur:
-        KT.spiel(os.path.join(ausd, 'spiel_v3'), os.path.join(ausd, '07_spiel.png'))
+        lg = os.path.join(ausd, 'spiel_lauf_v3.log')
+        wege = sorted(set(z.split(':', 1)[1].split('(')[0].strip() for z in open(lg, encoding='utf-8', errors='replace') if z.startswith('Verfahren:'))) if os.path.exists(lg) else []
+        KT.spiel(os.path.join(ausd, 'spiel_v3'), os.path.join(ausd, '07_spiel.png'), ' / '.join(wege) or 'Weg unbekannt')
     if '01' in nur:
         szene(1, neu, os.path.join(ausd, '01_szene_bild1.png'))
     if '02' in nur:

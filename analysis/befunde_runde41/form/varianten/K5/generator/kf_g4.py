@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Farbe Versuch 3 der Riesenform K5c: G4-Uebertragung (MESSBLATT_FARBE_V3.md, Bauer Runde 2; Pruefberichte FARBE_PRUEFUNG_v3_r1_*.md).
+"""Farbe Versuch 3 der Riesenform K5c: G4-Uebertragung (MESSBLATT_FARBE_V3.md, Bauer Runde 3; Pruefberichte FARBE_PRUEFUNG_v3_r1_*.md, v3_r2_*.md).
 
 Nutzer 2026-11-07: "Ich koennte mir vorstellen, das er so schwarz rot ist in seiner 4 beider Form, weil er verbrannt ist, wenn der generator
 explodiert. ... das Gesicht vorne irgendwie in flammenfarben leuchtet. Bei der vorderansicht ja auch vielleicht hat er mit der Mutatione die
@@ -17,6 +17,10 @@ Was der Bau tut (Messblatt V3 2.2/2.3/3):
   Winkelluecke, die sie lassen, wird je Quellmesh zusammengeschoben (theta-Verdichtung), damit keine Flaeche auf eine Lochkante faellt.
 - CLUT-Zeilen (Messblatt 5 H2): 0-2 G4 bytegleich; 3-5 "Bild-1-Aderrot" = G4-Zeile 0-2, rote Eintraege im Farbton auf das Bild-1-Rot
   gedreht und in C* auf dessen Buntheit gesetzt, L* unveraendert (Rangfolge haelt); 6 = F1-Stelle, 7 = Maul-Band, 8 = Zaehne.
+
+Runde 3 (Pruefberichte FARBE_PRUEFUNG_v3_r2_*.md): Krallen je K5c-Kralle ein G4-Krallenstreifen (krallen_uv), F1-Fleck nach Mehrheitsregel mit
+dunklem Rand, Band auf das Ketten-Ziel ZIEL_BAND_KETTE, Seite-1-Buntheit auf K12 geeicht, Bild-1-Zeilen am Vorderglied r nur auf den in Bild 1
+sichtbaren Flaechen (B1_SICHTBAR_NR).
 
 Aufruf: python kf_g4.py [--aus <Ordner>]   (Default: farbe/K5c_farbe_v3; dazu farbe/K5C_FARBE_V3.EMD/.TIM und Scratchpad formfarbe3/emd)
 """
@@ -67,7 +71,12 @@ B1_C_FAKTOR = math.hypot(*B1_ROT_LAB[1:]) / math.hypot(*G4_ROT_LAB[1:])   # 21,7
 #  Lauf 2 (alle Seiten x 1,0): K1v2/K2v2/K4b gruen, aber K12 Schwanz 17,1 % > 8,9 % -> ROT.
 #  Seite 1 traegt Schwanz (F17/F19) und Vorderglied r: dort die Schwanz-Buntheit aus Messblatt V3 4 "1 Schwanz" Rot Lab (39,7 / 23,6 / -0,4):
 #  C* 23,6 / 41,1 = 0,574. Seiten 0 und 2 (Becken, Lende, Hinterbeine) behalten die G4-Buntheit, nur der Farbton wird gedreht.
-B1_C_JE_SEITE = (1.0, math.hypot(23.6, -0.4) / math.hypot(*G4_ROT_LAB[1:]), 1.0)
+# Runde 3 (Zahlen-Pruefer V3 r2 Befund C: K12 Schwanz 8,7 / 8,9 / 9,0 % mit Saat 15 / 12345 / 7, Grenze 8,9, ohne Reserve): Seite 1 auf das
+# K12-Original geeicht (Messblatt V3 5 K12 "Original Schwanz 5,9 %"; Messblatt 2.3 Schwanz "Adern-CLUT nach H2" erlaubt). Laeufe (r3/k12_saaten.py,
+# Schwanz % je Saat 15/12345/7): 0,35 -> 1,3/1,4/1,3; 0,45 -> 2,8/3,0/3,0; 0,515 -> 5,3/5,7/5,3; 0,535 -> 6,1/6,5/6,2; 0,574 -> 8,7/9,0/9,2.
+# Gewaehlt 0,535: Mittel 6,3 % am naechsten an 5,9 % (0,515: 5,4 %). Runde 1/2: 0,574 = C* 23,6 / 41,1 (Messblatt V3 4 "1 Schwanz").
+B1_C_SEITE1_EICH = 0.535
+B1_C_JE_SEITE = (1.0, B1_C_SEITE1_EICH, 1.0)
 # Rot-Gewicht eines CLUT-Eintrags fuer die Bild-1-Zeilen, als Rampe zwischen den beiden Rotklassen der Messblaetter (Runde 2, keine eigene Wahl):
 #  ROT_C0 = 15: Untergrenze der Ketten-Rotklasse K11 (MESSBLATT_FARBE_V3 5 K11 "a* >= 12, C* >= 15, L* >= 20"); darunter zaehlt der Eintrag
 #               in der Bild-1-Kette nicht als Rot und bleibt G4.
@@ -79,6 +88,13 @@ ROT_C0, ROT_C1, ROT_H0, ROT_H1 = 15.0, 20.0, -40.0, 70.0
 ZIEL_F1 = (149, 103, 122)        # Lab (48,9 / 21,4 / -3,1), -8,3 Grad
 ZIEL_BAND = (184, 90, 85)        # Lab (49,6 / 37,5 / 20,8), 29,0 Grad
 # Runde 2: ZIEL_BAND_BAU (183,99,92) entfaellt (Zahlen-Pruefer (5): PORT-WAHL ohne Nutzer-Wortlaut). Das Band wird auf ZIEL_BAND gebaut.
+# Runde 3: Bauziel des Bands aus der Bild-2-Kette (Sicht-Pruefer V3 r2: "Fuer das Auge zaehlt K15, nicht F2t ... In der Kette muesste das Band
+# weniger rot sein"; Zahlen-Pruefer V3 r2 Befund A: auch ein einfarbiges Band auf ZIEL_BAND ergibt K15 dE 12,7). Gemessen an den Bandpixeln auf
+# Knochen 23 (1282 px, Scratchpad formfarbe3/r3/band_knochen.py + kette_band.npz, Variante r3/v3): Die Kette gibt das Texel fast unveraendert
+# wieder (Ketten-T / Texel = 1,017 / 0,963 / 1,030 je Kanal); der Rundlauf des Originals liegt dort bei T (185,5 / 112,7 / 105,4). Bauziel =
+# Rundlauf / Faktor = (182, 117, 102), Lab (55,7 / 24,2 / 18,8). Abstand zu ZIEL_BAND (Riegel F2t) dE 14,8: F2t wird dadurch ROT; der
+# Widerspruch Messblatt 3.2 <-> Kette liegt beim Messblatt-Pruefer (Dossier V3R3.3).
+ZIEL_BAND_KETTE = (182, 117, 102)
 ZIEL_ZAHN = (199, 191, 183)      # Leser B (Lab 77,7 / 2,1 / 4,8), Messblatt 3.2 "Zaehne: L* >= 70, C* <= 12"
 
 # K5c-Flaechen der Sonderfelder (Messblatt V3 1.2 / Leser B 1.3; Zaehlung je Mesh: tf, danach qf)
@@ -117,18 +133,34 @@ ZUORDNUNG = [
     ('Vorderbein l (W) Oberarm', [11], [11], 'kette', dict(zeilen='g4')),
     ('Vorderbein l (W) Unterarm', [12], [12], 'kette', dict(zeilen='g4')),
     ('Vorderbein l (W) Hand', [13], [13], 'kette', dict(nur=['F20'], zeilen='g4', laengs_einmal=True)),
-    ('Klauen l (W)', [14, 15, 28, 30], [14], 'einzeln', dict(zeilen='g4', laengs_einmal=True)),
+    # Runde 3 (Sicht-Pruefer V3 r2: Vorderklaue in Bild 2 'Mosaik aus grossen beige-weiss-braunen Dreiecken'): je K5c-Kralle EIN G4-Krallenstreifen,
+    # durchgehend (krallen_uv) statt Zylinderprojektion im Handrahmen (die Flaechen einer Kralle fielen dort auf verschiedene G4-Krallen und Inseln).
+    ('Klauen l (W)', [14, 15, 28, 30], [14], 'kralle', dict(zeilen='g4')),
     # Runde 2: ohne das rosa Wundoval G4 16 Insel 72 (Sicht-Pruefer V3 r1: 'lachsfarbenes Oval' an der Schulter; beim Kopf schon ausgeschlossen).
     ('Vorderbein r (W) Oberarm', [16], [15, 16], 'gruppe16', dict(ohne=['F16'], ohne_inseln={16: [72]}, zeilen='b1')),
     ('Vorderbein r (W) Unterarm', [17], [17], 'kette', dict(zeilen='b1')),
     ('Vorderbein r (W) Hand', [18], [18], 'kette', dict(nur=['F20'], zeilen='b1', laengs_einmal=True)),
-    ('Klauen r (W)', [19, 20, 29, 31], [19], 'einzeln', dict(zeilen='g4', laengs_einmal=True)),
+    ('Klauen r (W)', [19, 20, 29, 31], [19], 'kralle', dict(zeilen='g4')),
     # Kopf aussen aus F18 (Messblatt V3 2.3 "dunkle Hautfelder F18 (Oberarm r: schwarz mit Laengsadern) oder F4/F5"). Gewaehlt nach Messung
     # (Dossier FARBE.md Versuch 3 Runde 1, V3.1 Punkt 6): mit F4/F5/F6 K13 Bild-2-Dunkel 31,2 % < 46,4 %, K6 dE 9,1; mit F18 K13 46,2 %, K6 dE 4,7
     # (farbe/v3r1/riegel_K5c_farbe_v3r1.txt).
     # Ohne das rosa Wundoval (G4 16 Insel 72, L* 21,4, 38 % rot, gemessen t7.py): es laege sonst am rechten Auge (K10 L* 35,1 > 30).
     ('Kopf + Kiefer aussen', [22, 23], [16], 'kopf', dict(achse=(1, 0, 0), nur=['F18'], ohne_inseln={16: [72]}, zeilen='g4')),
 ]
+# Runde 3: Bild-1-Zeilen am Vorderglied r (W) nur auf den Flaechen, die Bild 1 zeigt (Sicht-Pruefer V3 r2: "2-3 waagerechte rosa Strichel an
+# Flaechengrenzen" an Schulter/Brust, "Hand A ... mauve-lila ... Ursache sind die Bild-1-Zeilen (Magenta) am Vorderglied"). Gemessen
+# (Scratchpad formfarbe3/r3/strichel.py): rosa-magenta Texel (Rotklasse, Farbton < 10 Grad) gibt es nur auf Mesh 16 in den Bild-1-Zeilen,
+# 7,1 % im Inselinneren und 3,8 % am Inselrand; es sind also die umgefaerbten G4-Adern, kein Randtexel einer Sonderzeile.
+# Flaechen-Nr. (tf, danach qf) mit mindestens 1 px in Bild 1: Leser B fid1.npz (flaechen_id.py, K5c-Geometrie = G0), Knochen 16: 2521 px auf 39,
+# 17: 1667 px auf 37, 18: 1213 px auf 31 Flaechen. Die uebrigen Flaechen dieser Meshes nehmen die G4-Zeile (Messblatt V3 4: das Bild-1-Aderrot
+# dient Bild 1; H2: G4-CLUT bytegleich).
+B1_SICHTBAR_NR = {
+    16: (1, 3, 5, 7, 16, 17, 18, 19, 20, 21, 22, 66, 67, 68, 74, 75, 76, 81, 82, 83, 84, 90, 91, 92, 93, 98, 99, 105, 106, 107, 108, 109, 114, 115,
+         116, 130, 131, 132, 139),
+    17: (18, 27, 28, 36, 37, 42, 43, 44, 45, 50, 51, 52, 53, 58, 59, 60, 61, 66, 67, 68, 69, 74, 75, 76, 77, 82, 84, 85, 93, 98, 106, 107, 108, 114,
+         115, 116, 117),
+    18: (0, 2, 14, 36, 37, 38, 39, 40, 41, 42, 43, 56, 57, 58, 59, 64, 65, 66, 73, 115, 116, 117, 118, 120, 121, 122, 123, 124, 125, 126, 127),
+}
 TEILE_H1 = {   # Messblatt 5 H1 "je Teil (Rumpf, Schwanz, Hals, Beine, Arme, Klauen, Kopf/Kiefer aussen)"; Rumpf = Huefte, Wirbel, Brust
     'Rumpf': [0, 7, 10], 'Schwanz': [1, 2, 3, 4, 5, 6], 'Hals': [21], 'Beine': [8, 24, 25, 9, 26, 27],
     'Arme': [11, 12, 13, 16, 17, 18], 'Klauen': [14, 15, 28, 30, 19, 20, 29, 31], 'Kopf/Kiefer aussen': [22, 23],
@@ -790,6 +822,111 @@ def projektion(k5, G, zm, qm, art, op, k5skel_rel=None, auswahl=None):
     return neu, st, erl_maske
 
 
+# ================================================================ Krallen (Runde 3)
+# G4-Krallenstreifen (Messung r3/krallen_streifen, 2026-11-07, G4-Zeile 1 = Seite 1): Die Krallen-Inseln von G4 14 und 19 liegen auf zwei Streifen,
+#  links u 230-240 (Inseln 14/7, 14/15, 19/7, 19/15, 19/2; L* Mittel 40-49) und rechts u 242-253 (14/10, 14/16, 19/10; L* Mittel 53-60, p90 98-100).
+#  Jede G4-Kralle legt jede ihrer Seitenflaechen ueber den ganzen Streifen: v laeuft von der Wurzel (v klein, Abstand zum Knochen 87-250) zur
+#  Spitze (v gross, 282-458). Gewaehlt ist der linke Streifen: Wurzel dunkelrot (Zeilen 201-213, a* 24-41), Mitte beige (L* 44-55), Spitze dunkel
+#  (L* 15-30). Der rechte Streifen hat Texel mit L* > 85 (Glanz-Riegel N2) und ist im G4 die helle Seite derselben Krallen.
+KRALLE_INSELN = ((14, 7), (14, 15), (19, 7), (19, 15))   # linker Streifen (gleiche Texel, Bbox u 229-240, v 200-254)
+
+
+def krallen_streifen(G):
+    """Streifen als Maske, Zeilenbereich je v (u_links, u_rechts), Spitze/Wurzel und Laengsdichte (Texel je Einheit) des G4-Streifens."""
+    mk = np.zeros((G.H, G.W), bool)
+    for key in KRALLE_INSELN:
+        mk |= G.inselmaske[key]
+    zeilen = {}
+    for y in range(G.H):
+        xs = np.nonzero(mk[y])[0]
+        if len(xs) >= 2:
+            zeilen[y] = (int(xs.min()), int(xs.max()))
+    # Laengsdichte: Kante Spitzenecke -> Wurzelecke je G4-Flaeche (|dv| > 20 Texel), Median (gemessen 0,087-0,102 je Insel)
+    r = []
+    for mi, i in KRALLE_INSELN:
+        for k, (V, T, cw, qq) in enumerate(G.fl[mi]):
+            if G.ins[mi][k] != i:
+                continue
+            j = int(np.argmax(T[:, 1]))
+            for o in range(3):
+                if o != j and abs(T[j, 1] - T[o, 1]) > 20:
+                    r.append(abs(T[j, 1] - T[o, 1]) / np.linalg.norm(V[j] - V[o]))
+    ys = sorted(zeilen)
+    # Wurzel: erste Zeile, ab der der Streifen mindestens 8 Texel breit ist (die oberen Zeilen 200-205 sind 2-7 Texel schmal und laufen spitz zu)
+    v_w = next(y for y in ys if zeilen[y][1] - zeilen[y][0] + 1 >= 8)
+    # Spitze: letzte Zeile mit einem Index != 0 in der Streifenmitte (Index 0 = 0x0000 = durchsichtig auf der PSX)
+    return mk, zeilen, v_w, max(ys), float(np.median(r))
+
+
+def krallen_uv(k5, G, mi, px_g4, cl_g4):
+    """UV einer K5c-Kralle, zweiteilig (Runde 3; Weg aus Dossier V3R2.5 Punkt 3 "Krallen laengs zweiteilig", Sicht-Pruefer V3 r2: im Original eine
+    "lange dunkelrote Klaue"). Topologie gemessen an allen 8 Krallen-Meshes: sechseckige Ringe (Ecke 6r+j), danach Wurzelmitte und Spitze.
+    - Spitzenteil: die letzten k Glieder (Ring R-k -> Spitze) tragen den Rest des Streifens v_r .. v_s einmal, linear in T (beige Mitte, dunkle
+      Spitze, wie die G4-Kralle); k so, dass die Vergroesserung dort der G4-Dichte am naechsten kommt (gemessen k = 2..4, Vergroesserung 0,78-1,21);
+    - Ansatz: die Glieder davor tragen die Wurzelzeilen des Streifens (v_w .. v_r = dunkelrote Zeilen, Klasse A3), Ring fuer Ring gespiegelt
+      (Ringe abwechselnd auf v_r und v_w; die Spiegelkante liegt auf der Ringkante, also ohne Naht);
+    Gemessen (Scratchpad formfarbe3/r3, Laeufe v1/v2/v12): Streifen einmal je Kralle (v1) P2 Klauen +13,5/+15,9, Kralle beige; nur die Spitze im
+    letzten Glied (v2) P2 +21,6/+24,4; Spitzenteil in Quelldichte (v12, gebaut) P2 +16,3/+21,0, Kralle dunkelrot mit heller Spitze.
+    - u: Seiten j abwechselnd an den linken / rechten Streifenrand der Zeile (wie G4: jede Seitenflaeche ueber die ganze Streifenbreite, Nachbarn
+      gespiegelt, ohne Naht); Spitze und Wurzelmitte in der Streifenmitte. -> ({(mesh, teil, fi): UV-Ecken Atlas float}, Statistik)"""
+    mk, zeilen, v_w, v_s, rho = krallen_streifen(G)
+    while v_s > v_w and px_g4[v_s, (zeilen[v_s][0] + zeilen[v_s][1]) // 2] == 0:
+        v_s -= 1
+    # Ende des Ansatzes: letzte Zeile ab v_w, deren Zeilenmittel (G4-Zeile 1, Seite 1) in der Rotklasse A3 liegt
+    # (MESSBLATT_FARBE_V1 6 A3 / Leser A 1: a* > 15, C* > 20, Farbton -40..70 Grad); gemessen Zeilen 201-213 a* 23-41, Zeile 214 a* 12,7
+    rgb1 = wort_rgb(np.array(cl_g4[1]))
+    v_r = v_w
+    for y in range(v_w, v_s + 1):
+        L = lab(rgb1[px_g4[y, zeilen[y][0]:zeilen[y][1] + 1]]).mean(0)
+        C, h = math.hypot(L[1], L[2]), math.degrees(math.atan2(L[2], L[1]))
+        if L[1] > 15 and C > 20 and -40 < h < 70:
+            v_r = y
+        else:
+            break
+    # Streifenbreite der Ringecken: Schnitt der Zeilen v_w..v_r (so liegen die Kanten zwischen den Ringen und zur Spitze ganz im Streifen, S1)
+    ul_a = max(zeilen[y][0] for y in range(v_w, v_r + 1))
+    ur_a = min(zeilen[y][1] for y in range(v_w, v_r + 1))
+    m = k5.meshes[mi]
+    nv = len(m.qv)
+    nr = (nv - 2) // 6
+    R = Rahmen(k5, [mi])
+    V = np.array([x[:3] for x in m.qv], float)
+    T, th = R.p(mi, V)
+    t_min = float(T.min())
+
+    # Spitzenteil in Quelldichte: die letzten k Glieder (Ring nr-k .. Spitze) tragen v_r .. v_s, k so, dass ihre Laenge bei G4-Dichte
+    # (rho Texel je Einheit) den v_s - v_r Streifenzeilen am naechsten kommt (Vergroesserung ~ 1, D1 "Texeldichte wie die Quelle");
+    # davor der Ansatz, Ring fuer Ring gespiegelt.
+    tr = [float(np.mean(T[6 * r:6 * r + 6])) for r in range(nr)]
+    k_sp = min(range(1, nr + 1), key=lambda k: abs((1.0 - tr[nr - k]) * R.L * rho / max(v_s - v_r, 1) - 1.0))
+    r0 = nr - k_sp                                        # erster Ring des Spitzenteils (liegt auf v_r)
+
+    def uv_ecke(i):
+        if i == nv - 1:                                   # Spitze
+            v = v_s
+        elif i == nv - 2:                                 # Wurzelmitte (Kappe am Handansatz): Gegenseite von Ring 0
+            v = (v_w if r0 % 2 == 0 else v_r) if r0 > 0 else v_r - (tr[0] - t_min) / max(1.0 - tr[0], 1e-9) * (v_s - v_r)
+        else:
+            r = i // 6
+            if r >= r0:
+                v = v_r + (T[i] - tr[r0]) / max(1.0 - tr[r0], 1e-9) * (v_s - v_r)
+            else:
+                v = v_r if (r0 - r) % 2 == 0 else v_w
+        v = float(np.clip(v, v_w, v_s))
+        if i >= nv - 2:
+            return np.array([(ul_a + ur_a) / 2.0, float(v)])
+        return np.array([float(ul_a) if (i % 6) % 2 == 0 else float(ur_a), float(v)])
+    out = {}
+    for teil, faces in (('t', m.tf), ('q', m.qf)):
+        for fi, g in enumerate(faces):
+            out[(mi, teil, fi)] = np.array([uv_ecke(i) for i in g[1::2]])
+    # Vergroesserung laengs je Glied (Texel bei G4-Dichte / Streifenzeilen)
+    glied = [(tr[r + 1] - tr[r]) * R.L * rho / max(v_r - v_w, 1) for r in range(r0)]
+    spitze = (1.0 - tr[r0]) * R.L * rho / max(v_s - v_r, 1)
+    return out, dict(streifen_v=[int(v_w), int(v_r), int(v_s)], streifen_u=[int(ul_a), int(ur_a)], ringe=nr, spitzen_glieder=k_sp, rho_laengs=round(rho, 4), laenge=round(R.L, 1),
+                     vergroesserung_ansatz=[round(x, 2) for x in glied], vergroesserung_spitze=round(spitze, 2), mk=mk)
+
+
 # ================================================================ CLUT-Zeilen
 def g4_cluts(g4tim):
     t = FE.tim_lesen(g4tim)
@@ -1017,9 +1154,15 @@ def groesstes_rechteck_in(maske, w, h):
 
 # ================================================================ Bau
 # Runde 2: FLECK_WEITE entfaellt (Sicht-Pruefer: Fleck 977 px = 1,51-fach, gelappt). Der Kern des Flecks sind die Maskenpunkte selbst.
-WEICH_RAND = 1   # PORT-WAHL mit Nutzer-Wortlaut E10 ("die offenen Wunden sehen so richtig fleischig aus ... Bei uns wirkt alles wie billig
-                 # einfarbig bemalt"): ein Texelring aussen um den Kern, in dem nur die hellere Haelfte der Fleisch-Texel steht
-                 # bleibt nur die hellere Haelfte der Fleisch-Texel stehen (helle Strahlen laufen in die Haut aus), sonst Haut
+# Runde 3 (Sicht-Pruefer V3 r2: 941 px = 1,46-fach, "gelappter Fleck mit drei dunklen Streifen", "harte, ausgefranste Kante"; Zahlen-Pruefer (5):
+# WEICH_RAND schwach belegt, MORPH_CLOSE 3x3 ohne Quelle): WEICH_RAND und MORPH_CLOSE entfallen.
+#  - Kern = Texel, die mehr als zur Haelfte von den Maskenpunkten gedeckt sind (Mehrheitsregel wie BAND_MEHRHEIT; volle Deckung = Median der
+#    Punktzahl der Texel, deren 8 Nachbarn alle Punkte haben), eingeschlossene Loecher gefuellt (Definition, keine Stellgroesse).
+#  - Rand = ein Texelring aussen um den Kern: dort stehen nur die dunklere Haelfte der Fleisch-Texel, sonst Haut. Quelle: Messblatt V3 3.1
+#    Machart "Ein dunkler Rand zur Haut ist G4-Machart und erlaubt"; Runde 2 hatte dort die hellere Haelfte (ausgefranste helle Kante).
+#    Gemessen (Scratchpad formfarbe3/r3/f1_flaeche.py, Regel des Sicht-Pruefers): Ring innerhalb des Kerns 447 px (0,69-fach), aussen siehe Dossier.
+#  - Fleischquelle: unter allen Lagen des Kernrechtecks in G4-F16 ohne Iris (Seite 2, Zeile 2) die mit den wenigsten Texeln, die nicht heller sind
+#    als die hellste Haut des Felds (diese lesen sich als dunkle Streifen; Sicht-Pruefer "einen schraegen Streifen statt drei").
 
 
 ART_G4, ART_F1, ART_BAND = 1, 2, 3
@@ -1071,13 +1214,38 @@ def bau(aus_dir):
     for nm, zm, qm, art, op in ZUORDNUNG:
         aw = {k for k in alle_flaechen(k5, zm) if k not in belegt}
         st_sum = {}
+        if art == 'kralle':
+            mk_k = None
+            st_sum = dict(flaechen=0, verlegt=0, kleiner=0, je_mesh={})
+            for z in zm:
+                uvk, stk = krallen_uv(k5, G, z, px_g4, cl_g4)
+                mk_k = stk.pop('mk')
+                vl = kl = 0
+                for k, q in uvk.items():
+                    if k not in aw:
+                        continue
+                    qq, f, _fr = einpassen(q, mk_k, int(q[:, 0].min() // 128))
+                    vl += int(f < 1.0 or not np.array_equal(qq, np.round(q).astype(int)))
+                    kl += int(f < 1.0)
+                    uv[k] = (qq, int(q[:, 0].min() // 128), KRALLE_INSELN[0] if z in (14, 15, 28, 30) else KRALLE_INSELN[2], f, nm, op)
+                    st_sum['flaechen'] += 1
+                st_sum['verlegt'] += vl
+                st_sum['kleiner'] += kl
+                st_sum['je_mesh'][str(z)] = dict(stk, verlegt=vl, kleiner=kl)
+            bericht['teile'][nm] = dict(k5c=zm, g4=qm, art=art, **st_sum)
+            continue
         if art == 'einzeln':
             for z in zm:
                 neu, st, _m = projektion(k5, G, [z], qm, 'kette', op, k5.skel.rel, {k for k in aw if k[0] == z})
                 for k, v in neu.items():
                     uv[k] = (v[0], v[1], v[2], v[3], nm, op)
+                # Runde 3 (Zahlen-Pruefer V3 r2 (5): n_theta, s_T und umfang_k5c_quelle waren Summen ueber die Ziel-Meshes): Zaehler summiert,
+                # Masse je Mesh unter 'je_mesh'
                 for a_, b_ in st.items():
-                    st_sum[a_] = st_sum.get(a_, 0) + b_
+                    if a_ in ('n_theta', 's_T', 'umfang_k5c_quelle'):
+                        st_sum.setdefault('je_mesh', {}).setdefault(str(z), {})[a_] = b_
+                    else:
+                        st_sum[a_] = st_sum.get(a_, 0) + b_
         else:
             neu, st, _m = projektion(k5, G, zm, qm, art, op, k5.skel.rel, aw)
             for k, v in neu.items():
@@ -1098,6 +1266,10 @@ def bau(aus_dir):
         z = op.get('zeilen', 'g4')
         if isinstance(z, dict):
             z = z.get(k[0], 'g4')
+        if z == 'b1' and k[0] in B1_SICHTBAR_NR:
+            nr_ = k[2] if k[1] == 't' else len(k5.meshes[k[0]].tf) + k[2]
+            if nr_ not in B1_SICHTBAR_NR[k[0]]:
+                z = 'g4'
         zeile = (Z_B1 if z == 'b1' else Z_G4)[seite]
         fertig[k] = (q, seite, zeile, nm)
         quelle_feld[k] = '%s:%d/%d' % (G.feld(*herk) or '-', herk[0], herk[1])
@@ -1124,11 +1296,12 @@ def bau(aus_dir):
         fertig[k] = (q, 0, Z_ZAHN, 'Zaehne F8')
         zahn_xy.update((int(x), int(y)) for x, y in texel_set(q))
 
-    # ---- F1-Stelle (Runde 2): Becken-Vierecke (Messblatt V3 1.2) -> eigenes Feld auf Seite 3.
+    # ---- F1-Stelle (Runde 3): Becken-Vierecke (Messblatt V3 1.2) -> eigenes Feld auf Seite 3.
     #      Haut: G4-F11 (Becken) als lueckenloses Rechteck, Indizes bytegleich, Quelle je Texel in hx/hy (H1: G4-Kopie, kein Sonderfeld).
-    #      Fleck = Sonderfeld: Kern = Maskenpunkte F1 (Bild 1, 646 px) im Knochenraum; Saum = 1 Texelring aussen mit der helleren Haelfte des
-    #      Fleischs (WEICH_RAND). Fleisch = G4-F16-Strahlen ohne Iris. Zeile 6 = G4-Zeile 2, Fleisch-Eintraege so umgefaerbt, dass das Mittel
-    #      ueber ALLE Fleck-Texel ZIEL_F1 trifft (F1t); Haut-Eintraege bleiben (H2).
+    #      Fleck = Sonderfeld: Kern = Texel, die die Maskenpunkte F1 (Bild 1, 646 px, im Knochenraum) mehrheitlich decken; im Texelring um den
+    #      Kern nur die dunklere Haelfte des Fleischs (dunkler Rand, Messblatt 3.1). Fleisch = G4-F16 ohne Iris, Lage mit den wenigsten
+    #      hautdunklen Texeln. Zeile 6 = G4-Zeile 2, Fleisch-Eintraege so umgefaerbt, dass das Mittel ueber ALLE Fleck-Texel ZIEL_F1 trifft (F1t);
+    #      Haut-Eintraege bleiben (H2).
     rho_b = dichte_g4(G, [0])                                   # G4-Becken: Texel je Einheit (gemessen, t4.py: 0,0339)
     Pall = np.vstack([flaeche_info(k5, k)[0] for k in K['F1']])
     c0, e1, e2 = ebene(Pall)
@@ -1159,16 +1332,16 @@ def bau(aus_dir):
             px[oy + j, ox + i] = px_g4[e11[1] + j, sx]
             hx[oy + j, ox + i], hy[oy + j, ox + i], hart[oy + j, ox + i] = sx, e11[1] + j, ART_G4
     lp = f1_uv(Z['F1_lok'].astype(float))
-    kern = np.zeros((H, W), np.uint8)
-    kern[np.floor(lp[:, 1]).astype(int), np.floor(lp[:, 0]).astype(int)] = 1
-    kern = (cv2.morphologyEx(kern, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8)) > 0) & feld
-    saum = np.zeros((H, W), bool)
-    rr = kern.copy()
-    for _ in range(WEICH_RAND):
-        d_ = cv2.dilate(rr.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool) & feld
-        saum |= d_ & ~rr
-        rr = d_
-    fleck = kern | saum
+    anz = np.zeros((H, W), np.int32)
+    np.add.at(anz, (np.floor(lp[:, 1]).astype(int), np.floor(lp[:, 0]).astype(int)), 1)
+    belegt_ = anz > 0
+    innen = cv2.erode(belegt_.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
+    voll = float(np.median(anz[innen])) if innen.any() else float(np.median(anz[belegt_]))
+    kern = (anz > 0.5 * voll) & feld
+    import scipy.ndimage as ndi
+    kern = ndi.binary_fill_holes(kern) & feld
+    rand = cv2.dilate(kern.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool) & feld & ~kern
+    fleck = kern | rand
     m16 = G.feldmaske('F16')
     rgb16 = wort_rgb(np.array(cl_g4[2])[px_g4])
     L16 = lab(rgb16.reshape(-1, 3)).reshape(H, 384, 3)
@@ -1177,17 +1350,32 @@ def bau(aus_dir):
     iris = cv2.dilate(iris.astype(np.uint8), np.ones((9, 9), np.uint8)).astype(bool)
     ys_f, xs_f = np.nonzero(fleck)
     fw, fh = int(xs_f.max() - xs_f.min() + 1), int(ys_f.max() - ys_f.min() + 1)
-    e16 = groesstes_rechteck_in(m16 & ~iris, fw, fh)
-    if e16 is None:
-        raise SystemExit('F16 ohne Iris: kein %dx%d-Rechteck' % (fw, fh))
+    haut_L = lab(wort_rgb(np.array(cl_g4[2])[px[feld & ~fleck]])).max(0)[0] if (feld & ~fleck).any() else 0.0
+    erl16 = m16 & ~iris
+    erl16[:, :256] = False                                      # Seite 2 (Zeile 2 = Basis der Zeile 6)
+    dunkel16 = (L16[..., 0] <= haut_L) & erl16
+    km = fleck[ys_f.min():ys_f.min() + fh, xs_f.min():xs_f.min() + fw]
+    kk_ = kern[ys_f.min():ys_f.min() + fh, xs_f.min():xs_f.min() + fw]
+    best16 = None
+    ii_e = cv2.integral(erl16.astype(np.uint8))
+    for y in range(H - fh + 1):
+        for x in range(256, 384 - fw + 1):
+            if ii_e[y + fh, x + fw] - ii_e[y, x + fw] - ii_e[y + fh, x] + ii_e[y, x] != fw * fh:
+                continue
+            nd = int(dunkel16[y:y + fh, x:x + fw][kk_].sum())
+            if best16 is None or nd < best16[0]:
+                best16 = (nd, x, y)
+    if best16 is None:
+        raise SystemExit('F16 ohne Iris (Seite 2): kein %dx%d-Rechteck' % (fw, fh))
+    e16 = (best16[1], best16[2])
     fl_idx = px_g4[e16[1]:e16[1] + fh, e16[0]:e16[0] + fw]
     fl_L = L16[e16[1]:e16[1] + fh, e16[0]:e16[0] + fw, 0]
-    med = float(np.median(fl_L))
+    med = float(np.median(fl_L[km]))      # Median ueber Kern und Rand
     haut_eintraege = set(np.unique(px[feld & ~fleck]).tolist())
     fleisch_texel = zaehler()
     for y, x in zip(ys_f, xs_f):
         j, i = y - ys_f.min(), x - xs_f.min()
-        if saum[y, x] and fl_L[j, i] < med:
+        if rand[y, x] and fl_L[j, i] >= med:
             continue
         px[y, x] = fl_idx[j, i]
         hx[y, x], hy[y, x], hart[y, x] = -1, -1, ART_F1
@@ -1196,14 +1384,17 @@ def bau(aus_dir):
     for k in K['F1']:
         for x, y in texel_psx(fertig[k][0]):
             gelesen.add((int(x), int(y)))
+    # Runde 3: Bauziel ZIEL_F1 auf den Kern-Texeln (Gewicht = gelesene Kern-Texel). Gemessen (r3/schnell.py): mit Kern + dunklem Rand im Mittel
+    # liest die Kette an der Maske F1 nur den hellen Kern, K14 (54,3 / 16,4 / -2,5), dE 9,3 ROT; mit Kerngewicht (47,9 / 17,5 / -1,2), dE 3,1.
+    # Der Riegel F1t mittelt weiter ueber alle Fleck-Texel samt Rand.
     for x, y in gelesen:
-        if hart[y, x] == ART_F1:
+        if hart[y, x] == ART_F1 and kern[y, x]:
             fleisch_texel[int(px[y, x])] += 1
     eintr = [i for i in fleisch_texel if i not in haut_eintraege and cl_g4[2][i] != 0]
     z6, info6 = zeile_ziel(cl_g4[2], eintr, fleisch_texel, ZIEL_F1, fest=sorted(haut_eintraege))
     cl[Z_F1] = z6
     bericht['sonder']['F1'] = dict(flaechen=sorted([list(k) for k in K['F1']]), dichte=round(rho_b, 4), feld=[ox, oy, wf, hf], kern_texel=int(kern.sum()),
-                                   saum_texel=int(saum.sum()), fleisch_texel=int(sum(fleisch_texel.values())),
+                                   rand_texel=int(rand.sum()), volle_deckung_punkte=voll, dunkle_quelltexel=int(best16[0]), haut_L_max=round(float(haut_L), 2), fleisch_texel=int(sum(fleisch_texel.values())),
                                    gelesen=len(gelesen), haut_g4_kopie=int(sum(1 for x, y in gelesen if hart[y, x] == ART_G4)),
                                    quelle_fleisch_F16=[int(e16[0]), int(e16[1]), fw, fh], quelle_haut_F11=[int(e11[0]), int(e11[1]), bw, hf],
                                    umgefaerbt=len(eintr), zeile=info6)
@@ -1245,7 +1436,7 @@ def bau(aus_dir):
     for x, y in zahn_xy:
         zahn_texel[int(px[y, x])] += 1
     eintr7 = [i for i in band_texel if cl_g4[0][i] != 0]
-    z7, info7 = zeile_ziel(cl_g4[0], eintr7, band_texel, ZIEL_BAND)
+    z7, info7 = zeile_ziel(cl_g4[0], eintr7, band_texel, ZIEL_BAND_KETTE)
     cl[Z_BAND] = z7
     bericht['sonder']['Band'] = dict(flaechen=len(K['band']), dichte_soll=round(rho_r, 4), dichte=round(s_band, 4), feld=[bx, by, w7, h7],
                                      quelle_F7=[x7, y7, w7, h7], umgefaerbt=len(eintr7), zeile=info7)
@@ -1287,8 +1478,9 @@ def bau(aus_dir):
     bericht['sha256'] = dict(emd=hashlib.sha256(emd_neu).hexdigest(), tim=hashlib.sha256(tim_neu).hexdigest())
     bericht['basis'] = 'K5c (varianten/K5/K5c): Geometrie, Knochen, Clips unveraendert; UV/CLUT/TPage je Flaeche und FORM.TIM neu (Versuch 3, kf_g4.py)'
     bericht['konstanten'] = dict(G4_KIND=hex(G4_KIND), B1_ROT_LAB=B1_ROT_LAB, G4_ROT_LAB=G4_ROT_LAB, B1_TON=round(B1_TON, 2), G4_TON=round(G4_TON, 2),
-                                 B1_C_JE_SEITE=[round(x, 4) for x in B1_C_JE_SEITE], ROT_RAMPE=(ROT_C0, ROT_C1, ROT_H0, ROT_H1), ZIEL_F1=ZIEL_F1, ZIEL_BAND=ZIEL_BAND,
-                                 ZIEL_ZAHN=ZIEL_ZAHN, KAPPE_NA=KAPPE_NA, WEICH_RAND=WEICH_RAND, BAND_MEHRHEIT=BAND_MEHRHEIT)
+                                 B1_C_JE_SEITE=[round(x, 4) for x in B1_C_JE_SEITE], ROT_RAMPE=(ROT_C0, ROT_C1, ROT_H0, ROT_H1), ZIEL_F1=ZIEL_F1, ZIEL_BAND=ZIEL_BAND, ZIEL_BAND_KETTE=ZIEL_BAND_KETTE,
+                                 ZIEL_ZAHN=ZIEL_ZAHN, KAPPE_NA=KAPPE_NA, BAND_MEHRHEIT=BAND_MEHRHEIT, B1_C_SEITE1_EICH=B1_C_SEITE1_EICH,
+                                 KRALLE_INSELN=KRALLE_INSELN, B1_SICHTBAR_NR={str(k): len(v) for k, v in B1_SICHTBAR_NR.items()})
     json.dump(bericht, open(os.path.join(aus_dir, 'bau.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False, default=str)
     return bericht
 

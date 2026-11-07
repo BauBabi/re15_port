@@ -291,8 +291,9 @@ SPIEL = (('spiel_pose1_nachstellung_r5080.png', 1, 'ROOM5080 Schnitt 1, Nachstel
          ('spiel_ruhe_r5090_s11.png', 2, 'ROOM5090 Schnitt 11, Ruhe (Clip 2)'))
 
 
-def spiel(spd, aus):
-    """07: je Zeile Original-Standbild (Bild 1 bzw. 2) | K4 heute im Spiel | Variante im Spiel. Spielbilder aus kf_spiel.sh (gdigrab), unbearbeitet."""
+def spiel(spd, aus, verfahren='gdigrab'):
+    """07: je Zeile Original-Standbild (Bild 1 bzw. 2) | K4 heute im Spiel | Variante im Spiel. Spielbilder aus kf_spiel.sh, unbearbeitet.
+    verfahren: Aufnahmeweg laut Spiellauf-Log ("Verfahren:"-Zeile von form_spiel.sh: gdigrab oder PrintWindow; Sicht-Pruefer V3 r2: Beschriftung)."""
     zeilen = []
     for f, n, txt in SPIEL:
         a = os.path.join(spd, 'heute_' + f)
@@ -304,7 +305,7 @@ def spiel(spd, aus):
         ks = [cv2.resize(k, (640, 480), interpolation=cv2.INTER_NEAREST) if k.shape[:2] != (480, 640) else k.copy() for k in ks]
         for k, t in zip(ks, ('Original Bild %d (Video-Standbild)' % n, 'K4 heute im Spiel: ' + txt, NEU + ' im Spiel: ' + txt)):
             H.schrift(k, t, 6, 18, 0.45)
-            H.schrift(k, 'echtes Fenster (gdigrab), roh, kein Gamma', 6, 36, 0.4, (200, 230, 255))
+            H.schrift(k, 'echtes Fenster (%s), roh, kein Gamma' % verfahren, 6, 36, 0.4, (200, 230, 255))
         zeilen.append(H.reihe(ks))
     t = H.stapel(zeilen)
     kopf = H.kopfzeile('07 Spiel: eigene exe-Kopie, Kandidat ueber RE15_RE2_ASSET_ROOT (re15_port/tools/form_spiel.sh), echtes Fenster, kein AUTOSHOT, '
