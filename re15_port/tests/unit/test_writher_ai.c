@@ -200,7 +200,7 @@ int main(void)
 
     /* (6) KILLABLE: the HP-0 spawn dies in one damaging hit -> DEATH(3) -> CORPSE(7) */
     e->hit_react = 0;
-    int landed = re15_enemy_take_damage(e, 2);   /* type-2 = instakill class (dmg 1000); hp 0 -> -1000 */
+    int landed = re15_enemy_take_damage(e, 2);   /* type-2 = Handgranate (Spur WS: D_G 251, vorher 1000); hp 0 -> -251 */
     if (!landed)        { fprintf(stderr, "FAIL(6): a hit on the writher must land (it is targetable)\n"); fail = 1; }
     if (e->state != 3)  { fprintf(stderr, "FAIL(6): one damaging hit on HP-0 spawn must -> DEATH state 3, got %d\n", e->state); fail = 1; }
     printf("  (6a) KILLABLE: after 1 hit, hp=%d state=%d (DEATH)\n", e->hp, e->state);

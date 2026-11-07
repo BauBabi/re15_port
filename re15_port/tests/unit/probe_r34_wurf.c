@@ -339,11 +339,11 @@ static void abschnitt_mitte(void)
     PRUEF(22, re15_esp_granate_resolver_calls() == w.res0 + 1 && s_res_vor_x_ok,
           "Resolver-Aufrufe %u (soll genau 1, erst im Bild 109)", re15_esp_granate_resolver_calls() - w.res0);
     PRUEF(23, s_lat_n == 1 && s_lat_bild == 109, "Licht-Latch %d-mal, Bild %d (soll 1x, Bild 109)", s_lat_n, s_lat_bild);
-    /* Runde 41 Spur GR, Nachbesserung 2 (PORT-WAHL, Nutzerentscheid): der Dummy ist ein Gorilla 0x27 = Boss; die
-     * Handgranate traegt an ihm Form-HP 360 - Rest 40 = 320 (re15_granate_schaden), nicht mehr 1000 (@0x8006f41c). */
-    PRUEF(24, s_dum_vor_x_ok && s_dum->hp == 180 - 320 && s_dum->state == 3 &&
+    /* Runde 41 Spur WS (Nutzer 2026-11-07): die Handgranate traegt an jedem Gegner D_G 251 (250 @0x801008C8 + 1,
+     * re15_granate_schaden), auch am Gorilla 0x27; vorher Boss-Regel 320, davor 1000 (@0x8006f41c). 180 - 251 = -71. */
+    PRUEF(24, s_dum_vor_x_ok && s_dum->hp == 180 - RE15_GRANATE_DG && s_dum->state == 3 &&
                s_dum->sub_state_1 == 9 && s_dum->sub_state_2 == 1,
-          "Dummy 0x27: hp %d state %u +5 %u +6 %u (soll -140/3/9/1)", s_dum->hp, s_dum->state,
+          "Dummy 0x27: hp %d state %u +5 %u +6 %u (soll -71/3/9/1)", s_dum->hp, s_dum->state,
           s_dum->sub_state_1, s_dum->sub_state_2);
     /* Runde 35 Spur A: KEIN Spielerzweig mehr (RE2 FUN_800470C0 nur Gegnerliste @0x800470c4-0x8004740c). */
     PRUEF(25, g_actors[0].hp == 100 && g_actors[0].state == 0,
