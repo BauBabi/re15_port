@@ -217,17 +217,18 @@ def l10():
 
 def l11():
     import c6
-    boxen = {135: (280, 110, 430, 260), 85: (400, 150, 550, 300)}
+    boxen = {135: (280, 110, 430, 260), 85: (240, 100, 540, 400)}     # Kopf im Spielbild (c6.port, registriert): h135 ~ x 320-400; h85 ganzer Oberkoerper
+    fakt = {135: 3, 85: 2}                                             # (der Kopf liegt im Spielbild h85 hinter dem Buckel, anders als in der b2-Pose 85)
     zeilen = []
     for h in (135, 85):
         bs = LV.beschriftung(1) if h == 135 else LV.beschriftung(2)
         kiB = KI_KOPF['FRONT'] if h == 135 else KI_KOPF['RIGHT']
         t = [ki_kachel(kiB, 1, 'KI-Kopf image_1 %s' % ('FRONT' if h == 135 else 'RIGHT'), [''], hoehe=3 * 150),
-             LV.kachel(bs, boxen[h], 3, 'Beschreibung%d Kopf x3' % (1 if h == 135 else 2), [''])]
+             LV.kachel(bs, boxen[h], fakt[h], 'Beschreibung%d Kopf x%d' % (1 if h == 135 else 2, fakt[h]), [''])]
         for k in ('ref2', 'neu'):
             p = c6.port(LAUF[k], h)
             im = cv2.cvtColor(p, cv2.COLOR_BGR2RGB) if p is not None else np.zeros((480, 640, 3), np.uint8)
-            t.append(LV.kachel(im, boxen[h], 3, '%s Spiel h%d (RE15_FRAMEDUMP) x3' % (NAME[k], h), ['Lauf %s' % os.path.basename(LAUF[k])]))
+            t.append(LV.kachel(im, boxen[h], fakt[h], '%s Spiel h%d (RE15_FRAMEDUMP) x%d' % (NAME[k], h, fakt[h]), ['Lauf %s' % os.path.basename(LAUF[k])]))
         zeilen.append(t)
     LV.speichern('11_spiel_koepfe', zeilen, ['SF V5 Kopf aus RE2 (Runde 1) - 11 Spiel-Koepfe: RE15_FRAMEDUMP-Bilder h135 (Zeile 1) und h85 (Zeile 2), registriert wie Abnahme 3',
                                             KOPFZEILE])
