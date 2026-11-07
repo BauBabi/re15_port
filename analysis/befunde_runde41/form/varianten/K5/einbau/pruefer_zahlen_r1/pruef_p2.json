@@ -1,0 +1,172 @@
+{
+ "md1_len": {
+  "asset": 169500,
+  "basis": 169500,
+  "variante": 169500,
+  "k4": 167644
+ },
+ "md1_asset_eq_basis": true,
+ "md1_asset_vs_variante": {
+  "diff_bytes": 5003,
+  "diff_ausserhalb_clut": 0,
+  "clut_worte_gesamt": 3828,
+  "clut_worte_geaendert": 3421
+ },
+ "md1_crc_asset": {
+  "len": 169500,
+  "crc32": "0x2456b5cc"
+ },
+ "tim_crc_asset": {
+  "len": 139296,
+  "crc32": "0x9234618d"
+ },
+ "emr": {
+  "asset": {
+   "o": 3332,
+   "bt": 200,
+   "kf": 360,
+   "nb": 32,
+   "ks": 156,
+   "ende": 123968
+  },
+  "variante": {
+   "o": 48,
+   "bt": 200,
+   "kf": 360,
+   "nb": 32,
+   "ks": 156,
+   "ende": 876
+  },
+  "basis": {
+   "o": 48,
+   "bt": 200,
+   "kf": 360,
+   "nb": 32,
+   "ks": 156,
+   "ende": 876
+  },
+  "k4": {
+   "o": 3332,
+   "bt": 200,
+   "kf": 360,
+   "nb": 32,
+   "ks": 156,
+   "ende": 124124
+  }
+ },
+ "emr_struct_asset_eq_variante": true,
+ "emr_struct_asset_eq_basis": true,
+ "emr_struct_asset_eq_k4": false,
+ "relpos_diff_zu_k4": {
+  "23": {
+   "asset": [
+    784,
+    420,
+    0
+   ],
+   "k4": [
+    500,
+    400,
+    0
+   ]
+  }
+ },
+ "bonetable_asset_eq_k4": true,
+ "keyframes": {
+  "asset": 771,
+  "variante": 3,
+  "basis": 3,
+  "pool_rest_asset": 0
+ },
+ "variante_kf_im_asset": [
+  false,
+  true,
+  false
+ ],
+ "variante_kf_index_im_asset": [
+  -1,
+  542,
+  -1
+ ],
+ "basis_kf_eq_variante": true,
+ "edd_len": {
+  "asset": 3312,
+  "variante": 28,
+  "k4": 3312
+ },
+ "edd_asset_eq_k4": false,
+ "edd_clips": {
+  "asset": 28,
+  "basis": 3,
+  "variante": 3,
+  "k4": 28
+ },
+ "clip_bilder_asset": [
+  18,
+  1,
+  60,
+  60,
+  50,
+  89,
+  1,
+  1,
+  30,
+  63,
+  126,
+  57,
+  56,
+  40,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  35,
+  100
+ ],
+ "clip_bilder_k4": [
+  18,
+  1,
+  60,
+  60,
+  50,
+  89,
+  1,
+  1,
+  30,
+  63,
+  126,
+  57,
+  56,
+  40,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  35,
+  100
+ ],
+ "clip_bilder_variante": [
+  1,
+  1,
+  1
+ ],
+ "clip_bilder_summe_asset": 799,
+ "frame_idx_max_asset": 770,
+ "frame_idx_alle_gueltig": true
+}
