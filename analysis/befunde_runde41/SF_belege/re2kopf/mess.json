@@ -1,0 +1,489 @@
+{
+ "dE00": {
+  "em30": {
+   "ki_front|zonen_flach": {
+    "kuppe": 10.9,
+    "links_mitte": 6.5,
+    "rechts_mitte": 27.0,
+    "maul": 13.7,
+    "gesamt": 12.4
+   },
+   "ki_front|zonen_licht": {
+    "kuppe": 15.1,
+    "links_mitte": 6.4,
+    "rechts_mitte": 42.8,
+    "maul": 14.5,
+    "gesamt": 17.7
+   },
+   "ki_rechts|zonen_flach": {
+    "kuppe": 19.8,
+    "links_mitte": 8.0,
+    "rechts_mitte": 12.4,
+    "maul": 10.3,
+    "gesamt": 12.3
+   },
+   "ki_rechts|zonen_licht": {
+    "kuppe": 35.3,
+    "links_mitte": 11.6,
+    "rechts_mitte": 22.4,
+    "maul": 14.5,
+    "gesamt": 20.5
+   },
+   "beschreibung1|zonen_flach": {
+    "kuppe": 10.1,
+    "links_mitte": 10.6,
+    "rechts_mitte": 30.2,
+    "maul": 18.6,
+    "gesamt": 15.2
+   },
+   "beschreibung1|zonen_licht": {
+    "kuppe": 13.5,
+    "links_mitte": 10.6,
+    "rechts_mitte": 45.6,
+    "maul": 18.8,
+    "gesamt": 20.3
+   },
+   "beschreibung2|zonen_flach": {
+    "kuppe": 18.2,
+    "links_mitte": 9.7,
+    "rechts_mitte": 10.7,
+    "maul": 9.1,
+    "gesamt": 10.2
+   },
+   "beschreibung2|zonen_licht": {
+    "kuppe": 32.9,
+    "links_mitte": 10.5,
+    "rechts_mitte": 19.7,
+    "maul": 11.6,
+    "gesamt": 17.2
+   }
+  },
+  "em31": {
+   "ki_front|zonen_flach": {
+    "kuppe": 2.4,
+    "links_mitte": 7.4,
+    "rechts_mitte": 7.3,
+    "maul": 11.6,
+    "gesamt": 3.0
+   },
+   "ki_front|zonen_licht": {
+    "kuppe": 3.1,
+    "links_mitte": 10.9,
+    "rechts_mitte": 13.1,
+    "maul": 16.9,
+    "gesamt": 10.2
+   },
+   "ki_rechts|zonen_flach": {
+    "kuppe": 7.3,
+    "links_mitte": 5.4,
+    "rechts_mitte": 11.4,
+    "maul": 7.1,
+    "gesamt": 7.1
+   },
+   "ki_rechts|zonen_licht": {
+    "kuppe": 10.1,
+    "links_mitte": 4.3,
+    "rechts_mitte": 14.6,
+    "maul": 8.9,
+    "gesamt": 9.4
+   },
+   "beschreibung1|zonen_flach": {
+    "kuppe": 4.0,
+    "links_mitte": 11.9,
+    "rechts_mitte": 11.6,
+    "maul": 8.4,
+    "gesamt": 6.6
+   },
+   "beschreibung1|zonen_licht": {
+    "kuppe": 3.0,
+    "links_mitte": 15.4,
+    "rechts_mitte": 17.0,
+    "maul": 18.3,
+    "gesamt": 13.3
+   },
+   "beschreibung2|zonen_flach": {
+    "kuppe": 4.0,
+    "links_mitte": 8.2,
+    "rechts_mitte": 11.4,
+    "maul": 5.1,
+    "gesamt": 6.5
+   },
+   "beschreibung2|zonen_licht": {
+    "kuppe": 3.9,
+    "links_mitte": 6.3,
+    "rechts_mitte": 13.4,
+    "maul": 5.4,
+    "gesamt": 6.8
+   }
+  },
+  "em33": {
+   "ki_front|zonen_flach": {
+    "kuppe": 37.2,
+    "links_mitte": 9.4,
+    "rechts_mitte": 17.5,
+    "maul": 9.2,
+    "gesamt": 14.6
+   },
+   "ki_front|zonen_licht": {
+    "kuppe": 52.9,
+    "links_mitte": 4.7,
+    "rechts_mitte": 27.5,
+    "maul": 9.2,
+    "gesamt": 18.0
+   },
+   "ki_rechts|zonen_flach": {
+    "kuppe": 29.2,
+    "links_mitte": 4.6,
+    "rechts_mitte": 13.1,
+    "maul": 17.8,
+    "gesamt": 13.4
+   },
+   "ki_rechts|zonen_licht": {
+    "kuppe": 55.0,
+    "links_mitte": 8.5,
+    "rechts_mitte": 24.0,
+    "maul": 23.8,
+    "gesamt": 25.3
+   },
+   "beschreibung1|zonen_flach": {
+    "kuppe": 35.8,
+    "links_mitte": 14.9,
+    "rechts_mitte": 21.3,
+    "maul": 18.5,
+    "gesamt": 19.2
+   },
+   "beschreibung1|zonen_licht": {
+    "kuppe": 50.3,
+    "links_mitte": 10.4,
+    "rechts_mitte": 30.9,
+    "maul": 18.4,
+    "gesamt": 22.1
+   },
+   "beschreibung2|zonen_flach": {
+    "kuppe": 25.2,
+    "links_mitte": 7.2,
+    "rechts_mitte": 11.8,
+    "maul": 18.0,
+    "gesamt": 10.5
+   },
+   "beschreibung2|zonen_licht": {
+    "kuppe": 49.7,
+    "links_mitte": 4.3,
+    "rechts_mitte": 21.7,
+    "maul": 22.2,
+    "gesamt": 21.4
+   }
+  },
+  "ref2": {
+   "ki_front|zonen_flach": {
+    "kuppe": 13.6,
+    "links_mitte": 8.8,
+    "rechts_mitte": 18.5,
+    "maul": 22.6,
+    "gesamt": 14.9
+   },
+   "ki_front|zonen_licht": {
+    "kuppe": 12.8,
+    "links_mitte": 11.0,
+    "rechts_mitte": 23.1,
+    "maul": 26.8,
+    "gesamt": 18.4
+   },
+   "ki_rechts|zonen_flach": {
+    "kuppe": 17.8,
+    "links_mitte": 15.3,
+    "rechts_mitte": 17.7,
+    "maul": 21.9,
+    "gesamt": 18.4
+   },
+   "ki_rechts|zonen_licht": {
+    "kuppe": 19.6,
+    "links_mitte": 10.5,
+    "rechts_mitte": 16.6,
+    "maul": 26.1,
+    "gesamt": 18.4
+   },
+   "beschreibung1|zonen_flach": {
+    "kuppe": 13.0,
+    "links_mitte": 13.9,
+    "rechts_mitte": 22.4,
+    "maul": 28.6,
+    "gesamt": 19.4
+   },
+   "beschreibung1|zonen_licht": {
+    "kuppe": 12.1,
+    "links_mitte": 16.1,
+    "rechts_mitte": 26.7,
+    "maul": 32.3,
+    "gesamt": 22.4
+   },
+   "beschreibung2|zonen_flach": {
+    "kuppe": 12.5,
+    "links_mitte": 12.4,
+    "rechts_mitte": 16.6,
+    "maul": 19.4,
+    "gesamt": 15.6
+   },
+   "beschreibung2|zonen_licht": {
+    "kuppe": 14.0,
+    "links_mitte": 8.1,
+    "rechts_mitte": 15.4,
+    "maul": 22.9,
+    "gesamt": 15.2
+   }
+  }
+ },
+ "zaehne": {
+  "em30": [
+   0.0,
+   0
+  ],
+  "em31": [
+   0.0002,
+   2
+  ],
+  "em33": [
+   0.0225,
+   265
+  ],
+  "ref2": [
+   0.0,
+   0
+  ],
+  "ki1_front": [
+   0.001,
+   4
+  ],
+  "ki1_rechts": [
+   0.0066,
+   18
+  ],
+  "ki2_front": [
+   0.0115,
+   37
+  ],
+  "ki2_rechts": [
+   0.0005,
+   1
+  ],
+  "ki3_front": [
+   0.0084,
+   25
+  ],
+  "ki3_rechts": [
+   0.0184,
+   36
+  ],
+  "beschreibung1": [
+   0.0,
+   0
+  ],
+  "beschreibung2": [
+   0.0,
+   0
+  ]
+ },
+ "haar": {
+  "em30": 0.2859,
+  "em31": 0.0512,
+  "em33": 0.4036,
+  "ref2": 0.0513,
+  "ki1_front": 0.0286,
+  "ki1_rechts": 0.0133,
+  "ki2_front": 0.0882,
+  "ki2_rechts": 0.044,
+  "ki3_front": 0.0639,
+  "ki3_rechts": 0.0321,
+  "beschreibung1": 0.0112,
+  "beschreibung2": 0.0075
+ },
+ "augen_ki": {
+  "ki1_front": [
+   {
+    "px": 99,
+    "x_anteil": 0.343,
+    "y_anteil": 0.378
+   },
+   {
+    "px": 8,
+    "x_anteil": 0.358,
+    "y_anteil": 0.151
+   },
+   {
+    "px": 8,
+    "x_anteil": 0.015,
+    "y_anteil": 0.273
+   },
+   {
+    "px": 7,
+    "x_anteil": 0.456,
+    "y_anteil": 0.388
+   }
+  ],
+  "ki1_rechts": [
+   {
+    "px": 73,
+    "x_anteil": 0.414,
+    "y_anteil": 0.41
+   },
+   {
+    "px": 14,
+    "x_anteil": 0.325,
+    "y_anteil": 0.294
+   },
+   {
+    "px": 3,
+    "x_anteil": 0.369,
+    "y_anteil": 0.341
+   }
+  ],
+  "ki2_front": [
+   {
+    "px": 64,
+    "x_anteil": 0.304,
+    "y_anteil": 0.395
+   },
+   {
+    "px": 59,
+    "x_anteil": 0.051,
+    "y_anteil": 0.372
+   },
+   {
+    "px": 36,
+    "x_anteil": 0.176,
+    "y_anteil": 0.133
+   },
+   {
+    "px": 12,
+    "x_anteil": 0.332,
+    "y_anteil": 0.161
+   }
+  ],
+  "ki2_rechts": [
+   {
+    "px": 10,
+    "x_anteil": 0.475,
+    "y_anteil": 0.192
+   }
+  ],
+  "ki3_front": [
+   {
+    "px": 82,
+    "x_anteil": 0.269,
+    "y_anteil": 0.247
+   },
+   {
+    "px": 8,
+    "x_anteil": 0.36,
+    "y_anteil": 0.472
+   },
+   {
+    "px": 4,
+    "x_anteil": 0.453,
+    "y_anteil": 0.215
+   },
+   {
+    "px": 4,
+    "x_anteil": 0.912,
+    "y_anteil": 0.24
+   }
+  ],
+  "ki3_rechts": [
+   {
+    "px": 42,
+    "x_anteil": 0.855,
+    "y_anteil": 0.485
+   },
+   {
+    "px": 39,
+    "x_anteil": 0.964,
+    "y_anteil": 0.303
+   },
+   {
+    "px": 21,
+    "x_anteil": 0.298,
+    "y_anteil": 0.308
+   },
+   {
+    "px": 6,
+    "x_anteil": 0.945,
+    "y_anteil": 0.429
+   }
+  ]
+ },
+ "zonen_ki_mittel": {
+  "front": {
+   "kuppe": [
+    26.0,
+    10.4,
+    4.6
+   ],
+   "links_mitte": [
+    31.1,
+    11.4,
+    5.5
+   ],
+   "rechts_mitte": [
+    18.6,
+    10.1,
+    4.5
+   ],
+   "maul": [
+    21.5,
+    18.2,
+    8.9
+   ],
+   "gesamt": [
+    23.9,
+    13.3,
+    6.3
+   ]
+  },
+  "rechts": {
+   "kuppe": [
+    21.5,
+    4.0,
+    1.6
+   ],
+   "links_mitte": [
+    26.7,
+    7.2,
+    4.3
+   ],
+   "rechts_mitte": [
+    20.9,
+    4.9,
+    1.7
+   ],
+   "maul": [
+    15.1,
+    6.5,
+    2.9
+   ],
+   "gesamt": [
+    20.1,
+    5.7,
+    2.7
+   ]
+  }
+ },
+ "ref2": {
+  "H_einheiten_ohne_schwanz": 3874,
+  "pal_zeilen": 6,
+  "clut_y": 480,
+  "kopf_ist": {
+   "hoehe": 637,
+   "breite": 392,
+   "tiefe": 486
+  },
+  "kopf_ziel_K10": {
+   "hoehe": 724,
+   "breite": 597
+  },
+  "kandidaten_skala_auf_K10": {
+   "em30": 1.253,
+   "em31": 1.577,
+   "em33": 1.111
+  }
+ }
+}
