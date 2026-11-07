@@ -32,6 +32,9 @@ Runde 4 (weniger Rot; Nutzer 2026-11-07 ~17:10, woertlich, bindend: "bist du noc
 - Augen lesen G4-Zeile 0 (F10, dunkel), Maulinneres F2 bleibt auf den G4-Zeilen, Sonderzeilen 6-8 (Leuchtstellen) wie Runde 3.
 - Baufehler A (Zahlen-Pruefer V3 r3): die Rand-Texel des F1-Flecks werden mit umgefaerbt (kein rohes G4-Blutrot mehr).
 
+Runde 5 (nur die Krallen; Pruefer Runde 4: Vorderkrallen gesprenkelt, A7 / P2 Klauen ROT): die Krallenflaechen (R5_KRALLEN) lesen wieder ihre
+G4-Zeile wie Runde 3 (dunkelrote Klaue, khaki Spitze); alles andere bytegleich Runde 4 (Riegel AE1 in riegel_farbe_v3.py).
+
 Aufruf: python kf_g4.py [--aus <Ordner>]   (Default: farbe/K5c_farbe_v3; dazu farbe/K5C_FARBE_V3.EMD/.TIM und Scratchpad formfarbe3/emd)
 """
 import argparse
@@ -209,6 +212,17 @@ R4_PAR_DATEI = os.path.join(HIER, 'v3_daten', 'r4_par.json')
 # s(L) begrenzt auf 0..3: gemessen ohne Einfluss auf das Ergebnis (scan smax 3 / 5, beta 5: Hals dL -1,7 / -1,7, Kopf dL 0,2 / 0,3).
 R4_SMAX = 3.0
 R4_SMIN = 0.0   # Runde 4 Lauf 2: Untergrenze von s(L) (Suchgrenze, Dossier V3R4)
+
+# ================================================================ Runde 5: nur die Krallen (Versuch 3 Runde 5)
+# Pruefer Runde 4 (FARBE_PRUEFUNG_v3_r4_sicht.md "Krallen", _zahlen.md A7 0,349 / P2 Klauen ROT): Runde 4 legte die Krallenflaechen auf die
+# Gruppenzeile Vorderbeine (Zeile 16): dunkle Wurzelzone gestaucht, helle Spitzen (L* >= R4_L_HELL) G4 -> schwarze Klaue mit khaki Tupfen
+# (linke Klaue 1099 px / 83 Komponenten gegen Runde 3 426 / 53). Runde 3 (bestanden, Sicht V3 r3: dunkelrote Klaue, khaki Spitze, durchgehender
+# Verlauf) las die Krallen mit G4-Zeile 1 (farbe/K5c_farbe_v3r3/bau.json flaechen_herkunft: alle 252 Krallenflaechen Zeile 1). Zeile 1 ist in
+# Runde 4 weiter bytegleich G4 (Riegel H2; Diff r3/r4 gemessen: Zeilen 0-2 gleich, Texel 0 Unterschiede, UV/TPage 0 Unterschiede). Darum lesen
+# die Krallen wieder G4-Zeile Z_G4[seite] = Runde-3-Klauenfarbe; eine eigene Kopie dieser Zeile waere bytegleich und machte die Port-Textur
+# 256 Texel hoeher (Dossier V3R4.5 Punkt 3). Die Statistik der Gruppenzeile Vorderbeine zaehlt die Kralltexel weiter mit (zaehl vor dem
+# Umhaengen), damit Zeile 16 und alle uebrigen Bytes gleich Runde 4 bleiben (Riegel AE1 Aenderungsumfang).
+R5_KRALLEN = ('Klauen l (W)', 'Klauen r (W)')     # Teilnamen aus ZUORDNUNG (art 'kralle'), Meshes 14/15/28/30 und 19/20/29/31
 
 
 def r4_par():
@@ -1702,6 +1716,14 @@ def bau(aus_dir):
     for k, g in gruppe.items():
         q, seite, _z, nm = fertig[k]
         fertig[k] = (q, seite, zplan[(g, seite)], nm)
+    # ---- Runde 5: Krallen zurueck auf ihre G4-Zeile (Runde-3-Klauenfarbe), nach der Gruppenstatistik (Zeile 16 bleibt bytegleich)
+    r5 = dict(flaechen=0, zeilen={})
+    for k, (q, seite, z, nm) in list(fertig.items()):
+        if nm in R5_KRALLEN:
+            fertig[k] = (q, seite, Z_G4[seite], nm)
+            r5['flaechen'] += 1
+            r5['zeilen']['%d->%d' % (z, Z_G4[seite])] = r5['zeilen'].get('%d->%d' % (z, Z_G4[seite]), 0) + 1
+    bericht['r5'] = dict(teile=list(R5_KRALLEN), **r5)
     bericht['zeilen']['basis'] = {str(z): seite for (g, seite), z in zplan.items()}
     bericht['zeilen']['basis'].update({str(Z_F1): 2, str(Z_BAND): 0, str(Z_ZAHN): 0})
     bericht['zeilen']['gruppe'] = {str(z): g for (g, seite), z in zplan.items()}
@@ -1741,8 +1763,8 @@ def bau(aus_dir):
                                g4_kopie_seite3=int(((hart == ART_G4) & (np.arange(W)[None, :] >= 384)).sum()))
     bericht['sha256'] = dict(emd=hashlib.sha256(emd_neu).hexdigest(), tim=hashlib.sha256(tim_neu).hexdigest())
     bericht['basis'] = ('K5c (varianten/K5/K5c): Geometrie, Knochen, Clips unveraendert; UV/CLUT/TPage je Flaeche und FORM.TIM neu '
-                        '(Versuch 3, kf_g4.py; Runde 4: Gruppenzeilen, weniger Rot)')
-    bericht['konstanten'] = dict(R4_PAR=r4_par(), R4_L_HELL=R4_L_HELL, R4_SMAX=R4_SMAX, R4_N_GRENZE=R4_N_GRENZE,
+                        '(Versuch 3, kf_g4.py; Runde 4: Gruppenzeilen, weniger Rot; Runde 5: Krallen auf G4-Zeile)')
+    bericht['konstanten'] = dict(R5_KRALLEN=R5_KRALLEN, R4_PAR=r4_par(), R4_L_HELL=R4_L_HELL, R4_SMAX=R4_SMAX, R4_N_GRENZE=R4_N_GRENZE,
                                  G4_KIND=hex(G4_KIND), B1_ROT_LAB=B1_ROT_LAB, G4_ROT_LAB=G4_ROT_LAB, B1_TON=round(B1_TON, 2), G4_TON=round(G4_TON, 2),
                                  B1_C_JE_SEITE=[round(x, 4) for x in B1_C_JE_SEITE], ROT_RAMPE=(ROT_C0, ROT_C1, ROT_H0, ROT_H1), ZIEL_F1=ZIEL_F1, ZIEL_BAND=ZIEL_BAND, ZIEL_BAND_KETTE=ZIEL_BAND_KETTE,
                                  ZIEL_ZAHN=ZIEL_ZAHN, KAPPE_NA=KAPPE_NA, BAND_MEHRHEIT=BAND_MEHRHEIT, B1_C_SEITE1_EICH=B1_C_SEITE1_EICH,

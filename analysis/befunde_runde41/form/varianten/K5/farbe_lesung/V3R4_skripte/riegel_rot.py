@@ -7,7 +7,13 @@ Messmaske und Regionen fest (rot_masken.npz, aus mess.py): Figur des Nutzers x K
 
     python riegel_rot.py <Variantenordner> [--rundlauf] [--json aus.json]
     --rundlauf: Gegenprobe Vorlage (Original-T x Figurlicht durch dieselbe Kette) statt einer Variante; muss alle bindenden Zeilen GRUEN haben.
-Exit 1, wenn eine bindende Zeile ROT ist."""
+Exit 1, wenn eine bindende Zeile ROT ist.
+
+Runde 5 (Krallen wieder mit der Runde-3-Farbe; Orchestrator 2026-11-07: "sonst die Krallen-Texel aus der RV-Messregion ausnehmen und das im
+Nachtrag mit Zahl belegen"): Bild 2 "Vorderbeine" wird Info; bindend ist "Vorderbeine ohne Krallen" = dieselbe Region ohne die Krallenpixel
+samt 2 px Saum (feste Maske ../V3R5_skripte/krallen_bild2.npz, Kennungs-Render), fuer Vorlage UND Variante, Ziel nach demselben Verfahren
+(../V3R5_skripte/ziel_ohne_krallen.json, ziel_ohne_krallen.py). Gemessen: mit Krallen Runde 5 77,32 % gegen Fenster bis 74,45; die Krallen
+allein Vorlage 51,0 %, Runde 3/5 78,1 %, Runde 4 51,6 % (V3R5_skripte/kralle_rv.py)."""
 import argparse, json, math, os, sys
 import numpy as np, cv2
 
@@ -23,6 +29,7 @@ SAATEN = (15, 12345, 7)
 H_ROT = (-30.0, 70.0)          # Farbton-Fenster "rot" (MESSBLATT_FARBE_V3 4, Leser B 4)
 RIEGEL = dict(rot_eng='RV1 Rot eng %', h_rot='RV2 Farbton a*-Klasse Grad', dL='RV3 dL Rot - Haut', gross_eng_p='RV4 groesste Rotflaeche eng % (Obergrenze)',
               C_rot='RV5 C* Rotklasse [Info]')
+R5 = os.path.join(HIER, '..', 'V3R5_skripte')
 
 
 def lab(x):
@@ -57,6 +64,13 @@ def main():
     Z = json.load(open(os.path.join(HIER, 'ziele.json'), encoding='utf-8'))
     E = json.load(open(os.path.join(HIER, 'mess.json'), encoding='utf-8'))
     k = None if a.rundlauf else PZ.P.Kandidat(os.path.join(a.variante, 'form.json'))
+    # Runde 5: Bild 2 Vorderbeine -> Info, neu bindend "Vorderbeine ohne Krallen"
+    zr5 = json.load(open(os.path.join(R5, 'ziel_ohne_krallen.json'), encoding='utf-8'))
+    Z = dict(Z)
+    Z['bild2|Vorderbeine|T'] = {m: dict(x, bindend=False) for m, x in Z['bild2|Vorderbeine|T'].items()}
+    Z['bild2|Vorderbeine ohne Krallen|T'] = zr5['ziel']
+    kz = np.load(os.path.join(R5, 'krallen_bild2.npz'))
+    kralle2 = np.unpackbits(kz['kralle'])[:480 * 640].reshape(480, 640).astype(bool)
     res, rot = {}, 0
     print('== Riegel Rot wie die Vorlage:', 'Rundlauf der Vorlage' if a.rundlauf else a.variante)
     for n in (1, 2):
@@ -70,11 +84,14 @@ def main():
             sauber, alb, m, _k = k.rendern(n)
             basis = basis & m & (alb.max(2) > 0)
         Ls = [lab(PZ.rueck(np.asarray(PZ.FV.video_filter(sauber, bild=n, entzerren=False, rauschen=True, saat=s), np.uint8), n)[0]) for s in SAATEN]
-        for rn in REGIONEN + ['Figur']:
+        for rn in REGIONEN + ['Vorderbeine ohne Krallen', 'Figur']:
             z = Z.get('bild%d|%s|T' % (n, rn))
             if not z:
                 continue
-            rm = basis & ((reg == REGIONEN.index(rn)) if rn != 'Figur' else (reg >= 0))
+            if rn == 'Vorderbeine ohne Krallen':
+                rm = basis & (reg == REGIONEN.index('Vorderbeine')) & ~kralle2
+            else:
+                rm = basis & ((reg == REGIONEN.index(rn)) if rn != 'Figur' else (reg >= 0))
             ms = [masse(L, rm, A0) for L in Ls]
             for m, name in RIEGEL.items():
                 x = z.get(m)
@@ -88,7 +105,7 @@ def main():
                 bind = x['bindend']
                 rot += int(bind and not ok)
                 res['Bild %d %s %s' % (n, rn, name)] = dict(wert=round(w, 2), fenster=[lo, hi], ok=bool(ok), bindend=bool(bind))
-                print('  Bild %d %-12s %-44s %7.2f  [%7.2f .. %7.2f]  %s%s' % (n, rn, name, w, lo, hi, 'GRUEN' if ok else 'ROT', '' if bind else ' (Info)'))
+                print('  Bild %d %-24s %-44s %7.2f  [%7.2f .. %7.2f]  %s%s' % (n, rn, name, w, lo, hi, 'GRUEN' if ok else 'ROT', '' if bind else ' (Info)'))
     t = sum(1 for v in res.values() if v['bindend'])
     print('  -> %d/%d bindende Zeilen GRUEN' % (t - rot, t))
     if a.json:

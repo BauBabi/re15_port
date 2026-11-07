@@ -18,6 +18,15 @@ wieder nach vorlage um?"):
   Klasse (Ader unter Adern, Haut unter Haut), weil die Adern nach Nutzerauftrag unter die Haut gehen.
 - --gegenprobe-r3 <farbe/K5c_farbe_v3r3>: RV1-RV4 und RV6 muessen an Runde 3 ROT sein (Nutzer: zu viel Rot, Feuerrillen).
 
+Runde 5 (nur die Krallen; Orchestrator 2026-11-07 nach den Pruefberichten der Runde 4):
+- NEU AE1 "Aenderungsumfang" gegen den Runde-4-Stand (AE_REF = farbe/K5c_farbe_v3r4): Geometrie, Knochen, Clips und alle Nicht-Krallen-
+  Flaechen bytegleich, Krallenflaechen nur in UV/CLUT/TPage verschieden, CLUT-Zeilen nur geaendert/neu, wenn ausschliesslich Krallen sie lesen,
+  Texel nur geaendert, wo keine Nicht-Krallen-Flaeche liest. Gegenprobe: am Runde-3-Stand ROT.
+- P2 geteilt: "P2 ... Klauen" (Klauen l/r, Sicht/Zahlen-Pruefer Runde 4) und "P2 ... uebrige Teile", beide bindend.
+- INFO_R5: P1, A4, H2, F2t, B10, B12, B13, B14, B16, B17, K3, K6, K7, K1v2, K2v2 nur noch Info (Orchestrator 2026-11-07: ueberholt durch
+  RV1-RV6 bzw. nicht Gegenstand der Runde 5; Begruendung je Zeile im Dossier FARBE.md V3R5.3).
+- --gegenprobe-r4 <farbe/K5c_farbe_v3r4>: A7 Kralle und P2 Klauen muessen am Runde-4-Stand ROT sein (Sicht/Zahlen-Pruefer Runde 4).
+
 Atlas mit mehreren CLUT-Zeilen: Ein Texel, das zwei Teile mit verschiedenen Zeilen nutzen, ist zwei Farben. Gemessen wird darum am
 "Zeilen-Atlas" (wie der Port: je CLUT-Zeile eine Kopie der Textur untereinander, render_pc.c re15_render_pc_upload_tim_slot): jede Flaeche
 liegt in der Kopie ihrer Zeile. Felder der V3-Anordnung (Messblatt V3 1.3 "Felder im Riegel-Skript nachtragen"): Koerper = alle Flaechen
@@ -81,6 +90,10 @@ P2_TEILE = [('Rumpf', [0, 7], [0, 9]), ('Brust', [10], [16]), ('Schwanz', [1, 2,
 # Runde 2: jedes Teil gegen seine tatsaechliche Quelle laut kf_g4.ZUORDNUNG (Zahlen-Pruefer P2: Runde 1 mass den Kopf gegen G4 10 statt 16).
 # Kopf, Brust und Hals kommen aus G4 16 (F18), der Rumpf hinten aus G4 0/9.
 KLAUEN = [14, 15, 28, 30, 19, 20, 29, 31]
+AE_REF = os.path.join(K5, 'farbe', 'K5c_farbe_v3r4')   # Runde 5: Bezugsstand fuer AE1 (Runde 4, FORM.EMD 07d679a5..., FORM.TIM 51282806...)
+INFO_R5 = ('H2 ', 'P1 ', 'A4 ', 'F2t ', 'B10 ', 'B12 ', 'B13 ', 'B14 ', 'B16 ', 'B17 ', 'K3 ', 'K6 ', 'K7 ', 'K1v2 ', 'K2v2 ')
+INFO_R5_TEXT = ' [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]'
+P2_KLAUEN = ('Klauen l (W)', 'Klauen r (W)')
 
 
 def lab(rgb):
@@ -671,6 +684,43 @@ def rv6(v, cl_g4):
     return out, ok_ges
 
 
+def aenderungsumfang(vdir, ref_dir=AE_REF):
+    """AE1 (Runde 5): Diff Variante gegen den Runde-4-Stand. Erlaubt sind nur Aenderungen an den Krallenflaechen (Meshes KLAUEN):
+    deren UV/CLUT/TPage, CLUT-Zeilen, die nur Krallen lesen, und Texel, die keine Nicht-Krallen-Flaeche liest."""
+    v, r = Var(vdir), Var(ref_dir)
+    fv, fr = FE.lese_emd(v.emd), FE.lese_emd(r.emd)
+    sonst = sorted(k for k in set(fv) | set(fr) if k != 'meshes' and fv.get(k) != fr.get(k))
+    geo = sorted(mi for mi, (a, b) in enumerate(zip(fv['meshes'], fr['meshes'])) if a['ecken'] != b['ecken'] or a['normalen'] != b['normalen'])
+    n_k = n_rest = n_feld = 0
+    for mi, (a, b) in enumerate(zip(fv['meshes'], fr['meshes'])):
+        for t in ('dreiecke', 'vierecke'):
+            for x, y in zip(a[t], b[t]):
+                if x == y:
+                    continue
+                if mi in KLAUEN:
+                    n_k += 1
+                    n_feld += int(any(x.get(f) != y.get(f) for f in set(x) | set(y) if f not in ('uv', 'clut', 'page')))
+                else:
+                    n_rest += 1
+    leser = {}                                       # Zeile -> {'kralle', 'rest'}
+    rest_texel = np.zeros(v.px.shape, bool)
+    for key, mi, z, ecken, a3 in v.flaechen:
+        leser.setdefault(z, set()).add('kralle' if mi in KLAUEN else 'rest')
+        if mi not in KLAUEN:
+            xy = v.texel(ecken)
+            if len(xy):
+                rest_texel[np.clip(xy[:, 1], 0, 255), np.clip(xy[:, 0], 0, 511)] = True
+    z_diff = [z for z in range(len(v.cl)) if z >= len(r.cl) or v.cl[z] != r.cl[z]]
+    z_fremd = [z for z in z_diff if leser.get(z, set()) - {'kralle'}]
+    td = v.px != r.px if v.px.shape == r.px.shape else np.ones(v.px.shape, bool)
+    t_fremd = int((td & rest_texel).sum())
+    val = dict(sektionen_ungleich=sonst, geometrie_ungleich=geo, kralle_flaechen_geaendert=n_k, kralle_andere_felder=n_feld,
+               nicht_kralle_flaechen_geaendert=n_rest, clut_zeilen=(len(r.cl), len(v.cl)), clut_zeilen_geaendert=z_diff,
+               clut_zeilen_fremd_gelesen=z_fremd, texel_geaendert=int(td.sum()), texel_geaendert_fremd_gelesen=t_fremd)
+    ok = not sonst and not geo and n_feld == 0 and n_rest == 0 and not z_fremd and t_fremd == 0
+    return val, ok
+
+
 def masken_daten():
     z = np.load(os.path.join(HIER, 'v3_daten', 'masken.npz'))
     sh = tuple(z['form'])
@@ -711,7 +761,12 @@ def messen(vdir, schnell=False):
     for k, (val, ok) in ar.items():
         res[k + ' [V3-Felder]'] = (val, bool(ok))
     if not schnell:
-        res['P2 Render dL=0 je Teil (K5c, G4, Diff)'] = p2(v, g4, g4tim)
+        p2r, _ok = p2(v, g4, g4tim)
+        # Runde 5: Klauen getrennt (Pruefer Runde 4: P2 Klauen +39,8 / +50,4 ROT); uebrige Teile wie bisher bindend
+        res['P2 Render dL=0 Klauen (K5c, G4, Diff)'] = ({k: x for k, x in p2r.items() if k in P2_KLAUEN},
+                                                         all(x[2] <= P2_PLUS for k, x in p2r.items() if k in P2_KLAUEN))
+        res['P2 Render dL=0 uebrige Teile (K5c, G4, Diff)'] = ({k: x for k, x in p2r.items() if k not in P2_KLAUEN},
+                                                                all(x[2] <= P2_PLUS for k, x in p2r.items() if k not in P2_KLAUEN))
     # B10-B17 (n2_riegel): Atlas am Zeilen-Atlas, Koerper/Kopf = V3-Felder; Render am echten Modell
     import n2_riegel as NR
     import fl as FLB
@@ -758,6 +813,11 @@ def messen(vdir, schnell=False):
         res[k] = val
     r6, ok6 = rv6(v, cl_g4)
     res['RV6 Texel Ader gegen umgebende Haut je Region (dL*, da* <= 0)'] = (r6, ok6)
+    res['AE1 Aenderungsumfang gegen Runde 4 (nur Krallen)'] = aenderungsumfang(vdir)
+    # Runde 5: Orchestrator-Entscheid 2026-11-07 -> Info
+    for k in list(res):
+        if k.startswith(INFO_R5) and res[k][1] is not None:
+            res[k + INFO_R5_TEXT] = (res.pop(k)[0], None)
     zus = dict(teile=hk, h1b=h1b, feldmittel=fm_)
     return res, zus
 
@@ -868,6 +928,7 @@ def main():
     a.add_argument('--json', default=None)
     a.add_argument('--schnell', action='store_true', help='ohne P2 (Render je Teil)')
     a.add_argument('--gegenprobe-r3', default=None, help='Runde-3-Stand: RV1-RV4 und RV6 muessen ROT sein')
+    a.add_argument('--gegenprobe-r4', default=None, help='Runde-4-Stand: A7 Kralle und P2 Klauen muessen ROT sein (Runde 5)')
     x = a.parse_args()
     r, zus = messen(x.variante, x.schnell)
     g, n = drucken(x.variante, r)
@@ -901,8 +962,26 @@ def main():
             print('  %-58s %s ROT' % (k, rv[k][0]))
         print('  RV1-RV4: %d/%d bindende Zeilen ROT -> %s' % (len(rot_rv), n_rv, 'ROT wie verlangt' if rot_rv else 'FALSCH (GRUEN)'))
         print('  RV6 %s -> %s' % (r6, 'ROT wie verlangt' if not ok6 else 'FALSCH (GRUEN)'))
-        out['gegenprobe_r3'] = dict(rv_rot=rot_rv, rv_bindend=n_rv, rv6=r6, rv6_ok=ok6)
-        if not rot_rv or ok6:
+        ae, ok_ae = aenderungsumfang(x.gegenprobe_r3)
+        print('  AE1 %s -> %s' % (ae, 'ROT wie verlangt' if not ok_ae else 'FALSCH (GRUEN)'))
+        out['gegenprobe_r3'] = dict(rv_rot=rot_rv, rv_bindend=n_rv, rv6=r6, rv6_ok=ok6, ae1=ae, ae1_ok=ok_ae)
+        if not rot_rv or ok6 or ok_ae:
+            exitcode = 1
+    if x.gegenprobe_r4:
+        g4, g4tim, _q = KG.g4_modell()
+        k5c_emd, k5c_tim = KG.k5c_bytes()
+        v4 = Var(x.gegenprobe_r4)
+        sonder4, aug4 = sonder_keys(v4, FE.modell(k5c_emd, k5c_tim))
+        ar4 = atlas_v3(v4, sonder4, aug4)[0]
+        a7 = [val for k, (val, _ok) in ar4.items() if k.startswith('A7 ')][0]
+        p2r4, _ok = p2(v4, g4, g4tim, teile=[t for t in P2_TEILE if t[0] in P2_KLAUEN])
+        ok_a7 = a7['kralle'] <= 0.19          # Grenze wie A7 in farbe_lesung/P_skripte/p_riegel.py:50 (HF_rest <= 0,19)
+        ok_p2 = all(xx[2] <= P2_PLUS for xx in p2r4.values())
+        print('== Gegenprobe Runde 4 (%s): A7 Kralle und P2 Klauen muessen ROT sein' % x.gegenprobe_r4)
+        print('  A7 Kralle %s -> %s' % (a7['kralle'], 'ROT wie verlangt' if not ok_a7 else 'FALSCH (GRUEN)'))
+        print('  P2 Klauen %s -> %s' % (p2r4, 'ROT wie verlangt' if not ok_p2 else 'FALSCH (GRUEN)'))
+        out['gegenprobe_r4'] = dict(a7=a7, p2_klauen=p2r4, a7_ok=ok_a7, p2_ok=ok_p2)
+        if ok_a7 or ok_p2:
             exitcode = 1
     print('EXIT %d' % exitcode)
     if x.json:
