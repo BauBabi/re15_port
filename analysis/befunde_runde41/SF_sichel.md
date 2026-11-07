@@ -1416,3 +1416,86 @@ unveraendert. Die Varianten-EMD sfv4/emd/EM30_V4.EMD (sha256 174b7879) ist repro
 8. Die Hautfaktoren in eichen_v4.py ('haut') wirken nur noch auf die Zeilen 483/485. Die Zeilen 480/481/482/484 und die Koerpertexel kommen
    aus farben_koerper_v4.npz.
 9. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme.
+
+### V4 Runde 3 (Bauer, 2026-11-07, nach Pruefung V4 r2)
+
+Nutzer-Wortlaut wie oben ("Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben"). Grundlage: SF_MESSBLATT_V4.md (Commit
+7a4f3b684), die Pruefberichte SF_PRUEFUNG_V4_r2_zahlen.md und SF_PRUEFUNG_V4_r2_sicht.md (Commit eadf288b4) und die Entscheide O1-O6
+des Orchestrators. Kein RE-Befund: die Sichel-Form gibt es auf der Disc nicht, keine Zahl ist eine @0x-Konstante. Jede Konstante nennt im
+Code ihre Quelle (Messblatt-Zeile, Original-Messung) oder ist als PORT-WAHL mit den Laeufen gekennzeichnet, die sie festgelegt haben.
+Commits e2ad70c50 (Messwerkzeuge), 0669ae3dd (Engine), d64c021ac (Generator/Farben), a6baa4eed (Riegel, Leisten, Belege).
+
+**Befund -> Aenderung -> Beleg**
+
+| Befund (Pruefung V4 r2) | Aenderung (Entscheid) | Ergebnis (riegel_V4r3, Lauf sfv4/r/V4r3) |
+|---|---|---|
+| Sicht A: Kopf vorn glatte Kuppel, Gradient Kopf 27,8 = 67 % des Originals, Kopf/Rumpf 0,86 | (O4) eichen_v4.py struktur_original: Hautstruktur aus dem ORIGINAL - je Texel die relative Farbe von Vorlage 1/2 (Pixel / Gauss sigma 3) an derselben Anteilslage der Original-Kopfbox; Helligkeit x 10 (Klammer -2,0/+0,15), Farbton x 1,5 (+-0,4), 16 RGB-Stufen (k-Mittel); Augenhof 2-4 Augenradien ohne Struktur und dunkler (vorn 0,5, seitlich 0,6); helle Stufen aus in v_basis, v_oben_links, v_nase, s_basis, s_haar, s_hinten_unten; Auge vorn radial 0,55 | Neuer Riegel K11: Ziel aus dem Original 41,0 +-6,1 (9 um +-3 px verschobene Kopfboxen 39,4-42,9; Kopfviertel 34,9-47,0; Toleranz = groesser von Spanne der Boxen 3,5 und halber Viertel-Spanne 6,1), Kopf >= Rumpf (Original 1,57 x). V4 r2 27,7 (ROT) -> **36,1, Kopf/Rumpf 1,10 (OK)**. K1-K10, S1, S2, S4 bleiben gruen (K1 Kontrast 20,4) |
+| Sicht A: Unterarm (B)-links = (W)-rechts weiss gefleckt, 28,1 L*, 35 % L* > 30 | (O1/O5) eigene CLUT-Zeile 488 fuer Mesh 14 (birkin_formen.py KOERPER_ZEILEN_V4, nur das CLUT-Feld); r2_koerper_farben.py Region unterarm_wr mit der Box der Sicht-Pruefung 298-325 x 262-340 | Neue Zeile FS Unterarm Id 14: Ziel 9,0/-3,8/3,5, Anteil L* > 30 <= Original + 0,05. V4 r2 28,2 L*, Anteil 0,337 (ROT) -> **11,4 L*, Anteil 0,000, dE00 2,9 (OK)** |
+| Zahlen: T2-Drehung 52,5 Grad mit der Pruefer-Mittellinie (Original 66-70); Bauer-Mittellinie am Original nicht stabil | (O2) EIN Werkzeug t2_mass_v4.py (Pruefer-Mittellinie, Original-Masken in v4/t2_masken): Ziel 68,4, Toleranz max(Spanne 4,3; 5) = 5 Grad. Schwanzgelenke 2-4, Durchmesser 2-4, Tiefe 2-3 per r3_form_suche.py (Saat 2, Schritt 78, T1-T6/TA mit Marge 0,003 H, Protokoll SF_belege/v4/r3/) | T2 V4 r2 52,5 (ROT) -> **70,6 Grad (OK)**; der Ansatz faellt wie im Original schraeg zur Biegung (Original-Mittellinie 20-27 Grad vor der Biegung). T1 0,172/0,742, T3 -0,248/0,265, T4 -0,216/0,390 (0,353 H ueber der Sohle), TA <= 0,022 H, T5 0,028/0,080/0,140/0,131, T6 B 0,036 L 0,129 76 Grad Taille 0,021 - alle OK |
+| Zahlen: T7 h85-h125 rot, h100 Kette waagerecht, 18/46 Gangtakte > 0,06 H; Figur bei h85 in clip 11 | (O3) T7 koerperfest (t7_koerperfest_v4.py): Kette gegen ihr Feder-Ziel = Keyframe-Gelenke der gezeichneten Pose (neue Messzeile "Schwanz Ziel"). Ursache h100: das Szenenziel zog bis h102 die Spitze auf den verdeckten Punkt hinter dem Koerper -> V4 frei ab h70-h74 (k_schwanz_gewicht_v4; Vorlage 2 = h85 zeigt die Ruheform). V4-Kette ohne haengen() (es zog die am Knochen 8 nach hinten oben getragene Ruheform auf die Waagerechte), Mitnahme 0,80, Feder x1,5, Daempfung 0,50 (Messreihe Laeufe V4r3c-g im Kommentar von schwanz_r41.c) | T7a V4 r2 38/47 Takte > 0,06 H, max 0,442 H (ROT) -> **0/47, max 0,042 H (h85)**; T7b Biegung 51,7-59,2 Grad (Keyframe 51,7-57,4), Knick 10,9-16,1; T7c Strecke Biegung -> Ende min 0,387 H (Keyframe 0,385; V4 r2 -0,090 = Kette zurueckgeklappt); T7d max 60,9 Grad - alle OK |
+| Zahlen: Dornspitze h33-h35 bis 57 E. unter dem Boden; glaetten() prueft nur Kettenpunkte | (O3) schwanz_r41.c: Bodenpruefung der V4-Kette mit dem Radius des Glied-Meshes je Gelenk und der Dornspitze von Mesh 22 (aus der geladenen Bank gemessen) | Boden V4 r2 +76 E. (h34, ROT) -> **tiefster Mesh-Punkt -4 E. (h68), Dornspitze -43 E., 0 Takte darunter (OK)** |
+| Zahlen: F7/F8 auf "obere 58/56 %" umgedeutet, Messblatt-Lesart fest OK; Mesh 10/13 teilen 5797 Texel und CLUT 480 | (O1) eigene CLUT-Zeile 489 fuer Mesh 10; Id 10 ganz mit der F8-Verteilung. Die Messblatt-Lesart (Id ganz) ist jetzt eine echt bewertete Riegelzeile | F8 Wortlaut V4 r2 20,9 dL +4,5 (ROT) -> **19,6 dL +3,2 (OK)**; F7 Wortlaut 22,7 dL -10,6 **ROT** (Offen 2) |
+| Zahlen: F14 dL -5,2 (Helligkeitsdecke) | Neue Koerperfarben (die Zeilen 488/489 nehmen die Arme aus den geteilten Texeln) | F14 **57,0, dL -3,0 (OK)**; F-Mittel 2,65 |
+| Zahlen: S3 Abstand 0,015 H | versucht: Vorderkante der gemalten Seitenellipse 0,006 / 0,010 H nach vorn (eichen_v4.py AUGE_S_VOR, Laeufe r3 S3 1/2): der gemessene Fleck rueckt nicht vor (Naht zu den Vorderbild-Flaechen), K1 fiel auf 16,7-18,7 -> zurueckgenommen (AUGE_S_VOR 0) | S3 **ROT** (Offen 1) |
+| Konstanten: S2_MITTE 0,045 gegen zitierte 0,049; 'tiefe' ohne PORT-WAHL | Kommentar: gemalt 0,045 -> gemessen S2 0,058 H; mit 0,049 laege die Mitte bei ~0,062 und S3 wuerde groesser. 'tiefe' als PORT-WAHL mit Quelle | - |
+
+**Riegel-Tabelle** (riegel_v4.py, EM30_V4.EMD = EM30_V4r3.EMD sha256 dfbc30bc, Lauf sfv4/r/V4r3; volle Tabelle SF_belege/v4/riegel_V4r3.md/.txt/.json; **Exit 1, 3 rot von 53**)
+
+| Mass | Soll | Ist V4 r2 (neue Riegel) | Ist V4 r3 | |
+|---|---|---|---|---|
+| G1 Koerper = Ref2 (O1) | Ecken, Normalen, Flaechen, UV der Meshes 0-8/10-15 gleich; Skelett/KF/EDD gleich; CLUT-Feld frei | keine Abweichung | Geometrie gleich; CLUT Mesh 10 480->489, Mesh 14 482->488; 13/15 byte-gleich | OK |
+| M1-M4 | <= 212 / <= 118 / 8 bpp / 0,045-0,091 | 160 / 109 / ok / ok | 160 / 109 / Zeilen 480-482, 484, 486-489 (TIM 10 Zeilen) / Kopf 0,054, Schwanz 0,051-0,066 | OK |
+| K1 | 1 Komponente, Kontrast >= 20 | 1; 20,3 | 1; 20,4 | OK |
+| K2-K10 | Messblatt V4 Abschnitt 7 | OK | K2 dE00 0,7; K3 0,030 x 0,036; K4 0,060 / 0,107; K5 0,7; K6 L* 12,7; K7 1,4; K8 3,3 Anteil 0; K9 1,6; K10 0,154 x 0,187 | OK |
+| K11 Kopf-Struktur vorn (O4) | Gradient 41,0 +-6,1; Kopf >= Rumpf | 27,7 / 32,9 (0,84) | 36,1 / 32,7 (1,10) | OK |
+| S1 / S2 / S4 | Messblatt | OK | 48,0/3,9/0,8 0,030 x 0,049 1 Komp. / 0,058; 0,811 / dE00 0,3 | OK |
+| S3 | L* <= 22, dE00 <= 6, Abstand <= 0,01 H | Abstand 0,011 | 14,1, dE00 3,7, **Abstand 0,015 H** | ROT |
+| T1 / T3 / T4 / TA / T5 / T6 | Messblatt | OK | s. oben | OK |
+| T2 (O2) | dx -0,245 dy +0,036 +-0,03; Drehung 68,4 +-5,0 (t2_mass_v4) | 52,5 Grad | -0,262 / 0,061; 70,6 Grad | OK |
+| T8 / T9 | dE00 <= 6 / Mittel <= 6 | OK | 1,9/2,9/0,7/1,5 / 2,5 | OK |
+| T7a Gang koerperfest (O3) | Gelenke 1/3/5/7 <= 0,06 H vom Ziel, h85 + alle Gangtakte | 38/47, max 0,442 | 0/47, max 0,042 | OK |
+| T7b / T7c / T7d | Biegung >= KF-10, Knick >= KF/2 / Strecke >= 0,75 KF / <= 90 Grad | ROT / ROT / OK | OK / OK (min 0,387) / OK (60,9) | OK |
+| Boden Mesh (O3) | kein Glied-Mesh, keine Dornspitze unter dem Boden | +76 E. | -4 E. | OK |
+| F0 Licht h118 / h135, F0 Wand | dE00 <= 3 / <= 2 | OK | 0,1 / 0,1 / 0,52 | OK |
+| F6 / F7 / F8 / F9 / F10 / F14 / F19 | dE00 <= 5, Betrag dL <= 4 | F14 ROT | 3,7 / 3,6 / 2,0 / 2,4 / 2,8 / 2,8 (dL -3,0) / 1,2 | OK |
+| F-Mittel | <= 4 | 3,11 | 2,65 | OK |
+| F7 Messblatt-Wortlaut (Id 13 ganz) | 33,3/5,5/2,7 | 22,4 dL -10,9 | **22,7 dL -10,6** | ROT |
+| F8 Messblatt-Wortlaut (Id 10 ganz) | 16,4/8,3/1,5 | 20,9 dL +4,5 | 19,6 dL +3,2 | OK |
+| FS Unterarm (W)-rechts Id 14 (O5) | 9,0/-3,8/3,5; Anteil L* > 30 <= 0,05 | 28,2, Anteil 0,337 | 11,4, Anteil 0,000 | OK |
+| FS Unterarm (W)-links Id 11, Rumpf, Oberarm (B)-links unten, Unterschenkel | Sicht-Boxen | OK | dE00 2,1 / 2,6 / 2,7 / 4,5 | OK |
+| FS Oberarm (B)-rechts unten | 20,9/3,2/-0,4, Rotanteil 0,02 +-0,15 | OK (0,09) | 21,5 dE00 4,7, **Rotanteil 0,49** | ROT |
+
+Gegenprobe V3 r2 (riegel_V3r2_gegenprobe_r3.*, Lauf sfv3/r/V3r2 ohne Ziel-Zeile -> T7 im Raum von Knochen 8): **44 von 53 rot**, darunter
+K11 (28,5 / 36,5 = 0,78), T2 22,9 Grad, T7a 47/47 (max 0,634 H), T7c 14 Takte, Boden +96 E. (19 Takte), Unterarm Id 14 21,3 L* mit
+Anteil 0,121. Gegenprobe V4 r2 mit den Riegeln dieser Runde (riegel_V4r2_mit_r3_riegeln.*): 11 von 53 rot (K11, S3, T2, T7a-c, Boden,
+F14, F7/F8 Wortlaut, Unterarm Id 14). Tests: unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41, integration_r41_sichel_form
+**4/4 Passed** (SF_belege/v4/ctest_v4_r3.txt). Spiel-Asset EM30_HANGAR.EMD und Pin cfd1ac42 unveraendert; die Variante ist
+reproduzierbar ("birkin_formen.py --variante v4 --aus DIR" bitgleich dfbc30bc).
+
+**Leisten** (SF_belege/v4/, Spalten Nutzer-Vorlage | Nutzer-Beschriftung | V4 Runde 2 (vorher) | V4 Runde 3 (neu); Runde-2-Leisten in
+SF_belege/v4/r2/): 01_vorn_kamera12 (mit K11), 02_seite_wie_bild2, 03_kopf_nah_vorn_x4 (K1-K11), 04_kopf_nah_seite_x4, 05_schwanz_x3,
+06_farben (mit den neuen FS-Zeilen), 07_gang (Spielbilder h85/h100/h118/h135, Unterschriften mit der koerperfesten Abweichung je Gelenk,
+Biegung und Strecke; Kopfzeilen mit T7a-T7d/Boden beider Staende; letzte Zeile Feder-Stand V4 r3 an Pose 85), 08_rundum_V4 (V4 r3).
+
+**Offen**
+1. S3 (Abstand Haarkante -> Augenfleck 0,015 H, erlaubt 0,01 H): der helle Teil des Seitenauges endet an der Naht zu den Vorderbild-
+   Flaechen. Runde 2 versuchte Augenmitte, Malgroesse, Vorhang, Vorderbild-Texel als Auge; Runde 3 die Vorderkante der Ellipse
+   (+0,006 / +0,010 H): ohne Wirkung auf den gemessenen Fleck, K1 fiel. Naechster Weg: die Naht verlegen (Ansichtswahl der Flaechen am Auge
+   mit eigener Schwelle) - beruehrt die Augen vorn, daher nicht in dieser Runde.
+2. F7 Messblatt-Wortlaut (Id 13 ganz gegen das Fenster 307-347 x 167-212 = 33,3 L*) widerspricht der Sicht-Pruefung (ganzer Oberarm
+   (B)-links 17,3 L*, unterer Teil 11,0 L*): das F7-Fenster liegt nur auf der hellen Schulterkuppe. Nach Fensterlage ist F7 gruen
+   (31,4, dE00 3,6). Bitte Messblatt-Entscheid: Fensterlage statt "Id ganz" fuer F7.
+3. FS Oberarm (B)-rechts unten Rotanteil 0,49 (Original 0,02): Id 10 traegt jetzt ganz die F8-Verteilung (Messblatt-Wortlaut F8 gruen);
+   das rote F8-Fenster faerbt damit auch den unteren Oberarm. Mit getrennten Regionen (oben F8, unten Sicht-Box) ist der Rotanteil gruen,
+   F8 Wortlaut aber dL +4,4 (rot, Lauf r3 Koerper 2) - die Sicht-Box unten (20,9 L*) ist heller als das F8-Fenster (16,4 L*). Entscheid wie 2.
+4. K11 liegt mit 36,1 im unteren Teil des Bands (41,0 +-6,1), K1 mit Kontrast 20,4 knapp ueber 20: mehr Struktur (Verstaerkung 11-12,
+   Klammer -2,5) brachte 38-41, aber helle Flecken neben den Augen wurden eigene Komponenten (K1 2 Komp., S1/S2 fanden einen Fleck auf
+   der Kopfoberseite seitlich), Laeufe r3 Struktur 12-15.
+5. Schwanz: die Aussenecke am Bogen bleibt spitz (Sicht-Pruefung r2 1.3 "K"); der Ansatz ist jetzt schraeg wie im Original. Die Kette ist
+   im Gang fast starr am Koerper (Abweichung im Mittel 0,010 H) - mit Mitnahme 0,60 schwingt sie mehr, h85 liegt dann 0,103 H neben der
+   Ruheform (Lauf V4r3g0.60).
+6. Spielbild h135/h100 (Sicht-Pruefung r2 1.1): die Kopfstruktur gilt fuer alle Flaechen (beide Ansichtsbilder); der Augenfleck im
+   Spielbild (Spielpose h135 ist nicht Pose "135") ist nicht eigens gemessen; die FRAMEDUMPs liegen in sfv4/r/V4r3/fd (Leiste 07).
+7. Tests: die neuen Engine-Regeln (Boden mit Mesh-Massen, Mitnahme/Feder/Daempfung V4, V4-Freigabe h70-h74, kein haengen fuer V4) haben
+   keinen eigenen Unit-Test; integration_r41_sichel_form laedt weiter das Spiel-Asset (Referenz 2).
+8. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme.
