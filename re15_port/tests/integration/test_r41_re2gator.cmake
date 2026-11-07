@@ -73,6 +73,14 @@
 #   Nachbesserung 4: die Szene frisst jetzt obj 3 im Nordbecken (Obj_model_set @0x00A8E), die Wende auf Leon an der Leiter ist
 #   laenger (G5 F369 -> G6 F394 statt -> F376), "KAMERA SZENE ... Ende" kommt in F423 statt F405 -> Lauf "szene" RE15_EXIT_AT
 #   420 -> 440 (gemessen F41n4 Laeufe N_L/N_E: Folge C F423). Pruefungen unveraendert.
+#   (f) Querbezug Runde 41 Spur G2 NB3 (Nutzerentscheid 2026-11-06 F4 "Er darf nicht zu lange haengen" -> Vorgabe B, enemy_ai_boss_gator.c
+#   gb_punkt_im_band / Zweig 7): steht die Figur im Koerper-Band vor der Plattform-/Rampenkante, faehrt die Verfolgung sie direkt an statt
+#   ueber den Westumlauf. Im Lauf "kanister" fuehrt der Autopilot Leon durch das Rampenband ((5600,-19698) F1115: zw=7 statt zw=6), die
+#   Bahn des Gators liegt danach anders zum liegenden Kanister: Zielmodus 1/0 viermal (F1129/1141, 1252/1261, 1327/1336, 1427; laengs
+#   < 8880 ohne Aufnahme-Fenster, quer > Koerper + 267) und die Aufnahme erst im vierten Vorbeilauf F1435 (quer 1040) / angehaengt F1447
+#   statt F1215 (quer -478) / F1227 - bis EXIT_AT 1500 nur 30 angehaengte Bilder (zweimal einzeln nachgefahren, bitgleich; alter Stand
+#   a661eb8aa dreimal F1227). RE15_EXIT_AT 1500 -> 1700 (+200 = Verschiebung 220 auf die naechsten 100 gerundet, Regel (c)); die
+#   Schranke >= 200 Bilder bei Abweichung 0 bleibt. Belege: analysis/befunde_runde41/G2_belege/nb3/bau/re2gator/.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_re2gator.cmake
 # =============================================================================
@@ -483,7 +491,8 @@ re15_start_spiel(_rv 300
     "RE15_GATOR_KANISTER=-1500,-23400"
     "RE15_AUTOPILOT=xz:5500,-25500\;xz:5500,-20500\;xz:-1000,-21000\;xz:-1000,-25500\;xz:5500,-25500\;xz:5500,-20500\;xz:-1000,-21000\;noact"
     RE15_AUTOPILOT_ROOM=2090
-    "RE15_EXIT_AT=1500#2090"   # Querbezug Runde 41 Spur F (Kopf): ohne Spinnen Aufnahme F1227 statt F1119 -> Fenster +100
+    "RE15_EXIT_AT=1700#2090"   # Querbezug Runde 41 Spur F (Kopf): ohne Spinnen Aufnahme F1227 statt F1119 -> Fenster +100;
+                               # Spur G2 NB3 (f): Aufnahme F1447 statt F1227 -> Fenster +200 (Schranke >= 200 Bilder, Abweichung 0 bleibt)
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")

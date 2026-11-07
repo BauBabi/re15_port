@@ -1346,6 +1346,17 @@ void re15_gator_boss_deck_alt_setzen(int an) { s_gb_deck_alt = an; }
 static int s_gb_kdt_alt = 0;    /* 1 = Ueberquerung ohne Hub ueber dem Deck */
 void re15_gator_boss_kdt_alt_setzen(int an) { s_gb_kdt_alt = an; }
 int  re15_gator_boss_rammen(void) { return s_gb_rammen; }               /* Messhaken: Rammen seit Programmstart */
+/* NB3 (Vorgabe A): Phasen, in denen der Zaehler oben_ohne laeuft - nur im Kampf kann er die Figur oben angreifen. Nicht gezaehlt: OFF, LURK
+ * (Lauerstellung an der Leiter, Punkt 2), FRESSEN/DIE/DEAD/RE2_TOD und das RE2-Intro (GBP_RE2_INTRO, Durchbruch -> Schnapper, ~300 Bilder ab dem
+ * Betreten). Gemessen (exe-Riegel integration_r41_re2gator, Lauf belagerung: Figur ab F0 auf der Rampe (6300,-16250), Intro bis F305): mit dem
+ * Zaehler im Intro quert er im 71. Bild der Belagerung (QUERPRUEF F305 t 1, CROSS F376, Rammen F377) VOR dem ersten Hochbiss (a661eb8aa F417), die
+ * GIER-WACHE (300 Bildpaare CHASE/GUARD) wird nie erreicht und der Finisher kommt F751 statt F627; nur im Kampf gezaehlt laeuft die Belagerung
+ * wie im Stand a661eb8aa (Hochbiss F417/F522/F627 nullt den Zaehler). Harness (Lagen A1/B1) und exe ohne Intro-Anteil unveraendert. */
+static int gb_phase_kampf(int ph)
+{
+    return ph == GBP_CHASE || ph == GBP_LUNGE || ph == GBP_FLINCH || ph == GBP_GUARD || ph == GBP_CROSS_APPR || ph == GBP_CROSS
+        || ph == GBP_RE2_DASH;
+}
 int  re15_gator_boss_oben_ohne(const re15_actor_t *e)                    /* NB3 Messhaken: Bilder oben ohne Treffer (GUARD-Querungszaehler) */
 { const int i = (int)(e - g_actors); return (i >= 0 && i < RE15_ACTOR_MAX) ? (int)s_gb[i].oben_ohne : -1; }
 int  re15_gator_boss_kreuz_kanister(void) { return s_gb_kreuz_kan; }    /* Messhaken: Ueberquerungen mit dem Kanister seit Programmstart */
@@ -1839,8 +1850,9 @@ static void gb_takt(int slot)
     }
     int32_t dist = re15_enemy_player_dist(e, pl);
     {   /* NB3 (Vorgabe A): Bilder oben (Rampe/Plattform y < -900 wie player_on_platform, oder Ostnische) ohne Treffer - Treffer nullt in
-         * gb_biss_abschluss; nicht oben nullt. Ab GB_OBEN_OHNE quert die Belagerung ueber die Figur (GBP_GUARD). */
-        if (!gb_pl_oben(pl)) g->oben_ohne = 0;
+         * gb_biss_abschluss; nicht oben und jede Nicht-Kampfphase (RE2-Intro, Lauern, Tod) nullt. Ab GB_OBEN_OHNE quert die Belagerung
+         * ueber die Figur (GBP_GUARD). */
+        if (!gb_pl_oben(pl) || !gb_phase_kampf(g->phase)) g->oben_ohne = 0;   /* nur im Kampf gezaehlt (s. gb_phase_kampf) */
         else if (g->oben_ohne < 30000) g->oben_ohne++;
     }
 
