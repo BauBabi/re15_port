@@ -799,3 +799,95 @@ Gesehen (Bauer, keine Abnahme):
    - Krallen laengs zweiteilig: Ansatz gekachelt, Spitze einmal.
 4. Die Wiederholung von F18 ueber Kopf, Hals und Brust (Kachelung, G4-Machart) ist in 05/06 nicht als Muster zu erkennen. Das sollte ein Sicht-Pruefer bestaetigen.
 5. Messblatt 7.1 (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer.
+
+
+# Versuch 3 (G4-Uebertragung), Runde 3 (Bauer, 2026-11-07)
+
+Grundlage: `MESSBLATT_FARBE_V3.md` und die Pruefberichte der Runde 2 (`FARBE_PRUEFUNG_v3_r2_zahlen.md`, `FARBE_PRUEFUNG_v3_r2_sicht.md`).
+Der Stand der Runde 2 liegt in `farbe/K5c_farbe_v3r2/` und `farbe/v3r2/`. Spiel-Asset `BAHNSTEIG_FORM` und Pins sind unveraendert, K4 bleibt fuer v0.8.30.
+Messskripte und Zwischenlaeufe dieser Runde: `farbe_lesung/V3B_r3_skripte/` (Kopie aus dem Scratchpad `formfarbe3/r3/`).
+
+## V3R3.0 Ergebnis
+
+- **Variante:** `farbe/K5c_farbe_v3/` (FORM.EMD sha256 d19fe901..., FORM.TIM abd0ba1b...). Kopien `farbe/K5C_FARBE_V3.EMD/.TIM` und
+  Scratchpad `formfarbe3/emd/`, bytegleich.
+- **Riegel** `generator/riegel_farbe_v3.py`: **32 von 52 Zeilen GRUEN, Exit 1** (`farbe/riegel_K5c_farbe_v3.txt`, `.json`). Runde 2: 36 von 52.
+  Die Zahl sinkt, weil zwei Zeilen jetzt nach dem Wortlaut bzw. nach dem Auge gerechnet werden (A8, F2t) und die Krallen anders aussehen (B13, B16).
+- **Gegenproben:** alle 13 wie verlangt ("falsch ausgefallen: keine"). Die Orange/Gelb-Probe faerbt jetzt nur die Feld-Eintraege (Zahlen-Pruefer (4)):
+  F1t/F2t dE 74,6/50,1 und 87,3/72,4, ROT.
+- **Spiel:** 10 von 10 Bildern (`farbe/spiel_lauf_v3.log`, `farbe/spiel_v3/`). Zwei K4-Aufnahmen waren beim ersten Lauf schwarz (rc 1) und sind
+  einzeln wiederholt (rc 0). Die Form laedt mit "32 Meshes, 32 Knochen, 3 Clips". Aufnahmeweg: PrintWindow (Tafel 07 nennt ihn jetzt).
+- **Tests:** Form-Gruppe `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: 11 von 11 gruen, 95,1 s (`V3B_r3_skripte/ctest.log`).
+
+## V3R3.1 Befunde der Runde 2 und was geaendert ist
+
+| Befund (Pruefer) | Aenderung | Beleg Runde 3 |
+|---|---|---|
+| Sicht: Vorderklaue Bild 2 als Mosaik aus beige-weiss-braunen Dreiecken, gefiltert Schachbrett | **`kf_g4.krallen_uv`**: je K5c-Kralle EIN G4-Krallenstreifen, durchgehend. Gemessen: alle 8 Krallen-Meshes sind Sechseckringe (Ecke 6r+j, dann Wurzelmitte und Spitze). Die G4-Kralleninseln 14/7, 14/15, 19/7, 19/15 liegen auf einem Streifen u 229-240, v 200-254 (Seite 1); v gross = Spitze (Abstand zum Knochen 282-458 gegen 87-250). Seiten abwechselnd an den Streifenrand (gespiegelt, ohne Naht). Ansatz = Zeilen 202-213 (Zeilenmittel in der Rotklasse A3, Zeile 214 a\* 12,7), Ring fuer Ring gespiegelt; die letzten k Glieder tragen 213-254 einmal, k so, dass die Vergroesserung dort der G4-Dichte am naechsten ist (0,78-1,21) | Bild 2: dunkelrote Krallen mit heller Spitze, ohne Mosaik (`02`, Z.1/Z.2). S1 0,00 %, keine Flaeche verkleinert. K9 Klauen a\* 31,4 / 30,6 (Original 24,1 / 22,2, GRUEN). N2 0,0 % in allen Winkeln (Runde 2: 0,27/0,02/0,30 %, ROT): Der helle rechte Streifen (L\* p90 98-100) wird nicht mehr benutzt |
+| Sicht: Original "weiche weisse Flecken oben" | keine | Die hellen, geclippten Flecken liegen nach Messblatt V3 3.2/7.3 auf keinem K5c-Koerper (5 von 969 px). Kein Malziel, offen wie im Messblatt |
+| Sicht F1: 941 px (1,46-fach), drei dunkle Streifen, harte Kante | Kern = Texel, die die 646 Maskenpunkte mehrheitlich decken (volle Deckung = Median 5,0 Punkte je Innentexel), eingeschlossene Loecher gefuellt. Rand = 1 Texelring aussen mit der dunkleren Haelfte des Fleischs (Messblatt V3 3.1 "Ein dunkler Rand zur Haut ist G4-Machart und erlaubt"). Fleischquelle: Lage in F16 ohne Iris (Seite 2) mit den wenigsten Texeln, die nicht heller als die hellste Haut (L\* 28,66) sind (17 Texel). Bauziel auf den Kerntexeln | F1-Flaeche (Regel des Sicht-Pruefers) **731 px (1,13-fach)**, IoU 0,75 mit der Maske (Runde 2: 941 px, 0,59). Ein Streifen mit schwacher Innenzeichnung (`01` Z.3). K14 (47,9 / 17,5 / -1,2), dE 3,1, Rotklasse 61,6 %. Zwischenlaeufe: Ring innen 447 px; Ring aussen ohne Kerngewicht K14 dE 9,3 |
+| Sicht/Zahlen: Band in der Kette zu rot (K15 dE 12,2), Zahlen-Pruefer Befund A | Das Band wird auf das Ketten-Ziel **ZIEL_BAND_KETTE (182,117,102)** gebaut, Lab (55,7 / 24,2 / 18,8). Messung `band_knochen.py`: An den 1282 Bandpixeln auf Knochen 23 gibt die Kette das Texel fast unveraendert wieder (Ketten-T / Texel 1,017 / 0,963 / 1,030); der Rundlauf des Originals liegt dort bei T (185,5 / 112,7 / 105,4). Das Messblatt-Ziel (184,90,85) ergibt dort (49,2 / 40,2 / 19,5) gegen den Rundlauf (55,2 / 27,9 / 16,4) | **K15 (50,9 / 30,7 / 20,6), dE 5,2, GRUEN**. Knochen 23 jetzt (53,8 / 30,0 / 19,1). K7 dE 15,3 -> 9,6 (ROT). **F2t dE 15,1, ROT** (bewusst, V3R3.3) |
+| Sicht: rosa Strichel an Flaechengrenzen von Schulter/Brust | Herkunft gemessen (`strichel.py`): rosa-magenta Texel (Rotklasse, Farbton < 10 Grad) gibt es nur auf Mesh 16 in den Bild-1-Zeilen, 7,1 % im Inselinneren und 3,8 % am Inselrand. Es sind die umgefaerbten G4-Adern, kein Randtexel einer Sonderzeile. Darum tragen Oberarm 16 und Unterarm 17 die Bild-1-Zeilen nur noch auf den Flaechen, die Bild 1 zeigt (39 bzw. 37 Flaechen, Leser B `fid1.npz`) | Rosa Texel auf Mesh 16: 1978 -> 495 (nur noch auf Bild-1-Flaechen). K11/K12 unveraendert gruen. Die Hand 18 behaelt die Bild-1-Zeilen auf allen Flaechen: mit Teilung K15 dE 6,0 (ROT) und K6 7,5 (Lauf `V3B_r3_skripte/r_v13_offiziell.txt`) |
+| Zahlen Befund B: A8 nur durch Umdefinition gruen | Riegel nach dem Wortlaut: Kieferfeld = Unterkiefer aussen + Band, ohne Zaehne | **A8 Zahn 2,0 %** (gerundet; ROT, knapp unter 2), Runde 2 nach Wortlaut 0,9 %. Rot 36,3 %, Dunkel 67,5 % |
+| Zahlen Befund C: K12 Schwanz ohne Reserve (Saat 7 ROT) | Buntheit Seite 1 geeicht auf das K12-Original 5,9 %: Laeufe 0,35 / 0,45 / 0,515 / 0,535 / 0,574 ergeben 1,3 / 2,8 / 5,3 / 6,1 / 8,7 % (Saat 15). Gewaehlt 0,535 (`B1_C_SEITE1_EICH`) | **K12 Schwanz 6,1 / 6,5 / 6,2 %** mit Saat 15 / 12345 / 7 (Grenze 8,9) |
+| Zahlen (5): MORPH_CLOSE ohne Quelle, WEICH_RAND schwach | beide entfallen; ersetzt durch Mehrheitsregel und Messblatt 3.1 (siehe F1) | `bau.json` sonder.F1: kern_texel 122, rand_texel 70, volle_deckung_punkte 5,0 |
+| Zahlen (5): bau.json Klauen n_theta/s_T als Summen | Krallen je Mesh unter `je_mesh` (Streifen, Ringe, Spitzenglieder, Vergroesserung); im Zweig 'einzeln' Masse je Mesh statt Summen | `farbe/K5c_farbe_v3/bau.json` |
+| Sicht: Tafel 07 mit "gdigrab" beschriftet | `kf_tafeln.spiel` nennt den Weg aus der Zeile "Verfahren:" des Spiellauf-Logs | `07`: "echtes Fenster (PrintWindow)" |
+| Zahlen Befund E: Brust/Hals aus F18, klassenunrein verglichen; Zone zu dunkel | Vergleich gleich gegen gleich (Zonen-Lab unten). Versuch Brust <- G4 10 F5/F6 (Messblatt 2.3 ohne F4): K6 dE 6,0 und Knochen 10 L\* 31,9, aber in der Rundum-Ansicht wieder lachsfarbene Scherben an der Schulter (Scratchpad `r3/all_v10.png`, der Sicht-Befund der Runde 1) und K12 Vorderglied 4,3 % > 3,0 (11 Brustflaechen in Bild 1). Verworfen, Brust bleibt F18 | Zone Kopf/Rumpf Bild 2 (`zonen2.py`): V (13,9 / 22,2 / 13,3), Original (18,5 / 18,3 / 3,7). Bleibt zu dunkel, siehe K6 |
+
+## V3R3.2 Konstanten (neu oder geaendert in Runde 3)
+
+| Konstante | Wert | Quelle |
+|---|---|---|
+| KRALLE_INSELN | (14,7), (14,15), (19,7), (19,15) | G4-Inseln des linken Krallenstreifens, gemessen (Bbox, L\*-Mittel 40-49; rechter Streifen L\* p90 98-100) |
+| Krallen v_w / v_r / v_s | 202 / 213 / 254 | v_w: erste Streifenzeile mit >= 8 Texel Breite; v_r: letzte Zeile mit Zeilenmittel in der A3-Rotklasse (MESSBLATT_FARBE_V1 6 A3); v_s: letzte Zeile mit Index != 0 |
+| Krallen u | 230 / 237 | Schnitt der Streifenbreiten der Zeilen 202-213 (S1) |
+| rho laengs | 0,0957 Texel je Einheit | Median der Kanten Spitze -> Wurzel der G4-Krallen (0,087-0,102 je Insel) |
+| Spitzenglieder k | je Kralle 2-4 | Vergroesserung des Spitzenteils am naechsten an 1 (Quelldichte) |
+| F1-Kern | Deckung > 0,5 x Median | Mehrheitsregel (Definition, wie BAND_MEHRHEIT) |
+| F1-Rand | 1 Texelring aussen, dunklere Haelfte | Messblatt V3 3.1 Machart; 1 Ring = kleinste Einheit |
+| ZIEL_BAND_KETTE | (182,117,102) | Ketten-Rueckrechnung an Knochen 23 (V3R3.1) |
+| B1_C_SEITE1_EICH | 0,535 | Eichung auf K12-Original 5,9 % (5 Laeufe, V3R3.1) |
+| B1_SICHTBAR_NR | 16: 39, 17: 37 Flaechen | Leser B fid1.npz, >= 1 px in Bild 1 |
+| entfallen | WEICH_RAND, MORPH_CLOSE 3x3, Seite-1-Buntheit 0,574 | Zahlen-Pruefer (5), Befund C |
+
+## V3R3.3 Rote Riegel und warum
+
+- **F2t (dE 15,1) gegen K15 (dE 5,2):** Entscheid fuer K15 (Sicht-Pruefer V3 r2: "Fuer das Auge zaehlt K15, nicht F2t").
+  - Ein Texel, das beide Riegel erfuellt, gibt es nicht: F2t verlangt dE <= 6 um (49,6 / 37,5 / 20,8), die Kette an Knochen 23 (55,7 / 24,2 / 18,8); Abstand 14,8.
+  - Vermutete Ursache der Messblatt-Zahl: Die Vorwaerts-Gegenprobe setzte das Texel auf alle K5c-Pixel des Bandkerns. In der Kette tragen es nur die
+    Bandflaechen auf Knochen 23; 258 Maskenpixel sind Hintergrund (Kette a\* 41,8, Original 33,4), 192 px Hand 18 und 96 px Bein 24 (`bk_end.txt`).
+  - Der Messblatt-Pruefer muss F2t neu fassen oder streichen.
+- **A8 (Zahn 2,0 %):** nach dem Wortlaut knapp unter 2 %. Das hellere Band bringt die hellsten F7-Eintraege ueber L\* 60; mehr helle Punkte waeren
+  eine neue, unbelegte Stellgroesse.
+- **K7 (dE 9,6):** Unterkiefer-Zone V (48,5 / 29,2 / 18,4), Original (56,3 / 24,1 / 13,3); Runde 2 15,3.
+- **K6 (dE 6,8):** Figur Bild 2 V (21,0 / 24,6 / 14,5), Original (25,1 / 20,5 / 9,6). Treiber ist die dunkle Zone Kopf/Rumpf (Brust Knochen 10 L\* 14,5
+  gegen 21,8). In Runde 2 (4,8) haben die beigen Krallen (Knochen 20/29 L\* 60-67, Original 20/41) das ueberdeckt. Krallen einmal je Streifen (Lauf v1): 6,4.
+  Hellere Brust aus F5/F6: 6,0, aber lachsfarbene Scherben (verworfen, V3R3.1).
+- **P2:** Brust +10,2 (unveraendert), Klauen l/r +16,3 / +21,0. Der Ansatz ist die gleichmaessig dunkelrote Wurzelzone der G4-Kralle, 1,7-2,9-fach gedehnt.
+  Varianten: Streifen einmal je Kralle (v1) +13,5/+15,9 mit beigen Krallen; nur Spitze im letzten Glied (v2) +21,6/+24,4; gebaut (v12) +16,3/+21,0.
+  Abwaegung zugunsten des Sicht-Befunds "dunkelrote lange Klaue"; die Krallen sind ohne Mosaik.
+- **B13 (24,6 < 25,1), B16 (46,7 %):** kamen mit den gleichmaessig roten Krallenansaetzen (Lauf v1 mit beigen Krallen: 25,1 / 57,3, beide GRUEN).
+- **B10 7,0 / B11 2,7 / B12 2,6;17,3 / B17 0,541, A1 7,3, N1, K1v2 6,3 / K2v2 6,0:** wie Runde 2. Die dunklen G4-Felder (F10, F11, F18, F17, F19)
+  zeichnen duenner und weniger bunt als die V1/V2-Familienspanne; G1 "schwarz rot" verlangt sie.
+- **K3 (Hinterbein r dE 10,5, Ruecken 8,4):** blaeuliche Haut des Originals ohne G4-Hautzeile (V3.5 Punkt 3). Ruecken von 7,3 auf 8,4 mit dem kleineren F1-Fleck.
+- **B2 (2,6 / 2,0), B9 14,2:** Rot als Aderlinien am Umriss (G4-Machart), wie Runde 2. B9b jetzt GRUEN (10,8).
+- **D1 nach Messblatt-Formel** (Info-Zeile 2,33-2,81 an Rumpf, Schwanz, Hals, Kopf): unveraendert die Kachelung der Runde 2 (Zahlen-Pruefer Befund D).
+  Das Gate rechnet ortsgenau (Median 1,06-1,41), offen ausgewiesen. Klauen jetzt 0,95 / 1,06, Anteil > 2,0 bei 0,0 % (Runde 2 16,9 %).
+
+GRUEN: G0, H1, H1b, H2, P1, D1 (ortsgenau), S1, F1t (dE 5,84), F3t, A2-A7, A9-A12, B14, B15, N2, K4, K5, K8-K14, K4b, B9b, K15.
+
+## V3R3.4 Tafeln (`farbe/`, Messblatt 6; Runde 2 in `farbe/v3r2/`)
+
+- 01/02: Original | K4 heute | V3 Runde 3, Disc-Licht x k, roh und mit Videofilter (Saat 15), Nahkacheln der Feuerstellen.
+- 03 Familie (EM30 | G5 | G4 | V3 | K4), 04 Atlas mit Herkunftskarte, 05 rundum, 06 Kopf nah, 07 Spiel (PrintWindow), 08 Binnenzeichnung.
+- Gesehen (Bauer, keine Abnahme): Vorderklaue in Bild 2 dunkelrot mit heller Spitze, ohne Schachbrett; F1 ein schraeger rosa Streifen; das Band
+  heller lachsrosa. Die Hand 18 bleibt mauve (Bild-1-Zeilen).
+
+## V3R3.5 Offen
+
+1. **F2t gegen K15:** Der Messblatt-Pruefer muss F2t neu fassen (V3R3.3). Die Zahlen dafuer stehen in `V3B_r3_skripte/bk_end.txt`.
+2. **K6 / Zone Kopf/Rumpf zu dunkel:** Es fehlt eine helle Hautquelle ohne Lachs-Look; F5/F6 bringt die Polster der Runde 1 zurueck.
+3. **Krallen-Posterisierung (P2 +16/+21, B13, B16):** Abwaegung Farbe (Sicht) gegen Posterisierung; Pruefer-Entscheid.
+4. **Hand 18 mauve** (Sicht-Befund klein) gegen K15: mit G4-Zeilen auf den Bild-2-Flaechen wird K15 ROT.
+5. Messblatt 7.1 (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer.
