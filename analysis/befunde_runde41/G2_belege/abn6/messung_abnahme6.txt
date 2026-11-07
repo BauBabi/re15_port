@@ -1,0 +1,886 @@
+# Abnahme 6 (G2-RE2 NB3 Runde 2) - eigene Messung, 2026-11-07 13:57:26; exe neu 5910fc24 (re15_pc_g2abn6.exe), alt d872c8e6 (a661eb8aa), r1 029efac6 (10603425b)
+
+## 1. Figur ausserhalb (aussen6.py: alle Bilder in 2090/2091; Deck verlassen / aussen / Nische / im Block; Kletterbilder getrennt)
+alt_neu_kante_-800_-21200_0_elza             exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+alt_ohne_kante_-1300_-20700_0_elza           exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+alt_ohne_kante_0_-20900_2_leon               exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+alt_ohne_kante_100_-20900_2_leon             exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_abn2rw_alt_leon                          exit 0,  1221 Bilder in 2090/2091 (state 3111, climb 3111): wasser 1221, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_abn2wand_leon                            exit 0,  8684 Bilder in 2090/2091 (state 9274, climb 9274): wasser 8684, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 1 (Band 1: 0, Band 0: 1) (erste F1046); Ausnahme-Zeilen 0
+neu_frei4_elza                               exit 0,  8684 Bilder in 2090/2091 (state 9274, climb 9274): wasser 8684, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_frei4_leon                               exit 0,  8684 Bilder in 2090/2091 (state 9274, climb 9274): wasser 8684, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_kante_-1300_-20700_0_elza                exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_kante_-500_-21800_0_leon                 exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_kante_-800_-21200_0_elza                 exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_kante_0_-20900_2_leon                    exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_kante_2800_-18700_2_leon                 exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_oben_elza                                exit 0,  4684 Bilder in 2090/2091 (state 5274, climb 5274): wasser 335, oben 4297, klettern 52, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_oben_leon                                exit 0,  4684 Bilder in 2090/2091 (state 5274, climb 5274): wasser 335, oben 4297, klettern 52, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_west4_elza                               exit 0,  3584 Bilder in 2090/2091 (state 4174, climb 4174): wasser 2555, oben 938, klettern 91, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 2 (Band 1: 2, Band 0: 0) (erste F1319); Ausnahme-Zeilen 0
+neu_west4_leon                               exit 0,  3584 Bilder in 2090/2091 (state 4174, climb 4174): wasser 3584, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+neu_west5_elza                               exit 0,  3584 Bilder in 2090/2091 (state 4174, climb 4174): wasser 2090, oben 1442, klettern 52, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 7 (Band 1: 7, Band 0: 0) (erste F2753); Ausnahme-Zeilen 0
+ohne_abn2wand_leon                           exit 0,  8684 Bilder in 2090/2091 (state 9274, climb 9274): wasser 8684, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 1 (Band 1: 0, Band 0: 1) (erste F1046); Ausnahme-Zeilen 0
+ohne_abn2wand_leon_fd                        exit 0,  1884 Bilder in 2090/2091 (state 2474, climb 2474): wasser 1884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 1 (Band 1: 0, Band 0: 1) (erste F1046); Ausnahme-Zeilen 0
+ohne_frei4_elza                              exit 0,  8684 Bilder in 2090/2091 (state 9274, climb 9274): wasser 8684, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_frei4_leon                              exit 0,  8684 Bilder in 2090/2091 (state 9274, climb 9274): wasser 8684, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_kante_-1300_-20700_0_elza               exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_kante_-2300_-16000_0_elza               exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_kante_0_-20900_2_leon                   exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_kante_100_-20900_2_leon                 exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_kante_1500_-21400_2_elza                exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_kante_4073_-19322_0_leon                exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_kante_5000_-18900_2_elza                exit 0,  3884 Bilder in 2090/2091 (state 4474, climb 4474): wasser 3884, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_oben_elza                               exit 0,  4684 Bilder in 2090/2091 (state 5274, climb 5274): wasser 335, oben 4297, klettern 52, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_oben_leon                               exit 0,  4684 Bilder in 2090/2091 (state 5274, climb 5274): wasser 335, oben 4297, klettern 52, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_spawn_2300_-14950_elza_r3072            exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 26 (Band 1: 26, Band 0: 0) (erste F888); Ausnahme-Zeilen 0
+ohne_spawn_2600_-16800_elza_r0               exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_spawn_3000_-14950_leon_r1024            exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 18 (Band 1: 18, Band 0: 0) (erste F993); Ausnahme-Zeilen 0
+ohne_spawn_3600_-15800_elza_r2048            exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_spawn_4000_-16000_leon_r1024            exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 23 (Band 1: 23, Band 0: 0) (erste F1197); Ausnahme-Zeilen 0
+ohne_spawn_4000_-16000_leon_r1024_det        exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 23 (Band 1: 23, Band 0: 0) (erste F1197); Ausnahme-Zeilen 0
+ohne_spawn_4400_-16200_leon_r0               exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_spawn_5000_-15200_leon_r3072            exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 8 (Band 1: 8, Band 0: 0) (erste F1490); Ausnahme-Zeilen 0
+ohne_spawn_5800_-17650_elza_r1024            exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 5 (Band 1: 5, Band 0: 0) (erste F637); Ausnahme-Zeilen 0
+ohne_spawn_6000_-17400_leon_r2048            exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_spawn_6750_-16300_elza_r1024            exit 0,  4200 Bilder in 2090/2091 (state 4451, climb 4451): wasser 0, oben 4200, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 3 (Band 1: 3, Band 0: 0) (erste F1276); Ausnahme-Zeilen 0
+ohne_west4_elza                              exit 0,  3584 Bilder in 2090/2091 (state 4174, climb 4174): wasser 2555, oben 938, klettern 91, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 2 (Band 1: 2, Band 0: 0) (erste F1319); Ausnahme-Zeilen 0
+ohne_west4_leon                              exit 0,  3584 Bilder in 2090/2091 (state 4174, climb 4174): wasser 3584, oben 0, klettern 0, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 0 (Band 1: 0, Band 0: 0); Ausnahme-Zeilen 0
+ohne_west5_elza                              exit 0,  3584 Bilder in 2090/2091 (state 4174, climb 4174): wasser 2090, oben 1442, klettern 52, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 7 (Band 1: 7, Band 0: 0) (erste F2753); Ausnahme-Zeilen 0
+ohne_west5_elza_fd                           exit 0,  3584 Bilder in 2090/2091 (state 4174, climb 4174): wasser 2090, oben 1442, klettern 52, deck_verlassen 0, aussen 0, nische 0, im_block 0 -> NIE ausserhalb; RAUMHALT 7 (Band 1: 7, Band 0: 0) (erste F2753); Ausnahme-Zeilen 0
+
+## 2. Mass je Lauf (mass6.py: Treffer, Oben-Abschnitte, Pausen, Schaden, ohne Fortschritt, Haenge-Fenster, Rueckfall-Zeilen, Kanister-Sitz)
+== alt_neu_kante_-800_-21200_0_elza: pid=38169 winpid=52340 start=13:53:46 exit=0 ende=13:56:44 exe d872c8e6; Besuch 3600 Bilder F1..F3600, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F556, Kanister-Sitz 3030 Bilder, Abw. max 0 (letzte Zeile F3585), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 13: Biss 13
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 288 B. = 9.6 s (bis F1168); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 870 B. (F314..F1184), Figur im Wasser 870 B. (F314..F1184); Figur im Band 1562 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:609, 3:430, 12:1980
+
+== alt_ohne_kante_-1300_-20700_0_elza: pid=33017 winpid=62552 start=13:49:45 exit=0 ende=13:52:45 exe d872c8e6; Besuch 3600 Bilder F1..F3600, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F650, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F650), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 23: Biss 23
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 82 B. = 2.7 s (bis F1303); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 1123 B. (F196..F1319), Figur im Wasser 1123 B. (F196..F1319); Figur im Band 3344 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1391, 3:903, 12:631
+
+== alt_ohne_kante_0_-20900_2_leon: pid=32622 winpid=61924 start=13:49:22 exit=0 ende=13:51:59 exe d872c8e6; Besuch 3600 Bilder F1..F3600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F387, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F387), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 19: Biss 19
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 295 B. = 9.8 s (bis F1207); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 428 B. (F338..F766), Figur im Wasser 428 B. (F338..F766); Figur im Band 269 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:986, 3:688, 12:1514
+
+== alt_ohne_kante_100_-20900_2_leon: pid=30027 winpid=76016 start=13:45:27 exit=0 ende=13:48:02 exe d872c8e6; Besuch 3600 Bilder F1..F3600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F537, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F537), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 23: Biss 23
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 299 B. = 10.0 s (bis F2048); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 743 B. (F2423..F3166), Figur im Wasser 743 B. (F2423..F3166); Figur im Band 1055 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1304, 3:817, 12:917
+
+== neu_abn2rw_alt_leon: pid=38860 winpid=71300 start=13:54:59 exit=0 ende=13:56:55 exe 5910fc24; Besuch 1300 Bilder F1..F1300, Raeume ['2080'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F584, Kanister-Sitz 330 Bilder, Abw. max 0 (letzte Zeile F913), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 0: 
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 1 B. = 0.0 s (bis F937); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 1299 B. (F1..F1300), Figur im Wasser 1299 B. (F1..F1300); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:199, 3:129
+
+== neu_abn2wand_leon: pid=21494 winpid=74168 start=13:32:39 exit=0 ende=13:39:09 exe 5910fc24; Besuch 8400 Bilder F1..F8400, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 1, Kanister angehaengt F625, Kanister-Sitz 7770 Bilder, Abw. max 0 (letzte Zeile F8394), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 74: Biss 74
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 47 B. = 1.6 s (bis F2476); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 323 B. (F401..F724), Figur im Wasser 323 B. (F401..F724); Figur im Band 3833 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:4740, 3:3010
+
+== neu_frei4_elza: pid=24786 winpid=65444 start=13:39:09 exit=0 ende=13:46:03 exe 5910fc24; Besuch 8400 Bilder F1..F8400, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F921, Kanister-Sitz 7470 Bilder, Abw. max 0 (letzte Zeile F8390), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 60: Biss 60
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 221 B. = 7.4 s (bis F3301); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 1089 B. (F2920..F4009), Figur im Wasser 1089 B. (F2920..F4009); Figur im Band 4481 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:4000, 3:2537, 12:917
+
+== neu_frei4_leon: pid=22357 winpid=64996 start=13:34:28 exit=0 ende=13:39:54 exe 5910fc24; Besuch 8400 Bilder F1..F8400, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F570, Kanister-Sitz 7830 Bilder, Abw. max 0 (letzte Zeile F8399), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 60: Biss 60
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 197 B. = 6.6 s (bis F6123); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 464 B. (F139..F603), Figur im Wasser 464 B. (F139..F603); Figur im Band 1695 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:4046, 3:2537, 12:1222
+
+== neu_kante_-1300_-20700_0_elza: pid=28852 winpid=68956 start=13:44:11 exit=0 ende=13:47:03 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F613, Kanister-Sitz 2970 Bilder, Abw. max 0 (letzte Zeile F3582), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 30: Biss 30
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 35 B. = 1.2 s (bis F3531); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 311 B. (F399..F710), Figur im Wasser 311 B. (F399..F710); Figur im Band 90 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1844, 3:1118
+
+== neu_kante_-500_-21800_0_leon: pid=31061 winpid=53588 start=13:47:04 exit=0 ende=13:49:45 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F384, Kanister-Sitz 3210 Bilder, Abw. max 0 (letzte Zeile F3593), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Biss 22
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 326 B. = 10.9 s (bis F1452); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 753 B. (F1052..F1805), Figur im Wasser 753 B. (F1052..F1805); Figur im Band 1593 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1168, 3:799, 12:1224
+
+== neu_kante_-800_-21200_0_elza: pid=35445 winpid=23328 start=13:50:45 exit=0 ende=13:53:45 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F628, Kanister-Sitz 2970 Bilder, Abw. max 0 (letzte Zeile F3597), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 31: Biss 31
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 67 B. = 2.2 s (bis F2344); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 171 B. (F504..F675), Figur im Wasser 171 B. (F504..F675); Figur im Band 264 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1829, 3:1118
+
+== neu_kante_0_-20900_2_leon: pid=25818 winpid=73768 start=13:40:38 exit=0 ende=13:44:10 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F673, Kanister-Sitz 2910 Bilder, Abw. max 0 (letzte Zeile F3582), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 32: Biss 32
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 14 B. = 0.5 s (bis F1754); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 247 B. (F505..F752), Figur im Wasser 247 B. (F505..F752); Figur im Band 1912 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1763, 3:1139
+
+== neu_kante_2800_-18700_2_leon: pid=37685 winpid=59900 start=13:52:47 exit=0 ende=13:55:25 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F634, Kanister-Sitz 2940 Bilder, Abw. max 0 (letzte Zeile F3573), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 31: Biss 31
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 39 B. = 1.3 s (bis F1039); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 280 B. (F452..F732), Figur im Wasser 280 B. (F452..F732); Figur im Band 3600 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1780, 3:1161
+
+== neu_oben_elza: pid=17433 winpid=77152 start=13:23:41 exit=0 ende=13:26:56 exe 5910fc24; Besuch 4400 Bilder F1..F4400, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F1013, Kanister-Sitz 3360 Bilder, Abw. max 0 (letzte Zeile F4372), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 20: CROSS-Biss 4, Hochbiss 9, Rammen 6, ph?/mo0 1
+   A oben: 4318 Bilder in 1 Abschnitten
+     oben F83..F4400 (4318 B. = 143.9 s) ab erstem Oben-Bild F83: Treffer 20, erster nach 300 B., laengste Pause 854 B. = 28.5 s (F483..F1337), Rest am Ende 82 B. (Laufende)
+     oben F83..F4400 (4318 B. = 143.9 s) ab Kampfbeginn F282: Treffer 20, erster nach 101 B., laengste Pause 854 B. = 28.5 s (F483..F1337), Rest am Ende 82 B. (Laufende)
+     oben F83..F4400 (4318 B. = 143.9 s) ab Anhaengen F1013: Treffer 18, erster nach 324 B., laengste Pause 343 B. = 11.4 s (F3391..F3734), Rest am Ende 82 B. (Laufende)
+       Treffer: F383 Rammen -50 (3600,-15727), F483 ph?/mo0 -50 (6732,-15718), F1337 Rammen -50 (6732,-15848), F1437 CROSS-Biss -50 (2318,-17295), F1583 Hochbiss -50 (2312,-17041), F1688 Hochbiss -50 (2310,-17609), F1879 Hochbiss -50 (2310,-17609), F1984 Hochbiss -50 (2310,-17609), F2105 Hochbiss -50 (2310,-17609), F2408 Rammen -50 (6454,-14959), F2508 CROSS-Biss -50 (6732,-15658), F2697 Hochbiss -50 (6732,-15869), F2966 Rammen -50 (4980,-17609), F3066 CROSS-Biss -50 (2318,-17488), F3212 Hochbiss -50 (2301,-17179), F3391 Hochbiss -50 (2310,-17609), F3734 Rammen -50 (6454,-14959), F3834 CROSS-Biss -50 (6732,-15649), F4017 Hochbiss -50 (6732,-15906), F4318 Rammen -50 (4980,-17609)
+       Schaden je Art (oben): CROSS-Biss 4 x, je 50; Hochbiss 9 x, je 50; Rammen 6 x, je 50; ph?/mo0 1 x, je 50
+   B: ohne Fortschritt max 159 B. = 5.3 s (bis F1218); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 854 B. (F483..F1337), Figur im Wasser 81 B. (F1..F82); Figur im Band 82 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:44, 5:2274, 7:1044
+
+== neu_oben_leon: pid=17429 winpid=64024 start=13:23:41 exit=0 ende=13:26:41 exe 5910fc24; Besuch 4400 Bilder F1..F4400, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F1013, Kanister-Sitz 3360 Bilder, Abw. max 0 (letzte Zeile F4372), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 20: CROSS-Biss 4, Hochbiss 9, Rammen 6, ph?/mo0 1
+   A oben: 4318 Bilder in 1 Abschnitten
+     oben F83..F4400 (4318 B. = 143.9 s) ab erstem Oben-Bild F83: Treffer 20, erster nach 300 B., laengste Pause 856 B. = 28.5 s (F483..F1339), Rest am Ende 80 B. (Laufende)
+     oben F83..F4400 (4318 B. = 143.9 s) ab Kampfbeginn F282: Treffer 20, erster nach 101 B., laengste Pause 856 B. = 28.5 s (F483..F1339), Rest am Ende 80 B. (Laufende)
+     oben F83..F4400 (4318 B. = 143.9 s) ab Anhaengen F1013: Treffer 18, erster nach 326 B., laengste Pause 343 B. = 11.4 s (F3393..F3736), Rest am Ende 80 B. (Laufende)
+       Treffer: F383 Rammen -50 (4200,-15727), F483 ph?/mo0 -50 (6732,-15721), F1339 Rammen -50 (6732,-15855), F1439 CROSS-Biss -50 (2318,-17304), F1585 Hochbiss -50 (2311,-17045), F1690 Hochbiss -50 (2310,-17609), F1881 Hochbiss -50 (2310,-17609), F1986 Hochbiss -50 (2310,-17609), F2107 Hochbiss -50 (2310,-17609), F2410 Rammen -50 (6454,-14959), F2510 CROSS-Biss -50 (6732,-15658), F2699 Hochbiss -50 (6732,-15869), F2968 Rammen -50 (4980,-17609), F3068 CROSS-Biss -50 (2318,-17488), F3214 Hochbiss -50 (2301,-17179), F3393 Hochbiss -50 (2310,-17609), F3736 Rammen -50 (6454,-14959), F3836 CROSS-Biss -50 (6732,-15649), F4019 Hochbiss -50 (6732,-15906), F4320 Rammen -50 (4980,-17609)
+       Schaden je Art (oben): CROSS-Biss 4 x, je 50; Hochbiss 9 x, je 50; Rammen 6 x, je 50; ph?/mo0 1 x, je 50
+   B: ohne Fortschritt max 161 B. = 5.4 s (bis F1220); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 856 B. (F483..F1339), Figur im Wasser 81 B. (F1..F82); Figur im Band 82 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:44, 5:2276, 7:1042
+
+== neu_west4_elza: pid=20221 winpid=76268 start=13:29:58 exit=0 ende=13:32:38 exe 5910fc24; Besuch 3300 Bilder F1..F3300, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 2, Kanister angehaengt F648, Kanister-Sitz 2640 Bilder, Abw. max 0 (letzte Zeile F3287), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Biss 16, CROSS-Biss 1, Hochbiss 3, Rammen 2
+   A oben: 974 Bilder in 1 Abschnitten
+     oben F668..F1641 (974 B. = 32.5 s) ab erstem Oben-Bild F668: Treffer 5, erster nach 402 B., laengste Pause 402 B. = 13.4 s (F668..F1070), Rest am Ende 115 B. (verlassen)
+       Treffer: F1070 Rammen -50 (6711,-17015), F1179 CROSS-Biss -50 (6732,-17166), F1316 Hochbiss -50 (6732,-16848), F1421 Hochbiss -50 (6732,-17392), F1526 Hochbiss -50 (6732,-17602)
+       Schaden je Art (oben): CROSS-Biss 1 x, je 50; Hochbiss 3 x, je 50; Rammen 1 x, je 50
+   B: ohne Fortschritt max 157 B. = 5.2 s (bis F854); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 600 B. (F470..F1070), Figur im Wasser 239 B. (F1673..F1912); Figur im Band 456 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:893, 3:527, 5:727, 7:480
+
+== neu_west4_leon: pid=19899 winpid=50552 start=13:29:22 exit=0 ende=13:31:47 exe 5910fc24; Besuch 3300 Bilder F1..F3300, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F766, Kanister-Sitz 2520 Bilder, Abw. max 0 (letzte Zeile F3285), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 26: Biss 26
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 39 B. = 1.3 s (bis F3083); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 310 B. (F551..F861), Figur im Wasser 310 B. (F551..F861); Figur im Band 753 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1509, 3:903, 12:97
+
+== neu_west5_elza: pid=18848 winpid=59412 start=13:26:41 exit=0 ende=13:29:21 exe 5910fc24; Besuch 3300 Bilder F1..F3300, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 7, Kanister angehaengt F611, Kanister-Sitz 2670 Bilder, Abw. max 0 (letzte Zeile F3280), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Biss 15, CROSS-Biss 2, Hochbiss 4, Rammen 1
+   A oben: 1463 Bilder in 1 Abschnitten
+     oben F1838..F3300 (1463 B. = 48.8 s) ab erstem Oben-Bild F1838: Treffer 7, erster nach 379 B., laengste Pause 379 B. = 12.6 s (F1838..F2217), Rest am Ende 271 B. (Laufende)
+       Treffer: F2217 CROSS-Biss -50 (2318,-14993), F2384 Hochbiss -50 (2315,-15549), F2531 Hochbiss -50 (2315,-14993), F2752 CROSS-Biss -50 (2315,-17642), F2817 Rammen -50 (2318,-17431), F2924 Hochbiss -50 (2301,-17165), F3029 Hochbiss -50 (2318,-17642)
+       Schaden je Art (oben): CROSS-Biss 2 x, je 50; Hochbiss 4 x, je 50; Rammen 1 x, je 50
+   B: ohne Fortschritt max 270 B. = 9.0 s (bis F2136); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 397 B. (F1820..F2217), Figur im Wasser 285 B. (F413..F698); Figur im Band 292 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:749, 3:473, 5:962, 7:480
+
+== ohne_abn2wand_leon: pid=21174 winpid=78736 start=13:32:01 exit=0 ende=13:38:17 exe 5910fc24; Besuch 8400 Bilder F1..F8400, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 1, Kanister angehaengt F625, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F625), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 74: Biss 74
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 47 B. = 1.6 s (bis F2476); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 323 B. (F401..F724), Figur im Wasser 323 B. (F401..F724); Figur im Band 3833 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:4740, 3:3010
+
+== ohne_abn2wand_leon_fd: pid=26346 winpid=56584 start=13:41:21 exit=0 ende=13:42:49 exe 5910fc24; Besuch 1600 Bilder F1..F1600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 1, Kanister angehaengt F625, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F625), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 12: Biss 12
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 27 B. = 0.9 s (bis F1589); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 323 B. (F401..F724), Figur im Wasser 323 B. (F401..F724); Figur im Band 698 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:601, 3:349
+
+== ohne_frei4_elza: pid=25232 winpid=42692 start=13:39:55 exit=0 ende=13:47:07 exe 5910fc24; Besuch 8400 Bilder F1..F8400, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F921, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F921), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 60: Biss 60
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 221 B. = 7.4 s (bis F3301); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 1089 B. (F2920..F4009), Figur im Wasser 1089 B. (F2920..F4009); Figur im Band 4481 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:4000, 3:2537, 12:917
+
+== ohne_frei4_leon: pid=24248 winpid=63260 start=13:38:18 exit=0 ende=13:44:32 exe 5910fc24; Besuch 8400 Bilder F1..F8400, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F570, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F570), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 60: Biss 60
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 197 B. = 6.6 s (bis F6123); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 464 B. (F139..F603), Figur im Wasser 464 B. (F139..F603); Figur im Band 1695 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:4046, 3:2537, 12:1222
+
+== ohne_kante_-1300_-20700_0_elza: pid=28198 winpid=69712 start=13:43:31 exit=0 ende=13:46:23 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F613, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F613), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 30: Biss 30
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 35 B. = 1.2 s (bis F3531); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 311 B. (F399..F710), Figur im Wasser 311 B. (F399..F710); Figur im Band 90 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1844, 3:1118
+
+== ohne_kante_-2300_-16000_0_elza: pid=22723 winpid=77700 start=13:35:20 exit=0 ende=13:39:04 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F634, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F634), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 24: Biss 24
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 262 B. = 8.7 s (bis F2194); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 418 B. (F1791..F2209), Figur im Wasser 418 B. (F1791..F2209); Figur im Band 199 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1427, 3:903, 12:611
+
+== ohne_kante_0_-20900_2_leon: pid=25293 winpid=76812 start=13:39:58 exit=0 ende=13:43:30 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F673, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F673), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 32: Biss 32
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 14 B. = 0.5 s (bis F1754); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 247 B. (F505..F752), Figur im Wasser 247 B. (F505..F752); Figur im Band 1912 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1763, 3:1139
+
+== ohne_kante_100_-20900_2_leon: pid=27668 winpid=74640 start=13:42:49 exit=0 ende=13:45:26 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F691, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F691), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 20: Biss 20
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 77 B. = 2.6 s (bis F2594); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 719 B. (F1893..F2612), Figur im Wasser 719 B. (F1893..F2612); Figur im Band 1347 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1024, 3:645, 12:1215
+
+== ohne_kante_1500_-21400_2_elza: pid=30591 winpid=68684 start=13:46:24 exit=0 ende=13:49:21 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F645, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F645), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 31: Biss 31
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 48 B. = 1.6 s (bis F1381); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 220 B. (F498..F718), Figur im Wasser 220 B. (F498..F718); Figur im Band 265 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1812, 3:1118
+
+== ohne_kante_4073_-19322_0_leon: pid=24724 winpid=60928 start=13:39:05 exit=0 ende=13:42:25 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F613, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F613), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 30: Biss 30
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 51 B. = 1.7 s (bis F2689); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 277 B. (F414..F691), Figur im Wasser 277 B. (F414..F691); Figur im Band 360 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1844, 3:1118
+
+== ohne_kante_5000_-18900_2_elza: pid=37150 winpid=56828 start=13:52:00 exit=0 ende=13:54:58 exe 5910fc24; Besuch 3600 Bilder F1..F3600, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F654, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F654), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 29: Biss 29
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 43 B. = 1.4 s (bis F2882); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 292 B. (F458..F750), Figur im Wasser 292 B. (F458..F750); Figur im Band 167 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1841, 3:1080
+
+== ohne_oben_elza: pid=18843 winpid=75148 start=13:26:41 exit=0 ende=13:29:57 exe 5910fc24; Besuch 4400 Bilder F1..F4400, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F1013, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F1013), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 20: CROSS-Biss 4, Hochbiss 9, Rammen 6, ph?/mo0 1
+   A oben: 4318 Bilder in 1 Abschnitten
+     oben F83..F4400 (4318 B. = 143.9 s) ab erstem Oben-Bild F83: Treffer 20, erster nach 300 B., laengste Pause 854 B. = 28.5 s (F483..F1337), Rest am Ende 82 B. (Laufende)
+     oben F83..F4400 (4318 B. = 143.9 s) ab Kampfbeginn F282: Treffer 20, erster nach 101 B., laengste Pause 854 B. = 28.5 s (F483..F1337), Rest am Ende 82 B. (Laufende)
+     oben F83..F4400 (4318 B. = 143.9 s) ab Anhaengen F1013: Treffer 18, erster nach 324 B., laengste Pause 343 B. = 11.4 s (F3391..F3734), Rest am Ende 82 B. (Laufende)
+       Treffer: F383 Rammen -50 (3600,-15727), F483 ph?/mo0 -50 (6732,-15718), F1337 Rammen -50 (6732,-15848), F1437 CROSS-Biss -50 (2318,-17295), F1583 Hochbiss -50 (2312,-17041), F1688 Hochbiss -50 (2310,-17609), F1879 Hochbiss -50 (2310,-17609), F1984 Hochbiss -50 (2310,-17609), F2105 Hochbiss -50 (2310,-17609), F2408 Rammen -50 (6454,-14959), F2508 CROSS-Biss -50 (6732,-15658), F2697 Hochbiss -50 (6732,-15869), F2966 Rammen -50 (4980,-17609), F3066 CROSS-Biss -50 (2318,-17488), F3212 Hochbiss -50 (2301,-17179), F3391 Hochbiss -50 (2310,-17609), F3734 Rammen -50 (6454,-14959), F3834 CROSS-Biss -50 (6732,-15649), F4017 Hochbiss -50 (6732,-15906), F4318 Rammen -50 (4980,-17609)
+       Schaden je Art (oben): CROSS-Biss 4 x, je 50; Hochbiss 9 x, je 50; Rammen 6 x, je 50; ph?/mo0 1 x, je 50
+   B: ohne Fortschritt max 159 B. = 5.3 s (bis F1218); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 854 B. (F483..F1337), Figur im Wasser 81 B. (F1..F82); Figur im Band 82 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:44, 5:2274, 7:1044
+
+== ohne_oben_leon: pid=17430 winpid=38748 start=13:23:41 exit=0 ende=13:26:41 exe 5910fc24; Besuch 4400 Bilder F1..F4400, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F1013, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F1013), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 20: CROSS-Biss 4, Hochbiss 9, Rammen 6, ph?/mo0 1
+   A oben: 4318 Bilder in 1 Abschnitten
+     oben F83..F4400 (4318 B. = 143.9 s) ab erstem Oben-Bild F83: Treffer 20, erster nach 300 B., laengste Pause 856 B. = 28.5 s (F483..F1339), Rest am Ende 80 B. (Laufende)
+     oben F83..F4400 (4318 B. = 143.9 s) ab Kampfbeginn F282: Treffer 20, erster nach 101 B., laengste Pause 856 B. = 28.5 s (F483..F1339), Rest am Ende 80 B. (Laufende)
+     oben F83..F4400 (4318 B. = 143.9 s) ab Anhaengen F1013: Treffer 18, erster nach 326 B., laengste Pause 343 B. = 11.4 s (F3393..F3736), Rest am Ende 80 B. (Laufende)
+       Treffer: F383 Rammen -50 (4200,-15727), F483 ph?/mo0 -50 (6732,-15721), F1339 Rammen -50 (6732,-15855), F1439 CROSS-Biss -50 (2318,-17304), F1585 Hochbiss -50 (2311,-17045), F1690 Hochbiss -50 (2310,-17609), F1881 Hochbiss -50 (2310,-17609), F1986 Hochbiss -50 (2310,-17609), F2107 Hochbiss -50 (2310,-17609), F2410 Rammen -50 (6454,-14959), F2510 CROSS-Biss -50 (6732,-15658), F2699 Hochbiss -50 (6732,-15869), F2968 Rammen -50 (4980,-17609), F3068 CROSS-Biss -50 (2318,-17488), F3214 Hochbiss -50 (2301,-17179), F3393 Hochbiss -50 (2310,-17609), F3736 Rammen -50 (6454,-14959), F3836 CROSS-Biss -50 (6732,-15649), F4019 Hochbiss -50 (6732,-15906), F4320 Rammen -50 (4980,-17609)
+       Schaden je Art (oben): CROSS-Biss 4 x, je 50; Hochbiss 9 x, je 50; Rammen 6 x, je 50; ph?/mo0 1 x, je 50
+   B: ohne Fortschritt max 161 B. = 5.4 s (bis F1220); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 856 B. (F483..F1339), Figur im Wasser 81 B. (F1..F82); Figur im Band 82 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:44, 5:2276, 7:1042
+
+== ohne_spawn_2300_-14950_elza_r3072: pid=21815 winpid=68176 start=13:33:16 exit=0 ende=13:36:31 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2091'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 26, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 21: Hochbiss 9, Rammen 6, ph?/mo0 6
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 21, erster nach 506 B., laengste Pause 506 B. = 16.9 s (F1..F507), Rest am Ende 94 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 21, erster nach 227 B., laengste Pause 380 B. = 12.7 s (F2989..F3369), Rest am Ende 94 B. (Laufende)
+       Treffer: F507 Hochbiss -50 (2300,-14968), F887 ph?/mo0 -50 (2300,-17642), F953 Rammen -50 (2318,-17580), F1058 Hochbiss -50 (2318,-17642), F1232 Hochbiss -50 (2318,-17642), F1594 ph?/mo0 -50 (2318,-14993), F1686 Rammen -50 (2318,-14968), F1796 Hochbiss -50 (2308,-15749), F2147 ph?/mo0 -50 (2318,-17642), F2212 Rammen -50 (2318,-17430), F2319 Hochbiss -50 (2303,-17163), F2424 Hochbiss -50 (2318,-17642), F2792 ph?/mo0 -50 (2318,-14993), F2884 Rammen -50 (2318,-15144), F2989 Hochbiss -50 (2318,-15284), F3369 ph?/mo0 -50 (2318,-17642), F3436 Rammen -50 (2318,-17606), F3541 Hochbiss -50 (2318,-17642), F3646 Hochbiss -50 (2318,-17642), F4014 ph?/mo0 -50 (2318,-14993), F4106 Rammen -50 (2318,-15144)
+       Schaden je Art (oben): Hochbiss 9 x, je 50; Rammen 6 x, je 50; ph?/mo0 6 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 506 B. (F1..F507), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_2600_-16800_elza_r0: pid=23533 winpid=67688 start=13:36:55 exit=0 ende=13:40:38 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2091'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 0, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 28: Hochbiss 26, Rammen 1, ph?/mo0 1
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 28, erster nach 415 B., laengste Pause 415 B. = 13.8 s (F1..F416), Rest am Ende 30 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 28, erster nach 136 B., laengste Pause 200 B. = 6.7 s (F632..F832), Rest am Ende 30 B. (Laufende)
+       Treffer: F416 ph?/mo0 -50 (2600,-16800), F483 Rammen -50 (2318,-16643), F632 Hochbiss -50 (2303,-16784), F832 Hochbiss -50 (6707,-16784), F937 Hochbiss -50 (6707,-16784), F1135 Hochbiss -50 (6707,-16784), F1240 Hochbiss -50 (6707,-16784), F1410 Hochbiss -50 (6707,-16784), F1515 Hochbiss -50 (6707,-16784), F1685 Hochbiss -50 (6707,-16784), F1790 Hochbiss -50 (6707,-16784), F1960 Hochbiss -50 (6707,-16784), F2065 Hochbiss -50 (6707,-16784), F2235 Hochbiss -50 (6707,-16784), F2340 Hochbiss -50 (6707,-16784), F2510 Hochbiss -50 (6707,-16784), F2615 Hochbiss -50 (6707,-16784), F2785 Hochbiss -50 (6707,-16784), F2890 Hochbiss -50 (6707,-16784), F3060 Hochbiss -50 (6707,-16784), F3165 Hochbiss -50 (6707,-16784), F3335 Hochbiss -50 (6707,-16784), F3440 Hochbiss -50 (6707,-16784), F3610 Hochbiss -50 (6707,-16784), F3715 Hochbiss -50 (6707,-16784), F3895 Hochbiss -50 (6707,-16784), F4000 Hochbiss -50 (6707,-16784), F4170 Hochbiss -50 (6707,-16784)
+       Schaden je Art (oben): Hochbiss 26 x, je 50; Rammen 1 x, je 50; ph?/mo0 1 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 415 B. (F1..F416), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_3000_-14950_leon_r1024: pid=20558 winpid=68476 start=13:30:43 exit=0 ende=13:33:15 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2090'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 18, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 19: Hochbiss 10, Rammen 4, ph?/mo0 5
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 19, erster nach 398 B., laengste Pause 398 B. = 13.3 s (F1..F399), Rest am Ende 264 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 19, erster nach 119 B., laengste Pause 369 B. = 12.3 s (F3374..F3743), Rest am Ende 264 B. (Laufende)
+       Treffer: F399 Hochbiss -50 (3000,-14968), F731 Rammen -50 (3000,-17607), F990 Hochbiss -50 (2318,-16732), F1359 ph?/mo0 -50 (2318,-14958), F1419 Rammen -50 (2309,-15391), F1537 Hochbiss -50 (2307,-15699), F1642 Hochbiss -50 (2318,-14958), F1910 ph?/mo0 -50 (2318,-17607), F2077 Hochbiss -50 (2310,-17071), F2182 Hochbiss -50 (2310,-17607), F2551 ph?/mo0 -50 (2310,-14958), F2611 Rammen -50 (2303,-15395), F2744 Hochbiss -50 (2308,-15703), F3103 ph?/mo0 -50 (2308,-17607), F3269 Hochbiss -50 (2310,-17071), F3374 Hochbiss -50 (2310,-17607), F3743 ph?/mo0 -50 (2310,-14958), F3803 Rammen -50 (2303,-15395), F3936 Hochbiss -50 (2308,-15703)
+       Schaden je Art (oben): Hochbiss 10 x, je 50; Rammen 4 x, je 50; ph?/mo0 5 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 398 B. (F1..F399), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_3600_-15800_elza_r2048: pid=29567 winpid=61580 start=13:44:59 exit=0 ende=13:47:48 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2091'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 0, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Hochbiss 12, Rammen 6, ph?/mo0 4
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 22, erster nach 382 B., laengste Pause 382 B. = 12.7 s (F1..F383), Rest am Ende 154 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 22, erster nach 103 B., laengste Pause 317 B. = 10.6 s (F1977..F2294), Rest am Ende 154 B. (Laufende)
+       Treffer: F383 Hochbiss -50 (3638,-14968), F504 Hochbiss -50 (3418,-15829), F801 Hochbiss -50 (5749,-15803), F906 Hochbiss -50 (6732,-14968), F1011 Hochbiss -50 (6732,-14968), F1116 Hochbiss -50 (6732,-14968), F1418 Rammen -50 (5774,-17632), F1518 ph?/mo0 -50 (2318,-17085), F1678 Hochbiss -50 (2318,-16925), F1894 Hochbiss -50 (5189,-17559), F1977 Rammen -50 (6129,-15247), F2294 Rammen -50 (2846,-17632), F2543 Hochbiss -50 (6732,-16730), F2818 Rammen -50 (6732,-15735), F2918 ph?/mo0 -50 (6732,-15676), F3101 Hochbiss -50 (6732,-15804), F3402 Rammen -50 (6264,-17608), F3502 ph?/mo0 -50 (6732,-16924), F3648 Hochbiss -50 (6732,-16798), F3753 Hochbiss -50 (6264,-17608), F3946 Rammen -50 (6732,-14968), F4046 ph?/mo0 -50 (6732,-15522)
+       Schaden je Art (oben): Hochbiss 12 x, je 50; Rammen 6 x, je 50; ph?/mo0 4 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 382 B. (F1..F383), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_4000_-16000_leon_r1024: pid=19370 winpid=78456 start=13:28:12 exit=0 ende=13:30:42 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2090'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 23, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Hochbiss 11, Rammen 5, ph?/mo0 6
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 22, erster nach 581 B., laengste Pause 581 B. = 19.4 s (F1..F582), Rest am Ende 313 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 22, erster nach 302 B., laengste Pause 380 B. = 12.7 s (F2038..F2418), Rest am Ende 313 B. (Laufende)
+       Treffer: F582 Rammen -50 (4000,-16000), F682 ph?/mo0 -50 (2318,-17431), F828 Hochbiss -50 (2309,-17133), F933 Hochbiss -50 (2309,-17607), F1196 ph?/mo0 -50 (2309,-14958), F1261 Rammen -50 (2318,-15160), F1368 Hochbiss -50 (2301,-15434), F1473 Hochbiss -50 (2318,-14958), F1841 ph?/mo0 -50 (2318,-17607), F1933 Rammen -50 (2318,-17458), F2038 Hochbiss -50 (2318,-17322), F2418 ph?/mo0 -50 (2318,-14958), F2485 Rammen -50 (2318,-14992), F2590 Hochbiss -50 (2318,-14958), F2695 Hochbiss -50 (2318,-14958), F3072 ph?/mo0 -50 (2318,-17607), F3242 Hochbiss -50 (2308,-16953), F3347 Hochbiss -50 (2308,-17607), F3606 ph?/mo0 -50 (2308,-14958), F3668 Rammen -50 (2309,-15308), F3782 Hochbiss -50 (2312,-15610), F3887 Hochbiss -50 (2318,-14958)
+       Schaden je Art (oben): Hochbiss 11 x, je 50; Rammen 5 x, je 50; ph?/mo0 6 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 581 B. (F1..F582), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_4000_-16000_leon_r1024_det: pid=31662 winpid=9476 start=13:48:02 exit=0 ende=13:50:44 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2090'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 23, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Hochbiss 11, Rammen 5, ph?/mo0 6
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 22, erster nach 581 B., laengste Pause 581 B. = 19.4 s (F1..F582), Rest am Ende 313 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 22, erster nach 302 B., laengste Pause 380 B. = 12.7 s (F2038..F2418), Rest am Ende 313 B. (Laufende)
+       Treffer: F582 Rammen -50 (4000,-16000), F682 ph?/mo0 -50 (2318,-17431), F828 Hochbiss -50 (2309,-17133), F933 Hochbiss -50 (2309,-17607), F1196 ph?/mo0 -50 (2309,-14958), F1261 Rammen -50 (2318,-15160), F1368 Hochbiss -50 (2301,-15434), F1473 Hochbiss -50 (2318,-14958), F1841 ph?/mo0 -50 (2318,-17607), F1933 Rammen -50 (2318,-17458), F2038 Hochbiss -50 (2318,-17322), F2418 ph?/mo0 -50 (2318,-14958), F2485 Rammen -50 (2318,-14992), F2590 Hochbiss -50 (2318,-14958), F2695 Hochbiss -50 (2318,-14958), F3072 ph?/mo0 -50 (2318,-17607), F3242 Hochbiss -50 (2308,-16953), F3347 Hochbiss -50 (2308,-17607), F3606 ph?/mo0 -50 (2308,-14958), F3668 Rammen -50 (2309,-15308), F3782 Hochbiss -50 (2312,-15610), F3887 Hochbiss -50 (2318,-14958)
+       Schaden je Art (oben): Hochbiss 11 x, je 50; Rammen 5 x, je 50; ph?/mo0 6 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 581 B. (F1..F582), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_4400_-16200_leon_r0: pid=27258 winpid=62600 start=13:42:26 exit=0 ende=13:44:58 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2090'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 0, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Hochbiss 16, Rammen 4, ph?/mo0 2
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 22, erster nach 435 B., laengste Pause 435 B. = 14.5 s (F1..F436), Rest am Ende 102 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 22, erster nach 156 B., laengste Pause 340 B. = 11.3 s (F436..F776), Rest am Ende 102 B. (Laufende)
+       Treffer: F436 Hochbiss -50 (5146,-16245), F776 Rammen -50 (4482,-14968), F876 ph?/mo0 -50 (2318,-17542), F1097 Hochbiss -50 (3558,-15788), F1403 Rammen -50 (2654,-17632), F1596 Hochbiss -50 (2318,-16515), F1890 Hochbiss -50 (5184,-15922), F1995 Hochbiss -50 (6732,-15958), F2100 Hochbiss -50 (6547,-14968), F2305 Hochbiss -50 (6732,-16283), F2410 Hochbiss -50 (6732,-14968), F2515 Hochbiss -50 (6737,-14992), F2620 Hochbiss -50 (6737,-14992), F2725 Hochbiss -50 (6737,-14992), F2830 Hochbiss -50 (6737,-14992), F2935 Hochbiss -50 (6737,-14992), F3040 Hochbiss -50 (6737,-14992), F3145 Hochbiss -50 (6737,-14992), F3454 Rammen -50 (3468,-17642), F3711 Hochbiss -50 (2309,-16869), F3998 Rammen -50 (3665,-14992), F4098 ph?/mo0 -50 (2302,-15160)
+       Schaden je Art (oben): Hochbiss 16 x, je 50; Rammen 4 x, je 50; ph?/mo0 2 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 435 B. (F1..F436), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_5000_-15200_leon_r3072: pid=22061 winpid=61832 start=13:33:48 exit=0 ende=13:36:54 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2090'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 8, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Hochbiss 9, Rammen 7, ph?/mo0 6
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 22, erster nach 362 B., laengste Pause 362 B. = 12.1 s (F1..F363), Rest am Ende 62 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 22, erster nach 83 B., laengste Pause 305 B. = 10.2 s (F3733..F4038), Rest am Ende 62 B. (Laufende)
+       Treffer: F363 Hochbiss -50 (5000,-15200), F664 Rammen -50 (5000,-17642), F932 Hochbiss -50 (6732,-16573), F1207 Rammen -50 (6732,-14993), F1307 ph?/mo0 -50 (6732,-15561), F1487 Hochbiss -50 (6732,-15804), F1792 Rammen -50 (6732,-17642), F1892 ph?/mo0 -50 (6732,-17078), F2034 Hochbiss -50 (6732,-16798), F2139 Hochbiss -50 (6732,-17642), F2331 Rammen -50 (6732,-14993), F2431 ph?/mo0 -50 (6732,-15561), F2610 Hochbiss -50 (6732,-15804), F2915 Rammen -50 (6732,-17642), F3015 ph?/mo0 -50 (6732,-17078), F3157 Hochbiss -50 (6732,-16798), F3262 Hochbiss -50 (6732,-17642), F3454 Rammen -50 (6732,-14993), F3554 ph?/mo0 -50 (6732,-15561), F3733 Hochbiss -50 (6732,-15804), F4038 Rammen -50 (6732,-17642), F4138 ph?/mo0 -50 (6732,-17078)
+       Schaden je Art (oben): Hochbiss 9 x, je 50; Rammen 7 x, je 50; ph?/mo0 6 x, je 50
+   B: ohne Fortschritt max 285 B. = 9.5 s (bis F649); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 362 B. (F1..F363), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_5800_-17650_elza_r1024: pid=19371 winpid=63408 start=13:28:12 exit=0 ende=13:30:59 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2091'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 5, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 24: Hochbiss 11, Rammen 7, ph?/mo0 6
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 24, erster nach 367 B., laengste Pause 367 B. = 12.2 s (F1..F368), Rest am Ende 23 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 24, erster nach 88 B., laengste Pause 353 B. = 11.8 s (F634..F987), Rest am Ende 23 B. (Laufende)
+       Treffer: F368 Rammen -50 (5800,-17650), F634 Hochbiss -50 (6732,-16599), F987 Rammen -50 (6732,-14958), F1087 ph?/mo0 -50 (6732,-15517), F1266 Hochbiss -50 (6732,-15886), F1570 Rammen -50 (6732,-17607), F1670 ph?/mo0 -50 (6732,-17039), F1813 Hochbiss -50 (6732,-16798), F1918 Hochbiss -50 (6732,-17607), F2023 Hochbiss -50 (6732,-17607), F2111 Rammen -50 (6732,-14958), F2211 ph?/mo0 -50 (6732,-15522), F2390 Hochbiss -50 (6732,-15804), F2694 Rammen -50 (6732,-17607), F2794 ph?/mo0 -50 (6732,-17039), F2937 Hochbiss -50 (6732,-16798), F3042 Hochbiss -50 (6732,-17607), F3245 Rammen -50 (6732,-14958), F3359 ph?/mo0 -50 (6732,-14952), F3525 Hochbiss -50 (6732,-16048), F3829 Rammen -50 (6732,-17607), F3929 ph?/mo0 -50 (6732,-17039), F4072 Hochbiss -50 (6732,-16798), F4177 Hochbiss -50 (6732,-17607)
+       Schaden je Art (oben): Hochbiss 11 x, je 50; Rammen 7 x, je 50; ph?/mo0 6 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 367 B. (F1..F368), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_6000_-17400_leon_r2048: pid=23305 winpid=77804 start=13:36:32 exit=0 ende=13:39:58 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2090'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 0, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 19: Hochbiss 12, Rammen 6, ph?/mo0 1
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 19, erster nach 363 B., laengste Pause 447 B. = 14.9 s (F2108..F2555), Rest am Ende 159 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 19, erster nach 84 B., laengste Pause 447 B. = 14.9 s (F2108..F2555), Rest am Ende 159 B. (Laufende)
+       Treffer: F364 Rammen -50 (6000,-17400), F633 Hochbiss -50 (6744,-16557), F790 Hochbiss -50 (6732,-16557), F895 Hochbiss -50 (6732,-16557), F1257 Rammen -50 (2343,-16557), F1462 Hochbiss -50 (2318,-15875), F1567 Hochbiss -50 (2343,-15875), F1731 Hochbiss -50 (6732,-15875), F1798 Rammen -50 (6732,-15875), F2003 Hochbiss -50 (6732,-16628), F2108 Hochbiss -50 (6732,-16628), F2555 Rammen -50 (2343,-16628), F2722 Hochbiss -50 (2343,-16628), F2980 Rammen -50 (6732,-16628), F3080 ph?/mo0 -50 (6732,-16924), F3226 Hochbiss -50 (6732,-16798), F3331 Hochbiss -50 (6732,-16798), F3627 Hochbiss -50 (2343,-16798), F4041 Rammen -50 (2342,-16798)
+       Schaden je Art (oben): Hochbiss 12 x, je 50; Rammen 6 x, je 50; ph?/mo0 1 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 447 B. (F2108..F2555), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_spawn_6750_-16300_elza_r1024: pid=20695 winpid=72796 start=13:31:00 exit=0 ende=13:33:47 exe 5910fc24; Besuch 4200 Bilder F1..F4200, Raeume ['2091'], Kampfbeginn (Intro-Ende) F280, RAUMHALT 3, Kanister angehaengt nie, Kanister-Sitz -, Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 23: Hochbiss 10, Rammen 7, ph?/mo0 6
+   A oben: 4200 Bilder in 1 Abschnitten
+     oben F1..F4200 (4200 B. = 140.0 s) ab erstem Oben-Bild F1: Treffer 23, erster nach 427 B., laengste Pause 427 B. = 14.2 s (F1..F428), Rest am Ende 99 B. (Laufende)
+     oben F1..F4200 (4200 B. = 140.0 s) ab Kampfbeginn F280: Treffer 23, erster nach 148 B., laengste Pause 305 B. = 10.2 s (F428..F733), Rest am Ende 99 B. (Laufende)
+       Treffer: F428 Hochbiss -50 (6732,-16300), F733 Rammen -50 (6732,-17607), F833 ph?/mo0 -50 (6732,-17073), F975 Hochbiss -50 (6732,-16794), F1080 Hochbiss -50 (6732,-17607), F1273 Rammen -50 (6732,-14958), F1373 ph?/mo0 -50 (6732,-15522), F1551 Hochbiss -50 (6732,-15804), F1855 Rammen -50 (6732,-17607), F1955 ph?/mo0 -50 (6732,-17039), F2098 Hochbiss -50 (6732,-16798), F2203 Hochbiss -50 (6732,-17607), F2396 Rammen -50 (6732,-14958), F2496 ph?/mo0 -50 (6732,-15522), F2674 Hochbiss -50 (6732,-15804), F2978 Rammen -50 (6732,-17607), F3078 ph?/mo0 -50 (6732,-17039), F3221 Hochbiss -50 (6732,-16798), F3326 Hochbiss -50 (6732,-17607), F3519 Rammen -50 (6732,-14958), F3619 ph?/mo0 -50 (6732,-15522), F3797 Hochbiss -50 (6732,-15804), F4101 Rammen -50 (6732,-17607)
+       Schaden je Art (oben): Hochbiss 10 x, je 50; Rammen 7 x, je 50; ph?/mo0 6 x, je 50
+   B: ohne Fortschritt max 278 B. = 9.3 s (bis F279); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 427 B. (F1..F428), Figur im Wasser 0 B. (FNone..FNone); Figur im Band 0 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+
+== ohne_west4_elza: pid=21045 winpid=57572 start=13:31:47 exit=0 ende=13:34:27 exe 5910fc24; Besuch 3300 Bilder F1..F3300, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 2, Kanister angehaengt F648, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F648), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 21: Biss 16, CROSS-Biss 1, Hochbiss 3, Rammen 1
+   A oben: 974 Bilder in 1 Abschnitten
+     oben F668..F1641 (974 B. = 32.5 s) ab erstem Oben-Bild F668: Treffer 5, erster nach 402 B., laengste Pause 402 B. = 13.4 s (F668..F1070), Rest am Ende 115 B. (verlassen)
+       Treffer: F1070 Rammen -50 (6711,-17015), F1179 CROSS-Biss -50 (6732,-17166), F1316 Hochbiss -50 (6732,-16848), F1421 Hochbiss -50 (6732,-17392), F1526 Hochbiss -50 (6732,-17602)
+       Schaden je Art (oben): CROSS-Biss 1 x, je 50; Hochbiss 3 x, je 50; Rammen 1 x, je 50
+   B: ohne Fortschritt max 157 B. = 5.2 s (bis F854); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 600 B. (F470..F1070), Figur im Wasser 270 B. (F1642..F1912); Figur im Band 488 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:893, 3:527, 5:727, 7:480
+
+== ohne_west4_leon: pid=20031 winpid=67888 start=13:29:37 exit=0 ende=13:32:01 exe 5910fc24; Besuch 3300 Bilder F1..F3300, Raeume ['2090'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 0, Kanister angehaengt F766, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F766), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 26: Biss 26
+   A oben: 0 Bilder in 0 Abschnitten
+   B: ohne Fortschritt max 39 B. = 1.3 s (bis F3083); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 310 B. (F551..F861), Figur im Wasser 310 B. (F551..F861); Figur im Band 753 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:1509, 3:903, 12:97
+
+== ohne_west5_elza: pid=18936 winpid=14992 start=13:26:56 exit=0 ende=13:29:36 exe 5910fc24; Besuch 3300 Bilder F1..F3300, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 7, Kanister angehaengt F611, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F611), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Biss 15, CROSS-Biss 2, Hochbiss 4, Rammen 1
+   A oben: 1463 Bilder in 1 Abschnitten
+     oben F1838..F3300 (1463 B. = 48.8 s) ab erstem Oben-Bild F1838: Treffer 7, erster nach 379 B., laengste Pause 379 B. = 12.6 s (F1838..F2217), Rest am Ende 271 B. (Laufende)
+       Treffer: F2217 CROSS-Biss -50 (2318,-14993), F2384 Hochbiss -50 (2315,-15549), F2531 Hochbiss -50 (2315,-14993), F2752 CROSS-Biss -50 (2315,-17642), F2817 Rammen -50 (2318,-17431), F2924 Hochbiss -50 (2301,-17165), F3029 Hochbiss -50 (2318,-17642)
+       Schaden je Art (oben): CROSS-Biss 2 x, je 50; Hochbiss 4 x, je 50; Rammen 1 x, je 50
+   B: ohne Fortschritt max 270 B. = 9.0 s (bis F2136); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 397 B. (F1820..F2217), Figur im Wasser 285 B. (F413..F698); Figur im Band 292 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:749, 3:473, 5:962, 7:480
+
+== ohne_west5_elza_fd: pid=24434 winpid=70104 start=13:38:35 exit=0 ende=13:41:21 exe 5910fc24; Besuch 3300 Bilder F1..F3300, Raeume ['2091'], Kampfbeginn (Intro-Ende) F282, RAUMHALT 7, Kanister angehaengt F611, Kanister-Sitz 1 Bilder, Abw. max 0 (letzte Zeile F611), Fehlerzeilen 0, EXIT_AT True
+   Treffer gesamt 22: Biss 15, CROSS-Biss 2, Hochbiss 4, Rammen 1
+   A oben: 1463 Bilder in 1 Abschnitten
+     oben F1838..F3300 (1463 B. = 48.8 s) ab erstem Oben-Bild F1838: Treffer 7, erster nach 379 B., laengste Pause 379 B. = 12.6 s (F1838..F2217), Rest am Ende 271 B. (Laufende)
+       Treffer: F2217 CROSS-Biss -50 (2318,-14993), F2384 Hochbiss -50 (2315,-15549), F2531 Hochbiss -50 (2315,-14993), F2752 CROSS-Biss -50 (2315,-17642), F2817 Rammen -50 (2318,-17431), F2924 Hochbiss -50 (2301,-17165), F3029 Hochbiss -50 (2318,-17642)
+       Schaden je Art (oben): CROSS-Biss 2 x, je 50; Hochbiss 4 x, je 50; Rammen 1 x, je 50
+   B: ohne Fortschritt max 270 B. = 9.0 s (bis F2136); Haenge-Fenster 0; laengste Pause ohne Treffer: ganzer Besuch 397 B. (F1820..F2217), Figur im Wasser 285 B. (F413..F698); Figur im Band 292 Bilder; Zeilen HAENGT 0, RUECKWAERTS an 0, TAUCHEN an 0
+   Phasen (TRAG): 2:749, 3:473, 5:962, 7:480
+
+
+## 3. Vergleich Bild fuer Bild (vergleich6.py): Abnahme-4-Laeufe gegen a661eb8aa (g2abn4/runs) und gegen Runde 1 (abn5r2/runs), mit gegen ohne
+### neu west4_leon gegen a661eb8aa
+== neu_west4_leon | neu_west4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:3300 | neu: 1240:251, 2090:284, 2080:339, 2090:3300
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 3300/3300 gemeinsam 3300, abweichend 3291 (erste F10); TRAG 2650/2509 gemeinsam 2509, abweichend 2509 (erste F792)
+   erste Abweichung F10: Figur (4200,0,-18800) cam 12 Ort BAND; Ort der Figur in F1..F10: BAND 10
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F8 alt: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=3 stun=0 d=0 @(-2754,-22840,r2912)] hp=24983 | TRAG -
+   F8 neu: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=3 stun=0 d=0 @(-2754,-22840,r2912)] hp=24983 | TRAG -
+   F9 alt: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F9 neu: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F10 alt: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3104)] hp=24983 | TRAG -
+   F10 neu: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3056)] hp=24983 | TRAG -
+   F11 alt: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2754,-22840,r3200)] hp=24983 | TRAG -
+   F11 neu: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2755,-22848,r3104)] hp=24983 | TRAG -
+### neu west4_leon gegen Runde 1
+== neu_west4_leon | neu_west4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:3300 | neu: 1240:251, 2090:284, 2080:339, 2090:3300
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 3300/3300 gemeinsam 3300, abweichend 0 (erste F-); TRAG 2509/2509 gemeinsam 2509, abweichend 0 (erste F-)
+   BITGLEICH
+### ohne west4_leon gegen a661eb8aa
+== ohne_west4_leon | ohne_west4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:3300 | neu: 1240:251, 2090:284, 2080:339, 2090:3300
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 3300/3300 gemeinsam 3300, abweichend 3291 (erste F10); TRAG 2650/2509 gemeinsam 2509, abweichend 2509 (erste F792)
+   erste Abweichung F10: Figur (4200,0,-18800) cam 12 Ort BAND; Ort der Figur in F1..F10: BAND 10
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F8 alt: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=3 stun=0 d=0 @(-2754,-22840,r2912)] hp=24983 | TRAG -
+   F8 neu: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=3 stun=0 d=0 @(-2754,-22840,r2912)] hp=24983 | TRAG -
+   F9 alt: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F9 neu: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F10 alt: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3104)] hp=24983 | TRAG -
+   F10 neu: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3056)] hp=24983 | TRAG -
+   F11 alt: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2754,-22840,r3200)] hp=24983 | TRAG -
+   F11 neu: PL(4200, -18800, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2755,-22848,r3104)] hp=24983 | TRAG -
+### ohne west4_leon gegen Runde 1
+== ohne_west4_leon | ohne_west4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:3300 | neu: 1240:251, 2090:284, 2080:339, 2090:3300
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 3300/3300 gemeinsam 3300, abweichend 0 (erste F-); TRAG 2509/2509 gemeinsam 2509, abweichend 0 (erste F-)
+   BITGLEICH
+### west4_leon mit gegen ohne Kanister
+== neu_west4_leon | ohne_west4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:3300 | neu: 1240:251, 2090:284, 2080:339, 2090:3300
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 3300/3300 gemeinsam 3300, abweichend 0 (erste F-); TRAG 2509/2509 gemeinsam 2509, abweichend 0 (erste F-)
+   BITGLEICH
+### neu west4_elza gegen a661eb8aa
+== neu_west4_elza | neu_west4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 0 Zeilen | neu: 2 Zeilen, erste F1319 Band 1 (7668,-18587)->(6732,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 3290 (erste F11); TRAG 2688/2627 gemeinsam 2627, abweichend 2627 (erste F674)
+   erste Abweichung F11: Figur (6400,0,-18700) cam 12 Ort BAND; Ort der Figur in F1..F11: BAND 11
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F9 alt: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F9 neu: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F10 alt: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3104)] hp=24983 | TRAG -
+   F10 neu: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3104)] hp=24983 | TRAG -
+   F11 alt: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2754,-22840,r3200)] hp=24983 | TRAG -
+   F11 neu: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2756,-22848,r3152)] hp=24983 | TRAG -
+   F12 alt: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=7 stun=0 d=0 @(-2754,-22840,r3296)] hp=24983 | TRAG -
+   F12 neu: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=7 stun=0 d=0 @(-2760,-22863,r3200)] hp=24983 | TRAG -
+### neu west4_elza gegen Runde 1
+== neu_west4_elza | neu_west4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 0 Zeilen | neu: 2 Zeilen, erste F1319 Band 1 (7668,-18587)->(6732,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 1982 (erste F1319); TRAG 2627/2627 gemeinsam 2627, abweichend 1982 (erste F1319)
+   erste Abweichung F1319: Figur (7668,-1800,-18587) cam 2 Ort BAND; Ort der Figur in F1259..F1319: BAND 1, OBEN 60
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F1317 alt: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=7 stun=98 d=0 @(6495,-20663,r487)] hp=24983 | TRAG ph=5 mo=4 af=7 gier=487 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1317 neu: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=7 stun=98 d=0 @(6495,-20663,r487)] hp=24983 | TRAG ph=5 mo=4 af=7 gier=487 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1318 alt: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=8 stun=97 d=0 @(6495,-20663,r423)] hp=24983 | TRAG ph=5 mo=4 af=8 gier=423 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1318 neu: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=8 stun=97 d=0 @(6495,-20663,r423)] hp=24983 | TRAG ph=5 mo=4 af=8 gier=423 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1319 alt: PL(7668, -18587, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=96 d=0 @(6495,-20663,r423)] hp=24983 | TRAG ph=2 mo=0 af=0 gier=423 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(7668,-18587)
+   F1319 neu: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=9 stun=96 d=0 @(6495,-20663,r359)] hp=24983 | TRAG ph=5 mo=4 af=9 gier=359 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1320 alt: PL(6732, -19568, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=1 stun=95 d=0 @(5716,-20642,r327)] hp=24983 | TRAG ph=2 mo=0 af=1 gier=327 pos=(5716,-20642) takt=(-38,21) nach_klemmen=(-779,21) spieler=(6732,-19568)
+   F1320 neu: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=10 stun=95 d=0 @(6495,-20663,r295)] hp=24983 | TRAG ph=5 mo=4 af=10 gier=295 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+### ohne west4_elza gegen a661eb8aa
+== ohne_west4_elza | ohne_west4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 0 Zeilen | neu: 2 Zeilen, erste F1319 Band 1 (7668,-18587)->(6732,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 3290 (erste F11); TRAG 2688/2627 gemeinsam 2627, abweichend 2627 (erste F674)
+   erste Abweichung F11: Figur (6400,0,-18700) cam 12 Ort BAND; Ort der Figur in F1..F11: BAND 11
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F9 alt: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F9 neu: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F10 alt: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3104)] hp=24983 | TRAG -
+   F10 neu: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3104)] hp=24983 | TRAG -
+   F11 alt: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2754,-22840,r3200)] hp=24983 | TRAG -
+   F11 neu: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2756,-22848,r3152)] hp=24983 | TRAG -
+   F12 alt: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=7 stun=0 d=0 @(-2754,-22840,r3296)] hp=24983 | TRAG -
+   F12 neu: PL(6400, -18700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=7 stun=0 d=0 @(-2760,-22863,r3200)] hp=24983 | TRAG -
+### ohne west4_elza gegen Runde 1
+== ohne_west4_elza | ohne_west4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 0 Zeilen | neu: 2 Zeilen, erste F1319 Band 1 (7668,-18587)->(6732,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 1982 (erste F1319); TRAG 2627/2627 gemeinsam 2627, abweichend 1982 (erste F1319)
+   erste Abweichung F1319: Figur (7668,-1800,-18587) cam 2 Ort BAND; Ort der Figur in F1259..F1319: BAND 1, OBEN 60
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F1317 alt: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=7 stun=98 d=0 @(6495,-20663,r487)] hp=24983 | TRAG ph=5 mo=4 af=7 gier=487 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1317 neu: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=7 stun=98 d=0 @(6495,-20663,r487)] hp=24983 | TRAG ph=5 mo=4 af=7 gier=487 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1318 alt: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=8 stun=97 d=0 @(6495,-20663,r423)] hp=24983 | TRAG ph=5 mo=4 af=8 gier=423 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1318 neu: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=8 stun=97 d=0 @(6495,-20663,r423)] hp=24983 | TRAG ph=5 mo=4 af=8 gier=423 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1319 alt: PL(7668, -18587, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=96 d=0 @(6495,-20663,r423)] hp=24983 | TRAG ph=2 mo=0 af=0 gier=423 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(7668,-18587)
+   F1319 neu: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=9 stun=96 d=0 @(6495,-20663,r359)] hp=24983 | TRAG ph=5 mo=4 af=9 gier=359 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+   F1320 alt: PL(6732, -19568, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=1 stun=95 d=0 @(5716,-20642,r327)] hp=24983 | TRAG ph=2 mo=0 af=1 gier=327 pos=(5716,-20642) takt=(-38,21) nach_klemmen=(-779,21) spieler=(6732,-19568)
+   F1320 neu: PL(6732, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=10 stun=95 d=0 @(6495,-20663,r295)] hp=24983 | TRAG ph=5 mo=4 af=10 gier=295 pos=(6495,-20663) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-17632)
+### west4_elza mit gegen ohne Kanister
+== neu_west4_elza | ohne_west4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 2 Zeilen, erste F1319 Band 1 (7668,-18587)->(6732,-17632) | neu: 2 Zeilen, erste F1319 Band 1 (7668,-18587)->(6732,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 194 (erste F1673); TRAG 2627/2627 gemeinsam 2627, abweichend 137 (erste F1674)
+   erste Abweichung F1673: Figur (6741,0,-14014) cam 3 Ort BAND; Ort der Figur in F1613..F1673: BAND 32, OBEN 29
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F1671 alt: PL(6732, -14032, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=28 stun=0 d=0 @(5704,-19674,r3141)] hp=24983 | TRAG ph=7 mo=0 af=28 gier=3141 pos=(5704,-19674) takt=(4,36) nach_klemmen=(4,36) spieler=(6732,-14032)
+   F1671 neu: PL(6732, -14032, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=28 stun=0 d=0 @(5704,-19674,r3141)] hp=24983 | TRAG ph=7 mo=0 af=28 gier=3141 pos=(5704,-19674) takt=(4,36) nach_klemmen=(4,36) spieler=(6732,-14032)
+   F1672 alt: PL(6732, -14032, 3072, 100, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=29 stun=0 d=0 @(5707,-19637,r3141)] hp=24983 | TRAG ph=7 mo=0 af=29 gier=3141 pos=(5707,-19637) takt=(3,37) nach_klemmen=(3,37) spieler=(6732,-14032)
+   F1672 neu: PL(6732, -14032, 3072, 100, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=29 stun=0 d=0 @(5707,-19637,r3141)] hp=24983 | TRAG ph=7 mo=0 af=29 gier=3141 pos=(5707,-19637) takt=(3,37) nach_klemmen=(3,37) spieler=(6732,-14032)
+   F1673 alt: PL(6741, -14014, 3072, 50, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=30 stun=99 d=0 @(5711,-19600,r3141)] hp=24983 | TRAG ph=7 mo=0 af=30 gier=3141 pos=(5711,-19600) takt=(4,37) nach_klemmen=(4,37) spieler=(6741,-14014)
+   F1673 neu: PL(6741, -14014, 3072, 100, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=30 stun=0 d=0 @(5711,-19600,r3141)] hp=24983 | TRAG ph=7 mo=0 af=30 gier=3141 pos=(5711,-19600) takt=(4,37) nach_klemmen=(4,37) spieler=(6741,-14014)
+   F1674 alt: PL(6741, -13514, 3072, 100, 12) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=31 stun=98 d=0 @(5715,-19564,r3141)] hp=24983 | TRAG ph=7 mo=0 af=31 gier=3141 pos=(5715,-19564) takt=(4,36) nach_klemmen=(4,36) spieler=(6741,-13514)
+   F1674 neu: PL(6732, -13989, 3072, 100, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=31 stun=0 d=0 @(5715,-19564,r3141)] hp=24983 | TRAG ph=7 mo=0 af=31 gier=3141 pos=(5715,-19564) takt=(4,36) nach_klemmen=(4,36) spieler=(6732,-13989)
+### neu west5_elza gegen a661eb8aa
+== neu_west5_elza | neu_west5_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 0 Zeilen | neu: 7 Zeilen, erste F2753 Band 1 (2315,-19568)->(2315,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 3244 (erste F57); TRAG 2596/2664 gemeinsam 2596, abweichend 2596 (erste F705)
+   erste Abweichung F57: Figur (3600,0,-18750) cam 12 Ort BAND; Ort der Figur in F1..F57: BAND 57
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F55 alt: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=50 stun=0 d=0 @(-2214,-22891,r4067)] hp=24983 | TRAG -
+   F55 neu: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=50 stun=0 d=0 @(-2214,-22891,r4067)] hp=24983 | TRAG -
+   F56 alt: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=51 stun=0 d=0 @(-2175,-22889,r4067)] hp=24983 | TRAG -
+   F56 neu: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=51 stun=0 d=0 @(-2175,-22889,r4067)] hp=24983 | TRAG -
+   F57 alt: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=52 stun=0 d=0 @(-2135,-22887,r4067)] hp=24983 | TRAG -
+   F57 neu: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=52 stun=0 d=0 @(-2135,-22884,r4019)] hp=24983 | TRAG -
+   F58 alt: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=53 stun=0 d=0 @(-2095,-22885,r4067)] hp=24983 | TRAG -
+   F58 neu: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=53 stun=0 d=0 @(-2095,-22876,r3971)] hp=24983 | TRAG -
+### neu west5_elza gegen Runde 1
+== neu_west5_elza | neu_west5_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 0 Zeilen | neu: 7 Zeilen, erste F2753 Band 1 (2315,-19568)->(2315,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 548 (erste F2753); TRAG 2664/2664 gemeinsam 2664, abweichend 548 (erste F2753)
+   erste Abweichung F2753: Figur (2318,-1800,-19704) cam 2 Ort BAND; Ort der Figur in F2693..F2753: BAND 1, OBEN 60
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F2751 alt: PL(2315, -17642, 3072, 100, 211) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=74 stun=0 d=0 @(4512,-14613,r1229)] hp=24983 | TRAG ph=7 mo=0 af=74 gier=1229 pos=(4512,-14613) takt=(-12,-37) nach_klemmen=(-12,-37) spieler=(2315,-17642)
+   F2751 neu: PL(2315, -17642, 3072, 100, 211) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=74 stun=0 d=0 @(4512,-14613,r1229)] hp=24983 | TRAG ph=7 mo=0 af=74 gier=1229 pos=(4512,-14613) takt=(-12,-37) nach_klemmen=(-12,-37) spieler=(2315,-17642)
+   F2752 alt: PL(2315, -17642, 3072, 50, 211) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=75 stun=99 d=0 @(4500,-14650,r1229)] hp=24983 | TRAG ph=7 mo=0 af=75 gier=1229 pos=(4500,-14650) takt=(-12,-37) nach_klemmen=(-12,-37) spieler=(2315,-17642)
+   F2752 neu: PL(2315, -17642, 3072, 50, 211) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=75 stun=99 d=0 @(4500,-14650,r1229)] hp=24983 | TRAG ph=7 mo=0 af=75 gier=1229 pos=(4500,-14650) takt=(-12,-37) nach_klemmen=(-12,-37) spieler=(2315,-17642)
+   F2753 alt: PL(2318, -19704, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=76 stun=98 d=0 @(4488,-14686,r1229)] hp=24983 | TRAG ph=7 mo=0 af=76 gier=1229 pos=(4488,-14686) takt=(-12,-36) nach_klemmen=(-12,-36) spieler=(2318,-19704)
+   F2753 neu: PL(2315, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=76 stun=98 d=0 @(4488,-14686,r1229)] hp=24983 | TRAG ph=7 mo=0 af=76 gier=1229 pos=(4488,-14686) takt=(-12,-36) nach_klemmen=(-12,-36) spieler=(2315,-17632)
+   F2754 alt: PL(2318, -20689, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=77 stun=97 d=0 @(4477,-14723,r1229)] hp=24983 | TRAG ph=7 mo=0 af=77 gier=1229 pos=(4477,-14723) takt=(-11,-37) nach_klemmen=(-11,-37) spieler=(2318,-20689)
+   F2754 neu: PL(2318, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=77 stun=97 d=0 @(4477,-14723,r1229)] hp=24983 | TRAG ph=7 mo=0 af=77 gier=1229 pos=(4477,-14723) takt=(-11,-37) nach_klemmen=(-11,-37) spieler=(2318,-17632)
+### ohne west5_elza gegen a661eb8aa
+== ohne_west5_elza | ohne_west5_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 0 Zeilen | neu: 7 Zeilen, erste F2753 Band 1 (2315,-19568)->(2315,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 3244 (erste F57); TRAG 2596/2664 gemeinsam 2596, abweichend 2596 (erste F705)
+   erste Abweichung F57: Figur (3600,0,-18750) cam 12 Ort BAND; Ort der Figur in F1..F57: BAND 57
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F55 alt: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=50 stun=0 d=0 @(-2214,-22891,r4067)] hp=24983 | TRAG -
+   F55 neu: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=50 stun=0 d=0 @(-2214,-22891,r4067)] hp=24983 | TRAG -
+   F56 alt: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=51 stun=0 d=0 @(-2175,-22889,r4067)] hp=24983 | TRAG -
+   F56 neu: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=51 stun=0 d=0 @(-2175,-22889,r4067)] hp=24983 | TRAG -
+   F57 alt: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=52 stun=0 d=0 @(-2135,-22887,r4067)] hp=24983 | TRAG -
+   F57 neu: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=52 stun=0 d=0 @(-2135,-22884,r4019)] hp=24983 | TRAG -
+   F58 alt: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=53 stun=0 d=0 @(-2095,-22885,r4067)] hp=24983 | TRAG -
+   F58 neu: PL(3600, -18750, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=53 stun=0 d=0 @(-2095,-22876,r3971)] hp=24983 | TRAG -
+### ohne west5_elza gegen Runde 1
+== ohne_west5_elza | ohne_west5_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 0 Zeilen | neu: 7 Zeilen, erste F2753 Band 1 (2315,-19568)->(2315,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 548 (erste F2753); TRAG 2664/2664 gemeinsam 2664, abweichend 548 (erste F2753)
+   erste Abweichung F2753: Figur (2318,-1800,-19704) cam 2 Ort BAND; Ort der Figur in F2693..F2753: BAND 1, OBEN 60
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F2751 alt: PL(2315, -17642, 3072, 100, 211) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=74 stun=0 d=0 @(4512,-14613,r1229)] hp=24983 | TRAG ph=7 mo=0 af=74 gier=1229 pos=(4512,-14613) takt=(-12,-37) nach_klemmen=(-12,-37) spieler=(2315,-17642)
+   F2751 neu: PL(2315, -17642, 3072, 100, 211) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=74 stun=0 d=0 @(4512,-14613,r1229)] hp=24983 | TRAG ph=7 mo=0 af=74 gier=1229 pos=(4512,-14613) takt=(-12,-37) nach_klemmen=(-12,-37) spieler=(2315,-17642)
+   F2752 alt: PL(2315, -17642, 3072, 50, 211) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=75 stun=99 d=0 @(4500,-14650,r1229)] hp=24983 | TRAG ph=7 mo=0 af=75 gier=1229 pos=(4500,-14650) takt=(-12,-37) nach_klemmen=(-12,-37) spieler=(2315,-17642)
+   F2752 neu: PL(2315, -17642, 3072, 50, 211) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=75 stun=99 d=0 @(4500,-14650,r1229)] hp=24983 | TRAG ph=7 mo=0 af=75 gier=1229 pos=(4500,-14650) takt=(-12,-37) nach_klemmen=(-12,-37) spieler=(2315,-17642)
+   F2753 alt: PL(2318, -19704, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=76 stun=98 d=0 @(4488,-14686,r1229)] hp=24983 | TRAG ph=7 mo=0 af=76 gier=1229 pos=(4488,-14686) takt=(-12,-36) nach_klemmen=(-12,-36) spieler=(2318,-19704)
+   F2753 neu: PL(2315, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=76 stun=98 d=0 @(4488,-14686,r1229)] hp=24983 | TRAG ph=7 mo=0 af=76 gier=1229 pos=(4488,-14686) takt=(-12,-36) nach_klemmen=(-12,-36) spieler=(2315,-17632)
+   F2754 alt: PL(2318, -20689, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=77 stun=97 d=0 @(4477,-14723,r1229)] hp=24983 | TRAG ph=7 mo=0 af=77 gier=1229 pos=(4477,-14723) takt=(-11,-37) nach_klemmen=(-11,-37) spieler=(2318,-20689)
+   F2754 neu: PL(2318, -17632, 3072, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=77 stun=97 d=0 @(4477,-14723,r1229)] hp=24983 | TRAG ph=7 mo=0 af=77 gier=1229 pos=(4477,-14723) takt=(-11,-37) nach_klemmen=(-11,-37) spieler=(2318,-17632)
+### west5_elza mit gegen ohne Kanister
+== neu_west5_elza | ohne_west5_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3300 | neu: 1241:251, 2091:284, 2081:339, 2091:3300
+   RAUMHALT alt: 7 Zeilen, erste F2753 Band 1 (2315,-19568)->(2315,-17632) | neu: 7 Zeilen, erste F2753 Band 1 (2315,-19568)->(2315,-17632)
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3300/3300 gemeinsam 3300, abweichend 0 (erste F-); TRAG 2664/2664 gemeinsam 2664, abweichend 0 (erste F-)
+   BITGLEICH
+### neu frei4_leon gegen a661eb8aa
+== neu_frei4_leon | neu_frei4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:8400 | neu: 1240:251, 2090:284, 2080:339, 2090:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 8400/8400 gemeinsam 8400, abweichend 6909 (erste F1492); TRAG 7805/7805 gemeinsam 7805, abweichend 6909 (erste F1492)
+   erste Abweichung F1492: Figur (498,0,-10669) cam 0 Ort BAND; Ort der Figur in F1432..F1492: BAND 2, frei 59
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F1490 alt: PL(265, -10400, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=8 stun=21 d=0 @(3682,-8998,r1905)] hp=24983 | TRAG ph=2 mo=1 af=8 gier=1905 pos=(3682,-8998) takt=(-116,-25) nach_klemmen=(-116,-25) spieler=(265,-10400)
+   F1490 neu: PL(265, -10400, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=8 stun=21 d=0 @(3682,-8998,r1905)] hp=24983 | TRAG ph=2 mo=1 af=8 gier=1905 pos=(3682,-8998) takt=(-116,-25) nach_klemmen=(-116,-25) spieler=(265,-10400)
+   F1491 alt: PL(255, -10678, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=9 stun=20 d=0 @(3557,-9035,r1857)] hp=24983 | TRAG ph=2 mo=1 af=9 gier=1857 pos=(3557,-9035) takt=(-125,-37) nach_klemmen=(-125,-37) spieler=(255,-10678)
+   F1491 neu: PL(255, -10678, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=9 stun=20 d=0 @(3557,-9035,r1857)] hp=24983 | TRAG ph=2 mo=1 af=9 gier=1857 pos=(3557,-9035) takt=(-125,-37) nach_klemmen=(-125,-37) spieler=(255,-10678)
+   F1492 alt: PL(498, -10669, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=10 stun=19 d=0 @(3557,-9035,r1761)] hp=24983 | TRAG ph=2 mo=1 af=10 gier=1761 pos=(3557,-9035) takt=(0,0) nach_klemmen=(0,0) spieler=(498,-10669)
+   F1492 neu: PL(316, -10924, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=10 stun=19 d=0 @(3483,-9063,r1809)] hp=24983 | TRAG ph=2 mo=1 af=10 gier=1809 pos=(3483,-9063) takt=(-74,-28) nach_klemmen=(-74,-28) spieler=(316,-10924)
+   F1493 alt: PL(178, -10522, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=11 stun=18 d=0 @(3557,-9035,r1665)] hp=24983 | TRAG ph=2 mo=1 af=11 gier=1665 pos=(3557,-9035) takt=(0,0) nach_klemmen=(0,0) spieler=(178,-10522)
+   F1493 neu: PL(382, -11180, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=11 stun=18 d=0 @(3402,-9100,r1761)] hp=24983 | TRAG ph=2 mo=1 af=11 gier=1761 pos=(3402,-9100) takt=(-81,-37) nach_klemmen=(-81,-37) spieler=(382,-11180)
+### neu frei4_leon gegen Runde 1
+== neu_frei4_leon | neu_frei4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:8400 | neu: 1240:251, 2090:284, 2080:339, 2090:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 8400/8400 gemeinsam 8400, abweichend 0 (erste F-); TRAG 7805/7805 gemeinsam 7805, abweichend 0 (erste F-)
+   BITGLEICH
+### ohne frei4_leon gegen a661eb8aa
+== ohne_frei4_leon | ohne_frei4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:8400 | neu: 1240:251, 2090:284, 2080:339, 2090:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 8400/8400 gemeinsam 8400, abweichend 6909 (erste F1492); TRAG 7805/7805 gemeinsam 7805, abweichend 6909 (erste F1492)
+   erste Abweichung F1492: Figur (498,0,-10669) cam 0 Ort BAND; Ort der Figur in F1432..F1492: BAND 2, frei 59
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F1490 alt: PL(265, -10400, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=8 stun=21 d=0 @(3682,-8998,r1905)] hp=24983 | TRAG ph=2 mo=1 af=8 gier=1905 pos=(3682,-8998) takt=(-116,-25) nach_klemmen=(-116,-25) spieler=(265,-10400)
+   F1490 neu: PL(265, -10400, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=8 stun=21 d=0 @(3682,-8998,r1905)] hp=24983 | TRAG ph=2 mo=1 af=8 gier=1905 pos=(3682,-8998) takt=(-116,-25) nach_klemmen=(-116,-25) spieler=(265,-10400)
+   F1491 alt: PL(255, -10678, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=9 stun=20 d=0 @(3557,-9035,r1857)] hp=24983 | TRAG ph=2 mo=1 af=9 gier=1857 pos=(3557,-9035) takt=(-125,-37) nach_klemmen=(-125,-37) spieler=(255,-10678)
+   F1491 neu: PL(255, -10678, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=9 stun=20 d=0 @(3557,-9035,r1857)] hp=24983 | TRAG ph=2 mo=1 af=9 gier=1857 pos=(3557,-9035) takt=(-125,-37) nach_klemmen=(-125,-37) spieler=(255,-10678)
+   F1492 alt: PL(498, -10669, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=10 stun=19 d=0 @(3557,-9035,r1761)] hp=24983 | TRAG ph=2 mo=1 af=10 gier=1761 pos=(3557,-9035) takt=(0,0) nach_klemmen=(0,0) spieler=(498,-10669)
+   F1492 neu: PL(316, -10924, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=10 stun=19 d=0 @(3483,-9063,r1809)] hp=24983 | TRAG ph=2 mo=1 af=10 gier=1809 pos=(3483,-9063) takt=(-74,-28) nach_klemmen=(-74,-28) spieler=(316,-10924)
+   F1493 alt: PL(178, -10522, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=11 stun=18 d=0 @(3557,-9035,r1665)] hp=24983 | TRAG ph=2 mo=1 af=11 gier=1665 pos=(3557,-9035) takt=(0,0) nach_klemmen=(0,0) spieler=(178,-10522)
+   F1493 neu: PL(382, -11180, 2443, 100, 11) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=11 stun=18 d=0 @(3402,-9100,r1761)] hp=24983 | TRAG ph=2 mo=1 af=11 gier=1761 pos=(3402,-9100) takt=(-81,-37) nach_klemmen=(-81,-37) spieler=(382,-11180)
+### ohne frei4_leon gegen Runde 1
+== ohne_frei4_leon | ohne_frei4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:8400 | neu: 1240:251, 2090:284, 2080:339, 2090:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 8400/8400 gemeinsam 8400, abweichend 0 (erste F-); TRAG 7805/7805 gemeinsam 7805, abweichend 0 (erste F-)
+   BITGLEICH
+### frei4_leon mit gegen ohne Kanister
+== neu_frei4_leon | ohne_frei4_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:8400 | neu: 1240:251, 2090:284, 2080:339, 2090:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 8400/8400 gemeinsam 8400, abweichend 0 (erste F-); TRAG 7805/7805 gemeinsam 7805, abweichend 0 (erste F-)
+   BITGLEICH
+### neu frei4_elza gegen a661eb8aa
+== neu_frei4_elza | neu_frei4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:8400 | neu: 1241:251, 2091:284, 2081:339, 2091:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 8400/8400 gemeinsam 8400, abweichend 4297 (erste F4104); TRAG 7454/7454 gemeinsam 7454, abweichend 4297 (erste F4104)
+   erste Abweichung F4104: Figur (6732,0,-12972) cam 3 Ort BAND; Ort der Figur in F4044..F4104: BAND 2, frei 59
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F4102 alt: PL(6732, -12407, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=23 stun=6 d=0 @(4270,-10217,r215)] hp=24983 | TRAG ph=2 mo=1 af=23 gier=215 pos=(4270,-10217) takt=(66,-22) nach_klemmen=(66,-22) spieler=(6732,-12407)
+   F4102 neu: PL(6732, -12407, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=23 stun=6 d=0 @(4270,-10217,r215)] hp=24983 | TRAG ph=2 mo=1 af=23 gier=215 pos=(4270,-10217) takt=(66,-22) nach_klemmen=(66,-22) spieler=(6732,-12407)
+   F4103 alt: PL(6732, -12714, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=24 stun=5 d=0 @(4231,-10197,r311)] hp=24983 | TRAG ph=2 mo=1 af=24 gier=311 pos=(4231,-10197) takt=(-39,20) nach_klemmen=(-39,20) spieler=(6732,-12714)
+   F4103 neu: PL(6732, -12714, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=24 stun=5 d=0 @(4231,-10197,r311)] hp=24983 | TRAG ph=2 mo=1 af=24 gier=311 pos=(4231,-10197) takt=(-39,20) nach_klemmen=(-39,20) spieler=(6732,-12714)
+   F4104 alt: PL(6732, -12972, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=25 stun=4 d=0 @(4231,-10197,r407)] hp=24983 | TRAG ph=2 mo=1 af=25 gier=407 pos=(4231,-10197) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-12972)
+   F4104 neu: PL(6732, -12867, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=25 stun=4 d=0 @(4232,-10198,r359)] hp=24983 | TRAG ph=2 mo=1 af=25 gier=359 pos=(4232,-10198) takt=(1,-1) nach_klemmen=(1,-1) spieler=(6732,-12867)
+   F4105 alt: PL(6457, -12981, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=0 stun=3 d=0 @(4231,-10197,r503)] hp=24983 | TRAG ph=2 mo=1 af=0 gier=503 pos=(4231,-10197) takt=(0,0) nach_klemmen=(0,0) spieler=(6457,-12981)
+   F4105 neu: PL(6732, -13154, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=0 stun=3 d=0 @(4399,-10318,r407)] hp=24983 | TRAG ph=2 mo=1 af=0 gier=407 pos=(4399,-10318) takt=(167,-120) nach_klemmen=(167,-120) spieler=(6732,-13154)
+### neu frei4_elza gegen Runde 1
+== neu_frei4_elza | neu_frei4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:8400 | neu: 1241:251, 2091:284, 2081:339, 2091:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 8400/8400 gemeinsam 8400, abweichend 0 (erste F-); TRAG 7454/7454 gemeinsam 7454, abweichend 0 (erste F-)
+   BITGLEICH
+### ohne frei4_elza gegen a661eb8aa
+== ohne_frei4_elza | ohne_frei4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:8400 | neu: 1241:251, 2091:284, 2081:339, 2091:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 8400/8400 gemeinsam 8400, abweichend 4297 (erste F4104); TRAG 7454/7454 gemeinsam 7454, abweichend 4297 (erste F4104)
+   erste Abweichung F4104: Figur (6732,0,-12972) cam 3 Ort BAND; Ort der Figur in F4044..F4104: BAND 2, frei 59
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F4102 alt: PL(6732, -12407, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=23 stun=6 d=0 @(4270,-10217,r215)] hp=24983 | TRAG ph=2 mo=1 af=23 gier=215 pos=(4270,-10217) takt=(66,-22) nach_klemmen=(66,-22) spieler=(6732,-12407)
+   F4102 neu: PL(6732, -12407, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=23 stun=6 d=0 @(4270,-10217,r215)] hp=24983 | TRAG ph=2 mo=1 af=23 gier=215 pos=(4270,-10217) takt=(66,-22) nach_klemmen=(66,-22) spieler=(6732,-12407)
+   F4103 alt: PL(6732, -12714, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=24 stun=5 d=0 @(4231,-10197,r311)] hp=24983 | TRAG ph=2 mo=1 af=24 gier=311 pos=(4231,-10197) takt=(-39,20) nach_klemmen=(-39,20) spieler=(6732,-12714)
+   F4103 neu: PL(6732, -12714, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=24 stun=5 d=0 @(4231,-10197,r311)] hp=24983 | TRAG ph=2 mo=1 af=24 gier=311 pos=(4231,-10197) takt=(-39,20) nach_klemmen=(-39,20) spieler=(6732,-12714)
+   F4104 alt: PL(6732, -12972, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=25 stun=4 d=0 @(4231,-10197,r407)] hp=24983 | TRAG ph=2 mo=1 af=25 gier=407 pos=(4231,-10197) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-12972)
+   F4104 neu: PL(6732, -12867, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=25 stun=4 d=0 @(4232,-10198,r359)] hp=24983 | TRAG ph=2 mo=1 af=25 gier=359 pos=(4232,-10198) takt=(1,-1) nach_klemmen=(1,-1) spieler=(6732,-12867)
+   F4105 alt: PL(6457, -12981, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=0 stun=3 d=0 @(4231,-10197,r503)] hp=24983 | TRAG ph=2 mo=1 af=0 gier=503 pos=(4231,-10197) takt=(0,0) nach_klemmen=(0,0) spieler=(6457,-12981)
+   F4105 neu: PL(6732, -13154, 2251, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=1 af=0 stun=3 d=0 @(4399,-10318,r407)] hp=24983 | TRAG ph=2 mo=1 af=0 gier=407 pos=(4399,-10318) takt=(167,-120) nach_klemmen=(167,-120) spieler=(6732,-13154)
+### ohne frei4_elza gegen Runde 1
+== ohne_frei4_elza | ohne_frei4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:8400 | neu: 1241:251, 2091:284, 2081:339, 2091:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 8400/8400 gemeinsam 8400, abweichend 0 (erste F-); TRAG 7454/7454 gemeinsam 7454, abweichend 0 (erste F-)
+   BITGLEICH
+### frei4_elza mit gegen ohne Kanister
+== neu_frei4_elza | ohne_frei4_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:8400 | neu: 1241:251, 2091:284, 2081:339, 2091:8400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 8400/8400 gemeinsam 8400, abweichend 0 (erste F-); TRAG 7454/7454 gemeinsam 7454, abweichend 0 (erste F-)
+   BITGLEICH
+### neu oben_leon gegen Runde 1
+== neu_oben_leon | neu_oben_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:4400 | neu: 1240:251, 2090:284, 2080:339, 2090:4400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 4400/4400 gemeinsam 4400, abweichend 0 (erste F-); TRAG 3362/3362 gemeinsam 3362, abweichend 0 (erste F-)
+   BITGLEICH
+### ohne oben_leon gegen Runde 1
+== ohne_oben_leon | ohne_oben_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:4400 | neu: 1240:251, 2090:284, 2080:339, 2090:4400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 4400/4400 gemeinsam 4400, abweichend 0 (erste F-); TRAG 3362/3362 gemeinsam 3362, abweichend 0 (erste F-)
+   BITGLEICH
+### oben_leon mit gegen ohne Kanister
+== neu_oben_leon | ohne_oben_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:4400 | neu: 1240:251, 2090:284, 2080:339, 2090:4400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 4400/4400 gemeinsam 4400, abweichend 0 (erste F-); TRAG 3362/3362 gemeinsam 3362, abweichend 0 (erste F-)
+   BITGLEICH
+### neu oben_elza gegen Runde 1
+== neu_oben_elza | neu_oben_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:4400 | neu: 1241:251, 2091:284, 2081:339, 2091:4400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 4400/4400 gemeinsam 4400, abweichend 0 (erste F-); TRAG 3362/3362 gemeinsam 3362, abweichend 0 (erste F-)
+   BITGLEICH
+### ohne oben_elza gegen Runde 1
+== ohne_oben_elza | ohne_oben_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:4400 | neu: 1241:251, 2091:284, 2081:339, 2091:4400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 4400/4400 gemeinsam 4400, abweichend 0 (erste F-); TRAG 3362/3362 gemeinsam 3362, abweichend 0 (erste F-)
+   BITGLEICH
+### oben_elza mit gegen ohne Kanister
+== neu_oben_elza | ohne_oben_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:4400 | neu: 1241:251, 2091:284, 2081:339, 2091:4400
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 4400/4400 gemeinsam 4400, abweichend 0 (erste F-); TRAG 3362/3362 gemeinsam 3362, abweichend 0 (erste F-)
+   BITGLEICH
+### ohne_abn2wand_leon gegen Runde 1
+== ohne_abn2wand_leon | ohne_abn2wand_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:7374 | neu: 1240:251, 2090:284, 2080:339, 2090:8400
+   RAUMHALT alt: 0 Zeilen | neu: 1 Zeilen, erste F1046 Band 0 (7668,-17599)->(6732,-18598)
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 7374/8400 gemeinsam 7374, abweichend 6329 (erste F1046); TRAG 6724/7750 gemeinsam 6724, abweichend 6329 (erste F1046)
+   erste Abweichung F1046: Figur (7668,0,-17081) cam 2 Ort NISCHE; Ort der Figur in F986..F1046: BAND 33, NISCHE 1, frei 27
+   erstes gemeinsames Bild mit Figur nicht frei: F179 (BAND)
+   F1044 alt: PL(6732, -18636, 1131, 100, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=6 stun=0 d=0 @(5645,-19584,r3552)] hp=24983 | TRAG ph=3 mo=4 af=6 gier=3552 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18636)
+   F1044 neu: PL(6732, -18636, 1131, 100, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=6 stun=0 d=0 @(5645,-19584,r3552)] hp=24983 | TRAG ph=3 mo=4 af=6 gier=3552 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18636)
+   F1045 alt: PL(6732, -18598, 1035, 50, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=7 stun=99 d=0 @(5645,-19584,r3629)] hp=24983 | TRAG ph=3 mo=4 af=7 gier=3629 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18598)
+   F1045 neu: PL(6732, -18598, 1035, 50, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=7 stun=99 d=0 @(5645,-19584,r3629)] hp=24983 | TRAG ph=3 mo=4 af=7 gier=3629 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18598)
+   F1046 alt: PL(7668, -17081, 1035, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=8 stun=98 d=0 @(5645,-19584,r3593)] hp=24983 | TRAG ph=3 mo=4 af=8 gier=3593 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(7668,-17081)
+   F1046 neu: PL(6732, -18576, 1035, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=8 stun=98 d=0 @(5645,-19584,r3617)] hp=24983 | TRAG ph=3 mo=4 af=8 gier=3617 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18576)
+   F1047 alt: PL(7668, -16901, 1035, 100, 15) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=9 stun=97 d=0 @(5645,-19584,r3515)] hp=24983 | TRAG ph=3 mo=4 af=9 gier=3515 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(7668,-16901)
+   F1047 neu: PL(6744, -18565, 1035, 100, 15) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=9 stun=97 d=0 @(5645,-19584,r3609)] hp=24983 | TRAG ph=3 mo=4 af=9 gier=3609 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6744,-18565)
+### neu_abn2wand_leon gegen Runde 1
+== neu_abn2wand_leon | neu_abn2wand_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:8400 | neu: 1240:251, 2090:284, 2080:339, 2090:8400
+   RAUMHALT alt: 0 Zeilen | neu: 1 Zeilen, erste F1046 Band 0 (7668,-17599)->(6732,-18598)
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 8400/8400 gemeinsam 8400, abweichend 7355 (erste F1046); TRAG 7750/7750 gemeinsam 7750, abweichend 7355 (erste F1046)
+   erste Abweichung F1046: Figur (7668,0,-17081) cam 2 Ort NISCHE; Ort der Figur in F986..F1046: BAND 33, NISCHE 1, frei 27
+   erstes gemeinsames Bild mit Figur nicht frei: F179 (BAND)
+   F1044 alt: PL(6732, -18636, 1131, 100, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=6 stun=0 d=0 @(5645,-19584,r3552)] hp=24983 | TRAG ph=3 mo=4 af=6 gier=3552 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18636)
+   F1044 neu: PL(6732, -18636, 1131, 100, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=6 stun=0 d=0 @(5645,-19584,r3552)] hp=24983 | TRAG ph=3 mo=4 af=6 gier=3552 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18636)
+   F1045 alt: PL(6732, -18598, 1035, 50, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=7 stun=99 d=0 @(5645,-19584,r3629)] hp=24983 | TRAG ph=3 mo=4 af=7 gier=3629 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18598)
+   F1045 neu: PL(6732, -18598, 1035, 50, 105) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=7 stun=99 d=0 @(5645,-19584,r3629)] hp=24983 | TRAG ph=3 mo=4 af=7 gier=3629 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18598)
+   F1046 alt: PL(7668, -17081, 1035, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=8 stun=98 d=0 @(5645,-19584,r3593)] hp=24983 | TRAG ph=3 mo=4 af=8 gier=3593 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(7668,-17081)
+   F1046 neu: PL(6732, -18576, 1035, 100, 13) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=8 stun=98 d=0 @(5645,-19584,r3617)] hp=24983 | TRAG ph=3 mo=4 af=8 gier=3617 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6732,-18576)
+   F1047 alt: PL(7668, -16901, 1035, 100, 15) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=9 stun=97 d=0 @(5645,-19584,r3515)] hp=24983 | TRAG ph=3 mo=4 af=9 gier=3515 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(7668,-16901)
+   F1047 neu: PL(6744, -18565, 1035, 100, 15) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=9 stun=97 d=0 @(5645,-19584,r3609)] hp=24983 | TRAG ph=3 mo=4 af=9 gier=3609 pos=(5645,-19584) takt=(0,0) nach_klemmen=(0,0) spieler=(6744,-18565)
+### neu_kante_-800_-21200_0_elza gegen a661eb8aa (eigener alt-Lauf)
+== alt_neu_kante_-800_-21200_0_elza | neu_kante_-800_-21200_0_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3600 | neu: 1241:251, 2091:284, 2081:339, 2091:3600
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3600/3600 gemeinsam 3600, abweichend 3595 (erste F6); TRAG 3019/2947 gemeinsam 2947, abweichend 2947 (erste F654)
+   erste Abweichung F6: Figur (-800,0,-21200) cam 12 Ort BAND; Ort der Figur in F1..F6: BAND 6
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F4 alt: PL(-800, -21200, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F4 neu: PL(-800, -21200, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F5 alt: PL(-800, -21200, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F5 neu: PL(-800, -21200, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F6 alt: PL(-800, -21200, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=0 stun=0 d=0 @(-2791,-22801,r2576)] hp=24983 | TRAG -
+   F6 neu: PL(-800, -21200, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=0 stun=0 d=0 @(-2754,-22840,r2720)] hp=24983 | TRAG -
+   F7 alt: PL(-800, -21200, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=1 stun=0 d=0 @(-2830,-22749,r2656)] hp=24983 | TRAG -
+   F7 neu: PL(-800, -21200, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=1 stun=0 d=0 @(-2780,-22781,r2800)] hp=24983 | TRAG -
+### ohne_kante_-1300_-20700_0_elza gegen a661eb8aa (eigener alt-Lauf)
+== alt_ohne_kante_-1300_-20700_0_elza | ohne_kante_-1300_-20700_0_elza - Besuche alt: 1241:251, 2091:284, 2081:339, 2091:3600 | neu: 1241:251, 2091:284, 2081:339, 2091:3600
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1241): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2091): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2081): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2091): state 3600/3600 gemeinsam 3600, abweichend 3595 (erste F6); TRAG 2925/2962 gemeinsam 2925, abweichend 2925 (erste F676)
+   erste Abweichung F6: Figur (-1300,0,-20700) cam 12 Ort BAND; Ort der Figur in F1..F6: BAND 6
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F4 alt: PL(-1300, -20700, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F4 neu: PL(-1300, -20700, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F5 alt: PL(-1300, -20700, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F5 neu: PL(-1300, -20700, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F6 alt: PL(-1300, -20700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=0 stun=0 d=0 @(-2791,-22801,r2576)] hp=24983 | TRAG -
+   F6 neu: PL(-1300, -20700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=0 stun=0 d=0 @(-2754,-22840,r2720)] hp=24983 | TRAG -
+   F7 alt: PL(-1300, -20700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=1 stun=0 d=0 @(-2830,-22749,r2656)] hp=24983 | TRAG -
+   F7 neu: PL(-1300, -20700, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=4 af=1 stun=0 d=0 @(-2780,-22781,r2800)] hp=24983 | TRAG -
+### ohne_kante_0_-20900_2_leon gegen a661eb8aa (eigener alt-Lauf)
+== alt_ohne_kante_0_-20900_2_leon | ohne_kante_0_-20900_2_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:3600 | neu: 1240:251, 2090:284, 2080:339, 2090:3600
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 3600/3600 gemeinsam 3600, abweichend 3595 (erste F6); TRAG 3188/2902 gemeinsam 2902, abweichend 2902 (erste F699)
+   erste Abweichung F6: Figur (0,0,-20900) cam 12 Ort BAND; Ort der Figur in F1..F6: BAND 6
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F4 alt: PL(0, -20900, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F4 neu: PL(0, -20900, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F5 alt: PL(0, -20900, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F5 neu: PL(0, -20900, 3072, 100, 210) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=0 stun=0 d=0 @(-2754,-22840,r2624)] hp=24983 | TRAG -
+   F6 alt: PL(0, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=1 stun=0 d=0 @(-2791,-22801,r2576)] hp=24983 | TRAG -
+   F6 neu: PL(0, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=1 stun=0 d=0 @(-2754,-22840,r2720)] hp=24983 | TRAG -
+   F7 alt: PL(0, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=2 stun=0 d=0 @(-2820,-22775,r2528)] hp=24983 | TRAG -
+   F7 neu: PL(0, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=2 stun=0 d=0 @(-2754,-22840,r2816)] hp=24983 | TRAG -
+### ohne_kante_100_-20900_2_leon gegen a661eb8aa (eigener alt-Lauf)
+== alt_ohne_kante_100_-20900_2_leon | ohne_kante_100_-20900_2_leon - Besuche alt: 1240:251, 2090:284, 2080:339, 2090:3600 | neu: 1240:251, 2090:284, 2080:339, 2090:3600
+   RAUMHALT alt: 0 Zeilen | neu: 0 Zeilen
+   Besuch 1 (1240): 251 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 2 (2090): 284 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   Besuch 3 (2080): 339 Bilder gemeinsam, abweichend 0 - BITGLEICH
+   letzter Besuch (2090): state 3600/3600 gemeinsam 3600, abweichend 3591 (erste F10); TRAG 3038/2884 gemeinsam 2884, abweichend 2884 (erste F717)
+   erste Abweichung F10: Figur (100,0,-20900) cam 12 Ort BAND; Ort der Figur in F1..F10: BAND 10
+   erstes gemeinsames Bild mit Figur nicht frei: F1 (BAND)
+   F8 alt: PL(100, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=3 stun=0 d=0 @(-2754,-22840,r2912)] hp=24983 | TRAG -
+   F8 neu: PL(100, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=3 stun=0 d=0 @(-2754,-22840,r2912)] hp=24983 | TRAG -
+   F9 alt: PL(100, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F9 neu: PL(100, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=4 stun=0 d=0 @(-2754,-22840,r3008)] hp=24983 | TRAG -
+   F10 alt: PL(100, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3104)] hp=24983 | TRAG -
+   F10 neu: PL(100, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=5 stun=0 d=0 @(-2754,-22840,r3056)] hp=24983 | TRAG -
+   F11 alt: PL(100, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2754,-22840,r3200)] hp=24983 | TRAG -
+   F11 neu: PL(100, -20900, 3072, 100, 200) [35 t=23 st=1 ss1=3 ss2=1 ss3=0 g=00 mo=0 af=6 stun=0 d=0 @(-2755,-22848,r3104)] hp=24983 | TRAG -
+
+## 4. RAUMHALT-Zeilen aller neuen Laeufe nach Figur-Zustand (hr = hit_react, mo = Clip)
+      3 Band 0 hr=1 mo=13
+    131 Band 1 hr=1 mo=13

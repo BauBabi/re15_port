@@ -1,0 +1,14 @@
+SCA @0x6dc ceiling (-9648,-13554) Zellen je Quadrant (10, 10, 10, 10, 10)
+# 0 @0x6f4 x -10900.. -8900 z -29000.. -3400 type 1 u0 ff u1 00 floor 03 band 0
+# 1 @0x700 x -10900..  9200 z -29000..-27000 type 1 u0 ff u1 00 floor 03 band 0
+# 2 @0x70c x -10900..  9200 z  -5400.. -3400 type 1 u0 ff u1 00 floor 03 band 0
+# 3 @0x718 x   7200..  9200 z -29000.. -3400 type 1 u0 ff u1 00 floor 03 band 0
+# 4 @0x724 x  -1700..  1850 z -20000..-12450 type 1 u0 ff u1 00 floor 03 band 0
+# 5 @0x730 x   1850..  7200 z -18100..-14500 type 1 u0 ff u1 01 floor 01 band 0
+# 6 @0x73c x   7200..  9200 z -29000.. -3400 type 1 u0 ff u1 00 floor 13 band 1
+# 7 @0x748 x  -1700..  1850 z -20000..-12450 type 1 u0 ff u1 00 floor 13 band 1
+# 8 @0x754 x   1850..  7200 z -14500..-13500 type 1 u0 ff u1 02 floor 10 band 1
+# 9 @0x760 x   1850..  7200 z -19100..-18100 type 1 u0 ff u1 02 floor 10 band 1
+#10 @0x76c x -10900.. -8900 z -29000.. -3400 type 1 u0 ff u1 00 floor 03 band 0
+a48d11a4fe36c8d17d1ff9fc0fda7a32 *re15_port/shared_assets/PSX/STAGE2/ROOM2090.RDT
+a48d11a4fe36c8d17d1ff9fc0fda7a32 *re15_port/shared_assets/PSX/STAGE2/ROOM2091.RDT

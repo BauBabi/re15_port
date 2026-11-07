@@ -1,0 +1,19 @@
+spawn_4000_-16000_leon ohne
+spawn_5800_-17650_elza ohne
+spawn_3000_-14950_leon ohne
+spawn_6750_-16300_elza ohne
+spawn_2300_-14950_elza ohne ROT=3072
+spawn_5000_-15200_leon ohne ROT=3072
+spawn_6000_-17400_leon ohne ROT=2048
+spawn_2600_-16800_elza ohne ROT=0
+kante_0_-20900_2_leon ohne
+kante_0_-20900_2_leon neu
+kante_-1300_-20700_0_elza ohne
+kante_-1300_-20700_0_elza neu
+kante_1500_-21400_2_elza ohne
+kante_-500_-21800_0_leon neu
+kante_0_-20900_2_leon ohne alt
+kante_-1300_-20700_0_elza ohne alt
+kante_5000_-18900_2_elza ohne
+kante_2800_-18700_2_leon neu
+abn2rw_alt_leon neu

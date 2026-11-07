@@ -1,0 +1,7 @@
+# test_r41_gatorfix.exe gang_elza direkt (Abnahme 6); gefiltert (Ladezeilen entfernt; vollstaendig im Laufordner <SP>/harness/gang_elza/aus.txt)
+== gang_elza (G2-RE2: Gang ohne Kanister gleich NB5; NB3: Lagen ausserhalb der Baender, alter Stand = Pruefhaken rw_alt + nb3_alt) ==
+    nb5 2700 Bilder, neu 2700 Bilder (Clip 1 in 379), abweichend 0; Gegenprobe RE1.5-Tempo 2700 Bilder, abweichend 2699
+  ok: ohne Kanister Bild fuer Bild gleich NB5 (Lage, Gier, Clip, Bild, Hoehe): 0 von 2700 abweichend
+  ok: Gegenprobe RE1.5-Tempo ohne Kanister: abweichend 2699 (rot ohne den Bau)
+gang_elza: 0 Fehler
+exit=0
