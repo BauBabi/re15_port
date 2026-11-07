@@ -404,7 +404,8 @@ static int boss_schuesse_bis(re15_actor_t *e, int ende)
     return 999;
 }
 
-/* G4-Bank der Bahnsteig-Form wie der Plattform-Haken (platform/pc/main.c, RE2/BAHNSTEIG_G4.EMD + Opfer-Bank von EM30), damit
+/* Form-Bank der Riesenform wie der Plattform-Haken (platform/pc/main.c pc_enemy_load_bahnsteig: RE2/BAHNSTEIG_FORM.EMD + bb_form,
+ * Opfer-Bank von EM30; Stufe 3 der Form-Spur ersetzte BAHNSTEIG_G4.EMD, Integration Runde 41 Welle 2), damit
  * der ECHTE Eintritt von re15_bb_tick laeuft (HP-Zuweisung RE15_BB_FORM_HP). Muster: test_birkin_bahnsteig.c form_bank. */
 static uint8_t *s_g4_emd = NULL, *s_em30 = NULL;
 static size_t   s_g4_emd_n = 0, s_em30_n = 0;
@@ -413,7 +414,7 @@ static void g4_dateien(void)
     static int versucht = 0;
     if (versucht) return;
     versucht = 1;
-    s_g4_emd = slurp(RE15_ASSET_PSX_DIR "/../RE2/BAHNSTEIG_G4.EMD", &s_g4_emd_n);
+    s_g4_emd = slurp(RE15_ASSET_PSX_DIR "/../RE2/BAHNSTEIG_FORM.EMD", &s_g4_emd_n);
     size_t esz = 0, off = 0, len = 0;
     uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &esz);
     if (ems && re15_ems_get_entry(ems, esz, re15_ems_index_for_type(0x30), &off, &len) == 0) {
@@ -429,7 +430,7 @@ static void g4_haken(uint8_t type)
     if (!eb) return;
     { uint8_t typ = eb->type; memset(eb, 0, sizeof *eb); eb->type = typ; }
     if (re2_emd_parse_bank(s_g4_emd, s_g4_emd_n, eb) != 0) { eb->type = 0; return; }
-    eb->re2_rig = 1; eb->ok = 1; eb->buf = NULL;
+    eb->re2_rig = 1; eb->ok = 1; eb->buf = NULL; eb->bb_form = 1;   /* Stufe 3: Knochenzahl frei (re15_bb_bank_da, main.c pc_enemy_load_bahnsteig) */
     eb->victim_ok = re15_emd_parse_victim_bank(s_em30, s_em30_n, &eb->skel_victim, &eb->anim_victim) == 0;
 }
 
@@ -437,13 +438,19 @@ typedef enum { BF_GORILLA, BF_ALLIGATOR, BF_BIRKIN, BF_FORM1, BF_MUTATION, BF_NA
 typedef struct { const char *name; uint16_t raum; uint8_t typ, grid; bform_t art; int ende; } bfall_t;
 /* Den Boss in seine Form bringen: Form 1 -> Mutation ueber das echte Wurzel-Tor (hp < RE15_BIRKIN_HP_MUT_TOR = `slti 100`
  * @0x8011667c x 2 -> 0x601) und die echte Mutation (HP RE15_BIRKIN_HP_MUTATION = 0x96 @0x80118094 x 2); nach der Mutation bis
- * zu ihrem Ende (sub 6 Phase 2 @0x8011888c). Bahnsteig-Form: am Mutationsende laedt der Haken die G4-Bank, der naechste
- * KI-Takt laeuft durch den Eintritt von re15_bb_tick. */
+ * zu ihrem Ende (sub 6 Phase 2 @0x8011888c). Riesenform (Stufe 3 der Form-Spur): in 5080/5081 (Flucht) und 5090/5091 (Zug) ist
+ * sie ab der Raumladung da (re15_bf_riesenform_raum, birkin_formen.c; keine Mutation mehr in 5090), der Haken laedt die Form-Bank,
+ * der naechste KI-Takt laeuft durch den Eintritt von re15_bb_tick (HP RE15_BB_FORM_HP). */
 static re15_actor_t *boss_aufstellen(const bfall_t *f)
 {
     boss_welt(f->raum);
     re15_bf_modell_hook(f->art == BF_BAHNSTEIG ? g4_haken : NULL);
     re15_actor_t *e = boss_neu(f->typ, f->grid);
+    /* Stufe 3 (Integration Runde 41 Welle 2): der Modell-Haken feuert nur noch am Mutationsende (re15_bf_mutation_fertig), das
+     * es in 5090 nicht mehr gibt; im Spiel laedt der Plattform-Lader die Form-Bank bei der Raumladung (main.c
+     * re15_bf_bahnsteig_bank_faellig -> pc_enemy_load_bahnsteig). Hier dasselbe direkt: Bank da -> re15_birkin_root ruft
+     * re15_bb_tick (enemy_ai_common.c, re15_bb_bank_da), dessen Eintritt schreibt RE15_BB_FORM_HP. */
+    if (f->art == BF_BAHNSTEIG) g4_haken(0x30u);
     if (f->art == BF_G5)    { e->hp = 600; }                           /* Ctor @0x801003fc (enemy_ai_boss_g5.c) */
     if (f->art == BF_GATOR) { e->hp = RE15_GR2_HP_INIT; }              /* 25240 @0x80100518-580 (Spur WS H3, gator_re2_r41.c) */
     if (f->art == BF_MUTATION || f->art == BF_NACH_MUT || f->art == BF_BAHNSTEIG) {
@@ -513,14 +520,14 @@ static void abschnitt_boss(void)
         { "Gorilla 0x27 (1141)",                         0x1141, 0x27, 0x10, BF_GORILLA,   0 },
         { "Alligator 0x23 RE1.5-KI (ausserhalb 2090)",   0x2080, 0x23, 0x00, BF_ALLIGATOR, 0 },
         { "Birkin 0x30 Mensch 3070 (grid 0x10)",         0x3070, 0x30, 0x10, BF_BIRKIN,    0 },
-        { "Birkin 0x30 5080 (grid 0x13)",                0x5080, 0x30, 0x13, BF_BIRKIN,    0 },
+        { "Riesenform 5080 Flucht-Raum (Stufe 3)",        0x5080, 0x30, 0x13, BF_BAHNSTEIG, 0 },
         { "Birkin 0x30 Hangar/Sichel 50A0 (grid 0x10)",  0x50A0, 0x30, 0x10, BF_BIRKIN,    0 },
         { "Birkin 0x30 Labor 50E0 (grid 0x10)",          0x50E0, 0x30, 0x10, BF_BIRKIN,    0 },
         { "Birkin 0x30 Form 1 3071 (grid 0x01)",         0x3071, 0x30, 0x01, BF_FORM1,    -1 },
-        { "Birkin 0x30 Form 1 5090 (grid 0x13)",         0x5090, 0x30, 0x13, BF_FORM1,    -1 },
+        { "Riesenform 5091 Elza (Stufe 3)",               0x5091, 0x30, 0x13, BF_BAHNSTEIG, 0 },
         { "Birkin 0x30 waehrend der Mutation (3071)",    0x3071, 0x30, 0x01, BF_MUTATION,  0 },
         { "Birkin 0x30 nach der Mutation 3071",          0x3071, 0x30, 0x01, BF_NACH_MUT,  0 },
-        { "Bahnsteig-/Riesenform 5090 (G4-Eintritt)",    0x5090, 0x30, 0x13, BF_BAHNSTEIG, 0 },
+        { "Riesenform 5090 (Form-Eintritt, Stufe 3)",     0x5090, 0x30, 0x13, BF_BAHNSTEIG, 0 },
         { "G5 0x36 5090",                                0x5090, 0x36, 0x13, BF_G5,        0 },
         { "Gator-Boss 0x23 2090 (bis zur Schwaeche)",    0x2090, 0x23, 0x00, BF_GATOR,    -2 },
     };
@@ -529,11 +536,11 @@ static void abschnitt_boss(void)
         { 360,   200, 2, 2 },     /* Gorilla 180 @0x8011f514 x 2; Rakete Licker @0x800A485C: 360-251=109, -142 / 160, -40 */
         { 300,   110, 2, 3 },     /* RE1.5-Alligator @0x801175dc; Rakete @0x800A4B54: 49, -202 / 190, 80, -30 */
         { 600,   200, 3, 4 },     /* 0x12c @0x8011690c x 2; G1 @0x800A58B0: 349, 98, -153 / 400, 200, 0, -200 */
-        { 600,   200, 3, 4 },
+        { 1000,  301, 4, 4 },     /* Stufe 3: 5080 = Riesenform (re15_bf_riesenform_raum); G4-Ctor 1000 @0x80100678, Rakete G4 301 @0x800A5D24 */
         { 600,   200, 3, 4 },
         { 600,   200, 3, 4 },
         { 600,   200, 2, 3 },     /* Form 1 bis hp < 200 (`slti 100` @0x8011667c x 2): 349, 98 / 400, 200, 0 */
-        { 600,   200, 2, 3 },
+        { 1000,  301, 4, 4 },     /* Stufe 3: 5091 (Elza) = Riesenform wie 5080/5090 */
         { 300,   200, 999, 999 }, /* waehrend der Mutation: ein toedlicher Treffer setzt 100 (Revive @0x8011a530 x 2) */
         { 300,   200, 2, 2 },     /* nach der Mutation 0x96 @0x80118094 x 2: 49, -202 / 100, -100 */
         { 1000,  301, 4, 4 },     /* G4-Ctor @0x80100678; G4 @0x800A5D24: 749, 498, 247, -4 / 699, 398, 97, -204 */
