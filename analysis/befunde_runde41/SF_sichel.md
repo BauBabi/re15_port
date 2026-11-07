@@ -1658,3 +1658,126 @@ Mittellinie, Abschnitte Beginn-Biegung-Knick-Ende, Original | V4 r4 | V4 r5 als 
 5. AF Pose 85 Id 6 (Bein (W)-rechts) 0,012 (Grenze 0,01).
 6. Tests: kein Unit-Test fuer die V4-Regeln (Pruefung V4 r3/r4); integration_r41_sichel_form laedt weiter das Spiel-Asset.
 7. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme.
+
+## V4 Originaltexturen (Bauer, Runde 1 von 2, 2026-11-07)
+
+### Nutzer-Wortlaut und Ursache
+Nutzer 2026-11-07 ~17:40: "Bei der Sichel Form V4, warum sind denn da die Farben so extrem scheisse? Das kann doch eigentlich garnicht
+passieren.... die Form baut von Farben und Texturen her ja nun wirklich auf die Ursprüngliche Birkin Form auf.... Die Farben können doch
+dann im Prinzip garnicht so scheisse aussehen."
+
+Ursache (Orchestrator, hier bestaetigt): Ab V4 Runde 2 wurden auch die Koerper-Texel und Koerper-CLUTs per Farbeichung an die Videobilder
+angepasst (eichen_v4.py, r2_koerper_farben.py, r4_koerper_eichen.py; Messblatt V4 Abschnitt 5). Die Gegenprobe mit dem neuen Riegel an
+V4 Runde 5 (a762bd66) zeigt das Ausmass (SF_belege/v4/ot/riegel_ref2tex_V4r5_gegenprobe.*):
+- 34486 von 34716 Koerpertexeln geaendert;
+- CLUT-Zeilen 480-485 geaendert, sechs neue Zeilen 486-491;
+- sieben Koerper-Meshes auf eigene Zeilen umgehaengt;
+- 3129 Kopf-/Schwanztexel mit Farben, die es in Referenz 2 nicht gibt.
+
+Messblatt V4 Abschnitt 5 ist als ueberholt markiert.
+
+### Vorgabe (Orchestrator, bindend)
+1. Koerper = Referenz 2 unveraendert.
+2. Schwanz: Form V4, Textur aus der Koerperhaut des Ref2-Atlas, UV entlang der Achse durchgehend.
+3. Kopf: Form V4, Merkmale an den Messblatt-Orten, nur Ref2-Farben in der Machart der Original-Textur.
+4. Geometrie wie V4 Runde 5; Spiel-Asset und Pin bleiben unveraendert.
+
+### Aenderungen
+**birkin_formen.py** (Commit 514b69739): Neuer Schalter RE15_V4_TEXTUR, Standard ref2.
+- Im Modus ref2 entfallen die Koerperzeilen 488-491, die Koerpertexel, die geeichten Hautzeilen und die Farbklammer.
+- Kopf (Mesh 9) und Schwanz (Meshes 16-22) zeigen auf die Ref2-Zeile 480 (Oberarm-/Rueckenhaut).
+- v4_ref2tex_einsetzen schreibt nur die freien Flaechen: TPage 128 v 160-223 (Kopf) und TPage 130 u 64-127 (Schwanz).
+- RE15_V4_TEXTUR=eichung baut V4 Runde 5 bitgleich nach (gemessen a762bd66).
+
+**ref2tex_v4.py** mit farben_ref2tex_v4.npz und Protokoll SF_belege/v4/ref2tex_protokoll.json (Commit 03ba6284f):
+- Schwanz:
+  - Quelle sind Texel der Oberarm-/Rueckenhaut (Seite 0, x 1-64, y 15-104). Das ist das groesste ganz in Zeile 480 belegte
+    64er-Rechteck; die Texel gehoeren zu Mesh 13, 8 und 10.
+  - Entlang der Achse wird die Quelle gespiegelt gekachelt, damit keine Naht entsteht.
+  - Quer wird nach dem Umfangswinkel entzerrt, weil die UV-Abbildung 'achse' u = (1 - c)/2 x sp setzt. Ohne Entzerrung lagen an Ober-
+    und Unterkante nur 1-2 Quellspalten auf einer ganzen Seitenflaeche; das war in der ersten Fassung als Querstreifen an der Wurzel
+    sichtbar.
+- Kopf:
+  - Erlaubt sind nur Eintraege der Zeile 480, die Ref2 auf Koerperflaechen zeigt, in fuenf Klassen:
+
+    | Klasse | Eintraege | Bedingung | Einsatz |
+    |---|---|---|---|
+    | haut | 149 | L* < 40 | uebrige Zonen |
+    | rot | 132 | a* >= 12 | Kuppe |
+    | hell | 21 | L* >= 45, a* <= 15 | Auge |
+    | dunkel | 55 | L* <= 22 | Haare |
+    | dunkelrot | 57 | L* <= 30, a* >= 8 | Kinn |
+
+  - Die Feinstruktur stammt aus den Original-Kopftexeln von Ref2 (x 76-119, y 19-67, ganz von Mesh 9 abgedeckt): Helligkeit hoch 0,7,
+    dazu die halbe a*/b*-Abweichung.
+  - Die Orte stammen aus der Zonenkarte der Runde 5, also den Messblatt-Fenstern.
+  - Der Augenfleck sitzt an den Riegelorten K4/S2 mit der Groesse K3/S1. Er wird im Bild der jeweiligen Vorlage-Kamera gesetzt und ueber
+    Kenn-Renders auf beide Kopfbilder zurueckgetragen.
+  - Die Zonenhelligkeit wird nach der Vergleichsregel nachgefuehrt, die hier nur Messverfahren ist. Je Texel wird immer ein vorhandener
+    Eintrag gewaehlt. Es liefen 12 Runden; gewaehlt ist Runde 8, T-K4 ist ab Runde 5 durchgehend gruen.
+- PORT-WAHL, jeweils mit Lauf im Kommentar: STRUKTUR_EXP 0,7, STRUKTUR_FARBE 0,5, AUGE_KERN 0,3, AUGE_PROFIL 1,5, UMGEBUNG_SIGMA 3,
+  GLATT 1,2, DAEMPF 0,7 und die Klassengrenzen. Zwei davon mit eigener Begruendung:
+  - AUGE_HOF 0,85: ohne Hof lag der K1-Kontrast bei 19,2-19,9.
+  - UMGEBUNG_DL 6: die Augenumgebung (KV9/KV6) liegt dunkler, weil der hellste blasse Hauteintrag der Palette nach der Vergleichsregel
+    nur L* ~48 statt 56 ergibt.
+
+**riegel_ref2tex.py** (neu, Exit 1 bei Rot) und **leisten_ref2tex.py**.
+
+### Riegel
+riegel_ref2tex.py an EM30_V4.EMD (sha256 a9da924f), Lauf sfv4/r/V4ot mit 191 FRAMEDUMPs; Ausgabe SF_belege/v4/ot/riegel_ref2tex_V4ot.*.
+**Exit 1: 1 rot von 40** (T5, unveraendert seit Runde 5), dazu 1 INFO-Zeile.
+
+| Mass | Soll | Ist V4 neu | Ist V4 r5 (Gegenprobe) |
+|---|---|---|---|
+| T-K1a Koerper-Meshes | Meshes 0-8, 10-15 inkl. UV/CLUT-Feld/TPage bytegleich | OK, keine Abweichung | ROT [2, 3, 5, 6, 10, 13, 14] |
+| T-K1b CLUT | Zeilen 480-485 bytegleich, weitere nur Kopie | OK, TIM 6 Zeilen | ROT, 480-485 abweichend, 486-491 neu |
+| T-K1c Koerper-Texel | jeder abgedeckte Texel bytegleich | OK, 0 von 34716 | ROT, 34486 von 34716 |
+| T-K2 keine neue Farbe | Kopf/Schwanz-Texel in der Ref2-CLUT | OK, 0 von 14008, 165 Farben, Zeile 480 | ROT, 3129 von 14008 |
+| T-K3a Quernaht | Sprung zwischen Gliedern <= innerhalb | OK, 13,0 (Id 20/21) <= 13,5 | OK, 8,6 <= 21,0 |
+| T-K3b Bloecke | je Glied Std L* >= 5,4, >= 16 Indizes | OK, Std 11,1-15,8, 136-174 Indizes | ROT |
+| T-K3c Wurzel | Sprung Id 16 / Rumpf <= innerhalb | OK, 5,2 | OK, 10,7 |
+| T-K4 K1-K10 | Messblatt V4 Abschnitt 7 | alle OK (K1 20,7; K2 dE00 3,0; K3 0,027 x 0,036 H; K4 0,052 / 0,096 H; K5 1,2; K6 11,5; K7 3,8; K8 2,2; K9 0,4; K10 0,154 x 0,187 H) | alle OK |
+| T-K4 S1-S4 | dito | alle OK (S1 dE00 5,4 bei L* 42,7, 0,042 x 0,053 H; S2 0,046 / 0,817 H; S3 0,5; S4 0,4) | alle OK |
+| G1, M1-M4 | wie Riegel V4 | OK (M3 Kopf/Schwanz Zeile 480; M4 0,057-0,072) | OK |
+| T1-T4, TA, T5q, T6, TK | wie Riegel V4 | OK | OK |
+| T5 (Bauer-Mittellinie) | f 0,5 >= 0,100 H | ROT 0,098 | ROT 0,098 |
+| T7a-d, Boden | koerperfest am Lauf | OK, 0 von 47 Takten, max 0,056 H | OK |
+
+K8 wird an den Kopf-Bildpunkten im Fenster KV4 gemessen (Id 9, 2 px erodiert wie alle Id-Masken in riegel_v4). Das Fenster reicht bis 1,05
+der Kopfbox, und 145 seiner 276 Bildpunkte liegen auf dem Rumpf Id 8. Der Rumpf ist nach Vorgabe 1 Referenz 2 und hell. Nach dem
+Messblatt-Wortlaut ("Fenster ganz") ergeben sich 30,1 L* und dE00 15,5. Dieser Wert haengt am Ref2-Rumpf, nicht am Kopf, und steht deshalb
+nur als INFO-Zeile in der Ausgabe.
+
+### Leisten (SF_belege/v4/; Runde-5-Leisten in v4/r5/)
+Alle Leisten haben die Spalten Nutzer-Vorlage | Nutzer-Beschriftung | Referenz 2 (gelobt) | V4 neu (Originaltexturen):
+- 01_vorn_kamera12
+- 02_seite_wie_bild2
+- 03_kopf_nah_vorn_x4
+- 04_kopf_nah_seite_x4
+- 05_schwanz_x3: Zeile 1 zeigt die Textur ohne Marken, Zeile 2 den Polygonzug.
+- 07_gang: Spiellaeufe sfv4/r/R2ot (Spiel-Asset) und sfv4/r/V4ot.
+- 08_rundum_V4: Zeile 1 Referenz 2, Zeile 2 V4 neu.
+
+Am Bild:
+- Der Koerper ist in allen Spalten bildgleich zu Referenz 2.
+- Der Schwanz traegt die Oberarmhaut mit den roten Adern.
+- Kopf vorn: rote Oberseite, dunkles Haarfeld (B)-rechts, blasser, unregelmaessiger Augenfleck (B)-links.
+- Kopf seitlich: rote Oberseite, blasser Augenfleck, dunkle Vorderkante.
+
+### Tests
+unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41 und integration_r41_sichel_form: 4/4 Passed (100% tests passed, 64,6 s;
+SF_belege/v4/ot/ctest_v4_ot.txt). Der Bau meldet "LOCAL-BUILD-OK (build)", die Engine ist unveraendert. Das Spiel-Asset EM30_HANGAR.EMD
+und der Pin cfd1ac42 sind unveraendert.
+
+### Offen
+1. T5 ist der einzige rote Riegel und der Grund fuer Exit 1: die Bauer-Mittellinie ergibt f 0,5 = 0,098 H bei Grenze 0,100. T5 ist seit
+   Runde 5 rot, weil die Geometrie nach Vorgabe 4 unveraendert bleibt. T5q quer zur Pruefer-Mittellinie ist gruen (0,110).
+2. S1 und K1 halten nur knapp, beide aus demselben Grund: der hellste blasse Eintrag der Ref2-Hautzeile 480 hat L* 55 (Texel).
+   - S1: dE00 5,4 bei Grenze 6, L* 42,7 statt 48,4. Heller geht es seitlich nur mit rosa Wundeintraegen (a* 22) oder einer anderen Zeile.
+   - K1: Kontrast 20,7 bei Grenze 20 (Original 29,5).
+3. Der Kopf ist vorn dunkel, weil die Messblatt-Ziele K5/K7/K8 bei 13-18 L* liegen. Er ist damit dunkler als Kopf und Rumpf von Referenz 2.
+   Die Abnahme am Bild (Leiste 03) liegt bei Pruefer und Nutzer.
+4. T-K3a haelt knapp: 13,0 zwischen den Gliedern 20/21 gegen 13,5 innerhalb. Ursache ist der Lichtwechsel an Gelenk 20/21 (Gouraud je
+   Glied); die Textur laeuft dort durch.
+5. Der Einbau ins Spiel-Asset folgt erst nach der Nutzer-Abnahme. Bis dahin liegt die Variante im Scratchpad als sfv4/emd/EM30_V4.EMD
+   (= EM30_V4ot.EMD, a9da924f), reproduzierbar mit "birkin_formen.py --variante v4 --aus DIR". Runde 5 liegt als EM30_V4r5.EMD (a762bd66).

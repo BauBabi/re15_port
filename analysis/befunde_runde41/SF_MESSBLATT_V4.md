@@ -155,6 +155,18 @@ Kein Oliv, kein Lachsrot.
 
 ## 5. Farben EXAKT: Ziel je Region und Umrechnung auf Texel
 
+> **UEBERHOLT (2026-11-07, Vorgabe des Orchestrators "V4 Originaltexturen" nach dem Nutzer: "Bei der Sichel Form V4, warum sind denn
+> da die Farben so extrem scheisse? ... die Form baut von Farben und Texturen her ja nun wirklich auf die Urspruengliche Birkin Form
+> auf").** Die Farbeichung der Texel an den Videobildern (Umrechnung unten, F1-F19 als Texelziel, die Riegel F*, FS, FO, FR, AF, O7, O9,
+> O10, T8/T9 und die Video-Farbriegel TQ/TN/TV/TR) gilt nicht mehr. Sie trug Unschaerfe, Kompression und Szenenlicht des Videos in die
+> Texel (fleckige, zu rote Flaechen, weisse Sprenkel, gelbe Ausreisser). Es gilt jetzt:
+> (1) Koerper = Referenz 2 unveraendert (Texel, CLUT, UV bytegleich zu EM30_HANGAR.EMD sha256 cfd1ac42);
+> (2) Schwanz: Textur aus der Koerperhaut desselben Ref2-Atlas (Oberarm/Ruecken), UV entlang der Achse durchgehend, keine neue Farbe;
+> (3) Kopf: Ref2-Atlas-Farben, Merkmale (Auge, Haare, Nase, rote Oberseite) an den Orten der Abschnitte 2/3/7 (K1-K10, S1-S4 gelten
+> weiter, Vergleichsregel nur noch als Messverfahren), gemalt nur mit Farben der Ref2-Palette in der Machart der Original-Textur.
+> Riegel: re15_port/tools/r41_sichel/v4/riegel_ref2tex.py (T-K1 bis T-K4 und die Form-Riegel), Dossier SF_sichel.md Abschnitt
+> "V4 Originaltexturen". Der Text unten bleibt als Beleg der Runden 1-5 stehen.
+
 **Eichung Video <-> Port-Schirm** (p_eichung.py): Der Port zeigt in 50A0 Cut 12 dasselbe Raumbild. Fit je Kanal
 Video = a + b x Port ueber statische Wand- und Bodenfelder (x < 270 oder x > 540, y 60-440), den Port vorher mit Gauss
 sigma 1,5 weichgezeichnet (bei sigma 1,5 kleinster Fehler: RMSE 8,9-9,4 je Pixel; ohne Weichzeichnung 12,5-13,1):
@@ -233,6 +245,9 @@ Endstueck fehlen. Die Ist-Form in der Vorlage-2-Kamera misst der Bauer zuerst mi
 abgedunkelt, A: Hintergrund-Steigung ~0,6).
 
 ## 7. RIEGEL-TABELLE
+
+> Seit 2026-11-07 (V4 Originaltexturen): die Zeilen F-Riegel Koerper, F0 Gueltigkeit, T8 und die Lichtgegenprobe als Farbziel sind
+> ueberholt (Abschnitt 5). K1-K10, S1-S4, T1-T7, G1, M1-M4 gelten weiter; dazu T-K1 bis T-K4 (riegel_ref2tex.py).
 
 **Render fuer alle Riegel (Bauer und Pruefer gleich):** b2.zeichne (re15_port/tools/r41_sichel/v2/b2.py: Spielkamera
 50A0/12, GTE-Projektion, RDT-Licht Cut 12), 640 x 480. Posen in **re15_port/tools/r41_sichel/v4/posen_v4.json**, die der
