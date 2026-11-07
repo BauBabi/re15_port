@@ -695,3 +695,107 @@ Gesehen (Bauer, keine Abnahme):
 3. **K3 b*** (blaeuliche Haut in Bild 1): Laut H2 duerfen die Bild-1-Zeilen nur das Aderrot aendern. Soll eine Bild-1-Hautzeile erlaubt werden?
 4. **N2:** Die G4-Krallenspitzen sind heller als L* 85, und G4 selbst hat sie so. Sollen sie ohne eigene Zeile bleiben?
 5. **Messblatt 7.1** (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer.
+
+
+# Versuch 3 (G4-Uebertragung), Runde 2 (Bauer, 2026-11-07)
+
+Grundlage: `MESSBLATT_FARBE_V3.md` und die Pruefberichte der Runde 1 (`FARBE_PRUEFUNG_v3_r1_zahlen.md`, `FARBE_PRUEFUNG_v3_r1_sicht.md`).
+Der Stand der Runde 1 liegt in `farbe/K5c_farbe_v3r1/` und `farbe/v3r1/` (Tafeln, Riegel-Ausgabe, Spielbilder).
+Spiel-Asset `BAHNSTEIG_FORM` und Pins sind unveraendert. K4 bleibt fuer v0.8.30.
+
+## V3R2.0 Ergebnis
+
+- **Variante:** `farbe/K5c_farbe_v3/` (FORM.EMD, FORM.TIM, form.json, bau.json, herkunft.npz).
+  - Kopien: `farbe/K5C_FARBE_V3.EMD` (sha256 32b48eee...) und `farbe/K5C_FARBE_V3.TIM` (sha256 2bddb092...).
+  - Dazu Scratchpad `formfarbe3/emd/`, bytegleich.
+- **Riegel** `generator/riegel_farbe_v3.py`: **36 von 52 Zeilen GRUEN, Exit 1** (`farbe/riegel_K5c_farbe_v3.txt`, `.json`). Runde 1: 33 von 52.
+- **Gegenproben:** Alle 13 fallen so aus, wie das Messblatt verlangt ("falsch ausgefallen: keine").
+  - V2r2: H1, P1, K11, K14 und K15 ROT.
+  - G4 selbst: P1 GRUEN und B10-B17 8/8 GRUEN.
+  - (b2)-Probe A: K11 +24,8 Grad, K12 Schwanz 21,3 %, K13 17,2 % und P2 Kopf aus F1 +11,2 Punkte, alle ROT.
+  - Orange und Gelb als Feldfarbe: F1t/F2t dE 74,6/50,1 bzw. 87,3/72,4, beide ROT.
+- **Spiel:** 10 von 10 Laeufen mit rc 0 (`farbe/spiel_lauf_v3.log`, Bilder `farbe/spiel_v3/`). Die Form laedt mit "32 Meshes, 32 Knochen, 3 Clips".
+- **Tests:** Form-Gruppe `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: 11 von 11 gruen, 96,9 s.
+
+## V3R2.1 Befunde der Runde 1 und was geaendert ist
+
+| Befund (Pruefer) | Aenderung | Beleg Runde 2 |
+|---|---|---|
+| Zahlen A: Flaechen ohne Texelmittelpunkt fielen aus H1/S1/F1t/F2t; UV als Punkt/Linie (Hals 10,8 %) | Bau und Riegel tasten wie die PSX ab: `kf_g4.texel_psx`, 861 baryzentrische Punkte je Dreieck, floor (Verfahren des Zahlen-Pruefers). Auch die G4-Inselmasken sind so gerastert. Neue Info-Zeile S1b: Flaechen mit Punkt/Linie, die bei G4-Dichte >= 1 Texel^2 decken. | S1 0,00 % in allen Teilen. S1b: Hals 0 %, Kopf 0 %, Schwanz 1,35 %, Beine 1,57 % (Runde 1 laut Pruefer 10,8 / 8,6 / 3,7 / 6,6 %) |
+| Zahlen D1: Kopf ortsgenau Median 4,00, Rumpf 1,61 | **Texeldichte wie die Quelle** (`projektion`): theta n_th-mal wiederholt (n_th = round(Umfang K5c / gedeckter Umfang Quelle)), laengs gespiegelt gekachelt (s_T = Laenge K5c / gedeckte Laenge). | D1 (abgebildete G4-Flaeche mit Wiederholung) / Median ortsgenau: Rumpf 1,16/1,20, Schwanz 1,20/1,27, Hals 1,05/1,12, Beine 1,03/1,14, Arme 1,21/1,24, Klauen 1,10/1,31, Kopf 1,25/1,41 |
+| Zahlen/Sicht P2 > +8 an Rumpf, Hals, Vorderbein r, Klauen, Kopf; Riegel mass Kopf gegen G4 10 | Wie D1. P2 misst jedes Teil gegen seine tatsaechliche Quelle (Kopf, Brust, Hals gegen G4 16; Rumpf hinten gegen G4 0/9) | Kopf +6,8 (Runde 1 +13,1), Hals +3,9, Vorderbein r +3,4, Rumpf +3,5. **ROT bleiben:** Brust +10,2, Klauen l/r +9,1/+8,7 |
+| Sicht: flache rote Keile, Strahlenmuster vorn an der Brust | **Kappen** (Flaechen mit \|N.a\| > 0,8 zur Teilachse, dieselbe Grenze KAPPE_NA wie fuer die Quell-Kappen) bekommen je Ende eine gemeinsame Ebene quer zur Achse in Quelldichte | Brust vorn: dunkle Scheibe statt Keilen (`05_rundum_neu.png`, vorn) |
+| Sicht: lachsfarbene Polster an Schultern/Brust | Brust 10 und Hals 21 aus F18 (wie der Kopf). Abweichung von Messblatt 2.3 (Brust <- G4 10 F4/F5/F6, Hals <- F4/F5), begruendet mit der Bild-2-Kette (Messblatt 4: "Massstab fuer die Haut ist die Kette"): Mit F4/F5/F6 war Knochen 10 in Bild 2 zu 76,7 % Rotklasse und zu 19,1 % dunkel. Die Zone Kopf/Rumpf lag bei 38,5 % rot und 58,6 % dunkel, das Original bei 11,0 % und 73,1 %. Oberarm r ohne das rosa Wundoval G4 16 Insel 72 | Zone Kopf/Rumpf jetzt 8,9 % rot, 90,4 % dunkel (`r2/zone_knochen.py`). K13 66,6 % (Runde 1 46,2 %). K6 dE 4,8, K8 dE 3,3 |
+| Sicht: Vorderklaue als Tarnmuster | Haende (F20) und Krallen (F21) laengs genau einmal (`laengs_einmal`). Mit Spiegelkachel wiederholten sich die hellen Spitzen als Querbaender | Krallen: dunkelroter Ansatz, eine helle Spitze (`05`, `02`). Die Krallen bleiben im Bild-2-Vordergrund hell, so hell wie F21 im G4. P2 Klauen ROT, siehe oben |
+| Sicht: Kopf schwarze Kuppel mit verschmierten Rotflecken; roter Maulkorb | Kopf in G4-Dichte (F18, gekachelt): gemalte Adern statt gedehnter Texel. Band nur noch Flaechen mit Mehrheit (> 50 %) ihrer Bild-2-Pixel im Band: 25 statt 27 Flaechen | `06_kopf_nah.png`: dunkle Haut mit roten Aderlinien. Neue Vergleichsspalte "RE2-G4 Mesh 16 = Quelle F18" |
+| Sicht F1: 977 px (1,51-fach), gelappt | Fleck-Kern = Maskenpunkte selbst (FLECK_WEITE entfaellt). Saum = 1 Texelring, darin nur die hellere Haelfte des Fleischs | K14 dE 3,9 (Runde 1 5,1), Rotklasse 82,2 % |
+| Zahlen F1t: Feld zu 70 % Haut | **Herkunftskarte** `herkunft.npz`: Die Haut der F1-Flaechen ist eine G4-Kopie aus F11, lueckenlos, Quelle je Texel festgehalten. Das zaehlt in H1 als G4-Texel ("Index bytegleich ... an der kopierten Stelle"). Das Sonderfeld sind die Fleck-Texel (Art 2). F1t mittelt ueber **alle** Fleck-Texel, auch die mit Haut-Eintrag | F1-Flaechen lesen 620 Texel: 442 G4-Haut, 178 Fleisch. F1t ueber die 178: Lab (48,66/21,83/-3,22), dE 0,34 |
+| Zahlen F2t: Zaehlweise; ZIEL_BAND_BAU ohne Nutzer-Wortlaut | Band auf ZIEL_BAND (Messblatt 3.2) gebaut. Bau und Riegel zaehlen jedes gelesene Texel einmal | F2t dE 0,22 (554 Texel). **K15 und K7 ROT** (V3R2.3) |
+| Zahlen H2: Zeile 7 31 Vertauschungen, Zeile 8 2 | Rang-Reparatur bis zum Stillstand. Die genutzten Eintraege stammen aus der PSX-Abtastung | 0 Vertauschungen in den Zeilen 3-8 |
+| Zahlen: Gegenproben nicht als Lauf | `gegenproben_weitere`: G4 B10-B17, (b2)-Probe A (K11/K12/K13/P2 Kopf), Orange/Gelb (F1t/F2t) | siehe V3R2.0 |
+| Zahlen: Konstanten ohne Quelle | VERSCHIEBE_N, SCHRUMPF, ZIEL_BAND_BAU, FLECK_WEITE und BAND_SCHWELLE 0,3 entfallen. Die Rot-Rampe kommt aus den Klassen der Messblaetter. Veraltete Kommentarzahlen sind berichtigt | Tabelle V3R2.2 |
+| Sicht: Vorderglied r in Bild 1 (Runde 2 neu gemessen) | Durch die Dichte kamen mehr Adern ins Bild. Die Handflammen lagen auch auf dem Handruecken: 9,8 % gegen die Grenze 3,0 %. Mit "laengs einmal" sitzen die Flammen an den Fingern | K12 Vorderglied r 1,8 % |
+
+## V3R2.2 Konstanten (neu oder geaendert in Runde 2)
+
+| Konstante | Wert | Quelle |
+|---|---|---|
+| Abtastung `_BARY_N` | 40 (861 Punkte je Dreieck) | Verfahren des Zahlen-Pruefers (FARBE_PRUEFUNG_v3_r1_zahlen.md, Kopf) |
+| ROT_C0, ROT_C1, ROT_H0/H1 | 15, 20, -40/70 Grad | C0 = K11-Rotklasse "C* >= 15" (Messblatt V3 5), C1 und Farbtonfenster = A3-Klasse (Messblatt V1 6 / Leser A 1). Runde 1: C0 10 als Bauer-Wahl |
+| n_th, s_T | je Teil gemessen, Werte in `bau.json` je Teil | Umfang und Laenge K5c / Quelle (Rahmen-Messung) |
+| `laengs_einmal` (Haende, Krallen) | s_T = 1 | Sicht-Befund "Tarnmuster"; Messung K12 Vorderglied r 9,8 % -> 2,1 % |
+| KAPPE_NA auch fuer K5c-Kappen | 0,8 | Leser A uebertrag.py (dieselbe Grenze wie fuer die Quell-Kappen) |
+| BAND_MEHRHEIT | > 0,5 | Mehrheitsregel der Bildpixel (Definition), Maske band2_pruef (Messblatt 3.2) |
+| WEICH_RAND | 1 Texelring | PORT-WAHL mit Nutzer-Wortlaut E10 ("die offenen Wunden sehen so richtig fleischig aus ... Bei uns wirkt alles wie billig einfarbig bemalt") |
+| B1_C_JE_SEITE | 1,0 / 0,574 / 1,0 | Messblatt V3 2.3 Schwanz (Auflage K12: "Adern-CLUT nach H2") und Messblatt V3 4 "1 Schwanz" Rot C* 23,6 / G4 41,1; Seiten 0/2 mit G4-Buntheit |
+| Brust/Hals <- F18 | G4 16 ohne Insel 72 | Bild-2-Kette (Tabelle V3R2.1). Messblatt 2.3 Kopf: "dunkle Hautfelder F18" |
+
+## V3R2.3 Rote Riegel und warum
+
+- **K15 / K7 (Band, Bild 2):** K15 dE 12,2 (a\* 39,2 gegen 28,2), K7 dE 15,3.
+  - Gebaut ist auf ZIEL_BAND, F2t dE 0,22. In Runde 1 brachte ein Bauziel mit dE 5,1 zu ZIEL_BAND K15 nur auf 7,9.
+  - Innerhalb der F2t-Toleranz erreicht K15 also kein Gruen.
+  - Dazu kommen 258 der 2227 Bandpixel, die K5c nicht deckt (Hintergrund, Feuer: a\* 46 gegen 33).
+  - Das Messblatt muss entscheiden, welcher der beiden Riegel gilt (wie V3.5 Punkt 2).
+- **P2:** Brust +10,2 und Klauen l/r +9,1/+8,7.
+  - Brust: Die F18-Inseln sind schmal. Ein Teil der Brustflaechen passt nur verkleinert hinein (`bau.json` Brust "kleiner").
+  - Klauen: Durch "laengs einmal" ist die Kralle laengs 3,9- bis 5,1-fach vergroessert.
+  - Abwaegung: Querbaender (Sicht-Befund) gegen Posterisierung (P2 +8,7/+9,1). Gewaehlt ist die Form der G4-Kralle (dunkelroter Ansatz, eine helle Spitze).
+- **A1 7,8 / N1 / K1v2 6,5 (Grenze 6,63) / K2v2 6,2:** Die Haut ist duenkler und weniger bunt als die V1-Familie.
+  - Das folgt aus G1 "schwarz rot" und der Bild-2-Kette. Die Zone Kopf/Rumpf ist jetzt mit 90,4 % dunkler als das Original mit 73,1 %.
+  - Rot gegen dunkel ist dort 8,9 gegen 11,0 %.
+- **K3** (Bild 1, Hinterbein r dE 10,5):
+  - Es fehlt die blaeuliche Haut des Originals (b\* -8,3).
+  - Eine Bild-1-Hautzeile laesst H2 nicht zu (wie V3.5 Punkt 3).
+- **N2 0,27 / 0,02 / 0,30 %:** Krallenspitzen F21 und Zaehne. G4 selbst liegt bei 0,09-0,21 % (V3.5 Punkt 4).
+- **B10 6,9 / B11 2,61 / B12 2,62;17,2 / B17 0,534:**
+  - Binnenzeichnung aus F18, F11 und F10 ist duenner liniert als die Familienspanne.
+  - G4 selbst ist 8/8 GRUEN (Gegenprobe). Die Auswahl der dunklen Felder senkt die Liniendichte.
+- **B2 2,59 / B9 15,8 / B9b 12,1:** Rot sitzt als Aderlinien am Umriss, nicht als grosse Rotflaeche. Das ist G4-Machart, die V2-Grenzen stammen aus der Malzeit.
+
+## V3R2.4 Tafeln (`farbe/`, Messblatt 6; Runde 1 in `farbe/v3r1/`)
+
+- 01 und 02: Original | K4 heute | V3 Runde 2, Spiellicht roh und durch form_video, je mit Nahkachel.
+- 03: Familie EM30 | G5 | G4 | V3 | K4, roh, gleiches Licht.
+- 04: Atlas G4 | V3 mit Herkunftskarte.
+- 05: rundum.
+- 06: Kopf nah, mit G4-Kopf 26 und neu der Hautquelle G4 16 (F18).
+- 07: Spiel, eigene exe-Kopie, 5080/5090.
+- 08: Binnenzeichnung.
+
+Gesehen (Bauer, keine Abnahme):
+- Rumpf vorn, Hals und Kopf sind schwarz mit roten Aderlinien, ohne lachsfarbene Flaechen.
+- Der Schwanz ist schwarz mit magentafarbenen Adern (Bild-1-Zeilen).
+- Die Krallen haben einen dunkelroten Ansatz und eine helle Spitze.
+- Das Band ist eine lachsrote Lippe mit Zahnreihe.
+- Im Spiel (07) ist die Form in 5080 schwarz, in 5090 schwarz mit rotem Schimmer.
+
+## V3R2.5 Offen
+
+1. K15 gegen F2t (V3R2.3): Entscheid des Pruefers noetig.
+2. Brust aus F18 weicht von Messblatt 2.3 ab (begruendet mit der Bild-2-Kette, V3R2.1). Der Pruefer bestaetigt oder verwirft.
+3. P2 Brust und Klauen knapp ueber der Grenze. Wege fuer Runde 3:
+   - Brust aus F18 plus F19 (breitere Inseln);
+   - Krallen laengs zweiteilig: Ansatz gekachelt, Spitze einmal.
+4. Die Wiederholung von F18 ueber Kopf, Hals und Brust (Kachelung, G4-Machart) ist in 05/06 nicht als Muster zu erkennen. Das sollte ein Sicht-Pruefer bestaetigen.
+5. Messblatt 7.1 (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer.
