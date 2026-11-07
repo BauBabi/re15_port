@@ -47,6 +47,7 @@ Ventil-Sicherungskasten 2010, nachgetragen von Spur C nach AUFTRAG.md Nachtrag 1
 (Szene gesehen 110, Schluessel liegt 111, Schluessel genommen 112), **G = 114-119**, **E = 120** (nur wenn kein
 Original-Flag reicht), **J/K = 121-124** bei Bedarf, 125-133 vergibt der Orchestrator. Jedes neu belegte Bit traegt
 die Spur in `tests/unit/test_r36_kartenbits.c` k_port[] ein (eine Zeile) — 104/105 sind Original!
+**ST80** (Nachbesserung 1, 2026-11-07, Orchestrator): **128** = RE15_S80_BIT_NACHTRAG (Zug 6030: Fuehrerstand vor dem Wagen besucht, Sherry-Nachtrag msg 40/25 steht aus; gesetzt in k_s80_6030_sub08_vorne, geloescht in k_s80_6030_sub09_nachtrag). Zensus: Original-Block 110..133 frei, Integrationsbaum und alle r41-Zweige ohne 128 (moosgang 126/127, annette 133); k_port[] eingetragen. Nachrichten-Ids 6030: 31 und 40 (Spur AN belegt 27..30).
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)
 Port-Ids liegen hinter den Original-Nachrichten eines Raums (ab 40; vorhandene per grep `MSG_ID`/Ids in include/ und
