@@ -1,0 +1,10 @@
+# Gegenrechnung mit dem Werkzeug der Abnahme 5 (G2_belege/abn5/werkzeug/aussen5.py, letzter Besuch, SCA-Aussenwaende x -8900..7200 z -27000..-5400, Ostnische getrennt)
+# alt = exe 029efac6 (Stand 10603425b), neu = exe 5910fc24 (Bau 5a94392bf); Laeufe werkzeug/batch_r2.sh
+alt_ohne_west5_elza                 3300 Bilder: aussen 536 Bilder (F2765..F3300), vorher F2764 bei (2318,-1800,-26864), Treffer davor F2752, aussen bis (2318,-1800,-29914), Gator dabei (2819,-22855); bis Laufende F3300 aussen; Treffer waehrend aussen 0
+neu_ohne_west5_elza                 3300 Bilder: Figur nie ausserhalb der Aussenwaende, nie in der Ostnische
+alt_ohne_abn2wand_leon              1530 Bilder: aussen 0 Bilder; Ostnische 327 Bilder (F1046..F1530)
+neu_ohne_abn2wand_leon              1530 Bilder: Figur nie ausserhalb der Aussenwaende, nie in der Ostnische
+alt_ohne_spawn_2318_-16300_leon     4200 Bilder: aussen 2986 Bilder (F1215..F4200), vorher F1214 bei (2318,-1800,-5449), Treffer davor F1201, aussen bis (2318,-1800,-2694), Gator dabei (2206,-6884); bis Laufende F4200 aussen; Treffer waehrend aussen 0
+neu_ohne_spawn_2318_-16300_leon     4200 Bilder: Figur nie ausserhalb der Aussenwaende, nie in der Ostnische
+neu_mit_oben_leon                   4400 Bilder: Figur nie ausserhalb der Aussenwaende, nie in der Ostnische
+neu_ohne_oben_leon                  4400 Bilder: Figur nie ausserhalb der Aussenwaende, nie in der Ostnische

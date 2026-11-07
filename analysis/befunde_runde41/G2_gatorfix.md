@@ -906,4 +906,153 @@ der Kante ist innerhalb der Aenderung (Vorgabe B), auch wenn sie nur durchlaeuft
    Vorgabe-B-Anfahrt (Leon per Autopilot im Rampenband) die Kanister-Aufnahme von F1227 auf F1447 verschiebt; Aufnahme/Sitz unveraendert - Entscheid der
    Spur-Eigner, ob das Fenster so bleibt. (b) Lauf belagerung - Patch 9 (Zaehler oben_ohne nur in Kampfphasen) stellt den alten Ablauf her; ohne ihn quert er
    im 71. Bild der Belagerung VOR dem ersten Hochbiss. Der Nutzer hat diesen Takt ("300 Bilder Belagerung ohne Treffer, dann Querung") noch nicht gesehen.
-9. Runde 2 (Abnahme 5 / Nachbesserung) steht aus.
+9. Runde 2 (Abnahme 5 / Nachbesserung): Abschnitt "G2-RE2 NB3 Runde 2" unten (Offen 1, Wegstoss in den Pier, ist mit dem Raumhalt verhindert).
+
+## G2-RE2 NB3 Runde 2 (Abnahme 5: M1 Absturz abn2_wand, M2 Wurf aus dem Raum, M3 abn2_rampe_west)
+Stand 2026-11-07, Zweig r41/gator_re2 ab 10603425b (Abnahme 5 `G2_abnahme_5.md`: NICHT BESTANDEN). Rolle: Bauer (NB3, Runde 2 von 2). Spezifikation unveraendert
+der Nutzerentscheid 2026-11-06 (Abschnitt "G2-RE2 NB3" oben, F1-F4 woertlich): F1 "Zu F1, noe, wozu wenn es gut funktioniert?" (keine Kameragrenze), F2 "Verstehe ich
+nicht..." (Querungsbeginn nicht anfassen), F3/Vorgabe A "Er soll nur den Spieler oben auf der Rampe auch rammen koennen, das der Spieler oben nicht ausweichen kann.
+Alternativ kann er auch hoch beissen oder sowas, aber er darf halt oben nicht sicher sein.", F4/Vorgabe B "Wenn er haengt muessen wir nachbessern denke ich. Er darf
+nicht zu lange haengen. Wenn es kurz ist, kann man mit dem tauchen abhilfe schaffen, aber das hilft natuerlich nicht bei der Platform."
+Commits: 5a94392bf (Engine: Raumhalt, Anlauf ohne Ruhezone), aa41ec95e (Riegel raum, aussenlog, oben_kante, abn2_rampe_west), 5a4ee385f (aussenlog ohne Kletterbilder, obenlog kampf = Intro-Ende),
+dieser Commit (Dossier, Belege). Laufordner scratchpad `g2nb3/r2/` (nicht im Baum); Belege `G2_belege/nb3/runde2/` (harness/, exe/, leisten/, werkzeug/, ctest_*.txt).
+Messkopien: neu `re15_pc_g2nb3r2.exe` = Bau-exe md5 5910fc24 (nach 5a94392bf), vorher `re15_pc_g2nb3r2_alt.exe` = Runde-1-exe md5 029efac6 (Stand 10603425b).
+
+### Ursache (gemessen; ROOM2090.RDT = ROOM2091.RDT md5 a48d11a4, SCA-Kopf @0x6dc, Zellen ab Datei 0x6f4, `werkzeug/sca_2090.py`)
+Die SCA hat 50 Zellen (5 Quadranten x 10, bytegleich). Band 0: [0] Westwand x -10900..-8900, [1] Suedwand z -29000..-27000, [2] Nordwand z -5400..-3400, [3] Ostwand
+x 7200..9200 (0x718), [4] Plattform x -1700..1850 z -20000..-12450 (0x724), [5] Rampe x 1850..7200 z -18100..-14500 (0x730, u1 0x01). Band 1: [6] Ostwand,
+[7] Plattform, [8] Nordleiste z -14500..-13500 (0x754) und [9] Suedleiste z -19100..-18100 (0x760), je x 1850..7200, nur 1000 tief, u1 0x02 - auf Band 1 gibt es
+keine Sued-, Nord- oder Westwand. Die Spieler-Klemme FUN_8003b0a4/FUN_8003bca8 schiebt aus einer Zelle ihres Bandes auf Kante + 450 (DAT_80073e94+6 = 0x01c2,
+`lhu a1,6(v0)` @0x80036210) + 0x12 (`addiu t1,v0,18` / `addiu a0,a0,-18` @0x8003bce0-e8, z @0x8003bd20-2c), je Zelle in Tabellenfolge.
+- **M2 (Wurf aus dem Raum):** der Niederwurf (s_kd_speed 1000 `ori v0,zero,0x3e8` @0x8003615c, -15*Bild @0x800361c8-e0) traegt die Figur oben im ersten Bild
+  2062, dann 985, 955 ... Einheiten - durch die Leiste (1000 + 2 x 450 = 1900) in EINEM Bild, danach ohne Wand ueber das Becken. Die Sonde FUN_8001c2dc stoppt nicht
+  (Zellwort der Leisten 0x1002: Bit 0x2 -> Flag 0, @0x8001c390-ac). Nachgefahren (`exe/west5_elza_alt_neu.txt`, `exe/spawn_2318_-16300_leon_alt_neu.txt`, Stand
+  10603425b): west5_elza F2752 CROSS-Biss an (2315,-1800,-17642) -> F2753 (2318,-19704) ... F2763 (2318,-26554) -> 548 Bilder "Deck verlassen", bis 2914 hinter
+  der Aussenwand; Spawn (2318,-16300) F1201 -> F1202 (2318,-12904) ... -> 2999 Bilder, bis 2706 hinter der Nordwand.
+- **M1 (Absturz abn2_wand):** [5] stoesst an [3] (x 7200); [3] wird vor [5] geklemmt, [5] schiebt eine Figur, die der Biss-Niederwurf in die SO-Ecke von [5] traegt,
+  nach Osten auf 7200 + 468 = 7668 IN die Ostwand (Fixpunkt "Ostnische": F1045 Biss an (6732,-18598) -> F1046 (7668,-17081)); ein Schub nach Osten loest [3] auf
+  der Aussenseite auf (9200 + 468 = 9668, F1500), danach laeuft die blinde Eingabe ins Leere, `re15_squareroot0` in `re15_autolook_scan` liest bei ~100000 Abstand
+  ausserhalb der Tafel (F7374). Dieselbe Fuge: Pier (1382,0,-17036) = [5] schiebt in [4] (wand_elza F7920, Runde-1-Offen 1) und oben Klemmlage (1382,-1800,-14013)
+  bzw. (1382,-1800,-18617) = [8]/[9] schieben in [7] (Abnahme 5 Abschnitt 3a, Pausen 632-849).
+- **M3 (abn2_rampe_west rot):** kein Spielfehler (Abnahme 5): die alte Eingabe stand 20 s im Band vor der Suedkante, mit Vorgabe B beisst er dort ab ~F190, die
+  Niederwuerfe (gleiche Mechanik, im Wasser mit Aussenwaenden) tragen die Figur durchs Suedbecken in die SW-Ecke, die blinde Aktionstaste oeffnet die Tuer
+  (F934, DOOR FIRE F937 -> ROOM2080), RE15_EXIT_AT ...#2090 kommt nie.
+- **Dazu gefunden (Vorgabe A, Figur frei):** der neue Riegel raum (Figur nicht je Bild zurueckgesetzt) fand am Westende des Decks eine Lage ohne Angriff: nach zwei
+  Niederwuerfen stand die Figur bei (2300,-1800,-16680); QUERPRUEF traf vom Anlauf x 4450 (t 95), nicht von der Wurzel x 5004; die Wurzel stand 554 vor dem Anlauf
+  (4450,-20700) in der 600er-Ruhezone der Belagerung, startete nie (Start erst, wenn die Bahn "von hier" trifft, NB3 Patch 3/4) - 1195 Bilder ohne Treffer oben
+  (`harness/raum_vor_anlauf_leon.txt` R2800/-16300, Spur `harness/anlauf_ruhezone_R2800_vorher.txt`).
+
+### Was gebaut wurde (enemy_ai_boss_gator.c, game_step_common.c, re15_boss_gator.h)
+1. **Raumhalt** `re15_gator_boss_raum_halt` (PORT-WAHL nach Abnahme 5 "Figur oben nicht sicher, Figur bleibt im Raum" und Vorgabe A "... das der Spieler oben nicht
+   ausweichen kann ... aber er darf halt oben nicht sicher sein" - getroffen werden, nicht aus dem Level fliegen), aufgerufen in der Spieler-Klemme `spieler_klemme`
+   (game_step_common.c; Gehen, Niederwurf kd_move, Koerper-Schub, Flinch) und nach dem Koerperlaengen-Push des Bosses, nur solange ein Alligator-Boss im Raum ist
+   (`re15_gator_boss_active`: Typ 0x23 in 2090/2091):
+   - Band 1: Lage ausserhalb des Decks (x 1850 + 450 .. 7200 - 450, z -18100 + 450 .. -14500 - 450) -> auf die Klemmlage von FUN_8003bca8 (Kante +- 468).
+     Die Leisten halten damit auch einen Schritt, der breiter ist als sie.
+   - Band 0: Lage ausserhalb der Aussenwaende (Kante - 450) oder mit dem Mittelpunkt in [4]/[5] -> die Lage vor dem Schritt.
+   Nur wenn die Lage davor gueltig war (Spawn-/Szenenlagen werden nie verschoben) und die Figur lebt (der Finisher setzt die Leiche). Beim Gehen greift nichts:
+   die Zellen schieben selbst schon dorthin (Schritt < Zelltiefe). Zeile `RAUMHALT F<n> Band b (x,z) -> (x',z') vorher (..)` in gator_boss.log; Pruefhaken
+   `re15_gator_boss_raum_alt_setzen(1)` = Stand 10603425b; Messhaken `re15_gator_boss_raum_halt_zahl`.
+2. **Anlauf der Zaehler-Querung ohne 600er-Ruhezone** (Vorgabe A): `quer_anl` im GUARD - waehrend des Anlaufs der QUER-CROSS (Zaehler oben_ohne >= 300 und die Bahn
+   vom Anlauf trifft) schwimmt er weiter auf den Anlauf zu, bis die Bahn von seiner Wurzel trifft. Kein neuer Wert; Querungsbeginn selbst (gb_cross_begin, F2)
+   unveraendert. Unter dem Pruefhaken raum_alt aus.
+3. Nicht angefasst: Niederwurf (byte-true RE1.5), Kollision ausserhalb des Kampfs, Querungsbeginn (F2), Kanister-Zielmodus (Abnahme 5 F1), Rueckfall-Modul,
+   `re15_squareroot0` (der Ueberlauf wird mit der Figur im Raum nicht mehr erreicht). `gb_pl_nische` / `gb_pl_im_block` (Runde 1) bleiben, werden mit dem Raumhalt
+   aber nicht mehr erreicht.
+
+### Riegel (neu/geaendert in aa41ec95e und 5a4ee385f)
+- `unit_r41_gatorfix_raum(_elza)`: Figur EINMAL gesetzt, danach frei (Niederwurf, Schub, Klemme wie im Spiel, hp 100 wie RE15_R39_MESS_SPIELER_HP), Blick wie die
+  exe-Lagen (Spawn 1024, Rueckkehr 3072, abn2_wand 1035). 9 Lagen oben (Wurf-Lagen (2318,-16300), (6500,-15000), (2315,-17642), Klemmlagen-Laeufe (2318,-17600),
+  (2800,-16300), (4428,-16300), (3350,-15000), Ecken), 7 Wasserlagen ((6732,-18598) vor dem Biss in die Ostnische, (4200,-18700) Rueckkehr abn2_rampe_west, Taschen-
+  Ecke, nb3-B1-Lagen), mit und ohne Kanister, je 2400 Bilder. Soll: 0 Bilder Deck verlassen / aussen / im Block; oben erster Treffer und Pause <= 600.
+  Gegenprobe Pruefhaken raum_alt (Stand 10603425b): oben verlaesst >= 1 Lage das Deck, die Wasserlage steht in der Ostnische.
+  (Erste Fassung ohne gesetzte Blickrichtung, `harness/raum_ohne_blick_leon.txt`: die Figur blickte aus der Szene laengs des Decks, der Niederwurf lief gegen
+  Ostwand/Plattform, und die Gegenprobe blieb gruen - ein Riegel, der den Fehler nicht sieht. Mit dem Blick der exe-Lagen ist sie rot.)
+- exe-Auswerter `aussenlog <lauf>` (state.log + climb.log, alle Bilder in 2090/2091) in ALLEN Laeufen frei/rampe/abn2_*/rampe_oben mit und ohne Kanister (climb.log
+  jetzt in allen Laeufen, Messschrieb ohne Verhalten); `obenlog <lauf> kampf` (ab Ende des RE2-Intros, gator_boss.log "KAMERA INTRO frei ... F<n>").
+- `integration_r41_gatorfix_oben_kante(_elza)` (Abnahme 5 Abschnitt 4 (2)): Figur per RE15_PLAYER_POS oben (2318,-16300) / (6500,-15000) / (2318,-17600), Kampf
+  sofort, 4200 Bilder je Lage - aussenlog 0, obenlog kampf <= 600 / <= 600.
+- `abn2_rampe_west`: Eingabe wie rampe_oben (Klettern ab F48 vor den Schuessen, Schuesse F180), Rueckkehr an die Rampe West (2318,-18750) = Lage des Abnahme-2-Laufs
+  plat7_leon "Rampe x 2318" (cmake-Kopfkommentar mit der Begruendung).
+- Formal (Abnahme 5 Abschnitt 7): `NB3_OHNE_MAX 450` mit PORT-WAHL und Nutzer-Wortlaut; probes-Kommentar der gang-Lagen auf die echten Lagen.
+
+### Messung (Harness `test_r41_gatorfix raum` / `nb3`, eigene exe-Laeufe `werkzeug/batch_r2.sh`; vorher = Stand 10603425b)
+| Lage / Lauf | vorher | nachher | Beleg |
+|---|---|---|---|
+| Harness raum, 9 Lagen oben, frei, mit und ohne Kanister | (Pruefhaken raum_alt) (2318,-16300): 1709 Bilder Deck verlassen ab t691 bei (2314,-1800,-19568); (6500,-15000): 645 ab t377; (2315,-17642): 2063 ab t292, Ende (2318,-1800,1633) | 0 Bilder Deck verlassen; erster Treffer spaetestens t450 (R2318/-16300), laengste Pause oben 492 (R2800/-16300); Raumhalt 385 Eingriffe je Lauf (370 oben, 15 unten) | `harness/raum_leon.txt`, `raum_elza.txt` (Leon = Elza) |
+| Harness raum, 7 Wasserlagen | (6732,-18598) mit Kanister: 627 Bilder aussen ab t696 bei (7668,0,-17081) = Ostnische wie abn2_wand F1046 | 0 aussen / im Block; (4200,-18700) endet wie M3 in der SW-Ecke (-8432,0,-26532), im Raum | dto. |
+| Harness raum, Anlauf der Zaehler-Querung | Raumhalt an, Anlauf mit Ruhezone: Pause oben 1195 (R2800/-16300, R4428/-16300), 1098 (R2318/-16300) | 492 / 492 / 450 | `harness/raum_vor_anlauf_leon.txt`, `anlauf_ruhezone_R2800_vorher.txt` |
+| Harness nb3 (A1/B1, Figur je Bild zurueckgesetzt) | SUMME Runde 1 | bitgleich: A1 0/18 ohne Treffer, erster t450, Pause 537, Rammen 36; B1 Fenster 0, ohne Fortschritt 327, Pause 520/530 | `harness/nb3_leon.txt` |
+| exe west5_elza ohne Kanister (Abnahme-4-Lauf) | F2752 CROSS-Biss an (2315,-1800,-17642) -> Flug durch die Suedwand, 548 Bilder Deck verlassen (aussen5.py: 536 aussen bis (2318,-1800,-29914)) | F2753 RAUMHALT (2315,-19568) -> (2315,-17632); bitgleich bis F2752, danach oben Rammen F2817, Treffer F2924, F3029; 0 aussen; Pause oben max 379 | `exe/west5_elza_alt_neu.txt`, Leiste |
+| exe Spawn (2318,-16300) Leon ohne Kanister | F1201 -> Flug nach Norden, 2999 Bilder Deck verlassen (aussen5.py 2986 aussen bis (2318,-1800,-2694)) | 0 aussen, Raumhalt 27 (Nordleiste und Klemmlage (1382,-14013) -> (2318,-14968)); 20 Treffer, erster 363 nach dem Intro-Ende F280, Pause max 375 | `exe/spawn_2318_-16300_leon_alt_neu.txt` |
+| exe abn2_wand Leon ohne Kanister (bis F1530) | F1045 Biss -> F1046 Ostnische (7668,-17081) ... F1500 (9668,-16031), 327 Bilder aussen | F1046 RAUMHALT (7668,-17599) -> (6732,-18598), Figur bleibt in der SO-Tasche, dann an der Suedwand; 0 aussen | `exe/abn2wand_leon_alt_neu.txt`, Leiste |
+| exe rampe_oben Leon mit / ohne (Riegel-Szenario) | Runde 1: oben 18 Treffer, erster nach 326 ab Anhaengen (Rammen F1339), Pause 343 | unveraendert 18 / 326 / 343, 0 aussen | Leiste |
+Gegenrechnung mit dem Werkzeug der Abnahme 5 (`exe/aussen5_gegenrechnung.txt`): vorher west5_elza 536, Spawn 2986 Bilder aussen, abn2_wand 327 Bilder Ostnische;
+nachher "Figur nie ausserhalb der Aussenwaende, nie in der Ostnische" in allen vier Laeufen.
+Weitere Oben-Lagen der Abnahme 5 (Abschnitt 3a, dort 632-849 Bilder Pause in der Klemmlage (1382,-14013)), neu (`exe/oben_lagen_neu.txt`, obenlog ab Intro-Ende F280):
+(2800,-16300) Elza erster Treffer nach 342, Pause max 375 (vorher 698); (4428,-16300) Leon 302 / 388 (vorher 693); (3350,-15000) Elza 107 / 380 (vorher 632);
+je 0 Bilder ausserhalb, Raumhalt 20-28 Eingriffe (Nordleiste und Klemmlage -> Deck).
+
+### Riegel Soll | Ist (Abnahme 5 Befunde, Messblatt NB3 Abschnitt 4)
+| Riegel / Befund | Soll | Ist (Leon = Elza) | Beleg |
+|---|---|---|---|
+| M1 abn2_wand (exe) | kein Absturz, Figur im Raum, gruen | Passed 643.96 s; aussenlog mit / ohne Kanister 0 Bilder aussen / im Block; eigener Lauf bis F1530: F1046 RAUMHALT statt Ostnische (vorher 327 Bilder Ostnische, F1500 hinter der Wand, Absturz F7374) | ctest_exe_gruppe.txt, exe/abn2wand_leon_alt_neu.txt |
+| M2 Wurf aus dem Raum (Harness raum, frei) | 0 Bilder Deck verlassen / aussen / im Block, 16 Lagen, mit und ohne | 0 in allen Lagen; Gegenprobe 10603425b: oben 3 von 3 Lagen verlassen das Deck (1709 / 645 / 2063 Bilder), Wasserlage 627 Bilder Ostnische | harness/raum_*.txt |
+| M2 exe (west5_elza, Spawn-Lagen, oben_kante) | Figur nie ausserhalb | west5_elza 0 (vorher 548), Spawn (2318,-16300) 0 (vorher 2999), oben_kante / oben_kante_elza (je 3 Lagen x 4200 Bilder): 0 Bilder aussen / Deck verlassen; erster Treffer nach dem Intro-Ende 363 / 84 / 142, Pause max 375 / 345 / 380 ((2318,-16300) / (6500,-15000) / (2318,-17600)), Leon = Elza | exe/*.txt, ctest |
+| M3 abn2_rampe_west (exe) | gruen, misst "Leon oben an der Rampe West" | Passed 673.89 s (vorher 900-s-Grenze): Leon oben 6999 Bilder, Gator im Bild 100 %, Kopf-Abstand mittel 4898, Rammen 12, Kanister F1002, tragvergleich abweichend 0, aussenlog 0 | ctest, Leiste |
+| alle exe-Riegel integration_r41_gatorfix_* / re2gator (20 = 18 + oben_kante(_elza)) | gruen | Gruppe 95 % (19 von 20, 4473.31 s); rot nur abn2_rampe_west_elza durch einen Fehler des Auswerters (Kletterbilder als "Deck verlassen", s. u. Tests), einzeln nachgefahren gruen (683.89 s; aussenlog 0, 91 Kletterbilder nicht gezaehlt, tragvergleich abweichend 0) | ctest_exe_*.txt |
+| A1 Harness nb3 (Figur je Bild gesetzt) | erster Treffer und Pause <= 600 | unveraendert: 0/18 ohne Treffer, erster t450, Pause 537, Rammen 36 (mit = ohne) | harness/nb3_leon.txt |
+| A1 frei (Harness raum, neu) | oben erster Treffer und Pause <= 600 | erster spaetestens t450, Pause max 492 (vorher mit Ruhezone 1195) | harness/raum_*.txt |
+| A2 exe rampe_oben(_elza) | ab Anhaengen erster <= 600, Pause <= 600; Figur im Raum | Leon 326 / 343, Elza 324 / 343 (18 Treffer oben, Rammen 5), aussenlog 0 - unveraendert gegen Runde 1 | ctest, Leisten |
+| B1/B3 Harness nb3 | Fenster 0, ohne Fortschritt <= 450 | unveraendert: Fenster 0, ohne Fortschritt 327, Pause 520 / 530 | harness/nb3_leon.txt |
+| B2/B3 exe rampe / rampe_elza / abn2_wand_elza | Fenster 0, ohne Fortschritt <= 450, mit Kanister 0 Rueckfall-Zeilen | rampe(_elza): Fenster 0, ohne Fortschritt 16 Bilder, 0 Rueckfall-Zeilen; abn2_wand_elza Passed | ctest |
+| B4 bitgleich ausserhalb (gang / v4 / re2) | gruen | unit_r41_gatorfix_* 28/28 (gang, gang_elza, v4, re2 ...) | ctest_unit.txt |
+| Gegenprobe | Stand 10603425b im neuen Riegel rot | raum(_elza) Gegenprobe rot (s. o.); aussenlog auf den alt-Laeufen VERFEHLT (west5_elza 548, Spawn 2999, abn2_wand 327 Bilder) | harness/, exe/ |
+
+### Bildleisten (RE15_FRAMEDUMP-Serien, F-genau, kein gdigrab; `G2_belege/nb3/runde2/leisten/`)
+- `nb3r2_west5_elza_wurf_vorher_nachher_F2740-F2930.jpg` (Abnahme-4-Lauf west5_elza ohne Kanister, Cut 2; Spalten 10603425b | Bau 5a94392bf): F2740/F2750 Elza oben an der
+  SW-Ecke der Rampe, Gator-Kopf daneben (beide gleich); vorher F2760/F2770 Elza fliegt in Niederwurf-Haltung waagerecht ueber das Wasser zur Wand, ab F2780 weg (hinter
+  der Suedwand, z bis -29914); nachher bleibt sie oben an der Maschine liegen (F2752 CROSS-Biss, Raumhalt F2753 auf (2315,-17632)), F2800-F2930 der Kopf kommt ueber das Deck
+  (Rammen F2817, Treffer F2924) - Elza bleibt im Bild und wird weiter getroffen.
+- `nb3r2_abn2wand_leon_ostnische_vorher_nachher_F1040-F1520.jpg` und `..._hell.jpg` (Belegkopie x2,5; exe-Riegel-Szenario abn2_wand ohne Kanister): F1040 Biss in der
+  SO-Ecke (beide gleich); vorher F1490 Leon in der Ostnische rechts neben der Maschine, F1500/F1520 verschwunden (hinter der Nischen-Rueckwand (9668,-16031)); nachher
+  F1300-F1520 Leon an der Suedwand neben dem Gator (Schnitt auf die Kamera der Suedwand), im Raum.
+- `nb3r2_oben_leon_mit_ohne_F390-F2400.jpg` / `nb3r2_oben_elza_mit_ohne_F390-F2400.jpg` (exe-Riegel-Szenario rampe_oben, Spalten ohne | mit Kanister, Cut 2): F390 Rammen
+  F383 (Koerper quert unter der Figur), F480 CROSS-Biss F483, F1350 Figur liegt (Rammen F1339 / F1337), F1440 CROSS-Biss F1439 (mit: gelber Kanister am Kiefer), F1590 und
+  F1710 Hochbiss (Kopf ueber dem Deck), F2400 Figur steht oben, Gator unten - mit = ohne Kanister bildgleich im Ablauf.
+- `nb3r2_rampe_west_leon_mit_F60-F2700.jpg` (exe-Riegel abn2_rampe_west, neue Eingabe, Cut 2): F60/F120 Klettern an der Rampe West, F240 Leon oben an der Westkante
+  x 2318, F1380 Rammen F1377 (Kanister am Kiefer), F1560 Hochbiss F1567 an (2300,-16680) (vorher die Lage ohne Angriff), F2160 Hochbiss, F2520 CROSS-Biss F2528, F2700
+  Hochbiss F2674.
+- Spawn-Lagen (oben_kante): die Kamera bleibt Cut 0 (Nordwand mit Leiter und Tor), die Figur oben ist dort nicht im Bild (wie Abnahme 5 Abschnitt 5) - nur Logs.
+
+### Tests
+- `ctest --test-dir re15_port/build -R "^unit_r41_gatorfix_" -j 2 --timeout 900` (Bau 5a4ee385f, `ctest_unit.txt`): `100% tests passed, 0 tests failed out of 28`,
+  `Total Test time (real) =  98.22 sec` (neu: raum 12.87 s, raum_elza 12.80 s; nb3 32.34 s, nb3_elza 32.21 s, re2 19.78 s, v4 12.38 s, gang 1.47 s ...).
+  Direkt: `test_r41_gatorfix.exe raum` -> `raum: 0 Fehler`, `raum_elza` -> `raum_elza: 0 Fehler`, `nb3` -> `nb3: 0 Fehler` (`harness/`).
+- `ctest --test-dir re15_port/build -R "^integration_r41_gatorfix_|^integration_r41_re2gator" -j 2 --timeout 1800 -V` (exe 5910fc24, 11:53-13:08, parallel zu eigenen
+  Leisten-Laeufen und fremden Agenten; `ctest_exe_gruppe.txt`): `95% tests passed, 1 tests failed out of 20`, `Total Test time (real) = 4473.31 sec`,
+  `The following tests FAILED: 1189 - integration_r41_gatorfix_abn2_rampe_west_elza (Failed)` - Ursache der Auswerter (aussenlog zaehlte die Kletterbilder F502-F505,
+  sub=10 y -1210..-640, als "Deck verlassen"; der Lauf selbst lief bis F8100 mit exit 0, tragvergleich abweichend 0), behoben in 5a4ee385f, bevor die uebrigen 16
+  Riegel ausgewertet wurden. Gruen u. a.: abn2_wand 643.96 s (M1), abn2_rampe_west 673.89 s (M3), oben_kante 466.12 s, oben_kante_elza 530.10 s, rampe_oben
+  391.77 s, rampe_oben_elza 395.86 s, rampe 319.58 s, rampe_elza 367.05 s, abn2_wand_elza 671.68 s, frei 704.78 s, frei_elza 692.05 s, abn2_ecken 650.88 s,
+  abn2_leiterecke 693.82 s, abn2_nordbecken 571.69 s, re2gator 291.79 s, gang_szene 27.15 s, gang_szene_elza 47.60 s, gang_montage 32.93 s, gang_montage_elza 51.67 s.
+- Einzeln nachgefahren (`ctest ... -R "^integration_r41_gatorfix_abn2_rampe_west_elza$" --timeout 1800 --output-on-failure`, Auswerter 5a4ee385f,
+  `ctest_exe_einzeln_rw_elza.txt`): `100% tests passed, 0 tests failed out of 1`, `Total Test time (real) = 683.95 sec`.
+- Bau: `RE15_BUILD_DIR=<Baum>/re15_port/build bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`; exe md5 5910fc24 (Engine-Stand 5a94392bf,
+  danach nur Testquellen).
+
+### Offen
+1. **M3 ist ein Szenario-Fix, kein Spielfix:** der Niederwurf im Wasser bleibt der RE1.5-Niederwurf (s_kd_speed 1000 @0x8003615c, ~11000-12000 Einheiten Rutschweg)
+   und traegt eine gebissene Figur durch das Becken bis an die Waende (Harness raum: (4200,-18700) endet in der SW-Ecke (-8432,0,-26532)); RE2 trifft im Alligator-Raum
+   mit `FUN_8001569c(pl, Richtung, 1536)` (@0x80101684-88, Messblatt NB3 Abschnitt 3) - eine andere Trefferreaktion. Sie zu uebernehmen wuerde den gelobten Stand im
+   Wasser aendern (Memory "gelobter Stand ist Referenz") - nicht gebaut, Nutzerfrage.
+2. **re15_squareroot0** liest bei einem uebergelaufenen Quadrat (> 2^31) ausserhalb seiner 192er-Tafel (BIOS-Nachbau @0x80065f60, Absturz M1 F7374). Mit dem Raumhalt
+   wird es in 2090 nicht mehr erreicht; der Nachbau selbst ist unveraendert (byte-true; eine Klemme waere eine Abweichung).
+3. Der Raumhalt stoppt einen Niederwurf oben an der Deckkante ohne Wand-Slam (Clip 0xf): die Sonde FUN_8001c2dc meldet fuer die Leisten Flag 0 (Bit 0x2), der Slam
+   bleibt so byte-true aus; im Bild endet der Flug an der Kante. Unten haelt die Lage vor dem Schritt (die Figur "steht" fuer den Rest des Flugs in der SO-Tasche).
+4. `gb_pl_nische` / `gb_pl_im_block` (Runde 1, Belagerung der Ostnische / Figur im Block) werden mit dem Raumhalt nicht mehr erreicht (toter Code, nicht entfernt).
+5. Kanister-Zielmodus waehrend der Belagerung (Abnahme 5 Frage F1: bis 28 s ohne Angriff, wenn der geworfene Kanister noch im Becken liegt) - unveraendert, Nutzerfrage.
+6. Die blinden Wand-Touren (abn2_wand, abn2_wand_elza) treffen mit Vorgabe B nicht mehr ihre alten Orte (Abnahme 5 Offen 2); sie laufen als Riegel "kein Absturz,
+   Figur im Raum, Kanister mit = ohne" weiter.
+7. PSX-Bau nicht gemessen (plattformneutrale Pfade; die Zeile RAUMHALT schreibt wie die uebrigen Boss-Diagnosen mit fopen).
+8. Querbezug re2gator (EXIT_AT 1700, Runde 1 Offen 8) unveraendert; integration_r41_re2gator gruen (291.79 s, "r41_re2gator: ok").

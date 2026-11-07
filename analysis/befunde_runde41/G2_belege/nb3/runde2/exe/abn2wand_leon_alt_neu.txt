@@ -1,0 +1,26 @@
+# exe-Riegel-Szenario abn2_wand (Eingabe G2_belege/abn5/werkzeug/eingabe_abn2_wand.txt, Umgebung wie test_r41_gatorfix.cmake), ohne Kanister, Ende F1530 (werkzeug/batch_r2.sh abn2wand_leon, ENDE=1530)
+== alt exe 029efac644499f92ef0a5572ee3aa43d
+exit=0 ende=12:18:05
+aussenlog: 1814 Bilder in ROOM2090/2091 (Klettern 0 nicht gezaehlt), davon oben 0; aussen 327, Deck verlassen 0, im Block 0; erstes F1046 (aussen) bei (7668,0,-17081) Raum 2090, letztes F1530, groesster Abstand hinter der Aussenwand 2503 -> VERFEHLT (0 verlangt)
+RAUMHALT-Zeilen:
+== neu exe 5910fc246fc82eaaac9f64795492585a
+exit=0 ende=12:16:38
+aussenlog: 1814 Bilder in ROOM2090/2091 (Klettern 0 nicht gezaehlt), davon oben 0; aussen 0, Deck verlassen 0, im Block 0; erstes F-1 (-) bei (0,0,0) Raum 0000, letztes F-1, groesster Abstand hinter der Aussenwand 0 -> ok (0 verlangt)
+RAUMHALT-Zeilen:
+RAUMHALT F1046 Band 0 (7668,-17599) -> (6732,-18598) vorher (6732,-18598) hr=1 mo=13
+# alt F1044-F1048, F1499-F1500
+F1044 pad=0080 PL(6732,-18636,rot=1131,hp=100) pst=2 ps1=2 ps2=0 mo=105 
+F1045 pad=0080 PL(6732,-18598,rot=1035,hp=50) pst=2 ps1=2 ps2=0 mo=105 a
+F1046 pad=4010 PL(7668,-17081,rot=1035,hp=100) pst=2 ps1=2 ps2=0 mo=13 a
+F1047 pad=4010 PL(7668,-16901,rot=1035,hp=100) pst=2 ps1=2 ps2=0 mo=15 a
+F1048 pad=4010 PL(7668,-16829,rot=1035,hp=100) pst=2 ps1=2 ps2=0 mo=15 a
+F1499 pad=0000 PL(7668,-15802,rot=1035,hp=100) pst=2 ps1=2 ps2=0 mo=200 
+F1500 pad=0000 PL(9668,-16031,rot=1035,hp=100) pst=2 ps1=2 ps2=0 mo=200 
+# neu F1044-F1048, F1499-F1500
+F1044 pad=0080 PL(6732,-18636,rot=1131,hp=100) pst=2 ps1=2 ps2=0 mo=105 
+F1045 pad=0080 PL(6732,-18598,rot=1035,hp=50) pst=2 ps1=2 ps2=0 mo=105 a
+F1046 pad=4010 PL(6732,-18576,rot=1035,hp=100) pst=2 ps1=2 ps2=0 mo=13 a
+F1047 pad=4010 PL(6744,-18565,rot=1035,hp=100) pst=2 ps1=2 ps2=0 mo=15 a
+F1048 pad=4010 PL(6744,-18565,rot=1035,hp=100) pst=2 ps1=2 ps2=0 mo=15 a
+F1499 pad=0000 PL(6580,-26539,rot=1035,hp=100) pst=2 ps1=3 ps2=0 mo=12 a
+F1500 pad=0000 PL(6580,-26539,rot=1035,hp=100) pst=2 ps1=3 ps2=0 mo=12 a
