@@ -1,6 +1,6 @@
 {
  "emd": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V4re2.EMD",
- "sha256": "f37bc5514c6892186d90a808dfd20f646aeecb59b0667933b3daa84f296ff18d",
+ "sha256": "e9c66c2edcb846f8613ea2f309810bb82b09bb7b4e25bd0917ba7ae9297363a5",
  "zeilen": [
   {
    "mass": "T-K1a Koerper-Meshes = Ref2",
@@ -12,8 +12,8 @@
   },
   {
    "mass": "T-K1b CLUT = Ref2",
-   "soll": "Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie einer Ref2-Zeile oder als RE2-Kopfzeile (G2 / G3, T-R1d)",
-   "ist": "Zeilen 480-485 gleich; TIM 8 Zeilen; weitere ['486=G2 0x31 Zeile 0', '487=G3 0x33 Zeile 0']",
+   "soll": "Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie einer Ref2-Zeile oder als RE2-Kopfzeile (G2 grau / G3 / G2 dunkel, T-R1d)",
+   "ist": "Zeilen 480-485 gleich; TIM 9 Zeilen; weitere ['486=G2 0x31 Zeile 0 grau (L* x 1.90)', '487=G3 0x33 Zeile 0', '488=G2 0x31 Zeile 0 dunkel (L* x 1.00, <= 30)']",
    "ok": true,
    "note": "",
    "info": false
@@ -21,7 +21,7 @@
   {
    "mass": "T-K1c Koerper-Texel = Ref2",
    "soll": "jeder von einer Koerperflaeche (Meshes 0-8, 10-15) abgedeckte Texel bytegleich",
-   "ist": "0 von 34716 abgedeckten Texeln abweichend; ausserhalb der Koerperflaechen geaendert 28073 Texel (Kopf-/Schwanzflaechen)",
+   "ist": "0 von 34716 abgedeckten Texeln abweichend; ausserhalb der Koerperflaechen geaendert 28075 Texel (Kopf-/Schwanzflaechen)",
    "ok": true,
    "note": "",
    "info": false
@@ -124,16 +124,16 @@
   },
   {
    "mass": "T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)",
-   "soll": "Ecken = Rz Ry S v + t (Abstand <= 1 E.), Normalen gedreht (<= 2 E.), Flaechen-Indizes gleich, UV = Quelle + (0, 160) ausser Maulflaechen (11 Dreiecke, G3-Kachel)",
-   "ist": "48 Ecken / 48 Normalen / 56 Tri / 14 Quad; Ecken max 0.50 E., Normalen max 0.50, Flaechen gleich, UV abweichend 0, Maul 11",
+   "soll": "Ecken = Rz Ry Rx S v + t (Abstand <= 1 E.), Normalen gedreht (<= 2 E.), Flaechen-Indizes gleich, UV = Quelle + (0, 160) ausser Maulflaechen (11 Dreiecke, G3-Kachel); CLUT-Zeile je Flaeche = Zonenregel (n . c > -60.1 mit n = (0.2543, 0.5728, 0.7792) | u 41-60 | Spitze Q[0] -> 488)",
+   "ist": "48 Ecken / 48 Normalen / 56 Tri / 14 Quad; Ecken max 0.50 E., Normalen max 0.50, Flaechen gleich, UV abweichend 0, Maul 11; Zeilen grau 33 / dunkel 26, Zone abweichend 0",
    "ok": true,
    "note": "",
    "info": false
   },
   {
-   "mass": "T-R1b Kopf-Texel = G2-TIM (u 0-125 v 0-89) bis auf Andunkeln",
-   "soll": "abweichende Texel = angedunkelte (Protokoll 3821), alle mit Eintrag derselben G2-Zeile, kein Texel heller als die Quelle",
-   "ist": "3821 von 11340 Texeln abweichend; davon Eintrag der G2-Zeile 3821; dunkler/gleich 3821; unveraendert 7519",
+   "mass": "T-R1b Kopf-Texel = G2-TIM (u 0-125 v 0-89)",
+   "soll": "bytegleich (Runde 2: kein Andunkeln, Helligkeit nur ueber die Palette)",
+   "ist": "0 von 11340 Texeln abweichend (6524 belegt)",
    "ok": true,
    "note": "",
    "info": false
@@ -147,9 +147,9 @@
    "info": false
   },
   {
-   "mass": "T-R1d CLUT-Zeilen 486 / 487 = RE2",
-   "soll": "Zeile 486 = G2 (0x31) CLUT-Zeile 0, Zeile 487 = G3 (0x33) CLUT-Zeile 0, 15-Bit-Rohwerte bytegleich",
-   "ist": "TIM 8 Zeilen; 486 gleich; 487 gleich",
+   "mass": "T-R1d CLUT-Zeilen 486 / 487 / 488 = RE2 (Palettentransformation)",
+   "soll": "486 = G2 Zeile 0 mit L* x 1.90 (Chroma x 1.00, L* <= 100); 487 = G3 Zeile 0 bytegleich; 488 = G2 Zeile 0 mit L* x 1.00, Chroma x 0.50, L* <= 30; 15-Bit-Worte bytegleich der Nachrechnung (kopf_re2_bau.zeile_transform); Farbton der grauen Zeile erhalten (Farbwinkel der Zielwerte vor der 5-Bit-Rundung p90 <= 1 Grad bei Quell-Chroma > 10; sRGB-Gamut nur ueber die Chroma); 5-Bit-Rundung dE76 max <= 7",
+   "ist": "TIM 9 Zeilen; 486 gleich; 487 gleich; 488 gleich; Eintraege (belegt 187) Lab p50 Quelle 39.4/25.1/14.5 -> grau 74.3/4.6/1.2 -> dunkel 29.6/12.8/7.5; Farbwinkel p90 0.00 Grad; Rundung dE76 p90 3.8 max 5.6; Gamut-reduzierte Eintraege 0.49 (Chroma p50 31.3 -> 9.7)",
    "ok": true,
    "note": "",
    "info": false
@@ -188,8 +188,8 @@
   },
   {
    "mass": "T-R2 KS2 Haarkante seitlich",
-   "soll": "Fenster KS2 (0,84-0,96 / 0,52-0,80 der Kopfbox), nur Kopf-Bildpunkte: L* <= Kopf-Median (Pose 85, Videoraum 22.5) - 5 (die Schnauze fuellt die untere Vorderecke der Box nicht, ganzes Fenster nur Ausgabe)",
-   "ist": "Kopf L* 14.8 (68 % des Fensters; ganzes Fenster 22.8; Box (478, 215, 482, 227))",
+   "soll": "Fenster KS2 (0,84-0,96 / 0,52-0,80 der Kopfbox), nur Kopf-Bildpunkte: L* <= Kopf-Median (Pose 85, Videoraum 39.6) - 5 (die Schnauze fuellt die untere Vorderecke der Box nicht, ganzes Fenster nur Ausgabe)",
+   "ist": "Kopf L* 20.7 (68 % des Fensters; ganzes Fenster 26.7; Box (478, 215, 482, 227))",
    "ok": true,
    "note": "",
    "info": false
@@ -197,15 +197,63 @@
   {
    "mass": "T-R3 Zaehne sichtbar (Pose 135)",
    "soll": "Zahn-Texel (G3-Kachel L* > 60, Chroma < 20) >= 20 Bildpunkte im Marker-Render; helle unbunte Bildpunkte (L* > 45, Chroma < 20) im Kopf unterhalb 0,5 der Kopfbox im rohen Render >= 5",
-   "ist": "58 Marker-Bildpunkte; 44 helle Bildpunkte; Pose 85: 0 Marker",
+   "ist": "58 Marker-Bildpunkte; 78 helle Bildpunkte; Pose 85: 0 Marker",
    "ok": true,
    "note": "",
    "info": false
   },
   {
+   "mass": "T-R2 K1k Auge sichtbar (KI D3: dunkle Pupille mit Glanz)",
+   "soll": "Augenfaecher T19/T20/T41 (Videoraum) L* <= Umgebung (Kopf 25x25 um den Faecher) - 6; Glanzkern (G2-Augenkern) L* max >= Faecher-Median (RDT-Licht) + 8",
+   "ist": "Faecher 104 px (0.044 x 0.071 H) L* 18.2 gegen Umgebung 36.4 (Videoraum); RDT-Licht Faecher 10.6, Glanzkern max 29.7; Lichtfaktor Faecher 0.25",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-R2 K6 zweites Auge verdeckt",
+   "soll": "Spiegelbox des Augenfaechers an der Kopfmitte (Videoraum): L* <= Kopf-Median (29.2); kein Glanzkern (Messblatt: Original 12,9)",
+   "ist": "L* 28.3 (Box (365, 185, 380, 210))",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-R2 K5 dunkle Seite Bild-rechts (Haare)",
+   "soll": "Kopf-Haelften an der Kopfbox-Mitte: Median L* rechts <= 0.90 x links (RDT-Licht und Videoraum); Fenster KV2 (Videoraum) L* <= Ref2-Kopf P50 39.4 - 8 (Messblatt R2), a* > 0, b* > 0 (braeunlich); Band 0.62-0.90 x Kopf-Median (18.1-26.3) nur Ausgabe (das Fenster KV2 schneidet das Maul mit den Zaehnen)",
+   "ist": "links/rechts RDT-Licht 28.4 / 20.9 (0.73), Videoraum 36.1 / 26.7 (0.74); KV2 30.1/10.6/6.3; KV3 (Nase) 29.1/11.4/7.5; Zonen (px, L* Licht, Videoraum): grau 861 / 39.4 / 45.4, dunkel 964 / 21.6 / 27.1, maul 641 / 17.4 / 26.3",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-R2 T-K9e ganzer Kopf (Pose 135)",
+   "soll": "L* P50 >= 23; Kopf/Rumpf (Mittel L*, Id 8) >= 0.9 (Ref2 30.8 / 1.28; Vorlagen Kopf/Brust Video 1,59, KI 1,6-2,2)",
+   "ist": "L* P50 23.8 (Videoraum 29.2); Kopf/Rumpf 1.02 (Rumpf P50 26.2)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "INFO K9 Kuppe rot (KV1)",
+   "soll": "Messblatt a* >= 11 (Original 15,4); G2-Kuppe hat rote Adern auf grauem Grund - nur Ausgabe",
+   "ist": "KV1 30.0/7.2/4.0",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
+   "mass": "INFO Messblatt K1/K3/K4 (hellster Kopfpunkt)",
+   "soll": "Messblatt: der hellste Kopfpunkt ist der Augenfleck (Video). Im RDT-Licht 50A0/12 liegt der Augenfaecher (Normale -z, (W)-rechts) im Umgebungslicht (Faktor 0,24 = 63/255 von ncct, re2kopf_r2/diag1.json), das Maul (Normale +x) im Hauptlicht (0,81) - ein weisser Texel wuerde hier hoechstens L* 26 erreichen, die Zaehne liegen bei 55; Drehungen (yaw -65, roll -20) heben den Faecher nur auf 0,47-0,51 und brechen K4/K10/KS2 (grid_rot/grid_roll.log). Nur Ausgabe.",
+   "ist": "hellster Fleck Schwerpunkt (333, 170) L* 69.2, Kontrast 25.1, 8 x 7 px = 0.022 x 0.019 H, K4 0.060 / 0.028 H, auf den Zaehnen: False",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
    "mass": "T-R4 CLUT-Zeilen",
    "soll": "<= 16 Zeilen; Port-Texturhoehe TIM-Hoehe x Zeilen <= 4096 (render_pc.c ~2598-2606, SDL_render.c:1266-1270)",
-   "ist": "8 Zeilen; 256 x 8 = 2048",
+   "ist": "9 Zeilen; 256 x 9 = 2304",
    "ok": true,
    "note": "",
    "info": false
@@ -237,7 +285,7 @@
   {
    "mass": "M3 Farbtiefe",
    "soll": "8-bpp-TIM, Texel aus der CLUT",
-   "ist": "8 bpp True; CLUT-Zeilen Kopf [486, 487], Schwanz [480], Koerper [480, 481, 482, 484] (TIM 8 Zeilen)",
+   "ist": "8 bpp True; CLUT-Zeilen Kopf [486, 487, 488], Schwanz [480], Koerper [480, 481, 482, 484] (TIM 9 Zeilen)",
    "ok": true,
    "note": "",
    "info": false
@@ -1024,17 +1072,17 @@
       213
      ]
     },
-    "kopf_p50_v": 21.096327975052603,
+    "kopf_p50_v": 29.211681716757063,
     "kopf_lab_roh": [
-     15.563942255892385,
-     5.245483411425944,
-     1.8045119808973387
+     23.76362772061418,
+     7.1677129441344025,
+     2.49044092580204
     ],
     "haelften_L": [
-     15.446402002038411,
-     15.922566271778322
+     28.436245061424934,
+     20.869954376864705
     ],
-    "hell_unten": 44
+    "hell_unten": 78
    },
    "85": {
     "H": 264.0,
@@ -1070,17 +1118,17 @@
     "zaehne": {
      "px": 0
     },
-    "kopf_p50_v": 22.529772908826935,
+    "kopf_p50_v": 39.578470990740826,
     "kopf_lab_roh": [
-     16.985138730300854,
-     4.8119127126531325,
-     1.3740915833422296
+     37.0138770978332,
+     5.9225263692027905,
+     1.175430700405089
     ],
     "KS2": {
      "lab": [
-      22.811831803678686,
-      -1.656638480526773,
-      7.723698428702663
+      26.741845866890714,
+      -1.1636524111942603,
+      7.624229744744837
      ],
      "box": [
       478,
@@ -1089,15 +1137,15 @@
       227
      ],
      "kopf": [
-      14.829764587737095,
-      0.13676870632656213,
-      3.9785179969818896
+      20.675236225493535,
+      0.8205295396937207,
+      3.9285551734339896
      ],
      "kopf_anteil": 0.676923076923077
     },
     "haelften_L": [
-     16.985138730300854,
-     16.513093497821572
+     38.14753150526411,
+     33.1679751117762
     ]
    }
   },
@@ -1172,6 +1220,12 @@
    "jb": 112,
    "jk": 165,
    "je": 203
+  },
+  "ref2": {
+   "p50": 30.78226350926174,
+   "p50_v": 39.39507107736259,
+   "verh": 1.2838034285476527,
+   "rumpf": 26.649833723950266
   }
  }
 }

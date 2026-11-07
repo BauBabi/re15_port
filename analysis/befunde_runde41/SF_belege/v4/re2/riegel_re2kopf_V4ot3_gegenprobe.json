@@ -12,7 +12,7 @@
   },
   {
    "mass": "T-K1b CLUT = Ref2",
-   "soll": "Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie einer Ref2-Zeile oder als RE2-Kopfzeile (G2 / G3, T-R1d)",
+   "soll": "Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie einer Ref2-Zeile oder als RE2-Kopfzeile (G2 grau / G3 / G2 dunkel, T-R1d)",
    "ist": "Zeilen 480-485 gleich; TIM 6 Zeilen; weitere keine",
    "ok": true,
    "note": "",
@@ -115,14 +115,6 @@
    "info": true
   },
   {
-   "mass": "T-R0 Aenderungsumfang gegen EM30_V4ot2.EMD",
-   "soll": "Sektionen 0-6 bytegleich; MD1 nur Mesh 9 anders; CLUT 480-485 gleich; Texel nur in alten Kopfflaechen und G2-/G3-Orten geaendert",
-   "ist": "Sektionen gleich [0, 1, 2, 3, 4, 5, 6]; andere Meshes abweichend keine; Meshes 23 -> 23; CLUT 480-485 gleich; Texel ausserhalb 0",
-   "ok": true,
-   "note": "",
-   "info": false
-  },
-  {
    "mass": "T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)",
    "soll": "Ecken / Normalen / Flaechen wie G2 Mesh 3 (48 / 48 / 56 Tri / 14 Quad)",
    "ist": "61 Ecken / 61 Normalen / 73 Tri / 18 Quad",
@@ -131,9 +123,9 @@
    "info": false
   },
   {
-   "mass": "T-R1b Kopf-Texel = G2-TIM (u 0-125 v 0-89) bis auf Andunkeln",
-   "soll": "abweichende Texel = angedunkelte (Protokoll ?), alle mit Eintrag derselben G2-Zeile, kein Texel heller als die Quelle",
-   "ist": "11254 von 11340 Texeln abweichend; davon Eintrag der G2-Zeile 11254; dunkler/gleich 1710; unveraendert 86",
+   "mass": "T-R1b Kopf-Texel = G2-TIM (u 0-125 v 0-89)",
+   "soll": "bytegleich (Runde 2: kein Andunkeln, Helligkeit nur ueber die Palette)",
+   "ist": "11254 von 11340 Texeln abweichend (6524 belegt)",
    "ok": false,
    "note": "",
    "info": false
@@ -147,9 +139,9 @@
    "info": false
   },
   {
-   "mass": "T-R1d CLUT-Zeilen 486 / 487 = RE2",
-   "soll": "Zeile 486 = G2 (0x31) CLUT-Zeile 0, Zeile 487 = G3 (0x33) CLUT-Zeile 0, 15-Bit-Rohwerte bytegleich",
-   "ist": "TIM 6 Zeilen; 486 ABWEICHEND; 487 ABWEICHEND",
+   "mass": "T-R1d CLUT-Zeilen 486 / 487 / 488 = RE2 (Palettentransformation)",
+   "soll": "486 = G2 Zeile 0 mit L* x 1.90 (Chroma x 1.00, L* <= 100); 487 = G3 Zeile 0 bytegleich; 488 = G2 Zeile 0 mit L* x 1.00, Chroma x 0.50, L* <= 30; 15-Bit-Worte bytegleich der Nachrechnung (kopf_re2_bau.zeile_transform); Farbton der grauen Zeile erhalten (Farbwinkel p90 <= 5 Grad bei Quell-Chroma > 10; Gamut-Abbildung nur ueber die Chroma)",
+   "ist": "TIM 6 Zeilen; 486 ABWEICHEND; 487 ABWEICHEND; 488 ABWEICHEND; Eintraege (belegt 187) Lab p50 Quelle 39.4/25.1/14.5 -> grau 74.3/4.6/1.2 -> dunkel 29.6/12.8/7.5; Farbwinkel-Abweichung p90 10.3 Grad",
    "ok": false,
    "note": "",
    "info": false
@@ -201,6 +193,54 @@
    "ok": false,
    "note": "",
    "info": false
+  },
+  {
+   "mass": "T-R2 K1k Auge sichtbar (KI D3: dunkle Pupille mit Glanz)",
+   "soll": "Augenfaecher T19/T20/T41 (Videoraum) L* <= Umgebung (Kopf 25x25 um den Faecher) - 6; Glanzkern (G2-Augenkern) L* max >= Faecher-Median (RDT-Licht) + 8",
+   "ist": "Faecher 95 px (0.049 x 0.036 H) L* 14.5 gegen Umgebung 20.3 (Videoraum); RDT-Licht Faecher 8.6, Glanzkern max 25.2; Lichtfaktor Faecher 0.30",
+   "ok": false,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-R2 K6 zweites Auge verdeckt",
+   "soll": "Spiegelbox des Augenfaechers an der Kopfmitte (Videoraum): L* <= Kopf-Median (32.6); kein Glanzkern (Messblatt: Original 12,9)",
+   "ist": "L* 26.7 (Box (325, 195, 342, 207))",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-R2 K5 dunkle Seite Bild-rechts (Haare)",
+   "soll": "Kopf-Haelften an der Kopfbox-Mitte: Median L* rechts <= 0.90 x links (RDT-Licht und Videoraum); Fenster KV2 (Videoraum) L* <= Ref2-Kopf P50 39.4 - 8 (Messblatt R2), a* > 0, b* > 0 (braeunlich); Band 0.62-0.90 x Kopf-Median (20.2-29.3) nur Ausgabe (das Fenster KV2 schneidet das Maul mit den Zaehnen)",
+   "ist": "links/rechts RDT-Licht 28.9 / 23.1 (0.80), Videoraum 36.8 / 28.9 (0.78); KV2 28.0/4.6/7.2; KV3 (Nase) 23.2/1.1/5.1",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "T-R2 T-K9e ganzer Kopf (Pose 135)",
+   "soll": "L* P50 >= 23; Kopf/Rumpf (Mittel L*, Id 8) >= 0.9 (Ref2 30.8 / 1.28; Vorlagen Kopf/Brust Video 1,59, KI 1,6-2,2)",
+   "ist": "L* P50 27.4 (Videoraum 32.6); Kopf/Rumpf 0.99 (Rumpf P50 26.2)",
+   "ok": true,
+   "note": "",
+   "info": false
+  },
+  {
+   "mass": "INFO K9 Kuppe rot (KV1)",
+   "soll": "Messblatt a* >= 11 (Original 15,4); G2-Kuppe hat rote Adern auf grauem Grund - nur Ausgabe",
+   "ist": "KV1 37.3/14.4/6.7",
+   "ok": true,
+   "note": "",
+   "info": true
+  },
+  {
+   "mass": "INFO Messblatt K1/K3/K4 (hellster Kopfpunkt)",
+   "soll": "Messblatt: der hellste Kopfpunkt ist der Augenfleck (Video). Im RDT-Licht 50A0/12 liegt der Augenfaecher (Normale -z, (W)-rechts) im Umgebungslicht (Faktor 0,24 = 63/255 von ncct, re2kopf_r2/diag1.json), das Maul (Normale +x) im Hauptlicht (0,81) - ein weisser Texel wuerde hier hoechstens L* 26 erreichen, die Zaehne liegen bei 55; Drehungen (yaw -65, roll -20) heben den Faecher nur auf 0,47-0,51 und brechen K4/K10/KS2 (grid_rot/grid_roll.log). Nur Ausgabe.",
+   "ist": "hellster Fleck Schwerpunkt (333, 188) L* 58.3, Kontrast 20.2, 11 x 12 px = 0.030 x 0.033 H, K4 0.054 / 0.095 H, auf den Zaehnen: False",
+   "ok": true,
+   "note": "",
+   "info": true
   },
   {
    "mass": "T-R4 CLUT-Zeilen",
@@ -1089,6 +1129,12 @@
    "jb": 112,
    "jk": 165,
    "je": 203
+  },
+  "ref2": {
+   "p50": 30.78226350926174,
+   "p50_v": 39.39507107736259,
+   "verh": 1.2838034285476527,
+   "rumpf": 26.649833723950266
   }
  }
 }
