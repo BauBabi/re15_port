@@ -583,12 +583,19 @@ static void gr2_kan_sitz_takt(void)
  * der Kanister (z -9500, sub05 Pos_set @SCD 0x0484) laengst HINTER der 8880-Grenze, d.h. RE2 traegt das Bit nie aus Zone 1
  * hinaus; im Becken fuehrt die Verfolgung den Gator zurueck in andere Zonen. Der Hals-Zielmodus selbst (Root @0x80100344-60
  * -> FUN_800177c0 statt FUN_80017d98) ist OFFEN (Dossier §11.3): der Port fuehrt die RE2-Halsfuehrung des Gators nicht. */
+extern int (*s_kan_szene_fn)(void);   /* unten definiert (Kanister der Marvin/John-Szene) */
 static void gr2_zielmodus_takt(gr2_t *g, const re15_actor_t *e, int im_chase)
 {
     if (!s_kan.aktiv || s_kan.stufe == 13) { g->ziel_bit = 0; return; }
     if (!im_chase) { g->ziel_bit = 0; return; }              /* PORT-WAHL: nur in der Schwimm-Verfolgung (RE2 Sub 1/2) - die
                                                                * Nutzer-Design-Phasen GUARD/CROSS haben kein RE2-Gegenstueck */
     if (!s_zone_fn || s_zone_fn(e->z) != s_zone_fn(s_kan.liege_z)) { g->ziel_bit = 0; return; }
+    /* Runde 41 Spur G2-RE2 NB4 (K, Messblatt O-K1): fuer den Kanister der Marvin/John-Szene aus - PORT-WAHL mit dem Nutzer-Wortlaut 2026-11-07
+     * ~15:00 "da leon mit den alligator ganz normal seine runden drehen soll. Das heißt der alligator sollte Ganz natürlich irgendwann zum Kanister
+     * kommen, während er leo. Auf dem rundweg verfolgt....": RE2s Bit (@0x80100a34-5c) haengt an der Korridorbahn, auf der sein Kanister liegt;
+     * im Port wuerde es die Verfolgung (Biss-Sperre @0x8010134c-58) gegen die Vorgabe "verfolgt wie ohne Kanister" aendern. Pruefhaken
+     * re15_k2080_runde_alt_setzen(1) = Stand 3d57083b1. */
+    { extern int re15_k2080_runde_alt(void); if (!re15_k2080_runde_alt() && s_kan_szene_fn && s_kan_szene_fn()) { g->ziel_bit = 0; return; } }
     int32_t laengs, quer; gr2_kan_vor(e, &laengs, &quer);
     int alt = g->ziel_bit;
     if (s_kan.stufe < 2) g->ziel_bit = 1;                                              /* (a) @0x80100a34-5c */
@@ -1337,6 +1344,12 @@ int re15_gr2_hysterese_ruht(int slot, const re15_actor_t *e)
     if (!s_kan.aktiv || s_kan.stufe == 13) return 0;
     if (s_kan.stufe == 7 && !s_v4_alt) return 0;   /* G2-RE2 NB2 Vorschlag 4 (PORT-WAHL Nutzerentscheid): getragen ruht die Hysterese nicht - wie ohne Kanister im Raum */
     if (s_kan.stufe != 0 && s_kan.stufe != 7) return 1;                              /* (b) */
+    /* Runde 41 Spur G2-RE2 NB4 (K): (a) gilt nicht fuer den Kanister der Marvin/John-Szene - PORT-WAHL mit dem Nutzer-Wortlaut 2026-11-07 ~15:00 "da leon
+     * mit den alligator ganz normal seine runden drehen soll. Das heißt der alligator sollte Ganz natürlich irgendwann zum Kanister kommen, während er leo.
+     * Auf dem rundweg verfolgt....": die Zonen-Ruhe (@0x80100ab8-c8 / @0x80100aec) aenderte die Verfolgung in der Kanister-Zone (Clip 0/1 nach der
+     * Hysterese), solange der Kanister liegt - gemessen Riegel nb4 K1: 5 von 6 Lagen weichen vor der Aufnahme ab (erstes Bild t449..t1718, Clip 1 statt 0).
+     * (b) waehrend der Aufnahme bleibt. Pruefhaken re15_k2080_runde_alt_setzen(1) = Stand 3d57083b1. */
+    { extern int re15_k2080_runde_alt(void); if (s_kan.stufe == 0 && !re15_k2080_runde_alt() && s_kan_szene_fn && s_kan_szene_fn()) return 0; }
     if (e && s_zone_fn && s_zone_fn(e->z) == s_zone_fn(s_kan.liege_z)) return 1;     /* (a) */
     return 0;
 }
@@ -4665,6 +4678,7 @@ int re15_gr2_fx_quelle(int i, uint8_t m[32])
     return 1;
 }
 
+int re15_gr2_geschwaecht_slot(int slot) { return slot > 0 && slot < RE15_ACTOR_MAX && s_g[slot].geschwaecht; }
 int re15_gr2_geschwaecht(void) { for (int i = 0; i < RE15_ACTOR_MAX; i++) if (s_g[i].geschwaecht) return 1; return 0; }
 int re15_gr2_treffer(void)     { int n = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) n += s_g[i].treffer; return n; }
 int re15_gr2_tot(void)         { for (int i = 0; i < RE15_ACTOR_MAX; i++) if (s_g[i].tot) return 1; return 0; }

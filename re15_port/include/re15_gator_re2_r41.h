@@ -213,6 +213,7 @@ void re15_gr2_kanister_env(void);
 
 /* ---- Fuer Spur F/G ------------------------------------------------------------------------ */
 int  re15_gr2_geschwaecht(void);     /* +0x218 & 0x20: HP < 25000 (= 300 Schaden genommen) */
+int  re15_gr2_geschwaecht_slot(int slot);   /* NB4 (T): dasselbe Bit dieses Gators (Schaden 30 statt 60 @0x8010168c-a0) */
 int  re15_gr2_treffer(void);         /* Treffer seit INIT */
 int  re15_gr2_tot(void);             /* R1-Endzustand erreicht (Leiche, +0x10E |= 0x4000 @0x80102654-64) */
 int  re15_gr2_traegt(void);          /* Stufe 7 */

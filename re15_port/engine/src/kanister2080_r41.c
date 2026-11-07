@@ -991,8 +991,21 @@ static void runde_zaehlen(void)
     if (kanister_der_szene() && re15_gr2_kanister_stufe() == 0 && re15_gr2_kanister_welt(pos, rot)) s_frei_bilder++;
     else { s_frei_bilder = 0; s_runde = 0; }
 }
+/* Runde 41 Spur G2-RE2 NB4 (K): KEIN eigener Kanister-Holmodus mehr. PORT-WAHL mit dem Nutzer-Wortlaut 2026-11-07 ~15:00: "Die Frage stellt sich
+ * garnicht, da leon mit den alligator ganz normal seine runden drehen soll. Das heißt der alligator sollte Ganz natürlich irgendwann zum Kanister
+ * kommen, während er leo. Auf dem rundweg verfolgt...." - die RUNDE (E1, NB1) und das Anschwimmen (N3) sind aus dem Spiel genommen: der Alligator
+ * verfolgt die Figur immer wie ohne Kanister (gelobter Gang NB5); kommt sein Kopf auf dem Verfolgungsweg in das Aufnahmefenster des liegenden
+ * Kanisters (gator_re2_r41.c gr2_kan_takt Stufe 0: RE2 obj[1].z - z - 8601 < 0x18f @0x80100ad0-ec, im Port laengs [0, 6000) vom Kopf an, quer < 1733),
+ * nimmt er ihn mit den RE2-Stufen 1-6 auf; kommt er nie vorbei, bleibt der Kanister liegen (kein Ersatzweg). Damit ist auch die Belagerungs-Ausnahme
+ * enemy_ai_boss_gator.c GUARD ("erst der Kanister") ohne Wirkung. Pruefhaken der Gegenprobe: re15_k2080_runde_alt_setzen(1) = Stand 3d57083b1
+ * (RUNDE nach RE15_K2080_RUNDE_AB / _SPAET), re15_k2080_anschwimmen_alt_setzen(1) = N3. */
+static int s_runde_alt = 0, s_holmodus_n = 0;
+void re15_k2080_runde_alt_setzen(int an) { s_runde_alt = an; }
+int  re15_k2080_holmodus_zahl(void) { return s_holmodus_n; }   /* NB4 (K): Einschalten von RUNDE bzw. ANSCHWIMMEN (Riegel nb4 K1, Gegenprobe) */
+int  re15_k2080_runde_alt(void) { return s_runde_alt; }
 static int anschwimm_lage(const re15_actor_t *e, int32_t c[2], int64_t *d2, int64_t *ab2)
 {
+    if (!s_anschw_alt && !s_runde_alt) return 0;   /* NB4 (K): kein Holmodus (s. oben) */
     if (!s_anschw_alt && !s_runde) {
         if (s_frei_bilder < RE15_K2080_RUNDE_AB || !e) return 0;
         int32_t pos[3], rot[9];
@@ -1000,7 +1013,7 @@ static int anschwimm_lage(const re15_actor_t *e, int32_t c[2], int64_t *d2, int6
         const int th = e->rot_y & 0xfff;
         const int64_t vor = (int64_t)re15_cos_q12(th) * (pos[0] - e->x) - (int64_t)re15_sin_q12(th) * (pos[2] - e->z);   /* Schwimmrichtung (cos, -sin) */
         if (vor < 0 && s_frei_bilder < RE15_K2080_RUNDE_SPAET) return 0;
-        s_runde = 1;
+        s_runde = 1; s_holmodus_n++;
         K_LOG("RUNDE zum Kanister an: Gator (%d,%d) Gier %d, Kanister (%d,%d), %d Bilder frei im Becken, %s", (int)e->x, (int)e->z, th, (int)pos[0],
               (int)pos[2], s_frei_bilder, vor >= 0 ? "liegt voraus" : "spaet (liegt hinten)");
     }
@@ -1028,6 +1041,7 @@ int re15_k2080_r41_anschwimmen(int slot, re15_actor_t *e, int32_t dist)
     const int an = lage && (d2 >= ab2 || runde);
     if (an != s_anschw) {
         s_anschw = an;
+        if (an && !runde) s_holmodus_n++;
         if (runde) K_LOG("RUNDE zum Kanister %s F%u", an ? "Ziel" : "aus", (unsigned)g_engine.frame_count);
         else if (lage)
             K_LOG("ANSCHWIMMEN %s: Gator Slot %d (%d,%d) Gier %d, Kanister (%d,%d) Abstand %d, Grenze %d (RE2-Zielmodus 8880 @0x80100a88-8c)",
