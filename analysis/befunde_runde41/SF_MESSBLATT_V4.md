@@ -172,6 +172,17 @@ Kein Oliv, kein Lachsrot.
 > 13,3/7,4/1,5, K7 18,2/7,1/1,3, K8 9,9/9,9/3,8, K9 22,6/15,4/5,2, S1 48,4/4,0/0,5, S3 19,1/1,2/1,1, S4 27,6/15,3/3,3, KV5 18,9/7,1/0,6)
 > sind ueberholt. Abnahme gegen Referenz 2, nicht gegen das Video: Kopf-Grundton = die blasse Ref2-Haut, dunkel nur das Haarfeld neben dem
 > Auge, keine violettstichigen Eintraege. Ersatzbedingungen und T-K5 siehe Abschnitt 7.
+>
+> **Nachtrag Kopf nach Nutzerbeschreibung, Runde 3 (2026-11-07, Nutzer nach Ansicht des Kopfes der Runde 2: "da ist links ein Auge. Linke
+> Seite ist so graeulich. Bis Nase. Dann rechts Seite sieht man Haare - braeunlich.... Warum mischst du die Farben so daemlich?"):**
+> Der Kopf besteht aus drei Zonen in BILDKOORDINATEN der Spielkamera 50A0 Cut 12 (wie Beschreibung1): (1) linke Bildhaelfte graeuliche Haut mit
+> dem Auge (heller unbunter Fleck, Ort K4), bis zur Nase (K7 = Zonengrenze); (2) rechte Bildhaelfte Haare, braeunlich (a* > 0, b* > 0, nicht
+> schwarz; etwa 25 % dunkler als der Kopf-Median - Video Haar 12,9 bei Median 17,3), eine Flaeche mit weichem, strukturfolgendem Rand;
+> (3) Kopfoberseite dunkel rotbraun, hoechstens Kopf-Median + 6 L* (Video Kuppe 22,6 bei Median 17,3), nahtlos zu den Haaren. Die Video-Lab-
+> Werte dieses Blatts (F1-F5, F11-F13 und die Kopfzeilen in Abschnitt 7) sind nur noch Richtung (grau / braun / dunkelrot) und Ort; Texel werden
+> nicht an sie geeicht. Farbquelle: die Ref2-Palette (Zeile 480; Klassen grau / braun / kuppe / hell in ref2tex_v4.klassen_r3), keine
+> Ableitungen noetig. Riegel: riegel_ref2tex.py Runde 3 (T-K4 umgeschrieben, T-K9 Zonen, T-K8 Aenderungsumfang), Dossier SF_sichel.md
+> Abschnitt "V4 Kopf nach Nutzerbeschreibung (Runde 3)".
 
 **Eichung Video <-> Port-Schirm** (p_eichung.py): Der Port zeigt in 50A0 Cut 12 dasselbe Raumbild. Fit je Kanal
 Video = a + b x Port ueber statische Wand- und Bodenfelder (x < 270 oder x > 540, y 60-440), den Port vorher mit Gauss
@@ -273,6 +284,25 @@ abgedunkelt, A: Hintergrund-Steigung ~0,6).
 > | T-K3d (neu) | - | Schwanzwurzel Id 16: waagerecht/senkrecht \|dL*\| je Teilflaeche (ganz, obere 14 Zeilen, 4 Quadranten) in der Spanne von Rumpf Id 8 / Oberarm Id 13 |
 >
 > K1, K3, K4, K6, K10, S2 bleiben unveraendert. In der Tabelle unten sind die ueberholten Ziele mit **[ueberholt R2]** markiert.
+>
+> **Kopf nach Nutzerbeschreibung, Runde 3 (2026-11-07):** die Kopfzeilen folgen der Lesung grau links bis Nase / Haar braeunlich rechts /
+> Kuppe dunkel rotbraun (Abschnitt 5, Nachtrag Runde 3). Bezug ist der Kopf-Median (L* P50 der Kopf-Id 9 im selben Bild; Videoraum bei den
+> Fensterzeilen, roher Render bei T-K9). Die Video-Zahlen stehen nur noch als Richtung. Ersatz (riegel_ref2tex.tk4 / tk9 / tk8):
+>
+> | Zeile | Runde 2 | gilt jetzt (Runde 3) |
+> |---|---|---|
+> | K2 | L* >= KV5 + 20; blass | unveraendert; "hell und unbunt" (a* <= 15, b* >= 0); Video 46,9/7,2/-1,1 Richtung |
+> | K5 | KV2 L* <= Auge - 25 und <= Ref2 P50 - 8 | KV2 braeunlich: L* 0,62-0,90 x Kopf-Median (Videoraum), a* > 0, b* > 0; Video 13,3/7,4/1,5 Richtung (Video 12,9 / 17,3 = 0,75) |
+> | K6 | Spiegelstelle L* <= 18 | Spiegelstelle liegt in der Haarflaeche: Mittel L* <= Kopf-Median - 3, kein heller Fleck (max L* <= Auge - 15) |
+> | K7 | KV3 zwischen Haar und Auge, >= Haar + 8 | Nase = Zonengrenze, mitteldunkel wie die Wange gleicher Hoehe: \|KV3 - KV5\| <= 4 (Vorlage Nase 18,2 / KV5 18,9 = -0,7) und KV3 >= Haar rechts daneben (KV3r 0,62-0,85 x 0,66-0,81) + 1 (Vorlage +4,9) |
+> | K8 | Albedo >= Ref2-Kopfhaut - 8; dE00 <= 10 zu Ref2 KV4 | kein dunkles Maul in der Textur: Albedo-L* P50 >= Ref2-Kopfhaut - 8; b* >= 0. Kein Farbziel Ref2-Kinn mehr (das Kinn liegt in der grauen Zone; dE00 nur Ausgabe) |
+> | K9 / S4 | a* >= 11; \|dL*\| zu Ref2 <= 8 | dunkel rotbraun: a* >= 8, b* > 0; L* <= Kopf-Median + 8 (Videoraum; roh + 6 in T-K9c); K9 zudem >= Haar KV2. Video 22,6/15,4/5,2 bzw. 27,6/15,3/3,3 Richtung |
+> | S1 | 1 Komponente, Groesse, blass | unveraendert ("hell und unbunt") |
+> | S3 | KS2 L* <= Ref2 P50 (85) - 8; Abstand <= 0,01 H | KS2 L* <= Kopf-Median (Pose 85, Videoraum) - 5; Abstand zum Fleck <= 0,01 H; Video 19,1/1,2/1,1 Richtung |
+> | T-K5 | Grundton ausserhalb des Haarfelds (KV2 + K6-Box / KS2) | Grundton = graue Zone (ausserhalb Haar + Kuppe, Zonen = Klasse des Texel-Index, riegel_ref2tex.zonen_emd) wie Ref2 +- 4; uebrige Bedingungen gleich |
+> | T-K9 (neu) | - | Zonen am rohen Render Pose 135: a) grau: Chroma P50 <= 0,5 x Rumpf Id 8, L* P50 = Ref2-Kopf +- 5, >= 0,80 der grauen Pixel links der Nase (x = Mitte KV3), >= 0,70 der Kopfpixel links der Nase grau; b) Haar: L* P50 0,62-0,90 x Kopf-Median, a* > 0, b* > 0, Flaeche Haar + Kuppe 0,40-0,55 der Kopfpixel; Rand: Sobel/8-Gradient 3-8, Grenze je Zeile Std zur Geraden > 4 px; c) Kuppe: L* P50 <= Median + 6 und >= Haar, a* >= 8, b* > 0, Anteil > 0,03; d) Augenfleck in der grauen Zone, K4 OK, KV3 zu 0,3-0,7 grau, S2 OK, KS2 roh <= Median (85) - 4; e) ganzer Kopf L* P50 >= 23, Kopf/Rumpf >= 0,9; f) Gier +120/+180 (neutral): kein Fleck L* < 15 ueber 100 px |
+> | T-K8 (neu) | - | Aenderungsumfang gegen den Vorstand (EM30_V4ot2.EMD): Sektionen 0-7 und CLUT bytegleich; Texel nur in den Kopf-UV-Flaechen (Zahl, Bbox), ausserhalb 0 |
+> | T-K2 | keine neue Farbe | Ref2-Farbe oder belegte Ableitung (Liste 'ableitungen' im Protokoll; Runde 3: keine) |
 
 **Render fuer alle Riegel (Bauer und Pruefer gleich):** b2.zeichne (re15_port/tools/r41_sichel/v2/b2.py: Spielkamera
 50A0/12, GTE-Projektion, RDT-Licht Cut 12), 640 x 480. Posen in **re15_port/tools/r41_sichel/v4/posen_v4.json**, die der
