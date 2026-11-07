@@ -17,12 +17,12 @@
 #               aendert sich um > 600 in 10 Bildern), erreicht Zustand 7 (Leiche) bis Bild X+80,
 #           (d) RE2-SE genau einmal, (e) exe bis EXIT_AT.
 #   gator   ROOM2090 (Gator-Boss, Modul enemy_ai_boss_gator.c), RE15_FORCE_EXPLOSION=2@<bild>:<slot> am Alligator:
-#           HP faellt um 250 (Runde 41 GR NB3: Boss-Regel 25300 - 25000 - 50; vorher 1000 @0x8006f41c), Zustand 2 im
-#           Explosionsbild, exe laeuft bis EXIT_AT (kein Haenger), RE15_FORCE_EXPLOSION-Zeile "Treffer=1".
+#           HP faellt um 251 (Runde 41 Spur WS: D_G = 250 @0x801008C8 + 1; vorher GR-Boss-Regel 250, davor 1000
+#           @0x8006f41c), Zustand 2 im Explosionsbild, exe laeuft bis EXIT_AT (kein Haenger), RE15_FORCE_EXPLOSION "Treffer=1".
 #   birkin  ROOM5090 (G5 EM36, Modul enemy_ai_boss_g5.c), ARMIERT ueber RE15_DEBUG_SUB=4@255 (sub04 = Kampfstart:
 #           grid 0x33 -> 0x13, Lage (-9000,-23400); Vorspann bis ~Bild 346, danach kriecht er), RE15_FORCE_EXPLOSION
-#           im Bild 400 am kriechenden Boss: (a) vor dem Treffer armiert (g=13), (b) HP faellt um 80 (E16
-#           @0x800A5F7C), (c) REAKTION: 40 Bilder spaeter laeuft sein Clip weiter (af anders) und er hat sich
+#           im Bild 400 am kriechenden Boss: (a) vor dem Treffer armiert (g=13), (b) HP faellt um 251 (Spur WS D_G;
+#           vorher E16 80 @0x800A5F7C), (c) REAKTION: 40 Bilder spaeter laeuft sein Clip weiter (af anders) und er hat sich
 #           bewegt (> 200) — kein Haenger. (Abnahme 0, Mangel 5: der alte Pin traf den geparkten Boss, grid 0x33.)
 #   duenn_a / duenn_b  ROOM1220 (Zellentrakt), HOCH-Wurf (380 je Bild @0x80018494) gegen die 275 dicke Zellenfront
 #           x[-21825..-21550] aus zwei Wurfphasen (Leon x -19533 / -19433; Abnahme 0, Laeufe t1220h1/t1220h2):
@@ -393,7 +393,8 @@ endfunction()
 
 r35_laeuft(gator _an)
 if(_an)
-    # Gator-Boss 0x23 in ROOM2090: GB_HP = RE15_GR2_HP_INIT 25300 (Runde 41 Spur B), Art 2 = 250 (Runde 41 GR NB3, vorher 1000 @0x8006f41c).
+    # Gator-Boss 0x23 in ROOM2090: GB_HP = RE15_GR2_HP_INIT 25240 (Spur WS H3: Bit 0x40 @0x8002b4ac -> [0x801045ec] = 240),
+    # Art 2 = D_G 251 (Spur WS; vorher GR NB3 250, davor 1000 @0x8006f41c).
     # Runde 41 Spur A (Nachbesserung 2, M3): der Platz folgt RE15_ACTOR_MAX (include/re15_actor.h; seit Runde 41 36 -> Slot 35,
     # main.c Rueckwaertssuche ab RE15_ACTOR_MAX-1) statt fest 20.
     file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/../../include/re15_actor.h" _am REGEX "^#define RE15_ACTOR_MAX +[0-9]+")
@@ -401,9 +402,9 @@ if(_an)
         r35_fehler(gator "RE15_ACTOR_MAX nicht in include/re15_actor.h gefunden")
     endif()
     math(EXPR _gator_slot "${CMAKE_MATCH_1} - 1")
-    # Runde 41 Spur GR, Nachbesserung 3 (Nutzer F4 "nicht einfach mit einer Granate beenden"): Boss-Regel wie der Alligator,
-    # 25300 - 25000 (Schwaeche slti 25000 @0x80101ec4) - Rest 50 = 250 (engine/src/re15_damage.c re15_granate_schaden).
-    r35_boss(gator 2090 ${_gator_slot} 23 60 250)    # Slot RE15_ACTOR_MAX-1 (Runde 36 Spur E, s. Kopf)
+    # Runde 41 Spur WS (Nutzer 2026-11-07 "mach wie resident evil 2 ... gerade so die Standard Gegner"): die Boss-Regel der
+    # Spur GR NB3 (25300 - 25000 - 50 = 250) ist ueberholt; jeder Gegner nimmt D_G = 250 + 1 (re15_granate_schaden).
+    r35_boss(gator 2090 ${_gator_slot} 23 60 251)    # Slot RE15_ACTOR_MAX-1 (Runde 36 Spur E, s. Kopf)
 endif()
 # Felder g (grid) und af eines Gegners <slot> (CMake kennt nur 9 Fanggruppen -> eigener Auswerter).
 function(r35_gegner_g _zeile _slot _p)
@@ -417,7 +418,7 @@ endfunction()
 
 r35_laeuft(birkin _an)
 if(_an)
-    # G5 EM36 in ROOM5090: HP 600 (@0x801003fc), Granate = RE2-Record Zeile 9 K0 = 80 (E16 @0x800A5F7C).
+    # G5 EM36 in ROOM5090: HP 600 (@0x801003fc), Granate = D_G 251 (Spur WS; vorher RE2-Record Zeile 9 K0 = 80 @0x800A5F7C).
     # ARMIERT: sub04 (Kampfstart) ueber RE15_DEBUG_SUB=4@255 -> grid 0x13, Vorspann bis ~Bild 346, danach kriecht
     # der Boss (gemessen nb1/birkin_c: F380 x -8808, F400 x -7373). Explosion im Bild 400.
     # RE15_ENDKAMPF_NUR_G5=1: dieser Lauf pinnt den G5; seit "Vierbein, dann G5" spawnt 5090 sonst zuerst den 0x30.
@@ -437,9 +438,9 @@ if(_an)
     if(NOT "${_X_T}" STREQUAL "36" OR NOT "${_VG_G}" STREQUAL "13")
         r35_fehler(birkin "Slot 2: Typ ${_X_T} grid ${_VG_G} im Bild 399 (soll 36 / 13 = ARMIERT ueber sub04; 33 = geparkt)")
     endif()
-    math(EXPR _hp_soll "${_V_HP} - 80")
+    math(EXPR _hp_soll "${_V_HP} - 251")
     if(NOT _X_HP EQUAL _hp_soll OR NOT _N_HP EQUAL _hp_soll)
-        r35_fehler(birkin "HP ${_V_HP} -> ${_X_HP} im Bild 400, ${_N_HP} im Bild 440 (soll ${_hp_soll}: Schaden 80 @0x800A5F7C, genau einmal)")
+        r35_fehler(birkin "HP ${_V_HP} -> ${_X_HP} im Bild 400, ${_N_HP} im Bild 440 (soll ${_hp_soll}: Schaden D_G 251 = 250 @0x801008C8 + 1, genau einmal)")
     endif()
     math(EXPR _dx "${_N_X} - ${_X_X}")
     math(EXPR _dz "${_N_Z} - ${_X_Z}")

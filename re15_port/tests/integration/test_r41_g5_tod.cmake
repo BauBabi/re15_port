@@ -22,6 +22,14 @@
 # Deshalb MA9 (Feuer bis F658): die Rakete im 32-Bild-Takt (F413, 445, ..., 604, 636) trifft die 0-HP-Form noch einmal ->
 # tot -> Rueckstoss (dort feuert re15_bf_pad selbst) -> G5-Szene -> der Spieler steht danach ohne Taste auf RE2s Linie.
 #
+# RUNDE 41 SPUR WS (Nutzer 2026-11-07 "mach wie resident evil 2"): die Rakete macht RE2-Zeile 17 K0 je Typ (re15_rakete_schaden):
+# Form 1 = G1 200 (@0x800A58B0), Riesenform = G4 301 (@0x800A5D24). Gemessen (Lauf leon_ma13, state.log, gleiche Vorgeschichte):
+# Form 1 F413 600 -> 400, F444 -> 205, F475 -> 10 (Fern-Rueckgabe +5 je Treffer @0x8011a134 dazwischen), F477 Mutation 300; die
+# Raketen in der Mutation F507..F635 fallen in den Revive (100); Riesenform F654 HP 1000, Raketen F666 699, F698 398, F730 97,
+# F761 -204 (tot), G5 F866. Die "0-HP-Form" entfaellt. Mit MA9 endete das Feuer bei F658 VOR der ersten Riesenform-Rakete, die
+# Form toetete den Spieler (FSM-START isdead=1, Lauf leon_ma9). Deshalb MA13 (Feuer bis ~F778): vier Raketen auf die Riesenform,
+# Ende vor dem G5.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_g5_tod.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -56,7 +64,7 @@ function(ein_lauf _name _raum)
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_extra}
         RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA9,W260"
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA13,W260"
         RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log RE15_GIVE=18:200 RE15_EQUIP=18
         RE15_FINISHER_LOG=1 RE15_BOOT_EXIT_AT=2 "RE15_EXIT_AT=7000#${_raum}"
         "${_exe_kopie}")
