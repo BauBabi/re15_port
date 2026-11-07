@@ -1,0 +1,51 @@
+Kontrolle ohne NPC                 Waffe  3 | NPC -- Kasten r 0 h 0: hp 0->0 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x40 hp -1 davor               Waffe  3 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x42 hp -1 davor               Waffe  3 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x45 hp -1 davor               Waffe  3 | NPC ja Kasten r 500 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x47 hp -1 davor               Waffe  3 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x49 hp -1 davor               Waffe  3 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4B hp -1 davor               Waffe  3 | NPC ja Kasten r 300 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4D hp -1 davor               Waffe  3 | NPC ja Kasten r 350 h 1350: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0
+Kontrolle ohne NPC                 Waffe  7 | NPC -- Kasten r 0 h 0: hp 0->0 st 0->0 | Gegner 0x10 hp 100->-1 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x40 hp -1 davor               Waffe  7 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x42 hp -1 davor               Waffe  7 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x45 hp -1 davor               Waffe  7 | NPC ja Kasten r 500 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x47 hp -1 davor               Waffe  7 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x49 hp -1 davor               Waffe  7 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4B hp -1 davor               Waffe  7 | NPC ja Kasten r 300 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4D hp -1 davor               Waffe  7 | NPC ja Kasten r 350 h 1350: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1 | Ziel NPC 0, Gegner 5, leer 0
+Kontrolle ohne NPC                 Waffe  8 | NPC -- Kasten r 0 h 0: hp 0->0 st 0->0 | Gegner 0x10 hp 100->-900 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x40 hp -1 davor               Waffe  8 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-900 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x42 hp -1 davor               Waffe  8 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-900 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x45 hp -1 davor               Waffe  8 | NPC ja Kasten r 500 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-900 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x47 hp -1 davor               Waffe  8 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-900 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x49 hp -1 davor               Waffe  8 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-900 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4B hp -1 davor               Waffe  8 | NPC ja Kasten r 300 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-900 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4D hp -1 davor               Waffe  8 | NPC ja Kasten r 350 h 1350: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-900 | Ziel NPC 0, Gegner 5, leer 0
+Kontrolle ohne NPC                 Waffe 12 | NPC -- Kasten r 0 h 0: hp 0->0 st 0->0 | Gegner 0x10 hp 100->80 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x40 hp -1 davor               Waffe 12 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->80 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x42 hp -1 davor               Waffe 12 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->80 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x45 hp -1 davor               Waffe 12 | NPC ja Kasten r 500 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->80 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x47 hp -1 davor               Waffe 12 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->80 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x49 hp -1 davor               Waffe 12 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->80 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4B hp -1 davor               Waffe 12 | NPC ja Kasten r 300 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->80 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4D hp -1 davor               Waffe 12 | NPC ja Kasten r 350 h 1350: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->80 | Ziel NPC 0, Gegner 5, leer 0
+Kontrolle ohne NPC                 Waffe 13 | NPC -- Kasten r 0 h 0: hp 0->0 st 0->0 | Gegner 0x10 hp 100->-1400 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x40 hp -1 davor               Waffe 13 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1400 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x42 hp -1 davor               Waffe 13 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1400 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x45 hp -1 davor               Waffe 13 | NPC ja Kasten r 500 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1400 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x47 hp -1 davor               Waffe 13 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1400 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x49 hp -1 davor               Waffe 13 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1400 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4B hp -1 davor               Waffe 13 | NPC ja Kasten r 300 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1400 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4D hp -1 davor               Waffe 13 | NPC ja Kasten r 350 h 1350: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->-1400 | Ziel NPC 0, Gegner 5, leer 0
+Kontrolle ohne NPC                 Waffe 19 | NPC -- Kasten r 0 h 0: hp 0->0 st 0->0 | Gegner 0x10 hp 100->60 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x40 hp -1 davor               Waffe 19 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->60 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x42 hp -1 davor               Waffe 19 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->60 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x45 hp -1 davor               Waffe 19 | NPC ja Kasten r 500 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->60 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x47 hp -1 davor               Waffe 19 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->60 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x49 hp -1 davor               Waffe 19 | NPC ja Kasten r 450 h 1530: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->60 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4B hp -1 davor               Waffe 19 | NPC ja Kasten r 300 h 1440: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->60 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x4D hp -1 davor               Waffe 19 | NPC ja Kasten r 350 h 1350: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->60 | Ziel NPC 0, Gegner 5, leer 0
+NPC 0x40 hp 0 davor (RE2: Kandidat) Waffe  3 | NPC ja Kasten r 450 h 1530: hp 0->-5 st 0->3 | Gegner 0x10 hp 100->36 | Ziel NPC 1, Gegner 4, leer 0
+Zombie 0x10 hp -1 davor (RE1.5)    Waffe  3 | NPC ja Kasten r 400 h 1440: hp -1->-17 st 0->3 | Gegner 0x10 hp 100->36 | Ziel NPC 1, Gegner 4, leer 0
+NPC 0x4D hp -1 quer 1300           Waffe  3 | NPC ja Kasten r 350 h 1350: hp -1->-1 st 0->0 | Gegner 0x10 hp 100->20 | Ziel NPC 0, Gegner 5, leer 0

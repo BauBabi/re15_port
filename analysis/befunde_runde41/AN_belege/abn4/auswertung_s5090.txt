@@ -1,0 +1,75 @@
+# Auswertung Lauf s5090 (Abnahme 4 Spur AN, exe cefd57402)
+s5090 exit=0 Dauer=205 s Bilder: 55
+
+## env
+RE15_DEBUG_JUMP=6000@250
+RE15_EXIT_AT=1965#5090
+RE15_FRAMEDUMP=1150-1960/15:f
+RE15_INPUT_SCRIPT=W5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W0.2,L0.04,U1.3,R0.367,U4.3,A0.1,W3,A0.1,W0.5,R0.7,U6.5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W3,R0.1,U0.47,L0.1,U1.5,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W29.7,L0.22,U0.4,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W1.5,U0.8,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W3,L0.04,U0.5,R0.04,U7,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,U15,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,L0.04,U2.17,R0.04,U10.7,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,A0.1,W0.1,W0.5,U8.5,W60
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=1763,-9700,1024,2
+RE15_SET_FLAG=3:48,3:49,3:100,3:239,4:23,3:89,3:22
+RE15_SE_DEBUG=1
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/s5090/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/s5090/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[pri] cut=13 pri_offset=0x810 masks=128 fg_atlas=1
+[framedump] 640x480 -> f001960.ppm
+[flow] EXIT_AT: Bild 1965 in Raum 5090 erreicht -> exit
+
+## Vergleich state.log gegen Abnahme 3 (exe b646c72a6, NB4): logvergleich.py
+Zeilen alt 4329 neu 4329
+abweichende Zeilen: 54 von 4329
+erste Abweichung Zeile 4275 (Abschnitt 3):
+  alt F1912 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=9 stun=0 d=0 @(3784,-23726,r9)] hp=0
+  neu F1912 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=9 stun=0 d=0 @(3858,-23659,r9)] hp=0
+Abschnitt 3: 54 Zeilen anders, F1912 .. F1965
+Spieler: groesste Lageabweichung 15 ('F1936', 3, ('14384', '-23633', '2055', '95'), ('14399', '-23644', '2055', '95'))
+Annette: Zeilen mit anderem Zustand/Lage 0, groesste Lageabweichung 0 None
+  [4275] alt F1912 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=9 stun=0 d=0 @(3784,-23726,r9)] hp=0
+       neu F1912 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=9 stun=0 d=0 @(3858,-23659,r9)] hp=0
+  [4276] alt F1913 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=10 stun=0 d=0 @(4105,-23682,r4085)] hp=0
+       neu F1913 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=10 stun=0 d=0 @(4193,-23682,r4087)] hp=0
+  [4277] alt F1914 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=11 stun=0 d=0 @(4392,-23682,r4087)] hp=0
+       neu F1914 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=11 stun=0 d=0 @(4537,-23682,r4087)] hp=0
+  [4278] alt F1915 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=12 stun=0 d=0 @(4778,-23682,r4087)] hp=0
+       neu F1915 pad=0000 PL(13775,-23550,rot=2055,hp=100) pst=1 ps1=0 ps2=0 mo=200 ac=6 fx=17 mg=-1 bx=50 sl=1111 cam=12 msg(a=0 fsm=0 id=42 q=0) pf=00000007 pm=0 gr=0 hk=0/255 io=1 hr=00 ms=0 [1 t=4d st=0 ss1=0 ss2=0 ss3=0 g=40 mo=24 af=0 stun=0 d=0 @(4856,-22748,r1170)] hp=-1 [2 t=30 st=1 ss1=4 ss2=1 ss3=0 g=13 mo=0 af=12 stun=0 d=0 @(4993,-23682,r4087)] hp=0
+
+## Abstand Spieler <-> Annette: abstand4.py
+Abschnitt 2: kleinster Abstand 1226 bei F1502, Spieler (-3080, -23674), Annette (-3260, -22461) (st 4 mo 5)
+Abschnitt 3: kleinster Abstand 5817 bei F1168, Spieler (13775, -23550), Annette (8000, -24250) (st 4 mo 2)
+
+## Schuesse und Treffer (letzter Raumabschnitt): schuss4.py
+Abschnitte: 4, gewaehlt letzter (1965 Bilder, F1..F1965)
+Schuesse (mg-Abfall): 0
+hp-Wechsel: 3
+  F6 Slot 1 t=4d hp 0 -> -1 (st 4)
+  F498 Slot 2 t=30 hp 300 -> 150 (st 1)
+  F946 Slot 2 t=30 hp 150 -> 0 (st 1)
+NPC-Zustandswechsel (t>=0x40): 2
+  F6 Slot 1 t=4d st 0 -> 4
+  F1598 Slot 1 t=4d st 4 -> 0
+
+## Annette-Szene: szene4.py
+F1010  Ton 0 
+F1168  Szenenstart statt sub04
+F1350  Ton 1 
+F1350  Sturz:
+F1365  gelandet, Drohen:
+F1407  Ton 2 
+F1598  Hieb (RE2
+F1611  Ausholen (RE2
+F1640  Blut-Skala
+F1640  Treffer:
+F1674  Schnitt weg, liegt, Schrei
+F1776  Kampfstart (sub04), Form frei
+Ersatzmodell RE2/ANNETTE_4D.EMD                  ja
+Ersatzmodell RE2/ANNETTE_4D_BLUT.EMD             ja
+Wiedereintritt nach der Szene: Leiche liegt      nein
+Frau im Kittel (0x4D, @0x0122A) verworfen        nein
+EXIT_AT                                          ja
+Reihenfolge vollstaendig: True

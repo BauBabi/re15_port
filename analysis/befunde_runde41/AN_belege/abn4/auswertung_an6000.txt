@@ -1,0 +1,56 @@
+# Auswertung Lauf an6000 (Abnahme 4 Spur AN, exe cefd57402)
+an6000 exit=0 Dauer=60 s Bilder: 71
+
+## env
+RE15_AUDIO_CAP_SYNC=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/an6000/ton.raw
+RE15_DEBUG_JUMP=6000@250
+RE15_EXIT_AT=1500#6000
+RE15_FRAMEDUMP=100-1500/20:f
+RE15_INPUT_SCRIPT=W1,A0.1,W1,A0.1,W1,A0.1,W40
+RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=100
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=4550,-8200,1024,2
+RE15_SET_FLAG=3:48,3:49,3:100
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/an6000/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/w2abn/an4/laeufe/an6000/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=2
+
+## Ende debug.log
+[walk] F1500 cut=3 mo=211 af=123 frz=0 | pl pos=(4345,-3600,-9925) rot=2603
+[framedump] 640x480 -> f001500.ppm
+[flow] EXIT_AT: Bild 1500 in Raum 6000 erreicht -> exit
+
+## Abstand Spieler <-> Annette: abstand4.py
+Abschnitt 1: kleinster Abstand 1030 bei F20, Spieler (4511, -8500), Annette (5313, -7854) (st 4 mo 5)
+
+## Schuesse und Treffer (letzter Raumabschnitt): schuss4.py
+Abschnitte: 2, gewaehlt letzter (1500 Bilder, F1..F1500)
+Schuesse (mg-Abfall): 0
+hp-Wechsel: 1
+  F6 Slot 1 t=4d hp 0 -> -1 (st 1)
+NPC-Zustandswechsel (t>=0x40): 2
+  F6 Slot 1 t=4d st 0 -> 1
+  F16 Slot 1 t=4d st 1 -> 4
+
+## Annette-Szene: szene4.py
+FEHLT: Ton 0 
+FEHLT: Szenenstart statt sub04
+FEHLT: Ton 1 
+FEHLT: Sturz:
+FEHLT: gelandet, Drohen:
+FEHLT: Ton 2 
+FEHLT: Hieb \(RE2
+FEHLT: Ausholen \(RE2
+FEHLT: Blut-Skala
+FEHLT: Treffer:
+FEHLT: Schnitt weg, liegt, Schrei
+FEHLT: Kampfstart \(sub04\), Form frei
+Ersatzmodell RE2/ANNETTE_4D.EMD                  ja
+Ersatzmodell RE2/ANNETTE_4D_BLUT.EMD             nein
+Wiedereintritt nach der Szene: Leiche liegt      nein
+Frau im Kittel (0x4D, @0x0122A) verworfen        nein
+EXIT_AT                                          ja
+Reihenfolge vollstaendig: False

@@ -1,0 +1,116 @@
+# Abnahme 4 Spur AN - RE1.5-Kasten des Typs 0x4D (info/Re1.5/PSX/BIN, Overlay ohne Kopf @0x80100000), eigene Disassembly
+# Die Wurzeln werden in die Tick-Tabelle 0x80072bac geschrieben; Eintrag 0x4D = 0x80072bac + 0x4D*4 = 0x80072ce0.
+
+## STAGE6.BIN (ROOM6000/6030): Registrierung, Wurzel, INIT, Kasten
+  80101df0: lui v0,0x8010                      
+  80101df4: addiu v0,v0,6048                   0x801017a0
+  80101df8: lui at,0x8007                      
+  80101dfc: sw v0,11488(at)                    0x80072ce0
+  80101874: lui at,0x8010                      
+  80101878: addiu at,at,10132                  0x80102794
+  8010187c: addu at,at,v0                      
+  80101880: lw v0,0(at)                        0x80100000
+  [ 0] 0x80102794 -> 0x80101918  overlay
+  80101918: addiu sp,sp,-32                    
+  8010191c: lui v1,0x800b                      
+  80101920: lw v1,-14460(v1)                   g_entity(cur)
+  80101924: ori v0,zero,0x1                    
+  80101928: sw ra,24(sp)                       
+  8010192c: sb v0,4(v1)                        0x800b0004
+  80101930: lui a0,0x800b                      
+  80101934: lw a0,-14460(a0)                   g_entity(cur)
+  80101938: nop                                
+  8010193c: lw v0,0(a0)                        0x800b0000
+  80101940: lui v1,0x4000                      
+  80101944: or v0,v0,v1                        
+  80101948: sw v0,0(a0)                        0x800b0000
+  8010194c: lui v1,0x800b                      
+  80101950: lw v1,-14460(v1)                   g_entity(cur)
+  80101954: lui v0,0x8010                      
+  80101958: lw v0,10128(v0)                    0x80102790
+  8010195c: nop                                
+  80101960: sw v0,120(v1)                      0x800b0078
+  80101964: lui v1,0x800b                      
+  80101968: lw v1,-14460(v1)                   g_entity(cur)
+  8010196c: lui v0,0x800b                      
+  80101970: addiu v0,v0,-13740                 player
+  80101974: sw v0,424(v1)                      0x800b01a8
+  80101978: lui v1,0x800b                      
+  8010197c: lw v1,-14460(v1)                   g_entity(cur)
+  80101980: addiu v0,zero,-1                   
+  80101984: sh v0,154(v1)                      0x800b009a
+  80101988: lui v1,0x800b                      
+  8010198c: lw v1,-14460(v1)                   g_entity(cur)
+  80102784: 00 00 06 fa 00 00 c2 01 fa 05 c2 01 84 27 10 80
+
+## STAGE6.BIN 0x4D-Wurzel 0x801017a0: Schwerkraft FUN_8001bd60 (liest -(Kasten+6) @0x8001bd94-a8) und Wand-Klemme FUN_8003b0a4 mit Radius = Kasten+6
+  80101838: lui v1,0x800b                      
+  8010183c: lw v1,-14460(v1)                   g_entity(cur)
+  80101840: ori a1,zero,0x14                   
+  80101844: jal 0x8001bd60                     
+  80101848: sw v0,464(v1)                      0x800b01d0
+  8010184c: addiu a0,s0,72                     
+  80101850: addu a1,zero,zero                  
+  80101854: jal 0x80039e7c                     
+  801018c0: nop                                
+  801018c4: lw v0,120(a0)                      
+  801018c8: ori a2,zero,0x4                    
+  801018cc: lhu a1,6(v0)                       
+  801018d0: jal 0x8003b0a4                     
+  801018d4: addiu a0,a0,52                     
+
+## STAGE5.BIN (ROOM5090): Registrierung, Wurzel-Tabelle, INIT, Kasten
+  8011ddac: lui v0,0x8012                      
+  8011ddb0: addiu v0,v0,-10540                 0x8011d6d4
+  8011ddb4: lui at,0x8007                      
+  8011ddb8: sw v0,11488(at)                    0x80072ce0
+  8011d7a8: lui at,0x8012                      
+  8011d7ac: addiu at,at,2016                   0x801207e0
+  8011d7b0: addu at,at,v0                      
+  8011d7b4: lw v0,0(at)                        0x80120000
+  8011d7b8: nop                                
+  8011d7bc: jalr v0                            
+  [ 0] 0x801207e0 -> 0x8011d84c  overlay
+  8011d84c: addiu sp,sp,-32                    
+  8011d850: lui v1,0x800b                      
+  8011d854: lw v1,-14460(v1)                   g_entity(cur)
+  8011d858: ori v0,zero,0x1                    
+  8011d85c: sw ra,24(sp)                       
+  8011d860: sb v0,4(v1)                        0x800b0004
+  8011d864: lui a0,0x800b                      
+  8011d868: lw a0,-14460(a0)                   g_entity(cur)
+  8011d86c: nop                                
+  8011d870: lw v0,0(a0)                        0x800b0000
+  8011d874: lui v1,0x4000                      
+  8011d878: or v0,v0,v1                        
+  8011d87c: sw v0,0(a0)                        0x800b0000
+  8011d880: lui v1,0x800b                      
+  8011d884: lw v1,-14460(v1)                   g_entity(cur)
+  8011d888: lui v0,0x8012                      
+  8011d88c: lw v0,2012(v0)                     0x801207dc
+  8011d890: nop                                
+  8011d894: sw v0,120(v1)                      0x800b0078
+  8011d898: lui v1,0x800b                      
+  801207d0: 00 00 06 fa 00 00 c2 01 fa 05 c2 01 d0 07 12 80
+
+## Kasten-Bytes {ofs_x, ofs_y, ofs_z, r_min, h, r_max} = 00 00 | 06 fa | 00 00 | c2 01 | fa 05 | c2 01 = {0,-1530,0,450,1530,450}
+
+## EXE FUN_8001bd60 (Schwerkraft/Bodenprobe, info/Re1.5/PSX.EXE): Radius = -(*(+0x78)+6)
+  8001bd94: lw v1,120(v0)                      
+  8001bd98: addiu a0,v0,52                     
+  8001bd9c: lhu a1,6(v1)                       
+  8001bda0: lbu a2,130(v0)                     
+  8001bda4: jal 0x8003b7f0                     
+  8001bda8: subu a1,zero,a1                    
+
+## EXE FUN_8002aec4 (Spieler-Schub gegen eine Entity, aufgerufen aus der 0x4D-Wurzel @0x801018a8): liest beide Kaesten (+0x78), Radius +6
+  8002af38: lw s6,120(s3)                      
+  8002af3c: lw s5,120(s2)                      
+  8002af40: lhu t4,6(s6)                       
+  8002af44: nop                                
+  8002af48: sh t4,24(sp)                       
+  8002af4c: lhu t4,6(s5)                       
+  8002af50: nop                                
+  8002af54: sh t4,32(sp)                       
+  8002af58: lw fp,124(s3)                      
+  8002af5c: lhu v1,6(s6)                       

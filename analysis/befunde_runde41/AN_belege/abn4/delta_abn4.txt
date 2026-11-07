@@ -1,0 +1,31 @@
+# Delta Spur AN nach Abnahme 3 (37f565a3c, 2026-11-03 09:01:43)
+cefd57402 2026-11-03 10:36:13 +0100 fix(r41-annette): Annette (0x4D) mit RE2-Koerpersegment r 350 / Halbhoehe 1350 statt NPC-Kasten 450/1530
+52e461188 2026-11-03 10:22:12 +0100 docs(r41-annette): Dossier Nachbesserung 5 - RE2-Regel Begleiter, Test Schusslinie, Leichen-Kollision in RE2
+c974552f2 2026-11-03 10:22:11 +0100 fix(r41-annette): Nachbesserung 5 - Schuss geht durch Begleiter (RE2-Regel, Nutzerentscheid), Belege A1/H1, Test Schusslinie
+
+## Dateien re15_port/ und release/
+ re15_port/engine/src/annette_r41.c                 |  14 +-
+ re15_port/engine/src/re15_damage.c                 |  45 ++++-
+ re15_port/include/re15_annette_r41.h               |   8 +-
+ .../test_r41_begleiter_schusslinie.cmake           | 187 +++++++++++++++++++++
+ re15_port/tests/unit/probes/r41_annette.cmake      |   8 +
+ re15_port/tests/unit/test_r41_annette.c            |  58 ++++++-
+ 6 files changed, 300 insertions(+), 20 deletions(-)
+
+## letzter Commit auf re15_port/release
+cefd57402 2026-11-03 10:36:13 +0100 fix(r41-annette): Annette (0x4D) mit RE2-Koerpersegment r 350 / Halbhoehe 1350 statt NPC-Kasten 450/1530
+
+## exe des Arbeitsbaums und Bauzeiten (ls --full-time)
+2026-11-03 09:49:26.437544800 26521 re15_port/build/engine/CMakeFiles/re15_engine.dir/src/annette_r41.c.obj
+2026-11-03 10:29:51.508591100 59839 re15_port/build/engine/CMakeFiles/re15_engine.dir/src/re15_damage.c.obj
+2026-11-03 10:29:52.833395400 3952260 re15_port/build/engine/libre15_engine.a
+2026-11-03 10:29:54.063051800 8717212 re15_port/build/platform/pc/re15_pc.exe
+2026-11-03 10:30:39.580960300 3517382 re15_port/build/tests/unit/test_r41_annette.exe
+2026-11-03 09:49:06.262507100 64741 re15_port/engine/src/annette_r41.c
+2026-11-03 10:29:43.559825900 333539 re15_port/engine/src/re15_damage.c
+2026-11-03 09:48:57.142521400 10572 re15_port/include/re15_annette_r41.h
+2026-11-03 10:28:55.977586600 51272 re15_port/tests/unit/test_r41_annette.c
+
+sha256 exe: 5e058b2f7f26ac6db25fb58a9fcae766185f9855b41362d0cbadb2f6a71677cb
+Dateien unter re15_port/ (ohne build/) neuer als die exe: 0
+git status: 0 Eintraege
