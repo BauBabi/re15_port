@@ -1,0 +1,79 @@
+{
+ "basis16": "C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r41_form\\analysis\\befunde_runde41\\form\\stufe3\\basis_k5c",
+ "variante17": "C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r41_form\\analysis\\befunde_runde41\\form\\varianten\\K5\\farbe\\K5c_farbe_v3",
+ "zeilen": {
+  "E-Z1 Basis16": {
+   "ok": true,
+   "text": "Zeilen 16 (<= 16), Port-Texturhoehe 256 x 16 = 4096 (<= 4096)"
+  },
+  "E-Z1 Gegenprobe Variante17": {
+   "ok": true,
+   "text": "Zeilen 17 (<= 16), Port-Texturhoehe 256 x 17 = 4352 (<= 4096) -> muss ROT sein: ROT"
+  },
+  "E-Z2 Basis16": {
+   "ok": true,
+   "text": "3828 Flaechen, Zeilen 0:155 1:252 2:770 3:696 4:62 5:6 6:25 7:114 8:45 9:187 10:152 11:204 12:131 13:229 14:232 15:568"
+  },
+  "E-Z2 Variante17 (Info)": {
+   "ok": true,
+   "text": "3828 Flaechen, Zeilen 0:155 1:252 2:0 3:770 4:696 5:62 6:6 7:25 8:114 9:45 10:187 11:152 12:204 13:131 14:229 15:232 16:568"
+  },
+  "E-Z3 01 Szene Bild 1": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 02 Szene Bild 2": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 0 vorn": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 0 3/4 vorn": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 0 Seite": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 0 3/4 hinten": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 0 hinten": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 0 oben": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 2 vorn": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 2 3/4 vorn": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 2 Seite": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 2 3/4 hinten": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 2 hinten": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  },
+  "E-Z3 05 rundum Clip 2 oben": {
+   "ok": true,
+   "text": "Pixel-Diff 0, max dE76 0.000"
+  }
+ },
+ "rot": []
+}
