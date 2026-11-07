@@ -1,0 +1,15 @@
+h118 Id 13 (Zeile 490)      b2 [24.4  6.8  5.3] Spiel [24.5  6.7  5.1] dE00 0.17 (1656 px)
+h118 Id 10 (489)            b2 [20.3  6.3  0.9] Spiel [20.6  6.3  0.9] dE00 0.26 (2295 px)
+h118 Id 14 (488)            b2 [10.3 -1.2  2.3] Spiel [10.4 -1.3  2.3] dE00 0.15 (1548 px)
+h118 Beine 2/3/5/6 (491)    b2 [19.4  3.6 -0.4] Spiel [15.2  2.1 -0.3] dE00 3.41 (1873 px)
+h118 Rumpf 7/8              b2 [22.8  6.2  2.4] Spiel [22.9  6.2  2.4] dE00 0.07 (11192 px)
+h135 Id 13 (Zeile 490)      b2 [22.   6.4  3.7] Spiel [22.4  6.1  3.8] dE00 0.44 (2448 px)
+h135 Id 10 (489)            b2 [20.7  6.4  0.9] Spiel [21.6  6.2  1.1] dE00 0.67 (2137 px)
+h135 Id 14 (488)            b2 [11.2 -1.   2.3] Spiel [11.4 -1.   2.4] dE00 0.19 (2240 px)
+h135 Beine 2/3/5/6 (491)    b2 [19.   3.7 -0.4] Spiel [10.7  1.3 -0.1] dE00 6.25 (1999 px)
+h135 Rumpf 7/8              b2 [21.3  6.2  2.5] Spiel [21.2  6.   2.5] dE00 0.21 (12464 px)
+  ret = um.true_divide(
+V4r3 h118 Beine y<400 (1 px, y 399-474) b2 [19.   2.4 -0.4] Spiel [16.3  0.7 -1.8] dE00 3.20; Spielbild Zeile 400-479 Mittel L 9.9
+V4r3 h135 Beine y<400 (0 px, y 405-475) b2 [nan nan nan] Spiel [nan nan nan] dE00 nan; Spielbild Zeile 400-479 Mittel L 10.0
+V4r4 h118 Beine y<400 (1 px, y 399-474) b2 [17.7  0.4 -0.5] Spiel [15.   0.2 -1.5] dE00 2.10; Spielbild Zeile 400-479 Mittel L 9.9
+V4r4 h135 Beine y<400 (0 px, y 405-475) b2 [nan nan nan] Spiel [nan nan nan] dE00 nan; Spielbild Zeile 400-479 Mittel L 10.0

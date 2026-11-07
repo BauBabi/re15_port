@@ -1,0 +1,16 @@
+{
+ "korrektur": {
+  "F8": [
+   -3.84,
+   0.0,
+   0.0
+  ]
+ },
+ "quelle": "r4_koerper_eichen.py Lauf koerper_eichen4 Runde 1 (Versatz F8 -3,84 L* als RGB-Faktor in den Kacheln von Id 10); Messblatt V4 F8 16,4/8,3/1,5",
+ "verlauf": {
+  "eichung_1": "Lab-Versatz F6/F7/F8/Regionen, 3 Runden (Protokoll korrektur_eich1): F6 a* +11,5, Rot Mitte/aussen 1,81, Schultern 0,24 - verworfen",
+  "eichung_2": "Lab-Versatz mit Kappe 6 und Stopp bei dE00 <= 3 (korrektur_eich2): F8 b* -3,5, Rotanteil Rumpf 0,51 - verworfen",
+  "eichung_3": "nur L*, ohne F6 (korrektur_eich3): Regionen nach Lab rot aus dem Gamut (Oberarm unten a* 9,9) - verworfen",
+  "eichung_4": "nur L* als RGB-Faktor (koerper_eichen4 Runde 1): F8 21,2 -> 19,1 (dE00 2,5), Regionen Oberarm unten / Beine roter (a* 7,4 / 5,7) - nur F8 uebernommen"
+ }
+}

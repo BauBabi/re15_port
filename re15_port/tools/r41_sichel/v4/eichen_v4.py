@@ -197,7 +197,9 @@ AUGE_K4 = (0.05, 0.12)      # nur noch fuer auge_3d (Runde 1); Runde 2 nimmt KOP
 # Mittel 46,9 (Messblatt K1/F2, Kontrast 29,5); nachgestellt an K1/S1 (Dossier V4 Runde 2)
 AUGE_RADIAL = 0.40
 # V4 Runde 3: vorn eigener Wert (Lauf r3 Struktur 8/9: mit der Kopfstruktur fiel der K1-Kontrast auf 18,3-19,4; vorn 0,55 -> 20,6 bei
-# K2 dE00 1,3 und K3 0,030 x 0,038 H; seitlich mit 0,55 S1-Breite 0,027 < 0,028 H, daher seitlich 0,40 wie Runde 2). PORT-WAHL.
+# K2 dE00 1,3 und K3 0,030 x 0,038 H; seitlich mit 0,55 S1-Breite 0,027 < 0,028 H, daher seitlich 0,40 wie Runde 2). PORT-WAHL,
+# Nutzer-Wortlaut "nicht so komische runde aufgemalte Augen" / "Die Augen sehen nicht mal ansatzweise aus wie im Original" (weicher
+# heller Fleck mit dem Kontrast des Originals, Messblatt K1 29,5).
 AUGE_RADIAL_VORN = float(os.environ.get('RE15_V4_RADIAL', '0.55'))
 AUGE_RAND = 0.5               # Randbreite des Augenprofils seitlich (Anteil des Ellipsenradius); PORT-WAHL, nachgestellt an S1
 AUGE_RAND_VORN = 0.8          # vorn spitzer (K1-Kontrast: mit 0,5 19,4 < 20, Lauf r2 Eichung 19); PORT-WAHL
@@ -226,36 +228,114 @@ STRUKTUR_ZONE = dict(s_basis=0.5, s_haar=0.5, v_oben_links=0.5, s_hinten_unten=0
 # weichzeichnet (Vergleichsregel): nachgestellt am Riegel K11 (Lum-Gradient im Kopf, Ziel aus dem Original), Laeufe r3 Struktur 1-n.
 STRUKTUR_SIGMA = 3.0
 STRUKTUR_GAIN = float(os.environ.get('RE15_V4_GAIN', '10.0'))
-STRUKTUR_GAIN_FARBE = float(os.environ.get('RE15_V4_GAINF', '1.5'))       # Farbton (rot/grau-Flecken des Originals), PORT-WAHL
+STRUKTUR_GAIN_FARBE = float(os.environ.get('RE15_V4_GAINF', '1.5'))       # Farbton (rot/grau-Flecken des Originals), PORT-WAHL,
+                              # Nutzer-Wortlaut "Ich will ... auch EXAKT seine Farben" (Laeufe r3 Struktur 16/17)
+# Klammer des Farbtons (log, je Kanal nach Abzug der Helligkeit): V4 Runde 4 gemessen (Pruefung V4 r3 Zahlen 5, "ohne Quelle"): die
+# Farbton-Abweichung des Originals x 1,5 hat in der Kopfbox vorn p99 0,30 (max 0,95), seitlich p99 0,15 (max 0,48); 0,4 schneidet nur die
+# Ausreisser ueber p99 (Kopfkontur gegen den Hintergrund) - Lauf r3 Struktur 17 zeigte ohne diese Grenze tuerkise Flecken.
 STRUKTUR_FARBE_KLAMMER = 0.4
-STRUKTUR_KLAMMER = float(os.environ.get('RE15_V4_KLAMMER', '2.0'))       # log Faktor >= -1,0 (Faktor >= 0,37): Kanten zum Hintergrund in den Ecken der Original-Kopfbox
-STRUKTUR_HELL = float(os.environ.get('RE15_V4_HELL', '0.15'))   # log Faktor <= STRUKTUR_HELL: helle Flecken ueber der Halbwertschwelle
-                              # des Auges bildeten eigene Komponenten (Lauf r3 Struktur 2, Gain 3,5 ohne Grenze: K1 2, S1 3 Komponenten)
+# Klammer der Helligkeit (log Faktor >= -STRUKTUR_KLAMMER): 2,0 = Faktor >= 0,135. Die dunklen Kanten zum Hintergrund in den Ecken der
+# Original-Kopfbox ergeben x 10 bis -7,5 (p1 vorn); Laeufe r3 Struktur 1-n (Dossier V4 Runde 3 "Klammer -2,0").
+STRUKTUR_KLAMMER = float(os.environ.get('RE15_V4_KLAMMER', '2.0'))
+STRUKTUR_HELL = float(os.environ.get('RE15_V4_HELL', '0.10'))   # log Faktor <= STRUKTUR_HELL: helle Flecken ueber der Halbwertschwelle
+                              # des Auges bildeten eigene Komponenten (Lauf r3 Struktur 2, Gain 3,5 ohne Grenze: K1 2, S1 3 Komponenten);
+                              # V4 Runde 4: 0,15 -> 0,10 (Lauf r4 Eichung final: mit den dunklen Flecken im Hof wurde ein heller Fleck neben
+                              # dem Auge zur zweiten K1-Komponente; Lauf r4 Eichung k mit 0,10: 1 Komponente, Kontrast 22,9, K11 38,5)
 # Exponent je Zone (1 = volle Originalstruktur). Wie Runde 2 (STRUKTUR_ZONE): halbe Struktur in den Zonen, deren helle Stufen neben
 # dem Auge eigene Komponenten ueber der Halbwertschwelle von K1/S1 bildeten; Runde 3 dazu v_basis (Lauf r3 Struktur 6/7: Komponenten
 # bei (338,181) und (370,164) in v_oben_links / v_basis, seitlich (455,220) in s_basis, je 4-15 px, L* 41,6-45 bei Schwelle 40-43)
 # (348,205): Zone v_nase Stufe 15 = (218,131,145) - der rosa Fleck am Mund der Sicht-Pruefung V4 r2 1.1 (Kinn/Maulzone); die Nasenzone
-# ist hell (Zonenfarbe ~(160,94,104)), weil nur wenige Nasentexel im Fenster KV3 liegen -> auch dort nur halbe helle Struktur
+# ist hell (Zonenfarbe ~(160,94,104)), weil nur wenige Nasentexel im Fenster KV3 liegen.
+# Wert 0,0 (Pruefung V4 r3 Zahlen 5: der Kommentar sagte "halbe Struktur"): Exponent 0 auf die HELLEN Stufen = in diesen 6 Zonen keine
+# helle Struktur, die dunklen Flecken bleiben voll (Lauf r3 Struktur 6/7: mit 0,5 blieben die Komponenten neben dem Auge)
 STRUKTUR_ZONE_R3 = {k: float(os.environ.get('RE15_V4_ZEXP', '0.0')) for k in ('s_basis', 's_haar', 'v_oben_links', 's_hinten_unten',
                                                                             'v_basis')}
 STRUKTUR_ZONE_R3['v_nase'] = 0.0
 
 
 # Augenhof (Lauf r3 Struktur 3/4: die Struktur hob den Median 21 x 21 um das Auge vorn auf 33,9 L* (Original 26,7, Messblatt K1), der
-# Kontrast fiel unter 20 und helle Flecken neben dem Auge wurden eigene Komponenten): bis AUGE_HOF_1 x Augenradius im Bild keine
-# Struktur, bis AUGE_HOF_2 x Radius linear auf volle Struktur. PORT-WAHL, nachgestellt an K1/S1 (Laeufe r3 Struktur 5-n).
+# Kontrast fiel unter 20 und helle Flecken neben dem Auge wurden eigene Komponenten): bis AUGE_HOF_1 x Augenradius im Bild keine helle
+# Struktur, bis AUGE_HOF_2 x Radius linear auf volle Struktur. PORT-WAHL, nachgestellt an K1/S1 (Laeufe r3 Struktur 5-n), Nutzer-Wortlaut
+# "Die Augen sehen nicht mal ansatzweise aus wie im Original" (das Original-Auge ist ein einzelner heller Fleck, Messblatt K1 1 Komponente).
 AUGE_HOF_1 = float(os.environ.get('RE15_V4_HOF1', '2.0'))
 AUGE_HOF_2 = float(os.environ.get('RE15_V4_HOF2', '4.0'))
 # Hof dunkler als die Zone: Median 21 x 21 um das Auge vorn im Port 36 L* auf den Kopfpixeln (Original 26,7, Messblatt K1), Lauf r3
-# Struktur 10; Faktor im Hof (Original-Ring um den hellen Fleck). PORT-WAHL, nachgestellt an K1.
+# Struktur 10; Faktor im Hof (Original-Ring um den hellen Fleck). PORT-WAHL, nachgestellt an K1, Nutzer-Wortlaut wie AUGE_HOF_1.
 AUGE_HOF_DUNKEL = float(os.environ.get('RE15_V4_HOFD', '0.5'))
 
 
+HOF_DUNKELSTRUKTUR = float(os.environ.get('RE15_V4_HOFSTR', '1.0'))   # V4 Runde 4: Anteil der dunklen Originalflecken im Hof (1 = voll);
+                              # Nutzer-Wortlaut "Die Augen sehen nicht mal ansatzweise aus wie im Original", Sicht-Pruefung V4 r3 1.1
 AUGE_HOF_DUNKEL_S = float(os.environ.get('RE15_V4_HOFDS', '0.6'))   # seitlich (Lauf r3 Struktur 15: mit 0,45 auch seitlich wurde die
                               # Kopfoberseite seitlich zur hellsten Stelle, S1/S2 fanden dort den Fleck)
 
 
-def struktur_original(info, ansicht, kp, kb_port, bild, auge=None, hof_dunkel=None):
+# V4 Runde 4 (Pruefung V4 r3 Sicht 1.3, Klasse A "Vierkant-Balken": Deck- und Seitenflaeche als Plateaus mit harter Kante, Querprofil-
+# Stufe auf 3 px 16,6-19,9 L*, Original 5,4-9,6 mit stetigem Abfall von hell oben nach dunkel unten): Schwanzbaender mit Verlauf ueber die
+# Lage c um den Umfang (c = Normale . Richtung weg von der Bogenmitte, birkin_formen.kette_meshes_v4). c-Bereich je Band = die
+# Klassengrenzen des Generators (SCHWANZ_V4 uv grenze 0,5). Aussenkante und Unterseite einfarbig; die Seitenbaender (mitte, senkrecht)
+# laufen von der Farbe der Aussenkante (c = +0,5) ueber ihre eigene Farbe (c = 0) zur Farbe der Unterseite (c = -0,5) - an jeder
+# Klassengrenze haben beide Flaechen dieselbe Farbe. Die eigene Farbe loest die Eichung (Achsenpunkte T9 wie bisher).
+SCHWANZ_VERLAUF = dict(aussen=(1.0, 0.5), mitte=(0.5, -0.5), senkrecht=(0.5, -0.5), unten=(-0.5, -1.0))
+
+
+# Breite der Uebergangszone (in c) beiderseits jeder Klassengrenze. V4 Runde 4: ein durchgehender Verlauf ueber den ganzen Umfang
+# (Laeufe r4 Eichung c-p) liess sich nicht stabil an T8/T9 eichen (Mitte (22,0,0), Aussenkante rot oder F17 4,9-9,6 L*); die Klassenfarben
+# der Runde 3 (T8/T9 bestanden) bleiben, nur an den Grenzen laeuft die Farbe ueber UEBERGANG je Seite auf die Mitte beider Farben - die
+# harte Kante (Querprofil-Stufe 16,6-19,9 L* auf 3 px, Sicht-Pruefung V4 r3 1.3) wird zum Verlauf ueber ~2 Flaechen. PORT-WAHL (Breite),
+# Nutzer-Wortlaut "Ich will EXAKT diese Umsetzung" (Vorlage 2: runder Schwanz ohne Kanten).
+UEBERGANG = 0.3
+
+
+def verlauf_mischung(bn, s):
+    """Anteile [(Band, Gewicht), ...] der Stufe s eines Verlaufsbands: eigene Farbe, an den Klassengrenzen linear bis 50/50 mit dem
+    Nachbarband (Aussenkante <-> Seite <-> Unterseite; Nachbar der Aussenkante/Unterseite ist 'mitte'). Linear in den Bandfarben
+    (loese_zonen_misch); Lauf r4 Eichung a: ein Faktor relativ zur Bandfarbe der vorigen Runde schaukelte sich auf."""
+    c_hi, c_lo = SCHWANZ_VERLAUF[bn]
+    c = c_hi - (c_hi - c_lo) * s / (STUFEN - 1)
+    out = {bn: 1.0}
+    oben = 'mitte' if bn in ('aussen', 'unten') else 'aussen'
+    unten = 'mitte' if bn in ('aussen', 'unten') else 'unten'
+    if bn != 'aussen' and c_hi - c < UEBERGANG:          # obere Grenze (zur Aussenkante hin)
+        w = 0.5 * (1.0 - (c_hi - c) / UEBERGANG); out[bn] -= w; out[oben] = out.get(oben, 0.0) + w
+    if bn != 'unten' and c - c_lo < UEBERGANG:           # untere Grenze (zur Unterseite hin)
+        w = 0.5 * (1.0 - (c - c_lo) / UEBERGANG); out[bn] -= w; out[unten] = out.get(unten, 0.0) + w
+    return out
+
+
+def loese_zonen_misch(daten, n_zonen, zeile, misch, regl_ziel, regl_gewicht=None):
+    """Wie loese_zonen, aber jeder CLUT-Index ist eine Mischung der Zonenfarben: Farbe(i) = Sum_z misch[i, z] x c_z (RGB je Zone)."""
+    from scipy.optimize import lsq_linear
+    zeilen, rhs = [], []
+    for cl, regs in daten:
+        idx, zl, lam, img = cl['idx'], cl['zeile'], cl['lam'], cl['img']
+        sel = zl == zeile
+        ii = np.clip(idx, 0, 255)
+        konst_bild = np.where(sel[..., None], 0.0, img)
+        for name, m, ziel_lab, wgt in regs:
+            if m.sum() < 2:
+                continue
+            w = gewicht(m)
+            konst = (w[..., None] * konst_bild).reshape(-1, 3).sum(0)
+            q = sel & (w > 0)
+            A = np.zeros((n_zonen, 3))
+            if q.any():
+                mq = misch[ii[q]]                                     # Pixel x Zonen
+                A = (mq[:, :, None] * (w[q][:, None] * lam[q])[:, None, :]).sum(0)
+            p_ziel = (lab_rgb(ziel_lab) - G.EA_) / G.EB_
+            for c in range(3):
+                row = np.zeros(n_zonen * 3); row[c::3] = A[:, c]
+                zeilen.append(row * wgt); rhs.append((p_ziel[c] - konst[c]) * wgt)
+    for zz in range(n_zonen):
+        rg_ = 0.15 if regl_gewicht is None else regl_gewicht[zz]
+        for c in range(3):
+            row = np.zeros(n_zonen * 3); row[zz * 3 + c] = rg_
+            zeilen.append(row); rhs.append(rg_ * regl_ziel[zz][c])
+    r = lsq_linear(np.array(zeilen), np.array(rhs), bounds=(0.0, 248.0))
+    return r.x.reshape(n_zonen, 3)
+
+
+def struktur_original(info, ansicht, kp, kb_port, bild, auge=None, hof_dunkel=None, hof_struktur=None):
     """Je Texel der Flaeche einer Ansicht: log der relativen Farbe des Originals (Vorlage 1 entblendet / Vorlage 2) an der Stelle mit
     denselben Anteilen der Original-Kopfbox (G.KB_ORIG) wie der Texel in der Port-Kopfbox kb_port. Rueckgabe (v, u, 3)."""
     o = G.vorlage(bild).astype(np.float32)
@@ -274,7 +354,11 @@ def struktur_original(info, ansicht, kp, kb_port, bild, auge=None, hof_dunkel=No
     if auge is not None:                      # (cx, cy, rx, ry) im Bild der Ansicht
         d = np.sqrt(((x - auge[0]) / auge[2]) ** 2 + ((y - auge[1]) / auge[3]) ** 2)
         t = np.clip((d - AUGE_HOF_1) / (AUGE_HOF_2 - AUGE_HOF_1), 0.0, 1.0)[..., None]
-        r = r * t + np.log(AUGE_HOF_DUNKEL if hof_dunkel is None else hof_dunkel) * (1.0 - t)
+        # V4 Runde 4 (Pruefung V4 r3 Sicht 1.1 Klasse A: im Spielbild h118/h135 eine glatte Kuppel, Innenflaeche Gradient 26,9/27,2 unter
+        # der Originalspanne 29,0-40,4, glatte Pixel 1,7-2,7 x): der Hof reicht bis AUGE_HOF_2 x Augenradius (vorn ~20 px um das Auge =
+        # fast die ganze Gesichtsflaeche) und war ohne jede Struktur. Jetzt behaelt der Hof die DUNKLEN Flecken des Originals (min(r, 0));
+        # nur die hellen sind dort aus - sie bildeten die zweiten Komponenten ueber der K1/S1-Schwelle (Lauf r3 Struktur 3/4)
+        r = r * t + (np.minimum(r, 0.0) * (HOF_DUNKELSTRUKTUR if hof_struktur is None else hof_struktur) + np.log(AUGE_HOF_DUNKEL if hof_dunkel is None else hof_dunkel)) * (1.0 - t)
     return r
 
 
@@ -488,14 +572,20 @@ def loese_koerper(daten, basis, klassen, theta0):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--runden', type=int, default=4)
+    ap.add_argument('--aus', default=AUS, help='Ziel der Farbdatei (Standard: farben_v4.npz im Baum)')
+    ap.add_argument('--arb', default=ARB, help='Arbeitsordner (Versuchslaeufe parallel)')
+    ap.add_argument('--prot', default=PROT)
     a = ap.parse_args()
-    os.makedirs(ARB, exist_ok=True)
+    ARB_ = a.arb
+    os.makedirs(ARB_, exist_ok=True)
     P = G.posen()
     ziel = ziele_original()
     amp, amp_einzeln = struktur_amplitude()
     prot = dict(ziele=ziel, struktur=dict(amp=amp, je_fenster=amp_einzeln), runden=[])
     kp, sw = BF.KOPF_V4, BF.SCHWANZ_V4
-    npz = os.path.join(ARB, 'farben_runde.npz')
+    g_ = sw['uv']['grenze']                    # V4 Runde 4: c-Bereiche der Verlaufsbaender = Klassengrenzen des Generators
+    SCHWANZ_VERLAUF.update(aussen=(1.0, g_), mitte=(g_, -g_), senkrecht=(g_, -g_), unten=(-g_, -1.0))
+    npz = os.path.join(ARB_, 'farben_runde.npz')
     if os.path.exists(npz):
         os.remove(npz)
     # Startfarben: Ziel im Port-Schirm / 0,6 (mittleres lambda der Kopf-/Schwanzflaechen im ersten Licht-Render)
@@ -508,7 +598,7 @@ def main():
     zonen_c, baender_c = start_z.copy(), start_b.copy()
     for runde in range(a.runden + 1):
         # Zwischenstand schreiben: Texelbilder (Zone x 16 Stufen) + Zeilen
-        blob, info = bauen(npz if os.path.exists(npz) else os.path.join(ARB, 'nicht_da.npz'))
+        blob, info = bauen(npz if os.path.exists(npz) else os.path.join(ARB_, 'nicht_da.npz'))
         mo = b2.modell(blob)
         vorn_r = G.zeichne(mo, P['135'], voll=True); seite_r = G.zeichne(mo, P['85'], voll=True)
         kv = G.kopfbox(vorn_r[1]); ks = G.kopfbox(seite_r[1])
@@ -559,7 +649,8 @@ def main():
         auge_v = (float(_xa[0, 0]), float(_xa[0, 1]), 0.5 * 0.026 * Hv, 0.5 * 0.033 * Hv)      # Messblatt K3 0,026 x 0,033 H
         rel_v = struktur_original(info, 'vorn', kp, kv, 1, auge_v)
         rel_s = struktur_original(info, 'seite', kp, ks, 2, (auge_s[0], auge_s[1], auge_s[2] / AUGE_S_GEMALT, auge_s[3] / AUGE_S_GEMALT),
-                                 AUGE_HOF_DUNKEL_S)
+                                 AUGE_HOF_DUNKEL_S, hof_struktur=0.0)   # Runde 4: seitlich wie Runde 3 (Lauf r4 Eichung a: mit
+                                 # dunklen Flecken im Hof auch seitlich verlor das Seitenauge seine Helligkeit, S1/S2/S4 rot)
         st_v, st_s, stufen_rgb = struktur_stufen(rel_v, rel_s)
         # Runde 2: Augen mit radialem Verlauf statt Hautstruktur (heller Kern, dunklerer Rand): Stufe = (1 - Ellipsenabstand) x 15;
         # vorn aus dem 3D-Abstand zur Augenzone, seitlich aus dem Abstand zur Augenellipse im Bild
@@ -608,15 +699,30 @@ def main():
         # Schwanz: Baender nach SCHWANZ_V4 uv baender (Runde 2: 5 x 51 Zeilen), Stufen aus der Struktur
         st_t, f_t = struktur_feld(mo, (256, 64), amp)
         idx_t = np.zeros((256, 64), int)
+        vl = sw['uv'].get('verlauf')
         for bi, (bn, _k) in enumerate(BAENDER):
             v0_, v1_ = sw['uv']['baender'][bn]
-            idx_t[v0_:v1_ + 1] = 1 + bi * STUFEN + st_t[v0_:v1_ + 1]
-        zone_t = np.full(256, -1); fak_t = np.zeros(256)
-        for bi in range(len(BAENDER)):
+            if vl and bn in SCHWANZ_VERLAUF:
+                # V4 Runde 4: Zeile -> Lage um den Umfang c (wie birkin_formen.kette_meshes_v4 tx), Stufe = Lage im c-Bereich des Bands
+                c_hi, c_lo = SCHWANZ_VERLAUF[bn]
+                zj = vl['zeilen_je_c'][bn] if isinstance(vl['zeilen_je_c'], dict) else vl['zeilen_je_c']
+                for r in range(v0_, v1_ + 1):
+                    t_ = min(1.0, (r - v0_) / zj / (c_hi - c_lo))
+                    idx_t[r] = 1 + bi * STUFEN + int(round(t_ * (STUFEN - 1)))
+            else:
+                idx_t[v0_:v1_ + 1] = 1 + bi * STUFEN + st_t[v0_:v1_ + 1]
+        zone_t = np.full(256, -1); misch_t = np.zeros((256, len(BAENDER)))
+        namen_b = [b[0] for b in BAENDER]
+        for bi, (bn, _k) in enumerate(BAENDER):
             for s in range(STUFEN):
-                # Runde 2: Schwanz mit halber Hautstruktur - mit voller Struktur fielen die dunklen Stufen der Wurzel unter Chroma 6 und
-                # zaehlten in die Region F17 (Aussenkante, Chroma < 6), Lauf r2 Koerper 1: F17 L* 14,0 statt 26,8
-                zone_t[1 + bi * STUFEN + s] = bi; fak_t[1 + bi * STUFEN + s] = 1.0 + 0.5 * amp * (s - (STUFEN - 1) / 2.0) / ((STUFEN - 1) / 2.0)
+                zone_t[1 + bi * STUFEN + s] = bi
+                if vl and bn in SCHWANZ_VERLAUF:
+                    for nb, w in verlauf_mischung(bn, s).items():
+                        misch_t[1 + bi * STUFEN + s, namen_b.index(nb)] += w
+                else:
+                    # Runde 2: Schwanz mit halber Hautstruktur - mit voller Struktur fielen die dunklen Stufen der Wurzel unter Chroma 6 und
+                    # zaehlten in die Region F17 (Aussenkante, Chroma < 6), Lauf r2 Koerper 1: F17 L* 14,0 statt 26,8
+                    misch_t[1 + bi * STUFEN + s, bi] = 1.0 + 0.5 * amp * (s - (STUFEN - 1) / 2.0) / ((STUFEN - 1) / 2.0)
         if runde > 0:
             # Loesen an den Renders dieses Stands
             mo_cl = dict(mo=mo)
@@ -633,16 +739,60 @@ def main():
                             ziel_lab = ziel[ZONEN[zz][2]] if zi_ is zone_je_index else RV.ziel(BAENDER[zz][1])
                             st_[zz] = np.clip((lab_rgb(ziel_lab) - G.EA_) / G.EB_ / np.maximum(cl_['lam'][q].mean(0), 0.05), 0, 248)
             rv = regionen(mo_cl, None, 'vorn', ziel, P); rs = regionen(mo_cl, None, 'seite', ziel, P)
+            # V4 Runde 4: die Augen-Regionen nach der Zone aus dem Code-Render (Texel der Zonen v_auge/s_auge), nicht nach dem hellsten
+            # Fleck des aktuellen Renders - Lauf r4 Eichung c: der Fleck lag in einer Runde auf der Kopfoberseite seitlich, die Eichung
+            # machte dort das "Auge" hell (S2 0,139 H, S4 grau) und verstaerkte den Fehler in den folgenden Runden
+            augen_z = (nm['v_auge'], nm['s_auge'])
+            for (cl_, rl_, kn_) in ((cv, rv, 'AUGE_V'), (cs, rs, 'AUGE_S')):
+                ii_ = np.clip(cl_['idx'], 0, 255)
+                # nur der helle Kern (obere Haelfte der radialen Stufen): der Riegel misst den Fleck ueber der Halbwertschwelle; mit allen
+                # Augentexeln trieb die Eichung den Kern auf 72-74 L* (K2/S1 dE00 15-24, Lauf r4 Eichung e/f)
+                zall = (cl_['zeile'] == 6) & np.isin(zone_je_index[ii_], augen_z)
+                mz = zall & (((ii_ - 1) % STUFEN) >= STUFEN // 2)
+                for j_, r_ in enumerate(rl_):
+                    if r_[0] == kn_:
+                        # der Fleck des Riegels (Halbwertschwelle), soweit er auf Augentexeln liegt; liegt er nicht auf dem Auge (Lauf r4
+                        # Eichung c), der helle Kern der Augenzone (nur dann: mit dem Kern allein wurde das Auge zu hell, Lauf r4 Eichung g)
+                        ms = r_[1] & zall
+                        rl_[j_] = (kn_, ms if ms.sum() >= 0.5 * max(int(r_[1].sum()), 1) else mz, r_[2], r_[3])
             zonen_c = loese_zonen([(cv, rv), (cs, rs)], len(ZONEN), 6, None, fak_je_index, zone_je_index, start_z)
             # Schwanz-Regionen (riegel_v4.schwanz Masken)
             # Regionen genau wie riegel_v4 T8 (Kreise um T1/T2 mit Chroma >= 6, Chroma < 6 oberhalb T2, Ids zwischen T3 und T4)
             zt, s_, (img_t, ids_t, V_t, fr, rmask) = RV.schwanz(mo, P)
             # F17 doppelt gewichtet: die Region (Chroma < 6 ueber T2) enthaelt auch Mischpixel Kante/Mitte (Lauf r2 Eichung 2: 17,7 statt 26,8)
             rt = [(k, rmask[k], RV.ZIEL[k], 2.0 if k == 'F17' else 1.0) for k in ('F15', 'F16', 'F17', 'F18')]
+            if vl:
+                # V4 Runde 4: die Riegel-Regionen haengen am Chroma der aktuellen Farben (F17 = Chroma < 6 ueber der Biegung, F15/F16 =
+                # Chroma >= 6 in Kreisen) - mit dem Verlauf tauschten die Baender dabei die Rollen (Lauf r4 Eichung c: Wurzel grau,
+                # Aussenkante rot, Bandfarben schwingen 0 <-> 215). Zum LOESEN gelten deshalb die Baender aus dem Code-Render (gleiche
+                # Kreise/Hoehen wie riegel_v4.schwanz, ohne Chroma-Bedingung); der Riegel misst danach wie bisher.
+                bp = np.where(cs['zeile'] == 7, zone_t[np.clip(cs['idx'], 0, 255)], -1)
+                yy_, xx_ = np.mgrid[:480, :640]
+                me_ = RV.er(np.isin(ids_t, RV.SCHW), 1)
+                b_, bi_ = s_['beginn'], s_['biegung']
+                na_ = [b[0] for b in BAENDER]
+                kreis15 = me_ & (np.hypot(xx_ - (b_[0] - 12), yy_ - (b_[1] - 5)) <= 12) & (bp != na_.index('aussen'))
+                kreis16 = me_ & (np.hypot(xx_ - (bi_[0] + 10), yy_ - bi_[1]) <= 10) & (bp != na_.index('aussen'))
+                oben17 = me_ & (bp == na_.index('aussen')) & (yy_ <= bi_[1])
+                # F17 = Oberseite des Rohrs: Band 'aussen' und die oberen Verlaufsstufen der Seitenbaender (c >= ~0,5) ueber der Biegung.
+                # Lauf r4 Eichung h (nur 'aussen'): F17 20,1 statt 26,8; Lauf r4 Eichung i (Riegelmaske Chroma < 6): die Maske fiel auf
+                # die Mitte der Seitenbaender, die Eichung machte die Mitte hell und die Oberseite dunkel (Querprofil verkehrt)
+                st_ = (np.clip(cs['idx'], 0, 255) - 1) % STUFEN
+                mitte_b = np.isin(bp, [na_.index('mitte'), na_.index('senkrecht')])
+                r17 = me_ & (yy_ <= bi_[1]) & ((bp == na_.index('aussen')) | (mitte_b & (st_ <= 3)))
+                rt = [('F15', kreis15, RV.ZIEL['F15'], 1.0),     # (Lauf r4 Eichung n mit Gewicht 2: F17 kippte auf 4,9 L*, verworfen) ('F16', kreis16, RV.ZIEL['F16'], 1.0), ('F17', r17, RV.ZIEL['F17'], 2.0),
+                      ('F18', rmask['F18'], RV.ZIEL['F18'], 1.0)]
             # Runde 2: die 7 Achsenpunkte (T9) als eigene Regionen mit dem Original-5x5-Mittel als Ziel
             for k9, (m9, z9) in RV.achse_regionen(ids_t, V_t).items():
                 rt.append((k9, m9, z9, 1.0))
-            baender_c = loese_zonen([(cs, rt)], len(BAENDER), 7, None, fak_t, zone_t, start_b)
+            # Aussenkante stark an ihre Startfarbe (F17-Ziel / mittleres Licht ihrer Bildpunkte) gebunden: im Verlauf mischt sie in die
+            # Seitenbaender, und die dunkelroten Achsenpunkte (T9) zogen sie rot (Lauf r4 Eichung final 2: Aussenkante (68,24,37), F17 4,9 L*).
+            # Gewicht 3,0 (Laeufe r4 Eichung r/s/t/u/v mit 1,0 / 0,4 / 0,6 / 3,0 / 10,0: F17 20,5 / 6,2 / 12,3 / 20,8 / 20,8 L*, T8 nur ab 3,0
+            # gruen). PORT-WAHL (Regularisierung der Eichung, keine Spielkonstante).
+            rgw = [float(os.environ.get('RE15_V4_RGW', '3.0')) if b[0] == 'aussen' else 0.15 for b in BAENDER]
+            neu_b = loese_zonen_misch([(cs, rt)], len(BAENDER), 7, misch_t, start_b, rgw)
+            # V4 Runde 4: gedaempft (halber Schritt ab Runde 2), die Regionen haengen am Render der vorigen Runde
+            baender_c = neu_b if runde == 1 else 0.5 * (baender_c + neu_b)
             # Koerper
             zf, ef, (img1, ids1, V1, img2, ids2, V2, reg, reg2) = RV.koerper_farben(mo, P)
             # F8 (Oberarm (W)-links 16,4) nicht im Fit: beide Oberarme (Mesh 10 und 13) nutzen dieselbe Zeile 480 / Seite 128, das Original
@@ -655,7 +805,7 @@ def main():
             if zone_je_index[i] >= 0:
                 clut486[i] = np.clip(zonen_c[zone_je_index[i]] * fak_je_index[i], 0, 248)
             if zone_t[i] >= 0:
-                clut487[i] = np.clip(baender_c[zone_t[i]] * fak_t[i], 0, 248)
+                clut487[i] = np.clip(misch_t[i] @ baender_c, 0, 248)
         haut = basis.copy()
         haut[:3] = koerper_param(theta, basis[:3], klassen)
         np.savez(npz, kopf_vorn=idx_v.astype(np.uint8), kopf_seite=idx_s.astype(np.uint8), schwanz=idx_t.astype(np.uint8),
@@ -665,9 +815,9 @@ def main():
                                    theta=[round(float(x), 4) for x in theta], kopfbox_vorn=kv, kopfbox_seite=ks, H=(Hv, Hs)))
         print('Runde', runde, 'Zonen', {z[0]: [int(x) for x in zonen_c[i]] for i, z in enumerate(ZONEN)}, flush=True)
     import shutil
-    shutil.copy(npz, AUS)
-    json.dump(prot, open(PROT, 'w'), indent=1, default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o))
-    print('geschrieben', AUS, PROT)
+    shutil.copy(npz, a.aus)
+    json.dump(prot, open(a.prot, 'w'), indent=1, default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o))
+    print('geschrieben', a.aus, a.prot)
 
 
 if __name__ == '__main__':

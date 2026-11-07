@@ -605,23 +605,34 @@ SCHWANZ_V4 = dict(
     # Durchmesser 2-4 und Tiefe 2-3 nachgestellt mit tools/r41_sichel/v4/r3_form_suche.py (Saat 2, Schritt 78; T1-T6/TA mit Marge
     # 0,003 H, Protokoll SF_belege/v4/r3/r3_form_suche_saat2.log): 70,6 Grad. Der Ansatz faellt jetzt wie im Original schraeg zur
     # Biegung ab (Gelenk 2 0,016 H ueber dem Beginn, Gelenk 3 0,058 H darunter; Original-Mittellinie 20-27 Grad vor der Biegung).
-    gelenke=[(0.12, -0.080), (-0.037, -0.040), (-0.1345, -0.0163), (-0.2617, 0.0582), (-0.2577, 0.1834), (-0.259, 0.280),
-             (-0.238, 0.337), (-0.218, 0.393)],
+    # V4 Runde 4 (Pruefung V4 r3 Zahlen 4.1/4.2, Sicht 1.3): Lage der Biegung nach dem O2-Werkzeug +0,100 H (Soll +0,036 +-0,03), Breite
+    # nicht monoton (Gelenk 3 0,1599 > Gelenk 2), Aussenecke als Dorn, Oberkante x 276-292 6-16 px ueber dem Original. Gelenke 2-4,
+    # Durchmesser 1-4 (monoton fallend erzwungen, Messblatt Abschnitt 4 Punkt 3) und Tiefe 2-3 per tools/r41_sichel/v4/r4_form_suche.py
+    # (Saat 1, Schritt 253; Nebenbedingungen T1-T6/TA, T2 Lage+Drehung nach t2_mass_v4, T5 auch quer zur Mittellinie, Oberkante;
+    # Ziel = Ober-/Unterkontur des waagerechten Teils wie die Leser-Maske; Protokoll SF_belege/v4/r4/r4_form_suche_saat1.log).
+    # Gelenke 5-7 (Knick, Endstueck) danach mit RE15_R4_ENDE=1 r4_form_suche.py (Saat 22, Schritt 35: T4 dx -0,214 -> -0,215, Strafe 2,36 ->
+    # 2,00; Protokoll SF_belege/v4/r4/r4_form_suche_ende22.log).
+    gelenke=[(0.12, -0.080), (-0.037, -0.040), (-0.1462, -0.0115), (-0.2871, 0.0604), (-0.2456, 0.1649), (-0.2605, 0.2792),
+             (-0.2393, 0.3385), (-0.2163, 0.3924)],
     # Durchmesser je Gelenk in H (Abschnitt 4 "breiter nach oben": vom Knick zum Ruecken f 0,1/0,3/0,5/0,7 = 0,03/0,065/0,125/0,14 H,
     # f 0,9 geht in den Buckel >= 0,09; Taille am Knick 0,024-0,032 H; unter dem Knick gleich breit 0,035 H). Gelenke 2-4 nachgestellt
     # (r2_form_suche.py nach f 0,7 / 0,5 / 0,3); Gelenk 1 0,13 H: Unterseite am Beginn (Achse 0,04 H darueber); Gelenk 0 im Buckel wie
     # Runde 1. Knick (Gelenk 5) 0,027 H: Mitte der gemessenen Taille 0,024-0,032 H (Runde 1: 0,022 lag darunter, Pruefung V4 r1 Zahlen 5);
     # gemessen 0,025-0,028 H und die schmalste Stelle (T6). Endstueck 0,038 H (gemessen 0,032-0,036 H, Ziel 0,035).
     # V4 Runde 3: Gelenke 2-4 aus r3_form_suche.py (Saat 2, Schritt 78, s. gelenke); T5 0,028 / 0,080 / 0,140 / 0,131 H
-    durchmesser=[0.16, 0.13, 0.1243, 0.1599, 0.0452, 0.027, 0.038, 0.038],
+    # V4 Runde 4: Gelenke 1-4 aus r4_form_suche.py (Saat 1, Schritt 253), monoton fallend 0,139 -> 0,130 -> 0,079 -> 0,046 H
+    durchmesser=[0.16, 0.1391, 0.1301, 0.0789, 0.0459, 0.027, 0.038, 0.038],
     # Versatz zur Kamera (H, Bildmassstab am Gelenk) - Ansatz vor der Flanke (s. beginn): Strahl durch (357,243) trifft Mesh 8 bei
     # Modell-z -475 (Mittelebene -134, kopf3d_v4.treffer); mit 0,05 H blieb der Ansatz hinter der Flanke (Malreihenfolge nach mittlerer
     # Tiefe wie die PSX-Ordnungstabelle, r2_expt Lauf a1), mit 0,12 H liegt er sichtbar davor (Lauf a2). Ab der Biegung 0 (Mittelebene).
     # PORT-WAHL (Pruefung V4 r2 Zahlen 4.4/5: als solche kennzeichnen): Gelenke 0/1 0,12 H aus r2_expt Lauf a1/a2 (Sichtbarkeit nach der
-    # Malreihenfolge); Gelenke 2/3 V4 Runde 3 aus r3_form_suche.py (Saat 2, Schritt 78) 0,0822 / 0,0443 H.
-    tiefe=[0.12, 0.12, 0.0822, 0.0443, 0.0, 0.0, 0.0, 0.0],
+    # Malreihenfolge); Gelenke 2/3 V4 Runde 4 aus r4_form_suche.py (Saat 1, Schritt 253) 0,1463 / 0,0696 H. Nutzer-Wortlaut "Ich will
+    # EXAKT diese Umsetzung" (Beschreibung2: Schwanz Beginn in den Ruecken ueberfuehrend).
+    tiefe=[0.12, 0.12, 0.1463, 0.0696, 0.0, 0.0, 0.0, 0.0],
     dorn=0.8,                              # Spitze 0,8 x Endradius (Spitzenform nicht aufloesbar, Abschnitt 9 Punkt 2; PORT-WAHL kurz)
-    glieder=7, seiten=10,                  # M1: 7 x 20 + Deckel 10 + Spitze 10 = 160 Dreiecke <= 212 (EM30-Arm 13-15)
+    # V4 Runde 4 (Sicht-Pruefung V4 r3 1.3 "Vierkant-Balken", Empfehlung "runder Querschnitt (mehr Seiten, wie Referenz 2)"): 12 Seiten.
+    # M1: 7 x 24 + Deckel 12 + Spitze 12 = 192 Dreiecke <= 212 (EM30-Arm 13-15); 13 Seiten ergaeben 208, 14 Seiten 224 > 212.
+    glieder=7, seiten=12,
     ueberlapp=0.45, deckel=True,           # wie V3 (Manschette ins Vorglied, Deckel in den Rumpf)
     # Textur: eigene Flaeche TPage 130 u 64-127 v 0-255 (frei, Atlasbelegung Referenz 2: Seite 2 belegt u 0-47 und u 0-63 ab v 176),
     # Zeile 487; je Flaeche eine Farbklasse (Abschnitt 4 "zweitoenig"): Wurzel (Glied 16; Glied 17 ohne die Aussenkante), Aussenkante
@@ -635,7 +646,18 @@ SCHWANZ_V4 = dict(
     # = cos 60 Grad teilt die 10 Seiten in 4 / 2 / 4 (Aussenkante / Mitte / Unterseite), im Bild je etwa ein Drittel der Breite.
     # dichte = Texel je E. (M4: 0,045-0,091, EM30-Haut 0,046-0,087 -> Mitte 0,068): je Glied u-Spanne = Laenge x dichte, v-Spanne =
     # halber Umfang x dichte (Umfang gespiegelt wie V3), hoechstens 63 bzw. die Hoehe des Bands der Klasse.
+    # V4 Runde 4 (Pruefung V4 r3 Sicht 1.3, Klasse A: "Vierkant-Balken" - Deckflaeche 38-42 L* und Seitenflaeche 11 L* als Plateaus mit
+    # harter Kante, Querprofil-Stufe auf 3 px 16,6-19,9 L*, Original 5,4-9,6): 'verlauf' = Zeile je Ecke aus der Lage um den Umfang
+    # (c), die Baender aussen/mitte/senkrecht/unten tragen einen Verlauf ueber c (eichen_v4.py, Schwanz-Verlauf); Glied 17 ohne die
+    # Klasse 'wurzel' (sonst stiesse das Wurzelband ohne Verlauf an die Aussenkante). zeilen_je_c = Texelzeilen je Einheit c, je Band so
+    # gewaehlt, dass jedes Glied in der M4-Spanne 0,045-0,091 Texel/E. bleibt (Dichte = Wurzel aus u-Dichte 0,068 x v-Dichte; die
+    # duennen Glieder 19-20 im Band 'senkrecht' brauchen weniger Zeilen): Lauf r4 Dichte 1 mit 20/22/15/20 -> 0,045-0,086 (Glied 18 an der
+    # Grenze), Lauf r4 Dichte 2 mit 22/24/14/22 -> 0,046-0,086. PORT-WAHL (Machart, Messblatt M4).
+    # Grenze 0,5 wie Runde 3 (Klassen und Farben der Runde 3, T8/T9 bestanden); der Verlauf liegt nur an den Klassengrenzen
+    # (eichen_v4.UEBERGANG). Laeufe r4 Eichung h-p mit 0,8 und durchgehendem Verlauf: nicht stabil an T8/T9 zu eichen (Dossier V4 Runde 4).
+    # Zeilen je c fuer M4 (Lauf r4 Dichte 4: senkrecht 10 -> Glied 20 0,092 > 0,091, daher 9).
     uv=dict(clut=487 << 6, page=130, u=(64, 127), dichte=0.068, grenze=0.5,
+            verlauf=dict(zeilen_je_c=dict(aussen=22, mitte=24, senkrecht=9, unten=22)),
             baender=dict(wurzel=(0, 55), aussen=(56, 95), mitte=(96, 135), senkrecht=(136, 175), unten=(176, 215), ende=(216, 255))),
     # Nachschwingen wie V3 (Ae5), Knick-Grenze mit Ausnahme fuer die Biegung (ab 30 Grad Ruhewinkel). Dieselbe Regel im Spiel:
     # schwanz_r41.c glaetten() mit SW_GLATT_KNICK_AB, dort seit V4 Runde 2 fuer die V4-Kette (ungleiche Glieder, SW_GLATT_V4_VERH)
@@ -666,7 +688,13 @@ KOPF_V4 = dict(
     # Treffer 218 E. davor, Lauf "n"), glatt in x (xa 100 .. xb 250: Eckenreihen x 104 / 254 = Uebergang Hinterkopf -> Gesicht) und
     # in y bis zum Kinn (y1 40 .. y2 170: Eckenreihen y 77-81 / 168). Ergebnis (Lauf k7): Spaltenhoehen an der Vorderkante 31-36 px =
     # 0,12-0,14 H (Runde 1: 18-21 px), K10 unveraendert 0,154 x 0,187 H. PORT-WAHL (Eckenreihen), Quelle der Masse: Messblatt S2/S3.
-    vorbau=dict(art='bild', vor=0.06, z0=-10.0, z1=30.0, xa=100.0, xb=250.0, y1=40.0, y2=170.0),
+    # V4 Runde 4 (Pruefung V4 r3 Zahlen S3 ROT: Abstand Haarkante -> Augenfleck 0,015-0,019 H, erlaubt 0,01 H): vor 0,06 -> 0,053 H. Das
+    # Fenster KS2 (Messblatt S3) liegt bei 0,84-0,96 der Kopfbox-Breite; der Augenfleck endet an der Naht zu den Vorderbild-Flaechen
+    # (Runde 3: Vorderkante der Ellipse vorgezogen ohne Wirkung). Mit der Vorderkante des Vorhangs 0,007 H weiter hinten rueckt das
+    # Fenster um 0,84 x 0,007 H an den Fleck: Lauf r4 Eichung f S3 Abstand 0,004 H, S2 0,054 H (Soll 0,03-0,07, Messblatt 0,049). Mit dem
+    # Endstand der Kopfstruktur schwankte S3 bei 0,053 / 0,050 zwischen 0,004 und 0,011 H (Laeufe r4 Eichung h-o: ein Pixel Fleckrand);
+    # 0,048 H: S3 0,004 H, S2 0,054 H, K10 unveraendert 0,154 x 0,187 H (Lauf r4 Eichung n). PORT-WAHL, Quelle der Masse Messblatt S2/S3.
+    vorbau=dict(art='bild', vor=0.048, z0=-10.0, z1=30.0, xa=100.0, xb=250.0, y1=40.0, y2=170.0),
     clut=486, page=128,
     # Ansichten: Flaechen von Mesh 9 mit Blick zur Kamera (Normale . Blick >= schwelle) bekommen das Bild der Ansicht, in der sie
     # frontaler liegen (Parallelprojektion aus der Spielkamera): vorn = Pose "135" (Vorlage 1), seitlich = Pose "85" (Vorlage 2).
@@ -691,7 +719,13 @@ KOPF_V4 = dict(
 #            298-325 x 262-340 8,8 / -3,4 / 3,2 L*, kein Pixel L* > 30, gegen Unterarm (B)-rechts 29,3 L* (Pruefung V4 r2 Sicht 1.4,
 #            Klasse A) -> Zeile 488 (Startwert = Zeile 482).
 # Die Zeilen 488/489 liegen hinter Kopf 486 / Schwanz 487 (dieselbe CLUT-Spalte; NB3 nutzte 488/489 schon fuer Klaue/Kappe).
-KOERPER_ZEILEN_V4 = {10: (489, 480), 14: (488, 482)}       # Mesh -> (neue Zeile, Startzeile)
+#   Mesh 13 = Oberarm (W)-rechts = (B)-links (V4 Runde 4, Pruefung V4 r3 Sicht 1.5 Klasse A "Rot-Verteilung"): teilt 5074 Texel mit
+#            Mesh 8 (Rumpf, rote Brustmitte) und 4023 mit Mesh 5 (Bein) in Zeile 480 - das Kachelziel gab Id 13 im aeusseren Drittel
+#            Rotanteil 0,12, der Fit lieferte 0,36 (Lauf r4 Koerper 2, der geteilte Texel mittelt mit der Brust) -> Zeile 490 (Start 480).
+#   Meshes 2/3/5/6 = Beine (V4 Runde 4, Riegel FS Unterschenkel): teilen in Zeile 480 2507 Texel (Mesh 5) mit dem Rumpf; mit der roten
+#            Brustmitte (Kacheln) wurden die Unterschenkel rot (Rotanteil 0,30 statt 0,03, dE00 7,1, Lauf r4 Koerper 6) -> Zeile 491.
+KOERPER_ZEILEN_V4 = {10: (489, 480), 14: (488, 482), 13: (490, 480),
+                     2: (491, 480), 3: (491, 480), 5: (491, 480), 6: (491, 480)}       # Mesh -> (neue Zeile, Startzeile)
 
 
 def _variante_v4():
@@ -845,23 +879,28 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
         W, P0 = welt[i]
         achse_mitte = P0 + W @ np.array([0.0, Li / 2.0, 0.0])
 
-        def klasse(nrm_lokal):
-            if i == 0:
-                return 'wurzel'
-            if i >= 5:
-                return 'ende'
+        vl = uv.get('verlauf')
+
+        def c_wert(nrm_lokal):
             nw = W @ nrm_lokal
             u_ = achse_mitte - bogenmitte
             if ebene_n is not None:                # nur die Richtung in der Ebene des Bogens (der Ansatz liegt 'tiefe' vor der Flanke)
                 u_ = u_ - ebene_n * float(u_ @ ebene_n)
                 ga = W @ ey                        # V4 Runde 2: Aussennormale der Bogenlinie = Anteil quer zur Gliedachse
                 u_ = u_ - ga * float(u_ @ ga)
-            c = float(nw @ u_) / max(float(np.linalg.norm(nw) * np.linalg.norm(u_)), 1e-9)
+            return float(nw @ u_) / max(float(np.linalg.norm(nw) * np.linalg.norm(u_)), 1e-9)
+
+        def klasse(nrm_lokal):
+            if i == 0:
+                return 'wurzel'
+            if i >= 5:
+                return 'ende'
+            c = c_wert(nrm_lokal)
             if 'mitte' not in uv['baender']:
                 return 'aussen' if c > 0 else 'unten'
             if c > uv['grenze']:
                 return 'aussen'
-            if i == 1:
+            if i == 1 and not vl:
                 return 'wurzel'
             if c < -uv['grenze']:
                 return 'unten'
@@ -872,6 +911,19 @@ def kette_meshes_v4(sw, ruhe, welt, bogenmitte, ebene_n=None):
 
         def tx(kl, k, t):
             v0, v1 = uv['baender'][kl]
+            if vl and kl in ('aussen', 'mitte', 'senkrecht', 'unten'):
+                # V4 Runde 4 (Pruefung V4 r3 Sicht 1.3 Klasse A, "Vierkant-Balken"): Zeile = Lage um den Umfang (c der Eckennormale), nicht
+                # mehr gespiegelter Umfangsindex. Die Baender tragen einen Verlauf ueber c (eichen_v4.py), benachbarte Flaechen
+                # verschiedener Klassen treffen sich an der Klassengrenze in derselben Farbe -> keine harte Kante zwischen Deck- und Seitenflaeche
+                wk = 2 * np.pi * (k % S) / S
+                c = c_wert(np.array([np.cos(wk), 0.0, np.sin(wk)]))
+                g_ = uv['grenze']
+                c_hi = 1.0 if kl == 'aussen' else (-g_ if kl == 'unten' else g_)
+                c_lo = g_ if kl == 'aussen' else (-1.0 if kl == 'unten' else -g_)
+                c = min(max(c, c_lo), c_hi)
+                zj = vl['zeilen_je_c']
+                zj = zj[kl] if isinstance(zj, dict) else zj
+                return (int(round(uv['u'][0] + us * t)), int(round(v0 + (c_hi - c) * zj)))
             a = 1.0 - abs(1.0 - 2.0 * (k % (S + 1)) / S)
             return (int(round(uv['u'][0] + us * t)), int(round(v0 + min(vs_, float(v1 - v0)) * a)))
 
