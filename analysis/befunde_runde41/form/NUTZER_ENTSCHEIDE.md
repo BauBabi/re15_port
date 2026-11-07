@@ -181,6 +181,18 @@ Folgen (Auftrag Nachbesserung 2 der Stufe 3):
 - E20/E21 neu ausgelegt: K3 (vorn breite, kurze Schnauze) ist ersetzt; die Kopflage folgt weiter Screenshot 2 (offenes Maul, Unterkiefer-Band).
 - Textur: die Haut soll im Spiel wie durchgehende Haut im H2-Stil aussehen (E10-E16 gelten: keine erfundenen Farben, kein Cel-Shading). Ursache messen (Heatmap, echtes Fenster), beheben; Gegenprobe Mosaik-Mass <= J.
 
+## E23 (2026-11-03, nach Nachbesserung 2): K4 passt erst einmal, Pose von Bild 2 nicht drehen
+
+Wortlaut Nutzer zu K4 (Krokodilkopf, Textur nahtlos, Asset r41/form 917195879 ff.): "passt erst einmal". Auf die Rueckfrage, ob die Pose
+von Bild 2 staerker zur Kamera gedreht werden soll: "nein".
+
+Folgen:
+- K4 (Kopf) mit Textur NB2 ist das Spiel-Asset RE2/BAHNSTEIG_FORM.EMD/.TIM (Pins tests/unit/form_j_posen.h: MD1 167644 Byte CRC32 0xc0b6c82a,
+  TIM 362528 Byte 0x76775364; bestaetigt STUFE3_abnahme_2.md Abschnitt 2).
+- Die Pose von Bild 2 bleibt, wie sie ist (keine staerkere Drehung zur Kamera).
+- Das Aussehen von K4 ist seitdem nicht Gegenstand der Abnahmen der Stufe 3 (STUFE3_abnahme_2.md Kopf), nur dass das Spiel-Asset das
+  abgenommene K4/NB2 ist und nichts kaputt rendert.
+
 ## E24-E28 (2026-11-05): neue Referenzen des Nutzers, Beschriftung aus Sicht des Wesens
 
 Nutzer 2026-11-05 (Wortlaut-Kern): "Ich bin weder mit der stehenden Birkin Form mit dem Schwanz, noch mit der 4 Beinigen Birkin Form richtig zufrieden. ... Bei der 4 Beinigen Form habe ich auch KI und Tripo AI Unterstuetzung mir geholt und eine 4 Seiten Ansicht erstellen koennen ... Was auch klar auffaellt, diese langen hellen Dinge waren keine Fusssohlen, sondern gehoerten zum Boden. Tripo AI war aber nicht in der Lage den Mund so richtig abzubilden ... Auch ich habe das noch mal EXAKT gemacht im Bild Vorderseite_Beschreibung.png."
@@ -194,3 +206,18 @@ Berichtigt 2026-11-06 nach FORMBLATT_V2.md (Pruefer des Workflows "birkin-refere
 - **E27 Maul:** Das Tripo-Maul ist falsch (Nutzer). Massstab fuer Kopf und Maul ist allein `Vorderseite_Beschreibung.png`: Kopf frontal, Augen oben, Schnauze nach UNTEN (Spitze (245/371) 1,9 Grad neben der Senkrechten unter der Augenmitte); das Maul oeffnet sich vom Maulwinkel (329/326) nach links unten im Bild = **nach rechts aus Sicht des Wesens, zur Frau hin** (die Frau steht links im Bild = rechts vom Wesen). Unterkiefer = helles Band mit 5-6 Zahnflecken, Achse 38,5 Grad, Ende (279/400); Maulspalt 23-27 Grad. K4 hat die Maulrichtung richtig, ist aber ein 3/4-Profil (Augen 16,8 px auseinander, verdeckt), rund halb so breit wie gemessen und sitzt an der falschen Stelle (Augenmitte 94 px vom J-Halsende, erreichbar ~40 px). Die Tripo-Ansichten liefern nur Koerperbau/Silhouette.
 - **E28 Zweibeiner (Sichel-Form, Spur SF):** Nutzer zur KI-Hochrechnung von Video 4 (`..._slp.mp4`, Freisteller `birkin01-24.png`, Tripo `image_1.png`/`image_2 (2).png`/`image_3 (3).png`): "Man sieht klar Kopf und den langen dicken Schwanz der bis in den oberen Ruecken reicht. So moechte ich das haben dem Original entsprechend." Lesung (SF_LESER_A/B): Schwanzwurzel oben am Ruecken (Buckel), Verlauf erst waagerecht nach hinten, dann Haken nach unten, Spitze frei in Knie-/Oberschenkelhoehe, Wurzel 0,11-0,17 H dick; Port-Wurzel sitzt 0,2-0,3 H zu tief und halb so dick. Original bleibt Massstab, die KI-Bilder sind Lesehilfe.
 - Lese-Ergebnis: `FORMBLATT_V2.md` (Riesenform, Fragen F1-F9, Aenderungen AE1-AE12, Regeln R1-R10) und `r41_sichel/analysis/befunde_runde41/SF_FORMBLATT_V2.md` (Sichel).
+
+## E29 (2026-11-07 ~10:15): K4 bleibt fuer v0.8.30 im Spiel, der G4-Ansatz danach
+
+Vorschlag an den Nutzer (Vorschlag 1+2): Texel der RE2-G4 auf die Riesenform uebertragen (dritter Ansatz der Farbe); K4 bleibt fuer v0.8.30
+im Spiel, der G4-Ansatz danach.
+Wortlaut Nutzer: "Das koennte schon passen mit der riesen Form. Ich koennte mir vorstellen, das er so schwarz rot ist in seiner 4 beider
+Form, weil er verbrannt ist, wenn der generator explodiert. Man sieht auch in der 4 beider Ansicht von hinten das das Gesicht vorne
+irgendwie in flammenfarben leuchtet. Bei der vorderansicht ja auch vielleicht hat er mit der Mutatione die feuer Farbe beim Mund nach der
+explosion angenommen."
+
+Folgen:
+- Kein Rueckbau der Riesenform. Das Spiel-Asset bleibt fuer v0.8.30 K4/NB2 (E23); die Farbvarianten (FARBE.md, Workflow
+  riesenform-farbe-v3-g4-verbrannt) laufen getrennt unter analysis/ und aendern Spiel-Asset und Pins nicht.
+- Gestaltung des dritten Ansatzes: schwarz-rot verbrannt aus RE2-G4-Texeln (G1), Gesicht vorn und Maul in Feuerfarben (G2); Orte und Farben
+  werden gemessen, nicht erfunden.
