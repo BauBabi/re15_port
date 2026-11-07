@@ -1,4 +1,4 @@
-"""SF V5 Kopf aus RE2 (Bauer, Runde 1): Bildleisten fuer die Abnahme (analysis/befunde_runde41/SF_belege/v4/).
+"""SF V5 Kopf aus RE2 (Bauer, Runde 2): Bildleisten fuer die Abnahme (analysis/befunde_runde41/SF_belege/v4/).
 
     python leisten_re2kopf.py [alle|01|02|03|04|08|10|11]
 
@@ -25,7 +25,7 @@ import kopf_re2_mess as KM
 
 AUS = LV.AUS
 RE2DIR = os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4', 're2')
-NAME = {'ref2': 'Referenz 2', 'neu': 'neu (Kopf RE2 G2)'}
+NAME = {'ref2': 'Referenz 2', 'neu': 'neu (Kopf RE2 G2, Runde 2)'}
 EMD = {'ref2': G.REF2, 'neu': os.environ.get('RE15_LEISTE_NEU', os.path.join(G.SFV4, 'emd', 'EM30_V4re2.EMD'))}
 LAUF = {'ref2': os.environ.get('RE15_LAUF_REF2', os.path.join(G.SFV4, 'r', 'R2ot')),
         'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V4re2'))}
@@ -34,7 +34,7 @@ KI_FIGUR = dict(FRONT=(60, 0, 470, 500), RIGHT=(520, 0, 1024, 500), BACK=(60, 51
 KI_KOPF = dict(FRONT=(205, 5, 305, 115), RIGHT=(925, 80, 1010, 170))          # vorlagen_kopf.KI (Leser A, von Hand gesetzt)
 KI_KOEPFE = {'image_1.png': ((205, 5, 305, 115), (925, 80, 1010, 170)), 'image_2 (2).png': ((205, 15, 300, 110), (865, 85, 945, 160)),
              'image_3 (3).png': ((205, 10, 290, 110), (590, 45, 660, 125))}
-KOPFZEILE = 'Spalten: KI-Bild (Version_80%/image_1.png) | Nutzer-Beschriftung (Beschreibung1/2) | Referenz 2 (gelobt) | neu (Kopf aus RE2 G2 0x31, Maul G3 0x33)'
+KOPFZEILE = 'Spalten: KI-Bild (Version_80%/image_1.png) | Nutzer-Beschriftung (Beschreibung1/2) | Referenz 2 (gelobt) | neu (Kopf aus RE2 G2 0x31 Texel bytegleich, Palette L* x k, Maul G3 0x33)'
 GELB, CYAN = LV.GELB, LV.CYAN
 _cache = {}
 
@@ -78,7 +78,7 @@ def riegel_neu():
         d = {}
         if os.path.exists(p):
             for z in json.load(open(p))['zeilen']:
-                key = z['mass'].replace('T-R2 ', '').replace('T-K4 ', '').split()[0]
+                key = z['mass'].replace('T-R2 ', '').replace('T-K4 ', '').replace('INFO ', '').split()[0]
                 d.setdefault(key, z); d.setdefault(z['mass'].split()[0], z)
         _cache['rg'] = d
     return _cache['rg']
@@ -104,8 +104,8 @@ def l01():
          LV.kachel(bsch, box, 2, 'Beschreibung1 (Nutzer)', ['Auge links / Haare rechts / Nase'])]
     for k in ('ref2', 'neu'):
         t.append(kachel_mark(k, '135', box, 2, '%s Pose 135 (Kamera 50A0/12)' % NAME[k],
-                             zl(['T-K1a', 'T-K1b', 'T-R1a', 'K10', 'K4', 'K7'], 70) if k == 'neu' else ['Spiel-Asset EM30_HANGAR.EMD cfd1ac42'], marken=False))
-    LV.speichern('01_vorn_kamera12', [t], ['SF V5 Kopf aus RE2 (Runde 1) - 01 vorn: Spielkamera 50A0 Cut 12 wie Vorlagebild 1 (h135), Pose posen_v4 "135"', KOPFZEILE])
+                             zl(['T-K1a', 'T-R1b', 'T-R1d', 'K10', 'K4', 'K5', 'T-K9e'], 70) if k == 'neu' else ['Spiel-Asset EM30_HANGAR.EMD cfd1ac42'], marken=False))
+    LV.speichern('01_vorn_kamera12', [t], ['SF V5 Kopf aus RE2 (Runde 2) - 01 vorn: Spielkamera 50A0 Cut 12 wie Vorlagebild 1 (h135), Pose posen_v4 "135"', KOPFZEILE])
 
 
 def l02():
@@ -116,7 +116,7 @@ def l02():
     for k in ('ref2', 'neu'):
         t.append(kachel_mark(k, '85', box, 2, '%s Pose 85 (Kamera 50A0/12)' % NAME[k],
                              zl(['S2', 'KS2', 'T-K3a', 'T2', 'T3'], 70) if k == 'neu' else ['Spiel-Asset EM30_HANGAR.EMD cfd1ac42'], marken=False))
-    LV.speichern('02_seite_wie_bild2', [t], ['SF V5 Kopf aus RE2 (Runde 1) - 02 seitlich: Kamera/Pose wie Vorlagebild 2 (h85), posen_v4 "85"', KOPFZEILE])
+    LV.speichern('02_seite_wie_bild2', [t], ['SF V5 Kopf aus RE2 (Runde 2) - 02 seitlich: Kamera/Pose wie Vorlagebild 2 (h85), posen_v4 "85"', KOPFZEILE])
 
 
 def l03():
@@ -127,9 +127,9 @@ def l03():
     for k in ('ref2', 'neu'):
         img, ids, _iv = render(k, '135'); kb = G.kopfbox(ids)
         z1.append(kachel_mark(k, '135', LV.kopfbox_rand(kb), 4, '%s Kopf x4' % NAME[k],
-                              zl(['K10', 'K4', 'K7', 'T-R3'], 60) if k == 'neu' else ['Mesh 9 Referenz 2 (rosa Klumpen, Leser A)'], marken=False))
+                              zl(['K10', 'K4', 'K1k', 'K5', 'T-K9e', 'T-R3'], 60) if k == 'neu' else ['Mesh 9 Referenz 2 (rosa Klumpen, Leser A)'], marken=False))
         z2.append(kachel_mark(k, '135', LV.kopfbox_rand(kb), 4, '%s mit Marken' % NAME[k], ['gelb Auge (Marker-Render), cyan Zaehne'] if k == 'neu' else ['']))
-    LV.speichern('03_kopf_nah_vorn_x4', [z1, z2], ['SF V5 Kopf aus RE2 (Runde 1) - 03 Kopf vorn x4 (Kopfbox +8 px; Port = Bbox Id 9); Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
+    LV.speichern('03_kopf_nah_vorn_x4', [z1, z2], ['SF V5 Kopf aus RE2 (Runde 2) - 03 Kopf vorn x4 (Kopfbox +8 px; Port = Bbox Id 9); Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
 
 
 def l04():
@@ -145,7 +145,7 @@ def l04():
         z1.append(LV.kachel(img, LV.kopfbox_rand(kb, 14), 4, '%s Kopf seitlich x4' % NAME[k],
                             zl(['S2', 'KS2'], 62) if k == 'neu' else ['Spiel-Asset']))
         z2.append(LV.kachel(im2, LV.kopfbox_rand(kb, 14), 4, '%s mit Marken' % NAME[k], ['gelb Auge, cyan Fenster KS2'] if k == 'neu' else ['']))
-    LV.speichern('04_kopf_nah_seite_x4', [z1, z2], ['SF V5 Kopf aus RE2 (Runde 1) - 04 Kopf seitlich x4; Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
+    LV.speichern('04_kopf_nah_seite_x4', [z1, z2], ['SF V5 Kopf aus RE2 (Runde 2) - 04 Kopf seitlich x4; Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
 
 
 def l08():
@@ -163,7 +163,7 @@ def l08():
             t.append(LV.kachel(img, (max(cx - 150, 0), max(cy - 150, 0), min(cx + 150, 640), min(cy + 150, 480)), 1,
                                '%s Gier +%d Grad (neutral)' % (NAME[k], dg), ['']))
         zeilen.append(t)
-    LV.speichern('08_rundum_V4', zeilen, ['SF V5 Kopf aus RE2 (Runde 1) - 08 rundum: Zeile 1 KI-Bild 4 Ansichten + Beschriftungen, Zeile 2 Referenz 2, Zeile 3 neu; '
+    LV.speichern('08_rundum_V4', zeilen, ['SF V5 Kopf aus RE2 (Runde 2) - 08 rundum: Zeile 1 KI-Bild 4 Ansichten + Beschriftungen, Zeile 2 Referenz 2, Zeile 3 neu; '
                                          '6 Blickwinkel, neutrales Licht (Texelfarbe), Pose 85 gedreht', KOPFZEILE])
 
 
@@ -198,7 +198,7 @@ def l10():
              ki_kachel(br, 1, 'KI-Kopf %s RIGHT' % datei, [''], hoehe=240, datei=G.V80 + datei)]
         if datei == 'image_1.png':
             t += [b2.tafel(kopf_render(g2, 3, EA.V_FRONT), 'RE2 G2 0x31 Mesh 3 vorn (Quelle)', ['CDEMD0.EMS Sektor 2944; TIM Sektor 2895 Zeile 0']),
-                  b2.tafel(kopf_render(neu, KB.KOPF, EA.V_FRONT), 'neu Mesh 9 vorn (+X des Modells)', ['G2-Kopf, Haar/Nase/Spitze angedunkelt, Maul G3']),
+                  b2.tafel(kopf_render(neu, KB.KOPF, EA.V_FRONT), 'neu Mesh 9 vorn (+X des Modells)', ['G2-Kopf, Texel bytegleich; Zeile 486 grau / 488 dunkel; Maul G3']),
                   b2.tafel(kopf_render(neu, KB.KOPF, EA.V_RIGHT), 'neu Mesh 9 rechte Flanke (-Z)', ['Pose Clip 0 Bild 0 des EMD'])]
         elif datei == 'image_2 (2).png':
             t += [b2.tafel(kopf_render(g2, 3, EA.V_RIGHT), 'RE2 G2 0x31 Mesh 3 rechts (Quelle)', ['']),
@@ -210,7 +210,7 @@ def l10():
                   b2.tafel(kopf_render(neu, KB.KOPF, ((0, 0, 1), (1, 0, 0), (0, 1, 0))), 'neu Mesh 9 von unten (+Y)', ['Maul mit Zahnreihen (G3-Kachel)']),
                   b2.tafel(kopf_render(neu, KB.KOPF, EA.V_BACK), 'neu Mesh 9 von hinten (-X)', [''])]
         zeilen.append(t)
-    LV.speichern('10_kopf_ki_re2_neu_x6', zeilen, ['SF V5 Kopf aus RE2 (Runde 1) - 10 Kopf x6: je Zeile ein KI-Bild (FRONT | RIGHT) und drei Modell-Kacheln unter GLEICHEM Licht '
+    LV.speichern('10_kopf_ki_re2_neu_x6', zeilen, ['SF V5 Kopf aus RE2 (Runde 2) - 10 Kopf x6: je Zeile ein KI-Bild (FRONT | RIGHT) und drei Modell-Kacheln unter GLEICHEM Licht '
                                                   '(emd_ansichtsblatt.render, orthogonal, kamerarelativ; Kopfbox 240 px)',
                                                   'Zeile 1: RE2-Quellkopf vorn | neu vorn | neu rechts; Zeile 2: Quelle rechts | neu links (Haar) | neu oben; Zeile 3: G3-Zahnquelle | neu unten (Maul) | neu hinten'])
 
@@ -230,7 +230,7 @@ def l11():
             im = cv2.cvtColor(p, cv2.COLOR_BGR2RGB) if p is not None else np.zeros((480, 640, 3), np.uint8)
             t.append(LV.kachel(im, boxen[h], fakt[h], '%s Spiel h%d (RE15_FRAMEDUMP) x%d' % (NAME[k], h, fakt[h]), ['Lauf %s' % os.path.basename(LAUF[k])]))
         zeilen.append(t)
-    LV.speichern('11_spiel_koepfe', zeilen, ['SF V5 Kopf aus RE2 (Runde 1) - 11 Spiel-Koepfe: RE15_FRAMEDUMP-Bilder h135 (Zeile 1) und h85 (Zeile 2), registriert wie Abnahme 3',
+    LV.speichern('11_spiel_koepfe', zeilen, ['SF V5 Kopf aus RE2 (Runde 2) - 11 Spiel-Koepfe: RE15_FRAMEDUMP-Bilder h135 (Zeile 1) und h85 (Zeile 2), registriert wie Abnahme 3',
                                             KOPFZEILE])
 
 

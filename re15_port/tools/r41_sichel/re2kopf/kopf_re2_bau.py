@@ -1,6 +1,6 @@
-"""SF V5 (Bauer, Kopf aus RE2, Runde 1): Kopf der Sichel-Form = RE2-Birkin-G2-Kopf (CDEMD0.EMS kind 0x31, Mesh 3) anstelle von Mesh 9
+"""SF V5 (Bauer, Kopf aus RE2, Runde 2): Kopf der Sichel-Form = RE2-Birkin-G2-Kopf (CDEMD0.EMS kind 0x31, Mesh 3) anstelle von Mesh 9
 (KOPF_V4) im EMD der Runde 3 (EM30_V4ot3.EMD); Maul = Zahn-Kachel des G3-Kopfes (kind 0x33, TIM page 0 u 2-13 v 5-40) auf den
-unteren Vorderflaechen des G2-Kopfes; Haarseite ((W)-links, z > 0) mit dunkleren Eintraegen DERSELBEN G2-Palettenzeile angedunkelt.
+unteren Vorderflaechen des G2-Kopfes.
 
     python kopf_re2_bau.py [--aus DIR] [--basis EMD] [--json PROT]      -> DIR/EM30_V4re2.EMD (+ EM30_V4.EMD), Protokoll
 
@@ -9,25 +9,34 @@ aufgebaut sein die anderen Formen...." und "bei den KI Bildern kann man so verda
 muss.... Man sieht alles einwandfrei! Das Auge die Haare, den Mund, den Schwanz...."
 Leser A (SF_belege/re2kopf/00_koepfe_re2_vs_ki.png, mess.json): naechster Einzelkandidat = G2-Kopf (0x31 Mesh 3; dE00 zu KI-Front 3,0, zu
 Beschreibung1 6,6, zu Beschreibung2 6,5); Zaehne nur im G3-Kopf (0x33, Zahn-Anteil 0,0225). Leser B (KI_LESUNG.md): Kuppel mit Schnauze,
-Achse 30-35 Grad vorn-unten, Maul an der Unterseite mit zwei Zahnreihen, ein Auge oben vorn (B)-links bis mittig, (B)-rechte Haelfte
-9-21 L* dunkler mit weichem Uebergang, roter Kamm.
+Maul an der Unterseite mit zwei Zahnreihen, ein kleines dunkles Auge oben vorn (B)-links bis mittig (D3: dunkle Pupille mit Glanzpunkt),
+(B)-rechte Haelfte 9-21 L* dunkler (D4), Kopfhaut dunkles warmes Grau (D6).
 
 Herkunft (byte-true, Zaehlung wie re2_leser.rec): G2 EMD = CDEMD0.EMS Sektor 2944 (193124 B, sha256 bb966cd5...), MD1 dir[7], Mesh 3 (48 Ecken,
 48 Normalen, 56 Dreiecke, 14 Vierecke, UV page 128 / CLUT 480 = Zeile 0 der G2-TIM); G2 TIM = Sektor 2895 (99872 B), 384 x 256 8 bpp,
 Texel u 0-125 v 0-89, CLUT-Zeile 0 (y 480). G3 TIM = Sektor 3065 (99872 B), Zahn-Kachel u 2-13 v 5-40, CLUT-Zeile 0.
-Transformation (PORT-WAHL nach Messblatt-Kopfbox K10 und Leser B, s. PARAM): q = Rz(pitch) . Ry(yaw) . (skal * v) + versatz im Raum des Ref2-Knochens
-9 (rel (111,-971,-133) unveraendert; Skelett, Clips, EDD unveraendert). Normalen mitgedreht (bei anisotroper Skalierung invers-transponiert).
+
+Runde 2 (nach Zahlen-/Sicht-Pruefung r1: Kopf im RDT-Licht L* 15,6 = fast schwarz, rechte Haelfte nicht dunkler, Auge unsichtbar):
+  * ALLE Kopf-Texel bleiben bytegleich G2 (Runde 1 hatte 3821 Texel auf dunklere Eintraege umgesetzt - weg).
+  * Die Helligkeit kommt aus der PALETTE: Zeile 486 = G2-Zeile 0 mit L* x k_grau (a*, b* unveraendert = Farbton und Adern bleiben; der
+    Sicht-Pruefer r1 nannte genau diesen Weg "keine Farbmischung"); Zeile 488 = dieselbe G2-Zeile mit L* x k_dunkel, Chroma x g_dunkel,
+    L* <= lmax (Haarseite, Nase, Schnauzenspitze). Jede Flaeche bekommt eine der beiden Zeilen (uv[2]), Texel-Indizes gleich.
+  * Zonen je Flaeche (G2-Koordinaten vor der Drehung): dunkel = Flaechenmittelpunkt Bild-rechts der Kopfbox-Mitte in Cut 12 Pose 135
+    (Ebene PARAM['zonen']['ebene_n'/'ebene_d']; Nutzer "rechts Seite sieht man Haare - braeunlich") oder u-Mittel im Gesichtsspalt
+    nase_u (Nutzer "Bis Nase") oder Schnauzenspitzen-Flaeche Q0 (Haarkante KS2 der Beschreibung2); sonst grau.
+Transformation (PORT-WAHL nach Messblatt-Kopfbox K10 und Leser B, s. PARAM): q = Rz(pitch) . Ry(yaw) . Rx(roll) . (skal * v) + versatz im Raum
+des Ref2-Knochens 9 (rel (111,-971,-133) unveraendert; Skelett, Clips, EDD unveraendert). Normalen mitgedreht.
 Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc; keine Zahl hier ist eine @0x-Konstante.
 """
 import os, sys, json, struct, argparse, hashlib
-import numpy as np, cv2
+import numpy as np
 HIER = os.path.dirname(os.path.abspath(__file__))
 TOOLS = os.path.dirname(os.path.dirname(HIER))
 sys.path.insert(0, HIER); sys.path.insert(0, TOOLS); sys.path.insert(0, os.path.join(TOOLS, 'r41_sichel', 'v4'))
 import re2_leser as RL
 import emd_ansichtsblatt as EA
 import birkin_formen as BF
-from skimage.color import rgb2lab
+from skimage.color import rgb2lab, lab2rgb
 
 SP = r'C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad'
 BASIS = os.environ.get('RE15_V5_BASIS', os.path.join(SP, 'sfv4', 'emd', 'EM30_V4ot3.EMD'))     # sha256 a1bc9309 (Runde 3)
@@ -38,42 +47,42 @@ KOPF = 9                        # Mesh/Knochen des Kopfes im EM30 (Ref2)
 G2_ORT = dict(page=128, u0=0, v0=160, u=(0, 125), v=(0, 89))        # G2-Texel u 0-125 v 0-89 -> x 0-125, y 160-249
 # G3-Zahn-Kachel u 2-13 v 5-40 -> x 256-267, y 200-235 (Spalten 0-1 und 14-20 der Kachel tragen den blauen Stirnstreifen des G3, b* < -15; probe9)
 G3_ORT = dict(page=130, u0=0, v0=200, u=(2, 13), v=(5, 40))
-ZEILE_G2, ZEILE_G3 = 486, 487   # neue CLUT-Zeilen (Ref2 hat 480-485); 8 Zeilen gesamt <= 16 (Port-Texturhoehe 2048 <= 4096)
+ZEILE_G2, ZEILE_G3, ZEILE_DUNKEL = 486, 487, 488   # neue CLUT-Zeilen (Ref2 hat 480-485); 9 Zeilen gesamt <= 16 (Port-Texturhoehe 2304 <= 4096)
 # Maulflaechen des G2-Kopfes (Indizes in Mesh 3, T = Dreieck, Q = Viereck): die unteren Vorderflaechen unter den Augen (y > -140 vor der
 # Drehung, Normale +x), s. probe2 / Protokoll 'maul_flaechen'
 MAUL_T = [25, 26, 34, 35, 42, 44, 28, 29, 22, 43, 5]
 MAUL_Q = []
-# Parameter = Ergebnis der Suche an den Messblatt-Fenstern (Scratchpad re2kopf_bau/grid1-4.log, 2026-11-07; Masse kopf_re2_mess, Render b2
-# Pose "135" / "85"): Skala gleichmaessig 1,50 (K10 0,165 x 0,176 H; Leser A rechnete 1,577 auf 724 E. Kopfhoehe, Leser B Kuppel 0,13-0,15 x
-# 0,15 H, mit Maul 0,19-0,22 H - gewaehlt ist das Messblatt-Fenster 0,14-0,18 x 0,15-0,20 H, weil die Riegel T-R2 dort messen); Neigung
-# 10 Grad nach unten (Leser B 30-35 Grad: ab 20 Grad kippt die Schnauze aus der Kamera 50A0/12, Kopfbox-Hoehe 0,137 H und das Gesicht
-# der Beschreibung1 ist nicht mehr zu sehen - Beschreibung1 ist bindend, Offen im Dossier); Gieren -34 Grad zur (W)-linken Seite (das
-# G2-Auge sitzt bei z -110 = 0,6 der halben Kopfbreite weit aussen; ohne Gieren laege es 0,08 H links der Kopfmitte, Messblatt 0,035-0,065);
-# Versatz (140, +10, 0) E. (S2 Augenhoehe 0,76-0,82 H ueber der Sohle; mit y -20 lag das Auge bei 0,8203 H). PORT-WAHL, kein RE-Wert.
+# Zonen (Flaechenmittelpunkte im unskalierten G2-Raum, Liste Scratchpad re2kopf_r2 "Flaechen": z -161..+172, x -182..+223; Gesichtsspalt
+# u 41-60, Kuppe/Hinterkopf u 101-125, (W)-linke Gesichtshaelfte u 61-100)
+# Parameter: Drehung/Skala/Versatz wie Runde 1 (Suche re2kopf_bau/grid1-4.log; K10 0,165 x 0,170 H, K4 0,060 / 0,097 H, S2 0,043 / 0,812 H
+# gruen in der Zahlen-Pruefung r1). roll 0: Rollen um die Schnauzenachse wurde als Weg gemessen, das Auge ins Licht zu heben (re2kopf_r2/
+# grid_roll.log: Augenfaecher-Lichtfaktor p50 0,22 -> 0,51 erst bei roll -20, dabei K10-Breite 0,143 H und KS2-Fenster nur noch 0,26 Kopf) -
+# verworfen, kein Vorbild zeigt einen schiefen Kopf. Palette: Suche re2kopf_r2/pal_test.py / grid_pal.log (Kopf-Median im RDT-Licht Pose 135).
 PARAM = dict(
     skal=(1.50, 1.50, 1.50),      # gleichmaessig
     pitch=10.0,                   # Grad, positiv = Schnauze nach unten (um die lokale z-Achse)
     yaw=-34.0,                    # Grad, positiv = Schnauze nach (W)-rechts (um die lokale y-Achse)
+    roll=0.0,                     # Grad, um die Schnauzenachse (negativ hebt die (W)-rechte Seite)
     versatz=(140.0, 10.0, 0.0),   # E. im Knochen-9-Raum, nach der Drehung (y +10 = 10 E. tiefer als der Knochenursprung)
-    # Haar (Nutzer: "Dann rechts Seite sieht man Haare - braeunlich"; Leser B D4: (B)-rechte Haelfte 9-21 L* dunkler, weicher Uebergang,
-    # keine Straehnen): (W)-linke Kopfhaelfte z > z0 .. z1 glatt auf faktor x L* (Lab-naechster Eintrag DERSELBEN G2-Zeile); das (W)-rechte
-    # Auge (z -98..-125) bleibt unberuehrt
-    haar=dict(z0=-80.0, z1=0.0, faktor=0.65),
-    # Nase (Nutzer: "Linke Seite ist so graeulich. Bis Nase"; Messblatt K7 Nase mitteldunkel 18,2 L*; Beschreibung2 KS2 dunkle Vorderkante):
-    # die leuchtende Mittelspalte der G2-Textur (u 41-60, der Gesichtsspalt) wird mitteldunkel - sonst laege der hellste Punkt des Gesichts
-    # in der Mitte statt am Auge (Messblatt Abschnitt 2: "der hellste Kopfpunkt ist der Augenfleck"); Riegel KS2 (Kopf-Bildpunkte) <= Median - 5
-    nase=dict(u0=41, u1=60, v_ab=0.0, rampe=1.0, faktor=0.50),
-    # Schnauzenspitze (Beschreibung2: dunkle Haarkante an der Kopf-Vorderkante vor dem Auge, Fenster KS2; Messblatt Abschnitt 3 Streifen L* 12,6):
-    # Flaechen mit Mittelpunkt x > x0 .. x1 (Q0 173, T33/T31 177, T27 184, T0 192, T32 196, T2 204, T21 223 - die vorderste Kante des Keils;
-    # das Fenster KS2 zeigt in Pose 85 zu 0,93 die Flaeche Q0, Scratchpad re2kopf_bau/probe6) auf faktor x L*; das Auge
-    # (T19/T20/T41, x 78-119) liegt dahinter
-    spitze=dict(x0=150.0, x1=175.0, faktor=0.50),
+    # Zonengrenze = Bildmitte der Kopfbox in Cut 12 Pose 135 (Beschreibung1: "Linke Seite ist so graeulich. Bis Nase. Dann rechts Seite ...
+    # Haare"): Ebene n . c = d im unskalierten G2-Kopfraum, n = normierter Bild-x-Gradient der Spielkamera 50A0/12 an der Kopfmitte
+    # (re2kopf_r2/ebene.json: Gradient (0,0368, 0,0829, 0,1128) px/E., Kopfbox-Mitte x 354,5); Flaechen mit n . c > d liegen Bild-rechts.
+    # Die z-Halbierung (z > 0) der ersten Runde-2-Fassung traf nur den Bildrand: die Kamera steht (W)-links-vorn-oben, in Pose 135 zeigten
+    # 1454 von 2461 Kopfpixeln die dunkle Zeile (re2kopf_r2/z1_135.png), die graue nur 366 am linken Rand.
+    zonen=dict(ebene_n=(0.2543, 0.5728, 0.7792), ebene_d=-60.1,
+               nase_u=(41, 60),   # Gesichtsspalt (leuchtende Mittelspalte der G2-Textur) -> dunkel ("Bis Nase": die graue Seite endet an der Nase)
+               spitze_Q=(0,), spitze_T=()),   # Schnauzenspitze: nur Q0 (z -72, x 173, y -252) -> dunkel; das Fenster KS2 zeigt in Pose 85 zu 0,93
+                                              # diese Flaeche (Runde 1 probe6). Runde 1 hatte alle Flaechen x > 150 dunkel - in Pose 135 ist das
+                                              # die Schnauzenfront links der Mitte, die nach Beschreibung1 grau sein muss (re2kopf_r2/z2_135.png).
+    # Palette (Belichtung der G2-Zeile 0, je Zeile ein L*-Faktor; a*/b* der grauen Zeile unveraendert):
+    # Suche re2kopf_r2/grid_pal*.log (Kopf-Median mit RDT-Licht Pose 135, Haelften, KV2, Augenfaecher; Zonen nach der Bildmitte-Ebene, Spitze
+    # nur Q0): k_grau 1,7 / 1,9 -> Kopf P50 23,8 / 24,2 (dunkel 1,05/32) bzw. 23,7 (1,9 mit dunkel 1,0/30), Haelften links 27,9-29,1 gegen
+    # rechts 20,9-21,8 (0,74), KV2 30,1-30,6 (Grenze Ref2-Kopf P50 - 8 = 31,4); dunkel k 0,9 / lmax 26 -> P50 20,5 (T-K9e < 23), k 1,1 / lmax 34
+    # -> KV2 31,6 (rot). Gewaehlt 1,9 und 1,0 / 30 / 0,5. Die graue Zone liegt damit bei L* ~40 (RDT-Licht), die dunkle bei ~21, das Maul bei 17
+    # (KI: linke Haelfte 32-38, rechte 17-24, Maul 16-18; Leser B).
+    pal=dict(grau=dict(k=1.90, g=1.0, lmax=100.0),      # Zeile 486: Bild-linke Kopfhaelfte ("Linke Seite ist so graeulich"), Farbton/Adern bleiben
+             dunkel=dict(k=1.00, g=0.50, lmax=30.0)),   # Zeile 488: Haarseite / Nase / Spitze (Leser B D4: 9-21 L* dunkler, braun-grau, wenig Chroma)
 )
-
-
-def glatt(t):
-    t = np.clip(t, 0.0, 1.0)
-    return t * t * (3 - 2 * t)
 
 
 def rz(grad):
@@ -87,16 +96,90 @@ def ry(grad):
     return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
 
 
+def rx(grad):
+    """Rollen um die lokale x-Achse (Schnauzenachse); negativ hebt die (W)-rechte Kopfseite (z < 0) nach oben (-y) ins Licht."""
+    a = np.radians(grad); c, s = np.cos(a), np.sin(a)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+
+
 def rot(p):
-    return rz(p['pitch']) @ ry(p.get('yaw', 0.0))
+    return rz(p['pitch']) @ ry(p.get('yaw', 0.0)) @ rx(p.get('roll', 0.0))
 
 
 def lab_pal(pal_rgb):
     return rgb2lab(np.asarray(pal_rgb, float).reshape(-1, 1, 3) / 255.0).reshape(-1, 3)
 
 
+def clut15_rgb(c):
+    c = np.asarray(c).astype(np.int64)
+    return np.stack([(c & 31) * 8, ((c >> 5) & 31) * 8, ((c >> 10) & 31) * 8], -1)
+
+
+_M_XYZ2RGB = np.array([[3.2406, -1.5372, -0.4986], [-0.9689, 1.8758, 0.0415], [0.0557, -0.2040, 1.0570]])
+_WP_D65 = np.array([0.95047, 1.0, 1.08883])
+
+
+def _lab2rgb_lin(lab):
+    """CIE-Lab (D65) -> lineares sRGB OHNE Clipping (skimage.lab2rgb clippt auf [0, 1] und taugt nicht als Gamut-Test)."""
+    L, a, b = (float(v) for v in lab)
+    fy = (L + 16.0) / 116.0; fx = fy + a / 500.0; fz = fy - b / 200.0
+
+    def finv(t):
+        return t ** 3 if t > 6.0 / 29.0 else 3.0 * (6.0 / 29.0) ** 2 * (t - 4.0 / 29.0)
+    xyz = np.array([finv(fx), finv(fy), finv(fz)]) * _WP_D65
+    return _M_XYZ2RGB @ xyz
+
+
+def _in_gamut(lab, eps=1e-4):
+    rgb = _lab2rgb_lin(lab)
+    return bool(((rgb >= -eps) & (rgb <= 1 + eps)).all())
+
+
+def lab_gamut(lab2):
+    """Farbton-erhaltende Gamut-Abbildung: liegt (L*, a*, b*) ausserhalb von sRGB, wird nur die Chroma (a*, b* gemeinsam) verkleinert
+    (Bisektion), der Farbwinkel bleibt. Ein hartes RGB-Clipping (Runde-2-Erstfassung) drehte den Farbwinkel heller Eintraege um bis zu
+    38 Grad (Riegel T-R1d)."""
+    out = np.array(lab2, float)
+    for i in range(out.shape[0]):
+        if _in_gamut(out[i]):
+            continue
+        lo, hi = 0.0, 1.0
+        for _ in range(20):
+            s = 0.5 * (lo + hi)
+            if _in_gamut([out[i, 0], lab2[i, 1] * s, lab2[i, 2] * s]):
+                lo = s
+            else:
+                hi = s
+        out[i, 1:] = lab2[i, 1:] * lo
+    return out
+
+
+def zeile_transform(clut15, k, g=1.0, lmax=100.0):
+    """Palettentransformation einer 15-Bit-CLUT-Zeile: RGB (x8 wie der Port/BB.modell) -> CIE-Lab -> L*' = min(k x L*, lmax),
+    a*' = g a*, b*' = g b* -> Farbton-erhaltende Gamut-Abbildung (lab_gamut) -> RGB -> 5 Bit je Kanal. Eintrag 0 bleibt 0 (transparent),
+    kein anderer Eintrag wird 0; STP-Bit bleibt."""
+    c = np.asarray(clut15).astype(np.int64)
+    lab = rgb2lab((clut15_rgb(c) / 255.0).reshape(-1, 1, 3)).reshape(-1, 3)
+    lab2 = np.stack([np.clip(np.minimum(lab[:, 0] * k, lmax), 0, 100), lab[:, 1] * g, lab[:, 2] * g], 1)
+    lab2 = lab_gamut(lab2)
+    rgb2 = np.clip(lab2rgb(lab2.reshape(-1, 1, 3)).reshape(-1, 3), 0, 1)
+    q = np.clip(np.rint(rgb2 * 255 / 8.0), 0, 31).astype(np.int64)
+    w = q[:, 0] | (q[:, 1] << 5) | (q[:, 2] << 10) | (c & 0x8000)
+    return np.where(c == 0, 0, np.where(w == 0, 1, w)).astype('<u2')
+
+
+def zone_flaeche(V, idx, uv, n, zn, kind='T', i=-1):
+    """'dunkel' oder 'grau' fuer eine Flaeche (Ecken-Indizes idx, UV-Liste uv mit n Ecken, Art kind 'T'/'Q' und Index i) im unskalierten
+    G2-Raum; zn = PARAM['zonen']. dunkel = Flaechenmittelpunkt auf der Bild-rechten Seite der Ebene n . c > d (Bildmitte der Kopfbox in
+    Cut 12 Pose 135, s. PARAM) oder Gesichtsspalt (u-Mittel in nase_u) oder die Schnauzenspitzen-Flaeche(n) spitze_Q / spitze_T."""
+    c = V[idx].mean(0); um = np.mean([uv[3 * k] for k in range(n)])
+    if float(np.dot(zn['ebene_n'], c)) > zn['ebene_d'] or zn['nase_u'][0] <= um <= zn['nase_u'][1] or i in zn.get('spitze_' + kind, ()):
+        return 'dunkel'
+    return 'grau'
+
+
 def g2_kopf_mesh(p, prot):
-    """Mesh 3 des G2 als birkin_formen-Mesh-Dict (v, n, tf, tuv, qf, quv), transformiert; UVs auf den EM30-Atlas gelegt."""
+    """Mesh 3 des G2 als birkin_formen-Mesh-Dict (v, n, tf, tuv, qf, quv), transformiert; UVs auf den EM30-Atlas gelegt, CLUT-Zeile je Zone."""
     mo = RL.modell(G2)
     m = mo.meshes[3]
     sk = np.array(p['skal'], float); R = rot(p); t = np.array(p['versatz'], float)
@@ -109,21 +192,25 @@ def g2_kopf_mesh(p, prot):
     out = dict(v=[[int(round(c)) for c in q] + [v[3]] for q, v in zip(np.clip(Q, -32768, 32767), m.tv)],
                n=[[int(round(c)) for c in q] + [n[3]] for q, n in zip(Nn, m.tn)],
                tf=[list(x) for x in m.tf], qf=[list(x) for x in m.qf], tuv=[], quv=[])
-    for i, uv in enumerate(m.tuv):
-        uv = list(uv)
-        for k in range(3):
-            uv[3 * k] = uv[3 * k] - G2_ORT['u'][0] + G2_ORT['u0']; uv[3 * k + 1] = uv[3 * k + 1] - G2_ORT['v'][0] + G2_ORT['v0']
-        uv[2], uv[5] = ZEILE_G2 << 6, G2_ORT['page']
-        out['tuv'].append(uv)
-    for i, uv in enumerate(m.quv):
-        uv = list(uv)
-        for k in range(4):
-            uv[3 * k] = uv[3 * k] - G2_ORT['u'][0] + G2_ORT['u0']; uv[3 * k + 1] = uv[3 * k + 1] - G2_ORT['v'][0] + G2_ORT['v0']
-        uv[2], uv[5] = ZEILE_G2 << 6, G2_ORT['page']
-        out['quv'].append(uv)
+    zonen = dict(T=[], Q=[])
+    for kind, faces, uvs, n in (('T', m.tf, m.tuv, 3), ('Q', m.qf, m.quv, 4)):
+        for i, (f, uv) in enumerate(zip(faces, uvs)):
+            uv = list(uv)
+            idx = [f[2 * k + 1] for k in range(n)]
+            z = zone_flaeche(V, idx, uv, n, p['zonen'], kind, i)
+            zonen[kind].append(z)
+            for k in range(n):
+                uv[3 * k] = uv[3 * k] - G2_ORT['u'][0] + G2_ORT['u0']; uv[3 * k + 1] = uv[3 * k + 1] - G2_ORT['v'][0] + G2_ORT['v0']
+            uv[2], uv[5] = (ZEILE_DUNKEL if z == 'dunkel' else ZEILE_G2) << 6, G2_ORT['page']
+            out['tuv' if kind == 'T' else 'quv'].append(uv)
     prot['g2'] = dict(ecken=len(m.tv), normalen=len(m.tn), dreiecke=len(m.tf), vierecke=len(m.qf),
                       bbox_quelle=[V.min(0).tolist(), V.max(0).tolist()], bbox_neu=[Q.min(0).tolist(), Q.max(0).tolist()],
                       uv_quelle=sorted({(u[5], u[2]) for u in list(m.tuv) + list(m.quv)}))
+    prot['zonen'] = dict(regel=dict(p['zonen']),
+                         dunkel_T=[i for i, z in enumerate(zonen['T']) if z == 'dunkel' and i not in MAUL_T],
+                         grau_T=[i for i, z in enumerate(zonen['T']) if z == 'grau' and i not in MAUL_T],
+                         dunkel_Q=[i for i, z in enumerate(zonen['Q']) if z == 'dunkel' and i not in MAUL_Q],
+                         grau_Q=[i for i, z in enumerate(zonen['Q']) if z == 'grau' and i not in MAUL_Q], maul_T=list(MAUL_T), maul_Q=list(MAUL_Q))
     return out, mo, V
 
 
@@ -156,72 +243,21 @@ def maul_uv(out, V, p, prot):
                                  kachel=dict(G3_ORT), n=n_t + n_q)
 
 
-def z_karte(mo2, V, shape, achse=2):
-    """Je Texel des G2-Kopfbereichs die (unskalierte) Modell-Koordinate (achse 2 = z, 0 = x; Flaechenmittel ueber die abdeckenden Flaechen) -
-    fuer das Haargewicht (z) und die Schnauzenspitze (x)."""
-    m = mo2.meshes[3]
-    summe = np.zeros(shape, float); zahl = np.zeros(shape, float)
-    for faces, uvs, n in ((m.tf, m.tuv, 3), (m.qf, m.quv, 4)):
-        for f, uv in zip(faces, uvs):
-            idx = [f[2 * k + 1] for k in range(n)]
-            pts = np.array([(uv[3 * k], uv[3 * k + 1]) for k in range(n)], np.float32)
-            zz = V[idx][:, achse]
-            if n == 4:
-                pts = pts[[0, 1, 3, 2]]
-            mk = np.zeros(shape, np.uint8); cv2.fillPoly(mk, [pts.astype(np.int32)], 1)
-            # Flaechenmittel (die Texel einer Flaeche liegen nah beieinander; weicher Uebergang ueber glatt())
-            summe[mk > 0] += float(zz.mean()); zahl[mk > 0] += 1
-    z = np.where(zahl > 0, summe / np.maximum(zahl, 1), np.nan)
-    return z
+def clut_roh(mo):
+    t = mo.tim; cs_, = struct.unpack_from('<I', t, 8); cw_, ch_ = struct.unpack_from('<HH', t, 16)
+    return np.frombuffer(t[20:20 + 2 * cw_ * ch_], '<u2').reshape(ch_, cw_)
 
 
-# Entsaettigung in den angedunkelten Zonen: a*/b* x (1 - ENTSAETT x w). Ohne sie blieben die roten Adern und das (W)-linke Auge (T49/T55/T38/
-# T40, G2 u 60-79 v 17-34) als roter Glanz Bild-rechts oben stehen (Lauf c6: 34 rote Bildpunkte a* > 25 dort) - Beschreibung1: das zweite Auge
-# liegt unter den Haaren; Leser B D4: (B)-rechte Haelfte braun-grau 17-24 / 6-7 / 3-4, D3: "ein Auge, Spiegelstelle dunkel"; Messblatt Nase
-# 18,2 / 7,1 / 1,3. PORT-WAHL.
-ENTSAETT = 0.6
+def zeilen_neu(p, mo2, mo3):
+    """(Zeile 486, Zeile 487, Zeile 488) als 15-Bit-Worte: G2-Zeile 0 transformiert (grau), G3-Zeile 0 bytegleich, G2-Zeile 0 transformiert (dunkel)."""
+    z2, z3 = clut_roh(mo2)[0], clut_roh(mo3)[0]
+    pg, pd = p['pal']['grau'], p['pal']['dunkel']
+    return zeile_transform(z2, pg['k'], pg['g'], pg['lmax']), z3.astype('<u2'), zeile_transform(z2, pd['k'], pd['g'], pd['lmax'])
 
 
-def haar_andunkeln(tex_g2, pal_g2, z, p, prot, x=None):
-    """(W)-linke Kopfhaelfte (Haar), Mittelspalte (Nase) und Schnauzenspitze dunkler und entsaettigt: Ziel-Lab = (L* x f, a* x g, b* x g)
-    mit f = 1 - (1 - faktor) x w, g = 1 - ENTSAETT x w; Haar: w = glatt((z - z0) / (z1 - z0)); Nase: w = Rampe in v ab v_ab in den Spalten
-    u0-u1 (G2-Zaehlung); Spitze: w = glatt((x - x0) / (x1 - x0)).
-    Je Texel der naechste Eintrag DERSELBEN G2-Zeile (Lab-Abstand). Index 0 (transparent) bleibt. Rueckgabe neue Indizes + Umfang."""
-    lab = lab_pal(pal_g2)
-    h = p['haar']; nz = p.get('nase')
-    w = glatt((z - h['z0']) / (h['z1'] - h['z0'])); w = np.where(np.isnan(z), 0.0, w)
-    fak = np.full(w.shape, h['faktor'])
-    if nz:
-        vv = np.arange(tex_g2.shape[0], dtype=float)[:, None] * np.ones((1, tex_g2.shape[1]))
-        wn = glatt((vv - nz['v_ab']) / nz['rampe']); wn[:, :nz['u0']] = 0; wn[:, nz['u1'] + 1:] = 0
-        fak = np.where(wn > w, nz['faktor'], fak); w = np.maximum(w, wn)
-    sp = p.get('spitze')
-    if sp and x is not None:
-        ws = glatt((np.where(np.isnan(x), -1e9, x) - sp['x0']) / (sp['x1'] - sp['x0']))
-        fak = np.where(ws > w, sp['faktor'], fak); w = np.maximum(w, ws)
-    neu = tex_g2.copy()
-    kand = np.array([i for i in range(256) if i != 0 and (pal_g2[i] != 0).any()])
-    ys, xs = np.nonzero((w > 0.02) & (tex_g2 != 0))
-    dL = []
-    for y, x in zip(ys, xs):
-        i = int(tex_g2[y, x]); L, a, b = lab[i]
-        f = 1.0 - (1.0 - fak[y, x]) * w[y, x]
-        g = 1.0 - ENTSAETT * w[y, x]
-        ziel = np.array([L * f, a * g, b * g])
-        kd = kand[lab[kand, 0] <= L + 1e-6]          # nie heller als die Quelle (Riegel T-R1b)
-        d = np.linalg.norm(lab[kd] - ziel, axis=1)
-        j = int(kd[np.argmin(d)])
-        neu[y, x] = j; dL.append(lab[j, 0] - L)
-    dL = np.array(dL) if len(dL) else np.zeros(1)
-    prot['haar'] = dict(param=dict(h), nase=dict(nz) if nz else None, spitze=dict(sp) if sp else None, entsaett=ENTSAETT, texel_gewichtet=int(len(ys)), texel_geaendert=int((neu != tex_g2).sum()),
-                        dL_mittel=float(dL.mean()), dL_p10_p90=[float(np.percentile(dL, 10)), float(np.percentile(dL, 90))],
-                        w_voll=int((w >= 0.98).sum()))
-    return neu, w
-
-
-def tim_bauen(tim_alt, tex_g2_neu, mo2, mo3, prot):
-    """EM30-TIM: Texel der ot3-Kopfflaechen (TPage 128 v 160-223) auf 0 zurueck, G2-Kopftexel nach G2_ORT, G3-Zahn-Kachel nach G3_ORT;
-    CLUT-Block um die Zeilen 486 (= G2 Zeile 0) und 487 (= G3 Zeile 0) verlaengert, Zeilen 480-485 bytegleich."""
+def tim_bauen(tim_alt, mo2, mo3, p, prot):
+    """EM30-TIM: Texel der ot3-Kopfflaechen (TPage 128 v 160-223) auf 0 zurueck, G2-Kopftexel (bytegleich) nach G2_ORT, G3-Zahn-Kachel nach
+    G3_ORT; CLUT-Block um die Zeilen 486 (G2 grau), 487 (G3) und 488 (G2 dunkel) verlaengert, Zeilen 480-485 bytegleich."""
     tim = bytearray(tim_alt)
     cs, cx, cy, cw, ch = struct.unpack_from('<I4H', tim, 8)
     c = np.frombuffer(bytes(tim[20:20 + 2 * cw * ch]), '<u2').reshape(ch, cw).copy()
@@ -235,28 +271,36 @@ def tim_bauen(tim_alt, tex_g2_neu, mo2, mo3, prot):
         u0, u1 = kp[ans]['u']; v0, v1 = kp[ans]['v']
         alt_kopf += int((pix[v0:v1 + 1, pb + u0:pb + u1 + 1] != 0).sum())
         pix[v0:v1 + 1, pb + u0:pb + u1 + 1] = 0
-    # G2
+    # G2 (bytegleich)
     o = G2_ORT; x0 = 128 * (o['page'] & 0xF) + o['u0']
-    hh, ww = tex_g2_neu.shape
-    pix[o['v0']:o['v0'] + hh, x0:x0 + ww] = tex_g2_neu
+    tex_g2 = mo2.tex[o['v'][0]:o['v'][1] + 1, o['u'][0]:o['u'][1] + 1]
+    hh, ww = tex_g2.shape
+    pix[o['v0']:o['v0'] + hh, x0:x0 + ww] = tex_g2
     # G3 Kachel
     o3 = G3_ORT; x3 = 128 * (o3['page'] & 0xF) + o3['u0']
     kach = mo3.tex[o3['v'][0]:o3['v'][1] + 1, o3['u'][0]:o3['u'][1] + 1]
     pix[o3['v0']:o3['v0'] + kach.shape[0], x3:x3 + kach.shape[1]] = kach
-
-    # CLUT: Rohwerte (15 Bit) der RE2-TIMs, bytegleich
-    def clut_roh(mo):
-        t = mo.tim; cs_, = struct.unpack_from('<I', t, 8); cw_, ch_ = struct.unpack_from('<HH', t, 16)
-        return np.frombuffer(t[20:20 + 2 * cw_ * ch_], '<u2').reshape(ch_, cw_)
-    z2, z3 = clut_roh(mo2)[0], clut_roh(mo3)[0]
     assert ch == 6 and cy == 480, (ch, cy)
-    alle = np.vstack([c, z2[None], z3[None]]).astype('<u2')
+    zg, z3, zd = zeilen_neu(p, mo2, mo3)
+    alle = np.vstack([c, zg[None], z3[None], zd[None]]).astype('<u2')
     blk = struct.pack('<I4H', 12 + alle.size * 2, cx, cy, cw, alle.shape[0]) + alle.tobytes()
     neu = bytes(tim[:8]) + blk + bytes(tim[ende:ende + 12]) + pix.tobytes() + bytes(tim[ende + 12 + breite * ih:])
-    prot['tim'] = dict(clut_zeilen=int(alle.shape[0]), zeilen_neu={ZEILE_G2: 'G2 0x31 CLUT-Zeile 0 (y 480)', ZEILE_G3: 'G3 0x33 CLUT-Zeile 0 (y 480)'},
+    # Protokoll der Palettentransformation: Lab der Quelle und der Zeilen (belegte Eintraege)
+    q2 = clut_roh(mo2)[0]
+    idx = np.unique(tex_g2[tex_g2 != 0])
+    labq = lab_pal(clut15_rgb(q2)); labg = lab_pal(clut15_rgb(zg)); labd = lab_pal(clut15_rgb(zd))
+    prot['tim'] = dict(clut_zeilen=int(alle.shape[0]),
+                       zeilen_neu={ZEILE_G2: 'G2 0x31 CLUT-Zeile 0 (y 480), L* x %.2f, Chroma x %.2f, L* <= %.0f' % (p['pal']['grau']['k'], p['pal']['grau']['g'], p['pal']['grau']['lmax']),
+                                   ZEILE_G3: 'G3 0x33 CLUT-Zeile 0 (y 480) bytegleich',
+                                   ZEILE_DUNKEL: 'G2 0x31 CLUT-Zeile 0 (y 480), L* x %.2f, Chroma x %.2f, L* <= %.0f' % (p['pal']['dunkel']['k'], p['pal']['dunkel']['g'], p['pal']['dunkel']['lmax'])},
                        g2_ort=dict(G2_ORT), g3_ort=dict(G3_ORT), alt_kopf_texel_geloescht=alt_kopf,
-                       g2_texel=int((tex_g2_neu != 0).sum()), g3_texel=int((kach != 0).sum()),
-                       port_texturhoehe=int(ih * alle.shape[0]))
+                       g2_texel=int((tex_g2 != 0).sum()), g3_texel=int((kach != 0).sum()),
+                       port_texturhoehe=int(ih * alle.shape[0]),
+                       palette_lab_p50_belegt=dict(quelle=[float(v) for v in np.median(labq[idx], 0)], grau=[float(v) for v in np.median(labg[idx], 0)],
+                                                   dunkel=[float(v) for v in np.median(labd[idx], 0)]),
+                       texel_lab_p50=dict(quelle=[float(v) for v in np.median(labq[tex_g2[tex_g2 != 0]], 0)],
+                                          grau=[float(v) for v in np.median(labg[tex_g2[tex_g2 != 0]], 0)],
+                                          dunkel=[float(v) for v in np.median(labd[tex_g2[tex_g2 != 0]], 0)]))
     return neu
 
 
@@ -277,13 +321,8 @@ def bauen(p=PARAM, basis=BASIS):
     prot['mesh9_alt'] = dict(ecken=len(meshes[KOPF]['v']), dreiecke=len(meshes[KOPF]['tf']), vierecke=len(meshes[KOPF]['qf']))
     meshes[KOPF] = kopf
     md1_neu = BF.md1_schreiben(meshes)
-    # Texel
-    o = G2_ORT
-    tex_g2 = mo2.tex[o['v'][0]:o['v'][1] + 1, o['u'][0]:o['u'][1] + 1].copy()
-    z = z_karte(mo2, V, tex_g2.shape); x = z_karte(mo2, V, tex_g2.shape, achse=0)
-    tex_neu, w = haar_andunkeln(tex_g2, mo2.pal[0], z, p, prot, x)
     mo3 = RL.modell(G3)
-    tim_neu = tim_bauen(tim, tex_neu, mo2, mo3, prot)
+    tim_neu = tim_bauen(tim, mo2, mo3, p, prot)
     if len(tim_neu) % 4:
         tim_neu += bytes(4 - len(tim_neu) % 4)
     sek = [blob[d[i]:d[i + 1]] for i in range(7)] + [md1_neu, tim_neu]
@@ -293,7 +332,7 @@ def bauen(p=PARAM, basis=BASIS):
         neu_dir.append(o_); o_ += len(x)
     neu = struct.pack('<II', 8 + sum(len(x) for x in sek), n) + b''.join(sek) + struct.pack('<%dI' % n, *neu_dir)
     prot['emd'] = dict(bytes=len(neu), sha256=hashlib.sha256(neu).hexdigest(), sektionen_gleich=[i for i in range(7)])
-    return neu, prot, dict(tex_g2=tex_g2, tex_neu=tex_neu, z=z, w=w)
+    return neu, prot, dict(V=V)
 
 
 def main():
@@ -310,7 +349,7 @@ def main():
     open(ziel, 'wb').write(neu)
     open(os.path.join(a.aus, 'EM30_V4.EMD'), 'wb').write(neu)
     print('geschrieben %s (%d Byte, sha256 %s); EM30_V4.EMD darauf' % (ziel, len(neu), prot['emd']['sha256'][:16]))
-    print('TIM', prot['tim']); print('Haar', prot['haar']); print('G2', prot['g2']['bbox_neu'])
+    print('TIM', prot['tim']); print('Zonen', prot['zonen']); print('G2', prot['g2']['bbox_neu'])
     if a.json:
         json.dump(prot, open(a.json, 'w'), indent=1, default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o))
 

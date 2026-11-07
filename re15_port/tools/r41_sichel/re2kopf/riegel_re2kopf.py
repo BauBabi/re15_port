@@ -1,23 +1,29 @@
-"""Riegel SF V5 Kopf aus RE2 (Bauer, 2026-11-07) - Exit 1, wenn eine Zeile rot ist.
+"""Riegel SF V5 Kopf aus RE2 (Bauer, Runde 2, 2026-11-07) - Exit 1, wenn eine Zeile rot ist.
 
-    python riegel_re2kopf.py <EMD> [--basis EMD_ot3] [--lauf LAUFORDNER] [--json aus.json] [--md aus.md] [--txt aus.txt] [--kein-exit]
+    python riegel_re2kopf.py <EMD> [--basis EMD_ot3] [--lauf LAUFORDNER] [--prot PROT.json] [--json aus.json] [--md aus.md] [--txt aus.txt] [--kein-exit]
 
   T-K1  Koerper = Referenz 2 (riegel_ref2tex.tk1: Meshes 0-8, 10-15 bytegleich, CLUT-Zeilen 480-485 bytegleich, Koerper-Texel bytegleich).
   T-K2s Schwanz-Texel (Meshes 16-22) zeigen Ref2-Farben (riegel_ref2tex.tk2 nur Schwanz); Kopf ausgenommen (RE2-Palette, T-R1).
   T-K3  Schwanz ohne Quernaht/Bloecke (riegel_ref2tex.tk3, unveraendert Runde 3).
   T-R0  Aenderungsumfang gegen die Basis (EM30_V4ot3): Sektionen 0-6 bytegleich; MD1 nur Mesh 9 anders; Schwanz-Meshes 16-22 bytegleich;
         Texel ausserhalb der alten Kopfflaechen (TPage 128 v 160-223) und der neuen Orte (G2 / G3) bytegleich.
-  T-R1  Kopf byte-true RE2: Mesh 9 = G2 Mesh 3 (kind 0x31) bis auf Skalierung/Drehung/Versatz (Ecken max. Rundungsabstand <= 1 E., Normalen
-        gedreht <= 2 E., Flaechen-Indizes gleich, UVs = Quelle + Versatz bis auf die Maulflaechen (Zahl)); Texel im G2-Ort = G2-TIM bis auf
-        die angedunkelten (Zahl, selbe Zeile); G3-Kachel bytegleich; CLUT-Zeilen 486/487 bytegleich den RE2-Zeilen (15-Bit-Rohwerte).
-  T-R2  Kopfbox K10, Auge K4, Maul K7, Auge seitlich S2, Haarkante KS2 in den Messblatt-Fenstern (kopf_re2_mess).
+  T-R1  Kopf byte-true RE2: a) Mesh 9 = G2 Mesh 3 (kind 0x31) bis auf Skalierung/Drehung/Versatz (Ecken <= 1 E., Normalen <= 2 E., Flaechen-
+        Indizes gleich, UVs = Quelle + Versatz ausser Maulflaechen; CLUT-Zeile je Flaeche nach der Zonenregel des Protokolls); b) Texel im
+        G2-Ort BYTEGLEICH der G2-TIM (Runde 2: kein Andunkeln mehr); c) G3-Kachel bytegleich; d) CLUT-Zeile 486 / 488 = G2-Zeile 0 nach der
+        dokumentierten Palettentransformation (L* x k, Chroma x g, L* <= lmax; 15-Bit-Worte bytegleich der Nachrechnung), 487 = G3-Zeile 0.
+  T-R2  Kopfbox K10, Auge K4 (Marker), Maul K7, Auge seitlich S2, Haarkante KS2 (Messblatt-Fenster, kopf_re2_mess); dazu Runde 2:
+        K1k Auge sichtbar nach KI-Lesung D3 (dunkle Pupille: Augenfaecher T19/T20/T41 im Videoraum dunkler als die Umgebung, Glanzkern heller
+        als der Faecher), K5 dunkle Seite Bild-rechts (Haelften-Median rechts <= 0,85 x links, Videoraum und RDT-Licht; Fenster KV2 L* in
+        0,62-0,90 x Kopf-Median und <= Ref2-Kopf P50 - 8, a* > 0, b* > 0), K6 zweites Auge verdeckt (Spiegelbox des Faechers <= Kopf-Median),
+        T-K9e Kopf L* P50 >= 23 und Kopf/Rumpf >= 0,9 (roher Render mit RDT-Licht, Pose 135).
   T-R3  Zaehne am Render sichtbar: Zahn-Texel (G3-Kachel L* > 60, Chroma < 20) in Pose 135 >= 20 Bildpunkte (Marker-Render) und helle
         unbunte Bildpunkte im Maulfenster des rohen Renders >= 5.
   T-R4  CLUT-Zeilen <= 16 (Port-Texturhoehe = 256 x Zeilen <= 4096, SDL_render.c:1266-1270).
+  INFO  Messblatt-Methode K1/K3/K4 (hellster Kopfpunkt = Augenfleck) und der Lichtfaktor des Augenfaechers; KV1 a* (K9); Kopf/Brust.
   Form  riegel_ref2tex.form: G1, M1-M4, T1-T7, TA, TK, Boden (mit --lauf auch T7a-d).
 Gegenprobe: die Basis (ot3) muss an T-R1 ROT sein (python riegel_re2kopf.py EM30_V4ot3.EMD --kein-exit).
 """
-import os, sys, json, argparse, hashlib
+import os, sys, json, argparse, hashlib, struct
 import numpy as np, cv2
 HIER = os.path.dirname(os.path.abspath(__file__))
 TOOLS = os.path.dirname(os.path.dirname(HIER))
@@ -35,18 +41,26 @@ import kopf_re2_mess as KM
 
 zeile = RV.zeile
 SOLL = dict(K10=((0.14, 0.18), (0.15, 0.20)), K4=((0.035, 0.065), (0.07, 0.12)), K7=((0.3, 0.7), (0.55, 1.0)),
-            S2=((0.03, 0.07), (0.76, 0.82)), KS2_DL=5.0, ZAEHNE=20, HELL=5)
+            S2=((0.03, 0.07), (0.76, 0.82)), KS2_DL=5.0, ZAEHNE=20, HELL=5,
+            K1K_DL=6.0,          # Augenfaecher (Videoraum) mindestens 6 L* dunkler als die Kopf-Umgebung (25 x 25 um den Faecher)
+            K1K_GLANZ=8.0,       # Glanzkern (G2-Augenkern) mindestens 8 L* heller als der Faecher-Median (RDT-Licht)
+            K5_REL=0.90,         # rechte Haelfte <= 0,90 x linke Haelfte (Median L*; die Haelften mischen Zonen, Maul und Augenhoehle - Zonenwerte in der INFO-Zeile)
+            K5_BAND=(0.62, 0.90), K5_REF2_DL=8.0, K9E_P50=23.0, K9E_VERH=0.9)
+FAN = [19, 20, 41]
 
 
-def tk1b(A, R):
-    """T-K1b wie riegel_ref2tex, aber weitere Zeilen duerfen auch die RE2-Zeilen des Kopfes sein (486 = G2 Zeile 0, 487 = G3 Zeile 0; T-R1d prueft
-    sie bytegleich) - die Zeilen 480-485 muessen bytegleich Referenz 2 sein."""
-    import struct
+def _rows(p):
+    mo2, mo3 = RL.modell(KB.G2), RL.modell(KB.G3)
+    return KB.zeilen_neu(p, mo2, mo3)
+
+
+def tk1b(A, R, p):
+    """T-K1b wie riegel_ref2tex, aber weitere Zeilen duerfen die RE2-Kopfzeilen sein (486 = G2 Zeile 0 grau, 487 = G3 Zeile 0, 488 = G2 Zeile 0
+    dunkel; T-R1d prueft sie bytegleich der Nachrechnung) - die Zeilen 480-485 muessen bytegleich Referenz 2 sein."""
     gleich = A['clut'].shape[0] >= 6 and bool((A['clut'][:6] == R['clut'][:6]).all())
-    erlaubt = {}
-    for kind, nm in ((KB.G2, 'G2 0x31 Zeile 0'), (KB.G3, 'G3 0x33 Zeile 0')):
-        t = RL.rec(kind, 2)[2]; cw_, ch_ = struct.unpack_from('<HH', t, 16)
-        erlaubt[nm] = np.frombuffer(t[20:20 + 2 * cw_], '<u2')
+    zg, z3, zd = _rows(p)
+    erlaubt = {'G2 0x31 Zeile 0 grau (L* x %.2f)' % p['pal']['grau']['k']: zg, 'G3 0x33 Zeile 0': z3,
+               'G2 0x31 Zeile 0 dunkel (L* x %.2f, <= %.0f)' % (p['pal']['dunkel']['k'], p['pal']['dunkel']['lmax']): zd}
     weitere = []
     ok = gleich
     for zi in range(6, A['clut'].shape[0]):
@@ -54,7 +68,7 @@ def tk1b(A, R):
         re2 = [nm for nm, w in erlaubt.items() if (A['clut'][zi] == w).all()]
         weitere.append('%d=%s' % (480 + zi, ('Kopie %s' % kopie) if kopie else (re2[0] if re2 else 'NEU')))
         ok &= bool(kopie or re2)
-    return zeile('T-K1b CLUT = Ref2', 'Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie einer Ref2-Zeile oder als RE2-Kopfzeile (G2 / G3, T-R1d)',
+    return zeile('T-K1b CLUT = Ref2', 'Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie einer Ref2-Zeile oder als RE2-Kopfzeile (G2 grau / G3 / G2 dunkel, T-R1d)',
                  'Zeilen 480-485 %s; TIM %d Zeilen; weitere %s' % ('gleich' if gleich else 'ABWEICHEND', A['clut'].shape[0], weitere or 'keine'), ok)
 
 
@@ -101,6 +115,7 @@ def tr0(emd, basis):
 def tr1(emd, prot=None):
     """Kopf byte-true RE2 (bis auf die dokumentierte Transformation)."""
     p = (prot or {}).get('param') or KB.PARAM
+    zonen = (prot or {}).get('zonen')
     blob = open(emd, 'rb').read(); d = EA.emd_dir(blob)
     ms = EA.md1_parse(blob[d[7]:d[8]]); m9 = ms[KB.KOPF]
     mo2 = RL.modell(KB.G2); g = mo2.meshes[3]
@@ -118,22 +133,26 @@ def tr1(emd, prot=None):
         dn = np.abs(np.array([n[:3] for n in m9.tn], float) - Nn / L2 * Ln).max()
         fl = list(m9.tf) == list(g.tf) and list(m9.qf) == list(g.qf)
         du, dv_ = KB.G2_ORT['u0'] - KB.G2_ORT['u'][0], KB.G2_ORT['v0'] - KB.G2_ORT['v'][0]
-        uv_ab = 0; maul = 0
-        for i, (a, b) in enumerate(list(zip(m9.tuv, g.tuv))):
-            if (a[2] >> 6) == KB.ZEILE_G3:
-                maul += 1; continue
-            if not all(a[3 * k] == b[3 * k] + du and a[3 * k + 1] == b[3 * k + 1] + dv_ for k in range(3)) or (a[2] >> 6) != KB.ZEILE_G2:
-                uv_ab += 1
-        for a, b in zip(m9.quv, g.quv):
-            if (a[2] >> 6) == KB.ZEILE_G3:
-                maul += 1; continue
-            if not all(a[3 * k] == b[3 * k] + du and a[3 * k + 1] == b[3 * k + 1] + dv_ for k in range(4)) or (a[2] >> 6) != KB.ZEILE_G2:
-                uv_ab += 1
-        Z.append(zeile('T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)', 'Ecken = Rz Ry S v + t (Abstand <= 1 E.), Normalen gedreht (<= 2 E.), Flaechen-Indizes gleich, '
-                       'UV = Quelle + (%d, %d) ausser Maulflaechen (%d Dreiecke, G3-Kachel)' % (du, dv_, len(KB.MAUL_T) + len(KB.MAUL_Q)),
-                       '%d Ecken / %d Normalen / %d Tri / %d Quad; Ecken max %.2f E., Normalen max %.2f, Flaechen %s, UV abweichend %d, Maul %d' % (
-                           len(m9.tv), len(m9.tn), len(m9.tf), len(m9.qf), dv, dn, 'gleich' if fl else 'ABWEICHEND', uv_ab, maul),
-                       dv <= 1.0 and dn <= 2.0 and fl and uv_ab == 0 and maul == len(KB.MAUL_T) + len(KB.MAUL_Q)))
+        uv_ab = 0; maul = 0; zone_ab = 0; rows = dict(grau=0, dunkel=0)
+        zn = p.get('zonen', KB.PARAM['zonen'])
+        for kind, A_, B_, faces, n in (('T', m9.tuv, g.tuv, g.tf, 3), ('Q', m9.quv, g.quv, g.qf, 4)):
+            for i, (a, b) in enumerate(zip(A_, B_)):
+                if (a[2] >> 6) == KB.ZEILE_G3:
+                    maul += 1; continue
+                row = a[2] >> 6
+                if not all(a[3 * k] == b[3 * k] + du and a[3 * k + 1] == b[3 * k + 1] + dv_ for k in range(n)) or row not in (KB.ZEILE_G2, KB.ZEILE_DUNKEL):
+                    uv_ab += 1; continue
+                soll = KB.zone_flaeche(V, [faces[i][2 * k + 1] for k in range(n)], list(b), n, zn, kind, i)
+                ist = 'dunkel' if row == KB.ZEILE_DUNKEL else 'grau'
+                rows[ist] += 1
+                if soll != ist:
+                    zone_ab += 1
+        Z.append(zeile('T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)', 'Ecken = Rz Ry Rx S v + t (Abstand <= 1 E.), Normalen gedreht (<= 2 E.), Flaechen-Indizes gleich, '
+                       'UV = Quelle + (%d, %d) ausser Maulflaechen (%d Dreiecke, G3-Kachel); CLUT-Zeile je Flaeche = Zonenregel (n . c > %.1f mit n = %s | u %d-%d | Spitze Q%s -> 488)' % (
+                           du, dv_, len(KB.MAUL_T) + len(KB.MAUL_Q), zn['ebene_d'], tuple(zn['ebene_n']), zn['nase_u'][0], zn['nase_u'][1], list(zn.get('spitze_Q', ()))),
+                       '%d Ecken / %d Normalen / %d Tri / %d Quad; Ecken max %.2f E., Normalen max %.2f, Flaechen %s, UV abweichend %d, Maul %d; Zeilen grau %d / dunkel %d, Zone abweichend %d' % (
+                           len(m9.tv), len(m9.tn), len(m9.tf), len(m9.qf), dv, dn, 'gleich' if fl else 'ABWEICHEND', uv_ab, maul, rows['grau'], rows['dunkel'], zone_ab),
+                       dv <= 1.0 and dn <= 2.0 and fl and uv_ab == 0 and zone_ab == 0 and maul == len(KB.MAUL_T) + len(KB.MAUL_Q)))
     else:
         Z.append(zeile('T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)', 'Ecken / Normalen / Flaechen wie G2 Mesh 3 (48 / 48 / 56 Tri / 14 Quad)',
                        '%d Ecken / %d Normalen / %d Tri / %d Quad' % (len(m9.tv), len(m9.tn), len(m9.tf), len(m9.qf)), False))
@@ -141,33 +160,130 @@ def tr1(emd, prot=None):
     o = KB.G2_ORT; x0 = 128 * (o['page'] & 0xF) + o['u0']
     neu = tex[o['v0']:o['v0'] + 90, x0:x0 + 126] if tex.shape[0] >= o['v0'] + 90 else np.zeros((90, 126), np.uint8)
     quelle = mo2.tex[o['v'][0]:o['v'][1] + 1, o['u'][0]:o['u'][1] + 1]
-    abw = neu != quelle
-    pal2 = mo2.pal[0]
-    z2 = KM._lab(pal2)
-    selbe = int(sum(1 for y, x in zip(*np.nonzero(abw)) if neu[y, x] != 0 and (pal2[neu[y, x]] != 0).any()))
-    dunkler = int(sum(1 for y, x in zip(*np.nonzero(abw)) if z2[neu[y, x], 0] <= z2[quelle[y, x], 0]))
-    haar_prot = (prot or {}).get('haar', {})
-    Z.append(zeile('T-R1b Kopf-Texel = G2-TIM (u 0-125 v 0-89) bis auf Andunkeln', 'abweichende Texel = angedunkelte (Protokoll %s), alle mit Eintrag derselben G2-Zeile, '
-                   'kein Texel heller als die Quelle' % haar_prot.get('texel_geaendert', '?'),
-                   '%d von %d Texeln abweichend; davon Eintrag der G2-Zeile %d; dunkler/gleich %d; unveraendert %d' % (
-                       int(abw.sum()), quelle.size, selbe, dunkler, int((~abw).sum())),
-                   int(abw.sum()) == selbe == dunkler and (haar_prot.get('texel_geaendert') in (None, int(abw.sum())))))
+    abw = int((neu != quelle).sum())
+    Z.append(zeile('T-R1b Kopf-Texel = G2-TIM (u 0-125 v 0-89)', 'bytegleich (Runde 2: kein Andunkeln, Helligkeit nur ueber die Palette)',
+                   '%d von %d Texeln abweichend (%d belegt)' % (abw, quelle.size, int((quelle != 0).sum())), abw == 0))
     o3 = KB.G3_ORT; x3 = 128 * (o3['page'] & 0xF) + o3['u0']
     hk, wk = o3['v'][1] - o3['v'][0] + 1, o3['u'][1] - o3['u'][0] + 1
     k_neu = tex[o3['v0']:o3['v0'] + hk, x3:x3 + wk] if tex.shape[0] >= o3['v0'] + hk else np.zeros((hk, wk), np.uint8)
     k_q = mo3.tex[o3['v'][0]:o3['v'][1] + 1, o3['u'][0]:o3['u'][1] + 1]
     Z.append(zeile('T-R1c Zahn-Kachel = G3-TIM (u %d-%d v %d-%d)' % (o3['u'] + o3['v']), 'bytegleich', '%d von %d Texeln abweichend' % (int((k_neu != k_q).sum()), k_q.size),
                    bool((k_neu == k_q).all())))
+    zg, z3, zd = KB.zeilen_neu(p, mo2, mo3)
+    q2 = KB.clut_roh(mo2)[0]
+    okg = ch > KB.ZEILE_G2 - 480 and bool((c[KB.ZEILE_G2 - 480] == zg).all())
+    ok3 = ch > KB.ZEILE_G3 - 480 and bool((c[KB.ZEILE_G3 - 480] == z3).all())
+    okd = ch > KB.ZEILE_DUNKEL - 480 and bool((c[KB.ZEILE_DUNKEL - 480] == zd).all())
+    # Nachweis der Transformation: Lab der belegten Eintraege (Quelle -> grau / dunkel), Farbton erhalten (Winkel)
+    idx = np.unique(quelle[quelle != 0])
+    lq, lg, ld = (KB.lab_pal(KB.clut15_rgb(z))[idx] for z in (q2, zg, zd))
+    pg, pd = p['pal']['grau'], p['pal']['dunkel']
+    # Farbton: Zielwerte der Transformation VOR der 5-Bit-Rundung (L* x k, a*/b* x g, Gamut nur ueber die Chroma) gegen die Quelle; die
+    # Rundung auf 5 Bit je Kanal (PSX-CLUT) wird getrennt als dE76 ausgewiesen (Schritt 8/255 -> hoechstens ~6)
+    ziel = np.stack([np.clip(np.minimum(lq[:, 0] * pg['k'], pg['lmax']), 0, 100), lq[:, 1] * pg['g'], lq[:, 2] * pg['g']], 1)
+    ziel = KB.lab_gamut(ziel)
+    hq, hz = np.degrees(np.arctan2(lq[:, 2], lq[:, 1])), np.degrees(np.arctan2(ziel[:, 2], ziel[:, 1]))
+    cq, cz, cg = np.hypot(lq[:, 1], lq[:, 2]), np.hypot(ziel[:, 1], ziel[:, 2]), np.hypot(lg[:, 1], lg[:, 2])
+    dh = np.abs((hz - hq + 180) % 360 - 180)[(cq > 10) & (cz > 1)]
+    dq = np.linalg.norm(lg - ziel, axis=1)
+    gamut = float((cz < cq - 0.5).mean())
+    Z.append(zeile('T-R1d CLUT-Zeilen 486 / 487 / 488 = RE2 (Palettentransformation)',
+                   '486 = G2 Zeile 0 mit L* x %.2f (Chroma x %.2f, L* <= %.0f); 487 = G3 Zeile 0 bytegleich; 488 = G2 Zeile 0 mit L* x %.2f, Chroma x %.2f, L* <= %.0f; '
+                   '15-Bit-Worte bytegleich der Nachrechnung (kopf_re2_bau.zeile_transform); Farbton der grauen Zeile erhalten (Farbwinkel der Zielwerte vor der 5-Bit-Rundung '
+                   'p90 <= 1 Grad bei Quell-Chroma > 10; sRGB-Gamut nur ueber die Chroma); 5-Bit-Rundung dE76 max <= 7' % (
+                       pg['k'], pg['g'], pg['lmax'], pd['k'], pd['g'], pd['lmax']),
+                   'TIM %d Zeilen; 486 %s; 487 %s; 488 %s; Eintraege (belegt %d) Lab p50 Quelle %s -> grau %s -> dunkel %s; Farbwinkel p90 %.2f Grad; Rundung dE76 p90 %.1f max %.1f; '
+                   'Gamut-reduzierte Eintraege %.2f (Chroma p50 %.1f -> %.1f)' % (
+                       ch, 'gleich' if okg else 'ABWEICHEND', 'gleich' if ok3 else 'ABWEICHEND', 'gleich' if okd else 'ABWEICHEND', len(idx),
+                       '/'.join('%.1f' % v for v in np.median(lq, 0)), '/'.join('%.1f' % v for v in np.median(lg, 0)), '/'.join('%.1f' % v for v in np.median(ld, 0)),
+                       float(np.percentile(dh, 90)) if len(dh) else 0.0, float(np.percentile(dq, 90)), float(dq.max()), gamut, float(np.median(cq)), float(np.median(cg))),
+                   okg and ok3 and okd and (not len(dh) or float(np.percentile(dh, 90)) <= 1.0) and float(dq.max()) <= 7.0))
+    return Z
 
-    def clut_roh(mo):
-        import struct
-        t = mo.tim; cs_, = struct.unpack_from('<I', t, 8); cw_, ch_ = struct.unpack_from('<HH', t, 16)
-        return np.frombuffer(t[20:20 + 2 * cw_ * ch_], '<u2').reshape(ch_, cw_)
-    r2, r3 = clut_roh(mo2)[0], clut_roh(mo3)[0]
-    ok2 = ch > KB.ZEILE_G2 - 480 and bool((c[KB.ZEILE_G2 - 480] == r2).all())
-    ok3 = ch > KB.ZEILE_G3 - 480 and bool((c[KB.ZEILE_G3 - 480] == r3).all())
-    Z.append(zeile('T-R1d CLUT-Zeilen 486 / 487 = RE2', 'Zeile 486 = G2 (0x31) CLUT-Zeile 0, Zeile 487 = G3 (0x33) CLUT-Zeile 0, 15-Bit-Rohwerte bytegleich',
-                   'TIM %d Zeilen; 486 %s; 487 %s' % (ch, 'gleich' if ok2 else 'ABWEICHEND', 'gleich' if ok3 else 'ABWEICHEND'), ok2 and ok3))
+
+_ref2 = {}
+
+
+def ref2_mass(P):
+    """Ref2-Kopf im selben Render: Kopf-Median (roh mit Licht und Videoraum) Pose 135, Kopf/Rumpf."""
+    if not _ref2:
+        mo = b2.modell(G.REF2)
+        img, ids = G.zeichne(mo, P['135'])
+        L = G.lab(img.astype(float))[..., 0]; Lv = G.lab(G.videoraum(img))[..., 0]
+        k, r8 = ids == 9, ids == 8
+        _ref2.update(p50=float(np.median(L[k])), p50_v=float(np.median(Lv[k])), verh=float(L[k].mean() / L[r8].mean()), rumpf=float(np.median(L[r8])))
+    return _ref2
+
+
+def kopf_r2(mo, M, P, zonen=None):
+    """Runde-2-Masse am Render Pose 135: Auge als dunkle Pupille (Faecher), Haelften, KV1/KV2, K6, T-K9e, Messblatt-Methode (INFO)."""
+    a = M['135']; img, ids = a['img'], a['ids']
+    ir, _ = G.zeichne(mo, P['135'], licht=False)
+    L = G.lab(img.astype(float))[..., 0]; Lr = G.lab(ir.astype(float))[..., 0]
+    V = G.videoraum(img); LabV = G.lab(V); Lv = LabV[..., 0]
+    k, r8 = ids == 9, ids == 8; kb = a['kopfbox']; x0, y0, x1, y1 = kb; xm = 0.5 * (x0 + x1); H = a['H']
+    X = np.arange(640)[None, :].repeat(480, 0)
+    li, re_ = k & (X < xm), k & (X >= xm)
+    R2 = ref2_mass(P)
+    Z = []
+    # Auge (KI-Lesung D3): Faecher T19/T20/T41
+    _i, idf = G.zeichne(KM.teil(mo, FAN), P['135'], licht=False)
+    fan = (idf == 9) & k
+    if fan.any():
+        ys, xs = np.nonzero(fan); cx, cy = int(xs.mean()), int(ys.mean())
+        umg = k & ~fan
+        umg[:max(cy - 12, 0)] = False; umg[cy + 13:] = False; umg[:, :max(cx - 12, 0)] = False; umg[:, cx + 13:] = False
+        core = a['ma'] if a.get('ma') is not None and a['ma'].any() else fan
+        fv, uv = float(np.median(Lv[fan])), float(np.median(Lv[umg])) if umg.any() else float('nan')
+        fl, gl = float(np.median(L[fan])), float(L[core].max())
+        fak = float(np.median(L[fan] / np.maximum(Lr[fan], 1)))
+        Z.append(zeile('T-R2 K1k Auge sichtbar (KI D3: dunkle Pupille mit Glanz)',
+                       'Augenfaecher T19/T20/T41 (Videoraum) L* <= Umgebung (Kopf 25x25 um den Faecher) - %.0f; Glanzkern (G2-Augenkern) L* max >= Faecher-Median (RDT-Licht) + %.0f' % (
+                           SOLL['K1K_DL'], SOLL['K1K_GLANZ']),
+                       'Faecher %d px (%.3f x %.3f H) L* %.1f gegen Umgebung %.1f (Videoraum); RDT-Licht Faecher %.1f, Glanzkern max %.1f; Lichtfaktor Faecher %.2f' % (
+                           fan.sum(), (xs.ptp() + 1) / H, (ys.ptp() + 1) / H, fv, uv, fl, gl, fak),
+                       fv <= uv - SOLL['K1K_DL'] and gl >= fl + SOLL['K1K_GLANZ']))
+        bx0, bx1 = int(xs.min()), int(xs.max()); by0, by1 = int(ys.min()), int(ys.max())
+        sp = (int(round(2 * xm - bx1)), by0, int(round(2 * xm - bx0)), by1)
+        l6 = float(RV.lab1(G.mittel(V, sp))[0]); pv = float(np.median(Lv[k]))
+        Z.append(zeile('T-R2 K6 zweites Auge verdeckt', 'Spiegelbox des Augenfaechers an der Kopfmitte (Videoraum): L* <= Kopf-Median (%.1f); kein Glanzkern (Messblatt: Original 12,9)' % pv,
+                       'L* %.1f (Box %s)' % (l6, sp), l6 <= pv))
+    else:
+        Z.append(zeile('T-R2 K1k Auge sichtbar (KI D3)', 'Augenfaecher sichtbar', 'Faecher nicht sichtbar', False))
+    # Haelften und KV2
+    hl, hr = float(np.median(L[li])), float(np.median(L[re_])); vl, vr = float(np.median(Lv[li])), float(np.median(Lv[re_]))
+    pv = float(np.median(Lv[k]))
+    kv2, _b = RV.fenster_lab(V, kb, RV.FENSTER['KV2']); kv1, _b1 = RV.fenster_lab(V, kb, RV.FENSTER['KV1']); kv3, _b3 = RV.fenster_lab(V, kb, RV.FENSTER['KV3'])
+    lo, hi = SOLL['K5_BAND'][0] * pv, SOLL['K5_BAND'][1] * pv
+    # Zonen am Bild: graue / dunkle / Maul-Flaechen (Protokoll) -> Median L* mit Licht
+    zinfo = ''
+    if zonen:
+        zw = {}
+        for nm, tt, qq in (('grau', zonen['grau_T'], zonen['grau_Q']), ('dunkel', zonen['dunkel_T'], zonen['dunkel_Q']), ('maul', zonen['maul_T'], zonen['maul_Q'])):
+            _i, idz = G.zeichne(KM.teil(mo, tt, qq), P['135'], licht=False); mz_ = (idz == 9) & k
+            zw[nm] = (int(mz_.sum()), float(np.median(L[mz_])) if mz_.any() else float('nan'), float(np.median(Lv[mz_])) if mz_.any() else float('nan'))
+        zinfo = '; Zonen (px, L* Licht, Videoraum): ' + ', '.join('%s %d / %.1f / %.1f' % (nm, *w) for nm, w in zw.items())
+    Z.append(zeile('T-R2 K5 dunkle Seite Bild-rechts (Haare)', 'Kopf-Haelften an der Kopfbox-Mitte: Median L* rechts <= %.2f x links (RDT-Licht und Videoraum); Fenster KV2 (Videoraum) '
+                   'L* <= Ref2-Kopf P50 %.1f - %.0f (Messblatt R2), a* > 0, b* > 0 (braeunlich); Band %.2f-%.2f x Kopf-Median (%.1f-%.1f) nur Ausgabe (das Fenster KV2 '
+                   'schneidet das Maul mit den Zaehnen)' % (SOLL['K5_REL'], R2['p50_v'], SOLL['K5_REF2_DL'], SOLL['K5_BAND'][0], SOLL['K5_BAND'][1], lo, hi),
+                   'links/rechts RDT-Licht %.1f / %.1f (%.2f), Videoraum %.1f / %.1f (%.2f); KV2 %s; KV3 (Nase) %s%s' % (
+                       hl, hr, hr / hl if hl else 0, vl, vr, vr / vl if vl else 0, '/'.join('%.1f' % v for v in kv2), '/'.join('%.1f' % v for v in kv3), zinfo),
+                   hr <= SOLL['K5_REL'] * hl and vr <= SOLL['K5_REL'] * vl and kv2[0] <= R2['p50_v'] - SOLL['K5_REF2_DL'] and kv2[1] > 0 and kv2[2] > 0))
+    p50 = float(np.median(L[k])); verh = float(L[k].mean() / L[r8].mean())
+    Z.append(zeile('T-R2 T-K9e ganzer Kopf (Pose 135)', 'L* P50 >= %.0f; Kopf/Rumpf (Mittel L*, Id 8) >= %.1f (Ref2 %.1f / %.2f; Vorlagen Kopf/Brust Video 1,59, KI 1,6-2,2)' % (
+        SOLL['K9E_P50'], SOLL['K9E_VERH'], R2['p50'], R2['verh']),
+        'L* P50 %.1f (Videoraum %.1f); Kopf/Rumpf %.2f (Rumpf P50 %.1f)' % (p50, pv, verh, float(np.median(L[r8]))), p50 >= SOLL['K9E_P50'] and verh >= SOLL['K9E_VERH']))
+    Z.append(zeile('INFO K9 Kuppe rot (KV1)', 'Messblatt a* >= 11 (Original 15,4); G2-Kuppe hat rote Adern auf grauem Grund - nur Ausgabe',
+                   'KV1 %s' % '/'.join('%.1f' % v for v in kv1), True, info=True))
+    # Messblatt-Methode (hellster Kopfpunkt) als INFO mit Lichtbeleg
+    b = RV.kopf_blob(V, LabV, k, kb)
+    dxk = (xm - b['sp'][0]) / H; dyk = (b['sp'][1] - y0) / H
+    mz = a.get('mz'); in_zahn = bool(mz is not None and mz.any() and mz[int(round(b['sp'][1])), int(round(b['sp'][0]))]) if mz is not None else False
+    Z.append(zeile('INFO Messblatt K1/K3/K4 (hellster Kopfpunkt)', 'Messblatt: der hellste Kopfpunkt ist der Augenfleck (Video). Im RDT-Licht 50A0/12 liegt der Augenfaecher (Normale -z, (W)-rechts) im '
+                   'Umgebungslicht (Faktor 0,24 = 63/255 von ncct, re2kopf_r2/diag1.json), das Maul (Normale +x) im Hauptlicht (0,81) - ein weisser Texel wuerde hier hoechstens L* 26 erreichen, '
+                   'die Zaehne liegen bei 55; Drehungen (yaw -65, roll -20) heben den Faecher nur auf 0,47-0,51 und brechen K4/K10/KS2 (grid_rot/grid_roll.log). Nur Ausgabe.',
+                   'hellster Fleck Schwerpunkt (%d, %d) L* %.1f, Kontrast %.1f, %d x %d px = %.3f x %.3f H, K4 %.3f / %.3f H, auf den Zaehnen: %s' % (
+                       int(round(b['sp'][0])), int(round(b['sp'][1])), b['ext'], b['kontrast'], b['wh'][0], b['wh'][1], b['wh'][0] / H, b['wh'][1] / H, dxk, dyk, in_zahn), True, info=True))
     return Z
 
 
@@ -220,12 +336,13 @@ def hell_unten(mo, M):
 
 def pruefen(emd, basis=None, lauf=None, prot=None):
     P = G.posen()
+    p = (prot or {}).get('param') or KB.PARAM
     R = RT.atlas(G.REF2); A = RT.atlas(emd)
     mo = b2.modell(emd)
     Z = []
     for z in RR.tk1(A, R):
         if z['mass'].startswith('T-K1b'):
-            z = tk1b(A, R)
+            z = tk1b(A, R, p)
         Z.append(z)
     Z += tk2_schwanz(A, R)
     z3, i3 = RR.tk3(mo, P, A); Z += z3
@@ -235,17 +352,18 @@ def pruefen(emd, basis=None, lauf=None, prot=None):
     M = KM.messen(mo, P, bilder=True)
     hell_unten(mo, M)
     Z += tr2_tr3(mo, M)
+    Z += kopf_r2(mo, M, P, (prot or {}).get('zonen'))
     Z += tr4(emd)
     zf, st = RR.form(emd, mo, P, lauf); Z += zf
     info = dict(tk3={k: v for k, v in i3.items() if k != 'bild'}, mess={h: {k: v for k, v in r.items() if k not in ('img', 'ids', 'ma', 'mz')} for h, r in M.items()},
-                schwanz={k: v for k, v in st.items() if k not in ('C', 'breite', 'maske')})
+                schwanz={k: v for k, v in st.items() if k not in ('C', 'breite', 'maske')}, ref2=dict(_ref2))
     return Z, info, M
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('emd'); ap.add_argument('--basis', default=KB.BASIS); ap.add_argument('--lauf')
-    ap.add_argument('--prot', help='Protokoll-JSON des Baus (Parameter, Haar-Umfang)')
+    ap.add_argument('--prot', help='Protokoll-JSON des Baus (Parameter, Zonen)')
     ap.add_argument('--json'); ap.add_argument('--md'); ap.add_argument('--txt'); ap.add_argument('--kein-exit', action='store_true')
     a = ap.parse_args()
     prot = json.load(open(a.prot)) if a.prot and os.path.exists(a.prot) else None

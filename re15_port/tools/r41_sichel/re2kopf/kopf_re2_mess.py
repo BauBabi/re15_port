@@ -40,6 +40,16 @@ def _lab(rgb):
     return rgb2lab(np.asarray(rgb, float).reshape(-1, 1, 3) / 255.0).reshape(-1, 3)
 
 
+_g2 = {}
+
+
+def _g2_pal():
+    if 'pal' not in _g2:
+        import re2_leser as RL
+        _g2['pal'] = RL.modell(KB.G2).pal[0]
+    return _g2['pal']
+
+
 def auge_texel(mo, prot=None):
     """Maske (im EM30-Atlas) des (W)-rechten G2-Auges: heller Kern (L* > 45) plus 1 Texel Ring in der Zeile 486 im Fenster G2 u 8-26 /
     v 4-16 (Flaechen T0/T19/T20/T41 bei z -72..-125 = (W)-rechte Kopfseite; die Texel der Mittelspalte u 41-60 und der Wangenstreifen
@@ -48,7 +58,8 @@ def auge_texel(mo, prot=None):
     if mo.pal.shape[0] <= KB.ZEILE_G2 - mo.clut_y:
         return np.zeros(mo.tex.shape, bool)             # Modell ohne RE2-Zeilen (Gegenprobe ot3): kein G2-Auge
     sub = mo.tex[o['v0']:o['v0'] + 90, x0:x0 + 126]
-    lab = _lab(mo.pal[KB.ZEILE_G2 - mo.clut_y])[sub]
+    # Kern nach der QUELL-Palette (G2 Zeile 0) bestimmt, damit die Belichtung der Zeile 486 (Runde 2) die Marker-Menge nicht aendert
+    lab = _lab(_g2_pal())[sub]
     m = (lab[..., 0] > 45) & (sub != 0)      # heller Kern des Auges
     k = np.zeros_like(m); k[4:17, 8:27] = True   # (W)-rechtes Auge: G2 u 8-26, v 4-16 (Flaechen T0/T19/T20/T41, z -72..-125; probe4)
     m &= k
@@ -76,8 +87,15 @@ def marker_render(mo, pose, maske, zeile):
     lut = lut0.copy()
     if not maske.any() or z >= lut.shape[0]:
         return np.zeros((480, 640), bool)
-    frei = [i for i in range(1, 256) if not (mo.tex[maske] == i).any()]
-    idx = frei[0] if frei else 255
+    # Marker-Index: ein Eintrag, der in der GANZEN Region der Zeile (G2-Ort bzw. G3-Kachel) nicht vorkommt - nicht nur ausserhalb der Maske
+    # (Zahlen-Pruefung RE2-Kopf r1, Info: Index 1 stand 21-mal sonst in der G2-Region); ersatzweise der seltenste Eintrag
+    region = np.zeros(mo.tex.shape, bool)
+    for o in (KB.G2_ORT, KB.G3_ORT):
+        x0_ = 128 * (o['page'] & 0xF) + o['u0']
+        region[o['v0']:o['v0'] + o['v'][1] - o['v'][0] + 1, x0_:x0_ + o['u'][1] - o['u'][0] + 1] = True
+    belegt = np.bincount(mo.tex[region].ravel(), minlength=256)
+    frei = [i for i in range(1, 256) if belegt[i] == 0]
+    idx = frei[0] if frei else int(1 + np.argmin(belegt[1:]))
     lut[z, idx, :3] = MAG; lut[z, idx, 3] = 255
     tex = tex0.copy(); tex[maske] = idx
     mo.tex, mo.lut = tex, lut
