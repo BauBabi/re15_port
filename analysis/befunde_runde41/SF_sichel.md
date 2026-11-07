@@ -1582,3 +1582,79 @@ SF_belege/v4/r3/): 01_vorn_kamera12 (mit FO), 02_seite_wie_bild2, 03_kopf_nah_vo
 8. Tests: die Engine ist in dieser Runde nur kommentiert (O6); ein Unit-Test fuer die V4-Regeln der Runde 3 (Mitnahme, Freigabe,
    Boden mit Mesh) fehlt weiter (Pruefung V4 r3 Zahlen Offen 6).
 9. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme.
+
+### V4 Runde 5 (Bauer, 2026-11-07, nach Pruefung V4 r4)
+
+Nutzer-Wortlaut wie oben ("Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben"). Grundlage: SF_MESSBLATT_V4.md mit dem Nachtrag
+Runde 5 (Entscheid O7, Commit fb17942e5), die Pruefberichte SF_PRUEFUNG_V4_r4_zahlen.md / SF_PRUEFUNG_V4_r4_sicht.md (Commit 0936f2e84) und
+die Entscheide O1-O11. Kein RE-Befund: die Sichel-Form gibt es auf der Disc nicht, keine Zahl ist eine @0x-Konstante; jede neue Konstante
+nennt im Code ihre Quelle (Messung am Original, Lauf) oder ist PORT-WAHL mit Nutzer-Wortlaut. Commits 0936f2e84 (Pruefberichte r4),
+fb17942e5 (Messblatt-Nachtrag O7), 8a83adce6 (Leisten r4 nach r4/), 496613e2c (Schwanz), a0638b2dc (Koerperfarben), 13830bca0 (Riegel,
+Leisten-Werkzeug, Gegenproben), 54a1f60e8 (Endstand). Endstand EM30_V4.EMD = EM30_V4r5.EMD sha256 a762bd66 (Neubau "birkin_formen.py
+--variante v4 --aus DIR"; Runde-4-Stand bleibt als EM30_V4r4.EMD 00d642b7), Lauf sfv4/r/V4r5 (191 FRAMEDUMPs). Spiel-Asset EM30_HANGAR.EMD
+und Pin cfd1ac42 unveraendert.
+
+**Befund -> Aenderung -> Beleg**
+
+| Befund (Pruefung V4 r4) | Aenderung (Entscheid) | Ergebnis (riegel_V4r5, Lauf sfv4/r/V4r5) |
+|---|---|---|
+| S1/S2 Schwanz: drei einfarbige Bloecke je Mesh (L* 7,3/28,6/13,2), Quernaehte 16,7 dE76, Helligkeit verkehrt, Wurzel weinrot a* 22 | (O8) EINE Textur fuer alle Glieder: SCHWANZ_V4 uv art 'achse' (v = Bogenlaenge fortlaufend, u = Lage um den Umfang); Texel aus Vorlage 2 (r5_schwanz_textur.py): Gegenstelle im Original nach Anteil der Achse zwischen Beginn/Biegung/Knick/Ende und Lage quer zur Mittellinie (Lauf r5 Schwanz b mit "derselben Bildstelle": Station Mitte L* 21,1 gegen 10,2, Naht 19,0 an der Wurzel - verworfen); Texel = Sum lambda D / Sum lambda^2; 3 Runden Nachfuehrung nach der Vergleichsregel; 255 Indizes. Die Wurzel liest am Ruecken die Figur (ueberfuehrend) | **TN 10,7 dE76** (r4 16,7; Original 9,5, ROT knapp, bei x 297 = Zwischenring an der Biegung); **TV gruen** an allen 5 Stationen (Wurzel 9,7/10,4 gegen 9,0/11,2; Mitte 9,6/8,0 gegen 10,3/8,1; Biegung 22,8/6,2 gegen 23,4/6,2; senkrecht 12,4/3,8 gegen 10,2/2,7; Endstueck); T8 F15 1,3 / F16 3,8 / F17 5,9 / F18 0,7, T9 4,9 (gruen); Kurve und Streifen in Leiste 09. **TR 0,020 gegen 0,102 (ROT)**: die Weichzeichnung der Vergleichsregel glaettet die wenigen kraeftig roten Wurzelpunkte des rohen Originals |
+| Zahlen TK RMS 1,77 px, T3 dx -0,234, T5 f 0,5 0,095 H (O11) | Zwischenring 'bauch' in Glied 2 (t 0,15, Radius x1,374, aussen 0,011), 11 Seiten (M1 198 <= 212), Gelenk 3 (-0,3003/+0,0743; 0,0636 H) aus r5_form_suche.py Lauf "bauch" (Saat 5, Schritt 46); Gelenke 5-7 je 0,0075/0,015 H nach hinten (T3). Laeufe r5 Form Saat 1-4 (alle 14 Parameter, Start r4 bzw. dicker waagerechter Teil): nach 40-60 Schritten Strafe 5-35, verworfen | **TK RMS 3,69 px** (Original 3,87-4,71, Grenze 3,02), Oberkante max 0,027 H; **T3 -0,239 / +0,247** (gruen); **T5q 0,032/0,047/0,110/0,161** (gruen); T2 64,0 Grad, dx -0,259 dy +0,049 (gruen); **T5 Bauer-Mittellinie f 0,5 0,098 H (ROT, Grenze 0,100)** |
+| S3 gelber Fleck (B)-linke Schulter (45 Texel, Mesh 13, CLUT 490) | (O9) Ursache gemessen: die gelbe Lampe hinter der (B)-linken Schulter (Vorlage 1 x 306-341, y 145-167, b* bis 28) lag in der Schulterbox der Region 'rumpf' und im Kachel-Polygon. r2_koerper_farben: Original-Bildpunkte mit b* > 9,9 (= max b* der Figur in Rumpf- und Kopfbox) zaehlen nicht; dazu farbmenge(): Bildpunkte > 10 dE76 von jeder Farbe der Original-Region bekommen die naechste Farbe der Menge | gelb 0 px in beiden Ansichten; **AF Pose 135 max 0,009** (gruen), **AF Pose 85 max 0,012 Id 6 (ROT, Grenze 0,01)**; V4 r4 mit demselben Riegel 0,026 (Id 13 gelb 47) / 0,108 |
+| S4 Rot ueberall, Mitte/aussen 1,55/1,49, Schultern 0,08/0,07, a* > 22 h85 1170 / h100 531 | (O10) Oberkoerper-Ziel nach Anteilslage (Farbe des Originals an derselben Stelle) statt Rangabbildung (die verteilte das Rot auf die dunklen Spalten des Referenz-2-Musters); Feinanteil nur als Helligkeit; Ausgleich je Drittel an den Laufposen h118/h135 mit dem Video-Verhaeltnis; Grenze a* <= 21,7 (p99 der Vorlage 1 im Polygon) fuer Kopf-, Schwanz- und Koerperzeilen | **FO Buehne 6,48** (Schultern 0,005), **Spielbild h135 2,76** (gruen), **h118 2,73 (ROT, 0,02 unter 2,75)**, Schultern 0,016/0,020; **FR h100/h118/h135 0 px** (gruen), **h85 165 (ROT, Grenze 41)** |
+| F6/F7 nach Wortlaut (O7) | Messblatt-Nachtrag; Riegel an der Fensterlage, F7 mit FS Oberarm (B)-links unten; "Id ganz" INFO | F6 3,4 / F7 1,1 / F-Mittel 2,42 (gruen) |
+| F16/F17 auskommentiert (Zahlen 4.2, O11) | Klarstellung: der Stand der farben_v4.npz (vom Pruefer bitgleich nachgebaut) ist OHNE F16/F17 entstanden (Lauf r4 Eichung n mit F17-Gewicht 2 verworfen); das Dossier V4 Runde 4 nannte irrtuemlich F15/F16/F17 - hiermit berichtigt. Seit Runde 5 kommt der Schwanz nicht mehr aus eichen_v4.py | eichen_v4.py: Kommentar statt Zeilenumbruch-Rest |
+| O6: 5 PORT-WAHL ohne Wortlaut, vorbau-Kommentar | vorbau: Kommentar nennt 0,053 als ersten Versuch, Endstand 0,048, Wortlaut; zeilen_je_c, rgw: Wortlaut und "seit Runde 5 ohne Wirkung"; MU, KACHEL_MIN: Wortlaut und Laeufe | - |
+
+**Riegel-Tabelle** (riegel_v4.py, EM30_V4.EMD a762bd66, Lauf sfv4/r/V4r5; volle Tabelle SF_belege/v4/riegel_V4r5.md/.txt/.json; **Exit 1,
+8 rot von 70**, 2 INFO-Zeilen nicht gezaehlt). Spalte "V4 r4" = derselbe Riegel an V4 r4 (SF_belege/v4/r5/riegel_V4r4_mit_r5_riegeln.*:
+16 rot von 70).
+
+| Mass | Soll | Ist V4 r4 | Ist V4 r5 | |
+|---|---|---|---|---|
+| G1 / M1-M4 | Geometrie = Ref2; M1 <= 212; M4 0,045-0,091 | OK | OK; M1 198; M4 0,060-0,072 | OK |
+| K1-K11 | Messblatt V4 / K11 41,0 +-6,1 | OK | K1 1 Komp. 25,3; K2 dE00 1,6; K11 37,8 / Rumpf 27,1 | OK |
+| S1-S4 | Messblatt | OK | S3 0,004 H; S4 dE00 3,1 | OK |
+| T1 / T2 / T4 / TA / T6 | Messblatt, T2 nach O2 | OK | T2 dx -0,259 dy +0,049, 64,0 Grad | OK |
+| T3 | dx -0,265 dy +0,257 +-0,03 | ROT -0,233 | -0,239 / +0,247 | OK |
+| T5 (Bauer) | f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 | ROT 0,095 | 0,032/0,049/**0,098**/0,163 | ROT |
+| T5q | dito, quer | ROT 0,095 | 0,032/0,047/0,110/0,161 | OK |
+| T8 / T9 | dE00 <= 6 / Mittel <= 6, L*/a* +-4/+-3 | OK | F17 5,9 / 4,9; 14,4/3,6 | OK |
+| T7a-d, Boden (O3) | koerperfest | OK | 0/47, max 0,056 H; 69,5-76,8 Grad; min 0,370 H; 79,4 Grad; -6 E. | OK |
+| F0, F6 (Fensterlage), F7 (Fensterlage + FS), F8-F19, F-Mittel | dE00 <= 5, Betrag dL <= 4; Mittel <= 4 | F6 ROT 7,0 (Wortlaut) | 3,4 / 1,1 / 2,7 / 1,9 / 3,4 / 2,9 / 1,6; Mittel 2,42 | OK |
+| FS (6 Sicht-Boxen) | dE00 <= 5, Betrag dL <= 4, Rotanteil +-0,15 | OK | alle OK | OK |
+| TQ | Stufe <= 9,6, Plateau <= 0,31 | ROT 0,41-0,53 | Stufe 5,0-7,7, **Plateau 0,21-0,41** | ROT |
+| TK | RMS >= 3,02 px; Oberkante <= 0,03 H | ROT 1,77 | 3,69 px; 0,027 H | OK |
+| TN (neu, O8) | Quernaht <= 9,5 dE76 | ROT 16,7 | **10,7** bei x 297 | ROT |
+| TV (neu, O8) | 5 Stationen +-4/+-3 | ROT (Wurzel 25,0/2,6) | alle OK | OK |
+| TR (neu, O8) | a* > 12 waagerecht 0,102 +-0,05 | ROT 0,189 | **0,020** | ROT |
+| AF (neu, O9) Pose 135 / 85 | je Mesh <= 0,01 | ROT / ROT | 0,009 / **0,012 (Id 6)** | OK / ROT |
+| FO Buehne / Spielbild h118 / h135 | >= 2,75; Schultern <= 0,05 | ROT | 6,48 / **2,73** / 2,76 | OK / ROT / OK |
+| FR (neu, O10) h85 / h100 / h118 / h135 | a* > 22 <= max(10 x Video, 1 Promille) | ROT h85, h118 | **165** / 0 / 0 / 0 | ROT / OK / OK / OK |
+| KS Buehne / h118 / h135 | Gradient 29,1-40,4; glatt <= 0,098 | ROT h135 0,134 | 32,6 / 31,0 (0,048) / 37,5 (**0,120**) | OK / OK / ROT |
+
+Gegenprobe V3 r2 mit denselben Riegeln (SF_belege/v4/r5/riegel_V3r2_gegenprobe_r5.*, Lauf sfv3/r/V3r2): **57 rot von 70**. Gegenprobe V4 r4
+(riegel_V4r4_mit_r5_riegeln.*): 16 rot von 70 - alle neuen Riegel TN, TV, TR, AF 135/85, FR h85/h118 sind dort rot, dazu TK, TQ, T3, T5,
+T5q, FO Buehne/h118/h135, KS h135. Behoben gegenueber V4 r4 (dort rot, hier gruen): T3, T5q, TK, TV, AF 135, FO Buehne, FO h135, FR h118.
+Nicht behoben (beide rot): T5 Bauer, TQ, TN, TR, AF 85, FR h85, FO h118, KS h135 (jeweils besser als V4 r4). Rueckschritte gegenueber V4
+r4 unter denselben Riegeln: keine Zeile, die in V4 r4 gruen war, ist rot. Tests unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41,
+integration_r41_sichel_form **4/4 Passed** (SF_belege/v4/ctest_v4_r5.txt; Bau "LOCAL-BUILD-OK", Engine unveraendert).
+
+**Leisten** (SF_belege/v4/, Spalten Nutzer-Vorlage | Nutzer-Beschriftung | V4 Runde 4 (vorher) | V4 Runde 5 (neu); Runde-4-Leisten in
+SF_belege/v4/r4/): 01_vorn_kamera12 (mit FO, AF), 02_seite_wie_bild2, 03_kopf_nah_vorn_x4, 04_kopf_nah_seite_x4, 05_schwanz_x3 (T2-T6,
+T5q, TQ, TK, TN, TR, TV), 06_farben, 07_gang (Laeufe V4r4 / V4r5), 08_rundum_V4 (V4 r5), **09_schwanz_verlauf** (L* und a* entlang der
+Mittellinie, Abschnitte Beginn-Biegung-Knick-Ende, Original | V4 r4 | V4 r5 als Kurve und als Farbstreifen).
+
+**Offen**
+1. T5 nach der Bauer-Mittellinie f 0,5 = 0,098 H (Grenze 0,100; T5q quer zur t2_mass_v4-Mittellinie 0,110 gruen). In Runde 3 gruen
+   (0,140), damals mit T2-Lage rot. Die Laeufe r5 Form zeigen den Zielkonflikt T5 f 0,5 <-> T2-Drehung: Gelenk 4 mit 0,0636 statt 0,0459 H
+   gibt T5 0,093 und T2 62,5 Grad (Grenze 63,4); Gelenk 3 0,07 gibt T5 0,100, aber T2 58,8 Grad und f 0,7 0,169 (formprobe-Laeufe r5).
+2. TQ Plateau 0,38-0,41 bei x 310-330 (Original <= 0,31): die Seitenflaeche hat Textur aus dem Original, nach der Weichzeichnung sigma 1,5
+   bleiben aber Laengsbaender konstanter Helligkeit (11 Seiten). TN 10,7 dE76 bei x 297 am Zwischenring (Original 9,5).
+3. TR 0,020 (Original 0,102): Rotanteil im rohen Original gegen den weichgezeichneten Port gemessen; das Mittel trifft (TV Wurzel a* 10,4
+   gegen 11,2), die Spitzen a* > 12 nicht.
+4. FR h85 165 px a* > 22 (Grenze 41, Video 2) und FO h118 2,73 (Grenze 2,75), KS h135 glatt 0,120 (<= 0,098): im Spielbild; die Probe an
+   den b2-Laufposen (r5_probe.py) hatte h85 0 px und h118 2,88 - das Spielbild weicht ab (Licht/Ueberblendung h85).
+5. AF Pose 85 Id 6 (Bein (W)-rechts) 0,012 (Grenze 0,01).
+6. Tests: kein Unit-Test fuer die V4-Regeln (Pruefung V4 r3/r4); integration_r41_sichel_form laedt weiter das Spiel-Asset.
+7. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme.
