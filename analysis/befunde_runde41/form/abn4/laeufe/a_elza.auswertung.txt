@@ -1,0 +1,24 @@
+## a_elza (exit=0 dauer=81s; exe aa370951fe9768dd)
+HP Form: A F251 150 | B F- None | C F- None; Kampfstart (Clip 10) FNone; Treffer bis Rueckstoss 0 (ab FNone); Rueckstoss None; Sturz None; G5 None; Spieler-HP F497 100->90, F560 90->80, F612 80->70, F671 70->60, F718 60->25, F1010 25->15, F1063 15->5, F1126 5->-1
+a_elza: Raum-Ton 10 gespielt 6, verworfen 0, SILENT 2 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT', '[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formnb4/abn4e/laeufe/a_elza: keine Rueckstoss-Szene
+a_elza: Fenster F700-F1200 (501 Bilder), Form-Slot 11; Beginn: Spieler (10150,-23582) Form (5944,-23388)
+  Cut 12 F700-F723 ( 24 Bilder): Form x   5944..  6364, Spieler x  10150.. 14484 | dunkel 175..206 (>600: 0) | Form sichtbar min 2298, verdeckt max 209 | Spieler sichtbar max 1809, verdeckt max 477
+  Cut 13 F724-F837 (114 Bilder): Form x   6364..  7390, Spieler x  14932.. 16722 | dunkel 206..274 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 3114, verdeckt max 0
+  Cut 12 F838-F1041 (204 Bilder): Form x   7434.. 12131, Spieler x  16722.. 17218 | dunkel 223..341 (>600: 0) | Form sichtbar min 3316, verdeckt max 318 | Spieler sichtbar max 14328, verdeckt max 0
+  Cut 13 F1042-F1200 (159 Bilder): Form x  12174.. 15191, Spieler x  17218.. 17714 | dunkel 0..706 (>600: 53) | Form sichtbar min 20025, verdeckt max 1 | Spieler sichtbar max 810, verdeckt max 997
+  Pruefmass (501 Bilder, 501 mit Bild): Form sichtbar min 0 (F725), Spieler sichtbar max 14328 (F1029), Form verdeckt max 318 (F1024), fast schwarz max 706 (F1056), > 600: 53; Verstoesse: 53
+    F1043 Cut 13: fast schwarz 668 > 600
+    F1044 Cut 13: fast schwarz 665 > 600
+    F1045 Cut 13: fast schwarz 662 > 600
+    F1046 Cut 13: fast schwarz 659 > 600
+    F1047 Cut 13: fast schwarz 661 > 600
+    F1048 Cut 13: fast schwarz 664 > 600
+    F1049 Cut 13: fast schwarz 668 > 600
+    F1050 Cut 13: fast schwarz 673 > 600
+    F1051 Cut 13: fast schwarz 681 > 600
+    F1052 Cut 13: fast schwarz 688 > 600
+    F1053 Cut 13: fast schwarz 693 > 600
+    F1054 Cut 13: fast schwarz 699 > 600
+    ... 41 weitere
+werkzeug/../blatt/a_elza_kampf.png 63 Bilder

@@ -1,0 +1,18 @@
+## k_elza (exit=0 dauer=105s; exe aa370951fe9768dd)
+HP Form: A F251 300 | B F498 150 | C F946 150; Kampfstart (Clip 10) F1169; Treffer bis Rueckstoss 1 (ab F1897); Rueckstoss None; Sturz None; G5 None; Spieler-HP F1322 100->95, F1473 95->50, F1731 50->40, F1793 40->30, F1850 30->20, F1902 20->10
+k_elza: Raum-Ton 10 gespielt 6, verworfen 0, SILENT 1 ['[re2se] se=11 bank=24 (gewaehlt 24) Eintrag FFFFFFFF SILENT']
+C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/formnb4/abn4e/laeufe/k_elza: keine Rueckstoss-Szene
+k_elza: Fenster F1150-F1931 (782 Bilder), Form-Slot 11; Beginn: Spieler (15050,-23550) Form (-14700,-23350)
+  Cut 13 F1150-F1166 ( 17 Bilder): Form x -14700..-14700, Spieler x  15050.. 13850 | dunkel 265..273 (>600: 0) | Form sichtbar min 0, verdeckt max 0 | Spieler sichtbar max 5576, verdeckt max 0
+  Cut 12 F1167-F1168 (  2 Bilder): Form x -14700..  1200, Spieler x  13775.. 13775 | dunkel 199..273 (>600: 0) | Form sichtbar min 1243, verdeckt max 135 | Spieler sichtbar max 2254, verdeckt max 0
+  Cut 15 F1169-F1169 (  1 Bilder): Form x   1200..  1200, Spieler x  13775.. 13775 | dunkel 199..199 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 11 F1170-F1228 ( 59 Bilder): Form x   1200..  1243, Spieler x  13775.. 13775 | dunkel 199..590 (>600: 0) | Form sichtbar min 11469, verdeckt max 21 | Spieler sichtbar max 0, verdeckt max 0
+  Cut 12 F1229-F1323 ( 95 Bilder): Form x   1191.. 10955, Spieler x  13775.. 13975 | dunkel 172..443 (>600: 0) | Form sichtbar min 1143, verdeckt max 274 | Spieler sichtbar max 2371, verdeckt max 60
+  Cut 13 F1324-F1324 (  1 Bilder): Form x  11380.. 11380, Spieler x  14125.. 14125 | dunkel 249..249 (>600: 0) | Form sichtbar min -, verdeckt max - | Spieler sichtbar max -, verdeckt max -
+  Cut 12 F1325-F1330 (  6 Bilder): Form x  11780.. 13222, Spieler x  14225.. 14767 | dunkel 249..427 (>600: 0) | Form sichtbar min 11448, verdeckt max 96 | Spieler sichtbar max 2658, verdeckt max 531
+  Cut 13 F1331-F1896 (566 Bilder): Form x  13446.. 15493, Spieler x  14803.. 12570 | dunkel 368..615 (>600: 1) | Form sichtbar min 9101, verdeckt max 257 | Spieler sichtbar max 7305, verdeckt max 1000
+  Cut 12 F1897-F1899 (  3 Bilder): Form x  15494.. 15641, Spieler x  12570.. 12569 | dunkel 400..498 (>600: 0) | Form sichtbar min 25704, verdeckt max 0 | Spieler sichtbar max 392, verdeckt max 784
+  Cut 13 F1900-F1931 ( 32 Bilder): Form x  15642.. 15529, Spieler x  12569.. 12095 | dunkel 475..595 (>600: 0) | Form sichtbar min 16672, verdeckt max 447 | Spieler sichtbar max 5998, verdeckt max 1000
+  Pruefmass (782 Bilder, 782 mit Bild): Form sichtbar min 0 (F1150), Spieler sichtbar max 7305 (F1858), Form verdeckt max 447 (F1902), fast schwarz max 615 (F1889), > 600: 1; Verstoesse: 1
+    F1889 Cut 13: fast schwarz 615 > 600
+werkzeug/../blatt/k_elza_kampf.png 98 Bilder
