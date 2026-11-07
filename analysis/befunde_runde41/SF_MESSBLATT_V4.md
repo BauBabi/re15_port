@@ -166,6 +166,12 @@ Kein Oliv, kein Lachsrot.
 > weiter, Vergleichsregel nur noch als Messverfahren), gemalt nur mit Farben der Ref2-Palette in der Machart der Original-Textur.
 > Riegel: re15_port/tools/r41_sichel/v4/riegel_ref2tex.py (T-K1 bis T-K4 und die Form-Riegel), Dossier SF_sichel.md Abschnitt
 > "V4 Originaltexturen". Der Text unten bleibt als Beleg der Runden 1-5 stehen.
+>
+> **Nachtrag Originaltexturen Runde 2 (2026-11-07, Sicht-Pruefung Runde 1 und Orchestrator Runde 2 (a)):** Auch die Zonenhelligkeit des
+> Kopfes darf NICHT an Video-L*-Ziele nachgefuehrt werden - die Video-Farbziele der Kopfzeilen in Abschnitt 7 (K2 46,9/7,2/-1,1, K5
+> 13,3/7,4/1,5, K7 18,2/7,1/1,3, K8 9,9/9,9/3,8, K9 22,6/15,4/5,2, S1 48,4/4,0/0,5, S3 19,1/1,2/1,1, S4 27,6/15,3/3,3, KV5 18,9/7,1/0,6)
+> sind ueberholt. Abnahme gegen Referenz 2, nicht gegen das Video: Kopf-Grundton = die blasse Ref2-Haut, dunkel nur das Haarfeld neben dem
+> Auge, keine violettstichigen Eintraege. Ersatzbedingungen und T-K5 siehe Abschnitt 7.
 
 **Eichung Video <-> Port-Schirm** (p_eichung.py): Der Port zeigt in 50A0 Cut 12 dasselbe Raumbild. Fit je Kanal
 Video = a + b x Port ueber statische Wand- und Bodenfelder (x < 270 oder x > 540, y 60-440), den Port vorher mit Gauss
@@ -248,6 +254,25 @@ abgedunkelt, A: Hintergrund-Steigung ~0,6).
 
 > Seit 2026-11-07 (V4 Originaltexturen): die Zeilen F-Riegel Koerper, F0 Gueltigkeit, T8 und die Lichtgegenprobe als Farbziel sind
 > ueberholt (Abschnitt 5). K1-K10, S1-S4, T1-T7, G1, M1-M4 gelten weiter; dazu T-K1 bis T-K4 (riegel_ref2tex.py).
+>
+> **Originaltexturen Runde 2 (2026-11-07):** In K2, K5, K7, K8, K9, S1, S3 und S4 sind die Video-Farbziele (dE00 zu Lab-Werten aus
+> Vorlage 1/2) **ueberholt** (Abschnitt 5, Nachtrag Runde 2), ebenso das Kinn-Ziel "dunkel" (K8 9,9 L*). Orte, Fenster, Groessen,
+> Komponentenzahl und die relativen Bedingungen gelten weiter. Ersatz (riegel_ref2tex.tk4, Abnahme gegen Referenz 2 = Spiel-Asset im
+> selben Render):
+>
+> | Zeile | ueberholt | gilt jetzt |
+> |---|---|---|
+> | K2 | dE00 <= 6 zu 46,9/7,2/-1,1 | L* >= KV5 + 20 (wie bisher); blass: a* <= 15, b* >= 0 |
+> | K5 | dE00 <= 6 zu 13,3/7,4/1,5 | KV2 L* <= Augenfleck - 25 (wie bisher) und <= Ref2-Kopf L* P50 - 8 |
+> | K7 | dE00 <= 6 zu 18,2/7,1/1,3 | KV3 L* zwischen Haarfeld und Augenfleck (wie bisher) und >= Haarfeld + 8 (Nase eigenes Merkmal) |
+> | K8 | dE00 <= 6 zu 9,9/9,9/3,8; Anteil L* > 35 <= 0,05 | kein dunkles Maul: KV4 (Kopf-Id erodiert) Albedo-L* P50 >= Ref2-Kopfhaut - 8; dE00 <= 10 zu Ref2 KV4 |
+> | K9 / S4 | dE00 <= 6 zu 22,6/15,4/5,2 bzw. 27,6/15,3/3,3 | a* >= 11 (wie bisher); \|dL*\| zu Ref2 im selben Fenster <= 8 |
+> | S1 | dE00 <= 6 zu 48,4/4,0/0,5 | 1 Komponente und Groesse wie bisher; blass: a* <= 15, b* >= 0 |
+> | S3 | L* <= 22; dE00 <= 6 zu 19,1/1,2/1,1 | KS2 L* <= Ref2-Kopf L* P50 (Pose 85) - 8; Abstand zum Fleck <= 0,01 H (wie bisher) |
+> | T-K5 (neu) | - | Kopf gegen Ref2 im rohen Render, Pose 135 und 85: Grundton L* P50 ausserhalb des Haarfelds (vorn KV2 + K6-Box, seitlich KS2) wie Ref2 +- 4; Grundton/Rumpf >= Ref2 - 0,2; Anteil b* < 0 <= 0,02; dunkle Textur (Albedo L* < 25) ausserhalb des Haarfelds <= Ref2 + 0,05 |
+> | T-K3d (neu) | - | Schwanzwurzel Id 16: waagerecht/senkrecht \|dL*\| je Teilflaeche (ganz, obere 14 Zeilen, 4 Quadranten) in der Spanne von Rumpf Id 8 / Oberarm Id 13 |
+>
+> K1, K3, K4, K6, K10, S2 bleiben unveraendert. In der Tabelle unten sind die ueberholten Ziele mit **[ueberholt R2]** markiert.
 
 **Render fuer alle Riegel (Bauer und Pruefer gleich):** b2.zeichne (re15_port/tools/r41_sichel/v2/b2.py: Spielkamera
 50A0/12, GTE-Projektion, RDT-Licht Cut 12), 640 x 480. Posen in **re15_port/tools/r41_sichel/v4/posen_v4.json**, die der
@@ -263,19 +288,19 @@ Bildes, Rumpf-Mittel (Id 7/8) dE00 <= 3; sonst Farbriegel am Spielbild messen.
 | G1 Koerper-Geometrie = Ref2 | EM30_HANGAR.EMD sha256 cfd1ac42... (Commit 84e8a4d97, Pin release/em30_hangar.sha256) | Meshes 0-8 und 10-15 (Ecken, Normalen, Primitive inkl. UV), Skelett 0-15, EDD/EMR **byte-gleich**; geaendert werden duerfen nur Mesh 9 (Kopf), Meshes 16-22 (Schwanz), TIM-Texel und CLUT | birkin_formen MD1-Serializer: Byte-Vergleich je Mesh gegen Ref2 (wie R28 V3) |
 | G2 Gang/Szene unveraendert | Ref2 | Clips und Keyframes der Knochen 0-15 und der Szenenablauf 50A0/50E0 gleich; Tests gruen | ctest -R "unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41, integration_r41_sichel_form" (Muster wie im Auftrag) |
 | K1 Augen vorn | 1 heller Fleck im Kopf | genau 1 Komponente (p_blob: hellstes 3x3 in der Kopfbox, Schwelle Mitte aus Extrem und Median 21x21) mit L*-Maximum im Fleck - L*-Median 21x21 >= 20 (Original 56,2 - 26,7 = 29,5) | Pose 135, Kopfbox Id 9, nach sigma 1,5 |
-| K2 Augenfleck Farbe | 46,9 / 7,2 / -1,1 | dE00 <= 6; L* >= KV5 (Kopf (B)-links unter dem Auge, Anteile 0,05-0,35 x 0,62-0,85; Ziel 18,9 / 7,1 / 0,6) + 20 | wie K1, Mittel der Fleckmaske |
+| K2 Augenfleck Farbe | 46,9 / 7,2 / -1,1 **[ueberholt R2]** | dE00 <= 6 **[ueberholt R2]**; L* >= KV5 (Kopf (B)-links unter dem Auge, Anteile 0,05-0,35 x 0,62-0,85; Ziel 18,9 / 7,1 / 0,6) + 20 | wie K1, Mittel der Fleckmaske |
 | K3 Augenfleck Groesse | 0,026 x 0,033 H | Breite 0,016-0,036 H, Hoehe 0,023-0,043 H | Bbox der Fleckmaske / H_port |
 | K4 Augenlage vorn | 0,050 H (B)-links = (W)-rechts der Kopfmitte, 0,093 H unter der Kopf-Oberkante | 0,035-0,065 H links; 0,07-0,12 H unter OK | Fleck-Schwerpunkt minus Kopfbox-Mitte (x) bzw. Kopfbox-Oberkante (y), / H_port |
-| K5 Haarfeld vorn | dunkles Feld (B)-rechts | Fenster KV2 (Anteile 0,52-0,85 x 0,25-0,75 der Kopfbox): dE00 <= 6 zu 13,3 / 7,4 / 1,5 und L* <= Augenfleck - 25 | Anteils-Fenster auf der Port-Kopfbox |
+| K5 Haarfeld vorn | dunkles Feld (B)-rechts | Fenster KV2 (Anteile 0,52-0,85 x 0,25-0,75 der Kopfbox): dE00 <= 6 zu 13,3 / 7,4 / 1,5 **[ueberholt R2]** und L* <= Augenfleck - 25 | Anteils-Fenster auf der Port-Kopfbox |
 | K6 zweites Auge verdeckt | Spiegelstelle dunkel | im Spiegelfenster (Fleckbox an der Kopfmitte gespiegelt) L* <= 18 | dito |
-| K7 Nase | mitteldunkel, mittig | Fenster KV3 (0,44-0,62 x 0,66-0,81): dE00 <= 6 zu 18,2 / 7,1 / 1,3; L* zwischen Haarfeld und Augenfleck | dito |
-| K8 Kinn/Maulzone | dunkel, rotstichig, keine Struktur | Fenster KV4 (0,21-0,62 x 0,88-1,05): dE00 <= 6 zu 9,9 / 9,9 / 3,8; Anteil Pixel mit L* > 35 <= 0,05 (keine hellen Zaehne) | dito, nach sigma 1,5 |
-| K9 Kopf-Oberseite rot vorn | 22,6 / 15,4 / 5,2 | Fenster KV1 (0,40-0,80 x 0,02-0,32): dE00 <= 6, a* >= 11 | dito |
+| K7 Nase | mitteldunkel, mittig | Fenster KV3 (0,44-0,62 x 0,66-0,81): dE00 <= 6 zu 18,2 / 7,1 / 1,3 **[ueberholt R2]**; L* zwischen Haarfeld und Augenfleck | dito |
+| K8 Kinn/Maulzone | dunkel, rotstichig, keine Struktur **[ueberholt R2: Ref2-Haut, kein dunkles Maul]** | Fenster KV4 (0,21-0,62 x 0,88-1,05): dE00 <= 6 zu 9,9 / 9,9 / 3,8; Anteil Pixel mit L* > 35 <= 0,05 (keine hellen Zaehne) **[ueberholt R2]** | dito, nach sigma 1,5 |
+| K9 Kopf-Oberseite rot vorn | 22,6 / 15,4 / 5,2 **[ueberholt R2]** | Fenster KV1 (0,40-0,80 x 0,02-0,32): dE00 <= 6 **[ueberholt R2]**, a* >= 11 | dito |
 | K10 Kopfbox vorn | 0,159 x 0,172 H | Breite 0,14-0,18 H, Hoehe 0,15-0,20 H | Bbox Id 9, Pose 135 |
-| S1 Auge seitlich | 1 heller Fleck, 48,4 / 4,0 / 0,5 | dE00 <= 6; Groesse 0,028-0,052 x 0,040-0,070 H | p_blob in der Kopfbox, Pose 85 |
+| S1 Auge seitlich | 1 heller Fleck, 48,4 / 4,0 / 0,5 **[ueberholt R2]** | dE00 <= 6 **[ueberholt R2]**; Groesse 0,028-0,052 x 0,040-0,070 H | p_blob in der Kopfbox, Pose 85 |
 | S2 Augenlage seitlich | 0,049 H hinter der Kopf-Vorderkante, 0,79 H ueber der Sohle | 0,03-0,07 H; 0,76-0,82 H | Schwerpunkt gegen Vorderkante (max x Id 9) und Sohle |
-| S3 Haarkante seitlich | dunkler Streifen vor dem Auge | Fenster KS2 (Anteile 0,84-0,96 x 0,52-0,80 der Kopfbox seitlich): L* <= 22 und dE00 <= 6 zu 19,1 / 1,2 / 1,1; Abstand zum Augenfleck <= 0,01 H | Anteils-Fenster, Pose 85 |
-| S4 Kopf-Oberseite rot seitlich | 27,6 / 15,3 / 3,3 | Fenster KS1 (0,11-0,53 x 0,04-0,29): dE00 <= 6, a* >= 11 | dito |
+| S3 Haarkante seitlich | dunkler Streifen vor dem Auge | Fenster KS2 (Anteile 0,84-0,96 x 0,52-0,80 der Kopfbox seitlich): L* <= 22 und dE00 <= 6 zu 19,1 / 1,2 / 1,1 **[ueberholt R2]**; Abstand zum Augenfleck <= 0,01 H | Anteils-Fenster, Pose 85 |
+| S4 Kopf-Oberseite rot seitlich | 27,6 / 15,3 / 3,3 **[ueberholt R2]** | Fenster KS1 (0,11-0,53 x 0,04-0,29): dE00 <= 6 **[ueberholt R2]**, a* >= 11 | dito |
 | T1 Beginn | 0,767 H ueber der Sohle, 0,15 H hinter dem Buckelscheitel | +-0,03 H je Achse | Unterkante des Schwanzansatzes: unterster Pixel von Id 16 an der Grenze zum Rumpf (Id 7/8); Buckelscheitel = Mitte der obersten Zeile der Koerper-Ids |
 | T2 Biegung | dx -0,245 H, dy +0,036 H zum Beginn; Drehung 70-90 Grad | +-0,03 H; Drehung 60-100 Grad innerhalb <= 0,10 H Achslaenge | Mittellinie der Schwanz-Ids (P_schwanz.mittellinie aus v3), Richtung je 0,05 H |
 | T3 Knick | dx -0,265 H, dy +0,257 H zum Beginn | +-0,03 H | Stelle minimaler Breite der Mittellinie zwischen Biegung und Ende |
