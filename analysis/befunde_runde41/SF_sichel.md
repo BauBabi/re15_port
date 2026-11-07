@@ -2172,3 +2172,121 @@ Schnauze mit dem Auge nahe der Spitze.
 6. **Texel-Zeilen der Zaehne**: die Zahn-Kachel ist 12 x 36 Texel auf 11 Flaechen (Texeldichte des Maulbereichs unter der des G2-Kopfes); im
    Spielbild h135 sind die Zaehne als helle Punkte zu sehen (Leiste 11, Zeile 1).
 7. Der Einbau ins Spiel-Asset folgt erst nach der Abnahme; Runde 2 dieser Spur ist die letzte.
+
+## V5 Kopf aus RE2 (KI-Bilder) - Runde 2 (Bauer, Runde 2 von 2, 2026-11-07, nach Pruefung RE2-Kopf r1)
+
+Grundlage: Runde 1 (EM30_V4re2 f37bc551) wurde nicht bestanden (SF_PRUEFUNG_RE2KOPF_r1_zahlen.md / _sicht.md): der Kopf war im
+RDT-Licht ein fast schwarzer Klotz (Kopf L* 15,6, Ref2 30,8), die rechte Haelfte nicht dunkler als die linke (15,4 / 15,9), das Auge ein
+1-2 px grosser roter Punkt. Diese Runde behebt genau diese Befunde; Koerper (Referenz 2), Schwanz (Runde 3), Drehung/Skala/Versatz des
+Kopfes und die Zaehne bleiben.
+
+### Nutzer-Wortlaut (bindend, unveraendert)
+- "bei den KI Bildern kann man so verdammt gut sehen wie das verschwommene Bild eigentlich aussehen muss.... Man sieht alles einwandfrei! Das
+  Auge die Haare, den Mund, den Schwanz...."
+- "Vielleicht kannst du dir auch einen Birkin aus Resident Evil 2 nehmen. Ich nehme an die duerften aehnlich aufgebaut sein die anderen Formen...."
+- "Linke Seite ist so graeulich. Bis Nase. Dann rechts Seite sieht man Haare - braeunlich.... Warum mischst du die Farben so daemlich?"
+
+### Befunde der Pruefung r1 und was gemessen wurde (re2kopf/suche_r2/, Belege SF_belege/v4/re2/suche/)
+1. **Warum der Kopf schwarz war**: die G2-Textur ist flach dunkel (Texel-Median L* 21,6, Leser A 22,1); im RDT-Licht 50A0/12 (drei
+   Parallellichter aus Richtung (2000, 2000, 2000), Farbe 128, Umgebung 63; b2.raum) faellt der Kopf-Median auf 15,6. Referenz 2 hat Texel
+   42,5 -> 30,8 (diag1.json). Das Andunkeln der Runde 1 (3821 Texel auf dunklere Eintraege) verschaerfte das noch.
+2. **Warum die Haarseite nicht ankam**: die Runde-1-Zone war z > -80 im Kopfraum ((W)-links); die Kamera 50A0/12 steht (W)-links-vorn-oben
+   (Richtung im Knochen-9-Raum (0,72, -0,43, 0,54)), die Lichter kommen aus (0,22, -0,83, 0,52). In Pose 135 zeigt die Bild-rechte
+   Haelfte zu 708 von 950 Pixeln die Texel u 61-80, die Bild-linke zu 514 von 1193 die Kuppe u 101-125 (diag1.json, u_hist); die
+   Zonengrenze z = 0 lag am linken Bildrand, nicht in der Bildmitte (z1_135.png: 366 graue gegen 1454 dunkle Kopfpixel).
+3. **Warum das Auge nicht als heller Fleck geht**: der Augenfaecher T19/T20/T41 hat die Normale (0,33, -0,19, -0,88) ((W)-rechts), nach
+   Rz(10) Ry(-34) (0,89, -0,15, -0,43) - Skalarprodukt mit dem Licht ~0 -> nur Umgebungslicht, Faktor 0,24 (ncct: 63 -> 62/255; gemessen
+   0,22-0,25, fan.py). Ein weisser Texel erreicht dort hoechstens L* 26, die Zaehne (Normale +x, Faktor 0,81) liegen bei 55. Suche ueber
+   yaw -34..-65 und pitch 10..30 (grid_rot.log, 12 Faelle): Faecher-Faktor hoechstens 0,47 (yaw -65), dabei K4 0,034 H (rot) und KS2
+   zerstoert; Rollen um die Schnauzenachse (grid_roll.log, 24 Faelle): Faktor 0,51 erst bei roll -20, dabei K10-Breite 0,143 H und KS2 nur
+   noch 0,26 Kopf - kein Vorbild zeigt einen schiefen Kopf. Die Messblatt-Methode "hellster Kopfpunkt = Augenfleck" (Video) ist in Cut 12
+   mit dem G2-Kopf physikalisch nicht zu erfuellen; gebaut ist die KI-Lesung (Leser B D3: dunkle Pupille mit Glanzpunkt, s. u.).
+
+### Aenderungen (Commit aa6c8a181; Variante sfv4/emd/EM30_V4re2.EMD = EM30_V4.EMD, sha256 e9c66c2edcb846f8613ea2f309810bb82b09bb7b4e25bd0917ba7ae9297363a5, 262796 Byte)
+| Teil | Runde 1 | Runde 2 |
+|---|---|---|
+| Kopf-Texel (G2 u 0-125 v 0-89 -> TPage 128 v 160-249) | 7519 bytegleich, 3821 auf dunklere Eintraege umgesetzt | **alle 11340 bytegleich** (T-R1b 0 abweichend) |
+| Zeile 486 | G2-Zeile 0 bytegleich | G2-Zeile 0 mit **L* x 1,90**, a*/b* unveraendert (Belichtung; Farbton-erhaltende sRGB-Gamut-Abbildung nur ueber die Chroma; Farbwinkel vor der 5-Bit-Rundung 0,00 Grad, Rundung dE76 max 5,6); Texel-Median L* 21,6 -> 42,2 |
+| Zeile 487 | G3-Zeile 0 bytegleich | unveraendert bytegleich (Zaehne) |
+| Zeile 488 (neu) | - | G2-Zeile 0 mit L* x 1,00, Chroma x 0,50, L* <= 30 (Haarseite/Nase/Spitze; Texel-Median 21,0) |
+| CLUT-Zeile je Flaeche | alle G2-Flaechen 486 | 33 Flaechen 486 (grau), 26 Flaechen 488 (dunkel), 11 Maulflaechen 487 |
+| Zonenregel | Texel z > -80 (Haar), u 41-60 (Nase), Flaechen x > 150 (Spitze) | Flaechenmittelpunkt Bild-rechts der Kopfbox-Mitte in Cut 12 Pose 135: Ebene n . c > d mit n = (0,2543, 0,5728, 0,7792), d = -60,1 (G2-Kopfraum; n = normierter Bild-x-Gradient der Spielkamera, suche/ebene.json) oder Gesichtsspalt u 41-60 oder Spitze Q0 (KS2) |
+| Drehung/Skala/Versatz | Rz(10) Ry(-34) x 1,50 + (140, 10, 0) | unveraendert (roll 0, als Parameter gemessen und verworfen) |
+| Geometrie, Maul-UV, Koerper, Schwanz, Skelett, Clips, EDD | - | unveraendert (T-R0: Sektionen 0-6 bytegleich ot3, nur Mesh 9 anders, Texel ausserhalb 0) |
+Palettenwahl (grid_pal.log ... grid_pal4.log, 21 Faelle, Masse kopf_re2_mess + mess_r2): k_grau 1,7 / 1,9 / 2,3 / 2,6 -> Kopf P50 23,1-23,8;
+dunkel k 0,9 / lmax 26 -> P50 20,5 (T-K9e < 23); k 1,1 / lmax 34 -> KV2 31,6 (> Ref2-Kopf - 8 = 31,4). Gewaehlt 1,90 und 1,00 / 30 / 0,50.
+Der Sicht-Pruefer r1 nannte diesen Weg ("ein Faktor auf L*, Farbton und Adern bleiben") ausdruecklich keine Farbmischung; die zweite Zeile
+ist derselbe Faktor-Weg fuer die Haarseite. Folge der Belichtung: 49 % der belegten Eintraege liegen nach L* x 1,9 ausserhalb des
+sRGB-Gamuts und verlieren Chroma (Eintraege p50 31,3 -> 9,7), die Adern der grauen Seite werden blasser (Farbton bleibt).
+
+### Herkunft (byte-true, unveraendert Runde 1; Protokoll SF_belege/v4/re2/kopf_re2_protokoll.json)
+CDEMD0.EMS (sha256 8724200c...) kind 0x31 (G2): EMD Sektor 2944 (193124 B, bb966cd5...), MD1 dir[7] Mesh 3 (48 Ecken, 48 Normalen, 56
+Dreiecke, 14 Vierecke); TIM Sektor 2895 (99872 B, e0929cef...), Texel u 0-125 v 0-89, CLUT-Zeile 0 (y 480). kind 0x33 (G3): TIM Sektor
+3065 (99872 B, 99b793e2...), Zahn-Kachel u 2-13 v 5-40 (432 Texel), CLUT-Zeile 0. Ins EM30: Mesh 9 am Ref2-Knochen 9, Texel TPage 128
+x 0-125 / y 160-249 und TPage 130 x 256-267 / y 200-235, Zeilen 486 / 487 / 488 (9 Zeilen, Port-Texturhoehe 2304 <= 4096).
+
+### Kopfmasse (kopf_re2_mess.py / riegel_re2kopf.py, Render b2 Kamera 50A0/12 RDT-Licht, Pose 135 / 85)
+| Mass | Soll | Ist Runde 2 | Runde 1 |
+|---|---|---|---|
+| K10 Kopfbox vorn | 0,14-0,18 x 0,15-0,20 H | 0,165 x 0,170 H (Box 325-384 x 160-221, H 364) | gleich |
+| K4 Auge vorn (Marker Augenkern) | 0,035-0,065 H links; 0,07-0,12 H unter OK | 0,060 / 0,097 H (19 px) | gleich |
+| K1k Auge sichtbar (KI D3) | Faecher (Videoraum) <= Umgebung - 6; Glanzkern >= Faecher + 8 | Faecher 104 px (0,044 x 0,071 H) L* 18,2 gegen Umgebung 36,4; RDT-Licht Faecher 10,6, Glanzkern max 29,7 | Faecher 17,4 gegen 26,3 (kaum lesbar, Kopf dunkel) |
+| K5 dunkle Seite Bild-rechts | Haelften rechts <= 0,90 x links (Licht und Videoraum); KV2 <= Ref2-Kopf P50 - 8 = 31,4, a*, b* > 0 | **28,4 / 20,9 (0,73)**, Videoraum 36,1 / 26,7 (0,74); KV2 30,1 / 10,6 / 6,3; Zonen: grau 39,4, dunkel 21,6, Maul 17,4 (RDT-Licht) | 15,4 / 15,9 |
+| K6 zweites Auge verdeckt | Spiegelbox <= Kopf-Median (Videoraum 29,2) | 28,3 | - |
+| K7 Maul-Lage | Zahn-Schwerpunkt x 0,3-0,7 / y 0,55-1,0 | 0,60 / 0,66 (58 px) | gleich |
+| T-K9e ganzer Kopf | L* P50 >= 23; Kopf/Rumpf >= 0,9 | **23,8** (Videoraum 29,2); **1,02** (Rumpf 26,2) | 15,6; 0,59 |
+| S2 Auge seitlich | 0,03-0,07 H; 0,76-0,82 H | 0,043 / 0,812 H | gleich |
+| KS2 Haarkante seitlich | Kopf-Pixel <= Kopf-Median (85, Videoraum 39,6) - 5 | 20,7 (68 % Kopf; ganzes Fenster 26,7) | 14,8 / 22,5 |
+| T-R3 Zaehne | >= 20 Marker, >= 5 helle | 58 Marker; 78 helle | 58 / 44 |
+| INFO K9 Kuppe rot KV1 | Messblatt a* >= 11 | 30,0 / 7,2 / 4,0 (a* 7,2; G2-Kuppe = rote Adern auf Grau) | 6,1 |
+| INFO Messblatt K1/K3/K4 (hellster Kopfpunkt) | = Augenfleck | hellster Fleck (333, 170) L* 69,2, Kontrast 25,1, 0,022 x 0,019 H, K4 0,060 / 0,028 H = die graue Kuppe ueber dem Auge, nicht die Zaehne (r1) und nicht das Auge (Lichtbeleg oben) | Zaehne |
+Kopf/Rumpf-Verhaeltnis gegen die Vorlagen (Sicht r1 Punkt 4): Video 1,59, KI 1,6-2,2, Ref2 1,28 - neu 1,02 (Kopf-Mittel 26,7 gegen Rumpf 26,2).
+Die graue Seite allein liegt bei 39,4 (1,5 x Rumpf, wie die Vorlagen), Haarseite und Maul sind absichtlich dunkel (KI rechte Haelfte 17-24,
+Maul 16-18; Leser B), darum bleibt der ganze Kopf im Mittel beim Rumpf.
+
+### Riegel (riegel_re2kopf.py, --basis EM30_V4ot3.EMD, --lauf sfv4/r/V4re2b/debug.log; SF_belege/v4/re2/riegel_re2kopf_V4re2.txt/.md/.json)
+**Exit 1: 1 rot von 43** (T5 0,098, Geometrie seit Runde 5), 8 INFO-Zeilen. Woertlich (gekuerzt auf Mass / Ist):
+| Mass | Ist | |
+|---|---|---|
+| T-K1a/b/c Koerper = Ref2 | keine Abweichung; Zeilen 480-485 gleich, weitere 486 = G2 grau (L* x 1,90), 487 = G3, 488 = G2 dunkel (L* x 1,00, <= 30); 0 von 34716 Texeln | OK |
+| T-K2s / T-K3a-d Schwanz | 0 von 10356 ausserhalb; Sprung 13,0 <= 14,0; Std 8,8-14,6; Wurzel 4,7; Anisotropie 0,71-1,29 | OK |
+| T-R0 Aenderungsumfang gegen ot3 | Sektionen gleich [0-6]; andere Meshes keine; CLUT 480-485 gleich; Texel ausserhalb 0 | OK |
+| T-R1a Kopf-Geometrie = G2 Mesh 3 | 48 / 48 / 56 / 14; Ecken max 0,50 E., Normalen 0,50, Flaechen gleich, UV abweichend 0, Maul 11; Zeilen grau 33 / dunkel 26, Zone abweichend 0 | OK |
+| T-R1b Kopf-Texel = G2-TIM | 0 von 11340 Texeln abweichend (6524 belegt) | OK |
+| T-R1c Zahn-Kachel = G3-TIM | 0 von 432 abweichend | OK |
+| T-R1d CLUT 486 / 487 / 488 | 486 gleich; 487 gleich; 488 gleich (Nachrechnung); Lab p50 Quelle 39,4/25,1/14,5 -> grau 74,3/4,6/1,2 -> dunkel 29,6/12,8/7,5; Farbwinkel p90 0,00 Grad; Rundung dE76 p90 3,8 max 5,6; Gamut-reduziert 0,49 | OK |
+| T-R2 K10 / K4 / K7 / S2 / KS2 | 0,165 x 0,170; 0,060 / 0,097; 0,60 / 0,66; 0,043 / 0,812; 20,7 | OK |
+| T-R2 K1k / K6 / K5 / T-K9e | s. Tabelle oben | OK |
+| T-R3 Zaehne | 58 Marker, 78 helle | OK |
+| T-R4 Zeilen | 9 Zeilen; 256 x 9 = 2304 | OK |
+| G1, M1-M4, T1-T4, TA, T5q, T6, TK, T7a-d, Boden | wie Runde 1 | OK |
+| T5 | 0,032/0,049/0,098/0,163 (f 0,5 >= 0,100 verfehlt) | ROT (bekannt) |
+Gegenprobe ot3 (riegel_re2kopf_V4ot3_gegenprobe.txt): **10 rot von 37** - T-R1a/b/c/d, K4, K7, S2, T-R3, K1k, T5. Der Riegel unterscheidet.
+
+### Leisten (SF_belege/v4/; Runde 1 in v4/re2r1/, Runde 3 in v4/ot3/; Spalten KI-Bild | Nutzer-Beschriftung | Referenz 2 | neu)
+01_vorn_kamera12, 02_seite_wie_bild2, 03_kopf_nah_vorn_x4 (Zeile 2 Marken: Auge gelb, Zaehne cyan), 04_kopf_nah_seite_x4, 08_rundum_V4,
+10_kopf_ki_re2_neu_x6 (KI FRONT/RIGHT | G2-Quelle | neu vorn/rechts/links/oben/unten/hinten unter gleichem Licht), 11_spiel_koepfe
+(RE15_FRAMEDUMP h135 / h85, Lauf sfv4/r/V4re2b, 191 Bilder, EXIT=0, "EM30 loaded: 23 meshes, 23 bones, 21 clips", 0 Fehlerzeilen;
+SF_belege/v4/re2/lauf_V4re2b.txt). Am Spielbild h135 (11, Spalte 4): grau-rosa Kuppe mit blassen Adern Bild-links, dunkle braun-graue
+Seite Bild-rechts, dunkle Augenhoehle mit Glanzpunkt links oben, offenes Maul mit Zahnreihen unten - gegen Runde 1 (suche/spiel_vgl.png,
+Zeile 2) kein schwarzer Klotz mehr.
+
+### Tests
+ctest (unit_birkin_formen, unit_birkin_szenen, unit_schwanz_r41, integration_r41_sichel_form): "100% tests passed, 0 tests failed out of 4",
+Total Test time (real) = 64.42 sec (SF_belege/v4/re2/ctest_v4_re2.txt). Engine unveraendert (Bau 2026-11-07 12:37). Spiel-Asset
+EM30_HANGAR.EMD (cfd1ac42) und Pin release/em30_hangar.sha256 unveraendert.
+
+### Offen
+1. **Auge nach Messblatt (heller Fleck)**: in Cut 12 nicht erfuellbar (Lichtbeleg oben: Umgebungslicht 0,24 am Augenfaecher, Zaehne 0,81).
+   Gebaut ist die KI-Lesung (dunkle Augenhoehle 18 gegen Umgebung 36 im Videoraum, Glanzkern 29,7). Entscheid beim Orchestrator, ob die
+   Messblatt-Zeilen K1-K3 fuer den RE2-Kopf durch K1k ersetzt werden.
+2. **Zwei Palettenzeilen statt einer**: die Haarseite braucht eine eigene dunkle Zeile (488), weil die Belichtung x 1,9 die dunkelsten
+   Eintraege der grauen Zeile auf L* ~26 hebt. Harte Zonengrenze entlang der Flaechenkanten (kein weicher Uebergang wie Leser B D4).
+3. **Kuppe**: KV1 a* 7,2 (Messblatt >= 11) - die G2-Kuppe ist grau mit roten Adern, nach der Gamut-Abbildung blasser. Die hellste Stelle
+   des Kopfes ist jetzt diese Kuppe (L* 69 im Videoraum), nicht das Auge.
+4. **KV2 schneidet das Maul**: das Haar-Fenster des Messblatts (0,52-0,85 x 0,25-0,75) enthaelt die Zahnreihe; KV2 30,1 liegt nur 1,3
+   unter der Grenze 31,4; die dunkle Zone selbst misst 27,1 (Videoraum).
+5. **Kopf/Rumpf 1,02** statt 1,4-1,6 (Vorlagen): nur die graue Seite ist heller als der Rumpf (39,4 / 26,2 = 1,5); Haarseite und Maul sind
+   nach KI dunkel. Heller nur mit einem hoeheren Faktor auf beiden Zeilen (dann KV2 rot).
+6. Schwanz (Leser B D7 gegen Beschreibung2), Schnauzenwinkel (Leser B 30-35 Grad gegen Beschreibung1-Sicht), T5 0,098: wie Runde 1 offen.
+7. Einbau ins Spiel-Asset erst nach der Abnahme.
