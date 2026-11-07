@@ -1,0 +1,41 @@
+{
+ "orig_kopfbox": {
+  "grad": 46.3,
+  "glatt_lt8": 0.103,
+  "lum_std": 23.1
+ },
+ "orig_eng": {
+  "grad": 63.7,
+  "glatt_lt8": 0.068,
+  "lum_std": 43.8
+ },
+ "orig_buckel_rumpf": {
+  "grad": 80.2,
+  "glatt_lt8": 0.024,
+  "lum_std": 37.8
+ },
+ "V4_Id9_Kopf": {
+  "grad": 49.1,
+  "glatt_lt8": 0.071,
+  "lum_std": 24.5,
+  "n": 780
+ },
+ "V4_Id8_Rumpf": {
+  "grad": 67.5,
+  "glatt_lt8": 0.073,
+  "lum_std": 38.3,
+  "n": 2646
+ },
+ "V4r3_Id9_Kopf": {
+  "grad": 47.8,
+  "glatt_lt8": 0.093,
+  "lum_std": 23.6,
+  "n": 882
+ },
+ "V4r3_Id8_Rumpf": {
+  "grad": 68.0,
+  "glatt_lt8": 0.061,
+  "lum_std": 38.1,
+  "n": 2655
+ }
+}

@@ -1,0 +1,31 @@
+{
+ "orig_innen": {
+  "grad": 32.9,
+  "glatt": 0.074,
+  "lum_std": 20.2,
+  "grad_spanne_pm3": [
+   29.0,
+   40.4
+  ]
+ },
+ "V4r4_h135_innen": {
+  "grad": 36.8,
+  "glatt": 0.134,
+  "lum_std": 20.9
+ },
+ "V4r3_h135_innen": {
+  "grad": 27.2,
+  "glatt": 0.197,
+  "lum_std": 18.8
+ },
+ "V4r4_h118_innen": {
+  "grad": 30.9,
+  "glatt": 0.072,
+  "lum_std": 11.9
+ },
+ "V4r3_h118_innen": {
+  "grad": 26.9,
+  "glatt": 0.126,
+  "lum_std": 11.8
+ }
+}
