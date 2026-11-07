@@ -1499,3 +1499,86 @@ Biegung und Strecke; Kopfzeilen mit T7a-T7d/Boden beider Staende; letzte Zeile F
 7. Tests: die neuen Engine-Regeln (Boden mit Mesh-Massen, Mitnahme/Feder/Daempfung V4, V4-Freigabe h70-h74, kein haengen fuer V4) haben
    keinen eigenen Unit-Test; integration_r41_sichel_form laedt weiter das Spiel-Asset (Referenz 2).
 8. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme.
+
+### V4 Runde 4 (Bauer, 2026-11-07, nach Pruefung V4 r3)
+
+Nutzer-Wortlaut wie oben ("Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben"). Grundlage: SF_MESSBLATT_V4.md (Commit
+7a4f3b684), die Pruefberichte SF_PRUEFUNG_V4_r3_zahlen.md und SF_PRUEFUNG_V4_r3_sicht.md (Commit 349f4360c) und die Entscheide O1-O6.
+Kein RE-Befund: die Sichel-Form gibt es auf der Disc nicht, keine Zahl ist eine @0x-Konstante. Jede neue Konstante nennt im Code ihre
+Quelle (Messblatt-Zeile, Original-Messung, Lauf) oder ist PORT-WAHL mit Nutzer-Wortlaut. Commits 349f4360c (Pruefberichte r3),
+6488773d2 (O6 Engine-Kommentare), 41ac7f058 (Messwerkzeuge), 8ee38bb7d (Generator/Farben), 5e56f89a0 (Riegel, Gegenproben, Leisten,
+ctest), 89a05d1b0 (Nachstellung F8/Beine), 72c7d7d4a (Endstand Riegel/Leisten). Endstand EM30_V4.EMD sha256 00d642b7 (Neubau
+"birkin_formen.py --variante v4 --aus DIR" bitgleich), Lauf sfv4/r/V4r4. Spiel-Asset EM30_HANGAR.EMD und Pin cfd1ac42 unveraendert.
+
+**Befund -> Aenderung -> Beleg**
+
+| Befund (Pruefung V4 r3) | Aenderung | Ergebnis (riegel_V4r4, Lauf sfv4/r/V4r4) |
+|---|---|---|
+| Zahlen S3: Abstand Haarkante -> Augenfleck 0,015-0,019 H (<= 0,01) | KOPF_V4 vorbau vor 0,06 -> 0,048 H: das Fenster KS2 (0,84-0,96 der Kopfbox) rueckt mit der Vorderkante an den Fleck, der an der Naht zu den Vorderbild-Flaechen endet. Laeufe r4 Eichung f-o: 0,053 / 0,050 schwankten zwischen 0,004 und 0,011 H (ein Pixel Fleckrand), 0,048 stabil | **S3 Abstand 0,004 H, 17,2/2,8/0,6 dE00 2,5 (OK)**; S2 0,054 H / 0,809 H, K10 0,154 x 0,187 H unveraendert |
+| Zahlen T2-Lage nach O2: dy +0,100 H (Soll +0,036 +-0,03, Original +0,056) | Riegel T2 misst jetzt Lage UND Drehung mit t2_mass_v4 (r4_mass.t2_lage_port). Gelenke 2-4, Durchmesser 1-4, Tiefe 2-3 per r4_form_suche.py (Saat 1, Schritt 253) gegen T1-T6/TA, T2 (O2), T5q und die Oberkante; Ziel = Ober-/Unterkontur der Leser-Maske | **T2 dx -0,251 dy +0,051, 66,6 Grad (OK)** (Original -0,268 / +0,056, 70,1/65,8/69,5) |
+| Zahlen T5: Ausbuchtung an der Biegung, Abfall 0,027-0,061 H; Durchmesser Gelenk 3 0,1599 > Gelenk 2 | Durchmesser im Suchlauf monoton fallend erzwungen (Messblatt Abschnitt 4 Punkt 3): 0,139 / 0,130 / 0,079 / 0,046 H; zweites, unabhaengiges Breitenmass T5q (quer zur t2_mass_v4-Mittellinie, Pruefer pz3_t5orig) als eigener Riegel | **T5q Abfall 0,000, T5 Abfall 0,008 (OK)**; Ausbuchtung weg (Profil f 0..1: 0,025/0,032/0,045/0,055/0,066/0,095/0,104/0,129/0,14/0,146/0,144). **Rot: f 0,5 = 0,095 H (Soll 0,125 +-0,025)** - der Teil an der Biegung ist schmaler als im Original (0,117-0,121); ein dickeres Gelenk 3 hob die Oberkante wieder an (Laeufe d3 0,085/0,088/0,098: Oberkante 240..230, Drehung 60,6-63,6 Grad) |
+| Zahlen F7 nach Wortlaut (Id 13 ganz 23,0 L* gegen 33,3) | keine - Widerspruch im Messblatt belegt: Id 13 = 1031 px Fensterlage (31,2 L*) + 1150 px unten (FS-Box Original 11,0 L*). Fuer Wortlaut \|dL\| <= 4 (Id ganz >= 29,3) muesste der untere Teil (29,3 x 2181 - 33,3 x 1031) / 1150 = 25,7 L* haben: dL +14,7 gegen die Sicht-Box, FS Oberarm (B)-links unten rot | F7 Fensterlage 31,2 dE00 2,1 (OK), FS Oberarm (B)-links unten 14,9 dE00 3,7 (OK), **F7 Wortlaut ROT (22,8, dL -10,5) - Entscheid noetig** |
+| Zahlen FS Oberarm (B)-rechts unten: Rotanteil 0,49 (Rueckschritt) | Id 10 wieder oben/unten getrennt: unten Region oberarm_br_unten (Sicht-Box 455-500 x 228-262), oben die Kacheln (Original an derselben Stelle = F8-Fenster); Nachstellung F8 -4,6 L* als RGB-Faktor (r4_koerper_korrektur.json) | **FS Oberarm (B)-rechts unten 22,6/4,6/0,6, Rotanteil 0,02 (OK)**; F8 Fensterlage 18,6 dE00 2,1, **F8 Wortlaut 20,2 dL +3,8 (OK)** |
+| Zahlen O6: 8 PORT-WAHL ohne Nutzer-Wortlaut, STRUKTUR_FARBE_KLAMMER ohne Quelle, 2 Kommentare gegen ihre Werte | schwanz_r41.c / birkin_formen.c (Commit 6488773d2) und eichen_v4.py: Nutzer-Wortlaut an jeder PORT-WAHL; STRUKTUR_FARBE_KLAMMER 0,4 = ueber p99 der Original-Farbtonabweichung x 1,5 (vorn 0,30, seitlich 0,15, max 0,95); STRUKTUR_KLAMMER 2,0 = Faktor >= 0,135; STRUKTUR_ZONE_R3 0 = keine helle Struktur | - |
+| Sicht Schwanz "Vierkant-Balken": Querprofil-Stufe 16,6-19,9 L*, Oberkontur gerade (0,6 px), Dorn 27 Grad an der Bogenecke | 12 statt 10 Seiten (M1 192 <= 212); Textur: Zeile je Ecke aus der Lage um den Umfang (SCHWANZ_V4 uv verlauf), an jeder Klassengrenze Uebergang ueber 0,3 c (eichen_v4.UEBERGANG, lineare Mischung loese_zonen_misch). Ein durchgehender Verlauf ueber den ganzen Umfang (Laeufe r4 Eichung c-p, Grenze 0,5 und 0,8) war nicht stabil an T8/T9 zu eichen (Mitte (22,0,0), Aussenkante rot oder F17 4,9-9,6 L*) und wurde verworfen. Eichregionen F15/F16/F17 nach Baendern aus dem Code-Render, Aussenkante regularisiert (Gewicht 3,0, Laeufe r/s/t/u/v), gedaempft | **TQ Stufe auf 3 px 8,2/8,2/8,7/8,7 L* (Original <= 9,6, OK)**; Dorn weg (Douglas-Peucker-Ecke 118 Grad statt 27); Oberkante x 276-292 246/242/238/235/232 (V4 r3 237..228, Original 251..234, max 0,030 H). **Rot: TQ Plateau-Anteil 0,41-0,53 (Original <= 0,31), TK RMS 1,77 px (Original 3,87-4,71)**. T8 F15 11,5/8,4 dE00 3,3, F17 20,8 dE00 6,0, T9 Mittel dE00 3,9 (OK) |
+| Sicht Rot-Verteilung Oberkoerper vorn: Rot Mitte/aussen 1,06-1,18 (Video 2,75-2,91), Schultern a*>12 0,10-0,13, a*>18 4,4-5,7 x Video | r2_koerper_farben.py: Kacheln 6 x 4 im Oberkoerper-Polygon der Sicht-Pruefung + Rumpfbox, Port -> Original nach Anteilslage, Lab-Tripel nach L*-Rang (Original-Verteilung je Kachel); Feinanteil des Port-Musters 0,5 (HF_OBERKOERPER, Laeufe r4 Koerper 6-8); eigene CLUT-Zeilen 490 (Mesh 13) und 491 (Beine) nach O1; Grenze je Texel auf Leuchtdichte; Quantisierung nach Sichtbarkeit gewichtet | **Buehne: Rot Mitte/aussen 1,21 -> 2,33, Schultern 0,089 -> 0,017, a*>18 0,053 -> 0,016 (Original 0,041)**; Spielbild h118 1,18 -> 1,55, Schultern 0,128 -> 0,081, a*>18 0,046 -> 0,016 (Video 0,019); h135 1,06 -> 1,49, 0,116 -> 0,070, 0,048 -> 0,013. **Rot: Mitte/aussen < 2,75 (Buehne/h118/h135), Schultern im Spielbild > 0,05** |
+| Sicht Kopf vorn im Spielbild glatt: Innenflaeche 27,2/26,9 (Original 29,0-40,4), glatte Pixel 0,197/0,126 | eichen_v4.py: im Augenhof vorn bleiben die dunklen Flecken des Originals (HOF_DUNKELSTRUKTUR; seitlich aus, Lauf r4 Eichung a/b: sonst S1/S2/S4 rot), STRUKTUR_HELL 0,15 -> 0,10 (Lauf r4 Eichung k: K1 1 Komponente); Augen-Regionen der Eichung = Fleck auf den Augentexeln. Neuer Riegel KS (Spielbild ueber nb2neu/c6.port, Kreise des Sicht-Pruefers) und KS Buehne 320 x 240 (Naeherung) | **KS Spielbild h118 30,9 / glatt 0,072 (OK)**, h135 Gradient 36,8 (OK) aber **glatt 0,134 > 0,098 (ROT)**; Buehne 320 x 240 32,6 (OK); K1 1 Komp. Kontrast 26,1, K2 47,1/8,0/-1,2 dE00 0,8, K11 37,5 / Rumpf 36,8 (OK) |
+
+**Riegel-Tabelle** (riegel_v4.py, EM30_V4.EMD 00d642b7, Lauf sfv4/r/V4r4; volle Tabelle SF_belege/v4/riegel_V4r4.md/.txt/.json; **Exit 1,
+11 rot von 63**). Spalte "V4 r3" = derselbe Riegel an V4 r3 (riegel_V4r3_mit_r4_riegeln.*: 13 rot von 63).
+
+| Mass | Soll | Ist V4 r3 | Ist V4 r4 | |
+|---|---|---|---|---|
+| G1 / M1-M4 | Geometrie = Ref2 (CLUT-Feld frei, O1); M1 <= 212; M4 0,045-0,091 | OK | OK; CLUT 2/3/5/6 -> 491, 10 -> 489, 13 -> 490, 14 -> 488; M1 192; M4 0,050-0,091 | OK |
+| K1-K11 | Messblatt V4 / K11 41,0 +-6,1 | OK | K1 1 Komp. 26,1; K2 dE00 0,8; K10 0,154 x 0,187; K11 37,5 / 36,8 | OK |
+| S1 / S2 / S4 | Messblatt | OK | 48,5/3,1/0,9, 0,042 x 0,049 H, 1 Komp. / 0,054; 0,809 / 27,6/15,6/2,9 | OK |
+| S3 | L* <= 22, dE00 <= 6, Abstand <= 0,01 H | ROT 0,015 | 17,2/2,8/0,6, dE00 2,5, **0,004 H** | OK |
+| T1 / T4 / TA / T6 | Messblatt | OK | 0,172/0,742 / -0,215 0,385 0,357 / <= 0,024 H / B 0,032 L 0,121 81 Grad | OK |
+| T2 (O2, Lage und Drehung) | dx -0,245 dy +0,036 +-0,03; 68,4 +-5 Grad | ROT dy +0,100 | **-0,251 / +0,051; 66,6 Grad** | OK |
+| T3 | dx -0,265 dy +0,257 +-0,03 | OK -0,248 | **-0,233** / 0,266 | ROT |
+| T5 / T5q | f 0,1/0,3/0,5/0,7 0,03/0,065/0,125/0,14; Abfall <= 0,01 | OK / ROT (Abfall 0,061) | 0,028/0,053/**0,095**/0,121, Abfall 0,008 / 0,032/0,055/**0,095**/0,129, Abfall 0,000 | ROT |
+| T8 / T9 | dE00 <= 6 / Mittel <= 6 | OK | F15 3,3 F16 2,1 F17 6,0 F18 1,3 / 3,9 | OK |
+| T7a-d, Boden (O3) | <= 0,06 H; Biegung/Knick; Strecke; <= 90 Grad; nichts unter dem Boden | OK | 0/47 max 0,048 H; 61,2-70,5 / 10,6-16,2 Grad; min 0,389 H; 72,7 Grad; tiefster Mesh-Punkt -13 E. | OK |
+| F0 Licht h118/h135, Wand | <= 3 / <= 2 | OK | 0,06 / 0,21 / 0,52; je Id 0,07-0,67 (r4/licht_je_id_V4r4.txt) | OK |
+| F6 (Wortlaut) / F6 Fensterlage | 16,6/17,3/6,2 | OK / OK | **22,1/9,7/3,8 dE00 7,0** / 19,2/11,2/4,7 dE00 4,8 | ROT / OK |
+| F7 / F8 / F9 / F10 / F14 / F19 | dE00 <= 5, \|dL\| <= 4 | OK | 2,1 / 2,1 / 3,0 / 2,8 / 2,2 / 1,6 | OK |
+| F7 Wortlaut / F8 Wortlaut | Id ganz | ROT / OK | **22,8 dL -10,5** / 20,2 dL +3,8 | ROT / OK |
+| FS (6 Sicht-Boxen) | dE00 <= 5, \|dL\| <= 4, Rotanteil +-0,15 | Oberarm (B)-rechts unten ROT 0,49 | alle OK; Oberarm (B)-rechts unten Rotanteil 0,02, Unterschenkel 0,14, Rumpf 0,37 | OK |
+| TQ Querprofil | Stufe <= 9,6 L*, Plateau <= 0,31 | ROT 16,6-19,9 / 0,38-0,41 | Stufe 8,2-8,7, **Plateau 0,41-0,53** | ROT |
+| TK Oberkontur | RMS >= 3,02 px; Oberkante <= 0,03 H | ROT 0,60 / 0,057 H | **RMS 1,77** / 0,030 H | ROT |
+| FO Buehne / Spielbild h118 / h135 | Rot Mitte/aussen >= 2,75; Schultern <= 0,05; a*>18 <= Original | ROT 1,21 / 1,18 / 1,06 | **2,33 / 1,55 / 1,49**; Schultern 0,017 / 0,081 / 0,070; a*>18 OK | ROT |
+| KS Buehne 320 / Spielbild h118 / h135 | Gradient 29,1-40,4; glatt <= 0,098 | ROT 28,0 / 26,9 / 27,2 | 32,6 / 30,9 (0,072) / 36,8 (**0,134**) | OK / OK / ROT |
+
+Gegenprobe V3 r2 mit denselben Riegeln (riegel_V3r2_gegenprobe_r4.*, Lauf sfv3/r/V3r2): **52 rot von 63**. Gegenprobe V4 r3
+(riegel_V4r3_mit_r4_riegeln.*): 13 rot von 63 - die neuen Riegel (T2-Lage, T5q, TQ, TK, FO, KS) trennen V4 r3 wie die Pruefung V4 r3.
+Rueckschritte gegenueber V4 r3 unter denselben Riegeln: **T3, T5, F6 nach Wortlaut** (in V4 r3 gruen, in V4 r4 rot); F8 Wortlaut und
+FS Unterschenkel, die mit Stand 8ee38bb7d ebenfalls zurueckgefallen waren, sind mit 89a05d1b0 wieder gruen. Tests: unit_birkin_formen,
+unit_birkin_szenen, unit_schwanz_r41, integration_r41_sichel_form **4/4 Passed** (SF_belege/v4/ctest_v4_r4.txt; ninja "no work to do").
+
+**Leisten** (SF_belege/v4/, Spalten Nutzer-Vorlage | Nutzer-Beschriftung | V4 Runde 3 (vorher) | V4 Runde 4 (neu); Runde-3-Leisten in
+SF_belege/v4/r3/): 01_vorn_kamera12 (mit FO), 02_seite_wie_bild2, 03_kopf_nah_vorn_x4 (K1-K11, KS 320), 04_kopf_nah_seite_x4 (S1-S4),
+05_schwanz_x3 (T2-T6, T5q, TQ, TK), 06_farben, 07_gang (Spielbilder h85/h100/h118/h135 mit T7 koerperfest, KS/FO h118/h135),
+08_rundum_V4 (V4 r4).
+
+**Offen**
+1. F6 nach Messblatt-Wortlaut: F6 vergleicht ALLE roten Bildpunkte von Id 8 (4735 px, 22,1/9,7/3,8) mit den roten Bildpunkten des
+   Brustfensters 372-424 x 197-232 (16,7/17,0/6,1 im Original). Im Original haben die roten Bildpunkte des ganzen Oberkoerpers
+   (Polygon + Rumpfbox) 19,6/11,1/3,1 - wer F6 nach Wortlaut trifft, faerbt den ganzen Rumpf so rot wie die Brustmitte (Lauf r4
+   Koerper-Eichung 1: Rot Mitte/aussen 1,81, Schultern a*>12 0,24) und widerspricht der Sicht-Pruefung V4 r3 1.5. An der Fensterlage
+   (rote Id-8-Bildpunkte im Fenster) ist F6 gruen (dE00 4,8). Bitte Messblatt-Entscheid: F6 an der Fensterlage.
+2. F7 nach Wortlaut: Widerspruch im Messblatt (Rechnung oben); bitte Entscheid "Fensterlage + Sicht-Box unten" statt "Id ganz".
+3. FO Rot-Verteilung: Buehne 2,33, Spielbild 1,55 / 1,49 (Ziel >= 2,75). Grenzen: der Port-Kopf (Id 9, rot an der Kappe) liegt in
+   Pose 135 im linken Drittel (Port x 325-380, Original-Kopf in der Mitte 368-416), und die Texel werden in zwei Ansichten gemeinsam
+   gefittet. Im Spielbild sind die Schultern noch rot gesprenkelt (a*>12 0,07-0,08).
+4. T3 dx -0,233 (0,002 H ausserhalb) und T5/T5q f 0,5 = 0,095 H (0,005 H zu schmal): Knick und Biegung haengen in der Kette zusammen; die
+   Endstueck-Suche (Saat 22) behob T4, nicht T3; ein dickeres Gelenk 3 hob die Oberkante (TK) und senkte die Drehung.
+5. TQ Plateau 0,41-0,53 und TK RMS 1,77 px: der waagerechte Teil hat keine harte Kante mehr (Stufe <= 8,7 L*), ist aber in der Mitte
+   der Seitenflaeche einfarbig (eigene Klassenfarbe) und die Oberkontur nur schwach gekruemmt; ein durchgehender Verlauf liess sich
+   nicht stabil eichen (Laeufe r4 Eichung c-p). Naechster Weg: eigene Eichregionen fuer Ober-/Unterhaelfte der Seite statt der Klassen.
+6. KS Spielbild h135: glatte Pixel 0,134 (Original max 0,098) bei Gradient 36,8 im Band - die Kappe ist fleckig, die Mitte um das Auge
+   bleibt glatt (Hof ohne helle Flecken, sonst K1 2 Komponenten).
+7. Die Koerperfarben sind am Stand basis491 (Schwanz V4 r3-Form, Vorhang 0,06) gefittet; der Schwanz V4 r4 verdeckt in Pose 85 einen
+   etwas anderen Teil des Buckels (F14 57,5 dE00 2,2, gruen).
+8. Tests: die Engine ist in dieser Runde nur kommentiert (O6); ein Unit-Test fuer die V4-Regeln der Runde 3 (Mitnahme, Freigabe,
+   Boden mit Mesh) fehlt weiter (Pruefung V4 r3 Zahlen Offen 6).
+9. Einbau ins Spiel-Asset erst nach der Nutzer-Abnahme.
