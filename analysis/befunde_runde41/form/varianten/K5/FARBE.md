@@ -199,3 +199,185 @@ nichts wiederholt, 95,8 s. Die Tests pruefen den unveraenderten Bestand (Spiel-A
 | O7 | Kopffeld: zwei helle senkrechte Baender (projizierte Bild-2-Hellstellen, L* <= 58) und kleine Rotsprenkel aus der Bild-2-Projektion | Sicht-Pruefer |
 | O8 | Eichung lief ueber 4 Codestaende (15 Runden); Endstand ist Fixpunkt des Endcodes (2 Runden, Schritt 0,71), Start nicht neu von null | zweiter Pruefer |
 | O9 | Herkunftstext 'hautseiten' in bau.json sagt "k-Mittel Bild 1", gerechnet wird ueber Bild 1 und 2 (Code `hautseiten()`) | Textfehler |
+
+
+# Versuch 2, Runde 1 (Bauer, 2026-11-07)
+
+Auftrag: Orchestrator, Spur Form, Versuch 2 (der letzte, Nutzer 2026-11-06). Grundlage `MESSBLATT_FARBE_V1.md` + Nachtrag `MESSBLATT_FARBE_V2.md`
+(Binnenzeichnung B10-B17, Zielwerte K1/K2/K4/K4b/B2/B9, Konstanten-Vorschriften Abschnitt 4). Generator `generator/kf_mal4.py` (baut auf
+`kf_mal3.py` auf), Eichstand `generator/kf_eich4.json`, Variante `farbe/K5c_farbe_v2/` (+ Kopie `farbe/K5C_FARBE_V2.EMD/.TIM`, Scratchpad
+`formfarbe2/emd/K5C_FARBE_V2.*`). Runde 3 liegt jetzt in `farbe/K5c_farbe_r3/`, `farbe/spiel_r3/`, `farbe/riegel_K5c_farbe_r3.*`.
+FORM.EMD = `K5c/FORM.EMD` (sha256 a71f8d08..., Geometrie, Clips, UV bytegleich, cmp), neu nur FORM.TIM (sha256 eca20f1d...). Nachbau
+`python generator/kf_mal4.py bauen <aus>` byte-gleich (cmp). Spiel-Asset `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.*` und Pins unveraendert.
+Kein RE-Wert: neues Modell (PORT-WAHL Form, E5/E19/E20); fuer Malkonstanten liegt kein Nutzer-Wortlaut vor, jede Konstante traegt eine Messquelle.
+
+## V2.0 Ergebnis
+
+**Riegel 38/45 GRUEN, EXIT 1** (`farbe/riegel_K5c_farbe_v2.txt/.json`; V1 A1-A12, K3-K10, N1/N2, B1-B9 + V2 K1v2, K2v2, K4b, B9b, B6 je Feld, B10-B17).
+Alle fuenf roten r3-Riegel (K1, K2, K4, B2-Seite, B9) und alle acht Binnenzeichnungs-Riegel bis auf B12/B17 sind gruen. ROT, alle knapp ausser B6 Kiefer:
+
+| Riegel | Soll | V2 | Abstand |
+|---|---|---|---|
+| K5 geclippte Bildpunkte Bild 1 (W Figur) | <= 0,75 % | 0,8 % | 0,05 |
+| N1 neutraler Render C* Seite | >= 9,35 | 9,3 | 0,05 |
+| B2 groesste Rotflaeche 3/4 vorn | >= 3,2 % | 3,11 % (Seite 3,67) | 0,09 |
+| B6 Kachelwiederholung Koerper | <= 0,28 % | 0,29 % | 0,01 |
+| B6 je Feld Kiefer (V2 4) | <= 0,28 % | 1,83 % | 1,55 |
+| B12 Kopf Canny-Dichte | >= 25,2 | 24,5 (Linien 20,1 % gruen) | 0,7 |
+| B17 Render-Kohaerenz (Mittel 3 Winkel) | >= 0,60 | 0,599 (Atlas 0,586 gruen) | 0,001 |
+
+Gegenproben (EXIT-relevant, alle wie verlangt ROT): K5c heute (alle Farbriegel), Runde 1 (B1-B5), Runde 2 (B6-B9), **Runde 3 (alle V2-Riegel:
+K1v2 6,1, K2v2 6,2, K4b 2,3, B2 2,88, B9 17,8, B10-B17)**; B9b (Clip 0) ist an r3 mit 9,9 % gruen, wie V2 3.2 angibt (Bezugsprobe). Familie mit
+`n2_riegel.py --familie` (Pruefer-Lauf, `farbe_lesung/N2_riegel_familie.json`): EM30 8/8, G4 8/8, G5 7/7.
+**Unabhaengigkeitsnachweis K_GRAPH / SPIEGEL_ABSTAND (V2 4) NICHT erbracht** (Abschnitt V2.4): bei 4/16 bzw. 1,0/4,0 kippen 10 Riegel.
+Nach Messblatt V1 7.5 gehen die Tafeln deshalb nicht als Abnahmevorlage an den Nutzer.
+
+## V2.1 Ursache in Zahlen (r3 -> V2)
+
+| Mass | Familie | r3 | V2 |
+|---|---|---|---|
+| dunkle Linien Fleisch / Haut (B10/B11) | 9,5-19,3 / 3,9-8,3 % | 3,71 / 2,99 | 8,94 / 6,22 |
+| Canny Fleisch / Kopf (B13/B12) | 29,6-30,2 / 29,6-30,1 | 19,05 / 8,85 | 32,85 / 24,5 |
+| L*-Streuung Rotflaechen Render / Atlas (B14) | 9,6-11,2 / 10,9-14,5 | 5,4 / 8,6 | 10,1 / 12,1 |
+| a*-Streuung Render (B15) | 5,0-8,7 | 3,1 | 6,2 |
+| Rotpixel in Flaechen mit >= 2 Stufen, Render (B16) | 60-81 % | 2,1 | 81,0 |
+| Kohaerenz Render / Atlas (B17) | 0,601-0,690 / 0,576-0,753 | 0,561 / 0,561 | 0,599 / 0,586 |
+| Bild-1-Kette C* / ab-Streuung (K1v2/K2v2) | Rundlauf 7,8 / 8,0 | 6,1 / 6,2 | 6,7 / 8,2 |
+| Rotklasse Figur / Ruecken (K4/K4b) | 3,15-7,87 / 7,1-17,9 % | 2,75 / 2,3 | 6,5 / 11,5 |
+| Rot im Umrissband Clip 2 / Clip 0 (B9/B9b) | <= 11,3 % | 17,8 / 9,9 | 8,1 / 5,6 |
+
+Gemessene Ursachen, die den Bau bestimmt haben (Laeufe im Scratchpad `formfarbe2/`):
+1. **Die r3-Koernung (Wirbel) ist der inkohaerente Teil**: ohne Koernung Kohaerenz Atlas 0,747 / Render 0,635, mit r3-Koernung 0,570 / 0,563
+   (Laeufe exp_*). Gezeichnete Linien allein heben B17 nicht. Laengs der Muskelachse gemittelt (Linienfaltung) wird die Koernung zu Straengen:
+   Render 0,599-0,616 je nach Lauf. EM30 und G5 sind in Tafel 03 laengs gestreift.
+2. **Linien zaehlen nur, wenn sie elongiert bleiben**: dichte Linien verschmelzen zu Netzen und fallen aus B10/B11 heraus (Lauf v1/v2: 4811-9910
+   Faltenlinien, Anteil sinkt auf 3-5 %). Deshalb Abstand >= 2 Texel zwischen Linien (Halbbreite der 5x5-Schliessung des Top-Hat) und je1000-Obergrenze.
+3. **Auf dunkler Haut gibt es keine dunkle Linie**: L* - Kontrast < 0; der fehlende Kontrast geht als Aufhellung in einen 2-Texel-Hof (Fuge zwischen Wuelsten).
+4. **Rot im Umrissband (B9) sass an den Klauen und den Krallen** (Zuordnung durch Graufaerben der Mesh-Gruppen, Laeufe b9_*/c9_*: Arme 17,4 -> 12,4,
+   Kopf+Krallen -> 11,0) und am Bauch, der in den Riegelwinkeln (Hoehe 8-20 Grad) nur am unteren Umriss sichtbar ist. Abhilfe: Screenshot-Fleisch
+   nur auf gesehenen/gespiegelten Texeln, verdeckte Rumpf-Wunde an der Flanke.
+5. **Die r3-Eichversaetze passen weiter**; der Fixpunkt der Zonenmittel senkte die Bild-1-Kette C* 6,7 -> 5,6 (Laeufe e1/e2, `kf_eich4.json`
+   'laeufe_verworfen'), ohne g-Grenze stieg g 2,22 -> 3,09 ohne Wirkung (Kappen a* <= 11, C* kuehl <= 8).
+6. **Glaettung und Lochfuellung legten 855 sichtbare Texel rot** (Lauf dbg: Huefte/Wirbel neben der verdeckten Rumpf-Wunde, K4b 27 %). E14 jetzt streng.
+
+## V2.2 Verfahren (`generator/kf_mal4.py`)
+
+Schritte 1-3 wie r3 (Koernung H2, Screenshot-Farbkarte, Hautseiten, Form), dann neu:
+1. **Muskelachse je Mesh**: PCA der Ruhepose-Lage (Clip 2) der Texel, in die Tangentialebene projiziert und ueber die lokale Jacobi-Matrix
+   (dP/dx, dP/dy aus den Atlas-Nachbarn im selben Mesh) nach (du, dv); Doppelwinkel im Mesh geglaettet (sigma SIG_GROB 2,5).
+2. **Koernung laengs**: r3-Koernung entlang der Achse gemittelt (13,5 Texel), auf die r3-Streuung zurueckskaliert (Haut, Fleisch x 1, Kopf x c_k).
+3. **Fleisch** = Screenshot-Mehrheit nur auf gesehenen/gespiegelten Texeln (1211) + Bild-1-Ruecken-Wunde (1025 Texel, gewachsen ab dem roetesten
+   Original-Bildpunkt (104,8) bis 16,5 % der Zonen-Bildpunkte, Kern L* 45-55) + verdeckte Rumpf-Wunde (13 768 Texel, zusammenhaengend gewachsen,
+   Prioritaet |ny| = Flanke vor Bauch) bis 23,9 % der Koerpertexel; Kante 2,5 Texel geglaettet, Inseln/Loecher < 20 Texel bereinigt, auf
+   sichtbaren Texeln nur Screenshot-Fleisch (E14).
+4. **Wundstufen**: geodaetischer Abstand zum Fleischrand auf dem Oberflaechengraph (Texel des Meshs): < 2 G4-Dunkelrot (18,9/25,6/12,2),
+   2-4 G4-Fleischrot (32,8/43,7/25,8), Kern je Wunde haelftig EM30-Rot (36,5/37,4/20,5) / Familienwunde (51,5/26,5/18,0) nach der Form;
+   Uebergang 0 Texel. Screenshot-Farbabweichung (glatt) wie r3. Farbton je Texel um k x Koernung/sigma gedreht (k 14,1 Grad).
+5. **Haut**: Rampen der Seite x g 2,22, ohne Faltenfaerbung; a* <= 11 ausserhalb der Wunden, Blau-Klasse C* <= 8, L* <= 58.
+6. **Linien**: Adern im Fleisch (laengs der Achse, quer, wo das Fleischband schmaler ist; G4-Dunkelrot-ab, Kontrast 13), Falten in der Haut
+   (Saat in Hohlraeumen, quer zur Achse, Kontrast 10,5, Breite 1,4), Kopf laengs parallel (Breite 2,1, Kontrast 16,2, 1,22 je 1000 = EM30-Kopf);
+   Dichte je Art per Halbierung auf das V2-Mass am Float-Atlas.
+7. **Kiefer/Krallen**: je EINE G4-Kopie auf das Feld gestreckt (Maul bilinear, Krallen naechster Nachbar), Zahnfleisch a*/19,30; Zaehne, Augen,
+   E9-Schwanz, Farbfenster wie r3.
+
+## V2.3 Konstanten (Quelle je Zeile; Liste auch in `farbe/K5c_farbe_v2/bau.json` 'konstanten')
+
+| Konstante | Wert | Quelle |
+|---|---|---|
+| K_NAH | 755 | pi x (31/2)^2, Linienabstand Fleisch Familien-Median G4 31 (V2 4 Zeile 1) |
+| K_FERN je Mesh | 17-2061 | pi x (Gliedhalbbreite/Texelabstand)^2 aus PCA der Ruhepose (V2 4); Werte je Mesh in bau.json 'mesh_geometrie' (z. B. Huefte 24,6 Texel -> 1906, Schwanz 1 10,6 -> 352, Kopf 25,6 -> 2061) |
+| L_STUFEN | 0 / 10,5 / 12,1 / 13,4 / 14,7 / 16,3 / 18,3 / 20 / 21,5 / 28,6 / 43,1 / 45 / 100 | Pflicht 20 und 45 (V1 2) + Dezile der Original-T-Helligkeit Bild 1+2, Nicht-Rot (V2 4); je Stufe >= 30 Bildpunkte |
+| Zahnfleisch-Gewicht | 19,30 | a* p90 der genutzten G4-Texel (10,44,60,40) (V2 4) |
+| Hautseiten-Schwelle | 0,414 | Warm-Anteil der Nicht-Rot-Figurpunkte Bild 1+2 (k-Mittel) = 0,537 -> Quantil der Texel-Warmanteile (V2 4); warm 53,9 % der Haut |
+| Faltenuebergang 1 sigma | entfaellt | V2 4: Falten werden Linien |
+| Fleisch-Koernung | Faktor 1,0 | V2 4 verlangt Atlas-B14 10,9-14,5: Halbierung auf den Familien-Median 11,2 ergibt 0 (Stufen allein 11,2), damit Render-B14 7,8 < 8,2; Faktor 1 = Hautkoernung (E8 "aus einem Guss"), Atlas 12,1 in der Spanne (Laeufe cf1/1,5/2,5: 12,1/12,8/13,7, B10 7,9/4,7/1,7) |
+| Eichregeln | Abbruch 2 x 0,125; Sperre bei Aenderung > 2 x 0,125 und Wirkung < 0,125; g-Ziel Rundlauf 7,85, g <= 2,22 | Kettenstreuung 3 Saaten (15/12345/7) max 0,125 (kf_eich4.json); Fenster 0,95-1,05 entfaellt (V2 4); g-Grenze 1,5 x r3 (V2 3.2) |
+| Linienlaenge Fleisch/Haut | Median 13,5 / p90 32 (Messlaenge) | Familienmitte V2 1 (11-16 / 21-43); gezeichnet / 1,155 (Messdefinition 4 sqrt(l1)) |
+| Linienbreite / Kontrast Fleisch | 1,65 / 13 | V2 1: 1,5-1,8 / 11-15 |
+| Breite / Kontrast Haut | 1,4 / 10,5 | V2 1: 1,3-1,5 / 9-12 |
+| Kopflinien | 2,1 / 16,2 / 1,22 je 1000 / Laenge 15,6-42,9 | EM30-Kopf (V2 5.5, N2_messung 'EM30_kopf'); Laengen G5 (laengste Familie, V2 1) |
+| Liniendichte-Ziel Fleisch / Haut | B10 12,65 / B11 5,35 % | Familien-Median EM30 (V2 1); Obergrenze je1000 3,45 / 3,50 = Familienmaximum |
+| Richtungsabweichung je Linie | sigma 0,58 rad | R = exp(-2 sigma^2) = 0,51 = Familienmaximum Feldkohaerenz (V2 5.2) |
+| Linienabstand | 2 Texel | Halbbreite der 5x5-Schliessung des Top-Hat-Masses (V2 1 (a)) |
+| Wundrand / Innenrand | 2 / 4 Texel | V2 5.3 (Rand 1-2) = Aussenrand Mass (c); Kern = Erosion 2 Texel Mass (f) |
+| Hell-Kern | 50 % je Wunde | G4-Leitwert (V2 1 (f), 5.3) |
+| Mindestflaeche Wunde/Loch | 20 Texel | Rotflaeche-Definition V2 1 |
+| Fleischanteil Koerper | 23,9 % | RE2-G4 Fleischrot (V1 1, Vorbild) |
+| Ruecken-Wunde | 16,5 % der Zonen-Bildpunkte, Kern L* 45-55 | V2 3.2 K4b (15-18 %, L* 45-55) |
+| Haut-Buntheit | g 2,22, a* <= 11 | V2 3.2 (1,5 x r3, V8-Kappe) |
+| Kopf-Koernung | c_k 2,0 (Halbierung) | Ziel Canny 29,6 (EM30-Kopf, V2 1), Obergrenze HF_fft 0,258 = A6-Grenze 0,26 minus gemessene CLUT-Drift (Lauf v13 0,260 -> 0,261) |
+| Koernungslaenge | 13,5 Texel | Linienlaenge Familienmitte (V2 1) |
+| Farbton-Drehung | k 14,1 Grad/sigma | Halbierung auf Rot-Farbton-Streuung G4 9,4 (Familien-Median, V1 B7) |
+| Saat Linien | 41 (SAAT_MAL) | fest und genannt (V2 4); CLUT-Saat 7 wie r3 |
+| K_GRAPH / SPIEGEL_ABSTAND | 8 / 2,0 | Rechenparameter, **Nachweis nicht erbracht** (V2.4) |
+| kf_mal.ausschnitt sigma 2 / 4 Durchlaeufe | unveraendert | V2 4: zulaessig bei A6-A8 gruen (gruen) und B6 je Feld <= 0,28 (Krallen 0,0 gruen, **Kiefer 1,83 rot**) |
+| Kopienzahl +1 | entfaellt | je EINE Kopie (B6 Feld Krallen 85,4 -> 0,0 %, Kiefer 11,1 -> 1,83 %) |
+Textfehler r3 berichtigt: Herkunft 'hautseiten' nennt jetzt "k-Mittel Bild 1 und 2"; das Farbfenster nennt -125..80 Grad (H_MIN) im Herkunftstext.
+
+## V2.4 Unabhaengigkeitsnachweis (V2 4: K_GRAPH 4/16, SPIEGEL_ABSTAND 1,0/4,0)
+
+Laeufe `formfarbe2/ind_*`, Riegel `riegel_ind_*.json`: 39/45, 40/45, 40/45, 42/45 gegen 38/45. Entscheidungen, die kippen (V2 / kg4 / kg16 / sp1 / sp4):
+A6 Kopf 0,250 / **0,271** / 0,259 / 0,254 / 0,255; K5 W 0,8 / 1,1 / **0,7** / 0,9 / **0,7**; K1v2 6,7 / **6,6** / 7,0 / 6,8 / 6,7; N1 Seite 9,3 / 9,3 / 9,3 /
+**9,4** / 9,2; B2 3/4 vorn 3,11 / **4,85** / **5,88** / **4,41** / **4,49**; B6 0,29 / **0,18** / 0,70 / 0,32 / 0,39; B8 15,9 / 20,1 / **9,9** / 17,2 / 17,1;
+B10 8,94 / 10,57 / 8,20 / **7,82** / 9,05; B12 24,5 / **25,2** / **27,0** / **26,0** / **28,5**; B17 0,599 / 0,587 / 0,597 / 0,595 / **0,602**.
+Ergebnis: K_GRAPH und SPIEGEL_ABSTAND sind nicht unabhaengig; die knappen Riegel (Abstand < Laufstreuung) kippen in beide Richtungen. Nach V2 4
+sind beide Werte damit **nicht zulaessig belegt** (Offen V2-O2).
+
+## V2.5 Eingeeichte Riegel mit zweiter Saat (V2 3.2 letzter Absatz)
+
+Versaetze unveraendert aus r3 (`kf_eich3.json`): Schwanz (-16,5/5,0/-12,7), Ruecken (-4,0/8,0/-19,2), Hinterbein l (W) (-8,9/18,6/-31,6),
+Hinterbein r (W) (-17,0/14,9/-51,4), Vorderglied r (W) (-6,9/-5,6/-5,9), Oberkiefer (-0,2/7,0/-7,5), Kopf/Rumpf (1,7/2,6/-9,2),
+Unterkiefer (43,3/26,0/19,2), Klauen 0. **Ueber 6 dE: Schwanz 21,4, Ruecken 21,2, beide Hinterbeine 37,7/56,1, Vorderglied 10,7,
+Oberkiefer 10,3, Kopf/Rumpf 9,7, Unterkiefer 54,0** - Begruendung: die Versaetze gleichen die Spiellicht-/Videokette (Kanalbalance, Blau-Verlust
+an den Beinen, Messblatt V1 2) und die Kappen der Textur aus; b* der Beine ist gesperrt (Blau-Grenze), wirkt also nicht (V1 Offen O5 r3).
+Saat 15 / 12345: K3 max 5,1 / 5,1 (Hinterbein r (W)); K6 dE 2,2 / 2,2, C* 23,1 / 23,1; K7 2,6 / 2,6, a* 22,4 / 22,4; K8 4,0 / 3,9;
+K1v2 6,7 / 6,8; K2v2 8,2 / 8,2; K4 6,5 / 6,4; K4b 11,5 / 11,4.
+
+## V2.6 Laufprotokoll (Scratchpad `formfarbe2/`, Auszug)
+
+| Lauf | Aenderung | Befund |
+|---|---|---|
+| v0 | Adern/Falten/Kopflinien, Wundstufen, Ruecken-Wunde, g 2,22 | B10 5,8, B17 0,551; Wundstufen mit Lochmuster |
+| v1-v3 | Fleisch bereinigt, Linien auf V2-Mass kalibriert, Hof, kein Kreuzen | Faltenlinien verschmelzen (9910 Linien, 5 %); Kopf "Leopard"-Striche |
+| exp_* | Komponenten einzeln aus | Koernung = inkohaerent (B17 0,747 ohne) |
+| exp_lic | Koernung laengs 6 / 13,5 | B17 Render 0,586 / 0,599, Haut wie Fell im Atlas |
+| v4 | + Fleisch-Koernung 1,44 | B10-B17 8/8 gruen, aber K4 21 %, K4b 22 % |
+| v5-v6 | Ruecken-Wunde gesamt statt Kern 16,5 % | K4b 21,9 -> Ursache Glaettung (dbg) |
+| v7 | Maul/Krallen eine Kopie, Screenshot-Fleisch nur gesehen | B6 je Feld 0,0, B9 14,6 |
+| kopf_* / v9-v12 | Kopf: Linien dicht, G4-Baender, Koernung | Linien allein -> HF 0,26+; Baender zaehlen nicht; Koernung + HF-Grenze traegt B12 |
+| ny-* / v14-v16 | Rumpf-Wunde nach G4-Anteil, E14 streng | B9 9,3, K4b 13,8 |
+| o_* | Reihenfolge Unterseite / Flanke / Oberseite | Render-B14 7,8 / 10,5 / 10,8 |
+| v21 | Farbton-Drehung | B7 4,0 -> 10,6 |
+| e1/e2 | Fixpunkt-Eichung | K1 6,7 -> 5,6, verworfen |
+| v2final | Endstand | 38/45 |
+
+## V2.7 Tafeln (`farbe/`, `generator/kf_tafeln.py`, KF_NAME 'K5c V2 (Versuch 2)'; Messblatt 7: roh, kein Gamma)
+
+| Tafel | Inhalt |
+|---|---|
+| `01_szene_bild1.png` / `02_szene_bild2.png` | Original - K4 heute - V2, Zeile 1 Disc-Licht x k (beide gleich), Zeile 2 + Videofilter |
+| `03_familie.png` | EM30 - G5 - G4 - V2 - K4 heute, gleicher Renderer/Licht (0,55 + 0,45 N.L), 3 Winkel; V2 L* 18,4/15,9/17,6, C* 10,7/9,3/12,6 |
+| `04_atlas.png` | EM30 - V2 - K5c heute mit Paletten; darunter Kanten-/Richtungsbild (n2_mass) RE2-G4 und V2 |
+| `05_rundum_neu.png` / `06_kopf_nah.png` | wie r3 |
+| `07_spiel.png` | echtes Spiel (eigene exe-Kopie, `kf_spiel.sh --mit-heute`, gdigrab Versuch 1, 10/10 rc=0, `farbe/spiel_lauf.log`, Einzelbilder `farbe/spiel/`) |
+| `08_binnenzeichnung.png` (neu) | Flanke / Schulter / Ruecken nah: RE2-G4 - EM30 - r3 - V2, gleiches Licht, gleiche Ausschnittregel (Figurrahmen) |
+
+Gesehen (eigene Durchsicht, keine Pruefung): Fleisch an Flanke und Ruecken jetzt gestuft (dunkler Rand, Rot, rosa Kern) mit dunklen Adern,
+Haut laengs gestreift; im Spiel 5080 eine rote Rueckenwunde. Schwaechen: Kopf laengs gestreift, im Atlas haarartig (warme Seite x 2,22 ist
+ocker); Wunden im Nahbild pixelig-fleckig, G4-Adern sind klarer (Tafel 08); Ausschnitt "Schulter" trifft bei K5c den Kopf.
+
+## V2.8 Tests
+
+`RE15_BUILD_DIR=.../re15_port/build bash re15_port/tools/local_build.sh build`: LOCAL-BUILD-OK. `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3
+--timeout 600`: **11/11 gruen**, 95,6 s, nichts wiederholt (Tests pruefen das unveraenderte Spiel-Asset).
+
+## V2.9 Offen
+
+| # | Punkt |
+|---|---|
+| V2-O1 | 7 Riegel ROT (V2.0), sechs davon mit Abstand <= Laufstreuung (V2.4). B6 Kiefer 1,83 % (gestrecktes G4-Maul hat glatte Doppelbloecke) braucht ein gemaltes Maulinneres statt der Kopie |
+| V2-O2 | Unabhaengigkeitsnachweis K_GRAPH/SPIEGEL_ABSTAND nicht erbracht (V2.4) |
+| V2-O3 | Zielkonflikte gemessen: Laengs-Koernung traegt B17 und kostet B6 (Laenge 9: B6 0,18, B17 0,588); Fleisch-Koernung traegt Render-B14 und kostet B10; Kopf-Canny gegen HF_fft-Grenze |
+| V2-O4 | Kopf wirkt im Atlas haarig (Sicht-Pruefung); Farbe der warmen Hautseite x 2,22 ocker |
+| V2-O5 | Commit aee1a1b71 enthaelt bereits die Verschiebung r3 -> K5c_farbe_r3 (Nachricht nennt sie in 1984269ca); die Zahlen der Nachricht 1984269ca zu B7/B10/B11/B13-B16 stammen aus Lauf v20, gueltig sind die Werte in V2.1 / riegel_K5c_farbe_v2.txt |
+| V2-O6 | Zweiter Pruefer rechnet Rundlauf (7,8/8,0) und K1v2/K2v2 nach (V2 6.1) |
