@@ -194,13 +194,14 @@ def texel_lage(mo, kp, pose):
     return ids, bild, np.where(kopf, out[1], -1), np.where(kopf, out[2], -1)
 
 
-def augen_gewicht(mo, kp, P, shapes):
+def augen_gewicht(mo, kp, P, shapes, je_pose=False):
     """Augenfleck als Gewicht je Texel beider Kopfbilder, gesetzt im Bild der jeweiligen Vorlage-Kamera an der Riegel-Stelle (Messblatt V4
     Abschnitt 7): vorn (Pose 135) K4 0,050 H (B)-links der Kopfmitte, 0,093 H unter der Kopf-Oberkante, Groesse K3 0,026 x 0,033 H;
     seitlich (Pose 85) S2 0,049 H hinter der Kopf-Vorderkante, 0,79 H ueber der Sohle, Groesse S1 0,040 x 0,055 H. Gewicht je Bildpunkt
     clip(AUGE_PROFIL - d, 0, 1) mit d = Ellipsenabstand (1 = Sollrand); je Texel das groesste Gewicht seiner Bildpunkte. Ein Texel des
     Vorderbilds kann so zum Seitenauge gehoeren (die vordersten Flaechen an der Kopfkante tragen in Pose 85 das Vorderbild)."""
     w = [np.zeros(sh) for sh in shapes]
+    wp = {pose: [np.zeros(sh) for sh in shapes] for pose in ('135', '85')}
     for pose, art in (('135', 'vorn'), ('85', 'seite')):
         _img, _ids, iv = G.zeichne(mo, P[pose], voll=True)
         ok, so, H = G.h_port(iv)
@@ -216,7 +217,8 @@ def augen_gewicht(mo, kp, P, shapes):
         for b_ in (0, 1):
             m = bild[yy, xx] == b_
             np.maximum.at(w[b_], (vv[yy, xx][m], uu[yy, xx][m]), g[m])
-    return w
+            np.maximum.at(wp[pose][b_], (vv[yy, xx][m], uu[yy, xx][m]), g[m])
+    return (w, wp) if je_pose else w
 
 
 def kopf_bild(A, K, zn, w, quelle, T, namen, ansicht, auge_rand=0.6):
@@ -515,9 +517,10 @@ def haar_vorn(mo, kp, P, shape):
 
 
 def fenster_texel(mo, kp, P, pose, fenster, bild_nr, shape):
-    """Texel des Kopfbilds bild_nr (0 vorn, 1 seitlich), die die Pose im Messblatt-Fenster zeigt (geschlossen, ohne Loecher)."""
+    """Texel des Kopfbilds bild_nr (0 vorn, 1 seitlich), die die Pose im Messblatt-Fenster zeigt (geschlossen, ohne Loecher). 'UNTEN' = der
+    Kopf unterhalb von SAUM_BIS der Kopfbox (Runde 3, Saum)."""
     ids, bild, uu, vv = texel_lage(mo, kp, P[pose])
-    bx = G.fenster(G.kopfbox(ids), RV.FENSTER[fenster])
+    bx = G.fenster(G.kopfbox(ids), RV.FENSTER[fenster] if fenster != 'UNTEN' else (0.0, SAUM_BIS, 1.0, 1.1))
     m = np.zeros(shape, bool)
     ys, xs = np.nonzero(bild == bild_nr)
     sel = (xs >= bx[0]) & (xs <= bx[2]) & (ys >= bx[1]) & (ys <= bx[3])
@@ -652,7 +655,7 @@ def kopf_mass(mo, P, pose):
                 d12=float((k[:, 0] < 12).mean()), viol=float((k[:, 2] < 0).mean()))
 
 
-def main():
+def main_r2():
     """Runde 2: Kopf mit den festen PORT-WAHLen (S_VORN / S_SEITE ...), Schwanz schwanz_textur_r2; T-K4/T-K5 werden ausgegeben."""
     A = atlas()
     K, used, haar_l, n_viol = klassen_r2(A)
@@ -691,6 +694,380 @@ def main():
     json.dump(prot, open(PROT, 'w'), indent=1)
     print('geschrieben', AUS)
 
+
+# ---------------------------------------------------------------------------------------------------- Runde 3 (Kopf nach Nutzerbeschreibung)
+# Nutzer 2026-11-07 (nach Ansicht des Kopfes der Runde 2): "da ist links ein Auge. Linke Seite ist so graeulich. Bis Nase. Dann rechts Seite
+# sieht man Haare - braeunlich.... Warum mischst du die Farben so daemlich?" Lesung (Orchestrator, bindend; Seiten = Bildkoordinaten der
+# Spielkamera 50A0 Cut 12 wie Beschreibung1):
+#   (1) linke Bildhaelfte des Kopfes = graeuliche Haut mit dem Auge (heller unbunter Fleck am Ort K4), bis zur Nase (K7 = Grenze);
+#   (2) rechte Bildhaelfte = Haare, braeunlich (a* > 0, b* > 0, nicht schwarz; etwa 25 % dunkler als der Kopf-Median), eine Flaeche mit
+#       weichem, strukturfolgendem Rand (kein Block, kein Fenster);
+#   (3) keine Farbmischung: Kopfoberseite dunkel rotbraun (hoechstens Kopf-Median + 6 L*), nahtlos zu den Haaren;
+#   (4) Farbquelle zuerst die Ref2-Palette (Zeile 480: unbunte Eintraege fuer Grau, warm-dunkle fuer Braun, dunkle rote fuer die Kuppe).
+# Zonen: je Texel sein Ort im Kopfraum (Mesh 9, mesh-lokal, aus den UV-Flaechen gerastert, tex3d()) und drei Ebenen:
+#   Seitenebene durch die Nase (Mitte des Messblatt-Fensters KV3 in Pose 135), senkrecht im Bild der Pose 135 (enthaelt Sehstrahl und
+#   Bild-oben) -> s > 0 = Bild-rechts = Haare; Kuppe = Ellipse um die rote Zone des Messblatts im Bild der Pose 135 bzw. 85 (KUPPE_ELL).
+#   Rand: s plus RAND_STRUKTUR x (Ref2-Kopfstruktur - 1), Rampe RAND_W (E.) - der Rand folgt der Original-Kopftextur statt der Ebene. Messung: Kopfpixel Pose 135 (explore2.py, Scratchpad ot3): Ebene -> grau 0,48 / Haar 0,36 /
+#   Kuppe 0,11 der Kopfpixel, KV5 1,00 grau, KV2 0,84 Haar, KV3 0,53/0,47 (Grenze), Auge K4 grau.
+# Alle Zahlen PORT-WAHL (kein RE-Befund; die Sichel-Form gibt es auf der Disc nicht).
+GRAU_C, GRAU_L0 = 7.5, 26.0            # grau: Chroma <= 7,5 (Eintraege 72/64/64 .. 144/128/128, a* <= 6,5, b* <= 5,7), L* >= 26 (Texel); Lauf 3 mit 8,7: Render-
+#                                        Chroma der grauen Zone 6,1 > 0,5 x Rumpf
+BRAUN_L, BRAUN_C, BRAUN_BA = (12.0, 40.0), 17.0, 0.6    # braun: a* > 0, b* > 0, b* >= 0,6 a* (braun, nicht dunkelrosa), L* 12-40, Chroma <= 17, nicht grau
+KUPPE_A, KUPPE_L, KUPPE_BA = (12.0, 22.0), (20.0, 36.0), 0.4   # kuppe (rotbraun): a* 12-22 (kein Wundrot a* > 22), b* >= 0,4 a*, L* 20-36, Chroma > 17
+HELL_C = 7.5                           # Auge: hell (L* >= HELL_L) und unbunt (Chroma <= 7,5)
+HAAR_REL = 0.8                         # Haar-Sollhelligkeit = HAAR_REL x Grau-Soll desselben Texels (Texel). Im Render Pose 135 liegt die Haarseite im
+#                                        Schatten des RDT-Lichts: Lauf 1/2 (Klasse klemmte am Median-Eintrag, Haar texelgleich hell oder heller) schon
+#                                        0,75 x Kopf-Median im Render; die Texel selbst sollen nur wenig dunkler sein als die graue Haut
+KUPPE_REL = 0.9                        # Kuppe-Sollhelligkeit relativ zum Grau-Soll (Ziel <= Kopf-Median + 6; Lauf 1 mit 1,0: Render 34,0 bei Median 25,3)
+GRAU_AB = 0.15                         # Anteil der a*/b*-Abweichung der Ref2-Kopftexel im Grau-Soll (Rest unbunt; Lauf 3 mit 0,3 s. GRAU_C)
+# Helligkeit: die Ref2-Kopftexel (Zeile 485) sind ueber das Kopfbild nicht gleich hell (gespiegelt gekachelt; Lauf 3: src L* P50 45,8 auf der
+# Haarseite, 30,8 auf der grauen Seite des Vorderbilds -> Haar texelheller als Grau). Runde 3 nimmt deshalb nur die OERTLICHE Struktur
+# (L / Gauss(L, STRUKTUR_SIGMA)) und setzt die Zonenhelligkeit auf GRAU_BASIS = Albedo-L* P50 des Ref2-Kopfes (37,2; riegel_ref2tex T-K5a
+# 'Ref2 37.2', Render-P50 30,8), Lichter mit dem Knie KNIE_F.
+GRAU_BASIS = 40.0                      # Lauf 4 mit 37,2: Soll-L* P50 30,3, gewaehlt 27,9 (die Eintragswahl zieht zu den neutralen Eintraegen 72/64/64),
+#                                        Render-P50 der grauen Zone 27,4 bei Ziel Ref2-Kopf 30,8 -> Basis 40 (Soll ~33, Eintraege 88/72/72 .. 96/88/88)
+STRUKTUR_SIGMA = 6.0                   # Texel
+STRUKTUR_MIN, STRUKTUR_MAX = 0.6, 1.5
+# Kuppe: Ellipse im Bild der jeweiligen Vorlage-Kamera um die rote Zone des Messblatts (Abschnitt 2: Vorlage 1 x 388-406, y 140-156 in der
+# Kopfbox 368-416 x 139-191 -> Mitte (0,60 / 0,17), Halbachsen (0,19 / 0,15) der Box; Abschnitt 3: Vorlage 2 x 418-441, y 193-211 in
+# 412-467 x 190-263 -> Mitte (0,32 / 0,16), Halbachsen (0,21 / 0,12)), Halbachsen x KUPPE_SKAL (die gemessene Zone ist der gesaettigte
+# Kern R-G >= 15 bzw. 25). Je Texel das kleinste d seiner Bildpunkte (wie augen_gewicht); Rand strukturfolgend. Lauf 1 (Kuppe als Halbraum
+# ueber einer waagerechten Bildlinie): gerades Band ueber die ganze Kopfbreite (Rechteck-Kante) - verworfen.
+KUPPE_ELL = {'135': (0.60, 0.17, 0.19, 0.15), '85': (0.32, 0.16, 0.21, 0.12)}
+KUPPE_SKAL = 1.3                       # Lauf 2 mit 1,4: Kuppe 0,17 der Kopfpixel, reichte bis 0,33 der Kopfbox-Breite (Vorlage-Kern ab 0,42)
+KUPPE_STRUKTUR = 0.35                  # Ellipsenabstand d: Gewicht rampe(1 - d + KUPPE_STRUKTUR x (Struktur - 1), KUPPE_RAMPE)
+KUPPE_RAMPE = 0.25
+RAND_W = 8.0                           # E.: Breite der Rampe am Zonenrand (13,2 / 11,9 E. je Bildpunkt an der Nase, Pose 135; Lauf 4 mit 15: Randgradient 2,5 < 3)
+RAND_STRUKTUR = 200.0                  # E.: Rand folgt der Ref2-Kopfstruktur (Gauss RAND_SIGMA Texel); 200 x (rel - 1) ~ +-30 E. ~ 2-3 Texel (Lauf 2 mit
+#                                        300: Kante Std 7,4 px, Haarflaeche ausgefranst; Riegel verlangt > 4 px)
+RAND_SIGMA = 2.0
+# Haaransatz (Saum): die ersten SAUM_W E. der Haarflaeche am Rand zur grauen Zone um SAUM_F dunkler - der Rand wird als Kante lesbar
+# (Riegel T-K9b Randgradient 3-8 'wie Ref2-Hautstruktur'; Lauf 4-6 ohne Saum: 2,5-2,6, weil Haar und Grau als Texel nur ~3 L* auseinander
+# liegen und die Haarseite erst durch das RDT-Licht dunkel wird). Der Saum folgt dem strukturfolgenden Rand (gleiches s_eff).
+SAUM_W, SAUM_F = 25.0, 0.6             # Lauf 7 mit 0,7: Randgradient 2,9 (Grenze 3)
+SAUM_BIS = 0.85                        # kein Saum unterhalb von SAUM_BIS der Kopfbox-Hoehe (Pose 135): das Haarfeld ist in Vorlage 1 'nach unten offen'
+#                                        (Messblatt Abschnitt 2); Lauf 7 mit Saum bis zum Kinn: K8 Albedo 27,8 < 29,2
+NASE_F3 = 0.9                          # Nase (Texel im Fenster KV3 auf der Grau-Seite): mitteldunkles Merkmal, Faktor auf das Grau-Soll
+NASE_RAND = 60.0                       # E.: Breite des Nasenstreifens beidseits der Nasenebene (nur Grau-Seite wirksam)
+HOF_F3, HOF_R3 = 0.5, 6.0              # Augenhof vorn: Faktor und Radius (Texel). Lauf 6 mit 0,65 / 5: K1 19,0. Runde 2 HOF_F 0,62 / HOF_R 8: K1-Kontrast 19,6 mit der grauen Umgebung
+#                                        (Grenze 20); Lauf 5 mit 0,55 / 8: K1 22,6, aber der Hof senkte die graue Zone des Vorderbilds insgesamt
+#                                        (Soll-L* P50 29,5 bei Lg 36,1 - 588 belegte graue Texel, davon ein grosser Teil im Hofradius 8)
+HOF_F_S3, AUGE_KERN_S3 = 0.7, 0.10     # seitlich: Hof 0,7 (Runde 2 0,9; Lauf 3 mit 0,85: 0,038 x 0,030 H) und Kernschwelle 0,10 (Runde 2 0,15): S1 lag in Lauf 1/2 bei 0,034 x 0,034 H
+#                                        (Soll 0,028-0,052 x 0,040-0,070 H) - die graue Umgebung ist heller als die rosa Haut der Runde 2, der Fleck
+#                                        nach der Vergleichsregel kleiner
+AB_GEW_GRAU = 0.4                      # dito grau (Lauf 4 mit 1,0: gewaehlt 27,9 bei Soll 30,3, s. GRAU_BASIS)
+AB_GEW = 0.15                          # Gewicht von a*/b* bei der Eintragswahl in den Klassen braun / kuppe (Lab-Abstand): die Farbe gibt die Klasse,
+#                                        die Helligkeit folgt der Struktur (Lauf 1/2 mit 1,0: die Klasse klemmte am Eintrag, der dem Klassen-Median
+#                                        a*/b* am naechsten liegt - Haar einfarbig 88/72/64 bzw. 104/80/72)
+
+
+def klassen_r3(A):
+    """Eintraege der Zeile 480 (Ref2 auf Koerperflaechen, nicht violett) in den Zonenklassen grau / braun / kuppe (paarweise disjunkt)
+    und hell (Auge, Teilmenge von grau)."""
+    z = ZEILE - A['cy']
+    used = np.unique(A['tex'][A['zeile'] == ZEILE])
+    used = used[A['clut'][z][used] != 0]
+    lab = G.lab(A['rgb'][z][used].astype(float))
+    nv = nicht_violett(lab)
+    L, a, b = lab[:, 0], lab[:, 1], lab[:, 2]
+    C = np.hypot(a, b)
+    grau = nv & (C <= GRAU_C) & (L >= GRAU_L0)
+    braun = nv & ~grau & (a > 0) & (b > 0) & (b >= BRAUN_BA * a) & (L >= BRAUN_L[0]) & (L <= BRAUN_L[1]) & (C <= BRAUN_C)
+    kuppe = nv & ~grau & ~braun & (a >= KUPPE_A[0]) & (a <= KUPPE_A[1]) & (b >= KUPPE_BA * a) & (L >= KUPPE_L[0]) & (L <= KUPPE_L[1]) & (C > BRAUN_C)
+    hell = grau & (L >= HELL_L) & (C <= HELL_C)
+    K = dict(grau=used[grau], braun=used[braun], kuppe=used[kuppe], hell=used[hell])
+    return K, used, int((~nv).sum())
+
+
+def tex3d(blob, kp):
+    """Je Texel der Kopfbilder (vorn / seite) der Ort im Kopfraum (Mesh 9 mesh-lokal, E.), aus den UV-Flaechen von Mesh 9 der gebauten EMD
+    baryzentrisch gerastert (Vierecke als zwei Dreiecke 0-1-2 / 1-3-2). Texel ohne Flaeche: NaN (fuellen mit dem naechsten belegten
+    Texel in fuellen())."""
+    d = EA.emd_dir(blob); m9 = EA.md1_parse(blob[d[7]:d[8]])[9]
+    pb = 128 * (kp['page'] & 0xF)
+    shapes = {a: (kp[a]['v'][1] - kp[a]['v'][0] + 1, kp[a]['u'][1] - kp[a]['u'][0] + 1) for a in ('vorn', 'seite')}
+    P3 = {a: np.full(shapes[a] + (3,), np.nan) for a in shapes}
+    V = np.array([v[:3] for v in m9.tv], float)
+
+    def ansicht(uv):
+        u = uv[0] - pb
+        for a in shapes:
+            if kp[a]['u'][0] <= u <= kp[a]['u'][1]:
+                return a
+        return None
+
+    def tri(uvs, vids, a):
+        u0, v0 = kp[a]['u'][0], kp[a]['v'][0]
+        pts = np.array([(u - pb - u0, v - v0) for u, v in uvs], float)
+        xs = np.arange(int(np.floor(pts[:, 0].min())), int(np.ceil(pts[:, 0].max())) + 1)
+        ys = np.arange(int(np.floor(pts[:, 1].min())), int(np.ceil(pts[:, 1].max())) + 1)
+        if not len(xs) or not len(ys):
+            return
+        X, Y = np.meshgrid(xs + 0.5, ys + 0.5)
+        (x0, y0), (x1, y1), (x2, y2) = pts
+        den = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        if abs(den) < 1e-9:
+            return
+        l0 = ((y1 - y2) * (X - x2) + (x2 - x1) * (Y - y2)) / den; l1 = ((y2 - y0) * (X - x2) + (x0 - x2) * (Y - y2)) / den; l2 = 1 - l0 - l1
+        ins = (l0 >= -0.02) & (l1 >= -0.02) & (l2 >= -0.02)
+        for yy, xx, a0, a1, a2 in zip(Y[ins] - 0.5, X[ins] - 0.5, l0[ins], l1[ins], l2[ins]):
+            yi, xi = int(yy), int(xx)
+            if 0 <= yi < shapes[a][0] and 0 <= xi < shapes[a][1]:
+                P3[a][yi, xi] = a0 * V[vids[0]] + a1 * V[vids[1]] + a2 * V[vids[2]]
+    for f, uv in zip(m9.tf, m9.tuv):
+        a = ansicht(uv)
+        if a:
+            tri([(uv[0], uv[1]), (uv[3], uv[4]), (uv[6], uv[7])], [f[1], f[3], f[5]], a)
+    for f, uv in zip(m9.qf, m9.quv):
+        a = ansicht(uv)
+        if a:
+            tri([(uv[0], uv[1]), (uv[3], uv[4]), (uv[6], uv[7])], [f[1], f[3], f[5]], a)
+            tri([(uv[3], uv[4]), (uv[9], uv[10]), (uv[6], uv[7])], [f[3], f[7], f[5]], a)
+    return P3
+
+
+def fuellen(q):
+    fin = np.isfinite(q[..., 0])
+    _d, (iy, ix) = nd.distance_transform_edt(~fin, return_indices=True)
+    return q[iy, ix], fin
+
+
+def _jacobi(pose, q_loc, R9, T9):
+    """Bild-Jacobi (2 x 3) der Spielkamera am Kopfpunkt q_loc (mesh-lokal): Sehstrahl, Bild-oben und Bild-rechts im Kopfraum."""
+    def proj(q):
+        return BF.v4_proj(pose, (np.atleast_2d(q) @ R9.T + T9))[0]
+    p0 = proj(q_loc); J = np.zeros((2, 3))
+    for k in range(3):
+        e = np.zeros(3); e[k] = 1.0
+        J[:, k] = (proj(q_loc + e) - proj(q_loc - e)) / 2.0
+    ray = np.linalg.svd(J)[2][2]
+    kam_l = R9.T @ (BF.v4_kamerapunkt(pose) - T9)
+    if np.dot(ray, q_loc - kam_l) < 0:
+        ray = -ray
+    up = np.linalg.pinv(J) @ np.array([0.0, -1.0]); up /= np.linalg.norm(up)
+    right = np.linalg.pinv(J) @ np.array([1.0, 0.0]); right /= np.linalg.norm(right)
+    return p0, J, ray, up, right
+
+
+def geometrie_r3(mo, kp, P, blob):
+    """Zonengeometrie: je Texel (vorn / seite) der Seitenabstand s (E., > 0 = Bild-rechts der Nasenebene in Pose 135). Die Nasenebene geht
+    durch die Mitte des Messblatt-Fensters KV3 (Pose 135) und enthaelt Sehstrahl und Bild-oben dieser Kamera (senkrechte Bildlinie durch die
+    Nase). Rueckgabe dict(vorn=dict(s, fin, belegt), seite=..., info=...)."""
+    P3 = tex3d(blob, kp)
+    pose = P['135']
+    kf = BF._v4_kf(mo, pose); R, T = mo.pose(kf); R9 = R[9].astype(float) / 4096.0; T9 = T[9].astype(float)
+    ids, bild, uu, vv = texel_lage(mo, kp, pose)
+    lc = np.full(ids.shape + (3,), np.nan)
+    for b_, a in ((0, 'vorn'), (1, 'seite')):
+        ys, xs = np.nonzero(bild == b_)
+        lc[ys, xs] = P3[a][vv[ys, xs], uu[ys, xs]]
+    kb = G.kopfbox(ids)
+    bx = G.fenster(kb, RV.FENSTER['KV3'])
+    sub = lc[bx[1]:bx[3] + 1, bx[0]:bx[2] + 1].reshape(-1, 3)
+    q_nase = np.median(sub[np.isfinite(sub[:, 0])], 0)
+    p_n, J, ray, up, right = _jacobi(pose, q_nase, R9, T9)
+    n_s = np.cross(up, ray); n_s /= np.linalg.norm(n_s)
+    if (J @ n_s)[0] < 0:
+        n_s = -n_s
+    # Seitenbestimmung: lokale z-Koordinate (Mesh 9: z > 0 = (W)-links, KOPF_V4) der Kopfpixel links / rechts der Kopfmitte
+    fin = np.isfinite(lc[..., 0]); X = np.arange(ids.shape[1])[None, :]
+    xm = 0.5 * (kb[0] + kb[2])
+    z_links = float(np.median(lc[..., 2][fin & (X < xm)])); z_rechts = float(np.median(lc[..., 2][fin & (X >= xm)]))
+    out = dict(info=dict(q_nase=q_nase.round(1).tolist(), nase_bild=p_n.round(1).tolist(), kv3_mitte=[0.5 * (bx[0] + bx[2]), 0.5 * (bx[1] + bx[3])],
+                         n_seite=n_s.round(4).tolist(), e_je_px_nase=[round(1.0 / np.linalg.norm(J[:, 0]), 2), round(1.0 / np.linalg.norm(J[:, 2]), 2)],
+                         kopfbox135=list(kb), z_lokal_bild_links=round(z_links, 1), z_lokal_bild_rechts=round(z_rechts, 1)))
+    for a in ('vorn', 'seite'):
+        q, fin_a = fuellen(P3[a])
+        out[a] = dict(s=(q - q_nase) @ n_s, fin=fin_a, belegt=int(fin_a.sum()))
+    return out
+
+
+def kuppe_gewicht(mo, kp, P, shapes):
+    """Kuppe als Ellipsenabstand je Texel beider Kopfbilder: Ellipse KUPPE_ELL (Anteile der Kopfbox) im Bild der Pose 135 bzw. 85, Halbachsen
+    x KUPPE_SKAL; je Bildpunkt d (1 = Rand), je Texel das kleinste d seiner Bildpunkte (Texel ohne Bildpunkt: 9)."""
+    d_tex = [np.full(sh, 9.0) for sh in shapes]
+    for pose_n in ('135', '85'):
+        ids, bild, uu, vv = texel_lage(mo, kp, P[pose_n])
+        kb = G.kopfbox(ids); w, h = kb[2] - kb[0], kb[3] - kb[1]
+        cx_, cy_, ax_, ay_ = KUPPE_ELL[pose_n]
+        cx, cy, ax, ay = kb[0] + cx_ * w, kb[1] + cy_ * h, ax_ * w * KUPPE_SKAL, ay_ * h * KUPPE_SKAL
+        yy, xx = np.nonzero(bild >= 0)
+        d = np.sqrt(((xx + 0.5 - cx) / ax) ** 2 + ((yy + 0.5 - cy) / ay) ** 2)
+        for b_ in (0, 1):
+            m = bild[yy, xx] == b_
+            np.minimum.at(d_tex[b_], (vv[yy, xx][m], uu[yy, xx][m]), d[m])
+    return d_tex
+
+
+def rampe(x, w):
+    return np.clip(0.5 + x / (2.0 * w), 0.0, 1.0)
+
+
+def zonen_r3(geo, src, ansicht, d_kuppe, w_auge):
+    """Zonengewichte je Texel: wk (Kuppe, aus dem Ellipsenabstand d_kuppe), wh (Haar, aus dem Seitenabstand s), Rest grau; Rand
+    strukturfolgend (Seite: RAND_STRUKTUR x (Ref2-Kopfstruktur - 1) in E.; Kuppe: KUPPE_STRUKTUR x (Struktur - 1) in d). Das Auge
+    (w_auge > 0) bleibt grau."""
+    g = geo[ansicht]
+    L = src[..., 0]; rel = L / max(float(L.mean()), 1e-6)
+    rel_g = cv2.GaussianBlur(rel.astype(np.float32), (0, 0), RAND_SIGMA).astype(float)
+    st = rel_g - 1.0
+    s_eff = g['s'] + RAND_STRUKTUR * st
+    wh = rampe(s_eff, RAND_W)
+    wk = rampe(1.0 - d_kuppe + KUPPE_STRUKTUR * st, KUPPE_RAMPE)
+    wk[w_auge > 0] = 0.0; wh[w_auge > 0] = 0.0
+    wh = wh * (1.0 - wk)
+    saum = rampe(SAUM_W - s_eff, RAND_W) * rampe(s_eff, RAND_W)       # 0 .. SAUM_W E. hinter dem Rand, innerhalb der Haarflaeche
+    return wh, wk, rel, saum
+
+
+def kopf_bild_r3(A, K, src, w, geo, d_kuppe, ansicht, zn=None, nase_m=None, unten_m=None, w_eigen=None):
+    """Texelbild einer Kopf-Ansicht, Runde 3: Grau-Zone = GRAU_BASIS x oertliche Struktur der Ref2-Kopftexel (Zeile 485, Knie) mit reduzierter Buntheit ->
+    naechster grauer Eintrag; Haarzone = HAAR_REL x Grau-Soll -> naechster brauner Eintrag; Kuppe = KUPPE_REL x Grau-Soll -> naechster
+    rotbrauner Eintrag; Auge = Kern hell/unbunt mit Hof (Runde 2); Nase = Grau-Soll x NASE_F3 im Fenster KV3 (Grau-Seite)."""
+    pal = A['rgb'][ZEILE - A['cy']].astype(float)
+    sh = src.shape[:2]
+    wh, wk, rel, saum = zonen_r3(geo, src, ansicht, d_kuppe, w)
+    # Augenzone = Augengewicht (K4 / S2) und die Augenzone der Runde-5-Zonenkarte (zn, wie Runde 2; Lauf 1-5 ohne zn: S1 0,034 H hoch, Soll
+    # >= 0,040): bleibt grau, ohne Saum. Kein Saum im unteren Kopf (unten_m, s. SAUM_BIS).
+    auge = (w > 0) | (zn if zn is not None else False)
+    wh[auge] = 0.0; wk[auge] = 0.0; saum[auge] = 0.0
+    if unten_m is not None:
+        saum[unten_m] = 0.0
+    L, a, b = src[..., 0], src[..., 1], src[..., 2]
+    # oertliche Struktur statt absoluter Ref2-Helligkeit (s. GRAU_BASIS), Lichter mit Knie
+    rel_l = np.clip(L / np.maximum(cv2.GaussianBlur(L.astype(np.float32), (0, 0), STRUKTUR_SIGMA).astype(float), 1.0), STRUKTUR_MIN, STRUKTUR_MAX)
+    rel_k = np.where(rel_l <= 1.0, rel_l, 1.0 + (rel_l - 1.0) * KNIE_F)
+    Lg = np.minimum(GRAU_BASIS * rel_k, HAUT_L2 - 0.5)
+    if nase_m is not None:
+        nm = nase_m & (geo[ansicht]['s'] < 0) & (geo[ansicht]['s'] > -NASE_RAND)
+        Lg = np.where(nm, Lg * NASE_F3, Lg)
+    lab_b = G.lab(pal[K['braun']]); lab_k = G.lab(pal[K['kuppe']])
+    soll_g = np.stack([Lg, GRAU_AB * a, GRAU_AB * b], -1)
+    soll_h = np.stack([Lg * HAAR_REL, np.full(sh, float(np.median(lab_b[:, 1]))), np.full(sh, float(np.median(lab_b[:, 2])))], -1)
+    soll_k = np.stack([np.minimum(Lg * KUPPE_REL, KUPPE_L[1] - 0.5), np.full(sh, float(np.median(lab_k[:, 1]))), np.full(sh, float(np.median(lab_k[:, 2])))], -1)
+    wg = 1.0 - wh - wk
+    soll = soll_g * wg[..., None] + soll_h * wh[..., None] + soll_k * wk[..., None]
+    soll[..., 0] *= 1.0 - (1.0 - SAUM_F) * saum * (wh >= 0.5)         # Haaransatz (s. SAUM_W)
+    # Auge (Runde 2): Kern hell und unbunt, Rand nach der Feinstruktur, Hof um den Kern (K1-Kontrast) - nur in der Grau-Zone
+    w2 = np.clip(w + 0.6 * (cv2.GaussianBlur(rel.astype(np.float32), (0, 0), 1.0) - 1.0), 0, 1); w2[~auge] = 0
+    kern = nd.binary_fill_holes(nd.binary_closing(auge & (w2 >= (AUGE_KERN if ansicht == 'vorn' else AUGE_KERN_S3)))) & auge
+    kern = nd.binary_opening(kern) | (kern & (w2 >= 0.9))
+    hl = G.lab(pal[K['hell']]); e = hl[np.argmax(hl[:, 0])]
+    # Hof nur um den Kern des Auges der EIGENEN Vorlage-Kamera (w_eigen: vorn Pose 135, seitlich Pose 85). Das Seitenauge (Pose 85) liegt zum
+    # Teil auf Vorderbild-Texeln, die Pose 135 am Kinn zeigt (Lauf 7/8: 19 von 74 KV4-Bildpunkten mit Augengewicht) - sein Hof senkte dort die
+    # Albedo (K8 27,8 < 29,2).
+    kern_hof = kern & (w_eigen > 0) if w_eigen is not None else kern
+    if kern_hof.any():
+        dk_ = nd.distance_transform_edt(~kern_hof)
+        fak = 1.0 - (1.0 - (HOF_F3 if ansicht == 'vorn' else HOF_F_S3)) * np.exp(-(dk_ / (HOF_R3 if ansicht == 'vorn' else HOF_R)) ** 2)
+        grau_m = (wh < 0.5) & (wk < 0.5)
+        soll[..., 0] = np.where(kern | ~grau_m, soll[..., 0], np.minimum(soll[..., 0], np.maximum(soll[..., 0] * fak, HOF_MIN)))
+    soll[kern] = e[None, :]
+    kl = np.full(sh, 'grau', object)
+    kl[wh >= 0.5] = 'braun'; kl[wk >= 0.5] = 'kuppe'; kl[kern] = 'hell'
+    out = np.zeros(sh, np.uint8)
+    for k in set(kl.ravel()):
+        sel = kl == k
+        ein = K[k]
+        lab_e = G.lab(pal[ein])
+        gew = np.array([1.0, AB_GEW, AB_GEW]) if k in ('braun', 'kuppe') else (np.array([1.0, AB_GEW_GRAU, AB_GEW_GRAU]) if k == 'grau' else np.ones(3))
+        d = (((soll[sel][:, None, :] - lab_e[None, :, :]) ** 2) * gew).sum(-1)
+        out[sel] = ein[np.argmin(d, 1)].astype(np.uint8)
+        if os.environ.get('RT_DEBUG'):
+            print('DEBUG', ansicht, k, 'n', int(sel.sum()), 'soll L P10/50/90', np.percentile(soll[sel][:, 0], (10, 50, 90)).round(1), 'Lg P50', round(float(np.median(Lg[sel])), 1),
+                  'gewaehlt L P50', round(float(np.median(G.lab(pal[out[sel]])[:, 0])), 1), 'src L P50', round(float(np.median(L[sel])), 1),
+                  'wg/wh/wk P50', np.median(wg[sel]).round(2), np.median(wh[sel]).round(2), np.median(wk[sel]).round(2), 'rel_k P50', np.median(rel_k[sel]).round(3),
+                  'belegt', int(geo[ansicht]['fin'][sel].sum()), 'soll L P50 belegt', round(float(np.median(soll[sel & geo[ansicht]['fin']][:, 0])), 1) if (sel & geo[ansicht]['fin']).any() else None,
+                  'Lg P50 belegt', round(float(np.median(Lg[sel & geo[ansicht]['fin']])), 1) if (sel & geo[ansicht]['fin']).any() else None)
+    zone = np.where(kl == 'braun', 2, np.where(kl == 'kuppe', 3, 1)).astype(np.uint8)
+    return out, zone, dict(wh=wh, wk=wk, kern=kern)
+
+
+def zonen_render(mo, kp, pose, zmaps):
+    """Zone je Bildpunkt (Kopf Id 9): 1 grau, 2 Haar, 3 Kuppe; Kenn-Render ohne Licht (Zeile 480 als Kenn-CLUT, R = Index)."""
+    tex0, lut0 = mo.tex, mo.lut
+    try:
+        t = mo.tex.copy(); pb = 128 * (kp['page'] & 0xF)
+        for name, ans in (('vorn', kp['vorn']), ('seite', kp['seite'])):
+            u0, u1 = ans['u']; v0, v1 = ans['v']
+            t[v0:v1 + 1, pb + u0:pb + u1 + 1] = zmaps[name].astype(np.uint8)
+        mo.tex = t
+        l = mo.lut.copy(); z = ZEILE - mo.clut_y
+        l[z, :, 0] = np.arange(256); l[z, :, 1] = 0; l[z, :, 2] = 0; l[z, :, 3] = 255
+        mo.lut = l
+        img, ids = G.zeichne(mo, pose, licht=False)
+    finally:
+        mo.tex, mo.lut = tex0, lut0
+    return np.where(ids == 9, img[..., 0].astype(int), -1), ids
+
+
+def main():
+    """Runde 3: Kopf nach der Nutzerbeschreibung (Zonen grau / braun / Kuppe aus der Kopfgeometrie, Farben aus den Ref2-Klassen);
+    Schwanz texelgleich Runde 2 (schwanz_textur_r2)."""
+    A = atlas()
+    K, used, n_viol = klassen_r3(A)
+    K2, _u, haar_l, _n = klassen_r2(A)
+    P = G.posen()
+    zk = zonenkarte()
+    blob, _info = bauen()
+    mo = b2.modell(blob)
+    form = BF._variante_v4(); kp, sw = form['kopf_v4'], form['schwanz_kette']
+    shapes = {'vorn': zk['kopf_vorn'][0].shape, 'seite': zk['kopf_seite'][0].shape}
+    src_v = quelle_kopf(A, shapes['vorn'], (0, 0))
+    src_s = quelle_kopf(A, shapes['seite'], (20, 6))
+    schwanz = schwanz_textur_r2(A, schwanz_spanne(mo, sw))
+    alt = dict(np.load(AUS)) if os.path.exists(AUS) else {}
+    if 'schwanz' in alt:
+        assert (alt['schwanz'] == schwanz).all(), 'Schwanz muss texelgleich Runde 2 bleiben'
+    geo = geometrie_r3(mo, kp, P, blob)
+    (w_v, w_s), wp = augen_gewicht(mo, kp, P, (shapes['vorn'], shapes['seite']), je_pose=True)
+    dk_v, dk_s = kuppe_gewicht(mo, kp, P, (shapes['vorn'], shapes['seite']))
+    nv_ = fenster_texel(mo, kp, P, '135', 'KV3', 0, shapes['vorn'])
+    namen = [z[0] for z in E.ZONEN]
+    za_v = zk['kopf_vorn'][0] == namen.index('v_auge'); za_s = zk['kopf_seite'][0] == namen.index('s_auge')
+    un_ = fenster_texel(mo, kp, P, '135', 'UNTEN', 0, shapes['vorn'])
+    bv, zv, iv = kopf_bild_r3(A, K, src_v, w_v, geo, dk_v, 'vorn', za_v, nv_, un_, wp['135'][0])
+    bs, zs, is_ = kopf_bild_r3(A, K, src_s, w_s, geo, dk_s, 'seite', za_s, w_eigen=wp['85'][1])
+    setze(mo, kp, sw, dict(kopf_vorn=bv, kopf_seite=bs, schwanz=schwanz))
+    pal = A['rgb'][ZEILE - A['cy']].astype(float)
+    zonen_lab = {}
+    for name, bild, zone in (('vorn', bv, zv), ('seite', bs, zs)):
+        lab = G.lab(pal[bild])
+        zonen_lab[name] = {zn: dict(texel=int((zone == zi).sum()), lab_p50=[round(float(x), 1) for x in np.median(lab[zone == zi], 0)]) if (zone == zi).any() else dict(texel=0)
+                           for zn, zi in (('grau', 1), ('braun', 2), ('kuppe', 3))}
+    zmap = {}
+    for pose_n in ('135', '85'):
+        zm, ids = zonen_render(mo, kp, P[pose_n], dict(vorn=zv, seite=zs))
+        k = ids == 9
+        zmap[pose_n] = {zn: round(float((zm[k] == zi).mean()), 3) for zn, zi in (('grau', 1), ('braun', 2), ('kuppe', 3))}
+    import riegel_ref2tex as RR
+    zk_ = dict(vorn=zv, seite=zs)
+    zb_ = RR.zonen_bild(mo, kp, P, zk_)
+    hf_ = dict((p_, (zb_[p_]['zm'] >= 2) & (zb_[p_]['ids'] == 9)) for p_ in ('135', '85'))
+    N_ = RR._kopf_fenster(mo, P, hf_)
+    Z, _i = RR.tk4(mo, P, hf_, N_)
+    Z9, _i9 = RR.tk9(mo, P, kp, zb_, zk_, N_)
+    ref = b2.modell(G.REF2)
+    prot = dict(runde=3, quelle=dict(kopf=KOPF_QUELLE, kopf_zeile=KOPF_ZEILE_REF2, schwanz=SCHWANZ_QUELLE, zeile=ZEILE),
+                klassen={k: [int(x) for x in v] for k, v in K.items()}, klassen_lab={k: [[round(float(c), 1) for c in r] for r in G.lab(pal[v])] for k, v in K.items()},
+                eintraege_koerper=int(len(used)), violett_ausgenommen=n_viol, ableitungen=[],
+                geometrie=geo['info'], belegt={a: geo[a]['belegt'] for a in ('vorn', 'seite')},
+                zonen_texel=zonen_lab, zonen_bild=zmap,
+                port_wahl=dict(GRAU_C=GRAU_C, GRAU_L0=GRAU_L0, BRAUN_L=BRAUN_L, BRAUN_C=BRAUN_C, BRAUN_BA=BRAUN_BA, KUPPE_A=KUPPE_A, KUPPE_L=KUPPE_L,
+                               KUPPE_BA=KUPPE_BA, HELL_C=HELL_C, HAAR_REL=HAAR_REL, KUPPE_REL=KUPPE_REL, GRAU_AB=GRAU_AB, KUPPE_ELL=KUPPE_ELL,
+                               KUPPE_SKAL=KUPPE_SKAL, KUPPE_STRUKTUR=KUPPE_STRUKTUR, KUPPE_RAMPE=KUPPE_RAMPE, RAND_W=RAND_W, RAND_STRUKTUR=RAND_STRUKTUR, RAND_SIGMA=RAND_SIGMA,
+                               NASE_F3=NASE_F3, NASE_RAND=NASE_RAND, SAUM_W=SAUM_W, SAUM_F=SAUM_F, SAUM_BIS=SAUM_BIS, GRAU_BASIS=GRAU_BASIS, STRUKTUR_SIGMA=STRUKTUR_SIGMA, STRUKTUR_MIN=STRUKTUR_MIN,
+                               STRUKTUR_MAX=STRUKTUR_MAX, KNIE_F=KNIE_F, HAUT_L2=HAUT_L2,
+                               HOF_F3=HOF_F3, HOF_R3=HOF_R3, HOF_F_S3=HOF_F_S3, AUGE_KERN_S3=AUGE_KERN_S3, AB_GEW=AB_GEW, AB_GEW_GRAU=AB_GEW_GRAU, HOF_R=HOF_R, HOF_MIN=HOF_MIN, HOF_F_S=HOF_F_S, AUGE_KERN=AUGE_KERN, AUGE_KERN_S=AUGE_KERN_S),
+                ref2_kopf={p: kopf_mass(ref, P, p) for p in ('135', '85')}, ist_kopf={p: kopf_mass(mo, P, p) for p in ('135', '85')},
+                riegel=[dict(mass=z['mass'], ist=z['ist'], ok=z['ok']) for z in Z + Z9])
+    for z in Z + Z9:
+        print('INFO' if z.get('info') else ('OK  ' if z['ok'] else 'ROT '), z['mass'], '| soll:', z['soll'], '| ist:', z['ist'])
+    print('Zonen Texel', json.dumps(zonen_lab), '\nZonen Bild', zmap)
+    np.savez(AUS, kopf_vorn=bv, kopf_seite=bs, schwanz=schwanz, zonen_vorn=zv, zonen_seite=zs)
+    os.makedirs(os.path.dirname(PROT), exist_ok=True)
+    json.dump(prot, open(PROT, 'w'), indent=1)
+    print('geschrieben', AUS)
 
 if __name__ == '__main__':
     main()
