@@ -1,12 +1,17 @@
 {
  "korrektur": {
   "F8": [
-   -3.84,
+   -4.6,
    0.0,
+   0.0
+  ],
+  "beine": [
+   0.0,
+   -0.6,
    0.0
   ]
  },
- "quelle": "r4_koerper_eichen.py Lauf koerper_eichen4 Runde 1 (Versatz F8 -3,84 L* als RGB-Faktor in den Kacheln von Id 10); Messblatt V4 F8 16,4/8,3/1,5",
+ "quelle": "r4_koerper_eichen.py Lauf koerper_eichen4 Runde 1 (Versatz F8 -3,84 L* als RGB-Faktor in den Kacheln von Id 10); Messblatt V4 F8 16,4/8,3/1,5; danach -3,84 -> -4,6 (Lauf r4 Koerper F8b: Messblatt-Wortlaut F8 Id ganz mit -3,84 dL +4,1 > 4); beine [0, -0,6] = a*/b* x 0,4 im Ziel der Region beine (Lauf r4 Koerper Beine: Riegel FS Unterschenkel Rotanteil 0,20 -> 0,14, Original 0,03 +-0,15)",
  "verlauf": {
   "eichung_1": "Lab-Versatz F6/F7/F8/Regionen, 3 Runden (Protokoll korrektur_eich1): F6 a* +11,5, Rot Mitte/aussen 1,81, Schultern 0,24 - verworfen",
   "eichung_2": "Lab-Versatz mit Kappe 6 und Stopp bei dE00 <= 3 (korrektur_eich2): F8 b* -3,5, Rotanteil Rumpf 0,51 - verworfen",

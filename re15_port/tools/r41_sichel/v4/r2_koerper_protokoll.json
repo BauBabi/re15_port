@@ -212,7 +212,7 @@
  },
  "texel": 34726,
  "k": 256,
- "quant_rmse": 3.78,
+ "quant_rmse": 3.79,
  "mu": 0.25,
  "quellen": {
   "rumpf_rot": "Messblatt F6 (372-424 x 197-232, R-G >= 15)",

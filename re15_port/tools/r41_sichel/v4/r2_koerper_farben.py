@@ -276,10 +276,12 @@ def ziel_bild(img, ids, ansicht):
             rang = np.argsort(np.argsort(p_lab[:, c]))
             q = (rang + 0.5) / len(rang)
             neu[:, c] = np.quantile(o_lab[:, c], q)
-        if name in KORR:                     # nur L*: als RGB-Faktor (Farbton bleibt; Lab-Versatz trieb dunkle Farben aus dem Gamut ins Rot)
-            dl_ = float(KORR[name][0])
+        if name in KORR:                     # L* (Farbton bleibt; ein Lab-Versatz trieb dunkle Farben aus dem Gamut ins Rot) und
+            dl_ = float(KORR[name][0])       # als zweiter Wert ein Faktor auf a*/b* (Saettigung, 1 + k)
             neu[:, 0] = np.clip(neu[:, 0] + dl_, 0, 100)
             neu[:, 1:] = neu[:, 1:] * (((neu[:, :1] + 16.0) / np.maximum(neu[:, :1] - dl_ + 16.0, 1.0)))
+            if len(KORR[name]) > 1 and KORR[name][1]:
+                neu[:, 1:] = neu[:, 1:] * (1.0 + float(KORR[name][1]))
         T[m] = np.clip(lab2rgb(neu.reshape(-1, 1, 3)).reshape(-1, 3) * 255.0, 0, 255)
         gesetzt |= m
         kachel_px &= ~m                      # spaetere Regionen (Hals, Unterarme, ...) gehen vor den Kacheln
