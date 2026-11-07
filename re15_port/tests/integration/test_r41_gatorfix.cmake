@@ -22,6 +22,10 @@
 # TEIL=rampe_oben|rampe_oben_elza  G2-RE2 NB3 (Vorgabe A, Riegel A2): Rueckkehr 650 vor der Rampen-Suedkante (RE15_K2080_RUECK_LAGE 4200,-18750 / 3600,-18750,
 #     Cut 2), nach der Szenen-Haltung Klettern (U0.1,A0.2 ab F48) und U1.2 auf die Rampe, dann die Schuesse wie in allen Raeumen (F180) und W170 stehen; 4400 Bilder, mit und ohne Kanister - obenlog:
 #     erster Treffer oben <= 600 Bilder nach dem ersten Oben-Bild, keine Pause ohne Treffer > 600, solange die Figur oben ist (Rammen, CROSS-Biss, Hochbiss).
+# TEIL=oben_kante|oben_kante_elza  G2-RE2 NB3 Runde 2 (Abnahme 5 M1/M2): Figur per RE15_PLAYER_POS oben an Nord-/Suedkante bzw. Westende der Rampe (Lagen des
+#     Wurfs aus dem Raum), Kampf sofort, 4200 Bilder je Lage - aussenlog (nie ausserhalb des Decks/Raums) und obenlog ab Kampfbeginn (<= 600 / <= 600).
+# Alle Laeufe frei/rampe/abn2_*/rampe_oben (mit und ohne Kanister) dazu aussenlog: kein Bild in ROOM2090/2091 oben ausserhalb des Rampen-Grundrisses,
+#     unten ausserhalb der Aussenwaende oder mit dem Mittelpunkt in Plattform/Rampe (Abnahme 5 Abschnitt 4 (1)).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_TOOL=<test_r41_gatorfix> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r41_gatorfix.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -119,10 +123,16 @@ elseif(TEIL MATCHES "^(frei|rampe|abn2_)")
         set(_weg "W6.0,M0.6,MA0.1,M0.3,MA0.1,W3.0,A0.3,W1.2,A0.3,W1.2,A0.3,W1.2,A0.3,W1.2,A0.3,W2.0,R0.356,XU2.0,W15,U1.5,W25,L0.356,U2.0,W25,R0.711,U3.5,W30,L0.356,U1.0,W40,R0.711,U2.5,W30,L0.711,U1.0,W40")
         set(_ende 7300)
         set(_extra "RE15_K2080_RUECK_LAGE=5200,-13800,1024")
-    elseif(TEIL STREQUAL "abn2_rampe_west")   # Abnahme 2 Lauf plat7_leon
-        set(_weg "W6.0,M0.6,MA0.1,M0.3,MA0.1,W14.0,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,W200")
+    elseif(TEIL STREQUAL "abn2_rampe_west")   # Abnahme 2 Lauf plat7_leon ("Rampe x 2318": Leon oben an der Rampe West, Cut 2)
+        # G2-RE2 NB3 Runde 2 (Abnahme 5 M3): die alte Eingabe (W6.0 Schuesse, W14.0 im Wasser 600 vor der Suedkante, dann 40 x U0.1,A0.2,W0.3,D0.1,W0.3)
+        # stand 20 s im Band; mit Vorgabe B (kein Haenger mehr) beisst er die Figur dort ab ~F190, die Niederwuerfe werfen sie durchs Suedbecken bis an die
+        # SW-Tuer (F231-F236 5600 Einheiten in 6 Bildern), die blinde Aktionstaste oeffnet sie (F934, DOOR FIRE F937 -> ROOM2080) und RE15_EXIT_AT ...#2090
+        # kam nie - der Riegel lief in die 900-s-Grenze und mass nicht mehr "Leon oben an der Rampe West". Eingabe jetzt wie rampe_oben (Klettern ab F48 vor
+        # den Schuessen, Schuesse F180 wie W6.0, dann stehen), Rueckkehr an die Rampe West x 2318 (Kletterzellen x 2000..6800, z -18750 = Kletterpose 650
+        # vor der Kante, test_r41_gatorfix kletterkarte 2090): oben an der Westkante x 2318 = die Lage des Abnahme-2-Laufs plat7_leon.
+        set(_weg "W1.6,U0.1,A0.2,W1.2,U1.2,W1.7,M0.6,MA0.1,M0.3,MA0.1,W260")
         set(_ende 8000)
-        set(_extra "RE15_K2080_RUECK_LAGE=4200,-18700,3072,2")   # NB3: Rueckschnitt auf Cut 2 (Kamera der Rampe West)
+        set(_extra "RE15_K2080_RUECK_LAGE=2318,-18750,3072,2")   # NB3: Rueckschnitt auf Cut 2 (Kamera der Rampe West)
     elseif(TEIL STREQUAL "abn2_rampe_west_elza")   # Abnahme 2 Lauf plat8_elza
         set(_weg "W6.0,M0.6,MA0.1,M0.3,MA0.1,W1.0,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,U0.1,A0.2,W0.3,D0.1,W0.3,W200")
         set(_ende 8100)
@@ -140,7 +150,7 @@ elseif(TEIL MATCHES "^(frei|rampe|abn2_)")
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 ${_wahl}
         RE15_DEBUG_JUMP=${_r2090}@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:1" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_weg}" RE15_STATE_LOG=state.log RE15_G2_TRAG_LOG=1
-        "RE15_PLAYER_POS=-6000,-17500,3072" ${_extra} "RE15_EXIT_AT=${_ende}#${_r2090}" "${_exe_kopie}")
+        "RE15_PLAYER_POS=-6000,-17500,3072" RE15_CLIMB_TRACE=climb.log ${_extra} "RE15_EXIT_AT=${_ende}#${_r2090}" "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
         g2_fehler("exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT)")
     endif()
@@ -154,7 +164,7 @@ elseif(TEIL MATCHES "^(frei|rampe|abn2_)")
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 ${_wahl}
         RE15_DEBUG_JUMP=${_r2090}@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:1" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_weg}" RE15_STATE_LOG=state.log RE15_G2_TRAG_LOG=1
-        "RE15_PLAYER_POS=-6000,-17500,3072" ${_extra} RE15_G2_OHNE_KANISTER=1 "RE15_EXIT_AT=${_ende}#${_r2090}" "${_exe_kopie}")
+        "RE15_PLAYER_POS=-6000,-17500,3072" RE15_CLIMB_TRACE=climb.log ${_extra} RE15_G2_OHNE_KANISTER=1 "RE15_EXIT_AT=${_ende}#${_r2090}" "${_exe_kopie}")
     set(WORKDIR "${_dir_mit}")
     file(REMOVE "${_exe_kopie}")
     if(NOT _rv2 EQUAL 0)
@@ -223,7 +233,52 @@ elseif(TEIL MATCHES "^(frei|rampe|abn2_)")
             g2_fehler("NB3 Vorgabe A verfehlt (Figur oben sicher): ${_tz}")
         endif()
     endif()
+    # G2-RE2 NB3 Runde 2 (Abnahme 5 M1/M2, Abschnitt 4 (1) "Figur nie ausserhalb der SCA-Aussenwaende in allen Oben- und Kanten-Laeufen"): aussenlog mit und ohne
+    # Kanister - kein Bild in ROOM2090/2091 oben ausserhalb des Rampen-Grundrisses, unten ausserhalb der Aussenwaende oder mit dem Mittelpunkt in Plattform/Rampe.
+    execute_process(COMMAND "${RE15_TOOL}" aussenlog "${_dir}" RESULT_VARIABLE _ar OUTPUT_VARIABLE _ao ERROR_VARIABLE _ae)
+    string(REGEX MATCH "aussenlog: [^\n]*" _az "${_ao}")
+    execute_process(COMMAND "${RE15_TOOL}" aussenlog "${_dir}_ohne" RESULT_VARIABLE _ar2 OUTPUT_VARIABLE _ao2 ERROR_VARIABLE _ae2)
+    string(REGEX MATCH "aussenlog: [^\n]*" _az2 "${_ao2}")
+    set(_tz "${_tz}; Raum mit Kanister: ${_az}; ohne Kanister: ${_az2}")
+    if(NOT _ar EQUAL 0 OR NOT _ar2 EQUAL 0)
+        g2_fehler("NB3 Runde 2: Figur ausserhalb des Raums/Decks: ${_tz}")
+    endif()
     message(STATUS "r41_gatorfix ${TEIL}: ${_tz}")
+    return()
+elseif(TEIL MATCHES "^oben_kante")
+    # G2-RE2 NB3 Runde 2 (Abnahme 5 M1/M2, Abschnitt 4 (2) "exe-Lagen mit der Figur oben an Nord- und Suedkante der Rampe"): Figur per RE15_PLAYER_POS
+    # Band 1 (y -1800) direkt oben, Szene gesehen + Tor offen (9:110, 9:113), Kampf sofort (RE15_GB_TEST=1, RE2-Intro bis ~F280), Figur steht (kein Skript),
+    # hp 100 (Messhaken), 4200 Bilder - die Lagen der Abnahme 5 mit Wurf aus dem Raum: (2318,-16300) F1201 Nordwand, (6500,-15000) Rammen F1209 Nordwand,
+    # dazu die Suedkante (2318,-17600) (Klemmlage, Pause 849). Je Lage: aussenlog (nie ausserhalb des Decks/Raums) und obenlog ab Kampfbeginn (erster Treffer
+    # oben <= 600, keine Pause > 600). Leon und Elza; ohne Kanister im Maul (der liegende Kanister wird in diesem Aufbau nicht aufgenommen, Abnahme 5).
+    set(_tz "")
+    set(_basis "${_dir}")
+    foreach(_lage "2318,-16300" "6500,-15000" "2318,-17600")
+        string(REPLACE "," "_" _ln "${_lage}")
+        set(WORKDIR "${_basis}/${_ln}")
+        file(MAKE_DIRECTORY "${WORKDIR}")
+        re15_start_spiel(_rv 900
+            RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 ${_wahl}
+            RE15_DEBUG_JUMP=${_r2090}@250 RE15_GB_TEST=1 "RE15_SET_FLAG=9:110,9:113" "RE15_PLAYER_POS=${_lage},1024,1" RE15_R39_MESS_SPIELER_HP=100
+            RE15_STATE_LOG=state.log RE15_G2_TRAG_LOG=1 RE15_CLIMB_TRACE=climb.log "RE15_EXIT_AT=4200#${_r2090}" "${_exe_kopie}")
+        if(NOT _rv EQUAL 0)
+            g2_fehler("Lage ${_lage}: exe exit=${_rv} (erwartet 0 bis RE15_EXIT_AT)")
+        endif()
+        execute_process(COMMAND "${RE15_TOOL}" aussenlog "${WORKDIR}" RESULT_VARIABLE _ar OUTPUT_VARIABLE _ao ERROR_VARIABLE _ae)
+        string(REGEX MATCH "aussenlog: [^\n]*" _az "${_ao}")
+        execute_process(COMMAND "${RE15_TOOL}" obenlog "${WORKDIR}" kampf RESULT_VARIABLE _or OUTPUT_VARIABLE _oo ERROR_VARIABLE _oe)
+        string(REGEX MATCH "obenlog: [^\n]*" _oz "${_oo}")
+        set(_tz "${_tz} | ${_lage}: ${_az}; ${_oz}")
+        if(NOT _ar EQUAL 0)
+            g2_fehler("Lage ${_lage}: Figur ausserhalb des Decks/Raums: ${_az}")
+        endif()
+        if(NOT _or EQUAL 0)
+            g2_fehler("Lage ${_lage}: Vorgabe A verfehlt (Figur oben sicher): ${_oz}")
+        endif()
+    endforeach()
+    set(WORKDIR "${_basis}")
+    file(REMOVE "${_exe_kopie}")
+    message(STATUS "r41_gatorfix ${TEIL}:${_tz}")
     return()
 else()
     g2_fehler("unbekannter TEIL")

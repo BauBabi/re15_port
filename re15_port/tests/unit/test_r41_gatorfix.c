@@ -2758,7 +2758,11 @@ static int nb3_haengt(int argc, char **argv)
  *      Phase 2 ohne Biss/Treffer, Wurzel-Kasten < 2500, Kopf 3236 vor der Wurzel > 4500 von der Figur, netto < 600 in 60 Bildern), laengste Zeit ohne
  *      Fortschritt (Mass mass_v4.py); "mit": dazu 0 Zeilen "G2RE2 HAENGT" / "RUECKWAERTS an" / "TAUCHEN an" in gator_boss.log. Riegel: Fenster 0, <= 450. */
 #define NB3_PAUSE_MAX 600   /* Messblatt NB3 Abschnitt 4 (A1): Pause nach der Querung 300 (NB5) + laengste Querung 240 + Hochbiss-Fenster 45 = 585, aufgerundet */
-#define NB3_OHNE_MAX  450   /* Messblatt NB3 Abschnitt 4 (B3): 3 Haenge-Fenster = die Zeit, nach der der Rueckfall (Rueckwaerts 150, Tauchen 150 + 30) aufgegeben haette */
+#define NB3_OHNE_MAX  450   /* PORT-WAHL nach dem Nutzer-Wortlaut 2026-11-06 (Vorgabe B): "Wenn er haengt muessen wir nachbessern denke ich. Er darf nicht zu lange
+                             * haengen. Wenn es kurz ist, kann man mit dem tauchen abhilfe schaffen, aber das hilft natuerlich nicht bei der Platform." - "nicht zu lange"
+                             * in Zahlen (Messblatt NB3 Abschnitt 4, B3): 3 Haenge-Fenster = 450 Bilder = 15 s, die Zeit, nach der der Rueckfall selbst aufgegeben
+                             * haette (Haenge-Fenster 150 = PORT-WAHL seit 199a63c95, Rueckwaerts nach 150, Tauchen nach weiteren 150 + 30, gator_rw_r41.c:277-280);
+                             * gemessen gute Werte darunter (mit Kanister 4,1-11,1 s), der M4-Haenger NB5 west4_elza 70,2 s weit darueber. */
 typedef struct { int nl, schlecht, erst_max, pause_max, haeng_sum, haeng_max, ohne_max, treffer_min, rammen; char erst_wo[32], pause_wo[32], haeng_wo[32], ohne_wo[32]; } nb3_sum_t;
 static void nb3_raster(int elza, int stand, int bilder, int oben, const int32_t (*lagen)[3], int nl, nb3_sum_t *S, int zeilen)
 {
@@ -2871,6 +2875,136 @@ static void teil_nb3(int elza)
         }
     }
 }
+/* ==== Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2: "Figur oben nicht sicher, Figur bleibt im Raum") - Riegel raum(_elza) ===========================
+ * Die Riegel nb3 setzen die Figur jedes Bild auf ihre Lage zurueck und sehen darum keinen Niederwurf-Flug (Abnahme 5 Abschnitt 4 "Warum die Riegel des Bauers
+ * M1-M3 nicht sehen"). Hier steht die Figur EINMAL auf ihrer Lage und bleibt dann sich selbst ueberlassen (kein Pad, hp je Bild 100 wie der exe-Messhaken
+ * RE15_R39_MESS_SPIELER_HP=100, sonst nichts zurueckgesetzt): Niederwurf, Koerper-Schub und Klemme wirken wie im Spiel.
+ * Lagen: oben (y -1800) die Abnahme-5-Lagen des Wurfs aus dem Raum (2318,-16300) F1201, (6500,-15000) F1209, (2315,-17642) west5_elza F2752, die Klemmlagen-
+ * Laeufe (2318,-17600) / (2800,-16300) / (4428,-16300) / (3350,-15000) und zwei Ecken; unten (y 0) die Lage vor dem Biss in die Ostnische (6732,-18598)
+ * abn2_wand F1045, die Rueckkehr-Lage von abn2_rampe_west (4200,-18700), Taschen-Ecke (2318,-18568), Lagen der Riegel nb3 B1.
+ * Mass je Bild (nach dem Bild): oben = Figur-y < -900 -> ausserhalb des Rampen-Grundrisses SCA [5] (x 1850..7200, z -18100..-14500) = "Deck verlassen";
+ * unten -> ausserhalb der Aussenwaende x -8900..7200, z -27000..-5400 = "aussen", Mittelpunkt in Plattform [4] / Rampe [5] = "im Block".
+ * Riegel: 0 Bilder Deck verlassen / aussen / im Block in jeder Lage, mit und ohne Kanister, Leon und Elza; oben (A1 frei) erster Treffer <= 600 und laengste Pause
+ * ohne Treffer, solange die Figur oben ist, <= 600 (NB3_PAUSE_MAX). Gegenprobe Stand 10603425b (Pruefhaken re15_gator_boss_raum_alt_setzen(1)): >= 1 Lage
+ * oben verlaesst das Deck und >= 1 Lage unten steht in der Ostnische/ausserhalb - rot ohne den Bau. */
+/* ROOM2090.RDT SCA (Kopf @0x6dc): Rampe [5] Datei 0x730 x 1850..7200 z -18100..-14500, Plattform [4] 0x724 x -1700..1850 z -20000..-12450 */
+#define RM_RX0  1850
+#define RM_RX1  7200
+#define RM_RZ0 -18100
+#define RM_RZ1 -14500
+#define RM_PX0 -1700
+#define RM_PX1  1850
+#define RM_PZ0 -20000
+#define RM_PZ1 -12450
+typedef struct { int n, aus, deck, block, erst_aus, ntr, erst_tr, pause, oben_n; int32_t ax, az, ay; } raum_m_t;
+static void raum_lauf(re15_actor_t *g, re15_actor_t *pl, int32_t lx, int32_t ly, int32_t lz, int rot, int cam, int bilder, int stand, raum_m_t *m)
+{
+    int bi = 0; int64_t bd = -1;   /* Start des Gators: fernste der fuenf Beckenlagen (wie nb3_lauf) */
+    for (int i = 0; i < 5; i++) { const int64_t dx = k_fz_start[i][0] - lx, dz = k_fz_start[i][1] - lz; if (dx * dx + dz * dz > bd) { bd = dx * dx + dz * dz; bi = i; } }
+    g->x = k_fz_start[bi][0]; g->z = k_fz_start[bi][1]; g->anchor_x = g->x; g->anchor_z = g->z;
+    memset(m, 0, sizeof *m); m->erst_aus = -1; m->erst_tr = -1;
+    pl->x = lx; pl->y = ly; pl->z = lz; pl->hp = 100; pl->hit_react = 0; pl->rot_y = (int16_t)rot;   /* Blickrichtung wie die exe-Lagen (Niederwurf rueckwaerts dazu) */
+    g_scd.cam_id = (uint8_t)cam;
+    re15_collision_set_band(re15_collision_band_from_y(ly));
+    int letzt_tr = -1, oben_ab = -1;
+    for (int t = 0; t < bilder && (stand == 3 || re15_gr2_traegt()); t++) {
+        pl->hp = 100;
+        frame(0, 0);
+        m->n++;
+        const int tr = pl->hp < 100;
+        const int oben = pl->y < -900;
+        int aus = 0, deck = 0, block = 0;
+        if (oben) deck = !(pl->x >= RM_RX0 && pl->x <= RM_RX1 && pl->z >= RM_RZ0 && pl->z <= RM_RZ1);
+        else {
+            aus = pl->x < -8900 || pl->x > 7200 || pl->z < -27000 || pl->z > -5400;
+            block = (pl->x > RM_PX0 && pl->x < RM_PX1 && pl->z > RM_PZ0 && pl->z < RM_PZ1)
+                 || (pl->x > RM_RX0 && pl->x < RM_RX1 && pl->z > RM_RZ0 && pl->z < RM_RZ1);
+        }
+        m->aus += aus; m->deck += deck; m->block += block;
+        if ((aus || deck || block) && m->erst_aus < 0) { m->erst_aus = t; m->ax = pl->x; m->ay = pl->y; m->az = pl->z; }
+        if (oben && !deck) { m->oben_n++; if (oben_ab < 0) oben_ab = t; }
+        {   static FILE *s_rs = NULL; static int s_rs_init = 0;   /* Werkzeug: G2_RAUM_SPUR=<datei> - je Bild Lage, t, Gator, Phase, Clip, Figur, Treffer */
+            if (!s_rs_init) { s_rs_init = 1; if (getenv("G2_RAUM_SPUR")) s_rs = fopen(getenv("G2_RAUM_SPUR"), "a"); }
+            if (s_rs) fprintf(s_rs, "%d/%d %d %d g=(%d,%d,%d) gier %d ph %d clip %d/%d pl=(%d,%d,%d) rot %d mo %d hr %d tr %d oo %d\n", (int)lx, (int)lz, stand, t, g->x, g->y, g->z,
+                              g->rot_y & 0xfff, re15_gator_boss_phase(g), (int)g->motion, (int)g->anim_frame, pl->x, pl->y, pl->z, pl->rot_y & 0xfff, (int)pl->motion,
+                              (int)pl->hit_react, tr, re15_gator_boss_oben_ohne(g)); }
+        if (tr) { m->ntr++; if (m->erst_tr < 0) m->erst_tr = t;
+                  if (oben && !deck) { const int p = t - (letzt_tr < 0 ? oben_ab : letzt_tr); if (p > m->pause) m->pause = p; letzt_tr = t; } }
+    }
+    if (oben_ab >= 0) { const int rest = m->n - 1 - (letzt_tr < 0 ? oben_ab : letzt_tr); if (rest > m->pause) m->pause = rest; }
+}
+static void teil_raum(int elza)
+{
+    printf("== raum%s (G2-RE2 NB3 Runde 2, Abnahme 5 M1/M2: Figur frei - Niederwurf, Schub und Klemme wie im Spiel - bleibt auf dem Deck bzw. im Raum) ==\n", elza ? "_elza" : "");
+    const char *bs = getenv("G2_RAUM_BILDER"); const int bilder = bs ? atoi(bs) : 2400;
+    /* {x, z, Blick}: Blick wie die exe-Laeufe der Abnahme 5 - Spawn-Lagen RE15_PLAYER_POS=x,z,1024,1 (Blick Sued), Rueckkehr-Lagen RE15_K2080_RUECK_LAGE=x,z,3072 (Blick
+     * Nord), west5_elza F2752 rot 3072, abn2_wand F1045 rot 1035; der Niederwurf [4] faehrt rueckwaerts (facing + 0x800, FUN_800245d8(0x800) @0x800361fc-200). */
+    static const int32_t O[9][3] = { { 2318, -16300, 1024 }, { 6500, -15000, 1024 }, { 2315, -17642, 3072 }, { 2318, -17600, 1024 }, { 2800, -16300, 1024 }, { 4428, -16300, 1024 },
+                                     { 3350, -15000, 1024 }, { 6500, -17600, 3072 }, { 2318, -15000, 3072 } };
+    static const int32_t U[7][4] = { { 6732, -18598, 2, 1035 }, { 4200, -18700, 2, 3072 }, { 2318, -18568, 2, 3072 }, { 6400, -18700, 2, 3072 }, { 1000, -20700, 2, 3072 },
+                                     { 3000, -18800, 0, 3072 }, { 4073, -19322, 0, 3072 } };
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int fehl[2] = { 0, 0 }, erst_max[2] = { -1, -1 }, pause_max[2] = { 0, 0 }, tr_oben_min[2] = { 1 << 30, 1 << 30 }, halt0 = re15_gator_boss_raum_halt_zahl();
+    char erst_wo[2][32] = { "-", "-" }, pause_wo[2][32] = { "-", "-" };
+    for (int k = 0; k < 2; k++) {
+        const int stand = k == 0 ? 2 : 3;
+        printf("  -- %s Kanister, %d Bilder je Lage --\n", stand == 2 ? "mit" : "ohne", bilder);
+        for (int i = 0; i < 9 + 7; i++) {
+            const int ob = i < 9;
+            const int32_t lx = ob ? O[i][0] : U[i - 9][0], lz = ob ? O[i][1] : U[i - 9][1], ly = ob ? -1800 : 0;
+            char name[32]; snprintf(name, sizeof name, "%s%d/%d", ob ? "R" : "W", (int)lx, (int)lz);
+            re15_actor_t *g = szene_bis_kampf(elza);
+            if (!g || !g2_kanister_ins_maul(g, pl)) { printf("    %s: kein Tragen\n", name); fehl[k]++; continue; }
+            if (stand == 3) re15_gr2_kanister_entfernen();
+            int cam = ob ? -1 : U[i - 9][2];
+            if (ob) { g2_lage_t gl = { name, lx, -1800, lz }; cam = g2_lage_kamera(&gl, 0); if (cam < 0) cam = 2; }
+            raum_m_t m; const int h0 = re15_gator_boss_raum_halt_zahl();
+            raum_lauf(g, pl, lx, ly, lz, ob ? O[i][2] : U[i - 9][3], cam, bilder, stand, &m);
+            printf("    %-13s Cut %d: %4d B., Treffer %3d (erster t%d), oben %4d B., laengste Pause oben %3d; Deck verlassen %d, aussen %d, im Block %d (erstes t%d bei (%d,%d,%d)); "
+                   "Figur am Ende (%d,%d,%d); Raumhalt %d\n", name, cam, m.n, m.ntr, m.erst_tr, m.oben_n, m.pause, m.deck, m.aus, m.block, m.erst_aus, (int)m.ax, (int)m.ay, (int)m.az,
+                   pl->x, pl->y, pl->z, re15_gator_boss_raum_halt_zahl() - h0);
+            if (m.n < bilder * 9 / 10 || m.deck || m.aus || m.block) fehl[k]++;
+            if (ob) {
+                const int e = m.erst_tr < 0 ? m.n : m.erst_tr;
+                if (e > erst_max[k]) { erst_max[k] = e; snprintf(erst_wo[k], sizeof erst_wo[k], "%s", name); }
+                if (m.pause > pause_max[k]) { pause_max[k] = m.pause; snprintf(pause_wo[k], sizeof pause_wo[k], "%s", name); }
+                if (m.ntr < tr_oben_min[k]) tr_oben_min[k] = m.ntr;
+            }
+        }
+        printf("    SUMME raum %s Kanister: %d von 16 Lagen verlassen Deck/Raum oder laufen nicht; oben spaetester erster Treffer t%d (%s), laengste Pause oben %d B. = %.1f s (%s), wenigste Treffer %d\n",
+               stand == 2 ? "mit" : "ohne", fehl[k], erst_max[k], erst_wo[k], pause_max[k], pause_max[k] / 30.0, pause_wo[k], tr_oben_min[k]);
+    }
+    printf("    Raumhalt-Eingriffe gesamt %d\n", re15_gator_boss_raum_halt_zahl() - halt0);
+    for (int k = 0; k < 2; k++) {
+        const char *w = k == 0 ? "mit" : "ohne";
+        PRUEF(fehl[k] == 0, "%s Kanister: in allen 16 Lagen bleibt die freie Figur auf dem Deck (oben) bzw. innerhalb der Aussenwaende und ausserhalb von Plattform/Rampe (unten) (%d Lagen verfehlt)", w, fehl[k]);
+        PRUEF(erst_max[k] <= NB3_PAUSE_MAX && pause_max[k] <= NB3_PAUSE_MAX, "%s Kanister (A1 frei): oben erster Treffer <= %d und laengste Pause oben <= %d (t%d %s, %d %s)",
+              w, NB3_PAUSE_MAX, NB3_PAUSE_MAX, erst_max[k], erst_wo[k], pause_max[k], pause_wo[k]);
+    }
+    {   /* Gegenprobe Stand 10603425b (Pruefhaken raum_alt): oben ohne Kanister, die Wasserlage vor der Ostnische mit Kanister (gemessen: dort traegt nur der
+         * Lauf mit Kanister die Figur in die Ostnische - mit Kanister rammt er auch im Wasser, Raumhalt 13 im Lauf oben) */
+        static const int32_t Gl[4][4] = { { 2318, -1800, -16300, 1024 }, { 6500, -1800, -15000, 1024 }, { 2315, -1800, -17642, 3072 }, { 6732, 0, -18598, 1035 } };
+        int rot_oben = 0, rot_unten = 0;
+        printf("  -- Gegenprobe Stand 10603425b (Pruefhaken raum_alt): oben ohne, Wasserlage mit Kanister --\n");
+        re15_gator_boss_raum_alt_setzen(1);
+        for (int i = 0; i < 4; i++) {
+            re15_actor_t *g = szene_bis_kampf(elza);
+            if (!g || !g2_kanister_ins_maul(g, pl)) continue;
+            const int st = Gl[i][1] < 0 ? 3 : 2;
+            if (st == 3) re15_gr2_kanister_entfernen();
+            int cam = 2;
+            if (Gl[i][1] < 0) { g2_lage_t gl = { "G", Gl[i][0], -1800, Gl[i][2] }; cam = g2_lage_kamera(&gl, 0); if (cam < 0) cam = 2; }
+            raum_m_t m; raum_lauf(g, pl, Gl[i][0], Gl[i][1], Gl[i][2], Gl[i][3], cam, bilder, st, &m);
+            printf("    G(%d,%d,%d): Deck verlassen %d, aussen %d, im Block %d (erstes t%d bei (%d,%d,%d)), Figur am Ende (%d,%d,%d)\n", Gl[i][0], Gl[i][1], Gl[i][2], m.deck, m.aus, m.block,
+                   m.erst_aus, (int)m.ax, (int)m.ay, (int)m.az, pl->x, pl->y, pl->z);
+            if (Gl[i][1] < 0 && m.deck) rot_oben++;
+            if (Gl[i][1] == 0 && (m.aus || m.block)) rot_unten++;
+        }
+        re15_gator_boss_raum_alt_setzen(0);
+        PRUEF(rot_oben >= 1, "Gegenprobe 10603425b oben: >= 1 Lage verlaesst das Deck (%d von 3) - rot ohne den Bau", rot_oben);
+        PRUEF(rot_unten >= 1, "Gegenprobe 10603425b unten (6732,-18598): Figur aussen/im Block (%d) - rot ohne den Bau", rot_unten);
+    }
+}
 /* ---- exe-Auswerter (Logs eines Laufordners) ---- */
 typedef struct { int f, px, pz, hp, cam, y, gx, gz, rot, gmo, gaf; } nb3_st_t;
 static nb3_st_t s_nb3_st[40000];
@@ -2923,7 +3057,9 @@ static int nb3_boss_zeilen(const char *dir, const char *muster, uint8_t *bild, i
     fclose(f); return n;
 }
 static int nb3_oben_grund(const nb3_st_t *r) { return r->y < -900 && ((r->px > 1850 && r->px < 7200 && r->pz > -18100 && r->pz < -14500) || (r->px > -1700 && r->px < 1850 && r->pz > -20000 && r->pz < -12450)); }
-static int obenlog(const char *dir)
+/* NB3 Runde 2: obenlog <lauf> kampf - fuer Laeufe ohne Kanister im Maul (Figur ab F1 oben per RE15_PLAYER_POS, RE2-Intro bis ~F280): gezaehlt ab dem ersten
+ * Bild mit einer Kampfphase in gator_trag.log (2/3/4/5/6/7/12 = gb_phase_kampf) statt ab "KANISTER angehaengt". */
+static int obenlog(const char *dir, int ab_kampf)
 {
     const int n = nb3_state_lesen(dir);
     if (n <= 0) { printf("obenlog: %s: keine state.log\n", dir); return 2; }
@@ -2936,6 +3072,8 @@ static int obenlog(const char *dir)
     {   char pf[1024]; static char zl[4096]; snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
         FILE *fb = fopen(pf, "r");
         if (fb) { while (fgets(zl, sizeof zl, fb)) { if (strstr(zl, "KANISTER angehaengt")) { const char *q = strrchr(zl, 'F'); if (q && auf == 0) auf = atoi(q + 1); } } fclose(fb); } }
+    if (ab_kampf) { auf = -1; for (int f = 0; f < 40000 && auf < 0; f++) if (ph[f] == 2 || ph[f] == 3 || ph[f] == 4 || ph[f] == 5 || ph[f] == 6 || ph[f] == 7 || ph[f] == 12) auf = f;
+                    if (auf < 0) auf = 0; }
     int oben_n = 0, erst_f = -1, letzt_f = -1, treffer = 0, tr_oben = 0, je[5] = { 0, 0, 0, 0, 0 };
     int erst_offs = -1, erst_tf = -1, pause_max = 0, abschn = 0, verlassen_max = 0, a = -1, letzt_tr = -1, oben_vor_auf = 0;
     const char *erst_art = "-";
@@ -2968,11 +3106,59 @@ static int obenlog(const char *dir)
         }
     }
     const int ok = oben_n > 0 && erst_offs >= 0 && erst_offs <= NB3_PAUSE_MAX && pause_max <= NB3_PAUSE_MAX && verlassen_max <= NB3_PAUSE_MAX;
-    printf("obenlog: %d Bilder (F%d..F%d); Kanister angehaengt F%d (gezaehlt ab dann, davor %d Bilder oben); Figur oben %d Bilder (erstes F%d, letztes F%d, %d Abschnitte); Treffer gesamt %d, "
+    printf("obenlog: %d Bilder (F%d..F%d); %s F%d (gezaehlt ab dann, davor %d Bilder oben); Figur oben %d Bilder (erstes F%d, letztes F%d, %d Abschnitte); Treffer gesamt %d, "
            "oben %d (Rammen %d, CROSS-Biss %d, Hochbiss %d, Biss %d, sonst %d); erster Treffer oben nach %d Bildern (%s F%d); laengste Pause ohne Treffer oben %d Bilder; "
            "ohne Treffer verlassener Abschnitt bis %d Bilder -> %s (Schranke %d)\n",
-           n, s_nb3_st[0].f, s_nb3_st[n - 1].f, auf, oben_vor_auf, oben_n, erst_f, letzt_f, abschn, treffer, tr_oben, je[1], je[2], je[3], je[4], je[0], erst_offs, erst_art, erst_tf, pause_max,
+           n, s_nb3_st[0].f, s_nb3_st[n - 1].f, ab_kampf ? "Kampfbeginn" : "Kanister angehaengt", auf, oben_vor_auf, oben_n, erst_f, letzt_f, abschn, treffer, tr_oben, je[1], je[2], je[3], je[4], je[0], erst_offs, erst_art, erst_tf, pause_max,
            verlassen_max, ok ? "ok" : "VERFEHLT", NB3_PAUSE_MAX);
+    return ok ? 0 : 1;
+}
+/* NB3 Runde 2 (Abnahme 5 M1/M2, Abschnitt 4 "Ein Riegel fuer Runde 2 braucht (1) 'Figur nie ausserhalb der SCA-Aussenwaende' ... in allen Oben- und Kanten-
+ * Laeufen"): aussenlog <lauf>. state.log + climb.log Zeile fuer Zeile (T-Zeile i = F-Zeile i), ALLE Bilder mit room=2090/2091: oben (Figur-y < -900) ausserhalb
+ * des Rampen-Grundrisses SCA [5] = "Deck verlassen"; unten ausserhalb der Aussenwaende x -8900..7200 z -27000..-5400 = "aussen" (wie aussen5.py der Abnahme 5),
+ * Mittelpunkt in Plattform [4] / Rampe [5] = "im Block" (Pier, Ostnische zaehlt als aussen). Riegel: 0 Bilder in jeder Art. Ohne climb.log: letzter Besuch, nur
+ * die Aussenwaende. */
+static int aussenlog(const char *dir)
+{
+    char pf[1024]; static char zs[16384], zc[16384];
+    snprintf(pf, sizeof pf, "%s/state.log", dir);
+    FILE *fs = fopen(pf, "r");
+    if (!fs) { printf("aussenlog: %s fehlt\n", pf); return 2; }
+    snprintf(pf, sizeof pf, "%s/climb.log", dir);
+    FILE *fc = fopen(pf, "r");
+    int n = 0, aus = 0, deck = 0, block = 0, erst = -1, ex = 0, ey = 0, ez = 0, emax = 0, letzt = -1, ok_cl = fc != NULL, oben_n = 0;
+    char erst_art[16] = "-"; unsigned eraum = 0;
+    if (!fc) { const int ns = nb3_state_lesen(dir);   /* letzter Besuch ohne y */
+               for (int i = 0; i < ns; i++) { n++; const nb3_st_t *r = &s_nb3_st[i];
+                   if (r->px < -8900 || r->px > 7200 || r->pz < -27000 || r->pz > -5400) { aus++; if (erst < 0) { erst = r->f; ex = r->px; ez = r->pz; strcpy(erst_art, "aussen"); } letzt = r->f; } } }
+    else while (fgets(zs, sizeof zs, fs)) {
+        if (zs[0] != 'F') continue;
+        if (!fgets(zc, sizeof zc, fc)) break;
+        int fr = 0, px = 0, pz = 0, hp = 0, cx = 0, cy = 0, cz = 0; unsigned raum = 0;
+        if (sscanf(zs, "F%d ", &fr) != 1) continue;
+        const char *p = strstr(zs, " PL("); if (!p || sscanf(p, " PL(%d,%d,rot=%*d,hp=%d)", &px, &pz, &hp) != 3) continue;
+        const char *r = strstr(zc, "room="); if (!r || sscanf(r, "room=%x", &raum) != 1) continue;
+        const char *q = strstr(zc, "pos=("); if (!q || sscanf(q, "pos=(%d,%d,%d)", &cx, &cy, &cz) != 3) continue;
+        if ((raum & 0xFFFEu) != 0x2090u) continue;
+        n++;
+        const int oben = cy < -900;
+        int a = 0, d = 0, b = 0;
+        if (oben) { oben_n++; d = !(px >= RM_RX0 && px <= RM_RX1 && pz >= RM_RZ0 && pz <= RM_RZ1); }
+        else { a = px < -8900 || px > 7200 || pz < -27000 || pz > -5400;
+               b = !a && ((px > RM_PX0 && px < RM_PX1 && pz > RM_PZ0 && pz < RM_PZ1) || (px > RM_RX0 && px < RM_RX1 && pz > RM_RZ0 && pz < RM_RZ1)); }
+        aus += a; deck += d; block += b;
+        if (a || d || b) {
+            const int dx = px < -8900 ? -8900 - px : px > 7200 ? px - 7200 : 0, dz = pz < -27000 ? -27000 - pz : pz > -5400 ? pz + 5400 : 0;
+            if (dx + dz > emax) emax = dx + dz;
+            if (erst < 0) { erst = fr; ex = px; ey = cy; ez = pz; eraum = raum; strcpy(erst_art, a ? "aussen" : d ? "Deck verlassen" : "im Block"); }
+            letzt = fr;
+        }
+    }
+    fclose(fs); if (fc) fclose(fc);
+    const int ok = n > 0 && aus == 0 && deck == 0 && block == 0;
+    printf("aussenlog: %d Bilder in ROOM2090/2091%s, davon oben %d; aussen %d, Deck verlassen %d, im Block %d; erstes F%d (%s) bei (%d,%d,%d) Raum %04X, letztes F%d, "
+           "groesster Abstand hinter der Aussenwand %d -> %s (0 verlangt)\n", n, ok_cl ? "" : " (ohne climb.log: letzter Besuch, nur Aussenwaende)", oben_n, aus, deck, block,
+           erst, erst_art, ex, ey, ez, eraum, letzt, emax, ok ? "ok" : "VERFEHLT");
     return ok ? 0 : 1;
 }
 typedef struct { int f, ph, mo, af, gier, gx, gz, px, pz; } nb3_tr_t;
@@ -3043,8 +3229,9 @@ int main(int argc, char **argv)
     re15_door_seq_setze_laeufer(fang);
     if (getenv("G2_RE2_ALT")) re15_gr2_rw_alt_setzen(1);   /* G2-RE2: Werkzeug-Laeufe (fuzz/bahn) im Stand NB5 - Vergleich mit dem NB5-Bau */
     if (getenv("G2_NB3_ALT")) re15_gator_boss_nb3_alt_setzen(1);   /* G2-RE2 NB3: Werkzeug-Laeufe (nb3_oben/nb3_haengt) im Stand a661eb8aa */
-    if (!strcmp(teil, "obenlog") && argc >= 3)  return obenlog(argv[2]);                                            /* NB3 exe-Riegel rampe_oben */
+    if (!strcmp(teil, "obenlog") && argc >= 3)  return obenlog(argv[2], argc >= 4 && !strcmp(argv[3], "kampf"));                                            /* NB3 exe-Riegel rampe_oben */
     if (!strcmp(teil, "haenglog") && argc >= 3) return haenglog(argv[2], argc >= 4 && !strcmp(argv[3], "mit"));    /* NB3 exe-Riegel rampe/abn2_wand_elza */
+    if (!strcmp(teil, "aussenlog") && argc >= 3) return aussenlog(argv[2]);   /* NB3 Runde 2: Figur nie ausserhalb (Abnahme 5 M1/M2) */
     if (!strcmp(teil, "projektion") && argc >= 5) return projektion(argc, argv);
     if (!strcmp(teil, "kamerazone") && argc >= 3) return kamerazone(argc, argv);
     if (!strcmp(teil, "begehbar") && argc >= 5) return begehbar(argc, argv);
@@ -3102,6 +3289,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "v4_elza"))   teil_v4(1);
     if (alle || !strcmp(teil, "nb3"))       teil_nb3(0);
     if (alle || !strcmp(teil, "nb3_elza"))  teil_nb3(1);
+    if (alle || !strcmp(teil, "raum"))      teil_raum(0);
+    if (alle || !strcmp(teil, "raum_elza")) teil_raum(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

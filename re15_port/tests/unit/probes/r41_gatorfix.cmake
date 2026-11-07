@@ -48,9 +48,12 @@ endforeach()
 #                                     Kanister: erster Treffer <= 600 Bilder und laengste Pause ohne Treffer <= 600, Rammen >= 1; (B1) 11 Wasser-Lagen vor der
 #                                     Suedkante: Haenge-Fenster 0, (B3) ohne Fortschritt <= 450, Pause ohne Treffer <= 600; mit = ohne; Gegenproben Stand
 #                                     a661eb8aa (Pruefhaken nb3_alt): R2318/-16300 ohne Treffer, W4200/-18800/c2 Haenge-Fenster, alte gang-Lagen weichen ab
-#   unit_r41_gatorfix_gang(_elza)    seit NB3: Lagen ausserhalb der Baender (Westkanal, Nordbecken 2500 vor der Kante, Suedbecken 2500 vor der Plattform),
-#                                     alter Stand = Pruefhaken rw_alt + nb3_alt
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza nb3 nb3_elza)
+#   unit_r41_gatorfix_gang(_elza)    seit NB3: Lagen ausserhalb der Baender - Westkanal (-6000,0,-16000), NO-Ecke (4944,0,-5868) und SO-Ecke (6734,0,-26532)
+#                                     (Lagen des Riegels re2, k_re2_lagen), alter Stand = Pruefhaken rw_alt + nb3_alt
+#   unit_r41_gatorfix_raum(_elza)    NB3 Runde 2 (Abnahme 5 M1/M2): die FREIE Figur (einmal gesetzt, Niederwurf/Schub/Klemme wie im Spiel, hp 100) bleibt in
+#                                     9 Lagen oben auf dem Deck der Rampe und in 7 Wasserlagen innerhalb der Aussenwaende und ausserhalb von Plattform/Rampe,
+#                                     mit und ohne Kanister; oben erster Treffer und Pause <= 600; Gegenprobe Stand 10603425b (Pruefhaken raum_alt): rot
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza nb3 nb3_elza raum raum_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
@@ -58,7 +61,8 @@ endforeach()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
     foreach(_teil gang_montage gang_montage_elza gang_szene gang_szene_elza frei frei_elza rampe rampe_elza
                   abn2_leiterecke abn2_wand_elza abn2_nordbecken abn2_rampe_west abn2_rampe_west_elza abn2_ecken abn2_wand   # NB1/NB2
-                  rampe_oben rampe_oben_elza)   # G2-RE2 NB3 (Vorgabe A): Figur oben auf der Rampe, obenlog; rampe/rampe_elza/abn2_wand_elza: dazu haenglog (Vorgabe B)
+                  rampe_oben rampe_oben_elza    # G2-RE2 NB3 (Vorgabe A): Figur oben auf der Rampe, obenlog; rampe/rampe_elza/abn2_wand_elza: dazu haenglog (Vorgabe B)
+                  oben_kante oben_kante_elza)   # NB3 Runde 2 (Abnahme 5 M1/M2): Figur oben an Nord-/Suedkante/Westende, aussenlog + obenlog; alle Laeufe: aussenlog
         add_test(NAME integration_r41_gatorfix_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
