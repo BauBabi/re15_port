@@ -6,8 +6,8 @@
 # Bild @0x8011a39c und loescht @0x8011a3c0), Birkin blieb bei HP 155 unverwundbar; ueber Dauerfeuer startete die
 # Mutation endlos neu (M3, Tor @0x801164e8 schliesst @0x80118054).
 #
-# Je ein Lauf Leon (ROOM5090) und Elza (ROOM5091), kein Messhaken: Debug-Sprung, Tuer 2, laufen, Zielen und Feuer
-# gehalten. RE15_GIVE liefert nur die Patronen. Geprueft aus state.log/debug.log:
+# Je ein Lauf Leon (ROOM5090) und Elza (ROOM5091), seit Runde 41 Spur GR NB3 mit dem Messhaken RE15_R39_MESS_SPIELER_HP (unten):
+# Debug-Sprung, Tuer 2, laufen, Zielen und Feuer gehalten. RE15_GIVE liefert nur die Patronen. Geprueft aus state.log/debug.log:
 #   1  Mutation genau einmal (Sub 6 Phase 0 in einem einzigen Bild)
 #   1b Runde 41 Spur GR NB3: Form 1 (EM30) startet mit HP 600 = 0x12c @0x8011690c x RE15_BIRKIN_HP_FAKTOR 2 (PORT-WAHL, Nutzer F1)
 #   2  Modelltausch (debug.log "Bahnsteig-Form"), danach kommt die Form mit HP 1000 und laeuft (Clip 10, Clip 5); 1000 = RE2-G4-Ctor
@@ -16,9 +16,14 @@
 #   4  Rueckstoss-Szene (Clip 8, HP 1), danach Typ 0x36 mit HP 600 (G5)
 #   5  Abnahme 2: der G5 faellt unter derselben Pistole (HP < 0), der Spieler lebt dabei noch. Bis zur Nachbesserung frass er den
 #      gesunden Spieler bei F2879 kurz vor dem Ziel (Polaritaet `bgtz` @0x801008e0 / @0x80103e80).
+#   5b G5-Rueckzug (Integration Runde 41, Gegenpruefung Welle 1 B1): vom Ende der G5-Szene (state.log pm 2 -> nicht 2 nach dem
+#      G5-Auftritt; g5auftritt_r41.c Szenenende @0x0197C Plc_ret, Freigabe @0x01983) bis zum Bild des G5-Todes trifft den Spieler
+#      nichts: keine Spieler-HP unter der des Vorbildes und keine unter der am Szenenende. Pruefung 5 allein sieht den Biss mit dem
+#      Messhaken nicht mehr (Abschnitt GR NB3 unten); 5b prueft, was der G5A-Rueckzug leisten soll.
 #
 # G5-AUFTRITT NACHBESSERUNG 2 (analysis/befunde_runde41/G5_auftritt.md Abschnitt 8): nach der G5-Szene geht der Spieler ZURUECK
-# (Taste unten, 12 s ab F2548; wirkt erst mit der Freigabe am Szenenende) und schiesst dann weiter. Der Test fuehrte den Spieler bis
+# (Taste unten, 12 s ab F2548 in G5As Zeitachse, im Integrationsstand ab F4540, s. u.; wirkt erst mit der Freigabe am Szenenende)
+# und schiesst dann weiter. Der Test fuehrte den Spieler bis
 # Nachbesserung 1 im G5-Kampf STEHEND - das trug nur, weil ihn das Szenenende 715 neben der RE2-Linie liess (z -22855 statt Pos_set
 # -23570 @0x0196C `32 00 02 3a 00 00 ee a3`) und die Arme ihn danach aus dem Bissbogen schoben. Auf RE2s Linie beisst der G5 jeden
 # Spieler, der innerhalb 6000 vor ihm steht (`sltiu 0x1770` @0x80103e08, Bogen 128 @0x80103e2c-3c, 40 Schaden a0 @0x80104118), und
@@ -68,9 +73,31 @@ endif()
 # Messhaken RE15_R39_MESS_SPIELER_HP=100 (engine/src/gegner_r39.c, KEIN Spielverhalten, nur mit Env) die Spieler-HP am Kopf
 # jedes KI-Bildes auf 100; negative HP hebt er nicht (gegner_r39.c r39_mess_spieler_hp `pl->hp < 0` -> return). Das Fressen
 # des G5 setzt die HP direkt auf -1 (g5_fressen_beginn, enemy_ai_boss_g5.c): der Polaritaetsfehler aus Abnahme 2 (gesunder
-# Spieler gefressen) toetet also weiter, Pruefung 5 behaelt ihre Zaehne. Leer setzen (-D_spieler_hp=) = Lauf ohne Haken.
+# Spieler gefressen) toetet also weiter. Leer setzen (-D_spieler_hp=) = Lauf ohne Haken.
+# GEGENPRUEFUNG WELLE 1 B1: mehr als den Polaritaetsfehler sieht Pruefung 5 mit dem Haken nicht. Ein Biss nimmt im Port 20 (RE2 EM36
+# `addiu a0,zero,40` @0x80104118, halbiert ueber RE15_G5_HP in enemy_ai_boss_g5.c: RE2 200 HP, Port 100), gefressen wird nur bei
+# Spieler-HP <= 0 (`lh v0,-690(v0)` = 0x800cfd4e @0x80103e78, `bgtz v0` @0x80103e80); der Haken stellt vor jedem KI-Bild 100 her,
+# also endet jede Biss-Folge bei 80 und der Hauptfall des G5A-Rueckzugs (gebissen bis 0, gefressen) kann nicht eintreten.
+# Pruefung 5b misst deshalb den Treffer selbst: state.log schreibt das Bildende NACH re15_game_step (main.c, PARITY STATE-LOG), der
+# Haken laeuft am KOPF von re15_enemy_ai_run_all - ein Abzug steht also im Bild des Treffers im Protokoll (gemessen lauf_38551e8c:
+# 23 Bilder HP 90/50 vor dem Szenenende, im Folgebild wieder 100).
 if(NOT DEFINED _spieler_hp)
     set(_spieler_hp "RE15_R39_MESS_SPIELER_HP=100")
+endif()
+# Gegenprobe B1 (Messlauf, nicht der Riegel): -D_rueck_ab=<n> = Rueckzug nach n statt 34 Abschnitten MA4 (34 = F4540; jeder Abschnitt
+# 120 Bilder), -D_rueck_s=0 = kein Rueckzug, -D_laeufe=leon = nur der Leon-Lauf. Gemessen 2026-11-07 (Leon, Integrationsstand 9867e3913,
+# je eine Kopie der exe): ohne Rueckzug 8 Treffer nach dem Szenenende F4767 (erster F5105 100 -> 80 bei x 14386, kleinster x-Abstand
+# zum G5 4548 < 6000 = `sltiu v0,v0,0x1770` @0x80103e08), G5 tot F5876; Rueckzug 1200 Bilder spaeter (-D_rueck_ab=44) 8 Treffer, erster
+# F5105, G5 tot F6219; Rueckzug auf G5As alter Zeitachse (-D_rueck_ab=18, liegt in der Formphase) 7 Treffer nach dem Szenenende F5310.
+# In allen drei Laeufen ist 5b rot und Pruefung 5 gruen ("Spieler-HP dabei 100"). Mit Rueckzug (Standard): 0 Treffer, x-Abstand >= 10725.
+if(NOT DEFINED _rueck_ab)
+    set(_rueck_ab 34)
+endif()
+if(NOT DEFINED _rueck_s)
+    set(_rueck_s 12)
+endif()
+if(NOT DEFINED _laeufe)
+    set(_laeufe leon elza)
 endif()
 # Patronen (GR NB3): die Menge ist ein Byte (re15_inventory.h `uint8_t qty`, main.c RE15_GIVE `(uint8_t)qt`) - das fruehere
 # 3:400 lud 144 (400 & 0xff); der Skript-Schuetze laedt nicht nach (Kasten 21 bleibt liegen). Mit 144 war die Waffe gemessen
@@ -89,10 +116,13 @@ function(ein_lauf _name _raum)
     # + 72 (W2.4). In der Rueckstoss-Szene (ab F3431) feuert der Spieler selbst weiter (re15_bf_pad); ab dem Vorlauf F3550 sperrt
     # die G5-Szene die Eingabe (sub06 @0x01778 Set(2,7,1), g5auftritt_r41.c), die Schritte bis zum Szenenende F4767 wirken nicht.
     set(_skript "A0.1,W1,U8.5")
-    foreach(_i RANGE 1 34)
+    foreach(_i RANGE 1 ${_rueck_ab})
         string(APPEND _skript ",MA4")
     endforeach()
-    string(APPEND _skript ",W2.4,D12")
+    string(APPEND _skript ",W2.4")
+    if(_rueck_s GREATER 0)
+        string(APPEND _skript ",D${_rueck_s}")
+    endif()
     # Nachbesserung G5 3: nach jedem 4-s-Abschnitt R1 kurz los (W0.2), damit das naechste Heben neu zielt. Die Zielhilfe laeuft nur im
     # Heben (Latch FUN_8003703c rundum, Radius 0x7530 @0x80032fac, Drehung FUN_8001a8f8 0xC8 @0x80032fe0-ec, player_common.c RAISE).
     # Gemessen (Lauf mit RE2-Vorkampf-Puls, eine Zufallsziehung @0x80104544 mehr): ein Arm peitscht den Spieler bei x 23113 (F3576 HP
@@ -142,6 +172,18 @@ function(ein_lauf _name _raum)
     set(_clip5 0)
     set(_g5_tot 0)
     set(_pl_hp_tod -999)
+    # 5b: Spieler vom Szenenende bis zum G5-Tod
+    set(_pm_vor "")
+    set(_hp_vor "")
+    set(_bild_ende -1)
+    set(_x_ende "?")
+    set(_hp_ende "")
+    set(_n_fenster 0)
+    set(_treffer 0)
+    set(_treffer_erst "")
+    set(_hp_min_fenster 9999)
+    set(_dx_min "?")
+    set(_x_g5tod "?")
     foreach(_z IN LISTS _zeilen)
         string(REGEX MATCH "^F([0-9]+) .* mg=(-?[0-9]+) " _fm "${_z}")
         set(_bild "${CMAKE_MATCH_1}")
@@ -149,6 +191,44 @@ function(ein_lauf _name _raum)
         if(_mg_start STREQUAL "")
             set(_mg_start "${_mg_jetzt}")
         endif()
+        # 5b: Spieler je Bild (state.log PL(x,z,rot,hp), pm = g_scd.player_mode; die G5-Szene setzt am Ende pm 1, g5auftritt_r41.c)
+        set(_pl_x "")
+        set(_pl_hp "")
+        if(_z MATCHES "PL\\((-?[0-9]+),-?[0-9]+,rot=[0-9]+,hp=(-?[0-9]+)\\)")
+            set(_pl_x "${CMAKE_MATCH_1}")
+            set(_pl_hp "${CMAKE_MATCH_2}")
+        endif()
+        set(_pm "")
+        if(_z MATCHES " pm=([0-9]+) ")
+            set(_pm "${CMAKE_MATCH_1}")
+        endif()
+        if(_g5 AND _bild_ende LESS 0 AND _pm_vor STREQUAL "2" AND NOT _pm STREQUAL "2")
+            set(_bild_ende "${_bild}")
+            set(_x_ende "${_pl_x}")
+            set(_hp_ende "${_pl_hp}")
+        endif()
+        # Fenster: Szenenende bis einschliesslich Todesbild (_g5_tot setzt erst der Typ-0x36-Zweig unten)
+        if(_bild_ende GREATER_EQUAL 0 AND NOT _g5_tot AND NOT _pl_hp STREQUAL "")
+            math(EXPR _n_fenster "${_n_fenster} + 1")
+            if(_pl_hp LESS _hp_min_fenster)
+                set(_hp_min_fenster "${_pl_hp}")
+            endif()
+            if(NOT _hp_vor STREQUAL "" AND _pl_hp LESS _hp_vor)
+                math(EXPR _treffer "${_treffer} + 1")
+                if(_treffer_erst STREQUAL "")
+                    set(_treffer_erst "F${_bild} HP ${_hp_vor} -> ${_pl_hp}, Spieler x ${_pl_x}")
+                endif()
+            endif()
+            if(_z MATCHES "t=36 [^]]*@\\((-?[0-9]+),")
+                math(EXPR _dx "${_pl_x} - (${CMAKE_MATCH_1})")
+                if(_dx_min STREQUAL "?" OR _dx LESS _dx_min)
+                    set(_dx_min "${_dx}")
+                endif()
+            endif()
+            set(_x_g5tod "${_pl_x}")
+        endif()
+        set(_pm_vor "${_pm}")
+        set(_hp_vor "${_pl_hp}")
         string(REGEX MATCH "t=(3[06]) st=([0-9]+) ss1=([0-9]+) ss2=([0-9]+) ss3=[0-9]+ g=[0-9a-f]+ mo=([0-9]+) [^]]*\\] hp=(-?[0-9]+)" _m "${_z}")
         if(NOT _m)
             continue()
@@ -233,6 +313,16 @@ function(ein_lauf _name _raum)
     elseif(NOT _pl_hp_tod GREATER 0)
         string(APPEND _g "\n ${_name}: Spieler-HP ${_pl_hp_tod} im Bild, in dem der G5 faellt (der Spieler muss leben)")
     endif()
+    # 5b (Gegenpruefung Welle 1 B1): der Rueckzug haelt den Spieler aus dem Biss - kein Treffer vom Szenenende bis zum G5-Tod
+    if(_bild_ende LESS 0)
+        string(APPEND _g "\n ${_name}: kein Ende der G5-Szene im Protokoll (pm 2 -> nicht 2 nach dem G5-Auftritt), 5b ungeprueft")
+    elseif(_n_fenster LESS 2)
+        string(APPEND _g "\n ${_name}: ${_n_fenster} Bilder zwischen Szenenende F${_bild_ende} und G5-Tod, 5b ungeprueft")
+    elseif(_treffer GREATER 0 OR _hp_min_fenster LESS _hp_ende)
+        string(APPEND _g "\n ${_name}: ${_treffer} Treffer am Spieler zwischen Szenenende F${_bild_ende} und G5-Tod (erster ${_treffer_erst}; "
+                         "kleinste HP ${_hp_min_fenster}, am Szenenende ${_hp_ende}; kleinster x-Abstand zum G5 ${_dx_min}) - der Rueckzug "
+                         "haelt ihn nicht aus dem Biss (5b)")
+    endif()
     # Patronen am Ende: Magazin (mg=) und Vorrat (Zeile "Patronen" fehlt im Log; Vorrat = RE15_GIVE 21:250 minus Nachladen).
     file(STRINGS "${WORKDIR}/state.log" _letzte REGEX "^F[0-9]+ .* mg=")
     list(LENGTH _letzte _nl)
@@ -246,12 +336,21 @@ function(ein_lauf _name _raum)
     endif()
     message(STATUS "r41_birkin_pistole ${_name}: Mutationen ${_mut} (F${_bild_mut}), Form 1 HP max ${_form1_max}, Form-HP ${_form_hp} "
                    "(F${_bild_form}) bis ${_form_min}, Rueckstoss ${_rueck} (F${_bild_rueck}), G5 ${_g5} (F${_bild_g5}), G5 tot ${_g5_tot} "
-                   "(F${_bild_g5_tot}), Spieler-HP dabei ${_pl_hp_tod}, Patronen in der Waffe ${_mg_start} -> ${_mg_g5_tot} beim G5-Tod, am Ende ${_mg}")
+                   "(F${_bild_g5_tot}), Spieler-HP dabei ${_pl_hp_tod}, Patronen in der Waffe ${_mg_start} -> ${_mg_g5_tot} beim G5-Tod, am Ende ${_mg}; "
+                   "5b: Szenenende F${_bild_ende} x ${_x_ende} HP ${_hp_ende}, ${_n_fenster} Bilder bis zum G5-Tod, Treffer ${_treffer}, "
+                   "kleinste HP ${_hp_min_fenster}, Spieler x beim G5-Tod ${_x_g5tod}, kleinster x-Abstand zum G5 ${_dx_min} "
+                   "(Rueckzug nach ${_rueck_ab} x MA4, D${_rueck_s})")
     set(_f "${_f}${_g}" PARENT_SCOPE)
 endfunction()
 
-ein_lauf(leon 5090)
-ein_lauf(elza 5091)
+list(FIND _laeufe leon _i_leon)
+list(FIND _laeufe elza _i_elza)
+if(_i_leon GREATER -1)
+    ein_lauf(leon 5090)
+endif()
+if(_i_elza GREATER -1)
+    ein_lauf(elza 5091)
+endif()
 file(REMOVE "${_exe_kopie}")
 
 if(_f)
