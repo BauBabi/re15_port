@@ -1,0 +1,930 @@
+{
+ "bild1|H-30|c1.0": {
+  "Ruecken": {
+   "rot_eng": 13.65,
+   "h_rot": -21.8,
+   "C_rot": 15.0,
+   "dL": -0.8,
+   "gross_p": 7.76,
+   "gross_eng_p": 5.44
+  },
+  "Flanke": {
+   "rot_eng": 4.0,
+   "h_rot": -24.6,
+   "C_rot": 13.2,
+   "dL": 2.2,
+   "gross_p": 1.76,
+   "gross_eng_p": 1.34
+  },
+  "Brust/Bauch": {
+   "rot_eng": 0.0,
+   "h_rot": null,
+   "C_rot": null,
+   "dL": null,
+   "gross_p": 0.0,
+   "gross_eng_p": 0.0
+  },
+  "Vorderbeine": {
+   "rot_eng": 2.57,
+   "h_rot": -33.3,
+   "C_rot": 13.6,
+   "dL": 7.9,
+   "gross_p": 6.17,
+   "gross_eng_p": 1.1
+  },
+  "Hinterbeine": {
+   "rot_eng": 1.04,
+   "h_rot": -15.2,
+   "C_rot": 11.8,
+   "dL": -2.1,
+   "gross_p": 0.89,
+   "gross_eng_p": 0.37
+  },
+  "Schwanz": {
+   "rot_eng": 31.28,
+   "h_rot": -23.7,
+   "C_rot": 12.9,
+   "dL": 0.1,
+   "gross_p": 20.74,
+   "gross_eng_p": 19.07
+  },
+  "Figur": {
+   "rot_eng": 13.89,
+   "h_rot": -24.3,
+   "C_rot": 13.1,
+   "dL": 2.3,
+   "gross_p": 9.2,
+   "gross_eng_p": 7.49
+  }
+ },
+ "bild1|H-30|c0.6": {
+  "Ruecken": {
+   "rot_eng": 7.61,
+   "h_rot": -15.7,
+   "C_rot": 12.5,
+   "dL": -0.7,
+   "gross_p": 4.4,
+   "gross_eng_p": 2.91
+  },
+  "Flanke": {
+   "rot_eng": 1.25,
+   "h_rot": -24.6,
+   "C_rot": 11.6,
+   "dL": 2.4,
+   "gross_p": 1.09,
+   "gross_eng_p": 0.6
+  },
+  "Brust/Bauch": {
+   "rot_eng": 0.0,
+   "h_rot": null,
+   "C_rot": null,
+   "dL": null,
+   "gross_p": 0.0,
+   "gross_eng_p": 0.0
+  },
+  "Vorderbeine": {
+   "rot_eng": 0.8,
+   "h_rot": -33.7,
+   "C_rot": 11.0,
+   "dL": 6.6,
+   "gross_p": 1.22,
+   "gross_eng_p": 0.8
+  },
+  "Hinterbeine": {
+   "rot_eng": 0.23,
+   "h_rot": 49.4,
+   "C_rot": 14.1,
+   "dL": -3.7,
+   "gross_p": 0.23,
+   "gross_eng_p": 0.23
+  },
+  "Schwanz": {
+   "rot_eng": 12.05,
+   "h_rot": -14.9,
+   "C_rot": 10.8,
+   "dL": 0.1,
+   "gross_p": 7.47,
+   "gross_eng_p": 7.09
+  },
+  "Figur": {
+   "rot_eng": 5.34,
+   "h_rot": -15.7,
+   "C_rot": 11.0,
+   "dL": 1.7,
+   "gross_p": 2.9,
+   "gross_eng_p": 2.75
+  }
+ },
+ "bild1|H-20|c1.0": {
+  "Ruecken": {
+   "rot_eng": 20.13,
+   "h_rot": -9.2,
+   "C_rot": 14.2,
+   "dL": -0.2,
+   "gross_p": 8.05,
+   "gross_eng_p": 8.05
+  },
+  "Flanke": {
+   "rot_eng": 5.22,
+   "h_rot": -12.1,
+   "C_rot": 12.4,
+   "dL": 2.3,
+   "gross_p": 1.85,
+   "gross_eng_p": 1.85
+  },
+  "Brust/Bauch": {
+   "rot_eng": 0.0,
+   "h_rot": null,
+   "C_rot": null,
+   "dL": null,
+   "gross_p": 0.0,
+   "gross_eng_p": 0.0
+  },
+  "Vorderbeine": {
+   "rot_eng": 10.33,
+   "h_rot": -22.6,
+   "C_rot": 12.9,
+   "dL": 7.5,
+   "gross_p": 6.62,
+   "gross_eng_p": 5.39
+  },
+  "Hinterbeine": {
+   "rot_eng": 1.9,
+   "h_rot": -7.8,
+   "C_rot": 11.4,
+   "dL": -2.3,
+   "gross_p": 1.02,
+   "gross_eng_p": 1.02
+  },
+  "Schwanz": {
+   "rot_eng": 41.01,
+   "h_rot": -13.9,
+   "C_rot": 12.7,
+   "dL": -0.3,
+   "gross_p": 22.37,
+   "gross_eng_p": 22.15
+  },
+  "Figur": {
+   "rot_eng": 19.44,
+   "h_rot": -14.2,
+   "C_rot": 12.7,
+   "dL": 2.2,
+   "gross_p": 9.99,
+   "gross_eng_p": 9.91
+  }
+ },
+ "bild1|H-20|c0.6": {
+  "Ruecken": {
+   "rot_eng": 10.96,
+   "h_rot": -5.6,
+   "C_rot": 12.2,
+   "dL": -0.8,
+   "gross_p": 4.85,
+   "gross_eng_p": 4.85
+  },
+  "Flanke": {
+   "rot_eng": 1.94,
+   "h_rot": -14.0,
+   "C_rot": 11.1,
+   "dL": 2.5,
+   "gross_p": 1.18,
+   "gross_eng_p": 0.97
+  },
+  "Brust/Bauch": {
+   "rot_eng": 0.0,
+   "h_rot": null,
+   "C_rot": null,
+   "dL": null,
+   "gross_p": 0.0,
+   "gross_eng_p": 0.0
+  },
+  "Vorderbeine": {
+   "rot_eng": 2.95,
+   "h_rot": -24.8,
+   "C_rot": 10.4,
+   "dL": 7.5,
+   "gross_p": 1.65,
+   "gross_eng_p": 1.4
+  },
+  "Hinterbeine": {
+   "rot_eng": 0.37,
+   "h_rot": 30.2,
+   "C_rot": 12.2,
+   "dL": -2.4,
+   "gross_p": 0.24,
+   "gross_eng_p": 0.24
+  },
+  "Schwanz": {
+   "rot_eng": 16.94,
+   "h_rot": -8.4,
+   "C_rot": 10.4,
+   "dL": 0.6,
+   "gross_p": 9.33,
+   "gross_eng_p": 9.32
+  },
+  "Figur": {
+   "rot_eng": 7.83,
+   "h_rot": -8.9,
+   "C_rot": 10.6,
+   "dL": 2.3,
+   "gross_p": 3.62,
+   "gross_eng_p": 3.61
+  }
+ },
+ "bild1|H-10|c1.0": {
+  "Ruecken": {
+   "rot_eng": 21.4,
+   "h_rot": 2.2,
+   "C_rot": 13.8,
+   "dL": 0.0,
+   "gross_p": 8.5,
+   "gross_eng_p": 8.5
+  },
+  "Flanke": {
+   "rot_eng": 5.64,
+   "h_rot": -0.6,
+   "C_rot": 12.3,
+   "dL": 2.5,
+   "gross_p": 1.87,
+   "gross_eng_p": 1.87
+  },
+  "Brust/Bauch": {
+   "rot_eng": 0.0,
+   "h_rot": null,
+   "C_rot": null,
+   "dL": null,
+   "gross_p": 0.0,
+   "gross_eng_p": 0.0
+  },
+  "Vorderbeine": {
+   "rot_eng": 11.68,
+   "h_rot": -12.4,
+   "C_rot": 12.6,
+   "dL": 7.5,
+   "gross_p": 6.99,
+   "gross_eng_p": 6.42
+  },
+  "Hinterbeine": {
+   "rot_eng": 2.27,
+   "h_rot": 1.0,
+   "C_rot": 10.9,
+   "dL": -2.3,
+   "gross_p": 1.08,
+   "gross_eng_p": 1.08
+  },
+  "Schwanz": {
+   "rot_eng": 43.76,
+   "h_rot": -4.6,
+   "C_rot": 12.7,
+   "dL": -0.3,
+   "gross_p": 23.04,
+   "gross_eng_p": 23.03
+  },
+  "Figur": {
+   "rot_eng": 20.9,
+   "h_rot": -4.6,
+   "C_rot": 12.6,
+   "dL": 2.1,
+   "gross_p": 10.33,
+   "gross_eng_p": 10.33
+  }
+ },
+ "bild1|H-10|c0.6": {
+  "Ruecken": {
+   "rot_eng": 11.71,
+   "h_rot": 3.8,
+   "C_rot": 12.0,
+   "dL": -0.8,
+   "gross_p": 5.07,
+   "gross_eng_p": 5.07
+  },
+  "Flanke": {
+   "rot_eng": 2.15,
+   "h_rot": -5.0,
+   "C_rot": 11.0,
+   "dL": 2.4,
+   "gross_p": 1.27,
+   "gross_eng_p": 1.27
+  },
+  "Brust/Bauch": {
+   "rot_eng": 0.0,
+   "h_rot": null,
+   "C_rot": null,
+   "dL": null,
+   "gross_p": 0.0,
+   "gross_eng_p": 0.0
+  },
+  "Vorderbeine": {
+   "rot_eng": 4.09,
+   "h_rot": -17.0,
+   "C_rot": 9.9,
+   "dL": 8.9,
+   "gross_p": 2.9,
+   "gross_eng_p": 2.6
+  },
+  "Hinterbeine": {
+   "rot_eng": 0.57,
+   "h_rot": 22.9,
+   "C_rot": 11.2,
+   "dL": -2.1,
+   "gross_p": 0.25,
+   "gross_eng_p": 0.25
+  },
+  "Schwanz": {
+   "rot_eng": 20.15,
+   "h_rot": -0.9,
+   "C_rot": 10.3,
+   "dL": 0.6,
+   "gross_p": 12.45,
+   "gross_eng_p": 12.44
+  },
+  "Figur": {
+   "rot_eng": 9.34,
+   "h_rot": -1.4,
+   "C_rot": 10.4,
+   "dL": 2.5,
+   "gross_p": 5.15,
+   "gross_eng_p": 5.15
+  }
+ },
+ "bild1|HG4|c1.0": {
+  "Ruecken": {
+   "rot_eng": 20.73,
+   "h_rot": 18.2,
+   "C_rot": 13.6,
+   "dL": 0.0,
+   "gross_p": 8.35,
+   "gross_eng_p": 8.35
+  },
+  "Flanke": {
+   "rot_eng": 5.38,
+   "h_rot": 7.1,
+   "C_rot": 12.6,
+   "dL": 2.4,
+   "gross_p": 1.85,
+   "gross_eng_p": 1.85
+  },
+  "Brust/Bauch": {
+   "rot_eng": 0.0,
+   "h_rot": null,
+   "C_rot": null,
+   "dL": null,
+   "gross_p": 0.0,
+   "gross_eng_p": 0.0
+  },
+  "Vorderbeine": {
+   "rot_eng": 11.61,
+   "h_rot": -4.3,
+   "C_rot": 12.3,
+   "dL": 7.5,
+   "gross_p": 6.84,
+   "gross_eng_p": 6.52
+  },
+  "Hinterbeine": {
+   "rot_eng": 2.1,
+   "h_rot": 5.7,
+   "C_rot": 11.1,
+   "dL": -2.3,
+   "gross_p": 1.09,
+   "gross_eng_p": 1.09
+  },
+  "Schwanz": {
+   "rot_eng": 43.56,
+   "h_rot": 1.1,
+   "C_rot": 12.7,
+   "dL": -0.4,
+   "gross_p": 23.07,
+   "gross_eng_p": 23.07
+  },
+  "Figur": {
+   "rot_eng": 20.7,
+   "h_rot": 1.8,
+   "C_rot": 12.6,
+   "dL": 2.0,
+   "gross_p": 10.31,
+   "gross_eng_p": 10.31
+  }
+ },
+ "bild1|HG4|c0.6": {
+  "Ruecken": {
+   "rot_eng": 10.66,
+   "h_rot": 23.1,
+   "C_rot": 11.9,
+   "dL": -0.7,
+   "gross_p": 4.7,
+   "gross_eng_p": 4.7
+  },
+  "Flanke": {
+   "rot_eng": 2.1,
+   "h_rot": 0.5,
+   "C_rot": 11.0,
+   "dL": 2.5,
+   "gross_p": 1.22,
+   "gross_eng_p": 1.22
+  },
+  "Brust/Bauch": {
+   "rot_eng": 0.0,
+   "h_rot": null,
+   "C_rot": null,
+   "dL": null,
+   "gross_p": 0.0,
+   "gross_eng_p": 0.0
+  },
+  "Vorderbeine": {
+   "rot_eng": 4.12,
+   "h_rot": -8.7,
+   "C_rot": 9.6,
+   "dL": 8.5,
+   "gross_p": 2.72,
+   "gross_eng_p": 2.65
+  },
+  "Hinterbeine": {
+   "rot_eng": 0.55,
+   "h_rot": 26.7,
+   "C_rot": 11.2,
+   "dL": -1.8,
+   "gross_p": 0.24,
+   "gross_eng_p": 0.24
+  },
+  "Schwanz": {
+   "rot_eng": 20.34,
+   "h_rot": 3.8,
+   "C_rot": 10.4,
+   "dL": 0.6,
+   "gross_p": 11.48,
+   "gross_eng_p": 11.47
+  },
+  "Figur": {
+   "rot_eng": 9.35,
+   "h_rot": 4.4,
+   "C_rot": 10.4,
+   "dL": 2.5,
+   "gross_p": 4.76,
+   "gross_eng_p": 4.76
+  }
+ },
+ "bild2|H-20|c1.0": {
+  "Ruecken": {
+   "rot_eng": 73.31,
+   "h_rot": 3.6,
+   "C_rot": 27.2,
+   "dL": 2.7,
+   "gross_p": 59.13,
+   "gross_eng_p": 59.13
+  },
+  "Flanke": {
+   "rot_eng": 26.49,
+   "h_rot": 7.1,
+   "C_rot": 22.7,
+   "dL": 4.1,
+   "gross_p": 11.71,
+   "gross_eng_p": 11.71
+  },
+  "Brust/Bauch": {
+   "rot_eng": 73.43,
+   "h_rot": 9.9,
+   "C_rot": 25.0,
+   "dL": 1.1,
+   "gross_p": 25.05,
+   "gross_eng_p": 25.05
+  },
+  "Vorderbeine": {
+   "rot_eng": 84.72,
+   "h_rot": 9.3,
+   "C_rot": 32.8,
+   "dL": -1.4,
+   "gross_p": 39.53,
+   "gross_eng_p": 39.53
+  },
+  "Hals": {
+   "rot_eng": 86.85,
+   "h_rot": 10.3,
+   "C_rot": 25.5,
+   "dL": 1.7,
+   "gross_p": 51.01,
+   "gross_eng_p": 51.01
+  },
+  "Kopf": {
+   "rot_eng": 54.7,
+   "h_rot": 8.3,
+   "C_rot": 25.6,
+   "dL": 3.3,
+   "gross_p": 33.02,
+   "gross_eng_p": 33.02
+  },
+  "Figur": {
+   "rot_eng": 70.68,
+   "h_rot": 8.8,
+   "C_rot": 28.3,
+   "dL": 4.8,
+   "gross_p": 52.66,
+   "gross_eng_p": 52.66
+  }
+ },
+ "bild2|H-20|c0.6": {
+  "Ruecken": {
+   "rot_eng": 49.15,
+   "h_rot": 7.6,
+   "C_rot": 24.8,
+   "dL": 1.0,
+   "gross_p": 36.58,
+   "gross_eng_p": 36.58
+  },
+  "Flanke": {
+   "rot_eng": 12.5,
+   "h_rot": 11.9,
+   "C_rot": 20.9,
+   "dL": 3.1,
+   "gross_p": 8.23,
+   "gross_eng_p": 8.23
+  },
+  "Brust/Bauch": {
+   "rot_eng": 46.62,
+   "h_rot": 14.3,
+   "C_rot": 22.9,
+   "dL": 0.8,
+   "gross_p": 12.97,
+   "gross_eng_p": 12.97
+  },
+  "Vorderbeine": {
+   "rot_eng": 74.69,
+   "h_rot": 14.8,
+   "C_rot": 30.2,
+   "dL": -1.9,
+   "gross_p": 34.43,
+   "gross_eng_p": 34.43
+  },
+  "Hals": {
+   "rot_eng": 65.04,
+   "h_rot": 15.0,
+   "C_rot": 22.9,
+   "dL": 1.3,
+   "gross_p": 44.5,
+   "gross_eng_p": 44.5
+  },
+  "Kopf": {
+   "rot_eng": 34.26,
+   "h_rot": 11.6,
+   "C_rot": 23.4,
+   "dL": 2.9,
+   "gross_p": 13.18,
+   "gross_eng_p": 13.18
+  },
+  "Figur": {
+   "rot_eng": 52.39,
+   "h_rot": 13.6,
+   "C_rot": 26.4,
+   "dL": 4.8,
+   "gross_p": 19.68,
+   "gross_eng_p": 19.68
+  }
+ },
+ "bild2|H-10|c1.0": {
+  "Ruecken": {
+   "rot_eng": 75.01,
+   "h_rot": 12.6,
+   "C_rot": 27.9,
+   "dL": 2.8,
+   "gross_p": 60.62,
+   "gross_eng_p": 60.62
+  },
+  "Flanke": {
+   "rot_eng": 28.17,
+   "h_rot": 13.7,
+   "C_rot": 23.5,
+   "dL": 4.2,
+   "gross_p": 11.81,
+   "gross_eng_p": 11.81
+  },
+  "Brust/Bauch": {
+   "rot_eng": 76.87,
+   "h_rot": 17.3,
+   "C_rot": 25.9,
+   "dL": 0.9,
+   "gross_p": 28.97,
+   "gross_eng_p": 28.97
+  },
+  "Vorderbeine": {
+   "rot_eng": 85.54,
+   "h_rot": 15.1,
+   "C_rot": 33.8,
+   "dL": -0.8,
+   "gross_p": 39.71,
+   "gross_eng_p": 39.71
+  },
+  "Hals": {
+   "rot_eng": 89.86,
+   "h_rot": 17.8,
+   "C_rot": 26.5,
+   "dL": 1.1,
+   "gross_p": 73.78,
+   "gross_eng_p": 73.78
+  },
+  "Kopf": {
+   "rot_eng": 57.42,
+   "h_rot": 16.1,
+   "C_rot": 26.5,
+   "dL": 3.3,
+   "gross_p": 34.96,
+   "gross_eng_p": 34.96
+  },
+  "Figur": {
+   "rot_eng": 72.82,
+   "h_rot": 15.8,
+   "C_rot": 29.2,
+   "dL": 4.8,
+   "gross_p": 54.48,
+   "gross_eng_p": 54.48
+  }
+ },
+ "bild2|H-10|c0.6": {
+  "Ruecken": {
+   "rot_eng": 53.05,
+   "h_rot": 13.5,
+   "C_rot": 25.1,
+   "dL": 0.9,
+   "gross_p": 40.48,
+   "gross_eng_p": 40.48
+  },
+  "Flanke": {
+   "rot_eng": 14.98,
+   "h_rot": 15.2,
+   "C_rot": 21.4,
+   "dL": 3.2,
+   "gross_p": 9.03,
+   "gross_eng_p": 9.03
+  },
+  "Brust/Bauch": {
+   "rot_eng": 51.74,
+   "h_rot": 18.9,
+   "C_rot": 23.5,
+   "dL": 0.7,
+   "gross_p": 14.41,
+   "gross_eng_p": 14.41
+  },
+  "Vorderbeine": {
+   "rot_eng": 75.96,
+   "h_rot": 18.5,
+   "C_rot": 30.7,
+   "dL": -2.2,
+   "gross_p": 34.56,
+   "gross_eng_p": 34.56
+  },
+  "Hals": {
+   "rot_eng": 69.04,
+   "h_rot": 19.5,
+   "C_rot": 23.7,
+   "dL": 1.2,
+   "gross_p": 46.21,
+   "gross_eng_p": 46.21
+  },
+  "Kopf": {
+   "rot_eng": 37.46,
+   "h_rot": 16.8,
+   "C_rot": 24.1,
+   "dL": 2.9,
+   "gross_p": 14.48,
+   "gross_eng_p": 14.48
+  },
+  "Figur": {
+   "rot_eng": 55.35,
+   "h_rot": 17.9,
+   "C_rot": 26.9,
+   "dL": 4.5,
+   "gross_p": 36.43,
+   "gross_eng_p": 36.43
+  }
+ },
+ "bild2|H0|c1.0": {
+  "Ruecken": {
+   "rot_eng": 75.51,
+   "h_rot": 19.5,
+   "C_rot": 28.8,
+   "dL": 3.0,
+   "gross_p": 60.98,
+   "gross_eng_p": 60.98
+  },
+  "Flanke": {
+   "rot_eng": 28.87,
+   "h_rot": 18.5,
+   "C_rot": 24.2,
+   "dL": 4.2,
+   "gross_p": 11.71,
+   "gross_eng_p": 11.71
+  },
+  "Brust/Bauch": {
+   "rot_eng": 77.53,
+   "h_rot": 22.6,
+   "C_rot": 26.8,
+   "dL": 0.9,
+   "gross_p": 29.18,
+   "gross_eng_p": 29.18
+  },
+  "Vorderbeine": {
+   "rot_eng": 85.69,
+   "h_rot": 20.3,
+   "C_rot": 34.7,
+   "dL": -0.5,
+   "gross_p": 39.73,
+   "gross_eng_p": 39.73
+  },
+  "Hals": {
+   "rot_eng": 90.56,
+   "h_rot": 23.1,
+   "C_rot": 27.6,
+   "dL": 0.9,
+   "gross_p": 74.3,
+   "gross_eng_p": 74.3
+  },
+  "Kopf": {
+   "rot_eng": 58.47,
+   "h_rot": 21.7,
+   "C_rot": 27.4,
+   "dL": 3.4,
+   "gross_p": 35.61,
+   "gross_eng_p": 35.61
+  },
+  "Figur": {
+   "rot_eng": 73.44,
+   "h_rot": 21.2,
+   "C_rot": 30.1,
+   "dL": 4.9,
+   "gross_p": 54.97,
+   "gross_eng_p": 54.97
+  }
+ },
+ "bild2|H0|c0.6": {
+  "Ruecken": {
+   "rot_eng": 54.84,
+   "h_rot": 18.6,
+   "C_rot": 25.6,
+   "dL": 0.8,
+   "gross_p": 41.82,
+   "gross_eng_p": 41.82
+  },
+  "Flanke": {
+   "rot_eng": 15.77,
+   "h_rot": 18.8,
+   "C_rot": 22.0,
+   "dL": 3.3,
+   "gross_p": 9.23,
+   "gross_eng_p": 9.23
+  },
+  "Brust/Bauch": {
+   "rot_eng": 53.98,
+   "h_rot": 22.8,
+   "C_rot": 24.2,
+   "dL": 0.6,
+   "gross_p": 14.81,
+   "gross_eng_p": 14.81
+  },
+  "Vorderbeine": {
+   "rot_eng": 76.3,
+   "h_rot": 22.2,
+   "C_rot": 31.3,
+   "dL": -2.3,
+   "gross_p": 34.6,
+   "gross_eng_p": 34.6
+  },
+  "Hals": {
+   "rot_eng": 71.29,
+   "h_rot": 23.4,
+   "C_rot": 24.4,
+   "dL": 1.2,
+   "gross_p": 46.99,
+   "gross_eng_p": 46.99
+  },
+  "Kopf": {
+   "rot_eng": 39.08,
+   "h_rot": 21.4,
+   "C_rot": 24.8,
+   "dL": 2.9,
+   "gross_p": 15.13,
+   "gross_eng_p": 15.13
+  },
+  "Figur": {
+   "rot_eng": 56.71,
+   "h_rot": 22.0,
+   "C_rot": 27.5,
+   "dL": 4.3,
+   "gross_p": 37.38,
+   "gross_eng_p": 37.38
+  }
+ },
+ "bild2|HG4|c1.0": {
+  "Ruecken": {
+   "rot_eng": 71.49,
+   "h_rot": 30.9,
+   "C_rot": 30.5,
+   "dL": 2.3,
+   "gross_p": 57.58,
+   "gross_eng_p": 57.58
+  },
+  "Flanke": {
+   "rot_eng": 26.59,
+   "h_rot": 27.0,
+   "C_rot": 25.1,
+   "dL": 3.9,
+   "gross_p": 11.71,
+   "gross_eng_p": 11.71
+  },
+  "Brust/Bauch": {
+   "rot_eng": 73.2,
+   "h_rot": 31.3,
+   "C_rot": 28.2,
+   "dL": 0.7,
+   "gross_p": 24.74,
+   "gross_eng_p": 24.74
+  },
+  "Vorderbeine": {
+   "rot_eng": 82.52,
+   "h_rot": 29.5,
+   "C_rot": 36.4,
+   "dL": -3.6,
+   "gross_p": 39.44,
+   "gross_eng_p": 39.44
+  },
+  "Hals": {
+   "rot_eng": 86.62,
+   "h_rot": 31.5,
+   "C_rot": 28.8,
+   "dL": 1.2,
+   "gross_p": 51.22,
+   "gross_eng_p": 51.22
+  },
+  "Kopf": {
+   "rot_eng": 54.59,
+   "h_rot": 31.0,
+   "C_rot": 28.9,
+   "dL": 3.3,
+   "gross_p": 31.89,
+   "gross_eng_p": 31.89
+  },
+  "Figur": {
+   "rot_eng": 69.75,
+   "h_rot": 30.4,
+   "C_rot": 31.7,
+   "dL": 3.8,
+   "gross_p": 51.68,
+   "gross_eng_p": 51.68
+  }
+ },
+ "bild2|HG4|c0.6": {
+  "Ruecken": {
+   "rot_eng": 49.18,
+   "h_rot": 28.6,
+   "C_rot": 27.0,
+   "dL": 0.2,
+   "gross_p": 36.46,
+   "gross_eng_p": 36.46
+  },
+  "Flanke": {
+   "rot_eng": 11.71,
+   "h_rot": 24.8,
+   "C_rot": 22.9,
+   "dL": 2.2,
+   "gross_p": 4.56,
+   "gross_eng_p": 4.56
+  },
+  "Brust/Bauch": {
+   "rot_eng": 47.99,
+   "h_rot": 30.2,
+   "C_rot": 25.4,
+   "dL": 0.3,
+   "gross_p": 13.24,
+   "gross_eng_p": 13.24
+  },
+  "Vorderbeine": {
+   "rot_eng": 73.56,
+   "h_rot": 28.7,
+   "C_rot": 32.5,
+   "dL": -2.7,
+   "gross_p": 34.51,
+   "gross_eng_p": 34.51
+  },
+  "Hals": {
+   "rot_eng": 65.87,
+   "h_rot": 30.5,
+   "C_rot": 25.5,
+   "dL": 1.0,
+   "gross_p": 45.02,
+   "gross_eng_p": 45.02
+  },
+  "Kopf": {
+   "rot_eng": 35.0,
+   "h_rot": 30.2,
+   "C_rot": 26.2,
+   "dL": 2.7,
+   "gross_p": 13.91,
+   "gross_eng_p": 13.91
+  },
+  "Figur": {
+   "rot_eng": 52.53,
+   "h_rot": 29.4,
+   "C_rot": 28.9,
+   "dL": 4.2,
+   "gross_p": 29.7,
+   "gross_eng_p": 29.7
+  }
+ }
+}

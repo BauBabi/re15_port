@@ -1,0 +1,230 @@
+{
+ "bild1|H-30|c1.0": [
+  18,
+  21,
+  [
+   "Ruecken h_rot -21.8",
+   "Schwanz gross_eng_p 19.1",
+   "Figur gross_eng_p 7.5"
+  ]
+ ],
+ "bild1|H-30|c0.6": [
+  16,
+  21,
+  [
+   "Ruecken rot_eng 7.6",
+   "Ruecken h_rot -15.7",
+   "Hinterbeine h_rot 49.4",
+   "Schwanz rot_eng 12.1",
+   "Figur rot_eng 5.3"
+  ]
+ ],
+ "bild1|H-20|c1.0": [
+  17,
+  21,
+  [
+   "Vorderbeine rot_eng 10.3",
+   "Schwanz rot_eng 41.0",
+   "Schwanz gross_eng_p 22.1",
+   "Figur gross_eng_p 9.9"
+  ]
+ ],
+ "bild1|H-20|c0.6": [
+  19,
+  21,
+  [
+   "Ruecken rot_eng 11.0",
+   "Hinterbeine h_rot 30.2"
+  ]
+ ],
+ "bild1|H-10|c1.0": [
+  15,
+  21,
+  [
+   "Flanke h_rot -0.6",
+   "Vorderbeine rot_eng 11.7",
+   "Vorderbeine gross_eng_p 6.4",
+   "Schwanz rot_eng 43.8",
+   "Schwanz gross_eng_p 23.0",
+   "Figur gross_eng_p 10.3"
+  ]
+ ],
+ "bild1|H-10|c0.6": [
+  18,
+  21,
+  [
+   "Flanke h_rot -5.0",
+   "Hinterbeine h_rot 22.9",
+   "Schwanz gross_eng_p 12.4"
+  ]
+ ],
+ "bild1|HG4|c1.0": [
+  14,
+  21,
+  [
+   "Flanke h_rot 7.1",
+   "Vorderbeine rot_eng 11.6",
+   "Vorderbeine gross_eng_p 6.5",
+   "Schwanz rot_eng 43.6",
+   "Schwanz gross_eng_p 23.1",
+   "Figur h_rot 1.8",
+   "Figur gross_eng_p 10.3"
+  ]
+ ],
+ "bild1|HG4|c0.6": [
+  15,
+  21,
+  [
+   "Ruecken rot_eng 10.7",
+   "Flanke h_rot 0.5",
+   "Hinterbeine h_rot 26.7",
+   "Schwanz h_rot 3.8",
+   "Schwanz gross_eng_p 11.5",
+   "Figur h_rot 4.4"
+  ]
+ ],
+ "bild2|H-20|c1.0": [
+  10,
+  24,
+  [
+   "Ruecken rot_eng 73.3",
+   "Ruecken h_rot 3.6",
+   "Ruecken dL 2.7",
+   "Brust/Bauch rot_eng 73.4",
+   "Brust/Bauch gross_eng_p 25.1",
+   "Vorderbeine rot_eng 84.7",
+   "Vorderbeine h_rot 9.3",
+   "Hals rot_eng 86.8",
+   "Hals dL 1.7",
+   "Hals gross_eng_p 51.0",
+   "Kopf h_rot 8.3",
+   "Kopf dL 3.3",
+   "Figur h_rot 8.8",
+   "Figur dL 4.8"
+  ]
+ ],
+ "bild2|H-20|c0.6": [
+  14,
+  24,
+  [
+   "Ruecken h_rot 7.6",
+   "Ruecken dL 1.0",
+   "Vorderbeine rot_eng 74.7",
+   "Vorderbeine h_rot 14.8",
+   "Hals dL 1.3",
+   "Hals gross_eng_p 44.5",
+   "Kopf h_rot 11.6",
+   "Kopf dL 2.9",
+   "Figur h_rot 13.6",
+   "Figur dL 4.8"
+  ]
+ ],
+ "bild2|H-10|c1.0": [
+  10,
+  24,
+  [
+   "Ruecken rot_eng 75.0",
+   "Ruecken h_rot 12.6",
+   "Ruecken dL 2.8",
+   "Brust/Bauch rot_eng 76.9",
+   "Brust/Bauch h_rot 17.3",
+   "Brust/Bauch gross_eng_p 29.0",
+   "Vorderbeine rot_eng 85.5",
+   "Vorderbeine h_rot 15.1",
+   "Hals rot_eng 89.9",
+   "Hals dL 1.1",
+   "Hals gross_eng_p 73.8",
+   "Kopf dL 3.3",
+   "Figur h_rot 15.8",
+   "Figur dL 4.8"
+  ]
+ ],
+ "bild2|H-10|c0.6": [
+  15,
+  24,
+  [
+   "Ruecken h_rot 13.5",
+   "Ruecken dL 0.9",
+   "Brust/Bauch h_rot 18.9",
+   "Vorderbeine rot_eng 76.0",
+   "Vorderbeine h_rot 18.5",
+   "Hals dL 1.2",
+   "Hals gross_eng_p 46.2",
+   "Kopf dL 2.9",
+   "Figur dL 4.5"
+  ]
+ ],
+ "bild2|H0|c1.0": [
+  10,
+  24,
+  [
+   "Ruecken rot_eng 75.5",
+   "Ruecken h_rot 19.5",
+   "Ruecken dL 3.0",
+   "Brust/Bauch rot_eng 77.5",
+   "Brust/Bauch h_rot 22.6",
+   "Brust/Bauch gross_eng_p 29.2",
+   "Vorderbeine rot_eng 85.7",
+   "Vorderbeine h_rot 20.3",
+   "Hals rot_eng 90.6",
+   "Hals h_rot 23.1",
+   "Hals dL 0.9",
+   "Hals gross_eng_p 74.3",
+   "Kopf dL 3.4",
+   "Figur dL 4.9"
+  ]
+ ],
+ "bild2|H0|c0.6": [
+  15,
+  24,
+  [
+   "Ruecken h_rot 18.6",
+   "Brust/Bauch h_rot 22.8",
+   "Vorderbeine rot_eng 76.3",
+   "Vorderbeine h_rot 22.2",
+   "Hals h_rot 23.4",
+   "Hals dL 1.2",
+   "Hals gross_eng_p 47.0",
+   "Kopf dL 2.9",
+   "Figur dL 4.3"
+  ]
+ ],
+ "bild2|HG4|c1.0": [
+  8,
+  24,
+  [
+   "Ruecken rot_eng 71.5",
+   "Ruecken h_rot 30.9",
+   "Ruecken dL 2.3",
+   "Brust/Bauch rot_eng 73.2",
+   "Brust/Bauch h_rot 31.3",
+   "Brust/Bauch gross_eng_p 24.7",
+   "Vorderbeine rot_eng 82.5",
+   "Vorderbeine h_rot 29.5",
+   "Hals rot_eng 86.6",
+   "Hals h_rot 31.5",
+   "Hals dL 1.2",
+   "Hals gross_eng_p 51.2",
+   "Kopf h_rot 31.0",
+   "Kopf dL 3.3",
+   "Figur h_rot 30.4",
+   "Figur dL 3.8"
+  ]
+ ],
+ "bild2|HG4|c0.6": [
+  14,
+  24,
+  [
+   "Ruecken h_rot 28.6",
+   "Brust/Bauch h_rot 30.2",
+   "Vorderbeine h_rot 28.7",
+   "Hals h_rot 30.5",
+   "Hals dL 1.0",
+   "Hals gross_eng_p 45.0",
+   "Kopf h_rot 30.2",
+   "Kopf dL 2.7",
+   "Figur h_rot 29.4",
+   "Figur dL 4.2"
+  ]
+ ]
+}

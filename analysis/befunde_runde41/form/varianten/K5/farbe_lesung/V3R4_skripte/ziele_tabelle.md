@@ -1,0 +1,16 @@
+| Bild / Region (Bloecke) | RV1 Rot eng % | RV2 Farbton a\*-Klasse Grad | RV3 dL Rot - Haut | RV4 groesste Rotflaeche eng % (Obergrenze) | RV5 C\* Rotklasse (Info) |
+|---|---|---|---|---|---|
+| Bild 1 Ruecken (38) | O 27,1, 11,2..42,9; V3 20,7 GRUEN | O 9,5, -13,2..32,2; V3 15,8 GRUEN | O -1,2, -5,6..3,2; V3 -0,4 GRUEN | O 21,2, <= 33,8; V3 8,3 GRUEN (Info) | O 14,7, 12,2..17,2; V3 13,6 GRUEN (Info) |
+| Bild 1 Flanke (61) | O 12,9, 0,3..25,5; V3 5,9 GRUEN | O -19,5, -33,6..-5,4; V3 5,8 **ROT** | O -0,4, -5,1..4,3; V3 2,5 GRUEN | O 4,3, <= 7,5; V3 1,9 GRUEN | O 15,7, 12,6..18,8; V3 12,5 **ROT** (Info) |
+| Bild 1 Brust/Bauch (12) | O 11,5, 0,0..38,7; V3 0,0 GRUEN (Info) | O -41,1, -67,5..-14,7; V3 ohne Rotklasse (Info) | O 2,3, -10,5..15,1; V3 ohne Rotklasse (Info) | O 10,7, <= 27,0; V3 0,0 GRUEN (Info) | O 14,4, 11,7..17,1; V3 ohne Rotklasse (Info) |
+| Bild 1 Vorderbeine (49) | O 2,4, 0,0..7,1; V3 12,3 **ROT** | kein Ziel (Rundlauf ohne Rotklasse) | kein Ziel (Rundlauf ohne Rotklasse) | O 1,3, <= 5,5; V3 6,5 **ROT** | kein Ziel (Rundlauf ohne Rotklasse) |
+| Bild 1 Hinterbeine (89) | O 5,1, 0,0..11,1; V3 2,2 GRUEN | O -30,4, -81,9..21,1; V3 3,9 GRUEN | O -4,1, -9,7..1,5; V3 -2,7 GRUEN | O 2,6, <= 6,4; V3 1,1 GRUEN | O 16,0, 13,6..18,4; V3 10,9 **ROT** (Info) |
+| Bild 1 Schwanz (109) | O 23,5, 12,5..34,5; V3 43,5 **ROT** | O -12,3, -25,9..1,3; V3 -1,0 GRUEN | O 3,9, -0,6..8,4; V3 -0,7 **ROT** | O 6,0, <= 9,7; V3 22,9 **ROT** | O 15,7, 13,0..18,4; V3 12,7 **ROT** (Info) |
+| Bild 1 Figur (270) | O 14,1, 6,9..21,4; V3 20,9 GRUEN | O -15,8, -30,6..-1,0; V3 -0,2 **ROT** | O -0,6, -4,2..3,0; V3 2,0 GRUEN | O 2,3, <= 5,5; V3 10,6 **ROT** | O 15,5, 13,7..17,4; V3 12,6 **ROT** (Info) |
+| Bild 2 Ruecken (54) | O 53,6, 42,0..65,2; V3 71,5 **ROT** | O -5,3, -12,9..2,3; V3 30,6 **ROT** | O -7,4, -15,6..0,8; V3 1,8 **ROT** | O 39,7, <= 62,2; V3 61,4 GRUEN | O 30,1, 25,4..34,8; V3 30,2 GRUEN (Info) |
+| Bild 2 Flanke (18) | O 52,3, 10,3..94,3; V3 24,1 GRUEN (Info) | O 10,4, -0,4..21,2; V3 26,1 **ROT** (Info) | O -10,3, -17,2..-3,4; V3 3,1 **ROT** (Info) | O 50,7, <= 108,2; V3 10,5 GRUEN (Info) | O 28,7, 22,2..35,2; V3 25,0 GRUEN (Info) |
+| Bild 2 Brust/Bauch (84) | O 42,8, 17,8..67,7; V3 74,9 **ROT** | O 7,9, -0,1..15,9; V3 30,6 **ROT** | O -4,3, -10,0..1,4; V3 0,9 GRUEN | O 9,4, <= 17,8; V3 24,7 **ROT** | O 26,7, 22,8..30,6; V3 28,2 GRUEN (Info) |
+| Bild 2 Vorderbeine (152) | O 65,4, 56,4..74,5; V3 82,3 **ROT** | O 36,6, 34,5..38,8; V3 28,5 **ROT** | O -4,2, -11,4..3,0; V3 -3,9 GRUEN | O 30,9, <= 49,0; V3 39,8 GRUEN | O 36,1, 31,9..40,3; V3 36,0 GRUEN (Info) |
+| Bild 2 Hals (62) | O 45,1, 17,9..72,3; V3 87,1 **ROT** | O 11,0, 1,7..20,3; V3 30,7 **ROT** | O -3,9, -6,3..-1,5; V3 0,8 **ROT** | O 14,3, <= 29,8; V3 51,6 **ROT** | O 25,9, 21,7..30,1; V3 29,0 GRUEN (Info) |
+| Bild 2 Kopf (123) | O 59,0, 25,4..92,5; V3 55,6 GRUEN | O 18,9, 13,1..24,7; V3 30,4 **ROT** | O -1,5, -4,4..1,4; V3 3,0 **ROT** | O 55,7, <= 118,3; V3 32,8 GRUEN | O 27,1, 23,1..31,1; V3 28,9 GRUEN (Info) |
+| Bild 2 Figur (338) | O 56,9, 39,0..74,8; V3 70,2 GRUEN | O 22,8, 17,7..27,9; V3 29,7 **ROT** | O -2,5, -7,2..2,2; V3 3,5 **ROT** | O 41,4, <= 87,1; V3 52,4 GRUEN | O 30,5, 27,7..33,3; V3 31,5 GRUEN (Info) |
