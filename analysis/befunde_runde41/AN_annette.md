@@ -21,6 +21,8 @@ haben und dann die G5 Form."
 | Nachbesserung 2 (2026-11-02/03) | erledigt (Abschnitt N2): Bit 133 eingetragen, Ausgang 6030 vor dem Zugstart = Tuer (msg 20 erst danach), Musikwechsel als Original belegt, Blut = RE2-Emitter FUN_80104C24, Sherry vermerkt. Offen: N2.8. |
 | Nachbesserung 3 (2026-11-03) | erledigt (Abschnitt N3): r41/form gemergt; nach Abnahme 1 Satz/Landung in Cut 11 mit neuen Lagen und RE2-Vorstoss (M1), Abgang 6030 ueber Cut 0 (M2), Zusammensacken im Trefferbild (M4), Blut in RE2-Bildgroesse (M5), Untertitel = RE2-Stimmlaenge (M6), PAL-Takt + Ausholen nach der Aufnahme (M7), Leiche beim Wiedereintritt (M8), Kampfstart Cut 11 geprueft (M9). Offen: N3.12. |
 | Nachbesserung 4 (2026-11-03) | erledigt (Abschnitt N4): nach Abnahme 2 liegt die Leiche flach mit dem RE2-Liegeclip 0x18 (ROOM6141-RBJ, N2), sie ist kein Schuss-Kandidat mehr, und der Waffen-Resolver hat die RE1.5-Typpruefung @0x80012178-84 (N3). Abgang 6030: Leon tritt zur Seite, Tuerton nach RE2 ROOM4081, keine Tuerbewegung, weil es kein Modell gibt (N4). Gesicht beim Satz: mit den Disc-Kameras nicht moeglich, begruendet (N5). N3.5 berichtigt (Ladestandbild). |
+| Nachbesserung 5 (2026-11-03) | erledigt (Abschnitt N5): Belege A1/H1 berichtigt, Schuss geht durch Begleiter (RE2-Regel hp < 0, Nutzerentscheid), Test Schusslinie 10D0; Leichen-Kollision wie RE2. Der Kasten-Teil (RE2-Segment fuer jede 0x4D) ist durch N6 eingeschraenkt. |
+| Nachbesserung 6 (2026-11-07) | erledigt (Abschnitt N6): nach Abnahme 4 M1 traegt die 0x4D in 6000/6030 und in 5090 vor der Szene wieder ihren RE1.5-Kasten 450/1530 (STAGE6 @0x80101958 -> 0x80102784, STAGE5 @0x8011d88c -> 0x801207d0); das RE2-Segment 350/1350 setzt annette_r41.c erst beim Szenenstart und fuer die Leiche. Pult 6030: Leon haelt bei 901 statt 802. |
 
 Belege dieser Spur: `analysis/befunde_runde41/AN_belege/` (Werkzeuge unter `werkzeug/`).
 
@@ -1347,7 +1349,7 @@ Keil jeden Schuss (Abnahme 3, E1).
 - Alle Tore lassen den Schub durch: Die liegende Annette schiebt Claire aus einem Kreis von 350 + 350 = 700 um ihre Wurzel.
 - Das ist derselbe Mechanismus wie beim Port-Befund "um 100 seitlich versetzt".
 
-**Radius (Entscheid nach N5.3: die Szene folgt RE2):** Annette (0x4D) traegt jetzt das RE2-Segment r 350 / Halbhoehe 1350 /
+**Radius (Entscheid nach N5.3: die Szene folgt RE2; durch N6 eingeschraenkt auf die RE2-Szene ab Szenenstart und die Leiche, in 6000/6030 und in 5090 vor der Szene gilt wieder der RE1.5-Kasten 450/1530):** Annette (0x4D) traegt jetzt das RE2-Segment r 350 / Halbhoehe 1350 /
 Mitte Lage - 1350 statt des NPC-Familienkastens 450/1530 (`re15_enemy_apply_hitbox`). Beleg: FUN_80034D0C +0x1E8 @0x80034d74,
 +0x16 @0x80034dac, +0x1A @0x80034e5c. Claire-RAM lauf3 zeigt lebend (e01..e22) und liegend (e23..e30) dieselben Werte, deshalb gilt
 er fuer die lebende Annette und die Leiche, ohne getrennte Fuehrung. Die Leiche schiebt den Port-Spieler (r 450) jetzt ab 800 statt
@@ -1385,3 +1387,118 @@ Die Integrationstests liefen nacheinander und nicht parallel zur Suite.
   - Die RE2-Regel gilt im Port fuer die NPC-Familie 0x40..0x4D mit hp < 0. Ein NPC mit hp >= 0 waere wie in RE2 treffbar; im Port
     setzt der NPC-INIT hp -1 (@0x8011c744), im Lauf 10D0 ab Bild 6 (Bild 1..5 traegt Marvin noch hp 0).
   - Release Notes: Der E1-Punkt der Abnahme 3 ist durch den Nutzerentscheid erledigt.
+
+## N6. Nachbesserung 6 (Kasten 0x4D je Raum/Phase) (2026-11-07)
+
+Auftrag: Abnahme 4 (`AN_abnahme_4.md`) M1, blockierend. cefd57402 gab in `re15_enemy_apply_hitbox` jeder 0x4D das RE2-Segment
+r 350 / Halbhoehe 1350, also auch der lebenden Annette in 6000/6030 und in 5090 vor der Szene. Dort ist sie RE1.5-Inhalt. Gemessen
+(Abnahme 4 `an6030_pult`): Leon hielt am Pult bei 802 statt 900. Das widersprach auch 8.3 ("Ihr Verhalten in 6000/6030 bleibt das
+alte").
+
+**Entscheid des Orchestrators (nach "Original oder nicht", keine Wahlfrage): Variante NB6.** In RE1.5-Raeumen und in 5090 vor der
+RE2-Szene gilt der RE1.5-Kasten 450/1530. Das RE2-Segment 350/1350 gilt nur ab Beginn der RE2-Szene und fuer die Leiche. Die
+Nachbesserung 5 (Schuss geht durch Begleiter) bleibt unveraendert.
+
+### N6.1 Der RE1.5-Kasten der 0x4D (selbst nachgelesen)
+
+Bytes in `info/Re1.5/PSX/BIN` (= `re15_port/shared_assets/PSX/BIN`), Overlay ohne Kopf, geladen @0x80100000 (Datei-Offset =
+Adresse - 0x80100000):
+
+| Stelle | STAGE6.BIN (6000/6030) | STAGE5.BIN (5090) |
+|---|---|---|
+| Registrierung Typ 0x4D in 0x80072bac + 0x4D*4 = 0x80072ce0 | `lui v0,0x8010` / `addiu v0,v0,6048` @0x80101df0-f4 (Woerter `3c021080` `244217a0`), `sw v0,11488(at)` @0x80101dfc (`ac222ce0`) -> Wurzel 0x801017a0 | `addiu v0,v0,-10540` @0x8011ddb0 (`2442d6d4`), `sw v0,11488(at)` @0x8011ddb8 (`ac222ce0`) -> Wurzel 0x8011d6d4 |
+| INIT: +0x78 = Kasten | `lw v0,10128(v0)` @0x80101958 (Wort `8c422790`; [0x80102790] = `84 27 10 80` = 0x80102784), `sw v0,120(v1)` @0x80101960 (`ac620078`) | `lw v0,2012(v0)` @0x8011d88c (`8c4207dc`; [0x801207dc] = `d0 07 12 80` = 0x801207d0), `sw v0,120(v1)` @0x8011d894 |
+| Kasten-Bytes | @0x80102784 `00 00 06 fa 00 00 c2 01 fa 05 c2 01` | @0x801207d0 `00 00 06 fa 00 00 c2 01 fa 05 c2 01` |
+| = {ofs_x, ofs_y, ofs_z, r_min, h, r_max} | {0,-1530,0,450,1530,450} | {0,-1530,0,450,1530,450} |
+
+Leser (Abnahme 4, 4.2): Wand-Klemme der 0x4D-Wurzel `lw v0,120(a0)` / `lhu a1,6(v0)` / `jal 0x8003b0a4` @0x801018c4-d0, Bodenprobe
+FUN_8001bd60 @0x8001bd94-a8, Schub FUN_8002aec4 `lhu t4,6(s6)` / `lhu t4,6(s5)` @0x8002af40/@0x8002af4c.
+
+Der alte Port-Wert 450/1530 war fuer 0x4D also byte-genau. Der Kommentar nannte bisher nur den STAGE1-Kasten @0x80121658; jetzt
+stehen die eigenen 0x4D-Belege im Code.
+
+### N6.2 Umschaltpunkt RE1.5 -> RE2
+
+| Zustand | Kasten | Wer setzt ihn | Beleg |
+|---|---|---|---|
+| 6000 lebend (sub00 @0x00F44/@0x00F68) | RE1.5 450/1530, Versatz -1530 | `re15_enemy_apply_hitbox` beim Sce_em_set (scd_vm.c) | STAGE6 @0x80101958 -> 0x80102784 |
+| 6030 am Pult (sub07 @0x010D4/@0x010F8) und in der Port-Zugstart-Szene NB1 | RE1.5 450/1530 | dto. | STAGE6 @0x80101958 -> 0x80102784. Die Zugstart-Szene laeuft in einem RE1.5-Raum mit RE1.5-Skriptsegmenten (N1.3); sie ist keine RE2-Szene |
+| 5090 vor der Szene (sub00 @0x0122A) | RE1.5 450/1530 | dto. | STAGE5 @0x8011d88c -> 0x801207d0 |
+| 5090 ab Szenenstart | **RE2 r 350, Halbhoehe 1350, Versatz -1350** | `annette_r41.c` `re2_segment` in `re15_annette_r41_evt_exec`, im selben Bild, in dem Evt_exec sub04 @0x01296 in das Programm nach Claire ROOM6141 MAIN sub02 (ab @0x01024) umgelenkt wird | RE2 FUN_80034D0C: Segmentzahl `lw v0,488(s6)` (+0x1E8) @0x80034d74, Segmente ab `addiu s5,s6,132` @0x80034d78, Radius `lhu s7,22(s5)` (+0x16) @0x80034dac, Halbhoehe `lhu v0,26(s5)` (+0x1A) @0x80034e5c. Claire-RAM lauf3: schon im ersten Abzug der Szene **e01 (Skript @0x010B0 in sub02**, `re2_claire/ram_reihe_voll.md`) traegt Annette @0x80125d4c +0x1E8 = 1, +0x14 = -1350, +0x16 = 350, +0x1A = 1350 (`abn4/claire_annette_ram.txt`) |
+| 5090 Leiche in derselben Szene (Phase LEICHE/FREI) | RE2 | bleibt vom Szenenstart | Claire-RAM lauf3 e23..e30 liegend gleich |
+| 5090 Wiedereintritt, Leiche (Phase RUHE) | RE2 | `re2_segment` in `ruhe_setzen` (nach dem RE1.5-Spawn @0x0122A, der zuerst 450/1530 gibt) | RE2 MAIN sub00 @0x00D16 setzt die liegende RE2-Annette; Segment wie oben |
+
+Der Port fuehrt sonst nichts nach: Der NPC-Takt (`re15_npc_ai_tick`) setzt den Kasten nicht neu, `re15_enemy_ai_init` laeuft fuer die
+NPC-Familie nicht. Faellt der Szenenstart aus (keine Riesenform-Bank, Protokoll "keine Szene"), bleibt der RE1.5-Kasten.
+
+### N6.3 Code
+
+- `re15_port/engine/src/re15_damage.c` `re15_enemy_apply_hitbox`: `case 0x4d: r = 450; h = 1530;` mit den STAGE6/STAGE5-Belegen
+  aus N6.1 und dem Hinweis, dass das RE2-Segment nur `annette_r41.c` setzt.
+- `re15_port/engine/src/annette_r41.c`: `re2_segment` (AN_RE2_SEG_R 350, AN_RE2_SEG_HH 1350, AN_RE2_SEG_DY -1350, je mit Adresse),
+  Aufruf beim Szenenstart und in `ruhe_setzen`.
+- Die Schussregel aus N5.2 ist unveraendert.
+
+### N6.4 Riegel und Gegenproben
+
+`unit_r41_annette`, `test_leiche_radius` (erweitert) und `test_szene` (zwei neue Pruefungen):
+
+| Fall | Soll | Ergebnis NB6 |
+|---|---|---|
+| 6000 lebend (Ck(3,100)=0, @0x00F44) | 450/450/1530/-1530 | 450/450/1530 Versatz (0,-1530,0) |
+| 6030 Pult ((4,23)=1, (3,89)=0, @0x010F8, Lage (-1790,-22272)) | 450/450/1530/-1530 | 450/450/1530 Versatz (0,-1530,0) |
+| Pult-Riegel: Leon westlich bei 850 / 810 / 950, ein Schub-Durchlauf `re15_body_push_player` | 900 / 900 / 950 | **901 / 901 / 950** |
+| 5090 vor der Szene ((3,89)=1, (9,133)=1, (3,42)=0) | 450/450/1530/-1530 | 450/450/1530 Versatz (0,-1530,0) |
+| 5090 ab Szenenstart (`re15_annette_r41_evt_exec(0x5090, 4)`, Phase WARTEN) | 350/350/1350/-1350 | 350/350/1350 Versatz (0,-1350,0) |
+| `test_szene`: vor der Szene / nach der ganzen Szene (Leiche) | 450/1530 / 350/1350 | gruen |
+| Leiche beim Wiedereintritt ((3,42)=1): beim Spawn, nach `ruhe_setzen` | 450/1530, dann 350/1350 | 450/1530, dann 350/350/1350 Versatz (0,-1350,0) |
+| Leiche: Leon bei 850 / 750 | 850 (kein Schub) / 800 | **850 / 801** |
+
+Gegenproben, je mit eigener Bau- und Testrunde im Arbeitsbaum (danach zurueckgestellt und neu gebaut):
+
+| Gegenprobe | Ergebnis |
+|---|---|
+| 1: `re15_damage.c` aus cefd57402 (case 0x4d 350/1350) | **rot, 7 Fehler**: 6000, 6030, 5090 vor der Szene und Wiedereintritt-Spawn 350 statt 450; Pult-Riegel "Leon bei 850 nicht auf 900 geschoben (Abstand 850)", "bei 810 ... (Abstand 810)" (`AN_belege/n6/gegenprobe_cefd57402.txt`) |
+| 2: `annette_r41.c` ohne `re2_segment`-Aufrufe | **rot, 5 Fehler**: ab Szenenstart und als Leiche 450/1530; Leiche schiebt bei 850 und 750 auf 901 (`AN_belege/n6/gegenprobe_ohne_umschaltung.txt`) |
+
+### N6.5 Fensterlauf an6030_pult (wie Abnahme 4 5.3)
+
+Eigene exe-Kopie des Arbeitsbaums nach 99bbe97ba (`re15_pc_annb6_*`, nur eigene PID per `timeout`), echtes Fenster, Renderer des
+Nutzers, ohne AUTOSHOT und SOFTWARE_RENDER. Dieselbe Umgebung wie Abnahme 4 `alle4b.sh`: `RE15_DEBUG_JUMP=6030@250`,
+`RE15_PLAYER_POS=-2600,-22272,0,0`, `RE15_SET_FLAG=3:48,3:49,3:100,3:239,4:23`, Eingabe `U2,W4` ab Bild 100,
+`RE15_EXIT_AT=400#6030`, `RE15_FRAMEDUMP=90-400/10:f`. Werkzeug `AN_belege/werkzeug/n6/lauf6.sh`, Auswertung `abstand6.py`.
+
+| Bild | Leon | Annette (0x4D) | Abstand |
+|---|---|---|---|
+| F1..F5 (vor dem NPC-INIT, hp 0) | (-2600,-22272) | (-1790,-22272) | 810 |
+| F6 (INIT, hp -1, erster Schub) | (-2691,-22272) | (-1790,-22272) | 901 |
+| F100..F400 (Leon geht 2 s auf sie zu) | -2691..-2693 | (-1790,-22272) | **901..903** |
+
+Abnahme 4 mass mit cefd57402 an derselben Stelle 802 (Minimum 801 bei F102). Jetzt haelt der RE1.5-Kasten Leon bei 900. Bildleiste
+`AN_belege/n6/an6030_pult_nb6.jpg` (F90..F400, Leon hinter Annette am Pult, mit sichtbarem Abstand).
+
+### N6.6 Tests
+
+Bau nur ueber `RE15_BUILD_DIR=<Baum>/re15_port/build bash re15_port/tools/local_build.sh build` (LOCAL-BUILD-OK). ctest aus
+Git-Bash mit `PATH=/c/msys64/mingw64/bin:$PATH`, `SDL_ASSERT=always_ignore`, `--test-dir <Baum>/re15_port/build`. Summenzeilen
+woertlich (`AN_belege/n6/ctest_nb6.txt`):
+
+| Lauf | Summenzeile |
+|---|---|
+| unit_r41_annette, _se_bank, _se_toene, _se_lagen | `100% tests passed, 0 tests failed out of 4` |
+| Suite `^unit_\|^prop_\|^probe_` ohne `releaseskript\|titelversion\|android\|paket\|r37_masken36_ausschluss`, `-j 2` (darin alle Unit-Tests aus `git grep` auf 0x4d/0x4D/Annette in `re15_port/tests`, z.B. unit_r41_kollision_npc, unit_1090_npc_prop_push, unit_r36_kartenbits, unit_r35_affen_npcband) | `100% tests passed, 0 tests failed out of 1040` (627 s) |
+| integration_r41_annette, _r41_begleiter_schusslinie, _r36_story_leon, _r36_story_elza, _r41_kollision_npc3070, _r41_kollision_npc3001, _r35_zgirl_5090, _r41_birkin_pistole, `-j 1` | `100% tests passed, 0 tests failed out of 8` (1643 s) |
+| uebrige Integrationstests aus `git grep` (r32_tor_hell, r35_zgirl, r36_elza_* 5, r37_elzaems_* 12, r37_sperre1050, r37_szene11c0, r38_elzatoene_* 2, r38_tagebuch_* 3, r41_wasser20b0, r41_wasser20b0_npc), `-j 1` | `100% tests passed, 0 tests failed out of 28` (1851 s) |
+
+Die Integrationslaeufe liefen nacheinander; die Unit-Suite lief parallel zur ersten Integrationsgruppe. Kein roter Fenster-Riegel war
+nachzufahren.
+
+### N6.7 Dateien, Commits und Offen
+
+- Code: `re15_port/engine/src/re15_damage.c`, `re15_port/engine/src/annette_r41.c`.
+- Test: `re15_port/tests/unit/test_r41_annette.c` (`test_leiche_radius`, `test_szene`).
+- Belege: `AN_belege/n6/` (`unit_r41_annette_nb6.txt`, `gegenprobe_cefd57402.txt`, `gegenprobe_ohne_umschaltung.txt`,
+  `an6030_pult_abstand.txt`, `an6030_pult_nb6.jpg`, `ctest_nb6.txt`), Werkzeug `AN_belege/werkzeug/n6/`.
+- Commits: 99bbe97ba (Code + Riegel), dieser Dossier-Commit.
+- N5.3 "Radius" und N5.5 "Leichen-Radius" gelten jetzt nur noch fuer die RE2-Szene und die Leiche (siehe oben).
+- Offen: nichts Neues. Die Stimmen (Abnahme 4 M3) fehlen weiter.

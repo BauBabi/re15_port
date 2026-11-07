@@ -1,0 +1,52 @@
+# NB6 ctest (Git-Bash, PATH=/c/msys64/mingw64/bin:$PATH, SDL_ASSERT=always_ignore, --test-dir r41_annette/re15_port/build, exe/libs = 99bbe97ba)
+## unit_r41_annette*
+1/4 Test #1149: unit_r41_annette .................   Passed    0.39 sec
+2/4 Test #1152: unit_r41_annette_se_bank .........   Passed    0.23 sec
+3/4 Test #1153: unit_r41_annette_se_toene ........   Passed    0.11 sec
+4/4 Test #1154: unit_r41_annette_se_lagen ........   Passed    0.21 sec
+100% tests passed, 0 tests failed out of 4
+## Suite ^unit_|^prop_|^probe_ ohne releaseskript|titelversion|android|paket|r37_masken36_ausschluss, -j 2
+100% tests passed, 0 tests failed out of 1040
+Total Test time (real) = 627.62 sec
+## Integration Auswahl (-j 1)
+1/8 Test  #571: integration_r35_zgirl_5090 ..............   Passed  194.12 sec
+2/8 Test  #653: integration_r36_story_leon ..............   Passed  397.51 sec
+3/8 Test  #654: integration_r36_story_elza ..............   Passed  226.45 sec
+4/8 Test #1150: integration_r41_annette .................   Passed  272.69 sec
+5/8 Test #1151: integration_r41_begleiter_schusslinie ...   Passed   55.49 sec
+6/8 Test #1257: integration_r41_kollision_npc3070 .......   Passed   86.36 sec
+7/8 Test #1258: integration_r41_kollision_npc3001 .......   Passed  113.35 sec
+8/8 Test #1386: integration_r41_birkin_pistole ..........   Passed  296.87 sec
+100% tests passed, 0 tests failed out of 8
+Total Test time (real) = 1642.95 sec
+## Integration aus git grep 0x4d/0x4D/Annette (-j 1)
+ 1/28 Test  #391: integration_r32_tor_hell .................   Passed    3.24 sec
+ 2/28 Test  #570: integration_r35_zgirl ....................   Passed  278.01 sec
+ 3/28 Test  #583: integration_r36_elza_fenster .............   Passed   45.41 sec
+ 4/28 Test  #584: integration_r36_elza_irons ...............   Passed   17.28 sec
+ 5/28 Test  #585: integration_r36_elza_unlock ..............   Passed   42.54 sec
+ 6/28 Test  #586: integration_r36_elza_schuss ..............   Passed   64.89 sec
+ 7/28 Test  #587: integration_r36_elza_stoehnen ............   Passed  121.05 sec
+ 8/28 Test  #700: integration_r37_elzaems_elza5081 .........   Passed   14.92 sec
+ 9/28 Test  #701: integration_r37_elzaems_elza3071 .........   Passed   12.05 sec
+10/28 Test  #702: integration_r37_elzaems_leon5080 .........   Passed   12.01 sec
+11/28 Test  #703: integration_r37_elzaems_elza3091 .........   Passed   25.80 sec
+12/28 Test  #704: integration_r37_elzaems_elza1101 .........   Passed   32.40 sec
+13/28 Test  #705: integration_r37_elzaems_leon1100 .........   Passed   23.67 sec
+14/28 Test  #706: integration_r37_elzaems_elza11b1 .........   Passed   14.42 sec
+15/28 Test  #707: integration_r37_elzaems_elza5091 .........   Passed   15.20 sec
+16/28 Test  #708: integration_r37_elzaems_elza1181griff ....   Passed   19.04 sec
+17/28 Test  #709: integration_r37_elzaems_elza10c1kraehe ...   Passed   42.69 sec
+18/28 Test  #710: integration_r37_elzaems_leon10c0kraehe ...   Passed   43.23 sec
+19/28 Test  #711: integration_r37_elzaems_elza1141 .........   Passed   12.97 sec
+20/28 Test  #780: integration_r37_sperre1050 ...............   Passed  232.94 sec
+21/28 Test  #783: integration_r37_szene11c0 ................   Passed  143.52 sec
+22/28 Test  #835: integration_r38_elzatoene_gunshot1041 ....   Passed   99.37 sec
+23/28 Test  #836: integration_r38_elzatoene_szene1021 ......   Passed   79.06 sec
+24/28 Test  #913: integration_r38_tagebuch_lesen ...........   Passed   55.38 sec
+25/28 Test  #914: integration_r38_tagebuch_karte ...........   Passed   30.19 sec
+26/28 Test  #915: integration_r38_tagebuch_leon ............   Passed   28.59 sec
+27/28 Test #1366: integration_r41_wasser20b0_npc ...........   Passed  233.41 sec
+28/28 Test #1367: integration_r41_wasser20b0 ...............   Passed  107.56 sec
+100% tests passed, 0 tests failed out of 28
+Total Test time (real) = 1850.99 sec

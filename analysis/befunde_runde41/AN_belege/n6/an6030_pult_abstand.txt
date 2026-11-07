@@ -1,0 +1,42 @@
+an6030_pult exit=0 Dauer=23 s Bilder: 32
+exe sha256 (16): 0e9ece98360bd5b0
+## env
+RE15_AUDIO_CAP_SYNC=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/laeufe/an6030_pult/ton.raw
+RE15_DEBUG_JUMP=6030@250
+RE15_EXIT_AT=400#6030
+RE15_FRAMEDUMP=90-400/10:f
+RE15_INPUT_SCRIPT=U2,W4
+RE15_INPUT_SCRIPT_BASIS=spiel
+RE15_INPUT_SCRIPT_START=100
+RE15_NO_INTRO=1
+RE15_PLAYER_POS=-2600,-22272,0,0
+RE15_SET_FLAG=3:48,3:49,3:100,3:239,4:23
+RE15_SPAWN_DIAG=1
+RE15_STATE_LOG=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/laeufe/an6030_pult/state.log
+RE15_TITLE_SHOT=C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/annb6/laeufe/an6030_pult/titel.bmp
+RE15_TITLE_SHOT_AF=2
+RE15_WINDOW_SCALE=2
+## Abstand (abstand6.py, ab F5)
+letzter Abschnitt: 400 Bilder mit 0x4D, ab F5: 396
+  F5 Spieler (-2600,-22272) 0x4D (-1790,-22272) Abstand 810
+  F10 Spieler (-2691,-22272) 0x4D (-1790,-22272) Abstand 901
+  F50 Spieler (-2691,-22272) 0x4D (-1790,-22272) Abstand 901
+  F100 Spieler (-2692,-22272) 0x4D (-1790,-22272) Abstand 902
+  F102 Spieler (-2691,-22272) 0x4D (-1790,-22272) Abstand 901
+  F150 Spieler (-2691,-22272) 0x4D (-1790,-22272) Abstand 901
+  F200 Spieler (-2691,-22272) 0x4D (-1790,-22272) Abstand 901
+  F300 Spieler (-2691,-22272) 0x4D (-1790,-22272) Abstand 901
+  F400 Spieler (-2691,-22272) 0x4D (-1790,-22272) Abstand 901
+Minimum ab F5: 810 bei F5, Maximum 903
+## erste Bilder
+F1 Leon x -2600 0x4D x -1790 hp 0 Abstand 810
+F2 Leon x -2600 0x4D x -1790 hp 0 Abstand 810
+F3 Leon x -2600 0x4D x -1790 hp 0 Abstand 810
+F4 Leon x -2600 0x4D x -1790 hp 0 Abstand 810
+F5 Leon x -2600 0x4D x -1790 hp 0 Abstand 810
+F6 Leon x -2691 0x4D x -1790 hp -1 Abstand 901
+F7 Leon x -2691 0x4D x -1790 hp -1 Abstand 901
+F8 Leon x -2691 0x4D x -1790 hp -1 Abstand 901
+ab F6: min 901 max 903 (395 Bilder)
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r41_annette/re15_port/shared_assets/PSX
+[flow] EXIT_AT: Bild 400 in Raum 6030 erreicht -> exit
