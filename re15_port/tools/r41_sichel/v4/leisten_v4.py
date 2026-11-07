@@ -6,6 +6,8 @@ Spalten NUR: Nutzer-Vorlage (Originalbild) | Nutzer-Beschriftung | vorher | neu.
   Runde 3: vorher = V4 Runde 2 (sfv4/emd/EM30_V4r2.EMD sha256 174b7879, Lauf sfv4/r/V4r2), neu = V4 Runde 3 (sfv4/emd/EM30_V4.EMD
   = EM30_V4r3.EMD sha256 dfbc30bc,
   Lauf sfv4/r/V4r3); Umgebungsvariablen RE15_LEISTE_VORHER / RE15_LEISTE_NEU (EMD) und RE15_LAUF_VORHER / RE15_LAUF_NEU.
+  Runde 4: vorher = V4 Runde 3 (sfv4/emd/EM30_V4r3.EMD sha256 dfbc30bc, Lauf sfv4/r/V4r3), neu = V4 Runde 4 (sfv4/emd/EM30_V4.EMD,
+  Lauf sfv4/r/V4r4); Runde-3-Leisten liegen in SF_belege/v4/r3/. Neue Riegel in den Unterschriften: TQ/TK (05), FO (01/06), KS (03/07).
   Vorlage 1 = Beschreibung1_Vorlage.png (n1485) entblendet (Messblatt V4 Abschnitt 1, k 0,766/0,764/0,768), Vorlage 2 =
   Beschreibung2_Vorlage.png (n1435); Beschriftung = linke 640 Spalten von Beschreibung1.png / Beschreibung2.png (wie gezeichnet).
   V3 r2 / V4 = b2-Render in der Spielkamera 50A0 Schnitt 12 (RDT-Licht, Hintergrund BSS 50A0/12) in posen_v4 "135" / "85"
@@ -21,11 +23,11 @@ import v4_gemein as G, b2, riegel_v4 as RV
 from PIL import Image
 
 AUS = os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4')
-NAME = {'vorher': 'V4 r2', 'neu': 'V4 r3'}
-EMD = {'vorher': os.environ.get('RE15_LEISTE_VORHER', os.path.join(G.SFV4, 'emd', 'EM30_V4r2.EMD')),     # sha256 174b7879 (V4 Runde 2)
-       'neu': os.environ.get('RE15_LEISTE_NEU', G.EMD_V4)}                                                 # sha256 dfbc30bc (V4 Runde 3)
-LAUF = {'vorher': os.environ.get('RE15_LAUF_VORHER', os.path.join(G.SFV4, 'r', 'V4r2')),
-        'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V4r3'))}
+NAME = {'vorher': 'V4 r3', 'neu': 'V4 r4'}
+EMD = {'vorher': os.environ.get('RE15_LEISTE_VORHER', os.path.join(G.SFV4, 'emd', 'EM30_V4r3.EMD')),     # sha256 dfbc30bc (V4 Runde 3)
+       'neu': os.environ.get('RE15_LEISTE_NEU', G.EMD_V4)}                                                 # V4 Runde 4
+LAUF = {'vorher': os.environ.get('RE15_LAUF_VORHER', os.path.join(G.SFV4, 'r', 'V4r3')),
+        'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V4r4'))}
 PKT1 = {'Auge': (382, 164), 'Haare': (404, 160), 'Nase': (395, 177)}
 PKT2 = {'Auge': (460, 234), 'Haare': (468, 241), 'Beginn': (357, 243), 'Knick': (290, 308), 'Ende': (295, 343)}
 BIEG2 = (295, 252)
@@ -71,7 +73,10 @@ def riegel(k):
         P = G.posen(); m = mo(k)
         zk, ik, _ = RV.kopf_vorn(m, P); zs, is_, _ = RV.kopf_seite(m, P); zt, st, rest = RV.schwanz(m, P)
         zf, ef, _ = RV.koerper_farben(m, P)
-        zt = zt + []
+        zq, _iq = RV.schwanz_form(m, P); zo, _io = RV.oberkoerper_vorn(m, P); zk2 = RV.kopf_buehne320(m, P)
+        zt = zt + zq
+        zf = zf + zo
+        zk = zk + zk2
         _cache[key] = dict(zk={z['mass'].split()[0]: z for z in zk}, zs={z['mass'].split()[0]: z for z in zs},
                            zt={z['mass'].split()[0]: z for z in zt}, zf=zf, ef=ef, ik=ik, is_=is_, st=st, fr=rest[3])
     return _cache[key]
@@ -87,7 +92,7 @@ def speichern(name, zeilen, kopf):
     print('geschrieben', p)
 
 
-KOPFZEILE = 'Spalten: Nutzer-Vorlage (Originalbild) | Nutzer-Beschriftung | V4 Runde 2 (vorher) | V4 Runde 3 (neu)'
+KOPFZEILE = 'Spalten: Nutzer-Vorlage (Originalbild) | Nutzer-Beschriftung | V4 Runde 3 (vorher) | V4 Runde 4 (neu)'
 
 
 # ═══════════════════════════════════════════════════ 01 / 02 ganze Figur
@@ -104,7 +109,8 @@ def l01():
         bl = r['ik']['blob']; punkt(img, bl['sp'], GELB, 3, 'Auge')
         t.append(kachel(img, box, 2, '%s Pose 135 (Kamera 50A0/12)' % NAME[k],
                         ['K4 ' + kurz(r['zk']['K4']), 'K2 ' + kurz(r['zk']['K2'])[:60], 'K5 ' + kurz(r['zk']['K5'])[:60],
-                         'K11 ' + kurz(r['zk']['K11'])[:60]]))
+                         'K11 ' + kurz(r['zk']['K11'])[:60],
+                         'FO ' + kurz(next(z for z in r['zf'] if z['mass'].startswith('FO')))[:66]]))
     speichern('01_vorn_kamera12', [t], ['SF V4 - 01 vorn: Spielkamera 50A0 Cut 12 wie Vorlagebild 1 (h135), Figur in Pose posen_v4 "135"',
                                          KOPFZEILE])
 
@@ -151,7 +157,7 @@ def l03():
             punkt(img, (0.5 * (bx[0] + bx[2]), 0.5 * (bx[1] + bx[3])), CYAN, 1)
         zl = ['K1 ' + kurz(r['zk']['K1']), 'K2 ' + kurz(r['zk']['K2'])[:58], 'K3 ' + kurz(r['zk']['K3'])[:58],
               'K4 ' + kurz(r['zk']['K4'])[:58], 'K5 ' + kurz(r['zk']['K5'])[:58], 'K7 ' + kurz(r['zk']['K7']), 'K9 ' + kurz(r['zk']['K9']),
-              'K11 ' + kurz(r['zk']['K11'])[:58]]
+              'K11 ' + kurz(r['zk']['K11'])[:58], 'KS320 ' + kurz(r['zk']['KS'])[:56]]
         z1.append(kachel(img0, kopfbox_rand(kb), 4, '%s Kopf x4' % NAME[k], zl))
         z2.append(kachel(img, kopfbox_rand(kb), 4, '%s mit Messpunkten' % NAME[k], ['gelb Augenfleck (Schwerpunkt), cyan KV2/KV3']))
     speichern('03_kopf_nah_vorn_x4', [z1, z2], ['SF V4 - 03 Kopf vorn x4 (Kopfbox +8 px; Port = Bbox Id 9); Zeile 1 ohne, Zeile 2 mit Marken',
@@ -198,7 +204,8 @@ def l05():
         f = s['T5']
         t.append(kachel(img, box, 3, '%s Schwanz x3 (gelb Vorlage am Port-Beginn, H-skaliert; cyan Mittellinie)' % NAME[k],
                         ['T2 ' + kurz(r['zt']['T2']), 'T3 ' + kurz(r['zt']['T3']), 'T4 ' + kurz(r['zt']['T4'])[:60],
-                         'T5 %.3f/%.3f/%.3f/%.3f H' % (f[0.1], f[0.3], f[0.5], f[0.7]), 'T6 ' + kurz(r['zt']['T6'])[:64]]))
+                         'T5 %.3f/%.3f/%.3f/%.3f H' % (f[0.1], f[0.3], f[0.5], f[0.7]), 'T5q ' + kurz(r['zt']['T5q'])[:64],
+                         'T6 ' + kurz(r['zt']['T6'])[:64], 'TQ ' + kurz(r['zt']['TQ'])[:66], 'TK ' + kurz(r['zt']['TK'])[:66]]))
     speichern('05_schwanz_x3', [t], ['SF V4 - 05 Schwanz x3: Polygonzug der Vorlage (Beginn, Biegung, Knick, Ende) ueber dem Port',
                                      KOPFZEILE])
 
@@ -275,7 +282,7 @@ def l06():
             z.append(feld(BF._lab_rgb(*la) if n >= 3 else None, '%s %s dE00 %.1f' % ('OK' if d <= 6 else 'ROT',
                                                                                '/'.join('%.1f' % v for v in la), d)))
         reihen.append(z)
-    speichern('06_farben', reihen, ['SF V4 - 06 Farben: Ziel (Videoraum, Messblatt V4 Abschnitt 5) | Fenster | V4 r2 | V4 r3 '
+    speichern('06_farben', reihen, ['SF V4 - 06 Farben: Ziel (Videoraum, Messblatt V4 Abschnitt 5) | Fenster | V4 r3 | V4 r4 '
                                     '(Vergleichsregel sigma 1,5, V = a + b x P, Lab D65, dE00)', KOPFZEILE])
 
 
@@ -289,6 +296,8 @@ def l07():
     zeilen = []
     mk = {k: T7K.messen(EMD[k], os.path.join(LAUF[k], 'debug.log')) for k in ('vorher', 'neu')}
     rg = {k: {z['mass'].split()[0]: z for z in T7K.riegel(mk[k])} for k in ('vorher', 'neu')}
+
+    SPB = {k: RV.spielbild(os.path.join(LAUF[k], 'debug.log')) for k in ('vorher', 'neu')}
 
     def ab(k, h):
         t = mk[k]['takte'].get(h)
@@ -309,7 +318,11 @@ def l07():
         for k in ('vorher', 'neu'):
             p = c6.port(LAUF[k], h)
             im = cv2.cvtColor(p, cv2.COLOR_BGR2RGB) if p is not None else np.zeros((480, 640, 3), np.uint8)
-            t.append(kachel(im, box, 1, '%s Spiel h%d (RE15_FRAMEDUMP)' % (NAME[k], h), ab(k, h)))
+            zus = []
+            if h in (118, 135):
+                zs4, _i = SPB[k]
+                zus = [z['mass'].split()[0] + ' ' + kurz(z)[:70] for z in zs4 if z['mass'].endswith('h%d' % h)]
+            t.append(kachel(im, box, 1, '%s Spiel h%d (RE15_FRAMEDUMP)' % (NAME[k], h), ab(k, h) + zus))
         zeilen.append(t)
     zs = []
     for k in ('vorher', 'neu'):
@@ -323,7 +336,7 @@ def l07():
                              ['koerperfest max %.3f H' % max(t['abw'].values()) if t else '']))
     zeilen.append(tz)
     speichern('07_gang', zeilen, ['SF V4 - 07 Gang: Spiellaeufe (RE15_FRAMEDUMP, registriert), T7 koerperfest (Kette gegen das Feder-Ziel '
-                                  'der gezeichneten Pose, H = Figurhoehe, Riegel <= 0,06 H)', KOPFZEILE + '; letzte Zeile: nur V4 r3',
+                                  'der gezeichneten Pose, H = Figurhoehe, Riegel <= 0,06 H)', KOPFZEILE + '; letzte Zeile: nur V4 r4',
                                   ' | '.join(zs[0])[:300], ' | '.join(zs[1])[:300]])
 
 
@@ -339,7 +352,7 @@ def l08():
         t.append(kachel(img, (max(cx - 150, 0), max(cy - 150, 0), min(cx + 150, 640), min(cy + 150, 480)), 1,
                         '%s Gier +%d Grad (neutral)' % (NAME['neu'], dg), ['']))
     speichern('08_rundum_V4', [t[:3], t[3:]], ['SF V4 - 08 rundum: 6 Blickwinkel, neutrales Licht (Texelfarbe), Pose 85 gedreht',
-                                               'nur V4 Runde 3 (neu)'])
+                                               'nur V4 Runde 4 (neu)'])
 
 
 def main():

@@ -40,6 +40,7 @@ import emd_ansichtsblatt as EA
 import birkin_formen as BF
 from P_schwanz import mittellinie, dicke
 import t2_mass_v4 as T2M
+import r4_mass as R4
 
 SCHW = G.SCHWANZ
 ZIEL = dict(  # Messblatt V4 Abschnitt 5 (Ziele, Videoraum) und Abschnitt 7
@@ -365,10 +366,14 @@ def schwanz(mo, P):
     # Runde 3 (O2): EIN Verfahren (t2_mass_v4.py, Pruefer-Mittellinie), Ziel/Toleranz aus den Original-Masken
     to = T2M.original(); tp = T2M.port(ids, s['H'])
     dp = tp['drehung'] if tp else float('nan')
-    Z.append(zeile('T2 Biegung', 'dx -0,245 dy +0,036 (+-0,03); Drehung %.1f +-%.1f Grad (t2_mass_v4, Original %s)' % (
-        to['ziel'], to['tol'], '/'.join('%.1f' % w for w in to['werte'])),
-        'dx %.3f dy %.3f; %.1f Grad (Bauer-Mittellinie Runde 2: %.1f)' % (t2[0], t2[1], dp, s['drehung']),
-        abs(t2[0] + 0.245) <= 0.03 and abs(t2[1] - 0.036) <= 0.03 and abs(dp - to['ziel']) <= to['tol']))
+    # Runde 4 (Pruefung V4 r3 Zahlen 4.1): auch die LAGE mit dem O2-Werkzeug (Mitte des Fensters der groessten Drehung, relativ zum
+    # T1-Beginn); die Bauer-Mittellinie (s['T2']) wird nur noch ausgegeben. Original mit demselben Werkzeug -0,268 / +0,056.
+    tl = R4.t2_lage_port(ids, s['H'], s['beginn'])
+    lo = R4.t2_lage_original()
+    Z.append(zeile('T2 Biegung', 'Lage dx -0,245 dy +0,036 (+-0,03) nach t2_mass_v4 (Original %.3f / %.3f); Drehung %.1f +-%.1f Grad (Original %s)' % (
+        np.mean([d['dx'] for d in lo]), np.mean([d['dy'] for d in lo]), to['ziel'], to['tol'], '/'.join('%.1f' % w for w in to['werte'])),
+        'dx %.3f dy %.3f; %.1f Grad (Bauer-Mittellinie: dx %.3f dy %.3f)' % (tl['dx'], tl['dy'], dp, t2[0], t2[1]),
+        abs(tl['dx'] + 0.245) <= 0.03 and abs(tl['dy'] - 0.036) <= 0.03 and abs(dp - to['ziel']) <= to['tol']))
     t3 = s['T3']
     Z.append(zeile('T3 Knick (Taille)', 'dx -0,265 dy +0,257 (+-0,03)', 'dx %.3f dy %.3f' % t3,
                    abs(t3[0] + 0.265) <= 0.03 and abs(t3[1] - 0.257) <= 0.03))
@@ -390,6 +395,13 @@ def schwanz(mo, P):
     abfall = max([reihe[i] - reihe[i + 1] for i in range(len(reihe) - 1)] + [0.0])
     Z.append(zeile('T5 Breite nach oben', 'f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01', '%.3f/%.3f/%.3f/%.3f H; Abfall %.3f' % (
         f[0.1], f[0.3], f[0.5], f[0.7], abfall), ok5 and abfall <= 0.01))
+    # Runde 4 (Pruefung V4 r3 Zahlen 4.2): zweites, unabhaengiges Breitenmass (Pruefer pz3_t5orig: quer zur t2_mass_v4-Mittellinie)
+    q5 = R4.t5_quer_port(ids, s['H'], s['beginn'], s['knick'])
+    qo = R4.t5_quer_original()
+    ok5q = all(abs(q5['f'][k] - v) <= t for k, (v, t) in soll.items()) and q5['abfall'] <= 0.01
+    Z.append(zeile('T5q Breite quer (unabhaengig)', 'f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 (Original 3 Masken: Abfall %s)' % (
+        '/'.join('%.3f' % d['abfall'] for d in qo)), '%.3f/%.3f/%.3f/%.3f H; Abfall %.3f; Profil f 0..1 %s' % (
+        q5['f'][0.1], q5['f'][0.3], q5['f'][0.5], q5['f'][0.7], q5['abfall'], q5['profil']), ok5q))
     ok6 = (0.025 <= s['end_breite'] <= 0.05 and 0.12 <= s['end_laenge'] <= 0.17 and 75 <= s['end_richtung'] <= 95 and
            s['taille'] <= 0.035 and s['taille'] <= s['schmal_vor_knick'] + 1e-9)
     Z.append(zeile('T6 Endstueck', 'B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste',
@@ -477,6 +489,16 @@ def koerper_farben(mo, P):
                                                                        erg['F10_id15'][1]) if k == 'F10' else ''))
     mt = float(np.mean(des))
     Z.append(zeile('F Mittel', 'Mittel dE00 <= 4', '%.2f' % mt, mt <= 4))
+    # Runde 4: F6 an der Fensterlage (rote Bildpunkte von Id 8 im Fenster 372-424 x 197-232) und die Lesart "ganzer Oberkoerper" des
+    # Originals (rote Bildpunkte in Polygon + Rumpfbox 19,6 / 11,1 / 3,1) - F6 nach Wortlaut vergleicht alle roten Id-8-Bildpunkte mit dem
+    # roten Fenster der Brustmitte (Widerspruch zur Rot-Verteilung der Sicht-Pruefung V4 r3 1.5, Dossier V4 Runde 4)
+    fb = np.zeros(ids.shape, bool); fb[197:233, 372:425] = True
+    r6 = er(ids == 8) & rg & fb
+    if r6.sum():
+        la6 = lab1(V[r6].mean(0)); d6 = G.de00(la6, ZIEL['F6'])
+        Z.append(zeile('F F6 Fensterlage', '16.6/17.3/6.2 dE00 <= 5, |dL| <= 4 (rote Id-8-Bildpunkte im Fenster 372-424 x 197-232)',
+                       '%s dE00 %.1f dL %+.1f (%d px)' % ('/'.join('%.1f' % v for v in la6), d6, la6[0] - ZIEL['F6'][0], int(r6.sum())),
+                       d6 <= 5 and abs(la6[0] - ZIEL['F6'][0]) <= 4))
     for k in ('F7g', 'F8g'):          # Runde 3: Messblatt-Wortlaut (Id ganz gegen das Fensterziel), echt bewertet (Pruefung V4 r2 Zahlen 4.2)
         la, n = erg[k]; zk = ZIEL[k[:2]]
         dd, dl = G.de00(la, zk), la[0] - zk[0]
@@ -517,6 +539,89 @@ def koerper_farben(mo, P):
     Z.append(zeile('F0 Gueltigkeit Farbvergleich', 'Wand links 64,7/0,3/-2,1 dE00 <= 2', '%s dE00 %.2f' % ('/'.join('%.1f' % v for v in w), d0),
                    d0 <= 2))
     return Z, erg, (img, ids, V, img2, ids2, V2, reg, reg2)
+
+# ---------------------------------------------------------------------------------------------------- Runde 4 (Pruefung V4 r3)
+def schwanz_form(mo, P):
+    """Sicht-Pruefung V4 r3 1.3 (Klasse A "Vierkant-Balken"): Querprofil und Oberkontur des waagerechten Teils (r4_mass, Verfahren des
+    Sicht-Pruefers), Original = Vorlage 2 roh in den 3 Leser-Masken."""
+    img, ids, iv = G.zeichne(mo, P['85'], voll=True)
+    _ok, _so, H = G.h_port(iv)
+    fp = R4.form_port(img, ids); fo = R4.form_original()
+    st_max = max(d['quer'][x]['stufe3px'] for d in fo for x in R4.XS_QUER)
+    pl_max = max(d['quer'][x]['plateau'] for d in fo for x in R4.XS_QUER)
+    q = fp['quer']
+    okq = all(q[x] is not None and q[x]['stufe3px'] <= st_max + 1e-9 and q[x]['plateau'] <= pl_max + 1e-9 for x in R4.XS_QUER)
+    Z = [zeile('TQ Schwanz Querprofil', 'x 310/320/330/340: Stufe auf 3 px <= %.1f L*, Plateau-Anteil <= %.2f (Original-Maximum, 3 Masken)' % (st_max, pl_max),
+               '; '.join('x %d %s' % (x, ('Stufe %.1f Plateau %.2f' % (q[x]['stufe3px'], q[x]['plateau'])) if q[x] else '-') for x in R4.XS_QUER), okq,
+               'Sicht-Pruefung V4 r3 1.3: V4 r3 16,6-19,9 L*, 0,33-0,43')]
+    rms_o = [d['kontur']['rms'] for d in fo]
+    rms_min = min(rms_o) - (max(rms_o) - min(rms_o))
+    ko = fo[0]['kontur']['kante']; kp = fp['kontur']['kante']
+    ab = {x: (abs(kp[x] - ko[x]) / H if kp[x] is not None else 1.0) for x in R4.X_KANTE}
+    okk = fp['kontur']['rms'] >= rms_min and all(v <= 0.03 for v in ab.values())
+    Z.append(zeile('TK Schwanz Oberkontur', 'x 284-332: RMS zur Geraden >= %.2f px (Original %s minus Spanne); Oberkante x 276-292 je Spalte '
+                   '<= 0,03 H vom Original %s' % (rms_min, '/'.join('%.2f' % r for r in rms_o), '/'.join(str(ko[x]) for x in R4.X_KANTE)),
+                   'RMS %.2f px; Oberkante %s (max %.3f H)' % (fp['kontur']['rms'], '/'.join(str(kp[x]) for x in R4.X_KANTE), max(ab.values())),
+                   okk, 'Sicht-Pruefung V4 r3 1.3: V4 r3 0,6 px, Oberkante 237/235/232/230/228; Toleranz Oberkante = TA (0,03 H)'))
+    return Z, dict(port=fp, original=fo)
+
+
+def oberkoerper_vorn(mo, P):
+    """Sicht-Pruefung V4 r3 1.5 (Klasse A "Rot-Verteilung"): Buehne Pose 135 gegen Vorlage 1 (r4_mass.oberkoerper_*), Riegel nach dem
+    Vorschlag des Sicht-Pruefers: Rot Mitte/aussen >= 2,75, Schultern a* > 12 <= 0,05; dazu Anteil a* > 18 <= Original."""
+    img, ids = G.zeichne(mo, P['135'])
+    d = R4.oberkoerper_buehne(img, ids); o = R4.oberkoerper_original()
+    a18o, a18p = o['a18'] / o['n'], d['a18'] / d['n']
+    ok = d['rot_m_a'] >= 2.75 and d['schulter_a12'] <= 0.05 and a18p <= a18o
+    return [zeile('FO Oberkoerper vorn Rot-Verteilung (Buehne)', 'Rot Mitte/aussen >= 2,75 (Original %.2f); Schultern a*>12 <= 0,05 (Original %.3f); '
+                  'Anteil a*>18 <= %.3f (Original)' % (o['rot_m_a'], o['schulter_a12'], a18o),
+                  'Mitte/aussen %.2f (Drittel %.2f/%.2f/%.2f); Schultern %.3f; a*>18 %.3f' % (
+                      d['rot_m_a'], d['B_links']['rot'], d['Mitte']['rot'], d['B_rechts']['rot'], d['schulter_a12'], a18p), ok,
+                  'Sicht-Pruefung V4 r3 1.5 / Riegelvorschlag Abschnitt 3; V4 r3 1,21 / 0,089')], dict(port=d, original=o)
+
+
+def spielbild(lauf):
+    """Sicht-Pruefung V4 r3 1.1 / 1.5 im SPIELBILD (RE15_FRAMEDUMP des Laufs, registriert ueber nb2neu/c6.port): Kopf-Innenflaeche
+    (Gradient in der Originalspanne, glatte Pixel), Oberkoerper (Rot Mitte/aussen, Schultern, Anteil a* > 18 gegen das Videobild)."""
+    d = os.path.dirname(lauf)
+    sys.path.insert(0, os.path.join(os.path.dirname(HIER), 'nb2neu'))
+    os.environ['NB6_RUNS'] = os.path.dirname(d)
+    import c6
+    ko = R4.kopf_innen_original()
+    g = R4._grad_lum(G.vorlage(1)); x0, y0, x1, y1 = R4.KOPF_INNEN_ORIG
+    glatt_max = max(float((g[y0 + dy:y1 + dy + 1, x0 + dx:x1 + dx + 1] < 8).mean()) for dx in (-3, 0, 3) for dy in (-3, 0, 3))
+    Z, info = [], {}
+    for h in (118, 135):
+        fd = c6.port(os.path.abspath(d), h)
+        if fd is None:
+            continue
+        fd = cv2.cvtColor(fd, cv2.COLOR_BGR2RGB).astype(float)
+        k = R4.kopf_innen_spiel(fd, h)
+        Z.append(zeile('KS Kopf-Struktur Spielbild h%d' % h, 'Innenflaeche Gradient %.1f-%.1f (Original, Box +-3 px); glatte Pixel <= %.3f (Original max)' % (
+            ko['spanne'][0], ko['spanne'][1], glatt_max), 'Gradient %.1f; glatt %.3f' % (k['grad'], k['glatt']),
+            ko['spanne'][0] <= k['grad'] <= ko['spanne'][1] and k['glatt'] <= glatt_max, 'Sicht-Pruefung V4 r3 1.1: V4 r3 h135 27,2 / 0,197, h118 26,9 / 0,126'))
+        vid = c6.vid(h)
+        vid = (cv2.cvtColor(vid, cv2.COLOR_BGR2RGB).astype(float) if h == 118 else G.vorlage(1))
+        dv = R4.drittel(vid, R4.poly_maske(R4.PV_SPIEL[h]))
+        mp = R4.poly_maske(R4.PS_SPIEL[h])
+        dp = R4.drittel(G.videoraum(fd), mp)
+        a18v, a18p = dv['a18'] / dv['n'], dp['a18'] / dp['n']
+        Z.append(zeile('FO Oberkoerper Spielbild h%d' % h, 'Rot Mitte/aussen >= 2,75 (Video %.2f); Schultern a*>12 <= 0,05 (Video %.3f); Anteil a*>18 <= Video %.3f' % (
+            dv['rot_m_a'], dv['schulter_a12'], a18v), 'Mitte/aussen %.2f (Drittel %.2f/%.2f/%.2f); Schultern %.3f; a*>18 %.3f; L* p10 %.1f (Video %.1f)' % (
+            dp['rot_m_a'], dp['B_links']['rot'], dp['Mitte']['rot'], dp['B_rechts']['rot'], dp['schulter_a12'], a18p, dp['L_p10'], dv['L_p10']),
+            dp['rot_m_a'] >= 2.75 and dp['schulter_a12'] <= 0.05 and a18p <= a18v,
+            'Sicht-Pruefung V4 r3 1.5 (Polygone von Hand, oberkoerper_spiel.py); V4 r3 h118 1,18 / 0,13'))
+        info[h] = dict(kopf=k, oberkoerper=dp, video=dv)
+    return Z, info
+
+
+def kopf_buehne320(mo, P):
+    img, ids = G.zeichne(mo, P['135'])
+    k = R4.kopf_innen_buehne(img, ids, True); ko = R4.kopf_innen_original()
+    return [zeile('KS Kopf-Struktur Buehne 320 x 240', 'Innenflaeche Gradient %.1f-%.1f (Original); Naeherung des Spielbilds' % ko['spanne'],
+                  'Gradient %.1f; glatt %.3f' % (k['grad'], k['glatt']), ko['spanne'][0] <= k['grad'] <= ko['spanne'][1],
+                  'Buehne Pose 135 ueber 320 x 240 (INTER_AREA wie c6.port); V4 r3 28,0')]
+
 
 
 def lichtprobe(lauf):
@@ -668,6 +773,13 @@ def main():
             Z.append(zeile('F0 Lichtgegenprobe h%d' % h, 'Rumpf b2 gegen FRAMEDUMP dE00 <= 3', 'b2 %s / Spiel %s dE00 %.1f (%d px)' % (
                 '/'.join('%.1f' % v for v in x), '/'.join('%.1f' % v for v in y), d, n), d <= 3))
     zf, ef, _ = koerper_farben(mo, P); Z += zf
+    # Runde 4 (Pruefung V4 r3): Schwanzform, Oberkoerper-Rotverteilung, Kopfstruktur im Spielbild
+    zq, iq = schwanz_form(mo, P); Z += zq
+    zo, io = oberkoerper_vorn(mo, P); Z += zo
+    Z += kopf_buehne320(mo, P)
+    ispiel = {}
+    if a.lauf:
+        zs4, ispiel = spielbild(a.lauf); Z += zs4
     rot = [z for z in Z if not z['ok']]
     for z in Z:
         print('%-4s %-34s soll: %-60s ist: %s %s' % ('OK' if z['ok'] else 'ROT', z['mass'], z['soll'], z['ist'],
