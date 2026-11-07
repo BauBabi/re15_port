@@ -10,7 +10,9 @@
 # Debug-Sprung, Tuer 2, laufen, Zielen und Feuer gehalten. RE15_GIVE liefert nur die Patronen. Geprueft aus state.log/debug.log:
 #   1  Stufe 3 (analysis/befunde_runde41/form/STUFE3.md): KEINE Mutation mehr in 5090 (Sub 6 nie), die Riesenform ist ab
 #      der Raumladung da
-#   1b Runde 41 Spur GR NB3: Form 1 (EM30) startet mit HP 600 = 0x12c @0x8011690c x RE15_BIRKIN_HP_FAKTOR 2 (PORT-WAHL, Nutzer F1)
+#   1b Runde 41 Spur GR NB3: Form 1 (EM30) startet mit HP 600 = 0x12c @0x8011690c x RE15_BIRKIN_HP_FAKTOR 2 (PORT-WAHL, Nutzer F1) -
+#      seit Stufe 3 gibt es in 5090 KEINE Form-1-Phase mehr: die hoechste HP eines 0x30 im Protokoll ist die der Riesenform,
+#      RE15_BB_FORM_HP 1000 (Integration Runde 41 Welle 2, gemessen: Form-HP 1000 ab F281, Leon = Elza)
 #   2  debug.log "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips" (BAHNSTEIG_FORM.EMD), die Form kommt mit HP 1000 und laeuft
 #      (Clip 10, Clip 5); 1000 = RE2-G4-Ctor `addiu v0,zero,1000` @0x80100678 / `sh v0,342(s1)` @0x8010067c (Runde 41 Spur GR
 #      NB3, Nutzer F2; vorher 150)
@@ -92,8 +94,17 @@ endif()
 # zum G5 4548 < 6000 = `sltiu v0,v0,0x1770` @0x80103e08), G5 tot F5876; Rueckzug 1200 Bilder spaeter (-D_rueck_ab=44) 8 Treffer, erster
 # F5105, G5 tot F6219; Rueckzug auf G5As alter Zeitachse (-D_rueck_ab=18, liegt in der Formphase) 7 Treffer nach dem Szenenende F5310.
 # In allen drei Laeufen ist 5b rot und Pruefung 5 gruen ("Spieler-HP dabei 100"). Mit Rueckzug (Standard): 0 Treffer, x-Abstand >= 10725.
+# INTEGRATION RUNDE 41 WELLE 2 (Stufe 3 der Form-Spur, gemessen im Integrationsbaum 2a0fe07bc, Leon = Elza, scratchpad
+# integ_w2/grp_form.txt): ohne EM30-Phase ist die Riesenform ab der Raumladung da (HP 1000 ab F281), Rueckstoss F2657, Sturz,
+# G5 F2893, Szenenende F4110 (= 2893 + 55 Vorlauf + 1162), G5 tot F5505. Der Rueckzug ab F4540 (34 x MA4) lag damit NACH dem
+# Szenenende, der G5 biss bei F4445 (HP 100 -> 80, x 14045, x-Abstand 4531) -> 5b rot. Wie in GR+G5A (F4540 = 227 Bilder vor
+# dem Szenenende F4767, wirksam 133 Bilder F4767-F4900 bis zur Ostwand x 23113) muss der Rueckzug (D12 = 360 Bilder, die
+# Taste wirkt erst mit der Freigabe am Szenenende, sub06 @0x01778 Set(2,7,1) sperrt bis @0x01983) das Szenenende F4110
+# um >= 133 Bilder ueberdauern. Gemessen mit 28 x MA4 (Start F3820, Ende F4180): nur 70 wirksame Bilder, Leon bis x 18523,
+# dort zwei Armhiebe (HP 100 -> 93 bei F4922, x-Abstand 8210) -> 5b rot. Mit 29 x MA4 beginnt der Rueckzug bei F388 +
+# 29 x 120 + 72 = F3940 und endet F4300: 190 wirksame Bilder, Leon erreicht die Ostwand wie in Welle 1.
 if(NOT DEFINED _rueck_ab)
-    set(_rueck_ab 34)
+    set(_rueck_ab 29)
 endif()
 if(NOT DEFINED _rueck_s)
     set(_rueck_s 12)
@@ -297,8 +308,10 @@ function(ein_lauf _name _raum)
     if(NOT _mut EQUAL 0)
         string(APPEND _g "\n ${_name}: Mutation ${_mut}-mal gestartet, erwartet 0 (Riesenform ab der Raumladung)")
     endif()
-    if(NOT _form1_max EQUAL 600)
-        string(APPEND _g "\n ${_name}: Form 1 hat hoechstens HP ${_form1_max}, erwartet 600 (0x12c @0x8011690c x 2, GR NB3)")
+    # Stufe 3: keine Form-1-Phase (600) mehr in 5090 - die hoechste 0x30-HP ist die Riesenform mit RE15_BB_FORM_HP 1000
+    # (G4-Ctor @0x80100678; Integration Runde 41 Welle 2, gemessen 1000 in beiden Laeufen).
+    if(NOT _form1_max EQUAL 1000)
+        string(APPEND _g "\n ${_name}: hoechste 0x30-HP ${_form1_max}, erwartet 1000 (Riesenform, keine Form-1-Phase 600 seit Stufe 3)")
     endif()
     if(NOT _form_hp EQUAL 1000)
         string(APPEND _g "\n ${_name}: Form kommt mit HP ${_form_hp}, erwartet 1000 (G4-Ctor @0x8010067c, GR NB3)")
