@@ -37,6 +37,7 @@
 #include "re15_rumble.h"
 #include "re15_birkin_formen.h"
 #include "re15_g5auftritt_r41.h"
+#include "re15_annette_r41.h"    /* Integration Runde 41 Welle 2: Tor-/Zug-Bits der Spur AN (Vorbedingung 0x4D in 5090) */
 #include "re2_ems.h"
 #include "re15_xa.h"
 #include "re15_emd.h"
@@ -208,6 +209,11 @@ static uint8_t *raum_laden(const char *rel, unsigned id)
     re15_actor_init();
     re15_aot_init();
     scd_vm_init();
+    /* Integration Runde 41 Welle 2 (Spur AN): die Frau im Kittel (0x4D, sub00 @0x0122A) spawnt in 5090 nur im Spielstand, in dem der
+     * Spieler den Raum betritt - Tor (3,89) passiert (ROOM6000 sub07 @0x011B4 `22 03 59 01`, RE15_AN_TOR_BIT) und Zugstart-Szene im
+     * Fuehrerstand gesehen ((9,133) RE15_AN_ZUG_BIT, PORT-WAHL AN NB1/NB2); re15_annette_r41_spawn_weg (scd_vm.c op_sce_em_set)
+     * verwirft sie sonst. Nach scd_vm_init (ruft re15_game_state_init, nullt g_game.flags) und vor den SCD-Threads setzen. */
+    if (id == 0x5090u) { re15_game_flag_set(RE15_AN_TOR_BANK, RE15_AN_TOR_BIT, 1); re15_game_flag_set(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, 1); }
     if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);
     if (s_rdt.sub_scd[0]) scd_thread_start(1, s_rdt.sub_scd[0]);
     g_scd.work_vars[10] = 0;
