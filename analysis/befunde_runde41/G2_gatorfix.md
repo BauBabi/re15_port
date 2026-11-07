@@ -1164,3 +1164,11 @@ Tragen-Riegel ohne Aufnahme (K), E1 entfaellt, obenlog ab0 fuer rampe_oben, auss
 5. **PSX**: die Maschine ist plattformneutral, der Zeichner-Override fuer die Raumbank nur PC (PSX posiert Clip 17-20 aus der Standardbank) - nicht gebaut/gemessen.
 6. Vibration (0x800eaad8/0x800eac28), Gator-Effekt FUN_80103d80 und die Nacken-Bits +0x1C0 |= 0x12 sind nicht Teil der Reaktion (O-T3).
 7. Elza posiert aus RE2-Leon-Record 0 (O-T2) - Sichtpruefung `nachher_oben_elza_*`.
+
+### Nachtrag ctest exe (Bauer-Durchlauf auf HEAD cfa775ae8, Bau "ninja: no work to do", parallel andere Agenten unter Last)
+
+- `ctest --test-dir <Baum>/re15_port/build -R "^unit_r41_(gatorfix|re2gator)_" -j 2 --timeout 1800`: `100% tests passed, 0 tests failed out of 48`,
+  `Total Test time (real) =  90.76 sec` (30 unit_r41_gatorfix_* inkl. nb4/nb4_elza, 18 unit_r41_re2gator_*; `G2_belege/nb4/bau/ctest_unit_r41_alle.txt`).
+- `ctest --test-dir <Baum>/re15_port/build -R "^integration_r41_(gatorfix_|re2gator)" -j 2 --timeout 1800`: `100% tests passed, 0 tests failed out of 20`,
+  `Total Test time (real) = 4582.95 sec` (19 integration_r41_gatorfix_* + integration_r41_re2gator; `G2_belege/nb4/bau/ctest_exe.txt`). Kein roter Riegel,
+  kein Nachfahren noetig.
