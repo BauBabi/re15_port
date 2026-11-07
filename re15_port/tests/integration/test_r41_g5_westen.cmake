@@ -160,7 +160,13 @@ function(ein_lauf _name _raum _skript)
 endfunction()
 
 # Eingaben der Abnahme: z_w4 (Leon im Westen ohne Feuer) und z_fern (Suedwand im Armbereich), danach laufen, drehen, rennen
-set(_tasten ",W56.5,U2,W1,D2,W1,L0.5,U2,R1.1,XU2,W10")
+# INTEGRATION RUNDE 41 WELLE 2 (Stufe 3 der Form-Spur, gemessen im Integrationsbaum 2a0fe07bc, Lauf lauf_5b9f175d leon_w4):
+# die Riesenform ist ab der Raumladung da und faellt den vier Raketen frueher, G5-Vorlauf F652, Armierung F707, Szenenende F1869
+# (vorher G5 F866 -> Armierung F921 -> Szenenende F2083). Die Tasten ab W56.5 (= F2656 bei Skriptstart F100) lagen damit 787
+# statt 573 Bilder hinter dem Szenenende; der G5 biss den stehenden Spieler bei F2220/2358/2474/2592/2708 (100 -> 0) und
+# toetete ihn F2731 (Neustart, Bildzaehler 2992 -> 0; das Zellenmass sah danach den Spawn (500,-9175) als #23). Die Wartezeit
+# rueckt um die gemessenen 214 Bilder (7,1 s) vor: W49.4 = F2443, wieder 573 Bilder nach dem Szenenende wie in Welle 1.
+set(_tasten ",W49.4,U2,W1,D2,W1,L0.5,U2,R1.1,XU2,W10")
 ein_lauf(leon_w4 5090 "A0.1,W1,U8.5,MA13,W4.2,XU1.9${_tasten}")
 ein_lauf(elza_w4 5091 "A0.1,W1,U8.5,MA13,W4.2,XU2.2${_tasten}")
 ein_lauf(leon_fern 5090 "A0.1,W1,U8.5,MA13,W4.2,R1.08,XU2.4${_tasten}")
