@@ -60,9 +60,11 @@ static size_t         s_room_rbj_size = 0;
 static struct {
     int  slot;                    /* Aktor-Slot (-1 = frei) */
     int  valid;
+    uint8_t type;                 /* Typ des Aktors beim Binden (Integration Sherry 6031, s. rbj_resolve_slot) */
+    const void *bank;             /* Bank, deren Hierarchie kopiert wurde (re15_enemy_find(type)) */
     re15_emd_skeleton_t  skel;    /* Entity-Hierarchie + Record-Keyframe-Pool */
     re15_emd_animation_t anim;    /* Record-EDD */
-} s_rbj_cache[RE15_RBJ_CACHE_MAX] = { { -1, 0, {0}, {0} }, { -1, 0, {0}, {0} } };
+} s_rbj_cache[RE15_RBJ_CACHE_MAX] = { { -1, 0, 0, NULL, {0}, {0} }, { -1, 0, 0, NULL, {0}, {0} } };
 
 /* Runde 35 Spur L: Marker-Alias je Aktor-Slot (0 = keiner). Ein portseitig gespawnter NPC ohne
  * eigenen RBJ-Record (ROOM11C0: Marvin, Aktor-Slot 4) spielt den Record des angegebenen
@@ -106,10 +108,28 @@ static uint32_t rbj_record_marker(int r)
 
 static int rbj_resolve_slot(int slot)
 {
-    for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++)
-        if (s_rbj_cache[i].slot == slot) return i;
-    if (!s_room_rbj || slot <= 0 || slot >= RE15_ACTOR_MAX) return -1;
+    if (slot <= 0 || slot >= RE15_ACTOR_MAX) return -1;
     const re15_actor_t *e = &g_actors[slot];
+    /* Integration Runde 41 (Nutzer-Marke 2026-11-08 "gestreckte Sherry" ROOM6031 F164): der Eintrag gilt nur fuer die
+     * Figur, mit deren HIERARCHIE er gebaut wurde. Das Original nimmt die Knochenlagen immer vom Modell des aktuellen
+     * Spawns: Sce_em_set -> FUN_80022300 (`jal` @0x80042328) schreibt @0x800224a8 `sw v0,0x84(s2)` = dir[2] des neuen
+     * Modells (Hierarchie + relpos), der RBJ-Kanal +0x180/+0x184 liefert nur EDD + Keyframes (Sub 0 @0x80050d40/48 ->
+     * FUN_8001f314) - die RBJ-Records haben gar keine Hierarchie: EMR-Kopf o_arm = 0, o_frm = 8 (ROOM6031.RDT RBJ @0x13C8,
+     * rec1 EMR @+200 = 00 00 08 00 0f 00 50 00; ROOM6030.RDT RBJ @0x17BC rec1 ebenso). Der Port kopierte die Hierarchie
+     * beim ersten Binden in den Cache und hielt sie je SLOT: ROOM6031 Wagen sub06 @0x00E42 setzt Aktor 1 = 0x40
+     * (rec1 mit dessen relpos gebunden), die Tuer Slot 1 (main00 @0x00C52) fuehrt in DENSELBEN Raum (kein Raumladen,
+     * kein re15_enemy_reset), sub07 @0x00EFA setzt Aktor 1 = 0x4B Sherry -> Sherrys Teile auf den Knochenlagen des
+     * Erwachsenen (Kopf Knochen 8: -709 statt -465, Arme 9/12: (-84,-717,-/+369) statt (-37,-412,-219/221)).
+     * ROOM6030 ebenso (Wagen sub02 Johns 0x49 auf Aktor 1, Fuehrerstand sub07 @0x010D4 Annette 0x4D). Wechselt Typ
+     * oder Bank des Slots, wird neu gebunden. */
+    for (int i = 0; i < RE15_RBJ_CACHE_MAX; i++)
+        if (s_rbj_cache[i].slot == slot) {
+            if (s_rbj_cache[i].type == e->type && s_rbj_cache[i].bank == (const void *)re15_enemy_find(e->type))
+                return i;
+            s_rbj_cache[i].slot = -1; s_rbj_cache[i].valid = 0;   /* neuer Spawn im Slot -> neu binden */
+            break;
+        }
+    if (!s_room_rbj) return -1;
     if (!e->active || re15_typ47_ist_elliot(e->type)) return -1;   /* Elliot-Ausnahme (O3) — Runde 37 Spur K: nur Leons 0x47;
                                                    * Elzas Roy bindet wie jeder NPC (ROOM1011 rec1, @0x8001b498) */
     /* Marker-Bit (1 + Enemy-Index); Port-Aktor-Slot = 1 + Enemy-Index -> Bit == slot. */
@@ -127,6 +147,7 @@ static int rbj_resolve_slot(int slot)
         if (s_rbj_cache[i].slot < 0) { ci = i; break; }
     if (ci < 0) return -1;
     s_rbj_cache[ci].slot = slot; s_rbj_cache[ci].valid = 0;
+    s_rbj_cache[ci].type = e->type; s_rbj_cache[ci].bank = (const void *)re15_enemy_find(e->type);
     if (rec >= 0) {
         re15_enemy_bank_t *eb = re15_enemy_find(e->type);  /* Basis-Hierarchie = die eigene Bank */
         if (eb && eb->ok &&
