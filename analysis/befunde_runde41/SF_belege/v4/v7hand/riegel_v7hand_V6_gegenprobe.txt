@@ -1,0 +1,11 @@
+SF V7 linke Hand - Riegel V6_gegenprobe (EM30_V6.EMD gegen Basis EM30_V6.EMD)
+T-V7a Krallenzahl                gruen  Modell 4 Doppelpyramiden ['A', 'B', 'C', 'T'], geschlossen True; Foto rote Streifen je Bild [1, 1, 1, 1, 1, 1, 1], Keil in 3/3 Bildern
+T-V7b Daumen grau (P1)           ROT    a* 10.75 (<= 6.0), Lab [14.97, 10.75, 4.18], 29 px; Foto-Keil [30.31, 3.97, 1.83]
+T-V7c Finger rot (P1)            ROT    a* 2.66 (>= 4.12 = Foto 9.12 - 5), Lab [31.47, 2.66, 1.25], 97 px; Foto-Streifen L*/a*/b* 14.87 / 9.12 / 3.00
+T-V7bc P2 / 135                  INFO   P2 Daumen {'px': 13, 'lab': [14.04, 4.0, 1.49]} Finger {'px': 37, 'lab': [23.8, 1.44, 0.8]}; 135 Daumen {'px': 15, 'lab': [15.2, 3.43, -2.78]} Finger {'px': 218, 'lab': [31.18, 2.67, 0.58]}
+T-V7d Laenge je Kralle (P1)      ROT    T 0.0270 H (7.8 px) / Soll 0.0421 = -35.8 %; A 0.0429 H (12.4 px) / Soll 0.0629 = -31.7 %; B 0.0209 H (6.0 px) / Soll 0.0629 = -66.8 %; C 0.0383 H (11.0 px) / Soll 0.0629 = -39.1 %
+T-V7e Rest bytegleich V6         ROT    Abweichungen: ['CLUT 491', 'Zeile 492 fehlt', 'Mesh 12 UV d0', 'Mesh 12 UV d1', 'Mesh 12 UV d3', 'Mesh 12 UV d4', 'Mesh 12 UV d5', 'Mesh 12 UV d6', 'Mesh 12 UV d7', 'Mesh 12 UV d11', 'Mesh 12 UV d12', 'Mesh 12 UV d13']
+T-V7f Zeilen                     gruen  12 Zeilen, Port-Texturhoehe 3072
+T-V7g Boden (912 Keyframes)      gruen  0 von 912 Keyframes mit Krallenspitze unter der Sohle; naechste Spitze 397 E. ueber der Sohle (Basis 0 / 397)
+T-V7h Koerper (912 Keyframes)    INFO   neu 22 Keyframes (je Kralle {'C': 8, 'A': 10, 'T': 15, 'B': 4}; Clips [9, 11, 12, 18, 20], Knochen [4, 8, 10]; tiefster Anteil der Achse 1.0), Basis 22 ({'C': 8, 'A': 10, 'T': 15, 'B': 4}; Clips [9, 11, 12, 18, 20], Knochen [4, 8, 10]; 1.0)
+ERGEBNIS: 4 rot von 7 Pflichtpruefungen -> Exit 1

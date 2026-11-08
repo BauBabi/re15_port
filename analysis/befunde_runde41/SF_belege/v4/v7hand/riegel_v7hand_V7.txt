@@ -1,0 +1,11 @@
+SF V7 linke Hand - Riegel V7 (EM30_V7.EMD gegen Basis EM30_V6.EMD)
+T-V7a Krallenzahl                gruen  Modell 4 Doppelpyramiden ['A', 'B', 'C', 'T'], geschlossen True; Foto rote Streifen je Bild [1, 1, 1, 1, 1, 1, 1], Keil in 3/3 Bildern
+T-V7b Daumen grau (P1)           gruen  a* 3.7 (<= 6.0), Lab [31.39, 3.7, 0.9], 45 px; Foto-Keil [30.31, 3.97, 1.83]
+T-V7c Finger rot (P1)            gruen  a* 11.46 (>= 4.12 = Foto 9.12 - 5), Lab [14.91, 11.46, 5.14], 142 px; Foto-Streifen L*/a*/b* 14.87 / 9.12 / 3.00
+T-V7bc P2 / 135                  INFO   P2 Daumen {'px': 15, 'lab': [22.07, 0.73, 0.38]} Finger {'px': 65, 'lab': [17.09, 8.94, 4.37]}; 135 Daumen {'px': 24, 'lab': [22.2, 0.69, -3.28]} Finger {'px': 313, 'lab': [18.99, 11.25, 3.97]}
+T-V7d Laenge je Kralle (P1)      gruen  T 0.0421 H (12.1 px) / Soll 0.0421 = -0.0 %; A 0.0628 H (18.1 px) / Soll 0.0629 = -0.1 %; B 0.0632 H (18.2 px) / Soll 0.0629 = +0.5 %; C 0.0628 H (18.1 px) / Soll 0.0629 = -0.2 %
+T-V7e Rest bytegleich V6         gruen  nur Krallen von Mesh 12; 491 ergaenzt um Indizes [88, 251], 492 mit 68 Finger-Indizes
+T-V7f Zeilen                     gruen  13 Zeilen, Port-Texturhoehe 3328
+T-V7g Boden (912 Keyframes)      gruen  0 von 912 Keyframes mit Krallenspitze unter der Sohle; naechste Spitze 320 E. ueber der Sohle (Basis 0 / 397)
+T-V7h Koerper (912 Keyframes)    INFO   neu 26 Keyframes (je Kralle {'A': 14, 'C': 12, 'B': 14, 'T': 16}; Clips [9, 11, 12, 18, 20], Knochen [4, 8, 10]; tiefster Anteil der Achse 1.0), Basis 22 ({'C': 8, 'A': 10, 'T': 15, 'B': 4}; Clips [9, 11, 12, 18, 20], Knochen [4, 8, 10]; 1.0)
+ERGEBNIS: 0 rot von 7 Pflichtpruefungen -> Exit 0
