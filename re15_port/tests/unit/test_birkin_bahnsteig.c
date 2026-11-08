@@ -111,8 +111,10 @@ static void test_asset(void)
     CHECK(re2_emd_parse_bank(s_emd, s_emd_n, &fo) == 0, "BAHNSTEIG_FORM.EMD parst nicht");
     CHECK(fo.skel.bone_count == 32 && fo.md1.mesh_count == 32 && fo.anim.clip_count == 28,
           "Knochen %d Meshes %d Clips %d (J: 32/32, Stufe 3: 28 Clips)", fo.skel.bone_count, fo.md1.mesh_count, fo.anim.clip_count);
-    /* Formtreue: MD1 und TIM bytegleich mit der Referenz (seit E30 2026-11-07: Riesenform K5c V3 Runde 5 mit 16 CLUT-Zeilen,
-     * stufe3/basis_k5c; vorher K4 stufe3/basis_n2, K3 K3_fit), die drei Posen als Keyframes (Ruhe = Ruhe von J mit Kiefer zu,
+    /* Formtreue: MD1 und TIM bytegleich mit der Referenz (seit E32 2026-11-09: Riesenform K5e ruhige Haut mit F1-Hautrand,
+     * 10 CLUT-Zeilen, varianten/K5/ruhe/K5e_f1, FARBE.md "Einbau K5e v0.8.30 (E32)": MD1 0x634cd4c3 / TIM 136224 Byte 0x330ea1c5;
+     * vorher E30 K5c V3 Runde 5 mit 16 CLUT-Zeilen stufe3/basis_k5c, MD1 0x2456b5cc / TIM 139296 Byte 0x9234618d, gesichert
+     * varianten/K5/einbau_k5c; davor K4 stufe3/basis_n2, K3 K3_fit), die drei Posen als Keyframes (Ruhe = Ruhe von J mit Kiefer zu,
      * Bild 1/Bild 2 mit den Kopfwinkeln der Basis; form_j_posen.h, erzeugt von stufe3/gen/s3_testkopf.py) */
     {
         uint32_t dir = rd32(s_emd), md1 = rd32(s_emd + dir + 7u * 4u);

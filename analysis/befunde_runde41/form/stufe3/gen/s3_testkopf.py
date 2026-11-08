@@ -6,6 +6,11 @@ Seit Nachbesserung 1 (E20/E21): Referenz ist die Basis des Rigs, stufe3/basis_n1
 Alligator-Kopf K3, Krallen-Ton, Gelenkkoerpern; Gerippe gleich J) mit neuer Textur-UV der Gelenkkoerper (s3_n1_textur.py): CRC32/Laenge von MD1 und TIM, dazu die drei Posen des Rigs (Wurzel + 32 Winkeltripel):
 Bild 1 und Bild 2 aus K3 (Kopfwinkel von K3), Ruhe = Ruhe von J mit geschlossenem Kiefer (s3_rig.RUHE_KIEFER). Der Test prueft damit,
 dass das Spiel-Asset Gestalt, Textur und die Screenshot-Posen unveraendert traegt. Die Makronamen FORM_J_* bleiben. Kein RE-Wert.
+
+Seit E32 (2026-11-09, Einbau K5e): MD1 und TIM kommen aus der Variante REFERENZ (varianten/K5/ruhe/K5e_f1/BAHNSTEIG_FORM.EMD/.TIM, MD1-Sektion
+bytegleich wie im Spiel-Asset; Generator varianten/K5/generator/kf_k5e.py). Die Posen kommen weiter aus dem Rig (BASIS_DIR = basis_k5c):
+K5e traegt EDD/EMR/Clips bytegleich K5c, nur MD1 (Geometrie K5d, CLUT-Worte K5e) und TIM (10 Zeilen) sind neu.
+Umschaltbar fuer Vergleiche: Umgebungsvariable S3_TESTKOPF_REF (Pfad ohne .EMD/.TIM).
 """
 import os, sys, zlib
 HIER = os.path.dirname(os.path.abspath(__file__))
@@ -14,17 +19,19 @@ import s3_rig as S          # noqa: E402
 import form_emd as FE       # noqa: E402
 
 AUS = os.path.join(S.WURZEL, 're15_port', 'tests', 'unit', 'form_j_posen.h')
+REFERENZ = os.environ.get('S3_TESTKOPF_REF') or os.path.join(S.FORM_DIR, 'varianten', 'K5', 'ruhe', 'K5e_f1', 'BAHNSTEIG_FORM')
 
 
 def main():
-    emd = open(os.path.join(S.BASIS_DIR, 'FORM.EMD'), 'rb').read()
-    tim = open(os.path.join(S.BASIS_DIR, 'FORM.TIM'), 'rb').read()
+    emd = open(REFERENZ + '.EMD', 'rb').read()
+    tim = open(REFERENZ + '.TIM', 'rb').read()
     md1 = FE.sektionen(emd)['md1']
     r = S.Rig()
     namen = {0: 'BILD1', 1: 'BILD2', 2: 'RUHE'}
     z = ['/* form_j_posen.h - ERZEUGT von analysis/befunde_runde41/form/stufe3/gen/s3_testkopf.py, nicht von Hand aendern.',
-         ' * Referenz Formtreue seit E30 (2026-11-07): Riesenform K5c V3 Runde 5 mit 16 CLUT-Zeilen (stufe3/basis_k5c = varianten/K5/farbe/',
-         ' * K5c_farbe_v3 + kf_zeilen16.py; vorher K4: stufe3/basis_n2): MD1/TIM, Posen Bild 1/Bild 2 von K5c, Ruhe = Ruhe von J mit Kiefer zu.',
+         ' * Referenz Formtreue seit E32 (2026-11-09): Riesenform K5e ruhige Haut mit F1-Hautrand, 10 CLUT-Zeilen (varianten/K5/ruhe/K5e_f1,',
+         ' * Generator varianten/K5/generator/kf_k5e.py; Geometrie K5d, Texel/UV K5c). Vorher E30 K5c V3 Runde 5 (stufe3/basis_k5c), davor K4.',
+         ' * MD1/TIM aus K5e_f1; Posen Bild 1/Bild 2 von K5c (Clips bytegleich), Ruhe = Ruhe von J mit Kiefer zu.',
          ' * Makronamen FORM_J_* wie bisher. Kein RE-Wert. */',
          '#ifndef FORM_J_POSEN_H', '#define FORM_J_POSEN_H', '#include <stdint.h>', '',
          '#define FORM_J_MD1_LEN %du' % len(md1), '#define FORM_J_MD1_CRC 0x%08xu' % (zlib.crc32(md1) & 0xffffffff),

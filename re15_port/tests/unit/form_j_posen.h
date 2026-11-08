@@ -1,15 +1,16 @@
 /* form_j_posen.h - ERZEUGT von analysis/befunde_runde41/form/stufe3/gen/s3_testkopf.py, nicht von Hand aendern.
- * Referenz Formtreue seit E30 (2026-11-07): Riesenform K5c V3 Runde 5 mit 16 CLUT-Zeilen (stufe3/basis_k5c = varianten/K5/farbe/
- * K5c_farbe_v3 + kf_zeilen16.py; vorher K4: stufe3/basis_n2): MD1/TIM, Posen Bild 1/Bild 2 von K5c, Ruhe = Ruhe von J mit Kiefer zu.
+ * Referenz Formtreue seit E32 (2026-11-09): Riesenform K5e ruhige Haut mit F1-Hautrand, 10 CLUT-Zeilen (varianten/K5/ruhe/K5e_f1,
+ * Generator varianten/K5/generator/kf_k5e.py; Geometrie K5d, Texel/UV K5c). Vorher E30 K5c V3 Runde 5 (stufe3/basis_k5c), davor K4.
+ * MD1/TIM aus K5e_f1; Posen Bild 1/Bild 2 von K5c (Clips bytegleich), Ruhe = Ruhe von J mit Kiefer zu.
  * Makronamen FORM_J_* wie bisher. Kein RE-Wert. */
 #ifndef FORM_J_POSEN_H
 #define FORM_J_POSEN_H
 #include <stdint.h>
 
 #define FORM_J_MD1_LEN 169500u
-#define FORM_J_MD1_CRC 0x2456b5ccu
-#define FORM_J_TIM_LEN 139296u
-#define FORM_J_TIM_CRC 0x9234618du
+#define FORM_J_MD1_CRC 0x634cd4c3u
+#define FORM_J_TIM_LEN 136224u
+#define FORM_J_TIM_CRC 0x330ea1c5u
 
 static const int16_t FORM_J_BILD1_WURZEL[3] = { -9, -1887, -22 };
 static const int16_t FORM_J_BILD1_WINKEL[32][3] = {
