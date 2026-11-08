@@ -11,7 +11,8 @@ Regeln (Nutzer 3 "ein zusammenhaengendes Stueck ... diverse komische Huckel"):
   * Radius je Gelenk j (j = 0 Wurzel im Rumpf, 1 = Beginn, ..., 6 = Knick-Endstueck, 7 = Ende vor der Spitze) monoton fallend von der
     Wurzel zur Spitze: Endring von Glied k und Anfangsring von Glied k + 1 tragen denselben Radius (deckungsgleich in der Ruhe-Kette,
     die Manschette liegt im Vorglied, solange das Vorglied dort nicht duenner ist).
-  * Zwischenring 'bauch' im Glied 18: Radius linear zwischen den Gelenken 2 und 3 an seiner Stelle, Mitte auf der Achse (kein Wulst).
+  * Zwischenring 'bauch' im Glied 18: Lage, Radius und Versatz aus der Suche (schwanz_suche.py), Steigungsknick <= 15 Grad (kein Wulst
+    wie V4: dort 1,374 x linear = 27 % ueber Gelenk 2, Knick 31 Grad).
   * Radien je Gelenk aus der Foto-Breite (v5f_gemein.foto_breiten, Inkreis-Durchmesser, Median 3) in Pose P2 nachgestellt
     (passen(): Faktor (Soll / Ist)^0,8 je Gelenk an seinem f, danach Monotonie, 12 Durchgaenge).
 """
@@ -53,8 +54,9 @@ def radien_lesen(meshes):
 
 def setzen(meshes, rad):
     """rad = {0..7: Radius, optional 'bauch': dict(t, anteil, aussen)}; setzt die Ringe aller Glieder (Kopie).
-    bauch (Glied 18): Lage t (Anteil der Gliedlaenge), Radius = linear + anteil x (r2 - linear) (anteil <= 1: nie dicker als das
-    Gelenk davor), Mitte aussen x Radius in der Richtung der Generator-Mitte (nach aussen, weg von der Bogenmitte)."""
+    bauch (Glied 18): Lage t (Anteil der Gliedlaenge), Radius = linear + anteil x (r2 - linear) (anteil 1 = so dick wie Gelenk 2;
+    die Suche Lauf 3 liess bis 2,0 zu, begrenzt nur durch den Steigungsknick <= 15 Grad; gewaehlt 1,356 = 4,5 % ueber Gelenk 2),
+    Mitte aussen x Radius in der Richtung der Generator-Mitte (nach aussen, weg von der Bogenmitte)."""
     ms = copy.deepcopy(meshes)
     for i in range(7):
         m = ms[16 + i]

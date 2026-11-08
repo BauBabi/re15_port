@@ -2630,3 +2630,134 @@ Kein Spiellauf mit RE15_FRAMEDUMP in dieser Runde (Leisten aus dem Renderer v4_g
 4. **Kopfgroesse/-lage**: Original-Groesse 1,0 (Referenz 2 hatte 1,05); Kopfbox 135 x 333-374 y 158-213, P2 x 432-461 y 195-238. Der Abstand zur
    Foto-Kopfstelle in Foto 1 (Messblatt Offen 1) bleibt.
 5. Das Hellgrau ueber dem Mund kommt aus der Stirn (Paletten-L* 55-84) und ist im Texturbild heller als die Wange daneben; im Spielbild (Licht) L* 20-42.
+
+## V5 wie Foto - Koerper (Bauer, 2026-11-08)
+
+Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc, keine Zahl hier ist eine @0x-Konstante. Masse = Bildmessung an den Originalfotos
+(SF_MESSBLATT_FOTO.md, a909bd2cd) und am Modell (v4_gemein.zeichne, Spielkamera 50A0/12, RDT-Licht). Werkzeuge
+re15_port/tools/r41_sichel/v5koerper/ (Commit 42757e3fa), Belege SF_belege/v4/v5f/ und SF_belege/v4/20-24_*.jpg (Commit d8a589057).
+Variante sfv4/emd/EM30_V5f.EMD = EM30_V4.EMD, sha256 784c8f05dfc4ac57dfdf3ac52127ac2a4e900603043aafa0c6bada897a2d3019, 264564 Byte,
+zweiter Bau gleiche sha256. Basis EM30_V5k.EMD (99703bbd). Kopf (Mesh 9, Zeile 486) unveraendert. Spiel-Asset EM30_HANGAR.EMD (cfd1ac42) und
+Pin unveraendert, nachgerechnet.
+
+### Nutzer-Wortlaut (2026-11-08, bindend)
+(1) "In der Seitenansicht sieht man auch weder das Auge, noch den dicken schwanz..."; (3) "im original ist der Schanz wie man sieht gräulich
+und vom rücken aus geschlossen ein zusammenhängendes stück Das direkt I. den Rücken übergeht. wir haben da wieder diverse komische huckel..."
+und "dunkel grünlich"; (5) "Auch der rote Fleck oben auf der rechten Schulter, den gibt es in der Vorlage ganz offensichtlich nicht. In der
+Vorlage ist es grau wie der Rest..."; (8) "Die roten Stellen sind korrekt auf der brust und am oberen linken Arm sonst dominiert im original
+eher das grau."; (9) "Und die klauen der linken Hand sieht irgendwie falsch aus und zu klein." mit Klarstellung "gemeint ist die kleine Klaue
+auf der linken Hand des Wesens."
+
+### a) Schwanz: Form (schwanz_form.py, schwanz_suche.py; nur Ecken der Meshes 16-22)
+- Messung der Breite: Der Lauf entlang der Normalen (Messblatt 5) misst an der Biegung quer durch die Ecke (Foto f 0,4: 0,225 H, f 0,5:
+  0,083 H). T-F1 misst deshalb den Querschnitt = Inkreis-Durchmesser auf der Normalen durch die Station, Foto und Modell mit derselben
+  Funktion; Foto-Achse = Nutzerlinie Beginn -> Biegung -> Knick -> Ende, Modell-Achse = projizierte Gelenkkette ab Gelenk 17 (Beginn).
+  Foto-Soll = Median ueber 3 Stationen (roh f 0,7 / 0,8 / 0,9 = 0,033 / 0,055 / 0,033 H, Maskenrauschen):
+  f 0,1-0,9 = 0,144 / 0,145 / 0,144 / 0,114 / 0,077 / 0,077 / 0,055 / 0,033 / 0,033 H.
+- Huckel-Ursachen in V5k (gemessen, Knochenraum): Zwischenring bauch im Glied 18 mit 1,374 x linear (340 E. bei Gelenkradius 268,
+  Steigungsknick 31 Grad), Endglied 22 dicker als 21 (82 gegen 58 E.).
+- Bau: jeder Ring um seine Mitte skaliert, Manschette (-0,45 r) und Apex nach der Generatorregel neu gelegt; Flaechen, UV, Normalen,
+  Skelett, Keyframes bytegleich. Endring von Glied k und Anfangsring von Glied k+1 tragen denselben Radius (deckungsgleich in der
+  Ruhe-Kette). Die Manschette bleibt: die Schwanzgelenke drehen sich in den Keyframes um bis zu 86 Grad gegen das Mittel (gemessen ueber
+  912 Keyframes), ohne Manschette oeffneten sich dort Spalten.
+- Radien (Suche Lauf 3, Saat 9, 600 Schritte; Strafe aus T-F1, Steigungsknick <= 15 Grad, Riegel V4 T1-T5/TA/TK in Pose 85; Protokolle
+  v5f/schwanz_suche_s1-9.log): Gelenk 0-7 = 289 / 258 / 258 / 160 / 151 / 60 / 65 / 65 E. (V5k 315 / 281 / 268 / 135 / 98 / 58 / 82 / 82);
+  bauch t 0,334, 269 E. (4,5 % ueber Gelenk 2), Versatz 0,023 r nach aussen. Die Taille am Knick (Gelenk 5) bleibt, das Endstueck ist 7 %
+  dicker (Steigungsknick 9,5 Grad).
+- Wurzel: Glied 16 liegt wie bisher im Rumpf; am Wechsel Schwanz -> Rumpf ist die obere Kontur in P2 stetig (Stufe 1 px, keine Luecke).
+  Den Anfangsring auf die Rueckenflaeche zu legen war dafuer nicht noetig; ein groesserer Wurzelradius aendert die Kontur nicht (r0 289-420
+  geprueft, die sichtbare Oberkante dort ist Glied 17).
+
+### a) Schwanz: Farbe (koerper_bau.schwanz_palette; Zeile 487)
+Zeile 487 = Kopie der Referenz-2-Zeile 480; jeder der 187 Indizes, die die Schwanztexel tragen, bekommt den Eintrag der Sichel-Zeile 484
+(Referenz 2, Mesh 15, 126 Indizes) mit demselben Helligkeitsrang (15-Bit-Wert bytegleich aus 484). Texel bytegleich. Paletten-Median der
+Schwanz-Indizes 32,2 / 14,3 / 7,3 -> 23,3 / -1,7 / 5,0. Gerendert (P2, Videoraum): 22,8 / -1,5 / 3,4 gegen Foto-Schwanz 17,8 / 4,8 / 1,5 und
+Modell-Rumpf grau 30,3 / 2,3 / 2,1: dunkler als der Rumpf, a* leicht negativ (Nutzer "dunkel gruenlich"; im Foto-Lab nicht messbar,
+Messblatt Offen 4).
+
+### b) Rot nur Brust und oberer Arm (koerper_bau.rot_behalten / kuppe_13 / grau_zeile)
+- Lesart (Messblatt 4.3/4.4): "oberer linker Arm" = Bild-links in Foto 2 = (W)-rechter Oberarm (Knochen 13); "rechte Schulter" = Foto 1
+  Bild-links = (W)-rechts.
+- Zeilen 488 / 489 / 490 = Referenz-2-Zeilen 481 / 480 / 482 bytegleich. Auf die Kopie zeigen (nur CLUT-Feld): Mesh 8 Brust (f_analyse.teil am
+  Flaechenschwerpunkt, ohne 8/v24, 8/v26) 34 Flaechen -> 488; Mesh 13 ohne Schulterkuppe 43 Flaechen -> 489; Mesh 12 Klauenhand (im Foto rote
+  Handflaeche, Messblatt 6) 58 Flaechen -> 490.
+- Schulterkuppe (kuppe_13): 13/d30, d32, d33 (Messblatt 4.4) und jede Flaeche von 13, deren in P1 sichtbare Pixel zu >= 50 % (>= 8 px) in der
+  Foto-1-Region Schulter Bild-links (x 296-355, y 175-250, Foto rot 0,5 %) liegen. Grund: mit nur d30/d32/d33 blieb die Region zu 33 % rot
+  (13/v11, d18, v6, v3, d3, d17, d16). Ergebnis: d3, d18, d30, d32, d33, v3, v10, v11, v12, v13, v14, v17, v18.
+- Zeilen 480 / 481 / 482: jeder Eintrag mit Paletten-a* >= 10 (155 / 104 / 150 Eintraege) wird grau: L* gleich bzw. tiefer, a*/b* = graue
+  Rumpfhaut im Foto 2 (3,9 / 1,5, Messblatt 5); 5-Bit-Wert = naechster Nachbar, der nicht heller ist. Der erste Lauf mit dem Median der grauen
+  Paletten-Eintraege (Zeile 480: 3,1 / 5,2) ergab im Bild ein Braun (Leiste selbst angesehen), darum die Foto-Haut. C* aller neuen Eintraege
+  <= P90 der grauen Eintraege derselben Zeile (Riegel T-K1d).
+- CLUT: 11 Zeilen (480-490), Port-Texturhoehe 2816 <= 4096.
+
+### c) Krallen (W)-links (koerper_bau.krallen_strecken; Mesh 12)
+Je Kralle (f_krallen.krallen: Flaechen mit allen Ecken y >= 330) die Ecken um die Krallenwurzel gestreckt, Faktor = 0,036 H / projizierte
+Laenge in P1 (Messblatt 6: Keil 11 px hoch), nie kuerzer. Faktoren 1,92 / 1,00 / 1,32 / 2,37; Laengen 0,019 / 0,038 / 0,027 / 0,015 H ->
+0,037 / 0,038 / 0,036 / 0,036 H. 9 Ecken geaendert; Flaechen, UV, Normalen, Textur unveraendert. Die Krallen bleiben dunkel wie die Hand
+(Foto: heller Keil L* 30), die Textur ist nach Auftrag unveraendert.
+
+### Riegel (riegel_v5f.py; SF_belege/v4/v5f/riegel_v5f_V5f.txt/.json) - Exit 1, 12 rot von 42
+| Pruefung | Ergebnis |
+|---|---|
+| T-K1a-d Ausnahmeliste (Sektionen und Texel bytegleich; nur CLUT-Felder der Rot-Flaechen/des Schwanzes, Krallen- und Schwanzecken; CLUT 483-486 = Basis, Kopien bytegleich, nur rote Eintraege grau, 487 aus 484) | gruen |
+| T-F1 Schwanzbreite je Station (P2) +-20 % | gruen, groesste Abweichung 16 % |
+| T-F5a Schwanz dunkel gruenlich-grau | gruen: 22,8 / -1,5 / 3,4 |
+| T-F5b Gelenkringe deckungsgleich | gruen: 0,0-0,1 % |
+| T-F5c Breitensprung im Bild (P2) | gruen: 3 / 3 / 2 / 9 % (0,7 px) / 0 %; 16/17 verdeckt |
+| T-F5d Steigungsknick | gruen: max 12,2 Grad (bauch) |
+| T-F5e Stufe Wurzel/Ruecken (P2) | gruen: 1 px, keine Luecke (Pose 85 nur ausgegeben: 4 px, V5k dort 2 px) |
+| T-F8 Krallen | gruen: 0,037 / 0,038 / 0,036 / 0,036 H |
+| T-F4 Umriss-IoU >= V5r4 (gleich gemessen) | gruen: P1 0,7038 / P2 0,7489 gegen 0,7031 / 0,7444 |
+| V4 T1-T4, TA, T5 (Pose 85) | gruen (T5 war in V5k rot; jetzt 0,038 / 0,064 / 0,104 / 0,138 H) |
+| Kopf T-H1i/ii, T-H2, T-H4, T-H5, T-H6 | gruen |
+| V4 TK Oberkontur | rot: RMS 2,55 px (>= 3,02), Oberkante 0,034 H (<= 0,03) |
+| T-F7 Rot-Karte | rot, 11 Zeilen (Liste unten) |
+
+T-F7 im Einzelnen (Foto / Modell, Prozent a* >= 10): Foto 1 Region Brust Mitte 47,8 / 12,3; Schulter Bild-links 0,5 / 9,1; Schulter
+Bild-rechts 2,2 / 11,7 (Brustflaechen 8/d32, d2, v15 fallen in P1 in diese Box); Unterarm/Hand 9,6 / 2,6; Bauch 0,0 / 3,4 (gruen).
+Foto 2 Region Buckel 41,5 / 10,9; Schulter/Oberarm Mitte 27,9 / 6,3; Teile: Schulter (W)-rechts 55,0 / 0,6; Oberarm (W)-rechts 51,0 / 16,8;
+Ruecken/Buckel 13,3 / 0,0; Brust 3,5 / 14,5; Bauch 6,5 / 0,0; gruen: Becken, Oberarm (W)-links, Oberschenkel, Unterarme.
+V5k zum Vergleich: Schulter Bild-links 49,0, Bild-rechts 30,3, Foto-2-Schulter 60,6, Oberarm 48,7.
+
+Warum T-F7 nicht gruen wird (gemessen, nicht geloest):
+1. Foto 1 und Foto 2 widersprechen sich an denselben Flaechen: 13/d30, v11, d33, d16, v6 sind in P1 im Foto grau (0-15 %) und in P2 im Foto
+   rot (87-100 %); 8/v24 in P1 1 %, in P2 87 %. Eine Textur kann nicht beides. Die Pose P1 trifft laut Messblatt Kopf- und Schulterhoehe
+   nicht (Offen 1), die Zuordnung dort ist unsicher.
+2. Die Auftragsregel (Rot nur Brust und oberer Arm) graut die Foto-2-Schulter und den Buckel, die im Foto rot sind (55 % / 42 %).
+3. Die Brust behaelt die Referenz-2-Palette; mehr Rot auf der Brust (Foto-1-Box 48 %) waere neue Farbe.
+4. TK verlangt eine gewoelbte Oberkontur des waagerechten Teils; in V5k kam sie aus dem bauch-Wulst (Knick 31 Grad). Mit Steigungsknick
+   <= 15 Grad erreichte keine der 9 Suchen mehr als RMS 2,6 px.
+
+Gegenproben (SF_belege/v4/v5f/): V5r4 25 rot (u. a. T-K1b-d, T-F1, T-F5a/c/d), V5k 18 rot (u. a. T-K1c/d, T-F1, T-F5a/c/d). Der Riegel
+unterscheidet V5r4, V5k und V5f.
+
+### Leisten (SF_belege/v4/; roh, x2 bzw. x4)
+- 20_foto2_vergleich.jpg: P2 - Foto 2 roh | Beschreibung2 | Stand V5k | neu | 50 % Foto/neu mit Nutzerpunkten, Foto-Schwanzmaske, Kette.
+- 21_foto1_vergleich.jpg: P1 und 135 - Foto 1 roh | entblendet | Beschreibung1 | V5k | neu | 50 %.
+- 22_kopf_nah_beide.jpg: Kopf x4, Foto 1 roh/entblendet | neu P1 | neu 135; Foto 2 roh | neu P2.
+- 23_spiel.jpg: Spielbild RE15_FRAMEDUMP (Lauf sfv4/r/V5f) h135 / h85 gegen Foto.
+- 24_rot_karte.jpg: Rot-Karte Foto 1 / P1 und Foto 2 / P2.
+- v5f/krallen_P1_x8.png: Foto 1 | V5k | neu, Hand (W)-links x8.
+
+Selbst angesehen: Der Schwanz ist in P2 ein dickes, dunkles, gruenlich-graues Stueck ohne Wulst und tritt ohne Stufe aus dem Ruecken. In P2
+ist er weiter kuerzer als im Foto (Spitze y ~306 statt 343; die Kette ist unveraendert, damit T1-T4/TA gruen bleiben). Der Koerper ist grau,
+rot sind Brust, der Oberarm (W)-rechts unterhalb der Kuppe und die Klauenhand. Im Spielbild h135 bleibt oben Bild-links ein roter Rest auf dem
+Arm (andere Pose als P1). Die Seitenansicht ist jetzt deutlich weniger rot als Foto 2 (Modell 3,4 % gegen Foto 20 % der Figur). Die Krallen
+sind laenger, aber dunkel. Kopf unveraendert: Auge im Schatten, blondes Haar, Mund hellgrau zu.
+
+### Tests
+Bau mit RE15_BUILD_DIR=.../r41_sichel/re15_port/build bash re15_port/tools/local_build.sh build: "LOCAL-BUILD-OK (build)". ctest -R
+"unit_birkin_formen|unit_birkin_szenen|unit_schwanz_r41|integration_r41_sichel_form" --timeout 900: "100% tests passed, 0 tests failed out
+of 4", Total Test time (real) = 64.62 sec (v5f/ctest_v5f.txt). Spiellauf lauf_v4.sh mit EM30_V5f: EXIT=0, 191 FRAMEDUMPs, "EM30 loaded: 23
+meshes, 23 bones, 21 clips", 0 Zeilen mit error/fehler/assert (v5f/lauf_V5f_debug.log).
+
+### Offen
+1. T-F7 / Lesart Rot: Foto 2 zeigt Rot auf Schulter (W)-rechts und Buckel (55 % / 42 %), Foto 1 an derselben Stelle (Bild-links) Grau.
+   Nach Auftrag ist die Schulter jetzt grau; dadurch faellt auch der Oberarm (W)-rechts in P2 von 49 auf 17 % (Foto 51 %). Der Nutzer sollte
+   bestaetigen, ob "rechte Schulter" (W)-rechts (so gebaut) oder Bild-rechts in Foto 1 meint und ob die rote Schulter in der Seitenansicht
+   bleiben soll. Mit nur 13/d30, d32, d33 grau waeren es Oberarm P2 37 % und Schulter Bild-links 33 %.
+2. TK (V4, Pose 85, alte Leser-Masken) und "ohne Huckel" (T-F5d) schliessen sich bei den Foto-Breiten aus; entschieden fuer T-F5d.
+3. Schwanzlaenge in P2: Spitze 37 px zu hoch (Messblatt 5). Die Kette ist auf Pose 85 und die Nutzerpunkte eingestellt (T1-T4/TA);
+   laenger in P2 hiesse die Kette aendern.
+4. Krallen hell: Foto-Keil L* 30, Modell-Krallen so dunkel wie die Hand; nach Auftrag Textur unveraendert.
+5. Foto-1-Pose: Die Zuordnung je Koerperteil in P1 bleibt grob (Messblatt Offen 1); T-F7 Foto 1 nutzt deshalb nur die festen Regionen.
