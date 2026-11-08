@@ -1,0 +1,15 @@
+Riegel V8 (Messblatt V8 Abschnitt 7) fuer C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/emd/EM30_V7.EMD
+sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6
+Referenz V7 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6
+S1 Kontur T: Mittel 16.8 Max 50.0 px (Soll <= 4 / <= 8) -> ROT
+   d je Station (px, + = Modell weiter innen): [4.0, 2.0, 8.0, 11.0, 13.0, 4.0, 0.0, -6.0, -5.0, -2.0, -6.0, -9.0, -8.0, 2.0, 15.0, 20.0, 30.0, 43.0, 50.0, 45.0, 43.0, 43.0]
+S2 Uebergang J: (a) Mittel 7.3 Max 13 (<= 4 / <= 6); (b) Sattel 6.6 bei x 355 (<= 2); (c) Huckel an J 7.0 bei x 366 (<= 3) -> ROT
+S3 Ruecken/H/K: (a) Kuppe 8.0 (<= 4); (b) H 4.6 bei x 427 (5-10, x 428-445); (c) weitere []; (d) Sattel Kopf 6.4 bei x 438 (<= 2); (e) K 3.0 (<= 3) -> ROT
+S4 Breite: Wurzel 44.3 (>= 55), s 90-130 [34.3, 24.1, 28.1] (>= 36), Ende 8.1 (<= 10), monoton False; Folge [44.3, 36.8, 37.1, 35.5, 35.1, 34.3, 24.1, 28.1, 17.3, 17.2, 8.5, 8.4, 8.0, 8.0, 8.1] -> ROT
+S5 Gesicht: Mesh 9 True, Zeile 486 True, Texel True (6501) -> GRUEN
+S6 Boden: 70 von 912 Keyframes unter der tiefsten Koerperecke [205, 206, 207, 208, 209, 210, 217, 218, 219, 322]; Szene {'takte': 144, 'tiefstes_y': -108, 'unter_boden': 0} -> ROT
+S7 Adern: (a) Herkunft ok; (b) Oberarm 13 22.8 % (35-59); (c) Rumpf 8 lok x<0 0.0 % (25-80) [lok z<0: 0.2 %]; (d) Flecken 15 (Original 27) -> ROT
+S8 Technik: 13 Zeilen, Hoehe 3328, Felder gueltig True, 23 Meshes, 23 Knochen, 21 Clips -> GRUEN
+SUMME: 2 von 8 gruen; ROT: S1, S2, S3, S4, S6, S7
+V5f S5 {'mesh9': True, 'zeile486': True, 'texel': False, 'n_texel': 6501, 'ok': False}
+V8 S5 {'mesh9': True, 'zeile486': True, 'texel': True, 'n_texel': 6501, 'ok': True}
