@@ -1,0 +1,6 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[warten_leon]: Kamera keine Szene bis F1931 (Teil warten)
+-- r41_form_wagenweg[warten_leon]: Kampfkamera F1150-F1931 782 Bilder, 9 > 600 Promille fast schwarz (erlaubt 9), max 621 (F1889)
+-- r41_form_wagenweg: Soll-HP 1000, Wagen B 1000, Wagen C 1000 (F946), Treffer 1 (Abzug 15, groesster 15) ab F1897, Rueckstoss F, Form-HP zuletzt 985, Leon getroffen 1x, exit=0, Lauf <scratch>/wd_wl4/lauf_9f225318
+-- r41_form_wagenweg[warten_leon]: alle Pruefungen gruen
+EXIT=0

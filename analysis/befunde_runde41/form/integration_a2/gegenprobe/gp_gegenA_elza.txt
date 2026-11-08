@@ -1,0 +1,17 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[elza]: Kamera Taumeln F1462-F1705 (244 Bilder, Schnitte 12;11), Form-Slot 11 min sichtbar 1025, Elza max 5933, Form max 523 Promille verdeckt, max 998 Promille fast schwarz (244 Bilder)
+-- r41_form_wagenweg[elza]: Kampfkamera F1150-F1461 312 Bilder; Auftritt 59 Bilder, 33 > 600 (erlaubt 33), max 628 (F1182); Kampf 0 > 600 (erlaubt 0), max 531 (F1333, erlaubt 600)
+-- r41_form_wagenweg: Soll-HP 1000, Wagen B 1000, Wagen C 1000 (F946), Treffer 4 (Abzug 1204, groesster 301) ab F1365, Rueckstoss F1462, Form-HP zuletzt -204, Elza getroffen 1x, exit=0, Lauf <scratch>/gp_gegenA_elza/lauf_d8b6142b
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/tests/integration/test_r41_form_wagenweg.cmake:618 (message):
+  r41_form_wagenweg[elza]: FEHLER
+
+   Kamera der Rueckstoss-Szene: 21 Verstoesse in F1462-F1705
+     F1463: 933 Promille fast schwarz (> 600)
+     F1464: 977 Promille fast schwarz (> 600)
+     F1465: 995 Promille fast schwarz (> 600)
+     F1466: 998 Promille fast schwarz (> 600)
+     F1467: 996 Promille fast schwarz (> 600)
+     F1468: 995 Promille fast schwarz (> 600)
+
+
+EXIT=1

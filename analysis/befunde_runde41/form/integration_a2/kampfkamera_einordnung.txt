@@ -1,0 +1,85 @@
+# Einordnung der dunklen Kampfbilder (> 600 Promille Luma < 24), klass.py, exe bf5001400
+# Laeufe: rk1 leon Rakete sofort (K5c), zl5/ze5 zurueck Rakete sofort (K5c), wl5/we5 warten Pistole (K5c), pi5 leon Pistole 1000 HP (K5c), pi4 leon Pistole 1000 HP (K4 = Gegenpruefung Lauf A)
+== rk1
+Auftritt Cut 11: 32 Bilder, max 628, F1172-F1211
+   F1172 620 Promille Spieler x 13775 Form x 1190 rot 11 Mitte 2889 Zonen-Schnitt 12 | -
+   F1173 602 Promille Spieler x 13775 Form x 1162 rot 11 Mitte 2861 Zonen-Schnitt 12 | -
+   F1211 602 Promille Spieler x 13775 Form x 1787 rot 9 Mitte 3486 Zonen-Schnitt 12 | -
+Auftritt Cut None: 1 Bilder, max 609, F1201-F1201
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+== zl5
+Auftritt Cut 11: 32 Bilder, max 628, F1172-F1211
+   F1172 620 Promille Spieler x 13775 Form x 1190 rot 11 Mitte 2889 Zonen-Schnitt 12 | -
+   F1173 602 Promille Spieler x 13775 Form x 1162 rot 11 Mitte 2861 Zonen-Schnitt 12 | -
+   F1211 602 Promille Spieler x 13775 Form x 1787 rot 9 Mitte 3486 Zonen-Schnitt 12 | -
+Auftritt Cut None: 1 Bilder, max 609, F1201-F1201
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+Kampf Cut 13: 16 Bilder, max 778, F1347-F1390
+   F1347 627 Promille Spieler x 17975 Form x 8531 rot 3 Mitte 10230 Zonen-Schnitt 13 | Form -820 vor Auge, Spieler 6925, Gegenkamera Spieler 551 -> kein Wechsel (Gegen>=1500)
+   F1358 603 Promille Spieler x 17975 Form x 8531 rot 3 Mitte 10230 Zonen-Schnitt 13 | Form -820 vor Auge, Spieler 6925, Gegenkamera Spieler 551 -> kein Wechsel (Gegen>=1500)
+   F1390 604 Promille Spieler x 17975 Form x 9314 rot 3 Mitte 11013 Zonen-Schnitt 13 | Form -37 vor Auge, Spieler 6925, Gegenkamera Spieler 551 -> kein Wechsel (Gegen>=1500)
+== ze5
+Auftritt Cut 11: 32 Bilder, max 628, F1172-F1211
+   F1172 620 Promille Spieler x 13775 Form x 1190 rot 11 Mitte 2889 Zonen-Schnitt 12 | -
+   F1173 602 Promille Spieler x 13775 Form x 1162 rot 11 Mitte 2861 Zonen-Schnitt 12 | -
+   F1211 602 Promille Spieler x 13775 Form x 1787 rot 9 Mitte 3486 Zonen-Schnitt 12 | -
+Auftritt Cut None: 1 Bilder, max 609, F1201-F1201
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+Kampf Cut 13: 15 Bilder, max 777, F1347-F1389
+   F1347 628 Promille Spieler x 17975 Form x 8531 rot 3 Mitte 10230 Zonen-Schnitt 13 | Form -820 vor Auge, Spieler 6925, Gegenkamera Spieler 551 -> kein Wechsel (Gegen>=1500)
+   F1358 603 Promille Spieler x 17975 Form x 8531 rot 3 Mitte 10230 Zonen-Schnitt 13 | Form -820 vor Auge, Spieler 6925, Gegenkamera Spieler 551 -> kein Wechsel (Gegen>=1500)
+   F1389 624 Promille Spieler x 17975 Form x 9314 rot 3 Mitte 11013 Zonen-Schnitt 13 | Form -37 vor Auge, Spieler 6925, Gegenkamera Spieler 551 -> kein Wechsel (Gegen>=1500)
+== wl5
+Auftritt Cut 11: 32 Bilder, max 628, F1172-F1211
+   F1172 620 Promille Spieler x 13775 Form x 1190 rot 11 Mitte 2889 Zonen-Schnitt 12 | -
+   F1173 602 Promille Spieler x 13775 Form x 1162 rot 11 Mitte 2861 Zonen-Schnitt 12 | -
+   F1211 602 Promille Spieler x 13775 Form x 1787 rot 9 Mitte 3486 Zonen-Schnitt 12 | -
+Auftritt Cut None: 1 Bilder, max 609, F1201-F1201
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+Kampf Cut 13: 5 Bilder, max 698, F1917-F1921
+   F1917 612 Promille Spieler x 13904 Form x 16931 rot 1723 Mitte 15438 Zonen-Schnitt 12 | Form 4388 vor Auge, Spieler 2854, Gegenkamera Spieler 4622 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+   F1918 618 Promille Spieler x 12966 Form x 16931 rot 1723 Mitte 15438 Zonen-Schnitt 12 | Form 4388 vor Auge, Spieler 1916, Gegenkamera Spieler 5560 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+   F1921 609 Promille Spieler x 12162 Form x 16931 rot 1723 Mitte 15438 Zonen-Schnitt 12 | Form 4388 vor Auge, Spieler 1112, Gegenkamera Spieler 6364 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+== we5
+Auftritt Cut 11: 32 Bilder, max 628, F1172-F1211
+   F1172 620 Promille Spieler x 13775 Form x 1190 rot 11 Mitte 2889 Zonen-Schnitt 12 | -
+   F1173 602 Promille Spieler x 13775 Form x 1162 rot 11 Mitte 2861 Zonen-Schnitt 12 | -
+   F1211 602 Promille Spieler x 13775 Form x 1787 rot 9 Mitte 3486 Zonen-Schnitt 12 | -
+Auftritt Cut None: 1 Bilder, max 609, F1201-F1201
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+Kampf Cut 13: 4 Bilder, max 653, F1917-F1920
+   F1917 606 Promille Spieler x 13904 Form x 16931 rot 1723 Mitte 15438 Zonen-Schnitt 12 | Form 4388 vor Auge, Spieler 2854, Gegenkamera Spieler 4622 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+   F1918 608 Promille Spieler x 12966 Form x 16931 rot 1723 Mitte 15438 Zonen-Schnitt 12 | Form 4388 vor Auge, Spieler 1916, Gegenkamera Spieler 5560 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+   F1920 605 Promille Spieler x 12162 Form x 16931 rot 1723 Mitte 15438 Zonen-Schnitt 12 | Form 4388 vor Auge, Spieler 1112, Gegenkamera Spieler 6364 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+== pi5
+Auftritt Cut 11: 32 Bilder, max 628, F1172-F1211
+   F1172 620 Promille Spieler x 13775 Form x 1190 rot 11 Mitte 2889 Zonen-Schnitt 12 | -
+   F1173 602 Promille Spieler x 13775 Form x 1162 rot 11 Mitte 2861 Zonen-Schnitt 12 | -
+   F1211 602 Promille Spieler x 13775 Form x 1787 rot 9 Mitte 3486 Zonen-Schnitt 12 | -
+Auftritt Cut None: 1 Bilder, max 609, F1201-F1201
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+   F1201 609 Promille Spieler x 13775 Form x 1191 rot 11 Mitte 2890 Zonen-Schnitt 12 | -
+Kampf Cut 13: 10 Bilder, max 636, F1706-F1890
+   F1706 612 Promille Spieler x 14019 Form x 16421 rot 1723 Mitte 14928 Zonen-Schnitt 13 | Form 3878 vor Auge, Spieler 2969, Gegenkamera Spieler 4507 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+   F1707 633 Promille Spieler x 14019 Form x 16421 rot 1723 Mitte 14928 Zonen-Schnitt 13 | Form 3878 vor Auge, Spieler 2969, Gegenkamera Spieler 4507 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+   F1890 615 Promille Spieler x 13039 Form x 17006 rot 1731 Mitte 15504 Zonen-Schnitt 12 | Form 4454 vor Auge, Spieler 1989, Gegenkamera Spieler 5487 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+Kampf Cut None: 1 Bilder, max 615, F1891-F1891
+   F1891 615 Promille Spieler x 12235 Form x 17006 rot 1731 Mitte 15504 Zonen-Schnitt 12 | -
+   F1891 615 Promille Spieler x 12235 Form x 17006 rot 1731 Mitte 15504 Zonen-Schnitt 12 | -
+Kampf Cut 12: 136 Bilder, max 753, F1892-F2298
+   F1892 653 Promille Spieler x 12235 Form x 17006 rot 1731 Mitte 15504 Zonen-Schnitt 12 | Form 3022 vor Auge, Spieler 6291, Gegenkamera Spieler 1185 -> kein Wechsel (Gegen>=1500)
+   F1893 700 Promille Spieler x 12235 Form x 17006 rot 1731 Mitte 15504 Zonen-Schnitt 12 | Form 3022 vor Auge, Spieler 6291, Gegenkamera Spieler 1185 -> kein Wechsel (Gegen>=1500)
+   F2298 612 Promille Spieler x 10402 Form x 15308 rot 1783 Mitte 13747 Zonen-Schnitt 12 | Form 4779 vor Auge, Spieler 8124, Gegenkamera Spieler -648 -> kein Wechsel (fa<4500,Gegen>=1500)
+== pi4
+Kampf Cut 13: 1 Bilder, max 606, F1922-F1922
+   F1922 606 Promille Spieler x 10774 Form x 15803 rot 1823 Mitte 14204 Zonen-Schnitt 12 | Form 3154 vor Auge, Spieler -276, Gegenkamera Spieler 7752 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+   F1922 606 Promille Spieler x 10774 Form x 15803 rot 1823 Mitte 14204 Zonen-Schnitt 12 | Form 3154 vor Auge, Spieler -276, Gegenkamera Spieler 7752 -> kein Wechsel (Spieler hinter Form,Form hinter Spieler)
+Kampf Cut 12: 54 Bilder, max 652, F1951-F2004
+   F1951 637 Promille Spieler x 10774 Form x 15803 rot 1823 Mitte 14204 Zonen-Schnitt 12 | Form 4322 vor Auge, Spieler 7752, Gegenkamera Spieler -276 -> kein Wechsel (Gegen>=1500)
+   F1952 630 Promille Spieler x 10774 Form x 15803 rot 1823 Mitte 14204 Zonen-Schnitt 12 | Form 4322 vor Auge, Spieler 7752, Gegenkamera Spieler -276 -> kein Wechsel (Gegen>=1500)
+   F2004 603 Promille Spieler x 10774 Form x 15803 rot 1823 Mitte 14204 Zonen-Schnitt 12 | Form 4322 vor Auge, Spieler 7752, Gegenkamera Spieler -276 -> kein Wechsel (Gegen>=1500)

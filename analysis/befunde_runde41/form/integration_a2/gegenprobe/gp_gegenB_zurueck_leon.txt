@@ -1,0 +1,20 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[zurueck_leon]: Kamera Taumeln F1495-F1779 (285 Bilder, Schnitte 13;12;11), Form-Slot 11 min sichtbar 2108, Leon max 6001, Form max 185 Promille verdeckt, max 629 Promille fast schwarz (285 Bilder)
+-- r41_form_wagenweg[zurueck_leon]: Kampfkamera F1150-F1494 345 Bilder; Auftritt 59 Bilder, 33 > 600 (erlaubt 33), max 628 (F1182); Kampf 63 > 600 (erlaubt 4), max 804 (F1382, erlaubt 623)
+-- r41_form_wagenweg: Soll-HP 1000, Wagen B 1000, Wagen C 1000 (F946), Treffer 4 (Abzug 1204, groesster 301) ab F1398, Rueckstoss F1495, Form-HP zuletzt -204, Leon getroffen 1x, exit=0, Lauf <scratch>/gp_gegenB_zurueck_leon/lauf_d619366d
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/tests/integration/test_r41_form_wagenweg.cmake:618 (message):
+  r41_form_wagenweg[zurueck_leon]: FEHLER
+
+   Kampfkamera vor der Szene (F1150-F1494, ohne Auftritt): F1382 804 Promille fast schwarz, erlaubt 623
+   Kampfkamera vor der Szene (F1150-F1494, ohne Auftritt): 63 Bilder > 600 Promille fast schwarz, erlaubt 4
+     F1324: 605 Promille fast schwarz
+     F1325: 623 Promille fast schwarz
+     F1326: 621 Promille fast schwarz
+     F1327: 610 Promille fast schwarz
+     F1341: 745 Promille fast schwarz
+     F1342: 777 Promille fast schwarz
+     F1343: 778 Promille fast schwarz
+     F1344: 779 Promille fast schwarz
+
+
+EXIT=1

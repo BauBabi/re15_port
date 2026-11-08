@@ -1,0 +1,25 @@
+# integration_r41_birkin_pistole: Absturz mit Asset K5c (exe Kopf bf5001400/2312b9e0a, RE15_SOFTWARE_RENDER=1 wie im Riegel)
+## ctest Satz A (Lauf 1) und Einzellauf (Lauf 2), Leon und Elza: letzte Zeilen debug.log
+-- leon: state.log endet bei F1029
+[flow] AUSNAHME 0xC0000005 Modul 00007ff65fa40000 Adresse +0x238b06 Ziel 000002bf95b95be4 Stapel +0x4724a +0x235e96fd3 +0x2386ea723 +0x2386a1b73 +0x2386e640f +0x238592327 +0x2386e5d4e +0x238b06 +0x237c35 +0x233415 +0x1feb5d +0x20b09f +0x1d9323 +0x6860f +0x2eb87 +0x1157 +0x23762e8d7 +0x23860c53c
+-- elza: state.log endet bei F1029
+[flow] AUSNAHME 0xC0000005 Modul 00007ff65fa40000 Adresse +0x238b06 Ziel 0000016b84bbabe4 Stapel +0x4724a +0x235e96fd3 +0x2386ea723 +0x2386a1b73 +0x2386e640f +0x238592327 +0x2386e5d4e +0x238b06 +0x237c35 +0x233415 +0x1feb5d +0x20b09f +0x1d9323 +0x6860f +0x2eb87 +0x1157 +0x23762e8d7 +0x23860c53c
+-- leon: state.log endet bei F1029
+[flow] AUSNAHME 0xC0000005 Modul 00007ff7b7d40000 Adresse +0x238b06 Ziel 0000025defba8be4 Stapel +0x4724a +0xddb96fd3 +0xe03ea723 +0xe03a1b73 +0xe03e640f +0xe0292327 +0xe03e5d4e +0x238b06 +0x237c35 +0x233415 +0x1feb5d +0x20b09f +0x1d9323 +0x6860f +0x2eb87 +0x1157 +0xdf32e8d7 +0xe030c53c
+-- elza: state.log endet bei F1029
+[flow] AUSNAHME 0xC0000005 Modul 00007ff7b7d40000 Adresse +0x238b06 Ziel 000001a246d32be4 Stapel +0x4724a +0xddb96fd3 +0xe03ea723 +0xe03a1b73 +0xe03e640f +0xe0292327 +0xe03e5d4e +0x238b06 +0x237c35 +0x233415 +0x1feb5d +0x20b09f +0x1d9323 +0x6860f +0x2eb87 +0x1157 +0xdf32e8d7 +0xe030c53c
+## Symbole (gdb info symbol 0x140000000 + Offset, exe re15_pc.exe)
+SDL_BlitTriangle_Slow + 1394 in section .text
+SDL_SW_BlitTriangle + 2757 in section .text
+SW_RunCommandQueue + 3758 in section .text
+FlushRenderCommands + 290 in section .text
+SDL_RenderPresent_REAL + 81 in section .text
+SDL_RenderPresent + 28 in section .text
+## Lage beim Absturz (state.log F1029, Leon)
+PL(17755,-23750,rot=2065,hp=100)
+cam=13
+t=30 st=1 ss1=20 ss2=1 ss3=0 g=13 mo=8 af=21 stun=0 d=0 @(7777,-23504,r17)] hp=700
+## Gegenprobe gleiche exe, Asset K4 (RE15_RE2_ASSET_ROOT, 3163f6045): kein AUSNAHME, Riegel gruen
+-- r41_birkin_pistole leon: Mutationen 0 (F-1), Form 1 HP max 1000, Form-HP 1000 (F281) bis 10, Rueckstoss 1 (F2657), Sturz 1, G5 1 (F2893), G5 tot 1 (F5283), Spieler-HP dabei 100, Patronen in der Waf
+-- r41_birkin_pistole elza: Mutationen 0 (F-1), Form 1 HP max 1000, Form-HP 1000 (F281) bis 10, Rueckstoss 1 (F2657), Sturz 1, G5 1 (F2893), G5 tot 1 (F5283), Spieler-HP dabei 100, Patronen in der Waf
+-- r41_birkin_pistole: alle Pruefungen gruen

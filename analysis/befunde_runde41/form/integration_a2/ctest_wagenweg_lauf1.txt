@@ -1,0 +1,26 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/build
+    Start 1158: integration_r41_form_wagenweg
+    Start 1161: integration_r41_form_wagenweg_zurueck_elza
+1/6 Test #1161: integration_r41_form_wagenweg_zurueck_elza ...***Failed   95.71 sec
+    Start 1160: integration_r41_form_wagenweg_zurueck_leon
+2/6 Test #1158: integration_r41_form_wagenweg ................***Failed   96.36 sec
+    Start 1159: integration_r41_form_wagenweg_elza
+3/6 Test #1160: integration_r41_form_wagenweg_zurueck_leon ...***Failed  103.68 sec
+    Start 1163: integration_r41_form_wagenweg_warten_elza
+4/6 Test #1159: integration_r41_form_wagenweg_elza ...........***Failed  103.86 sec
+    Start 1162: integration_r41_form_wagenweg_warten_leon
+5/6 Test #1163: integration_r41_form_wagenweg_warten_elza ....   Passed  101.50 sec
+6/6 Test #1162: integration_r41_form_wagenweg_warten_leon ....   Passed  101.34 sec
+
+33% tests passed, 4 tests failed out of 6
+
+Total Test time (real) = 301.61 sec
+
+The following tests FAILED:
+	1158 - integration_r41_form_wagenweg (Failed)
+	1159 - integration_r41_form_wagenweg_elza (Failed)
+	1160 - integration_r41_form_wagenweg_zurueck_leon (Failed)
+	1161 - integration_r41_form_wagenweg_zurueck_elza (Failed)
+Errors while running CTest
+Output from these tests are in: C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/build/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

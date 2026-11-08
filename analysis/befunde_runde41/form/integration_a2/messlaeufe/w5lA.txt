@@ -1,0 +1,20 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[leon]: Kamera Taumeln F1462-F1705 (244 Bilder, Schnitte 12;11), Form-Slot 11 min sichtbar 751, Leon max 8082, Form max 639 Promille verdeckt, max 998 Promille fast schwarz (244 Bilder)
+-- r41_form_wagenweg[leon]: Kampfkamera F1150-F1461 312 Bilder, 33 > 600 Promille fast schwarz (erlaubt 0), max 628 (F1182)
+-- r41_form_wagenweg: Soll-HP 1000, Wagen B 1000, Wagen C 1000 (F946), Treffer 4 (Abzug 1204, groesster 301) ab F1365, Rueckstoss F1462, Form-HP zuletzt -204, Leon getroffen 0x, exit=0, Lauf <scratch>/wd_w5lA/lauf_68e8dfc7
+CMake Error at mess.cmake:510 (message):
+  r41_form_wagenweg[leon]: FEHLER
+
+   Kampf: 4 Treffer auf die Form bis zur Rueckstoss-Szene bzw. F2000, erwartet >= 33
+   Kampf: Leon wird zwischen dem ersten Treffer (F1365) und dem Kampfende (Rueckstoss F1462) nicht getroffen
+   Kamera der Rueckstoss-Szene: 37 Verstoesse in F1462-F1705
+     F1463: 933 Promille fast schwarz (> 600)
+     F1464: 976 Promille fast schwarz (> 600)
+     F1465: 995 Promille fast schwarz (> 600)
+     F1466: 998 Promille fast schwarz (> 600)
+     F1467: 995 Promille fast schwarz (> 600)
+     F1468: 994 Promille fast schwarz (> 600)
+   Kampfkamera vor der Szene (F1150-F1461): 33 Bilder > 600 Promille fast schwarz, erlaubt 0
+
+
+EXIT=1

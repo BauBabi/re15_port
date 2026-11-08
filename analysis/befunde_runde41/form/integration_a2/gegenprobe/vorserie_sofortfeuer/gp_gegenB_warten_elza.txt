@@ -1,0 +1,20 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[warten_elza]: Kamera keine Szene bis F1931 (Teil warten)
+-- r41_form_wagenweg[warten_elza]: Kampfkamera F1150-F1931 782 Bilder; Auftritt 59 Bilder, 33 > 600 (erlaubt 33), max 628 (F1182); Kampf 47 > 600 (erlaubt 4), max 721 (F1724, erlaubt 653)
+-- r41_form_wagenweg: Soll-HP 1000, Wagen B 1000, Wagen C 1000 (F946), Treffer 1 (Abzug 15, groesster 15) ab F1897, Rueckstoss F, Form-HP zuletzt 985, Elza getroffen 1x, exit=0, Lauf <scratch>/gp_gegenB_warten_elza/lauf_0b3847c3
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/tests/integration/test_r41_form_wagenweg.cmake:590 (message):
+  r41_form_wagenweg[warten_elza]: FEHLER
+
+   Kampfkamera vor der Szene (F1150-F1931, ohne Auftritt): F1724 721 Promille fast schwarz, erlaubt 653
+   Kampfkamera vor der Szene (F1150-F1931, ohne Auftritt): 47 Bilder > 600 Promille fast schwarz, erlaubt 4
+     F1723: 716 Promille fast schwarz
+     F1724: 721 Promille fast schwarz
+     F1725: 710 Promille fast schwarz
+     F1726: 677 Promille fast schwarz
+     F1727: 643 Promille fast schwarz
+     F1728: 626 Promille fast schwarz
+     F1729: 626 Promille fast schwarz
+     F1730: 626 Promille fast schwarz
+
+
+EXIT=1

@@ -1,0 +1,6 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[elza]: Kamera Taumeln F1350-F1431 (82 Bilder, Schnitte 12;11), Form-Slot 11 min sichtbar 1870, Elza max 2530, Form max 140 Promille verdeckt, max 599 Promille fast schwarz (82 Bilder)
+-- r41_form_wagenweg[elza]: Kampfkamera F1150-F1349 200 Bilder; Auftritt 59 Bilder, 33 > 600 (erlaubt 33), max 628 (F1182); Kampf 0 > 600 (erlaubt 0), max 469 (F1228, erlaubt 600)
+-- r41_form_wagenweg: Soll-HP 1000, Wagen B 1000, Wagen C 1000 (F946), Treffer 4 (Abzug 1204, groesster 301) ab F1256, Rueckstoss F1350, Form-HP zuletzt -204, Elza getroffen 0x, exit=0, Lauf <scratch>/gp_gegenA_elza/lauf_ae990c92
+-- r41_form_wagenweg[elza]: alle Pruefungen gruen
+EXIT=0

@@ -1,0 +1,80 @@
+# (a) Sichtlinien-Tor, PSX.EXE (info/Re1.5/PSX.EXE, t_addr 0x80010000, Kopf 0x800), dis_exe.py
+## Aufruf im Treffer-Pfad FUN_80011f50
+0x80012160  f6002012  beqz $s1, 0x8001253c
+0x80012164  34003026  addiu $s0, $s1, 0x34
+0x80012168  6d6e000c  jal 0x8001b9b4
+0x8001216c  21200002  move $a0, $s0
+0x80012170  f3004014  bnez $v0, 0x80012540
+## FUN_8001b9b4
+0x8001b9b4  0b80023c  lui $v0, 0x800b
+0x8001b9b8  84c7428c  lw $v0, -0x387c($v0)
+0x8001b9bc  d0ffbd27  addiu $sp, $sp, -0x30
+0x8001b9c0  2800bfaf  sw $ra, 0x28($sp)
+0x8001b9c4  2400b1af  sw $s1, 0x24($sp)
+0x8001b9c8  2000b0af  sw $s0, 0x20($sp)
+0x8001b9cc  b40140ac  sw $zero, 0x1b4($v0)
+0x8001b9d0  0b80053c  lui $a1, 0x800b
+0x8001b9d4  84c7a58c  lw $a1, -0x387c($a1)
+0x8001b9d8  0000828c  lw $v0, ($a0)
+0x8001b9dc  3400a38c  lw $v1, 0x34($a1)
+0x8001b9e0  00000000  nop 
+0x8001b9e4  23104300  subu $v0, $v0, $v1
+0x8001b9e8  1000a2af  sw $v0, 0x10($sp)
+0x8001b9ec  0400828c  lw $v0, 4($a0)
+0x8001b9f0  3800a38c  lw $v1, 0x38($a1)
+0x8001b9f4  21880000  move $s1, $zero
+0x8001b9f8  23104300  subu $v0, $v0, $v1
+0x8001b9fc  1400a2af  sw $v0, 0x14($sp)
+0x8001ba00  0800828c  lw $v0, 8($a0)
+0x8001ba04  3c00a38c  lw $v1, 0x3c($a1)
+0x8001ba08  03001034  ori $s0, $zero, 3
+0x8001ba0c  23104300  subu $v0, $v0, $v1
+0x8001ba10  1800a2af  sw $v0, 0x18($sp)
+0x8001ba14  1000a427  addiu $a0, $sp, 0x10
+0x8001ba18  ff000532  andi $a1, $s0, 0xff
+0x8001ba1c  000f0634  ori $a2, $zero, 0xf00
+0x8001ba20  31f7000c  jal 0x8003dcc4
+0x8001ba24  00030734  ori $a3, $zero, 0x300
+0x8001ba28  25882202  or $s1, $s1, $v0
+0x8001ba2c  21100002  move $v0, $s0
+0x8001ba30  ff004230  andi $v0, $v0, 0xff
+0x8001ba34  f7ff4014  bnez $v0, 0x8001ba14
+0x8001ba38  ffff1026  addiu $s0, $s0, -1
+0x8001ba3c  ff002232  andi $v0, $s1, 0xff
+0x8001ba40  2800bf8f  lw $ra, 0x28($sp)
+0x8001ba44  2400b18f  lw $s1, 0x24($sp)
+0x8001ba48  2000b08f  lw $s0, 0x20($sp)
+0x8001ba4c  3000bd27  addiu $sp, $sp, 0x30
+0x8001ba50  0800e003  jr $ra
+## FUN_8003dcc4 Band- und Maskenvergleich
+0x8003de5c  0000e496  lhu $a0, ($s7)
+0x8003de60  82006390  lbu $v1, 0x82($v1)
+0x8003de64  00140400  sll $v0, $a0, 0x10
+0x8003de68  03170200  sra $v0, $v0, 0x1c
+0x8003de6c  8e006214  bne $v1, $v0, 0x8003e0a8
+0x8003de70  00000000  nop 
+0x8003de74  4800ad97  lhu $t5, 0x48($sp)
+0x8003de78  00000000  nop 
+0x8003de7c  2418a401  and $v1, $t5, $a0
+0x8003de80  001c0300  sll $v1, $v1, 0x10
+0x8003de84  5000ad97  lhu $t5, 0x50($sp)
+0x8003de88  031c0300  sra $v1, $v1, 0x10
+0x8003de8c  00140d00  sll $v0, $t5, 0x10
+0x8003de90  03140200  sra $v0, $v0, 0x10
+0x8003de94  84006214  bne $v1, $v0, 0x8003e0a8
+## FUN_8003dcc4 Treffer (return 1) / naechster Eintrag
+0x8003e094  0b80033c  lui $v1, 0x800b
+0x8003e098  84c7638c  lw $v1, -0x387c($v1)
+0x8003e09c  01000234  ori $v0, $zero, 1
+0x8003e0a0  32f80008  j 0x8003e0c8
+0x8003e0a4  b4017eac  sw $fp, 0x1b4($v1)
+0x8003e0a8  5800ad8f  lw $t5, 0x58($sp)
+0x8003e0ac  00000000  nop 
+0x8003e0b0  0000a28d  lw $v0, ($t5)
+0x8003e0b4  0c00de27  addiu $fp, $fp, 0xc
+0x8003e0b8  2b10c203  sltu $v0, $fp, $v0
+0x8003e0bc  42ff4014  bnez $v0, 0x8003ddc8
+0x8003e0c0  0c00f726  addiu $s7, $s7, 0xc
+## ROOM5090.RDT Zelle 126 (SCA @0x860, Eintrag 12 Byte, Datei-Offset 0xe60)
+00000e60: 5d16 d007 57fe c095 06ff 0003            ]...W.......
+w=0x165d=5725 d=0x07d0=2000 x=0xfe57=-425 z=0x95c0=-27200 Typ 06 u0 ff, Wort +10 = 0x0300: (0x0300<<16)>>28 = 0 (Band), 0x0300 & 0xf00 = 0x300

@@ -1,5 +1,126 @@
 # Stufe 3 Bahnsteig-Form: Bewegung, Angriffe, Einbau (laufendes Dossier)
 
+## Integration 1000 HP (Lauf A2)
+
+Auftrag: Integration Runde 41 Welle 2, Lauf A2, Befund 1 der Gegenpruefung A (integration_r41_form_wagenweg, _elza, _zurueck_leon,
+_zurueck_elza rot mit der GR-HP 1000). Integrationsbaum `.claude/worktrees/r41_integration` (Zweig r41/integration, Kopf bf5001400, Asset
+K5c seit 275a57906). Die Form-HP 1000 sind Nutzerentscheid F2 (G4-Ctor `addiu v0,zero,1000` @0x80100678) und bleiben. Belege
+`integration_a2/` (Messlaeufe, Gegenproben, Einordnung, Werkzeug). Alle Laeufe: eigene exe-Kopie, Renderer des Nutzers, Fenster
+320x240, RE15_FRAMEDUMP jedes Bild, Eingabe Tastenskript w8 des Riegels.
+
+### A2-1. (a) Sichtlinien-Tor in der Suedwestecke: ORIGINAL
+
+Mechanismus (selbst disassembliert, `integration_a2/sichtlinie_tor.txt`, PSX.EXE des Auslieferungsstands):
+- Treffer-Pfad FUN_80011f50: `jal 0x8001b9b4` @0x80012168 mit a0 = Ziel + 0x34, `bnez v0,0x80012540` @0x80012170 -> Schuss ohne Treffer.
+- FUN_8001b9b4: Delta Ziel - Spieler (+0x34/+0x38/+0x3c), Schleife ueber die Regionen 3..0 (`ori s0,zero,3` @0x8001ba08,
+  `bnez v0,0x8001ba14` @0x8001ba34), je Region `jal 0x8003dcc4` @0x8001ba20 mit a2 = 0xf00 (`ori a2,zero,0xf00` @0x8001ba1c) und
+  a3 = 0x300 (`ori a3,zero,0x300` @0x8001ba24, Verzoegerungsplatz).
+- FUN_8003dcc4: je SCA-Eintrag Band `lbu v1,0x82(v1)` @0x8003de60 gegen `(w << 16) >> 28` (@0x8003de64/68, `bne` @0x8003de6c), Maske
+  `and v1,t5,a0` @0x8003de7c gegen 0x300 (`bne` @0x8003de94), dann die zwei Straddle-Tests je Diagonale (OuterProduct0); Treffer
+  `ori v0,zero,1` @0x8003e09c, `sw fp,0x1b4(v1)` @0x8003e0a4. Keine Abfrage des Gegnertyps.
+- Zelle 126: ROOM5090.RDT SCA @0x860, Eintrag 12 Byte, Datei-Offset 0xe60 `5d16 d007 57fe c095 06ff 0003`: x -425..5300,
+  z -27200..-25200, Typ 6, Wort +10 = 0x0300 -> Band 0, Nibble 3. Dieselbe Zelle in allen fuenf Regionen (Test-Integrator,
+  `scratchpad/integ_w2b/mess_los/sca_zelle126.txt`).
+
+Der Port bildet das ab (schuss_r36.c `re15_schuss_r36_sichtlinie_blockiert` -> treffer_r39.c `re15_treffer_r39_los_blockiert`);
+Messung des Test-Integrators (treffer.log): 267 Sperren F3270-F5490, alle zelle=126, nachgerechnet: von (1950,-26080), (1501,-26259),
+(-12,-26433) kreuzt die Linie zur Form Zelle 126, aus dem Wagenband z -24749 nicht. **Kein Port-Fehler, kein Fix.** Folge: ein stehender
+Pistolenschuetze, den die Angriffe der Form ueber z -25200 nach Sueden schieben, kann die 1000-HP-Form nicht mehr treffen; das
+Riegel-Szenario (150 HP, 10 Treffer) war durch die GR-HP widerlegt, nicht durch einen Regress.
+
+### A2-2. (b) Riegel auf 1000 HP (test_r41_form_wagenweg.cmake, probes/r41_form_kamera.cmake)
+
+- Waffe: leon/elza/zurueck_* Raketenwerfer (`RE15_GIVE=18:200 RE15_EQUIP=18`; Item 0x12 "ROCKET LAUNCHER", inventory_common.c:418;
+  wie integration_r41_g5_tod). Schaden an der Riesenform 301: RE2-Leon-EXE @0x800A5D24 Bytes `2d b5 d4 12` = w0 0x12D4B52D,
+  & 0x3FF = 301 (Zeiger @0x800A6B58 = 0x800A6A88 + 0x34*4 -> 0x800A5BE4, + 16*20 = 0x800A5D24; selbst nachgelesen in
+  info/re2leon/SLUS_007.48 und PSX.EXE). Tod nach HP / 301 + 1 = 4 Raketen (hp < 0). warten_* behalten die Pistole (Lauf k5090).
+  Kein Messhaken mehr (RE15_R39_MESS_SPIELER_HP entfaellt; echte Spieler-HP in allen Teilen, gemessen HP 100 -> 95).
+- Eingabe: Mit sofortigem Feuer (w8 + 2 s) stirbt die Form nach ihrem Auftritt am Westende (x 3925, Raketen F1256-F1349), mit
+  Zurueckweichen bei x ~9300. Dann zeigt die Szene Cut 12 -> 11 bzw. 15 -> 12 -> 11, und die Gegenprobe "Szene fest Cut 12" war in
+  allen vier Teilen GRUEN (`integration_a2/gegenprobe/vorserie_sofortfeuer/`, Zwischenstand des Riegels mit 2 s; Laeufe rk1/zl5): der Riegel haette M-A nicht mehr gefangen. Neu:
+  leon/elza w8 + 5 s, zurueck_* w8 + 2 s + D2.0 + 3 s, dann Feuer. Der Ansturm der Form (ss1 4) trifft den Spieler (F1322 bzw. F1336,
+  HP 100 -> 95), danach betaeubt jede Rakete sie (Zustand 2) bis zum Tod in der Lage der Abnahme-2-M-A-Laeufe: Form x 16664 / Leon
+  x 15104 (v0_w: 17290 / 14998), Form x 20136 / Leon x 19310 (v0_v: 20124 / 17815). Probiert: 6 s (w6l) wie 5 s, zurueck sofort (zl5).
+- Pruefung 3: >= HP / 301 + 1 Treffer und jeder Abzug genau 301. Pruefung 4: Fenster ab dem Eintritt in Wagen C (der Angriff faellt vor
+  die erste Rakete). Pruefung 5 unveraendert (Abzug 1204 >= 1000 - 301).
+- Laufende = Framedump-Ende (ein Wert): F2000 fuer die Raketenteile (Taumelende gemessen F1705 / F1779), F1931 fuer warten_*;
+  "Taumeln erreicht das Laufende" ist rot. Die Fenster der Pruefungen 6 und 7 kommen aus dem state.log.
+- Pruefung 7 getrennt in AUFTRITT (Bedingung der Wache (a): Form 1/0, Clip 10, Clip-Bild < 60 = Cut 11) und KAMPF (danach bis vor die
+  Szene), Schranken = gemessener Stand (Begruendung A2-3):
+
+| Teil | Auftritt > 600 / max | Kampf > 600 / max | Szene 6a min / 6b max / 6c max / 6d max | Taumeln |
+|---|---|---|---|---|
+| leon | 33 / 628 | 0 / 553 | 751 / 6683 / 639 / 600 | F1462-F1705, 244 Bilder, Cut 13-12-11 |
+| elza | 33 / 628 | 0 / 531 | 1025 / 5333 / 523 / 600 | F1462-F1705, 244 Bilder |
+| zurueck_leon | 33 / 628 | 4 / 623 | 2108 / 6001 / 185 / 629 | F1495-F1779, 285 Bilder |
+| zurueck_elza | 33 / 628 | 3 / 617 | 2108 / 1428 / 158 / 605 | F1495-F1779, 285 Bilder |
+| warten_leon | 33 / 628 | 5 / 698 | - | keine Szene bis F1931 |
+| warten_elza | 33 / 628 | 4 / 653 | - | keine Szene bis F1931 |
+
+Schranken: Auftritt 33 / 650 (650 = PORT-WAHL NB4-10); Kampf je Teil = Messwert; Szene das Pruefmass der Abnahme 2 M-A
+(768 / 25600 / 500 / 600), gehoben nur, wo der Stand es ueberschreitet: leon 6a 751 + 6c 639, elza 6c 523, zurueck_leon 6d 629,
+zurueck_elza 6d 605. Zwei ctest-Laeufe mit denselben Zahlen.
+
+Gegenproben mit dem fertigen Riegel (`integration_a2/gegenprobe/gp_gegen*.txt`; exe aus demselben Baum, nur birkin_formen.c geaendert,
+danach zurueckgesetzt und neu gebaut):
+- A "Szene fest Cut 12" (re15_bf_rueckstoss_start und Taumel-Kamera `bf_kamera(0x0C)` wie 2e3713c74): leon ROT (23 Verstoesse,
+  F1463-F1468 933-998 Promille fast schwarz), elza ROT (21, bis 998), zurueck_leon ROT (19, Form 0 sichtbar F1496-F1499, 775),
+  zurueck_elza ROT (20).
+- B "Wache nach dem Bildmass" (Commit 128d52e2e rueckwaerts = Runde 1 b9ab865af): warten_leon ROT (50 Kampfbilder > 600, max 728),
+  warten_elza ROT (47, max 721), zurueck_leon ROT (63, max 804), zurueck_elza ROT (62, max 803), leon ROT (3, max 617), elza gruen.
+
+### A2-3. (c) Kampfkamera mit K5c: Einordnung (keine Aenderung an der Wache)
+
+Asset: K4 (BAHNSTEIG_FORM.EMD/.TIM aus 3163f6045, sha256 16eb6ea8... / ec280802...) per RE15_RE2_ASSET_ROOT gegen K5c, gleiche exe:
+in den Raketenlaeufen 0 Bilder mit anderem Spielzustand oder Schnitt (F1150-F1349 bzw. F1406), nur die Helligkeit aendert sich
+(`integration_a2/asset_k5c_gegen_k4.txt`): leon Kampfkamera K4 0 Bilder > 600 / max 596, K5c 33 / 628; zurueck_leon K4 2 / 621, K5c
+49 / 778; warten_leon K4 9 / 621 (= alte Schranke), K5c 38 / 698. Die Gegenpruefung A hatte noch K4 gemessen (ihr Lauf = pi4).
+
+Je Bild nachgerechnet (`integration_a2/kampfkamera_einordnung.txt`, klass.py: Zonenregel re15_bf_schnitt_aus_lage und Achsenregel der
+Wache mit k_gang_kam Cut 12 Auge x 18526 RID @0x1e0, Cut 13 Auge x 11050 RID @0x200, BF_NAH_ACHSE 4500, Mitte = x + cos(rot) * 1700;
+RVD-Bytes selbst gelesen: Anker Cut 12 @0x4a4, Cut 13 @0x4e0, Streifen 13 -> 12 @0x4f4 x 12249..13873, 12 -> 13 @0x4cc x 14000..15400):
+1. Auftritt F1172-F1211, Cut 11 (Wache (a), Kamera von Bild 2, PORT-WAHL Nachbesserung 1 M4): Form frontal bei x 1015-1787, 13000-15600
+   Bildpunkte; Leon nicht im Bild. K5c 602-628, K4 559-596 Promille. Ursache: das dunklere Asset. Kein Kamerafehler.
+2. zurueck F1324-F1327 (Raketenlauf) und F1347-F1390 (sofortiges Feuer), Cut 13: Zonenkamera der Spielerlage (Leon x 17975, Anker
+   @0x4e0), die Form laeuft im Ansturm am Auge vorbei bzw. steht an ihm (Form vor dem Auge -820 .. 3300) zwischen Kamera und Spieler,
+   36-57 % des Bildes. Achsenregel: Spieler hinter der Form ja, aber Gegenkamera Cut 12 nur 551 vor ihrem Auge (< 1500) -> kein Wechsel,
+   wie in 2e3713c74 (M-B-Rest NB4-10: dort hat der Raum keinen Schnitt im Pruefmass). ORIGINAL-Zonenkamera + PORT-WAHL Achsenregel.
+3. warten F1917-F1921, Cut 13: Spieler vor der Form (Spieler 1112-2854 vor dem Auge, Form 4388), Form 42000-45000 Bildpunkte gross
+   hinter ihm; Achsenregel greift nicht (Spieler nicht hinter der Form). Zonenkamera (Spieler im Streifen bzw. noch im Cut 13).
+4. Langer Pistolenkampf (Gegenpruefung, K4, pi4): F1922 Cut 13 = Haltezeit der Wache (30 Bilder nach dem Wechsel bei F1911; Leon war im
+   Streifen @0x4f4 bei x 12610, F1910 kurz Cut 12): der Treffer F1916-F1920 stoesst Leon auf x 10774 HINTER das Auge von Cut 13 (-276),
+   die Haltezeit haelt Cut 13 weiter. F1951-F2004 Cut 12: nach der Haltezeit die Zonenkamera der Spielerlage (x 10774 < 14000), die Form
+   (Mitte 14204, 4322 vor dem Auge) zwischen Kamera und Leon; Gegenkamera Cut 13 hat Leon hinter dem Auge (-276 < 1500) -> kein Wechsel.
+   K5c (pi5): dieselbe Klasse, Cut 12 F1892-F2298 136 Bilder bis 753.
+
+Ergebnis: Kein Abweichen der Wache von der Achsenregel 2e3713c74 (Funktion bytegleich, gelobter Stand, STUFE3 Abnahme 4), nicht
+umgebaut. Gemeldet (offen): die Haltezeit von 30 Bildern prueft nicht nach, ob der Spieler noch vor dem Auge der gehaltenen Kamera
+steht (pi4 F1920-F1950: Leon hinter dem Auge von Cut 13).
+
+### A2-4. Neu gesehen, nicht geaendert (offen)
+
+- Szenenkamera bf_schnitt_waehlen (PORT-WAHL Nachbesserung 4) in der w-Lage mit 1000 HP: Cut 12 F1621-F1635 (leon) bzw. F1633-F1634
+  (elza) zeigt die Form klein am Wagenende (x 4142 -> 3022, 2081-2810 bedeckte Bildpunkte) zu 510-639 Promille hinter Leon/Elza
+  (x 15104), bevor bei x <= 3000 Cut 11 kommt. Mit K4 dasselbe (637). Das Pruefmass 6c (500) ist dort ueberschritten; der Riegel haelt
+  den Stand (639 / 523), damit ein Rueckschritt auffaellt.
+- 6d in der v-Lage: zurueck_leon F1577-F1580 616-629, F1712 603; zurueck_elza 603-605 - nur mit K5c.
+- 6d Rand: leon/elza in der w-Lage max genau 600 (Schranke 600, kein Abstand); mit 6 s Warten (w6l) 601-608.
+
+### A2-5. Tests
+
+- `ctest -R "form|bahnsteig|birkin_form|r41_form|integration_r41_birkin_pistole|integration_r41_g5_tod|integration_r41_g5_westen" -j 2
+  --timeout 1800` (Kopf 2312b9e0a, exe = Bau des Kopfs; parallel lief ein fremder ctest im Baum r41_gatorfix):
+  **95% tests passed, 1 tests failed out of 19** (Total Test time (real) = 848.10 sec), Log `integration_a2/ctest_satzA.txt`. Gruen: die
+  sechs Wagenweg-Teile, integration_r41_g5_tod, integration_r41_g5_westen, die Form-/Bahnsteig-Riegel. Rot: integration_r41_birkin_pistole.
+- Wagenweg allein, zweimal: "100% tests passed, 0 tests failed out of 6" (`integration_a2/ctest_wagenweg_lauf1.txt` / `_lauf2.txt`,
+  gleiche Zahlen je Teil).
+- **integration_r41_birkin_pistole: ABSTURZ mit K5c** (`integration_a2/pistole_absturz_k5c.txt`), NICHT durch diesen Lauf verursacht
+  (nur Testdateien geaendert): Leon und Elza, zweimal (ctest und Einzellauf), state.log endet bei F1029, debug.log
+  `[flow] AUSNAHME 0xC0000005 ... Adresse +0x238b06` = SDL_BlitTriangle_Slow + 1394 <- SDL_SW_BlitTriangle <- SW_RunCommandQueue <-
+  SDL_RenderPresent (Riegel mit RE15_SOFTWARE_RENDER=1; Form x 7777, Zustand 1/20, Clip 8, Cut 13, Spieler x 17755). Dieselbe exe mit
+  dem K4-Asset (RE15_RE2_ASSET_ROOT): kein Absturz, Riegel gruen (Rueckstoss F2657, G5 tot F5283). Der A2-Merger hatte nur Unit-Filter
+  gefahren. Offen fuer Spur FORM / Renderer (Lesezugriff ausserhalb der Textur im Software-Dreieck mit dem K5c-Modell).
+
 ## Nachbesserung 4 (Rueckstoss-Kamera)
 
 Auftrag: Abnahme 2 (`STUFE3_abnahme_2.md`) M-A (blockierend), M-B (mittel), M-D (Doku). Zweig r41/form_nb4 ab 2e3713c74, Worktree

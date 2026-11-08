@@ -1,0 +1,13 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[leon]: Kamera 
+-- r41_form_wagenweg[leon]: Kampfkamera F1150-F2400 1251 Bilder, 55 > 600 Promille fast schwarz (erlaubt 0), max 652 (F1985)
+-- r41_form_wagenweg: Soll-HP 1000, Wagen B 1000, Wagen C 1000 (F946), Treffer 38 (Abzug 570, groesster 15) ab F1237, Rueckstoss F, Form-HP zuletzt 430, Leon getroffen 11x, exit=0, Lauf <scratch>/wd_pi4/lauf_fd1c74c0
+CMake Error at mess.cmake:507 (message):
+  r41_form_wagenweg[leon]: FEHLER
+
+   Kamera: nur 0 Taumelbilder (Clip 13, HP 1) im state.log, erwartet >= 60
+   Kampfkamera vor der Szene (F1150-F2400): F1985 652 Promille fast schwarz, erlaubt 650
+   Kampfkamera vor der Szene (F1150-F2400): 55 Bilder > 600 Promille fast schwarz, erlaubt 0
+
+
+EXIT=1

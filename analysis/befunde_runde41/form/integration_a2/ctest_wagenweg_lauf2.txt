@@ -1,0 +1,17 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/build
+    Start 1158: integration_r41_form_wagenweg
+    Start 1159: integration_r41_form_wagenweg_elza
+1/6 Test #1158: integration_r41_form_wagenweg ................   Passed  104.51 sec
+    Start 1160: integration_r41_form_wagenweg_zurueck_leon
+2/6 Test #1159: integration_r41_form_wagenweg_elza ...........   Passed  104.52 sec
+    Start 1161: integration_r41_form_wagenweg_zurueck_elza
+3/6 Test #1160: integration_r41_form_wagenweg_zurueck_leon ...   Passed  109.87 sec
+    Start 1163: integration_r41_form_wagenweg_warten_elza
+4/6 Test #1161: integration_r41_form_wagenweg_zurueck_elza ...   Passed  110.01 sec
+    Start 1162: integration_r41_form_wagenweg_warten_leon
+5/6 Test #1163: integration_r41_form_wagenweg_warten_elza ....   Passed  114.62 sec
+6/6 Test #1162: integration_r41_form_wagenweg_warten_leon ....   Passed  114.84 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Total Test time (real) = 329.42 sec

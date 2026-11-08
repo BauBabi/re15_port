@@ -1,0 +1,20 @@
+[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo
+-- r41_form_wagenweg[warten_leon]: Kamera keine Szene bis F1931 (Teil warten)
+-- r41_form_wagenweg[warten_leon]: Kampfkamera F1150-F1931 782 Bilder; Auftritt 59 Bilder, 33 > 600 (erlaubt 33), max 628 (F1182); Kampf 50 > 600 (erlaubt 5), max 728 (F1724, erlaubt 698)
+-- r41_form_wagenweg: Soll-HP 1000, Wagen B 1000, Wagen C 1000 (F946), Treffer 1 (Abzug 15, groesster 15) ab F1897, Rueckstoss F, Form-HP zuletzt 985, Leon getroffen 1x, exit=0, Lauf <scratch>/gp_gegenB_warten_leon/lauf_a0544d34
+CMake Error at C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/tests/integration/test_r41_form_wagenweg.cmake:590 (message):
+  r41_form_wagenweg[warten_leon]: FEHLER
+
+   Kampfkamera vor der Szene (F1150-F1931, ohne Auftritt): F1724 728 Promille fast schwarz, erlaubt 698
+   Kampfkamera vor der Szene (F1150-F1931, ohne Auftritt): 50 Bilder > 600 Promille fast schwarz, erlaubt 5
+     F1344: 611 Promille fast schwarz
+     F1345: 605 Promille fast schwarz
+     F1723: 723 Promille fast schwarz
+     F1724: 728 Promille fast schwarz
+     F1725: 716 Promille fast schwarz
+     F1726: 680 Promille fast schwarz
+     F1727: 645 Promille fast schwarz
+     F1728: 630 Promille fast schwarz
+
+
+EXIT=1

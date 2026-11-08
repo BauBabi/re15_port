@@ -1,0 +1,15 @@
+# K5c gegen K4 (gleiche exe bf5001400, K4 per RE15_RE2_ASSET_ROOT = BAHNSTEIG_FORM.EMD/.TIM aus 3163f6045, sha256 16eb6ea8.../ec280802...)
+== rk1 gegen rk4 F1150-F1349
+Bilder mit abweichendem Zustand/Schnitt 0
+== zl5 gegen zl4 F1150-F1406
+Bilder mit abweichendem Zustand/Schnitt 0
+== wl5 gegen wl4 F1150-F1931
+Bilder mit abweichendem Zustand/Schnitt 200
+rk1: F1150-F1349 200 Bilder, 33 > 600 Promille fast schwarz (erlaubt 0), max 628 (F1182)
+rk4: F1150-F1349 200 Bilder, 0 > 600 Promille fast schwarz (erlaubt 0), max 596 (F1187)
+zl5: F1150-F1406 257 Bilder, 49 > 600 Promille fast schwarz (erlaubt 0), max 778 (F1378)
+zl4: F1150-F1406 257 Bilder, 2 > 600 Promille fast schwarz (erlaubt 0), max 621 (F1387)
+wl5: F1150-F1931 782 Bilder, 38 > 600 Promille fast schwarz (erlaubt 9), max 698 (F1920)
+wl4: F1150-F1931 782 Bilder, 9 > 600 Promille fast schwarz (erlaubt 9), max 621 (F1889)
+pi5: F1150-F2400 1251 Bilder, 180 > 600 Promille fast schwarz (erlaubt 0), max 753 (F1911)
+pi4: F1150-F2400 1251 Bilder, 55 > 600 Promille fast schwarz (erlaubt 0), max 652 (F1985)
