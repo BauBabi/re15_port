@@ -790,9 +790,10 @@ uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed)
 
 /* UEBERGABEPUNKT Riesenform -> G5 (Stufe 3, analysis/befunde_runde41/form/STUFE3.md Abschnitt 4).
  * Wird genau einmal aufgerufen, wenn die Form den Wagen verlassen hat: mit der Riesenform am Ende ihres Sturz-Clips 12, ohne sie
- * (EM30 per RE15_BIRKIN_FORM=original) am Wagenende. Danach laeuft unveraendert Phase 2 (Pause hinter dem Zug) und
- * re15_bf_morph_zu_g5 + s_kam_g5. Der G5-Auftritt selbst (Kamera, Tentakel, enemy_ai_boss_g5.c) gehoert NICHT zu dieser Stufe,
- * er wird im Zweig r41/g5auftritt neu gebaut und soll hier ansetzen. */
+ * (EM30 per RE15_BIRKIN_FORM=original) am Wagenende. Danach ruft Phase 2 (case 2 in der Rueckstoss-Szene, ohne Pause) einmal
+ * re15_bf_g5_auftritt_start (g5auftritt_r41.c, RE2 room7040 sub06 @0x018DE). Ab da besitzt der G5-Auftritt (Spur G5A) Kamera,
+ * Typwechsel re15_bf_morph_zu_g5 und Spielersperre; die Nahsicht-Wache dieser Datei schweigt (Gate !re15_g5a_laeuft() in
+ * bf_nahsicht_wache). Die fruehere Kamera-Halte s_kam_g5 gibt es seit Commit 6d8e65214 nicht mehr. */
 static void bf_rs_form_ist_draussen(re15_actor_t *e, int mit_gebruell)
 {
     s_rs.phase = 2; s_rs.t = 0;

@@ -802,9 +802,15 @@ int re15_enemy_waffen_schaden(const re15_actor_t *e, int weapon_id)   /* Runde 3
  *   0x8002C698  = `DAT_800cfb74 &= 0x10008D9`  -> 0x8D9 & 0x40 = 0x40, das Bit UEBERLEBT
  *   0x80026320 |0x4 | 0x80026488 |0x08000000 | 0x8002B928 | 0x80038FE0 | 0x80039408 (AND mit
  *   0x…FFFF) | 0x80051BDC |0x00040000 | 0x8010295C |0x100
- * KEIN Schreiber setzt jemals 0x20, und keiner loescht 0x40.
- * => Im ausgelieferten RE2 ist BIT 0x40 IMMER GESETZT und BIT 0x20 NIE. Damit ist genau EIN
- *    Zweig je Modul erreichbar — der wird hier portiert, die uebrigen drei sind toter Code.
+ * In PSX.EXE und den EM-Overlays setzt kein Schreiber 0x20, und keiner loescht 0x40.
+ * BERICHTIGT (Runde 41 Spur WS, Scan auch ueber COMMON/BIN, WS_waffenschaden.md Abschnitt 7 und
+ * WS_belege/abn1/abn1_h3_schreiberscan.txt): Bit 0x20 ist das Schwierigkeits-Bit EASY/ROOKIE. Es
+ * setzt das RE2-TITLE-Overlay (gelinkt @0x8019xxxx): `ori v0,a0,0x20` @0x80192994 / `sw` @0x8019299c
+ * bei Wahl s0[0xe] == 1, `ori a2,a2,0x20` @0x80192cb4 / `sw` @0x80192ce4; MEM_CARD.BIN stellt es
+ * wieder her (`ori v0,v0,0x20`, Datei-Offset 0x3AA8). Der Port faehrt Normal.
+ * => BIT 0x40 IMMER GESETZT, BIT 0x20 = 0 (Normal). Damit ist genau EIN Zweig je Modul der
+ *    Port-Zweig — der wird hier portiert; die 0x20-Zweige gelten nur auf EASY/ROOKIE, die
+ *    Zweige ohne 0x40 sind toter Code.
  *
  * ZOMBIE-FAMILIE (EMOVL10_S0.BIN, INIT @0x8010065C):
  *   801006d4: andi v0,v0,0x40        ; 801006d8: beq -> 0x8010075c   (0x40 gesetzt = Fallthrough)

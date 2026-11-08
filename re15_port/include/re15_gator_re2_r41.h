@@ -33,8 +33,9 @@ extern "C" {
  *   `sw v0,-1164(at)` @0x8002b4b4 (FUN_8002b48c, gerufen `jal 0x8002b48c` @0x8002af00); kein Schreiber von 0x800cfb74
  *   in PSX.EXE und COMMON/BIN loescht es (Scan aller 34 Stores; Masken 0x7fffffff, 0xfeffffff, 0xfffbffff, 0xffdfffff,
  *   -2, -9, 0x010008d9 lassen 0x40 stehen, MEM_CARD @0x80103af4 setzt es). Den Zweig mit Bit 0x40 nimmt der Port auch fuer
- *   die Zombie-Tabelle (@0x801006d4), den G4 (1000) und den G5 (600). Bit 0x20 (Schwierigkeit) waehlt nur zwischen zwei
- *   gleichen 240. Vorher 25300 mit dem Kommentar "Bit 0x40 aus". */
+ *   die Zombie-Tabelle (@0x801006d4), den G4 (1000) und den G5 (600). Bit 0x20 = Schwierigkeit EASY/ROOKIE (gesetzt nur vom
+ *   RE2-TITLE-Overlay, `sw v0,-1164(at)` @0x8019299c / @0x80192ce4; der Port faehrt Normal = 0) waehlt nur zwischen zwei
+ *   gleichen 240 (@0x8010053c / @0x8010054c). Vorher 25300 mit dem Kommentar "Bit 0x40 aus". */
 #define RE15_GR2_HP_SOCKEL  25000   /* `slti v0,v0,25000` @0x80101ec4 -> +0x218 |= 0x20 (geschwaecht) */
 #define RE15_GR2_HP_INIT    (RE15_GR2_HP_SOCKEL + 240)   /* 25240 = 25000 + [0x801045ec]/[0x801045ee] = 240 (Bit 0x40 gesetzt
                                                          * @0x8002b4ac; Laden @0x8010053c/@0x8010054c) */

@@ -17,8 +17,9 @@
  *     80100180  andi v1,v1,0x20   80100180  beq -> 0x801001ac
  *       0x801001A0 lhu 0x801053D0 | 0x801001C4 lhu 0x801053B0
  *       0x80100204 lhu 0x80105360 | 0x80100228 lhu 0x80105340
- *     Mit „0x40 immer gesetzt / 0x20 nie" (9 Schreiber von DAT_800CFB74, Beleg in
- *     re15_damage.c) ist der ausgelieferte INIT-Zweig **0x801053B0** — genau das macht
+ *     Mit „0x40 immer gesetzt / 0x20 = 0" (0x40: 9 Schreiber von DAT_800CFB74, Beleg in
+ *     re15_damage.c; 0x20 = Schwierigkeit EASY/ROOKIE, gesetzt nur vom RE2-TITLE-Overlay
+ *     @0x8019299c / @0x80192ce4, Port faehrt Normal) ist der INIT-Zweig **0x801053B0** — genau das macht
  *     re15_re2_init_hp (Commit 717d13e0, Hund 129er-Familie).
  *
  *   RE-ROLL @0x801037E8 — ZWEI-WEGIG, testet NUR Bit 0x20 (Bit 0x40 kommt nicht vor):

@@ -678,7 +678,10 @@ static void ausloesen(int gslot)
 
 /* MESSHAKEN RE15_K2080_GATOR_HP=<n> (env-gegatet, KEIN Spielverhalten; Muster RE15_R39_MESS_SPIELER_HP): setzt die HP des
  * Boss-Alligators EINMAL je Raumeintritt auf n, damit ein Messlauf die Schwelle (HP < 25000 @0x80101ebc-dc) mit wenigen ECHTEN
- * Treffern erreicht statt mit 43 Pistolenschuessen (Dossier 4). */
+ * Treffern erreicht statt mit 35 Pistolenschuessen: Start 25240 (RE15_GR2_HP_INIT, re15_gator_re2_r41.h), Pistole (Waffe 3)
+ * 7 je Treffer aus der Port-Zeile des Typs 0x23 (s_wpn_dmg_gator[3], RE1.5 @0x8006ece4 = 0x8006e0d0 + 0x23*0x58 + 3*4,
+ * Bytes 07 00; die RE2-Zeile @0x800A4A28 w0 0x00F04011 = 17 nimmt der Port nicht) -> 25240 - 7n < 25000 <=> n >= 35
+ * (240/7 = 34,3). Die frueheren 43 (Dossier 4) galten fuer den Start 25300. */
 static void messhaken_gator_hp(void)
 {
 #ifdef RE15_PLATFORM_PC

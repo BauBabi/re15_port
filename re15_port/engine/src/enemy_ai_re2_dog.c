@@ -1843,11 +1843,12 @@ static void re2d_hurt_p3(re15_actor_t *e)
  *
  * WARUM DER BEFUND FALSCH IST: 0x801053B0 ist die INIT-Tabelle, nicht die des Re-Rolls. Der
  * INIT @0x80100150 waehlt VIER-WEGIG ueber BEIDE Bits (0x40 @0x80100160, dann 0x20 @0x80100180)
- * -> 0x801053D0 / 0x801053B0 / 0x80105360 / 0x80105340; mit „0x40 immer gesetzt, 0x20 nie"
- * (Beleg: re15_damage.c, 9 Schreiber von DAT_800CFB74) landet der INIT byte-true auf
- * **0x801053B0** (so implementiert in re15_re2_init_hp, Commit 717d13e0). Der Re-Roll hier
- * verzweigt dagegen NUR ueber Bit 0x20 -> mit 0x20 = 0 ist **0x80105340** der ausgelieferte
- * Zweig. Voll-Scan aller Tabellen-Referenzen im Modul (jede `lhu rt,imm(at)` mit imm in
+ * -> 0x801053D0 / 0x801053B0 / 0x80105360 / 0x80105340; mit „0x40 immer gesetzt, 0x20 = 0"
+ * (Beleg 0x40: re15_damage.c, 9 Schreiber von DAT_800CFB74; 0x20 = Schwierigkeit EASY/ROOKIE,
+ * gesetzt nur vom RE2-TITLE-Overlay @0x8019299c / @0x80192ce4, Port faehrt Normal) landet der INIT
+ * byte-true auf **0x801053B0** (so implementiert in re15_re2_init_hp, Commit 717d13e0). Der Re-Roll
+ * hier verzweigt dagegen NUR ueber Bit 0x20 -> mit 0x20 = 0 (Normal) ist **0x80105340** der
+ * Port-Zweig. Voll-Scan aller Tabellen-Referenzen im Modul (jede `lhu rt,imm(at)` mit imm in
  * {0x5340,0x5360,0x5380,0x53A0,0x53B0,0x53C0,0x53D0,0x53E0}) findet GENAU SECHS:
  *     0x801001A0 (0x801053D0)  0x801001C4 (0x801053B0)  0x80100204 (0x80105360)
  *     0x80100228 (0x80105340)      = INIT (4-wegig)

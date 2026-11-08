@@ -72,9 +72,13 @@ void re15_bf_modell_hook(void (*fn)(uint8_t type));
  * (birkin_bahnsteig.c).
  * ⛔ NACHBESSERUNG 3 (Nutzerentscheid F2 "ja"): die Bahnsteig-/Riesenform traegt die HP des RE2-G4, dessen Ablaeufe sie
  * faehrt - G4-Ctor (CDEMD0.EMS rec 1 @0x80100000): `andi v0,v0,0x40` @0x80100670 (Bit gesetzt) -> `addiu v0,zero,1000`
- * @0x80100678 / `sh v0,342(s1)` @0x8010067c; `andi v0,v0,0x20` @0x80100688 (Bit nie gesetzt) ueberspringt die 900
- * @0x80100690-98. Bit 0x40 ist im ausgelieferten RE2 immer gesetzt, 0x20 nie (Schreiber-Zensus re15_damage.c "START-HP AUS
- * DEN RE2-EM-MODULEN") -> 1000 ist der einzige erreichbare Zweig (1100 @0x8010069c / 1000 @0x801006b4 sind toter Code).
+ * @0x80100678 / `sh v0,342(s1)` @0x8010067c; `andi v0,v0,0x20` @0x80100688 (Bit klar) ueberspringt die 900
+ * @0x80100690-98. Bit 0x40 ist im ausgelieferten RE2 immer gesetzt (Schreiber-Zensus re15_damage.c "START-HP AUS DEN
+ * RE2-EM-MODULEN"). Bit 0x20 ist das Schwierigkeits-Bit EASY/ROOKIE: es setzt nur das RE2-TITLE-Overlay (gelinkt @0x8019xxxx;
+ * `ori v0,a0,0x20` @0x80192994 / `sw v0,-1164(at)` @0x8019299c bei Wahl s0[0xe] == 1, `ori a2,a2,0x20` @0x80192cb4 /
+ * `sw v0,-1164(at)` @0x80192ce4; Spur WS, analysis/befunde_runde41/WS_waffenschaden.md Abschnitt 7). Der Port faehrt Normal
+ * -> 0x20 = 0 -> 1000 ist der Port-Zweig; die 900 gilt nur auf EASY/ROOKIE (1100 @0x8010069c / 1000 @0x801006b4 bleiben
+ * toter Code).
  * Vorher 150 (Port-Mass, die 0x96 der Mutation).
  * Form Stufe 3 (Bytes): `sh v0,342(s1)` @0x8010067c = 56 01 22 a6; `addiu v0,zero,1000` @0x80100678 = e8 03 02 24; die 0x96 der
  * Mutation @0x80118094-98 STAGE3.BIN = 96 00 02 34 9a 00 62 a4. Engine und Tests (auch integration_r41_form_wagenweg, liest die

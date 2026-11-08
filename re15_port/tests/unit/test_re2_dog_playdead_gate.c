@@ -195,7 +195,8 @@ static void pin_applier_word_store(void)
 
     int ph, gd, st;
 
-    /* Angriffstyp 0 = 10 Schaden (re15_damage_table[0]) -> ueberlebt; Typ 2 = 1000 -> toedlich. */
+    /* Angriffstyp 0 = 10 Schaden (re15_damage_table[0], DAT_8006f418) -> 200 - 10 ueberlebt; Typ 2 = Handgranate seit
+     * Runde 41 Spur WS D_G = RE15_GRANATE_DG = 251 (re15_granate_schaden, re15_damage.c) statt 1000 -> 1 - 251 < 0 toedlich. */
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
     stamp_and_read(1, 200, 0, &ph, &gd, &st);      /* Treffer, ueberlebt -> HURT */
     printf("  RE2 ueberlebt: state=%d +0x6=%d +0x7=%d\n", st, ph, gd);
