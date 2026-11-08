@@ -74,3 +74,32 @@ state.log, SCD-Trace, Ton-Mitschnitt; Auswertung kette_leon_logzeilen.txt / kett
 Befund zu den roten Laeufen 2-5 der Messung 1 (stilles Ende bei 20B0 F750): in Welle 2 nicht aufgetreten - zwei eigene Laeufe
 und beide registrierten Riegel (4 Laeufe) liefen unter vergleichbarer Last (5-11 fremde Fenster) ueber F751-F779 hinweg bis
 ROOM2050/2051. Ursache bleibt offen (UEBERGABE 3b, vor dem Release auf ruhiger Maschine in der vollen Suite pruefen).
+
+============================================================================================================================
+Welle 2, Lauf B - 2026-11-08 (Kopf r41/integration 198980793 nach Lauf A2, Absturz-Fix 4dde57452 und Merge G2 c19f8aaf3; exe
+re15_pc.exe 06:19:12, sha256 0f2697ba5295d5575b22779702cf6f17ef03cf0e3b0355471c2b5bb8ab864731, ninja -n platform/pc/re15_pc.exe
+= "no work to do"; Messkopie re15_pc_r41int_kette.exe bytegleich). Registriert wie in Lauf A: integration_r41_ventilkette_kette
+(probes/r41_ventilkette.cmake:70, Leon) und integration_r41_ventilkette_kette_elza (Spur Q, probes/r41_restpunkte.cmake:85);
+Skript test_r41_ventilkette_kette.cmake seit Lauf A unveraendert. Last: keine fremde re15-exe am Start und am Ende der Riegel.
+
+Laeufe der REGISTRIERTEN Riegel (ctest --test-dir build -R '^integration_r41_ventilkette_kette(_elza)?$' --timeout 900 -VV)
+ Nr  Zeit (exe)            Test                                           Ergebnis
+ B1  08:58:57-09:03:29     #1391 integration_r41_ventilkette_kette_elza   GRUEN: Passed 271.61 s; 20B1-Spiellogik- und [walk]-Zeilen bytegleich mit dem eigenen Lauf
+ B2  09:03:29-09:07:54     #1425 integration_r41_ventilkette_kette        GRUEN: Passed 264.84 s; 20B0-Spiellogik- und [walk]-Zeilen bytegleich mit dem eigenen Lauf;
+                                                                          ctest "100% tests passed, 0 tests failed out of 2"
+ Zusatz (Spur A, ctest -R '^integration_r41_wasser20b0$' --timeout 1800)
+ B3  09:07:55-09:09:38     #1441 integration_r41_wasser20b0               GRUEN: Passed 101.87 s; Leon 20B0 + Elza 20B1 je EM024-Spawns=35, fx-Zeilen id=15: 2408,
+                                                                          Cut7=1 Cut6=1 frei=1 zeichnet0x24=0 (wie Lauf A)
+ Software-Renderer der Riegel: kein "[sw-teilung]"/"UEBERLAUF" im debug.log (Absturz-Fix 4dde57452 teilt hier kein Dreieck).
+ Fremdlaeufe mit derselben exe (anderer Agent dieses Laufs, Scratch r41_w2b/t3456.log, Block 07:05:47-08:14:47): _elza Passed
+ 267.43 s, Leon Passed 251.59 s.
+
+Eigene exe-Laeufe derselben Kette (Wegplan des Riegels wortgleich, beschleunigter Renderer, Framedumps jedes 3. Bild,
+state.log, SCD-Trace, Ton-Mitschnitt; Auswertung w2b_kette/kette_leon_logzeilen.txt / kette_elza_logzeilen.txt)
+ leon 08:52:34-08:56:46 GRUEN exit 0 (4:12, EXIT_AT Bild 60 in 2050)   elza 08:52:57-08:57:24 GRUEN exit 0 (4:27, EXIT_AT Bild 60 in 2051)
+ beide parallel, sonst keine re15-exe; je Figur alle 28 Riegel-Pruefungen + 3 Spur-A-Pruefungen erfuellt; gegen Lauf A
+ (Messung 2) state.log aller Raeume bytegleich und alle 2357 Framedumps je Figur bitgleich (w2b_kette/vergleich_m2_*.txt).
+
+Befund zu den roten Laeufen 2-5 der Messung 1 (stilles Ende bei 20B0 F750): auch in Lauf B nicht aufgetreten - zwei eigene
+Laeufe, die zwei Ketten-Riegel B1/B2 und die zwei Fremdlaeufe liefen ueber 20B0/20B1 F751-F779 hinweg bis ROOM2050/2051.
+Ursache bleibt offen (UEBERGABE 3b, vor dem Release auf ruhiger Maschine in der vollen Suite pruefen).

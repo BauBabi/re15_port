@@ -1,0 +1,32 @@
+Vergleich Messung 3 (Kopf 198980793, exe 06:19:12 sha256 0f2697ba...) gegen Messung 2 (Kopf d5f4f5914, exe 21:42:29 sha256 70a9756d...), Figur leon
+Raeume neu: ['2030', '20B0', '2050'] | alt: ['2030', '20B0', '2050'] | gleich
+
+== state.log je Raum (jede Zeile = ein Bild: Lage x/z, rot, mo, cam, pm, msg, fx, alle Aktoren) ==
+Start(1240/Titel)    251 Zeilen neu /   251 alt: ALLE GLEICH (bytegleich)
+2030                5814 Zeilen neu /  5814 alt: ALLE GLEICH (bytegleich)
+20B0                 942 Zeilen neu /   942 alt: ALLE GLEICH (bytegleich)
+2050                  60 Zeilen neu /    60 alt: ALLE GLEICH (bytegleich)
+
+== [walk]-Zeilen je Raum (alle 30 Bilder, mit y: pos=(x,y,z)) ==
+2030   193 neu / 193 alt: ALLE GLEICH
+2050     2 neu /   2 alt: ALLE GLEICH
+20B0    31 neu /  31 alt: ALLE GLEICH
+START    9 neu /   9 alt: ALLE GLEICH
+
+== Spiellogik-Zeilen des debug.log (Laden, Cuts, Plc_dest, sub05, Set(3,235), letterbox, Tueren, EXIT_AT, ventilkette41, msg, Sperrtext, EM024-Spawns) ==
+127 neu / 127 alt: ALLE GLEICH (diff leer)
+
+== Framedumps je Raum (jedes 3. Bild, md5) ==
+r0    84 neu /   84 alt,   84 gemeinsam:   84 bitgleich
+r1  1938 neu / 1938 alt, 1938 gemeinsam: 1938 bitgleich
+r2   314 neu /  314 alt,  314 gemeinsam:  314 bitgleich
+r3    21 neu /   21 alt,   21 gemeinsam:   21 bitgleich
+
+GESAMT state.log: alle Raeume bytegleich
+
+== debug.log gesamt (alle Zeilen) ==
+48168 Zeilen neu / 48168 alt; roher diff: 5442 Zeilen (< und >), alle in SCD-Trace-Zeilen mit 8-stelligem Offset: Port-Programm-Faeden der Spur C ausserhalb der RDT,
+RE15_SCD_TRACE druckt dort t->pc - rdt->raw (Heap-Adresse, je Lauf anders; Hinweis 2 der Messung 2, scd_vm.c:832-836). Nach Ersetzen dieser 2721 Offsets durch @0xPTR:
+diff LEER - das debug.log ist bis auf diese Zeiger bytegleich mit Messung 2.
+wegplan.txt: bytegleich mit Messung 2.
+cap.raw (RE15_AUDIO_CAP_SYNC, Ton-Mitschnitt 44,1 kHz Stereo 16 bit, 5880 Bytes je Tick): bytegleich mit Messung 2 (43641360 Bytes).

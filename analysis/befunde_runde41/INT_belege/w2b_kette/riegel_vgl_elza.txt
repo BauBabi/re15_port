@@ -1,0 +1,23 @@
+Riegel 20B1: 16 Zeilen, eigener Lauf: 16 Zeilen -> BYTEGLEICH (diff leer)
+  = [room] PC loaded room20b1.rdt (201460 bytes)
+  = [scd F5814] Cut_chg(11)
+  = [scd] Plc_dest(slot=0 mode=0x05 dest=(-15920,-6355) flag=0) walk_active=1
+  = [scd] thread start slot=11 first_op=0x46
+  = [scd F105] Cut_chg(7)
+  = [scd] Plc_dest(slot=0 mode=0x05 dest=(-20370,-7305) flag=32) walk_active=1
+  = [scd] Plc_dest(slot=0 mode=0x05 dest=(-21020,-9355) flag=32) walk_active=1
+  = [scd F146] Cut_chg(15)
+  = [scd] Plc_dest(slot=0 mode=0x09 dest=(-22820,-7555) flag=32) walk_active=1
+  = [scd] Plc_dest(slot=0 mode=0x07 dest=(-20620,-9705) flag=32) walk_active=1
+  = [scd F228] Cut_chg(6)
+  = [flagcensus] room=20B1 WRITE Set  zone=3 idx=235 op=1
+  = [scd F242] letterbox closed -> gameplay (player_mode=0)
+  = [aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0 spawn=(9100,-5400,4100)
+  = [room] PC loaded room2051.rdt (342712 bytes)
+  = [flow] EXIT_AT: Bild 60 in Raum 2051 erreicht -> exit
+Riegel-debug.log: 6749 Zeilen gesamt, [render]-Zeile: [render] SDL-Renderer software, Videotreiber windows, ABR2 (B-F) NICHT unterstuetzt -> Rueckfall BLEND
+  '[sw-teilung]'/'UEBERLAUF' (Absturz-Fix 4dde57452, nur CPU-Rasterer): 0 Zeilen
+[walk]-Zeilen ab dem 20B1-Laden (Lage x,y,z je 30 Bilder, bis EXIT_AT in 205x): Riegel 33 Zeilen, eigener Lauf 33 Zeilen -> BYTEGLEICH (cmp)
+  erste: [walk] F30 cut=12 mo=100 af=14 frz=0 | pl pos=(-420,-1800,-6355) rot=2047
+  letzte: [walk] F60 cut=0 mo=200 af=54 frz=0 | pl pos=(9100,-5400,4100) rot=1024
+Riegel-Arbeitsordner: build/tests/integration/r41_ventilkette_kette_elza/lauf_c3f294b5_voll (ctest #1391 Passed 271.61 s)

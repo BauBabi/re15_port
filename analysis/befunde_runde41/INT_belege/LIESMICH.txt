@@ -1,6 +1,112 @@
 INT_belege - Kette A+C (Spur A wasser20b0 + Spur C ventilkette) im Integrationsbaum gemessen
 =========================================================================================
 
+MESSUNG 3 - Welle 2, Lauf B, 2026-11-08 08:52-09:10 (Kopf r41/integration 198980793, nach Lauf A2, Absturz-Fix und Merge G2)
+------------------------------------------------------------------------------------------------------------------------
+Entscheid C-E1 (AUFTRAG.md 2026-10-24 05:25): Ventile -> Ost-Tuer zu Fuss -> 20B0-Szene bis Szenen-Ende (letterbox zu,
+(3,235)=1, Spieler frei) -> Leiter -> 2050. Gemessen fuer Leon (2030 -> 20B0 -> 2050) UND Elza (2031 -> 20B1 -> 2051).
+Belege dieser Messung im Unterordner w2b_kette/ (die Dateien direkt in diesem Ordner gehoeren zu Messung 2 bzw. 1).
+
+Stand: r41/integration Kopf 198980793 (06:59:55) = 89586a617 (Welle 1 + Lauf A + Lauf A2 + Absturz-Fix 4dde57452) + Merge G2
+c19f8aaf3 (06:18:45, r41/gator_re2 00c6b3bad) + Fix 198980793. exe re15_port/build/platform/pc/re15_pc.exe 06:19:12, sha256
+0f2697ba5295d5575b22779702cf6f17ef03cf0e3b0355471c2b5bb8ab864731. Die exe ist aelter als der Kopf-Commit, aber der Kopfstand
+des Spielcodes: 198980793 aendert nur re15_port/tests/unit/test_r41_alligator2.c; unter re15_port/ ausserhalb von tests/ und
+build/ ist keine Datei neuer als die exe (find -newer leer), "ninja -n platform/pc/re15_pc.exe" meldet "no work to do", ebenso
+der Bau des Test-Integrators um 08:43 (local_build.sh build: "ninja: no work to do").
+Marker in der exe: "Bahnsteig-Form" 2x, "ANNETTE_SE.VBS" 4x, "[ventilkette41] Folge", "wasser20b0_r41.c", "[sw-teilung]" und
+"SDL_triangle.c:618" (Absturz-Fix 4dde57452), "GTR " und "gator_treffer_r41" (G2), "[flagwatch]" (A2-Messhaken 8f09f8fe0).
+Messkopie re15_pc_r41int_kette.exe neben der exe (bytegleich, gleiche sha256; debug.log Z. 1-2: exe-dir build/platform/pc ->
+cd-root re15_port/shared_assets/PSX des Integrationsbaums), nach der Messung entfernt. Baum beim Messstart sauber bis auf
+den vorbestehenden ctest-Rest Testing/; um 09:09:28 (nach den eigenen Laeufen, waehrend des letzten Riegels) aenderte ein
+anderer Agent tests/unit/probes/r41_gatorfix.cmake (eingecheckt als 548b8f3e7 09:10:53; nur Testregistrierung, nicht Teil
+der exe, nicht Teil dieser Messung).
+
+Seit Messung 2 (d5f4f5914) neu im Spielcode und auf dem Weg der Kette: climb_common.c (G2 NB4 00b5d6986: die Fallschritte des
+Substate 10 HERUNTERSPRINGEN @0x80038314 als Helfer re15_climb_fall_beginn/_schritt/_landung - genau der Sprung von der
+Mittelgang-Kante in den Kanal von 20B0/20B1), game_step_common.c (G2-Raumhalt, greift nur mit Alligator-Boss im Raum),
+render_pc.c (Absturz-Fix: Dreiecksteilung nur im CPU-Rasterer = Software-Renderer der Riegel), main.c/input_pc.c
+(A2-Messhaken, env-gegatet), anim_select_common.c, re15_damage.c.
+
+Dateien dieser Messung (w2b_kette/)
+ kette_leon_logzeilen.txt / kette_elza_logzeilen.txt
+     Eigener exe-Lauf je Figur (beschleunigter Renderer, RE15_WINDOW_SCALE=1, RE15_FRAMEDUMP jedes 3. Bild, RE15_STATE_LOG,
+     RE15_SCD_TRACE, RE15_FLAG_CENSUS, RE15_MSG_LOG, RE15_SPAWN_DIAG, RE15_AUDIO_CAP_SYNC; Wegplan WORTGLEICH aus
+     test_r41_ventilkette_kette.cmake gezogen (77 Befehle, bytegleich mit dem Plan der Messung 2), fuer Elza 2031/20B1/2051).
+     Inhalt wie in Messung 2: die 28 Pruefungen des Riegels + 3 Zusatzpruefungen der Spur A (alle 31 erfuellt), Schluessel-
+     zeilen des debug.log mit Zeilennummer, SCD-Trace-Offsets der Szene, Wegplan-Zeilen, state.log der 20B-Szene je 15 Bilder.
+ vergleich_m2_leon.txt / vergleich_m2_elza.txt   (NEU)
+     Dieser Lauf gegen den Lauf derselben Figur aus Messung 2 (Kopf d5f4f5914, exe 21:42:29): state.log je Raum Zeile fuer
+     Zeile, [walk]-Zeilen (mit y), Spiellogik-Zeilen, alle Framedumps (md5), das ganze debug.log, wegplan.txt, Ton-Mitschnitt.
+ riegel_vgl_leon.txt / riegel_vgl_elza.txt   (NEU)
+     Registrierter Riegel (Software-Renderer, NOAUDIO) gegen den eigenen Lauf: die 16 Spiellogik-Zeilen und die 33 [walk]-
+     Zeilen ab dem 20B-Laden bytegleich, Renderer-Zeile des Riegels, Zaehlung "[sw-teilung]"/"UEBERLAUF" (0), Arbeitsordner.
+ kette_kanalsprung.png   (NEU)
+     Der Sprung in den Kanal = climb_sub10 mit den seit G2 gemeinsamen Fallschritten: 20B0/20B1 F333..F378 jedes 3. Bild,
+     Leon oben, Elza unten, Beschriftung F/mo/hr/fx/x aus state.log: mo 232 (F336-F348) -> 233 (ab F349, hr=01, x -21101 ->
+     -22118) -> 234 Landung ab F353 (Wasser-Spritzer der Spur A sichtbar in F357-F363, [walk] F360 y=0) -> 200 ab F374.
+ kette_leon_ueberblick.png / kette_elza_ueberblick.png / kette_leon_20b0_szene.png / kette_elza_20b1_szene.png
+     Mit demselben Werkzeug wie in Messung 2 aus den Framedumps DIESES Laufs gebaut (Bildwahl aus state.log/debug.log, 22 bzw.
+     44 Bilder) - sha256 GLEICH den Boegen der Messung 2 im Ordner darueber (c3f7624b..., e1649e2a..., 47e4b873...,
+     18d240cd...), weil jedes Einzelbild bitgleich ist (s. vergleich_m2_*.txt).
+
+Ergebnis: die Kette laeuft fuer Leon UND Elza ohne Haenger bis ROOM2050/2051 (exit 0), Bild fuer Bild wie in Messung 2.
+ * Eigene Laeufe: Leon 08:52:34-08:56:46 (4:12), Elza 08:52:57-08:57:24 (4:27), parallel, sonst keine re15-exe auf der
+   Maschine (Stichprobe 08:55:57: nur die zwei Messkopien). Je Figur alle 31 Pruefungen erfuellt.
+ * 2030/2031: Fragen 09 (Text 55 ab F75) / 02 (51 ab F1403) / 01 (50 ab F2427) / 08 (54 ab F3727) (state.log msg a=1; im
+   Ueberblicksbogen je das Bild +6), je Ja RE2-Drehen (letterbox closed F588/F1916/F2940/F4240), "[ventilkette41] Folge 09 02 01
+   08 -> RICHTIG: Warnung, Zaehler, Flut" (Leon debug.log:29797, Elza :29807), Ereignis 26 -> Port-Programm 2030_ventile_flut,
+   Warnung 46 ab F4227 (:29810 / :29820), RE2-Alarm SUB_25 an F4227, Sirene SUB_34 an F4680, Flucht zu Fuss, [aot] DOOR FIRE
+   slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11 (:39538 / :39548) bei 2030 F5814, kein "[fire-aot]", kein
+   "FLUT: Wasser steigt".
+ * 20B0/20B1: geladen (:39543 / :39553), "Zaehler lief beim Verlassen von 2030 -> Bits 103 + 100", Ring-Tuer Slot 3 gesperrt
+   (Sperrtext 41), Alarm/Sirene aus beim Raumwechsel, 35 x "spawn-diag] Sce_em_set type=0x24", "[enemy] EM24 loaded",
+   state.log em=35 in jedem Bild, fx>0 in 936 von 942 Bildern (max 31) = Flut sichtbar (Bilder F9..F105 im Szenenbogen).
+   SCD-Trace (Datei-Offsets ROOM20B0.RDT): sub00 @0x1AA6 op 06, @0x1DF2 op 2C (Aot_set Slot 7); sub02 @0x1EF8 / @0x1EFC op 22,
+   @0x1F00 Cut_chg(11), @0x1F24 Plc_dest Modus 5 (-15920,-6355) F16; Zone Slot 7 -> sub05 @0x1F5C op 46 F105 ("thread start
+   slot=11 first_op=0x46"), Cut 7 @0x1F6A F105, Cut 15 @0x1F9C F146, Cut 6 @0x1FB6 F228, Set(3,235)=1 @0x1FBC F228,
+   "letterbox closed -> gameplay (player_mode=0)" F242, state.log pm=0 ab F242, Wegplan "Raum bereit" F259, FLAG (3,235)=1
+   F290, (9,103)=1 F291, (9,100)=1 F292; Sprung in den Kanal F335-F374 (kette_kanalsprung.png), Kanal, Aufstieg Westgang
+   (mo 230/231 ab F494), Leiter: AKTION F942 -> [aot] DOOR FIRE slot=4 rect=(-27100,10300,hw=500,hh=500) target_cut=0
+   spawn=(9100,-5400,4100) (:42046 / :42061) -> room2050.rdt / room2051.rdt -> EXIT_AT Bild 60, exit 0.
+   Kein "KLEMME", kein "-> Sperrtext 40". Kein "[sw-teilung]"/"UEBERLAUF" im beschleunigten Lauf (Teilung nur im CPU-Rasterer).
+ * Gegen Messung 2 (vergleich_m2_*.txt): state.log in allen vier Abschnitten (Start 251, 2030/2031 5814, 20B0/20B1 942,
+   2050/2051 60 Zeilen) BYTEGLEICH, [walk]-Zeilen (mit y) gleich, alle 2357 Framedumps je Figur BITGLEICH (Titel 84, 2030 1938,
+   20B 314, 2050 21), wegplan.txt bytegleich. debug.log (48168 / 48189 Zeilen) bis auf die 2721 SCD-Trace-Zeiger der
+   Port-Programm-Faeden (Hinweis 2 der Messung 2) bytegleich; bei Elza zusaetzlich 8 Zeilen capTick um +28 verschoben - der
+   ganze Ton-Mitschnitt der Messung 2 ist bytegleich das Ende des neuen, der Titel stand 28 Ticks laenger, weil die Elza-Wahl
+   ueber RE15_TITLE_CONFIRM_MS=1500 nach der WANDUHR bestaetigt (main.c:3734-3753); Leon (RE15_TITLE_SHOT, Bildzahl) ist auch im
+   Ton bytegleich. Damit wirken weder der G2-Umbau der Fallschritte (climb_common.c) noch der G2-Raumhalt, die A2-Messhaken
+   oder der Absturz-Fix (beschleunigter Pfad) auf die Kette.
+
+Registrierte Riegel im Integrationsbaum (ctest -VV, je RUN_SERIAL, nacheinander; Last: keine fremde re15-exe am Start und am Ende)
+ integration_r41_ventilkette_kette_elza (Spur Q, probes/r41_restpunkte.cmake:85, TIMEOUT 900)   GRUEN: Passed 271.61 s (08:58:57-09:03:29)
+     "-- r41_ventilkette_kette: 2031 richtige Folge zu Fuss -> Ost-Tuer zu Fuss -> 20B1 Szene sub02/sub05 -> (3,235)=1 -> frei
+      -> Kanal -> Leiter -> ROOM2051 in einem Lauf (Haken der Spur A: 1)"
+ integration_r41_ventilkette_kette (Spur C, probes/r41_ventilkette.cmake:70, TIMEOUT 900)         GRUEN: Passed 264.84 s (09:03:29-09:07:54)
+     "-- r41_ventilkette_kette: 2030 richtige Folge zu Fuss -> Ost-Tuer zu Fuss -> 20B0 Szene sub02/sub05 -> (3,235)=1 -> frei
+      -> Kanal -> Leiter -> ROOM2050 in einem Lauf (Haken der Spur A: 1)"; ctest "100% tests passed, 0 tests failed out of 2".
+     Beide Riegel-Laeufe (Software-Renderer "SDL-Renderer software", RE15_NOAUDIO) gegen die eigenen Laeufe (beschleunigt, Ton):
+     die 16 Spiellogik-Zeilen ab dem 20B-Laden (Laden, Cut_chg, Plc_dest, sub05-Start, Set(3,235), letterbox, DOOR FIRE, EXIT_AT)
+     und die 33 [walk]-Zeilen ab dem 20B-Laden (Lage mit y) BYTEGLEICH (w2b_kette/riegel_vgl_{leon,elza}.txt). Kein
+     "[sw-teilung]"/"UEBERLAUF" im Software-Renderer (render_pc.c:770 meldet die ersten 8 Teilungen ohne Umgebungsvariable):
+     in 2030/20B0/2050 liegt kein Dreieck ueber der Grenze von SDL_triangle.c:618, der Absturz-Fix zeichnet dort wie vorher.
+ integration_r41_wasser20b0 (Spur A, Debug-Sprung 20B0 Leon + 20B1 Elza, TIMEOUT 1800)           GRUEN: Passed 101.87 s (09:07:55-09:09:38)
+     Leon 20B0 und Elza 20B1 je "EM024-Spawns=35 fx-Zeilen id=15: 2408 Cut7=1 Cut6=1 frei(mo=1)=1 zeichnet0x24=0" - dieselben
+     Zahlen wie in Messung 2. (Die CMake-Dev-Warnung an test_r41_wasser20b0.cmake:97 steht unveraendert, s. Messung 2.)
+ Dazu (nicht in dieser Messung gefahren, gleiche exe 06:19:12): ein anderer Agent dieses Laufs hatte beide Ketten-Riegel in
+ seinem Testblock 07:05:47-08:14:47 (Scratch r41_w2b/t3456.log) ebenfalls GRUEN: _elza Passed 267.43 s, Leon Passed 251.59 s.
+
+Befunde / Hinweise (keine Abweichung im Spielverhalten)
+ 1. Keine Abweichung gegen Messung 2 (s. oben); die Kette laeuft fuer beide Figuren ohne Haenger bis 2050/2051.
+ 2. Unveraendert aus Messung 2: Pruef-Beschriftung Z. 259-261 von test_r41_ventilkette_kette.cmake veraltet (nur Text; Messung 2
+    nannte Z. 216-218, das Skript ist seit 852b43581 vom 2026-10-31 unveraendert, die Pruefungen stehen in Z. 259-295);
+    SCD-Trace-Offset der Port-Programm-Faeden ausserhalb der RDT ist ein Heap-Zeiger (scd_vm.c:832-836, nur Messschiene);
+    Elza-Logtext "[ventilkette41] ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11" nennt die Basis-Id, geladen wird room20b1.rdt;
+    Kamera beim Teleport-Start bleibt Cut 0, die Figur ist bei den Ventilfragen nicht im Bild.
+ 3. Messung 2 nannte "player_mode 0 ab F255" - gemessen (beide state.log bytegleich) ist pm=0 ab F242, im selben Bild wie
+    "letterbox closed" (F242); nur die Angabe in Messung 2 war ungenau, das Verhalten ist gleich.
+
+
 MESSUNG 2 - Welle 2, Lauf A, 2026-11-07 23:39-23:59 (Kopf r41/integration d5f4f5914, nach den Merges form_nb4 + annette)
 ---------------------------------------------------------------------------------------------------------------------
 Entscheid C-E1 (AUFTRAG.md 2026-10-24 05:25): Ventile -> Ost-Tuer zu Fuss -> 20B0-Szene bis Szenen-Ende (letterbox zu,

@@ -1,0 +1,58 @@
+Vergleich Messung 3 (Kopf 198980793, exe 06:19:12 sha256 0f2697ba...) gegen Messung 2 (Kopf d5f4f5914, exe 21:42:29 sha256 70a9756d...), Figur elza
+Raeume neu: ['2031', '20B1', '2051'] | alt: ['2031', '20B1', '2051'] | gleich
+
+== state.log je Raum (jede Zeile = ein Bild: Lage x/z, rot, mo, cam, pm, msg, fx, alle Aktoren) ==
+Start(1240/Titel)    251 Zeilen neu /   251 alt: ALLE GLEICH (bytegleich)
+2031                5814 Zeilen neu /  5814 alt: ALLE GLEICH (bytegleich)
+20B1                 942 Zeilen neu /   942 alt: ALLE GLEICH (bytegleich)
+2051                  60 Zeilen neu /    60 alt: ALLE GLEICH (bytegleich)
+
+== [walk]-Zeilen je Raum (alle 30 Bilder, mit y: pos=(x,y,z)) ==
+2031   193 neu / 193 alt: ALLE GLEICH
+2051     2 neu /   2 alt: ALLE GLEICH
+20B1    31 neu /  31 alt: ALLE GLEICH
+START    9 neu /   9 alt: ALLE GLEICH
+
+== Spiellogik-Zeilen des debug.log (Laden, Cuts, Plc_dest, sub05, Set(3,235), letterbox, Tueren, EXIT_AT, ventilkette41, msg, Sperrtext, EM024-Spawns) ==
+127 neu / 127 alt: VERSCHIEDEN
+   --- alt
+   +++ neu
+   @@ -31 +31 @@
+   -[ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AN, ROOM2031, capTick 5718 F4680
+   +[ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AN, ROOM2031, capTick 5746 F4680
+   @@ -110 +110 @@
+   -[ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AUS, ROOM20B1, capTick 7023 F1
+   +[ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AUS, ROOM20B1, capTick 7051 F1
+
+== Framedumps je Raum (jedes 3. Bild, md5) ==
+r0    84 neu /   84 alt,   84 gemeinsam:   84 bitgleich
+r1  1938 neu / 1938 alt, 1938 gemeinsam: 1938 bitgleich
+r2   314 neu /  314 alt,  314 gemeinsam:  314 bitgleich
+r3    21 neu /   21 alt,   21 gemeinsam:   21 bitgleich
+
+GESAMT state.log: alle Raeume bytegleich
+
+== debug.log gesamt (alle Zeilen) ==
+48189 Zeilen neu / 48189 alt; roher diff: 5450 Zeilen (< und >), alle in SCD-Trace-Zeilen mit 8-stelligem Offset: Port-Programm-Faeden der Spur C ausserhalb der RDT,
+RE15_SCD_TRACE druckt dort t->pc - rdt->raw (Heap-Adresse, je Lauf anders; Hinweis 2 der Messung 2, scd_vm.c:832-836). Nach Ersetzen dieser 2721 Offsets durch @0xPTR:
+diff 8 Zeilen:
+   29811c29811
+   < [bgm] Runde 41 Spur C: RE2-Alarm SUB_25 an (ROOM2031, Warntext 46) geladen capTick 5265 F4227
+   ---
+   > [bgm] Runde 41 Spur C: RE2-Alarm SUB_25 an (ROOM2031, Warntext 46) geladen capTick 5293 F4227
+   30010c30010
+   < [ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AN, ROOM2031, capTick 5718 F4680
+   ---
+   > [ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AN, ROOM2031, capTick 5746 F4680
+   39692,39693c39692,39693
+   < [bgm] Runde 41 Spur C: RE2-Alarm SUB_25 aus (Raumwechsel, SUB-Platz vom Raum-BGM-Lader) capTick 7023 F1
+   < [ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AUS, ROOM20B1, capTick 7023 F1
+   ---
+   > [bgm] Runde 41 Spur C: RE2-Alarm SUB_25 aus (Raumwechsel, SUB-Platz vom Raum-BGM-Lader) capTick 7051 F1
+   > [ventilkette41] Sirene ROOM6000 (RE2 SUB_34) AUS, ROOM20B1, capTick 7051 F1
+wegplan.txt: bytegleich mit Messung 2.
+Die 8 Zeilen sind capTick-Werte, alle um genau +28 Ticks verschoben (5265->5293, 5718->5746, 7023->7051), bei gleicher Bildnummer F4227/F4680/F1.
+cap.raw: 48421800 Bytes neu / 48257160 alt = +164640 Bytes = 28 Ticks x 5880 Bytes; der GANZE alte Mitschnitt ist bytegleich das Ende des neuen
+(gleicher Suffix 48257160 Bytes = 8207 Ticks, beginnt im neuen bei Tick 28). Ursache: die Elza-Wahl laeuft ueber RE15_TITLE_CONFIRM_MS=1500 (Testhaken,
+main.c:3734-3753: bestaetigt den Titel nach 1500 ms WANDUHR, pc_now_us) - der Titel stand in diesem Lauf 28 Ticks laenger; ab dem Spielstart sind Bild,
+Spiellogik und Ton bytegleich. Leon waehlt ueber RE15_TITLE_SHOT (Bildzahl) und ist deshalb auch im Ton bytegleich.
