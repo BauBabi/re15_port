@@ -10,7 +10,20 @@
  *   (4) Boden: kein Gelenk unter y = 0.
  *   (5) Szenenvorgabe: Seite 4000 legt die Spitze auf Birkins rechte Seite (Modell z < -800), Freigabe -> sie schwingt
  *       durch die Mitte (z ~ 0) zurueck auf die linke Seite des Clips (z > +1000) - Video h28 -> h30-h34 -> h38.
- *   (6) Nur die Sichel-Form: EM30 mit 16 Knochen bleibt unberuehrt. */
+ *   (6) Nur die Sichel-Form: EM30 mit 16 Knochen bleibt unberuehrt.
+ *
+ * Seit v0.8.30 (Einbau V7, Nutzerfreigabe 2026-11-08 "Naja, gehen wir so erst mal ins rennnen.") traegt das Spiel-Asset die
+ * V4-Kette (ungleiche Glieder 624/440/887/1121/350/204/608, max/min 5,5 > SW_GLATT_V4_VERH 2,0; Dossier SF_sichel.md V6 drei
+ * Punkte 2.). Fuer sie gelten in schwanz_r41.c die V4-Regeln (SW_V4_MITNAHME 0,80 / SW_V4_FEDER 1,5 / SW_V4_ERHALT 0,50, Entscheid O3
+ * "T7 koerperfest", Nutzer-Wortlaut 2026-11-06 "Ich will EXAKT diese Umsetzung": die Kette schwingt noch, bleibt aber in der
+ * Ruheform; Knick-Grenze glaetten() nach dem Szenenziel). kette_pruefen() prueft deshalb zweimal:
+ *   - Spiel-Asset (V4-Kette): (1), (3), (4) unveraendert; (2) Nachlauf > 60 (= ausserhalb der Ruhe-Toleranz von (1)) und Ausschwingen
+ *     < 60; (5) Glieder je Glied so lang wie gezeichnet, Spitze rechts, Mitte nach <= 12 Takten (0 erlaubt: SW_V4_MITNAHME nimmt
+ *     80 % der Zielbewegung im selben Takt mit); (7) Spitze naeher am Ziel als ohne Ziel, Glieder verbunden, Freigabe ohne Sprung.
+ *     Gemessen mit V7 (Lauf 2026-11-08): Nachlauf 189 / Rest 4, Glieder 201..1115 je wie gezeichnet, Mitte nach 0 Takten,
+ *     Ziel 380 (Knick-Grenze der V4-Kette; Dossier "Einbau v0.8.30" Offen).
+ *   - Gegenlauf "Gliederung Referenz 2" (Knochenlagen 16-22 aus cfd1ac42, keine V4-Kette): alle Schwellen der Referenz-2-Kette wie bisher
+ *     ((2) > 300, (5) Mitte nach 1..12, (7) Ziel < 40) - die Pruefungen der freien Kette bleiben so streng wie vor dem Einbau. */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,33 +92,20 @@ static void verbunden(const re15_skel_pose_t *p, const re15_skel_pose_t *k, cons
               glied(k, b));
 }
 
-int main(void)
+static void kette_pruefen(re15_actor_t *a, const char *wo)
 {
-    size_t len = 0;
-    uint8_t *blob = slurp(RE15_ASSET_PSX_DIR "/EMD/EM30_HANGAR.EMD", &len);
-    CHECK(blob != NULL, "EM30_HANGAR.EMD fehlt");
-    if (!blob) return 1;
-    CHECK(re15_emd_parse_container(blob, len, &s_md1, &s_skel, &s_anim, NULL) == 0, "EM30_HANGAR nicht lesbar");
-    CHECK(s_skel.bone_count == 23, "Knochen %d statt 23", s_skel.bone_count);
-
-    re15_schwanz_r41_reset();
-    re15_actor_t *a = &g_actors[20];
-    memset(a, 0, sizeof *a);
-    a->active = 1; a->type = 0x30u; a->x = -8488; a->z = -21651; a->rot_y = 1300;
-    /* Runde 41 SF Neuaufbau ab NB2: Haltung wie NB2 (Becken 170 tiefer als NB4/NB5) und Schwanz in NB4-Laenge - in Clip 0x0B B20
-     * liegt die Spitze jetzt auf dem Boden (Modellraum: Gelenk 6 bei y -133, NB5-Stand -478), die Bodenregel haelt sie dort fest.
-     * Die freie Kette wird deshalb im Stand (Clip 0 B0, Gelenk 6 bei y -892) geprueft. */
-    a->motion = 0; a->anim_frame = 0;
+    const int v4 = re15_schwanz_r41_v4_kette(&s_skel);
     re15_skel_pose_t p[RE15_EMD_MAX_BONES], k[RE15_EMD_MAX_BONES];
     double sp[3], sk[3];
+    fprintf(stderr, "Schwanz [%s]: %s\n", wo, v4 ? "V4-Kette (ungleiche Glieder)" : "Kette mit gleichen Gliedern");
 
     /* (1) Ruhe */
-    for (int i = 0; i < 90; i++) { takt(); CHECK(pose(a, p, 1), "Kette nicht angewandt (Ruhe)"); }
+    for (int i = 0; i < 90; i++) { takt(); CHECK(pose(a, p, 1), "[%s] Kette nicht angewandt (Ruhe)", wo); }
     pose(a, k, 0); spitze(p, sp); spitze(k, sk);
-    CHECK(abst(sp, sk) < 60.0, "Ruhe: Spitze %.0f vom Keyframe (Soll < 60)", abst(sp, sk));
+    CHECK(abst(sp, sk) < 60.0, "[%s] Ruhe: Spitze %.0f vom Keyframe (Soll < 60)", wo, abst(sp, sk));
     verbunden(p, k, "Ruhe");
     for (int b = 0; b < 16; b++)
-        CHECK(!memcmp(&p[b], &k[b], sizeof p[b]), "Knochen %d von der Kette veraendert", b);
+        CHECK(!memcmp(&p[b], &k[b], sizeof p[b]), "[%s] Knochen %d von der Kette veraendert", wo, b);
 
     /* (2) Nachlauf nach einer Drehung um 45 Grad in einem Takt */
     double max_ab = 0, end_ab;
@@ -117,34 +117,42 @@ int main(void)
         verbunden(p, k, "Nachlauf");
         for (int j = 0; j < 8; j++) {
             int32_t g[3];
-            if (re15_schwanz_r41_gelenk(20, j, g)) CHECK(g[1] <= 0, "Gelenk %d unter dem Boden (y %d)", j, g[1]);
+            if (re15_schwanz_r41_gelenk(20, j, g)) CHECK(g[1] <= 0, "[%s] Gelenk %d unter dem Boden (y %d)", wo, j, g[1]);
         }
     }
     end_ab = abst(sp, sk);
-    CHECK(max_ab > 300.0, "Drehung: Spitze laeuft nicht nach (max %.0f vom Keyframe)", max_ab);
-    CHECK(end_ab < 60.0, "Drehung: Kette schwingt nicht aus (%.0f nach 120 Takten)", end_ab);
+    if (v4)   /* V4-Kette: schwingt noch (ausserhalb der Ruhe-Toleranz 60 von (1)), bleibt in der Ruheform (SW_V4_*, Entscheid O3) */
+        CHECK(max_ab > 60.0, "[%s] Drehung: V4-Kette laeuft nicht nach (max %.0f vom Keyframe, Soll > 60)", wo, max_ab);
+    else
+        CHECK(max_ab > 300.0, "[%s] Drehung: Spitze laeuft nicht nach (max %.0f vom Keyframe)", wo, max_ab);
+    CHECK(end_ab < 60.0, "[%s] Drehung: Kette schwingt nicht aus (%.0f nach 120 Takten)", wo, end_ab);
 
     /* (5) Szenenvorgabe Seite 4000 (wie k_schwanz_seite) -> rechte Seite, Freigabe -> zurueck durch die Mitte */
     re15_schwanz_r41_seite(20, 4000);
-    double sim_min = 1e9, sim_max = 0;
+    double sim_max = 0, ist_l[8] = { 0 }, soll_l[8] = { 0 };
     for (int i = 0; i < 25; i++) {
         takt(); pose(a, p, 1);
         /* Runde 41 SF NB3 (Abnahme 1 Mangel 3): die SIMULIERTEN Glieder bleiben auch mit Seitenvorgabe so lang wie die
-         * gezeichneten (vorher 429..973 statt 424, weil die Laengen nach der Vorgabe gemessen wurden). */
+         * gezeichneten (vorher 429..973 statt 424, weil die Laengen nach der Vorgabe gemessen wurden). Einbau V7: je Glied gegen
+         * seine gezeichnete Laenge (Keyframe k: Glied j = Knochen 16+j, Glied 7 = Spitze) - die V4-Kette hat ungleiche Glieder. */
         for (int j = 1; j < 8; j++) {
             int32_t g0[3], g1[3];
             if (re15_schwanz_r41_gelenk(20, j - 1, g0) && re15_schwanz_r41_gelenk(20, j, g1)) {
                 const double l = sqrt((double)(g1[0] - g0[0]) * (g1[0] - g0[0]) + (double)(g1[1] - g0[1]) * (g1[1] - g0[1]) +
                                       (double)(g1[2] - g0[2]) * (g1[2] - g0[2]));
-                if (l < sim_min) sim_min = l;
-                if (l > sim_max) sim_max = l;
+                double t22[3] = { k[22].trans[0], k[22].trans[1], k[22].trans[2] }, skk[3];
+                spitze(k, skk);
+                const double soll = j < 7 ? glied(k, 16 + j) : abst(skk, t22);
+                if (fabs(l - soll) > sim_max) { sim_max = fabs(l - soll); }
+                ist_l[j] = l; soll_l[j] = soll;
             }
         }
     }
-    CHECK(sim_min > glied(k, 17) - 6.0 && sim_max < glied(k, 17) + 6.0, "Seitenvorgabe: simulierte Glieder %.0f..%.0f statt %.0f",
-          sim_min, sim_max, glied(k, 17));
+    CHECK(sim_max < 6.0, "[%s] Seitenvorgabe: simulierte Glieder bis %.0f von der gezeichneten Laenge (Glieder %.0f/%.0f/%.0f/%.0f/%.0f/%.0f/%.0f "
+          "statt %.0f/%.0f/%.0f/%.0f/%.0f/%.0f/%.0f)", wo, sim_max, ist_l[1], ist_l[2], ist_l[3], ist_l[4], ist_l[5], ist_l[6], ist_l[7],
+          soll_l[1], soll_l[2], soll_l[3], soll_l[4], soll_l[5], soll_l[6], soll_l[7]);
     spitze(p, sp);
-    CHECK(sp[2] < -800.0, "Vorgabe rechts: Spitze z %.0f (Soll < -800)", sp[2]);
+    CHECK(sp[2] < -800.0, "[%s] Vorgabe rechts: Spitze z %.0f (Soll < -800)", wo, sp[2]);
     re15_schwanz_r41_seite(20, 0);
     int mitte = -1, links = -1;
     for (int i = 0; i < 60; i++) {
@@ -152,25 +160,33 @@ int main(void)
         if (mitte < 0 && sp[2] > -200.0) mitte = i;
         if (links < 0 && sp[2] > 1000.0) links = i;
     }
-    CHECK(mitte >= 1 && mitte <= 12, "Freigabe: Mitte nach %d Takten (Video h28 -> h30..h34)", mitte);
+    /* V4-Kette: SW_V4_MITNAHME 0,80 nimmt 80 % der Zielbewegung (auch der Seitenvorgabe) im selben Takt mit -> Mitte ab Takt 0 */
+    CHECK(mitte >= (v4 ? 0 : 1) && mitte <= 12, "[%s] Freigabe: Mitte nach %d Takten (Video h28 -> h30..h34)", wo, mitte);
     /* Neuaufbau ab NB2: "linke Seite" nur, wenn die Ruhelage der Spitze links liegt (Clip 0x0B B20: z +1500..+1850); im Stand
      * (Clip 0 B0, s. oben) liegt sie mittig - die Seitenvorgabe nutzt die Szene seit NB3 nicht mehr (Schwanzbahn). */
-    if (sk[2] > 1000.0) CHECK(links > mitte && links <= 20, "Freigabe: linke Seite nach %d Takten (Video bis h38)", links);
-    fprintf(stderr, "Schwanz: Nachlauf max %.0f, Rest %.0f; Freigabe Mitte nach %d, links nach %d Takten\n",
-            max_ab, end_ab, mitte, links);
+    if (sk[2] > 1000.0) CHECK(links > mitte && links <= 20, "[%s] Freigabe: linke Seite nach %d Takten (Video bis h38)", wo, links);
+    fprintf(stderr, "Schwanz [%s]: Nachlauf max %.0f, Rest %.0f; Glieder bis %.0f von der gezeichneten Laenge; Freigabe Mitte nach %d, "
+            "links nach %d Takten\n", wo, max_ab, end_ab, sim_max, mitte, links);
 
     /* (7) Runde 41 SF NB3: Szenenziel der Spitze (FABRIK) - erreichbares Ziel wird im selben Takt getroffen, die Glieder
-     *     bleiben gleich lang; Freigabe ohne Sprung. */
+     *     bleiben gleich lang; Freigabe ohne Sprung. V4-Kette: glaetten() (Knick-Grenze, V4 Runde 2) laeuft NACH dem Szenenziel und
+     *     hat Vorrang - die Spitze muss dem Ziel naeher kommen als ohne Ziel (gemessen V7: 380 statt < 40, Dossier Offen). */
     {
-        int32_t w0[3], ziel[3], g[3];
+        int32_t w0[3], ziel[3], g[3], g_ohne[3];
         re15_schwanz_r41_gelenk(20, 0, w0);
         ziel[0] = w0[0] + 900; ziel[1] = -300; ziel[2] = w0[2] - 1200;
+        re15_schwanz_r41_gelenk(20, 7, g_ohne);
+        const double d0 = sqrt((double)(g_ohne[0] - ziel[0]) * (g_ohne[0] - ziel[0]) + (double)(g_ohne[1] - ziel[1]) * (g_ohne[1] - ziel[1]) +
+                               (double)(g_ohne[2] - ziel[2]) * (g_ohne[2] - ziel[2]));
         re15_schwanz_r41_ziel(20, ziel, 4096);
         takt(); pose(a, p, 1); pose(a, k, 0);
         re15_schwanz_r41_gelenk(20, 7, g);
         const double d = sqrt((double)(g[0] - ziel[0]) * (g[0] - ziel[0]) + (double)(g[1] - ziel[1]) * (g[1] - ziel[1]) +
                               (double)(g[2] - ziel[2]) * (g[2] - ziel[2]));
-        CHECK(d < 40.0, "Ziel: Spitze %.0f vom Szenenziel (Soll < 40)", d);
+        if (v4)
+            CHECK(d < d0, "[%s] Ziel: V4-Kette kommt dem Szenenziel nicht naeher (%.0f, ohne Ziel %.0f)", wo, d, d0);
+        else
+            CHECK(d < 40.0, "[%s] Ziel: Spitze %.0f vom Szenenziel (Soll < 40)", wo, d);
         verbunden(p, k, "Ziel");
         re15_schwanz_r41_ziel(20, NULL, 0);
         int32_t g1[3];
@@ -178,9 +194,61 @@ int main(void)
         re15_schwanz_r41_gelenk(20, 7, g1);
         const double s = sqrt((double)(g1[0] - g[0]) * (g1[0] - g[0]) + (double)(g1[1] - g[1]) * (g1[1] - g[1]) +
                               (double)(g1[2] - g[2]) * (g1[2] - g[2]));
-        CHECK(s < 700.0, "Ziel-Freigabe: Spitze springt %.0f in einem Takt", s);
-        fprintf(stderr, "Schwanz: Szenenziel getroffen auf %.0f, Freigabe-Schritt %.0f\n", d, s);
+        CHECK(s < 700.0, "[%s] Ziel-Freigabe: Spitze springt %.0f in einem Takt", wo, s);
+        fprintf(stderr, "Schwanz [%s]: Szenenziel getroffen auf %.0f (ohne Ziel %.0f), Freigabe-Schritt %.0f\n", wo, d, d0, s);
     }
+}
+
+int main(void)
+{
+    size_t len = 0;
+    uint8_t *blob = slurp(RE15_ASSET_PSX_DIR "/EMD/EM30_HANGAR.EMD", &len);
+    CHECK(blob != NULL, "EM30_HANGAR.EMD fehlt");
+    if (!blob) return 1;
+    CHECK(re15_emd_parse_container(blob, len, &s_md1, &s_skel, &s_anim, NULL) == 0, "EM30_HANGAR nicht lesbar");
+    CHECK(s_skel.bone_count == 23, "Knochen %d statt 23", s_skel.bone_count);
+    /* Einbau V7 (v0.8.30): das Spiel-Asset traegt die V4-Kette mit den Gliedlaengen aus V6 drei Punkte 2. (Knochen 17-22 relpos y
+     * 624/440/887/1121/350/204, gemessen am EMR von 319bbd17; Referenz 2: 467/466/466/466/466/466) */
+    {
+        static const int16_t v7_y[6] = { 624, 440, 887, 1121, 350, 204 };
+        int abw = 0;
+        for (int b = 17; b <= 22; b++) abw += s_skel.bone_relative_pos[b][1] != v7_y[b - 17];
+        CHECK(s_skel.bone_count == 23 && abw == 0 && re15_schwanz_r41_v4_kette(&s_skel),
+              "Spiel-Asset: Schwanzglieder 17-22 nicht die V7-Kette (%d Laengen anders, V4-Kette %d)", abw,
+              re15_schwanz_r41_v4_kette(&s_skel));
+    }
+
+    re15_schwanz_r41_reset();
+    re15_actor_t *a = &g_actors[20];
+    memset(a, 0, sizeof *a);
+    a->active = 1; a->type = 0x30u; a->x = -8488; a->z = -21651; a->rot_y = 1300;
+    /* Runde 41 SF Neuaufbau ab NB2: Haltung wie NB2 (Becken 170 tiefer als NB4/NB5) und Schwanz in NB4-Laenge - in Clip 0x0B B20
+     * liegt die Spitze jetzt auf dem Boden (Modellraum: Gelenk 6 bei y -133, NB5-Stand -478), die Bodenregel haelt sie dort fest.
+     * Die freie Kette wird deshalb im Stand (Clip 0 B0, Gelenk 6 bei y -892) geprueft. */
+    a->motion = 0; a->anim_frame = 0;
+    re15_skel_pose_t p[RE15_EMD_MAX_BONES];
+
+    /* (1)-(7) mit dem Spiel-Asset (V4-Kette seit dem Einbau V7) */
+    kette_pruefen(a, "Spiel-Asset");
+    /* (1)-(7) Gegenlauf mit der Gliederung der Referenz 2 (EMR von cfd1ac42, gemessen: Knochen 16 Bindversatz (-380,120,0),
+     * 17 (0,467,0), 18-22 (0,466,0); keine V4-Kette): die Schwellen der freien Kette wie vor dem Einbau */
+    {
+        static const int16_t ref2_rel[7][3] = { { -380, 120, 0 }, { 0, 467, 0 }, { 0, 466, 0 }, { 0, 466, 0 }, { 0, 466, 0 },
+                                                { 0, 466, 0 }, { 0, 466, 0 } };
+        int16_t alt[7][3];
+        for (int b = 16; b <= 22; b++)
+            for (int c = 0; c < 3; c++) { alt[b - 16][c] = s_skel.bone_relative_pos[b][c]; s_skel.bone_relative_pos[b][c] = ref2_rel[b - 16][c]; }
+        CHECK(!re15_schwanz_r41_v4_kette(&s_skel), "Gegenlauf: Gliederung Referenz 2 als V4-Kette erkannt");
+        re15_schwanz_r41_reset();
+        a->rot_y = 1300; a->motion = 0; a->anim_frame = 0;
+        kette_pruefen(a, "Gliederung Referenz 2");
+        for (int b = 16; b <= 22; b++)
+            for (int c = 0; c < 3; c++) s_skel.bone_relative_pos[b][c] = alt[b - 16][c];
+        re15_schwanz_r41_reset();
+        a->rot_y = 1300; a->motion = 0; a->anim_frame = 0;
+        kette_pruefen(a, "Spiel-Asset, zweiter Lauf");
+    }
+
     /* (8) Runde 41 SF NB3 (Abnahme 1 Mangel 12): ohne Ziel steht kein Glied flacher als 62 Grad zur Senkrechten (Labor-Pult:
      *     kein waagerechter Dorn). Runde 41 SF "Schwanz V2": ein Glied darf so flach sein wie sein Keyframe (Haken der
      *     V2-Ruhelinie, Formblatt V2 S6), aber nie flacher als 80 Grad (schwanz_r41.c SW_HANG_COS_MIN). */

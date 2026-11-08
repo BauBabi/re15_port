@@ -2,7 +2,8 @@
 # HANGAR-/LABOR-BIRKIN, Runde 41 Spur SF (analysis/befunde_runde41/SF_sichel.md).
 #
 # Nutzer 2026-11-02 (NUTZER_ENTSCHEIDE E17): der Birkin im Hangar 50A0 und im Labor 50E0 ist derselbe; das Modell
-# EMD/EM30_HANGAR.EMD (tools/birkin_formen.py) traegt eine Schwanzkette (Knochen 16-22). Je ein kurzer Lauf mit
+# EMD/EM30_HANGAR.EMD (seit v0.8.30 Sichel-Form V7, tools/r41_sichel/v7_kette.sh; vorher tools/birkin_formen.py) traegt eine
+# Schwanzkette (Knochen 16-22); V7 hat weiter 23 Meshes / 23 Knochen / 21 Clips (gemessen, Dossier "Einbau v0.8.30"). Je ein kurzer Lauf mit
 # Debug-Sprung, kein Messhaken ausser der Kamera in 50A0 (RE15_FORCE_CUT=4: Cut 12 der Szene hat ein Ankerviereck
 # x -25000..-21000, in dem der Birkin nicht steht; Cut 4 zeigt ihn). Geprueft aus debug.log / enemy_dbg.log:
 #   1  50A0 und 50E0: "EM30: Ersatzmodell EMD/EM30_HANGAR.EMD" und "EM30 loaded: 23 meshes, 23 bones, 21 clips"

@@ -16,6 +16,22 @@
  *     geteilte Viereck wird zu zwei, neue Ecken liegen hinter den alten), Haut-CLUTs 480-482 umgefaerbt (Jeans-Eintraege
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
+ *
+ * Seit v0.8.30 (Einbau V7, Nutzerfreigabe 2026-11-08 woertlich "Naja, gehen wir so erst mal ins rennnen.") ist das Spiel-Asset die
+ * Sichel-Form V7 (sha256 319bbd17..., Pin release/em30_hangar.sha256, Bau re15_port/tools/r41_sichel/v7_kette.sh), nicht mehr die
+ * Ausgabe von birkin_formen.py (Referenz 2, cfd1ac42). Die Erwartungen unten sind an V7 gemessen (eigener Leser in Python:
+ * MD1/TIM-Leser von tools/emd_ansichtsblatt.py / birkin_formen.md1_lesen, Dossier SF_sichel.md "Einbau v0.8.30") und je Zeile mit
+ * dem Abschnitt des Dossiers analysis/befunde_runde41/SF_sichel.md belegt (V6 Kopf, V5 wie Foto, V6 drei Punkte, V7 linke Hand).
+ * PORT-WAHL / Gestaltung, keine @0x-Konstante (die Form gibt es auf keiner Disc):
+ *   - Kopf Mesh 9 = Original-Kopf des RE1.5-Birkin (UV bis auf das CLUT-Feld = EM30, hoechstens 4 Ecken geglaettet), CLUT-Zeile 486
+ *     (= EM30-Zeile 0 bytegleich) - V6 Kopf Schritt 1/3, T-H6;
+ *   - Brust Mesh 8 / Oberarm Mesh 13 / Klauenhand Mesh 12 nur im CLUT-Feld umtexturiert (488 / 489 / 490) - V5 wie Foto b);
+ *   - Daumenkralle 6 Flaechen auf Zeile 491 (grau), Fingerkrallen 18 Flaechen auf Zeile 492 (rot) - V7 linke Hand 2.;
+ *   - Schwanzglieder 16-22 (Mantel und die V6-Deckel-Dreiecke) auf Zeile 487 - V5 wie Foto a) Farbe, V6 drei Punkte 2. Deckel;
+ *   - 13 CLUT-Zeilen (<= 16, Port-Texturhoehe tex_h = tim->height x n_cluts = 3328 <= 4096, render_pc.c
+ *     re15_render_pc_upload_tim_slot) - V7 linke Hand T-V7f;
+ *   - Zeilen 480-482: die 30 blauen Eintraege mit Paletten-a* >= 10 sind grau (V5 wie Foto b), Nutzer (5)/(8) "sonst dominiert im
+ *     original eher das grau"), alle anderen blauen Eintraege unveraendert.
  */
 #include <math.h>
 #include <stdint.h>
@@ -58,17 +74,46 @@ typedef struct {
 static modell_t s_basis, s_form;
 
 #define KETTE 7                  /* Schwanzglieder, birkin_formen.py FORMEN['hangar'] schwanz_kette glieder */
-static int umtexturiert(int m)   /* birkin_formen.py FORMEN['hangar'] umtexturieren */
+static int umtexturiert(int m)   /* birkin_formen.py FORMEN['hangar'] umtexturieren (1-6, 9, 15); V7: dazu 8, 12, 13 (V5 wie Foto b) */
 {
-    return (m >= 1 && m <= 6) || m == 9 || m == 15;
+    return (m >= 1 && m <= 6) || m == 8 || m == 9 || m == 12 || m == 13 || m == 15;
+}
+static int nur_clut(int m)       /* V7: UV bis auf das CLUT-Feld = EM30 (V6 Kopf Schritt 1: Mesh 9 = Original-Mesh; V5 wie Foto b):
+                                  * nur CLUT-Felder fuer 8/12/13; Sichel 15 wie Referenz 2). Gemessen: genau 8, 9, 12, 13, 15 */
+{
+    return m == 8 || m == 9 || m == 12 || m == 13 || m == 15;
+}
+static int uv_ohne_clut_gleich(const re15_md1_mesh_t *a, const re15_md1_mesh_t *b)
+{
+    for (int t = 0; t < a->triangle_count; t++) {
+        re15_md1_tri_uv_t x = a->triangle_uvs[t], y = b->triangle_uvs[t];
+        x.clut = y.clut = 0;
+        if (memcmp(&x, &y, sizeof x)) return 0;
+    }
+    for (int q = 0; q < a->quad_count; q++) {
+        re15_md1_quad_uv_t x = a->quad_uvs[q], y = b->quad_uvs[q];
+        x.clut = y.clut = 0;
+        if (memcmp(&x, &y, sizeof x)) return 0;
+    }
+    return 1;
+}
+static int zeile_zahl(const re15_md1_mesh_t *b, unsigned zeile)   /* Flaechen eines Meshes auf CLUT-Zeile `zeile` */
+{
+    int n = 0;
+    for (int q = 0; q < b->quad_count; q++) n += b->quad_uvs[q].clut == (uint16_t)(zeile << 6);
+    for (int t = 0; t < b->triangle_count; t++) n += b->triangle_uvs[t].clut == (uint16_t)(zeile << 6);
+    return n;
 }
 static int geteilt(int m)        /* birkin_formen.py FORMEN['hangar'] teilen (kurze Hose, N1.6) */
 {
     return m == 1 || m == 4;
 }
-#define CLUT_SCHWANZ (483u << 6)  /* birkin_formen.py schwanz_kette uv clut */
-#define CLUT_SICHEL  (484u << 6)  /* birkin_formen.py umtexturieren Mesh 15 */
-#define CLUT_KOPF    (485u << 6)  /* birkin_formen.py umtexturieren Mesh 9 (N1.10) */
+#define CLUT_SCHWANZ (487u << 6)  /* V7 (V5 wie Foto a) Farbe: Zeile 487; Referenz 2: 483). Gemessen: Meshes 16-22 alle Flaechen 487 */
+#define CLUT_SICHEL  (484u << 6)  /* birkin_formen.py umtexturieren Mesh 15 (V7 unveraendert, gemessen 484:50) */
+#define CLUT_KOPF    (486u << 6)  /* V7 (V6 Kopf Schritt 1/3: Original-Kopf auf Zeile 486 = EM30-Zeile 0; Referenz 2: 485). Gemessen 486:91 */
+#define CLUT_ZEILEN  13           /* V7 linke Hand T-V7f: 13 Zeilen 480-492 (gemessen: 3328 Eintraege) */
+#define TEX_H_MAX    4096         /* Port-Texturhoehe tex_h = tim->height x n_cluts (render_pc.c re15_render_pc_upload_tim_slot);
+                                   * Grenze 4096 = 16 Paletten 480..495 x 256 (render_pc.c Kommentar tpage 0x1e/0x1f; Dossier V6 Kopf T-K1c) */
 
 static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
 {
@@ -76,7 +121,7 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
     snprintf(pfad, sizeof pfad, RE15_ASSET_PSX_DIR "/EMD/%s", name);
     size_t len = 0;
     uint8_t *blob = slurp(pfad, &len);
-    CHECK(blob != NULL, "%s fehlt (python re15_port/tools/birkin_formen.py)", pfad);
+    CHECK(blob != NULL, "%s fehlt (Spiel-Asset V7, re15_port/tools/r41_sichel/v7_kette.sh)", pfad);
     if (!blob) return;
     CHECK(len >= em30_len, "%s: Laenge %zu < EM30 %zu", name, len, em30_len);
 
@@ -226,12 +271,30 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                  !memcmp(a->quad_uvs, b->quad_uvs, sizeof *a->quad_uvs * (size_t)a->quad_count));
             if (umtexturiert(m)) { CHECK(!uv_gleich, "%s: Mesh %d nicht umtexturiert", name, m); uv_neu++; }
             else CHECK(uv_gleich, "%s: Mesh %d UVs weichen ab", name, m);
-            if (m == 9) {                /* N1.10: Kopf auf eigener CLUT-Zeile */
-                int kopf = 0;
+            if (nur_clut(m))
+                CHECK(uv_ohne_clut_gleich(a, b), "%s: Mesh %d UVs ausser dem CLUT-Feld weichen von EM30 ab", name, m);
+            if (m == 8)                  /* V5 wie Foto b): Brust 34 Flaechen -> Zeile 488 (gemessen 480:56, 481:14, 488:34) */
+                CHECK(zeile_zahl(b, 488) == 34, "%s: Brust (Mesh 8) %d Flaechen auf CLUT 488 statt 34", name, zeile_zahl(b, 488));
+            if (m == 13)                 /* V5 wie Foto b): Oberarm ohne Schulterkuppe 43 Flaechen -> 489 (gemessen 480:13, 489:43) */
+                CHECK(zeile_zahl(b, 489) == 43, "%s: Oberarm (Mesh 13) %d Flaechen auf CLUT 489 statt 43", name, zeile_zahl(b, 489));
+            if (m == 12) {               /* V7 linke Hand 2.: Daumenkralle T 6 Flaechen -> 491 (grau), Fingerkrallen A/B/C 18 -> 492 (rot),
+                                          * Rest der Klauenhand 490 (V5 wie Foto b, Kappe v16 zurueck auf 490); gemessen 490:34, 491:6, 492:18 */
+                CHECK(zeile_zahl(b, 491) == 6, "%s: Daumenkralle (Mesh 12) %d Flaechen auf CLUT 491 statt 6", name, zeile_zahl(b, 491));
+                CHECK(zeile_zahl(b, 492) == 18, "%s: Fingerkrallen (Mesh 12) %d Flaechen auf CLUT 492 statt 18", name,
+                      zeile_zahl(b, 492));
+                CHECK(zeile_zahl(b, 490) == b->quad_count + b->triangle_count - 24, "%s: Klauenhand (Mesh 12) %d Flaechen auf 490 statt %d",
+                      name, zeile_zahl(b, 490), b->quad_count + b->triangle_count - 24);
+            }
+            if (m == 9) {                /* N1.10: Kopf auf eigener CLUT-Zeile; V7: 486 (V6 Kopf) */
+                int kopf = 0, ecken = 0;
                 for (int q = 0; q < b->quad_count; q++) kopf += b->quad_uvs[q].clut == CLUT_KOPF;
                 for (int t = 0; t < b->triangle_count; t++) kopf += b->triangle_uvs[t].clut == CLUT_KOPF;
-                CHECK(kopf == b->quad_count + b->triangle_count, "%s: Kopf (Mesh 9) nur %d/%d Teile auf CLUT 485",
+                CHECK(kopf == b->quad_count + b->triangle_count, "%s: Kopf (Mesh 9) nur %d/%d Teile auf CLUT 486",
                       name, kopf, b->quad_count + b->triangle_count);
+                /* V6 Kopf T-H6: Mesh 9 = Original-Mesh bis auf die Glaettung (<= 4 Ecken; gemessen 2: Ecken 54 und 60) */
+                for (int v = 0; v < a->tri_vertex_count; v++)
+                    ecken += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
+                CHECK(ecken <= 4, "%s: Kopf (Mesh 9) %d Ecken anders als der Original-Kopf (Soll <= 4)", name, ecken);
             }
             if (m == 15) {
                 int sichel = 0;
@@ -245,8 +308,12 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         } else {
             CHECK(b->quad_count > 0, "%s: Schwanzglied-Mesh %d leer", name, m);
             for (int q = 0; q < b->quad_count; q++)
-                CHECK(b->quad_uvs[q].clut == CLUT_SCHWANZ, "%s: Schwanzglied %d Quad %d CLUT %04x statt 483", name, m, q,
+                CHECK(b->quad_uvs[q].clut == CLUT_SCHWANZ, "%s: Schwanzglied %d Quad %d CLUT %04x statt 487", name, m, q,
                       b->quad_uvs[q].clut);
+            /* V6 drei Punkte 2. (Deckel je Rohrende auf Zeile 487): auch die Dreiecke der Glieder liegen auf der Schwanzzeile */
+            for (int t = 0; t < b->triangle_count; t++)
+                CHECK(b->triangle_uvs[t].clut == CLUT_SCHWANZ, "%s: Schwanzglied %d Dreieck %d CLUT %04x statt 487", name, m, t,
+                      b->triangle_uvs[t].clut);
             for (int q = 0; q < b->quad_count; q++) {
                 const re15_md1_quad_t *f = &b->quads[q];
                 CHECK(f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count &&
@@ -265,21 +332,41 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         }
     }
     CHECK(geaendert > 0, "%s: keine einzige Vertex-Aenderung gegenueber EM30", name);
-    /* CLUT-Block (N1.4/N1.5/N1.7): 3 EM30-Zeilen + 3 Zusatzzeilen; Haut umgefaerbt, blaue Eintraege (Jeans) gleich. */
-    CHECK(s_basis.tim.clut_entries == 3 * 256 && s_form.tim.clut_entries == 6 * 256 &&
-          s_form.tim.clut_y == s_basis.tim.clut_y, "%s: CLUT %d Eintraege (Soll 6 x 256) ab y %d", name,
-          s_form.tim.clut_entries, s_form.tim.clut_y);
-    if (s_form.tim.clut_entries == 6 * 256) {
-        int blau_anders = 0, haut_anders = 0;
+    /* CLUT-Block (N1.4/N1.5/N1.7; V7): 3 EM30-Zeilen + 10 Zusatzzeilen 483-492 (V7 linke Hand T-V7f: 13 Zeilen), hoechstens 16
+     * Zeilen und Port-Texturhoehe tex_h = tim->height x n_cluts <= 4096 (render_pc.c re15_render_pc_upload_tim_slot; gemessen
+     * 256 x 13 = 3328). Haut umgefaerbt; blaue Eintraege (Jeans) gleich - ausser den 30 mit Paletten-a* >= 10, die V5 wie Foto b)
+     * grau macht (gemessen: 30 geaendert, alle neu mit 5-Bit-Spanne <= 1, C* <= 4,4). Zeile 486 = EM30-Zeile 0 bytegleich
+     * (V6 Kopf Schritt 3). */
+    const int zeilen = s_form.tim.clut_entries / 256;
+    CHECK(s_basis.tim.clut_entries == 3 * 256 && s_form.tim.clut_entries == CLUT_ZEILEN * 256 &&
+          s_form.tim.clut_y == s_basis.tim.clut_y, "%s: CLUT %d Eintraege (Soll %d x 256) ab y %d", name,
+          s_form.tim.clut_entries, CLUT_ZEILEN, s_form.tim.clut_y);
+    CHECK(s_form.tim.bpp == 8 && zeilen <= 16 && s_form.tim.height * zeilen <= TEX_H_MAX,
+          "%s: %d CLUT-Zeilen (<= 16), Port-Texturhoehe %d x %d = %d (<= %d), bpp %d", name, zeilen, s_form.tim.height, zeilen,
+          s_form.tim.height * zeilen, TEX_H_MAX, s_form.tim.bpp);
+    if (s_form.tim.clut_entries == CLUT_ZEILEN * 256) {
+        int blau_anders = 0, blau_bunt = 0, haut_anders = 0;
         for (int i = 0; i < 3 * 256; i++) {
             const uint16_t c = s_basis.tim.clut[i], d = s_form.tim.clut[i];
             const int r = c & 31, bl = (c >> 10) & 31;
-            if (bl > r) blau_anders += c != d; else haut_anders += c != d;
+            if (bl > r) {
+                blau_anders += c != d;
+                if (c != d) {
+                    const int dr = d & 31, dg = (d >> 5) & 31, db = (d >> 10) & 31;
+                    const int hi = dr > dg ? (dr > db ? dr : db) : (dg > db ? dg : db);
+                    const int lo = dr < dg ? (dr < db ? dr : db) : (dg < db ? dg : db);
+                    blau_bunt += hi - lo > 1;
+                }
+            } else haut_anders += c != d;
             CHECK((c == 0) == (d == 0), "%s: CLUT %d Transparenz geaendert (%04x -> %04x)", name, i, c, d);
         }
-        CHECK(blau_anders == 0, "%s: %d blaue CLUT-Eintraege (Jeans) umgefaerbt", name, blau_anders);
+        CHECK(blau_anders == 30, "%s: %d blaue CLUT-Eintraege umgefaerbt (Soll 30: die mit a* >= 10, V5 wie Foto b)", name, blau_anders);
+        CHECK(blau_bunt == 0, "%s: %d umgefaerbte blaue Eintraege nicht grau (5-Bit-Spanne > 1)", name, blau_bunt);
         CHECK(haut_anders > 200, "%s: nur %d Haut-Eintraege umgefaerbt", name, haut_anders);
-        fprintf(stderr, "%s: %d Haut-CLUT-Eintraege umgefaerbt, 3 Zusatzzeilen\n", name, haut_anders);
+        CHECK(!memcmp(s_form.tim.clut + 6 * 256, s_basis.tim.clut, 256 * sizeof(uint16_t)),
+              "%s: CLUT-Zeile 486 ist nicht die EM30-Zeile 0 (Original-Kopf, V6 Kopf)", name);
+        fprintf(stderr, "%s: %d Haut-CLUT-Eintraege umgefaerbt, %d blaue grau, %d Zusatzzeilen, Port-Texturhoehe %d\n", name,
+                haut_anders, blau_anders, zeilen - 3, s_form.tim.height * zeilen);
     }
     fprintf(stderr, "%s: %d Meshes, %d Knochen, %d Clips, %ld Tri-Vertices umgeformt, %ld Teile umtexturiert\n",
             name, s_form.md1.mesh_count, s_form.skel.bone_count, s_form.anim.clip_count, geaendert, uv_neu);
