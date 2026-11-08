@@ -1,0 +1,2 @@
+gtrlog: 35 RE2-Reaktionen (vollstaendig 35: Sub 2 2, Sub 3 33; abgebrochen 0); Abweichungen 0 (Unterzustand 0, Dauer 0, Schritte 0, Haken-Weg 0, Sturz 0); Haken-Weg max 4021; Luftlinie gesamt max 3980 (2 ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze 1; RE1.5-Niederwurf-Bilder 0 (von 4400); Kanister Stufe 1 0 (ausserhalb des Fensters 0), Zielmodus 1 0, RUNDE 0, ANSCHWIMMEN an 0; Treffer (hp-Flanken) 35; Biss-Laeufe mit Zweitbiss 0, ohne Biss 0 -> ok
+gtrlog Bisslauf: 34 Biss-Clip-Laeufe (BISSLAUF), Zweitbiss im selben Lauf 0, Lauf mit Bissbedingung ohne Biss 0

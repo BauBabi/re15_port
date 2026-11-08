@@ -1,0 +1,24 @@
+# C:/workspace/git/reAi_v2/info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN  18664 B  md5 0293e099bbeae989776264eb14c81bc9
+==== 80100d30-80100d48 ====
+80100d30  e0ffbd27  addiu $sp, $sp, -0x20
+80100d34  1400b1af  sw $s1, 0x14($sp)
+80100d38  21888000  move $s1, $a0
+80100d3c  1800bfaf  sw $ra, 0x18($sp)
+80100d40  bf04040c  jal 0x801012fc
+80100d44  1000b0af  sw $s0, 0x10($sp)
+==== 80100e80-80100e9c ====
+80100e80  00000000  nop 
+80100e84  4d012292  lbu $v0, 0x14d($s1)
+80100e88  00000000  nop 
+80100e8c  7200422c  sltiu $v0, $v0, 0x72
+80100e90  05004014  bnez $v0, 0x80100ea8
+80100e94  00000000  nop 
+80100e98  18022296  lhu $v0, 0x218($s1)
+# C:/workspace/git/reAi_v2/info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN  18664 B  md5 0293e099bbeae989776264eb14c81bc9
+==== 80100e98-80100eb0 ====
+80100e98  18022296  lhu $v0, 0x218($s1)
+80100e9c  00000000  nop 
+80100ea0  10004234  ori $v0, $v0, 0x10
+80100ea4  180222a6  sh $v0, 0x218($s1)
+80100ea8  0f000012  beqz $s0, 0x80100ee8
+80100eac  00000000  nop 

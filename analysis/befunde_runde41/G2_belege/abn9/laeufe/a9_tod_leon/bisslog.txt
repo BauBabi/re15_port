@@ -1,0 +1,1 @@
+bisslog: nach INTRO ende; 2 Biss-Clip-Laeufe, erster Lauf mit Bissbedingung Nr 0 (ab F935), erster Lauf mit Treffer Nr 0 (ab F935), Laeufe mit Bedingung ohne Biss 0, Zweitbiss im selben Lauf 0 -> ok
