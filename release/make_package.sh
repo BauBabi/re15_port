@@ -313,14 +313,14 @@ check_tree() {           # $1 = fertiger Paketordner
         [[ -s "$out/shared_assets/PSX/$pf" ]] || die "PSX-Asset fehlt/leer im Paket: shared_assets/PSX/$pf (Hangar-/Labor-Birkin fiele auf EM30 zurueck)"
         cmp -s "$ASSETS/$pf" "$out/shared_assets/PSX/$pf" || die "PSX-Asset im Paket weicht vom Quellbaum ab: shared_assets/PSX/$pf"
     done
-    # Runde 41 SF: Pin release/em30_hangar.sha256 = Sichel-Form V7 (seit v0.8.30, Nutzerfreigabe 2026-11-08; Bau
-    # re15_port/tools/r41_sichel/v7_kette.sh, NICHT mehr tools/birkin_formen.py - das schreibt ohne --variante den
+    # Runde 41 SF: Pin release/em30_hangar.sha256 = Sichel-Form (v0.8.30 V7; Zweig r41/sichel_v8: V8, Bau
+    # re15_port/tools/r41_sichel/v8_kette.sh, NICHT mehr tools/birkin_formen.py - das schreibt ohne --variante den
     # Grundstand Referenz 2 cfd1ac42 zurueck). Ein alter Stand im Quellbaum faellt sonst nicht auf,
     # weil cmp nur Quellbaum gegen Paket prueft. Neu erzeugt -> Pin im selben Commit nachziehen.
     local em30_soll em30_ist
     em30_soll="$(awk 'NR==1{print $1}' "$HERE/em30_hangar.sha256")"
     em30_ist="$(sha256sum "$out/shared_assets/PSX/EMD/EM30_HANGAR.EMD" | awk '{print $1}')"
-    [[ -n "$em30_soll" && "$em30_ist" == "$em30_soll" ]] || die "EMD/EM30_HANGAR.EMD im Paket ($em30_ist) ist nicht der Stand aus release/em30_hangar.sha256 ($em30_soll) - Spiel-Asset mit re15_port/tools/r41_sichel/v7_kette.sh pruefen bzw. Pin nachziehen (nicht tools/birkin_formen.py: das schreibt Referenz 2 cfd1ac42)"
+    [[ -n "$em30_soll" && "$em30_ist" == "$em30_soll" ]] || die "EMD/EM30_HANGAR.EMD im Paket ($em30_ist) ist nicht der Stand aus release/em30_hangar.sha256 ($em30_soll) - Spiel-Asset mit re15_port/tools/r41_sichel/v8_kette.sh pruefen bzw. Pin nachziehen (nicht tools/birkin_formen.py: das schreibt Referenz 2 cfd1ac42)"
     echo "  check_tree: EMD/EM30_HANGAR.EMD = Pin release/em30_hangar.sha256"
     # Seit Runde 36 (Spur O, PRI): die Masken-Erzeugnisse der Nutzer-PRIs fuer ROOM10F0 Cut 2 (Absperrung) und ROOM1100
     # (Wandfuss) liegen im kopierten PSX-Baum (shared_assets/PSX/MASKS); fehlen sie, verdeckt die Absperrung Marvin nicht.

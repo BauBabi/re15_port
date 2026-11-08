@@ -5,7 +5,7 @@
 # lauf_v2.sh <laufordner> <emd-datei|-> [exitbild] [env...]   (EMD "-" = Spiel-Asset, kein Overlay)
 # EXE_SRC = zu startende exe (Standard: Bau dieses Arbeitsbaums). Eigene exe-Kopie, nur eigene PID.
 set -u
-BAUM=C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel
+BAUM="${BAUM:-C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel}"   # V8: per Umgebung auf den eigenen Arbeitsbaum setzbar
 EXE_SRC="${EXE_SRC:-$BAUM/re15_port/build/platform/pc/re15_pc.exe}"
 NAME="re15_sfv4_$$"
 D="$1"; EMD="$2"; EX="${3:-420}"; shift 3 2>/dev/null || shift $#

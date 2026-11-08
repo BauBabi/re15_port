@@ -85,6 +85,22 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
 #define SW_V4_FEDER        1.5f       /* Federfaktor der V4-Kette (k_feder x 1,5) */
 #define SW_V4_MITNAHME     0.80f      /* Anteil der Zielbewegung, um den die V4-Kette je Schritt mitgeht */
 
+/* Runde 41 SF V8 (analysis/befunde_runde41/SF_MESSBLATT_V8.md Abschnitt 5 Punkt 3 und Bauplan 6a; Nutzer 2026-11-08 "mit Schwanz und
+ * sowas bin ich immer noch 0 zufrieden.... Man sieht ganz klar den Koerper Aufbau...." zu Darstellung.png "Tail directly smooth into
+ * the back - no hill or anything..."): die V8-Kette hat 7 gleich lange Glieder (EM30_HANGAR.EMD V8: 538 E., tools/r41_sichel/v8/
+ * kette_v8.json) und einen gleichmaessigen Bogen (Ruhe-Gelenkwinkel 11-27 Grad statt der V4-L-Biegung 39/73/48 Grad). Die V4-Erkennung
+ * (Gliedverhaeltnis > 2,0) greift dort nicht mehr; ohne eigenen Modus liefe die Kette wie Referenz 2 (haengen() mit 62/80 Grad, Feder
+ * 0,80) und wuerde in der Szene durchhaengen. Erkennung V8 (gemessen an den gebauten Formen, Knochen 16-22 relpos):
+ *   Gliedlaengen max/min <= SW_V8_VERH (V8 1,00; V4/V7 5,5), Gliedlaenge >= SW_V8_GLIED_MIN (V8 538; Referenz 2 466/467),
+ *   Wurzel (Knochen 16 relpos) y < 0 (oben am Ruecken; V8 -342, Referenz 2 +120) und x >= SW_GLATT_WURZEL_X (V8 -667; V1-V3 hohe
+ *   Wurzel x < -700).
+ * Fuer die V8-Kette: Mitnahme/Feder/Erhalt wie V4 (SW_V4_*, Bauplan "Feder/Mitnahme wie V4"), haengen() aus, glaetten() mit Grenze
+ * Keyframe-Gelenkwinkel + SW_GLATT_RAND (3 Grad), mindestens SW_GLATT_MIN, hoechstens SW_V8_GLATT_MAX (25 Grad, Bauplan "je hoechstens
+ * 25 Grad"), ohne Knick-Ausnahme; Bodenregel mit Mesh-Radien und Dornspitze wie V4. GESTALTUNG (PORT-WAHL), keine Original-Konstante. */
+#define SW_V8_VERH         1.10f
+#define SW_V8_GLIED_MIN    500.0f
+#define SW_V8_GLATT_MAX    0.4363f    /* 25 Grad */
+
 /* V4 Runde 3 (Pruefung V4 r2 Zahlen Abschnitt 3 "Boden", Entscheid O3 "Schwanz und Dornspitze nie unter dem Boden, glaetten() prueft
  * auch die Mesh-Spitze"): im Lauf sfv4/r/V4r2 lag kein Kettenpunkt unter dem Boden, wohl aber die Spitze von Mesh 22 (Knochenraum bis
  * y 319, 63 E. ueber das Gliedende hinaus) in h33/h34/h35 bis 57 E. darunter. Die Bodenpruefung der V4-Kette nimmt deshalb die
@@ -167,6 +183,21 @@ void re15_schwanz_r41_verdeckt(int slot, int glieder)
 }
 
 static int kette_ok(const re15_emd_skeleton_t *s);
+
+/* Runde 41 SF V8: die V8-Kette (gleiche Glieder, Wurzel oben am Ruecken) am Skelett erkennen (siehe SW_V8_*). */
+int re15_schwanz_r41_v8_kette(const re15_emd_skeleton_t *s)
+{
+    if (!s || !kette_ok(s)) return 0;
+    float lmin = 1e9f, lmax = 0.0f;
+    for (int b = SW_K0 + 1; b < SW_K0 + SW_N; b++) {
+        const int16_t *r = s->bone_relative_pos[b];
+        const float l = sqrtf((float)r[0] * r[0] + (float)r[1] * r[1] + (float)r[2] * r[2]);
+        if (l < lmin) lmin = l;
+        if (l > lmax) lmax = l;
+    }
+    const int16_t *w = s->bone_relative_pos[SW_K0];
+    return lmin >= SW_V8_GLIED_MIN && lmax <= SW_V8_VERH * lmin && w[1] < 0 && w[0] >= SW_GLATT_WURZEL_X;
+}
 
 /* V4 Runde 3: die V4-Kette (ungleiche Glieder, SW_GLATT_V4_VERH) am Skelett erkennen - Gliedlaengen = |rel| der Knochen 17-22. */
 int re15_schwanz_r41_v4_kette(const re15_emd_skeleton_t *s)
@@ -305,7 +336,7 @@ static void haengen(float (*p)[3], const float *laenge, float boden, float (*zw)
  * das Vorglied abgeknickt als erlaubt, wird es in der Ebene beider Glieder auf die Grenze zurueckgedreht; Laenge bleibt, Boden.
  * Die alte Lage q wird um dieselbe Verschiebung mitgezogen (keine Scheingeschwindigkeit fuer die Feder im naechsten Takt). */
 static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float boden, float (*zw)[3], int biegung,
-                     const float *radius, float dorn)
+                     const float *radius, float dorn, int v8)
 {
     for (int j = 1; j < SW_J - 1; j++) {
         float a[3] = { p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1], p[j][2] - p[j - 1][2] };
@@ -321,7 +352,8 @@ static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float bo
             lim = kw + SW_GLATT_RAND;
         }
         if (lim < SW_GLATT_MIN) lim = SW_GLATT_MIN;
-        if (lim > SW_GLATT_MAX && !(biegung && kw > SW_GLATT_KNICK_AB)) lim = SW_GLATT_MAX;   /* nur V4: Biegung behaelt ihren Winkel */
+        if (v8) { if (lim > SW_V8_GLATT_MAX) lim = SW_V8_GLATT_MAX; }                     /* V8: keine Knick-Ausnahme, hoechstens 25 Grad */
+        else if (lim > SW_GLATT_MAX && !(biegung && kw > SW_GLATT_KNICK_AB)) lim = SW_GLATT_MAX;   /* nur V4: Biegung behaelt ihren Winkel */
         const float c = a[0] * d[0] + a[1] * d[1] + a[2] * d[2];
         if (c < cosf(lim)) {
             float s[3] = { d[0] - a[0] * c, d[1] - a[1] * c, d[2] - a[2] * c };
@@ -514,7 +546,8 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
         for (int j = 0; j < SW_J; j++) for (int k = 0; k < 3; k++) dz[j][k] = zw[j][k] - s_sw[slot].zw[j][k];
         memcpy(s_sw[slot].zw, zw, sizeof zw);                                 /* V4 Runde 3: Messzugang re15_schwanz_r41_ziel_gelenk */
         float sp[3] = { s_sw[slot].p[0][0] - zw[0][0], s_sw[slot].p[0][1] - zw[0][1], s_sw[slot].p[0][2] - zw[0][2] };
-        const int kette_v4 = re15_schwanz_r41_v4_kette(skel);
+        const int kette_v8 = re15_schwanz_r41_v8_kette(skel);
+        const int kette_v4 = re15_schwanz_r41_v4_kette(skel) || kette_v8;   /* V8: Mitnahme/Feder/Erhalt und kein haengen() wie V4 */
         if (s_sw[slot].gueltig && norm(sp) <= SW_SPRUNG && kette_v4) {
             /* V4 Runde 3: die V4-Kette wird mit dem Anteil SW_V4_MITNAHME der Zielbewegung mitgenommen (Lage und Vorlage gleich
              * verschoben, die eigene Schwinggeschwindigkeit bleibt); Messreihe bei SW_V4_MITNAHME. */
@@ -559,9 +592,9 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
             for (int j = 1; j < SW_J; j++) { if (laenge[j] < lmin) lmin = laenge[j]; if (laenge[j] > lmax) lmax = laenge[j]; }
             const int v4 = lmin > 1.0f && lmax > SW_GLATT_V4_VERH * lmin;
             float rad[SW_J], dorn = 0.0f;
-            const int mm = v4 && sw_mesh_mass(skel, rad, &dorn);
-            if (skel->bone_relative_pos[SW_K0][0] < SW_GLATT_WURZEL_X || v4)
-                glaetten(s_sw[slot].p, s_sw[slot].q, laenge, (float)a->y, zw, v4, mm ? rad : NULL, mm ? dorn : 0.0f);
+            const int mm = (v4 || kette_v8) && sw_mesh_mass(skel, rad, &dorn);
+            if (skel->bone_relative_pos[SW_K0][0] < SW_GLATT_WURZEL_X || v4 || kette_v8)
+                glaetten(s_sw[slot].p, s_sw[slot].q, laenge, (float)a->y, zw, v4, mm ? rad : NULL, mm ? dorn : 0.0f, kette_v8);
         }
         s_sw[slot].takt = g_engine.frame_count;
     }
