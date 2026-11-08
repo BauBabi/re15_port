@@ -603,6 +603,178 @@ int re15_render_pc_standbild_wiederholen(void)
  * sprites draw ABR0 = 0.5*back + 0.5*front -> alpha 128 with SDL BLEND). Reset to 255 after. */
 static int s_tri_alpha = 255;
 static int s_cpu_rasterer = 0;   /* Runde 41 Spur Q: 1 = SDLs CPU-Rasterer (RE15_SOFTWARE_RENDER oder Rueckfall), Schutz re15_gpu_grenze_r41.h */
+/* ===== SDLs CPU-RASTERER: 32-BIT-UEBERLAUF s2 * area (Integration Runde 41, Absturz Software-Renderer K5c) ==============
+ * Dossier analysis/befunde_runde41/form/STUFE3.md Abschnitt "Integration: Absturz Software-Renderer K5c".
+ *
+ * SDL 2.28.5 rechnet je texturiertem Dreieck die Texel-Lage baryzentrisch, die Gewichte in 64 Bit, den Anteil der dritten Ecke
+ * aber vorab in int: `s2_x_area.x = s2->x * area;` / `s2_x_area.y = s2->y * area;` (src/render/software/SDL_triangle.c:618-619),
+ * verwendet in TRIANGLE_GET_TEXTCOORD (SDL_triangle.c:171-172) und gelesen ohne Grenzpruefung
+ * `src = (info->src + (srcy * info->src_pitch) + (srcx * srcbpp))` (SDL_triangle.c:771, SDL_BlitTriangle_Slow).
+ * area = |cross(d0, d1, d2)| (SDL_triangle.c:472, 571) in Festkomma mit FP_BITS 1 (SDL_triangle.c:36): dst = (int)(xy * scale) << 1
+ * (SDL_render_sw.c:576-578 SW_QueueGeometry), src = (int)(uv * texture->w|h) (SDL_render_sw.c:573-574), danach 1 ab am Maximum
+ * (SDL_triangle.c:505-533). Ueber 2^31 kippt s2 * area ins Negative, srcy liegt dann tausende Zeilen vor der Textur.
+ *
+ * Gemessen (Lauf leon, integration_r41_birkin_pistole bis F1100, Messhaken unten): 18 Dreiecke der Form (Slot 11, Textur 512 x 4096
+ * = 16 CLUT-Zeilen je 256) ueber der Grenze, das groesste F1016 area 976560 x s2.y 3606 = 3521475360; F1029 area 859884 x s2.y 3634 =
+ * 3124818456 -> AUSNAHME 0xC0000005 in SDL_BlitTriangle_Slow. Mit 8 CLUT-Zeilen (2048 hoch, gleiche UVs) hoechstens 943560296, kein
+ * Absturz. Die Flaechengrenze aus re15_gpu_grenze_r41.h (4 * 1023 * 511) haelt das Produkt nur fuer Texel-Lagen bis 1027 unter 2^31.
+ *
+ * Abhilfe NUR im CPU-Rasterer (s_cpu_rasterer): ein Dreieck, dessen Produkt ueberliefe, wird an der laengsten Kante halbiert (Lage,
+ * UV und Farbe der Mitte gemittelt), bis jede Haelfte unter 2^31 liegt; alle anderen Dreiecke gehen unveraendert an SDL. Der
+ * beschleunigte Renderer (direct3d, opengl, opengles2) rechnet die Texel in der GPU und bekommt die Dreiecke weiter unveraendert. */
+#define RE15_SW_PRODUKT_MAX 2147483647LL   /* INT_MAX: Typ `int` von s2_x_area (SDL_Point, SDL_triangle.c:447) */
+#define RE15_SW_TEIL_TIEFE  12             /* Abbruch: 2^12 Teile je Dreieck; jede Halbierung halbiert area */
+#define RE15_SW_TEIL_MAX    2048           /* Dreiecke je Zwischenpuffer, voll -> sofort gezeichnet */
+
+/* Produkt max(|s2.x * area|, |s2.y * area|) in 64 Bit, wie SDL es in int rechnet; 0 = flaches Dreieck (SDL zeichnet nichts). */
+static long long re15_sw_s2_produkt(const SDL_Vertex *t, int tw, int th, float sx, float sy,
+                                    long long *o_area, long long o_s[6], long long o_d[6])
+{
+    long long su[3], sv[3], dx[3], dy[3];
+    for (int k = 0; k < 3; k++) {
+        su[k] = (int)(t[k].tex_coord.x * (float)tw);
+        sv[k] = (int)(t[k].tex_coord.y * (float)th);
+        dx[k] = (long long)(int)(t[k].position.x * sx) * 2;
+        dy[k] = (long long)(int)(t[k].position.y * sy) * 2;
+    }
+    long long mxu = su[0], mnu = su[0], mxv = sv[0], mnv = sv[0];
+    for (int k = 1; k < 3; k++) {
+        if (su[k] > mxu) mxu = su[k];
+        if (su[k] < mnu) mnu = su[k];
+        if (sv[k] > mxv) mxv = sv[k];
+        if (sv[k] < mnv) mnv = sv[k];
+    }
+    for (int k = 0; k < 3; k++) {
+        if (mxu > mnu && su[k] == mxu) su[k]--;
+        if (mxv > mnv && sv[k] == mxv) sv[k]--;
+    }
+    long long area = (dx[1] - dx[0]) * (dy[2] - dy[0]) - (dy[1] - dy[0]) * (dx[2] - dx[0]);
+    if (area < 0) area = -area;
+    if (o_area) *o_area = area;
+    if (o_s) for (int k = 0; k < 3; k++) { o_s[2 * k] = su[k]; o_s[2 * k + 1] = sv[k]; }
+    if (o_d) for (int k = 0; k < 3; k++) { o_d[2 * k] = dx[k]; o_d[2 * k + 1] = dy[k]; }
+    if (area == 0) return 0;
+    long long px = su[2] * area, py = sv[2] * area;
+    if (px < 0) px = -px;
+    if (py < 0) py = -py;
+    return px > py ? px : py;
+}
+
+/* MESSHAKEN RE15_SWTRI_LOG=<datei> (KEIN Spielverhalten, nur mit Env): je Stapel an SDL_RenderGeometry eine Kennzeile (Slot, Textur,
+ * Dreiecke, groesstes Produkt) und jedes Dreieck ueber der Grenze mit SDLs Ganzzahlen - gemessen VOR der Teilung unten. */
+static FILE *s_swtri_fp = NULL;
+static int   s_swtri_init = 0;
+static void re15_swtri_messen(int slot, SDL_Texture *tex, const SDL_Vertex *v, int n_tri)
+{
+    if (!s_swtri_init) {
+        s_swtri_init = 1;
+        const char *e = getenv("RE15_SWTRI_LOG");
+        if (e && *e) s_swtri_fp = fopen(e, "w");
+    }
+    if (!s_swtri_fp || !tex) return;
+    int tw = 0, th = 0;
+    float sx = 1.0f, sy = 1.0f;
+    SDL_QueryTexture(tex, NULL, NULL, &tw, &th);
+    SDL_RenderGetScale(s_renderer, &sx, &sy);
+    long long pmax = 0;
+    int n_ueber = 0;
+    for (int i = 0; i < n_tri; i++) {
+        long long area, s[6], d[6];
+        long long p = re15_sw_s2_produkt(&v[i * 3], tw, th, sx, sy, &area, s, d);
+        if (p > pmax) pmax = p;
+        if (p > RE15_SW_PRODUKT_MAX) {
+            n_ueber++;
+            fprintf(s_swtri_fp, "F%u UEBERLAUF slot=%d tex=%dx%d area=%lld s2*area=%lld"
+                    " dst=(%lld,%lld)(%lld,%lld)(%lld,%lld) src=(%lld,%lld)(%lld,%lld)(%lld,%lld) cpu=%d\n",
+                    (unsigned)g_engine.frame_count, slot, tw, th, area, p,
+                    d[0], d[1], d[2], d[3], d[4], d[5], s[0], s[1], s[2], s[3], s[4], s[5], s_cpu_rasterer);
+        }
+    }
+    fprintf(s_swtri_fp, "F%u stapel slot=%d tex=%dx%d n=%d max_s2*area=%lld ueber=%d\n",
+            (unsigned)g_engine.frame_count, slot, tw, th, n_tri, pmax, n_ueber);
+    fflush(s_swtri_fp);
+}
+
+static SDL_Vertex s_sw_teil_buf[RE15_SW_TEIL_MAX * 3];
+static int        s_sw_teil_n = 0;
+static int        s_sw_teil_log = 0;   /* die ersten 8 Teilungen je Prozess stehen im Log */
+
+static void re15_sw_teil_zeichnen(SDL_Texture *tex)
+{
+    if (s_sw_teil_n > 0) SDL_RenderGeometry(s_renderer, tex, s_sw_teil_buf, s_sw_teil_n * 3, NULL, 0);
+    s_sw_teil_n = 0;
+}
+
+static SDL_Vertex re15_sw_mitte(const SDL_Vertex *a, const SDL_Vertex *b)
+{
+    SDL_Vertex m;
+    m.position.x  = (a->position.x + b->position.x) * 0.5f;
+    m.position.y  = (a->position.y + b->position.y) * 0.5f;
+    m.tex_coord.x = (a->tex_coord.x + b->tex_coord.x) * 0.5f;
+    m.tex_coord.y = (a->tex_coord.y + b->tex_coord.y) * 0.5f;
+    m.color.r = (Uint8)(((int)a->color.r + b->color.r) / 2);
+    m.color.g = (Uint8)(((int)a->color.g + b->color.g) / 2);
+    m.color.b = (Uint8)(((int)a->color.b + b->color.b) / 2);
+    m.color.a = (Uint8)(((int)a->color.a + b->color.a) / 2);
+    return m;
+}
+
+/* 1 = Dreieck (in Teilen) eingereiht, 0 = auch nach RE15_SW_TEIL_TIEFE Halbierungen ueber der Grenze -> verworfen. */
+static int re15_sw_teilen(SDL_Texture *tex, const SDL_Vertex *t, int tw, int th, float sx, float sy, int tiefe)
+{
+    if (re15_sw_s2_produkt(t, tw, th, sx, sy, NULL, NULL, NULL) <= RE15_SW_PRODUKT_MAX) {
+        if (s_sw_teil_n >= RE15_SW_TEIL_MAX) re15_sw_teil_zeichnen(tex);
+        s_sw_teil_buf[s_sw_teil_n * 3 + 0] = t[0];
+        s_sw_teil_buf[s_sw_teil_n * 3 + 1] = t[1];
+        s_sw_teil_buf[s_sw_teil_n * 3 + 2] = t[2];
+        s_sw_teil_n++;
+        return 1;
+    }
+    if (tiefe >= RE15_SW_TEIL_TIEFE) return 0;
+    /* laengste Kante k -> (k+1)%3 im Bild; die Mitte teilt das Dreieck in zwei gleich grosse mit derselben Windung */
+    int k = 0;
+    float best = -1.0f;
+    for (int e = 0; e < 3; e++) {
+        const SDL_Vertex *p = &t[e], *q = &t[(e + 1) % 3];
+        float ddx = q->position.x - p->position.x, ddy = q->position.y - p->position.y;
+        float l = ddx * ddx + ddy * ddy;
+        if (l > best) { best = l; k = e; }
+    }
+    const SDL_Vertex *A = &t[k], *B = &t[(k + 1) % 3], *C = &t[(k + 2) % 3];
+    SDL_Vertex M = re15_sw_mitte(A, B);
+    SDL_Vertex h1[3] = { *A, M, *C };
+    SDL_Vertex h2[3] = { M, *B, *C };
+    int ok1 = re15_sw_teilen(tex, h1, tw, th, sx, sy, tiefe + 1);
+    int ok2 = re15_sw_teilen(tex, h2, tw, th, sx, sy, tiefe + 1);
+    return ok1 && ok2;
+}
+
+/* Ersatz fuer SDL_RenderGeometry(tex, v, n_tri * 3) im CPU-Rasterer: unkritische Dreiecke unveraendert und in derselben Reihenfolge,
+ * jedes kritische an seiner Stelle in Teilen. */
+static void re15_sw_geometrie(int slot, SDL_Texture *tex, const SDL_Vertex *v, int n_tri)
+{
+    int tw = 0, th = 0;
+    float sx = 1.0f, sy = 1.0f;
+    SDL_QueryTexture(tex, NULL, NULL, &tw, &th);
+    SDL_RenderGetScale(s_renderer, &sx, &sy);
+    int erst = 0;
+    for (int i = 0; i < n_tri; i++) {
+        long long area = 0;
+        long long p = re15_sw_s2_produkt(&v[i * 3], tw, th, sx, sy, &area, NULL, NULL);
+        if (p <= RE15_SW_PRODUKT_MAX) continue;
+        if (i > erst) SDL_RenderGeometry(s_renderer, tex, &v[erst * 3], (i - erst) * 3, NULL, 0);
+        s_sw_teil_n = 0;
+        int ok = re15_sw_teilen(tex, &v[i * 3], tw, th, sx, sy, 0);
+        if (s_sw_teil_log < 8) {
+            s_sw_teil_log++;
+            fprintf(stderr, "[sw-teilung] F%u Slot %d Textur %dx%d: area %lld x s2 = %lld > 2^31-1 (SDL_triangle.c:618) -> %s\n",
+                    (unsigned)g_engine.frame_count, slot, tw, th, area, p, ok ? "geteilt" : "Teil verworfen");
+        }
+        re15_sw_teil_zeichnen(tex);
+        erst = i + 1;
+    }
+    if (n_tri > erst) SDL_RenderGeometry(s_renderer, tex, &v[erst * 3], (n_tri - erst) * 3, NULL, 0);
+}
 void re15_render_pc_set_tri_alpha(int a) { s_tri_alpha = (a < 0) ? 0 : (a > 255) ? 255 : a; }
 /* Per-tri BLEND MODE for subsequently queued tris — die PSX-ABR-Modi der Effekt-Sprites
  * (POLY-Code-Bit 0x02 = ABE aus flags Bit4, ABR = TPAGE-Bits 5-6; Draw FUN_800534c4,
@@ -1419,7 +1591,10 @@ void re15_render_end_frame(void)
                             if (SDL_SetTextureBlendMode(btex, s_tri_sub_blend) != 0)
                                 SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_BLEND);
                         }
-                        if (btex) SDL_RenderGeometry(s_renderer, btex,
+                        re15_swtri_messen(cur_slot, btex, s_textri_flush_buf, n);   /* Messhaken RE15_SWTRI_LOG, nur Env */
+                        /* CPU-Rasterer: Schutz vor SDL_triangle.c:618-619 (re15_sw_geometrie); GPU unveraendert */
+                        if (btex && s_cpu_rasterer) re15_sw_geometrie(cur_slot, btex, s_textri_flush_buf, n);
+                        else if (btex) SDL_RenderGeometry(s_renderer, btex,
                                             s_textri_flush_buf, n * 3, NULL, 0);
                         if (btex && bl != 0)
                             SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_BLEND);
@@ -2759,10 +2934,29 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
         SDL_DestroyTexture(st->tex);
         st->tex = NULL;
     }
+    /* Integration Runde 41 (Absturz Software-Renderer K5c): die Grenze des Renderers nennen, wenn die gestapelte Textur (Hoehe =
+     * TIM-Hoehe x CLUT-Zeilen) sie ueberschreitet - SDL_CreateTexture lehnt dann ab ("Texture dimensions are limited to %dx%d",
+     * SDL 2.28.5 src/render/SDL_render.c:1266-1268). GLES2-Geraete melden 4096; bisher blieb das still. */
+    {
+        SDL_RendererInfo ri;
+        if (SDL_GetRendererInfo(s_renderer, &ri) == 0 &&
+            ((ri.max_texture_height > 0 && tex_h > ri.max_texture_height) ||
+             (ri.max_texture_width > 0 && tex_w > ri.max_texture_width)))
+            fprintf(stderr, "[tim] slot %d: Textur %dx%d (%d CLUT-Zeilen) ueber der Grenze des Renderers %s %dx%d\n",
+                    slot, tex_w, tex_h, n_cluts, ri.name, ri.max_texture_width, ri.max_texture_height);
+    }
     st->tex = SDL_CreateTexture(s_renderer,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STATIC,
         tex_w, tex_h);
+    if (!st->tex) {
+        /* Slot gilt als nicht geladen (der Flush zeichnet ihn ohnehin nicht: tex NULL). Ist er der aktive, bleibt s_tim_texture
+         * NULL wie bisher ueber update_active_slot_globals - die Dreiecks-Einreihung weist dann ab. */
+        fprintf(stderr, "[tim] slot %d: SDL_CreateTexture %dx%d fehlgeschlagen: %s\n", slot, tex_w, tex_h, SDL_GetError());
+        st->loaded = 0;
+        st->w = st->h = 0;
+        if (slot == s_active_slot) s_tim_texture = NULL;
+    }
     if (st->tex) {
         SDL_UpdateTexture(st->tex, NULL, rgba, tex_w * 4);
         SDL_SetTextureBlendMode(st->tex, SDL_BLENDMODE_BLEND);

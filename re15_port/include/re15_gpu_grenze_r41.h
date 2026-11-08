@@ -14,6 +14,9 @@
  * 1,1e9). Der CPU-Rasterer von SDL 2.28.5 rechnet `s2_x_area.x = s2->x * area` (SDL_triangle.c:618) in 32 Bit, oberhalb 2^31/255 laufen die Texturkoordinaten aus der Textur:
  * SDL_BlitTriangle_Slow las dann fremden Speicher, das waren die stillen Enden von integration_r41_ventilkette_kette. Saettigung + Grenze halten die Flaeche bei hoechstens
  * 4 * 1023 * 511, unter dem Ueberlauf.
+ * NACHTRAG Integration Runde 41 (Absturz Software-Renderer K5c, form/STUFE3.md): das gilt nur fuer Texel-Lagen bis 1027 (2^31 / 2090892). Die Riesenform K5c (Port-Textur 512x4096) lief
+ * mit area 859884 x s2.y 3634 = 3124818456 trotzdem ueber; den Ueberlauf selbst faengt seitdem render_pc.c re15_sw_geometrie ab (Teilung, nur CPU-Rasterer). Diese Grenze bleibt als
+ * PSX-Hardwareverhalten.
  *
  * Effekt-Quader (Integration Q+R, Z2: Dossier Q OFFEN 1, Entscheid des Orchestrators): fuer die ESP-Quader gilt die GPU-Grenze in BEIDEN Renderern, denn das ist Hardwareverhalten und kein Schutz vor
  * dem CPU-Rasterer. Ihre Ecken sind keine GTE-Ausgaben, darum nicht re15_gpu_dreieck_verwerfen: FUN_800534c4 holt nur die Mitte aus der GTE (RTPS @0x80053534, SXY2 @0x8005354c, gesaettigt) und
