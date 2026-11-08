@@ -1367,3 +1367,66 @@ Nach dem Intro beisst RE2 bei Kontakt sofort (8 Bilder Kiefer-Vorlauf), schwimmt
   Spurt-Wahl Clip 0/1 (@0x80100b5c-64 / @0x80100bf4-c04, gator_re2_r41.c :1306/:1308).
 - Nicht Teil dieser Runde: der Abstand zwischen zwei Biss-Laeufen. RE2 erlaubt bei andauerndem Kontakt einen neuen Lauf nach Reaktionsende + 8 Bildern
   (rund 28/30 Bilder nach dem Treffer); der Port beginnt einen neuen LUNGE/Hochbiss erst bei `hit_stun == 0` (0x64 im Treffer, unveraendert seit vor NB4).
+
+### NB4 Runde 3 (Abnahme 8 M1) - Fix, Riegel, Tests, Laeufe
+
+**Befund Abnahme 8 (77918c914):** Runde 2 (d8bf728b0) stuetzte die Bisssperre auf +0x238; RE2 sperrt damit nur den Spurt (Sub 1 -> Sub 2), der Biss
+fragt es nie, und am Intro-Ende gibt RE2 den Biss frei. Folge: Lauf nische zwei Biss-Anlaeufe mit dem Maul an der Figur ohne Biss (F284-F326, F347-F389),
+erster Biss F416 statt F290. Disassembly: Abschnitt "NB4 Runde 3 - RE2-Bissmechanismus" oben (Commit 93a57bcb5).
+
+**Fix (4fe772196, enemy_ai_boss_gator.c, re15_boss_gator.h):**
+
+| Stelle | vorher (Runde 2) | nachher | Beleg |
+|---|---|---|---|
+| LUNGE-Biss (Clip 4, Bild 6..34) | `!bite_done && ... && gb_biss_frei(slot)` (+0x238 == 0); bite_done im Treffer nie gesetzt | `!bite_done && bed4`; gb_biss_abschluss setzt bite_done = 1 (art 4) | ein Treffer je Kiefer-Lauf: PL+0x1D3 @0x801015a4-ac, Lauf-Ende @0x80101558; T1 @0x801012fc ohne +0x238 |
+| Biss B2 (Clip 3, Bild >= 114, nur env) | dito mit gb_biss_frei | `!bite_done && bed5`, bite_done im Treffer (art 5) | RE2 Sub 3 nur T1 @0x80100d40; @0x80100e8c setzt nur +0x218 |
+| Hochbiss (GUARD, Clip 4, Bild 6..34) | `re15_gr2_biss_cd_rest(slot) == 0` (88ff3f990) | `!bite_done && bed3`, bite_done im Treffer (art 3) | wie LUNGE; @0x80100cb4-c4 ist toter Code |
+| Rammen (CROSS) | `... && gb_biss_frei(slot)` | Bedingung entfernt (einmal je Ueberquerung ueber bite_done wie vor Runde 2) | RE2-Treffer-Einstieg fragt nur Kontakt @0x80101590-98 und PL+0x1D3 @0x801015a0-ac |
+| +0x238 | 110 Intro / 70 Treffer / -1 je Bild / Clip-0/1-Wahl | unveraendert, Texte "Spurt-Sperre" | @0x8010091c-20, @0x801016b0-b4, @0x801004a8-b8, @0x80100b5c-64 / @0x80100bf4-c04 |
+
+Jeder neue Biss-Clip-Lauf (LUNGE-Start, Hochbiss-Start) loescht bite_done ueber `gb_lauf_beginn` (vorher die Zuweisung `bite_done = 0` an denselben drei
+Stellen). Messhaken ohne Spielverhalten: Mitschrift je Biss-Clip-Lauf (`re15_gator_boss_bisslauf_info/_reset`, Zeile `BISSLAUF F<a>-F<b> art <n> treffer <t>
+bedingung <b>` in gator_boss.log; bedingung = Bilder mit Fenster + `pl->hit_react == 0` + Maul/Abstand + keine Wand, solange der Lauf nicht getroffen hat,
+OHNE Lauf-Riegel und ohne +0x238). Pruefhaken (im Spiel nie gesetzt): `sperre_alt` = kein Lauf-Riegel (Stand cfa775ae8), neu `sperre238` = +0x238 als
+Bissbedingung (Stand d8bf728b0). CROSS-Biss (hit_stun 0x64) und jeder Angriffsbeginn unveraendert. Keine neue Zahl.
+Texte berichtigt: gator_re2_r41.c (:8, :12, :1499, :2692), re15_gator_re2_r41.h (:33/:34/:85), test_r41_re2gator.c und probes/r41_re2gator.cmake
+("Spurt-Sperre" statt "Biss-Sperre"); test_r41_gatorfix.c ohne "Bisssperre +0x238". Die "Biss-Sperre @0x8010134c-58" (+0x1C0 & 4 in T1) ist eine echte
+Biss-Bedingung und bleibt so benannt.
+
+**Riegel (6eafe8753, 76a6d2a52):**
+
+| Riegel | Soll | Ist (Leon = Elza) | Gegenprobe |
+|---|---|---|---|
+| nb4 Teil B (a) | 0 Zweitbisse im selben Biss-Clip-Lauf; neuer Treffer waehrend einer Reaktion nur im Liegen von Sub 3 (RE2 loescht PL+0x1D3 dort @0x801032f0, in Sub 2 erst am Ende @0x801031d4) | 527 Laeufe, 523 Treffer, Zweitbisse 0; abgebrochen 2, beide Sub 3 (erster F661: CROSS-Biss Sub 3 nach 35 Bildern, dann Rammen), nicht Sub 3: 0 | Pruefhaken 'Sperre alt' (Stand cfa775ae8), 2 Wasserlagen: 30 Laeufe, 57 Treffer, **27 Zweitbisse** (kleinster Abstand 20) - rot |
+| nb4 Teil B (b) NEU | Intro-Lage (Figur im Wasser, Maul 400 vor ihr, +0x238 = 110 wie nach dem Intro): erster Treffer im ersten Lauf, waehrend +0x238 > 0 | 2 von 2 Lagen: Lauf Nr 0, Treffer t7 bei +0x238 = 103, Leerlaeufe 0 | Pruefhaken 'Sperre 238' (Stand d8bf728b0): erster Treffer Lauf 1 t109 (+0x238 = 1) bzw. Lauf 2 t133 (+0x238 = 0), **1 bzw. 2 Leerlaeufe** - rot |
+| nb4 Teil B (c) | kein Lauf mit Bissbedingung ohne Treffer, je Lage erster Treffer im ersten Lauf mit Bedingung | Leerlaeufe 0, Lagen mit spaeterem Erstbiss 0 | dieselbe Gegenprobe 'Sperre 238' (Leerlaeufe 1 / 2) |
+| gtrlog (exe) | statt "Abstand < 70 = VERFEHLT": BISSLAUF mit treffer > 1 oder (treffer 0 und bedingung > 0) = VERFEHLT | 10 gtrlog-Zeilen der 4 gatorfix-Laeufe: "Biss-Laeufe mit Zweitbiss 0, ohne Biss 0 -> ok" | (alte Logs haben keine BISSLAUF-Zeilen; exe-Gegenprobe = Abnahme 8 a8_nische2) |
+| re2gator nische: bisslog NEU | nach "INTRO ende" erster Lauf mit Bedingung = erster Lauf mit Treffer, je Lauf <= 1 Treffer | `bisslog: nach INTRO ende; 2 Biss-Clip-Laeufe, erster Lauf mit Bissbedingung Nr 0 (ab F283), erster Lauf mit Treffer Nr 0 (ab F283), Laeufe mit Bedingung ohne Biss 0, Zweitbiss im selben Lauf 0 -> ok` | Abnahme 8 a8_nische2 (Stand d8bf728b0): Laeufe F284-F326 / F347-F389 ohne Biss, erster Biss F416 |
+| re2gator nische EXIT_AT | im Finisher, >= 10 Halt-Zeilen | 770 -> 640 = 397 + 243 (13 Halt-Zeilen F398..F638); 770 laege nach dem Game Over (~F676) | - |
+
+**Tests (Summenzeilen woertlich, `G2_belege/nb4/runde3/`):**
+- `RE15_BUILD_DIR=<Baum>/re15_port/build bash re15_port/tools/local_build.sh build`: `=== LOCAL-BUILD-OK (build)` (exe md5 5c2cd89f18863b88c0db2c8c58589bf3).
+- `ctest -R "^unit_r41_(gatorfix|re2gator)_" -j 2 --timeout 1800`: `100% tests passed, 0 tests failed out of 48`, `Total Test time (real) = 100.80 sec`
+  (`ctest_unit.txt`); nb4 / nb4_elza: `nb4: 0 Fehler` / `nb4_elza: 0 Fehler` (`harness_nb4_auszug.txt`).
+- exe (Biss/Intro): `ctest -R "^integration_r41_(re2gator|gatorfix_(oben_kante|oben_kante_elza|rampe_oben|frei))$" -j 2 --timeout 1800 -V`:
+  `100% tests passed, 0 tests failed out of 5`, `Total Test time (real) = 1299.75 sec` (`ctest_exe.txt`; re2gator 294.79 s `r41_re2gator: ok`,
+  oben_kante 479.10, oben_kante_elza 525.81, rampe_oben 389.65, frei 666.22). Die uebrigen 15 exe-Riegel faehrt die Integration.
+
+**Eigene exe-Laeufe** (Messkopie `re15_pc_g2nb4r3.exe` md5 5c2cd89f18863b88c0db2c8c58589bf3, Skript `werkzeug/lauf9.sh`, Auszuege `laeufe/<lauf>/`):
+
+| Lauf | Umgebung | erster Biss | Treffer-Paare | Zweitbisse | Anlauf ohne Biss |
+|---|---|---|---|---|---|
+| r3_nische | wortgleich integration_r41_re2gator nische, EXIT_AT 1100 | **F290** (BISSLAUF F283-F327, HP 60 -> 0, Sub 2), Lauf Nr 0 nach INTRO ende | F290 -> F397 TOT (107) | 0 | 0 |
+| r3_tod_leon | wie Abnahme 8 a8_tod_leon (echte HP, ohne Kanister, Start (-3000,-23000)) | F942 (BISSLAUF F935-F979, HP 100 -> 40) | F942 -> F1049 TOT (107) | 0 | 0 |
+
+Vergleich: Runde 1 nische F290 / F310 Zweitbiss TOT (Abnahme 7); Runde 2 F416 / F523 (Abnahme 8); Runde 3 F290 / F397 - der erste Biss liegt wieder auf dem
+Bild der Runde 1 (RE2-Zeit laut Abnahme 8), der Zweitbiss bleibt weg. tod_leon unveraendert zu Runde 2 (F942 / F1049; dort kein Intro-Fenster).
+Der Lauf nische lief nach dem Game Over (~F676) bis zum Abbruch der eigenen PID weiter (EXIT_AT 1100 gilt nur in 2090); ausgewertet ist der erste Besuch.
+
+**Offen (Runde 3):**
+1. Abstand zwischen zwei Biss-Laeufen: RE2 erlaubt bei andauerndem Kontakt einen neuen Kiefer-Lauf nach Reaktionsende + 8 Bilder (rund 28/30 Bilder nach dem
+   Treffer); der Port beginnt LUNGE/Hochbiss erst bei hit_stun == 0 (0x64 im Treffer, vor NB4). Kleinster Abstand zweier Treffer im Harness 36 (Rammen nach
+   CROSS-Biss), exe 107. Nicht umgebaut (nicht Teil des Befunds).
+2. CROSS-Biss und Rammen in derselben Ueberquerung (2 von 523 Treffern im Harness, beide im Liegen der Sub-3-Reaktion): RE2-zulaessig ueber PL+0x1D3 frei
+   @0x801032f0; Rammen ist PORT-WAHL. Vor Runde 2 ebenso, in Runde 2 von der +0x238-Regel verdeckt.
+3. Unveraendert aus Runde 2: A90 (O-T1) ohne Nutzer-Wortlaut, fuzz im Stand f942f56c0, Sturz-Animation (O-W1), Koerper-/Boss-Schub, B2 nur per env, PSX nicht gebaut.
