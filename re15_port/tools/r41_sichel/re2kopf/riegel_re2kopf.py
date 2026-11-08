@@ -22,6 +22,22 @@
   INFO  Messblatt-Methode K1/K3/K4 (hellster Kopfpunkt = Augenfleck) und der Lichtfaktor des Augenfaechers; KV1 a* (K9); Kopf/Brust.
   Form  riegel_ref2tex.form: G1, M1-M4, T1-T7, TA, TK, Boden (mit --lauf auch T7a-d).
 Gegenprobe: die Basis (ot3) muss an T-R1 ROT sein (python riegel_re2kopf.py EM30_V4ot3.EMD --kein-exit).
+
+Runde 3 (Nutzer 2026-11-08: Feuerflecken/helle Kratzer weg, Seite einfach grau; kein spitzer Schnabel, vorn abgerundet wie das Originalfoto):
+  T-R1a/d pruefen gegen kopf_re2_bau.PARAM_R3 (Kappe + Palettenregel r3), wenn das Protokoll keine Parameter bringt.
+  T-V1  Kopf-Farbe am Render Pose 135 / 85 (RDT-Licht), Kopfpixel ohne Augenfaecher (T19/T20/T41) und ohne Maulflaechen: Anteil a* > 12
+        <= 2 %; Anteil heller Kratzer = L* > lokaler Median (9 x 9, nur Pixel derselben Zone grau/dunkel) + 8 <= 2 %; b* P10 >= -1.
+        Der Anteil gegen den Kopf-Median bzw. Zonen-Median steht als Ausgabe dabei: gegen den Kopf-Median ist jede Lesart mit dunkler Haarseite
+        (K5) rot (graue Seite ganz ueber Median + 8), gegen den Zonen-Median zaehlt in Pose 85 die Lichtseite (n.l der oberen Vorderflaechen;
+        dieselben Pixel ohne Licht liegen bei Texel-L* <= M + 6) - beides misst Licht/Zonen, nicht Kratzer.
+  T-V2  Form: a) Vorsprung der vordersten Kopfecke (max x im G2-Raum, Ecken von Mesh 9 zurueckgerechnet) gegen die Kappe (Ellipsoid-Anpassung
+        an die Kopfecken, iterativ ohne r > 1,15) <= 3 % der Kopfhoehe; b) keine Delle/kein neuer Vorsprung: bewegte Ecken und ihre Nachbarn liegen
+        radial nicht weiter unter/ueber dem Mittel ihrer Nachbarecken als das Relief der G2-Quelle (P75 von |Abweichung| ueber alle 48 Ecken,
+        mindestens 3 % der Kopfhoehe), es sei denn, das war an der Quelle schon so (Zuwachs <= 1 %); c) Silhouette seitlich gegen
+        Version_80%/Beschreibung2_Vorlage.png: Zeilen 186-217 (Hintergrund = weisser Pfosten x 466-482), Vorderkante je Zeile im Foto = rechtestes
+        x in 450-482 mit |L*Foto - L*BSS (Videoraum)| > 9, im Render = rechtestes Figurpixel; IoU der Streifen 440..Vorderkante (Zahl) und
+        groesster Ueberstand; Soll IoU >= IoU der Vorgaengervariante (--vorher, Standard EM30_V4re2 = V5 Runde 2).
+  Gegenprobe V5 Runde 2 (EM30_V4re2.EMD mit --prot kopf_re2_protokoll.json): T-V1 und T-V2 ROT.
 """
 import os, sys, json, argparse, hashlib, struct
 import numpy as np, cv2
@@ -59,8 +75,11 @@ def tk1b(A, R, p):
     dunkel; T-R1d prueft sie bytegleich der Nachrechnung) - die Zeilen 480-485 muessen bytegleich Referenz 2 sein."""
     gleich = A['clut'].shape[0] >= 6 and bool((A['clut'][:6] == R['clut'][:6]).all())
     zg, z3, zd = _rows(p)
-    erlaubt = {'G2 0x31 Zeile 0 grau (L* x %.2f)' % p['pal']['grau']['k']: zg, 'G3 0x33 Zeile 0': z3,
-               'G2 0x31 Zeile 0 dunkel (L* x %.2f, <= %.0f)' % (p['pal']['dunkel']['k'], p['pal']['dunkel']['lmax']): zd}
+    if p['pal'].get('regel') == 'r3':
+        erlaubt = {'G2 0x31 Zeile 0 grau (Regel r3)': zg, 'G3 0x33 Zeile 0': z3, 'G2 0x31 Zeile 0 dunkel (Regel r3)': zd}
+    else:
+        erlaubt = {'G2 0x31 Zeile 0 grau (L* x %.2f)' % p['pal']['grau']['k']: zg, 'G3 0x33 Zeile 0': z3,
+                   'G2 0x31 Zeile 0 dunkel (L* x %.2f, <= %.0f)' % (p['pal']['dunkel']['k'], p['pal']['dunkel']['lmax']): zd}
     weitere = []
     ok = gleich
     for zi in range(6, A['clut'].shape[0]):
@@ -114,7 +133,7 @@ def tr0(emd, basis):
 
 def tr1(emd, prot=None):
     """Kopf byte-true RE2 (bis auf die dokumentierte Transformation)."""
-    p = (prot or {}).get('param') or KB.PARAM
+    p = (prot or {}).get('param') or KB.PARAM_R3
     zonen = (prot or {}).get('zonen')
     blob = open(emd, 'rb').read(); d = EA.emd_dir(blob)
     ms = EA.md1_parse(blob[d[7]:d[8]]); m9 = ms[KB.KOPF]
@@ -126,9 +145,12 @@ def tr1(emd, prot=None):
     ok_n = len(m9.tv) == len(g.tv) and len(m9.tn) == len(g.tn) and len(m9.tf) == len(g.tf) and len(m9.qf) == len(g.qf)
     if ok_n:
         sk = np.array(p['skal'], float); R = KB.rot(p); t = np.array(p['versatz'], float)
-        V = np.array([v[:3] for v in g.tv], float); Q = (V * sk) @ R.T + t
+        # Runde 3: Soll-Ecken = gerundete Ecken (Kappe, kopf_re2_bau.runden), Soll-Normalen = Normalen der bewegten Ecken neu gerechnet;
+        # Zonen und UVs an den QUELL-Ecken V (unveraendert)
+        V, V2, N, finfo = KB.g2_geometrie(p)
+        Q = (V2 * sk) @ R.T + t
         dv = np.abs(np.array([v[:3] for v in m9.tv], float) - Q).max()
-        N = np.array([n[:3] for n in g.tn], float); Nn = (N / sk) @ R.T
+        Nn = (N / sk) @ R.T
         Ln = np.linalg.norm(N, axis=1, keepdims=True); L2 = np.linalg.norm(Nn, axis=1, keepdims=True); L2[L2 == 0] = 1
         dn = np.abs(np.array([n[:3] for n in m9.tn], float) - Nn / L2 * Ln).max()
         fl = list(m9.tf) == list(g.tf) and list(m9.qf) == list(g.qf)
@@ -147,11 +169,12 @@ def tr1(emd, prot=None):
                 rows[ist] += 1
                 if soll != ist:
                     zone_ab += 1
-        Z.append(zeile('T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)', 'Ecken = Rz Ry Rx S v + t (Abstand <= 1 E.), Normalen gedreht (<= 2 E.), Flaechen-Indizes gleich, '
+        form_txt = ('; Kappe: %d Ecken gerundet %s, %d Normalen neu' % (len(finfo['bewegt']), finfo['bewegt'], len(finfo['normalen_neu']))) if finfo else '; ohne Kappe (Runde 2)'
+        Z.append(zeile('T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)', 'Ecken = Rz Ry Rx S runden(v) + t (Abstand <= 1 E.), Normalen gedreht (<= 2 E.), Flaechen-Indizes gleich, '
                        'UV = Quelle + (%d, %d) ausser Maulflaechen (%d Dreiecke, G3-Kachel); CLUT-Zeile je Flaeche = Zonenregel (n . c > %.1f mit n = %s | u %d-%d | Spitze Q%s -> 488)' % (
                            du, dv_, len(KB.MAUL_T) + len(KB.MAUL_Q), zn['ebene_d'], tuple(zn['ebene_n']), zn['nase_u'][0], zn['nase_u'][1], list(zn.get('spitze_Q', ()))),
-                       '%d Ecken / %d Normalen / %d Tri / %d Quad; Ecken max %.2f E., Normalen max %.2f, Flaechen %s, UV abweichend %d, Maul %d; Zeilen grau %d / dunkel %d, Zone abweichend %d' % (
-                           len(m9.tv), len(m9.tn), len(m9.tf), len(m9.qf), dv, dn, 'gleich' if fl else 'ABWEICHEND', uv_ab, maul, rows['grau'], rows['dunkel'], zone_ab),
+                       '%d Ecken / %d Normalen / %d Tri / %d Quad; Ecken max %.2f E., Normalen max %.2f, Flaechen %s, UV abweichend %d, Maul %d; Zeilen grau %d / dunkel %d, Zone abweichend %d%s' % (
+                           len(m9.tv), len(m9.tn), len(m9.tf), len(m9.qf), dv, dn, 'gleich' if fl else 'ABWEICHEND', uv_ab, maul, rows['grau'], rows['dunkel'], zone_ab, form_txt),
                        dv <= 1.0 and dn <= 2.0 and fl and uv_ab == 0 and zone_ab == 0 and maul == len(KB.MAUL_T) + len(KB.MAUL_Q)))
     else:
         Z.append(zeile('T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)', 'Ecken / Normalen / Flaechen wie G2 Mesh 3 (48 / 48 / 56 Tri / 14 Quad)',
@@ -169,6 +192,9 @@ def tr1(emd, prot=None):
     k_q = mo3.tex[o3['v'][0]:o3['v'][1] + 1, o3['u'][0]:o3['u'][1] + 1]
     Z.append(zeile('T-R1c Zahn-Kachel = G3-TIM (u %d-%d v %d-%d)' % (o3['u'] + o3['v']), 'bytegleich', '%d von %d Texeln abweichend' % (int((k_neu != k_q).sum()), k_q.size),
                    bool((k_neu == k_q).all())))
+    if p['pal'].get('regel') == 'r3':
+        Z.append(tr1d_r3(p, c, ch, mo2, mo3))
+        return Z
     zg, z3, zd = KB.zeilen_neu(p, mo2, mo3)
     q2 = KB.clut_roh(mo2)[0]
     okg = ch > KB.ZEILE_G2 - 480 and bool((c[KB.ZEILE_G2 - 480] == zg).all())
@@ -199,6 +225,201 @@ def tr1(emd, prot=None):
                        float(np.percentile(dh, 90)) if len(dh) else 0.0, float(np.percentile(dq, 90)), float(dq.max()), gamut, float(np.median(cq)), float(np.median(cg))),
                    okg and ok3 and okd and (not len(dh) or float(np.percentile(dh, 90)) <= 1.0) and float(dq.max()) <= 7.0))
     return Z
+
+
+def tr1d_r3(p, c, ch, mo2, mo3):
+    """T-R1d fuer die Palettenregel r3: Zeilen bytegleich der Nachrechnung und die Regel an den belegten Eintraegen erfuellt."""
+    zg, z3, zd = KB.zeilen_neu(p, mo2, mo3)
+    _zg, _zd, pr = KB.zeilen_r3(p, mo2)
+    okg = ch > KB.ZEILE_G2 - 480 and bool((c[KB.ZEILE_G2 - 480] == zg).all())
+    ok3 = ch > KB.ZEILE_G3 - 480 and bool((c[KB.ZEILE_G3 - 480] == z3).all())
+    okd = ch > KB.ZEILE_DUNKEL - 480 and bool((c[KB.ZEILE_DUNKEL - 480] == zd).all())
+    zm, kern, tex, labq = KB.zonen_texel(p, mo2)
+    Cq = np.hypot(labq[:, 1], labq[:, 2])
+    glanz = set(pr['glanz_eintraege'])
+    teile = []; ok = okg and ok3 and okd
+    for nm, z, zone in (('grau', zg, zm['grau']), ('dunkel', zd, zm['dunkel'])):
+        pz = p['pal'][nm]; M = pr[nm]['M']
+        lab = KB.lab_pal(KB.clut15_rgb(z))
+        idx = np.unique(tex[zone])
+        ng = np.array([i for i in idx if i not in glanz])
+        hell = int((lab[ng, 0] > M + pz['d_hoch'] + 1.0).sum())                       # +1: 5-Bit-Rundung
+        ader = ng[Cq[ng] > pz['c_ader']]
+        ader_hell = int((lab[ader, 0] > M + 1.0).sum())
+        da, db = float(np.abs(lab[ng, 1] - pz['a_t']).max()), float(np.abs(lab[ng, 2] - pz['b_t']).max())
+        de = float(np.linalg.norm(lab[ng] - pr[nm]['ziel'][ng], axis=1).max())          # 5-Bit-Rundung gegen den Zielwert der Regel
+        amax, bmin = float(lab[ng, 1].max()), float(lab[ng, 2].min())
+        texel_l = lab[tex[zone], 0]; tg = np.array([t not in glanz for t in tex[zone]])
+        teile.append('%s: M %.1f (k %.3f), belegt %d, heller als M+%.0f: %d, Adern (Quell-C > %.0f) %d davon heller als M: %d, |a*-%.1f| max %.1f, |b*-%.1f| max %.1f, '
+                     'Rundung dE76 max %.1f, a* max %.1f, b* min %.1f, Texel L* P50/P99 %.1f/%.1f' % (
+                         nm, M, pr[nm]['k'], len(idx), pz['d_hoch'], hell, pz['c_ader'], len(ader), ader_hell, pz['a_t'], da, pz['b_t'], db, de, amax, bmin,
+                         float(np.median(texel_l[tg])), float(np.percentile(texel_l[tg], 99))))
+        ok &= hell == 0 and ader_hell == 0 and de <= 7.0 and amax <= 8.0 and bmin >= -0.5
+    lg = KB.lab_pal(KB.clut15_rgb(zg))[sorted(glanz)] if glanz else np.zeros((0, 3))
+    teile.append('Glanz %s L* %s' % (sorted(glanz), np.round(lg[:, 0], 1).tolist()))
+    return zeile('T-R1d CLUT-Zeilen 486 / 487 / 488 = RE2 (Palettenregel r3)',
+                 '486 / 488 = G2 Zeile 0 nach Regel r3 (kopf_re2_bau.zeile_r3; 15-Bit-Worte bytegleich der Nachrechnung), 487 = G3 Zeile 0 bytegleich; an den '
+                 'belegten Eintraegen der Zone (ohne Glanzpunkt des Auges): kein Eintrag heller als M + d_hoch (+1 Rundung), kein Ader-Eintrag (Quell-Chroma > c_ader) '
+                 'heller als M (+1), Farbton a*/b* je Zeile = a_t/b_t (5-Bit-Rundung dE76 <= 7 gegen den Zielwert), a* <= 8 (kein Rosa/Rot), b* >= -0,5 (kein Lila/Blau)',
+                 'TIM %d Zeilen; 486 %s; 487 %s; 488 %s; %s' % (ch, 'gleich' if okg else 'ABWEICHEND', 'gleich' if ok3 else 'ABWEICHEND', 'gleich' if okd else 'ABWEICHEND',
+                                                                 '; '.join(teile)), ok)
+
+
+# ------------------------------------------------------------------------------------------------------------ Runde 3: T-V1 / T-V2
+TV1 = dict(A_MAX=12.0, A_ANTEIL=0.02, DL=8.0, L_ANTEIL=0.02, B_P10=-1.0, FENSTER=9)
+TV2 = dict(VORSPRUNG=0.03, DELLE=0.03, ZUWACHS=0.01, RELIEF_P=75, ZEILEN=(186, 217), X0=440, FOTO_X=(450, 482), FOTO_DL=9.0)
+
+
+def tv1(mo, P, prot):
+    """T-V1 Kopf-Farbe am Render (RDT-Licht), Kopfpixel ohne Augenfaecher und Maulflaechen."""
+    zon = (prot or {}).get('zonen')
+    Z = []
+    for h in ('135', '85'):
+        img, ids = G.zeichne(mo, P[h]); Lab = G.lab(img.astype(float)); k = ids == KB.KOPF
+        _i, idf = G.zeichne(KM.teil(mo, FAN), P[h], licht=False); fan = (idf == KB.KOPF) & k
+        _i, idm = G.zeichne(KM.teil(mo, KB.MAUL_T, KB.MAUL_Q), P[h], licht=False); maul = (idm == KB.KOPF) & k
+        m = k & ~fan & ~maul
+        L, a, b = Lab[..., 0][m], Lab[..., 1][m], Lab[..., 2][m]
+        anteil_a = float((a > TV1['A_MAX']).mean()) if m.any() else 1.0
+        med = float(np.median(L)) if m.any() else 0.0
+        anteil_l_kopf = float((L > med + TV1['DL']).mean()) if m.any() else 1.0
+        hell = np.zeros(m.shape, bool); hell_lok = np.zeros(m.shape, bool); zt = []
+        zmasken = []
+        if zon:
+            for nm, tt, qq in (('grau', zon['grau_T'], zon['grau_Q']), ('dunkel', zon['dunkel_T'], zon['dunkel_Q'])):
+                _i, idz = G.zeichne(KM.teil(mo, tt, qq), P[h], licht=False); zmasken.append((nm, (idz == KB.KOPF) & m))
+        else:
+            zmasken.append(('Kopf', m))
+        for nm, mz in zmasken:
+            if not mz.any():
+                continue
+            zmed = float(np.median(Lab[..., 0][mz]))
+            hell |= mz & (Lab[..., 0] > zmed + TV1['DL'])
+            ys, xs = np.nonzero(mz); r_ = TV1['FENSTER'] // 2
+            for y_, x_ in zip(ys, xs):            # lokaler Median: Pixel derselben Zone im Fenster FENSTER x FENSTER
+                w_ = mz[max(y_ - r_, 0):y_ + r_ + 1, max(x_ - r_, 0):x_ + r_ + 1]
+                lw = Lab[max(y_ - r_, 0):y_ + r_ + 1, max(x_ - r_, 0):x_ + r_ + 1, 0][w_]
+                if Lab[y_, x_, 0] > np.median(lw) + TV1['DL']:
+                    hell_lok[y_, x_] = True
+            zt.append('%s %d px Median %.1f' % (nm, int(mz.sum()), zmed))
+        anteil_l = float(hell_lok[m].mean()) if m.any() else 1.0
+        anteil_zone = float(hell[m].mean()) if m.any() else 1.0
+        b10 = float(np.percentile(b, 10)) if m.any() else -99.0
+        ok = anteil_a <= TV1['A_ANTEIL'] and anteil_l <= TV1['L_ANTEIL'] and b10 >= TV1['B_P10']
+        Z.append(zeile('T-V1 Kopf-Farbe Pose %s (RDT-Licht)' % h,
+                       'Kopfpixel ohne Augenfaecher/Maul: Anteil a* > %.0f <= %.0f %%; Anteil heller Kratzer L* > lokaler Median (%dx%d, gleiche Zone grau/dunkel) + %.0f '
+                       '<= %.0f %%; b* P10 >= %.0f (Zonen- und Kopf-Median-Anteil nur Ausgabe: die Haarseite ist nach K5 dunkler, die Lichtseite nach n.l heller)' % (
+                           TV1['A_MAX'], 100 * TV1['A_ANTEIL'], TV1['FENSTER'], TV1['FENSTER'], TV1['DL'], 100 * TV1['L_ANTEIL'], TV1['B_P10']),
+                       '%d px; a* > 12: %.1f %%; L* > lokaler Median + 8: %.1f %%; > Zonen-Median + 8: %.1f %% (%s); > Kopf-Median %.1f + 8: %.1f %%; L* P50/P99 %.1f/%.1f; '
+                       'a* P50/P99 %.1f/%.1f; b* P10/P50 %.1f/%.1f' % (int(m.sum()), 100 * anteil_a, 100 * anteil_l, 100 * anteil_zone, ', '.join(zt) or 'ohne Zonen', med, 100 * anteil_l_kopf,
+                                                med, float(np.percentile(L, 99)) if m.any() else 0, float(np.median(a)) if m.any() else 0,
+                                                float(np.percentile(a, 99)) if m.any() else 0, b10, float(np.median(b)) if m.any() else 0), ok))
+    return Z
+
+
+def g2_ecken(emd, p):
+    """Ecken von Mesh 9 zurueck in den unskalierten G2-Raum (Umkehrung von Q = (V S) R^T + t)."""
+    blob = open(emd, 'rb').read(); d = EA.emd_dir(blob)
+    m9 = EA.md1_parse(blob[d[7]:d[8]])[KB.KOPF]
+    Q = np.array([v[:3] for v in m9.tv], float)
+    sk = np.array(p['skal'], float); R = KB.rot(p); t = np.array(p['versatz'], float)
+    return ((Q - t) @ R) / sk
+
+
+def _nachbarn(m):
+    nb = {}
+    for faces, n in ((m.tf, 3), (m.qf, 4)):
+        for f in faces:
+            vi = [f[2 * k + 1] for k in range(n)]
+            for a_ in vi:
+                nb.setdefault(a_, set()).update(set(vi) - {a_})
+    return nb
+
+
+def foto_vorderkante():
+    """Vorderkante des Kopfes im Foto Beschreibung2_Vorlage je Zeile (TV2['ZEILEN']): rechtestes x in FOTO_X mit |L* Foto - L* BSS| > FOTO_DL."""
+    v = G.vorlage(2); bg = G.videoraum(G.hintergrund())
+    dl = np.abs(G.lab(v)[..., 0] - G.lab(bg)[..., 0])
+    out = []
+    for y in range(TV2['ZEILEN'][0], TV2['ZEILEN'][1] + 1):
+        xs = [x for x in range(TV2['FOTO_X'][0], TV2['FOTO_X'][1] + 1) if dl[y, x] > TV2['FOTO_DL']]
+        out.append(max(xs) if xs else TV2['X0'])
+    return np.array(out)
+
+
+def silhouette(mo, P, ff=None):
+    ff = foto_vorderkante() if ff is None else ff
+    _img, ids = G.zeichne(mo, P['85'])
+    fr = []
+    for y in range(TV2['ZEILEN'][0], TV2['ZEILEN'][1] + 1):
+        xs = np.nonzero(ids[y, TV2['X0']:TV2['FOTO_X'][1] + 11] >= 0)[0]
+        fr.append(TV2['X0'] + int(xs.max()) if len(xs) else TV2['X0'])
+    fr = np.array(fr)
+    inter = (np.minimum(fr, ff) - TV2['X0']).sum(); uni = (np.maximum(fr, ff) - TV2['X0']).sum()
+    k9 = np.nonzero((ids == KB.KOPF).any(0))[0]
+    return dict(iou=float(inter / max(uni, 1)), ueber_max=int((fr - ff).max()), ueber_mittel=float((fr - ff).mean()), foto=ff.tolist(), render=fr.tolist(),
+                kopf_vorderkante=int(k9.max()) if len(k9) else -1)
+
+
+def tv2(emd, mo, P, prot, vorher=None, prot_vorher=None):
+    """T-V2 Form: Vorsprung gegen die Kappe, Delle/Vorsprung der bewegten Ecken, Silhouette seitlich gegen das Foto."""
+    p = (prot or {}).get('param') or KB.PARAM_R3
+    g = RL.modell(KB.G2).meshes[3]
+    V0 = np.array([v[:3] for v in g.tv], float)
+    V = g2_ecken(emd, p)
+    Hk = float(V[:, 1].max() - V[:, 1].min())
+    c, ax, r, raus, it = KB.kappe(V, (p.get('form') or KB.PARAM_R3['form'])['trimm'])
+    i0 = int(np.argmax(V[:, 0]))
+    vor = float(np.linalg.norm(V[i0] - c) * (1 - 1 / r[i0])) / Hk
+    Z = [zeile('T-V2a Vorsprung vorderste Kopfecke', 'Ecke mit max x (G2-Raum, Mesh 9 zurueckgerechnet) gegen die Kappe (Ellipsoid-Anpassung an die Kopfecken, iterativ ohne r > 1,15): '
+               'radialer Ueberstand <= %.0f %% der Kopfhoehe' % (100 * TV2['VORSPRUNG']),
+               'Ecke %d (x %.0f) r %.3f -> %.1f E. = %.1f %% von %.0f E.; Kappe c %s ax %s, %d Schritte, ausgeschlossen %s' % (
+                   i0, V[i0, 0], r[i0], vor * Hk, 100 * vor, Hk, np.round(c, 1).tolist(), np.round(ax, 1).tolist(), it, raus),
+               vor <= TV2['VORSPRUNG'])]
+    # b) Delle / neuer Vorsprung an den bewegten Ecken
+    bew = [int(i) for i in np.nonzero(np.linalg.norm(V - V0, axis=1) > 1.0)[0]]
+    nb = _nachbarn(g)
+    r0 = np.linalg.norm((V0 - c) / ax, axis=1)
+
+    def abw(W, rW, i):
+        ring = sorted(nb.get(i, ()))
+        rr = np.linalg.norm((W[ring] - c) / ax, axis=1)
+        return float((rW[i] - rr.mean()) * np.linalg.norm(W[i] - c) / max(rW[i], 1e-9) / Hk)
+    # gepruefte Ecken: bewegte Ecken und ihre Nachbarn (deren Umgebung sich geaendert hat)
+    pruef = sorted(set(bew) | set().union(*[nb.get(i, set()) for i in bew])) if bew else []
+    dev = {i: abw(V, r, i) for i in pruef}
+    dev0 = {i: abw(V0, r0, i) for i in pruef}
+    # Relief der unveraenderten G2-Quelle (alle 48 Ecken, gleiche Kappe): P75 von |Abweichung| = Grenze fuer "neu" (eine Unebenheit, die
+    # kleiner ist als die von drei Vierteln der Quell-Ecken, ist keine neue Form); mindestens TV2['DELLE']
+    rel = float(np.percentile(np.abs([abw(V0, r0, i) for i in range(len(V0))]), TV2['RELIEF_P']))
+    grenze = max(TV2['DELLE'], rel)
+    delle = {i: d_ for i, d_ in dev.items() if d_ < -grenze and d_ < dev0[i] - TV2['ZUWACHS']}
+    neu_vor = {i: d_ for i, d_ in dev.items() if d_ > grenze and d_ > dev0[i] + TV2['ZUWACHS']}
+    dmin = min(dev.values()) if dev else 0.0; dmax = max(dev.values()) if dev else 0.0
+    Z.append(zeile('T-V2b keine Delle / kein neuer Vorsprung', 'bewegte Ecken (> 1 E. gegen G2) und ihre Nachbarn: radialer Abstand zum Mittel der Nachbarecken '
+                   '(Kappenmass, Anteil der Kopfhoehe); Grenze = max(%.0f %%, Relief der G2-Quelle = P%d von |Abweichung| ueber alle 48 Ecken); Delle = unter -Grenze und um > %.0f %% '
+                   'tiefer als an der Quelle; neuer Vorsprung = ueber +Grenze und um > %.0f %% hoeher als an der Quelle; beides 0' % (
+                       100 * TV2['DELLE'], TV2['RELIEF_P'], 100 * TV2['ZUWACHS'], 100 * TV2['ZUWACHS']),
+                   'Grenze %.1f %% (Relief P%d %.1f %%); %d Ecken bewegt %s, %d geprueft; min %.1f %% (Ecke %s), max %.1f %% (Ecke %s, Quelle %.1f %%); Dellen %s; neue Vorspruenge %s' % (
+                       100 * grenze, TV2['RELIEF_P'], 100 * rel,
+                       len(bew), bew, len(pruef), 100 * dmin, min(dev, key=dev.get) if dev else '-', 100 * dmax, max(dev, key=dev.get) if dev else '-',
+                       100 * dev0[max(dev, key=dev.get)] if dev else 0.0, {k: round(100 * v, 1) for k, v in delle.items()} or 'keine',
+                       {k: round(100 * v, 1) for k, v in neu_vor.items()} or 'keine'),
+                   not delle and not neu_vor))
+    # c) Silhouette seitlich
+    ff = foto_vorderkante()
+    s_ = silhouette(mo, P, ff)
+    sv = None
+    if vorher and os.path.exists(vorher) and os.path.abspath(vorher) != os.path.abspath(emd):
+        sv = silhouette(b2.modell(vorher), P, ff)
+    ok = sv is None or s_['iou'] >= sv['iou']
+    Z.append(zeile('T-V2c Silhouette seitlich gegen Beschreibung2_Vorlage', 'Zeilen %d-%d (Hintergrund weisser Pfosten): IoU der Streifen %d..Vorderkante Foto/Render (Pose 85) '
+                   '>= IoU der Vorgaengervariante; Foto-Vorderkante = rechtestes x in %d-%d mit |dL*| > %.0f gegen das BSS im Videoraum' % (
+                       TV2['ZEILEN'][0], TV2['ZEILEN'][1], TV2['X0'], TV2['FOTO_X'][0], TV2['FOTO_X'][1], TV2['FOTO_DL']),
+                   'IoU %.3f%s; Ueberstand Render ueber Foto max %d px / Mittel %.1f px; Foto-Vorderkante x %d-%d (P50 %d); Kopf-Vorderkante Render (Id 9) x %d' % (
+                       s_['iou'], (' (vorher %s: %.3f, Ueberstand max %d, Kopf-Vorderkante %d)' % (os.path.basename(vorher), sv['iou'], sv['ueber_max'], sv['kopf_vorderkante'])) if sv else '',
+                       s_['ueber_max'], s_['ueber_mittel'], min(ff), max(ff), int(np.median(ff)), s_['kopf_vorderkante']), ok))
+    return Z, dict(silhouette=s_, vorher=sv, abweichung=dev, vorsprung=vor)
 
 
 _ref2 = {}
@@ -334,9 +555,9 @@ def hell_unten(mo, M):
     a['hell_unten'] = int(m.sum())
 
 
-def pruefen(emd, basis=None, lauf=None, prot=None):
+def pruefen(emd, basis=None, lauf=None, prot=None, vorher=None):
     P = G.posen()
-    p = (prot or {}).get('param') or KB.PARAM
+    p = (prot or {}).get('param') or KB.PARAM_R3
     R = RT.atlas(G.REF2); A = RT.atlas(emd)
     mo = b2.modell(emd)
     Z = []
@@ -353,10 +574,13 @@ def pruefen(emd, basis=None, lauf=None, prot=None):
     hell_unten(mo, M)
     Z += tr2_tr3(mo, M)
     Z += kopf_r2(mo, M, P, (prot or {}).get('zonen'))
+    Z += tv1(mo, P, prot)
+    z2, i2 = tv2(emd, mo, P, prot, vorher)
+    Z += z2
     Z += tr4(emd)
     zf, st = RR.form(emd, mo, P, lauf); Z += zf
     info = dict(tk3={k: v for k, v in i3.items() if k != 'bild'}, mess={h: {k: v for k, v in r.items() if k not in ('img', 'ids', 'ma', 'mz')} for h, r in M.items()},
-                schwanz={k: v for k, v in st.items() if k not in ('C', 'breite', 'maske')}, ref2=dict(_ref2))
+                schwanz={k: v for k, v in st.items() if k not in ('C', 'breite', 'maske')}, ref2=dict(_ref2), form=i2)
     return Z, info, M
 
 
@@ -364,10 +588,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('emd'); ap.add_argument('--basis', default=KB.BASIS); ap.add_argument('--lauf')
     ap.add_argument('--prot', help='Protokoll-JSON des Baus (Parameter, Zonen)')
+    ap.add_argument('--vorher', default=os.path.join(G.SFV4, 'emd', 'EM30_V4re2.EMD'), help='Vorgaengervariante fuer T-V2c (Standard V5 Runde 2)')
     ap.add_argument('--json'); ap.add_argument('--md'); ap.add_argument('--txt'); ap.add_argument('--kein-exit', action='store_true')
     a = ap.parse_args()
     prot = json.load(open(a.prot)) if a.prot and os.path.exists(a.prot) else None
-    Z, info, _M = pruefen(a.emd, a.basis if a.basis and os.path.exists(a.basis) and os.path.abspath(a.basis) != os.path.abspath(a.emd) else None, a.lauf, prot)
+    Z, info, _M = pruefen(a.emd, a.basis if a.basis and os.path.exists(a.basis) and os.path.abspath(a.basis) != os.path.abspath(a.emd) else None, a.lauf, prot, a.vorher)
     rot = [z for z in Z if not z['ok']]
     sha = hashlib.sha256(open(a.emd, 'rb').read()).hexdigest()
     lines = ['EMD %s sha256 %s (Ref2 %s; Basis %s)' % (a.emd, sha[:8], hashlib.sha256(open(G.REF2, 'rb').read()).hexdigest()[:8],
