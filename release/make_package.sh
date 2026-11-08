@@ -291,9 +291,11 @@ check_tree() {           # $1 = fertiger Paketordner
     # ANNETTE_SE.VBS (Krach/Sturz/Gebruell/Hochfahren der Annette-Szene, tools/r41_annette/an_se_cut.py, annette_se_pc.c).
     # G (Raum-ESP GATOR40A0.ESP + Texturen, KANISTER2080.VBS). Fehlen sie, bleiben Notiz, Alarm, Ventile, Alligator-
     # Kampf und Kanister-Explosion still stumm oder unsichtbar - Gate statt Stille, bytegleich wie TORSE.VBS.
+    # Spur G2 (NB4 T): GATOR40A0.RBJ = RE2-Raumbank mit den Trefferreaktions-Clips 17-20 (gator_treffer_r41_pc.c,
+    # re15_pc_read_re2). Fehlt sie, posiert die Trefferreaktion still ohne Raumbank (Gegenpruefung Welle 2 Lauf B).
     for rs in FILES/FILE31_p00_page.TIM FILES/FILE31_p01_page.TIM FILES/FILE31_p02_page.TIM FILES/FILE31_title_page.TIM \
               FILES/FILE31_title_paper.TIM SOUND/SUB_25.BGM VENTIL1080.EDT VENTIL1080.RBJ VENTIL1080.VB VENTIL1080.VH \
-              GATOR40A0.VBS KANISTER40A0.MD1 KANISTER40A0.TIM SOUND/MAIN1A.BGM \
+              GATOR40A0.VBS GATOR40A0.RBJ KANISTER40A0.MD1 KANISTER40A0.TIM SOUND/MAIN1A.BGM \
               GATOR40A0.ESP GATOR40A0_08.TIM GATOR40A0_09.TIM GATOR40A0_16.TIM GATOR40A0_18.TIM GATOR40A0_19.TIM \
               GATOR40A0_1A.TIM GATOR40A0_26.TIM KANISTER2080.VBS BAHNSTEIG_FORM.EMD BAHNSTEIG_FORM.TIM \
               ANNETTE_4D.EMD ANNETTE_4D_BLUT.EMD ANNETTE_SE.VBS \
