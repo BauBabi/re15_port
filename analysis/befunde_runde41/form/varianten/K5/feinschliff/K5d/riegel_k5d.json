@@ -18,12 +18,12 @@
   },
   {
    "name": "(f) Bild 2 Figur L* T >= Vorlage",
-   "wert": "26.99 (Vorlage 24.88)",
+   "wert": "27.00 (Vorlage 24.88)",
    "ok": true
   },
   {
    "name": "(f) Bild 2 Figur L* Video >= Vorlage",
-   "wert": "15.45 (Vorlage 15.37)",
+   "wert": "15.46 (Vorlage 15.37)",
    "ok": true
   },
   {
@@ -103,7 +103,7 @@
   },
   {
    "name": "(a) Bild 2 Anteil T-L* > 40 an der Figur ohne Feuerschein F13/F14 >= Vorlage",
-   "wert": "7.9 % (Vorlage 5.7, 34730 px)",
+   "wert": "8.0 % (Vorlage 5.7, 34730 px)",
    "ok": true
   },
   {
@@ -158,7 +158,7 @@
   },
   {
    "name": "(c) B2-F06 T-L* 80..125 % der Vorlage, T-C* <= 15",
-   "wert": "[39.4, 1.5, 0.4] C* 1.5 (Vorlage [39.6, -3.2, 0.2])",
+   "wert": "[39.4, 1.5, 0.4] C* 1.6 (Vorlage [39.6, -3.2, 0.2])",
    "ok": true
   },
   {
@@ -183,7 +183,7 @@
   },
   {
    "name": "(g) Krallen sichtbar (>= 30 px) rechts (W) = [31]",
-   "wert": "[31] (px {19: 0, 20: 0, 29: 10, 31: 419})",
+   "wert": "[31] (px {19: 0, 20: 0, 29: 0, 31: 419})",
    "ok": true
   },
   {
@@ -203,7 +203,7 @@
   },
   {
    "name": "(g) Kette T Krallen r (W) (Info)",
-   "wert": "Krallen [35.3, 24.8, 27.4] Hand [16.7, 21.1, 12.0] dL 18.5; Vorlage Krallen [45.9, 17.4, 21.4]",
+   "wert": "Krallen [35.3, 24.8, 27.4] Hand [16.8, 21.2, 12.1] dL 18.5; Vorlage Krallen [45.9, 17.4, 21.4]",
    "ok": null
   },
   {

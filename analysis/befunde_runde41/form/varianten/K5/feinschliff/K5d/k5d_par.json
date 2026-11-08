@@ -25,7 +25,7 @@
    29,
    28
   ],
-  "zug": 0.12,
+  "zug": 0.04,
   "wurzel_n": 6,
   "hand_meshes": [
    13,
@@ -35,7 +35,8 @@
   "s_L": 0.7,
   "s_C": 0.3,
   "dL": -2.0,
-  "dL_quelle": "Krallen-L* = Hand-L* - 2: im Disc-Licht ohne Filter lagen die Krallen r bei gleicher Albedo +5,1 ueber der Hand (Lauf v6)"
+  "dL_quelle": "Krallen-L* = Hand-L* - 2: im Disc-Licht ohne Filter lagen die Krallen r bei gleicher Albedo +5,1 ueber der Hand (Lauf v6)",
+  "zug_quelle": "0,12 liess von Kralle 29 in Bild 2 noch 10 px sichtbar (Riegel (g), Lauf 2026-11-08); 0,04 zieht sie ganz in die Hand"
  },
  "ziele": {
   "buckel": {

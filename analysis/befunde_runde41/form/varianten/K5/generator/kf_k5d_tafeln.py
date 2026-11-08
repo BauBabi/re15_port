@@ -57,7 +57,25 @@ def speichern(p, rgb):
     cv2.imwrite(p, cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
 
 
+def spiel(sp, aus):
+    """f4: echtes Spielfenster (gdigrab, kf_k5d_spiel.sh): Original-Standbild | Asset heute | K5d neu, je Pose Bild 1 / Bild 2 und Ruhe."""
+    lade = lambda p: cv2.cvtColor(cv2.imread(os.path.join(sp, p)), cv2.COLOR_BGR2RGB)
+    leer = np.full((480, 640, 3), 24, np.uint8)
+    z = []
+    for titel, n, datei in (('5080 Schnitt 1, Nachstellung Bild 1 (Clip 0 Bild 11)', 1, 'pose1_nachstellung_r5080.png'),
+                            ('5090 Schnitt 11, Pose Bild 2 (Clip 12 Bild 0)', 2, 'pose2_r5090_s11.png'),
+                            ('5080 Schnitt 1, Ruhe (Clip 2)', 0, 'ruhe_r5080_s1.png'),
+                            ('5090 Schnitt 11, Ruhe (Clip 2)', 0, 'ruhe_r5090_s11.png')):
+        z.append(reihe([v4f.original(n) if n else leer, lade('heute_' + datei), lade('k5d_' + datei)],
+                       ['Original-Standbild Bild %d' % n if n else '(kein Original-Standbild)', 'Asset heute (K5c): ' + titel, 'K5d neu: ' + titel]))
+    speichern(os.path.join(aus, 'f4_spiel.png'), stapeln(z, 'K5d im echten Spielfenster (gdigrab, kein AUTOSHOT/SOFTWARE_RENDER, Variante ueber '
+                                                           'RE15_RE2_ASSET_ROOT): Original | Asset heute | K5d neu, roh'))
+
+
 def main():
+    if sys.argv[1] == '--spiel':
+        spiel(sys.argv[2], sys.argv[3])
+        return
     neu, aus = sys.argv[1], sys.argv[2]
     os.makedirs(aus, exist_ok=True)
     st = {'Asset K5c': R.Stand(R.BASIS), 'K5d neu': R.Stand(neu)}

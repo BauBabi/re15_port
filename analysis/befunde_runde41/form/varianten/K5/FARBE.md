@@ -1227,3 +1227,100 @@ Ruhe mit geschlossenem Kiefer (Ruhe von J, wie K4).
    pixelgenau messbar (Rauschboden 43 386 px). Entscheidung Pruefer/Integration: Schwelle fuer 07 als Rauschboden-Vergleich fassen oder die
    zwei Pixel als hinnehmbar werten.
 5. Spiellauf-Bilder liegen in `einbau/spiel/` (roh, 640 x 480); `einbau/riegel_einbau_spiel07.json` dokumentiert die Szene-07-Messung mit Exit 1.
+
+## Feinschliff K5d (Nutzer 2026-11-08)
+
+Nutzersaetze 2026-11-08: Details wieder da, Schwanzspitze fleischroetlich, Verbindungsstuecke der Beine/Arme weisslich, Lippe durchweg
+grau-blau, rote fleischige Stelle auf dem Buckel vorn, insgesamt heller (mindestens wie die Vergleichsbilder); dazu: "die krallen bei der
+Vorderseite stimmen nicht. Weder optisch - da sind es jetzt irgendwie zu viele - noch farblich". Messgrundlage: MESSBLATT_FARBE_V4_FEINSCHLIFF.md.
+Variante `feinschliff/K5d/` auf Basis des Spiel-Assets K5c; das Spiel-Asset `re15_port/shared_assets/RE2/BAHNSTEIG_FORM` ist unveraendert
+(sha256 1ab56076... / 7187ff09...).
+
+### F.1 Ergebnis
+
+| Datei | sha256 |
+|---|---|
+| `feinschliff/K5d/BAHNSTEIG_FORM.EMD` (28 Clips, Spielform) | 51917830bc843c1ba99bd0ce4a1ba1ba421ba10059d39a2bbb01dc857df8b099 (293 516 Byte) |
+| `feinschliff/K5d/BAHNSTEIG_FORM.TIM` = `FORM.TIM` | 8a39ab47b5b610c3872bb0aa981539bb03d960d27cabed7a114e34a7acddaa1f (512 x 256, 16 Zeilen, Port-Texturhoehe 4096) |
+| `feinschliff/K5d/FORM.EMD` (3 Posen-Clips, fuer die Kette) | d3a961deda58873882d17b910f1fd787079d49d7c219b339c9a95ac6645e761a |
+
+- Riegel `generator/riegel_k5d.py`: **48/48 bindende Zeilen GRUEN, Exit 0** (`feinschliff/K5d/riegel_k5d.txt`).
+- Gegenprobe Asset K5c (`--gegenprobe`, `riegel_gegenprobe_k5c.txt`): jeder Punkt (b)-(g) hat ROT-Zeilen (dazu alle (a)-Flecken ROT).
+- Spiel: 10 von 10 Laeufen rc 0, gdigrab Versuch 1, 0 Fehlerzeilen in debug.log/exe_stderr.log (`feinschliff/spiel_lauf.log`, `feinschliff/spiel/`).
+- Software-Renderer (RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Clip 10 abgespielt): rc 0, debug.log "SDL-Renderer software", Form geladen,
+  Bild `feinschliff/spiel/k5d_softrender_r5090_s11.png`, kein Absturz (`feinschliff/softrender_lauf.log`).
+- Tests: `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3` 11/11 am Spiel-Asset (`feinschliff/ctest_asset.log`) und 11/11 mit
+  RE15_RE2_ASSET_ROOT = `feinschliff/K5d` (`feinschliff/ctest_k5d.log`; die exe erbt die Umgebung). Die Pin-Tests (form_j_posen.h CRC)
+  lesen weiter das unveraenderte Spiel-Asset; ein Einbau braucht neue Pins wie in E.3.
+
+### F.2 Verfahren (`generator/kf_k5d.py`, Parameter `feinschliff/K5d/k5d_par.json`, Bericht `feinschliff/K5d/bau.json`)
+
+- **(g) Krallen.** Anzahl: die Krallen ohne Spitze im Nutzerumriss (Messblatt 2.1: rechts 29/20/19, links 28) werden in die Hand eingezogen:
+  alle 26 Ecken je Kralle auf Wurzel + 0,04 x (Ecke - Wurzel), Wurzel = Mittel der 6 Ecken mit kleinstem x (Krallenansatz). Flaechen und
+  Eckindizes bleiben (keine Loecher, keine Flaeche mit Inhalt 0: Ausdehnung 30-39 x 8-23 Einheiten), Knochen und Clips byte-gleich.
+  Bild 2 zeigt danach rechts nur Kralle 31 (419 px), links 14 und 15 (357 / 699 px), Kralle 30 2 px wie vorher. Farbe: Zeile 1 gehoert nur den
+  Krallen; alle 75 Eintraege auf das Albedo-Mittel der Haende (Meshes 13/18 nach (f), L* - 2) mit a* <= 9,5 (Binnenzeichnung s_L 0,7).
+  Albedo vorher (39,2/17,9/13,9), 72,6 % der Zugriffe a* > 10; nachher (17,7/6,9/3,3), 0 %.
+- **(f) Helligkeit.** Je CLUT-Zeile L* x c_z, a*/b* bleiben (chroma_anteil 0: volle Skalierung machte den Kopf magenta, Lauf v10). c = 1,82
+  fuer die Bild-2-Teile (Zeilen 0, 11-15), 1,0 fuer die Bild-1-Teile (Hinterbeine 3, Rumpf 4/8/9/10; Bild 1 erreicht die Vorlage ueber die
+  Details), Schwanz 2 Kappe 1,02, Zeilen 5/6/7 (F1, Band, Zaehne) unveraendert. 15-Bit-Rundung gerichtet: Ader-Eintraege (G4-Rotklasse wie RV6)
+  runden L*/a* ab, Haut-Eintraege auf.
+- **(a)-(e) neue Stellen.** Die Flaechen bekommen Texelinseln im freien TIM-Bereich (Kopie ihrer Texel je Zeile, Klasse und Zusammenhangskomponente,
+  1 Texel Saum, UV/Seite der Flaechen nachgezogen), die Indizes zeigen auf freie Eintraege ihrer Zeile (Stufen: alte Eintraege gleicher
+  Helligkeit teilen einen neuen). 72 Inseln, 1044 Flaechen mit neuer UV, 41 510 Texel neu, je Zeile bleiben 56-229 Eintraege frei.
+  - ganz: Gelenkkoerper Beine (Huefte l/r, Muffen, Knie, Fuss; Albedo L* 28, kuehl-grau), Arme (Ellbogen, Hand, Muffen; 30), Schultern (28),
+    Schwanzgelenke 3-4/4-5 (20, kuehl), Schwanzspitze Mesh 6 (zweitonig: 65 % (24/6/2), 35 % (27/30/0)), Lippensaum (Kopfhaut ohne Rotklasse,
+    a* <= 12).
+  - Fleck (Ort aus der Vorlagen-Fleckmaske ueber den Kennungs-Render von K5c, nur Ort): D3 Ruecken unter F1 (an F01 sichtbare Texel gesperrt),
+    D1 Huefte l/r, Knie l/r, Fuss l, D2 Ellbogen r, Hand r, Schultern Bild 2, D6 Schwanzglieder, D4 Schwanzspitze F15, D5 Buckel (40/20/-6).
+  - Helligkeit je Fleck an der Szenenkette auf das Vorlagen-Niveau gestellt (`generator/kf_k5d_eichen.py`: je Fleck nur das Ziel-L*, Quote
+    0,9..1,12; Ergebnis im par.json). Das ist kein Texel-Eichen: Farbe = Messblatt-Richtung, Binnenzeichnung bleibt.
+- **Lippe gegen E30-Leuchtstelle:** Das Maul-Band bleibt an den 13 Flaechen am Unterkiefer (Mesh 23), die in Bild 2 >= 20 px zeigen (1123 der
+  1494 Band-Pixel in Bild 2, Albedo dort 100 % gleich K5c). Die Band-Flaechen am Oberkiefer (Mesh 22; Vorlage Oberkiefer dunkel) und die in
+  Bild 2 unsichtbaren Band-Reste sind grau-blau, ebenso alle Zeile-0/14-Flaechen des Lippensaums (127 Flaechen, 0 % Rotklasse).
+
+### F.3 Riegel (`generator/riegel_k5d.py`, gleiche Kette und Pixelmengen fuer Asset und Variante; Auszug, alles GRUEN)
+
+| Punkt | K5d | Asset K5c (Gegenprobe) | Vorlage |
+|---|---|---|---|
+| (f) Figur L* Bild 1 T / Video / ohne | 27,8 / 27,6 / 9,7 | 18,0 / 16,4 / 5,1 ROT | 20,3 / 18,3 / 7,6 |
+| (f) Figur L* Bild 2 T / Video / ohne | 27,0 / 15,5 / 7,7 | 18,8 / 10,9 / 4,9 ROT | 24,9 / 15,4 / 7,3 |
+| (a) 12 Detailflecken, Kette T-L* 80..125 % der Vorlage | 12/12 (88-114 %) | 0/12 ROT | |
+| (a) Anteil T-L* > 40 Bild 1 / Bild 2 ohne Feuerschein F13/F14 | 21,7 % / 8,0 % | 4,8 / 2,8 % ROT | 9,9 / 5,7 % |
+| (b) Schwanzspitze Rot-Anteil / T-L* / F15 | 35,4 % / 47,0 / 58,6 | 1,4 % / 21,3 / 22,5 ROT | 27,9 % / 42,6 / 53,3 |
+| (c) Gelenkflecken T-L* und C* <= 15; Gelenkkoerper-Albedo | 7/7; (30,7/0,2/-4,6) gegen Glieder 23,6 | ROT; (13,3/11,1/1,3) | |
+| (d) Lippensaum Rotklasse | 0 % | 53,2 % (123/127 Flaechen) ROT | |
+| (e) Buckel F01 / F02 | (35,3/20,6/-5,2) / (37,1/22,4/-5,7) | (12,0/19,6/-5,2) ROT | (41,4/15,7/-4,3) / (33,2/22,2/-6,4) |
+| (g) Krallen sichtbar r / l | [31] / [14, 15] | [19,20,29,31] / [14,15,28] ROT | 1 / 2 Spitzen |
+| (g) Krallen-Albedo a* > 10; Disc-Licht Krallen-Hand dL r / l | 0 %; 4,5 / 1,2 | 72,6 %; 14,7 / 9,7 ROT | dE 4 / 3,8 |
+| G0 Geometrie | nur Krallen 19/20/28/29 (je 26 Ecken), Eckindizes gleich, EDD/EMR/Morph byte-gleich, 32/32/28 | | |
+| E-Z1 / E-Z2 | 16 Zeilen, 4096; 3828/3828 | | |
+| L Leuchtstellen | F1 100 % gleich, Band Unterkiefer 100 % gleich, Zeilen 5/6/7 gleich | | |
+| RV6 (Flaechen/Indizes K5c, Palette K5d) | 8/8 Regionen dL < 0, da* < 0 | | |
+
+Spielfenster (gdigrab, `feinschliff/spiel_helligkeit.txt`, Verfahren wie Messblatt 3.3): 5080 Bild 1 L* 3,15 -> 5,55 (p90 4,8 -> 12,6;
+K4 5,87); 5090 Bild 2 7,36 -> 8,99 (Feuer-Szene, Rauschboden hoch). Das Original-Standbild (19,3 / 15,6) ist nur relativ vergleichbar.
+
+### F.4 Tafeln (`generator/kf_k5d_tafeln.py`, roh, kein Gamma; selbst angesehen)
+
+- `feinschliff/f1_bild1.png`, `f2_bild2.png`: Vorlage | Asset K5c | K5d, Zeile 1 Disc-Licht ohne Filter, Zeile 2 mit Videofilter.
+- `feinschliff/f3_details_nah.png`: Schwanzspitze, Gelenke, Buckel, Schultern, Krallen vorn (mit und ohne Filter), Kopf nah (Clip 2 Ruhe,
+  Clip 1 Maul offen), rundum.
+- `feinschliff/f4_spiel.png`: echtes Spielfenster Original | Asset heute | K5d (Bild 1, Bild 2, beide Ruhen).
+- Gesehen: Bild 1 zeigt grau-kuehle Gelenkkappen an Huefte/Knie/Ellbogen wie die Vorlage und eine rosa Schwanzspitze mit hellem Fleck;
+  Bild 2 eine mauve-rote Stelle auf dem Buckel und helle Schultern; vorn rechts nur noch eine Kralle, die Krallen haben Handfarbe (kein Rot);
+  die Lippe ist ausser dem Unterkiefer-Band grau-blau; der Kopf ist heller, nicht bunter.
+
+### F.5 Offen
+
+1. **Lippe gegen E30:** Das Unterkiefer-Band (13 Flaechen) bleibt als Leuchtstelle Bild 2 und ist in Ruheansichten als lachsfarbene Flaechen
+   zwischen den Zaehnen sichtbar (f3, Kopf Clip 2 120/10). Soll es auch weg, ist das eine Aenderung an der E30-Leuchtstelle (Nutzerfrage).
+2. **Bild 1 heller als die Vorlage:** Figur T 27,8 gegen 20,3, Anteil T-L* > 40 21,7 % gegen 9,9 % (K4 15,3 %). Bild 2 bindet den Faktor; Bild 1
+   bekommt die Helligkeit ueber die Gelenke (Teilmittel Fuss r 52 gegen Vorlage 16 = Pose-Artefakt, Messblatt Offen 4) und den Schwanz (K5c
+   lag dort schon ueber der Vorlage). Die Detailflecken selbst liegen bei 88-114 % der Vorlage.
+3. **Krallen-Anzahl ist Geometrie:** Die rechte Hand hat nur noch die Daumenkralle 31, die linke 14/15 (+30). Rundum ist die Hand dadurch
+   asymmetrisch (der Nutzerumriss gibt nur Bild 2 vor). Die weissen Flecken (160-230, 325-385) in Bild 2 bleiben Feuer (Messblatt Offen 2).
+4. Kette T Krallen r (Info): 35,3 gegen Hand 16,7 - der Videofilter zieht den hellen Feuerboden in die duenne Kralle 31; ohne Filter dL 4,5.
+5. Bild 2 Anteil T-L* > 40 auf der ganzen Figur 11,7 % gegen Messblatt-Ziel 14,5 %: der Rest liegt im Feuerschein F13/F14 (Licht der Szene
+   auf den Haenden). Der Riegel misst deshalb ohne F13/F14 (K5d 8,0 % gegen Vorlage 5,7 %).
+6. Einbau (nicht Teil dieser Runde): Asset ersetzen, Pins form_j_posen.h (MD1/TIM CRC) neu erzeugen, Bau + Tests wie E.3/E.4.

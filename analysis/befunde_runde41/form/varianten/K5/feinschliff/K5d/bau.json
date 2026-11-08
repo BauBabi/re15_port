@@ -26,7 +26,7 @@
     29,
     28
    ],
-   "zug": 0.12,
+   "zug": 0.04,
    "wurzel_n": 6,
    "hand_meshes": [
     13,
@@ -36,7 +36,8 @@
    "s_L": 0.7,
    "s_C": 0.3,
    "dL": -2.0,
-   "dL_quelle": "Krallen-L* = Hand-L* - 2: im Disc-Licht ohne Filter lagen die Krallen r bei gleicher Albedo +5,1 ueber der Hand (Lauf v6)"
+   "dL_quelle": "Krallen-L* = Hand-L* - 2: im Disc-Licht ohne Filter lagen die Krallen r bei gleicher Albedo +5,1 ueber der Hand (Lauf v6)",
+   "zug_quelle": "0,12 liess von Kralle 29 in Bild 2 noch 10 px sichtbar (Riegel (g), Lauf 2026-11-08); 0,04 zieht sie ganz in die Hand"
   },
   "ziele": {
    "buckel": {
@@ -803,20 +804,20 @@
   "lippe": 129
  },
  "fleck_flaechen": {
-  "schulter_l": 13,
   "ruecken_glanz": 6,
+  "knie_r": 12,
+  "schulter_l": 13,
+  "schulter_r": 3,
   "hand_r": 4,
-  "huefte_l": 5,
-  "knie_l": 13,
+  "schwanz_45": 3,
+  "fuss_glanz": 20,
   "huefte_r": 15,
   "buckel": 16,
-  "schwanz_45": 3,
-  "knie_r": 12,
+  "schwanz_34": 6,
   "spitze_glanz": 13,
-  "fuss_glanz": 20,
-  "ellbogen_r": 6,
-  "schulter_r": 3,
-  "schwanz_34": 6
+  "huefte_l": 5,
+  "knie_l": 13,
+  "ellbogen_r": 6
  },
  "inseln": [
   {
@@ -5628,9 +5629,9 @@
   "15": 62
  },
  "sha256": {
-  "FORM.EMD": "8da0da45bc7930abbb1bc3a4ebdd6d559c76ac2feda3d02bcdba12700424763e",
+  "FORM.EMD": "d3a961deda58873882d17b910f1fd787079d49d7c219b339c9a95ac6645e761a",
   "FORM.TIM": "8a39ab47b5b610c3872bb0aa981539bb03d960d27cabed7a114e34a7acddaa1f",
-  "BAHNSTEIG_FORM.EMD": "0ebf2d17123cb63638480fc524216f6190949221ff98ca8a824d0616f9c5569a",
+  "BAHNSTEIG_FORM.EMD": "51917830bc843c1ba99bd0ce4a1ba1ba421ba10059d39a2bbb01dc857df8b099",
   "BAHNSTEIG_FORM.TIM": "8a39ab47b5b610c3872bb0aa981539bb03d960d27cabed7a114e34a7acddaa1f"
  },
  "eingang_sha256": {
