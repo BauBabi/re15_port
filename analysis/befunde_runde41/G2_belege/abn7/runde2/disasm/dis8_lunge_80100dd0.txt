@@ -1,0 +1,82 @@
+# C:/workspace/git/reAi_v2/info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN  Groesse 18664  md5 0293e099bbeae989776264eb14c81bc9
+==== 80100dd0-80100f10 (Datei 0xdd0-0xf10) ====
+80100dd0  21804000  move     $s0, $v0
+80100dd4  7c030408  j        0x80100df0
+80100dd8  21800202  addu     $s0, $s0, $v0
+80100ddc  02000524  addiu    $a1, $zero, 2
+80100de0  10000624  addiu    $a2, $zero, 0x10
+80100de4  cc68000c  jal      0x8001a330
+80100de8  21380000  move     $a3, $zero
+80100dec  21804000  move     $s0, $v0
+80100df0  06002292  lbu      $v0, 6($s1)
+80100df4  02000012  beqz     $s0, 0x80100e00
+80100df8  00000000  nop      
+80100dfc  01004224  addiu    $v0, $v0, 1
+80100e00  060022a2  sb       $v0, 6($s1)
+80100e04  01000224  addiu    $v0, $zero, 1
+80100e08  ba030408  j        0x80100ee8
+80100e0c  250222a2  sb       $v0, 0x225($s1)
+80100e10  2c022292  lbu      $v0, 0x22c($s1)
+80100e14  00000000  nop      
+80100e18  0d004010  beqz     $v0, 0x80100e50
+80100e1c  21202002  move     $a0, $s1
+80100e20  03000524  addiu    $a1, $zero, 3
+80100e24  21300000  move     $a2, $zero
+80100e28  cc68000c  jal      0x8001a330
+80100e2c  21380000  move     $a3, $zero
+80100e30  21202002  move     $a0, $s1
+80100e34  03000524  addiu    $a1, $zero, 3
+80100e38  21300000  move     $a2, $zero
+80100e3c  21380000  move     $a3, $zero
+80100e40  cc68000c  jal      0x8001a330
+80100e44  21804000  move     $s0, $v0
+80100e48  99030408  j        0x80100e64
+80100e4c  21800202  addu     $s0, $s0, $v0
+80100e50  03000524  addiu    $a1, $zero, 3
+80100e54  21300000  move     $a2, $zero
+80100e58  cc68000c  jal      0x8001a330
+80100e5c  21380000  move     $a3, $zero
+80100e60  21804000  move     $s0, $v0
+80100e64  1a022392  lbu      $v1, 0x21a($s1)
+80100e68  02000224  addiu    $v0, $zero, 2
+80100e6c  0e006214  bne      $v1, $v0, 0x80100ea8
+80100e70  03000224  addiu    $v0, $zero, 3
+80100e74  4c012392  lbu      $v1, 0x14c($s1)
+80100e78  00000000  nop      
+80100e7c  0a006214  bne      $v1, $v0, 0x80100ea8
+80100e80  00000000  nop      
+80100e84  4d012292  lbu      $v0, 0x14d($s1)
+80100e88  00000000  nop      
+80100e8c  7200422c  sltiu    $v0, $v0, 0x72
+80100e90  05004014  bnez     $v0, 0x80100ea8
+80100e94  00000000  nop      
+80100e98  18022296  lhu      $v0, 0x218($s1)
+80100e9c  00000000  nop      
+80100ea0  10004234  ori      $v0, $v0, 0x10
+80100ea4  180222a6  sh       $v0, 0x218($s1)
+80100ea8  0f000012  beqz     $s0, 0x80100ee8
+80100eac  00000000  nop      
+80100eb0  76002296  lhu      $v0, 0x76($s1)
+80100eb4  1a022392  lbu      $v1, 0x21a($s1)
+80100eb8  250220a2  sb       $zero, 0x225($s1)
+80100ebc  00044224  addiu    $v0, $v0, 0x400
+80100ec0  760022a6  sh       $v0, 0x76($s1)
+80100ec4  02000224  addiu    $v0, $zero, 2
+80100ec8  06006214  bne      $v1, $v0, 0x80100ee4
+80100ecc  01010224  addiu    $v0, $zero, 0x101
+80100ed0  01070224  addiu    $v0, $zero, 0x701
+80100ed4  040022ae  sw       $v0, 4($s1)
+80100ed8  ff000224  addiu    $v0, $zero, 0xff
+80100edc  ba030408  j        0x80100ee8
+80100ee0  2e0222a2  sb       $v0, 0x22e($s1)
+80100ee4  040022ae  sw       $v0, 4($s1)
+80100ee8  1c022286  lh       $v0, 0x21c($s1)
+80100eec  00000000  nop      
+80100ef0  07004018  blez     $v0, 0x80100f10
+80100ef4  00000000  nop      
+80100ef8  3800228e  lw       $v0, 0x38($s1)
+80100efc  1c022396  lhu      $v1, 0x21c($s1)
+80100f00  06004224  addiu    $v0, $v0, 6
+80100f04  faff6324  addiu    $v1, $v1, -6
+80100f08  380022ae  sw       $v0, 0x38($s1)
+80100f0c  1c0223a6  sh       $v1, 0x21c($s1)

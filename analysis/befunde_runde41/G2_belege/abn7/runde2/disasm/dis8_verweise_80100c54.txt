@@ -1,0 +1,5 @@
+80100c70  0a006214  bne $v1, $v0, 0x80100c9c
+80100c90  02004010  beqz $v0, 0x80100c9c
+80100ca8  02004010  beqz $v0, 0x80100cb4
+80100cbc  02004010  beqz $v0, 0x80100cc8
+Datenworte mit Ziel in 0x80100c54..0x80100cd8: []

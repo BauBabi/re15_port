@@ -1,0 +1,104 @@
+RE2 INTRO ende pos=(-2715,-22821) yaw=2624 wand_draussen_max=0 kopf_x_min=-4665
+GTR F403 START art 4 sub 3 achse 2048 gier 3035->2048 schaden 30 ret 0 hp 70 gator (3584,-1200,-9546) gier 2515 figur (-652,0,-5868) band 0
+GTR F457 ENDE sub 3 bilder 54 weg 3080 von (-3836,-5868) luft 3184 figur (-3836,0,-5868) band 0 fall 0
+GTR F519 START art 4 sub 2 achse 1024 gier 2048->1024 schaden 30 ret 0 hp 70 gator (-3100,-1200,-6884) gier 3389 figur (-1524,0,-5865) band 0
+GTR F539 ENDE sub 2 bilder 20 weg 3735 von (-2003,-5863) luft 479 figur (-2003,0,-5863) band 0 fall 0
+GTR F626 START art 4 sub 2 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (2311,-1200,-7031) gier 3539 figur (3162,0,-5868) band 0
+GTR F646 ENDE sub 2 bilder 20 weg 3735 von (3258,-5870) luft 96 figur (3258,0,-5870) band 0 fall 0
+GTR F733 START art 4 sub 2 achse 2048 gier 1024->2048 schaden 30 ret 0 hp 70 gator (5683,-1200,-6951) gier 3599 figur (6732,0,-5959) band 0
+GTR F753 ENDE sub 2 bilder 20 weg 3735 von (6732,-5881) luft 78 figur (6732,0,-5881) band 0 fall 0
+GTR F840 START art 4 sub 2 achse 1024 gier 2048->1024 schaden 30 ret 0 hp 70 gator (5716,-1200,-7145) gier 3507 figur (6422,0,-5868) band 0
+GTR F860 ENDE sub 2 bilder 20 weg 3735 von (6489,-5862) luft 67 figur (6489,0,-5862) band 0 fall 0
+GTR F947 START art 4 sub 3 achse 0 gier 1024->0 schaden 30 ret 0 hp 70 gator (3835,-1200,-9910) gier 419 figur (6056,0,-10587) band 0
+GTR F1001 ENDE sub 3 bilder 54 weg 3080 von (6097,-6838) luft 3749 figur (6097,0,-6838) band 0 fall 0
+GTR F1059 START art 4 sub 3 achse 3072 gier 0->3072 schaden 30 ret 0 hp 70 gator (4933,-1200,-6827) gier 3395 figur (6732,0,-5868) band 0
+GTR F1113 ENDE sub 3 bilder 54 weg 3080 von (6526,-5866) luft 206 figur (6526,0,-5866) band 0 fall 0
+GTR F1179 START art 4 sub 3 achse 3072 gier 3072->3072 schaden 30 ret 0 hp 70 gator (4128,-1200,-6826) gier 3377 figur (5866,0,-5868) band 0
+GTR F1233 ENDE sub 3 bilder 54 weg 3080 von (5722,-5857) luft 144 figur (5722,0,-5857) band 0 fall 0
+GTR F1286 START art 4 sub 3 achse 2048 gier 3072->2048 schaden 30 ret 0 hp 70 gator (5721,-1200,-7020) gier 2537 figur (4558,0,-6075) band 0
+GTR F1340 ENDE sub 3 bilder 54 weg 3080 von (1820,-6272) luft 2745 figur (1820,0,-6272) band 0 fall 0
+GTR F1393 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (201,-1200,-6990) gier 2511 figur (-1042,0,-5915) band 0
+GTR F1447 ENDE sub 3 bilder 54 weg 3080 von (-2196,-9486) luft 3752 figur (-2196,0,-9486) band 0 fall 0
+RE2 KANISTER Stufe 1 laengs=5830 quer=1144 sub 2 -> 1 F1480
+RE2 KANISTER angehaengt lokal=(4223,-124,1621) F1492
+GTR F1529 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (-4085,-1200,-9550) gier 1619 figur (-8432,0,-12927) band 0
+GTR F1583 ENDE sub 3 bilder 54 weg 3080 von (-8432,-16278) luft 3351 figur (-8432,0,-16278) band 0 fall 0
+GTR F1946 START art 4 sub 3 achse 3072 gier 2048->3072 schaden 30 ret 0 hp 70 gator (-6768,-1200,-19526) gier 2857 figur (-7890,0,-16201) band 0
+GTR F2000 ENDE sub 3 bilder 54 weg 3080 von (-8432,-15927) luft 607 figur (-8432,0,-15927) band 0 fall 0
+GTR F2053 START art 4 sub 3 achse 2048 gier 3072->2048 schaden 30 ret 0 hp 70 gator (-7176,-1200,-13985) gier 2421 figur (-8432,0,-13285) band 0
+GTR F2107 ENDE sub 3 bilder 54 weg 3080 von (-8449,-12816) luft 469 figur (-8449,0,-12816) band 0 fall 0
+GTR F2160 START art 4 sub 2 achse 1024 gier 3776->1024 schaden 30 ret 0 hp 70 gator (-7324,-1200,-8567) gier 2619 figur (-8271,0,-7427) band 0
+GTR F2180 ENDE sub 2 bilder 20 weg 3735 von (-4955,-6060) luft 3586 figur (-4955,0,-6060) band 0 fall 0
+GTR F2271 START art 4 sub 2 achse 0 gier 976->0 schaden 30 ret 0 hp 70 gator (-7416,-1200,-7115) gier 2309 figur (-8427,0,-6069) band 0
+GTR F2291 ENDE sub 2 bilder 20 weg 3735 von (-8435,-6017) luft 52 figur (-8435,0,-6017) band 0 fall 0
+GTR F2391 START art 4 sub 2 achse 0 gier 48->0 schaden 30 ret 0 hp 70 gator (-7473,-1200,-7831) gier 2355 figur (-8450,0,-6113) band 0
+GTR F2411 ENDE sub 2 bilder 20 weg 3735 von (-8432,-6729) luft 616 figur (-8432,0,-6729) band 0 fall 0
+GTR F2512 START art 4 sub 2 achse 0 gier 576->0 schaden 30 ret 0 hp 70 gator (-7426,-1200,-6930) gier 2265 figur (-8432,0,-5868) band 0
+GTR F2532 ENDE sub 2 bilder 20 weg 3735 von (-8432,-5868) luft 0 figur (-8432,0,-5868) band 0 fall 0
+GTR F2627 START art 4 sub 2 achse 0 gier 576->0 schaden 30 ret 0 hp 70 gator (-7416,-1200,-7527) gier 2355 figur (-8443,0,-5853) band 0
+GTR F2647 ENDE sub 2 bilder 20 weg 3735 von (-8432,-6425) luft 572 figur (-8432,0,-6425) band 0 fall 0
+GTR F2747 START art 4 sub 3 achse 2048 gier 2944->2048 schaden 30 ret 0 hp 70 gator (-7416,-1200,-8700) gier 2445 figur (-8432,0,-6692) band 0
+GTR F2801 ENDE sub 3 bilder 54 weg 3080 von (-5069,-5868) luft 3462 figur (-5069,0,-5868) band 0 fall 0
+GTR F2854 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (-5619,-1200,-7808) gier 2443 figur (-8432,0,-5858) band 0
+GTR F2908 ENDE sub 3 bilder 54 weg 3080 von (-8432,-5868) luft 10 figur (-8432,0,-5868) band 0 fall 0
+GTR F2975 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (-7373,-1200,-6962) gier 2301 figur (-8432,0,-5868) band 0
+GTR F3029 ENDE sub 3 bilder 54 weg 3080 von (-8432,-5868) luft 0 figur (-8432,0,-5868) band 0 fall 0
+GTR F3094 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (-7416,-1200,-7631) gier 2373 figur (-8436,0,-5862) band 0
+GTR F3148 ENDE sub 3 bilder 54 weg 3080 von (-8448,-6027) luft 165 figur (-8448,0,-6027) band 0 fall 0
+GTR F3217 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (-7416,-1200,-7368) gier 2387 figur (-8432,0,-5868) band 0
+GTR F3271 ENDE sub 3 bilder 54 weg 3080 von (-8432,-5868) luft 0 figur (-8432,0,-5868) band 0 fall 0
+GTR F3330 START art 4 sub 3 achse 3072 gier 3584->3072 schaden 30 ret 0 hp 70 gator (-4290,-1200,-9583) gier 2875 figur (-5339,0,-6207) band 0
+GTR F3384 ENDE sub 3 bilder 54 weg 3080 von (-3667,-6267) luft 1673 figur (-3667,0,-6267) band 0 fall 0
+GTR F3437 START art 4 sub 2 achse 3072 gier 3072->3072 schaden 30 ret 0 hp 70 gator (-7009,-1200,-7876) gier 1017 figur (-6722,0,-11624) band 0
+GTR F3457 ENDE sub 2 bilder 20 weg 3735 von (-6975,-11453) luft 305 figur (-6975,0,-11453) band 0 fall 0
+GTR F3607 START art 4 sub 3 achse 0 gier 512->0 schaden 30 ret 0 hp 70 gator (-5021,-1200,-14116) gier 453 figur (-2232,0,-16445) band 0
+GTR F3661 ENDE sub 3 bilder 54 weg 3080 von (-2370,-16343) luft 171 figur (-2370,0,-16343) band 0 fall 0
+GTR F4677 START art 4 sub 3 achse 1024 gier 80->1024 schaden 30 ret 0 hp 70 gator (-4241,-1200,-15727) gier 705 figur (-1590,0,-20751) band 0
+GTR F4731 ENDE sub 3 bilder 54 weg 3080 von (-1561,-23888) luft 3137 figur (-1561,0,-23888) band 0 fall 0
+GTR F4784 START art 4 sub 3 achse 0 gier 1024->0 schaden 30 ret 0 hp 70 gator (-3545,-1200,-22804) gier 137 figur (-1159,0,-22306) band 0
+GTR F4838 ENDE sub 3 bilder 54 weg 3080 von (-594,-20472) luft 1919 figur (-594,0,-20472) band 0 fall 0
+GTR F4891 START art 4 sub 3 achse 0 gier 0->0 schaden 30 ret 0 hp 70 gator (2319,-1200,-21930) gier 3701 figur (6732,0,-18858) band 0
+GTR F4945 ENDE sub 3 bilder 54 weg 3080 von (5878,-19060) luft 877 figur (5878,0,-19060) band 0 fall 0
+GTR F4998 START art 4 sub 3 achse 3072 gier 0->3072 schaden 30 ret 0 hp 70 gator (5686,-1200,-19715) gier 3575 figur (6732,0,-18721) band 0
+GTR F5052 ENDE sub 3 bilder 54 weg 3080 von (6732,-18568) luft 153 figur (6732,0,-18568) band 0 fall 0
+GTR F5105 START art 4 sub 3 achse 0 gier 3072->0 schaden 30 ret 0 hp 70 gator (5645,-1200,-19584) gier 3629 figur (6732,0,-18636) band 0
+GTR F5159 ENDE sub 3 bilder 54 weg 3080 von (6732,-18568) luft 68 figur (6732,0,-18568) band 0 fall 0
+GTR F5235 START art 4 sub 2 achse 1024 gier 0->1024 schaden 30 ret 0 hp 70 gator (4592,-1200,-22365) gier 2609 figur (2349,0,-19744) band 0
+GTR F5255 ENDE sub 2 bilder 20 weg 3735 von (3768,-18887) luft 1657 figur (3768,0,-18887) band 0 fall 0
+GTR F5342 START art 4 sub 3 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (5716,-1200,-21272) gier 979 figur (5966,0,-24892) band 0
+GTR F5396 ENDE sub 3 bilder 54 weg 3080 von (6426,-25315) luft 624 figur (6426,0,-25315) band 0 fall 0
+GTR F5449 START art 4 sub 3 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (5584,-1200,-25421) gier 545 figur (6580,0,-26532) band 0
+GTR F5503 ENDE sub 3 bilder 54 weg 3080 von (6732,-26532) luft 152 figur (6732,0,-26532) band 0 fall 0
+GTR F5556 START art 4 sub 3 achse 0 gier 1024->0 schaden 30 ret 0 hp 70 gator (5483,-1200,-25516) gier 439 figur (6732,0,-26244) band 0
+GTR F5610 ENDE sub 3 bilder 54 weg 3080 von (6732,-26532) luft 288 figur (6732,0,-26532) band 0 fall 0
+GTR F5674 START art 4 sub 3 achse 1024 gier 0->1024 schaden 30 ret 0 hp 70 gator (4891,-1200,-25516) gier 689 figur (6748,0,-26542) band 0
+GTR F5728 ENDE sub 3 bilder 54 weg 3080 von (6502,-26543) luft 246 figur (6502,0,-26543) band 0 fall 0
+GTR F5783 START art 4 sub 3 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (5401,-1200,-25516) gier 691 figur (6732,0,-26532) band 0
+GTR F5837 ENDE sub 3 bilder 54 weg 3080 von (6732,-26532) luft 0 figur (6732,0,-26532) band 0 fall 0
+GTR F5902 START art 4 sub 3 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (4888,-1200,-25516) gier 683 figur (6738,0,-26550) band 0
+GTR F5956 ENDE sub 3 bilder 54 weg 3080 von (6493,-26547) luft 245 figur (6493,0,-26547) band 0 fall 0
+GTR F6010 START art 4 sub 3 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (5423,-1200,-25516) gier 723 figur (6732,0,-26532) band 0
+GTR F6064 ENDE sub 3 bilder 54 weg 3080 von (6732,-26532) luft 0 figur (6732,0,-26532) band 0 fall 0
+GTR F6131 START art 4 sub 3 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (5122,-1200,-25516) gier 713 figur (6732,0,-26532) band 0
+GTR F6185 ENDE sub 3 bilder 54 weg 3080 von (6718,-26548) luft 21 figur (6718,0,-26548) band 0 fall 0
+GTR F6246 START art 4 sub 3 achse 1024 gier 448->1024 schaden 30 ret 0 hp 70 gator (5116,-1200,-25516) gier 687 figur (6748,0,-26542) band 0
+GTR F6300 ENDE sub 3 bilder 54 weg 3080 von (6749,-26546) luft 4 figur (6749,0,-26546) band 0 fall 0
+GTR F6361 START art 4 sub 3 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (4278,-1200,-23196) gier 667 figur (6157,0,-26282) band 0
+GTR F6415 ENDE sub 3 bilder 54 weg 3080 von (2607,-26193) luft 3551 figur (2607,0,-26193) band 0 fall 0
+GTR F6483 START art 4 sub 3 achse 3072 gier 2752->3072 schaden 30 ret 0 hp 70 gator (5266,-1200,-24535) gier 3561 figur (6733,0,-23979) band 0
+GTR F6537 ENDE sub 3 bilder 54 weg 3080 von (1797,-23952) luft 4936 figur (1797,0,-23952) band 0 fall 0
+GTR F6590 START art 4 sub 3 achse 2048 gier 3072->2048 schaden 30 ret 0 hp 70 gator (524,-1200,-21484) gier 2313 figur (-2643,0,-20109) band 0
+GTR F6644 ENDE sub 3 bilder 54 weg 3080 von (-3068,-20807) luft 817 figur (-3068,0,-20807) band 0 fall 0
+GTR F6697 START art 4 sub 2 achse 1024 gier 992->1024 schaden 30 ret 0 hp 70 gator (-4662,-1200,-21448) gier 2997 figur (-4039,0,-19639) band 0
+GTR F6717 ENDE sub 2 bilder 20 weg 3735 von (-3807,-17971) luft 1684 figur (-3807,0,-17971) band 0 fall 0
+GTR F6804 START art 4 sub 2 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (-3503,-1200,-19719) gier 2747 figur (-3534,0,-17983) band 0
+GTR F6824 ENDE sub 2 bilder 20 weg 3735 von (-3122,-16095) luft 1932 figur (-3122,0,-16095) band 0 fall 0
+GTR F7921 START art 4 sub 3 achse 0 gier 1024->0 schaden 30 ret 0 hp 70 gator (-5029,-1200,-24678) gier 351 figur (-1995,0,-26510) band 0
+GTR F7975 ENDE sub 3 bilder 54 weg 3080 von (-1574,-26532) luft 421 figur (-1574,0,-26532) band 0 fall 0
+GTR F8039 START art 4 sub 3 achse 0 gier 0->0 schaden 30 ret 0 hp 70 gator (2349,-1200,-25235) gier 175 figur (5673,0,-26158) band 0
+GTR F8093 ENDE sub 3 bilder 54 weg 3080 von (6190,-26426) luft 582 figur (6190,0,-26426) band 0 fall 0
+GTR F8158 START art 4 sub 3 achse 0 gier 0->0 schaden 30 ret 0 hp 70 gator (5716,-1200,-24838) gier 341 figur (6738,0,-26542) band 0
+GTR F8212 ENDE sub 3 bilder 54 weg 3080 von (6742,-26442) luft 100 figur (6742,0,-26442) band 0 fall 0
+GTR F8281 START art 4 sub 3 achse 0 gier 0->0 schaden 30 ret 0 hp 70 gator (5716,-1200,-25041) gier 289 figur (6732,0,-26532) band 0
+GTR F8335 ENDE sub 3 bilder 54 weg 3080 von (6732,-26532) luft 0 figur (6732,0,-26532) band 0 fall 0
+GTR F8394 START art 4 sub 3 achse 0 gier 0->0 schaden 30 ret 0 hp 70 gator (5716,-1200,-24998) gier 299 figur (6732,0,-26532) band 0

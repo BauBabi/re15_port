@@ -1,0 +1,4 @@
+RE2 INTRO ende pos=(2261,-10304) yaw=1056 wand_draussen_max=0 kopf_x_min=-2511
+GTR F942 START art 4 sub 2 achse 1024 gier 0->1024 schaden 60 ret 0 hp 40 gator (-435,-1200,-24479) gier 2597 figur (-2731,0,-21904) band 0
+GTR F962 ENDE sub 2 bilder 20 weg 3735 von (-1291,-21007) luft 1696 figur (-1291,0,-21007) band 0 fall 0
+GTR F1049 TOT art 4 schaden 60 hp -20
