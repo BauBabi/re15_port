@@ -1,0 +1,8 @@
+# C:/workspace/git/reAi_v2/info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN  18664 B  md5 0293e099bbeae989776264eb14c81bc9
+==== 80100004-8010001c ====
+80100004  64151080  lb $s0, 0x1564($zero)
+80100008  c4131080  lb $s0, 0x13c4($zero)
+8010000c  d4131080  lb $s0, 0x13d4($zero)
+80100010  18141080  lb $s0, 0x1418($zero)
+80100014  88141080  lb $s0, 0x1488($zero)
+80100018  f8141080  lb $s0, 0x14f8($zero)

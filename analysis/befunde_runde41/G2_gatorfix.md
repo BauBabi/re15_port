@@ -1257,3 +1257,113 @@ Vorher (Abnahme 7, Bau 6f4314fb): tod_leon F942 Biss, F962 Zweitbiss hp -20 TOT;
    den Angriff in dieser Zeit gar nicht beginnen (@0x80100b5c). Der Angriffsbeginn fragt im Port weiter nur hit_stun (wie beim Hochbiss seit 88ff3f990);
    nach einem Treffer deckt hit_stun 100 > 70 das ab, nur das Intro-Fenster bleibt - nicht umgebaut (letzte Runde).
 6. Unveraendert aus Runde 1: Animation im Sturz (O-W1), Koerper-/Boss-Schub, B2 nur per env (jetzt mit Sperre), PSX nicht gebaut.
+
+## NB4 Runde 3 - RE2-Bissmechanismus (Abnahme 8 M1: +0x238 ist in RE2 eine Spurt-Sperre, keine Bisssperre)
+
+Abnahme 8 (77918c914, `G2_abnahme_8.md`) NICHT BESTANDEN wegen **M1**: Runde 2 (d8bf728b0) liess Biss im Wasser (LUNGE), Biss B2 und Rammen die Port-Sperre
+`gb_biss_frei` = `re15_gr2_biss_cd_rest(slot) == 0` (+0x238) fragen; in RE2 fragt der Biss +0x238 nicht, und am Intro-Ende gibt RE2 den Biss frei und setzt im
+selben Schritt +0x238 = 110. Folge im Port: Lauf nische zwei Biss-Anlaeufe mit dem Maul an der Figur ohne Biss (F284-F326, F347-F389), erster Biss F416 statt F290.
+
+Vor jeder Code-Aenderung selbst disassembliert (eigenes Werkzeug `G2_belege/nb4/runde3/werkzeug/dis9.py`, capstone 5.0.7, Quelle
+`C:/workspace/git/reAi_v2/info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN`, 18 664 B, md5 0293e099bbeae989776264eb14c81bc9, Datei-Offset = Adresse - 0x80100000).
+Listings `G2_belege/nb4/runde3/disasm/r3_*.txt`. Die Bytes stimmen mit `G2_belege/abn7/runde2/disasm/` der Abnahme 8 ueberein.
+
+### 1. T1 0x801012fc - die Kiefer-Maschine scharf machen (`r3_t1.txt`)
+
+| Adresse | Bytes | Befehl | Bedeutung |
+|---|---|---|---|
+| 0x801012fc-308 | `0d80023c 06fc4294 00000000 1d004010` | `lui v0,0x800d / lhu v0,-0x3fa(v0) / beqz v0,0x80101380` | Koerperkontakt PL+0xE (0x800cfc06) != 0 |
+| 0x80101310-320 | `0d80023c d8fb428c 00000000 10004230 17004014` | `lw v0,-0x428(v0) / andi v0,v0,0x10 / bnez` | Biss-Bremse 0x800cfbd8 Bit 0x10 == 0 |
+| 0x80101328-334 | `0d80023c cbfd4290 00000000 12004014` | `lbu v0,-0x235(v0) / bnez` | Reaktionssperre PL+0x1D3 (0x800cfdcb) == 0 |
+| 0x8010133c-344 | `24028280 00000000 0e004014` | `lb v0,0x224(a0) / bnez` | Kiefer-Lauf +0x224 == 0 (kein Lauf aktiv) |
+| 0x8010134c-358 | `c0018290 00000000 04004230 09004014` | `lbu v0,0x1c0(a0) / andi 4 / bnez` | +0x1C0 & 4 == 0 |
+| 0x80101360-374 | `26028390 .. 03006010 07000224 03006214` | `lbu v1,0x226(a0) / beqz / addiu v0,zero,7 / bne` | +0x226 in {0, 7} |
+| 0x80101378-37c | `01000224 240282a0` | `addiu v0,zero,1 / sb v0,0x224(a0)` | **scharf: +0x224 = 1** |
+
+**+0x238 kommt in T1 nicht vor.** Aufrufer (`r3_verweise.txt`, Muster `bf04040c` = `jal 0x801012fc`): 0x80100974 (erste Anweisung der Vorstufe 0x80100964,
+Tafel @0x80104640/44 = Sub 1 und Sub 2), 0x80100d40 (Sub 3 = 0x80100d30, Tafel @0x80104668), 0x8010125c (Sub 7), 0x80100c60 (in 0x80100c54: kein `j`
+`15030408`, kein `jal` `1503040c`, kein Datenwort `540c1080` in der ganzen Datei -> toter Code). T1 laeuft also in jedem Bild der Verfolgung (Sub 1 Schwimmen
+UND Sub 2 Spurt), egal wie +0x238 steht.
+
+### 2. Kiefer-Maschine 0x80101388 (+0x224 1..5 -> 0, `r3_kiefer.txt`, `r3_tafel.txt`)
+
+- je Bild aus dem Root: `e204040c jal 0x80101388` @0x80100328 (einzige Fundstelle). Sprung `sltiu v0,v1,6` @0x801013a0, Tafel @0x80100004..18 =
+  {0x80101564 (0 = nichts), 0x801013c4, 0x801013d4, 0x80101418, 0x80101488, 0x801014f8} (Bytes `64151080 c4131080 d4131080 18141080 88141080 f8141080`).
+- Stufe 1 @0x801013c4-3d0 (`24020292 580100a6 01004224 240202a2`: +0x224 = 2, Zaehler +0x158 = 0) faellt in Stufe 2 @0x801013d4; Stufe 2 und Stufe 3
+  (@0x80101418) zaehlen +0x158 bis 4 (`04000224 addiu v0,zero,4 / 3d006214 bne` @0x80101468-6c, dann +0x224 += 1 @0x80101474-84) und bewegen den Kiefer
+  (FUN_80101bac / FUN_80101c74, Knochen +0x228/+0x22a) = Kiefer oeffnen.
+- Stufe 4 @0x80101488 und Stufe 5 @0x801014f8 zaehlen bis 3 (`03000224 addiu v0,zero,3 / 1f006214 bne v1,v0,0x8010155c` @0x801014d8-dc bzw.
+  `03006214` @0x8010154c) und rufen in jedem ihrer Bilder den Treffer-Einstieg: `5e05040c jal 0x80101578` @0x8010155c (einzige Fundstelle in der Datei).
+  Ende des Laufs: `580100a6 sh zero,0x158(s0) / 240200a2 sb zero,0x224(s0)` @0x80101554-58.
+- Ein Kiefer-Lauf hat damit 3 + 3 = 6 Treffer-Pruefbilder (Stufe 4/5), davor 4 + 4 Bilder Stufe 2/3.
+
+### 3. Treffer-Einstieg 0x80101578 (`r3_treffer.txt`)
+
+| Adresse | Bytes | Befehl | Bedeutung |
+|---|---|---|---|
+| 0x8010157c-580 | `0d80053c 06fca524` | `lui a1,0x800d / addiu a1,a1,-0x3fa` | a1 = PL+0xE (0x800cfc06) |
+| 0x80101590-598 | `0000a294 00000000 49004010` | `lhu v0,0(a1) / beqz v0,0x801016c0` | ohne Kontakt kein Treffer |
+| 0x801015a0-5ac | `0d80023c cbfd4290 00000000 44004014` | `lbu v0,-0x235(v0) / bnez v0,0x801016c0` | **PL+0x1D3 != 0 -> kein Treffer** |
+| 0x801015b4-5c4 | `05020224 .. fcfb22ac` | `addiu v0,zero,0x205 / sw v0,-0x404(at)` | Spieler PL+4 = 0x205 (Routine 5, Sub 2 = Reaktion) |
+| 0x80101684-688 | `a755000c 00060624` | `jal 0x8001569c / addiu a2,zero,0x600` | Gier der Figur |
+| 0x8010169c-6a4 | `3c000424 1e000424 390e040c` | `addiu a0,zero,0x3c / addiu a0,zero,0x1e / jal 0x801038e4` | Schaden 60 / 30 |
+| 0x801016b0-6b4 | `46000224 380282a0` | `addiu v0,zero,0x46 / sb v0,0x238(a0)` | +0x238 = 70 (Spurt-Sperre, s. 5) |
+
+### 4. Reaktionssperre PL+0x1D3 (`r3_rk.txt`)
+
+- gesetzt im Reaktions-Unterzustand Sub 2 der Spieler-Routine 5: `d3012292 lbu v0,0x1d3(s1)` @0x801030e8, `80004234 ori v0,v0,0x80` @0x801030f8,
+  `d30122a2 sb v0,0x1d3(s1)` @0x80103100.
+- geloescht: Sub-2-Ende `d30120a2 sb zero,0x1d3(s1)` @0x801031d4 (mit `sw 1,4(s1)` @0x801031d0); Sub 3 beim Liegen `d30120a2` @0x801032f0.
+
+**Was in RE2 einen zweiten Treffer im selben Biss verhindert:** der Treffer setzt die Figur in die Reaktion (PL+4 = 0x205 @0x801015b4-c4), die Reaktion
+setzt PL+0x1D3 |= 0x80 (@0x801030e8-80103100) und haelt sie bis zum Reaktionsende (Sub 2: 20 Bilder, Sub 3: 54 Bilder; Modell NB4). Die restlichen
+hoechstens 5 Stufe-4/5-Aufrufe desselben Kiefer-Laufs scheitern an `bnez` @0x801015ac; der Lauf endet mit +0x224 = 0 @0x80101558. Ein neuer Treffer
+braucht einen NEUEN Kiefer-Lauf: T1 mit +0x224 == 0 (@0x8010133c-44) und PL+0x1D3 == 0 (@0x80101328-34), dann wieder 8 Bilder bis Stufe 4.
+**Ergebnis: ein Treffer je Kiefer-Lauf.** Es gibt kein eigenes "bite_done"-Feld in RE2; die Wirkung entsteht aus Reaktionssperre (laenger als der
+Rest-Lauf) + Lauf-Ende. +0x238 ist an keiner dieser Stellen beteiligt.
+
+### 5. +0x238 - alle Zugriffe (`r3_verweise.txt`, `r3_weitere.txt`, `r3_sub12.txt`)
+
+| Adresse | Bytes | Befehl | Bedeutung |
+|---|---|---|---|
+| 0x8010069c | `380200a2` | `sb zero,0x238(s0)` | Init 0 |
+| 0x801004a8-4b8 | `38020292 00000000 02004010 ffff4224 380202a2` | `lbu / beqz / addiu -1 / sb` | je Bild -1 im Root |
+| 0x80100920 | `380202a2` | `sb v0,0x238(s0)` (v0 = 0x6e @0x8010091c) | Intro-Ende 110 |
+| 0x801016b4 | `380282a0` | `sb v0,0x238(a0)` (v0 = 0x46 @0x801016b0) | Treffer 70 |
+| 0x80100b5c-b64 | `38020292 00000000 28004014` | `lbu v0,0x238(s0) / bnez v0,0x80100c08` | Sub 1: solange != 0 kein Wechsel nach Sub 2 (0x201 = Spurt) |
+| 0x80100bf4-c04 | `38020292 00000000 02004010 01010224 040002ae` | `lbu / beqz / addiu v0,zero,0x101 / sw v0,4(s0)` | Sub 2: != 0 -> zurueck nach Sub 1 |
+| 0x80100cb4-cc4 | `38020292 00000000 02004010 01010224 040002ae` | dito | in 0x80100c54 = toter Code |
+
+**+0x238 sperrt nur den Spurt (Sub 1 -> Sub 2) und beendet einen laufenden Spurt; der Biss (T1 + Kiefer-Maschine + Treffer-Einstieg) fragt es nie.**
+Port: `gator_re2_r41.c` :1306/:1308 waehlt Clip 0/1 genau nach @0x80100b5c-64 / @0x80100be4-c04 - das bleibt.
+
+### 6. Intro-Ende 0x801008e0 (`r3_intro.txt`)
+
+`16004010 beqz v0,0x80100950` @0x801008f4 (Clip 3 zu Ende, FUN_8001a330 @0x801008ec), dann `efff0324 addiu v1,zero,-0x11` @0x801008f8,
+`0d80043c d8fb8424 0000828c` 0x800cfbd8 laden @0x801008fc-904, `24104300 and v0,v0,v1` @0x8010090c, `fffe0324 addiu v1,zero,-0x101 / 24104300 and` @0x80100910-14,
+`000082ac sw v0,0(a0)` @0x80100918 -> **Biss-Bremse Bit 0x10 geloescht (die T1 @0x80101310-20 fragt)**; im selben Schritt `6e000224 addiu v0,zero,0x6e /
+380202a2 sb v0,0x238(s0)` @0x8010091c-20 (Spurt-Sperre 110) und `01010324 addiu v1,zero,0x101 / 040003ae sw v1,4(s0)` @0x80100928-2c (Sub 1).
+Nach dem Intro beisst RE2 bei Kontakt sofort (8 Bilder Kiefer-Vorlauf), schwimmt aber 110 Bilder ohne Spurt.
+
+### 7. Biss B2 (RE2 Sub 3 = Clips 2/3, `r3_sub3.txt`) und Rammen
+
+- Sub 3 0x80100d30: erste Anweisung `bf04040c jal 0x801012fc` @0x80100d40 - auch hier nur T1. Die Clip-3-Pruefung `4d012292 lbu v0,0x14d(s1) /
+  7200422c sltiu v0,v0,0x72` @0x80100e84-8c setzt nur `+0x218 |= 0x10` (`10004234 ori / 180222a6 sh` @0x80100ea0-a4), keinen Treffer; das Clip-Ende dreht
+  `+0x76 += 0x400` (@0x80100eb0-ec0) und setzt `+0x225 = 0` @0x80100eb8. Der Treffer kommt in Sub 3 ebenfalls nur aus dem Kiefer-Lauf
+  (`jal 0x80101578` nur @0x8010155c): **ein Treffer je Kiefer-Lauf**, +0x238 nicht beteiligt.
+- Rammen: RE2 kennt im Raum kein Rammen (PORT-WAHL, Nutzer 2026-11-02 "Beim Ueberklettern der Rampe von Aligator sollte der Spieler schon immer gerammelt
+  werden und Schaden nehmen"). Jeder RE2-Treffer laeuft durch 0x80101578 und fragt dort nur Kontakt (@0x80101590-98) und PL+0x1D3 (@0x801015a0-ac) -
+  das Port-Rammen fragt dasselbe (`gb_koerper_kontakt`, `pl->hit_react == 0`) und trifft einmal je Ueberquerung (`bite_done`, seit NB7 ff4380b40 /
+  `gb_cross_begin`, vor Runde 2). Die +0x238-Bedingung aus Runde 2 hat dort keinen RE2-Beleg.
+
+### 8. Folgerung fuer den Port (Grundlage des Fixes)
+
+- RE2-Kiefer-Lauf (+0x224 1..5) <-> Port-Biss-Clip-Lauf: LUNGE Clip 4 (Fenster Bild 6..34), Biss B2 Clip 3 (Bild >= 114), Hochbiss Clip 4 (Fenster 6..34).
+  RE2 erreicht "ein Treffer je Lauf" ueber die Reaktionssperre, weil sein Lauf nur 6 Pruefbilder hat (@0x80101468-6c / @0x801014d8-dc / @0x8010154c) und die
+  Reaktion 20/54 Bilder dauert. Das Port-Fenster ist 29 Bilder lang (> 20 Bilder Sub-2-Reaktion) - genau darum traf Runde 1 zweimal (Abnahme 7). Der Port haelt
+  dieselbe Wirkung mit dem vorhandenen Lauf-Riegel `bite_done` (wird im Treffer gesetzt, mit jedem neuen Biss-Clip-Lauf geloescht) - keine neue Zahl.
+- Die +0x238-Bedingung faellt aus allen Bissen (LUNGE, B2, Hochbiss, Rammen). +0x238 bleibt, wo RE2 es hat: 110 am Intro-Ende (@0x8010091c-20,
+  gator_re2_r41.c :1830 / gatorszene_r41.c :1153), 70 im Treffer (@0x801016b0-b4, gb_biss_abschluss), je Bild -1 (@0x801004a8-b8, gator_re2_r41.c :1293),
+  Spurt-Wahl Clip 0/1 (@0x80100b5c-64 / @0x80100bf4-c04, gator_re2_r41.c :1306/:1308).
+- Nicht Teil dieser Runde: der Abstand zwischen zwei Biss-Laeufen. RE2 erlaubt bei andauerndem Kontakt einen neuen Lauf nach Reaktionsende + 8 Bildern
+  (rund 28/30 Bilder nach dem Treffer); der Port beginnt einen neuen LUNGE/Hochbiss erst bei `hit_stun == 0` (0x64 im Treffer, unveraendert seit vor NB4).
