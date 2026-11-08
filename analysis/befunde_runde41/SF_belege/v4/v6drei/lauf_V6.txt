@@ -1,0 +1,5 @@
+EXIT=0
+191
+debug.log:[asset] cd-root: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/r/V6/cd (+Fallbacks)
+debug.log:[enemy] EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum 50A0)
+debug.log:[enemy] EM30 loaded: 23 meshes, 23 bones, 21 clips -> slot 12

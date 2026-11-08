@@ -1,0 +1,155 @@
+{
+ "keyframes_gesamt": 912,
+ "stichprobe": 50,
+ "ansichten": 4,
+ "bilder": 200,
+ "luecke_px": 1206,
+ "bilder_mit_luecke": 22,
+ "schlimmste": [
+  {
+   "clip": 4,
+   "bild": 59,
+   "gier_plus": 3072,
+   "px": 230,
+   "je_gelenk": {
+    "19": 58,
+    "18": 139,
+    "20": 33
+   }
+  },
+  {
+   "clip": 4,
+   "bild": 35,
+   "gier_plus": 2048,
+   "px": 141,
+   "je_gelenk": {
+    "18": 132,
+    "19": 9
+   }
+  },
+  {
+   "clip": 4,
+   "bild": 35,
+   "gier_plus": 3072,
+   "px": 118,
+   "je_gelenk": {
+    "17": 116,
+    "18": 2
+   }
+  },
+  {
+   "clip": 11,
+   "bild": 46,
+   "gier_plus": 3072,
+   "px": 105,
+   "je_gelenk": {
+    "18": 58,
+    "17": 47
+   }
+  },
+  {
+   "clip": 5,
+   "bild": 33,
+   "gier_plus": 3072,
+   "px": 83,
+   "je_gelenk": {
+    "19": 60,
+    "20": 23
+   }
+  },
+  {
+   "clip": 7,
+   "bild": 25,
+   "gier_plus": 3072,
+   "px": 75,
+   "je_gelenk": {
+    "17": 74,
+    "18": 1
+   }
+  },
+  {
+   "clip": 5,
+   "bild": 15,
+   "gier_plus": 2048,
+   "px": 68,
+   "je_gelenk": {
+    "18": 49,
+    "19": 19
+   }
+  },
+  {
+   "clip": 20,
+   "bild": 112,
+   "gier_plus": 3072,
+   "px": 58,
+   "je_gelenk": {
+    "18": 58
+   }
+  },
+  {
+   "clip": 7,
+   "bild": 25,
+   "gier_plus": 2048,
+   "px": 55,
+   "je_gelenk": {
+    "18": 55
+   }
+  },
+  {
+   "clip": 8,
+   "bild": 34,
+   "gier_plus": 3072,
+   "px": 47,
+   "je_gelenk": {
+    "19": 38,
+    "20": 9
+   }
+  },
+  {
+   "clip": 5,
+   "bild": 15,
+   "gier_plus": 3072,
+   "px": 46,
+   "je_gelenk": {
+    "18": 46
+   }
+  },
+  {
+   "clip": 12,
+   "bild": 38,
+   "gier_plus": 0,
+   "px": 33,
+   "je_gelenk": {
+    "18": 15,
+    "17": 18
+   }
+  }
+ ],
+ "je_gelenk": {
+  "17": {
+   "px": 264,
+   "faelle": 5
+  },
+  "18": {
+   "px": 600,
+   "faelle": 13
+  },
+  "19": {
+   "px": 193,
+   "faelle": 6
+  },
+  "20": {
+   "px": 140,
+   "faelle": 7
+  },
+  "21": {
+   "px": 0,
+   "faelle": 0
+  },
+  "22": {
+   "px": 9,
+   "faelle": 1
+  }
+ },
+ "roh_px": 9328
+}

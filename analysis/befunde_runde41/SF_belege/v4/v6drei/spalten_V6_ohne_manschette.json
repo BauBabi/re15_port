@@ -1,0 +1,36 @@
+{
+ "keyframes_gesamt": 912,
+ "stichprobe": 50,
+ "ansichten": 4,
+ "bilder": 200,
+ "luecke_px": 0,
+ "bilder_mit_luecke": 0,
+ "schlimmste": [],
+ "je_gelenk": {
+  "17": {
+   "px": 0,
+   "faelle": 0
+  },
+  "18": {
+   "px": 0,
+   "faelle": 0
+  },
+  "19": {
+   "px": 0,
+   "faelle": 0
+  },
+  "20": {
+   "px": 0,
+   "faelle": 0
+  },
+  "21": {
+   "px": 0,
+   "faelle": 0
+  },
+  "22": {
+   "px": 0,
+   "faelle": 0
+  }
+ },
+ "roh_px": 2171
+}

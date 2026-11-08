@@ -1,0 +1,974 @@
+{
+ "emd": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V5f.EMD",
+ "emd_sha256": "784c8f05dfc4ac57dfdf3ac52127ac2a4e900603043aafa0c6bada897a2d3019",
+ "basis": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad\\sfv4\\emd\\EM30_V5f.EMD",
+ "basis_sha256": "784c8f05dfc4ac57dfdf3ac52127ac2a4e900603043aafa0c6bada897a2d3019",
+ "zeilen": [
+  {
+   "name": "T-K1a Sektionen 0/1/3-6 bytegleich, EMR nur relpos-y 20/21/22",
+   "ok": true,
+   "soll": "Sektionen bytegleich; EMR-Abweichung nur in den y-Feldern von relpos 20/21/22",
+   "ist": "Sektionen abweichend []; EMR fremde Bytes []; relpos {20: '(0, 524, 0) -> (0, 524, 0)', 21: '(0, 531, 0) -> (0, 531, 0)', 22: '(0, 243, 0) -> (0, 243, 0)'}",
+   "info": false
+  },
+  {
+   "name": "T-K1b Texel nur im Haarfeld, Indizes aus dem Fleck",
+   "ok": false,
+   "soll": "Abweichung nur im Haarfeld (Kopf-exklusiv), neue Indizes aus dem grauen Fleck der Original-Textur",
+   "ist": "0 Texel geaendert, ausserhalb des Haarfelds 0, fremde Indizes [] (Haarfeld 1410 Texel)",
+   "info": false
+  },
+  {
+   "name": "T-K1c Meshes: nur Krallen-CLUT-Feld (Mesh 12) und Schwanz (Ecken + Deckel)",
+   "ok": false,
+   "soll": "Meshes 0-15 bytegleich bis auf CLUT-Feld der Krallenflaechen 490 -> 491; 16-22 alte Flaechen/UV/Normalen gleich, nur Deckel dazu",
+   "ist": "Fehler []; Krallenflaechen auf 491: 0 von 13; Deckel 0",
+   "info": false
+  },
+  {
+   "name": "T-K1d CLUT: 480-490 = Basis, 491 = 490 bis auf Krallen-Indizes (Referenz-2-/Original-Palette)",
+   "ok": false,
+   "soll": "12 Zeilen (<= 16), Hoehe <= 4096; 480-490 bytegleich; 491 sonst = 490; Krallen-Indizes aus grau/knochenfarbenen Ref2-/Original-Eintraegen",
+   "ist": "11 Zeilen, Hoehe 2816; 480-490 gleich True; 491 Rest gleich False; 60 Krallen-Indizes aus Kandidaten False",
+   "info": false
+  },
+  {
+   "name": "T-H7 Haar grau (P1/P2/135)",
+   "ok": false,
+   "soll": "ohne rote Original-Merkmale: b* P90 <= 6, C* P90 <= 10; Haartexel Paletten-b* <= 10",
+   "ist": "P1 b* 16.1 C* 16.3 (alle 16.1/16.2, 1267 px, L* 31.6); P2 b* 19.6 C* 19.8 (alle 19.8/19.9, 902 px, L* 35.1); 135 b* 13.4 C* 13.9 (alle 13.2/24.1, 1751 px, L* 32.1); Haartexel b* max 31.6",
+   "info": false
+  },
+  {
+   "name": "INFO T-H7 Basis",
+   "ok": true,
+   "soll": "-",
+   "ist": "P1 b* 16.1 C* 16.3; P2 b* 19.6 C* 19.8; 135 b* 13.4 C* 13.9",
+   "info": true
+  },
+  {
+   "name": "T-F9 Schwanz P2: Spitze am Nutzerpunkt, Verlauf Beginn/Biegung/Knick",
+   "ok": false,
+   "soll": "Spitze <= 8 px von (295,343); Beginn/Biegung/Knick <= 10 px vom Schwanz-Umriss",
+   "ist": "Spitze [279.0, 308.7], 37.8 px; Beginn 4.0, Biegung 0.0, Knick 9.8 px; tiefster Schwanzpixel [277, 307]; Kette (388,215) (350,225) (323,231) (293,242) (302,266) (288,284) (283,294) (280,306)",
+   "info": false
+  },
+  {
+   "name": "INFO T-F9 Basis",
+   "ok": true,
+   "soll": "-",
+   "ist": "Spitze [279.0, 308.7], 37.8 px; Beginn 4.0, Biegung 0.0, Knick 9.8 px",
+   "info": true
+  },
+  {
+   "name": "INFO T-F9b Schwanz unter der Sohle (alle Keyframes)",
+   "ok": true,
+   "soll": "Beobachtung, kein Auftragsmass",
+   "ist": "neu: 0 von 912 Keyframes, max -38 E. unter der tiefsten Koerperecke, je Clip {}; Basis: 0, max -38 E.",
+   "info": true
+  },
+  {
+   "name": "T-F5d Steigungsknick der Mantellinie <= 15 Grad",
+   "ok": true,
+   "soll": "<= 15 Grad je Gelenk (Knochenraum)",
+   "ist": "Glied 16 / 17 2.3; Glied 17 / 18 1.7; Glied 18 / 18 12.2; Glied 18 / 19 9.7; Glied 19 / 20 7.7; Glied 20 / 21 9.5; Glied 21 / 22 1.0",
+   "info": false
+  },
+  {
+   "name": "T-F9s Spalten (Stichprobe Keyframes x 4 Ansichten)",
+   "ok": false,
+   "soll": "sichtbare Innenwand nach Oeffnung 3 x 3 = 0 px",
+   "ist": "50 Keyframes (von 912) x 4 Ansichten: 1792 px in 72 Bildern (roh 6928 px Saum)",
+   "info": false
+  },
+  {
+   "name": "T-F10a Kralle (W)-links hell (P1)",
+   "ok": false,
+   "soll": "Krallenpixel L* = Foto 30,3 +- 6 (Messblatt 6, Lab 30,3/4,9/1,7)",
+   "ist": "neu 14.0/10.1/4.6 (108 px); Basis 14.0/10.1/4.6",
+   "info": false
+  },
+  {
+   "name": "T-F10b Sichel-Unterarm und Koerper unveraendert (P1/P2)",
+   "ok": true,
+   "soll": "jedes Pixel gleichen Knochens ausser Kopf/Schwanz/Krallen bytegleich zur Basis",
+   "ist": "P1: verglichen 30439 px (Mesh 14: 2679), abweichend 0 (Mesh 14: 0); P2: verglichen 17005 px (Mesh 14: 2878), abweichend 0 (Mesh 14: 0)",
+   "info": false
+  },
+  {
+   "name": "INFO v5f T-K1a Sektionen 0-6 (EDD, EMR, ...) = Basis",
+   "ok": true,
+   "soll": "bytegleich",
+   "ist": "abweichend []; Meshes 23/23",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-K1b Texel = Basis",
+   "ok": true,
+   "soll": "bytegleich",
+   "ist": "gleich",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-K1c Geometrie/UV = Basis bis auf die Ausnahmeliste",
+   "ok": true,
+   "soll": "nur CLUT-Feld (Rot-Flaechen 8 Brust/12/13 -> 488-490, Schwanz -> 487), Krallenecken Mesh 12, Schwanzecken 16-22",
+   "ist": "Fehler []; falsche CLUT-Felder []; Schwanz alle 487 True; Rot-Flaechen je Mesh {8: 34, 12: 58, 13: 43}; Krallenecken 9; Schwanzecken 167",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-K1d CLUT: Ausnahmeliste",
+   "ok": true,
+   "soll": "11 Zeilen (<= 16, Hoehe <= 4096); 483-486 = Basis; 488/489/490 = Ref2 481/480/482; 480-482 nur rote Eintraege grau (nicht heller, C* <= P90 der grauen Eintraege derselben Zeile = Spanne der grauen Haut); 487 = Ref2 480 ausser Schwanz-Indizes, diese aus der Sichel-Zeile 484",
+   "ist": "11 Zeilen, Hoehe 2816; 483-486 gleich True; Kopien gleich True; geaendert je Zeile {480: 155, 481: 104, 482: 150}, Fehler []; 487 Rest gleich True, Schwanz-Indizes 187 aus Sichel True",
+   "info": true
+  },
+  {
+   "name": "v5f T-F1 Schwanzbreite je Station (Inkreis, P2) +-20 %",
+   "ok": true,
+   "soll": "Modell/Foto-Soll (Median 3) je f 0,1-0,9, +-20 %",
+   "ist": "f 0.1 0.136/0.144 (-6 %); f 0.2 0.136/0.145 (-7 %); f 0.3 0.130/0.144 (-10 %); f 0.4 0.097/0.114 (-14 %); f 0.5 0.077/0.077 (-0 %); f 0.6 0.066/0.077 (-14 %); f 0.7 0.049/0.055 (-11 %); f 0.8 0.032/0.033 (-2 %); f 0.9 0.028/0.033 (-16 %)",
+   "info": false
+  },
+  {
+   "name": "INFO v5f INFO T-F1 Foto roh / Modell f 0 und 1",
+   "ok": true,
+   "soll": "-",
+   "ist": "Foto roh 0.079/0.145/0.144/0.152/0.114/0.077/0.077/0.033/0.055/0.033/0.024; Modell f 0 0.089, f 1 0.017",
+   "info": true
+  },
+  {
+   "name": "v5f T-F5a Schwanz dunkel gruenlich-grau (P2)",
+   "ok": true,
+   "soll": "a* <= 0, b* >= 0, L* < Rumpfhaut (Foto 23,8; Modell-Rumpf grau)",
+   "ist": "Schwanz 22.8/-1.5/3.4 (2834 px, 1 px erodiert); Modell-Rumpf grau 30.3/2.3/2.1; Foto-Schwanz 17,8/4,8/1,5",
+   "info": false
+  },
+  {
+   "name": "v5f T-F5b Gelenkringe deckungsgleich (Knochenraum)",
+   "ok": true,
+   "soll": "Radius Endring k / Anfangsring k+1: Sprung <= 8 %",
+   "ist": "Spruenge 16/17..21/22: 0.0 0.0 0.0 0.1 0.1 0.1 %",
+   "info": false
+  },
+  {
+   "name": "v5f T-F5c Breitensprung im Bild (P2)",
+   "ok": true,
+   "soll": "Inkreis 2-8 px vor/nach jedem sichtbaren Gelenk (Inkreis nicht an Koerperpixeln = nicht verdeckt, je Seite >= 4 Proben), zum Gelenk fortgesetzt: Sprung <= 8 % bzw. <= 1 px (Rasterboden)",
+   "ist": "16/17 verdeckt; 17/18 35.8->34.8 px (3 %); 18/19 24.7->25.6 px (3 %); 19/20 17.2->16.9 px (2 %); 20/21 7.9->7.2 px (9 %); 21/22 7.2->7.2 px (0 %)",
+   "info": false
+  },
+  {
+   "name": "v5f T-F5d Steigungsknick der Mantellinie <= 15 Grad",
+   "ok": true,
+   "soll": "<= 15 Grad je Gelenk (Knochenraum)",
+   "ist": "Glied 16 / 17 2.3; Glied 17 / 18 1.7; Glied 18 / 18 12.2; Glied 18 / 19 9.7; Glied 19 / 20 7.7; Glied 20 / 21 9.5; Glied 21 / 22 1.0",
+   "info": false
+  },
+  {
+   "name": "v5f T-F5e Stufe Wurzel/Ruecken <= 2 px, keine Luecke (P2 = Foto-2-Ansicht)",
+   "ok": true,
+   "soll": "obere Kontur am Wechsel Schwanz -> Rumpf in P2 (Messblatt 2/5); Pose 85 (posen_v4, abgeloest) nur ausgegeben",
+   "ist": "P2 Wechsel x 350 (y 206 -> 205), Stufe 1 px, Luecke False; 85 Wechsel x 346 (y 205 -> 201), Stufe 4 px, Luecke False",
+   "info": false
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Region Kopf (Kopfbox V4)",
+   "ok": true,
+   "soll": "Kopf ausgenommen",
+   "ist": "Foto 19.2 % / Modell 13.4 %",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 1 Region Brust Mitte (B-Mitte)",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 47.8 % / Modell 12.3 % [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 1 Region Schulter/Oberarm Bild-links = (W)-rechts",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte, <= 5 % (kein Rot)",
+   "ist": "Foto 0.5 % / Modell 9.1 % [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 1 Region Schulter/Oberarm Bild-rechts = (W)-links",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte, <= 5 % (kein Rot)",
+   "ist": "Foto 2.2 % / Modell 11.7 % [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 1 Region Unterarm/Hand Bild-rechts = (W)-links",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 9.6 % / Modell 2.6 % [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 1 Region Bauch/Huefte",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 0.0 % / Modell 3.4 %",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Bauch/Huefte",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (2068 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Becken",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (1066 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Brust",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 10.4 % / Modell 24.6 % (4329 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Klauenhand (W)-links",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 45.3 % / Modell 13.4 % (439 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Kopf",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 39.5 % / Modell 0.3 % (1267 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Oberarm (W)-links",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (1645 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Oberarm (W)-rechts (Sichelarm)",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 7.7 % / Modell 25.1 % (3054 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Oberschenkel (W)-links",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (340 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Oberschenkel (W)-rechts",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 19.8 % / Modell 0.0 % (611 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Ruecken/Buckel",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 0.5 % (877 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Schulter (W)-links",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 7.0 % (1183 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Schulter (W)-rechts",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 49.4 % / Modell 0.0 % (2833 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Schwanz",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (220 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Sichel",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 7.3 % / Modell 0.0 % (1660 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Unterarm (W)-links",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (1134 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 1 Teil Unterarm (W)-rechts (Sichelarm)",
+   "ok": true,
+   "soll": "Id-Zuordnung P1 nur grob (Messblatt 4.2)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (2205 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 2 Region Kopf (Kopfbox V4)",
+   "ok": true,
+   "soll": "ausgenommen",
+   "ist": "Foto 23.1 % / Modell 9.4 %",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Region Buckel/Ruecken oben",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 41.5 % / Modell 10.9 % [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Region Schulter/Oberarm Mitte = (W)-rechts",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 27.9 % / Modell 6.3 % [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 2 Region Schwanz Bogen",
+   "ok": true,
+   "soll": "ausgenommen",
+   "ist": "Foto 8.0 % / Modell 0.0 %",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Bauch/Huefte",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 6.5 % / Modell 0.0 % (509 px) [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Becken",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 0.0 % / Modell 0.0 % (242 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Brust",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 3.5 % / Modell 14.5 % (455 px) [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 2 Teil Kopf",
+   "ok": true,
+   "soll": "ausgenommen (Kopf/Schwanz/< 100 px)",
+   "ist": "Foto 28.5 % / Modell 0.0 % (876 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Oberarm (W)-links",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 0.0 % / Modell 0.0 % (133 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Oberarm (W)-rechts (Sichelarm)",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 51.0 % / Modell 16.8 % (3735 px) [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 2 Teil Oberschenkel (W)-links",
+   "ok": true,
+   "soll": "ausgenommen (Kopf/Schwanz/< 100 px)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (57 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Oberschenkel (W)-rechts",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 0.0 % / Modell 0.0 % (324 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Ruecken/Buckel",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 13.3 % / Modell 0.0 % (602 px) [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 2 Teil Schulter (W)-links",
+   "ok": true,
+   "soll": "ausgenommen (Kopf/Schwanz/< 100 px)",
+   "ist": "Foto 0.0 % / Modell 0.0 % (54 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Schulter (W)-rechts",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 55.0 % / Modell 0.6 % (2168 px) [ROT wie in V5f, offen beim Nutzer]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO T-F7 Foto 2 Teil Schwanz",
+   "ok": true,
+   "soll": "ausgenommen (Kopf/Schwanz/< 100 px)",
+   "ist": "Foto 15.7 % / Modell 0.0 % (3164 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Unterarm (W)-links",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 0.0 % / Modell 0.0 % (561 px)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f T-F7 Foto 2 Teil Unterarm (W)-rechts (Sichelarm)",
+   "ok": true,
+   "soll": "+-5 Prozentpunkte",
+   "ist": "Foto 0.0 % / Modell 0.0 % (2172 px)",
+   "info": true
+  },
+  {
+   "name": "v5f T-F8 Krallen (W)-links Laenge (P1)",
+   "ok": true,
+   "soll": "0,036 H +-15 % je Kralle, keine kuerzer als in der Basis",
+   "ist": "neu 0.037/0.038/0.036/0.036 H; Basis 0.019/0.038/0.027/0.015 H",
+   "info": false
+  },
+  {
+   "name": "v5f T-F4 Umriss-IoU (Trimap) >= Stand Runde 4",
+   "ok": true,
+   "soll": "P1 >= 0.7031, P2 >= 0.7444 (V5r4 gleich gemessen: Render ids >= 0; Messblatt mit Umriss-Render 0,709 / 0,758)",
+   "ist": "P1 0.7038, P2 0.7489 (Basis V5k 0.7031 / 0.7487)",
+   "info": false
+  },
+  {
+   "name": "INFO v5f V4 T1 Schwanz Beginn",
+   "ok": true,
+   "soll": "0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03)",
+   "ist": "0.172 H hinter, 0.750 H ueber",
+   "info": true
+  },
+  {
+   "name": "INFO v5f V4 T2 Biegung",
+   "ok": true,
+   "soll": "Lage dx -0,245 dy +0,036 (+-0,03) nach t2_mass_v4 (Original -0.268 / 0.056); Drehung 68.4 +-5.0 Grad (Original 70.1/65.8/69.5)",
+   "ist": "dx -0.255 dy 0.056; 64.1 Grad (Bauer-Mittellinie: dx -0.263 dy 0.070)",
+   "info": true
+  },
+  {
+   "name": "INFO v5f V4 T3 Knick (Taille)",
+   "ok": true,
+   "soll": "dx -0,265 dy +0,257 (+-0,03)",
+   "ist": "dx -0.242 dy 0.281",
+   "info": true
+  },
+  {
+   "name": "INFO v5f V4 T4 Ende",
+   "ok": true,
+   "soll": "dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle",
+   "ist": "dx -0.218 dy 0.399; 0.351 H ueber Sohle",
+   "info": true
+  },
+  {
+   "name": "INFO v5f V4 TA Schwanz absolut",
+   "ok": true,
+   "soll": "Beginn (357,243), Knick (290,308), Ende (295,343) je Achse +-0,03 H",
+   "ist": "Beginn (358,236) +0.004/-0.027 H; Knick (294,310) +0.016/+0.008 H; Ende (300,341) +0.020/-0.007 H",
+   "info": true
+  },
+  {
+   "name": "INFO v5f V4 T5 Breite nach oben",
+   "ok": true,
+   "soll": "f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01",
+   "ist": "0.038/0.064/0.104/0.138 H; Abfall 0.004",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO V4 T5q Breite quer (unabhaengig)",
+   "ok": true,
+   "soll": "f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 (Original 3 Masken: Abfall 0.016/0.020/0.000)",
+   "ist": "0.038/0.059/0.112/0.140 H; Abfall 0.011; Profil f 0..1 [0.021, 0.038, 0.055, 0.059, 0.078, 0.112, 0.125, 0.14, 0.134, 0.131, 0.134] [ROT, alte KI-Zielwerte]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO V4 T6 Endstueck",
+   "ok": true,
+   "soll": "B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste",
+   "ist": "B 0.028; L 0.121 H; 79 Grad (vorn); Taille 0.021, schmalste davor 0.008 [ROT, alte KI-Zielwerte]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO V4 T8 Schwanzfarbe",
+   "ok": true,
+   "soll": "F15 9,3/11,4/1,5; F16 8,7/8,4/2,2; F17 26,8/-0,1/2,4; F18 15,2/3,2/1,6; dE00 <= 6; a* Wurzel >= 7, Ende <= 6",
+   "ist": "F15 nan/nan/nan dE00 99.0 (0 px); F16 nan/nan/nan dE00 99.0 (0 px); F17 24.9/-1.4/3.8 dE00 2.6 (3164 px); F18 25.9/-1.0/3.1 dE00 9.7 (161 px) [ROT, alte KI-Zielwerte]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO V4 T9 Schwanzachse",
+   "ok": true,
+   "soll": "7 Achsenpunkte: Mittel dE00 <= 6; L*/a* Mittel +-4/+-3 zum Original 11.6/6.1",
+   "ist": "Mittel dE00 13.5; L*/a* 23.9/-1.2; je Punkt 20.3 15.8 11.3 15.5 12.7 7.0 11.6 [ROT, alte KI-Zielwerte]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO V4 TQ Schwanz Querprofil",
+   "ok": true,
+   "soll": "x 310/320/330/340: Stufe auf 3 px <= 9.6 L*, Plateau-Anteil <= 0.31 (Original-Maximum, 3 Masken)",
+   "ist": "x 310 Stufe 7.0 Plateau 0.39; x 320 Stufe 5.6 Plateau 0.12; x 330 Stufe 8.0 Plateau 0.11; x 340 Stufe 9.8 Plateau 0.09 [ROT, alte KI-Zielwerte]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f V4 TK Schwanz Oberkontur",
+   "ok": true,
+   "soll": "x 284-332: RMS zur Geraden >= 3.02 px (Original 3.87/4.71/4.69 minus Spanne); Oberkante x 276-292 je Spalte <= 0,03 H vom Original 251/250/243/236/234",
+   "ist": "RMS 2.55 px; Oberkante 246/241/237/232/228 (max 0.034 H) [Pose 85 abgeloest durch T-F9 in P2]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO Kopf-Riegel T-K1a Meshes 0-8/10-22 = Basis",
+   "ok": true,
+   "soll": "bytegleich",
+   "ist": "abweichend [8, 12, 13, 16, 17, 18, 19, 20, 21, 22], Meshes 23/23 [hier durch T-K1 ersetzt]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO Kopf-Riegel T-K1b Sektionen 0-6 (EDD, EMR, ...) = Basis",
+   "ok": true,
+   "soll": "bytegleich",
+   "ist": "abweichend []",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO Kopf-Riegel T-K1c CLUT 480-485 = Referenz 2; Zeilen <= 16; Hoehe <= 4096",
+   "ok": true,
+   "soll": "480-485 bytegleich, <= 16, <= 4096",
+   "ist": "ABWEICHEND, 11 Zeilen, 2816 [hier durch T-K1 ersetzt]",
+   "info": true
+  },
+  {
+   "name": "INFO v5f INFO Kopf-Riegel T-K1d Texel: Koerper = Referenz 2, Abweichung nur Schwanzfeld (= Basis) und Kopf-exklusiv",
+   "ok": true,
+   "soll": "Koerpertexel 0 abweichend",
+   "ist": "Koerpertexel abweichend 0; Schwanzfeld = Basis True; Kopf-exklusiv geaendert 1762 (Box [60, 186, 107, 254])",
+   "info": true
+  },
+  {
+   "name": "v5f Kopf T-H6 Kopfgeometrie = Original (EM30 Mesh 9) bis auf die gelistete Glaettung",
+   "ok": true,
+   "soll": "Normalen/Flaechen/UV bytegleich, CLUT-Feld = 486; Ecken gleich ausser <= 4 Glaettungsecken (zum Schwerpunkt <= 0.10, abseits <= 1.5 E.)",
+   "ist": "Ecken 61/61, Normalen 61/61, Dreiecke 73/73, Vierecke 18/18; gleich {'n': True, 'tf': True, 'qf': True, 'ecken_zahl': True}; Glaettung ['54: [-103, -369, -23] -> [-101, -367, -23] (0.008, 0.2 E.)', '60: [-184, -327, -21] -> [-156, -312, -21] (0.081, 0.1 E.)']; UV abweichend 0; CLUT-Feld abweichend 0",
+   "info": false
+  },
+  {
+   "name": "v5f Kopf T-H5 keine neue Farbe",
+   "ok": true,
+   "soll": "Kopf nur Zeile 486 = Original-Zeile 0; Indizes aus den Original-Kopftexeln",
+   "ist": "Zeilen [486]; 486 = Original-Zeile 0: True; Kopftexel 6501, Indizes 218, nicht im Original-Kopf []",
+   "info": false
+  },
+  {
+   "name": "v5f Kopf T-H1i Mund geschlossen (Texel)",
+   "ok": true,
+   "soll": "dunkel (L* < 30) <= 2 %, rot (a* >= 15) <= 2 %, Median L* >= 55",
+   "ist": "Maultexel 622 (Zeile 486): dunkel 0.0 %, rot 0.0 %, Median L* 75.9",
+   "info": false
+  },
+  {
+   "name": "v5f Kopf T-H1ii Mund geschlossen (sichtbar, Posen 135/P1/P2)",
+   "ok": true,
+   "soll": "dunkel/rot nach Palette <= 5 %, beleuchtet a* >= 10 <= 10 %",
+   "ist": "P1: 38 px, dunkel 0 %, rot 0 %, Licht-rot 5 %, Lab [22.8, 4.2, 2.9]; P2: 16 px, dunkel 0 %, rot 0 %, Licht-rot 0 %, Lab [20.9, 1.6, 2.1]; 135: 86 px, dunkel 0 %, rot 0 %, Licht-rot 8 %, Lab [41.6, 1.8, 2.6]",
+   "info": false
+  },
+  {
+   "name": "v5f Kopf T-H2 grauer Fleck erweitert (Gesichtshaelfte bis zur Nase)",
+   "ok": true,
+   "soll": "je Pose (>= 20 px): neu >= Foto 1 - 0,10 und >= Original + 0,10",
+   "ist": "Foto 1 0.99; P1: 111 px neu 1.00 / Original 0.74; P2: 141 px neu 1.00 / Original 0.69; 135: 30 px neu 1.00 / Original 0.37; Texel 851: neu 0.99 / Original 0.58",
+   "info": false
+  },
+  {
+   "name": "INFO v5f INFO Kopf INFO (d) Auge (W)-rechts = Texturbild links (Augenweiss u 74-84 v 194-198), unveraendert",
+   "ok": true,
+   "soll": "Foto 1 Augenfleck (376,9/167,2) L* 47,0; Foto 2 (452,5/237,2) L* 48,5 (Messblatt 3.3)",
+   "ist": "P1: 5 px bei [444.0, 218.0], Lab [20.4, 1.9, 1.8], L* max 21.4; P2: 3 px bei [451.0, 226.3], Lab [26.1, 3.3, 2.4], L* max 26.9; 135: 6 px bei [341.2, 196.3], Lab [11.9, 0.5, 1.6], L* max 12.5",
+   "info": true
+  },
+  {
+   "name": "v5f Kopf T-H4 obere Kontur Ruecken -> Kopf ohne Buckel (P2)",
+   "ok": true,
+   "soll": "Wiederanstieg <= 2 px",
+   "ist": "Kuppe x 405 y 175, Kopf-Vorderkante x 461; Wiederanstieg 2 px (x 435 y 197 -> x 437 y 195)",
+   "info": false
+  },
+  {
+   "name": "INFO v5f INFO Kopf INFO T-H4 Modell-Kontur ueber Foto-2-Kontur",
+   "ok": true,
+   "soll": "-",
+   "ist": "max 14 px bei x 418 (Knochen 8); Kopf-Oberkante Modell y 195 / Foto y 194 bei x 437",
+   "info": true
+  }
+ ],
+ "th7": {
+  "neu": {
+   "P1": {
+    "px": 1267,
+    "rot_merkmale": 50,
+    "b_p90": 16.13,
+    "c_p90": 16.28,
+    "b_p90_alle": 16.1,
+    "c_p90_alle": 16.24,
+    "l_p50": 31.6
+   },
+   "P2": {
+    "px": 902,
+    "rot_merkmale": 36,
+    "b_p90": 19.62,
+    "c_p90": 19.8,
+    "b_p90_alle": 19.8,
+    "c_p90_alle": 19.93,
+    "l_p50": 35.1
+   },
+   "135": {
+    "px": 1751,
+    "rot_merkmale": 427,
+    "b_p90": 13.36,
+    "c_p90": 13.86,
+    "b_p90_alle": 13.25,
+    "c_p90_alle": 24.13,
+    "l_p50": 32.1
+   }
+  },
+  "basis": {
+   "P1": {
+    "px": 1267,
+    "rot_merkmale": 50,
+    "b_p90": 16.13,
+    "c_p90": 16.28,
+    "b_p90_alle": 16.1,
+    "c_p90_alle": 16.24,
+    "l_p50": 31.6
+   },
+   "P2": {
+    "px": 902,
+    "rot_merkmale": 36,
+    "b_p90": 19.62,
+    "c_p90": 19.8,
+    "b_p90_alle": 19.8,
+    "c_p90_alle": 19.93,
+    "l_p50": 35.1
+   },
+   "135": {
+    "px": 1751,
+    "rot_merkmale": 427,
+    "b_p90": 13.36,
+    "c_p90": 13.86,
+    "b_p90_alle": 13.25,
+    "c_p90_alle": 24.13,
+    "l_p50": 32.1
+   }
+  }
+ },
+ "tf9": {
+  "neu": {
+   "spitze": [
+    279.0,
+    308.7
+   ],
+   "spitze_abstand": 37.8,
+   "abstand": {
+    "Beginn": 4.0,
+    "Biegung": 0.0,
+    "Knick": 9.848857801796104
+   },
+   "kette": [
+    [
+     387.7,
+     214.9
+    ],
+    [
+     350.2,
+     224.8
+    ],
+    [
+     322.8,
+     231.0
+    ],
+    [
+     292.9,
+     242.4
+    ],
+    [
+     302.1,
+     266.2
+    ],
+    [
+     287.5,
+     283.7
+    ],
+    [
+     282.9,
+     294.1
+    ],
+    [
+     279.7,
+     306.1
+    ]
+   ],
+   "tiefster": [
+    277,
+    307
+   ]
+  },
+  "basis": {
+   "spitze": [
+    279.0,
+    308.7
+   ],
+   "spitze_abstand": 37.8,
+   "abstand": {
+    "Beginn": 4.0,
+    "Biegung": 0.0,
+    "Knick": 9.848857801796104
+   },
+   "kette": [
+    [
+     387.7,
+     214.9
+    ],
+    [
+     350.2,
+     224.8
+    ],
+    [
+     322.8,
+     231.0
+    ],
+    [
+     292.9,
+     242.4
+    ],
+    [
+     302.1,
+     266.2
+    ],
+    [
+     287.5,
+     283.7
+    ],
+    [
+     282.9,
+     294.1
+    ],
+    [
+     279.7,
+     306.1
+    ]
+   ],
+   "tiefster": [
+    277,
+    307
+   ]
+  }
+ },
+ "boden": {
+  "neu": {
+   "keyframes": 912,
+   "unter_sohle": 0,
+   "max_ueberstand": -38,
+   "je_clip": {}
+  },
+  "basis": {
+   "keyframes": 912,
+   "unter_sohle": 0,
+   "max_ueberstand": -38,
+   "je_clip": {}
+  }
+ },
+ "spalten": {
+  "keyframes_gesamt": 912,
+  "stichprobe": 50,
+  "ansichten": 4,
+  "bilder": 200,
+  "luecke_px": 1792,
+  "bilder_mit_luecke": 72,
+  "schlimmste": [
+   {
+    "clip": 11,
+    "bild": 75,
+    "gier_plus": 1024,
+    "px": 83,
+    "je_gelenk": {
+     "19": 34,
+     "18": 49
+    }
+   },
+   {
+    "clip": 12,
+    "bild": 112,
+    "gier_plus": 0,
+    "px": 62,
+    "je_gelenk": {
+     "18": 9,
+     "19": 53
+    }
+   },
+   {
+    "clip": 11,
+    "bild": 46,
+    "gier_plus": 1024,
+    "px": 57,
+    "je_gelenk": {
+     "19": 21,
+     "18": 36
+    }
+   },
+   {
+    "clip": 15,
+    "bild": 90,
+    "gier_plus": 1024,
+    "px": 57,
+    "je_gelenk": {
+     "18": 57
+    }
+   },
+   {
+    "clip": 16,
+    "bild": 6,
+    "gier_plus": 1024,
+    "px": 53,
+    "je_gelenk": {
+     "19": 30,
+     "18": 23
+    }
+   },
+   {
+    "clip": 4,
+    "bild": 59,
+    "gier_plus": 0,
+    "px": 52,
+    "je_gelenk": {
+     "19": 52
+    }
+   },
+   {
+    "clip": 8,
+    "bild": 4,
+    "gier_plus": 0,
+    "px": 50,
+    "je_gelenk": {
+     "18": 9,
+     "19": 41
+    }
+   },
+   {
+    "clip": 20,
+    "bild": 50,
+    "gier_plus": 0,
+    "px": 49,
+    "je_gelenk": {
+     "19": 49
+    }
+   },
+   {
+    "clip": 16,
+    "bild": 6,
+    "gier_plus": 0,
+    "px": 47,
+    "je_gelenk": {
+     "19": 38,
+     "20": 9
+    }
+   },
+   {
+    "clip": 2,
+    "bild": 15,
+    "gier_plus": 0,
+    "px": 41,
+    "je_gelenk": {
+     "19": 41
+    }
+   },
+   {
+    "clip": 10,
+    "bild": 8,
+    "gier_plus": 3072,
+    "px": 41,
+    "je_gelenk": {
+     "19": 41
+    }
+   },
+   {
+    "clip": 5,
+    "bild": 15,
+    "gier_plus": 1024,
+    "px": 35,
+    "je_gelenk": {
+     "19": 35
+    }
+   }
+  ],
+  "je_gelenk": {
+   "17": {
+    "px": 1,
+    "faelle": 1
+   },
+   "18": {
+    "px": 583,
+    "faelle": 28
+   },
+   "19": {
+    "px": 1066,
+    "faelle": 48
+   },
+   "20": {
+    "px": 142,
+    "faelle": 8
+   },
+   "21": {
+    "px": 0,
+    "faelle": 0
+   },
+   "22": {
+    "px": 0,
+    "faelle": 0
+   }
+  },
+  "roh_px": 6928
+ },
+ "rot": [
+  "T-K1b Texel nur im Haarfeld, Indizes aus dem Fleck",
+  "T-K1c Meshes: nur Krallen-CLUT-Feld (Mesh 12) und Schwanz (Ecken + Deckel)",
+  "T-K1d CLUT: 480-490 = Basis, 491 = 490 bis auf Krallen-Indizes (Referenz-2-/Original-Palette)",
+  "T-H7 Haar grau (P1/P2/135)",
+  "T-F9 Schwanz P2: Spitze am Nutzerpunkt, Verlauf Beginn/Biegung/Knick",
+  "T-F9s Spalten (Stichprobe Keyframes x 4 Ansichten)",
+  "T-F10a Kralle (W)-links hell (P1)"
+ ]
+}
