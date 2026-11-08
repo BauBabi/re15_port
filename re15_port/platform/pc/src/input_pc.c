@@ -23,6 +23,7 @@
 #include "re15_engine.h"
 #include "re15_rumble.h"        /* die zwei RE2-Rumble-Ringe -> DualShock-Aktuatoren */
 #include "touch_overlay_pc.h"   /* On-Screen-Pad: Finger -> dieselben Pad-Bits */
+#include "re15_room.h"          /* g_current_room_id (Protokoll des Skript-Abschnitts je Raum) */
 
 #define RE15_PAD_UP       0x0010
 #define RE15_PAD_RIGHT    0x0020
@@ -58,11 +59,23 @@
  *       Kampfpose ein, der naechste P-Tipp loest sie. Das R1-Bit, das das Overlay daraus macht,
  *       wird nach der Skript-Ersetzung wieder einge-ODERt; ohne P und ohne Finger ist es 0,
  *       bestehende Skripte bleiben also bitgleich.
+ *   | = ABSCHNITT JE RAUM (Runde 41 Integration A2, Messhaken fuer durchgehende Laeufe ueber mehrere Raeume):
+ *       "<abschnitt 0>|<abschnitt 1>|..." - mit RE15_INPUT_SCRIPT_BASIS=spiel beginnt die Zeitachse in jedem
+ *       neuen Raum wieder bei 0, weil der Kreuz-Raum-Wechsel g_engine.frame_count nullt (main.c "Frame-Cap des
+ *       Handoffs relativ zum Eintritt"); ohne '|' lief deshalb dasselbe Skript in jedem Raum von vorn. Mit '|'
+ *       gilt Abschnitt k ab dem k-ten Ruecksprung von frame_count (Abschnitt 0 = Startraum), nach dem letzten
+ *       Abschnitt bleibt das Pad leer. Vor '|' muss eine Zahl stehen ("W8|..."). Ohne '|' gibt es genau einen
+ *       Abschnitt = das bisherige Verhalten (bitgleich).
  * RE15_INPUT_SCRIPT_START = lead-in frames before the script begins (default 90 = 3s room
  *   settle/fade-in). After the timeline ends the pad returns to 0 (player idle). */
-#define RE15_SCRIPT_MAX_TICKS 8192
+#define RE15_SCRIPT_MAX_TICKS 8192      /* je Abschnitt (bisher die Grenze des ganzen Skripts) */
+#define RE15_SCRIPT_MAX_ABSCHN 8
 #define RE15_SCRIPT_P        0x10000u   /* Buchstabe P: Overlay-R1-Finger (kein Pad-Bit) */
-static uint32_t s_script[RE15_SCRIPT_MAX_TICKS];
+static uint32_t s_script_alle[RE15_SCRIPT_MAX_TICKS * RE15_SCRIPT_MAX_ABSCHN];
+static int      s_abschn_off[RE15_SCRIPT_MAX_ABSCHN], s_abschn_len[RE15_SCRIPT_MAX_ABSCHN];
+static int      s_abschn_n = 1, s_abschn = 0;
+static uint32_t s_abschn_fc = 0;         /* frame_count des letzten Bilds (Ruecksprung = neuer Raum) */
+static uint32_t *s_script = s_script_alle;  /* Tasten des aktuellen Abschnitts */
 static int      s_script_len   = 0;      /* number of scripted ticks, -1 = none */
 static int      s_script_start = 90;
 static int      s_script_init  = 0;
@@ -110,11 +123,21 @@ static void script_parse_once(void)
     { const char *b = getenv("RE15_INPUT_SCRIPT_BASIS");
       s_script_spiel = (b && (b[0] == 's' || b[0] == 'S')) ? 1 : 0; }
 
-    int ticks = 0;
+    int ticks = 0, gesamt = 0;
     const char *p = env;
-    while (*p && ticks < RE15_SCRIPT_MAX_TICKS) {
+    s_abschn_n = 1; s_abschn_off[0] = 0;
+    for (;;) {
         while (*p == ',' || *p == ' ') p++;
-        if (!*p) break;
+        if (*p == '|') {                              /* Abschnitt je Raum (s. Kopf) */
+            p++;
+            s_abschn_len[s_abschn_n - 1] = ticks;
+            if (s_abschn_n >= RE15_SCRIPT_MAX_ABSCHN) break;
+            gesamt += ticks; ticks = 0;
+            s_abschn_off[s_abschn_n++] = gesamt;
+            continue;
+        }
+        if (!*p || ticks >= RE15_SCRIPT_MAX_TICKS) break;
+        s_script = s_script_alle + gesamt;
         uint16_t bits = 0;
         int mash = 0;   /* 'B<secs>' = BUTTON-MASH: CROSS press-EDGE every other tick (the grab
                          * mash-escape probe; a constant hold is one edge and never re-triggers
@@ -134,9 +157,14 @@ static void script_parse_once(void)
         for (int i = 0; i < n && ticks < RE15_SCRIPT_MAX_TICKS; i++)
             s_script[ticks++] = (uint32_t)(mash ? (((i & 1) ? 0 : RE15_PAD_CROSS) | bits) : bits) | touch_r1;
     }
-    s_script_len = ticks;
+    if (ticks || s_abschn_n == 1) s_abschn_len[s_abschn_n - 1] = ticks;
+    s_script = s_script_alle;
+    s_script_len = s_abschn_len[0];
     fprintf(stderr, "[input-script] RE15_INPUT_SCRIPT=\"%s\" -> %d ticks @ %d fps, start frame %d\n",
-            env, ticks, fps, s_script_start);
+            env, s_script_len, fps, s_script_start);
+    if (s_abschn_n > 1)
+        for (int k = 0; k < s_abschn_n; k++)
+            fprintf(stderr, "[input-script] Abschnitt %d: %d ticks\n", k, s_abschn_len[k]);
 }
 
 /* ==== GAMEPAD (SDL game controller) — Steam Deck / Xbox-style pad -> PSX pad bits ==============
@@ -391,6 +419,16 @@ void re15_input_tick(void)
     if (!s_script_init) script_parse_once();
     s_input_ticks++;
     uint32_t sw = 0;
+    if (s_abschn_n > 1 && s_script_spiel) {        /* Abschnitt je Raum: Ruecksprung von frame_count = neuer Raum */
+        if (g_engine.frame_count < s_abschn_fc) {
+            s_abschn++;
+            if (s_abschn < s_abschn_n) { s_script = s_script_alle + s_abschn_off[s_abschn]; s_script_len = s_abschn_len[s_abschn]; }
+            else s_script_len = 0;
+            fprintf(stderr, "[input-script] Abschnitt %d ab Raum %04X (%d ticks)\n", s_abschn,
+                    (unsigned)g_current_room_id, s_script_len);
+        }
+        s_abschn_fc = g_engine.frame_count;
+    }
     if (s_script_len > 0) {
         /* Zeitachse: s_input_ticks, oder mit RE15_INPUT_SCRIPT_BASIS=spiel die Spielbilder
          * (Zweig karte-3010, Messlaeufe hinter einem Vorspann schwankender Laenge). */

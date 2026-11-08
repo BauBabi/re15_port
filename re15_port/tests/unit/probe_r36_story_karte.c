@@ -35,8 +35,13 @@
  *   wagen     (3,22) = 1: Wagen-Szene ROOM6030 gelaufen (Schreiber sub02 @0x00D7A `22 03 16 01`) — Runde 41 ST80 NB1
  *   nachtrag  (4,23) = 1 (Fuehrerstand-Szene gesehen, sub08 @0x0113A `22 04 17 01`) und (9,128) = 1 (Port-Bit
  *             "Sherry-Nachtrag offen", gesetzt von der Fassung "vorne zuerst", re15_story80_r41.h) — Runde 41 ST80 NB1
+ *   tor_bereit (3,48) = (3,49) = 1 (Bahnsteig-Kampf 5080 vorbei: ROOM5080 sub01 @0x00792 `22 03 30 01` /
+ *             @0x00796 `22 03 31 01`; 6000 main00 @0x00E66 Aot Slot 5 sce 3 -> Torschalter sub07, @0x00DFE sonst
+ *             msg 7) und (3,239) = 1 (Annette ist in den Zug gegangen, ROOM6000 sub02 @0x00F8E `22 03 ef 01`;
+ *             sub00 @0x00F64 setzt sie sonst wieder auf den Bahnsteig). ROOM6030 liest keines der drei Bits
+ *             (scd_dump_room.py) — Runde 41 Integration A2, durchgehende Laeufe erster Besuch 6030 -> Tor -> zweiter
  *
- * Aufruf: probe_r36_story_karte <kartendatei> <stand> [strom] [cut=N] [wagen] [nachtrag]
+ * Aufruf: probe_r36_story_karte <kartendatei> <stand> [strom] [cut=N] [wagen] [nachtrag] [tor_bereit]
  */
 #include "re15_actor.h"
 #include "re15_scd.h"
@@ -79,11 +84,12 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < sizeof k_staende / sizeof k_staende[0]; i++)
         if (strcmp(argv[2], k_staende[i].name) == 0) s = &k_staende[i];
     if (!s) { printf("FAIL: unbekannter Stand '%s'\n", argv[2]); return 2; }
-    int strom = 0, cut = -1, wagen = 0, nachtrag = 0;
+    int strom = 0, cut = -1, wagen = 0, nachtrag = 0, tor_bereit = 0;
     for (int a = 3; a < argc; a++) {
         if (strcmp(argv[a], "strom") == 0) strom = 1;
         else if (strcmp(argv[a], "wagen") == 0) wagen = 1;
         else if (strcmp(argv[a], "nachtrag") == 0) nachtrag = 1;
+        else if (strcmp(argv[a], "tor_bereit") == 0) tor_bereit = 1;
         else if (strncmp(argv[a], "cut=", 4) == 0) cut = atoi(argv[a] + 4);
         else { printf("FAIL: unbekanntes Argument '%s'\n", argv[a]); return 2; }
     }
@@ -102,6 +108,7 @@ int main(int argc, char **argv)
     if (strcmp(s->name, "vor6030") == 0) re15_game_flag_set(3, 0x64, 1);   /* Annette-Treffen 6000 gesehen */
     if (wagen) re15_game_flag_set(RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT, 1);
     if (nachtrag) { re15_game_flag_set(4, 23, 1); re15_game_flag_set(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, 1); }
+    if (tor_bereit) { re15_game_flag_set(3, 48, 1); re15_game_flag_set(3, 49, 1); re15_game_flag_set(3, 239, 1); }
 
     if (cut >= 0) g_scd.cam_id = (uint8_t)cut;   /* gespeicherter Kamera-Cut (re15_savedata camera_cut, v3) */
     re15_savedata_t sd;

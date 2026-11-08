@@ -7658,6 +7658,36 @@ re_title:;
                         }
                     }
                     { extern void re15_sherry_r41_messhaken(void); re15_sherry_r41_messhaken(); }   /* Runde 41 Spur K: RE15_WORKVAR_AT (Messhaken) */
+                    /* MESS-HAKEN RE15_FLAG_WATCH="<bank>:<bit>[,...]" (Runde 41 Integration A2): protokolliert jede
+                     * Aenderung der genannten Story-Flags einmal je Bild ("[flagwatch] F.. ROOM.. (b,i) a -> b"), damit
+                     * ein durchgehender Lauf den Bit-Stand je Besuch zeigt. Reine Ausgabe, env-gegated. */
+                    {
+                        enum { FW_MAX = 16 };
+                        static int fw_init = 0, fw_n = 0;
+                        static uint8_t fw_bank[FW_MAX], fw_bit[FW_MAX];
+                        static int fw_alt[FW_MAX];
+                        if (!fw_init) {
+                            fw_init = 1;
+                            const char *e = getenv("RE15_FLAG_WATCH");
+                            while (e && *e && fw_n < FW_MAX) {
+                                int bank = (int)strtol(e, (char **)&e, 0);
+                                while (*e == ':' || *e == ' ') e++;
+                                int bit = (int)strtol(e, (char **)&e, 0);
+                                if (bank >= 0 && bank < 32 && bit >= 0 && bit < 256) {
+                                    fw_bank[fw_n] = (uint8_t)bank; fw_bit[fw_n] = (uint8_t)bit; fw_alt[fw_n] = -1; fw_n++;
+                                }
+                                while (*e && *e != ',') e++;
+                                while (*e == ',' || *e == ' ') e++;
+                            }
+                        }
+                        for (int k = 0; k < fw_n; k++) {
+                            const int v = re15_game_flag_get(fw_bank[k], fw_bit[k]) ? 1 : 0;
+                            if (v != fw_alt[k])
+                                fprintf(stderr, "[flagwatch] F%u ROOM%04X (%u,%u) %d -> %d\n", g_engine.frame_count,
+                                        (unsigned)g_current_room_id, fw_bank[k], fw_bit[k], fw_alt[k], v);
+                            fw_alt[k] = v;
+                        }
+                    }
                     /* MESS-HAKEN RE15_DEBUG_SUB="<sub>[,<sub>...]@<frame>" (Runde 34) —
                      * startet einen SUB-Thread des geladenen Raums von Hand, genauso wie es
                      * `Evt_exec` (0x04, sub_id = pc[3], scd_vm.c:1076) im Skript tut. Notwendig
@@ -8286,24 +8316,35 @@ re_title:;
              * aktuellen Raums ueber re15_aot_fire_slot() — exakt der Pfad, den auch das
              * Hineinlaufen nimmt (Scan -> aot_fire_door) und den `Aot_on` @0x800407bc nutzt.
              * Gebraucht, um eine TUER nach einer langen Cutscene deterministisch zu nehmen,
-             * ohne den Regler durch den halben Raum zu zirkeln. Env-gegated, feuert einmal. */
+             * ohne den Regler durch den halben Raum zu zirkeln. Env-gegated, feuert einmal.
+             * Runde 41 Integration A2: mehrere Eintraege mit ";" oder "," ("2@5100#6030;5@200#6000;3@700#6000")
+             * feuern NACHEINANDER - Eintrag k+1 ist erst nach Eintrag k scharf (durchgehende Laeufe ueber
+             * mehrere Raeume; frame_count beginnt je Kreuz-Raum-Wechsel bei 0). Ein Eintrag = wie bisher. */
             {
-                static int s_fa_init = 0, s_fa_slot = -1, s_fa_frame = 30, s_fa_done = 0;
-                static unsigned s_fa_room = 0;
+                enum { FA_MAX = 8 };
+                static int s_fa_init = 0, s_fa_n = 0, s_fa_i = 0;
+                static int s_fa_slot[FA_MAX], s_fa_frame[FA_MAX];
+                static unsigned s_fa_room[FA_MAX];
                 if (!s_fa_init) { const char *fa = getenv("RE15_FIRE_AOT");
-                    if (fa && *fa) { s_fa_slot = atoi(fa);
-                        const char *at = strchr(fa, 0x40); if (at) s_fa_frame = atoi(at + 1);
+                    while (fa && *fa && s_fa_n < FA_MAX) {
+                        const char *ende = strpbrk(fa, ";,");   /* auch "," fuer CMake-Aufrufer (";" trennt dort Listen) */
+                        if (!ende) ende = fa + strlen(fa);
+                        s_fa_slot[s_fa_n] = atoi(fa); s_fa_frame[s_fa_n] = 30; s_fa_room[s_fa_n] = 0;
+                        const char *at = strchr(fa, 0x40); if (at && at < ende) s_fa_frame[s_fa_n] = atoi(at + 1);
                         const char *hs = strchr(fa, 0x23);
-                        if (hs) s_fa_room = (unsigned)strtol(hs + 1, NULL, 16); }
+                        if (hs && hs < ende) s_fa_room[s_fa_n] = (unsigned)strtol(hs + 1, NULL, 16);
+                        s_fa_n++;
+                        fa = *ende ? ende + 1 : ende;
+                    }
                     s_fa_init = 1; }
-                if (s_fa_slot >= 0 && !s_fa_done &&
-                    g_engine.frame_count >= (uint32_t)s_fa_frame &&
-                    (s_fa_room == 0 || g_current_room_id == s_fa_room)) {
+                if (s_fa_i < s_fa_n && s_fa_slot[s_fa_i] >= 0 &&
+                    g_engine.frame_count >= (uint32_t)s_fa_frame[s_fa_i] &&
+                    (s_fa_room[s_fa_i] == 0 || g_current_room_id == s_fa_room[s_fa_i])) {
                     extern void re15_aot_fire_slot(int slot);
                     fprintf(stderr, "[fire-aot] slot=%d at F%u (Raum %04X)\n",
-                            s_fa_slot, (unsigned)g_engine.frame_count, g_current_room_id);
-                    re15_aot_fire_slot(s_fa_slot);
-                    s_fa_done = 1;
+                            s_fa_slot[s_fa_i], (unsigned)g_engine.frame_count, g_current_room_id);
+                    re15_aot_fire_slot(s_fa_slot[s_fa_i]);
+                    s_fa_i++;
                 }
             }
             re15_keyitems_r41_testhaken();   /* Runde 41 Spur O: Messhaken RE15_USE_TEST (Gegenstueck zu RE15_FIRE_AOT) */
@@ -11950,14 +11991,21 @@ re_title:;
          * nur ein Bild in genau diesem Raum. Damit endet ein Testlauf an einem BILD statt an
          * einer Wanduhr (ein Zeitlimit reisst unter Last, bevor das Bild erreicht ist).
          * Reiner Testhaken, env-gegated, kein Spielverhalten. Gebraucht von
-         * integration_r30_sicherung_laden. */
+         * integration_r30_sicherung_laden.
+         * Runde 41 Integration A2: "<bild>#<raum>!<k>" zaehlt erst nach k Raumwechseln (Ruecksprung von
+         * frame_count, wie der Skript-Abschnitt je Raum in input_pc.c) - fuer den zweiten Besuch desselben Raums. */
         { static int s_ea_init = 0; static long s_ea_frame = -1; static unsigned s_ea_room = 0;
+          static int s_ea_k = 0, s_ea_wechsel = 0; static uint32_t s_ea_fc = 0;
           if (!s_ea_init) { s_ea_init = 1;
               const char *e = getenv("RE15_EXIT_AT");
               if (e && *e) { s_ea_frame = atol(e);
                   const char *hs = strchr(e, 0x23);
-                  if (hs) s_ea_room = (unsigned)strtol(hs + 1, NULL, 16); } }
-          if (s_ea_frame >= 0 && (long)g_engine.frame_count >= s_ea_frame &&
+                  if (hs) s_ea_room = (unsigned)strtol(hs + 1, NULL, 16);
+                  const char *ak = strchr(e, 0x21);
+                  if (ak) s_ea_k = atoi(ak + 1); } }
+          if (g_engine.frame_count < s_ea_fc) s_ea_wechsel++;
+          s_ea_fc = g_engine.frame_count;
+          if (s_ea_frame >= 0 && (long)g_engine.frame_count >= s_ea_frame && s_ea_wechsel >= s_ea_k &&
               (s_ea_room == 0 || (unsigned)g_current_room_id == s_ea_room)) {
               fprintf(stderr, "[flow] EXIT_AT: Bild %u in Raum %04x erreicht -> exit\n",
                       (unsigned)g_engine.frame_count, (unsigned)g_current_room_id);
