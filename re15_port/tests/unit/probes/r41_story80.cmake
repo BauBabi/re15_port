@@ -9,6 +9,8 @@
 #   unit_r41_story80_stimmen        Stimmen-Pfade main<Id>.wav ohne Umleitung (stimmen_r39 / elza_r36)
 #   unit_r41_story80_reihenfolge6030  Nachbesserung 1: 6030 Fuehrerstand vor dem Wagen (msg 11, 31, 13..19 ohne Sherry),
 #                                   Wagen, Nachtrag vorne (msg 40, 25), jede Zeile hoechstens einmal
+#   unit_r41_story80_torweg6030     Integration A2: vorne -> Wagen -> ohne Rueckkehr -> Tor -> Fuehrerstand: Nachtrag 40, 25
+#                                   vor dem AN-Zugstart (27..30, naechstes Betreten); Wagen zuerst: Zugstart sofort
 # Echte exe: integration_r36_story_leon/_elza (tests/integration/test_r36_story.cmake, P4a/P4b/P4f/P4g).
 add_executable(test_r41_story80 ${CMAKE_CURRENT_LIST_DIR}/../test_r41_story80.c)
 target_link_libraries(test_r41_story80 PRIVATE re15_engine re15_test_support)
@@ -18,7 +20,7 @@ target_compile_definitions(test_r41_story80 PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_story80 PRIVATE m)
 endif()
-foreach(_teil hebetisch1151 texte ablauf30c1 ablauf6030 stimmen reihenfolge6030)
+foreach(_teil hebetisch1151 texte ablauf30c1 ablauf6030 stimmen reihenfolge6030 torweg6030)
     add_test(NAME unit_r41_story80_${_teil} COMMAND test_r41_story80 ${_teil}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_story80_${_teil} PROPERTIES TIMEOUT 300)

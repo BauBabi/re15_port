@@ -12,6 +12,7 @@
  * ORIGINAL-Opcodes ueber die vorhandene VM.
  */
 #include "re15_annette_r41.h"
+#include "re15_story80_r41.h"   /* Integration A2: RE15_S80_BIT_NACHTRAG (Zugstart wartet auf den Sherry-Nachtrag) */
 
 #include <string.h>
 #include <stdlib.h>
@@ -660,6 +661,16 @@ static const uint8_t *zug_evt_exec(uint8_t sub_id, const uint8_t *target)
     /* Erster Besuch erst nach dem Tor: sub07 @0x010D4 hat sie schon gesetzt und sub08 laeuft -> Zugstart beim naechsten
      * Eintritt (sub07 spawnt sie ab (4,23)=1 und (3,89)=1 nicht mehr, @0x010F4). */
     if (slot_vom_typ(RE15_AN_TYP) >= 0) return target;
+    /* Integration A2 (Weg F gemessen: vorne zuerst -> Wagen -> ohne Rueckkehr -> Tor): solange der Sherry-Nachtrag der Spur
+     * ST80 offen ist ((9,128)=1, gesetzt k_s80_6030_sub08_vorne), weiss Annette nichts von Sherry - msg 28 "...Sherry is back
+     * there!" setzt msg 25 voraus. Der Haken story80 (vor diesem in op_evt_exec) leitet dann dieselbe Stelle sub07 @0x01132 auf
+     * den Nachtrag um (k_s80_6030_sub05_nachtrag_tor); der Zugstart folgt beim naechsten Betreten, wie nach sub08 oben. */
+    if (re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG)) {
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[annette] ROOM6030 Zugstart wartet: Sherry-Nachtrag offen (9,%d)=1\n", RE15_S80_BIT_NACHTRAG);
+#endif
+        return target;
+    }
     zug_bauen();
     if (!s_zug_len) return target;
     s_an.zug++;

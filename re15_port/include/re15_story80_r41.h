@@ -20,6 +20,12 @@
  *   ROOM6030 sub07 @0x0110C `04 ff 18 09` -> sub09 @0x01376 bei (9,128)=1 und (3,22)=1 (Zweig @0x010EC Else_ck (4,23)=1,
  *                                                           @0x010F4 Ck(3,89)=0 Annette da) -> Nachtrag msg 40, 25;
  *                                                           loescht (9,128)
+ * Integration A2 (Gegenpruefung Welle 2 Befund 2, Weg F gemessen): nach dem Tor ((3,89)=1, ROOM6000 sub07 @0x011B4) laeuft
+ * sub09 nie mehr; der offene Nachtrag kommt dann an sub07 @0x01132 `04 ff 18 05` (Evt_exec sub05, nur Cut 0):
+ *   ROOM6030 sub07 @0x01132 -> sub05 @0x01004 bei (9,128)=1, (3,89)=1, Cut 0 -> Nachtrag msg 40, 25 mit Annette
+ *                                                           (Sce_em_set @0x010F8) und Licht-Schleife (@0x01132);
+ *                                                           loescht (9,128); der AN-Zugstart wartet bis dahin
+ *                                                           (annette_r41.c zug_evt_exec) und folgt beim naechsten Betreten
  * Stimmen: synchro/STAGE<n>/room<ID>/main<Id>.wav (audio_pc.c, kein Eintrag in stimmen_r39.c noetig).
  *
  * Message-Ids ROOM6030 (VERTRAG Runde 36 §1.2: Port-Ids < 32 = PSX MSG_TABLE_N): RDT 0..20, ST80-T 21..26.
@@ -37,6 +43,9 @@
 #define RE15_S80_SUB_WAGEN        2        /* sub01 @0x00D70 `04 ff 18 02`                                          */
 #define RE15_S80_SUB_PULT         8        /* sub07 @0x010E8 `04 ff 18 08`                                          */
 #define RE15_S80_SUB_PULTRUHE     9        /* sub07 @0x0110C `04 ff 18 09` (Annette am Pult, (4,23)=1, (3,89)=0)    */
+#define RE15_S80_SUB_LICHT        5        /* sub07 @0x01132 `04 ff 18 05` (Zweig @0x01128 Ck(3,89)=1, Licht-Schleife) */
+#define RE15_S80_TOR_BANK         3        /* (3,89): ROOM6000 sub07 @0x011B4 `22 03 59 01` (Torschalter)            */
+#define RE15_S80_TOR_BIT          89
 #define RE15_S80_WAGEN_BANK       3        /* (3,22): sub02 @0x00D7A `22 03 16 01`, sub01 @0x00D62 `21 03 16 00`    */
 #define RE15_S80_WAGEN_BIT        22
 #define RE15_S80_ID_VORNE         31       /* "Everyone we could find. Can you start this thing?" (NB1)             */
@@ -50,7 +59,7 @@
 #define RE15_S80_ID_LETZTE_NEUE   26
 
 enum { RE15_S80_P_30C1 = 0, RE15_S80_P_WAGEN = 1, RE15_S80_P_PULT = 2, RE15_S80_P_PULT_VORNE = 3,
-       RE15_S80_P_NACHTRAG = 4, RE15_S80_P_N = 5 };
+       RE15_S80_P_NACHTRAG = 4, RE15_S80_P_NACHTRAG_TOR = 5, RE15_S80_P_N = 6 };
 
 /* HAKEN op_evt_exec (scd_vm.c): liefert das Programm statt des Original-Subs, sonst `orig`. */
 const uint8_t *re15_story80_evt_exec(uint16_t room_id, uint8_t sub_id, const uint8_t *orig);

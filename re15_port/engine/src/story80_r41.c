@@ -30,38 +30,49 @@ typedef struct {
     const char    *was;
     uint8_t        ck_n;
     s80_ck_t       ck[2];
+    int8_t         cut;    /* Integration A2: Eintritts-Cut work_vars[0x0A] (sub00 @0x00D28 Switch), -1 = jeder */
 } s80_eintrag_t;
 
 static const s80_eintrag_t k_s80[RE15_S80_P_N] = {
     { RE15_S80_RAUM_30C1, RE15_S80_SUB_30C1, k_s80_30c1_sub03, sizeof k_s80_30c1_sub03,
       k_s80_30c1_sub03_sig, sizeof k_s80_30c1_sub03_sig, k_s80_30c1_sub03_folge, sizeof k_s80_30c1_sub03_folge,
-      "kurze Fassung msg 1..5, Marvins Abgang wie Original", 0, { { 0, 0, 0 } } },
+      "kurze Fassung msg 1..5, Marvins Abgang wie Original", 0, { { 0, 0, 0 } }, -1 },
     { RE15_S80_RAUM_6030, RE15_S80_SUB_WAGEN, k_s80_6030_sub02, sizeof k_s80_6030_sub02,
       k_s80_6030_sub02_sig, sizeof k_s80_6030_sub02_sig, k_s80_6030_sub02_folge, sizeof k_s80_6030_sub02_folge,
-      "Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)", 0, { { 0, 0, 0 } } },
+      "Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)", 0, { { 0, 0, 0 } }, -1 },
     /* Wagen-Szene gelaufen: sub02 @0x00D7A `22 03 16 01` */
     { RE15_S80_RAUM_6030, RE15_S80_SUB_PULT, k_s80_6030_sub08, sizeof k_s80_6030_sub08,
       k_s80_6030_sub08_sig, sizeof k_s80_6030_sub08_sig, k_s80_6030_sub08_folge, sizeof k_s80_6030_sub08_folge,
       "Fuehrerstand msg 11,12,25,26 vor 'Certainly.'", 1,
-      { { RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT, 1 } } },
+      { { RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT, 1 } }, -1 },
     /* Nachbesserung 1: Fuehrerstand vor dem Wagen (3,22)=0 -> ohne Sherry, setzt (9,128) */
     { RE15_S80_RAUM_6030, RE15_S80_SUB_PULT, k_s80_6030_sub08_vorne, sizeof k_s80_6030_sub08_vorne,
       k_s80_6030_sub08_vorne_sig, sizeof k_s80_6030_sub08_vorne_sig, k_s80_6030_sub08_vorne_folge,
       sizeof k_s80_6030_sub08_vorne_folge,
       "Fuehrerstand vor dem Wagen msg 11,31 vor 'Certainly.' (NB1)", 1,
-      { { RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT, 0 } } },
+      { { RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT, 0 } }, -1 },
     /* Nachbesserung 1: naechstes Betreten nach dem Wagen, Nachtrag offen -> msg 40, 25; loescht (9,128) */
     { RE15_S80_RAUM_6030, RE15_S80_SUB_PULTRUHE, k_s80_6030_sub09_nachtrag, sizeof k_s80_6030_sub09_nachtrag,
       k_s80_6030_sub09_nachtrag_sig, sizeof k_s80_6030_sub09_nachtrag_sig, k_s80_6030_sub09_nachtrag_folge,
       sizeof k_s80_6030_sub09_nachtrag_folge,
       "Fuehrerstand nach dem Wagen, Nachtrag msg 40,25 (NB1)", 2,
-      { { RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, 1 }, { RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT, 1 } } },
+      { { RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, 1 }, { RE15_S80_WAGEN_BANK, RE15_S80_WAGEN_BIT, 1 } }, -1 },
+    /* Integration A2 (Weg F gemessen: vorne zuerst -> Wagen -> ohne Rueckkehr -> Tor): nach dem Torschalter (ROOM6000 sub07
+     * @0x011B4 Set(3,89)=1) erreicht sub07 den Nachtrag-Zweig @0x0110C nie mehr (@0x010F4 Ck(3,89)=0), nur noch @0x01128
+     * Ck(3,89)=1 -> @0x01132 Evt_exec sub05. Hier laeuft der offene Nachtrag (msg 40, 25) VOR dem Zugstart der Spur AN;
+     * Cut 0 = Fuehrerstand (sub00 @0x00D2C Case 0 -> sub07), im Wagen (Cut 6/8/12 -> sub06 @0x010C4) nicht. */
+    { RE15_S80_RAUM_6030, RE15_S80_SUB_LICHT, k_s80_6030_sub05_nachtrag_tor, sizeof k_s80_6030_sub05_nachtrag_tor,
+      k_s80_6030_sub05_nachtrag_tor_sig, sizeof k_s80_6030_sub05_nachtrag_tor_sig, k_s80_6030_sub05_nachtrag_tor_folge,
+      sizeof k_s80_6030_sub05_nachtrag_tor_folge,
+      "Fuehrerstand nach dem Tor, Nachtrag msg 40,25 vor dem Zugstart (Integration A2)", 2,
+      { { RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, 1 }, { RE15_S80_TOR_BANK, RE15_S80_TOR_BIT, 1 } }, 0 },
 };
 
 static int s80_gate(const s80_eintrag_t *e)
 {
     for (int k = 0; k < e->ck_n; k++)
         if (re15_game_flag_get(e->ck[k].bank, e->ck[k].bit) != e->ck[k].wert) return 0;
+    if (e->cut >= 0 && (int)g_scd.work_vars[0x0A] != e->cut) return 0;
     return 1;
 }
 

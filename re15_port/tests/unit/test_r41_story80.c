@@ -16,6 +16,10 @@
  *                  vorne nach dem Wagen: Nachtrag msg 40, 25, (9,128)=0; nochmals vorne: nichts. Jede Zeile hoechstens
  *                  einmal ueber den ganzen Weg. GEGENPROBE: Stand ad8532cd4 (Fuehrerstand ohne Gate) liefert vorne
  *                  msg 12/25 mit "Sherry" -> rot (in der echten exe: integration_r36_story_leon P4b).
+ *   torweg6030     Integration A2 (Gegenpruefung Welle 2 Befund 2): Weg F vorne -> Wagen -> ohne Rueckkehr -> Tor ->
+ *                  Fuehrerstand: Nachtrag 40, 25 (k_s80_6030_sub05_nachtrag_tor), dann beim naechsten Betreten der Zugstart
+ *                  der Spur AN (27..30); Weg W: Zugstart sofort, kein Nachtrag. GEGENPROBE: Stand dabac8d22 -> 27..30 ohne
+ *                  40/25 (exe-Lauf weg_F_vor)
  *   stimmen        Stimmen-Pfade: keine Umleitung in stimmen_r39 fuer die neuen/umgeschriebenen Ids (Datei = main<Id>.wav)
  */
 #include "re15_rdt.h"
@@ -563,6 +567,113 @@ static void teil_reihenfolge6030(void)
           doppelt - 1);
 }
 
+/* Integration A2 (Gegenpruefung Welle 2 Befund 2): Weg F = vorne zuerst -> Wagen -> OHNE Rueckkehr -> Tor -> Fuehrerstand.
+ * Torschalter ROOM6000 sub07 (scd_dump_room.py): @0x011B4 `22 03 59 01` Set(3,89)=1, @0x011BC/@0x011C0 Ck(3,22)=0 ->
+ * `22 03 16 01`, @0x011CA/@0x011CE Ck(4,23)=0 -> `22 04 17 01`. Danach ruft ROOM6030 sub07 nur noch @0x01132 Evt_exec sub05
+ * (Zweig @0x01128 Ck(3,89)=1), der Nachtrag-Zweig @0x0110C (Ck(3,89)=0 @0x010F4) ist zu. Vor dem Fix (exe-Lauf weg_F_vor):
+ * Zugstart msg 27..30 mit "Sherry is back there!" ohne msg 40/25, (9,128) blieb 1. Soll: Nachtrag 40, 25 beim ersten
+ * Betreten nach dem Tor (k_s80_6030_sub05_nachtrag_tor), Zugstart 27..30 beim naechsten; jede Zeile hoechstens einmal. */
+static int weg_pos(int id)
+{
+    for (int i = 0; i < s_weg_n; i++) if (s_weg_ids[i] == id) return i;
+    return -1;
+}
+static int typ_da(uint8_t typ)
+{
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) if (g_actors[i].active && g_actors[i].type == typ) return 1;
+    return 0;
+}
+static void torschalter(void)
+{
+    re15_game_flag_set(3, 89, 1);                                   /* ROOM6000 sub07 @0x011B4 */
+    if (!re15_game_flag_get(3, 22)) re15_game_flag_set(3, 22, 1);   /* @0x011BC / @0x011C0 */
+    if (!re15_game_flag_get(4, 23)) re15_game_flag_set(4, 23, 1);   /* @0x011CA / @0x011CE */
+}
+static void zugstart_laufen(int bilder)
+{
+    for (int f = 0; f < bilder; f++) frame();
+    weg_merken();
+}
+
+static void teil_torweg6030(void)
+{
+    static const uint8_t k_banken[] = { 0x49, 0x40, 0x4B, 0x4D };
+    int bilder = 0;
+    printf("== torweg6030 F: 1. vorne zuerst ==\n");
+    re15_game_state_init();
+    re15_inv_init();
+    for (int i = 0; i < RE15_S80_P_N; i++) g_re15_story80_umleitungen[i] = 0;
+    s_weg_n = 0;
+    if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
+    szene_pruefen(RE15_S80_P_PULT_VORNE, 0x6030, 9000, &bilder);
+    weg_merken();
+    for (int f = 0; f < 60; f++) frame();
+    printf("== torweg6030 F: 2. Wagen, danach NICHT nach vorne ==\n");
+    if (room_boot(0x6030, -18930, -22420, 0, 6, k_banken, 4) != 0) return;
+    szene_pruefen(RE15_S80_P_WAGEN, 0x6030, 9000, &bilder);
+    weg_merken();
+    for (int f = 0; f < 60; f++) frame();
+    PRUEF(re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG) && re15_game_flag_get(3, 22),
+          "vor dem Tor: (9,128)=%d (Nachtrag offen), (3,22)=%d", re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG),
+          re15_game_flag_get(3, 22));
+    printf("== torweg6030 F: 3. Torschalter (ROOM6000 sub07 @0x011B4/@0x011C0/@0x011CE), Wagen-Eintritt ==\n");
+    torschalter();
+    unsigned vorher[RE15_S80_P_N];
+    for (int i = 0; i < RE15_S80_P_N; i++) vorher[i] = g_re15_story80_umleitungen[i];
+    if (room_boot(0x6030, -17970, -20380, 1100, 6, k_banken, 4) != 0) return;
+    for (int f = 0; f < 300; f++) frame();
+    int umgeleitet = 0;
+    for (int i = 0; i < RE15_S80_P_N; i++) if (g_re15_story80_umleitungen[i] != vorher[i]) umgeleitet = 1;
+    PRUEF(s_prot_n == 0 && !umgeleitet && re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG),
+          "Wagen nach dem Tor (Cut 6, sub06 @0x010C4 -> sub05): kein Text (%d), keine ST80-Umleitung, (9,128) bleibt 1",
+          s_prot_n);
+    printf("== torweg6030 F: 4. Fuehrerstand nach dem Tor: Nachtrag ==\n");
+    if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
+    szene_pruefen(RE15_S80_P_NACHTRAG_TOR, 0x6030, 9000, &bilder);
+    weg_merken();
+    PRUEF(g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG_TOR] == 1 && g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG] == 0,
+          "sub07 @0x01132 -> Nachtrag nach dem Tor genau einmal (%u), sub09-Nachtrag nie (%u)",
+          g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG_TOR], g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG]);
+    for (int f = 0; f < 60; f++) frame();
+    PRUEF(!re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG) && !re15_game_flag_get(9, 133) && typ_da(0x4D) &&
+          !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27) && g_scd.cam_id == 0,
+          "danach (9,128)=%d, (9,133)=%d (Zugstart noch nicht), Annette 0x4D am Pult %d (Sce_em_set @0x010F8), Sperren "
+          "(2,7)=%d (1,27)=%d, Cut %u", re15_game_flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG),
+          re15_game_flag_get(9, 133), typ_da(0x4D), re15_game_flag_get(2, 7), re15_game_flag_get(1, 27),
+          (unsigned)g_scd.cam_id);
+    printf("== torweg6030 F: 5. Fuehrerstand erneut: Zugstart ==\n");
+    if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
+    zugstart_laufen(2400);
+    PRUEF(re15_game_flag_get(9, 133) && g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG_TOR] == 1,
+          "Zugstart gelaufen (9,133)=%d, kein zweiter Nachtrag (%u)", re15_game_flag_get(9, 133),
+          g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG_TOR]);
+    printf("   ganzer Weg F (%d Zeilen):", s_weg_n);
+    for (int i = 0; i < s_weg_n; i++) printf(" %d", s_weg_ids[i]);
+    printf("\n");
+    int doppelt = 0;
+    for (int i = 0; i < s_weg_n; i++)
+        for (int k = i + 1; k < s_weg_n; k++) if (s_weg_ids[i] == s_weg_ids[k]) doppelt = s_weg_ids[i] + 1;
+    PRUEF(!doppelt && s_weg_n == 9 + 13 + 2 + 4, "jede Zeile hoechstens einmal (%d Zeilen, doppelt: %d)", s_weg_n, doppelt - 1);
+    PRUEF(weg_pos(25) >= 0 && weg_pos(40) >= 0 && weg_pos(28) > weg_pos(25) && weg_pos(25) > weg_pos(40) &&
+          weg_pos(27) > weg_pos(25),
+          "Annette erfaehrt von Sherry (40 @%d, 25 @%d) vor dem Zugstart (27 @%d, 28 '...Sherry is back there!' @%d)",
+          weg_pos(40), weg_pos(25), weg_pos(27), weg_pos(28));
+
+    printf("== torweg6030 W: Wagen zuerst, Fuehrerstand, Tor, Fuehrerstand: Zugstart sofort, kein Nachtrag ==\n");
+    re15_game_state_init();
+    re15_inv_init();
+    for (int i = 0; i < RE15_S80_P_N; i++) g_re15_story80_umleitungen[i] = 0;
+    s_weg_n = 0;
+    re15_game_flag_set(3, 22, 1); re15_game_flag_set(4, 23, 1);   /* sub02 @0x00D7A, sub08 @0x0113A (volle Fassung) */
+    torschalter();
+    if (room_boot(0x6030, -5000, -23000, 3072, 0, k_banken, 4) != 0) return;
+    zugstart_laufen(2400);
+    PRUEF(re15_game_flag_get(9, 133) && g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG_TOR] == 0 && weg_pos(40) < 0 &&
+          weg_pos(27) == 0 && s_weg_n == 4,
+          "W: Zugstart beim ersten Betreten (%d Zeilen, erste %d), kein Nachtrag (%u), (9,133)=%d", s_weg_n,
+          s_weg_n ? s_weg_ids[0] : -1, g_re15_story80_umleitungen[RE15_S80_P_NACHTRAG_TOR], re15_game_flag_get(9, 133));
+}
+
 static void teil_stimmen(void)
 {
     printf("== stimmen ==\n");
@@ -588,6 +699,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "ablauf30c1")    || !strcmp(teil, "alle")) teil_ablauf30c1();
     if (!strcmp(teil, "ablauf6030")    || !strcmp(teil, "alle")) teil_ablauf6030();
     if (!strcmp(teil, "reihenfolge6030") || !strcmp(teil, "alle")) teil_reihenfolge6030();
+    if (!strcmp(teil, "torweg6030")    || !strcmp(teil, "alle")) teil_torweg6030();
     if (!strcmp(teil, "stimmen")       || !strcmp(teil, "alle")) teil_stimmen();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

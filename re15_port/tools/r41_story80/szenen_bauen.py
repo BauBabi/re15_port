@@ -9,6 +9,8 @@ Kein Asset-Patch: der Port leitet nur den Start des Original-Subs um (op_evt_exe
   ROOM6030 sub07 @0x010E8 `04 ff 18 08` Evt_exec sub08  -> k_s80_6030_sub08        bei (3,22)=1 (Wagen-Szene gelaufen)
                                                         -> k_s80_6030_sub08_vorne  bei (3,22)=0 (Nachbesserung 1)
   ROOM6030 sub07 @0x0110C `04 ff 18 09` Evt_exec sub09  -> k_s80_6030_sub09_nachtrag bei (9,128)=1 und (3,22)=1
+  ROOM6030 sub07 @0x01132 `04 ff 18 05` Evt_exec sub05  -> k_s80_6030_sub05_nachtrag_tor bei (9,128)=1, (3,89)=1, Cut 0
+                                                        (Integration A2: Nachtrag nach dem Tor, vor dem AN-Zugstart)
 Vor dem Umleiten prueft der Port die ersten 16 Bytes des Original-Subs (Signatur unten).
 
 NACHBESSERUNG 1 (Abnahme 1 M1, Entscheid Orchestrator Variante a): der Fuehrerstand ist vor dem Wagen erreichbar
@@ -66,7 +68,7 @@ def rdt(room):
 
 # Datei-Offsets der Sub-Tabelle (RDT-Kopf, scd_dump_room "sub_scd") und erwartete Sub-Anfaenge.
 SUB_TAB = {"30C1": 0x0BD8, "6030": 0x0D14}
-SUB_SOLL = {("30C1", 3): 0x0C2C, ("6030", 2): 0x0D7A, ("6030", 8): 0x113A, ("6030", 9): 0x1376}
+SUB_SOLL = {("30C1", 3): 0x0C2C, ("6030", 2): 0x0D7A, ("6030", 8): 0x113A, ("6030", 9): 0x1376, ("6030", 5): 0x1004}
 
 
 def orig(lo, hi, was):
@@ -198,6 +200,21 @@ P_6030_NACHTRAG = [
 ]
 FOLGE_6030_NACHTRAG = [40, 25]
 
+# Integration A2 (Gegenpruefung Welle 2 Befund 2, Weg F gemessen): Fuehrerstand vorne zuerst -> Wagen -> ohne Rueckkehr ->
+# Tor. Der Torschalter ROOM6000 sub07 setzt @0x011B4 `22 03 59 01` (3,89)=1 (und @0x011C0 (3,22), @0x011CE (4,23)); danach
+# erreicht sub07 den Nachtrag-Zweig nie mehr (@0x010F4 `21 03 59 00` Ck(3,89)=0), sondern nur noch @0x01128 Ck(3,89)=1 ->
+# @0x01132 `04 ff 18 05` Evt_exec sub05. Ohne diesen Eintrag lief dort die Zugstart-Szene der Spur AN (msg 28 "...Sherry is
+# back there!") ohne den Nachtrag, und (9,128) blieb 1 stehen. Der Nachtrag laeuft deshalb an dieser Stelle (Regel NB1:
+# naechstes Betreten des Fuehrerstands nach dem Wagen). Weil sub07 die Frau ab (3,89)=1 nicht mehr setzt, setzt das
+# Programm sie selbst mit den Bytes des Nachtrag-Zweigs @0x010F8 und startet die Licht-Schleife wie sub07 @0x01132 (der
+# Haken der Spur AN laesst sub05 dann unveraendert, weil die 0x4D steht); der Zugstart folgt beim naechsten Betreten.
+P_6030_NACHTRAG_TOR = [
+    LOESCH_NACHTRAG,
+    orig(0x10F8, 0x110C, "Sce_em_set Annette am Pult (sub07 @0x010F8, Bytes des Nachtrag-Zweigs)"),
+    orig(0x1132, 0x1136, "Evt_exec sub05 Licht-Schleife wie sub07 @0x01132 (Zweig Ck(3,89)=1 @0x01128)"),
+] + P_6030_NACHTRAG[1:]
+FOLGE_6030_NACHTRAG_TOR = [40, 25]
+
 PROGRAMME = [
     # (Raum, Sub, C-Name, Segmente, Folge, Messtext)
     ("30C1", 3, "k_s80_30c1_sub03", P_30C1, FOLGE_30C1, "Elza trifft Marvin, kurze Fassung"),
@@ -207,6 +224,8 @@ PROGRAMME = [
      "Leon, Fuehrerstand vor dem Wagen (NB1)"),
     ("6030", 9, "k_s80_6030_sub09_nachtrag", P_6030_NACHTRAG, FOLGE_6030_NACHTRAG,
      "Leon, Fuehrerstand nach dem Wagen, Nachtrag (NB1)"),
+    ("6030", 5, "k_s80_6030_sub05_nachtrag_tor", P_6030_NACHTRAG_TOR, FOLGE_6030_NACHTRAG_TOR,
+     "Leon, Fuehrerstand nach dem Tor, Nachtrag (Integration A2)"),
 ]
 SIG_N = 16
 
