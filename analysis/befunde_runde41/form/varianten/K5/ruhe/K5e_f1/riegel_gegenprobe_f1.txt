@@ -1,0 +1,8 @@
+== Riegel ruhige Haut K5e: Gegenprobe F1 K5e vor der Korrektur (C:\workspace\git\reAi_v2\.claude\worktrees\r41_form\analysis\befunde_runde41\form\varianten\K5\ruhe\K5e)
+  F1R Texelring um den F1-Kern (weiss + Bild 1): Mittel-L* >= angrenzende Haut - 3             ROT    dL {'weiss Seite': -7.94, 'Bild 1': -2.49} (Ansichten mit >= 20 Ringpixeln)
+  F1H Feldhaut der F1-Flaechen um Kern und Ring: Mittel-L* >= angrenzende Haut - 3             ROT    dL {'weiss Seite': -19.94, 'Bild 1': -9.12}
+  F1K Kern = K5c: Lab-Mittel Kerntexel (Albedo) und Kernpixel Bild 1 dE76 <= 1                 GRUEN  Albedo dE 0.00 ([48.5, 21.5, -3.1] gegen [48.5, 21.5, -3.1]), Bild 1 dE 0.00 ([21.29, 12.94, 4.77] gegen [21.29, 12.94, 4.77])
+  -> 1/3 bindende Zeilen GRUEN
+  ROT-Zeilen: ['F1H', 'F1R']; Gegenprobe (F1R oder F1H ROT): erfuellt
+EXIT 0
+rc 0

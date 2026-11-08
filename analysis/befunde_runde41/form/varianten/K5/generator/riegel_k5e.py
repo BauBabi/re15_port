@@ -3,6 +3,7 @@
 
     python riegel_k5e.py <Variante> [--json aus.json]
     python riegel_k5e.py --gegenprobe [--json aus.json]     (K5c = Spiel-Asset, K5d = abgelehnt; Ruhe-Zeilen muessen dort ROT sein)
+    python riegel_k5e.py --gegenprobe-f1 [--json aus.json]  (K5e vor der F1-Korrektur: F1-Ringzeilen muessen ROT sein)
 
 <Variante> = Ordner mit FORM.EMD/FORM.TIM/form.json (3 Posen-Clips), BAHNSTEIG_FORM.EMD/.TIM (28 Clips) und bau.json (par).
 
@@ -24,6 +25,11 @@ Zeilen (Soll aus dem Messblatt RUHE 4.1-4.4; Masse ruhe/skripte/ruhe_mass.py, we
  W6 Bild 2 Figur Video >= Vorlage 15,37 und ohne Filter >= 7,33 (Pixelmenge V4F 3.1) | W7 F1-Zeile = K5c-Zeile 5, 6 Flaechen, UV gleich.
  T1 Zeilen <= 16, Port-Texturhoehe <= 4096 (riegel_einbau.ez1) | T2 jede Flaeche gueltige Zeile (ez2), kein neues 0x0000 |
  T3 Ecken/Normalen = K5d, Eckindizes = K5c | T4 Asset EDD/EMR/Morph byte-gleich Spiel-Asset, 32/32/28, MD1 = FORM.EMD, TIM = FORM.TIM.
+ F1R/F1H/F1K (E32 2026-11-09, "um den roten Fleck herum ... schwarz"): gerendert unter weissem Licht (rl.weiss_id, Clip 2, Ansichten mit
+ >= 20 Ringpixeln) und in Bild 1 (v4f.szene_id ohne Filter); Pixelklasse ueber den Texel (u, v) der F1-Flaechen und die Kern-/Randmaske
+ aus kf_k5e.f1_masken (K5c-Bau). F1R Texelring um den Kern, F1H uebrige Feldhaut der F1-Flaechen: Mittel-L* hoechstens 3 dunkler als die
+ angrenzende Haut (Figurpixel im 9x9-Umkreis der F1-Flaechen, nicht F1). F1K Kern = K5c: Lab-Mittel der Kerntexel (Albedo) und der
+ Kernpixel in Bild 1 dE76 <= 1. Bei par['f1_rand'] lesen H3/W7 die F1-Zeile als Kern bytegleich K5c-5 + Rest aus dem Materialsatz.
 """
 import argparse
 import json
@@ -143,9 +149,16 @@ class Lauf:
             worte, _zj, _i, _n, self.nutz = KE.zeilen(par, E['F'], E['mat'], E['quell'], E['cl_k5c'], E['cl_g4'])
             dz = {z: sum(1 for a, b in zip(worte[z], cl[z]) if a != b) for z in range(KE.NZ)}
             Zp = par['zeilen']
-            sonder = (cl[Zp['g4_0']] == [int(x) for x in E['cl_g4'][0]], cl[Zp['f1']] == E['cl_k5c'][5], cl[Zp['zahn']] == E['cl_k5c'][7])
+            if (par.get('f1_rand') or {}).get('an'):
+                # E32: F1-Zeile = Kern-Eintraege bytegleich K5c-5 (der Rest steckt in dz, neu berechnet aus par)
+                ke = KE.f1_kern_eintraege()
+                f1_ok = all(cl[Zp['f1']][i] == E['cl_k5c'][5][i] for i in ke)
+            else:
+                f1_ok = cl[Zp['f1']] == E['cl_k5c'][5]
+            sonder = (cl[Zp['g4_0']] == [int(x) for x in E['cl_g4'][0]], f1_ok, cl[Zp['zahn']] == E['cl_k5c'][7])
             self.par, self.E = par, E
-            self.zeile('H3', 'H3 Zeilen 1-7 = G4-Rampe + EIN Materialsatz (neu berechnet), 0/8/9 bytegleich G4-0/K5c-5/K5c-7',
+            self.zeile('H3', 'H3 Zeilen 1-7 = G4-Rampe + EIN Materialsatz (neu berechnet), 0/8/9 bytegleich G4-0/K5c-5/K5c-7'
+                       + (' (Z8: Kern bytegleich, E32)' if (par.get('f1_rand') or {}).get('an') else ''),
                        'Abweichung je Zeile %s; Z0=G4-0 %s, Z8=K5c-5 %s, Z9=K5c-7 %s' % (dz, *sonder), sum(dz.values()) == 0 and all(sonder))
         else:
             self.par = None
@@ -288,9 +301,16 @@ class Lauf:
         tc = FE.tim_lesen(open(os.path.join(KE.BASIS, 'FORM.TIM'), 'rb').read())
         k5 = [int(x) for x in tc['cluts'][5]]
         uv_gl = all(np.array_equal(self.F[k]['idx'], A_c[k]['idx']) for k in f1)
-        ok7 = len(f1) == 6 and len(z8) == 1 and self.cl[list(z8)[0]] == k5 and uv_gl
-        self.zeile('W7', 'W7 F1: Zeile = K5c-Zeile 5 bytegleich, 6 Flaechen, UV gleich', '%d Flaechen, Zeile %s, bytegleich %s, UV gleich %s'
-                   % (len(f1), sorted(z8), self.cl[list(z8)[0]] == k5, uv_gl), ok7)
+        f1r = self.par is not None and (self.par.get('f1_rand') or {}).get('an')
+        if f1r:
+            ke = KE.f1_kern_eintraege()
+            gleich = all(self.cl[list(z8)[0]][i] == k5[i] for i in ke)
+            nm7 = 'W7 F1: Kern-Eintraege (%d) bytegleich K5c-Zeile 5 (E32), 6 Flaechen, UV gleich' % len(ke)
+        else:
+            gleich = self.cl[list(z8)[0]] == k5
+            nm7 = 'W7 F1: Zeile = K5c-Zeile 5 bytegleich, 6 Flaechen, UV gleich'
+        ok7 = len(f1) == 6 and len(z8) == 1 and gleich and uv_gl
+        self.zeile('W7', nm7, '%d Flaechen, Zeile %s, bytegleich %s, UV gleich %s' % (len(f1), sorted(z8), gleich, uv_gl), ok7)
         timb = open(os.path.join(self.ordner, 'FORM.TIM'), 'rb').read()
         emdb = open(os.path.join(self.ordner, 'FORM.EMD'), 'rb').read()
         ok1, t1 = RE.ez1(timb)
@@ -323,6 +343,72 @@ class Lauf:
                                                                               t_ok),
                    len(gleich) == 7 and len(fa['meshes']) == 32 and len(fa['knochen']) == 32 and len(fa['clips']) == 28 and md1_ok and t_ok)
 
+    # ------------------------------------------------ F1-Rand (E32)
+    def f1rand(self):
+        Mk = KE.f1_masken()
+        f1 = self.mt['F1']
+
+        def mess(img, K):
+            lab = RM.lab(img.reshape(-1, 3)).reshape(img.shape)
+            fk, mk = K['flaeche'], K['maske']
+            mf = np.zeros(mk.shape, bool)
+            for (me, vi, fi) in f1:
+                mf |= (K['mesh'] == me) & (fk == vi * 100000 + fi)
+            mf &= mk
+            u, v = K['u'], K['v']
+            ok = mf & (u >= 0) & (v >= 0)
+            kern = np.zeros(mk.shape, bool)
+            ring = np.zeros(mk.shape, bool)
+            kern[ok] = Mk['kern'][v[ok], u[ok]]
+            ring[ok] = Mk['rand'][v[ok], u[ok]]
+            fh = mf & ~kern & ~ring
+            umg = cv2.dilate(mf.astype(np.uint8), np.ones((9, 9), np.uint8)).astype(bool) & ~mf & mk
+            r = dict(kern_px=int(kern.sum()), ring_px=int(ring.sum()), feldhaut_px=int(fh.sum()), haut_px=int(umg.sum()))
+            if umg.sum():
+                hL = float(lab[..., 0][umg].mean())
+                r['haut_L'] = round(hL, 2)
+                if ring.sum():
+                    r['ring_dL'] = round(float(lab[..., 0][ring].mean()) - hL, 2)
+                if fh.sum():
+                    r['feldhaut_dL'] = round(float(lab[..., 0][fh].mean()) - hL, 2)
+            if kern.sum():
+                r['kern_lab'] = [round(float(x), 2) for x in lab[kern].mean(0)]
+            return r
+        import cv2
+        mo = rl.fl.lade_var(self.ordner)
+        an = {}
+        for wn, az, el in rl.WINKEL4:
+            img, K = rl.weiss_id(mo, 2, az, el)
+            an['weiss ' + wn] = mess(img, K)
+        s, K = rl.v4f.szene_id(self.ordner, 1)
+        an['Bild 1'] = mess(s, K)
+        sc, Kc = rl.v4f.szene_id(KE.BASIS, 1)
+        k5c_b1 = mess(sc, Kc)
+        self.f1 = dict(ansichten=an, k5c_bild1=k5c_b1)
+        gueltig = {k: d for k, d in an.items() if d['ring_px'] >= 20 and d['haut_px'] > 0}
+        rr = {k: d['ring_dL'] for k, d in gueltig.items()}
+        ff = {k: d.get('feldhaut_dL') for k, d in gueltig.items()}
+        self.zeile('F1R', 'F1R Texelring um den F1-Kern (weiss + Bild 1): Mittel-L* >= angrenzende Haut - 3',
+                   'dL %s (Ansichten mit >= 20 Ringpixeln)' % rr, len(gueltig) >= 2 and all(x >= -3 for x in rr.values()))
+        self.zeile('F1H', 'F1H Feldhaut der F1-Flaechen um Kern und Ring: Mittel-L* >= angrenzende Haut - 3',
+                   'dL %s' % ff, len(gueltig) >= 2 and all(x is not None and x >= -3 for x in ff.values()))
+        tv = FE.tim_lesen(open(os.path.join(self.ordner, 'FORM.TIM'), 'rb').read())
+        tc = FE.tim_lesen(open(os.path.join(KE.BASIS, 'FORM.TIM'), 'rb').read())
+        z8 = {self.F[k]['zeile'] for k in f1}
+        zv = list(z8)[0] if len(z8) == 1 else 0
+
+        def alb(t, z):
+            w = np.array(t['cluts'][z], np.int64)[t['pixel'][Mk['kern']]]
+            rgb = np.stack([w & 31, (w >> 5) & 31, (w >> 10) & 31], -1) * 255.0 / 31.0
+            return RM.lab(rgb).mean(0)
+        a_v, a_c = alb(tv, zv), alb(tc, 5)
+        dea = float(np.linalg.norm(a_v - a_c))
+        b1 = an['Bild 1'].get('kern_lab')
+        deb = float(np.linalg.norm(np.array(b1) - np.array(k5c_b1['kern_lab']))) if b1 and k5c_b1.get('kern_lab') else 99.0
+        self.zeile('F1K', 'F1K Kern = K5c: Lab-Mittel Kerntexel (Albedo) und Kernpixel Bild 1 dE76 <= 1',
+                   'Albedo dE %.2f (%s gegen %s), Bild 1 dE %.2f (%s gegen %s)' % (dea, r1(a_v), r1(a_c), deb, b1, k5c_b1.get('kern_lab')),
+                   dea <= 1 and deb <= 1)
+
     def alles(self, kette=True):
         self.ruhe()
         self.szene()
@@ -331,6 +417,7 @@ class Lauf:
         if kette:
             self.kette()
         self.technik()
+        self.f1rand()
         return self.z
 
 
@@ -352,10 +439,25 @@ def main():
     ap.add_argument('variante', nargs='?')
     ap.add_argument('--json')
     ap.add_argument('--gegenprobe', action='store_true')
+    ap.add_argument('--gegenprobe-f1', action='store_true')
     a = ap.parse_args()
     vor = RK.Vorlage()
     ref = RK.Stand(KE.BASIS)
     mt = W.mat()
+    if a.gegenprobe_f1:
+        o = os.path.join(K5, 'ruhe', 'K5e')
+        lauf = Lauf(o, os.path.join(o, 'BAHNSTEIG_FORM'), vor, ref, mt)
+        lauf.herkunft()
+        lauf.f1rand()
+        z = [x for x in lauf.z if x['kz'] in ('F1R', 'F1H', 'F1K')]
+        ausgabe('Gegenprobe F1 K5e vor der Korrektur (%s)' % o, z, sys.stdout)
+        rot = {x['kz'] for x in z if x['ok'] is False}
+        ok = 'F1R' in rot or 'F1H' in rot
+        print('  ROT-Zeilen: %s; Gegenprobe (F1R oder F1H ROT): %s' % (sorted(rot), 'erfuellt' if ok else 'NICHT erfuellt'))
+        if a.json:
+            json.dump(dict(zeilen=z, f1=lauf.f1, rot=sorted(rot)), open(a.json, 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
+        print('EXIT %d' % (0 if ok else 1))
+        sys.exit(0 if ok else 1)
     if a.gegenprobe:
         aus, fehlt = {}, []
         for nm, (o, asset) in STAENDE.items():
@@ -378,7 +480,7 @@ def main():
     z = lauf.alles()
     g, n = ausgabe(a.variante, z, sys.stdout)
     if a.json:
-        json.dump(dict(zeilen=z, gruen=g, bindend=n, weiss=lauf.weiss, szene=lauf.sz, wuensche=lauf.wu, helligkeit=lauf.hell), open(a.json, 'w', encoding='utf-8'),
+        json.dump(dict(zeilen=z, gruen=g, bindend=n, weiss=lauf.weiss, szene=lauf.sz, wuensche=lauf.wu, helligkeit=lauf.hell, f1=lauf.f1), open(a.json, 'w', encoding='utf-8'),
                   indent=1, ensure_ascii=False, default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o))
     print('EXIT %d' % (0 if g == n else 1))
     sys.exit(0 if g == n else 1)

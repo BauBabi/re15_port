@@ -1,0 +1,73 @@
+{
+ "_doc": "K5e ruhige Haut (Nutzer 2026-11-08): je Material EIN Parametersatz auf der G4-Originalrampe seiner Seite (Messblatt RUHE 3.4). Jeder Wert mit Quelle. Verboten (Memory reai-v2-texturen-nicht-aus-video-eichen, Nachtrag 2026-11-08): Eichung je Region/Fleck/Texel am Video.",
+ "haut": {
+  "h": -26.3,
+  "h_quelle": "Messblatt RUHE 3.2 Hauptfamilie E30: 8 K5c-Zeilen mit Farbton < 0, texelgewichtet -26,3 Grad (material.json haut_anker_e30); Nutzer 11-08 'einheitlich grau/blau', E30 'Sieht doch gut aus'",
+  "C": 11.68,
+  "C_quelle": "Messblatt RUHE 3.2 Hauptfamilie E30, texelgewichtet C* 11,68",
+  "dL": 21.407,
+  "dL_quelle": "kf_k5e_global.py: kleinste Hebung (Bisektion 10 Schritte, 2 Runden) mit Bild 2 Video >= Vorlage 15.37 (Messblatt RUHE 3.5/W6, EIN globaler Helligkeitswert); Ergebnis 15.48. Messblatt-Vorschau +21,016 galt fuer Abschneiden r>>3 und K5c-Zeile 2 als G4-Seite 2. Nutzer 11-08 \"insgesamt ein wenig heller ... Helligkeit der Vergleichsbilder\"",
+  "modus": "hebung",
+  "modus_quelle": "Messblatt RUHE 0.4 / 6 Offen 3: Hebung haelt den G4-Kontrast 1:1, Faktor ROT in S3",
+  "hell_neigung": 0.1,
+  "hell_quelle": "Messblatt RUHE 3.4 Haut: helle G4-Eintraege (L* >= 52,4) -> Haut-Median' + 0,1 x (L* - 52,4), gleicher Ton/C*"
+ },
+ "ader": {
+  "q": 0.74,
+  "q_quelle": "Messblatt RUHE 3.4 Adern: Median der 9 E30-Gruppensaetze (v3_daten/r4_par.json), RV6",
+  "kappa": 0.61,
+  "kappa_quelle": "Messblatt RUHE 3.4 Adern: Median der 9 E30-Gruppensaetze; Farbton wie Haut"
+ },
+ "gelenk": {
+  "h": -26.3,
+  "h_quelle": "Messblatt RUHE 3.4 Gelenk: Farbton der Haut (Lauf mit -69 Grad farbfremd F_fremd 11,3)",
+  "C": 4.8,
+  "C_quelle": "Messblatt RUHE 3.4 Gelenk: K4-Albedo an den Gelenkflecken a* 1,7 b* -4,5 ('vorher da'); Nutzer 11-08 Verbindungsstuecke 'weisslich'",
+  "dL": 9.1,
+  "dL_quelle": "Messblatt RUHE 3.4 Gelenk: K5d Gelenk- gegen Nachbar-Albedo 28,5 - 19,4 (Nutzer zu K5d 'ja, besser')"
+ },
+ "fleisch": {
+  "h": -8.0,
+  "h_quelle": "Messblatt RUHE 3.4 Fleisch: Ton der F1-Leuchtstelle (E30 gelobt, Lab 48,6/21,6/-3,0); Nutzer 11-08 'fleisch roetlich', 'rote fleischige Stelle'",
+  "C": 18.0,
+  "C_quelle": "Messblatt RUHE 3.4 Fleisch: Mittel K4 Schwanzspitze / K4 Buckel F02 (11,6 / 24,9)",
+  "dL": 6.739,
+  "dL_quelle": "kf_k5e_global.py: kleinster Versatz (Bisektion), mit dem Spitze und Buckel im Albedo mindestens ihren K4-Abstand erreichen (K4_heute: Spitze gegen Schwanz +6.89, Buckel gegen Mesh-10-Haut +4.77; \"vorher da\"); Ergebnis Spitze +8.64, Buckel +5.29. Messblatt-Wert 6,9 = nur K4-Spitze; die G4-Buckeltexel liegen 3,7 L* unter der Mesh-10-Haut"
+ },
+ "zeilen": {
+  "g4_0": 0,
+  "haut": [
+   1,
+   2,
+   3
+  ],
+  "gelenk": [
+   4,
+   5,
+   6
+  ],
+  "fleisch": 7,
+  "f1": 8,
+  "zahn": 9,
+  "quelle": "Messblatt RUHE 3.3 Zeilenplan (10 Zeilen, Port-Hoehe 2560)"
+ },
+ "bytegleich": {
+  "g4_0": "K5c-Zeile 0 = G4-Zeile 0 (Auge, Maulinneres)",
+  "f1": "K5c-Zeile 5 (E30 gelobt)",
+  "zahn": "K5c-Zeile 7",
+  "quelle": "Messblatt RUHE 3.3/3.4"
+ },
+ "orte": {
+  "material_json": "ruhe/messung/material.json (Flaechenlisten je Material; Orte aus Messblatt RUHE 3.4, Buckel = Mesh 10 qf 54,55,65,66,67,77,78,79,80,89,90,91)"
+ },
+ "rundung": {
+  "verfahren": "naechste 15-Bit-Farbe (dE76, 4x4x4 Nachbarn), Adern von unten (L*, a* <= Ziel)",
+  "quelle": "keine Farbaenderung, nur Quantisierung: Lauf 1 mit Abschneiden r>>3 streute die Haut-Eintraege auf 21,5 Grad (Riegel H4 Soll <= 15); Adern von unten = RV6 'nie heller, nie roeter' (riegel_farbe_v3.rv6, wie kf_k5d.lab_wort richtung -1)"
+ },
+ "name": "K5e_f1",
+ "f1_rand": {
+  "an": true,
+  "quelle": "Nutzer E32 2026-11-09 (NUTZER_ENTSCHEIDE.md): \"Warum hast du es jetzt beim 4 beiner um den Fleck herum hinten am hintern schwarz gemacht? also um den roten Fleck herum? ansonsten passt, baue das ruhig einfach mal alles so ein.\" Ursache: F1-Zeile 8 = K5c-Zeile 5 bytegleich, ihre G4-F11-Haut (L* 0-28,7) und der dunkle Fleischrand wurden nicht wie die Haut um +21,407 gehoben (PRUEFUNG_K5E_r1_zahlen 5.2: -8,9 L*; FARBE.md R.5 Offen 2).",
+  "regel": "Kern-Eintraege (Indizes der 122 Kerntexel, kf_g4 F1-Mehrheitsregel) bytegleich K5c-Zeile 5; alle uebrigen von den 6 F1-Flaechen gelesenen Eintraege = Hauttransformation par.haut (h, C, dL) auf ihr K5c-Wort. Keine Texel-, UV-, Flaechenaenderung, kein neuer Parameter."
+ }
+}

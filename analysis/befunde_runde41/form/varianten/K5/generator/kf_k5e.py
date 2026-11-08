@@ -18,6 +18,16 @@ Verfahren (Messblatt RUHE 3.3/3.4; Memory reai-v2-texturen-nicht-aus-video-eiche
    Adern rangtreu auf [Haut-p10, q x Haut-p50], C* = kappa x C, Farbton der Haut; helle Eintraege in die Hautmitte.
    Gelenk = Hautabbildung + dL, eigenes h/C; Fleisch = Hautabbildung + dL, eigenes h/C. Rangfolge je Klasse bleibt (steigende Abbildungen).
  - Zeile 0 (Auge, Maulinneres) = G4-Zeile 0, Zeile 8 (F1) = K5c-Zeile 5, Zeile 9 (Zaehne) = K5c-Zeile 7, bytegleich.
+
+Stufe F1-Rand (Nutzer E32 2026-11-09: "Warum hast du es jetzt beim 4 beiner um den Fleck herum hinten am hintern schwarz gemacht? also um den
+roten Fleck herum?"; Schalter par['f1_rand']['an'], ohne den Schalter ist der Bau bytegleich K5e):
+ - Kern- und Randmaske des F1-Feldes (Seite 3) kommen aus dem K5c-Bau selbst: kf_g4.bau wird in einen Wegwerf-Ordner nachgebaut und die Maske
+   des einzigen binary_fill_holes-Aufrufs (kf_g4.py F1-Stelle, Mehrheitsregel V3R3) mitgeschnitten. Pruefung: sha256 des Nachbau-TIM =
+   farbe/K5c_farbe_v3 (512828...), Pixel = basis_k5c, Kern 122 / Rand 70 Texel = farbe/K5c_farbe_v3/bau.json sonder.F1.
+ - Kern-Eintraege (Indizes der Kerntexel) bleiben bytegleich K5c-Zeile 5 (E30 gelobt).
+ - Alle uebrigen Eintraege, die die 6 F1-Flaechen lesen (G4-F11-Haut des Feldes, dunkler Fleischrand), folgen der Hauttransformation der
+   Hautzeilen (par['haut']: L* + dL, Farbton h, C* weich an den sRGB-Rand, naechste 15-Bit-Farbe); Eingang ist ihr K5c-Wort (Haut = G4-Zeile 2).
+   Fuer die Haut-Eintraege ist das Ergebnis wortgleich K5e-Zeile 3 (G4-Seite 2); der Bau prueft das. Texel, UV und Flaechen bleiben.
 """
 import hashlib
 import json
@@ -197,6 +207,7 @@ def zeilen(par, F, mat, quell, cl_k5c, cl_g4):
     info = {}
     worte[Z['g4_0']] = [int(x) for x in cl_g4[0]]
     worte[Z['f1']] = [int(x) for x in cl_k5c[5]]
+    f1_par = par.get('f1_rand') or {}
     worte[Z['zahn']] = [int(x) for x in cl_k5c[7]]
     for s in range(3):
         g4z = [int(x) for x in cl_g4[s]]
@@ -208,7 +219,114 @@ def zeilen(par, F, mat, quell, cl_k5c, cl_g4):
     g = float(fp['dL'])
     worte[Z['fleisch']], info['fleisch1'] = rampe([int(x) for x in cl_g4[1]], nutz[('fleisch', 1)], fp['h'], fp['C'], lambda L: L + d + g,
                                                   ap['q'], ap['kappa'], hp['hell_neigung'])
+    if f1_par.get('an'):
+        worte[Z['f1']], info['f1_rand'] = f1_rand_zeile(cl_k5c[5], F, mat, hp, worte[Z['haut'][2]], [int(x) for x in cl_g4[2]])
     return worte, zeile_je, info, {'%s%d' % gr: int(n.sum()) for gr, n in sorted(nutz.items())}, nutz
+
+
+_F1_MASKE = {}
+
+
+def f1_masken():
+    """Kern-/Randmaske des F1-Feldes (Seite 3, 512 x 256) aus dem K5c-Bau (kf_g4.bau = Spiel-Asset K5c, Pixel bytegleich basis_k5c).
+    Weg: kf_g4.bau in einen Wegwerf-Ordner, scipy.ndimage.binary_fill_holes mitschneiden (einziger Aufruf: kern = fill_holes(kern) & feld);
+    Rand = 1 Texelring (3x3-Dilatation) im Feld ohne Kern (kf_g4.py F1-Stelle, Messblatt V3 3.1).
+    Pruefungen (sonst Abbruch): Nachbau-TIM sha256 = farbe/K5c_farbe_v3/bau.json sha256.tim, Pixel = basis_k5c/FORM.TIM,
+    Kern/Rand-Zahl = bau.json sonder.F1 kern_texel/rand_texel."""
+    if _F1_MASKE:
+        return _F1_MASKE
+    import shutil
+    import tempfile
+    import scipy.ndimage as ndi
+    v3 = os.path.join(K5, 'farbe', 'K5c_farbe_v3')
+    soll = json.load(open(os.path.join(v3, 'bau.json'), encoding='utf-8'))
+    orig, mit = ndi.binary_fill_holes, []
+
+    def haken(x, *a, **k):
+        r = orig(x, *a, **k)
+        mit.append(np.array(r, bool))
+        return r
+    tmp = tempfile.mkdtemp(prefix='kf_k5e_f1_')
+    ndi.binary_fill_holes = haken
+    try:
+        b = KG.bau(tmp)
+        tim_n = open(os.path.join(tmp, 'FORM.TIM'), 'rb').read()
+    finally:
+        ndi.binary_fill_holes = orig
+        shutil.rmtree(tmp, ignore_errors=True)
+    if len(mit) != 1:
+        raise SystemExit('kf_g4.bau: %d binary_fill_holes-Aufrufe statt 1' % len(mit))
+    if hashlib.sha256(tim_n).hexdigest() != soll['sha256']['tim'] or b['sha256']['tim'] != soll['sha256']['tim']:
+        raise SystemExit('Nachbau kf_g4 != farbe/K5c_farbe_v3 (TIM)')
+    px_n = FE.tim_lesen(tim_n)['pixel']
+    px_b = FE.tim_lesen(open(os.path.join(BASIS, 'FORM.TIM'), 'rb').read())['pixel']
+    if not np.array_equal(px_n, px_b):
+        raise SystemExit('Nachbau-Pixel != basis_k5c')
+    fx, fy, fw, fh = soll['sonder']['F1']['feld']
+    feld = np.zeros(px_b.shape, bool)
+    feld[fy:fy + fh, fx:fx + fw] = True
+    kern = mit[0] & feld
+    rand = cv2.dilate(kern.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool) & feld & ~kern
+    if int(kern.sum()) != soll['sonder']['F1']['kern_texel'] or int(rand.sum()) != soll['sonder']['F1']['rand_texel']:
+        raise SystemExit('F1 Kern/Rand %d/%d != bau.json %d/%d' % (kern.sum(), rand.sum(), soll['sonder']['F1']['kern_texel'],
+                                                                   soll['sonder']['F1']['rand_texel']))
+    _F1_MASKE.update(kern=kern, rand=rand, feld=feld, feld_xywh=[int(fx), int(fy), int(fw), int(fh)], tim_sha=soll['sha256']['tim'])
+    return _F1_MASKE
+
+
+def f1_kern_eintraege():
+    """Indizes der F1-Kerntexel (f1_masken) im K5c-TIM: diese Eintraege bleiben bytegleich K5c-Zeile 5 (E32)."""
+    px = FE.tim_lesen(open(os.path.join(BASIS, 'FORM.TIM'), 'rb').read())['pixel']
+    return sorted(int(x) for x in np.unique(px[f1_masken()['kern']]))
+
+
+def f1_rand_zeile(z5, F, mat, hp, zeile3, g4z2):
+    """F1-Zeile (K5c-Zeile 5) mit Hautrand (E32): Kern-Eintraege bytegleich; jeder andere Eintrag, den die 6 F1-Flaechen lesen, bekommt die
+    Hauttransformation der Hautzeilen (L* + dL, Farbton h, C* = Cmax tanh(C / Cmax), runde15 naechste Farbe) auf sein K5c-Wort. 0x0000 bleibt.
+    Pruefung: Eintraege, deren K5c-Wort = G4-Zeile 2 ist (F11-Haut), ergeben dasselbe Wort wie K5e-Zeile 3 (rampe, G4-Seite 2)."""
+    M = f1_masken()
+    px = FE.tim_lesen(open(os.path.join(BASIS, 'FORM.TIM'), 'rb').read())['pixel']
+    f1 = sorted(k for k, v in mat.items() if v == 'F1')
+    gelesen = np.zeros(256, int)
+    for k in f1:
+        np.add.at(gelesen, F[k][2], 1)
+    kern_e = set(int(x) for x in np.unique(px[M['kern']]))
+    z5 = [int(x) for x in z5]
+    L = KG.r4_eintraege(z5)[0]
+    um = [i for i in range(256) if gelesen[i] > 0 and i not in kern_e and z5[i] != 0]
+    if any(L[i, 0] >= KG.R4_L_HELL for i in um):
+        raise SystemExit('F1-Rand: Eintrag mit L* >= R4_L_HELL (helle Klasse braucht Haut-p50)')
+    d = float(hp['dL'])
+    Ln = np.array([L[i, 0] + d for i in um])
+    cm = KG.r4_cmax(Ln, hp['h'])
+    Cn = np.where(cm > 1e-6, cm * np.tanh(float(hp['C']) / np.maximum(cm, 1e-6)), 0.0)
+    hr = math.radians(hp['h'])
+    ziel = np.stack([Ln, Cn * math.cos(hr), Cn * math.sin(hr)], 1)
+    rgb = KG.rgb_aus_lab(ziel)
+    neu = list(z5)
+    for j, i in enumerate(um):
+        w = runde15(rgb[j], ziel[j], 0) | (z5[i] & 0x8000)
+        neu[i] = w if w != 0 else 0x8000
+    haut_g4 = [i for i in um if z5[i] == g4z2[i]]
+    abw3 = [i for i in haut_g4 if neu[i] != zeile3[i]]
+    if abw3:
+        raise SystemExit('F1-Rand: Haut-Eintraege %s != K5e-Zeile 3 (nicht derselbe Parametersatz)' % abw3)
+    Lo = KG.r4_eintraege(neu)[0]
+    inv = sum(1 for a in um for b in um if L[a, 0] < L[b, 0] - 1e-9 and Lo[a, 0] > Lo[b, 0] + 1e-9)
+    rand_fl = M['rand'] & ~np.isin(px, haut_g4)
+    rand_e = set(int(x) for x in np.unique(px[rand_fl]))
+    feld_haut = M['feld'] & ~M['kern'] & ~M['rand']
+    info = dict(kern_texel=int(M['kern'].sum()), rand_texel=int(M['rand'].sum()), feld_xywh=M['feld_xywh'],
+                kern_eintraege=len(kern_e), umgefaerbt=len(um), umgefaerbt_liste=um, haut_eintraege_g4=len(haut_g4),
+                haut_eintraege_gleich_zeile3=len(haut_g4) - len(abw3),
+                fleischrand_eintraege=len(rand_e), fleischrand_eintraege_auch_kern=len(rand_e & kern_e),
+                fleischrand_eintraege_nur_rand=len(rand_e - kern_e),
+                rand_texel_haut=int((M['rand'] & np.isin(px, haut_g4)).sum()), rand_texel_fleisch=int(rand_fl.sum()),
+                rand_texel_fleisch_folgen=int((rand_fl & np.isin(px, um)).sum()),
+                rand_texel_fleisch_kern_eintrag=int((rand_fl & np.isin(px, sorted(kern_e))).sum()),
+                feld_haut_texel=int(feld_haut.sum()), feld_haut_texel_folgen=int((feld_haut & np.isin(px, um)).sum()),
+                rang_vertauschungen=int(inv), nachbau_tim_sha256=M['tim_sha'])
+    return neu, info
 
 
 def eingaenge():
@@ -257,7 +375,7 @@ def bauen(par, aus):
     open(os.path.join(aus, 'FORM.EMD'), 'wb').write(emd)
     open(os.path.join(aus, 'FORM.TIM'), 'wb').write(tim)
     fj = json.load(open(os.path.join(K5D, 'form.json'), encoding='utf-8'))
-    fj['name'] = 'K5e'
+    fj['name'] = par.get('name', 'K5e')
     json.dump(fj, open(os.path.join(aus, 'form.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
     a = open(ASSET + '.EMD', 'rb').read()
     dir_off, dd = FE.verzeichnis(a)
@@ -272,7 +390,7 @@ def bauen(par, aus):
     for z in zeile_je.values():
         zaehl[z] = zaehl.get(z, 0) + 1
     bericht = dict(
-        variante='K5e', par=par, g4_quelle=E['g4q'], zeilen=NZ, port_texturhoehe=NZ * 256,
+        variante=par.get('name', 'K5e'), par=par, g4_quelle=E['g4q'], zeilen=NZ, port_texturhoehe=NZ * 256,
         flaechen=n_fl, flaechen_je_zeile={str(z): zaehl[z] for z in sorted(zaehl)},
         material_je_flaeche_zaehlung={nm: sum(1 for v in mat.values() if v == nm) for nm in sorted(set(mat.values()))},
         texelzugriffe_je_material_seite=nutz, rampen=info,

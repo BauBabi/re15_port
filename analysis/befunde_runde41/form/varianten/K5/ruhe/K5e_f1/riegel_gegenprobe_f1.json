@@ -1,0 +1,97 @@
+{
+ "zeilen": [
+  {
+   "kz": "F1R",
+   "name": "F1R Texelring um den F1-Kern (weiss + Bild 1): Mittel-L* >= angrenzende Haut - 3",
+   "wert": "dL {'weiss Seite': -7.94, 'Bild 1': -2.49} (Ansichten mit >= 20 Ringpixeln)",
+   "ok": false
+  },
+  {
+   "kz": "F1H",
+   "name": "F1H Feldhaut der F1-Flaechen um Kern und Ring: Mittel-L* >= angrenzende Haut - 3",
+   "wert": "dL {'weiss Seite': -19.94, 'Bild 1': -9.12}",
+   "ok": false
+  },
+  {
+   "kz": "F1K",
+   "name": "F1K Kern = K5c: Lab-Mittel Kerntexel (Albedo) und Kernpixel Bild 1 dE76 <= 1",
+   "wert": "Albedo dE 0.00 ([48.5, 21.5, -3.1] gegen [48.5, 21.5, -3.1]), Bild 1 dE 0.00 ([21.29, 12.94, 4.77] gegen [21.29, 12.94, 4.77])",
+   "ok": true
+  }
+ ],
+ "f1": {
+  "ansichten": {
+   "weiss 3/4 vorn": {
+    "kern_px": 1,
+    "ring_px": 0,
+    "feldhaut_px": 13,
+    "haut_px": 284,
+    "haut_L": 23.45,
+    "feldhaut_dL": -18.79,
+    "kern_lab": [
+     35.36,
+     19.22,
+     -1.22
+    ]
+   },
+   "weiss Seite": {
+    "kern_px": 114,
+    "ring_px": 56,
+    "feldhaut_px": 285,
+    "haut_px": 533,
+    "haut_L": 25.11,
+    "ring_dL": -7.94,
+    "feldhaut_dL": -19.94,
+    "kern_lab": [
+     43.75,
+     19.45,
+     -2.89
+    ]
+   },
+   "weiss 3/4 hinten": {
+    "kern_px": 0,
+    "ring_px": 0,
+    "feldhaut_px": 0,
+    "haut_px": 0
+   },
+   "weiss Gegenseite": {
+    "kern_px": 0,
+    "ring_px": 0,
+    "feldhaut_px": 0,
+    "haut_px": 0
+   },
+   "Bild 1": {
+    "kern_px": 660,
+    "ring_px": 353,
+    "feldhaut_px": 1372,
+    "haut_px": 1033,
+    "haut_L": 11.23,
+    "ring_dL": -2.49,
+    "feldhaut_dL": -9.12,
+    "kern_lab": [
+     21.29,
+     12.94,
+     4.77
+    ]
+   }
+  },
+  "k5c_bild1": {
+   "kern_px": 660,
+   "ring_px": 353,
+   "feldhaut_px": 1372,
+   "haut_px": 1033,
+   "haut_L": 2.85,
+   "ring_dL": 5.88,
+   "feldhaut_dL": -0.74,
+   "kern_lab": [
+    21.29,
+    12.94,
+    4.77
+   ]
+  }
+ },
+ "rot": [
+  "F1H",
+  "F1R"
+ ]
+}
