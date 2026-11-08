@@ -2761,3 +2761,89 @@ meshes, 23 bones, 21 clips", 0 Zeilen mit error/fehler/assert (v5f/lauf_V5f_debu
    laenger in P2 hiesse die Kette aendern.
 4. Krallen hell: Foto-Keil L* 30, Modell-Krallen so dunkel wie die Hand; nach Auftrag Textur unveraendert.
 5. Foto-1-Pose: Die Zuordnung je Koerperteil in P1 bleibt grob (Messblatt Offen 1); T-F7 Foto 1 nutzt deshalb nur die festen Regionen.
+
+## V6 drei Punkte (Haar, Schwanzspitze, Kralle) (Bauer, 2026-11-08)
+
+Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc, keine Zahl hier ist eine @0x-Konstante. Masse = Bildmessung an den Originalfotos
+(SF_MESSBLATT_FOTO.md) und am Modell (v4_gemein.zeichne, Spielkamera 50A0/12, RDT-Licht). Werkzeuge re15_port/tools/r41_sichel/v6drei/,
+Belege SF_belege/v4/v6drei/ und SF_belege/v4/30-34_*. Variante sfv4/emd/**EM30_V6.EMD = EM30_V4.EMD**, sha256
+9e0e58ef09322b51213eaa4e55f6d04d980478cce4fe940f0f9b841c9e78c626, 268436 Byte, zweiter Bau gleiche sha256. Basis EM30_V5f.EMD (784c8f05).
+Spiel-Asset EM30_HANGAR.EMD (cfd1ac42) und Pin unveraendert (nachgerechnet). Nichts in Version_80%/, pri/, synchro/.
+
+### Nutzer-Wortlaut (2026-11-08)
+"Ja, sieht insgesamt schon recht cool aus. Mache mal die 3 von dir genannten Punkte noch, und wir schauen sie uns an." Die drei Punkte:
+1. Haar ergrauen wie den Fleck (Struktur bleibt); 2. Schwanz bis zum Nutzerpunkt "Schwanzspitze Ende"; 3. Kralle (W)-links aufhellen.
+
+### 1. Haar (drei_bau.haar; nur Texel)
+- Haarfeld = 8-zusammenhaengende Komponente(n) der gelblichen Texel (Paletten-b* >= 6, Zeile 486 = Original-Zeile 0) im Haarbereich
+  (v <= 172 ueber den Kopf, u <= 76 bis v 186 = (W)-rechte Kopfseite/Schlaefe ueber Fleck und Braue, u <= 57 Randstraehnen), die die
+  obersten Haarzeilen (v <= 150) beruehren, Loecher gefuellt (dunkle Straehnen). Nur Texel, die ausschliesslich Mesh 9 nutzt und die V6
+  nicht schon geaendert hat. Erster Lauf mit u <= 68 liess einen gelben Block u 68-76 v 172-186 stehen (P2 b* P90 6,0), darum 76.
+- Umfaerbung wie Zone A: jeder Haartexel behaelt seinen Helligkeitsrang und bekommt den Index des grauen Flecks (Original-Textur, Box
+  u 58-74 v 186-226, L* <= 50, b* <= 10, 300 Texel) mit demselben Rang. 1410 Haartexel, 1319 geaendert, Box u 60-122 v 138-186;
+  Paletten-Median 30,9 / 2,4 / 13,3 -> 25,2 / 6,9 / 2,3, b* P90 21,6 -> 5,2. Palette unveraendert. Haartexel ausserhalb der UV von
+  Mesh 9 (Rand u < 56, oben v < 136, Mitte oben) sind unsichtbar und bleiben.
+
+### 2. Schwanz bis zur Nutzer-Spitze (schwanz_laenge_suche.py, radien_suche.py, drei_bau.schwanz / kappen)
+- Befund (gemessen, P2 = Clip 12 Bild 48): die Kette V5f endet bei (280,306), Apex (279,309) = 38 px ueber Ende (295,343). Die Glieder
+  20-22 zeigen in P2 nach Bild-links unten, nur Glied 19 nach rechts unten; die Foto-Spitze liegt rechts unter dem Knick. Mit festen
+  Keyframe-Winkeln bringt nur eine Laengenverschiebung (vor allem Glied 19 laenger) die Spitze dorthin.
+- Laengen (Suche ueber Glied 19-22, Glieder 16-18 fest; Nelder-Mead, Ziel Nutzerlinie, Grenzen Spitze/Beginn/Biegung/Knick):
+  relpos 20 / 21 / 22 = 524 / 531 / 243 -> **1121 / 350 / 204**, Endring Mesh 22 242 -> **608** (Faktoren 2,14 / 0,66 / 0,84 / 2,51).
+  Keyframes, Kinderlisten, Bindversatz 16 bytegleich (T-K1a). Verworfen: Glieder 16-18 frei (4,0 px statt 5,3, aber Glied 16 x 1,67).
+- Radien: schwanz_form.passen auf die Foto-Breite (bauch wie V5f), danach Gitter Gelenk 3/4/5 (radien_suche.py, Laeufe 1-3; passen
+  allein liess T-F5c 21 % am Gelenk 19/20): 306,5 / 273,5 / 273,5 / **255 / 170 / 80** / 74,1 / 74,1 (V5f 289 / 258 / 258 / 160 / 151 / 60 / 65 / 65).
+- **Deckel** (neu, kappen): spalten.py (Tiefenpuffer, sichtbare Innenwand = Spalte, Oeffnung 3 x 3) fand schon in **V5f** bei Knicken
+  ueber ~27 Grad offene Rohrenden: 1792 px in 72 von 200 Bildern (Stichprobe 50 Keyframes x 4 Ansichten); ohne Manschette 1206 px in
+  22 Bildern (lange Risse statt Eckloecher); V6 vor den Deckeln 5274 px. Darum je Rohrende ein flacher Deckel aus 11 Dreiecken um eine
+  Ecke in der Ringmitte (Glied 16-21 Endring, 17-22 Anfangsring; 12 Deckel, Zeile 487, UV der angrenzenden Mantelflaeche). Ringe und
+  Manschette wie V5f. Verworfenes Spalten-Mass: Kugelscheibe gegen den Umriss (zaehlte schmale Rohre und Schleifen als Luecke).
+
+### 3. Kralle (W)-links (drei_bau.kralle)
+- Neue Zeile 491 = Kopie 490 (Klauenhand); nur die 13 Krallenflaechen von Mesh 12 (alle Ecken y >= 330) zeigen darauf. Die Krallentexel
+  (526, 60 Indizes) teilt Mesh 12 mit 11/14/15 - die behalten ihre Zeilen, Texel unveraendert.
+- In 491 bekommt jeder Krallen-Index den naechsten Eintrag (dE76) aus der Referenz-2-Palette (480-485) bzw. Original-Zeile 0 mit C* <= 12,
+  a* >= 0 (156 Kandidaten) zum Ziel (Paletten-L* + Verschiebung, Foto-a*/b* 4,9 / 1,7); Verschiebung per Halbierung auf die Foto-L* in P1:
+  25,66. Paletten-Median 13,1 / 16,3 / 5,9 -> 38,9 / 3,4 / 1,2; gerendert P1 14,0 / 10,1 / 4,6 -> **30,3 / 2,5 / 1,2** (Foto-Keil n1476
+  30,3 / 4,9 / 1,7). CLUT 12 Zeilen, Port-Texturhoehe 3072 <= 4096.
+
+### Riegel (riegel_v6drei.py; SF_belege/v4/v6drei/riegel_v6drei_V6.txt/.json) - Exit 0, 0 rot von 24
+| Pruefung | Ergebnis |
+|---|---|
+| T-K1a-d Ausnahmeliste gegen V5f | gruen: EMR nur relpos-y 20/21/22; Texel nur im Haarfeld (1319), Indizes aus dem Fleck; Meshes 0-15 nur 13 Krallen-CLUT-Felder; 16-22 alte Flaechen gleich + 12 Deckel; 480-490 gleich, 491 Rest = 490 |
+| T-H7 Haar grau (ohne rote Original-Merkmale a* >= 15) | P1 b* P90 4,4 / C* 6,9; P2 5,0 / 7,4; 135 4,0 / 9,2; Haartexel b* max 8,4 (V5f 16,1/16,3; 19,6/19,8; 13,4/13,9). Alle Kopfpixel in 135: 10,5 / 24,1 (rotes Auge, Wange, Lippen) |
+| T-F9 Schwanz P2 | Spitze (290/342) 5,6 px von (295,343); Beginn 2,2, Biegung 0,0, Knick 2,2 px vom Umriss (V5f: Spitze 37,8 px) |
+| T-F5d Steigungsknick | max 10,5 Grad |
+| T-F9s Spalten | 0 px (50 Keyframes x 4 Ansichten) |
+| T-F10a Kralle P1 | L* 30,3 (Soll 30,3 +- 6) |
+| T-F10b Rest unveraendert | P1 30439 px / P2 16959 px gleichen Knochens verglichen (Mesh 14: 2679 / 2878), 0 abweichend |
+| v5f T-F1 / T-F5a / b / c / e / T-F8 / T-F4 / Kopf T-H1i/ii, H2, H4, H5, H6 | gruen; T-F1 max 14 %; T-F5c 20/21 und 21/22 nur ueber den 1-px-Rasterboden (0,9 / 0,8 px); IoU P1 0,7104, P2 0,7528 |
+
+Gegenprobe V5f (riegel_v6drei_V5f_gegenprobe.txt): Exit 1, 7 rot (T-K1b-d, T-H7, T-F9, T-F9s, T-F10a). INFO: T-F7 bleibt wie in V5f
+(offen beim Nutzer; Foto-1-Region Unterarm/Hand faellt durch die graue Kralle 2,6 -> 0,6 %); V4 T1-T4/TA/TK in Pose 85 sind durch T-F9 in
+P2 abgeloest (in Pose 85 liegt das Ende jetzt bei (323,372), 0,1 H rechts/unter dem Nutzerpunkt).
+
+### Leisten (SF_belege/v4/, roh)
+30_foto2_vergleich.jpg (Foto 2 | Beschreibung2 | V5f | neu | 50 % neu | 50 % V5f, mit Nutzerpunkten, Kette, Spitze), 31_foto1_vergleich.jpg
+(P1 und 135), 32_kopf_nah.jpg (x4), 33_kralle_x8.png (n1476 | Foto 1 | V5f | neu), 34_spiel.jpg (Spielbild h135 / h85).
+Selbst angesehen: Das Haar ist grau mit erhaltener Straehnenstruktur, kein Gelb mehr (P1/P2/135). Die Schwanzspitze sitzt in P2 am
+Nutzerpunkt, der Schwanz laeuft durch Beginn/Biegung/Knick, macht aber unter der Biegung einen Zickzack (Gelenk 20 bei (312,291), ~20 px
+rechts der Nutzerlinie), weil die Winkel fest sind. Die Kralle ist ein heller grauer Keil wie in n1476. Im Spielbild h135 und in P1
+ist das lange Schwanzende jetzt hinter den Beinen als duenner Stab zu sehen (V5f nicht).
+
+### Tests
+Bau "LOCAL-BUILD-OK (build)" (Engine unveraendert). ctest -R "unit_birkin_formen|unit_birkin_szenen|unit_schwanz_r41|
+integration_r41_sichel_form": "100% tests passed, 0 tests failed out of 4", Total Test time (real) = 88.79 sec (v6drei/ctest_v6.txt).
+Spiellauf lauf_v4.sh mit EM30_V6: EXIT=0, 191 FRAMEDUMPs, "[enemy] EM30 loaded: 23 meshes, 23 bones, 21 clips -> slot 12", 0 Zeilen
+mit error/fehler/assert (v6drei/lauf_V6_debug.log). Die CLUT-Zeilenzahl loggt der Port nicht (12 Zeilen belegt T-K1d an der Datei).
+
+### Offen
+1. **Schwanz unter der Sohle** (Beobachtung, INFO T-F9b): Mit den laengeren Gliedern 19/22 liegt die Schwanzspitze in 82 von 912
+   Keyframes tiefer als die tiefste Koerperecke (max 579 E.; Clips 4, 7, 8, 9, 10, 11, 12, 17, 20), V5f in keinem. Im Spiel kann die
+   Spitze dort in den Boden ragen. Abhilfe nur ueber andere Keyframe-Winkel des Schwanzes (nach Auftrag ausgeschlossen) oder ein
+   kuerzeres Ende (dann nicht am Nutzerpunkt). Entscheidung beim Nutzer.
+2. **Zickzack unter der Biegung** in P2 (Glied 19 x 2,14 nach rechts unten, 20-22 nach links unten); die Foto-Linie laeuft gerade nach
+   unten. Gleicher Grund (Winkel fest).
+3. In Pose 85 (alter Vergleich zu Foto 2) ist der Schwanz jetzt zu lang (Ende 0,10 H rechts / 0,11 H unter dem Nutzerpunkt).
+4. Kralle: a* 2,5 gegen Foto 4,9 (Kandidaten nur grau/knochenfarben, C* <= 12); L* trifft.
+5. T-F7 / TK unveraendert offen wie in V5f.
