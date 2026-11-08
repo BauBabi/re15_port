@@ -3042,3 +3042,112 @@ Labor 50E0: Lauf aus integration_r41_sichel_form (Software-Renderer) - Ersatzmod
 7. analysis/befunde_runde41/NUTZER_ENTSCHEIDE.md liegt in diesem Zweig nicht vor und SF_sichel.md hat keinen Entscheid-Abschnitt -
    der Entscheid steht nur hier.
 8. Software-Renderer-Fix 4dde57452 fehlt in r41/sichel_nb2 (fuer V7 nicht noetig); kommt mit der Integration.
+
+## V8 Koerperbau nach Nutzer-Skizze (2026-11-08) (Bauer, Runde 1 von 2, Zweig r41/sichel_v8)
+
+### Wortlaut (bindend)
+- (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Ich verstehe
+  das auch nicht. Es ist doch eigentlich KLAR erkennbar. Siehe Darstellung.png und Darstellung_Vorlage.png. Man sieht ganz klar den
+  Körper Aufbau...."
+- (B) "und wenn du schon dabei bist, am überarbeiten, man sieht ebenfalls beim vorlage Bild, das die Rechte Seite auch mehr rottöne hat,
+  also quasi mehr adern an verschiedenen Stellen, am Arm und Körper, nicht nur grau. Übernehme die die Textur Sachen die du dafür
+  brauchst vom originalen Birkin von Resident Evil 1.5"
+- Skizze Version_80%/Darstellung.png: T ("tail area 1/2"), J ("Tail directly smooth into the back - no hill or anything..."), H ("Little
+  red hill from the back"), K ("smooth straight to head without further hills....").
+Messblatt: SF_MESSBLATT_V8.md (09b04bc1c). Kein RE-Befund; jede Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine @0x-Adresse.
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8, sha256 fa31156c3b17dd4fe0946f3fad334e597eac91bdc9aa5168280566fd4b33a8ff** (270 500 Byte), Pin
+  release/em30_hangar.sha256. Bau: re15_port/tools/r41_sichel/v8_kette.sh (V7-Kette Stufen 1-6, dann v8/v8_bau.py) -> "V8-KETTE-OK".
+  Zwei Bauten aus V7 bytegleich (Determinismus geprueft).
+- Riegel (v8/riegel_v8.py, SF_belege/v8/riegel_v8.txt): **6 von 8 gruen** (S1, S4, S5, S6, S7, S8), **rot S2 und S3** (siehe Offen).
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log **bytegleich** zum freigegebenen V7-Lauf
+  (1131 Zeilen, 0 Unterschiede), Spieler am Ende frei (pst=1). Labor 50E0: Form geladen (23/23/21), state.log V7 = V8 (0 Unterschiede).
+
+### Achsen (Korrektur zum Messblatt)
+Gemessen (sfv8/bau/x2.py, x3.py): im Knochenraum 8 ist **z die Seitenachse** (Oberarm Knochen 13 relpos z -1136, Knochen 10 z +943,
+Huefte 1/4 z -229/+229), x = vorn/hinten (Kopf Mesh 9 x -156..353, Ruecken bis x -1075), y entlang der Wirbelsaeule. In PV steht die
+Kamera im Knochenraum 8 in Richtung (0,27, -0,50, -0,82). **(W)-rechts = z < 0** = die zur Kamera gewandte Flanke (bestaetigt das
+Messblatt in der Sache: Knochen 13 sichtbar). Das Messblatt nannte die Seitenachse x ("Wurzel 378 E. (W)-rechts", "Schwerpunkt x < 0");
+x < 0 ist die hintere Rumpfhaelfte. S7c misst weiter wie im Messblatt definiert (lok x < 0); daneben ausgegeben lok z < 0.
+
+### Verfahren und PORT-WAHL-Werte
+1. **Schwanz** (v8/kette_suche.py -> kette_v8.json; Stufe s in v8_bau.py):
+   - Modell der Suche: Kette aus 7 gleich langen Gliedern im Knochenraum 8, Bild = Kreise entlang der Kette (Radius x Bildmassstab am
+     Ort), Pose PV, Residuen: S1 (22 T-Stationen), 0,5 x Oberkontur x 330-445 gegen die Vorlage-Maske, Naht (S2c), Spitze an (283,334),
+     Wurzelmitte an J-Mitte (366,215), S4-Mindestdurchmesser, Rueckenmitte (z-Gewicht 2,0), Boden. scipy least_squares (soft_l1).
+     Laeufe sfv8/bau ks1-ks11; verworfen: freie Radien (fetter Schwanz ueber dem ganzen Ruecken, ks1), z-Gewicht 0,5 (Gelenke bis
+     z -1300 an der Flanke, ks5), gerades Wurzelrohr B 1,2-1,7 (Deckel ragte in der Ansicht von vorn ueber die Schulter, t5/t6).
+   - Ergebnis: Wurzel relpos **(-667, -342, 102)**, Gliedlaenge **L 538** (alle 7), Ruhe-Biegung je Gelenk (Suche) 23,2 / 23,7 / 20,8 /
+     -11,7 / 16,9 / -18,8 Grad (Betrag <= 25 Grad, Bauplan); Ruhe-Lokaldrehungen im Asset 21,9 / 22,2 / 19,5 / 11,1 / 18,8 / 26,9 Grad
+     (die Ruhe ist so gesetzt, dass PV mit der V7-Bewegung genau die Suchkette zeigt; das letzte Gelenk liegt dadurch 1,9 Grad ueber 25).
+   - Radien je Gelenk (E.) **450 / 417 / 362 / 350 / 193 / 83 / 63 / 60** aus dem Bauplan-Profil (Wurzel 450, s 90-130 **350**,
+     s 140 250, s 150-160 90, Ende 60) mit Steigungsknick <= 15 Grad. 350 statt ~305 bei s 90-130: mit 305 nur 34,7-37,5 px (Lauf ks10,
+     die Glieder liegen tiefer im Bild als der Koerper; S4 verlangt >= 36).
+   - Mesh 16 (Wurzel) = Topologie von Mesh 18 (3 Ringe): Rohr im Rumpf **1,5 r0** hinter der Wurzel, verjuengt auf **0,6 r0**, Kegel
+     **0,3** x Radius; Ringe der Glieder auf der Gehrung der Ruhekette, Manschette 0,45 r, Dorn 0,8 r, Normalen radial; Flaechen/UV/
+     Zeile 487 wie V7 (Schwanzfarbe unveraendert).
+   - Keyframes der Knochen 16-22 = Ruhe x (V7-Keyframe gegen den Clip-Median); Bodenregel offline: in **151** Keyframes Knochen 16 um
+     eine waagerechte Achse hochgedreht, bis Ringunterkanten, Spitze und Dornspitze nicht unter der tiefsten Koerperecke liegen.
+2. **Ruecken** (v8/ruecken_suche.py -> ruecken_v8.json): Ecken von Mesh 8 senkrecht zum Sehstrahl verschoben (Koordinatensuche, 1 px):
+   Runde 1 Rumpf allein gegen die Vorlage-Oberkontur x 372-445 (Kosten 8,37 -> 5,55), Runde 2 mit Schwanz und den Formtermen (H,
+   Sattel, Kuppe), nur Bild-x >= 395. Verschoben: Ecken 7, 29, 30, 45, 47, 49, 50, 53, 58 (je 10-74 E.).
+3. **Adern** (v8/adern_v8.py, adern_suche.py -> adern_v8.json): Zeile **493 = X1** (V7-Zeile 480 + **62** Original-EM30-Ader-Eintraege
+   der Zeile 480, a* >= 15, L* <= 38, bytegleich), **494 = X2** (V7-Zeile 481 + **50** Eintraege der Zeile 481); 15 Zeilen, Port-
+   Texturhoehe 3840. Mesh 13: 13 Flaechen 480 -> X1. Mesh 8: die in PV sichtbaren (>= 10 px) Hautflaechen mit z < 0 (26), 23 -> X1,
+   3 -> X2, je Teil-UV-Insel (<= **900** Texel, 9 Inseln) ein Schub auf aderreiche Original-Texel derselben Seite und Zeile (keine
+   Flaechen-Rot-Texel, nicht Bereich C Schulter-Augapfel). 900 statt ganzer Inseln (3, S7c 17,4 %) bzw. je Flaeche (S7c 62,7 %, Tafel
+   sfv8/bau/za.png: rotes Netz "wie drauf gemalt"): Probe zc.png, ruhigster Stand mit S7c >= 25 %. Texel bytegleich V7, keine neue Farbe.
+4. **Code**: schwanz_r41.c V8-Kettenmodus (re15_schwanz_r41_v8_kette: gleiche Glieder max/min <= 1,10, Glied >= 500 E., Wurzel y < 0,
+   x >= -700; V4-Mitnahme/-Feder/-Erhalt, haengen() aus, glaetten() Keyframe-Winkel + 3 Grad, hoechstens 25 Grad, ohne Knick-Ausnahme,
+   Bodenregel mit Mesh-Radien); birkin_formen.c: V8 nimmt die V4/V7-Szenenfuehrung (k_schwanz_gewicht_v4), nie die V2-Fuehrung.
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenprobe V7 in tools/r41_sichel/v8/riegel_v8_V7_gegenprobe.txt)
+| Riegel | Soll | V8 | V7 (Gegenprobe) |
+|---|---|---|---|
+| S1 Kontur T | Mittel <= 4, Max <= 8 | **3,0 / 7,0 gruen** | 16,8 / 50 rot |
+| S2 J | (a) <= 4/6, (b) <= 2, (c) <= 3 | (a) 3,7 / 7, (b) 3,7 bei x 358, (c) 5,0 bei x 406 **rot** | 7,3/13; 6,6; 7,0 rot |
+| S3 Ruecken/H/K | (a) <= 4, (b) H 5-10 bei x 428-445, (c) keine, (d) <= 2, (e) <= 3 | (a) 3,0, (b) **3,0 bei x 423**, (c) keine, (d) **2,3**, (e) 3,0 **rot** | 8,0; 4,6 bei 427; 6,4; 3,0 rot |
+| S4 Breite | Wurzel >= 55, s 90-130 >= 36, monoton, Ende <= 10 | **59,0; 42,6/40,0/40,3; ja; 6,0 gruen** | 44,3; 24,1; nein rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | V5f: Texel anders, rot |
+| S6 Boden | 0 Keyframes, Szene y <= 0 | **0 von 912; Szene tiefstes y -66 gruen** | 70 von 912 rot (Szene -108) |
+| S7 Adern | Herkunft; 35-59 %; 25-80 %; Flecken <= Original | **ok; 43,3 %; 29,8 % (lok z < 0: 32,7 %); 19 <= 27 gruen** | 22,8 %; 0,0 % rot |
+| S8 Technik | <= 16 Zeilen, <= 4096, 23/23/21 | **15, 3840, gruen** | 13, 3328 gruen |
+
+Praezisierung S2c: das Messblatt-Werkzeug m26 setzte die Schwanz-Oberkante hinter ihrem rechten Ende als Gerade fort und mass damit den im
+Rumpf liegenden Rohrrand (V7 34 px bei x 410, Messblatt-Tabelle "6-14"); riegel_v8 misst an der Naht (rechteste Spalte x 330-420, in
+der der Schwanz oben liegt, +-15 Spalten): V7 7,0, V8 5,0. S3c nimmt Kuppe (x 385-425, -> a) und H (x 428-445, -> b) aus; S3e ueber
+y 212-243 wie m25 (V7 3,0).
+
+### Tests
+- configure + build: LOCAL-BUILD-OK.
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8".
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":
+  "100% tests passed, 0 tests failed out of 1013".
+- Neu: unit_birkin_formen (15 Zeilen, X1/X2 62/50 Eintraege aus EM30, Mesh 13 13 Flaechen X1, Mesh 8 23 + 3, 26 UV-Schuebe),
+  unit_schwanz_r41 (V8-Kette erkannt, V7-relpos nicht; (10) Gelenk <= min(25, max(12, Keyframe + 3)) Grad: 24,9 / +0,1).
+  Gegenprobe mit V7 als Asset: beide rot (SF_belege/v8/tests_gegenprobe_V7.txt).
+
+### Spiel
+- Szene: sfv8/szene_v8 (Video sfv8/spiderman_szene_v8.mp4, F225-F450, 226 Bilder, 30 fps, 960 x 720); Tafeln 06 und 07 (jedes 7. Bild):
+  Ablauf wie V7, Schwanz nie im Boden (tiefstes Gelenk y -66), in groben Zuegen kein Durchstossen von Leon/Spider-Man/Wand gesehen.
+  Bilder per RE15_FRAMEDUMP wie der freigegebene V7-Lauf (kein AUTOSHOT/SOFTWARE_RENDER); ein gdigrab-Lauf steht aus.
+- Labor 50E0 (sfv8/labor_v8, 1000 Takte ohne Eingabe): Form geladen; Birkin st=1 ss1=9 an (-15000,12200) unveraendert, wie V7
+  (sfv8/labor_v7, state.log 0 Unterschiede). Der Kampf selbst laeuft in integration_r41_birkin_pistole (gruen, 240 s).
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+01_darstellung.png, 02_foto2_seite.jpg, 03_foto1_vorn.jpg, 04_rundum.jpg, 05_adern_rechts.png, 06_spiel.jpg, 07_bogen_jedes7.jpg.
+Sicht: V8 zeigt einen durchgehenden Bogen vom oberen Ruecken nach hinten unten (statt der V7-L-Form), die Oberkante liegt auf T; die
+(W)-rechte Flanke traegt rote Original-Adern.
+
+### Offen (Runde 2)
+1. S2 rot: Schwanz-Oberkante x 345-365 3-7 px ueber der Vorlage (Suchmodell mit Kreisen weicht dort 3-4 px vom Mesh ab), Sattel 3,7
+   bei x 358, Naht 5,0 bei x 406 (Rumpf ueber dem Wurzelrohr). Weg: Feinsuche mit dem gerenderten Mesh statt Kreisen.
+2. S3 rot: Huegel H nur 3,0 px bei x 423 (Soll 5-10 bei 428-445), Sattel Ruecken -> Kopf 2,3 (Soll <= 2). Grenze: der Kopf (bytegleich)
+   setzt die Sehne bei x 447; eine Gittersuche ueber die Ecken 0/30/46/51/53/54 erreichte H 4,5 bei x 438 mit Sattel 4,0.
+3. In P2 (Foto 2) endet der Schwanz hoeher als im Foto und das Ende biegt hoch (Bewegung aus dem V7-Clip-Median auf die neue Kette);
+   die Bewegungsdeltas der L-Kette passen nicht ganz zum Bogen.
+4. Letztes Ruhe-Gelenk 26,9 Grad (> 25); glaetten() begrenzt im Spiel auf 25.
+5. Adern: 9 Teil-Inseln erzeugen UV-Naehte zwischen den Inseln; Eindruck "ruhig" am Nutzerbild pruefen (Memory Texturen nie aus Video eichen).
+6. gdigrab-Aufnahme des echten Fensters fehlt noch (Bilder hier aus RE15_FRAMEDUMP wie der V7-Referenzlauf).
