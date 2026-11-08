@@ -2290,3 +2290,109 @@ EM30_HANGAR.EMD (cfd1ac42) und Pin release/em30_hangar.sha256 unveraendert.
    nach KI dunkel. Heller nur mit einem hoeheren Faktor auf beiden Zeilen (dann KV2 rot).
 6. Schwanz (Leser B D7 gegen Beschreibung2), Schnauzenwinkel (Leser B 30-35 Grad gegen Beschreibung1-Sicht), T5 0,098: wie Runde 1 offen.
 7. Einbau ins Spiel-Asset erst nach der Abnahme.
+
+
+## V5 Runde 3 (Nutzer: grau, abgerundet) (Bauer, 2026-11-08)
+
+Grundlage: V5 Runde 2 (EM30_V4re2, sha256 e9c66c2e). Diese Runde aendert nur die Palettenzeilen 486/488 und die Lage von 9 Ecken des Kopf-Meshes.
+Koerper (Referenz 2), Schwanz (Runde 3 ot3), Texel (G2/G3 bytegleich), UVs, Zonen, Drehung/Skala/Versatz des Kopfes und das Maul bleiben.
+Kein RE-Befund (die Sichel-Form gibt es auf keiner Disc): keine Zahl hier ist eine @0x-Konstante; jede Zahl ist ein Mass gegen Foto/Referenz.
+
+### Nutzer-Wortlaut (2026-11-08, bindend)
+"Mach die Feuerflecken vom 2 beinigen Birkin auf dem Kopf noch weg. DIese hellen Kratzer im Gesicht. Ich weiß nicht woher du die ableitest. Die gibt
+es eindeutige nicht! Die Seite ist einfach grau wie der Rest auch. Außerdem hast du vorne am Kopf eine Verlängerung wie so ein spitzer Schnabel in
+grau. AUch die gibt es nicht. Es ist abgerundet so wie es auf dem Original Foto aussieht."
+Weiter gueltig: "da ist links ein Auge. Linke Seite ist so gräulich. Bis Nase. Dann rechts Seite sieht man Haare - bräunlich" (Beschreibung1).
+
+### Woher die Flecken kamen (gemessen)
+Die "Feuerflecken"/"hellen Kratzer" sind die roten Adern der G2-Textur (Quell-Eintraege mit Chroma > 12: 192 von 255 Eintraegen der
+G2-Zeile 0; im Texel der grauen Zone 30 % der Texel, Median-L* 27,5 gegen 21,0 der grauen Haut). Runde 2 hat sie mit L* x 1,9 belichtet:
+Zeile 486 Texel L* P50 / P99 / max 42,2 / 97,6 / 97,6, 30,6 % der Texel ueber P50 + 8, Chroma P90 30,9, a* P99 45,2, b* P10 -3,7
+(silber-lila). Im Render Pose 135 / 85: a* > 12 bei 25,4 / 23,4 % der Kopfpixel, L* P99 78,6 / 90,9.
+
+### Farbe: Palettenregel r3 (kopf_re2_bau.zeile_r3 / zeilen_r3; PARAM_R3['pal']; Texel bytegleich, nur Zeilen 486 / 488)
+Je Eintrag: L*k = k x L*Quelle; M = Texel-Median von L*k ueber die Texel der Zone (UV-Dreiecke der Zonenflaechen ohne Maul gerastert);
+L*' = L*k begrenzt auf [M - 12, M + 6]; Eintraege mit Quell-Chroma > 12 (Adern) hoechstens M (= Grau derselben bzw. geringeren Helligkeit);
+a*/b* fuer ALLE Eintraege = Zielton der Zeile; Ausnahme Glanzpunkt des Auges (Eintraege des Augenkerns mit Quell-L* >= 70: 133, 152, 164, 166):
+L*' = L*k. Danach sRGB-Gamut ueber die Chroma, 5 Bit je Kanal, Eintrag 0 bleibt 0.
+| Zeile | k | M | Ton a*/b* | Texel L* P50/P99/max | Texel > P50 + 8 | Chroma P50/P90 | a* P99 | b* P10 |
+|---|---|---|---|---|---|---|---|---|
+| 486 grau Runde 2 | 1,90 | - | Quelle | 42,2 / 97,6 / 97,6 | 30,6 % | 6,9 / 30,9 | 45,2 | -3,7 |
+| 486 grau Runde 3 | 1,941 | 42,0 | 1,5 / 2,0 | 41,5 / 47,9 / 47,9 | 0,0 % | 3,4 / 5,1 | 3,4 | 1,1 |
+| 488 dunkel Runde 2 | 1,00 (<= 30, Chroma x 0,5) | - | Quelle x 0,5 | 21,0 / 31,1 / 31,4 | 22,5 % | 6,9 / 22,7 | 29,1 | -3,9 |
+| 488 dunkel Runde 3 | 1,20 | 26,0 | 3,0 / 5,0 | 25,2 / 31,1 / 97,6 (1 Glanz-Texel) | 0,0 % | 7,0 / 7,6 | 7,1 | 1,4 |
+(Texel der Zonen ohne Augenkern, sfv5r3-Messung; Riegel T-R1d)
+Helligkeit (Suche re2kopf/suche_r3/grid_pal.py, Render b2 Kamera 50A0/12 RDT-Licht Pose 135): m_ziel 27,9 = Texel-Median der Koerperhaut
+(Referenz 2 Meshes 0-8/10-15, 36244 Texel, suche_r3/haut.py) ergab im Render graue Zone 25,5 gegen Koerperhaut 27,7, aber T-K9e 20,0 / 0,78 und
+K5 0,97 (rot) - der Kopf wirkte dunkler und oliv als der Koerper. 30,5-40: K5, T-K9e oder K6 rot. 42 (k 1,94, wie Runde 2): graue Zone im Render
+37,8-39,1 (Videoraum 41,5) = helle Schulterhaut der Leiste 01, Kopf/Rumpf 0,99, alle Zeilen gruen. Ton: b* 4 wirkte bei L* ~25 oliv-braun
+(kopf_ref2_r2_r3_x5.png aus dem ersten Versuch), darum a*/b* 1,5/2,0 (warm-neutral, b* >= 0, a* < 8). Dunkle Zeile k 1,2: 1,0 -> T-K9e rot,
+1,25/1,3 -> KV2 > 31,4 (K5 rot); Ton braeunlich-grau 3,0/5,0.
+Render nachher (Riegel T-V1, Kopfpixel ohne Augenfaecher/Maul): Pose 135 a* > 12 0,0 % (vorher 25,4 %), helle Kratzer 1,5 % (vorher 10,0 %),
+b* P10 0,6 (vorher -3,8), L* P99 47,9 (vorher 78,6); Pose 85 0,0 % (23,4 %), 1,9 % (22,0 %), b* P10 0,0 (-3,7), L* P99 47,9 (90,9).
+
+### Form: Kappe (kopf_re2_bau.kappe / runden / normalen_neu; PARAM_R3['form'] = trimm 1,15, cos0 0,45, cos1 0,55, fest 'auge')
+Profil der Fotos: Kopf-Vorderkante seitlich (Beschreibung2_Vorlage, Zeilen 186-217 vor dem weissen Pfosten, |dL*| > 9 gegen das BSS im
+Videoraum) x 464-465 in allen 32 Zeilen = Messblatt "Vorderkante x 465"; Foto vorn (Vorlage 1) ist rund ohne Vorsprung (Messblatt Abschnitt 2).
+Kappe = achsparalleles Ellipsoid, Kleinste-Quadrate-Anpassung an die 48 G2-Ecken (unskaliert), iterativ ohne r > 1,15: c (-17,5, 18,1, 0,0),
+Halbachsen (214,5, 396,7, 173,1), 3 Schritte, ausgeschlossen 7 / 8 / 10 / 18 (r 1,35 / 1,19 / 1,36 / 1,35) = die Keilspitze (lokale Abweichung
+9,2-10,4 % der Kopfhoehe = die drei groessten des ganzen Meshes, suche_r3/form_probe.py). Vordere Ecken mit r > 1 werden radial auf
+r' = 1 + (1 - w)(r - 1) gelegt, w = 0 bei cos <= 0,45 bis 1 bei cos >= 0,55 (cos = Richtung zur Schnauzenachse +x).
+Fest bleiben die 5 Ecken des Augenfaechers (2, 3, 5, 17, 39 = T19/T20/T41: K4/S2). **Bewegt: 9 Ecken** 1, 7, 8, 10, 11, 18, 29, 30, 41
+(7/10/18 je ~90-99 E., 8 58, 11 37, 30 36, 1/29/41 klein); Normalen dieser 9 Ecken neu (flaechengewichtetes Mittel der Flaechennormalen,
+Methode an G2 nachgerechnet: p50 4,8 / p90 11,7 Grad zur Original-Normale), alle anderen bytegleich; UVs und Zonen unveraendert (an den
+Quell-Ecken). Verworfen (Varianten A-W, suche_r3/feval.py): Auge mitrunden -> Augenfaecher an der Vorderkante, KS2 rot (A/J/K/L); Maul
+festhalten -> Maulecke 41 steht 4,8 % vor (C); breiter Uebergang 0,30/0,60 -> Kronenecken 16/26 mit, S2 0,028 (B); lokale Kugeln
+(form_probe3) liefen in Teilhaufen; radiale Glaettung / Randbindung ans Auge (M-W) liessen Spitze oder Maulecke wieder vorstehen.
+| Mass | Runde 2 | Runde 3 |
+|---|---|---|
+| T-V2a vorderste Ecke gegen die Kappe (Riegel-Anpassung am Ergebnis) | Ecke 10 (x 228), 99,0 E. = 21,3 % der Kopfhoehe | Ecke 41 (x 170), 7,0 E. = 1,5 % |
+| T-V2b Dellen / neue Vorspruenge (Grenze = Relief der G2-Quelle P75 7,7 %) | - | keine / keine (24 Ecken geprueft) |
+| T-V2c IoU vorn seitlich gegen Foto 2 (Zeilen 186-217) | 0,529 | 0,549 (Referenz 2: 0,503) |
+| Kopf-Vorderkante seitlich Render / Foto | 484 / 464 (Ueberstand max 20 px) | 481 / 464 (max 17 px) |
+| K10 / K4 / K7 / S2 / KS2 | 0,165x0,170 / 0,060-0,097 / 0,60-0,66 / 0,043 / 20,7 | 0,165x0,170 / 0,060-0,097 / 0,62-0,64 / 0,032 / 33,6 |
+
+### Riegel (riegel_re2kopf.py, --prot SF_belege/v4/re2r3/kopf_re2_protokoll_r3.json, --lauf sfv4/r/V5r3/debug.log; SF_belege/v4/re2r3/riegel_re2kopf_V5r3.txt/.md/.json)
+EMD sha256 dd546074; **Exit 1: 1 rot von 48 (T5 0,098, Schwanz-Geometrie seit Runde 5, bekannt)**, 8 INFO. Neu bzw. geaendert:
+| Mass | Soll | Ist | |
+|---|---|---|---|
+| T-K1a/b/c Koerper = Ref2 | Meshes 0-8/10-15, Zeilen 480-485, Koerper-Texel bytegleich | keine Abweichung; 486/488 = Regel r3, 487 = G3; 0 von 34716 | OK |
+| T-R1a Kopf-Geometrie | Ecken = Rz Ry Rx S runden(v) + t, Normalen, Flaechen, UV, Zonen | max 0,49 E. / 0,50; UV abweichend 0; Zone abweichend 0; 9 Ecken gerundet, 9 Normalen neu | OK |
+| T-R1d Zeilen 486/487/488 | Nachrechnung bytegleich; kein Eintrag > M + 6, keine Ader > M, Rundung dE76 <= 7, a* <= 8, b* >= -0,5 | gleich/gleich/gleich; grau M 42,0: 0 / 0, dE 4,3, a* max 3,4, b* min 0,0; dunkel M 26,0: 0 / 0, dE 4,7, a* 7,1, b* 1,3 | OK |
+| T-V1 Pose 135 | a* > 12 <= 2 %; L* > lokaler Median (9x9, gleiche Zone) + 8 <= 2 %; b* P10 >= -1 | 0,0 %; 1,5 %; 0,6 (Zonen-Median + 8: 0,6 %; Kopf-Median + 8: 30,0 %) | OK |
+| T-V1 Pose 85 | wie oben | 0,0 %; 1,9 %; 0,0 (Zonen-Median + 8: 10,7 % = Lichtseite; Kopf-Median + 8: 11,1 %) | OK |
+| T-V2a / T-V2b / T-V2c | s. Form | 1,5 %; keine/keine; 0,549 >= 0,529 | OK |
+| K10 / K4 / K7 / S2 / KS2 / K1k / K5 / K6 / T-K9e / T-R3 | Messblatt-Fenster wie Runde 2 | alle OK (K5 30,4/23,1 = 0,76; K6 29,4 <= 29,7; T-K9e 24,8 / 0,99) | OK |
+| T5 | f 0,5 >= 0,100 | 0,098 | ROT (bekannt) |
+Abweichung von der Auftragsformel bei T-V1 (offen benannt): "Anteil L* > Kopf-Median + 8" ist bei JEDER Variante mit dunkler Haarseite rot
+(die graue Seite liegt ganz ueber dem Kopf-Median + 8: 30 % in Pose 135), und gegen den Zonen-Median zaehlt in Pose 85 die Lichtseite der oberen
+Vorderflaechen (10,7 %; dieselben Pixel ohne Licht liegen bei Texel-L* <= M + 6, hell85.py). Darum prueft der Riegel helle Kratzer gegen den
+lokalen Median derselben Zone; beide Auftragszahlen stehen als Ausgabe in der Zeile. Die Texel-Regel "kein Texel heller als Median + 8" prueft
+T-R1d an der Palette (0 Eintraege > M + 6).
+**Gegenprobe V5 Runde 2** (riegel_re2kopf_V4re2_gegenprobe.txt): 4 rot von 48 - T-V1 135 (a* > 12 25,4 %, Kratzer 10,0 %, b* P10 -3,8),
+T-V1 85 (23,4 %, 22,0 %, -3,7), T-V2a (21,3 %), T5. Der Riegel unterscheidet.
+
+### Leisten (SF_belege/v4/; Runde 2 nach v4/re2r2/ verschoben; Spalten Originalfoto (roh) | Nutzer-Beschriftung | Referenz 2 | neu)
+01_vorn_kamera12, 02_seite_wie_bild2, 03_kopf_nah_vorn_x4, 04_kopf_nah_seite_x4, 11_spiel_koepfe (RE15_FRAMEDUMP h135 / h85, Lauf
+sfv4/r/V5r3: EXIT=0, 191 Bilder, "EM30 loaded: 23 meshes, 23 bones, 21 clips", 0 Fehlerzeilen; re2r3/lauf_V5r3.txt). Zusatz in re2r3/:
+kopf_ref2_r2_r3_x5.png (Foto | Referenz 2 | Runde 2 | Runde 3, h135/h85), ecken_V5r3_x8.png (Ecken-Nummern im Render),
+draht_quelle_gerundet.png (Drahtmodell Quelle/gerundet mit Kappe, drei Ansichten).
+
+### Tests
+Bau "LOCAL-BUILD-OK (build)" (Engine unveraendert, ninja: no work to do); ctest unit_birkin_formen / unit_birkin_szenen / unit_schwanz_r41 /
+integration_r41_sichel_form: "100% tests passed, 0 tests failed out of 4", Total Test time (real) = 64.48 sec (re2r3/ctest_v5r3.txt).
+Variante sfv4/emd/EM30_V5r3.EMD = EM30_V4.EMD (sha256 dd5460740e9a18cfe7aad5a06f1466fb2ea7dc06144c669a58e3ca9ff7dd7872, 262796 Byte).
+Spiel-Asset EM30_HANGAR.EMD (cfd1ac42) und Pin release/em30_hangar.sha256 unveraendert. Runde 2 bleibt mit "kopf_re2_bau.py --r2" bytegleich
+baubar (e9c66c2e nachgerechnet).
+
+### Offen
+1. **Lage des Kopfes seitlich**: auch gerundet steht die Kopf-Vorderkante in Pose 85 bei x 481, im Foto bei 464 (Ueberstand max 17 px =
+   0,07 H). Das ist die Lage des ganzen Kopfes, nicht die Spitze: das Auge liegt ebenso weit vor dem Foto-Auge (S2 misst relativ zur Vorderkante).
+   Zurueckschieben (Versatz) ist ein eigener Schritt, der K4/S2/K10 neu eicht - nicht in diesem Auftrag.
+2. Die Spitze ist auf die Kappe gelegt; die Front ist damit stumpf-rund, aber der Kopf bleibt als G2-Form laenglich (Kronenecke 16/26 bildet
+   seitlich die Vorderkante). Ob das "abgerundet wie auf dem Foto" genug ist, entscheidet der Blick des Nutzers auf Leiste 02/04/11.
+3. T-V1-Formel (Kratzer gegen lokalen statt Kopf-Median) und T-V2b-Grenze (Relief der G2-Quelle P75 7,7 % statt fester 3 %) sind Bauer-Wahl
+   mit Begruendung oben; Pruefer bitte gegenlesen.
+4. Graue Seite im Render L* ~39 (Videoraum 41,5) liegt bei der hellen Schulterhaut, nicht beim Haut-Median des Rumpfes (27,7): mit dem
+   Rumpf-Median waeren T-K9e und K5 rot. S2 0,032 und K6 29,4 / 29,7 liegen knapp an der Grenze.
+5. Schwanz T5 0,098 (seit Runde 5), Einbau ins Spiel-Asset erst nach der Abnahme.
