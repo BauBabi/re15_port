@@ -2502,3 +2502,131 @@ Runde 3 bleibt mit "kopf_re2_bau.py --r3" bytegleich baubar (dd546074 nachgerech
    Augennabe) ruecken ab; Zuwachs 7-14 E. = unter 1 px im Spielbild. Beide Zahlen stehen in der Riegelzeile.
 3. S2 0,038 / 0,817 liegt mit der Hoehe knapp unter 0,82; K10-Hoehe 0,165 (Runde 3 0,170), weil die Scheitel-Ecken 16/26 auf die Kappe sinken.
 4. Schwanz T5 0,098 (seit Runde 5), Einbau ins Spiel-Asset erst nach der Abnahme.
+
+## V6 Kopf aus dem Original RE1.5-Birkin (Bauer, 2026-11-08)
+
+Grundlage: V5 Runde 4 (EM30_V5r4, sha256 38562ced). Diese Runde ersetzt den RE2-G2-Kopf vollstaendig durch den ORIGINAL-Kopf des RE1.5-Birkin
+(EM30 = CDEMD0.EMS Eintrag 16) und erweitert nur dessen Textur. Koerper (Referenz 2), Schwanz (V4), Knochen, Clips, EDD unveraendert.
+Spiel-Asset EM30_HANGAR.EMD (cfd1ac42) und Pin release/em30_hangar.sha256 unveraendert (nachgerechnet). Nichts in Version_80%/, pri/, synchro/.
+Kein RE-Befund (die Sichel-Form gibt es auf keiner Disc): keine Zahl hier ist eine @0x-Konstante; Texel-Koordinaten sind Lesestellen der
+Original-Textur, Grenzen sind Masse gegen Foto/Original.
+
+### Nutzer-Wortlaut (2026-11-08, bindend, geht allen frueheren Kopf-Vorgaben vor)
+"Für die Textur anders - das was haare sind, sind offenbar keine Haare. Orientiere dich an den Original Birkin in Resident Evil 1.5. Der hat auch
+schon links in seinen Gesicht diesen grauen Fleck. Der scheint bei den mutierten Modell einfach nur erweitert zu sein. Das Hellgrau in der Mitte
+auch, so dass der Mund eher geschlossen ist. Also nutze das Original Resident Evil 1.5 Birkin Modell als Ausgangsgrundlage, damit solltest du nicht
+viel falsch machen." und "Immerhin ist dieses Modell ja eine Mutation/Weiterentwicklung des anderen Models! Dementsprechend muss ein Teil des
+Vormodells erkenntbar drin sein."
+
+### Schritt 0: Ist der Kopf der Referenz 2 das Original? (gemessen, sfv6/p1.py-p3.py)
+Nein. Massgeblich ist deshalb das Original selbst:
+
+| | Original EM30 (CDEMD0.EMS Eintrag 16, 226404 B, sha256 569e3138) | Referenz 2 (EM30_HANGAR.EMD) | V5 Runde 4 |
+|---|---|---|---|
+| Mesh 9 | 61 Ecken / 61 Normalen / 73 Dreiecke / 18 Vierecke | Ecken = round(1,05 x Original) (FORMEN skal 9), Flaechen gleich | RE2-G2-Kopf, 48 / 48 / 56 / 14 |
+| UV / TPage | TPage 128, u 56-127 v 136-254 (6501 Texel) | auf das Wundfleisch u 66-126 v 4-90 umgelegt | G2 x 0-125 y 160-249, G3-Kachel |
+| CLUT | Zeile 480 (= Zeile 0 der EM30-TIM, Original-Palette) | Zeile 485 (Kopf-Zeile aus Zeile 480, Haut-Transformation) | 486 / 487 / 488 |
+| Kopftexel u 56-127 v 136-254 | Original | 6501 von 6501 gleich dem Original | zu 85 % vom G2-Kopf ueberschrieben |
+
+Die Zeilen 480-482 der Referenz 2 sind die Haut-Transformation (nicht Original). Von den Original-Kopftexeln nutzen die Meshes 10 und 13 vier Texel mit.
+
+### Rueckbau und Aufbau (re15_port/tools/r41_sichel/v6kopf/kopf_orig_bau.py; Protokoll SF_belege/v4/v6k/kopf_orig_protokoll.json)
+1. Mesh 9 := Original-Mesh 9 bytegleich (Ecken, Normalen, Flaechen, UV); nur das CLUT-Feld jeder Flaeche zeigt auf Zeile 486 (Spalte wie das
+   Original). Form, Groesse (1,0 statt 1,05 der Referenz 2) und Lage im Knochen-9-Raum = Original; das Skelett (Bindoffset Knochen 9 der Referenz 2)
+   bleibt, weil es zum Koerper gehoert.
+2. RE2-G2-Kopf, G3-Zahnkachel und die Zeilen 486/487/488 der V5 zurueckgebaut: V5-Einsaetze TPage 128 x 0-125 y 160-249 und TPage 130
+   x 256-267 y 200-235 auf Referenz 2 (11722 Texel). Schwanzfeld TPage 130 x 320-383 bleibt V4.
+3. CLUT: 480-485 bytegleich Referenz 2; **486 = Original-Zeile 0 bytegleich**; 7 Zeilen (vorher 9), Port-Texturhoehe 256 x 7 = 1792 <= 4096.
+4. Kopftextur erweitert (texel_erweitern.py, nur Texel, die AUSSCHLIESSLICH Mesh 9 nutzt; die 4 mitgenutzten Texel der Meshes 10/13 unberuehrt).
+5. Ruecken -> Kopf (glaetten, Pose P2): Original-Kopf 3 px Wiederanstieg (Ecke 60 = Hinterkopf oben) -> 2 Ecken eingezogen.
+
+Varianten: sfv4/emd/**EM30_V5k.EMD = EM30_V4.EMD** (sha256 99703bbda76ebda1317555c0e7c5e5669938c32df408a8d9a2042db570bd679e, 262516 Byte);
+Spalte "Original" = sfv4/emd/EM30_V6orig.EMD (Stufe 0: Schritte 1-3 ohne 4/5, sha256 419ccfd4bcf26a83). Bau deterministisch (zweimal gebaut, gleiche sha256).
+
+### Lesart der Original-Kopftextur (Texelkarte x10, L*/a*/b*-Raster der Original-Palette; Leiste k_textur.jpg)
+- Die Textur liegt aufrecht und ungespiegelt: Texturbild links = (W)-rechte Gesichtshaelfte = Bild-links in der Vorderansicht.
+  Sichtbare Texel: Pose 135 u 65-126, P1 u 58-124, P2 ((W)-rechts zur Kamera) u 59-113.
+- **Grauer Fleck** (Nutzer: "links in seinem Gesicht"): dunkelgrauer Streifen unter dem (W)-rechten Auge, u 58-72 v 188-226 = **Bild-links,
+  (W)-rechts**. Fleck-Texel (Box u 58-74 v 186-226, b* <= 10, L* <= 50): 300 Texel, 34 Indizes, L* P10/50/90 10,3 / 25,2 / 47,9, C* bis 19,9.
+- **Hellgrau der Mitte**: Stirn / Nasenruecken / Wange u 72-100 v 166-221, L* 55-84, a* 2-8, b* 0-5.
+- **Auge**: (W)-rechtes Auge = Texturbild links, Augenweiss L* 60-64 bei u 74-84 v 194-198 - ein heller Fleck; die Lage passt zu Beschreibung1
+  "Auge links" und zum Messblatt-Augenfleck (W)-rechts (Foto 1 und 2). Das (W)-linke Auge (Texturbild rechts) ist rot in einem violetten
+  Aderfeld u 96-127 v 168-212. Beide unveraendert, nichts dazugemalt.
+- **Was als "Haare" gelesen wurde** (Messblatt 3.4: dunkles Feld Bild-rechts = (W)-links): das ist das violette Aderfeld der Original-Textur ->
+  unveraendert, kein Haarbogen, kein dunkles Haarfeld. Das blonde Haar oben (b* 10-25) ist Original und bleibt.
+- **Mund**: offener Mund u 80-104 v 222-238 (Hoehle L* < 15, Zaehne L* 50-68, rote Lippen a* > 20), rotes Kinnfleisch v 238-254; rechts davon
+  (u 104-127 v 200-254) aufgerissene Wange - unveraendert.
+
+### Textur-Erweiterung (texel_erweitern.PARAM; nur Indizes der Original-Textur)
+- **(a) Zone A, grauer Fleck -> (W)-rechte Gesichtshaelfte bis zur Nase**: Polygon (58,186) (68,186) (70,200) (86,201) (87,221) (81,223) (80,254)
+  (58,254) = vom Kopfrand bis an den Nasenruecken (u 88-96 bleibt hell), unter dem (W)-rechten Auge, unten bis v 254. Rangabbildung: jeder
+  ersetzte Texel behaelt seinen Helligkeitsrang und bekommt den Fleck-Index desselben Rangs (Wangenschatten/Falten der Original-Textur bleiben,
+  Farben = die des Flecks). Der Fleck selbst bleibt. 915 Texel.
+- **(b) Zone B, Hellgrau ueber den Mund**: Polygon (81,222) (100,221) (105,224) (106,254) (81,254) = Mund, Lippen, rotes Kinn in der Mitte;
+  Quelle = Hellgrau-Feld der Stirn u 74-92 v 166-185 (ohne Adern ab u 93, ohne Brauen ab v 187) als EIN Stueck auf die Box von B gelegt
+  (naechster Texel): die Hautstruktur der Stirn laeuft ueber den Mund. 847 Texel.
+- Raender beider Zonen ausgefranst wie der Original-Fleck: Abstandsrampe +-1,5 Texel, Rand +-1,5 Texel durch ein geglaettetes Rauschfeld
+  verschoben, Ersatz wenn Gewicht > gleichverteilte Schwelle (Startwert 4108). Keine geraden Kanten.
+- Verworfen (Bilder im Scratchpad sfv6/): Fleck nur der dunkle Kern L* <= 30 (A wurde eine glatte dunkle Flaeche, tex_vgl_a30.png); B als
+  Spiegelkachel (Rorschach-Muster, tex_vgl_spiegel.png) und als Zufallsflicken 3 x 3 (Schachbrett, tex_vgl_flicken.png); erste Fassung mit
+  geraden Polygon-Kanten (Rechteck-Kleckse).
+- **Ausnahmeliste T-K1** (Kopf-exklusiv): 1762 Texel geaendert, Box u 60-107 v 186-254, alle nur von Mesh 9 genutzt; Indizes nur aus den Quellen
+  (Fleck 34, Hellgrau 51 Indizes); 0 Texel ausserhalb der Kopf-exklusiven Menge. Zeile 486 = Original-Zeile 0 (keine Palettenaenderung).
+
+### Ruecken -> Kopf (Nutzer 4; kopf_orig_bau.glaetten, Pose P2)
+Obere Kontur (Knochen 0-15) von der Buckelkuppe (x 405, y 175) zur Kopf-Vorderkante: mit dem Original-Kopf faellt sie bis x 434 (y 196) und
+steigt am Hinterkopf wieder auf y 193 (x 437) = 3 px Huckel. Geglaettet (einzige Geometrie-Aenderung; Normalen, Flaechen, UV, Texel, Palette
+bytegleich): Ecke 60 (-184,-327,-21) -> (-156,-312,-21) (8,1 % zum Mesh-Schwerpunkt, 31,8 E.), Ecke 54 (-103,-369,-23) -> (-101,-367,-23)
+(0,8 %, 2,8 E.). Danach 2 px (x 435 y 197 -> x 437 y 195). V5 Runde 4 hatte dort 5 px (Kopf als eigener Buckel hinter der Nackensenke).
+INFO: Vor dem Kopf liegt die Modell-Kontur weiter bis 14 px ueber der Foto-2-Kontur (x 418, Knochen 8 = Buckel der Referenz 2) - das ist die
+Buckelhoehe des Koerpers, nicht der Kopf; Koerper unveraendert (Regel), s. Offen 2. Kopf-Oberkante Modell y 195 / Foto y 194 bei x 437.
+
+### Riegel (riegel_v6kopf.py --emd EM30_V5k.EMD; SF_belege/v4/v6k/riegel_v6kopf_V5k.txt/.json) - Exit 0, 0 rot von 10, 2 INFO
+
+| Mass | Soll | Ist | |
+|---|---|---|---|
+| T-K1a/b | Meshes 0-8/10-22, Sektionen 0-6 = Basis V5r4 | keine Abweichung | OK |
+| T-K1c | 480-485 = Referenz 2; <= 16 Zeilen; <= 4096 | gleich; 7 Zeilen; 1792 | OK |
+| T-K1d | Koerpertexel = Referenz 2; Abweichung nur Schwanzfeld (= Basis) und Kopf-exklusiv | Koerper 0; Schwanzfeld = Basis; Kopf 1762 (u 60-107 v 186-254) | OK |
+| **T-H6** | Mesh 9 = Original bis auf die Glaettung (<= 4 Ecken, Gerade zum Schwerpunkt, <= 10 %) | 61/61/73/18; Normalen, Flaechen, UV gleich; CLUT-Feld 486; Glaettung 54 (0,8 %), 60 (8,1 %) | OK |
+| **T-H5** | Kopf nur Zeile 486 = Original-Zeile 0; Indizes aus den Original-Kopftexeln | Zeilen [486]; 486 = Original; 218 Indizes, 0 neu | OK |
+| **T-H1i** | Maulkern (Zone B 2 Texel eingezogen): dunkel (L* < 30) <= 2 %, rot (a* >= 15) <= 2 %, Median L* >= 55 | 622 Texel: 0,0 % / 0,0 % / 75,9 | OK |
+| **T-H1ii** | sichtbar je Pose: dunkel/rot (Palette) <= 5 %, beleuchtet a* >= 10 <= 10 % | 135: 86 px 0/0/8 %, Lab 41,6/1,8/2,6; P1: 38 px 0/0/5 %; P2: 16 px 0/0/0 % | OK |
+| **T-H2** | Gesichtshaelfte bis zur Nase (Texel u 58-86 v 186-254 ohne Haar/Auge/Zone B), Fleck-Klasse (L* <= 50, C* <= 20): je Pose neu >= Foto 1 - 0,10 und >= Original + 0,10 | Foto 1 (x 368-395 y 150-191 ohne Augenfleck) 0,99; 135 1,00 / Original 0,37 (30 px); P1 1,00 / 0,74 (111 px); P2 1,00 / 0,69 (141 px); Texel 0,99 / 0,58 | OK |
+| **T-H4** | P2: Wiederanstieg vor dem Kopf <= 2 px | 2 px | OK |
+| INFO (d) Auge | Foto 1 L* 47,0 / Foto 2 L* 48,5 | sichtbares Augenweiss: P2 3 px bei (451/226), L* 26; P1 5 px L* 20; 135 6 px L* 12 (Schatten) | INFO |
+| INFO T-H4 | Abstand zur Foto-2-Kontur | max 14 px bei x 418 (Knochen 8) | INFO |
+
+**Gegenprobe V5 Runde 4** (riegel_v6kopf_V5r4_gegenprobe.txt): 6 rot von 10 - **T-H6** (48 Ecken statt 61), **T-H1i** (Zahnkachel 487: dunkel 53 %,
+rot 84 %, L* 28,7), **T-H1ii** (135: rot 91 %, Licht-rot 64 %), T-H5 (Zeilen 486-488, 19 fremde Indizes), T-H2, T-H4 (5 px).
+**Gegenprobe Original unveraendert** (EM30_V6orig, riegel_v6kopf_V6orig_gegenprobe.txt): 4 rot - T-H1i (dunkel 39 %, rot 81 %), T-H1ii, T-H2
+(135 0,37 / P1 0,74 / P2 0,69 < Foto 0,99 - 0,10), T-H4 (3 px). Der Riegel unterscheidet Original, V5 und neu.
+
+### Leisten (SF_belege/v4/; roh, x4 bzw. x6)
+- k_kopf_foto1.jpg: Zeile Pose 135 (Kopf von vorn, Messblatt) und Pose P1 (Clip 20 Bild 139 Gier 1422); Spalten Foto 1 roh | Foto 1 entblendet |
+  ORIGINAL RE1.5-Kopf unveraendert | neu.
+- k_kopf_foto2.jpg: Pose P2 (Clip 12 Bild 48 Gier 861); Foto 2 roh (nicht abgeblendet) | ORIGINAL | neu.
+- k_textur.jpg: Kopftextur u 50-127 v 130-255 x6, Original | neu | neu mit Zonen A (blau) / B (gruen) und Quellen (Fleck gelb, Hellgrau weiss).
+
+Selbst angesehen: Der Original-Birkin ist erkennbar (blondes Haar, menschliches Gesicht, rotes (W)-linkes Auge im violetten Feld, aufgerissene
+Wange). Der graue Fleck ueberzieht die (W)-rechte Wange bis an die Nase (k_textur; in 135 ist das Gesicht unten links dunkler). Der Mund ist zu,
+die Stelle hellgrau (135: L* 41,6, a* 1,8). Kein Schnabel (Original-Kopfform), kein Haarbogen, kein dunkles Haarfeld. Im Spielbild ist der Kopf
+klein und schaut in P1/P2 nach unten, darum zeigt er dort vor allem das blonde Haar von oben.
+
+### Tests
+Bau "LOCAL-BUILD-OK (build)" (ninja: no work to do; Engine unveraendert). ctest -R "unit_birkin_formen|unit_birkin_szenen|unit_schwanz_r41|
+integration_r41_sichel_form": "100% tests passed, 0 tests failed out of 4", Total Test time (real) = 64.52 sec (SF_belege/v4/v6k/ctest_v5k.txt).
+Kein Spiellauf mit RE15_FRAMEDUMP in dieser Runde (Leisten aus dem Renderer v4_gemein.zeichne, Spielkamera 50A0/12, RDT-Licht).
+
+### Offen
+1. **Blondes Haar**: Das Original-Haar (gelblich, b* 10-25) bleibt nach Auftrag unveraendert. In P1/P2 sieht man den Kopf vor allem von oben,
+   dort ist das Haar die groesste Flaeche; die Fotos zeigen an der Stelle Grau. Ob das Haar ebenfalls ergraut sein soll, entscheidet der Nutzer
+   (Weg waere dieselbe Rangabbildung auf die Fleck-Indizes).
+2. **Buckel ueber der Foto-Kontur**: Vor dem Kopf liegt der Koerper (Knochen 8, Referenz 2) bis 14 px ueber der Foto-2-Kontur; in P1 liegt der Kopf
+   ganz unter der Schulterkontur. Die Kontur Ruecken -> Kopf selbst ist jetzt stetig (2 px); den Buckel abzusenken waere eine Koerper-Aenderung und
+   nicht Teil dieses Auftrags.
+3. **Auge im Licht**: Das (W)-rechte Augenweiss liegt in P2 bei (451/226) gegen den Foto-Fleck (452,5/237,2), also 11 px hoeher, und im Schatten
+   (L* 26 gegen 48,5), weil das Gesicht in dieser Pose nach unten zeigt. Nichts dazugemalt (Auftrag d).
+4. **Kopfgroesse/-lage**: Original-Groesse 1,0 (Referenz 2 hatte 1,05); Kopfbox 135 x 333-374 y 158-213, P2 x 432-461 y 195-238. Der Abstand zur
+   Foto-Kopfstelle in Foto 1 (Messblatt Offen 1) bleibt.
+5. Das Hellgrau ueber dem Mund kommt aus der Stirn (Paletten-L* 55-84) und ist im Texturbild heller als die Wange daneben; im Spielbild (Licht) L* 20-42.
