@@ -82,6 +82,21 @@
 #   Vorbedingung im Riegel (r41f_fge7_ohne_klemme): keine KOPF-KLEMME-Zeile zwischen "R1 start" und "R1 ende (Leiche)", keine beim
 #   R1-Start offene Klemme; tod_r1 zusaetzlich R1 ohne Explosionsschnitt. Schwellen unveraendert (Quadrat >= 10,4 Bildpunkte,
 #   E/K/X paarweise verschieden).
+#   Integration Runde 41 Welle 2 Lauf B (2026-11-08, nach dem Merge G2 c19f8aaf3; FG-E7 erneut angewandt, nur die Schussbilder):
+#   Mit G2 NB4 schwimmt der Alligator nach dem Aggro F905 mit dem Kanister wie ohne an ((K)), die Schnauze erreicht die Figur F911,
+#   LUNGE F912, Treffer F919 ohne +0x238-Sperre (NB4 Runde 3) - "GTR F919 START art 4 sub 2 ... schaden 60" -, die RE2-Reaktion Sub 2
+#   ((T)) schiebt die Figur 3735 nach Westen (-3774,-26071), Cut 1 -> 0. Damit war tod_r1 (Schuss F955) "R1 nicht mit der natuerlichen
+#   Kamera" (KAMERA R1 EXPLOSION -> Cut 1) und tod_explosion (Schuss F1156 nach zwei Bissen F977/F1084, Figur nach (-8435,-14168)
+#   geschoben) "E 5, K 6, X 6". Neu gemessen (exe des Integrationsbaums, Kopf 548b8f3e7, Leon und Elza bitgleich; gator_boss.log ohne
+#   KOPF-KLEMME im R1, scratchpad r41_w2b_ti/fx/*_batch*.txt):
+#   - tod_r1/_elza: Schuss F904 / F910 / F913 Kopf-Klemme im R1 (Ueberstand 31 / 3 / 5), F914..F919 je "Sperre ohne Schnitt" ohne
+#     Klemme und ohne Treffer, Schluessel Kamera 0 (laufende 1) Quadrat 15,3..15,7, Einstellung 92 Bilder; ab F920 trifft der Biss
+#     F919 zuerst -> R1 mit Explosionsschnitt. Gewaehlt W29.0 = Schuss F916: R1 bei (4269,-21890), Leiche (15,-24447), Schluessel-
+#     Lage Kamera 0 (laufende 1) Tiefe 2454 = Quadrat 15,3 Bildpunkte, Einstellung Cut 0 F954-F1046, zurueck Cut 1.
+#   - tod_explosion/_elza: Schuss F916 Klemme (Ueberstand 22); F922 / F928 / F934: E 1 / 1 / 6, K 0, X 7; F940 / F943: K = E = 0;
+#     F946 / F949 / F952: E 0, K 1, X 7; F955..F970 Klemme. Gewaehlt W30.6 = Schuss F928 (Mitte des Fensters F922..F934): R1 bei
+#     (2921,-22991), Explosions-Cut E 1, Leiche (-2046,-22641), Schluessel-Schnitt F964 statt B's Rueckschnitt auf X 7, Schluessel-
+#     Kamera K 0 Tiefe 2368 = Quadrat 15,8, Einstellung F964-F1056.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza|flucht|flucht_elza -P test_r41_gatorszene.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -334,10 +349,11 @@ if(TEIL MATCHES "^tod_explosion")
     # FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; K3-Wandlage: integration_r41_alligator2_k3 (Spur P, Option (a))
     # Rezept (Kopf des Skripts, Abschnitt FG-E7): Spieler im RVD-Streifen 0 -> 7 (@0x00248) bei (-7000,-19000) Blick Nord = laufender
     # Cut 7 statt Leiter-Cut 0 (dort lag jede Lage ohne Kopf-Klemme im Suedkanal mit K = X = 0); erster Schuss nach dem Aggro der
-    # GB_TEST=5-Marke: W38.2 = 1146 Bilder warten, Zielen F1147-F1155, Feuer F1156 -> R1 F1156, Rueckschnitt-Ersatz F1192, Ende F1284.
+    # GB_TEST=5-Marke: W30.6 = 918 Bilder warten, Zielen F919-F927, Feuer F928 -> R1 F928, Rueckschnitt-Ersatz F964, Ende F1056
+    # (Integration Welle 2 Lauf B, Kopf des Skripts; vorher W38.2 -> R1 F1156, seit G2 NB4 erst nach zwei Bissen und mit K = X).
     # Vorher (Rezept KW/KWE der Abnahme 2): Leiter-Spawn, W5, R1 F160 an der Marke, EXIT_AT 330, Bilder 150-330.
     # 12 Schuesse ausgeschrieben (input_pc.c script_parse_once kennt keine Wiederholung, Abnahme F 2 H1)
-    set(_schuss "W38.2")
+    set(_schuss "W30.6")
     foreach(_i RANGE 1 12)
         string(APPEND _schuss ",M0.3,MA0.1")
     endforeach()
@@ -350,7 +366,7 @@ if(TEIL MATCHES "^tod_explosion")
         "RE15_PLAYER_POS=-7000,-19000,3072,0"
         RE15_R39_MESS_SPIELER_HP=100 RE15_GB_TEST=5 "RE15_GATOR_KANISTER=4430,-26160" "RE15_GIVE=3:15,21:50" RE15_EQUIP=3
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss}"
-        "RE15_EXIT_AT=1400#${_r2090}" "RE15_FRAMEDUMP=1146-1400/1:fd_"   # G2-RE2 NB2 (Vorschlag 4): ohne Kopf-Klemme trifft der Schuss spaeter - R1 F1192 statt F1156 (Lauf 2026-11-06), X = Ende + 15 = F1335 lag hinter 1330
+        "RE15_EXIT_AT=1172#${_r2090}" "RE15_FRAMEDUMP=918-1172/1:fd_"   # Welle 2 Lauf B: Bilder ab dem Warte-Ende (918) wie vorher 1146-1400 (Abstand 254); X = Ende + 15 = F1071
         "${_exe_kopie}")
     file(REMOVE "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
@@ -498,16 +514,17 @@ if(TEIL MATCHES "^tod")
     if(TEIL MATCHES "^tod_r1")
         # FG-E7 (AUFTRAG.md 2026-10-26 01:19): Todeslage ohne Kopf-Klemme; K3-Wandlage: integration_r41_alligator2_k3 (Spur P, Option (a))
         # Rezept K3 (Abnahme F 1, natuerliche Kamera) mit dem ersten Schuss NACH dem Aggro der GB_TEST=5-Marke (Kopf des Skripts,
-        # Abschnitt FG-E7): U1.2 (F1-F36, RVD-Streifen 0 -> 1), W30.3 = 909 Bilder warten, Zielen F946-F954, Feuer F955 -> R1 F955
-        # "Sperre ohne Schnitt" in Cut 1, Einstellung Cut 2 ab F993, zurueck Cut 1. Vorher: "U1.2,(M0.3,MA0.1)x12" (Feuer F46 an
+        # Abschnitt FG-E7): U1.2 (F1-F36, RVD-Streifen 0 -> 1), W29.0 = 870 Bilder warten, Zielen F907-F915, Feuer F916 -> R1 F916
+        # "Sperre ohne Schnitt" in Cut 1, Einstellung Cut 0 F954-F1046, zurueck Cut 1 (Integration Welle 2 Lauf B, Kopf des Skripts;
+        # vorher W30.3 -> R1 F955, seit G2 NB4 nach dem Treffer F919 mit Explosionsschnitt). Vorher: "U1.2,(M0.3,MA0.1)x12" (Feuer F46 an
         # der Marke; "x12" = 12 s Kreuz), R1 ende F84, Einstellung F84-F176 (Nachbesserung F 2, Laeufe K4m/KEm), EXIT_AT 300.
-        set(_schuss_r1 "U1.2,W30.3")
+        set(_schuss_r1 "U1.2,W29.0")
         foreach(_i RANGE 1 12)
             string(APPEND _schuss_r1 ",M0.3,MA0.1")
         endforeach()
         set(_lauf RE15_GB_TEST=5 "RE15_PLAYER_POS=-1000,-25550,0,0" "RE15_GATOR_KANISTER=4430,-26160" "RE15_GIVE=3:15,21:50"
                   RE15_EQUIP=3 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss_r1}"
-                  "RE15_EXIT_AT=1200#${_r2090}" "RE15_FRAMEDUMP=964-1124/2:fd_")
+                  "RE15_EXIT_AT=1160#${_r2090}" "RE15_FRAMEDUMP=924-1084/2:fd_")   # Welle 2 Lauf B: wie vorher 1200 / 964-1124, 40 Bilder frueher (gerade Bilder)
     else()
         # GB_TEST=3: Tod nach 300 Boss-Bildern + Todesrolle Clip 7 (165 Bilder) -> Leiche (Zustand 7) und Schluessel F469,
         # Einstellung F469-F561 (gemessen Nachbesserung F 2, Laeufe T2m/TEm).
