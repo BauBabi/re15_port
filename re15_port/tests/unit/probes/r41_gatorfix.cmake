@@ -58,9 +58,20 @@ endforeach()
 #                                     Lagen von raum: jede Reaktion = Modell, jede Angriffsart, 0 RE1.5-Niederwurf; (W) Stoss ueber Nord-/Suedkante faellt wie Substate 10 ins
 #                                     Wasser, Ostwand/Plattform bleiben Wand, nie aussen/im Block; A1 neu bewertet; (K) liegender Kanister: Gator bis zur Aufnahme bitgleich wie
 #                                     ohne, Aufnahme nur im Fenster, oben erster Treffer <= 600; Gegenproben Pruefhaken treffer_alt / runde_alt rot
-foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza nb3 nb3_elza raum raum_elza nb4 nb4_elza)
+foreach(_teil montage montage_elza marvin marvin_elza schluessel schluessel_elza klemm klemm_elza fuzz fuzz_elza haken haken_elza re2 re2_elza re2_gegen re2_gegen_elza gang gang_elza v4 v4_elza nb3 nb3_elza raum raum_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
+endforeach()
+# Integration Runde 41 Welle 2 Lauf B (2026-11-08, gemessen): nb4/nb4_elza Teil K lesen gator_boss.log aus dem ARBEITSORDNER
+# (test_r41_gatorfix.c nb4_log_ende/nb4_log_lesen, K1 zaehlt "Zielmodus 1"). Im gemeinsamen build/tests/unit schreibt die
+# K-Gegenprobe RUNDE des Zwillings (re15_k2080_runde_alt_setzen) "RE2 KANISTER Zielmodus 1 ... F0" in dieselbe Datei: unter
+# ctest -j 6 war nb4_elza einmal rot; nachgestellt (G2_NB4_TEIL=K, nb4 und 2-3 s spaeter nb4_elza im selben Ordner) 3 von 3 rot
+# mit K1 (0/0/1), in getrennten Ordnern 2 von 2 gruen. Darum je Teil ein eigener Ordner (VERTRAG.md §2 "parallel-fest").
+foreach(_teil nb4 nb4_elza)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
+    add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
