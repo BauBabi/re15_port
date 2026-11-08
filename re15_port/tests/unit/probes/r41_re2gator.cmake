@@ -102,6 +102,7 @@ if(TARGET re15_pc)
     add_test(NAME integration_r41_re2gator
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_TOOL=$<TARGET_FILE:test_r41_gatorfix>   # NB4 Runde 3: bisslog (Lauf nische)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_re2gator_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_re2gator.cmake)
     set_tests_properties(integration_r41_re2gator PROPERTIES TIMEOUT 900)

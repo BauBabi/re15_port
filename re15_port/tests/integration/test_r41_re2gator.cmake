@@ -15,6 +15,10 @@
 #     auf Leon), Biss F403 -> FINISHER Cut 6, Game Over ~F677 -> EXIT_AT 650 liegt davor. G2-RE2 NB4 (RE2-Trefferreaktion): toedlicher Biss F310, letzte Finisher-Zeile F571 -> EXIT_AT 560.
 #     NB4 Runde 2 (Abnahme 7 M1, RE2-Bisssperre +0x238 auch fuer den Biss im Wasser): F310 war der Zweitbiss 20 Bilder nach F290; jetzt Biss F416
 #     (HP 60 -> 0), toedlicher Biss F523 (Abstand 107 >= 70), letzte Finisher-Zeile F784, danach Game Over -> EXIT_AT 770.
+#     NB4 Runde 3 (Abnahme 8 M1: +0x238 ist in RE2 die Spurt-Sperre, der Biss fragt sie nicht - T1 0x801012fc, Intro-Ende gibt den Biss frei
+#     @0x801008f8-918 und setzt nur 110 @0x8010091c-20): ein Treffer je Biss-Clip-Lauf; Biss F290 im ersten Lauf nach dem Intro (BISSLAUF
+#     F283-F327, HP 60 -> 0), toedlicher Biss F397 (Abstand 107), Finisher-Halt F398..F658, danach Game Over -> EXIT_AT 640. bisslog prueft
+#     den ersten Biss nach dem Intro und je Lauf hoechstens einen Treffer (RE15_TOOL = test_r41_gatorfix).
 #   Lauf "dash" (Leon im Suedbecken (-4000,-24000) im Bild der Eintrittskamera Cut 0, Messhaken
 #     RE15_R39_MESS_SPIELER_HP=100): der Intro endet im Nordbecken, die Verfolgung kommt durch den Westkanal in Leons
 #     Zone -> RE2-Dash (Clip 2 -> 3, gr2_dash_planen: Vordrehung 1139 -> 624 am Suedausgang), Putz je Stark-Schuetteln (Spur P NB1),
@@ -240,12 +244,15 @@ re15_start_spiel(_rv 300
     RE15_R41_HP_AT=175:60       # Querbezug Runde 41 Spur F: Leons HP wie mit den zwei Spinnen-Treffern (Kopf)
     "RE15_GATOR_KANISTER=-6000,-15000"
     RE15_STATE_LOG=state.log
-    "RE15_EXIT_AT=770#2090"     # G2-RE2 NB4 (T): RE2-Trefferreaktion statt RE1.5-Niederwurf - die Figur ist nach 20 statt 41-92 Bildern wieder treffbar
+    "RE15_EXIT_AT=640#2090"     # G2-RE2 NB4 (T): RE2-Trefferreaktion statt RE1.5-Niederwurf - die Figur ist nach 20 statt 41-92 Bildern wieder treffbar
                                 # (+0x1D3 frei @0x801031d4), der zweite Biss (HP 60 - 60 = 0, dann -60: Tod, FUN_800401d4) kommt F310, Finisher F310..F571, danach
                                 # Game Over (Raum verlassen vor F650, gemessen Bau 3d53ca60). 560 lag im Finisher (Halt-Zeilen F311..F551, Kamera ab F310).
                                 # NB4 Runde 2 (Abnahme 7 M1): der Biss im Wasser fragt die RE2-Bisssperre +0x238 (70 @0x801016b0-b4, nach dem Intro 110
                                 # @0x8010091c-20; Pruefstelle @0x80100cb4-c4) - Biss F416 (HP 0), toedlicher Biss F523, Finisher F523..F784 (Halt-Zeilen
-                                # F524..F784, gemessen Bau 42a1c8f7 mit EXIT_AT 1100: danach Game Over). 770 = 523 + 247 liegt im Finisher (13 Halt-Zeilen bis F764).
+                                # F524..F784, gemessen Bau 42a1c8f7 mit EXIT_AT 1100: danach Game Over). 770 = 523 + 247 lag im Finisher (13 Halt-Zeilen bis F764).
+                                # NB4 Runde 3 (Abnahme 8 M1): +0x238 ist keine Bisssperre (Spurt-Sperre, @0x80100b5c-64 / @0x80100bf4-c04) - Biss F290 im
+                                # ersten Lauf nach dem Intro, toedlicher Biss F397, Finisher-Halt F398..F658 (gemessen Bau 5c2cd89f mit EXIT_AT 1100: danach
+                                # Game Over). 640 = 397 + 243 liegt im Finisher (13 Halt-Zeilen F398..F638).
     "${_exe_kopie}")
 if(NOT _rv EQUAL 0)
     file(REMOVE "${_exe_kopie}")
@@ -341,7 +348,7 @@ endif()
 # demselben Cut, und KEIN cam= im Zustandslog weicht ab dem Finisher-Bild davon ab (keine RE1.5-Todeskamera).
 if(_fin_halt LESS 10 OR NOT "${_fin_halt_falsch}" STREQUAL "")
     file(REMOVE "${_exe_kopie}")
-    message(FATAL_ERROR "r41_re2gator: Finisher-Halt ${_fin_halt} Zeilen (erwartet >= 10 bis EXIT_AT 770), abweichend: '${_fin_halt_falsch}'")
+    message(FATAL_ERROR "r41_re2gator: Finisher-Halt ${_fin_halt} Zeilen (erwartet >= 10 bis EXIT_AT 640), abweichend: '${_fin_halt_falsch}'")
 endif()
 file(STRINGS "${_dir}/state.log" _zl)
 set(_mo6 0)
@@ -406,8 +413,20 @@ endif()
 r41b_maul_sitz("${_basis}/nische" "nische" 0 _ms1)   # Nachbesserung 5: CHASE-Tod, Finisher bis EXIT_AT (P3 nicht ganz)
 r41b_kamera_wechsel("${_basis}/nische" "nische" _kw1)   # Nachbesserung 6 (M2)
 r41b_gier_wache("${_basis}/nische" "nische" _gw1)
+# NB4 Runde 3 (Abnahme 8 M1): erster Biss nach dem Intro im ersten Biss-Clip-Lauf mit dem Maul an der Figur, je Lauf hoechstens ein Treffer
+# (RE2: ein Treffer je Kiefer-Lauf, PL+0x1D3 @0x801015a4-ac, Lauf-Ende @0x80101558; Intro-Ende gibt den Biss frei @0x801008f8-918).
+# Gegenprobe Stand d8bf728b0 (Abnahme 8, Lauf a8_nische2): zwei Laeufe F284-F326 / F347-F389 ohne Biss, erster Biss F416.
+set(_bl1 "bisslog nicht gefahren (RE15_TOOL fehlt)")
+if(RE15_TOOL AND EXISTS "${RE15_TOOL}")
+    execute_process(COMMAND "${RE15_TOOL}" bisslog "${_basis}/nische" RESULT_VARIABLE _blr OUTPUT_VARIABLE _blo ERROR_VARIABLE _ble TIMEOUT 60)
+    string(REGEX MATCH "bisslog: [^\n]*" _bl1 "${_blo}")
+    if(NOT _blr EQUAL 0)
+        file(REMOVE "${_exe_kopie}")
+        message(FATAL_ERROR "r41_re2gator: Lauf nische - ${_bl1}")
+    endif()
+endif()
 set(_ms1 "${_ms1}, ${_kw1}")
-set(_status1 "nische: ${_ms1}, RE2-Zeilen ${_re2}, Intro Lage/Start/Ende ${_intro_lage}/${_intro}/${_intro_ende} wand ${_intro_wand}, Clip 6/3 ${_mo6}/${_mo3}, Kamera ${_kam_folge}, Finisher Cut ${_fin_cut} ab F${_fin_bild} gehalten ${_fin_cam_bilder} Bilder / ${_fin_halt} Halt-Zeilen, HP min ${_hp_min}, kein Gier-Sprung")
+set(_status1 "nische: ${_ms1}, RE2-Zeilen ${_re2}, Intro Lage/Start/Ende ${_intro_lage}/${_intro}/${_intro_ende} wand ${_intro_wand}, Clip 6/3 ${_mo6}/${_mo3}, Kamera ${_kam_folge}, Finisher Cut ${_fin_cut} ab F${_fin_bild} gehalten ${_fin_cam_bilder} Bilder / ${_fin_halt} Halt-Zeilen, HP min ${_hp_min}, kein Gier-Sprung; ${_bl1}")
 
 # ---------------------------------------------------------------- Lauf 3: natuerlicher Zugang (B9: untergetaucht)
 set(_dir "${_basis}/natuerlich")
