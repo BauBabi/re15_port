@@ -7,6 +7,13 @@
 Ausgabe (vom PC-Port ueber RE15_BIRKIN_FORM geladen, platform/pc/main.c):
     re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD     Hangar 50A0/50A1 und Labor 50E0/50F1 (RE15_BIRKIN_FORM=hangar)
 
+⛔ Seit v0.8.30 (Nutzerfreigabe 2026-11-08 "Naja, gehen wir so erst mal ins rennnen.") ist das Spiel-Asset EM30_HANGAR.EMD
+die Sichel-Form V7 (sha256 319bbd17..., Pin release/em30_hangar.sha256), NICHT mehr die Ausgabe dieses Skripts. V7 baut
+re15_port/tools/r41_sichel/v7_kette.sh neu (Kette Referenz 2 -> --variante v4 -> re2kopf -> v6kopf -> v5koerper -> v6drei
+-> v7hand in einem Schattenbaum; Dossier SF_sichel.md "Einbau v0.8.30"). Dieses Skript OHNE --variante zu starten
+ueberschreibt EM30_HANGAR.EMD mit dem Grundstand Referenz 2 (sha256 cfd1ac42...) - also nicht ins Spiel-Asset laufen lassen;
+--variante NAME --aus DIR (ausserhalb von shared_assets) bleibt erlaubt und ist Schritt 1 der V7-Kette.
+
 ⛔ KEIN BYTE-TRUE-ASSET. Diese Form existiert auf der ausgelieferten Disc nicht. Sie ist NUR aus
 Beta-Screenshots bekannt (Hangar C-2: Birkin packt Elza und schleudert sie). Jede Zahl in FORMEN
 unten ist eine GESTALTUNGSENTSCHEIDUNG nach diesen Bildern, kein RE-Wert, und hat deshalb
