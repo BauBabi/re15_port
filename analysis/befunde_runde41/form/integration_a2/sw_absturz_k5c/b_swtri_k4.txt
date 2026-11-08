@@ -1,0 +1,2 @@
+# K4 (3163f6045, Port 1408x1024), gleiche Messung bis F1100: UEBERLAUF 0
+max s2*area slot 11: 1187923968 (Grenze 2147483647)

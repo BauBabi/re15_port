@@ -1,0 +1,3 @@
+TIM 512x256, 16 CLUT-Zeilen ab VRAM-y 480 -> Port-Textur 512x4096
+Meshes 32, Clips 28
+Flaechen 3828, Ecken ausserhalb 0; Texel-x 44..436, v 0..254, Seiten ['0x80', '0x81', '0x82', '0x83'], CLUT-Indizes [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]

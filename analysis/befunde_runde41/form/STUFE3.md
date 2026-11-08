@@ -1,5 +1,99 @@
 # Stufe 3 Bahnsteig-Form: Bewegung, Angriffe, Einbau (laufendes Dossier)
 
+## Integration: Absturz Software-Renderer K5c
+
+Befund (Lauf A2, `integration_a2/pistole_absturz_k5c.txt`): `integration_r41_birkin_pistole` stuerzte mit dem Asset K5c (BAHNSTEIG_FORM.EMD
+sha256 1ab56076..., .TIM 7187ff09..., TIM 512x256 8 bpp, 16 CLUT-Zeilen -> Port-Textur 512x4096) bei F1029 ab, Leon und Elza:
+`AUSNAHME 0xC0000005` in `SDL_BlitTriangle_Slow+1394`. Der Riegel laeuft mit `RE15_SOFTWARE_RENDER=1` (SDLs CPU-Rasterer); mit K4 (1408x1024)
+gruen, im beschleunigten Renderer (direct3d, opengles2) kein Absturz. Belege dieses Abschnitts: `integration_a2/sw_absturz_k5c/`.
+
+### SW-1. Ursache (gemessen): 32-Bit-Ueberlauf in SDLs CPU-Rasterer, nicht das Asset
+
+(a) **Asset-UVs liegen alle in der Textur.** Eigener Leser (`sw_absturz_k5c/uv_pruef.py`, Formel des Ports: Texel-x = u + (page & 0xF) * 128
+wie `main.c` page_off, v vor dem Zeilenversatz, CLUT-Index = VRAM-Zeile - 480 wie `render_pc.c` v_offset) ueber alle 32 Meshes (auch
+Kiefer/Zaehne), 3828 Flaechen: 0 Ecken ausserhalb, Texel-x 44..436 (Breite 512), v 0..254, Seiten 0x80..0x83, CLUT-Indizes 0..15
+(`a_uv_pruef_k5c.txt`). Die Clips aendern keine UV (kein UV-Versatz fuer Typ 0x30, `eye_du` nur fuer 0x36).
+
+(b) **SDL 2.28.5 rechnet den Anteil der dritten Ecke in int.** `src/render/software/SDL_triangle.c`:
+- Z. 618-619 `s2_x_area.x = s2->x * area;` / `s2_x_area.y = s2->y * area;` (Typ `SDL_Point` = int, Z. 447),
+- Z. 171-172 `srcy = (int)(((Sint64)w0 * s2s0_y + (Sint64)w1 * s2s1_y + s2_x_area.y) / area)` (nur die Gewichte in 64 Bit),
+- Z. 771 `src = (info->src + (srcy * info->src_pitch) + (srcx * srcbpp))` ohne Grenzpruefung.
+area = |cross(d0,d1,d2)| (Z. 472, 571) in Festkomma FP_BITS 1 (Z. 36): dst = (int)(xy * scale) << 1 (`SDL_render_sw.c:576-578`),
+src = (int)(uv * texture->h) (`SDL_render_sw.c:573-574`). Mit 16 CLUT-Zeilen liegt s2.y bis 4095 statt bis 1023 (K4): die Flaechengrenze aus
+`re15_gpu_grenze_r41.h` (4 * 1023 * 511 = 2090892) haelt das Produkt nur fuer Texel-Lagen bis 1027 unter 2^31.
+
+(c) **Messhaken** `RE15_SWTRI_LOG=<datei>` (render_pc.c `re15_swtri_messen`, nur Env, kein Spielverhalten) rechnet SDLs Ganzzahlen je an
+`SDL_RenderGeometry` gegebenem Dreieck nach. Lauf leon (Riegel-Umgebung, bis F1100), exe vor dem Fix (`b_swtri_vor_fix_k5c16.txt`):
+- 18 Dreiecke ueber 2^31-1, alle Slot 11 (Form, 512x4096), F968..F1029, alle mit Ecken an der GTE-Saettigung (dst -2046 = -1023 px) und
+  Texel-y 3044..3664 (CLUT-Zeilen 11..14). Groesstes F1016: area 976560 x s2.y 3606 = 3521475360.
+- F1029 (Absturzbild): area 859884 x s2.y 3634 = 3124818456 -> gewickelt -1170148840, srcy rund 4995 Zeilen vor der Textur;
+  `AUSNAHME 0xC0000005 ... +0x239b06` (= SDL_BlitTriangle_Slow+1394 wie im Befund), state.log endet bei F1029 wie im Befund.
+  Die frueheren 17 Ueberlaeufe lasen fremden, zufaellig gemappten Speicher (kein Absturz, falsche Texel).
+- Andere Slots im selben Lauf: 512x4096 nur Slot 11; Slot 50/51 (globale Effektseiten DATA/TEX.TIM, 256x4096) hoechstens 289849560,
+  Slot 0 (Spieler 384x768) 6196800.
+- Gegenprobe Hoehe (`b_swtri_gegenprobe_k5c8.txt`): dieselbe exe, BAHNSTEIG_FORM.TIM auf CLUT-Zeilen 0..7 gekuerzt (Port 512x2048, gleiche
+  UVs, Zeilen 8..15 fallen auf Zeile 0): 0 Ueberlaeufe, groesstes Produkt 943560296, kein Absturz, Lauf bis F1100.
+- K4 (3163f6045, Port 1408x1024), gleiche Messung (`b_swtri_k4.txt`): 0 Ueberlaeufe, groesstes Produkt 1187923968 = 55 % der Grenze -
+  darum war der Riegel mit K4 gruen.
+
+### SW-2. Fix (render_pc.c, nur CPU-Rasterer)
+
+- `re15_sw_geometrie` ersetzt im Flush der texturierten Dreiecke `SDL_RenderGeometry`, aber nur wenn `s_cpu_rasterer` (RE15_SOFTWARE_RENDER
+  oder Rueckfall ohne GPU). Jedes Dreieck, dessen Produkt max(|s2.x * area|, |s2.y * area|) nach SDLs Ganzzahlen (`re15_sw_s2_produkt`,
+  Formeln oben mit Zeilenbeleg) ueber INT_MAX laege, wird an der laengsten Bildkante halbiert (Lage, UV, Farbe der Mitte gemittelt), bis
+  jede Haelfte darunter liegt (Abbruch nach 12 Halbierungen -> Teil verworfen, Log). Alle anderen Dreiecke gehen unveraendert und in
+  derselben Reihenfolge an SDL. Die ersten 8 Teilungen je Prozess stehen als `[sw-teilung]` in debug.log.
+- Der beschleunigte Renderer bekommt die Dreiecke unveraendert (SDL_RenderGeometry wie bisher).
+- Die Flaechengrenze aus Spur Q bleibt (PSX-Hardwareverhalten); der neue Schutz deckt auch Skalierung > 1 (RE15_WINDOW_SCALE: area waechst
+  mit scale^2) und die 4096 hohen Effektseiten 50/51 ab.
+- Upload (`re15_render_pc_upload_tim_slot`, ohne Verhaltensaenderung): liegt die gestapelte Textur ueber `max_texture_width/height` aus
+  `SDL_GetRendererInfo`, steht `[tim] slot N: Textur WxH (n CLUT-Zeilen) ueber der Grenze des Renderers ...` im Log (SDL lehnt dann ab,
+  `SDL_render.c:1266-1268`); schlaegt `SDL_CreateTexture` fehl, steht `SDL_GetError()` im Log, der Slot gilt als nicht geladen
+  (`loaded = 0`, w/h 0; aktiver Slot: `s_tim_texture = NULL` wie bisher ueber update_active_slot_globals).
+- Asset unveraendert (K5c, Nutzerentscheid E30). Commits 4dde57452 (Fix) und b0623e4d6 (Riegel unit_r41_uv_textur).
+
+Nach dem Fix (`c_nach_fix.txt`): Lauf leon bis F1100 ohne AUSNAHME, `[sw-teilung] F968 ... F1016 Slot 11 Textur 512x4096: area 976560 x s2 =
+3521475360 > 2^31-1 -> geteilt`; state.log bis F1028 byte-gleich mit dem Lauf vor dem Fix (Spiel deterministisch, der Fix aendert nur Pixel).
+
+### SW-3. Bildgleich im beschleunigten Renderer (`d_bildgleich_d3d.txt`)
+
+`re15_port/tools/form_spiel.sh` (eigene exe-Kopie, echtes Fenster, Renderer direct3d, Fenster 640x480, Asset K5c ohne Umleitung) mit
+`RE15_FRAMEDUMP=300-3000/50:fd_` je vor dem Fix (exe aus 72c80256f) und nach dem Fix, Skript `sw_absturz_k5c/bild_lauf.sh`:
+
+| Lage | Bild | Pixel-Diff vor/nach |
+|---|---|---|
+| 5080 Schnitt 1, -18564,-18386 Gier 80, Clip 0 Bild 11 | RE15_FRAMEDUMP F300/F350/F400 | 0 / 0 / 0 |
+| 5080 Schnitt 1 | gdigrab Fenster | 0 |
+| 5090 Schnitt 11, 941,-23776 Gier 3874, Clip 12 Bild 0 | RE15_FRAMEDUMP F300/F350/F400 | 0 / 0 / 0 |
+| 5090 Schnitt 11 | gdigrab Fenster | 48419 (x 70..639, y 225..479) |
+
+Die 5090-gdigrab-Abweichung ist der Aufnahmezeitpunkt des Feuers: zwei Laeufe mit DERSELBEN exe nach dem Fix weichen dort ebenso ab
+(41500 Pixel, x 80..639, y 226..479), die Framedumps desselben Bildes sind in allen drei Laeufen gleich (0). Keine Asset-UV berichtigt.
+
+### SW-4. Tests
+
+- Neuer Riegel `unit_r41_uv_textur` (`tests/unit/test_r41_uv_textur.c`): fuer RE2/BAHNSTEIG_FORM, PSX/EMD/EM30_HANGAR, PSX/EMD/EM29_ROT,
+  RE2/ANNETTE_4D, RE2/ANNETTE_4D_BLUT und alle 55 RE2-Banken aus RE2/CDEMD0.EMS mit EMD + TIM: jede UV-Ecke in der Textur (Formel des
+  Zeichners), Port-Texturhoehe <= 4096. Alle gruen (BAHNSTEIG_FORM 512x4096, Texel-x 44..436, v 0..254). Gegenprobe eingebaut (Kopie mit
+  Mesh 0 Dreieck 0 u0 255 Seite 0xF -> 3 Ecken ausserhalb, rot erkannt) und als Aufruf `test_r41_uv_textur gegenprobe` (Exit 1,
+  "GEGENPROBE ROT (erwartet)").
+- `bash re15_port/tools/local_build.sh build`: `=== LOCAL-BUILD-OK (build)` (Endstand; die letzte Aenderung danach war nur ein Kommentar in
+  re15_gpu_grenze_r41.h, Disassembly der exe vor/nach identisch).
+- `integration_r41_birkin_pistole` (Leon und Elza, RE15_SOFTWARE_RENDER=1 wie im Riegel): `1/1 Test #1419: integration_r41_birkin_pistole ...   Passed  477.88 sec`;
+  beide Laeufe bis F6500, je 8 `[sw-teilung]`-Zeilen (Log-Grenze 8), keine AUSNAHME.
+- `ctest -R "form|bahnsteig|birkin_form|r41_form|integration_r41_g5_tod|integration_r41_g5_westen|annette_g5" -j 2 --timeout 1800`:
+  `100% tests passed, 0 tests failed out of 19` (kein roter Fenster-Riegel).
+- `ctest -R "^(unit_|prop_|probe_)" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)" -j 6`:
+  `100% tests passed, 0 tests failed out of 1068` (mit unit_r41_uv_textur).
+
+### SW-5. Offen
+
+- Die Teilung nimmt fuer die betroffenen Dreiecke (alle mit Ecken an der GTE-Saettigung, fast ganz ausserhalb des Bildes) eine Mitte, deren
+  Bildlage SDL auf ganze Pixel abschneidet: an der Teilungskante kann ein Randpixel anders fallen als bei einem (nicht ueberlaufenden)
+  ganzen Dreieck. Betrifft nur den CPU-Rasterer (Tests, Rueckfall ohne GPU), nicht den Renderer des Spielers.
+- Nicht gemessen: ob SDLs Gewichte selbst (w0/w1/w2, int in TRIANGLE_BEGIN_LOOP, SDL_triangle.c:156-163) bei grossen Fensterskalen
+  ueberlaufen koennen (area waechst mit scale^2). Im Riegel (RE15_WINDOW_SCALE 1) gilt area <= 4 * 1023 * 511 = 2090892 (Grenze Spur Q).
+
 ## Integration 1000 HP (Lauf A2)
 
 Auftrag: Integration Runde 41 Welle 2, Lauf A2, Befund 1 der Gegenpruefung A (integration_r41_form_wagenweg, _elza, _zurueck_leon,

@@ -1,0 +1,11 @@
+# nach dem Fix, Lauf leon bis F1100
+[sw-teilung] F968 Slot 11 Textur 512x4096: area 598896 x s2 = 2181778128 > 2^31-1 (SDL_triangle.c:618) -> geteilt
+[sw-teilung] F1006 Slot 11 Textur 512x4096: area 628328 x s2 = 2272034048 > 2^31-1 (SDL_triangle.c:618) -> geteilt
+[sw-teilung] F1006 Slot 11 Textur 512x4096: area 592040 x s2 = 2169234560 > 2^31-1 (SDL_triangle.c:618) -> geteilt
+[sw-teilung] F1007 Slot 11 Textur 512x4096: area 733816 x s2 = 2649075760 > 2^31-1 (SDL_triangle.c:618) -> geteilt
+[sw-teilung] F1007 Slot 11 Textur 512x4096: area 670760 x s2 = 2417419040 > 2^31-1 (SDL_triangle.c:618) -> geteilt
+[sw-teilung] F1011 Slot 11 Textur 512x4096: area 757536 x s2 = 2752885824 > 2^31-1 (SDL_triangle.c:618) -> geteilt
+[sw-teilung] F1016 Slot 11 Textur 512x4096: area 976560 x s2 = 3521475360 > 2^31-1 (SDL_triangle.c:618) -> geteilt
+[sw-teilung] F1021 Slot 11 Textur 512x4096: area 809248 x s2 = 2463350912 > 2^31-1 (SDL_triangle.c:618) -> geteilt
+0
+F1100 pad=8800 PL(18630,-24749,rot=3072,hp=100) pst=1 ps1=0 

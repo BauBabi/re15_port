@@ -1,0 +1,5 @@
+# Gegenprobe: BAHNSTEIG_FORM.TIM nur CLUT-Zeilen 0..7 (Port 512x2048), gleiche UVs, gleiche exe vor dem Fix
+0
+0
+F1100 pad=8800 PL(18630,-24749,rot=3072,hp=100) pst=1 ps1=0 
+max s2*area slot 11: 943560296

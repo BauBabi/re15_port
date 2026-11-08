@@ -1,0 +1,10 @@
+pose1_r5080_s1 fd_000300.ppm 640x480: Pixel-Diff 0, max 0, Bild nicht leer: 288100 Pixel > 8
+pose1_r5080_s1 fd_000350.ppm 640x480: Pixel-Diff 0, max 0, Bild nicht leer: 288100 Pixel > 8
+pose1_r5080_s1 fd_000400.ppm 640x480: Pixel-Diff 0, max 0, Bild nicht leer: 288100 Pixel > 8
+pose1_r5080_s1 pose1_r5080_s1.png 640x480: Pixel-Diff 0, max 0, Bild nicht leer: 288100 Pixel > 8
+pose2_r5090_s11 fd_000300.ppm 640x480: Pixel-Diff 0, max 0, Bild nicht leer: 279187 Pixel > 8
+pose2_r5090_s11 fd_000350.ppm 640x480: Pixel-Diff 0, max 0, Bild nicht leer: 279165 Pixel > 8
+pose2_r5090_s11 fd_000400.ppm 640x480: Pixel-Diff 0, max 0, Bild nicht leer: 278928 Pixel > 8
+pose2_r5090_s11 pose2_r5090_s11.png 640x480: Pixel-Diff 48419, max 240, Bild nicht leer: 281646 Pixel > 8 Ort x 70..639 y 225..479
+pose1_r5080_s1 gdigrab nach vs nach2 (gleiche exe, Wiederholung): 0 Pixel, max 0 
+pose2_r5090_s11 gdigrab nach vs nach2 (gleiche exe, Wiederholung): 41500 Pixel, max 247 x 80..639 y 226..479
