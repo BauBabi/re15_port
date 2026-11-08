@@ -37,8 +37,10 @@ target_include_directories(probe_r36_story_karte PRIVATE ${CMAKE_SOURCE_DIR}/inc
 #   integration_r36_story_leon / _elza  echte exe (test_r36_story.cmake, Laeufe dort beschrieben)
 #   integration_r36_story_zug  Runde 41 ST80 Nachbesserung 1: Zug 6030 in beiden Reihenfolgen mit normalen Eingaben
 #                              (Weg der Abnahme 1 Lauf kabine5 + Rueckweg; P4j/P4k)
+#   integration_r36_story_torweg_f/_w/_r  Runde 41 Integration A2: durchgehend erster Besuch 6030 -> Tor -> zweiter Besuch,
+#                              Wege F (vorne, Wagen, ohne Rueckkehr), W (Wagen zuerst), R (mit Rueckkehr); ST80 x AN
 if(TARGET re15_pc AND TARGET probe_r36_story_karte)
-    foreach(_teil leon elza zug)
+    foreach(_teil leon elza zug torweg_f torweg_w torweg_r)
         add_test(NAME integration_r36_story_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

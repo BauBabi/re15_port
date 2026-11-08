@@ -34,6 +34,18 @@
 #                 Reihenfolge geprueft, jede Zeile genau einmal, kein msg 12/26.
 #   P4k wagen_weg ROOM6000 -> ROOM6030 -> Marke (P4a-Weg) -> Wagen -> Gang/Treppe/Tuer -> Fuehrerstand wie bisher
 #                 (11, 12, 25, 26, 13..19), kein msg 31/40.
+# TEIL=torweg_f|torweg_w|torweg_r (Runde 41 Integration A2, Gegenpruefung Welle 2 Befund 2): DURCHGEHENDE Laeufe erster Besuch
+#   6030 -> 6000 Tor -> zweiter Besuch 6030, Leon, Karte "vor6030 tor_bereit" ((3,48)/(3,49) Bahnsteig-Kampf 5080 vorbei, (3,239)).
+#   Je Raum ein Abschnitt des Eingabeskripts ('|', input_pc.c), RE15_FIRE_AOT der Reihe nach (main.c): Ausgang Slot 2 (main00
+#   @0x00C72) -> 6000, Torschalter Slot 5 (main00 @0x00E66 sce 3 -> sub07: msg 5, Ja, @0x011B4 Set(3,89)), Tuer Slot 3 (@0x00DDA)
+#   -> 6030 Cut 6. Im 6030 Wege der P4j/P4k; im zweiten Besuch Gang -> Treppe -> Fuehrerstand, Tuer hinaus und wieder hinein.
+#   torweg_f  vorne zuerst -> Wagen -> OHNE Rueckkehr -> Tor -> Fuehrerstand: Nachtrag msg 40, 25 (k_s80_6030_sub05_nachtrag_tor,
+#             sub07 @0x01132) vor dem Zugstart der Spur AN (msg 27..30) beim naechsten Betreten; (9,128) 1 -> 0, (9,133) 0 -> 1.
+#             GEGENPROBE Stand dabac8d22 (gemessen, Lauf weg_F_vor): Zugstart 27..30 ohne 40/25, (9,128) bleibt 1 -> rot.
+#   torweg_w  Wagen zuerst -> Fuehrerstand (msg 11, 12, 25, 26) -> Tor -> Fuehrerstand: Zugstart sofort, kein Nachtrag.
+#   torweg_r  vorne -> Wagen -> zurueck nach vorne (Nachtrag sub09) -> Tor -> Fuehrerstand: Zugstart sofort, kein zweiter Nachtrag.
+#   Jede Zeile genau einmal; der Wagen-Eintritt nach dem Tor zeigt die Tuer nach 5090 noch zu (Spur AN k_tuer), keine Wagen-Szene
+#   (Torschalter @0x011C0 Set(3,22)). Schranken = Bilder der Messlaeufe weg_*_nach (Ausgang F5100/F5000/F6800, Tor F100, Tuer F900).
 # TEIL=elza:
 #   P3a schuppen  CONTINUE in ROOM1091 (Elza): Aktionstaste vor dem Schuppen -> msg 20 "It's a burnt-out shed..."
 #   P3b vor1091   ROOM1051 -> Tuer -> ROOM1091 (Elza): Text-Platz Slot 5 angelegt; RE15_FIRE_AOT Slot 5 -> msg 20
@@ -79,6 +91,12 @@ set(_exe_kopie "${_exe_dir}/re15_pc_r36p_${TEIL}_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 set(RE15_PC_EXE "${_exe_kopie}")
 
+# Zeitgrenze je Lauf (s); die durchgehenden torweg-Laeufe dauern allein 390-470 s (weg_*_nach).
+set(_zeit 600)
+if(TEIL MATCHES "^torweg_")
+    set(_zeit 1100)
+endif()
+
 # lauf(<name> <karten-argumente (;-Liste)> <raum> <skript> <ende> <out> [KEY=WERT ...])
 function(lauf _name _karte _raum _skript _ende _out_debug)
     set(WORKDIR "${_basis}_${_name}")
@@ -90,7 +108,7 @@ function(lauf _name _karte _raum _skript _ende _out_debug)
     if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
         message(FATAL_ERROR "r36_story[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_outk}")
     endif()
-    re15_start_spiel(_rv 600
+    re15_start_spiel(_rv ${_zeit}
         RE15_NO_INTRO=1 SDL_AUDIODRIVER=dummy RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=60 "RE15_INPUT_SCRIPT=${_skript}"
@@ -291,6 +309,73 @@ elseif(TEIL STREQUAL "zug")
     darf_nicht(p4k "${_d}" "[msgtext] room=6030 id=31 ")
     darf_nicht(p4k "${_d}" "[msgtext] room=6030 id=40 ")
     darf_nicht(p4k "${_d}" "Evt_exec sub09 -> Programm")
+elseif(TEIL MATCHES "^torweg_(f|w|r)$")
+    set(_weg "${CMAKE_MATCH_1}")
+    set(_vorne "A0.3,W8,L0.07,XU0.5,W0.5,L0.38,XU2,R0.12,A0.3,W6,XU1,R0.07,A0.3")
+    if(_weg STREQUAL "f")
+        set(_seg1 "${_vorne},W68,A0.3,W11,XU1,A0.3,W2,XU3,W75")
+        set(_aus 5100)
+    elseif(_weg STREQUAL "w")
+        set(_seg1 "A0.3,W8,U3,W62,L0.40,XU3,W0.5,R0.07,A0.3,W6,XU1,R0.07,A0.3,W68,A0.3,W11")
+        set(_aus 5000)
+    else()
+        set(_seg1 "${_vorne},W68,A0.3,W11,XU1,A0.3,W2,XU3,W75,L0.40,XU3,W0.5,R0.07,A0.3,W6,XU1,R0.07,A0.3,W20,A0.3,W11")
+        set(_aus 6800)
+    endif()
+    set(_n "torweg_${_weg}")
+    lauf(${_n} "vor6030;tor_bereit" 6000
+         "A0.3,W8|${_seg1}|W5,A0.2,W1,A0.2,W1,A0.2,W30|${_vorne},W45,A0.3,W11,R0.71,A0.3,W65"
+         "4300#6030!3" _d
+         "RE15_FIRE_AOT=2@${_aus}#6030,5@100#6000,3@900#6000"
+         "RE15_FLAG_WATCH=3:22,4:23,3:89,9:128,9:133")
+    muss(${_n} "${_d}" "[input-script] Abschnitt 3 ab Raum 6030")
+    muss(${_n} "${_d}" "[msgtext] room=6000 id=5 \"A device to open the tunnel gate.Will you turn on the switch?\"")
+    muss(${_n} "${_d}" "ROOM6000 (3,89) 0 -> 1")
+    muss(${_n} "${_d}" "[annette] ROOM6030 Wagen (Cut 6): Zugstart nicht gelaufen")
+    muss(${_n} "${_d}" "[story80] ROOM6030 Evt_exec sub02 -> Programm")
+    genau_einmal(${_n} "${_d}" "[story80] ROOM6030 Evt_exec sub02 -> Programm")
+    muss(${_n} "${_d}" "ROOM6030 Zugstart-Szene statt sub05")
+    genau_einmal(${_n} "${_d}" "ROOM6030 Zugstart-Szene statt sub05")
+    muss(${_n} "${_d}" "ROOM6030 (9,133) 0 -> 1")
+    vor(${_n} "${_d}" "ROOM6000 (3,89) 0 -> 1" "ROOM6030 Zugstart-Szene statt sub05")
+    vor(${_n} "${_d}" "[msgtext] room=6030 id=25 " "[msgtext] room=6030 id=28 ")
+    vor(${_n} "${_d}" "[msgtext] room=6030 id=19 " "[msgtext] room=6030 id=27 ")
+    vor(${_n} "${_d}" "[msgtext] room=6030 id=8 " "[msgtext] room=6030 id=27 ")
+    vor(${_n} "${_d}" "[msgtext] room=6030 id=27 " "[msgtext] room=6030 id=28 ")
+    vor(${_n} "${_d}" "[msgtext] room=6030 id=28 " "[msgtext] room=6030 id=30 ")
+    if(_weg STREQUAL "w")
+        set(_ids 0 1 21 2 3 22 4 5 6 7 23 24 8 11 12 25 26 13 14 15 16 17 18 19 27 28 29 30)
+        muss(${_n} "${_d}" "[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B)")
+        darf_nicht(${_n} "${_d}" "[msgtext] room=6030 id=31 ")
+        darf_nicht(${_n} "${_d}" "[msgtext] room=6030 id=40 ")
+    else()
+        set(_ids 11 31 13 14 15 16 17 18 19 0 1 21 2 3 22 4 5 6 7 23 24 8 40 25 27 28 29 30)
+        muss(${_n} "${_d}" "[story80] ROOM6030 Evt_exec sub08 -> Programm (576 B)")
+        muss(${_n} "${_d}" "ROOM6030 (9,128) 1 -> 0")
+        vor(${_n} "${_d}" "[msgtext] room=6030 id=8 " "[msgtext] room=6030 id=40 ")
+        vor(${_n} "${_d}" "[msgtext] room=6030 id=40 " "[msgtext] room=6030 id=25 ")
+        darf_nicht(${_n} "${_d}" "[msgtext] room=6030 id=12 ")
+        darf_nicht(${_n} "${_d}" "[msgtext] room=6030 id=26 ")
+    endif()
+    if(_weg STREQUAL "f")
+        # Nachtrag nach dem Tor (sub07 @0x01132), dann der Zugstart beim naechsten Betreten
+        muss(${_n} "${_d}" "[story80] ROOM6030 Evt_exec sub05 -> Programm (262 B)")
+        muss(${_n} "${_d}" "[annette] ROOM6030 Zugstart wartet: Sherry-Nachtrag offen")
+        darf_nicht(${_n} "${_d}" "Evt_exec sub09 -> Programm")
+        vor(${_n} "${_d}" "ROOM6000 (3,89) 0 -> 1" "[msgtext] room=6030 id=40 ")
+        vor(${_n} "${_d}" "[story80] ROOM6030 Evt_exec sub05 -> Programm" "ROOM6030 Zugstart-Szene statt sub05")
+        vor(${_n} "${_d}" "ROOM6030 (9,128) 1 -> 0" "ROOM6030 (9,133) 0 -> 1")
+    else()
+        darf_nicht(${_n} "${_d}" "[story80] ROOM6030 Evt_exec sub05 -> Programm")
+        darf_nicht(${_n} "${_d}" "Zugstart wartet")
+        if(_weg STREQUAL "r")
+            muss(${_n} "${_d}" "[story80] ROOM6030 Evt_exec sub09 -> Programm (238 B)")
+            vor(${_n} "${_d}" "ROOM6030 (9,128) 1 -> 0" "ROOM6000 (3,89) 0 -> 1")
+        endif()
+    endif()
+    foreach(_id ${_ids})
+        genau_einmal(${_n} "${_d}" "[msgtext] room=6030 id=${_id} ")
+    endforeach()
 elseif(TEIL STREQUAL "elza")
     # --- P3a: CONTINUE in ROOM1091 (Elza), Aktionstaste vor dem Schuppen --------------------------------
     lauf(p3a "schuppen" 1091 "A0.3,W30" "400#1091" _d)
@@ -333,7 +418,7 @@ elseif(TEIL STREQUAL "elza")
     darf_nicht(p4g "${_d}" "bit me")
     darf_nicht(p4g "${_d}" "medical supplies")
 else()
-    message(FATAL_ERROR "r36_story: TEIL '${TEIL}' unbekannt (leon|elza|zug)")
+    message(FATAL_ERROR "r36_story: TEIL '${TEIL}' unbekannt (leon|elza|zug|torweg_f|torweg_w|torweg_r)")
 endif()
 
 file(REMOVE "${_exe_kopie}")
