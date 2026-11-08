@@ -2847,3 +2847,99 @@ mit error/fehler/assert (v6drei/lauf_V6_debug.log). Die CLUT-Zeilenzahl loggt de
 3. In Pose 85 (alter Vergleich zu Foto 2) ist der Schwanz jetzt zu lang (Ende 0,10 H rechts / 0,11 H unter dem Nutzerpunkt).
 4. Kralle: a* 2,5 gegen Foto 4,9 (Kandidaten nur grau/knochenfarben, C* <= 12); L* trifft.
 5. T-F7 / TK unveraendert offen wie in V5f.
+
+## V7 linke Hand (Bauer, 2026-11-08)
+
+Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc, keine Zahl hier ist eine @0x-Konstante. Masse = Bildmessung an den Originalfotos
+und ihren Nachbarbildern (SF_belege/roh/alle) und am Modell (Spielkamera 50A0/12, RDT-Licht, f_rast). Werkzeuge
+re15_port/tools/r41_sichel/v7hand/ (Commit 3d0dbbd66), Belege SF_belege/v4/v7hand/ und SF_belege/v4/40-42_* (Commit 32adc29a1).
+Variante sfv4/emd/**EM30_V7.EMD = EM30_V4.EMD**, sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6, 268948 Byte,
+zweiter Bau gleiche sha256. Basis EM30_V6.EMD (9e0e58ef); alles ausser den Krallen der (W)-linken Hand bytegleich V6 (T-V7e).
+Spiel-Asset EM30_HANGAR.EMD (cfd1ac42) und Pin unveraendert. Nichts in Version_80%/, pri/, synchro/.
+
+### Nutzer-Wortlaut (2026-11-08)
+"Beim 2 Beiner Birkin - fast perfekt, aber die linke Hand von ihn stimmt immer noch nicht. Erstens sieht man auf den Original Bildern ganz
+klar, das alle Krallen bis auf die Daumen Kralle rot sind, die Daumen Kralle ist grau. und 2. Sieht man auf den Original Bildern das
+Offenbar JEDE der Krallen im Original länger ist...." Linke Hand = (W)-links = Klauenhand (Knochen/Mesh 12).
+
+### Bildzaehlung
+sfv4/orig/nNNNN ist gegen SF_belege/roh/alle/fNNNN um ein Bild versetzt (n(N-1) = fN; Beschreibung1_Vorlage gegen f1485 mittlere
+Abweichung 0,15, gegen orig n1485 1,86). Alle Werte hier in der Messblatt-Zaehlung fNNNN.
+
+### 1. Messung
+- Modell (hand_gemein.krallen, Topologie V5k = V6): Mesh 12 traegt **4 Krallen**, jede eine geschlossene Doppelpyramide aus 6 Dreiecken
+  und 5 Ecken (Ring aus 3 Ecken, obere und untere Spitze), ohne gemeinsame Ecke oder Normale mit anderen Flaechen:
+  **Daumenkralle T** (Ecken 18-22, Spitze 20, sitzt am Daumen, Ring x ~ +190; d0 d1 d3 d4 d6 d7) und **Fingerkrallen A** (45-49, Spitze 47),
+  **C** (40-44, Spitze 42) unten an der Handflaeche und **B** (27-31, Spitze 29) am Kastenfinger. Die V6-"Krallenflaechen" (alle Ecken
+  y >= 330) waren die unteren Haelften von A und C, ganz B und die Kappe v16 des Kastenfingers (keine Kralle); die Daumenkralle lag
+  auf der roten Zeile 490. V6 hatte also genau verkehrt herum gefaerbt: Finger grau, Daumen rot.
+- Foto, rote Fingerkrallen (hand_gemein.foto_rot, Bilder f1482-f1488 um Foto 1): helle Grate von L* (Zeilenmaxima, Prominenz >= 1, a* >= 5)
+  ueber Zeilen verkettet. Je Bild genau **ein** roter Streifen (Fenster x 482-506, y 338-371); Laengen 23,1 / 19,0 / 22,0 / 15,0 / 17,0 /
+  17,0 / 21,1 px, **Median 19,0 px = 0,0629 H1** (H1 = 302 wie Messblatt 6), Streifen-Lab Median **14,87 / 9,12 / 3,00**. Die Zahl der
+  Fingerkrallen loest das Video nicht auf (Chroma in 2x2-Bloecken, ein Streifen je Bild).
+- Foto, graue Daumenkralle (hand_gemein.foto_daumen, f1475-f1477 um den Messblatt-Keil f1476): groesste Komponente L* >= 24, a* < 8;
+  Laenge entlang der Hauptachse 22,6 / 12,7 / 6,7 px, **Median 12,7 px = 0,0421 H1**, Lab Median **30,3 / 4,0 / 1,8**.
+- Modell V6 in P1 (Ring-Mitte -> Spitze projiziert): T 0,027 / A 0,043 / B 0,021 / C 0,038 H: jede Kralle kuerzer als das Foto
+  (Gegenprobe T-V7d: -36 / -32 / -67 / -39 %).
+
+### 2. Farbe (hand_bau; nur CLUT-Felder und Zeilen)
+- Daumenkralle T (6 Flaechen) -> **Zeile 491** (V6-Grau). Zwei Daumen-Indizes (88, 251) hatte V6 nicht umgefaerbt; sie bekommen die V6-Regel
+  (drei_bau.kralle_zeile, Verschiebung 25,664 aus drei_bau_protokoll.json); alle V6-Eintraege von 491 bleiben bytegleich.
+- Fingerkrallen A, B, C (18 Flaechen) -> **neue Zeile 492** = Kopie 490 (Klauenhand = Referenz-2-Zeile 482). Jeder der 68 Indizes der
+  Finger-Krallentexel bekommt den naechsten (dE76) roten Eintrag der Referenz-2-Palette (EM30_HANGAR Zeilen 480-485, Paletten-a* >= 10,
+  310 Kandidaten) zum Ziel (L* + Verschiebung, a*, b* des 490-Eintrags); Verschiebung per Halbierung auf die Foto-L* der roten Streifen
+  in P1: **1,814**. Paletten-Median 13,3 / 16,5 / 2,9 -> 15,6 / 16,5 / 4,7.
+- Kappe v16 (Kastenfinger, keine Kralle; in V6 auf 491) -> 490 wie die Hand.
+- CLUT **13 Zeilen**, Port-Texturhoehe 3328 <= 4096.
+
+### 3. Laenge (hand_bau)
+Je Kralle nur die untere Spitzenecke entlang der Achse Ring-Mitte -> Spitze verschoben; Ring, obere Spitze, Flaechen und UV bleiben, die
+Doppelpyramide bleibt geschlossen und spitz. Faktor so, dass die P1-Projektion die Foto-Laenge trifft (4 Iterationen):
+
+| Kralle | Soll H | V6 H | V7 H | Faktor | Spitze Knochenraum V6 -> V7 | Achse E. V6 -> V7 |
+|---|---|---|---|---|---|---|
+| T Daumen | 0,0421 | 0,0270 | 0,0421 | 1,55 | (228,343,-98) -> (248,402,-105) | 114 -> 177 |
+| A | 0,0629 | 0,0429 | 0,0628 | 1,45 | (47,511,-75) -> (73,588,-121) | 208 -> 301 |
+| B | 0,0629 | 0,0209 | 0,0632 | 3,02 | (82,451,-48) -> (29,526,-150) | 68 -> 205 |
+| C | 0,0629 | 0,0383 | 0,0628 | 1,62 | (85,512,-59) -> (120,610,-102) | 183 -> 295 |
+
+Normalen: jede Normale einer unteren Krallenflaeche (alle exklusiv in ihrer Doppelpyramide) = Mittel der Einheits-Flaechennormalen ihrer
+Flaechen (Wicklung negiert), Laenge 4096. Diese Regel trifft die Original-Normalen von V5k auf Median 0,7 / max 1,5 Grad
+(flaechengewichtet 7,7 / 40,6, winkelgewichtet 5,3 / 42,1). Knochen, Keyframes und Clips unveraendert.
+
+### Riegel (riegel_v7hand.py; SF_belege/v4/v7hand/riegel_v7hand_V7.txt/.json) - Exit 0, 0 rot von 7
+| Pruefung | Ergebnis |
+|---|---|
+| T-V7a Krallenzahl | gruen: 4 geschlossene Doppelpyramiden (T, A, B, C); Foto je Bild f1482-f1488 ein roter Streifen, Keil in 3/3 Bildern |
+| T-V7b Daumen grau (P1) | gruen: a* 3,7 (<= 6), Lab 31,4 / 3,7 / 0,9, 45 px (Foto-Keil 30,3 / 4,0 / 1,8) |
+| T-V7c Finger rot (P1) | gruen: a* 11,5 (>= 9,12 - 5), Lab 14,9 / 11,5 / 5,1, 142 px (Foto-Streifen 14,9 / 9,1 / 3,0) |
+| T-V7d Laenge je Kralle (P1, +-15 %) | gruen: T -0,0 %, A -0,1 %, B +0,5 %, C -0,2 % |
+| T-V7e Rest bytegleich V6 | gruen: Sektionen 0-6, Texel, CLUT 480-490, Meshes ausser 12 bytegleich; Mesh 12 nur 4 Spitzenecken, Normalen der unteren Krallenflaechen, CLUT-Felder der Krallen und v16; 491 nur Indizes 88/251 ergaenzt; 492 nur rote Ref2-Eintraege |
+| T-V7f Zeilen | gruen: 13 Zeilen, 3328 |
+| T-V7g Boden (912 Keyframes) | gruen: 0 Keyframes mit Krallenspitze unter der Sohle; naechste Spitze 320 E. darueber (V6 397) |
+| INFO T-V7bc P2 / 135 | P2 Daumen a* 0,7, Finger a* 8,9; 135 Daumen a* 0,7, Finger a* 11,3 |
+| INFO T-V7h Koerper | 26 Keyframes, in denen ein Punkt einer Krallenachse in Knochen 4/8/10 liegt (V6: 22). Gleiche Clips 9, 11, 12, 18, 20 wie V6; in Clip 18 Bild 14-24 liegt schon in V6 die ganze Hand im Bein (Knochen 4). Zuwachs durch die Laenge v. a. Clip 9 Bild 42/44/56 (A, B, C) |
+
+Gegenprobe V6 (riegel_v7hand_V6_gegenprobe.txt): Exit 1, 4 rot (T-V7b Daumen a* 10,8; T-V7c Finger a* 2,7; T-V7d -32 bis -67 %;
+T-V7e). Der Riegel trennt V6 und V7.
+
+### Leisten (SF_belege/v4/, roh)
+40_hand_links_x8.png (Foto 1 | Foto 2 | f1475 grauer Keil | f1483 roter Streifen | V6 | neu; Zeile P1, Zeile P2), 41_foto1_vergleich.jpg
+(Foto 1 | V6 | neu, P1 und 135), 42_foto2_vergleich.jpg (Foto 2 | V6 | neu, P2).
+Selbst angesehen: In P1 haengen jetzt lange rote Fingerkrallen unter der Hand, die Daumenkralle sitzt seitlich hoeher und ist ein grauer
+Keil; in 135 sind die Fingerkrallen lange rote Spitzen (V6: graue), der Daumen dort verdeckt; in P2 eine lange rote Kralle, Daumen grau. Im
+Spielbild h135 (Lauf V7, f000360) sind die roten Krallen gegen V6 deutlich laenger. Die Foto-Krallen wirken heller und weicher rot (Video-
+Unschaerfe); die Modellkrallen treffen die Foto-L* im Mittel, sind aber kantiger.
+
+### Tests
+Bau "LOCAL-BUILD-OK (build)" (Engine unveraendert). ctest -R "unit_birkin_formen|unit_birkin_szenen|unit_schwanz_r41|
+integration_r41_sichel_form" --timeout 900: "100% tests passed, 0 tests failed out of 4", Total Test time (real) = 64.41 sec
+(v7hand/ctest_v7.txt). Spiellauf lauf_v4.sh mit EM30_V7: EXIT=0, 191 FRAMEDUMPs, "[enemy] EM30 loaded: 23 meshes, 23 bones, 21 clips
+-> slot 12", 0 Zeilen mit error/fehler/assert (v7hand/lauf_V7_debug.log).
+
+### Offen
+1. Zahl der Fingerkrallen: das Video zeigt je Bild nur einen roten Streifen (Chroma 2x2); das Modell behaelt seine 3 Fingerkrallen + Daumen.
+2. Koerper-Durchdringung (INFO T-V7h): die verlaengerten Krallen stecken in 4 Keyframes mehr in Koerper/Bein als in V6 (26 gegen 22),
+   v. a. Clip 9; Clip 18 ist schon im Original-Arm so. Abhilfe nur ueber kuerzere Krallen (dann nicht Foto-Laenge) oder andere Keyframes.
+3. Die Fingerkrallen-Laenge stammt aus einem Streifen je Bild und gilt fuer alle drei; der Daumen-Keil schwankt stark (6,7-22,6 px, Median).
+4. T-F7 / TK (V5f) und Schwanz unter der Sohle (V6 Offen 1) unveraendert.
