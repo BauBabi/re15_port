@@ -1,0 +1,34 @@
+{
+ "basis": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad\\sfv4\\emd\\EM30_V5r4.EMD",
+ "basis_sha256": "38562ced41061258f435be0d6598697b10ed241b09ba1a948007bc5bdf5993d5",
+ "ref2": "C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r41_sichel\\re15_port\\shared_assets\\PSX\\EMD\\EM30_HANGAR.EMD",
+ "ref2_sha256": "cfd1ac42729e56365847db42b352337d7f0c06fdcc1ef3413d0aee32d4a97a95",
+ "original": "C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r41_sichel\\re15_port\\shared_assets\\PSX\\EMD\\CDEMD0.EMS",
+ "original_ems_index": 16,
+ "original_sha256": "569e31387d78c89f2193553a4ba8670d8923ff3d2e98f99c1a2a6bef8f72f4ce",
+ "stufe": 0,
+ "mesh9_alt": {
+  "ecken": 48,
+  "dreiecke": 56,
+  "vierecke": 14
+ },
+ "tim": {
+  "v5_einsaetze_zurueck": 11722,
+  "clut_zeilen": 7,
+  "port_texturhoehe": 1792,
+  "zeile_486": "Original EM30 CLUT-Zeile 0 (y 480) bytegleich"
+ },
+ "emd": {
+  "bytes": 262516,
+  "sha256": "419ccfd4bcf26a83375dc97d1627a030239e55848732b84421aa1252348d3a7c",
+  "sektionen_gleich": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ]
+ }
+}
