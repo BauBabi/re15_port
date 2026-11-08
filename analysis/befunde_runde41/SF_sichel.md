@@ -2943,3 +2943,102 @@ integration_r41_sichel_form" --timeout 900: "100% tests passed, 0 tests failed o
    v. a. Clip 9; Clip 18 ist schon im Original-Arm so. Abhilfe nur ueber kuerzere Krallen (dann nicht Foto-Laenge) oder andere Keyframes.
 3. Die Fingerkrallen-Laenge stammt aus einem Streifen je Bild und gilt fuer alle drei; der Daumen-Keil schwankt stark (6,7-22,6 px, Median).
 4. T-F7 / TK (V5f) und Schwanz unter der Sohle (V6 Offen 1) unveraendert.
+
+## Einbau v0.8.30 (Nutzerfreigabe 2026-11-08) (Einbau-Bauer, 2026-11-08)
+
+Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc; keine Zahl hier ist eine @0x-Konstante. Belege = Nutzer-Wortlaut (PORT-WAHL)
+und Messungen an den Dateien und Laeufen. Zweig r41/sichel_nb2. Nichts in Version_80%/, pri/, synchro/, BAHNSTEIG_FORM unberuehrt.
+
+### Nutzer-Wortlaut (2026-11-08, bindend)
+"Naja, gehen wir so erst mal ins rennnen." - Antwort auf die Vorlage V7 (reAi_v2_entscheidung_2026-11-06/16_sichel_v7_linke_hand/); danach
+hat der Nutzer die Spider-Man-Szene mit V7 gesehen (17_spiderman_szene_v7/spiderman_szene_v7.mp4, Bilder 225-450). Folge: V7 wird ohne
+weitere Gestaltungsaenderung das Spiel-Asset fuer v0.8.30.
+
+### Asset und Pins (Commit d28112654)
+| | vorher (Referenz 2) | nachher (V7) |
+|---|---|---|
+| re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD | 274420 Byte, sha256 cfd1ac42729e56365847db42b352337d7f0c06fdcc1ef3413d0aee32d4a97a95 | 268948 Byte, sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6 (bytegleich sfv4/emd/EM30_V7.EMD, cmp) |
+| release/em30_hangar.sha256 | cfd1ac42... | 319bbd17... |
+
+- git grep "cfd1ac42" ueber release/, re15_port/tests, re15_port/tools: einzige Pruef-Fundstelle war der Pin; die uebrigen Treffer sind
+  Kommentare/Protokolltexte der Werkzeuge frueherer Runden (Herkunft "Referenz 2 = cfd1ac42") und bleiben wahr.
+- tools/birkin_formen.py: nur Kopfkommentar - das Spiel-Asset ist V7; ohne --variante schreibt das Skript den Grundstand Referenz 2
+  (cfd1ac42) ueber V7, darum nicht ins Spiel-Asset laufen lassen. Das Skript wurde NICHT im Arbeitsbaum gestartet.
+- release/make_package.sh (EM30-Pin-Tor): nur Kommentar und die-Meldung verweisen jetzt auf re15_port/tools/r41_sichel/v7_kette.sh.
+
+### Kette und Reproduktion (Commit 8d3cc79ff, re15_port/tools/r41_sichel/v7_kette.sh)
+Alle Bau-Werkzeuge lesen Referenz 2 am Pfad des Spiel-Assets (kopf_orig_bau.REF2, v4_gemein.REF2, re2_kopf.REF2), wo jetzt V7 liegt. Das
+Skript baut deshalb in einem Schattenbaum ZIEL/baum: Werkzeuge per git archive (Standard HEAD), EMD-Ordner aus git, darin
+EM30_HANGAR.EMD = Referenz 2 per git show ed254a7fe (sha256 geprueft), die grossen Lese-Ordner (PSX-Unterordner ausser EMD,
+shared_assets/RE2, engine, analysis, info) als Verzeichnis-Verbindungen (mklink /J, am Ende mit rmdir ohne /s geloest).
+
+| Schritt | Werkzeug | Ergebnis (Soll = Dossier) |
+|---|---|---|
+| 1 | birkin_formen.py --variante v4 --aus ZIEL/emd/v4 (CDEMD0.EMS + v4/*.npz) | EM30_V4ot3 a1bc9309 OK (V4 Runde 3 ot3) |
+| 2 | re2kopf/kopf_re2_bau.py (PARAM_R4, RE2 CDEMD0.EMS G2/G3) | EM30_V5r4 38562ced OK (V5 Runde 4) |
+| 3 | v6kopf/kopf_orig_bau.py | EM30_V5k 99703bbd OK (V6 Kopf) |
+| 4 | v5koerper/koerper_bau.py | EM30_V5f 784c8f05 OK (V5 wie Foto) |
+| 5 | v6drei/drei_bau.py | EM30_V6 9e0e58ef OK (V6 drei Punkte) |
+| 6 | v7hand/hand_bau.py | EM30_V7 319bbd17 OK = Pin = Spiel-Asset (cmp bytegleich) |
+
+Lauf 2026-11-08 (Werkzeuge d28112654, Ziel scratchpad laufc/kette): Abschlusszeile "V7-KETTE-OK sha256
+319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6", Exit 0, 26 s (Protokoll laufc/kette_lauf1.txt). Keine Eingabe
+ausserhalb des Repos noetig: der Ausgangsstand V5r4 der Abschnitte V6 Kopf ff. ist selbst aus committeten Eingaben (Schritte 1-2)
+reproduzierbar. Jede Abweichung einer Stufe setzt Exit 1.
+
+### Testaenderungen (Commit b1d2e864b) und Gegenprobe
+Erster Lauf mit V7 und den alten Riegeln: unit_birkin_formen 93 Fehler, unit_schwanz_r41 4 Fehler, alle anderen gruen
+("75% tests passed, 2 tests failed out of 8"). Alle Ursachen = Erwartungen des Vor-V7-Stands; neue Erwartungen am V7-EMD gemessen
+(eigener Python-Leser ueber emd_ansichtsblatt / birkin_formen.md1_lesen, scratchpad laufc/mess/v7_mess.py, blau.py).
+
+| Datei | alt | neu (Beleg) |
+|---|---|---|
+| test_birkin_formen.c | Kopf Mesh 9 auf CLUT 485 | 486 (V6 Kopf Schritt 1/3); NEU UV ausser CLUT = EM30, <= 4 Ecken anders als der Original-Kopf (T-H6, gemessen 2) |
+| | umtexturiert 1-6, 9, 15 | 1-6, 8, 9, 12, 13, 15 (V5 wie Foto b); NEU 8/9/12/13/15 nur im CLUT-Feld; Brust 8: 34 Flaechen auf 488; Oberarm 13: 43 auf 489 |
+| | - | NEU Mesh 12: Daumenkralle 6 Flaechen auf 491, Fingerkrallen 18 auf 492, Rest 34 auf 490 (V7 linke Hand 2.) |
+| | Schwanz-Quads CLUT 483 | 487 (V5 wie Foto a); NEU auch die Deckel-Dreiecke (V6 drei Punkte 2.) |
+| | CLUT "Soll 6 x 256" | 13 x 256 (T-V7f); NEU <= 16 Zeilen und tex_h = tim->height x n_cluts <= 4096 (render_pc.c re15_render_pc_upload_tim_slot, gemessen 256 x 13 = 3328); Zeile 486 = EM30-Zeile 0 |
+| | blaue Eintraege 480-482: 0 geaendert | genau 30 geaendert, alle grau (5-Bit-Spanne <= 1; gemessen C* <= 4,4): die mit Paletten-a* >= 10 (V5 wie Foto b, Nutzer (5)/(8)) |
+| test_schwanz_r41.c | (1)-(7) einmal mit dem Asset | kette_pruefen() zweimal: Spiel-Asset (V4-Kette) und Gegenlauf "Gliederung Referenz 2" (Knochen 16-22 aus cfd1ac42) mit allen alten Schwellen |
+| | Nachlauf > 300 | V4-Kette > 60 (ausserhalb der Ruhe-Toleranz von (1); SW_V4_*, Entscheid O3 "T7 koerperfest"); gemessen 189; Gegenlauf > 300 (gemessen 1007) |
+| | Glieder alle = Glied 17 (+-6) | je Glied = gezeichnete Laenge (+-6), gemessen bis 1 (die V4-Kette hat ungleiche Glieder 624/440/887/1121/350/204/608) |
+| | Freigabe Mitte nach 1..12 | V4-Kette 0..12 (SW_V4_MITNAHME 0,80 nimmt die Zielbewegung im selben Takt mit; gemessen 0); Gegenlauf 1..12 (gemessen 6) |
+| | Ziel: Spitze < 40 | V4-Kette naeher als ohne Ziel (gemessen 380 statt 1400; Knick-Grenze glaetten() laeuft nach dem Szenenziel, s. Offen 3); Gegenlauf < 40 (gemessen 0) |
+| | - | NEU: Spiel-Asset traegt die V7-Kette (relpos y 624/440/887/1121/350/204, re15_schwanz_r41_v4_kette) |
+| test_r41_sichel_form.cmake | Kommentar "tools/birkin_formen.py" | nur Kommentar (V7, 23/23/21 gilt weiter) |
+
+Gegenprobe (Asset kurz auf cfd1ac42 aus git show, danach V7 zurueck, sha256 319bbd17 nachgerechnet, nichts committet):
+unit_birkin_formen "test_birkin_formen: 382 Fehler" (u. a. Mesh 8/12/13 nicht umtexturiert, Kopf 0/91 auf 486, 61 Ecken anders,
+Krallenzeilen 491/492 leer, Schwanz 483 statt 487, "CLUT 1536 Eintraege (Soll 13 x 256)"), unit_schwanz_r41 "FAIL: Spiel-Asset:
+Schwanzglieder 17-22 nicht die V7-Kette (6 Laengen anders, V4-Kette 0)" - beide rot; mit V7 beide gruen.
+
+Summenzeilen (ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole|hangar" --timeout 900,
+nach der Anpassung, laufc/ctest_v7_nachher.txt): "100% tests passed, 0 tests failed out of 8", "Total Test time (real) = 305.30 sec".
+("hangar" trifft keinen eigenen Test; andere Tests laden EM30_HANGAR laut git grep nicht.)
+
+### Software-Renderer
+integration_r41_sichel_form laeuft mit RE15_SOFTWARE_RENDER=1 ("[render] SDL-Renderer software"): mit V7 "r41_sichel_form 50A0: exit=0",
+"r41_sichel_form 50E0: exit=0", beide Laeufe "EM30 loaded: 23 meshes, 23 bones, 21 clips", 50A0 "ZEICHNE Typ 0x30: 23 Teile (Bones 23,
+Meshes 23)". Kein Absturz (Port-Texturhoehe 3328) -> 4dde57452 / b0623e4d6 NICHT uebernommen; der Fix fehlt in diesem Zweig weiter.
+
+### Spiellauf gegen die freigegebene Szene
+"FD=200-1100/1 bash re15_port/tools/r41_sichel/v4/lauf_v4.sh laufc/einbau_szene/asset - 1110" (EMD "-" = Spiel-Asset, exe dieses Baums
+neu gebaut): EXIT=0, 901 FRAMEDUMPs; debug.log "[asset] cd-root: .../r41_sichel/re15_port/shared_assets/PSX" (kein Overlay),
+"[enemy] EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum 50A0)", "[enemy] EM30 loaded: 23 meshes, 23 bones, 21 clips -> slot 12",
+0 Zeilen mit error/fehler/assert. Vergleich gegen sfv4/r/V7_szene/fd (laufc/mess/fd_vgl.py): Bilder 225-450 226 von 226 bytegleich,
+Bilder 200-1100 901 von 901 bytegleich, state.log bytegleich. Kein zweiter Lauf zur Streuungsmessung noetig (keine Abweichung).
+Labor 50E0: Lauf aus integration_r41_sichel_form (Software-Renderer) - Ersatzmodell (Raum 50E0) geladen, 23/23/21, 0 Fehlzeilen.
+
+### Offen (nur festgehalten, nichts geaendert)
+1. Schwanz unter der Sohle (V6 Offen 1): Spitze in 82 von 912 Keyframes tiefer als die tiefste Koerperecke (max 579 E.).
+2. Krallen-Durchdringung (V7 Offen 2, INFO T-V7h): 26 Keyframes (V6 22), v. a. Clip 9; Clip 18 schon im Original-Arm.
+3. V4-Kette und Szenenziel: im Unit-Riegel erreicht die V4-Kette ein synthetisches Ziel nur auf 380 E. (ohne Ziel 1400), weil
+   glaetten() (Knick-Grenze, V4 Runde 2) nach ziel_anwenden() laeuft. Im Spiel gilt derselbe Mechanismus fuer die Schwanzbahn
+   (bf_schwanz_ziel, Gewichtstabelle k_schwanz_gewicht_v4); die Szene mit V7 hat der Nutzer gesehen und freigegeben, die
+   Abweichung Spitze <-> Bahnpunkt im Spiel ist nicht gemessen.
+4. 30 blaue (violette, a* >= 10) Eintraege der Zeilen 480-482 sind seit V5f grau; die Jeans-Regel N1.4 gilt nur noch fuer die uebrigen.
+5. T-F7 / TK (V5f), Zahl der Fingerkrallen (V7 Offen 1) unveraendert.
+6. Abnahme nach dem letzten Code-Commit fehlt weiter (letzter Code-Commit jetzt b1d2e864b, Tests); bisher nur H_abnahme_0/1.
+7. analysis/befunde_runde41/NUTZER_ENTSCHEIDE.md liegt in diesem Zweig nicht vor und SF_sichel.md hat keinen Entscheid-Abschnitt -
+   der Entscheid steht nur hier.
+8. Software-Renderer-Fix 4dde57452 fehlt in r41/sichel_nb2 (fuer V7 nicht noetig); kommt mit der Integration.
