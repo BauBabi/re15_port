@@ -12,6 +12,9 @@ add_executable(probe_r41_form_kamera_bild ${CMAKE_CURRENT_LIST_DIR}/../probe_r41
 #   integration_r41_form_wagenweg_warten_leon   Leon wartet nach dem Kampfstart 24 s (Abnahme 2/3 Lauf k5090), Pruefung 7
 #                                               Kampfkamera (Nachbesserung 4 Runde 2, Abnahme 3 N1)
 #   integration_r41_form_wagenweg_warten_elza   Elza dasselbe
+# Lauf A2 (Integration Runde 41 Welle 2, Form-HP 1000): leon/elza/zurueck_* toeten die Form mit dem Raketenwerfer (4 x 301,
+# RE2-G4 @0x800A5D24) nach ihrem Ansturm; Laufende und Framedump-Ende = F2000 (Szenenende gemessen F1705 / F1779), warten_* wie bisher
+# Pistole bis F1931. Laufzeit je Teil gemessen 104-115 s, das TIMEOUT 600 bleibt. Schranken und Gegenproben: Kopf des Skripts.
 if(TARGET re15_pc)
     foreach(_teil leon elza zurueck_leon zurueck_elza warten_leon warten_elza)
         if(_teil STREQUAL "leon")
