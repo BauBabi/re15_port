@@ -1,0 +1,504 @@
+{
+ "quelle": "Messblatt V4F (MESSBLATT_FARBE_V4_FEINSCHLIFF.md); Nutzer 2026-11-08",
+ "helligkeit": {
+  "bedarf_je_zeile_quelle": "Messblatt V4F 3.2 'Je CLUT-Zeile': nur Zeile 2 (Schwanz, Bild 1 0,94 / 1,03) braucht weniger als g; alle anderen Koerperzeilen liegen bei 1,2-4,2 (Zeile 8 1,19 gehoert mit 4/9/10 zum Rumpf und bekommt deren Faktor, damit Ader und Haut einer Region gleich skaliert werden, RV6). Zeilen 5/6/7 bleiben 1",
+  "bedarf_je_zeile": {
+   "2": 1.03
+  },
+  "g_lab": 1.82,
+  "g_lab_quelle": "Lab-Faktor auf L*, a*, b* je Zeile, bisektiert auf Riegel (f): Figur-L* >= Vorlage in Bild 1 und 2 (T, Video, ohne Filter)",
+  "g_lab_zeile": {
+   "3": 1.0,
+   "4": 1.0,
+   "8": 1.0,
+   "9": 1.0,
+   "10": 1.0
+  },
+  "g_lab_zeile_quelle": "Zeilen der Bild-1-Teile (Hinterbeine 3, Rumpf 4/8/9/10; Messblatt 3.2: Bild 1 braucht x 1,14 / 1,38, Bild 2 x 1,37 / 1,41) bekommen g1, die Bild-2-Teile (Kopf 0/14, Brust/Hals 12/13, Vorderbeine 11/15) g2; je RV6-Region (Ruecken/Flanke 4/8/9/10, Brust/Hals 12/13/14, Vorderbeine 11/15) ein Faktor",
+  "chroma_anteil": 0.0
+ },
+ "krallen": {
+  "quelle": "Messblatt V4F 2.1: rechts nur Kralle 31 mit Spitze im Nutzerumriss, links 14 und 15; 29/20/19 und 28 ohne Gegenstueck. Farbe = Hand (Vorlage dE 4 / 3,8)",
+  "einziehen": [
+   19,
+   20,
+   29,
+   28
+  ],
+  "zug": 0.12,
+  "wurzel_n": 6,
+  "hand_meshes": [
+   13,
+   18
+  ],
+  "a_max": 10.0,
+  "s_L": 0.7,
+  "s_C": 0.3,
+  "dL": -2.0,
+  "dL_quelle": "Krallen-L* = Hand-L* - 2: im Disc-Licht ohne Filter lagen die Krallen r bei gleicher Albedo +5,1 ueber der Hand (Lauf v6)"
+ },
+ "ziele": {
+  "buckel": {
+   "lab": [
+    40.0,
+    20.0,
+    -6.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.3,
+   "quelle": "D5: Vorlage T (33-41/16-22/-4..-6), gedecktes Mauve-Rot"
+  },
+  "spitze": {
+   "lab": [
+    24.0,
+    6.0,
+    2.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.3,
+   "zweiton": {
+    "anteil": 0.35,
+    "lab": [
+     27.0,
+     30.0,
+     0.0
+    ]
+   },
+   "quelle": "D4: Vorlage T (53,3/11,9/3,1), 37,5 % rosa-rot, Rot-Lab (41,3/22,5/-1,5)"
+  },
+  "lippe": {
+   "lab": "kopfhaut",
+   "s_L": 0.6,
+   "s_C": 0.2,
+   "a_max": 12.0,
+   "quelle": "Nutzer: Lippe durchweg grau/blau = Kopfhaut (Zeilen 14, Meshes 22/23) ohne Rotklasse a* > 15 und C* > 15; a* <= 12"
+  },
+  "gelenk_bein": {
+   "lab": [
+    28.0,
+    0.0,
+    -6.0
+   ],
+   "s_L": 0.9,
+   "s_C": 0.3,
+   "quelle": "D1: Huefte/Knie/Fuss Vorlage T-L* 41-55, weiss-grau bis kuehl; K4-Albedo L* 24-40"
+  },
+  "gelenk_arm": {
+   "lab": [
+    30.0,
+    0.0,
+    -5.0
+   ],
+   "s_L": 0.9,
+   "s_C": 0.3,
+   "quelle": "D2: Ellbogen r Vorlage T (50,4/-2,8/-3,2), K4-Albedo (35,5/-2,5/-4,8)"
+  },
+  "gelenk_schulter": {
+   "lab": [
+    28.0,
+    0.0,
+    -3.0
+   ],
+   "s_L": 0.9,
+   "s_C": 0.3,
+   "quelle": "D2 Bild 2: Schulter l T (44,2/6,3/-1,9), Muffe Schulter r T (39,6/-3,2/0,2)"
+  },
+  "ruecken_glanz": {
+   "lab": [
+    65.6,
+    3.0,
+    -10.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.25,
+   "quelle": "D3: Vorlage T (51,0/6,5/-11,4); K4 hatte dort Albedo (69,1/6,7/-12,8) und Kette 49,6"
+  },
+  "fuss_glanz": {
+   "lab": [
+    52.2,
+    0.0,
+    -8.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.25,
+   "quelle": "D1 Fuss l: Vorlage T (41,4/2,8/-11,3); K4 Albedo (40,2/1,4/-7,6)"
+  },
+  "kuehl_ganz": {
+   "lab": [
+    20.0,
+    1.0,
+    -8.0
+   ],
+   "s_L": 0.9,
+   "s_C": 0.3,
+   "quelle": "Schwanzgelenke 3-4/4-5 ganz: kuehl-grau, heller als das Glied"
+  },
+  "ellbogen_r": {
+   "lab": [
+    40.0,
+    0.0,
+    -5.0
+   ],
+   "quelle": "D2 Ellbogen r: Vorlage T (50,4/-2,8/-3,2)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "huefte_l": {
+   "lab": [
+    40.0,
+    0.0,
+    -5.0
+   ],
+   "quelle": "D1 Huefte l: Vorlage T (51,7/-1,0/-4,1)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "huefte_r": {
+   "lab": [
+    40.0,
+    0.0,
+    -6.0
+   ],
+   "quelle": "D1 Huefte r: Vorlage T (54,6/-0,3/-6,4)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "knie_l": {
+   "lab": [
+    30.0,
+    0.0,
+    -10.0
+   ],
+   "quelle": "D1 Knie l: Vorlage T (44,5/-1,8/-11,6)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "knie_r": {
+   "lab": [
+    30.0,
+    0.0,
+    -4.0
+   ],
+   "quelle": "D1 Knie r: Vorlage T (49,3/-2,6/-3,9)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "hand_r": {
+   "lab": [
+    46.0,
+    0.0,
+    -4.0
+   ],
+   "quelle": "D2 Hand r: Vorlage T (44,4/-3,5/-4,3)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "schwanz_34": {
+   "lab": [
+    33.0,
+    1.0,
+    -8.0
+   ],
+   "quelle": "D6 Schwanzglied 3-4: Vorlage T (43,5/7,9/-15,4)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "schwanz_45": {
+   "lab": [
+    33.0,
+    0.0,
+    -8.0
+   ],
+   "quelle": "D6 Schwanzglied 4-5: Vorlage T (42,9/-0,8/-14,2)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "schulter_l": {
+   "lab": [
+    50.0,
+    2.0,
+    -3.0
+   ],
+   "quelle": "D2 Schulter l Bild 2: Vorlage T (44,2/6,3/-1,9)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "schulter_r": {
+   "lab": [
+    44.0,
+    0.0,
+    0.0
+   ],
+   "quelle": "D2 Muffe Schulter r Bild 2: Vorlage T (39,6/-3,2/0,2)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "spitze_glanz": {
+   "lab": [
+    46.0,
+    10.0,
+    2.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.3,
+   "quelle": "D4 Fleck F15 Schwanzspitze: Vorlage T (53,3/11,9/3,1), heller als die Spitze im Mittel (42,6)"
+  }
+ },
+ "ganz": [
+  {
+   "name": "Gelenke Beine",
+   "ziel": "gelenk_bein",
+   "gelenke": [
+    "Huefte l",
+    "Huefte r",
+    "Muffe Huefte l",
+    "Muffe Huefte r",
+    "Knie l",
+    "Knie r",
+    "Fuss l",
+    "Fuss r"
+   ]
+  },
+  {
+   "name": "Gelenke Arme",
+   "ziel": "gelenk_arm",
+   "gelenke": [
+    "Ellbogen l",
+    "Ellbogen r",
+    "Hand l",
+    "Hand r",
+    "Muffe Hand l",
+    "Muffe Hand r"
+   ]
+  },
+  {
+   "name": "Gelenke Schultern",
+   "ziel": "gelenk_schulter",
+   "gelenke": [
+    "Schulter l (Arm l - Brust)",
+    "Schulter r (Arm r - Brust)",
+    "Muffe Schulter r"
+   ]
+  },
+  {
+   "name": "Schwanzgelenke 3-4, 4-5",
+   "ziel": "kuehl_ganz",
+   "gelenke": [
+    "Schwanz 3-4",
+    "Schwanz 4-5"
+   ]
+  },
+  {
+   "name": "Schwanzspitze",
+   "ziel": "spitze",
+   "meshes": [
+    6
+   ],
+   "gelenke": []
+  },
+  {
+   "name": "Lippe",
+   "ziel": "lippe",
+   "lippe": "LIPPE_PKL",
+   "band_min_px": 20
+  }
+ ],
+ "flecken": [
+  {
+   "name": "D4 Schwanzspitze Fleck F15",
+   "bild": 1,
+   "flecken": [
+    "B1-F15"
+   ],
+   "meshes": [
+    5,
+    6
+   ],
+   "dilat": 2,
+   "ziel": "spitze_glanz",
+   "eichen": true
+  },
+  {
+   "name": "D3 Ruecken unter F1",
+   "bild": 1,
+   "flecken": [
+    "B1-F03"
+   ],
+   "meshes": [
+    0
+   ],
+   "ziel": "ruecken_glanz",
+   "eichen": true,
+   "ausser_flecken": [
+    "B1-F01"
+   ]
+  },
+  {
+   "name": "D2 Ellbogen r",
+   "bild": 1,
+   "flecken": [
+    "B1-F04"
+   ],
+   "meshes": [
+    16,
+    17
+   ],
+   "ziel": "ellbogen_r",
+   "eichen": true,
+   "dilat": 2
+  },
+  {
+   "name": "D1 Huefte l",
+   "bild": 1,
+   "flecken": [
+    "B1-F05"
+   ],
+   "meshes": [
+    0,
+    8
+   ],
+   "ziel": "huefte_l",
+   "eichen": true,
+   "dilat": 2
+  },
+  {
+   "name": "D1 Huefte r",
+   "bild": 1,
+   "flecken": [
+    "B1-F07"
+   ],
+   "meshes": [
+    0,
+    9
+   ],
+   "ziel": "huefte_r",
+   "eichen": true,
+   "dilat": 2
+  },
+  {
+   "name": "D1 Knie l",
+   "bild": 1,
+   "flecken": [
+    "B1-F08",
+    "B1-F09"
+   ],
+   "meshes": [
+    8,
+    24
+   ],
+   "ziel": "knie_l",
+   "eichen": true,
+   "dilat": 2
+  },
+  {
+   "name": "D1 Knie r",
+   "bild": 1,
+   "flecken": [
+    "B1-F10"
+   ],
+   "meshes": [
+    9,
+    26
+   ],
+   "ziel": "knie_r",
+   "eichen": true,
+   "dilat": 2
+  },
+  {
+   "name": "D2 Hand r",
+   "bild": 1,
+   "flecken": [
+    "B1-F12"
+   ],
+   "meshes": [
+    17,
+    18
+   ],
+   "ziel": "hand_r",
+   "eichen": true,
+   "dilat": 2
+  },
+  {
+   "name": "D1 Fuss l",
+   "bild": 1,
+   "flecken": [
+    "B1-F13"
+   ],
+   "meshes": [
+    24,
+    25
+   ],
+   "ziel": "fuss_glanz",
+   "eichen": true,
+   "dilat": 5
+  },
+  {
+   "name": "D6 Schwanzglied 3-4",
+   "bild": 1,
+   "flecken": [
+    "B1-F06"
+   ],
+   "meshes": [
+    3,
+    4
+   ],
+   "ziel": "schwanz_34",
+   "eichen": true,
+   "dilat": 2
+  },
+  {
+   "name": "D6 Schwanzglied 4-5",
+   "bild": 1,
+   "flecken": [
+    "B1-F11"
+   ],
+   "meshes": [
+    4,
+    5
+   ],
+   "ziel": "schwanz_45",
+   "eichen": true,
+   "dilat": 2
+  },
+  {
+   "name": "D2 Schulter l Bild 2",
+   "bild": 2,
+   "flecken": [
+    "B2-F05"
+   ],
+   "meshes": [
+    10,
+    11
+   ],
+   "ziel": "schulter_l",
+   "eichen": true
+  },
+  {
+   "name": "D2 Muffe Schulter r Bild 2",
+   "bild": 2,
+   "flecken": [
+    "B2-F06"
+   ],
+   "meshes": [
+    10,
+    16
+   ],
+   "ziel": "schulter_r",
+   "eichen": true
+  },
+  {
+   "name": "D5 Buckel vorn",
+   "bild": 2,
+   "flecken": [
+    "B2-F01",
+    "B2-F02",
+    "B2-F03"
+   ],
+   "meshes": [
+    10
+   ],
+   "dilat": 2,
+   "ziel": "buckel"
+  }
+ ]
+}

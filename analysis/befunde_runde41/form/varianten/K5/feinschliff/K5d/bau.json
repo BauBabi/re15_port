@@ -1,0 +1,5644 @@
+{
+ "par": {
+  "quelle": "Messblatt V4F (MESSBLATT_FARBE_V4_FEINSCHLIFF.md); Nutzer 2026-11-08",
+  "helligkeit": {
+   "bedarf_je_zeile_quelle": "Messblatt V4F 3.2 'Je CLUT-Zeile': nur Zeile 2 (Schwanz, Bild 1 0,94 / 1,03) braucht weniger als g; alle anderen Koerperzeilen liegen bei 1,2-4,2 (Zeile 8 1,19 gehoert mit 4/9/10 zum Rumpf und bekommt deren Faktor, damit Ader und Haut einer Region gleich skaliert werden, RV6). Zeilen 5/6/7 bleiben 1",
+   "bedarf_je_zeile": {
+    "2": 1.03
+   },
+   "g_lab": 1.82,
+   "g_lab_quelle": "Lab-Faktor auf L*, a*, b* je Zeile, bisektiert auf Riegel (f): Figur-L* >= Vorlage in Bild 1 und 2 (T, Video, ohne Filter)",
+   "g_lab_zeile": {
+    "3": 1.0,
+    "4": 1.0,
+    "8": 1.0,
+    "9": 1.0,
+    "10": 1.0
+   },
+   "g_lab_zeile_quelle": "Zeilen der Bild-1-Teile (Hinterbeine 3, Rumpf 4/8/9/10; Messblatt 3.2: Bild 1 braucht x 1,14 / 1,38, Bild 2 x 1,37 / 1,41) bekommen g1, die Bild-2-Teile (Kopf 0/14, Brust/Hals 12/13, Vorderbeine 11/15) g2; je RV6-Region (Ruecken/Flanke 4/8/9/10, Brust/Hals 12/13/14, Vorderbeine 11/15) ein Faktor",
+   "chroma_anteil": 0.0
+  },
+  "krallen": {
+   "quelle": "Messblatt V4F 2.1: rechts nur Kralle 31 mit Spitze im Nutzerumriss, links 14 und 15; 29/20/19 und 28 ohne Gegenstueck. Farbe = Hand (Vorlage dE 4 / 3,8)",
+   "einziehen": [
+    19,
+    20,
+    29,
+    28
+   ],
+   "zug": 0.12,
+   "wurzel_n": 6,
+   "hand_meshes": [
+    13,
+    18
+   ],
+   "a_max": 10.0,
+   "s_L": 0.7,
+   "s_C": 0.3,
+   "dL": -2.0,
+   "dL_quelle": "Krallen-L* = Hand-L* - 2: im Disc-Licht ohne Filter lagen die Krallen r bei gleicher Albedo +5,1 ueber der Hand (Lauf v6)"
+  },
+  "ziele": {
+   "buckel": {
+    "lab": [
+     40.0,
+     20.0,
+     -6.0
+    ],
+    "s_L": 0.5,
+    "s_C": 0.3,
+    "quelle": "D5: Vorlage T (33-41/16-22/-4..-6), gedecktes Mauve-Rot"
+   },
+   "spitze": {
+    "lab": [
+     24.0,
+     6.0,
+     2.0
+    ],
+    "s_L": 0.5,
+    "s_C": 0.3,
+    "zweiton": {
+     "anteil": 0.35,
+     "lab": [
+      27.0,
+      30.0,
+      0.0
+     ]
+    },
+    "quelle": "D4: Vorlage T (53,3/11,9/3,1), 37,5 % rosa-rot, Rot-Lab (41,3/22,5/-1,5)"
+   },
+   "lippe": {
+    "lab": [
+     19.31,
+     11.94,
+     -3.52
+    ],
+    "s_L": 0.6,
+    "s_C": 0.2,
+    "a_max": 12.0,
+    "quelle": "Nutzer: Lippe durchweg grau/blau = Kopfhaut (Zeilen 14, Meshes 22/23) ohne Rotklasse a* > 15 und C* > 15; a* <= 12"
+   },
+   "gelenk_bein": {
+    "lab": [
+     28.0,
+     0.0,
+     -6.0
+    ],
+    "s_L": 0.9,
+    "s_C": 0.3,
+    "quelle": "D1: Huefte/Knie/Fuss Vorlage T-L* 41-55, weiss-grau bis kuehl; K4-Albedo L* 24-40"
+   },
+   "gelenk_arm": {
+    "lab": [
+     30.0,
+     0.0,
+     -5.0
+    ],
+    "s_L": 0.9,
+    "s_C": 0.3,
+    "quelle": "D2: Ellbogen r Vorlage T (50,4/-2,8/-3,2), K4-Albedo (35,5/-2,5/-4,8)"
+   },
+   "gelenk_schulter": {
+    "lab": [
+     28.0,
+     0.0,
+     -3.0
+    ],
+    "s_L": 0.9,
+    "s_C": 0.3,
+    "quelle": "D2 Bild 2: Schulter l T (44,2/6,3/-1,9), Muffe Schulter r T (39,6/-3,2/0,2)"
+   },
+   "ruecken_glanz": {
+    "lab": [
+     65.6,
+     3.0,
+     -10.0
+    ],
+    "s_L": 0.5,
+    "s_C": 0.25,
+    "quelle": "D3: Vorlage T (51,0/6,5/-11,4); K4 hatte dort Albedo (69,1/6,7/-12,8) und Kette 49,6"
+   },
+   "fuss_glanz": {
+    "lab": [
+     52.2,
+     0.0,
+     -8.0
+    ],
+    "s_L": 0.5,
+    "s_C": 0.25,
+    "quelle": "D1 Fuss l: Vorlage T (41,4/2,8/-11,3); K4 Albedo (40,2/1,4/-7,6)"
+   },
+   "kuehl_ganz": {
+    "lab": [
+     20.0,
+     1.0,
+     -8.0
+    ],
+    "s_L": 0.9,
+    "s_C": 0.3,
+    "quelle": "Schwanzgelenke 3-4/4-5 ganz: kuehl-grau, heller als das Glied"
+   },
+   "ellbogen_r": {
+    "lab": [
+     40.0,
+     0.0,
+     -5.0
+    ],
+    "quelle": "D2 Ellbogen r: Vorlage T (50,4/-2,8/-3,2)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "huefte_l": {
+    "lab": [
+     40.0,
+     0.0,
+     -5.0
+    ],
+    "quelle": "D1 Huefte l: Vorlage T (51,7/-1,0/-4,1)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "huefte_r": {
+    "lab": [
+     40.0,
+     0.0,
+     -6.0
+    ],
+    "quelle": "D1 Huefte r: Vorlage T (54,6/-0,3/-6,4)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "knie_l": {
+    "lab": [
+     30.0,
+     0.0,
+     -10.0
+    ],
+    "quelle": "D1 Knie l: Vorlage T (44,5/-1,8/-11,6)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "knie_r": {
+    "lab": [
+     30.0,
+     0.0,
+     -4.0
+    ],
+    "quelle": "D1 Knie r: Vorlage T (49,3/-2,6/-3,9)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "hand_r": {
+    "lab": [
+     46.0,
+     0.0,
+     -4.0
+    ],
+    "quelle": "D2 Hand r: Vorlage T (44,4/-3,5/-4,3)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "schwanz_34": {
+    "lab": [
+     33.0,
+     1.0,
+     -8.0
+    ],
+    "quelle": "D6 Schwanzglied 3-4: Vorlage T (43,5/7,9/-15,4)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "schwanz_45": {
+    "lab": [
+     33.0,
+     0.0,
+     -8.0
+    ],
+    "quelle": "D6 Schwanzglied 4-5: Vorlage T (42,9/-0,8/-14,2)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "schulter_l": {
+    "lab": [
+     50.0,
+     2.0,
+     -3.0
+    ],
+    "quelle": "D2 Schulter l Bild 2: Vorlage T (44,2/6,3/-1,9)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "schulter_r": {
+    "lab": [
+     44.0,
+     0.0,
+     0.0
+    ],
+    "quelle": "D2 Muffe Schulter r Bild 2: Vorlage T (39,6/-3,2/0,2)",
+    "s_L": 0.5,
+    "s_C": 0.25
+   },
+   "spitze_glanz": {
+    "lab": [
+     46.0,
+     10.0,
+     2.0
+    ],
+    "s_L": 0.5,
+    "s_C": 0.3,
+    "quelle": "D4 Fleck F15 Schwanzspitze: Vorlage T (53,3/11,9/3,1), heller als die Spitze im Mittel (42,6)"
+   }
+  },
+  "ganz": [
+   {
+    "name": "Gelenke Beine",
+    "ziel": "gelenk_bein",
+    "gelenke": [
+     "Huefte l",
+     "Huefte r",
+     "Muffe Huefte l",
+     "Muffe Huefte r",
+     "Knie l",
+     "Knie r",
+     "Fuss l",
+     "Fuss r"
+    ]
+   },
+   {
+    "name": "Gelenke Arme",
+    "ziel": "gelenk_arm",
+    "gelenke": [
+     "Ellbogen l",
+     "Ellbogen r",
+     "Hand l",
+     "Hand r",
+     "Muffe Hand l",
+     "Muffe Hand r"
+    ]
+   },
+   {
+    "name": "Gelenke Schultern",
+    "ziel": "gelenk_schulter",
+    "gelenke": [
+     "Schulter l (Arm l - Brust)",
+     "Schulter r (Arm r - Brust)",
+     "Muffe Schulter r"
+    ]
+   },
+   {
+    "name": "Schwanzgelenke 3-4, 4-5",
+    "ziel": "kuehl_ganz",
+    "gelenke": [
+     "Schwanz 3-4",
+     "Schwanz 4-5"
+    ]
+   },
+   {
+    "name": "Schwanzspitze",
+    "ziel": "spitze",
+    "meshes": [
+     6
+    ],
+    "gelenke": []
+   },
+   {
+    "name": "Lippe",
+    "ziel": "lippe",
+    "lippe": "LIPPE_PKL",
+    "band_min_px": 20
+   }
+  ],
+  "flecken": [
+   {
+    "name": "D4 Schwanzspitze Fleck F15",
+    "bild": 1,
+    "flecken": [
+     "B1-F15"
+    ],
+    "meshes": [
+     5,
+     6
+    ],
+    "dilat": 2,
+    "ziel": "spitze_glanz",
+    "eichen": true
+   },
+   {
+    "name": "D3 Ruecken unter F1",
+    "bild": 1,
+    "flecken": [
+     "B1-F03"
+    ],
+    "meshes": [
+     0
+    ],
+    "ziel": "ruecken_glanz",
+    "eichen": true,
+    "ausser_flecken": [
+     "B1-F01"
+    ]
+   },
+   {
+    "name": "D2 Ellbogen r",
+    "bild": 1,
+    "flecken": [
+     "B1-F04"
+    ],
+    "meshes": [
+     16,
+     17
+    ],
+    "ziel": "ellbogen_r",
+    "eichen": true,
+    "dilat": 2
+   },
+   {
+    "name": "D1 Huefte l",
+    "bild": 1,
+    "flecken": [
+     "B1-F05"
+    ],
+    "meshes": [
+     0,
+     8
+    ],
+    "ziel": "huefte_l",
+    "eichen": true,
+    "dilat": 2
+   },
+   {
+    "name": "D1 Huefte r",
+    "bild": 1,
+    "flecken": [
+     "B1-F07"
+    ],
+    "meshes": [
+     0,
+     9
+    ],
+    "ziel": "huefte_r",
+    "eichen": true,
+    "dilat": 2
+   },
+   {
+    "name": "D1 Knie l",
+    "bild": 1,
+    "flecken": [
+     "B1-F08",
+     "B1-F09"
+    ],
+    "meshes": [
+     8,
+     24
+    ],
+    "ziel": "knie_l",
+    "eichen": true,
+    "dilat": 2
+   },
+   {
+    "name": "D1 Knie r",
+    "bild": 1,
+    "flecken": [
+     "B1-F10"
+    ],
+    "meshes": [
+     9,
+     26
+    ],
+    "ziel": "knie_r",
+    "eichen": true,
+    "dilat": 2
+   },
+   {
+    "name": "D2 Hand r",
+    "bild": 1,
+    "flecken": [
+     "B1-F12"
+    ],
+    "meshes": [
+     17,
+     18
+    ],
+    "ziel": "hand_r",
+    "eichen": true,
+    "dilat": 2
+   },
+   {
+    "name": "D1 Fuss l",
+    "bild": 1,
+    "flecken": [
+     "B1-F13"
+    ],
+    "meshes": [
+     24,
+     25
+    ],
+    "ziel": "fuss_glanz",
+    "eichen": true,
+    "dilat": 5
+   },
+   {
+    "name": "D6 Schwanzglied 3-4",
+    "bild": 1,
+    "flecken": [
+     "B1-F06"
+    ],
+    "meshes": [
+     3,
+     4
+    ],
+    "ziel": "schwanz_34",
+    "eichen": true,
+    "dilat": 2
+   },
+   {
+    "name": "D6 Schwanzglied 4-5",
+    "bild": 1,
+    "flecken": [
+     "B1-F11"
+    ],
+    "meshes": [
+     4,
+     5
+    ],
+    "ziel": "schwanz_45",
+    "eichen": true,
+    "dilat": 2
+   },
+   {
+    "name": "D2 Schulter l Bild 2",
+    "bild": 2,
+    "flecken": [
+     "B2-F05"
+    ],
+    "meshes": [
+     10,
+     11
+    ],
+    "ziel": "schulter_l",
+    "eichen": true
+   },
+   {
+    "name": "D2 Muffe Schulter r Bild 2",
+    "bild": 2,
+    "flecken": [
+     "B2-F06"
+    ],
+    "meshes": [
+     10,
+     16
+    ],
+    "ziel": "schulter_r",
+    "eichen": true
+   },
+   {
+    "name": "D5 Buckel vorn",
+    "bild": 2,
+    "flecken": [
+     "B2-F01",
+     "B2-F02",
+     "B2-F03"
+    ],
+    "meshes": [
+     10
+    ],
+    "dilat": 2,
+    "ziel": "buckel"
+   }
+  ]
+ },
+ "texel_belegt_vorher": 22763,
+ "faktor_je_zeile": {
+  "0": 1.82,
+  "1": 1.82,
+  "2": 1.0234,
+  "3": 1.0,
+  "4": 1.0,
+  "5": 1.0,
+  "6": 1.0,
+  "7": 1.0,
+  "8": 1.0,
+  "9": 1.0,
+  "10": 1.0,
+  "11": 1.82,
+  "12": 1.82,
+  "13": 1.82,
+  "14": 1.82,
+  "15": 1.82
+ },
+ "krallen_farbe": {
+  "hand_albedo_lab": [
+   18.8,
+   9.47,
+   3.4
+  ],
+  "ziel_lab": [
+   16.8,
+   8.5,
+   3.05
+  ],
+  "eintraege": 75,
+  "a_max": 10.0
+ },
+ "krallen_eingezogen": {
+  "19": {
+   "ecken": 26,
+   "wurzel": [
+    -101.0,
+    -23.0,
+    -12.2
+   ],
+   "flaechen": 30
+  },
+  "20": {
+   "ecken": 26,
+   "wurzel": [
+    -96.7,
+    -18.2,
+    62.7
+   ],
+   "flaechen": 30
+  },
+  "29": {
+   "ecken": 26,
+   "wurzel": [
+    -61.2,
+    17.8,
+    94.8
+   ],
+   "flaechen": 30
+  },
+  "28": {
+   "ecken": 26,
+   "wurzel": [
+    -46.7,
+    13.5,
+    -72.0
+   ],
+   "flaechen": 30
+  }
+ },
+ "ziele": {
+  "buckel": {
+   "lab": [
+    40.0,
+    20.0,
+    -6.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.3,
+   "quelle": "D5: Vorlage T (33-41/16-22/-4..-6), gedecktes Mauve-Rot"
+  },
+  "spitze": {
+   "lab": [
+    24.0,
+    6.0,
+    2.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.3,
+   "zweiton": {
+    "anteil": 0.35,
+    "lab": [
+     27.0,
+     30.0,
+     0.0
+    ]
+   },
+   "quelle": "D4: Vorlage T (53,3/11,9/3,1), 37,5 % rosa-rot, Rot-Lab (41,3/22,5/-1,5)"
+  },
+  "lippe": {
+   "lab": [
+    19.31,
+    11.94,
+    -3.52
+   ],
+   "s_L": 0.6,
+   "s_C": 0.2,
+   "a_max": 12.0,
+   "quelle": "Nutzer: Lippe durchweg grau/blau = Kopfhaut (Zeilen 14, Meshes 22/23) ohne Rotklasse a* > 15 und C* > 15; a* <= 12"
+  },
+  "gelenk_bein": {
+   "lab": [
+    28.0,
+    0.0,
+    -6.0
+   ],
+   "s_L": 0.9,
+   "s_C": 0.3,
+   "quelle": "D1: Huefte/Knie/Fuss Vorlage T-L* 41-55, weiss-grau bis kuehl; K4-Albedo L* 24-40"
+  },
+  "gelenk_arm": {
+   "lab": [
+    30.0,
+    0.0,
+    -5.0
+   ],
+   "s_L": 0.9,
+   "s_C": 0.3,
+   "quelle": "D2: Ellbogen r Vorlage T (50,4/-2,8/-3,2), K4-Albedo (35,5/-2,5/-4,8)"
+  },
+  "gelenk_schulter": {
+   "lab": [
+    28.0,
+    0.0,
+    -3.0
+   ],
+   "s_L": 0.9,
+   "s_C": 0.3,
+   "quelle": "D2 Bild 2: Schulter l T (44,2/6,3/-1,9), Muffe Schulter r T (39,6/-3,2/0,2)"
+  },
+  "ruecken_glanz": {
+   "lab": [
+    65.6,
+    3.0,
+    -10.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.25,
+   "quelle": "D3: Vorlage T (51,0/6,5/-11,4); K4 hatte dort Albedo (69,1/6,7/-12,8) und Kette 49,6"
+  },
+  "fuss_glanz": {
+   "lab": [
+    52.2,
+    0.0,
+    -8.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.25,
+   "quelle": "D1 Fuss l: Vorlage T (41,4/2,8/-11,3); K4 Albedo (40,2/1,4/-7,6)"
+  },
+  "kuehl_ganz": {
+   "lab": [
+    20.0,
+    1.0,
+    -8.0
+   ],
+   "s_L": 0.9,
+   "s_C": 0.3,
+   "quelle": "Schwanzgelenke 3-4/4-5 ganz: kuehl-grau, heller als das Glied"
+  },
+  "ellbogen_r": {
+   "lab": [
+    40.0,
+    0.0,
+    -5.0
+   ],
+   "quelle": "D2 Ellbogen r: Vorlage T (50,4/-2,8/-3,2)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "huefte_l": {
+   "lab": [
+    40.0,
+    0.0,
+    -5.0
+   ],
+   "quelle": "D1 Huefte l: Vorlage T (51,7/-1,0/-4,1)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "huefte_r": {
+   "lab": [
+    40.0,
+    0.0,
+    -6.0
+   ],
+   "quelle": "D1 Huefte r: Vorlage T (54,6/-0,3/-6,4)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "knie_l": {
+   "lab": [
+    30.0,
+    0.0,
+    -10.0
+   ],
+   "quelle": "D1 Knie l: Vorlage T (44,5/-1,8/-11,6)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "knie_r": {
+   "lab": [
+    30.0,
+    0.0,
+    -4.0
+   ],
+   "quelle": "D1 Knie r: Vorlage T (49,3/-2,6/-3,9)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "hand_r": {
+   "lab": [
+    46.0,
+    0.0,
+    -4.0
+   ],
+   "quelle": "D2 Hand r: Vorlage T (44,4/-3,5/-4,3)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "schwanz_34": {
+   "lab": [
+    33.0,
+    1.0,
+    -8.0
+   ],
+   "quelle": "D6 Schwanzglied 3-4: Vorlage T (43,5/7,9/-15,4)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "schwanz_45": {
+   "lab": [
+    33.0,
+    0.0,
+    -8.0
+   ],
+   "quelle": "D6 Schwanzglied 4-5: Vorlage T (42,9/-0,8/-14,2)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "schulter_l": {
+   "lab": [
+    50.0,
+    2.0,
+    -3.0
+   ],
+   "quelle": "D2 Schulter l Bild 2: Vorlage T (44,2/6,3/-1,9)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "schulter_r": {
+   "lab": [
+    44.0,
+    0.0,
+    0.0
+   ],
+   "quelle": "D2 Muffe Schulter r Bild 2: Vorlage T (39,6/-3,2/0,2)",
+   "s_L": 0.5,
+   "s_C": 0.25
+  },
+  "spitze_glanz": {
+   "lab": [
+    46.0,
+    10.0,
+    2.0
+   ],
+   "s_L": 0.5,
+   "s_C": 0.3,
+   "quelle": "D4 Fleck F15 Schwanzspitze: Vorlage T (53,3/11,9/3,1), heller als die Spitze im Mittel (42,6)"
+  }
+ },
+ "band_bleibt": {
+  "flaechen": 13,
+  "px_bild2": 1123,
+  "px_bild2_band_gesamt": 1494
+ },
+ "ganz_flaechen": {
+  "gelenk_bein": 320,
+  "gelenk_arm": 240,
+  "gelenk_schulter": 120,
+  "kuehl_ganz": 80,
+  "spitze": 80,
+  "lippe": 129
+ },
+ "fleck_flaechen": {
+  "schulter_l": 13,
+  "ruecken_glanz": 6,
+  "hand_r": 4,
+  "huefte_l": 5,
+  "knie_l": 13,
+  "huefte_r": 15,
+  "buckel": 16,
+  "schwanz_45": 3,
+  "knie_r": 12,
+  "spitze_glanz": 13,
+  "fuss_glanz": 20,
+  "ellbogen_r": 6,
+  "schulter_r": 3,
+  "schwanz_34": 6
+ },
+ "inseln": [
+  {
+   "zeile": 0,
+   "klasse": "lippe",
+   "komponente": 1,
+   "groesse": [
+    17,
+    48
+   ],
+   "von": [
+    90,
+    138
+   ],
+   "nach": [
+    0,
+    0
+   ],
+   "flaechen": 56,
+   "texel": 478,
+   "ziele": {
+    "lippe": 478
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "fleck",
+   "komponente": 1,
+   "groesse": [
+    18,
+    14
+   ],
+   "von": [
+    128,
+    103
+   ],
+   "nach": [
+    14,
+    0
+   ],
+   "flaechen": 2,
+   "texel": 200,
+   "ziele": {
+    "schwanz_34": 36
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "fleck",
+   "komponente": 2,
+   "groesse": [
+    23,
+    14
+   ],
+   "von": [
+    160,
+    104
+   ],
+   "nach": [
+    31,
+    0
+   ],
+   "flaechen": 3,
+   "texel": 238,
+   "ziele": {
+    "spitze_glanz": 4,
+    "schwanz_34": 25
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "fleck",
+   "komponente": 3,
+   "groesse": [
+    20,
+    13
+   ],
+   "von": [
+    134,
+    176
+   ],
+   "nach": [
+    54,
+    0
+   ],
+   "flaechen": 3,
+   "texel": 210,
+   "ziele": {
+    "spitze_glanz": 65
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "fleck",
+   "komponente": 4,
+   "groesse": [
+    18,
+    22
+   ],
+   "von": [
+    144,
+    197
+   ],
+   "nach": [
+    74,
+    0
+   ],
+   "flaechen": 2,
+   "texel": 297,
+   "ziele": {
+    "schwanz_45": 71
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "kuehl_ganz",
+   "komponente": 1,
+   "groesse": [
+    28,
+    27
+   ],
+   "von": [
+    157,
+    103
+   ],
+   "nach": [
+    91,
+    0
+   ],
+   "flaechen": 29,
+   "texel": 652,
+   "ziele": {
+    "kuehl_ganz": 612,
+    "schwanz_34": 40
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "kuehl_ganz",
+   "komponente": 2,
+   "groesse": [
+    18,
+    27
+   ],
+   "von": [
+    191,
+    103
+   ],
+   "nach": [
+    154,
+    0
+   ],
+   "flaechen": 6,
+   "texel": 468,
+   "ziele": {
+    "kuehl_ganz": 468
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "kuehl_ganz",
+   "komponente": 3,
+   "groesse": [
+    26,
+    43
+   ],
+   "von": [
+    128,
+    104
+   ],
+   "nach": [
+    172,
+    0
+   ],
+   "flaechen": 21,
+   "texel": 639,
+   "ziele": {
+    "kuehl_ganz": 639
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "kuehl_ganz",
+   "komponente": 4,
+   "groesse": [
+    34,
+    28
+   ],
+   "von": [
+    128,
+    204
+   ],
+   "nach": [
+    419,
+    0
+   ],
+   "flaechen": 24,
+   "texel": 763,
+   "ziele": {
+    "kuehl_ganz": 735,
+    "schwanz_45": 28
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "spitze",
+   "komponente": 1,
+   "groesse": [
+    9,
+    11
+   ],
+   "von": [
+    132,
+    131
+   ],
+   "nach": [
+    119,
+    0
+   ],
+   "flaechen": 10,
+   "texel": 92,
+   "ziele": {
+    "spitze": 92
+   }
+  },
+  {
+   "zeile": 2,
+   "klasse": "spitze",
+   "komponente": 2,
+   "groesse": [
+    35,
+    88
+   ],
+   "von": [
+    128,
+    167
+   ],
+   "nach": [
+    449,
+    0
+   ],
+   "flaechen": 70,
+   "texel": 2035,
+   "ziele": {
+    "spitze": 1434,
+    "spitze_glanz": 601
+   }
+  },
+  {
+   "zeile": 3,
+   "klasse": "fleck",
+   "komponente": 1,
+   "groesse": [
+    42,
+    37
+   ],
+   "von": [
+    308,
+    19
+   ],
+   "nach": [
+    21,
+    13
+   ],
+   "flaechen": 11,
+   "texel": 980,
+   "ziele": {
+    "huefte_l": 102,
+    "huefte_r": 208,
+    "knie_r": 59
+   }
+  },
+  {
+   "zeile": 3,
+   "klasse": "fleck",
+   "komponente": 2,
+   "groesse": [
+    24,
+    26
+   ],
+   "von": [
+    295,
+    62
+   ],
+   "nach": [
+    355,
+    0
+   ],
+   "flaechen": 9,
+   "texel": 401,
+   "ziele": {
+    "knie_r": 106,
+    "knie_l": 23
+   }
+  },
+  {
+   "zeile": 3,
+   "klasse": "fleck",
+   "komponente": 3,
+   "groesse": [
+    16,
+    20
+   ],
+   "von": [
+    363,
+    117
+   ],
+   "nach": [
+    247,
+    0
+   ],
+   "flaechen": 17,
+   "texel": 241,
+   "ziele": {
+    "fuss_glanz": 112
+   }
+  },
+  {
+   "zeile": 3,
+   "klasse": "gelenk_bein",
+   "komponente": 1,
+   "groesse": [
+    51,
+    57
+   ],
+   "von": [
+    307,
+    0
+   ],
+   "nach": [
+    370,
+    30
+   ],
+   "flaechen": 160,
+   "texel": 1996,
+   "ziele": {
+    "gelenk_bein": 1757,
+    "huefte_l": 35,
+    "huefte_r": 109,
+    "knie_l": 50,
+    "knie_r": 45
+   }
+  },
+  {
+   "zeile": 3,
+   "klasse": "gelenk_bein",
+   "komponente": 2,
+   "groesse": [
+    10,
+    12
+   ],
+   "von": [
+    295,
+    74
+   ],
+   "nach": [
+    213,
+    0
+   ],
+   "flaechen": 16,
+   "texel": 103,
+   "ziele": {
+    "gelenk_bein": 103
+   }
+  },
+  {
+   "zeile": 3,
+   "klasse": "gelenk_bein",
+   "komponente": 3,
+   "groesse": [
+    20,
+    21
+   ],
+   "von": [
+    297,
+    95
+   ],
+   "nach": [
+    480,
+    0
+   ],
+   "flaechen": 54,
+   "texel": 338,
+   "ziele": {
+    "gelenk_bein": 265,
+    "fuss_glanz": 73
+   }
+  },
+  {
+   "zeile": 3,
+   "klasse": "gelenk_bein",
+   "komponente": 4,
+   "groesse": [
+    15,
+    18
+   ],
+   "von": [
+    318,
+    96
+   ],
+   "nach": [
+    497,
+    17
+   ],
+   "flaechen": 10,
+   "texel": 222,
+   "ziele": {
+    "gelenk_bein": 222
+   }
+  },
+  {
+   "zeile": 4,
+   "klasse": "gelenk_bein",
+   "komponente": 1,
+   "groesse": [
+    10,
+    10
+   ],
+   "von": [
+    83,
+    70
+   ],
+   "nach": [
+    128,
+    0
+   ],
+   "flaechen": 1,
+   "texel": 85,
+   "ziele": {
+    "gelenk_bein": 85
+   }
+  },
+  {
+   "zeile": 4,
+   "klasse": "gelenk_bein",
+   "komponente": 2,
+   "groesse": [
+    10,
+    10
+   ],
+   "von": [
+    86,
+    91
+   ],
+   "nach": [
+    297,
+    0
+   ],
+   "flaechen": 1,
+   "texel": 89,
+   "ziele": {
+    "gelenk_bein": 89
+   }
+  },
+  {
+   "zeile": 5,
+   "klasse": "fleck",
+   "komponente": 1,
+   "groesse": [
+    36,
+    21
+   ],
+   "von": [
+    386,
+    2
+   ],
+   "nach": [
+    54,
+    22
+   ],
+   "flaechen": 3,
+   "texel": 424,
+   "ziele": {
+    "ruecken_glanz": 71
+   }
+  },
+  {
+   "zeile": 6,
+   "klasse": "lippe",
+   "komponente": 1,
+   "groesse": [
+    21,
+    11
+   ],
+   "von": [
+    386,
+    107
+   ],
+   "nach": [
+    349,
+    26
+   ],
+   "flaechen": 1,
+   "texel": 223,
+   "ziele": {
+    "lippe": 223
+   }
+  },
+  {
+   "zeile": 6,
+   "klasse": "lippe",
+   "komponente": 2,
+   "groesse": [
+    14,
+    10
+   ],
+   "von": [
+    424,
+    114
+   ],
+   "nach": [
+    379,
+    0
+   ],
+   "flaechen": 5,
+   "texel": 101,
+   "ziele": {
+    "lippe": 101
+   }
+  },
+  {
+   "zeile": 6,
+   "klasse": "lippe",
+   "komponente": 3,
+   "groesse": [
+    35,
+    4
+   ],
+   "von": [
+    388,
+    122
+   ],
+   "nach": [
+    88,
+    27
+   ],
+   "flaechen": 6,
+   "texel": 123,
+   "ziele": {
+    "lippe": 123
+   }
+  },
+  {
+   "zeile": 8,
+   "klasse": "gelenk_bein",
+   "komponente": 1,
+   "groesse": [
+    19,
+    22
+   ],
+   "von": [
+    274,
+    20
+   ],
+   "nach": [
+    156,
+    27
+   ],
+   "flaechen": 8,
+   "texel": 307,
+   "ziele": {
+    "gelenk_bein": 307
+   }
+  },
+  {
+   "zeile": 8,
+   "klasse": "gelenk_bein",
+   "komponente": 2,
+   "groesse": [
+    22,
+    24
+   ],
+   "von": [
+    264,
+    110
+   ],
+   "nach": [
+    421,
+    28
+   ],
+   "flaechen": 10,
+   "texel": 394,
+   "ziele": {
+    "gelenk_bein": 368,
+    "huefte_r": 17,
+    "ruecken_glanz": 9
+   }
+  },
+  {
+   "zeile": 9,
+   "klasse": "gelenk_bein",
+   "komponente": 1,
+   "groesse": [
+    17,
+    19
+   ],
+   "von": [
+    80,
+    69
+   ],
+   "nach": [
+    484,
+    31
+   ],
+   "flaechen": 3,
+   "texel": 194,
+   "ziele": {
+    "gelenk_bein": 194
+   }
+  },
+  {
+   "zeile": 9,
+   "klasse": "gelenk_bein",
+   "komponente": 2,
+   "groesse": [
+    12,
+    12
+   ],
+   "von": [
+    84,
+    90
+   ],
+   "nach": [
+    498,
+    0
+   ],
+   "flaechen": 1,
+   "texel": 98,
+   "ziele": {
+    "gelenk_bein": 98
+   }
+  },
+  {
+   "zeile": 10,
+   "klasse": "fleck",
+   "komponente": 1,
+   "groesse": [
+    33,
+    14
+   ],
+   "von": [
+    258,
+    92
+   ],
+   "nach": [
+    48,
+    43
+   ],
+   "flaechen": 1,
+   "texel": 366,
+   "ziele": {
+    "ruecken_glanz": 39
+   }
+  },
+  {
+   "zeile": 10,
+   "klasse": "fleck",
+   "komponente": 2,
+   "groesse": [
+    25,
+    11
+   ],
+   "von": [
+    262,
+    109
+   ],
+   "nach": [
+    288,
+    41
+   ],
+   "flaechen": 1,
+   "texel": 270,
+   "ziele": {
+    "ruecken_glanz": 32
+   }
+  },
+  {
+   "zeile": 10,
+   "klasse": "gelenk_bein",
+   "komponente": 1,
+   "groesse": [
+    31,
+    37
+   ],
+   "von": [
+    273,
+    4
+   ],
+   "nach": [
+    11,
+    41
+   ],
+   "flaechen": 44,
+   "texel": 808,
+   "ziele": {
+    "gelenk_bein": 796,
+    "huefte_r": 12
+   }
+  },
+  {
+   "zeile": 10,
+   "klasse": "gelenk_bein",
+   "komponente": 2,
+   "groesse": [
+    26,
+    21
+   ],
+   "von": [
+    260,
+    108
+   ],
+   "nach": [
+    481,
+    48
+   ],
+   "flaechen": 9,
+   "texel": 340,
+   "ziele": {
+    "gelenk_bein": 258,
+    "huefte_l": 35,
+    "huefte_r": 47
+   }
+  },
+  {
+   "zeile": 10,
+   "klasse": "gelenk_bein",
+   "komponente": 3,
+   "groesse": [
+    15,
+    14
+   ],
+   "von": [
+    263,
+    139
+   ],
+   "nach": [
+    374,
+    15
+   ],
+   "flaechen": 3,
+   "texel": 146,
+   "ziele": {
+    "gelenk_bein": 116,
+    "huefte_r": 30
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "fleck",
+   "komponente": 1,
+   "groesse": [
+    16,
+    13
+   ],
+   "von": [
+    167,
+    102
+   ],
+   "nach": [
+    253,
+    37
+   ],
+   "flaechen": 1,
+   "texel": 184,
+   "ziele": {
+    "ellbogen_r": 4
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "fleck",
+   "komponente": 2,
+   "groesse": [
+    21,
+    16
+   ],
+   "von": [
+    191,
+    221
+   ],
+   "nach": [
+    348,
+    37
+   ],
+   "flaechen": 2,
+   "texel": 256,
+   "ziele": {
+    "hand_r": 66
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 1,
+   "groesse": [
+    23,
+    26
+   ],
+   "von": [
+    130,
+    44
+   ],
+   "nach": [
+    167,
+    47
+   ],
+   "flaechen": 8,
+   "texel": 459,
+   "ziele": {
+    "gelenk_arm": 353,
+    "ellbogen_r": 106
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 2,
+   "groesse": [
+    20,
+    32
+   ],
+   "von": [
+    195,
+    52
+   ],
+   "nach": [
+    209,
+    35
+   ],
+   "flaechen": 2,
+   "texel": 420,
+   "ziele": {
+    "gelenk_arm": 285,
+    "ellbogen_r": 135
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 3,
+   "groesse": [
+    20,
+    34
+   ],
+   "von": [
+    231,
+    52
+   ],
+   "nach": [
+    416,
+    52
+   ],
+   "flaechen": 3,
+   "texel": 526,
+   "ziele": {
+    "gelenk_arm": 354,
+    "ellbogen_r": 172
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 4,
+   "groesse": [
+    13,
+    15
+   ],
+   "von": [
+    156,
+    110
+   ],
+   "nach": [
+    119,
+    11
+   ],
+   "flaechen": 2,
+   "texel": 127,
+   "ziele": {
+    "gelenk_arm": 127
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 5,
+   "groesse": [
+    25,
+    20
+   ],
+   "von": [
+    160,
+    143
+   ],
+   "nach": [
+    58,
+    56
+   ],
+   "flaechen": 5,
+   "texel": 424,
+   "ziele": {
+    "gelenk_arm": 424
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 6,
+   "groesse": [
+    20,
+    20
+   ],
+   "von": [
+    186,
+    143
+   ],
+   "nach": [
+    154,
+    63
+   ],
+   "flaechen": 3,
+   "texel": 296,
+   "ziele": {
+    "gelenk_arm": 296
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 7,
+   "groesse": [
+    17,
+    10
+   ],
+   "von": [
+    138,
+    147
+   ],
+   "nach": [
+    288,
+    52
+   ],
+   "flaechen": 1,
+   "texel": 155,
+   "ziele": {
+    "gelenk_arm": 155
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 8,
+   "groesse": [
+    34,
+    29
+   ],
+   "von": [
+    129,
+    176
+   ],
+   "nach": [
+    473,
+    65
+   ],
+   "flaechen": 2,
+   "texel": 598,
+   "ziele": {
+    "gelenk_arm": 598
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_arm",
+   "komponente": 9,
+   "groesse": [
+    38,
+    38
+   ],
+   "von": [
+    176,
+    213
+   ],
+   "nach": [
+    37,
+    76
+   ],
+   "flaechen": 40,
+   "texel": 855,
+   "ziele": {
+    "gelenk_arm": 835,
+    "hand_r": 20
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_schulter",
+   "komponente": 1,
+   "groesse": [
+    26,
+    39
+   ],
+   "von": [
+    224,
+    46
+   ],
+   "nach": [
+    0,
+    74
+   ],
+   "flaechen": 2,
+   "texel": 626,
+   "ziele": {
+    "gelenk_schulter": 626
+   }
+  },
+  {
+   "zeile": 11,
+   "klasse": "gelenk_schulter",
+   "komponente": 2,
+   "groesse": [
+    29,
+    85
+   ],
+   "von": [
+    129,
+    167
+   ],
+   "nach": [
+    231,
+    79
+   ],
+   "flaechen": 2,
+   "texel": 1521,
+   "ziele": {
+    "gelenk_schulter": 1521
+   }
+  },
+  {
+   "zeile": 12,
+   "klasse": "fleck",
+   "komponente": 1,
+   "groesse": [
+    22,
+    73
+   ],
+   "von": [
+    232,
+    4
+   ],
+   "nach": [
+    438,
+    63
+   ],
+   "flaechen": 6,
+   "texel": 1145,
+   "ziele": {
+    "buckel": 885
+   }
+  },
+  {
+   "zeile": 12,
+   "klasse": "fleck",
+   "komponente": 2,
+   "groesse": [
+    25,
+    47
+   ],
+   "von": [
+    129,
+    11
+   ],
+   "nach": [
+    22,
+    92
+   ],
+   "flaechen": 4,
+   "texel": 809,
+   "ziele": {
+    "buckel": 365
+   }
+  },
+  {
+   "zeile": 12,
+   "klasse": "gelenk_schulter",
+   "komponente": 1,
+   "groesse": [
+    28,
+    70
+   ],
+   "von": [
+    129,
+    0
+   ],
+   "nach": [
+    459,
+    84
+   ],
+   "flaechen": 26,
+   "texel": 1164,
+   "ziele": {
+    "gelenk_schulter": 1164
+   }
+  },
+  {
+   "zeile": 12,
+   "klasse": "gelenk_schulter",
+   "komponente": 2,
+   "groesse": [
+    30,
+    77
+   ],
+   "von": [
+    224,
+    7
+   ],
+   "nach": [
+    60,
+    108
+   ],
+   "flaechen": 23,
+   "texel": 1405,
+   "ziele": {
+    "gelenk_schulter": 1356,
+    "schulter_l": 35,
+    "buckel": 14
+   }
+  },
+  {
+   "zeile": 12,
+   "klasse": "gelenk_schulter",
+   "komponente": 3,
+   "groesse": [
+    19,
+    26
+   ],
+   "von": [
+    193,
+    12
+   ],
+   "nach": [
+    210,
+    68
+   ],
+   "flaechen": 2,
+   "texel": 286,
+   "ziele": {
+    "gelenk_schulter": 286
+   }
+  },
+  {
+   "zeile": 13,
+   "klasse": "fleck",
+   "komponente": 1,
+   "groesse": [
+    22,
+    63
+   ],
+   "von": [
+    230,
+    22
+   ],
+   "nach": [
+    486,
+    94
+   ],
+   "flaechen": 5,
+   "texel": 846,
+   "ziele": {
+    "buckel": 371
+   }
+  },
+  {
+   "zeile": 13,
+   "klasse": "gelenk_schulter",
+   "komponente": 1,
+   "groesse": [
+    25,
+    61
+   ],
+   "von": [
+    129,
+    3
+   ],
+   "nach": [
+    104,
+    84
+   ],
+   "flaechen": 3,
+   "texel": 687,
+   "ziele": {
+    "gelenk_schulter": 687
+   }
+  },
+  {
+   "zeile": 13,
+   "klasse": "gelenk_schulter",
+   "komponente": 2,
+   "groesse": [
+    29,
+    80
+   ],
+   "von": [
+    224,
+    4
+   ],
+   "nach": [
+    210,
+    101
+   ],
+   "flaechen": 25,
+   "texel": 1536,
+   "ziele": {
+    "gelenk_schulter": 1312,
+    "schulter_l": 205,
+    "schulter_r": 19
+   }
+  },
+  {
+   "zeile": 13,
+   "klasse": "gelenk_schulter",
+   "komponente": 3,
+   "groesse": [
+    14,
+    12
+   ],
+   "von": [
+    196,
+    13
+   ],
+   "nach": [
+    211,
+    12
+   ],
+   "flaechen": 1,
+   "texel": 137,
+   "ziele": {
+    "gelenk_schulter": 94,
+    "schulter_l": 43
+   }
+  },
+  {
+   "zeile": 14,
+   "klasse": "lippe",
+   "komponente": 1,
+   "groesse": [
+    30,
+    84
+   ],
+   "von": [
+    224,
+    0
+   ],
+   "nach": [
+    322,
+    110
+   ],
+   "flaechen": 41,
+   "texel": 1578,
+   "ziele": {
+    "lippe": 1578
+   }
+  },
+  {
+   "zeile": 14,
+   "klasse": "lippe",
+   "komponente": 2,
+   "groesse": [
+    26,
+    82
+   ],
+   "von": [
+    129,
+    2
+   ],
+   "nach": [
+    296,
+    114
+   ],
+   "flaechen": 6,
+   "texel": 1002,
+   "ziele": {
+    "lippe": 1002
+   }
+  },
+  {
+   "zeile": 14,
+   "klasse": "lippe",
+   "komponente": 3,
+   "groesse": [
+    17,
+    31
+   ],
+   "von": [
+    195,
+    4
+   ],
+   "nach": [
+    89,
+    101
+   ],
+   "flaechen": 14,
+   "texel": 360,
+   "ziele": {
+    "lippe": 360
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "fleck",
+   "komponente": 1,
+   "groesse": [
+    26,
+    53
+   ],
+   "von": [
+    127,
+    174
+   ],
+   "nach": [
+    384,
+    125
+   ],
+   "flaechen": 5,
+   "texel": 824,
+   "ziele": {
+    "schulter_l": 239
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_arm",
+   "komponente": 1,
+   "groesse": [
+    26,
+    44
+   ],
+   "von": [
+    130,
+    41
+   ],
+   "nach": [
+    410,
+    125
+   ],
+   "flaechen": 5,
+   "texel": 745,
+   "ziele": {
+    "gelenk_arm": 745
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_arm",
+   "komponente": 2,
+   "groesse": [
+    17,
+    18
+   ],
+   "von": [
+    193,
+    51
+   ],
+   "nach": [
+    40,
+    56
+   ],
+   "flaechen": 1,
+   "texel": 236,
+   "ziele": {
+    "gelenk_arm": 236
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_arm",
+   "komponente": 3,
+   "groesse": [
+    25,
+    35
+   ],
+   "von": [
+    227,
+    51
+   ],
+   "nach": [
+    0,
+    134
+   ],
+   "flaechen": 6,
+   "texel": 636,
+   "ziele": {
+    "gelenk_arm": 636
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_arm",
+   "komponente": 4,
+   "groesse": [
+    17,
+    20
+   ],
+   "von": [
+    159,
+    108
+   ],
+   "nach": [
+    182,
+    70
+   ],
+   "flaechen": 14,
+   "texel": 264,
+   "ziele": {
+    "gelenk_arm": 264
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_arm",
+   "komponente": 5,
+   "groesse": [
+    59,
+    22
+   ],
+   "von": [
+    127,
+    143
+   ],
+   "nach": [
+    432,
+    154
+   ],
+   "flaechen": 39,
+   "texel": 941,
+   "ziele": {
+    "gelenk_arm": 941
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_arm",
+   "komponente": 6,
+   "groesse": [
+    17,
+    21
+   ],
+   "von": [
+    193,
+    143
+   ],
+   "nach": [
+    421,
+    86
+   ],
+   "flaechen": 16,
+   "texel": 310,
+   "ziele": {
+    "gelenk_arm": 310
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_arm",
+   "komponente": 7,
+   "groesse": [
+    34,
+    72
+   ],
+   "von": [
+    129,
+    184
+   ],
+   "nach": [
+    25,
+    134
+   ],
+   "flaechen": 53,
+   "texel": 1697,
+   "ziele": {
+    "gelenk_arm": 1697
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_arm",
+   "komponente": 8,
+   "groesse": [
+    40,
+    30
+   ],
+   "von": [
+    176,
+    213
+   ],
+   "nach": [
+    251,
+    156
+   ],
+   "flaechen": 40,
+   "texel": 881,
+   "ziele": {
+    "gelenk_arm": 881
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_schulter",
+   "komponente": 1,
+   "groesse": [
+    25,
+    87
+   ],
+   "von": [
+    132,
+    0
+   ],
+   "nach": [
+    349,
+    120
+   ],
+   "flaechen": 9,
+   "texel": 1024,
+   "ziele": {
+    "gelenk_schulter": 1024
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_schulter",
+   "komponente": 2,
+   "groesse": [
+    18,
+    14
+   ],
+   "von": [
+    191,
+    30
+   ],
+   "nach": [
+    338,
+    53
+   ],
+   "flaechen": 1,
+   "texel": 136,
+   "ziele": {
+    "gelenk_schulter": 136
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_schulter",
+   "komponente": 3,
+   "groesse": [
+    22,
+    29
+   ],
+   "von": [
+    230,
+    57
+   ],
+   "nach": [
+    107,
+    156
+   ],
+   "flaechen": 2,
+   "texel": 546,
+   "ziele": {
+    "gelenk_schulter": 546
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_schulter",
+   "komponente": 4,
+   "groesse": [
+    13,
+    15
+   ],
+   "von": [
+    202,
+    69
+   ],
+   "nach": [
+    251,
+    20
+   ],
+   "flaechen": 1,
+   "texel": 122,
+   "ziele": {
+    "gelenk_schulter": 122
+   }
+  },
+  {
+   "zeile": 15,
+   "klasse": "gelenk_schulter",
+   "komponente": 5,
+   "groesse": [
+    34,
+    87
+   ],
+   "von": [
+    129,
+    167
+   ],
+   "nach": [
+    401,
+    168
+   ],
+   "flaechen": 23,
+   "texel": 1933,
+   "ziele": {
+    "gelenk_schulter": 1854,
+    "schulter_r": 79
+   }
+  }
+ ],
+ "neue_eintraege": {
+  "0|lippe": {
+   "eintraege": 17,
+   "alte_indizes": 79,
+   "alt_mittel_lab": [
+    58.9,
+    36.9,
+    18.9
+   ],
+   "neu_lab": [
+    [
+     37.2,
+     8.0,
+     -7.4
+    ],
+    [
+     39.6,
+     6.6,
+     -7.0
+    ],
+    [
+     8.8,
+     11.0,
+     -3.7
+    ],
+    [
+     2.9,
+     9.5,
+     -4.9
+    ],
+    [
+     19.4,
+     12.0,
+     -0.1
+    ],
+    [
+     34.3,
+     9.6,
+     -7.4
+    ],
+    [
+     22.1,
+     12.0,
+     -2.4
+    ],
+    [
+     0.0,
+     9.3,
+     -4.7
+    ],
+    [
+     16.9,
+     12.0,
+     -1.1
+    ],
+    [
+     11.0,
+     11.8,
+     -2.5
+    ],
+    [
+     4.4,
+     10.8,
+     -3.2
+    ],
+    [
+     14.0,
+     11.6,
+     -3.2
+    ],
+    [
+     43.6,
+     4.7,
+     -7.2
+    ],
+    [
+     28.1,
+     12.0,
+     -5.6
+    ],
+    [
+     25.2,
+     12.0,
+     -3.5
+    ],
+    [
+     31.3,
+     10.9,
+     -6.1
+    ],
+    [
+     0.0,
+     4.6,
+     -7.3
+    ]
+   ],
+   "gewicht": [
+    13,
+    7,
+    22,
+    25,
+    71,
+    12,
+    46,
+    5,
+    18,
+    39,
+    3,
+    66,
+    16,
+    33,
+    66,
+    22,
+    14
+   ],
+   "zweiton_hell": null
+  },
+  "2|schwanz_34": {
+   "eintraege": 9,
+   "alte_indizes": 14,
+   "alt_mittel_lab": [
+    16.4,
+    7.8,
+    -1.2
+   ],
+   "neu_lab": [
+    [
+     31.2,
+     0.4,
+     -7.6
+    ],
+    [
+     38.8,
+     2.4,
+     -9.0
+    ],
+    [
+     34.9,
+     2.7,
+     -9.1
+    ],
+    [
+     33.6,
+     0.8,
+     -7.9
+    ],
+    [
+     39.2,
+     3.8,
+     -10.0
+    ],
+    [
+     40.5,
+     5.7,
+     -10.2
+    ],
+    [
+     30.2,
+     1.5,
+     -8.3
+    ],
+    [
+     42.2,
+     5.7,
+     -10.2
+    ],
+    [
+     29.0,
+     -0.9,
+     -7.7
+    ]
+   ],
+   "gewicht": [
+    41,
+    2,
+    7,
+    41,
+    2,
+    1,
+    3,
+    2,
+    2
+   ],
+   "zweiton_hell": null
+  },
+  "2|spitze_glanz": {
+   "eintraege": 16,
+   "alte_indizes": 59,
+   "alt_mittel_lab": [
+    15.6,
+    8.3,
+    -2.0
+   ],
+   "neu_lab": [
+    [
+     42.4,
+     7.5,
+     2.6
+    ],
+    [
+     41.2,
+     9.3,
+     1.6
+    ],
+    [
+     44.6,
+     9.1,
+     2.6
+    ],
+    [
+     52.1,
+     7.5,
+     2.6
+    ],
+    [
+     48.2,
+     12.1,
+     0.8
+    ],
+    [
+     47.0,
+     10.3,
+     1.9
+    ],
+    [
+     52.5,
+     12.9,
+     0.7
+    ],
+    [
+     50.7,
+     12.8,
+     1.4
+    ],
+    [
+     48.8,
+     12.9,
+     1.4
+    ],
+    [
+     59.4,
+     12.9,
+     -0.0
+    ],
+    [
+     58.4,
+     15.2,
+     -0.4
+    ],
+    [
+     55.5,
+     16.0,
+     -0.5
+    ],
+    [
+     54.1,
+     13.9,
+     0.6
+    ],
+    [
+     43.7,
+     10.5,
+     1.9
+    ],
+    [
+     56.3,
+     13.4,
+     0.8
+    ],
+    [
+     46.3,
+     11.4,
+     2.5
+    ]
+   ],
+   "gewicht": [
+    28,
+    97,
+    288,
+    25,
+    51,
+    81,
+    23,
+    35,
+    7,
+    1,
+    3,
+    8,
+    7,
+    3,
+    10,
+    3
+   ],
+   "zweiton_hell": null
+  },
+  "2|schwanz_45": {
+   "eintraege": 3,
+   "alte_indizes": 22,
+   "alt_mittel_lab": [
+    10.0,
+    4.0,
+    -1.5
+   ],
+   "neu_lab": [
+    [
+     34.3,
+     -0.4,
+     -7.7
+    ],
+    [
+     36.7,
+     -0.0,
+     -7.3
+    ],
+    [
+     31.0,
+     0.5,
+     -8.5
+    ]
+   ],
+   "gewicht": [
+    52,
+    4,
+    43
+   ],
+   "zweiton_hell": null
+  },
+  "2|kuehl_ganz": {
+   "eintraege": 20,
+   "alte_indizes": 100,
+   "alt_mittel_lab": [
+    14.0,
+    8.4,
+    -2.1
+   ],
+   "neu_lab": [
+    [
+     15.0,
+     -1.5,
+     -7.4
+    ],
+    [
+     18.8,
+     0.7,
+     -7.5
+    ],
+    [
+     32.2,
+     1.6,
+     -8.5
+    ],
+    [
+     45.6,
+     3.9,
+     -10.0
+    ],
+    [
+     25.5,
+     3.1,
+     -9.1
+    ],
+    [
+     23.3,
+     1.2,
+     -8.0
+    ],
+    [
+     41.4,
+     9.0,
+     -12.1
+    ],
+    [
+     38.6,
+     6.9,
+     -10.5
+    ],
+    [
+     36.0,
+     5.0,
+     -9.5
+    ],
+    [
+     12.8,
+     0.2,
+     -8.5
+    ],
+    [
+     17.2,
+     1.5,
+     -8.1
+    ],
+    [
+     39.9,
+     4.3,
+     -9.1
+    ],
+    [
+     43.5,
+     4.8,
+     -9.5
+    ],
+    [
+     33.3,
+     4.1,
+     -9.8
+    ],
+    [
+     29.9,
+     3.8,
+     -8.6
+    ],
+    [
+     26.6,
+     3.9,
+     -8.5
+    ],
+    [
+     21.9,
+     2.4,
+     -7.5
+    ],
+    [
+     10.7,
+     0.6,
+     -7.5
+    ],
+    [
+     49.6,
+     10.9,
+     -12.3
+    ],
+    [
+     8.8,
+     -1.5,
+     -7.4
+    ]
+   ],
+   "gewicht": [
+    167,
+    982,
+    79,
+    5,
+    210,
+    359,
+    1,
+    14,
+    19,
+    408,
+    94,
+    14,
+    14,
+    31,
+    10,
+    3,
+    29,
+    6,
+    2,
+    7
+   ],
+   "zweiton_hell": null
+  },
+  "2|spitze": {
+   "eintraege": 18,
+   "alte_indizes": 77,
+   "alt_mittel_lab": [
+    13.4,
+    7.2,
+    -1.2
+   ],
+   "neu_lab": [
+    [
+     23.7,
+     5.7,
+     2.4
+    ],
+    [
+     28.4,
+     31.6,
+     -1.0
+    ],
+    [
+     27.0,
+     29.8,
+     0.2
+    ],
+    [
+     20.3,
+     5.6,
+     1.3
+    ],
+    [
+     23.8,
+     30.1,
+     0.0
+    ],
+    [
+     22.5,
+     27.2,
+     0.8
+    ],
+    [
+     32.3,
+     27.2,
+     0.8
+    ],
+    [
+     39.5,
+     32.5,
+     -1.8
+    ],
+    [
+     36.3,
+     32.8,
+     -0.8
+    ],
+    [
+     34.4,
+     32.3,
+     -0.4
+    ],
+    [
+     32.6,
+     32.4,
+     -0.7
+    ],
+    [
+     30.8,
+     32.4,
+     -0.4
+    ],
+    [
+     38.4,
+     33.5,
+     -1.3
+    ],
+    [
+     18.5,
+     27.2,
+     0.8
+    ],
+    [
+     35.7,
+     35.1,
+     -2.3
+    ],
+    [
+     26.4,
+     31.1,
+     0.7
+    ],
+    [
+     20.2,
+     29.4,
+     0.3
+    ],
+    [
+     41.7,
+     39.6,
+     -4.2
+    ]
+   ],
+   "gewicht": [
+    848,
+    65,
+    187,
+    193,
+    54,
+    85,
+    4,
+    7,
+    10,
+    7,
+    17,
+    20,
+    10,
+    10,
+    1,
+    5,
+    2,
+    1
+   ],
+   "zweiton_hell": [
+    false,
+    true,
+    true,
+    false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ]
+  },
+  "3|huefte_l": {
+   "eintraege": 12,
+   "alte_indizes": 27,
+   "alt_mittel_lab": [
+    15.3,
+    6.6,
+    -3.5
+   ],
+   "neu_lab": [
+    [
+     34.2,
+     1.4,
+     -6.1
+    ],
+    [
+     35.9,
+     1.9,
+     -5.2
+    ],
+    [
+     37.2,
+     3.0,
+     -6.5
+    ],
+    [
+     40.6,
+     -1.6,
+     -4.1
+    ],
+    [
+     42.6,
+     -1.6,
+     -4.1
+    ],
+    [
+     49.8,
+     -1.6,
+     -4.1
+    ],
+    [
+     51.5,
+     -1.6,
+     -4.1
+    ],
+    [
+     46.3,
+     -1.6,
+     -4.1
+    ],
+    [
+     44.4,
+     -1.6,
+     -4.1
+    ],
+    [
+     38.0,
+     1.4,
+     -6.1
+    ],
+    [
+     38.7,
+     -1.6,
+     -4.1
+    ],
+    [
+     48.0,
+     -1.6,
+     -4.1
+    ]
+   ],
+   "gewicht": [
+    11,
+    14,
+    15,
+    18,
+    18,
+    4,
+    2,
+    6,
+    12,
+    24,
+    11,
+    2
+   ],
+   "zweiton_hell": null
+  },
+  "3|huefte_r": {
+   "eintraege": 12,
+   "alte_indizes": 29,
+   "alt_mittel_lab": [
+    9.6,
+    10.1,
+    -4.8
+   ],
+   "neu_lab": [
+    [
+     37.2,
+     0.3,
+     -6.7
+    ],
+    [
+     38.7,
+     0.2,
+     -5.4
+    ],
+    [
+     39.9,
+     1.7,
+     -6.9
+    ],
+    [
+     43.5,
+     -2.5,
+     -4.8
+    ],
+    [
+     45.4,
+     -2.5,
+     -4.8
+    ],
+    [
+     50.9,
+     -2.5,
+     -4.8
+    ],
+    [
+     52.7,
+     -2.5,
+     -4.8
+    ],
+    [
+     49.1,
+     -2.5,
+     -4.8
+    ],
+    [
+     47.2,
+     -2.5,
+     -4.8
+    ],
+    [
+     40.8,
+     0.4,
+     -6.7
+    ],
+    [
+     41.5,
+     -2.0,
+     -5.0
+    ],
+    [
+     35.9,
+     -0.7,
+     -6.1
+    ]
+   ],
+   "gewicht": [
+    75,
+    96,
+    53,
+    16,
+    22,
+    2,
+    1,
+    3,
+    10,
+    31,
+    7,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "3|knie_r": {
+   "eintraege": 11,
+   "alte_indizes": 24,
+   "alt_mittel_lab": [
+    11.8,
+    10.9,
+    -5.4
+   ],
+   "neu_lab": [
+    [
+     24.8,
+     -1.0,
+     -3.9
+    ],
+    [
+     26.1,
+     -0.1,
+     -4.5
+    ],
+    [
+     27.7,
+     1.9,
+     -4.5
+    ],
+    [
+     28.8,
+     2.1,
+     -5.0
+    ],
+    [
+     32.4,
+     -2.7,
+     -2.6
+    ],
+    [
+     29.7,
+     0.4,
+     -4.6
+    ],
+    [
+     39.8,
+     -2.7,
+     -2.6
+    ],
+    [
+     38.0,
+     -2.7,
+     -2.6
+    ],
+    [
+     36.2,
+     -2.7,
+     -2.6
+    ],
+    [
+     34.3,
+     -2.7,
+     -2.6
+    ],
+    [
+     30.6,
+     -0.8,
+     -3.5
+    ]
+   ],
+   "gewicht": [
+    4,
+    27,
+    40,
+    51,
+    27,
+    14,
+    4,
+    5,
+    10,
+    17,
+    11
+   ],
+   "zweiton_hell": null
+  },
+  "3|knie_l": {
+   "eintraege": 9,
+   "alte_indizes": 17,
+   "alt_mittel_lab": [
+    18.2,
+    4.4,
+    -2.1
+   ],
+   "neu_lab": [
+    [
+     24.5,
+     3.3,
+     -11.1
+    ],
+    [
+     25.6,
+     2.0,
+     -11.1
+    ],
+    [
+     36.5,
+     -1.1,
+     -9.5
+    ],
+    [
+     34.8,
+     -1.1,
+     -9.5
+    ],
+    [
+     32.9,
+     -1.1,
+     -9.5
+    ],
+    [
+     29.1,
+     -1.1,
+     -9.5
+    ],
+    [
+     31.1,
+     -1.1,
+     -9.5
+    ],
+    [
+     26.5,
+     1.8,
+     -11.4
+    ],
+    [
+     27.8,
+     0.2,
+     -10.3
+    ]
+   ],
+   "gewicht": [
+    10,
+    6,
+    6,
+    4,
+    12,
+    6,
+    18,
+    2,
+    9
+   ],
+   "zweiton_hell": null
+  },
+  "3|fuss_glanz": {
+   "eintraege": 8,
+   "alte_indizes": 13,
+   "alt_mittel_lab": [
+    10.5,
+    9.1,
+    -4.9
+   ],
+   "neu_lab": [
+    [
+     50.4,
+     0.2,
+     -7.3
+    ],
+    [
+     51.8,
+     -0.4,
+     -7.9
+    ],
+    [
+     59.0,
+     -2.3,
+     -6.8
+    ],
+    [
+     57.2,
+     -2.3,
+     -6.8
+    ],
+    [
+     55.2,
+     -2.3,
+     -6.8
+    ],
+    [
+     52.5,
+     1.1,
+     -8.8
+    ],
+    [
+     53.3,
+     -2.3,
+     -6.8
+    ],
+    [
+     48.9,
+     2.7,
+     -10.1
+    ]
+   ],
+   "gewicht": [
+    32,
+    68,
+    3,
+    2,
+    14,
+    59,
+    3,
+    4
+   ],
+   "zweiton_hell": null
+  },
+  "3|gelenk_bein": {
+   "eintraege": 15,
+   "alte_indizes": 47,
+   "alt_mittel_lab": [
+    10.8,
+    9.7,
+    -4.8
+   ],
+   "neu_lab": [
+    [
+     19.3,
+     -1.2,
+     -5.8
+    ],
+    [
+     21.8,
+     1.1,
+     -7.3
+    ],
+    [
+     24.6,
+     0.8,
+     -5.6
+    ],
+    [
+     26.8,
+     1.6,
+     -6.9
+    ],
+    [
+     33.1,
+     -2.9,
+     -4.6
+    ],
+    [
+     36.7,
+     -2.9,
+     -4.6
+    ],
+    [
+     46.5,
+     -2.9,
+     -4.6
+    ],
+    [
+     49.7,
+     -2.9,
+     -4.6
+    ],
+    [
+     55.9,
+     -2.9,
+     -4.6
+    ],
+    [
+     52.7,
+     -2.9,
+     -4.6
+    ],
+    [
+     43.3,
+     -2.9,
+     -4.6
+    ],
+    [
+     39.9,
+     -2.9,
+     -4.6
+    ],
+    [
+     28.3,
+     0.9,
+     -6.9
+    ],
+    [
+     29.8,
+     -0.6,
+     -5.5
+    ],
+    [
+     23.4,
+     5.0,
+     -9.5
+    ]
+   ],
+   "gewicht": [
+    151,
+    236,
+    535,
+    509,
+    226,
+    136,
+    42,
+    4,
+    1,
+    4,
+    42,
+    87,
+    283,
+    79,
+    12
+   ],
+   "zweiton_hell": null
+  },
+  "4|gelenk_bein": {
+   "eintraege": 7,
+   "alte_indizes": 8,
+   "alt_mittel_lab": [
+    3.6,
+    4.1,
+    2.7
+   ],
+   "neu_lab": [
+    [
+     26.8,
+     -1.2,
+     -6.8
+    ],
+    [
+     32.4,
+     -1.2,
+     -6.8
+    ],
+    [
+     28.8,
+     1.7,
+     -4.7
+    ],
+    [
+     25.7,
+     0.2,
+     -6.3
+    ],
+    [
+     28.0,
+     0.6,
+     -6.2
+    ],
+    [
+     24.8,
+     -1.2,
+     -6.8
+    ],
+    [
+     36.2,
+     -1.2,
+     -6.8
+    ]
+   ],
+   "gewicht": [
+    53,
+    18,
+    61,
+    8,
+    13,
+    19,
+    2
+   ],
+   "zweiton_hell": null
+  },
+  "5|ruecken_glanz": {
+   "eintraege": 13,
+   "alte_indizes": 23,
+   "alt_mittel_lab": [
+    19.1,
+    7.3,
+    -1.7
+   ],
+   "neu_lab": [
+    [
+     57.0,
+     1.3,
+     -9.9
+    ],
+    [
+     58.6,
+     1.5,
+     -10.4
+    ],
+    [
+     60.3,
+     1.1,
+     -9.4
+    ],
+    [
+     62.3,
+     0.9,
+     -8.9
+    ],
+    [
+     82.0,
+     7.9,
+     -10.6
+    ],
+    [
+     72.1,
+     5.4,
+     -10.6
+    ],
+    [
+     70.3,
+     5.5,
+     -10.6
+    ],
+    [
+     80.2,
+     7.5,
+     -10.0
+    ],
+    [
+     67.3,
+     6.5,
+     -10.0
+    ],
+    [
+     74.8,
+     7.0,
+     -9.8
+    ],
+    [
+     88.8,
+     5.7,
+     -10.3
+    ],
+    [
+     91.8,
+     5.6,
+     -10.3
+    ],
+    [
+     64.9,
+     5.7,
+     -10.5
+    ]
+   ],
+   "gewicht": [
+    10,
+    19,
+    17,
+    2,
+    3,
+    1,
+    2,
+    5,
+    2,
+    3,
+    3,
+    3,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "6|lippe": {
+   "eintraege": 15,
+   "alte_indizes": 73,
+   "alt_mittel_lab": [
+    51.0,
+    21.8,
+    17.2
+   ],
+   "neu_lab": [
+    [
+     17.9,
+     12.0,
+     -2.8
+    ],
+    [
+     27.1,
+     12.0,
+     -2.8
+    ],
+    [
+     13.4,
+     10.7,
+     -4.1
+    ],
+    [
+     8.3,
+     11.1,
+     -5.5
+    ],
+    [
+     24.3,
+     12.0,
+     -2.6
+    ],
+    [
+     20.2,
+     12.0,
+     -2.7
+    ],
+    [
+     31.6,
+     12.0,
+     -3.5
+    ],
+    [
+     29.8,
+     12.0,
+     -1.6
+    ],
+    [
+     21.6,
+     11.5,
+     -3.2
+    ],
+    [
+     15.6,
+     10.1,
+     -4.9
+    ],
+    [
+     0.0,
+     7.6,
+     -7.0
+    ],
+    [
+     3.7,
+     12.0,
+     -2.1
+    ],
+    [
+     34.0,
+     12.0,
+     -5.1
+    ],
+    [
+     36.0,
+     12.0,
+     -6.1
+    ],
+    [
+     3.4,
+     12.0,
+     0.3
+    ]
+   ],
+   "gewicht": [
+    31,
+    51,
+    79,
+    14,
+    67,
+    22,
+    17,
+    24,
+    67,
+    51,
+    18,
+    1,
+    3,
+    1,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "8|gelenk_bein": {
+   "eintraege": 10,
+   "alte_indizes": 20,
+   "alt_mittel_lab": [
+    7.5,
+    2.1,
+    1.6
+   ],
+   "neu_lab": [
+    [
+     23.3,
+     -0.6,
+     -6.5
+    ],
+    [
+     25.5,
+     1.0,
+     -5.3
+    ],
+    [
+     28.9,
+     -0.6,
+     -6.4
+    ],
+    [
+     32.7,
+     -0.6,
+     -6.5
+    ],
+    [
+     36.1,
+     -0.6,
+     -6.5
+    ],
+    [
+     39.7,
+     -0.6,
+     -6.5
+    ],
+    [
+     27.1,
+     1.7,
+     -4.4
+    ],
+    [
+     21.3,
+     -0.6,
+     -6.5
+    ],
+    [
+     46.4,
+     -0.6,
+     -6.5
+    ],
+    [
+     43.0,
+     -0.6,
+     -6.5
+    ]
+   ],
+   "gewicht": [
+    81,
+    208,
+    167,
+    103,
+    18,
+    15,
+    31,
+    38,
+    7,
+    7
+   ],
+   "zweiton_hell": null
+  },
+  "8|huefte_r": {
+   "eintraege": 3,
+   "alte_indizes": 4,
+   "alt_mittel_lab": [
+    11.4,
+    0.0,
+    0.0
+   ],
+   "neu_lab": [
+    [
+     38.5,
+     -0.0,
+     -6.0
+    ],
+    [
+     40.6,
+     0.0,
+     -6.0
+    ],
+    [
+     42.6,
+     -0.0,
+     -6.0
+    ]
+   ],
+   "gewicht": [
+    6,
+    10,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "8|ruecken_glanz": {
+   "eintraege": 3,
+   "alte_indizes": 4,
+   "alt_mittel_lab": [
+    15.7,
+    0.0,
+    0.0
+   ],
+   "neu_lab": [
+    [
+     64.1,
+     3.0,
+     -10.0
+    ],
+    [
+     68.0,
+     3.0,
+     -10.0
+    ],
+    [
+     66.0,
+     3.0,
+     -10.0
+    ]
+   ],
+   "gewicht": [
+    3,
+    1,
+    5
+   ],
+   "zweiton_hell": null
+  },
+  "9|gelenk_bein": {
+   "eintraege": 6,
+   "alte_indizes": 9,
+   "alt_mittel_lab": [
+    3.0,
+    12.7,
+    -11.7
+   ],
+   "neu_lab": [
+    [
+     26.8,
+     -1.1,
+     -5.5
+    ],
+    [
+     32.9,
+     -3.8,
+     -2.5
+    ],
+    [
+     29.2,
+     3.0,
+     -8.1
+    ],
+    [
+     25.3,
+     -3.8,
+     -2.5
+    ],
+    [
+     27.5,
+     -0.1,
+     -5.1
+    ],
+    [
+     36.7,
+     -3.8,
+     -2.5
+    ]
+   ],
+   "gewicht": [
+    130,
+    17,
+    112,
+    30,
+    1,
+    2
+   ],
+   "zweiton_hell": null
+  },
+  "10|ruecken_glanz": {
+   "eintraege": 9,
+   "alte_indizes": 13,
+   "alt_mittel_lab": [
+    10.4,
+    11.7,
+    -11.0
+   ],
+   "neu_lab": [
+    [
+     64.3,
+     3.6,
+     -10.6
+    ],
+    [
+     66.8,
+     0.1,
+     -7.2
+    ],
+    [
+     68.7,
+     0.1,
+     -7.2
+    ],
+    [
+     70.6,
+     0.1,
+     -7.2
+    ],
+    [
+     74.3,
+     0.1,
+     -7.2
+    ],
+    [
+     72.5,
+     0.1,
+     -7.2
+    ],
+    [
+     62.9,
+     6.5,
+     -13.3
+    ],
+    [
+     61.2,
+     2.3,
+     -9.8
+    ],
+    [
+     62.0,
+     4.6,
+     -12.4
+    ]
+   ],
+   "gewicht": [
+    22,
+    13,
+    7,
+    4,
+    2,
+    2,
+    19,
+    1,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "10|gelenk_bein": {
+   "eintraege": 11,
+   "alte_indizes": 23,
+   "alt_mittel_lab": [
+    6.3,
+    14.0,
+    -13.9
+   ],
+   "neu_lab": [
+    [
+     23.4,
+     -2.2,
+     -4.1
+    ],
+    [
+     25.2,
+     1.3,
+     -8.0
+    ],
+    [
+     29.3,
+     0.1,
+     -5.8
+    ],
+    [
+     33.7,
+     -4.2,
+     -1.8
+    ],
+    [
+     37.2,
+     -4.2,
+     -1.8
+    ],
+    [
+     40.7,
+     -4.2,
+     -1.8
+    ],
+    [
+     47.4,
+     -4.2,
+     -1.8
+    ],
+    [
+     44.0,
+     -4.2,
+     -1.8
+    ],
+    [
+     31.0,
+     1.6,
+     -6.8
+    ],
+    [
+     28.5,
+     5.0,
+     -9.9
+    ],
+    [
+     26.8,
+     3.5,
+     -9.1
+    ]
+   ],
+   "gewicht": [
+    238,
+    242,
+    237,
+    111,
+    32,
+    31,
+    7,
+    9,
+    15,
+    60,
+    188
+   ],
+   "zweiton_hell": null
+  },
+  "10|huefte_r": {
+   "eintraege": 10,
+   "alte_indizes": 16,
+   "alt_mittel_lab": [
+    9.5,
+    9.5,
+    -9.4
+   ],
+   "neu_lab": [
+    [
+     36.1,
+     -0.1,
+     -6.2
+    ],
+    [
+     36.9,
+     2.2,
+     -8.8
+    ],
+    [
+     39.2,
+     1.2,
+     -7.0
+    ],
+    [
+     37.7,
+     4.0,
+     -9.7
+    ],
+    [
+     41.6,
+     -2.4,
+     -3.6
+    ],
+    [
+     45.5,
+     -2.4,
+     -3.6
+    ],
+    [
+     49.2,
+     -2.4,
+     -3.6
+    ],
+    [
+     47.3,
+     -2.4,
+     -3.6
+    ],
+    [
+     43.5,
+     -2.4,
+     -3.6
+    ],
+    [
+     38.7,
+     5.3,
+     -10.3
+    ]
+   ],
+   "gewicht": [
+    5,
+    12,
+    19,
+    11,
+    32,
+    3,
+    1,
+    1,
+    4,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "10|huefte_l": {
+   "eintraege": 5,
+   "alte_indizes": 6,
+   "alt_mittel_lab": [
+    5.0,
+    12.4,
+    -12.6
+   ],
+   "neu_lab": [
+    [
+     38.1,
+     -1.5,
+     -3.7
+    ],
+    [
+     39.1,
+     1.5,
+     -7.0
+    ],
+    [
+     41.4,
+     0.5,
+     -5.2
+    ],
+    [
+     43.8,
+     -3.1,
+     -1.8
+    ],
+    [
+     40.0,
+     3.3,
+     -7.9
+    ]
+   ],
+   "gewicht": [
+    11,
+    7,
+    11,
+    3,
+    3
+   ],
+   "zweiton_hell": null
+  },
+  "11|ellbogen_r": {
+   "eintraege": 10,
+   "alte_indizes": 35,
+   "alt_mittel_lab": [
+    17.0,
+    2.7,
+    -1.1
+   ],
+   "neu_lab": [
+    [
+     54.0,
+     -0.7,
+     -4.7
+    ],
+    [
+     54.9,
+     1.3,
+     -5.3
+    ],
+    [
+     39.6,
+     -0.7,
+     -4.7
+    ],
+    [
+     43.6,
+     -0.7,
+     -4.7
+    ],
+    [
+     41.4,
+     2.7,
+     -6.1
+    ],
+    [
+     36.1,
+     0.1,
+     -4.8
+    ],
+    [
+     34.5,
+     0.7,
+     -5.7
+    ],
+    [
+     33.0,
+     0.3,
+     -5.4
+    ],
+    [
+     48.6,
+     2.3,
+     -5.0
+    ],
+    [
+     45.2,
+     2.8,
+     -6.1
+    ]
+   ],
+   "gewicht": [
+    3,
+    1,
+    158,
+    98,
+    38,
+    72,
+    31,
+    2,
+    1,
+    13
+   ],
+   "zweiton_hell": null
+  },
+  "11|hand_r": {
+   "eintraege": 5,
+   "alte_indizes": 17,
+   "alt_mittel_lab": [
+    15.3,
+    3.2,
+    -0.1
+   ],
+   "neu_lab": [
+    [
+     46.6,
+     -0.8,
+     -4.0
+    ],
+    [
+     50.4,
+     -0.8,
+     -4.0
+    ],
+    [
+     48.3,
+     2.7,
+     -6.0
+    ],
+    [
+     43.1,
+     0.3,
+     -3.7
+    ],
+    [
+     41.3,
+     0.5,
+     -4.9
+    ]
+   ],
+   "gewicht": [
+    13,
+    24,
+    6,
+    41,
+    2
+   ],
+   "zweiton_hell": null
+  },
+  "11|gelenk_arm": {
+   "eintraege": 18,
+   "alte_indizes": 114,
+   "alt_mittel_lab": [
+    18.4,
+    5.9,
+    -2.3
+   ],
+   "neu_lab": [
+    [
+     27.7,
+     -1.7,
+     -4.3
+    ],
+    [
+     35.1,
+     -1.7,
+     -4.3
+    ],
+    [
+     42.4,
+     -0.7,
+     -3.9
+    ],
+    [
+     22.0,
+     -0.4,
+     -4.8
+    ],
+    [
+     31.5,
+     2.6,
+     -6.1
+    ],
+    [
+     18.7,
+     -0.2,
+     -5.3
+    ],
+    [
+     14.6,
+     -1.3,
+     -4.7
+    ],
+    [
+     44.4,
+     2.1,
+     -5.3
+    ],
+    [
+     38.0,
+     2.3,
+     -6.1
+    ],
+    [
+     52.9,
+     -0.2,
+     -5.4
+    ],
+    [
+     49.1,
+     0.1,
+     -4.9
+    ],
+    [
+     61.5,
+     1.5,
+     -5.6
+    ],
+    [
+     67.2,
+     2.3,
+     -6.3
+    ],
+    [
+     56.1,
+     1.5,
+     -6.0
+    ],
+    [
+     72.7,
+     1.4,
+     -5.3
+    ],
+    [
+     76.5,
+     1.8,
+     -5.8
+    ],
+    [
+     65.5,
+     2.4,
+     -7.2
+    ],
+    [
+     87.9,
+     6.4,
+     -8.1
+    ]
+   ],
+   "gewicht": [
+    747,
+    532,
+    106,
+    672,
+    863,
+    187,
+    42,
+    35,
+    123,
+    17,
+    49,
+    18,
+    5,
+    19,
+    4,
+    1,
+    6,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "11|gelenk_schulter": {
+   "eintraege": 19,
+   "alte_indizes": 91,
+   "alt_mittel_lab": [
+    19.5,
+    4.3,
+    -1.7
+   ],
+   "neu_lab": [
+    [
+     24.6,
+     -1.3,
+     -2.5
+    ],
+    [
+     32.1,
+     -1.3,
+     -2.5
+    ],
+    [
+     28.4,
+     3.0,
+     -4.3
+    ],
+    [
+     18.9,
+     0.0,
+     -3.0
+    ],
+    [
+     15.8,
+     0.3,
+     -3.7
+    ],
+    [
+     11.5,
+     -0.8,
+     -2.8
+    ],
+    [
+     46.1,
+     0.5,
+     -3.0
+    ],
+    [
+     41.3,
+     2.5,
+     -3.1
+    ],
+    [
+     35.1,
+     2.9,
+     -4.2
+    ],
+    [
+     51.0,
+     -1.3,
+     -2.5
+    ],
+    [
+     80.7,
+     0.9,
+     -3.1
+    ],
+    [
+     39.4,
+     -0.2,
+     -2.1
+    ],
+    [
+     75.3,
+     4.9,
+     -5.8
+    ],
+    [
+     64.2,
+     2.5,
+     -4.5
+    ],
+    [
+     58.5,
+     1.8,
+     -3.8
+    ],
+    [
+     53.2,
+     2.0,
+     -4.3
+    ],
+    [
+     69.8,
+     1.0,
+     -3.1
+    ],
+    [
+     73.5,
+     2.2,
+     -4.0
+    ],
+    [
+     62.5,
+     2.8,
+     -5.3
+    ]
+   ],
+   "gewicht": [
+    495,
+    513,
+    310,
+    451,
+    100,
+    5,
+    58,
+    29,
+    52,
+    23,
+    1,
+    50,
+    1,
+    6,
+    18,
+    21,
+    6,
+    2,
+    6
+   ],
+   "zweiton_hell": null
+  },
+  "12|buckel": {
+   "eintraege": 15,
+   "alte_indizes": 58,
+   "alt_mittel_lab": [
+    23.9,
+    17.9,
+    -10.5
+   ],
+   "neu_lab": [
+    [
+     36.8,
+     18.9,
+     -5.1
+    ],
+    [
+     38.3,
+     19.6,
+     -6.1
+    ],
+    [
+     44.6,
+     21.9,
+     -7.0
+    ],
+    [
+     60.2,
+     14.6,
+     -2.8
+    ],
+    [
+     57.1,
+     14.6,
+     -2.8
+    ],
+    [
+     52.1,
+     18.8,
+     -5.8
+    ],
+    [
+     46.8,
+     22.1,
+     -7.8
+    ],
+    [
+     34.9,
+     22.0,
+     -7.1
+    ],
+    [
+     33.7,
+     18.1,
+     -5.2
+    ],
+    [
+     63.3,
+     14.6,
+     -2.9
+    ],
+    [
+     50.5,
+     18.9,
+     -5.8
+    ],
+    [
+     31.7,
+     21.3,
+     -7.1
+    ],
+    [
+     48.9,
+     26.0,
+     -10.3
+    ],
+    [
+     54.7,
+     17.0,
+     -3.5
+    ],
+    [
+     41.3,
+     17.8,
+     -5.0
+    ]
+   ],
+   "gewicht": [
+    395,
+    227,
+    285,
+    3,
+    28,
+    11,
+    22,
+    152,
+    70,
+    1,
+    63,
+    2,
+    3,
+    1,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "12|gelenk_schulter": {
+   "eintraege": 17,
+   "alte_indizes": 67,
+   "alt_mittel_lab": [
+    25.0,
+    19.3,
+    -11.5
+   ],
+   "neu_lab": [
+    [
+     21.1,
+     -1.5,
+     -1.8
+    ],
+    [
+     24.0,
+     -0.8,
+     -2.8
+    ],
+    [
+     35.4,
+     1.4,
+     -3.7
+    ],
+    [
+     57.8,
+     -5.8,
+     0.4
+    ],
+    [
+     48.9,
+     -1.4,
+     -2.5
+    ],
+    [
+     39.2,
+     1.7,
+     -4.5
+    ],
+    [
+     18.3,
+     2.4,
+     -4.4
+    ],
+    [
+     53.5,
+     -3.4,
+     -0.2
+    ],
+    [
+     15.7,
+     -2.3,
+     -1.9
+    ],
+    [
+     29.3,
+     -2.6,
+     -1.7
+    ],
+    [
+     11.3,
+     -0.1,
+     -2.4
+    ],
+    [
+     46.0,
+     -1.4,
+     -2.5
+    ],
+    [
+     43.0,
+     5.6,
+     -7.0
+    ],
+    [
+     5.5,
+     -5.8,
+     0.4
+    ],
+    [
+     63.4,
+     -5.8,
+     0.4
+    ],
+    [
+     74.4,
+     -5.8,
+     0.4
+    ],
+    [
+     68.9,
+     -5.8,
+     0.4
+    ]
+   ],
+   "gewicht": [
+    521,
+    500,
+    848,
+    57,
+    63,
+    46,
+    409,
+    2,
+    131,
+    1,
+    68,
+    129,
+    5,
+    16,
+    4,
+    1,
+    5
+   ],
+   "zweiton_hell": null
+  },
+  "12|schulter_l": {
+   "eintraege": 7,
+   "alte_indizes": 15,
+   "alt_mittel_lab": [
+    22.9,
+    17.0,
+    -10.2
+   ],
+   "neu_lab": [
+    [
+     48.8,
+     1.9,
+     -3.2
+    ],
+    [
+     55.3,
+     4.7,
+     -4.8
+    ],
+    [
+     57.3,
+     4.0,
+     -4.6
+    ],
+    [
+     47.5,
+     1.7,
+     -2.7
+    ],
+    [
+     44.8,
+     1.6,
+     -1.9
+    ],
+    [
+     44.2,
+     0.7,
+     -2.4
+    ],
+    [
+     61.0,
+     1.4,
+     -2.9
+    ]
+   ],
+   "gewicht": [
+    1,
+    4,
+    2,
+    18,
+    1,
+    5,
+    4
+   ],
+   "zweiton_hell": null
+  },
+  "13|buckel": {
+   "eintraege": 9,
+   "alte_indizes": 39,
+   "alt_mittel_lab": [
+    23.3,
+    9.1,
+    -4.9
+   ],
+   "neu_lab": [
+    [
+     35.2,
+     23.3,
+     -7.8
+    ],
+    [
+     40.4,
+     17.3,
+     -4.5
+    ],
+    [
+     47.5,
+     17.3,
+     -4.5
+    ],
+    [
+     46.4,
+     23.5,
+     -7.9
+    ],
+    [
+     37.2,
+     19.6,
+     -5.9
+    ],
+    [
+     53.0,
+     18.2,
+     -4.2
+    ],
+    [
+     45.1,
+     23.8,
+     -6.7
+    ],
+    [
+     32.0,
+     23.9,
+     -8.8
+    ],
+    [
+     38.4,
+     25.1,
+     -9.6
+    ]
+   ],
+   "gewicht": [
+    51,
+    58,
+    51,
+    37,
+    160,
+    1,
+    8,
+    1,
+    4
+   ],
+   "zweiton_hell": null
+  },
+  "13|gelenk_schulter": {
+   "eintraege": 14,
+   "alte_indizes": 62,
+   "alt_mittel_lab": [
+    26.6,
+    8.9,
+    -4.5
+   ],
+   "neu_lab": [
+    [
+     16.7,
+     3.9,
+     -5.1
+    ],
+    [
+     25.7,
+     -2.6,
+     -1.7
+    ],
+    [
+     38.5,
+     -2.6,
+     -1.7
+    ],
+    [
+     50.5,
+     -2.7,
+     -1.7
+    ],
+    [
+     37.7,
+     2.1,
+     -3.9
+    ],
+    [
+     20.0,
+     -0.3,
+     -3.0
+    ],
+    [
+     34.1,
+     3.8,
+     -3.8
+    ],
+    [
+     9.3,
+     2.4,
+     -3.8
+    ],
+    [
+     67.5,
+     -2.7,
+     -1.7
+    ],
+    [
+     56.3,
+     -2.7,
+     -1.7
+    ],
+    [
+     22.1,
+     5.2,
+     -6.7
+    ],
+    [
+     61.9,
+     -2.7,
+     -1.7
+    ],
+    [
+     72.9,
+     -2.7,
+     -1.7
+    ],
+    [
+     4.0,
+     -2.7,
+     -1.7
+    ]
+   ],
+   "gewicht": [
+    310,
+    394,
+    270,
+    109,
+    316,
+    546,
+    47,
+    32,
+    7,
+    22,
+    28,
+    3,
+    1,
+    8
+   ],
+   "zweiton_hell": null
+  },
+  "13|schulter_l": {
+   "eintraege": 12,
+   "alte_indizes": 36,
+   "alt_mittel_lab": [
+    35.3,
+    6.5,
+    -3.5
+   ],
+   "neu_lab": [
+    [
+     44.4,
+     0.4,
+     -2.1
+    ],
+    [
+     51.6,
+     0.6,
+     -2.3
+    ],
+    [
+     67.6,
+     0.4,
+     -2.1
+    ],
+    [
+     64.5,
+     0.4,
+     -2.1
+    ],
+    [
+     58.2,
+     0.4,
+     -2.1
+    ],
+    [
+     51.0,
+     4.2,
+     -3.9
+    ],
+    [
+     41.2,
+     1.9,
+     -3.1
+    ],
+    [
+     56.9,
+     1.1,
+     -1.9
+    ],
+    [
+     49.0,
+     5.8,
+     -3.9
+    ],
+    [
+     61.4,
+     0.4,
+     -2.1
+    ],
+    [
+     39.7,
+     7.6,
+     -5.7
+    ],
+    [
+     42.4,
+     6.9,
+     -6.4
+    ]
+   ],
+   "gewicht": [
+    17,
+    12,
+    4,
+    4,
+    48,
+    65,
+    75,
+    1,
+    1,
+    16,
+    2,
+    3
+   ],
+   "zweiton_hell": null
+  },
+  "13|schulter_r": {
+   "eintraege": 5,
+   "alte_indizes": 11,
+   "alt_mittel_lab": [
+    20.0,
+    12.0,
+    -6.7
+   ],
+   "neu_lab": [
+    [
+     53.2,
+     -3.0,
+     1.7
+    ],
+    [
+     42.9,
+     -1.1,
+     0.6
+    ],
+    [
+     39.8,
+     4.6,
+     -3.1
+    ],
+    [
+     50.7,
+     2.4,
+     -0.1
+    ],
+    [
+     44.1,
+     3.5,
+     -2.6
+    ]
+   ],
+   "gewicht": [
+    1,
+    13,
+    2,
+    2,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "14|lippe": {
+   "eintraege": 17,
+   "alte_indizes": 73,
+   "alt_mittel_lab": [
+    20.9,
+    15.7,
+    -2.8
+   ],
+   "neu_lab": [
+    [
+     12.0,
+     12.0,
+     -4.1
+    ],
+    [
+     16.7,
+     11.7,
+     -4.1
+    ],
+    [
+     23.2,
+     11.6,
+     -4.1
+    ],
+    [
+     41.6,
+     8.8,
+     -3.0
+    ],
+    [
+     37.8,
+     8.8,
+     -3.0
+    ],
+    [
+     29.8,
+     8.8,
+     -3.0
+    ],
+    [
+     26.6,
+     12.0,
+     -3.4
+    ],
+    [
+     45.4,
+     8.8,
+     -3.0
+    ],
+    [
+     13.8,
+     12.0,
+     -3.2
+    ],
+    [
+     18.7,
+     11.5,
+     -3.3
+    ],
+    [
+     24.6,
+     12.0,
+     -3.5
+    ],
+    [
+     30.9,
+     10.5,
+     -3.4
+    ],
+    [
+     22.1,
+     12.0,
+     -3.5
+    ],
+    [
+     10.6,
+     12.0,
+     -3.5
+    ],
+    [
+     16.0,
+     12.0,
+     -3.2
+    ],
+    [
+     6.8,
+     8.8,
+     -3.0
+    ],
+    [
+     33.8,
+     8.8,
+     -3.0
+    ]
+   ],
+   "gewicht": [
+    69,
+    494,
+    382,
+    11,
+    52,
+    248,
+    51,
+    1,
+    1048,
+    22,
+    421,
+    1,
+    62,
+    26,
+    34,
+    16,
+    2
+   ],
+   "zweiton_hell": null
+  },
+  "15|schulter_l": {
+   "eintraege": 9,
+   "alte_indizes": 29,
+   "alt_mittel_lab": [
+    25.7,
+    12.5,
+    10.9
+   ],
+   "neu_lab": [
+    [
+     46.8,
+     1.6,
+     -3.2
+    ],
+    [
+     53.8,
+     3.1,
+     -1.8
+    ],
+    [
+     43.4,
+     2.3,
+     -3.2
+    ],
+    [
+     78.4,
+     -1.1,
+     -5.7
+    ],
+    [
+     75.4,
+     -1.1,
+     -5.7
+    ],
+    [
+     69.3,
+     -1.1,
+     -5.7
+    ],
+    [
+     63.3,
+     -0.3,
+     -5.4
+    ],
+    [
+     60.0,
+     2.7,
+     -2.9
+    ],
+    [
+     66.2,
+     -1.1,
+     -5.7
+    ]
+   ],
+   "gewicht": [
+    92,
+    65,
+    55,
+    2,
+    2,
+    4,
+    10,
+    8,
+    1
+   ],
+   "zweiton_hell": null
+  },
+  "15|gelenk_arm": {
+   "eintraege": 17,
+   "alte_indizes": 121,
+   "alt_mittel_lab": [
+    27.6,
+    13.5,
+    11.3
+   ],
+   "neu_lab": [
+    [
+     12.1,
+     -0.8,
+     -5.9
+    ],
+    [
+     22.5,
+     -0.9,
+     -5.4
+    ],
+    [
+     35.2,
+     1.1,
+     -3.7
+    ],
+    [
+     41.9,
+     -1.0,
+     -7.2
+    ],
+    [
+     16.2,
+     -0.2,
+     -5.8
+    ],
+    [
+     6.6,
+     -3.1,
+     -8.1
+    ],
+    [
+     52.3,
+     -3.1,
+     -8.1
+    ],
+    [
+     46.5,
+     0.5,
+     -5.0
+    ],
+    [
+     39.5,
+     3.0,
+     -3.8
+    ],
+    [
+     62.9,
+     -4.0,
+     -8.4
+    ],
+    [
+     95.2,
+     -4.0,
+     -8.4
+    ],
+    [
+     57.3,
+     -4.4,
+     -7.2
+    ],
+    [
+     84.7,
+     -4.0,
+     -8.4
+    ],
+    [
+     79.4,
+     -4.0,
+     -8.4
+    ],
+    [
+     68.6,
+     -4.0,
+     -8.4
+    ],
+    [
+     89.9,
+     -4.0,
+     -8.4
+    ],
+    [
+     74.1,
+     -4.0,
+     -8.4
+    ]
+   ],
+   "gewicht": [
+    189,
+    1182,
+    2364,
+    150,
+    1146,
+    66,
+    68,
+    308,
+    28,
+    58,
+    26,
+    52,
+    9,
+    18,
+    3,
+    16,
+    27
+   ],
+   "zweiton_hell": null
+  },
+  "15|gelenk_schulter": {
+   "eintraege": 16,
+   "alte_indizes": 97,
+   "alt_mittel_lab": [
+    25.3,
+    12.7,
+    10.7
+   ],
+   "neu_lab": [
+    [
+     12.1,
+     -0.6,
+     -3.7
+    ],
+    [
+     22.6,
+     -0.6,
+     -3.2
+    ],
+    [
+     35.3,
+     1.1,
+     -1.8
+    ],
+    [
+     42.0,
+     -0.8,
+     -5.0
+    ],
+    [
+     16.5,
+     0.1,
+     -3.4
+    ],
+    [
+     8.2,
+     -1.8,
+     -5.5
+    ],
+    [
+     52.4,
+     -2.8,
+     -5.9
+    ],
+    [
+     46.6,
+     0.7,
+     -2.8
+    ],
+    [
+     63.1,
+     -3.8,
+     -6.2
+    ],
+    [
+     57.3,
+     -4.2,
+     -5.1
+    ],
+    [
+     95.3,
+     -3.8,
+     -6.2
+    ],
+    [
+     84.8,
+     -3.8,
+     -6.2
+    ],
+    [
+     79.5,
+     -3.8,
+     -6.2
+    ],
+    [
+     90.0,
+     -3.8,
+     -6.2
+    ],
+    [
+     74.1,
+     -3.8,
+     -6.2
+    ],
+    [
+     39.5,
+     3.3,
+     -1.6
+    ]
+   ],
+   "gewicht": [
+    171,
+    1000,
+    1117,
+    59,
+    906,
+    44,
+    48,
+    183,
+    57,
+    38,
+    4,
+    8,
+    8,
+    10,
+    20,
+    9
+   ],
+   "zweiton_hell": null
+  },
+  "15|schulter_r": {
+   "eintraege": 3,
+   "alte_indizes": 10,
+   "alt_mittel_lab": [
+    29.3,
+    15.3,
+    12.2
+   ],
+   "neu_lab": [
+    [
+     38.9,
+     -0.8,
+     -0.3
+    ],
+    [
+     45.9,
+     0.2,
+     0.2
+    ],
+    [
+     35.6,
+     -0.4,
+     -1.0
+    ]
+   ],
+   "gewicht": [
+    14,
+    60,
+    5
+   ],
+   "zweiton_hell": null
+  }
+ },
+ "freie_eintraege_nachher": {
+  "0": 144,
+  "1": 181,
+  "2": 85,
+  "3": 119,
+  "4": 228,
+  "5": 163,
+  "6": 159,
+  "7": 223,
+  "8": 211,
+  "9": 229,
+  "10": 193,
+  "11": 56,
+  "12": 147,
+  "13": 146,
+  "14": 165,
+  "15": 62
+ },
+ "sha256": {
+  "FORM.EMD": "8da0da45bc7930abbb1bc3a4ebdd6d559c76ac2feda3d02bcdba12700424763e",
+  "FORM.TIM": "8a39ab47b5b610c3872bb0aa981539bb03d960d27cabed7a114e34a7acddaa1f",
+  "BAHNSTEIG_FORM.EMD": "0ebf2d17123cb63638480fc524216f6190949221ff98ca8a824d0616f9c5569a",
+  "BAHNSTEIG_FORM.TIM": "8a39ab47b5b610c3872bb0aa981539bb03d960d27cabed7a114e34a7acddaa1f"
+ },
+ "eingang_sha256": {
+  "basis_emd": "a2e87fb84e73c7d7bd173ea11d56482df731175c1e12af26cebd48063eb09adf",
+  "basis_tim": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3",
+  "asset_emd": "1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041",
+  "asset_tim": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3"
+ },
+ "texel_neu": 41510,
+ "zeilen": 16
+}
