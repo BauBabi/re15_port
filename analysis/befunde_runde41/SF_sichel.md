@@ -2396,3 +2396,109 @@ baubar (e9c66c2e nachgerechnet).
 4. Graue Seite im Render L* ~39 (Videoraum 41,5) liegt bei der hellen Schulterhaut, nicht beim Haut-Median des Rumpfes (27,7): mit dem
    Rumpf-Median waeren T-K9e und K5 rot. S2 0,032 und K6 29,4 / 29,7 liegen knapp an der Grenze.
 5. Schwanz T5 0,098 (seit Runde 5), Einbau ins Spiel-Asset erst nach der Abnahme.
+
+## V5 Runde 4 (Nutzer: kein Schnabel ueber dem Mund) (Bauer, 2026-11-08)
+
+Grundlage: V5 Runde 3 (EM30_V5r3, sha256 dd546074). Diese Runde aendert nur die Geometrie und die Lage des Kopf-Meshes (Mesh 9).
+Farben, Texel, UVs, Zonen und die CLUT-Zeilen 486/487/488 bleiben bytegleich Runde 3 (T-R1b/c/d gleich, T-V1 gruen). Koerper (Referenz 2),
+Schwanz (Runde 3 ot3), Knochen und Clips des EM30 unveraendert. Spiel-Asset EM30_HANGAR.EMD (cfd1ac42) und Pin release/em30_hangar.sha256 unveraendert.
+Kein RE-Befund (die Sichel-Form gibt es auf keiner Disc): keine Zahl hier ist eine @0x-Konstante; jede Zahl ist ein Mass gegen Foto/Referenz.
+
+### Nutzer-Wortlaut (2026-11-08, bindend)
+"er hat immer noch eine schnabelmäßige Form über den Mund." (nach den Runde-3-Leisten 01/02/03/04). Weiter gueltig: "vorne am Kopf eine Verlängerung
+wie so ein spitzer Schnabel in grau. AUch die gibt es nicht. Es ist abgerundet so wie es auf dem Original Foto aussieht."
+
+### Befund (gemessen, sfv5r4/probe1.py, geo.py, achsen.py, proj.py)
+- Der G2-Kopf ist ein Keil: im eigenen Raum (x vorn, y unten) liegt die Oberkante von Scheitel 16/26 (x 80, y -347) ueber 11/8/7/10 (x 147-228) bis
+  zur Keilspitze vor; die Maulvorderkante (Ecke 41) liegt bei x 185, das Kinn weicht nach hinten (45: x 154, 9: x 82). Runde 3 hat nur die Spitze
+  (9 Ecken) auf eine hohe Ellipsoid-Kappe (Halbachsen 214 / 397 / 173 = Seitenverhaeltnis 1,85, selbst eine Keilform) gelegt.
+- Pose 85 sieht den Kopf schraeg: G2 +x (Schnauze) liegt im Bild (6,6 / 5,2) px je 100 E., G2 -y (oben) bei (8,6 / -5,7); die Vorderkante im
+  Spielbild ist die Ecke aus Scheitel und Schnauzenruecken (Ecken 26/16/2/11/1/8, x 477-483). Das ist die "Schnabelform ueber dem Mund".
+- Auge seitlich (S2) haengt an der Nabe 39 des Augenfaechers (T19/T20/T41, UV 17/10; x 60, z -126 = auf der Kopfseite hinter der Front): jede
+  zurueckgenommene Vorderkante verkleinert S2 (Runde 3: 0,032 bei Grenze 0,03).
+
+### Foto-Ziel Tiefe/Hoehe (Originalfoto 2)
+Vorlage 2 ist nicht abgeblendet (Messblatt V4 Abschnitt 1: entblendet wird nur Vorlage 1). Der Kopf-Umriss trennt sich im Foto hinten nicht vom
+Buckel (Farbabstand Foto gegen BSS im Videoraum, re2r4/foto2_kopf_dE_bss_x6.png; Umriss mit Port-Kopf, re2r4/foto2_kopf_umriss_x6.png).
+Zielwert = Kopfbox seitlich des Messblatts (Abschnitt 3 / p_riegelfenster.py, v4_gemein.KB_ORIG[2]) x 412-467, y 190-263 = 56 x 74 px = **0,757**;
+Gegenlesung aus den Messblatt-Merkmalen (Vorderkante x 465, rote Zone Kopfoberseite ab x 418 / y 193, KS3 "Kopf unter dem Auge" bis y 262) = 47 / 69 =
+0,68. Grenze des Riegels = 0,757 + 0,10 = 0,857 (die groessere der beiden Lesungen, damit die Grenze nicht strenger ist als das Foto).
+
+### Form: Weg (a) + (b), dazu Augennabe und Lage (kopf_re2_bau.form_r4 / kappe_rund; PARAM_R4)
+- **(a) Verkuerzen**: x-Skalierung 0,85 um den Hinterkopf (kleinstes x = Ecke 19, x -248), alle 48 Ecken; Normalen affin (n / (0,85, 1, 1), Laenge
+  wie das Original). Begruendung: nur so wird die ganze Keilform kuerzer (Profil x/y 1,024 -> 0,870 vor der Kuppe); (b) allein (sx 1,0) liess
+  den Ueberstand bei 15 px (exp1).
+- **(b) Runde Kuppe**: Kappe aus drei Massen des verkuerzten Kopfes, kein Fit: Maullinie ym = Oberkante der Maulflaechen (kleinstes y der
+  Flaechenmittelpunkte MAUL_T, -129,7), Scheitel yt = -347,0, Maulvorderkante xf = groesstes x der Maulecken (120,1). Mittelpunkt (xf - R, ym, 0) =
+  (-97,3 / -129,7 / 0), Halbachsen (R, R, rz) = (217,3 / 217,3 / 185,0) mit R = ym - yt und rz = groesste |z|; Seitenverhaeltnis x : y = **1,00**.
+  Ecken oberhalb der Maullinie und vor dem Mittelpunkt mit r > 1 radial auf die Kappe: 14 Ecken (1, 2, 3, 7, 8, 10, 11, 16, 18, 26, 30, 39, 42, 46;
+  7/10/18 je ~65 E., 8/11 ~35/25, 16/26/1/2/42 ~20-30, 3/30/39/46 klein). Das Maul sitzt danach direkt unter der Kuppe vorn (Kappe vorn tangential
+  an der Maulvorderkante), das Maul ist mit der Verkuerzung 65 E. zurueckgewandert. Keine Flaechen-Umkehr (Flaechennormalen vor/nach, 0 gekippt).
+- **(c) Augennabe**: Ecke 39 um (-20, +70, 0) E. (G2-Raum) - gleitet auf der Kopfseite (z der Nachbarn -112..-145) nach hinten/unten; Pose 85: Auge
+  nach links (S2), Pose 135: zur Kopfmitte (K4 bleibt). Die Augentexel (UV) bleiben.
+- **(d) Lage**: Versatz im Knochen-9-Raum (80, 70, 0) statt (140, 10, 0) = 60 E. zurueck, 60 E. tiefer (Pose 85: Knochen-x (5,0 / 5,0) px, Knochen-y
+  (-4,6 / 4,5) px je 100 E. -> ~5,8 px nach links, waagerecht). Knochen, Clips, EDD unveraendert (nur der Mesh-Versatz).
+- Normalen der in (b)/(c) bewegten 14 Ecken flaechengewichtet neu (normalen_flaechen wie Runde 3), die uebrigen 34 affin mitgerechnet.
+- **Verworfen** (Suche sfv5r4/exp1-12, suche_r4/): sx 0,9 (Ueberstand 9-11 px oder S2 rot); sx 0,8 / 0,75 / 0,7 (K5/K6/K1k am Bild rot, exp9);
+  Versatz-Schritt 75/90 (K5/K6/K1k rot, exp11); Kuppe nur entlang -x (x-Klemmung: Scheitel 16/26 hinter 6/33 = Faltung, Spitze am Scheitel, vis1);
+  untere Rundung der Kieferecken 4/20/34 (beidseitig: K10-Hoehe 0,143-0,154 bzw. K6 rot; nur (W)-rechts: K10-Hoehe 0,154 knapp, Sicht kaum anders,
+  exp6-10, re2r4/suche_vorn_h135_x6.png); weicher Kappenrand (tanh) und Relief-Ausgleich der Nachbarecken (K5 bzw. T-V3ii rot, exp12).
+
+| Mass | Runde 3 (dd546074) | Runde 4 (38562ced) | Grenze |
+|---|---|---|---|
+| T-V3i Tiefe/Hoehe Pose 85 (Bbox Id 9) | 0,860 (37 x 43 px) | **0,649** (24 x 37 px) | <= 0,857 (Foto 0,757) |
+| T-V3i Tiefe/Hoehe Profil rein seitlich (G2-Raum x/y) | 0,899 (418 / 465 E.; Quelle 1,024) | **0,815** (368 / 452 E.) | <= 0,857 |
+| T-V3ii vor der runden Kappe (Ecken oberhalb der Maullinie) | 7,8 % (Ecke 16; 26 7,7, 2 6,0, 42 5,7, 3 5,2, 1 3,9) | **1,9 %** (Ecke 33) | <= 3 % |
+| T-V3iii / T-V2c Ueberstand seitlich gegen Beschreibung2_Vorlage | 17 px max / 4,8 Mittel; IoU 0,549 | **3 px** / -2,8; IoU 0,779 | <= 8 px |
+| Lage: Kopf-Vorderkante Pose 85 (Id 9) / Foto | x 481 / 464-465 | **x 467** / 464-465 | - |
+| T-V2a (Runde-3-Mass, Ellipsoid 1 : 1,9) | 1,5 % (Ecke 41) | 3,8 % (Ecke 41) - INFO | s. Offen 2 |
+| K10 / K4 / K7 | 0,165 x 0,170 / 0,060 - 0,097 / 0,62 - 0,64 | 0,165 x 0,165 / 0,054 - 0,096 / 0,58 - 0,62 | Messblatt |
+| S2 / KS2 | 0,032 - 0,812 / Kopf L* 33,6 | 0,038 - 0,817 / 28,2 (<= 35,5) | Messblatt |
+| K1k / K5 / K6 / T-K9e | OK / 0,76 / 29,4 / 24,8 - 0,99 | OK / 0,88 / 27,6 / 24,3 - 0,96 | Runde 2 |
+
+### Riegel (riegel_re2kopf.py, --prot SF_belege/v4/re2r4/kopf_re2_protokoll_r4.json, --lauf sfv4/r/V5r4/debug.log; SF_belege/v4/re2r4/riegel_re2kopf_V5r4.txt/.md/.json)
+EMD sha256 38562ced; **Exit 1: 1 rot von 50 (T5 0,098, Schwanz-Geometrie seit Runde 5, bekannt)**, 9 INFO. Neu bzw. geaendert:
+| Mass | Soll | Ist | |
+|---|---|---|---|
+| T-K1a/b/c Koerper = Ref2 | Meshes 0-8/10-15, Zeilen 480-485, Koerper-Texel bytegleich | keine Abweichung; 486/488 = Regel r3, 487 = G3; 0 von 34716 | OK |
+| T-R1a Kopf-Geometrie | Ecken = Rz Ry Rx S form(v) + t (form_r4), Normalen, Flaechen, UV, Zonen | max 0,50 E. / 0,50; UV abweichend 0; Zone abweichend 0; 14 Ecken auf die runde Kappe, Augennabe 39, 14 Normalen neu, 34 affin | OK |
+| T-R1b/c/d Texel, Zahn-Kachel, Zeilen 486-488 | bytegleich / Regel r3 | 0 von 11340 / 0 von 432 / gleich, gleich, gleich | OK |
+| T-V1 Pose 135 / 85 | a* > 12 <= 2 %; Kratzer <= 2 %; b* P10 >= -1 | 0,0 % / 0,9 % / 0,6; 0,0 % / 0,7 % / 0,0 | OK |
+| T-V2a (Runde 4: INFO) | Ellipsoid-Kappe der Runde 3 | Ecke 41 3,8 % | INFO |
+| T-V2b keine Delle / kein neuer Vorsprung | Rahmen runde Kappe T-V3ii, gegen den verkuerzten G2-Kopf | Grenze 9,1 % (Relief P75); 27 Ecken geprueft; Dellen keine; neue Vorspruenge keine (Runde-3-Rahmen als Ausgabe: 29 7,9 (Quelle 6,3), 43 8,2 (Quelle 5,0)) | OK |
+| T-V2c Silhouette seitlich | IoU >= Vorgaenger (Runde 3) | 0,779 >= 0,549 | OK |
+| **T-V3i** Tiefe/Hoehe | Pose 85 und Profil <= 0,757 + 0,10 | 0,649 / 0,815 | OK |
+| **T-V3ii** runde Kappe | Seitenverhaeltnis 1,00 <= 1,05; Ecken oberhalb der Maullinie <= 3 % vor der Kappe | Kappe am geprueften Kopf c (-84,3 / -129,7), Halbachsen 204,5 / 204,5 / 185,0; 22 geprueft, max 1,9 % (Ecke 33) | OK |
+| **T-V3iii** Ueberstand seitlich | <= 8 px | 3 px | OK |
+| K10 / K4 / K7 / S2 / KS2 / K1k / K5 / K6 / T-K9e / T-R3 | Messblatt-Fenster wie Runde 3 | alle OK (Zahlen s. Tabelle oben; T-R3 45 Marker / 46 hell) | OK |
+| T5 | f 0,5 >= 0,100 | 0,098 | ROT (bekannt) |
+Die Kappe in T-V3ii wird am GEPRUEFTEN Kopf nach derselben Regel wie im Bau bestimmt (kein Fit); da (b) die Scheitel-Ecken 16/26 absenkt, ist sie
+am Ergebnis kleiner (R 204,5 statt 217,3) - die Ecken liegen trotzdem hoechstens 1,9 % davor (Iteration bis zum Fixpunkt verworfen: die Kappe
+schrumpft je Schritt weiter, R 204,3 -> 196,5 -> 190,6 -> 185,9 ..., Probe im Scratchpad).
+**Gegenprobe V5 Runde 3** (riegel_re2kopf_V5r3_gegenprobe.txt, --prot re2r3/kopf_re2_protokoll_r3.json, --vorher EM30_V4re2): 4 rot von 51 -
+T-V3i (Pose 85 0,860, Profil 0,899), T-V3ii (7,8 % Ecke 16; ueber 3 %: 16, 26, 2, 42, 3, 1), T-V3iii (17 px), T5. Der Riegel unterscheidet.
+
+### Leisten (SF_belege/v4/; Runde 3 nach v4/re2r3/leisten/ verschoben; Spalten Originalfoto (roh) | Nutzer-Beschriftung | Referenz 2 | neu)
+01_vorn_kamera12, 02_seite_wie_bild2, 03_kopf_nah_vorn_x4, 04_kopf_nah_seite_x4, 11_spiel_koepfe (RE15_FRAMEDUMP h135 / h85, Lauf sfv4/r/V5r4:
+EXIT=0, 191 Bilder, "EM30 loaded: 23 meshes, 23 bones, 21 clips", 0 Fehlerzeilen; re2r4/lauf_V5r4.txt) und neu **12_kopf_profil_x6**
+(Mesh 9 in den G2-Raum zurueckgerechnet, orthogonal, neutrales kamerarelatives Licht, roh; Zeile 1 rein seitlich mit runder Kappe (gruen) und
+Maullinie (gelb), Zeile 2 rein von vorn; Spalten neu | Runde 3, gleicher Massstab und Ursprung je Zeile).
+
+### Tests
+Bau "LOCAL-BUILD-OK (build)" (Engine unveraendert, ninja: no work to do); ctest unit_birkin_formen / unit_birkin_szenen / unit_schwanz_r41 /
+integration_r41_sichel_form: "100% tests passed, 0 tests failed out of 4", Total Test time (real) = 64.42 sec (re2r4/ctest_v5r4.txt).
+Variante sfv4/emd/EM30_V5r4.EMD = EM30_V4.EMD (sha256 38562ced41061258f435be0d6598697b10ed241b09ba1a948007bc5bdf5993d5, 262796 Byte).
+Runde 3 bleibt mit "kopf_re2_bau.py --r3" bytegleich baubar (dd546074 nachgerechnet), Runde 2 mit --r2.
+
+### Offen
+1. **Vorn (Pose 135 / Spielbild h135)**: die beleuchtete (W)-rechte Kopfseite bildet links vom Maul weiter eine graue Sichel bis zur Mundecke
+   (Leiste 03/11 Zeile 1). Das ist die Seitenflaeche des G2-Kopfes unter dem Augenfaecher (Ecken 3/17/5/20/4), keine Spitze mehr; sie wird
+   durch die Verkuerzung kuerzer, verschwindet aber nicht. Eine untere Rundung der Kieferecken (Variante 'unten') machte die Kopfbox zu niedrig
+   bzw. K6 rot. Ob die Front von vorn jetzt rund genug ist, entscheidet der Blick des Nutzers auf Leiste 03/11/12.
+2. **T-V2a/T-V2b bei Form r4 (Bauer-Wahl, Pruefer bitte gegenlesen)**: T-V2a misst gegen die Ellipsoid-Kappe der Runde 3 (1 : 1,9, selbst keilfoermig);
+   am verkuerzten Kopf liegen dort viele Ecken 3-6 % ausserhalb (46 6,5 %, 42 4,1 %, 41 3,8 %) - das misst den Fit, nicht einen Schnabel. Fuer
+   Form r4 ist T-V2a darum INFO, die Pruefung leistet T-V3ii (runde Kappe, Auftrag). T-V2b rechnet im Rahmen der runden Kappe; im Runde-3-Rahmen
+   waeren 29 (7,9 % gegen Quelle 6,3 %) und 43 (8,2 % gegen 5,0 %) "neue Vorspruenge" - beide Ecken wurden nicht bewegt, ihre Nachbarn (Kuppe bzw.
+   Augennabe) ruecken ab; Zuwachs 7-14 E. = unter 1 px im Spielbild. Beide Zahlen stehen in der Riegelzeile.
+3. S2 0,038 / 0,817 liegt mit der Hoehe knapp unter 0,82; K10-Hoehe 0,165 (Runde 3 0,170), weil die Scheitel-Ecken 16/26 auf die Kappe sinken.
+4. Schwanz T5 0,098 (seit Runde 5), Einbau ins Spiel-Asset erst nach der Abnahme.
