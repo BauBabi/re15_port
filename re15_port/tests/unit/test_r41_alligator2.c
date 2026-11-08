@@ -13,7 +13,8 @@
  * Nachbesserung 1 (Abnahme 0, AUFTRAG.md Nachtrag 35):
  *   erreichbar            Schluessel an jeder Todeslage auf einem erreichbaren Punkt, Klettersonde greift ihn nie, echte Aktionstaste aus schraeger Stellung nimmt ihn auf
  *   weg                   echter Lauf ueber die Eingabe bis zum Aufheben, auch quer durch den Westkanal
- *   koerper               R1 + Leiche schieben die Figur nicht (RE2 +0 |= 0x80a), Gegenprobe lebend, keine Zielhilfe auf die Leiche
+ *   koerper               R1 + Leiche schieben die Figur nicht (RE2 +0 |= 0x80a), Gegenprobe lebend, keine Zielhilfe auf die Leiche;
+ *                         Bezug je Bild = Setzlage nach der reinen Wandklemme (koerper_bezug), nicht die Setzlage selbst
  *   finisher              Leon in Clip 4/5 sichtbar, ab Clip 11 Modell aus (RE2 |= 0x80000 @0x80101190-ac)
  *   leiche / leiche_elza  Rumpfmitte der Leiche sitzt im Maul und folgt Bild fuer Bild, mit dem Clip-5-Ende weg
  *   kanister_sitz         Tank-Achse = Quer-Achse des Kopfes bei jeder Gier wie RE2, Lokallage (1750,-210,-262)
@@ -829,6 +830,17 @@ static void koerper_punkt(const re15_actor_t *g, int32_t ofs, int32_t *x, int32_
     *x = g->x + (int32_t)(((int64_t)re15_cos_q12(g->rot_y) * ofs) >> 12);
     *z = g->z - (int32_t)(((int64_t)re15_sin_q12(g->rot_y) * ofs) >> 12);
 }
+/* Bezug der Schub-Zaehlung (Integration Runde 41 Welle 2, Querbezug G2 x P): die Setzlage nach der REINEN Wandklemme der Figur (Band 0, y = 0).
+ * Liegt ein Koerperpunkt naeher als Spielerradius 450 (DAT_80073e94+6 = c2 01, `lhu a1,6(v0)` @0x80036210) + 0x12 (`addiu t0,v0,18` @0x8003bd20 /
+ * `addiu a0,a0,-18` @0x8003bd2c) an einer SCA-Zelle, schiebt die Raumklemme die Figur auf Kante +- 468 - das ist kein Koerperschub. Gemessen
+ * (G2 NB4 (K) verlegt die R1-Lage): R1 Bild 1 Punkt (18,-20225) -> (18,-20468), Bild 5 (-786,-20314) -> (-786,-20468) = Suedkante der Plattform
+ * ROOM2090.RDT SCA @0x724 (de0d 7e1d 5cf9 e0b1: w 3550, d 7550, x -1700, z -20000) - 2 Bilder, Wandklemme der Setzlage bitgleich. */
+static void koerper_bezug(int32_t x, int32_t z, int32_t *bx, int32_t *bz)
+{
+    *bx = x; *bz = z;
+    re15_collision_ensure_band(0);
+    re15_collision_constrain(&g_room_rdt, x, z, bx, bz);
+}
 static void teil_koerper(void)
 {
     printf("== koerper (M2) ==\n");
@@ -845,10 +857,11 @@ static void teil_koerper(void)
     /* Gegenprobe lebend: der Koerperlaengen-Push schiebt */
     int schub = 0;
     for (int i = 0; i < 5; i++) {
-        int32_t x, z; koerper_punkt(g, k_ofs[i], &x, &z);
+        int32_t x, z, bx, bz; koerper_punkt(g, k_ofs[i], &x, &z);
         pl->x = x; pl->z = z; pl->y = 0; pl->hp = 100;
+        koerper_bezug(x, z, &bx, &bz);
         frame(0, 0);
-        const int64_t dx = (int64_t)pl->x - x, dz = (int64_t)pl->z - z;
+        const int64_t dx = (int64_t)pl->x - bx, dz = (int64_t)pl->z - bz;
         if (dx * dx + dz * dz > 10000) schub++;
     }
     PRUEF(schub >= 3, "Gegenprobe lebend: %d von 5 Koerperpunkten schieben die Figur (Mass misst)", schub);
@@ -858,19 +871,21 @@ static void teil_koerper(void)
     PRUEF(re15_gr2_r1_laeuft((int)(g - g_actors)), "R1 laeuft");
     int geschoben = 0, bilder = 0;
     for (int f = 0; f < 400 && !re15_gr2_tot(); f++) {
-        int32_t x, z; koerper_punkt(g, k_ofs[f % 5], &x, &z);
+        int32_t x, z, bx, bz; koerper_punkt(g, k_ofs[f % 5], &x, &z);
         pl->x = x; pl->z = z; pl->y = 0; pl->hp = 100;
+        koerper_bezug(x, z, &bx, &bz);
         frame(0, 0);
         bilder++;
-        if (pl->x != x || pl->z != z) geschoben++;
+        if (pl->x != bx || pl->z != bz) geschoben++;
     }
     PRUEF(re15_gr2_tot() && bilder > 20, "R1 zu Ende nach %d Bildern", bilder);
     for (int i = 0; i < 25; i++) {
-        int32_t x, z; koerper_punkt(g, k_ofs[i % 5], &x, &z);
+        int32_t x, z, bx, bz; koerper_punkt(g, k_ofs[i % 5], &x, &z);
         pl->x = x; pl->z = z; pl->y = 0; pl->hp = 100;
+        koerper_bezug(x, z, &bx, &bz);
         frame(0, 0);
         bilder++;
-        if (pl->x != x || pl->z != z) geschoben++;
+        if (pl->x != bx || pl->z != bz) geschoben++;
     }
     PRUEF(geschoben == 0, "R1 und Leiche schieben die Figur in %d Bildern nie (%d)", bilder, geschoben);
     PRUEF(re15_gator_boss_ohne_koerper(g), "Boss meldet: ohne Koerper");
