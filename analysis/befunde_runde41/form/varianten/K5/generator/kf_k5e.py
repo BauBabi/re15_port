@@ -6,7 +6,7 @@
 Eingaben (fest, sha256 in bau.json):
   feinschliff/K5d/FORM.EMD              Geometrie (Krallen 19/20/28/29 eingezogen), EDD/EMR/3 Posen-Clips
   stufe3/basis_k5c/FORM.EMD/.TIM        UV, Seite, Eckreihenfolge je Flaeche; TIM-Pixel (= Spiel-Asset, G4-Indizes auf Seite 0-2)
-  re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD   28 Clips, EDD/EMR/Morph (nur MD1 wird ersetzt)
+  varianten/K5/einbau_k5c/BAHNSTEIG_FORM.EMD   Spiel-Asset K5c (bis E32 shared_assets/RE2): 28 Clips, EDD/EMR/Morph (nur MD1 wird ersetzt)
   RE2 CDEMD0.EMS Typ 0x34 (G4, TIM @0x65e800)    die drei G4-Originalrampen (kf_g4.g4_roh / g4_cluts)
   ruhe/messung/material.json            Orte: Flaechenliste je Material (Messblatt RUHE 3.4)
 Ausgaben in <aus>: FORM.EMD/FORM.TIM/form.json (3-Clip-Basis fuer die Szenenkette), BAHNSTEIG_FORM.EMD/.TIM (28 Clips), bau.json.
@@ -49,7 +49,7 @@ import kf_g4 as KG  # noqa: E402
 
 BASIS = os.path.join(FORM, 'stufe3', 'basis_k5c')
 K5D = os.path.join(K5, 'feinschliff', 'K5d')
-ASSET = os.path.join(WT, 're15_port', 'shared_assets', 'RE2', 'BAHNSTEIG_FORM')
+ASSET = os.path.join(K5, 'einbau_k5c', 'BAHNSTEIG_FORM')   # Spiel-Asset K5c (E30), seit E32 gesichert (einbau_k5c/K5C.md); shared_assets traegt K5e_f1
 MATERIAL = os.path.join(K5, 'ruhe', 'messung', 'material.json')
 NZ = 10
 

@@ -55,7 +55,7 @@ import gelenke as G  # noqa: E402
 
 PZ = v4f.PZ
 BASIS = os.path.join(FORM, 'stufe3', 'basis_k5c')
-ASSET = os.path.join(WT, 're15_port', 'shared_assets', 'RE2', 'BAHNSTEIG_FORM')
+ASSET = os.path.join(K5, 'einbau_k5c', 'BAHNSTEIG_FORM')   # Asset K5c (E30), seit E32 gesichert (einbau_k5c/K5C.md); shared_assets traegt K5e_f1
 FLECKEN = np.load(os.path.join(K5, 'feinschliff', 'messung_v4f_flecken.npz'))
 LIPPE_PKL = os.path.join(K5, 'feinschliff', 'K5d', 'lippe_k5c.pkl')
 LOGO = np.zeros((480, 640), bool)
