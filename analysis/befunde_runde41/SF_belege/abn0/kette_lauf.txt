@@ -1,0 +1,17 @@
+== V7-Kette: Werkzeuge 6a25db27b, Referenz 2 aus ed254a7fe, Ziel <abn0>/kette
+   Referenz 2 (Schattenbaum) sha256 cfd1ac42729e56365847db42b352337d7f0c06fdcc1ef3413d0aee32d4a97a95
+-- 1_v4ot3: python birkin_formen.py --variante v4 --aus <abn0>/kette/emd/v4
+   1 V4 Runde 3 (ot3): EM30_V4ot3.EMD sha256 a1bc9309e5dd9ce8a948371ec4fef8595bd86310e3ea5e01dc3326552d5f8998 OK
+-- 2_v5r4: python re2kopf/kopf_re2_bau.py --basis <abn0>/kette/emd/EM30_V4ot3.EMD --aus <abn0>/kette/emd/r4 --name EM30_V5r4.EMD --json <abn0>/kette/prot/2_v5r4.json
+   2 V5 Runde 4: EM30_V5r4.EMD sha256 38562ced41061258f435be0d6598697b10ed241b09ba1a948007bc5bdf5993d5 OK
+-- 3_v5k: python v6kopf/kopf_orig_bau.py --basis <abn0>/kette/emd/EM30_V5r4.EMD --aus <abn0>/kette/emd --name EM30_V5k.EMD --json <abn0>/kette/prot/3_v5k.json
+   3 V6 Kopf (V5k): EM30_V5k.EMD sha256 99703bbda76ebda1317555c0e7c5e5669938c32df408a8d9a2042db570bd679e OK
+-- 4_v5f: python v5koerper/koerper_bau.py --basis <abn0>/kette/emd/EM30_V5k.EMD --aus <abn0>/kette/emd --name EM30_V5f.EMD --json <abn0>/kette/prot/4_v5f.json
+   4 V5 wie Foto (V5f): EM30_V5f.EMD sha256 784c8f05dfc4ac57dfdf3ac52127ac2a4e900603043aafa0c6bada897a2d3019 OK
+-- 5_v6: python v6drei/drei_bau.py --basis <abn0>/kette/emd/EM30_V5f.EMD --aus <abn0>/kette/emd --name EM30_V6.EMD --json <abn0>/kette/prot/5_v6.json
+   5 V6 drei Punkte: EM30_V6.EMD sha256 9e0e58ef09322b51213eaa4e55f6d04d980478cce4fe940f0f9b841c9e78c626 OK
+-- 6_v7: python v7hand/hand_bau.py --basis <abn0>/kette/emd/EM30_V6.EMD --aus <abn0>/kette/emd --name EM30_V7.EMD --json <abn0>/kette/prot/6_v7.json
+   6 V7 linke Hand = Pin release/em30_hangar.sha256: EM30_V7.EMD sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6 OK
+   Spiel-Asset EM30_HANGAR.EMD = Pin (319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6)
+   EM30_V7.EMD bytegleich Spiel-Asset
+V7-KETTE-OK sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6

@@ -1,0 +1,3 @@
+[hangar] ROOM50A0 Szene Start: Schnitt 4 angefordert -> Cut 12, Birkin Slot 35, Spider-Man Slot 34, Spieler (-8951,-13304)
+[hangar] ROOM50A0 Szene Ende: Cut 4, Birkin Zustand 0
+[flow] EXIT_AT: Bild 750 in Raum 50a0 erreicht -> exit
