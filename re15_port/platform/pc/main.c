@@ -146,6 +146,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
+#include "re15_gator_treffer_r41.h"   /* Runde 41 G2-RE2 NB4: RE2-Trefferreaktion, Raumbank-Override */
 #include "re15_esp.h"          /* Phase ESP-C: op-0x3a effect-sprite bank + particle pool */
 #include "re15_gameflow.h"     /* FE-0.2 top-level mode machine (BOOT/TITLE/INGAME/GAMEOVER) */
 #include "re15_str.h"          /* FE-3 STR/MDEC opening-movie demux+decode (CAPCOM.STR) */
@@ -795,6 +796,10 @@ static void pc_prop_world(int slot, int32_t rot_q12[9], int32_t pos[3])
     int32_t r[9], t[3];
     pc_prop_rot_q12(g_scd.props[slot].rot_x, g_scd.props[slot].rot_y,
                     g_scd.props[slot].rot_z, r);
+    /* Runde 41 Spur G2 NB4 (M4, PORT-WAHL): Laengsskala der gefressenen Leiche (Modell-x) - Weltmatrix = Drehung x diag(s, 1, 1) */
+    { extern int re15_gatorszene_r41_leiche_skala(int s, int32_t *q); int32_t sq = 4096;
+      if (re15_gatorszene_r41_leiche_skala(slot, &sq))
+          for (int k = 0; k < 3; k++) r[k*3] = (int32_t)(((int64_t)r[k*3] * sq) >> 12); }
     t[0] = g_scd.props[slot].x; t[1] = g_scd.props[slot].y; t[2] = g_scd.props[slot].z;
     int cur = slot, tiefe = 0;
     while (tiefe++ < 4) {
@@ -807,6 +812,9 @@ static void pc_prop_world(int slot, int32_t rot_q12[9], int32_t pos[3])
         int32_t pr[9], pt[3];
         pc_prop_rot_q12(g_scd.props[pslot].rot_x, g_scd.props[pslot].rot_y,
                         g_scd.props[pslot].rot_z, pr);
+        /* Runde 41 Spur G2 NB4 (M4): Kind einer gestauchten Leiche (Schluessel auf dem Ruecken) - seine Lage wird mitgestaucht, seine Form nicht */
+        { extern int re15_gatorszene_r41_leiche_skala(int s, int32_t *q); int32_t sq = 4096;
+          if (re15_gatorszene_r41_leiche_skala(pslot, &sq)) t[0] = (int32_t)(((int64_t)t[0] * sq) >> 12); }
         /* Die Eltern-Translation traegt IHRE eigene Typ-4-Absenkung, weil das Original die
          * -900 auf die Weltmatrix des Elternteils schreibt, BEVOR ein spaeterer Kind-Eintrag
          * sie liest (FUN_8002c18c, Schleifenreihenfolge = Pool-Reihenfolge). */
@@ -9083,6 +9091,23 @@ re_title:;
                     p_clip_override = erc;
                 }
             }
+            /* Runde 41 Spur G2-RE2 NB4 (T): die RE2-Trefferreaktion auf den Alligator posiert die Figur aus der RE2-Raumbank ROOM40A0
+             * (PL+0x190/+0x194, FUN_80018e08 @0x80018ea4/@0x80018eb8; Clips 18/19 bzw. 20/17 @0x801030cc/@0x80103150/@0x80103248/@0x801032dc),
+             * Knochen = die eigenen der Figur (wie die Opfer-/Ziel-Overrides oben). Der Schluss (Basis-Clip 6 rueckwaerts) kommt aus der
+             * PL00-Bank ueber anim_select_common.c. Herleitung engine/src/gator_treffer_r41.c. */
+            {
+                extern void re15_pc_gator_treffer_r41_init(void);
+                static int s_gtr_init = 0;
+                if (!s_gtr_init) { s_gtr_init = 1; re15_pc_gator_treffer_r41_init(); }
+                const int gtc = re15_gator_treffer_r41_rbj_clip();
+                const re15_emd_skeleton_t *gts = NULL; const re15_emd_animation_t *gta = NULL;
+                if (gtc >= 0 && pl00_ok && re15_player_victim_state() == 0 &&
+                    re15_gator_treffer_r41_bank(&pl00_skel, &gts, &gta)) {
+                    p_skel = gts;
+                    p_anim = gta;
+                    p_clip_override = gtc;
+                }
+            }
             int kf_idx = 0;
             { extern void re15_render_pc_tri_z_reset(void); re15_render_pc_tri_z_reset(); }
             /* ⛔ RUNDE 34 NACHBESSERUNG (mess_he M-HE-1 / mess_reg M-H1) — GECULLT = NICHT ZEICHNEN,
@@ -10129,6 +10154,10 @@ re_title:;
                  * Schatten stehen (Feuer-Emitter 0x26), deshalb der eigene Ausstieg HIER. */
                 if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc)) continue;
                 if (re15_gr2_pc_untergetaucht(npc, npc_region_culled)) continue;   /* Runde 41 Spur B (Entscheid B9): Boss-Alligator vor dem Durchbruch untergetaucht wie RE2 (Sce_em_set y=+3000 @RDT 0x25A0) - Mesh UND Schatten aus */
+                /* Runde 41 Spur G2-RE2 (aus r41/gatorfix NB7): Alligator mit dem Kanister - im Tauchgang der Notloesung untergetaucht Mesh aus, beim Ab-/Auftauchen
+                 * Schnitt an der Wasserlinie, immer Schnitt an den Bloecken Plattform/Rampe unter dem Deck (gator_re2_pc.c re15_gr2_pc_wl_poly) */
+                int gwl_on = 0, gwl_bl = 0; int32_t gwl_y = 0;
+                const int gwl_aus = re15_gr2_pc_gator_schnitt(npc, &gwl_on, &gwl_y, &gwl_bl);
 
                 /* RE1.5 character shadow for this NPC — FUN_8001b064 is called
                  * PER-ENTITY (corners from param_1+0xc/+0xe), so each on-stage
@@ -10579,6 +10608,7 @@ re_title:;
                 /* Region-gecullt: Pose gerechnet (Takt-Zustand wie @0x8001e9b4 FUN_8001ef54),
                  * gezeichnet wird nichts. */
                 if (npc_region_culled) continue;
+                if (gwl_aus) continue;   /* Runde 41 Spur G2-RE2 (r41/gatorfix NB7): untergetaucht kein Mesh - erst NACH der Pose (Ueberblend-Schnappschuss bleibt aktuell, wie der Regions-Cull) */
                 /* Nachbesserung G5A 4 (N2): G5-Arm (EM37) - Teile 1..3 tragen Flag 0x800 (Ctor `ori 0x4800` @0x80100774-0x8010078c),
                  * FUN_80027434 baut ihre Translationen GESTRECKT (@0x800275e0-0x8002768c), und der Haeuter 0x80104CF0 nimmt genau diese
                  * Teil-Lagen. Erst danach streckt der Zeichner Mesh 0 um Teil 0 (FUN_80019CD0, Flag 0x400). Ohne diesen Schritt blieb
@@ -11227,6 +11257,16 @@ re_title:;
                          * Stand als UV-Versatz (FUN_800171d0: (char)delta auf u/v, akkumuliert). */
                         int eye_du = 0, eye_dv = 0;
                         if (npc->type == 0x36u) re15_g5_eye_uv_offset(nmi, 0, ti, &eye_du, &eye_dv);
+                        if (gwl_on) {   /* Runde 41 Spur G2 NB7: Wasserlinien-/Block-Schnitt */
+                            const int32_t wmv[3][3] = { { vp[0]->x + bofs_x, vp[0]->y + bofs_y, vp[0]->z + bofs_z },
+                                                        { vp[1]->x + bofs_x, vp[1]->y + bofs_y, vp[1]->z + bofs_z },
+                                                        { vp[2]->x + bofs_x, vp[2]->y + bofs_y, vp[2]->z + bofs_z } };
+                            const int wuv[3][2] = { { (int)uv->u0 + page_off + eye_du, (int)uv->v0 + eye_dv }, { (int)uv->u1 + page_off + eye_du, (int)uv->v1 + eye_dv },
+                                                    { (int)uv->u2 + page_off + eye_du, (int)uv->v2 + eye_dv } };
+                            const uint8_t wcl[3][3] = { { nr0, ng0, nb0 }, { nr1, ng1, nb1 }, { nr2, ng2, nb2 } };
+                            if (re15_gr2_pc_wl_poly(3, wmv, wuv, wcl, nyawed_rot, nbone_world_trans, nbone_m, nbone_t, gwl_y, gwl_bl,
+                                                    (int)cam_view.fov_screen_dist, cx, cy, (int)uv->clut)) continue;
+                        }
                         re15_render_textured_tri_lit(
                             (int)ax[0], (int)ay[0], (int)uv->u0 + page_off + eye_du, (int)uv->v0 + eye_dv,
                             (int)ax[1], (int)ay[1], (int)uv->u1 + page_off + eye_du, (int)uv->v1 + eye_dv,
@@ -11318,6 +11358,17 @@ re_title:;
                         }
                         int eye_qdu = 0, eye_qdv = 0;
                         if (npc->type == 0x36u) re15_g5_eye_uv_offset(nmi, 1, qi, &eye_qdu, &eye_qdv);
+                        if (gwl_on) {   /* Runde 41 Spur G2 NB7: Wasserlinien-/Block-Schnitt (Umfang 0,1,3,2) */
+                            const int32_t wmv[4][3] = { { vp[0]->x + bofs_x, vp[0]->y + bofs_y, vp[0]->z + bofs_z },
+                                                        { vp[1]->x + bofs_x, vp[1]->y + bofs_y, vp[1]->z + bofs_z },
+                                                        { vp[3]->x + bofs_x, vp[3]->y + bofs_y, vp[3]->z + bofs_z },
+                                                        { vp[2]->x + bofs_x, vp[2]->y + bofs_y, vp[2]->z + bofs_z } };
+                            const int wuv[4][2] = { { (int)uv->u0 + page_off + eye_qdu, (int)uv->v0 + eye_qdv }, { (int)uv->u1 + page_off + eye_qdu, (int)uv->v1 + eye_qdv },
+                                                    { (int)uv->u3 + page_off + eye_qdu, (int)uv->v3 + eye_qdv }, { (int)uv->u2 + page_off + eye_qdu, (int)uv->v2 + eye_qdv } };
+                            const uint8_t wcl[4][3] = { { nqr0, nqg0, nqb0 }, { nqr1, nqg1, nqb1 }, { nqr3, nqg3, nqb3 }, { nqr2, nqg2, nqb2 } };
+                            if (re15_gr2_pc_wl_poly(4, wmv, wuv, wcl, nyawed_rot, nbone_world_trans, nbone_m, nbone_t, gwl_y, gwl_bl,
+                                                    (int)cam_view.fov_screen_dist, cx, cy, (int)uv->clut)) continue;
+                        }
                         re15_render_textured_tri_lit(
                             (int)ax[0], (int)ay[0], (int)uv->u0 + page_off + eye_qdu, (int)uv->v0 + eye_qdv,
                             (int)ax[1], (int)ay[1], (int)uv->u1 + page_off + eye_qdu, (int)uv->v1 + eye_qdv,
@@ -11498,6 +11549,13 @@ re_title:;
                         int32_t bm[9], bt[3];   /* Q12 view×bone — byte-true integer RTPS (was float) */
                         for (int i = 0; i < 9; i++) bm[i] = comb_rot[i];
                         for (int i = 0; i < 3; i++) bt[i] = comb_trans[i];
+                        /* Runde 41 Spur G2 NB5 (M1, PORT-WAHL): Scheitel der gefressenen Leiche ins Kopf-Band des Alligators geklemmt (gatorszene_r41.c
+                         * KLEMMEN JE SCHEITEL); sonst die MD1-Felder unveraendert */
+                        const re15_md1_vertex_t *prop_tv = hm->tri_vertices, *prop_qv = hm->quad_vertices;
+                        { const re15_md1_vertex_t *kt = re15_gatorszene_r41_leiche_scheitel(pi, hm->tri_vertices, hm->tri_vertex_count, 0);
+                          if (kt) prop_tv = kt;
+                          const re15_md1_vertex_t *kq = re15_gatorszene_r41_leiche_scheitel(pi, hm->quad_vertices, hm->quad_vertex_count, 1);
+                          if (kq) prop_qv = kq; }
 
                         /* Textured rendering using bound prop TIM slot. */
                         for (int ti = 0; ti < hm->triangle_count; ti++) {
@@ -11507,9 +11565,9 @@ re_title:;
                             if (tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
                             int ax[3], ay[3], wz_avg = 0;
                             const re15_md1_vertex_t *vp[3] = {
-                                &hm->tri_vertices[tr->v0],
-                                &hm->tri_vertices[tr->v1],
-                                &hm->tri_vertices[tr->v2],
+                                &prop_tv[tr->v0],
+                                &prop_tv[tr->v1],
+                                &prop_tv[tr->v2],
                             };
                             /* Runde 38 Spur W: RTPT + NCLIP (@0x80022fec/@0x80025580) + OTZ<64 (@0x80023044/@0x80025654)
                              * + GPU-Groessengrenze, gesaettigte SXY (objpoly_r38.c) statt Port-Ausschnitt `_vz < 64`. */
@@ -11560,10 +11618,10 @@ re_title:;
                             if (qd->v3 >= (uint32_t)hm->quad_vertex_count) continue;
                             int ax[4], ay[4], wz_avg = 0;
                             const re15_md1_vertex_t *vp[4] = {
-                                &hm->quad_vertices[qd->v0],
-                                &hm->quad_vertices[qd->v1],
-                                &hm->quad_vertices[qd->v2],
-                                &hm->quad_vertices[qd->v3],
+                                &prop_qv[qd->v0],
+                                &prop_qv[qd->v1],
+                                &prop_qv[qd->v2],
+                                &prop_qv[qd->v3],
                             };
                             /* Runde 38 Spur W: RTPT/RTPS + NCLIP (@0x80023168/@0x80025798) + OTZ<64 (@0x80023224/@0x800258b0)
                              * + GPU-Groessengrenze je Dreieck (0,1,2)/(1,2,3) (objpoly_r38.c) statt `_vz < 64`. */

@@ -1,0 +1,27 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build
+    Start 1184: integration_r41_gatorfix_abn2_wand_elza
+    Start 1180: integration_r41_gatorfix_frei_elza
+1/8 Test #1184: integration_r41_gatorfix_abn2_wand_elza ....   Passed  679.97 sec
+    Start 1179: integration_r41_gatorfix_frei
+2/8 Test #1180: integration_r41_gatorfix_frei_elza .........   Passed  697.79 sec
+    Start 1182: integration_r41_gatorfix_rampe_elza
+3/8 Test #1182: integration_r41_gatorfix_rampe_elza ........   Passed  362.76 sec
+    Start 1181: integration_r41_gatorfix_rampe
+4/8 Test #1179: integration_r41_gatorfix_frei ..............   Passed  672.72 sec
+    Start 1346: integration_r41_re2gator
+5/8 Test #1181: integration_r41_gatorfix_rampe .............   Passed  318.71 sec
+    Start 1190: integration_r41_gatorfix_rampe_oben
+6/8 Test #1346: integration_r41_re2gator ...................***Failed  126.20 sec
+    Start 1191: integration_r41_gatorfix_rampe_oben_elza
+7/8 Test #1190: integration_r41_gatorfix_rampe_oben ........   Passed  389.80 sec
+8/8 Test #1191: integration_r41_gatorfix_rampe_oben_elza ...   Passed  437.31 sec
+
+88% tests passed, 1 tests failed out of 8
+
+Total Test time (real) = 1916.28 sec
+
+The following tests FAILED:
+	1346 - integration_r41_re2gator (Failed)
+Errors while running CTest
+Output from these tests are in: C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

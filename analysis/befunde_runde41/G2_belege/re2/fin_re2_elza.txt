@@ -1,0 +1,474 @@
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5750,-1800,-16300) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=3 pos=(-9000,-1620,-5400) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1725,-1740,-21723) rot=(0,685,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-25,-1740,-7423) rot=(0,1656,0)
+[gatorszene] ROOM2091: Spinne 0x25 bei (-100,-8296) verworfen (Nutzer: "Entferne die Spinnen aus dem ROOM 2090"; Form = Kill-Flag-Tor @0x80042120-38)
+[gatorszene] ROOM2091: Spinne 0x25 bei (-2300,-23896) verworfen (Nutzer: "Entferne die Spinnen aus dem ROOM 2090"; Form = Kill-Flag-Tor @0x80042120-38)
+[scd] thread start slot=10 first_op=0x02
+[scd] thread start slot=11 first_op=0x02
+[gatorszene] ROOM2091 Slot 1 (Tor) gesperrt: Ereignis 19, Bit (9,113) = 0
+[gatorszene] Folge A ROOM2091 F0 wert=-8200/-25550 zustand=1
+[gatorszene] Folge P ROOM2091 F0 wert=1/0 zustand=1
+[scd] thread start slot=12 first_op=0x09
+[scd F0] Cut_chg(0)
+[szenenschutz] F0 an (Szene haelt den Spieler)
+[gatorszene] Folge T ROOM2091 F0 wert=0/1 zustand=1
+[aot] DOOR FIRE slot=20 rect=(0,0,hw=0,hh=0) target_cut=2 spawn=(-9950,-14400,-25700)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(-9000,-10800,-5400) rot=(0,1024,0)
+[gatorszene] Folge P ROOM2081 F0 wert=2/0 zustand=2
+[scd] thread start slot=10 first_op=0x44
+[gatorszene] Folge M ROOM2081 F0 wert=5/2 zustand=2
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[scd F0] Cut_chg(2)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[aot] DOOR FIRE slot=20 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-8200,0,-25550)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5750,-1800,-16300) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=3 pos=(-9000,-1620,-5400) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1725,-1740,-21723) rot=(0,685,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-25,-1740,-7423) rot=(0,1656,0)
+[gatorszene] ROOM2091: Spinne 0x25 bei (-100,-8296) verworfen (Nutzer: "Entferne die Spinnen aus dem ROOM 2090"; Form = Kill-Flag-Tor @0x80042120-38)
+[gatorszene] ROOM2091: Spinne 0x25 bei (-2300,-23896) verworfen (Nutzer: "Entferne die Spinnen aus dem ROOM 2090"; Form = Kill-Flag-Tor @0x80042120-38)
+[scd] thread start slot=10 first_op=0x02
+[scd] thread start slot=11 first_op=0x02
+[gatorszene] ROOM2091 Slot 1 (Tor) gesperrt: Ereignis 19, Bit (9,113) = 0
+[gatorszene] Folge P ROOM2091 F0 wert=3/0 zustand=3
+[scd] thread start slot=12 first_op=0x09
+[szenenschutz] F0 aus (750 geschuetzte Gegner-Ticks)
+[scd F0] Cut_chg(0)
+[szenenschutz] F0 an (Szene haelt den Spieler)
+[gatorszene] Folge S ROOM2091 F0 wert=0/0 zustand=4
+[gatorszene] Buehne: Leiche (-170,-23629) Kopf13-Versatz (-2558,-1669) Weg4 (-1123,-709) Weg6 (-1462,-494) -> A (3511,-21251) S (4973,-20757) Gier 1680
+[gatorszene] Folge G ROOM2091 F0 wert=1/1 zustand=4
+[gatorszene] Fress-Einstellung: Cut 1 frontal 4005 (Kopf (895,-22890), Achse (-1296,-819))
+[gatorszene] Folge G ROOM2091 F0 wert=2/1 zustand=4
+[gatorszene] Folge K ROOM2091 F0 wert=13/0 zustand=4
+[gatorszene] Folge H ROOM2091 F0 wert=350/-1008 zustand=4
+[gatorszene] Folge G ROOM2091 F0 wert=3/0 zustand=4
+[gatorszene] Folge W ROOM2091 F0 wert=57/-2149 zustand=4
+[gatorszene] Folge F ROOM2091 F0 wert=75/-2044 zustand=4
+[gatorszene] Folge V ROOM2091 F0 wert=77/0 zustand=4
+[gatorszene] Folge G ROOM2091 F0 wert=4/0 zustand=4
+[gatorszene] Folge G ROOM2091 F0 wert=5/0 zustand=4
+[gatorszene] Folge G ROOM2091 F0 wert=6/1 zustand=4
+[gatorszene] Folge C ROOM2091 F0 wert=0/1 zustand=4
+[gatorszene] Kamera-Uebergabe: Cut 0 (Eintritts-Cut), Spielfigur im Bild (Fuss-Bildpunkt 88,127)
+[gatorszene] Kampfbeginn F0: Gator (3033,-21904) Gier 1843 Zone 0, Spielfigur (-8200,-25550) Zone 0, Abstand 11808
+[gatorszene] Folge G ROOM2091 F0 wert=7/0 zustand=5
+[szenenschutz] F0 aus (293 geschuetzte Gegner-Ticks)
+[gatorszene] Folge B ROOM2091 F0 wert=1/0 zustand=5
+[gatorszene] Kontakt F0: +40 Bilder nach dem Kampfbeginn (Knochen 7, Gator (-4692,-9013) Gier 1795 Clip 0, Spielfigur (6734,-26532))
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5750,-1800,-16300) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=3 pos=(-9000,-1620,-5400) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1725,-1740,-21723) rot=(0,685,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-25,-1740,-7423) rot=(0,1656,0)
+[gatorszene] ROOM2091: Spinne 0x25 bei (-100,-8296) verworfen (Nutzer: "Entferne die Spinnen aus dem ROOM 2090"; Form = Kill-Flag-Tor @0x80042120-38)
+[gatorszene] ROOM2091: Spinne 0x25 bei (-2300,-23896) verworfen (Nutzer: "Entferne die Spinnen aus dem ROOM 2090"; Form = Kill-Flag-Tor @0x80042120-38)
+[scd] thread start slot=10 first_op=0x02
+[scd] thread start slot=11 first_op=0x02
+[gatorszene] ROOM2091 Slot 1 (Tor) gesperrt: Ereignis 19, Bit (9,113) = 0
+[gatorszene] Folge X ROOM2091 F0 wert=5/1 zustand=5
+[gatorszene] Folge A ROOM2091 F0 wert=-8200/-25550 zustand=1
+[gatorszene] Folge P ROOM2091 F0 wert=1/0 zustand=1
+[scd] thread start slot=12 first_op=0x09
+[gatorszene] Folge B ROOM2091 F0 wert=0/0 zustand=1
+[scd F0] Cut_chg(0)
+[szenenschutz] F0 an (Szene haelt den Spieler)
+[gatorszene] Folge T ROOM2091 F0 wert=0/1 zustand=1
+[aot] DOOR FIRE slot=20 rect=(0,0,hw=0,hh=0) target_cut=2 spawn=(-9950,-14400,-25700)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=3 pos=(-9000,-10800,-5400) rot=(0,1024,0)
+[gatorszene] Folge P ROOM2081 F0 wert=2/0 zustand=2
+[scd] thread start slot=10 first_op=0x44
+[gatorszene] Folge M ROOM2081 F0 wert=5/2 zustand=2
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[scd F0] Cut_chg(2)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[k2080] F0 Ebene: 5 Zombies x -12700..-9900 y -14400..-14400, auf der Treppe (x < -16650) 0, nicht auf y -14400: 0 | Spieler (-9950,-14400,-25700)
+[aot] DOOR FIRE slot=20 rect=(0,0,hw=0,hh=0) target_cut=0 spawn=(-8200,0,-25550)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x04
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(5750,-1800,-16300) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=3 pos=(-9000,-1620,-5400) rot=(0,1024,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-1725,-1740,-21723) rot=(0,685,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-25,-1740,-7423) rot=(0,1656,0)
+[gatorszene] ROOM2091: Spinne 0x25 bei (-100,-8296) verworfen (Nutzer: "Entferne die Spinnen aus dem ROOM 2090"; Form = Kill-Flag-Tor @0x80042120-38)
+[gatorszene] ROOM2091: Spinne 0x25 bei (-2300,-23896) verworfen (Nutzer: "Entferne die Spinnen aus dem ROOM 2090"; Form = Kill-Flag-Tor @0x80042120-38)
+[scd] thread start slot=10 first_op=0x02
+[scd] thread start slot=11 first_op=0x02
+[gatorszene] ROOM2091 Slot 1 (Tor) gesperrt: Ereignis 19, Bit (9,113) = 0
+[gatorszene] Folge P ROOM2091 F0 wert=3/0 zustand=3
+[scd] thread start slot=12 first_op=0x09
+[szenenschutz] F0 aus (750 geschuetzte Gegner-Ticks)
+[scd F0] Cut_chg(0)
+[szenenschutz] F0 an (Szene haelt den Spieler)
+[gatorszene] Folge S ROOM2091 F0 wert=0/0 zustand=4
+[gatorszene] Buehne: Leiche (-170,-23629) Kopf13-Versatz (-2558,-1669) Weg4 (-1123,-709) Weg6 (-1462,-494) -> A (3511,-21251) S (4973,-20757) Gier 1680
+[gatorszene] Folge G ROOM2091 F0 wert=1/1 zustand=4
+[gatorszene] Fress-Einstellung: Cut 1 frontal 4005 (Kopf (895,-22890), Achse (-1296,-819))
+[gatorszene] Folge G ROOM2091 F0 wert=2/1 zustand=4
+[gatorszene] Folge K ROOM2091 F0 wert=13/0 zustand=4
+[gatorszene] Folge H ROOM2091 F0 wert=350/-1008 zustand=4
+[gatorszene] Folge G ROOM2091 F0 wert=3/0 zustand=4
+[gatorszene] Folge W ROOM2091 F0 wert=57/-2149 zustand=4
+[gatorszene] Folge F ROOM2091 F0 wert=75/-2044 zustand=4
+[gatorszene] Folge V ROOM2091 F0 wert=77/0 zustand=4
+[gatorszene] Folge G ROOM2091 F0 wert=4/0 zustand=4
+[gatorszene] Folge G ROOM2091 F0 wert=5/0 zustand=4
+[gatorszene] Folge G ROOM2091 F0 wert=6/1 zustand=4
+[gatorszene] Folge C ROOM2091 F0 wert=0/1 zustand=4
+[gatorszene] Kamera-Uebergabe: Cut 0 (Eintritts-Cut), Spielfigur im Bild (Fuss-Bildpunkt 88,127)
+[gatorszene] Kampfbeginn F0: Gator (3033,-21904) Gier 1843 Zone 0, Spielfigur (-8200,-25550) Zone 0, Abstand 11808
+[gatorszene] Folge G ROOM2091 F0 wert=7/0 zustand=5
+[szenenschutz] F0 aus (293 geschuetzte Gegner-Ticks)
+[gatorszene] Folge B ROOM2091 F0 wert=1/0 zustand=5
+[gatorszene] Kontakt F0: +40 Bilder nach dem Kampfbeginn (Knochen 7, Gator (-4694,-8975) Gier 1795 Clip 0, Spielfigur (6734,-26532))
+== re2_elza (G2-RE2, Neuaufbau ab NB5) ==
+    nb5 SO-Ecke         1800 B.: ohne Fortschritt max   1.6 s, 2-s-Fenster   0, Drehen  89 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  27 %, Kam<2500   0 %, hinter   0 %, Kopf  7643, Rammen 0/Querung 0, Haenger 0, Gang 0/1800 abw., Gier max 96, Takt 0/0/0 us
+    nb5 Nordbecken-Ost  1800 B.: ohne Fortschritt max  54.9 s, 2-s-Fenster   0, Drehen  87 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block   1 %, Kam<2500   0 %, hinter   0 %, Kopf 14426, Rammen 0/Querung 0, Haenger 0, Gang 0/1800 abw., Gier max 96, Takt 27/50/350 us
+    nb5 NO-Ecke         1800 B.: ohne Fortschritt max   9.5 s, 2-s-Fenster   0, Drehen  26 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  10 %, Kam<2500  24 %, hinter   1 %, Kopf  8622, Rammen 0/Querung 0, Haenger 0, Gang 0/1800 abw., Gier max 96, Takt 24/36/248 us
+    nb5 Rampe-x4428     1800 B.: ohne Fortschritt max  15.9 s, 2-s-Fenster   0, Drehen  63 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  13 %, Kam<2500  31 %, hinter  13 %, Kopf  7707, Rammen 0/Querung 0, Haenger 0, Gang 0/0 abw., Gier max 0, Takt 58/48/2979 us
+    nb5 Rampe-x2318     1800 B.: ohne Fortschritt max  17.5 s, 2-s-Fenster   0, Drehen  66 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  20 %, Kam<2500  32 %, hinter  13 %, Kopf  6555, Rammen 0/Querung 0, Haenger 0, Gang 0/0 abw., Gier max 0, Takt 25/42/317 us
+    nb5 Rampe-Nord      1800 B.: ohne Fortschritt max  13.4 s, 2-s-Fenster   0, Drehen  64 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  12 %, Kam<2500  36 %, hinter  14 %, Kopf  6940, Rammen 0/Querung 0, Haenger 0, Gang 0/0 abw., Gier max 0, Takt 61/50/4386 us
+    nb5 Leiter          1800 B.: ohne Fortschritt max   2.0 s, 2-s-Fenster   0, Drehen  34 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  10 %, Kam<2500   0 %, hinter   0 %, Kopf  6454, Rammen 0/Querung 0, Haenger 0, Gang 9/1456 abw., Gier max 96, Takt 28/41/585 us
+    nb5 Leiterecke      1800 B.: ohne Fortschritt max   3.8 s, 2-s-Fenster   0, Drehen   0 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  20 %, Kam<2500   0 %, hinter   0 %, Kopf  8712, Rammen 0/Querung 0, Haenger 0, Gang 0/1800 abw., Gier max 96, Takt 28/44/508 us
+    nb5 Westkanal       1800 B.: ohne Fortschritt max   1.7 s, 2-s-Fenster   0, Drehen   0 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  11 %, Kam<2500   0 %, hinter   0 %, Kopf  2551, Rammen 0/Querung 0, Haenger 0, Gang 11/1327 abw., Gier max 96, Takt 29/49/478 us
+    nb5 Mitte-Nord      1800 B.: ohne Fortschritt max   2.0 s, 2-s-Fenster   0, Drehen  61 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  12 %, Kam<2500  14 %, hinter   1 %, Kopf  3362, Rammen 0/Querung 0, Haenger 0, Gang 12/1284 abw., Gier max 96, Takt 23/35/339 us
+    nb5 Plattform-Sued  1800 B.: ohne Fortschritt max   1.1 s, 2-s-Fenster   0, Drehen   0 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  15 %, Kam<2500   5 %, hinter   0 %, Kopf  3237, Rammen 0/Querung 0, Haenger 0, Gang 13/1241 abw., Gier max 96, Takt 26/43/280 us
+    nb5 Weg-Becken      1800 B.: ohne Fortschritt max   1.1 s, 2-s-Fenster   0, Drehen  15 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  14 %, Kam<2500  11 %, hinter   4 %, Kopf  3906, Rammen 0/Querung 0, Haenger 0, Gang 12/1327 abw., Gier max 96, Takt 35/61/934 us
+    nb5 Weg-Rampe       1800 B.: ohne Fortschritt max   2.4 s, 2-s-Fenster   0, Drehen  65 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block  14 %, Kam<2500  31 %, hinter  13 %, Kopf  7679, Rammen 0/Querung 0, Haenger 0, Gang 0/0 abw., Gier max 0, Takt 69/69/4751 us
+    neu SO-Ecke         1800 B.: ohne Fortschritt max   4.8 s, 2-s-Fenster   0, Drehen   0 %, rueckw.  27 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block   4 %, Kam<2500   5 %, hinter   0 %, Kopf  7978, Rammen 0/Querung 0, Haenger 0, Gang 7/989 abw., Gier max 96, Takt 58/91/1224 us
+    neu Nordbecken-Ost  1800 B.: ohne Fortschritt max  56.0 s, 2-s-Fenster   0, Drehen  23 %, rueckw.  29 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block   4 %, Kam<2500   0 %, hinter   0 %, Kopf  8812, Rammen 0/Querung 0, Haenger 0, Gang 0/1260 abw., Gier max 96, Takt 62/95/498 us
+    neu NO-Ecke         1800 B.: ohne Fortschritt max  57.0 s, 2-s-Fenster   0, Drehen   0 %, rueckw.  28 % (+Rueckzug  0 %), Tauch 5 (5.0/min) unter 14 %, Block   0 %, Kam<2500  45 %, hinter   0 %, Kopf 10605, Rammen 0/Querung 0, Haenger 5, Gang 5/1013 abw., Gier max 96, Takt 46/81/341 us
+    neu Rampe-x4428     1800 B.: ohne Fortschritt max   2.3 s, 2-s-Fenster   0, Drehen   0 %, rueckw.   0 % (+Rueckzug 24 %), Tauch 0 (0.0/min) unter  0 %, Block   0 %, Kam<2500   0 %, hinter   0 %, Kopf  4255, Rammen 13/Querung 13, Haenger 0, Gang 13/56 abw., Gier max 48, Takt 35/64/330 us
+    neu Rampe-x2318     1800 B.: ohne Fortschritt max   7.3 s, 2-s-Fenster   0, Drehen   0 %, rueckw.   1 % (+Rueckzug 23 %), Tauch 0 (0.0/min) unter  0 %, Block   0 %, Kam<2500   1 %, hinter   0 %, Kopf  4567, Rammen 9/Querung 10, Haenger 0, Gang 9/230 abw., Gier max 96, Takt 35/67/353 us
+    neu Rampe-Nord      1800 B.: ohne Fortschritt max   4.7 s, 2-s-Fenster   0, Drehen   0 %, rueckw.   0 % (+Rueckzug 25 %), Tauch 0 (0.0/min) unter  0 %, Block   0 %, Kam<2500   0 %, hinter   0 %, Kopf  4644, Rammen 10/Querung 9, Haenger 0, Gang 10/30 abw., Gier max 96, Takt 38/72/337 us
+    neu Leiter          1800 B.: ohne Fortschritt max  18.3 s, 2-s-Fenster   6, Drehen  17 %, rueckw.   8 % (+Rueckzug  0 %), Tauch 2 (2.0/min) unter  5 %, Block   1 %, Kam<2500   0 %, hinter   0 %, Kopf  6622, Rammen 0/Querung 0, Haenger 2, Gang 6/1374 abw., Gier max 96, Takt 60/99/589 us
+    neu Leiterecke      1800 B.: ohne Fortschritt max   6.8 s, 2-s-Fenster   0, Drehen   0 %, rueckw.   0 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block   0 %, Kam<2500   0 %, hinter   0 %, Kopf 10530, Rammen 0/Querung 0, Haenger 0, Gang 0/1800 abw., Gier max 96, Takt 74/127/322 us
+    neu Westkanal       1800 B.: ohne Fortschritt max   2.6 s, 2-s-Fenster   0, Drehen   8 %, rueckw.   6 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block   2 %, Kam<2500   0 %, hinter   0 %, Kopf  2464, Rammen 0/Querung 0, Haenger 0, Gang 14/1121 abw., Gier max 96, Takt 53/94/511 us
+    neu Mitte-Nord      1800 B.: ohne Fortschritt max   4.5 s, 2-s-Fenster   3, Drehen   7 %, rueckw.  18 % (+Rueckzug  0 %), Tauch 1 (1.0/min) unter  2 %, Block   0 %, Kam<2500  14 %, hinter   0 %, Kopf  3463, Rammen 0/Querung 0, Haenger 1, Gang 17/936 abw., Gier max 96, Takt 46/76/326 us
+    neu Plattform-Sued  1800 B.: ohne Fortschritt max   2.3 s, 2-s-Fenster   0, Drehen   0 %, rueckw.  20 % (+Rueckzug  0 %), Tauch 0 (0.0/min) unter  0 %, Block   3 %, Kam<2500   5 %, hinter   0 %, Kopf  3355, Rammen 0/Querung 0, Haenger 0, Gang 12/905 abw., Gier max 96, Takt 47/71/278 us
+    neu Weg-Becken      1800 B.: ohne Fortschritt max   2.1 s, 2-s-Fenster   2, Drehen   6 %, rueckw.  14 % (+Rueckzug  0 %), Tauch 2 (2.0/min) unter  5 %, Block   0 %, Kam<2500   8 %, hinter   0 %, Kopf  4869, Rammen 0/Querung 0, Haenger 2, Gang 11/1081 abw., Gier max 96, Takt 47/77/354 us
+    neu Weg-Rampe       1800 B.: ohne Fortschritt max   1.0 s, 2-s-Fenster   0, Drehen   0 %, rueckw.   0 % (+Rueckzug 29 %), Tauch 0 (0.0/min) unter  0 %, Block   0 %, Kam<2500   0 %, hinter   0 %, Kopf  3746, Rammen 9/Querung 9, Haenger 0, Gang 9/63 abw., Gier max 96, Takt 32/64/396 us
+    SUMME nb5: 23400 Bilder (13.0 min): ohne Fortschritt max 54.9 s, 2-s-Fenster 0, Drehen 44.2 %, rueckwaerts 0.0 % (Rueckzug nach Vorstoss 0.0 %), Tauchgaenge 0 = 0.00/min, untergetaucht 0.0 %, Kopf/Kanister in Rampe/Plattform 14.2 %, < 2500 vor der Kamera 14.5 %, hinter der Kamera 4.9 %, Rammen 0 (Querungen 0), Gang 57 von 13835 abweichend, Gier max 96, Takt-Rechenzeit Mittel 33 us / 95 % 47 us / max 4751 us
+    SUMME neu: 23400 Bilder (13.0 min): ohne Fortschritt max 57.0 s, 2-s-Fenster 11, Drehen 4.8 %, rueckwaerts 11.9 % (Rueckzug nach Vorstoss 7.9 %), Tauchgaenge 10 = 0.77/min, untergetaucht 2.2 %, Kopf/Kanister in Rampe/Plattform 1.3 %, < 2500 vor der Kamera 6.3 %, hinter der Kamera 0.0 %, Rammen 41 (Querungen 41), Gang 113 von 10858 abweichend, Gier max 96, Takt-Rechenzeit Mittel 49 us / 95 % 89 us / max 1224 us
+  ok: gelaufen (neu 23400 Bilder mit Kanister)
+  ok: Haengen: hoechstens 15 2-s-Fenster ohne Fortschritt in 13 Lagen-Minuten (PORT-WAHL; neu 11, nb5 im Harness 0 - der exe-Haenger frei4_leon der Abnahme 4 hatte 430 in 4,3 min)
+  ok: Haengen: SO-Ecke und Rampe - laengste Zeit ohne Fortschritt zur Figur <= 20 s (neu 7.3 s; alle Lagen neu 57.0 s, nb5 54.9 s)
+  ok: Drehen auf der Stelle (fern der Figur) <= 15 % (neu 4.8 %, nb5 44.2 %)
+  ok: Kopf/Kanister unter dem Deck in Rampe/Plattform <= 2 % (neu 315 Bilder, nb5 3328)
+  ok: Kopf/Kanister < 2500 vor der Kamera <= 8 % (Kamerawechsel, Kamera dicht an der Figur) und hinter der Kamera <= 0,1 % (neu 1465 / 0 Bilder, nb5 3382 / 1135)
+  ok: rueckwaerts setzen hoechstens 12 % (neu 11.9 %; Rueckzug nach Vorstoss getrennt 7.9 %)
+  ok: Tauch-Obergrenze: <= 1 je Minute und < 5 % untergetaucht (neu 10 in 13.0 min, 2.2 %)
+  ok: Gang mit Kanister wie NB5: Taktschritt = authored RE2-Vortrieb je (Clip, Bild) - abweichend neu 113 von 10858, nb5 57 von 13835 (neu hoechstens nb5-Anteil + 1 %), |Gier-Delta| <= 0x60 (max 96)
+  ok: Rampe: in jeder Lage mit der Figur oben mindestens ein Rammen (4 Lagen)
+  ok: Gegenprobe NB5: Kopf/Kanister in Rampe/Plattform > 2 % und hinter der Kamera (3328 / 1135 Bilder)
+  ok: Gegenprobe NB5: Drehen auf der Stelle > 15 % (10352 von 23400)
+  ok: Gegenprobe NB5: SO-Ecke/Rampe ohne Fortschritt 17.5 s (2-s-Fenster 0)
+  ok: Gegenprobe NB5: kein Rammen (0)
+re2_elza: 0 Fehler

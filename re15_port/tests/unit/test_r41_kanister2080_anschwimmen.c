@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <math.h>
 
 extern unsigned g_current_room_id;
 
@@ -100,6 +101,8 @@ static void tick(void)
         e->x = nx; e->z = nz;
     }
 }
+static int s_anschw_bilder = 0;          /* Runde 41 Spur G2 (Punkt 8): Bilder mit Anschwimmen im Fall */
+static int32_t s_kan_x = 0, s_kan_z = 0;  /* Kanister-Lage des letzten Falls */
 static void statue(int32_t x, int32_t z)
 {
     pl->x = x; pl->z = z; pl->y = 0; pl->floor = 0; pl->state = 0; pl->motion = 0; pl->hit_react = 0; pl->hp = 100;
@@ -132,12 +135,15 @@ static int fall(const char *was, int32_t gx, int32_t gz, int32_t px, int32_t pz,
     int32_t kp[3] = { 0, 0, 0 }, kr[9];
     if (!re15_gr2_kanister_welt(kp, kr)) { printf("FAIL: %s: kein Kanister\n", was); fails++; return -2; }
     int aufnahme = -1;
+    s_anschw_bilder = 0;
     for (f = 0; f < 1500; f++) {
         statue(px, pz);
         tick();
+        if (re15_k2080_r41_anschwimmen_aktiv(e)) s_anschw_bilder++;
         if (*biss < 0 && re15_gator_boss_phase(e) == 3 /* GBP_LUNGE */) *biss = f;
         if (re15_gr2_kanister_stufe() >= 1) { aufnahme = f; break; }
     }
+    s_kan_x = kp[0]; s_kan_z = kp[2];
     printf("  %-36s Alligator (%6d,%6d) Leon (%6d,%6d) Wurf-Gier %4d Kanister (%6d,%6d): ", was, (int)gx, (int)gz, (int)px,
            (int)pz, g, (int)kp[0], (int)kp[2]);
     if (aufnahme >= 0) printf("Aufnahme Bild %d (%.1f s)", aufnahme, aufnahme / 30.0);
@@ -160,13 +166,34 @@ int main(int argc, char **argv)
         { "v2/v4 Start (0,-7000)",          5716,  -7090,   6670,  -5935 },
         { "Kampf im Suedwestbecken",       -6000, -23500,  -7000, -25000 },
     };
+    /* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 8): KEIN Anschwimmen mehr - in denselben fuenf Lagen bleibt der Alligator beim Spieler (Anschwimmen in
+     * keinem Bild); steht der Spieler AM Kanister (2500 daneben), fuehrt ihn die Verfolgung hin und er nimmt ihn auf. Gegenprobe (Pruefhaken, Form N3):
+     * das Anschwimmen der Nachbesserung 2 laeuft in der ersten Lage an. Vorher (N3): Aufnahme in allen fuenf Lagen und kein Biss davor. */
     for (unsigned i = 0; i < sizeof k_f / sizeof k_f[0]; i++) {
         int biss = -1, g = 0;
         const int a = fall(k_f[i].was, k_f[i].gx, k_f[i].gz, k_f[i].px, k_f[i].pz, 1, &biss, &g);
         if (a == -2) continue;
-        PRUEFE(a >= 0, "%s: keine Aufnahme in 1500 Bildern", k_f[i].was);
-        PRUEFE(biss < 0, "%s: Biss auf Leon (Bild %d) vor der Aufnahme - RE2 schaerft T1 im Zielmodus nicht (@0x8010134c-58)",
-               k_f[i].was, biss);
+        PRUEFE(s_anschw_bilder == 0, "%s: %d Bilder Anschwimmen statt der Verfolgung (Punkt 8)", k_f[i].was, s_anschw_bilder);
+        /* Spieler hinter dem Kanister: dieselbe Lage, Leon auf der Linie Alligator -> Kanister 2500 hinter dem Kanister - die Verfolgung fuehrt ueber
+         * den Kanister ("erst wenn er beim Kanister ankommt, soll er ihn aufnehmen"); innerhalb der Aussenwaende (x -8900..7200, z -27000..-5400) mit Rand */
+        const int32_t kx = s_kan_x, kz = s_kan_z;
+        const double vx = (double)kx - k_f[i].gx, vz = (double)kz - k_f[i].gz, vl = sqrt(vx * vx + vz * vz);
+        int32_t lx = kx + (int32_t)(vl > 1 ? vx / vl * 2500 : 0), lz = kz + (int32_t)(vl > 1 ? vz / vl * 2500 : 0);
+        if (lx < -8900 + 700) lx = -8900 + 700;
+        if (lx > 7200 - 700) lx = 7200 - 700;
+        if (lz < -27000 + 700) lz = -27000 + 700;
+        if (lz > -5400 - 700) lz = -5400 - 700;
+        int biss2 = -1;
+        const int a2 = fall("  dieselbe, Leon hinter dem Kanister", k_f[i].gx, k_f[i].gz, lx, lz, 1, &biss2, NULL);
+        if (a2 == -2) continue;
+        PRUEFE(a2 >= 0 && s_anschw_bilder == 0, "%s: Leon hinter dem Kanister -> Aufnahme beim Ankommen (Bild %d, Anschwimmen %d Bilder)", k_f[i].was, a2, s_anschw_bilder);
+    }
+    {   /* Gegenprobe Punkt 8: Anschwimmen wie N3 (Pruefhaken) */
+        re15_k2080_anschwimmen_alt_setzen(1);
+        int biss = -1;
+        (void)fall("Gegenprobe Anschwimmen wie N3", k_f[0].gx, k_f[0].gz, k_f[0].px, k_f[0].pz, 1, &biss, NULL);
+        re15_k2080_anschwimmen_alt_setzen(0);
+        PRUEFE(s_anschw_bilder > 0, "Gegenprobe: mit dem Anschwimmen der N3 %d Bilder Anschwimmen (rot ohne den Bau)", s_anschw_bilder);
     }
     {   /* Gegenprobe: Kanister ohne die Szene -> kein Anschwimmen (Spur B unveraendert) */
         int biss = -1;

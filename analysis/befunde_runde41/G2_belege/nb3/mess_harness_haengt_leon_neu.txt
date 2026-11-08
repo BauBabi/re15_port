@@ -1,0 +1,62 @@
+== nb3_haengt leon mit Kanister: Figur steht still im Wasser vor der Rampen-Suedkante (y 0), 3600 Bilder je Lage ==
+    W3000/-18800/c0 Cut 0: 3600 B., Treffer 287 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 285, sonst 0), erster t166 Rammen, laengste Pause ohne Treffer 425 B. = 14.2 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-325..4678, -24720..-21850), Kopf min 523 mittel 3957, ohne Fortschritt max 10.7 s, Haenge-Fenster 0 (erstes t-1)
+        t166   Rammen     Phase 7 Clip  0 Wurzel (  4389,-13403) Kopf (  3983,-16439) Kopf-Abstand 2547
+        t266   CROSS-Biss Phase 7 Clip  0 Wurzel (  3867,-17070) Kopf (  3413,-20100) Kopf-Abstand 1360
+        t691   Biss       Phase 3 Clip  4 Wurzel (   338,-23084) Kopf (  1808,-20389) Kopf-Abstand 1982
+        t693   Biss       Phase 3 Clip  4 Wurzel (   412,-22980) Kopf (  2108,-20424) Kopf-Abstand 1850
+        W4073/-19322/c0 t2421 HAENGT: Wurzel 150 Bilder in (3215..3596, -24085..-22255), jetzt (3215,-24085) Gier 1361 Clip 1 Bild 9, Kopf (1725,-26764) 7798 von der Figur (4073,-19322), Steuerziel (4450,-22600), Phase 2 Modus 0
+        W4073/-19322/c0 t2827 HAENGT: Wurzel 150 Bilder in (3322..3849, -23656..-22221), jetzt (3464,-23656) Gier 1017 Clip 1 Bild 15, Kopf (3532,-26720) 7401 von der Figur (4073,-19322), Steuerziel (-4300,-22600), Phase 2 Modus 0
+    W4073/-19322/c0 Cut 0: 3600 B., Treffer 249 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 247, sonst 0), erster t172 Rammen, laengste Pause ohne Treffer 420 B. = 14.0 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (773..4642, -24980..-21712), Kopf min 45 mittel 3772, ohne Fortschritt max 9.4 s, Haenge-Fenster 2 (erstes t2421)
+        t172   Rammen     Phase 7 Clip  0 Wurzel (  4499,-13623) Kopf (  4364,-16692) Kopf-Abstand 2635
+        t272   CROSS-Biss Phase 7 Clip  0 Wurzel (  4278,-17290) Kopf (  4081,-20334) Kopf-Abstand 1011
+        t692   Biss       Phase 3 Clip  4 Wurzel (  1463,-23211) Kopf (  3031,-20572) Kopf-Abstand 1624
+        t694   Biss       Phase 3 Clip  4 Wurzel (  1541,-23111) Kopf (  3338,-20625) Kopf-Abstand 1492
+    W4252/-19953/c0 Cut 0: 3600 B., Treffer 319 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 317, sonst 0), erster t188 Rammen, laengste Pause ohne Treffer 403 B. = 13.4 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (1055..5334, -25042..-20721), Kopf min 301 mittel 2663, ohne Fortschritt max 7.9 s, Haenge-Fenster 0 (erstes t-1)
+        t188   Rammen     Phase 7 Clip  0 Wurzel (  4511,-14210) Kopf (  4473,-17269) Kopf-Abstand 2684
+        t288   CROSS-Biss Phase 7 Clip  0 Wurzel (  4365,-17876) Kopf (  4249,-20893) Kopf-Abstand 938
+        t691   Biss       Phase 3 Clip  4 Wurzel (  1626,-23465) Kopf (  3321,-20907) Kopf-Abstand 1330
+        t693   Biss       Phase 3 Clip  4 Wurzel (  1710,-23369) Kopf (  3641,-20986) Kopf-Abstand 1193
+    W3000/-18800/c2 Cut 2: 3600 B., Treffer 287 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 285, sonst 0), erster t166 Rammen, laengste Pause ohne Treffer 425 B. = 14.2 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-325..4678, -24720..-21850), Kopf min 523 mittel 3957, ohne Fortschritt max 10.7 s, Haenge-Fenster 0 (erstes t-1)
+        t166   Rammen     Phase 7 Clip  0 Wurzel (  4389,-13403) Kopf (  3983,-16439) Kopf-Abstand 2547
+        t266   CROSS-Biss Phase 7 Clip  0 Wurzel (  3867,-17070) Kopf (  3413,-20100) Kopf-Abstand 1360
+        t691   Biss       Phase 3 Clip  4 Wurzel (   338,-23084) Kopf (  1808,-20389) Kopf-Abstand 1982
+        t693   Biss       Phase 3 Clip  4 Wurzel (   412,-22980) Kopf (  2108,-20424) Kopf-Abstand 1850
+        W4200/-18800/c2 t1764 HAENGT: Wurzel 150 Bilder in (3198..3820, -23585..-22606), jetzt (3198,-23585) Gier 711 Clip 1 Bild 9, Kopf (4636,-26292) 7489 von der Figur (4200,-18800), Steuerziel (4450,-22600), Phase 2 Modus 0
+        W4200/-18800/c2 t2383 HAENGT: Wurzel 150 Bilder in (3167..3797, -23671..-22612), jetzt (3167,-23671) Gier 807 Clip 1 Bild 9, Kopf (4192,-26560) 7747 von der Figur (4200,-18800), Steuerziel (4450,-22600), Phase 2 Modus 0
+    W4200/-18800/c2 Cut 2: 3600 B., Treffer 227 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 225, sonst 0), erster t157 Ra
+        t157   Rammen     Phase 7 Clip  0 Wurzel (  4549,-13073) Kopf (  4421,-16121) Kopf-Abstand 2684
+        t257   CROSS-Biss Phase 7 Clip  0 Wurzel (  4381,-16740) Kopf (  4195,-19808) Kopf-Abstand 1007
+        t693   Biss       Phase 3 Clip  4 Wurzel (  1750,-23096) Kopf (  3119,-20349) Kopf-Abstand 1885
+        t695   Biss       Phase 3 Clip  4 Wurzel (  1822,-22990) Kopf (  3431,-20378) Kopf-Abstand 1755
+    W3600/-18750/c2 Cut 2: 3600 B., Treffer 287 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 285, sonst 0), erster t158 Rammen, laengste Pause ohne Treffer 435 B. = 14.5 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (17..4663, -24782..-21779), Kopf min 527 mittel 3863, ohne Fortschritt max 10.8 s, Haenge-Fenster 0 (erstes t-1)
+        t158   Rammen     Phase 7 Clip  0 Wurzel (  4465,-13110) Kopf (  4131,-16143) Kopf-Abstand 2660
+        t258   CROSS-Biss Phase 7 Clip  0 Wurzel (  4047,-16776) Kopf (  3662,-19825) Kopf-Abstand 1070
+        t693   Biss       Phase 3 Clip  4 Wurzel (   923,-22837) Kopf (  2458,-20179) Kopf-Abstand 1828
+        t695   Biss       Phase 3 Clip  4 Wurzel (  1001,-22735) Kopf (  2767,-20227) Kopf-Abstand 1693
+    W6400/-18700/c2 Cut 2: 3600 B., Treffer 191 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 189, sonst 0), erster t161 Rammen, laengste Pause ohne Treffer 270 B. = 9.0 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (497..4026, -25304..-21267), Kopf min 649 mittel 6020, ohne Fortschritt max 7.0 s, Haenge-Fenster 0 (erstes t-1)
+        t161   Rammen     Phase 7 Clip  0 Wurzel (  4871,-13220) Kopf (  5512,-16207) Kopf-Abstand 2635
+        t261   CROSS-Biss Phase 7 Clip  0 Wurzel (  5620,-16886) Kopf (  6217,-19898) Kopf-Abstand 1207
+        t384   Biss       Phase 3 Clip  4 Wurzel (  5716,-21144) Kopf (  8009,-19117) Kopf-Abstand 1659
+        t386   Biss       Phase 3 Clip  4 Wurzel (  5716,-21144) Kopf (  7592,-18747) Kopf-Abstand 1187
+    W2318/-18568/c2 Cut 2: 3600 B., Treffer 272 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 270, sonst 0), erster t224 CROSS-Biss, laengste Pause ohne Treffer 549 B. = 18.3 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-325..4678, -24720..-21467), Kopf min 851 mittel 4346, ohne Fortschritt max 10.9 s, Haenge-Fenster 0 (erstes t-1)
+        t224   CROSS-Biss Phase 7 Clip  0 Wurzel (  4086,-15530) Kopf (  3679,-18547) Kopf-Abstand 1360
+        t234   Rammen     Phase 7 Clip  0 Wurzel (  4034,-15896) Kopf (  3600,-18915) Kopf-Abstand 1324
+        t783   Biss       Phase 3 Clip  4 Wurzel (  4407,-22153) Kopf (  2716,-19590) Kopf-Abstand 1093
+        t785   Biss       Phase 3 Clip  4 Wurzel (  4341,-22041) Kopf (  2676,-19463) Kopf-Abstand 962
+        W4428/-18951/c2 t2744 HAENGT: Wurzel 150 Bilder in (3156..3703, -23543..-22173), jetzt (3156,-23543) Gier 531 Clip 1 Bild 18, Kopf (5302,-25745) 6830 von der Figur (4428,-18951), Steuerziel (4450,-22600), Phase 2 Modus 0
+    W4428/-18951/c2 Cut 2: 3600 B., Treffer 248 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 246, sonst 0), erster t161 Rammen, laengste Pause ohne Treffer 432 B. = 14.4 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (1311..4837, -25097..-21737), Kopf min 212 mittel 4132, ohne Fortschritt max 10.6 s, Haenge-Fenster 1 (erstes t2744)
+        t161   Rammen     Phase 7 Clip  0 Wurzel (  4576,-13220) Kopf (  4523,-16276) Kopf-Abstand 2672
+        t261   CROSS-Biss Phase 7 Clip  0 Wurzel (  4504,-16886) Kopf (  4403,-19956) Kopf-Abstand 1003
+        t693   Biss       Phase 3 Clip  4 Wurzel (  1944,-23002) Kopf (  3397,-20298) Kopf-Abstand 1693
+        t695   Biss       Phase 3 Clip  4 Wurzel (  2018,-22898) Kopf (  3714,-20342) Kopf-Abstand 1562
+    W1000/-20700/c2 Cut 2: 3600 B., Treffer 300 (Rammen 0, CROSS-Biss 0, Hochbiss 0, Biss 300, sonst 0), erster t475 Biss, laengste Pause ohne Treffer 475 B. = 15.8 s, GUARD 0 % CROSS 0 %, Wurzel ab t600 (3657..4638, -22809..-22016), Kopf min 15 mittel 3832, ohne Fortschritt max 9.2 s, Haenge-Fenst
+        t475   Biss       Phase 3 Clip  4 Wurzel (  -189,-23442) Kopf (  1188,-20699) Kopf-Abstand 187
+        t477   Biss       Phase 3 Clip  4 Wurzel (  -189,-23442) Kopf (  1289,-20754) Kopf-Abstand 293
+        t479   Biss       Phase 3 Clip  4 Wurzel (  -189,-23442) Kopf (  1325,-20783) Kopf-Abstand 334
+        t481   Biss       Phase 3 Clip  4 Wurzel (  -189,-23442) Kopf (  1371,-20818) Kopf-Abstand 389
+    W3000/-21000/c0 Cut 0: 3600 B., Treffer 225 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 223, sonst 0), erster t221 Rammen, laengste Pause ohne Treffer 367 B. = 12.2 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-325..4657, -24720..-22380), Kopf min 546 mittel 2792, ohne Fortschritt max 3.5 s, Haenge-Fenster 0 (erstes t-1)
+        t221   Rammen     Phase 7 Clip  0 Wurzel (  4102,-15420) Kopf (  3702,-18437) Kopf-Abstand 2648
+        t321   CROSS-Biss Phase 7 Clip  0 Wurzel (  3580,-19086) Kopf (  3169,-22077) Kopf-Abstand 1086
+        t688   Biss       Phase 3 Clip  4 Wurzel (    85,-23692) Kopf (  2214,-21481) Kopf-Abstand 920
+        t690   Biss       Phase 3 Clip  4 Wurzel (   185,-23612) Kopf (  2502,-21602) Kopf-Abstand 781
+    SUMME leon neu: Haenge-Fenster hoechstens 2 (W4073/-19322/c0); laengste Zeit ohne Fortschritt 10.9 s (W2318/-18568/c2)

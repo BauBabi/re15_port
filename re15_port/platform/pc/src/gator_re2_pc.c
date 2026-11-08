@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "re15_gator_re2_r41.h"
 #include "re15_md1.h"
 #include "re15_tim.h"
@@ -283,7 +284,14 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
          * -> keine Ausnahme 0x10. */
         static int s_drin = -1;
         int16_t rx[4], rz[4];
-        const int drin = !(g_room_rdt_ok && g_re15_active_cut >= 0 &&
+        /* G2-RE2 NB2 "Vorschlag 4" (PORT-WAHL, Nutzer "wichtig ist nur das der Kanister synchron mit dem Aligator mitlaeuft"): ohne Kopf-Klemme ragt der Kopf mit
+         * dem Kanister an den Aussenwaenden ueber das Regions-Viereck hinaus (z. B. Suedwand -27000, Viereck bis -29000, Kanister-Ende 4660 vor der Wurzel,
+         * Wurzel-Klemme 1466 vor der Wand: bis ~-30200) - der Test verwarf ihn dann, er verschwand aus dem Maul. RE2 kennt den Fall nicht (der Gator schwimmt
+         * dort nur im Korridor). Der angehaengte Kanister wird darum wie der Alligator gezeichnet (kein eigener Regions-Test); liegend/fallend wie RE2.
+         * Pruefhaken v4_alt = Stand f942f56c0. */
+        int32_t lk[3];
+        const int haengt = re15_gr2_kanister_lokal(lk) && !re15_gr2_v4_alt();
+        const int drin = haengt || !(g_room_rdt_ok && g_re15_active_cut >= 0 &&
                            re15_rdt_get_region_quad(&g_room_rdt, g_re15_active_cut, rx, rz)) || re15_aot_point_in_quad(pos[0], pos[2], rx, rz);
         if (drin != s_drin) {
             s_drin = drin;
@@ -294,6 +302,14 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
         if (!drin) return;
     }
     if (!modell_laden()) return;
+    /* Runde 41 Spur G2 NB7 (Entwurf F, Punkt b): der Kanister haengt am Maul - untergetaucht nicht gezeichnet, sonst derselbe Wasserlinien-/Block-Schnitt wie das Mesh */
+    int kwl_on = 0, kwl_bl = 0; int32_t kwl_y = 0;
+    for (int ai = 0; ai < RE15_ACTOR_MAX; ai++) {
+        const re15_actor_t *ga = &g_actors[ai];
+        if (!ga->active || ga->type != 0x23u || !re15_gator_boss_active(ga)) continue;
+        if (re15_gr2_pc_gator_schnitt(ga, &kwl_on, &kwl_y, &kwl_bl)) return;
+        break;
+    }
     const re15_camera_view_t *cam_view = (const re15_camera_view_t *)cam_view_v;
     re15_render_pc_bind_tim_slot(R41_KANISTER_TIM_SLOT);
 
@@ -350,6 +366,11 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                 else { c[k][0] = g_re15_light_tint[0]; c[k][1] = g_re15_light_tint[1]; c[k][2] = g_re15_light_tint[2]; }
                 if (scherben) scherbe_farbe(c[k], sch_farbe);
             }
+            if (kwl_on) {   /* NB7: Wasserlinien-/Block-Schnitt */
+                const int32_t wmv[3][3] = { { vp[0]->x, vp[0]->y, vp[0]->z }, { vp[1]->x, vp[1]->y, vp[1]->z }, { vp[2]->x, vp[2]->y, vp[2]->z } };
+                const int wuv[3][2] = { { (int)uv->u0 + po, (int)uv->v0 }, { (int)uv->u1 + po, (int)uv->v1 }, { (int)uv->u2 + po, (int)uv->v2 } };
+                if (re15_gr2_pc_wl_poly(3, wmv, wuv, (const uint8_t (*)[3])c, rot, pos, bm, bt, kwl_y, kwl_bl, cam_view->fov_screen_dist, cx, cy, (int)uv->clut)) continue;
+            }
             re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0,
                                          ax[1], ay[1], (int)uv->u1 + po, (int)uv->v1,
                                          ax[2], ay[2], (int)uv->u2 + po, (int)uv->v2,
@@ -390,6 +411,12 @@ void re15_gr2_pc_zeichnen(const void *cam_view_v, int cx, int cy)
                 if (d_c[0] < 0 || (int)c[0][0] + c[0][1] + c[0][2] > d_c[0] + d_c[1] + d_c[2]) {
                     d_c[0] = c[0][0]; d_c[1] = c[0][1]; d_c[2] = c[0][2];   /* hellster Scheitel 0 */
                 }
+            }
+            if (kwl_on) {   /* NB7: Wasserlinien-/Block-Schnitt (Umfang 0,1,3,2) */
+                const int32_t wmv[4][3] = { { vp[0]->x, vp[0]->y, vp[0]->z }, { vp[1]->x, vp[1]->y, vp[1]->z }, { vp[3]->x, vp[3]->y, vp[3]->z }, { vp[2]->x, vp[2]->y, vp[2]->z } };
+                const int wuv[4][2] = { { (int)uv->u0 + po, (int)uv->v0 }, { (int)uv->u1 + po, (int)uv->v1 }, { (int)uv->u3 + po, (int)uv->v3 }, { (int)uv->u2 + po, (int)uv->v2 } };
+                const uint8_t wcl[4][3] = { { c[0][0], c[0][1], c[0][2] }, { c[1][0], c[1][1], c[1][2] }, { c[3][0], c[3][1], c[3][2] }, { c[2][0], c[2][1], c[2][2] } };
+                if (re15_gr2_pc_wl_poly(4, wmv, wuv, wcl, rot, pos, bm, bt, kwl_y, kwl_bl, cam_view->fov_screen_dist, cx, cy, (int)uv->clut)) continue;
             }
             if (ok[0])
                 re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0,
@@ -521,6 +548,124 @@ int re15_gr2_pc_untergetaucht(const re15_actor_t *npc, int gecullt)
         }
     }
     s_lf = f; s_lx = npc->x; s_lz = npc->z;
+    return 0;
+}
+
+/* ==== Runde 41 Spur G2 NB7 (Entwurf F): Wasserlinien-/Block-Schnitt fuer den Alligator mit dem Kanister ==========================================
+ * PORT-WAHL (Dossier G2_gatorfix.md "Nachbesserung 7", Punkt a/d): RE1.5 B5/B4 zeichnen das Modell beim Sinken und untergetaucht weiter (kein Zeichen-Bit in
+ * 0x8010c448..0x80115750, der Wrapper ruft nur den Schatten FUN_8001b064 @0x8010c550); der vorgerenderte Hintergrund hat keine Wassertiefe und keine Tiefe fuer
+ * Plattform/Rampe. Der Port schneidet deshalb die Teile weg, die das Wasser bzw. der feste Block verdecken muesste. Sutherland-Hodgman je Halbraum in Weltlage,
+ * alle Groessen (Modelllage, UV, Farbe) linear mitgefuehrt; Projektion wie der NPC-Zeichner (RTPS, re15_gte_divide, near 64). */
+typedef struct { double m[3], w[3], u, v, c[3]; } wl_pkt_t;
+#define WL_MAX 16
+static int s_wl_geschnitten, s_wl_weg;
+void re15_gr2_pc_schnitt_zaehler(int *geschnitten, int *weg) { if (geschnitten) *geschnitten = s_wl_geschnitten; if (weg) *weg = s_wl_weg; }
+/* behalten: vz = +1 -> w[achse] <= grenze, vz = -1 -> w[achse] >= grenze */
+static int wl_halb(const wl_pkt_t *in, int n, wl_pkt_t *out, int achse, double grenze, int vz)
+{
+    int m = 0;
+    for (int i = 0; i < n; i++) {
+        const wl_pkt_t *a = &in[i], *b = &in[(i + 1) % n];
+        const double da = vz * (a->w[achse] - grenze), db = vz * (b->w[achse] - grenze);
+        if (da <= 0 && m < WL_MAX) out[m++] = *a;
+        if ((da < 0 && db > 0) || (da > 0 && db < 0)) {
+            const double t = da / (da - db);
+            wl_pkt_t p;
+            for (int k = 0; k < 3; k++) { p.m[k] = a->m[k] + (b->m[k] - a->m[k]) * t; p.w[k] = a->w[k] + (b->w[k] - a->w[k]) * t; p.c[k] = a->c[k] + (b->c[k] - a->c[k]) * t; }
+            p.u = a->u + (b->u - a->u) * t; p.v = a->v + (b->v - a->v) * t;
+            if (m < WL_MAX) out[m++] = p;
+        }
+    }
+    return m;
+}
+static void wl_zeichnen(const wl_pkt_t *p, int n, const int32_t vm[9], const int32_t vt[3], int fov, int cx, int cy, int clut)
+{
+    if (n < 3) return;
+    int sx[WL_MAX], sy[WL_MAX]; int32_t vzs[WL_MAX];
+    for (int i = 0; i < n; i++) {
+        const int32_t x = (int32_t)lrint(p[i].m[0]), y = (int32_t)lrint(p[i].m[1]), z = (int32_t)lrint(p[i].m[2]);
+        const int32_t vx = (int32_t)(((int64_t)x * vm[0] + (int64_t)y * vm[1] + (int64_t)z * vm[2]) >> 12) + vt[0];
+        const int32_t vy = (int32_t)(((int64_t)x * vm[3] + (int64_t)y * vm[4] + (int64_t)z * vm[5]) >> 12) + vt[1];
+        const int32_t vz = (int32_t)(((int64_t)x * vm[6] + (int64_t)y * vm[7] + (int64_t)z * vm[8]) >> 12) + vt[2];
+        if (vz < 64) return;                                   /* near-plane wie der NPC-Zeichner (main.c "BO: H28 near-plane") */
+        const int32_t ir1 = vx > 0x7FFF ? 0x7FFF : (vx < -0x8000 ? -0x8000 : vx), ir2 = vy > 0x7FFF ? 0x7FFF : (vy < -0x8000 ? -0x8000 : vy);
+        const uint32_t nn = re15_gte_divide((uint32_t)fov, vz > 0xFFFF ? 0xFFFFu : (uint32_t)vz);
+        sx[i] = cx + (int)(((int64_t)ir1 * (int64_t)nn) >> 16); sy[i] = cy + (int)(((int64_t)ir2 * (int64_t)nn) >> 16); vzs[i] = vz;
+    }
+    for (int i = 1; i + 1 < n; i++) {
+        const int z = (int)((vzs[0] + vzs[i] + vzs[i + 1]) / 3);
+        re15_render_textured_tri_lit(sx[0], sy[0], (int)lrint(p[0].u), (int)lrint(p[0].v), sx[i], sy[i], (int)lrint(p[i].u), (int)lrint(p[i].v),
+                                     sx[i + 1], sy[i + 1], (int)lrint(p[i + 1].u), (int)lrint(p[i + 1].v), 0, clut, z,
+                                     (uint8_t)lrint(p[0].c[0]), (uint8_t)lrint(p[0].c[1]), (uint8_t)lrint(p[0].c[2]),
+                                     (uint8_t)lrint(p[i].c[0]), (uint8_t)lrint(p[i].c[1]), (uint8_t)lrint(p[i].c[2]),
+                                     (uint8_t)lrint(p[i + 1].c[0]), (uint8_t)lrint(p[i + 1].c[1]), (uint8_t)lrint(p[i + 1].c[2]));
+    }
+}
+/* Bloecke Plattform/Rampe (SCA ROOM2090, enemy_ai_boss_gator.c Kopf) bis zum Deck y -1800 (Stockwerk 1, B10 @0x8010e33c-360) */
+static const double k_wl_block[2][4] = { { -1700, 1850, -20000, -12450 }, { 1850, 7200, -18100, -14500 } };
+#define WL_DECK (-1800.0)
+int re15_gr2_pc_wl_poly(int n, const int32_t (*mv)[3], const int (*uv)[2], const uint8_t (*col)[3],
+                        const int32_t wm[9], const int32_t wt[3], const int32_t vm[9], const int32_t vt[3],
+                        int32_t y_wl, int bloecke, int fov, int cx, int cy, int clut)
+{
+    wl_pkt_t p[WL_MAX];
+    double lo[3] = { 1e30, 1e30, 1e30 }, hi[3] = { -1e30, -1e30, -1e30 };
+    for (int i = 0; i < n; i++) {
+        for (int k = 0; k < 3; k++) {
+            p[i].m[k] = mv[i][k];
+            p[i].w[k] = (double)wt[k] + ((double)wm[k * 3] * mv[i][0] + (double)wm[k * 3 + 1] * mv[i][1] + (double)wm[k * 3 + 2] * mv[i][2]) / 4096.0;
+            p[i].c[k] = col[i][k];
+            if (p[i].w[k] < lo[k]) lo[k] = p[i].w[k];
+            if (p[i].w[k] > hi[k]) hi[k] = p[i].w[k];
+        }
+        p[i].u = uv[i][0]; p[i].v = uv[i][1];
+    }
+    int beruehrt = hi[1] > y_wl;
+    if (bloecke)
+        for (int b = 0; b < 2; b++)
+            if (hi[1] > WL_DECK && hi[0] > k_wl_block[b][0] && lo[0] < k_wl_block[b][1] && hi[2] > k_wl_block[b][2] && lo[2] < k_wl_block[b][3]) beruehrt = 1;
+    if (!beruehrt) return 0;
+    /* Arbeitsliste: zuerst die Wasserlinie (behalten y <= y_wl), dann je Block das Aeussere als Vereinigung von fuenf Halbraeumen */
+    static wl_pkt_t liste[64][WL_MAX]; static int ln[64]; int nl = 0;
+    ln[nl] = wl_halb(p, n, liste[nl], 1, (double)y_wl, 1); if (ln[nl] >= 3) nl++;
+    if (bloecke) {
+        for (int b = 0; b < 2; b++) {
+            static wl_pkt_t neu[64][WL_MAX]; static int nn[64]; int nnl = 0;
+            const int achse[5] = { 1, 0, 0, 2, 2 }, vz[5] = { 1, 1, -1, 1, -1 };
+            const double grenze[5] = { WL_DECK, k_wl_block[b][0], k_wl_block[b][1], k_wl_block[b][2], k_wl_block[b][3] };
+            for (int q = 0; q < nl; q++) {
+                wl_pkt_t rest[WL_MAX], tmp[WL_MAX]; int nr = ln[q];
+                memcpy(rest, liste[q], (size_t)nr * sizeof rest[0]);
+                for (int h = 0; h < 5 && nr >= 3; h++) {
+                    if (nnl < 64) { nn[nnl] = wl_halb(rest, nr, neu[nnl], achse[h], grenze[h], vz[h]); if (nn[nnl] >= 3) nnl++; }
+                    const int m = wl_halb(rest, nr, tmp, achse[h], grenze[h], -vz[h]);   /* weiter mit dem Teil auf der Blockseite */
+                    memcpy(rest, tmp, (size_t)m * sizeof tmp[0]); nr = m;
+                }
+            }
+            for (int q = 0; q < nnl; q++) { ln[q] = nn[q]; memcpy(liste[q], neu[q], (size_t)nn[q] * sizeof neu[q][0]); }
+            nl = nnl;
+        }
+    }
+    if (nl == 0) s_wl_weg++; else s_wl_geschnitten++;
+    for (int q = 0; q < nl; q++) wl_zeichnen(liste[q], ln[q], vm, vt, fov, cx, cy, clut);
+    return 1;
+}
+int re15_gr2_pc_gator_schnitt(const re15_actor_t *npc, int *wl, int32_t *y_wl, int *bloecke)
+{
+    /* Runde 41 Spur G2-RE2: nur mit dem Kanister im Maul (neuer Stand, re15_gr2_rw_an). Untergetaucht (Notloesung) kein Mesh; Wasserlinie nur beim Ab-/Auftauchen
+     * (sonst so tief, dass nichts schneidet - Schwimmen und Biss wie NB5); die Bloecke Plattform/Rampe schneiden immer (was dort unter dem Deck liegt, steckt
+     * im festen Block - Ueberquerung, Schwanz an der Rampe). */
+    *wl = 0;
+    if (!npc || npc->type != 0x23u || !re15_gator_boss_active(npc) || !re15_gr2_rw_traegt()) return 0;
+    if (re15_gr2_rw_modell_aus(npc)) return 1;
+    int32_t y = 0;
+    const int taucht = re15_gr2_rw_wasserlinie(npc, &y);
+    /* G2-RE2 NB2 Vorschlag 4 (Nutzerentscheid: der Kanister darf in die Geometrie ragen - dokumentieren, nicht verstecken): kein Block-Schnitt, gezeichnet wie
+     * ohne Kanister; nur der Rueckfall-Tauchgang schneidet an der Wasserlinie. Pruefhaken v4_alt = Stand f942f56c0 (Bloecke schneiden immer). */
+    if (!re15_gr2_v4_alt() && !taucht) return 0;
+    *y_wl = taucht ? y : (1 << 30);
+    *bloecke = re15_gr2_v4_alt();
+    *wl = 1;
     return 0;
 }
 

@@ -1,0 +1,81 @@
+== nb4_elza (G2-RE2 NB4: Trefferreaktion wie RE2, Stoss von der Rampe ins Wasser, kein Kanister-Holmodus) ==
+  -- Teil A: Treffer eingespeist (Gator-KI angehalten, Gator weit weg) --
+    Wasser Sub 2             Sub 2 art 4 Schaden 60 ret 0 hp 100->40 | 20 Bilder, SE 1, Sturz ab Bild -1 (ok), Ende (-6735,0,-23000) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 18@0 19@4 -> ok
+    Wasser Sub 3             Sub 3 art 4 Schaden 60 ret 0 hp 100->40 | 54 Bilder, SE 2, Sturz ab Bild -1 (ok), Ende (80,0,-23000) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 20@0 17@21 11@29 -> ok
+    Wasser Sub 2 geschw.     Sub 2 art 4 Schaden 30 ret 0 hp 100->70 | 20 Bilder, SE 1, Sturz ab Bild -1 (ok), Ende (-3000,0,-19265) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 18@0 19@4 -> ok
+    Wasser Sub 2 One-Save    Sub 2 art 4 Schaden 60 ret 1 hp 50->0 |  1 Bilder, SE 0, Sturz ab Bild -1 (ok), Ende (-3000,0,-23000) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips -1@0 -> ok
+    Wasser Sub 3 One-Save    Sub 3 art 4 Schaden 60 ret 1 hp 50->0 | 33 Bilder, SE 0, Sturz ab Bild -1 (ok), Ende (-3000,0,-23000) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 17@0 11@8 -> ok
+    Deck Sued Sub 3          Sub 3 art 4 Schaden 60 ret 0 hp 100->40 | 54 Bilder, SE 2, Sturz ab Bild 0 (ok), Ende (4000,0,-20848) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 20@0 17@21 11@29 | y -1210 -1070 -880 -640 0 0 -> ok
+    Deck Sued Sub 2          Sub 2 art 4 Schaden 60 ret 0 hp 100->40 | 20 Bilder, SE 1, Sturz ab Bild 0 (ok), Ende (4000,0,-21503) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 18@0 19@4 | y -1210 -1070 -880 -640 0 0 -> ok
+    Deck Nord Sub 2          Sub 2 art 4 Schaden 60 ret 0 hp 100->40 | 20 Bilder, SE 1, Sturz ab Bild 0 (ok), Ende (4000,0,-11097) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 18@0 19@4 | y -1210 -1070 -880 -640 0 0 -> ok
+    Deck Nord Sub 3          Sub 3 art 4 Schaden 60 ret 0 hp 100->40 | 54 Bilder, SE 2, Sturz ab Bild 0 (ok), Ende (4000,0,-11752) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 20@0 17@21 11@29 | y -1210 -1070 -880 -640 0 0 -> ok
+    Deck Mitte Sub 2 Sued    Sub 2 art 4 Schaden 60 ret 0 hp 100->40 | 20 Bilder, SE 1, Sturz ab Bild 2 (ok), Ende (4428,0,-20353) Band 0, Raumhalt 0, Lage-Abweichungen 0, Clips 18@0 19@4 | y -1210 -1070 -880 -640 0 0 -> ok
+    Deck Ost (Wand [6])      Sub 3 art 4 Schaden 60 ret 0 hp 100->40 | 54 Bilder, SE 2, Sturz ab Bild -1 (ok), Ende (6732,-1800,-16300) Band 1, Raumhalt 0, Lage-Abweichungen 0, Clips 20@0 17@21 11@29 -> ok
+    Deck West (Plattf. [7])  Sub 3 art 4 Schaden 60 ret 0 hp 100->40 | 54 Bilder, SE 2, Sturz ab Bild -1 (ok), Ende (2318,-1800,-16300) Band 1, Raumhalt 0, Lage-Abweichungen 0, Clips 20@0 17@21 11@29 -> ok
+    Deck Mitte Sub 2 West    Sub 2 art 4 Schaden 60 ret 0 hp 100->40 | 20 Bilder, SE 1, Sturz ab Bild -1 (ok), Ende (2313,-1800,-16300) Band 1, Raumhalt 0, Lage-Abweichungen 0, Clips 18@0 19@4 -> ok
+  ok: Teil A (T1-T3, W1, W2): 13 von 13 eingespeisten Treffern wie RE2 (Schritte/Lage/Dauer/Clips/Sperre/SE/Schaden/One-Save) und Kante/Wand wie verlangt
+  ok: T2: shared_assets/RE2/GATOR40A0.RBJ (14328 B) Record 0: 21 Clips, 17/18/19/20 = 16/10/30/21 Bilder (soll 21 Clips, 16/10/30/21; ROOM40A0.RDT @0x65E8, EDD @0x8F8C)
+  -- Teil B: echter Boss-Takt, freie Figur, 2400 Bilder je Lage (Lagen des Riegels raum) --
+    R2318/-16300 mit : 2400 B., Reaktionen 31 (Sturz 1), erster Treffer t450, oben  455 B., Pause oben 450; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (2400,0,-18648)
+    R6500/-15000 mit : 2400 B., Reaktionen 23 (Sturz 1), erster Treffer t252, oben  255 B., Pause oben 252; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (3637,0,-13299)
+    R2315/-17642 mit : 2400 B., Reaktionen 30 (Sturz 1), erster Treffer t291, oben  294 B., Pause oben 291; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (2415,0,-18662)
+    R2318/-17600 mit : 2400 B., Reaktionen 29 (Sturz 1), erster Treffer t291, oben  294 B., Pause oben 291; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (6746,0,-5852)
+    R2800/-16300 mit : 2400 B., Reaktionen 30 (Sturz 1), erster Treffer t361, oben  366 B., Pause oben 361; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (2415,0,-18662)
+    R4428/-16300 mit : 2400 B., Reaktionen 23 (Sturz 1), erster Treffer t300, oben  305 B., Pause oben 300; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (-8432,0,-26532)
+    R3350/-15000 mit : 2400 B., Reaktionen 26 (Sturz 1), erster Treffer t230, oben  233 B., Pause oben 230; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (6731,0,-14049)
+    R6500/-17600 mit : 2400 B., Reaktionen 29 (Sturz 1), erster Treffer t253, oben  256 B., Pause oben 253; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (2318,0,-18568)
+    R2318/-15000 mit : 2400 B., Reaktionen 26 (Sturz 1), erster Treffer t288, oben  291 B., Pause oben 288; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (6732,0,-5868)
+    W6732/-18598 mit : 2400 B., Reaktionen 32 (Sturz 0), erster Treffer t164, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (272,0,-20468)
+    W4200/-18700 mit : 2400 B., Reaktionen 25 (Sturz 0), erster Treffer t155, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (6744,0,-26534)
+    W2318/-18568 mit : 2400 B., Reaktionen 10 (Sturz 0), erster Treffer t224, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (-2168,0,-15717)
+    W6400/-18700 mit : 2400 B., Reaktionen 31 (Sturz 0), erster Treffer t161, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (2318,0,-18568)
+    W1000/-20700 mit : 2400 B., Reaktionen 30 (Sturz 0), erster Treffer t456, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (2318,0,-18568)
+    W3000/-18800 mit : 2400 B., Reaktionen 29 (Sturz 0), erster Treffer t166, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (-884,0,-20468)
+    W4073/-19322 mit : 2400 B., Reaktionen 22 (Sturz 0), erster Treffer t172, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (6732,0,-22526)
+    R2318/-16300 ohne: 2400 B., Reaktionen 31 (Sturz 1), erster Treffer t450, oben  455 B., Pause oben 450; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (2400,0,-18648)
+    R6500/-15000 ohne: 2400 B., Reaktionen 21 (Sturz 1), erster Treffer t252, oben  255 B., Pause oben 252; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (5957,0,-5954)
+    R2315/-17642 ohne: 2400 B., Reaktionen 30 (Sturz 1), erster Treffer t291, oben  294 B., Pause oben 291; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (1290,0,-20468)
+    R2318/-17600 ohne: 2400 B., Reaktionen 17 (Sturz 1), erster Treffer t291, oben  294 B., Pause oben 291; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (-5633,0,-26027)
+    R2800/-16300 ohne: 2400 B., Reaktionen 30 (Sturz 1), erster Treffer t361, oben  366 B., Pause oben 361; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (2415,0,-18662)
+    R4428/-16300 ohne: 2400 B., Reaktionen 22 (Sturz 1), erster Treffer t300, oben  305 B., Pause oben 300; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (-8432,0,-26532)
+    R3350/-15000 ohne: 2400 B., Reaktionen 25 (Sturz 1), erster Treffer t230, oben  233 B., Pause oben 230; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (1968,0,-11047)
+    R6500/-17600 ohne: 2400 B., Reaktionen 23 (Sturz 1), erster Treffer t253, oben  256 B., Pause oben 253; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (5405,0,-22900)
+    R2318/-15000 ohne: 2400 B., Reaktionen 32 (Sturz 1), erster Treffer t288, oben  291 B., Pause oben 288; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 4 nicht gezaehlt); Ende (5444,0,-14032)
+    W6732/-18598 ohne: 2400 B., Reaktionen 31 (Sturz 0), erster Treffer t373, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (272,0,-20468)
+    W4200/-18700 ohne: 2400 B., Reaktionen 27 (Sturz 0), erster Treffer t290, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (2547,0,-18568)
+    W2318/-18568 ohne: 2400 B., Reaktionen 10 (Sturz 0), erster Treffer t224, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (-2168,0,-15717)
+    W6400/-18700 ohne: 2400 B., Reaktionen 31 (Sturz 0), erster Treffer t373, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (2318,0,-18568)
+    W1000/-20700 ohne: 2400 B., Reaktionen 30 (Sturz 0), erster Treffer t456, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (2318,0,-18568)
+    W3000/-18800 ohne: 2400 B., Reaktionen 10 (Sturz 0), erster Treffer t232, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (-2168,0,-15717)
+    W4073/-19322 ohne: 2400 B., Reaktionen 14 (Sturz 0), erster Treffer t313, oben    0 B., Pause oben   0; aussen 0, im Block 0, Deck verlassen 0 (Sturzbilder 0 nicht gezaehlt); Ende (-5633,0,-26042)
+    Oben halten (3 Lagen, nach dem Sturz wieder oben): Rammen 41, CROSS-Biss 2, Hochbiss 8, Biss 0
+    (Lauf Gator-HP 24990: 27 Reaktionen, hp des Gators 24990)
+    Lauf Gator-HP 24990 (W4200/-18700 ohne, ein Treffer am Gator): +0x218 & 0x20 = 1, Reaktionen mit Schaden 30: 27
+    SUMME Teil B: 32 Lagen, Reaktionen 888 (vollstaendig 717, durch einen neuen Treffer abgebrochen 171; Sub 2 498, Sub 3 219), Abweichungen vom RE2-Modell 0 (davon Unterzustand 0); Angriffe: Rammen 66, CROSS-Biss 22, Hochbiss 8, Biss 792, Biss B2 0; Schaden 60: 861, 30: 27, sonst 0; Stuerze 64 (falsch 0), Raumhalt in Sturzbildern 0; RE1.5-Niederwurf-Bilder 0; Weg des Hakens (Luftlinie) max 4171, ueber RE2 0; Luftlinie gesamt max 6186 (98 ueber 3735/3080, Koerper-/Boss-Schub + Klemme bis 3106); oben spaetester erster Treffer t450, laengste Pause oben 450
+  ok: T1/T3: jede vollstaendige Reaktion (717) Bild fuer Bild = RE2-Modell (Unterzustand FUN_80015910, Schritte, Dauer 20/54, Clips, Sperre, SE) - Abweichungen 0
+  ok: T1: jede Angriffsart nimmt die RE2-Reaktion (Rammen 66, CROSS-Biss 22, Hochbiss 8, Biss 792)
+  ok: T2: nach Alligator-Treffern 0 Bilder RE1.5-Niederwurf (0)
+  ok: T3: Schaden 60, bei Gator-HP < 25000 30 (60: 861, 30: 27, sonst 0)
+  ok: T4 (Harness): Weg des RE2-Hakens je Reaktion <= 3735 (Sub 2) / 3080 (Sub 3), mit Sturz + Klemme der Fall-Phase <= +468 (max 4171, 0 ueber); Luftlinie gesamt max 6186, davon Koerper-/Boss-Schub und Klemme bis 3106 (RE2 schiebt ebenso, FUN_80034D0C @0x80026628)
+  ok: W1: 64 Stuerze ins Wasser, jeder Bild fuer Bild wie Substate 10 (falsch 0), 0 Raumhalt-Eingriffe in Sturzbildern (0)
+  ok: W3: in allen Lagen nie aussen, nie im Block, oben nie neben dem Deck ausser im Sturz (0 Lagen verfehlt)
+  ok: A1 (NB3 Vorgabe A, mit Sturz neu bewertet): oben erster Treffer <= 600 und laengste Pause oben <= 600 (t450, 450)
+    Gegenprobe Stand 3d57083b1: Niederwurf-Bilder 1804, groesste Niederwurf-Luftlinie 5630, RE2-Reaktionen 0
+  ok: T5 Gegenprobe Pruefhaken 'Treffer alt': RE1.5-Niederwurf wieder da (1804 Bilder, Luftlinie bis 5630 > 3735, 0 RE2-Reaktionen) - rot ohne den Bau
+  -- Teil K: liegender Kanister der Szene (Bit 116), 1800 Bilder je Lage --
+    Lage (2318,-1800,-16300) Cut 2: mit liegendem Kanister 1800 B. (Aufnahme t1221, erster Treffer t288), ohne 1800 B. (erster Treffer t288); bis zur Aufnahme abweichend 0 (erstes t-1)
+    Lage (4428,-1800,-16300) Cut 2: mit liegendem Kanister 1800 B. (Aufnahme t1091, erster Treffer t227), ohne 1800 B. (erster Treffer t227); bis zur Aufnahme abweichend 0 (erstes t-1)
+    Lage (6500,-1800,-15000) Cut 2: mit liegendem Kanister 1800 B. (Aufnahme t1673, erster Treffer t252), ohne 1800 B. (erster Treffer t252); bis zur Aufnahme abweichend 0 (erstes t-1)
+    Lage (-6000,0,-16000) Cut 0: mit liegendem Kanister 1800 B. (Aufnahme t147, erster Treffer t75), ohne 1800 B. (erster Treffer t75); bis zur Aufnahme abweichend 0 (erstes t-1)
+    Lage (4200,0,-18700) Cut 2: mit liegendem Kanister 1800 B. (Aufnahme t1726, erster Treffer t132), ohne 1800 B. (erster Treffer t132); bis zur Aufnahme abweichend 0 (erstes t-1)
+    Lage (-5000,0,-9000) Cut 0: mit liegendem Kanister 1800 B. (Aufnahme t872, erster Treffer t156), ohne 1800 B. (erster Treffer t156); bis zur Aufnahme abweichend 0 (erstes t-1)
+    RUNDE/ANSCHWIMMEN eingeschaltet 0; gator_boss.log: ANSCHWIMMEN an 0, Zielmodus 1 0, Stufe 1 6 (laengs max 5802, |quer| max 1692, ausserhalb des Fensters 0)
+  ok: K1: Gator mit liegendem Kanister bis zur Aufnahme Bild fuer Bild wie ohne Kanister (6 Lagen x 1800, 0 verfehlt)
+  ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0)
+  ok: K2: jede Stufe-1-Aufnahme laengs in [0,6000) und |quer| < 1733 (6 Aufnahmen, 0 ausserhalb)
+  ok: K3: mit liegendem Kanister oben erster Treffer <= 600 (spaetester t288; Stand 3d57083b1: Pause 851-856)
+    Gegenprobe Kanister abseits (-8300,-26400), Figur oben (4428,-16300): 1800 B., Aufnahme t-1
+  ok: K2 Gegenprobe: Kanister abseits der Bahn bleibt bis Laufende auf Stufe 0 (Aufnahme t-1)
+    Gegenprobe Stand 3d57083b1 (re15_k2080_runde_alt_setzen): RUNDE-Zeilen 1, Aufnahme t648, abweichend 55
+  ok: K Gegenprobe RUNDE (Stand 3d57083b1): RUNDE an (1 Zeilen), Bewegung weicht ab (55 Bilder) - rot ohne den Bau
+nb4_elza: 0 Fehler

@@ -1,0 +1,31 @@
+# Abnahme 8: test_r41_gatorfix_g2abn8.exe nb4_elza (md5 d078d22d = Bau-Testprogramm), direkt gefahren; Auszug der Pruef-/Summenzeilen aus nb4_elza_voll.txt (14979 Zeilen)
+  -- Teil A: Treffer eingespeist (Gator-KI angehalten, Gator weit weg) --
+  ok: Teil A (T1-T3, W1, W2): 13 von 13 eingespeisten Treffern wie RE2 (Schritte/Lage/Dauer/Clips/Sperre/SE/Schaden/One-Save) und Kante/Wand wie verlangt
+  ok: T2: shared_assets/RE2/GATOR40A0.RBJ (14328 B) Record 0: 21 Clips, 17/18/19/20 = 16/10/30/21 Bilder (soll 21 Clips, 16/10/30/21; ROOM40A0.RDT @0x65E8, EDD @0x8F8C)
+  -- Teil B: echter Boss-Takt, freie Figur, 2400 Bilder je Lage (Lagen des Riegels raum) --
+    SUMME Teil B: 32 Lagen, Reaktionen 605 (vollstaendig 605, durch einen neuen Treffer abgebrochen 0; Sub 2 374, Sub 3 231), Abweichungen vom RE2-Modell 0 (davon Unterzustand 0); Angriffe: Rammen 55, CROSS-Biss 22, Hochbiss 11, Biss 517, Biss B2 0; Schaden 60: 589, 30: 16, sonst 0; Stuerze 51 (falsch 0), Raumhalt in Sturzbildern 0; RE1.5-Niederwurf-Bilder 0; Weg des Hakens (Luftlinie) max 4171, ueber RE2 0; Luftlinie gesamt max 5432 (91 ueber 3735/3080, Koerper-/Boss-Schub + Klemme bis 2352); oben spaetester erster Treffer t450, laengste Pause oben 450
+  ok: T1/T3: jede vollstaendige Reaktion (605) Bild fuer Bild = RE2-Modell (Unterzustand FUN_80015910, Schritte, Dauer 20/54, Clips, Sperre, SE) - Abweichungen 0
+  ok: T1: jede Angriffsart nimmt die RE2-Reaktion (Rammen 55, CROSS-Biss 22, Hochbiss 11, Biss 517)
+  ok: T2: nach Alligator-Treffern 0 Bilder RE1.5-Niederwurf (0)
+  ok: T3: Schaden 60, bei Gator-HP < 25000 30 (60: 589, 30: 16, sonst 0)
+  ok: T4 (Harness): Weg des RE2-Hakens je Reaktion <= 3735 (Sub 2) / 3080 (Sub 3), mit Sturz + Klemme der Fall-Phase <= +468 (max 4171, 0 ueber); Luftlinie gesamt max 5432, davon Koerper-/Boss-Schub und Klemme bis 2352 (RE2 schiebt ebenso, FUN_80034D0C @0x80026628)
+  ok: W1: 51 Stuerze ins Wasser, jeder Bild fuer Bild wie Substate 10 (falsch 0), 0 Raumhalt-Eingriffe in Sturzbildern (0)
+  ok: W3: in allen Lagen nie aussen, nie im Block, oben nie neben dem Deck ausser im Sturz (0 Lagen verfehlt)
+  ok: A1 (NB3 Vorgabe A, mit Sturz neu bewertet): oben erster Treffer <= 600 und laengste Pause oben <= 600 (t450, 450)
+    Bisssperre (Abnahme 7 M1): 589 Treffer-Paare, kleinster Abstand 70 Bilder, Treffer waehrend +0x238 > 0: 0, Reaktionen durch einen neuen Treffer abgebrochen 0
+  ok: T3 Unverwundbarkeit / Angriffstakt wie RE2 (Abnahme 7 M1): kein Treffer, solange die Bisssperre +0x238 > 0 ist - Abstand zweier Treffer >= 70 (70 @0x801016b0-b4, -1 je Bild @0x801004a8-b8, Pruefstellen @0x80100b5c / @0x80100cb4-c4): 589 Paare, kleinster Abstand 70, Zweitbisse 0, abgebrochen 0
+    Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): 56 Treffer-Paare, kleinster Abstand 20, Zweitbisse 27, abgebrochen 13 - erster: F1029 art 4 nach F1009 (Abstand 20, Bisssperre +0x238 noch 50)
+  ok: Gegenprobe M1 Pruefhaken 'S[scd] thread start slot=0 first_op=0x3B
+    Gegenprobe Stand 3d57083b1: Niederwurf-Bilder 1804, groesste Niederwurf-Luftlinie 5630, RE2-Reaktionen 0
+  ok: T5 Gegenprobe Pruefhaken 'Treffer alt': RE1.5-Niederwurf wieder da (1804 Bilder, Luftlinie bis 5630 > 3735, 0 RE2-Reaktionen) - rot ohne den Bau
+  -- Teil K: liegender Kanister der Szene (Bit 116), 1800 Bilder je Lage --
+  ok: K1: Gator mit liegendem Kanister bis zur Aufnahme Bild fuer Bild wie ohne Kanister (6 Lagen x 1800, 0 verfehlt)
+  ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0)
+  ok: K2: jede Stufe-1-Aufnahme laengs in [0,6000) und |quer| < 1733 (3 Aufnahmen, 0 ausserhalb)
+  ok: K3: mit liegendem Kanister oben erster Treffer <= 600 (spaetester t288; Stand 3d57083b1: Pause 851-856)
+    Gegenprobe Kanister abseits (-8300,-26400), Figur oben (4428,-16300): 1800 B., Aufnahme t-1
+  ok: K2 Gegenprobe: Kanister abseits der Bahn bleibt bis Laufende auf Stufe 0 (Aufnahme t-1)
+    Gegenprobe Stand 3d57083b1 (re15_k2080_runde_alt_setzen): RUNDE-Zeilen 1, Aufnahme t648, abweichend 55
+  ok: K Gegenprobe RUNDE (Stand 3d57083b1): RUNDE an (1 Zeilen), Bewegung weicht ab (55 Bilder) - rot ohne den Bau
+nb4_elza: 0 Fehler
+exit=0

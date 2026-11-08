@@ -1,0 +1,36 @@
+1177:   -- Teil B: echter Boss-Takt, freie Figur, 2400 Bilder je Lage (Lagen des Riegels raum) --
+1177:     (Lauf Gator-HP 24990: 16 Reaktionen, hp des Gators 24990)
+1177:     Lauf Gator-HP 24990 (W4200/-18700 ohne, ein Treffer am Gator): +0x218 & 0x20 = 1, Reaktionen mit Schaden 30: 16
+1177:     SUMME Teil B: 32 Lagen, Reaktionen 611 (vollstaendig 609, durch einen neuen Treffer abgebrochen 2; Sub 2 397, Sub 3 212), Abweichungen vom RE2-Modell 0 (davon Unterzustand 0); Angriffe: Rammen 66, CROSS-Biss 22, Hochbiss 8, Biss 515, Biss B2 0; Schaden 60: 595, 30: 16, sonst 0; Stuerze 64 (falsch 0), Raumhalt in Sturzbildern 0; RE1.5-Niederwurf-Bilder 0; Weg des Hakens (Luftlinie) max 4171, ueber RE2 0; Luftlinie gesamt max 5745 (109 ueber 3735/3080, Koerper-/Boss-Schub + Klemme bis 2665); oben spaetester erster Treffer t450, laengste Pause oben 450
+1177:     Biss-Clip-Laeufe (Abnahme 8 M1, RE2 ein Treffer je Kiefer-Lauf): 527 Laeufe, 523 Treffer; Zweitbiss im selben Lauf 0, Lauf mit Bissbedingung ohne Treffer 0, Lagen mit erstem Treffer nach dem ersten Lauf mit Bedingung 0, Reaktionen durch einen neuen Treffer abgebrochen 2 - erster Abbruch F661: Reaktion art 2 Sub 3 nach 35 Bildern, neuer Treffer art 1; Treffer-Paare 594, kleinster Abstand 36 Bilder (Ausgabe)
+1177:   ok: (a) ein Treffer je Biss-Clip-Lauf wie RE2 je Kiefer-Lauf (Treffer-Einstieg verweigert bei PL+0x1D3 @0x801015a4-ac, Lauf-Ende +0x224 = 0 @0x80101558): 523 Treffer in 527 Laeufen, Zweitbisse 0; neuer Treffer nur im Liegen der Sub-3-Reaktion (RE2 loescht PL+0x1D3 dort @0x801032f0, in Sub 2 erst am En[scd] thread start slot=0 first_op=0x3B
+1177:   ok: (c) kein Biss-Lauf mit Bissbedingung (Fenster, Maul an der Figur, Reaktion zu Ende, keine Wand) ohne Treffer - RE2 trifft dort, T1 @0x801012fc fragt +0x238 nicht: Leerlaeufe 0, Lagen mit spaeterem Erstbiss 0
+1177:     Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): 30 Laeufe, 57 Treffer, Zweitbisse im selben Lauf 27, kleinster Abstand 20 - Lage 4200/-18700: 12 Laeufe mit Zweitbiss
+1177:   ok: Gegenprobe (a) Pruefhaken 'Sperre alt': Zweitbisse im selben Lauf wieder da (27) - rot ohne den Bau
+1177:     (b) Intro-Lage W4200/-18700 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 0 bei t7 mit +0x238 = 103, Leerlaeufe 0, Zweitbisse 0 -> wie RE2
+1177:     (b) Intro-Lage W6732/-18598 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 0 bei t7 mit +0x238 = 103, Leerlaeufe 0, Zweitbisse 0 -> wie RE2
+1177:   ok: (b) nach dem Intro-Ende beisst der Gator im ersten Lauf mit dem Maul an der Figur, waehrend +0x238 > 0 (RE2: Biss-Bremse frei @0x801008f8-918, nur Spurt-Sperre 110 @0x8010091c-20): 2 von 2 Lagen
+1177:     Gegenprobe Stand d8bf728b0 ('Sperre 238'): Intro-Lage W4200/-18700 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 1 bei t109 mit +0x238 = 1, Leerlaeufe 1, Zweitbisse 0 -> nicht RE2
+1177:     Gegenprobe Stand d8bf728b0 ('Sperre 238'): Intro-Lage W6732/-18598 (+0x238 = 110 am Start): 5 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 2 bei t133 mit +0x238 = 0, Leerlaeufe 2, Zweitbisse 0 -> nicht RE2
+1177:   ok: Gegenprobe (b) Pruefhaken 'Sperre 238' (Stand d8bf728b0): kein Biss im ersten Lauf bei +0x238 > 0 (0 von 2 Lagen wie RE2) - rot ohne den Bau
+1177:   ok: K2 Gegenprobe: Kanister abseits der Bahn bleibt bis Laufende auf Stufe 0 (Aufnahme t-1)
+1177: nb4: 0 Fehler
+1/2 Test #1177: unit_r41_gatorfix_nb4 ............   Passed   15.72 sec
+1178:   -- Teil B: echter Boss-Takt, freie Figur, 2400 Bilder je Lage (Lagen des Riegels raum) --
+1178:     (Lauf Gator-HP 24990: 16 Reaktionen, hp des Gators 24990)
+1178:     Lauf Gator-HP 24990 (W4200/-18700 ohne, ein Treffer am Gator): +0x218 & 0x20 = 1, Reaktionen mit Schaden 30: 16
+1178:     SUMME Teil B: 32 Lagen, Reaktionen 611 (vollstaendig 609, durch einen neuen Treffer abgebrochen 2; Sub 2 397, Sub 3 212), Abweichungen vom RE2-Modell 0 (davon Unterzustand 0); Angriffe: Rammen 66, CROSS-Biss 22, Hochbiss 8, Biss 515, Biss B2 0; Schaden 60: 595, 30: 16, sonst 0; Stuerze 64 (falsch 0), Raumhalt in Sturzbildern 0; RE1.5-Niederwurf-Bilder 0; Weg des Hakens (Luftlinie) max 4171, ueber RE2 0; Luftlinie gesamt max 5745 (109 ueber 3735/3080, Koerper-/Boss-Schub + Klemme bis 2665); oben spaetester erster Treffer t450, laengste Pause oben 450
+1178:     Biss-Clip-Laeufe (Abnahme 8 M1, RE2 ein Treffer je Kiefer-Lauf): 527 Laeufe, 523 Treffer; Zweitbiss im selben Lauf 0, Lauf mit Bissbedingung ohne Treffer 0, Lagen mit erstem Treffer nach dem ersten Lauf mit Bedingung 0, Reaktionen durch einen neuen Treffer abgebrochen 2 - erster Abbruch F661: Reaktion art 2 Sub 3 nach 35 Bildern, neuer Treffer art 1; Treffer-Paare 594, kleinster Abstand 36 Bilder (Ausgabe)
+1178:   ok: (a) ein Treffer je Biss-Clip-Lauf wie RE2 je Kiefer-Lauf (Treffer-Einstieg verweigert bei PL+0x1D3 @0x801015a4-ac, Lauf-Ende +0x224 = 0 @0x80101558): 523 Treffer in 527 Laeufen, Zweitbisse 0; neuer Treffer nur im Liegen der Sub-3-Reaktion (RE2 loescht PL+0x1D3 dort @0x801032f0, in Sub 2 erst [scd] thread start slot=0 first_op=0x3B
+1178:   ok: (c) kein Biss-Lauf mit Bissbedingung (Fenster, Maul an der Figur, Reaktion zu Ende, keine Wand) ohne Treffer - RE2 trifft dort, T1 @0x801012fc fragt +0x238 nicht: Leerlaeufe 0, Lagen mit spaeterem Erstbiss 0
+1178:     Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): 30 Laeufe, 57 Treffer, Zweitbisse im selben Lauf 27, kleinster Abstand 20 - Lage 4200/-18700: 12 Laeufe mit Zweitbiss
+1178:   ok: Gegenprobe (a) Pruefhaken 'Sperre alt': Zweitbisse im selben Lauf wieder da (27) - rot ohne den Bau
+1178:     (b) Intro-Lage W4200/-18700 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 0 bei t7 mit +0x238 = 103, Leerlaeufe 0, Zweitbisse 0 -> wie RE2
+1178:     (b) Intro-Lage W6732/-18598 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 0 bei t7 mit +0x238 = 103, Leerlaeufe 0, Zweitbisse 0 -> wie RE2
+1178:   ok: (b) nach dem Intro-Ende beisst der Gator im ersten Lauf mit dem Maul an der Figur, waehrend +0x238 > 0 (RE2: Biss-Bremse frei @0x801008f8-918, nur Spurt-Sperre 110 @0x8010091c-20): 2 von 2 Lagen
+1178:     Gegenprobe Stand d8bf728b0 ('Sperre 238'): Intro-Lage W4200/-18700 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 1 bei t109 mit +0x238 = 1, Leerlaeufe 1, Zweitbisse 0 -> nicht RE2
+1178:     Gegenprobe Stand d8bf728b0 ('Sperre 238'): Intro-Lage W6732/-18598 (+0x238 = 110 am Start): 5 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 2 bei t133 mit +0x238 = 0, Leerlaeufe 2, Zweitbisse 0 -> nicht RE2
+1178:   ok: Gegenprobe (b) Pruefhaken 'Sperre 238' (Stand d8bf728b0): kein Biss im ersten Lauf bei +0x238 > 0 (0 von 2 Lagen wie RE2) - rot ohne den Bau
+1178:   ok: K2 Gegenprobe: Kanister abseits der Bahn bleibt bis Laufende auf Stufe 0 (Aufnahme t-1)
+1178: nb4_elza: 0 Fehler
+2/2 Test #1178: unit_r41_gatorfix_nb4_elza .......   Passed   15.56 sec

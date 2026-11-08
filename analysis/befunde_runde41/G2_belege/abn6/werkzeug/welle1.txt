@@ -1,0 +1,16 @@
+oben_leon neu FDR=0-4400/30
+oben_leon ohne FDR=0-4400/30
+oben_elza neu FDR=0-4400/30
+oben_elza ohne FDR=0-4400/30
+west5_elza neu FDR=600-3300/30
+west5_elza ohne FDR=600-3300/30
+west4_leon neu FDR=600-3300/30
+west4_leon ohne FDR=600-3300/30
+west4_elza neu FDR=600-3300/30
+west4_elza ohne FDR=600-3300/30
+abn2wand_leon ohne FDR=1000-1600/20
+abn2wand_leon neu
+frei4_leon neu
+frei4_leon ohne
+frei4_elza neu
+frei4_elza ohne

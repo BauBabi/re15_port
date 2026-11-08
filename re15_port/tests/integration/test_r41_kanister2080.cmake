@@ -101,9 +101,10 @@ file(STRINGS "${WORKDIR}/debug.log" _td REGEX "\\[tuer\\] Sequenz Archiv [0-9]+ 
 if(NOT _td)
     r41g_fehler("Lauf ankunft: kein Tuerweg 2090 -> 2080 (Leiter DOOR16, Tuer Slot 0 @ROOM2090 0x0996)")
 endif()
-file(STRINGS "${WORKDIR}/debug.log" _sp REGEX "\\[k2080\\] F[0-9]+ ROOM2080 nach Bit 110: 8 lebende Zombies \\(Tot-Bits 236\\.\\.243\\)")
+# Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 4): RE15_K2080_N_ZOMBIES 3 statt 8 (Tot-Bits 236..238)
+file(STRINGS "${WORKDIR}/debug.log" _sp REGEX "\\[k2080\\] F[0-9]+ ROOM2080 nach Bit 110: 3 lebende Zombies \\(Tot-Bits 236\\.\\.238\\)")
 if(NOT _sp)
-    r41g_fehler("Lauf ankunft: keine Zeile 'ROOM2080 nach Bit 110: 8 lebende Zombies'")
+    r41g_fehler("Lauf ankunft: keine Zeile 'ROOM2080 nach Bit 110: 3 lebende Zombies'")
 endif()
 file(STRINGS "${WORKDIR}/debug.log" _kn REGEX
      "\\[k2080\\] F[0-9]+ Knall \\(Knall-Bank Satz 0 = RE2 ROOM1060 Se_on 0x0a @0x0F48, Tuerknall der Irons-/Elza-Szene\\) - erstes Betreten nach Bit 110, Bit 114 = 1")
@@ -126,10 +127,10 @@ if(NOT _erste MATCHES "Knall: Knall-Bank")
 endif()
 file(STRINGS "${WORKDIR}/debug.log" _em REGEX "\\[spawn-diag\\] Sce_em_set type=0x16 behavior=0x02 slot=[0-7] pos=\\(-?[0-9]+,-14400,-?[0-9]+\\)")
 list(LENGTH _em _n_em)
-if(NOT _n_em EQUAL 8)
-    r41g_fehler("Lauf ankunft: ${_n_em} Zombie-Spawns auf Band 8 statt 8")
+if(NOT _n_em EQUAL 3)
+    r41g_fehler("Lauf ankunft: ${_n_em} Zombie-Spawns auf Band 8 statt 3")
 endif()
-message(STATUS "r41_kanister2080 ankunft: Tuerweg 2090 -> 2080, Knall (2 Lagen) vor 8 Zombies Typ 0x16 auf y -14400")
+message(STATUS "r41_kanister2080 ankunft: Tuerweg 2090 -> 2080, Knall (2 Lagen) vor 3 Zombies Typ 0x16 auf y -14400")
 
 # ---------------------------------------------------------------- ebene (Nachtrag 20: oberhalb der Treppe, kein Abstieg)
 set(WORKDIR "${_basis}/ebene")
@@ -146,7 +147,7 @@ if(NOT _ab)
     r41g_fehler("Lauf ebene: kein Abstieg ueber die Treppe @0x0BE2 (Band 8 -> 5)")
 endif()
 file(STRINGS "${WORKDIR}/debug.log" _eb REGEX "\\[k2080\\] F[0-9]+ Ebene: ")
-file(STRINGS "${WORKDIR}/debug.log" _eb_ok REGEX "\\[k2080\\] F[0-9]+ Ebene: 8 Zombies x -?[0-9]+\\.\\.-?[0-9]+ y -14400\\.\\.-14400, ${_ebene_ok}")
+file(STRINGS "${WORKDIR}/debug.log" _eb_ok REGEX "\\[k2080\\] F[0-9]+ Ebene: 3 Zombies x -?[0-9]+\\.\\.-?[0-9]+ y -14400\\.\\.-14400, ${_ebene_ok}")
 list(LENGTH _eb _n_eb)
 list(LENGTH _eb_ok _n_eb_ok)
 if(_n_eb LESS 20 OR NOT _n_eb EQUAL _n_eb_ok)
@@ -234,12 +235,12 @@ foreach(_wer leon elza)
     endif()
     foreach(_muster
             "AUSLOESER geschwaecht .*-> ROOM${_r80}"
-            "ROOM${_r80} SZENE \\(${_npc}, 8 lebende Zombies"
+            "ROOM${_r80} SZENE \\(${_npc}, 3 lebende Zombies"
             "Tuer-Ton DOOR06 Satz 1 \\(Door_exit @0x800141f0\\) - Szene"
             "Kanister aufgehoben \\(Loco c11 Bild 24, Hinknien ROOM11B0 sub06 @0x01650\\)"
             "Wurf: Start .* -> Landung \\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) nach [0-9]+ Bildern"
             "Aufschlag im Wasser"
-            "ROOM${_r90} RUECKKEHR: .*Zone-7-Tot-Bits 236\\.\\.243 gesetzt: 8 von 8"
+            "ROOM${_r90} RUECKKEHR: .*Zone-7-Tot-Bits 236\\.\\.238 gesetzt: 3 von 3"
             "ROOM${_r90} Kanister im Becken \\(-?[0-9]+,-1200,-?[0-9]+\\) = Aufschlagstelle")
         file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[k2080\\] F[0-9]+ ${_muster}")
         if(NOT _z)
@@ -258,8 +259,8 @@ foreach(_wer leon elza)
     list(LENGTH _ka _n_ka)
     file(STRINGS "${WORKDIR}/debug.log" _sch REGEX "\\[k2080\\] F[0-9]+ Schuss [0-9]+: Treffer Slot [0-9]+ .*hp=-1 state=3 zeile=5")
     list(LENGTH _sch _n_sch)
-    if(NOT _n_ka EQUAL 8 OR NOT _n_sch EQUAL 8)
-        r41g_fehler("Lauf szene_${_wer}: ${_n_sch} Kopfschuesse (zeile 5) und ${_n_ka} x Kopf ab statt je 8")
+    if(NOT _n_ka EQUAL 3 OR NOT _n_sch EQUAL 3)   # Runde 41 Spur G2 (Punkt 4)
+        r41g_fehler("Lauf szene_${_wer}: ${_n_sch} Kopfschuesse (zeile 5) und ${_n_ka} x Kopf ab statt je 3")
     endif()
     file(STRINGS "${WORKDIR}/debug.log" _eb REGEX "\\[k2080\\] F[0-9]+ Ebene: ")
     file(STRINGS "${WORKDIR}/debug.log" _eb_ok REGEX "\\[k2080\\] F[0-9]+ Ebene: [0-9]+ Zombies x -?[0-9]+\\.\\.-?[0-9]+ y -14400\\.\\.-14400, ${_ebene_ok}")
@@ -268,8 +269,9 @@ foreach(_wer leon elza)
     if(_n_eb EQUAL 0 OR NOT _n_eb EQUAL _n_eb_ok)
         r41g_fehler("Lauf szene_${_wer}: ${_n_eb_ok} von ${_n_eb} Ebene-Zeilen ohne Zombie auf der Treppe / ausserhalb y -14400")
     endif()
-    # Schnittfolge in 2080 (Spieler auf dem Parkplatz -23200,-16700): erste Bilder je Cut
-    file(STRINGS "${WORKDIR}/state.log" _st REGEX "PL\\(-23200,-16700,")
+    # Schnittfolge in 2080 (Spieler an der Leiter-Ankunft -9950,-25700 bis zum Schnitt auf Cut 5, dann auf dem Parkplatz -23200,-16700 - Runde 41
+    # Spur G2 Punkt 4): erste Bilder je Cut
+    file(STRINGS "${WORKDIR}/state.log" _st REGEX "PL\\(-23200,-16700,|PL\\(-9950,-25700,")
     set(_folge "")
     set(_letzt "")
     set(_msg42 0)

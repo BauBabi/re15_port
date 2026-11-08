@@ -1,0 +1,37 @@
+# reichweite.py auf die Abnahme-6-Laeufe (scratchpad g2nb3/abn6/runs, exe 5910fc24): Bahn = gator_trag.log ab der Aufnahme (Verfolgung bitgleich ohne Kanister); Liegestelle aus debug.log
+Fenster laengs [0,6000) |quer| < 1733
+alt_neu_kante_-800_-21200_0_elza   Kanister (-6842,-12641) Bilder  3019 CHASE   609  im Fenster  147  Besuche  8  erste [1285, 1336, 1356, 2361, 2412, 2472, 2533, 2579]  Wurzel min 295
+alt_ohne_kante_-1300_-20700_0_elza Kanister (-6842,-12641) Bilder  2925 CHASE  1391  im Fenster    2  Besuche  1  erste [3553]  Wurzel min 1490
+alt_ohne_kante_0_-20900_2_leon     Kanister (-6870,-12651) Bilder  3188 CHASE   986  im Fenster   93  Besuche  6  erste [413, 802, 1415, 1804, 2697, 3505]  Wurzel min 78
+alt_ohne_kante_100_-20900_2_leon   Kanister (-6870,-12651) Bilder  3038 CHASE  1304  im Fenster  211  Besuche 15  erste [668, 720, 960, 1071, 1164, 1303, 1398, 1409, 1541, 1612, 1660, 1743, 2085, 2415, 2459]  Wurzel min 199
+neu_abn2rw_alt_leon                Kanister (-6870,-12651) Bilder   328 CHASE   199  im Fenster    0  Besuche  0  erste []  Wurzel min 6123
+neu_abn2wand_leon                  Kanister (-6870,-12651) Bilder  7750 CHASE  4740  im Fenster    0  Besuche  0  erste []  Wurzel min 6228
+neu_frei4_elza                     Kanister (-6842,-12641) Bilder  7454 CHASE  4000  im Fenster  194  Besuche 14  erste [1168, 1288, 1501, 1575, 1628, 1801, 1901, 2067, 2188, 2379, 2554, 2667, 2897, 2956]  Wurzel min 420
+neu_frei4_leon                     Kanister (-6870,-12651) Bilder  7805 CHASE  4046  im Fenster  121  Besuche  9  erste [698, 816, 921, 1009, 1618, 3002, 3542, 3552, 5705]  Wurzel min 447
+neu_kante_-1300_-20700_0_elza      Kanister (-6842,-12641) Bilder  2962 CHASE  1844  im Fenster    0  Besuche  0  erste []  Wurzel min 6124
+neu_kante_-500_-21800_0_leon       Kanister (-6870,-12651) Bilder  3191 CHASE  1168  im Fenster   48  Besuche 10  erste [453, 473, 476, 480, 483, 486, 488, 911, 1435, 2983]  Wurzel min 2277
+neu_kante_-800_-21200_0_elza       Kanister (-6842,-12641) Bilder  2947 CHASE  1829  im Fenster    0  Besuche  0  erste []  Wurzel min 6154
+neu_kante_0_-20900_2_leon          Kanister (-6870,-12651) Bilder  2902 CHASE  1763  im Fenster    0  Besuche  0  erste []  Wurzel min 6243
+neu_kante_2800_-18700_2_leon       Kanister (-6870,-12651) Bilder  2941 CHASE  1780  im Fenster    0  Besuche  0  erste []  Wurzel min 6169
+neu_oben_elza                      Kanister (-6842,-12641) Bilder  3362 CHASE    44  im Fenster    0  Besuche  0  erste []  Wurzel min 3920
+neu_oben_leon                      Kanister (-6870,-12651) Bilder  3362 CHASE    44  im Fenster    0  Besuche  0  erste []  Wurzel min 3948
+neu_west4_elza                     Kanister (-6842,-12641) Bilder  2627 CHASE   893  im Fenster    0  Besuche  0  erste []  Wurzel min 1981
+neu_west4_leon                     Kanister (-6870,-12651) Bilder  2509 CHASE  1509  im Fenster    0  Besuche  0  erste []  Wurzel min 2588
+neu_west5_elza                     Kanister (-6842,-12641) Bilder  2664 CHASE   749  im Fenster    0  Besuche  0  erste []  Wurzel min 6264
+ohne_abn2wand_leon                 Kanister (-6870,-12651) Bilder  7750 CHASE  4740  im Fenster    0  Besuche  0  erste []  Wurzel min 6228
+ohne_abn2wand_leon_fd              Kanister (-6870,-12651) Bilder   950 CHASE   601  im Fenster    0  Besuche  0  erste []  Wurzel min 6228
+ohne_frei4_elza                    Kanister (-6842,-12641) Bilder  7454 CHASE  4000  im Fenster  194  Besuche 14  erste [1168, 1288, 1501, 1575, 1628, 1801, 1901, 2067, 2188, 2379, 2554, 2667, 2897, 2956]  Wurzel min 420
+ohne_frei4_leon                    Kanister (-6870,-12651) Bilder  7805 CHASE  4046  im Fenster  121  Besuche  9  erste [698, 816, 921, 1009, 1618, 3002, 3542, 3552, 5705]  Wurzel min 447
+ohne_kante_-1300_-20700_0_elza     Kanister (-6842,-12641) Bilder  2962 CHASE  1844  im Fenster    0  Besuche  0  erste []  Wurzel min 6124
+ohne_kante_-2300_-16000_0_elza     Kanister (-6842,-12641) Bilder  2941 CHASE  1427  im Fenster  148  Besuche 12  erste [811, 852, 1073, 1300, 1527, 1632, 1718, 1827, 3021, 3324, 3375, 3584]  Wurzel min 572
+ohne_kante_0_-20900_2_leon         Kanister (-6870,-12651) Bilder  2902 CHASE  1763  im Fenster    0  Besuche  0  erste []  Wurzel min 6243
+ohne_kante_100_-20900_2_leon       Kanister (-6870,-12651) Bilder  2884 CHASE  1024  im Fenster   70  Besuche  3  erste [1858, 1929, 3148]  Wurzel min 1309
+ohne_kante_1500_-21400_2_elza      Kanister (-6842,-12641) Bilder  2930 CHASE  1812  im Fenster    0  Besuche  0  erste []  Wurzel min 6210
+ohne_kante_4073_-19322_0_leon      Kanister (-6870,-12651) Bilder  2962 CHASE  1844  im Fenster    0  Besuche  0  erste []  Wurzel min 6173
+ohne_kante_5000_-18900_2_elza      Kanister (-6842,-12641) Bilder  2921 CHASE  1841  im Fenster    0  Besuche  0  erste []  Wurzel min 6156
+ohne_oben_elza                     Kanister (-6842,-12641) Bilder  3362 CHASE    44  im Fenster    0  Besuche  0  erste []  Wurzel min 3920
+ohne_oben_leon                     Kanister (-6870,-12651) Bilder  3362 CHASE    44  im Fenster    0  Besuche  0  erste []  Wurzel min 3948
+ohne_west4_elza                    Kanister (-6842,-12641) Bilder  2627 CHASE   893  im Fenster    0  Besuche  0  erste []  Wurzel min 1981
+ohne_west4_leon                    Kanister (-6870,-12651) Bilder  2509 CHASE  1509  im Fenster    0  Besuche  0  erste []  Wurzel min 2588
+ohne_west5_elza                    Kanister (-6842,-12641) Bilder  2664 CHASE   749  im Fenster    0  Besuche  0  erste []  Wurzel min 6264
+ohne_west5_elza_fd                 Kanister (-6842,-12641) Bilder  2664 CHASE   749  im Fenster    0  Besuche  0  erste []  Wurzel min 6264

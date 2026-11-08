@@ -389,8 +389,9 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
         extern int re15_player_death_cmd3_active(void);
         extern int re15_player_react_pose_pl00(void);
         extern int re15_player_victim_own_bank(void);   /* Runde 35 Spur J: Gorilla-Wurf P3-P6 @0x8011c350/@0x8011c358 = acad8/acbc0 */
+        extern int re15_gator_treffer_r41_pl00(void);   /* Runde 41 G2-RE2 NB4: RE2 Sub 3 Ph6 = Basis-Clip 6 rw (+0x108/+0x17C @0x80103348-4c) = PL00 Clip 11 */
         if (is_player && banks->pl00_ok &&
-            (re15_player_hit_flinch_active() || re15_player_knockdown_active() ||
+            (re15_player_hit_flinch_active() || re15_player_knockdown_active() || re15_gator_treffer_r41_pl00() ||
              re15_player_death_cmd3_active() || re15_player_react_pose_pl00() || re15_player_victim_own_bank())) {
             out->skel = banks->pl00_skel;
             out->anim = banks->pl00_anim;

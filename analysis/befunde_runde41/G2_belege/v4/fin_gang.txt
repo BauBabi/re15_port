@@ -1,0 +1,5 @@
+== gang (G2-RE2: Gang ohne Kanister gleich NB5) ==
+    nb5 2700 Bilder, neu 2700 Bilder (Clip 1 in 294), abweichend 0; Gegenprobe RE1.5-Tempo 2700 Bilder, abweichend 2699
+  ok: ohne Kanister Bild fuer Bild gleich NB5 (Lage, Gier, Clip, Bild, Hoehe): 0 von 2700 abweichend
+  ok: Gegenprobe RE1.5-Tempo ohne Kanister: abweichend 2699 (rot ohne den Bau)
+gang: 0 Fehler

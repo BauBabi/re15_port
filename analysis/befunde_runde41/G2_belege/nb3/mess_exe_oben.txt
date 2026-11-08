@@ -1,0 +1,57 @@
+neu_oben_leon: 4401 Bilder (F0..F4400); Figur oben 3733 Bilder (erstes F668, letztes F4400); Treffer gesamt 27
+    Treffer F152   ph-1       Figur (3801,0,-19021) unten | Gator Wurzel (3627,-22471) Gier 3113 Clip 4 Bild 7, Kopf (3830,-19241) | cam 2
+    Treffer F287   ph-1       Figur (3301,0,-19343) unten | Gator Wurzel (4617,-22534) Gier 2821 Clip 4 Bild 7, Kopf (3401,-19534) | cam 2
+    Treffer F461   ph-1       Figur (2931,0,-19846) unten | Gator Wurzel (4704,-22862) Gier 2943 Clip 4 Bild 7, Kopf (4067,-19689) | cam 2
+    Treffer F880   Rammen     Figur (4428,-1800,-14968) OBEN | Gator Wurzel (4450,-20664) Gier 3069 Clip 0 Bild 1, Kopf (4435,-17428) | cam 2
+    Treffer F1152  Hochbiss   Figur (2300,-1800,-15920) OBEN | Gator Wurzel (3789,-12372) Gier 857 Clip 4 Bild 32, Kopf (4608,-15502) | cam 2
+    Treffer F1989  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (-562,-21944) Gier 4085 Clip 4 Bild 12, Kopf (2673,-21889) | cam 2
+    Treffer F2094  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1283,-21905) Gier 4089 Clip 4 Bild 6, Kopf (4518,-21870) | cam 2
+    Treffer F2199  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1701,-22193) Gier 97 Clip 4 Bild 6, Kopf (4901,-22672) | cam 2
+    Treffer F2304  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1938,-22013) Gier 2085 Clip 4 Bild 6, Kopf (-1292,-21829) | cam 2
+    Treffer F2409  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (450,-21924) Gier 1115 Clip 4 Bild 6, Kopf (0,-25128) | cam 2
+    Treffer F2514  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1306,-22093) Gier 3877 Clip 4 Bild 6, Kopf (4361,-21026) | cam 2
+    Treffer F2681  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (3029,-22088) Gier 2087 Clip 4 Bild 11, Kopf (-201,-21894) | cam 2
+    Treffer F2786  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (437,-21926) Gier 2079 Clip 4 Bild 6, Kopf (-2795,-21772) | cam 2
+    Treffer F2891  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1293,-22097) Gier 3877 Clip 4 Bild 6, Kopf (4348,-21030) | cam 2
+    Treffer F2996  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1439,-22213) Gier 83 Clip 4 Bild 6, Kopf (4648,-22623) | cam 2
+    Treffer F3101  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (2239,-22045) Gier 2087 Clip 4 Bild 6, Kopf (-991,-21851) | cam 2
+    Treffer F3206  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (463,-21934) Gier 1639 Clip 4 Bild 6, Kopf (-2156,-23833) | cam 2
+    Treffer F3311  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1310,-22107) Gier 3859 Clip 4 Bild 6, Kopf (4334,-20956) | cam 2
+    Treffer F3416  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (2256,-22318) Gier 83 Clip 4 Bild 6, Kopf (5465,-22728) | cam 2
+    Treffer F3521  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1346,-21990) Gier 2087 Clip 4 Bild 6, Kopf (-1884,-21796) | cam 2
+    Treffer F3626  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (571,-22122) Gier 487 Clip 4 Bild 6, Kopf (2945,-24320) | cam 2
+    Treffer F3731  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1327,-22094) Gier 3675 Clip 4 Bild 6, Kopf (3911,-20146) | cam 2
+    Treffer F3888  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (3039,-22095) Gier 2087 Clip 4 Bild 11, Kopf (-191,-21901) | cam 2
+    Treffer F3993  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (447,-21933) Gier 2087 Clip 4 Bild 6, Kopf (-2783,-21739) | cam 2
+    Treffer F4098  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1294,-22111) Gier 3861 Clip 4 Bild 6, Kopf (4322,-20969) | cam 2
+    Treffer F4203  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (1398,-22216) Gier 81 Clip 4 Bild 6, Kopf (4609,-22617) | cam 2
+    Treffer F4308  Hochbiss   Figur (1382,-1800,-18587) OBEN | Gator Wurzel (2198,-22043) Gier 2087 Clip 4 Bild 6, Kopf (-1032,-21849) | cam 2
+  oben F668..F4400 (3733 Bilder = 124.4 s): Treffer 24 (erster nach 212 Bildern = 7.1 s), laengste Pause ohne Treffer 837 Bilder = 27.9 s; Phasen 2:1, 5:3492, 7:240; cam 2:3733
+
+ohne_oben_leon: 4401 Bilder (F0..F4400); Figur oben 1183 Bilder (erstes F668, letztes F1850); Treffer gesamt 8
+    Treffer F152   ph-1       Figur (3801,0,-19021) unten | Gator Wurzel (3627,-22471) Gier 3113 Clip 4 Bild 7, Kopf (3830,-19241) | cam 2
+    Treffer F287   ph-1       Figur (3301,0,-19343) unten | Gator Wurzel (4617,-22534) Gier 2821 Clip 4 Bild 7, Kopf (3401,-19534) | cam 2
+    Treffer F461   ph-1       Figur (2931,0,-19846) unten | Gator Wurzel (4704,-22862) Gier 2943 Clip 4 Bild 7, Kopf (4067,-19689) | cam 2
+    Treffer F1078  CROSS-Biss Figur (4428,-1800,-14968) OBEN | Gator Wurzel (5345,-18904) Gier 2987 Clip 0 Bild 49, Kopf (4924,-15695) | cam 2
+    Treffer F1276  Hochbiss   Figur (2307,-1800,-15582) OBEN | Gator Wurzel (3360,-11937) Gier 2513 Clip 4 Bild 6, Kopf (912,-9819) | cam 2
+    Treffer F1381  Hochbiss   Figur (2307,-1800,-14993) OBEN | Gator Wurzel (4336,-12132) Gier 3105 Clip 4 Bild 6, Kopf (4499,-8900) | cam 2
+    Treffer F1486  Hochbiss   Figur (2307,-1800,-14993) OBEN | Gator Wurzel (4318,-12051) Gier 869 Clip 4 Bild 6, Kopf (5080,-15195) | cam 2
+    Treffer F1850  CROSS-Biss Figur (2307,-1800,-17642) OBEN | Gator Wurzel (3960,-14173) Gier 1165 Clip 0 Bild 62, Kopf (3265,-17333) | cam 2
+  oben F668..F1850 (1183 Bilder = 39.4 s): Treffer 5 (erster nach 410 Bildern = 13.7 s), laengste Pause ohne Treffer 410 Bilder = 13.7 s; Phasen 2:1, 5:879, 7:303; cam 2:1183
+
+neu_oben_elza: 4401 Bilder (F0..F4400); Figur oben 970 Bilder (erstes F668, letztes F1637); Treffer gesamt 5
+    Treffer F159   ph-1       Figur (3345,0,-19154) unten | Gator Wurzel (4491,-22408) Gier 2847 Clip 4 Bild 7, Kopf (3396,-19362) | cam 2
+    Treffer F338   ph-1       Figur (3502,0,-19659) unten | Gator Wurzel (3875,-23185) Gier 3077 Clip 4 Bild 7, Kopf (3899,-19949) | cam 2
+    Treffer F445   ph-1       Figur (5083,0,-19300) unten | Gator Wurzel (3023,-22244) Gier 3275 Clip 4 Bild 7, Kopf (4014,-19163) | cam 2
+    Treffer F1254  Hochbiss   Figur (2318,-1800,-14968) OBEN | Gator Wurzel (5303,-12525) Gier 1907 Clip 4 Bild 7, Kopf (2142,-13219) | cam 2
+    Treffer F1637  CROSS-Biss Figur (2318,-1800,-17642) OBEN | Gator Wurzel (4648,-14870) Gier 1251 Clip 0 Bild 81, Kopf (3543,-17911) | cam 2
+  oben F668..F1637 (970 Bilder = 32.3 s): Treffer 2 (erster nach 586 Bildern = 19.5 s), laengste Pause ohne Treffer 586 Bilder = 19.5 s; Phasen -1:37, 5:851, 7:82; cam 2:970
+
+ohne_oben_elza: 4401 Bilder (F0..F4400); Figur oben 970 Bilder (erstes F668, letztes F1637); Treffer gesamt 5
+    Treffer F159   ph-1       Figur (3345,0,-19154) unten | Gator Wurzel (4491,-22408) Gier 2847 Clip 4 Bild 7, Kopf (3396,-19362) | cam 2
+    Treffer F338   ph-1       Figur (3502,0,-19659) unten | Gator Wurzel (3875,-23185) Gier 3077 Clip 4 Bild 7, Kopf (3899,-19949) | cam 2
+    Treffer F445   ph-1       Figur (5083,0,-19300) unten | Gator Wurzel (3023,-22244) Gier 3275 Clip 4 Bild 7, Kopf (4014,-19163) | cam 2
+    Treffer F1254  Hochbiss   Figur (2318,-1800,-14968) OBEN | Gator Wurzel (5303,-12525) Gier 1907 Clip 4 Bild 7, Kopf (2142,-13219) | cam 2
+    Treffer F1637  CROSS-Biss Figur (2318,-1800,-17642) OBEN | Gator Wurzel (4648,-14870) Gier 1251 Clip 0 Bild 81, Kopf (3543,-17911) | cam 2
+  oben F668..F1637 (970 Bilder = 32.3 s): Treffer 2 (erster nach 586 Bildern = 19.5 s), laengste Pause ohne Treffer 586 Bilder = 19.5 s; Phasen -1:37, 5:851, 7:82; cam 2:970
+

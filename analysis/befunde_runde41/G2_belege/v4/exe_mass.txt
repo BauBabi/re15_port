@@ -1,0 +1,54 @@
+# G2-RE2 NB2 (Vorschlag 4) - exe-Fensterlaeufe, Mass werkzeug/mass_v4.py + test_r41_gatorfix tragvergleich/traglog. Eingaben/Umgebung der Abnahme 4 (werkzeug/batch.sh).
+# f942 = Laeufe auf f942f56c0 (exe 15aa14b5, scratchpad g2re2/runs); neu/ohne west* = exe re15_pc_g2v4_final.exe (Stand c06bcfefa, Baum build_v4b, md5 f7037901c4a7a6e669a6518019a2a7aa);
+# neu/ohne frei4 = exe Stand 4b794e625 (md5 d2290ddb...; Unterschied zu c06bcfefa nur die Pause nach einer Belagerungs-Querung - beide frei4-Laeufe haben 0 Bilder in Phase 5/7 bzw. nur Querungen der Verfolgung, gleich in mit/ohne);
+# ohne = Messhaken RE15_G2_OHNE_KANISTER=1 (der Kanister verschwindet beim Tragen = Gang ohne Kanister).
+
+== frei4_leon
+f942 frei4_leon: 7805 Bilder (4.3 min) | ohne Fortschritt zur Figur 38.5 s | Drehen 15.2 % (ganz fern 13.4 %) | rueckwaerts 17.1 % (45), Tauch 1, Haenger 1 | Kopf in Plattform/Rampe 0.1 % (+Kanister 21.8 %) | Kopf < 2500 vor der Kamera 0.0 %, hinter 0.0 % (+Kanister < 2500 0.8 %) | Rammen 0, Querungen 0 | Kanister-Sitz 7830 Bilder, Abweichung max 0 (letzte Zeile F8399) | Kanister ausserhalb Regions-Viereck 0
+neu  neu_frei4_leon: 7805 Bilder (4.3 min) | ohne Fortschritt zur Figur 4.1 s | Drehen 63.2 % (ganz fern 1.6 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.4 % (+Kanister 7.2 %) | Kopf < 2500 vor der Kamera 6.9 %, hinter 0.0 % (+Kanister < 2500 22.3 %) | Rammen 0, Querungen 0 | Kanister-Sitz 7830 Bilder, Abweichung max 0 (letzte Zeile F8399) | Kanister ausserhalb Regions-Viereck 0
+neu    gegen ohne_frei4_leon: 7805 gemeinsame Bilder (mit 7805, ohne 7805), abweichend 0, erstes FNone (Phase mit/ohne None)
+ohne ohne_frei4_leon: 7805 Bilder (4.3 min) | ohne Fortschritt zur Figur 4.1 s | Drehen 63.2 % (ganz fern 1.6 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.4 % (+Kanister 7.2 %) | Kopf < 2500 vor der Kamera 6.9 %, hinter 0.0 % (+Kanister < 2500 22.3 %) | Rammen 0, Querungen 0 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F570) | Kanister ausserhalb Regions-Viereck 0
+neu  tragvergleich: 7805 Bilder mit Kanister, 7805 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1); Kanister-Sitz 7830 Bilder, Abweichung max 0
+traglog frei4_leon: 2-s-Fenster ohne Fortschritt 1 Figur oben 0 Bilder 2-s-Fenster fern der Figur 1 
+traglog neu_frei4_leon: 2-s-Fenster ohne Fortschritt 48 Figur oben 0 Bilder 2-s-Fenster fern der Figur 0 
+traglog ohne_frei4_leon: 2-s-Fenster ohne Fortschritt 48 Figur oben 0 Bilder 2-s-Fenster fern der Figur 0 
+
+== frei4_elza
+f942 frei4_elza: 7454 Bilder (4.1 min) | ohne Fortschritt zur Figur 48.1 s | Drehen 26.3 % (ganz fern 18.2 %) | rueckwaerts 11.7 % (29), Tauch 11, Haenger 20 | Kopf in Plattform/Rampe 0.1 % (+Kanister 9.5 %) | Kopf < 2500 vor der Kamera 0.0 %, hinter 0.0 % (+Kanister < 2500 0.3 %) | Rammen 0, Querungen 0 | Kanister-Sitz 7470 Bilder, Abweichung max 0 (letzte Zeile F8390) | Kanister ausserhalb Regions-Viereck 0
+neu  neu_frei4_elza: 7454 Bilder (4.1 min) | ohne Fortschritt zur Figur 7.4 s | Drehen 47.6 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.7 % (+Kanister 11.0 %) | Kopf < 2500 vor der Kamera 12.2 %, hinter 0.5 % (+Kanister < 2500 21.1 %) | Rammen 0, Querungen 1 | Kanister-Sitz 7470 Bilder, Abweichung max 0 (letzte Zeile F8390) | Kanister ausserhalb Regions-Viereck 0
+neu    gegen ohne_frei4_elza: 7454 gemeinsame Bilder (mit 7454, ohne 7454), abweichend 0, erstes FNone (Phase mit/ohne None)
+ohne ohne_frei4_elza: 7454 Bilder (4.1 min) | ohne Fortschritt zur Figur 7.4 s | Drehen 47.6 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.7 % (+Kanister 11.0 %) | Kopf < 2500 vor der Kamera 12.2 %, hinter 0.5 % (+Kanister < 2500 21.1 %) | Rammen 0, Querungen 1 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F921) | Kanister ausserhalb Regions-Viereck 0
+neu  tragvergleich: 7454 Bilder mit Kanister, 7454 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1); Kanister-Sitz 7470 Bilder, Abweichung max 0
+traglog frei4_elza: 2-s-Fenster ohne Fortschritt 186 Figur oben 0 Bilder 2-s-Fenster fern der Figur 183 
+traglog neu_frei4_elza: 2-s-Fenster ohne Fortschritt 231 Figur oben 16 Bilder 2-s-Fenster fern der Figur 209 
+traglog ohne_frei4_elza: 2-s-Fenster ohne Fortschritt 231 Figur oben 16 Bilder 2-s-Fenster fern der Figur 209 
+
+== west4_leon
+f942 west4_leon: 2650 Bilder (1.5 min) | ohne Fortschritt zur Figur 7.0 s | Drehen 0.0 % (ganz fern 0.0 %) | rueckwaerts 30.3 % (27), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.0 % (+Kanister 18.8 %) | Kopf < 2500 vor der Kamera 0.0 %, hinter 0.0 % (+Kanister < 2500 8.9 %) | Rammen 1, Querungen 1 | Kanister-Sitz 2670 Bilder, Abweichung max 0 (letzte Zeile F3294) | Kanister ausserhalb Regions-Viereck 0
+neu  f_neu_west4_leon: 2650 Bilder (1.5 min) | ohne Fortschritt zur Figur 11.1 s | Drehen 0.0 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 11.4 % (+Kanister 19.3 %) | Kopf < 2500 vor der Kamera 3.7 %, hinter 0.1 % (+Kanister < 2500 6.0 %) | Rammen 2, Querungen 4 | Kanister-Sitz 2670 Bilder, Abweichung max 0 (letzte Zeile F3294) | Kanister ausserhalb Regions-Viereck 0
+neu    gegen f_ohne_west4_leon: 2650 gemeinsame Bilder (mit 2650, ohne 2650), abweichend 2433, erstes F868 (Phase mit/ohne (5, 5)), davon vor der ersten Querung mit Kanister: 11
+ohne f_ohne_west4_leon: 2650 Bilder (1.5 min) | ohne Fortschritt zur Figur 3.0 s | Drehen 35.4 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 1.4 % (+Kanister 9.0 %) | Kopf < 2500 vor der Kamera 1.5 %, hinter 0.1 % (+Kanister < 2500 3.7 %) | Rammen 0, Querungen 1 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F625) | Kanister ausserhalb Regions-Viereck 0
+neu  tragvergleich: 2650 Bilder mit Kanister, 2650 gemeinsame Bilder, abweichend 2433, erste Abweichung F868 (Phase mit 5 / ohne 5, erstes Rammen F880); Kanister-Sitz 2670 Bilder, Abweichung max 0
+traglog west4_leon: 2-s-Fenster ohne Fortschritt 0 Figur oben 215 Bilder 2-s-Fenster fern der Figur 0 
+traglog f_neu_west4_leon: 2-s-Fenster ohne Fortschritt 35 Figur oben 2302 Bilder 2-s-Fenster fern der Figur 22 
+traglog f_ohne_west4_leon: 2-s-Fenster ohne Fortschritt 127 Figur oben 344 Bilder 2-s-Fenster fern der Figur 0 
+
+== west4_elza
+f942 west4_elza: 2688 Bilder (1.5 min) | ohne Fortschritt zur Figur 66.5 s | Drehen 27.8 % (ganz fern 27.8 %) | rueckwaerts 25.7 % (23), Tauch 1, Haenger 1 | Kopf in Plattform/Rampe 0.0 % (+Kanister 36.9 %) | Kopf < 2500 vor der Kamera 0.0 %, hinter 0.0 % (+Kanister < 2500 1.1 %) | Rammen 0, Querungen 0 | Kanister-Sitz 2700 Bilder, Abweichung max 0 (letzte Zeile F3286) | Kanister ausserhalb Regions-Viereck 0
+neu  f_neu_west4_elza: 2688 Bilder (1.5 min) | ohne Fortschritt zur Figur 7.3 s | Drehen 83.4 % (ganz fern 29.8 %) | rueckwaerts 2.1 % (2), Tauch 0, Haenger 2 | Kopf in Plattform/Rampe 0.7 % (+Kanister 31.7 %) | Kopf < 2500 vor der Kamera 24.3 %, hinter 7.3 % (+Kanister < 2500 29.6 %) | Rammen 1, Querungen 1 | Kanister-Sitz 2700 Bilder, Abweichung max 0 (letzte Zeile F3286) | Kanister ausserhalb Regions-Viereck 0
+neu    gegen f_ohne_west4_elza: 2688 gemeinsame Bilder (mit 2688, ohne 2688), abweichend 1857, erstes F1444 (Phase mit/ohne (2, 2)), davon vor der ersten Querung mit Kanister: 0
+ohne f_ohne_west4_elza: 2688 Bilder (1.5 min) | ohne Fortschritt zur Figur 7.3 s | Drehen 77.0 % (ganz fern 17.4 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.3 % (+Kanister 6.5 %) | Kopf < 2500 vor der Kamera 10.4 %, hinter 4.3 % (+Kanister < 2500 11.0 %) | Rammen 0, Querungen 1 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F587) | Kanister ausserhalb Regions-Viereck 0
+neu  tragvergleich: 2688 Bilder mit Kanister, 2688 gemeinsame Bilder, abweichend 1857, erste Abweichung F1444 (Phase mit 2 / ohne 2, erstes Rammen F1183); Kanister-Sitz 2700 Bilder, Abweichung max 0
+traglog west4_elza: 2-s-Fenster ohne Fortschritt 11 Figur oben 0 Bilder 2-s-Fenster fern der Figur 11 
+traglog f_neu_west4_elza: 2-s-Fenster ohne Fortschritt 107 Figur oben 0 Bilder 2-s-Fenster fern der Figur 103 
+traglog f_ohne_west4_elza: 2-s-Fenster ohne Fortschritt 9 Figur oben 0 Bilder 2-s-Fenster fern der Figur 0 
+
+== west5_elza
+f942 west5_elza: 2596 Bilder (1.4 min) | ohne Fortschritt zur Figur 6.8 s | Drehen 0.0 % (ganz fern 0.0 %) | rueckwaerts 11.6 % (10), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 0.0 % (+Kanister 11.4 %) | Kopf < 2500 vor der Kamera 0.0 %, hinter 0.0 % (+Kanister < 2500 0.9 %) | Rammen 7, Querungen 7 | Kanister-Sitz 2610 Bilder, Abweichung max 0 (letzte Zeile F3288) | Kanister ausserhalb Regions-Viereck 0
+neu  f_neu_west5_elza: 2596 Bilder (1.4 min) | ohne Fortschritt zur Figur 9.6 s | Drehen 31.4 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 3.1 % (+Kanister 3.6 %) | Kopf < 2500 vor der Kamera 1.1 %, hinter 0.0 % (+Kanister < 2500 3.7 %) | Rammen 2, Querungen 2 | Kanister-Sitz 2610 Bilder, Abweichung max 0 (letzte Zeile F3288) | Kanister ausserhalb Regions-Viereck 0
+neu    gegen f_ohne_west5_elza: 2596 gemeinsame Bilder (mit 2596, ohne 2596), abweichend 1367, erstes F1934 (Phase mit/ohne (2, 2)), davon vor der ersten Querung mit Kanister: 0
+ohne f_ohne_west5_elza: 2596 Bilder (1.4 min) | ohne Fortschritt zur Figur 9.6 s | Drehen 31.4 % (ganz fern 0.0 %) | rueckwaerts 0.0 % (0), Tauch 0, Haenger 0 | Kopf in Plattform/Rampe 3.1 % (+Kanister 3.8 %) | Kopf < 2500 vor der Kamera 1.1 %, hinter 0.0 % (+Kanister < 2500 5.0 %) | Rammen 0, Querungen 2 | Kanister-Sitz 1 Bilder, Abweichung max 0 (letzte Zeile F679) | Kanister ausserhalb Regions-Viereck 0
+neu  tragvergleich: 2596 Bilder mit Kanister, 2596 gemeinsame Bilder, abweichend 1367, erste Abweichung F1934 (Phase mit 2 / ohne 2, erstes Rammen F1103); Kanister-Sitz 2610 Bilder, Abweichung max 0
+traglog west5_elza: 2-s-Fenster ohne Fortschritt 12 Figur oben 1431 Bilder 2-s-Fenster fern der Figur 12 
+traglog f_neu_west5_elza: 2-s-Fenster ohne Fortschritt 0 Figur oben 753 Bilder 2-s-Fenster fern der Figur 0 
+traglog f_ohne_west5_elza: 2-s-Fenster ohne Fortschritt 18 Figur oben 753 Bilder 2-s-Fenster fern der Figur 0 

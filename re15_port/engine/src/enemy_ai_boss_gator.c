@@ -48,6 +48,7 @@
 #include <string.h>
 #include <stdlib.h>   /* getenv - RE15_GB_TEST (Sichtlauf-Hebel) */
 #include "re15_boss_gator.h"
+#include "re15_gator_treffer_r41.h"   /* Runde 41 G2-RE2 NB4 (T) */
 #include "re15_damage.h"     /* re15_enemy_player_dist, re15_player_take_damage, rand8, bone_world_pos */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex + re15_esp_room_bank */
 #include "re15_room.h"       /* g_current_room_id */
@@ -59,6 +60,7 @@
 #include "re15_math.h"       /* re15_squareroot0 - Fress-Ausrichtung (Maulachsen-Elevation) */
 #include "re15_enemy_ai.h"   /* victim_force + Clip-Anker-Exporte (Fress-Finisher R6) */
 #include "re15_audio.h"     /* re15_audio_core_se - Leons Schrei im Fress-Finisher (@0x80102EF4) */
+#include "re15_scd.h"       /* Runde 41 Spur G2-RE2: g_scd.cam_id (Kamera der Figur) */
 #include "re15_engine.h"    /* Runde 41 Spur B NB3: g_engine.frame_count (Messzeile AUFTAUCHEN) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: die 2090-Ankunftsszene fuehrt den Gator (gatorszene_r41.c) */
 #include "re15_gator_re2_r41.h" /* Runde 41 Spur B: RE2-Bausteine (Hysterese, Zonen-Dash, Intro, HURT-Selektor,
@@ -133,6 +135,49 @@ extern re15_actor_t g_actors[];
 #define GB_RAMP_X1       7200
 #define GB_RAMP_Z0     -18100
 #define GB_RAMP_Z1     -14500
+/* Runde 41 Spur G2-RE2 NB3 (Nutzerentscheid 2026-11-06 zu F1-F4 der Abnahme 4, Messblatt analysis/befunde_runde41/G2_MESSBLATT_NB3.md):
+ *  Vorgabe A ("Er soll nur den Spieler oben auf der Rampe auch rammen koennen, das der Spieler oben nicht ausweichen kann. Alternativ kann er
+ *  auch hoch beissen oder sowas, aber er darf halt oben nicht sicher sein." / "Das kann er gerne machen."): steht die Figur GB_OBEN_OHNE Bilder
+ *  oben (Rampe/Plattform/Ostnische) ohne Treffer, quert er ueber sie hinweg (QUER-CROSS der Belagerung, Rammen in GBP_CROSS auch ohne Kanister,
+ *  unabhaengig von der Kamera - F1 "noe, wozu wenn es gut funktioniert?").
+ *  Vorgabe B ("Wenn er haengt muessen wir nachbessern ... Er darf nicht zu lange haengen ... das hilft natuerlich nicht bei der Platform."):
+ *  eine Figur im Koerper-Band (GB_KOERPER_M) VOR einer Blockkante ist kein Umweg-Fall mehr (gb_punkt_im_band, Zielstrecken gegen den Block
+ *  selbst); die Ostnische (x > GB_RAMP_X1 im Rampenband) wird belagert wie eine Figur oben.
+ *  Pruefhaken s_gb_nb3_alt = 1: Stand a661eb8aa (Gegenproben der Riegel nb3, kein Spielweg). */
+static int s_gb_nb3_alt = 0;
+void re15_gator_boss_nb3_alt_setzen(int an) { s_gb_nb3_alt = an; }
+int  re15_gator_boss_nb3_alt(void) { return s_gb_nb3_alt; }
+/* NB3 aus = Stand a661eb8aa (Pruefhaken nb3_alt) ODER Stand f942f56c0 (Pruefhaken re15_gr2_v4_alt: der Kanister zaehlt als Koerper - Kopf-Klemme,
+ * Trag-Lenkung, Huelle; die Riegel fuzz/klemm/alligator2 tragen/re2gator laufen so). Dort gilt die NB5-Wegwahl weiter: mit der Kanister-Huelle
+ * lief die direkte Anfahrt (Vorgabe B) an die Pier-Westkante in die Kopf-Klemme und endete rueckwaerts an der Westwand (Riegel fuzz, Lage P-mitte:
+ * 92 2-s-Fenster ab t673 bei (-7416,-15904), Clip 10). Im Spiel ist kein Pruefhaken gesetzt. */
+static int gb_nb3_aus(void) { return s_gb_nb3_alt || re15_gr2_v4_alt(); }
+/* Runde 41 Spur G2-RE2 NB4 Runde 3 (Abnahme 8 M1): EIN TREFFER JE BISS-CLIP-LAUF wie RE2 ein Treffer je Kiefer-Lauf +0x224 (EM23_OVL_0000.BIN, Dossier
+ * G2_gatorfix.md "NB4 Runde 3 - RE2-Bissmechanismus"). T1 0x801012fc macht den Kiefer-Lauf scharf (`01000224 / 240282a0 sb v0,0x224(a0)` @0x80101378-7c) nur
+ * bei Kontakt PL+0xE (`06fc4294 lhu v0,-0x3fa(v0)` @0x80101300), ohne Reaktionssperre PL+0x1D3 (`cbfd4290 lbu v0,-0x235(v0) / 12004014 bnez` @0x8010132c-34)
+ * und ohne laufenden Lauf (`24028280 lb v0,0x224(a0) / 0e004014 bnez` @0x8010133c-44); die Kiefer-Maschine 0x80101388 ruft den Treffer-Einstieg nur in
+ * Stufe 4/5 (`5e05040c jal 0x80101578` @0x8010155c, je 3 Bilder: `03000224 / 1f006214` @0x801014d8-dc) und beendet den Lauf (`240200a2 sb zero,0x224(s0)`
+ * @0x80101558); der Treffer-Einstieg verweigert bei PL+0x1D3 != 0 (`cbfd4290 / 44004014 bnez` @0x801015a4-ac), und die Reaktion setzt PL+0x1D3 |= 0x80
+ * (`80004234 ori v0,v0,0x80 / d30122a2 sb` @0x801030f8-80103100) laenger als der Rest des Laufs. +0x238 fragt der Biss NIE: gelesen nur @0x80100b5c-64 und
+ * @0x80100bf4-c04 (Spurt-Sperre Sub 1 <-> Sub 2, gator_re2_r41.c re15_gr2_chase_clip); @0x80100cb4-c4 liegt in 0x80100c54 ohne j/jal/Datenwort (toter
+ * Code). Am Intro-Ende gibt RE2 den Biss frei (Bremse 0x800cfbd8 Bit 0x10: `efff0324 addiu v1,zero,-0x11` @0x801008f8 .. `000082ac sw v0,0(a0)` @0x80100918)
+ * und setzt nur die Spurt-Sperre 110 (`6e000224 / 380202a2` @0x8010091c-20).
+ * Port: das Biss-Fenster (LUNGE und Hochbiss Clip 4 Bild 6..34, Biss B2 Clip 3 Bild >= 114) ist laenger als die RE2-Reaktion (Sub 2: 20 Bilder) - die
+ * Wirkung "ein Treffer je Lauf" haelt der vorhandene Lauf-Riegel bite_done: gb_biss_abschluss setzt ihn im Treffer (Hochbiss / LUNGE / B2), jeder neue
+ * Biss-Clip-Lauf (gb_lauf_beginn) loescht ihn. Runde 2 (d8bf728b0) fragte statt dessen +0x238 (gb_biss_frei) - ohne RE2-Beleg, entfernt.
+ * Pruefhaken (im Spiel nie gesetzt): s_gb_sperre_alt = Stand cfa775ae8 (kein Lauf-Riegel im Treffer; Gegenprobe 'Zweitbiss'); s_gb_sperre238 = Stand
+ * d8bf728b0 (+0x238 als Bissbedingung in LUNGE / B2 / Hochbiss / Rammen; Gegenprobe 'Anlauf ohne Biss nach dem Intro'). Mit dem Pruefhaken 'Treffer alt'
+ * (Stand 3d57083b1, RE1.5-Niederwurf 41-92 Bilder > Fenster) gilt der Lauf-Riegel wie dort nicht. */
+static int s_gb_sperre_alt = 0;
+static int s_gb_sperre238 = 0;
+void re15_gator_boss_sperre_alt_setzen(int an) { s_gb_sperre_alt = an; }
+void re15_gator_boss_sperre238_setzen(int an) { s_gb_sperre238 = an; }
+static int gb_lauf_riegel(void) { return !s_gb_sperre_alt && !re15_gator_treffer_alt(); }
+static int gb_sperre238_zu(int slot) { return s_gb_sperre238 && !re15_gator_treffer_alt() && re15_gr2_biss_cd_rest(slot) != 0; }
+#define GB_OBEN_OHNE     300    /* Bilder oben ohne Treffer bis zur Querung ueber die Figur = der NB5-Wert der Pause nach einer Querung mit
+                                 * der Figur oben (cross_cd 300, Spur B "Leon OBEN: 10 s auf der Seite bleiben", GBP_CROSS unten) - PORT-WAHL
+                                 * nach dem Nutzer-Wortlaut "darf halt oben nicht sicher sein" (Takt frei: "Das kann er gerne machen"); RE2 hat
+                                 * im Alligator-Raum keine erhoehte Flaeche und keinen Takt dafuer (Messblatt NB3 Abschnitt 3). */
 /* CROSS-Bogen: Hub ueber die Wasserlinie. Plattformhoehe im Spiel gemessen
  * (siehe GB_PLAT_TOP_Y-Messnotiz unten) + Kopffreiheit. */
 #define GB_CROSS_FRAMES   150   /* DESIGN: ~5950 Einheiten Bahn / 40 pro Frame */
@@ -158,6 +203,16 @@ extern re15_actor_t g_actors[];
                                  * muss flacher aussehen"): ~9 deg je Wirbelgelenk
                                  * statt 23 - der Koerper bleibt fast gerade */
 #define GB_PITCH_MAX      140   /* DESIGN: ~12 deg Nase-Neigung statt 26 */
+/* Runde 41 Spur G2-RE2 (5): Kletterprofil der Ueberquerung mit dem Kanister - uebernommen aus r41/gatorfix NB7 ff4380b40 / NB9 557e1a75b (PORT-WAHL): */
+#define GB_KL_HEBE       4500   /* Wurzel-Abstand zur Einstiegskante, ab dem der Hub beginnt */
+#define GB_KL_NEIG       6500   /* ... ab dem die Nase hochgeht (Kopf 5644 vor der Wurzel, NB6 Messung 1, + Rand) */
+#define GB_KDT_RAND        16   /* Kopf/Vorderkoerper 16 ueber dem Deck (Rundung der Pose; der Schnitt liegt genau auf -1800) */
+#define GB_KL_TAN         893   /* tan(GB_PITCH_MAX 140/4096 x 360 Grad = 12,3 Grad) x 4096: Hub-Abbau je Einheit hinter der Ausstiegskante */
+#define GB_KREUZ_ANLAUF  6000   /* G2-RE2 PORT-WAHL: Startpunkt der Ueberquerung 6000 vor der Kante (Kopf 5644 vor der Wurzel bleibt vor der Rampe) */
+#define GB_KREUZ_START   3000   /* G2-RE2 PORT-WAHL: Ueberquerung beginnt, wenn die Wurzel naeher als 3000 am Startpunkt ist ... */
+#define GB_KREUZ_GIER   0x400   /* ... und die Gier hoechstens 90 Grad neben der Querungsrichtung liegt (Rest dreht die Ueberquerung mit 0x60/Bild) */
+#define GB_KREUZ_PAUSE     45   /* G2-RE2 PORT-WAHL: 1,5 s Lauern zwischen zwei Ueberquerungen/Vorstoessen mit dem Kanister (Spur B: 300 = 10 s) - unter einem 2-s-Fenster */
+
 /* Spinnen (Nutzer-Punkte 1+7): Plattform-Sitzplaetze + Ostwand-Flucht. */
 #define GB_SPID0_X       -700
 #define GB_SPID0_Z     -17800
@@ -204,6 +259,10 @@ typedef struct {
     int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
     int16_t  guard_t;              /* Aufricht-Rampe der Plattform-Belagerung */
     uint8_t  bite_done;            /* 1 Biss pro Lunge/Cross-Passage (Design-Schaden!) */
+    /* NB4 Runde 3: Mitschrift des laufenden Biss-Clip-Laufs (Messhaken, kein Spielverhalten; gb_lauf_beginn / gb_lauf_bild / gb_lauf_ende) */
+    uint8_t  lauf_an, lauf_art, lauf_treffer;
+    uint16_t lauf_bed;
+    uint32_t lauf_f0;
     /* ROUTEN-LATCH (Nutzer-Marker 2026-09-10 "bleibt haengen": die je Frame neu
      * bewertete Wegwahl konnte zwischen Rim-Anlauf und Ring-Ecke flattern -
      * sichtbares Vor-zurueck-Pendeln im Westkanal, Marke 3). Die Route wird
@@ -222,6 +281,9 @@ typedef struct {
     int8_t   hit_zaehler;          /* Treffer seit letztem Flinch (alle 6 zuckt er) */
     int8_t   cross_oben;           /* Querung startete mit Leon OBEN (nur dann
                                     * bricht Leons Absprung die Bahn ab) */
+    int8_t   kz_rueck;             /* Runde 41 Spur G2-RE2: 1 = Vorstoss zur Kamera hin (danach Rueckzug), 2 = Rueckzug laeuft */
+    int8_t   kz_lauer;             /* Runde 41 Spur G2-RE2: dieser Takt lauerte am Startpunkt (Messhaken) */
+    int32_t  kz_ende_z;            /*   ... z-Ende des Rueckzugs (Startseite + GB_BAHN_M) */
     int16_t  seite_t;              /* Frames, die die NEUE Seite schon anliegt */
     int8_t   frei_seen;            /* frei_lx/lz gueltig (1 ab dem 2. Tick) */
     int32_t  frei_lx, frei_lz;     /* Position im Vortick (Totalstand-Nachweis) */
@@ -257,6 +319,8 @@ typedef struct {
     /* Runde 41 Spur B, Nachbesserung 6 (Abnahme 5 M1): vollendete Kau-Kreise der endlosen P3-Schleife (Clip 11, 59 Bilder) -
      * nur Messhaken/Log, kein Verhalten. */
     uint8_t  p3_kreise;
+    int16_t  oben_ohne;            /* Runde 41 G2-RE2 NB3 (Vorgabe A): Bilder, die die Figur oben/in der Ostnische steht, ohne Treffer
+                                    * (0 beim Treffer gb_biss_abschluss und sobald sie nicht mehr oben ist) */
 } gb_state_t;
 
 /* RE15_GB_STUMM=1: gesamte gator_boss.log-Telemetrie aus (Sweep-Test). */
@@ -413,9 +477,48 @@ static int gb_seg_hits_ramp(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int3
 /* Biss-Treffer-Abschluss: normal = Schaden + Knockdown; TOEDLICH = die
  * FRESS-Sequenz (Nutzer-Design 2026-09-11: "Kopf zu Leon runter machen,
  * ihn Fressen - Leon verschwindet, und danach geht er einfach weg"). */
-static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
+/* NB4 Runde 3 (Abnahme 8 M1): Mitschrift je Biss-Clip-Lauf (LUNGE art 4, Biss B2 art 5, Hochbiss art 3) fuer die Riegel nb4 / gtrlog / bisslog:
+ * Treffer im Lauf und Bilder, in denen die Bissbedingung OHNE Lauf-Riegel und ohne +0x238 galt, solange der Lauf noch nicht getroffen hatte. Ein Lauf mit
+ * Bedingung und ohne Treffer = Anlauf mit dem Maul an der Figur ohne Biss (Abnahme 8: nische F284-F326 / F347-F389); mehr als ein Treffer = Zweitbiss
+ * (Abnahme 7). Zeile "BISSLAUF" in gator_boss.log. Kein Spielverhalten. */
+static re15_gb_bisslauf_t s_gb_bl = { 0, 0, 0, 0, -1, -1, -1, -1, -1 };
+void re15_gator_boss_bisslauf_reset(void) { const re15_gb_bisslauf_t z = { 0, 0, 0, 0, -1, -1, -1, -1, -1 }; s_gb_bl = z; }
+void re15_gator_boss_bisslauf_info(re15_gb_bisslauf_t *out) { if (out) *out = s_gb_bl; }
+static void gb_lauf_ende(gb_state_t *g)
 {
-    re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z);
+    if (!g->lauf_an) return;
+    g->lauf_an = 0;
+    const int nr = s_gb_bl.laeufe++;
+    s_gb_bl.treffer += g->lauf_treffer;
+    if (g->lauf_treffer > 1) s_gb_bl.zweit++;
+    if (g->lauf_treffer == 0 && g->lauf_bed > 0) { s_gb_bl.leer++; if (s_gb_bl.erst_leer_f < 0) s_gb_bl.erst_leer_f = (long)g->lauf_f0; }
+    if (g->lauf_bed > 0 && s_gb_bl.erst_bed_lauf < 0) { s_gb_bl.erst_bed_lauf = nr; s_gb_bl.erst_bed_f = (long)g->lauf_f0; }
+    if (g->lauf_treffer > 0 && s_gb_bl.erst_treffer_lauf < 0) { s_gb_bl.erst_treffer_lauf = nr; s_gb_bl.erst_treffer_f = (long)g->lauf_f0; }
+    if (!s_gb_stumm) { FILE *fl = fopen("gator_boss.log", "a");
+        if (fl) { fprintf(fl, "BISSLAUF F%u-F%u art %d treffer %d bedingung %d\n", (unsigned)g->lauf_f0, (unsigned)g_engine.frame_count, (int)g->lauf_art,
+                          (int)g->lauf_treffer, (int)g->lauf_bed); fclose(fl); } }
+}
+static void gb_lauf_beginn(gb_state_t *g, int art)
+{
+    gb_lauf_ende(g);
+    g->bite_done = 0;                          /* neuer Biss-Clip-Lauf = neuer RE2-Kiefer-Lauf (T1 @0x8010133c-44 verlangt +0x224 == 0) */
+    g->lauf_an = 1; g->lauf_art = (uint8_t)art; g->lauf_treffer = 0; g->lauf_bed = 0; g->lauf_f0 = (uint32_t)g_engine.frame_count;
+}
+static void gb_lauf_bild(gb_state_t *g, int bed) { if (g->lauf_an && bed && g->lauf_treffer == 0 && g->lauf_bed < 0xffff) g->lauf_bed++; }
+static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl, int art)
+{
+    g->oben_ohne = 0;                          /* NB3 (Vorgabe A): Treffer - die Figur war nicht sicher */
+    if (art >= 3) {                            /* Hochbiss 3 / LUNGE 4 / B2 5: ein Treffer je Biss-Clip-Lauf (RE2: PL+0x1D3 @0x801015a4-ac, Lauf-Ende @0x80101558) */
+        if (g->lauf_an && g->lauf_treffer < 0xff) g->lauf_treffer++;
+        if (gb_lauf_riegel()) g->bite_done = 1;
+    }
+    /* Runde 41 Spur G2-RE2 NB4 (T): JEDER Alligator-Angriff, der die Figur trifft, nimmt den RE2-Treffer-Einstieg 0x80101578 (Schaden FUN_800401d4
+     * 60 / 30 @0x8010168c-a0, Unterzustand 2/3 @0x801015b4-ec, Gier FUN_8001569c @0x80101684-88) und die RE2-Spieler-Routine 5 (Haken 0x80102D08)
+     * statt re15_player_take_damage(GB_BITE_TYPE 5) = 50 + RE1.5-Niederwurf (Herleitung engine/src/gator_treffer_r41.c). Pruefhaken
+     * re15_gator_treffer_alt_setzen(1) = Stand 3d57083b1. */
+    const int re2 = !re15_gator_treffer_alt();
+    if (re2) (void)re15_gator_treffer_r41_einstieg(e, pl, re15_gr2_geschwaecht_slot((int)(e - g_actors)), art);
+    else { (void)art; re15_player_take_damage(pl, GB_BITE_TYPE, e->x, e->z); }
     if (pl->hp < 0) {
         g->phase = GBP_FRESSEN; g->timer = 0;
         /* VICTIM-MODUS SOFORT armen (Runde 7, victim-render-gate.md): hp<0 wuerde
@@ -443,8 +546,8 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl)
         re15_gr2_finisher_buehne((int)(e - g_actors), e);
         re15_gr2_kamera_finisher((int)(e - g_actors), e, pl);
     } else {
-        re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
-        re15_gr2_biss_cd((int)(e - g_actors), RE15_GR2_BISS_CD_BISS);   /* Runde 41 Spur B: +0x238 = 70 @0x801016b0-b4 */
+        if (!re2) re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
+        re15_gr2_biss_cd((int)(e - g_actors), RE15_GR2_BISS_CD_BISS);   /* Runde 41 Spur B: Spurt-Sperre +0x238 = 70 @0x801016b0-b4 (nur Sub 1 -> Sub 2) */
     }
     pl->hit_react |= 1;
     e->hit_stun = 0x64;                       /* byte-true Re-Attack-Sperre */
@@ -601,6 +704,7 @@ static void gb_bone_welt(re15_actor_t *e, int bone, int32_t out[3])
  * DURCH die Plattform ist unmoeglich (Nutzer 2026-09-11: "direkt an der
  * Platform auf der anderen Seite ... probiert staendig die Angriffs-
  * animation aber trifft mich nicht"). */
+static int gb_punkt_im_band(int32_t x, int32_t z);   /* fwd (NB3, definiert bei gb_seg_frei) */
 static int gb_wand_dazwischen(const re15_actor_t *e, const re15_actor_t *pl)
 {
     /* Prueflinie ab MAULPUNKT (Zentrum+2600 voraus) statt ab Zentrum
@@ -610,6 +714,18 @@ static int gb_wand_dazwischen(const re15_actor_t *e, const re15_actor_t *pl)
     int32_t fs = re15_sin_q12((int)e->rot_y);
     int32_t kx = e->x + (int32_t)(((int64_t)fc * 2600) >> 12);
     int32_t kz = e->z - (int32_t)(((int64_t)fs * 2600) >> 12);
+    if (!gb_nb3_aus() && gb_punkt_im_band(pl->x, pl->z)) {
+        /* Runde 41 Spur G2-RE2 NB3 (Vorgabe B): steht die Figur im Koerper-Band vor einer Blockkante und naeher an der Wurzel als der
+         * Maulpunkt (2600 voraus), liegt der Maulpunkt HINTER ihr im Block ("Punkt innen") und sperrte den Biss fuer immer - gemessen
+         * (Harness nb3_haengt, erster Bau): W1000/-20700 Wurzel still an der Klemmlinie (1000,-21484), 784 vor der Figur, 104 s ohne
+         * Treffer; W4073/W4200/W3000 96 / 96 / 87 s. Die Wand-Frage ist dann die Strecke Wurzel -> Figur gegen den Block selbst (ein
+         * Biss DURCH den Block bleibt unmoeglich); GBP_LUNGE zieht rueckwaerts, bis das Maul wieder vor der Figur liegt (dort seit dem
+         * Biss-Sweep 2026-09-11), und trifft mit Maul <= 1500. */
+        const int64_t dx = (int64_t)pl->x - e->x, dz = (int64_t)pl->z - e->z;
+        if (dx * dx + dz * dz < (int64_t)2600 * 2600)
+            return gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, 0)
+                || gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, 0);
+    }
     return gb_seg_hits_platform(kx, kz, pl->x, pl->z, 0)
         || gb_seg_hits_ramp(kx, kz, pl->x, pl->z, 0);
 }
@@ -643,6 +759,126 @@ static int gb_seg_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m
     return !gb_seg_hits_platform(x0, z0, x1, z1, m)
         && !gb_seg_hits_ramp(x0, z0, x1, z1, m);
 }
+/* Runde 41 Spur G2-RE2 NB3 (Vorgabe B): liegt der Punkt im Koerper-Band (GB_KOERPER_M 1800) VOR einer Blockkante von Plattform oder Rampe,
+ * aber nicht im Block selbst? Fuer so ein Ziel meldete gb_seg_hits_rect "Punkt innen -> Schnitt" (Messblatt NB3 2.3: Figur (4073,-19322) 1222
+ * vor der Rampen-Suedkante, (7668,-16403) Ostnische, (4252,-19953)) und die Verfolgung lief in den Ring-/Westumlauf-Umweg: Pendel im Kasten
+ * (3156..4879, -24085..-21690), Kopf 6830-10057 von der Figur = der Haenger. Im Band gilt die Strecke gegen den Block selbst (m = 0); die
+ * SCA-Klemme (hit_radius_min 1466) haelt die Wurzel ohnehin von der Kante, der Biss reicht hinueber (Maul 2600 + 1500, LUNGE dist < 3200). */
+static int gb_punkt_im_band(int32_t x, int32_t z)
+{
+    const int32_t m = GB_KOERPER_M;
+    if (x >= GB_PLAT_X0 && x <= GB_PLAT_X1 && z >= GB_PLAT_Z0 && z <= GB_PLAT_Z1) return 0;
+    if (x >= GB_RAMP_X0 && x <= GB_RAMP_X1 && z >= GB_RAMP_Z0 && z <= GB_RAMP_Z1) return 0;
+    return (x >= GB_PLAT_X0 - m && x <= GB_PLAT_X1 + m && z >= GB_PLAT_Z0 - m && z <= GB_PLAT_Z1 + m)
+        || (x >= GB_RAMP_X0 - m && x <= GB_RAMP_X1 + m && z >= GB_RAMP_Z0 - m && z <= GB_RAMP_Z1 + m);
+}
+/* NB3 (Vorgabe B): die Figur steht in der OSTNISCHE neben der Rampe (x > GB_RAMP_X1 im Rampenband; die Figur kommt nur dort ueber x 7200
+ * hinaus - exe-Lauf wand_elza: x 7668 nur bei z -17577..-14994). Durch das Wasser unerreichbar: die Wurzel klemmt an Ostwand (7200 - 1466)
+ * und Suedkante, der Maulpunkt 2600 voraus laege im Rampenblock (gb_wand_dazwischen). Sie wird belagert wie eine Figur oben (GBP_GUARD,
+ * Kantenziel der Rampe), und die Querung der Vorgabe A ueberstreicht sie (Bahn-x bis GB_RAMP_X1 - 700 = 6500, Koerperkreis 1050 + 450). */
+static int gb_pl_nische(const re15_actor_t *pl)
+{
+    return pl->x > GB_RAMP_X1 && pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1;
+}
+/* NB3 (Vorgabe B): die Figur steht IM Block-Rechteck (Plattform/Rampe) auf Wasserhoehe (y >= -900). Fuer die Figur ist das Rechteck nicht begehbar
+ * (test_r41_gatorfix begehbar 2091 Band 0/1: Raster x <= 2200, z -20200..-12200 "weggeschoben"), beim Klettern springen y und z im selben Bild
+ * (y 0 -> -1800, z -18750 -> -17602, exe probe4 F82) - der Zustand kommt nur im Defektfall vor: exe wand_elza (NB3) F7920 Biss-Wegstoss aus der
+ * Taschen-Ecke (2318,-18568) in den Pier (1382,-16749) -> (1382,-17036), 488 Bilder bis zum Laufende; in 7 Laeufen vor/nach NB3 sonst 0 Bilder.
+ * Dort gilt "Punkt innen" zu Recht, die NB5-Verfolgung pendelte an der SW-Ecke (2 Haenge-Fenster F8239/F8389, Kopf 9076-11182 von der Figur).
+ * Unerreichbar wie die Ostnische -> Belagerung der naechsten Kante (GBP_GUARD). Der Wegstoss selbst (Spieler-Kollision) ist nicht Teil dieser Spur. */
+static int gb_pl_im_block(const re15_actor_t *pl)
+{
+    return pl->y >= -900
+        && ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 && pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1)
+            || (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 && pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
+}
+static int gb_pl_unerreichbar(const re15_actor_t *pl) { return gb_pl_nische(pl) || gb_pl_im_block(pl); }
+/* NB3: die Figur ist OBEN (Rampe/Plattform mit y < -900 wie player_on_platform im CHASE) oder in der Ostnische - der Zaehler der Vorgabe A
+ * und das Rammen ohne Kanister gelten nur ihr; eine Figur im Wasser wird in der Verfolgungs-Querung wie in NB5 nur vom Maul getroffen. */
+static int gb_pl_oben(const re15_actor_t *pl)
+{
+    return ((pl->y < -900)
+            && ((pl->x >= GB_PLAT_X0 && pl->x <= GB_PLAT_X1 && pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1)
+                || (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 && pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1)))
+           || gb_pl_unerreichbar(pl);
+}
+
+/* ==== Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2, analysis/befunde_runde41/G2_abnahme_5.md Abschnitt 4): RAUMHALT DER FIGUR IM ALLIGATOR-KAMPF ====
+ * ROOM2090.RDT/ROOM2091.RDT (md5 a48d11a4, bytegleich): SCA-Kopf @0x6dc, 5 Quadranten x 10 Zellen ab Datei 0x6f4 (12 Byte), selbst geparst:
+ *   Band 0: [0] Westwand x -10900..-8900 (0x6f4), [1] Suedwand z -29000..-27000, [2] Nordwand z -5400..-3400, [3] Ostwand x 7200..9200 (0x718),
+ *           [4] Plattform x -1700..1850 z -20000..-12450 (0x724), [5] Rampe x 1850..7200 z -18100..-14500 (0x730, u1 0x01);
+ *   Band 1: [6] Ostwand x 7200..9200, [7] Plattform, [8] Nordleiste z -14500..-13500 (0x754) und [9] Suedleiste z -19100..-18100 (0x760), je x 1850..7200,
+ *           1000 tief, u1 0x02 - KEINE Sued-, Nord- oder Westwand.
+ * Die Spieler-Klemme FUN_8003b0a4/FUN_8003bca8 schiebt aus jeder Zelle ihres Bandes auf Kante + Spielerradius 450 (DAT_80073e94+6 = 0x01c2, `lhu a1,6(v0)`
+ * @0x80036210) + 0x12 (`addiu t1,v0,18` / `addiu a0,a0,-18` @0x8003bce0-e8 fuer x, @0x8003bd20-2c fuer z). Zwei Loecher, die erst die Angriffe der
+ * NB3 erreichen (Abnahme 5, gemessen):
+ *  (M2) oben: der Niederwurf (s_kd_speed 1000 `ori v0,zero,0x3e8` @0x8003615c, -15*Bild @0x800361c8-e0) schiebt die Figur im ersten Bild 2062, dann 985, 955 ...
+ *       Einheiten - durch die Leiste [8]/[9] (1000 + 2 x 450) in einem Bild, danach ohne Wand ueber das Becken hinter die Aussenwand (west5_elza F2752 CROSS-Biss
+ *       an (2315,-17642) -> (2318,-1800,-29914); Lagen (2318,-16300) F1201 und (6500,-15000) Rammen F1209 -> Nordwand); die Sonde FUN_8001c2dc stoppt dort nicht
+ *       (Zellwort 0x1002: Bit 0x2 -> Flag 0, @0x8001c390-ac).
+ *  (M1) unten: [5] stoesst an [3]; [3] wird VOR [5] geklemmt, [5] schiebt nach Osten auf 7200 + 468 = 7668 IN die Ostwand (Fixpunkt "Ostnische", abn2_wand
+ *       F1045 Biss -> F1046 (7668,-17081)); ein Schub nach Osten loest [3] dann auf der Aussenseite auf (9200 + 468 = 9668, F1500) -> Figur ausserhalb des
+ *       Raums, Absturz F7374 (re15_squareroot0 in re15_autolook_scan, Abstand ~100000). Dieselbe Fuge [4]/[5] (Pier (1382,-17036), exe wand_elza F7920) und
+ *       oben [7]/[8] (Klemmlage (1382,-14013), Abnahme 5 Abschnitt 3a).
+ * PORT-WAHL (Abnahme 5 M1/M2 "Figur oben nicht sicher, Figur bleibt im Raum"; Nutzer 2026-11-06, Vorgabe A: "Er soll nur den Spieler oben auf der Rampe auch
+ * rammen koennen, das der Spieler oben nicht ausweichen kann ... aber er darf halt oben nicht sicher sein" - getroffen werden, nicht aus dem Level fliegen):
+ * waehrend ein Alligator-Boss im Raum ist, gilt fuer die Spieler-Klemme zusaetzlich
+ *   Band 1: die Figur bleibt auf dem Deck der Rampe = dem Rechteck, das [6]/[7]/[8]/[9] beim Gehen freilassen (x 1850 + 450 .. 7200 - 450, z -18100 + 450 ..
+ *           -14500 - 450); eine Lage ausserhalb wird auf die Lage geklemmt, an die FUN_8003bca8 aus der Zelle schiebt (Kante +- 468) - die Leisten
+ *           halten auch einen Schritt, der breiter ist als sie.
+ *   Band 0: eine Lage ausserhalb der Aussenwaende (x -8900 + 450 .. 7200 - 450, z -27000 + 450 .. -5400 - 450) oder mit dem Mittelpunkt in [4]/[5] gilt nicht;
+ *           die Figur bleibt auf der Lage vor diesem Schritt.
+ * Nur wenn die Lage vor dem Schritt (alt) selbst gueltig war (eine Spawn-/Szenenlage wird nie verschoben) und die Figur lebt (Finisher setzt die Leiche).
+ * Beim Gehen schieben die Zellen selbst schon dorthin (Schrittweite < Zelltiefe) - der Halt greift nur in den Loechern; Pruefhaken
+ * re15_gator_boss_raum_alt_setzen(1) = Stand 10603425b (Gegenproben der Riegel raum). */
+#define GB_PR    450                    /* Spielerradius DAT_80073e94+6 (s. o.) */
+#define GB_PRK   (GB_PR + 18)           /* Klemmlage FUN_8003bca8: Kante + Radius + 0x12 */
+static int s_gb_raum_alt = 0;
+static int s_gb_raum_n = 0;
+void re15_gator_boss_raum_alt_setzen(int an) { s_gb_raum_alt = an; }
+int  re15_gator_boss_raum_halt_zahl(void) { return s_gb_raum_n; }
+static int gb_kampf_raum(void)
+{
+    for (int i = 1; i < RE15_ACTOR_MAX; i++)
+        if (g_actors[i].active && re15_gator_boss_active(&g_actors[i])) return 1;
+    return 0;
+}
+static int gb_deck_gueltig(int32_t x, int32_t z)      /* Band 1 */
+{
+    return x >= GB_RAMP_X0 + GB_PR && x <= GB_RAMP_X1 - GB_PR && z >= GB_RAMP_Z0 + GB_PR && z <= GB_RAMP_Z1 - GB_PR;
+}
+static int gb_wasser_gueltig(int32_t x, int32_t z)    /* Band 0 */
+{
+    if (x < -8900 + GB_PR || x > 7200 - GB_PR || z < -27000 + GB_PR || z > -5400 - GB_PR) return 0;
+    if (x > GB_PLAT_X0 && x < GB_PLAT_X1 && z > GB_PLAT_Z0 && z < GB_PLAT_Z1) return 0;
+    if (x > GB_RAMP_X0 && x < GB_RAMP_X1 && z > GB_RAMP_Z0 && z < GB_RAMP_Z1) return 0;
+    return 1;
+}
+int re15_gator_boss_raum_halt(const re15_actor_t *pl, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z)
+{
+    if (s_gb_raum_alt || !pl || pl->hp < 0 || (*x == alt_x && *z == alt_z) || !gb_kampf_raum()) return 0;
+    const int band = re15_collision_debug_band();
+    const int32_t vx = *x, vz = *z;
+    if (band == 1) {
+        if (gb_deck_gueltig(vx, vz) || !gb_deck_gueltig(alt_x, alt_z)) return 0;
+        if (*x < GB_RAMP_X0 + GB_PR) *x = GB_RAMP_X0 + GB_PRK;
+        if (*x > GB_RAMP_X1 - GB_PR) *x = GB_RAMP_X1 - GB_PRK;
+        if (*z < GB_RAMP_Z0 + GB_PR) *z = GB_RAMP_Z0 + GB_PRK;
+        if (*z > GB_RAMP_Z1 - GB_PR) *z = GB_RAMP_Z1 - GB_PRK;
+    } else if (band == 0) {
+        if (gb_wasser_gueltig(vx, vz) || !gb_wasser_gueltig(alt_x, alt_z)) return 0;
+        *x = alt_x; *z = alt_z;
+    } else return 0;
+    s_gb_raum_n++;
+    if (s_gb_stumm < 0) s_gb_stumm = (getenv("RE15_GB_STUMM") != NULL);
+    if (!s_gb_stumm) {
+        static FILE *s_rh = NULL;
+        if (!s_rh) s_rh = fopen("gator_boss.log", "a");
+        if (s_rh) { fprintf(s_rh, "RAUMHALT F%u Band %d (%d,%d) -> (%d,%d) vorher (%d,%d) hr=%d mo=%d\n", (unsigned)g_engine.frame_count, band, (int)vx, (int)vz,
+                            (int)*x, (int)*z, (int)alt_x, (int)alt_z, (int)pl->hit_react, (int)pl->motion); fflush(s_rh); }
+    }
+    return 1;
+}
 
 static int     gb_zone(int32_t z);       /* fwd (definiert unten) */
 static int32_t gb_becken_draussen(int32_t x, int32_t z, int32_t m);   /* fwd (Nachbesserung 2, M2) */
@@ -654,7 +890,7 @@ static int32_t gb_iabs(int32_t v);       /* fwd */
  * naechstgelegenen. Rueckgabe: gewaehlte Ecke (0..3) oder -1 (Weg frei).
  * CHASE und GUARD nutzen dieselbe Maschine - die GUARD-eigene Following/
  * ring_target-Wegwahl widersprach ihr dreimal (Marken 2026-09-11). */
-static int gb_kanten_umweg(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+static int gb_kanten_umweg(const re15_actor_t *e, int32_t *tx, int32_t *tz, int direkt)
 {
     /* v0.7.65: KUERZESTER PFAD im 6-Knoten-Sichtgraph (Start, 4 Ecken, Ziel)
      * statt 1-Hop-Greedy. SWEEP-BELEG (probe_gator_sweep, 530/3286 Paare):
@@ -667,6 +903,11 @@ static int gb_kanten_umweg(const re15_actor_t *e, int32_t *tx, int32_t *tz)
     int32_t kx[NK], kz[NK];
     int64_t dist[NK]; int prev[NK], fest[NK];
     int i, j;
+    /* NB3 (Vorgabe B): direkt = der CHASE-Zweig 7 hat die Figur im Koerper-Band vor einer Blockkante und die Strecke gegen den Block
+     * selbst frei befunden - kein Umweg ("Punkt innen" der 1800er-Pruefung war der Haenger, s. gb_punkt_im_band). Nur dort: die
+     * Pruefung am ZIEL statt an der Figur liess den VORHALTE-Punkt (Figur vom Koerper geschoben, 20 Bilder Vorhalte) im Band greifen
+     * und wich in der Westkanal-Lage (-6000,-16000) von NB5 ab (Riegel gang, erster Bau: 1944 von 2700 Bildern). */
+    if (direkt) return -1;
     if (gb_seg_frei(e->x, e->z, *tx, *tz, GB_KOERPER_M)) return -1;
     for (i = 0; i < 4; i++) { kx[i] = gb_ecke[i][0]; kz[i] = gb_ecke[i][1]; }
     kx[4] = *tx; kz[4] = *tz;
@@ -800,6 +1041,10 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
     /* Runde 41 Spur B: Unverwundbarkeit +0x1D3 |= 0x80 waehrend der Grossreaktion (@0x80102c20-28)
      * und nach dem Explosionstod (R1 P0 @0x801022ec-f4): Schaden zuruecknehmen. */
     if (g->phase == GBP_FLINCH || g->phase == GBP_RE2_TOD) {
+        e->hp = g->prev_hp; e->hit_react &= (uint8_t)~1u; return;
+    }
+    if (re15_gr2_rw_taucht((int)(e - g_actors))) {   /* Runde 41 Spur G2-RE2 (b): im Tauchgang der Notloesung nicht treffbar (Trefferbox 0; der Granaten-Kasten
+                                                     * erreicht auch eine Null-Box - PORT-WAHL wie r41/gatorfix NB7 a14ff425a) */
         e->hp = g->prev_hp; e->hit_react &= (uint8_t)~1u; return;
     }
     e->hit_react &= (uint8_t)~1u;       /* Fenster-Latch loesen (byte-true HURT-Tail) */
@@ -965,6 +1210,53 @@ static int gb_koerper_kontakt(int32_t x, int32_t z, int yaw, int32_t px, int32_t
  * Wasser), m = Rand nach innen - fuer die bone-genauen RE2-Wende-Bahnen in gator_re2_r41.c. Geometrie wie oben im
  * Dateikopf (ROOM2090.RDT selbst geparst): SCA-Aussenwaende x[-8900..7200] z[-27000..-5400], Plattform-Block
  * GB_PLAT_* (SCA [4]/[7]), Rampe GB_RAMP_* (SCA [5]); in einem Block = Tiefe bis zum naechsten Blockrand. */
+int re15_gator_boss_koerper_kontakt(const re15_actor_t *e, int32_t px, int32_t pz) { return e ? gb_koerper_kontakt(e->x, e->z, (int)e->rot_y, px, pz) : 0; }
+/* Runde 41 Spur G2-RE2 NB3 (Vorgabe A): rammt die geplante Belagerungs-Querung ab Start-x cx0 die Figur? Nachbildung der Bahn von
+ * gb_cross_begin + GBP_CROSS mit der Figur oben, Bild fuer Bild: Start (cx0 geklemmt auf [GB_RAMP_X0 + GB_RING_M .. GB_RAMP_X1 - 700],
+ * Kante +- GB_BAHN_M), erstes Bahn-Ende x = Figur-x geklemmt auf [3350 .. GB_RAMP_X1 - 700] (Lande-Klemme), Dauer len/32 in [90..240],
+ * Rampen-Fenster t_ein..t_aus (gb_seg_rect_span, Marge 300), im Fenster Bahn-Ende x = Figur-x geklemmt auf [GB_RAMP_X0 + 700 ..] (b),
+ * Lage = cx0 + (cx1 - cx0) t / n, Blick = Sofort-Snap auf (cx1, cz1) (re15_enemy_steer_point 0x800); Treffer = gb_koerper_kontakt wie das
+ * Rammen in GBP_CROSS. Gemessen (Harness nb3_oben, Lage R2318/-16300, erster und zweiter Bau): vom Ost-Ende des Kanten-Pendels (x 5625)
+ * lief die Bahn 1757 seitlich an der Figur vorbei, und eine Vorpruefung mit dem Maulpunkt <= 1500 ueber die vereinfachte Bahn hielt bei
+ * x 5230 einen Grenzfall (Abstand ~1500) fuer einen Treffer, den die echte Bahn (Ende-x 3350 vor dem Fenster, gb_maul_dist in 16er-
+ * Schritten) verfehlte - erst die Querung ab dem Anlauf (x 4450) rammte (t603 / t682). Darum hier die Bahn selbst und nur der Koerper. */
+static int gb_seg_rect_span(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t bx0, int32_t bz0, int32_t bx1, int32_t bz1, int32_t m, int32_t *t0, int32_t *t1);
+static int gb_quer_trifft(int32_t cx0, int von_sued, const re15_actor_t *pl)
+{
+    const int32_t cz0 = von_sued ? GB_RAMP_Z0 - GB_BAHN_M : GB_RAMP_Z1 + GB_BAHN_M;
+    const int32_t cz1 = von_sued ? GB_RAMP_Z1 + GB_BAHN_M : GB_RAMP_Z0 - GB_BAHN_M;
+    int32_t cx1 = pl->x, cxf = pl->x, n, t_ein, t_aus;
+    if (cx0 < GB_RAMP_X0 + GB_RING_M) cx0 = GB_RAMP_X0 + GB_RING_M;
+    if (cx0 > GB_RAMP_X1 - 700)       cx0 = GB_RAMP_X1 - 700;
+    if (cx1 < 3350)                   cx1 = 3350;                    /* gb_cross_begin: Lande-x-Klemme */
+    if (cx1 > GB_RAMP_X1 - 700)       cx1 = GB_RAMP_X1 - 700;
+    if (cxf < GB_RAMP_X0 + 700)       cxf = GB_RAMP_X0 + 700;        /* GBP_CROSS (b): im Rampen-Fenster die volle Breite */
+    if (cxf > GB_RAMP_X1 - 700)       cxf = GB_RAMP_X1 - 700;
+    {   const int64_t ldx = cx1 - cx0, ldz = cz1 - cz0, l2 = ldx * ldx + ldz * ldz;
+        int32_t len = 64; while ((int64_t)len * len < l2 && len < 30000) len += 64;
+        n = len / 32; if (n < 90) n = 90; if (n > 240) n = 240; }
+    {   int32_t q0, q1;
+        if (gb_seg_rect_span(cx0, cz0, cx1, cz1, GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1, 300, &q0, &q1)) {
+            t_ein = (int32_t)(((int64_t)n * q0) >> 12); t_aus = (int32_t)(((int64_t)n * q1) >> 12);
+        } else { t_ein = 0; t_aus = n; } }
+    int treffer = 0; int32_t t_tr = -1;
+    for (int32_t t = 1; t < n; t++) {   /* GBP_CROSS endet bei t >= cframes VOR dem Rammen-Test: das letzte Bild zaehlt nicht */
+        const int32_t ex = (t >= t_ein && t <= t_aus) ? cxf : cx1;
+        const int32_t x = cx0 + (int32_t)((int64_t)(ex - cx0) * t / n), z = cz0 + (int32_t)((int64_t)(cz1 - cz0) * t / n);
+        const int yaw = ((int)re15_atan2_q12(cz1 - z, ex - x) - 0x400) & 0x0fff;
+        if (gb_koerper_kontakt(x, z, yaw, pl->x, pl->z)) { treffer = 1; t_tr = t; break; }
+    }
+    if (!s_gb_stumm) {   /* Diagnose (gator_boss.log): nur bei Wechsel von Start-x oder Ergebnis */
+        static FILE *s_qp = NULL; static int32_t s_qx = -1; static int s_qr = -1;
+        if (!s_qp) s_qp = fopen("gator_boss.log", "a");
+        if (s_qp && (cx0 != s_qx || treffer != s_qr)) {
+            fprintf(s_qp, "QUERPRUEF F%u cx0=%d ende=%d/%d cz0=%d cz1=%d n=%d fenster=%d..%d figur=(%d,%d) -> %d (t %d)\n",
+                    (unsigned)g_engine.frame_count, cx0, cx1, cxf, cz0, cz1, n, t_ein, t_aus, pl->x, pl->z, treffer, t_tr);
+            fflush(s_qp); s_qx = cx0; s_qr = treffer;
+        }
+    }
+    return treffer;
+}
 static int32_t gb_becken_draussen(int32_t x, int32_t z, int32_t m)
 {
     int32_t d = 0;
@@ -1068,6 +1360,24 @@ static int gb_seg_rect_span(int32_t x0, int32_t z0, int32_t x1, int32_t z1,
  * als auf den kleinen Vorsprung" beendete die freien rim->rim-Bahnen, die
  * diagonal ueber die Plattform-Mitte liefen, Marke 4: y=-3192 mitten auf dem
  * Block). Der Aufrufer startet die Bahn aus Kanten-Naehe (Anlaufpunkt). */
+/* Runde 41 Spur G2-RE2: Dauer und Rampen-Fenster einer Ueberquerungsbahn (die Rechnung aus gb_cross_begin, fuer Vorstoss/Rueckzug wiederverwendet);
+ * tempo_div 32 = Spur-B-Tempo (DESIGN 2026-09-11, Dauer len/32 in 90..240 Bildern). */
+static int gb_seg_rect_span(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t rx0, int32_t rz0, int32_t rx1, int32_t rz1, int32_t m, int32_t *t0, int32_t *t1);
+static void gb_kreuz_bahn(gb_state_t *g, int tempo_div, int fmin, int fmax)
+{
+    int64_t ldx = g->cx1 - g->cx0, ldz = g->cz1 - g->cz0;
+    int64_t l2 = ldx * ldx + ldz * ldz;
+    int32_t len = 64; while ((int64_t)len * len < l2 && len < 30000) len += 64;
+    g->cframes = (int16_t)(len / tempo_div);
+    if (g->cframes < fmin) g->cframes = (int16_t)fmin;
+    if (g->cframes > fmax) g->cframes = (int16_t)fmax;
+    int32_t t0, t1;
+    if (gb_seg_rect_span(g->cx0, g->cz0, g->cx1, g->cz1, GB_RAMP_X0, GB_RAMP_Z0, GB_RAMP_X1, GB_RAMP_Z1, 300, &t0, &t1)) {
+        g->t_ein = (int16_t)(((int32_t)g->cframes * t0) >> 12);
+        g->t_aus = (int16_t)(((int32_t)g->cframes * t1) >> 12);
+    } else { g->t_ein = 0; g->t_aus = (int16_t)g->cframes; }
+    if (g->t_aus <= g->t_ein) g->t_aus = (int16_t)(g->t_ein + 1);
+}
 static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
                            int32_t ziel_x)
 {
@@ -1092,7 +1402,7 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
     g->cx0 = cx; g->cx1 = ziel_x;
     if (von_sued) { g->cz0 = GB_RAMP_Z0 - GB_BAHN_M; g->cz1 = GB_RAMP_Z1 + GB_BAHN_M; }
     else          { g->cz0 = GB_RAMP_Z1 + GB_BAHN_M; g->cz1 = GB_RAMP_Z0 - GB_BAHN_M; }
-    const int kan = re15_gr2_traegt();                /* Runde 41 Spur P (Abnahme G 4 O1): mit dem Kanister im Maul beginnt die Bahn an der Lage des Gators */
+    const int kan = re15_gr2_traegt_lenkung();        /* Runde 41 Spur P (Abnahme G 4 O1): mit dem Kanister im Maul beginnt die Bahn an der Lage des Gators - G2-RE2 NB2 Vorschlag 4: nur noch mit dem Pruefhaken v4_alt (sonst wie ohne Kanister) */
     if (kan) { g->cx0 = e->x; g->cz0 = e->z; }        /* statt des Anlaufpunkts (Sprung bis 1425 je Bild, trag_scan), Wende mit 0x60/Bild (GIER-WACHE) */
     {
         int64_t ldx = g->cx1 - g->cx0, ldz = g->cz1 - g->cz0;
@@ -1114,7 +1424,7 @@ static void gb_cross_begin(re15_actor_t *e, gb_state_t *g, int von_sued,
         } else { g->t_ein = 0; g->t_aus = (int16_t)g->cframes; } /* Sicherheitsnetz */
         if (g->t_aus <= g->t_ein) g->t_aus = (int16_t)(g->t_ein + 1);
     }
-    g->ct = 0; g->bite_done = 0;
+    g->ct = 0; g->bite_done = 0; g->kz_rueck = 0;
     g->phase = GBP_CROSS;
     e->motion = 0; e->anim_frame = 0;
     re15_enemy_steer_point(e, g->cx1, g->cz1, kan ? 0x60 : 0x800);   /* Blick ueber die Insel */
@@ -1167,6 +1477,33 @@ static void gb_auftauchen(re15_actor_t *e, gb_state_t *g)
  * (Spieler-Tick FUN_800355c4: `((*a | *b) & 2) == 0` ist das Eingangs-Gate). Die Leiche hat also keine Masse: kein Rand, keine Stufe, nichts zum Klettern (FUN_8002d474 fragt
  * nur Objekte und SCA, nie Aktoren). Vorher blieb der Koerperlaengen-Push (k_gb_seg, Port-Zusatz) in GBP_RE2_TOD an: der Kadaver sperrte den Westkanal, die einzige Verbindung
  * Nord <-> Sued auf Band 0 (Abnahme 0: Schluessel und Leiter unerreichbar in kampf_leon, kampf_elza, west_elza). */
+/* Runde 41 Spur G2-RE2: Pruefhaken der Riegel (Gegenproben, kein Spielweg) und Messhaken - aus r41/gatorfix NB7/NB8/NB9 */
+static int s_gb_ramm_alt = 0, s_gb_rammen = 0, s_gb_kreuz_kan = 0;
+/* Pruefhaken der Riegel "Gang gleich NB5" (Gegenprobe, kein Spielweg): 1 = mit dem Kanister das verworfene RE1.5-Tempo B4 (rnd & 0x3f) + 60 x Skala
+ * (STAGE2.BIN @0x8010d728-73c, r41/gatorfix NB7-NB9) statt des authored RE2-Vortriebs - der Riegel muss das erkennen. */
+static int s_gb_tempo_alt = 0;
+void re15_gator_boss_tempo_alt_setzen(int an) { s_gb_tempo_alt = an; }
+void re15_gator_boss_ramm_alt_setzen(int an) { s_gb_ramm_alt = an; }   /* 1 = Ueberquerung mit dem Kanister ohne Rammen */
+static int s_gb_deck_alt = 0;   /* 1 = Push ohne Halt auf der begehbaren Rampe */
+void re15_gator_boss_deck_alt_setzen(int an) { s_gb_deck_alt = an; }
+static int s_gb_kdt_alt = 0;    /* 1 = Ueberquerung ohne Hub ueber dem Deck */
+void re15_gator_boss_kdt_alt_setzen(int an) { s_gb_kdt_alt = an; }
+int  re15_gator_boss_rammen(void) { return s_gb_rammen; }               /* Messhaken: Rammen seit Programmstart */
+/* NB3 (Vorgabe A): Phasen, in denen der Zaehler oben_ohne laeuft - nur im Kampf kann er die Figur oben angreifen. Nicht gezaehlt: OFF, LURK
+ * (Lauerstellung an der Leiter, Punkt 2), FRESSEN/DIE/DEAD/RE2_TOD und das RE2-Intro (GBP_RE2_INTRO, Durchbruch -> Schnapper, ~300 Bilder ab dem
+ * Betreten). Gemessen (exe-Riegel integration_r41_re2gator, Lauf belagerung: Figur ab F0 auf der Rampe (6300,-16250), Intro bis F305): mit dem
+ * Zaehler im Intro quert er im 71. Bild der Belagerung (QUERPRUEF F305 t 1, CROSS F376, Rammen F377) VOR dem ersten Hochbiss (a661eb8aa F417), die
+ * GIER-WACHE (300 Bildpaare CHASE/GUARD) wird nie erreicht und der Finisher kommt F751 statt F627; nur im Kampf gezaehlt laeuft die Belagerung
+ * wie im Stand a661eb8aa (Hochbiss F417/F522/F627 nullt den Zaehler). Harness (Lagen A1/B1) und exe ohne Intro-Anteil unveraendert. */
+static int gb_phase_kampf(int ph)
+{
+    return ph == GBP_CHASE || ph == GBP_LUNGE || ph == GBP_FLINCH || ph == GBP_GUARD || ph == GBP_CROSS_APPR || ph == GBP_CROSS
+        || ph == GBP_RE2_DASH;
+}
+int  re15_gator_boss_oben_ohne(const re15_actor_t *e)                    /* NB3 Messhaken: Bilder oben ohne Treffer (GUARD-Querungszaehler) */
+{ const int i = (int)(e - g_actors); return (i >= 0 && i < RE15_ACTOR_MAX) ? (int)s_gb[i].oben_ohne : -1; }
+int  re15_gator_boss_kreuz_kanister(void) { return s_gb_kreuz_kan; }    /* Messhaken: Ueberquerungen mit dem Kanister seit Programmstart */
+int re15_gator_boss_koerper_kontakt(const re15_actor_t *e, int32_t px, int32_t pz);
 int re15_gator_boss_ohne_koerper(const re15_actor_t *e)
 {
     return re15_gator_boss_active(e) && s_gb[(int)(e - g_actors)].phase == GBP_RE2_TOD;
@@ -1194,9 +1531,12 @@ int re15_gator_boss_im_fressen(const re15_actor_t *e)   /* Nachbesserung 5: Mess
 }
 /* Runde 41 Spur G (NB2, N3): Steuerziel wie die Verfolgung = Kanten-Umweg + Klemmflaeche des CHASE-Zweigs (kanister2080_r41.c) */
 void re15_gator_boss_steuerziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
-{   (void)gb_kanten_umweg(e, tx, tz);
+{   (void)gb_kanten_umweg(e, tx, tz, 0);
     *tx = (*tx < -8900 + 1600) ? -8900 + 1600 : (*tx > 7200 - 1600) ? 7200 - 1600 : *tx;
     *tz = (*tz < -27000 + 1600) ? -27000 + 1600 : (*tz > -5400 - 1600) ? -5400 - 1600 : *tz; }
+int re15_gator_boss_lauert(const re15_actor_t *e) { const int i = (int)(e - g_actors); return (i >= 0 && i < RE15_ACTOR_MAX) ? s_gb[i].kz_lauer : 0; }   /* G2-RE2 Messhaken */
+void re15_gator_boss_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)   /* G2-RE2 Messhaken: Steuerziel des letzten CHASE-Takts */
+{ const int i = (int)(e - g_actors); if (i >= 0 && i < RE15_ACTOR_MAX) { *tx = s_gb[i].dbg_tx; *tz = s_gb[i].dbg_tz; } }
 int re15_gator_boss_verfolgt(const re15_actor_t *e)
 {
     if (!re15_gator_boss_active(e)) return 0;
@@ -1265,13 +1605,51 @@ static void gb_takt(int slot);
  *      (RE2: Kanister = Kind der Part-6-Weltmatrix, `addiu a0,s0,1104` @0x801018d0 / `sw a0,128(s2)` @0x801018e0). Vorher
  *      rechnete re15_gr2_takt das am Takt-ANFANG, vor Befreiung, Wende, re15_ai_advance, Bildvorschub und Klemme (Abnahme 3:
  *      Kanister bis 637 Einheiten je Bild hinter dem Kopf). */
+static void gb_boss_tick_innen(int slot);
+static int32_t s_gb_takt_dx, s_gb_takt_dz;
+void re15_gator_boss_takt_schritt(int32_t *dx, int32_t *dz) { if (dx) *dx = s_gb_takt_dx; if (dz) *dz = s_gb_takt_dz; }
+/* Runde 41 Spur G2-RE2 (Leistung, Auftrag Punkt 7) - MESSHAKEN aus r41/gatorfix NB9 (gator_zeit_r41.c, kein Spielverhalten): Wanduhr und Faden-Zyklen des
+ * ganzen Boss-Takts; je Takt eine Zeile in gator_zeit.log bei env RE15_G2_ZEIT_LOG; der letzte Wert fuer die Riegel (re15_gator_boss_zeit_letzt). */
+static int64_t s_gb_zeit_ns, s_gb_zeit_zyk;
+void re15_gator_boss_zeit_letzt(int64_t *ns, int64_t *zyk) { if (ns) *ns = s_gb_zeit_ns; if (zyk) *zyk = s_gb_zeit_zyk; }
 void re15_gator_boss_tick(int slot)
+{
+#ifdef RE15_PLATFORM_PC
+    const int64_t t0 = re15_g2_zeit_ns(), z0 = re15_g2_faden_zyk();
+    gb_boss_tick_innen(slot);
+    s_gb_zeit_ns = re15_g2_zeit_ns() - t0; s_gb_zeit_zyk = re15_g2_faden_zyk() - z0;
+    re15_g2_zeit_takt((unsigned)g_engine.frame_count, (int)s_gb[slot].phase, re15_gr2_rw_modus(slot), s_gb_zeit_ns, s_gb_zeit_zyk, 0, 0, NULL);
+#else
+    gb_boss_tick_innen(slot);
+#endif
+}
+static void gb_boss_tick_innen(int slot)
 {
     re15_actor_t *e = &g_actors[slot];
     if (e->anim_frac > 0) e->anim_frac--;                     /* (1) @0x800299c0-cc */
     int32_t ox = e->x, oz = e->z;
+    const int16_t oyaw = e->rot_y;                            /* G2-RE2 (c): Gier vor dem Takt (Kollisions-Antwort Kopf/Kanister) */
+    const int rw_vorher = re15_gr2_rw_an() && s_gb[slot].phase == GBP_CHASE && !re15_gr2_rw_taucht(slot) && re15_gr2_rw_kopf_verletzt(e);
     gb_takt(slot);
     if (!re15_gator_boss_active(e)) return;
+    const int32_t g2_tx = e->x, g2_tz = e->z;   /* Runde 41 Spur G2 (Messzeile TRAG): Lage nach dem Takt, vor den Klemmen */
+    s_gb_takt_dx = g2_tx - ox; s_gb_takt_dz = g2_tz - oz;   /* G2-RE2 Messhaken: Takt-Schritt vor den Klemmen */
+    if (re15_gr2_rw_an() && !rw_vorher && !re15_gr2_rw_taucht(slot)
+        && (s_gb[slot].phase == GBP_CHASE || s_gb[slot].phase == GBP_LUNGE) && re15_gr2_rw_kopf_verletzt(e)) {
+        /* Runde 41 Spur G2-RE2 (c) KOLLISIONS-ANTWORT (PORT-WAHL): dieses Bild brachte Kopf/Kanister (Mesh 5/6/7 + Kanister der gezeichneten Pose) unter das
+         * Deck von Plattform/Rampe oder dichter als 2500 vor die Kamera (vorher frei) - erst die Drehung zuruecknehmen, sonst den Schritt, sonst beides.
+         * Clip und Bild laufen weiter (Gang wie NB5); was bleibt, ist "drueckt sich fest" -> Rueckwaerts (gator_rw_r41.c). Gemessen ohne das (Riegel re2):
+         * beim Wenden schwenkte der Kopf (5644 vor der Wurzel) schneller in die Plattform, als die Klemme (340 je Bild) ihn herausschob. */
+        const int32_t nx = e->x, nz = e->z; const int16_t nyaw = e->rot_y;
+        e->rot_y = oyaw;
+        if (re15_gr2_rw_kopf_verletzt(e)) {
+            e->rot_y = nyaw; e->x = ox; e->z = oz; e->anchor_x += ox - nx; e->anchor_z += oz - nz;
+            if (re15_gr2_rw_kopf_verletzt(e)) {
+                e->rot_y = oyaw;
+                if (re15_gr2_rw_kopf_verletzt(e)) { e->rot_y = nyaw; e->x = nx; e->z = nz; e->anchor_x -= ox - nx; e->anchor_z -= oz - nz; }
+            }
+        }
+    }
     if (g_room_rdt_ok && (e->x != ox || e->z != oz) && !gb_klemme_aus(&s_gb[slot])) {   /* (2) */
         int32_t nx = e->x, nz = e->z;
         re15_collision_constrain_enemy(&g_room_rdt, ox, oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
@@ -1284,7 +1662,12 @@ void re15_gator_boss_tick(int slot)
     {   /* (2b) Runde 41 Spur G (Nachbesserung 4, Abnahme G 3 M3): Kopf-Klemme - Kanister im Maul / R1-Tod: Hals, Kopf, Kiefer und Kanister
          * innerhalb der Aussenwaende (gator_re2_r41.c re15_gr2_kopf_klemme); nicht im FRESSEN (eigene Buehne) und nicht bei Klemme aus. */
         int32_t kx, kz;
-        if (g_room_rdt_ok && !gb_klemme_aus(&s_gb[slot]) && s_gb[slot].phase != GBP_FRESSEN && re15_gr2_kopf_klemme(slot, e, &kx, &kz)) {
+        /* Runde 41 Spur G2-RE2 (c): mit dem Kanister auch Plattform/Rampe und die Kamera (gator_re2_r41.c Abschnitt G2-RE2) - nicht in der Ueberquerung
+         * (der Hub traegt den Koerper ueber das Deck) und nicht im Tauchgang der Notloesung */
+        re15_gr2_kk_erweitert(re15_gr2_rw_an() && s_gb[slot].phase != GBP_CROSS && s_gb[slot].phase != GBP_FRESSEN && !re15_gr2_rw_taucht(slot));
+        const int kk_hat = g_room_rdt_ok && !gb_klemme_aus(&s_gb[slot]) && s_gb[slot].phase != GBP_FRESSEN && re15_gr2_kopf_klemme(slot, e, &kx, &kz);
+        re15_gr2_kk_erweitert(0);
+        if (kk_hat) {
             /* Runde 41 Spur P (Abnahme G 4 O1): beim Tragen darf die Kopf-Klemme die Wurzel nicht in den Slab der Wurzel-Klemme schieben - dort warf sie (2) im
              * naechsten Takt zurueck (Lauf v1_leon F163 x -1867 -> -3184, Hin- und Rueckspruenge 1517/-1317). */
             if (s_gb[slot].phase != GBP_RE2_TOD && !re15_gr2_kk_hart()) {
@@ -1299,6 +1682,31 @@ void re15_gator_boss_tick(int slot)
             e->x += kx; e->z += kz; e->anchor_x += kx; e->anchor_z += kz;
         }
     }
+#ifdef RE15_PLATFORM_PC
+    {   /* Runde 41 Spur G2 (Punkt 7, MESSZEILE env RE15_G2_TRAG_LOG, kein Spielverhalten): mit dem Kanister im Maul je Bild Takt-Schritt, Schritt nach
+         * der Wand-Klemme (2) und der Kopf-Klemme (2b), Phase, Clip - wer frisst die Bewegung, wenn er "haengt". */
+        static int s_tl = -1; if (s_tl < 0) s_tl = getenv("RE15_G2_TRAG_LOG") != NULL;
+        /* G2-RE2 NB4 (K): auch solange der Kanister liegt (Stufe 0..6) - ohne Holmodus kommt die Aufnahme nur, wenn der Gator vorbeikommt; die exe-Riegel
+         * (haenglog/tragvergleich) messen dann den ganzen Kampf mit dem Kanister im Raum. Messzeile, kein Spielverhalten. */
+        if (s_tl && (re15_gr2_traegt() || re15_gr2_ohne_kanister_entfernt() || (re15_gr2_kanister_stufe() >= 0 && re15_gr2_kanister_stufe() < 7))) {
+            FILE *f = fopen("gator_trag.log", "a");
+            if (f) { fprintf(f, "TRAG F%u ph=%d mo=%d af=%d gier=%d pos=(%d,%d) takt=(%d,%d) nach_klemmen=(%d,%d) spieler=(%d,%d)\n", (unsigned)g_engine.frame_count,
+                             (int)s_gb[slot].phase, (int)e->motion, (int)e->anim_frame, (int)(e->rot_y & 0xfff), e->x, e->z, g2_tx - ox, g2_tz - oz, e->x - ox, e->z - oz,
+                             g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z); fclose(f); }
+        }
+    }
+#endif
+    if (s_gb[slot].phase == GBP_CROSS && re15_gr2_rw_an() && !s_gb_kdt_alt) {
+        /* Runde 41 Spur G2-RE2 (5) - aus r41/gatorfix NB9 557e1a75b/ac29780f0 ohne Entwurf F (PORT-WAHL): steht in der Ueberquerung mit dem Kanister ein Punkt des
+         * Vorderkoerpers (Teile 0-10: Rumpf, Vorderbeine 2-4/8-10, Hals/Kopf/Kiefer 5-7) oder des Kanisters im Grundriss von Plattform/Rampe unter dem Deck
+         * (-1800, B10 @0x8010e33c-360), hebt die Wurzel in diesem Bild um die Tiefe + GB_KDT_RAND - der Koerper liegt auf dem Deck statt hindurchzutauchen
+         * (Fensterlauf r41/gatorfix w9_rampe_elza t119.5). Bloecke = SCA [4]/[7] Plattform, [5] Rampe. Hinterbeine/Schwanz schneidet der Zeichner im Block weg. */
+        static const int32_t k_kdt_bl[2][4] = { { GB_PLAT_X0, GB_PLAT_X1, GB_PLAT_Z0, GB_PLAT_Z1 }, { GB_RAMP_X0, GB_RAMP_X1, GB_RAMP_Z0, GB_RAMP_Z1 } };
+        const int32_t kt = re15_gr2_teile_deck_tiefe(e, -1800, k_kdt_bl, 2, 0x7ffu);
+        if (kt > -GB_KDT_RAND) e->y -= kt + GB_KDT_RAND;
+    }
+    re15_gr2_rw_nachtakt(slot, e, &g_actors[RE15_ACTOR_SLOT_PLAYER], ox, oz, g2_tx, g2_tz,
+                         s_gb[slot].phase == GBP_CHASE, s_gb[slot].phase == GBP_LUNGE);   /* G2-RE2: Fenster "drueckt sich fest" / "haengt" */
     re15_gr2_nachtakt(slot, e);                               /* (3) */
     re15_gatorszene_r41_nachtakt(slot, e);                    /* Runde 41 Spur F (Haken): Leiche im Maul = Kind der Part-6-Matrix */
     {   /* NB4 (Abnahme 3, M2) - MESSZEILE GIER-WACHE (gator_boss.log): je Bildpaar, dessen beide Takte in CHASE/GUARD enden, das
@@ -1375,11 +1783,14 @@ static void gb_takt(int slot)
      * Boss-Zustand nullen (em_flag_id 0xFF = Boss erscheint je Betreten). */
     if (g->phase != GBP_OFF && e->state == 0 && e->hp <= 0)
         memset(g, 0, sizeof *g);
+    /* NB4 Runde 3: Biss-Clip-Lauf zu Ende, sobald der Gator nicht mehr im Biss-Clip ist (Mitschrift, kein Spielverhalten) */
+    if (g->lauf_an && !(g->phase == GBP_LUNGE || (g->phase == GBP_GUARD && e->motion == 4))) gb_lauf_ende(g);
 
     if (g->phase == GBP_OFF) {                /* INIT (Punkt 2): Lauerstellung */
         e->hp = GB_HP;                        /* RE2 INIT schreibt HP unbedingt (@0x80100518-580) */
         g->prev_hp = e->hp;
         re15_gr2_reset(slot, gb_se);          /* Runde 41 Spur B: RE2-Bausteine je Aktor-Leben */
+        re15_gr2_rw_reset(slot); re15_gr2_rw_kamera_neu();   /* Runde 41 Spur G2-RE2 */
         re15_gr2_zonen_quelle(gb_zone);       /* Nachbesserung 2 (M3): RE2-Zone 1 des Kanisters = Beckenzone */
         re15_gr2_becken_quelle(gb_becken_draussen);   /* Nachbesserung 2 (M2): Wasser fuer die RE2-Wende-Bahnen */
         re15_gr2_koerper_quelle(gb_koerper_kontakt);  /* Nachbesserung 2 (M2): Push-Kreise gegen Leon */
@@ -1585,6 +1996,12 @@ static void gb_takt(int slot)
         else if (g->burst_cd > 0) g->burst_cd--;
     }
     int32_t dist = re15_enemy_player_dist(e, pl);
+    {   /* NB3 (Vorgabe A): Bilder oben (Rampe/Plattform y < -900 wie player_on_platform, oder Ostnische) ohne Treffer - Treffer nullt in
+         * gb_biss_abschluss; nicht oben und jede Nicht-Kampfphase (RE2-Intro, Lauern, Tod) nullt. Ab GB_OBEN_OHNE quert die Belagerung
+         * ueber die Figur (GBP_GUARD). */
+        if (!gb_pl_oben(pl) || !gb_phase_kampf(g->phase)) g->oben_ohne = 0;   /* nur im Kampf gezaehlt (s. gb_phase_kampf) */
+        else if (g->oben_ohne < 30000) g->oben_ohne++;
+    }
 
     switch (g->phase) {
     case GBP_LURK:
@@ -1624,6 +2041,7 @@ static void gb_takt(int slot)
         break;
 
     case GBP_CHASE: {                         /* Punkt 6: Verfolgung im Wasser */
+        g->kz_lauer = 0;
         int player_on_platform =                    /* begehbare Flaeche OBEN =
                                                      * Block UND Ost-Rampe (Nutzer-
                                                      * Marker: Leon auf der Rampe
@@ -1639,6 +2057,7 @@ static void gb_takt(int slot)
               pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1) ||
              (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 &&
               pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
+        if (!gb_nb3_aus() && gb_pl_unerreichbar(pl)) player_on_platform = 1;   /* NB3 (Vorgabe B): Ostnische / Figur im Block = belagern wie oben */
         if (g->cross_cd > 0) g->cross_cd--;
         {   const char *tv6 = getenv("RE15_GB_TEST");
             if (tv6 && *tv6 == '6') player_on_platform = 1;
@@ -1659,7 +2078,74 @@ static void gb_takt(int slot)
         /* Runde 41 Spur G (Nachbesserung 2, N3): liegt der geworfene Kanister >= 8880 voraus, schwimmt er ihn an (RE2-Zielmodus
          * +0x1C0 & 4 @0x80100a34-5c / Biss-Sperre @0x8010134c-58; Herleitung re15_kanister2080_r41.h RE15_K2080_ANSCHWIMM_AB) */
         if (re15_k2080_r41_anschwimmen(slot, e, dist)) break;
-        if (player_on_platform) {
+        /* Runde 41 Spur G2-RE2 (5) - Nutzer 2026-11-02: "Wir haben doch schon eine Bewegung eingebaut das der Aligator die Rampe ueberklettert" / "Beim
+         * Ueberklettern ... sollte der Spieler schon immer gerammelt werden" / "nein, keine deckung": mit dem Kanister keine Belagerung (NB5-Stadion = Drehen
+         * auf der Stelle, Abnahme 4 M2), sondern die vorhandene Ueberquerung GBP_CROSS (gb_cross_begin) ueber die Figur; der Weg zum Startpunkt ist die
+         * Verfolgung selbst (RE2-Clips/Vortrieb wie NB5), mit dem Startpunkt als Ziel. PORT-WAHL der Seite: die Querung laeuft von der Kamera weg (ihr Ende
+         * liegt fuer den Kopf mindestens GR2_RW_KAM_NAH 2500 vor der Kamera; Cut 2 sieht von Sueden, Cut 3 von Norden), sonst die eigene Seite. */
+        re15_actor_t kz_pl; const re15_actor_t *zp = pl; int kreuz_ziel = 0;
+        if (player_on_platform && re15_gr2_rw_an()) {
+            const int32_t xc = pl->x < 3350 ? 3350 : pl->x > GB_RAMP_X1 - 700 ? GB_RAMP_X1 - 700 : pl->x;   /* Lande-x-Klemme der Ueberquerung (gb_cross_begin) */
+            int vz_ok[2]; int32_t vz_min[2];
+            for (int sd = 0; sd < 2; sd++) {                  /* sd 0 = von Sueden (nach Norden), 1 = von Norden */
+                const int32_t ende = sd == 0 ? GB_RAMP_Z1 + GB_BAHN_M : GB_RAMP_Z0 - GB_BAHN_M;
+                const int32_t kz2 = sd == 0 ? ende + 5644 : ende - 5644;   /* Kopf 5644 vor der Wurzel (NB6 Messung 1) */
+                const int32_t p1[3] = { xc, GB_WATER_Y, kz2 }, p2[3] = { xc, GB_WATER_Y - 1793, kz2 };
+                const int32_t a1 = re15_gr2_kamera_tiefe((int)g_scd.cam_id, p1), a2 = re15_gr2_kamera_tiefe((int)g_scd.cam_id, p2);
+                vz_min[sd] = a1 < a2 ? a1 : a2; vz_ok[sd] = vz_min[sd] >= 2500;
+            }
+            /* Seite = die des Gators (gemessen: mit dem Kanister kommt er in Cut 2 nicht kopfvoran aus dem Westkanal ins Suedbecken - Kopf 5644 vor der Wurzel,
+             * Kanister 2694 links, Platten-Ecke und die Kamera-Grenze 2500 lassen keinen Wendekreis; ebenso Cut 3/Nordbecken). Im Westkanal zwischen den
+             * Kanten die Seite, deren volle Querung zur Kamera hin liefe (Vorstoss) - das Becken auf der Kameraseite ist von dort nicht erreichbar. */
+            const int eigen = e->z < GB_RAMP_Z0 ? 0 : e->z > GB_RAMP_Z1 ? 1 : (vz_ok[0] != vz_ok[1] ? (vz_ok[0] ? 1 : 0) : (gb_iabs(e->z - GB_RAMP_Z0) <= gb_iabs(e->z - GB_RAMP_Z1) ? 0 : 1));
+            const int sd = eigen;
+            const int vorstoss = !vz_ok[sd];
+            kz_pl = *pl; kz_pl.x = xc; kz_pl.y = 0; kz_pl.z = sd == 0 ? GB_RAMP_Z0 - GB_KREUZ_ANLAUF : GB_RAMP_Z1 + GB_KREUZ_ANLAUF;
+            if (g->cross_cd > 0 && re15_gr2_rw_modus(slot) == 0) {
+                /* Pause nach Ueberquerung/Rueckzug (PORT-WAHL, Form = Spur-B-Lauern GBP_LURK "still liegen", Clip 0 laeuft ohne Vortrieb): liegt er am Startpunkt
+                 * (< GB_KREUZ_START) mit Blick zur Rampe (+-90 Grad), lauert er dort bis zum naechsten Vorstoss - kein Wenden mit dem 12 300 langen Koerper. */
+                const int64_t ax = (int64_t)e->x - kz_pl.x, az = (int64_t)e->z - kz_pl.z;
+                const int soll = sd == 0 ? 3072 : 1024;
+                const int dg = ((soll - (int)e->rot_y + 0x800) & 0xfff) - 0x800;
+                if (ax * ax + az * az < (int64_t)GB_KREUZ_START * GB_KREUZ_START && dg <= GB_KREUZ_GIER && dg >= -GB_KREUZ_GIER) {
+                    if (e->motion != 0) { e->motion = 0; e->anim_frame = 0; e->anim_frac = 32; e->anim_blend_rate = 4096 / 33; }   /* Clip 0, Blend 32 wie Sub 1 (@0x80100c38) */
+                    else { re15_enemy_bank_t *lb = re15_enemy_find(0x23); if (lb && lb->ok && ++e->anim_frame >= lb->anim.clips[0].frame_count) e->anim_frame = 0; }
+                    e->y = GB_WATER_Y; g->kz_lauer = 1;
+                    break;
+                }
+            }
+            zp = &kz_pl; kreuz_ziel = 1;
+            if (g->cross_cd == 0 && re15_gr2_rw_modus(slot) == 0 && !re15_gr2_aufnahme_lenksperre(slot)) {
+                const int64_t ax = (int64_t)e->x - kz_pl.x, az = (int64_t)e->z - kz_pl.z;
+                const int soll = sd == 0 ? 3072 : 1024;      /* Gier nach Norden / Sueden: vorwaerts (cos g, -sin g) */
+                const int dg = ((soll - (int)e->rot_y + 0x800) & 0xfff) - 0x800;
+                if (ax * ax + az * az < (int64_t)GB_KREUZ_START * GB_KREUZ_START && dg <= GB_KREUZ_GIER && dg >= -GB_KREUZ_GIER) {
+                    gb_cross_begin(e, g, sd == 0, pl->x);
+                    g->cross_oben = 1; s_gb_kreuz_kan++;
+                    g->kz_ende_z = g->cz0 < g->cz1 ? GB_RAMP_Z0 - GB_KREUZ_ANLAUF : GB_RAMP_Z1 + GB_KREUZ_ANLAUF;   /* Rueckzug bis zum Startpunkt: Kopf wieder vor der Kante */
+                    if (vorstoss) {
+                        /* G2-RE2 (5) VORSTOSS (PORT-WAHL): die volle Querung braechte den Kopf hinter die Kamera - die Bahn endet, wo der Kopf (5644 vor der
+                         * Wurzel, NB6 Messung 1) noch GR2_RW_KAM_NAH 2500 + 250 vor der Kamera liegt; danach Rueckzug zur Startseite (CROSS, kz_rueck 2) */
+                        const int dirz = g->cz1 > g->cz0 ? 1 : -1;
+                        int32_t z_ok = g->cz0;
+                        for (int32_t zz = g->cz0; dirz > 0 ? zz <= g->cz1 : zz >= g->cz1; zz += 250 * dirz) {
+                            const int32_t xx = g->cx0 + (int32_t)((int64_t)(g->cx1 - g->cx0) * (zz - g->cz0) / (g->cz1 - g->cz0 ? g->cz1 - g->cz0 : 1));
+                            const int32_t k1[3] = { xx, GB_WATER_Y, zz + dirz * 5644 }, k2[3] = { xx, GB_WATER_Y - 1793, zz + dirz * 5644 };
+                            const int32_t a1 = re15_gr2_kamera_tiefe((int)g_scd.cam_id, k1), a2 = re15_gr2_kamera_tiefe((int)g_scd.cam_id, k2);
+                            if ((a1 < a2 ? a1 : a2) < 2500 + 250) break;
+                            z_ok = zz;
+                        }
+                        g->cz1 = z_ok;
+                        gb_kreuz_bahn(g, 32, 90, 240);
+                        g->kz_rueck = 1;
+                    }
+                    re15_gr2_log("G2RE2 UEBERQUERUNG F%u %s von %s: Wurzel (%d,%d) -> (%d,%d), Figur (%d,%d,%d) Cut %d", (unsigned)g_engine.frame_count,
+                                 vorstoss ? "VORSTOSS" : "voll", sd == 0 ? "Sueden" : "Norden", g->cx0, g->cz0, g->cx1, g->cz1, pl->x, pl->y, pl->z, (int)g_scd.cam_id);
+                    break;
+                }
+            }
+        }
+        if (player_on_platform && !kreuz_ziel) {
             /* Nutzer 2026-09-10: solange Leon OBEN steht -> BELAGERN und nach
              * oben schnappen; geklettert wird erst, wenn er heruntergesprungen
              * ist (dann faellt player_on_platform und die Routenwahl unten
@@ -1670,7 +2156,7 @@ static void gb_takt(int slot)
         }
         {   /* Runde 41 Spur B: RE2-LUNGE als Zonen-Dash (Zonenlinie +0x21A 0->1->2 @0x801009a8/@0x801009ec
              * -> Routine 0x301 @0x801009ac/@0x801009f4; die Pruefung liegt VOR und unabhaengig von der
-             * Biss-Sperre +0x238 @0x80100b5c-64, also auch in der 110er-Sperre nach dem Intro). PORT-WAHL:
+             * Spurt-Sperre +0x238 @0x80100b5c-64, also auch in der 110er-Sperre nach dem Intro). PORT-WAHL:
              * die drei sce-8-Wasserzonen des RDT statt der Korridorlinien, nur beim Wechsel in Leons Zone.
              * Nachbesserung 1 (M1): statt der ganzen Bahn gegen Insel + Aussenwaende nur noch die Laengs-
              * Bahn gegen Insel/Rampe; Quer-Komponente und Aussenwaende nimmt die Dispatcher-Klemme. */
@@ -1678,7 +2164,8 @@ static void gb_takt(int slot)
             /* Nachbesserung 2 (Abnahme 1 M2): statt der Laengs-Probe gb_seg_frei die bone-genaue Bahn der RE2-Wende
              * (gator_re2_r41.c gr2_dash_planen: Kopf/Rumpf im Wasser, Wurzel ausserhalb der Klemmzone, Ende auf Leon) */
             if (re15_gr2_dash_zonenwechsel(slot, e, gb_zone(e->z), gb_zone(pl->z), zv)
-                && re15_gr2_dash_planen(slot, e, pl, zv)) {
+                && re15_gr2_dash_planen(slot, e, pl, zv)
+                && re15_gr2_trag_dash_erlaubt(slot)) {   /* Runde 41 Spur G2 NB2 (M1'): mit Kanister hoechstens einmal (RE2-Zonenbyte @0x801009a8/@0x801009ec) */
                 re15_gr2_dash_start(slot, e, pl);
                 g->phase = GBP_RE2_DASH; g->timer = 0;
                 break;
@@ -1693,19 +2180,19 @@ static void gb_takt(int slot)
          * ueber die Rampe (den kleinen Vorsprung - NUR dort, Nutzer-Wort).
          * Die Route wird gelatcht und nur neu bewertet, wenn eine Zone
          * wechselt oder der Kletter-Cooldown ablaeuft. */
-        int32_t tx = pl->x, tz = pl->z;
+        int32_t tx = zp->x, tz = zp->z;
         {   /* VORHALTE (DESIGN "schlauer machen", Nutzer 2026-09-11): auf
              * die in 20 F extrapolierte Leon-Position zielen; Sprung-/
              * Teleport-Frames (>200 Delta) und Erst-Tick liefern 0. */
             int32_t vdx = pl->x - g->leon_lx, vdz = pl->z - g->leon_lz;
             if (gb_iabs(vdx) <= 200 && gb_iabs(vdz) <= 200
                 && dist > 2000                 /* nah: direkt, kein Zappeln */
-                && (g->leon_lx | g->leon_lz)) {
+                && (g->leon_lx | g->leon_lz) && !kreuz_ziel) {
                 tx += vdx * 20; tz += vdz * 20;
             }
         }
         {
-            int zg = gb_zone(e->z), zl = gb_zone(pl->z);
+            int zg = gb_zone(e->z), zl = gb_zone(zp->z);
             g->dbg_zweig = 0;
             if (zg != zl && zg != 2 && zl != 2) {
                 /* Sued<->Nord: Route waehlen/halten */
@@ -1722,10 +2209,10 @@ static void gb_takt(int slot)
                     /* Kostenvergleich (grobe Manhattan-Summen reichen zur Wahl) */
                     int32_t kw = gb_iabs(e->x - eckx) + gb_iabs(e->z - eckz_g)
                                + gb_iabs(eckz_l - eckz_g)
-                               + gb_iabs(pl->x - eckx) + gb_iabs(pl->z - eckz_l);
+                               + gb_iabs(zp->x - eckx) + gb_iabs(zp->z - eckz_l);
                     int32_t kr = gb_iabs(e->x - rx) + gb_iabs(e->z - rz_ein)
                                + gb_iabs(rz_aus - rz_ein)
-                               + gb_iabs(pl->x - rx) + gb_iabs(pl->z - rz_aus);
+                               + gb_iabs(zp->x - rx) + gb_iabs(zp->z - rz_aus);
                     /* Nutzer-Marke F280 2026-09-11 ("nimmt den langen Weg,
                      * dreht sogar um"): das fruehere "RAMPE immer" warf den
                      * Kostenvergleich weg - Gator NW, Leon SW hiess kw 23150
@@ -1734,20 +2221,23 @@ static void gb_takt(int slot)
                      * behaelt +2000 Praeferenz ("direkt drueber klettern"
                      * gilt, wenn sie wirklich der direkte Weg ist). */
                     g->route = (g->cross_cd == 0 && kr <= kw + 2000) ? 2 : 1;
+                    if (re15_gr2_traegt_lenkung() && !re15_gr2_kk_ziel_alt()) g->route = 1;   /* Runde 41 Spur G2 NB2 (M1'): mit dem Kanister quer im Maul kein
+                                                * Rampen-Uebergang - der Anlauf-Wegpunkt an der Rampenkante liegt fuer Kopf + Kanister hinter der Ostwand (Fuzz NB2 O2/O3: Pendel
+                                                * im Suedbecken, 176 2-s-Fenster); RE2 klettert nicht (Korridor). Westumlauf. */
                     g->route_zwang = (int8_t)(g->cross_cd > 0);
                     g->zone_g = (int8_t)zg; g->zone_l = (int8_t)zl;
                 }
                 if (g->route == 2 && g->cross_cd == 0) {
                     int64_t adx = e->x - rx, adz = e->z - rz_ein;
                     if (adx * adx + adz * adz < (int64_t)1400 * 1400) {
-                        gb_cross_begin(e, g, zg == 0, pl->x);
+                        gb_cross_begin(e, g, zg == 0, zp->x);
                         g->cross_oben = 0;    /* Verfolgungs-Querung */
                         break;
                     }
                     tx = rx; tz = rz_ein; g->dbg_zweig = 2;
                 } else {
                     /* WEST: naechsten noch noetigen Wegpunkt ansteuern */
-                    if (gb_seg_frei(e->x, e->z, pl->x, pl->z, GB_KOERPER_M))
+                    if (gb_seg_frei(e->x, e->z, zp->x, zp->z, GB_KOERPER_M))
                         { g->dbg_zweig = 1; }                     /* frei: direkt */
                     else if (gb_seg_frei(e->x, e->z, eckx, eckz_l, GB_KOERPER_M))
                         { tx = eckx; tz = eckz_l; g->dbg_zweig = 3; }
@@ -1757,9 +2247,12 @@ static void gb_takt(int slot)
                 /* verbunden (gleiche Zone oder Westkanal): direkt zu Leon;
                  * streift die Sichtlinie den Plattform-Sporn oder die
                  * Rampen-Westkante, um die Ecke fuehren. */
-                if (gb_seg_hits_platform(e->x, e->z, pl->x, pl->z, GB_KOERPER_M))
-                    { gb_ring_target(e, pl, &tx, &tz); g->dbg_zweig = 5; }
-                else if (gb_seg_hits_ramp(e->x, e->z, pl->x, pl->z, GB_KOERPER_M)) {
+                if (!gb_nb3_aus() && gb_punkt_im_band(zp->x, zp->z) && gb_seg_frei(e->x, e->z, zp->x, zp->z, 0))
+                    { tx = zp->x; tz = zp->z; g->dbg_zweig = 7; }   /* NB3 (Vorgabe B): Figur im Band vor der Kante, Strecke gegen den Block frei -> direkt,
+                                                                      * ohne Vorhalte (der Vorhalte-Punkt laege im Band oder im Block) */
+                else if (gb_seg_hits_platform(e->x, e->z, zp->x, zp->z, GB_KOERPER_M))
+                    { gb_ring_target(e, zp, &tx, &tz); g->dbg_zweig = 5; }
+                else if (gb_seg_hits_ramp(e->x, e->z, zp->x, zp->z, GB_KOERPER_M)) {
                     /* westlich um die Rampe = westlich um die PLATTFORM (die
                      * Rampe schliesst an sie an; eine "Rampen-Westecke" laege
                      * im Radius-Schatten der Plattform-Suedkante). */
@@ -1813,7 +2306,7 @@ static void gb_takt(int slot)
          * Plattform, erst zur guenstigsten FREIEN Umlauf-Ecke; ist keine
          * frei (Start selbst im Schatten-Band), zur naechstgelegenen. */
         {
-            int ubi = gb_kanten_umweg(e, &tx, &tz);
+            int ubi = gb_kanten_umweg(e, &tx, &tz, g->dbg_zweig == 7);   /* NB3: Zweig 7 = direkt (s. gb_kanten_umweg) */
             if (ubi >= 0) g->dbg_zweig = (int8_t)(10 + ubi);
         }
         /* Steuerziel in die vom KOERPER-ZENTRUM erreichbare Flaeche klemmen
@@ -1827,7 +2320,12 @@ static void gb_takt(int slot)
         if (tx >  7200 - 1600)  tx =  7200 - 1600;
         if (tz < -27000 + 1600) tz = -27000 + 1600;
         if (tz >  -5400 - 1600) tz =  -5400 - 1600;
+        (void)re15_gr2_trag_ziel(slot, e, zp, &tx, &tz, tx, tz, 0);
+        if (kreuz_ziel) (void)re15_gr2_kreuz_anfahrt(slot, e, kz_pl.x, kz_pl.z, &tx, &tz);   /* G2-RE2 (5): Weg zum Startpunkt der Ueberquerung (Westkanal-Knoten wie NB5) */
+        else if (re15_gr2_rw_an()) (void)re15_gr2_rw_umweg(slot, e, pl->x, pl->z, &tx, &tz);   /* G2-RE2 (M4): Strecke zur Figur durch Plattform/Rampe -> Westkanal-Knoten */   /* Verfolgung: Hop-Regel aus (Routenwahl/CROSS-Anlauf der Spur B; Fuzz NB1: am Hop-Wegpunkt stand er vor der Rampe) */   /* Runde 41 Spur G2 (Punkt 7, Nachbesserung 1 M1): mit dem Kanister im Maul das Ziel, an dem
+                                                         * die Kopf-Klemme nicht greift, und am Ende kein Stehen - Vorbei-Etappe (gator_re2_r41.c) */
         g->dbg_tx = tx; g->dbg_tz = tz;
+        if (re15_gr2_rw_takt(slot, e, pl, tx, tz, dist)) break;   /* Runde 41 Spur G2-RE2 (a)/(b): Rueckwaerts (RE2-Clip 10) / Notloesung Tauchen */
         {   /* Dreh-Telemetrie (Nutzer 2026-09-11: "dreht fast immer erst in
              * die entgegengesetzte Richtung bevor er Richtung Platform
              * dreht"): bei jedem Zweig-/Routenwechsel 48 F Drehverlauf. */
@@ -1872,7 +2370,7 @@ static void gb_takt(int slot)
                     && !gb_wand_dazwischen(e, pl)
                     && (dist < 3200 || gb_maul_dist(e, pl) < 2400
                         || g->maul_kontakt > 0)) {
-                    g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
+                    g->phase = GBP_LUNGE; g->timer = 0; gb_lauf_beginn(g, gb_lunge_b2() ? 5 : 4);   /* NB4 Runde 3: bite_done = 0 */
                     gb_se(4);                          /* RE2 Lunge-P0 Angriffs-Brueller: `beq v1,zero,0x80100d84`
                                                         * @0x80100d60 / `addiu a0,zero,4` @0x80100d64 / `jal
                                                         * 0x8005bd6c` @0x80100d84 (Phase 2 Stufe B1) */
@@ -1890,6 +2388,15 @@ static void gb_takt(int slot)
                     e->z += (int32_t)(((int64_t)bs * 44) >> 12);
                 }
                 e->y = GB_WATER_Y;
+                if (re15_gr2_traegt_lenkung() && !re15_gr2_kk_ziel_alt()) {
+                    /* Runde 41 Spur G2 (Nachbesserung 1, M1 "RE2 hat keinen Wartezustand, der Alligator schwimmt immer weiter, auch mit Kanister"):
+                     * mit dem Kanister keine Wende auf der Stelle, sondern im Bogen mit dem Wurzelversatz des Clips weiter - RE2 Stufe 7 ohne Zaehler
+                     * @0x80101b58-8c, der Koerper schwimmt in Sub 1/2 (FUN_8001a330 je Bild). Gemessen (Lauf n1_frei_elza): die Wenden auf der Stelle
+                     * waren 31-45 Bilder lange Stillstaende zwischen den Vorbei-Etappen. */
+                    int32_t vw = 0;
+                    re15_gr2_chase_clip(slot, e, dist, &vw);
+                    re15_ai_advance(e, vw);
+                } else
                 re15_gr2_chase_clip(slot, e, dist, NULL);   /* Runde 41 Spur B: Clip nach RE2-Hysterese (Wende ohne Vortrieb) */
                 break;
             }
@@ -1920,6 +2427,7 @@ static void gb_takt(int slot)
              * frueheren Design-Geschwindigkeiten 56/100. */
             int32_t v = 0;
             re15_gr2_chase_clip(slot, e, dist, &v);
+            if (s_gb_tempo_alt && (s_gb_tempo_alt == 2 || re15_gr2_rw_traegt())) v = (int32_t)((((int32_t)(re15_engine_rand8() & 0x3f) + 60) * GB_SCALE_Q12) >> 12);   /* Pruefhaken (s.u.) */
             re15_ai_advance(e, v);
         }
         e->y = GB_WATER_Y;
@@ -1938,7 +2446,7 @@ static void gb_takt(int slot)
              * (6000) startete Leer-Schnapps, deren Maul Leon im 45-F-Clip
              * nie erreichte (Messung: maul 3088->2624, kein Treffer);
              * maul<2400 = Fenster-Ankunft bei ~40/F Lunge-Vortrieb. */
-            g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
+            g->phase = GBP_LUNGE; g->timer = 0; gb_lauf_beginn(g, gb_lunge_b2() ? 5 : 4);   /* NB4 Runde 3: bite_done = 0 */
             /* Clip 4 = SCHNAPP-Biss - Kieferkurve GEMESSEN (EDD/EMR 2026-09-10):
              * Maul reisst ab Frame 4 auf, Peak -591 @F12, zu @F24 (45 F). Clip 3
              * oeffnet erst ab ~F54 (Peak F96/150) - der alte 40-Frame-Abbruch
@@ -1986,10 +2494,14 @@ static void gb_takt(int slot)
                 e->anim_frame += 2;
                 if (e->anim_frame >= 150) { e->motion = 3; e->anim_frame = 0; }
             } else {
-                if (!g->bite_done && e->anim_frame >= 114 && pl->hit_react == 0
+                const int bed5 = e->anim_frame >= 114 && pl->hit_react == 0
                     && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
-                    && !gb_wand_dazwischen(e, pl))
-                    gb_biss_abschluss(e, g, pl);
+                    && !gb_wand_dazwischen(e, pl);
+                gb_lauf_bild(g, bed5);
+                if (!g->bite_done && bed5   /* NB4 Runde 3 (Abnahme 8 M1): ein Treffer je Lauf (bite_done, s. gb_lauf_riegel); RE2 Sub 3 hat nur T1
+                                             * `bf04040c jal 0x801012fc` @0x80100d40, die Clip-3-Pruefung `7200422c sltiu v0,v0,0x72` @0x80100e8c setzt nur +0x218 */
+                    && !gb_sperre238_zu(slot))
+                    gb_biss_abschluss(e, g, pl, 5);   /* NB4: Angriff Biss B2 */
                 e->anim_frame += 2;
                 if (e->anim_frame >= 150) {
                     e->rot_y = (int16_t)((e->rot_y + 0x400) & 0x0fff);
@@ -2000,14 +2512,17 @@ static void gb_takt(int slot)
             }
             break;
         }
-        if (!g->bite_done
-            && e->anim_frame >= 6 && e->anim_frame <= 34   /* Fenster geweitet
+        const int bed4 = e->anim_frame >= 6 && e->anim_frame <= 34   /* Fenster geweitet
                                                             * (Biss-Sweep 2026-09-11):
                                                             * 8..20 liess Leon in
                                                             * F21-42 entkommen */
             && pl->hit_react == 0
             && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
-            && !gb_wand_dazwischen(e, pl)) {
+            && !gb_wand_dazwischen(e, pl);
+        gb_lauf_bild(g, bed4);
+        if (!g->bite_done && bed4   /* NB4 Runde 3 (Abnahme 8 M1): ein Treffer je Clip-4-Lauf wie RE2 ein Treffer je Kiefer-Lauf (bite_done, s. gb_lauf_riegel;
+                                     * PL+0x1D3 @0x801015a4-ac, Lauf-Ende @0x80101558); kein +0x238 (Runde 2 entfernt: T1 @0x801012fc fragt es nicht) */
+            && !gb_sperre238_zu(slot)) {
             /* dist<1000 = Leon IM Kopf-Segment-Radius (900+Puffer): Nahkontakt
              * zaehlt als Biss (Biss-Sweep 2026-09-11, Leon auf dem Koerper). */
             /* Treffer = MAUL-Kontakt (Kopf-Segment 900 + Spieler 450 + 150
@@ -2016,7 +2531,7 @@ static void gb_takt(int slot)
              * attack_type 5 -> dmg_table[5] = 50 + Knockdown-Latch. EIN Biss pro
              * Lunge (bite_done): ohne den Latch traefen alle drei Fensterframes
              * (gemessen 2026-09-10: Leon 100 HP -> Game Over in <2 s). */
-                            gb_biss_abschluss(e, g, pl);
+                            gb_biss_abschluss(e, g, pl, 4);   /* NB4: Angriff Biss (LUNGE) */
         }
         e->anim_frame++;
         if (e->anim_frame > 42) {             /* Clip 4 (45 F) ausklingen lassen */
@@ -2050,6 +2565,10 @@ static void gb_takt(int slot)
     case GBP_GUARD: {                         /* Plattform-Belagerung (Nutzer-Design):
                                                * an die Kante unter Leon, aufrichten,
                                                * nach OBEN schnappen inkl. Schaden. */
+        if (re15_gr2_rw_an()) {               /* Runde 41 Spur G2-RE2 (5): mit dem Kanister keine Belagerung - Verfolgung mit Ueberquerung */
+            g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
+            break;
+        }
         if (g->cross_cd > 0) g->cross_cd--;   /* auch im Dauer-GUARD abbauen */
         int oben = (pl->y < -900) &&          /* y-Check wie im CHASE: watender
                                                * Leon (y=0) ist NICHT oben */
@@ -2057,10 +2576,12 @@ static void gb_takt(int slot)
                      pl->z >= GB_PLAT_Z0 && pl->z <= GB_PLAT_Z1) ||
                     (pl->x >= GB_RAMP_X0 && pl->x <= GB_RAMP_X1 &&
                      pl->z >= GB_RAMP_Z0 && pl->z <= GB_RAMP_Z1));
+        if (!gb_nb3_aus() && gb_pl_unerreichbar(pl)) oben = 1;   /* NB3 (Vorgabe B): Ostnische / Figur im Block = belagern wie oben */
         {   const char *tv6 = getenv("RE15_GB_TEST");
             if (tv6 && *tv6 == '6') oben = 1;   /* Sichtlauf: Belagerung erzwingen */
         }
         if (re15_k2080_r41_anschwimmen_aktiv(e)) oben = 0;   /* Runde 41 Spur G (NB2, N3): erst der Kanister (Zielmodus) */
+                                                              /* NB4 (K): ohne Holmodus immer 0 - nur noch unter den Pruefhaken runde_alt / anschwimmen_alt */
         if (!oben) {                          /* heruntergesprungen -> Verfolgung
                                                * (deren blocked-Regel klettert) */
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
@@ -2073,6 +2594,7 @@ static void gb_takt(int slot)
              * er schwimmt sichtbar an der Kante unter Leon her. */
             int32_t gx, gz;
             int64_t gdx, gdz;
+            int quer_anl = 0;   /* NB3 Runde 2: Anlauf der Zaehler-Querung (Vorgabe A) - ohne 600er-Ruhezone (s. Vortrieb unten) */
             /* Randpunkt auf der EIGENEN Seite konstruieren (Nutzer-Marken
              * F2579-F2809, 2026-09-10: Leon oben auf der Rampe, der Gator
              * kreiste ewig im Nordbecken an der Plattform-NO-Ecke - der
@@ -2087,6 +2609,7 @@ static void gb_takt(int slot)
             {
                 int zg2 = gb_zone_hyst(e->z, &g->gzone_h);
                 int auf_rampe = (pl->x >= GB_RAMP_X0);
+                int quer_anlauf = 0;   /* NB3 (Vorgabe A): Anlauf der Zaehler-Querung ohne Kanten-Pendel (s. u.) */
                 int pend_z = 0;   /* Pendel-Achse folgt der ZIELART (Sweep-Beleg
                                    * 2026-09-11: die zg2-Achsenwahl verschob das
                                    * SUED-Kantenziel bei Hysterese-Kipp auf
@@ -2105,7 +2628,44 @@ static void gb_takt(int slot)
                                                * Leon-oben bleibt per Nutzer-Design
                                                * verboten). */
                     int zielzone = gb_seite_latch(g, pl->z, (GB_RAMP_Z0 + GB_RAMP_Z1) / 2);
-                    if (zg2 != 2 && zg2 != zielzone && g->cross_cd == 0) {
+                    /* Runde 41 Spur G2-RE2 NB2 "Vorschlag 4" (PORT-WAHL; Auftrag "Rampe: rammen wie gehabt, keine Deckung", Nutzer 2026-11-02 "Beim Ueberklettern ...
+                     * sollte der Spieler schon immer gerammelt werden"): mit dem Kanister im Maul belagert er wie ohne Kanister (Kante, Pendel, Hochbiss), quert aber,
+                     * sobald die Pause (cross_cd, GB_KREUZ_PAUSE) abgelaufen ist, mit dieser QUER-CROSS ueber die Figur hinweg auf die andere Seite (Rammen in
+                     * GBP_CROSS) - wenn die Querung von der Kamera der Figur WEG fuehrt: Bahn-Ende der Spur-B-Querung (Kante + GB_BAHN_M) plus der Kopf 5644 vor
+                     * der Wurzel (NB6 Messung 1) auf Wasserhoehe und 1793 darueber mindestens 2500 vor der Kamera (GR2_RW_KAM_NAH, r41/gatorfix a14ff425a; Seite
+                     * wie f942f56c0 G2-RE2 (5), jetzt nur fuer den Kopf). Zur Kamera hin gilt die Seite der Belagerung ohne Kanister (Leons naehere Kante).
+                     * Gemessen (Riegel re2, je Lage 1800 Bilder): ohne Kanister an Rampe-x2318 (= Abnahme 4 west5_elza) 3 Treffer = fast sicherer Platz, mit dieser
+                     * Regel 24 Treffer / 6 Rammen; Querung auch zur Kamera hin: Kopf < 2500 vor der Kamera in 186-192 Querungs-Bildern je Lage; nur von der Kamera
+                     * weg OHNE Rueckfall auf die Belagerungsseite: 0 Querungen, 0 Treffer an x2318 und Rampe-Nord. Pruefhaken v4_alt: f942f56c0 (dort gibt es mit dem
+                     * Kanister keine Belagerung). */
+                    const int zielzone_b = zielzone;   /* Seite der Belagerung ohne Kanister (Leons naehere Kante) */
+                    int quer_frei = 0;                 /* NB3 (Vorgabe A): Querung ueber die Figur auch waehrend cross_cd */
+                    if (gb_nb3_aus()) {
+                        /* Stand a661eb8aa (Gegenprobe): nur mit dem Kanister, nur von der Kamera weg (NB2 Vorschlag 4, s. o.) */
+                        if (re15_gr2_rw_traegt() && !re15_gr2_v4_alt() && zg2 != 2) {
+                            zielzone = g->cross_cd == 0 ? !zg2 : zg2;
+                            const int32_t xc = pl->x < 3350 ? 3350 : pl->x > GB_RAMP_X1 - 700 ? GB_RAMP_X1 - 700 : pl->x;   /* Lande-x-Klemme (gb_cross_begin) */
+                            const int32_t ende = zg2 == 0 ? GB_RAMP_Z1 + GB_BAHN_M : GB_RAMP_Z0 - GB_BAHN_M;
+                            const int32_t kz2 = zg2 == 0 ? ende + 5644 : ende - 5644;
+                            const int32_t p1[3] = { xc, GB_WATER_Y, kz2 }, p2[3] = { xc, GB_WATER_Y - 1793, kz2 };
+                            const int32_t a1 = re15_gr2_kamera_tiefe((int)g_scd.cam_id, p1), a2 = re15_gr2_kamera_tiefe((int)g_scd.cam_id, p2);
+                            if ((a1 < a2 ? a1 : a2) < 2500) zielzone = zielzone_b;   /* zur Kamera hin: Belagerung wie ohne Kanister */
+                        }
+                    } else if (zg2 != 2) {
+                        /* Runde 41 Spur G2-RE2 NB3 (Vorgabe A, Nutzer 2026-11-06 "darf halt oben nicht sicher sein", "Das kann er gerne machen"):
+                         * fuer alle, mit und ohne Kanister (Vorschlag 4: mit = ohne), ohne Kamera-Bedingung (F1 "noe"). Steht die Figur
+                         * GB_OBEN_OHNE Bilder oben ohne Treffer (Hochbiss reicht nicht: Mittelband bei x < ~3400, Messblatt NB3 1.4), quert er
+                         * ueber sie hinweg auf die andere Seite - auch mitten in der Pause nach der letzten Querung; das Bahn-Ende folgt ihr
+                         * (GBP_CROSS (b)), Rammen bei Koerperkontakt (GBP_CROSS). Waehrend der Pause (cross_cd) belagert er die EIGENE Kante
+                         * statt des Westumlaufs zur fernen (Seite wie mit dem Kanister in NB2); sonst wie NB5: Leons naehere Kante, Querung,
+                         * wenn er auf der falschen Seite liegt. */
+                        int32_t rxa = pl->x;   /* Anlauf-x der QUER-CROSS (s. u.) = bester Start */
+                        if (rxa < GB_RAMP_X0 + GB_RING_M) rxa = GB_RAMP_X0 + GB_RING_M;
+                        if (rxa > GB_RAMP_X1 - 700)       rxa = GB_RAMP_X1 - 700;
+                        if (g->oben_ohne >= GB_OBEN_OHNE && gb_quer_trifft(rxa, zg2 == 0, pl)) { zielzone = !zg2; quer_frei = 1; }
+                        else if (g->cross_cd > 0) zielzone = zg2;
+                    }
+                    if (zg2 != 2 && zg2 != zielzone && (g->cross_cd == 0 || quer_frei)) {
                         /* QUER-CROSS unter dem oben stehenden Leon hindurch
                          * (NUTZER-FREIGABE 2026-09-11 "kannst du schon
                          * machen"): statt des Riesen-Westumlaufs klettert er
@@ -2121,14 +2681,19 @@ static void gb_takt(int slot)
                                             : (GB_RAMP_Z1 + GB_BAHN_M);
                         {
                             int64_t adx = e->x - rx, adz = e->z - rz_ein;
-                            if (adx * adx + adz * adz < (int64_t)1400 * 1400) {
+                            if (adx * adx + adz * adz < (int64_t)1400 * 1400
+                                && (!quer_frei || gb_quer_trifft(e->x, zg2 == 0, pl))) {   /* NB3 (Vorgabe A): die Zaehler-Querung erst, wenn die Bahn von hier trifft */
                                 gb_cross_begin(e, g, zg2 == 0, pl->x);
                                 g->cross_oben = 1;   /* Belagerungs-Querung */
+                                if (re15_gr2_rw_traegt()) s_gb_kreuz_kan++;   /* Messhaken: Ueberquerungen mit dem Kanister (G2-RE2 NB2) */
                                 break;
                             }
                         }
                         gx = rx; gz = rz_ein;   /* Anlauf; Weg via Umweg unten */
                         g->umlauf = 0;          /* kein West-Commit noetig */
+                        quer_anl = quer_frei && !s_gb_raum_alt;   /* Pruefhaken raum_alt = Stand 10603425b */
+                        quer_anlauf = quer_frei;   /* NB3: der Anlauf der Zaehler-Querung ohne das Kanten-Pendel - mit ihm stand das Ziel bis 90 Bilder
+                                                    * 1500 oestlich des Anlaufs (Harness R2318/-16300: t300 Zaehler, t378 Start) */
                     } else {
                         gx = pl->x;
                         if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
@@ -2195,7 +2760,7 @@ static void gb_takt(int slot)
                         if (gz < GB_PLAT_Z0) gz = GB_PLAT_Z0;
                         if (gz > GB_PLAT_Z1) gz = GB_PLAT_Z1;
                     } else {
-                        gx += g->pend_dir * 1500;
+                        if (!quer_anlauf) gx += g->pend_dir * 1500;   /* NB3: s. quer_anlauf */
                         if (auf_rampe) {
                             if (gx < GB_RAMP_X0 + GB_RING_M) gx = GB_RAMP_X0 + GB_RING_M;
                             if (gx > GB_RAMP_X1 - 700)       gx = GB_RAMP_X1 - 700;
@@ -2206,7 +2771,9 @@ static void gb_takt(int slot)
                     }
                     bdx = e->x - gx; bdz = e->z - gz;
                     if (bdx * bdx + bdz * bdz < (int64_t)800 * 800)
-                        if (++g->pend_t >= 90) { g->pend_t = 0; g->pend_dir = (int8_t)-g->pend_dir; }
+                        /* Runde 41 Spur G2 (Nachbesserung 1, M3 "patrouilliert weiter, auch mit Kanister"): mit dem Kanister im Maul kein Halt am
+                         * Pendelpunkt - RE2 Stufe 7 hat keinen Zaehler (@0x80101b58-8c, s. gator_re2_r41.c TRAG-LENKUNG); Gegenprobe-Haken alt = 90 */
+                        if (++g->pend_t >= ((re15_gr2_traegt_lenkung() && !re15_gr2_kk_ziel_alt()) ? 1 : 90)) { g->pend_t = 0; g->pend_dir = (int8_t)-g->pend_dir; }
                 }
             }
             /* v0.7.64: der WEG zum Belagerungsziel laeuft ueber DIESELBE
@@ -2214,7 +2781,9 @@ static void gb_takt(int slot)
              * (ring_target) widersprach ihr dreimal (Kreiseln, SO-Sackgasse,
              * Grenz-Schwanken). */
             {
-                int uh = gb_kanten_umweg(e, &gx, &gz);
+                const int32_t tr_nx = gx, tr_nz = gz;   /* Runde 41 Spur G2 NB1: Endziel vor dem Kanten-Umweg */
+                int uh = gb_kanten_umweg(e, &gx, &gz, 0);
+                (void)re15_gr2_trag_ziel(slot, e, pl, &gx, &gz, uh >= 0 ? tr_nx : gx, uh >= 0 ? tr_nz : gz, 1);   /* Runde 41 Spur G2 (Punkt 7, NB1 M1/M3): s. CHASE - auch der Belagerungs-Hop */
                 if (!s_gb_stumm) {
                     static FILE *s_gwl2 = NULL; static int s_gwc2 = 0;
                     if (!s_gwl2) s_gwl2 = fopen("gator_boss.log", "a");
@@ -2241,7 +2810,7 @@ static void gb_takt(int slot)
                          * GEGEN den Pfad - C0<->C3-Flip im Westkanal,
                          * Einzelfall-Telemetrie Sweep 2026-09-11). */
                         int32_t hx = gx, hz = gz;
-                        int bi2 = gb_kanten_umweg(e, &hx, &hz);
+                        int bi2 = gb_kanten_umweg(e, &hx, &hz, 0);
                         g->gw_notx = hx; g->gw_notz = hz;
                         if (bi2 < 0) bi2 = 9;   /* Ziel direkt frei */
                         g->gw_not = 60;
@@ -2274,8 +2843,15 @@ static void gb_takt(int slot)
             {   /* Wende statt Bogen auch hier (s. CHASE-Steer-Notiz) */
                 int gsoll = ((int)re15_atan2_q12(gz - e->z, gx - e->x) - 0x400) & 0x0fff;
                 int gdlt  = ((gsoll - (int)e->rot_y + 0x800) & 0x0fff) - 0x800;
-                if ((gdlt <= 0x300 && gdlt >= -0x300)
-                    && gdx * gdx + gdz * gdz > (int64_t)600 * 600)
+                if ((gdlt <= 0x300 && gdlt >= -0x300
+                     || (re15_gr2_traegt_lenkung() && !re15_gr2_kk_ziel_alt()))   /* Runde 41 Spur G2 NB1 (M3): mit Kanister im Bogen weiter, s. CHASE */
+                    && (gdx * gdx + gdz * gdz > (int64_t)600 * 600
+                        || (re15_gr2_traegt_lenkung() && !re15_gr2_kk_ziel_alt())   /* NB1 (M3): mit Kanister keine 600er-Ruhezone (Lauf n3_plat_leon: 2165
+                                                                                * Bilder Stand 591 vor dem Etappenziel) - RE2 Stufe 7 ohne Wartezustand */
+                        || quer_anl))   /* NB3 Runde 2 (Vorgabe A "darf halt oben nicht sicher sein"): auch der Anlauf der Zaehler-Querung ohne 600er-Ruhezone. Gemessen
+                                         * (Harness raum, Figur frei, R2800/-16300 nach zwei Niederwuerfen bei (2300,-1800,-16680)): QUERPRUEF trifft vom Anlauf
+                                         * x 4450, aber nicht von der Wurzel x 5004; die Wurzel stand 554 vor dem Anlauf (4450,-20700) in der Ruhezone, startete nie
+                                         * (Start erst, wenn die Bahn von hier trifft) - 1195 Bilder ohne Treffer oben. Weiter zum Anlauf, bis die Bahn trifft. */
                     re15_ai_advance(e, GB_SWIM_SPEED);
             }
             {   /* Feindiagnose Haenger (temporaer aussagekraeftig, billig) */
@@ -2311,18 +2887,24 @@ static void gb_takt(int slot)
         if (dist < 4200 && e->hit_stun == 0 && e->motion != 4
             && re15_gr2_biss_erlaubt(slot)) {   /* R41 B NB2 M3: kein Biss in Kanister-Stufe 1..6 @0x80101360-70 */
             gb_se(4);                                  /* RE2 Lunge-P0 SE 4 @0x80100d64/d84 (Stufe B1) */
-            gb_se(3); e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
+            gb_se(3); e->motion = 4; e->anim_frame = 0; gb_lauf_beginn(g, 3);   /* NB4 Runde 3: bite_done = 0 */
         }
         if (e->motion == 4) {
             e->anim_frame++;
-            if (!g->bite_done && e->anim_frame >= 6 && e->anim_frame <= 34
-                && pl->hit_react == 0 && dist < 3900) {   /* DESIGN: Kantenstand +
+            const int bed3 = e->anim_frame >= 6 && e->anim_frame <= 34 && pl->hit_react == 0 && dist < 3900;
+            gb_lauf_bild(g, bed3);
+            if (!g->bite_done && bed3
+                && !gb_sperre238_zu(slot)) {   /* NB4 Runde 3 (Abnahme 8 M1): ein Treffer je Clip-4-Lauf (bite_done, s. gb_lauf_riegel) statt der +0x238-Frage
+                                               * aus NB4 (T) 88ff3f990 - RE2 haelt den zweiten Treffer im selben Biss ueber PL+0x1D3 (@0x801015a4-ac) und das
+                                               * Lauf-Ende (@0x80101558), nicht ueber +0x238 (@0x80100cb4-c4 ist toter Code). Vorher deckte der RE1.5-Niederwurf
+                                               * (41-92 Bilder) das Fenster ab; die RE2-Reaktion sperrt nur 20 Bilder (gemessen exe re2gator belagerung F522/F542) */
+                                              /* DESIGN: Kantenstand +
                                                * gehobener Kopf erreicht die Flaeche;
                                                * 3400->3900 + Fenster geweitet
                                                * (Biss-Sweep 2026-09-11: die
                                                * Plattform-MITTE liegt 3675 von
                                                * der besten Kanten-Position) */
-                                gb_biss_abschluss(e, g, pl);
+                                gb_biss_abschluss(e, g, pl, 3);   /* NB4: Angriff Hochbiss */
             }
             if (e->anim_frame > 42) { e->motion = 0; e->anim_frame = 0; }
         } else {
@@ -2338,12 +2920,23 @@ static void gb_takt(int slot)
 
     case GBP_CROSS: {                         /* Punkt 8: Bogen ueber die Rampe */
         g->ct++;
-        if (re15_gr2_traegt()) re15_enemy_steer_point(e, g->cx1, g->cz1, 0x60);   /* Runde 41 Spur P: Wende weiter (s. gb_cross_begin) */
+        if (g->kz_rueck == 1 && re15_gr2_rw_an()
+            && (g->ct >= g->cframes || g->bite_done)) {
+            /* Runde 41 Spur G2-RE2 (5) RUECKZUG nach dem Vorstoss (PORT-WAHL): rueckwaerts auf derselben Linie zur Startseite (kz_ende_z) mit dem RE2-Rueckzugs-
+             * Clip 10, Blend 3 (`addiu a1,zero,10 / addiu a2,zero,3 / jal 0x8001a330` @0x80102c40-48), Bahn-Tempo len/64 (doppelt so schnell wie die
+             * Querung - kurz halten), keine Wende; Ende = Bahn-Ende (Verfolgung). Ausloeser: Bahnende oder das Rammen. */
+            g->kz_rueck = 2; g->cx0 = e->x; g->cz0 = e->z; g->cx1 = e->x; g->cz1 = g->kz_ende_z; g->ct = 0;
+            gb_kreuz_bahn(g, 64, 30, 240);
+            { int32_t v0 = 0; e->motion = 0xff; (void)re15_gr2_rueck_clip(slot, e, &v0); }
+            re15_gr2_log("G2RE2 RUECKZUG F%u: Wurzel (%d,%d) -> (%d,%d) in %d Bildern", (unsigned)g_engine.frame_count, g->cx0, g->cz0, g->cx1, g->cz1, (int)g->cframes);
+        }
+        if (re15_gr2_traegt_lenkung() && g->kz_rueck != 2) re15_enemy_steer_point(e, g->cx1, g->cz1, 0x60);   /* Runde 41 Spur P: Wende weiter (s. gb_cross_begin); Vorschlag 4: nur Pruefhaken */
         int32_t t = g->ct;                    /* 0..GB_CROSS_FRAMES */
+        const int f_kl = re15_gr2_rw_an();    /* Runde 41 Spur G2-RE2 (5): Ueberquerung mit dem Kanister im Maul (Profil/Rammen aus r41/gatorfix NB7-NB9) */
         /* ANTI-HILFLOSIGKEIT (Nutzer 2026-09-11: "waehrend seiner Kletter-
          * phase ist der Aligator absolut hilflos" - Leon sprang die Stufe
          * hoch/runter um die starre 7-s-Bahn herum): */
-        if (pl->y < -900) {
+        if (pl->y < -900) { if (!f_kl) {     /* G2-RE2: mit dem Kanister bleibt die Bahn gerade (Kanister quer im Maul; r41/gatorfix NB7) */
             /* (b) Leon OBEN: das Bahn-Ende verfolgt LIVE seine Spur.
              * SAFE-ZONE-SCHLIESSUNG (Nutzer 2026-09-11 "immer noch total
              * leicht ausgetrickst": Leon stand im West-Drittel x=2318,
@@ -2357,7 +2950,7 @@ static void gb_takt(int slot)
             if (zx < lo)               zx = lo;
             if (zx > GB_RAMP_X1 - 700) zx = GB_RAMP_X1 - 700;
             g->cx1 = zx;
-        } else if (g->cross_oben && (t < g->t_ein || t > g->t_aus)) {
+        } } else if (g->cross_oben && (t < g->t_ein || t > g->t_aus)) {
             /* (c) Leon UNTEN + Gator noch/wieder ueber Wasser: Bahn sofort
              * beenden und normal jagen statt die Restbahn abzusitzen */
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
@@ -2368,7 +2961,8 @@ static void gb_takt(int slot)
         }
         if (t >= (g->cframes ? g->cframes : GB_CROSS_FRAMES)) {
             g->phase = GBP_CHASE; g->arc_vz = 0; g->pitch_vz = 0;
-            g->cross_cd = (int16_t)((pl->y < -900) ? 300 : 90);
+            g->cross_cd = (int16_t)((pl->y < -900) ? (re15_gr2_rw_an() ? GB_KREUZ_PAUSE : 300) : 90);   /* G2-RE2: mit dem Kanister GB_KREUZ_PAUSE - NB2 Vorschlag 4: nur noch mit dem Pruefhaken; sonst die
+                                              * 10 s der Spur B wie ohne Kanister (exe west4_leon mit 45: Querung alle ~6 s hin und her, Kopf < 2500 vor der Kamera 8,2 % gegen 1,5 % ohne Kanister) */
                                              /* Leon OBEN: 10 s auf der Seite
                                               * bleiben (souveraene Belagerung
                                               * statt Dauer-Pendelei, Nutzer
@@ -2408,6 +3002,23 @@ static void gb_takt(int slot)
             int32_t laz = g->cz0 + (int32_t)((int64_t)(g->cz1 - g->cz0) * tla / nfr2);
             int32_t y_ziel = (gb_ueber_rampe(e->x, e->z) && gb_ueber_rampe(lax, laz))
                                ? (GB_WATER_Y - RE15_GB_CROSS_HUB) : GB_WATER_Y;
+            int pitch_ziel = 0;
+            if (f_kl) {
+                /* r41/gatorfix NB7 ff4380b40 (PORT-WAHL Kletterprofil mit dem Kanister): der Kopf ragt 5644 vor die Wurzel (NB6 Messung 1) und erreicht die
+                 * Deckkante lange vor der Wurzel. Vor der Einstiegskante Nase hoch (GB_PITCH_MAX) und die Wurzel ab GB_KL_HEBE vor der Kante bis zum Hub angehoben;
+                 * nach der Ausstiegskante Nase runter, der Hub faellt mit der Neigung (GB_KL_TAN). */
+                const int nord = g->cz1 > g->cz0;
+                const int32_t d_ein = nord ? (GB_RAMP_Z0 - e->z) : (e->z - GB_RAMP_Z1);
+                const int32_t d_aus = nord ? (e->z - GB_RAMP_Z1) : (GB_RAMP_Z0 - e->z);
+                int32_t hub;
+                if (d_ein > 0)      hub = d_ein >= GB_KL_HEBE ? 0 : (int32_t)((int64_t)RE15_GB_CROSS_HUB * (GB_KL_HEBE - d_ein) / GB_KL_HEBE);
+                else if (d_aus > 0) { hub = RE15_GB_CROSS_HUB - (int32_t)(((int64_t)d_aus * GB_KL_TAN) >> 12); if (hub < 0) hub = 0; }
+                else                hub = RE15_GB_CROSS_HUB;
+                y_ziel = GB_WATER_Y - hub;
+                if (d_ein > 0 && d_ein < GB_KL_NEIG) pitch_ziel = -GB_PITCH_MAX;
+                else if (d_aus > 0 && hub > 0)        pitch_ziel = GB_PITCH_MAX;
+                if (g->kz_rueck == 2) pitch_ziel = 0;   /* G2-RE2: Rueckzug ohne Neigung (rueckwaerts) */
+            }
             int32_t dy = y_ziel - e->y;
             if (dy >  100) dy =  100;        /* DESIGN 2026-09-11 "flacher": 100/F
                                               * = weicher An-/Abstieg (~20 F); der
@@ -2422,7 +3033,11 @@ static void gb_takt(int slot)
                 g->arc_vz = (int16_t)(-(int32_t)GB_ARC_VZ_MAX * hub / RE15_GB_CROSS_HUB);
                 g->arc_vz = (int16_t)(-g->arc_vz);         /* Betrag: haengen wie gehabt */
                 /* Neigung aus der y-RATE: steigen = Nase hoch, sinken = runter. */
-                g->pitch_vz = (int16_t)((dy * GB_PITCH_MAX) / 100);
+                if (!f_kl) g->pitch_vz = (int16_t)((dy * GB_PITCH_MAX) / 100);
+                else {                               /* G2-RE2 (r41/gatorfix NB7): Kletterprofil, Neigung 10 je Bild zum Ziel */
+                    if (g->pitch_vz < pitch_ziel) g->pitch_vz = (int16_t)(g->pitch_vz + 10 > pitch_ziel ? pitch_ziel : g->pitch_vz + 10);
+                    if (g->pitch_vz > pitch_ziel) g->pitch_vz = (int16_t)(g->pitch_vz - 10 < pitch_ziel ? pitch_ziel : g->pitch_vz - 10);
+                }
             }
         }
         {   /* MESS-HOOK (Nutzer-Bild fehler/error.png 2026-09-11: "Abstand
@@ -2444,9 +3059,26 @@ static void gb_takt(int slot)
                 s_pk_done = 1;
             }
         }
-        /* Blick in Bahnrichtung (Engine-Peilung, Sofort-Snap) */
-        re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);
-        e->anim_frame++;
+        /* Blick in Bahnrichtung (Engine-Peilung, Sofort-Snap) - G2-RE2: mit dem Kanister nur die Wende 0x60 je Bild oben (kein Gier-Sprung) */
+        if (!f_kl) re15_enemy_steer_point(e, g->cx1, g->cz1, 0x800);
+        if (g->kz_rueck == 2) { int32_t v0 = 0; if (re15_gr2_rueck_clip(slot, e, &v0)) e->anim_frame = 0; }   /* G2-RE2: Clip 10 in Schleife, Lage = Bahn */
+        else e->anim_frame++;
+        /* Runde 41 Spur G2-RE2 (5) RAMMEN - uebernommen aus r41/gatorfix NB7 ff4380b40 (ohne Entwurf F). Nutzer 2026-11-02: "Beim Ueberklettern der Rampe von
+         * Aligator sollte der Spieler schon immer gerammelt werden und Schaden nehmen. Sonst ist er auf der Rampe ja sicher": wer beim Ueberklettern mit dem
+         * Kanister im Koerper-Grundriss steht (Push-Kreise k_gb_seg + Spielerradius 450, gb_koerper_kontakt), wird getroffen - einmal je Ueberquerung
+         * (bite_done, gb_cross_begin setzt 0). Schaden = der Biss, den NB5 fuer den RE2-Biss benutzt: gb_biss_abschluss -> re15_player_take_damage(GB_BITE_TYPE 5)
+         * -> DAT_8006f418[5] = 50 (@0x8006f422, Tafel @0x8006f418-42c) + Niederwurf re15_player_knockdown_begin(facing). */
+        if ((re15_gr2_rw_traegt() || (!gb_nb3_aus() && gb_pl_oben(pl)))   /* NB3 (Vorgabe A): Rammen auch ohne Kanister, wenn die Figur OBEN steht - "den Spieler oben auf
+                                                                             * der Rampe auch rammen koennen"; Figur im Wasser: wie NB5 nur der CROSS-Biss unten */
+            && !s_gb_ramm_alt && !g->bite_done && g->kz_rueck != 2 && pl->hit_react == 0 && pl->hp >= 0 && !gb_sperre238_zu(slot)   /* NB4 Runde 3 (Abnahme 8 M1): kein +0x238 (RE2-Treffer-Einstieg fragt nur Kontakt @0x80101590-98 und PL+0x1D3 @0x801015a0-ac); G2-RE2 NB2 Vorschlag 4 ("Rampe: rammen wie gehabt"): Rammen mit dem Kanister auch in der Ueberquerung wie ohne Kanister */
+            && gb_koerper_kontakt(e->x, e->z, (int)e->rot_y, pl->x, pl->z)) {
+            g->bite_done = 1; s_gb_rammen++;
+            if (!s_gb_stumm) { FILE *fr = fopen("gator_boss.log", "a");
+                if (fr) { fprintf(fr, "RAMMEN F%u gator=(%d,%d,%d) spieler=(%d,%d,%d) hp=%d\n", (unsigned)g_engine.frame_count, e->x, e->y, e->z, pl->x, pl->y, pl->z,
+                                  (int)pl->hp); fclose(fr); } }
+            gb_biss_abschluss(e, g, pl, 1);   /* NB4: Angriff Rammen */
+            if (g->phase != GBP_CROSS) break;            /* toedlich -> FRESSEN */
+        }
         /* Biss-Fenster auch auf der Plattform (Leon vertreiben): Reichweiten-Test,
          * EIN Biss pro Passage + byte-true Cooldown-Feld als Zweitsperre. */
         if (e->hit_stun == 0                  /* Mehrfach-Schnapp: hit_stun
@@ -2454,7 +3086,7 @@ static void gb_takt(int slot)
                                                * Hilflosigkeit 2026-09-11) */
             && pl->hit_react == 0 && gb_maul_dist(e, pl) <= 1500
             && re15_gr2_biss_erlaubt(slot)) {   /* R41 B NB2 M3: kein Biss in Kanister-Stufe 1..6 @0x80101360-70 */
-                            gb_biss_abschluss(e, g, pl);
+                            gb_biss_abschluss(e, g, pl, 2);   /* NB4: Angriff CROSS-Biss */
         }
         break; }
 
@@ -2787,8 +3419,27 @@ static void gb_takt(int slot)
                 int32_t nx = pl->x, nz = pl->z;
                 re15_collision_ensure_band(pl->y);
                 re15_collision_constrain(&g_room_rdt, plox, ploz, &nx, &nz);
+                (void)re15_gator_boss_raum_halt(pl, plox, ploz, &nx, &nz);   /* NB3 Runde 2 (Abnahme 5 M1/M2): Raumhalt (s. dort) - auch dieser Schub */
                 pl->x = nx; pl->z = nz;
             }
+            /* Runde 41 Spur G2-RE2 (5) - aus r41/gatorfix NB8 Punkt 1b: mit dem Kanister (Rammen) haelt der Push eine Figur oben auf dem Deck (y < -900) auf der
+             * begehbaren Rampe (SCA [5] x[1850..7200] z[-18100..-14500] minus Spieler-Kollisionsradius 468; gemessen test_r41_gatorfix begehbar 2090 Band 1:
+             * die Plattform ist nicht begehbar) - sonst schob das Rammen die Figur in die Klemmlage (1382,-18617) an der Ecke Plattform/Rampe. */
+            if (re15_gr2_rw_an() && !s_gb_deck_alt && pl->y < -900 && (pl->x != plox || pl->z != ploz)
+                && pl->x > GB_PLAT_X0 - 468 && pl->x < GB_RAMP_X1 + 468 && pl->z > GB_PLAT_Z0 - 468 && pl->z < GB_PLAT_Z1 + 468) {
+                if (pl->x < GB_RAMP_X0 + 468) pl->x = GB_RAMP_X0 + 468;
+                if (pl->x > GB_RAMP_X1 - 468) pl->x = GB_RAMP_X1 - 468;
+                if (pl->z < GB_RAMP_Z0 + 468) pl->z = GB_RAMP_Z0 + 468;
+                if (pl->z > GB_RAMP_Z1 - 468) pl->z = GB_RAMP_Z1 - 468;
+            }
+        }
+        /* Runde 41 Spur G2-RE2 (5) - aus r41/gatorfix NB8 Punkt 1b (Fensterlauf w8_rampe_elza F1115-F1116: der Niederwurf nach dem Rammen schob Elza vom
+         * Rampenrand in die Klemmlage (1382,-18617)): mit dem Kanister steht oben (y < -900) im Grundriss der Plattform (SCA [4]/[7], nicht begehbar) nie eine
+         * Figur -> naechster Punkt der begehbaren Rampe (Rechteck wie oben). */
+        if (re15_gr2_rw_an() && !s_gb_deck_alt && pl->y < -900 && pl->x > GB_PLAT_X0 && pl->x < GB_PLAT_X1 && pl->z > GB_PLAT_Z0 && pl->z < GB_PLAT_Z1) {
+            pl->x = GB_RAMP_X0 + 468;
+            if (pl->z < GB_RAMP_Z0 + 468) pl->z = GB_RAMP_Z0 + 468;
+            if (pl->z > GB_RAMP_Z1 - 468) pl->z = GB_RAMP_Z1 - 468;
         }
         {   /* AUSSEN-WAECHTER (Diagnose, Nutzer-Marker 2026-09-11: Leon
              * landete hinter Sued-/Westwand): meldet die ersten Frames, in
@@ -2858,7 +3509,13 @@ int re15_gator_fress_todeslatch(void)
     return 0;
 }
 
+static int gb_spine_arc_vz(const re15_actor_t *e, int bone);
 int re15_gator_spine_arc_vz(const re15_actor_t *e, int bone)
+{
+    /* Runde 41 Spur G2 Nachbesserung 1 (M2): Kopfhaltung beim Wurf der Fress-Szene (gatorszene_r41.c, Zuschlag wie die Part-Zusaetze unten) */
+    return gb_spine_arc_vz(e, bone) + re15_gatorszene_r41_kopf_vz(e, bone);
+}
+static int gb_spine_arc_vz(const re15_actor_t *e, int bone)
 {
     if (!re15_gator_boss_active(e)) return 0;
     const gb_state_t *g = &s_gb[(int)(e - g_actors)];

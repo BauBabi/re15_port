@@ -1,0 +1,15 @@
+# C:/workspace/git/reAi_v2/info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN  18664 B  md5 0293e099bbeae989776264eb14c81bc9
+8010155c  5e05040c  jal 0x80101578
+# C:/workspace/git/reAi_v2/info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN  18664 B  md5 0293e099bbeae989776264eb14c81bc9
+80100328  e204040c  jal 0x80101388
+# C:/workspace/git/reAi_v2/info/re2leon/COMMON/BIN/EM23_OVL_0000.BIN  18664 B  md5 0293e099bbeae989776264eb14c81bc9
+# Verweise auf 0x80100c54: Datenwort / imm 0x0c54 (addiu/ori) / j / jal
+Fundstellen: 0
+Datenwoerter im Overlay-Bereich: 86  nahe c54 (0x80100c00-0x80100d00): ['0x80100c20', '0x80100cdc']
+# Routinen-Tafel-Eintraege auf die Sub-Funktionen (Datenwort-Fundstellen); 0x80100c54 kommt nicht vor
+80104640  64091080  -> 0x80100964
+80104644  64091080  -> 0x80100964
+80104660  200c1080  -> 0x80100c20
+80104664  dc0c1080  -> 0x80100cdc
+80104668  300d1080  -> 0x80100d30
+# Reaktions-Tafel 0x80100074 (Funktion 0x8010307c, Index PL+6): ['0x801030bc', '0x80103108', '0x80103150', '0x80103164', '0x801031c8']

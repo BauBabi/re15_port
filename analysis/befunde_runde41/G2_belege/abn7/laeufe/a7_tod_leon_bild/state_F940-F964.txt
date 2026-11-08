@@ -1,0 +1,25 @@
+F940 pad=0000 PL(-2746,-21917,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 i
+F941 pad=0000 PL(-2731,-21904,rot=0,hp=100) pst=1 ps1=0 ps2=0 mo=211 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 i
+F942 pad=0000 PL(-2733,-21906,rot=1024,hp=40) pst=2 ps1=2 ps2=0 mo=211 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0
+F943 pad=0000 PL(-2390,-21554,rot=1024,hp=40) pst=2 ps1=2 ps2=1 mo=18 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F944 pad=0000 PL(-2147,-21336,rot=1024,hp=40) pst=2 ps1=2 ps2=1 mo=18 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F945 pad=0000 PL(-1956,-21240,rot=1024,hp=40) pst=2 ps1=2 ps2=1 mo=18 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F946 pad=0000 PL(-1830,-21184,rot=1024,hp=40) pst=2 ps1=2 ps2=2 mo=18 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F947 pad=0000 PL(-1758,-21154,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F948 pad=0000 PL(-1700,-21132,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F949 pad=0000 PL(-1649,-21113,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F950 pad=0000 PL(-1610,-21100,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F951 pad=0000 PL(-1573,-21088,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F952 pad=0000 PL(-1523,-21072,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F953 pad=0000 PL(-1473,-21055,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F954 pad=0000 PL(-1437,-21046,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F955 pad=0000 PL(-1404,-21038,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F956 pad=0000 PL(-1379,-21031,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F957 pad=0000 PL(-1356,-21025,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F958 pad=0000 PL(-1340,-21021,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F959 pad=0000 PL(-1324,-21016,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F960 pad=0000 PL(-1324,-21016,rot=1024,hp=40) pst=2 ps1=2 ps2=3 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F961 pad=0000 PL(-1291,-21007,rot=1024,hp=40) pst=2 ps1=2 ps2=4 mo=19 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=0 msg(a=0 fsm=0 
+F962 pad=0000 PL(-1291,-21007,rot=1024,hp=-20) pst=3 ps1=0 ps2=0 mo=0 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=6 msg(a=0 fsm=0 
+F963 pad=0000 PL(-6291,-8877,rot=2929,hp=-20) pst=3 ps1=0 ps2=0 mo=0 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=6 msg(a=0 fsm=0 i
+F964 pad=0000 PL(-6291,-8877,rot=2929,hp=-20) pst=3 ps1=0 ps2=0 mo=0 ac=6 fx=0 mg=-1 bx=50 sl=1111 cam=6 msg(a=0 fsm=0 i

@@ -468,6 +468,71 @@ static void climb_sub9(const re15_rdt_t *rdt, re15_actor_t *p,
     }
 }
 
+/* ==== Runde 41 Spur G2-RE2 NB4 (W): DIE FALLSCHRITTE DES SUBSTATE 10 ALS GEMEINSAMER HELFER ====================================
+ * Nutzer 2026-11-07 ~15:00 woertlich: "er kann den Spieler ruhig In das Wasser stoßen." Traegt die RE2-Trefferreaktion (gator_treffer_r41.c) die
+ * Figur von der Rampe ueber die Absprung-Kante, faellt sie mit GENAU diesen Schritten ins Wasser - dieselben Anweisungen wie climb_sub10 (der sie
+ * selbst aufruft), nur mit dem Boden-Zaehler des Aufrufers (climb_sub10: s_floor_y = 0x800acc0e, `lh v0,442` @0x800386ac).
+ * re15_climb_fall_beginn = Ph2 NACH dem Vorschub: y += 500 (@0x8003843c-44), Boden h = room_coll (@0x80038448), Band = -(h / 1800) (@0x80038460-bc)
+ *   VOR der SCA-Klemme (@0x800384c4), Objekt-Pass (@0x800384e0-50), Landung auf einem Objekt (@0x80038560-604), posS (@0x80038628-38).
+ * re15_climb_fall_schritt = Ph3: y += 90 + 50 t, t++ (@0x80038660-9c); 1 = Landeschwelle Boden - 800 < y (@0x800386ac-c8).
+ * re15_climb_fall_landung = Ph4: y = Boden (@0x80038724-2c), +0x93 frei (@0x80038748-54, nur wenn frei93), Wasser-Spritzer (@0x80038758-cc). */
+void re15_climb_fall_beginn(const re15_rdt_t *rdt, re15_actor_t *p, int16_t *boden)
+{
+        const int band0 = re15_collision_debug_band();           /* @0x80038438 */
+        p->y += 500;                            /* @0x8003843c-44 */
+        int16_t h = re15_collision_room_coll(rdt, p->x, p->z, 0, band0, 0x100); /* @0x80038448 */
+        p->pos_s_x = (uint16_t)p->x;            /* @0x80038464/@0x80038480 */
+        (*boden)  = h;                         /* @0x80038494 */
+        p->pos_s_z = (uint16_t)p->z;            /* @0x80038498 */
+        p->pos_s_y = (uint16_t)p->y;            /* @0x800384a0 */
+        /* Band = -(h / 1800): `mult 0x91a2b3c5 / mfhi + t0 / sra 10 / subu`
+         * @0x80038460-bc — die Magic-Division durch 1800 mit Vorzeichen. */
+        re15_collision_set_band(-((int)h / 1800));               /* @0x800384bc */
+        {   /* @0x800384c4 FUN_8003b0a4(&pos, radius, 1) = die SCA-Klemme */
+            int32_t nx = p->x, nz = p->z;
+            re15_collision_constrain(rdt, p->x, p->z, &nx, &nz);
+            p->x = nx; p->z = nz;
+        }
+        /* @0x800384e0-50 Objekt-Pass: FUN_8002cabc(player, obj, 1) je aktivem Objekt. */
+        for (int q = 0; q < (int)g_scd.prop_count && q < 16; q++) {
+            if (!obj_live(q)) continue;                          /* @0x80038514 */
+            int32_t ox = g_scd.props[q].x, oz = g_scd.props[q].z;
+            if (re15_collision_push_prop(q, p->x, p->z, &ox, &oz)) {
+                g_scd.props[q].x = ox; g_scd.props[q].z = oz;    /* @0x8002cd44/@0x8002cdac */
+            }
+        }
+        /* @0x80038560 FUN_8002d100(player, 450) — landet er direkt auf einem Objekt? */
+        const int lo = climb_obj_under(p, 0x1c2);
+        if (lo >= 0) {
+            const int32_t top = (int32_t)g_scd.props[lo].y - 1800;   /* @0x80038580 */
+            if (!((int32_t)(*boden) < top) && !(top < p->y)) {      /* @0x80038584-a0 */
+                (*boden) = (int16_t)top;                            /* @0x800385c8 */
+                re15_collision_set_band(-(top / 1800));              /* @0x800385e0 */
+                p->pos_s_x = (uint16_t)(int32_t)g_scd.props[lo].x;   /* @0x800385f0 */
+                p->pos_s_z = (uint16_t)(int32_t)g_scd.props[lo].z;   /* @0x80038600 */
+                re15_collision_prop_contain(lo, &p->x, &p->z);       /* @0x80038604 */
+            }
+        }
+        p->pos_s_x = (uint16_t)p->x;            /* @0x80038628 */
+        p->pos_s_z = (uint16_t)p->z;            /* @0x80038630 */
+        p->pos_s_y = (uint16_t)p->y;            /* @0x80038638 */
+}
+int re15_climb_fall_schritt(re15_actor_t *p, int *t, int16_t boden)
+{
+    const int t0 = *t;
+    *t = t0 + 1;                                /* @0x8003867c */
+    p->y += 90 + 50 * (int)(int16_t)t0;         /* @0x8003866c/@0x80038680-94 */
+    return (int32_t)boden - 800 < p->y;         /* @0x800386ac-c8 */
+}
+void re15_climb_fall_landung(re15_actor_t *p, int16_t boden, int frei93)
+{
+    int32_t t_y = p->y;                         /* Entity-Matrix +0x20: zuletzt gezeichnete Lage (vor @0x8003872c) */
+    p->y = (int32_t)boden;                      /* @0x80038724-2c */
+    if (frei93) p->hit_react &= (uint8_t)0xfe;  /* @0x80038748-54 */
+    /* Runde 41 Spur A: @0x80038758-cc = der WASSER-Spritzer (8 x FUN_80019700(0x06033000), nur Stempel < y) */
+    (void)re15_wassersprung_r41_landung(p, re15_wasser_r38_stempel(), t_y);
+}
+
 /* ==== SUBSTATE 10 = LAB_80038314 (HERUNTERSPRINGEN) ================================= */
 static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
                         const re15_emd_animation_t *pl00)
@@ -497,54 +562,16 @@ static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
         p->hit_react |= 1;                      /* @0x80038414-1c */
         s_speed = 0x320;                        /* @0x80038408-10  +0x8c = 800 */
         pos_advance(p);                         /* @0x80038418 */
-        const int band0 = re15_collision_debug_band();           /* @0x80038438 */
-        p->y += 500;                            /* @0x8003843c-44 */
-        int16_t h = re15_collision_room_coll(rdt, p->x, p->z, 0, band0, 0x100); /* @0x80038448 */
-        p->pos_s_x = (uint16_t)p->x;            /* @0x80038464/@0x80038480 */
-        s_floor_y  = h;                         /* @0x80038494 */
-        p->pos_s_z = (uint16_t)p->z;            /* @0x80038498 */
-        p->pos_s_y = (uint16_t)p->y;            /* @0x800384a0 */
-        /* Band = -(h / 1800): `mult 0x91a2b3c5 / mfhi + t0 / sra 10 / subu`
-         * @0x80038460-bc — die Magic-Division durch 1800 mit Vorzeichen. */
-        re15_collision_set_band(-((int)h / 1800));               /* @0x800384bc */
-        {   /* @0x800384c4 FUN_8003b0a4(&pos, radius, 1) = die SCA-Klemme */
-            int32_t nx = p->x, nz = p->z;
-            re15_collision_constrain(rdt, p->x, p->z, &nx, &nz);
-            p->x = nx; p->z = nz;
-        }
-        /* @0x800384e0-50 Objekt-Pass: FUN_8002cabc(player, obj, 1) je aktivem Objekt. */
-        for (int q = 0; q < (int)g_scd.prop_count && q < 16; q++) {
-            if (!obj_live(q)) continue;                          /* @0x80038514 */
-            int32_t ox = g_scd.props[q].x, oz = g_scd.props[q].z;
-            if (re15_collision_push_prop(q, p->x, p->z, &ox, &oz)) {
-                g_scd.props[q].x = ox; g_scd.props[q].z = oz;    /* @0x8002cd44/@0x8002cdac */
-            }
-        }
-        /* @0x80038560 FUN_8002d100(player, 450) — landet er direkt auf einem Objekt? */
-        const int lo = climb_obj_under(p, 0x1c2);
-        if (lo >= 0) {
-            const int32_t top = (int32_t)g_scd.props[lo].y - 1800;   /* @0x80038580 */
-            if (!((int32_t)s_floor_y < top) && !(top < p->y)) {      /* @0x80038584-a0 */
-                s_floor_y = (int16_t)top;                            /* @0x800385c8 */
-                re15_collision_set_band(-(top / 1800));              /* @0x800385e0 */
-                p->pos_s_x = (uint16_t)(int32_t)g_scd.props[lo].x;   /* @0x800385f0 */
-                p->pos_s_z = (uint16_t)(int32_t)g_scd.props[lo].z;   /* @0x80038600 */
-                re15_collision_prop_contain(lo, &p->x, &p->z);       /* @0x80038604 */
-            }
-        }
-        p->pos_s_x = (uint16_t)p->x;            /* @0x80038628 */
-        p->pos_s_z = (uint16_t)p->z;            /* @0x80038630 */
-        p->pos_s_y = (uint16_t)p->y;            /* @0x80038638 */
+        re15_climb_fall_beginn(rdt, p, &s_floor_y);   /* Ph2 ab @0x80038438 (Runde 41 G2-RE2 NB4: gemeinsamer Helfer, s. dort) */
         /* fallthrough */
     }
     case 3: {                                   /* @0x8003863c */
-        /* Y += 90 + 50*fall_t, fall_t++ (@0x80038660-9c). */
-        const int t = s_fall_t;
-        s_fall_t = t + 1;                       /* @0x8003867c */
-        p->y += 90 + 50 * (int)(int16_t)t;      /* @0x8003866c/@0x80038680-94 */
+        /* Y += 90 + 50*fall_t, fall_t++ (@0x80038660-9c); Schwelle (@0x800386ac-c8) - gemeinsamer Helfer (NB4). Die Schwelle wird wie im
+         * Original NACH dem Anim-Vorschub ausgewertet; der Helfer rechnet sie, ohne y danach noch zu aendern. */
+        const int lande = re15_climb_fall_schritt(p, &s_fall_t, s_floor_y);
         anim_sample(p);
         (void)anim_step(pl00, 4);               /* @0x80038698 */
-        if ((int32_t)s_floor_y - 800 < p->y) s_phase = 4;        /* @0x800386ac-c8 */
+        if (lande) s_phase = 4;                 /* @0x800386ac-c8 */
         return;
     }
     case 4:                                     /* @0x800386d4 — FAELLT DURCH nach case 5 */
@@ -556,11 +583,7 @@ static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
         s_frac  = 0; p->anim_frac = 0;          /* @0x80038720 `sb zero,-13597(at)` = +0x8f = 0
                                                  * (fehlte; wirkte bisher nicht, weil der Decay
                                                  * ganz fehlte und +0x8f auf 7 stand) */
-        { int32_t t_y = p->y;                   /* Entity-Matrix +0x20: zuletzt gezeichnete Lage (vor @0x8003872c) */
-        p->y = (int32_t)s_floor_y;              /* @0x80038724-2c */
-        p->hit_react &= (uint8_t)0xfe;          /* @0x80038748-54 */
-        /* Runde 41 Spur A: @0x80038758-cc = der WASSER-Spritzer (8 x FUN_80019700(0x06033000), nur Stempel < y) */
-        (void)re15_wassersprung_r41_landung(p, re15_wasser_r38_stempel(), t_y); }
+        re15_climb_fall_landung(p, s_floor_y, 1);   /* @0x80038724-2c, @0x80038748-54, @0x80038758-cc (NB4: gemeinsamer Helfer) */
         /* fallthrough */
     case 5:                                     /* @0x800387d4 */
         anim_sample(p);

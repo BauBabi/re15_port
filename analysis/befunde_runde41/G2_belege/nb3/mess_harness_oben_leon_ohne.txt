@@ -1,0 +1,211 @@
+== nb3_oben leon ohne Kanister: Figur steht still oben auf der Rampe (y -1800), 3600 Bilder je Lage, Kamera des Wegs von Sueden ==
+    R2318/-17600   Cut 2: 3600 B., Treffer 249 (Rammen 0, CROSS-Biss 1, Hochbiss 248, Biss 0, sonst 0), erster t291 CROSS-Biss, laengste Pause ohne Treffer 291 B. = 9.7 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 531 mittel 4675, ohne Fortschritt max 6.3 s, Haenge-Fenster 0 (erstes t-1)
+        t291   CROSS-Biss Phase 7 Clip  0 Wurzel (  4056,-14173) Kopf (  3450,-17172) Kopf-Abstand 1207
+        t476   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  4776,-23383) Kopf-Abstand 6270
+        t478   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5281,-23054) Kopf-Abstand 6186
+        t480   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5680,-22660) Kopf-Abstand 6058
+        t482   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5990,-22212) Kopf-Abstand 5882
+        t484   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6220,-21719) Kopf-Abstand 5655
+        t486   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6363,-21224) Kopf-Abstand 5418
+        t488   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6417,-20741) Kopf-Abstand 5145
+        t490   Hochbiss   Phase 5 Clip  4 Wurzel (  3449,-20645) Kopf (  6477,-20317) Kopf-Abstand 4964
+        t492   Hochbiss   Phase 5 Clip  4 Wurzel (  3537,-20609) Kopf (  6446,-19820) Kopf-Abstand 4664
+        t494   Hochbiss   Phase 5 Clip  4 Wurzel (  3616,-20556) Kopf (  6302,-19167) Kopf-Abstand 4252
+        t496   Hochbiss   Phase 5 Clip  4 Wurzel (  3684,-20488) Kopf (  6015,-18537) Kopf-Abstand 3805
+    R2800/-17600   Cut 2: 3600 B., Treffer 307 (Rammen 0, CROSS-Biss 1, Hochbiss 306, Biss 0, sonst 0), erster t288 CROSS-Biss, laengste Pause ohne Treffer 288 B. = 9.6 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 241 mittel 4359, ohne Fortschritt max 3.7 s, Haenge-Fenster 0 (erstes t-1)
+        t288   CROSS-Biss Phase 7 Clip  0 Wurzel (  4278,-14063) Kopf (  3935,-17110) Kopf-Abstand 1234
+        t476   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  4776,-23383) Kopf-Abstand 6101
+        t478   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5281,-23054) Kopf-Abstand 5970
+        t480   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5680,-22660) Kopf-Abstand 5815
+        t482   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5990,-22212) Kopf-Abstand 5585
+        t484   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6220,-21719) Kopf-Abstand 5345
+        t486   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6363,-21224) Kopf-Abstand 5068
+        t488   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6417,-20741) Kopf-Abstand 4775
+        t490   Hochbiss   Phase 5 Clip  4 Wurzel (  3449,-20645) Kopf (  6477,-20317) Kopf-Abstand 4550
+        t492   Hochbiss   Phase 5 Clip  4 Wurzel (  3537,-20609) Kopf (  6446,-19820) Kopf-Abstand 4252
+        t494   Hochbiss   Phase 5 Clip  4 Wurzel (  3616,-20556) Kopf (  6302,-19167) Kopf-Abstand 3831
+        t496   Hochbiss   Phase 5 Clip  4 Wurzel (  3684,-20488) Kopf (  6015,-18537) Kopf-Abstand 3347
+    R3350/-17600   Cut 2: 3600 B., Treffer 312 (Rammen 0, CROSS-Biss 1, Hochbiss 311, Biss 0, sonst 0), erster t278 CROSS-Biss, laengste Pause ohne Treffer 278 B. = 9.3 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 38 mittel 4021, ohne Fortschritt max 3.7 s, Haenge-Fenster 0 (erstes t-1)
+        t278   CROSS-Biss Phase 7 Clip  0 Wurzel (  4329,-13696) Kopf (  3950,-16744) Kopf-Abstand 1039
+        t476   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  4776,-23383) Kopf-Abstand 5948
+        t478   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5281,-23054) Kopf-Abstand 5769
+        t480   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5680,-22660) Kopf-Abstand 5561
+        t482   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  5990,-22212)
+        t484   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6220,-21719) Kopf-Abstand 5016
+        t486   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6363,-21224) Kopf-Abstand 4692
+        t488   Hochbiss   Phase 5 Clip  4 Wurzel (  3356,-20663) Kopf (  6417,-20741) Kopf-Abstand 4374
+        t490   Hochbiss   Phase 5 Clip  4 Wurzel (  3449,-20645) Kopf (  6477,-20317) Kopf-Abstand 4127
+        t492   Hochbiss   Phase 5 Clip  4 Wurzel (  3537,-20609) Kopf (  6446,-19820) Kopf-Abstand 3805
+        t494   Hochbiss   Phase 5 Clip  4 Wurzel (  3616,-20556) Kopf (  6302,-19167) Kopf-Abstand 3337
+        t496   Hochbiss   Phase 5 Clip  4 Wurzel (  3684,-20488) Kopf (  6015,-18537) Kopf-Abstand 2816
+    R4428/-17600   Cut 2: 3600 B., Treffer 317 (Rammen 0, CROSS-Biss 1, Hochbiss 316, Biss 0, sonst 0), erster t274 CROSS-Biss, laengste Pause ohne Treffer 274 B. = 9.1 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4168..5725, -21938..-19675), Kopf min 324 mittel 3543, ohne Fortschritt max 2.5 s, Haenge-Fenster 0 (erstes t-1)
+        t274   CROSS-Biss Phase 7 Clip  0 Wurzel (  4552,-13550) Kopf (  4538,-16620) Kopf-Abstand 985
+        t476   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-20663) Kopf (  6187,-23177) Kopf-Abstand 5837
+        t478   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-20663) Kopf (  6645,-22786) Kopf-Abstand 5632
+        t480   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-20663) Kopf (  6991,-22344) Kopf-Abstand 5369
+        t482   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-20663) Kopf (  7240,-21860) Kopf-Abstand 5094
+        t484   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-20663) Kopf (  7405,-21342) Kopf-Abstand 4775
+        t486   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-20663) Kopf (  7484,-20833) Kopf-Abstand 4434
+        t488   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-20663) Kopf (  7475,-20347) Kopf-Abstand 4096
+        t490   Hochbiss   Phase 5 Clip  4 Wurzel (  4519,-20633) Kopf (  7479,-19918) Kopf-Abstand 3831
+        t492   Hochbiss   Phase 5 Clip  4 Wurzel (  4602,-20585) Kopf (  7384,-19428) Kopf-Abstand 3472
+        t494   Hochbiss   Phase 5 Clip  4 Wurzel (  4675,-20522) Kopf (  7160,-18799) Kopf-Abstand 2974
+        t496   Hochbiss   Phase 5 Clip  4 Wurzel (  4733,-20446) Kopf (  6793,-18211) Kopf-Abstand 2442
+    R5500/-17600   Cut 2: 3600 B., Treffer 323 (Rammen 0, CROSS-Biss 1, Hochbiss 322, Biss 0, sonst 0), erster t282 CROSS-Biss, laengste Pause ohne Treffer 282 B. = 9.4 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4168..5727, -22035..-19673), Kopf min 37 mittel 3433, ohne Fortschritt max 2.4 s, Haenge-Fenster 0 (erstes t-1)
+        t282   CROSS-Biss Phase 7 Clip  0 Wurzel (  5022,-13586) Kopf (  5286,-16645) Kopf-Abstand 976
+        t483   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-20663) Kopf (  7536,-22955) Kopf-Abstand 5724
+        t485   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-20663) Kopf (  7946,-22514) Kopf-Abstand 5466
+        t487   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-20663) Kopf (  8237,-22035) Kopf-Abstand 5196
+        t489   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-20663) Kopf (  8429,-21525) Kopf-Abstand 4884
+        t491   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-20663) Kopf (  8533,-20991) Kopf-Abstand 4521
+        t493   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-20663) Kopf (  8550,-20481) Kopf-Abstand 4190
+        t495   Hochbiss   Phase 5 Clip  4 Wurzel (  5543,-20649) Kopf (  8531,-19981) Kopf-Abstand 3848
+        t497   Hochbiss   Phase 5 Clip  4 Wurzel (  5629,-20609) Kopf (  8485,-19555) Kopf-Abstand 3565
+        t499   Hochbiss   Phase 5 Clip  4 Wurzel (  5706,-20552) Kopf (  8335,-19078) Kopf-Abstand 3187
+        t501   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-20481) Kopf (  7984,-18480) Kopf-Abstand 2623
+        t503   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-20399) Kopf (  7502,-17939) Kopf-Abstand 2027
+    R6500/-17600   Cut 2: 3600 B., Treffer 343 (Rammen 0, CROSS-Biss 1, Hochbiss 342, Biss 0, sonst 0), erster t298 CROSS-Biss, laengste Pause ohne Treffer 298 B. = 9.9 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (
+        t298   CROSS-Biss Phase 7 Clip  0 Wurzel (  5641,-13660) Kopf (  6072,-16701) Kopf-Abstand 995
+        t497   Hochbiss   Phase 5 Clip  4 Wurzel (  6495,-20663) Kopf (  8650,-22845) Kopf-Abstand 5655
+        t499   Hochbiss   Phase 5 Clip  4 Wurzel (  6495,-20663) Kopf (  9037,-22383) Kopf-Abstand 5394
+        t501   Hochbiss   Phase 5 Clip  4 Wurzel (  6495,-20663) Kopf (  9303,-21890) Kopf-Abstand 5120
+        t503   Hochbiss   Phase 5 Clip  4 Wurzel (  6495,-20663) Kopf (  9468,-21371) Kopf-Abstand 4775
+        t505   Hochbiss   Phase 5 Clip  4 Wurzel (  6495,-20663) Kopf (  9543,-20832) Kopf-Abstand 4434
+        t507   Hochbiss   Phase 5 Clip  4 Wurzel (  6495,-20663) Kopf (  9535,-20322) Kopf-Abstand 4071
+        t509   Hochbiss   Phase 5 Clip  4 Wurzel (  6495,-20663) Kopf (  9443,-19840) Kopf-Abstand 3692
+        t511   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-20618) Kopf (  8513,-19416) Kopf-Abstand 2709
+        t513   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-20557) Kopf (  8264,-18948) Kopf-Abstand 2217
+        t515   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-20482) Kopf (  7876,-18365) Kopf-Abstand 1572
+        t517   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-20397) Kopf (  7371,-17847) Kopf-Abstand 905
+    R2318/-16300   Cut 2: 3600 B., Treffer   0 (Rammen 0, CROSS-Biss 0, Hochbiss 0, Biss 0, sonst 0), erster t-1 KEIN TREFFER, laengste Pause ohne Treffer 3600 B. = 120.0 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4164..5598, -12855..-10540), Kopf min 1624 mittel 5411, ohne Fortschritt max 4.7 s, Haenge-Fenster 0 (erstes t-1)
+    R2800/-16300   Cut 2: 3600 B., Treffer   0 (Rammen 0, CROSS-Biss 0, Hochbiss 0, Biss 0, sonst 0), erster t-1 KEIN TREFFER, laengste Pause ohne Treffer 3600 B. = 120.0 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4164..5598, -12855..-10540), Kopf min 1372 mittel 5121, ohne Fortschritt max 4.7 s, Haenge-Fenster 0 (erstes t-1)
+    R3350/-16300   Cut 2: 3600 B., Treffer  16 (Rammen 0, CROSS-Biss 0, Hochbiss 16, Biss 0, sonst 0), erster t1236 Hochbiss, laengste Pause ohne Treffer 1236 B. = 41.2 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4164..5598, -12855..-10540), Kopf min 1086 mittel 4823, ohne Fortschritt max 4.1 s, Haenge-Fenster 0 (erstes t-1)
+        t1236  Hochbiss   Phase 5 Clip  4 Wurzel (  5013,-12833) Kopf (  2059,-13668) Kopf-Abstand 2930
+        t1248  Hochbiss   Phase 5 Clip  4 Wurzel (  4702,-12615) Kopf (  3336, -9918) Kopf-Abstand 6374
+        t1532  Hochbiss   Phase 5 Clip  4 Wurzel (  5069,-12832) Kopf (  2228,-13997) Kopf-Abstand 2560
+        t1543  Hochbiss   Phase 5 Clip  4 Wurzel (  4721,-12711) Kopf (  2660,-10452) Kopf-Abstand 5882
+        t1831  Hochbiss   Phase 5 Clip  4 Wurzel (  5031,-12845) Kopf (  2153,-13914) Kopf-Abstand 2660
+        t1842  Hochbiss   Phase 5 Clip  4 Wurzel (  4734,-12706) Kopf (  2750,-10379) Kopf-Abstand 5948
+        t2129  Hochbiss   Phase 5 Clip  4 Wurzel (  5033,-12845) Kopf (  2155,-13914) Kopf-Abstand 2660
+        t2140  Hochbiss   Phase 5 Clip  4 Wurzel (  4736,-12706) Kopf (  2752,-10379) Kopf-Abstand 5948
+        t2427  Hochbiss   Phase 5 Clip  4 Wurzel (  5035,-12846) Kopf (  2157,-13915) Kopf-Abstand 2660
+        t2438  Hochbiss   Phase 5 Clip  4 Wurzel (  4738,-12707) Kopf (  2754,-10380) Kopf-Abstand 5948
+        t2725  Hochbiss   Phase 5 Clip  4 Wurzel (  5036,-12846) Kopf (  2158,-13915) Kopf-Abstand 2660
+        t2736  Hochbiss   Phase 5 Clip  4 Wurzel (  4739,-12707) Kopf (  2755,-10380) Kopf-Abstand 5948
+    R4428/-16300   Cut 2: 3600 B., Treffer 187 (Rammen 0, CROSS-Biss 0, Hochbiss 187, Biss 0, sonst 0), erster t371 Hochbiss, laengste Pause ohne Treffer 371 B. = 12.4 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4174..5729, -12887..-10532), Kopf min 834 mittel 4347, ohne Fortschritt max 3.8 s, Haenge-Fenster 0 (erstes t-1)
+        t371   Hochbiss   Phase 5 Clip  4 Wurzel (  5354,-12571) Kopf (  2785,-14253) Kopf-Abstand 2623
+        t379   Hochbiss   Phase 5 Clip  4 Wurzel (  5025,-12618) Kopf (  1969,-12449
+        t386   Hochbiss   Phase 5 Clip  4 Wurzel (  5025,-12618) Kopf (  2056,-12058) Kopf-Abstand 4857
+        t393   Hochbiss   Phase 5 Clip  4 Wurzel (  5025,-12618) Kopf (  1968,-12343) Kopf-Abstand 4636
+        t498   Hochbiss   Phase 5 Clip  4 Wurzel (  5475,-12906) Kopf (  8471,-12245) Kopf-Abstand 5724
+        t500   Hochbiss   Phase 5 Clip  4 Wurzel (  5475,-12906) Kopf (  8286,-11672) Kopf-Abstand 6014
+        t502   Hochbiss   Phase 5 Clip  4 Wurzel (  5475,-12906) Kopf (  8009,-11185) Kopf-Abstand 6228
+        t504   Hochbiss   Phase 5 Clip  4 Wurzel (  5510,-12873) Kopf (  7692,-10735) Kopf-Abstand 6435
+        t506   Hochbiss   Phase 5 Clip  4 Wurzel (  5568,-12797) Kopf (  7334,-10309) Kopf-Abstand 6656
+        t508   Hochbiss   Phase 5 Clip  4 Wurzel (  5610,-12711) Kopf (  6936, -9956) Kopf-Abstand 6811
+        t510   Hochbiss   Phase 5 Clip  4 Wurzel (  5635,-12618) Kopf (  6504, -9682) Kopf-Abstand 6926
+        t512   Hochbiss   Phase 5 Clip  4 Wurzel (  5642,-12522) Kopf (  6110, -9512) Kopf-Abstand 6982
+    R5500/-16300   Cut 2: 3600 B., Treffer 190 (Rammen 0, CROSS-Biss 0, Hochbiss 190, Biss 0, sonst 0), erster t293 Hochbiss, laengste Pause ohne Treffer 293 B. = 9.8 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4951..5716, -12740..-12273), Kopf min 884 mittel 4568, ohne Fortschritt max 4.4 s, Haenge-Fenster 0 (erstes t-1)
+        t293   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12417) Kopf (  8638,-13331) Kopf-Abstand 4314
+        t295   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12438) Kopf (  8588,-13450) Kopf-Abstand 4190
+        t297   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12456) Kopf (  8548,-13491) Kopf-Abstand 4127
+        t299   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12472) Kopf (  8592,-13414) Kopf-Abstand 4222
+        t301   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12486) Kopf (  8644,-13312) Kopf-Abstand 4314
+        t303   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12498) Kopf (  8693,-13190) Kopf-Abstand 4434
+        t305   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12509) Kopf (  8735,-13055) Kopf-Abstand 4579
+        t307   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12519) Kopf (  8762,-12932) Kopf-Abstand 4664
+        t309   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12527) Kopf (  8779,-12820) Kopf-Abstand 4775
+        t414   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8783,-12477) Kopf-Abstand 5016
+        t416   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8785,-12477) Kopf-Abstand 5016
+        t418   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8781,-12519) Kopf-Abstand 4990
+    R6500/-16300   Cut 2: 3600 B., Treffer 222 (Rammen 0, CROSS-Biss 0, Hochbiss 222, Biss 0, sonst 0), erster t300 Hochbiss, laengste Pause ohne Treffer 300 B. = 10.0 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4951..5732, -12780..-12273), Kopf min 882 mittel 4122, ohne Fortschritt max 3.0 s, Haenge-Fenster 0 (erstes t-1)
+        t300   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12479) Kopf (  8578,-13426) Kopf-Abstand 3537
+        t310   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12531) Kopf (  8768,-12898) Kopf-Abstand 4087
+        t312   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12538) Kopf (  8783,-12785) Kopf-Abstand 4190
+        t417   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8783,-12477) Kopf-Abstand 4434
+        t419   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8785,-12477) Kopf-Abstand 4434
+        t421   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8781,-12519) Kopf-Abstand 4404
+        t423   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8773,-12575) Kopf-Abstand 4344
+        t425   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8769,-12631) Kopf-Abstand 4283
+        t427   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8772,-12716) Kopf-Abstand 4222
+        t429   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8769,-12826) Kopf-Abstand 4127
+        t431   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8731,-13015) Kopf-Abstand 3965
+        t433   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12583) Kopf (  8682,-13128) Kopf-Abstand 3848
+    R2318/-15000   Cut 2: 3600 B., Treffer 243 (Rammen 0, CROSS-Biss 1, Hochbiss 242, Biss 0, sonst 0), erster t288 CROSS-Biss, laengste Pause ohne Treffer 288 B. = 9.6 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4165..5694, -12912..-10387), Kopf min 531 mittel 4663, ohne Fortschritt max 5.6 s, Haenge-Fenster 0 (erstes t-1)
+        t288   CROSS-Biss Phase 7 Clip  0 Wurzel (  3987,-18427) Kopf (  3220,-15466) Kopf-Abstand 1013
+        t473   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  4544, -9110) Kopf-Abstand 6291
+        t475   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5074, -9395) Kopf-Abstand 6228
+        t477   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5563, -9814) Kopf-Abstand 6101
+        t479   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5958,-10338) Kopf-Abstand 5904
+        t481   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  6236,-10931) Kopf-Abstand 5632
+        t483   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  6395,-11596) Kopf-Abstand 5296
+        t485   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  6396,-12301) Kopf-Abstand 4884
+        t487   Hochbiss   Phase 5 Clip  4 Wurzel (  3448,-11956) Kopf (  6278,-13082) Kopf-Abstand 4374
+        t489   Hochbiss   Phase 5 Clip  4 Wurzel (  3535,-11992) Kopf (  5998,-13730) Kopf-Abstand 3890
+        t491   Hochbiss   Phase 5 Clip  4 Wurzel (  3613,-12046) Kopf (  5730,-14207) Kopf-Abstand 3500
+        t493   Hochbiss   Phase 5 Clip  4 Wurzel (  3679,-12113) Kopf (  5400,-14620) Kopf-Abstand 3103
+    R2800/-15000   Cut 2: 3600 B., Treffer 279 (Rammen 0, CROSS-Biss 1, Hochbiss 278, Biss 0, sonst 0), erster t284 CROSS-Biss, laengste Pause ohne Treffer 284 B. = 9.5 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4165..5694, -12912..-10387), Kopf min 206 mittel 4341, ohne Fortschritt max 5.5 s, Haenge-Fenster 0 (erstes t-1)
+        t284   CROSS-Biss Phase 7 Clip  0 Wurzel (  4213,-18574) Kopf (  3724,-15546) Kopf-Abstand 1070
+        t473   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  4544, -9110) Kopf-Abstand 6122
+        t475   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5074, -9395) Kopf-Abstand 6036
+        t477   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5563, -9814) Kopf-Abstand 5860
+        t479   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5958,-10338) Kopf-Abstand 5608
+        t481   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  6236,-10931) Kopf-Abstand 5320
+        t483   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  6395,-11596) Kopf-Abstand 4937
+        t485   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  6396,-12301) Kopf-Abstand 4492
+        t487   Hochbiss   Phase 5 Clip  4 Wurzel (  3448,-11956) Kopf (  6278,-13082) Kopf-Abstand 3965
+        t489   Hochbiss   Phase 5 Clip  4 Wurzel (  3535,-11992) Kopf (  5998,-13730) Kopf-Abstand 3434
+        t491   Hochbiss   Phase 5 Clip  4 Wurzel (  3613,-12046) Kopf (  5730,-14207) Kopf-Abstand 3029
+        t493   Hochbiss   Phase 5 Clip  4 Wurzel (  3679,-12113) Kopf (  5400,-14620) Kopf-Abstand 2623
+    R3350/-15000   Cut 2: 3600 B., Treffer 261 (Rammen 0, CROSS-Biss 1, Hochbiss 260, Biss 0, sonst 0), erster t274 CROSS-Biss, laengste Pause ohne Treffer 274 B. = 9.1 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4531..5733, -12880..-10355), Kopf min 75 mittel 3961, ohne Fortschritt max 3.3 s, Haenge-Fenster 0 (erstes t-1)
+        t274   CROSS-Biss Phase 7 Clip  0 Wurzel (  4260,-18940) Kopf (  3810,-15903) Kopf-Abstand 1011
+        t473   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  4544, -9110) Kopf-Abstand 5992
+        t475   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5074, -9395) Kopf-Abstand 5860
+        t477   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5563, -9814) Kopf-Abstand 5632
+        t479   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  5958,-10338) Kopf-Abstand 5320
+        t483   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  6395,-11596) Kopf-Abstand 4550
+        t485   Hochbiss   Phase 5 Clip  4 Wurzel (  3355,-11937) Kopf (  6396,-12301) Kopf-Abstand 4063
+        t487   Hochbiss   Phase 5 Clip  4 Wurzel (  3448,-11956) Kopf (  6278,-13082) Kopf-Abstand 3491
+        t489   Hochbiss   Phase 5 Clip  4 Wurzel (  3535,-11992) Kopf (  5998,-13730) Kopf-Abstand 2930
+        t491   Hochbiss   Phase 5 Clip  4 Wurzel (  3613,-12046) Kopf (  5730,-14207) Kopf-Abstand 2508
+        t493   Hochbiss   Phase 5 Clip  4 Wurzel (  3679,-12113) Kopf (  5400,-14620) Kopf-Abstand 2079
+    R4428/-15000   Cut 2: 3600 B., Treffer 330 (Rammen 0, CROSS-Biss 1, Hochbiss 329, Biss 0, sonst 0), erster t270 CROSS-Biss, laengste Pause ohne Treffer 270 B. = 9.0 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4172..5731, -12894..-10372), Kopf min 34 mittel 3719, ohne Fortschritt max 2.8 s, Haenge-Fenster 0 (erstes t-1)
+        t270   CROSS-Biss Phase 7 Clip  0 Wurzel (  4477,-19087) Kopf (  4412,-16021) Kopf-Abstand 1019
+        t473   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-11937) Kopf (  5906, -9249) Kopf-Abstand 5926
+        t475   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-11937) Kopf (  6404, -9588) Kopf-Abstand 5747
+        t477   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-11937) Kopf (  6847,-10055) Kopf-Abstand 5490
+        t479   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-11937) Kopf (  7185,-10618) Kopf-Abstand 5170
+        t481   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-11937) Kopf (  7400,-11236) Kopf-Abstand 4775
+        t483   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-11937) Kopf (  7488,-11914) Kopf-Abstand 4344
+        t485   Hochbiss   Phase 5 Clip  4 Wurzel (  4429,-11937) Kopf (  7415,-12615) Kopf-Abstand 3814
+        t487   Hochbiss   Phase 5 Clip  4 Wurzel (  4519,-11965) Kopf (  7216,-13379) Kopf-Abstand 3217
+        t489   Hochbiss   Phase 5 Clip  4 Wurzel (  4602,-12011) Kopf (  6870,-13996) Kopf-Abstand 2635
+        t491   Hochbiss   Phase 5 Clip  4 Wurzel (  4674,-12072) Kopf (  6554,-14443) Kopf-Abstand 2187
+        t493   Hochbiss   Phase 5 Clip  4 Wurzel (  4732,-12147) Kopf (  6182,-14820) Kopf-Abstand 1759
+    R5500/-15000   Cut 2: 3600 B., Treffer 349 (Rammen 0, CROSS-Biss 1, Hochbiss 348, Biss 0, sonst 0), erster t280 CROSS-Biss, laengste Pause ohne Treffer 280 B. = 9.3 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4614..5733, -12764..-10344), Kopf min 359 mittel 3980, ohne Fortschritt max 2.6 s, Haenge-Fenster 0 (erstes t-1)
+        t280   CROSS-Biss Phase 7 Clip  0 Wurzel (  4960,-19014) Kopf (  5142,-15950) Kopf-Abstand 1013
+        t481   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-11937) Kopf (  7277, -9440) Kopf-Abstand 5815
+        t483   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-11937) Kopf (  7732, -9835) Kopf-Abstand 5608
+        t485   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-11937) Kopf (  8117,-10350) Kopf-Abstand 5320
+        t487   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-11937) Kopf (  8388,-10948) Kopf-Abstand 4964
+        t489   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-11937) Kopf (  8530,-11587) Kopf-Abstand 4550
+        t491   Hochbiss   Phase 5 Clip  4 Wurzel (  5497,-11937) Kopf (  8538,-12266) Kopf-Abstand 4079
+        t493   Hochbiss   Phase 5 Clip  4 Wurzel (  5543,-11950) Kopf (  8429,-12972) Kopf-Abstand 3556
+        t495   Hochbiss   Phase 5 Clip  4 Wurzel (  5629,-11989) Kopf (  8143,-13708) Kopf-Abstand 2941
+        t497   Hochbiss   Phase 5 Clip  4 Wurzel (  5706,-12044) Kopf (  7727,-14280) Kopf-Abstand 2332
+        t499   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12113) Kopf (  7307,-14686) Kopf-Abstand 1832
+        t501   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12194) Kopf (  6845,-15018) Kopf-Abstand 1342
+    R6500/-15000   Cut 2: 3600 B., Treffer 345 (Rammen 0, CROSS-Biss 1, Hochbiss 344, Biss 0, sonst 0), erster t296 CROSS-Biss, laengste Pause ohne Treffer 296 B. = 9.9 s, GUARD 92 % CROSS 6 %, Wurzel ab t600 (4612..5733, -13016..-10408), Kopf min 124 mittel 3535, ohne Fortschritt max 2.6 s, Haenge-Fenster 0 (erstes t-1)
+        t296   CROSS-Biss Phase 7 Clip  0 Wurzel (  5596,-18940) Kopf (  5940,-15889) Kopf-Abstand 1047
+        t515   Hochbiss   Phase 5 Clip  4 Wurzel (  5554,-11937) Kopf (  7462, -9536) Kopf-Abstand 5538
+        t517   Hochbiss   Phase 5 Clip  4 Wurzel (  5554,-11937) Kopf (  7896, -9954) Kopf-Abstand 5221
+        t519   Hochbiss   Phase 5 Clip  4 Wurzel (  5554,-11937) Kopf (  8254,-10489) Kopf-Abstand 4830
+        t521   Hochbiss   Phase 5 Clip  4 Wurzel (  5554,-11937) Kopf (  8493,-11100) Kopf-Abstand 4374
+        t523   Hochbiss   Phase 5 Clip  4 Wurzel (  5554,-11937) Kopf (  8601,-11745) Kopf-Abstand 3873
+        t525   Hochbiss   Phase 5 Clip  4 Wurzel (  5554,-11937) Kopf (  8574,-12424) Kopf-Abstand 3298
+        t527   Hochbiss   Phase 5 Clip  4 Wurzel (  5599,-11952) Kopf (  8428,-13122) Kopf-Abstand 2684
+        t529   Hochbiss   Phase 5 Clip  4 Wurzel (  5683,-11996) Kopf (  8103,-13843) Kopf-Abstand 1974
+        t531   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12055) Kopf (  7618,-14393) Kopf-Abstand 1267
+        t533   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12128) Kopf (  7170,-14781) Kopf-Abstand 704
+        t535   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12211) Kopf (  6696,-15090) Kopf-Abstand 215
+    SUMME leon ohne: 2 von 18 Lagen ohne Treffer; spaetester erster Treffer t3600 (R2318/-16300); laengste Pause ohne Treffer 3600 B. = 120.0 s (R2318/-16300)

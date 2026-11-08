@@ -350,7 +350,7 @@ if(TEIL MATCHES "^tod_explosion")
         "RE15_PLAYER_POS=-7000,-19000,3072,0"
         RE15_R39_MESS_SPIELER_HP=100 RE15_GB_TEST=5 "RE15_GATOR_KANISTER=4430,-26160" "RE15_GIVE=3:15,21:50" RE15_EQUIP=3
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss}"
-        "RE15_EXIT_AT=1330#${_r2090}" "RE15_FRAMEDUMP=1146-1330/1:fd_"
+        "RE15_EXIT_AT=1400#${_r2090}" "RE15_FRAMEDUMP=1146-1400/1:fd_"   # G2-RE2 NB2 (Vorschlag 4): ohne Kopf-Klemme trifft der Schuss spaeter - R1 F1192 statt F1156 (Lauf 2026-11-06), X = Ende + 15 = F1335 lag hinter 1330
         "${_exe_kopie}")
     file(REMOVE "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
@@ -692,7 +692,8 @@ endif()
 
 # Folge-Zeilen in Reihenfolge
 file(STRINGS "${_dir}/debug.log" _fz REGEX "\\[gatorszene\\] Folge ")
-set(_soll "A;P 1;T;P 2;M 8;P 3;S;G 1;G 2;K 13;G 3;G 4;V;G 5;G 6;C 0;G 7;B 1")
+# Runde 41 Spur G2: Montage mit 5 Zombies (Punkt 3), Wurf W 57 / Fang F 75 / verschlungen V 77 vor dem Kauen G 4 (Punkt 2)
+set(_soll "A;P 1;T;P 2;M 5;P 3;S;G 1;G 2;K 13;G 3;W 57;F 75;V 77;G 4;G 5;G 6;C 0;G 7;B 1")
 set(_i 0)
 list(LENGTH _fz _n_fz)
 foreach(_s IN LISTS _soll)
@@ -797,7 +798,7 @@ foreach(_a IN LISTS _m0)
     endforeach()
 endforeach()
 if(_bewegt LESS 4)
-    message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - nur ${_bewegt} von 8 Zombies gelaufen (Nachtrag 20: sie sollen oben laufen)")
+    message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - nur ${_bewegt} von 5 Zombies gelaufen (Nachtrag 20: sie sollen oben laufen; Spur G2: 5 statt 8)")
 endif()
 message(STATUS "r41_gatorszene: Lauf ${TEIL} - Tor gesperrt, ${_n_sp} Spinnen-Saetze verworfen, Folge ${_soll} vollstaendig, "
-               "2080: ${_n_zl} Bilder mit Zombies, keiner westlich x -16650, ${_bewegt} von 8 gelaufen; ${_status_kampf}")
+               "2080: ${_n_zl} Bilder mit Zombies, keiner westlich x -16650, ${_bewegt} von 5 gelaufen; ${_status_kampf}")

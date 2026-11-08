@@ -489,7 +489,16 @@ static void trag_scan(int zeige)
 }
 
 /* Riegel: Auswahl der Scan-Laeufe, die ohne die weiche Klemme springen (Scan trag_scan, Stand vor Spur P: > 340 in 946 Bildpaaren, > 1000 in 68). */
+static void teil_tragen_innen(void);
 static void teil_tragen(void)
+{
+    /* G2-RE2 NB2 "Vorschlag 4": der Mechanismus dieses Riegels (Kopf-Klemme mit dem Kanister, Querungsbeginn an der Lage des Gators) gilt nur noch mit dem Pruefhaken v4_alt (Stand f942f56c0);
+     * der Riegel prueft ihn dort weiter. Die Bewegung mit Vorschlag 4 pruefen unit_r41_gatorfix_v4 / _re2 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"). */
+    re15_gr2_v4_alt_setzen(1);
+    teil_tragen_innen();
+    re15_gr2_v4_alt_setzen(0);
+}
+static void teil_tragen_innen(void)
 {
     printf("== tragen (Abnahme G 4 O1) ==\n");
     static const struct { int32_t x, z; int gier; int32_t lx, lz; } k[] = {
@@ -930,23 +939,26 @@ static void teil_leiche_p(int elza)
     if (room_boot(r2090, g_room_change.x, g_room_change.y, g_room_change.z, g_room_change.yaw_4096, cut) != 0) return;
     if (!gator_bank()) return;
     re15_actor_t *g = gator_setzen();
-    int gemessen = 0, angekommen = -1; int32_t a_start = -1, a_max = 0, a = 0; int weg = -1, clip5_ende = -1;
+    /* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 2 "hochschmeisst ... im Mund wieder auffaengt und er dann quasi verschwindet"): die Leiche haengt vom
+     * Koppelbild bis Clip 5 Bild 56 (dann Wurf, im Flug misst leiche_sitz nicht), wieder ab dem Fang Bild 75 und ist mit Clip 5 Bild 77 weg (gatorszene_r41.c
+     * GSZ_WURF_BILD/GSZ_FANG_BILD/GSZ_WEG_BILD) - nicht mehr mit dem Clip-5-Ende. Vorher: > 100 angehaengte Bilder und weg == Clip-5-Ende. */
+    int gemessen = 0, angekommen = -1; int32_t a_start = -1, a_max = 0, a = 0; int weg = -1, bild77 = -1;
     for (int f = 0; f < 2000 && re15_gatorszene_r41_zustand() != RE15_GSZ_KAMPF; f++) {
-        const int clip_vor = g ? g->motion : -1;
         frame(0, 0);
-        if (g && clip_vor == 5 && g->motion == 11 && clip5_ende < 0) clip5_ende = f;
+        if (g && g->motion == 5 && g->anim_frame == 77 && bild77 < 0) bild77 = f;
+        const int k = prop_von(RE15_GSZ_LEICHE_OBJ);
         if (re15_gatorszene_r41_leiche_sitz(&a)) {
             if (gemessen == 0) a_start = a;
             gemessen++;
             if (angekommen < 0 && a <= 40) angekommen = gemessen;
             if (angekommen >= 0 && a > a_max) a_max = a;
-        } else if (gemessen && weg < 0) weg = f;
+        } else if (gemessen && weg < 0 && k >= 0 && !g_scd.props[k].active) weg = f;
     }
-    printf("    %d Bilder angehaengt, Abstand zum Maul beim Anhaengen %d, angekommen nach %d Bildern, danach hoechstens %d; Clip-5-Ende Bild %d, weg ab Bild %d\n", gemessen, (int)a_start, angekommen,
-           (int)a_max, clip5_ende, weg);
-    PRUEF(gemessen > 100 && angekommen > 0 && angekommen <= 40, "Rumpfmitte kommt im Maul an (nach %d Bildern, Start %d)", angekommen, (int)a_start);
+    printf("    %d Bilder angehaengt, Abstand zum Maul beim Anhaengen %d, angekommen nach %d Bildern, danach hoechstens %d; Clip 5 Bild 77 in Bild %d, weg ab Bild %d\n", gemessen, (int)a_start, angekommen,
+           (int)a_max, bild77, weg);
+    PRUEF(gemessen >= 50 && angekommen > 0 && angekommen <= 40, "Rumpfmitte kommt im Maul an (nach %d Bildern, Start %d, %d Haltebilder)", angekommen, (int)a_start, gemessen);
     PRUEF(a_max <= 40, "Leiche folgt dem Kopf Bild fuer Bild (Abstand hoechstens %d)", (int)a_max);
-    PRUEF(clip5_ende >= 0 && weg == clip5_ende, "Leiche mit dem Clip-5-Ende weg (RE2 P2-Ende @0x80101190-ac), Bild %d / %d", weg, clip5_ende);
+    PRUEF(bild77 >= 0 && weg == bild77, "Leiche nach dem Fang mit dem geschlossenen Maul weg (Clip 5 Bild 77, Spur G2 Punkt 2), Bild %d / %d", weg, bild77);
 }
 
 /* ---- Teil kanister_sitz (M7, Nachtrag 35 Punkt 6): Tank-Achse = Quer-Achse des Kopfes wie RE2, bei jeder Gier; Lokallage (1750,-210,-262) ------------------------------------------- */

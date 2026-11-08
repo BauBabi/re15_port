@@ -1,0 +1,22 @@
+GTR F942 START art 4 sub 2 achse 1024 gier 0->1024 schaden 60 ret 0 hp 40 gator (-435,-1200,-24479) gier 2597 figur (-2731,0,-21904) band 0
+GTR F943 sub 2 ph 1 bild 0 schritt -800 clip 18/0 raum sperre 1 figur (-2733,0,-21106) gier 1024 band 0 fall 0 von (-2733,-21906)
+GTR F944 sub 2 ph 1 bild 1 schritt -650 clip 18/1 raum sperre 1 figur (-2390,0,-20904) gier 1024 band 0 fall 0 von (-2390,-21554)
+GTR F945 sub 2 ph 1 bild 2 schritt -500 clip 18/2 raum sperre 1 figur (-2147,0,-20836) gier 1024 band 0 fall 0 von (-2147,-21336)
+GTR F946 sub 2 ph 2 bild 3 schritt -350 clip 18/3 raum sperre 1 figur (-1956,0,-20890) gier 1024 band 0 fall 0 von (-1956,-21240)
+GTR F947 sub 2 ph 3 bild 4 schritt -200 clip 19/1 raum sperre 1 figur (-1830,0,-20984) gier 1024 band 0 fall 0 von (-1830,-21184)
+GTR F948 sub 2 ph 3 bild 5 schritt -185 clip 19/3 raum sperre 1 figur (-1758,0,-20969) gier 1024 band 0 fall 0 von (-1758,-21154)
+GTR F949 sub 2 ph 3 bild 6 schritt -170 clip 19/5 raum sperre 1 figur (-1700,0,-20962) gier 1024 band 0 fall 0 von (-1700,-21132)
+GTR F950 sub 2 ph 3 bild 7 schritt -155 clip 19/7 raum sperre 1 figur (-1649,0,-20958) gier 1024 band 0 fall 0 von (-1649,-21113)
+GTR F951 sub 2 ph 3 bild 8 schritt -140 clip 19/9 raum sperre 1 figur (-1610,0,-20960) gier 1024 band 0 fall 0 von (-1610,-21100)
+GTR F952 sub 2 ph 3 bild 9 schritt -125 clip 19/11 raum sperre 1 figur (-1573,0,-20963) gier 1024 band 0 fall 0 von (-1573,-21088)
+GTR F953 sub 2 ph 3 bild 10 schritt -110 clip 19/13 raum sperre 1 figur (-1523,0,-20962) gier 1024 band 0 fall 0 von (-1523,-21072)
+GTR F954 sub 2 ph 3 bild 11 schritt -95 clip 19/15 raum sperre 1 figur (-1473,0,-20960) gier 1024 band 0 fall 0 von (-1473,-21055)
+GTR F955 sub 2 ph 3 bild 12 schritt -80 clip 19/17 raum sperre 1 figur (-1437,0,-20966) gier 1024 band 0 fall 0 von (-1437,-21046)
+GTR F956 sub 2 ph 3 bild 13 schritt -65 clip 19/19 raum sperre 1 figur (-1404,0,-20973) gier 1024 band 0 fall 0 von (-1404,-21038)
+GTR F957 sub 2 ph 3 bild 14 schritt -50 clip 19/21 raum sperre 1 figur (-1379,0,-20981) gier 1024 band 0 fall 0 von (-1379,-21031)
+GTR F958 sub 2 ph 3 bild 15 schritt -35 clip 19/23 raum sperre 1 figur (-1356,0,-20990) gier 1024 band 0 fall 0 von (-1356,-21025)
+GTR F959 sub 2 ph 3 bild 16 schritt -20 clip 19/25 raum sperre 1 figur (-1340,0,-21001) gier 1024 band 0 fall 0 von (-1340,-21021)
+GTR F960 sub 2 ph 3 bild 17 schritt -5 clip 19/27 raum sperre 1 figur (-1324,0,-21011) gier 1024 band 0 fall 0 von (-1324,-21016)
+GTR F961 sub 2 ph 4 bild 18 schritt 0 clip 19/29 raum sperre 1 figur (-1324,0,-21016) gier 1024 band 0 fall 0 von (-1324,-21016)
+GTR F962 ENDE sub 2 bilder 20 weg 3735 von (-1291,-21007) luft 1696 figur (-1291,0,-21007) band 0 fall 0
+GTR F962 TOT art 4 schaden 60 hp -20

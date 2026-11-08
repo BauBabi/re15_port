@@ -1,0 +1,29 @@
+== v4 (G2-RE2 NB2 Vorschlag 4: Bewegung mit = ohne Kanister, Halterung am Kiefer) ==
+    SO-Ecke         Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+    Nordbecken-Ost  Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+    NO-Ecke         Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+    Rampe-x4428     Rampe  mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1, Rampe) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+                      erste Querung im Lauf mit: Bild -1; Phase im ersten abweichenden Bild mit -1 / ohne -1
+    Rampe-x2318     Rampe  mit  900 / ohne  900 Bilder: abweichend  131 (erstes Bild 769, Rampe) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+                      erste Querung im Lauf mit: Bild 229; Phase im ersten abweichenden Bild mit 7 / ohne 5
+    Rampe-Nord      Rampe  mit  900 / ohne  900 Bilder: abweichend  134 (erstes Bild 766, Rampe) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+                      erste Querung im Lauf mit: Bild 226; Phase im ersten abweichenden Bild mit 7 / ohne 5
+    Leiter          Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+    Leiterecke      Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+    Westkanal       Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  897 (erstes Bild 3)
+    Mitte-Nord      Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+    Plattform-Sued  Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+    Weg-Becken      Wasser mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+    Weg-Rampe       Rampe  mit  900 / ohne  900 Bilder: abweichend    0 (erstes Bild -1, Rampe) | Gegenprobe Huelle aktiv (f942f56c0): abweichend  900 (erstes Bild 0)
+                      erste Querung im Lauf mit: Bild -1; Phase im ersten abweichenden Bild mit -1 / ohne -1
+    SUMME Wasser-Lagen: abweichend 0; Rampen-Lagen: abweichend 265 von 3600 Bildern (ab der ersten Querung mit Rammen); Gegenprobe Huelle 11697; Rueckfall (Rueckwaerts/Tauchen) im Lauf mit: 0 Bilder
+    Halterung: 11700 Bilder getragen, Lage-Abweichung max 0, Drehungs-Abweichung max 0 (Q12), Bilder mit Abweichung 0; Lokallage wandert in 78 Bildern (zuletzt im Bild 10807)
+  ok: gelaufen (mit 11700, ohne 11700 Bilder)
+  ok: (a) Wasser-Lagen: Bewegung mit Kanister Bild fuer Bild = ohne Kanister (Lage, Hoehe, Gier, Clip, Bild, Phase): 0 abweichende Bilder
+  ok: (a) Rampen-Lagen: mit = ohne Kanister, bis die Seitenwahl der Belagerung (Querung ueber die Figur mit Rammen) greift - erste Abweichung in GUARD/CROSS (0 Lagen weichen anders ab)
+  ok: (a) kein Rueckfall Rueckwaerts/Tauchen in den 13 Lagen (0 Bilder)
+  ok: (a) Gegenprobe Kanister-Huelle aktiv (Stand f942f56c0): jede Wasser-Lage weicht ab (9 von 9) - rot ohne den Bau
+  ok: (b) Halterung: Kanister = Part 6 der gezeichneten Pose x Lokallage in jedem Bild (11700 Bilder, Lage max 0, Drehung max 0)
+    Gegenprobe ein Bild alte Pose: 300 Bilder, Lage-Abweichung max 12281, Drehung max 1391, Bilder mit Abweichung 300
+  ok: (b) Gegenprobe ein Bild alte Pose: Abweichung > 0 in mehr als der Haelfte der Bilder (300 von 300, max 12281) - rot ohne den Bau
+v4: 0 Fehler

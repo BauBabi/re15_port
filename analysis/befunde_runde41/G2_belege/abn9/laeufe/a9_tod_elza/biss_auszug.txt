@@ -1,0 +1,6 @@
+RE2 INTRO ende pos=(2261,-10304) yaw=1056 wand_draussen_max=0 kopf_x_min=-2511
+GTR F942 START art 4 sub 2 achse 1024 gier 0->1024 schaden 60 ret 0 hp 40 gator (-435,-1200,-24479) gier 2597 figur (-2731,0,-21904) band 0
+BISSLAUF F935-F979 art 4 treffer 1 bedingung 1
+GTR F1049 TOT art 4 schaden 60 hp -20
+RE2 FINISHER Buehne (Nachbesserung 5, RE2-P0 @0x80101048-4c): von (-4023,-22048) Gier 1503 -> (-5650,-16000) Gier 2929 Cut 6, Versatz 6249 Drehung 1426 | Koppelbild Kopf (152,98) Leon (83,150) Massstab max 1594 (Grenze 1892) F1049 | NB6: laufende Kamera 0/0 ausgeschlossen, Raum-Objekte 2, Leon-Stichpunkte 15, wegen Verdeckung verworfen 8 (zuletzt Bild 0), Massstab Koppelbild 1357 (RE2-Finisher 1354), Lagen geprueft 45
+BISSLAUF F1042-F1050 art 4 treffer 1 bedingung 1

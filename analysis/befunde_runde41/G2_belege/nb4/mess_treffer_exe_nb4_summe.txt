@@ -1,0 +1,8 @@
+Wasser   ?          Treffer   1  heute: Weg max  4737, Luftlinie max  4746 / Mittel  4746, Dauer 92..92 Bilder | RE2: Sub 2 0 x (3735 rueckwaerts, 20 Bilder), Sub 3 0 x (3080 vorwaerts, 54 Bilder), unbestimmt 1
+Wasser   LUNGE      Treffer  59  heute: Weg max 18026, Luftlinie max 11268 / Mittel  2530, Dauer 41..92 Bilder | RE2: Sub 2 19 x (3735 rueckwaerts, 20 Bilder), Sub 3 40 x (3080 vorwaerts, 54 Bilder), unbestimmt 0
+oben     ?          Treffer   1  heute: Weg max  2445, Luftlinie max   254 / Mittel   254, Dauer 67..67 Bilder | RE2: Sub 2 0 x (3735 rueckwaerts, 20 Bilder), Sub 3 0 x (3080 vorwaerts, 54 Bilder), unbestimmt 1
+oben     CROSS      Treffer   4  heute: Weg max  2369, Luftlinie max   332 / Mittel   279, Dauer 67..92 Bilder | RE2: Sub 2 2 x (3735 rueckwaerts, 20 Bilder), Sub 3 2 x (3080 vorwaerts, 54 Bilder), unbestimmt 0
+oben     GUARD      Treffer   9  heute: Weg max  5917, Luftlinie max  4918 / Mittel  1749, Dauer 41..92 Bilder | RE2: Sub 2 2 x (3735 rueckwaerts, 20 Bilder), Sub 3 7 x (3080 vorwaerts, 54 Bilder), unbestimmt 0
+oben     Rammen     Treffer   6  heute: Weg max  5793, Luftlinie max  4730 / Mittel  2186, Dauer 67..92 Bilder | RE2: Sub 2 2 x (3735 rueckwaerts, 20 Bilder), Sub 3 3 x (3080 vorwaerts, 54 Bilder), unbestimmt 1
+oben, Richtung A (Gator-Gier): {'Ostwand [6]': 4, 'Plattform [7]': 4, 'Wasser Sued': 8, 'Wasser Nord': 2}
+oben, Richtung A90 (Gator-Gier auf 90 Grad gerastet): {'Wasser Sued': 11, 'Plattform [7]': 2, 'Wasser Nord': 5}

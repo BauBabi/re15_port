@@ -6,11 +6,11 @@
  *   - HP-Sockel 25240 (Spur WS H3: Bit 0x40 gesetzt @0x8002b4ac -> [0x801045ec]/[0x801045ee] = 240) / Schwaeche < 25000
  *     (INIT @0x80100518-580, Selektor @0x80101ebc-dc)
  *   - Hysterese Schwimmen (Clip 0, Blend 32 @0x80100c38) <-> Paddeln (Clip 1, Blend 4 @0x80100cfc)
- *     ueber +0x1F0 >= 0x65 / < 0x5a und die Biss-Sperre +0x238 (Sub-1-Pre @0x80100b20-c08)
+ *     ueber +0x1F0 >= 0x65 / < 0x5a und die Spurt-Sperre +0x238 (der Biss fragt sie nicht: T1 @0x801012fc) (Sub-1-Pre @0x80100b20-c08)
  *   - Wurzelgeschwindigkeit je Bild = Differenz der kumulierten Versatz-Bytes 6..11 zweier
  *     Keyframes (FUN_80015e7c @0x80015e7c; bei Bild 0 gegen 0, `sw zero,0x20c` ebd.)
  *   - LUNGE = Zonen-Dash Clip 2 (16) -> Clip 3 (0) mit SE 4 am Start (@0x80100d64/84, @0x80100dac-b4,
- *     @0x80100e20-28); INTRO Clip 6 -> Clip 3 (@0x801008ac-f0); Biss-Sperre 110 danach (@0x8010091c)
+ *     @0x80100e20-28); INTRO Clip 6 -> Clip 3 (@0x801008ac-f0); Spurt-Sperre 110 danach (@0x8010091c)
  *   - Stroke-Ereignisse (Frame-Wort Top-5-Bits 0x28 @0x801003f0-40c) -> Ereignis-Maschine
  *     @0x80101d44 (Tabelle @0x80100044): Rumble-Rampen FUN_800395b8(10,120,50) / (8,85,40), Bits 4/8
  *     in 0x800cfbd8 fuer 5 / 10 Bilder
@@ -135,6 +135,22 @@ static struct {
     uint16_t scherben;        /* +0x1EC (0 = intaktes Mesh) */
     uint32_t scherben_farbe;  /* +0x1BC = Record +0x70 */
 } s_kan;
+/* Runde 41 Spur G2-RE2 NB2 "Vorschlag 4" (Nutzerentscheid 2026-11-03 "Ignoriere den Kanister einfach in der Berechnung. Tu so als ob er nicht da waere" /
+ * "wichtig ist nur das der Kanister synchron mit dem Aligator mitlaeuft. Ansonsten soll er nicht als Stoerkoerper zaehlen"; PORT-WAHL, Dossier G2_gatorfix.md
+ * Abschnitt "G2-RE2 NB2 (Vorschlag 4)"): der angehaengte Kanister zaehlt in keiner Bewegungs-, Kollisions- oder Wegrechnung - Kopf-Klemme, Steuerziel,
+ * Trag-Lenkung, Zonen-Dash, Kollisions-Antwort, Ueberquerungs-Profil und Hysterese-Ruhe sehen ihn nicht. Er folgt nur der gezeichneten Part-6-Matrix
+ * (gr2_kan_folgen, RE2 `addiu a0,s0,1104` @0x801018d0 / `sw a0,128(s2)` @0x801018e0) und bleibt Trefferziel (T2 @0x801017c4, HURT-Selektor @0x80101ef4-fc -> R1).
+ * Pruefhaken s_v4_alt = 1: Stand f942f56c0 (der Kanister zaehlt). */
+static int s_v4_alt = 0;
+static void gr2_th_verwerfen(void);
+void re15_gr2_v4_alt_setzen(int an) { if (an != s_v4_alt) gr2_th_verwerfen(); s_v4_alt = an; }   /* die Huelle haengt am Pruefhaken (mit/ohne Kanister) */
+int  re15_gr2_v4_alt(void) { return s_v4_alt; }
+static int gr2_kan_zaehlt(void) { return s_v4_alt && s_kan.aktiv && s_kan.angehaengt; }   /* 1 = der angehaengte Kanister gehoert zur Bewegungs-Huelle */
+static int s_kan_vorbild = 0;                                   /* Pruefhaken Riegel v4 (b): Kanister an der Part-6-Matrix des Vorbilds */
+void re15_gr2_kan_vorbild_setzen(int an) { s_kan_vorbild = an; }
+static int s_ohne_entfernt = 0;                                /* Messhaken RE15_G2_OHNE_KANISTER: Kanister beim Tragen entfernt */
+int re15_gr2_ohne_kanister_entfernt(void) { return s_ohne_entfernt; }
+static int s_rw_ohne_kan = 0;                                   /* Messhaken re15_gr2_rw_nur_kopf_punkte: Punkte ohne Kanister-Zylinder */
 
 static int s_env_geprueft;
 /* Nachbesserung 2 (M3): Beckenzone des Boss-Moduls (gb_zone: 0 Sued, 1 Nord, 2 Westkanal-Streifen, PORT-WAHL der
@@ -323,6 +339,7 @@ enum { GR2_FXM_TEIL6, GR2_FXM_TEIL7, GR2_FXM_KANISTER, GR2_FXM_N };
 static uint8_t s_fx_mtx[GR2_FXM_N][32];
 static int     s_fx_ok;          /* Nachbesserung 4: Part-6/7-Puffer stammen aus einer gezeichneten Pose (re15_gr2_nachtakt) */
 static int32_t s_p6_rot[9], s_p6_pos[3];   /* Messhaken: Part-6-Weltmatrix der letzten gezeichneten Pose */
+static int32_t s_p7_rot[9], s_p7_pos[3];   /* Runde 41 Spur G2 NB4: Part 7 (Schaedel) derselben Pose (Einpassung der Leiche) */
 static int gr2_fx(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t ofs[4])
 {
     return re2fx_spawn_sofort(a0, a1, mtx, ofs);             /* FUN_8001bf10 = sofort lebendig */
@@ -567,12 +584,19 @@ static void gr2_kan_sitz_takt(void)
  * der Kanister (z -9500, sub05 Pos_set @SCD 0x0484) laengst HINTER der 8880-Grenze, d.h. RE2 traegt das Bit nie aus Zone 1
  * hinaus; im Becken fuehrt die Verfolgung den Gator zurueck in andere Zonen. Der Hals-Zielmodus selbst (Root @0x80100344-60
  * -> FUN_800177c0 statt FUN_80017d98) ist OFFEN (Dossier §11.3): der Port fuehrt die RE2-Halsfuehrung des Gators nicht. */
+extern int (*s_kan_szene_fn)(void);   /* unten definiert (Kanister der Marvin/John-Szene) */
 static void gr2_zielmodus_takt(gr2_t *g, const re15_actor_t *e, int im_chase)
 {
     if (!s_kan.aktiv || s_kan.stufe == 13) { g->ziel_bit = 0; return; }
     if (!im_chase) { g->ziel_bit = 0; return; }              /* PORT-WAHL: nur in der Schwimm-Verfolgung (RE2 Sub 1/2) - die
                                                                * Nutzer-Design-Phasen GUARD/CROSS haben kein RE2-Gegenstueck */
     if (!s_zone_fn || s_zone_fn(e->z) != s_zone_fn(s_kan.liege_z)) { g->ziel_bit = 0; return; }
+    /* Runde 41 Spur G2-RE2 NB4 (K, Messblatt O-K1): fuer den Kanister der Marvin/John-Szene aus - PORT-WAHL mit dem Nutzer-Wortlaut 2026-11-07
+     * ~15:00 "da leon mit den alligator ganz normal seine runden drehen soll. Das heißt der alligator sollte Ganz natürlich irgendwann zum Kanister
+     * kommen, während er leo. Auf dem rundweg verfolgt....": RE2s Bit (@0x80100a34-5c) haengt an der Korridorbahn, auf der sein Kanister liegt;
+     * im Port wuerde es die Verfolgung (Biss-Sperre @0x8010134c-58) gegen die Vorgabe "verfolgt wie ohne Kanister" aendern. Pruefhaken
+     * re15_k2080_runde_alt_setzen(1) = Stand 3d57083b1. */
+    { extern int re15_k2080_runde_alt(void); if (!re15_k2080_runde_alt() && s_kan_szene_fn && s_kan_szene_fn()) { g->ziel_bit = 0; return; } }
     int32_t laengs, quer; gr2_kan_vor(e, &laengs, &quer);
     int alt = g->ziel_bit;
     if (s_kan.stufe < 2) g->ziel_bit = 1;                                              /* (a) @0x80100a34-5c */
@@ -582,6 +606,8 @@ static void gr2_zielmodus_takt(gr2_t *g, const re15_actor_t *e, int im_chase)
                      (int)s_kan.stufe, (unsigned)g_engine.frame_count);
 }
 
+/* Runde 41 Spur G2: 1 = der liegende Kanister ist der der Marvin/John-Szene (kanister2080_r41.c), nicht ein Testhaken-Kanister der Spur B */
+int (*s_kan_szene_fn)(void) = NULL;
 static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
 {
     gr2_zielmodus_takt(g, e, im_chase);
@@ -598,6 +624,12 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         gr2_kan_vor(e, &laengs, &quer);
         int32_t ab = q12mul(RE15_GR2_KAN_FENSTER_AB, s), len = q12mul(RE15_GR2_KAN_FENSTER_LEN, s);
         int32_t qmax = (int32_t)e->hit_radius_min + 267;    /* Koerperradius (skaliert) + Kanisterradius (MD1) */
+        /* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 8 "erst wenn er beim Kanister ankommt, soll er ihn aufnehmen", Haken): ohne Anschwimmen kommt er
+         * nicht mehr laengs auf den Kanister zu (RE2: Korridorbahn, die ueber den Kanister fuehrt), er kreuzt ihn auf der Verfolgung. Gemessen
+         * (integration_r41_alligator2_tragen_elza, Lauf F1201): Wurzel 25 vom Kanister entfernt, das Fenster 8601..8999 voraus nie getroffen. Darum gilt
+         * das Fenster vom Kopf an (laengs >= 0, Wurzel) bis zu seinem RE2-Ende - der Kanister vor dem Maul, wenn er bei ihm ankommt. Mit dem
+         * Anschwimmen der N3 (Pruefhaken re15_k2080_anschwimmen_alt_setzen) das RE2-Fenster wie bisher. */
+        { extern int re15_k2080_anschwimmen_alt(void); if (!re15_k2080_anschwimmen_alt() && s_kan_szene_fn && s_kan_szene_fn()) { len += ab; ab = 0; } }
         if (laengs >= ab && laengs < ab + len && quer > -qmax && quer < qmax) {
             s_kan.stufe = 1;                                /* +0x226 = 1 @0x80100b08 */
             /* Nachbesserung 2 (Abnahme 1, M3): RE2 schaltet im selben Pre PADDELN (Sub 2) auf SCHWIMMEN (Sub 1):
@@ -691,6 +723,13 @@ static void gr2_kan_takt(gr2_t *g, re15_actor_t *e, int im_chase)
         g->ease_t++;
         gr2_kan_sitz_takt();
         if (g->ease_t == 7) { g->ease_t = 0; s_kan.stufe = 7; re15_gr2_log("KANISTER getragen (Stufe 7)"); }
+#ifdef RE15_PLATFORM_PC
+        {   /* MESSHAKEN G2-RE2 NB2 (env RE15_G2_OHNE_KANISTER, PC, kein Spielweg): der Kanister verschwindet im Bild, in dem er getragen ist - dieselbe
+             * Eingabe zeigt dann den Gang ohne Kanister (Bildleisten-Spalte "NB5 ohne Kanister", Riegel v4 (a) im exe-Lauf). */
+            static int s_ohne = -1; if (s_ohne < 0) s_ohne = getenv("RE15_G2_OHNE_KANISTER") != NULL;
+            if (s_ohne && s_kan.stufe == 7) { s_ohne_entfernt = 1; re15_gr2_log("MESSHAKEN RE15_G2_OHNE_KANISTER: Kanister entfernt F%u", (unsigned)g_engine.frame_count); memset(&s_kan, 0, sizeof s_kan); }
+        }
+#endif
         break;
     case 7:                                                 /* @0x80101b58: halten */
         gr2_annaehern(&s_kan.lokal[0], RE15_GR2_KAN_LOKAL_X, 100);            /* @0x80101b68-70 */
@@ -1304,7 +1343,14 @@ int re15_gr2_hysterese_ruht(int slot, const re15_actor_t *e)
 {
     (void)slot;
     if (!s_kan.aktiv || s_kan.stufe == 13) return 0;
+    if (s_kan.stufe == 7 && !s_v4_alt) return 0;   /* G2-RE2 NB2 Vorschlag 4 (PORT-WAHL Nutzerentscheid): getragen ruht die Hysterese nicht - wie ohne Kanister im Raum */
     if (s_kan.stufe != 0 && s_kan.stufe != 7) return 1;                              /* (b) */
+    /* Runde 41 Spur G2-RE2 NB4 (K): (a) gilt nicht fuer den Kanister der Marvin/John-Szene - PORT-WAHL mit dem Nutzer-Wortlaut 2026-11-07 ~15:00 "da leon
+     * mit den alligator ganz normal seine runden drehen soll. Das heißt der alligator sollte Ganz natürlich irgendwann zum Kanister kommen, während er leo.
+     * Auf dem rundweg verfolgt....": die Zonen-Ruhe (@0x80100ab8-c8 / @0x80100aec) aenderte die Verfolgung in der Kanister-Zone (Clip 0/1 nach der
+     * Hysterese), solange der Kanister liegt - gemessen Riegel nb4 K1: 5 von 6 Lagen weichen vor der Aufnahme ab (erstes Bild t449..t1718, Clip 1 statt 0).
+     * (b) waehrend der Aufnahme bleibt. Pruefhaken re15_k2080_runde_alt_setzen(1) = Stand 3d57083b1. */
+    { extern int re15_k2080_runde_alt(void); if (s_kan.stufe == 0 && !re15_k2080_runde_alt() && s_kan_szene_fn && s_kan_szene_fn()) return 0; }
     if (e && s_zone_fn && s_zone_fn(e->z) == s_zone_fn(s_kan.liege_z)) return 1;     /* (a) */
     return 0;
 }
@@ -1451,7 +1497,7 @@ static int gr2_bahn_frei(const gr2_bahn_t *b, int32_t sx, int32_t sz, int y0, co
         if (s_becken_fn(rx, rz, GR2_KLEMM_R)) return 0;
         /* (3b) keine Beruehrung durch die Push-Kreise des Boss-Moduls (laengs der Entity-Gier): sonst setzt der Push
          * g->maul_kontakt und der Nutzer-Design-Biss faellt sofort nach der Wende (gemessen unit intro: Biss im
-         * ersten CHASE-Takt). RE2 liest +0x238 = 110 nach dem Intro nur in der Hysterese (@0x80100b5c/bf4/cb4). */
+         * ersten CHASE-Takt). RE2 liest +0x238 = 110 nach dem Intro nur in der Hysterese (@0x80100b5c/bf4; @0x80100cb4 ist toter Code). */
         if (pl && s_kontakt_fn && s_kontakt_fn(rx, rz, yaw, pl->x, pl->z)) return 0;
         for (int i = 0; i < GR2_BAHN_BONES; i++) {
             int32_t bx, bz; gr2_dreh(yaw, b->b[t][i][0], b->b[t][i][1], &bx, &bz);
@@ -2107,6 +2153,12 @@ void re15_gr2_kanister_setzen(int32_t x, int32_t y, int32_t z)
 }
 void re15_gr2_kanister_entfernen(void) { memset(&s_kan, 0, sizeof s_kan); }
 int  re15_gr2_kanister_stufe(void) { return s_kan.aktiv ? (int)s_kan.stufe : -1; }
+int  re15_gr2_kanister_rel(int32_t rel[9])
+{
+    if (!s_kan.aktiv || !s_kan.angehaengt) return 0;
+    memcpy(rel, s_kan.rel, sizeof s_kan.rel);
+    return 1;
+}
 int  re15_gr2_kanister_lokal(int32_t l[3])
 {
     if (!s_kan.aktiv || !s_kan.angehaengt) return 0;
@@ -2231,6 +2283,13 @@ static void gr2_kk_punkt(const int32_t p[3], int32_t u[4])
     if (GR2_KK_Z0 - p[2] > u[2]) u[2] = GR2_KK_Z0 - p[2];   /* Sued -> nach +z */
     if (p[2] - GR2_KK_Z1 > u[3]) u[3] = p[2] - GR2_KK_Z1;   /* Nord -> nach -z */
 }
+/* NB5 (Abnahme 3 M2b): Waende, gegen die die Kopf-Klemme in diesem Takt prueft (Bit 0 West, 1 Ost, 2 Sued, 3 Nord). Waehrend der Bahn der Belagerung
+ * nur die Waende im Bild der laufenden Kamera (gr2_kk_waende_setzen aus der Trag-Lenkung, s. BAHN DER BELAGERUNG); sonst alle vier. */
+static int s_kk_waende = 15;
+/* Runde 41 Spur G2-RE2: Zusatz der Kopf-Klemme gegen Plattform/Rampe und die Kamera (Abschnitt G2-RE2 unten) */
+static int s_rw_erw = 0;
+void re15_gr2_kk_erweitert(int an) { s_rw_erw = an; }
+static int gr2_rw_zusatz(const re15_actor_t *e, const re15_skel_pose_t *poses, int32_t *dx, int32_t *dz);
 static int gr2_kk_rechnen(const re15_actor_t *e, const re15_skel_pose_t *poses, int mit_kanister, int32_t *dx, int32_t *dz)
 {
     int32_t u[4] = { 0, 0, 0, 0 }, r[9], p[3];
@@ -2251,8 +2310,1586 @@ static int gr2_kk_rechnen(const re15_actor_t *e, const re15_skel_pose_t *poses, 
         gr2_kk_punkt(kp, u);
         gr2_kk_punkt(kf, u);
     }
+    for (int i = 0; i < 4; i++) if (!(s_kk_waende & (1 << i))) u[i] = 0;   /* NB5: Wand nicht im Bild (nur waehrend der Bahn der Belagerung) */
     *dx = u[0] - u[1]; *dz = u[2] - u[3];
+    if (mit_kanister && s_rw_erw && !re15_gr2_rw_alt()) {     /* G2-RE2 (c): Plattform/Rampe und Kamera */
+        int32_t bx = 0, bz = 0;
+        if (gr2_rw_zusatz(e, poses, &bx, &bz)) { *dx += bx; *dz += bz; }
+    }
     return *dx != 0 || *dz != 0;
+}
+/* Runde 41 Spur G2 (Punkt 7 "Hat der Aligator den Kanister bleibt es staendig an verschiedenen Stellen haengen", Haken): das STEUERZIEL mit dem Kanister im
+ * Maul. Befund (befund.log/gator_boss.log der Nutzer-Sitzung 2026-11-01 19:54, Marke 1 F735; Lauf k3_tragen_leon): das Boss-Modul legt seine Ziele fuer die
+ * WURZEL (Belagerungs-Hop (4450,-22600), Klemmflaeche 1600 vor den Aussenwaenden); mit dem Kanister quer im Maul ragen Kopf und Kanister ~4200 vor die Wurzel,
+ * die Kopf-Klemme (oben, PORT-WAHL G-E5) schiebt den Gator jedes Bild zurueck, die Lenkung schiebt ihn wieder hin: F636..F1208 stand er bei (3191,-22595)
+ * Gier 1, KOPF-KLEMME Ueberstand (-207,0) im Takt, 50 PUTZ-Stoesse, NOTFREI ohne Wirkung. Ursache = Ziel und Klemme widersprechen sich.
+ * Abhilfe: das Ziel selbst wird um den Ueberstand verschoben, den die Kopf-Klemme an ihm messen wuerde - dieselben Punkte (gr2_kk_rechnen: Hals/Kopf/
+ * Kiefer + beide Kanister-Enden) und dieselben Aussenwaende GR2_KK_*, die Punkte als Versatz zur Wurzel aus der Pose ohne Ueberblendung, gedreht auf die
+ * Ankunftsrichtung (Wurzel -> Ziel). Am verschobenen Ziel greift die Klemme nicht: der Gator kommt an, statt gegen die Wand zu druecken.
+ * Rueckgabe 1 = verschoben. */
+static int s_kk_ziel_alt = 0;                                 /* Pruefhaken der Riegel (Gegenprobe, kein Spielweg): 1 = Ziel wie vor Spur G2, 2 = wie G2 vor der Nachbesserung 1 */
+void re15_gr2_kk_ziel_alt_setzen(int an) { s_kk_ziel_alt = an; }
+int  re15_gr2_kk_ziel_alt(void) { return s_kk_ziel_alt; }
+static int gr2_kk_ziel_v1(const re15_actor_t *e, int32_t *tx, int32_t *tz)   /* Stand G2 vor der Nachbesserung 1 (Gegenprobe 2) */
+{
+    if (!e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7) return 0;
+    int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, e, -1, (uint32_t)e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    int32_t w[5][3], r[9], p[3], lok[5][2];
+    for (int k = 0; k < 3; k++) { gr2_part_welt(e, &poses[k_kk_bone[k]], r, p); w[k][0] = p[0]; w[k][1] = p[1]; w[k][2] = p[2]; }
+    gr2_part_welt(e, &poses[6], r, p);
+    const int32_t sk = gr2_scale(e);
+    const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+    for (int i = 0; i < 3; i++) {
+        w[3][i] = p[i] + (int32_t)(((int64_t)r[i*3] * l[0] + (int64_t)r[i*3+1] * l[1] + (int64_t)r[i*3+2] * l[2]) >> 12);
+        const int64_t ry = (int64_t)r[i*3] * s_kan.rel[1] + (int64_t)r[i*3+1] * s_kan.rel[4] + (int64_t)r[i*3+2] * s_kan.rel[7];
+        w[4][i] = w[3][i] + (int32_t)(((ry >> 12) * -2784) >> 12);
+    }
+    const int64_t c0 = re15_cos_q12((int)e->rot_y), s0 = re15_sin_q12((int)e->rot_y);
+    for (int k = 0; k < 5; k++) {                             /* Welt -> Gator-Rahmen: Umkehrung von x' = c x + s z, z' = -s x + c z */
+        const int64_t dx = (int64_t)w[k][0] - e->x, dz = (int64_t)w[k][2] - e->z;
+        lok[k][0] = (int32_t)((c0 * dx - s0 * dz) >> 12);
+        lok[k][1] = (int32_t)((s0 * dx + c0 * dz) >> 12);
+    }
+    const int64_t ax = (int64_t)*tx - e->x, az = (int64_t)*tz - e->z;
+    const int gier = (ax == 0 && az == 0) ? (int)(e->rot_y & 0xfff) : (((int)re15_atan2_q12((int32_t)az, (int32_t)ax) - 1024) & 0xfff);
+    const int64_t c = re15_cos_q12(gier), sn = re15_sin_q12(gier);
+    int verschoben = 0;
+    for (int it = 0; it < 2; it++) {                          /* 2 Durchgaenge: Ost/West und Nord/Sued koennen sich beide melden */
+        int32_t u[4] = { 0, 0, 0, 0 };
+        for (int k = 0; k < 5; k++) {
+            const int32_t q[3] = { *tx + (int32_t)((c * lok[k][0] + sn * lok[k][1]) >> 12), 0, *tz + (int32_t)((-sn * lok[k][0] + c * lok[k][1]) >> 12) };
+            gr2_kk_punkt(q, u);
+        }
+        const int32_t dx = u[0] - u[1], dz = u[2] - u[3];
+        if (!dx && !dz) break;
+        *tx += dx; *tz += dz; verschoben = 1;
+    }
+    return verschoben;
+}
+/* ==== Runde 41 Spur G2, Nachbesserung 1 (Abnahme 1 M1/M3): TRAG-LENKUNG =======================================================
+ * Befund Abnahme 1 (freies Spiel, gator_trag.log/gator_boss.log): Leon F7545-F7896 Wurzel (-3952,-10027), Ziel nach der G2-Verschiebung (-4001,-8549)
+ * = 1300-2000 noerdlich der Linie, an der die Kopf-Klemme haelt (Ueberstand (0,-185) je Paddel-Zyklus, Clip 1 Bild 0); Elza F6971-F6981 Wurzel
+ * (-636,-22565) steht (Takt (0,0)), Gier pendelt 3285/3381/3477 = Wende 0x60 hin und her um ein Ziel, das auf der Wurzel liegt.
+ * Ursachen: (1) die G2-Verschiebung drehte die Kopfpunkte auf die Richtung Wurzel -> UNVERSCHOBENES Ziel, geschwommen wird aber auf das verschobene
+ * (Leon: Ziel NW, verschoben nach N - Kopf in die Nordwand); (2) die Punkte kamen aus dem laufenden Bild, Clip 1 Bild 0 ragt weiter vor;
+ * (3) es gibt keinen Zustand "angekommen": am verschobenen Ziel steht er (Elza) oder drueckt weiter (Leon).
+ * RE2 hat keinen Wartezustand: Stufe 7 (Tragen) @0x80101b58-8c fuehrt nur die Kanister-Lokallage nach (`lw v1,56(s2) / addiu v0,zero,1750 /
+ * beq v1,v0 / ... jal 0x8001a1e0 (a2 = 100)`, `lw v1,60(s2) / addiu v0,zero,-210 / ... jal 0x8001a1e0 (a2 = 30)`), kein Zaehler; der Koerper schwimmt
+ * in Sub 1/2 weiter (Wurzelversatz Clip 0/1). Nur das Intro wartet (`lh v0,468(s0) / beq v0,zero` @0x80100854-5c).
+ * PORT-WAHL (Form):
+ *  - Kopfpunkte = konvexe Huelle von Hals/Kopf/Kiefer (Bones 5/6/7) und beiden Kanister-Enden ueber ALLE Bilder der Schwimm-Clips 0 und 1 (dieselben
+ *    Punkte wie die Kopf-Klemme gr2_kk_rechnen), im Gator-Rahmen; einmal je Anhaengen gerechnet.
+ *  - Wurzel-Kasten je Gier: Aussenwaende GR2_KK_* minus die Huelle, minus GR2_TR_RAND = GR2_KK_SCHRITT 340 (groesster Wurzelschritt je Bild: er kommt
+ *    hoechstens einen Schritt ueber das Ziel, bevor die Lenkung greift).
+ *  - Ziel auf der Strecke Wurzel -> Ziel abschneiden (gleiche Gier fuer die Rechnung und fuer das Schwimmen); liegt die Wurzel selbst ausserhalb des
+ *    Kastens ihrer Zielrichtung, das Ziel in den Kasten legen und die Richtung neu rechnen (3 Durchgaenge).
+ *  - Ist das abgeschnittene Ziel erreicht (< 800 = Spur-B-Erreicht-Radius, ETAPPEN-LATCH/Kanten-Pendel enemy_ai_boss_gator.c), schwimmt er weiter:
+ *    VORBEI-Etappe laengs der Wand, die das Ziel kuerzte, GR2_TR_ETAPPE = 4000 (= ein Schwimmzyklus Clip 0: 5990 x 2731/4096 = 3994), danach die naechste
+ *    in Gegenrichtung (Pendel vor dem Spieler); ist laengs kein Platz (< 1500), die andere Richtung, sonst von der Wand weg. Etappe gehalten, bis
+ *    erreicht (< 800) oder 150 Bilder um (= 5 s, Haltezeit wie die Spur-B-Etappen 120 + Wende).
+ * Gegenproben (Pruefhaken re15_gr2_kk_ziel_alt_setzen): 1 = Ziel wie vor Spur G2, 2 = Verschiebung wie G2 vor dieser Nachbesserung. */
+#define GR2_TR_RAND    340      /* = GR2_KK_SCHRITT */
+#define GR2_TR_ERREICHT 800
+#define GR2_TR_ETAPPE  4000
+#define GR2_TR_PLATZ   1500
+#define GR2_TR_HALTEN  150
+#define GR2_TR_PN      1024
+static struct { int ok; int32_t lokal[3]; int32_t rel[9]; int32_t sk; int n; int32_t h[96][2]; } s_th;   /* Huelle (Gator-Rahmen) */
+/* Runde 41 Spur G2-RE2: zweite Huelle fuer Plattform/Rampe/Kamera - Mesh der Parts 5/6/7 (Ecken des Part-Kastens der Scheitel, die Schnauze reicht bis
+ * 5644 vor die Wurzel, NB6 Messung 1) und Kanister-Zylinder r 267 (KANISTER40A0.MD1, Dossier B 2.5) an beiden Enden; die NB5-Huelle s_th (Bone-Ursprung) bleibt
+ * fuer die Aussenwaende (Gang/Wege wie NB5). */
+static struct { int n; int32_t h[256][2]; } s_th2;
+static void gr2_th_verwerfen(void) { s_th.ok = 0; }
+static int gr2_tr_huelle_pkt(const re15_actor_t *t, const re15_skel_pose_t *poses, int32_t sk, int32_t (*pk)[2], int cap);
+static int64_t gr2_kreuz(const int32_t o[2], const int32_t a[2], const int32_t b[2])
+{
+    return (int64_t)(a[0] - o[0]) * (b[1] - o[1]) - (int64_t)(a[1] - o[1]) * (b[0] - o[0]);
+}
+static int gr2_pkt_cmp(const void *x, const void *y)
+{
+    const int32_t *a = (const int32_t *)x, *b = (const int32_t *)y;
+    return a[0] != b[0] ? (a[0] < b[0] ? -1 : 1) : (a[1] < b[1] ? -1 : a[1] > b[1]);
+}
+/* Runde 41 Spur G2-RE2 (Leistung, Auftrag Punkt 7): gemessen (Riegel re2, G2_RE2_ZEIT_ZEIGE) kostete jeder Neubau der Huelle ~7 ms (200 Posen der Clips
+ * 0/1), und waehrend der Kanister in den Sitz dreht (Stufe 7, rel aendert sich) baute sie jedes Bild neu (NB5: Takt bis 9,9 ms). Die Posen haengen nicht vom
+ * Kanister ab: Teile 5/6/7 je Bild einmal je Bank/Skala in s_thp (verteilt, GR2_THP_JE_TAKT Bilder je Takt), danach rechnet der Neubau nur Punkte. Vor dem
+ * Ende des Vorrats keine Huelle (Kuerzung aus, wie vor Stufe 7). Mit dem Pruefhaken NB5 der alte Weg (bitgleich). */
+#define GR2_THP_JE_TAKT 8
+static struct { const void *bk; int32_t sk; int n, fertig; int16_t clip[256], bild[256]; int32_t r[256][3][9], p[256][3][3]; } s_thp;
+static int gr2_thp_vorrat(const re15_actor_t *e, re15_enemy_bank_t *bk, int32_t sk)
+{
+    if (s_thp.bk != bk || s_thp.sk != sk) { s_thp.bk = bk; s_thp.sk = sk; s_thp.n = 0; s_thp.fertig = 0; }
+    if (s_thp.fertig) return 1;
+    re15_actor_t t = *e; t.x = 0; t.y = 0; t.z = 0; t.rot_y = 0;
+    int idx = 0, neu = 0;
+    for (int c = 0; c <= 1 && c < bk->anim.clip_count; c++)
+        for (int f = 0; f < bk->anim.clips[c].frame_count && idx < 256; f++, idx++) {
+            if (idx < s_thp.n) continue;
+            if (neu >= GR2_THP_JE_TAKT) return 0;
+            t.motion = (int16_t)c; t.anim_frame = f;
+            const int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, &t, c, (uint32_t)f);
+            re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+            void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+            const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+            g_anim_pose_actor = save;
+            s_thp.clip[idx] = (int16_t)(rv == 0 ? c : -1); s_thp.bild[idx] = (int16_t)f;
+            if (rv == 0) for (int k = 0; k < 3; k++) gr2_part_welt(&t, &poses[5 + k], s_thp.r[idx][k], s_thp.p[idx][k]);
+            s_thp.n = idx + 1; neu++;
+        }
+    s_thp.fertig = 1;
+    return 1;
+}
+static int gr2_tr_huelle_vorrat(const re15_actor_t *e);
+static int gr2_tr_huelle(const re15_actor_t *e)
+{
+    const int32_t sk = gr2_scale(e);
+    if (s_th.ok && s_th.sk == sk && !memcmp(s_th.lokal, s_kan.lokal, sizeof s_th.lokal) && !memcmp(s_th.rel, s_kan.rel, sizeof s_th.rel)) return s_th.n > 2;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7) return 0;
+    if (!re15_gr2_rw_alt()) return gr2_tr_huelle_vorrat(e);
+    static int32_t pk[GR2_TR_PN][2];
+    static int32_t pk2[8192][2]; int n2 = 0;                /* G2-RE2: Punkte der zweiten Huelle (s_th2) */
+    int n = 0;
+    re15_actor_t t = *e;
+    t.x = 0; t.y = 0; t.z = 0; t.rot_y = 0;
+    for (int c = 0; c <= 1 && c < bk->anim.clip_count; c++) {
+        for (int f = 0; f < bk->anim.clips[c].frame_count && n + 5 <= GR2_TR_PN; f++) {
+            t.motion = (int16_t)c; t.anim_frame = f;
+            const int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, &t, c, (uint32_t)f);
+            re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+            void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+            const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+            g_anim_pose_actor = save;
+            if (rv != 0) continue;
+            n2 += gr2_tr_huelle_pkt(&t, poses, sk, pk2 + n2, 8192 - n2);
+            int32_t r[9], p[3];
+            for (int k = 0; k < 3; k++) { gr2_part_welt(&t, &poses[k_kk_bone[k]], r, p); pk[n][0] = p[0]; pk[n][1] = p[2]; n++; }
+            gr2_part_welt(&t, &poses[6], r, p);
+            const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+            int32_t kp[3], kf2[3];
+            for (int i = 0; i < 3; i++) {
+                kp[i] = p[i] + (int32_t)(((int64_t)r[i*3] * l[0] + (int64_t)r[i*3+1] * l[1] + (int64_t)r[i*3+2] * l[2]) >> 12);
+                const int64_t ry = (int64_t)r[i*3] * s_kan.rel[1] + (int64_t)r[i*3+1] * s_kan.rel[4] + (int64_t)r[i*3+2] * s_kan.rel[7];
+                kf2[i] = kp[i] + (int32_t)(((ry >> 12) * -2784) >> 12);   /* Kanister-Modellhoehe 2784 wie gr2_kk_rechnen */
+            }
+            pk[n][0] = kp[0]; pk[n][1] = kp[2]; n++;
+            pk[n][0] = kf2[0]; pk[n][1] = kf2[2]; n++;
+        }
+    }
+    qsort(pk, (size_t)n, sizeof pk[0], gr2_pkt_cmp);   /* Andrew monotone chain */
+    int m = 0;
+    static int32_t hl[2 * GR2_TR_PN][2];
+    for (int i = 0; i < n; i++) {
+        while (m >= 2 && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--;
+        hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++;
+    }
+    for (int i = n - 2, u = m + 1; i >= 0; i--) {
+        while (m >= u && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--;
+        hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++;
+    }
+    if (m > 1) m--;
+    if (m > 96) m = 96;
+    memcpy(s_th.h, hl, (size_t)m * sizeof hl[0]);
+    s_th.n = m; s_th.ok = 1; s_th.sk = sk;
+    {   /* G2-RE2: zweite Huelle (gleiche Kette) */
+        qsort(pk2, (size_t)n2, sizeof pk2[0], gr2_pkt_cmp);
+        int m2 = 0;
+        static int32_t hl2[2 * 8192][2];
+        for (int i = 0; i < n2; i++) {
+            while (m2 >= 2 && gr2_kreuz(hl2[m2-2], hl2[m2-1], pk2[i]) <= 0) m2--;
+            hl2[m2][0] = pk2[i][0]; hl2[m2][1] = pk2[i][1]; m2++;
+        }
+        for (int i = n2 - 2, u = m2 + 1; i >= 0; i--) {
+            while (m2 >= u && gr2_kreuz(hl2[m2-2], hl2[m2-1], pk2[i]) <= 0) m2--;
+            hl2[m2][0] = pk2[i][0]; hl2[m2][1] = pk2[i][1]; m2++;
+        }
+        if (m2 > 1) m2--;
+        if (m2 > 256) m2 = 256;
+        memcpy(s_th2.h, hl2, (size_t)m2 * sizeof hl2[0]); s_th2.n = m2;
+    }
+    memcpy(s_th.lokal, s_kan.lokal, sizeof s_th.lokal); memcpy(s_th.rel, s_kan.rel, sizeof s_th.rel);
+    re15_gr2_log("TRAG-HUELLE F%u: %d Punkte aus %d (Clips 0/1, Bones 5/6/7 + Kanister-Enden)", (unsigned)g_engine.frame_count, m, n);
+    return m > 2;
+}
+/* G2-RE2: Huellen s_th / s_th2 aus dem Posen-Vorrat (gleiche Punkte wie gr2_tr_huelle + gr2_tr_huelle_pkt) */
+static void gr2_kette(int32_t (*pk)[2], int n, int32_t (*hl)[2], int32_t (*out)[2], int cap, int *m_aus)
+{
+    qsort(pk, (size_t)n, sizeof pk[0], gr2_pkt_cmp);
+    int m = 0;
+    for (int i = 0; i < n; i++) { while (m >= 2 && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--; hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++; }
+    for (int i = n - 2, u = m + 1; i >= 0; i--) { while (m >= u && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--; hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++; }
+    if (m > 1) m--;
+    if (m > cap) m = cap;
+    memcpy(out, hl, (size_t)m * sizeof hl[0]);
+    *m_aus = m;
+}
+static void gr2_rw_box_bauen(const re15_enemy_bank_t *bk);
+static int gr2_rw_box_ecken(int part, int32_t sk, int32_t (*v)[3]);
+static int gr2_rw_kan_pkt(const int32_t kp[3], const int32_t kr[9], int32_t (*out)[3], int max);
+static int gr2_tr_huelle_vorrat(const re15_actor_t *e)
+{
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    const int32_t sk = gr2_scale(e);
+    if (!bk || !gr2_thp_vorrat(e, bk, sk)) return 0;
+    gr2_rw_box_bauen(bk);
+    static int32_t pk[GR2_TR_PN][2], pk2[8192][2], hl[2 * 8192][2];
+    int n = 0, n2 = 0;
+    const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+    for (int i = 0; i < s_thp.n; i++) {
+        if (s_thp.clip[i] < 0 || n + 5 > GR2_TR_PN) continue;
+        for (int k = 0; k < 3; k++) { pk[n][0] = s_thp.p[i][k][0]; pk[n][1] = s_thp.p[i][k][2]; n++; }
+        const int32_t *r = s_thp.r[i][1], *p = s_thp.p[i][1];   /* Part 6 */
+        int32_t kp[3], kf2[3], kr[9];
+        for (int a = 0; a < 3; a++) {
+            kp[a] = p[a] + (int32_t)(((int64_t)r[a*3] * l[0] + (int64_t)r[a*3+1] * l[1] + (int64_t)r[a*3+2] * l[2]) >> 12);
+            const int64_t ry = (int64_t)r[a*3] * s_kan.rel[1] + (int64_t)r[a*3+1] * s_kan.rel[4] + (int64_t)r[a*3+2] * s_kan.rel[7];
+            kf2[a] = kp[a] + (int32_t)(((ry >> 12) * -2784) >> 12);
+            for (int c = 0; c < 3; c++) kr[a*3+c] = (int32_t)(((int64_t)r[a*3] * s_kan.rel[c] + (int64_t)r[a*3+1] * s_kan.rel[3+c] + (int64_t)r[a*3+2] * s_kan.rel[6+c]) >> 12);
+        }
+        if (s_v4_alt) { pk[n][0] = kp[0]; pk[n][1] = kp[2]; n++;
+                         pk[n][0] = kf2[0]; pk[n][1] = kf2[2]; n++; }   /* Vorschlag 4: die Huelle (Notloesung freie Stelle) ohne den Kanister */
+        /* zweite Huelle: Bone-Ursprung, Ecken der Part-Kaesten, Kanister-Zylinder */
+        for (int k = 0; k < 3 && n2 < 8192; k++) {
+            const int part = 5 + k; const int32_t *rr = s_thp.r[i][k], *pp = s_thp.p[i][k];
+            pk2[n2][0] = pp[0]; pk2[n2][1] = pp[2]; n2++;
+            int32_t ek[8][3];
+            if (!gr2_rw_box_ecken(part, sk, ek)) continue;
+            for (int c = 0; c < 8 && n2 < 8192; c++) {
+                const int32_t *v = ek[c];
+                pk2[n2][0] = pp[0] + (int32_t)(((int64_t)rr[0] * v[0] + (int64_t)rr[1] * v[1] + (int64_t)rr[2] * v[2]) >> 12);
+                pk2[n2][1] = pp[2] + (int32_t)(((int64_t)rr[6] * v[0] + (int64_t)rr[7] * v[1] + (int64_t)rr[8] * v[2]) >> 12); n2++;
+            }
+        }
+        int32_t kz[48][3]; const int m = s_v4_alt ? gr2_rw_kan_pkt(kp, kr, kz, 48) : 0;
+        for (int j = 0; j < m && n2 < 8192; j++) { pk2[n2][0] = kz[j][0]; pk2[n2][1] = kz[j][2]; n2++; }
+    }
+    int m = 0, m2 = 0;
+    gr2_kette(pk, n, hl, s_th.h, 96, &m);
+    gr2_kette(pk2, n2, hl, s_th2.h, 256, &m2);
+    s_th.n = m; s_th.ok = 1; s_th.sk = sk; s_th2.n = m2;
+    memcpy(s_th.lokal, s_kan.lokal, sizeof s_th.lokal); memcpy(s_th.rel, s_kan.rel, sizeof s_th.rel);
+    return m > 2;
+}
+/* Messhaken NB5 (M2a): Ausdehnung von Hals/Kopf/Kiefer (a[0..3]) und Kanister-Enden (a[4..7]) im Gator-Rahmen (Gier 0: x = vorn, z = links)
+ * ueber alle Bilder eines Clips: min x, max x, min z, max z. 0 = keine Bank/kein Kanister. */
+int re15_gr2_huelle_ausdehnung(const re15_actor_t *e, int clip, int32_t a[8])
+{
+    re15_enemy_bank_t *bk = e ? gr2_bank(e) : NULL;
+    if (!bk || bk->skel.bone_count <= 7 || !s_kan.aktiv || !s_kan.angehaengt || clip < 0 || clip >= bk->anim.clip_count) return 0;
+    const int32_t sk = gr2_scale(e);
+    re15_actor_t t = *e; t.x = 0; t.y = 0; t.z = 0; t.rot_y = 0;
+    for (int i = 0; i < 8; i++) a[i] = (i & 1) ? -1000000 : 1000000;
+    for (int f = 0; f < bk->anim.clips[clip].frame_count; f++) {
+        t.motion = (int16_t)clip; t.anim_frame = f;
+        const int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, &t, clip, (uint32_t)f);
+        re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+        void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+        const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+        g_anim_pose_actor = save;
+        if (rv != 0) continue;
+        int32_t r[9], p[3], q[5][3];
+        for (int k = 0; k < 3; k++) { gr2_part_welt(&t, &poses[k_kk_bone[k]], r, p); q[k][0] = p[0]; q[k][2] = p[2]; }
+        gr2_part_welt(&t, &poses[6], r, p);
+        const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+        for (int i = 0; i < 3; i++) {
+            q[3][i] = p[i] + (int32_t)(((int64_t)r[i*3] * l[0] + (int64_t)r[i*3+1] * l[1] + (int64_t)r[i*3+2] * l[2]) >> 12);
+            const int64_t ry = (int64_t)r[i*3] * s_kan.rel[1] + (int64_t)r[i*3+1] * s_kan.rel[4] + (int64_t)r[i*3+2] * s_kan.rel[7];
+            q[4][i] = q[3][i] + (int32_t)(((ry >> 12) * -2784) >> 12);
+        }
+        for (int k = 0; k < 5; k++) {
+            int32_t *b = a + (k < 3 ? 0 : 4);
+            if (q[k][0] < b[0]) b[0] = q[k][0];
+            if (q[k][0] > b[1]) b[1] = q[k][0];
+            if (q[k][2] < b[2]) b[2] = q[k][2];
+            if (q[k][2] > b[3]) b[3] = q[k][2];
+        }
+    }
+    return 1;
+}
+/* Wurzel-Kasten fuer die Gier: x in [k0,k1], z in [k2,k3] (Lokal -> Welt wie re15_gr2_kk_ziel v1: dx = c l0 + s l1, dz = -s l0 + c l1) */
+static void gr2_tr_kasten(int gier, int32_t k[4])
+{
+    const int64_t c = re15_cos_q12(gier), sn = re15_sin_q12(gier);
+    int32_t x0 = 0, x1 = 0, z0 = 0, z1 = 0;
+    for (int i = 0; i < s_th.n; i++) {
+        const int32_t ox = (int32_t)((c * s_th.h[i][0] + sn * s_th.h[i][1]) >> 12), oz = (int32_t)((-sn * s_th.h[i][0] + c * s_th.h[i][1]) >> 12);
+        if (!i || ox < x0) x0 = ox;
+        if (!i || ox > x1) x1 = ox;
+        if (!i || oz < z0) z0 = oz;
+        if (!i || oz > z1) z1 = oz;
+    }
+    k[0] = GR2_KK_X0 - x0 + GR2_TR_RAND; k[1] = GR2_KK_X1 - x1 - GR2_TR_RAND;
+    k[2] = GR2_KK_Z0 - z0 + GR2_TR_RAND; k[3] = GR2_KK_Z1 - z1 - GR2_TR_RAND;
+    if (k[0] > k[1]) k[0] = k[1] = (k[0] + k[1]) / 2;
+    if (k[2] > k[3]) k[2] = k[3] = (k[2] + k[3]) / 2;
+}
+int re15_gr2_tr_kasten_mess(const re15_actor_t *e, int gier, int32_t k[4])   /* Messhaken NB5: Wurzel-Kasten der Trag-Lenkung fuer diese Gier (0 = keine Huelle) */
+{
+    if (!e || !s_kan.aktiv || !s_kan.angehaengt || !gr2_tr_huelle(e)) return 0;
+    gr2_tr_kasten(gier & 0xfff, k);
+    return 1;
+}
+static int gr2_tr_gier(const re15_actor_t *e, int32_t tx, int32_t tz)
+{
+    if (tx == e->x && tz == e->z) return (int)(e->rot_y & 0xfff);
+    return ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 1024) & 0xfff;
+}
+/* Ziel auf die Strecke kuerzen; Rueckgabe = Seiten, die gekuerzt haben (1 West, 2 Ost, 4 Sued, 8 Nord), 0 = Ziel passt */
+static int gr2_tr_fit_wand(const re15_actor_t *e, int32_t *tx, int32_t *tz);
+static int gr2_rw_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz);
+static int gr2_tr_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    int seiten = gr2_tr_fit_wand(e, tx, tz);
+    if (!re15_gr2_rw_alt()) seiten |= gr2_rw_fit(e, tx, tz);   /* G2-RE2 (c): auch Plattform/Rampe und Kamera (Abschnitt G2-RE2) */
+    return seiten;
+}
+static int gr2_tr_fit_wand(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    int seiten = 0;
+    for (int it = 0; it < 3; it++) {
+        int32_t k[4]; gr2_tr_kasten(gr2_tr_gier(e, *tx, *tz), k);
+        const int64_t dx = (int64_t)*tx - e->x, dz = (int64_t)*tz - e->z;
+        if (e->x >= k[0] && e->x <= k[1] && e->z >= k[2] && e->z <= k[3]) {
+            int64_t t = 4096; int s = 0;                       /* Liang-Barsky, t in Q12 */
+            if (dx > 0 && e->x + dx > k[1]) { const int64_t u = ((int64_t)(k[1] - e->x) << 12) / dx; if (u < t) { t = u; s = 2; } }
+            if (dx < 0 && e->x + dx < k[0]) { const int64_t u = ((int64_t)(k[0] - e->x) << 12) / dx; if (u < t) { t = u; s = 1; } }
+            if (dz > 0 && e->z + dz > k[3]) { const int64_t u = ((int64_t)(k[3] - e->z) << 12) / dz; if (u < t) { t = u; s = 8; } }
+            if (dz < 0 && e->z + dz < k[2]) { const int64_t u = ((int64_t)(k[2] - e->z) << 12) / dz; if (u < t) { t = u; s = 4; } }
+            if (s) { *tx = e->x + (int32_t)((dx * t) >> 12); *tz = e->z + (int32_t)((dz * t) >> 12); seiten |= s; }
+            return seiten;
+        }
+        const int32_t nx = *tx < k[0] ? k[0] : *tx > k[1] ? k[1] : *tx, nz = *tz < k[2] ? k[2] : *tz > k[3] ? k[3] : *tz;
+        if (nx != *tx) seiten |= nx > *tx ? 1 : 2;
+        if (nz != *tz) seiten |= nz > *tz ? 4 : 8;
+        if (nx == *tx && nz == *tz) return seiten;
+        *tx = nx; *tz = nz;
+    }
+    return seiten;
+}
+int re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    if (s_kk_ziel_alt == 1 || !e || !gr2_kan_zaehlt()) return 0;   /* G2-RE2 NB2 Vorschlag 4: Steuerziel wie ohne Kanister */
+    if (s_kk_ziel_alt == 2) return gr2_kk_ziel_v1(e, tx, tz);
+    if (s_kan.stufe != 7 || !gr2_tr_huelle(e)) return 0;   /* erst getragen (Stufe 7): in Stufe 3-6 wandert die Lokallage noch vom Fenster ins Maul */
+    return gr2_tr_fit(e, tx, tz) != 0;
+}
+static struct { int8_t an, dir; int16_t t; int32_t qx, qz; int8_t kreis, kdir, dash; int32_t cx, cz, sx, sz, d0; } s_tr[RE15_ACTOR_MAX];
+static int s_tr_ohne_annaeherung = 0;   /* Messzeile: Etappen, die ohne Annaeherung endeten */
+int re15_gr2_trag_ohne_annaeherung(void) { return s_tr_ohne_annaeherung; }
+/* ==== Runde 41 Spur G2 Nachbesserung 2 (Abnahme 2 M1'/M3'): UMKREISEN statt Pendel, Zonen-Dash nur einmal, Ziele ausserhalb der Bloecke ================
+ * Befund Abnahme 2 (G2_abnahme_2.md Abschnitt 2/4): an Spielerlagen, die der Kopf mit dem Kanister nicht erreicht, liefen deterministische Schleifen -
+ * Leiter-Ecke `TRAG VORBEI ... Etappe laengs z` (18 x) -> ueber die Zonenlinie -> RE2-Zonen-Dash Clip 2/3 (21 x, je 3,9 s) -> zurueck; NW-Ecke/Ost-Nische
+ * dasselbe (57 % Dash); Nordbecken 75 Pendel-Stopps (Wende in Clip 0); Rampe West: Etappenziel (1673,-11900) 934 hinter der Plattform-Nordkante, 130 Bilder
+ * paddelnd an (1673,-10966).
+ * RE2 (EM23_OVL_0000.BIN): kein Ziel, keine Lenkung - Sub 1 schwimmt `jal 0x8001a330` (Clip 0, Blend 32) @0x80100c34-40 weiter; der Dash (Routine 0x301 =
+ * `addiu v0,zero,769` @0x801009ac/@0x801009f4) kommt nur mit dem Zonenbyte +0x21A, und das wird nur hochgezaehlt (`sb v0,538(s0)` mit 1 @0x801009a8 bei x <
+ * -17877, mit 2 @0x801009ec bei z < -7322) - jeder Dash hoechstens einmal; die Spurt-Sperre +0x238 (`lbu v0,568(s0) / bne` @0x80100b5c-64) haelt nur den Spurt Sub 1 -> Sub 2, nicht den Biss (T1 @0x801012fc fragt sie nicht; NB4 Runde 3).
+ * PORT-WAHL: (1) mit dem Kanister kein Zonen-Dash (die RE2-Zonenfolge ist einmalig, der Port-Dash steht 3,9 s auf der Stelle);
+ * (2) ist das Ziel gekuerzt und die Wurzel in 2 R des gekuerzten Ziels, umkreist er einen Mittelpunkt R von dort weg von der kuerzenden Wand (Karotte 45 Grad
+ * voraus auf dem Kreis, Drehsinn gehalten) - ohne Wende, die Wurzel kommt in 30 Bildern nie unter 300 voran; R = GR2_TR_KREIS 2000 = Wenderadius beim Paddeln
+ * (Clip 1: 5798/26 x 2731/4096 = 149 je Bild, Slew 0x30 = 0,0736 rad je Bild -> 2025); vorbei, sobald das Ziel wieder passt oder der Spieler weiter als 2 R
+ * vom Mittelpunkt ist; (3) jedes Ziel der Trag-Lenkung liegt ausserhalb der um den Wurzel-Rand (hit_radius_min + 60 + 120 = Slab-Ausgang der Spur B)
+ * aufgeblasenen Bloecke Plattform/Rampe (SCA ROOM2090, GB_PLAT_X0.. / GB_RAMP_X0..). */
+#define GR2_TR_KREIS   2000
+#define GR2_PLAT_X0    (-1700)
+#define GR2_PLAT_X1    1850
+#define GR2_PLAT_Z0    (-20000)
+#define GR2_PLAT_Z1    (-12450)
+#define GR2_RAMP_X0    1850
+#define GR2_RAMP_X1    7200
+#define GR2_RAMP_Z0    (-18100)
+#define GR2_RAMP_Z1    (-14500)
+static int gr2_tr_im_block(int32_t x, int32_t z, int32_t m)
+{
+    return (x > GR2_PLAT_X0 - m && x < GR2_PLAT_X1 + m && z > GR2_PLAT_Z0 - m && z < GR2_PLAT_Z1 + m)
+        || (x > GR2_RAMP_X0 - m && x < GR2_RAMP_X1 + m && z > GR2_RAMP_Z0 - m && z < GR2_RAMP_Z1 + m);
+}
+static void gr2_tr_frei_r(const re15_actor_t *e, int32_t *x, int32_t *z, int32_t extra);
+static void gr2_tr_frei(const re15_actor_t *e, int32_t *x, int32_t *z) { gr2_tr_frei_r(e, x, z, 0); }
+static void gr2_tr_frei_r(const re15_actor_t *e, int32_t *x, int32_t *z, int32_t extra)
+{
+    const int32_t m = (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60 + 120 + extra;
+    if (!gr2_tr_im_block(*x, *z, m)) return;
+    int32_t bx = *x, bz = *z; int64_t bd = -1;
+    const int32_t kx[4] = { GR2_PLAT_X0 - m, GR2_PLAT_X1 + m, GR2_RAMP_X0 - m, GR2_RAMP_X1 + m };
+    const int32_t kz[4] = { GR2_PLAT_Z0 - m, GR2_PLAT_Z1 + m, GR2_RAMP_Z0 - m, GR2_RAMP_Z1 + m };
+    for (int i = 0; i < 25; i++) {                         /* NB3: auch Ecken (x und z verschoben) - an der Fuge Plattform/Rampe passt keine Achse allein */
+        const int32_t qx = (i % 5) ? kx[i % 5 - 1] : *x, qz = (i / 5) ? kz[i / 5 - 1] : *z;
+        if (qx < GR2_KK_X0 + 1600 || qx > GR2_KK_X1 - 1600 || qz < GR2_KK_Z0 + 1600 || qz > GR2_KK_Z1 - 1600 || gr2_tr_im_block(qx, qz, m)) continue;
+        const int64_t d = (int64_t)(qx - *x) * (qx - *x) + (int64_t)(qz - *z) * (qz - *z);
+        if (bd < 0 || d < bd) { bd = d; bx = qx; bz = qz; }
+    }
+    *x = bx; *z = bz;
+}
+/* ==== Runde 41 Spur G2-RE2 (Neuaufbau ab NB5 bc5fb7c9c): KOPF UND KANISTER NICHT IN RAMPE/PLATTFORM, NICHT VOR DIE LINSE ===============================
+ * Befund Abnahme 4 (29cb53610, M3): Kopf/Kanister in 24 % der Bilder im Grundriss von Rampe/Plattform unter dem Deck und in 20 % hinter der Kameraebene - die
+ * NB5-Kopf-Klemme und die NB5-Zielkuerzung pruefen nur die Aussenwaende. RE2 hat dafuer nichts (Korridor ohne Insel, Root @0x80100190-3a4 ohne Wandklemme).
+ * PORT-WAHL (Nutzer-Auftrag 2026-11-03 Punkt 4c; Grenze 2500 = die Grenze von r41/gatorfix a14ff425a/NB9 "Kopf/Kanister >= 2500 vor der Figur-Kamera"):
+ *  - Punkte = die Mesh-Scheitel der Parts 5/6/7 (Hals, Kopf, Kiefer) der GEZEICHNETEN Pose und der Kanister-Zylinder (Achse Anfang/Mitte/Ende, Ring r 267 in
+ *    8 Richtungen + waagerechtes Achteck; KANISTER40A0.MD1 r 267 x 2784, Dossier B 2.5) - dieselben Punkte wie r41/gatorfix re15_gr2_teile_deck_tiefe;
+ *  - kein Punkt im Grundriss von Plattform (SCA [4]/[7]) oder Rampe (SCA [5]) + GR2_RW_RAND - auch nicht ueber dem Deck: Abnahme 4 sah "Schnauze und Kanister
+ *    auf der Rampe vor den Fuessen der Figur" (gemessen Riegel re2: mit der Deck-Ausnahme Drehen 11,8 %, ohne 4,8 %) - und jeder Punkt
+ *    mindestens GR2_RW_KAM_NAH tief vor der laufenden Kamera g_scd.cam_id (Bildtiefe vz wie der Zeichner, re15_camera_build_view);
+ *  - Klemme: wie die NB5-Kopf-Klemme den ganzen Alligator verschieben (Block: kuerzester Ausgang ueber eine Kante; Kamera: waagerecht in Blickrichtung), je Bild
+ *    hoechstens GR2_KK_SCHRITT (re15_gr2_kopf_klemme); nicht in der Ueberquerung (dort traegt der Hub den Koerper ueber das Deck) und nicht untergetaucht;
+ *  - Zielkuerzung: das Steuerziel auf der Strecke Wurzel -> Ziel so weit kuerzen, dass die Huelle s_th2 (Schwimm-Clips 0/1) mit der Ankunfts-Gier frei bleibt -
+ *    sonst draengte die Lenkung gegen die Klemme (= das NB5-Festdruecken). */
+#define GR2_RW_DECK      (-1800)   /* Deck Plattform/Rampe = Stockwerk 1 (B10 @0x8010e33c-360) */
+#define GR2_RW_RAND        100     /* PORT-WAHL: Abstand Punkte - Block (= r41/gatorfix GA_RAND) */
+#define GR2_RW_KAM_NAH    2500     /* PORT-WAHL (Auftrag Punkt 4c): Kopf/Kanister mindestens 2500 vor der Kamera */
+#define GR2_RW_SCHWIMM_Y (-1200)   /* Schwimmhoehe GB_WATER_Y (0x23-KI INIT @0x8010c65c) */
+#define GR2_RW_KOERPER_OBEN 1793   /* Schwimm-Pose: oberster Scheitel 1793 ueber der Wurzel (gemessen r41/gatorfix NB7, Huelle y -1793..146) */
+#define GR2_RW_PN          640
+static const int32_t k_rw_bl[2][4] = { { GR2_PLAT_X0, GR2_PLAT_X1, GR2_PLAT_Z0, GR2_PLAT_Z1 }, { GR2_RAMP_X0, GR2_RAMP_X1, GR2_RAMP_Z0, GR2_RAMP_Z1 } };
+static struct { int ok, cam; re15_camera_view_t v; } s_rw_kam;
+static const re15_camera_view_t *gr2_rw_view(int cam)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cam < 0 || cam >= g_room_rdt.cut_count) return NULL;
+    if (!s_rw_kam.ok || s_rw_kam.cam != cam) {
+        if (re15_camera_build_view(&g_room_rdt.cuts[cam], &s_rw_kam.v) != 0) { s_rw_kam.ok = 0; return NULL; }
+        s_rw_kam.ok = 1; s_rw_kam.cam = cam;
+    }
+    return &s_rw_kam.v;
+}
+void re15_gr2_rw_kamera_neu(void) { s_rw_kam.ok = 0; }   /* Raumwechsel: Kamera-Cache verwerfen */
+static int32_t gr2_rw_vz(const re15_camera_view_t *v, int32_t x, int32_t y, int32_t z)
+{
+    return (int32_t)(((int64_t)v->rot[6] * x + (int64_t)v->rot[7] * y + (int64_t)v->rot[8] * z) >> 12) + v->trans[2];
+}
+int32_t re15_gr2_kamera_tiefe(int cam, const int32_t p[3])
+{
+    const re15_camera_view_t *v = gr2_rw_view(cam);
+    return v ? gr2_rw_vz(v, p[0], p[1], p[2]) : (1 << 30);
+}
+/* Kasten der Mesh-Scheitel je Part im Part-Rahmen (ungeskaliert), einmal je Bank */
+static struct { const void *bk; int ok[8]; int32_t lo[8][3], hi[8][3]; } s_rw_box;
+static void gr2_rw_box_bauen(const re15_enemy_bank_t *bk)
+{
+    if (s_rw_box.bk == bk) return;
+    memset(&s_rw_box, 0, sizeof s_rw_box); s_rw_box.bk = bk;
+    for (int part = 5; part <= 7; part++) {
+        if (part >= bk->md1.mesh_count) continue;
+        const re15_md1_mesh_t *ms = &bk->md1.meshes[part];
+        for (int pass = 0; pass < 2; pass++) {
+            const int nv = pass ? ms->quad_vertex_count : ms->tri_vertex_count;
+            for (int i = 0; i < nv; i++) {
+                const re15_md1_vertex_t *vv = pass ? &ms->quad_vertices[i] : &ms->tri_vertices[i];
+                const int32_t q[3] = { vv->x, vv->y, vv->z };
+                for (int k = 0; k < 3; k++) {
+                    if (!s_rw_box.ok[part] || q[k] < s_rw_box.lo[part][k]) s_rw_box.lo[part][k] = q[k];
+                    if (!s_rw_box.ok[part] || q[k] > s_rw_box.hi[part][k]) s_rw_box.hi[part][k] = q[k];
+                }
+                s_rw_box.ok[part] = 1;
+            }
+        }
+    }
+}
+static int gr2_rw_box_ecken(int part, int32_t sk, int32_t (*v)[3])   /* 8 Ecken des Part-Kastens (Part-Rahmen, x Skala) */
+{
+    if (part < 0 || part >= 8 || !s_rw_box.ok[part]) return 0;
+    for (int c = 0; c < 8; c++) {
+        v[c][0] = q12mul((c & 1) ? s_rw_box.hi[part][0] : s_rw_box.lo[part][0], sk);
+        v[c][1] = q12mul((c & 2) ? s_rw_box.hi[part][1] : s_rw_box.lo[part][1], sk);
+        v[c][2] = q12mul((c & 4) ? s_rw_box.hi[part][2] : s_rw_box.lo[part][2], sk);
+    }
+    return 1;
+}
+/* Kanister an Part 6 der Pose (wie gr2_kan_folgen): Lage kp = p6 + R6 x Skala x lokal, Drehung kr = R6 x rel */
+static int gr2_rw_kanister(const re15_actor_t *e, const re15_skel_pose_t *ps, int32_t kp[3], int32_t kr[9])
+{
+    if (!s_kan.aktiv || !s_kan.angehaengt || s_rw_ohne_kan) return 0;
+    int32_t r6[9], p6[3]; gr2_part_welt(e, &ps[6], r6, p6);
+    const int32_t sk = gr2_scale(e);
+    const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+    for (int r = 0; r < 3; r++) {
+        kp[r] = p6[r] + (int32_t)(((int64_t)r6[r*3] * l[0] + (int64_t)r6[r*3+1] * l[1] + (int64_t)r6[r*3+2] * l[2]) >> 12);
+        for (int c = 0; c < 3; c++)
+            kr[r*3+c] = (int32_t)(((int64_t)r6[r*3] * s_kan.rel[c] + (int64_t)r6[r*3+1] * s_kan.rel[3+c] + (int64_t)r6[r*3+2] * s_kan.rel[6+c]) >> 12);
+    }
+    return 1;
+}
+/* Punkte des Kanister-Zylinders (Achse 0 / -1392 / -2784, Ring r 267 in 8 Richtungen + waagerechtes Achteck) */
+static int gr2_rw_kan_pkt(const int32_t kp[3], const int32_t kr[9], int32_t (*out)[3], int max)
+{
+    int n = 0;
+    for (int t = 0; t <= 2; t++) {
+        const int32_t a = -1392 * t;
+        const int32_t cx = kp[0] + (int32_t)(((int64_t)kr[1] * a) >> 12), cy = kp[1] + (int32_t)(((int64_t)kr[4] * a) >> 12), cz = kp[2] + (int32_t)(((int64_t)kr[7] * a) >> 12);
+        for (int o = 0; o < 8 && n + 2 <= max; o++) {
+            const int32_t ux = (int32_t)(((int64_t)re15_cos_q12(o * 512) * 267) >> 12), uz = (int32_t)(((int64_t)re15_sin_q12(o * 512) * 267) >> 12);
+            out[n][0] = cx + (int32_t)(((int64_t)kr[0] * ux + (int64_t)kr[2] * uz) >> 12);
+            out[n][1] = cy + (int32_t)(((int64_t)kr[3] * ux + (int64_t)kr[5] * uz) >> 12);
+            out[n][2] = cz + (int32_t)(((int64_t)kr[6] * ux + (int64_t)kr[8] * uz) >> 12); n++;
+            out[n][0] = cx + ux; out[n][1] = cy; out[n][2] = cz + uz; n++;
+        }
+    }
+    return n;
+}
+/* Huellen-Punkte (Gator-Rahmen, x/z) eines Bildes fuer s_th2: Bone-Ursprung 5/6/7, Ecken der Part-Kaesten 5/6/7, Kanister-Zylinder */
+static int gr2_tr_huelle_pkt(const re15_actor_t *t, const re15_skel_pose_t *poses, int32_t sk, int32_t (*pk)[2], int cap)
+{
+    re15_enemy_bank_t *bk = gr2_bank(t);
+    if (!bk) return 0;
+    gr2_rw_box_bauen(bk);
+    int n = 0;
+    for (int part = 5; part <= 7; part++) {
+        int32_t r[9], p[3]; gr2_part_welt(t, &poses[part], r, p);
+        if (n < cap) { pk[n][0] = p[0]; pk[n][1] = p[2]; n++; }
+        if (!s_rw_box.ok[part]) continue;
+        for (int c = 0; c < 8 && n < cap; c++) {
+            const int32_t v[3] = { q12mul((c & 1) ? s_rw_box.hi[part][0] : s_rw_box.lo[part][0], sk), q12mul((c & 2) ? s_rw_box.hi[part][1] : s_rw_box.lo[part][1], sk),
+                                   q12mul((c & 4) ? s_rw_box.hi[part][2] : s_rw_box.lo[part][2], sk) };
+            pk[n][0] = p[0] + (int32_t)(((int64_t)r[0] * v[0] + (int64_t)r[1] * v[1] + (int64_t)r[2] * v[2]) >> 12);
+            pk[n][1] = p[2] + (int32_t)(((int64_t)r[6] * v[0] + (int64_t)r[7] * v[1] + (int64_t)r[8] * v[2]) >> 12); n++;
+        }
+    }
+    int32_t kp[3], kr[9], kz[48][3];
+    if (gr2_rw_kanister(t, poses, kp, kr)) {
+        const int m = gr2_rw_kan_pkt(kp, kr, kz, 48);
+        for (int i = 0; i < m && n < cap; i++) { pk[n][0] = kz[i][0]; pk[n][1] = kz[i][2]; n++; }
+    }
+    return n;
+}
+/* Welt-Punkte Mesh 5/6/7 + Kanister der Pose ps */
+static int gr2_rw_punkte(const re15_actor_t *e, const re15_skel_pose_t *ps, int32_t (*out)[3], int max)
+{
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7) return 0;
+    const int32_t sk = gr2_scale(e);
+    int n = 0;
+    for (int part = 5; part <= 7; part++) {
+        if (part >= bk->md1.mesh_count) continue;
+        int32_t r[9], p[3]; gr2_part_welt(e, &ps[part], r, p);
+        const re15_md1_mesh_t *ms = &bk->md1.meshes[part];
+        for (int pass = 0; pass < 2; pass++) {
+            const int nv = pass ? ms->quad_vertex_count : ms->tri_vertex_count;
+            for (int i = 0; i < nv && n < max; i++) {
+                const re15_md1_vertex_t *vv = pass ? &ms->quad_vertices[i] : &ms->tri_vertices[i];
+                const int32_t v[3] = { q12mul(vv->x, sk), q12mul(vv->y, sk), q12mul(vv->z, sk) };
+                out[n][0] = p[0] + (int32_t)(((int64_t)r[0] * v[0] + (int64_t)r[1] * v[1] + (int64_t)r[2] * v[2]) >> 12);
+                out[n][1] = p[1] + (int32_t)(((int64_t)r[3] * v[0] + (int64_t)r[4] * v[1] + (int64_t)r[5] * v[2]) >> 12);
+                out[n][2] = p[2] + (int32_t)(((int64_t)r[6] * v[0] + (int64_t)r[7] * v[1] + (int64_t)r[8] * v[2]) >> 12); n++;
+            }
+        }
+    }
+    int32_t kp[3], kr[9];
+    if (gr2_rw_kanister(e, ps, kp, kr)) n += gr2_rw_kan_pkt(kp, kr, out + n, max - n);
+    return n;
+}
+int re15_gr2_rw_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max)
+{
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!e || !gr2_pose_gezeichnet(e, ps)) return 0;
+    return gr2_rw_punkte(e, ps, out, max);
+}
+/* Messhaken G2-RE2 NB2 (Riegel v4 / re2: Kopf-Riegel ohne den Kanister): nur Mesh 5/6/7 der gezeichneten Pose */
+int re15_gr2_rw_nur_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max)
+{
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!e || !gr2_pose_gezeichnet(e, ps)) return 0;
+    s_rw_ohne_kan = 1;
+    const int n = gr2_rw_punkte(e, ps, out, max);
+    s_rw_ohne_kan = 0;
+    return n;
+}
+/* Klemmen-Zusatz: Verschiebung (*dx,*dz), die alle Punkte aus Plattform/Rampe (unter dem Deck) und vor die Kamera bringt */
+static int gr2_rw_zusatz(const re15_actor_t *e, const re15_skel_pose_t *poses, int32_t *dx, int32_t *dz)
+{
+    static int32_t q[GR2_RW_PN][3];
+    const int n = gr2_rw_punkte(e, poses, q, GR2_RW_PN);
+    *dx = *dz = 0;
+    for (int b = 0; b < 2; b++) {
+        int32_t w = 0, o = 0, s = 0, nd = 0; int drin = 0;     /* noetiger Weg ueber die West-/Ost-/Sued-/Nordkante */
+        const int32_t x0 = k_rw_bl[b][0] - GR2_RW_RAND, x1 = k_rw_bl[b][1] + GR2_RW_RAND, z0 = k_rw_bl[b][2] - GR2_RW_RAND, z1 = k_rw_bl[b][3] + GR2_RW_RAND;
+        for (int i = 0; i < n; i++) {
+            if (q[i][0] <= x0 || q[i][0] >= x1 || q[i][2] <= z0 || q[i][2] >= z1) continue;
+            drin = 1;
+            if (q[i][0] - x0 > w) w = q[i][0] - x0;
+            if (x1 - q[i][0] > o) o = x1 - q[i][0];
+            if (q[i][2] - z0 > s) s = q[i][2] - z0;
+            if (z1 - q[i][2] > nd) nd = z1 - q[i][2];
+        }
+        if (!drin) continue;
+        int32_t m = w; int k = 0;
+        if (o < m) { m = o; k = 1; }
+        if (s < m) { m = s; k = 2; }
+        if (nd < m) { m = nd; k = 3; }
+        if (k == 0) *dx -= m; else if (k == 1) *dx += m; else if (k == 2) *dz -= m; else *dz += m;
+    }
+    const re15_camera_view_t *v = gr2_rw_view((int)g_scd.cam_id);
+    if (v) {
+        int32_t vmin = 1 << 30;
+        for (int i = 0; i < n; i++) { const int32_t vz = gr2_rw_vz(v, q[i][0], q[i][1], q[i][2]); if (vz < vmin) vmin = vz; }
+        const int64_t fx = v->rot[6], fz = v->rot[8], f2 = fx * fx + fz * fz;
+        if (vmin < GR2_RW_KAM_NAH && f2 > 0) {
+            const int64_t need = (int64_t)(GR2_RW_KAM_NAH - vmin) * 4096;   /* Weg D = need / |f| in Blickrichtung f/|f| -> Versatz f * need / |f|^2 */
+            *dx += (int32_t)(fx * need / f2); *dz += (int32_t)(fz * need / f2);
+        }
+    }
+    return *dx != 0 || *dz != 0;
+}
+/* frei: Huelle s_th2 (gedreht, Wurzel bei x/z) ausserhalb von Plattform/Rampe + Rand und vor der Kamera (Wurzelhoehe und Koerper-Oberkante) */
+static int gr2_rw_frei(const int32_t (*hw)[2], int n, int32_t x, int32_t z, const re15_camera_view_t *v)
+{
+    for (int i = 0; i < n; i++) {
+        const int32_t px = x + hw[i][0], pz = z + hw[i][1];
+        for (int b = 0; b < 2; b++)
+            if (px > k_rw_bl[b][0] - GR2_RW_RAND && px < k_rw_bl[b][1] + GR2_RW_RAND && pz > k_rw_bl[b][2] - GR2_RW_RAND && pz < k_rw_bl[b][3] + GR2_RW_RAND) return 0;
+        if (v && (gr2_rw_vz(v, px, GR2_RW_SCHWIMM_Y, pz) < GR2_RW_KAM_NAH || gr2_rw_vz(v, px, GR2_RW_SCHWIMM_Y - GR2_RW_KOERPER_OBEN, pz) < GR2_RW_KAM_NAH)) return 0;
+    }
+    return 1;
+}
+static int gr2_rw_drehen(int gier, int32_t (*hw)[2])
+{
+    const int64_t c = re15_cos_q12(gier), sn = re15_sin_q12(gier);
+    for (int i = 0; i < s_th2.n; i++) {
+        hw[i][0] = (int32_t)((c * s_th2.h[i][0] + sn * s_th2.h[i][1]) >> 12);
+        hw[i][1] = (int32_t)((-sn * s_th2.h[i][0] + c * s_th2.h[i][1]) >> 12);
+    }
+    return s_th2.n;
+}
+/* Zielkuerzung (an gr2_tr_fit): erster unfreier Punkt der Strecke -> Ziel davor; Seiten-Bit nach der Fahrtrichtung (wie eine Wand) */
+static int gr2_rw_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz)
+{
+    if (s_th2.n < 3) return 0;
+    int32_t hw[256][2];
+    const int n = gr2_rw_drehen(gr2_tr_gier(e, *tx, *tz), hw);
+    const re15_camera_view_t *v = gr2_rw_view((int)g_scd.cam_id);
+    const int64_t dx = (int64_t)*tx - e->x, dz = (int64_t)*tz - e->z, d2 = dx * dx + dz * dz;
+    const int32_t d = (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
+    if (d < 1) return 0;
+    const int seite = (dx * dx >= dz * dz) ? (dx > 0 ? 2 : 1) : (dz > 0 ? 8 : 4);
+    if (!gr2_rw_frei(hw, n, e->x, e->z, v)) return 0;          /* schon jetzt unfrei (Kamerawechsel): keine Kuerzung - Klemme und Kollisions-Antwort fuehren heraus */
+    int steps = d / 250 + 1; if (steps > 120) steps = 120;
+    for (int k = 1; k <= steps; k++) {
+        const int32_t px = e->x + (int32_t)(dx * k / steps), pz = e->z + (int32_t)(dz * k / steps);
+        if (gr2_rw_frei(hw, n, px, pz, v)) continue;
+        *tx = e->x + (int32_t)(dx * (k - 1) / steps); *tz = e->z + (int32_t)(dz * (k - 1) / steps);
+        return seite;
+    }
+    return 0;
+}
+/* Runde 41 Spur G2-RE2 (c): liegt ein Punkt (Mesh 5/6/7 + Kanister) der gezeichneten Pose unter dem Deck im Grundriss von Plattform/Rampe (ohne Rand) oder
+ * weniger als GR2_RW_KAM_NAH tief vor der Kamera der Figur? Grundlage der Kollisions-Antwort im Boss-Takt (enemy_ai_boss_gator.c): die Bewegung eines Bildes,
+ * die Kopf/Kanister dorthin braechte, wird zurueckgenommen (erst die Drehung, dann der Schritt) - so dringt der Kopf beim Wenden nicht ein; die Klemme (mit
+ * Rand) bleibt fuer Lagen, die schon verletzen (Kamerawechsel). */
+int re15_gr2_rw_kopf_verletzt(re15_actor_t *e)
+{
+    if (!e || !gr2_kan_zaehlt()) return 0;                  /* G2-RE2 NB2 Vorschlag 4: keine Kollisions-Antwort fuer Kopf/Kanister (ohne Kanister gibt es keine) */
+    static int32_t q[GR2_RW_PN][3];
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!gr2_pose_gezeichnet(e, ps)) return 0;
+    const int n = gr2_rw_punkte(e, ps, q, GR2_RW_PN);
+    const re15_camera_view_t *v = gr2_rw_view((int)g_scd.cam_id);
+    for (int i = 0; i < n; i++) {
+            for (int b = 0; b < 2; b++)
+                if (q[i][0] > k_rw_bl[b][0] && q[i][0] < k_rw_bl[b][1] && q[i][2] > k_rw_bl[b][2] && q[i][2] < k_rw_bl[b][3]) return 1;
+        if (v && gr2_rw_vz(v, q[i][0], q[i][1], q[i][2]) < GR2_RW_KAM_NAH) return 1;
+    }
+    return 0;
+}
+/* Messhaken Riegel "Gang gleich NB5": authored Vortrieb des Bildes wie re15_gr2_chase_clip (+0x144 = dx des Wurzelversatzes, Bild 0 gegen Latch 0, x Skala) */
+int32_t re15_gr2_vortrieb_soll(const re15_actor_t *e, int clip, int frame)
+{
+    re15_enemy_bank_t *bk = e ? gr2_bank(e) : NULL;
+    if (!bk || clip < 0 || clip >= bk->anim.clip_count) return 0;
+    int16_t a[3] = { 0, 0, 0 }, b[3] = { 0, 0, 0 };
+    gr2_off(bk, clip, frame, b);
+    if (frame > 0) gr2_off(bk, clip, frame - 1, a);
+    return q12mul((int32_t)b[0] - a[0], gr2_scale(e));
+}
+/* Notloesung (gator_rw_r41.c): freie Stelle zum Auftauchen. PORT-WAHL: Raster 500 im Wasser; Gier = die freie von 16 Richtungen, die der Richtung zum
+ * Steuerziel (tx,tz) am naechsten liegt; Wurzel in der Wurzel-Klemmflaeche (Aussenwaende
+ * - 1600, ausserhalb der um den Wurzel-Rand aufgeblasenen Bloecke wie gr2_tr_frei), Huelle s_th mit dieser Gier im Wurzel-Kasten der Aussenwaende
+ * (gr2_tr_kasten), Huelle s_th2 frei (Bloecke, Kamera) - an der Stelle und 1500 voraus (er kann nach dem Auftauchen anschwimmen); 2000..9000 von der jetzigen
+ * Lage; Wahl = kleinster Abstand zum Steuerziel + 2 x Abweichung der Gier, Kopfpunkt (3236 vor) mindestens 2500 von der Figur, im Bild der Kamera 2000 besser. */
+int re15_gr2_rw_freie_stelle(const re15_actor_t *e, const re15_actor_t *pl, int32_t tx, int32_t tz, int32_t *x, int32_t *z, int *gier)
+{
+    if (!e || !pl || !s_kan.aktiv || !s_kan.angehaengt || !gr2_tr_huelle(e) || s_th2.n < 3) return 0;
+    const int cam = (int)g_scd.cam_id;
+    const re15_camera_view_t *v = gr2_rw_view(cam);
+    const int32_t m = (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60 + 120;
+    int64_t best = -1; int32_t bx = 0, bz = 0; int bg = 0;
+    for (int32_t cx = GR2_KK_X0 + 1600; cx <= GR2_KK_X1 - 1600; cx += 500)
+        for (int32_t cz = GR2_KK_Z0 + 1600; cz <= GR2_KK_Z1 - 1600; cz += 500) {
+            if (gr2_tr_im_block(cx, cz, m)) continue;
+            const int64_t ex = (int64_t)cx - e->x, ez = (int64_t)cz - e->z, e2 = ex * ex + ez * ez;
+            if (e2 < 2000LL * 2000 || e2 > 9000LL * 9000) continue;
+            /* Gier: die von 16 Richtungen, die frei ist und am wenigsten von der Richtung zum Steuerziel (tx,tz) abweicht */
+            const int gz = (cx == tx && cz == tz) ? (int)(e->rot_y & 0xfff) : ((((int)re15_atan2_q12(tz - cz, tx - cx)) - 1024) & 0xfff);
+            int g = -1, gab = 0;
+            for (int r = 0; r < 16; r++) {
+                const int g1 = (gz + (r & 1 ? -1 : 1) * ((r + 1) / 2) * 256) & 0xfff;
+                int32_t k[4]; gr2_tr_kasten(g1, k);
+                const int32_t fx = re15_cos_q12(g1), fz = -re15_sin_q12(g1);
+                const int32_t vx = cx + (int32_t)(((int64_t)fx * 1500) >> 12), vz = cz + (int32_t)(((int64_t)fz * 1500) >> 12);
+                if (cx < k[0] || cx > k[1] || cz < k[2] || cz > k[3] || vx < k[0] || vx > k[1] || vz < k[2] || vz > k[3]) continue;
+                int32_t hw[256][2]; const int n = gr2_rw_drehen(g1, hw);
+                if (!gr2_rw_frei(hw, n, cx, cz, v) || !gr2_rw_frei(hw, n, vx, vz, v)) continue;
+                g = g1; gab = ((r + 1) / 2) * 256; break;
+            }
+            if (g < 0) continue;
+            const int32_t fx = re15_cos_q12(g), fz = -re15_sin_q12(g);
+            const int64_t kx = (int64_t)cx + ((3236LL * fx) >> 12) - pl->x, kz = (int64_t)cz + ((3236LL * fz) >> 12) - pl->z;   /* Kopfpunkt 3236 vor (GR2_RUNDE_KOPF) */
+            const int64_t k2 = kx * kx + kz * kz;
+            if (k2 < 2500LL * 2500) continue;
+            const int64_t zx = (int64_t)cx - tx, zz = (int64_t)cz - tz;
+            int64_t score = (int64_t)re15_squareroot0((uint32_t)(zx * zx + zz * zz > 0xffffffffLL ? 0xffffffffLL : zx * zx + zz * zz)) + 2 * gab;   /* nah am Steuerziel, wenig Abweichung */
+            if (v) { const int32_t w[3] = { cx, GR2_RW_SCHWIMM_Y, cz }; int sx = 0, sy = 0; if (gr2_im_bild(&g_room_rdt.cuts[cam], w, &sx, &sy) && sy >= 24 && sy < 216) score -= 2000; }
+            if (best < 0 || score < best) { best = score; bx = cx; bz = cz; bg = g; }
+        }
+    if (best < 0) return 0;
+    *x = bx; *z = bz; *gier = bg;
+    return 1;
+}
+/* RE2-Rueckzug: Clip 10, Blend 3 (`addiu a1,zero,10 / addiu a2,zero,3 / jal 0x8001a330` @0x80102c40-48), Vortrieb = authored Wurzelversatz laengs
+ * (+0x144 wie re15_gr2_chase_clip), 1 = letztes Bild (Clip-Ende -> `addiu v1,zero,257 / sw v1,4(s0)` @0x80102c54-5c: zurueck ins Schwimmen) */
+int re15_gr2_rueck_clip(int slot, re15_actor_t *e, int32_t *vortrieb)
+{
+    (void)slot;
+    *vortrieb = 0;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->anim.clip_count <= 10) return 1;
+    if (e->motion != 10) { e->motion = 10; e->anim_frame = 0; gr2_blend(e, 3); }
+    else if (e->anim_frame + 1 < bk->anim.clips[10].frame_count) e->anim_frame++;
+    int16_t a[3] = { 0, 0, 0 }, b[3] = { 0, 0, 0 };
+    gr2_off(bk, 10, e->anim_frame, b);
+    if (e->anim_frame > 0) gr2_off(bk, 10, e->anim_frame - 1, a);
+    *vortrieb = q12mul((int32_t)b[0] - a[0], gr2_scale(e));
+    return e->anim_frame + 1 >= bk->anim.clips[10].frame_count;
+}
+/* Ueberquerung mit dem Kanister (r41/gatorfix NB9 557e1a75b, ohne Entwurf F): groesste Tiefe gezeichneter Punkte der Teile `teile` (Mesh) und des
+ * Kanister-Zylinders unter dem Deck im Grundriss der Bloecke bl; <= 0 = keiner. */
+int re15_gr2_teile_deck_tiefe(re15_actor_t *e, int32_t deck, const int32_t (*bl)[4], int nb, uint32_t teile)
+{
+    re15_enemy_bank_t *bk = e ? gr2_bank(e) : NULL;
+    re15_skel_pose_t ps[RE15_EMD_MAX_BONES];
+    if (!bk || !s_kan.aktiv || !s_kan.angehaengt || !gr2_pose_gezeichnet(e, ps)) return 0;
+    const int32_t sk = gr2_scale(e);
+    int32_t best = -(1 << 30);
+    #define GR2_KDT(px, py, pz) do { const int32_t x_ = (px), y_ = (py), z_ = (pz); \
+        for (int b_ = 0; b_ < nb; b_++) if (x_ > bl[b_][0] && x_ < bl[b_][1] && z_ > bl[b_][2] && z_ < bl[b_][3] && y_ - deck > best) best = y_ - deck; } while (0)
+    for (int part = 0; part < 32; part++) {
+        if (!(teile & (1u << part)) || part >= bk->md1.mesh_count || part >= bk->skel.bone_count) continue;
+        int32_t r[9], p[3]; gr2_part_welt(e, &ps[part], r, p);
+        const re15_md1_mesh_t *ms = &bk->md1.meshes[part];
+        for (int pass = 0; pass < 2; pass++) {
+            const int nv = pass ? ms->quad_vertex_count : ms->tri_vertex_count;
+            for (int i = 0; i < nv; i++) {
+                const re15_md1_vertex_t *vv = pass ? &ms->quad_vertices[i] : &ms->tri_vertices[i];
+                const int32_t v[3] = { q12mul(vv->x, sk), q12mul(vv->y, sk), q12mul(vv->z, sk) };
+                GR2_KDT(p[0] + (int32_t)(((int64_t)r[0] * v[0] + (int64_t)r[1] * v[1] + (int64_t)r[2] * v[2]) >> 12),
+                        p[1] + (int32_t)(((int64_t)r[3] * v[0] + (int64_t)r[4] * v[1] + (int64_t)r[5] * v[2]) >> 12),
+                        p[2] + (int32_t)(((int64_t)r[6] * v[0] + (int64_t)r[7] * v[1] + (int64_t)r[8] * v[2]) >> 12));
+            }
+        }
+    }
+    {   int32_t kp[3], kr[9], kz[48][3];
+        if (bk->skel.bone_count > 6 && gr2_rw_kanister(e, ps, kp, kr)) {
+            const int m = gr2_rw_kan_pkt(kp, kr, kz, 48);
+            for (int i = 0; i < m; i++) GR2_KDT(kz[i][0], kz[i][1], kz[i][2]);
+        } }
+    #undef GR2_KDT
+    return best;
+}
+
+/* ==== Runde 41 Spur G2 Nachbesserung 4 (Orchestrator nach NB3, Punkt 2): KREISPUNKT IN DER SPIELERKAMERA ============================================
+ * Befund NB3: der Mittelpunkt der Belagerung (Figur oben/an der Leiter, mit dem Kanister nicht erreichbar) ist der naechste freie Wasserpunkt zur Figur - auf
+ * der Rampe West liegt der Alligator so zu 91 % im Bild der Spielerkamera (Cut 2), auf dem Nordteil der Rampe nur zu 12 %.
+ * Die Kamera waehlt das Spiel ueber die RVD-Zonen (aot_common.c re15_aot_scan, Zone mit cam_from == laufender Cut, Lage im Viereck -> cam_to, FUN_80014230);
+ * g_scd.cam_id ist die Kamera, in der die Figur steht. In ROOM2090 haengt sie am Weg (Zonenstreifen 2 <-> 3 bei z -14500..-13500 / -19000..-18000: auf der
+ * Rampe Cut 2, wer von Sueden heraufklettert, Cut 3 von Norden; Werkzeug test_r41_gatorfix kamerazone).
+ * PORT-WAHL (Gestaltung, kein Original - RE2 kreist nicht): Mittelpunkt = der freie Punkt im Raster GR2_TR_SICHT_RASTER (ganzer Kreis R in der Wurzel-
+ * Klemmflaeche = Aussenwaende - 1600 und euklidisch >= Wurzel-Rand + R von Plattform und Rampe), dessen Kreis (GR2_TR_SICHT_N Punkte auf Wurzelhoehe -1200 =
+ * GB_WATER_Y) zu mindestens GR2_TR_SICHT_MIN / GR2_TR_SICHT_N im Bild der laufenden Kamera liegt (zwischen den Kino-Balken y 24..216 wie das Mass traglog),
+ * der Figur am naechsten. Gilt fuer den Kreis der Belagerung (Rampe) und den Kreis der Verfolgung um das gekuerzte Ziel (Leiter). Gibt es keinen (kein
+ * sichtbares Wasser in dieser Kamera): wie NB3. Gerechnet je Kamera und Figur-Zelle (GR2_TR_SICHT_RASTER) einmal. Riegel unit_r41_gatorfix_kamera. */
+#define GR2_TR_SICHT_RASTER 250
+#define GR2_TR_SICHT_N      16
+#define GR2_TR_SICHT_MIN    12      /* 12/16 = 75 % (Orchestrator: Gator mindestens 70 % im Bild) */
+static int s_sicht_alt = 0;         /* Pruefhaken der Gegenprobe (Riegel kamera): 1 = Mittelpunkt wie NB3 */
+static struct { int ok, cam, gefunden, vis; int32_t px, pz, cx, cz; } s_sk;
+void re15_gr2_kreis_kamera_alt_setzen(int an) { s_sicht_alt = an; s_sk.ok = 0; }
+/* Abstand (euklidisch) eines Punkts zum Rechteck [x0,x1] x [z0,z1], 0 innen */
+static int64_t gr2_tr_rect_ab2(int32_t x, int32_t z, int32_t x0, int32_t x1, int32_t z0, int32_t z1)
+{
+    const int64_t dx = x < x0 ? (int64_t)x0 - x : x > x1 ? (int64_t)x - x1 : 0, dz = z < z0 ? (int64_t)z0 - z : z > z1 ? (int64_t)z - z1 : 0;
+    return dx * dx + dz * dz;
+}
+static int gr2_tr_kreis_sicht(const re15_camera_view_t *v, int32_t cx, int32_t cz)
+{
+    int n = 0;
+    for (int k = 0; k < GR2_TR_SICHT_N; k++) {
+        const int a = k * 4096 / GR2_TR_SICHT_N;
+        const int64_t px = cx + (int32_t)(((int64_t)re15_cos_q12(a) * GR2_TR_KREIS) >> 12), py = -1200,
+                      pz = cz + (int32_t)(((int64_t)re15_sin_q12(a) * GR2_TR_KREIS) >> 12);
+        const int32_t vx = (int32_t)(((int64_t)v->rot[0]*px + (int64_t)v->rot[1]*py + (int64_t)v->rot[2]*pz) >> 12) + v->trans[0];
+        const int32_t vy = (int32_t)(((int64_t)v->rot[3]*px + (int64_t)v->rot[4]*py + (int64_t)v->rot[5]*pz) >> 12) + v->trans[1];
+        const int32_t vz = (int32_t)(((int64_t)v->rot[6]*px + (int64_t)v->rot[7]*py + (int64_t)v->rot[8]*pz) >> 12) + v->trans[2];
+        if (vz <= 0) continue;
+        const int x = 160 + (int)(((int64_t)vx * v->fov_screen_dist) / vz), y = 120 + (int)(((int64_t)vy * v->fov_screen_dist) / vz);
+        n += (x >= 0 && x < 320 && y >= 24 && y < 216);
+    }
+    return n;
+}
+int re15_gr2_kreis_sicht(int cam, int32_t cx, int32_t cz)   /* Messhaken: Kreispunkte (von GR2_TR_SICHT_N) im Bild der Kamera cam */
+{
+    re15_camera_view_t v;
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cam < 0 || cam >= g_room_rdt.cut_count || re15_camera_build_view(&g_room_rdt.cuts[cam], &v) != 0) return -1;
+    return gr2_tr_kreis_sicht(&v, cx, cz);
+}
+int re15_gr2_kreis_kamera(int cam, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *cx, int32_t *cz, int *vis)
+{
+    if (!e || !g_room_rdt_ok || !g_room_rdt.cuts || cam < 0 || cam >= g_room_rdt.cut_count) return 0;
+    if (s_sk.ok && s_sk.cam == cam && (px - s_sk.px) / GR2_TR_SICHT_RASTER == 0 && (pz - s_sk.pz) / GR2_TR_SICHT_RASTER == 0) {
+        if (s_sk.gefunden) { *cx = s_sk.cx; *cz = s_sk.cz; }
+        if (vis) *vis = s_sk.vis;
+        return s_sk.gefunden;
+    }
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[cam], &v) != 0) return 0;
+    const int32_t m = (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60 + 120 + GR2_TR_KREIS;
+    int64_t bd = -1; int32_t bx = 0, bz = 0; int bv = 0;
+    /* ganzer Kreis in der Wurzel-Klemmflaeche (Aussenwaende - 1600, s. re15_gr2_kk_ziel): sonst schiebt die Klemme ihn vom Kreis (Leiter-Ecke) */
+    for (int32_t x = GR2_KK_X0 + 1600 + GR2_TR_KREIS; x <= GR2_KK_X1 - 1600 - GR2_TR_KREIS; x += GR2_TR_SICHT_RASTER)
+        for (int32_t z = GR2_KK_Z0 + 1600 + GR2_TR_KREIS; z <= GR2_KK_Z1 - 1600 - GR2_TR_KREIS; z += GR2_TR_SICHT_RASTER) {
+            const int64_t d = (int64_t)(x - px) * (x - px) + (int64_t)(z - pz) * (z - pz);
+            /* ganzer Kreis mindestens um den Wurzel-Rand neben Plattform und Rampe: euklidischer Abstand zum Block >= Rand + R (der Kasten-Test
+             * gr2_tr_im_block sperrt die Ecken mit, dort lag fuer Cut 2 das ganze sichtbare Suedwasser unter der Rampe) */
+            if ((bd >= 0 && d >= bd) || gr2_tr_rect_ab2(x, z, GR2_PLAT_X0, GR2_PLAT_X1, GR2_PLAT_Z0, GR2_PLAT_Z1) < (int64_t)m * m
+                || gr2_tr_rect_ab2(x, z, GR2_RAMP_X0, GR2_RAMP_X1, GR2_RAMP_Z0, GR2_RAMP_Z1) < (int64_t)m * m) continue;
+            const int n = gr2_tr_kreis_sicht(&v, x, z);
+            if (n < GR2_TR_SICHT_MIN) continue;
+            bd = d; bx = x; bz = z; bv = n;
+        }
+    s_sk.ok = 1; s_sk.cam = cam; s_sk.px = px; s_sk.pz = pz; s_sk.gefunden = bd >= 0; s_sk.cx = bx; s_sk.cz = bz; s_sk.vis = bv;
+    if (bd >= 0) { *cx = bx; *cz = bz; }
+    if (vis) *vis = bv;
+    return bd >= 0;
+}
+int re15_gr2_trag_dash_erlaubt(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || s_kk_ziel_alt || !gr2_kan_zaehlt() || s_kan.stufe != 7) return 1;   /* Vorschlag 4: Dash wie ohne Kanister */
+    if (!s_tr[slot].dash) re15_gr2_log("TRAG DASH F%u: kein Zonen-Dash mit dem Kanister im Maul", (unsigned)g_engine.frame_count);
+    s_tr[slot].dash = 1;
+    return 0;   /* Fuzz NB2 N2: auch der eine Dash = 3,9 s Vordrehung auf der Stelle (Clip 2/3) ohne Weg - mit dem Kanister keiner */
+}
+extern void re15_gator_boss_steuerziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);   /* Spur B: Kanten-Umweg + Klemmflaeche 1600 */
+static int32_t gr2_tr_ab(const re15_actor_t *e, int32_t x, int32_t z)
+{
+    const int64_t dx = (int64_t)x - e->x, dz = (int64_t)z - e->z, d2 = dx * dx + dz * dz;
+    return (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
+}
+static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern);
+/* NB2: Ziel kuerzen (Kopf + Kanister in den Waenden), aus den aufgeblasenen Bloecken schieben und noch einmal kuerzen - sonst lag ein aus der Plattform
+ * geschobenes Ziel fuer den Kopf hinter der Nordwand (Riegel integration_r41_gatorfix_frei F3676-F3839: Etappe (788,-8191), 59 Bilder Wandreiben) */
+static int gr2_tr_fit(const re15_actor_t *e, int32_t *tx, int32_t *tz);
+static void gr2_tr_frei(const re15_actor_t *e, int32_t *x, int32_t *z);
+static int gr2_tr_fitfrei(const re15_actor_t *e, int32_t *x, int32_t *z)
+{
+    int seiten = gr2_tr_fit(e, x, z);
+    gr2_tr_frei(e, x, z);
+    seiten |= gr2_tr_fit(e, x, z);
+    return seiten;
+}
+static int8_t s_tr_modus[RE15_ACTOR_MAX];   /* letzte Rueckgabe je Slot: 0 Ziel unveraendert, 1 gekuerzt, 2 Vorbei-Etappe */
+int re15_gr2_trag_kreis(int slot, int32_t *cx, int32_t *cz)   /* Messhaken NB4: laufender Kreis (1 Verfolgung, 2 Belagerung, 0 keiner) und Mittelpunkt */
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    if (cx) *cx = s_tr[slot].cx;
+    if (cz) *cz = s_tr[slot].cz;
+    return s_tr[slot].kreis;
+}
+/* ==== Runde 41 Spur G2 Nachbesserung 5 (Abnahme 3 M2a): KAROTTE OHNE SPIEGELUNG =====================================================================
+ * Befund Abnahme 3 (west_leon/west_elza, gator_trag.log F1200-F3300): geplant Kreis (3450,-9150) R 2000, gefahren eine Schleife R ~535 um (2232,-10500),
+ * 28-29 Runden in 70 s. Ursache: die Karotte nahm den Winkel aus re15_atan2_q12 - Port-Konvention 0 = +Z, 1024 = +X (actor_locomotion.c atan2_q12:
+ * FUN_8001a6d4-Bearing + 0x400), also a = 1024 - theta - und setzte ihn in cos/sin der Standard-Konvention (0 = +X) ein. Der Punkt R(cos a, sin a) =
+ * R(sin theta, cos theta) ist das SPIEGELBILD der Gator-Lage an der 45-Grad-Diagonale; die Karotte lief nur auf der Diagonale (theta = 45 / 225 Grad)
+ * mit ihm mit - Fixpunkt SW des Mittelpunkts (3450-1414, -9150-1414) = (2036,-10564), dort die gemessene Schleife (Wenderadius beim Nachlenken).
+ * Neu: Einheitsvektor Mittelpunkt -> Wurzel um kdir x 45 Grad gedreht (Standard-Drehung in (x,z), kdir aus dem Kreuzprodukt wie beim Anlegen).
+ * Pruefhaken der Gegenprobe re15_gr2_karotte_alt_setzen(1) = Karotte wie NB4 (Riegel unit_r41_gatorfix_bahn). */
+static int s_karotte_alt = 0;
+void re15_gr2_karotte_alt_setzen(int an) { s_karotte_alt = an; }
+static void gr2_tr_karotte(int slot, const re15_actor_t *e, int32_t *qx, int32_t *qz, int verfolgung)
+{
+    const int32_t cx = s_tr[slot].cx, cz = s_tr[slot].cz;
+    /* verfolgung: Kreis der Verfolgung (kreis 1, Leiter/Waende) bleibt wie NB4 - mit der korrigierten Karotte fielen die exe-Riegel des freien Spiels
+     * integration_r41_gatorfix_abn2_nordbecken (2) und _abn2_ecken (6 Zeitfenster von 2 s ohne Fortschritt); das freie Spiel war in Abnahme 3 bestanden. */
+    if (s_karotte_alt || verfolgung) {
+        const int a = (int)re15_atan2_q12(e->z - cz, e->x - cx);
+        const int a2 = (a + s_tr[slot].kdir * 512) & 0xfff;
+        *qx = cx + (int32_t)(((int64_t)re15_cos_q12(a2) * GR2_TR_KREIS) >> 12);
+        *qz = cz + (int32_t)(((int64_t)re15_sin_q12(a2) * GR2_TR_KREIS) >> 12);
+        return;
+    }
+    int64_t rx = (int64_t)e->x - cx, rz = (int64_t)e->z - cz;
+    int64_t d = (int64_t)re15_squareroot0((uint32_t)(rx * rx + rz * rz > 0xffffffffLL ? 0xffffffffLL : rx * rx + rz * rz));
+    if (d <= 0) { rx = 1; rz = 0; d = 1; }
+    const int64_t c45 = re15_cos_q12(512), s45 = (int64_t)s_tr[slot].kdir * re15_sin_q12(512);   /* 45 Grad, Drehsinn kdir */
+    const int64_t ux = (rx * c45 - rz * s45) / d, uz = (rx * s45 + rz * c45) / d;              /* Q12-Einheitsvektor */
+    *qx = cx + (int32_t)((ux * GR2_TR_KREIS) >> 12);
+    *qz = cz + (int32_t)((uz * GR2_TR_KREIS) >> 12);
+}
+/* ==== Runde 41 Spur G2 Nachbesserung 5 (Abnahme 3 M2a/M2b): BAHN DER BELAGERUNG =========================================================================
+ * Befund (Dossier NB5 M2a): ein Kreis R 2000 ist mit dem Kanister quer im Maul nirgends im Becken befahrbar. Der Kanister ragt im Schwimm-Clip 0 bis 4666 vor
+ * die Wurzel und bis 2694 nach links (re15_gr2_huelle_ausdehnung), die Wurzel haelt hit_radius_min 1466 (+ 60 + 120 wie gr2_tr_frei) von Plattform und
+ * Rampe; die Trag-Kuerzung zog die Karotte auf den unbefahrbaren Kreisteilen neben die Wurzel (Kreisel R ~500), ohne sie drueckte ihn die Kopf-Klemme fest.
+ * PORT-WAHL (Gestaltung, kein Original - RE2 kreist nicht): die Bahn ist ein Stadion (zwei Halbkreise R um A und B, gerade Stuecke dazwischen; A = B =
+ * Kreis), gesucht im Raster GR2_RUNDE_RASTER ueber Mittelpunkt, Laenge, Lage (x/z), R und Drehsinn. ZULAESSIG = an jedem der GR2_RUNDE_N Stuetzpunkte, mit der
+ * Tangente als Gier: Wurzel euklidisch >= Wurzel-Rand von Plattform und Rampe, die Clip-0-Huelle (Hals/Kopf/Kiefer + Kanister-Enden ueber alle Bilder,
+ * Gier-Rahmen) innerhalb der Aussenwaende GR2_KK_* minus GR2_RUNDE_RAND (die Belagerung schwimmt in Clip 0, gemessen Harness kamera: nur Clip 0 und der
+ * Hochbiss Clip 4). ERKENNBAR (Abnahme 3 M2b: in Cut 2 nur ein dunkler Fleck): je Stuetzpunkt die Laenge Wurzel -> Kopf (GR2_RUNDE_KOPF vor) im Bild der
+ * Spielerkamera in Bildpunkten, 0 wenn einer der beiden Punkte ausserhalb der Kino-Balken liegt; gewaehlt wird die zulaessige Bahn mit der groessten
+ * mittleren Laenge, bei der mindestens GR2_RUNDE_SICHT_MIN von GR2_RUNDE_N Stuetzpunkten im Bild liegen; bei Gleichstand die der Figur naehere. Gerechnet je
+ * Kamera einmal (Cache), die Karotte laeuft auf der Bahn (Bogenlaenge R x 45 Grad voraus, wie die NB2-Karotte auf dem Kreis). */
+#define GR2_RUNDE_N          48
+#define GR2_RUNDE_RAND       60      /* PORT-WAHL: Abstand Kanister/Kopf zu den Waenden im Bild (Lenkfehler darunter faengt die Kopf-Klemme, hoechstens 340 je Bild) */
+#define GR2_RUNDE_RASTER     250
+#define GR2_RUNDE_KOPF       3236    /* Clip-0-Kopf-Bones vor der Wurzel (re15_gr2_huelle_ausdehnung, Werkzeug kasten) */
+#define GR2_RUNDE_SICHT_MIN  32      /* 32/48 = 2/3: "ueberwiegend im Bild" (Orchestrator NB5; zeitweise unten aus dem Bild ausdruecklich erlaubt) */
+typedef struct { int32_t ax, az, bx, bz, r; int8_t kdir; } gr2_runde_t;
+#define GR2_RUNDE_GIER_N 1024   /* Stufen der Kasten-Tafel (0,35 Grad; Nachbarn mitgenommen = hoechstens ~33 Einheiten zu streng bei 5388 Kanister-Reichweite) */
+static struct { int ok, n; int32_t sk; int32_t lokal[3]; int32_t rel[9]; int32_t h[96][2]; int16_t k[GR2_RUNDE_GIER_N][4]; } s_h0;   /* Clip-0-Huelle (Gier-Rahmen) + Ausdehnung je Gier */
+static int gr2_h0_huelle(const re15_actor_t *e)
+{
+    const int32_t sk = gr2_scale(e);
+    if (s_h0.ok && s_h0.sk == sk && !memcmp(s_h0.lokal, s_kan.lokal, sizeof s_h0.lokal) && !memcmp(s_h0.rel, s_kan.rel, sizeof s_h0.rel)) return s_h0.n > 2;
+    re15_enemy_bank_t *bk = gr2_bank(e);
+    if (!bk || bk->skel.bone_count <= 7 || bk->anim.clip_count < 1) return 0;
+    static int32_t pk[GR2_TR_PN][2];
+    int n = 0;
+    re15_actor_t t = *e;
+    t.x = 0; t.y = 0; t.z = 0; t.rot_y = 0;
+    for (int f = 0; f < bk->anim.clips[0].frame_count && n + 5 <= GR2_TR_PN; f++) {
+        t.motion = 0; t.anim_frame = f;
+        const int kf = re15_compute_actor_kf(&bk->anim, &bk->skel, &t, 0, (uint32_t)f);
+        re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+        void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+        const int rv = re15_skel_compute_pose(&bk->skel, kf, poses);
+        g_anim_pose_actor = save;
+        if (rv != 0) continue;
+        int32_t r[9], p[3];
+        for (int k = 0; k < 3; k++) { gr2_part_welt(&t, &poses[k_kk_bone[k]], r, p); pk[n][0] = p[0]; pk[n][1] = p[2]; n++; }
+        gr2_part_welt(&t, &poses[6], r, p);
+        const int32_t l[3] = { q12mul(s_kan.lokal[0], sk), q12mul(s_kan.lokal[1], sk), q12mul(s_kan.lokal[2], sk) };
+        int32_t kp[3], kf2[3];
+        for (int i = 0; i < 3; i++) {
+            kp[i] = p[i] + (int32_t)(((int64_t)r[i*3] * l[0] + (int64_t)r[i*3+1] * l[1] + (int64_t)r[i*3+2] * l[2]) >> 12);
+            const int64_t ry = (int64_t)r[i*3] * s_kan.rel[1] + (int64_t)r[i*3+1] * s_kan.rel[4] + (int64_t)r[i*3+2] * s_kan.rel[7];
+            kf2[i] = kp[i] + (int32_t)(((ry >> 12) * -2784) >> 12);
+        }
+        pk[n][0] = kp[0]; pk[n][1] = kp[2]; n++;
+        pk[n][0] = kf2[0]; pk[n][1] = kf2[2]; n++;
+    }
+    qsort(pk, (size_t)n, sizeof pk[0], gr2_pkt_cmp);
+    int m = 0;
+    static int32_t hl[2 * GR2_TR_PN][2];
+    for (int i = 0; i < n; i++) {
+        while (m >= 2 && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--;
+        hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++;
+    }
+    for (int i = n - 2, u = m + 1; i >= 0; i--) {
+        while (m >= u && gr2_kreuz(hl[m-2], hl[m-1], pk[i]) <= 0) m--;
+        hl[m][0] = pk[i][0]; hl[m][1] = pk[i][1]; m++;
+    }
+    if (m > 1) m--;
+    if (m > 96) m = 96;
+    memcpy(s_h0.h, hl, (size_t)m * sizeof hl[0]);
+    s_h0.n = m; s_h0.ok = 1; s_h0.sk = sk;
+    memcpy(s_h0.lokal, s_kan.lokal, sizeof s_h0.lokal); memcpy(s_h0.rel, s_kan.rel, sizeof s_h0.rel);
+    /* Ausdehnung (min x, max x, min z, max z) der Huelle je Gier-Stufe (wie gr2_tr_kasten: dx = c h0 + s h1, dz = -s h0 + c h1), danach mit den Nachbarstufen
+     * vereinigt (die Gier zwischen zwei Stufen liegt innerhalb) */
+    static int16_t kk[GR2_RUNDE_GIER_N][4];
+    for (int g = 0; g < GR2_RUNDE_GIER_N; g++) {
+        const int64_t c = re15_cos_q12(g * (4096 / GR2_RUNDE_GIER_N)), sn = re15_sin_q12(g * (4096 / GR2_RUNDE_GIER_N));
+        int32_t a[4] = { 0, 0, 0, 0 };
+        for (int i = 0; i < m; i++) {
+            const int32_t ox = (int32_t)((c * s_h0.h[i][0] + sn * s_h0.h[i][1]) >> 12), oz = (int32_t)((-sn * s_h0.h[i][0] + c * s_h0.h[i][1]) >> 12);
+            if (!i || ox < a[0]) a[0] = ox;
+            if (!i || ox > a[1]) a[1] = ox;
+            if (!i || oz < a[2]) a[2] = oz;
+            if (!i || oz > a[3]) a[3] = oz;
+        }
+        for (int k = 0; k < 4; k++) kk[g][k] = (int16_t)a[k];
+    }
+    for (int g = 0; g < GR2_RUNDE_GIER_N; g++)
+        for (int k = 0; k < 4; k++) {
+            int16_t v = kk[g][k];
+            for (int d = -1; d <= 1; d += 2) {
+                const int16_t w = kk[(g + d + GR2_RUNDE_GIER_N) % GR2_RUNDE_GIER_N][k];
+                if ((k & 1) ? w > v : w < v) v = w;
+            }
+            s_h0.k[g][k] = v;
+        }
+    return m > 2;
+}
+static int32_t gr2_runde_l(const gr2_runde_t *b)
+{
+    const int64_t dx = (int64_t)b->bx - b->ax, dz = (int64_t)b->bz - b->az;
+    return (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+}
+static int32_t gr2_runde_umfang(const gr2_runde_t *b) { return 2 * gr2_runde_l(b) + (int32_t)(((int64_t)25736 * b->r) >> 12); }   /* 2 L + 2 pi R (2 pi = 25736/4096) */
+/* Vorrechnung je Bahn: Laenge L, Umfang U, Halbkreis pi R, Achse u (Q12), linke Normale n, Winkel von u (Standard: 0 = +x, gegen den Uhrzeiger) */
+typedef struct { int32_t L, U, hb, ux, uz, nx, nz, th; } gr2_runde_vor_t;
+static void gr2_runde_vor(const gr2_runde_t *b, gr2_runde_vor_t *p)
+{
+    p->L = gr2_runde_l(b); p->hb = (int32_t)(((int64_t)12868 * b->r) >> 12); p->U = 2 * p->L + 2 * p->hb;   /* pi = 12868/4096 */
+    p->ux = 4096; p->uz = 0; p->th = 0;
+    if (p->L > 0) {
+        p->ux = (int32_t)(((int64_t)(b->bx - b->ax) << 12) / p->L); p->uz = (int32_t)(((int64_t)(b->bz - b->az) << 12) / p->L);
+        p->th = (1024 - (int)re15_atan2_q12(b->bz - b->az, b->bx - b->ax)) & 0xfff;   /* Port-Bearing (0 = +Z, 1024 = +X) -> Standardwinkel */
+    }
+    p->nx = -p->uz; p->nz = p->ux;
+}
+/* Stuetzpunkt bei Bogenlaenge s (in Fahrtrichtung kdir): Lage, Fahrtrichtung (Q12) und Gier (Port: Vorwaerts (cos g, -sin g)) */
+static void gr2_runde_punkt_v(const gr2_runde_t *b, const gr2_runde_vor_t *p, int32_t s, int32_t *x, int32_t *z, int32_t *fx, int32_t *fz, int *gier)
+{
+    const int32_t L = p->L, U = p->U, hb = p->hb;
+    s %= U; if (s < 0) s += U;
+    if (b->kdir < 0) s = (U - s) % U;
+    int32_t px, pz; int th;
+    if (s < L) {                                           /* A - R n -> B - R n, Richtung +u */
+        px = b->ax - q12mul(p->nx, b->r) + q12mul(p->ux, s); pz = b->az - q12mul(p->nz, b->r) + q12mul(p->uz, s); th = p->th;
+    } else if (s < L + hb || s >= 2 * L + hb) {            /* Halbkreis um B (von -n nach +n) bzw. um A (von +n nach -n), gegen den Uhrzeiger */
+        const int um_b = s < L + hb;
+        const int32_t sl = um_b ? s - L : s - 2 * L - hb;
+        const int32_t cx = um_b ? b->bx : b->ax, cz = um_b ? b->bz : b->az;
+        const int32_t v0x = um_b ? -p->nx : p->nx, v0z = um_b ? -p->nz : p->nz;
+        const int phi = (int)(((int64_t)sl * 4096 * 4096) / ((int64_t)25736 * (b->r > 0 ? b->r : 1)));
+        const int32_t c = re15_cos_q12(phi), sn = re15_sin_q12(phi);
+        const int32_t vx = q12mul(v0x, c) - q12mul(v0z, sn), vz = q12mul(v0x, sn) + q12mul(v0z, c);
+        px = cx + q12mul(vx, b->r); pz = cz + q12mul(vz, b->r);
+        th = (p->th + (um_b ? 0 : 2048) + phi) & 0xfff;    /* Tangente = Startrichtung (+u bzw. -u) um phi gegen den Uhrzeiger gedreht */
+    } else {                                               /* B + R n -> A + R n, Richtung -u */
+        const int32_t sl = s - L - hb;
+        px = b->bx + q12mul(p->nx, b->r) - q12mul(p->ux, sl); pz = b->bz + q12mul(p->nz, b->r) - q12mul(p->uz, sl); th = (p->th + 2048) & 0xfff;
+    }
+    if (b->kdir < 0) th = (th + 2048) & 0xfff;
+    *x = px; *z = pz;
+    if (fx) *fx = re15_cos_q12(th);
+    if (fz) *fz = re15_sin_q12(th);
+    if (gier) *gier = (-th) & 0xfff;                       /* Vorwaerts (cos g, -sin g) = (cos th, sin th) => g = -th */
+}
+static void gr2_runde_punkt(const gr2_runde_t *b, int32_t s, int32_t *x, int32_t *z, int32_t *fx, int32_t *fz)
+{
+    gr2_runde_vor_t p; gr2_runde_vor(b, &p);
+    gr2_runde_punkt_v(b, &p, s, x, z, fx, fz, NULL);
+}
+static int32_t gr2_runde_wurzelrand(const re15_actor_t *e) { return (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60; }
+/* zulaessig: Wurzel (x,z) mit Fahrtrichtung (fx,fz) (Q12) */
+static int s_runde_waende = 15;   /* Bit 0 West, 1 Ost, 2 Sued, 3 Nord: Waende, gegen die die Huelle geprueft wird (gr2_runde_planen je Kamera) */
+static int gr2_runde_zul(int32_t x, int32_t z, int gier, int32_t mw)
+{
+    if (gr2_tr_rect_ab2(x, z, GR2_PLAT_X0, GR2_PLAT_X1, GR2_PLAT_Z0, GR2_PLAT_Z1) < (int64_t)mw * mw
+        || gr2_tr_rect_ab2(x, z, GR2_RAMP_X0, GR2_RAMP_X1, GR2_RAMP_Z0, GR2_RAMP_Z1) < (int64_t)mw * mw) return 0;
+    const int16_t *k = s_h0.k[(gier & 0xfff) / (4096 / GR2_RUNDE_GIER_N)];   /* Ausdehnung der Huelle fuer diese Gier aus der Tafel */
+    if (((s_runde_waende & 1) && x + k[0] < GR2_KK_X0 + GR2_RUNDE_RAND) || ((s_runde_waende & 2) && x + k[1] > GR2_KK_X1 - GR2_RUNDE_RAND)
+        || ((s_runde_waende & 4) && z + k[2] < GR2_KK_Z0 + GR2_RUNDE_RAND) || ((s_runde_waende & 8) && z + k[3] > GR2_KK_Z1 - GR2_RUNDE_RAND)) return 0;
+    return 1;
+}
+static int gr2_runde_proj(const re15_camera_view_t *v, int32_t x, int32_t y, int32_t z, int *sx, int *sy)
+{
+    const int32_t vx = (int32_t)(((int64_t)v->rot[0]*x + (int64_t)v->rot[1]*y + (int64_t)v->rot[2]*z) >> 12) + v->trans[0];
+    const int32_t vy = (int32_t)(((int64_t)v->rot[3]*x + (int64_t)v->rot[4]*y + (int64_t)v->rot[5]*z) >> 12) + v->trans[1];
+    const int32_t vz = (int32_t)(((int64_t)v->rot[6]*x + (int64_t)v->rot[7]*y + (int64_t)v->rot[8]*z) >> 12) + v->trans[2];
+    if (vz <= 0) return 0;
+    *sx = 160 + (int)(((int64_t)vx * v->fov_screen_dist) / vz); *sy = 120 + (int)(((int64_t)vy * v->fov_screen_dist) / vz);
+    return *sx >= 0 && *sx < 320 && *sy >= 24 && *sy < 216;
+}
+/* sichtbare Bildlaenge der Strecke Wurzel -> Kopf (beide auf Wasserhoehe y -1200), auf das Bild zwischen den Kino-Balken abgeschnitten (Liang-Barsky) */
+static int gr2_runde_seg_sicht(const re15_camera_view_t *v, int32_t x0, int32_t z0, int32_t x1, int32_t z1)
+{
+    int32_t q[2][2];
+    const int32_t w[2][2] = { { x0, z0 }, { x1, z1 } };
+    for (int k = 0; k < 2; k++) {
+        const int64_t x = w[k][0], y = -1200, z = w[k][1];
+        const int32_t vx = (int32_t)((v->rot[0]*x + v->rot[1]*y + v->rot[2]*z) >> 12) + v->trans[0];
+        const int32_t vy = (int32_t)((v->rot[3]*x + v->rot[4]*y + v->rot[5]*z) >> 12) + v->trans[1];
+        const int32_t vz = (int32_t)((v->rot[6]*x + v->rot[7]*y + v->rot[8]*z) >> 12) + v->trans[2];
+        if (vz <= 0) return 0;
+        q[k][0] = 160 + (int32_t)(((int64_t)vx * v->fov_screen_dist) / vz); q[k][1] = 120 + (int32_t)(((int64_t)vy * v->fov_screen_dist) / vz);
+    }
+    const int64_t dx = q[1][0] - q[0][0], dy = q[1][1] - q[0][1];
+    int64_t t0 = 0, t1 = 4096;
+    const int64_t p[4] = { -dx, dx, -dy, dy }, r[4] = { q[0][0] - 0, 319 - q[0][0], q[0][1] - 24, 215 - q[0][1] };
+    for (int i = 0; i < 4; i++) {
+        if (p[i] == 0) { if (r[i] < 0) return 0; continue; }
+        const int64_t t = (r[i] * 4096) / p[i];
+        if (p[i] < 0) { if (t > t1) return 0; if (t > t0) t0 = t; }
+        else          { if (t < t0) return 0; if (t < t1) t1 = t; }
+    }
+    if (t1 <= t0) return 0;
+    const int64_t lx = (dx * (t1 - t0)) / 4096, ly = (dy * (t1 - t0)) / 4096;
+    return (int)re15_squareroot0((uint32_t)(lx * lx + ly * ly));
+}
+/* Bewertung einer Bahn: 0 = unzulaessig; sonst *vis = Stuetzpunkte mit sichtbarem Stueck Wurzel -> Kopf, *laenge = Summe der sichtbaren Bildlaengen */
+static int gr2_runde_bewerten(const gr2_runde_t *b, const re15_camera_view_t *v, int32_t mw, int *vis, int64_t *laenge)
+{
+    gr2_runde_vor_t p; gr2_runde_vor(b, &p);
+    const int32_t U = p.U;
+    int n = 0; int64_t sum = 0;
+    for (int j = 0; j < GR2_RUNDE_N; j++) {
+        const int i = (j % 4) * (GR2_RUNDE_N / 4) + j / 4;   /* Reihenfolge 0, N/4, N/2, 3N/4, 1, ...: die vier Viertel zuerst (frueher Abbruch) */
+        int32_t x, z, fx, fz; int gier;
+        gr2_runde_punkt_v(b, &p, (int32_t)((int64_t)U * i / GR2_RUNDE_N), &x, &z, &fx, &fz, &gier);
+        if (!gr2_runde_zul(x, z, gier, mw)) return 0;
+        if (!v) continue;
+        const int l = gr2_runde_seg_sicht(v, x, z, x + q12mul(fx, GR2_RUNDE_KOPF), z + q12mul(fz, GR2_RUNDE_KOPF));
+        if (l > 0) { n++; sum += l; }
+    }
+    *vis = n; *laenge = sum;
+    return 1;
+}
+static int s_runde_alt = 0;   /* Pruefhaken der Gegenprobe (Riegel bahn): 1 = Kreis wie NB4 */
+void re15_gr2_bahn_alt_setzen(int an) { s_runde_alt = an; }
+static struct { int ok, cam, gefunden, vis, waende, teil, fertig; int64_t laenge, best_d; gr2_runde_t b; } s_rp;
+static gr2_runde_t s_runde[RE15_ACTOR_MAX];   /* laufende Bahn je Slot (s_tr[].kreis == 2) */
+/* Waende, die im Bild der Kamera liegen: Punkte der Aussenwand (laengs je 250, Hoehe y -3000/-1500/0 = Hoehe von Kopf und Kanister ueber dem Wasser
+ * y -1200) im Bild zwischen den Kino-Balken -> sichtbar. Bit 0 West, 1 Ost, 2 Sued, 3 Nord. */
+static int gr2_runde_waende_sichtbar(const re15_camera_view_t *v)
+{
+    int m = 0;
+    for (int i = 0; i < 4; i++) {
+        const int laengs_z = i < 2;
+        const int32_t a0 = laengs_z ? GR2_KK_Z0 : GR2_KK_X0, a1 = laengs_z ? GR2_KK_Z1 : GR2_KK_X1;
+        const int32_t fest = i == 0 ? GR2_KK_X0 : i == 1 ? GR2_KK_X1 : i == 2 ? GR2_KK_Z0 : GR2_KK_Z1;
+        for (int32_t a = a0; a <= a1 && !(m & (1 << i)); a += 250)
+            for (int32_t y = -3000; y <= 0; y += 1500) {
+                int sx, sy;
+                if (gr2_runde_proj(v, laengs_z ? fest : a, y, laengs_z ? a : fest, &sx, &sy)) { m |= 1 << i; break; }
+            }
+    }
+    return m;
+}
+/* Suche in Teilschritten (ein Schritt je Aufruf = je Bild): Schritt 0..GR2_RUNDE_TEILE-1 = je ein (R, Lage, Laenge) ueber das ganze Becken im Raster
+ * GR2_RUNDE_RASTER, letzter Schritt = um die beste Bahn je 50 im Umkreis eines Rasterschritts. Gemessen (Werkzeug bahnpruef, PC): die ganze Suche 60-150 ms
+ * je Kamera - in einem Bild ein Ruckler; in Teilschritten ~1-3 ms je Bild, die Bahn steht nach GR2_RUNDE_TEILE + 1 Bildern (~2,2 s), bis dahin die
+ * Anfahrt wie NB4. */
+static const int32_t k_runde_r[] = { 2000, 1500, 1000, 800, 650 };
+#define GR2_RUNDE_HL_N  7                                  /* Laenge 0, 500 .. 3000 */
+#define GR2_RUNDE_TEILE ((int)(sizeof k_runde_r / sizeof k_runde_r[0]) * 2 * GR2_RUNDE_HL_N)
+static void gr2_runde_schritt(const re15_camera_view_t *v, int32_t mw, int32_t px, int32_t pz, int32_t r, int lage, int32_t hl, int fein)
+{
+    const gr2_runde_t b0 = s_rp.b;
+    const int32_t x0 = fein ? (b0.ax + b0.bx) / 2 - GR2_RUNDE_RASTER : GR2_KK_X0, x1 = fein ? (b0.ax + b0.bx) / 2 + GR2_RUNDE_RASTER : GR2_KK_X1;
+    const int32_t z0 = fein ? (b0.az + b0.bz) / 2 - GR2_RUNDE_RASTER : GR2_KK_Z0, z1 = fein ? (b0.az + b0.bz) / 2 + GR2_RUNDE_RASTER : GR2_KK_Z1;
+    const int32_t sch = fein ? 50 : GR2_RUNDE_RASTER;
+    for (int32_t cx = x0; cx <= x1; cx += sch)
+        for (int32_t cz = z0; cz <= z1; cz += sch) {
+            gr2_runde_t b;
+            b.r = r; b.kdir = 1;
+            b.ax = cx - (lage ? 0 : hl); b.bx = cx + (lage ? 0 : hl);
+            b.az = cz - (lage ? hl : 0); b.bz = cz + (lage ? hl : 0);
+            /* notwendig: A und B mindestens Wurzel-Rand + R von Plattform und Rampe, Bahn mit Wurzel-Rand in den Aussenwaenden, Mitte nahe dem Bild */
+            const int64_t m2 = (int64_t)(mw + r) * (mw + r);
+            if (b.ax - r < GR2_KK_X0 + mw || b.bx + r > GR2_KK_X1 - mw || b.az - r < GR2_KK_Z0 + mw || b.bz + r > GR2_KK_Z1 - mw) continue;
+            if (gr2_tr_rect_ab2(b.ax, b.az, GR2_PLAT_X0, GR2_PLAT_X1, GR2_PLAT_Z0, GR2_PLAT_Z1) < m2 || gr2_tr_rect_ab2(b.ax, b.az, GR2_RAMP_X0, GR2_RAMP_X1, GR2_RAMP_Z0, GR2_RAMP_Z1) < m2
+                || gr2_tr_rect_ab2(b.bx, b.bz, GR2_PLAT_X0, GR2_PLAT_X1, GR2_PLAT_Z0, GR2_PLAT_Z1) < m2 || gr2_tr_rect_ab2(b.bx, b.bz, GR2_RAMP_X0, GR2_RAMP_X1, GR2_RAMP_Z0, GR2_RAMP_Z1) < m2) continue;
+            {   int sx = 0, sy = 0;                        /* Mitte hoechstens eine halbe Bildbreite/-hoehe neben dem Bild */
+                const int64_t X = cx, Y = -1200, Z = cz;
+                const int32_t vz = (int32_t)((v->rot[6]*X + v->rot[7]*Y + v->rot[8]*Z) >> 12) + v->trans[2];
+                if (vz <= 0) continue;
+                (void)gr2_runde_proj(v, cx, -1200, cz, &sx, &sy);
+                if (sx < -160 || sx > 480 || sy < -96 || sy > 336) continue; }
+            for (int kd = -1; kd <= 1; kd += 2) {
+                if (fein && kd != b0.kdir) continue;
+                b.kdir = (int8_t)kd;
+                int vis = 0; int64_t lg = 0;
+                if (!gr2_runde_bewerten(&b, v, mw, &vis, &lg) || vis < GR2_RUNDE_SICHT_MIN) continue;
+                const int64_t d = (int64_t)(cx - px) * (cx - px) + (int64_t)(cz - pz) * (cz - pz);
+                if (lg > s_rp.laenge || (lg == s_rp.laenge && d < s_rp.best_d)) { s_rp.laenge = lg; s_rp.best_d = d; s_rp.b = b; s_rp.vis = vis; }
+            }
+        }
+}
+static int gr2_runde_planen(int cam, const re15_actor_t *e, int32_t px, int32_t pz, gr2_runde_t *out)
+{
+    if (!e || !g_room_rdt_ok || !g_room_rdt.cuts || cam < 0 || cam >= g_room_rdt.cut_count || !gr2_h0_huelle(e)) return 0;
+    if (!s_rp.ok || s_rp.cam != cam) {                     /* neue Kamera: Suche von vorn */
+        memset(&s_rp, 0, sizeof s_rp);
+        s_rp.ok = 1; s_rp.cam = cam; s_rp.laenge = -1; s_rp.b.kdir = 1;
+    }
+    if (s_rp.fertig) { if (s_rp.gefunden) *out = s_rp.b; return s_rp.gefunden; }
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[cam], &v) != 0) return 0;
+    const int32_t mw = gr2_runde_wurzelrand(e);
+    s_runde_waende = gr2_runde_waende_sichtbar(&v);
+    if (s_rp.teil < GR2_RUNDE_TEILE) {
+        const int t = s_rp.teil++;
+        const int ri = t / (2 * GR2_RUNDE_HL_N), lage = (t / GR2_RUNDE_HL_N) % 2, hi = t % GR2_RUNDE_HL_N;
+        if (!(lage == 1 && hi == 0)) gr2_runde_schritt(&v, mw, px, pz, k_runde_r[ri], lage, hi * 500, 0);   /* Kreis (Laenge 0) nur einmal */
+        return 0;
+    }
+    if (s_rp.laenge >= 0) {                                /* Verfeinerung um die beste Bahn */
+        const gr2_runde_t b0 = s_rp.b;
+        const int lage0 = b0.ax == b0.bx && b0.az != b0.bz;
+        gr2_runde_schritt(&v, mw, px, pz, b0.r, lage0, lage0 ? (b0.bz - b0.az) / 2 : (b0.bx - b0.ax) / 2, 1);
+    }
+    s_rp.fertig = 1; s_rp.gefunden = s_rp.laenge >= 0; s_rp.waende = s_runde_waende;
+    if (s_rp.gefunden) {
+        const gr2_runde_t bb = s_rp.b;
+        *out = bb;
+        re15_gr2_log("TRAG BAHN geplant F%u Cut %d: A (%d,%d) B (%d,%d) R %d Drehsinn %d Umfang %d, %d/%d Stuetzpunkte im Bild, Kopflaenge im Mittel %d Bildpunkte, Waende %d",
+                     (unsigned)g_engine.frame_count, cam, (int)bb.ax, (int)bb.az, (int)bb.bx, (int)bb.bz, (int)bb.r, (int)bb.kdir, (int)gr2_runde_umfang(&bb), s_rp.vis, GR2_RUNDE_N,
+                     (int)(s_rp.laenge / GR2_RUNDE_N), s_runde_waende);
+    } else re15_gr2_log("TRAG BAHN F%u Cut %d: keine zulaessige Bahn im Bild", (unsigned)g_engine.frame_count, cam);
+    return s_rp.gefunden;
+}
+/* Anfahrt zur Bahn (NB5): Plattform und Rampe reichen von x -1700 bis an die Ostwand (SCA ROOM2090, GR2_PLAT_* / GR2_RAMP_*) - Nord- und Suedbecken
+ * verbindet nur der Westkanal. Kuerzester Weg ueber die Knoten Kanal-Nord / Kanal-Sued (Mitte des Wassers zwischen Westwand und Plattform-Westkante, in z
+ * die Mitte zwischen Aussenwand und Plattformkante), jede Strecke frei von den um den Wurzel-Rand der Bahn aufgeblasenen Bloecken;
+ * zurueck kommt der naechste Knoten. Ersetzt fuer die Bahn den Kanten-Umweg der Spur B (Lauf R-2318s Cut 2: er sprang zwischen Ost- und West-Hop
+ * (2279,-9867) / (-3888,-9862) und pendelte im Nordbecken). */
+#define GR2_RUNDE_KANAL_X  ((GR2_KK_X0 + GR2_PLAT_X0) / 2)
+#define GR2_RUNDE_KANAL_N  ((GR2_KK_Z1 + GR2_PLAT_Z1) / 2)
+#define GR2_RUNDE_KANAL_S  ((GR2_KK_Z0 + GR2_PLAT_Z0) / 2)
+static int gr2_runde_frei(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int32_t m)
+{
+    const int64_t dx = (int64_t)x1 - x0, dz = (int64_t)z1 - z0;
+    const int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz > 0xffffffffLL ? 0xffffffffLL : dx * dx + dz * dz));
+    for (int32_t t = 0; t <= d; t += 250)
+        if (gr2_tr_im_block(x0 + (int32_t)(dx * t / (d ? d : 1)), z0 + (int32_t)(dz * t / (d ? d : 1)), m)) return 0;
+    return 1;
+}
+static int32_t gr2_runde_ab(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
+{
+    const int64_t dx = (int64_t)x1 - x0, dz = (int64_t)z1 - z0;
+    return (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz > 0xffffffffLL ? 0xffffffffLL : dx * dx + dz * dz));
+}
+static void gr2_runde_anfahrt(const re15_actor_t *e, int32_t tx, int32_t tz, int32_t *qx, int32_t *qz)
+{
+    const int32_t m = gr2_runde_wurzelrand(e);                /* derselbe Rand wie die Bahn (sonst liegt ihr Plattform-Ast "im Block") */
+    const int32_t k[2][2] = { { GR2_RUNDE_KANAL_X, GR2_RUNDE_KANAL_N }, { GR2_RUNDE_KANAL_X, GR2_RUNDE_KANAL_S } };
+    int64_t best = -1; int32_t bx = tx, bz = tz;
+    if (gr2_runde_frei(e->x, e->z, tx, tz, m)) { *qx = tx; *qz = tz; return; }
+    for (int a = 0; a < 2; a++) {
+        if (!gr2_runde_frei(e->x, e->z, k[a][0], k[a][1], m)) continue;
+        const int64_t d0 = gr2_runde_ab(e->x, e->z, k[a][0], k[a][1]);
+        if (gr2_runde_frei(k[a][0], k[a][1], tx, tz, m)) {
+            const int64_t d = d0 + gr2_runde_ab(k[a][0], k[a][1], tx, tz);
+            if (best < 0 || d < best) { best = d; bx = k[a][0]; bz = k[a][1]; }
+        }
+        if (gr2_runde_frei(k[a][0], k[a][1], k[1-a][0], k[1-a][1], m) && gr2_runde_frei(k[1-a][0], k[1-a][1], tx, tz, m)) {
+            const int64_t d = d0 + gr2_runde_ab(k[a][0], k[a][1], k[1-a][0], k[1-a][1]) + gr2_runde_ab(k[1-a][0], k[1-a][1], tx, tz);
+            if (best < 0 || d < best) { best = d; bx = k[a][0]; bz = k[a][1]; }
+        }
+    }
+    if (best < 0) { bx = tx; bz = tz; re15_gator_boss_steuerziel(e, &bx, &bz); }   /* kein Knotenweg (Wurzel in einem Block-Schatten): Kanten-Umweg der Spur B */
+    *qx = bx; *qz = bz;
+}
+/* Runde 41 Spur G2-RE2 (5): Weg zum Startpunkt der Ueberquerung mit dem Kanister - die NB5-Anfahrt der Belagerung ueber die Westkanal-Knoten (gr2_runde_anfahrt:
+ * direkt, wenn die Strecke frei von den um den Wurzel-Rand aufgeblasenen Bloecken ist, sonst ueber Knoten Nord/Sued des Westkanals), das Ziel danach wie jedes
+ * Trag-Ziel gekuerzt (Aussenwaende NB5, Plattform/Rampe/Kamera G2-RE2: gr2_tr_fitfrei). PORT-WAHL wie die NB5-Anfahrt; RE2 hat keine Insel. */
+int re15_gr2_kreuz_anfahrt(int slot, const re15_actor_t *e, int32_t sx, int32_t sz, int32_t *tx, int32_t *tz)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || s_kk_ziel_alt) return 0;
+    s_kk_waende = 15;
+    if (!gr2_kan_zaehlt() || s_kan.stufe != 7 || !gr2_tr_huelle(e)) return 0;
+    int32_t qx, qz;
+    gr2_runde_anfahrt(e, sx, sz, &qx, &qz);
+    (void)gr2_tr_fitfrei(e, &qx, &qz);
+    s_tr[slot].an = 0; s_tr[slot].kreis = 0;
+    s_tr_modus[slot] = 4;
+    *tx = qx; *tz = qz;
+    return 1;
+}
+/* Runde 41 Spur G2-RE2 (M4 "haengt mit dem Kanister"): Weg zur Figur, wenn die Strecke Wurzel -> Figur durch die um den Wurzel-Rand aufgeblasenen Bloecke
+ * Plattform/Rampe fuehrt - dieselbe Knoten-Anfahrt ueber den Westkanal wie die Belagerung in NB5 (gr2_runde_anfahrt). Gemessen (Riegel re2, Lage
+ * Nordbecken-Ost = Abnahme 4 west4_elza): mit dem NB5-Weg (Spur-B-Routenwahl + Hop-/Vorbei-Etappen der Trag-Lenkung) pendelte er zwischen dem NW-Hop und
+ * Vorbei-Etappen im Suedbecken (58 s ohne Fortschritt). Ist die Strecke frei, bleibt die NB5-Verfolgung (Kuerzung, Vorbei-Etappe, Kreis) unveraendert.
+ * Rueckgabe 1 = Umweg-Ziel gesetzt. PORT-WAHL wie die NB5-Anfahrt. */
+int re15_gr2_rw_umweg(int slot, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *tx, int32_t *tz)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e || s_kk_ziel_alt || !gr2_kan_zaehlt() || s_kan.stufe != 7) return 0;
+    gr2_tr_frei(e, &px, &pz);                                  /* Ziel aus den aufgeblasenen Bloecken (Figur dicht an Rampe/Plattform) */
+    if (gr2_runde_frei(e->x, e->z, px, pz, gr2_runde_wurzelrand(e))) return 0;
+    return re15_gr2_kreuz_anfahrt(slot, e, px, pz, tx, tz);
+}
+/* naechster Stuetzpunkt (Bogenlaenge) zur Wurzel und sein Abstand */
+static int32_t gr2_runde_naechst(const gr2_runde_t *b, int32_t x, int32_t z, int32_t *ab)
+{
+    gr2_runde_vor_t pv; gr2_runde_vor(b, &pv);
+    const int32_t U = pv.U;
+    int64_t bd = -1; int32_t bs = 0;
+    for (int i = 0; i < 4 * GR2_RUNDE_N; i++) {
+        const int32_t s = (int32_t)((int64_t)U * i / (4 * GR2_RUNDE_N));
+        int32_t px, pz; gr2_runde_punkt_v(b, &pv, s, &px, &pz, NULL, NULL, NULL);
+        const int64_t d = (int64_t)(px - x) * (px - x) + (int64_t)(pz - z) * (pz - z);
+        if (bd < 0 || d < bd) { bd = d; bs = s; }
+    }
+    if (ab) *ab = (int32_t)re15_squareroot0((uint32_t)(bd > 0xffffffffLL ? 0xffffffffLL : bd));
+    return bs;
+}
+/* Messhaken (Riegel bahn): laufende Bahn des Slots; 1 = vorhanden. b[0..6] = ax, az, bx, bz, r, kdir, umfang */
+int re15_gr2_bahn(int slot, int32_t b[7])
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || s_tr[slot].kreis != 2 || s_runde[slot].r <= 0 || s_runde_alt || s_sicht_alt) return 0;
+    const gr2_runde_t *q = &s_runde[slot];
+    b[0] = q->ax; b[1] = q->az; b[2] = q->bx; b[3] = q->bz; b[4] = q->r; b[5] = q->kdir; b[6] = gr2_runde_umfang(q);
+    return 1;
+}
+/* Messhaken (Werkzeug): Bahn fuer Kamera und Figur planen (ohne Zustand des Slots); b wie re15_gr2_bahn, *vis = Stuetzpunkte im Bild */
+int re15_gr2_bahn_plan_mess(int cam, const re15_actor_t *e, int32_t px, int32_t pz, int32_t b[7], int *vis)
+{
+    gr2_runde_t q;
+    if (!e || !s_kan.aktiv || !s_kan.angehaengt) return 0;
+    if (s_rp.ok && s_rp.cam != cam) s_rp.ok = 0;
+    int ok = 0;
+    for (int i = 0; i <= GR2_RUNDE_TEILE + 1 && !ok && !(s_rp.ok && s_rp.cam == cam && s_rp.fertig); i++) ok = gr2_runde_planen(cam, e, px, pz, &q);
+    if (!ok && !(ok = gr2_runde_planen(cam, e, px, pz, &q))) return 0;
+    b[0] = q.ax; b[1] = q.az; b[2] = q.bx; b[3] = q.bz; b[4] = q.r; b[5] = q.kdir; b[6] = gr2_runde_umfang(&q);
+    if (vis) *vis = s_rp.vis;
+    return 1;
+}
+/* Messhaken (Werkzeug bahnpruef): Bahn b bewerten - 1 = zulaessig (*vis Stuetzpunkte im Bild, *kopf mittlere Kopflaenge in Bildpunkten), 0 = unzulaessig
+ * (*vis = erster unzulaessiger Stuetzpunkt) */
+int re15_gr2_bahn_bewerten_mess(int cam, const re15_actor_t *e, const int32_t b[7], int *vis, int *kopf)
+{
+    if (!e || !s_kan.aktiv || !s_kan.angehaengt || !gr2_h0_huelle(e) || !g_room_rdt_ok || cam < 0 || cam >= g_room_rdt.cut_count) return -1;
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[cam], &v) != 0) return -1;
+    const gr2_runde_t q = { b[0], b[1], b[2], b[3], b[4], (int8_t)b[5] };
+    const int32_t mw = gr2_runde_wurzelrand(e), U = gr2_runde_umfang(&q);
+    s_runde_waende = gr2_runde_waende_sichtbar(&v);
+    gr2_runde_vor_t pv; gr2_runde_vor(&q, &pv);
+    for (int i = 0; i < GR2_RUNDE_N; i++) {
+        int32_t x, z; int gier;
+        gr2_runde_punkt_v(&q, &pv, (int32_t)((int64_t)U * i / GR2_RUNDE_N), &x, &z, NULL, NULL, &gier);
+        if (!gr2_runde_zul(x, z, gier, mw)) { if (vis) *vis = i; if (kopf) *kopf = 0; return 0; }
+    }
+    int n = 0; int64_t lg = 0;
+    gr2_runde_bewerten(&q, &v, mw, &n, &lg);
+    if (vis) *vis = n;
+    if (kopf) *kopf = (int)(lg / GR2_RUNDE_N);
+    return 1;
+}
+/* Messhaken: Stuetzpunkt s (Bogenlaenge) einer Bahn b (wie re15_gr2_bahn) und naechster Stuetzpunkt zu (x,z) */
+void re15_gr2_bahn_punkt_mess(const int32_t b[7], int32_t s, int32_t *x, int32_t *z)
+{
+    const gr2_runde_t q = { b[0], b[1], b[2], b[3], b[4], (int8_t)b[5] };
+    gr2_runde_punkt(&q, s, x, z, NULL, NULL);
+}
+int32_t re15_gr2_bahn_naechst_mess(const int32_t b[7], int32_t x, int32_t z, int32_t *ab)
+{
+    const gr2_runde_t q = { b[0], b[1], b[2], b[3], b[4], (int8_t)b[5] };
+    return gr2_runde_naechst(&q, x, z, ab);
+}
+int re15_gr2_trag_modus(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_tr_modus[slot] : 0; }
+int re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern)
+{
+    const int r = gr2_trag_ziel_innen(slot, e, pl, tx, tz, nx, nz, belagern);
+    if (slot >= 0 && slot < RE15_ACTOR_MAX) s_tr_modus[slot] = (int8_t)r;
+    return r;
+}
+static int gr2_trag_ziel_innen(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
+    s_kk_waende = 15;                                      /* NB5: alle Waende, ausser die Bahn der Belagerung laeuft (unten) */
+    if (s_kk_ziel_alt) return re15_gr2_kk_ziel(e, tx, tz);
+    if (!gr2_kan_zaehlt() || s_kan.stufe != 7) { s_tr[slot].an = 0; s_tr[slot].dir = 0; s_tr[slot].kreis = 0; s_tr[slot].dash = 0; return 0; }   /* Stufe 7 = getragen (s. re15_gr2_kk_ziel) */
+    if (!gr2_tr_huelle(e)) return 0;
+    const int32_t ox = *tx, oz = *tz;
+    int hop = (nx != *tx || nz != *tz);
+    if (belagern) {
+        /* NB2 (M3'): Belagerung mit dem Kanister = Umkreisen um die Kante unter dem Spieler (Endziel der Spur B vor dem Kanten-Umweg), Kreis ganz ausserhalb
+         * der aufgeblasenen Bloecke; aus groesserer Entfernung (> 2 R) der Weg der Spur B (Umweg/Hops, Ziele aus den Bloecken geschoben). Abnahme 2 Lauf
+         * plat7_leon: der Hop (1673,-11900) lag 934 hinter der Plattform-Nordkante, 26 Zyklen mit je ~4,3 s Paddeln gegen die Kante. */
+        /* NB3 (Abnahme-Nachtrag M3': "naechster erreichbarer Wasserpunkt zum Spieler, Umkreisen dort mit R 2000"): Mittelpunkt = die Figur, aus den um Wurzel-Rand
+         * + R aufgeblasenen Bloecken auf den naechsten Punkt geschoben (Kreis ganz im Wasser), nicht die Spur-B-Kante (Rampe: x >= 4450, Lauf n8_plat7_leon:
+         * Kreis bei (-4000,-10500), 9000 von der Figur) */
+        int32_t cx = pl ? pl->x : nx, cz = pl ? pl->z : nz;
+        /* NB5 (Abnahme 3 M2a/M2b): zulaessige, in der Spielerkamera erkennbare Bahn (Abschnitt BAHN DER BELAGERUNG); ohne sie wie NB4 */
+        gr2_runde_t bn;
+#ifdef RE15_PLATFORM_PC                                    /* PSX: Suche nicht im Laufzeitbudget gemessen -> wie NB4 */
+        if (!s_runde_alt && !s_sicht_alt && pl && gr2_runde_planen((int)g_scd.cam_id, e, pl->x, pl->z, &bn)) {
+#else
+        if (0) {
+#endif
+            if (s_tr[slot].kreis != 2 || memcmp(&s_runde[slot], &bn, sizeof bn)) {
+                s_runde[slot] = bn; s_tr[slot].kreis = 2; s_tr[slot].kdir = bn.kdir; s_tr[slot].an = 0;
+                s_tr[slot].cx = (bn.ax + bn.bx) / 2; s_tr[slot].cz = (bn.az + bn.bz) / 2;
+                re15_gr2_log("TRAG BAHN an F%u (Belagerung): Wurzel (%d,%d), Figur (%d,%d) Cut %d -> A (%d,%d) B (%d,%d) R %d Drehsinn %d", (unsigned)g_engine.frame_count,
+                             e->x, e->z, pl->x, pl->z, (int)g_scd.cam_id, (int)bn.ax, (int)bn.az, (int)bn.bx, (int)bn.bz, (int)bn.r, (int)bn.kdir);
+            }
+            s_kk_waende = s_rp.waende;                         /* NB5: die Kopf-Klemme prueft dieselben Waende wie die Bahn (die im Bild dieser Kamera) */
+            int32_t ab = 0;
+            const int32_t s0 = gr2_runde_naechst(&bn, e->x, e->z, &ab);
+            int32_t qx, qz;
+            if (ab < bn.r) {                                   /* auf der Bahn: Karotte R x 45 Grad (pi R / 4) voraus, ohne Kuerzung (die Bahn ist zulaessig) */
+                gr2_runde_punkt(&bn, s0 + (int32_t)(((int64_t)3217 * bn.r) >> 12), &qx, &qz, NULL, NULL);
+                *tx = qx; *tz = qz;
+                return 3;
+            }
+            gr2_runde_punkt(&bn, s0, &cx, &cz, NULL, NULL);     /* weiter weg: zum naechsten Bahnpunkt, Weg ueber den Westkanal (gr2_runde_anfahrt) */
+            gr2_runde_anfahrt(e, cx, cz, &qx, &qz);
+            (void)gr2_tr_fitfrei(e, &qx, &qz);
+            *tx = qx; *tz = qz;
+            return 2;
+        }
+        /* NB4 (Punkt 2): im sichtbaren Wasser der laufenden Kamera (s. re15_gr2_kreis_kamera), sonst wie NB3 */
+        if (s_sicht_alt || !pl || !re15_gr2_kreis_kamera((int)g_scd.cam_id, e, pl->x, pl->z, &cx, &cz, NULL))
+            gr2_tr_frei_r(e, &cx, &cz, GR2_TR_KREIS);
+        const int64_t mx = (int64_t)e->x - cx, mz = (int64_t)e->z - cz;
+        if (mx * mx + mz * mz < 4LL * GR2_TR_KREIS * GR2_TR_KREIS) {
+            if (!s_tr[slot].kreis || gr2_tr_ab(e, s_tr[slot].cx, s_tr[slot].cz) > 3 * GR2_TR_KREIS
+                || (int64_t)(s_tr[slot].cx - cx) * (s_tr[slot].cx - cx) + (int64_t)(s_tr[slot].cz - cz) * (s_tr[slot].cz - cz) > (int64_t)GR2_TR_KREIS * GR2_TR_KREIS) {
+                const int th = e->rot_y & 0xfff;
+                const int64_t kr = (int64_t)(e->x - cx) * (-re15_sin_q12(th)) - (int64_t)(e->z - cz) * re15_cos_q12(th);
+                s_tr[slot].kreis = 2; s_tr[slot].kdir = (int8_t)(kr >= 0 ? 1 : -1); s_tr[slot].cx = cx; s_tr[slot].cz = cz; s_tr[slot].an = 0;   /* NB4: 2 = Kreis der Belagerung */
+                re15_gr2_log("TRAG KREISEN an F%u (Belagerung): Wurzel (%d,%d), Kante (%d,%d) -> Mittelpunkt (%d,%d) R %d", (unsigned)g_engine.frame_count,
+                             e->x, e->z, (int)nx, (int)nz, (int)cx, (int)cz, GR2_TR_KREIS);
+            }
+            int32_t qx, qz;
+            gr2_tr_karotte(slot, e, &qx, &qz, 0);
+            gr2_tr_frei(e, &qx, &qz);
+            (void)gr2_tr_fitfrei(e, &qx, &qz);
+            *tx = qx; *tz = qz;
+            return 3;
+        }
+        s_tr[slot].kreis = 0;
+        {   /* weiter weg: ist die Strecke Wurzel -> Mittelpunkt frei von den aufgeblasenen Bloecken (nur Wurzel-Rand, nicht der 2600er-Schatten der Spur B),
+             * direkt hin - der Umweg der Spur B pendelte im Fuzz NB2 (P-west) zwischen dem NW-Hop und der NO-Ecke */
+            const int32_t m = (e->hit_radius_min > 0 ? (int32_t)e->hit_radius_min : 1466) + 60 + 120;
+            const int64_t dx = (int64_t)cx - e->x, dz = (int64_t)cz - e->z, d2 = dx * dx + dz * dz;
+            const int32_t d = (int32_t)re15_squareroot0((uint32_t)(d2 > 0xffffffffLL ? 0xffffffffLL : d2));
+            int frei = 1;
+            for (int32_t t = 0; t <= d && frei; t += 500)
+                if (gr2_tr_im_block(e->x + (int32_t)(dx * t / (d ? d : 1)), e->z + (int32_t)(dz * t / (d ? d : 1)), m)) frei = 0;
+            int32_t qx = cx, qz = cz;
+            if (!frei) re15_gator_boss_steuerziel(e, &qx, &qz);   /* NB3: sonst ueber den Kanten-Umweg der Spur B zum Mittelpunkt (nicht zur Spur-B-Kante) */
+            (void)gr2_tr_fitfrei(e, &qx, &qz);
+            *tx = qx; *tz = qz;
+            return 2;
+        }
+    } else if (pl) {
+        /* NB2 (M1'): Ziel der Verfolgung, das NICHT der Spieler ist (Ring-/Umlauf-Wegpunkt der Routenwahl, Fuzz NB2: Kreisen um gekuerzte Wegpunkte vor der
+         * Plattform) - wie ein Hop: am gekuerzten Wegpunkt weiter zum Wegpunkt, den der Umweg von dort zum Spieler waehlt; kein Kreisen. */
+        const int32_t sx = pl->x < GR2_KK_X0 + 1600 ? GR2_KK_X0 + 1600 : pl->x > GR2_KK_X1 - 1600 ? GR2_KK_X1 - 1600 : pl->x;
+        const int32_t sz = pl->z < GR2_KK_Z0 + 1600 ? GR2_KK_Z0 + 1600 : pl->z > GR2_KK_Z1 - 1600 ? GR2_KK_Z1 - 1600 : pl->z;
+        if (ox - sx < -1500 || ox - sx > 1500 || oz - sz < -1500 || oz - sz > 1500) { hop = 1; nx = sx; nz = sz; }   /* 1500: das Spur-B-Ziel weicht
+                                                                 * vom Spieler ab (Anlauf/Maul-Ziel, Fuzz S4: 480), Ring-Wegpunkte liegen >= GB_RING_M 2600 vom Block */
+    }
+    gr2_tr_frei(e, tx, tz);                                /* NB2: kein Ziel in den aufgeblasenen Bloecken (Wurzel kommt nicht hin) */
+    const int seiten = gr2_tr_fitfrei(e, tx, tz);                                /* NB2: auch das gekuerzte Ziel nicht in den Bloecken (Fuzz O2: (1658,-12000) vor der Plattform) */
+    if (s_tr[slot].an) {
+        /* NB2: die Etappe je Bild mit der Gier, mit der er jetzt hinschwimmt, neu kuerzen (Riegel frei F3680-F3843: Etappe (-1116,-8474) beim Anlegen fuer die
+         * Gier nach Nordwest gekuerzt, angeschwommen dann nach Norden - Kopf an der Nordwand) */
+        int32_t lqx = s_tr[slot].qx, lqz = s_tr[slot].qz;
+        (void)gr2_tr_fitfrei(e, &lqx, &lqz);
+        const int32_t dq = gr2_tr_ab(e, lqx, lqz);
+        ++s_tr[slot].t;
+        /* NB2: eine Etappe, der die Wurzel in 60 Bildern nicht 200 naeher kommt (Ecke Plattform/Wand, Fuzz NB2 P-west), ist nicht erreichbar - naechste */
+        const int ohne = s_tr[slot].t >= 60 && (s_tr[slot].t % 60) == 0 && s_tr[slot].d0 - dq < 200;
+        if (s_tr[slot].t % 60 == 0) s_tr[slot].d0 = dq;
+        if (ohne) { s_tr_ohne_annaeherung++; re15_gr2_log("TRAG ETAPPE ohne Annaeherung F%u: Wurzel (%d,%d) Etappe (%d,%d) Abstand %d", (unsigned)g_engine.frame_count,
+                                                          e->x, e->z, (int)s_tr[slot].qx, (int)s_tr[slot].qz, (int)dq); }
+        if (dq < GR2_TR_ERREICHT || s_tr[slot].t > GR2_TR_HALTEN || ohne) {
+            s_tr[slot].an = 0; s_tr[slot].dir = (int8_t)-s_tr[slot].dir;
+        } else { *tx = lqx; *tz = lqz; return 2; }
+    }
+    if (!belagern && !hop) {                               /* NB2: Umkreisen nur um den gekuerzten SPIELER (s. GR2_TR_KREIS) */
+        if (s_tr[slot].kreis == 2) s_tr[slot].kreis = 0;   /* NB4: der Kreis der Belagerung endet mit ihr (sonst kreiste er an der Leiter weiter um den Rampen-Mittelpunkt, Riegel kamera) */
+        if (s_tr[slot].kreis) {
+            /* vorbei, wenn das (ungekuerzte) Spielerziel um mehr als R vom Ziel beim Beginn wandert - nicht am gekuerzten Ziel gemessen, das haengt von der
+             * Lage auf dem Kreis ab (Fuzz NB2 N2: Kreisen an/aus im Wechsel, dazwischen Vorbei-Etappen mit Wende) */
+            const int64_t ax = (int64_t)ox - s_tr[slot].sx, az = (int64_t)oz - s_tr[slot].sz;
+            if (!seiten || ax * ax + az * az > (int64_t)GR2_TR_KREIS * GR2_TR_KREIS) {
+                s_tr[slot].kreis = 0;
+                re15_gr2_log("TRAG KREISEN aus F%u: %s", (unsigned)g_engine.frame_count, seiten ? "Spieler weiter weg" : "Ziel passt wieder");
+            }
+        }
+        if (!s_tr[slot].kreis && seiten && gr2_tr_ab(e, *tx, *tz) < 2 * GR2_TR_KREIS) {
+            int32_t vx = 0, vz = 0;
+            if (seiten & 1) vx += 4096;
+            if (seiten & 2) vx -= 4096;
+            if (seiten & 4) vz += 4096;
+            if (seiten & 8) vz -= 4096;
+            const int32_t vl = (int32_t)re15_squareroot0((uint32_t)((int64_t)vx * vx + (int64_t)vz * vz));
+            int32_t cx = *tx, cz = *tz;
+            if (vl > 0) { cx += (int32_t)((int64_t)vx * GR2_TR_KREIS / vl); cz += (int32_t)((int64_t)vz * GR2_TR_KREIS / vl); }
+            gr2_tr_frei_r(e, &cx, &cz, GR2_TR_KREIS);           /* der ganze Kreis ausserhalb der aufgeblasenen Bloecke */
+            /* NB4 (Punkt 2, Leiterlagen): liegt dieser Kreis nicht zu >= GR2_TR_SICHT_MIN/16 im Bild der laufenden Kamera, dann der Mittelpunkt im
+             * sichtbaren Wasser, der Figur am naechsten (re15_gr2_kreis_kamera) - die Kuerzung legte den Kreis an der Leiter bis (929,-23646), 9000 von der
+             * Figur und in Cut 0 zu 0..2/16 im Bild (Riegel kamera). Ein sichtbarer Kreis bleibt (freies Spiel unveraendert, Riegel frei), ebenso ein
+             * sichtbarer Mittelpunkt weiter als 3 R von der Figur (exe-Riegel abn2_nordbecken: Figur NO-Ecke, Kamera 0, sichtbares Wasser erst bei
+             * (-5300,-20650) - der Weg dorthin endete an der Plattform-Westkante in 2-s-Fenstern ohne Fortschritt). */
+            if (!s_sicht_alt && pl && re15_gr2_kreis_sicht((int)g_scd.cam_id, cx, cz) < GR2_TR_SICHT_MIN) {
+                int32_t kx = 0, kz = 0;
+                if (re15_gr2_kreis_kamera((int)g_scd.cam_id, e, pl->x, pl->z, &kx, &kz, NULL)
+                    && (int64_t)(kx - pl->x) * (kx - pl->x) + (int64_t)(kz - pl->z) * (kz - pl->z) <= 9LL * GR2_TR_KREIS * GR2_TR_KREIS) { cx = kx; cz = kz; }
+            }
+            const int th = e->rot_y & 0xfff;                /* Drehsinn = der, in den er schon schwimmt: Kreuzprodukt (Wurzel - M) x Schwimmrichtung (cos, -sin) */
+            const int64_t kr = (int64_t)(e->x - cx) * (-re15_sin_q12(th)) - (int64_t)(e->z - cz) * re15_cos_q12(th);
+            s_tr[slot].kreis = 1; s_tr[slot].kdir = (int8_t)(kr >= 0 ? 1 : -1); s_tr[slot].cx = cx; s_tr[slot].cz = cz; s_tr[slot].an = 0;
+            s_tr[slot].sx = ox; s_tr[slot].sz = oz;
+            re15_gr2_log("TRAG KREISEN an F%u: Wurzel (%d,%d) Gier %d, Ziel (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Mittelpunkt (%d,%d) R %d Drehsinn %d",
+                         (unsigned)g_engine.frame_count, e->x, e->z, th, (int)ox, (int)oz, (int)*tx, (int)*tz, seiten, (int)cx, (int)cz, GR2_TR_KREIS,
+                         (int)s_tr[slot].kdir);
+        }
+        if (s_tr[slot].kreis) {
+            int32_t qx, qz;
+            gr2_tr_karotte(slot, e, &qx, &qz, 1);   /* Karotte 45 Grad voraus (NB5: Verfolgung wie NB4, s. gr2_tr_karotte) */
+            gr2_tr_frei(e, &qx, &qz);
+            (void)gr2_tr_fitfrei(e, &qx, &qz);
+            *tx = qx; *tz = qz;
+            return 3;
+        }
+        return seiten != 0;
+    }
+    if (!seiten || gr2_tr_ab(e, *tx, *tz) >= GR2_TR_ERREICHT) return seiten != 0;
+    if (hop) {
+        /* Umlauf-Hop des Kanten-Umwegs (Spur B gb_kanten_umweg, zustandslos: solange die Luftlinie im Plattform-Schatten liegt, wieder der Hop). Gemessen
+         * (Lauf n2_plat_leon F1264/F1466): der Hop (-4300,-22600) war mit der Anfahrt nach Sueden gekuerzt, er erreichte ihn nie und pendelte im Westkanal.
+         * Am gekuerzten Hop gilt der Hop als erreicht: Etappe zum Wegpunkt, den der Umweg vom Hop aus waehlt. */
+        re15_actor_t am_hop = *e;                          /* naechster Wegpunkt, wie ihn der Kanten-Umweg AM Hop waehlt (freie Luftlinie -> Endziel, sonst die naechste Ecke) */
+        am_hop.x = ox; am_hop.z = oz;
+        int32_t qx = nx, qz = nz;
+        re15_gator_boss_steuerziel(&am_hop, &qx, &qz);
+        gr2_tr_frei(e, &qx, &qz);                          /* NB2 (M3'): nicht hinter die Plattform-Kante (Lauf plat7_leon: (1673,-11900)) */
+        (void)gr2_tr_fitfrei(e, &qx, &qz);
+        if (gr2_tr_ab(e, qx, qz) >= GR2_TR_PLATZ) {
+            s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz; s_tr[slot].d0 = gr2_tr_ab(e, qx, qz);
+            re15_gr2_log("TRAG VORBEI F%u: Wurzel (%d,%d) Gier %d, Hop (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Etappe zum Wegpunkt nach dem Hop (%d,%d), Endziel (%d,%d)",
+                         (unsigned)g_engine.frame_count, e->x, e->z, (int)(e->rot_y & 0xfff), (int)ox, (int)oz, (int)*tx, (int)*tz, seiten, (int)qx, (int)qz,
+                         (int)nx, (int)nz);
+            *tx = qx; *tz = qz;
+            return 2;
+        }
+    }
+    /* VORBEI-Etappe laengs der kuerzenden Wand (Ost/West kuerzt -> laengs z, Nord/Sued -> laengs x) */
+    const int laengs_z = (seiten & 3) != 0;
+    if (!s_tr[slot].dir) {
+        const int32_t kom = laengs_z ? (pl ? pl->z - e->z : 0) : (pl ? pl->x - e->x : 0);
+        s_tr[slot].dir = (int8_t)(kom >= 0 ? 1 : -1);
+    }
+    for (int v = 0; v < 3; v++) {
+        int32_t qx = e->x, qz = e->z;
+        if (v < 2) {
+            const int sg = v == 0 ? s_tr[slot].dir : -s_tr[slot].dir;
+            if (laengs_z) qz += sg * GR2_TR_ETAPPE; else qx += sg * GR2_TR_ETAPPE;
+        } else {                                               /* von der Wand weg */
+            if (seiten & 1) qx += GR2_TR_ETAPPE; else if (seiten & 2) qx -= GR2_TR_ETAPPE;
+            if (seiten & 4) qz += GR2_TR_ETAPPE; else if (seiten & 8) qz -= GR2_TR_ETAPPE;
+        }
+        re15_gator_boss_steuerziel(e, &qx, &qz);
+        gr2_tr_frei(e, &qx, &qz);
+        (void)gr2_tr_fitfrei(e, &qx, &qz);
+        if (gr2_tr_ab(e, qx, qz) < GR2_TR_PLATZ) continue;
+        if (v == 1) s_tr[slot].dir = (int8_t)-s_tr[slot].dir;
+        s_tr[slot].an = 1; s_tr[slot].t = 0; s_tr[slot].qx = qx; s_tr[slot].qz = qz; s_tr[slot].d0 = gr2_tr_ab(e, qx, qz);
+        re15_gr2_log("TRAG VORBEI F%u: Wurzel (%d,%d) Gier %d, Ziel (%d,%d) gekuerzt auf (%d,%d) Seiten %d -> Etappe %s nach (%d,%d)", (unsigned)g_engine.frame_count,
+                     e->x, e->z, (int)(e->rot_y & 0xfff), (int)ox, (int)oz, (int)*tx, (int)*tz, seiten,
+                     v == 2 ? "von der Wand weg" : (laengs_z ? "laengs z" : "laengs x"), (int)qx, (int)qz);
+        *tx = qx; *tz = qz;
+        return 2;
+    }
+    return 1;
 }
 /* Pose ohne Ueberblendung (wie gr2_bone_welt) - fuer die R1-Vorausschau gr2_r1_pfad. */
 static int gr2_kk_takt(const re15_actor_t *e, int mit_kanister, int32_t *dx, int32_t *dz)
@@ -2268,6 +3905,7 @@ static int gr2_kk_takt(const re15_actor_t *e, int mit_kanister, int32_t *dx, int
     return rv == 0 && gr2_kk_rechnen(e, poses, mit_kanister, dx, dz);
 }
 static struct { uint8_t an; uint32_t f0; int n; int32_t max; } s_kk;   /* Messzeile KOPF-KLEMME (gator_boss.log) */
+int re15_gr2_kk_aktiv(void) { return s_kk.an; }   /* Runde 41 Spur G2 NB1: Messhaken der Riegel (Klemme greift in diesem Bild) */
 /* Runde 41 Spur P (Abnahme G 4 O1, Nutzer-Punkt "Lagespruenge mit dem Kanister im Maul ... ohne sichtbaren Sprung"): beim Tragen baut die Klemme den
  * Ueberstand ueber mehrere Bilder ab - hoechstens GR2_KK_SCHRITT je Bild = groesster authored Wurzelschritt der Clips 6/3/0/1 x Skala 2731 (Clip 6: 340,
  * unit_r41_re2gator_lauer; Massstab des Riegels integration_r41_re2gator "sichtbarer Lagesprung"). Vorher der ganze Ueberstand in EINEM Bild: bis 1517 je
@@ -2290,7 +3928,8 @@ int re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz)
 {
     *dx = *dz = 0;
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return 0;
-    const int traegt = s_kan.aktiv && s_kan.angehaengt;
+    if (s_tr[slot].kreis != 2) s_kk_waende = 15;            /* NB5: Wandmaske nur waehrend der Bahn der Belagerung (sonst galt sie nach einem Takt ohne Lenkung weiter) */
+    const int traegt = gr2_kan_zaehlt();                     /* G2-RE2 NB2 Vorschlag 4: mit dem Kanister im Maul keine Kopf-Klemme (wie ohne Kanister); R1-Tod bleibt */
     int hat = 0;
     if (traegt || s_g[slot].r1_phase != 0) {
         re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
@@ -2324,12 +3963,16 @@ int re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz)
 void re15_gr2_nachtakt(int slot, re15_actor_t *e)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX || !e) return;
+    if (s_kan.aktiv && !re15_gr2_rw_alt()) { re15_enemy_bank_t *vb = gr2_bank(e); if (vb && vb->skel.bone_count > 7) (void)gr2_thp_vorrat(e, vb, gr2_scale(e)); }   /* G2-RE2: Posen-Vorrat der Huelle verteilt bauen, sobald der Kanister im Spiel ist */
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     if (!gr2_pose_gezeichnet(e, poses)) return;
-    int32_t r6[9], p6[3], r7[9], p7[3];
+    int32_t r6[9], p6[3], r7[9], p7[3], r6v[9], p6v[3];
+    const int vorbild = s_kan_vorbild && s_fx_ok;            /* Pruefhaken Riegel v4 (b): Part-6-Matrix des vorigen Bildes */
+    memcpy(r6v, s_p6_rot, sizeof r6v); memcpy(p6v, s_p6_pos, sizeof p6v);
     gr2_part_welt(e, &poses[6], r6, p6);
     gr2_part_welt(e, &poses[7], r7, p7);
     memcpy(s_p6_rot, r6, sizeof s_p6_rot); memcpy(s_p6_pos, p6, sizeof s_p6_pos);
+    memcpy(s_p7_rot, r7, sizeof s_p7_rot); memcpy(s_p7_pos, p7, sizeof s_p7_pos);
     if (s_kan.aktiv && s_kan.anhaengen) {
         /* FUN_8002d030(Part-6-Matrix, Kanister-Matrix) @0x801018f0: rel = R6^T * Rk, lokal = R6^T * (p - p6) / s
          * (Lokallage `sw v0,56(s2) / sw v1,60(s2) / sw a3,64(s2)` @0x80101910-18) */
@@ -2348,7 +3991,7 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e)
         re15_gr2_log("KANISTER angehaengt lokal=(%d,%d,%d) F%u", s_kan.lokal[0], s_kan.lokal[1], s_kan.lokal[2],
                      (unsigned)g_engine.frame_count);
     }
-    if (s_kan.aktiv && s_kan.angehaengt) gr2_kan_folgen(e, r6, p6);
+    if (s_kan.aktiv && s_kan.angehaengt) gr2_kan_folgen(e, vorbild ? r6v : r6, vorbild ? p6v : p6);
     gr2_mtx(s_fx_mtx[GR2_FXM_TEIL6], r6, p6);
     gr2_mtx(s_fx_mtx[GR2_FXM_TEIL7], r7, p7);
     int32_t kp[3], kr[9];
@@ -2382,13 +4025,18 @@ int re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw)
     gr2_part_welt(e, &poses[6], r6, p6);
     int32_t s = gr2_scale(e);
     int32_t l[3] = { q12mul(s_kan.lokal[0], s), q12mul(s_kan.lokal[1], s), q12mul(s_kan.lokal[2], s) };
-    int64_t q = 0;
+    int64_t q = 0; int32_t dr_max = 0;
     for (int r = 0; r < 3; r++) {
         int32_t soll = p6[r] + (int32_t)(((int64_t)r6[r*3] * l[0] + (int64_t)r6[r*3+1] * l[1] + (int64_t)r6[r*3+2] * l[2]) >> 12);
         int64_t d = (int64_t)soll - s_kan.welt[r];
         q += d * d;
+        /* G2-RE2 NB2 (Vorschlag 4, Riegel "Halterung zum Kieferknochen konstant"): auch die Drehung - R6 x rel gegen die gezeichnete Kanister-Drehung, je Komponente (Q12) */
+        for (int c = 0; c < 3; c++) {
+            const int32_t sr = (int32_t)(((int64_t)r6[r*3] * s_kan.rel[c] + (int64_t)r6[r*3+1] * s_kan.rel[3+c] + (int64_t)r6[r*3+2] * s_kan.rel[6+c]) >> 12);
+            int32_t dd = sr - s_kan.welt_rot[r*3+c]; if (dd < 0) dd = -dd; if (dd > dr_max) dr_max = dd;
+        }
     }
-    if (abw) *abw = (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q));
+    if (abw) *abw = (int32_t)re15_squareroot0((uint32_t)(q > 0xffffffffLL ? 0xffffffffLL : q)) + dr_max;   /* 0 = Lage UND Drehung bitgleich */
     return 1;
 }
 /* ==== Nachbesserung 5 (Abnahme 4, M1): FINISHER-BUEHNE (FRESSEN P0) + Messzeile Maul-Sitz ======================================
@@ -3018,6 +4666,12 @@ int re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3])
     memcpy(rot, s_p6_rot, sizeof s_p6_rot); memcpy(pos, s_p6_pos, sizeof s_p6_pos);
     return 1;
 }
+int re15_gr2_part7_gezeichnet(int32_t rot[9], int32_t pos[3])
+{
+    if (!s_fx_ok) return 0;
+    memcpy(rot, s_p7_rot, sizeof s_p7_rot); memcpy(pos, s_p7_pos, sizeof s_p7_pos);
+    return 1;
+}
 int re15_gr2_fx_quelle(int i, uint8_t m[32])
 {
     if (i < 0 || i >= GR2_FXM_N || !s_fx_ok) return 0;
@@ -3025,7 +4679,9 @@ int re15_gr2_fx_quelle(int i, uint8_t m[32])
     return 1;
 }
 
+int re15_gr2_geschwaecht_slot(int slot) { return slot > 0 && slot < RE15_ACTOR_MAX && s_g[slot].geschwaecht; }
 int re15_gr2_geschwaecht(void) { for (int i = 0; i < RE15_ACTOR_MAX; i++) if (s_g[i].geschwaecht) return 1; return 0; }
 int re15_gr2_treffer(void)     { int n = 0; for (int i = 0; i < RE15_ACTOR_MAX; i++) n += s_g[i].treffer; return n; }
 int re15_gr2_tot(void)         { for (int i = 0; i < RE15_ACTOR_MAX; i++) if (s_g[i].tot) return 1; return 0; }
 int re15_gr2_traegt(void)      { return s_kan.aktiv && s_kan.stufe == 7; }
+int re15_gr2_traegt_lenkung(void) { return s_v4_alt && re15_gr2_traegt(); }   /* G2-RE2 NB2 Vorschlag 4: der Kanister zaehlt in der Bewegung nur mit dem Pruefhaken */

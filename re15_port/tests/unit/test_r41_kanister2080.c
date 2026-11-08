@@ -11,7 +11,7 @@
  *              (Plc_motion(2,6) + Sleep 110), je lebendem Zombie Plc_motion(2,7) + Signal + Sleep 30, Senken (2,6)+Plc_flg 0x80
  *              + Sleep 20, Schnitte 2 -> 5 -> 7 in dieser Reihenfolge, RE2-Wurf ROOM7020 sub12 (Cut 7, Plc_motion, Message_on
  *              42, Sleep 30, Plc_motion, Sleep 20, Signal WURF, Poll GELANDET, Sleep 15), Rueckkehr-Tuer Raum-Byte 0x09 + Aot_on.
- *              Mit 3 schon toten Zombies (Zone-7-Bits gesetzt) nur 5 Schuss-Bloecke. Nachbesserung 1: zwischen zwei Zielen
+ *              Mit 1 schon totem Zombie (Zone-7-Bit gesetzt) nur 2 Schuss-Bloecke (Spur G2: 3 Zombies). Nachbesserung 1: zwischen zwei Zielen
  *              Poll auf AUSGERICHTET (kein Sleep 10), kein Sleep nach dem Tuer-Ton; Aufnehmen = Marvins Hinknien/Aufstehen
  *              ROOM11B0 sub06 @0x01650..0x01663 Byte fuer Byte (Plc_motion(1,11), Sleep 60 geteilt am Griff-Bild 24,
  *              Plc_motion(1,11)+Plc_flg 0x80, Sleep 30); kein Loco c2 (PL00-Klettern) und kein Eigen c0 (RUN-Gait) im Programm.
@@ -137,10 +137,12 @@ static int teil_lage(void)
             PRUEFE(!(x > ex - 400 && x < ex + ew + 400 && z > ez - 400 && z < ez + ed + 400),
                    "Zombie %d (%d,%d) im Radius 400 der Band-8-Wandzelle @0x%X", i, (int)x, (int)z, (unsigned)(sca + 24 + k * 12));
         }
-        const double soll = atan2(-(double)(RE15_K2080_NPC_Z - z), (double)(RE15_K2080_NPC_X - x)) * 4096.0 / 6.283185307179586;
+        /* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 4 "nicht ... Richtung Marvin schauen, sondern weiter Richtung Leiter"): Blick zur Leiter-Ankunft
+         * (RE15_K2080_LEITER_*) statt auf den Treppenabsatz (RE15_K2080_NPC_*) */
+        const double soll = atan2(-(double)(RE15_K2080_LEITER_Z - z), (double)(RE15_K2080_LEITER_X - x)) * 4096.0 / 6.283185307179586;
         int sg = (int)lround(soll) & 0xfff;
         int dg = abs(((sg - g + 0x800) & 0xfff) - 0x800);
-        PRUEFE(dg <= 2, "Zombie %d Gier %d statt %d (Blick auf den Treppenabsatz)", i, (int)g, sg);
+        PRUEFE(dg <= 2, "Zombie %d Gier %d statt %d (Blick zur Leiter)", i, (int)g, sg);
     }
     return fails != 0;
 }
@@ -192,8 +194,10 @@ static int szene_pruefen(int elza, int tote)
     PRUEFE(p[0] == 0x44 && p[1] == RE15_K2080_NPC_SLOT && p[2] == (elza ? 0x49 : 0x40) && p[3] == 0x40 && p[4] == 8 && p[7] == 0xff,
            "NPC-Satz %02x %02x %02x %02x %02x .. %02x", p[0], p[1], p[2], p[3], p[4], p[7]);
     PRUEFE(rd16(p + 8) == RE15_K2080_NPC_X && rd16(p + 10) == -14400 && rd16(p + 12) == RE15_K2080_NPC_Z, "NPC-Lage");
-    const uint8_t anlegen[] = { 0x3f, 0x02, 0x06, 0x00, 0x09, 0x0a, 110, 0x00 };
-    const uint8_t feuer[] = { 0x3f, 0x02, 0x07, 0x00, 0x22, 0x05, RE15_K2080_SIG_SCHUSS, 0x01, 0x09, 0x0a, 30, 0x00 };
+    /* Runde 41 Spur G2 (Punkt 4 "viel zu lang"): Anlegen = Eigen c6 (10 Bilder) + Warten aufs Nachdrehen statt Sleep 110 (ROOM1021 @0x020CA),
+     * Feuern = Eigen c7 (16 Bilder) statt Sleep 30 (@0x020D2) */
+    const uint8_t anlegen[] = { 0x3f, 0x02, 0x06, 0x00, 0x09, 0x0a, RE15_K2080_ZIELEN_BILDER, 0x00, 0x11, 0x00 };
+    const uint8_t feuer[] = { 0x3f, 0x02, 0x07, 0x00, 0x22, 0x05, RE15_K2080_SIG_SCHUSS, 0x01, 0x09, 0x0a, RE15_K2080_FEUER_BILDER, 0x00 };
     const uint8_t senken[] = { 0x3f, 0x02, 0x06, 0x00, 0x43, 0x00, 0x80, 0x00, 0x09, 0x0a, 20, 0x00 };
     const int soll = RE15_K2080_N_ZOMBIES - tote;
     PRUEFE(zaehle(p, n, feuer, sizeof feuer) == soll, "%d Schuss-Bloecke statt %d", zaehle(p, n, feuer, sizeof feuer), soll);
@@ -270,7 +274,7 @@ static int teil_szene(void)
     re15_k2080_reset();
     szene_pruefen(0, 0);
     szene_pruefen(1, 0);
-    szene_pruefen(0, 3);
+    szene_pruefen(0, 1);   /* Runde 41 Spur G2 (Punkt 4): 3 statt 8 Zombies - mit einem toten nur 2 Schuss-Bloecke (vorher 3 tote von 8 -> 5) */
     for (int i = 0; i < RE15_K2080_N_ZOMBIES; i++) re15_game_flag_set(re15_em_status_zone(), (uint8_t)(RE15_K2080_TOT0 + i), 0);
     g_gameflow.character = 0;
     return fails != 0;
@@ -282,9 +286,10 @@ static int teil_start(void)
     PRUEFE(p && n == 8 + 32 + 2 + 2 && !memcmp(p, riegel, 8), "Programm 2 Form (Riegel ROOM2080 sub02 @0x0CB6/@0x0CBA)");
     if (p && n >= 44) {
         const uint8_t *t = p + 8;
+        /* Runde 41 Spur G2 (Punkt 4): Ankunft an der Leiter (Ziel der laufenden Zombies), Etage 8, statt am Treppenfuss (Etage 5) */
         PRUEFE(t[0] == 0x3b && t[1] == RE15_K2080_TUER_SLOT && t[23] == RE15_K2080_RAUM_BYTE_2080 && t[24] == RE15_K2080_CUT_SCHUSS &&
-               t[25] == RE15_K2080_PARK_ETAGE && rd16(t + 14) == RE15_K2080_PARK_X && rd16(t + 16) == RE15_K2080_PARK_Y &&
-               rd16(t + 18) == RE15_K2080_PARK_Z, "Tuer nach 2080 (Raum 0x08, Cut 2, Etage 5, Parkplatz)");
+               t[25] == RE15_K2080_LEITER_ETAGE && rd16(t + 14) == RE15_K2080_LEITER_X && rd16(t + 16) == RE15_K2080_LEITER_Y &&
+               rd16(t + 18) == RE15_K2080_LEITER_Z, "Tuer nach 2080 (Raum 0x08, Cut 2, Etage 8, Leiter-Ankunft)");
         PRUEFE(p[40] == 0x47 && p[41] == RE15_K2080_TUER_SLOT, "Aot_on");
     }
     p = re15_k2080_programm(3, &n);

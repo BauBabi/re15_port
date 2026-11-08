@@ -1,0 +1,71 @@
+RE2 INTRO ende pos=(-2754,-22840) yaw=2624 wand_draussen_max=0 kopf_x_min=-4704
+RAMMEN F383 gator=(5580,-1200,-20664) spieler=(4200,-1800,-15727) hp=100
+GTR F383 START art 1 sub 2 achse 1024 gier 1272->1024 schaden 30 ret 0 hp 70 gator (5580,-1200,-20664) gier 2969 figur (4200,-1800,-15727) band 1
+GTR F756 START art 4 sub 2 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (4333,-1200,-11299) gier 3297 figur (6248,0,-5950) band 0
+BISSLAUF F749-F793 art 4 treffer 1 bedingung 1
+GTR F873 START art 4 sub 3 achse 1024 gier 1024->1024 schaden 30 ret 0 hp 70 gator (5351,-1200,-7881) gier 611 figur (6743,0,-8535) band 0
+BISSLAUF F856-F900 art 4 treffer 1 bedingung 1
+GTR F980 START art 4 sub 3 achse 0 gier 1024->0 schaden 30 ret 0 hp 70 gator (5496,-1200,-12934) gier 361 figur (6732,0,-13665) band 0
+BISSLAUF F973-F1017 art 4 treffer 1 bedingung 1
+GTR F1087 START art 4 sub 3 achse 0 gier 0->0 schaden 30 ret 0 hp 70 gator (5644,-1200,-13016) gier 467 figur (6732,0,-13961) band 0
+BISSLAUF F1080-F1124 art 4 treffer 1 bedingung 1
+GTR F1208 START art 4 sub 3 achse 1024 gier 0->1024 schaden 30 ret 0 hp 70 gator (3849,-1200,-13016) gier 643 figur (5648,0,-14032) band 0
+BISSLAUF F1187-F1231 art 4 treffer 1 bedingung 1
+GTR F1315 START art 4 sub 3 achse 2048 gier 1024->2048 schaden 30 ret 0 hp 70 gator (5411,-1200,-13016) gier 1789 figur (3930,0,-13648) band 0
+BISSLAUF F1308-F1352 art 4 treffer 1 bedingung 1
+GTR F1422 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F1415-F1459 art 4 treffer 1 bedingung 1
+GTR F1529 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F1522-F1566 art 4 treffer 1 bedingung 1
+GTR F1636 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F1629-F1673 art 4 treffer 1 bedingung 1
+GTR F1743 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F1736-F1780 art 4 treffer 1 bedingung 1
+GTR F1850 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F1843-F1887 art 4 treffer 1 bedingung 1
+GTR F1957 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F1950-F1994 art 4 treffer 1 bedingung 1
+GTR F2064 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2057-F2101 art 4 treffer 1 bedingung 1
+GTR F2171 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2164-F2208 art 4 treffer 1 bedingung 1
+GTR F2278 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2271-F2315 art 4 treffer 1 bedingung 1
+GTR F2385 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2378-F2422 art 4 treffer 1 bedingung 1
+GTR F2492 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2485-F2529 art 4 treffer 1 bedingung 1
+GTR F2599 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2592-F2636 art 4 treffer 1 bedingung 1
+GTR F2706 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2699-F2743 art 4 treffer 1 bedingung 1
+GTR F2813 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2806-F2850 art 4 treffer 1 bedingung 1
+GTR F2920 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F2913-F2957 art 4 treffer 1 bedingung 1
+GTR F3027 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3020-F3064 art 4 treffer 1 bedingung 1
+GTR F3134 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3127-F3171 art 4 treffer 1 bedingung 1
+GTR F3241 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3234-F3278 art 4 treffer 1 bedingung 1
+GTR F3348 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3341-F3385 art 4 treffer 1 bedingung 1
+GTR F3455 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3448-F3492 art 4 treffer 1 bedingung 1
+GTR F3562 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3555-F3599 art 4 treffer 1 bedingung 1
+GTR F3669 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3662-F3706 art 4 treffer 1 bedingung 1
+GTR F3776 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3769-F3813 art 4 treffer 1 bedingung 1
+GTR F3883 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3876-F3920 art 4 treffer 1 bedingung 1
+GTR F3990 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F3983-F4027 art 4 treffer 1 bedingung 1
+GTR F4097 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F4090-F4134 art 4 treffer 1 bedingung 1
+GTR F4204 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F4197-F4241 art 4 treffer 1 bedingung 1
+GTR F4311 START art 4 sub 3 achse 2048 gier 2048->2048 schaden 30 ret 0 hp 70 gator (3334,-1200,-13016) gier 1537 figur (2318,0,-14032) band 0
+BISSLAUF F4304-F4348 art 4 treffer 1 bedingung 1

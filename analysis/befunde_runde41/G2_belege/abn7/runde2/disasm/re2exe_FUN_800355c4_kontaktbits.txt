@@ -1,0 +1,54 @@
+# Auszug ghidra_re2_Leon.txt Zeilen 129648-129699 (RE2-EXE FUN_800355c4, Aufrufer @0x80026628): Kontakt-Bits der Gegner -> Spieler+0xE (At_em_flg) je Bild
+# s1 = Spieler (0x800cfbf8), je Gegner FUN_80034d0c(Gegner, Spieler) -> Bit (0x8000 >> Index) in s3; 'sh s3,0xe(s1)' @0x80035658 = 0x800cfc06, das T1 @0x80101300 liest
+                             **************************************************************
+                             undefined FUN_800355c4()
+                               assume gp = 0x800988a4
+             undefined         <UNASSIGNED>   <RETURN>
+             undefined4        Stack[-0x8]:4  local_8                                 XREF[2]:     800355d4(W), 
+                                                                                                   8003565c(R)  
+             undefined4        Stack[-0xc]:4  local_c                                 XREF[2]:     800355d8(W), 
+                                                                                                   80035660(R)  
+             undefined4        Stack[-0x10]:4 local_10                                XREF[2]:     800355dc(W), 
+                                                                                                   80035664(R)  
+             undefined4        Stack[-0x14]:4 local_14                                XREF[2]:     800355c8(W), 
+                                                                                                   80035668(R)  
+             undefined4        Stack[-0x18]:4 local_18                                XREF[2]:     800355e4(W), 
+                                                                                                   8003566c(R)  
+                             FUN_800355c4                                    XREF[1]:     80026628(c)  
+        800355c4 d8 ff bd 27     addiu      sp,sp,-0x28
+        800355c8 14 00 b1 af     sw         s1,local_14(sp)
+        800355cc 21 88 80 00     move       s1,a0
+        800355d0 38 00 25 26     addiu      a1,s1,0x38
+        800355d4 20 00 bf af     sw         ra,local_8(sp)
+        800355d8 1c 00 b3 af     sw         s3,local_c(sp)
+        800355dc 18 00 b2 af     sw         s2,local_10(sp)
+        800355e0 02 d5 00 0c     jal        FUN_80035408                                     undefined FUN_80035408()
+        800355e4 10 00 b0 af     _sw        s0,local_18(sp)
+        800355e8 00 80 12 34     ori        s2,zero,0x8000
+        800355ec ff 00 02 24     li         v0,0xff
+        800355f0 0d 00 22 a2     sb         v0,0xd(s1)
+        800355f4 0d 80 02 3c     lui        v0,0x800d
+        800355f8 34 e3 42 8c     lw         v0,-0x1ccc(v0)=>DAT_800ce334
+        800355fc 0d 80 10 3c     lui        s0,0x800d
+        80035600 14 fe 10 26     addiu      s0,s0,-0x1ec
+        80035604 14 00 50 10     beq        v0,s0,LAB_80035658
+        80035608 21 98 00 00     _clear     s3
+                             LAB_8003560c                                    XREF[1]:     80035650(j)  
+        8003560c 00 00 04 8e     lw         a0,0x0(s0)=>DAT_800cfe14
+        80035610 00 00 00 00     nop
+        80035614 0b 00 24 12     beq        s1,a0,LAB_80035644
+        80035618 00 00 00 00     _nop
+        8003561c 00 00 82 8c     lw         v0,0x0(a0)
+        80035620 00 00 00 00     nop
+        80035624 01 00 42 30     andi       v0,v0,0x1
+        80035628 06 00 40 10     beq        v0,zero,LAB_80035644
+        8003562c 00 00 00 00     _nop
+        80035630 43 d3 00 0c     jal        FUN_80034d0c                                     undefined FUN_80034d0c()
+        80035634 21 28 20 02     _move      a1,s1
+        80035638 02 00 40 10     beq        v0,zero,LAB_80035644
+        8003563c 00 00 00 00     _nop
+        80035640 25 98 72 02     or         s3,s3,s2
+                             LAB_80035644                                    XREF[3]:     80035614(j), 80035628(j), 
+                                                                                          80035638(j)  
+        80035644 0d 80 02 3c     lui        v0,0x800d
+        80035648 34 e3 42 8c     lw         v0,-0x1ccc(v0)=>DAT_800ce334

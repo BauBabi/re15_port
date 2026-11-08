@@ -1,0 +1,42 @@
+RDT+0x60 -> 0x65e8 Anzahl 2 Liste 0x9dd0
+Paar 0 Flags 0x1 EMR @0x65f4 EDD @0x8f8c Clips 21
+   Clip  0:   1 Bilder
+   Clip  1:   1 Bilder
+   Clip  2:   1 Bilder
+   Clip  3:   1 Bilder
+   Clip  4:   1 Bilder
+   Clip  5:   1 Bilder
+   Clip  6:   1 Bilder
+   Clip  7:   1 Bilder
+   Clip  8:   1 Bilder
+   Clip  9:   1 Bilder
+   Clip 10:   1 Bilder
+   Clip 11:   1 Bilder
+   Clip 12:   1 Bilder
+   Clip 13:   1 Bilder
+   Clip 14:   1 Bilder
+   Clip 15:  20 Bilder
+   Clip 16:  24 Bilder
+   Clip 17:  16 Bilder
+   Clip 18:  10 Bilder
+   Clip 19:  30 Bilder
+   Clip 20:  21 Bilder
+Paar 1 Flags 0x2 EMR @0x9208 EDD @0x9d00 Clips 16
+   Clip  0:   1 Bilder
+   Clip  1:   1 Bilder
+   Clip  2:   1 Bilder
+   Clip  3:   1 Bilder
+   Clip  4:   1 Bilder
+   Clip  5:   1 Bilder
+   Clip  6:   1 Bilder
+   Clip  7:   1 Bilder
+   Clip  8:   1 Bilder
+   Clip  9:   1 Bilder
+   Clip 10:   1 Bilder
+   Clip 11:   1 Bilder
+   Clip 12:   1 Bilder
+   Clip 13:   1 Bilder
+   Clip 14:   1 Bilder
+   Clip 15:  20 Bilder
+ROOM2090.RDT RDT+0x5C = 0x0
+ROOM2091.RDT RDT+0x5C = 0x0

@@ -1,0 +1,50 @@
+# Abnahme-4-Lauf west5_elza (Umgebung wortgleich G2_belege/abn4/werkzeug/batch2.sh / abn5 batch5.sh), ohne Kanister (RE15_G2_OHNE_KANISTER=1), EXIT_AT 3300#2091 (werkzeug/batch_r2.sh west5_elza)
+# alt = Runde-1-exe 029efac6 (Stand 10603425b; der erste alt-Lauf verlor die Bildausgabe (DEVICELOST), zweiter Lauf nur Bilder F2700-F2950, Logs bitgleich), neu = 5910fc24 (Bau 5a94392bf)
+== alt exe 029efac644499f92ef0a5572ee3aa43d
+exit=0 ende=12:14:56
+aussenlog: 3584 Bilder in ROOM2090/2091, davon oben 1463; aussen 0, Deck verlassen 548, im Block 0; erstes F2753 (Deck verlassen) bei (2318,-1800,-19704) Raum 2091, letztes F3300, groesster Abstand hinter der Aussenwand 2914 -> VERFEHLT (0 verlangt)
+RAUMHALT-Zeilen: 0
+== neu exe 5910fc246fc82eaaac9f64795492585a
+exit=0 ende=12:08:49
+aussenlog: 3584 Bilder in ROOM2090/2091, davon oben 1463; aussen 0, Deck verlassen 0, im Block 0; erstes F-1 (-) bei (0,0,0) Raum 0000, letztes F-1, groesster Abstand hinter der Aussenwand 0 -> ok (0 verlangt)
+RAUMHALT-Zeilen: 7
+
+# Treffer-Bilder (hp-Flanke) im Rueckkehr-Besuch: alt / neu identisch bis F2752
+-- alt:
+F1820(2318,0,-18568) F2217(2318,-1800,-14993) F2384(2315,-1800,-15549) F2531(2315,-1800,-14993) F2752(2315,-1800,-17642)
+-- neu:
+F1820(2318,0,-18568) F2217(2318,-1800,-14993) F2384(2315,-1800,-15549) F2531(2315,-1800,-14993) F2752(2315,-1800,-17642) F2817(2318,-1800,-17431) F2924(2301,-1800,-17165) F3029(2318,-1800,-17642)
+
+# alt F2752-F2765 (state.log): Flug durch die Suedwand
+F2752 pad=0000 PL(2315,-17642,rot=3072,hp=50) pst=2 ps1=2 ps2=0 mo=211
+F2753 pad=0000 PL(2318,-19704,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2754 pad=0000 PL(2318,-20689,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2755 pad=0000 PL(2318,-21644,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2756 pad=0000 PL(2318,-22554,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2757 pad=0000 PL(2318,-23404,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2758 pad=0000 PL(2318,-24179,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2759 pad=0000 PL(2318,-24864,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2760 pad=0000 PL(2318,-25444,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2761 pad=0000 PL(2318,-25904,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2762 pad=0000 PL(2318,-26229,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2763 pad=0000 PL(2318,-26554,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=14
+F2764 pad=0000 PL(2318,-26864,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=14
+F2765 pad=0000 PL(2318,-27159,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=14
+# neu F2752-F2760
+F2752 pad=0000 PL(2315,-17642,rot=3072,hp=50) pst=2 ps1=2 ps2=0 mo=211
+F2753 pad=0000 PL(2315,-17632,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2754 pad=0000 PL(2318,-17632,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2755 pad=0000 PL(2318,-17632,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2756 pad=0000 PL(2318,-17632,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2757 pad=0000 PL(2318,-17632,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2758 pad=0000 PL(2308,-17634,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2759 pad=0000 PL(2318,-17635,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+F2760 pad=0000 PL(2318,-17640,rot=3072,hp=100) pst=2 ps1=2 ps2=0 mo=13
+# neu RAUMHALT
+RAUMHALT F2753 Band 1 (2315,-19568) -> (2315,-17632) vorher (2315,-17642) hr=1 mo=13
+RAUMHALT F2754 Band 1 (1382,-18617) -> (2318,-17632) vorher (2315,-17632) hr=1 mo=13
+RAUMHALT F2755 Band 1 (1382,-18587) -> (2318,-17632) vorher (2318,-17632) hr=1 mo=13
+RAUMHALT F2819 Band 1 (1382,-18617) -> (2318,-17632) vorher (2318,-17632) hr=1 mo=13
+RAUMHALT F2820 Band 1 (1382,-18591) -> (2318,-17632) vorher (2307,-17636) hr=1 mo=13
+RAUMHALT F2926 Band 1 (1382,-18617) -> (2318,-17632) vorher (2301,-17632) hr=1 mo=13
+RAUMHALT F2927 Band 1 (1382,-18587) -> (2318,-17632) vorher (2318,-17632) hr=1 mo=13

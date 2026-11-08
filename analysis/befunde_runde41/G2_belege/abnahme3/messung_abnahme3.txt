@@ -1,0 +1,183 @@
+# Abnahme G2-3 - Messausgaben (eigene Auswerter zomb.py / p7.py / p8.py / sicht.py im Laufordner <SP>/G2abn3, Laeufe runs/<name>)
+# exe md5 84f886b1e1eddc0d3dc10e498f992bf7 (HEAD b78387a6c)
+
+## P1/P2 Folge-Zeilen und Gator-Clip je Bild (ank_leon / ank_elza)
+[gatorszene] Folge K ROOM2090 F87 wert=13/0 zustand=4
+[gatorszene] Folge W ROOM2090 F145 wert=57/-2149 zustand=4
+[gatorszene] Folge F ROOM2090 F163 wert=75/-2044 zustand=4
+[gatorszene] Folge V ROOM2090 F165 wert=77/0 zustand=4
+[gatorszene] Folge K ROOM2091 F87 wert=13/0 zustand=4
+[gatorszene] Folge W ROOM2091 F145 wert=57/-2149 zustand=4
+[gatorszene] Folge F ROOM2091 F163 wert=75/-2044 zustand=4
+[gatorszene] Folge V ROOM2091 F165 wert=77/0 zustand=4
+F87 mo=4 af=13;F88 mo=5 af=0;F89 mo=5 af=1;F90 mo=5 af=2;F91 mo=5 af=3;F92 mo=5 af=4;F93 mo=5 af=5;F94 mo=5 af=6;F95 mo=5 af=7;F96 mo=5 af=8;F97 mo=5 af=9;F98 mo=5 af=10;F99 mo=5 af=11;F100 mo=5 af=12;F101 mo=5 af=13;F161 mo=5 af=73;F162 mo=5 af=74;F163 mo=5 af=75;F164 mo=5 af=76;F165 mo=5 af=77;F166 mo=5 af=78;
+
+## P3 Montage (zomb.py)
+Abschnitt 3 (Spieler-Start (-9950, -25700), 156 Bilder): 5 Zombies (t=16)
+  Slot  1: Start (-12300,-18300) Leiter  7764 -> Ende (-11436,-20848) Leiter  5074 (naeher  2689), Bahn  2854, Richtung Bewegung   71.3 Grad / zur Leiter   72.4 Grad, Gier Start 821 Ende 827, erstes Bewegen F8, Tod FNone
+  Slot  2: Start (-10700,-17500) Leiter  8234 -> Ende (-10450,-21086) Leiter  4641 (naeher  3593), Bahn  4172, Richtung Bewegung   86.0 Grad / zur Leiter   84.8 Grad, Gier Start 963 Ende 951, erstes Bewegen F8, Tod FNone
+  Slot  3: Start (-12700,-15800) Leiter 10274 -> Ende (-12118,-18241) Leiter  7767 (naeher  2507), Bahn  2659, Richtung Bewegung   76.6 Grad / zur Leiter   74.5 Grad, Gier Start 847 Ende 839, erstes Bewegen F8, Tod FNone
+  Slot  4: Start (-11300,-15300) Leiter 10487 -> Ende (-10780,-19095) Leiter  6656 (naeher  3830), Bahn  4061, Richtung Bewegung   82.2 Grad / zur Leiter   82.6 Grad, Gier Start 939 Ende 941, erstes Bewegen F8, Tod FNone
+  Slot  5: Start (-9900,-14700) Leiter 11000 -> Ende (-10122,-18174) Leiter  7527 (naeher  3472), Bahn  3993, Richtung Bewegung   93.7 Grad / zur Leiter   90.3 Grad, Gier Start 1029 Ende 1005, erstes Bewegen F8, Tod FNone
+Abschnitt 3 (Spieler-Start (-9950, -25700), 156 Bilder): 5 Zombies (t=16)
+  Slot  1: Start (-12300,-18300) Leiter  7764 -> Ende (-11436,-20848) Leiter  5074 (naeher  2689), Bahn  2854, Richtung Bewegung   71.3 Grad / zur Leiter   72.4 Grad, Gier Start 821 Ende 827, erstes Bewegen F8, Tod FNone
+  Slot  2: Start (-10700,-17500) Leiter  8234 -> Ende (-10450,-21086) Leiter  4641 (naeher  3593), Bahn  4172, Richtung Bewegung   86.0 Grad / zur Leiter   84.8 Grad, Gier Start 963 Ende 951, erstes Bewegen F8, Tod FNone
+  Slot  3: Start (-12700,-15800) Leiter 10274 -> Ende (-12118,-18241) Leiter  7767 (naeher  2507), Bahn  2659, Richtung Bewegung   76.6 Grad / zur Leiter   74.5 Grad, Gier Start 847 Ende 839, erstes Bewegen F8, Tod FNone
+  Slot  4: Start (-11300,-15300) Leiter 10487 -> Ende (-10780,-19095) Leiter  6656 (naeher  3830), Bahn  4061, Richtung Bewegung   82.2 Grad / zur Leiter   82.6 Grad, Gier Start 939 Ende 941, erstes Bewegen F8, Tod FNone
+  Slot  5: Start (-9900,-14700) Leiter 11000 -> Ende (-10122,-18174) Leiter  7527 (naeher  3472), Bahn  3993, Richtung Bewegung   93.7 Grad / zur Leiter   90.3 Grad, Gier Start 1029 Ende 1005, erstes Bewegen F8, Tod FNone
+
+## P4 Marvin/John (zomb.py + Schuss-Zeilen)
+[k2080] F284 ROOM2080 SZENE (Marvin 0x40, 3 lebende Zombies, 366 B Programm) Faden 10
+[k2080] F39 Schuss 1: Treffer Slot 1 (Ziel 1) hp=-1 state=3 zeile=5
+[k2080] F56 Schuss 2: Treffer Slot 2 (Ziel 2) hp=-1 state=3 zeile=5
+[k2080] F73 Schuss 3: Treffer Slot 3 (Ziel 3) hp=-1 state=3 zeile=5
+Abschnitt 2 (Spieler-Start (-9950, -25700), 339 Bilder): 3 Zombies (t=16)
+  Slot  1: Start (-12700,-15800) Leiter 10274 -> Ende (-12719,-16248) Leiter  9849 (naeher   425), Bahn   455, Richtung Bewegung   92.4 Grad / zur Leiter   74.5 Grad, Gier Start 847 Ende 837, erstes Bewegen F8, Tod F39
+  Slot  2: Start (-11300,-15300) Leiter 10487 -> Ende (-11172,-16462) Leiter  9318 (naeher  1168), Bahn  1367, Richtung Bewegung   83.7 Grad / zur Leiter   82.6 Grad, Gier Start 939 Ende 935, erstes Bewegen F8, Tod F56
+  Slot  3: Start (-9900,-14700) Leiter 11000 -> Ende (-9959,-15850) Leiter  9850 (naeher  1150), Bahn  1221, Richtung Bewegung   92.9 Grad / zur Leiter   90.3 Grad, Gier Start 1029 Ende 1021, erstes Bewegen F8, Tod F73
+[k2080] F284 ROOM2081 SZENE (John 0x49, 3 lebende Zombies, 366 B Programm) Faden 10
+[k2080] F39 Schuss 1: Treffer Slot 1 (Ziel 1) hp=-1 state=3 zeile=5
+[k2080] F56 Schuss 2: Treffer Slot 2 (Ziel 2) hp=-1 state=3 zeile=5
+[k2080] F73 Schuss 3: Treffer Slot 3 (Ziel 3) hp=-1 state=3 zeile=5
+Abschnitt 2 (Spieler-Start (-9950, -25700), 339 Bilder): 3 Zombies (t=16)
+  Slot  1: Start (-12700,-15800) Leiter 10274 -> Ende (-12719,-16248) Leiter  9849 (naeher   425), Bahn   455, Richtung Bewegung   92.4 Grad / zur Leiter   74.5 Grad, Gier Start 847 Ende 837, erstes Bewegen F8, Tod F39
+  Slot  2: Start (-11300,-15300) Leiter 10487 -> Ende (-11172,-16462) Leiter  9318 (naeher  1168), Bahn  1367, Richtung Bewegung   83.7 Grad / zur Leiter   82.6 Grad, Gier Start 939 Ende 935, erstes Bewegen F8, Tod F56
+  Slot  3: Start (-9900,-14700) Leiter 11000 -> Ende (-9959,-15850) Leiter  9850 (naeher  1150), Bahn  1221, Richtung Bewegung   92.9 Grad / zur Leiter   90.3 Grad, Gier Start 1029 Ende 1021, erstes Bewegen F8, Tod F73
+
+## P5 Musik
+-- kette_leon
+[bgm] stage=0 room=24 entry=FF28 -> MAIN28(flag 0) SUB--(flags 1/1)
+[bgm] loaded: 15 VAGs, SEQ 5552B, PPQN=48 tempo=480000us
+[bgm] stage=1 room=09 entry=042E -> MAIN2E(flag 0) SUB(flags 0/0)
+[bgm] stage=1 room=09 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)
+[bgm] loaded: 1 VAGs, SEQ 100B, PPQN=480 tempo=372670us
+[bgm] stage=1 room=08 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]
+[bgm] stage=1 room=09 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]
+[bgm] stage=1 room=09 entry=042E -> MAIN2E(flag 0) SUB(flags 0/0)
+-- kette_elza
+[bgm] stage=0 room=24 entry=FF28 -> MAIN28(flag 0) SUB--(flags 1/1)
+[bgm] loaded: 15 VAGs, SEQ 5552B, PPQN=48 tempo=480000us
+[bgm] stage=1 room=09 entry=042E -> MAIN2E(flag 0) SUB(flags 0/0)
+[bgm] stage=1 room=09 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)
+[bgm] loaded: 1 VAGs, SEQ 100B, PPQN=480 tempo=372670us
+[bgm] stage=1 room=08 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]
+[bgm] stage=1 room=09 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]
+[bgm] stage=1 room=09 entry=042E -> MAIN2E(flag 0) SUB(flags 0/0)
+-- frei_leon
+[bgm] stage=0 room=24 entry=FF28 -> MAIN28(flag 0) SUB--(flags 1/1)
+[bgm] loaded: 15 VAGs, SEQ 5552B, PPQN=48 tempo=480000us
+[bgm] stage=1 room=09 entry=042E -> MAIN2E(flag 0) SUB(flags 0/0)
+[bgm] stage=1 room=09 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)
+[bgm] loaded: 1 VAGs, SEQ 100B, PPQN=480 tempo=372670us
+[bgm] stage=1 room=08 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]
+[bgm] stage=1 room=09 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]
+-- frei_elza
+[bgm] stage=0 room=24 entry=FF28 -> MAIN28(flag 0) SUB--(flags 1/1)
+[bgm] loaded: 15 VAGs, SEQ 5552B, PPQN=48 tempo=480000us
+[bgm] stage=1 room=09 entry=042E -> MAIN2E(flag 0) SUB(flags 0/0)
+[bgm] stage=1 room=09 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)
+[bgm] loaded: 1 VAGs, SEQ 100B, PPQN=480 tempo=372670us
+[bgm] stage=1 room=08 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]
+[bgm] stage=1 room=09 entry=FF3C -> MAIN3C(flag 0) SUB--(flags 1/1)  [unveraendert, laeuft durch]
+
+## P6 Schluessel nach dem Tod
+[gatorszene] ROOM2090: Water Key (Item 0x34, Bits (9,111)/(9,112)) bei der Leiche (1100,-1749,-9600) Neigung rx -672 rz 128 (Kamera 3), Zone Slot 15
+[gatorszene] ROOM2091: Water Key (Item 0x34, Bits (9,111)/(9,112)) bei der Leiche (-7000,-1749,-23100) Neigung rx 672 rz -128 (Kamera 7), Zone Slot 15
+[k2080] F972 Kanister verbraucht (R1-Tod) -> Bit 116 = 0
+
+## P7 (p7.py)
+frei_leon: Trag 8192 Bilder (273 s) F209..F8400, Bahn 1041169 (3813 je s), Umlauf |Winkel| 18.0 / netto 0.1 Runden um (0,-16200)
+  Spieler-Ort: {'Wasser': 8192}
+  (A) 30-B.-Fenster netto<300: 10.1 % (am Spieler 4.4 %, Dash 0.0 %, fern 5.7 %), laengste Folge 87 B. (2.9 s), laengste ferne Folge 74 B.
+  (B) 2-s-Fenster ohne Fortschritt (ohne Biss am Spieler): 0 Fenster, 0 Bilder betroffen; Anfaenge []
+  KOPF-KLEMME an: 164, TRAG VORBEI: 22
+   Folge F2867-F2953 87 B. (2.9 s) Gator (2294,-21678) O4906, Kopf-Spieler 2710, Spieler Wasser (2282,-24959), ph 2, Clips [(4, 43), (0, 34)], Klemmen 3
+   Folge F5381-F5461 81 B. (2.7 s) Gator (-4076,-14636) W4824, Kopf-Spieler 2865, Spieler Wasser (-6925,-16300), ph 3, Clips [(4, 43), (0, 34)], Klemmen 2
+   Folge F5668-F5748 81 B. (2.7 s) Gator (-3891,-21722) W5009, Kopf-Spieler 2573, Spieler Wasser (-6845,-23186), ph 3, Clips [(4, 43), (0, 34)], Klemmen 1
+   Folge F383-F460 78 B. (2.6 s) Gator (-4582,-16350) W4318, Kopf-Spieler 1525, Spieler Wasser (-2342,-18928), ph 3, Clips [(4, 43), (0, 34)], Klemmen 0
+   Folge F499-F572 74 B. (2.5 s) Gator (-3739,-21648) W5161, Kopf-Spieler 3287, Spieler Wasser (-3903,-17859), ph 2, Clips [(0, 40), (4, 34)], Klemmen 0
+   Folge F3647-F3705 59 B. (2.0 s) Gator (1888,-24356) S2644, Kopf-Spieler 3611, Spieler Wasser (5405,-25640), ph 2, Clips [(0, 34), (4, 24)], Klemmen 0
+   Folge F2533-F2572 40 B. (1.3 s) Gator (-4336,-19513) W4564, Kopf-Spieler 3849, Spieler Wasser (-8436,-14318), ph 2, Clips [(0, 34), (4, 5)], Klemmen 0
+   Folge F2775-F2813 39 B. (1.3 s) Gator (-3157,-22584) S4416, Kopf-Spieler 2180, Spieler Wasser (893,-26508), ph 2, Clips [(0, 34), (4, 4)], Klemmen 0
+frei_elza: Trag 7756 Bilder (259 s) F645..F8400, Bahn 1018358 (3939 je s), Umlauf |Winkel| 20.0 / netto -0.4 Runden um (0,-16200)
+  Spieler-Ort: {'Wasser': 7756}
+  (A) 30-B.-Fenster netto<300: 11.4 % (am Spieler 5.6 %, Dash 0.0 %, fern 5.8 %), laengste Folge 60 B. (2.0 s), laengste ferne Folge 60 B.
+  (B) 2-s-Fenster ohne Fortschritt (ohne Biss am Spieler): 0 Fenster, 0 Bilder betroffen; Anfaenge []
+  KOPF-KLEMME an: 142, TRAG VORBEI: 67
+   Folge F1891-F1950 60 B. (2.0 s) Gator (3535,-21777) O3665, Kopf-Spieler 3603, Spieler Wasser (6020,-18960), ph 2, Clips [(0, 34), (4, 25)], Klemmen 0
+   Folge F5439-F5493 55 B. (1.8 s) Gator (4009,-10228) O3191, Kopf-Spieler 885, Spieler Wasser (5519,-7100), ph 3, Clips [(4, 43), (1, 11)], Klemmen 3
+   Folge F734-F787 54 B. (1.8 s) Gator (3336,-21521) O3864, Kopf-Spieler 3943, Spieler Wasser (6085,-18958), ph 2, Clips [(0, 34), (4, 19)], Klemmen 0
+   Folge F5547-F5600 54 B. (1.8 s) Gator (4058,-10267) O3142, Kopf-Spieler 880, Spieler Wasser (6061,-7192), ph 3, Clips [(4, 43), (1, 10)], Klemmen 3
+   Folge F5335-F5386 52 B. (1.7 s) Gator (3100,-10090) O4100, Kopf-Spieler 1062, Spieler Wasser (5196,-7253), ph 3, Clips [(4, 43), (1, 8)], Klemmen 2
+   Folge F912-F962 51 B. (1.7 s) Gator (3388,-21523) O3812, Kopf-Spieler 4131, Spieler Wasser (6103,-18945), ph 2, Clips [(0, 34), (4, 16)], Klemmen 0
+   Folge F5656-F5706 51 B. (1.7 s) Gator (3990,-10448) O3210, Kopf-Spieler 852, Spieler Wasser (5836,-7439), ph 3, Clips [(4, 43), (1, 7)], Klemmen 2
+   Folge F5871-F5921 51 B. (1.7 s) Gator (3950,-10210) O3250, Kopf-Spieler 821, Spieler Wasser (6026,-7188), ph 3, Clips [(4, 43), (1, 7)], Klemmen 2
+west_leon: Trag 2595 Bilder (86 s) F706..F3300, Bahn 121388 (1403 je s), Umlauf |Winkel| 2.0 / netto -0.3 Runden um (0,-16200)
+  Spieler-Ort: {'Rampe': 2595}
+  (A) 30-B.-Fenster netto<300: 0.0 % (am Spieler 0.0 %, Dash 0.0 %, fern 0.0 %), laengste Folge 0 B. (0.0 s), laengste ferne Folge 0 B.
+  (B) 2-s-Fenster ohne Fortschritt (ohne Biss am Spieler): 0 Fenster, 0 Bilder betroffen; Anfaenge []
+  KOPF-KLEMME an: 0, TRAG VORBEI: 0
+west_elza: Trag 2643 Bilder (88 s) F658..F3300, Bahn 125503 (1425 je s), Umlauf |Winkel| 2.1 / netto -0.4 Runden um (0,-16200)
+  Spieler-Ort: {'Wasser': 10, 'Rampe': 2633}
+  (A) 30-B.-Fenster netto<300: 0.0 % (am Spieler 0.0 %, Dash 0.0 %, fern 0.0 %), laengste Folge 0 B. (0.0 s), laengste ferne Folge 0 B.
+  (B) 2-s-Fenster ohne Fortschritt (ohne Biss am Spieler): 0 Fenster, 0 Bilder betroffen; Anfaenge []
+  KOPF-KLEMME an: 1, TRAG VORBEI: 0
+
+## P7 Bau-Auswerter traglog auf meinen Laeufen
+frei_leon: traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F183 (140 Bilder = 4.7 s), 8218 Trag-Bilder: ohne Fortschritt 583 (7 %), davon keine Ausnahme ausser Biss am Spieler (245 Bilder), laengste Folge ohne Fortschritt 40 Bilder (bis F572), laengstes Wandreiben 3 Bilder (bis F2874), 2-s-Fenster ohne Fortschritt 0 (erstes F-1); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %
+frei_elza: traglog: 8400 Bilder 2090, Aufschlag F43, angehaengt F619 (576 Bilder = 19.2 s), 7782 Trag-Bilder: ohne Fortschritt 556 (7 %), davon keine Ausnahme ausser Biss am Spieler (354 Bilder), laengste Folge ohne Fortschritt 35 Bilder (bis F787), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 0 (erstes F-1); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %
+west_leon: traglog: 3300 Bilder 2090, Aufschlag F43, angehaengt F680 (637 Bilder = 21.2 s), 2621 Trag-Bilder: ohne Fortschritt 0 (0 %), davon keine Ausnahme ausser Biss am Spieler (0 Bilder), laengste Folge ohne Fortschritt 0 Bilder (bis F-1), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 0 (erstes F-1); Figur oben 2621 Bilder, Kopf-Abstand mittel 6978, Gator im Bild der Spielerkamera 95 %
+west_elza: traglog: 3300 Bilder 2090, Aufschlag F43, angehaengt F632 (589 Bilder = 19.6 s), 2669 Trag-Bilder: ohne Fortschritt 0 (0 %), davon keine Ausnahme ausser Biss am Spieler (0 Bilder), laengste Folge ohne Fortschritt 0 Bilder (bis F-1), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 0 (erstes F-1); Figur oben 2633 Bilder, Kopf-Abstand mittel 7599, Gator im Bild der Spielerkamera 93 %
+
+## P7c Sichtbarkeit (sicht.py: bewegte Pixel je s, 320x216 ohne Balken, |Luma-Diff 0,2 s| > 12)
+west_leon Cut 2: Median 286, Anteil Sekunden mit >= 150 bewegten Pixeln: 53/67
+west_elza Cut 2: Median 482, Anteil Sekunden mit >= 150 bewegten Pixeln: 59/64
+frei_leon Cut 0 (Vergleich): Median 8833, Anteil Sekunden mit >= 150 bewegten Pixeln: 24/24
+
+## P8 (p8.py)
+frei_leon: Aufschlag F43 Kanister (-6870,-12651), RUNDE-zum-Kanister FNone, Aufnahme F183 (4.7 s nach Aufschlag), ANSCHWIMMEN an: 0
+  F  43 Gator ( -2869,-22690) Clip 0 | Spieler  8935 (-1088/s, Blick-Abw   -6) | Kanister 10806 (-1058/s, Blick-Abw  +11)
+  F  73 Gator ( -3496,-21797) Clip 0 | Spieler  7846 ( -267/s, Blick-Abw  +10) | Kanister  9748 ( -182/s, Blick-Abw  +29)
+  F 103 Gator ( -3835,-21723) Clip 0 | Spieler  7579 (-1862/s, Blick-Abw   -7) | Kanister  9566 (-2928/s, Blick-Abw  +11)
+  F 133 Gator ( -5388,-19121) Clip 4 | Spieler  5716 ( +719/s, Blick-Abw   +1) | Kanister  6637 (-1889/s, Blick-Abw  +20)
+  F 163 Gator ( -6140,-17343) Clip 4 | Spieler  6435 ( +565/s, Blick-Abw   -0) | Kanister  4748 ( +309/s, Blick-Abw  +12)
+frei_elza: Aufschlag F43 Kanister (-6842,-12641), RUNDE-zum-Kanister F500, Aufnahme F619 (19.2 s nach Aufschlag), ANSCHWIMMEN an: 0
+  F  43 Gator ( -2432,-21936) Clip 4 | Spieler  1963 ( -465/s, Blick-Abw   +0) | Kanister 10288 (  -73/s, Blick-Abw -145)
+  F  73 Gator ( -2504,-21889) Clip 4 | Spieler  1498 (   +0/s, Blick-Abw   +0) | Kanister 10214 (   +0/s, Blick-Abw -146)
+  F 103 Gator ( -2504,-21889) Clip 4 | Spieler  1498 (   +0/s, Blick-Abw   +0) | Kanister 10214 (  -79/s, Blick-Abw -156)
+  F 133 Gator ( -2568,-21831) Clip 0 | Spieler  1498 (   +0/s, Blick-Abw   -0) | Kanister 10135 (+3127/s, Blick-Abw -156)
+  F 163 Gator (   -35,-24024) Clip 1 | Spieler  1498 (+2011/s, Blick-Abw   -0) | Kanister 13263 (+1956/s, Blick-Abw -162)
+  F 193 Gator (  1802,-25168) Clip 4 | Spieler  3509 (  +36/s, Blick-Abw   -5) | Kanister 15219 (  +86/s, Blick-Abw -125)
+[k2080] F500 RUNDE zum Kanister an: Gator (5693,-25371) Gier 3493, Kanister (-6842,-12641), 458 Bilder frei im Becken, liegt voraus
+west_leon: Aufschlag F43 Kanister (-6870,-12651), RUNDE-zum-Kanister F532, Aufnahme F680 (21.2 s nach Aufschlag), ANSCHWIMMEN an: 0
+  F  43 Gator ( -2647,-22915) Clip 0 | Spieler  6987 (-1001/s, Blick-Abw  -34) | Kanister 11098 ( +467/s, Blick-Abw -110)
+  F  73 Gator ( -1410,-22848) Clip 0 | Spieler  5986 ( -347/s, Blick-Abw  -40) | Kanister 11566 ( +189/s, Blick-Abw -116)
+  F 103 Gator (  -960,-22814) Clip 0 | Spieler  5638 (-1769/s, Blick-Abw  -43) | Kanister 11756 (+2148/s, Blick-Abw -118)
+  F 133 Gator (  2779,-22663) Clip 1 | Spieler  3869 ( -418/s, Blick-Abw  -85) | Kanister 13904 (+1049/s, Blick-Abw -132)
+  F 163 Gator (  4463,-22407) Clip 4 | Spieler  3450 (   +3/s, Blick-Abw   +0) | Kanister 14953 (   +0/s, Blick-Abw  -30)
+  F 193 Gator (  4463,-22407) Clip 4 | Spieler  3454 ( +356/s, Blick-Abw   +0) | Kanister 14953 ( +133/s, Blick-Abw  -46)
+[k2080] F532 RUNDE zum Kanister an: Gator (4478,-22601) Gier 3461, Kanister (-6870,-12651), 490 Bilder frei im Becken, liegt voraus
+west_elza: Aufschlag F43 Kanister (-6842,-12641), RUNDE-zum-Kanister F492, Aufnahme F632 (19.6 s nach Aufschlag), ANSCHWIMMEN an: 0
+  F  43 Gator ( -2647,-22915) Clip 0 | Spieler  9261 (-1116/s, Blick-Abw  -25) | Kanister 11097 ( +464/s, Blick-Abw -110)
+  F  73 Gator ( -1410,-22848) Clip 0 | Spieler  8145 ( -402/s, Blick-Abw  -28) | Kanister 11562 ( +188/s, Blick-Abw -115)
+  F 103 Gator (  -960,-22814) Clip 0 | Spieler  7743 (-2878/s, Blick-Abw  -30) | Kanister 11751 (+2141/s, Blick-Abw -118)
+  F 133 Gator (  2779,-22663) Clip 1 | Spieler  4864 (-1410/s, Blick-Abw  -53) | Kanister 13892 ( +305/s, Blick-Abw -132)
+  F 163 Gator (  3395,-22479) Clip 4 | Spieler  3454 ( +324/s, Blick-Abw   -1) | Kanister 14197 (   -1/s, Blick-Abw  -47)
+  F 193 Gator (  3402,-22469) Clip 0 | Spieler  3778 ( +147/s, Blick-Abw  -45) | Kanister 14196 ( +490/s, Blick-Abw  -88)
+[k2080] F492 RUNDE zum Kanister an: Gator (4058,-22712) Gier 3051, Kanister (-6842,-12641), 450 Bilder frei im Becken, liegt voraus
+kette_leon: Aufschlag F43 Kanister (-6870,-12651), RUNDE-zum-Kanister F642, Aufnahme F822 (26.0 s nach Aufschlag), ANSCHWIMMEN an: 0
+  F  43 Gator ( -2869,-22690) Clip 0 | Spieler  5809 (+1934/s, Blick-Abw   +0) | Kanister 10806 (-1468/s, Blick-Abw  +14)
+  F  73 Gator ( -3779,-21463) Clip 4 | Spieler  7743 (-1938/s, Blick-Abw   +0) | Kanister  9338 (-1826/s, Blick-Abw  +18)
+  F 103 Gator ( -4939,-19910) Clip 0 | Spieler  5805 (  +46/s, Blick-Abw   -4) | Kanister  7511 (  +48/s, Blick-Abw  +18)
+  F 133 Gator ( -4921,-19955) Clip 0 | Spieler  5852 (-3299/s, Blick-Abw  -10) | Kanister  7559 (-1909/s, Blick-Abw  +12)
+  F 163 Gator ( -6208,-18262) Clip 2 | Spieler  2553 ( -810/s, Blick-Abw  -30) | Kanister  5649 ( -526/s, Blick-Abw  +24)
+  F 193 Gator ( -6801,-17774) Clip 2 | Spieler  1742 ( -203/s, Blick-Abw  -39) | Kanister  5123 ( -201/s, Blick-Abw  +30)
+[k2080] F642 RUNDE zum Kanister an: Gator (-4359,-16809) Gier 704, Kanister (-6870,-12651), 600 Bilder frei im Becken, spaet (liegt hinten)
+kette_elza: Aufschlag F43 Kanister (-6842,-12641), RUNDE-zum-Kanister F642, Aufnahme F822 (26.0 s nach Aufschlag), ANSCHWIMMEN an: 0
+  F  43 Gator ( -2869,-22690) Clip 0 | Spieler  5809 (+1934/s, Blick-Abw   +0) | Kanister 10805 (-1467/s, Blick-Abw  +15)
+  F  73 Gator ( -3779,-21463) Clip 4 | Spieler  7743 (-1938/s, Blick-Abw   +0) | Kanister  9338 (-1824/s, Blick-Abw  +18)
+  F 103 Gator ( -4939,-19910) Clip 0 | Spieler  5805 (  +46/s, Blick-Abw   -4) | Kanister  7513 (  +48/s, Blick-Abw  +18)
+  F 133 Gator ( -4921,-19955) Clip 0 | Spieler  5852 (-3299/s, Blick-Abw  -10) | Kanister  7562 (-1905/s, Blick-Abw  +12)
+  F 163 Gator ( -6208,-18262) Clip 2 | Spieler  2553 ( -810/s, Blick-Abw  -30) | Kanister  5656 ( -523/s, Blick-Abw  +25)
+  F 193 Gator ( -6801,-17774) Clip 2 | Spieler  1742 ( -203/s, Blick-Abw  -39) | Kanister  5133 ( -200/s, Blick-Abw  +30)
+[k2080] F642 RUNDE zum Kanister an: Gator (-4359,-16809) Gier 704, Kanister (-6842,-12641), 600 Bilder frei im Becken, spaet (liegt hinten)

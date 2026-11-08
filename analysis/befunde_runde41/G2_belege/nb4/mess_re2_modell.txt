@@ -1,0 +1,76 @@
+== Sub 2 (Figur sieht den Gator an: Stoss rueckwaerts): 20 Bilder, Weg -3735
+  Bild  0  Weg bis hier  -800  SE 0x04010001, Clip 18 Blend 3, +0x144=-800, +0x1D3|=0x80; Schritt -800
+  Bild  1  Weg bis hier -1450  Schritt -650
+  Bild  2  Weg bis hier -1950  Schritt -500
+  Bild  3  Weg bis hier -2300  Schritt -350
+  Bild  4  Weg bis hier -2500  Clip 19 Blend 3; Schritt -200, Clip 19 Bild 2
+  Bild  5  Weg bis hier -2685  Schritt -185, Clip 19 Bild 4
+  Bild  6  Weg bis hier -2855  Schritt -170, Clip 19 Bild 6
+  Bild  7  Weg bis hier -3010  Schritt -155, Clip 19 Bild 8
+  Bild  8  Weg bis hier -3150  Schritt -140, Clip 19 Bild 10
+  Bild  9  Weg bis hier -3275  Schritt -125, Clip 19 Bild 12
+  Bild 10  Weg bis hier -3385  Schritt -110, Clip 19 Bild 14
+  Bild 11  Weg bis hier -3480  Schritt -95, Clip 19 Bild 16
+  Bild 12  Weg bis hier -3560  Schritt -80, Clip 19 Bild 18
+  Bild 13  Weg bis hier -3625  Schritt -65, Clip 19 Bild 20
+  Bild 14  Weg bis hier -3675  Schritt -50, Clip 19 Bild 22
+  Bild 15  Weg bis hier -3710  Schritt -35, Clip 19 Bild 24
+  Bild 16  Weg bis hier -3730  Schritt -20, Clip 19 Bild 26
+  Bild 17  Weg bis hier -3735  Schritt -5, Clip 19 Bild 28
+  Bild 18  Weg bis hier -3735  Schritt 0, Clip 19 Bild 0
+  Bild 19  Weg bis hier -3735  Ende: +4 = 1 (Routine 1), +0x1D3 = 0, +0x1C0 &= 0xED (@0x801031c8-dc)
+== Sub 3 (Gator hinter der Figur: Stoss vorwaerts): 54 Bilder, Weg 3080
+  Bild  0  Weg bis hier   800  SE 0x04020001, Clip 20 Blend 3, +0x144=800, +0x1D3|=0x80; Schritt 800, Clip 20 Bild 1
+  Bild  1  Weg bis hier  1480  Schritt 680, Clip 20 Bild 2
+  Bild  2  Weg bis hier  2040  Schritt 560, Clip 20 Bild 3
+  Bild  3  Weg bis hier  2480  Schritt 440, Clip 20 Bild 4
+  Bild  4  Weg bis hier  2800  Schritt 320, Clip 20 Bild 5
+  Bild  5  Weg bis hier  3000  Schritt 200, Clip 20 Bild 6
+  Bild  6  Weg bis hier  3080  Schritt 80, Clip 20 Bild 7
+  Bild  7  Weg bis hier  3080  Schritt 0, Clip 20 Bild 8
+  Bild  8  Weg bis hier  3080  Schritt 0, Clip 20 Bild 9
+  Bild  9  Weg bis hier  3080  Schritt 0, Clip 20 Bild 10
+  Bild 10  Weg bis hier  3080  Schritt 0, Clip 20 Bild 11
+  Bild 11  Weg bis hier  3080  Schritt 0, Clip 20 Bild 12
+  Bild 12  Weg bis hier  3080  Schritt 0, Clip 20 Bild 13
+  Bild 13  Weg bis hier  3080  Schritt 0, Clip 20 Bild 14
+  Bild 14  Weg bis hier  3080  Schritt 0, Clip 20 Bild 15
+  Bild 15  Weg bis hier  3080  Schritt 0, Clip 20 Bild 16
+  Bild 16  Weg bis hier  3080  Schritt 0, Clip 20 Bild 17
+  Bild 17  Weg bis hier  3080  Schritt 0, Clip 20 Bild 18
+  Bild 18  Weg bis hier  3080  Schritt 0, Clip 20 Bild 19
+  Bild 19  Weg bis hier  3080  Schritt 0, Clip 20 Bild 20
+  Bild 20  Weg bis hier  3080  Schritt 0, Clip 20 Bild 0
+  Bild 21  Weg bis hier  3080  Clip 17 Blend 3, +0x1D3 = 0 (wieder treffbar); Clip 17 Bild 2 (doppelt)
+  Bild 22  Weg bis hier  3080  Clip 17 Bild 4 (doppelt)
+  Bild 23  Weg bis hier  3080  Clip 17 Bild 6 (doppelt)
+  Bild 24  Weg bis hier  3080  Clip 17 Bild 8 (doppelt)
+  Bild 25  Weg bis hier  3080  Clip 17 Bild 10 (doppelt)
+  Bild 26  Weg bis hier  3080  Clip 17 Bild 12 (doppelt)
+  Bild 27  Weg bis hier  3080  Clip 17 Bild 14 (doppelt)
+  Bild 28  Weg bis hier  3080  Clip 17 fertig -> Basis-Clip 6 rueckwaerts (0x00030006, a3 0x10400)
+  Bild 29  Weg bis hier  3080  Basis-Clip 6 Bild 1
+  Bild 30  Weg bis hier  3080  Basis-Clip 6 Bild 2
+  Bild 31  Weg bis hier  3080  Basis-Clip 6 Bild 3
+  Bild 32  Weg bis hier  3080  Basis-Clip 6 Bild 4
+  Bild 33  Weg bis hier  3080  Basis-Clip 6 Bild 5
+  Bild 34  Weg bis hier  3080  Basis-Clip 6 Bild 6
+  Bild 35  Weg bis hier  3080  Basis-Clip 6 Bild 7
+  Bild 36  Weg bis hier  3080  Basis-Clip 6 Bild 8
+  Bild 37  Weg bis hier  3080  Basis-Clip 6 Bild 9
+  Bild 38  Weg bis hier  3080  Basis-Clip 6 Bild 10
+  Bild 39  Weg bis hier  3080  Basis-Clip 6 Bild 11
+  Bild 40  Weg bis hier  3080  Basis-Clip 6 Bild 12
+  Bild 41  Weg bis hier  3080  Basis-Clip 6 Bild 13
+  Bild 42  Weg bis hier  3080  Basis-Clip 6 Bild 14
+  Bild 43  Weg bis hier  3080  Basis-Clip 6 Bild 15
+  Bild 44  Weg bis hier  3080  Basis-Clip 6 Bild 16
+  Bild 45  Weg bis hier  3080  Basis-Clip 6 Bild 17
+  Bild 46  Weg bis hier  3080  Basis-Clip 6 Bild 18
+  Bild 47  Weg bis hier  3080  Basis-Clip 6 Bild 19
+  Bild 48  Weg bis hier  3080  Basis-Clip 6 Bild 20
+  Bild 49  Weg bis hier  3080  Basis-Clip 6 Bild 21
+  Bild 50  Weg bis hier  3080  Basis-Clip 6 Bild 22
+  Bild 51  Weg bis hier  3080  Basis-Clip 6 Bild 23
+  Bild 52  Weg bis hier  3080  Basis-Clip 6 Bild 24
+  Bild 53  Weg bis hier  3080  Ende: +4 = 1, +0x1D3 = 0, +0x1C0 &= 0xED (@0x80103358-70)

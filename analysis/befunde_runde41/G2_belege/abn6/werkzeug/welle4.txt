@@ -1,0 +1,7 @@
+west5_elza ohne FDR=2740-2960/5 SUF=_fd
+abn2wand_leon ohne FDR=1030-1110/2 ENDE=1600 SUF=_fd
+kante_100_-20900_2_leon ohne FDR=150-3600/60
+kante_100_-20900_2_leon ohne alt FDR=150-3600/60
+spawn_4000_-16000_leon ohne SUF=_det
+kante_-800_-21200_0_elza neu
+kante_-800_-21200_0_elza neu alt

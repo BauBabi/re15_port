@@ -1,0 +1,45 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build
+      Start 1184: integration_r41_gatorfix_frei_elza
+      Start 1188: integration_r41_gatorfix_abn2_wand_elza
+ 1/20 Test #1188: integration_r41_gatorfix_abn2_wand_elza .........   Passed  690.96 sec
+      Start 1183: integration_r41_gatorfix_frei
+ 2/20 Test #1184: integration_r41_gatorfix_frei_elza ..............   Passed  691.98 sec
+      Start 1193: integration_r41_gatorfix_abn2_wand
+ 3/20 Test #1193: integration_r41_gatorfix_abn2_wand ..............   Passed  644.76 sec
+      Start 1190: integration_r41_gatorfix_abn2_rampe_west
+ 4/20 Test #1183: integration_r41_gatorfix_frei ...................   Passed  646.79 sec
+      Start 1187: integration_r41_gatorfix_abn2_leiterecke
+ 5/20 Test #1187: integration_r41_gatorfix_abn2_leiterecke ........   Passed  630.42 sec
+      Start 1192: integration_r41_gatorfix_abn2_ecken
+ 6/20 Test #1190: integration_r41_gatorfix_abn2_rampe_west ........   Passed  634.44 sec
+      Start 1189: integration_r41_gatorfix_abn2_nordbecken
+ 7/20 Test #1189: integration_r41_gatorfix_abn2_nordbecken ........   Passed  623.57 sec
+      Start 1197: integration_r41_gatorfix_oben_kante_elza
+ 8/20 Test #1192: integration_r41_gatorfix_abn2_ecken .............   Passed  637.09 sec
+      Start 1196: integration_r41_gatorfix_oben_kante
+ 9/20 Test #1196: integration_r41_gatorfix_oben_kante .............   Passed  490.28 sec
+      Start 1195: integration_r41_gatorfix_rampe_oben_elza
+10/20 Test #1197: integration_r41_gatorfix_oben_kante_elza ........   Passed  548.37 sec
+      Start 1191: integration_r41_gatorfix_abn2_rampe_west_elza
+11/20 Test #1195: integration_r41_gatorfix_rampe_oben_elza ........   Passed  411.84 sec
+      Start 1194: integration_r41_gatorfix_rampe_oben
+12/20 Test #1191: integration_r41_gatorfix_abn2_rampe_west_elza ...   Passed  698.03 sec
+      Start 1186: integration_r41_gatorfix_rampe_elza
+13/20 Test #1194: integration_r41_gatorfix_rampe_oben .............   Passed  389.89 sec
+      Start 1185: integration_r41_gatorfix_rampe
+14/20 Test #1186: integration_r41_gatorfix_rampe_elza .............   Passed  379.21 sec
+      Start 1180: integration_r41_gatorfix_gang_montage_elza
+15/20 Test #1185: integration_r41_gatorfix_rampe ..................   Passed  340.02 sec
+      Start 1182: integration_r41_gatorfix_gang_szene_elza
+16/20 Test #1180: integration_r41_gatorfix_gang_montage_elza ......   Passed   64.13 sec
+      Start 1179: integration_r41_gatorfix_gang_montage
+17/20 Test #1182: integration_r41_gatorfix_gang_szene_elza ........   Passed   56.24 sec
+      Start 1352: integration_r41_re2gator
+18/20 Test #1179: integration_r41_gatorfix_gang_montage ...........   Passed   34.57 sec
+      Start 1181: integration_r41_gatorfix_gang_szene
+19/20 Test #1181: integration_r41_gatorfix_gang_szene .............   Passed   27.01 sec
+20/20 Test #1352: integration_r41_re2gator ........................   Passed  289.36 sec
+
+100% tests passed, 0 tests failed out of 20
+
+Total Test time (real) = 4582.95 sec

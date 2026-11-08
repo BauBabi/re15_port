@@ -1,0 +1,22 @@
+RE2 INTRO ende pos=(-4506,-21480) yaw=1600 wand_draussen_max=0 kopf_x_min=-6889
+GTR F290 START art 4 sub 2 achse 3072 gier 0->3072 schaden 60 ret 0 hp 0 gator (-4866,-1200,-21879) gier 1471 figur (-8432,0,-26246) band 0
+GTR F310 ENDE sub 2 bilder 20 weg 3735 von (-8432,-26532) luft 286 figur (-8432,0,-26532) band 0 fall 0
+BISSLAUF F283-F327 art 4 treffer 1 bedingung 1
+GTR F397 TOT art 4 schaden 60 hp -60
+RE2 KAMERA FINISHER FINISHER RE2-Cut 7 -> Cut 6 F397 clip=4 bild=0 frontal=4112 soll=4094 massstab=1332 re2_m=1354 grenze=1892 (Buehne)
+BISSLAUF F390-F398 art 4 treffer 1 bedingung 1
+RE2 KAMERA FINISHER Halt Cut 6 F398
+RE2 KAMERA FINISHER Halt Cut 6 F418
+RE2 KAMERA FINISHER Halt Cut 6 F438
+RE2 KAMERA FINISHER Halt Cut 6 F458
+RE2 KAMERA FINISHER haelt Cut 6: RE1.5-Todesbild unterdrueckt (cam=0 weiss=1 schwarz=0) ab F462
+RE2 KAMERA FINISHER Halt Cut 6 F478
+RE2 KAMERA FINISHER Halt Cut 6 F498
+RE2 KAMERA FINISHER Halt Cut 6 F518
+RE2 KAMERA FINISHER Halt Cut 6 F538
+RE2 KAMERA FINISHER Halt Cut 6 F558
+RE2 KAMERA FINISHER Halt Cut 6 F578
+RE2 KAMERA FINISHER Halt Cut 6 F598
+RE2 KAMERA FINISHER Halt Cut 6 F618
+RE2 KAMERA FINISHER Halt Cut 6 F638
+RE2 KAMERA FINISHER Halt Cut 6 F658

@@ -1,0 +1,40 @@
+# integration_r41_re2gator Lauf belagerung - alt a661eb8aa (lauf_ad2ac39e, 2026-11-06 20:50) | neu vor Patch 9 (lauf_0d30d767, exe 5581916f, 2026-11-07 00:50): hp-Flanken (state.log), Querung/Rammen/Finisher/GIER-WACHE (gator_boss.log)
+
+== lauf_ad2ac39e
+  F0 hp 100
+  F417 hp 50
+  F522 hp 0
+  F627 hp -50
+  F0 hp 100
+48:GUARD dist=7714 guard_t=0 pitch=0 arc=0 mo=0 af=29 pos=(2753,-9446)
+53:GUARD dist=6435 guard_t=0 pitch=0 arc=0 mo=0 af=59 pos=(3833,-10346)
+59:GUARD dist=5221 guard_t=0 pitch=0 arc=0 mo=0 af=89 pos=(4913,-11256)
+64:GUARD dist=4159 guard_t=3 pitch=-29 arc=-18 mo=4 af=2 pos=(5757,-12146)
+69:GUARD dist=3865 guard_t=24 pitch=-350 arc=-220 mo=4 af=32 pos=(5763,-12519)
+74:GUARD dist=3805 guard_t=24 pitch=-350 arc=-220 mo=0 af=19 pos=(5763,-12580)
+79:GUARD dist=3797 guard_t=24 pitch=-350 arc=-220 mo=0 af=49 pos=(5763,-12583)
+84:GUARD dist=3797 guard_t=24 pitch=-350 arc=-220 mo=4 af=5 pos=(5763,-12583)
+89:GUARD dist=4063 guard_t=24 pitch=-350 arc=-220 mo=4 af=35 pos=(5527,-12366)
+91:GIER-WACHE bis F581: 300 Bildpaare CHASE/GUARD, max |Gier-Delta| 64 (ohne +1024), Spruenge > 0x60: 0, Befreiungen 0
+95:GUARD dist=4063 guard_t=24 pitch=-350 arc=-220 mo=0 af=22 pos=(5527,-12366)
+100:GUARD dist=4063 guard_t=24 pitch=-350 arc=-220 mo=0 af=52 pos=(5527,-12366)
+102:RE2 KAMERA FINISHER FINISHER RE2-Cut 7 -> Cut 6 F627 clip=4 bild=0 frontal=4112 soll=4094 massstab=1332 re2_m=1354 grenze=1892 (Buehne)
+
+== lauf_0d30d767
+  F0 hp 100
+  F377 hp 50
+  F646 hp 0
+  F751 hp -50
+  F0 hp 100
+44:QUERPRUEF F305 cx0=6300 ende=6300/6300 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(6300,-16250) -> 1 (t 1)
+49:GUARD dist=7714 guard_t=0 pitch=0 arc=0 mo=0 af=29 pos=(2753,-9446)
+54:GUARD dist=6435 guard_t=0 pitch=0 arc=0 mo=0 af=59 pos=(3833,-10346)
+60:GUARD dist=5221 guard_t=0 pitch=0 arc=0 mo=0 af=89 pos=(4913,-11256)
+61:QUERPRUEF F376 cx0=5021 ende=6300/6300 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(6300,-16250) -> 1 (t 1)
+62:CROSS start=(5021,-11900) ende=(6300,-20700) frames=240 fenster=62..177
+63:RAMMEN F377 gator=(5026,-1200,-11936) spieler=(6300,-1800,-16250) hp=100
+79:GUARD dist=3949 guard_t=24 pitch=-350 arc=-220 mo=4 af=26 pos=(5730,-20337)
+84:GUARD dist=3547 guard_t=24 pitch=-350 arc=-220 mo=0 af=13 pos=(5763,-19963)
+89:GUARD dist=3565 guard_t=24 pitch=-350 arc=-220 mo=0 af=43 pos=(5763,-19983)
+94:GUARD dist=3565 guard_t=24 pitch=-350 arc=-220 mo=0 af=73 pos=(5763,-19983)
+97:RE2 KAMERA FINISHER FINISHER RE2-Cut 7 -> Cut 6 F751 clip=4 bild=0 frontal=4112 soll=4094 massstab=1332 re2_m=1354 grenze=1892 (Buehne)

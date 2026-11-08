@@ -1,0 +1,94 @@
+# integration_r41_re2gator Lauf kanister - KANISTER-Zeilen (gator_boss.log) und Kanister-Sitz (debug.log) je Lauf; alt = a661eb8aa (Laeufe 2026-11-06 18:23 / 19:19 / 20:50), neu = NB3 exe 5581916f (Gruppe 00:29, einzeln 00:40)
+
+== lauf_f6a45fcc (Nov 6 18:23)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6212 Stufe 0 F1209
+RE2 KANISTER Stufe 1 laengs=5929 quer=-478 sub 2 -> 1 F1215
+RE2 KANISTER angehaengt lokal=(4385,-169,-128) F1227
+RE2 KANISTER getragen (Stufe 7)
+[gator-re2] Kanister-Sitz F1496: angehaengt 270 Bilder, Abweichung max 0 (F1227), jetzt 0 clip=1 bild=11 gier=191 frac=0
+
+== lauf_6bfa4c6f (Nov 6 19:19)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6212 Stufe 0 F1209
+RE2 KANISTER Stufe 1 laengs=5929 quer=-478 sub 2 -> 1 F1215
+RE2 KANISTER angehaengt lokal=(4385,-169,-128) F1227
+RE2 KANISTER getragen (Stufe 7)
+[gator-re2] Kanister-Sitz F1496: angehaengt 270 Bilder, Abweichung max 0 (F1227), jetzt 0 clip=1 bild=11 gier=191 frac=0
+
+== lauf_ad2ac39e (Nov 6 20:50)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6212 Stufe 0 F1209
+RE2 KANISTER Stufe 1 laengs=5929 quer=-478 sub 2 -> 1 F1215
+RE2 KANISTER angehaengt lokal=(4385,-169,-128) F1227
+RE2 KANISTER getragen (Stufe 7)
+[gator-re2] Kanister-Sitz F1496: angehaengt 270 Bilder, Abweichung max 0 (F1227), jetzt 0 clip=1 bild=11 gier=191 frac=0
+
+== lauf_70ab0363 (Nov 7 00:29)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6214 Stufe 0 F1129
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5885 Stufe 0 F1141
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6203 Stufe 0 F1252
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5649 Stufe 0 F1261
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6134 Stufe 0 F1327
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5664 Stufe 0 F1336
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=5968 Stufe 0 F1427
+RE2 KANISTER Stufe 1 laengs=5928 quer=1040 sub 2 -> 1 F1435
+RE2 KANISTER angehaengt lokal=(3995,-80,2783) F1447
+RE2 KANISTER getragen (Stufe 7)
+[gator-re2] Kanister-Sitz F1476: angehaengt 30 Bilder, Abweichung max 0 (F1447), jetzt 0 clip=1 bild=3 gier=3539 frac=1
+
+== lauf_edb20547 (Nov 7 00:40)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6214 Stufe 0 F1129
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5885 Stufe 0 F1141
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6203 Stufe 0 F1252
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5649 Stufe 0 F1261
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6134 Stufe 0 F1327
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5664 Stufe 0 F1336
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=5968 Stufe 0 F1427
+RE2 KANISTER Stufe 1 laengs=5928 quer=1040 sub 2 -> 1 F1435
+RE2 KANISTER angehaengt lokal=(3995,-80,2783) F1447
+RE2 KANISTER getragen (Stufe 7)
+[gator-re2] Kanister-Sitz F1476: angehaengt 30 Bilder, Abweichung max 0 (F1447), jetzt 0 clip=1 bild=3 gier=3539 frac=1
+
+== neu lauf_70ab0363 gator_boss.log Zeilen 190-212 (Zweig 7 -> 11 -> 0, Zielmodus 1/0):
+DREH rot=3443 soll=3459 dlt=16 pos=(5008,-20581) ziel=(5600,-19698)
+DREH rot=3459 soll=3459 dlt=0 pos=(5231,-20248) ziel=(5600,-19698)
+DREH rot=3443 soll=3371 dlt=-72 pos=(5496,-19840) ziel=(5600,-19629)
+TICK ph=2 pos=(5615,-19619) y=-1200 dist=1247 mo=1 cd=0 rt=0 zw=7 ziel=(5600,-19629)
+RE2 PUTZ Stoss 12 Seite 1 Cut 2 F1118
+DREH rot=3155 soll=1271 dlt=-1884 pos=(5662,-19628) ziel=(5600,-19785)
+WECHSEL zw=11 rt=0
+DREH rot=2867 soll=1291 dlt=-1576 pos=(5685,-19758) ziel=(4450,-22600)
+DREH rot=2483 soll=1299 dlt=-1184 pos=(5705,-19798) ziel=(4450,-22600)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6214 Stufe 0 F1129
+DREH rot=2099 soll=1299 dlt=-800 pos=(5705,-19798) ziel=(4450,-22600)
+RE2 PUTZ Stoss 13 Seite 0 Cut 1 F1132
+DREH rot=1859 soll=1209 dlt=-650 pos=(5230,-19895) ziel=(4450,-22600)
+WECHSEL zw=0 rt=0
+DREH rot=1811 soll=759 dlt=-1052 pos=(5125,-19934) ziel=(5600,-21042)
+DREH rot=1475 soll=759 dlt=-716 pos=(5123,-19935) ziel=(5600,-21042)
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5885 Stufe 0 F1141
+DREH rot=1235 soll=349 dlt=-886 pos=(4822,-20578) ziel=(5600,-21042)
+TICK ph=2 pos=(4829,-20762) y=-1200 dist=1978 mo=1 cd=0 rt=0 zw=0 ziel=(5600,-21042)
+RE2 PUTZ Stoss 14 Seite 0 Cut 1 F1146
+DREH rot=899 soll=225 dlt=-674 pos=(4829,-20762) ziel=(5600,-21042)
+BISS af=6 dist=1588 maul=1280 wand=0 hr=0
+BISS af=7 dist=1578 maul=1120 wand=0 hr=1
+
+== alt lauf_ad2ac39e Umfeld der Aufnahme (Zweig 6 -> 11 -> 6):
+BISS af=31 dist=3444 maul=864 wand=0 hr=1
+BISS af=32 dist=3444 maul=864 wand=0 hr=1
+BISS af=33 dist=3444 maul=864 wand=0 hr=1
+BISS af=34 dist=3444 maul=864 wand=0 hr=1
+WECHSEL zw=6 rt=0
+DREH rot=3353 soll=2011 dlt=-1342 pos=(5238,-22070) ziel=(-4300,-22600)
+DREH rot=2969 soll=2011 dlt=-958 pos=(5238,-22070) ziel=(-4300,-22600)
+DREH rot=2681 soll=1991 dlt=-690 pos=(5058,-21782) ziel=(-4300,-22600)
+WECHSEL zw=11 rt=0
+DREH rot=2585 soll=1295 dlt=-1290 pos=(4895,-21593) ziel=(4450,-22600)
+TICK ph=2 pos=(4895,-21593) y=-1200 dist=3415 mo=1 cd=0 rt=0 zw=11 ziel=(4450,-22600)
+DREH rot=2201 soll=1295 dlt=-906 pos=(4895,-21593) ziel=(4450,-22600)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6212 Stufe 0 F1209
+RE2 PUTZ Stoss 15 Seite 1 Cut 2 F1211
+DREH rot=1865 soll=1179 dlt=-686 pos=(4682,-21621) ziel=(4450,-22600)
+WECHSEL zw=6 rt=0
+DREH rot=1769 soll=1985 dlt=216 pos=(4354,-21753) ziel=(-4300,-22600)
+RE2 KANISTER Stufe 1 laengs=5929 quer=-478 sub 2 -> 1 F1215
+RE2 KANISTER angehaengt lokal=(4385,-169,-128) F1227

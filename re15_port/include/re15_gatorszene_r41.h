@@ -71,6 +71,10 @@ int  re15_gatorszene_r41_spinnen_verworfen(void);
                                         * (Bild Cut 0). Nachbesserung 5 (Entscheid F-E2): die Leiche liegt wieder im Suedbecken
                                         * (Ankunftskamera Cut 0, Kampfbeginn in Leons Beckenzone 0); Nachbesserung 4 nahm obj 3
                                         * @0x00A8E im Nordbecken (Cut 5). */
+/* Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 6 "Der Schluessel am Anfang und Ende der Szene duerfte gerne etwas groesser sein"): PORT-WAHL der
+ * Gestaltung, Faktor 3/2 (Q12 6144) auf das RE2-Weltmodell (Quadrat 180 -> 270); gemessen am Bild (Dossier G2 §6): Ankunft Cut 0 und
+ * Schluessel-Einstellung nach dem Tod je Kasten vorher/nachher. */
+#define RE15_GSZ_KEY_SKALA_Q12   6144
 #define RE15_GSZ_KEY_OBJ         4     /* Port-Prop (nOmodel = 4, RDT-Kopf Byte 2), Muster dining_r38 obj 6                */
 
 /* Zustaende der Szene (nur RAM; waehrend der Szene kann weder gespeichert noch gekaempft werden). */
@@ -203,5 +207,32 @@ int  re15_gatorszene_r41_fress_kamera(int *frontal);
 
 /* Runde 41 Spur P (Nachbesserung 1, M6): Messhaken - Abstand Rumpfmitte der Leiche <-> Maullage (1750,-210) im Part-6-Rahmen x Zeichen-Skala; 1 = angehaengt und gemessen. */
 int re15_gatorszene_r41_leiche_sitz(int32_t *abw);
+/* Runde 41 Spur G2 (Punkte 1/2): Flug der Leiche (0 haengt / 1 fliegt / 2 gefangen / 3 weg), Clip-5-Bilder von Wurf/Fang/weg, hoechster Punkt der
+ * Rumpfmitte ueber der Maullage im Flug, Abstand Rumpfmitte <-> Maullage im Fangbild; Pruefhaken der Gegenprobe (1 = Leiche wie vor Spur G2). */
+int  re15_gatorszene_r41_leiche_flug(int *bild_wurf, int *bild_fang, int *bild_weg, int32_t *hoehe, int32_t *fang_abw);
+void re15_gatorszene_r41_g2_alt_setzen(int an);
+/* Runde 41 Spur G2 (Punkte 3/4): Mesh-Gier von (x,z) zur Leiter-Ankunft in ROOM2080/2081 (Montage-Parkplatz, ROOM2090 Tuer 0 @0x00996). */
+int  re15_gatorszene_r41_gier_zur_leiter(int32_t x, int32_t z);
 
+/* Runde 41 Spur G2 NB1 (M2): Zuschlag auf vz je Bone fuer die Kopfhaltung beim Wurf (enemy_ai_boss_gator.c re15_gator_spine_arc_vz) */
+int re15_gatorszene_r41_kopf_vz(const void *aktor, int bone);   /* aktor = re15_actor_t * */
+void re15_gatorszene_r41_nb1_alt_setzen(int an);   /* Pruefhaken: Stand G2 vor der Nachbesserung 1 (Gegenproben der Riegel) */
+/* Runde 41 Spur G2 NB4 (Abnahme 2 M4): Einpassung der Leiche in das Maulvolumen (gatorszene_r41.c, Abschnitt EINPASSEN; nur PC-Bau).
+ * _leiche_skala: Zeichner-Haken (platform/pc/main.c pc_prop_world) - Laengsskala (Modell-x, Q12) des Prop-Slots, 1 = gestaucht zeichnen.
+ * _leiche_matrix: Messhaken - Weltmatrix wie gezeichnet (Drehung x Skala) und Lage der Leiche. _leiche_fit: Messhaken - Rollanteil (1/16),
+ * Skala (Q12), Versatz (Part-6-Rahmen), Scheitel draussen (Kopf-Band Kiefer- + waagerechter Rahmen) jetzt und in Ruhelage (-1 = nicht gerechnet),
+ * Rollwinkel (4096tel); 1 = Einpassung laeuft. _m4_alt_setzen: Pruefhaken der Gegenprobe (1 = Stand vor NB4, keine Einpassung). */
+int  re15_gatorszene_r41_leiche_skala(int slot, int32_t *s_q12);
+int  re15_gatorszene_r41_leiche_matrix(int32_t m[9], int32_t t[3]);
+int  re15_gatorszene_r41_leiche_fit(int *a16, int32_t *s_q12, int32_t d[3], int *aus, int *aus_ruhe, int *beta);
+void re15_gatorszene_r41_m4_alt_setzen(int an);
+/* NB5 (Abnahme 3, Haken): Pruefhaken der Gegenprobe - 1 = Einpassung beim Raumaufbau NICHT leeren (Stand vor NB5). */
+void re15_gatorszene_r41_fit_reset_alt_setzen(int an);
+/* NB5 (Abnahme 3 M1): Klemmen je Scheitel der Leiche ins Kopf-Band (gatorszene_r41.c KLEMMEN JE SCHEITEL). _leiche_scheitel: Zeichner-Haken (Prop-Zeichner
+ * platform/pc/main.c) - Ersatzfeld der n Scheitel eines Mesh-Feldes (quad 0 = Tri-, 1 = Quad-Feld) oder NULL; _leiche_klemm: Messhaken (Riegel maul) fuer
+ * einen Modell-Scheitel, 1 = geklemmt; _klemm_alt_setzen(1): Pruefhaken der Gegenprobe (Stand NB4, kein Klemmen). */
+#include "re15_md1.h"
+const re15_md1_vertex_t *re15_gatorszene_r41_leiche_scheitel(int slot, const re15_md1_vertex_t *v, int n, int quad);
+int  re15_gatorszene_r41_leiche_klemm(const int16_t v[3], int16_t o[3]);
+void re15_gatorszene_r41_klemm_alt_setzen(int an);
 #endif /* RE15_GATORSZENE_R41_H */

@@ -1,0 +1,127 @@
+== fz_neu (Spiel-Reaktion RE2 + Bisssperre, G2_FZ_NEU)
+    neu   W1     : 900 Bilder, Stillstand  13 (laengster  10), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W2     : 900 Bilder, Stillstand  74 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W3     : 900 Bilder, Stillstand 140 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W4     : 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N1     : 900 Bilder, Stillstand  28 (laengster  15), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N2     : 900 Bilder, Stillstand  24 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N3     : 900 Bilder, Stillstand  81 (laengster  17), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        N4 t213 FENSTER gtr 0 kopf 15462 Gator (-3574,-23838) Gier 2993 Clip 0 Phase 2 Trag 4
+        N4 t214 FENSTER gtr 0 kopf 15428 Gator (-3579,-23801) Gier 2993 Clip 0 Phase 2 Trag 4
+        N4 t215 FENSTER gtr 0 kopf 15394 Gator (-3584,-23763) Gier 2997 Clip 0 Phase 2 Trag 4
+    neu   N4     : 900 Bilder, Stillstand 122 (laengster  37), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   3
+    neu   O1     : 900 Bilder, Stillstand  45 (laengster  16), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O2     : 900 Bilder, Stillstand   6 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O3     : 900 Bilder, Stillstand   7 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        O4 t614 FENSTER gtr 0 kopf 7112 Gator (-3979,-21260) Gier 245 Clip 1 Phase 2 Trag 2
+        O4 t615 FENSTER gtr 0 kopf 7112 Gator (-3979,-21260) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t616 FENSTER gtr 0 kopf 7149 Gator (-4012,-21247) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t617 FENSTER gtr 0 kopf 7186 Gator (-4045,-21234) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t618 FENSTER gtr 0 kopf 7222 Gator (-4076,-21222) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t619 FENSTER gtr 0 kopf 7240 Gator (-4106,-21210) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t620 FENSTER gtr 0 kopf 7276 Gator (-4136,-21198) Gier 243 Clip 10 Phase 2 Trag 2
+        O4 t621 FENSTER gtr 0 kopf 7312 Gator (-4165,-21186) Gier 243 Clip 10 Phase 2 Trag 2
+        O4 t622 FENSTER gtr 0 kopf 7366 Gator (-4194,-21173) Gier 275 Clip 10 Phase 2 Trag 4
+    neu   O4     : 900 Bilder, Stillstand  84 (laengster  23), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt   9
+    neu   S1     : 900 Bilder, Stillstand   7 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S2     : 900 Bilder, Stillstand  34 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S3     : 900 Bilder, Stillstand   5 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S4     : 900 Bilder, Stillstand   7 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   NW     : 900 Bilder, Stillstand  86 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   NO     : 900 Bilder, Stillstand  73 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   SO     : 900 Bilder, Stillstand  10 (laengster   6), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   SW     : 900 Bilder, Stillstand  65 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-mitte: 900 Bilder, Stillstand  49 (laengster  16), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-west : 900 Bilder, Stillstand  54 (laengster  12), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-nord : 900 Bilder, Stillstand 151 (laengster  24), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-sued : 900 Bilder, Stillstand 140 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   Rampe  : 900 Bilder, Stillstand  24 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   Leiter : 900 Bilder, Stillstand  16 (laengster  16), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-Leiterecke: 900 Bilder, Stillstand  22 (laengster  16), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NW-Ecke: 900 Bilder, Stillstand   2 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-Ostnische: 900 Bilder, Stillstand  81 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NO-Ecke: 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-RampeWest: 900 Bilder, Stillstand  41 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu  : 27900 Bilder, Stillstand 1491 (5 %), laengster Stillstand 37, laengstes Wandreiben 1 (O4)
+  FEHLER: NB2 (M5)/G2-RE2: hoechstens 10 Zeitfenster von 2 s (60 Bilder), in denen die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (12 Fenster; laengste 30-Bilder-Folge 37)
+== fz_alt (G2_SPERRE_ALT = Stand cfa775ae8)
+    neu   W1     : 900 Bilder, Stillstand  33 (laengster  12), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        W2 t298 FENSTER gtr 0 kopf 8808 Gator (-4710,-22960) Gier 237 Clip 1 Phase 2 Trag 3
+        W2 t299 FENSTER gtr 0 kopf 8808 Gator (-4710,-22960) Gier 237 Clip 10 Phase 2 Trag 3
+    neu   W2     : 900 Bilder, Stillstand 149 (laengster  23), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt   2
+    neu   W3     : 900 Bilder, Stillstand 113 (laengster  25), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W4     : 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N1     : 900 Bilder, Stillstand  42 (laengster  12), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N2     : 900 Bilder, Stillstand  45 (laengster  15), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N3     : 900 Bilder, Stillstand  19 (laengster  16), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N4     : 900 Bilder, Stillstand   2 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O1     : 900 Bilder, Stillstand  69 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O2     : 900 Bilder, Stillstand   2 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O3     : 900 Bilder, Stillstand  18 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O4     : 900 Bilder, Stillstand  22 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S1     : 900 Bilder, Stillstand  49 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S2     : 900 Bilder, Stillstand  39 (laengster  17), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S3     : 900 Bilder, Stillstand  30 (laengster  25), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S4     : 900 Bilder, Stillstand  11 (laengster   5), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   NW     : 900 Bilder, Stillstand 191 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   NO     : 900 Bilder, Stillstand  73 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        SO t409 FENSTER gtr 0 kopf 8254 Gator (2541,-25516) Gier 2451 Clip 10 Phase 2 Trag 3
+        SO t410 FENSTER gtr 0 kopf 8318 Gator (2566,-25532) Gier 2419 Clip 10 Phase 2 Trag 3
+        SO t411 FENSTER gtr 0 kopf 8318 Gator (2591,-25516) Gier 2387 Clip 10 Phase 2 Trag 3
+    neu   SO     : 900 Bilder, Stillstand  51 (laengster  35), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   3
+    neu   SW     : 900 Bilder, Stillstand   9 (laengster   5), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-mitte: 900 Bilder, Stillstand  49 (laengster  16), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-west : 900 Bilder, Stillstand  41 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-nord : 900 Bilder, Stillstand 147 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-sued : 900 Bilder, Stillstand 108 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   Rampe  : 900 Bilder, Stillstand  32 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   Leiter : 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-Leiterecke: 900 Bilder, Stillstand  10 (laengster  10), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NW-Ecke: 900 Bilder, Stillstand  13 (laengster   4), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-Ostnische: 900 Bilder, Stillstand  25 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NO-Ecke: 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-RampeWest: 900 Bilder, Stillstand  41 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu  : 27900 Bilder, Stillstand 1433 (5 %), laengster Stillstand 35, laengstes Wandreiben 1 (W2)
+  ok: NB2 (M5)/G2-RE2: hoechstens 10 Zeitfenster von 2 s (60 Bilder), in denen die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (5 Fenster; laengste 30-Bilder-Folge 35)
+== fz_talt (G2_TREFFER_ALT = RE1.5-Niederwurf, Stand des Riegels)
+    neu   W1     : 900 Bilder, Stillstand  40 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W2     : 900 Bilder, Stillstand 135 (laengster  21), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W3     : 900 Bilder, Stillstand 155 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   W4     : 900 Bilder, Stillstand  59 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N1     : 900 Bilder, Stillstand  34 (laengster  13), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        N2 t443 FENSTER gtr 0 kopf 13890 Gator (-3150,-23944) Gier 2979 Clip 0 Phase 2 Trag 4
+        N2 t444 FENSTER gtr 0 kopf 13852 Gator (-3156,-23907) Gier 2979 Clip 0 Phase 2 Trag 4
+        N2 t445 FENSTER gtr 0 kopf 13814 Gator (-3162,-23869) Gier 2979 Clip 0 Phase 2 Trag 4
+    neu   N2     : 900 Bilder, Stillstand 158 (laengster  37), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   3
+    neu   N3     : 900 Bilder, Stillstand 102 (laengster  37), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   N4     : 900 Bilder, Stillstand   5 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O1     : 900 Bilder, Stillstand  93 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O2     : 900 Bilder, Stillstand  10 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   O3     : 900 Bilder, Stillstand  25 (laengster   5), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+        O4 t815 FENSTER gtr 0 kopf 7112 Gator (-3984,-21270) Gier 243 Clip 1 Phase 2 Trag 2
+        O4 t816 FENSTER gtr 0 kopf 7112 Gator (-3984,-21270) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t817 FENSTER gtr 0 kopf 7149 Gator (-4017,-21257) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t818 FENSTER gtr 0 kopf 7186 Gator (-4050,-21244) Gier 239 Clip 10 Phase 2 Trag 2
+        O4 t819 FENSTER gtr 0 kopf 7222 Gator (-4081,-21232) Gier 239 Clip 10 Phase 2 Trag 2
+    neu   O4     : 900 Bilder, Stillstand 119 (laengster  23), Wandreiben laengstes   1, 2-s-Fenster ohne Fortschritt   5
+    neu   S1     : 900 Bilder, Stillstand   7 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S2     : 900 Bilder, Stillstand 137 (laengster  38), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S3     : 900 Bilder, Stillstand   6 (laengster   4), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   S4     : 900 Bilder, Stillstand  18 (laengster   7), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   NW     : 900 Bilder, Stillstand 131 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   NO     : 900 Bilder, Stillstand  60 (laengster  23), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   SO     : 900 Bilder, Stillstand   5 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   SW     : 900 Bilder, Stillstand   9 (laengster   5), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-mitte: 900 Bilder, Stillstand  43 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-west : 900 Bilder, Stillstand  45 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-nord : 900 Bilder, Stillstand 152 (laengster  24), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   P-sued : 900 Bilder, Stillstand 132 (laengster  22), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   Rampe  : 900 Bilder, Stillstand  24 (laengster   8), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   Leiter : 900 Bilder, Stillstand 105 (laengster  24), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-Leiterecke: 900 Bilder, Stillstand  11 (laengster   4), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NW-Ecke: 900 Bilder, Stillstand  11 (laengster   2), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-Ostnische: 900 Bilder, Stillstand  11 (laengster   3), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-NO-Ecke: 900 Bilder, Stillstand   0 (laengster   0), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu   A2-RampeWest: 900 Bilder, Stillstand  41 (laengster   9), Wandreiben laengstes   0, 2-s-Fenster ohne Fortschritt   0
+    neu  : 27900 Bilder, Stillstand 1883 (6 %), laengster Stillstand 38, laengstes Wandreiben 1 (O4)
+  ok: NB2 (M5)/G2-RE2: hoechstens 10 Zeitfenster von 2 s (60 Bilder), in denen die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (8 Fenster; laengste 30-Bilder-Folge 38)

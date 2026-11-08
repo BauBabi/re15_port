@@ -9,6 +9,7 @@
 #include <stdio.h>              /* fprintf — the dropped-event diagnostic below */
 #include <stdlib.h>             /* getenv — RE15_STAIR_DEMO */
 #include "re15_game_step.h"
+#include "re15_gator_treffer_r41.h"   /* Runde 41 G2-RE2 NB4 (T)+(W) */
 #include "re15_panel_zeiger.h"
 #include "re15_engine.h"        /* re15_pad_virtual_word — the virtual pad-word builder
                                  * (pad_common.c; wave-6 finding 4) */
@@ -48,6 +49,7 @@
 #include "re15_cut10f0.h"       /* Runde 35 Spur K: Szenen-Ende ROOM10F0 (re15_cut10f0_tick) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13, Irons-Kopf, 11B0-Erweiterung */
 #include "re15_affen.h"         /* Runde 35 Spur J: Knockdown-Sonde FUN_8001c2dc (re15_affen_kd_sonde) */
+#include "re15_boss_gator.h"    /* Runde 41 Spur G2-RE2 NB3 Runde 2: Raumhalt im Alligator-Kampf (re15_gator_boss_raum_halt) */
 #include "re15_objfall_r36.h"   /* Runde 36 Spur A: Objekt-Fall FUN_8002c444 (objfall_r36.c) */
 #include "re15_gegner_r39.h"
 #include "re15_birkin_opfer.h"   /* Birkin-Spieler-Haken (Vorschub vor dem Schwanz) */    /* Runde 39 Spur E: Querungs-Wache im Gorilla-Wurf (re15_r39_wurf_querung) */
@@ -442,6 +444,7 @@ void re15_player_cmd_zero(void)
     extern void re15_player_idle_reset(void);      /* player_common.c — Idle-Phase/-Timer */
     s_knockdown = 0; s_kd_dir = 0; s_kd_phase = 0; s_kd_speed = 0; s_kd_t = 0;
     s_hit_flinch = 0; s_hit_kb = 0;
+    re15_gator_treffer_r41_reset();          /* Runde 41 G2-RE2 NB4: RE2-Trefferreaktion (Routine 5 Sub 2/3) gehoert zum Kommandowort */
     s_react_pose = 0; s_react_clip = 0;   /* Raumwechsel/Reset: der Spieler-Loader FUN_800314b0
                                            * setzt die Bank ohnehin neu */
     s_ev_reach = 0; re15_r39k_reach_aus();   /* Runde 39 Spur K NB1: auch ein anstehender Sub-6-Start ist weg */
@@ -532,7 +535,13 @@ void re15_player_skriptlage(int32_t x, int32_t z)
 static void spieler_klemme(const re15_rdt_t *rdt, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z)
 {
     if (re15_birkin_klemme_aktiv()) re15_collision_constrain_re2(rdt, alt_x, alt_z, x, z);   /* FUN_8003567c */
-    else                            re15_collision_constrain(rdt, alt_x, alt_z, x, z);       /* FUN_8003b0a4 @0x80031d70 */
+    else {
+        re15_collision_constrain(rdt, alt_x, alt_z, x, z);       /* FUN_8003b0a4 @0x80031d70 */
+        /* Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2): PORT-WAHL Raumhalt im Alligator-Kampf ROOM2090/2091 - die Klemme selbst laesst dort zwei
+         * Loecher (Band 1 ohne Aussenwaende hinter 1000 tiefen Leisten, Fixpunkt Rampe/Ostwand auf Band 0); Herleitung und Belege enemy_ai_boss_gator.c
+         * re15_gator_boss_raum_halt. Ohne Alligator-Boss im Raum kein Eingriff. */
+        (void)re15_gator_boss_raum_halt(&g_actors[RE15_ACTOR_SLOT_PLAYER], alt_x, alt_z, x, z);
+    }
     s_klemme_ende.x = *x; s_klemme_ende.z = *z; s_klemme_ende.da = 1;
 }
 
@@ -1440,7 +1449,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     extern int re15_ventilkette_r41_vollbild_sperrt(void);   /* Runde 41 Spur N: Panel 2030 / Einsetzen 2010, die Vollbild-Ebene liegt ueber dem Inventar */
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD) && !panel_sperre && !re15_ventilkette_r41_vollbild_sperrt()) {
         int in_cinematic = (g_scd.player_mode == 2) || (g_scd.letterbox_countdown != 0);
-        s_inv_open_allowed = (s_hit_flinch == 0 && s_knockdown == 0 &&
+        s_inv_open_allowed = (s_hit_flinch == 0 && s_knockdown == 0 && !re15_gator_treffer_r41_aktiv() &&
                               !re15_player_is_grabbed() && !re15_player_is_dead() &&
                               !in_cinematic && !re15_stair_active()) ? 1 : 0;
         { extern int re15_inventar_r36_tick(void);   /* Runde 36 Spur I: leere Memory Cards/Handgranaten */
@@ -1481,6 +1490,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     if (c->rdt_ok && pl->hp < s_prev_hp && pl->hp >= 0 && s_hit_flinch == 0 &&
         s_knockdown == 0 &&        /* die Knockdown-Klasse hat Vorrang vor dem Flinch-Detector
                                     * (der Boss-Heavy-Biss wuerde sonst doppelt reagieren) */
+        !re15_gator_treffer_r41_aktiv() &&   /* Runde 41 G2-RE2 NB4: die RE2-Reaktion auf den Alligator ist die Treffer-Klasse */
         !re15_player_is_dead() && !re15_player_is_grabbed() && !re15_stair_active()) {
         const re15_actor_t *atk = re15_nearest_hostile(pl);      /* the enemy that struck (adjacent) */
         uint8_t clip = 0x0a;                                     /* [0]/[1] fallback (@0x80035bd0) */
@@ -1663,6 +1673,16 @@ void re15_game_step(const re15_game_ctx_t *c)
          * Gegner schiebt sehr wohl). */
         wurf = re15_player_victim_gorilla() || re15_bk_opfer_cmd(); wurf_alt_x = pl->x; wurf_alt_z = pl->z;   /* Runde 35 Spur J (6d); Birkin-Haken: FUN_800245d8 im Haken -> Schwanz @0x80031cbc/@0x80031d70 danach */
         if (!wurf) re15_player_body_and_walls(c, pl, pl->x, pl->z);
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+    } else if (c->rdt_ok && re15_gator_treffer_r41_aktiv()) {
+        /* Runde 41 Spur G2-RE2 NB4 (T)+(W): RE2-Spieler-Routine 5 Sub 2/3 des Alligators (Haken 0x80102D08, engine/src/gator_treffer_r41.c) -
+         * engine-getrieben wie der Niederwurf: kein Pad, kein ACTION-Scan; der Haken schiebt ohne Klemme (FUN_800152c8), danach der
+         * Dispatcher-Schwanz (Koerper-Schub + Klemme, RE2 FUN_8003567c @0x80026634 nach dem Entity-Pass); RVD-Scan laeuft weiter. */
+        g_aot_action_pressed = 0;
+        {   int32_t kx = pl->x, kz = pl->z;
+            re15_gator_treffer_r41_tick(c->rdt, pl, c->pl00_anim);
+            re15_player_body_and_walls(c, pl, kx, kz);
+        }
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_knockdown) {
         /* KNOCKDOWN-Klasse (cmd-2 [4]/[5], 0x800360e8/0x8003644c): engine-getrieben wie

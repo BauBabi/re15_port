@@ -1,0 +1,84 @@
+# Spawn-Lage (2318,-16300) Leon, Figur oben (RE15_PLAYER_POS=2318,-16300,1024,1), Kampf sofort, ohne Kanister, 4200 Bilder (werkzeug/batch_r2.sh spawn_2318_-16300_leon)
+== alt exe 029efac644499f92ef0a5572ee3aa43d (Stand 10603425b)
+exit=0 ende=12:05:26
+aussenlog: 4200 Bilder in ROOM2090/2091, davon oben 4200; aussen 0, Deck verlassen 2999, im Block 0; erstes F1202 (Deck verlassen) bei (2318,-1800,-12904) Raum 2090, letztes F4200, groesster Abstand hinter der Aussenwand 2706 -> VERFEHLT (0 verlangt)
+RAUMHALT-Zeilen: 0
+RAMMEN F735 gator=(3434,-1900,-17546) spieler=(2318,-1800,-17632) hp=100
+== neu exe 5910fc246fc82eaaac9f64795492585a (Bau 5a94392bf)
+exit=0 ende=12:02:08
+aussenlog: 4200 Bilder in ROOM2090/2091, davon oben 4200; aussen 0, Deck verlassen 0, im Block 0; erstes F-1 (-) bei (0,0,0) Raum 0000, letztes F-1, groesster Abstand hinter der Aussenwand 0 -> ok (0 verlangt)
+RAUMHALT-Zeilen: 27
+RAMMEN F735 gator=(3434,-1900,-17546) spieler=(2318,-1800,-17632) hp=100
+RAMMEN F1268 gator=(3754,-1900,-15310) spieler=(2301,-1800,-14994) hp=100
+RAMMEN F2465 gator=(3757,-1900,-15310) spieler=(2308,-1800,-14977) hp=100
+RAMMEN F3129 gator=(3244,-1900,-17546) spieler=(2318,-1800,-17632) hp=100
+RAMMEN F3651 gator=(3727,-1900,-15714) spieler=(2318,-1800,-15238) hp=100
+
+# alt: Treffer F1201 und Flug nach Norden (state.log)
+F1198 pad=0000 PL(2318,-14958,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=211 ac=
+F1199 pad=0000 PL(2318,-14958,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=211 ac=
+F1200 pad=0000 PL(2318,-14958,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=211 ac=
+F1201 pad=0000 PL(2318,-14958,rot=1024,hp=50) pst=2 ps1=2 ps2=0 mo=211 ac=6
+F1202 pad=0000 PL(2318,-12904,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1203 pad=0000 PL(2318,-11919,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1204 pad=0000 PL(2318,-10964,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1205 pad=0000 PL(2318,-10054,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1206 pad=0000 PL(2318,-9204,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6 
+F1207 pad=0000 PL(2318,-8429,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6 
+F1208 pad=0000 PL(2318,-7744,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6 
+F1209 pad=0000 PL(2318,-7164,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6 
+F1210 pad=0000 PL(2318,-6704,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6 
+F1211 pad=0000 PL(2318,-6379,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6 
+F1212 pad=0000 PL(2318,-6054,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=14 ac=6 
+F1213 pad=0000 PL(2318,-5744,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=14 ac=6 
+F1214 pad=0000 PL(2318,-5449,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=14 ac=6 
+F1215 pad=0000 PL(2318,-5169,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=14 ac=6 
+
+# neu: dieselben Bilder
+F1198 pad=0000 PL(2318,-14958,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=211 ac=
+F1199 pad=0000 PL(2318,-14958,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=211 ac=
+F1200 pad=0000 PL(2318,-14958,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=211 ac=
+F1201 pad=0000 PL(2318,-14958,rot=1024,hp=50) pst=2 ps1=2 ps2=0 mo=211 ac=6
+F1202 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1203 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1204 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1205 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1206 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1207 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1208 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1209 pad=0000 PL(2309,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1210 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1211 pad=0000 PL(2318,-14968,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=13 ac=6
+F1212 pad=0000 PL(2318,-14970,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=14 ac=6
+F1213 pad=0000 PL(2318,-14972,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=14 ac=6
+F1214 pad=0000 PL(2318,-14975,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=14 ac=6
+F1215 pad=0000 PL(2318,-14978,rot=1024,hp=100) pst=2 ps1=2 ps2=0 mo=14 ac=6
+
+# neu: RAUMHALT-Zeilen (gator_boss.log)
+RAUMHALT F1202 Band 1 (2318,-13032) -> (2318,-14968) vorher (2318,-14958) hr=1 mo=13
+RAUMHALT F1203 Band 1 (1382,-13983) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F1204 Band 1 (1382,-14013) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F1269 Band 1 (1382,-13992) -> (2318,-14968) vorher (2318,-14992) hr=1 mo=13
+RAUMHALT F1270 Band 1 (1382,-13974) -> (2318,-14968) vorher (2318,-14959) hr=1 mo=13
+RAUMHALT F1271 Band 1 (1382,-14002) -> (2318,-14968) vorher (2318,-14957) hr=1 mo=13
+RAUMHALT F1374 Band 1 (2318,-13032) -> (2318,-14968) vorher (2318,-14958) hr=1 mo=13
+RAUMHALT F1375 Band 1 (1382,-13983) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F1376 Band 1 (1382,-14013) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F2047 Band 1 (1382,-14013) -> (2318,-14968) vorher (2306,-14968) hr=1 mo=13
+RAUMHALT F2400 Band 1 (2318,-13032) -> (2318,-14968) vorher (2318,-14958) hr=1 mo=13
+RAUMHALT F2401 Band 1 (1382,-13983) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F2402 Band 1 (1382,-14013) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F2466 Band 1 (1382,-13975) -> (2318,-14968) vorher (2318,-14975) hr=1 mo=13
+RAUMHALT F2467 Band 1 (1382,-13975) -> (2318,-14968) vorher (2318,-14960) hr=1 mo=13
+RAUMHALT F2468 Band 1 (1382,-14002) -> (2318,-14968) vorher (2318,-14957) hr=1 mo=13
+RAUMHALT F2571 Band 1 (2318,-13032) -> (2318,-14968) vorher (2318,-14958) hr=1 mo=13
+RAUMHALT F2572 Band 1 (1382,-13983) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F2573 Band 1 (1382,-14013) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F3245 Band 1 (1382,-14013) -> (2318,-14968) vorher (2311,-14968) hr=1 mo=13
+RAUMHALT F3589 Band 1 (2318,-13032) -> (2318,-14968) vorher (2318,-14958) hr=1 mo=13
+RAUMHALT F3590 Band 1 (1382,-13983) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F3591 Band 1 (1382,-14013) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F3653 Band 1 (1382,-13983) -> (2318,-14968) vorher (2307,-14968) hr=1 mo=13
+RAUMHALT F3654 Band 1 (1382,-14013) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F3764 Band 1 (1382,-13983) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13
+RAUMHALT F3765 Band 1 (1382,-14013) -> (2318,-14968) vorher (2318,-14968) hr=1 mo=13

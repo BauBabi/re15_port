@@ -1,0 +1,11 @@
+RE2 INTRO ende pos=(-2754,-22840) yaw=2624 wand_draussen_max=0 kopf_x_min=-4704
+GTR F138 START art 4 sub 3 achse 3072 gier 3499->3072 schaden 30 ret 0 hp 70 gator (-3947,-1200,-18004) gier 3359 figur (-2476,0,-14882) band 0
+GTR F192 ENDE sub 3 bilder 54 weg 3080 von (-2278,-14937) luft 205 figur (-2278,0,-14937) band 0 fall 0
+GTR F563 START art 4 sub 3 achse 0 gier 279->0 schaden 30 ret 0 hp 70 gator (2561,-1200,-11003) gier 407 figur (6732,0,-14032) band 0
+GTR F617 ENDE sub 3 bilder 54 weg 3080 von (6642,-12784) luft 1251 figur (6642,0,-12784) band 0 fall 0
+GTR F670 START art 4 sub 3 achse 0 gier 0->0 schaden 30 ret 0 hp 70 gator (5474,-1200,-11344) gier 3737 figur (6732,0,-10655) band 0
+GTR F724 ENDE sub 3 bilder 54 weg 3080 von (6739,-10209) luft 446 figur (6739,0,-10209) band 0 fall 0
+GTR F789 START art 4 sub 3 achse 0 gier 0->0 schaden 30 ret 0 hp 70 gator (5264,-1200,-8703) gier 511 figur (6744,0,-9243) band 0
+GTR F843 ENDE sub 3 bilder 54 weg 3080 von (6739,-9443) luft 200 figur (6739,0,-9443) band 0 fall 0
+GTR F896 START art 4 sub 3 achse 3072 gier 0->3072 schaden 30 ret 0 hp 70 gator (5708,-1200,-8036) gier 3573 figur (6732,0,-6975) band 0
+GTR F950 ENDE sub 3 bilder 54 weg 3080 von (2527,-6708) luft 4213 figur (2527,0,-6708) band 0 fall 0

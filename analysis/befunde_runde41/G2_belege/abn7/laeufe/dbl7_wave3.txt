@@ -1,0 +1,7 @@
+a7_spawn_mitte_leon_r0     Treffer  48, Paare <= 25 Bilder:  23, davon im selben Gator-Clip:  23 | F1057/F1077(+20 ? clip 4 af 7->27) F1184/F1204(+20 ? clip 4 af 7->27) F1311/F1331(+20 ? clip 4 af 7->27) F1438/F1458(+20 ? clip 4 a
+a7_spawn_nord_leon_r1024   Treffer  36, Paare <= 25 Bilder:  13, davon im selben Gator-Clip:  13 | F1405/F1427(+22 ? clip 4 af 7->29) F1534/F1556(+22 ? clip 4 af 7->29) F1663/F1685(+22 ? clip 4 af 7->29) F2262/F2284(+22 ? clip 4 a
+a7_spawn_nw_elza_r3072     Treffer  48, Paare <= 25 Bilder:  20, davon im selben Gator-Clip:  20 | F1098/F1118(+20 ? clip 4 af 7->27) F1225/F1247(+22 ? clip 4 af 7->29) F1354/F1376(+22 ? clip 4 af 7->29) F1483/F1503(+20 ? clip 4 a
+a7_spawn_ost_elza_r1024    Treffer  59, Paare <= 25 Bilder:  28, davon im selben Gator-Clip:  28 | F640/F660(+20 ? clip 4 af 7->27) F767/F787(+20 ? clip 4 af 7->27) F894/F914(+20 ? clip 4 af 7->27) F1021/F1041(+20 ? clip 4 af 7->2
+a7_spawn_sued_elza_r1024   Treffer  52, Paare <= 25 Bilder:  25, davon im selben Gator-Clip:  25 | F741/F763(+22 ? clip 4 af 7->29) F870/F892(+22 ? clip 4 af 7->29) F1000/F1022(+22 ? clip 4 af 8->30) F1129/F1151(+22 ? clip 4 af 7-
+a7_spawn_sued_leon_r2048   Treffer  49, Paare <= 25 Bilder:  22, davon im selben Gator-Clip:  22 | F820/F840(+20 ? clip 4 af 7->27) F947/F967(+20 ? clip 4 af 7->27) F1195/F1215(+20 ? clip 4 af 7->27) F1444/F1464(+20 ? clip 4 af 7-
+SUMME: {'treffer': 292, 'paare': 131, 'paare_gleicher_clip': 131, 'abstand 20': 88, 'Art ?->?': 131, 'abstand 22': 43}

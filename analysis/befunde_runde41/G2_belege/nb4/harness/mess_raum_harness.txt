@@ -1,0 +1,48 @@
+# test_r41_gatorfix raum (Messkopie test_r41_gatorfix_g2nb4.exe md5 197d1ead, Stand 3d57083b1), 2400 Bilder je Lage; gefiltert (Kopf-/Lagen-/SUMME-/ok-Zeilen); vollstaendig im Laufordner scratchpad g2nb4/harness/raum_aus.txt
+== raum (G2-RE2 NB3 Runde 2, Abnahme 5 M1/M2: Figur frei - Niederwurf, Schub und Klemme wie im Spiel - bleibt auf dem Deck bzw. im Raum) ==
+  -- mit Kanister, 2400 Bilder je Lage --
+    R2318/-16300  Cut 2: 2400 B., Treffer  10 (erster t450), oben 2400 B., laengste Pause oben 450; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-17632); Raumhalt 17
+    R6500/-15000  Cut 2: 2400 B., Treffer  15 (erster t252), oben 2400 B., laengste Pause oben 304; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (6732,-1800,-17632); Raumhalt 1
+    R2315/-17642  Cut 2: 2400 B., Treffer  10 (erster t291), oben 2400 B., laengste Pause oben 473; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2300,-1800,-15920); Raumhalt 17
+    R2318/-17600  Cut 2: 2400 B., Treffer  18 (erster t291), oben 2400 B., laengste Pause oben 291; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-17632); Raumhalt 49
+    R2800/-16300  Cut 2: 2400 B., Treffer   9 (erster t361), oben 2400 B., laengste Pause oben 492; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-17632); Raumhalt 13
+    R4428/-16300  Cut 2: 2400 B., Treffer  10 (erster t300), oben 2400 B., laengste Pause oben 492; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-17632); Raumhalt 13
+    R3350/-15000  Cut 2: 2400 B., Treffer  10 (erster t230), oben 2400 B., laengste Pause oben 446; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2300,-1800,-16680); Raumhalt 19
+    R6500/-17600  Cut 2: 2400 B., Treffer  15 (erster t253), oben 2400 B., laengste Pause oben 305; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (6732,-1800,-14968); Raumhalt 3
+    R2318/-15000  Cut 2: 2400 B., Treffer  17 (erster t288), oben 2400 B., laengste Pause oben 288; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-14968); Raumhalt 53
+    W6732/-18598  Cut 2: 2400 B., Treffer  20 (erster t164), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2415,0,-18662); Raumhalt 13
+    W4200/-18700  Cut 2: 2400 B., Treffer  18 (erster t155), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (-8432,0,-26532); Raumhalt 0
+    W2318/-18568  Cut 2: 2400 B., Treffer  18 (erster t224), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,0,-18568); Raumhalt 0
+    W6400/-18700  Cut 2: 2400 B., Treffer  20 (erster t161), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,0,-18568); Raumhalt 1
+    W1000/-20700  Cut 2: 2400 B., Treffer  15 (erster t456), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (-1034,0,-11194); Raumhalt 0
+    W3000/-18800  Cut 0: 2400 B., Treffer  18 (erster t166), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (3435,0,-26532); Raumhalt 1
+    W4073/-19322  Cut 0: 2400 B., Treffer  17 (erster t172), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (933,0,-25965); Raumhalt 0
+    SUMME raum mit Kanister: 0 von 16 Lagen verlassen Deck/Raum oder laufen nicht; oben spaetester erster Treffer t450 (R2318/-16300), laengste Pause oben 492 B. = 16.4 s (R2800/-16300), wenigste Treffer 9
+  -- ohne Kanister, 2400 Bilder je Lage --
+    R2318/-16300  Cut 2: 2400 B., Treffer  10 (erster t450), oben 2400 B., laengste Pause oben 450; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-17632); Raumhalt 17
+    R6500/-15000  Cut 2: 2400 B., Treffer  15 (erster t252), oben 2400 B., laengste Pause oben 3[scd] thread start slot=0 first_op=0x3B
+    R2315/-17642  Cut 2: 2400 B., Treffer  10 (erster t291), oben 2400 B., laengste Pause oben 473; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2300,-1800,-15920); Raumhalt 17
+    R2318/-17600  Cut 2: 2400 B., Treffer  18 (erster t291), oben 2400 B., laengste Pause oben 291; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-17632); Raumhalt 49
+    R2800/-16300  Cut 2: 2400 B., Treffer   9 (erster t361), oben 2400 B., laengste Pause oben 492; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-17632); Raumhalt 13
+    R4428/-16300  Cut 2: 2400 B., Treffer  10 (erster t300), oben 2400 B., laengste Pause oben 492; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-17632); Raumhalt 13
+    R3350/-15000  Cut 2: 2400 B., Treffer  10 (erster t230), oben 2400 B., laengste Pause oben 446; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2300,-1800,-16680); Raumhalt 19
+    R6500/-17600  Cut 2: 2400 B., Treffer  15 (erster t253), oben 2400 B., laengste Pause oben 305; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (6732,-1800,-14968); Raumhalt 3
+    R2318/-15000  Cut 2: 2400 B., Treffer  17 (erster t288), oben 2400 B., laengste Pause oben 288; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,-1800,-14968); Raumhalt 53
+    W6732/-18598  Cut 2: 2400 B., Treffer  18 (erster t373), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,0,-18568); Raumhalt 0
+    W4200/-18700  Cut 2: 2400 B., Treffer  17 (erster t290), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (-8432,0,-26532); Raumhalt 0
+    W2318/-18568  Cut 2: 2400 B., Treffer  17 (erster t224), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,0,-18568); Raumhalt 0
+    W6400/-18700  Cut 2: 2400 B., Treffer  19 (erster t373), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (2318,0,-18568); Raumhalt 0
+    W1000/-20700  Cut 2: 2400 B., Treffer  15 (erster t456), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (-1034,0,-11194); Raumhalt 0
+    W3000/-18800  Cut 0: 2400 B., Treffer  17 (erster t232), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (3435,0,-26532); Raumhalt 0
+    W4073/-19322  Cut 0: 2400 B., Treffer  17 (erster t313), oben    0 B., laengste Pause oben   0; Deck verlassen 0, aussen 0, im Block 0 (erstes t-1 bei (0,0,0)); Figur am Ende (933,0,-25965); Raumhalt 0
+    SUMME raum ohne Kanister: 0 von 16 Lagen verlassen Deck/Raum oder laufen nicht; oben spaetester erster Treffer t450 (R2318/-16300), laengste Pause oben 492 B. = 16.4 s (R2800/-16300), wenigste Treffer 9
+    Raumhalt-Eingriffe gesamt 385
+  ok: mit Kanister: in allen 16 Lagen bleibt die freie Figur auf dem Deck (oben) bzw. innerhalb der Aussenwaende und ausserhalb von Plattform/Rampe (unten) (0 Lagen verfehlt)
+  ok: mit Kanister (A1 frei): oben erster Treffer <= 600 und laengste Pause oben <= 600 (t450 R2318/-16300, 492 R2800/-16300)
+  ok: ohne Kanister: in allen 16 Lagen bleibt die freie Figur auf dem Deck (oben) bzw. innerhalb der Aussenwaende und ausserhalb von Plattform/Rampe (unten) (0 Lagen verfehlt)
+  ok: ohne Kanister (A1 frei): oben erster Treffer <= 600 und laengste Pause oben <= 600 (t450 R2318/-16300, 492 R2800/-16300)
+  -- Gegenprobe Stand 10603425b (Pruefhaken raum_alt): oben ohne, Wasserlage mit Kanister --
+  ok: Gegenprobe 10603425b oben: >= 1 Lage verlaesst das Deck (3 von 3) - rot ohne den Bau
+  ok: Gegenprobe 10603425b unten (6732,-18598): Figur aussen/im Block (1) - rot ohne den Bau
+raum: 0 Fehler
+exit=0

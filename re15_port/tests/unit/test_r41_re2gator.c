@@ -4,9 +4,9 @@
  * Nachbau) mit der RE2-EM23-Bank. Belege je Zahl: analysis/befunde_runde41/B_re2gator.md §2 und die
  * @0x-Kommentare in engine/src/gator_re2_r41.c.
  *
- *   clips     Clip 1 (Paddeln) bei dist >= 0x65 ohne Biss-Sperre, Clip 0 in der Sperre, authored Vortrieb
+ *   clips     Clip 1 (Paddeln) bei dist >= 0x65 ohne Spurt-Sperre +0x238, Clip 0 in der Sperre, authored Vortrieb
  *   dash      Zonenwechsel -> SE 4, Clip 2 (150) -> Clip 3 (150), Stroke-Ereignis -> Schuetteln 5 x Bit 4 + 10 x Bit 8
- *   intro     Aggro -> Clip 6 (125) -> Clip 3 (150) -> Biss-Sperre 110 -> Clip 0, dann Clip 1
+ *   intro     Aggro -> Clip 6 (125) -> Clip 3 (150) -> Spurt-Sperre 110 -> Clip 0, dann Clip 1
  *   sockel    HP 25240 (Spur WS H3), 200 Pistolentreffer toeten nicht, geschwaecht < 25000, SE 0 xor SE 5, R4-Sperre 120..183
  *   kanister  Fenster -> Stufen 1..7 (Kopf/Kiefer-az), Anhaengen an Part 6, Treffer -> R1 (SE 4, Raum-Satz 15,
  *             Rumble, Clip 9, Kanister nach 9 Bildern weg, Leiche)
@@ -123,7 +123,7 @@ static void leon_statue(int32_t x, int32_t z)
     pl->x = x; pl->z = z; pl->y = 0; pl->floor = 0;
     pl->state = 0; pl->motion = 0; pl->hit_react = 0;
 }
-/* Intro (Clip 6 + Clip 3, 275 Bilder) zu Ende ticken und die Intro-Biss-Sperre (110) loeschen - fuer die
+/* Intro (Clip 6 + Clip 3, 275 Bilder) zu Ende ticken und die Intro-Spurt-Sperre (110) loeschen - fuer die
  * Riegel, die die Verfolgung/Treffer DANACH messen (Leon bleibt, wo der Aufrufer ihn hingestellt hat). */
 static void intro_abwarten(void)
 {
@@ -244,7 +244,7 @@ static int teil_clips(void)
     }
     CHECK(vortrieb_n > 0 && vortrieb_ok >= vortrieb_n - 2,
           "Vortrieb nicht der authored Wurzelversatz (FUN_80015e7c): %d/%d Bilder ok", vortrieb_ok, vortrieb_n);
-    /* Biss-Sperre +0x238 -> Schwimmen Clip 0 (@0x80100bf4-c04), danach wieder Paddeln */
+    /* Spurt-Sperre +0x238 -> Schwimmen Clip 0 (@0x80100bf4-c04), danach wieder Paddeln */
     re15_gr2_biss_cd(slot, RE15_GR2_BISS_CD_BISS);
     int clip0 = 0;
     for (int f = 0; f < RE15_GR2_BISS_CD_BISS; f++) {
@@ -252,7 +252,7 @@ static int teil_clips(void)
         tick();
         if (e->motion == 0) clip0++;
     }
-    CHECK(clip0 >= RE15_GR2_BISS_CD_BISS - 1, "in der Biss-Sperre nur %d/%d Bilder Clip 0", clip0, RE15_GR2_BISS_CD_BISS);
+    CHECK(clip0 >= RE15_GR2_BISS_CD_BISS - 1, "in der Spurt-Sperre nur %d/%d Bilder Clip 0", clip0, RE15_GR2_BISS_CD_BISS);
     for (int f = 0; f < 3; f++) { leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->rot_y = 0xC00; tick(); }
     CHECK(e->motion == 1, "nach der Sperre nicht wieder Clip 1 (motion=%d)", (int)e->motion);
     printf("clips: Clip1 %d/60, wrap %d, Vortrieb %d/%d, Sperre Clip0 %d/%d\n", clip1, wrap, vortrieb_ok, vortrieb_n, clip0, RE15_GR2_BISS_CD_BISS);
@@ -335,7 +335,7 @@ static int teil_intro(void)
         else if (n3 > 0) {
             /* +0x238 = 110 wird im Tick des LETZTEN Clip-3-Bildes gesetzt (@0x8010091c-20, FUN_8001a330 == 1,
              * Nachbesserung 1); der Umschalt-Tick (Clip 0) hat den Takt schon einmal abgezogen -> 109 hier. */
-            if (f_cd < 0) { f_cd = f; CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1, "Biss-Sperre im ersten Clip-0-Tick %d != 109 (110 @0x8010091c im Ende-Tick, ein Takt weniger)", re15_gr2_biss_cd_rest(slot)); }
+            if (f_cd < 0) { f_cd = f; CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1, "Spurt-Sperre im ersten Clip-0-Tick %d != 109 (110 @0x8010091c im Ende-Tick, ein Takt weniger)", re15_gr2_biss_cd_rest(slot)); }
             if (f < f_cd + RE15_GR2_BISS_CD_INTRO) { if (e->motion == 0) n0++; }
             else if (f < f_cd + RE15_GR2_BISS_CD_INTRO + 10) { if (e->motion == 1) n1++; }
         }
@@ -699,7 +699,7 @@ static int teil_modell(void)
  *     @SCD 0x0736) - in JEDEM der 275 Intro-Bilder liegen Rumpf (Bones 0/1), Hals 5, Kopf 6 und Kiefer 7 im Wasser des
  *     Beckens (Raumgeometrie ROOM2090-SCA [0]-[5]: Becken x[-8900,7200] z[-27000,-5400], Plattform x[-1700,1850]
  *     z[-20000,-12450], Rampe x[1850,7200] z[-18100,-14500]); Clip 6 (125) -> Clip 3 (150) -> yaw += 1024; die End-Gier
- *     zeigt auf Leon (Peilung, Toleranz 128); Biss-Sperre 110 (@0x8010091c-20). Vorher (Lauerplatz, Gier 1089): Kopf am
+ *     zeigt auf Leon (Peilung, Toleranz 128); Spurt-Sperre 110 (@0x8010091c-20). Vorher (Lauerplatz, Gier 1089): Kopf am
  *     Clip-3-Ende 4988 in der Westwand (probe_wende.c, = Abnahme-1-Lauf A).
  * (b) Dash am Suedausgang des Westkanals, Gator auf der Klemmlinie (-7434,-17900) Blick Sued, Leon Zone 0: Zonenwechsel
  *     2 -> 0 -> gr2_dash_planen dreht VOR Clip 2 auf die kleinste Gier mit freier Wende (vorher Kopf 4474 in der
@@ -762,7 +762,7 @@ static int teil_wand(void)
     CHECK(((yaw1 - yaw0) & 0xfff) == 1024, "Intro-Ende: yaw %d -> %d, erwartet +1024 (@0x80100938-48)", yaw0, yaw1);
     CHECK(abw <= 128, "Intro-Ende zeigt nicht auf Leon: Gier %d, Peilung %d (Abw. %d > 128)", yaw1, peil, abw);
     CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1,
-          "Biss-Sperre im ersten CHASE-Takt %d != 109 (110 im Ende-Takt @0x8010091c-20, ein Takt abgezogen)", re15_gr2_biss_cd_rest(slot));
+          "Spurt-Sperre im ersten CHASE-Takt %d != 109 (110 im Ende-Takt @0x8010091c-20, ein Takt abgezogen)", re15_gr2_biss_cd_rest(slot));
     /* (b) Dash: Klemmlinie im Westkanal, Blick Sued, Leon Zone 0 */
     pl->hp = 100;
     e->x = -7434; e->z = -17900; e->y = -1200; e->rot_y = 1024;
@@ -1084,7 +1084,29 @@ static int teil_kamera(void)
  * @0x80101360-70); (3) in der Zone des Kanisters (RE2-Zone 1 + Raumflag Bank 5 Bit 0 @0x80100ab8-c8, nie geloescht)
  * bleibt der Sub auch beim Tragen (Stufe 7) stehen (@0x80100aec / @0x80100afc -> 0x80100c08); (4) ausserhalb dieser
  * Zone laeuft die Hysterese bei Stufe 7 wieder (@0x80100b20-30 laesst 7 durch) und der Biss ist wieder erlaubt. */
+static int teil_aufnahme_innen(void);
 static int teil_aufnahme(void)
+{
+    /* G2-RE2 NB2 "Vorschlag 4" (Nutzerentscheid "Tu so als ob er nicht da waere", Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"): die RE2-Aufnahme bleibt, aber
+     * die Hysterese-Ruhe beim TRAGEN (Stufe 7, Kanister-Zone @0x80100ab8-c8) hebt Vorschlag 4 auf - der Kanister zaehlt in keiner Bewegungsrechnung. Dieser Riegel
+     * prueft die RE2-Regeln darum mit dem Pruefhaken v4_alt (und ohne den G2-RE2-Rueckfall "drueckt sich fest": er haelt die Wurzel je Bild fest), danach eigens
+     * den Stand mit Vorschlag 4. */
+    re15_gr2_v4_alt_setzen(1); re15_gr2_rw_rueck_aus_setzen(1);
+    int rv = teil_aufnahme_innen();
+    re15_gr2_rw_rueck_aus_setzen(0);
+    if (re15_gr2_kanister_stufe() == 7 && e) {
+        e->x = -6000; e->z = -25000;
+        const int ruht_alt = re15_gr2_hysterese_ruht(slot, e);
+        re15_gr2_v4_alt_setzen(0);
+        const int ruht_v4 = re15_gr2_hysterese_ruht(slot, e);
+        CHECK(ruht_alt && !ruht_v4, "Vorschlag 4: Stufe 7 in der Kanister-Zone - Hysterese ruht mit Pruefhaken %d (soll 1, RE2), mit Vorschlag 4 %d (soll 0 = wie ohne Kanister)", ruht_alt, ruht_v4);
+        printf("aufnahme: Vorschlag 4 - Stufe 7 in der Kanister-Zone: Hysterese ruht mit Pruefhaken v4_alt %d, mit Vorschlag 4 %d\n", ruht_alt, ruht_v4);
+        if (fails) rv = 1;
+    } else { CHECK(0, "Vorschlag 4: Kanister am Ende nicht getragen (Stufe %d)", re15_gr2_kanister_stufe()); rv = 1; }
+    re15_gr2_v4_alt_setzen(0);
+    return rv;
+}
+static int teil_aufnahme_innen(void)
 {
     if (!setup(1)) return 1;
     leon_statue(-6000, -18200);                /* Zone 0 wie teil_clips: Paddeln, kein Dash, kein Biss (6800) */
@@ -1340,6 +1362,9 @@ static int teil_schleppen(void)
         int32_t l_anh[3] = {0, 0, 0}, l[3] = {0, 0, 0}; int anh = 0, nach7 = 0;
         for (int f = 0; f < 200 && nach7 < 40; f++) {
             leon_statue(-3000, -19000);
+            pl->hp = 30000;   /* Runde 41 Spur G2 NB1 (M1): mit dem Kanister schwimmt er auch in der Wende weiter (RE2 Stufe 7 ohne Wartezustand,
+                               * @0x80101b58-8c) und erreicht die Statue frueher; ein toedlicher Biss (FRESSEN P0 schaltet den Kanister aus,
+                               * @0x80101008-0c) gehoert nicht zum Mass dieses Falls */
             tick();
             if (!anh && re15_gr2_kanister_lokal(l_anh)) anh = 1;
             if (re15_gr2_kanister_stufe() == 7) nach7++;
@@ -1463,7 +1488,19 @@ static int32_t sitz_fehler(const int32_t r6[9], const int32_t p6[3], int *fx_ok)
  * Wende 619-637 je Bild, Biss bis 409, > 300 in 51 von 240 Bildern). Gemessen wird nach jedem Takt gegen den Zeichner-Nachbau,
  * (a) Aufnahme bis Stufe 7 + 40, (b) 240 Takte Wende (Leon seitlich) / Biss (Leon vor der Schnauze) / Wende zurueck wie die
  * Sonde, (c) Befreiung aus einem Gefaengnis im Plattform-Slab (Schub, Gier fest) mit dem Kanister im Maul. */
+static int teil_sitz_innen(void);
 static int teil_sitz(void)
+{
+    /* G2-RE2 NB2 "Vorschlag 4": die Faelle dieses Riegels (Wende in Clip 0, Gefaengnis-Befreiung, Dash-Ueberblendung) entstehen mit der RE2-Hysterese-Ruhe in der
+     * Kanister-Zone (@0x80100ab8-c8), die Vorschlag 4 beim Tragen aufhebt (gator_re2_r41.c re15_gr2_hysterese_ruht); der Sitz selbst (gr2_kan_folgen in
+     * re15_gr2_nachtakt) ist von der Bewegung unabhaengig. Darum laeuft der Riegel mit dem Pruefhaken v4_alt; den Sitz unter der Bewegung von Vorschlag 4
+     * (13 Lagen, Wende/Biss/Querung/Rammen) pruefen unit_r41_gatorfix_v4 (b) und _re2. */
+    re15_gr2_v4_alt_setzen(1);
+    const int rv = teil_sitz_innen();
+    re15_gr2_v4_alt_setzen(0);
+    return rv;
+}
+static int teil_sitz_innen(void)
 {
     if (!setup(1)) return 1;
     leon_statue(-3000, -19000); tick(); intro_abwarten();
@@ -1473,7 +1510,7 @@ static int teil_sitz(void)
     int32_t r6[9], p6[3]; int fx_ok = 0, fx_falsch = 0;
     int f7 = 0, n_auf = 0; int32_t m_auf = 0;
     for (int f = 0; f < 200 && f7 < 40; f++) {
-        leon_statue(-3000, -19000); tick();
+        leon_statue(-3000, -19000); pl->hp = 30000; tick();   /* Runde 41 Spur G2 NB1 (M1): s. schleppen Fall 3 - kein toedlicher Biss im Mass */
         if (!zeichnen_nachbau(r6, p6)) { CHECK(0, "Zeichner-Nachbau ohne Pose"); return 1; }
         int32_t d = sitz_fehler(r6, p6, &fx_ok);
         if (d >= 0) { n_auf++; if (d > m_auf) m_auf = d; if (!fx_ok) fx_falsch++; }
@@ -1507,6 +1544,8 @@ static int teil_sitz(void)
      *     Westen - die Verfolgung will hinaus, push_rect Fall 0 verwirft den Schritt (re15_collision.c) -> Befreiung (Schub). */
     int b0 = re15_gator_boss_befreiungen(), n_schub = 0, gestartet = 0; int32_t m_schub = 0; int gier_fest = 1;
     const int32_t ausgang = -1700 - ((int32_t)e->hit_radius_min + 60) - 120;   /* Slab-Ausgang bx (enemy_ai_boss_gator.c) */
+    for (int f = 0; f < 120 && re15_gator_boss_phase(e) != 2; f++) { leon_statue(-7000, -16000); pl->hp = 30000; tick(); }   /* Runde 41 Spur G2 NB1: einen
+                                     * laufenden Biss aus (b) erst zu Ende gehen lassen (mit dem Kanister erreicht er die Statue frueher) */
     e->x = -1700 - (int32_t)e->hit_radius_min + 600; e->z = -16000; e->rot_y = 0x800;
     for (int f = 0; f < 80; f++) {
         leon_statue(-7000, -16000); pl->hp = 100;
@@ -1531,6 +1570,8 @@ static int teil_sitz(void)
     /* (d) mit UEBERBLENDUNG: der tragende Gator wechselt ins Nordbecken, in dem Leon ist -> RE2-Zonen-Dash mit Clip 2 und
      *     Blend 16 (@0x80100dac-b4); RE2-Gewicht 4096/(n+1) @0x8001a37c-ac, Abbau -1 je Bild @0x800299c0-cc - 16 Bilder, in
      *     denen die gezeichnete Pose eine Mischung aus Vorbild und Keyframe ist. */
+    re15_gr2_kk_ziel_alt_setzen(1);   /* Runde 41 Spur G2 NB2: mit dem Kanister gibt es im Spiel keinen Zonen-Dash mehr (re15_gr2_trag_dash_erlaubt);
+                                      * gemessen wird hier der Sitz unter der Dash-Ueberblendung - Dash ueber den Pruefhaken (Stand vor G2) */
     e->x = 3000; e->z = -9000; e->rot_y = 0x800;
     int n_bl = 0, frac_max = 0; int32_t m_bl = 0;
     for (int f = 0; f < 70; f++) {
@@ -1544,6 +1585,7 @@ static int teil_sitz(void)
     }
     CHECK(n_bl >= 15 && frac_max == 16, "Ueberblendung nicht abgedeckt: %d Bilder, groesster Zaehler %d (Dash-Blend 16 erwartet)", n_bl, frac_max);
     CHECK(m_bl == 0, "Ueberblendung: Kanister %d neben Part6(Bild) x lokal", m_bl);
+    re15_gr2_kk_ziel_alt_setzen(0);
     CHECK(fx_falsch == 0, "Effekt-Quelle Part 6 in %d Bildern nicht die gezeichnete Part-6-Matrix", fx_falsch);
     printf("sitz: (d) Ueberblendung %d Bilder (Zaehler bis %d), groesster Abstand %d; Effekt-Quelle Part 6 falsch in %d Bildern\n",
            n_bl, frac_max, m_bl, fx_falsch);
@@ -2145,7 +2187,17 @@ static int teil_buehne(void)
  * Ueberblend-Differenz zur gezeichneten Pose, nach der die Klemme rechnet), und die sechs Spritzring-Punkte (Kanister-Matrix x Tafel
  * @0x801000a8) liegen im Regions-Viereck des Raums (RVD-Anker, re15_rdt_get_region_quad). Gegenprobe: ohne Kanister greift die
  * Klemme nicht. */
+static int teil_kopfklemme_innen(void);
 static int teil_kopfklemme(void)
+{
+    /* G2-RE2 NB2 "Vorschlag 4": der Mechanismus dieses Riegels (der Kanister als Koerper in Lenkung/Klemme) gilt nur noch mit dem Pruefhaken v4_alt (Stand f942f56c0);
+     * der Riegel prueft ihn dort weiter. Die Bewegung mit Vorschlag 4 pruefen unit_r41_gatorfix_v4 / _re2 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"). */
+    re15_gr2_v4_alt_setzen(1);
+    const int rv = teil_kopfklemme_innen();
+    re15_gr2_v4_alt_setzen(0);
+    return rv;
+}
+static int teil_kopfklemme_innen(void)
 {
     if (!setup(5)) return 1;
     leon_statue(-6000, 2000);
@@ -2176,7 +2228,8 @@ static int teil_kopfklemme(void)
         CHECK((int64_t)sdx * sdx + (int64_t)sdz * sdz <= (int64_t)341 * 341, "Bild %d: Lagesprung (%d,%d) > 340", f, (int)sdx, (int)sdz);
         CHECK(re15_gr2_kanister_welt(kp, kr), "Bild %d: kein Kanister", f);
         if (kp[2] < kmin) kmin = kp[2];
-        if (f < 9) continue;
+        if (f < 10) continue;   /* G2-RE2 NB2: gemessen auf f942f56c0 (eigener Bau, scratchpad g2v4/f942src) Bild 9 noch 114 ausserhalb (z -27114) - der Riegel war dort schon rot;
+                                 * ab Bild 10 innerhalb (Ueberstand ~3200 / 340 je Bild = GR2_KK_SCHRITT) */
         CHECK(kp[0] >= -8900 && kp[0] <= 7200 && kp[2] >= -27000 && kp[2] <= -5400, "Bild %d: Kanister (%d,%d) ausserhalb der Aussenwaende",
               f, kp[0], kp[2]);
         /* anderes Ende des Kanisters: Weltdrehung x (0,-2784,0) (KANISTER40A0.MD1 y -2784..0) */

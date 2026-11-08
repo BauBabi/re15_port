@@ -1,0 +1,40 @@
+== a7_oben_leon (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 49; Treffer waehrend +0x238 > 0 18 -> VERFEHLT
+gtrlog Bisssperre: 48 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 18 - erster: F776 nach F756 (Abstand 20)
+== a7_oben_elza (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 59; Treffer waehrend +0x238 > 0 29 -> VERFEHLT
+gtrlog Bisssperre: 58 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 29 - erster: F776 nach F756 (Abstand 20)
+== a7_frei4_leon (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 101; Treffer waehrend +0x238 > 0 43 -> VERFEHLT
+gtrlog Bisssperre: 100 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 43 - erster: F579 nach F557 (Abstand 22)
+== a7_frei4_elza (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 93; Treffer waehrend +0x238 > 0 42 -> VERFEHLT
+gtrlog Bisssperre: 92 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 42 - erster: F160 nach F138 (Abstand 22)
+== a7_west4_leon (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 46; Treffer waehrend +0x238 > 0 21 -> VERFEHLT
+gtrlog Bisssperre: 45 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 21 - erster: F250 nach F230 (Abstand 20)
+== a7_west4_elza (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 45; Treffer waehrend +0x238 > 0 20 -> VERFEHLT
+gtrlog Bisssperre: 44 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 20 - erster: F159 nach F137 (Abstand 22)
+== a7_west5_elza (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 50; Treffer waehrend +0x238 > 0 24 -> VERFEHLT
+gtrlog Bisssperre: 49 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 24 - erster: F219 nach F199 (Abstand 20)
+== a7_ohne_frei4_leon (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 101; Treffer waehrend +0x238 > 0 43 -> VERFEHLT
+gtrlog Bisssperre: 100 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 43 - erster: F579 nach F557 (Abstand 22)
+== a7_ohne_oben_elza (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 59; Treffer waehrend +0x238 > 0 29 -> VERFEHLT
+gtrlog Bisssperre: 58 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 29 - erster: F776 nach F756 (Abstand 20)
+== a7_tod_leon (Abnahme-7-Lauf, Bau 6f4314fb)
+rc=1
+... Treffer (hp-Flanken) 0; Treffer waehrend +0x238 > 0 1 -> VERFEHLT
+gtrlog Bisssperre: 1 Treffer-Paare, kleinster Abstand 20, Treffer waehrend +0x238 > 0 (Abstand < 70): 1 - erster: F962 nach F942 (Abstand 20)

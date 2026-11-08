@@ -55,7 +55,7 @@ function(r41p_fehler _text)
     message(FATAL_ERROR "r41_alligator2: Lauf ${TEIL} - ${_text} (${_dir})")
 endfunction()
 
-foreach(_v RE15_GB_TEST RE15_GATOR_KANISTER RE15_KEIN_GATOR RE15_K2080_WURF_GIER RE15_K2080_GATOR_HP RE15_SET_FLAG RE15_FIRE_AOT)
+foreach(_v RE15_GB_TEST RE15_GATOR_KANISTER RE15_KEIN_GATOR RE15_K2080_WURF_GIER RE15_K2080_GATOR_HP RE15_SET_FLAG RE15_FIRE_AOT RE15_K2080_RUECK_KANISTER)
     unset(ENV{${_v}})
 endforeach()
 
@@ -195,8 +195,8 @@ if(TEIL MATCHES "^uebergabe")
         elseif(_l MATCHES "Knall \\(Knall-Bank")
             string(APPEND _folge "K")
         elseif(_l MATCHES "nach Bit 110: ([0-9]+) lebende Zombies")
-            if(NOT CMAKE_MATCH_1 EQUAL 8)
-                r41p_fehler("'${_l}' statt 8 lebende Zombies")
+            if(NOT CMAKE_MATCH_1 EQUAL 3)   # Runde 41 Spur G2 (Punkt 4): RE15_K2080_N_ZOMBIES 3 statt 8
+                r41p_fehler("'${_l}' statt 3 lebende Zombies")
             endif()
             string(APPEND _folge "N")
         elseif(_l MATCHES "Sce_em_set type=0x16")
@@ -213,8 +213,8 @@ if(TEIL MATCHES "^uebergabe")
     if(NOT _folge MATCHES "A.*C.*D.*K.*Z" OR NOT _folge MATCHES "N")
         r41p_fehler("Folge '${_folge}' (A Ankunft, C Kampfbeginn, D Tuerweg DOOR16, K Knall, N Zeile nach Bit 110, Z Zombies)")
     endif()
-    if(NOT _n_em EQUAL 8 OR NOT _n_em_oben EQUAL 8)
-        r41p_fehler("${_n_em} Zombie-Spawns, davon ${_n_em_oben} auf Band 8 (y -14400), statt 8")
+    if(NOT _n_em EQUAL 3 OR NOT _n_em_oben EQUAL 3)   # Runde 41 Spur G2 (Punkt 4)
+        r41p_fehler("${_n_em} Zombie-Spawns, davon ${_n_em_oben} auf Band 8 (y -14400), statt 3")
     endif()
     # Knall gemischt: direkt hinter der Ausloese-Zeile die Stimme des Satzes 0 (audio_pc.c se_play_layers, wie test_r41_kanister2080.cmake)
     set(_ausl "\\[k2080\\] F[0-9]+ Knall: Knall-Bank")
@@ -339,6 +339,7 @@ if(TEIL MATCHES "^tragen")
     re15_start_spiel(_rv 480
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore ${_wahl}
         RE15_DEBUG_JUMP=${_r2090}@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990
+        RE15_K2080_RUECK_KANISTER=1   # Runde 41 Spur G2 (Punkt 8): ohne Anschwimmen lockt die Figur den Alligator ueber den Kanister
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schuss}" RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_pos}"
         "RE15_EXIT_AT=2400#${_r2090}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
     file(REMOVE "${_exe_kopie}")
@@ -395,6 +396,7 @@ if(TEIL MATCHES "^schluessel")
     endif()
     set(_env RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 SDL_ASSERT=always_ignore ${_wahl}
         RE15_DEBUG_JUMP=${_r2090}@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990
+        RE15_K2080_RUECK_KANISTER=1   # Runde 41 Spur G2 (Punkt 8), s. tragen
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}")
     set(WORKDIR "${_dir}/lauf1")
     file(MAKE_DIRECTORY "${WORKDIR}")

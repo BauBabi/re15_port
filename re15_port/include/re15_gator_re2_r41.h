@@ -43,8 +43,8 @@ extern "C" {
 /* ---- Hysterese Schwimmen (Clip 0) <-> Paddeln (Clip 1), Sub 1/2 ------------------------- */
 #define RE15_GR2_PADDEL_AB  0x65    /* +0x1F0 >= 101 -> 0x201  `sltiu v0,v0,0x65` @0x80100b88/@0x80100ba4 */
 #define RE15_GR2_SCHWIMM_AB 0x5a    /* +0x1F0 <  90  -> 0x101  `sltiu v0,v0,0x5a` @0x80100be4/@0x80100ca4 */
-#define RE15_GR2_BISS_CD_INTRO 110  /* +0x238 = 110 nach dem Intro @0x8010091c-20 */
-#define RE15_GR2_BISS_CD_BISS   70  /* +0x238 = 70 nach dem Chomp-Commit @0x801016b0-b4 */
+#define RE15_GR2_BISS_CD_INTRO 110  /* Spurt-Sperre +0x238 = 110 nach dem Intro @0x8010091c-20 (sperrt nur Sub 1 -> Sub 2 @0x80100b5c-64, nicht den Biss) */
+#define RE15_GR2_BISS_CD_BISS   70  /* Spurt-Sperre +0x238 = 70 im Treffer-Einstieg @0x801016b0-b4 (dito) */
 
 /* ---- Grossreaktion R4 (@0x80101f8c-fd4) ---------------------------------------------------- */
 #define RE15_GR2_R4_CD_BASIS 120    /* +0x22E = (rnd & 0x3f) + 120 @0x80101fc8-cc */
@@ -95,7 +95,7 @@ int  re15_gr2_zielmodus(int slot);
 
 /* RE2-LUNGE als Zonen-Dash: `zone` = aktuelle Beckenzone des Gators (gb_zone), `zone_leon` =
  * Leons Zone. Liefert 1, wenn eben eine neue Zone betreten wurde, in der Leon ist (RE2: Zonenlinie
- * +0x21A 0->1->2 @0x801009a8/@0x801009ec = Routine 0x301, geprueft VOR der Biss-Sperre +0x238).
+ * +0x21A 0->1->2 @0x801009a8/@0x801009ec = Routine 0x301, geprueft VOR der Spurt-Sperre +0x238).
  * ziel_vor[] = Ende der LAENGS-Bahn (x-Netto Clip 2 + 3, skaliert, um den Yaw gedreht) fuer die
  * Insel-Probe des Boss-Moduls; die Quer-Komponente (RE2-Korridor-Ecke) nimmt die Dispatcher-Klemme.
  * Nachbesserung 1 (Abnahme 0, M1): die Bahn laeuft bildweise (FUN_80015e7c/152c8-Delta) statt absolut. */
@@ -179,6 +179,36 @@ void re15_gr2_nachtakt(int slot, re15_actor_t *e);
  * z[-27000..-5400]; *dx/*dz = Verschiebung des ganzen Alligators nach innen (Aufruf re15_gator_boss_tick nach der Wurzel-Klemme,
  * vor re15_gr2_nachtakt). Messzeilen "KOPF-KLEMME an/aus" in gator_boss.log. */
 int  re15_gr2_kopf_klemme(int slot, re15_actor_t *e, int32_t *dx, int32_t *dz);
+/* Runde 41 Spur G2 (Punkt 7, Haken): Steuerziel mit dem Kanister im Maul um den Ueberstand verschieben, den die Kopf-Klemme an ihm (Ankunftsrichtung
+ * Wurzel -> Ziel) messen wuerde; 1 = verschoben. Pruefhaken der Gegenprobe: _alt_setzen(1) = Ziel wie vor Spur G2. */
+int  re15_gr2_kk_ziel(const re15_actor_t *e, int32_t *tx, int32_t *tz);
+void re15_gr2_kk_ziel_alt_setzen(int an);
+int  re15_gr2_kk_ziel_alt(void);
+int  re15_gr2_trag_modus(int slot);   /* NB1: letzte Rueckgabe von re15_gr2_trag_ziel (0/1/2) */
+int  re15_gr2_kk_aktiv(void);         /* Messhaken: Kopf-Klemme griff im letzten Takt */
+/* Runde 41 Spur G2 Nachbesserung 1 (M1/M3): Steuerziel mit dem Kanister im Maul - gekuerztes Ziel, am Ende VORBEI-Etappen (gator_re2_r41.c).
+ * Rueckgabe 0 = unveraendert, 1 = gekuerzt, 2 = Vorbei-Etappe. */
+int  re15_gr2_trag_ziel(int slot, const re15_actor_t *e, const re15_actor_t *pl, int32_t *tx, int32_t *tz, int32_t nx, int32_t nz, int belagern);
+/* Runde 41 Spur G2 NB4 (Punkt 2): Mittelpunkt der Belagerung im sichtbaren Wasser der Kamera cam (freier Punkt, Kreis R 2000 zu >= 12/16 im Bild),
+ * der Figur (px,pz) am naechsten; 1 = gefunden (*cx/*cz, *vis = Kreispunkte im Bild), 0 = kein sichtbares Wasser. Pruefhaken: 1 = Mittelpunkt wie NB3. */
+int  re15_gr2_kreis_kamera(int cam, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *cx, int32_t *cz, int *vis);
+void re15_gr2_kreis_kamera_alt_setzen(int an);
+int  re15_gr2_trag_kreis(int slot, int32_t *cx, int32_t *cz);   /* Messhaken: laufender Kreis (1 Verfolgung, 2 Belagerung) und Mittelpunkt */
+void re15_gr2_karotte_alt_setzen(int an);   /* Pruefhaken NB5 (Gegenprobe Riegel bahn): 1 = Kreis-Karotte wie NB4 (gespiegelt) */
+int  re15_gr2_huelle_ausdehnung(const re15_actor_t *e, int clip, int32_t a[8]);   /* Messhaken NB5: Kopf/Kanister-Ausdehnung je Clip (Gator-Rahmen) */
+/* Runde 41 Spur G2 NB5 (Abnahme 3 M2a/M2b): Bahn der Belagerung (Stadion A/B/R/Drehsinn, gator_re2_r41.c BAHN DER BELAGERUNG). b[0..6] = ax, az, bx, bz, r, kdir,
+ * Umfang. _bahn: laufende Bahn des Slots; _plan_mess: Bahn fuer Kamera/Figur planen; _punkt_mess: Stuetzpunkt bei Bogenlaenge s; _naechst_mess: naechster
+ * Stuetzpunkt (Bogenlaenge) zu (x,z) und Abstand. _alt_setzen(1): Pruefhaken der Gegenprobe = Kreis wie NB4. */
+int  re15_gr2_bahn(int slot, int32_t b[7]);
+int  re15_gr2_bahn_plan_mess(int cam, const re15_actor_t *e, int32_t px, int32_t pz, int32_t b[7], int *vis);
+void re15_gr2_bahn_punkt_mess(const int32_t b[7], int32_t s, int32_t *x, int32_t *z);
+int32_t re15_gr2_bahn_naechst_mess(const int32_t b[7], int32_t x, int32_t z, int32_t *ab);
+void re15_gr2_bahn_alt_setzen(int an);
+int  re15_gr2_bahn_bewerten_mess(int cam, const re15_actor_t *e, const int32_t b[7], int *vis, int *kopf);
+int  re15_gr2_tr_kasten_mess(const re15_actor_t *e, int gier, int32_t k[4]);   /* Messhaken NB5: Wurzel-Kasten der Trag-Lenkung je Gier */
+int  re15_gr2_kreis_sicht(int cam, int32_t cx, int32_t cz);   /* Messhaken: Kreispunkte (von 16) im Bild der Kamera cam, -1 = keine Kamera */
+int  re15_gr2_trag_dash_erlaubt(int slot);
+int  re15_gr2_trag_ohne_annaeherung(void);   /* Messzeile: Etappen ohne Annaeherung (Riegel zaehlt sie) */   /* NB2: mit Kanister hoechstens ein Zonen-Dash je Tragen, keiner beim Umkreisen */   /* nx/nz = Endziel vor dem Kanten-Umweg */
 /* Runde 41 Spur P (Abnahme G 4 O1): Bildschritt (ox,oz) -> (nx,nz) auf hoechstens 340 kuerzen (groesster authored Wurzelschritt, gator_re2_r41.c GR2_KK_SCHRITT). */
 void re15_gr2_kk_schritt(int32_t ox, int32_t oz, int32_t *nx, int32_t *nz);
 void re15_gr2_kk_hart_setzen(int an);   /* Pruefhaken (Gegenprobe der Riegel, kein Spielweg, kein Env-Schalter): 1 = Klemme wie bis Spur P */
@@ -186,6 +216,7 @@ int  re15_gr2_kk_hart(void);
 /* Messhaken (Riegel unit_r41_re2gator_sitz): Part-6-Weltmatrix der letzten re15_gr2_nachtakt-Pose (Rotation ohne Skala, Lage
  * mit Zeichen-Skala) und die Effekt-Quellpuffer (0 = Part 6, 1 = Part 7, 2 = Kanister; 32-Byte-MATRIX-Abbild). 0 = keine. */
 int  re15_gr2_part6_gezeichnet(int32_t rot[9], int32_t pos[3]);
+int  re15_gr2_part7_gezeichnet(int32_t rot[9], int32_t pos[3]);   /* Runde 41 Spur G2 NB4: Part 7 (Schaedel) derselben Pose */
 /* Messhaken (PC-Zeichner nach dem NPC-Pass): Kanister-Sitz gegen die gezeichnete Pose aus dem Ueberblend-Schnappschuss;
  * 1 = gemessen (angehaengt), *abw = |Part6(gezeichnet) x Lokallage - Kanister-Weltlage|. Ohne Wirkung auf den Aktor. */
 int  re15_gr2_kanister_sitz(re15_actor_t *e, int32_t *abw);
@@ -195,6 +226,7 @@ void re15_gr2_kanister_env(void);
 
 /* ---- Fuer Spur F/G ------------------------------------------------------------------------ */
 int  re15_gr2_geschwaecht(void);     /* +0x218 & 0x20: HP < 25000 (= mehr als 240 Schaden genommen, RE15_GR2_HP_INIT) */
+int  re15_gr2_geschwaecht_slot(int slot);   /* NB4 (T): dasselbe Bit dieses Gators (Schaden 30 statt 60 @0x8010168c-a0) */
 int  re15_gr2_treffer(void);         /* Treffer seit INIT */
 int  re15_gr2_tot(void);             /* R1-Endzustand erreicht (Leiche, +0x10E |= 0x4000 @0x80102654-64) */
 int  re15_gr2_traegt(void);          /* Stufe 7 */
@@ -298,6 +330,15 @@ void re15_gr2_pc_zeichnen(const void *cam_view, int cx, int cy);
  * Messzeilen debug.log "[gator-re2] Sicht ...": Wechsel untergetaucht/aufgetaucht mit Bild, Lage, Clip/Bild; erstes
  * gezeichnetes Bild; groesster Lagesprung zwischen zwei aufgetauchten Bildern. */
 int  re15_gr2_pc_untergetaucht(const re15_actor_t *npc, int gecullt);
+/* Runde 41 Spur G2-RE2 (aus r41/gatorfix NB7): Schnitt eines Mesh-Polygons (n = 3 oder 4 Scheitel als Umfang) an der Wasserlinie (weg: Welt-y > y_wl) und, mit
+ * bloecke, an den festen Bloecken Plattform/Rampe unter dem Deck (weg: Inneres). mv = Modellraum, wm/wt = Modell -> Welt, vm/vt = Modell -> Kamera (Q12).
+ * Rueckgabe 0 = Polygon unberuehrt, 1 = erledigt (ganz weg oder Reststuecke gezeichnet). Zaehler re15_gr2_pc_schnitt_zaehler. */
+int  re15_gr2_pc_wl_poly(int n, const int32_t (*mv)[3], const int (*uv)[2], const uint8_t (*col)[3],
+                         const int32_t wm[9], const int32_t wt[3], const int32_t vm[9], const int32_t vt[3],
+                         int32_t y_wl, int bloecke, int fov, int cx, int cy, int clut);
+void re15_gr2_pc_schnitt_zaehler(int *geschnitten, int *weg);
+/* Zeichner-Gate Boss-Alligator mit Kanister: 1 = Mesh aus (untergetaucht); *wl/*y_wl/*bloecke = Schnitt an/aus, Wasserlinie, Bloecke. */
+int  re15_gr2_pc_gator_schnitt(const re15_actor_t *npc, int *wl, int32_t *y_wl, int *bloecke);
 /* Messhaken: Zahl der gespawnten Putz-Brocken (Raumbank 0x19) seit Start + Welt-Lage des letzten Spawns; exe-Zeile "RE2 PUTZ Stoss ..." in gator_boss.log. */
 int  re15_gr2_putz_spawns(void);
 /* Spur P (Nachbesserung 1, M4): Zahl der Putz-Stoesse = sub15-Laeufe mit Ringseite (ROOM40A0 sub01 @SCD 0x008C haengt am Stark-Schuetteln-Bit) */
@@ -306,6 +347,51 @@ void re15_gr2_putz_letzte(int32_t pos[3]);
 
 /* Messhaken: Log-Zeilen (gator_boss.log, "RE2 ...") an/aus. */
 void re15_gr2_log(const char *fmt, ...);
+
+/* ---- Runde 41 Spur G2-RE2 (Neuaufbau ab NB5 bc5fb7c9c; Dossier G2_gatorfix.md "G2-RE2"): Alligator mit dem Kanister im Maul ----------
+ * gator_rw_r41.c: Rueckwaerts (RE2-Clip 10, Blend 3 @0x80102c40-48) wo die Drehung nicht passt, kurz Tauchen nur als Notloesung (PORT-WAHL).
+ * gator_re2_r41.c: Kopf/Kanister nicht in Rampe/Plattform und mindestens 2500 vor der Kamera (Klemme + Zielkuerzung, PORT-WAHL).
+ * Pruefhaken _alt_setzen(1) = Stand NB5 (Gegenproben der Riegel, kein Spielweg). */
+typedef struct { uint32_t takte, rueck_n, rueck_bilder, tauchgaenge, tauch_bilder, unter_bilder, haenger; } re15_gr2_rw_stat_t;
+void re15_gr2_rw_alt_setzen(int an);
+int  re15_gr2_rw_alt(void);
+int  re15_gr2_rw_an(void);                       /* Kanister getragen (Stufe 7) und nicht der Pruefhaken */
+void re15_gr2_rw_tauchen_aus_setzen(int an);     /* Pruefhaken: Notloesung aus */
+void re15_gr2_rw_rueck_aus_setzen(int an);       /* Pruefhaken: Rueckwaerts aus */
+void re15_gr2_rw_reset(int slot);
+void re15_gr2_rw_stat(int slot, re15_gr2_rw_stat_t *s);
+void re15_gr2_rw_stat_null(void);
+int  re15_gr2_rw_modus(int slot);                /* 0 normal, 1 rueckwaerts, 2 abtauchen, 3 untergetaucht, 4 auftauchen */
+int  re15_gr2_rw_taucht(int slot);
+int  re15_gr2_rw_takt(int slot, re15_actor_t *e, const re15_actor_t *pl, int32_t tx, int32_t tz, int32_t dist);
+void re15_gr2_rw_nachtakt(int slot, re15_actor_t *e, const re15_actor_t *pl, int32_t ox, int32_t oz, int32_t takt_x, int32_t takt_z, int verfolgt, int phase_biss);
+int  re15_gr2_rw_modell_aus(const re15_actor_t *e);
+int  re15_gr2_rw_wasserlinie(const re15_actor_t *e, int32_t *y_wl);
+int  re15_gr2_rueck_clip(int slot, re15_actor_t *e, int32_t *vortrieb);   /* RE2-Clip 10 Blend 3, authored Vortrieb; 1 = Clip zu Ende */
+int  re15_gr2_rw_freie_stelle(const re15_actor_t *e, const re15_actor_t *pl, int32_t tx, int32_t tz, int32_t *x, int32_t *z, int *gier);
+int32_t re15_gr2_kamera_tiefe(int cam, const int32_t p[3]);   /* Bildtiefe (vz) von p in Kamera cam; sehr gross = keine Kamera */
+void re15_gr2_kk_erweitert(int an);
+int  re15_gr2_kreuz_anfahrt(int slot, const re15_actor_t *e, int32_t sx, int32_t sz, int32_t *tx, int32_t *tz);   /* Weg zum Startpunkt der Ueberquerung */
+int  re15_gr2_rw_kopf_verletzt(re15_actor_t *e);   /* Kopf/Kanister unter dem Deck in Plattform/Rampe oder < 2500 vor der Kamera */
+int32_t re15_gr2_vortrieb_soll(const re15_actor_t *e, int clip, int frame);   /* Messhaken: authored Vortrieb wie re15_gr2_chase_clip */
+int  re15_gr2_rw_umweg(int slot, const re15_actor_t *e, int32_t px, int32_t pz, int32_t *tx, int32_t *tz);   /* Westkanal-Umweg zur Figur */
+void re15_gr2_rw_kamera_neu(void);              /* Raumwechsel/INIT: Kamera-Cache verwerfen */              /* Boss je Takt: 1 = Kopf-Klemme auch gegen Plattform/Rampe und die Kamera */
+int  re15_gr2_rw_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max);   /* Messhaken: Mesh 5/6/7 + Kanister-Zylinder der gezeichneten Pose */
+int  re15_gr2_teile_deck_tiefe(re15_actor_t *e, int32_t deck, const int32_t (*bl)[4], int nb, uint32_t teile);
+
+/* ---- Runde 41 Spur G2-RE2 NB2 "Vorschlag 4" (Nutzerentscheid 2026-11-03, Dossier G2_gatorfix.md Abschnitt "G2-RE2 NB2 (Vorschlag 4)") --------------------
+ * "Ignoriere den Kanister einfach in der Berechnung. Tu so als ob er nicht da waere" / "wichtig ist nur das der Kanister synchron mit dem Aligator mitlaeuft.
+ * Ansonsten soll er nicht als Stoerkoerper zaehlen": der getragene Kanister (RE2-Stufe 7) zaehlt in keiner Bewegungs-, Kollisions- oder Wegrechnung; er haengt
+ * als Kind der gezeichneten Part-6-Matrix am Kiefer (RE2 `addiu a0,s0,1104` @0x801018d0 / `sw a0,128(s2)` @0x801018e0) und bleibt Trefferziel (T2 @0x801017c4,
+ * R1). Pruefhaken re15_gr2_v4_alt_setzen(1) = Stand f942f56c0 (Kanister zaehlt: Huelle, Klemme, Trag-Lenkung, Kollisions-Antwort, Ueberquerungs-Profil). */
+void re15_gr2_v4_alt_setzen(int an);
+int  re15_gr2_v4_alt(void);
+int  re15_gr2_traegt_lenkung(void);              /* getragen UND der Kanister zaehlt in der Bewegung (nur Pruefhaken v4_alt) */
+int  re15_gr2_rw_traegt(void);                   /* getragen und nicht der NB5-Pruefhaken: Rueckfall Rueckwaerts/Tauchen, Rammen in der Ueberquerung */
+int  re15_gr2_rw_nur_kopf_punkte(re15_actor_t *e, int32_t (*out)[3], int max);   /* Messhaken: Mesh 5/6/7 der gezeichneten Pose (ohne Kanister) */
+int  re15_gr2_kanister_rel(int32_t rel[9]);
+int  re15_gr2_ohne_kanister_entfernt(void);      /* Messhaken env RE15_G2_OHNE_KANISTER (PC): 1 = der Kanister wurde beim Tragen entfernt */      /* Messhaken: Drehung des Kanisters im Part-6-Rahmen (1 = angehaengt) */
+void re15_gr2_kan_vorbild_setzen(int an);        /* Pruefhaken Riegel v4 (b): 1 = Kanister folgt der Part-6-Matrix des VORBILDS (ein Bild alte Pose) */
 
 #ifdef __cplusplus
 }

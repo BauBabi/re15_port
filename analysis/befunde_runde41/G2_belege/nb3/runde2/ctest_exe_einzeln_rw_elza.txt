@@ -1,0 +1,13 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build
+    Start 1189: integration_r41_gatorfix_abn2_rampe_west_elza
+1/1 Test #1189: integration_r41_gatorfix_abn2_rampe_west_elza ...   Passed  683.89 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) = 683.95 sec
+
+# Auswertung des Laufordners lauf_304eafde (Werkzeuge des Riegels, Bau 5a4ee385f)
+aussenlog: 8293 Bilder in ROOM2090/2091 (Klettern 91 nicht gezaehlt), davon oben 98; aussen 0, Deck verlassen 0, im Block 0; erstes F-1 (-) bei (0,0,0) Raum 0000, letztes F-1, groesster Abstand hinter der Aussenwand 0 -> ok (0 verlangt)
+aussenlog: 8293 Bilder in ROOM2090/2091 (Klettern 91 nicht gezaehlt), davon oben 98; aussen 0, Deck verlassen 0, im Block 0; erstes F-1 (-) bei (0,0,0) Raum 0000, letztes F-1, groesster Abstand hinter der Aussenwand 0 -> ok (0 verlangt)
+traglog: 8100 Bilder 2090, Aufschlag F43, angehaengt F821 (778 Bilder = 25.9 s), 7280 Trag-Bilder: ohne Fortschritt 4068 (55 %), davon keine Ausnahme ausser Biss am Spieler (2623 Bilder), laengste Folge ohne Fortschritt 118 Bilder (bis F1040), laengstes Wandreiben 0 Bilder (bis F-1), 2-s-Fenster ohne Fortschritt 311 (erstes F923); Figur oben 0 Bilder, Kopf-Abstand mittel -1, Gator im Bild der Spielerkamera 0 %; 2-s-Fenster fern der Figur 0 (erstes F-1)
+tragvergleich: 7254 Bilder mit Kanister, 7254 gemeinsame Bilder, abweichend 0, erste Abweichung F-1 (Phase mit -1 / ohne -1, erstes Rammen F-1, erster Rueckfall F-1); Kanister-Sitz 7260 Bilder, Abweichung max 0

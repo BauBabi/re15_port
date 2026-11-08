@@ -1,0 +1,12 @@
+RE2 KANISTER gesetzt (-6870,-1200,-12651)
+RAMMEN F383 gator=(5580,-1200,-20664) spieler=(4200,-1800,-15727) hp=100
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6059 Stufe 0 F690
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5907 Stufe 0 F933
+RE2 KANISTER Stufe 1 laengs=4952 quer=1483 sub 1 -> 1 F1001
+RE2 KANISTER angehaengt lokal=(4241,-340,31) F1013
+RE2 KANISTER getragen (Stufe 7)
+RAMMEN F1339 gator=(5434,-1200,-11936) spieler=(6732,-1800,-15855) hp=100
+RAMMEN F2410 gator=(5555,-1200,-20590) spieler=(6454,-1800,-14959) hp=100
+RAMMEN F2968 gator=(5713,-1200,-11936) spieler=(4980,-1800,-17609) hp=100
+RAMMEN F3736 gator=(5484,-1200,-20554) spieler=(6454,-1800,-14959) hp=100
+RAMMEN F4320 gator=(5713,-1200,-11936) spieler=(4980,-1800,-17609) hp=100

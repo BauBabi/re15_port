@@ -1,0 +1,80 @@
+nb4_oben_leon                  F383   oben   Rammen     Lage (4200,-15727) Blick 1272 | heute Weg  3005 Luftlinie  2643 Dauer  75 | RE2 Sub - - | A: - | A90: -
+nb4_oben_leon                  F483   oben   ?          Lage (6732,-15760) Blick 1272 | heute Weg  2445 Luftlinie   254 Dauer  67 | RE2 Sub - - | A: - | A90: -
+nb4_oben_leon                  F1339  oben   Rammen     Lage (6732,-15855) Blick 1272 | heute Weg  5793 Luftlinie  4730 Dauer  92 | RE2 Sub 3 3080/54 | A: Ostwand [6] (6831, -16648) | A90: Wasser Sued (Leiste [9]) nach 4 Bildern (6732, -18335)
+nb4_oben_leon                  F1439  oben   CROSS      Lage (2318,-17319) Blick 1272 | heute Weg  1006 Luftlinie   274 Dauer  92 | RE2 Sub 3 3080/54 | A: Plattform [7] (2068, -18079) | A90: Wasser Sued (Leiste [9]) nach 1 Bildern (2318, -18119)
+nb4_oben_leon                  F1585  oben   GUARD      Lage (2311,-17045) Blick 1272 | heute Weg   628 Luftlinie   564 Dauer  92 | RE2 Sub 3 3080/54 | A: Wasser Sued (Leiste [9]) nach 2 Bildern (2816, -18436) | A90: Wasser Sued (Leiste [9]) nach 2 Bildern (2311, -18525)
+nb4_oben_leon                  F1690  oben   GUARD      Lage (2310,-17609) Blick 1272 | heute Weg    66 Luftlinie     0 Dauer  92 | RE2 Sub 3 3080/54 | A: Wasser Sued (Leiste [9]) nach 1 Bildern (2225, -18404) | A90: Wasser Sued (Leiste [9]) nach 1 Bildern (2310, -18409)
+nb4_oben_leon                  F1881  oben   GUARD      Lage (2310,-17609) Blick 1272 | heute Weg    66 Luftlinie     0 Dauer  92 | RE2 Sub 3 3080/54 | A: Plattform [7] (1550, -17356) | A90: Plattform [7] (1510, -17609)
+nb4_oben_leon                  F1986  oben   GUARD      Lage (2310,-17609) Blick 1272 | heute Weg    66 Luftlinie     0 Dauer  92 | RE2 Sub 3 3080/54 | A: Wasser Sued (Leiste [9]) nach 1 Bildern (2057, -18368) | A90: Wasser Sued (Leiste [9]) nach 1 Bildern (2310, -18409)
+nb4_oben_leon                  F2107  oben   GUARD      Lage (2310,-17609) Blick 1272 | heute Weg  5917 Luftlinie  4918 Dauer  41 | RE2 Sub 2 3735/20 | A: Plattform [7] (1768, -17020) | A90: Wasser Nord (Leiste [8]) nach 9 Bildern (2310, -14459)
+nb4_oben_leon                  F2410  oben   Rammen     Lage (6454,-14959) Blick 1272 | heute Weg   278 Luftlinie   278 Dauer  67 | RE2 Sub 2 3735/20 | A: Wasser Nord (Leiste [8]) nach 1 Bildern (6538, -14163) | A90: Wasser Nord (Leiste [8]) nach 1 Bildern (6454, -14159)
+nb4_oben_leon                  F2510  oben   CROSS      Lage (6732,-15697) Blick 1272 | heute Weg  2369 Luftlinie   252 Dauer  67 | RE2 Sub 2 3735/20 | A: Ostwand [6] (6821, -14902) | A90: Wasser Nord (Leiste [8]) nach 2 Bildern (6732, -14247)
+nb4_oben_leon                  F2699  oben   GUARD      Lage (6732,-15869) Blick 1272 | heute Weg  2966 Luftlinie  2469 Dauer  92 | RE2 Sub 3 3080/54 | A: Wasser Sued (Leiste [9]) nach 4 Bildern (6214, -18294) | A90: Wasser Sued (Leiste [9]) nach 4 Bildern (6732, -18349)
+nb4_oben_leon                  F2968  oben   Rammen     Lage (4980,-17609) Blick 1272 | heute Weg  2764 Luftlinie  2662 Dauer  92 | RE2 Sub 3 3080/54 | A: Wasser Sued (Leiste [9]) nach 1 Bildern (4912, -18406) | A90: Wasser Sued (Leiste [9]) nach 1 Bildern (4980, -18409)
+nb4_oben_leon                  F3068  oben   CROSS      Lage (2318,-17511) Blick 1272 | heute Weg   709 Luftlinie   332 Dauer  92 | RE2 Sub 3 3080/54 | A: Wasser Sued (Leiste [9]) nach 1 Bildern (2045, -18262) | A90: Wasser Sued (Leiste [9]) nach 1 Bildern (2318, -18311)
+nb4_oben_leon                  F3214  oben   GUARD      Lage (2301,-17179) Blick 1272 | heute Weg   517 Luftlinie   430 Dauer  92 | RE2 Sub 3 3080/54 | A: Wasser Sued (Leiste [9]) nach 2 Bildern (2767, -18583) | A90: Wasser Sued (Leiste [9]) nach 2 Bildern (2301, -18659)
+nb4_oben_leon                  F3393  oben   GUARD      Lage (2310,-17609) Blick 1272 | heute Weg  5917 Luftlinie  4918 Dauer  41 | RE2 Sub 2 3735/20 | A: Plattform [7] (1569, -17306) | A90: Plattform [7] (1510, -17609)
+nb4_oben_leon                  F3736  oben   Rammen     Lage (6454,-14959) Blick 1272 | heute Weg   278 Luftlinie   278 Dauer  67 | RE2 Sub 2 3735/20 | A: Wasser Nord (Leiste [8]) nach 1 Bildern (6545, -14164) | A90: Wasser Nord (Leiste [8]) nach 1 Bildern (6454, -14159)
+nb4_oben_leon                  F3836  oben   CROSS      Lage (6732,-15689) Blick 1272 | heute Weg  2282 Luftlinie   258 Dauer  67 | RE2 Sub 2 3735/20 | A: Ostwand [6] (6828, -14894) | A90: Wasser Nord (Leiste [8]) nach 2 Bildern (6732, -14239)
+nb4_oben_leon                  F4019  oben   GUARD      Lage (6732,-15906) Blick 1272 | heute Weg  2933 Luftlinie  2443 Dauer  92 | RE2 Sub 3 3080/54 | A: Ostwand [6] (7081, -16625) | A90: Wasser Sued (Leiste [9]) nach 4 Bildern (6732, -18386)
+nb4_oben_leon                  F4320  oben   Rammen     Lage (4980,-17609) Blick 1272 | heute Weg  2580 Luftlinie  2526 Dauer  80 | RE2 Sub 3 3080/54 | A: Wasser Sued (Leiste [9]) nach 1 Bildern (4912, -18406) | A90: Wasser Sued (Leiste [9]) nach 1 Bildern (4980, -18409)
+nb4_frei4_leon                 F139   Wasser ?          Lage (-2168,-12267) Blick 3499 | heute Weg  4737 Luftlinie  4746 Dauer  92 | RE2 Sub - - | A: - | A90: -
+nb4_frei4_leon                 F603   Wasser LUNGE      Lage (-8089,-5856) Blick 2443 | heute Weg  3243 Luftlinie   343 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F724   Wasser LUNGE      Lage (-8432,-5868) Blick 2443 | heute Weg  2108 Luftlinie     0 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F847   Wasser LUNGE      Lage (-8432,-5868) Blick 2443 | heute Weg  2087 Luftlinie     0 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F954   Wasser LUNGE      Lage (-8432,-6160) Blick 2443 | heute Weg  2263 Luftlinie  1311 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F1082  Wasser LUNGE      Lage (-8432,-9577) Blick 2443 | heute Weg 10502 Luftlinie  5224 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F1189  Wasser LUNGE      Lage (-3970,-5868) Blick 2443 | heute Weg 10955 Luftlinie 10776 Dauer  41 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F1305  Wasser LUNGE      Lage (4070,-13306) Blick 2443 | heute Weg  4335 Luftlinie  2934 Dauer  71 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F1412  Wasser LUNGE      Lage (2474,-7600) Blick 2443 | heute Weg 12794 Luftlinie  5598 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F1519  Wasser LUNGE      Lage (-2699,-10667) Blick 2443 | heute Weg  6207 Luftlinie  1934 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F1626  Wasser LUNGE      Lage (-4084,-12307) Blick 2443 | heute Weg  3831 Luftlinie  2470 Dauer  69 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F1733  Wasser LUNGE      Lage (-2186,-19036) Blick 2443 | heute Weg  1171 Luftlinie   436 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F1841  Wasser LUNGE      Lage (-1656,-22305) Blick 2443 | heute Weg  9617 Luftlinie  9400 Dauer  41 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F1948  Wasser LUNGE      Lage (5906,-26526) Blick 2443 | heute Weg  1572 Luftlinie   393 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F2055  Wasser LUNGE      Lage (332,-23601) Blick 2443 | heute Weg  7173 Luftlinie  3650 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F2162  Wasser LUNGE      Lage (-3463,-25803) Blick 2443 | heute Weg 18026 Luftlinie  7493 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F2269  Wasser LUNGE      Lage (3531,-25742) Blick 2443 | heute Weg  1805 Luftlinie  1018 Dauer  41 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F2376  Wasser LUNGE      Lage (-17,-26532) Blick 2443 | heute Weg 11635 Luftlinie  4155 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F2483  Wasser LUNGE      Lage (-5227,-26532) Blick 2443 | heute Weg 11038 Luftlinie  3216 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F2590  Wasser LUNGE      Lage (-8438,-26537) Blick 2155 | heute Weg  1231 Luftlinie     7 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F2710  Wasser LUNGE      Lage (-8304,-26538) Blick 2155 | heute Weg  6596 Luftlinie  4706 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F2821  Wasser LUNGE      Lage (-8432,-22368) Blick 2155 | heute Weg  5254 Luftlinie  2363 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F2928  Wasser LUNGE      Lage (-8432,-18814) Blick 2155 | heute Weg  4076 Luftlinie  3928 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F3035  Wasser LUNGE      Lage (-8432,-14073) Blick 1627 | heute Weg 12108 Luftlinie  5575 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F3472  Wasser LUNGE      Lage (-6287,-15919) Blick 5707 | heute Weg  3836 Luftlinie  1552 Dauer  41 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F3579  Wasser LUNGE      Lage (-7864,-17138) Blick 5707 | heute Weg  3671 Luftlinie  2770 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F3977  Wasser LUNGE      Lage (-8198,-26532) Blick 5707 | heute Weg  2031 Luftlinie   234 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F4099  Wasser LUNGE      Lage (-8432,-26532) Blick 5611 | heute Weg  3322 Luftlinie     0 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F4219  Wasser LUNGE      Lage (-8436,-26407) Blick 5611 | heute Weg  3799 Luftlinie    54 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F4327  Wasser LUNGE      Lage (-8432,-26532) Blick 5611 | heute Weg  1427 Luftlinie     0 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F4448  Wasser LUNGE      Lage (-8432,-26532) Blick 5611 | heute Weg  3626 Luftlinie   144 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F4556  Wasser LUNGE      Lage (-8432,-26532) Blick 5611 | heute Weg  1305 Luftlinie     0 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F4676  Wasser LUNGE      Lage (-8432,-26532) Blick 5611 | heute Weg  6391 Luftlinie  4416 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F4802  Wasser LUNGE      Lage (-5406,-25999) Blick 5611 | heute Weg 10025 Luftlinie  3028 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F4909  Wasser LUNGE      Lage (-8432,-26535) Blick 5611 | heute Weg  5376 Luftlinie  4799 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F5030  Wasser LUNGE      Lage (-6948,-20821) Blick 5611 | heute Weg  9869 Luftlinie  3094 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F5137  Wasser LUNGE      Lage (-8446,-22482) Blick 5611 | heute Weg 10669 Luftlinie 10267 Dauer  41 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F5244  Wasser LUNGE      Lage (-2161,-14455) Blick 5611 | heute Weg  1174 Luftlinie   542 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F5669  Wasser LUNGE      Lage (-8432,-10522) Blick 6091 | heute Weg  6137 Luftlinie  3356 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F5776  Wasser LUNGE      Lage (-8432,-14346) Blick 6091 | heute Weg  1965 Luftlinie  1957 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F6164  Wasser LUNGE      Lage (-8151,-18987) Blick 6091 | heute Weg  9687 Luftlinie  6956 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F6271  Wasser LUNGE      Lage (-3935,-24624) Blick 6091 | heute Weg 12432 Luftlinie  2391 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F6378  Wasser LUNGE      Lage (-5597,-26532) Blick 6091 | heute Weg 11314 Luftlinie 11268 Dauer  41 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F6485  Wasser LUNGE      Lage (6732,-25238) Blick 6091 | heute Weg  5644 Luftlinie  5659 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F6596  Wasser LUNGE      Lage (6732,-19905) Blick 6091 | heute Weg   665 Luftlinie   580 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F6703  Wasser LUNGE      Lage (6732,-18636) Blick 6091 | heute Weg   274 Luftlinie    68 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F6810  Wasser LUNGE      Lage (6732,-18636) Blick 6091 | heute Weg   274 Luftlinie    68 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F6930  Wasser LUNGE      Lage (3906,-19080) Blick 7291 | heute Weg  4890 Luftlinie  2872 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F7037  Wasser LUNGE      Lage (6694,-18577) Blick 6619 | heute Weg   965 Luftlinie    39 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F7162  Wasser LUNGE      Lage (6748,-19380) Blick 9067 | heute Weg  1053 Luftlinie   812 Dauer  68 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F7269  Wasser LUNGE      Lage (6732,-18699) Blick 9115 | heute Weg   334 Luftlinie   131 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F7388  Wasser LUNGE      Lage (6743,-18657) Blick 9115 | heute Weg  3279 Luftlinie  2666 Dauer  67 | RE2 Sub 2 3735/20 | A: - | A90: -
+nb4_frei4_leon                 F7495  Wasser LUNGE      Lage (6551,-26245) Blick 9115 | heute Weg  1376 Luftlinie   339 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F7618  Wasser LUNGE      Lage (6732,-26532) Blick 9115 | heute Weg  3674 Luftlinie   147 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F7726  Wasser LUNGE      Lage (6732,-26532) Blick 9115 | heute Weg  2392 Luftlinie  1001 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F7841  Wasser LUNGE      Lage (6700,-25640) Blick 9115 | heute Weg 11839 Luftlinie   892 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F7955  Wasser LUNGE      Lage (6746,-26532) Blick 9115 | heute Weg  1960 Luftlinie    14 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F8079  Wasser LUNGE      Lage (6732,-26532) Blick 9115 | heute Weg  3450 Luftlinie   116 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F8187  Wasser LUNGE      Lage (6749,-26546) Blick 9115 | heute Weg  1325 Luftlinie     2 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -
+nb4_frei4_leon                 F8305  Wasser LUNGE      Lage (6732,-26543) Blick 9115 | heute Weg  3174 Luftlinie   144 Dauer  92 | RE2 Sub 3 3080/54 | A: - | A90: -

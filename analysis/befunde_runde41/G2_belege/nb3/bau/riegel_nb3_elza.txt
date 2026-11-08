@@ -1,0 +1,210 @@
+== nb3_elza (G2-RE2 NB3: Rampe oben nicht sicher (Vorgabe A), kein Haenger vor der Suedkante (Vorgabe B) - Nutzerentscheid 2026-11-06) ==
+  -- Rampe oben (A1), mit Kanister, 3600 Bilder je Lage --
+    R2318/-17600   Cut 2: 3600 B., Treffer 250 (Rammen 1, CROSS-Biss 1, Hochbiss 248, Biss 0, sonst 0), erster t291 CROSS-Biss, laengste Pause ohne Treffer 291 B. = 9.7 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 531 mittel 4675, ohne Fortschritt max 6.3 s, Haenge-Fenster 0 (erstes t-1)
+        t291   CROSS-Biss Phase 7 Clip  0 Wurzel (  4056,-14173) Kopf (  3450,-17172) Kopf-Abstand 1207
+        t295   Rammen     Phase 7 Clip  0 Wurzel (  4022,-14320) Kopf (  3415,-17311) Kopf-Abstand 1130
+    R2800/-17600   Cut 2: 3600 B., Treffer 308 (Rammen 1, CROSS-Biss 1, Hochbiss 306, Biss 0, sonst 0), erster t247 Rammen, laengste Pause ohne Treffer 247 B. = 8.2 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 241 mittel 4359, ohne Fortschritt max 3.7 s, Haenge-Fenster 0 (erstes t-1)
+        t247   Rammen     Phase 7 Clip  0 Wurzel (  4488,-12560) Kopf (  4069,-15572) Kopf-Abstand 2387
+        t347   CROSS-Biss Phase 7 Clip  0 Wurzel (  3705,-16226) Kopf (  3069,-19219) Kopf-Abstand 1639
+    R3350/-17600   Cut 2: 3600 B., Treffer 313 (Rammen 1, CROSS-Biss 1, Hochbiss 311, Biss 0, sonst 0), erster t233 Rammen, laengste Pause ohne Treffer 233 B. = 7.8 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 38 mittel 4021, ohne Fortschritt max 3.7 s, Haenge-Fenster 0 (erstes t-1)
+        t233   Rammen     Phase 7 Clip  0 Wurzel (  4560,-12046) Kopf (  4148,-15048) Kopf-Abstand 2672
+        t333   CROSS-Biss Phase 7 Clip  0 Wurzel (  4047,-15713) Kopf (  3627,-18731) Kopf-Abstand 1159
+    R4428/-17600   Cut 2: 3600 B., Treffer 318 (Rammen 1, CROSS-Biss 1, Hochbiss 316, Biss 0, sonst 0), erster t230 Rammen, laengste Pause ohne Treffer 230 B. = 7.7 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4168..5725, -21938..-19675), Kopf min 324 mittel 3543, ohne Fortschritt max 2.5 s, Haenge-Fenster 0 (erstes t-1)
+        t230   Rammen     Phase 7 Clip  0 Wurzel (  4580,-11936) Kopf (  4541,-14960) Kopf-Abstand 2635
+        t330   CROSS-Biss Phase 7 Clip  0 Wurzel (  4517,-15603) Kopf (  4478,-18648) Kopf-Abstand 1047
+    R5500/-17600   Cut 2: 3600 B., Treffer 324 (Rammen 1, CROSS-Biss 1, Hochbiss 322, Biss 0, sonst 0), erster t237 Rammen, laengste Pause ohne Treffer 237 B. = 7.9 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4168..5727, -22035..-19673), Kopf min 37 mittel 3433, ohne Fortschritt max 2.4 s, Haenge-Fenster 0 (erstes t-1)
+        t237   Rammen     Phase 7 Clip  0 Wurzel (  4911,-11936) Kopf (  5136,-14952) Kopf-Abstand 2672
+        t337   CROSS-Biss Phase 7 Clip  0 Wurzel (  5157,-15603) Kopf (  5384,-18640) Kopf-Abstand 1039
+    R6500/-17600   Cut 2: 3600 B., Treffer 344 (Rammen 1, CROSS-Biss 1, Hochbiss 342, Biss 0, sonst 0), erster t253 Rammen, laengste Pause ohne Treffer 253 B. = 8.4 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4507..5729, -22035..-19673), Kopf min 88 mittel 3597, ohne Fortschritt max 2.5 s, Haenge-Fenster 0 (erstes t-1)
+        t253   Rammen     Phase 7 Clip  0 Wurzel (  5440,-12010) Kopf (  5831,-15013) Kopf-Abstand 2660
+        t353   CROSS-Biss Phase 7 Clip  0 Wurzel (  5887,-15676) Kopf (  6278,-18697) Kopf-Abstand 1115
+    R2318/-16300   Cut 2: 3600 B., Treffer  80 (Rammen 6, CROSS-Biss 4, Hochbiss 70, Biss 0, sonst 0), erster t450 Rammen, laengste Pause ohne Treffer 537 B. = 17.9 s, GUARD 54 % CROSS 45 %, Wurzel ab t600 (3049..5677, -22047..-10566), Kopf min 1078 mittel 4211, ohne Fortschritt max 6.9 s, Haenge-Fenster 0 (erstes t-1)
+        t450   Rammen     Phase 7 Clip  0 Wurzel (  3781,-16630) Kopf (  2836,-19554) Kopf-Abstand 3288
+        t602   Hochbiss   Phase 5 Clip  4 Wurzel (  3758,-19880) Kopf (  3867,-16811) Kopf-Abstand 1629
+    R2800/-16300   Cut 2: 3600 B., Treffer  81 (Rammen 7, CROSS-Biss 5, Hochbiss 69, Biss 0, sonst 0), erster t361 Rammen, laengste Pause ohne Treffer 361 B. = 12.0 s, GUARD 58 % CROSS 41 %, Wurzel ab t600 (3234..5682, -21888..-10325), Kopf min 738 mittel 4313, ohne Fortschritt max 7.7 s, Haenge-Fenster 0 (erstes t-1)
+        t361   Rammen     Phase 7 Clip  0 Wurzel (  4896,-14173) Kopf (  4043,-17112) Kopf-Abstand 1481
+        t578   Hochbiss   Phase 5 Clip  4 Wurzel (  3873,-19995) Kopf (  4571,-17007) Kopf-Abstand 1902
+    R3350/-16300   Cut 2: 3600 B., Treffer  75 (Rammen 7, CROSS-Biss 0, Hochbiss 68, Biss 0, sonst 0), erster t300 Rammen, laengste Pause ohne Treffer 397 B. = 13.2 s, GUARD 57 % CROSS 42 %, Wurzel ab t600 (3316..5705, -21888..-10325), Kopf min 515 mittel 3975, ohne Fortschritt max 7.7 s, Haenge-Fenster 0 (erstes t-1)
+        t300   Rammen     Phase 7 Clip  0 Wurzel (  5616,-11936) Kopf (  4870,-14866) Kopf-Abstand 2079
+        t576   Hochbiss   Phase 5 Clip  4 Wurzel (  3847,-20089) Kopf (  4545,-17101) Kopf-Abstand 1436
+    R4428/-16300   Cut 2: 3600 B., Treffer 114 (Rammen 2, CROSS-Biss 0, Hochbiss 112, Biss 0, sonst 0), erster t300 Rammen, laengste Pause ohne Treffer 300 B. = 10.0 s, GUARD 86 % CROSS 13 %, Wurzel ab t600 (4139..5733, -21925..-10355), Kopf min 214 mittel 4258, ohne Fortschritt max 6.0 s, Haenge-Fenster 0 (erstes t-1)
+        t300   Rammen     Phase 7 Clip  0 Wurzel (  5621,-11936) Kopf (  5221,-14933) Kopf-Abstand 1578
+        t574   Hochbiss   Phase 5 Clip  4 Wurzel (  4830,-20126) Kopf (  5128,-17070) Kopf-Abstand 1039
+    R5500/-16300   Cut 2: 3600 B., Treffer 190 (Rammen 0, CROSS-Biss 0, Hochbiss 190, Biss 0, sonst 0), erster t293 Hochbiss, laengste Pause ohne Treffer 293 B. = 9.8 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4951..5716, -12740..-12273), Kopf min 884 mittel 4568, ohne Fortschritt max 4.4 s, Haenge-Fenster 0 (erstes t-1)
+        t293   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12417) Kopf (  8638,-13331) Kopf-Abstand 4314
+        t295   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12438) Kopf (  8588,-13450) Kopf-Abstand 4190
+    R6500/-16300   Cut 2: 3600 B., Treffer 191 (Rammen 2, CROSS-Biss 0, Hochbiss 189, Biss 0, sonst 0), erster t300 Rammen, laengste Pause ohne Treffer 300 B. = 10.0 s, GUARD 86 % CROSS 13 %, Wurzel ab t600 (4614..6496, -21984..-10414), Kopf min 397 mittel 4213, ohne Fortschritt max 3.9 s, Haenge-Fenster 0 (erstes t-1)
+        t300   Rammen     Phase 7 Clip  0 Wurzel (  5719,-11936) Kopf (  6018,-14945) Kopf-Abstand 1436
+        t575   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-20100) Kopf (  8480,-18777) Kopf-Abstand 3166
+    R2318/-15000   Cut 2: 3600 B., Treffer 244 (Rammen 1, CROSS-Biss 1, Hochbiss 242, Biss 0, sonst 0), erster t288 CROSS-Biss, laengste Pause ohne Treffer 288 B. = 9.6 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4165..5694, -12912..-10387), Kopf min 531 mittel 4663, ohne Fortschritt max 5.6 s, Haenge-Fenster 0 (erstes t-1)
+        t288   CROSS-Biss Phase 7 Clip  0 Wurzel (  3987,-18427) Kopf (  3220,-15466) Kopf-Abstand 1013
+        t291   Rammen     Phase 7 Clip  0 Wurzel (  3963,-18317) Kopf (  3200,-15361) Kopf-Abstand 951
+    R2800/-15000   Cut 2: 3600 B., Treffer 280 (Rammen 1, CROSS-Biss 1, Hochbiss 278, Biss 0, sonst 0), erster t243 Rammen, laengste Pause ohne Treffer 243 B. = 8.1 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4165..5694, -12912..-10387), Kopf min 206 mittel 4341, ohne Fortschritt max 5.5 s, Haenge-Fenster 0 (erstes t-1)
+        t243   Rammen     Phase 7 Clip  0 Wurzel (  4407,-20077) Kopf (  4000,-17067) Kopf-Abstand 2387
+        t343   CROSS-Biss Phase 7 Clip  0 Wurzel (  3665,-16410) Kopf (  3108,-13403) Kopf-Abstand 1624
+    R3350/-15000   Cut 2: 3600 B., Treffer 262 (Rammen 1, CROSS-Biss 1, Hochbiss 260, Biss 0, sonst 0), erster t230 Rammen, laengste Pause ohne Treffer 230 B. = 7.7 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4531..5733, -12880..-10355), Kopf min 75 mittel 3961, ohne Fortschritt max 3.3 s, Haenge-Fenster 0 (erstes t-1)
+        t230   Rammen     Phase 7 Clip  0 Wurzel (  4469,-20554) Kopf (  4060,-17552) Kopf-Abstand 2648
+        t330   CROSS-Biss Phase 7 Clip  0 Wurzel (  3995,-16887) Kopf (  3589,-13868) Kopf-Abstand 1152
+    R4428/-15000   Cut 2: 3600 B., Treffer 331 (Rammen 1, CROSS-Biss 1, Hochbiss 329, Biss 0, sonst 0), erster t227 Rammen, laengste Pause ohne Treffer 227 B. = 7.6 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4172..5731, -12894..-10372), Kopf min 34 mittel 3719, ohne Fortschritt max 2.8 s, Haenge-Fenster 0 (erstes t-1)
+        t227   Rammen     Phase 7 Clip  0 Wurzel (  4487,-20664) Kopf (  4446,-17641) Kopf-Abstand 2635
+        t327   CROSS-Biss Phase 7 Clip  0 Wurzel (  4463,-16997) Kopf (  4422,-13953) Kopf-Abstand 1039
+    R5500/-15000   Cut 2: 3600 B., Treffer 350 (Rammen 1, CROSS-Biss 1, Hochbiss 348, Biss 0, sonst 0), erster t235 Rammen, laengste Pause ohne Treffer 235 B. = 7.8 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4614..5733, -12764..-10344), Kopf min 359 mittel 3980, ohne Fortschritt max 2.6 s, Haenge-Fenster 0 (erstes t-1)
+        t235   Rammen     Phase 7 Clip  0 Wurzel (  4835,-20664) Kopf (  5049,-17648) Kopf-Abstand 2684
+        t335   CROSS-Biss Phase 7 Clip  0 Wurzel (  5113,-16997) Kopf (  5328,-13960) Kopf-Abstand 1047
+    R6500/-15000   Cut 2: 3600 B., Treffer 346 (Rammen 1, CROSS-Biss 1, Hochbiss 344, Biss 0, sonst 0), erster t252 Rammen, laengste Pause ohne Treffer 252 B. = 8.4 s, GUARD 92 % CROSS 6 %, Wurzel ab t600 (4612..5733, -13016..-10408), Kopf min 124 mittel 3535, ohne Fortschritt max 2.6 s, Haenge-Fenster 0 (erstes t-1)
+        t252   Rammen     Phase 7 Clip  0 Wurzel (  5388,-20554) Kopf (  5763,-17548) Kopf-Abstand 2648
+        t352   CROSS-Biss Phase 7 Clip  0 Wurzel (  5859,-16887) Kopf (  6241,-13865) Kopf-Abstand 1159
+    SUMME A1 mit Kanister: 0 von 18 Lagen ohne Treffer; spaetester erster Treffer t450 (R2318/-16300); laengste Pause ohne Treffer 537 B. = 17.9 s (R2318/-16300); Rammen 36; wenigste Treffer je Lage 75
+  -- Wasser vor der Suedkante (B1/B3), mit Kanister --
+    W3000/-18800/c0 Cut 0: 3600 B., Treffer 332 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 330, sonst 0), erster t166 Rammen, laengste Pause ohne Treffer 431 B. = 14.4 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-543..4239, -24720..-19573), Kopf min 72 mittel 2174, ohne Fortschritt max 10.8 s, Haenge-Fenster 0 (erstes t-1)
+        t166   Rammen     Phase 7 Clip  0 Wurzel (  4389,-13403) Kopf (  3983,-16439) Kopf-Abstand 2547
+        t266   CROSS-Biss Phase 7 Clip  0 Wurzel (  3867,-17070) Kopf (  3413,-20100) Kopf-Abstand 1360
+    W4073/-19322/c0 Cut 0: 3600 B., Treffer 292 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 290, sonst 0), erster t172 Rammen, laengste Pause ohne Treffer 423 B. = 14.1 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (470..4380, -24980..-19572), Kopf min 19 mittel 2631, ohne Fortschritt max 9.5 s, Haenge-Fenster 0 (erstes t-1)
+        t172   Rammen     Phase 7 Clip  0 Wurzel (  4499,-13623) Kopf (  4364,-16692) Kopf-Abstand 2635
+        t272   CROSS-Biss Phase 7 Clip  0 Wurzel (  4278,-17290) Kopf (  4081,-20334) Kopf-Abstand 1011
+    W4252/-19953/c0 Cut 0: 3600 B., Treffer 287 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 285, sonst 0), erster t188 Rammen, laengste Pause ohne Treffer 403 B. = 13.4 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (1055..5331, -25042..-19567), Kopf min 286 mittel 2747, ohne Fortschritt max 7.9 s, Haenge-Fenster 0 (erstes t-1)
+        t188   Rammen     Phase 7 Clip  0 Wurzel (  4511,-14210) Kopf (  4473,-17269) Kopf-Abstand 2684
+        t288   CROSS-Biss Phase 7 Clip  0 Wurzel (  4365,-17876) Kopf (  4249,-20893) Kopf-Abstand 938
+    W3000/-18800/c2 Cut 2: 3600 B., Treffer 332 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 330, sonst 0), erster t166 Rammen, laengste Pause ohne Treffer 431 B. = 14.4 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-543..4239, -24720..-19573), Kopf min 72 mittel 2174, ohne Fortschritt max 10.8 s, Haenge-Fenster 0 (erstes t-1)
+        t166   Rammen     Phase 7 Clip  0 Wurzel (  4389,-13403) Kopf (  3983,-16439) Kopf-Abstand 2547
+        t266   CROSS-Biss Phase 7 Clip  0 Wurzel (  3867,-17070) Kopf (  3413,-20100) Kopf-Abstand 1360
+    W4200/-18800/c2 Cut 2: 3600 B., Treffer 312 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 310, sonst 0), erster t157 Rammen, laengste Pause ohne Treffer 439 B. = 14.6 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (677..4234, -25042..-19572), Kopf min 58 mittel 2340, ohne Fortschritt max 10.9 s, Haenge-Fenster 0 (erstes t-1)
+        t157   Rammen     Phase 7 Clip  0 Wurzel (  4549,-13073) Kopf (  4421,-16121) Kopf-Abstand 2684
+        t257   CROSS-Biss Phase 7 Clip  0 Wurzel (  4381,-16740) Kopf (  4195,-19808) Kopf-Abstand 1007
+    W3600/-18750/c2 Cut 2: 3600 B., Treffer 312 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 310, sonst 0), erster t158 Rammen, laengste Pause ohne Treffer 438 B. = 14.6 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-220..3600, -24782..-19568), Kopf min 62 mittel 2246, ohne Fortschritt max 10.9 s, Haenge-Fenster 0 (erstes t-1)
+        t158   Rammen     Phase 7 Clip  0 Wurzel (  4465,-13110) Kopf (  4131,-16143) Kopf-Abstand 2660
+        t258   CROSS-Biss Phase 7 Clip  0 Wurzel (  4047,-16776) Kopf (  3662,-19825) Kopf-Abstand 1070
+    W6400/-18700/c2 Cut 2: 3600 B., Treffer 350 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 348, sonst 0), erster t161 Rammen, laengste Pause ohne Treffer 161 B. = 5.4 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (4423..5733, -22693..-19570), Kopf min 256 mittel 2252, ohne Fortschritt max 1.9 s, Haenge-Fenster 0 (erstes t-1)
+        t161   Rammen     Phase 7 Clip  0 Wurzel (  4871,-13220) Kopf (  5512,-16207) Kopf-Abstand 2635
+        t261   CROSS-Biss Phase 7 Clip  0 Wurzel (  5620,-16886) Kopf (  6217,-19898) Kopf-Abstand 1207
+    W2318/-18568/c2 Cut 2: 3600 B., Treffer 317 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 315, sonst 0), erster t224 CROSS-Biss, laengste Pause ohne Treffer 520 B. = 17.3 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-325..4636, -24720..-19567), Kopf min 11 mittel 1713, ohne Fortschritt max 10.9 s, Haenge-Fenster 0 (erstes t-1)
+        t224   CROSS-Biss Phase 7 Clip  0 Wurzel (  4086,-15530) Kopf (  3679,-18547) Kopf-Abstand 1360
+        t234   Rammen     Phase 7 Clip  0 Wurzel (  4034,-15896) Kopf (  3600,-18915) Kopf-Abstand 1324
+    W4428/-18951/c2 Cut 2: 3600 B., Treffer 312 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 310, sonst 0), erster t161 Rammen, laengste Pause ohne Treffer 435 B. = 14.5 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (987..4536, -25097..-19569), Kopf min 64 mittel 2414, ohne Fortschritt max 10.7 s, Haenge-Fenster 0 (erstes t-1)
+        t161   Rammen     Phase 7 Clip  0 Wurzel (  4576,-13220) Kopf (  4523,-16276) Kopf-Abstand 2672
+        t261   CROSS-Biss Phase 7 Clip  0 Wurzel (  4504,-16886) Kopf (  4403,-19956) Kopf-Abstand 1003
+    W1000/-20700/c2 Cut 2: 3600 B., Treffer 337 (Rammen 0, CROSS-Biss 0, Hochbiss 0, Biss 337, sonst 0), erster t456 Biss, laengste Pause ohne Treffer 456 B. = 15.2 s, GUARD 0 % CROSS 0 %, Wurzel ab t600 (900..1013, -21704..-21472), Kopf min 2063 mittel 2263, ohne Fortschritt max 9.1 s, Haenge-Fenster 0 (erstes t-1)
+        t456   Biss       Phase 3 Clip  4 Wurzel ( -3058,-23229) Kopf (  -543,-21469) Kopf-Abstand 1722
+        t458   Biss       Phase 3 Clip  4 Wurzel ( -2946,-23167) Kopf (  -333,-21559) Kopf-Abstand 1583
+    W3000/-21000/c0 Cut 0: 3600 B., Treffer 315 (Rammen 1, CROSS-Biss 1, Hochbiss 0, Biss 313, sonst 0), erster t221 Rammen, laengste Pause ohne Treffer 370 B. = 12.3 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-421..4997, -24720..-20263), Kopf min 45 mittel 2638, ohne Fortschritt max 3.5 s, Haenge-Fenster 0 (erstes t-1)
+        t221   Rammen     Phase 7 Clip  0 Wurzel (  4102,-15420) Kopf (  3702,-18437) Kopf-Abstand 2648
+        t321   CROSS-Biss Phase 7 Clip  0 Wurzel (  3580,-19086) Kopf (  3169,-22077) Kopf-Abstand 1086
+    SUMME B1 mit Kanister: Haenge-Fenster 0 (hoechstens 0 je Lage, -); ohne Fortschritt max 327 B. = 10.9 s (W2318/-18568/c2); laengste Pause ohne Treffer 520 B. = 17.3 s (W2318/-18568/c2); wenigste Treffer je Lage 287; Rammen 10
+  -- Rampe oben (A1), ohne Kanister, 3600 Bilder je Lage --
+    R2318/-17600   Cut 2: 3600 B., Treffer 250 (Rammen 1, CROSS-Biss 1, Hochbiss 248, Biss 0, sonst 0), erster t291 CROSS-Biss, laengste Pause ohne Treffer 291 B. = 9.7 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 531 mittel 4675, ohne Fortschritt max 6.3 s, Haenge-Fenster 0 (erstes t-1)
+        t291   CROSS-Biss Phase 7 Clip  0 Wurzel (  4056,-14173) Kopf (  3450,-17172) Kopf-Abstand 1207
+        t295   Rammen     Phase 7 Clip  0 Wurzel (  4022,-14320) Kopf (  3415,-17311) Kopf-Abstand 1130
+    R2800/-17600   Cut 2: 3600 B., Treffer 308 (Rammen 1, CROSS-Biss 1, Hochbiss 306, Biss 0, sonst 0), erster t247 Rammen, laengste Pause ohne Treffer 247 B. = 8.2 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 241 mittel 4359, ohne Fortschritt max 3.7 s, Haenge-Fenster 0 (erstes t-1)
+        t247   Rammen     Phase 7 Clip  0 Wurzel (  4488,-12560) Kopf (  4069,-15572) Kopf-Abstand 2387
+        t347   CROSS-Biss Phase 7 Clip  0 Wurzel (  3705,-16226) Kopf (  3069,-19219) Kopf-Abstand 1639
+    R3350/-17600   Cut 2: 3600 B., Treffer 313 (Rammen 1, CROSS-Biss 1, Hochbiss 311, Biss 0, sonst 0), erster t233 Rammen, laengste Pause ohne Treffer 233 B. = 7.8 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4171..5678, -21938..-19688), Kopf min 38 mittel 4021, ohne Fortschritt max 3.7 s, Haenge-Fenster 0 (erstes t-1)
+        t233   Rammen     Phase 7 Clip  0 Wurzel (  4560,-12046) Kopf (  4148,-15048) Kopf-Abstand 2672
+        t333   CROSS-Biss Phase 7 Clip  0 Wurzel (  4047,-15713) Kopf (  3627,-18731) Kopf-Abstand 1159
+    R4428/-17600   Cut 2: 3600 B., Treffer 318 (Rammen 1, CROSS-Biss 1, Hochbiss 316, Biss 0, sonst 0), erster t230 Rammen, laengste Pause ohne Treffer 230 B. = 7.7 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4168..5725, -21938..-19675), Kopf min 324 mittel 3543, ohne Fortschritt max 2.5 s, Haenge-Fenster 0 (erstes t-1)
+        t230   Rammen     Phase 7 Clip  0 Wurzel (  4580,-11936) Kopf (  4541,-14960) Kopf-Abstand 2635
+        t330   CROSS-Biss Phase 7 Clip  0 Wurzel (  4517,-15603) Kopf (  4478,-18648) Kopf-Abstand 1047
+    R5500/-17600   Cut 2: 3600 B., Treffer 324 (Rammen 1, CROSS-Biss 1, Hochbiss 322, Biss 0, sonst 0), erster t237 Rammen, laengste Pause ohne Treffer 237 B. = 7.9 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4168..5727, -22035..-19673), Kopf min 37 mittel 3433, ohne Fortschritt max 2.4 s, Haenge-Fenster 0 (erstes t-1)
+        t237   Rammen     Phase 7 Clip  0 Wurzel (  4911,-11936) Kopf (  5136,-14952) Kopf-Abstand 2672
+        t337   CROSS-Biss Phase 7 Clip  0 Wurzel (  5157,-15603) Kopf (  5384,-18640) Kopf-Abstand 1039
+    R6500/-17600   Cut 2: 3600 B., Treffer 344 (Rammen 1, CROSS-Biss 1, Hochbiss 342, Biss 0, sonst 0), erster t253 Rammen, laengste Pause ohne Treffer 253 B. = 8.4 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4507..5729, -22035..-19673), Kopf min 88 mittel 3597, ohne Fortschritt max 2.5 s, Haenge-Fenster 0 (erstes t-1)
+        t253   Rammen     Phase 7 Clip  0 Wurzel (  5440,-12010) Kopf (  5831,-15013) Kopf-Abstand 2660
+        t353   CROSS-Biss Phase 7 Clip  0 Wurzel (  5887,-15676) Kopf (  6278,-18697) Kopf-Abstand 1115
+    R2318/-16300   Cut 2: 3600 B., Treffer  80 (Rammen 6, CROSS-Biss 4, Hochbiss 70, Biss 0, sonst 0), erster t450 Rammen, laengste Pause ohne Treffer 537 B. = 17.9 s, GUARD 54 % CROSS 45 %, Wurzel ab t600 (3049..5677, -22047..-10566), Kopf min 1078 mittel 4211, ohne Fortschritt max 6.9 s, Haenge-Fenster 0 (erstes t-1)
+        t450   Rammen     Phase 7 Clip  0 Wurzel (  3781,-16630) Kopf (  2836,-19554) Kopf-Abstand 3288
+        t602   Hochbiss   Phase 5 Clip  4 Wurzel (  3758,-19880) Kopf (  3867,-16811) Kopf-Abstand 1629
+    R2800/-16300   Cut 2: 3600 B., Treffer  81 (Rammen 7, CROSS-Biss 5, Hochbiss 69, Biss 0, sonst 0), erster t361 Rammen, laengste Pause ohne Treffer 361 B. = 12.0 s, GUARD 58 % CROSS 41 %, Wurzel ab t600 (3234..5682, -21888..-10325), Kopf min 738 mittel 4313, ohne Fortschritt max 7.7 s, Haenge-Fenster 0 (erstes t-1)
+        t361   Rammen     Phase 7 Clip  0 Wurzel (  4896,-14173) Kopf (  4043,-17112) Kopf-Abstand 1481
+        t578   Hochbiss   Phase 5 Clip  4 Wurzel (  3873,-19995) Kopf (  4571,-17007) Kopf-Abstand 1902
+    R3350/-16300   Cut 2: 3600 B., Treffer  75 (Rammen 7, CROSS-Biss 0, Hochbiss 68, Biss 0, sonst 0), erster t300 Rammen, laengste Pause ohne Treffer 397 B. = 13.2 s, GUARD 57 % CROSS 42 %, Wurzel ab t600 (3316..5705, -21888..-10325), Kopf min 515 mittel 3975, ohne Fortschritt max 7.7 s, Haenge-Fenster 0 (erstes t-1)
+        t300   Rammen     Phase 7 Clip  0 Wurzel (  5616,-11936) Kopf (  4870,-14866) Kopf-Abstand 2079
+        t576   Hochbiss   Phase 5 Clip  4 Wurzel (  3847,-20089) Kopf (  4545,-17101) Kopf-Abstand 1436
+    R4428/-16300   Cut 2: 3600 B., Treffer 114 (Rammen 2, CROSS-Biss 0, Hochbiss 112, Biss 0, sonst 0), erster t300 Rammen, laengste Pause ohne Treffer 300 B. = 10.0 s, GUARD 86 % CROSS 13 %, Wurzel ab t600 (4139..5733, -21925..-10355), Kopf min 214 mittel 4258, ohne Fortschritt max 6.0 s, Haenge-Fenster 0 (erstes t-1)
+        t300   Rammen     Phase 7 Clip  0 Wurzel (  5621,-11936) Kopf (  5221,-14933) Kopf-Abstand 1578
+        t574   Hochbiss   Phase 5 Clip  4 Wurzel (  4830,-20126) Kopf (  5128,-17070) Kopf-Abstand 1039
+    R5500/-16300   Cut 2: 3600 B., Treffer 190 (Rammen 0, CROSS-Biss 0, Hochbiss 190, Biss 0, sonst 0), erster t293 Hochbiss, laengste Pause ohne Treffer 293 B. = 9.8 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4951..5716, -12740..-12273), Kopf min 884 mittel 4568, ohne Fortschritt max 4.4 s, Haenge-Fenster 0 (erstes t-1)
+        t293   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12417) Kopf (  8638,-13331) Kopf-Abstand 4314
+        t295   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-12438) Kopf (  8588,-13450) Kopf-Abstand 4190
+    R6500/-16300   Cut 2: 3600 B., Treffer 191 (Rammen 2, CROSS-Biss 0, Hochbiss 189, Biss 0, sonst 0), erster t300 Rammen, laengste Pause ohne Treffer 300 B. = 10.0 s, GUARD 86 % CROSS 13 %, Wurzel ab t600 (4614..6496, -21984..-10414), Kopf min 397 mittel 4213, ohne Fortschritt max 3.9 s, Haenge-Fenster 0 (erstes t-1)
+        t300   Rammen     Phase 7 Clip  0 Wurzel (  5719,-11936) Kopf (  6018,-14945) Kopf-Abstand 1436
+        t575   Hochbiss   Phase 5 Clip  4 Wurzel (  5716,-20100) Kopf (  8480,-18777) Kopf-Abstand 3166
+    R2318/-15000   Cut 2: 3600 B., Treffer 244 (Rammen 1, CROSS-Biss 1, Hochbiss 242, Biss 0, sonst 0), erster t288 CROSS-Biss, laengste Pause ohne Treffer 288 B. = 9.6 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4165..5694, -12912..-10387), Kopf min 531 mittel 4663, ohne Fortschritt max 5.6 s, Haenge-Fenster 0 (erstes t-1)
+        t288   CROSS-Biss Phase 7 Clip  0 Wurzel (  3987,-18427) Kopf (  3220,-15466) Kopf-Abstand 1013
+        t291   Rammen     Phase 7 Clip  0 Wurzel (  3963,-18317) Kopf (  3200,-15361) Kopf-Abstand 951
+    R2800/-15000   Cut 2: 3600 B., Treffer 280 (Rammen 1, CROSS-Biss 1, Hochbiss 278, Biss 0, sonst 0), erster t243 Rammen, laengste Pause ohne Treffer 243 B. = 8.1 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4165..5694, -12912..-10387), Kopf min 206 mittel 4341, ohne Fortschritt max 5.5 s, Haenge-Fenster 0 (erstes t-1)
+        t243   Rammen     Phase 7 Clip  0 Wurzel (  4407,-20077) Kopf (  4000,-17067) Kopf-Abstand 2387
+        t343   CROSS-Biss Phase 7 Clip  0 Wurzel (  3665,-16410) Kopf (  3108,-13403) Kopf-Abstand 1624
+    R3350/-15000   Cut 2: 3600 B., Treffer 262 (Rammen 1, CROSS-Biss 1, Hochbiss 260, Biss 0, sonst 0), erster t230 Rammen, laengste Pause ohne Treffer 230 B. = 7.7 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4531..5733, -12880..-10355), Kopf min 75 mittel 3961, ohne Fortschritt max 3.3 s, Haenge-Fenster 0 (erstes t-1)
+        t230   Rammen     Phase 7 Clip  0 Wurzel (  4469,-20554) Kopf (  4060,-17552) Kopf-Abstand 2648
+        t330   CROSS-Biss Phase 7 Clip  0 Wurzel (  3995,-16887) Kopf (  3589,-13868) Kopf-Abstand 1152
+    R4428/-15000   Cut 2: 3600 B., Treffer 331 (Rammen 1, CROSS-Biss 1, Hochbiss 329, Biss 0, sonst 0), erster t227 Rammen, laengste Pause ohne Treffer 227 B. = 7.6 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4172..5731, -12894..-10372), Kopf min 34 mittel 3719, ohne Fortschritt max 2.8 s, Haenge-Fenster 0 (erstes t-1)
+        t227   Rammen     Phase 7 Clip  0 Wurzel (  4487,-20664) Kopf (  4446,-17641) Kopf-Abstand 2635
+        t327   CROSS-Biss Phase 7 Clip  0 Wurzel (  4463,-16997) Kopf (  4422,-13953) Kopf-Abstand 1039
+    R5500/-15000   Cut 2: 3600 B., Treffer 350 (Rammen 1, CROSS-Biss 1, Hochbiss 348, Biss 0, sonst 0), erster t235 Rammen, laengste Pause ohne Treffer 235 B. = 7.8 s, GUARD 93 % CROSS 6 %, Wurzel ab t600 (4614..5733, -12764..-10344), Kopf min 359 mittel 3980, ohne Fortschritt max 2.6 s, Haenge-Fenster 0 (erstes t-1)
+        t235   Rammen     Phase 7 Clip  0 Wurzel (  4835,-20664) Kopf (  5049,-17648) Kopf-Abstand 2684
+        t335   CROSS-Biss Phase 7 Clip  0 Wurzel (  5113,-16997) Kopf (  5328,-13960) Kopf-Abstand 1047
+    R6500/-15000   Cut 2: 3600 B., Treffer 346 (Rammen 1, CROSS-Biss 1, Hochbiss 344, Biss 0, sonst 0), erster t252 Rammen, laengste Pause ohne Treffer 252 B. = 8.4 s, GUARD 92 % CROSS 6 %, Wurzel ab t600 (4612..5733, -13016..-10408), Kopf min 124 mittel 3535, ohne Fortschritt max 2.6 s, Haenge-Fenster 0 (erstes t-1)
+        t252   Rammen     Phase 7 Clip  0 Wurzel (  5388,-20554) Kopf (  5763,-17548) Kopf-Abstand 2648
+        t352   CROSS-Biss Phase 7 Clip  0 Wurzel (  5859,-16887) Kopf (  6241,-13865) Kopf-Abstand 1159
+    SUMME A1 ohne Kanister: 0 von 18 Lagen ohne Treffer; spaetester erster Treffer t450 (R2318/-16300); laengste Pause ohne Treffer 537 B. = 17.9 s (R2318/-16300); Rammen 36; wenigste Treffer je Lage 75
+  -- Wasser vor der Suedkante (B1/B3), ohne Kanister --
+    W3000/-18800/c0 Cut 0: 3600 B., Treffer 331 (Rammen 0, CROSS-Biss 1, Hochbiss 0, Biss 330, sonst 0), erster t209 CROSS-Biss, laengste Pause ohne Treffer 488 B. = 16.3 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-543..4239, -24720..-19573), Kopf min 72 mittel 2174, ohne Fortschritt max 10.8 s, Haenge-Fenster 0 (erstes t-1)
+        t209   CROSS-Biss Phase 7 Clip  0 Wurzel (  4164,-14980) Kopf (  3776,-17996) Kopf-Abstand 1115
+        t697   Biss       Phase 3 Clip  4 Wurzel (   342,-21721) Kopf (  2281,-19342) Kopf-Abstand 898
+    W4073/-19322/c0 Cut 0: 3600 B., Treffer 292 (Rammen 0, CROSS-Biss 2, Hochbiss 0, Biss 290, sonst 0), erster t217 CROSS-Biss, laengste Pause ohne Treffer 378 B. = 12.6 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (470..4380, -24980..-19572), Kopf min 19 mittel 2631, ohne Fortschritt max 9.5 s, Haenge-Fenster 0 (erstes t-1)
+        t217   CROSS-Biss Phase 7 Clip  0 Wurzel (  4400,-15273) Kopf (  4243,-18313) Kopf-Abstand 1021
+        t317   CROSS-Biss Phase 7 Clip  0 Wurzel (  4179,-18940) Kopf (  4008,-21955) Kopf-Abstand 2623
+    W4252/-19953/c0 Cut 0: 3600 B., Treffer 287 (Rammen 0, CROSS-Biss 2, Hochbiss 0, Biss 285, sonst 0), erster t234 CROSS-Biss, laengste Pause ohne Treffer 357 B. = 11.9 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (1055..5331, -25042..-19567), Kopf min 286 mittel 2747, ohne Fortschritt max 7.9 s, Haenge-Fenster 0 (erstes t-1)
+        t234   CROSS-Biss Phase 7 Clip  0 Wurzel (  4444,-15896) Kopf (  4308,-18945) Kopf-Abstand 1007
+        t334   CROSS-Biss Phase 7 Clip  0 Wurzel (  4298,-19563) Kopf (  4182,-22580) Kopf-Abstand 2623
+    W3000/-18800/c2 Cut 2: 3600 B., Treffer 331 (Rammen 0, CROSS-Biss 1, Hochbiss 0, Biss 330, sonst 0), erster t209 CROSS-Biss, laengste Pause ohne Treffer 488 B. = 16.3 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-543..4239, -24720..-19573), Kopf min 72 mittel 2174, ohne Fortschritt max 10.8 s, Haenge-Fenster 0 (erstes t-1)
+        t209   CROSS-Biss Phase 7 Clip  0 Wurzel (  4164,-14980) Kopf (  3776,-17996) Kopf-Abstand 1115
+        t697   Biss       Phase 3 Clip  4 Wurzel (   342,-21721) Kopf (  2281,-19342) Kopf-Abstand 898
+    W4200/-18800/c2 Cut 2: 3600 B., Treffer 312 (Rammen 0, CROSS-Biss 2, Hochbiss 0, Biss 310, sonst 0), erster t203 CROSS-Biss, laengste Pause ohne Treffer 393 B. = 13.1 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (677..4234, -25042..-19572), Kopf min 58 mittel 2340, ohne Fortschritt max 10.9 s, Haenge-Fenster 0 (erstes t-1)
+        t203   CROSS-Biss Phase 7 Clip  0 Wurzel (  4472,-14760) Kopf (  4383,-17792) Kopf-Abstand 1024
+        t303   CROSS-Biss Phase 7 Clip  0 Wurzel (  4304,-18426) Kopf (  4179,-21443) Kopf-Abstand 2635
+    W3600/-18750/c2 Cut 2: 3600 B., Treffer 312 (Rammen 0, CROSS-Biss 2, Hochbiss 0, Biss 310, sonst 0), erster t203 CROSS-Biss, laengste Pause ohne Treffer 393 B. = 13.1 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-220..3600, -24782..-19568), Kopf min 62 mittel 2246, ohne Fortschritt max 10.9 s, Haenge-Fenster 0 (erstes t-1)
+        t203   CROSS-Biss Phase 7 Clip  0 Wurzel (  4277,-14760) Kopf (  3984,-17779) Kopf-Abstand 1039
+        t303   CROSS-Biss Phase 7 Clip  0 Wurzel (  3859,-18426) Kopf (  3531,-21427) Kopf-Abstand 2672
+    W6400/-18700/c2 Cut 2: 3600 B., Treffer 349 (Rammen 0, CROSS-Biss 1, Hochbiss 0, Biss 348, sonst 0), erster t205 CROSS-Biss, laengste Pause ohne Treffer 205 B. = 6.8 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (4423..5733, -22693..-19570), Kopf min 256 mittel 2252, ohne Fortschritt max 1.9 s, Haenge-Fenster 0 (erstes t-1)
+        t205   CROSS-Biss Phase 7 Clip  0 Wurzel (  5201,-14833) Kopf (  5873,-17794) Kopf-Abstand 1047
+        t384   Biss       Phase 3 Clip  4 Wurzel (  5716,-20959) Kopf (  8152,-19106) Kopf-Abstand 1796
+    W2318/-18568/c2 Cut 2: 3600 B., Treffer 316 (Rammen 0, CROSS-Biss 1, Hochbiss 0, Biss 315, sonst 0), erster t224 CROSS-Biss, laengste Pause ohne Treffer 530 B. = 17.7 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-325..4636, -24720..-19567), Kopf min 11 mittel 1713, ohne Fortschritt max 10.9 s, Haenge-Fenster 0 (erstes t-1)
+        t224   CROSS-Biss Phase 7 Clip  0 Wurzel (  4086,-15530) Kopf (  3679,-18547) Kopf-Abstand 1360
+        t754   Biss       Phase 3 Clip  4 Wurzel (  2247,-21484) Kopf (  2158,-18414) Kopf-Abstand 221
+    W4428/-18951/c2 Cut 2: 3600 B., Treffer 312 (Rammen 0, CROSS-Biss 2, Hochbiss 0, Biss 310, sonst 0), erster t206 CROSS-Biss, laengste Pause ohne Treffer 390 B. = 13.0 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (987..4536, -25097..-19569), Kopf min 64 mittel 2414, ohne Fortschritt max 10.7 s, Haenge-Fenster 0 (erstes t-1)
+        t206   CROSS-Biss Phase 7 Clip  0 Wurzel (  4544,-14870) Kopf (  4528,-17910) Kopf-Abstand 1039
+        t306   CROSS-Biss Phase 7 Clip  0 Wurzel (  4471,-18536) Kopf (  4420,-21555) Kopf-Abstand 2598
+    W1000/-20700/c2 Cut 2: 3600 B., Treffer 337 (Rammen 0, CROSS-Biss 0, Hochbiss 0, Biss 337, sonst 0), erster t456 Biss, laengste Pause ohne Treffer 456 B. = 15.2 s, GUARD 0 % CROSS 0 %, Wurzel ab t600 (900..1013, -21704..-21472), Kopf min 2063 mittel 2263, ohne Fortschritt max 9.1 s, Haenge-Fenster 0 (erstes t-1)
+        t456   Biss       Phase 3 Clip  4 Wurzel ( -3058,-23229) Kopf (  -543,-21469) Kopf-Abstand 1722
+        t458   Biss       Phase 3 Clip  4 Wurzel ( -2946,-23167) Kopf (  -333,-21559) Kopf-Abstand 1583
+    W3000/-21000/c0 Cut 0: 3600 B., Treffer 314 (Rammen 0, CROSS-Biss 1, Hochbiss 0, Biss 313, sonst 0), erster t265 CROSS-Biss, laengste Pause ohne Treffer 426 B. = 14.2 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (-421..4997, -24720..-20263), Kopf min 45 mittel 2638, ohne Fortschritt max 3.5 s, Haenge-Fenster 0 (erstes t-1)
+        t265   CROSS-Biss Phase 7 Clip  0 Wurzel (  3872,-17033) Kopf (  3413,-20063) Kopf-Abstand 1021
+        t691   Biss       Phase 3 Clip  4 Wurzel (   -98,-22847) Kopf (  2449,-21134) Kopf-Abstand 565
+    SUMME B1 ohne Kanister: Haenge-Fenster 0 (hoechstens 0 je Lage, -); ohne Fortschritt max 327 B. = 10.9 s (W2318/-18568/c2); laengste Pause ohne Treffer 530 B. = 17.7 s (W2318/-18568/c2); wenigste Treffer je Lage 287; Rammen 0
+  ok: A1 mit Kanister: in jeder der 18 Rampen-Lagen erster Treffer <= 600 Bilder und laengste Pause ohne Treffer <= 600 (ohne Treffer 0, spaetester erster t450 R2318/-16300, Pause 537 R2318/-16300)
+  ok: A1 mit Kanister: Rammen auf der Rampe >= 1 (36) - 'den Spieler oben auf der Rampe auch rammen koennen'
+  ok: B1 mit Kanister: Haenge-Fenster (RW-Mass) 0 in jeder der 11 Wasser-Lagen (0, hoechstens 0 in -)
+  ok: B3 mit Kanister: laengste Zeit ohne Fortschritt zur Figur <= 450 Bilder (327 = 10.9 s, W2318/-18568/c2)
+  ok: B1b mit Kanister: laengste Pause ohne Treffer in den Wasser-Lagen <= 600 (520, W2318/-18568/c2) - kein Stehen an der Klemmlinie ohne Biss
+  ok: A1 ohne Kanister: in jeder der 18 Rampen-Lagen erster Treffer <= 600 Bilder und laengste Pause ohne Treffer <= 600 (ohne Treffer 0, spaetester erster t450 R2318/-16300, Pause 537 R2318/-16300)
+  ok: A1 ohne Kanister: Rammen auf der Rampe >= 1 (36) - 'den Spieler oben auf der Rampe auch rammen koennen'
+  ok: B1 ohne Kanister: Haenge-Fenster (RW-Mass) 0 in jeder der 11 Wasser-Lagen (0, hoechstens 0 in -)
+  ok: B3 ohne Kanister: laengste Zeit ohne Fortschritt zur Figur <= 450 Bilder (327 = 10.9 s, W2318/-18568/c2)
+  ok: B1b ohne Kanister: laengste Pause ohne Treffer in den Wasser-Lagen <= 600 (530, W2318/-18568/c2) - kein Stehen an der Klemmlinie ohne Biss
+    (Dokumentation: Wasser-Lagen mit / ohne Kanister - laengste Pause ohne Treffer 520 / 530, Rammen 10 / 0)
+  ok: mit = ohne Kanister (Vorschlag 4) oben und im Haengen: erster t450/t450, Pause oben 537/537, Rammen oben 36/36, Fenster 0/0, ohne Fortschritt 327/327
+  -- Gegenprobe Stand a661eb8aa (Pruefhaken nb3_alt), ohne Kanister --
+    R2318/-16300   Cut 2: 3600 B., Treffer   0 (Rammen 0, CROSS-Biss 0, Hochbiss 0, Biss 0, sonst 0), erster t-1 KEIN TREFFER, laengste Pause ohne Treffer 3600 B. = 120.0 s, GUARD 100 % CROSS 0 %, Wurzel ab t600 (4164..5598, -12855..-10540), Kopf min 1624 mittel 5411, ohne Fortschritt max 4.7 s, Haenge-Fenster 0 (erstes t-1)
+        W4200/-18800/c2 t1764 HAENGT: Wurzel 150 Bilder in (3198..3820, -23585..-22606), jetzt (3198,-23585) Gier 711 Clip 1 Bild 9, Kopf (4636,-26292) 7489 von der Figur (4200,-18800), Steuerziel (4450,-22600), Phase 2 Modus 0
+        W4200/-18800/c2 t3139 HAENGT: Wurzel 150 Bilder in (3226..3798, -23622..-22611), jetzt (3226,-23622) Gier 663 Clip 1 Bild 9, Kopf (4860,-26216) 7437 von der Figur (4200,-18800), Steuerziel (4450,-22600), Phase 2 Modus 0
+        W4200/-18800/c2 t3376 HAENGT: Wurzel 150 Bilder in (3274..3838, -23716..-22598), jetzt (3277,-23716) Gier 615 Clip 1 Bild 9, Kopf (5097,-26182) 7419 von der Figur (4200,-18800), Steuerziel (4450,-22600), Phase 2 Modus 0
+    W4200/-18800/c2 Cut 2: 3600 B., Treffer 234 (Rammen 0, CROSS-Biss 2, Hochbiss 0, Biss 232, sonst 0), erster t203 CROSS-Biss, laengste Pause ohne Treffer 390 B. = 13.0 s, GUARD 0 % CROSS 6 %, Wurzel ab t600 (1003..4454, -25042..-21948), Kopf min 225 mittel 4886, ohne Fortschritt max 10.7 s, Haenge-Fenster 3 (erstes t1764)
+        t203   CROSS-Biss Phase 7 Clip  0 Wurzel (  4472,-14760) Kopf (  4383,-17792) Kopf-Abstand 1024
+  ok: Gegenprobe a661eb8aa R2318/-16300: kein Treffer in 3600 Bildern (Messblatt 1.2) bzw. erster > 600 (ohne Treffer 1, erster t3600) - rot ohne den Bau
+  ok: Gegenprobe a661eb8aa W4200/-18800/c2: Haenge-Fenster >= 1 (3; Messblatt 2.2: 3) - rot ohne den Bau
+    Gang-Lage (6732,0,-13687): Stand a661eb8aa 900 Bilder, neu 900 Bilder, abweichend 579 (erste Abweichung Bild 321)
+  ok: Gegenprobe Gang-Lage (6732,0,-13687): weicht zwischen a661eb8aa und neu ab (579 von 900 Bildern) - die Aenderung liegt im Band vor der Kante bzw. oben
+    Gang-Lage (4428,-1800,-16300): Stand a661eb8aa 900 Bilder, neu 900 Bilder, abweichend 29 (erste Abweichung Bild 55)
+  ok: Gegenprobe Gang-Lage (4428,-1800,-16300): weicht zwischen a661eb8aa und neu ab (29 von 900 Bildern) - die Aenderung liegt im Band vor der Kante bzw. oben
+nb3_elza: 0 Fehler
+nb3_elza exit=0

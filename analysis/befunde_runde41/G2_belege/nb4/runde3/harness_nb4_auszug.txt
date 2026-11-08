@@ -1,0 +1,36 @@
+1177:     Biss-Clip-Laeufe (Abnahme 8 M1, RE2 ein Treffer je Kiefer-Lauf): 527 Laeufe, 523 Treffer; Zweitbiss im selben Lauf 0, Lauf mit Bissbedingung ohne Treffer 0, Lagen mit erstem Treffer nach dem ersten Lauf mit Bedingung 0, Reaktionen durch einen neuen Treffer abgebrochen 2 - erster Abbruch F661: Reaktion art 2 Sub 3 nach 35 Bildern, neuer Treffer art 1; Treffer-Paare 594, kleinster Abstand 36 Bilder (Ausgabe)
+1177:   ok: (a) ein Treffer je Biss-Clip-Lauf wie RE2 je Kiefer-Lauf (Treffer-Einstieg verweigert bei PL+0x1D3 @0x801015a4-ac, Lauf-Ende +0x224 = 0 @0x80101558): 523 Treffer in 527 Laeufen, Zweitbisse 0; neuer Treffer nur im Liegen der Sub-3-Reaktion (RE2 loescht PL+0x1D3 dort @0x801032f0, in Sub 2 erst am En[scd] thread start slot=0 first_op=0x3B
+1178:     Biss-Clip-Laeufe (Abnahme 8 M1, RE2 ein Treffer je Kiefer-Lauf): 527 Laeufe, 523 Treffer; Zweitbiss im selben Lauf 0, Lauf mit Bissbedingung ohne Treffer 0, Lagen mit erstem Treffer nach dem ersten Lauf mit Bedingung 0, Reaktionen durch einen neuen Treffer abgebrochen 2 - erster Abbruch F661: Reaktion art 2 Sub 3 nach 35 Bildern, neuer Treffer art 1; Treffer-Paare 594, kleinster Abstand 36 Bilder (Ausgabe)
+1178:   ok: (a) ein Treffer je Biss-Clip-Lauf wie RE2 je Kiefer-Lauf (Treffer-Einstieg verweigert bei PL+0x1D3 @0x801015a4-ac, Lauf-Ende +0x224 = 0 @0x80101558): 523 Treffer in 527 Laeufen, Zweitbisse 0; neuer Treffer nur im Liegen der Sub-3-Reaktion (RE2 loescht PL+0x1D3 dort @0x801032f0, in Sub 2 erst [scd] thread start slot=0 first_op=0x3B
+1177:   ok: (c) kein Biss-Lauf mit Bissbedingung (Fenster, Maul an der Figur, Reaktion zu Ende, keine Wand) ohne Treffer - RE2 trifft dort, T1 @0x801012fc fragt +0x238 nicht: Leerlaeufe 0, Lagen mit spaeterem Erstbiss 0
+1177:     Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): 30 Laeufe, 57 Treffer, Zweitbisse im selben Lauf 27, kleinster Abstand 20 - Lage 4200/-18700: 12 Laeufe mit Zweitbiss
+1177:   ok: Gegenprobe (a) Pruefhaken 'Sperre alt': Zweitbisse im selben Lauf wieder da (27) - rot ohne den Bau
+1177:     (b) Intro-Lage W4200/-18700 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 0 bei t7 mit +0x238 = 103, Leerlaeufe 0, Zweitbisse 0 -> wie RE2
+1177:     (b) Intro-Lage W6732/-18598 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 0 bei t7 mit +0x238 = 103, Leerlaeufe 0, Zweitbisse 0 -> wie RE2
+1177:   ok: (b) nach dem Intro-Ende beisst der Gator im ersten Lauf mit dem Maul an der Figur, waehrend +0x238 > 0 (RE2: Biss-Bremse frei @0x801008f8-918, nur Spurt-Sperre 110 @0x8010091c-20): 2 von 2 Lagen
+1177:     Gegenprobe Stand d8bf728b0 ('Sperre 238'): Intro-Lage W4200/-18700 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 1 bei t109 mit +0x238 = 1, Leerlaeufe 1, Zweitbisse 0 -> nicht RE2
+1177:     Gegenprobe Stand d8bf728b0 ('Sperre 238'): Intro-Lage W6732/-18598 (+0x238 = 110 am Start): 5 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 2 bei t133 mit +0x238 = 0, Leerlaeufe 2, Zweitbisse 0 -> nicht RE2
+1177:   ok: Gegenprobe (b) Pruefhaken 'Sperre 238' (Stand d8bf728b0): kein Biss im ersten Lauf bei +0x238 > 0 (0 von 2 Lagen wie RE2) - rot ohne den Bau
+1177:     Gegenprobe Stand 3d57083b1: Niederwurf-Bilder 1804, groesste Niederwurf-Luftlinie 5630, RE2-Reaktionen 0
+1177:   ok: T5 Gegenprobe Pruefhaken 'Treffer alt': RE1.5-Niederwurf wieder da (1804 Bilder, Luftlinie bis 5630 > 3735, 0 RE2-Reaktionen) - rot ohne den Bau
+1177:     Gegenprobe Kanister abseits (-8300,-26400), Figur oben (4428,-16300): 1800 B., Aufnahme t-1
+1177:   ok: K2 Gegenprobe: Kanister abseits der Bahn bleibt bis Laufende auf Stufe 0 (Aufnahme t-1)
+1177:     Gegenprobe Stand 3d57083b1 (re15_k2080_runde_alt_setzen): RUNDE-Zeilen 1, Aufnahme t648, abweichend 55
+1177:   ok: K Gegenprobe RUNDE (Stand 3d57083b1): RUNDE an (1 Zeilen), Bewegung weicht ab (55 Bilder) - rot ohne den Bau
+1177: nb4: 0 Fehler
+1178:   ok: (c) kein Biss-Lauf mit Bissbedingung (Fenster, Maul an der Figur, Reaktion zu Ende, keine Wand) ohne Treffer - RE2 trifft dort, T1 @0x801012fc fragt +0x238 nicht: Leerlaeufe 0, Lagen mit spaeterem Erstbiss 0
+1178:     Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): 30 Laeufe, 57 Treffer, Zweitbisse im selben Lauf 27, kleinster Abstand 20 - Lage 4200/-18700: 12 Laeufe mit Zweitbiss
+1178:   ok: Gegenprobe (a) Pruefhaken 'Sperre alt': Zweitbisse im selben Lauf wieder da (27) - rot ohne den Bau
+1178:     (b) Intro-Lage W4200/-18700 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 0 bei t7 mit +0x238 = 103, Leerlaeufe 0, Zweitbisse 0 -> wie RE2
+1178:     (b) Intro-Lage W6732/-18598 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 0 bei t7 mit +0x238 = 103, Leerlaeufe 0, Zweitbisse 0 -> wie RE2
+1178:   ok: (b) nach dem Intro-Ende beisst der Gator im ersten Lauf mit dem Maul an der Figur, waehrend +0x238 > 0 (RE2: Biss-Bremse frei @0x801008f8-918, nur Spurt-Sperre 110 @0x8010091c-20): 2 von 2 Lagen
+1178:     Gegenprobe Stand d8bf728b0 ('Sperre 238'): Intro-Lage W4200/-18700 (+0x238 = 110 am Start): 4 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 1 bei t109 mit +0x238 = 1, Leerlaeufe 1, Zweitbisse 0 -> nicht RE2
+1178:     Gegenprobe Stand d8bf728b0 ('Sperre 238'): Intro-Lage W6732/-18598 (+0x238 = 110 am Start): 5 Laeufe, erster Lauf mit Bedingung Nr 0 (t0), erster Treffer im Lauf Nr 2 bei t133 mit +0x238 = 0, Leerlaeufe 2, Zweitbisse 0 -> nicht RE2
+1178:   ok: Gegenprobe (b) Pruefhaken 'Sperre 238' (Stand d8bf728b0): kein Biss im ersten Lauf bei +0x238 > 0 (0 von 2 Lagen wie RE2) - rot ohne den Bau
+1178:     Gegenprobe Stand 3d57083b1: Niederwurf-Bilder 1804, groesste Niederwurf-Luftlinie 5630, RE2-Reaktionen 0
+1178:   ok: T5 Gegenprobe Pruefhaken 'Treffer alt': RE1.5-Niederwurf wieder da (1804 Bilder, Luftlinie bis 5630 > 3735, 0 RE2-Reaktionen) - rot ohne den Bau
+1178:     Gegenprobe Kanister abseits (-8300,-26400), Figur oben (4428,-16300): 1800 B., Aufnahme t-1
+1178:   ok: K2 Gegenprobe: Kanister abseits der Bahn bleibt bis Laufende auf Stufe 0 (Aufnahme t-1)
+1178:     Gegenprobe Stand 3d57083b1 (re15_k2080_runde_alt_setzen): RUNDE-Zeilen 1, Aufnahme t648, abweichend 55
+1178:   ok: K Gegenprobe RUNDE (Stand 3d57083b1): RUNDE an (1 Zeilen), Bewegung weicht ab (55 Bilder) - rot ohne den Bau
+1178: nb4_elza: 0 Fehler

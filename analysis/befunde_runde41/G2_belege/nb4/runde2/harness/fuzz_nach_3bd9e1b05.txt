@@ -1,0 +1,14 @@
+1161:   ok: Fuzz gelaufen (27900 Bilder mit Kanister)
+1161:   ok: kein Wandreiben > 1 s mit dem Kanister (laengstes 1 Bilder bei O4)
+1161:   ok: NB3/NB4: Figur oben/an der Leiter - mittlerer Kopf-Abstand der Patrouille hoechstens 7540 (<= 9000: naechster Mittelpunkt im sichtbaren Wasser bis 8930 von der Figur; im Bild misst der Riegel kamera; Bildanteil hier nur berichtet: 8 %)
+1161:   ok: NB2 (M5)/G2-RE2: hoechstens 10 Zeitfenster von 2 s (60 Bilder), in denen die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (8 Fenster; laengste 30-Bilder-Folge 38)
+1161:   ok: Stillstand mit Kanister hoechstens wie vor G2 (1883 / 27900 gegen 3897 / 27900)
+1161:   ok: Gegenprobe G2 vor NB1: Wandreiben 13 / 2-s-Fenster ohne Fortschritt 1535 (rot ohne den Bau)
+1162:   ok: Fuzz gelaufen (27900 Bilder mit Kanister)
+1162:   ok: kein Wandreiben > 1 s mit dem Kanister (laengstes 1 Bilder bei O4)
+1162:   ok: NB3/NB4: Figur oben/an der Leiter - mittlerer Kopf-Abstand der Patrouille hoechstens 7540 (<= 9000: naechster Mittelpunkt im sichtbaren Wasser bis 8930 von der Figur; im Bild misst der Riegel kamera; Bildanteil hier nur berichtet: 8 %)
+1162:   ok: NB2 (M5)/G2-RE2: hoechstens 10 Zeitfenster von 2 s (60 Bilder), in denen die Wurzel nicht 300 vom Anfang wegkommt, ausser mit Biss am Spieler (8 Fenster; laengste 30-Bilder-Folge 38)
+1162:   ok: Stillstand mit Kanister hoechstens wie vor G2 (1883 / 27900 gegen 3897 / 27900)
+1162:   ok: Gegenprobe G2 vor NB1: Wandreiben 13 / 2-s-Fenster ohne Fortschritt 1535 (rot ohne den Bau)
+The following tests passed:
+100% tests passed, 0 tests failed out of 2

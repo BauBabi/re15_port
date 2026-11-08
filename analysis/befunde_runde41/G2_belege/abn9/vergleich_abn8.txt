@@ -1,0 +1,28 @@
+# Abnahme 9 - Vergleich der eigenen Laeufe (Bau 5c2cd89f, HEAD bae9fb1a0) mit den Abnahme-8-Laeufen (Bau 42a1c8f7, Stand 9c3659bf7), gleiche Umgebung (ohne FRAMEDUMP)
+== a8_oben_leon vs a9_oben_leon
+state.log md5 7d1e9b6a040af48ddfcb5b516b45ea88 / 7d1e9b6a040af48ddfcb5b516b45ea88 (erste 1031 Zeilen)
+state.log ganz: ecbf7cc06932131b9988f04d444360f0 / ecbf7cc06932131b9988f04d444360f0
+climb.log ganz: dca6cf693be503b4366e888c1351d4a9 / dca6cf693be503b4366e888c1351d4a9
+erste abweichende state.log-Zeile: keine
+== a8_tod_leon vs a9_tod_leon
+state.log md5 13881e3ff31817711f80933d258efdab / 13881e3ff31817711f80933d258efdab (erste 1031 Zeilen)
+state.log ganz: 39636562592efc7c446b103dd5fc8a0c / 39636562592efc7c446b103dd5fc8a0c
+climb.log ganz: 57ead1545e7db39a41a1d10a700b29e9 / 57ead1545e7db39a41a1d10a700b29e9
+erste abweichende state.log-Zeile: keine
+== a8_tod_elza vs a9_tod_elza
+state.log md5 248756e153ff6cdc64042abf520ce593 / 248756e153ff6cdc64042abf520ce593 (erste 1031 Zeilen)
+state.log ganz: afc39632ebf134a2fa4f8ce8a65801a5 / afc39632ebf134a2fa4f8ce8a65801a5
+climb.log ganz: 2391a9a468ceb61ca3550151706fd597 / 2391a9a468ceb61ca3550151706fd597
+erste abweichende state.log-Zeile: keine
+== a8_nische2 vs a9_nische
+state.log md5 752e30ebb4bcc3f2503b7403d029356e / 442e12878a311986e99fb816d76ee3a4 (erste 1031 Zeilen)
+state.log ganz: 752e30ebb4bcc3f2503b7403d029356e / e83ad4a1da060275827887677f3c97cc
+climb.log ganz: 1af457e7bfc0e136ddb7078d95f884d5 / 479a5baf0cbd7be39aadef0c004715aa
+erste abweichende state.log-Zeile: line 541
+
+== a8_nische2 (Abnahme 8) ab F284: Biss-Telemetrie
+GTR F416 START art 4 sub 2 achse 1024 gier 0->1024 schaden 60 ret 0 hp 0 gator (-7393,-1200,-24150) gier 2607 figur (-8373,0,-23016) band 0
+GTR F523 TOT art 4 schaden 60 hp -60
+(a8_nische2 hat keine BISSLAUF-Zeilen; Treffer laut hp-Flanken:)
+a8_nische2: Raum 2090, letzter Besuch F1..F780 (780 Bilder); Treffer (hp-Flanken) 2 [GTR START 1, TOT 1]; Sub 2 1 (Dauern [20]), Sub 3 0 (Dauern []); kleinster Abstand 107; Abstand < 70: 0; Zweitbiss im selben Gator-Clip-Lauf: 0; RE1.5-Niederwurf-Bilder (pst 2, Clip 12..16) 0; Stuerze 0; Weg max 3902, Luftlinie max 2746; Spieler-hp min -60
+  ausgerichtet 87 von 88 BISS-Zeilen (nicht zuordenbar 1); letzter Besuch: Clip-4-Lauefe mit Bissfenster 3, davon mit Treffer 1; nach dem Treffer im selben Lauf gesperrte Bisse (frueher M1-Zweitbiss): 1 Laeufe / 9 Bilder; Laeufe OHNE Treffer, in denen das Maul die Figur erreichte (Bisssperre): 2 Laeufe / 37 Bilder

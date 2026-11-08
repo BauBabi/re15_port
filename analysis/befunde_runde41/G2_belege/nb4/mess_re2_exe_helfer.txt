@@ -1,0 +1,171 @@
+# RE2 EXE (RE2_Quellcode_V2, Ghidra headless) - Decompilate der Helfer
+## FUN_8001569c
+/* FUN_8001569c @ 0x8001569c  (Ghidra headless, raw MIPS overlay) */
+
+void FUN_8001569c(int param_1,uint param_2,int param_3)
+
+{
+  short sVar1;
+  uint uVar2;
+  
+  if (param_3 << 0x10 < 0) {
+    param_3 = -((param_3 << 0x10) >> 0x10);
+    param_2 = param_2 + 0x800 & 0xfff;
+  }
+  uVar2 = param_3 + (param_2 - *(ushort *)(param_1 + 0x76)) & 0xfff;
+  sVar1 = *(ushort *)(param_1 + 0x76) - (short)param_3;
+  if ((int)uVar2 < (param_3 << 0x10) >> 0xf) {
+    *(short *)(param_1 + 0x76) = (short)param_2;
+  }
+  else {
+    *(short *)(param_1 + 0x76) = sVar1;
+    if (uVar2 < 0x801) {
+      *(short *)(param_1 + 0x76) = sVar1 + (short)param_3 * 2;
+    }
+  }
+  return;
+}
+
+
+## FUN_80015910
+/* FUN_80015910 @ 0x80015910  (Ghidra headless, raw MIPS overlay) */
+
+bool FUN_80015910(int param_1,int param_2)
+
+{
+  return (((int)*(short *)(param_2 + 0x76) - (int)*(short *)(param_1 + 0x76)) + 0x400U & 0xfff) <
+         0x800;
+}
+
+
+## FUN_800152c8
+/* FUN_800152c8 @ 0x800152c8  (Ghidra headless, raw MIPS overlay) */
+
+void FUN_800152c8(int param_1,short param_2)
+
+{
+  SVECTOR local_38;
+  MATRIX MStack_30;
+  
+  local_38.vx = 0;
+  local_38.vz = 0;
+  local_38.vy = *(short *)(param_1 + 0x76) + param_2;
+  RotMatrix(&local_38,&MStack_30);
+  ApplyMatrixSV(&MStack_30,(SVECTOR *)(param_1 + 0x144),&local_38);
+  *(int *)(param_1 + 0x38) = *(int *)(param_1 + 0x38) + (int)local_38.vx;
+  *(int *)(param_1 + 0x40) = *(int *)(param_1 + 0x40) + (int)local_38.vz;
+  return;
+}
+
+
+## FUN_8002959c
+/* FUN_8002959c @ 0x8002959c  (Ghidra headless, raw MIPS overlay) */
+
+void FUN_8002959c(int param_1,undefined4 param_2,int param_3,uint param_4)
+
+{
+  uint uVar1;
+  uint uVar2;
+  
+  uVar2 = *(uint *)(param_3 + (uint)*(byte *)(param_1 + 0x14c) * 4);
+  if ((param_4 & 0xffff0000) == 0) {
+    uVar1 = (uint)*(byte *)(param_1 + 0x14d);
+  }
+  else {
+    uVar1 = ((uVar2 & 0xffff) - (uint)*(byte *)(param_1 + 0x14d)) - 1;
+  }
+  *(uint *)(param_1 + 0x178) = param_3 + (uVar2 >> 0x10) + uVar1 * 4;
+  FUN_80029614(param_2);
+  return;
+}
+
+
+## FUN_80018e08
+/* FUN_80018e08 @ 0x80018e08  (Ghidra headless, raw MIPS overlay) */
+
+void FUN_80018e08(void)
+
+{
+  uint *puVar1;
+  uint *puVar2;
+  uint uVar3;
+  int *piVar4;
+  int *piVar5;
+  uint uVar6;
+  int *piVar7;
+  char cVar8;
+  
+  piVar4 = *(int **)(DAT_800ce324 + 0x60);
+  if (piVar4 != (int *)0x0) {
+    cVar8 = (char)piVar4[1];
+    piVar7 = (int *)((int)piVar4 + *piVar4);
+    piVar5 = piVar7 + 1;
+    do {
+      uVar6 = 0;
+      puVar1 = (uint *)((int)piVar4 + *piVar7);
+      uVar3 = *puVar1;
+      if ((DAT_800cfb74 & 0x1000000) == 0) {
+        if ((DAT_800cfbd8 & 0x2000000) == 0) {
+          if ((uVar3 & 1) != 0) goto LAB_80018f18;
+        }
+        else if ((int)uVar3 < 0) {
+LAB_80018f18:
+          DAT_800cfd88 = puVar1 + 1;
+          DAT_800cfd8c = (int)piVar4 + *piVar5;
+        }
+      }
+      else {
+        if (DAT_800d4828 < 3) {
+          if (DAT_800d4828 < 1) {
+            if (DAT_800d4828 == 0) goto LAB_80018e9c;
+          }
+          else if ((uVar3 & 2) != 0) {
+            DAT_800cfd8c = (int)piVar4 + *piVar5;
+            DAT_800cfd88 = puVar1 + 1;
+          }
+        }
+        else if (DAT_800d4828 == 3) {
+LAB_80018e9c:
+          if ((uVar3 & 1) != 0) {
+            DAT_800cfd8c = (int)piVar4 + *piVar5;
+            DAT_800cfd88 = puVar1 + 1;
+          }
+        }
+        uVar6 = 1;
+        uVar3 = uVar3 >> 1;
+      }
+      uVar3 = uVar3 >> 1;
+      if (uVar3 != 0) {
+        do {
+          if ((uVar3 & 1) != 0) {
+            puVar2 = (uint *)(&DAT_800cfe18)[uVar6 & 0xff];
+            if ((*puVar2 & 1) != 0) {
+              puVar2[100] = (uint)(puVar1 + 1);
+              *(int *)((&DAT_800cfe18)[uVar6 & 0xff] + 0x194) = (int)piVar4 + *piVar5;
+            }
+          }
+          uVar3 = uVar3 >> 1;
+          uVar6 = uVar6 + 1;
+        } while (uVar3 != 0);
+      }
+      piVar5 = piVar5 + 2;
+      piVar7 = piVar7 + 2;
+      cVar8 = cVar8 + -1;
+    } while (cVar8 != '\0');
+  }
+  return;
+}
+
+
+## Spieler-Struktur 0x800CFBF8 (ghidra_re2_Leon.txt)
+130480:        80035fdc 21 20 00 02     _move      a0=>DAT_800cfbf8,s0
+130547:        800360d0 10 3a 64 26     _addiu     a0=>DAT_800cfbf8,s3,0x3a10
+130557:        800360f4 21 20 c0 02     _move      a0=>DAT_800cfbf8,s6
+130568:        80036120 21 20 c0 02     move       a0=>DAT_800cfbf8,s6
+130576:        8003613c 10 3a 64 26     addiu      a0=>DAT_800cfbf8,s3,0x3a10
+130630:        800361fc 10 3a 64 26     addiu      a0=>DAT_800cfbf8,s3,0x3a10
+88207:        80018ea4 00 00 a2 ad     sw         v0,0x0(t5)=>DAT_800cfd88
+88217:        80018ec8 14 02 42 ad     sw         v0,0x214(t2)=>DAT_800cfd88
+88221:        80018ed8 18 02 42 ad     sw         v0,0x218(t2)=>DAT_800cfd8c
+88243:        80018f18 14 02 42 ad     sw         v0,0x214(t2)=>DAT_800cfd88
+88247:        80018f28 18 02 42 ad     sw         v0,0x218(t2)=>DAT_800cfd8c

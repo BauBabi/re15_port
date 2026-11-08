@@ -111,7 +111,7 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     endif()
     re15_start_spiel(_rv 900 ${_basisenv} ${_wahl}
         RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:60" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100
-        RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schiess}"
+        RE15_K2080_GATOR_HP=24990 RE15_K2080_RUECK_KANISTER=1 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 "RE15_INPUT_SCRIPT=${_schiess}"
         RE15_STATE_LOG=state.log "RE15_PLAYER_POS=${_start}" "RE15_EXIT_AT=5000#${_r90}" RE15_GATOR_FX_LOG=1 "${_exe_kopie}")
     if(NOT _rv EQUAL 0)
         r41gk_fehler("Lauf ${_lname}_${_wer} exe exit=${_rv}")
@@ -120,22 +120,26 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     foreach(_muster
             "FG-E3: Alligator gesichert Slot [0-9]+ "
             "AUSLOESER geschwaecht .*-> ROOM${_r80}"
-            "ROOM${_r80} SZENE \\(${_npc}, 8 lebende Zombies"
+            "ROOM${_r80} SZENE \\(${_npc}, 3 lebende Zombies"   # Runde 41 Spur G2 (Punkt 4): 3 statt 8
             "Kanister aufgehoben \\(Loco c11 Bild 24, Hinknien ROOM11B0 sub06 @0x01650\\)"
             "Wurf: Start .* -> Landung \\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) nach [0-9]+ Bildern \\(Wasser 2090 y -1620\\)"
             "FG-E3: ROOM${_r90} derselbe Alligator in Slot [0-9]+ "
-            "ROOM${_r90} RUECKKEHR: .*Zone-7-Tot-Bits 236\\.\\.243 gesetzt: 8 von 8"
+            "ROOM${_r90} RUECKKEHR: .*Zone-7-Tot-Bits 236\\.\\.238 gesetzt: 3 von 3"   # Runde 41 Spur G2 (Punkt 4): 3 statt 8
             "Aufschlag im Wasser bei "
             "ROOM${_r90} Kanister im Becken \\(-?[0-9]+,-1200,-?[0-9]+\\) = Aufschlagstelle"
             "Wurfrichtung (3072|1024) \\((Nord|Sued)becken, Alligator beim Ausloesen"
-            "ANSCHWIMMEN an: Gator Slot [0-9]+ "
-            "HALS zum Kanister: Part 5 "
-            "HALS zurueck \\(Akku -> 0\\)")
+            "MESSHAKEN RE15_K2080_RUECK_KANISTER: Rueckkehr hinter den Kanister")
         file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[k2080\\] F[0-9]+ ${_muster}")
         if(NOT _z)
             r41gk_fehler("Lauf ${_lname}_${_wer}: keine Zeile '${_muster}'")
         endif()
     endforeach()
+    # Runde 41 Spur G2 (Nutzer 2026-11-01 Punkt 8 "nicht direkt froehlich zum Kanister laufen, sondern weiter seine Runde dem Spieler hinterher"): KEIN
+    # Anschwimmen und damit keine Hals-Fuehrung zum Kanister mehr (vorher Pflichtzeilen "ANSCHWIMMEN an", "HALS zum Kanister", "HALS zurueck")
+    file(STRINGS "${WORKDIR}/debug.log" _an REGEX "\\[k2080\\] F[0-9]+ (ANSCHWIMMEN an|HALS zum Kanister)")
+    if(_an)
+        r41gk_fehler("Lauf ${_lname}_${_wer}: Anschwimmen trotz Punkt 8: ${_an}")
+    endif()
     # Nachtrag 24b: Hinknien/Aufstehen (Plc_motion(1,11) zweimal), kein Klettern (1,2) und kein RUN-Gait als "Tragen" (2,0)
     file(STRINGS "${WORKDIR}/debug.log" _kn REGEX "\\[scd\\] Plc_motion\\(entity=1, motion=11, ")
     list(LENGTH _kn _n_kn)

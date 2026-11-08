@@ -1,0 +1,5 @@
+1352: -- r41_re2gator: ok — nische: Maul-Sitz 240 Bilder (P1 14 P2 120 P3 106) Cut 6, Kopf 0, Kiefer-Abstand 2, Kopf/Leon im Bild 240/224+16 oben, Wasser 240, gehalten 240, frei 240, Finisher Cut 6 (Biss-Bild 0/0), RE2-Zeilen 56, Intro Lage/Start/Ende 1/1/1 wand 0, Clip 6/3 125/150, Kamera DURCHBRUCH:6/0;SEITE:6/70;ANGRIFF:6/124;FREI:3/149;FINISHER:4/0, Finisher Cut 6 ab F523 gehalten 248 Bilder / 13 Halt-Zeilen, HP min 25300, kein Gier-Sprung | natuerlich: untergetaucht bis F159 (Lauerplatz -7200,-9200), Auftauchen Clip/Bild 6/0, erstes Bild F159 Clip 6, groesster Bildschritt 338, kein Gier
+1/1 Test #1352: integration_r41_re2gator .........   Passed  299.71 sec
+The following tests passed:
+100% tests passed, 0 tests failed out of 1
+Total Test time (real) = 299.78 sec

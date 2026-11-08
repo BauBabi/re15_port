@@ -1,0 +1,14 @@
+oben_leon neu FDR=0-4400/30
+oben_leon ohne FDR=0-4400/30
+oben_elza neu FDR=0-4400/30
+oben_elza ohne FDR=0-4400/30
+spawn_2318_-16300_leon_k2500~-10000 neu FDR=250-4200/30
+spawn_2318_-16300_elza ohne FDR=250-4200/30
+spawn_4428_-16300_leon ohne FDR=250-4200/30
+spawn_6500_-15000_elza ohne FDR=250-4200/30
+spawn_2318_-17600_leon ohne FDR=250-4200/30
+spawn_3350_-15000_elza_k2500~-10000 neu FDR=250-4200/30
+frei4_leon neu
+frei4_leon ohne
+frei4_elza neu
+frei4_elza ohne

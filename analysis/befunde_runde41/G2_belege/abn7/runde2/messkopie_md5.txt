@@ -1,0 +1,4 @@
+42a1c8f76e83e13818bb43648c0f825a *C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc_g2abn8.exe
+42a1c8f76e83e13818bb43648c0f825a *C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc/re15_pc.exe
+d078d22d76b32b1f9bdbb32ce065e577 *C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix_g2abn8.exe
+d078d22d76b32b1f9bdbb32ce065e577 *C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/tests/unit/test_r41_gatorfix.exe

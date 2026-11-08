@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# G2-RE2 Fensterlaeufe: Eingaben/Umgebung der Abnahme-4-Laeufe (29cb53610 werkzeug/batch_b..d.sh), neue exe, gdigrab, Zeitlog
+SP="C:/Users/MJOEDI~1/AppData/Local/Temp/claude/c--workspace-git-reAi-v2/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/g2re2"
+W="$SP/werkzeug"
+export EXE_DIR="C:/workspace/git/reAi_v2/.claude/worktrees/r41_gatorfix/re15_port/build/platform/pc"
+BL=(RE15_NO_INTRO=1 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 RE15_DEBUG_JUMP=2090@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:1" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 RE15_STATE_LOG=state.log RE15_G2_TRAG_LOG=1 RE15_CLIMB_TRACE=climb.log "RE15_PLAYER_POS=-6000,-17500,3072" RE15_WINDOW_SCALE=2 RE15_G2_ZEIT_LOG=1)
+BE=(RE15_NO_INTRO=1 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1 RE15_TITLE_CONFIRM_MS=1500 RE15_DEBUG_JUMP=2091@250 "RE15_SET_FLAG=9:110,3:245" "RE15_GIVE=3:1" RE15_EQUIP=3 RE15_R39_MESS_SPIELER_HP=100 RE15_K2080_GATOR_HP=24990 RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1 RE15_STATE_LOG=state.log RE15_G2_TRAG_LOG=1 RE15_CLIMB_TRACE=climb.log "RE15_PLAYER_POS=-6000,-17500,3072" RE15_WINDOW_SCALE=2 RE15_G2_ZEIT_LOG=1)
+IN="$(cat $W/west_input.txt)"
+case "${1:-a}" in
+a)
+bash "$W/lauf.sh" frei4_leon 285 "${BL[@]}" "RE15_INPUT_SCRIPT=$(cat $W/frei_leon4.txt)" "RE15_EXIT_AT=8400#2090"
+bash "$W/lauf.sh" west4_leon 125 "${BL[@]}" "RE15_INPUT_SCRIPT=$IN" "RE15_EXIT_AT=3300#2090" "RE15_K2080_RUECK_LAGE=4200,-18800,3072,2"
+;;
+b)
+bash "$W/lauf.sh" west4_elza 125 "${BE[@]}" "RE15_INPUT_SCRIPT=$IN" "RE15_EXIT_AT=3300#2091" "RE15_K2080_RUECK_LAGE=6400,-18700,3072,2"
+bash "$W/lauf.sh" west5_elza 125 "${BE[@]}" "RE15_INPUT_SCRIPT=$IN" "RE15_EXIT_AT=3300#2091" "RE15_K2080_RUECK_LAGE=3600,-18750,3072,2"
+bash "$W/lauf.sh" frei4_elza 285 "${BE[@]}" "RE15_INPUT_SCRIPT=$(cat $W/frei_elza4.txt)" "RE15_EXIT_AT=8400#2091"
+;;
+c)
+bash "$W/lauf.sh" leiter2_leon 110 "${BL[@]}" "RE15_INPUT_SCRIPT=$(cat $W/leiter2_input.txt)" "RE15_EXIT_AT=3200#2090" "RE15_K2080_RUECK_LAGE=-9400,-25500,2560,0"
+bash "$W/lauf.sh" nordost_leon 110 "${BL[@]}" "RE15_INPUT_SCRIPT=W6.0,M0.6,MA0.1,M0.3,MA0.1,W200" "RE15_EXIT_AT=3200#2090" "RE15_K2080_RUECK_LAGE=6700,-13700,3072,3"
+;;
+esac
+echo BATCH_FERTIG

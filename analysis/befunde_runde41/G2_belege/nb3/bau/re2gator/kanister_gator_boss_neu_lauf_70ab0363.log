@@ -1,0 +1,339 @@
+F2 R2090 gator da
+RE2 KANISTER gesetzt (-1500,-1200,-23400)
+RE2 INTRO Lage (Pos_set-Zwilling, Nachbesserung 2): von (-7200,-9200) yaw 1089 -> (-6406,-8593) yaw 4032, End-Gier 960, Peilung zu Leon (2500,-25000) Abw. |31| (Toleranz 128), Kopf-Leon am Ende 11170
+RE2 INTRO start pos=(-6406,-8593) yaw=4032 bahn_ende=(-104,-7999)
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 0 kopf_bild=(383,115) draussen massstab=696 frontal=943 |f-soll|=3149
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 1 kopf_bild=(-162,138) draussen massstab=908 frontal=-1380 |f-soll|=5472
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 2 kopf_bild=(50,123) massstab=545 frontal=906 |f-soll|=3186
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 3 kopf_bild=(1170,594) draussen massstab=7282 >grenze frontal=4032 |f-soll|=60
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 4 kopf_bild=(156,196) massstab=1718 frontal=-3630 |f-soll|=7722
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 5 kopf_bild=(176,157) massstab=1310 frontal=4025 |f-soll|=67
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 6 kopf_bild=(-117,296) draussen massstab=3012 >grenze frontal=-3630 |f-soll|=7722
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 7 kopf_bild=(173,120) massstab=495 frontal=-1386 |f-soll|=5478
+RE2 KAMERA INTRO DURCHBRUCH RE2-Cut 10 -> Cut 5 F6 clip=6 bild=0 frontal=4025 soll=4092 massstab=1310 re2_m=1161 grenze=1892
+RE2 AUFTAUCHEN F6 pos=(-6406,-8593) yaw=4032 phase=11 clip=6 bild=0 r=1466
+TICK ph=11 pos=(-3386,-8237) y=-1200 dist=17496 mo=6 cd=0 rt=0 zw=0 ziel=(0,0)
+RE2 PUTZ Stoss 1 Seite 2 Cut 5 F41
+TICK ph=11 pos=(-1708,-8200) y=-1200 dist=18544 mo=6 cd=0 rt=0 zw=0 ziel=(0,0)
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 0 kopf_bild=(553,98) draussen massstab=1070 frontal=477 |f-soll|=968
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 1 kopf_bild=(-50,94) draussen massstab=645 frontal=-1726 |f-soll|=3171
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 2 kopf_bild=(110,102) massstab=523 frontal=419 |f-soll|=1026
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 3 kopf_bild=(338,258) draussen massstab=5691 >grenze frontal=2200 |f-soll|=755
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 4 kopf_bild=(110,107) massstab=1000 frontal=-4086 |f-soll|=5531
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 5 kopf_bild=(59,191) massstab=4118 >grenze frontal=2451 |f-soll|=1006
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 6 kopf_bild=(-376,167) draussen massstab=2692 >grenze frontal=-4086 |f-soll|=5531
+RE2 KAMERA-KANDIDAT SEITE stufe=2 Cut 7 kopf_bild=(223,100) massstab=477 frontal=-1736 |f-soll|=3181
+RE2 KAMERA INTRO SEITE RE2-Cut 0 -> Cut 2 F76 clip=6 bild=70 frontal=419 soll=1445 massstab=523 re2_m=1892 grenze=1892
+TICK ph=11 pos=(-1076,-8160) y=-1200 dist=18544 mo=6 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(-392,-8123) y=-1200 dist=17256 mo=6 cd=0 rt=0 zw=0 ziel=(0,0)
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 0 kopf_bild=(599,99) draussen massstab=1290 frontal=3072 |f-soll|=314
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 1 kopf_bild=(-19,91) draussen massstab=634 frontal=1054 |f-soll|=2332
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 2 kopf_bild=(120,101) massstab=573 frontal=3031 |f-soll|=355
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 3 kopf_bild=(211,156) massstab=2717 >grenze frontal=-2745 |f-soll|=6131
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 4 kopf_bild=(140,99) massstab=867 frontal=-3636 |f-soll|=7022
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 5 kopf_bild=(-144,183) draussen massstab=4521 >grenze frontal=-2500 |f-soll|=5886
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 6 kopf_bild=(-215,131) draussen massstab=1774 frontal=-3636 |f-soll|=7022
+RE2 KAMERA-KANDIDAT ANGRIFF stufe=2 Cut 7 kopf_bild=(242,99) massstab=518 frontal=1041 |f-soll|=2345
+RE2 KAMERA INTRO ANGRIFF RE2-Cut 1 -> Cut 2 F130 clip=6 bild=124 frontal=3031 soll=3386 massstab=573 re2_m=927 grenze=1892
+TICK ph=11 pos=(-281,-8024) y=-1200 dist=16636 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(-253,-8100) y=-1200 dist=16636 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(498,-8323) y=-1200 dist=18200 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(1259,-9257) y=-1200 dist=17256 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+TICK ph=11 pos=(1857,-10613) y=-1200 dist=14444 mo=3 cd=0 rt=0 zw=0 ziel=(0,0)
+RE2 INTRO ende pos=(1822,-10767) yaw=960 wand_draussen_max=2 kopf_x_min=-3343
+RE2 KAMERA INTRO zurueck -> Cut 0 F280 clip=3 bild=149
+RE2 KAMERA INTRO frei (Zonenkamera an) Cut 0 F280 clip=3 bild=149
+WECHSEL zw=12 rt=2
+DREH rot=960 soll=3879 dlt=-1177 pos=(1822,-10767) ziel=(4450,-9850)
+DREH rot=576 soll=3879 dlt=-793 pos=(1822,-10767) ziel=(4450,-9850)
+DREH rot=336 soll=3887 dlt=-545 pos=(1781,-10741) ziel=(4450,-9850)
+DREH rot=144 soll=3897 dlt=-343 pos=(1705,-10714) ziel=(4450,-9850)
+DREH rot=4048 soll=3901 dlt=-147 pos=(1656,-10713) ziel=(4450,-9850)
+DREH rot=3901 soll=3903 dlt=2 pos=(1627,-10719) ziel=(4450,-9850)
+TICK ph=2 pos=(1625,-10718) y=-1200 dist=13776 mo=0 cd=0 rt=2 zw=12 ziel=(4450,-9850)
+DREH rot=3903 soll=3903 dlt=0 pos=(1625,-10718) ziel=(4450,-9850)
+DREH rot=3903 soll=3903 dlt=0 pos=(1649,-10708) ziel=(4450,-9850)
+DREH rot=3903 soll=3903 dlt=0 pos=(1706,-10688) ziel=(4450,-9850)
+DREH rot=3903 soll=3903 dlt=0 pos=(1795,-10658) ziel=(4450,-9850)
+DREH rot=3903 soll=3905 dlt=2 pos=(1915,-10619) ziel=(4450,-9850)
+DREH rot=3905 soll=3905 dlt=0 pos=(2052,-10575) ziel=(4450,-9850)
+TICK ph=2 pos=(2428,-10458) y=-1200 dist=14802 mo=0 cd=0 rt=2 zw=12 ziel=(4450,-9850)
+WECHSEL zw=2 rt=2
+DREH rot=3911 soll=657 dlt=842 pos=(3362,-10168) ziel=(4450,-11900)
+DREH rot=55 soll=713 dlt=658 pos=(3556,-10167) ziel=(4450,-11900)
+RE2 PUTZ Stoss 2 Seite 0 Cut 1 F362
+DREH rot=247 soll=721 dlt=474 pos=(3587,-10171) ziel=(4450,-11900)
+TICK ph=2 pos=(3565,-10158) y=-1200 dist=16508 mo=0 cd=0 rt=2 zw=2 ziel=(4450,-11900)
+DREH rot=439 soll=711 dlt=272 pos=(3534,-10134) ziel=(4450,-11900)
+DREH rot=631 soll=707 dlt=76 pos=(3505,-10103) ziel=(4450,-11900)
+DREH rot=707 soll=707 dlt=0 pos=(3488,-10072) ziel=(4450,-11900)
+DREH rot=707 soll=707 dlt=0 pos=(3479,-10057) ziel=(4450,-11900)
+DREH rot=707 soll=707 dlt=0 pos=(3479,-10057) ziel=(4450,-11900)
+DREH rot=707 soll=705 dlt=-2 pos=(3481,-10063) ziel=(4450,-11900)
+DREH rot=705 soll=707 dlt=2 pos=(3691,-10460) ziel=(4450,-11900)
+CROSS start=(4450,-11900) ende=(3350,-20700) frames=240 fenster=62..177
+TICK ph=7 pos=(4441,-11973) y=-1200 dist=15014 mo=0 cd=0 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=7 pos=(4304,-13073) y=-1200 dist=12202 mo=0 cd=0 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=7 pos=(4166,-14173) y=-1200 dist=10836 mo=0 cd=0 rt=2 zw=0 ziel=(4450,-11900)
+PEAK root=-1900 tiefster_bone=-2233 deck=-1800
+RE2 PUTZ Stoss 3 Seite 0 Cut 1 F474
+TICK ph=7 pos=(4029,-15273) y=-1900 dist=11216 mo=0 cd=0 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=7 pos=(3891,-16373) y=-1900 dist=10640 mo=0 cd=0 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=7 pos=(3754,-17473) y=-1900 dist=9604 mo=0 cd=0 rt=2 zw=0 ziel=(4450,-11900)
+RE2 PUTZ Stoss 4 Seite 0 Cut 0 F560
+TICK ph=7 pos=(3616,-18573) y=-1200 dist=6811 mo=0 cd=0 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=7 pos=(3479,-19673) y=-1200 dist=5815 mo=0 cd=0 rt=2 zw=0 ziel=(4450,-11900)
+RE2 DASH Planung: an (3355,-20663) yaw 1113 -> Start-Gier 1040 (Drehung 73), End-Gier 2064, Abw. zu Leon 483
+RE2 DASH Vordrehung yaw 1113 -> 1040 F634
+RE2 DASH start pos=(3355,-20663) yaw=1040
+TICK ph=12 pos=(3355,-20663) y=-1200 dist=6714 mo=2 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=12 pos=(3710,-21022) y=-1200 dist=6596 mo=2 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+RE2 PUTZ Stoss 5 Seite 0 Cut 0 F690
+TICK ph=12 pos=(3808,-21409) y=-1200 dist=6576 mo=2 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=12 pos=(3532,-22233) y=-1200 dist=4374 mo=2 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+RE2 PUTZ Stoss 6 Seite 0 Cut 1 F750
+TICK ph=12 pos=(3225,-22988) y=-1200 dist=4314 mo=2 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=12 pos=(3144,-23042) y=-1200 dist=5271 mo=3 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=12 pos=(3228,-23065) y=-1200 dist=5042 mo=3 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=12 pos=(3095,-23174) y=-1200 dist=5271 mo=3 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=12 pos=(2746,-24013) y=-1200 dist=3537 mo=3 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+TICK ph=12 pos=(1563,-24652) y=-1200 dist=3318 mo=3 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+RE2 DASH ende pos=(262,-24930) yaw=2064 wand_draussen_max=0 kopf_x_min=-2817
+TICK ph=2 pos=(262,-24930) y=-1200 dist=2048 mo=0 cd=89 rt=2 zw=0 ziel=(4450,-11900)
+WECHSEL zw=0 rt=0
+DREH rot=2064 soll=857 dlt=-1207 pos=(262,-24930) ziel=(383,-25400)
+BISS af=6 dist=1546 maul=1216 wand=0 hr=0
+BISS af=7 dist=1593 maul=1264 wand=0 hr=1
+BISS af=8 dist=1593 maul=1344 wand=0 hr=1
+BISS af=9 dist=1639 maul=1376 wand=0 hr=1
+BISS af=10 dist=1722 maul=1376 wand=0 hr=1
+BISS af=11 dist=1810 maul=1312 wand=0 hr=1
+BISS af=12 dist=1915 maul=1216 wand=0 hr=1
+BISS af=13 dist=2048 maul=1120 wand=0 hr=1
+BISS af=14 dist=2246 maul=1024 wand=0 hr=1
+BISS af=15 dist=2482 maul=944 wand=0 hr=1
+BISS af=16 dist=2780 maul=960 wand=0 hr=1
+BISS af=17 dist=3124 maul=1024 wand=0 hr=1
+BISS af=18 dist=3472 maul=1120 wand=0 hr=1
+BISS af=19 dist=3744 maul=1232 wand=0 hr=1
+BISS af=20 dist=3736 maul=1168 wand=0 hr=1
+BISS af=21 dist=3510 maul=928 wand=0 hr=1
+BISS af=22 dist=3444 maul=864 wand=0 hr=1
+BISS af=23 dist=3444 maul=864 wand=0 hr=1
+BISS af=24 dist=3444 maul=864 wand=0 hr=1
+BISS af=25 dist=3444 maul=864 wand=0 hr=1
+BISS af=26 dist=3444 maul=864 wand=0 hr=1
+BISS af=27 dist=3444 maul=864 wand=0 hr=1
+BISS af=28 dist=3444 maul=864 wand=0 hr=1
+TICK ph=3 pos=(199,-24945) y=-1200 dist=3444 mo=4 cd=88 rt=0 zw=0 ziel=(383,-25400)
+BISS af=29 dist=3444 maul=864 wand=0 hr=1
+BISS af=30 dist=3444 maul=864 wand=0 hr=1
+BISS af=31 dist=3444 maul=864 wand=0 hr=1
+BISS af=32 dist=3444 maul=864 wand=0 hr=1
+BISS af=33 dist=3444 maul=864 wand=0 hr=1
+BISS af=34 dist=3444 maul=864 wand=0 hr=1
+DREH rot=141 soll=37 dlt=-104 pos=(860,-25137) ziel=(5600,-25400)
+DREH rot=49 soll=67 dlt=18 pos=(1735,-25214) ziel=(3588,-25400)
+DREH rot=163 soll=71 dlt=-92 pos=(2039,-25255) ziel=(3374,-25400)
+DREH rot=69 soll=67 dlt=-2 pos=(2597,-25318) ziel=(3401,-25400)
+TICK ph=2 pos=(2817,-25340) y=-1200 dist=1453 mo=1 cd=72 rt=0 zw=0 ziel=(3401,-25400)
+RE2 PUTZ Stoss 7 Seite 0 Cut 1 F997
+DREH rot=41 soll=33 dlt=-8 pos=(3437,-25386) ziel=(3699,-25400)
+DREH rot=4049 soll=2107 dlt=-1942 pos=(3790,-25411) ziel=(3671,-25400)
+DREH rot=3665 soll=2243 dlt=-1422 pos=(3669,-25459) ziel=(3480,-25400)
+RE2 PUTZ Stoss 8 Seite 0 Cut 1 F1011
+DREH rot=3281 soll=2089 dlt=-1192 pos=(3669,-25459) ziel=(2722,-25400)
+DREH rot=2897 soll=2077 dlt=-820 pos=(3669,-25459) ziel=(2338,-25400)
+DREH rot=2657 soll=1961 dlt=-696 pos=(3511,-25216) ziel=(2155,-25400)
+DREH rot=2417 soll=1689 dlt=-728 pos=(3100,-24810) ziel=(2146,-25400)
+RE2 PUTZ Stoss 9 Seite 0 Cut 1 F1025
+TICK ph=2 pos=(2763,-24668) y=-1200 dist=1982 mo=1 cd=42 rt=0 zw=0 ziel=(2146,-25400)
+RE2 PUTZ Stoss 10 Seite 0 Cut 1 F1039
+BISS af=6 dist=1498 maul=1104 wand=0 hr=0
+BISS af=7 dist=2172 maul=784 wand=0 hr=1
+BISS af=8 dist=2952 maul=1520 wand=0 hr=1
+BISS af=9 dist=3840 maul=1936 wand=0 hr=1
+BISS af=10 dist=4664 maul=2464 wand=0 hr=1
+BISS af=11 dist=4884 maul=2544 wand=0 hr=1
+TICK ph=3 pos=(2087,-25200) y=-1200 dist=4884 mo=4 cd=24 rt=0 zw=0 ziel=(2645,-25400)
+BISS af=12 dist=4830 maul=2320 wand=0 hr=1
+BISS af=13 dist=4802 maul=2208 wand=0 hr=1
+BISS af=14 dist=4964 maul=2352 wand=0 hr=1
+BISS af=15 dist=5145 maul=2512 wand=0 hr=1
+BISS af=16 dist=5320 maul=2688 wand=0 hr=1
+BISS af=17 dist=5466 maul=2816 wand=0 hr=1
+BISS af=18 dist=5538 maul=2880 wand=0 hr=1
+BISS af=19 dist=5585 maul=2944 wand=0 hr=1
+BISS af=20 dist=5608 maul=2960 wand=0 hr=1
+BISS af=21 dist=5632 maul=2992 wand=0 hr=1
+BISS af=22 dist=5632 maul=3008 wand=0 hr=1
+BISS af=23 dist=5655 maul=3008 wand=0 hr=1
+BISS af=24 dist=5655 maul=3024 wand=0 hr=1
+BISS af=25 dist=5678 maul=3024 wand=0 hr=1
+BISS af=26 dist=5678 maul=3024 wand=0 hr=1
+BISS af=27 dist=5678 maul=3024 wand=0 hr=1
+BISS af=28 dist=5678 maul=3040 wand=0 hr=1
+BISS af=29 dist=5678 maul=3040 wand=0 hr=1
+BISS af=30 dist=5678 maul=3040 wand=0 hr=1
+BISS af=31 dist=5678 maul=3040 wand=0 hr=1
+BISS af=32 dist=5678 maul=3040 wand=0 hr=1
+BISS af=33 dist=5678 maul=3040 wand=0 hr=1
+BISS af=34 dist=5678 maul=3040 wand=0 hr=1
+TICK ph=3 pos=(3447,-23913) y=-1200 dist=5701 mo=4 cd=24 rt=0 zw=0 ziel=(2645,-25400)
+WECHSEL zw=7 rt=0
+DREH rot=3471 soll=3349 dlt=-122 pos=(3483,-23860) ziel=(5600,-19161)
+DREH rot=3337 soll=3337 dlt=0 pos=(3894,-23005) ziel=(5600,-19044)
+DREH rot=3343 soll=3343 dlt=0 pos=(4204,-22292) ziel=(5600,-19139)
+DREH rot=3343 soll=3343 dlt=0 pos=(4369,-21910) ziel=(5600,-19139)
+DREH rot=3343 soll=3349 dlt=6 pos=(4647,-21271) ziel=(5600,-19174)
+RE2 PUTZ Stoss 11 Seite 1 Cut 2 F1104
+DREH rot=3443 soll=3459 dlt=16 pos=(5008,-20581) ziel=(5600,-19698)
+DREH rot=3459 soll=3459 dlt=0 pos=(5231,-20248) ziel=(5600,-19698)
+DREH rot=3443 soll=3371 dlt=-72 pos=(5496,-19840) ziel=(5600,-19629)
+TICK ph=2 pos=(5615,-19619) y=-1200 dist=1247 mo=1 cd=0 rt=0 zw=7 ziel=(5600,-19629)
+RE2 PUTZ Stoss 12 Seite 1 Cut 2 F1118
+DREH rot=3155 soll=1271 dlt=-1884 pos=(5662,-19628) ziel=(5600,-19785)
+WECHSEL zw=11 rt=0
+DREH rot=2867 soll=1291 dlt=-1576 pos=(5685,-19758) ziel=(4450,-22600)
+DREH rot=2483 soll=1299 dlt=-1184 pos=(5705,-19798) ziel=(4450,-22600)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6214 Stufe 0 F1129
+DREH rot=2099 soll=1299 dlt=-800 pos=(5705,-19798) ziel=(4450,-22600)
+RE2 PUTZ Stoss 13 Seite 0 Cut 1 F1132
+DREH rot=1859 soll=1209 dlt=-650 pos=(5230,-19895) ziel=(4450,-22600)
+WECHSEL zw=0 rt=0
+DREH rot=1811 soll=759 dlt=-1052 pos=(5125,-19934) ziel=(5600,-21042)
+DREH rot=1475 soll=759 dlt=-716 pos=(5123,-19935) ziel=(5600,-21042)
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5885 Stufe 0 F1141
+DREH rot=1235 soll=349 dlt=-886 pos=(4822,-20578) ziel=(5600,-21042)
+TICK ph=2 pos=(4829,-20762) y=-1200 dist=1978 mo=1 cd=0 rt=0 zw=0 ziel=(5600,-21042)
+RE2 PUTZ Stoss 14 Seite 0 Cut 1 F1146
+DREH rot=899 soll=225 dlt=-674 pos=(4829,-20762) ziel=(5600,-21042)
+BISS af=6 dist=1588 maul=1280 wand=0 hr=0
+BISS af=7 dist=1578 maul=1120 wand=0 hr=1
+BISS af=8 dist=1578 maul=1056 wand=0 hr=1
+BISS af=9 dist=1572 maul=1024 wand=0 hr=1
+BISS af=10 dist=1551 maul=1056 wand=0 hr=1
+BISS af=11 dist=1546 maul=1056 wand=0 hr=1
+BISS af=12 dist=1551 maul=1056 wand=0 hr=1
+BISS af=13 dist=1578 maul=1024 wand=0 hr=1
+BISS af=14 dist=1619 maul=992 wand=0 hr=1
+BISS af=15 dist=1649 maul=960 wand=0 hr=1
+BISS af=16 dist=1678 maul=928 wand=0 hr=1
+BISS af=17 dist=1668 maul=944 wand=0 hr=1
+BISS af=18 dist=1664 maul=944 wand=0 hr=1
+BISS af=19 dist=1664 maul=944 wand=0 hr=1
+BISS af=20 dist=1659 maul=944 wand=0 hr=1
+BISS af=21 dist=1659 maul=944 wand=0 hr=1
+BISS af=22 dist=1654 maul=944 wand=0 hr=1
+BISS af=23 dist=1649 maul=960 wand=0 hr=1
+BISS af=24 dist=1649 maul=960 wand=0 hr=1
+TICK ph=3 pos=(5183,-21255) y=-1200 dist=1649 mo=4 cd=0 rt=0 zw=0 ziel=(5600,-21042)
+BISS af=25 dist=1644 maul=960 wand=0 hr=1
+BISS af=26 dist=1639 maul=960 wand=0 hr=1
+BISS af=27 dist=1639 maul=960 wand=0 hr=1
+BISS af=28 dist=1639 maul=960 wand=0 hr=1
+BISS af=29 dist=1634 maul=960 wand=0 hr=1
+BISS af=30 dist=1639 maul=960 wand=0 hr=1
+BISS af=31 dist=1634 maul=976 wand=0 hr=1
+BISS af=32 dist=1624 maul=976 wand=0 hr=1
+BISS af=33 dist=1624 maul=976 wand=0 hr=1
+BISS af=34 dist=1624 maul=976 wand=0 hr=1
+DREH rot=263 soll=647 dlt=384 pos=(5183,-21255) ziel=(5600,-21895)
+DREH rot=455 soll=1115 dlt=660 pos=(5716,-21782) ziel=(5600,-22636)
+DREH rot=647 soll=1097 dlt=450 pos=(5716,-22371) ziel=(5600,-23413)
+TICK ph=2 pos=(5740,-22751) y=-1200 dist=1453 mo=1 cd=0 rt=0 zw=0 ziel=(5600,-23713)
+DREH rot=839 soll=1097 dlt=258 pos=(5716,-22751) ziel=(5600,-23795)
+DREH rot=1031 soll=1095 dlt=64 pos=(5725,-23442) ziel=(5600,-24607)
+RE2 PUTZ Stoss 15 Seite 0 Cut 1 F1211
+DREH rot=1065 soll=1059 dlt=-6 pos=(5661,-24217) ziel=(5600,-25379)
+DREH rot=1057 soll=1057 dlt=0 pos=(5637,-24614) ziel=(5600,-25400)
+DREH rot=1055 soll=1049 dlt=-6 pos=(5611,-25096) ziel=(5600,-25400)
+RE2 PUTZ Stoss 16 Seite 0 Cut 1 F1225
+TICK ph=2 pos=(5673,-25445) y=-1200 dist=1487 mo=1 cd=0 rt=0 zw=0 ziel=(5600,-25400)
+RE2 PUTZ Stoss 17 Seite 0 Cut 1 F1239
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6203 Stufe 0 F1252
+RE2 PUTZ Stoss 18 Seite 0 Cut 1 F1253
+GIER-WACHE bis F1256: 300 Bildpaare CHASE/GUARD, max |Gier-Delta| 96 (ohne +1024), Spruenge > 0x60: 0, Befreiungen 0
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5649 Stufe 0 F1261
+TICK ph=3 pos=(5372,-25480) y=-1200 dist=1726 mo=4 cd=0 rt=0 zw=0 ziel=(5600,-25400)
+RE2 PUTZ Stoss 19 Seite 0 Cut 1 F1267
+BISS af=6 dist=1726 maul=2416 wand=0 hr=0
+BISS af=7 dist=1736 maul=2208 wand=0 hr=0
+BISS af=8 dist=1740 maul=2000 wand=0 hr=0
+BISS af=9 dist=1736 maul=1792 wand=0 hr=0
+BISS af=10 dist=1722 maul=1568 wand=0 hr=0
+BISS af=11 dist=1707 maul=1328 wand=0 hr=0
+BISS af=12 dist=1707 maul=1152 wand=0 hr=1
+BISS af=13 dist=1707 maul=1008 wand=0 hr=1
+BISS af=14 dist=1693 maul=928 wand=0 hr=1
+BISS af=15 dist=1717 maul=880 wand=0 hr=1
+BISS af=16 dist=1707 maul=896 wand=0 hr=1
+BISS af=17 dist=1707 maul=896 wand=0 hr=1
+BISS af=18 dist=1707 maul=896 wand=0 hr=1
+BISS af=19 dist=1707 maul=896 wand=0 hr=1
+BISS af=20 dist=1707 maul=896 wand=0 hr=1
+BISS af=21 dist=1707 maul=896 wand=0 hr=1
+BISS af=22 dist=1722 maul=880 wand=0 hr=1
+BISS af=23 dist=1664 maul=944 wand=0 hr=1
+BISS af=24 dist=1603 maul=992 wand=0 hr=1
+BISS af=25 dist=1541 maul=1056 wand=0 hr=1
+BISS af=26 dist=1498 maul=1104 wand=0 hr=1
+BISS af=27 dist=1498 maul=1104 wand=0 hr=1
+BISS af=28 dist=1498 maul=1104 wand=0 hr=1
+BISS af=29 dist=1498 maul=1104 wand=0 hr=1
+BISS af=30 dist=1498 maul=1104 wand=0 hr=1
+BISS af=31 dist=1498 maul=1104 wand=0 hr=1
+BISS af=32 dist=1492 maul=1104 wand=0 hr=1
+BISS af=33 dist=1492 maul=1104 wand=0 hr=1
+TICK ph=3 pos=(5359,-25516) y=-1200 dist=1492 mo=4 cd=0 rt=0 zw=0 ziel=(5600,-25400)
+BISS af=34 dist=1498 maul=1104 wand=0 hr=1
+RE2 PUTZ Stoss 20 Seite 0 Cut 1 F1322
+TICK ph=2 pos=(5668,-25270) y=-1200 dist=1476 mo=1 cd=0 rt=0 zw=0 ziel=(5600,-25400)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6134 Stufe 0 F1327
+RE2 PUTZ Stoss 21 Seite 0 Cut 1 F1336
+RE2 KANISTER Zielmodus 0 (Anschwimm-Sperre) laengs=5664 Stufe 0 F1336
+RE2 PUTZ Stoss 22 Seite 0 Cut 1 F1350
+TICK ph=2 pos=(5577,-25527) y=-1200 dist=1525 mo=1 cd=0 rt=0 zw=0 ziel=(5600,-25400)
+NOTFREI pos=(5577,-25527) ecke=1
+RE2 PUTZ Stoss 23 Seite 0 Cut 1 F1364
+RE2 PUTZ Stoss 24 Seite 0 Cut 1 F1378
+BISS af=6 dist=2745 maul=4688 wand=0 hr=0
+BISS af=7 dist=2792 maul=4560 wand=0 hr=0
+BISS af=8 dist=2827 maul=4400 wand=0 hr=0
+BISS af=9 dist=2862 maul=4224 wand=0 hr=0
+BISS af=10 dist=2896 maul=4032 wand=0 hr=0
+BISS af=11 dist=2918 maul=3808 wand=0 hr=0
+TICK ph=3 pos=(5777,-23197) y=-1200 dist=2918 mo=4 cd=0 rt=0 zw=0 ziel=(4450,-22600)
+BISS af=12 dist=2941 maul=3568 wand=0 hr=0
+BISS af=13 dist=2952 maul=3312 wand=0 hr=0
+BISS af=14 dist=2952 maul=3040 wand=0 hr=0
+BISS af=15 dist=2941 maul=2736 wand=0 hr=0
+BISS af=16 dist=2930 maul=2416 wand=0 hr=0
+BISS af=17 dist=2918 maul=2096 wand=0 hr=0
+BISS af=18 dist=2884 maul=1760 wand=0 hr=0
+BISS af=19 dist=2862 maul=1392 wand=0 hr=0
+BISS af=20 dist=3124 maul=1296 wand=0 hr=1
+BISS af=21 dist=3396 maul=1248 wand=0 hr=1
+BISS af=22 dist=3396 maul=1008 wand=0 hr=1
+BISS af=23 dist=3396 maul=848 wand=0 hr=1
+BISS af=24 dist=3396 maul=816 wand=0 hr=1
+BISS af=25 dist=3396 maul=816 wand=0 hr=1
+BISS af=26 dist=3396 maul=816 wand=0 hr=1
+BISS af=27 dist=3396 maul=816 wand=0 hr=1
+BISS af=28 dist=3396 maul=816 wand=0 hr=1
+BISS af=29 dist=3396 maul=816 wand=0 hr=1
+BISS af=30 dist=3396 maul=816 wand=0 hr=1
+BISS af=31 dist=3396 maul=816 wand=0 hr=1
+BISS af=32 dist=3396 maul=816 wand=0 hr=1
+BISS af=33 dist=3396 maul=816 wand=0 hr=1
+BISS af=34 dist=3396 maul=816 wand=0 hr=1
+TICK ph=3 pos=(5716,-23284) y=-1200 dist=3396 mo=4 cd=0 rt=0 zw=0 ziel=(4450,-22600)
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=5968 Stufe 0 F1427
+RE2 PUTZ Stoss 25 Seite 0 Cut 1 F1434
+RE2 KANISTER Stufe 1 laengs=5928 quer=1040 sub 2 -> 1 F1435
+TICK ph=2 pos=(4418,-23430) y=-1200 dist=3857 mo=0 cd=0 rt=0 zw=0 ziel=(4450,-22600)
+RE2 KANISTER angehaengt lokal=(3995,-80,2783) F1447
+RE2 KANISTER getragen (Stufe 7)
+TICK ph=2 pos=(4461,-23295) y=-1200 dist=3924 mo=1 cd=0 rt=0 zw=0 ziel=(5600,-25400)
+RE2 PUTZ Stoss 26 Seite 0 Cut 1 F1490
+BISS af=6 dist=2217 maul=1040 wand=0 hr=0

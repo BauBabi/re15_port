@@ -1,0 +1,231 @@
+RE2 KAMERA SZENE "gatorszene Durchbruch"
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 0 kopf_bild=(430,316) draussen massstab=3541 >grenze frontal=1834 |f-soll|=2258
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 1 kopf_bild=(155,131) massstab=816 frontal=4010 |f-soll|=82
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 2 kopf_bild=(122,246) draussen massstab=2315 >grenze frontal=2081 |f-soll|=2011
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 3 kopf_bild=(196,125) massstab=568 frontal=-2220 |f-soll|=6312
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 4 kopf_bild=(295,116) massstab=566 frontal=7 |f-soll|=4085
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 5 kopf_bild=(-279,157) draussen massstab=1305 frontal=-2275 |f-soll|=6367
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 6 kopf_bild=(76,121) massstab=512 frontal=7 |f-soll|=4085
+RE2 KAMERA-KANDIDAT DURCHBRUCH stufe=2 Cut 7 kopf_bild=(506,198) draussen massstab=1619 frontal=4003 |f-soll|=89
+RE2 KAMERA SZENE DURCHBRUCH RE2-Cut 10 -> Cut 1 F0 clip=6 bild=0 frontal=4010 soll=4092 massstab=816 re2_m=1161 grenze=1892
+RE2 AUFTAUCHEN F0 pos=(4968,-20757) yaw=1680 phase=1 clip=6 bild=1 r=1466
+RE2 KAMERA SZENE "gatorszene Fressen"
+RE2 KAMERA-KANDIDAT FINISHER stufe=0 Cut 0 kopf_bild=(306,151) massstab=2792 >grenze frontal=207 |f-soll|=3887
+RE2 KAMERA-KANDIDAT FINISHER stufe=0 Cut 1 kopf_bild=(154,105) massstab=983 frontal=4005 |f-soll|=89
+RE2 KAMERA-KANDIDAT FINISHER stufe=0 Cut 2 kopf_bild=(11,179) -Kiefer -Opfer massstab=3108 >grenze frontal=351 |f-soll|=3743
+RE2 KAMERA-KANDIDAT FINISHER stufe=0 Cut 3 kopf_bild=(216,104) massstab=569 frontal=-2527 |f-soll|=6621
+RE2 KAMERA-KANDIDAT FINISHER stufe=0 Cut 4 kopf_bild=(323,96) draussen -Kiefer -Opfer massstab=623 frontal=-326 |f-soll|=4420
+RE2 KAMERA-KANDIDAT FINISHER stufe=0 Cut 5 kopf_bild=(-218,100) draussen -Kiefer -Opfer massstab=1132 frontal=-2579 |f-soll|=6673
+RE2 KAMERA-KANDIDAT FINISHER stufe=0 Cut 6 kopf_bild=(93,102) massstab=513 frontal=-326 |f-soll|=4420
+RE2 KAMERA-KANDIDAT FINISHER stufe=0 Cut 7 kopf_bild=(521,145) draussen -Kiefer -Opfer massstab=1977 >grenze frontal=4000 |f-soll|=94
+RE2 KAMERA SZENE FINISHER RE2-Cut 7 -> Cut 1 F0 clip=4 bild=0 frontal=4005 soll=4094 massstab=983 re2_m=1354 grenze=1892
+RE2 PUTZ Stoss 1 Seite 0 Cut 1 F0
+RE2 KAMERA SZENE "gatorszene" Ende
+RE2 KAMERA SZENE zurueck -> Cut 0 F0 clip=-1 bild=-1
+RE2 KAMERA SZENE frei (Zonenkamera an) Cut 0 F0 clip=-1 bild=-1
+RE2 KANISTER gesetzt (-2547,-1200,-23711)
+RE2 KANISTER Stufe 1 laengs=5862 quer=0 sub 1 -> 1 F0
+WECHSEL zw=0 rt=0
+DREH rot=1843 soll=1835 dlt=-8 pos=(3033,-21904) ziel=(-7300,-25400)
+RE2 KANISTER angehaengt lokal=(4367,-160,-121) F0
+DREH rot=1843 soll=1835 dlt=-8 pos=(3033,-21904) ziel=(-7300,-25400)
+DREH rot=1843 soll=1835 dlt=-8 pos=(3033,-21904) ziel=(-7300,-25400)
+DREH rot=1843 soll=1835 dlt=-8 pos=(3033,-21904) ziel=(-7300,-25400)
+DREH rot=1843 soll=1835 dlt=-8 pos=(3033,-21904) ziel=(-7300,-25400)
+TICK ph=2 pos=(3018,-21908) y=-1200 dist=11808 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+DREH rot=1843 soll=1835 dlt=-8 pos=(3033,-21904) ziel=(-7300,-25400)
+DREH rot=1843 soll=1835 dlt=-8 pos=(3033,-21904) ziel=(-7300,-25400)
+RE2 KANISTER getragen (Stufe 7)
+TICK ph=5 pos=(-4885,-9204) y=-1200 dist=10136 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-9850) rot=37
+GUARD dist=9714 guard_t=0 pitch=0 arc=0 mo=0 af=29 pos=(-4452,-9353)
+TICK ph=5 pos=(-3512,-9393) y=-1200 dist=9042 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-9850) rot=39
+GUARD dist=8748 guard_t=0 pitch=0 arc=0 mo=0 af=59 pos=(-3042,-9413)
+TICK ph=5 pos=(-2102,-9453) y=-1200 dist=8175 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+RE2 PUTZ Stoss 2 Seite 1 Cut 2 F0
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-9850) rot=39
+GUARD dist=7898 guard_t=0 pitch=0 arc=0 mo=0 af=89 pos=(-1632,-9473)
+TICK ph=5 pos=(-692,-9531) y=-1200 dist=7419 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-9850) rot=41
+GUARD dist=7204 guard_t=0 pitch=0 arc=0 mo=0 af=119 pos=(-222,-9560)
+TICK ph=5 pos=(718,-9618) y=-1200 dist=6869 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-9850) rot=41
+GUARD dist=6753 guard_t=0 pitch=0 arc=0 mo=0 af=149 pos=(1188,-9647)
+RE2 PUTZ Stoss 3 Seite 1 Cut 2 F0
+TICK ph=5 pos=(2128,-9706) y=-1200 dist=6596 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-9850) rot=41
+GUARD dist=6556 guard_t=0 pitch=0 arc=0 mo=0 af=179 pos=(2598,-9735)
+TICK ph=5 pos=(3538,-9793) y=-1200 dist=6596 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=-1 ziel=(5950,-12600) not=0
+GPAT ziel=(5950,-12600) rot=425
+GUARD dist=6616 guard_t=0 pitch=0 arc=0 mo=0 af=209 pos=(3984,-9915)
+TICK ph=5 pos=(4554,-10667) y=-1200 dist=6079 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=-1 ziel=(5950,-12600) not=0
+GPAT ziel=(5950,-12600) rot=617
+GUARD dist=5837 guard_t=0 pitch=0 arc=0 mo=0 af=239 pos=(4830,-11047)
+TICK ph=5 pos=(5378,-11807) y=-1200 dist=5442 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GIER-WACHE bis F0: 300 Bildpaare CHASE/GUARD, max |Gier-Delta| 64 (ohne +1024), Spruenge > 0x60: 0, Befreiungen 0
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=-1 ziel=(5950,-12600) not=0
+GPAT ziel=(5950,-12600) rot=617
+GUARD dist=5296 guard_t=0 pitch=0 arc=0 mo=0 af=269 pos=(5625,-12149)
+TICK ph=5 pos=(5625,-12149) y=-1200 dist=5296 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+GZIEL kante=(4450,-11900) zg=1 rampe=1
+GWEG hop=-1 ziel=(4450,-11900) not=0
+GPAT ziel=(4450,-11900) rot=745
+GUARD dist=5296 guard_t=0 pitch=0 arc=0 mo=0 af=299 pos=(5625,-12149)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5625 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5595 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5562 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5525 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5486 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5444 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5400 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5354 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5307 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5259 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 0 (t -1)
+TICK ph=5 pos=(5211,-12355) y=-1200 dist=4910 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+QUERPRUEF F0 cx0=4450 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 62)
+QUERPRUEF F0 cx0=5211 ende=3350/2550 cz0=-11900 cz1=-20700 n=240 fenster=62..177 figur=(2318,-16300) -> 1 (t 129)
+CROSS start=(5211,-11900) ende=(3350,-20700) frames=240 fenster=62..177
+TICK ph=7 pos=(4987,-12963) y=-1200 dist=4283 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=7 pos=(4754,-14063) y=-1200 dist=3337 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+PEAK root=-1900 tiefster_bone=-2233 deck=-1800
+RE2 PUTZ Stoss 4 Seite 1 Cut 2 F0
+TICK ph=7 pos=(4225,-15163) y=-1900 dist=2246 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=7 pos=(3892,-16263) y=-1900 dist=1583 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+RAMMEN F0 gator=(3781,-1900,-16630) spieler=(2318,-1800,-16300) hp=100
+TICK ph=7 pos=(3559,-17363) y=-1900 dist=1619 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+RE2 PUTZ Stoss 5 Seite 1 Cut 2 F0
+TICK ph=7 pos=(3824,-18463) y=-1200 dist=2598 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=7 pos=(3591,-19563) y=-1200 dist=3463 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=7 pos=(3358,-20663) y=-1200 dist=4434 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=1 ziel=(4450,-22600) not=0
+GPAT ziel=(4450,-11900) rot=527
+GUARD dist=4463 guard_t=0 pitch=0 arc=0 mo=0 af=9 pos=(3358,-20663)
+TICK ph=5 pos=(3659,-20443) y=-1200 dist=4374 mo=0 cd=271 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=-1 ziel=(5950,-20000) not=0
+GPAT ziel=(4450,-11900) rot=3131
+GUARD dist=3899 guard_t=8 pitch=-102 arc=-64 mo=4 af=7 pos=(3758,-19880)
+TICK ph=5 pos=(3830,-19536) y=-1200 dist=3434 mo=4 cd=241 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=1 ziel=(4450,-22600) not=0
+GPAT ziel=(4450,-11900) rot=3123
+GUARD dist=3453 guard_t=24 pitch=-350 arc=-220 mo=4 af=37 pos=(3867,-19536)
+TICK ph=5 pos=(3921,-19536) y=-1200 dist=3647 mo=0 cd=211 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=1 ziel=(4450,-22600) not=0
+GPAT ziel=(4450,-22600) rot=3179
+GUARD dist=3665 guard_t=24 pitch=-350 arc=-220 mo=0 af=24 pos=(3954,-19584)
+TICK ph=5 pos=(4044,-19612) y=-1200 dist=3692 mo=0 cd=181 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=-1 ziel=(5950,-20000) not=0
+GPAT ziel=(4450,-22600) rot=991
+GUARD dist=4222 guard_t=23 pitch=-350 arc=-220 mo=0 af=54 pos=(4332,-20063)
+TICK ph=5 pos=(4368,-20909) y=-1200 dist=4990 mo=0 cd=151 rt=0 zw=0 ziel=(-7300,-25400)
+RE2 PUTZ Stoss 6 Seite 1 Cut 2 F0
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=-1 ziel=(5950,-20000) not=0
+GPAT ziel=(4450,-22600) rot=989
+GUARD dist=5514 guard_t=0 pitch=0 arc=0 mo=0 af=84 pos=(4392,-21473)
+TICK ph=5 pos=(4408,-21849) y=-1200 dist=5926 mo=0 cd=121 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=-1 ziel=(5950,-20000) not=0
+GPAT ziel=(5950,-20000) rot=3673
+GUARD dist=6014 guard_t=0 pitch=0 arc=0 mo=0 af=114 pos=(4854,-21750)
+TICK ph=5 pos=(5323,-21027) y=-1200 dist=5608 mo=0 cd=91 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=-1 ziel=(5950,-20000) not=0
+GPAT ziel=(5950,-20000) rot=3431
+GUARD dist=5369 guard_t=0 pitch=0 arc=0 mo=0 af=144 pos=(5623,-20535)
+TICK ph=5 pos=(5648,-20494) y=-1200 dist=5345 mo=0 cd=61 rt=0 zw=0 ziel=(-7300,-25400)
+GIER-WACHE bis F0: 600 Bildpaare CHASE/GUARD, max |Gier-Delta| 64 (ohne +1024), Spruenge > 0x60: 0, Befreiungen 0
+RE2 PUTZ Stoss 7 Seite 1 Cut 2 F0
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=-1 ziel=(5950,-20000) not=0
+GPAT ziel=(5950,-20000) rot=3431
+GUARD dist=5345 guard_t=0 pitch=0 arc=0 mo=0 af=174 pos=(5648,-20494)
+TICK ph=5 pos=(5648,-20494) y=-1200 dist=5345 mo=0 cd=31 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-20000) zg=0 rampe=1
+GWEG hop=-1 ziel=(4450,-20000) not=0
+GPAT ziel=(4450,-20000) rot=2983
+GUARD dist=5296 guard_t=0 pitch=0 arc=0 mo=0 af=204 pos=(5639,-20398)
+TICK ph=5 pos=(5013,-19993) y=-1200 dist=4550 mo=0 cd=1 rt=0 zw=0 ziel=(-7300,-25400)
+CROSS start=(5013,-20700) ende=(3350,-11900) frames=240 fenster=62..177
+TICK ph=7 pos=(4813,-19637) y=-1200 dist=4190 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=7 pos=(4605,-18537) y=-1200 dist=3228 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+RE2 PUTZ Stoss 8 Seite 1 Cut 2 F0
+TICK ph=7 pos=(4100,-17437) y=-1900 dist=2141 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+RAMMEN F0 gator=(3813,-1900,-16410) spieler=(2318,-1800,-16300) hp=100
+TICK ph=7 pos=(3792,-16337) y=-1900 dist=1481 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=7 pos=(3484,-15237) y=-1900 dist=1557 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+RE2 PUTZ Stoss 9 Seite 1 Cut 2 F0
+TICK ph=7 pos=(3773,-14137) y=-1200 dist=2572 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=7 pos=(3565,-13037) y=-1200 dist=3453 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+TICK ph=7 pos=(3357,-11937) y=-1200 dist=4434 mo=0 cd=0 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-20000) rot=2181
+GUARD dist=4463 guard_t=0 pitch=0 arc=0 mo=0 af=11 pos=(3357,-11937)
+TICK ph=5 pos=(3309,-12278) y=-1200 dist=4159 mo=4 cd=271 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-20000) rot=925
+GUARD dist=3453 guard_t=15 pitch=-204 arc=-128 mo=4 af=14 pos=(3407,-12937)
+TICK ph=5 pos=(3506,-13063) y=-1200 dist=3347 mo=4 cd=241 rt=0 zw=0 ziel=(-7300,-25400)
+GZIEL kante=(4450,-12600) zg=1 rampe=1
+GWEG hop=2 ziel=(4450,-9850) not=0
+GPAT ziel=(4450,-20000) rot=941
+GUARD dist=3444 guard_t=24 pitch=-350 arc=-220 mo=0 af=1 pos=(3590,-13063)
+TICK ph=5 pos=(3670,-13063) y=-1200 dist=3547 mo=0 cd=211 rt=0 zw=0 ziel=(-7300,-25400)
