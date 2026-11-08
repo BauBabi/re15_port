@@ -891,3 +891,339 @@ GRUEN: G0, H1, H1b, H2, P1, D1 (ortsgenau), S1, F1t (dE 5,84), F3t, A2-A7, A9-A1
 3. **Krallen-Posterisierung (P2 +16/+21, B13, B16):** Abwaegung Farbe (Sicht) gegen Posterisierung; Pruefer-Entscheid.
 4. **Hand 18 mauve** (Sicht-Befund klein) gegen K15: mit G4-Zeilen auf den Bild-2-Flaechen wird K15 ROT.
 5. Messblatt 7.1 (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer.
+
+# Versuch 3 Runde 4 (weniger Rot) (Bauer, 2026-11-07 Abend)
+
+Auftrag, Nutzer 2026-11-07 ~17:10 (woertlich, bindend): "bist du noch an der Verbesserung von k5c ran, und entfernst die übertriebenen roten
+feuerrillen wieder, und stellst es wieder nach vorlage um?" Ziele und Riegel: `MESSBLATT_FARBE_V3_NACHTRAG_ROT.md` (RV1-RV5).
+Runde-3-Stand: `farbe/K5c_farbe_v3r3/`, `farbe/v3r3/`. Spiel-Asset `BAHNSTEIG_FORM`, Pins und `re15_port` unveraendert; K4 bleibt fuer v0.8.30.
+Such- und Pruefskripte: `farbe_lesung/V3R4_bau/lauf1/` (verworfener Lauf 1) und `lauf2/` (Endstand).
+
+## V3R4.0 Ergebnis
+
+- **Variante:** `farbe/K5c_farbe_v3/` (FORM.EMD sha256 07d679a5..., FORM.TIM 51282806...), Kopien `farbe/K5C_FARBE_V3.EMD/.TIM`.
+  Geometrie, Knochen und Clips wie Runde 3 (G0 GRUEN). 17 CLUT-Zeilen (0-2 G4 bytegleich, 6-8 Leuchtstellen, 11 Gruppenzeilen).
+- **Feuerrillen entfernt:** Die G4-Adern liegen jetzt unter der Haut, nicht darueber. Neuer Riegel **RV6** (Texel, Zeilen-Atlas, Ader gegen die
+  Haut im Umkreis 3 Texel): alle 8 Regionen dL\* -2,3..-7,7 und da\* -0,4..-3,6. Runde 3: dL\* +7,6..+11,9, da\* bis +30,5 (alle verletzt).
+- **Rot nach der Vorlage:** `riegel_rot.py` am gebauten Stand **45/45** bindende Zeilen GRUEN (3 Saaten; Runde 3 21/45),
+  `farbe/riegel_rot_K5c_farbe_v3.txt`. Beispiele (Vorlage | Runde 3 | Runde 4):
+  - Bild 1 Schwanz Rot eng 23,5 | 43,5 | 23,5 %, groesste Rotflaeche 6,0 | 22,9 | 6,7 %.
+  - Bild 1 Figur Farbton -15,8 | -0,2 | -22,4 Grad; groesste Rotflaeche 2,3 | 10,6 | 2,6 %; Vorderglied Rot 2,4 | 12,3 | 3,7 %.
+  - Bild 2 Ruecken 53,6 | 71,4 | 58,5 %, Farbton -5,3 | 30,6 | -8,9 Grad, dL -7,4 | +1,8 | -1,2.
+  - Bild 2 Hals 45,1 | 87,1 | 26,4 %, Farbton 11,0 | 30,7 | 18,6 Grad, dL -3,9 | +0,8 | -1,9.
+  - Bild 2 Figur Farbton 22,8 | 29,7 | 24,6 Grad, dL -2,5 | +3,5 | -0,6.
+- **Baufehler A behoben:** F1-Fleischtexel mit rohem G4-Blutrot Runde 3 11 von 162, jetzt 0 (`V3R4_bau/lauf2/baufehler_a.py`).
+- **Gesamtriegel** `generator/riegel_farbe_v3.py`: **76 von 93 Zeilen GRUEN, Exit 1** (`farbe/riegel_K5c_farbe_v3.txt`). Gegenproben wie verlangt
+  ("falsch ausgefallen: keine"); Gegenprobe Runde 3: RV1-RV4 24 von 45 ROT, RV6 ROT, wie verlangt.
+- **Spiel:** 10 von 10 Bildern (`farbe/spiel_lauf_v3.log`, eigene exe-Kopie, gdigrab), "32 Meshes, 32 Knochen, 3 Clips" (17 CLUT-Zeilen laden).
+- **Tests:** `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: 11 von 11 gruen, 96,8 s (`farbe_lesung/V3R4_bau/ctest.log`).
+
+## V3R4.1 Verfahren und warum Lauf 1 verworfen ist
+
+- **Gruppenzeilen:** Jede Koerperflaeche liest eine aus der G4-Zeile ihrer Seite abgeleitete Zeile ihrer Gruppe (Schwanz, Hinterbeine, Rumpf Ruecken,
+  Rumpf Flanke, Vorderbein r B1, Brust, Hals Bauch, Kopf, Vorderbeine; Region je Flaeche wie Nachtrag 1.2). Je Eintrag eine neue Farbe, Index und
+  Aderzeichnung bleiben (keine Neuquantisierung). Augen lesen G4-Zeile 0 (E24 dunkel, A9 L\* 7,3), Maulinneres bleibt auf den G4-Zeilen.
+- **Haut:** L\* x a (a = 1 fuer die Bild-1-Gruppen: dunkler Grundton), Farbton h, Buntheit C x s(L) x ((1-g) + g x C\*(G4)/C75),
+  s(L) = 1 + beta (Lm - L)/Lm (beta > 0: Rot im Dunkeln, Vorlage Bild 2 dL -2,5..-7,4); weich an den sRGB-Rand: Cmax x tanh(Wunsch/Cmax).
+- **Adern:** rangtreu linear auf [Haut-L\* p10, q x Haut-Median] gestaucht, Buntheit kappa x mittlere Haut-Buntheit; q, kappa <= 1 nach dem Nutzersatz.
+- **Lauf 1 (Seitenzweig `r41/form_rot_r4_abbruch`, nicht verwendet):** RV 45/45, aber
+  1. nur durch einen Fehler in `rgb_aus_lab`: OpenCV kappt negative Kanaele still, darum wurden zu bunte dunkle Eintraege heller
+     (Wunsch L\* 12 / C 60 -> RGB (95,0,0), L\* 17,5). Mit korrekter Gamut-Grenze fiel derselbe Parametersatz auf 29/45.
+  2. Die Deckel min(L\*, q x Hautmedian) und min(C, kappa x C_haut) legten alle helleren Adern auf eine Farbe (Vorderbeine: 40 Ader-Eintraege
+     auf Grau (32,32,32)); beta 5 machte die Haut zweistufig (reinrot (90,0,0) neben grau). P1 dL0 61,5 %.
+  Lauf 2 nutzt `r4_cmax` (Bisektion am ungekappten linearen sRGB) nur in den Gruppenzeilen; die Sonderzeilen 6-8 bleiben bytegleich Runde 3
+  bis auf Baufehler A.
+- **Parameter** (`generator/v3_daten/r4_par.json`, Quelle dort): Koordinatensuche `lauf2/such5.py` gegen RV1-RV4 (Saat 15, 12 % Reserve) plus
+  Ader <= Ring, danach Handscan Hals Bauch mit 3 Saaten (`x1-x3`, `y1-y3`, `z1-z3`; Hals RV4 31,8 -> 13,5 %, RV3 -1,55 -> -1,86).
+
+| Gruppe | h Grad | C | beta | g | a | q | kappa |
+|---|---|---|---|---|---|---|---|
+| Schwanz | -26,24 | 7,18 | -1,00 | 0,80 | 1,00 | 0,70 | 0,61 |
+| Hinterbeine | -27,60 | 18,26 | 2,82 | 0,76 | 1,00 | 0,74 | 0,92 |
+| Vorderbein r B1 | -29,00 | 6,72 | -0,30 | 0,94 | 1,00 | 0,80 | 1,00 |
+| Vorderbeine | 39,85 | 28,68 | 1,50 | 0,61 | 1,44 | 0,70 | 0,67 |
+| Rumpf Ruecken | 33,00 | 12,19 | 3,00 | 1,00 | 1,00 | 0,64 | 0,61 |
+| Rumpf Flanke | -42,78 | 48,60 | 2,09 | 0,60 | 1,00 | 0,74 | 0,61 |
+| Brust | -32,50 | 47,92 | 1,71 | 0,86 | 1,52 | 0,84 | 0,61 |
+| Hals Bauch | -27,65 | 19,27 | 3,00 | 0,90 | 1,60 | 0,76 | 0,67 |
+| Kopf | -9,00 | 28,94 | 2,89 | 0,75 | 1,30 | 0,90 | 0,60 |
+
+Grenzen: a = 1 Bild-1-Gruppen (Messblatt V3 0.1, Figur Bild 1 63,6-65,3 % dunkel), a 1..2 Bild-2-Gruppen (Nutzer: "Haut nach Vorlage"; K6),
+q und kappa <= 1 (Nutzer), uebrige Suchgrenzen in `r4_par.json`. Das sind Eichwerte gegen die Vorlage (RV-Fenster), keine Disc-Konstanten.
+
+## V3R4.2 Riegel-Paket (Nachtrag 4.1 umgesetzt)
+
+- NEU: RV1-RV5 (aus `riegel_rot.py`, eigener Prozess), RV6 (Nutzersatz, Texelraum).
+- K4, K4b, K12 -> Info (durch RV1 ersetzt), K11 -> Info (RV2), B2 entfaellt (RV4).
+- H2: Basiszeile aus `bau.json`; in den Gruppenzeilen Rangfolge je Klasse (Ader unter Adern, Haut unter Haut), weil die Adern nach dem
+  Nutzerauftrag unter die Haut gehen.
+- `--gegenprobe-r3`: RV1-RV4 und RV6 muessen an Runde 3 ROT sein (sind es).
+
+## V3R4.3 Rote Riegel und warum (17)
+
+- **Neu ROT gegen Runde 3:**
+  - **P1** (dL0 65,8 % bei <= 30, Farben 191 < 200): P1 zaehlt Texel mit a\* > 15. Das waren in Runde 3 die hellen G4-Adern; jetzt ist es die
+    dunkelrote Haut. Die G4-Haut ist in grossen Flaechen einfarbig gemalt (z. B. Zeile 10 Rumpf Flanke: Eintrag 151 auf 11 726 Texeln), und
+    Eintrag -> Farbe bleibt eins zu eins. Die Flaechen werden durch das Rot erst Teil der P1-Menge. Rot auf diesen Flaechen verlangt die Vorlage in
+    Bild 2 (Ruecken 53,6 % Rot). Ein P1 im alten Sinn (Posterisierung des Fleischs) gibt es ohne helles Fleisch nicht mehr; Pruefer-Entscheid.
+  - **H2** (Vertauschungen je Klasse, Zeilen 3/4/12-16): kommen von den Rampen-Eintraegen (0 < w < 1, Mischung Haut/Ader) und der
+    15-Bit-Rundung dunkler bunter Farben.
+  - **A4** (Atlas-Fleischrot-Farbton 5,0 Grad; Runde 3 21,0): Familienfenster (G4/EM30/G5), gegen RV2 (Vorlage mauve-karmin). Der Nachtrag
+    fuehrt A4 als unveraendert, weil es in Runde 3 gruen war; der Konflikt mit RV2 ist Pruefer-Entscheid.
+  - **A7** (HF_rest Kralle 0,349; Runde 3 0,096) und **P2 Klauen** (+39,8 / +50,4): Die Krallen liegen in der Gruppe Vorderbeine; ihre dunkelrote
+    Wurzelzone (G4-Adern) ist jetzt gestaucht und dunkel, die hellen Spitzen (L\* >= 52,4) bleiben G4. Mehr Kontrast, weniger Stufen.
+- **Wie Runde 3 ROT:** F2t (Band, Messblatt-Pruefer), P2 Brust/Hals/Kopf, B10, B12, B13, B14, B16, B17 (Binnenzeichnung duenner als die Familie;
+  ohne helle Adern noch duenner), K3 (Hinterbein/Ruecken dE 6,8-8,2, blaeuliche Haut ohne G4-Hautzeile), K6 (7,3; Runde 3 6,8), K7 (9,9),
+  K1v2 / K2v2 (6,4 / 5,8; Mangel in b\*, Nachtrag 4.1: nicht mit Rot zu erfuellen).
+- **Neu GRUEN gegen Runde 3:** RV1-RV4, RV6, A1 (11,5), A8, A12 (5,57), B9 (8,3), B11, N1, K9, K14 (Rotklasse 59,0 bei >= 58,8, knapp).
+
+## V3R4.4 Tafeln (`farbe/`, Runde 3 in `farbe/v3r3/`)
+
+- 01/02 Szene, 03 Familie, 04 Atlas, 05 rundum, 06 Kopf nah, 07 Spiel, 08 Binnenzeichnung wie Runde 3, roh, gleiches Licht.
+- **09_rot_vorlage** neu: je Bild und Region Vorlage | Runde 3 | Runde 4 unter Szenenlicht + Videofilter (Saat 15), gleicher Ausschnitt, Messregion
+  als Linie, Unterschrift RV1 Rot eng und RV2 Farbton (Mittel 3 Saaten).
+- Gesehen (Bauer, keine Abnahme): In Bild 2 keine hellen roten Linien mehr (Runde 3 deutlich), der Koerper dunkel karmin. Unter weissem Licht (05)
+  ist der Rumpf dunkel violett-mauve, die Vorderbeine braunrot, die Adern als dunkle Linien. Die Flanke wirkt unter weissem Licht violetter als
+  "mauve-rosa"; der Farbton ist gegen die Bild-1-Kette geeicht (RV2 Flanke -21,4, Fenster -33,6..-5,4).
+
+## V3R4.5 Offen
+
+1. **P1 / A4** gegen die Nachtragsziele (V3R4.3): Pruefer-Entscheid, ob P1 und A4 fuer eine Variante ohne helles Fleisch gelten.
+2. **Krallen** (A7, P2): eigene Zeile mit der Runde-3-Farbe waere moeglich, aendert aber RV Bild 2 Vorderbeine (Klauen-Feuerschein 36,6 Grad).
+3. **17 CLUT-Zeilen** = 4352 Texel hohe Port-Textur (render_pc.c: je Zeile eine Kopie). Fuer ein Spiel-Asset auf GLES2-Geraeten (4096) offen.
+4. Messblatt V3 7.1 (Gesicht oder Becken in Bild 1) bleibt eine Rueckfrage an den Nutzer; die Leuchtstellen sind wie Runde 3.
+
+# Versuch 3 Runde 5 (Krallen) (Bauer, 2026-11-07 Abend)
+
+Auftrag (Orchestrator nach den Pruefberichten der Runde 4, letzte Runde vor der Vorlage beim Nutzer): NUR die Vorderkrallen. Runde 4 hatte sie
+gesprenkelt (Sicht-Pruefer: linke Klaue 1099 px / 83 Komponenten gegen Runde 3 426 / 53; Zahlen-Pruefer: A7 Kralle 0,349, P2 Klauen +39,8 / +50,4).
+Ziel: Runde-3-Klauenfarbe (dunkelrote Klaue, khaki Spitze, durchgehender Verlauf), alles andere bytegleich Runde 4.
+Runde-4-Stand: `farbe/K5c_farbe_v3r4/`, `farbe/v3r4/`. Skripte und Messungen: `farbe_lesung/V3R5_skripte/`.
+
+## V3R5.0 Ergebnis
+
+- **Variante:** `farbe/K5c_farbe_v3/` = `farbe/K5C_FARBE_V3.EMD/.TIM` (FORM.EMD sha256 090e0b80..., FORM.TIM 51282806... = **bytegleich Runde 4**).
+- **Aenderungsumfang (neuer Riegel AE1, GRUEN):** EMD gegen Runde 4 an 504 Bytes verschieden = das CLUT-Feld der 252 Krallenflaechen
+  (Meshes 14/15/28/30, 19/20/29/31) von Zeile 16 (Gruppe Vorderbeine) auf Zeile 1. Keine andere Flaeche, keine Geometrie, keine Knochen/Clips,
+  kein Texel, keine CLUT-Zeile geaendert (17 Zeilen wie Runde 4). Die 252 Krallenflaechen sind damit feldgleich mit Runde 3.
+- **Krallen:** A7 Kralle 0,096 (Runde 4 0,349, Runde 3 0,096) **GRUEN**. Tupfen (Tafel 10, eigene Zaehlung, fuer alle Spalten gleich: L\* >
+  Umfeld 9 px + 10 in der Krallenmaske aus dem Kennungs-Render):
+
+| Ansicht | Runde 3 | Runde 4 | Runde 5 |
+|---|---|---|---|
+| Bild 2, Disc-Licht roh (6265 Krallenpixel) | 67 px / 38 Komp. | 393 / 90 | **67 / 38** |
+| Bild 2, + Videofilter Saat 15 | 29 / 6 | 39 / 17 | **31 / 8** |
+| Spielfenster 5090 Schnitt 11 (gdigrab, 1356 Krallenpixel) | 21 / 7 | 77 / 26 | **19 / 8** |
+
+  Die Original-Spalte trifft mit derselben Maske Hintergrund (Video-Krallen liegen nicht deckungsgleich), darum nur Info (388 / 28 bzw. 67 / 8).
+  Das Spielbild der Runde 3 stammt aus einem anderen Feuer-Frame; Runde 4 und 5 aus demselben Lauf-Verfahren.
+- **P2 Klauen +16,3 / +21,0: ROT** (Grenze +8). Das ist genau der Runde-3-Stand (Dossier V3R3, Lauf v12 "+16,3/+21,0"), nicht besser: P2 misst
+  flache Renderflaechen und haengt an der UV-Vergroesserung der Krallenwurzel (1,73-2,22, `krallen_uv`), nicht an der Farbzeile. Runde 4 war
+  +39,8 / +50,4.
+- **RV (riegel_rot.py) 45/45 GRUEN** (Saaten 15/12345/7; mit Saaten 1/2/3 ebenfalls 45/45, `farbe_lesung/V3R5_skripte/rot_r5_saat123.txt`).
+  Rundlauf der Vorlage 45/45, Runde 3 20/45 (Exit 1), Runde 4 45/45.
+- **Gesamtriegel** `riegel_farbe_v3.py`: **77 von 80 bindenden Zeilen GRUEN, Exit 1** (`farbe/riegel_K5c_farbe_v3.txt`). ROT: P2 Klauen (oben),
+  P2 uebrige Teile (Brust +15,5, Hals +11,6, Vorderbein r +12,2, Kopf +12,3; bytegleich Runde 4, wie Runde 3 ROT), B11 (V3R5.2).
+  Gegenproben: "falsch ausgefallen: keine"; Runde 3: RV 25/45 ROT, RV6 ROT, AE1 ROT; Runde 4: A7 Kralle 0,349 ROT, P2 Klauen +39,8 / +50,4 ROT.
+- **Spiel:** 10 von 10 Bildern rc 0, alle gdigrab Versuch 1 (`farbe/spiel_lauf_v3.log`, `farbe/spiel_v3/`). Zusaetzlich ein Kennungs-Spielbild
+  (Krallen gruen) fuer die Krallenmaske im Spielfenster: `farbe/spiel_v3/kennung_krallen_pose2_r5090_s11.png`.
+- **Tests:** `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: 11 von 11 gruen, 96,7 s (`farbe_lesung/V3R5_skripte/ctest.log`).
+- Spiel-Asset `BAHNSTEIG_FORM`, Pins und `re15_port` unveraendert; K4 bleibt fuer v0.8.30.
+
+## V3R5.1 Verfahren
+
+- `kf_g4.py` R5_KRALLEN: Nach der Gruppenstatistik werden die Krallenflaechen auf ihre G4-Zeile `Z_G4[seite]` = Zeile 1 zurueckgehaengt. Quelle:
+  `farbe/K5c_farbe_v3r3/bau.json` flaechen_herkunft (alle 252 Krallenflaechen Zeile 1). Gemessener Diff Runde 3 / Runde 4: Zeilen 0-2 gleich,
+  0 Texel und 0 UV/TPage verschieden. Die Runde-3-Klauenfarbe liegt also unveraendert in Zeile 1; eine "eigene" Zeile waere eine bytegleiche Kopie
+  und machte die Port-Textur 256 Texel hoeher (V3R4.5 Punkt 3). Die Gruppenzeile Vorderbeine (16) zaehlt die Kralltexel in ihrer Statistik weiter mit,
+  damit sie bytegleich bleibt.
+- **RV Bild 2 Vorderbeine (Auftrag: "sonst die Krallen-Texel aus der RV-Messregion ausnehmen und das im Nachtrag mit Zahl belegen"):**
+  - Mit Krallen liegt Runde 5 bei 77,32 % Rot eng (Fenster 56,43..74,45): **ROT**. Getrennt per Kennungs-Render (`kralle_rv.py` -> `kralle_rv.json`, Kette T, 3 Saaten):
+    Krallen allein Vorlage 51,0 %, Runde 3/5 78,1 %, Runde 4 51,6 %. Die Runde-3-Klaue ist im Feuerlicht roeter als die Video-Klaue.
+  - Buntheit oder Helligkeit der Klauenzeile helfen kaum (`kralle_f.py`, Pixelprobe, kein Bau): Buntheit x 0,6 -> 74,40 (RV2 35,1); x 0,5 -> 72,95,
+    aber RV2 34,32 unter 34,45; lineares Abdunkeln x 0,25 -> 74,38. Das Fenster zwischen RV1 und RV2 ist schmaler als die Saatenstreuung; damit
+    waere es auch nicht mehr die Runde-3-Farbe.
+  - Nur die Variante ohne Krallen messen reicht nicht: Ohne Krallenpixel sind es 76,96 % gegen dasselbe Fenster (Optik-Unschaerfe der Kette).
+  - Darum gilt fuer **Vorlage und Variante dieselbe Pixelmenge**: Vorderbeine ohne Krallen samt 2 px Saum (`krallen_bild2.npz`, 4566 von 12 142 px,
+    109 Bloecke). Das Ziel wurde nach demselben Verfahren wie `ziele.py` gebildet (`ziel_ohne_krallen.py`): O 64,7 %, Fenster 53,27..76,11;
+    Farbton 32,72..39,57; dL -13,51..3,11; groesste Rotflaeche <= 58,34.
+    Runde 5 75,01 / 35,59 / 0,81 / 44,06 GRUEN, mit Saaten 1/2/3 74,31. Runde 4 70,76. Runde 3 82,73 ROT / 25,53 ROT / 6,88 ROT.
+  - Die alte Zeile "Bild 2 Vorderbeine" laeuft als Info weiter (77,32 ROT (Info)).
+
+## V3R5.2 Rote Riegel und warum (3)
+
+- **P2 Klauen** (+16,3 / +21,0): Runde-3-Stand, siehe V3R5.0. Die Tupfen sind weg, die Flaechigkeit der Krallenwurzel bleibt. Behebbar waere das
+  nur ueber die Krallen-UV (Runde 3 hat v1/v2/v12 versucht: +13,5..+24,4). Das ist nicht Gegenstand dieser Runde.
+- **P2 uebrige Teile** (Brust +15,5, Hals +11,6, Vorderbein r +12,2, Kopf +12,3): bytegleich Runde 4 (AE1), seit Runde 3 ROT.
+- **B11** Atlas Haut dunkle Linien 3,24 % (Fenster 3,3..9,9; Runde 4 3,72 GRUEN, Runde 3 2,73 ROT). Ohne die Kralltexel misst die Haut in
+  Runde 4 und Runde 5 gleich **3,25 %**. Runde 4 war also nur ueber die Tupfen-Adern der Krallen gruen (3,72 mit, 3,25 ohne Krallen).
+
+## V3R5.3 Info-Zeilen (Orchestrator-Entscheid 2026-11-07, je ein Satz)
+
+Im Riegel markiert als "Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)":
+- **P1:** zaehlt seit Runde 4 die flaechig gemalte dunkelrote G4-Haut (a\* > 15). Ein Mass fuer Fleisch-Posterisierung gibt es ohne helles Fleisch nicht mehr.
+- **A4:** misst gegen das G4-Fleischrot der Familie. Die Vorlage verlangt mauve (RV2), das widerspricht A4 direkt.
+- **H2:** Vertauschungen kommen aus den Rampen-Eintraegen und der 15-Bit-Rundung dunkler Farben. Die Rangfolge der Adern unter der Haut ist der Nutzerauftrag; RV6 prueft ihn.
+- **F2t:** Maul-Band wie Runde 3, unveraendert bis zur offenen Nutzerfrage zu den Leuchtstellen.
+- **B10, B12, B13, B14, B16, B17:** Binnenzeichnung duenner als die Familie. Das ist die Folge der entfernten hellen Adern (Nutzer: Feuerrillen weg); RV6 und RV3 ersetzen diese Zeilen.
+- **K3:** dE gegen die Bild-1-Zonen. Der Rot-Anteil ist durch RV1/RV2 je Region gebunden; der Rest liegt in b\*/Helligkeit und ist nicht Gegenstand der Runde 5.
+- **K6:** Hauthelligkeit Bild 2 (Mittel-L\* 15,6 gegen Vorlage 22,1, Zahlen-Pruefer Runde 4). Sie wird dem Nutzer gezeigt, nicht geaendert.
+- **K7:** Unterkiefer und Band wie Runde 3 (Leuchtstelle), offene Nutzerfrage.
+- **K1v2, K2v2:** Bild-1-Chroma. Der Mangel liegt in b\* (Nachtrag 4.1) und ist mit Rot nicht zu erfuellen.
+
+## V3R5.4 Tafeln (`farbe/`, Runde 4 in `farbe/v3r4/`)
+
+- Neu: 02 (Bild 2, Krallen im Vordergrund), 03 Familie, 04 Atlas, 05 rundum, 07 Spiel (neuer Spiellauf), 09 (Spalte "Runde 5 (neu)",
+  zusaetzlich Region "Vorderbeine ohne Krallen"; alte Vorderbeine-Zeile als Info gekennzeichnet).
+- Unveraendert und nicht neu gerechnet: 01 (Bild 1, Krallen 3 px sichtbar), 06 Kopf, 08 Binnenzeichnung. Diese Ansichten sind bytegleich, weil sich
+  ausser den Krallen nichts geaendert hat (AE1).
+- **10_krallen_r3_r4_r5** (`generator/kf_tafel10_krallen.py`): Original | Runde 3 | Runde 4 | Runde 5. Z.1 Disc-Licht roh, Z.2 mit Videofilter,
+  Z.3 echtes Spielfenster 5090. Gleicher Ausschnitt und gleiches Licht je Zeile, kein Gamma, Tupfenzahl in der Unterschrift.
+- Gesehen (Bauer, keine Abnahme): Runde 5 zeigt dieselbe dunkelrote Klaue mit khaki Spitze wie Runde 3, einen durchgehenden Verlauf und keine
+  Sprenkel. Unterarm und Hand sind dunkel wie in Runde 4 (Gruppenzeile unveraendert).
+
+## V3R5.5 Offen (dem Nutzer vorlegen, nicht weiter polieren)
+
+1. **Krallen roeter als die Video-Klaue** unter Feuerlicht: Krallen allein 78,1 % Rot eng gegen 51,0 %. Das ist die vom Pruefer gewuenschte Runde-3-Farbe.
+2. **Zweifarbigkeit unter weissem Licht**, unveraendert (Sicht-Pruefer Runde 4): Rumpf, Flanke und Schwanz violett, Vorderbeine, Brust und Hals
+   braunrot. Dazu die Kachel `d_spiel5080_lage_r3_r4.png` (Scratchpad `formfarbe4/sicht_v3r4/`) bzw. Tafel 07 Z.2 zeigen.
+3. **Hauthelligkeit Bild 2** (Mittel-L\* 15,6 gegen 22,1) und der Kopf unter Bahnsteiglicht: zeigen, nicht aendern (Zahlen-Pruefer Runde 4).
+4. **Leuchtstellen** (Gesicht oder Becken in Bild 1, Messblatt V3 7.1): Rueckfrage an den Nutzer bleibt offen.
+5. **P2 Klauen** (+16,3 / +21,0) und **B11** (3,24 gegen >= 3,3): Restabweichungen aus Runde 3 bzw. aus der Haut selbst (V3R5.2).
+
+## Einbau v0.8.30 (Nutzerentscheid E30)
+
+Nutzerentscheid 2026-11-07 ~22:20 (`form/NUTZER_ENTSCHEIDE.md` E30): "Nein, wie lassen es so wie es jetzt ist. Sieht doch gut aus. Auch die
+Leuchtstelle sieht gut aus." Frage 1 -> A (so uebernehmen), Frage 2 -> Leuchtstelle bleibt (Becken Bild 1, Gesicht am Maul). Die Variante
+`farbe/K5c_farbe_v3` (Runde 5, EMD 090e0b80..., TIM 51282806...) wird ohne Farbaenderung das Spiel-Asset; keine weitere Gestaltungsrunde.
+
+### E.1 Zeilenmessung 17 -> 16 (`generator/kf_zeilen16.py`, Bericht `stufe3/basis_k5c/zeilen.json`)
+
+Pflicht: der PC-Port legt je CLUT-Zeile eine Texturkopie untereinander (`re15_port/platform/pc/src/render_pc.c`
+re15_render_pc_upload_tim_slot: n_cluts = clut_entries / 256, tex_h = tim->height * n_cluts, keine Maximalpruefung; SDL_CreateTexture gibt
+ueber dem Renderer-Maximum NULL zurueck, der Fehler wird in `if (st->tex)` still uebergangen; GLES2 oft GL_MAX_TEXTURE_SIZE 4096; der Port haelt
+16 Zeilen = 4096 als Grenze in re2fx_pc.c:35-45, fx_plattform_pc.h:106-110, gator_fx_r41_pc.c:79). 17 x 256 = 4352 > 4096.
+
+Referenzzaehlung je CLUT-Zeile (Zeile = ((clut >> 6) & 0x1ff) - clut_y, render_pc.c re15_render_pc_push_tri; 3828 Flaechen in 32 Meshes):
+
+| Zeile | Flaechen | Meshes |
+|---|---|---|
+| 0 | 155 | 22, 23 (Kopf, Kiefer; G4-Zeile) |
+| 1 | 252 | 14, 15, 19, 20, 28-31 (Krallen; G4-Zeile) |
+| **2** | **0** | **keine (G4-Zeile 2, von keiner Flaeche gelesen)** |
+| 3 | 770 | 1-6 Schwanz |
+| 4 | 696 | 8, 9, 24-27 Hinterbeine |
+| 5 | 62 | 0, 7 |
+| 6 | 6 | 0 (F1-Leuchtstelle) |
+| 7 | 25 | 22, 23 (Maul-Band) |
+| 8 | 114 | 22, 23 (Zaehne/Maul) |
+| 9 | 45 | 0, 7 |
+| 10 | 187 | 0, 7 |
+| 11 | 152 | 0, 7 |
+| 12 | 204 | 16, 17, 18 Vorderbein r |
+| 13 | 131 | 10 Brust |
+| 14 | 229 | 10, 21 Hals |
+| 15 | 232 | 22, 23 Kopf/Kiefer |
+| 16 | 568 | 11, 12, 13, 16, 17 Vorderbeine |
+
+Ergebnis: Zeile 2 ist unreferenziert und entfaellt; Zeilen 3-16 werden 2-15 (3421 Flaechen umgehaengt, nur das clut-Wort). Keine
+Zusammenlegung noetig, max dE 0, 0 Texel geaendert. Pixel, UV, TPage, Geometrie, Knochen und die 3 Clips sind byte-gleich (Rundlauf
+form_emd lese/schreibe byte-gleich). Basis16 = `stufe3/basis_k5c/FORM.EMD` (sha256 a2e87fb84e73c7d7bd173ea11d56482df731175c1e12af26cebd48063eb09adf)
+und `FORM.TIM` (sha256 7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3; 512 x 256, 16 Zeilen, Port-Texturhoehe 4096).
+
+### E.2 Riegel Einbau (`generator/riegel_einbau.py`, Exit 1 bei Rot; `einbau/riegel_einbau_basis.json`, `einbau/riegel_einbau_asset.json`)
+
+| Zeile | Ergebnis |
+|---|---|
+| E-Z1 Basis16: Zeilen <= 16, tim->height x n_cluts <= 4096 | GRUEN: 16 Zeilen, 256 x 16 = 4096 |
+| E-Z1 Gegenprobe Variante17 muss ROT sein | ROT wie verlangt: 17 Zeilen, 4352 |
+| E-Z2 jede Flaeche liest eine gueltige Zeile | GRUEN: 3828/3828 (Zeilen 0-15 belegt, keine leer) |
+| E-Z3 Render 17 gegen 16, Szene 01 (Kandidat.rendern Bild 1, Disc-Licht x k, roh) | Pixel-Diff 0 |
+| E-Z3 Szene 02 (Bild 2) | Pixel-Diff 0 |
+| E-Z3 Szene 05 rundum, 6 Winkel x Clip 0 und Clip 2 (render.blick, roh) | 12 x Pixel-Diff 0 |
+| E-Z3 Szene 07 echtes Spielfenster 5080 Schnitt 1 (Variante17 ueber RE15_RE2_ASSET_ROOT gegen Basis16, Clip 0 Bild 0, gdigrab) | **ROT nach der 1,0-Schwelle**: 2 Pixel, max dE76 2,71 (Ort 331/265 und 311/190, Werte RGB 15/10/12 gegen 12/7/10 und 12/7/12 gegen 12/12/12). Reproduzierbar: zwei Laeufe je Seite byte-gleich (Rauschboden 0) |
+| E-Z3 Szene 07 echtes Spielfenster 5090 Schnitt 11 | nicht pixelgenau messbar: Feuer-Szene, Rauschboden Basis16 gegen Basis16 43 386 Pixel, dE 108 (zwei Laeufe gleicher Pose); Variante17 gegen Basis16 38 936-48 474 Pixel, im Rauschen |
+| E-Z4 Spiel-Asset: MD1 byte-gleich Basis16, TIM byte-gleich, 32/32/28 | GRUEN |
+
+Empfindlichkeit der Render-Gegenprobe (einmalige Messung, kein Riegel): Basis16 mit vertauschten Zeilen 0 und 5 gerendert ergibt in Szene 01
+2164 Pixel Diff, max dE76 83,0 (Ort 321/213), in Szene 02 516 Pixel, dE 32,2. Die Kette liest die Zeile aus dem clut-Wort (form_buehne.py:223/270),
+E-Z3 misst also die Zeilenumhaengung wirklich. Tafel `einbau/ez3_gegenprobe.png` (17 | 16 | Diff x 32, roh).
+
+### E.3 Asset (28 Clips) und Pins
+
+Das Spiel-Asset braucht die 28 Clips der Stufe 3 (Tick-Clips 0/3/4/5/8/9/10/26/27 in `engine/src/birkin_bahnsteig.c` BB_C_*, Test
+`test_birkin_bahnsteig.c` verlangt 32/32/28, `test_r41_birkin_pistole.cmake` die Logzeile "28 Clips"); die Variante hat nur die 3 Posen-Clips.
+Die Auftragserwartung "32/32/3" ist damit nicht erfuellbar - ein 3-Clip-Asset liesse den Tick ins Leere greifen. Kette wie bei K4:
+`stufe3/gen/s3_rig.py` BASIS_DIR -> `stufe3/basis_k5c` (Umgebungsvariable S3_BASIS_DIR fuer Vergleiche; die Gerippe-Pruefung laesst nur den
+Kieferversatz Knochen 23 abweichen: K5c [784, 420, 0], J/K4 [500, 400, 0]); `python s3_clips.py` -> `stufe3/asset` -> `shared_assets/RE2`.
+Deterministisch: zweiter Lauf byte-gleich. Ruhe = Ruhe von J mit Kiefer zu (wie K4; die eigene Ruhe der Variante, Kopf 150 / Kiefer 60,
+war nur fuer die Rundumblaetter), Bild 1 = Clip 0 Bild 11, Bild 2 = Clip 10 Bild 45-52 und Clip 12 Bild 0 (s3_pruef.py bestaetigt die Lagen).
+
+| Datei | vorher K4 (67408cfcb) | nachher K5c V3 R5 |
+|---|---|---|
+| `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` | 16eb6ea89a40df179ef08cb538b12d7d038183f01b88b47baf05c97ebf8d8bd0 (291 816 Byte) | 1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041 (293 516 Byte, 32/32/28, 799 Bilder) |
+| `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.TIM` | ec280802dd785e9238535ba90830f7e6b8a690cc4aa3609fc91f1638b3df2072 (1408 x 256, 4 Zeilen) | 7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3 (512 x 256, 16 Zeilen) |
+
+K4 gesichert: `varianten/K4/` (BAHNSTEIG_FORM.EMD/.TIM = Spiel-Asset bis E30, FORM.EMD/.TIM = basis_n2, K4.md mit Hashes).
+`form_emd.py rundlauf` am Asset: alle Sektionen gleich, 799 Bilder 0 abweichend, Pruefung 0 Fehler 0 Warnungen.
+
+Pins (`git grep BAHNSTEIG_FORM` in release/, re15_port/tests, re15_port/tools, analysis):
+- `re15_port/tests/unit/form_j_posen.h` (erzeugt, `s3_testkopf.py`): FORM_J_MD1_LEN 167644 -> 169500, MD1_CRC 0xc0b6c82a -> 0x2456b5cc,
+  TIM_LEN 362528 -> 139296, TIM_CRC 0x76775364 -> 0x9234618d, Posen Bild 1/Bild 2 = K5c, Ruhe unveraendert, FORM_HOEHE_GEHEN 3126 unveraendert.
+- `re15_port/tests/unit/test_birkin_bahnsteig.c`: nur Kommentar (Referenz seit E30).
+- `release/make_package.sh:294`: Tor fuehrt BAHNSTEIG_FORM.EMD/.TIM (vorhanden, nicht leer, byte-gleich Quellbaum) - kein Hash-Pin, nichts zu aendern.
+- Kein weiterer Pin: `release/*.sha256`, `pri_hashes.py`, `SHA256SUMS*.txt` fuehren das Asset nicht; die alten Hashes 16eb6ea8/ec280802 stehen nur
+  in Berichten (`STUFE3_abnahme_2.md`, `abn2/pins.txt`, FARBE_PRUEFUNG_*).
+- Engine-Code unveraendert (gleiche Dateinamen).
+
+Zahlen je Clip (`s3_pruef.py`, `stufe3/einbau_k5c/pruef.json`) gegen K4 (`nachbesserung2/pruef.json`): Bildzahl, Treffer- und Tonbilder
+und Tempo aller Clips gleich; abweichend nur Clip 0 tief_max 49,7 (K4 333,5; Bild 11 = Pose Bild 1 von K5c), Clip 10 tief_min -47,2 (-48,5),
+Clip 11 Gleiten 5,8 (15,0), Clip 12 Sprung 26,0 (25,7).
+
+### E.4 Bau und Tests
+
+- `RE15_BUILD_DIR=.../r41_form/re15_port/build bash re15_port/tools/local_build.sh configure` -> `=== LOCAL-BUILD-OK (configure)`;
+  `... build` -> `=== LOCAL-BUILD-OK (build)` (nur `test_birkin_bahnsteig.exe` neu gelinkt: form_j_posen.h; Engine-Code unveraendert, re15_pc.exe gleich).
+- `ctest --test-dir re15_port/build -R "form|bahnsteig|birkin_form|r41_form" -j 3`: **100% tests passed, 0 tests failed out of 11** (Total Test time
+  (real) = 75.44 sec; darunter unit_birkin_bahnsteig, unit_birkin_formen, unit_r41_form_emd, integration_r41_form_wagenweg 75,3 s).
+- Zusaetzlich alle Tests, die BAHNSTEIG_FORM lesen (`git grep -l BAHNSTEIG_FORM re15_port/tests`): `ctest -R "n2_griff_start|birkin_szenen|r41_birkin_pistole|birkin_opfer" -j 3`:
+  **100% tests passed, 0 tests failed out of 4** (integration_r41_birkin_pistole 245,5 s; debug.log "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12").
+- Paket-Tor: `release/make_package.sh:294` fuehrt BAHNSTEIG_FORM.EMD und BAHNSTEIG_FORM.TIM (vorhanden, nicht leer, byte-gleich Quellbaum). make_package selbst nicht gelaufen (kein Release-Bau).
+
+### E.5 Spiellauf am echten Asset (`generator/kf_einbau_spiel.sh`, `einbau/spiel/`, Tafel `farbe/11_einbau_spiel.png`)
+
+`form_spiel.sh` ohne --emd/--tim (keine RE15_RE2_ASSET_ROOT-Umleitung; das Spiel liest shared_assets/RE2), eigene exe-Kopie je Lauf
+(re15_port/build/form_spiel/<pid>_<zeit>), echtes Fenster per gdigrab (Fenster-Handle), nur eigene PID; kein AUTOSHOT, kein SOFTWARE_RENDER.
+Log `einbau/spiel_lauf.log`, 4 von 4 Laeufen rc 0, "Verfahren: gdigrab (Versuch 1)":
+
+| Szene | debug.log | bb_pose.log |
+|---|---|---|
+| ROOM5080 Schnitt 1, Nachstellung Bild 1 (Lage -20711,-15984, Gier 756, Clip 0 Bild 11) | `[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 11` | `t751 slot1 typ 0x30 st 1/9 pos (-20711,0,-15984) gier 756 clip 0 bild 11 grid 0x33 kein_bild 0` |
+| ROOM5080 Schnitt 1, Ruhe (Clip 2 Bild 0) | dito Slot 11 | `t601 ... clip 2 bild 0 ... kein_bild 0` |
+| ROOM5090 Schnitt 11, Pose Bild 2 (Lage 941,-23776, Gier 3874, Clip 12 Bild 0) | `... 28 Clips -> Slot 12` | `t601 slot2 typ 0x30 st 1/9 pos (941,0,-23776) gier 3874 clip 12 bild 0 grid 0x33 kein_bild 0` |
+| ROOM5090 Schnitt 11, Ruhe (Clip 2 Bild 0) | dito Slot 12 | `... clip 2 bild 0 ... kein_bild 0` |
+
+CLUT-Zeilen im Spiel (Lauf mit RE15_TIM_LOG=1, debug.log): `[tim] slot 11: 512x4096 8bpp cluts=16 — 0.0% transparent, 22.6% opak-schwarz`
+(Port-Texturhoehe 4096 = 16 Zeilen). Keine FAILED-, slot-not-loaded- oder "[tim] WARNUNG"-Zeile in exe_stderr.log/debug.log der vier Laeufe
+(einzige stderr-Zeile: "[lautstaerke] re15_options.cfg fehlt -> 50 %, Stereo").
+Tafel `farbe/11_einbau_spiel.png` (`generator/kf_tafel11_einbau.py`): je Zeile Original-Standbild | K4 vorher (Bilder der Tafel 07,
+`farbe/spiel_v3/heute_*`) | Asset neu; 4 Zeilen (5080 Nachstellung Bild 1, 5080 Ruhe, 5090 Pose Bild 2, 5090 Ruhe), roh. Gesehen (Bauer): die
+Form laedt texturiert in beiden Raeumen, 5080 dunkel violett/braunrot wie in Tafel 07 (E30 Frage 1 A), 5090 Pose Bild 2 mit offenem Maul zur Frau,
+Ruhe mit geschlossenem Kiefer (Ruhe von J, wie K4).
+
+### E.6 Offen
+
+1. **Biss-Probe im Tick**: `birkin_bahnsteig.c` BB_BISS (Teil 23 + (928, -85, 0)) wurde an K4 gemessen (Zahnreihen-Mitte, Spitze 1190).
+   Am K5c-Kiefer (`s3_kopfmass.py`, `stufe3/einbau_k5c/kopfmass.json`): Spitze (949, -105, 0), Mitte vordere Zahnreihe (689, -105, 0). Der
+   Bisspunkt liegt jetzt 21 Einheiten vor der Spitze statt in der Zahnreihe; Reichweite im Biss (Clip 26 Bild 16, Abstand zum alten
+   Brustpunkt 1758) unveraendert. Engine-Aenderung (PORT-WAHL-Konstante) ist nicht Teil dieses Auftrags -> Runde 2 / Integration entscheidet.
+2. Die Auftragserwartung "32/32/3" weicht vom Engine-Bedarf (28 Clips) ab; umgesetzt sind 28 Clips (E.3).
+3. `varianten/K5/generator/k5_rueckbild.py` und `K_alligator/generator/k_s3*.py` lesen `stufe3/asset/BAHNSTEIG_FORM.EMD` als "Spiel-Asset K4";
+   seit E30 liegt dort K5c (K4 unter `varianten/K4`). Fuer K4-Nachbauten `S3_BASIS_DIR=.../stufe3/basis_n2`.
+4. **E-Z3 Szene 07 (Spiel)**: 5080 zeigt 2 abweichende Pixel (dE 2,71) zwischen 17- und 16-Zeilen-Textur, deterministisch (beide Seiten
+   je zwei Laeufe byte-gleich). Wahrscheinliche Ursache, nicht nachgewiesen: SDL_RenderGeometry normiert v / tex_h (4352 gegen 4096), an einer
+   Texelkante faellt die Abtastung auf den Nachbartexel; beide Pixel sind nahezu schwarz (8-Bit-Abstand <= 5). Nach der Auftragsschwelle
+   (Pixel-Diff 0 oder dE <= 1) ist die Zeile ROT; die Offline-Kette (01/02/05, gleiche CLUT-Logik) ist 0. 5090 ist wegen des Feuers nicht
+   pixelgenau messbar (Rauschboden 43 386 px). Entscheidung Pruefer/Integration: Schwelle fuer 07 als Rauschboden-Vergleich fassen oder die
+   zwei Pixel als hinnehmbar werten.
+5. Spiellauf-Bilder liegen in `einbau/spiel/` (roh, 640 x 480); `einbau/riegel_einbau_spiel07.json` dokumentiert die Szene-07-Messung mit Exit 1.

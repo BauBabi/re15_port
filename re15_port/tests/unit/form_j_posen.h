@@ -1,14 +1,15 @@
 /* form_j_posen.h - ERZEUGT von analysis/befunde_runde41/form/stufe3/gen/s3_testkopf.py, nicht von Hand aendern.
- * Referenz Formtreue: Variante J mit Kopf K4 Krokodil (stufe3/basis_n2 = K4_kroko + Textur-Bau s3_n2_textur, E19-E22): MD1/TIM,
- * Posen Bild 1/Bild 2 von K4, Ruhe = Ruhe von J mit Kiefer zu. Makronamen FORM_J_* wie bisher. Kein RE-Wert. */
+ * Referenz Formtreue seit E30 (2026-11-07): Riesenform K5c V3 Runde 5 mit 16 CLUT-Zeilen (stufe3/basis_k5c = varianten/K5/farbe/
+ * K5c_farbe_v3 + kf_zeilen16.py; vorher K4: stufe3/basis_n2): MD1/TIM, Posen Bild 1/Bild 2 von K5c, Ruhe = Ruhe von J mit Kiefer zu.
+ * Makronamen FORM_J_* wie bisher. Kein RE-Wert. */
 #ifndef FORM_J_POSEN_H
 #define FORM_J_POSEN_H
 #include <stdint.h>
 
-#define FORM_J_MD1_LEN 167644u
-#define FORM_J_MD1_CRC 0xc0b6c82au
-#define FORM_J_TIM_LEN 362528u
-#define FORM_J_TIM_CRC 0x76775364u
+#define FORM_J_MD1_LEN 169500u
+#define FORM_J_MD1_CRC 0x2456b5ccu
+#define FORM_J_TIM_LEN 139296u
+#define FORM_J_TIM_CRC 0x9234618du
 
 static const int16_t FORM_J_BILD1_WURZEL[3] = { -9, -1887, -22 };
 static const int16_t FORM_J_BILD1_WINKEL[32][3] = {
@@ -17,18 +18,18 @@ static const int16_t FORM_J_BILD1_WINKEL[32][3] = {
     { -51, -238, 482 }, { -344, 12, 490 }, { -21, -73, -365 }, { -222, -203, 540 },
     { 23, -1, 41 }, { 137, -238, -271 }, { 35, -325, 0 }, { -34, 117, 0 },
     { -158, -148, 965 }, { 152, -153, -526 }, { -27, 102, -172 }, { 34, -93, 84 },
-    { -36, -344, 65 }, { 42, 314, 432 }, { 112, -78, 167 }, { 0, 0, 0 },
-    { 632, 5, -520 }, { -718, -650, 507 }, { -365, 295, 403 }, { -250, -748, -325 },
+    { -36, -344, 65 }, { 17, 326, 379 }, { 141, -154, 143 }, { 0, 0, 0 },
+    { 866, 4, -592 }, { -456, -164, -136 }, { -565, 349, 428 }, { 392, -634, -683 },
     { -37, 366, 121 }, { 45, -391, 202 }, { 43, -415, -39 }, { -24, 302, 80 },
 };
 static const int16_t FORM_J_BILD2_WURZEL[3] = { 112, -1111, -148 };
 static const int16_t FORM_J_BILD2_WINKEL[32][3] = {
     { -91, 1, -587 }, { 22, 211, 22 }, { 8, 129, 73 }, { -12, 66, 121 },
-    { -10, 50, 146 }, { -4, 37, 150 }, { -3, 24, 120 }, { 35, -153, -14 },
-    { -232, -510, -773 }, { 355, 442, -603 }, { 24, 309, 451 }, { -120, -51, 276 },
-    { 187, -29, -287 }, { -78, 177, 166 }, { 33, -337, 104 }, { 27, -24, 128 },
-    { 419, 1160, -162 }, { -136, 114, -679 }, { 283, -172, 379 }, { -35, -202, -99 },
-    { 34, -155, -336 }, { -1381, 826, 2007 }, { -3, -167, -508 }, { 0, -40, 236 },
+    { -10, 50, 146 }, { -4, 37, 150 }, { -3, 24, 120 }, { 136, -66, 109 },
+    { -232, -510, -773 }, { 355, 442, -603 }, { -181, 356, 349 }, { 9, -196, 310 },
+    { 263, -64, -49 }, { -171, 218, -52 }, { 33, -337, 104 }, { 27, -24, 128 },
+    { -656, 797, 1258 }, { 12, -163, -1035 }, { -183, -266, 442 }, { -35, -202, -99 },
+    { 34, -155, -336 }, { -518, 1241, 271 }, { 103, -705, 773 }, { 0, -60, 200 },
     { -55, -176, 511 }, { 1077, -359, 296 }, { -139, 198, 1323 }, { 548, 782, -1243 },
     { 54, 416, -174 }, { -32, 399, -380 }, { 50, -394, 64 }, { 35, 45, -43 },
 };

@@ -6,6 +6,27 @@
 Zeilen: G0, H1, H1b, H2, P1, P2, D1, S1, B10-B17, A1-A5/A7/A8/A9/A11/A12 (+A6 nur Sonderfelder, A10), Glanz (A5 + N2), K1v2/K2v2/K3-K10/K4b,
 B2/B9/B9b, K11-K15, F1t/F2t (+ Zaehne). Exit 1, wenn eine Zeile der Variante ROT ist oder eine Gegenprobe nicht ROT (bzw. G4 nicht GRUEN) ist.
 
+Runde 4 (MESSBLATT_FARBE_V3_NACHTRAG_ROT.md 4; Nutzer 2026-11-07 ~17:10: "... entfernst die übertriebenen roten feuerrillen wieder, und stellst es
+wieder nach vorlage um?"):
+- NEU RV1-RV4 (bindend) und RV5 (Info) aus farbe_lesung/V3R4_skripte/riegel_rot.py (feste Maske rot_masken.npz, Ziele ziele.json), als
+  eigener Prozess gerufen (gleiche Modulnamen wie die P-Skripte), Zeilen je Bild und Region.
+- NEU RV6 "Adern nie heller und nie roter als die umgebende Haut" (Nutzerauftrag V3 R4): Texelraum (Zeilen-Atlas), je Region (Nachtrag 1.2)
+  Ader-Texel (G4-Rotklasse der Basiszeile, Rampe kf_g4.ROT_C0..ROT_C1) gegen die Haut-Texel im Umkreis RV6_RING:
+  L*(Ader) <= L*(Ring) und a*(Ader) <= a*(Ring).
+- GEAENDERT K4/K4b/K12 -> Info (durch RV1 ersetzt), K11 -> Info (durch RV2 ersetzt); B2 entfaellt (Info, ersetzt durch RV4).
+- H2: Basiszeile je umgefaerbter Zeile aus bau.json (zeilen.basis), sonst wie Runde 1-3 (3/4/5 -> 0/1/2); in den Gruppenzeilen Rangfolge je
+  Klasse (Ader unter Adern, Haut unter Haut), weil die Adern nach Nutzerauftrag unter die Haut gehen.
+- --gegenprobe-r3 <farbe/K5c_farbe_v3r3>: RV1-RV4 und RV6 muessen an Runde 3 ROT sein (Nutzer: zu viel Rot, Feuerrillen).
+
+Runde 5 (nur die Krallen; Orchestrator 2026-11-07 nach den Pruefberichten der Runde 4):
+- NEU AE1 "Aenderungsumfang" gegen den Runde-4-Stand (AE_REF = farbe/K5c_farbe_v3r4): Geometrie, Knochen, Clips und alle Nicht-Krallen-
+  Flaechen bytegleich, Krallenflaechen nur in UV/CLUT/TPage verschieden, CLUT-Zeilen nur geaendert/neu, wenn ausschliesslich Krallen sie lesen,
+  Texel nur geaendert, wo keine Nicht-Krallen-Flaeche liest. Gegenprobe: am Runde-3-Stand ROT.
+- P2 geteilt: "P2 ... Klauen" (Klauen l/r, Sicht/Zahlen-Pruefer Runde 4) und "P2 ... uebrige Teile", beide bindend.
+- INFO_R5: P1, A4, H2, F2t, B10, B12, B13, B14, B16, B17, K3, K6, K7, K1v2, K2v2 nur noch Info (Orchestrator 2026-11-07: ueberholt durch
+  RV1-RV6 bzw. nicht Gegenstand der Runde 5; Begruendung je Zeile im Dossier FARBE.md V3R5.3).
+- --gegenprobe-r4 <farbe/K5c_farbe_v3r4>: A7 Kralle und P2 Klauen muessen am Runde-4-Stand ROT sein (Sicht/Zahlen-Pruefer Runde 4).
+
 Atlas mit mehreren CLUT-Zeilen: Ein Texel, das zwei Teile mit verschiedenen Zeilen nutzen, ist zwei Farben. Gemessen wird darum am
 "Zeilen-Atlas" (wie der Port: je CLUT-Zeile eine Kopie der Textur untereinander, render_pc.c re15_render_pc_upload_tim_slot): jede Flaeche
 liegt in der Kopie ihrer Zeile. Felder der V3-Anordnung (Messblatt V3 1.3 "Felder im Riegel-Skript nachtragen"): Koerper = alle Flaechen
@@ -55,6 +76,10 @@ F_DE = 6.0                                  # F1t/F2t dE <= 6
 ZAHN_L, ZAHN_C = 70.0, 12.0                 # Zaehne L* >= 70, C* <= 12
 GLANZ_ATLAS, GLANZ_RENDER = 0.20, 0.10      # V1 A5 / N2
 SAAT = 15
+RV_SKRIPT = os.path.join(FL, 'V3R4_skripte', 'riegel_rot.py')
+RV6_RING = 3      # Texel "umgebende Haut" (8-Nachbarschaft, 3 Schritte) = Optik-sigma 2 px (farbe.md 3) + 1; wie Bauer-Lauf V3R4_bau/such4.RING
+RV6_N_MIN = 20    # Mindestzahl Ader- und Ring-Texel je Region (wie such4.ader_ring)
+RV6_AUS = ('Maulinneres F2', 'Augen F10')   # keine Koerperhaut (Maulinneres bleibt G4, Augen dunkel E24)
 
 TEILE = KG.TEILE_H1
 # P2: K5c-Teil <- G4-Quellteil (Messblatt V3 2.3), gleicher Weltmassstab, 3 Ansichten (stich.py)
@@ -65,6 +90,10 @@ P2_TEILE = [('Rumpf', [0, 7], [0, 9]), ('Brust', [10], [16]), ('Schwanz', [1, 2,
 # Runde 2: jedes Teil gegen seine tatsaechliche Quelle laut kf_g4.ZUORDNUNG (Zahlen-Pruefer P2: Runde 1 mass den Kopf gegen G4 10 statt 16).
 # Kopf, Brust und Hals kommen aus G4 16 (F18), der Rumpf hinten aus G4 0/9.
 KLAUEN = [14, 15, 28, 30, 19, 20, 29, 31]
+AE_REF = os.path.join(K5, 'farbe', 'K5c_farbe_v3r4')   # Runde 5: Bezugsstand fuer AE1 (Runde 4, FORM.EMD 07d679a5..., FORM.TIM 51282806...)
+INFO_R5 = ('H2 ', 'P1 ', 'A4 ', 'F2t ', 'B10 ', 'B12 ', 'B13 ', 'B14 ', 'B16 ', 'B17 ', 'K3 ', 'K6 ', 'K7 ', 'K1v2 ', 'K2v2 ')
+INFO_R5_TEXT = ' [Info (Orchestrator 2026-11-07: ueberholt durch RV1-RV6 bzw. nicht Gegenstand der Runde 5)]'
+P2_KLAUEN = ('Klauen l (W)', 'Klauen r (W)')
 
 
 def lab(rgb):
@@ -266,6 +295,17 @@ def h2(v, cl_g4):
         if len(xy):
             genutzt.setdefault(z, set()).update(int(i) for i in v.px[xy[:, 1], xy[:, 0]])
     basis = {3: 0, 4: 1, 5: 2, KG.Z_F1: 2, KG.Z_BAND: 0, KG.Z_ZAHN: 0}
+    bj = os.path.join(v.vdir, 'bau.json')
+    if os.path.exists(bj):                                       # Runde 4: Gruppenzeilen mit eigener Basiszeile
+        zb = json.load(open(bj, encoding='utf-8')).get('zeilen', {}).get('basis')
+        if zb:
+            basis.update({int(k): int(x) for k, x in zb.items()})
+        gruppe = {int(k) for k in json.load(open(bj, encoding='utf-8')).get('zeilen', {}).get('gruppe', {})}
+    else:
+        gruppe = set()
+    # Runde 4: In den Gruppenzeilen liegen die Adern (G4-Rotklasse) nach Nutzerauftrag dunkler als die Haut ("nie heller ... als die umgebende
+    # Haut"); die Rangfolge wird dort je Klasse geprueft (Ader unter Adern, Haut unter Haut), nicht ueber die Klassen hinweg.
+    klasse = {p: KG.r4_eintraege(cl_g4[p])[3] > 0 for p in range(3)}
     zeilen = {}
     tausch_ges = 0
     for z in range(3, len(v.cl)):
@@ -274,8 +314,11 @@ def h2(v, cl_g4):
         Lg = lab(KG.wort_rgb([cl_g4[b][i] for i in e]))[:, 0] if e else np.zeros(0)
         Ln = lab(KG.wort_rgb([v.cl[z][i] for i in e]))[:, 0] if e else np.zeros(0)
         t = 0
+        kl = [bool(klasse[b][i]) for i in e]
         for i in range(len(e)):
             for j in range(len(e)):
+                if z in gruppe and kl[i] != kl[j]:
+                    continue
                 if Lg[i] - Lg[j] >= 2 and Ln[i] < Ln[j]:
                     t += 1
         um = [i for i in e if v.cl[z][i] != cl_g4[b][i]]
@@ -561,6 +604,123 @@ def ketten_v3(vdir, masken, mo=None, tex=None):
     return out
 
 
+# ================================================================ Runde 4: RV1-RV6
+def rv_kette(vdir):
+    """RV1-RV5 (riegel_rot.py, eigener Prozess). Rueckgabe {Zeile: (Wert, ok)}; Info-Zeilen ok None."""
+    import subprocess
+    import tempfile
+    fd, tmp = tempfile.mkstemp(suffix='.json')
+    os.close(fd)
+    try:
+        r = subprocess.run([sys.executable, RV_SKRIPT, vdir, '--json', tmp], capture_output=True, text=True)
+        txt = open(tmp, encoding='utf-8').read()
+    finally:
+        os.remove(tmp)
+    if not txt.strip():
+        raise SystemExit('riegel_rot.py ohne Ergebnis: %s' % r.stderr[-2000:])
+    d = json.loads(txt)
+    out = {}
+    for k, x in d.items():
+        lo, hi = x['fenster']
+        f = '<= %.2f' % hi if 'Obergrenze' in k else '%.2f..%.2f' % (lo, hi)
+        out[k + ('' if x['bindend'] else ' [Info]')] = ('%.2f (%s)' % (x['wert'], f), bool(x['ok']) if x['bindend'] else None)
+    return out
+
+
+def rv6(v, cl_g4):
+    """RV6: Adern nie heller und nie roter als die umgebende Haut (Texelraum, Zeilen-Atlas), je Region (Nachtrag 1.2)."""
+    import cv2 as _cv
+    basis = {0: 0, 1: 1, 2: 2, 3: 0, 4: 1, 5: 2}
+    namen = {}
+    bj = os.path.join(v.vdir, 'bau.json')
+    if os.path.exists(bj):
+        b = json.load(open(bj, encoding='utf-8'))
+        basis.update({int(k): int(x) for k, x in b.get('zeilen', {}).get('basis', {}).items()})
+        namen = {k: x[0] for k, x in b.get('flaechen_herkunft', {}).items()}
+    fn = KG.r4_flaechen_normalen(v.mo)
+    w_g4 = {}
+    for p in range(3):
+        _L, _C, _h, w_ = KG.r4_eintraege(cl_g4[p])
+        w_g4[p] = (w_, np.array(cl_g4[p]) != 0)
+    lab_z = [lab(v.rgb_zeilen[z]) for z in range(len(v.cl))]
+    lagen = {}                                       # (Zeile, Region) -> (Ader-Maske, Haut-Maske) 256 x 512
+    for key, mi, z, ecken, a3 in v.flaechen:
+        if z in (KG.Z_F1, KG.Z_BAND, KG.Z_ZAHN) or z not in basis or namen.get('%d|%s|%d' % key) in RV6_AUS:
+            continue
+        nr = key[2] if key[1] == 't' else len(v.mo.meshes[mi].tf) + key[2]
+        r = KG.r4_region(mi, fn[mi][nr][0], fn[mi][nr][1])
+        if r is None:
+            continue
+        xy = v.texel(ecken)
+        if not len(xy):
+            continue
+        xs, ys = np.clip(xy[:, 0], 0, 511), np.clip(xy[:, 1], 0, 255)
+        w_, nz = w_g4[basis[z]]
+        idx = v.px[ys, xs]
+        a, h = lagen.setdefault((z, r), (np.zeros((256, 512), bool), np.zeros((256, 512), bool)))
+        a[ys, xs] |= w_[idx] > 0
+        h[ys, xs] |= (w_[idx] == 0) & nz[idx]
+    ker = np.ones((2 * RV6_RING + 1, 2 * RV6_RING + 1), np.uint8)
+    summe = {}
+    for (z, r), (a, h) in lagen.items():
+        h = h & ~a
+        ring = h & _cv.dilate(a.astype(np.uint8), ker).astype(bool)
+        L = lab_z[z][v.px]                           # 256 x 512 x 3
+        s_ = summe.setdefault(r, np.zeros(6))
+        s_ += [a.sum(), L[a, 0].sum(), L[a, 1].sum(), ring.sum(), L[ring, 0].sum(), L[ring, 1].sum()]
+    out = {}
+    ok_ges = True
+    for r in ('Ruecken', 'Flanke', 'Brust/Bauch', 'Vorderbeine', 'Hinterbeine', 'Hals', 'Kopf', 'Schwanz'):
+        if r not in summe:
+            continue
+        na, La, aa, nr_, Lr, ar = summe[r]
+        if na < RV6_N_MIN or nr_ < RV6_N_MIN:
+            out[r] = 'n %d/%d (zu wenig)' % (na, nr_)
+            continue
+        dL, da = La / na - Lr / nr_, aa / na - ar / nr_
+        ok = bool(dL <= 0 and da <= 0)
+        ok_ges &= ok
+        out[r] = 'dL %+.1f da* %+.1f (n %d/%d)%s' % (dL, da, na, nr_, '' if ok else ' VERLETZT')
+    return out, ok_ges
+
+
+def aenderungsumfang(vdir, ref_dir=AE_REF):
+    """AE1 (Runde 5): Diff Variante gegen den Runde-4-Stand. Erlaubt sind nur Aenderungen an den Krallenflaechen (Meshes KLAUEN):
+    deren UV/CLUT/TPage, CLUT-Zeilen, die nur Krallen lesen, und Texel, die keine Nicht-Krallen-Flaeche liest."""
+    v, r = Var(vdir), Var(ref_dir)
+    fv, fr = FE.lese_emd(v.emd), FE.lese_emd(r.emd)
+    sonst = sorted(k for k in set(fv) | set(fr) if k != 'meshes' and fv.get(k) != fr.get(k))
+    geo = sorted(mi for mi, (a, b) in enumerate(zip(fv['meshes'], fr['meshes'])) if a['ecken'] != b['ecken'] or a['normalen'] != b['normalen'])
+    n_k = n_rest = n_feld = 0
+    for mi, (a, b) in enumerate(zip(fv['meshes'], fr['meshes'])):
+        for t in ('dreiecke', 'vierecke'):
+            for x, y in zip(a[t], b[t]):
+                if x == y:
+                    continue
+                if mi in KLAUEN:
+                    n_k += 1
+                    n_feld += int(any(x.get(f) != y.get(f) for f in set(x) | set(y) if f not in ('uv', 'clut', 'page')))
+                else:
+                    n_rest += 1
+    leser = {}                                       # Zeile -> {'kralle', 'rest'}
+    rest_texel = np.zeros(v.px.shape, bool)
+    for key, mi, z, ecken, a3 in v.flaechen:
+        leser.setdefault(z, set()).add('kralle' if mi in KLAUEN else 'rest')
+        if mi not in KLAUEN:
+            xy = v.texel(ecken)
+            if len(xy):
+                rest_texel[np.clip(xy[:, 1], 0, 255), np.clip(xy[:, 0], 0, 511)] = True
+    z_diff = [z for z in range(len(v.cl)) if z >= len(r.cl) or v.cl[z] != r.cl[z]]
+    z_fremd = [z for z in z_diff if leser.get(z, set()) - {'kralle'}]
+    td = v.px != r.px if v.px.shape == r.px.shape else np.ones(v.px.shape, bool)
+    t_fremd = int((td & rest_texel).sum())
+    val = dict(sektionen_ungleich=sonst, geometrie_ungleich=geo, kralle_flaechen_geaendert=n_k, kralle_andere_felder=n_feld,
+               nicht_kralle_flaechen_geaendert=n_rest, clut_zeilen=(len(r.cl), len(v.cl)), clut_zeilen_geaendert=z_diff,
+               clut_zeilen_fremd_gelesen=z_fremd, texel_geaendert=int(td.sum()), texel_geaendert_fremd_gelesen=t_fremd)
+    ok = not sonst and not geo and n_feld == 0 and n_rest == 0 and not z_fremd and t_fremd == 0
+    return val, ok
+
+
 def masken_daten():
     z = np.load(os.path.join(HIER, 'v3_daten', 'masken.npz'))
     sh = tuple(z['form'])
@@ -601,7 +761,12 @@ def messen(vdir, schnell=False):
     for k, (val, ok) in ar.items():
         res[k + ' [V3-Felder]'] = (val, bool(ok))
     if not schnell:
-        res['P2 Render dL=0 je Teil (K5c, G4, Diff)'] = p2(v, g4, g4tim)
+        p2r, _ok = p2(v, g4, g4tim)
+        # Runde 5: Klauen getrennt (Pruefer Runde 4: P2 Klauen +39,8 / +50,4 ROT); uebrige Teile wie bisher bindend
+        res['P2 Render dL=0 Klauen (K5c, G4, Diff)'] = ({k: x for k, x in p2r.items() if k in P2_KLAUEN},
+                                                         all(x[2] <= P2_PLUS for k, x in p2r.items() if k in P2_KLAUEN))
+        res['P2 Render dL=0 uebrige Teile (K5c, G4, Diff)'] = ({k: x for k, x in p2r.items() if k not in P2_KLAUEN},
+                                                                all(x[2] <= P2_PLUS for k, x in p2r.items() if k not in P2_KLAUEN))
     # B10-B17 (n2_riegel): Atlas am Zeilen-Atlas, Koerper/Kopf = V3-Felder; Render am echten Modell
     import n2_riegel as NR
     import fl as FLB
@@ -633,6 +798,26 @@ def messen(vdir, schnell=False):
     M = masken_daten()
     for k, (val, ok) in ketten_v3(vdir, M).items():
         res[k] = (val, None if ok is None else bool(ok))
+    # Runde 4 (Nachtrag 4.1): K4/K4b/K12 -> Info (RV1), K11 -> Info (RV2), B2 entfaellt (RV4)
+    for k in list(res):
+        neu = None
+        if k.startswith(('K4 ', 'K4b ', 'K12 ')):
+            neu = k + ' [Info, ersetzt durch RV1]'
+        elif k.startswith('K11 '):
+            neu = k + ' [Info, ersetzt durch RV2]'
+        elif k.startswith('B2 '):
+            neu = k + ' [entfaellt, ersetzt durch RV4]'
+        if neu:
+            res[neu] = (res.pop(k)[0], None)
+    for k, val in rv_kette(vdir).items():
+        res[k] = val
+    r6, ok6 = rv6(v, cl_g4)
+    res['RV6 Texel Ader gegen umgebende Haut je Region (dL*, da* <= 0)'] = (r6, ok6)
+    res['AE1 Aenderungsumfang gegen Runde 4 (nur Krallen)'] = aenderungsumfang(vdir)
+    # Runde 5: Orchestrator-Entscheid 2026-11-07 -> Info
+    for k in list(res):
+        if k.startswith(INFO_R5) and res[k][1] is not None:
+            res[k + INFO_R5_TEXT] = (res.pop(k)[0], None)
     zus = dict(teile=hk, h1b=h1b, feldmittel=fm_)
     return res, zus
 
@@ -742,6 +927,8 @@ def main():
     a.add_argument('--gegenprobe-v2', default=None)
     a.add_argument('--json', default=None)
     a.add_argument('--schnell', action='store_true', help='ohne P2 (Render je Teil)')
+    a.add_argument('--gegenprobe-r3', default=None, help='Runde-3-Stand: RV1-RV4 und RV6 muessen ROT sein')
+    a.add_argument('--gegenprobe-r4', default=None, help='Runde-4-Stand: A7 Kralle und P2 Klauen muessen ROT sein (Runde 5)')
     x = a.parse_args()
     r, zus = messen(x.variante, x.schnell)
     g, n = drucken(x.variante, r)
@@ -762,6 +949,39 @@ def main():
         out['gegenprobe_v2'] = {k: dict(wert=str(v), ok=ok) for k, (v, ok) in gp.items()}
         out['gegenprobe_falsch'] = falsch
         if falsch:
+            exitcode = 1
+    if x.gegenprobe_r3:
+        rv = rv_kette(x.gegenprobe_r3)
+        _g4, g4tim, _q = KG.g4_modell()
+        _px, cl_g4 = KG.g4_cluts(g4tim)
+        r6, ok6 = rv6(Var(x.gegenprobe_r3), cl_g4)
+        rot_rv = sorted(k for k, (_w, ok) in rv.items() if ok is False)
+        n_rv = sum(1 for _w, ok in rv.values() if ok is not None)
+        print('== Gegenprobe Runde 3 (%s): RV1-RV4 und RV6 muessen ROT sein' % x.gegenprobe_r3)
+        for k in rot_rv:
+            print('  %-58s %s ROT' % (k, rv[k][0]))
+        print('  RV1-RV4: %d/%d bindende Zeilen ROT -> %s' % (len(rot_rv), n_rv, 'ROT wie verlangt' if rot_rv else 'FALSCH (GRUEN)'))
+        print('  RV6 %s -> %s' % (r6, 'ROT wie verlangt' if not ok6 else 'FALSCH (GRUEN)'))
+        ae, ok_ae = aenderungsumfang(x.gegenprobe_r3)
+        print('  AE1 %s -> %s' % (ae, 'ROT wie verlangt' if not ok_ae else 'FALSCH (GRUEN)'))
+        out['gegenprobe_r3'] = dict(rv_rot=rot_rv, rv_bindend=n_rv, rv6=r6, rv6_ok=ok6, ae1=ae, ae1_ok=ok_ae)
+        if not rot_rv or ok6 or ok_ae:
+            exitcode = 1
+    if x.gegenprobe_r4:
+        g4, g4tim, _q = KG.g4_modell()
+        k5c_emd, k5c_tim = KG.k5c_bytes()
+        v4 = Var(x.gegenprobe_r4)
+        sonder4, aug4 = sonder_keys(v4, FE.modell(k5c_emd, k5c_tim))
+        ar4 = atlas_v3(v4, sonder4, aug4)[0]
+        a7 = [val for k, (val, _ok) in ar4.items() if k.startswith('A7 ')][0]
+        p2r4, _ok = p2(v4, g4, g4tim, teile=[t for t in P2_TEILE if t[0] in P2_KLAUEN])
+        ok_a7 = a7['kralle'] <= 0.19          # Grenze wie A7 in farbe_lesung/P_skripte/p_riegel.py:50 (HF_rest <= 0,19)
+        ok_p2 = all(xx[2] <= P2_PLUS for xx in p2r4.values())
+        print('== Gegenprobe Runde 4 (%s): A7 Kralle und P2 Klauen muessen ROT sein' % x.gegenprobe_r4)
+        print('  A7 Kralle %s -> %s' % (a7['kralle'], 'ROT wie verlangt' if not ok_a7 else 'FALSCH (GRUEN)'))
+        print('  P2 Klauen %s -> %s' % (p2r4, 'ROT wie verlangt' if not ok_p2 else 'FALSCH (GRUEN)'))
+        out['gegenprobe_r4'] = dict(a7=a7, p2_klauen=p2r4, a7_ok=ok_a7, p2_ok=ok_p2)
+        if ok_a7 or ok_p2:
             exitcode = 1
     print('EXIT %d' % exitcode)
     if x.json:

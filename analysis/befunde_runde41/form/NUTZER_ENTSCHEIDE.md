@@ -221,3 +221,27 @@ Folgen:
   riesenform-farbe-v3-g4-verbrannt) laufen getrennt unter analysis/ und aendern Spiel-Asset und Pins nicht.
 - Gestaltung des dritten Ansatzes: schwarz-rot verbrannt aus RE2-G4-Texeln (G1), Gesicht vorn und Maul in Feuerfarben (G2); Orte und Farben
   werden gemessen, nicht erfunden.
+
+## E30 (2026-11-07 ~22:20): Riesenform K5c V3 Runde 5 wird ohne Farbaenderung das Spiel-Asset fuer v0.8.30
+
+Vorlage: `C:/workspace/git/reAi_v2_entscheidung_2026-11-06/7_riesenform_runde5_krallen_farben/LIESMICH.txt` (Frage 1 Zweifarbigkeit unter dem
+Bahnsteiglicht A/B/C, Frage 2 Leuchtstelle in Bild 1: Becken wie jetzt oder nur das Gesicht).
+
+Wortlaut Nutzer: "Nein, wie lassen es so wie es jetzt ist. Sieht doch gut aus. Auch die Leuchtstelle sieht gut aus."
+
+Lesung:
+- Frage 1 -> **A**: so uebernehmen. Keine gemeinsame Hautfarbe (B), kein Verbleib von K4 (C).
+- Frage 2 -> **Leuchtstelle bleibt wie jetzt**: Becken in der Bild-1-Lage (F1-Stelle, Knochen 0) und Gesicht am Maul (Bild 2).
+
+Folgen:
+- Die Variante `varianten/K5/farbe/K5c_farbe_v3/FORM.EMD` (sha256 090e0b80e214ae455788a383da6dd8f1b44ec6b26f771b281780a24953c5cfb0) und
+  `FORM.TIM` (sha256 512828067ea7f0480763110b4820ae311bc5cd7423796d58274b07ef776e7e6d) = Runde 5 ist OHNE jede Farbaenderung die Basis des
+  Spiel-Assets `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM` fuer v0.8.30. Keine weitere Gestaltungsrunde.
+- Technik ohne Rueckfrage (in der Vorlage angekuendigt): 17 CLUT-Zeilen -> 16, weil der PC-Port je CLUT-Zeile eine Texturkopie untereinander
+  legt (`re15_port/platform/pc/src/render_pc.c` re15_render_pc_upload_tim_slot: tex_h = tim->height * n_cluts, keine Maximalpruefung;
+  SDL_CreateTexture liefert ueber dem Renderer-Maximum NULL, GLES2 oft 4096) - 17 x 256 = 4352 > 4096. Gemessen: Zeile 2 wird von keiner
+  Flaeche gelesen; sie entfaellt, das Bild bleibt gleich (Riegel `varianten/K5/generator/riegel_einbau.py`).
+- Clips: das Spiel-Asset braucht die 28 Clips der Stufe 3 (Tick-Clips 0/3/4/5/8/9/10/26/27, `engine/src/birkin_bahnsteig.c`,
+  Test `test_birkin_bahnsteig.c` 28 Clips). Die Kette `stufe3/gen/s3_clips.py` baut sie auf der K5c-Basis (`stufe3/basis_k5c`), wie bei K4
+  auf `stufe3/basis_n2`. K4 bleibt als Variante unter `varianten/K4/`.
+- Dossier: `varianten/K5/FARBE.md` Abschnitt "Einbau v0.8.30 (Nutzerentscheid E30)".

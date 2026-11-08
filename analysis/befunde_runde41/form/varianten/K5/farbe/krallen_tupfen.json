@@ -1,0 +1,116 @@
+{
+ "Bild 2 Disc-Licht roh": [
+  [
+   "Original Bild 2",
+   {
+    "px": 388,
+    "komponenten": 28,
+    "maske_px": 6265,
+    "anteil": 6.19
+   }
+  ],
+  [
+   "Runde 3",
+   {
+    "px": 67,
+    "komponenten": 38,
+    "maske_px": 6265,
+    "anteil": 1.07
+   }
+  ],
+  [
+   "Runde 4",
+   {
+    "px": 393,
+    "komponenten": 90,
+    "maske_px": 6265,
+    "anteil": 6.27
+   }
+  ],
+  [
+   "Runde 5",
+   {
+    "px": 67,
+    "komponenten": 38,
+    "maske_px": 6265,
+    "anteil": 1.07
+   }
+  ]
+ ],
+ "Bild 2 + Videofilter": [
+  [
+   "Original Bild 2",
+   {
+    "px": 388,
+    "komponenten": 28,
+    "maske_px": 6265,
+    "anteil": 6.19
+   }
+  ],
+  [
+   "Runde 3",
+   {
+    "px": 29,
+    "komponenten": 6,
+    "maske_px": 6265,
+    "anteil": 0.46
+   }
+  ],
+  [
+   "Runde 4",
+   {
+    "px": 39,
+    "komponenten": 17,
+    "maske_px": 6265,
+    "anteil": 0.62
+   }
+  ],
+  [
+   "Runde 5",
+   {
+    "px": 31,
+    "komponenten": 8,
+    "maske_px": 6265,
+    "anteil": 0.49
+   }
+  ]
+ ],
+ "Spielfenster 5090": [
+  [
+   "Original Bild 2",
+   {
+    "px": 67,
+    "komponenten": 8,
+    "maske_px": 1356,
+    "anteil": 4.94
+   }
+  ],
+  [
+   "Runde 3",
+   {
+    "px": 21,
+    "komponenten": 7,
+    "maske_px": 1356,
+    "anteil": 1.55
+   }
+  ],
+  [
+   "Runde 4",
+   {
+    "px": 77,
+    "komponenten": 26,
+    "maske_px": 1356,
+    "anteil": 5.68
+   }
+  ],
+  [
+   "Runde 5",
+   {
+    "px": 19,
+    "komponenten": 8,
+    "maske_px": 1356,
+    "anteil": 1.4
+   }
+  ]
+ ]
+}

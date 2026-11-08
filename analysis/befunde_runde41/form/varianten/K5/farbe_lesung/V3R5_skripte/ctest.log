@@ -1,0 +1,27 @@
+﻿Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build
+      Start 1381: integration_r41_form_wagenweg
+      Start  560: integration_r35_werfer_form
+      Start  410: integration_r34_plattform_takt
+ 1/11 Test  #410: integration_r34_plattform_takt ...........   Passed   23.01 sec
+      Start  411: integration_r34_plattform_esp_eintritt
+ 2/11 Test  #560: integration_r35_werfer_form ..............   Passed   26.88 sec
+      Start 1374: unit_birkin_bahnsteig
+ 3/11 Test #1374: unit_birkin_bahnsteig ....................   Passed    1.27 sec
+      Start  409: unit_r34_plattform_ton
+ 4/11 Test  #409: unit_r34_plattform_ton ...................   Passed    0.07 sec
+      Start  508: unit_r35_fenster_satzform
+ 5/11 Test  #508: unit_r35_fenster_satzform ................   Passed    0.02 sec
+      Start 1373: unit_birkin_formen
+ 6/11 Test #1373: unit_birkin_formen .......................   Passed    0.02 sec
+      Start  408: unit_r34_plattform
+ 7/11 Test  #408: unit_r34_plattform .......................   Passed    0.02 sec
+      Start  980: unit_r39_funk10f1_form
+ 8/11 Test  #980: unit_r39_funk10f1_form ...................   Passed    0.02 sec
+      Start 1149: unit_r41_form_emd
+ 9/11 Test #1149: unit_r41_form_emd ........................   Passed    0.02 sec
+10/11 Test  #411: integration_r34_plattform_esp_eintritt ...   Passed    9.59 sec
+11/11 Test #1381: integration_r41_form_wagenweg ............   Passed   96.65 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Total Test time (real) =  96.72 sec

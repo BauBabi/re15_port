@@ -1,0 +1,393 @@
+{
+ "dateien": {
+  "asset_emd": {
+   "pfad": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD",
+   "sha256": "1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041",
+   "bytes": 293516
+  },
+  "asset_tim": {
+   "pfad": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/shared_assets/RE2/BAHNSTEIG_FORM.TIM",
+   "sha256": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3",
+   "bytes": 139296
+  },
+  "var_emd": {
+   "pfad": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/farbe/K5c_farbe_v3/FORM.EMD",
+   "sha256": "090e0b80e214ae455788a383da6dd8f1b44ec6b26f771b281780a24953c5cfb0",
+   "bytes": 170424
+  },
+  "var_tim": {
+   "pfad": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/farbe/K5c_farbe_v3/FORM.TIM",
+   "sha256": "512828067ea7f0480763110b4820ae311bc5cd7423796d58274b07ef776e7e6d",
+   "bytes": 139808
+  },
+  "basis_emd": {
+   "pfad": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/stufe3/basis_k5c/FORM.EMD",
+   "sha256": "a2e87fb84e73c7d7bd173ea11d56482df731175c1e12af26cebd48063eb09adf",
+   "bytes": 170424
+  }
+ },
+ "punkte": {
+  "P1_zeilen": {
+   "zeilen": 16,
+   "clut_h": 16,
+   "tex_h": 4096,
+   "ok": true,
+   "variante_zeilen": 17,
+   "variante_tex_h": 4352
+  },
+  "P1_uv_zeilen_asset": {
+   "flaechen": 3828,
+   "je_zeile": {
+    "0": 155,
+    "1": 252,
+    "2": 770,
+    "3": 696,
+    "4": 62,
+    "5": 6,
+    "6": 25,
+    "7": 114,
+    "8": 45,
+    "9": 187,
+    "10": 152,
+    "11": 204,
+    "12": 131,
+    "13": 229,
+    "14": 232,
+    "15": 568
+   },
+   "ungueltig": 0,
+   "beispiele": [],
+   "ok": true
+  },
+  "P1_uv_zeilen_variante": {
+   "flaechen": 3828,
+   "je_zeile": {
+    "0": 155,
+    "1": 252,
+    "3": 770,
+    "4": 696,
+    "5": 62,
+    "6": 6,
+    "7": 25,
+    "8": 114,
+    "9": 45,
+    "10": 187,
+    "11": 152,
+    "12": 204,
+    "13": 131,
+    "14": 229,
+    "15": 232,
+    "16": 568
+   },
+   "ungueltig": 0
+  },
+  "P1_meshes_je_zeile": {
+   "0": [
+    22,
+    23
+   ],
+   "1": [
+    14,
+    15,
+    19,
+    20,
+    28,
+    29,
+    30,
+    31
+   ],
+   "2": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "3": [
+    8,
+    9,
+    24,
+    25,
+    26,
+    27
+   ],
+   "4": [
+    0,
+    7
+   ],
+   "5": [
+    0
+   ],
+   "6": [
+    22,
+    23
+   ],
+   "7": [
+    22,
+    23
+   ],
+   "8": [
+    0,
+    7
+   ],
+   "9": [
+    0,
+    7
+   ],
+   "10": [
+    0,
+    7
+   ],
+   "11": [
+    16,
+    17,
+    18
+   ],
+   "12": [
+    10
+   ],
+   "13": [
+    10,
+    21
+   ],
+   "14": [
+    22,
+    23
+   ],
+   "15": [
+    11,
+    12,
+    13,
+    16,
+    17
+   ]
+  },
+  "P2_emd_bytegleich": {
+   "laenge_gleich": false,
+   "dir_gleich": false,
+   "ok": false,
+   "sektionen": {
+    "dir[0]": {
+     "off": 8,
+     "len": 12,
+     "gleich": true
+    },
+    "dir[1]": {
+     "off": 20,
+     "len": 3312,
+     "gleich": false
+    },
+    "dir[2]": {
+     "off": 3332,
+     "len": 120636,
+     "gleich": false
+    },
+    "dir[3]": {
+     "off": 123968,
+     "len": 4,
+     "gleich": true
+    },
+    "dir[4]": {
+     "off": 123972,
+     "len": 4,
+     "gleich": true
+    },
+    "dir[5]": {
+     "off": 123976,
+     "len": 4,
+     "gleich": true
+    },
+    "dir[6]": {
+     "off": 123980,
+     "len": 4,
+     "gleich": true
+    },
+    "dir[7]": {
+     "off": 123984,
+     "len": 169532,
+     "gleich": false
+    }
+   }
+  },
+  "P2_tim_zeilen": {
+   "pixel_gleich": true,
+   "masse_gleich": true,
+   "clut_x_y_gleich": true,
+   "zeilen_dE": {},
+   "variante_zeilen_ohne_ziel": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ],
+   "entfernte_zeilen_referenziert": {
+    "0": 155,
+    "1": 252,
+    "2": 0,
+    "3": 770,
+    "4": 696,
+    "5": 62,
+    "6": 6,
+    "7": 25,
+    "8": 114,
+    "9": 45,
+    "10": 187,
+    "11": 152,
+    "12": 204,
+    "13": 131,
+    "14": 229,
+    "15": 232,
+    "16": 568
+   },
+   "zusammenlegungen": {},
+   "info_dE_entfernte_zeile_gegen_andere": {
+    "1": 100.55322801507526,
+    "2": 92.06742711264164,
+    "3": 109.81644069845973,
+    "4": 111.67973087779873,
+    "5": 112.95866450998476,
+    "6": 92.06742711264164,
+    "7": 45.26678484954099,
+    "8": 50.129600833152,
+    "9": 110.35588900825599,
+    "10": 116.2921326072304,
+    "11": 119.36060655539085,
+    "12": 109.81644069845973,
+    "13": 107.05635091905047,
+    "14": 103.14764203837176,
+    "15": 102.7122777408569,
+    "16": 97.77915364376015
+   },
+   "ok": false
+  },
+  "P2_basis_md1": {
+   "md1_len_asset": 169532,
+   "md1_len_basis": 169532,
+   "bytegleich": false
+  },
+  "P2_render_diff": {
+   "S1_seite": {
+    "pixel_belegt_asset": 94406,
+    "pixel_diff": 0,
+    "max_dE76": 0.0,
+    "empfindlichkeit_zeilen_0_5_vertauscht": {
+     "pixel_diff": 1309,
+     "max_dE76": 74.20616583159598
+    },
+    "ok": true
+   },
+   "S2_schraeg_oben": {
+    "pixel_belegt_asset": 80142,
+    "pixel_diff": 0,
+    "max_dE76": 0.0,
+    "empfindlichkeit_zeilen_0_5_vertauscht": {
+     "pixel_diff": 2527,
+     "max_dE76": 87.07499875868774
+    },
+    "ok": true
+   }
+  }
+ },
+ "tim_asset": {
+  "bpp": 8,
+  "has_clut": 1,
+  "clut_x": 0,
+  "clut_y": 480,
+  "clut_w": 256,
+  "clut_h": 16,
+  "clut_entries": 4096,
+  "data_x": 0,
+  "data_y": 0,
+  "width": 512,
+  "height": 256,
+  "n_cluts": 16,
+  "tex_h": 4096
+ },
+ "tim_variante": {
+  "bpp": 8,
+  "has_clut": 1,
+  "clut_x": 0,
+  "clut_y": 480,
+  "clut_w": 256,
+  "clut_h": 17,
+  "clut_entries": 4352,
+  "data_x": 0,
+  "data_y": 0,
+  "width": 512,
+  "height": 256,
+  "n_cluts": 17,
+  "tex_h": 4352
+ },
+ "dir_asset": [
+  8,
+  20,
+  3332,
+  123968,
+  123972,
+  123976,
+  123980,
+  123984
+ ],
+ "dir_variante": [
+  8,
+  20,
+  48,
+  876,
+  880,
+  884,
+  888,
+  892
+ ],
+ "dir_basis": [
+  8,
+  20,
+  48,
+  876,
+  880,
+  884,
+  888,
+  892
+ ],
+ "bank": {
+  "asset": {
+   "meshes": 32,
+   "knochen": 32,
+   "clips_paare": [
+    28,
+    0,
+    0
+   ]
+  },
+  "variante": {
+   "meshes": 32,
+   "knochen": 32,
+   "clips_paare": [
+    3,
+    0,
+    0
+   ]
+  },
+  "basis_k5c": {
+   "clips_paare": [
+    3,
+    0,
+    0
+   ]
+  }
+ },
+ "gesamt_ok": false
+}

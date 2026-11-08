@@ -1,0 +1,237 @@
+{
+ "px_vorderbeine": 12142,
+ "px_kralle_mit_saum": 4566,
+ "px_ohne": 7576,
+ "bloecke": 109,
+ "A0": 19.0,
+ "ziel": {
+  "rot_eng": {
+   "O": 64.69,
+   "R": 68.06,
+   "R_spann": 2.42,
+   "sigma": 4.03,
+   "ziel": [
+    53.27,
+    76.11
+   ],
+   "bindend": true
+  },
+  "h_rot": {
+   "O": 36.15,
+   "R": 35.35,
+   "R_spann": 0.14,
+   "sigma": 1.31,
+   "ziel": [
+    32.72,
+    39.57
+   ],
+   "bindend": true
+  },
+  "dL": {
+   "O": -5.2,
+   "R": -9.06,
+   "R_spann": 0.93,
+   "sigma": 2.22,
+   "ziel": [
+    -13.51,
+    3.11
+   ],
+   "bindend": true
+  },
+  "gross_eng_p": {
+   "O": 34.07,
+   "R": 39.87,
+   "R_spann": 1.44,
+   "sigma": null,
+   "ziel": [
+    13.2,
+    58.34
+   ],
+   "bindend": true
+  }
+ },
+ "alt": {
+  "rot": {
+   "O": 65.54,
+   "R": 62.63,
+   "R_spann": 0.82,
+   "V3": 82.29,
+   "V3_spann": 1.06,
+   "sigma": 3.08,
+   "tol": 9.07,
+   "ziel": [
+    56.47,
+    74.61
+   ],
+   "ok": false,
+   "bindend": true,
+   "unten_ok": null,
+   "bloecke": 152,
+   "alb": 37.65
+  },
+  "rot_eng": {
+   "O": 65.44,
+   "R": 62.61,
+   "R_spann": 0.81,
+   "V3": 82.29,
+   "V3_spann": 1.06,
+   "sigma": 3.09,
+   "tol": 9.01,
+   "ziel": [
+    56.43,
+    74.45
+   ],
+   "ok": false,
+   "bindend": true,
+   "unten_ok": null,
+   "bloecke": 152,
+   "alb": 37.65
+  },
+  "h_rot": {
+   "O": 36.6,
+   "R": 36.27,
+   "R_spann": 0.1,
+   "V3": 28.5,
+   "V3_spann": 0.2,
+   "sigma": 0.91,
+   "tol": 2.15,
+   "ziel": [
+    34.45,
+    38.75
+   ],
+   "ok": false,
+   "bindend": true,
+   "unten_ok": null,
+   "bloecke": 152,
+   "alb": 22.6
+  },
+  "C_rot": {
+   "O": 36.1,
+   "R": 33.73,
+   "R_spann": 0.1,
+   "V3": 36.03,
+   "V3_spann": 0.1,
+   "sigma": 0.91,
+   "tol": 4.19,
+   "ziel": [
+    31.91,
+    40.29
+   ],
+   "ok": true,
+   "bindend": false,
+   "unten_ok": null,
+   "bloecke": 152,
+   "alb": 30.9
+  },
+  "dL": {
+   "O": -4.2,
+   "R": -7.6,
+   "R_spann": 0.5,
+   "V3": -3.9,
+   "V3_spann": 1.8,
+   "sigma": 1.91,
+   "tol": 7.22,
+   "ziel": [
+    -11.42,
+    3.02
+   ],
+   "ok": true,
+   "bindend": true,
+   "unten_ok": null,
+   "bloecke": 152,
+   "alb": 3.0
+  },
+  "gross_p": {
+   "O": 30.88,
+   "R": 32.69,
+   "R_spann": 0.89,
+   "V3": 39.8,
+   "V3_spann": 0.4,
+   "sigma": null,
+   "tol": 2.7,
+   "ziel": [
+    15.83,
+    49.02
+   ],
+   "ok": true,
+   "bindend": true,
+   "unten_ok": true,
+   "bloecke": 152,
+   "alb": 14.37
+  },
+  "gross_eng_p": {
+   "O": 30.88,
+   "R": 32.69,
+   "R_spann": 0.89,
+   "V3": 39.8,
+   "V3_spann": 0.4,
+   "sigma": null,
+   "tol": 2.7,
+   "ziel": [
+    15.83,
+    49.02
+   ],
+   "ok": true,
+   "bindend": true,
+   "unten_ok": true,
+   "bloecke": 152,
+   "alb": 14.37
+  }
+ },
+ "staende": {
+  "Runde 3": {
+   "rot_eng": {
+    "wert": 82.73,
+    "ok": false
+   },
+   "h_rot": {
+    "wert": 25.53,
+    "ok": false
+   },
+   "dL": {
+    "wert": 6.88,
+    "ok": false
+   },
+   "gross_eng_p": {
+    "wert": 43.04,
+    "ok": true
+   }
+  },
+  "Runde 4": {
+   "rot_eng": {
+    "wert": 70.76,
+    "ok": true
+   },
+   "h_rot": {
+    "wert": 35.85,
+    "ok": true
+   },
+   "dL": {
+    "wert": 1.73,
+    "ok": true
+   },
+   "gross_eng_p": {
+    "wert": 44.05,
+    "ok": true
+   }
+  },
+  "Runde 5": {
+   "rot_eng": {
+    "wert": 75.01,
+    "ok": true
+   },
+   "h_rot": {
+    "wert": 35.59,
+    "ok": true
+   },
+   "dL": {
+    "wert": 0.81,
+    "ok": true
+   },
+   "gross_eng_p": {
+    "wert": 44.06,
+    "ok": true
+   }
+  }
+ }
+}

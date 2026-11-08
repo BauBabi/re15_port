@@ -1,0 +1,14 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build
+    Start 1380: integration_r41_birkin_pistole
+    Start 1379: unit_birkin_szenen
+    Start 1378: unit_n2_griff_start
+1/4 Test #1378: unit_n2_griff_start ..............   Passed    0.12 sec
+    Start 1385: unit_birkin_opfer
+2/4 Test #1385: unit_birkin_opfer ................   Passed    0.02 sec
+3/4 Test #1379: unit_birkin_szenen ...............   Passed    0.18 sec
+4/4 Test #1380: integration_r41_birkin_pistole ...   Passed  242.07 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) = 242.12 sec
+EXIT=0

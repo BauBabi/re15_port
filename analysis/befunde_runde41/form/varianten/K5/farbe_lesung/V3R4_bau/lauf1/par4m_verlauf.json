@@ -1,0 +1,530 @@
+[
+ {
+  "par": {
+   "Schwanz": {
+    "h": -24.64,
+    "C": 6.564,
+    "beta": -1.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Hinterbeine": {
+    "h": -20.0,
+    "C": 13.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Vorderbein r B1": {
+    "h": -25.0,
+    "C": 6.716,
+    "beta": 0.5,
+    "kappa": 1.0,
+    "q": 0.5
+   },
+   "Vorderbeine": {
+    "h": 22.81,
+    "C": 19.044,
+    "beta": 5.0,
+    "kappa": 0.0,
+    "q": 1.0
+   },
+   "Rumpf Ruecken": {
+    "h": -10.0,
+    "C": 9.155,
+    "beta": 2.684,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Rumpf Flanke": {
+    "h": -27.18,
+    "C": 25.218,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Brust": {
+    "h": -29.45,
+    "C": 40.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Kopf Hals": {
+    "h": -21.52,
+    "C": 33.874,
+    "beta": 5.0,
+    "kappa": 0.7,
+    "q": 1.0
+   }
+  },
+  "gruen": 43,
+  "n": 45,
+  "rot": [
+   "B2 Ruecken rot_eng",
+   "B2 Ruecken dL"
+  ]
+ },
+ {
+  "par": {
+   "Schwanz": {
+    "h": -24.64,
+    "C": 6.564,
+    "beta": -1.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Hinterbeine": {
+    "h": -20.0,
+    "C": 13.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Vorderbein r B1": {
+    "h": -25.0,
+    "C": 6.716,
+    "beta": 0.5,
+    "kappa": 1.0,
+    "q": 0.5
+   },
+   "Vorderbeine": {
+    "h": 22.81,
+    "C": 19.331,
+    "beta": 5.0,
+    "kappa": 0.0,
+    "q": 1.0
+   },
+   "Rumpf Ruecken": {
+    "h": -8.0,
+    "C": 9.155,
+    "beta": 2.684,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Rumpf Flanke": {
+    "h": -27.18,
+    "C": 25.218,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Brust": {
+    "h": -29.65,
+    "C": 41.515,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Kopf Hals": {
+    "h": -21.85,
+    "C": 33.874,
+    "beta": 5.0,
+    "kappa": 0.7,
+    "q": 1.0
+   }
+  },
+  "gruen": 43,
+  "n": 45,
+  "rot": [
+   "B2 Ruecken dL",
+   "B2 Hals dL"
+  ]
+ },
+ {
+  "par": {
+   "Schwanz": {
+    "h": -24.64,
+    "C": 6.564,
+    "beta": -1.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Hinterbeine": {
+    "h": -20.0,
+    "C": 13.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Vorderbein r B1": {
+    "h": -25.0,
+    "C": 6.716,
+    "beta": 0.5,
+    "kappa": 1.0,
+    "q": 0.5
+   },
+   "Vorderbeine": {
+    "h": 22.81,
+    "C": 19.593,
+    "beta": 5.0,
+    "kappa": 0.0,
+    "q": 1.0
+   },
+   "Rumpf Ruecken": {
+    "h": -5.3,
+    "C": 9.155,
+    "beta": 2.684,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Rumpf Flanke": {
+    "h": -27.18,
+    "C": 25.218,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Brust": {
+    "h": -29.65,
+    "C": 42.043,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Kopf Hals": {
+    "h": -21.91,
+    "C": 33.874,
+    "beta": 5.0,
+    "kappa": 0.7,
+    "q": 1.0
+   }
+  },
+  "gruen": 43,
+  "n": 45,
+  "rot": [
+   "B2 Ruecken dL",
+   "B2 Hals dL"
+  ]
+ },
+ {
+  "par": {
+   "Schwanz": {
+    "h": -24.64,
+    "C": 6.564,
+    "beta": -1.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Hinterbeine": {
+    "h": -20.0,
+    "C": 13.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Vorderbein r B1": {
+    "h": -25.0,
+    "C": 6.716,
+    "beta": 0.5,
+    "kappa": 1.0,
+    "q": 0.5
+   },
+   "Vorderbeine": {
+    "h": 22.81,
+    "C": 19.199,
+    "beta": 5.0,
+    "kappa": 0.0,
+    "q": 1.0
+   },
+   "Rumpf Ruecken": {
+    "h": -2.65,
+    "C": 9.155,
+    "beta": 2.684,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Rumpf Flanke": {
+    "h": -27.18,
+    "C": 25.218,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Brust": {
+    "h": -29.65,
+    "C": 42.538,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Kopf Hals": {
+    "h": -21.98,
+    "C": 33.874,
+    "beta": 5.0,
+    "kappa": 0.7,
+    "q": 1.0
+   }
+  },
+  "gruen": 43,
+  "n": 45,
+  "rot": [
+   "B2 Ruecken dL",
+   "B2 Hals dL"
+  ]
+ },
+ {
+  "par": {
+   "Schwanz": {
+    "h": -24.64,
+    "C": 6.564,
+    "beta": -1.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Hinterbeine": {
+    "h": -20.0,
+    "C": 13.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Vorderbein r B1": {
+    "h": -25.0,
+    "C": 6.716,
+    "beta": 0.5,
+    "kappa": 1.0,
+    "q": 0.5
+   },
+   "Vorderbeine": {
+    "h": 22.81,
+    "C": 19.469,
+    "beta": 5.0,
+    "kappa": 0.0,
+    "q": 1.0
+   },
+   "Rumpf Ruecken": {
+    "h": 0.01,
+    "C": 9.155,
+    "beta": 2.684,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Rumpf Flanke": {
+    "h": -27.18,
+    "C": 25.218,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Brust": {
+    "h": -29.65,
+    "C": 42.977,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Kopf Hals": {
+    "h": -22.04,
+    "C": 33.874,
+    "beta": 5.0,
+    "kappa": 0.7,
+    "q": 1.0
+   }
+  },
+  "gruen": 43,
+  "n": 45,
+  "rot": [
+   "B2 Ruecken dL",
+   "B2 Hals dL"
+  ]
+ },
+ {
+  "par": {
+   "Schwanz": {
+    "h": -24.64,
+    "C": 6.564,
+    "beta": -1.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Hinterbeine": {
+    "h": -20.0,
+    "C": 13.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Vorderbein r B1": {
+    "h": -25.0,
+    "C": 6.716,
+    "beta": 0.5,
+    "kappa": 1.0,
+    "q": 0.5
+   },
+   "Vorderbeine": {
+    "h": 22.81,
+    "C": 19.045,
+    "beta": 5.0,
+    "kappa": 0.0,
+    "q": 1.0
+   },
+   "Rumpf Ruecken": {
+    "h": 2.16,
+    "C": 9.155,
+    "beta": 2.684,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Rumpf Flanke": {
+    "h": -27.18,
+    "C": 25.218,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Brust": {
+    "h": -29.65,
+    "C": 41.618,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Kopf Hals": {
+    "h": -22.1,
+    "C": 33.874,
+    "beta": 5.0,
+    "kappa": 0.7,
+    "q": 1.0
+   }
+  },
+  "gruen": 43,
+  "n": 45,
+  "rot": [
+   "B2 Ruecken dL",
+   "B2 Hals dL"
+  ]
+ },
+ {
+  "par": {
+   "Schwanz": {
+    "h": -24.64,
+    "C": 6.564,
+    "beta": -1.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Hinterbeine": {
+    "h": -20.0,
+    "C": 13.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Vorderbein r B1": {
+    "h": -25.0,
+    "C": 6.716,
+    "beta": 0.5,
+    "kappa": 1.0,
+    "q": 0.5
+   },
+   "Vorderbeine": {
+    "h": 22.81,
+    "C": 19.325,
+    "beta": 5.0,
+    "kappa": 0.0,
+    "q": 1.0
+   },
+   "Rumpf Ruecken": {
+    "h": 4.29,
+    "C": 9.155,
+    "beta": 2.684,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Rumpf Flanke": {
+    "h": -27.18,
+    "C": 25.218,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Brust": {
+    "h": -29.65,
+    "C": 42.141,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Kopf Hals": {
+    "h": -21.86,
+    "C": 33.874,
+    "beta": 5.0,
+    "kappa": 0.7,
+    "q": 1.0
+   }
+  },
+  "gruen": 43,
+  "n": 45,
+  "rot": [
+   "B2 Ruecken dL",
+   "B2 Hals dL"
+  ]
+ },
+ {
+  "par": {
+   "Schwanz": {
+    "h": -24.64,
+    "C": 6.564,
+    "beta": -1.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Hinterbeine": {
+    "h": -20.0,
+    "C": 13.0,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Vorderbein r B1": {
+    "h": -25.0,
+    "C": 6.716,
+    "beta": 0.5,
+    "kappa": 1.0,
+    "q": 0.5
+   },
+   "Vorderbeine": {
+    "h": 22.81,
+    "C": 19.575,
+    "beta": 5.0,
+    "kappa": 0.0,
+    "q": 1.0
+   },
+   "Rumpf Ruecken": {
+    "h": 6.09,
+    "C": 9.155,
+    "beta": 2.684,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Rumpf Flanke": {
+    "h": -27.18,
+    "C": 25.218,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Brust": {
+    "h": -29.65,
+    "C": 42.534,
+    "beta": 5.0,
+    "kappa": 1.0,
+    "q": 1.0
+   },
+   "Kopf Hals": {
+    "h": -21.92,
+    "C": 33.874,
+    "beta": 5.0,
+    "kappa": 0.7,
+    "q": 1.0
+   }
+  },
+  "gruen": 43,
+  "n": 45,
+  "rot": [
+   "B2 Ruecken dL",
+   "B2 Hals dL"
+  ]
+ }
+]

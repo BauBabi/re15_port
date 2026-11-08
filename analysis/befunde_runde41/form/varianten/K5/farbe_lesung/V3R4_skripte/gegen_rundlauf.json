@@ -1,0 +1,605 @@
+{
+ "Bild 1 Ruecken RV1 Rot eng %": {
+  "wert": 25.68,
+  "fenster": [
+   11.2,
+   42.94
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Ruecken RV2 Farbton a*-Klasse Grad": {
+  "wert": 11.51,
+  "fenster": [
+   -13.23,
+   32.23
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Ruecken RV3 dL Rot - Haut": {
+  "wert": -2.57,
+  "fenster": [
+   -5.56,
+   3.16
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Ruecken RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 21.97,
+  "fenster": [
+   10.64,
+   33.83
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Ruecken RV5 C* Rotklasse [Info]": {
+  "wert": 13.31,
+  "fenster": [
+   12.16,
+   17.24
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Flanke RV1 Rot eng %": {
+  "wert": 6.59,
+  "fenster": [
+   0.29,
+   25.51
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Flanke RV2 Farbton a*-Klasse Grad": {
+  "wert": -21.08,
+  "fenster": [
+   -33.63,
+   -5.37
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Flanke RV3 dL Rot - Haut": {
+  "wert": 0.18,
+  "fenster": [
+   -5.12,
+   4.32
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Flanke RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 4.51,
+  "fenster": [
+   2.31,
+   7.54
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Flanke RV5 C* Rotklasse [Info]": {
+  "wert": 15.78,
+  "fenster": [
+   12.56,
+   18.84
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Brust/Bauch RV1 Rot eng %": {
+  "wert": 2.94,
+  "fenster": [
+   0.0,
+   38.66
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Brust/Bauch RV2 Farbton a*-Klasse Grad": {
+  "wert": -44.7,
+  "fenster": [
+   -67.55,
+   -14.65
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Brust/Bauch RV3 dL Rot - Haut": {
+  "wert": -0.98,
+  "fenster": [
+   -10.47,
+   15.07
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Brust/Bauch RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 2.94,
+  "fenster": [
+   0.0,
+   26.96
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Brust/Bauch RV5 C* Rotklasse [Info]": {
+  "wert": 14.16,
+  "fenster": [
+   11.69,
+   17.11
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Vorderbeine RV1 Rot eng %": {
+  "wert": 0.02,
+  "fenster": [
+   0.0,
+   7.11
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Vorderbeine RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 0.02,
+  "fenster": [
+   0.0,
+   5.55
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Hinterbeine RV1 Rot eng %": {
+  "wert": 2.22,
+  "fenster": [
+   0.0,
+   11.1
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Hinterbeine RV2 Farbton a*-Klasse Grad": {
+  "wert": 1.82,
+  "fenster": [
+   -81.86,
+   21.06
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Hinterbeine RV3 dL Rot - Haut": {
+  "wert": -2.27,
+  "fenster": [
+   -9.73,
+   1.53
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Hinterbeine RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 1.91,
+  "fenster": [
+   0.74,
+   6.44
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Hinterbeine RV5 C* Rotklasse [Info]": {
+  "wert": 15.09,
+  "fenster": [
+   13.61,
+   18.39
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Schwanz RV1 Rot eng %": {
+  "wert": 18.6,
+  "fenster": [
+   12.5,
+   34.48
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Schwanz RV2 Farbton a*-Klasse Grad": {
+  "wert": -7.04,
+  "fenster": [
+   -25.89,
+   1.29
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Schwanz RV3 dL Rot - Haut": {
+  "wert": 5.31,
+  "fenster": [
+   -0.58,
+   8.38
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Schwanz RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 5.45,
+  "fenster": [
+   2.95,
+   9.65
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Schwanz RV5 C* Rotklasse [Info]": {
+  "wert": 14.43,
+  "fenster": [
+   13.03,
+   18.37
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 1 Figur RV1 Rot eng %": {
+  "wert": 9.96,
+  "fenster": [
+   6.86,
+   21.42
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Figur RV2 Farbton a*-Klasse Grad": {
+  "wert": -8.17,
+  "fenster": [
+   -30.62,
+   -0.98
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Figur RV3 dL Rot - Haut": {
+  "wert": 0.79,
+  "fenster": [
+   -4.23,
+   3.03
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Figur RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 2.09,
+  "fenster": [
+   1.13,
+   5.55
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 1 Figur RV5 C* Rotklasse [Info]": {
+  "wert": 14.57,
+  "fenster": [
+   13.65,
+   17.35
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Ruecken RV1 Rot eng %": {
+  "wert": 53.27,
+  "fenster": [
+   42.05,
+   65.19
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Ruecken RV2 Farbton a*-Klasse Grad": {
+  "wert": -6.62,
+  "fenster": [
+   -12.86,
+   2.26
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Ruecken RV3 dL Rot - Haut": {
+  "wert": -5.05,
+  "fenster": [
+   -15.64,
+   0.84
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Ruecken RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 40.8,
+  "fenster": [
+   21.27,
+   62.19
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Ruecken RV5 C* Rotklasse [Info]": {
+  "wert": 26.57,
+  "fenster": [
+   25.39,
+   34.81
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Flanke RV1 Rot eng %": {
+  "wert": 33.93,
+  "fenster": [
+   10.27,
+   94.29
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Flanke RV2 Farbton a*-Klasse Grad": {
+  "wert": 9.02,
+  "fenster": [
+   -0.42,
+   21.22
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Flanke RV3 dL Rot - Haut": {
+  "wert": -7.36,
+  "fenster": [
+   -17.18,
+   -3.42
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Flanke RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 28.27,
+  "fenster": [
+   0.0,
+   108.17
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Flanke RV5 C* Rotklasse [Info]": {
+  "wert": 24.38,
+  "fenster": [
+   22.18,
+   35.22
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Brust/Bauch RV1 Rot eng %": {
+  "wert": 26.91,
+  "fenster": [
+   17.83,
+   67.73
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Brust/Bauch RV2 Farbton a*-Klasse Grad": {
+  "wert": 5.14,
+  "fenster": [
+   -0.07,
+   15.87
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Brust/Bauch RV3 dL Rot - Haut": {
+  "wert": -2.2,
+  "fenster": [
+   -9.99,
+   1.39
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Brust/Bauch RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 7.76,
+  "fenster": [
+   1.86,
+   17.81
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Brust/Bauch RV5 C* Rotklasse [Info]": {
+  "wert": 24.13,
+  "fenster": [
+   22.75,
+   30.65
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Vorderbeine RV1 Rot eng %": {
+  "wert": 62.61,
+  "fenster": [
+   56.43,
+   74.45
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Vorderbeine RV2 Farbton a*-Klasse Grad": {
+  "wert": 36.28,
+  "fenster": [
+   34.45,
+   38.75
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Vorderbeine RV3 dL Rot - Haut": {
+  "wert": -7.62,
+  "fenster": [
+   -11.42,
+   3.02
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Vorderbeine RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 32.69,
+  "fenster": [
+   15.83,
+   49.02
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Vorderbeine RV5 C* Rotklasse [Info]": {
+  "wert": 33.74,
+  "fenster": [
+   31.91,
+   40.29
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Hals RV1 Rot eng %": {
+  "wert": 29.94,
+  "fenster": [
+   17.93,
+   72.27
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Hals RV2 Farbton a*-Klasse Grad": {
+  "wert": 14.71,
+  "fenster": [
+   1.66,
+   20.34
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Hals RV3 dL Rot - Haut": {
+  "wert": -3.31,
+  "fenster": [
+   -6.27,
+   -1.53
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Hals RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 11.66,
+  "fenster": [
+   0.19,
+   29.82
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Hals RV5 C* Rotklasse [Info]": {
+  "wert": 22.54,
+  "fenster": [
+   21.71,
+   30.09
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Kopf RV1 Rot eng %": {
+  "wert": 32.45,
+  "fenster": [
+   25.45,
+   92.45
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Kopf RV2 Farbton a*-Klasse Grad": {
+  "wert": 22.53,
+  "fenster": [
+   13.07,
+   24.73
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Kopf RV3 dL Rot - Haut": {
+  "wert": 0.41,
+  "fenster": [
+   -4.41,
+   1.41
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Kopf RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 21.93,
+  "fenster": [
+   0.0,
+   118.32
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Kopf RV5 C* Rotklasse [Info]": {
+  "wert": 23.75,
+  "fenster": [
+   23.15,
+   31.05
+  ],
+  "ok": true,
+  "bindend": false
+ },
+ "Bild 2 Figur RV1 Rot eng %": {
+  "wert": 42.83,
+  "fenster": [
+   38.95,
+   74.81
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Figur RV2 Farbton a*-Klasse Grad": {
+  "wert": 25.35,
+  "fenster": [
+   17.71,
+   27.89
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Figur RV3 dL Rot - Haut": {
+  "wert": 0.49,
+  "fenster": [
+   -7.25,
+   2.25
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Figur RV4 groesste Rotflaeche eng % (Obergrenze)": {
+  "wert": 16.79,
+  "fenster": [
+   0.0,
+   87.08
+  ],
+  "ok": true,
+  "bindend": true
+ },
+ "Bild 2 Figur RV5 C* Rotklasse [Info]": {
+  "wert": 28.6,
+  "fenster": [
+   27.7,
+   33.3
+  ],
+  "ok": true,
+  "bindend": false
+ }
+}

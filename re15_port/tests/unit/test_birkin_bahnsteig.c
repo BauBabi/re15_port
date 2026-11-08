@@ -111,8 +111,9 @@ static void test_asset(void)
     CHECK(re2_emd_parse_bank(s_emd, s_emd_n, &fo) == 0, "BAHNSTEIG_FORM.EMD parst nicht");
     CHECK(fo.skel.bone_count == 32 && fo.md1.mesh_count == 32 && fo.anim.clip_count == 28,
           "Knochen %d Meshes %d Clips %d (J: 32/32, Stufe 3: 28 Clips)", fo.skel.bone_count, fo.md1.mesh_count, fo.anim.clip_count);
-    /* Formtreue: MD1 und TIM bytegleich mit der Referenz (seit Nachbesserung 1: J mit Kopf K3, varianten/K_alligator/K3_fit), die
-     * drei Posen als Keyframes (Ruhe = Ruhe von J mit Kiefer zu, Bild 1/Bild 2 mit den Kopfwinkeln von K3; form_j_posen.h) */
+    /* Formtreue: MD1 und TIM bytegleich mit der Referenz (seit E30 2026-11-07: Riesenform K5c V3 Runde 5 mit 16 CLUT-Zeilen,
+     * stufe3/basis_k5c; vorher K4 stufe3/basis_n2, K3 K3_fit), die drei Posen als Keyframes (Ruhe = Ruhe von J mit Kiefer zu,
+     * Bild 1/Bild 2 mit den Kopfwinkeln der Basis; form_j_posen.h, erzeugt von stufe3/gen/s3_testkopf.py) */
     {
         uint32_t dir = rd32(s_emd), md1 = rd32(s_emd + dir + 7u * 4u);
         size_t md1_n = (size_t)dir - md1;

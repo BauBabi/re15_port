@@ -1,0 +1,9 @@
+Start 34/45  f 8.936
+sweep 0 C     37/45 f 7.354  ROT ['B1 Hinterbeine dL', 'B2 Ruecken rot_eng', 'B2 Ruecken h_rot', 'B2 Brust/Bauch dL', 'B2 Hals dL', 'B2 Kopf h_rot', 'B2 Kopf dL', 'B2 Figur dL']
+sweep 0 h     38/45 f 5.690  ROT ['B1 Hinterbeine dL', 'B2 Ruecken rot_eng', 'B2 Ruecken h_rot', 'B2 Brust/Bauch dL', 'B2 Hals dL', 'B2 Kopf dL', 'B2 Figur dL']
+sweep 0 beta  38/45 f 4.817  ROT ['B1 Hinterbeine dL', 'B2 Ruecken rot_eng', 'B2 Ruecken h_rot', 'B2 Brust/Bauch dL', 'B2 Hals dL', 'B2 Kopf dL', 'B2 Figur dL']
+sweep 0 a     39/45 f 4.396  ROT ['B1 Hinterbeine dL', 'B2 Ruecken rot_eng', 'B2 Brust/Bauch dL', 'B2 Hals dL', 'B2 Kopf dL', 'B2 Figur dL']
+sweep 0 q     38/45 f 3.626  ROT ['B1 Hinterbeine dL', 'B2 Ruecken rot_eng', 'B2 Brust/Bauch dL', 'B2 Vorderbeine h_rot', 'B2 Hals dL', 'B2 Kopf dL', 'B2 Figur dL']
+sweep 0 kappa 37/45 f 3.158  ROT ['B1 Hinterbeine dL', 'B2 Ruecken rot_eng', 'B2 Brust/Bauch dL', 'B2 Vorderbeine h_rot', 'B2 Hals dL', 'B2 Kopf dL', 'B2 Figur rot_eng', 'B2 Figur dL']
+sweep 1 C     38/45 f 2.863  ROT ['B1 Hinterbeine dL', 'B2 Ruecken rot_eng', 'B2 Brust/Bauch dL', 'B2 Vorderbeine h_rot', 'B2 Hals dL', 'B2 Kopf dL', 'B2 Figur dL']
+sweep 1 h     39/45 f 2.711  ROT ['B1 Hinterbeine dL', 'B2 Ruecken rot_eng', 'B2 Brust/Bauch dL', 'B2 Vorderbeine h_rot', 'B2 Hals dL', 'B2 Kopf dL']

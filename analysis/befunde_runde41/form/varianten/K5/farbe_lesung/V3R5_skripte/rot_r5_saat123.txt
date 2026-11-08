@@ -1,0 +1,70 @@
+== Riegel Rot wie die Vorlage: farbe/K5c_farbe_v3
+  Bild 1 Ruecken                  RV1 Rot eng %                                  23.94  [  11.20 ..   42.94]  GRUEN
+  Bild 1 Ruecken                  RV2 Farbton a*-Klasse Grad                     -9.48  [ -13.23 ..   32.23]  GRUEN
+  Bild 1 Ruecken                  RV3 dL Rot - Haut                               0.93  [  -5.56 ..    3.16]  GRUEN
+  Bild 1 Ruecken                  RV4 groesste Rotflaeche eng % (Obergrenze)     14.44  [  10.64 ..   33.83]  GRUEN (Info)
+  Bild 1 Ruecken                  RV5 C* Rotklasse [Info]                        13.48  [  12.16 ..   17.24]  GRUEN (Info)
+  Bild 1 Flanke                   RV1 Rot eng %                                   3.88  [   0.29 ..   25.51]  GRUEN
+  Bild 1 Flanke                   RV2 Farbton a*-Klasse Grad                    -23.05  [ -33.63 ..   -5.37]  GRUEN
+  Bild 1 Flanke                   RV3 dL Rot - Haut                               2.32  [  -5.12 ..    4.32]  GRUEN
+  Bild 1 Flanke                   RV4 groesste Rotflaeche eng % (Obergrenze)      1.83  [   2.31 ..    7.54]  GRUEN
+  Bild 1 Flanke                   RV5 C* Rotklasse [Info]                        13.30  [  12.56 ..   18.84]  GRUEN (Info)
+  Bild 1 Brust/Bauch              RV1 Rot eng %                                   0.00  [   0.00 ..   38.66]  GRUEN (Info)
+  Bild 1 Brust/Bauch              RV4 groesste Rotflaeche eng % (Obergrenze)      0.00  [   0.00 ..   26.96]  GRUEN (Info)
+  Bild 1 Vorderbeine              RV1 Rot eng %                                   4.00  [   0.00 ..    7.11]  GRUEN
+  Bild 1 Vorderbeine              RV4 groesste Rotflaeche eng % (Obergrenze)      4.00  [   0.00 ..    5.55]  GRUEN
+  Bild 1 Hinterbeine              RV1 Rot eng %                                   5.28  [   0.00 ..   11.10]  GRUEN
+  Bild 1 Hinterbeine              RV2 Farbton a*-Klasse Grad                    -30.25  [ -81.86 ..   21.06]  GRUEN
+  Bild 1 Hinterbeine              RV3 dL Rot - Haut                              -0.31  [  -9.73 ..    1.53]  GRUEN
+  Bild 1 Hinterbeine              RV4 groesste Rotflaeche eng % (Obergrenze)      2.39  [   0.74 ..    6.44]  GRUEN
+  Bild 1 Hinterbeine              RV5 C* Rotklasse [Info]                        11.80  [  13.61 ..   18.39]  ROT (Info)
+  Bild 1 Schwanz                  RV1 Rot eng %                                  23.46  [  12.50 ..   34.48]  GRUEN
+  Bild 1 Schwanz                  RV2 Farbton a*-Klasse Grad                    -22.05  [ -25.89 ..    1.29]  GRUEN
+  Bild 1 Schwanz                  RV3 dL Rot - Haut                               1.23  [  -0.58 ..    8.38]  GRUEN
+  Bild 1 Schwanz                  RV4 groesste Rotflaeche eng % (Obergrenze)      6.94  [   2.95 ..    9.65]  GRUEN
+  Bild 1 Schwanz                  RV5 C* Rotklasse [Info]                        12.26  [  13.03 ..   18.37]  ROT (Info)
+  Bild 1 Figur                    RV1 Rot eng %                                  12.67  [   6.86 ..   21.42]  GRUEN
+  Bild 1 Figur                    RV2 Farbton a*-Klasse Grad                    -22.54  [ -30.62 ..   -0.98]  GRUEN
+  Bild 1 Figur                    RV3 dL Rot - Haut                               1.83  [  -4.23 ..    3.03]  GRUEN
+  Bild 1 Figur                    RV4 groesste Rotflaeche eng % (Obergrenze)      2.71  [   1.13 ..    5.55]  GRUEN
+  Bild 1 Figur                    RV5 C* Rotklasse [Info]                        12.29  [  13.65 ..   17.35]  ROT (Info)
+  Bild 2 Ruecken                  RV1 Rot eng %                                  60.06  [  42.05 ..   65.19]  GRUEN
+  Bild 2 Ruecken                  RV2 Farbton a*-Klasse Grad                     -9.30  [ -12.86 ..    2.26]  GRUEN
+  Bild 2 Ruecken                  RV3 dL Rot - Haut                              -0.91  [ -15.64 ..    0.84]  GRUEN
+  Bild 2 Ruecken                  RV4 groesste Rotflaeche eng % (Obergrenze)     54.98  [  21.27 ..   62.19]  GRUEN
+  Bild 2 Ruecken                  RV5 C* Rotklasse [Info]                        24.16  [  25.39 ..   34.81]  ROT (Info)
+  Bild 2 Flanke                   RV1 Rot eng %                                  18.85  [  10.27 ..   94.29]  GRUEN (Info)
+  Bild 2 Flanke                   RV2 Farbton a*-Klasse Grad                      0.36  [  -0.42 ..   21.22]  GRUEN (Info)
+  Bild 2 Flanke                   RV3 dL Rot - Haut                               2.61  [ -17.18 ..   -3.42]  ROT (Info)
+  Bild 2 Flanke                   RV4 groesste Rotflaeche eng % (Obergrenze)     10.58  [   0.00 ..  108.17]  GRUEN (Info)
+  Bild 2 Flanke                   RV5 C* Rotklasse [Info]                        20.87  [  22.18 ..   35.22]  ROT (Info)
+  Bild 2 Brust/Bauch              RV1 Rot eng %                                  32.96  [  17.83 ..   67.73]  GRUEN
+  Bild 2 Brust/Bauch              RV2 Farbton a*-Klasse Grad                     11.14  [  -0.07 ..   15.87]  GRUEN
+  Bild 2 Brust/Bauch              RV3 dL Rot - Haut                              -1.16  [  -9.99 ..    1.39]  GRUEN
+  Bild 2 Brust/Bauch              RV4 groesste Rotflaeche eng % (Obergrenze)      8.80  [   1.86 ..   17.81]  GRUEN
+  Bild 2 Brust/Bauch              RV5 C* Rotklasse [Info]                        21.94  [  22.75 ..   30.65]  ROT (Info)
+  Bild 2 Vorderbeine              RV1 Rot eng %                                  76.77  [  56.43 ..   74.45]  ROT (Info)
+  Bild 2 Vorderbeine              RV2 Farbton a*-Klasse Grad                     35.79  [  34.45 ..   38.75]  GRUEN (Info)
+  Bild 2 Vorderbeine              RV3 dL Rot - Haut                              -5.46  [ -11.42 ..    3.02]  GRUEN (Info)
+  Bild 2 Vorderbeine              RV4 groesste Rotflaeche eng % (Obergrenze)     40.53  [  15.83 ..   49.02]  GRUEN (Info)
+  Bild 2 Vorderbeine              RV5 C* Rotklasse [Info]                        35.29  [  31.91 ..   40.29]  GRUEN (Info)
+  Bild 2 Hals                     RV1 Rot eng %                                  29.09  [  17.93 ..   72.27]  GRUEN
+  Bild 2 Hals                     RV2 Farbton a*-Klasse Grad                     17.86  [   1.66 ..   20.34]  GRUEN
+  Bild 2 Hals                     RV3 dL Rot - Haut                              -1.83  [  -6.27 ..   -1.53]  GRUEN
+  Bild 2 Hals                     RV4 groesste Rotflaeche eng % (Obergrenze)     14.29  [   0.19 ..   29.82]  GRUEN
+  Bild 2 Hals                     RV5 C* Rotklasse [Info]                        21.56  [  21.71 ..   30.09]  ROT (Info)
+  Bild 2 Kopf                     RV1 Rot eng %                                  63.10  [  25.45 ..   92.45]  GRUEN
+  Bild 2 Kopf                     RV2 Farbton a*-Klasse Grad                     19.21  [  13.07 ..   24.73]  GRUEN
+  Bild 2 Kopf                     RV3 dL Rot - Haut                              -0.75  [  -4.41 ..    1.41]  GRUEN
+  Bild 2 Kopf                     RV4 groesste Rotflaeche eng % (Obergrenze)     48.57  [   0.00 ..  118.32]  GRUEN
+  Bild 2 Kopf                     RV5 C* Rotklasse [Info]                        22.99  [  23.15 ..   31.05]  ROT (Info)
+  Bild 2 Vorderbeine ohne Krallen RV1 Rot eng %                                  74.31  [  53.27 ..   76.11]  GRUEN
+  Bild 2 Vorderbeine ohne Krallen RV2 Farbton a*-Klasse Grad                     35.55  [  32.72 ..   39.57]  GRUEN
+  Bild 2 Vorderbeine ohne Krallen RV3 dL Rot - Haut                               0.93  [ -13.51 ..    3.11]  GRUEN
+  Bild 2 Vorderbeine ohne Krallen RV4 groesste Rotflaeche eng % (Obergrenze)     44.26  [  13.20 ..   58.34]  GRUEN
+  Bild 2 Figur                    RV1 Rot eng %                                  58.65  [  38.95 ..   74.81]  GRUEN
+  Bild 2 Figur                    RV2 Farbton a*-Klasse Grad                     25.24  [  17.71 ..   27.89]  GRUEN
+  Bild 2 Figur                    RV3 dL Rot - Haut                               0.49  [  -7.25 ..    2.25]  GRUEN
+  Bild 2 Figur                    RV4 groesste Rotflaeche eng % (Obergrenze)     44.69  [   0.00 ..   87.08]  GRUEN
+  Bild 2 Figur                    RV5 C* Rotklasse [Info]                        27.98  [  27.70 ..   33.30]  GRUEN (Info)
+  -> 45/45 bindende Zeilen GRUEN
