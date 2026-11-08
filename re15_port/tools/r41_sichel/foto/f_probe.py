@@ -1,0 +1,22 @@
+import sys, os, numpy as np, cv2
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'v4'))
+import v4_gemein as G
+S = os.path.join(G.SFV4, 'foto'); os.makedirs(S, exist_ok=True)
+bg = G.videoraum(G.hintergrund())
+for b in (1, 2):
+    v = G.vorlage(b)
+    d = np.sqrt(((G.lab(v) - G.lab(bg)) ** 2).sum(2))
+    d = cv2.GaussianBlur(d.astype(np.float32), (0, 0), 1.0)
+    np.save(os.path.join(S, 'de_%d.npy' % b), d)
+    im = np.clip(d * 6, 0, 255).astype(np.uint8)
+    im = cv2.applyColorMap(im, cv2.COLORMAP_JET)
+    for x in range(0, 640, 50): cv2.line(im, (x, 0), (x, 479), (255, 255, 255), 1)
+    for y in range(0, 480, 50): cv2.line(im, (0, y), (639, y), (255, 255, 255), 1)
+    cv2.imwrite(os.path.join(S, 'de_%d.png' % b), im)
+    vv = cv2.cvtColor(np.clip(v, 0, 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+    for x in range(0, 640, 50): cv2.line(vv, (x, 0), (x, 479), (0, 255, 255), 1); cv2.putText(vv, str(x), (x+2, 12), 0, 0.35, (0,255,255), 1)
+    for y in range(0, 480, 50): cv2.line(vv, (0, y), (639, y), (0, 255, 255), 1); cv2.putText(vv, str(y), (2, y-2), 0, 0.35, (0,255,255), 1)
+    cv2.imwrite(os.path.join(S, 'grid_%d.png' % b), cv2.resize(vv, None, fx=1.5, fy=1.5))
+    bb = cv2.cvtColor(np.clip(bg, 0, 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+    cv2.imwrite(os.path.join(S, 'bg.png'), bb)
+    print(b, np.percentile(d, [50, 90, 99]))

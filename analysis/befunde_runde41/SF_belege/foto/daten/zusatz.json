@@ -1,0 +1,1345 @@
+{
+ "1": {
+  "regionen": {
+   "Kopf (Kopfbox V4)": {
+    "box": [
+     368,
+     139,
+     416,
+     191
+    ],
+    "px": 2523,
+    "rot": 0.192,
+    "lab": [
+     20.3,
+     8.3,
+     2.2
+    ],
+    "a50": 7.6,
+    "modell_px": 1320,
+    "modell_rot": 0.489
+   },
+   "Brust Mitte (B-Mitte)": {
+    "box": [
+     360,
+     192,
+     450,
+     245
+    ],
+    "px": 4914,
+    "rot": 0.478,
+    "lab": [
+     16.9,
+     9.9,
+     4.2
+    ],
+    "a50": 9.4,
+    "modell_px": 4914,
+    "modell_rot": 0.212
+   },
+   "Schulter/Oberarm Bild-links = (W)-rechts": {
+    "box": [
+     296,
+     175,
+     355,
+     250
+    ],
+    "px": 4382,
+    "rot": 0.005,
+    "lab": [
+     21.2,
+     4.0,
+     1.7
+    ],
+    "a50": 4.5,
+    "modell_px": 1099,
+    "modell_rot": 0.49
+   },
+   "Schulter/Oberarm Bild-rechts = (W)-links": {
+    "box": [
+     455,
+     178,
+     512,
+     265
+    ],
+    "px": 4652,
+    "rot": 0.022,
+    "lab": [
+     21.6,
+     4.4,
+     -0.7
+    ],
+    "a50": 4.2,
+    "modell_px": 3998,
+    "modell_rot": 0.302
+   },
+   "Unterarm/Hand Bild-rechts = (W)-links": {
+    "box": [
+     478,
+     265,
+     512,
+     372
+    ],
+    "px": 3290,
+    "rot": 0.096,
+    "lab": [
+     16.9,
+     4.0,
+     -2.0
+    ],
+    "a50": 2.7,
+    "modell_px": 2686,
+    "modell_rot": 0.095
+   },
+   "Bauch/Huefte": {
+    "box": [
+     360,
+     250,
+     445,
+     300
+    ],
+    "px": 4332,
+    "rot": 0.0,
+    "lab": [
+     10.0,
+     -0.9,
+     -0.7
+    ],
+    "a50": -1.0,
+    "modell_px": 3864,
+    "modell_rot": 0.092
+   }
+  },
+  "huckel": [
+   {
+    "x": 426,
+    "foto": 168,
+    "modell": 162,
+    "d": 6,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v4",
+    "zeile": 480,
+    "lok": [
+     -318,
+     -1227,
+     -428
+    ]
+   },
+   {
+    "x": 427,
+    "foto": 169,
+    "modell": 162,
+    "d": 7,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v4",
+    "zeile": 480,
+    "lok": [
+     -322,
+     -1228,
+     -415
+    ]
+   },
+   {
+    "x": 428,
+    "foto": 169,
+    "modell": 161,
+    "d": 8,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -564,
+     -1113,
+     -381
+    ]
+   },
+   {
+    "x": 429,
+    "foto": 170,
+    "modell": 161,
+    "d": 9,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -504,
+     -1149,
+     -380
+    ]
+   },
+   {
+    "x": 430,
+    "foto": 172,
+    "modell": 161,
+    "d": 11,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -442,
+     -1185,
+     -375
+    ]
+   },
+   {
+    "x": 431,
+    "foto": 174,
+    "modell": 161,
+    "d": 13,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -381,
+     -1222,
+     -370
+    ]
+   },
+   {
+    "x": 439,
+    "foto": 170,
+    "modell": 160,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -388,
+     -1259,
+     -293
+    ]
+   },
+   {
+    "x": 440,
+    "foto": 169,
+    "modell": 161,
+    "d": 8,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -384,
+     -1252,
+     -275
+    ]
+   },
+   {
+    "x": 441,
+    "foto": 169,
+    "modell": 161,
+    "d": 8,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -396,
+     -1249,
+     -261
+    ]
+   },
+   {
+    "x": 442,
+    "foto": 169,
+    "modell": 162,
+    "d": 7,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -392,
+     -1242,
+     -244
+    ]
+   },
+   {
+    "x": 443,
+    "foto": 170,
+    "modell": 163,
+    "d": 7,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -388,
+     -1235,
+     -227
+    ]
+   },
+   {
+    "x": 451,
+    "foto": 185,
+    "modell": 168,
+    "d": 17,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -403,
+     -1190,
+     -98
+    ]
+   },
+   {
+    "x": 452,
+    "foto": 185,
+    "modell": 168,
+    "d": 17,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -415,
+     -1186,
+     -84
+    ]
+   },
+   {
+    "x": 453,
+    "foto": 185,
+    "modell": 169,
+    "d": 16,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -411,
+     -1180,
+     -66
+    ]
+   },
+   {
+    "x": 454,
+    "foto": 185,
+    "modell": 170,
+    "d": 15,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -407,
+     -1173,
+     -49
+    ]
+   },
+   {
+    "x": 456,
+    "foto": 174,
+    "modell": 170,
+    "d": 4,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "d50",
+    "zeile": 480,
+    "lok": [
+     -468,
+     -1145,
+     -13
+    ]
+   },
+   {
+    "x": 459,
+    "foto": 175,
+    "modell": 171,
+    "d": 4,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "d50",
+    "zeile": 480,
+    "lok": [
+     -476,
+     -1140,
+     30
+    ]
+   }
+  ],
+  "kopf": {
+   "modell_kopf_ok_unter_figur_ok_H": 0.08,
+   "modell_kopf_box": [
+    416,
+    183,
+    461,
+    234
+   ],
+   "modell_kopf_wh_H": [
+    0.16,
+    0.181
+   ],
+   "foto_kopf_ok_unter_figur_ok_H": 0.0,
+   "foto_kopf_wh_H": [
+    0.159,
+    0.172
+   ],
+   "modell_kopf_mitte": [
+    440.3,
+    209.3
+   ],
+   "foto_kopf_mitte": [
+    392.0,
+    165.0
+   ]
+  }
+ },
+ "2": {
+  "regionen": {
+   "Kopf (Kopfbox V4)": {
+    "box": [
+     412,
+     190,
+     467,
+     263
+    ],
+    "px": 3529,
+    "rot": 0.231,
+    "lab": [
+     25.8,
+     7.0,
+     2.2
+    ],
+    "a50": 6.1,
+    "modell_px": 2768,
+    "modell_rot": 0.252
+   },
+   "Buckel/Ruecken oben": {
+    "box": [
+     330,
+     186,
+     410,
+     225
+    ],
+    "px": 2994,
+    "rot": 0.415,
+    "lab": [
+     32.8,
+     8.3,
+     2.0
+    ],
+    "a50": 8.0,
+    "modell_px": 2561,
+    "modell_rot": 0.775
+   },
+   "Schulter/Oberarm Mitte = (W)-rechts": {
+    "box": [
+     360,
+     228,
+     430,
+     300
+    ],
+    "px": 5144,
+    "rot": 0.279,
+    "lab": [
+     26.2,
+     6.9,
+     1.9
+    ],
+    "a50": 6.8,
+    "modell_px": 4791,
+    "modell_rot": 0.281
+   },
+   "Schwanz Bogen": {
+    "box": [
+     280,
+     222,
+     335,
+     262
+    ],
+    "px": 1989,
+    "rot": 0.08,
+    "lab": [
+     16.4,
+     5.1,
+     1.6
+    ],
+    "a50": 5.0,
+    "modell_px": 1515,
+    "modell_rot": 0.112
+   }
+  },
+  "huckel": [
+   {
+    "x": 300,
+    "foto": 225,
+    "modell": 219,
+    "d": 6,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v18",
+    "zeile": 480,
+    "lok": [
+     -212,
+     164,
+     -254
+    ]
+   },
+   {
+    "x": 301,
+    "foto": 224,
+    "modell": 218,
+    "d": 6,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v7",
+    "zeile": 480,
+    "lok": [
+     -220,
+     127,
+     -258
+    ]
+   },
+   {
+    "x": 302,
+    "foto": 224,
+    "modell": 217,
+    "d": 7,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -231,
+     116,
+     -242
+    ]
+   },
+   {
+    "x": 303,
+    "foto": 223,
+    "modell": 216,
+    "d": 7,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -247,
+     115,
+     -216
+    ]
+   },
+   {
+    "x": 304,
+    "foto": 223,
+    "modell": 215,
+    "d": 8,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -263,
+     114,
+     -190
+    ]
+   },
+   {
+    "x": 305,
+    "foto": 223,
+    "modell": 214,
+    "d": 9,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -279,
+     113,
+     -165
+    ]
+   },
+   {
+    "x": 306,
+    "foto": 223,
+    "modell": 213,
+    "d": 10,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -296,
+     112,
+     -139
+    ]
+   },
+   {
+    "x": 307,
+    "foto": 223,
+    "modell": 212,
+    "d": 11,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -312,
+     112,
+     -113
+    ]
+   },
+   {
+    "x": 308,
+    "foto": 224,
+    "modell": 212,
+    "d": 12,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -303,
+     86,
+     -115
+    ]
+   },
+   {
+    "x": 309,
+    "foto": 224,
+    "modell": 211,
+    "d": 13,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v5",
+    "zeile": 480,
+    "lok": [
+     -327,
+     121,
+     -62
+    ]
+   },
+   {
+    "x": 310,
+    "foto": 224,
+    "modell": 211,
+    "d": 13,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v5",
+    "zeile": 480,
+    "lok": [
+     -317,
+     85,
+     -72
+    ]
+   },
+   {
+    "x": 311,
+    "foto": 224,
+    "modell": 211,
+    "d": 13,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -300,
+     35,
+     -94
+    ]
+   },
+   {
+    "x": 312,
+    "foto": 224,
+    "modell": 211,
+    "d": 13,
+    "knochen": 18,
+    "teil": "Schwanz",
+    "flaeche": "v6",
+    "zeile": 480,
+    "lok": [
+     -291,
+     9,
+     -96
+    ]
+   },
+   {
+    "x": 392,
+    "foto": 185,
+    "modell": 181,
+    "d": 4,
+    "knochen": 8,
+    "teil": "Schulter (W)-rechts",
+    "flaeche": "d55",
+    "zeile": 480,
+    "lok": [
+     -592,
+     -1022,
+     -470
+    ]
+   },
+   {
+    "x": 393,
+    "foto": 185,
+    "modell": 181,
+    "d": 4,
+    "knochen": 8,
+    "teil": "Schulter (W)-rechts",
+    "flaeche": "d55",
+    "zeile": 480,
+    "lok": [
+     -562,
+     -1045,
+     -513
+    ]
+   },
+   {
+    "x": 394,
+    "foto": 185,
+    "modell": 180,
+    "d": 5,
+    "knochen": 8,
+    "teil": "Schulter (W)-rechts",
+    "flaeche": "d55",
+    "zeile": 480,
+    "lok": [
+     -581,
+     -1050,
+     -462
+    ]
+   },
+   {
+    "x": 395,
+    "foto": 185,
+    "modell": 179,
+    "d": 6,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v16",
+    "zeile": 480,
+    "lok": [
+     -755,
+     -925,
+     -43
+    ]
+   },
+   {
+    "x": 396,
+    "foto": 185,
+    "modell": 178,
+    "d": 7,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v16",
+    "zeile": 480,
+    "lok": [
+     -701,
+     -983,
+     -165
+    ]
+   },
+   {
+    "x": 397,
+    "foto": 186,
+    "modell": 178,
+    "d": 8,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "d5",
+    "zeile": 480,
+    "lok": [
+     -587,
+     -1084,
+     -406
+    ]
+   },
+   {
+    "x": 398,
+    "foto": 186,
+    "modell": 177,
+    "d": 9,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -596,
+     -1094,
+     -377
+    ]
+   },
+   {
+    "x": 399,
+    "foto": 186,
+    "modell": 176,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -606,
+     -1103,
+     -347
+    ]
+   },
+   {
+    "x": 400,
+    "foto": 187,
+    "modell": 175,
+    "d": 12,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -616,
+     -1112,
+     -316
+    ]
+   },
+   {
+    "x": 401,
+    "foto": 187,
+    "modell": 175,
+    "d": 12,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -607,
+     -1120,
+     -311
+    ]
+   },
+   {
+    "x": 402,
+    "foto": 186,
+    "modell": 175,
+    "d": 11,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -599,
+     -1128,
+     -306
+    ]
+   },
+   {
+    "x": 403,
+    "foto": 186,
+    "modell": 175,
+    "d": 11,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -590,
+     -1136,
+     -301
+    ]
+   },
+   {
+    "x": 404,
+    "foto": 186,
+    "modell": 175,
+    "d": 11,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -581,
+     -1144,
+     -295
+    ]
+   },
+   {
+    "x": 405,
+    "foto": 186,
+    "modell": 175,
+    "d": 11,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -573,
+     -1152,
+     -290
+    ]
+   },
+   {
+    "x": 406,
+    "foto": 186,
+    "modell": 176,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -546,
+     -1159,
+     -310
+    ]
+   },
+   {
+    "x": 407,
+    "foto": 186,
+    "modell": 176,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -537,
+     -1167,
+     -305
+    ]
+   },
+   {
+    "x": 408,
+    "foto": 186,
+    "modell": 176,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -528,
+     -1175,
+     -299
+    ]
+   },
+   {
+    "x": 409,
+    "foto": 186,
+    "modell": 176,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -520,
+     -1183,
+     -294
+    ]
+   },
+   {
+    "x": 410,
+    "foto": 186,
+    "modell": 177,
+    "d": 9,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -493,
+     -1190,
+     -314
+    ]
+   },
+   {
+    "x": 411,
+    "foto": 186,
+    "modell": 177,
+    "d": 9,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -484,
+     -1198,
+     -309
+    ]
+   },
+   {
+    "x": 412,
+    "foto": 186,
+    "modell": 177,
+    "d": 9,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -476,
+     -1207,
+     -304
+    ]
+   },
+   {
+    "x": 413,
+    "foto": 187,
+    "modell": 177,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -467,
+     -1215,
+     -298
+    ]
+   },
+   {
+    "x": 414,
+    "foto": 188,
+    "modell": 178,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -440,
+     -1222,
+     -318
+    ]
+   },
+   {
+    "x": 415,
+    "foto": 189,
+    "modell": 178,
+    "d": 11,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -431,
+     -1230,
+     -313
+    ]
+   },
+   {
+    "x": 416,
+    "foto": 190,
+    "modell": 178,
+    "d": 12,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -423,
+     -1238,
+     -308
+    ]
+   },
+   {
+    "x": 417,
+    "foto": 191,
+    "modell": 178,
+    "d": 13,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -414,
+     -1246,
+     -303
+    ]
+   },
+   {
+    "x": 418,
+    "foto": 192,
+    "modell": 178,
+    "d": 14,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v19",
+    "zeile": 480,
+    "lok": [
+     -405,
+     -1254,
+     -297
+    ]
+   },
+   {
+    "x": 419,
+    "foto": 192,
+    "modell": 179,
+    "d": 13,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v14",
+    "zeile": 480,
+    "lok": [
+     -381,
+     -1257,
+     -308
+    ]
+   },
+   {
+    "x": 420,
+    "foto": 191,
+    "modell": 180,
+    "d": 11,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v14",
+    "zeile": 480,
+    "lok": [
+     -361,
+     -1255,
+     -306
+    ]
+   },
+   {
+    "x": 421,
+    "foto": 191,
+    "modell": 181,
+    "d": 10,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v14",
+    "zeile": 480,
+    "lok": [
+     -342,
+     -1254,
+     -303
+    ]
+   },
+   {
+    "x": 422,
+    "foto": 191,
+    "modell": 182,
+    "d": 9,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v14",
+    "zeile": 480,
+    "lok": [
+     -323,
+     -1253,
+     -300
+    ]
+   },
+   {
+    "x": 423,
+    "foto": 191,
+    "modell": 183,
+    "d": 8,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v8",
+    "zeile": 480,
+    "lok": [
+     -408,
+     -1168,
+     27
+    ]
+   },
+   {
+    "x": 424,
+    "foto": 191,
+    "modell": 184,
+    "d": 7,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v8",
+    "zeile": 480,
+    "lok": [
+     -390,
+     -1166,
+     37
+    ]
+   },
+   {
+    "x": 425,
+    "foto": 191,
+    "modell": 185,
+    "d": 6,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v8",
+    "zeile": 480,
+    "lok": [
+     -373,
+     -1163,
+     47
+    ]
+   },
+   {
+    "x": 426,
+    "foto": 191,
+    "modell": 186,
+    "d": 5,
+    "knochen": 8,
+    "teil": "Ruecken/Buckel",
+    "flaeche": "v8",
+    "zeile": 480,
+    "lok": [
+     -355,
+     -1161,
+     57
+    ]
+   },
+   {
+    "x": 450,
+    "foto": 202,
+    "modell": 198,
+    "d": 4,
+    "knochen": 9,
+    "teil": "Kopf",
+    "flaeche": "d14",
+    "zeile": 486,
+    "lok": [
+     -1,
+     -375,
+     63
+    ]
+   },
+   {
+    "x": 451,
+    "foto": 202,
+    "modell": 197,
+    "d": 5,
+    "knochen": 9,
+    "teil": "Kopf",
+    "flaeche": "d14",
+    "zeile": 486,
+    "lok": [
+     -7,
+     -376,
+     92
+    ]
+   },
+   {
+    "x": 452,
+    "foto": 202,
+    "modell": 198,
+    "d": 4,
+    "knochen": 9,
+    "teil": "Kopf",
+    "flaeche": "d14",
+    "zeile": 486,
+    "lok": [
+     17,
+     -391,
+     71
+    ]
+   },
+   {
+    "x": 454,
+    "foto": 206,
+    "modell": 200,
+    "d": 6,
+    "knochen": 9,
+    "teil": "Kopf",
+    "flaeche": "d14",
+    "zeile": 486,
+    "lok": [
+     66,
+     -422,
+     29
+    ]
+   },
+   {
+    "x": 455,
+    "foto": 210,
+    "modell": 201,
+    "d": 9,
+    "knochen": 9,
+    "teil": "Kopf",
+    "flaeche": "d18",
+    "zeile": 486,
+    "lok": [
+     90,
+     -437,
+     8
+    ]
+   }
+  ],
+  "kopf": {
+   "modell_kopf_ok_unter_figur_ok_H": 0.085,
+   "modell_kopf_box": [
+    433,
+    197,
+    459,
+    239
+   ],
+   "modell_kopf_wh_H": [
+    0.104,
+    0.166
+   ],
+   "foto_kopf_ok_unter_figur_ok_H": 0.016,
+   "foto_kopf_wh_H": [
+    0.217,
+    0.289
+   ],
+   "modell_kopf_mitte": [
+    445.7,
+    216.5
+   ],
+   "foto_kopf_mitte": [
+    439.5,
+    226.5
+   ]
+  }
+ },
+ "maul_vorn_135": {
+  "pose": {
+   "clip": 0,
+   "bild": 9,
+   "gier": 1737,
+   "x": -9279,
+   "z": -22511,
+   "art": "vorn",
+   "iou": 0.619,
+   "x_ab": 462,
+   "y_bis": 396,
+   "quelle": "posen_v4.py: Silhouette n1485 entblendet gegen BSS 50A0/12, IoU Knochen 0-15 (Referenz 2)"
+  },
+  "sichtbar_px": 622,
+  "fussabdruck_px": 637,
+  "verdecker": {
+   "8/v15/z481": 8,
+   "8/d12/z481": 7
+  },
+  "box": [
+   348,
+   189,
+   382,
+   219
+  ],
+  "breite_H": 0.096,
+  "hoehe_H": 0.085,
+  "lab": [
+   26.5,
+   12.9,
+   8.3
+  ],
+  "hell_px": 27,
+  "hell_lab": [
+   48.9,
+   13.2,
+   12.4
+  ],
+  "kopfflaechen_ueber_maul": {
+   "9/d36/z488": 69,
+   "9/d38/z488": 56,
+   "9/v13/z486": 30,
+   "9/v1/z488": 30,
+   "9/d49/z488": 13,
+   "9/d55/z488": 9,
+   "9/d53/z488": 2
+  },
+  "H_port": 364
+ }
+}

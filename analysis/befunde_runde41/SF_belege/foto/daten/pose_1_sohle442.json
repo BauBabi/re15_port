@@ -1,0 +1,1553 @@
+{
+ "foto": 1,
+ "iou_alt": 0.706,
+ "pose_alt": {
+  "clip": 0,
+  "bild": 9,
+  "gier": 1737,
+  "x": -9279,
+  "z": -22511,
+  "art": "vorn",
+  "iou": 0.619,
+  "x_ab": 462,
+  "y_bis": 396,
+  "quelle": "posen_v4.py: Silhouette n1485 entblendet gegen BSS 50A0/12, IoU Knochen 0-15 (Referenz 2)"
+ },
+ "grob_top": [
+  {
+   "gesamt": 0.6322,
+   "iou_versatz": 0.7863,
+   "iou": 0.7769,
+   "dx": -4.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 135,
+   "gier": 1422,
+   "grad": 125.0
+  },
+  {
+   "gesamt": 0.6246,
+   "iou_versatz": 0.83,
+   "iou": 0.771,
+   "dx": 4.0,
+   "dy": -16.0,
+   "clip": 20,
+   "bild": 154,
+   "gier": 1138,
+   "grad": 100.0
+  },
+  {
+   "gesamt": 0.6112,
+   "iou_versatz": 0.8168,
+   "iou": 0.7573,
+   "dx": 0.0,
+   "dy": -16.0,
+   "clip": 20,
+   "bild": 154,
+   "gier": 1081,
+   "grad": 95.0
+  },
+  {
+   "gesamt": 0.6066,
+   "iou_versatz": 0.8334,
+   "iou": 0.7769,
+   "dx": 0.0,
+   "dy": -16.0,
+   "clip": 20,
+   "bild": 152,
+   "gier": 1138,
+   "grad": 100.0
+  },
+  {
+   "gesamt": 0.6052,
+   "iou_versatz": 0.8279,
+   "iou": 0.7236,
+   "dx": 12.0,
+   "dy": -16.0,
+   "clip": 11,
+   "bild": 88,
+   "gier": 1536,
+   "grad": 135.0
+  },
+  {
+   "gesamt": 0.605,
+   "iou_versatz": 0.84,
+   "iou": 0.7769,
+   "dx": 4.0,
+   "dy": -12.0,
+   "clip": 20,
+   "bild": 154,
+   "gier": 1195,
+   "grad": 105.0
+  },
+  {
+   "gesamt": 0.6027,
+   "iou_versatz": 0.8291,
+   "iou": 0.7278,
+   "dx": -12.0,
+   "dy": -20.0,
+   "clip": 17,
+   "bild": 26,
+   "gier": 1536,
+   "grad": 135.0
+  },
+  {
+   "gesamt": 0.6018,
+   "iou_versatz": 0.8082,
+   "iou": 0.7309,
+   "dx": 8.0,
+   "dy": -16.0,
+   "clip": 16,
+   "bild": 48,
+   "gier": 1308,
+   "grad": 115.0
+  },
+  {
+   "gesamt": 0.6016,
+   "iou_versatz": 0.8172,
+   "iou": 0.7583,
+   "dx": -4.0,
+   "dy": -16.0,
+   "clip": 20,
+   "bild": 152,
+   "gier": 1081,
+   "grad": 95.0
+  },
+  {
+   "gesamt": 0.5958,
+   "iou_versatz": 0.7844,
+   "iou": 0.7767,
+   "dx": -4.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 135,
+   "gier": 1479,
+   "grad": 130.0
+  },
+  {
+   "gesamt": 0.5951,
+   "iou_versatz": 0.7811,
+   "iou": 0.7674,
+   "dx": -4.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 135,
+   "gier": 1365,
+   "grad": 120.0
+  },
+  {
+   "gesamt": 0.5947,
+   "iou_versatz": 0.8116,
+   "iou": 0.7322,
+   "dx": 8.0,
+   "dy": -16.0,
+   "clip": 16,
+   "bild": 48,
+   "gier": 1365,
+   "grad": 120.0
+  },
+  {
+   "gesamt": 0.594,
+   "iou_versatz": 0.7311,
+   "iou": 0.6922,
+   "dx": 0.0,
+   "dy": -24.0,
+   "clip": 17,
+   "bild": 0,
+   "gier": 3812,
+   "grad": 335.0
+  },
+  {
+   "gesamt": 0.5927,
+   "iou_versatz": 0.78,
+   "iou": 0.7594,
+   "dx": 0.0,
+   "dy": -16.0,
+   "clip": 8,
+   "bild": 2,
+   "gier": 3356,
+   "grad": 295.0
+  },
+  {
+   "gesamt": 0.5921,
+   "iou_versatz": 0.832,
+   "iou": 0.7384,
+   "dx": -8.0,
+   "dy": -20.0,
+   "clip": 17,
+   "bild": 28,
+   "gier": 1479,
+   "grad": 130.0
+  },
+  {
+   "gesamt": 0.5917,
+   "iou_versatz": 0.844,
+   "iou": 0.785,
+   "dx": 4.0,
+   "dy": -12.0,
+   "clip": 20,
+   "bild": 152,
+   "gier": 1195,
+   "grad": 105.0
+  },
+  {
+   "gesamt": 0.5891,
+   "iou_versatz": 0.725,
+   "iou": 0.6985,
+   "dx": 0.0,
+   "dy": -20.0,
+   "clip": 17,
+   "bild": 0,
+   "gier": 3868,
+   "grad": 340.0
+  },
+  {
+   "gesamt": 0.5875,
+   "iou_versatz": 0.8522,
+   "iou": 0.7306,
+   "dx": 12.0,
+   "dy": -16.0,
+   "clip": 11,
+   "bild": 89,
+   "gier": 1479,
+   "grad": 130.0
+  },
+  {
+   "gesamt": 0.5867,
+   "iou_versatz": 0.7975,
+   "iou": 0.7391,
+   "dx": -4.0,
+   "dy": -16.0,
+   "clip": 20,
+   "bild": 152,
+   "gier": 1024,
+   "grad": 90.0
+  },
+  {
+   "gesamt": 0.5863,
+   "iou_versatz": 0.7866,
+   "iou": 0.7422,
+   "dx": -8.0,
+   "dy": -20.0,
+   "clip": 8,
+   "bild": 2,
+   "gier": 3300,
+   "grad": 290.0
+  },
+  {
+   "gesamt": 0.5852,
+   "iou_versatz": 0.799,
+   "iou": 0.74,
+   "dx": -4.0,
+   "dy": -16.0,
+   "clip": 20,
+   "bild": 154,
+   "gier": 1024,
+   "grad": 90.0
+  },
+  {
+   "gesamt": 0.5841,
+   "iou_versatz": 0.713,
+   "iou": 0.678,
+   "dx": 4.0,
+   "dy": -20.0,
+   "clip": 17,
+   "bild": 0,
+   "gier": 3925,
+   "grad": 345.0
+  },
+  {
+   "gesamt": 0.584,
+   "iou_versatz": 0.8142,
+   "iou": 0.678,
+   "dx": -20.0,
+   "dy": -24.0,
+   "clip": 17,
+   "bild": 24,
+   "gier": 1593,
+   "grad": 140.0
+  },
+  {
+   "gesamt": 0.582,
+   "iou_versatz": 0.8372,
+   "iou": 0.7714,
+   "dx": 8.0,
+   "dy": -12.0,
+   "clip": 20,
+   "bild": 156,
+   "gier": 1252,
+   "grad": 110.0
+  },
+  {
+   "gesamt": 0.5802,
+   "iou_versatz": 0.8339,
+   "iou": 0.7291,
+   "dx": -12.0,
+   "dy": -24.0,
+   "clip": 17,
+   "bild": 28,
+   "gier": 1422,
+   "grad": 125.0
+  },
+  {
+   "gesamt": 0.5802,
+   "iou_versatz": 0.8307,
+   "iou": 0.7729,
+   "dx": 4.0,
+   "dy": -12.0,
+   "clip": 20,
+   "bild": 156,
+   "gier": 1195,
+   "grad": 105.0
+  },
+  {
+   "gesamt": 0.5781,
+   "iou_versatz": 0.8041,
+   "iou": 0.7537,
+   "dx": -12.0,
+   "dy": -12.0,
+   "clip": 7,
+   "bild": 1,
+   "gier": 3413,
+   "grad": 300.0
+  },
+  {
+   "gesamt": 0.5767,
+   "iou_versatz": 0.8142,
+   "iou": 0.7317,
+   "dx": -4.0,
+   "dy": -20.0,
+   "clip": 17,
+   "bild": 30,
+   "gier": 1422,
+   "grad": 125.0
+  },
+  {
+   "gesamt": 0.5763,
+   "iou_versatz": 0.6961,
+   "iou": 0.6571,
+   "dx": 0.0,
+   "dy": -20.0,
+   "clip": 17,
+   "bild": 0,
+   "gier": 3982,
+   "grad": 350.0
+  },
+  {
+   "gesamt": 0.5753,
+   "iou_versatz": 0.7998,
+   "iou": 0.7188,
+   "dx": 4.0,
+   "dy": -16.0,
+   "clip": 16,
+   "bild": 48,
+   "gier": 1252,
+   "grad": 110.0
+  },
+  {
+   "gesamt": 0.5143,
+   "iou_versatz": 0.8511,
+   "iou": 0.7995,
+   "dx": 4.0,
+   "dy": -12.0,
+   "clip": 20,
+   "bild": 150,
+   "gier": 1308,
+   "grad": 115.0
+  },
+  {
+   "gesamt": 0.5452,
+   "iou_versatz": 0.8488,
+   "iou": 0.798,
+   "dx": 4.0,
+   "dy": -12.0,
+   "clip": 20,
+   "bild": 150,
+   "gier": 1252,
+   "grad": 110.0
+  },
+  {
+   "gesamt": 0.4665,
+   "iou_versatz": 0.8403,
+   "iou": 0.7949,
+   "dx": 0.0,
+   "dy": -12.0,
+   "clip": 20,
+   "bild": 148,
+   "gier": 1308,
+   "grad": 115.0
+  },
+  {
+   "gesamt": 0.4264,
+   "iou_versatz": 0.8032,
+   "iou": 0.7943,
+   "dx": 0.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 138,
+   "gier": 1593,
+   "grad": 140.0
+  },
+  {
+   "gesamt": 0.5417,
+   "iou_versatz": 0.7993,
+   "iou": 0.7941,
+   "dx": -4.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 136,
+   "gier": 1593,
+   "grad": 140.0
+  },
+  {
+   "gesamt": 0.4932,
+   "iou_versatz": 0.8397,
+   "iou": 0.7938,
+   "dx": 0.0,
+   "dy": -12.0,
+   "clip": 20,
+   "bild": 148,
+   "gier": 1252,
+   "grad": 110.0
+  },
+  {
+   "gesamt": 0.3991,
+   "iou_versatz": 0.8013,
+   "iou": 0.7932,
+   "dx": 0.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 138,
+   "gier": 1650,
+   "grad": 145.0
+  },
+  {
+   "gesamt": 0.4065,
+   "iou_versatz": 0.7971,
+   "iou": 0.791,
+   "dx": 0.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 138,
+   "gier": 1707,
+   "grad": 150.0
+  },
+  {
+   "gesamt": 0.4799,
+   "iou_versatz": 0.7958,
+   "iou": 0.7902,
+   "dx": 0.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 137,
+   "gier": 1650,
+   "grad": 145.0
+  },
+  {
+   "gesamt": 0.5071,
+   "iou_versatz": 0.793,
+   "iou": 0.7901,
+   "dx": 0.0,
+   "dy": -4.0,
+   "clip": 20,
+   "bild": 136,
+   "gier": 1650,
+   "grad": 145.0
+  }
+ ],
+ "alt": {
+  "iou": 0.706,
+  "teile": {
+   "kopf": 0.0,
+   "klauenhand": 0.0,
+   "sohle": 0.4333
+  },
+  "gesamt": 0.4252
+ },
+ "fein": [
+  {
+   "gesamt": 0.6713,
+   "iou": 0.6814,
+   "teile": {
+    "kopf": 0.9918,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 7,
+   "bild": 1,
+   "gier": 3380,
+   "x": -8524,
+   "z": -21777,
+   "grad": 297.1
+  },
+  {
+   "gesamt": 0.6694,
+   "iou": 0.6852,
+   "teile": {
+    "kopf": 0.9692,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 441,
+   "clip": 7,
+   "bild": 1,
+   "gier": 3445,
+   "x": -8568,
+   "z": -21787,
+   "grad": 302.8
+  },
+  {
+   "gesamt": 0.6592,
+   "iou": 0.6568,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9934,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 99,
+   "gier": 1156,
+   "x": -8066,
+   "z": -21621,
+   "grad": 101.6
+  },
+  {
+   "gesamt": 0.6569,
+   "iou": 0.6573,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9776,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 98,
+   "gier": 1138,
+   "x": -8076,
+   "z": -21607,
+   "grad": 100.0
+  },
+  {
+   "gesamt": 0.6564,
+   "iou": 0.6564,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9774,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 98,
+   "gier": 1138,
+   "x": -8075,
+   "z": -21607,
+   "grad": 100.0
+  },
+  {
+   "gesamt": 0.656,
+   "iou": 0.6585,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9692,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 140,
+   "gier": 1397,
+   "x": -8202,
+   "z": -21819,
+   "grad": 122.8
+  },
+  {
+   "gesamt": 0.6557,
+   "iou": 0.6561,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9743,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 140,
+   "gier": 1364,
+   "x": -8216,
+   "z": -21782,
+   "grad": 119.9
+  },
+  {
+   "gesamt": 0.6552,
+   "iou": 0.6534,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9792,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 140,
+   "gier": 1389,
+   "x": -8200,
+   "z": -21815,
+   "grad": 122.1
+  },
+  {
+   "gesamt": 0.655,
+   "iou": 0.6545,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9749,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 140,
+   "gier": 1387,
+   "x": -8184,
+   "z": -21792,
+   "grad": 121.9
+  },
+  {
+   "gesamt": 0.6548,
+   "iou": 0.6546,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9735,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 141,
+   "gier": 1388,
+   "x": -8187,
+   "z": -21797,
+   "grad": 122.0
+  },
+  {
+   "gesamt": 0.6535,
+   "iou": 0.6465,
+   "teile": {
+    "kopf": 0.9901,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 7,
+   "bild": 2,
+   "gier": 3852,
+   "x": -8760,
+   "z": -21981,
+   "grad": 338.6
+  },
+  {
+   "gesamt": 0.6531,
+   "iou": 0.6457,
+   "teile": {
+    "kopf": 0.9901,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 7,
+   "bild": 2,
+   "gier": 3851,
+   "x": -8763,
+   "z": -21988,
+   "grad": 338.5
+  },
+  {
+   "gesamt": 0.6517,
+   "iou": 0.6831,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.8695,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 139,
+   "gier": 1415,
+   "x": -8283,
+   "z": -21796,
+   "grad": 124.4
+  },
+  {
+   "gesamt": 0.651,
+   "iou": 0.6499,
+   "teile": {
+    "kopf": 0.965,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 441,
+   "clip": 8,
+   "bild": 1,
+   "gier": 3222,
+   "x": -8285,
+   "z": -21657,
+   "grad": 283.2
+  },
+  {
+   "gesamt": 0.6483,
+   "iou": 0.6434,
+   "teile": {
+    "kopf": 0.968,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 441,
+   "clip": 7,
+   "bild": 2,
+   "gier": 3950,
+   "x": -8653,
+   "z": -21855,
+   "grad": 347.2
+  },
+  {
+   "gesamt": 0.6434,
+   "iou": 0.6285,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.983,
+    "sohle": 0.9917
+   },
+   "sohle": 441,
+   "clip": 20,
+   "bild": 96,
+   "gier": 1108,
+   "x": -8069,
+   "z": -21541,
+   "grad": 97.4
+  },
+  {
+   "gesamt": 0.6415,
+   "iou": 0.6198,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9982,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 144,
+   "gier": 1333,
+   "x": -8110,
+   "z": -21797,
+   "grad": 117.2
+  },
+  {
+   "gesamt": 0.6397,
+   "iou": 0.639,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9297,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 146,
+   "gier": 1413,
+   "x": -8110,
+   "z": -21911,
+   "grad": 124.2
+  },
+  {
+   "gesamt": 0.6356,
+   "iou": 0.637,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9108,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 16,
+   "bild": 45,
+   "gier": 1543,
+   "x": -8089,
+   "z": -21794,
+   "grad": 135.6
+  },
+  {
+   "gesamt": 0.6344,
+   "iou": 0.6324,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9174,
+    "sohle": 0.9917
+   },
+   "sohle": 441,
+   "clip": 20,
+   "bild": 69,
+   "gier": 1579,
+   "x": -8052,
+   "z": -21715,
+   "grad": 138.8
+  },
+  {
+   "gesamt": 0.6343,
+   "iou": 0.6431,
+   "teile": {
+    "kopf": 0.8848,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 5,
+   "bild": 0,
+   "gier": 3072,
+   "x": -8830,
+   "z": -21602,
+   "grad": 270.0
+  },
+  {
+   "gesamt": 0.6338,
+   "iou": 0.633,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9119,
+    "sohle": 0.9917
+   },
+   "sohle": 441,
+   "clip": 20,
+   "bild": 68,
+   "gier": 1607,
+   "x": -7984,
+   "z": -21727,
+   "grad": 141.2
+  },
+  {
+   "gesamt": 0.6336,
+   "iou": 0.6416,
+   "teile": {
+    "kopf": 0.8852,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 5,
+   "bild": 1,
+   "gier": 3072,
+   "x": -8780,
+   "z": -21643,
+   "grad": 270.0
+  },
+  {
+   "gesamt": 0.6331,
+   "iou": 0.6406,
+   "teile": {
+    "kopf": 0.8852,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 5,
+   "bild": 1,
+   "gier": 3072,
+   "x": -8777,
+   "z": -21638,
+   "grad": 270.0
+  },
+  {
+   "gesamt": 0.6321,
+   "iou": 0.6464,
+   "teile": {
+    "kopf": 0.8617,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 4,
+   "bild": 15,
+   "gier": 3138,
+   "x": -8309,
+   "z": -21807,
+   "grad": 275.8
+  },
+  {
+   "gesamt": 0.6315,
+   "iou": 0.6476,
+   "teile": {
+    "kopf": 0.8546,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 4,
+   "bild": 15,
+   "gier": 3120,
+   "x": -8318,
+   "z": -21818,
+   "grad": 274.2
+  },
+  {
+   "gesamt": 0.6296,
+   "iou": 0.6188,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9295,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 5,
+   "bild": 29,
+   "gier": 1024,
+   "x": -8405,
+   "z": -21860,
+   "grad": 90.0
+  },
+  {
+   "gesamt": 0.6287,
+   "iou": 0.6262,
+   "teile": {
+    "kopf": 0.902,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 441,
+   "clip": 8,
+   "bild": 2,
+   "gier": 3838,
+   "x": -8989,
+   "z": -21551,
+   "grad": 337.3
+  },
+  {
+   "gesamt": 0.6245,
+   "iou": 0.6279,
+   "teile": {
+    "kopf": 0.8714,
+    "klauenhand": 0.0,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 12,
+   "bild": 73,
+   "gier": 3397,
+   "x": -8758,
+   "z": -21555,
+   "grad": 298.6
+  },
+  {
+   "gesamt": 0.6212,
+   "iou": 0.582,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9893,
+    "sohle": 0.9917
+   },
+   "sohle": 443,
+   "clip": 20,
+   "bild": 74,
+   "gier": 1333,
+   "x": -8435,
+   "z": -21593,
+   "grad": 117.2
+  }
+ ],
+ "sohlen_anker": true,
+ "fein_frei": [
+  {
+   "gesamt": 0.6479,
+   "iou": 0.7673,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9609,
+    "sohle": 0.625
+   },
+   "clip": 20,
+   "bild": 150,
+   "gier": 1203,
+   "x": -8959,
+   "z": -22319,
+   "grad": 105.7
+  },
+  {
+   "gesamt": 0.6479,
+   "iou": 0.776,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9847,
+    "sohle": 0.575
+   },
+   "clip": 20,
+   "bild": 135,
+   "gier": 1425,
+   "x": -9279,
+   "z": -22511,
+   "grad": 125.2
+  },
+  {
+   "gesamt": 0.6479,
+   "iou": 0.776,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9847,
+    "sohle": 0.575
+   },
+   "clip": 20,
+   "bild": 135,
+   "gier": 1425,
+   "x": -9279,
+   "z": -22511,
+   "grad": 125.2
+  },
+  {
+   "gesamt": 0.6479,
+   "iou": 0.776,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9847,
+    "sohle": 0.575
+   },
+   "clip": 20,
+   "bild": 135,
+   "gier": 1425,
+   "x": -9279,
+   "z": -22511,
+   "grad": 125.2
+  },
+  {
+   "gesamt": 0.6479,
+   "iou": 0.776,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9847,
+    "sohle": 0.575
+   },
+   "clip": 20,
+   "bild": 135,
+   "gier": 1425,
+   "x": -9279,
+   "z": -22511,
+   "grad": 125.2
+  },
+  {
+   "gesamt": 0.6479,
+   "iou": 0.776,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9847,
+    "sohle": 0.575
+   },
+   "clip": 20,
+   "bild": 135,
+   "gier": 1425,
+   "x": -9279,
+   "z": -22511,
+   "grad": 125.2
+  },
+  {
+   "gesamt": 0.6458,
+   "iou": 0.7736,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9789,
+    "sohle": 0.575
+   },
+   "clip": 20,
+   "bild": 135,
+   "gier": 1442,
+   "x": -9247,
+   "z": -22511,
+   "grad": 126.7
+  },
+  {
+   "gesamt": 0.6458,
+   "iou": 0.7736,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9789,
+    "sohle": 0.575
+   },
+   "clip": 20,
+   "bild": 135,
+   "gier": 1442,
+   "x": -9247,
+   "z": -22511,
+   "grad": 126.7
+  },
+  {
+   "gesamt": 0.6458,
+   "iou": 0.7736,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9789,
+    "sohle": 0.575
+   },
+   "clip": 20,
+   "bild": 135,
+   "gier": 1442,
+   "x": -9247,
+   "z": -22511,
+   "grad": 126.7
+  },
+  {
+   "gesamt": 0.6396,
+   "iou": 0.7708,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9918,
+    "sohle": 0.5333
+   },
+   "clip": 20,
+   "bild": 152,
+   "gier": 1151,
+   "x": -9111,
+   "z": -22399,
+   "grad": 101.2
+  },
+  {
+   "gesamt": 0.6396,
+   "iou": 0.7766,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9745,
+    "sohle": 0.5333
+   },
+   "clip": 20,
+   "bild": 152,
+   "gier": 1173,
+   "x": -9103,
+   "z": -22415,
+   "grad": 103.1
+  },
+  {
+   "gesamt": 0.6391,
+   "iou": 0.7745,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9775,
+    "sohle": 0.5333
+   },
+   "clip": 20,
+   "bild": 152,
+   "gier": 1164,
+   "x": -9103,
+   "z": -22415,
+   "grad": 102.3
+  },
+  {
+   "gesamt": 0.637,
+   "iou": 0.7935,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9248,
+    "sohle": 0.5167
+   },
+   "clip": 20,
+   "bild": 155,
+   "gier": 1239,
+   "x": -9135,
+   "z": -22511,
+   "grad": 108.9
+  },
+  {
+   "gesamt": 0.6344,
+   "iou": 0.7703,
+   "teile": {
+    "kopf": 0.7871,
+    "klauenhand": 0.0,
+    "sohle": 0.7083
+   },
+   "clip": 7,
+   "bild": 1,
+   "gier": 3458,
+   "x": -9215,
+   "z": -22383,
+   "grad": 303.9
+  },
+  {
+   "gesamt": 0.6337,
+   "iou": 0.7333,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9107,
+    "sohle": 0.6917
+   },
+   "clip": 20,
+   "bild": 148,
+   "gier": 1196,
+   "x": -8831,
+   "z": -22191,
+   "grad": 105.1
+  },
+  {
+   "gesamt": 0.6317,
+   "iou": 0.6923,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9799,
+    "sohle": 0.7333
+   },
+   "clip": 20,
+   "bild": 137,
+   "gier": 1639,
+   "x": -8575,
+   "z": -22255,
+   "grad": 144.1
+  },
+  {
+   "gesamt": 0.6311,
+   "iou": 0.7772,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9718,
+    "sohle": 0.4833
+   },
+   "clip": 20,
+   "bild": 154,
+   "gier": 1170,
+   "x": -9215,
+   "z": -22479,
+   "grad": 102.8
+  },
+  {
+   "gesamt": 0.6311,
+   "iou": 0.7772,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9718,
+    "sohle": 0.4833
+   },
+   "clip": 20,
+   "bild": 154,
+   "gier": 1170,
+   "x": -9215,
+   "z": -22479,
+   "grad": 102.8
+  },
+  {
+   "gesamt": 0.6311,
+   "iou": 0.7772,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9718,
+    "sohle": 0.4833
+   },
+   "clip": 20,
+   "bild": 154,
+   "gier": 1170,
+   "x": -9215,
+   "z": -22479,
+   "grad": 102.8
+  },
+  {
+   "gesamt": 0.6311,
+   "iou": 0.7772,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9718,
+    "sohle": 0.4833
+   },
+   "clip": 20,
+   "bild": 155,
+   "gier": 1170,
+   "x": -9215,
+   "z": -22479,
+   "grad": 102.8
+  },
+  {
+   "gesamt": 0.6294,
+   "iou": 0.7836,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9427,
+    "sohle": 0.4833
+   },
+   "clip": 20,
+   "bild": 154,
+   "gier": 1195,
+   "x": -9207,
+   "z": -22495,
+   "grad": 105.0
+  },
+  {
+   "gesamt": 0.6284,
+   "iou": 0.7716,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.8975,
+    "sohle": 0.5583
+   },
+   "clip": 20,
+   "bild": 150,
+   "gier": 1165,
+   "x": -9087,
+   "z": -22383,
+   "grad": 102.4
+  },
+  {
+   "gesamt": 0.6269,
+   "iou": 0.7402,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.8658,
+    "sohle": 0.675
+   },
+   "clip": 20,
+   "bild": 148,
+   "gier": 1196,
+   "x": -8863,
+   "z": -22223,
+   "grad": 105.1
+  },
+  {
+   "gesamt": 0.6224,
+   "iou": 0.7367,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9907,
+    "sohle": 0.5333
+   },
+   "clip": 16,
+   "bild": 48,
+   "gier": 1359,
+   "x": -9199,
+   "z": -22479,
+   "grad": 119.4
+  },
+  {
+   "gesamt": 0.6171,
+   "iou": 0.7302,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9952,
+    "sohle": 0.5167
+   },
+   "clip": 16,
+   "bild": 48,
+   "gier": 1338,
+   "x": -9239,
+   "z": -22479,
+   "grad": 117.6
+  },
+  {
+   "gesamt": 0.6147,
+   "iou": 0.7322,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9913,
+    "sohle": 0.5
+   },
+   "clip": 16,
+   "bild": 48,
+   "gier": 1330,
+   "x": -9263,
+   "z": -22495,
+   "grad": 116.9
+  },
+  {
+   "gesamt": 0.6097,
+   "iou": 0.773,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9055,
+    "sohle": 0.4333
+   },
+   "clip": 20,
+   "bild": 152,
+   "gier": 1112,
+   "x": -9279,
+   "z": -22511,
+   "grad": 97.7
+  },
+  {
+   "gesamt": 0.6096,
+   "iou": 0.7592,
+   "teile": {
+    "kopf": 0.1047,
+    "klauenhand": 0.7337,
+    "sohle": 0.5417
+   },
+   "clip": 11,
+   "bild": 89,
+   "gier": 1451,
+   "x": -9215,
+   "z": -22511,
+   "grad": 127.5
+  },
+  {
+   "gesamt": 0.6083,
+   "iou": 0.7302,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.993,
+    "sohle": 0.4667
+   },
+   "clip": 11,
+   "bild": 88,
+   "gier": 1540,
+   "x": -9263,
+   "z": -22511,
+   "grad": 135.4
+  },
+  {
+   "gesamt": 0.6018,
+   "iou": 0.725,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9859,
+    "sohle": 0.45
+   },
+   "clip": 17,
+   "bild": 26,
+   "gier": 1532,
+   "x": -9279,
+   "z": -22519,
+   "grad": 134.6
+  },
+  {
+   "gesamt": 0.6001,
+   "iou": 0.741,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9277,
+    "sohle": 0.45
+   },
+   "clip": 17,
+   "bild": 28,
+   "gier": 1451,
+   "x": -9311,
+   "z": -22519,
+   "grad": 127.5
+  },
+  {
+   "gesamt": 0.6001,
+   "iou": 0.7358,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9265,
+    "sohle": 0.4667
+   },
+   "clip": 17,
+   "bild": 28,
+   "gier": 1459,
+   "x": -9263,
+   "z": -22511,
+   "grad": 128.2
+  },
+  {
+   "gesamt": 0.5955,
+   "iou": 0.761,
+   "teile": {
+    "kopf": 0.8564,
+    "klauenhand": 0.0,
+    "sohle": 0.4333
+   },
+   "clip": 8,
+   "bild": 2,
+   "gier": 3354,
+   "x": -9279,
+   "z": -22511,
+   "grad": 294.8
+  },
+  {
+   "gesamt": 0.5927,
+   "iou": 0.7584,
+   "teile": {
+    "kopf": 0.8312,
+    "klauenhand": 0.0,
+    "sohle": 0.45
+   },
+   "clip": 8,
+   "bild": 2,
+   "gier": 3380,
+   "x": -9279,
+   "z": -22511,
+   "grad": 297.1
+  },
+  {
+   "gesamt": 0.5881,
+   "iou": 0.7357,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.8715,
+    "sohle": 0.45
+   },
+   "clip": 17,
+   "bild": 30,
+   "gier": 1389,
+   "x": -9263,
+   "z": -22511,
+   "grad": 122.1
+  },
+  {
+   "gesamt": 0.5803,
+   "iou": 0.6898,
+   "teile": {
+    "kopf": 0.0,
+    "klauenhand": 0.9788,
+    "sohle": 0.4333
+   },
+   "clip": 17,
+   "bild": 24,
+   "gier": 1595,
+   "x": -9279,
+   "z": -22495,
+   "grad": 140.2
+  },
+  {
+   "gesamt": 0.5711,
+   "iou": 0.6877,
+   "teile": {
+    "kopf": 0.9972,
+    "klauenhand": 0.0,
+    "sohle": 0.3667
+   },
+   "clip": 17,
+   "bild": 0,
+   "gier": 3873,
+   "x": -9255,
+   "z": -22463,
+   "grad": 340.4
+  },
+  {
+   "gesamt": 0.5664,
+   "iou": 0.6938,
+   "teile": {
+    "kopf": 0.9917,
+    "klauenhand": 0.0,
+    "sohle": 0.325
+   },
+   "clip": 17,
+   "bild": 0,
+   "gier": 3804,
+   "x": -9279,
+   "z": -22511,
+   "grad": 334.3
+  },
+  {
+   "gesamt": 0.5664,
+   "iou": 0.6938,
+   "teile": {
+    "kopf": 0.9917,
+    "klauenhand": 0.0,
+    "sohle": 0.325
+   },
+   "clip": 17,
+   "bild": 0,
+   "gier": 3804,
+   "x": -9279,
+   "z": -22511,
+   "grad": 334.3
+  },
+  {
+   "gesamt": 0.5664,
+   "iou": 0.6938,
+   "teile": {
+    "kopf": 0.9917,
+    "klauenhand": 0.0,
+    "sohle": 0.325
+   },
+   "clip": 17,
+   "bild": 0,
+   "gier": 3804,
+   "x": -9279,
+   "z": -22511,
+   "grad": 334.3
+  }
+ ],
+ "verfahren": "f_pose_sohle.py: Sohle fest auf y 442, Querlage nach Gesamtwert"
+}
