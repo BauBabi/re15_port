@@ -1,0 +1,14 @@
+# Lauf kal6000 (Integration A2, eigene Messkopie, beendet nur eigene PID)
+exe re15_pc_inta2_kal6000 PID 66144 sha1 73d58690c92150ad718c0673cf1342b68930d70d
+exit=0 dauer=54s
+## Karte
+Karte re15_card.mcr: Stand vor6030 Raum 0x6000 Figur 0 (1763,-3600,-9700) Gierung 1024, (4,0xF3)=0
+## debug.log: Skript, Abschnitte, FIRE_AOT, Flags, [story80], [annette], [g5auftritt], [msgtext], EXIT_AT (in Reihenfolge)
+[render] SDL-Renderer direct3d, Videotreiber windows, ABR2 (B-F) ok
+[input-script] RE15_INPUT_SCRIPT="W5,A0.2,W1,A0.2,W1,A0.2,W30" -> 1128 ticks @ 30 fps, start frame 60
+[save] CONTINUE: resumed in room 6000 (hp=100)
+[fire-aot] slot=5 at F100 (Raum 6000)
+[msgtext] room=6000 id=5 "A device to open the tunnel gate.Will you turn on the switch?"
+[fire-aot] slot=3 at F900 (Raum 6000)
+[annette] ROOM6030 Wagen (Cut 6): Zugstart nicht gelaufen -> Ausgang = Tuer (main00 @0x00C72), Tuer nach 5090 = msg 10 (sub06 @0x0106A)
+[flow] EXIT_AT: Bild 300 in Raum 6030 erreicht -> exit

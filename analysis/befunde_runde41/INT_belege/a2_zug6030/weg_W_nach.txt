@@ -1,0 +1,64 @@
+# Lauf weg_W_nach (Integration A2, eigene Messkopie, beendet nur eigene PID)
+exe re15_pc_inta2_weg_W_nach PID 76120 sha1 85c183c0b2be2f3dafc68076a234c26b3729f8d4
+exit=0 dauer=392s
+## Karte
+Karte re15_card.mcr: Stand vor6030 Raum 0x6000 Figur 0 (1763,-3600,-9700) Gierung 1024, (4,0xF3)=0
+## debug.log: Skript, Abschnitte, FIRE_AOT, Flags, [story80], [annette], [g5auftritt], [msgtext], EXIT_AT (in Reihenfolge)
+[render] SDL-Renderer software, Videotreiber windows, ABR2 (B-F) NICHT unterstuetzt -> Rueckfall BLEND
+[input-script] RE15_INPUT_SCRIPT="A0.3,W8|A0.3,W8,U3,W62,L0.40,XU3,W0.5,R0.07,A0.3,W6,XU1,R0.07,A0.3,W68,A0.3,W11|W5,A0.2,W1,A0.2,W1,A0.2,W30|A0.3,W8,L0.07,XU0.5,W0.5,L0.38,XU2,R0.12,A0.3,W6,XU1,R0.07,A0.3,W45,A0.3,W11,R0.71,A0.3,W65" -> 249 ticks @ 30 fps, start frame 60
+[input-script] Abschnitt 0: 249 ticks
+[input-script] Abschnitt 1: 4927 ticks
+[input-script] Abschnitt 2: 1128 ticks
+[input-script] Abschnitt 3: 4255 ticks
+[save] CONTINUE: resumed in room 6000 (hp=100)
+[flagwatch] F0 ROOM6000 (3,48) -1 -> 1
+[flagwatch] F0 ROOM6000 (3,49) -1 -> 1
+[flagwatch] F0 ROOM6000 (3,239) -1 -> 1
+[input-script] Abschnitt 1 ab Raum 6030 (4927 ticks)
+[story80] ROOM6030 Evt_exec sub02 -> Programm (900 B): Wagen-Szene 13 Zeilen (msg 0,1,21,2,3,22,4,5,6,7,23,24,8)
+[flagwatch] F329 ROOM6030 (3,22) 0 -> 1
+[msgtext] room=6030 id=0 "Leon: Hang on, Marvin. We're getting out of here."
+[msgtext] room=6030 id=1 "Leon: Who are you two?"
+[msgtext] room=6030 id=21 "John: Name's John. This is Sherry. We made it down here with a girl named Elza."
+[msgtext] room=6030 id=2 "Sherry: She's out there fighting the monsters!"
+[msgtext] room=6030 id=3 "John: She's trying to keep the outside clear so we can escape."
+[msgtext] room=6030 id=22 "John: She said she'd catch up with us."
+[msgtext] room=6030 id=4 "Leon: Why aren't you out there?"
+[msgtext] room=6030 id=5 "John: She told me to stay with the kid... and look after your friend here."
+[msgtext] room=6030 id=6 "Leon: Where's Annette?"
+[msgtext] room=6030 id=7 "John: The woman in the lab coat? Up front, trying to start the train."
+[msgtext] room=6030 id=23 "Sherry: A lab coat...? Is it Mom?!"
+[msgtext] room=6030 id=24 "John: Easy, kid. Stay with me."
+[msgtext] room=6030 id=8 "Leon: I'll find out. Stay here."
+[story80] ROOM6030 Evt_exec sub08 -> Programm (644 B): Fuehrerstand msg 11,12,25,26 vor 'Certainly.'
+[enemy] EM4D: Ersatzmodell RE2/ANNETTE_4D.EMD (Raum 6030)
+[flagwatch] F2600 ROOM6030 (4,23) 0 -> 1
+[msgtext] room=6030 id=11 "Annette: Is everyone aboard?"
+[msgtext] room=6030 id=12 "Leon: Everyone we could find. There's a little girl in the back... Sherry."
+[msgtext] room=6030 id=25 "Annette: Sherry...? My daughter is on this train? ...Thank God."
+[msgtext] room=6030 id=26 "Leon: Can you start this thing?"
+[msgtext] room=6030 id=13 "Annette: Certainly."
+[msgtext] room=6030 id=14 "Annette: If I remember the startup sequence correctly..."
+[msgtext] room=6030 id=15 "Leon: What's wrong?"
+[msgtext] room=6030 id=16 "Annette: Not enough power! The train's batteries are too low!"
+[msgtext] room=6030 id=17 "Leon: I'll take care of it!"
+[msgtext] room=6030 id=18 "Annette: I'll be ready to start the train when you do!"
+[msgtext] room=6030 id=19 "Leon: Good luck to both of us!"
+[fire-aot] slot=2 at F5000 (Raum 6030)
+[input-script] Abschnitt 2 ab Raum 6000 (1128 ticks)
+[fire-aot] slot=5 at F100 (Raum 6000)
+[msgtext] room=6000 id=5 "A device to open the tunnel gate.Will you turn on the switch?"
+[flagwatch] F284 ROOM6000 (3,89) 0 -> 1
+[fire-aot] slot=3 at F900 (Raum 6000)
+[annette] ROOM6030 Wagen (Cut 6): Zugstart nicht gelaufen -> Ausgang = Tuer (main00 @0x00C72), Tuer nach 5090 = msg 10 (sub06 @0x0106A)
+[input-script] Abschnitt 3 ab Raum 6030 (4255 ticks)
+[annette] F637 ROOM6030 Zugstart-Szene statt sub05 (sub07 @0x01132), 422 Byte, Tuerbank DOOR2A geladen
+[enemy] EM4D: Ersatzmodell RE2/ANNETTE_4D.EMD (Raum 6030)
+[flagwatch] F638 ROOM6030 (9,133) 0 -> 1
+[annette] F733 Ton 3 (ANNETTE_SE.VBS)
+[msgtext] room=6030 id=27 "Annette: There! The train's moving."
+[annette] F943 Ton 0 (ANNETTE_SE.VBS)
+[msgtext] room=6030 id=28 "Annette: What was that? ...Sherry is back there!"
+[msgtext] room=6030 id=29 "Leon: I'll check it out."
+[msgtext] room=6030 id=30 "Annette: No. She's my daughter. Stay here and keep an eye on the controls."
+[flow] EXIT_AT: Bild 4300 in Raum 6030 erreicht -> exit

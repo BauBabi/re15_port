@@ -1,0 +1,29 @@
+# Lauf weg_N (Integration A2, eigene Messkopie, beendet nur eigene PID)
+exe re15_pc_inta2_weg_N PID 76656 sha1 5ae0b7209d6c2f4a489c02d0dcdc08e40961b033
+exit=0 dauer=195s
+## Karte
+Karte re15_card.mcr: Stand vor6030 Raum 0x6000 Figur 0 (1763,-3600,-9700) Gierung 1024, (4,0xF3)=0
+## debug.log: Skript, Abschnitte, FIRE_AOT, Flags, [story80], [annette], [g5auftritt], [msgtext], EXIT_AT (in Reihenfolge)
+[render] SDL-Renderer software, Videotreiber windows, ABR2 (B-F) NICHT unterstuetzt -> Rueckfall BLEND
+[input-script] RE15_INPUT_SCRIPT="W5,A0.2,W1,A0.2,W1,A0.2,W30|A0.3,W8,L0.07,XU0.5,W0.5,L0.38,XU2,R0.12,A0.3,W6,XU1,R0.07,A0.3,W45,A0.3,W11,R0.71,A0.3,W65" -> 1128 ticks @ 30 fps, start frame 60
+[input-script] Abschnitt 0: 1128 ticks
+[input-script] Abschnitt 1: 4255 ticks
+[save] CONTINUE: resumed in room 6000 (hp=100)
+[fire-aot] slot=5 at F100 (Raum 6000)
+[msgtext] room=6000 id=5 "A device to open the tunnel gate.Will you turn on the switch?"
+[flagwatch] F284 ROOM6000 (3,22) 0 -> 1
+[flagwatch] F284 ROOM6000 (4,23) 0 -> 1
+[flagwatch] F284 ROOM6000 (3,89) 0 -> 1
+[fire-aot] slot=3 at F900 (Raum 6000)
+[annette] ROOM6030 Wagen (Cut 6): Zugstart nicht gelaufen -> Ausgang = Tuer (main00 @0x00C72), Tuer nach 5090 = msg 10 (sub06 @0x0106A)
+[input-script] Abschnitt 1 ab Raum 6030 (4255 ticks)
+[annette] F637 ROOM6030 Zugstart-Szene statt sub05 (sub07 @0x01132), 422 Byte, Tuerbank DOOR2A geladen
+[enemy] EM4D: Ersatzmodell RE2/ANNETTE_4D.EMD (Raum 6030)
+[flagwatch] F638 ROOM6030 (9,133) 0 -> 1
+[annette] F733 Ton 3 (ANNETTE_SE.VBS)
+[msgtext] room=6030 id=27 "Annette: There! The train's moving."
+[annette] F943 Ton 0 (ANNETTE_SE.VBS)
+[msgtext] room=6030 id=28 "Annette: What was that? ...Sherry is back there!"
+[msgtext] room=6030 id=29 "Leon: I'll check it out."
+[msgtext] room=6030 id=30 "Annette: No. She's my daughter. Stay here and keep an eye on the controls."
+[flow] EXIT_AT: Bild 4300 in Raum 6030 erreicht -> exit

@@ -1,0 +1,55 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_integration/re15_port/build
+      Start 1155: integration_r41_annette
+      Start  656: integration_r36_story_zug
+      Start  654: integration_r36_story_leon
+      Start  655: integration_r36_story_elza
+ 1/25 Test #1155: integration_r41_annette ............   Passed  247.70 sec
+      Start  721: unit_r37_fahrstuhl_lastenaufzug
+ 2/25 Test  #721: unit_r37_fahrstuhl_lastenaufzug ....   Passed    0.04 sec
+      Start 1369: unit_r41_story80_reihenfolge6030
+ 3/25 Test #1369: unit_r41_story80_reihenfolge6030 ...   Passed    0.21 sec
+      Start 1154: unit_r41_annette
+ 4/25 Test #1154: unit_r41_annette ...................   Passed    0.10 sec
+      Start 1367: unit_r41_story80_ablauf6030
+ 5/25 Test #1367: unit_r41_story80_ablauf6030 ........   Passed    0.15 sec
+      Start  610: unit_r36_kartenbits
+ 6/25 Test  #610: unit_r36_kartenbits ................   Passed    0.11 sec
+      Start  287: probe_abzug_takt
+ 7/25 Test  #287: probe_abzug_takt ...................   Passed    0.01 sec
+      Start 1366: unit_r41_story80_ablauf30c1
+ 8/25 Test #1366: unit_r41_story80_ablauf30c1 ........   Passed    0.04 sec
+      Start 1418: unit_r41_g5auftritt
+ 9/25 Test #1418: unit_r41_g5auftritt ................   Passed    0.16 sec
+      Start  652: unit_r36_story_sweep
+10/25 Test  #652: unit_r36_story_sweep ...............   Passed    0.03 sec
+      Start  648: unit_r36_story_roy
+11/25 Test  #648: unit_r36_story_roy .................   Passed    0.02 sec
+      Start 1364: unit_r41_story80_hebetisch1151
+12/25 Test #1364: unit_r41_story80_hebetisch1151 .....   Passed    0.02 sec
+      Start 1160: unit_r41_annette_se_lagen
+13/25 Test #1160: unit_r41_annette_se_lagen ..........   Passed    0.01 sec
+      Start 1158: unit_r41_annette_se_bank
+14/25 Test #1158: unit_r41_annette_se_bank ...........   Passed    0.01 sec
+      Start  653: unit_r36_story_reihenfolge
+15/25 Test  #653: unit_r36_story_reihenfolge .........   Passed    0.02 sec
+      Start 1159: unit_r41_annette_se_toene
+16/25 Test #1159: unit_r41_annette_se_toene ..........   Passed    0.01 sec
+      Start  651: unit_r36_story_texte
+17/25 Test  #651: unit_r36_story_texte ...............   Passed    0.01 sec
+      Start  650: unit_r36_story_schuppen
+18/25 Test  #650: unit_r36_story_schuppen ............   Passed    0.02 sec
+      Start  649: unit_r36_story_zelle
+19/25 Test  #649: unit_r36_story_zelle ...............   Passed    0.01 sec
+      Start 1368: unit_r41_story80_stimmen
+20/25 Test #1368: unit_r41_story80_stimmen ...........   Passed    0.01 sec
+      Start 1365: unit_r41_story80_texte
+21/25 Test #1365: unit_r41_story80_texte .............   Passed    0.01 sec
+      Start  335: r29_1d3_doppelabzug
+22/25 Test  #335: r29_1d3_doppelabzug ................   Passed    0.05 sec
+23/25 Test  #655: integration_r36_story_elza .........   Passed  270.23 sec
+24/25 Test  #656: integration_r36_story_zug ..........   Passed  449.79 sec
+25/25 Test  #654: integration_r36_story_leon .........   Passed  518.92 sec
+
+100% tests passed, 0 tests failed out of 25
+
+Total Test time (real) = 519.00 sec

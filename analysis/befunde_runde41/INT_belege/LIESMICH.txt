@@ -153,3 +153,18 @@ Befunde / Hinweise
     Gruppe von Cut 0 decken den unteren Bereich nicht). Spur C hat ihre Ventilbilder ebenfalls mit RE15_FORCE_CUT gemacht.
  4. Elza: die Zeile lautet "[ventilkette41] ROOM2031: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" (Basis-Id im
     Text), geladen wird richtig room20b1.rdt - nur Logtext.
+
+
+MESSUNG 3 - Welle 2, Lauf A2, 2026-11-08 03:55-05:40 (Gegenpruefung Befund 2 + 3; Ordner a2_zug6030/)
+-------------------------------------------------------------------------------------------------
+Durchgehende Leon-Laeufe erster Besuch ROOM6030 -> ROOM6000 Torschalter -> zweiter Besuch ROOM6030 (Wege F, W, R vor und nach
+dem Fix 3b2eec448, Zusatzwege F0 und N) und der kombinierte ROOM5090-Lauf mit (3,89)/(9,133) (b3_leon). Auswertung, Tabellen
+und Byte-Offsets: AN_annette.md Abschnitt "Integration A2".
+ weg_<W>_vor.txt / weg_<W>_nach.txt   Wege F, W, R, Stand dabac8d22 + Messhaken 8f09f8fe0 bzw. nach dem Fix: Skript-Abschnitte,
+                                      FIRE_AOT, [flagwatch] (3,22) (4,23) (3,89) (9,128) (9,133), [story80], [annette], [msgtext]
+ weg_F0.txt / weg_N.txt               vorne ohne Wagen -> Tor -> vorne; Zug erst nach dem Tor betreten (Nutzerfragen)
+ kal6000.txt                          Eichlauf Torschalter (msg 5, Ja, (3,89) F284) und Tuer Slot 3
+ b3_leon.txt                          5090: AN-Szene -> Riesenform 1000 -> Rueckstoss -> Sturz -> G5-Auftritt; state.log-Wechsel
+ ctest_torweg.txt / ctest_gruppe.txt / ctest_upp.txt   Testausgaben (3/3, 25/25, 1083/1083)
+ werkzeug/lauf.sh, wege.sh, b3.sh     Laufwerkzeug (eigene exe-Kopie re15_pc_inta2_<lauf>.exe, Wachhund, nur eigene PID)
+Rohdaten (debug.log, state.log): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/int_a2/laeufe/

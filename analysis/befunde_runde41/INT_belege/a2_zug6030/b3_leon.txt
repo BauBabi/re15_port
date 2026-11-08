@@ -1,0 +1,93 @@
+# Lauf b3_leon (Integration A2, eigene Messkopie, beendet nur eigene PID)
+exe re15_pc_inta2_b3_leon PID 69972 sha1 85c183c0b2be2f3dafc68076a234c26b3729f8d4
+exit=0 dauer=116s
+## Karte
+## debug.log: Skript, Abschnitte, FIRE_AOT, Flags, [story80], [annette], [g5auftritt], [msgtext], EXIT_AT (in Reihenfolge)
+[render] SDL-Renderer direct3d, Videotreiber windows, ABR2 (B-F) ok
+[input-script] RE15_INPUT_SCRIPT="A0.1,W1,U8.5,W16.7,MA13,W80" -> 3579 ticks @ 30 fps, start frame 100
+[setflag] flag(3,89/0x59) = 1
+[setflag] flag(9,133/0x85) = 1
+[flagwatch] F0 ROOM1240 (3,89) -1 -> 1
+[flagwatch] F0 ROOM1240 (9,133) -1 -> 1
+[enemy] EM4D: Ersatzmodell RE2/ANNETTE_4D.EMD (Raum 5090)
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12
+[annette] F280 Ton 0 (ANNETTE_SE.VBS)
+[annette] F280 Szenenstart statt sub04 (Krach): Phase 1, Form (-14700,0,-23350) Gier 3 Clip 2/55, Annette (8000,0,-24250) Clip 2/1, Cut 12
+[flagwatch] F280 ROOM5090 (3,42) 0 -> 1
+[msgtext] room=5090 id=43 "Annette: William."
+[annette] F462 Ton 1 (ANNETTE_SE.VBS)
+[annette] F462 Sturz: Phase 2, Form (-1378,-5600,-23395) Gier 3983 Clip 2/0, Annette (4813,0,-22953) Clip 5/19, Cut 11
+[annette] F477 gelandet, Drohen: Phase 3, Form (-1378,0,-23395) Gier 3983 Clip 10/0, Annette (3903,0,-22582) Clip 5/14, Cut 11
+[annette] F519 Ton 2 (ANNETTE_SE.VBS)
+[msgtext] room=5090 id=40 "Annette: W-William! You're alive!"
+[annette] F710 Hieb (RE2 @0x01142): Phase 4, Form (-1378,0,-23395) Gier 131 Clip 2/47, Annette (3773,0,-22529) Clip 4/0, Cut 11
+[annette] F723 Ausholen (RE2 70,22 s): Phase 4, Form (-1378,0,-23395) Gier 131 Clip 4/0, Annette (3773,0,-22529) Clip 4/19, Cut 11
+[annette] F752 Blut-Skala 0x3DB6: Cut 11 H 208, Klaue 14 (4231,-2176,-22579) 4492 vom Auge (RE2 0x2000 bei H 257 / 2878)
+[enemy] EM4D: Ersatzmodell RE2/ANNETTE_4D_BLUT.EMD (Raum 5090)
+[annette] F752 Treffer: Phase 4, Form (0,0,-23164) Gier 131 Clip 4/14, Annette (3773,0,-22529) Clip 6/0, Cut 11
+[annette] F752 Blut 1/15: 2 Aufrufe, 8 Plaetze, Pool 25/96
+[annette] F766 Blut 15/15: 30 Aufrufe, 99 Plaetze, Pool 96/96
+[annette] F786 Schnitt weg, liegt, Schrei (RE2 @0x01150/@0x01162): Phase 6, Form (0,0,-23164) Gier 131 Clip 4/49, Annette (4856,900,-22748) Clip 24/0, Cut 13
+[msgtext] room=5090 id=42 "Leon: Annette!"
+[annette] F888 Kampfstart (sub04), Form frei: Phase 7, Form (0,0,-23164) Gier 4039 Clip 2/40, Annette (4856,900,-22748) Clip 24/0, Cut 13
+[g5auftritt] F1192 Raum 5090: Vorlauf, Schnitt 16 (RE2 room7040 Cut 9), Spieler x -3800, Slot 2, Frau 1
+[g5auftritt] Schnitt 16: Hintergrund RE2/R704_CUT09.BSS rv=0, Masken-Atlas 33312 Byte
+[g5auftritt] F1247 Raum 5090: Armierung nach 55 Vorlaufbildern, Schnitt 16, Spieler x 1208
+[g5auftritt] Schnitt 17: Hintergrund RE2/R704_CUT10.BSS rv=0, Masken-Atlas 0 Byte
+[g5auftritt] F2409 Szenenende Bild 1162: G5 Sub 1 Ph 1, Spieler x 13873, Cut 12
+[flow] EXIT_AT: Bild 2900 in Raum 5090 erreicht -> exit
+## state.log: Zustandswechsel Riesenform (t=30), G5 (t=36), Annette (t=4d) mit Spieler-HP
+F1 t=30 st=1 ss1=9 g=33 mo=0 af=16 @(-14700,-23350,r0) hp=600 Spieler-hp=100
+F1 t=4d st=0 ss1=0 g=40 mo=0 af=0 @(600,-25300,r0) hp=0 Spieler-hp=100
+F6 t=30 st=1 ss1=9 g=33 mo=2 af=1 @(-14700,-23350,r0) hp=600 Spieler-hp=100
+F6 t=4d st=4 ss1=6 g=40 mo=2 af=0 @(600,-25300,r0) hp=-1 Spieler-hp=100
+F7 t=4d st=4 ss1=6 g=40 mo=1 af=0 @(600,-25300,r0) hp=-1 Spieler-hp=100
+F23 t=4d st=4 ss1=6 g=40 mo=2 af=0 @(600,-25300,r0) hp=-1 Spieler-hp=100
+F100 t=30 st=1 ss1=0 g=33 mo=2 af=1 @(-14700,-23350,r3) hp=1000 Spieler-hp=100
+F106 t=4d st=4 ss1=6 g=40 mo=1 af=0 @(600,-25300,r0) hp=-1 Spieler-hp=100
+F122 t=4d st=4 ss1=6 g=40 mo=2 af=0 @(600,-25300,r0) hp=-1 Spieler-hp=100
+F312 t=4d st=4 ss1=9 g=40 mo=5 af=0 @(8000,-24250,r3921) hp=-1 Spieler-hp=100
+F332 t=4d st=4 ss1=6 g=40 mo=1 af=0 @(8000,-24250,r2107) hp=-1 Spieler-hp=100
+F348 t=4d st=4 ss1=6 g=40 mo=2 af=0 @(8000,-24250,r2107) hp=-1 Spieler-hp=100
+F411 t=4d st=4 ss1=4 g=40 mo=5 af=0 @(8000,-24250,r2203) hp=-1 Spieler-hp=100
+F477 t=30 st=1 ss1=0 g=33 mo=10 af=0 @(-1378,-23395,r3983) hp=1000 Spieler-hp=100
+F483 t=4d st=4 ss1=6 g=40 mo=1 af=0 @(3773,-22529,r1939) hp=-1 Spieler-hp=100
+F499 t=4d st=4 ss1=6 g=40 mo=2 af=0 @(3773,-22529,r1939) hp=-1 Spieler-hp=100
+F603 t=30 st=1 ss1=0 g=33 mo=2 af=0 @(-1378,-23395,r3983) hp=1000 Spieler-hp=100
+F710 t=4d st=0 ss1=0 g=40 mo=4 af=0 @(3773,-22529,r1939) hp=-1 Spieler-hp=100
+F723 t=30 st=1 ss1=0 g=33 mo=4 af=0 @(-1378,-23395,r131) hp=1000 Spieler-hp=100
+F752 t=4d st=0 ss1=0 g=40 mo=6 af=0 @(3773,-22529,r1939) hp=-1 Spieler-hp=100
+F786 t=4d st=0 ss1=0 g=40 mo=24 af=0 @(4856,-22748,r1170) hp=-1 Spieler-hp=100
+F787 t=30 st=1 ss1=0 g=33 mo=2 af=0 @(0,-23164,r4039) hp=1000 Spieler-hp=100
+F889 t=30 st=1 ss1=0 g=13 mo=10 af=1 @(1200,-23350,r4055) hp=1000 Spieler-hp=100
+F949 t=30 st=2 ss1=18 g=13 mo=10 af=61 @(1191,-23366,r9) hp=699 Spieler-hp=100
+F950 t=30 st=1 ss1=20 g=13 mo=8 af=6 @(1191,-23366,r9) hp=699 Spieler-hp=100
+F975 t=30 st=1 ss1=3 g=13 mo=5 af=1 @(1209,-23367,r9) hp=699 Spieler-hp=100
+F976 t=30 st=1 ss1=4 g=13 mo=0 af=1 @(1221,-23368,r9) hp=699 Spieler-hp=100
+F980 t=30 st=2 ss1=18 g=13 mo=0 af=5 @(1974,-23380,r9) hp=398 Spieler-hp=100
+F981 t=30 st=1 ss1=20 g=13 mo=8 af=6 @(1974,-23380,r9) hp=398 Spieler-hp=100
+F1006 t=30 st=1 ss1=3 g=13 mo=5 af=1 @(1992,-23381,r9) hp=398 Spieler-hp=100
+F1007 t=30 st=1 ss1=4 g=13 mo=0 af=1 @(1994,-23384,r9) hp=398 Spieler-hp=100
+F1012 t=30 st=2 ss1=18 g=13 mo=0 af=6 @(2108,-23699,r4095) hp=97 Spieler-hp=100
+F1013 t=30 st=1 ss1=20 g=13 mo=8 af=6 @(2108,-23699,r4095) hp=97 Spieler-hp=100
+F1038 t=30 st=1 ss1=3 g=13 mo=5 af=1 @(2117,-23702,r4095) hp=97 Spieler-hp=100
+F1039 t=30 st=1 ss1=4 g=13 mo=0 af=1 @(2125,-23703,r4087) hp=97 Spieler-hp=100
+F1044 t=30 st=3 ss1=18 g=13 mo=0 af=6 @(2379,-24094,r4075) hp=-204 Spieler-hp=100
+F1045 t=30 st=3 ss1=18 g=13 mo=13 af=0 @(2379,-24094,r4075) hp=1 Spieler-hp=100
+F1046 t=30 st=2 ss1=18 g=13 mo=13 af=1 @(2299,-24089,r43) hp=1 Spieler-hp=100
+F1107 t=30 st=2 ss1=18 g=13 mo=8 af=5 @(-2501,-23782,r49) hp=1 Spieler-hp=100
+F1135 t=30 st=2 ss1=18 g=13 mo=12 af=0 @(-2501,-23782,r49) hp=1 Spieler-hp=100
+F1192 t=36 st=0 ss1=0 g=00 mo=0 af=0 @(-32000,-32000,r0) hp=600 Spieler-hp=100
+F1247 t=36 st=0 ss1=0 g=13 mo=1 af=0 @(-9000,-23400,r0) hp=600 Spieler-hp=100
+F1518 t=36 st=0 ss1=0 g=13 mo=3 af=1 @(-2786,-23400,r0) hp=600 Spieler-hp=100
+F1717 t=36 st=0 ss1=0 g=13 mo=4 af=0 @(-2786,-23400,r0) hp=600 Spieler-hp=100
+F1898 t=36 st=0 ss1=0 g=13 mo=2 af=1 @(1160,-23400,r0) hp=600 Spieler-hp=100
+F2048 t=36 st=0 ss1=0 g=13 mo=0 af=1 @(1160,-23400,r0) hp=600 Spieler-hp=100
+F2158 t=36 st=0 ss1=0 g=13 mo=2 af=1 @(1160,-23400,r0) hp=600 Spieler-hp=100
+F2308 t=36 st=0 ss1=0 g=13 mo=0 af=1 @(1160,-23400,r0) hp=600 Spieler-hp=100
+F2369 t=36 st=0 ss1=0 g=13 mo=5 af=0 @(1160,-23400,r0) hp=600 Spieler-hp=100
+F2520 t=36 st=0 ss1=0 g=13 mo=2 af=1 @(5166,-23400,r0) hp=600 Spieler-hp=100
+F2606 t=36 st=0 ss1=0 g=13 mo=0 af=0 @(5166,-23400,r0) hp=600 Spieler-hp=100
+F2607 t=36 st=0 ss1=0 g=13 mo=5 af=0 @(5166,-23400,r0) hp=600 Spieler-hp=100
+F2758 t=36 st=0 ss1=0 g=13 mo=2 af=1 @(9232,-23400,r0) hp=600 Spieler-hp=100
+F2844 t=36 st=0 ss1=0 g=13 mo=0 af=1 @(10012,-23400,r0) hp=600 Spieler-hp=80

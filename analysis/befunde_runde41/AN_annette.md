@@ -1502,3 +1502,94 @@ nachzufahren.
 - Commits: 99bbe97ba (Code + Riegel), dieser Dossier-Commit.
 - N5.3 "Radius" und N5.5 "Leichen-Radius" gelten jetzt nur noch fuer die RE2-Szene und die Leiche (siehe oben).
 - Offen: nichts Neues. Die Stimmen (Abnahme 4 M3) fehlen weiter.
+
+## Integration A2 (2026-11-08): Querbezug AN x ST80 im Zug 6030 und kombinierter 5090-Lauf
+
+Auftrag: Gegenpruefung Welle 2 Befund 2 (Querbezug ROOM6030 AN sub05 x ST80 sub02/08/09 ungemessen, durchgehender Lauf
+"erster Besuch 6030 -> Tor -> zweiter Besuch" fehlt) und Befund 3 (5090 mit den AN-Bits wie im echten Weg). Integrationsbaum
+`r41/integration`, Leon. Elza: entfaellt fuer den Zug, ROOM6031 hat keine 0x4D (Abschnitt 2.2) und keine ST80-Umleitung
+(alle `k_s80`-Eintraege tragen 0x30C1/0x6030); `integration_r36_story_elza` ist gruen (A2.7).
+
+### A2.1 Mechanismus (scd_dump_room.py, Datei-Offsets)
+
+| Stelle | Bytes | Wirkung |
+|---|---|---|
+| ROOM6000 sub07 @0x011B4 | `22 03 59 01` | Torschalter: Set(3,89)=1 |
+| ROOM6000 sub07 @0x011BC / @0x011C0 | `21 03 16 00` / `22 03 16 01` | Wagen-Szene als gelaufen markiert, falls nicht gelaufen |
+| ROOM6000 sub07 @0x011CA / @0x011CE | `21 04 17 00` / `22 04 17 01` | Fuehrerstand-Szene als gelaufen markiert, falls nicht gelaufen |
+| ROOM6030 sub07 @0x010D0 / @0x010E8 | `21 04 17 00` / `04 ff 18 08` | (4,23)=0 -> sub08 (ST80 vorne/voll) |
+| ROOM6030 sub07 @0x010F4 / @0x0110C | `21 03 59 00` / `04 ff 18 09` | sonst nur VOR dem Tor -> sub09 (ST80-Nachtrag) |
+| ROOM6030 sub07 @0x01128 / @0x01132 | `21 03 59 01` / `04 ff 18 05` | nach dem Tor -> sub05 (AN-Zugstart) |
+| ROOM6030 sub06 @0x0108E / @0x010C4 | `21 03 59 01` / `04 ff 18 05` | Wagen nach dem Tor -> sub05 (AN k_tuer) |
+
+Folge: nach dem Tor laufen weder die Wagen-Szene (sub01 @0x00D62 Ck(3,22)=0) noch sub08/sub09 je wieder; der einzige
+Fuehrerstand-Haken ist sub05 @0x01132. Nebenbefund: der AN-Zweig "erster Besuch erst nach dem Tor: sub08 laeuft, Zugstart beim
+naechsten Eintritt" (annette_r41.c zug_evt_exec) ist im echten Spiel nicht erreichbar, weil der Torschalter @0x011CE (4,23)
+setzt; er greift nur mit Debug-Flags. Unveraendert gelassen.
+
+### A2.2 Messweg
+
+Messhaken (Commit 8f09f8fe0, env-gegated): Eingabeskript mit einem Abschnitt je Raum (`|`, input_pc.c), RE15_FIRE_AOT als
+Liste, RE15_FLAG_WATCH, RE15_EXIT_AT `!k`, Karte `vor6030 tor_bereit` ((3,48)/(3,49) ROOM5080 sub01 @0x00792/@0x00796,
+(3,239) ROOM6000 sub02 @0x00F8E). Start ROOM6000 vor der Zugtuer, nur normale Eingaben im Zug (Wege der Riegel P4j/P4k),
+Ausgang Slot 2 / Torschalter Slot 5 (msg 5, Ja) / Tuer Slot 3 per FIRE_AOT. Software-Renderer, SDL_AUDIODRIVER=dummy, eigene
+exe-Kopien, nur eigene PIDs beendet. Werkzeug und Logauszuege: `INT_belege/a2_zug6030/` (`werkzeug/lauf.sh`, `wege.sh`,
+`b3.sh`; je Lauf `<lauf>.txt`).
+
+### A2.3 Ergebnis je Weg (Folge der angezeigten Ids ROOM6030; Bits)
+
+| Weg | Stand | Folge | Bits | Urteil |
+|---|---|---|---|---|
+| F vorne -> Wagen -> ohne Rueckkehr -> Tor -> vorne | dabac8d22 (`weg_F_vor`) | 11 31 13..19 / 0 1 21 2 3 22 4 5 6 7 23 24 8 / **27 28 29 30** | (9,128) bleibt 1, (9,133) 0 -> 1 | **Widerspruch**: msg 28 "...Sherry is back there!", obwohl Annette nichts von Sherry weiss (msg 25 nie); der Nachtrag 40/25 kommt nie |
+| F | nach Fix (`weg_F_nach`) | 11 31 13..19 / 0 1 21 .. 8 / **40 25** (F638, 1. Betreten nach dem Tor) / **27 28 29 30** (F2356, naechstes Betreten) | (9,128) 1 -> 0 F638, (9,133) 0 -> 1 F2357 | widerspruchsfrei |
+| W Wagen -> vorne -> Tor -> vorne | beide Staende | 0 1 21 .. 8 / 11 12 25 26 13..19 / 27 28 29 30 | (9,128) nie, (9,133) F638 | widerspruchsfrei, Zugstart sofort |
+| R vorne -> Wagen -> zurueck -> Tor -> vorne | beide Staende | 11 31 13..19 / 0 1 21 .. 8 / 40 25 / 27 28 29 30 | (9,128) 1 -> 0 vor dem Tor, (9,133) F638 | widerspruchsfrei, Zugstart sofort |
+
+Jede Zeile hoechstens einmal (28 Zeilen). Der Wagen-Eintritt nach dem Tor zeigt in allen Wegen `[annette] ROOM6030 Wagen (Cut 6):
+Zugstart nicht gelaufen -> Ausgang = Tuer` und keine Wagen-Szene: ST80 sub02 und AN k_tuer treffen im echten Weg nie zusammen,
+weil der Torschalter @0x011C0 (3,22) setzt. Tor jeweils F284 (ROOM6000 (3,89) 0 -> 1).
+
+### A2.4 Fix (Commit 3b2eec448)
+
+Kleinster belegter Fix, keine neue Zeile, kein neues Bit: der offene ST80-Nachtrag laeuft an der einzigen nach dem Tor noch
+erreichbaren Fuehrerstand-Stelle, sub07 @0x01132 (Regel ST80 NB1 "naechstes Betreten des Fuehrerstands nach dem Wagen").
+- `k_s80_6030_sub05_nachtrag_tor` (262 B, szenen_bauen.py, reproduzierbar): Set(9,128)=0 (Form @0x0136C), Sce_em_set Annette =
+  @0x010F8..0x0110C (sub07 setzt sie ab (3,89)=1 nicht mehr), Evt_exec sub05 = @0x01132..0x01136 (Licht-Schleife wie im
+  Original), dann der Nachtrag-Rumpf des bisherigen Programms (@0x0113E.., msg 40, msg 25, Schluss @0x0131E..0x01376).
+  Gate (9,128)=1, (3,89)=1, Cut 0 (sub00 @0x00D2C Case 0; im Wagen Cut 6/8/12 nicht).
+- annette_r41.c zug_evt_exec: der Zugstart wartet, solange (9,128)=1. Haken-Reihenfolge op_evt_exec (scd_vm.c): story80 vor
+  annette; ohne die Wartebedingung ueberschriebe der AN-Haken die Umleitung. Der Zugstart folgt beim naechsten Betreten (wie
+  nach sub08: 0x4D steht -> Original-sub05).
+
+### A2.5 Weitere Wege (gemessen; kein Beleg entscheidet sie -> Nutzerfragen)
+
+| Weg | Lauf | Folge | Befund |
+|---|---|---|---|
+| F0 vorne -> ohne Wagen -> Tor -> vorne | `weg_F0` | 11 31 13..19 / (Tor) / 40 25 / 27 28 29 30 | Die Wagen-Szene laeuft nie (Torschalter @0x011C0 setzt (3,22)); Leon sagt msg 40 "There's a little girl in the back... Sherry." ohne Johns Vorstellung (msg 21). Vor dem Fix: msg 28 ohne Wissen Annettes. Die Bits unterscheiden F0 nicht von F ((3,22)=1 in beiden). |
+| N Zug erst nach dem Tor betreten | `weg_N` | (Tor) / 27 28 29 30 | Weder Wagen- noch Fuehrerstand-Szene (Torschalter @0x011C0/@0x011CE), Zugstart sofort mit "...Sherry is back there!". |
+
+Die Disc ueberspringt nach dem Tor beide Zug-Szenen; welcher Satz in F0/N an welcher Stelle stehen soll, entscheidet kein Beleg.
+
+### A2.6 Befund 3: 5090 mit (3,89) und (9,133)
+
+Lauf `b3_leon` (Debug-Sprung 5090 Wagen B wie integration_r41_g5_tod, RE15_SET_FLAG 3:89,9:133, Rakete 18:200 erst nach dem
+Kampfstart, Renderer direct3d - nicht der Software-Renderer, der mit K5c abstuerzt, Befund 1). Zeitachse:
+F280 Szenenstart statt sub04 (Krach) -> F462 Sturz -> F477 gelandet -> F710 Hieb -> F752 Treffer (Blut 15/15, ANNETTE_4D_BLUT.EMD)
+-> F786 liegt, Schrei -> F888 Kampfstart (sub04), Form frei (g 0x13) -> Raketen F949 699, F980 398, F1012 97, F1044 -204 (wie
+g5_tod ohne AN) -> F1045/F1046 Rueckstoss (st 2, Clip 13, HP 1) -> F1107 Clip 8 -> F1135 Sturz (Clip 12) -> F1192 G5-Vorlauf
+(Typ 0x36 HP 600) -> F1247 Armierung -> F2409 Szenenende (Spieler x 13873, Cut 12). Spieler-HP 100 bis F2409 (F2844 80: G5-Biss
+nach dem Szenenende, der Lauf steht ohne Rueckzug). Annette am Ende Clip 24 Bild 0 @(4856,-22748) Gier 1170, hp -1
+(Begleiter-Regel NB5); Riesenform-Asset "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips". exit 0, kein Absturz -> Riegel
+`integration_r41_annette_g5` (gruen, dieselben Bilder). Beleg `INT_belege/a2_zug6030/b3_leon.txt`.
+
+### A2.7 Tests (Windows, 320x240)
+
+- `unit_r41_story80_torweg6030` (neu): Weg F `11 31 13 14 15 16 17 18 19 0 1 21 2 3 22 4 5 6 7 23 24 8 40 25 27 28 29 30`, 28 Zeilen,
+  keine doppelt, 40/25 vor 27/28; Weg W Zugstart sofort ohne Nachtrag -> `100% tests passed, 0 tests failed out of 1`.
+- `integration_r36_story_torweg_f/_w/_r` (neu, durchgehend, -j 3) -> `100% tests passed, 0 tests failed out of 3`,
+  `Total Test time (real) = 464.86 sec`.
+- `integration_r41_annette_g5` (neu) -> `100% tests passed, 0 tests failed out of 1`, `Total Test time (real) = 113.15 sec`.
+- Gruppe `-R "annette|story|kartenbits|g5auftritt|r41_story80|zug" -E "torweg|annette_g5" -j 4`: `100% tests passed, 0 tests failed out of 25`, `Total Test time (real) = 519.00 sec` (darin integration_r36_story_leon 518,92 s, _zug 449,79 s, _elza 270,23 s, integration_r41_annette, unit_r41_annette*, unit_r41_g5auftritt, unit_r36_kartenbits).
+- `-R "^(unit_|prop_|probe_)" -j 6`: `100% tests passed, 0 tests failed out of 1083`, `Total Test time (real) = 601.63 sec`.
+- PSX-Syntax story80_r41.c / annette_r41.c (mipsel-none-elf-gcc PSn00bSDK 0.24, -fsyntax-only) rc 0.
+- Offen: Linux-Lauf der neuen Riegel; Elza-Zug unberuehrt (s. oben).
