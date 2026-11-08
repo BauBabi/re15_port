@@ -1,0 +1,624 @@
+{
+ "modus": "hebung",
+ "d": 21.016,
+ "bisektion": [
+  {
+   "d": 20.0,
+   "bild2": {
+    "video": 15.0,
+    "T": 27.51,
+    "ohne": 8.15
+   }
+  },
+  {
+   "d": 30.0,
+   "bild2": {
+    "video": 20.44,
+    "T": 35.27,
+    "ohne": 11.25
+   }
+  },
+  {
+   "d": 25.0,
+   "bild2": {
+    "video": 17.3,
+    "T": 31.04,
+    "ohne": 9.56
+   }
+  },
+  {
+   "d": 22.5,
+   "bild2": {
+    "video": 16.05,
+    "T": 29.13,
+    "ohne": 8.83
+   }
+  },
+  {
+   "d": 21.25,
+   "bild2": {
+    "video": 15.38,
+    "T": 28.49,
+    "ohne": 8.58
+   }
+  },
+  {
+   "d": 20.625,
+   "bild2": {
+    "video": 15.21,
+    "T": 28.12,
+    "ohne": 8.45
+   }
+  },
+  {
+   "d": 20.938,
+   "bild2": {
+    "video": 15.34,
+    "T": 28.43,
+    "ohne": 8.56
+   }
+  },
+  {
+   "d": 21.094,
+   "bild2": {
+    "video": 15.37,
+    "T": 28.48,
+    "ohne": 8.58
+   }
+  },
+  {
+   "d": 21.016,
+   "bild2": {
+    "video": 15.37,
+    "T": 28.48,
+    "ohne": 8.58
+   }
+  }
+ ],
+ "rampen": {
+  "haut0": {
+   "haut_p10_p50_p90": [
+    23.28,
+    26.23,
+    29.71
+   ],
+   "ader": 120,
+   "haut": 15,
+   "hell": 0
+  },
+  "gelenk0": {
+   "haut_p10_p50_p90": [
+    30.81,
+    32.97,
+    37.4
+   ],
+   "ader": 0,
+   "haut": 7,
+   "hell": 0,
+   "dL": 9.1
+  },
+  "haut1": {
+   "haut_p10_p50_p90": [
+    27.19,
+    33.74,
+    40.47
+   ],
+   "ader": 121,
+   "haut": 45,
+   "hell": 18
+  },
+  "gelenk1": {
+   "haut_p10_p50_p90": [
+    35.68,
+    42.84,
+    47.47
+   ],
+   "ader": 91,
+   "haut": 42,
+   "hell": 0,
+   "dL": 9.1
+  },
+  "haut2": {
+   "haut_p10_p50_p90": [
+    26.72,
+    33.02,
+    49.44
+   ],
+   "ader": 13,
+   "haut": 40,
+   "hell": 17
+  },
+  "gelenk2": {
+   "haut_p10_p50_p90": [
+    35.38,
+    41.87,
+    58.96
+   ],
+   "ader": 10,
+   "haut": 26,
+   "hell": 13,
+   "dL": 9.1
+  },
+  "fleisch1": {
+   "haut_p10_p50_p90": [
+    34.03,
+    40.54,
+    48.86
+   ],
+   "ader": 60,
+   "haut": 35,
+   "hell": 0,
+   "dL": 6.9
+  }
+ },
+ "helligkeit": {
+  "1": {
+   "video": 42.67,
+   "T": 40.44,
+   "ohne": 16.19
+  },
+  "2": {
+   "video": 15.37,
+   "T": 28.48,
+   "ohne": 8.58
+  }
+ },
+ "weiss": {
+  "3/4 vorn": {
+   "px": 14199,
+   "bunt_pct": 66.3,
+   "S5": 3,
+   "sektoren": {
+    "0": 0.5,
+    "315": 47.4,
+    "330": 18.3,
+    "345": 33.6
+   },
+   "F": 46.5,
+   "F_hell": 13.4,
+   "F_dunkel": 13.4,
+   "F_ton": 17.6,
+   "F_chroma": 3.5,
+   "hell_pct": 1.53,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.7,
+   "h0": 335.4,
+   "flecken": 66,
+   "fleck_pct": 6.2,
+   "komp_geprueft": 390,
+   "C_std": 3.38,
+   "C_mittel": 7.76,
+   "L_mittel": 24.92,
+   "spanne90": 22.2,
+   "block_ton_streu": 5.9,
+   "block_L_p10_p90": 8.7,
+   "bloecke": 53,
+   "bloecke_bunt": 50
+  },
+  "Seite": {
+   "px": 16849,
+   "bunt_pct": 66.9,
+   "S5": 3,
+   "sektoren": {
+    "0": 0.6,
+    "315": 41.9,
+    "330": 20.3,
+    "345": 37.1
+   },
+   "F": 52.2,
+   "F_hell": 21.4,
+   "F_dunkel": 10.7,
+   "F_ton": 17.2,
+   "F_chroma": 4.2,
+   "hell_pct": 3.89,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.0,
+   "h0": 336.7,
+   "flecken": 88,
+   "fleck_pct": 10.2,
+   "komp_geprueft": 459,
+   "C_std": 3.5,
+   "C_mittel": 7.71,
+   "L_mittel": 23.98,
+   "spanne90": 22.4,
+   "block_ton_streu": 5.7,
+   "block_L_p10_p90": 11.9,
+   "bloecke": 70,
+   "bloecke_bunt": 67
+  },
+  "3/4 hinten": {
+   "px": 14915,
+   "bunt_pct": 74.3,
+   "S5": 3,
+   "sektoren": {
+    "315": 42.6,
+    "330": 23.5,
+    "345": 33.6
+   },
+   "F": 41.6,
+   "F_hell": 15.4,
+   "F_dunkel": 13.4,
+   "F_ton": 12.7,
+   "F_chroma": 0.7,
+   "hell_pct": 2.7,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.7,
+   "h0": 335.6,
+   "flecken": 62,
+   "fleck_pct": 6.2,
+   "komp_geprueft": 433,
+   "C_std": 2.96,
+   "C_mittel": 8.06,
+   "L_mittel": 25.04,
+   "spanne90": 22.2,
+   "block_ton_streu": 5.1,
+   "block_L_p10_p90": 8.9,
+   "bloecke": 56,
+   "bloecke_bunt": 54
+  },
+  "Gegenseite": {
+   "px": 17160,
+   "bunt_pct": 70.2,
+   "S5": 3,
+   "sektoren": {
+    "315": 43.1,
+    "330": 21.4,
+    "345": 34.9
+   },
+   "F": 47.8,
+   "F_hell": 14.0,
+   "F_dunkel": 15.7,
+   "F_ton": 15.7,
+   "F_chroma": 3.5,
+   "hell_pct": 2.29,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 1.2,
+   "h0": 335.9,
+   "flecken": 82,
+   "fleck_pct": 8.2,
+   "komp_geprueft": 456,
+   "C_std": 3.02,
+   "C_mittel": 7.82,
+   "L_mittel": 23.43,
+   "spanne90": 22.3,
+   "block_ton_streu": 5.0,
+   "block_L_p10_p90": 10.1,
+   "bloecke": 66,
+   "bloecke_bunt": 64
+  },
+  "MITTEL": {
+   "px": 15780.75,
+   "bunt_pct": 69.42,
+   "S5": 3.0,
+   "F": 47.03,
+   "F_hell": 16.05,
+   "F_dunkel": 13.3,
+   "F_ton": 15.8,
+   "F_chroma": 2.98,
+   "hell_pct": 2.6,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.65,
+   "h0": 335.9,
+   "flecken": 74.5,
+   "fleck_pct": 7.7,
+   "komp_geprueft": 434.5,
+   "C_std": 3.21,
+   "C_mittel": 7.84,
+   "L_mittel": 24.34,
+   "spanne90": 22.27,
+   "block_ton_streu": 5.43,
+   "block_L_p10_p90": 9.9,
+   "bloecke": 61.25,
+   "bloecke_bunt": 58.75,
+   "je_saat": [
+    {
+     "S5": 3,
+     "F": 46.5,
+     "C_std": 3.38,
+     "spanne90": 22.2,
+     "block_ton_streu": 5.9
+    },
+    {
+     "S5": 3,
+     "F": 52.2,
+     "C_std": 3.5,
+     "spanne90": 22.4,
+     "block_ton_streu": 5.7
+    },
+    {
+     "S5": 3,
+     "F": 41.6,
+     "C_std": 2.96,
+     "spanne90": 22.2,
+     "block_ton_streu": 5.1
+    },
+    {
+     "S5": 3,
+     "F": 47.8,
+     "C_std": 3.02,
+     "spanne90": 22.3,
+     "block_ton_streu": 5.0
+    }
+   ]
+  },
+  "S5_gepoolt": 3
+ },
+ "szene": {
+  "bild1": {
+   "ohne_filter": {
+    "px": 32885,
+    "bunt_pct": 58.2,
+    "S5": 3,
+    "sektoren": {
+     "0": 28.7,
+     "15": 49.8,
+     "30": 13.4,
+     "45": 3.8,
+     "60": 2.5,
+     "75": 0.8,
+     "345": 0.7
+    },
+    "F": 55.0,
+    "F_hell": 26.5,
+    "F_dunkel": 13.1,
+    "F_ton": 19.8,
+    "F_chroma": 1.2,
+    "hell_pct": 4.94,
+    "F_fremd": 3.0,
+    "fremd_pct": 0.41,
+    "F_grau_hell": 0.0,
+    "h0": 22.4,
+    "flecken": 181,
+    "fleck_pct": 10.2,
+    "komp_geprueft": 816,
+    "C_std": 4.04,
+    "C_mittel": 7.23,
+    "L_mittel": 17.14,
+    "spanne90": 39.4,
+    "block_ton_streu": 9.7,
+    "block_L_p10_p90": 19.7,
+    "bloecke": 132,
+    "bloecke_bunt": 110
+   },
+   "video": {
+    "px": 31178.0,
+    "bunt_pct": 96.47,
+    "S5": 3.0,
+    "F": 34.1,
+    "F_hell": 22.17,
+    "F_dunkel": 10.57,
+    "F_ton": 0.0,
+    "F_chroma": 4.03,
+    "hell_pct": 7.17,
+    "F_fremd": 0.0,
+    "fremd_pct": 0.0,
+    "F_grau_hell": 4.03,
+    "h0": 321.2,
+    "flecken": 106.33,
+    "fleck_pct": 14.1,
+    "komp_geprueft": 430.67,
+    "C_std": 7.09,
+    "C_mittel": 24.08,
+    "L_mittel": 44.0,
+    "spanne90": 19.13,
+    "block_ton_streu": 5.0,
+    "block_L_p10_p90": 52.8,
+    "bloecke": 123.0,
+    "bloecke_bunt": 123.0,
+    "je_saat": [
+     {
+      "S5": 3,
+      "F": 34.6,
+      "C_std": 7.09,
+      "spanne90": 19.2,
+      "block_ton_streu": 5.0
+     },
+     {
+      "S5": 3,
+      "F": 32.7,
+      "C_std": 7.1,
+      "spanne90": 19.1,
+      "block_ton_streu": 5.0
+     },
+     {
+      "S5": 3,
+      "F": 35.0,
+      "C_std": 7.09,
+      "spanne90": 19.1,
+      "block_ton_streu": 5.0
+     }
+    ]
+   }
+  },
+  "bild2": {
+   "ohne_filter": {
+    "px": 44140,
+    "bunt_pct": 9.0,
+    "S5": 3,
+    "sektoren": {
+     "0": 66.8,
+     "15": 20.9,
+     "30": 0.8,
+     "45": 4.4,
+     "60": 7.0
+    },
+    "F": 5.9,
+    "F_hell": 5.2,
+    "F_dunkel": 0.2,
+    "F_ton": 0.0,
+    "F_chroma": 0.5,
+    "hell_pct": 0.76,
+    "F_fremd": 2.7,
+    "fremd_pct": 0.48,
+    "F_grau_hell": 0.0,
+    "h0": 17.8,
+    "flecken": 26,
+    "fleck_pct": 0.8,
+    "komp_geprueft": 295,
+    "C_std": 1.75,
+    "C_mittel": 4.2,
+    "L_mittel": 8.67,
+    "spanne90": 52.0,
+    "block_ton_streu": 6.7,
+    "block_L_p10_p90": 5.0,
+    "bloecke": 174,
+    "bloecke_bunt": 93
+   },
+   "video": {
+    "px": 42288.0,
+    "bunt_pct": 100.0,
+    "S5": 3.0,
+    "F": 3.47,
+    "F_hell": 2.73,
+    "F_dunkel": 0.7,
+    "F_ton": 0.0,
+    "F_chroma": 0.0,
+    "hell_pct": 0.68,
+    "F_fremd": 0.0,
+    "fremd_pct": 0.0,
+    "F_grau_hell": 0.0,
+    "h0": 5.1,
+    "flecken": 14.67,
+    "fleck_pct": 0.87,
+    "komp_geprueft": 199.33,
+    "C_std": 6.2,
+    "C_mittel": 27.47,
+    "L_mittel": 14.98,
+    "spanne90": 28.3,
+    "block_ton_streu": 10.1,
+    "block_L_p10_p90": 10.13,
+    "bloecke": 165.0,
+    "bloecke_bunt": 165.0,
+    "je_saat": [
+     {
+      "S5": 3,
+      "F": 3.8,
+      "C_std": 6.2,
+      "spanne90": 28.3,
+      "block_ton_streu": 10.1
+     },
+     {
+      "S5": 3,
+      "F": 3.5,
+      "C_std": 6.2,
+      "spanne90": 28.2,
+      "block_ton_streu": 10.1
+     },
+     {
+      "S5": 3,
+      "F": 3.1,
+      "C_std": 6.2,
+      "spanne90": 28.4,
+      "block_ton_streu": 10.1
+     }
+    ]
+   }
+  }
+ },
+ "wuensche": {
+  "gelenk_albedo": {
+   "gelenk": [
+    39.1,
+    3.4,
+    0.0
+   ],
+   "nachbar": [
+    29.8,
+    8.9,
+    -3.8
+   ],
+   "dL_median": 9.27,
+   "C_gelenk": 3.66
+  },
+  "gelenk_weiss": {
+   "je_winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "dL": 6.22,
+     "px_gelenk": 2476,
+     "px_ring": 2238
+    },
+    {
+     "winkel": "Seite",
+     "dL": 8.02,
+     "px_gelenk": 2547,
+     "px_ring": 2164
+    },
+    {
+     "winkel": "3/4 hinten",
+     "dL": 8.72,
+     "px_gelenk": 2122,
+     "px_ring": 2512
+    },
+    {
+     "winkel": "Gegenseite",
+     "dL": 6.81,
+     "px_gelenk": 1862,
+     "px_ring": 2456
+    }
+   ],
+   "dL_mittel": 7.44,
+   "dL_min": 6.22
+  },
+  "schwanzspitze": {
+   "albedo_median": [
+    39.9,
+    17.0,
+    -2.5
+   ],
+   "fleisch_anteil": 78.0,
+   "schwanz_albedo_median": [
+    33.5,
+    10.1,
+    -5.5
+   ],
+   "dL": 6.34
+  },
+  "buckel": {
+   "albedo_median": [
+    33.1,
+    16.1,
+    -2.4
+   ],
+   "fleisch_anteil": 52.4,
+   "flaechen": 12,
+   "mesh10_haut_median": [
+    29.8,
+    8.6,
+    -3.8
+   ],
+   "dL": 3.28,
+   "ton": -8.4
+  },
+  "lippe_unterkiefer": {
+   "rot_pct": 0.0,
+   "L_p95": 37.1,
+   "haut_L_p95": 41.3,
+   "median": [
+    25.3,
+    5.8,
+    -4.0
+   ]
+  },
+  "krallen": {
+   "kralle": [
+    25.3,
+    5.6,
+    -3.8
+   ],
+   "hand": [
+    25.3,
+    5.6,
+    -3.8
+   ],
+   "dE": 0.0,
+   "a_gt10_pct": 24.12,
+   "rotklasse_pct": 0.0
+  }
+ }
+}

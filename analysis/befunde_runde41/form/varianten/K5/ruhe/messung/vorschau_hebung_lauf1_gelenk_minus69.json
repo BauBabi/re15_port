@@ -1,0 +1,513 @@
+{
+ "modus": "hebung",
+ "d": 21.484,
+ "bisektion": [
+  {
+   "d": 20.0,
+   "bild2": {
+    "video": 14.93,
+    "T": 27.53,
+    "ohne": 8.16
+   }
+  },
+  {
+   "d": 30.0,
+   "bild2": {
+    "video": 20.39,
+    "T": 35.29,
+    "ohne": 11.25
+   }
+  },
+  {
+   "d": 25.0,
+   "bild2": {
+    "video": 17.22,
+    "T": 31.03,
+    "ohne": 9.55
+   }
+  },
+  {
+   "d": 22.5,
+   "bild2": {
+    "video": 15.99,
+    "T": 29.17,
+    "ohne": 8.84
+   }
+  },
+  {
+   "d": 21.25,
+   "bild2": {
+    "video": 15.29,
+    "T": 28.46,
+    "ohne": 8.57
+   }
+  },
+  {
+   "d": 21.875,
+   "bild2": {
+    "video": 15.55,
+    "T": 28.74,
+    "ohne": 8.67
+   }
+  },
+  {
+   "d": 21.562,
+   "bild2": {
+    "video": 15.45,
+    "T": 28.62,
+    "ohne": 8.63
+   }
+  },
+  {
+   "d": 21.406,
+   "bild2": {
+    "video": 15.36,
+    "T": 28.54,
+    "ohne": 8.6
+   }
+  },
+  {
+   "d": 21.484,
+   "bild2": {
+    "video": 15.44,
+    "T": 28.61,
+    "ohne": 8.62
+   }
+  }
+ ],
+ "rampen": {
+  "haut0": {
+   "haut_p10_p50_p90": [
+    23.75,
+    26.69,
+    30.17
+   ],
+   "ader": 120,
+   "haut": 15,
+   "hell": 0
+  },
+  "gelenk0": {
+   "haut_p10_p50_p90": [
+    31.28,
+    33.44,
+    37.87
+   ],
+   "ader": 0,
+   "haut": 7,
+   "hell": 0,
+   "dL": 9.1
+  },
+  "haut1": {
+   "haut_p10_p50_p90": [
+    27.65,
+    34.21,
+    40.93
+   ],
+   "ader": 121,
+   "haut": 45,
+   "hell": 18
+  },
+  "gelenk1": {
+   "haut_p10_p50_p90": [
+    36.15,
+    43.3,
+    47.94
+   ],
+   "ader": 91,
+   "haut": 42,
+   "hell": 0,
+   "dL": 9.1
+  },
+  "haut2": {
+   "haut_p10_p50_p90": [
+    27.18,
+    33.49,
+    49.91
+   ],
+   "ader": 13,
+   "haut": 40,
+   "hell": 17
+  },
+  "gelenk2": {
+   "haut_p10_p50_p90": [
+    35.84,
+    42.34,
+    59.43
+   ],
+   "ader": 10,
+   "haut": 26,
+   "hell": 13,
+   "dL": 9.1
+  },
+  "fleisch1": {
+   "haut_p10_p50_p90": [
+    34.5,
+    41.01,
+    49.33
+   ],
+   "ader": 60,
+   "haut": 35,
+   "hell": 0,
+   "dL": 6.9
+  }
+ },
+ "helligkeit": {
+  "1": {
+   "video": 43.06,
+   "T": 40.75,
+   "ohne": 16.33
+  },
+  "2": {
+   "video": 15.44,
+   "T": 28.61,
+   "ohne": 8.62
+  }
+ },
+ "weiss": {
+  "3/4 vorn": {
+   "px": 14199,
+   "bunt_pct": 65.0,
+   "S5": 3,
+   "sektoren": {
+    "315": 47.5,
+    "330": 22.8,
+    "345": 29.5
+   },
+   "F": 45.1,
+   "F_hell": 16.2,
+   "F_dunkel": 12.0,
+   "F_ton": 16.9,
+   "F_chroma": 0.7,
+   "hell_pct": 1.64,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.0,
+   "h0": 335.3,
+   "flecken": 64,
+   "fleck_pct": 6.5,
+   "komp_geprueft": 405,
+   "C_std": 3.33,
+   "C_mittel": 8.02,
+   "L_mittel": 25.06,
+   "spanne90": 22.2,
+   "block_ton_streu": 9.4,
+   "block_L_p10_p90": 8.5,
+   "bloecke": 53,
+   "bloecke_bunt": 52
+  },
+  "Seite": {
+   "px": 16849,
+   "bunt_pct": 64.6,
+   "S5": 3,
+   "sektoren": {
+    "315": 43.6,
+    "330": 23.6,
+    "345": 32.4
+   },
+   "F": 50.4,
+   "F_hell": 17.8,
+   "F_dunkel": 10.7,
+   "F_ton": 20.2,
+   "F_chroma": 3.0,
+   "hell_pct": 2.82,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.0,
+   "h0": 336.2,
+   "flecken": 85,
+   "fleck_pct": 9.7,
+   "komp_geprueft": 468,
+   "C_std": 3.52,
+   "C_mittel": 7.88,
+   "L_mittel": 24.13,
+   "spanne90": 22.3,
+   "block_ton_streu": 8.8,
+   "block_L_p10_p90": 12.0,
+   "bloecke": 70,
+   "bloecke_bunt": 69
+  },
+  "3/4 hinten": {
+   "px": 14915,
+   "bunt_pct": 70.9,
+   "S5": 3,
+   "sektoren": {
+    "315": 46.7,
+    "330": 25.2,
+    "345": 27.9
+   },
+   "F": 42.2,
+   "F_hell": 16.1,
+   "F_dunkel": 16.1,
+   "F_ton": 10.1,
+   "F_chroma": 0.0,
+   "hell_pct": 2.76,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.0,
+   "h0": 334.7,
+   "flecken": 63,
+   "fleck_pct": 6.1,
+   "komp_geprueft": 434,
+   "C_std": 3.14,
+   "C_mittel": 8.13,
+   "L_mittel": 25.25,
+   "spanne90": 22.1,
+   "block_ton_streu": 6.6,
+   "block_L_p10_p90": 9.0,
+   "bloecke": 56,
+   "bloecke_bunt": 54
+  },
+  "Gegenseite": {
+   "px": 17160,
+   "bunt_pct": 67.6,
+   "S5": 3,
+   "sektoren": {
+    "315": 44.7,
+    "330": 25.0,
+    "345": 29.9
+   },
+   "F": 48.4,
+   "F_hell": 13.4,
+   "F_dunkel": 14.0,
+   "F_ton": 21.6,
+   "F_chroma": 0.6,
+   "hell_pct": 2.13,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.0,
+   "h0": 335.4,
+   "flecken": 83,
+   "fleck_pct": 8.4,
+   "komp_geprueft": 481,
+   "C_std": 3.12,
+   "C_mittel": 7.94,
+   "L_mittel": 23.62,
+   "spanne90": 22.3,
+   "block_ton_streu": 6.4,
+   "block_L_p10_p90": 10.2,
+   "bloecke": 66,
+   "bloecke_bunt": 64
+  },
+  "MITTEL": {
+   "px": 15780.75,
+   "bunt_pct": 67.03,
+   "S5": 3.0,
+   "F": 46.52,
+   "F_hell": 15.88,
+   "F_dunkel": 13.2,
+   "F_ton": 17.2,
+   "F_chroma": 1.07,
+   "hell_pct": 2.34,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.0,
+   "h0": 335.4,
+   "flecken": 73.75,
+   "fleck_pct": 7.67,
+   "komp_geprueft": 447.0,
+   "C_std": 3.28,
+   "C_mittel": 7.99,
+   "L_mittel": 24.52,
+   "spanne90": 22.22,
+   "block_ton_streu": 7.8,
+   "block_L_p10_p90": 9.93,
+   "bloecke": 61.25,
+   "bloecke_bunt": 59.75,
+   "je_saat": [
+    {
+     "S5": 3,
+     "F": 45.1,
+     "C_std": 3.33,
+     "spanne90": 22.2,
+     "block_ton_streu": 9.4
+    },
+    {
+     "S5": 3,
+     "F": 50.4,
+     "C_std": 3.52,
+     "spanne90": 22.3,
+     "block_ton_streu": 8.8
+    },
+    {
+     "S5": 3,
+     "F": 42.2,
+     "C_std": 3.14,
+     "spanne90": 22.1,
+     "block_ton_streu": 6.6
+    },
+    {
+     "S5": 3,
+     "F": 48.4,
+     "C_std": 3.12,
+     "spanne90": 22.3,
+     "block_ton_streu": 6.4
+    }
+   ]
+  }
+ },
+ "szene": {
+  "bild1": {
+   "ohne_filter": {
+    "px": 32885,
+    "bunt_pct": 50.7,
+    "S5": 3,
+    "sektoren": {
+     "0": 34.5,
+     "15": 53.3,
+     "30": 8.8,
+     "60": 0.8,
+     "75": 0.8,
+     "345": 1.1
+    },
+    "F": 49.0,
+    "F_hell": 26.2,
+    "F_dunkel": 12.2,
+    "F_ton": 11.3,
+    "F_chroma": 1.8,
+    "hell_pct": 7.19,
+    "F_fremd": 0.9,
+    "fremd_pct": 0.14,
+    "F_grau_hell": 0.0,
+    "h0": 19.3,
+    "flecken": 161,
+    "fleck_pct": 12.2,
+    "komp_geprueft": 751,
+    "C_std": 4.32,
+    "C_mittel": 6.95,
+    "L_mittel": 17.27,
+    "spanne90": 28.1,
+    "block_ton_streu": 8.9,
+    "block_L_p10_p90": 19.7,
+    "bloecke": 132,
+    "bloecke_bunt": 100
+   }
+  },
+  "bild2": {
+   "ohne_filter": {
+    "px": 44140,
+    "bunt_pct": 12.8,
+    "S5": 2,
+    "sektoren": {
+     "0": 82.7,
+     "15": 9.4,
+     "45": 3.0,
+     "60": 4.9
+    },
+    "F": 7.0,
+    "F_hell": 5.7,
+    "F_dunkel": 0.2,
+    "F_ton": 0.7,
+    "F_chroma": 0.5,
+    "hell_pct": 0.88,
+    "F_fremd": 2.7,
+    "fremd_pct": 0.48,
+    "F_grau_hell": 0.0,
+    "h0": 13.9,
+    "flecken": 31,
+    "fleck_pct": 1.0,
+    "komp_geprueft": 327,
+    "C_std": 1.97,
+    "C_mittel": 4.11,
+    "L_mittel": 8.71,
+    "spanne90": 20.0,
+    "block_ton_streu": 5.5,
+    "block_L_p10_p90": 4.9,
+    "bloecke": 174,
+    "bloecke_bunt": 86
+   }
+  }
+ },
+ "wuensche": {
+  "gelenk_albedo": {
+   "gelenk": [
+    38.6,
+    1.8,
+    -4.6
+   ],
+   "nachbar": [
+    29.8,
+    8.9,
+    -3.8
+   ],
+   "dL_median": 8.76,
+   "C_gelenk": 4.95
+  },
+  "gelenk_weiss": {
+   "je_winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "dL": 5.85,
+     "px_gelenk": 2476,
+     "px_ring": 2238
+    },
+    {
+     "winkel": "Seite",
+     "dL": 7.6,
+     "px_gelenk": 2547,
+     "px_ring": 2164
+    },
+    {
+     "winkel": "3/4 hinten",
+     "dL": 8.36,
+     "px_gelenk": 2122,
+     "px_ring": 2512
+    },
+    {
+     "winkel": "Gegenseite",
+     "dL": 6.49,
+     "px_gelenk": 1862,
+     "px_ring": 2456
+    }
+   ],
+   "dL_mittel": 7.07,
+   "dL_min": 5.85
+  },
+  "schwanzspitze": {
+   "albedo_median": [
+    39.9,
+    19.7,
+    -2.5
+   ],
+   "fleisch_anteil": 85.4,
+   "schwanz_albedo_median": [
+    33.5,
+    10.3,
+    -5.5
+   ],
+   "dL": 6.34
+  },
+  "buckel": {
+   "albedo_median": [
+    33.1,
+    17.0,
+    -2.4
+   ],
+   "fleisch_anteil": 57.1,
+   "flaechen": 12
+  },
+  "lippe_unterkiefer": {
+   "rot_pct": 0.0,
+   "L_p95": 38.0,
+   "haut_L_p95": 43.6,
+   "median": [
+    25.3,
+    5.8,
+    -4.0
+   ]
+  },
+  "krallen": {
+   "kralle": [
+    25.3,
+    5.6,
+    -3.8
+   ],
+   "hand": [
+    25.3,
+    5.6,
+    -3.8
+   ],
+   "dE": 0.0,
+   "a_gt10_pct": 20.5
+  }
+ }
+}
