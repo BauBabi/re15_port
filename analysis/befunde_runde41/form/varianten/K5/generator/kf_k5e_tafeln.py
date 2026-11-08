@@ -43,7 +43,8 @@ def spiel(sp, aus):
 
 
 def weiss(mo, clip, az, el, gross=380):
-    return rl.weiss(mo, clip, az, el, gross)
+    b = rl.weiss(mo, clip, az, el, gross)
+    return b[0] if isinstance(b, tuple) else b
 
 
 def kopf_nah(mo, clip, az, el):
