@@ -1,0 +1,14 @@
+Integration Runde 41, Welle 2 Lauf B - Testphase (Test-Integrator), 2026-11-08
+Baum .claude/worktrees/r41_integration, Zweig r41/integration. Gemessen an der exe des Integrationsbaums
+(Bau 06:19, md5 d171f7709d1dade864aa24122b9bd637; seit c19f8aaf3 keine Engine-Aenderung, nur Riegel).
+
+Dateien:
+- nb4_wettlauf.txt              Nachstellung des roten unit_r41_gatorfix_nb4_elza unter ctest -j 6 (gemeinsame gator_boss.log)
+                                -> Fix 548b8f3e7 (je Teil ein eigener Arbeitsordner)
+- f_riegel_messlaeufe.txt       Schussbild-Fenster der F-Riegel tod_r1 / tod_explosion unter G2 NB4 (Leon + Elza)
+                                -> Fix eef7bc87b (FG-E7 erneut angewandt: nur W, FRAMEDUMP, EXIT_AT)
+- merge_pruef_*_spur.txt         Gegenpruefung (a)/(b): jede Abweichung Spurspitze -> Merge-Ergebnis stammt von der
+- merge_pruef_*_integration.txt  Integrationsseite (und umgekehrt); 0 unerklaerte Zeilen fuer G2 (c19f8aaf3) und FORM (275a57906)
+- testlauf_summen.txt           Summenzeilen aller Testgruppen dieses Laufs (woertlich, mit -R-Ausdruck)
+- werkzeug/                     fx_lauf.py, fx_batch.py (exe-Messlaeufer mit der Riegel-Umgebung), nb4_kollision.py,
+                                merge_pruef.py / merge_pruef_gegen.py, mips_dis_r41.py (capstone; Gegenpruefung (c))

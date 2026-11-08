@@ -1,0 +1,12 @@
+Merge c19f8aaf3: P1 00c6b3bad (Spur als Gegenseite), P2 89586a617 (Integrationsseite geprueft), Basis 789f6e681
+Dateien der Spur: 6147, davon auch auf der Integrationsseite geaendert: 9
+ok re15_port/engine/src/enemy_ai_boss_gator.c: Abweichung Spur->Ergebnis +710/-53, alles von der Integrationsseite
+ok re15_port/engine/src/game_step_common.c: Abweichung Spur->Ergebnis +22/-2, alles von der Integrationsseite
+ok re15_port/engine/src/gator_re2_r41.c: Abweichung Spur->Ergebnis +1664/-8, alles von der Integrationsseite
+ok re15_port/engine/src/kanister2080_r41.c: Abweichung Spur->Ergebnis +137/-18, alles von der Integrationsseite
+ok re15_port/include/re15_gator_re2_r41.h: Abweichung Spur->Ergebnis +89/-3, alles von der Integrationsseite
+ok re15_port/platform/pc/main.c: Abweichung Spur->Ergebnis +65/-7, alles von der Integrationsseite
+ok re15_port/tests/integration/test_r41_re2gator.cmake: Abweichung Spur->Ergebnis +45/-5, alles von der Integrationsseite
+ok re15_port/tests/unit/probes/r41_re2gator.cmake: Abweichung Spur->Ergebnis +5/-4, alles von der Integrationsseite
+ok re15_port/tests/unit/test_r41_re2gator.c: Abweichung Spur->Ergebnis +63/-10, alles von der Integrationsseite
+Spur-Hunks (B..P2): 5951; unerklaerte Zeilen gesamt: 0

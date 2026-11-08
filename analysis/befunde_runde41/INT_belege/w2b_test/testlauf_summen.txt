@@ -1,0 +1,98 @@
+# Summenzeilen Testphase Welle 2 Lauf B (Test-Integrator), Baum r41_integration, alle ctest --test-dir re15_port/build
+
+## (1a) unit/prop/probe Kopf 198980793 (vor den Fixes), -j 6 --timeout 600, -E Release/Android-Skripttests
+   -R "^(unit_|prop_|probe_)"
+   99% tests passed, 1 tests failed out of 1098
+   Total Test time (real) = 279.84 sec
+   rot: 	1197 - unit_r41_gatorfix_nb4_elza (Failed)
+
+## (1b) dito, zweiter Lauf (vor 548b8f3e7)
+   -R "^(unit_|prop_|probe_)"
+   100% tests passed, 0 tests failed out of 1098
+   Total Test time (real) = 250.73 sec
+
+## (1c) dito, Kopf eef7bc87b (nach allen Fixes)
+   -R "^(unit_|prop_|probe_)"
+   100% tests passed, 0 tests failed out of 1098
+   Total Test time (real) = 251.88 sec
+
+## (2a) G2 unit, -j 2 --timeout 1800
+   -R "^unit_r41_(gatorfix|re2gator)_"
+   100% tests passed, 0 tests failed out of 48
+   Total Test time (real) =  72.75 sec
+
+## (2b) G2 integration, -j 2 --timeout 1800
+   -R "^integration_r41_(gatorfix_|re2gator)"
+   100% tests passed, 0 tests failed out of 20
+   Total Test time (real) = 4338.51 sec
+
+## (3) Form-Satz A, -E gatorfix -j 2
+   -R form|bahnsteig|birkin_form|r41_form|integration_r41_birkin_pistole|integration_r41_g5_tod|integration_r41_g5_westen|annette_g5
+   100% tests passed, 0 tests failed out of 20
+   Total Test time (real) = 1225.29 sec
+
+## (4) AN/ST80
+   -R annette|story|kartenbits|g5auftritt|r41_story80|zug|torweg
+   100% tests passed, 0 tests failed out of 30
+   Total Test time (real) = 1545.36 sec
+
+## (5) WS/Gator
+   -R ^(integration_(r30_granate_laden|r34_granaten|r35_granate|r35_werfer|r36_granate|r36_inventar|r36_schuss|r38_kleinkram_flammenwerfer|r41_alligator2_|r41_gatorszene_|r41_kanister2080|r41_restpunkte_)|unit_(r30_granate|r35_granate|r35_werfer|r36_granate|r36_schuss|r38_kleinkram_flammenwerfer|r41_alligator2_|r41_gatorszene_|r41_kanister2080_|r41_restpunkte_|r41_granate)|unit_alligator_ai|unit_gator_sweep|unit_gator_fress)
+   98% tests passed, 2 tests failed out of 110
+   Total Test time (real) = 3289.90 sec
+   rot: 	1145 - integration_r41_alligator2_k3 (Failed)
+   rot: 	1233 - integration_r41_gatorszene_tod_r1 (Failed)
+
+## (6) Klettern/Kante + Kette A+C, -E gatorfix
+   -R kletter|leiter|kante|fall|climb|treppe|ventilkette_kette
+   100% tests passed, 0 tests failed out of 31
+   Total Test time (real) = 1024.69 sec
+
+## (7) Raum-Querbezug 2090/2091/2080
+   -R ^integration_(r36_tueren|r36_kartenitems_bild|r37_itemband|r38_wasser|r41_nachtrag30_laut|r41_ventilkette_weg|r41_ventilkette_weg_elza|r41_wasser20b0_npc)$
+   100% tests passed, 0 tests failed out of 8
+   Total Test time (real) = 4090.90 sec
+
+## (8) main.c-Fensterriegel
+   -R ^integration_(boot_bg_pin|dark_start_pin|relatch_pin|save_counter_pin|weste_load_pin)$
+   100% tests passed, 0 tests failed out of 5
+   Total Test time (real) =  32.19 sec
+
+## F-Riegel neu (nach eef7bc87b)
+   -R "^integration_r41_gatorszene_tod_(r1|r1_elza|explosion|explosion_elza)$"
+   The following tests passed:
+   100% tests passed, 0 tests failed out of 4
+   Total Test time (real) = 200.36 sec
+
+## nb4 nach 548b8f3e7, -j 6
+   -R "^unit_r41_gatorfix_"
+   100% tests passed, 0 tests failed out of 30
+   Total Test time (real) =  40.45 sec
+
+## Nachlauf tod_r1 einzeln (nach dem DEVICELOST in (5))
+   -R "^integration_r41_gatorszene_tod_r1$"
+   The following tests passed:
+   100% tests passed, 0 tests failed out of 1
+   Total Test time (real) =  99.80 sec
+
+## Nachlauf k3 einzeln
+   -R "^integration_r41_alligator2_k3$"
+   The following tests passed:
+   100% tests passed, 0 tests failed out of 1
+   Total Test time (real) =  41.97 sec
+
+## Nachlauf beide, ruhige Maschine, -j 1
+   -R "^integration_r41_(alligator2_k3|gatorszene_tod_r1)$"
+   100% tests passed, 0 tests failed out of 2
+   Total Test time (real) = 152.21 sec
+
+## FORM-Einbaupruefung Asset-Gruppe (Wortlaut EINBAU_PRUEFUNG_r1_zahlen.md Z. 82), -j 2
+   -R "n2_griff_start|birkin_szenen|r41_birkin_pistole|birkin_opfer"
+   100% tests passed, 0 tests failed out of 4
+   Total Test time (real) = 475.35 sec
+
+## Rote in (5): beide Lauf-Umgebung, kein Querbezug
+   integration_r41_gatorszene_tod_r1 (10:55) und integration_r41_alligator2_k3 (11:07): im 'mit'-Lauf meldet die exe je Bild
+   '[framedump] SDL_RenderReadPixels failed: GetRenderTargetData(): DEVICELOST' (80 bzw. 36 Bilder), Spielablauf bitgleich zum
+   'ohne'-Zwilling (Schluessel-Lage/-Einstellung gleiche Zeilen); einzeln 2x bzw. 2x gruen (s. Nachlaeufe). Unter den 71 uebrigen
+   exe-Laeufen ab 10:40 kein DEVICELOST.

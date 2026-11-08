@@ -1,0 +1,19 @@
+# unit_r41_gatorfix_nb4(_elza): Nachstellung des Lauf-Wettlaufs (gemeinsame gator_boss.log im Arbeitsordner)
+# werkzeug/nb4_kollision.py <test_r41_gatorfix.exe> <ordner> <versatz_s> [getrennt]; beide Teile mit G2_NB4_TEIL=K
+
+## nb4 allein (eigener Ordner): genau eine Zeile 'Zielmodus 1' aus der K-Gegenprobe RUNDE
+RE2 KANISTER Zielmodus 1 (Anschwimm-Sperre) laengs=6071 Stufe 0 F0   (gator_boss.log Zeile 13067 von 14770)
+
+kol1 nb4:   ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0) | nb4: 0 Fehler
+kol1 nb4_elza:   FEHLER: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/1) | nb4_elza: 1 Fehler
+kol_s2 nb4:   ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0) | nb4: 0 Fehler
+kol_s2 nb4_elza:   FEHLER: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/1) | nb4_elza: 1 Fehler
+kol_g2 nb4:   ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0) | nb4: 0 Fehler
+kol_g2 nb4_elza:   ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0) | nb4_elza: 0 Fehler
+kol_s3 nb4:   ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0) | nb4: 0 Fehler
+kol_s3 nb4_elza:   FEHLER: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/1) | nb4_elza: 1 Fehler
+kol_g3 nb4:   ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0) | nb4: 0 Fehler
+kol_g3 nb4_elza:   ok: K1: 0 Zeilen RUNDE zum Kanister / ANSCHWIMMEN an / Zielmodus 1 (0/0/0) | nb4_elza: 0 Fehler
+
+Legende: kol1 = gemeinsamer Ordner, Versatz 3 s; kol_s2 / kol_s3 = gemeinsamer Ordner, Versatz 2 / 3 s; kol_g2 / kol_g3 = getrennte Ordner, Versatz 2 / 3 s.
+Ergebnis: gemeinsamer Ordner 3 von 3 rot (K1 0/0/1), getrennt 2 von 2 gruen -> Fix 548b8f3e7 (je Teil ein Arbeitsordner).

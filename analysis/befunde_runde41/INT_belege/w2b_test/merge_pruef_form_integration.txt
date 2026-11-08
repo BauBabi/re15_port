@@ -1,0 +1,5 @@
+Merge 275a57906: P1 947637dae (Spur als Gegenseite), P2 3163f6045 (Integrationsseite geprueft), Basis 2e3713c74
+Dateien der Spur: 2353, davon auch auf der Integrationsseite geaendert: 2
+ok analysis/befunde_runde41/form/NUTZER_ENTSCHEIDE.md: Abweichung Spur->Ergebnis +24/-0, alles von der Integrationsseite
+ok re15_port/tests/unit/test_birkin_bahnsteig.c: Abweichung Spur->Ergebnis +3/-2, alles von der Integrationsseite
+Spur-Hunks (B..P2): 2516; unerklaerte Zeilen gesamt: 0
