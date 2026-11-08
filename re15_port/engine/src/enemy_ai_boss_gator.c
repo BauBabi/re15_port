@@ -151,19 +151,28 @@ int  re15_gator_boss_nb3_alt(void) { return s_gb_nb3_alt; }
  * lief die direkte Anfahrt (Vorgabe B) an die Pier-Westkante in die Kopf-Klemme und endete rueckwaerts an der Westwand (Riegel fuzz, Lage P-mitte:
  * 92 2-s-Fenster ab t673 bei (-7416,-15904), Clip 10). Im Spiel ist kein Pruefhaken gesetzt. */
 static int gb_nb3_aus(void) { return s_gb_nb3_alt || re15_gr2_v4_alt(); }
-/* Runde 41 Spur G2-RE2 NB4 Runde 2 (Abnahme 7 M1): RE2-Bisssperre +0x238 fuer JEDEN Alligator-Treffer auf die Figur. RE2 setzt sie im Treffer-Einstieg
- * auf 70 (`addiu v0,zero,0x46 / sb v0,0x238(a0)` @0x801016b0-b4), zaehlt sie je Bild im Root herunter (`lbu / beqz / addiu -1 / sb` @0x801004a8-b8) und
- * laesst keinen Angriff zu, solange sie != 0 ist (`lbu v0,0x238(s0) / bnez v0,0x80100c08` @0x80100b5c: kein Wechsel in den Angriff;
- * `lbu v0,0x238(s0) / beqz / addiu v0,zero,0x101 / sw v0,4(s0)` @0x80100bf4-0x80100c04 und @0x80100cb4-c4: zurueck zum Schwimmen). Der Treffer-Einstieg
- * 0x80101578 wird nur aus den Schliess-Stufen 4/5 der Biss-Maschine +0x224 erreicht (Tafel @0x80100004, `jal 0x80101578` @0x8010155c) - ein Treffer je
- * Biss, der naechste fruehestens 70 Bilder spaeter. Im Port fragte nur der Hochbiss (88ff3f990) die Sperre; der Biss im Wasser (LUNGE, Fenster Bild 6..34)
- * traf 20 / 22 Bilder nach dem ersten Treffer im selben Clip ein zweites Mal (Abnahme 7: 400 von 895 Treffern, 100 -> 40 -> -20 TOT in 20 Bildern).
- * gb_biss_frei: LUNGE, Biss B2 und Rammen fragen sie wie der Hochbiss. Pruefhaken s_gb_sperre_alt = 1: Stand cfa775ae8 (nur der Hochbiss fragt sie;
- * Gegenprobe Riegel nb4, kein Spielweg);
- * mit dem Pruefhaken 'Treffer alt' (Stand 3d57083b1) gilt sie ebenfalls nicht. */
+/* Runde 41 Spur G2-RE2 NB4 Runde 3 (Abnahme 8 M1): EIN TREFFER JE BISS-CLIP-LAUF wie RE2 ein Treffer je Kiefer-Lauf +0x224 (EM23_OVL_0000.BIN, Dossier
+ * G2_gatorfix.md "NB4 Runde 3 - RE2-Bissmechanismus"). T1 0x801012fc macht den Kiefer-Lauf scharf (`01000224 / 240282a0 sb v0,0x224(a0)` @0x80101378-7c) nur
+ * bei Kontakt PL+0xE (`06fc4294 lhu v0,-0x3fa(v0)` @0x80101300), ohne Reaktionssperre PL+0x1D3 (`cbfd4290 lbu v0,-0x235(v0) / 12004014 bnez` @0x8010132c-34)
+ * und ohne laufenden Lauf (`24028280 lb v0,0x224(a0) / 0e004014 bnez` @0x8010133c-44); die Kiefer-Maschine 0x80101388 ruft den Treffer-Einstieg nur in
+ * Stufe 4/5 (`5e05040c jal 0x80101578` @0x8010155c, je 3 Bilder: `03000224 / 1f006214` @0x801014d8-dc) und beendet den Lauf (`240200a2 sb zero,0x224(s0)`
+ * @0x80101558); der Treffer-Einstieg verweigert bei PL+0x1D3 != 0 (`cbfd4290 / 44004014 bnez` @0x801015a4-ac), und die Reaktion setzt PL+0x1D3 |= 0x80
+ * (`80004234 ori v0,v0,0x80 / d30122a2 sb` @0x801030f8-80103100) laenger als der Rest des Laufs. +0x238 fragt der Biss NIE: gelesen nur @0x80100b5c-64 und
+ * @0x80100bf4-c04 (Spurt-Sperre Sub 1 <-> Sub 2, gator_re2_r41.c re15_gr2_chase_clip); @0x80100cb4-c4 liegt in 0x80100c54 ohne j/jal/Datenwort (toter
+ * Code). Am Intro-Ende gibt RE2 den Biss frei (Bremse 0x800cfbd8 Bit 0x10: `efff0324 addiu v1,zero,-0x11` @0x801008f8 .. `000082ac sw v0,0(a0)` @0x80100918)
+ * und setzt nur die Spurt-Sperre 110 (`6e000224 / 380202a2` @0x8010091c-20).
+ * Port: das Biss-Fenster (LUNGE und Hochbiss Clip 4 Bild 6..34, Biss B2 Clip 3 Bild >= 114) ist laenger als die RE2-Reaktion (Sub 2: 20 Bilder) - die
+ * Wirkung "ein Treffer je Lauf" haelt der vorhandene Lauf-Riegel bite_done: gb_biss_abschluss setzt ihn im Treffer (Hochbiss / LUNGE / B2), jeder neue
+ * Biss-Clip-Lauf (gb_lauf_beginn) loescht ihn. Runde 2 (d8bf728b0) fragte statt dessen +0x238 (gb_biss_frei) - ohne RE2-Beleg, entfernt.
+ * Pruefhaken (im Spiel nie gesetzt): s_gb_sperre_alt = Stand cfa775ae8 (kein Lauf-Riegel im Treffer; Gegenprobe 'Zweitbiss'); s_gb_sperre238 = Stand
+ * d8bf728b0 (+0x238 als Bissbedingung in LUNGE / B2 / Hochbiss / Rammen; Gegenprobe 'Anlauf ohne Biss nach dem Intro'). Mit dem Pruefhaken 'Treffer alt'
+ * (Stand 3d57083b1, RE1.5-Niederwurf 41-92 Bilder > Fenster) gilt der Lauf-Riegel wie dort nicht. */
 static int s_gb_sperre_alt = 0;
+static int s_gb_sperre238 = 0;
 void re15_gator_boss_sperre_alt_setzen(int an) { s_gb_sperre_alt = an; }
-static int gb_biss_frei(int slot) { return s_gb_sperre_alt || re15_gator_treffer_alt() || re15_gr2_biss_cd_rest(slot) == 0; }
+void re15_gator_boss_sperre238_setzen(int an) { s_gb_sperre238 = an; }
+static int gb_lauf_riegel(void) { return !s_gb_sperre_alt && !re15_gator_treffer_alt(); }
+static int gb_sperre238_zu(int slot) { return s_gb_sperre238 && !re15_gator_treffer_alt() && re15_gr2_biss_cd_rest(slot) != 0; }
 #define GB_OBEN_OHNE     300    /* Bilder oben ohne Treffer bis zur Querung ueber die Figur = der NB5-Wert der Pause nach einer Querung mit
                                  * der Figur oben (cross_cd 300, Spur B "Leon OBEN: 10 s auf der Seite bleiben", GBP_CROSS unten) - PORT-WAHL
                                  * nach dem Nutzer-Wortlaut "darf halt oben nicht sicher sein" (Takt frei: "Das kann er gerne machen"); RE2 hat
@@ -249,6 +258,10 @@ typedef struct {
     int16_t  pitch_vz;             /* Root-Neigung entlang der Bogen-Bahn (Q12) */
     int16_t  guard_t;              /* Aufricht-Rampe der Plattform-Belagerung */
     uint8_t  bite_done;            /* 1 Biss pro Lunge/Cross-Passage (Design-Schaden!) */
+    /* NB4 Runde 3: Mitschrift des laufenden Biss-Clip-Laufs (Messhaken, kein Spielverhalten; gb_lauf_beginn / gb_lauf_bild / gb_lauf_ende) */
+    uint8_t  lauf_an, lauf_art, lauf_treffer;
+    uint16_t lauf_bed;
+    uint32_t lauf_f0;
     /* ROUTEN-LATCH (Nutzer-Marker 2026-09-10 "bleibt haengen": die je Frame neu
      * bewertete Wegwahl konnte zwischen Rim-Anlauf und Ring-Ecke flattern -
      * sichtbares Vor-zurueck-Pendeln im Westkanal, Marke 3). Die Route wird
@@ -463,9 +476,41 @@ static int gb_seg_hits_ramp(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int3
 /* Biss-Treffer-Abschluss: normal = Schaden + Knockdown; TOEDLICH = die
  * FRESS-Sequenz (Nutzer-Design 2026-09-11: "Kopf zu Leon runter machen,
  * ihn Fressen - Leon verschwindet, und danach geht er einfach weg"). */
+/* NB4 Runde 3 (Abnahme 8 M1): Mitschrift je Biss-Clip-Lauf (LUNGE art 4, Biss B2 art 5, Hochbiss art 3) fuer die Riegel nb4 / gtrlog / bisslog:
+ * Treffer im Lauf und Bilder, in denen die Bissbedingung OHNE Lauf-Riegel und ohne +0x238 galt, solange der Lauf noch nicht getroffen hatte. Ein Lauf mit
+ * Bedingung und ohne Treffer = Anlauf mit dem Maul an der Figur ohne Biss (Abnahme 8: nische F284-F326 / F347-F389); mehr als ein Treffer = Zweitbiss
+ * (Abnahme 7). Zeile "BISSLAUF" in gator_boss.log. Kein Spielverhalten. */
+static re15_gb_bisslauf_t s_gb_bl = { 0, 0, 0, 0, -1, -1, -1, -1, -1 };
+void re15_gator_boss_bisslauf_reset(void) { const re15_gb_bisslauf_t z = { 0, 0, 0, 0, -1, -1, -1, -1, -1 }; s_gb_bl = z; }
+void re15_gator_boss_bisslauf_info(re15_gb_bisslauf_t *out) { if (out) *out = s_gb_bl; }
+static void gb_lauf_ende(gb_state_t *g)
+{
+    if (!g->lauf_an) return;
+    g->lauf_an = 0;
+    const int nr = s_gb_bl.laeufe++;
+    s_gb_bl.treffer += g->lauf_treffer;
+    if (g->lauf_treffer > 1) s_gb_bl.zweit++;
+    if (g->lauf_treffer == 0 && g->lauf_bed > 0) { s_gb_bl.leer++; if (s_gb_bl.erst_leer_f < 0) s_gb_bl.erst_leer_f = (long)g->lauf_f0; }
+    if (g->lauf_bed > 0 && s_gb_bl.erst_bed_lauf < 0) { s_gb_bl.erst_bed_lauf = nr; s_gb_bl.erst_bed_f = (long)g->lauf_f0; }
+    if (g->lauf_treffer > 0 && s_gb_bl.erst_treffer_lauf < 0) { s_gb_bl.erst_treffer_lauf = nr; s_gb_bl.erst_treffer_f = (long)g->lauf_f0; }
+    if (!s_gb_stumm) { FILE *fl = fopen("gator_boss.log", "a");
+        if (fl) { fprintf(fl, "BISSLAUF F%u-F%u art %d treffer %d bedingung %d\n", (unsigned)g->lauf_f0, (unsigned)g_engine.frame_count, (int)g->lauf_art,
+                          (int)g->lauf_treffer, (int)g->lauf_bed); fclose(fl); } }
+}
+static void gb_lauf_beginn(gb_state_t *g, int art)
+{
+    gb_lauf_ende(g);
+    g->bite_done = 0;                          /* neuer Biss-Clip-Lauf = neuer RE2-Kiefer-Lauf (T1 @0x8010133c-44 verlangt +0x224 == 0) */
+    g->lauf_an = 1; g->lauf_art = (uint8_t)art; g->lauf_treffer = 0; g->lauf_bed = 0; g->lauf_f0 = (uint32_t)g_engine.frame_count;
+}
+static void gb_lauf_bild(gb_state_t *g, int bed) { if (g->lauf_an && bed && g->lauf_treffer == 0 && g->lauf_bed < 0xffff) g->lauf_bed++; }
 static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl, int art)
 {
     g->oben_ohne = 0;                          /* NB3 (Vorgabe A): Treffer - die Figur war nicht sicher */
+    if (art >= 3) {                            /* Hochbiss 3 / LUNGE 4 / B2 5: ein Treffer je Biss-Clip-Lauf (RE2: PL+0x1D3 @0x801015a4-ac, Lauf-Ende @0x80101558) */
+        if (g->lauf_an && g->lauf_treffer < 0xff) g->lauf_treffer++;
+        if (gb_lauf_riegel()) g->bite_done = 1;
+    }
     /* Runde 41 Spur G2-RE2 NB4 (T): JEDER Alligator-Angriff, der die Figur trifft, nimmt den RE2-Treffer-Einstieg 0x80101578 (Schaden FUN_800401d4
      * 60 / 30 @0x8010168c-a0, Unterzustand 2/3 @0x801015b4-ec, Gier FUN_8001569c @0x80101684-88) und die RE2-Spieler-Routine 5 (Haken 0x80102D08)
      * statt re15_player_take_damage(GB_BITE_TYPE 5) = 50 + RE1.5-Niederwurf (Herleitung engine/src/gator_treffer_r41.c). Pruefhaken
@@ -501,7 +546,7 @@ static void gb_biss_abschluss(re15_actor_t *e, gb_state_t *g, re15_actor_t *pl, 
         re15_gr2_kamera_finisher((int)(e - g_actors), e, pl);
     } else {
         if (!re2) re15_player_knockdown_begin(re15_ai_facing_dir(e, pl));
-        re15_gr2_biss_cd((int)(e - g_actors), RE15_GR2_BISS_CD_BISS);   /* Runde 41 Spur B: +0x238 = 70 @0x801016b0-b4 */
+        re15_gr2_biss_cd((int)(e - g_actors), RE15_GR2_BISS_CD_BISS);   /* Runde 41 Spur B: Spurt-Sperre +0x238 = 70 @0x801016b0-b4 (nur Sub 1 -> Sub 2) */
     }
     pl->hit_react |= 1;
     e->hit_stun = 0x64;                       /* byte-true Re-Attack-Sperre */
@@ -1737,6 +1782,8 @@ static void gb_takt(int slot)
      * Boss-Zustand nullen (em_flag_id 0xFF = Boss erscheint je Betreten). */
     if (g->phase != GBP_OFF && e->state == 0 && e->hp <= 0)
         memset(g, 0, sizeof *g);
+    /* NB4 Runde 3: Biss-Clip-Lauf zu Ende, sobald der Gator nicht mehr im Biss-Clip ist (Mitschrift, kein Spielverhalten) */
+    if (g->lauf_an && !(g->phase == GBP_LUNGE || (g->phase == GBP_GUARD && e->motion == 4))) gb_lauf_ende(g);
 
     if (g->phase == GBP_OFF) {                /* INIT (Punkt 2): Lauerstellung */
         e->hp = GB_HP;                        /* RE2 INIT schreibt HP unbedingt (@0x80100518-580) */
@@ -2108,7 +2155,7 @@ static void gb_takt(int slot)
         }
         {   /* Runde 41 Spur B: RE2-LUNGE als Zonen-Dash (Zonenlinie +0x21A 0->1->2 @0x801009a8/@0x801009ec
              * -> Routine 0x301 @0x801009ac/@0x801009f4; die Pruefung liegt VOR und unabhaengig von der
-             * Biss-Sperre +0x238 @0x80100b5c-64, also auch in der 110er-Sperre nach dem Intro). PORT-WAHL:
+             * Spurt-Sperre +0x238 @0x80100b5c-64, also auch in der 110er-Sperre nach dem Intro). PORT-WAHL:
              * die drei sce-8-Wasserzonen des RDT statt der Korridorlinien, nur beim Wechsel in Leons Zone.
              * Nachbesserung 1 (M1): statt der ganzen Bahn gegen Insel + Aussenwaende nur noch die Laengs-
              * Bahn gegen Insel/Rampe; Quer-Komponente und Aussenwaende nimmt die Dispatcher-Klemme. */
@@ -2322,7 +2369,7 @@ static void gb_takt(int slot)
                     && !gb_wand_dazwischen(e, pl)
                     && (dist < 3200 || gb_maul_dist(e, pl) < 2400
                         || g->maul_kontakt > 0)) {
-                    g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
+                    g->phase = GBP_LUNGE; g->timer = 0; gb_lauf_beginn(g, gb_lunge_b2() ? 5 : 4);   /* NB4 Runde 3: bite_done = 0 */
                     gb_se(4);                          /* RE2 Lunge-P0 Angriffs-Brueller: `beq v1,zero,0x80100d84`
                                                         * @0x80100d60 / `addiu a0,zero,4` @0x80100d64 / `jal
                                                         * 0x8005bd6c` @0x80100d84 (Phase 2 Stufe B1) */
@@ -2398,7 +2445,7 @@ static void gb_takt(int slot)
              * (6000) startete Leer-Schnapps, deren Maul Leon im 45-F-Clip
              * nie erreichte (Messung: maul 3088->2624, kein Treffer);
              * maul<2400 = Fenster-Ankunft bei ~40/F Lunge-Vortrieb. */
-            g->phase = GBP_LUNGE; g->timer = 0; g->bite_done = 0;
+            g->phase = GBP_LUNGE; g->timer = 0; gb_lauf_beginn(g, gb_lunge_b2() ? 5 : 4);   /* NB4 Runde 3: bite_done = 0 */
             /* Clip 4 = SCHNAPP-Biss - Kieferkurve GEMESSEN (EDD/EMR 2026-09-10):
              * Maul reisst ab Frame 4 auf, Peak -591 @F12, zu @F24 (45 F). Clip 3
              * oeffnet erst ab ~F54 (Peak F96/150) - der alte 40-Frame-Abbruch
@@ -2446,10 +2493,13 @@ static void gb_takt(int slot)
                 e->anim_frame += 2;
                 if (e->anim_frame >= 150) { e->motion = 3; e->anim_frame = 0; }
             } else {
-                if (!g->bite_done && e->anim_frame >= 114 && pl->hit_react == 0
-                    && gb_biss_frei(slot)   /* NB4 Runde 2 (Abnahme 7 M1): RE2-Bisssperre +0x238 @0x801016b0-b4 / @0x80100cb4-c4 */
+                const int bed5 = e->anim_frame >= 114 && pl->hit_react == 0
                     && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
-                    && !gb_wand_dazwischen(e, pl))
+                    && !gb_wand_dazwischen(e, pl);
+                gb_lauf_bild(g, bed5);
+                if (!g->bite_done && bed5   /* NB4 Runde 3 (Abnahme 8 M1): ein Treffer je Lauf (bite_done, s. gb_lauf_riegel); RE2 Sub 3 hat nur T1
+                                             * `bf04040c jal 0x801012fc` @0x80100d40, die Clip-3-Pruefung `7200422c sltiu v0,v0,0x72` @0x80100e8c setzt nur +0x218 */
+                    && !gb_sperre238_zu(slot))
                     gb_biss_abschluss(e, g, pl, 5);   /* NB4: Angriff Biss B2 */
                 e->anim_frame += 2;
                 if (e->anim_frame >= 150) {
@@ -2461,16 +2511,17 @@ static void gb_takt(int slot)
             }
             break;
         }
-        if (!g->bite_done
-            && e->anim_frame >= 6 && e->anim_frame <= 34   /* Fenster geweitet
+        const int bed4 = e->anim_frame >= 6 && e->anim_frame <= 34   /* Fenster geweitet
                                                             * (Biss-Sweep 2026-09-11):
                                                             * 8..20 liess Leon in
                                                             * F21-42 entkommen */
             && pl->hit_react == 0
-            && gb_biss_frei(slot)   /* NB4 Runde 2 (Abnahme 7 M1): kein zweiter Treffer im selben Clip-4-Lauf - RE2-Bisssperre +0x238 = 70 nach dem Treffer
-                                     * (@0x801016b0-b4, je Bild -1 @0x801004a8-b8, Pruefstelle @0x80100cb4-c4); die RE2-Reaktion sperrt die Figur nur 19/21 Bilder */
             && (gb_maul_dist(e, pl) <= 1500 || dist < 1000 || g->maul_kontakt > 0)
-            && !gb_wand_dazwischen(e, pl)) {
+            && !gb_wand_dazwischen(e, pl);
+        gb_lauf_bild(g, bed4);
+        if (!g->bite_done && bed4   /* NB4 Runde 3 (Abnahme 8 M1): ein Treffer je Clip-4-Lauf wie RE2 ein Treffer je Kiefer-Lauf (bite_done, s. gb_lauf_riegel;
+                                     * PL+0x1D3 @0x801015a4-ac, Lauf-Ende @0x80101558); kein +0x238 (Runde 2 entfernt: T1 @0x801012fc fragt es nicht) */
+            && !gb_sperre238_zu(slot)) {
             /* dist<1000 = Leon IM Kopf-Segment-Radius (900+Puffer): Nahkontakt
              * zaehlt als Biss (Biss-Sweep 2026-09-11, Leon auf dem Koerper). */
             /* Treffer = MAUL-Kontakt (Kopf-Segment 900 + Spieler 450 + 150
@@ -2835,16 +2886,17 @@ static void gb_takt(int slot)
         if (dist < 4200 && e->hit_stun == 0 && e->motion != 4
             && re15_gr2_biss_erlaubt(slot)) {   /* R41 B NB2 M3: kein Biss in Kanister-Stufe 1..6 @0x80101360-70 */
             gb_se(4);                                  /* RE2 Lunge-P0 SE 4 @0x80100d64/d84 (Stufe B1) */
-            gb_se(3); e->motion = 4; e->anim_frame = 0; g->bite_done = 0;
+            gb_se(3); e->motion = 4; e->anim_frame = 0; gb_lauf_beginn(g, 3);   /* NB4 Runde 3: bite_done = 0 */
         }
         if (e->motion == 4) {
             e->anim_frame++;
-            if (!g->bite_done && e->anim_frame >= 6 && e->anim_frame <= 34
-                && pl->hit_react == 0 && dist < 3900
-                && (re15_gator_treffer_alt() || re15_gr2_biss_cd_rest(slot) == 0)) {   /* Runde 41 G2-RE2 NB4 (T): RE2-Bisssperre +0x238 (= 70 nach dem Treffer
-                                               * @0x801016b0-b4; solange != 0 bricht RE2 den Angriff ab: `lbu v0,568(s0) / beq v0,zero / sw 0x101,4(s0)`
-                                               * @0x80100cb4-c4). Vorher deckte der RE1.5-Niederwurf (41-92 Bilder gesperrt) das Hochbiss-Fenster ab; die
-                                               * RE2-Reaktion sperrt nur 20 Bilder -> zweiter Biss im selben Fenster (gemessen exe re2gator belagerung F522/F542) */
+            const int bed3 = e->anim_frame >= 6 && e->anim_frame <= 34 && pl->hit_react == 0 && dist < 3900;
+            gb_lauf_bild(g, bed3);
+            if (!g->bite_done && bed3
+                && !gb_sperre238_zu(slot)) {   /* NB4 Runde 3 (Abnahme 8 M1): ein Treffer je Clip-4-Lauf (bite_done, s. gb_lauf_riegel) statt der +0x238-Frage
+                                               * aus NB4 (T) 88ff3f990 - RE2 haelt den zweiten Treffer im selben Biss ueber PL+0x1D3 (@0x801015a4-ac) und das
+                                               * Lauf-Ende (@0x80101558), nicht ueber +0x238 (@0x80100cb4-c4 ist toter Code). Vorher deckte der RE1.5-Niederwurf
+                                               * (41-92 Bilder) das Fenster ab; die RE2-Reaktion sperrt nur 20 Bilder (gemessen exe re2gator belagerung F522/F542) */
                                               /* DESIGN: Kantenstand +
                                                * gehobener Kopf erreicht die Flaeche;
                                                * 3400->3900 + Fenster geweitet
@@ -3017,7 +3069,7 @@ static void gb_takt(int slot)
          * -> DAT_8006f418[5] = 50 (@0x8006f422, Tafel @0x8006f418-42c) + Niederwurf re15_player_knockdown_begin(facing). */
         if ((re15_gr2_rw_traegt() || (!gb_nb3_aus() && gb_pl_oben(pl)))   /* NB3 (Vorgabe A): Rammen auch ohne Kanister, wenn die Figur OBEN steht - "den Spieler oben auf
                                                                              * der Rampe auch rammen koennen"; Figur im Wasser: wie NB5 nur der CROSS-Biss unten */
-            && !s_gb_ramm_alt && !g->bite_done && g->kz_rueck != 2 && pl->hit_react == 0 && pl->hp >= 0 && gb_biss_frei(slot)   /* NB4 Runde 2 (Abnahme 7 M1): +0x238 @0x80100b5c; G2-RE2 NB2 Vorschlag 4 ("Rampe: rammen wie gehabt"): Rammen mit dem Kanister auch in der Ueberquerung wie ohne Kanister */
+            && !s_gb_ramm_alt && !g->bite_done && g->kz_rueck != 2 && pl->hit_react == 0 && pl->hp >= 0 && !gb_sperre238_zu(slot)   /* NB4 Runde 3 (Abnahme 8 M1): kein +0x238 (RE2-Treffer-Einstieg fragt nur Kontakt @0x80101590-98 und PL+0x1D3 @0x801015a0-ac); G2-RE2 NB2 Vorschlag 4 ("Rampe: rammen wie gehabt"): Rammen mit dem Kanister auch in der Ueberquerung wie ohne Kanister */
             && gb_koerper_kontakt(e->x, e->z, (int)e->rot_y, pl->x, pl->z)) {
             g->bite_done = 1; s_gb_rammen++;
             if (!s_gb_stumm) { FILE *fr = fopen("gator_boss.log", "a");

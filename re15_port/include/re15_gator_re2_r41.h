@@ -30,8 +30,8 @@ extern "C" {
 /* ---- Hysterese Schwimmen (Clip 0) <-> Paddeln (Clip 1), Sub 1/2 ------------------------- */
 #define RE15_GR2_PADDEL_AB  0x65    /* +0x1F0 >= 101 -> 0x201  `sltiu v0,v0,0x65` @0x80100b88/@0x80100ba4 */
 #define RE15_GR2_SCHWIMM_AB 0x5a    /* +0x1F0 <  90  -> 0x101  `sltiu v0,v0,0x5a` @0x80100be4/@0x80100ca4 */
-#define RE15_GR2_BISS_CD_INTRO 110  /* +0x238 = 110 nach dem Intro @0x8010091c-20 */
-#define RE15_GR2_BISS_CD_BISS   70  /* +0x238 = 70 nach dem Chomp-Commit @0x801016b0-b4 */
+#define RE15_GR2_BISS_CD_INTRO 110  /* Spurt-Sperre +0x238 = 110 nach dem Intro @0x8010091c-20 (sperrt nur Sub 1 -> Sub 2 @0x80100b5c-64, nicht den Biss) */
+#define RE15_GR2_BISS_CD_BISS   70  /* Spurt-Sperre +0x238 = 70 im Treffer-Einstieg @0x801016b0-b4 (dito) */
 
 /* ---- Grossreaktion R4 (@0x80101f8c-fd4) ---------------------------------------------------- */
 #define RE15_GR2_R4_CD_BASIS 120    /* +0x22E = (rnd & 0x3f) + 120 @0x80101fc8-cc */
@@ -82,7 +82,7 @@ int  re15_gr2_zielmodus(int slot);
 
 /* RE2-LUNGE als Zonen-Dash: `zone` = aktuelle Beckenzone des Gators (gb_zone), `zone_leon` =
  * Leons Zone. Liefert 1, wenn eben eine neue Zone betreten wurde, in der Leon ist (RE2: Zonenlinie
- * +0x21A 0->1->2 @0x801009a8/@0x801009ec = Routine 0x301, geprueft VOR der Biss-Sperre +0x238).
+ * +0x21A 0->1->2 @0x801009a8/@0x801009ec = Routine 0x301, geprueft VOR der Spurt-Sperre +0x238).
  * ziel_vor[] = Ende der LAENGS-Bahn (x-Netto Clip 2 + 3, skaliert, um den Yaw gedreht) fuer die
  * Insel-Probe des Boss-Moduls; die Quer-Komponente (RE2-Korridor-Ecke) nimmt die Dispatcher-Klemme.
  * Nachbesserung 1 (Abnahme 0, M1): die Bahn laeuft bildweise (FUN_80015e7c/152c8-Delta) statt absolut. */

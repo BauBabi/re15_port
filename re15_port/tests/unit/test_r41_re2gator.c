@@ -4,9 +4,9 @@
  * Nachbau) mit der RE2-EM23-Bank. Belege je Zahl: analysis/befunde_runde41/B_re2gator.md §2 und die
  * @0x-Kommentare in engine/src/gator_re2_r41.c.
  *
- *   clips     Clip 1 (Paddeln) bei dist >= 0x65 ohne Biss-Sperre, Clip 0 in der Sperre, authored Vortrieb
+ *   clips     Clip 1 (Paddeln) bei dist >= 0x65 ohne Spurt-Sperre +0x238, Clip 0 in der Sperre, authored Vortrieb
  *   dash      Zonenwechsel -> SE 4, Clip 2 (150) -> Clip 3 (150), Stroke-Ereignis -> Schuetteln 5 x Bit 4 + 10 x Bit 8
- *   intro     Aggro -> Clip 6 (125) -> Clip 3 (150) -> Biss-Sperre 110 -> Clip 0, dann Clip 1
+ *   intro     Aggro -> Clip 6 (125) -> Clip 3 (150) -> Spurt-Sperre 110 -> Clip 0, dann Clip 1
  *   sockel    HP 25300, 200 Pistolentreffer toeten nicht, geschwaecht < 25000, SE 0 xor SE 5, R4-Sperre 120..183
  *   kanister  Fenster -> Stufen 1..7 (Kopf/Kiefer-az), Anhaengen an Part 6, Treffer -> R1 (SE 4, Raum-Satz 15,
  *             Rumble, Clip 9, Kanister nach 9 Bildern weg, Leiche)
@@ -123,7 +123,7 @@ static void leon_statue(int32_t x, int32_t z)
     pl->x = x; pl->z = z; pl->y = 0; pl->floor = 0;
     pl->state = 0; pl->motion = 0; pl->hit_react = 0;
 }
-/* Intro (Clip 6 + Clip 3, 275 Bilder) zu Ende ticken und die Intro-Biss-Sperre (110) loeschen - fuer die
+/* Intro (Clip 6 + Clip 3, 275 Bilder) zu Ende ticken und die Intro-Spurt-Sperre (110) loeschen - fuer die
  * Riegel, die die Verfolgung/Treffer DANACH messen (Leon bleibt, wo der Aufrufer ihn hingestellt hat). */
 static void intro_abwarten(void)
 {
@@ -244,7 +244,7 @@ static int teil_clips(void)
     }
     CHECK(vortrieb_n > 0 && vortrieb_ok >= vortrieb_n - 2,
           "Vortrieb nicht der authored Wurzelversatz (FUN_80015e7c): %d/%d Bilder ok", vortrieb_ok, vortrieb_n);
-    /* Biss-Sperre +0x238 -> Schwimmen Clip 0 (@0x80100bf4-c04), danach wieder Paddeln */
+    /* Spurt-Sperre +0x238 -> Schwimmen Clip 0 (@0x80100bf4-c04), danach wieder Paddeln */
     re15_gr2_biss_cd(slot, RE15_GR2_BISS_CD_BISS);
     int clip0 = 0;
     for (int f = 0; f < RE15_GR2_BISS_CD_BISS; f++) {
@@ -252,7 +252,7 @@ static int teil_clips(void)
         tick();
         if (e->motion == 0) clip0++;
     }
-    CHECK(clip0 >= RE15_GR2_BISS_CD_BISS - 1, "in der Biss-Sperre nur %d/%d Bilder Clip 0", clip0, RE15_GR2_BISS_CD_BISS);
+    CHECK(clip0 >= RE15_GR2_BISS_CD_BISS - 1, "in der Spurt-Sperre nur %d/%d Bilder Clip 0", clip0, RE15_GR2_BISS_CD_BISS);
     for (int f = 0; f < 3; f++) { leon_statue(-6000, -18200); e->x = -6000; e->z = -25000; e->rot_y = 0xC00; tick(); }
     CHECK(e->motion == 1, "nach der Sperre nicht wieder Clip 1 (motion=%d)", (int)e->motion);
     printf("clips: Clip1 %d/60, wrap %d, Vortrieb %d/%d, Sperre Clip0 %d/%d\n", clip1, wrap, vortrieb_ok, vortrieb_n, clip0, RE15_GR2_BISS_CD_BISS);
@@ -335,7 +335,7 @@ static int teil_intro(void)
         else if (n3 > 0) {
             /* +0x238 = 110 wird im Tick des LETZTEN Clip-3-Bildes gesetzt (@0x8010091c-20, FUN_8001a330 == 1,
              * Nachbesserung 1); der Umschalt-Tick (Clip 0) hat den Takt schon einmal abgezogen -> 109 hier. */
-            if (f_cd < 0) { f_cd = f; CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1, "Biss-Sperre im ersten Clip-0-Tick %d != 109 (110 @0x8010091c im Ende-Tick, ein Takt weniger)", re15_gr2_biss_cd_rest(slot)); }
+            if (f_cd < 0) { f_cd = f; CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1, "Spurt-Sperre im ersten Clip-0-Tick %d != 109 (110 @0x8010091c im Ende-Tick, ein Takt weniger)", re15_gr2_biss_cd_rest(slot)); }
             if (f < f_cd + RE15_GR2_BISS_CD_INTRO) { if (e->motion == 0) n0++; }
             else if (f < f_cd + RE15_GR2_BISS_CD_INTRO + 10) { if (e->motion == 1) n1++; }
         }
@@ -699,7 +699,7 @@ static int teil_modell(void)
  *     @SCD 0x0736) - in JEDEM der 275 Intro-Bilder liegen Rumpf (Bones 0/1), Hals 5, Kopf 6 und Kiefer 7 im Wasser des
  *     Beckens (Raumgeometrie ROOM2090-SCA [0]-[5]: Becken x[-8900,7200] z[-27000,-5400], Plattform x[-1700,1850]
  *     z[-20000,-12450], Rampe x[1850,7200] z[-18100,-14500]); Clip 6 (125) -> Clip 3 (150) -> yaw += 1024; die End-Gier
- *     zeigt auf Leon (Peilung, Toleranz 128); Biss-Sperre 110 (@0x8010091c-20). Vorher (Lauerplatz, Gier 1089): Kopf am
+ *     zeigt auf Leon (Peilung, Toleranz 128); Spurt-Sperre 110 (@0x8010091c-20). Vorher (Lauerplatz, Gier 1089): Kopf am
  *     Clip-3-Ende 4988 in der Westwand (probe_wende.c, = Abnahme-1-Lauf A).
  * (b) Dash am Suedausgang des Westkanals, Gator auf der Klemmlinie (-7434,-17900) Blick Sued, Leon Zone 0: Zonenwechsel
  *     2 -> 0 -> gr2_dash_planen dreht VOR Clip 2 auf die kleinste Gier mit freier Wende (vorher Kopf 4474 in der
@@ -762,7 +762,7 @@ static int teil_wand(void)
     CHECK(((yaw1 - yaw0) & 0xfff) == 1024, "Intro-Ende: yaw %d -> %d, erwartet +1024 (@0x80100938-48)", yaw0, yaw1);
     CHECK(abw <= 128, "Intro-Ende zeigt nicht auf Leon: Gier %d, Peilung %d (Abw. %d > 128)", yaw1, peil, abw);
     CHECK(re15_gr2_biss_cd_rest(slot) == RE15_GR2_BISS_CD_INTRO - 1,
-          "Biss-Sperre im ersten CHASE-Takt %d != 109 (110 im Ende-Takt @0x8010091c-20, ein Takt abgezogen)", re15_gr2_biss_cd_rest(slot));
+          "Spurt-Sperre im ersten CHASE-Takt %d != 109 (110 im Ende-Takt @0x8010091c-20, ein Takt abgezogen)", re15_gr2_biss_cd_rest(slot));
     /* (b) Dash: Klemmlinie im Westkanal, Blick Sued, Leon Zone 0 */
     pl->hp = 100;
     e->x = -7434; e->z = -17900; e->y = -1200; e->rot_y = 1024;

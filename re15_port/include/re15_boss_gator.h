@@ -69,9 +69,17 @@ void re15_gator_boss_tempo_alt_setzen(int an);  /* Pruefhaken: 1 = RE1.5-Tempo B
  * Bilder, die die Figur oben/in der Ostnische steht, ohne Treffer (GUARD quert ab GB_OBEN_OHNE 300 ueber sie). */
 void re15_gator_boss_nb3_alt_setzen(int an);
 int  re15_gator_boss_nb3_alt(void);
-/* Runde 41 Spur G2-RE2 NB4 Runde 2 (Abnahme 7 M1): Pruefhaken 1 = Stand cfa775ae8 - LUNGE, Biss B2 und Rammen fragen die RE2-Bisssperre +0x238 nicht
- * (Gegenprobe Riegel nb4 'Zweitbiss'); im Spiel nicht gesetzt. */
+/* Runde 41 Spur G2-RE2 NB4 Runde 3 (Abnahme 8 M1): ein Treffer je Biss-Clip-Lauf wie RE2 ein Treffer je Kiefer-Lauf +0x224 (PL+0x1D3 @0x801015a4-ac,
+ * Lauf-Ende @0x80101558; Herleitung enemy_ai_boss_gator.c). Pruefhaken (im Spiel nie gesetzt): sperre_alt 1 = Stand cfa775ae8 (kein Lauf-Riegel im
+ * Treffer, Gegenprobe 'Zweitbiss'); sperre238 1 = Stand d8bf728b0 (+0x238 als Bissbedingung, Gegenprobe 'Anlauf ohne Biss nach dem Intro'). */
 void re15_gator_boss_sperre_alt_setzen(int an);
+void re15_gator_boss_sperre238_setzen(int an);
+/* Messhaken je Biss-Clip-Lauf (LUNGE / B2 / Hochbiss) seit dem letzten reset: Laeufe, Laeufe mit mehr als einem Treffer (zweit), Laeufe mit erfuellter
+ * Bissbedingung ohne Treffer (leer), Treffer; Nummer (0-basiert) und Startbild des ersten Laufs mit Bedingung / mit Treffer, Startbild des ersten Leerlaufs
+ * (-1 = keiner). Bedingung = Fenster + pl->hit_react == 0 + Maul/Abstand + keine Wand, ohne Lauf-Riegel und ohne +0x238. */
+typedef struct { int laeufe, zweit, leer, treffer; long erst_bed_lauf, erst_treffer_lauf, erst_bed_f, erst_treffer_f, erst_leer_f; } re15_gb_bisslauf_t;
+void re15_gator_boss_bisslauf_reset(void);
+void re15_gator_boss_bisslauf_info(re15_gb_bisslauf_t *out);
 int  re15_gator_boss_oben_ohne(const re15_actor_t *e);
 /* Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2): RAUMHALT der Figur in der Spieler-Klemme waehrend ein Alligator-Boss im Raum ist (oben: Deck der
  * Rampe, unten: innerhalb der Aussenwaende, nicht in Plattform-/Rampenblock; Herleitung enemy_ai_boss_gator.c). (*x,*z) = geklemmte Lage, alt = Lage vor

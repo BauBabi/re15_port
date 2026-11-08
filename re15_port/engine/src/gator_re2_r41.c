@@ -5,11 +5,11 @@
  * Was aus RE2 kommt (byte-belegt, Adresse je Konstante):
  *   - HP-Sockel 25300 / Schwaeche < 25000 (INIT @0x80100518-580, Selektor @0x80101ebc-dc)
  *   - Hysterese Schwimmen (Clip 0, Blend 32 @0x80100c38) <-> Paddeln (Clip 1, Blend 4 @0x80100cfc)
- *     ueber +0x1F0 >= 0x65 / < 0x5a und die Biss-Sperre +0x238 (Sub-1-Pre @0x80100b20-c08)
+ *     ueber +0x1F0 >= 0x65 / < 0x5a und die Spurt-Sperre +0x238 (der Biss fragt sie nicht: T1 @0x801012fc) (Sub-1-Pre @0x80100b20-c08)
  *   - Wurzelgeschwindigkeit je Bild = Differenz der kumulierten Versatz-Bytes 6..11 zweier
  *     Keyframes (FUN_80015e7c @0x80015e7c; bei Bild 0 gegen 0, `sw zero,0x20c` ebd.)
  *   - LUNGE = Zonen-Dash Clip 2 (16) -> Clip 3 (0) mit SE 4 am Start (@0x80100d64/84, @0x80100dac-b4,
- *     @0x80100e20-28); INTRO Clip 6 -> Clip 3 (@0x801008ac-f0); Biss-Sperre 110 danach (@0x8010091c)
+ *     @0x80100e20-28); INTRO Clip 6 -> Clip 3 (@0x801008ac-f0); Spurt-Sperre 110 danach (@0x8010091c)
  *   - Stroke-Ereignisse (Frame-Wort Top-5-Bits 0x28 @0x801003f0-40c) -> Ereignis-Maschine
  *     @0x80101d44 (Tabelle @0x80100044): Rumble-Rampen FUN_800395b8(10,120,50) / (8,85,40), Bits 4/8
  *     in 0x800cfbd8 fuer 5 / 10 Bilder
@@ -1496,7 +1496,7 @@ static int gr2_bahn_frei(const gr2_bahn_t *b, int32_t sx, int32_t sz, int y0, co
         if (s_becken_fn(rx, rz, GR2_KLEMM_R)) return 0;
         /* (3b) keine Beruehrung durch die Push-Kreise des Boss-Moduls (laengs der Entity-Gier): sonst setzt der Push
          * g->maul_kontakt und der Nutzer-Design-Biss faellt sofort nach der Wende (gemessen unit intro: Biss im
-         * ersten CHASE-Takt). RE2 liest +0x238 = 110 nach dem Intro nur in der Hysterese (@0x80100b5c/bf4/cb4). */
+         * ersten CHASE-Takt). RE2 liest +0x238 = 110 nach dem Intro nur in der Hysterese (@0x80100b5c/bf4; @0x80100cb4 ist toter Code). */
         if (pl && s_kontakt_fn && s_kontakt_fn(rx, rz, yaw, pl->x, pl->z)) return 0;
         for (int i = 0; i < GR2_BAHN_BONES; i++) {
             int32_t bx, bz; gr2_dreh(yaw, b->b[t][i][0], b->b[t][i][1], &bx, &bz);
@@ -2689,7 +2689,7 @@ int re15_gr2_trag_ohne_annaeherung(void) { return s_tr_ohne_annaeherung; }
  * paddelnd an (1673,-10966).
  * RE2 (EM23_OVL_0000.BIN): kein Ziel, keine Lenkung - Sub 1 schwimmt `jal 0x8001a330` (Clip 0, Blend 32) @0x80100c34-40 weiter; der Dash (Routine 0x301 =
  * `addiu v0,zero,769` @0x801009ac/@0x801009f4) kommt nur mit dem Zonenbyte +0x21A, und das wird nur hochgezaehlt (`sb v0,538(s0)` mit 1 @0x801009a8 bei x <
- * -17877, mit 2 @0x801009ec bei z < -7322) - jeder Dash hoechstens einmal; die Biss-Sperre +0x238 (`lbu v0,568(s0) / bne` @0x80100b5c-64) haelt den Biss.
+ * -17877, mit 2 @0x801009ec bei z < -7322) - jeder Dash hoechstens einmal; die Spurt-Sperre +0x238 (`lbu v0,568(s0) / bne` @0x80100b5c-64) haelt nur den Spurt Sub 1 -> Sub 2, nicht den Biss (T1 @0x801012fc fragt sie nicht; NB4 Runde 3).
  * PORT-WAHL: (1) mit dem Kanister kein Zonen-Dash (die RE2-Zonenfolge ist einmalig, der Port-Dash steht 3,9 s auf der Stelle);
  * (2) ist das Ziel gekuerzt und die Wurzel in 2 R des gekuerzten Ziels, umkreist er einen Mittelpunkt R von dort weg von der kuerzenden Wand (Karotte 45 Grad
  * voraus auf dem Kreis, Drehsinn gehalten) - ohne Wende, die Wurzel kommt in 30 Bildern nie unter 300 voran; R = GR2_TR_KREIS 2000 = Wenderadius beim Paddeln

@@ -2,14 +2,14 @@
 # Code engine/src/gator_re2_r41.c + include/re15_gator_re2_r41.h (Haken: enemy_ai_boss_gator.c, platform/pc/main.c,
 # platform/pc/src/gator_re2_pc.c), Daten shared_assets/RE2/KANISTER40A0.{MD1,TIM} + GATOR40A0.VBS.
 #
-#   unit_r41_re2gator_clips      Verfolgung: Clip 1 (Paddeln) bei +0x1F0 >= 0x65 ohne Biss-Sperre, Clip 0 (Schwimmen)
-#                                in der Biss-Sperre (+0x238 = 70/110); Vortrieb = authored Wurzelversatz off[f]-off[f-1]
+#   unit_r41_re2gator_clips      Verfolgung: Clip 1 (Paddeln) bei +0x1F0 >= 0x65 ohne Spurt-Sperre, Clip 0 (Schwimmen)
+#                                in der Spurt-Sperre (+0x238 = 70/110); Vortrieb = authored Wurzelversatz off[f]-off[f-1]
 #                                x Scale (FUN_80015e7c); Clip-1-Wrap nach 26 Bildern (@0x80100d08-10)
 #   unit_r41_re2gator_dash       Zonenwechsel in Leons Zone -> SE 4 (@0x80100d64/84), Clip 2 (150) -> Clip 3 (150) ueber
 #                                die authored Wurzelbahn, danach CHASE; Stroke-Woerter 0x28 (Clip 2 f50/f110) ->
 #                                Ereigniskette: Rumble-Rampe (10,120,50), Bit 4 fuer 5 Bilder (Tabelle @0x8009db14),
 #                                dann Bit 8 fuer 10 Bilder (@0x8009daf4) = Hintergrundversatz 0..3 px
-#   unit_r41_re2gator_intro      Aggro -> Clip 6 (125) -> Clip 3 (150) -> Biss-Sperre 110 (@0x8010091c), dann CHASE Clip 0
+#   unit_r41_re2gator_intro      Aggro -> Clip 6 (125) -> Clip 3 (150) -> Spurt-Sperre 110 (@0x8010091c), dann CHASE Clip 0
 #   unit_r41_re2gator_sockel     HP 25300; 100 Pistolentreffer toeten nicht (Sockel), geschwaecht sobald HP < 25000;
 #                                Treffer-Reaktion nur 0 (SE 5) oder 4 (SE 0 + Clip 10, Sperre 120..183), nie beides
 #   unit_r41_re2gator_kanister   RE15_GATOR_KANISTER-Lage vor der Schnauze -> Stufe 1..7 (12+6+6+7+7 Bilder nach dem Fenster-Takt,
@@ -37,7 +37,7 @@ endif()
 #                                +0xA0 0x8000, +0x9A -10, +0x98 yaw+0x800); Part-Bruecke (re15_re2z_gore_part_matrix /
 #                                _part_burst): 30 Scherben-Bilder, Skala 180..2790, Aufstieg -10/Bild, danach Flagwort 0
 #   unit_r41_re2gator_wand       Nachbesserung 1 (Abnahme 0, M1): Intro vom Lauerplatz OHNE Bahn-Gate (Clip 6 125 ->
-#                                Clip 3 150 -> yaw += 1024 @0x80100938-48, Biss-Sperre 110) und Dash im Westkanal nach
+#                                Clip 3 150 -> yaw += 1024 @0x80100938-48, Spurt-Sperre 110) und Dash im Westkanal nach
 #                                SUEDEN auf der Klemmlinie (x = -7434) mit Leon in der Tuernische: Zonenwechsel 2 -> 0 ->
 #                                SE 4, Clip 2/3 je 150, Gator bleibt im Becken (Dispatcher-Klemme nimmt den RE2-Korridor-
 #                                Seitversatz -2775), laengs ~4188 voran, yaw += 1024 @0x80100eb0-c0
