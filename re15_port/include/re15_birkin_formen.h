@@ -6,7 +6,8 @@
  * Auftritte gibt es nur im 80%-Material; jede Zahl, die hier NICHT mit @0x… belegt ist, ist aus dem Video gemessen
  * (Rueckprojektion durch die RID-Kamera) oder Gestaltung, und als solche markiert.
  *
- * Modelle: EMD/EM30_HANGAR.EMD (tools/birkin_formen.py): Clips, Hierarchie und KI von EM30 / Typ 0x30.
+ * Modelle: EMD/EM30_HANGAR.EMD (tools/birkin_formen.py): Clips, Knochen 0-15 und KI von EM30 / Typ 0x30, dazu eine
+ * Schwanzkette (Knochen 16-22, Runde 41 Spur SF), traegt der Birkin im Hangar 50A0/50A1 UND im Labor 50E0/50F1.
  * RE2/BAHNSTEIG_FORM.EMD + .TIM (Stufe 3, analysis/befunde_runde41/form/STUFE3.md): die Riesenform J nach den zwei
  * 80%-Screenshots, 32 Knochen, eigene Clips nach dem Muster RE2-G4 (Bildzahl, Spur, Treffer-/Tonbits je Tick-Clip aus
  * CDEMD0.EMS kind 0x34), eigener Tick (engine/src/birkin_bahnsteig.c). Gewaehlt vom PC-Lader (re15_bf_emd_datei bzw.
@@ -15,6 +16,14 @@
  *   HANGAR (50A0/50A1, Cut 12, V1 4:36-4:40): Birkin packt einen anspringenden Spider-Man (Typ 0x2B), stemmt
  *     ihn ueber den Kopf und schmettert ihn vor sich auf den Boden (Birkin-Clip 0x0B = GRAB-THROW, Wurf bei
  *     Bild 0x2C wie im Original @0x80117d30), dann greift er den Spieler an (Uebergabe an die 0x30-KI).
+ *     Runde 41 Spur H: Cut 12 ist im Raum unerreichbar (keine RVD-Zone, kein Cut_chg) - die Szene ist deshalb eine
+ *     Zwischensequenz mit Riegel und Letterbox, ausgeloest vom ersten angeforderten Schnitt, der eine der Figuren zeigt;
+ *     vorher gibt es die Figuren nicht (birkin_formen.c Kopf "Spur H", Dossier analysis/befunde_runde41/H_hangar.md).
+ *     Ablauf Bild fuer Bild nach dem 80%-Video (Complete Disc 4, 45.0 s): Ansprung, Halten, Wurf, Spider-Man flieht
+ *     rechts an der Kamera vorbei, Birkin geht auf die Kamera zu; danach 0x30-KI.
+ *     Modell-Voraussetzungen (jedes EM30-Ersatzmodell): Knochen 15 = haltende Hand (Sichelhand,
+ *     Runde 41 SF N1.2), Clip 0 (Stand, INIT), Clip 0x0B (Griff/Wurf,
+ *     mindestens 0x2D Bilder), Clip 1 (Gang der KI); Spider-Man EM2B: Clips 0, 7, 0x0A, 0x0C.
  *   BAHNSTEIG (5080/5081): die Riesenform ab der Raumladung (Spawn sub00 @0x00746, Fall + Member_set(0x0C,0x13)
  *     @0x0083E), G4-Ablaeufe (re15_bb_tick); bei HP <= 0 Flucht (Clip 11) statt Tod, danach Flag (5,0x1c) wie der
  *     Birkin-Tod @0x8011aecc (STAGE5), damit sub01 @0x0078A weiterlaeuft.
@@ -40,6 +49,7 @@ int  re15_bf_bahnsteig_aktiv(void);      /* ROOM5090/5091 und nicht RE15_ENDKAMP
 int  re15_bf_riesenform_raum(void);      /* 5080/5081 und re15_bf_bahnsteig_aktiv: der 0x30 traegt die Riesenform (Stufe 3) */
 int  re15_bf_flucht_raum(void);          /* 5080/5081: der Kampf endet mit der Flucht (Clip 11), nicht mit dem Tod */
 int  re15_bf_hangar_aktiv(void);         /* ROOM50A0/50A1 und nicht RE15_KEIN_HANGAR_BIRKIN */
+int  re15_bf_labor_aktiv(void);          /* ROOM50E0/50E1/50F0/50F1: Labor-Kampf, dieselbe Form wie im Hangar */
 
 /* Frueher 5090 Original -> Bahnsteig-Form ueber die Mutation (sub 6 Phase 2 @0x8011888c, Plattform-Haken). Seit Stufe 3
  * traegt der 0x30 die Riesenform ab der Raumladung; re15_bf_mutation_offen liefert 0, der Haken bleibt fuer Tests. */
@@ -130,8 +140,18 @@ int  re15_bb_cd_lauf_test(int setzen);
 int  re15_bb_pose_aktiv(void);
 void re15_bb_pose_tick(void);
 
-/* Diagnose fuer Tests: Szenenphase (0 = wartet, 1 = Sprung, 2 = Griff, 3 = Sturz, 4 = liegt, 5 = vorbei). */
+/* Diagnose fuer Tests: Szenenphase (0 = wartet auf den Ausloeser, keine Figuren; 1 = Vorlauf in Cut 12; 2 = Sprung;
+ * 3 = Griff/Halten; 4 = Wurf; 5 = am Boden und Flucht; 6 = Abgang (Gang auf die Kamera zu, Zeitplan); 7 = frei). */
 int  re15_bf_hangar_phase(void);
 int  re15_bf_hangar_slot(int birkin);    /* 1 = Birkin-Slot, 0 = Spider-Man-Slot, -1 = keiner */
+int  re15_bf_hangar_riegel(void);        /* 1 = die Szene haelt Set(2,7)/Set(1,27) */
+void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen (Prozess-Merker) */
+/* 1 = der Schnitt `cut` des aktuellen Raums zeigt eine Szenenfigur (Anker-Viereck + Bild), = Ausloeser-Bedingung. */
+int  re15_bf_szene_im_schnitt(int cut);
+/* Region-Cull-Ausnahme (Zeichner): 1 = `a` ist eine Figur der Hangar-Szene und die Szene haelt Cut 12. */
+int  re15_bf_szene_zeigt(const re15_actor_t *a);
+/* Runde 41 SF Neuaufbau ab NB2 (aus NB3): 1 = die Hangar-Szene haelt Cut 12 -> Effekte (gruenes Blut) nicht gegen den
+ * Platzhalter-Anker cullen. */
+int  re15_bf_szene_effekte(void);
 
 #endif

@@ -1,0 +1,12 @@
+Block: 12 Zeilen
+== 1 Endstand (Baum = Paket)
+  check_tree: EMD/EM30_HANGAR.EMD = Pin release/em30_hangar.sha256
+  GATE OK
+== 2 EM30 von NB2 in Paket UND Quellbaum
+  DIE: EMD/EM30_HANGAR.EMD im Paket (d6932b22b329284f93108d9edf07602af00dcb41dd9491f48a893adb34078d85) ist nicht der Stand aus release/em30_hangar.sha256 (cfd1ac42729e56365847db42b352337d7f0c06fdcc1ef3413d0aee32d4a97a95) - tools/birkin_formen.py laufen lassen bzw. Pin nachziehen
+== 3 EM30 fehlt im Paket
+  DIE: PSX-Asset fehlt/leer im Paket: shared_assets/PSX/EMD/EM30_HANGAR.EMD (Hangar-/Labor-Birkin fiele auf EM30 zurueck)
+== 4 EM30 im Paket alt, Quellbaum neu
+  DIE: PSX-Asset im Paket weicht vom Quellbaum ab: shared_assets/PSX/EMD/EM30_HANGAR.EMD
+== 5 EM30 1 Byte veraendert in Paket UND Quellbaum
+  DIE: EMD/EM30_HANGAR.EMD im Paket (82d06d11dd7432cd491d18f42aff5435ea84715858ae923a339fafcc283e52d7) ist nicht der Stand aus release/em30_hangar.sha256 (cfd1ac42729e56365847db42b352337d7f0c06fdcc1ef3413d0aee32d4a97a95) - tools/birkin_formen.py laufen lassen bzw. Pin nachziehen

@@ -1,0 +1,55 @@
+EMD C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V4r5.EMD sha256 a762bd66 (Ref2 cfd1ac42)
+ROT  T-K1a Koerper-Meshes = Ref2                    soll: Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV inkl. CLUT-Feld und TPage bytegleich ist: abweichend: [2, 3, 5, 6, 10, 13, 14] 
+ROT  T-K1b CLUT = Ref2                              soll: Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie      ist: Zeilen 480-485 ABWEICHEND; TIM 12 Zeilen; weitere ['486=Kopie None', '487=Kopie None', '488=Kopie None', '489=Kopie None', '490=Kopie None', '491=Kopie None'] 
+ROT  T-K1c Koerper-Texel = Ref2                     soll: jeder von einer Koerperflaeche (Meshes 0-8, 10-15) abgedeckte Texel bytegleich ist: 34486 von 34716 abgedeckten Texeln abweichend; ausserhalb der Koerperflaechen geaendert 22933 Texel (Kopf-/Schwanzflaechen) 
+ROT  T-K2 keine neue Farbe (Kopf, Schwanz)          soll: jeder abgedeckte Texel von Mesh 9 und 16-22: 15-Bit-Wert in der Ref2-CLUT; Zeilen = Ref2-Zeile oder Kopie ist: 3129 von 14008 Texeln mit Farbe ausserhalb Ref2; 200 verschiedene Farben; Kopf: Zeile 486 (NEU) 3652 Texel, nicht in Ref2: 760; Schwanz: Zeile 487 (NEU) 10356 Texel, nicht in Ref2: 2369 
+OK   T-K3a Schwanz ohne Quernaht                    soll: groesster Sprung (dE76, 3-px-Abschnitte entlang der Kette) zwischen Gliedern <= groesster Sprung innerhalb eines Glieds ist: zwischen Gliedern max 8.6 (Id 19|20 bei 147 px), innerhalb max 21.0; je Gelenk 16|17 1.6, 17|18 5.1, 18|19 1.9, 19|20 8.6, 20|21 1.8, 21|22 5.4 
+ROT  T-K3b keine einfarbigen Bloecke                soll: je Glied Std(L*) >= 0,5 x Oberarm Id 13 (12.8 -> 6.4) und >= 16 Texel-Indizes ist: Id 16 Std 10.1 / 123 Indizes; Id 17 Std 8.8 / 133 Indizes; Id 18 Std 9.8 / 157 Indizes; Id 19 Std 8.6 / 128 Indizes; Id 20 Std 13.4 / 93 Indizes; Id 21 Std 10.3 / 56 Indizes; Id 22 Std 5.3 / 61 Indizes 
+OK   T-K3c Wurzel ohne Kante                        soll: Sprung Id 16 <-> Rumpf Id 7/8 (je 3-px-Band an der Grenze) <= groesster Sprung innerhalb eines Glieds ist: Sprung 10.7 (Wurzel 15.2/6.1/1.1 / Rumpf 25.1/10.2/2.4, 269 / 307 px), Grenze 21.0 
+ROT  T-K3d Wurzel Id 16 ohne Streifen (Anisotropie je Teilflaeche) soll: waagerecht/senkrecht je Teilflaeche in der Spanne von Rumpf Id 8 und Oberarm Id 13 (0.65-1.30) ist: ganz 1.25; oben14 2.00; Qol 1.33; Qor 1.57; Qul 1.00; Qur 1.04 
+INFO T-K3d Glied Id 17 (Anisotropie)                soll: ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe ist: ganz 0.98; oben14 1.23; Qol 1.07; Qor 1.11; Qul 0.80; Qur 0.94 
+INFO T-K3d Glied Id 18 (Anisotropie)                soll: ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe ist: ganz 0.87; oben14 0.84; Qol 0.96; Qor 0.77; Qul 0.93; Qur 0.84 
+INFO T-K3d Glied Id 19 (Anisotropie)                soll: ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe ist: ganz 1.08; oben14 1.00; Qol 1.02; Qor 0.96; Qul 1.10; Qur 1.00 
+INFO T-K3d Glied Id 20 (Anisotropie)                soll: ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe ist: ganz 0.62; oben14 0.84; Qol 0.85; Qor 0.86; Qul 0.49; Qur 0.41 
+INFO T-K3d Glied Id 21 (Anisotropie)                soll: ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe ist: ganz 0.55; oben14 0.55; Qol nan; Qor nan; Qul nan; Qur 0.55 
+INFO T-K3d Glied Id 22 (Anisotropie)                soll: ab Texelzeile 56 texelgleich Runde 1 (Orchestrator Runde 2 (c)); nur Ausgabe ist: ganz 0.87; oben14 0.75; Qol 0.62; Qor 0.83; Qul 1.49; Qur 0.65 
+OK   T-K4 K1 Augen vorn                             soll: 1 Komponente; Kontrast >= 20 (Original 29,5)                 ist: 1 Komp.; 25.3 
+ROT  T-K4 K2 Augenfleck vorn                        soll: L* >= KV5 + 20; blass (a* <= 15, b* >= 0); Video-Farbziel 46,9/7,2/-1,1 ueberholt ist: 47.8/8.5/-1.4; KV5 22.4 
+OK   T-K4 K3 Augenfleck Groesse                     soll: B 0,016-0,036 / H 0,023-0,043 H                              ist: 0.025 x 0.025 H (9 x 9 px) 
+OK   T-K4 K4 Augenlage vorn                         soll: (B)-links 0,035-0,065 H; 0,07-0,12 H unter OK                ist: 0.056 H links; 0.101 H unter OK 
+OK   T-K4 K5 Haarfeld vorn (KV2)                    soll: L* <= Auge - 25 und <= Ref2-Kopf L* P50 - 8 (22.8); Video-Ziel 13,3/7,4/1,5 ueberholt ist: 13.9/8.1/1.0 (Auge 47.8) 
+OK   T-K4 K6 zweites Auge verdeckt                  soll: L* <= 18 (Original 12,9)                                     ist: L* 12.3 (Box (369, 187, 377, 195)) 
+ROT  T-K4 K7 Nase (KV3)                             soll: L* zwischen Haarfeld und Auge, >= Haarfeld + 8 (eigenes Merkmal neben dem Haar); Video-Ziel ueberholt ist: 18.1/7.0/-0.1 (Haar 13.9, Auge 47.8) 
+ROT  T-K4 K8 Kinn/Maulzone (KV4, Kopf-Id 9 erodiert) soll: kein dunkles Maul: Albedo-L* P50 >= Ref2-Kopfhaut 37.2 - 8; Farbe dE00 <= 10 zu Ref2 KV4 (30.3/8.2/4.0, Albedo 47.9); Video-Ziel 9,9/9,9/3,8 ueberholt ist: Albedo 9.0; 8.6/4.5/2.3 dE00 15.5 
+ROT  T-K4 K9 Kopf-Oberseite rot vorn (KV1)          soll: a* >= 11 (Messblatt); |dL*| zu Ref2 <= 8 (Ref2 41.8/18.2/8.8); Video-Ziel ueberholt ist: 20.9/13.0/5.4 
+OK   T-K4 K10 Kopfbox vorn                          soll: 0,14-0,18 x 0,15-0,20 H                                      ist: 0.154 x 0.187 H 
+OK   T-K4 S1 Auge seitlich                          soll: 1 heller Fleck; 0,028-0,052 x 0,040-0,070 H; blass (a* <= 15, b* >= 0); Video-Farbziel ueberholt ist: 48.5/3.1/0.9; 0.042 x 0.049 H; 1 Komp. 
+OK   T-K4 S2 Augenlage seitlich                     soll: 0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle ist: 0.054 H; 0.809 H 
+OK   T-K4 S3 Haarkante seitlich (KS2)               soll: L* <= Ref2-Kopf L* P50 (Pose 85) - 8 (22.8); Abstand zum Fleck <= 0,01 H; Video-Ziel 19,1/1,2/1,1 ueberholt ist: 17.2/2.8/0.6; Abstand 0.004 H 
+OK   T-K4 S4 Kopf-Oberseite rot seitlich (KS1)      soll: a* >= 11 (Messblatt); |dL*| zu Ref2 <= 8 (Ref2 34.5/20.1/8.9); Video-Ziel ueberholt ist: 27.5/11.4/3.2 
+ROT  T-K5a Kopf-Grundton L* P50 Pose 135            soll: ausserhalb des Haarfelds wie Ref2 (dort 30.8, ganzer Kopf 30.8) +- 4 ist: 15.6 (Haarfeld 25 % der Kopfpixel; Albedo 21.6, Ref2 37.2) 
+ROT  T-K5b Kopf-Grundton/Rumpf Pose 135             soll: ausserhalb des Haarfelds >= Ref2 - 0,2 (Ref2 dort 1.18, ganzer Kopf 1.28) ist: 0.96 
+ROT  T-K5c violett Pose 135                         soll: Anteil b* < 0 <= 0,02 (Ref2 0.00)                            ist: 0.408 
+ROT  T-K5d dunkle Textur nur im Haarfeld Pose 135   soll: Anteil Albedo-L* < 25 ausserhalb des Haarfelds <= Ref2 + 0,05 (Ref2 0.00) ist: 0.66 (Render L* < 20 ausserhalb 0.58, Ref2 0.18; im Haarfeld 0.82) 
+INFO T-K5 ganzer Kopf Pose 135                      soll: Ref2 L* P50 30.8, Kopf/Rumpf 1.28, L* < 20 0.12              ist: L* P50 13.3, Kopf/Rumpf 0.86, L* < 20 0.64 [mit Haarfeld; nicht gewertet, Grundton in T-K5a/b]
+ROT  T-K5a Kopf-Grundton L* P50 Pose 85             soll: ausserhalb des Haarfelds wie Ref2 (dort 30.8, ganzer Kopf 30.8) +- 4 ist: 21.6 (Haarfeld 8 % der Kopfpixel; Albedo 21.6, Ref2 30.8) 
+ROT  T-K5b Kopf-Grundton/Rumpf Pose 85              soll: ausserhalb des Haarfelds >= Ref2 - 0,2 (Ref2 dort 1.06, ganzer Kopf 1.05) ist: 0.72 
+ROT  T-K5c violett Pose 85                          soll: Anteil b* < 0 <= 0,02 (Ref2 0.00)                            ist: 0.222 
+ROT  T-K5d dunkle Textur nur im Haarfeld Pose 85    soll: Anteil Albedo-L* < 25 ausserhalb des Haarfelds <= Ref2 + 0,05 (Ref2 0.00) ist: 0.60 (Render L* < 20 ausserhalb 0.41, Ref2 0.16; im Haarfeld 0.90) 
+INFO T-K5 ganzer Kopf Pose 85                       soll: Ref2 L* P50 30.8, Kopf/Rumpf 1.05, L* < 20 0.16              ist: L* P50 21.2, Kopf/Rumpf 0.69, L* < 20 0.45 [mit Haarfeld; nicht gewertet, Grundton in T-K5a/b]
+OK   G1 Koerper-Geometrie = Ref2                    soll: Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV gleich (O1: CLUT-Feld frei); Skelett/Keyframes 0-15, EDD gleich ist: Geometrie abweichend keine; CLUT-Feld geaendert {2: '[480] -> [491]', 3: '[480] -> [491]', 5: '[480] -> [491]', 6: '[480] -> [491]', 10: '[480] -> [489]', 13: '[480] -> [490]', 14: '[482] -> [488]'}; byte-gleich 8 von 15; Skelett True; Keyframes True; EDD True; uebrige Sektionen True; Ref2 sha256 cfd1ac42 
+OK   M1 Dreiecke Schwanz                            soll: <= 212                                                       ist: 198 ([33, 22, 44, 22, 22, 22, 33]) 
+OK   M2 Dreiecke Kopf                               soll: <= 118                                                       ist: 109 
+OK   M3 Farbtiefe                                   soll: 8-bpp-TIM, Texel aus der CLUT                                ist: 8 bpp True; CLUT-Zeilen Kopf [486], Schwanz [487], Koerper [480, 481, 482, 484, 488, 489, 490, 491] (TIM 12 Zeilen) 
+OK   M4 Texeldichte                                 soll: Kopf und Schwanz 0,045-0,091 Texel/E.                        ist: Kopf 0.057; Schwanz [0.06, 0.07, 0.065, 0.072, 0.07, 0.069, 0.065] 
+OK   T1 Schwanz Beginn                              soll: 0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03)         ist: 0.172 H hinter, 0.742 H ueber [Id 16 an Id 7/8]
+OK   T2 Biegung                                     soll: Lage dx -0,245 dy +0,036 (+-0,03) nach t2_mass_v4 (Original -0.268 / 0.056); Drehung 68.4 +-5.0 Grad (Original 70.1/65.8/69.5) ist: dx -0.259 dy 0.049; 64.0 Grad (Bauer-Mittellinie: dx -0.266 dy 0.061) 
+OK   T3 Knick (Taille)                              soll: dx -0,265 dy +0,257 (+-0,03)                                 ist: dx -0.239 dy 0.247 
+OK   T4 Ende                                        soll: dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle             ist: dx -0.218 dy 0.388; 0.354 H ueber Sohle 
+OK   TA Schwanz absolut                             soll: Beginn (357,243), Knick (290,308), Ende (295,343) je Achse +-0,03 H ist: Beginn (358,238) +0.004/-0.019 H; Knick (295,303) +0.019/-0.018 H; Ende (300,340) +0.020/-0.010 H 
+ROT  T5 Breite nach oben                            soll: f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01   ist: 0.032/0.049/0.098/0.163 H; Abfall 0.000 
+OK   T5q Breite quer (unabhaengig)                  soll: f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 (Original 3 Masken: Abfall 0.016/0.020/0.000) ist: 0.032/0.047/0.110/0.161 H; Abfall 0.002; Profil f 0..1 [0.025, 0.032, 0.045, 0.047, 0.081, 0.11, 0.133, 0.161, 0.157, 0.142, 0.144] 
+OK   T6 Endstueck                                   soll: B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste ist: B 0.036; L 0.144 H; 82 Grad (vorn); Taille 0.021, schmalste davor 0.021 
+OK   TK Schwanz Oberkontur                          soll: x 284-332: RMS zur Geraden >= 3.02 px (Original 3.87/4.71/4.69 minus Spanne); Oberkante x 276-292 je Spalte <= 0,03 H vom Original 251/250/243/236/234 ist: RMS 3.69 px; Oberkante 249/243/238/233/228 (max 0.027 H) [Sicht-Pruefung V4 r3 1.3: V4 r3 0,6 px, Oberkante 237/235/232/230/228; Toleranz Oberkante = TA (0,03 H)]
+ROT: 19 von 44 (INFO-Zeilen nicht gezaehlt: 8)
+EXIT=1

@@ -1,0 +1,76 @@
+{
+ "orig": {
+  "kopf": 41.2,
+  "rumpf": 26.2,
+  "kopf_glatt": 0.067,
+  "kopf_spanne_pm3": [
+   39.4,
+   42.9
+  ],
+  "kopf_durch_rumpf": 1.57
+ },
+ "V4r5_h135": {
+  "kopf": 38.6,
+  "rumpf": 19.7,
+  "kopf_glatt": 0.075,
+  "kopf_lab": [
+   25.4,
+   7.7,
+   1.7
+  ],
+  "kopf_L_p10_90": [
+   16.4,
+   38.1
+  ],
+  "kopf_durch_rumpf": 1.96,
+  "kopf_anteil_original": 0.94
+ },
+ "V4r4_h135": {
+  "kopf": 40.0,
+  "rumpf": 26.6,
+  "kopf_glatt": 0.072,
+  "kopf_lab": [
+   25.5,
+   8.6,
+   1.7
+  ],
+  "kopf_L_p10_90": [
+   16.3,
+   38.8
+  ],
+  "kopf_durch_rumpf": 1.5,
+  "kopf_anteil_original": 0.97
+ },
+ "V4r5_h118": {
+  "kopf": 36.8,
+  "rumpf": 21.3,
+  "kopf_glatt": 0.062,
+  "kopf_lab": [
+   19.7,
+   7.0,
+   1.1
+  ],
+  "kopf_L_p10_90": [
+   8.9,
+   29.9
+  ],
+  "kopf_durch_rumpf": 1.73,
+  "kopf_anteil_original": 0.89
+ },
+ "V4r4_h118": {
+  "kopf": 31.3,
+  "rumpf": 24.9,
+  "kopf_glatt": 0.106,
+  "kopf_lab": [
+   18.3,
+   7.3,
+   1.1
+  ],
+  "kopf_L_p10_90": [
+   8.1,
+   27.2
+  ],
+  "kopf_durch_rumpf": 1.26,
+  "kopf_anteil_original": 0.76
+ }
+}

@@ -1,0 +1,45 @@
+EMD sha256 a9da924f
+
+| Mass | Soll | Ist | |
+|---|---|---|---|
+| T-K1a Koerper-Meshes = Ref2 | Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV inkl. CLUT-Feld und TPage bytegleich | abweichend: keine | OK |
+| T-K1b CLUT = Ref2 | Zeilen 480-485 bytegleich; weitere Zeilen nur als Kopie | Zeilen 480-485 gleich; TIM 6 Zeilen; weitere keine | OK |
+| T-K1c Koerper-Texel = Ref2 | jeder von einer Koerperflaeche (Meshes 0-8, 10-15) abgedeckte Texel bytegleich | 0 von 34716 abgedeckten Texeln abweichend; ausserhalb der Koerperflaechen geaendert 22914 Texel (Kopf-/Schwanzflaechen) | OK |
+| T-K2 keine neue Farbe (Kopf, Schwanz) | jeder abgedeckte Texel von Mesh 9 und 16-22: 15-Bit-Wert in der Ref2-CLUT; Zeilen = Ref2-Zeile oder Kopie | 0 von 14008 Texeln mit Farbe ausserhalb Ref2; 165 verschiedene Farben; Kopf: Zeile 480 (Kopie/gleich [480]) 3652 Texel, nicht in Ref2: 0; Schwanz: Zeile 480 (Kopie/gleich [480]) 10356 Texel, nicht in Ref2: 0 | OK |
+| T-K3a Schwanz ohne Quernaht | groesster Sprung (dE76, 3-px-Abschnitte entlang der Kette) zwischen Gliedern <= groesster Sprung innerhalb eines Glieds | zwischen Gliedern max 13.0 (Id 20|21 bei 177 px), innerhalb max 13.5; je Gelenk 16|17 6.0, 17|18 8.9, 18|19 4.3, 19|20 10.0, 20|21 13.0, 21|22 3.5 | OK |
+| T-K3b keine einfarbigen Bloecke | je Glied Std(L*) >= 0,5 x Oberarm Id 13 (10.9 -> 5.4) und >= 16 Texel-Indizes | Id 16 Std 15.8 / 174 Indizes; Id 17 Std 13.1 / 139 Indizes; Id 18 Std 11.1 / 154 Indizes; Id 19 Std 12.2 / 139 Indizes; Id 20 Std 11.5 / 136 Indizes; Id 21 Std 10.9 / 92 Indizes; Id 22 Std 8.8 / 86 Indizes | OK |
+| T-K3c Wurzel ohne Kante | Sprung Id 16 <-> Rumpf Id 7/8 (je 3-px-Band an der Grenze) <= groesster Sprung innerhalb eines Glieds | Sprung 5.2 (Wurzel 26.9/16.8/8.9 / Rumpf 26.7/12.6/5.9, 269 / 307 px), Grenze 13.5 | OK |
+| T-K4 K1 Augen vorn | 1 Komponente; Kontrast >= 20 (Original 29,5) | 1 Komp.; 20.7 | OK |
+| T-K4 K2 Augenfleck Farbe | 46,9/7,2/-1,1 dE00 <= 6; L* >= KV5 + 20 | 47.6/5.3/1.4 dE00 3.0; L* 47.6 vs KV5 19.0 + 20 | OK |
+| T-K4 K3 Augenfleck Groesse | B 0,016-0,036 / H 0,023-0,043 H | 0.027 x 0.036 H (10 x 13 px) | OK |
+| T-K4 K4 Augenlage vorn | (B)-links 0,035-0,065 H; 0,07-0,12 H unter OK | 0.052 H links; 0.096 H unter OK | OK |
+| T-K4 K5 Haarfeld vorn | 13,3/7,4/1,5 dE00 <= 6; L* <= Auge - 25 | 14.2/6.4/2.0 dE00 1.2; L* 14.2 vs 22.6 | OK |
+| T-K4 K6 zweites Auge verdeckt | L* <= 18 (Original 12,9) | L* 11.5 (Box (367, 183, 376, 195)) | OK |
+| T-K4 K7 Nase | 18,2/7,1/1,3 dE00 <= 6; L* zwischen Haar und Auge | 16.4/3.8/0.5 dE00 3.8 | OK |
+| T-K4 K8 Kinn/Maulzone (Kopf-Id 9 erodiert im Fenster KV4) | 9,9/9,9/3,8 dE00 <= 6; Anteil L*>35 <= 0,05 | 10.8/7.6/3.6 dE00 2.2; Anteil 0.000 (90 Kopf-Bildpunkte) | OK |
+| T-K4 K8 Messblatt-Wortlaut (Fenster ganz) | 9,9/9,9/3,8 dE00 <= 6; Anteil L*>35 <= 0,05 | 30.1/3.5/2.5 dE00 15.5; Anteil 0.475 (Fenster 276 px, davon 145 Rumpf Id 8 = Referenz 2 (Vorgabe 1); nicht gewertet) | INFO |
+| T-K4 K9 Kopf-Oberseite rot vorn | 22,6/15,4/5,2 dE00 <= 6; a* >= 11 | 22.7/15.9/5.1 dE00 0.4 | OK |
+| T-K4 K10 Kopfbox vorn | 0,14-0,18 x 0,15-0,20 H | 0.154 x 0.187 H | OK |
+| T-K4 S1 Auge seitlich | 1 heller Fleck (1 Komponente); 48,4/4,0/0,5 dE00 <= 6; 0,028-0,052 x 0,040-0,070 H | 42.7/3.7/0.6 dE00 5.4; 0.042 x 0.053 H; 1 Komp. | OK |
+| T-K4 S2 Augenlage seitlich | 0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle | 0.046 H; 0.817 H | OK |
+| T-K4 S3 Haarkante seitlich | L* <= 22; 19,1/1,2/1,1 dE00 <= 6; Abstand zum Fleck <= 0,01 H | 18.5/1.3/0.8 dE00 0.5; Abstand 0.000 H | OK |
+| T-K4 S4 Kopf-Oberseite rot seitlich | 27,6/15,3/3,3 dE00 <= 6; a* >= 11 | 27.7/14.8/3.2 dE00 0.4 | OK |
+| G1 Koerper-Geometrie = Ref2 | Meshes 0-8, 10-15: Ecken, Normalen, Flaechen, UV gleich (O1: CLUT-Feld frei); Skelett/Keyframes 0-15, EDD gleich | Geometrie abweichend keine; CLUT-Feld geaendert keine; byte-gleich 15 von 15; Skelett True; Keyframes True; EDD True; uebrige Sektionen True; Ref2 sha256 cfd1ac42 | OK |
+| M1 Dreiecke Schwanz | <= 212 | 198 ([33, 22, 44, 22, 22, 22, 33]) | OK |
+| M2 Dreiecke Kopf | <= 118 | 109 | OK |
+| M3 Farbtiefe | 8-bpp-TIM, Texel aus der CLUT | 8 bpp True; CLUT-Zeilen Kopf [480], Schwanz [480], Koerper [480, 481, 482, 484] (TIM 6 Zeilen) | OK |
+| M4 Texeldichte | Kopf und Schwanz 0,045-0,091 Texel/E. | Kopf 0.057; Schwanz [0.06, 0.07, 0.065, 0.072, 0.07, 0.069, 0.065] | OK |
+| T1 Schwanz Beginn | 0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03) | 0.172 H hinter, 0.742 H ueber (Id 16 an Id 7/8) | OK |
+| T2 Biegung | Lage dx -0,245 dy +0,036 (+-0,03) nach t2_mass_v4 (Original -0.268 / 0.056); Drehung 68.4 +-5.0 Grad (Original 70.1/65.8/69.5) | dx -0.259 dy 0.049; 64.0 Grad (Bauer-Mittellinie: dx -0.266 dy 0.061) | OK |
+| T3 Knick (Taille) | dx -0,265 dy +0,257 (+-0,03) | dx -0.239 dy 0.247 | OK |
+| T4 Ende | dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle | dx -0.218 dy 0.388; 0.354 H ueber Sohle | OK |
+| TA Schwanz absolut | Beginn (357,243), Knick (290,308), Ende (295,343) je Achse +-0,03 H | Beginn (358,238) +0.004/-0.019 H; Knick (295,303) +0.019/-0.018 H; Ende (300,340) +0.020/-0.010 H | OK |
+| T5 Breite nach oben | f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 | 0.032/0.049/0.098/0.163 H; Abfall 0.000 | ROT |
+| T5q Breite quer (unabhaengig) | f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 (Original 3 Masken: Abfall 0.016/0.020/0.000) | 0.032/0.047/0.110/0.161 H; Abfall 0.002; Profil f 0..1 [0.025, 0.032, 0.045, 0.047, 0.081, 0.11, 0.133, 0.161, 0.157, 0.142, 0.144] | OK |
+| T6 Endstueck | B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste | B 0.036; L 0.144 H; 82 Grad (vorn); Taille 0.021, schmalste davor 0.021 | OK |
+| TK Schwanz Oberkontur | x 284-332: RMS zur Geraden >= 3.02 px (Original 3.87/4.71/4.69 minus Spanne); Oberkante x 276-292 je Spalte <= 0,03 H vom Original 251/250/243/236/234 | RMS 3.69 px; Oberkante 249/243/238/233/228 (max 0.027 H) (Sicht-Pruefung V4 r3 1.3: V4 r3 0,6 px, Oberkante 237/235/232/230/228; Toleranz Oberkante = TA (0,03 H)) | OK |
+| T7a Gang koerperfest Lage | Gelenke 1/3/5/7 je <= 0,06 H vom Ziel (Keyframe der gezeichneten Pose), alle Gangtakte | 0 von 47 Takten > 0,06 H; max 0.056 H (h85 {'Beginn': 0.003, 'Biegung': 0.017, 'Knick': 0.036, 'Ende': 0.056}) | OK |
+| T7b Biegung/Knick im Gang | Gelenk 3 >= Keyframe - 10 Grad; Gelenk 5 >= halber Keyframe-Winkel | Biegung 69.5-76.8 Grad (Keyframe 70.2-76.2), 0 Takte darunter; Knick 11.2-16.2 (Keyframe 15.6-16.5), 0 darunter | OK |
+| T7c keine waagerechte Kette | Strecke Biegung -> Ende in Zielrichtung >= 0,75 x Keyframe | min 0.370 H (Keyframe 0.364 H); 0 Takte darunter [] | OK |
+| T7d keine Rueckfaltung | alle Gelenkwinkel <= 90 Grad, ganzer Lauf | max 79.4 Grad; 0 von 144 Takten > 90 | OK |
+| Boden Mesh | kein Glied-Mesh und keine Dornspitze unter dem Boden, ganzer Lauf | tiefster Mesh-Punkt -6 E. (h35, Dornspitze -53 E.); 0 Takte darunter (Radien je Gelenk [315, 315, 343, 343, 135, 98, 83, 83] E., Dorn 308 E. (Mesh 22)) | OK |

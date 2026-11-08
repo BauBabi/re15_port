@@ -1,0 +1,302 @@
+{
+ "basis": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad\\sfv4\\emd\\EM30_V5r4.EMD",
+ "basis_sha256": "38562ced41061258f435be0d6598697b10ed241b09ba1a948007bc5bdf5993d5",
+ "ref2": "C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r41_sichel\\re15_port\\shared_assets\\PSX\\EMD\\EM30_HANGAR.EMD",
+ "ref2_sha256": "cfd1ac42729e56365847db42b352337d7f0c06fdcc1ef3413d0aee32d4a97a95",
+ "original": "C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r41_sichel\\re15_port\\shared_assets\\PSX\\EMD\\CDEMD0.EMS",
+ "original_ems_index": 16,
+ "original_sha256": "569e31387d78c89f2193553a4ba8670d8923ff3d2e98f99c1a2a6bef8f72f4ce",
+ "stufe": 1,
+ "mesh9_alt": {
+  "ecken": 48,
+  "dreiecke": 56,
+  "vierecke": 14
+ },
+ "tim": {
+  "v5_einsaetze_zurueck": 11722,
+  "clut_zeilen": 7,
+  "port_texturhoehe": 1792,
+  "zeile_486": "Original EM30 CLUT-Zeile 0 (y 480) bytegleich"
+ },
+ "textur": {
+  "param": {
+   "zone_a": [
+    [
+     58,
+     186
+    ],
+    [
+     68,
+     186
+    ],
+    [
+     70,
+     200
+    ],
+    [
+     86,
+     201
+    ],
+    [
+     87,
+     221
+    ],
+    [
+     81,
+     223
+    ],
+    [
+     80,
+     254
+    ],
+    [
+     58,
+     254
+    ]
+   ],
+   "fleck_box": [
+    58,
+    186,
+    74,
+    226
+   ],
+   "fleck_l": 50.0,
+   "haar_b": 10.0,
+   "zone_b": [
+    [
+     81,
+     222
+    ],
+    [
+     100,
+     221
+    ],
+    [
+     105,
+     224
+    ],
+    [
+     106,
+     254
+    ],
+    [
+     81,
+     254
+    ]
+   ],
+   "hell_box": [
+    74,
+    166,
+    92,
+    185
+   ],
+   "rand": 1.5,
+   "wackel": 1.5,
+   "saat": 4108
+  },
+  "fleck_texel": 300,
+  "fleck_indizes": [
+   1,
+   5,
+   10,
+   11,
+   17,
+   18,
+   19,
+   20,
+   24,
+   26,
+   28,
+   29,
+   32,
+   33,
+   34,
+   38,
+   40,
+   54,
+   57,
+   59,
+   75,
+   80,
+   135,
+   144,
+   190,
+   196,
+   199,
+   200,
+   201,
+   205,
+   207,
+   217,
+   218,
+   255
+  ],
+  "fleck_l_p10_50_90": [
+   10.3,
+   25.2,
+   47.9
+  ],
+  "hell_indizes": [
+   2,
+   3,
+   4,
+   6,
+   7,
+   8,
+   9,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   21,
+   23,
+   25,
+   26,
+   34,
+   38,
+   41,
+   116,
+   125,
+   128,
+   131,
+   132,
+   133,
+   134,
+   135,
+   137,
+   141,
+   142,
+   143,
+   146,
+   147,
+   148,
+   150,
+   154,
+   156,
+   157,
+   159,
+   160,
+   165,
+   167,
+   173,
+   174,
+   177,
+   179,
+   193,
+   194,
+   195,
+   217
+  ],
+  "zone_a_ersetzt": 915,
+  "zone_b_ersetzt": 847,
+  "geaendert": 1762,
+  "nicht_frei_geaendert": 0,
+  "indizes_ausserhalb_quellen": [],
+  "box_geaendert": [
+   60,
+   186,
+   107,
+   254
+  ]
+ },
+ "glaettung": {
+  "regel": {
+   "pose": "P2",
+   "fenster": [
+    -2,
+    10
+   ],
+   "rest": 1,
+   "schritte": 3
+  },
+  "schwerpunkt": [
+   162.2,
+   -139.6,
+   -20.4
+  ],
+  "ecken": [
+   {
+    "ecke": 60,
+    "alt": [
+     -184,
+     -327,
+     -21
+    ],
+    "neu": [
+     -156,
+     -312,
+     -21
+    ],
+    "zum_schwerpunkt": 0.0387,
+    "weg": 31.8,
+    "bild_alt": [
+     438.0,
+     195.5
+    ]
+   },
+   {
+    "ecke": 54,
+    "alt": [
+     -103,
+     -369,
+     -23
+    ],
+    "neu": [
+     -101,
+     -367,
+     -23
+    ],
+    "zum_schwerpunkt": 0.0012,
+    "weg": 2.8,
+    "bild_alt": [
+     443.1,
+     196.5
+    ]
+   }
+  ],
+  "durchgaenge": [
+   {
+    "wiederanstieg": 3,
+    "stelle": [
+     434,
+     196,
+     437,
+     193
+    ]
+   },
+   {
+    "wiederanstieg": 2,
+    "stelle": [
+     435,
+     197,
+     437,
+     195
+    ]
+   },
+   {
+    "wiederanstieg": 2,
+    "stelle": [
+     435,
+     197,
+     437,
+     195
+    ]
+   }
+  ]
+ },
+ "emd": {
+  "bytes": 262516,
+  "sha256": "99703bbda76ebda1317555c0e7c5e5669938c32df408a8d9a2042db570bd679e",
+  "sektionen_gleich": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ]
+ }
+}

@@ -1,0 +1,5 @@
+{'runde': 0, 'gesehen': 3390, 'lambda_median': 0.9832280278205872, 'dE76_mittel': 2.071403832393785, 'dE76_p90': 3.7309473364410968}
+{'runde': 1, 'gesehen': 3390, 'lambda_median': 0.9832280278205872, 'dE76_mittel': 1.910059173761399, 'dE76_p90': 3.4352224466841546}
+{'runde': 2, 'gesehen': 3390, 'lambda_median': 0.9832280278205872, 'dE76_mittel': 1.7162456156987156, 'dE76_p90': 3.1248363570949227}
+{'runde': 3, 'gesehen': 3390, 'lambda_median': 0.9832280278205872, 'dE76_mittel': 1.8787182379829204, 'dE76_p90': 3.2205253435213086}
+geschrieben C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/r5/fs_q0.7.npz

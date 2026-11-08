@@ -1,0 +1,83 @@
+Riegel SF V5 wie Foto - Koerper (riegel_v5f.py)
+EMD C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V5r4.EMD sha256 38562ced41061258f435be0d6598697b10ed241b09ba1a948007bc5bdf5993d5
+Basis C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad\sfv4\emd\EM30_V5k.EMD sha256 99703bbda76ebda1317555c0e7c5e5669938c32df408a8d9a2042db570bd679e
+
+OK    T-K1a Sektionen 0-6 (EDD, EMR, ...) = Basis | Soll: bytegleich | Ist: abweichend []; Meshes 23/23
+ROT   T-K1b Texel = Basis | Soll: bytegleich | Ist: ABWEICHEND (11879 Texel)
+ROT   T-K1c Geometrie/UV = Basis bis auf die Ausnahmeliste | Soll: nur CLUT-Feld (Rot-Flaechen 8 Brust/12/13 -> 488-490, Schwanz -> 487), Krallenecken Mesh 12, Schwanzecken 16-22 | Ist: Fehler ['9: Normalen/Flaechen']; falsche CLUT-Felder []; Schwanz alle 487 False; Rot-Flaechen je Mesh {}; Krallenecken 0; Schwanzecken 0
+ROT   T-K1d CLUT: Ausnahmeliste | Soll: 11 Zeilen (<= 16, Hoehe <= 4096); 483-486 = Basis; 488/489/490 = Ref2 481/480/482; 480-482 nur rote Eintraege grau (nicht heller, C* <= P90 der grauen Eintraege derselben Zeile = Spanne der grauen Haut); 487 = Ref2 480 ausser Schwanz-Indizes, diese aus der Sichel-Zeile 484 | Ist: 9 Zeilen, Hoehe 2304; 483-486 gleich False; Kopien gleich False; geaendert je Zeile {480: 0, 481: 0, 482: 0}, Fehler []; 487 Rest gleich False, Schwanz-Indizes 187 aus Sichel False
+ROT   T-F1 Schwanzbreite je Station (Inkreis, P2) +-20 % | Soll: Modell/Foto-Soll (Median 3) je f 0,1-0,9, +-20 % | Ist: f 0.1 0.143/0.144 (-0 %); f 0.2 0.142/0.145 (-2 %); f 0.3 0.136/0.144 (-6 %); f 0.4 0.091/0.114 (-20 %); f 0.5 0.099/0.077 (+28 %); f 0.6 0.045/0.077 (-42 %); f 0.7 0.039/0.055 (-30 %); f 0.8 0.028/0.033 (-16 %); f 0.9 0.039/0.033 (+16 %)
+INFO  INFO T-F1 Foto roh / Modell f 0 und 1 | Soll: - | Ist: Foto roh 0.079/0.145/0.144/0.152/0.114/0.077/0.077/0.033/0.055/0.033/0.024; Modell f 0 0.099, f 1 0.017
+ROT   T-F5a Schwanz dunkel gruenlich-grau (P2) | Soll: a* <= 0, b* >= 0, L* < Rumpfhaut (Foto 23,8; Modell-Rumpf grau) | Ist: Schwanz 29.1/9.0/4.8 (2953 px, 1 px erodiert); Modell-Rumpf grau 24.2/3.2/2.7; Foto-Schwanz 17,8/4,8/1,5
+OK    T-F5b Gelenkringe deckungsgleich (Knochenraum) | Soll: Radius Endring k / Anfangsring k+1: Sprung <= 8 % | Ist: Spruenge 16/17..21/22: 0.0 0.0 0.1 0.1 0.0 0.0 %
+ROT   T-F5c Breitensprung im Bild (P2) | Soll: Inkreis 2-8 px vor/nach jedem sichtbaren Gelenk (Inkreis nicht an Koerperpixeln = nicht verdeckt, je Seite >= 4 Proben), zum Gelenk fortgesetzt: Sprung <= 8 % bzw. <= 1 px (Rasterboden) | Ist: 16/17 verdeckt; 17/18 36.6->38.3 px (4 %); 18/19 20.6->23.2 px (12 %); 19/20 12.3->10.3 px (17 %); 20/21 6.6->8.0 px (21 %); 21/22 8.9->10.9 px (24 %)
+ROT   T-F5d Steigungsknick der Mantellinie <= 15 Grad | Soll: <= 15 Grad je Gelenk (Knochenraum) | Ist: Glied 16 / 17 1.2; Glied 17 / 18 17.4; Glied 18 / 18 31.3; Glied 18 / 19 11.5; Glied 19 / 20 0.2; Glied 20 / 21 9.0; Glied 21 / 22 5.1
+OK    T-F5e Stufe Wurzel/Ruecken <= 2 px, keine Luecke (P2 = Foto-2-Ansicht) | Soll: obere Kontur am Wechsel Schwanz -> Rumpf in P2 (Messblatt 2/5); Pose 85 (posen_v4, abgeloest) nur ausgegeben | Ist: P2 Wechsel x 353 (y 202 -> 201), Stufe 1 px, Luecke False; 85 Wechsel x 346 (y 203 -> 201), Stufe 2 px, Luecke False
+INFO  INFO T-F7 Foto 1 Region Kopf (Kopfbox V4) | Soll: Kopf ausgenommen | Ist: Foto 19.2 % / Modell 48.9 %
+ROT   T-F7 Foto 1 Region Brust Mitte (B-Mitte) | Soll: +-5 Prozentpunkte | Ist: Foto 47.8 % / Modell 21.2 %
+ROT   T-F7 Foto 1 Region Schulter/Oberarm Bild-links = (W)-rechts | Soll: +-5 Prozentpunkte, <= 5 % (kein Rot) | Ist: Foto 0.5 % / Modell 49.0 %
+ROT   T-F7 Foto 1 Region Schulter/Oberarm Bild-rechts = (W)-links | Soll: +-5 Prozentpunkte, <= 5 % (kein Rot) | Ist: Foto 2.2 % / Modell 30.2 %
+OK    T-F7 Foto 1 Region Unterarm/Hand Bild-rechts = (W)-links | Soll: +-5 Prozentpunkte | Ist: Foto 9.6 % / Modell 9.5 %
+ROT   T-F7 Foto 1 Region Bauch/Huefte | Soll: +-5 Prozentpunkte | Ist: Foto 0.0 % / Modell 9.2 %
+INFO  INFO T-F7 Foto 1 Teil Bauch/Huefte | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 3.3 % (2068 px)
+INFO  INFO T-F7 Foto 1 Teil Becken | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 0.0 % (1066 px)
+INFO  INFO T-F7 Foto 1 Teil Brust | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 7.4 % / Modell 33.7 % (4140 px)
+INFO  INFO T-F7 Foto 1 Teil Klauenhand (W)-links | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 47.5 % / Modell 12.8 % (406 px)
+INFO  INFO T-F7 Foto 1 Teil Kopf | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 44.0 % / Modell 1.2 % (1461 px)
+INFO  INFO T-F7 Foto 1 Teil Oberarm (W)-links | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 35.1 % (1645 px)
+INFO  INFO T-F7 Foto 1 Teil Oberarm (W)-rechts (Sichelarm) | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 7.7 % / Modell 48.2 % (3054 px)
+INFO  INFO T-F7 Foto 1 Teil Oberschenkel (W)-links | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 0.0 % (340 px)
+INFO  INFO T-F7 Foto 1 Teil Oberschenkel (W)-rechts | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 19.8 % / Modell 4.1 % (611 px)
+INFO  INFO T-F7 Foto 1 Teil Ruecken/Buckel | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 40.5 % (872 px)
+INFO  INFO T-F7 Foto 1 Teil Schulter (W)-links | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 13.4 % (1183 px)
+INFO  INFO T-F7 Foto 1 Teil Schulter (W)-rechts | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 49.4 % / Modell 25.0 % (2833 px)
+INFO  INFO T-F7 Foto 1 Teil Schwanz | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 14.7 % (218 px)
+INFO  INFO T-F7 Foto 1 Teil Sichel | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 7.3 % / Modell 0.0 % (1660 px)
+INFO  INFO T-F7 Foto 1 Teil Unterarm (W)-links | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 0.7 % (1134 px)
+INFO  INFO T-F7 Foto 1 Teil Unterarm (W)-rechts (Sichelarm) | Soll: Id-Zuordnung P1 nur grob (Messblatt 4.2) | Ist: Foto 0.0 % / Modell 14.7 % (2205 px)
+INFO  INFO T-F7 Foto 2 Region Kopf (Kopfbox V4) | Soll: ausgenommen | Ist: Foto 23.1 % / Modell 25.2 %
+ROT   T-F7 Foto 2 Region Buckel/Ruecken oben | Soll: +-5 Prozentpunkte | Ist: Foto 41.5 % / Modell 77.5 %
+OK    T-F7 Foto 2 Region Schulter/Oberarm Mitte = (W)-rechts | Soll: +-5 Prozentpunkte | Ist: Foto 27.9 % / Modell 28.1 %
+INFO  INFO T-F7 Foto 2 Region Schwanz Bogen | Soll: ausgenommen | Ist: Foto 8.0 % / Modell 11.2 %
+OK    T-F7 Foto 2 Teil Bauch/Huefte | Soll: +-5 Prozentpunkte | Ist: Foto 6.5 % / Modell 3.7 % (509 px)
+OK    T-F7 Foto 2 Teil Becken | Soll: +-5 Prozentpunkte | Ist: Foto 0.0 % / Modell 0.0 % (242 px)
+ROT   T-F7 Foto 2 Teil Brust | Soll: +-5 Prozentpunkte | Ist: Foto 3.5 % / Modell 14.8 % (452 px)
+INFO  INFO T-F7 Foto 2 Teil Kopf | Soll: ausgenommen (Kopf/Schwanz/< 100 px) | Ist: Foto 25.5 % / Modell 0.0 % (765 px)
+ROT   T-F7 Foto 2 Teil Oberarm (W)-links | Soll: +-5 Prozentpunkte | Ist: Foto 0.7 % / Modell 8.6 % (139 px)
+OK    T-F7 Foto 2 Teil Oberarm (W)-rechts (Sichelarm) | Soll: +-5 Prozentpunkte | Ist: Foto 51.0 % / Modell 48.7 % (3735 px)
+INFO  INFO T-F7 Foto 2 Teil Oberschenkel (W)-links | Soll: ausgenommen (Kopf/Schwanz/< 100 px) | Ist: Foto 0.0 % / Modell 3.5 % (57 px)
+OK    T-F7 Foto 2 Teil Oberschenkel (W)-rechts | Soll: +-5 Prozentpunkte | Ist: Foto 0.0 % / Modell 0.0 % (324 px)
+ROT   T-F7 Foto 2 Teil Ruecken/Buckel | Soll: +-5 Prozentpunkte | Ist: Foto 19.1 % / Modell 33.8 % (565 px)
+INFO  INFO T-F7 Foto 2 Teil Schulter (W)-links | Soll: ausgenommen (Kopf/Schwanz/< 100 px) | Ist: Foto 0.0 % / Modell 0.0 % (61 px)
+ROT   T-F7 Foto 2 Teil Schulter (W)-rechts | Soll: +-5 Prozentpunkte | Ist: Foto 55.0 % / Modell 60.5 % (2168 px)
+INFO  INFO T-F7 Foto 2 Teil Schwanz | Soll: ausgenommen (Kopf/Schwanz/< 100 px) | Ist: Foto 15.2 % / Modell 31.4 % (3261 px)
+OK    T-F7 Foto 2 Teil Unterarm (W)-links | Soll: +-5 Prozentpunkte | Ist: Foto 0.0 % / Modell 0.0 % (561 px)
+ROT   T-F7 Foto 2 Teil Unterarm (W)-rechts (Sichelarm) | Soll: +-5 Prozentpunkte | Ist: Foto 0.0 % / Modell 20.2 % (2172 px)
+ROT   T-F8 Krallen (W)-links Laenge (P1) | Soll: 0,036 H +-15 % je Kralle, keine kuerzer als in der Basis | Ist: neu 0.019/0.038/0.027/0.015 H; Basis 0.019/0.038/0.027/0.015 H
+OK    T-F4 Umriss-IoU (Trimap) >= Stand Runde 4 | Soll: P1 >= 0.7031, P2 >= 0.7444 (V5r4 gleich gemessen: Render ids >= 0; Messblatt mit Umriss-Render 0,709 / 0,758) | Ist: P1 0.7031, P2 0.7444 (Basis V5k 0.7031 / 0.7487)
+OK    V4 T1 Schwanz Beginn | Soll: 0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03) | Ist: 0.172 H hinter, 0.742 H ueber
+OK    V4 T2 Biegung | Soll: Lage dx -0,245 dy +0,036 (+-0,03) nach t2_mass_v4 (Original -0.268 / 0.056); Drehung 68.4 +-5.0 Grad (Original 70.1/65.8/69.5) | Ist: dx -0.259 dy 0.049; 64.0 Grad (Bauer-Mittellinie: dx -0.266 dy 0.061)
+OK    V4 T3 Knick (Taille) | Soll: dx -0,265 dy +0,257 (+-0,03) | Ist: dx -0.239 dy 0.247
+OK    V4 T4 Ende | Soll: dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle | Ist: dx -0.218 dy 0.388; 0.354 H ueber Sohle
+OK    V4 TA Schwanz absolut | Soll: Beginn (357,243), Knick (290,308), Ende (295,343) je Achse +-0,03 H | Ist: Beginn (358,238) +0.004/-0.019 H; Knick (295,303) +0.019/-0.018 H; Ende (300,340) +0.020/-0.010 H
+ROT   V4 T5 Breite nach oben | Soll: f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 | Ist: 0.032/0.049/0.098/0.163 H; Abfall 0.000
+INFO  INFO V4 T5q Breite quer (unabhaengig) | Soll: f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01 (Original 3 Masken: Abfall 0.016/0.020/0.000) | Ist: 0.032/0.047/0.110/0.161 H; Abfall 0.002; Profil f 0..1 [0.025, 0.032, 0.045, 0.047, 0.081, 0.11, 0.133, 0.161, 0.157, 0.142, 0.144]
+INFO  INFO V4 T6 Endstueck | Soll: B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste | Ist: B 0.036; L 0.144 H; 82 Grad (vorn); Taille 0.021, schmalste davor 0.021
+INFO  INFO V4 T8 Schwanzfarbe | Soll: F15 9,3/11,4/1,5; F16 8,7/8,4/2,2; F17 26,8/-0,1/2,4; F18 15,2/3,2/1,6; dE00 <= 6; a* Wurzel >= 7, Ende <= 6 | Ist: F15 32.3/11.9/5.7 dE00 16.4 (228 px); F16 26.9/7.6/3.8 dE00 12.4 (173 px); F17 29.5/3.4/2.1 dE00 5.3 (671 px); F18 34.0/9.2/3.6 dE00 15.1 (267 px) [ROT, alte KI-Zielwerte]
+INFO  INFO V4 T9 Schwanzachse | Soll: 7 Achsenpunkte: Mittel dE00 <= 6; L*/a* Mittel +-4/+-3 zum Original 11.6/6.1 | Ist: Mittel dE00 15.0; L*/a* 31.9/6.9; je Punkt 18.4 14.6 5.0 18.8 19.1 10.7 18.1 [ROT, alte KI-Zielwerte]
+INFO  INFO V4 TQ Schwanz Querprofil | Soll: x 310/320/330/340: Stufe auf 3 px <= 9.6 L*, Plateau-Anteil <= 0.31 (Original-Maximum, 3 Masken) | Ist: x 310 Stufe 6.9 Plateau 0.17; x 320 Stufe 8.0 Plateau 0.07; x 330 Stufe 18.8 Plateau 0.05; x 340 Stufe 13.9 Plateau 0.05 [ROT, alte KI-Zielwerte]
+OK    V4 TK Schwanz Oberkontur | Soll: x 284-332: RMS zur Geraden >= 3.02 px (Original 3.87/4.71/4.69 minus Spanne); Oberkante x 276-292 je Spalte <= 0,03 H vom Original 251/250/243/236/234 | Ist: RMS 3.69 px; Oberkante 249/243/238/233/228 (max 0.027 H)
+INFO  INFO Kopf-Riegel T-K1a Meshes 0-8/10-22 = Basis | Soll: bytegleich | Ist: abweichend [], Meshes 23/23
+INFO  INFO Kopf-Riegel T-K1b Sektionen 0-6 (EDD, EMR, ...) = Basis | Soll: bytegleich | Ist: abweichend []
+INFO  INFO Kopf-Riegel T-K1c CLUT 480-485 = Referenz 2; Zeilen <= 16; Hoehe <= 4096 | Soll: 480-485 bytegleich, <= 16, <= 4096 | Ist: gleich, 9 Zeilen, 2304
+INFO  INFO Kopf-Riegel T-K1d Texel: Koerper = Referenz 2, Abweichung nur Schwanzfeld (= Basis) und Kopf-exklusiv | Soll: Koerpertexel 0 abweichend | Ist: Koerpertexel abweichend 0; Schwanzfeld = Basis True; Kopf-exklusiv geaendert 11722 (Box [0, 160, 267, 249])
+ROT   Kopf T-H6 Kopfgeometrie = Original (EM30 Mesh 9) bis auf die gelistete Glaettung | Soll: Normalen/Flaechen/UV bytegleich, CLUT-Feld = 486; Ecken gleich ausser <= 4 Glaettungsecken (zum Schwerpunkt <= 0.10, abseits <= 1.5 E.) | Ist: Ecken 48/61, Normalen 48/61, Dreiecke 56/73, Vierecke 14/18; gleich {'n': False, 'tf': False, 'qf': False, 'ecken_zahl': False}; Glaettung []; UV abweichend Anzahl; CLUT-Feld abweichend Anzahl
+ROT   Kopf T-H5 keine neue Farbe | Soll: Kopf nur Zeile 486 = Original-Zeile 0; Indizes aus den Original-Kopftexeln | Ist: Zeilen [486, 487, 488]; 486 = Original-Zeile 0: False; Kopftexel 5494, Indizes 198, nicht im Original-Kopf [36, 42, 51, 97, 103, 182, 184, 202, 204, 206, 208, 209, 213, 214, 224, 227, 233, 242, 245]
+ROT   Kopf T-H1i Mund geschlossen (Texel) | Soll: dunkel (L* < 30) <= 2 %, rot (a* >= 15) <= 2 %, Median L* >= 55 | Ist: Maultexel 317 (Zeile 487): dunkel 53.3 %, rot 83.6 %, Median L* 28.7
+ROT   Kopf T-H1ii Mund geschlossen (sichtbar, Posen 135/P1/P2) | Soll: dunkel/rot nach Palette <= 5 %, beleuchtet a* >= 10 <= 10 % | Ist: P1: 40 px, dunkel 15 %, rot 90 %, Licht-rot 35 %, Lab [16.5, 8.2, 4.3]; P2: 2 px, dunkel 50 %, rot 0 %, Licht-rot 0 %, Lab [24.8, 0.6, 1.1]; 135: 651 px, dunkel 8 %, rot 91 %, Licht-rot 64 %, Lab [27.0, 12.2, 7.3]
+ROT   Kopf T-H2 grauer Fleck erweitert | Soll: Kopf = Original-Kopf (Zeile 486) | Ist: Kopf nicht der Original-Kopf (Zeilen [486, 487, 488])
+INFO  INFO Kopf INFO (d) Auge (W)-rechts = Texturbild links (Augenweiss u 74-84 v 194-198), unveraendert | Soll: Foto 1 Augenfleck (376,9/167,2) L* 47,0; Foto 2 (452,5/237,2) L* 48,5 (Messblatt 3.3) | Ist: P1: 0 px; P2: 0 px; 135: 0 px
+ROT   Kopf T-H4 obere Kontur Ruecken -> Kopf ohne Buckel (P2) | Soll: Wiederanstieg <= 2 px | Ist: Kuppe x 405 y 175, Kopf-Vorderkante x 459; Wiederanstieg 5 px (x 438 y 202 -> x 451 y 197)
+INFO  INFO Kopf INFO T-H4 Modell-Kontur ueber Foto-2-Kontur | Soll: - | Ist: max 14 px bei x 418 (Knochen 8); Kopf-Oberkante Modell y 197 / Foto y 202 bei x 451
+
+Ergebnis: 25 rot von 42 (T-K1b Texel = Basis, T-K1c Geometrie/UV = Basis bis auf die Ausnahmeliste, T-K1d CLUT: Ausnahmeliste, T-F1 Schwanzbreite je Station (Inkreis, P2) +-20 %, T-F5a Schwanz dunkel gruenlich-grau (P2), T-F5c Breitensprung im Bild (P2), T-F5d Steigungsknick der Mantellinie <= 15 Grad, T-F7 Foto 1 Region Brust Mitte (B-Mitte), T-F7 Foto 1 Region Schulter/Oberarm Bild-links = (W)-rechts, T-F7 Foto 1 Region Schulter/Oberarm Bild-rechts = (W)-links, T-F7 Foto 1 Region Bauch/Huefte, T-F7 Foto 2 Region Buckel/Ruecken oben, T-F7 Foto 2 Teil Brust, T-F7 Foto 2 Teil Oberarm (W)-links, T-F7 Foto 2 Teil Ruecken/Buckel, T-F7 Foto 2 Teil Schulter (W)-rechts, T-F7 Foto 2 Teil Unterarm (W)-rechts (Sichelarm), T-F8 Krallen (W)-links Laenge (P1), V4 T5 Breite nach oben, Kopf T-H6 Kopfgeometrie = Original (EM30 Mesh 9) bis auf die gelistete Glaettung, Kopf T-H5 keine neue Farbe, Kopf T-H1i Mund geschlossen (Texel), Kopf T-H1ii Mund geschlossen (sichtbar, Posen 135/P1/P2), Kopf T-H2 grauer Fleck erweitert, Kopf T-H4 obere Kontur Ruecken -> Kopf ohne Buckel (P2))

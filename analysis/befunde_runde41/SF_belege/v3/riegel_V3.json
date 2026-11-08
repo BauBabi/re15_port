@@ -1,0 +1,804 @@
+{
+ "kopf": {
+  "R1": {
+   "kopfaugen": 1,
+   "flecken": [
+    {
+     "n": 1652,
+     "mitte": [
+      653.2633171912832,
+      425.1416464891041
+     ],
+     "L": 5.3,
+     "L_umgebung": 23.3
+    }
+   ]
+  },
+  "kopfauge": {
+   "mitte": [
+    106.1,
+    69.4
+   ],
+   "min": [
+    103,
+    69
+   ],
+   "b_px": 10,
+   "h_px": 6,
+   "flaeche": 44,
+   "aequiv_px": 7.5,
+   "b_H": 0.0176,
+   "h_H": 0.0105,
+   "aequiv_H": 0.0132,
+   "bh": 1.67,
+   "lab_auge": [
+    10.0,
+    5.0,
+    -1.3
+   ],
+   "rgb_auge": [
+    34.0,
+    23.0,
+    29.0
+   ],
+   "lab_pupille": [
+    0.9,
+    3.8,
+    -1.0
+   ],
+   "rgb_pupille": [
+    12.0,
+    1.0,
+    6.0
+   ],
+   "lab_lid": [
+    21.9,
+    5.5,
+    0.8
+   ],
+   "rgb_lid": [
+    61.0,
+    50.0,
+    52.0
+   ],
+   "lab_haut": [
+    23.9,
+    3.6,
+    0.2
+   ],
+   "rgb_haut": [
+    63.0,
+    55.0,
+    57.0
+   ],
+   "L_auge_haut": 0.418,
+   "L_lid_haut": 0.92,
+   "L_pup_haut": 0.039,
+   "anteil_L80": 0.0,
+   "anteil_heller_haut": 0.114,
+   "anteil_haut_plus15": 0.091,
+   "anteil_dunkel": 0.795,
+   "lab_dunkel": [
+    4.7,
+    5.1,
+    -1.1
+   ],
+   "L_dunkel_haut": 0.196,
+   "glanz_px": 5,
+   "glanz_Lmax": 43.5,
+   "schwelle": 12.0,
+   "Lmin": 0.8,
+   "Lhaut_ring": 23.2,
+   "lid_hell": 0.0,
+   "glanz_mitte": [
+    106.4,
+    70.6
+   ],
+   "lab_glanz": [
+    41.3,
+    3.8,
+    -2.2
+   ],
+   "rgb_glanz": [
+    102.0,
+    96.0,
+    101.0
+   ],
+   "glanz_rel_box": [
+    0.49,
+    0.68
+   ]
+  },
+  "schulterauge": {
+   "mitte": [
+    38.8,
+    102.4
+   ],
+   "min": [
+    39,
+    103
+   ],
+   "b_px": 9,
+   "h_px": 6,
+   "flaeche": 45,
+   "aequiv_px": 7.6,
+   "b_H": 0.0158,
+   "h_H": 0.0105,
+   "aequiv_H": 0.0133,
+   "bh": 1.5,
+   "lab_auge": [
+    5.7,
+    4.2,
+    1.4
+   ],
+   "rgb_auge": [
+    25.0,
+    16.0,
+    16.0
+   ],
+   "lab_pupille": [
+    4.0,
+    1.7,
+    0.6
+   ],
+   "rgb_pupille": [
+    18.0,
+    13.0,
+    13.0
+   ],
+   "lab_lid": [
+    14.4,
+    11.8,
+    4.7
+   ],
+   "rgb_lid": [
+    54.0,
+    30.0,
+    30.0
+   ],
+   "lab_haut": [
+    15.6,
+    10.4,
+    4.4
+   ],
+   "rgb_haut": [
+    55.0,
+    33.0,
+    33.0
+   ],
+   "L_auge_haut": 0.362,
+   "L_lid_haut": 0.923,
+   "L_pup_haut": 0.257,
+   "anteil_L80": 0.0,
+   "anteil_heller_haut": 0.022,
+   "anteil_haut_plus15": 0.0,
+   "anteil_dunkel": 0.911,
+   "lab_dunkel": [
+    5.1,
+    3.7,
+    1.3
+   ],
+   "L_dunkel_haut": 0.325,
+   "glanz_px": 1,
+   "glanz_Lmax": 16.5,
+   "schwelle": 9.4,
+   "Lmin": 4.0,
+   "Lhaut_ring": 14.8,
+   "lid_hell": 0.0,
+   "glanz_mitte": [
+    36.0,
+    104.0
+   ],
+   "lab_glanz": [
+    16.5,
+    16.5,
+    4.5
+   ],
+   "rgb_glanz": [
+    64.0,
+    31.0,
+    35.0
+   ],
+   "glanz_rel_box": [
+    0.17,
+    0.75
+   ]
+  },
+  "R2": {
+   "dx_H": -0.1183,
+   "dy_H": 0.058,
+   "L_dunkel_haut": 0.325
+  },
+  "maul": {
+   "bbox": [
+    530,
+    542,
+    818,
+    699
+   ],
+   "b_H": 0.0831,
+   "h_H": 0.0454,
+   "bh": 1.83,
+   "mitte": [
+    674.0,
+    620.5
+   ],
+   "lab_innen": [
+    6.1,
+    8.8,
+    1.5
+   ],
+   "lab_zahn": [
+    42.3,
+    19.2,
+    8.1
+   ],
+   "zahn_teile": 13,
+   "oben": 7,
+   "unten": 6,
+   "zahn_b_max_H": 0.0046,
+   "L_median": 20.2
+  },
+  "haut_auge": [
+   24.3,
+   3.9,
+   0.6
+  ],
+  "R12": {
+   "unter_auge_H": 0.0562,
+   "versatz_H": 0.006
+  },
+  "R13": {
+   "L_innen_haut": 0.251,
+   "da": 4.9
+  },
+  "auge_px": [
+   653.2633171912832,
+   425.1416464891041
+  ]
+ },
+ "schwanz": {
+  "85": {
+   "H": 265,
+   "OK": 170,
+   "s0_px": 25,
+   "versteckt_H": 0.094,
+   "form": {
+    "laenge_H": 0.732,
+    "dicke_H": {
+     "0.1": 0.174,
+     "0.2": 0.162,
+     "0.3": 0.13,
+     "0.5": 0.089,
+     "0.7": 0.051,
+     "0.8": 0.04,
+     "0.9": 0.032
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.032,
+     "0.1": 0.036,
+     "0.2": 0.047,
+     "0.3": 0.07,
+     "0.4": 0.094
+    },
+    "breiten_005_095": [
+     0.183,
+     0.174,
+     0.166,
+     0.162,
+     0.142,
+     0.13,
+     0.126,
+     0.106,
+     0.098,
+     0.089,
+     0.074,
+     0.066,
+     0.066,
+     0.051,
+     0.043,
+     0.04,
+     0.036,
+     0.032,
+     0.032
+    ],
+    "max_dwinkel_005H": 27.4,
+    "max_bei": 0.1,
+    "knicke": 2,
+    "knick_bei": [
+     0.04,
+     0.1
+    ],
+    "knick_winkel": [
+     21.2,
+     27.4
+    ],
+    "gesamtdrehung": 67.0,
+    "winkel_profil": [
+     156.0,
+     152.0,
+     147.0,
+     137.0,
+     134.0,
+     121.0,
+     119.0,
+     108.0,
+     106.0,
+     98.0,
+     95.0,
+     91.0,
+     92.0
+    ],
+    "austritt_grad": 162.4
+   },
+   "farbe": {
+    "lab_schwanz": [
+     16.2,
+     8.1,
+     2.8
+    ],
+    "rgb_schwanz": [
+     52.0,
+     36.0,
+     37.0
+    ],
+    "lab_haut": [
+     28.3,
+     13.6,
+     6.8
+    ],
+    "rgb_haut": [
+     90.0,
+     58.0,
+     58.0
+    ],
+    "lab_ruecken": [
+     33.6,
+     11.6,
+     5.1
+    ],
+    "n_schwanz": 4372,
+    "n_haut": 9115,
+    "de00_haut": 10.1,
+    "de76_haut": 14.0,
+    "de00_ruecken": 13.2,
+    "de76_ruecken": 17.9,
+    "L_verh": 0.571,
+    "C_schwanz": 8.5,
+    "C_haut": 15.2,
+    "C_verh": 0.56,
+    "h_schwanz": 18.9,
+    "h_haut": 26.5,
+    "dh": -7.7,
+    "rot_anteil_schwanz": 0.228,
+    "rot_anteil_haut": 0.361
+   },
+   "muster": {
+    "ak_a_max": 0.19,
+    "ak_a_lag_H": 0.023,
+    "rest_std_a": 1.77,
+    "periode_a_ak": 0.04,
+    "periode_a_H": 0.049,
+    "ak_L_max": 0.16,
+    "ak_L_lag_H": 0.019,
+    "rest_std_L": 1.35,
+    "periode_L_ak": 0.15,
+    "periode_L_H": 0.03
+   },
+   "austritt_unter_OK_H": 0.145
+  },
+  "92": {
+   "H": 265,
+   "OK": 170,
+   "s0_px": 26,
+   "versteckt_H": 0.098,
+   "form": {
+    "laenge_H": 0.706,
+    "dicke_H": {
+     "0.1": 0.164,
+     "0.2": 0.155,
+     "0.3": 0.121,
+     "0.5": 0.074,
+     "0.7": 0.047,
+     "0.8": 0.049,
+     "0.9": 0.036
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.032,
+     "0.1": 0.04,
+     "0.2": 0.053,
+     "0.3": 0.064,
+     "0.4": 0.087
+    },
+    "breiten_005_095": [
+     0.181,
+     0.164,
+     0.158,
+     0.155,
+     0.132,
+     0.121,
+     0.111,
+     0.096,
+     0.085,
+     0.077,
+     0.07,
+     0.062,
+     0.058,
+     0.047,
+     0.049,
+     0.049,
+     0.042,
+     0.036,
+     0.032
+    ],
+    "max_dwinkel_005H": 24.4,
+    "max_bei": 0.09,
+    "knicke": 1,
+    "knick_bei": [
+     0.09
+    ],
+    "knick_winkel": [
+     24.4
+    ],
+    "gesamtdrehung": 66.6,
+    "winkel_profil": [
+     151.0,
+     151.0,
+     149.0,
+     133.0,
+     132.0,
+     119.0,
+     119.0,
+     108.0,
+     104.0,
+     99.0,
+     98.0,
+     94.0,
+     88.0
+    ],
+    "austritt_grad": 161.9
+   },
+   "farbe": {
+    "lab_schwanz": [
+     16.6,
+     7.9,
+     2.7
+    ],
+    "rgb_schwanz": [
+     53.0,
+     37.0,
+     38.0
+    ],
+    "lab_haut": [
+     28.4,
+     13.7,
+     6.8
+    ],
+    "rgb_haut": [
+     90.0,
+     58.0,
+     58.0
+    ],
+    "lab_ruecken": [
+     33.9,
+     11.4,
+     4.9
+    ],
+    "n_schwanz": 3961,
+    "n_haut": 9012,
+    "de00_haut": 10.0,
+    "de76_haut": 13.8,
+    "de00_ruecken": 13.1,
+    "de76_ruecken": 17.7,
+    "L_verh": 0.585,
+    "C_schwanz": 8.3,
+    "C_haut": 15.3,
+    "C_verh": 0.54,
+    "h_schwanz": 18.7,
+    "h_haut": 26.5,
+    "dh": -7.8,
+    "rot_anteil_schwanz": 0.215,
+    "rot_anteil_haut": 0.367
+   },
+   "muster": {
+    "ak_a_max": 0.18,
+    "ak_a_lag_H": 0.026,
+    "rest_std_a": 1.7,
+    "periode_a_ak": 0.15,
+    "periode_a_H": 0.034,
+    "ak_L_max": 0.1,
+    "ak_L_lag_H": 0.049,
+    "rest_std_L": 1.57,
+    "periode_L_ak": 0.1,
+    "periode_L_H": 0.049
+   },
+   "austritt_unter_OK_H": 0.146
+  }
+ },
+ "machart": {
+  "datei": "EM30_V3.EMD",
+  "sha256": "1952713c0a1349dd",
+  "ref_sha256": "cfd1ac42729e5636",
+  "mesh8_neue_vierecke": 1,
+  "R28": {
+   "meshes_abweichend": [],
+   "skelett_0_15_gleich": true,
+   "keyframes_0_15_gleich": true,
+   "edd_gleich": true,
+   "ok": true
+  },
+  "R29": {
+   "dreiecke_schwanz": 160,
+   "je_glied": [
+    30,
+    20,
+    20,
+    20,
+    20,
+    20,
+    30
+   ],
+   "ok": true
+  },
+  "R30": {
+   "dreiecke_kopf": 109,
+   "dreiecke_schulterauge": 2,
+   "ok": true
+  },
+  "R31": {
+   "schwanz": [
+    0.046,
+    0.053,
+    0.054,
+    0.059,
+    0.069,
+    0.08,
+    0.082
+   ],
+   "kopf": 0.066,
+   "haut_ref": {
+    "7": 0.046,
+    "8": 0.051,
+    "10": 0.083,
+    "13": 0.086
+   },
+   "ok": true
+  },
+  "R32": {
+   "bpp8": true,
+   "schwanz_clut_zeilen": [
+    482
+   ],
+   "C_max_schwanz": 29.7,
+   "C_max_haut": 63.3,
+   "ok": true
+  }
+ },
+ "bewegung": {
+  "gelenke": {
+   "gang_h84_h132": {
+    "takte": 49,
+    "max_bild_grad": 120.2,
+    "max_knicke_je_takt": 3,
+    "max_raum_grad": 16.2,
+    "max_knicke_raum": 0,
+    "ok": true
+   },
+   "halten_h16_h70": {
+    "takte": 55,
+    "max_bild_grad": 38.3,
+    "max_knicke_je_takt": 2,
+    "max_raum_grad": 16.2,
+    "max_knicke_raum": 0,
+    "ok": true
+   }
+  },
+  "bild": null
+ },
+ "zeilen": [
+  {
+   "mass": "R1 Kopfaugen",
+   "soll": "genau 1",
+   "ist": "1",
+   "ok": true
+  },
+  {
+   "mass": "R2 Schulterauge",
+   "soll": "-0,10..-0,13 / +0,04..+0,07 H, dunkel",
+   "ist": "-0.118 / 0.058 H, L* dunkel/Haut 0.33",
+   "ok": true
+  },
+  {
+   "mass": "R3 Kopfauge Groesse",
+   "soll": "B 0,017-0,025 x H 0,008-0,014 H",
+   "ist": "0.0176 x 0.0105",
+   "ok": true
+  },
+  {
+   "mass": "R4 Kopfauge Form",
+   "soll": "B/H 1,5-2,5",
+   "ist": "1.67",
+   "ok": true
+  },
+  {
+   "mass": "R5 Kopfauge Helligkeit",
+   "soll": "L* Auge/Haut 0,35-0,55",
+   "ist": "0.418",
+   "ok": true
+  },
+  {
+   "mass": "R6 kein heller Ring",
+   "soll": "lid_hell <= 0,10; L Lid/Haut 0,70-1,00",
+   "ist": "0.000; 0.920",
+   "ok": true
+  },
+  {
+   "mass": "R7 keine Sclera, ein Glanzkern",
+   "soll": "L80 <= 0,05; hell 0,05-0,25; Kern x 0,4-0,7 y 0,55-0,8",
+   "ist": "0.000; 0.114; [0.49, 0.68]",
+   "ok": true
+  },
+  {
+   "mass": "R8 Pupille",
+   "soll": "L* Pupille/Haut <= 0,12",
+   "ist": "0.039",
+   "ok": true
+  },
+  {
+   "mass": "R9 Schulterauge",
+   "soll": "L* 0,30-0,50; hell <= 0,05; aequiv 0,8-1,3 x Kopfauge",
+   "ist": "0.362; 0.022; 1.01",
+   "ok": true
+  },
+  {
+   "mass": "R10 Maul Groesse",
+   "soll": "B 0,075-0,095 x H 0,038-0,055 H",
+   "ist": "0.0831 x 0.0454",
+   "ok": true
+  },
+  {
+   "mass": "R11 Maul Form",
+   "soll": "B/H 1,5-2,3",
+   "ist": "1.83",
+   "ok": true
+  },
+  {
+   "mass": "R12 Maul Lage",
+   "soll": "0,04-0,07 H unter Auge; Versatz <= 0,012 H",
+   "ist": "0.0562; 0.0060",
+   "ok": true
+  },
+  {
+   "mass": "R13 Maul innen",
+   "soll": "L innen/Haut 0,20-0,40; da >= +4",
+   "ist": "0.251; +4.9",
+   "ok": true
+  },
+  {
+   "mass": "R14 Zaehne",
+   "soll": "oben >= 5, unten >= 3; Teil <= 0,005 H; L* <= Haut+20; a* 12-20",
+   "ist": "7 / 6; 0.0046; L 42.3 (Haut 24.3); a 19.2",
+   "ok": true
+  },
+  {
+   "mass": "R15 Schwanz Helligkeit",
+   "soll": "L*/Haut 0,50-0,72 (h85 / h92)",
+   "ist": "0.571 / 0.585",
+   "ok": true
+  },
+  {
+   "mass": "R16 Schwanz Buntheit",
+   "soll": "C*/Haut 0,45-0,90",
+   "ist": "0.56 / 0.54",
+   "ok": true
+  },
+  {
+   "mass": "R17 Schwanz Farbton",
+   "soll": "|dh| <= 10 Grad",
+   "ist": "-7.7 / -7.8",
+   "ok": true
+  },
+  {
+   "mass": "R18 Schwanz Rot",
+   "soll": "Rot Schwanz <= 0,8 x Haut",
+   "ist": "0.228 (Haut 0.361) / 0.215 (Haut 0.367)",
+   "ok": true
+  },
+  {
+   "mass": "R19 Schwanz dE00",
+   "soll": "6-11",
+   "ist": "10.1 / 10.0",
+   "ok": true
+  },
+  {
+   "mass": "R20 Muster",
+   "soll": "Periode <= 0,25; Rest-Std a* <= 2,0",
+   "ist": "0.04; 1.77 / 0.15; 1.70",
+   "ok": true
+  },
+  {
+   "mass": "R21 Dicke s 0,2",
+   "soll": "0.150-0.200 H",
+   "ist": "0.162 / 0.155",
+   "ok": true
+  },
+  {
+   "mass": "R22 Dicke s 0,5",
+   "soll": "0.070-0.100 H",
+   "ist": "0.089 / 0.074",
+   "ok": true
+  },
+  {
+   "mass": "R23 Dicke s 0,9",
+   "soll": "0.028-0.045 H",
+   "ist": "0.032 / 0.036",
+   "ok": true
+  },
+  {
+   "mass": "R24 Dickenverlauf",
+   "soll": "kein Anstieg > 0,01 H (s 0,2-0,7)",
+   "ist": "0.000 / 0.000",
+   "ok": true
+  },
+  {
+   "mass": "R25 Glaette",
+   "soll": "<= 36 Grad je 0,05 H",
+   "ist": "27.4 / 24.4",
+   "ok": true
+  },
+  {
+   "mass": "R26 Knicke",
+   "soll": "<= 3 (> 20 Grad)",
+   "ist": "2 / 1",
+   "ok": true
+  },
+  {
+   "mass": "R27 Austritt",
+   "soll": "0,10-0,16 H unter OK",
+   "ist": "0.145 / 0.146",
+   "ok": true
+  },
+  {
+   "mass": "R28 Koerper unveraendert",
+   "soll": "Meshes 0-15/Skelett/EDD = Ref2 (ausser Mesh 9 UV, <= 1 Viereck Mesh 8)",
+   "ist": "abweichend [], Skelett True, Keyframes True, EDD True, Mesh 8 +1 Viereck",
+   "ok": true
+  },
+  {
+   "mass": "R29 Dreiecke Schwanz",
+   "soll": "<= 212",
+   "ist": "160",
+   "ok": true
+  },
+  {
+   "mass": "R30 Dreiecke Kopf",
+   "soll": "Mesh 9 <= 118; Schulterauge <= 2",
+   "ist": "109; 2",
+   "ok": true
+  },
+  {
+   "mass": "R31 Texeldichte",
+   "soll": "Schwanz 0,045-0,090; Kopf 0,05-0,091",
+   "ist": "[0.046, 0.053, 0.054, 0.059, 0.069, 0.08, 0.082]; 0.066",
+   "ok": true
+  },
+  {
+   "mass": "R32 Farbtiefe/Palette",
+   "soll": "8 bpp; Haut-CLUT; C* Schwanz <= C* Haut",
+   "ist": "8bpp True; Zeilen [482]; C* 29.7 <= 63.3",
+   "ok": true
+  },
+  {
+   "mass": "R25b/R26b Gang h84-h132 (Spiellauf)",
+   "soll": "je Takt Gelenkwinkel im Raum <= 25 Grad, <= 3 Gelenke > 20 Grad",
+   "ist": "max 16.2 Grad, Gelenke > 20 Grad max 0 je Takt (49 Takte)",
+   "ok": true
+  },
+  {
+   "mass": "R25b/R26b Halten h16-h70 (Spiellauf)",
+   "soll": "je Takt Gelenkwinkel im Raum <= 25 Grad, <= 3 Gelenke > 20 Grad",
+   "ist": "max 16.2 Grad, Gelenke > 20 Grad max 0 je Takt (55 Takte)",
+   "ok": true
+  }
+ ]
+}

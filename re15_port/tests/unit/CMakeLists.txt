@@ -4063,10 +4063,10 @@ foreach(_pc ${_re15_probe_cmakes})
 endforeach()
 
 # --- BETA-BIRKIN-FORMEN (Nutzerwunsch 2026-10-30): EM30_HANGAR.EMD ---
-#     Nachbildung aus tools/birkin_formen.py (nicht byte-true). Der Test haelt fest, dass
-#     nur Geometrie/Bindoffsets/CLUTs von EM30 abweichen (Clips/Keyframes/Topologie gleich).
+#     Nachbildung aus tools/birkin_formen.py (nicht byte-true). Der Test haelt fest, dass Knochen 0-15,
+#     EDD und Keyframe-Anfaenge gleich EM30 sind und die Schwanzkette (Knochen 16-22, Runde 41 Spur SF) sich bewegt.
 add_executable(test_birkin_formen test_birkin_formen.c)
-target_link_libraries(test_birkin_formen PRIVATE re15_engine m)
+target_link_libraries(test_birkin_formen PRIVATE re15_engine re15_test_support m)   # re15_skel_euler_matrix (Fussgelenk-Pruefung N2)
 target_include_directories(test_birkin_formen PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_birkin_formen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
@@ -4121,6 +4121,15 @@ target_compile_definitions(test_r41_g5auftritt PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r41_g5auftritt COMMAND test_r41_g5auftritt)
 set_tests_properties(unit_r41_g5auftritt PROPERTIES TIMEOUT 120)
+
+# --- Runde 41 Spur SF N1.9: Feder-Kette des Schwanzes der Sichel-Form (PORT-WAHL, re15_schwanz_r41.h).
+add_executable(test_schwanz_r41 test_schwanz_r41.c)
+target_link_libraries(test_schwanz_r41 PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_schwanz_r41 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_schwanz_r41 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_schwanz_r41 COMMAND test_schwanz_r41)
+set_tests_properties(unit_schwanz_r41 PROPERTIES TIMEOUT 30)
 if(TARGET re15_pc)
     # Abnahme 1 Spur R: Pistole, Dauerbeschuss, EM30 -> Mutation -> Form -> G5, Leon und Elza, kein Messhaken.
     add_test(NAME integration_r41_birkin_pistole
@@ -4133,6 +4142,13 @@ if(TARGET re15_pc)
     set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 1300)
     # Form Nachbesserung 3 (AN-Abnahme 2 N1): ECHTER Wagenweg A -> B -> C - integration_r41_form_wagenweg samt Elza- und
     # Zurueckweichen-Teilen und Kamera-Pruefung (Nachbesserung 4) jetzt in probes/r41_form_kamera.cmake.
+    # Spur SF: Hangar-/Labor-Birkin EM30_HANGAR mit Schwanzkette in 50A0 und 50E0 geladen und mit 23 Teilen gezeichnet.
+    add_test(NAME integration_r41_sichel_form
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_sichel_form_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_sichel_form.cmake)
+    set_tests_properties(integration_r41_sichel_form PROPERTIES TIMEOUT 400)
     # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
     add_test(NAME integration_r41_g5_westen
              COMMAND "${CMAKE_COMMAND}"

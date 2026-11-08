@@ -315,6 +315,22 @@ check_tree() {           # $1 = fertiger Paketordner
         n_msk=$((n_msk + 1))
     done
     echo "  check_tree: $n_msk Masken-Dateien bytegleich"
+    # Seit Runde 41 Spur SF: Hangar-/Labor-Birkin EMD/EM30_HANGAR.EMD (tools/birkin_formen.py, mit Schwanzkette Knochen 16-22).
+    # Fehlt die Datei oder ist sie alt, laden 50A0/50A1/50E0/50F1 still das Capcom-EM30 bzw. den starren Schwanz
+    # (re15_bf_emd_datei -> pc_enemy_read_re15_emd faellt ohne Datei auf CDEMD0 zurueck) - Gate statt Stille, wie BAHNSTEIG_FORM (Liste oben).
+    for pf in EMD/EM30_HANGAR.EMD; do
+        [[ -s "$out/shared_assets/PSX/$pf" ]] || die "PSX-Asset fehlt/leer im Paket: shared_assets/PSX/$pf (Hangar-/Labor-Birkin fiele auf EM30 zurueck)"
+        cmp -s "$ASSETS/$pf" "$out/shared_assets/PSX/$pf" || die "PSX-Asset im Paket weicht vom Quellbaum ab: shared_assets/PSX/$pf"
+    done
+    # Runde 41 SF: Pin release/em30_hangar.sha256 = Sichel-Form V7 (seit v0.8.30, Nutzerfreigabe 2026-11-08; Bau
+    # re15_port/tools/r41_sichel/v7_kette.sh, NICHT mehr tools/birkin_formen.py - das schreibt ohne --variante den
+    # Grundstand Referenz 2 cfd1ac42 zurueck). Ein alter Stand im Quellbaum faellt sonst nicht auf,
+    # weil cmp nur Quellbaum gegen Paket prueft. Neu erzeugt -> Pin im selben Commit nachziehen.
+    local em30_soll em30_ist
+    em30_soll="$(awk 'NR==1{print $1}' "$HERE/em30_hangar.sha256")"
+    em30_ist="$(sha256sum "$out/shared_assets/PSX/EMD/EM30_HANGAR.EMD" | awk '{print $1}')"
+    [[ -n "$em30_soll" && "$em30_ist" == "$em30_soll" ]] || die "EMD/EM30_HANGAR.EMD im Paket ($em30_ist) ist nicht der Stand aus release/em30_hangar.sha256 ($em30_soll) - Spiel-Asset mit re15_port/tools/r41_sichel/v7_kette.sh pruefen bzw. Pin nachziehen (nicht tools/birkin_formen.py: das schreibt Referenz 2 cfd1ac42)"
+    echo "  check_tree: EMD/EM30_HANGAR.EMD = Pin release/em30_hangar.sha256"
     # Seit Runde 36 (Spur O, PRI): die Masken-Erzeugnisse der Nutzer-PRIs fuer ROOM10F0 Cut 2 (Absperrung) und ROOM1100
     # (Wandfuss) liegen im kopierten PSX-Baum (shared_assets/PSX/MASKS); fehlen sie, verdeckt die Absperrung Marvin nicht.
     for rs in MASKS/ROOM10F0.MSK MASKS/ROOM10F0_PRI02.TIM MASKS/ROOM1100.MSK MASKS/ROOM1100_PRI01.TIM MASKS/ROOM1100_PRI02.TIM; do

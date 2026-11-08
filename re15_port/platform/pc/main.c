@@ -131,6 +131,7 @@ extern int32_t re15_g5_tentakel_scale_x(int slot);   /* enemy_ai_tentakel_g5.c *
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Water Key (Prop-Lader, Icon, Bild) + 2090-Ankunftsszene */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_bissarm_r37.h"  /* Runde 37 Spur J: Handkontakt im Griff */
+#include "re15_schwanz_r41.h"  /* Runde 41 SF N1.9: Feder-Kette des Schwanzes der Sichel-Form */
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm: Lader-Hook + Part-Maske im Zeichner */
 #include "re15_hundeschatten.h"   /* Runde 35 Spur H: Hunde-Schatten auf die Boden-Referenz */
 #include "re15_spinnenanim_r41.h" /* Runde 41 Spur L: Zeichnen der Adultspinne (Drehung, Bild, Massstab) */
@@ -370,7 +371,7 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * Getestet wird slot+0x28 — genau das Feld, aus dem FUN_800534c4 danach per RTPS
          * projiziert (@0x800534ec `addiu v0,a1,40`) — seit Runde 34 C2 die Weltlage wl (wpos).
          * has_region == 0 -> nicht cullen (dieselbe Rueckfallregel wie bei Prop/NPC/Spieler). */
-        if (re15_esp_fx_culled(wl[0], wl[2], has_region, rxs, rzs))
+        if (re15_esp_fx_culled(wl[0], wl[2], has_region, rxs, rzs) && !re15_bf_szene_effekte())   /* Runde 41 SF Neuaufbau: Hangar-Szene */
             continue;
         /* Each particle animates from ITS OWN resolved bank: the room ESP (RDT-TIM slot 19) or the
          * GLOBAL bank CORE00.ESP, whose sheets live only in VRAM -> the byte-true extracted TIMs.
@@ -552,7 +553,10 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * Routine 3 flags:=0x13, TPAGE bleibt hdr-Seed 0x001F) = ABR0 50/50.
          * Legacy-Fx (ohne Row-VM, flags==0) behalten den alten Pfad (Global 2/3 = 50/50). */
         int abe, abr;
-        if (f->rows_base) {
+        if (f->abr_port) {                            /* Runde 41 SF Neuaufbau ab NB2 (NB5): Mischart-Vorgabe des gruenen Blutes */
+            abe = 1;
+            abr = (f->abr_port - 1) & 3;
+        } else if (f->rows_base) {
             abe = (f->flags & 0x10) != 0;
             abr = (f->tpage >> 5) & 3;
         } else {
@@ -10126,7 +10130,8 @@ re_title:;
                 int npc_region_culled = 0;
                 if (cam_has_region &&
                     !re15_aot_point_in_quad(npc->x, npc->z,
-                                            cam_region_xs, cam_region_zs)) {
+                                            cam_region_xs, cam_region_zs) &&
+                    !re15_bf_szene_zeigt(npc)) {   /* Runde 41 Spur H: Hangar-Szene in Cut 12 (Anker = Platzhalter rvd 39 @0x564) */
                     /* G5-ENDKAMPF (Phase 2, birkin-g5.md 4.1.2 + Skeptiker #9): der Boss
                      * startet wie in RE2 bei X=-9000 (@0x801011d0), sein URSPRUNG liegt
                      * damit die ersten 151 Bilder ausserhalb des Cut-12-Ankervierecks
@@ -10616,6 +10621,47 @@ re_title:;
                 if (npc->type == 0x37u)
                     re15_g5_tentakel_kette_strecken(npc_skel, npc_poses, npc_skel->bone_count, re15_g5_tentakel_scale_x(npc_i));
                 (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
+                (void)re15_schwanz_r41_pose(npc, npc_skel, npc_poses);   /* Runde 41 SF N1.9: Schwanzkette 16-22 der Sichel-Form schwingt nach (PORT-WAHL, re15_schwanz_r41.h) */
+                {   /* Runde 41 SF NB6 Messhaken RE15_GRIFF_LOG=<datei>: Griffpunkte der Hangar-Szene je gezeichnetem Bild nach allen
+                     * Posen-Haken - Typ 0x30 Knochen 15/13/8 (Sichelhand, Schulter, Brust), Typ 0x2B Knochen 0 und 20 (Griffknochen),
+                     * Weltkoordinaten mit Figurmatrix und Massstab wie der Zeichner. Nur Messung, im Normalpfad stumm, kein Verhalten. */
+                    static FILE *s_griff_fp = NULL; static int s_griff_tried = 0;
+                    if (!s_griff_tried) { s_griff_tried = 1; const char *gp = getenv("RE15_GRIFF_LOG"); if (gp && *gp) s_griff_fp = fopen(gp, "w"); }
+                    if (s_griff_fp && (npc->type == 0x30u || npc->type == 0x2Bu) && npc_skel->bone_count > 20) {
+                        static const int k30[] = { 15, 13, 8 }, k2b[] = { 0, 20 };
+                        const int *kn = npc->type == 0x30u ? k30 : k2b, nk = npc->type == 0x30u ? 3 : 2;
+                        fprintf(s_griff_fp, "[griff] F%u typ%02X mo=%d af=%d", (unsigned)g_engine.frame_count, (unsigned)npc->type,
+                                (int)npc->motion, (int)npc->anim_frame);
+                        for (int q = 0; q < nk; q++) {
+                            int32_t l[3] = { npc_poses[kn[q]].trans[0], npc_poses[kn[q]].trans[1], npc_poses[kn[q]].trans[2] }, gw[3];
+                            if (npc->render_scale_q12) for (int k = 0; k < 3; k++) l[k] = (int32_t)(((int64_t)l[k] * npc->render_scale_q12) >> 12);
+                            if (npc->rot_x || npc->rot_z) {
+                                int32_t M[9]; re15_skel_euler_matrix((int)npc->rot_x, (int)npc->rot_y, (int)npc->rot_z, M);
+                                const int32_t ap[3] = { npc->x, npc->y, npc->z };
+                                for (int k = 0; k < 3; k++)
+                                    gw[k] = ap[k] + (int32_t)(((int64_t)M[k * 3] * l[0] + (int64_t)M[k * 3 + 1] * l[1] + (int64_t)M[k * 3 + 2] * l[2]) >> 12);
+                            } else re15_skel_bone_to_world(l, npc->rot_y, npc->x, npc->y, npc->z, gw);
+                            fprintf(s_griff_fp, " %d(%d,%d,%d)", kn[q], (int)gw[0], (int)gw[1], (int)gw[2]);
+                        }
+                        fputc('\n', s_griff_fp); fflush(s_griff_fp);
+                    }
+                }
+                {   /* Runde 41 SF NB6 Messhaken RE15_BEIN_LOG=<datei>: Beingelenke (Knochen 0-6: Becken, Huefte/Knie/Knoechel
+                     * rechts und links) jedes gezeichneten Typs 0x30 in Weltkoordinaten nach allen Posen-Haken, je Bild.
+                     * Nur Messung (Dossier SF_sichel.md "NB6 Beinhaltung"), im Normalpfad stumm, kein Verhalten. */
+                    static FILE *s_bein_fp = NULL; static int s_bein_tried = 0;
+                    if (!s_bein_tried) { s_bein_tried = 1; const char *bp = getenv("RE15_BEIN_LOG"); if (bp && *bp) s_bein_fp = fopen(bp, "w"); }
+                    if (s_bein_fp && npc->type == 0x30u && npc_skel->bone_count >= 7) {
+                        fprintf(s_bein_fp, "[bein] F%u slot%d mo=%d af=%d gier=%d", (unsigned)g_engine.frame_count,
+                                (int)(npc - g_actors), (int)npc->motion, (int)npc->anim_frame, (int)npc->rot_y);
+                        for (int bb = 0; bb < 7; bb++) {
+                            int32_t bw[3];
+                            re15_skel_bone_to_world(npc_poses[bb].trans, npc->rot_y, npc->x, npc->y, npc->z, bw);
+                            fprintf(s_bein_fp, " %d(%d,%d,%d)", bb, (int)bw[0], (int)bw[1], (int)bw[2]);
+                        }
+                        fputc('\n', s_bein_fp); fflush(s_bein_fp);
+                    }
+                }
                 /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
                  * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
                 {
@@ -10778,10 +10824,13 @@ re_title:;
                 int gore_on = re15_re2z_gore_resolve(npc, npc_skel->bone_parent, npc_bones,
                                                      gore_draw, gore_tint, gore_mesh);
                 /* BIRKIN-ROHR (Typ 0x30): Teil 15 traegt die Geometrie von Mesh 16 (Hand mit Rohr), s. birkin_rohr
-                 * in re15_actor.h (@0x80116980-9e4 / @0x80116c28-8c / @0x80119754-7b8). */
+                 * in re15_actor.h (@0x80116980-9e4 / @0x80116c28-8c / @0x80119754-7b8). Nur beim Capcom-EM30 mit genau
+                 * 16 Knochen ist Mesh 16 das knochenlose Rohr-Teil. PORT-ERGAENZUNG Runde 41 Spur SF: die Hangar-/Labor-Form
+                 * (tools/birkin_formen.py, EM30_HANGAR.EMD) haengt eine Schwanzkette als Knochen 16-22 an; dort ist Mesh 16
+                 * das erste Schwanzglied und darf nicht auf Teil 15 getauscht werden (das Video zeigt kein Rohr). */
                 /* Die Bahnsteig-Form erbt birkin_rohr aus dem Spawn (INIT @0x80116974: grid 0x33 hat Bit 0x10), ihr Teil 15 ist aber kein
                  * Klauenarm: ohne das Tor zeichnete jede Form mit mehr als 16 Meshes an Teil 15 die Geometrie von Mesh 16. */
-                int bk_rohr = (npc->type == 0x30u && npc->birkin_rohr && npc_md1->mesh_count > 16 && npc_bones > 15 &&
+                int bk_rohr = (npc->type == 0x30u && npc->birkin_rohr && npc_md1->mesh_count > 16 && npc_bones == 16 &&
                                !re15_bb_bank_da(npc) &&
                                !getenv("RE15_KEIN_BIRKIN_ROHR"));   /* Mess-Schalter A/B */
                 /* Runde 34 C7 (O-VB3 geklaert, Belege fx_plattform_pc.h): RE2 faerbt JEDE Entity

@@ -1,0 +1,14 @@
+Lichtgegenprobe je Id: b2-Render der Laufpose gegen RE15_FRAMEDUMP (Lauf sfv4/r/V4r4, EM30_V4.EMD 00d642b7), Videoraum, Ids 2 px erodiert
+h118 Id 13 (Zeile 490)      b2 [24.4  6.7  5.1] Spiel [24.5  6.5  5. ] dE00 0.18 (1656 px, y 212-277)
+h118 Id 10 (489)            b2 [19.9  6.4  0.9] Spiel [20.3  6.3  0.9] dE00 0.27 (2295 px, y 206-272)
+h118 Id 14 (488)            b2 [10.3 -1.2  2.3] Spiel [10.4 -1.3  2.3] dE00 0.15 (1548 px, y 266-325)
+h118 Beine 2/3/5/6 (491)    b2 [19.4  2.4  0.3] Spiel [15.2  1.3  0.2] dE00 3.20 (1873 px, y 399-474)
+h118 Rumpf 7/8              b2 [22.8  6.2  2.4] Spiel [22.8  6.1  2.4] dE00 0.06 (11192 px, y 166-311)
+h118 Kopf 9 (486)           b2 [22.   9.   1.5] Spiel [22.   8.9  1.5] dE00 0.07 (2084 px, y 185-244)
+h135 Id 13 (Zeile 490)      b2 [22.   6.2  3.7] Spiel [22.4  5.9  3.8] dE00 0.47 (2448 px, y 191-275)
+h135 Id 10 (489)            b2 [20.4  6.5  0.9] Spiel [21.3  6.2  1. ] dE00 0.67 (2137 px, y 197-265)
+h135 Id 14 (488)            b2 [11.2 -1.   2.3] Spiel [11.4 -1.   2.4] dE00 0.19 (2240 px, y 272-341)
+h135 Beine 2/3/5/6 (491)    b2 [19.   2.5  0.2] Spiel [10.7  0.7  0.3] dE00 6.00 (1999 px, y 405-475)
+h135 Rumpf 7/8              b2 [21.3  6.2  2.5] Spiel [21.2  6.   2.4] dE00 0.21 (12464 px, y 156-312)
+h135 Kopf 9 (486)           b2 [23.1  8.1  1.3] Spiel [22.4  8.4  1.4] dE00 0.56 (2359 px, y 164-225)
+Beine: alle Bildpunkte y >= 399 liegen im Letterbox-Balken der Kamera 50A0/12 (Spielbild Zeilen 400-479 Mittel L* 9,9-10,0); V4 r3 (Beine in Zeile 480) gleich gemessen: h118 dE00 3,95, h135 6,95.

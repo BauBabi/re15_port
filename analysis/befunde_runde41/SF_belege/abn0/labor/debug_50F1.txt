@@ -1,0 +1,29 @@
+[pl] Spieler-Familie PL04 (character=4, Elza-Bit=1)
+[enemy] EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum 50F1)
+[enemy] EM30 loaded: 23 meshes, 23 bones, 21 clips -> slot 11
+[input-script] Tick 60 -> F360 Tasten 0x0800
+[input-script] Tick 78 -> F378 Tasten 0x8800
+[input-script] Tick 82 -> F382 Tasten 0x0800
+[input-script] Tick 100 -> F400 Tasten 0x8800
+[input-script] Tick 104 -> F404 Tasten 0x0800
+[input-script] Tick 122 -> F422 Tasten 0x8800
+[input-script] Tick 126 -> F426 Tasten 0x0800
+[input-script] Tick 144 -> F444 Tasten 0x8800
+[input-script] Tick 148 -> F448 Tasten 0x0800
+[input-script] Tick 166 -> F466 Tasten 0x8800
+[input-script] Tick 170 -> F470 Tasten 0x0800
+[input-script] Tick 188 -> F488 Tasten 0x8800
+[input-script] Tick 192 -> F492 Tasten 0x0800
+[input-script] Tick 210 -> F510 Tasten 0x8800
+[input-script] Tick 214 -> F514 Tasten 0x0800
+[input-script] Tick 232 -> F532 Tasten 0x8800
+[input-script] Tick 236 -> F536 Tasten 0x0800
+[input-script] Tick 254 -> F554 Tasten 0x8800
+[input-script] Tick 258 -> F558 Tasten 0x0800
+[input-script] Tick 276 -> F576 Tasten 0x8800
+[input-script] Tick 280 -> F580 Tasten 0x0800
+[input-script] Tick 298 -> F598 Tasten 0x8800
+[input-script] Tick 302 -> F602 Tasten 0x0800
+[input-script] Tick 320 -> F620 Tasten 0x8800
+[input-script] Tick 324 -> F624 Tasten 0x0800
+[flow] EXIT_AT: Bild 1100 in Raum 50f1 erreicht -> exit

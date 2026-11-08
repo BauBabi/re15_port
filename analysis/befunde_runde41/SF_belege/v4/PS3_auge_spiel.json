@@ -1,0 +1,52 @@
+{
+ "V4r3_h135": {
+  "punkt": [
+   354,
+   198
+  ],
+  "kern": 127.8,
+  "ring": 81.9,
+  "sprung": 45.9,
+  "blob_px": 130,
+  "blob_wh": [
+   15,
+   16
+  ],
+  "flaeche_norm_x_original": 1.72,
+  "wh_H": [
+   0.041,
+   0.044
+  ]
+ },
+ "V4r2_h135": {
+  "punkt": [
+   345,
+   204
+  ],
+  "kern": 123.7,
+  "ring": 74.8,
+  "sprung": 48.9,
+  "blob_px": 162,
+  "blob_wh": [
+   17,
+   16
+  ],
+  "flaeche_norm_x_original": 2.14,
+  "wh_H": [
+   0.047,
+   0.044
+  ]
+ },
+ "original": {
+  "blob_px": 52,
+  "blob_wh": [
+   8,
+   10
+  ],
+  "wh_H": [
+   0.026,
+   0.033
+  ],
+  "sprung": 45.0
+ }
+}

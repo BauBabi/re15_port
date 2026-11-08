@@ -1,0 +1,227 @@
+{
+ "basis": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad\\sfv4\\emd\\EM30_V4ot3.EMD",
+ "basis_sha256": "a1bc9309e5dd9ce8a948371ec4fef8595bd86310e3ea5e01dc3326552d5f8998",
+ "param": {
+  "skal": [
+   1.5,
+   1.5,
+   1.5
+  ],
+  "pitch": 10.0,
+  "yaw": -34.0,
+  "versatz": [
+   140.0,
+   10.0,
+   0.0
+  ],
+  "haar": {
+   "z0": -80.0,
+   "z1": 0.0,
+   "faktor": 0.65
+  },
+  "nase": {
+   "u0": 41,
+   "u1": 60,
+   "v_ab": 0.0,
+   "rampe": 1.0,
+   "faktor": 0.5
+  },
+  "spitze": {
+   "x0": 150.0,
+   "x1": 175.0,
+   "faktor": 0.5
+  }
+ },
+ "quellen": {
+  "0x31": {
+   "emd_sektor": 2944,
+   "emd_len": 193124,
+   "emd_sha256": "bb966cd5613f7c6ca7197da8bb5576d39cd2c9a97a413c493c845bddeacfa409",
+   "tim_sektor": 2895,
+   "tim_len": 99872,
+   "tim_sha256": "e0929cef7eb21d62ed9bf556c6db531dea05461b39ed898c0df45cb74fadb1cc",
+   "ems": "C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r41_sichel\\re15_port\\shared_assets\\RE2\\CDEMD0.EMS",
+   "ems_sha256": "8724200c1ed5e8d3235ceb85640893467eb9878c2a016529aa84b49a79916fca"
+  },
+  "0x33": {
+   "emd_sektor": 3114,
+   "emd_len": 204968,
+   "emd_sha256": "c9ab4129e756cd80533dd314d2ce1f97d5f9cd0789850aab98dea715549bbd8c",
+   "tim_sektor": 3065,
+   "tim_len": 99872,
+   "tim_sha256": "99b793e22d01ac9921969cbfd8440e449a6148f783030f7a3123679510da02fa",
+   "ems": "C:\\workspace\\git\\reAi_v2\\.claude\\worktrees\\r41_sichel\\re15_port\\shared_assets\\RE2\\CDEMD0.EMS",
+   "ems_sha256": "8724200c1ed5e8d3235ceb85640893467eb9878c2a016529aa84b49a79916fca"
+  }
+ },
+ "g2": {
+  "ecken": 48,
+  "normalen": 48,
+  "dreiecke": 56,
+  "vierecke": 14,
+  "bbox_quelle": [
+   [
+    -248.0,
+    -347.0,
+    -185.0
+   ],
+   [
+    228.0,
+    118.0,
+    180.0
+   ]
+  ],
+  "bbox_neu": [
+   [
+    -204.30846022190656,
+    -488.98875240697913,
+    -302.90074715034694
+   ],
+   [
+    531.7788612188201,
+    210.02914188101536,
+    262.6877530609219
+   ]
+  ],
+  "uv_quelle": [
+   [
+    128,
+    30720
+   ]
+  ]
+ },
+ "maul_flaechen": {
+  "dreiecke": [
+   25,
+   26,
+   34,
+   35,
+   42,
+   44,
+   28,
+   29,
+   22,
+   43,
+   5
+  ],
+  "vierecke": [],
+  "ecken": [
+   5,
+   9,
+   25,
+   29,
+   34,
+   35,
+   37,
+   38,
+   40,
+   41,
+   45
+  ],
+  "z": [
+   -139.0,
+   83.0
+  ],
+  "y": [
+   -186.0,
+   118.0
+  ],
+  "kachel": {
+   "page": 130,
+   "u0": 0,
+   "v0": 200,
+   "u": [
+    2,
+    13
+   ],
+   "v": [
+    5,
+    40
+   ]
+  },
+  "n": 11
+ },
+ "mesh9_alt": {
+  "ecken": 61,
+  "dreiecke": 73,
+  "vierecke": 18
+ },
+ "haar": {
+  "param": {
+   "z0": -80.0,
+   "z1": 0.0,
+   "faktor": 0.65
+  },
+  "nase": {
+   "u0": 41,
+   "u1": 60,
+   "v_ab": 0.0,
+   "rampe": 1.0,
+   "faktor": 0.5
+  },
+  "spitze": {
+   "x0": 150.0,
+   "x1": 175.0,
+   "faktor": 0.5
+  },
+  "entsaett": 0.6,
+  "texel_gewichtet": 4517,
+  "texel_geaendert": 3821,
+  "dL_mittel": -8.07316356318087,
+  "dL_p10_p90": [
+   -15.621285661871902,
+   0.0
+  ],
+  "w_voll": 4414
+ },
+ "tim": {
+  "clut_zeilen": 8,
+  "zeilen_neu": {
+   "486": "G2 0x31 CLUT-Zeile 0 (y 480)",
+   "487": "G3 0x33 CLUT-Zeile 0 (y 480)"
+  },
+  "g2_ort": {
+   "page": 128,
+   "u0": 0,
+   "v0": 160,
+   "u": [
+    0,
+    125
+   ],
+   "v": [
+    0,
+    89
+   ]
+  },
+  "g3_ort": {
+   "page": 130,
+   "u0": 0,
+   "v0": 200,
+   "u": [
+    2,
+    13
+   ],
+   "v": [
+    5,
+    40
+   ]
+  },
+  "alt_kopf_texel_geloescht": 6656,
+  "g2_texel": 6524,
+  "g3_texel": 432,
+  "port_texturhoehe": 2048
+ },
+ "emd": {
+  "bytes": 262284,
+  "sha256": "f37bc5514c6892186d90a808dfd20f646aeecb59b0667933b3daa84f296ff18d",
+  "sektionen_gleich": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ]
+ }
+}

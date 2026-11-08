@@ -1,0 +1,18 @@
+Riegel V6 Kopf aus dem Original RE1.5-Birkin (riegel_v6kopf.py)
+EMD C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V6orig.EMD sha256 419ccfd4bcf26a83375dc97d1627a030239e55848732b84421aa1252348d3a7c
+Basis C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad\sfv4\emd\EM30_V5r4.EMD sha256 38562ced41061258; Referenz 2 cfd1ac42729e5636; Original EM30 569e31387d78c89f
+
+OK    T-K1a Meshes 0-8/10-22 = Basis | Soll: bytegleich | Ist: abweichend [], Meshes 23/23
+OK    T-K1b Sektionen 0-6 (EDD, EMR, ...) = Basis | Soll: bytegleich | Ist: abweichend []
+OK    T-K1c CLUT 480-485 = Referenz 2; Zeilen <= 16; Hoehe <= 4096 | Soll: 480-485 bytegleich, <= 16, <= 4096 | Ist: gleich, 7 Zeilen, 1792
+OK    T-K1d Texel: Koerper = Referenz 2, Abweichung nur Schwanzfeld (= Basis) und Kopf-exklusiv | Soll: Koerpertexel 0 abweichend | Ist: Koerpertexel abweichend 0; Schwanzfeld = Basis True; Kopf-exklusiv geaendert 0 (Box None)
+OK    T-H6 Kopfgeometrie = Original (EM30 Mesh 9) bis auf die gelistete Glaettung | Soll: Normalen/Flaechen/UV bytegleich, CLUT-Feld = 486; Ecken gleich ausser <= 4 Glaettungsecken (zum Schwerpunkt <= 0.10, abseits <= 1.5 E.) | Ist: Ecken 61/61, Normalen 61/61, Dreiecke 73/73, Vierecke 18/18; gleich {'n': True, 'tf': True, 'qf': True, 'ecken_zahl': True}; Glaettung []; UV abweichend 0; CLUT-Feld abweichend 0
+OK    T-H5 keine neue Farbe | Soll: Kopf nur Zeile 486 = Original-Zeile 0; Indizes aus den Original-Kopftexeln | Ist: Zeilen [486]; 486 = Original-Zeile 0: True; Kopftexel 6501, Indizes 233, nicht im Original-Kopf []
+ROT   T-H1i Mund geschlossen (Texel) | Soll: dunkel (L* < 30) <= 2 %, rot (a* >= 15) <= 2 %, Median L* >= 55 | Ist: Maultexel 622 (Zeile 486): dunkel 39.1 %, rot 81.0 %, Median L* 37.5
+ROT   T-H1ii Mund geschlossen (sichtbar, Posen 135/P1/P2) | Soll: dunkel/rot nach Palette <= 5 %, beleuchtet a* >= 10 <= 10 % | Ist: P1: 38 px, dunkel 50 %, rot 76 %, Licht-rot 37 %, Lab [14.6, 8.5, 4.7]; P2: 16 px, dunkel 69 %, rot 56 %, Licht-rot 0 %, Lab [15.0, 6.6, 2.7]; 135: 86 px, dunkel 33 %, rot 77 %, Licht-rot 70 %, Lab [27.0, 13.7, 6.6]
+ROT   T-H2 grauer Fleck erweitert (Gesichtshaelfte bis zur Nase) | Soll: je Pose (>= 20 px): neu >= Foto 1 - 0,10 und >= Original + 0,10 | Ist: Foto 1 0.99; P1: 111 px neu 0.74 / Original 0.74; P2: 141 px neu 0.69 / Original 0.69; 135: 30 px neu 0.37 / Original 0.37; Texel 851: neu 0.58 / Original 0.58
+INFO  INFO (d) Auge (W)-rechts = Texturbild links (Augenweiss u 74-84 v 194-198), unveraendert | Soll: Foto 1 Augenfleck (376,9/167,2) L* 47,0; Foto 2 (452,5/237,2) L* 48,5 (Messblatt 3.3) | Ist: P1: 5 px bei [444.0, 218.0], Lab [22.1, 1.9, 1.7], L* max 23.1; P2: 3 px bei [451.0, 226.3], Lab [29.0, 3.3, 2.6], L* max 29.5; 135: 6 px bei [341.2, 196.3], Lab [12.9, 0.6, 1.6], L* max 13.6
+ROT   T-H4 obere Kontur Ruecken -> Kopf ohne Buckel (P2) | Soll: Wiederanstieg <= 2 px | Ist: Kuppe x 405 y 175, Kopf-Vorderkante x 461; Wiederanstieg 3 px (x 434 y 196 -> x 437 y 193)
+INFO  INFO T-H4 Modell-Kontur ueber Foto-2-Kontur | Soll: - | Ist: max 14 px bei x 418 (Knochen 8); Kopf-Oberkante Modell y 193 / Foto y 194 bei x 437
+
+Ergebnis: 4 rot von 10 (T-H1i Mund geschlossen (Texel), T-H1ii Mund geschlossen (sichtbar, Posen 135/P1/P2), T-H2 grauer Fleck erweitert (Gesichtshaelfte bis zur Nase), T-H4 obere Kontur Ruecken -> Kopf ohne Buckel (P2))

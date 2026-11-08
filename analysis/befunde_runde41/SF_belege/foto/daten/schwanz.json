@@ -1,0 +1,596 @@
+{
+ "foto": {
+  "stationen": [
+   {
+    "f": 0.0,
+    "punkt": [
+     357.0,
+     243.0
+    ],
+    "mitte": [
+     354.2,
+     223.5
+    ],
+    "breite_px": 41.0,
+    "breite_H": 0.162,
+    "lab": [
+     17.2,
+     7.7,
+     0.5
+    ]
+   },
+   {
+    "f": 0.1,
+    "punkt": [
+     341.7,
+     245.2
+    ],
+    "mitte": [
+     339.3,
+     228.4
+    ],
+    "breite_px": 46.5,
+    "breite_H": 0.184,
+    "lab": [
+     14.6,
+     7.5,
+     0.7
+    ]
+   },
+   {
+    "f": 0.2,
+    "punkt": [
+     326.5,
+     247.4
+    ],
+    "mitte": [
+     325.3,
+     239.5
+    ],
+    "breite_px": 36.5,
+    "breite_H": 0.144,
+    "lab": [
+     11.3,
+     6.4,
+     1.7
+    ]
+   },
+   {
+    "f": 0.3,
+    "punkt": [
+     311.2,
+     249.6
+    ],
+    "mitte": [
+     309.8,
+     240.0
+    ],
+    "breite_px": 41.0,
+    "breite_H": 0.162,
+    "lab": [
+     16.4,
+     5.0,
+     1.8
+    ]
+   },
+   {
+    "f": 0.4,
+    "punkt": [
+     295.9,
+     251.9
+    ],
+    "mitte": [
+     297.1,
+     259.5
+    ],
+    "breite_px": 57.0,
+    "breite_H": 0.225,
+    "lab": [
+     16.9,
+     3.7,
+     2.6
+    ]
+   },
+   {
+    "f": 0.5,
+    "punkt": [
+     293.7,
+     266.4
+    ],
+    "mitte": [
+     292.0,
+     266.3
+    ],
+    "breite_px": 21.0,
+    "breite_H": 0.083,
+    "lab": [
+     14.7,
+     3.5,
+     2.3
+    ]
+   },
+   {
+    "f": 0.6,
+    "punkt": [
+     292.3,
+     281.8
+    ],
+    "mitte": [
+     290.6,
+     281.6
+    ],
+    "breite_px": 26.0,
+    "breite_H": 0.103,
+    "lab": [
+     14.0,
+     2.8,
+     3.2
+    ]
+   },
+   {
+    "f": 0.7,
+    "punkt": [
+     291.0,
+     297.1
+    ],
+    "mitte": [
+     279.0,
+     296.1
+    ],
+    "breite_px": 11.5,
+    "breite_H": 0.045,
+    "lab": [
+     16.8,
+     0.4,
+     0.5
+    ]
+   },
+   {
+    "f": 0.8,
+    "punkt": [
+     290.6,
+     312.5
+    ],
+    "mitte": [
+     281.0,
+     313.8
+    ],
+    "breite_px": 15.0,
+    "breite_H": 0.059,
+    "lab": [
+     26.4,
+     2.0,
+     1.6
+    ]
+   },
+   {
+    "f": 0.9,
+    "punkt": [
+     292.8,
+     327.7
+    ],
+    "mitte": [
+     288.6,
+     328.3
+    ],
+    "breite_px": 10.0,
+    "breite_H": 0.04,
+    "lab": [
+     12.8,
+     3.8,
+     1.3
+    ]
+   },
+   {
+    "f": 1.0,
+    "punkt": [
+     295.0,
+     343.0
+    ],
+    "mitte": [
+     292.0,
+     343.4
+    ],
+    "breite_px": 13.5,
+    "breite_H": 0.053,
+    "lab": [
+     16.5,
+     2.8,
+     0.9
+    ]
+   }
+  ],
+  "achslaenge_px": 154.2,
+  "achslaenge_H": 0.61,
+  "maske_px": 4888
+ },
+ "modell": {
+  "stationen": [
+   {
+    "f": 0.0,
+    "punkt": [
+     387.7,
+     214.9
+    ],
+    "breite": null
+   },
+   {
+    "f": 0.1,
+    "punkt": [
+     371.1,
+     219.3
+    ],
+    "mitte": [
+     365.9,
+     199.5
+    ],
+    "breite_px": 4.5,
+    "breite_H": 0.017,
+    "lab": [
+     46.3,
+     30.5,
+     16.1
+    ]
+   },
+   {
+    "f": 0.2,
+    "punkt": [
+     354.6,
+     223.6
+    ],
+    "mitte": [
+     353.5,
+     219.5
+    ],
+    "breite_px": 35.0,
+    "breite_H": 0.135,
+    "lab": [
+     28.1,
+     13.3,
+     7.9
+    ]
+   },
+   {
+    "f": 0.3,
+    "punkt": [
+     337.9,
+     227.5
+    ],
+    "mitte": [
+     337.5,
+     225.4
+    ],
+    "breite_px": 37.0,
+    "breite_H": 0.143,
+    "lab": [
+     24.4,
+     12.7,
+     7.1
+    ]
+   },
+   {
+    "f": 0.4,
+    "punkt": [
+     321.3,
+     231.6
+    ],
+    "mitte": [
+     320.4,
+     229.0
+    ],
+    "breite_px": 40.0,
+    "breite_H": 0.154,
+    "lab": [
+     27.9,
+     5.8,
+     2.7
+    ]
+   },
+   {
+    "f": 0.5,
+    "punkt": [
+     305.4,
+     237.6
+    ],
+    "mitte": [
+     304.4,
+     235.1
+    ],
+    "breite_px": 33.0,
+    "breite_H": 0.127,
+    "lab": [
+     31.7,
+     6.7,
+     3.6
+    ]
+   },
+   {
+    "f": 0.6,
+    "punkt": [
+     294.3,
+     245.9
+    ],
+    "mitte": [
+     309.2,
+     240.2
+    ],
+    "breite_px": 48.5,
+    "breite_H": 0.187,
+    "lab": [
+     29.0,
+     8.2,
+     4.1
+    ]
+   },
+   {
+    "f": 0.7,
+    "punkt": [
+     300.4,
+     261.9
+    ],
+    "mitte": [
+     300.0,
+     262.1
+    ],
+    "breite_px": 11.5,
+    "breite_H": 0.044,
+    "lab": [
+     15.9,
+     9.6,
+     4.7
+    ]
+   },
+   {
+    "f": 0.8,
+    "punkt": [
+     294.1,
+     275.8
+    ],
+    "mitte": [
+     292.2,
+     274.2
+    ],
+    "breite_px": 8.5,
+    "breite_H": 0.033,
+    "lab": [
+     27.6,
+     3.8,
+     2.7
+    ]
+   },
+   {
+    "f": 0.9,
+    "punkt": [
+     284.8,
+     289.9
+    ],
+    "mitte": [
+     282.5,
+     288.9
+    ],
+    "breite_px": 8.5,
+    "breite_H": 0.033,
+    "lab": [
+     26.9,
+     7.6,
+     2.7
+    ]
+   },
+   {
+    "f": 1.0,
+    "punkt": [
+     279.7,
+     306.2
+    ],
+    "mitte": [
+     278.5,
+     305.9
+    ],
+    "breite_px": 8.0,
+    "breite_H": 0.031,
+    "lab": [
+     30.6,
+     4.3,
+     1.8
+    ]
+   }
+  ],
+  "achslaenge_px": 171.0,
+  "achslaenge_H": 0.66,
+  "kette_bild": [
+   [
+    387.7,
+    214.9
+   ],
+   [
+    350.2,
+    224.8
+   ],
+   [
+    322.8,
+    231.0
+   ],
+   [
+    292.9,
+    242.4
+   ],
+   [
+    302.1,
+    266.2
+   ],
+   [
+    287.5,
+    283.7
+   ],
+   [
+    282.9,
+    294.1
+   ],
+   [
+    279.7,
+    306.2
+   ]
+  ],
+  "gliedgrenzen": [
+   {
+    "grenze": "16/17",
+    "punkt": [
+     350.2,
+     224.8
+    ],
+    "knick_grad": 1.9,
+    "breite_vor_px": 35.5,
+    "breite_nach_px": 38.0,
+    "sprung_px": 2.5,
+    "sichtbar_vor": true,
+    "sichtbar_nach": true
+   },
+   {
+    "grenze": "17/18",
+    "punkt": [
+     322.8,
+     231.0
+    ],
+    "knick_grad": 8.0,
+    "breite_vor_px": 37.0,
+    "breite_nach_px": 41.0,
+    "sprung_px": 4.0,
+    "sichtbar_vor": true,
+    "sichtbar_nach": true
+   },
+   {
+    "grenze": "18/19",
+    "punkt": [
+     292.9,
+     242.4
+    ],
+    "knick_grad": 90.2,
+    "breite_vor_px": 38.5,
+    "breite_nach_px": 48.5,
+    "sprung_px": 10.0,
+    "sichtbar_vor": true,
+    "sichtbar_nach": true
+   },
+   {
+    "grenze": "19/20",
+    "punkt": [
+     302.1,
+     266.2
+    ],
+    "knick_grad": 60.9,
+    "breite_vor_px": 12.5,
+    "breite_nach_px": 9.5,
+    "sprung_px": -3.0,
+    "sichtbar_vor": true,
+    "sichtbar_nach": true
+   },
+   {
+    "grenze": "20/21",
+    "punkt": [
+     287.5,
+     283.7
+    ],
+    "knick_grad": 15.9,
+    "breite_vor_px": 7.0,
+    "breite_nach_px": 7.5,
+    "sprung_px": 0.5,
+    "sichtbar_vor": true,
+    "sichtbar_nach": true
+   },
+   {
+    "grenze": "21/22",
+    "punkt": [
+     282.9,
+     294.1
+    ],
+    "knick_grad": 9.1,
+    "breite_vor_px": 9.0,
+    "breite_nach_px": 9.5,
+    "sprung_px": 0.5,
+    "sichtbar_vor": true,
+    "sichtbar_nach": true
+   }
+  ],
+  "wurzel": {
+   "punkt": [
+    387.7,
+    214.9
+   ],
+   "breite_schwanz_px": null,
+   "dicke_figur_davor_px": 69.5,
+   "knochen_am_gelenk": 13
+  },
+  "H_port": 259
+ },
+ "farben": {
+  "foto_schwanz_gesamt": [
+   17.8,
+   4.8,
+   1.5
+  ],
+  "foto_schwanz_px": 4888,
+  "foto_schwanz_a_kleiner_6": [
+   20.7,
+   2.8,
+   1.5
+  ],
+  "anteil_a_kleiner_0": 0.055,
+  "foto_rumpfhaut_grau": [
+   22.3,
+   4.1,
+   1.5
+  ],
+  "foto_rumpfhaut_px": 1070,
+  "ref2_sichel_mesh15_render": [
+   19.2,
+   -0.9,
+   2.7
+  ],
+  "ref2_sichel_px": 1519,
+  "ref2_sichelunterarm_mesh14_render": [
+   18.4,
+   6.9,
+   2.2
+  ],
+  "ref2_sichel_mesh15_texel": [
+   22.4,
+   -0.8,
+   4.3
+  ],
+  "modell_schwanz_render": [
+   28.4,
+   8.6,
+   4.6
+  ],
+  "modell_schwanz_px": 3415,
+  "dE00_schwanz_gegen_foto_rumpfhaut_grau": 3.22,
+  "dE00_schwanz_gegen_ref2_sichel_mesh15_render": 8.01,
+  "dE00_schwanz_gegen_ref2_sichel_mesh15_texel": 8.84,
+  "dE00_schwanz_gegen_modell_schwanz_render": 8.79
+ },
+ "kontur_stufen": {
+  "foto": [
+   {
+    "x": 332,
+    "dy": 3
+   },
+   {
+    "x": 334,
+    "dy": -9
+   },
+   {
+    "x": 335,
+    "dy": -3
+   },
+   {
+    "x": 453,
+    "dy": 4
+   },
+   {
+    "x": 454,
+    "dy": 4
+   }
+  ],
+  "modell": []
+ }
+}

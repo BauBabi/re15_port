@@ -1,0 +1,1371 @@
+{
+ "seite": {
+  "Ref2 h83": {
+   "H": 227,
+   "OK": 183,
+   "s0_px": 8,
+   "versteckt_H": 0.035,
+   "form": {
+    "laenge_H": 0.819,
+    "dicke_H": {
+     "0.1": 0.062,
+     "0.2": 0.075,
+     "0.3": 0.068,
+     "0.5": 0.059,
+     "0.7": 0.055,
+     "0.8": 0.046,
+     "0.9": 0.04
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.033,
+     "0.1": 0.044,
+     "0.2": 0.053,
+     "0.3": 0.055,
+     "0.4": 0.055
+    },
+    "breiten_005_095": [
+     0.07,
+     0.062,
+     0.068,
+     0.075,
+     0.059,
+     0.068,
+     0.073,
+     0.057,
+     0.07,
+     0.059,
+     0.064,
+     0.062,
+     0.048,
+     0.055,
+     0.046,
+     0.046,
+     0.048,
+     0.04,
+     0.024
+    ],
+    "max_dwinkel_005H": 20.2,
+    "max_bei": 0.8,
+    "knicke": 2,
+    "knick_bei": [
+     0.67,
+     0.8
+    ],
+    "knick_winkel": [
+     20.2,
+     20.2
+    ],
+    "gesamtdrehung": 34.1,
+    "winkel_profil": [
+     164.0,
+     173.0,
+     162.0,
+     159.0,
+     155.0,
+     159.0,
+     157.0,
+     164.0,
+     170.0,
+     154.0,
+     135.0,
+     133.0,
+     130.0
+    ],
+    "austritt_grad": 164.9
+   },
+   "farbe": {
+    "lab_schwanz": [
+     24.7,
+     21.7,
+     9.3
+    ],
+    "rgb_schwanz": [
+     93.0,
+     45.0,
+     46.0
+    ],
+    "lab_haut": [
+     28.2,
+     12.5,
+     6.5
+    ],
+    "rgb_haut": [
+     88.0,
+     59.0,
+     58.0
+    ],
+    "lab_ruecken": [
+     31.5,
+     13.9,
+     6.8
+    ],
+    "n_schwanz": 1710,
+    "n_haut": 8355,
+    "de00_haut": 6.5,
+    "de76_haut": 10.1,
+    "de00_ruecken": 7.2,
+    "de76_ruecken": 10.6,
+    "L_verh": 0.877,
+    "C_schwanz": 23.6,
+    "C_haut": 14.1,
+    "C_verh": 1.67,
+    "h_schwanz": 23.2,
+    "h_haut": 27.5,
+    "dh": -4.3,
+    "rot_anteil_schwanz": 0.912,
+    "rot_anteil_haut": 0.32
+   },
+   "muster": {
+    "ak_a_max": 0.26,
+    "ak_a_lag_H": 0.115,
+    "rest_std_a": 1.83,
+    "periode_a_ak": 0.26,
+    "periode_a_H": 0.115,
+    "ak_L_max": 0.6,
+    "ak_L_lag_H": 0.11,
+    "rest_std_L": 5.16,
+    "periode_L_ak": 0.6,
+    "periode_L_H": 0.11
+   },
+   "austritt_unter_OK_H": 0.253
+  },
+  "V1 h83": {
+   "H": 227,
+   "OK": 183,
+   "s0_px": 19,
+   "versteckt_H": 0.084,
+   "form": {
+    "laenge_H": 0.634,
+    "dicke_H": {
+     "0.1": 0.141,
+     "0.2": 0.148,
+     "0.3": 0.137,
+     "0.5": 0.099,
+     "0.7": 0.057,
+     "0.8": 0.042,
+     "0.9": 0.02
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.015,
+     "0.1": 0.033,
+     "0.2": 0.062,
+     "0.3": 0.099,
+     "0.4": 0.141
+    },
+    "breiten_005_095": [
+     0.148,
+     0.141,
+     0.15,
+     0.148,
+     0.148,
+     0.137,
+     0.132,
+     0.128,
+     0.106,
+     0.099,
+     0.093,
+     0.068,
+     0.046,
+     0.057,
+     0.048,
+     0.042,
+     0.033,
+     0.02,
+     0.011
+    ],
+    "max_dwinkel_005H": 71.9,
+    "max_bei": 0.66,
+    "knicke": 3,
+    "knick_bei": [
+     0.04,
+     0.31,
+     0.66
+    ],
+    "knick_winkel": [
+     21.5,
+     24.5,
+     71.9
+    ],
+    "gesamtdrehung": 69.8,
+    "winkel_profil": [
+     149.0,
+     169.0,
+     168.0,
+     161.0,
+     139.0,
+     135.0,
+     128.0,
+     168.0,
+     152.0,
+     91.0,
+     84.0,
+     78.0,
+     80.0
+    ],
+    "austritt_grad": 156.4
+   },
+   "farbe": {
+    "lab_schwanz": [
+     24.3,
+     21.5,
+     9.2
+    ],
+    "rgb_schwanz": [
+     92.0,
+     44.0,
+     45.0
+    ],
+    "lab_haut": [
+     28.4,
+     12.3,
+     6.4
+    ],
+    "rgb_haut": [
+     88.0,
+     59.0,
+     58.0
+    ],
+    "lab_ruecken": [
+     32.7,
+     13.5,
+     6.4
+    ],
+    "n_schwanz": 2537,
+    "n_haut": 8120,
+    "de00_haut": 6.8,
+    "de76_haut": 10.4,
+    "de00_ruecken": 8.3,
+    "de76_ruecken": 11.9,
+    "L_verh": 0.857,
+    "C_schwanz": 23.4,
+    "C_haut": 13.9,
+    "C_verh": 1.69,
+    "h_schwanz": 23.1,
+    "h_haut": 27.4,
+    "dh": -4.3,
+    "rot_anteil_schwanz": 0.899,
+    "rot_anteil_haut": 0.305
+   },
+   "muster": {
+    "ak_a_max": 0.2,
+    "ak_a_lag_H": 0.101,
+    "rest_std_a": 1.76,
+    "periode_a_ak": 0.2,
+    "periode_a_H": 0.101,
+    "ak_L_max": 0.36,
+    "ak_L_lag_H": 0.101,
+    "rest_std_L": 4.53,
+    "periode_L_ak": 0.36,
+    "periode_L_H": 0.101
+   },
+   "austritt_unter_OK_H": 0.101
+  },
+  "V3 h83": {
+   "H": 227,
+   "OK": 183,
+   "s0_px": 11,
+   "versteckt_H": 0.048,
+   "form": {
+    "laenge_H": 0.855,
+    "dicke_H": {
+     "0.1": 0.196,
+     "0.2": 0.176,
+     "0.3": 0.156,
+     "0.5": 0.099,
+     "0.7": 0.062,
+     "0.8": 0.051,
+     "0.9": 0.035
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.035,
+     "0.1": 0.04,
+     "0.2": 0.053,
+     "0.3": 0.066,
+     "0.4": 0.097
+    },
+    "breiten_005_095": [
+     0.2,
+     0.196,
+     0.181,
+     0.176,
+     0.165,
+     0.156,
+     0.145,
+     0.123,
+     0.112,
+     0.099,
+     0.086,
+     0.073,
+     0.066,
+     0.062,
+     0.053,
+     0.051,
+     0.042,
+     0.035,
+     0.033
+    ],
+    "max_dwinkel_005H": 25.7,
+    "max_bei": 0.06,
+    "knicke": 4,
+    "knick_bei": [
+     0.06,
+     0.12,
+     0.27,
+     0.4
+    ],
+    "knick_winkel": [
+     25.7,
+     23.8,
+     23.4,
+     20.2
+    ],
+    "gesamtdrehung": 40.6,
+    "winkel_profil": [
+     162.0,
+     186.0,
+     166.0,
+     162.0,
+     150.0,
+     135.0,
+     141.0,
+     124.0,
+     124.0,
+     121.0,
+     123.0,
+     122.0,
+     122.0
+    ],
+    "austritt_grad": 163.2
+   },
+   "farbe": {
+    "lab_schwanz": [
+     15.6,
+     8.1,
+     3.0
+    ],
+    "rgb_schwanz": [
+     51.0,
+     35.0,
+     35.0
+    ],
+    "lab_haut": [
+     28.3,
+     12.4,
+     6.4
+    ],
+    "rgb_haut": [
+     88.0,
+     59.0,
+     58.0
+    ],
+    "lab_ruecken": [
+     32.4,
+     13.7,
+     6.4
+    ],
+    "n_schwanz": 4033,
+    "n_haut": 7907,
+    "de00_haut": 9.9,
+    "de76_haut": 13.8,
+    "de00_ruecken": 13.1,
+    "de76_ruecken": 18.0,
+    "L_verh": 0.553,
+    "C_schwanz": 8.7,
+    "C_haut": 14.0,
+    "C_verh": 0.62,
+    "h_schwanz": 20.4,
+    "h_haut": 27.3,
+    "dh": -6.9,
+    "rot_anteil_schwanz": 0.229,
+    "rot_anteil_haut": 0.309
+   },
+   "muster": {
+    "ak_a_max": 0.16,
+    "ak_a_lag_H": 0.035,
+    "rest_std_a": 1.66,
+    "periode_a_ak": 0.16,
+    "periode_a_H": 0.035,
+    "ak_L_max": 0.17,
+    "ak_L_lag_H": 0.022,
+    "rest_std_L": 1.16,
+    "periode_L_ak": 0.01,
+    "periode_L_H": 0.079
+   },
+   "austritt_unter_OK_H": 0.103
+  },
+  "Ref2 h85": {
+   "H": 265,
+   "OK": 170,
+   "s0_px": 21,
+   "versteckt_H": 0.079,
+   "form": {
+    "laenge_H": 0.668,
+    "dicke_H": {
+     "0.1": 0.066,
+     "0.2": 0.055,
+     "0.3": 0.055,
+     "0.5": 0.051,
+     "0.7": 0.047,
+     "0.8": 0.034,
+     "0.9": 0.036
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.03,
+     "0.1": 0.036,
+     "0.2": 0.047,
+     "0.3": 0.055,
+     "0.4": 0.057
+    },
+    "breiten_005_095": [
+     0.057,
+     0.066,
+     0.062,
+     0.055,
+     0.062,
+     0.055,
+     0.053,
+     0.057,
+     0.053,
+     0.051,
+     0.051,
+     0.055,
+     0.042,
+     0.047,
+     0.042,
+     0.034,
+     0.036,
+     0.036,
+     0.023
+    ],
+    "max_dwinkel_005H": 11.2,
+    "max_bei": 0.14,
+    "knicke": 0,
+    "knick_bei": [],
+    "knick_winkel": [],
+    "gesamtdrehung": 29.2,
+    "winkel_profil": [
+     156.0,
+     155.0,
+     144.0,
+     141.0,
+     140.0,
+     135.0,
+     127.0,
+     127.0,
+     124.0,
+     122.0,
+     121.0,
+     128.0,
+     126.0
+    ],
+    "austritt_grad": 154.9
+   },
+   "farbe": {
+    "lab_schwanz": [
+     25.7,
+     22.2,
+     9.6
+    ],
+    "rgb_schwanz": [
+     96.0,
+     47.0,
+     48.0
+    ],
+    "lab_haut": [
+     28.2,
+     14.2,
+     7.2
+    ],
+    "rgb_haut": [
+     90.0,
+     58.0,
+     57.0
+    ],
+    "lab_ruecken": [
+     32.7,
+     13.9,
+     6.7
+    ],
+    "n_schwanz": 1773,
+    "n_haut": 9568,
+    "de00_haut": 5.4,
+    "de76_haut": 8.7,
+    "de00_ruecken": 7.5,
+    "de76_ruecken": 11.2,
+    "L_verh": 0.91,
+    "C_schwanz": 24.1,
+    "C_haut": 15.9,
+    "C_verh": 1.52,
+    "h_schwanz": 23.3,
+    "h_haut": 26.9,
+    "dh": -3.6,
+    "rot_anteil_schwanz": 0.924,
+    "rot_anteil_haut": 0.392
+   },
+   "muster": {
+    "ak_a_max": 0.51,
+    "ak_a_lag_H": 0.098,
+    "rest_std_a": 1.96,
+    "periode_a_ak": 0.51,
+    "periode_a_H": 0.098,
+    "ak_L_max": 0.65,
+    "ak_L_lag_H": 0.098,
+    "rest_std_L": 5.14,
+    "periode_L_ak": 0.65,
+    "periode_L_H": 0.098
+   },
+   "austritt_unter_OK_H": 0.292
+  },
+  "V1 h85": {
+   "H": 265,
+   "OK": 170,
+   "s0_px": 22,
+   "versteckt_H": 0.083,
+   "form": {
+    "laenge_H": 0.596,
+    "dicke_H": {
+     "0.1": 0.132,
+     "0.2": 0.14,
+     "0.3": 0.128,
+     "0.5": 0.083,
+     "0.7": 0.047,
+     "0.8": 0.034,
+     "0.9": 0.025
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.021,
+     "0.1": 0.028,
+     "0.2": 0.055,
+     "0.3": 0.085,
+     "0.4": 0.126
+    },
+    "breiten_005_095": [
+     0.142,
+     0.132,
+     0.138,
+     0.14,
+     0.138,
+     0.128,
+     0.119,
+     0.106,
+     0.079,
+     0.083,
+     0.077,
+     0.03,
+     0.062,
+     0.047,
+     0.038,
+     0.034,
+     0.028,
+     0.025,
+     0.011
+    ],
+    "max_dwinkel_005H": 38.5,
+    "max_bei": 0.56,
+    "knicke": 5,
+    "knick_bei": [
+     0.04,
+     0.35,
+     0.56,
+     0.67,
+     0.82
+    ],
+    "knick_winkel": [
+     24.8,
+     25.4,
+     38.5,
+     30.4,
+     24.0
+    ],
+    "gesamtdrehung": 53.1,
+    "winkel_profil": [
+     139.0,
+     157.0,
+     143.0,
+     137.0,
+     134.0,
+     113.0,
+     113.0,
+     84.0,
+     91.0,
+     112.0,
+     98.0,
+     85.0,
+     85.0
+    ],
+    "austritt_grad": 147.9
+   },
+   "farbe": {
+    "lab_schwanz": [
+     23.8,
+     21.0,
+     8.9
+    ],
+    "rgb_schwanz": [
+     90.0,
+     43.0,
+     45.0
+    ],
+    "lab_haut": [
+     28.4,
+     13.8,
+     7.1
+    ],
+    "rgb_haut": [
+     90.0,
+     58.0,
+     57.0
+    ],
+    "lab_ruecken": [
+     33.9,
+     12.9,
+     6.1
+    ],
+    "n_schwanz": 3017,
+    "n_haut": 9190,
+    "de00_haut": 5.8,
+    "de76_haut": 8.7,
+    "de00_ruecken": 9.4,
+    "de76_ruecken": 13.3,
+    "L_verh": 0.838,
+    "C_schwanz": 22.8,
+    "C_haut": 15.5,
+    "C_verh": 1.47,
+    "h_schwanz": 22.9,
+    "h_haut": 27.0,
+    "dh": -4.1,
+    "rot_anteil_schwanz": 0.874,
+    "rot_anteil_haut": 0.368
+   },
+   "muster": {
+    "ak_a_max": 0.26,
+    "ak_a_lag_H": 0.019,
+    "rest_std_a": 3.95,
+    "periode_a_ak": 0.16,
+    "periode_a_H": 0.098,
+    "ak_L_max": 0.18,
+    "ak_L_lag_H": 0.091,
+    "rest_std_L": 6.03,
+    "periode_L_ak": 0.18,
+    "periode_L_H": 0.091
+   },
+   "austritt_unter_OK_H": 0.136
+  },
+  "V3 h85": {
+   "H": 265,
+   "OK": 170,
+   "s0_px": 25,
+   "versteckt_H": 0.094,
+   "form": {
+    "laenge_H": 0.732,
+    "dicke_H": {
+     "0.1": 0.174,
+     "0.2": 0.162,
+     "0.3": 0.13,
+     "0.5": 0.089,
+     "0.7": 0.051,
+     "0.8": 0.04,
+     "0.9": 0.032
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.032,
+     "0.1": 0.036,
+     "0.2": 0.047,
+     "0.3": 0.07,
+     "0.4": 0.094
+    },
+    "breiten_005_095": [
+     0.183,
+     0.174,
+     0.166,
+     0.162,
+     0.142,
+     0.13,
+     0.126,
+     0.106,
+     0.098,
+     0.089,
+     0.074,
+     0.066,
+     0.066,
+     0.051,
+     0.043,
+     0.04,
+     0.036,
+     0.032,
+     0.032
+    ],
+    "max_dwinkel_005H": 27.4,
+    "max_bei": 0.1,
+    "knicke": 2,
+    "knick_bei": [
+     0.04,
+     0.1
+    ],
+    "knick_winkel": [
+     21.2,
+     27.4
+    ],
+    "gesamtdrehung": 67.0,
+    "winkel_profil": [
+     156.0,
+     152.0,
+     147.0,
+     137.0,
+     134.0,
+     121.0,
+     119.0,
+     108.0,
+     106.0,
+     98.0,
+     95.0,
+     91.0,
+     92.0
+    ],
+    "austritt_grad": 162.4
+   },
+   "farbe": {
+    "lab_schwanz": [
+     16.2,
+     8.1,
+     2.8
+    ],
+    "rgb_schwanz": [
+     52.0,
+     36.0,
+     37.0
+    ],
+    "lab_haut": [
+     28.3,
+     13.6,
+     6.8
+    ],
+    "rgb_haut": [
+     90.0,
+     58.0,
+     58.0
+    ],
+    "lab_ruecken": [
+     33.6,
+     11.6,
+     5.1
+    ],
+    "n_schwanz": 4372,
+    "n_haut": 9115,
+    "de00_haut": 10.1,
+    "de76_haut": 14.0,
+    "de00_ruecken": 13.2,
+    "de76_ruecken": 17.9,
+    "L_verh": 0.571,
+    "C_schwanz": 8.5,
+    "C_haut": 15.2,
+    "C_verh": 0.56,
+    "h_schwanz": 18.9,
+    "h_haut": 26.5,
+    "dh": -7.7,
+    "rot_anteil_schwanz": 0.228,
+    "rot_anteil_haut": 0.361
+   },
+   "muster": {
+    "ak_a_max": 0.19,
+    "ak_a_lag_H": 0.023,
+    "rest_std_a": 1.77,
+    "periode_a_ak": 0.04,
+    "periode_a_H": 0.049,
+    "ak_L_max": 0.16,
+    "ak_L_lag_H": 0.019,
+    "rest_std_L": 1.35,
+    "periode_L_ak": 0.15,
+    "periode_L_H": 0.03
+   },
+   "austritt_unter_OK_H": 0.145
+  },
+  "Ref2 h92": {
+   "H": 265,
+   "OK": 170,
+   "s0_px": 20,
+   "versteckt_H": 0.075,
+   "form": {
+    "laenge_H": 0.634,
+    "dicke_H": {
+     "0.1": 0.068,
+     "0.2": 0.055,
+     "0.3": 0.055,
+     "0.5": 0.051,
+     "0.7": 0.051,
+     "0.8": 0.032,
+     "0.9": 0.036
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.032,
+     "0.1": 0.038,
+     "0.2": 0.047,
+     "0.3": 0.055,
+     "0.4": 0.053
+    },
+    "breiten_005_095": [
+     0.066,
+     0.068,
+     0.064,
+     0.055,
+     0.062,
+     0.055,
+     0.051,
+     0.055,
+     0.045,
+     0.051,
+     0.055,
+     0.045,
+     0.04,
+     0.051,
+     0.04,
+     0.032,
+     0.036,
+     0.036,
+     0.025
+    ],
+    "max_dwinkel_005H": 13.7,
+    "max_bei": 0.08,
+    "knicke": 0,
+    "knick_bei": [],
+    "knick_winkel": [],
+    "gesamtdrehung": 32.2,
+    "winkel_profil": [
+     159.0,
+     150.0,
+     148.0,
+     145.0,
+     131.0,
+     138.0,
+     128.0,
+     131.0,
+     126.0,
+     126.0,
+     127.0,
+     117.0,
+     127.0
+    ],
+    "austritt_grad": 157.6
+   },
+   "farbe": {
+    "lab_schwanz": [
+     25.4,
+     22.0,
+     9.4
+    ],
+    "rgb_schwanz": [
+     95.0,
+     46.0,
+     47.0
+    ],
+    "lab_haut": [
+     28.3,
+     14.4,
+     7.3
+    ],
+    "rgb_haut": [
+     91.0,
+     58.0,
+     57.0
+    ],
+    "lab_ruecken": [
+     33.0,
+     14.0,
+     6.7
+    ],
+    "n_schwanz": 1663,
+    "n_haut": 9357,
+    "de00_haut": 5.3,
+    "de76_haut": 8.4,
+    "de00_ruecken": 7.7,
+    "de76_ruecken": 11.3,
+    "L_verh": 0.897,
+    "C_schwanz": 23.9,
+    "C_haut": 16.1,
+    "C_verh": 1.48,
+    "h_schwanz": 23.2,
+    "h_haut": 26.9,
+    "dh": -3.8,
+    "rot_anteil_schwanz": 0.918,
+    "rot_anteil_haut": 0.401
+   },
+   "muster": {
+    "ak_a_max": 0.61,
+    "ak_a_lag_H": 0.094,
+    "rest_std_a": 1.85,
+    "periode_a_ak": 0.61,
+    "periode_a_H": 0.094,
+    "ak_L_max": 0.67,
+    "ak_L_lag_H": 0.094,
+    "rest_std_L": 5.18,
+    "periode_L_ak": 0.67,
+    "periode_L_H": 0.094
+   },
+   "austritt_unter_OK_H": 0.292
+  },
+  "V1 h92": {
+   "H": 265,
+   "OK": 170,
+   "s0_px": 10,
+   "versteckt_H": 0.038,
+   "form": {
+    "laenge_H": 0.642,
+    "dicke_H": {
+     "0.1": 0.145,
+     "0.2": 0.136,
+     "0.3": 0.136,
+     "0.5": 0.079,
+     "0.7": 0.047,
+     "0.8": 0.03,
+     "0.9": 0.025
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.017,
+     "0.1": 0.028,
+     "0.2": 0.051,
+     "0.3": 0.077,
+     "0.4": 0.109
+    },
+    "breiten_005_095": [
+     0.16,
+     0.145,
+     0.134,
+     0.136,
+     0.136,
+     0.136,
+     0.121,
+     0.106,
+     0.091,
+     0.079,
+     0.079,
+     0.034,
+     0.066,
+     0.047,
+     0.04,
+     0.03,
+     0.028,
+     0.025,
+     0.009
+    ],
+    "max_dwinkel_005H": 40.7,
+    "max_bei": 0.04,
+    "knicke": 4,
+    "knick_bei": [
+     0.04,
+     0.56,
+     0.71,
+     0.8
+    ],
+    "knick_winkel": [
+     40.7,
+     37.9,
+     36.1,
+     26.2
+    ],
+    "gesamtdrehung": 76.8,
+    "winkel_profil": [
+     165.0,
+     143.0,
+     149.0,
+     146.0,
+     133.0,
+     121.0,
+     116.0,
+     85.0,
+     81.0,
+     116.0,
+     94.0,
+     91.0,
+     88.0
+    ],
+    "austritt_grad": 148.9
+   },
+   "farbe": {
+    "lab_schwanz": [
+     23.1,
+     20.6,
+     8.7
+    ],
+    "rgb_schwanz": [
+     88.0,
+     42.0,
+     43.0
+    ],
+    "lab_haut": [
+     28.5,
+     14.0,
+     7.2
+    ],
+    "rgb_haut": [
+     91.0,
+     58.0,
+     57.0
+    ],
+    "lab_ruecken": [
+     34.1,
+     12.9,
+     6.1
+    ],
+    "n_schwanz": 2816,
+    "n_haut": 9000,
+    "de00_haut": 5.8,
+    "de76_haut": 8.6,
+    "de00_ruecken": 9.8,
+    "de76_ruecken": 13.6,
+    "L_verh": 0.812,
+    "C_schwanz": 22.3,
+    "C_haut": 15.8,
+    "C_verh": 1.42,
+    "h_schwanz": 22.9,
+    "h_haut": 27.0,
+    "dh": -4.1,
+    "rot_anteil_schwanz": 0.837,
+    "rot_anteil_haut": 0.376
+   },
+   "muster": {
+    "ak_a_max": 0.34,
+    "ak_a_lag_H": 0.019,
+    "rest_std_a": 3.7,
+    "periode_a_ak": 0.13,
+    "periode_a_H": 0.102,
+    "ak_L_max": 0.17,
+    "ak_L_lag_H": 0.019,
+    "rest_std_L": 5.98,
+    "periode_L_ak": 0.02,
+    "periode_L_H": 0.087
+   },
+   "austritt_unter_OK_H": 0.115
+  },
+  "V3 h92": {
+   "H": 265,
+   "OK": 170,
+   "s0_px": 26,
+   "versteckt_H": 0.098,
+   "form": {
+    "laenge_H": 0.706,
+    "dicke_H": {
+     "0.1": 0.164,
+     "0.2": 0.155,
+     "0.3": 0.121,
+     "0.5": 0.074,
+     "0.7": 0.047,
+     "0.8": 0.049,
+     "0.9": 0.036
+    },
+    "dicke_ab_spitze_H": {
+     "0.05": 0.032,
+     "0.1": 0.04,
+     "0.2": 0.053,
+     "0.3": 0.064,
+     "0.4": 0.087
+    },
+    "breiten_005_095": [
+     0.181,
+     0.164,
+     0.158,
+     0.155,
+     0.132,
+     0.121,
+     0.111,
+     0.096,
+     0.085,
+     0.077,
+     0.07,
+     0.062,
+     0.058,
+     0.047,
+     0.049,
+     0.049,
+     0.042,
+     0.036,
+     0.032
+    ],
+    "max_dwinkel_005H": 24.4,
+    "max_bei": 0.09,
+    "knicke": 1,
+    "knick_bei": [
+     0.09
+    ],
+    "knick_winkel": [
+     24.4
+    ],
+    "gesamtdrehung": 66.6,
+    "winkel_profil": [
+     151.0,
+     151.0,
+     149.0,
+     133.0,
+     132.0,
+     119.0,
+     119.0,
+     108.0,
+     104.0,
+     99.0,
+     98.0,
+     94.0,
+     88.0
+    ],
+    "austritt_grad": 161.9
+   },
+   "farbe": {
+    "lab_schwanz": [
+     16.6,
+     7.9,
+     2.7
+    ],
+    "rgb_schwanz": [
+     53.0,
+     37.0,
+     38.0
+    ],
+    "lab_haut": [
+     28.4,
+     13.7,
+     6.8
+    ],
+    "rgb_haut": [
+     90.0,
+     58.0,
+     58.0
+    ],
+    "lab_ruecken": [
+     33.9,
+     11.4,
+     4.9
+    ],
+    "n_schwanz": 3961,
+    "n_haut": 9012,
+    "de00_haut": 10.0,
+    "de76_haut": 13.8,
+    "de00_ruecken": 13.1,
+    "de76_ruecken": 17.7,
+    "L_verh": 0.585,
+    "C_schwanz": 8.3,
+    "C_haut": 15.3,
+    "C_verh": 0.54,
+    "h_schwanz": 18.7,
+    "h_haut": 26.5,
+    "dh": -7.8,
+    "rot_anteil_schwanz": 0.215,
+    "rot_anteil_haut": 0.367
+   },
+   "muster": {
+    "ak_a_max": 0.18,
+    "ak_a_lag_H": 0.026,
+    "rest_std_a": 1.7,
+    "periode_a_ak": 0.15,
+    "periode_a_H": 0.034,
+    "ak_L_max": 0.1,
+    "ak_L_lag_H": 0.049,
+    "rest_std_L": 1.57,
+    "periode_L_ak": 0.1,
+    "periode_L_H": 0.049
+   },
+   "austritt_unter_OK_H": 0.146
+  }
+ },
+ "vorn": {
+  "Ref2 h118": {
+   "schwanz_sichtbar": 409
+  },
+  "V1 h118": {
+   "schwanz_sichtbar": 0
+  },
+  "V3 h118": {
+   "schwanz_sichtbar": 0
+  },
+  "Ref2 h125": {
+   "schwanz_sichtbar": 0
+  },
+  "V1 h125": {
+   "schwanz_sichtbar": 0
+  },
+  "V3 h125": {
+   "schwanz_sichtbar": 3
+  }
+ },
+ "gang": {
+  "Ref2": {
+   "gang_h84_h132": {
+    "takte": 49,
+    "max_bild_grad": 180.0,
+    "max_knicke_je_takt": 2,
+    "max_raum_grad": 163.7,
+    "max_knicke_raum": 5,
+    "ok": false
+   },
+   "halten_h16_h70": {
+    "takte": 55,
+    "max_bild_grad": 179.9,
+    "max_knicke_je_takt": 3,
+    "max_raum_grad": 168.5,
+    "max_knicke_raum": 6,
+    "ok": false
+   }
+  },
+  "V1": {
+   "gang_h84_h132": {
+    "takte": 49,
+    "max_bild_grad": 164.8,
+    "max_knicke_je_takt": 5,
+    "max_raum_grad": 154.3,
+    "max_knicke_raum": 6,
+    "ok": false
+   },
+   "halten_h16_h70": {
+    "takte": 55,
+    "max_bild_grad": 180.0,
+    "max_knicke_je_takt": 4,
+    "max_raum_grad": 147.8,
+    "max_knicke_raum": 6,
+    "ok": false
+   }
+  },
+  "V3": {
+   "gang_h84_h132": {
+    "takte": 49,
+    "max_bild_grad": 120.2,
+    "max_knicke_je_takt": 3,
+    "max_raum_grad": 16.2,
+    "max_knicke_raum": 0,
+    "ok": true
+   },
+   "halten_h16_h70": {
+    "takte": 55,
+    "max_bild_grad": 38.3,
+    "max_knicke_je_takt": 2,
+    "max_raum_grad": 16.2,
+    "max_knicke_raum": 0,
+    "ok": true
+   }
+  }
+ },
+ "farbe": {
+  "Ref2": {
+   "lab_schwanz": [
+    25.7,
+    22.2,
+    9.6
+   ],
+   "rgb_schwanz": [
+    96.0,
+    47.0,
+    48.0
+   ],
+   "lab_haut": [
+    28.2,
+    14.2,
+    7.2
+   ],
+   "rgb_haut": [
+    90.0,
+    58.0,
+    57.0
+   ],
+   "lab_ruecken": [
+    32.7,
+    13.9,
+    6.7
+   ],
+   "n_schwanz": 1773,
+   "n_haut": 9568,
+   "de00_haut": 5.4,
+   "de76_haut": 8.7,
+   "de00_ruecken": 7.5,
+   "de76_ruecken": 11.2,
+   "L_verh": 0.91,
+   "C_schwanz": 24.1,
+   "C_haut": 15.9,
+   "C_verh": 1.52,
+   "h_schwanz": 23.3,
+   "h_haut": 26.9,
+   "dh": -3.6,
+   "rot_anteil_schwanz": 0.924,
+   "rot_anteil_haut": 0.392
+  },
+  "V1": {
+   "lab_schwanz": [
+    23.8,
+    21.0,
+    8.9
+   ],
+   "rgb_schwanz": [
+    90.0,
+    43.0,
+    45.0
+   ],
+   "lab_haut": [
+    28.4,
+    13.8,
+    7.1
+   ],
+   "rgb_haut": [
+    90.0,
+    58.0,
+    57.0
+   ],
+   "lab_ruecken": [
+    33.9,
+    12.9,
+    6.1
+   ],
+   "n_schwanz": 3017,
+   "n_haut": 9190,
+   "de00_haut": 5.8,
+   "de76_haut": 8.7,
+   "de00_ruecken": 9.4,
+   "de76_ruecken": 13.3,
+   "L_verh": 0.838,
+   "C_schwanz": 22.8,
+   "C_haut": 15.5,
+   "C_verh": 1.47,
+   "h_schwanz": 22.9,
+   "h_haut": 27.0,
+   "dh": -4.1,
+   "rot_anteil_schwanz": 0.874,
+   "rot_anteil_haut": 0.368
+  },
+  "V3": {
+   "lab_schwanz": [
+    16.2,
+    8.1,
+    2.8
+   ],
+   "rgb_schwanz": [
+    52.0,
+    36.0,
+    37.0
+   ],
+   "lab_haut": [
+    28.3,
+    13.6,
+    6.8
+   ],
+   "rgb_haut": [
+    90.0,
+    58.0,
+    58.0
+   ],
+   "lab_ruecken": [
+    33.6,
+    11.6,
+    5.1
+   ],
+   "n_schwanz": 4372,
+   "n_haut": 9115,
+   "de00_haut": 10.1,
+   "de76_haut": 14.0,
+   "de00_ruecken": 13.2,
+   "de76_ruecken": 17.9,
+   "L_verh": 0.571,
+   "C_schwanz": 8.5,
+   "C_haut": 15.2,
+   "C_verh": 0.56,
+   "h_schwanz": 18.9,
+   "h_haut": 26.5,
+   "dh": -7.7,
+   "rot_anteil_schwanz": 0.228,
+   "rot_anteil_haut": 0.361
+  }
+ }
+}

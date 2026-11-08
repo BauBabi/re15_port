@@ -1,0 +1,27 @@
+     Mass                                                    Soll          KI h118 / h125        r2 h118 / h125        r1 h118 / h125        v1 h118 / h125        
+N1   Augenkern hell (Fenster +-0,012 H: Px L*>55)            >= 12         ok 55 / 28            ROT 0 / 0             ROT 8 / 16            ROT 0 / 80            
+N2   Augenkern Lmax (L*)                                     >= 65         ok 82.4 / 77.7        ROT 54.5 / 54.5       ok 70.4 / 70.4        ROT 20.4 / 6.5        
+N3   Augenkern Groesse (Px > Kuppe in der Augenhuelle)       4-16          ok 5 / 7              ROT 3 / 12            ok 8 / 14             ROT 0 / 0             
+N4   Auge dunkel eingebettet (L* Auge/Kuppe)                 0,35-0,55     ok 0.466 / 0.462      ROT 0.214 / 0.391     ok 0.405 / 0.522      ROT 0.767 / 0.137     
+N5   helle Kuppe um das Auge (L* Ring 0,012-0,02 H)          38-50         ok 43.6 / 42.5        ROT 31.4 / 35.2       ok 45.5 / 42.2        ROT 21.7 / 47.2       
+N6   Augenlage im Kopf (Anteil von (B)-links)                0,24-0,36     ok 0.315 / 0.286      ROT 0.398 / 0.458     ROT 0.406 / 0.458     ROT 0.926 / 0.513     
+N7   Auge zu Kopfmitte (H, - = (B)-links = (W)-rechts)       -0,032..-0,016ok -0.0214 / -0.026   ROT -0.0095 / -0.004  ROT -0.0088 / -0.004  ROT 0.0428 / 0.0012   
+N8   Maulmitte im Kopf (Anteil von (B)-links)                0,28-0,45     ok 0.356 / 0.37       ROT 0.528 / 0.555     ROT 0.528 / 0.555     ROT 0.614 / 0.591     
+N9   Haarzone dunkel (L* Zone / Kuppe)                       0,30-0,50     ok 0.385 / 0.406      ROT 1.031 / 0.946     ROT 0.972 / 1.082     ROT nan / 0.952       
+N10  Straehnen (Anzahl >= 0,015 H lang)                      3-6           ok 4 / 4              ROT 1 / 1             ROT 0 / 0             ROT 0 / 0             
+N11  Straehnen-Kontrast (L* dazwischen - L* Straehne)        >= 6          ok 11 / 10.9          ROT 1.2 / 2.1         ROT 0 / 0             ROT 0 / 0             
+N12  Haarzone Breite (H)                                     >= 0,05       ok 0.0685 / 0.0751    ROT 0.0458 / 0.0397   ROT 0.044 / 0.0397    ROT -0.0035 / 0.0345  
+N13  Auge frei (Straehnen-Px auf der Augenmaske)             0             ok 0 / 0              ok 0 / 0              ok 0 / 0              ok 0 / 0              
+N14  kein Oval: Umriss/Ellipse-IoU                           <= 0,60       ok 0.438 / 0.465      ROT 0.772 / 0.726     ROT 0.735 / 0.733     ROT 0.788 / 0.796     
+N15  Spalt (Median schwarze Px je Spalte, H)                 <= 0,018      ok 0.0088 / 0.015     ROT 0.0282 / 0.025    ROT 0.0317 / 0.0267   ROT 0.0475 / 0.0276   
+N16  schwarze Flaeche (1e-4 H^2)                             <= 16         ok 11.6 / 15          ROT 24.9 / 25         ROT 28 / 24.9         ROT 11.7 / 25.7       
+N17  zerklueftet (Anteil groesste schwarze Komponente)       <= 0,80       ok 0.29 / 0.66        ROT 1 / 0.99          ROT 1 / 1             ROT 0.75 / 0.99       
+N18  Oberlippenlinie unregelmaessig (Rest-Std, H)            >= 0,005      ok 0.0068 / 0.0071    ROT 0.0012 / 0.0024   ROT 0.0026 / 0.004    ROT 0.0015 / 0.0033   
+N19  Zahnreihe oben unregelmaessig (Rest-Std, H)             >= 0,005      ok 0.0098 / 0.0089    ROT 0.002 / 0.0027    ROT 0.005 / 0.0007    ROT 0.0026 / 0.0047   
+N20  Mundwinkel (B)-rechts tiefer (H)                        >= +0,004     ok 0.0134 / 0.0044    ROT -0.0033 / 0.0021  ROT 0 / 0.0007        ROT 0.0018 / -0.0035  
+N21  Lippen dunkelrot (Anteil in den Maulspalten)            >= 0,38       ok 0.51 / 0.44        ROT 0.23 / 0.27       ROT 0.27 / 0.24       ROT 0.16 / 0.32       
+N22  Lippen L*/Kuppe                                         0,32-0,48     ok 0.4 / 0.4          ok 0.4 / 0.41         ok 0.36 / 0.34        ok 0.42 / 0.47        
+N23  Kinn rot (Anteil a* >= 12)                              >= 0,70       ok 0.93 / 0.98        ROT 0.15 / 0.18       ROT 0.25 / 0.5        ROT 0.99 / 0.12       
+N24  Kinn L*                                                 14-22         ok 16.6 / 18          ROT 22.3 / 21.1       ok 20 / 17.5          ROT 23.1 / 15         
+N25  Lippenglanz max(RGB)>170 ohne Zaehne, Summe h118+h125   >= 4          ok 21                 ROT 0                 ROT 0                 ok 44                 
+ROT je Variante: KI 0 von 25, r2 23 von 25, r1 18 von 25, v1 22 von 25

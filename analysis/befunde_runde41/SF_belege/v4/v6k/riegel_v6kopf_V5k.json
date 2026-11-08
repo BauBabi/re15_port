@@ -1,0 +1,296 @@
+{
+ "emd": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv4/emd/EM30_V5k.EMD",
+ "emd_sha256": "99703bbda76ebda1317555c0e7c5e5669938c32df408a8d9a2042db570bd679e",
+ "basis": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad\\sfv4\\emd\\EM30_V5r4.EMD",
+ "basis_sha256": "38562ced41061258f435be0d6598697b10ed241b09ba1a948007bc5bdf5993d5",
+ "ref2_sha256": "cfd1ac42729e56365847db42b352337d7f0c06fdcc1ef3413d0aee32d4a97a95",
+ "original_sha256": "569e31387d78c89f2193553a4ba8670d8923ff3d2e98f99c1a2a6bef8f72f4ce",
+ "zeilen": [
+  {
+   "name": "T-K1a Meshes 0-8/10-22 = Basis",
+   "ok": true,
+   "soll": "bytegleich",
+   "ist": "abweichend [], Meshes 23/23",
+   "info": false
+  },
+  {
+   "name": "T-K1b Sektionen 0-6 (EDD, EMR, ...) = Basis",
+   "ok": true,
+   "soll": "bytegleich",
+   "ist": "abweichend []",
+   "info": false
+  },
+  {
+   "name": "T-K1c CLUT 480-485 = Referenz 2; Zeilen <= 16; Hoehe <= 4096",
+   "ok": true,
+   "soll": "480-485 bytegleich, <= 16, <= 4096",
+   "ist": "gleich, 7 Zeilen, 1792",
+   "info": false
+  },
+  {
+   "name": "T-K1d Texel: Koerper = Referenz 2, Abweichung nur Schwanzfeld (= Basis) und Kopf-exklusiv",
+   "ok": true,
+   "soll": "Koerpertexel 0 abweichend",
+   "ist": "Koerpertexel abweichend 0; Schwanzfeld = Basis True; Kopf-exklusiv geaendert 1762 (Box [60, 186, 107, 254])",
+   "info": false
+  },
+  {
+   "name": "T-H6 Kopfgeometrie = Original (EM30 Mesh 9) bis auf die gelistete Glaettung",
+   "ok": true,
+   "soll": "Normalen/Flaechen/UV bytegleich, CLUT-Feld = 486; Ecken gleich ausser <= 4 Glaettungsecken (zum Schwerpunkt <= 0.10, abseits <= 1.5 E.)",
+   "ist": "Ecken 61/61, Normalen 61/61, Dreiecke 73/73, Vierecke 18/18; gleich {'n': True, 'tf': True, 'qf': True, 'ecken_zahl': True}; Glaettung ['54: [-103, -369, -23] -> [-101, -367, -23] (0.008, 0.2 E.)', '60: [-184, -327, -21] -> [-156, -312, -21] (0.081, 0.1 E.)']; UV abweichend 0; CLUT-Feld abweichend 0",
+   "info": false
+  },
+  {
+   "name": "T-H5 keine neue Farbe",
+   "ok": true,
+   "soll": "Kopf nur Zeile 486 = Original-Zeile 0; Indizes aus den Original-Kopftexeln",
+   "ist": "Zeilen [486]; 486 = Original-Zeile 0: True; Kopftexel 6501, Indizes 218, nicht im Original-Kopf []",
+   "info": false
+  },
+  {
+   "name": "T-H1i Mund geschlossen (Texel)",
+   "ok": true,
+   "soll": "dunkel (L* < 30) <= 2 %, rot (a* >= 15) <= 2 %, Median L* >= 55",
+   "ist": "Maultexel 622 (Zeile 486): dunkel 0.0 %, rot 0.0 %, Median L* 75.9",
+   "info": false
+  },
+  {
+   "name": "T-H1ii Mund geschlossen (sichtbar, Posen 135/P1/P2)",
+   "ok": true,
+   "soll": "dunkel/rot nach Palette <= 5 %, beleuchtet a* >= 10 <= 10 %",
+   "ist": "P1: 38 px, dunkel 0 %, rot 0 %, Licht-rot 5 %, Lab [22.8, 4.2, 2.9]; P2: 16 px, dunkel 0 %, rot 0 %, Licht-rot 0 %, Lab [20.9, 2.4, 2.2]; 135: 86 px, dunkel 0 %, rot 0 %, Licht-rot 8 %, Lab [41.6, 1.8, 2.6]",
+   "info": false
+  },
+  {
+   "name": "T-H2 grauer Fleck erweitert (Gesichtshaelfte bis zur Nase)",
+   "ok": true,
+   "soll": "je Pose (>= 20 px): neu >= Foto 1 - 0,10 und >= Original + 0,10",
+   "ist": "Foto 1 0.99; P1: 111 px neu 1.00 / Original 0.74; P2: 141 px neu 1.00 / Original 0.69; 135: 30 px neu 1.00 / Original 0.37; Texel 851: neu 0.99 / Original 0.58",
+   "info": false
+  },
+  {
+   "name": "INFO (d) Auge (W)-rechts = Texturbild links (Augenweiss u 74-84 v 194-198), unveraendert",
+   "ok": true,
+   "soll": "Foto 1 Augenfleck (376,9/167,2) L* 47,0; Foto 2 (452,5/237,2) L* 48,5 (Messblatt 3.3)",
+   "ist": "P1: 5 px bei [444.0, 218.0], Lab [20.4, 1.9, 1.8], L* max 21.4; P2: 3 px bei [451.0, 226.3], Lab [26.1, 3.3, 2.4], L* max 26.9; 135: 6 px bei [341.2, 196.3], Lab [11.9, 0.5, 1.6], L* max 12.5",
+   "info": true
+  },
+  {
+   "name": "T-H4 obere Kontur Ruecken -> Kopf ohne Buckel (P2)",
+   "ok": true,
+   "soll": "Wiederanstieg <= 2 px",
+   "ist": "Kuppe x 405 y 175, Kopf-Vorderkante x 461; Wiederanstieg 2 px (x 435 y 197 -> x 437 y 195)",
+   "info": false
+  },
+  {
+   "name": "INFO T-H4 Modell-Kontur ueber Foto-2-Kontur",
+   "ok": true,
+   "soll": "-",
+   "ist": "max 14 px bei x 418 (Knochen 8); Kopf-Oberkante Modell y 195 / Foto y 194 bei x 437",
+   "info": true
+  }
+ ],
+ "ausnahmeliste": {
+  "kopf_texel_geaendert": 1762,
+  "box": [
+   60,
+   186,
+   107,
+   254
+  ],
+  "nutzer": []
+ },
+ "glaettung": [
+  {
+   "ecke": 54,
+   "alt": [
+    -103,
+    -369,
+    -23
+   ],
+   "neu": [
+    -101,
+    -367,
+    -23
+   ],
+   "zum_schwerpunkt": 0.0081,
+   "abseits": 0.2,
+   "ok": true
+  },
+  {
+   "ecke": 60,
+   "alt": [
+    -184,
+    -327,
+    -21
+   ],
+   "neu": [
+    -156,
+    -312,
+    -21
+   ],
+   "zum_schwerpunkt": 0.0808,
+   "abseits": 0.15,
+   "ok": true
+  }
+ ],
+ "posen": {
+  "P1": {
+   "kopf_px": 1267,
+   "maul_px": 38,
+   "maul_pal_dunkel": 0.0,
+   "maul_pal_rot": 0.0,
+   "maul_licht_rot": 0.05263157894736842,
+   "maul_licht_lab_p50": [
+    22.8,
+    4.2,
+    2.9
+   ],
+   "th1_ok": true,
+   "haelfte_px": 111,
+   "haelfte_grau_neu": 1.0,
+   "haelfte_grau_original": 0.7387387387387387,
+   "haelfte_licht_lab_p50": [
+    13.1,
+    0.8,
+    1.3
+   ],
+   "th2_ok": true,
+   "auge_px": 5,
+   "auge": {
+    "mitte": [
+     444.0,
+     218.0
+    ],
+    "licht_lab_p50": [
+     20.4,
+     1.9,
+     1.8
+    ],
+    "licht_l_max": 21.4
+   }
+  },
+  "P2": {
+   "kopf_px": 902,
+   "maul_px": 16,
+   "maul_pal_dunkel": 0.0,
+   "maul_pal_rot": 0.0,
+   "maul_licht_rot": 0.0,
+   "maul_licht_lab_p50": [
+    20.9,
+    2.4,
+    2.2
+   ],
+   "th1_ok": true,
+   "haelfte_px": 141,
+   "haelfte_grau_neu": 1.0,
+   "haelfte_grau_original": 0.6879432624113475,
+   "haelfte_licht_lab_p50": [
+    14.8,
+    2.5,
+    1.4
+   ],
+   "th2_ok": true,
+   "auge_px": 3,
+   "auge": {
+    "mitte": [
+     451.0,
+     226.3
+    ],
+    "licht_lab_p50": [
+     26.1,
+     3.3,
+     2.4
+    ],
+    "licht_l_max": 26.9
+   },
+   "kontur": {
+    "kuppe": [
+     405,
+     175
+    ],
+    "x_vorn": 461,
+    "wiederanstieg": 2,
+    "stelle": [
+     435,
+     197,
+     437,
+     195
+    ],
+    "ueber_foto": [
+     14,
+     418,
+     8
+    ],
+    "kopf_oben": [
+     437,
+     195,
+     194
+    ]
+   }
+  },
+  "135": {
+   "kopf_px": 1751,
+   "maul_px": 86,
+   "maul_pal_dunkel": 0.0,
+   "maul_pal_rot": 0.0,
+   "maul_licht_rot": 0.08139534883720931,
+   "maul_licht_lab_p50": [
+    41.6,
+    1.8,
+    2.6
+   ],
+   "th1_ok": true,
+   "haelfte_px": 30,
+   "haelfte_grau_neu": 1.0,
+   "haelfte_grau_original": 0.36666666666666664,
+   "haelfte_licht_lab_p50": [
+    18.7,
+    1.1,
+    1.7
+   ],
+   "th2_ok": true,
+   "auge_px": 6,
+   "auge": {
+    "mitte": [
+     341.2,
+     196.3
+    ],
+    "licht_lab_p50": [
+     11.9,
+     0.5,
+     1.6
+    ],
+    "licht_l_max": 12.5
+   }
+  }
+ },
+ "th2_texel": {
+  "neu": 0.9941245593419507,
+  "original": 0.5793184488836662,
+  "texel": 851
+ },
+ "foto1_haelfte": {
+  "box": [
+   368,
+   150,
+   395,
+   191
+  ],
+  "ohne_auge": [
+   373,
+   162,
+   381,
+   172
+  ],
+  "px": 1077,
+  "grau": 0.9925719591457753,
+  "lab_p50": [
+   18.3,
+   7.8,
+   1.5
+  ]
+ },
+ "rot": []
+}

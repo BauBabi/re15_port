@@ -1,0 +1,21 @@
+{
+ "M": [
+  [
+   2.0018467518336402,
+   -0.003930633213590466,
+   2.049128470962081
+  ],
+  [
+   0.0005822899108443439,
+   2.0690088022909006,
+   1.6302032384355494
+  ],
+  [
+   2.9645755284777813e-06,
+   -2.3143213811779668e-05,
+   1.0
+  ]
+ ],
+ "ecc": 0.9849856742342674,
+ "quelle": "ECC-Homographie: BSS ROOM50A Schnitt 12 (Engine-Dekoder probe_bg_dump, 320x240) gegen den Median der Videobilder 1352-1499 (jedes 3.), Maske ohne x 230-500 (Figuren); M bildet Port-Pixel auf Videopixel 640x480 ab"
+}

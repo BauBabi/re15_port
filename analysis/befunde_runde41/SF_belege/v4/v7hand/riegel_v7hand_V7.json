@@ -1,0 +1,910 @@
+{
+ "ergebnisse": [
+  {
+   "pruefung": "T-V7a Krallenzahl",
+   "ergebnis": "gruen",
+   "text": "Modell 4 Doppelpyramiden ['A', 'B', 'C', 'T'], geschlossen True; Foto rote Streifen je Bild [1, 1, 1, 1, 1, 1, 1], Keil in 3/3 Bildern"
+  },
+  {
+   "pruefung": "T-V7b Daumen grau (P1)",
+   "ergebnis": "gruen",
+   "text": "a* 3.7 (<= 6.0), Lab [31.39, 3.7, 0.9], 45 px; Foto-Keil [30.31, 3.97, 1.83]"
+  },
+  {
+   "pruefung": "T-V7c Finger rot (P1)",
+   "ergebnis": "gruen",
+   "text": "a* 11.46 (>= 4.12 = Foto 9.12 - 5), Lab [14.91, 11.46, 5.14], 142 px; Foto-Streifen L*/a*/b* 14.87 / 9.12 / 3.00"
+  },
+  {
+   "pruefung": "T-V7bc P2 / 135",
+   "ergebnis": "INFO",
+   "text": "P2 Daumen {'px': 15, 'lab': [22.07, 0.73, 0.38]} Finger {'px': 65, 'lab': [17.09, 8.94, 4.37]}; 135 Daumen {'px': 24, 'lab': [22.2, 0.69, -3.28]} Finger {'px': 313, 'lab': [18.99, 11.25, 3.97]}"
+  },
+  {
+   "pruefung": "T-V7d Laenge je Kralle (P1)",
+   "ergebnis": "gruen",
+   "text": "T 0.0421 H (12.1 px) / Soll 0.0421 = -0.0 %; A 0.0628 H (18.1 px) / Soll 0.0629 = -0.1 %; B 0.0632 H (18.2 px) / Soll 0.0629 = +0.5 %; C 0.0628 H (18.1 px) / Soll 0.0629 = -0.2 %"
+  },
+  {
+   "pruefung": "T-V7e Rest bytegleich V6",
+   "ergebnis": "gruen",
+   "text": "nur Krallen von Mesh 12; 491 ergaenzt um Indizes [88, 251], 492 mit 68 Finger-Indizes"
+  },
+  {
+   "pruefung": "T-V7f Zeilen",
+   "ergebnis": "gruen",
+   "text": "13 Zeilen, Port-Texturhoehe 3328"
+  },
+  {
+   "pruefung": "T-V7g Boden (912 Keyframes)",
+   "ergebnis": "gruen",
+   "text": "0 von 912 Keyframes mit Krallenspitze unter der Sohle; naechste Spitze 320 E. ueber der Sohle (Basis 0 / 397)"
+  },
+  {
+   "pruefung": "T-V7h Koerper (912 Keyframes)",
+   "ergebnis": "INFO",
+   "text": "neu 26 Keyframes (je Kralle {'A': 14, 'C': 12, 'B': 14, 'T': 16}; Clips [9, 11, 12, 18, 20], Knochen [4, 8, 10]; tiefster Anteil der Achse 1.0), Basis 22 ({'C': 8, 'A': 10, 'T': 15, 'B': 4}; Clips [9, 11, 12, 18, 20], Knochen [4, 8, 10]; 1.0)"
+  }
+ ],
+ "daten": {
+  "pixel": {
+   "P1": {
+    "daumen": {
+     "px": 45,
+     "lab": [
+      31.39,
+      3.7,
+      0.9
+     ]
+    },
+    "finger": {
+     "px": 142,
+     "lab": [
+      14.91,
+      11.46,
+      5.14
+     ]
+    }
+   },
+   "P2": {
+    "daumen": {
+     "px": 15,
+     "lab": [
+      22.07,
+      0.73,
+      0.38
+     ]
+    },
+    "finger": {
+     "px": 65,
+     "lab": [
+      17.09,
+      8.94,
+      4.37
+     ]
+    }
+   },
+   "135": {
+    "daumen": {
+     "px": 24,
+     "lab": [
+      22.2,
+      0.69,
+      -3.28
+     ]
+    },
+    "finger": {
+     "px": 313,
+     "lab": [
+      18.99,
+      11.25,
+      3.97
+     ]
+    }
+   }
+  },
+  "keyframes_neu": {
+   "keyframes": 912,
+   "unter_sohle": 0,
+   "max_ueber_sohle": -320,
+   "koerper_keyframes": 26,
+   "koerper_je_kralle": {
+    "A": 14,
+    "C": 12,
+    "B": 14,
+    "T": 16
+   },
+   "koerper_clips": [
+    9,
+    11,
+    12,
+    18,
+    20
+   ],
+   "koerper_knochen": [
+    4,
+    8,
+    10
+   ],
+   "koerper_tiefste": 1.0
+  },
+  "keyframes_basis": {
+   "keyframes": 912,
+   "unter_sohle": 0,
+   "max_ueber_sohle": -397,
+   "koerper_keyframes": 22,
+   "koerper_je_kralle": {
+    "C": 8,
+    "A": 10,
+    "T": 15,
+    "B": 4
+   },
+   "koerper_clips": [
+    9,
+    11,
+    12,
+    18,
+    20
+   ],
+   "koerper_knochen": [
+    4,
+    8,
+    10
+   ],
+   "koerper_tiefste": 1.0
+  },
+  "koerper_liste_neu": {
+   "A": [
+    {
+     "clip": 9,
+     "bild": 42,
+     "knochen": 4,
+     "punkte": 1,
+     "ab": 1.0
+    },
+    {
+     "clip": 9,
+     "bild": 44,
+     "knochen": 4,
+     "punkte": 3,
+     "ab": 0.8
+    },
+    {
+     "clip": 9,
+     "bild": 46,
+     "knochen": 4,
+     "punkte": 3,
+     "ab": 0.8
+    },
+    {
+     "clip": 9,
+     "bild": 48,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 9,
+     "bild": 50,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 9,
+     "bild": 52,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 9,
+     "bild": 54,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 9,
+     "bild": 56,
+     "knochen": 4,
+     "punkte": 1,
+     "ab": 1.0
+    },
+    {
+     "clip": 18,
+     "bild": 14,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 18,
+     "bild": 16,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.5
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "knochen": 4,
+     "punkte": 7,
+     "ab": 0.4
+    },
+    {
+     "clip": 18,
+     "bild": 20,
+     "knochen": 4,
+     "punkte": 8,
+     "ab": 0.3
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "knochen": 4,
+     "punkte": 8,
+     "ab": 0.3
+    },
+    {
+     "clip": 18,
+     "bild": 24,
+     "knochen": 4,
+     "punkte": 2,
+     "ab": 0.3
+    }
+   ],
+   "C": [
+    {
+     "clip": 9,
+     "bild": 42,
+     "knochen": 4,
+     "punkte": 1,
+     "ab": 1.0
+    },
+    {
+     "clip": 9,
+     "bild": 44,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 9,
+     "bild": 46,
+     "knochen": 4,
+     "punkte": 5,
+     "ab": 0.6
+    },
+    {
+     "clip": 9,
+     "bild": 48,
+     "knochen": 4,
+     "punkte": 5,
+     "ab": 0.6
+    },
+    {
+     "clip": 9,
+     "bild": 50,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.5
+    },
+    {
+     "clip": 9,
+     "bild": 52,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.5
+    },
+    {
+     "clip": 9,
+     "bild": 54,
+     "knochen": 4,
+     "punkte": 3,
+     "ab": 0.8
+    },
+    {
+     "clip": 18,
+     "bild": 14,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 18,
+     "bild": 16,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.5
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "knochen": 4,
+     "punkte": 8,
+     "ab": 0.3
+    },
+    {
+     "clip": 18,
+     "bild": 20,
+     "knochen": 4,
+     "punkte": 9,
+     "ab": 0.2
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.2
+    }
+   ],
+   "B": [
+    {
+     "clip": 9,
+     "bild": 44,
+     "knochen": 4,
+     "punkte": 1,
+     "ab": 1.0
+    },
+    {
+     "clip": 9,
+     "bild": 46,
+     "knochen": 4,
+     "punkte": 3,
+     "ab": 0.8
+    },
+    {
+     "clip": 9,
+     "bild": 48,
+     "knochen": 4,
+     "punkte": 5,
+     "ab": 0.6
+    },
+    {
+     "clip": 9,
+     "bild": 50,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.5
+    },
+    {
+     "clip": 9,
+     "bild": 52,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.5
+    },
+    {
+     "clip": 9,
+     "bild": 54,
+     "knochen": 4,
+     "punkte": 5,
+     "ab": 0.6
+    },
+    {
+     "clip": 9,
+     "bild": 56,
+     "knochen": 4,
+     "punkte": 3,
+     "ab": 0.8
+    },
+    {
+     "clip": 18,
+     "bild": 12,
+     "knochen": 4,
+     "punkte": 2,
+     "ab": 0.9
+    },
+    {
+     "clip": 18,
+     "bild": 14,
+     "knochen": 4,
+     "punkte": 5,
+     "ab": 0.6
+    },
+    {
+     "clip": 18,
+     "bild": 16,
+     "knochen": 4,
+     "punkte": 8,
+     "ab": 0.3
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "knochen": 4,
+     "punkte": 10,
+     "ab": 0.1
+    },
+    {
+     "clip": 18,
+     "bild": 20,
+     "knochen": 4,
+     "punkte": 10,
+     "ab": 0.1
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "knochen": 4,
+     "punkte": 10,
+     "ab": 0.1
+    },
+    {
+     "clip": 18,
+     "bild": 24,
+     "knochen": 4,
+     "punkte": 3,
+     "ab": 0.8
+    }
+   ],
+   "T": [
+    {
+     "clip": 11,
+     "bild": 37,
+     "knochen": 8,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 12,
+     "bild": 64,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 18,
+     "bild": 14,
+     "knochen": 4,
+     "punkte": 2,
+     "ab": 0.9
+    },
+    {
+     "clip": 18,
+     "bild": 16,
+     "knochen": 4,
+     "punkte": 10,
+     "ab": 0.1
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "knochen": 4,
+     "punkte": 11,
+     "ab": 0.0
+    },
+    {
+     "clip": 18,
+     "bild": 20,
+     "knochen": 4,
+     "punkte": 11,
+     "ab": 0.0
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 8,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 46,
+     "knochen": 10,
+     "punkte": 2,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 48,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 50,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 52,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 54,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 56,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 58,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 60,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    }
+   ]
+  },
+  "koerper_liste_basis": {
+   "C": [
+    {
+     "clip": 9,
+     "bild": 46,
+     "knochen": 4,
+     "punkte": 1,
+     "ab": 1.0
+    },
+    {
+     "clip": 9,
+     "bild": 48,
+     "knochen": 4,
+     "punkte": 2,
+     "ab": 0.9
+    },
+    {
+     "clip": 9,
+     "bild": 50,
+     "knochen": 4,
+     "punkte": 3,
+     "ab": 0.8
+    },
+    {
+     "clip": 9,
+     "bild": 52,
+     "knochen": 4,
+     "punkte": 2,
+     "ab": 0.9
+    },
+    {
+     "clip": 18,
+     "bild": 16,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.5
+    },
+    {
+     "clip": 18,
+     "bild": 20,
+     "knochen": 4,
+     "punkte": 9,
+     "ab": 0.2
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "knochen": 4,
+     "punkte": 8,
+     "ab": 0.3
+    }
+   ],
+   "A": [
+    {
+     "clip": 9,
+     "bild": 48,
+     "knochen": 4,
+     "punkte": 1,
+     "ab": 1.0
+    },
+    {
+     "clip": 9,
+     "bild": 50,
+     "knochen": 4,
+     "punkte": 2,
+     "ab": 0.9
+    },
+    {
+     "clip": 9,
+     "bild": 52,
+     "knochen": 4,
+     "punkte": 2,
+     "ab": 0.9
+    },
+    {
+     "clip": 9,
+     "bild": 54,
+     "knochen": 4,
+     "punkte": 1,
+     "ab": 1.0
+    },
+    {
+     "clip": 18,
+     "bild": 14,
+     "knochen": 4,
+     "punkte": 1,
+     "ab": 1.0
+    },
+    {
+     "clip": 18,
+     "bild": 16,
+     "knochen": 4,
+     "punkte": 4,
+     "ab": 0.7
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "knochen": 4,
+     "punkte": 5,
+     "ab": 0.6
+    },
+    {
+     "clip": 18,
+     "bild": 20,
+     "knochen": 4,
+     "punkte": 7,
+     "ab": 0.4
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "knochen": 4,
+     "punkte": 7,
+     "ab": 0.4
+    },
+    {
+     "clip": 18,
+     "bild": 24,
+     "knochen": 4,
+     "punkte": 3,
+     "ab": 0.4
+    }
+   ],
+   "T": [
+    {
+     "clip": 11,
+     "bild": 37,
+     "knochen": 8,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 12,
+     "bild": 64,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 18,
+     "bild": 16,
+     "knochen": 4,
+     "punkte": 10,
+     "ab": 0.1
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "knochen": 4,
+     "punkte": 11,
+     "ab": 0.0
+    },
+    {
+     "clip": 18,
+     "bild": 20,
+     "knochen": 4,
+     "punkte": 11,
+     "ab": 0.0
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "knochen": 4,
+     "punkte": 6,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 8,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 46,
+     "knochen": 10,
+     "punkte": 2,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 48,
+     "knochen": 10,
+     "punkte": 2,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 50,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 52,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 54,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 56,
+     "knochen": 10,
+     "punkte": 1,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 58,
+     "knochen": 10,
+     "punkte": 2,
+     "ab": 0.0
+    },
+    {
+     "clip": 20,
+     "bild": 60,
+     "knochen": 10,
+     "punkte": 2,
+     "ab": 0.0
+    }
+   ],
+   "B": [
+    {
+     "clip": 18,
+     "bild": 16,
+     "knochen": 4,
+     "punkte": 2,
+     "ab": 0.9
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "knochen": 4,
+     "punkte": 9,
+     "ab": 0.2
+    },
+    {
+     "clip": 18,
+     "bild": 20,
+     "knochen": 4,
+     "punkte": 10,
+     "ab": 0.1
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "knochen": 4,
+     "punkte": 9,
+     "ab": 0.2
+    }
+   ]
+  },
+  "foto": {
+   "daumen_bilder": {
+    "1475": {
+     "px_flaeche": 202,
+     "box": [
+      479,
+      340,
+      493,
+      361
+     ],
+     "achse": [
+      -0.41,
+      0.91
+     ],
+     "px": 22.6,
+     "lab": [
+      35.39,
+      0.17,
+      1.83
+     ]
+    },
+    "1476": {
+     "px_flaeche": 70,
+     "box": [
+      481,
+      350,
+      492,
+      360
+     ],
+     "achse": [
+      -0.91,
+      0.4
+     ],
+     "px": 12.7,
+     "lab": [
+      30.31,
+      4.85,
+      1.68
+     ]
+    },
+    "1477": {
+     "px_flaeche": 18,
+     "box": [
+      485,
+      355,
+      488,
+      360
+     ],
+     "achse": [
+      0.3,
+      0.96
+     ],
+     "px": 6.7,
+     "lab": [
+      26.12,
+      3.97,
+      2.46
+     ]
+    }
+   },
+   "rot_streifen_je_bild": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "finger_px": 19.0,
+   "finger_H": 0.0629,
+   "finger_a": 9.12,
+   "finger_L": 14.87,
+   "finger_b": 3.0,
+   "daumen_px": 12.7,
+   "daumen_H": 0.0421,
+   "daumen_lab": [
+    30.31,
+    3.97,
+    1.83
+   ]
+  }
+ }
+}

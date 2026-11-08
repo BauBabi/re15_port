@@ -1,0 +1,4 @@
+Gegenprobe der Riegel K6/K8 am Original (n1485 entblendet):
+ K6 Spiegelfenster x403-410 y162-171 (Augen-Bbox x374-381 an x392 gespiegelt): L* Mittel 12.9 (Riegel <= 18)
+ K8 KV4 x378-398 y185-194: Anteil L*>35 = 0.000 (Riegel <= 0,05), L* max 20.3
+ K1 Augenfleck L* max 56.2, Umgebung Median 21x21 um (376,166) 26.7

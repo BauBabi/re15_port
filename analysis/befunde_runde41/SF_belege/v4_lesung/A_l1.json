@@ -1,0 +1,722 @@
+{
+ "Beschreibung1": {
+  "maske": "|RGB-(237,28,36)|<=40, Kernpixel 4518, Linienpixel 4154 (Bildteil 3798), Diff-zur-Vorlage-Pixel 3798",
+  "matrix": {
+   "zeilen": [
+    "Auge",
+    "Haare",
+    "Nase"
+   ],
+   "spalten": [
+    [
+     403,
+     160
+    ],
+    [
+     382,
+     165
+    ],
+    [
+     394,
+     177
+    ]
+   ],
+   "belegung": [
+    [
+     0.372,
+     0.387,
+     0.356
+    ],
+    [
+     1.0,
+     0.946,
+     0.339
+    ],
+    [
+     0.349,
+     0.316,
+     1.0
+    ]
+   ],
+   "laenge": [
+    [
+     261.4,
+     283.0,
+     273.8
+    ],
+    [
+     257.9,
+     279.3,
+     268.8
+    ],
+    [
+     261.1,
+     282.0,
+     270.2
+    ]
+   ]
+  },
+  "zuordnung": [
+   {
+    "text": "Auge",
+    "box": [
+     679,
+     106,
+     710,
+     118
+    ],
+    "anker_text": [
+     679,
+     111
+    ],
+    "linien_start": [
+     660,
+     112
+    ],
+    "abstand_px": 19.0,
+    "zweitnaechster_px": 33.0,
+    "endpunkt_skelett": [
+     382,
+     165
+    ],
+    "endpunkt_spitze": [
+     381,
+     167
+    ],
+    "belegung": 0.387,
+    "strecke_px": 283.0,
+    "beste_alternative": [
+     403,
+     160
+    ],
+    "belegung_alternative": 0.372,
+    "geodaetisch": {
+     "polylinie_dp2": [
+      [
+       660,
+       112
+      ],
+      [
+       386,
+       146
+      ],
+      [
+       383,
+       150
+      ],
+      [
+       382,
+       165
+      ]
+     ],
+     "skelett_zusammenhaengend": true,
+     "pfad_px": 294,
+     "max_abw_von_gerade_px": 17.9,
+     "knick": [
+      386,
+      146
+     ],
+     "belegung_polylinie": 1.0
+    },
+    "komponente_start": 1,
+    "komponenten_enden": {
+     "[403, 160]": 2,
+     "[382, 165]": 1,
+     "[394, 177]": 3
+    },
+    "belegung_poly": 1.0,
+    "beste_alternative_poly": [
+     403,
+     160
+    ],
+    "belegung_alternative_poly": 0.958
+   },
+   {
+    "text": "Haare",
+    "box": [
+     677,
+     134,
+     714,
+     143
+    ],
+    "anker_text": [
+     677,
+     139
+    ],
+    "linien_start": [
+     660,
+     138
+    ],
+    "abstand_px": 17.0,
+    "zweitnaechster_px": 30.0,
+    "endpunkt_skelett": [
+     403,
+     160
+    ],
+    "endpunkt_spitze": [
+     401,
+     161
+    ],
+    "belegung": 1.0,
+    "strecke_px": 257.9,
+    "beste_alternative": [
+     382,
+     165
+    ],
+    "belegung_alternative": 0.946,
+    "geodaetisch": {
+     "polylinie_dp2": [
+      [
+       660,
+       138
+      ],
+      [
+       403,
+       160
+      ]
+     ],
+     "skelett_zusammenhaengend": true,
+     "pfad_px": 258,
+     "max_abw_von_gerade_px": 0.6,
+     "knick": [
+      594,
+      143
+     ]
+    },
+    "komponente_start": 2,
+    "komponenten_enden": {
+     "[403, 160]": 2,
+     "[382, 165]": 1,
+     "[394, 177]": 3
+    }
+   },
+   {
+    "text": "Nase",
+    "box": [
+     680,
+     161,
+     710,
+     170
+    ],
+    "anker_text": [
+     680,
+     166
+    ],
+    "linien_start": [
+     664,
+     166
+    ],
+    "abstand_px": 16.0,
+    "zweitnaechster_px": 34.4,
+    "endpunkt_skelett": [
+     394,
+     177
+    ],
+    "endpunkt_spitze": [
+     392,
+     178
+    ],
+    "belegung": 1.0,
+    "strecke_px": 270.2,
+    "beste_alternative": [
+     403,
+     160
+    ],
+    "belegung_alternative": 0.349,
+    "geodaetisch": {
+     "polylinie_dp2": [
+      [
+       664,
+       166
+      ],
+      [
+       394,
+       177
+      ]
+     ],
+     "skelett_zusammenhaengend": true,
+     "pfad_px": 271,
+     "max_abw_von_gerade_px": 0.6,
+     "knick": [
+      429,
+      175
+     ]
+    },
+    "komponente_start": 3,
+    "komponenten_enden": {
+     "[403, 160]": 2,
+     "[382, 165]": 1,
+     "[394, 177]": 3
+    }
+   }
+  ],
+  "kreuzungen": [],
+  "summe_beste": 2.387
+ },
+ "Beschreibung2": {
+  "maske": "|RGB-(237,28,36)|<=40, Kernpixel 10566, Linienpixel 7374 (Bildteil 6712), Diff-zur-Vorlage-Pixel 6712",
+  "matrix": {
+   "zeilen": [
+    "Auge von der Seite etwa hier",
+    "Haare von der Seite",
+    "Schwanzspitze Ende",
+    "Schwanz Beginn in den Ruecken ueberfuehrend.",
+    "Schwanz Knick, von da an wird es breiter nach oben"
+   ],
+   "spalten": [
+    [
+     459,
+     235
+    ],
+    [
+     467,
+     241
+    ],
+    [
+     357,
+     243
+    ],
+    [
+     290,
+     308
+    ],
+    [
+     294,
+     344
+    ]
+   ],
+   "belegung": [
+    [
+     1.0,
+     0.548,
+     0.201,
+     0.31,
+     0.234
+    ],
+    [
+     0.608,
+     1.0,
+     0.501,
+     0.139,
+     0.239
+    ],
+    [
+     0.3,
+     0.16,
+     0.114,
+     0.189,
+     1.0
+    ],
+    [
+     0.299,
+     0.252,
+     1.0,
+     0.179,
+     0.178
+    ],
+    [
+     0.208,
+     0.182,
+     0.135,
+     1.0,
+     0.138
+    ]
+   ],
+   "laenge": [
+    [
+     200.6,
+     194.8,
+     301.3,
+     384.0,
+     394.1
+    ],
+    [
+     209.5,
+     202.0,
+     311.8,
+     387.9,
+     393.7
+    ],
+    [
+     202.1,
+     193.6,
+     303.3,
+     373.6,
+     376.4
+    ],
+    [
+     217.9,
+     208.4,
+     314.0,
+     374.0,
+     371.7
+    ],
+    [
+     263.0,
+     253.0,
+     348.3,
+     392.6,
+     383.2
+    ]
+   ]
+  },
+  "zuordnung": [
+   {
+    "text": "Auge von der Seite etwa hier",
+    "box": [
+     664,
+     171,
+     822,
+     200
+    ],
+    "anker_text": [
+     664,
+     176
+    ],
+    "linien_start": [
+     651,
+     177
+    ],
+    "abstand_px": 13.0,
+    "zweitnaechster_px": 45.2,
+    "endpunkt_skelett": [
+     459,
+     235
+    ],
+    "endpunkt_spitze": [
+     457,
+     236
+    ],
+    "belegung": 1.0,
+    "strecke_px": 200.6,
+    "beste_alternative": [
+     467,
+     241
+    ],
+    "belegung_alternative": 0.548,
+    "geodaetisch": {
+     "polylinie_dp2": [
+      [
+       651,
+       177
+      ],
+      [
+       459,
+       235
+      ]
+     ],
+     "skelett_zusammenhaengend": true,
+     "pfad_px": 193,
+     "max_abw_von_gerade_px": 0.6,
+     "knick": [
+      619,
+      186
+     ]
+    },
+    "komponente_start": 1,
+    "komponenten_enden": {
+     "[459, 235]": 1,
+     "[467, 241]": 2,
+     "[357, 243]": 3,
+     "[290, 308]": 3,
+     "[294, 344]": 3
+    }
+   },
+   {
+    "text": "Haare von der Seite",
+    "box": [
+     682,
+     212,
+     809,
+     222
+    ],
+    "anker_text": [
+     682,
+     217
+    ],
+    "linien_start": [
+     668,
+     221
+    ],
+    "abstand_px": 14.6,
+    "zweitnaechster_px": 44.8,
+    "endpunkt_skelett": [
+     467,
+     241
+    ],
+    "endpunkt_spitze": [
+     465,
+     242
+    ],
+    "belegung": 1.0,
+    "strecke_px": 202.0,
+    "beste_alternative": [
+     459,
+     235
+    ],
+    "belegung_alternative": 0.608,
+    "geodaetisch": {
+     "polylinie_dp2": [
+      [
+       668,
+       221
+      ],
+      [
+       467,
+       241
+      ]
+     ],
+     "skelett_zusammenhaengend": true,
+     "pfad_px": 202,
+     "max_abw_von_gerade_px": 0.7,
+     "knick": [
+      611,
+      226
+     ]
+    },
+    "komponente_start": 2,
+    "komponenten_enden": {
+     "[459, 235]": 1,
+     "[467, 241]": 2,
+     "[357, 243]": 3,
+     "[290, 308]": 3,
+     "[294, 344]": 3
+    }
+   },
+   {
+    "text": "Schwanzspitze Ende",
+    "box": [
+     675,
+     260,
+     768,
+     289
+    ],
+    "anker_text": [
+     675,
+     265
+    ],
+    "linien_start": [
+     660,
+     256
+    ],
+    "abstand_px": 17.5,
+    "zweitnaechster_px": 44.6,
+    "endpunkt_skelett": [
+     294,
+     344
+    ],
+    "endpunkt_spitze": [
+     292,
+     345
+    ],
+    "belegung": 1.0,
+    "strecke_px": 376.4,
+    "beste_alternative": [
+     459,
+     235
+    ],
+    "belegung_alternative": 0.3,
+    "geodaetisch": {
+     "polylinie_dp2": [
+      [
+       660,
+       256
+      ],
+      [
+       558,
+       280
+      ],
+      [
+       555,
+       283
+      ],
+      [
+       537,
+       283
+      ],
+      [
+       535,
+       286
+      ],
+      [
+       387,
+       321
+      ],
+      [
+       383,
+       325
+      ],
+      [
+       366,
+       325
+      ],
+      [
+       294,
+       344
+      ]
+     ],
+     "skelett_zusammenhaengend": true,
+     "pfad_px": 368,
+     "max_abw_von_gerade_px": 2.5,
+     "knick": [
+      537,
+      283
+     ]
+    },
+    "komponente_start": 3,
+    "komponenten_enden": {
+     "[459, 235]": 1,
+     "[467, 241]": 2,
+     "[357, 243]": 3,
+     "[290, 308]": 3,
+     "[294, 344]": 3
+    }
+   },
+   {
+    "text": "Schwanz Beginn in den Ruecken ueberfuehrend.",
+    "box": [
+     681,
+     317,
+     784,
+     366
+    ],
+    "anker_text": [
+     681,
+     322
+    ],
+    "linien_start": [
+     664,
+     309
+    ],
+    "abstand_px": 21.4,
+    "zweitnaechster_px": 63.3,
+    "endpunkt_skelett": [
+     357,
+     243
+    ],
+    "endpunkt_spitze": [
+     355,
+     242
+    ],
+    "belegung": 1.0,
+    "strecke_px": 314.0,
+    "beste_alternative": [
+     459,
+     235
+    ],
+    "belegung_alternative": 0.299,
+    "geodaetisch": {
+     "polylinie_dp2": [
+      [
+       664,
+       309
+      ],
+      [
+       561,
+       287
+      ],
+      [
+       555,
+       283
+      ],
+      [
+       537,
+       283
+      ],
+      [
+       357,
+       243
+      ]
+     ],
+     "skelett_zusammenhaengend": true,
+     "pfad_px": 308,
+     "max_abw_von_gerade_px": 2.5,
+     "knick": [
+      555,
+      283
+     ]
+    },
+    "komponente_start": 3,
+    "komponenten_enden": {
+     "[459, 235]": 1,
+     "[467, 241]": 2,
+     "[357, 243]": 3,
+     "[290, 308]": 3,
+     "[294, 344]": 3
+    }
+   },
+   {
+    "text": "Schwanz Knick, von da an wird es breiter nach oben",
+    "box": [
+     687,
+     381,
+     784,
+     449
+    ],
+    "anker_text": [
+     687,
+     386
+    ],
+    "linien_start": [
+     675,
+     385
+    ],
+    "abstand_px": 12.0,
+    "zweitnaechster_px": 80.4,
+    "endpunkt_skelett": [
+     290,
+     308
+    ],
+    "endpunkt_spitze": [
+     288,
+     307
+    ],
+    "belegung": 1.0,
+    "strecke_px": 392.6,
+    "beste_alternative": [
+     459,
+     235
+    ],
+    "belegung_alternative": 0.208,
+    "geodaetisch": {
+     "polylinie_dp2": [
+      [
+       675,
+       385
+      ],
+      [
+       290,
+       308
+      ]
+     ],
+     "skelett_zusammenhaengend": true,
+     "pfad_px": 387,
+     "max_abw_von_gerade_px": 2.0,
+     "knick": [
+      380,
+      324
+     ]
+    },
+    "komponente_start": 3,
+    "komponenten_enden": {
+     "[459, 235]": 1,
+     "[467, 241]": 2,
+     "[357, 243]": 3,
+     "[290, 308]": 3,
+     "[294, 344]": 3
+    }
+   }
+  ],
+  "kreuzungen": [
+   [
+    "Schwanzspitze Ende",
+    "Schwanz Beginn in den Ruecken ueberfuehrend."
+   ],
+   [
+    "Schwanzspitze Ende",
+    "Schwanz Knick, von da an wird es breiter nach oben"
+   ]
+  ],
+  "summe_beste": 5.0
+ }
+}

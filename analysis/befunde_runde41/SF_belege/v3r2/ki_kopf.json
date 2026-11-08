@@ -1,0 +1,217 @@
+{
+ "vorn_h118": {
+  "H": 569,
+  "kuppe_L": 46.6,
+  "band_y": [
+   56,
+   92
+  ],
+  "band_h_H": 0.065,
+  "band_oben_unter_auge_H": 0.0265,
+  "spalt_zeilen": 10,
+  "spalt_h_H": 0.0176,
+  "spalt_anteil": 0.27,
+  "lab_spalt": [
+   14.4,
+   12.6,
+   5.3
+  ],
+  "lab_band": [
+   19.3,
+   16.2,
+   5.5
+  ],
+  "lab_lippe": [
+   20.1,
+   17.7,
+   5.9
+  ],
+  "stummel_n": 16,
+  "stummel_px": [
+   5,
+   3,
+   4,
+   1,
+   1,
+   2,
+   2,
+   3,
+   1,
+   1,
+   1,
+   1,
+   6,
+   2,
+   11,
+   6
+  ],
+  "stummel_b_H": 0.0031,
+  "lab_stummel": [
+   49.6,
+   22.4,
+   6.8
+  ],
+  "glanz_px": 33,
+  "glanz_anteil_band": 0.019,
+  "lab_glanz": [
+   63.6,
+   22.4,
+   7.2
+  ],
+  "rgb_glanz": [
+   196.6,
+   139.4,
+   142.5
+  ],
+  "lab_kinn": [
+   15.0,
+   15.7,
+   5.1
+  ],
+  "L_kinn_kuppe": 0.322,
+  "feld_L": 32.7,
+  "nachbar_L": 37.7,
+  "feld_nachbar": 0.867,
+  "L_band_kuppe": 0.413,
+  "L_kinn": 15.0
+ },
+ "vorn_h125": {
+  "H": 599,
+  "kuppe_L": 44.5,
+  "band_y": [
+   57,
+   94
+  ],
+  "band_h_H": 0.0634,
+  "band_oben_unter_auge_H": 0.0267,
+  "spalt_zeilen": 10,
+  "spalt_h_H": 0.0167,
+  "spalt_anteil": 0.26,
+  "lab_spalt": [
+   11.4,
+   10.6,
+   3.9
+  ],
+  "lab_band": [
+   17.9,
+   15.3,
+   5.3
+  ],
+  "lab_lippe": [
+   19.2,
+   16.5,
+   5.9
+  ],
+  "stummel_n": 19,
+  "stummel_px": [
+   1,
+   7,
+   2,
+   1,
+   4,
+   3,
+   3,
+   2,
+   1,
+   1,
+   1,
+   2,
+   6,
+   5,
+   6,
+   2,
+   2,
+   11,
+   10
+  ],
+  "stummel_b_H": 0.0032,
+  "lab_stummel": [
+   50.2,
+   20.7,
+   6.2
+  ],
+  "glanz_px": 29,
+  "glanz_anteil_band": 0.014,
+  "lab_glanz": [
+   66.0,
+   20.0,
+   6.2
+  ],
+  "rgb_glanz": [
+   199.0,
+   147.4,
+   150.4
+  ],
+  "lab_kinn": [
+   17.3,
+   15.6,
+   5.2
+  ],
+  "L_kinn_kuppe": 0.389,
+  "feld_L": 30.6,
+  "nachbar_L": 35.0,
+  "feld_nachbar": 0.872,
+  "L_band_kuppe": 0.403,
+  "L_kinn": 17.3
+ },
+ "seite_h85": {
+  "H": 504,
+  "OK_y": 1,
+  "spitze": [
+   388,
+   112
+  ],
+  "auge": [
+   371,
+   123
+  ],
+  "auge_hinter_spitze_H": 0.0337,
+  "auge_unter_OK_H": 0.2421,
+  "auge_b_H": 0.0139,
+  "auge_h_H": 0.0099,
+  "lab_auge": [
+   7.0,
+   1.5,
+   -0.2
+  ],
+  "L_auge_haut": 0.27,
+  "L_haut_auge": 26.0,
+  "maul_x": [
+   337,
+   366
+  ],
+  "maul_y": [
+   126,
+   140
+  ],
+  "maul_hinter_spitze_H": [
+   0.0437,
+   0.1012
+  ],
+  "maul_unter_auge_H": [
+   0.006,
+   0.0337
+  ],
+  "lab_maul": [
+   27.3,
+   22.8,
+   8.4
+  ],
+  "stummel_n": 5,
+  "lab_stummel": [
+   56.1,
+   20.1,
+   8.4
+  ],
+  "lab_schnauze_oben": [
+   43.4,
+   4.5,
+   1.0
+  ],
+  "lab_schnauze_unten": [
+   26.4,
+   4.5,
+   1.8
+  ]
+ }
+}

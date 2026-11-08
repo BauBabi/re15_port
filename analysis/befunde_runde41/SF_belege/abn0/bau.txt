@@ -1,0 +1,5 @@
+
+=== LOCAL-BUILD-OK (build)
+EXIT=0
+=== LOCAL-BUILD-OK (configure)
+EXIT=0

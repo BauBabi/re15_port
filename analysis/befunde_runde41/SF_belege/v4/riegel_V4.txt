@@ -1,0 +1,44 @@
+OK   G1 Koerper-Geometrie = Ref2        soll: Meshes 0-8, 10-15 byte-gleich; Skelett/Keyframes 0-15, EDD gleich ist: abweichend keine; Skelett True; Keyframes True; EDD True; uebrige Sektionen True; Ref2 sha256 cfd1ac42 
+OK   M1 Dreiecke Schwanz                soll: <= 212                                                       ist: 160 ([30, 20, 20, 20, 20, 20, 30]) 
+OK   M2 Dreiecke Kopf                   soll: <= 118                                                       ist: 111 
+OK   M3 Farbtiefe                       soll: 8-bpp-TIM, Texel aus der CLUT                                ist: 8 bpp True; CLUT-Zeilen Kopf [486], Schwanz [487] (TIM 8 Zeilen) 
+OK   M4 Texeldichte                     soll: Kopf und Schwanz 0,045-0,091 Texel/E.                        ist: Kopf 0.062; Schwanz [0.049, 0.061, 0.063, 0.063, 0.065, 0.066, 0.06] 
+OK   K1 Augen vorn                      soll: 1 Komponente; Kontrast >= 20 (Original 29,5)                 ist: 1 Komp.; 31.6 
+OK   K2 Augenfleck Farbe                soll: 46,9/7,2/-1,1 dE00 <= 6; L* >= KV5 + 20                      ist: 47.3/7.3/-1.4 dE00 0.5; L* 47.3 vs KV5 20.0 + 20 
+OK   K3 Augenfleck Groesse              soll: B 0,016-0,036 / H 0,023-0,043 H                              ist: 0.022 x 0.036 H (8 x 13 px) 
+OK   K4 Augenlage vorn                  soll: (B)-links 0,035-0,065 H; 0,07-0,12 H unter OK                ist: 0.056 H links; 0.112 H unter OK 
+OK   K5 Haarfeld vorn                   soll: 13,3/7,4/1,5 dE00 <= 6; L* <= Auge - 25                      ist: 13.2/7.2/1.7 dE00 0.3; L* 13.2 vs 22.3 
+OK   K6 zweites Auge verdeckt           soll: L* <= 18 (Original 12,9)                                     ist: L* 11.2 (Box (370, 188, 377, 200)) 
+OK   K7 Nase                            soll: 18,2/7,1/1,3 dE00 <= 6; L* zwischen Haar und Auge            ist: 18.3/6.3/1.0 dE00 0.9 
+OK   K8 Kinn/Maulzone                   soll: 9,9/9,9/3,8 dE00 <= 6; Anteil L*>35 <= 0,05                  ist: 11.9/13.2/4.3 dE00 3.1; Anteil 0.000 
+OK   K9 Kopf-Oberseite rot vorn         soll: 22,6/15,4/5,2 dE00 <= 6; a* >= 11                            ist: 22.9/15.4/5.4 dE00 0.2 
+OK   K10 Kopfbox vorn                   soll: 0,14-0,18 x 0,15-0,20 H                                      ist: 0.143 x 0.187 H 
+ROT  S1 Auge seitlich                   soll: 48,4/4,0/0,5 dE00 <= 6; 0,028-0,052 x 0,040-0,070 H          ist: 47.5/3.6/0.5 dE00 1.0; 0.023 x 0.030 H; 5 Komp. 
+OK   S2 Augenlage seitlich              soll: 0,03-0,07 H hinter der Vorderkante; 0,76-0,82 H ueber der Sohle ist: 0.046 H; 0.818 H 
+OK   S3 Haarkante seitlich              soll: L* <= 22; 19,1/1,2/1,1 dE00 <= 6; Abstand zum Fleck <= 0,01 H ist: 19.5/0.9/1.6 dE00 0.8; Abstand 0.008 H 
+OK   S4 Kopf-Oberseite rot seitlich     soll: 27,6/15,3/3,3 dE00 <= 6; a* >= 11                            ist: 27.5/14.3/2.9 dE00 0.8 
+ROT  T1 Schwanz Beginn                  soll: 0,15 H hinter Scheitel, 0,767 H ueber Sohle (+-0,03)         ist: 0.214 H hinter, 0.727 H ueber [unterster Schwanz-Pixel an Id 7/8 (Id 16 versenkt)]
+OK   T2 Biegung                         soll: dx -0,245 dy +0,036 (+-0,03); Drehung 60-100 Grad auf 0,10 H ist: dx -0.244 dy 0.025; 68 Grad 
+OK   T3 Knick (Taille)                  soll: dx -0,265 dy +0,257 (+-0,03)                                 ist: dx -0.263 dy 0.255 
+OK   T4 Ende                            soll: dx -0,245 dy +0,397 (+-0,03); 0,37 H ueber Sohle             ist: dx -0.241 dy 0.398; 0.330 H ueber Sohle 
+OK   T5 Breite nach oben                soll: f 0,1/0,3/0,5/0,7: 0,03/0,065/0,125/0,14 H; Abfall <= 0,01   ist: 0.034/0.066/0.123/0.140 H; Abfall 0.002 
+OK   T6 Endstueck                       soll: B 0,025-0,05; L 0,12-0,17 H; 75-95 Grad; Taille <= 0,035 und schmalste ist: B 0.028; L 0.144 H; 81 Grad (vorn); Taille 0.021, schmalste davor 0.021 
+OK   T8 Schwanzfarbe                    soll: F15 9,3/11,4/1,5; F16 8,7/8,4/2,2; F17 26,8/-0,1/2,4; F18 15,2/3,2/1,6; dE00 <= 6; a* Wurzel >= 7, Ende <= 6 ist: F15 9.3/8.5/3.2 dE00 3.0 (146 px); F16 9.2/8.7/3.2 dE00 0.9 (131 px); F17 26.6/-0.0/1.9 dE00 0.4 (2032 px); F18 15.5/3.4/1.9 dE00 0.3 (218 px) 
+ROT  T7 Gang h85                        soll: T1-T4 je +-0,06 H                                            ist: T1 (0.116, 0.659) (0.108) T2 (-0.244, 0.447) (0.411) T3 (-0.238, 0.476) (0.219) T4 (-0.221, 0.484) (0.087) [Laufpose clip 11 bild 64 gier 1893]
+ROT  T7 Gang h100                       soll: T1-T4 je +-0,06 H                                            ist: T1 (0.153, 0.617) (0.150) T2 (-0.316, 0.025) (0.071) T3 (-0.345, 0.033) (0.224) T4 (-0.341, 0.033) (0.364) [Laufpose clip 1 bild 10 gier 1515]
+ROT  T7 Gang h110                       soll: T1-T4 je +-0,06 H                                            ist: T1 (0.206, 0.723) (0.056) T2 (-0.372, 0.077) (0.127) T3 (-0.378, 0.163) (0.113) T4 (-0.305, 0.288) (0.109) [Laufpose clip 1 bild 20 gier 1515]
+ROT  T7 Gang h118                       soll: T1-T4 je +-0,06 H                                            ist: T1 (0.218, 0.735) (0.068) T2 (-0.231, 0.039) (0.014) T3 (-0.236, 0.275) (0.029) T4 (-0.253, 0.413) (0.016) [Laufpose clip 1 bild 28 gier 1515]
+ROT  T7 Gang h125                       soll: T1-T4 je +-0,06 H                                            ist: T1 (0.214, 0.727) (0.064) T2 (-0.255, -0.017) (0.053) T3 (-0.295, 0.207) (0.050) T4 (-0.267, 0.311) (0.086) [Laufpose clip 1 bild 35 gier 1515]
+ROT  T7 Gang h135                       soll: T1-T4 je +-0,06 H                                            ist: T1 (0.214, 0.723) (0.064) T2 (-0.232, 0.047) (0.013) T3 (-0.263, 0.293) (0.036) T4 (-0.284, 0.393) (0.039) [Laufpose clip 1 bild 45 gier 1513]
+OK   F0 Lichtgegenprobe h118            soll: Rumpf b2 gegen FRAMEDUMP dE00 <= 3                           ist: b2 22.6/11.9/4.0 / Spiel 22.5/12.0/4.1 dE00 0.1 (11424 px) 
+OK   F0 Lichtgegenprobe h135            soll: Rumpf b2 gegen FRAMEDUMP dE00 <= 3                           ist: b2 17.9/13.1/5.0 / Spiel 17.9/12.9/4.9 dE00 0.1 (12873 px) 
+OK   F F6                               soll: 16.6/17.3/6.2 dE00 <= 5, |dL| <= 4                           ist: 16.1/15.2/6.1 dE00 1.5 dL -0.5 (8698 px) 
+OK   F F7                               soll: 33.3/5.5/2.7 dE00 <= 5, |dL| <= 4                            ist: 36.1/8.7/1.5 dE00 4.2 dL +2.8 (2181 px) 
+ROT  F F8                               soll: 16.4/8.3/1.5 dE00 <= 5, |dL| <= 4                            ist: 40.6/6.4/0.4 dE00 18.5 dL +24.2 (3293 px) 
+OK   F F9                               soll: 12.7/-0.9/-1.5 dE00 <= 5, |dL| <= 4                          ist: 14.8/0.3/-2.4 dE00 2.4 dL +2.1 (4090 px) 
+OK   F F10                              soll: 11.2/14.0/2.5 dE00 <= 5, |dL| <= 4                           ist: 11.0/13.5/1.4 dE00 0.8 dL -0.2 (677 px) [Id 12 (Klaue (B)-rechts); Id 15: nan/nan/nan (0 px)]
+OK   F F14                              soll: 60.0/11.0/1.2 dE00 <= 5, |dL| <= 4                           ist: 56.3/8.0/0.8 dE00 4.3 dL -3.7 (1256 px) 
+OK   F F19                              soll: 18.4/0.5/-3.5 dE00 <= 5, |dL| <= 4                           ist: 15.6/-0.0/-2.1 dE00 2.4 dL -2.8 (1341 px) 
+ROT  F Mittel                           soll: Mittel dE00 <= 4                                             ist: 4.87 
+OK   F0 Gueltigkeit Farbvergleich       soll: Wand links 64,7/0,3/-2,1 dE00 <= 2                           ist: 65.2/0.2/-2.5 dE00 0.52 
+ROT: 10 von 43

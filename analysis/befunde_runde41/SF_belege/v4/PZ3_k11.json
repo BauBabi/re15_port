@@ -1,0 +1,157 @@
+{
+ "a_orig_box9": {
+  "mittel": 41.0,
+  "min": 39.4,
+  "max": 42.9,
+  "rumpf": 26.2
+ },
+ "b_orig_fenster": {
+  "innen": {
+   "grad": 32.7,
+   "streu": 2.6
+  },
+  "oben": {
+   "grad": 42.5,
+   "streu": 3.59
+  },
+  "mitte": {
+   "grad": 35.0,
+   "streu": 3.32
+  },
+  "unten": {
+   "grad": 32.5,
+   "streu": 2.41
+  },
+  "links": {
+   "grad": 44.2,
+   "streu": 3.59
+  },
+  "rechts": {
+   "grad": 24.8,
+   "streu": 2.15
+  }
+ },
+ "V4": {
+  "a": {
+   "kopf": 36.1,
+   "rumpf": 32.7,
+   "kopf_skaliert": 41.1,
+   "rumpf_skaliert": 37.2
+  },
+  "b": {
+   "innen": {
+    "grad": 39.9,
+    "streu": 3.31,
+    "n": 1151
+   },
+   "oben": {
+    "grad": 45.9,
+    "streu": 4.05,
+    "n": 456
+   },
+   "mitte": {
+    "grad": 36.3,
+    "streu": 2.72,
+    "n": 660
+   },
+   "unten": {
+    "grad": 39.7,
+    "streu": 3.17,
+    "n": 476
+   },
+   "links": {
+    "grad": 41.1,
+    "streu": 3.35,
+    "n": 662
+   },
+   "rechts": {
+    "grad": 39.0,
+    "streu": 3.44,
+    "n": 708
+   }
+  },
+  "faktor": 0.83
+ },
+ "V4R2": {
+  "a": {
+   "kopf": 27.7,
+   "rumpf": 32.9,
+   "kopf_skaliert": 31.7,
+   "rumpf_skaliert": 37.4
+  },
+  "b": {
+   "innen": {
+    "grad": 31.1,
+    "streu": 2.65,
+    "n": 1151
+   },
+   "oben": {
+    "grad": 22.9,
+    "streu": 2.06,
+    "n": 456
+   },
+   "mitte": {
+    "grad": 29.5,
+    "streu": 2.56,
+    "n": 660
+   },
+   "unten": {
+    "grad": 39.9,
+    "streu": 3.33,
+    "n": 476
+   },
+   "links": {
+    "grad": 39.5,
+    "streu": 3.49,
+    "n": 662
+   },
+   "rechts": {
+    "grad": 26.3,
+    "streu": 2.07,
+    "n": 708
+   }
+  },
+  "faktor": 0.83
+ },
+ "V3": {
+  "a": {
+   "kopf": 28.5,
+   "rumpf": 36.5,
+   "kopf_skaliert": 32.7,
+   "rumpf_skaliert": 42.1
+  },
+  "b": {
+   "innen": {
+    "grad": 33.3,
+    "streu": 2.76,
+    "n": 828
+   },
+   "oben": {
+    "grad": 16.4,
+    "streu": 1.37,
+    "n": 343
+   },
+   "mitte": {
+    "grad": 38.0,
+    "streu": 2.8,
+    "n": 490
+   },
+   "unten": {
+    "grad": 39.6,
+    "streu": 3.59,
+    "n": 335
+   },
+   "links": {
+    "grad": 36.1,
+    "streu": 2.95,
+    "n": 483
+   },
+   "rechts": {
+    "grad": 32.4,
+    "streu": 2.42,
+    "n": 485
+   }
+  },
+  "faktor": 0.83
+ }
+}

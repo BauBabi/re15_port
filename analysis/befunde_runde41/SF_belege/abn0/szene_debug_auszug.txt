@@ -1,0 +1,10 @@
+[asset] cd-root: C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel/re15_port/shared_assets/PSX
+[szenenschutz] F0 an (Szene haelt den Spieler)
+[szenenschutz] F6 aus (0 geschuetzte Gegner-Ticks)
+[hangar] ROOM50A0 Szene Start: Schnitt 4 angefordert -> Cut 12, Birkin Slot 35, Spider-Man Slot 34, Spieler (-8951,-13304)
+[enemy] EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum 50A0)
+[enemy] EM30 loaded: 23 meshes, 23 bones, 21 clips -> slot 12
+[szenenschutz] F235 an (Szene haelt den Spieler)
+[hangar] ROOM50A0 Szene Ende: Cut 4, Birkin Zustand 0
+[szenenschutz] F393 aus (14 geschuetzte Gegner-Ticks)
+[flow] EXIT_AT: Bild 1110 in Raum 50a0 erreicht -> exit

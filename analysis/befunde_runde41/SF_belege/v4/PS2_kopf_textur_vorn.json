@@ -1,0 +1,30 @@
+{
+ "orig": {
+  "kopf": 41.2,
+  "rumpf": 26.2,
+  "lum_std_kopf": 22.7,
+  "lum_std_rumpf": 16.5,
+  "verh_kopf_rumpf_grad": 1.57
+ },
+ "V4_videoraum": {
+  "kopf": 27.8,
+  "rumpf": 32.4,
+  "lum_std_kopf": 20.6,
+  "lum_std_rumpf": 20.7,
+  "verh_kopf_rumpf_grad": 0.86
+ },
+ "REF2_videoraum": {
+  "kopf": 47.4,
+  "rumpf": 37.0,
+  "lum_std_kopf": 19.7,
+  "lum_std_rumpf": 23.1,
+  "verh_kopf_rumpf_grad": 1.28
+ },
+ "V3r2_videoraum": {
+  "kopf": 28.8,
+  "rumpf": 36.5,
+  "lum_std_kopf": 21.1,
+  "lum_std_rumpf": 22.8,
+  "verh_kopf_rumpf_grad": 0.79
+ }
+}

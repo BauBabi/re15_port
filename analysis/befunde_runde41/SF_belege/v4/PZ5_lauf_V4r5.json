@@ -1,0 +1,2309 @@
+{
+ "HE": 3774.94091796875,
+ "takte": {
+  "-8": {
+   "clip": 0,
+   "F": 235,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.0,
+    "Knick": 0.0,
+    "Ende": 0.0
+   },
+   "form_rest": 0.015,
+   "w3": 75.0,
+   "w5": 15.8,
+   "wmax": 75.0,
+   "abfall_37_welt": 0.372,
+   "tiefster_meshpunkt": -1058
+  },
+  "-7": {
+   "clip": 0,
+   "F": 236,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.0,
+    "Knick": 0.0,
+    "Ende": 0.001
+   },
+   "form_rest": 0.014,
+   "w3": 75.1,
+   "w5": 15.8,
+   "wmax": 75.1,
+   "abfall_37_welt": 0.372,
+   "tiefster_meshpunkt": -1052
+  },
+  "-6": {
+   "clip": 0,
+   "F": 237,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.001,
+    "Knick": 0.001,
+    "Ende": 0.002
+   },
+   "form_rest": 0.012,
+   "w3": 75.1,
+   "w5": 15.8,
+   "wmax": 75.1,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -1044
+  },
+  "-5": {
+   "clip": 0,
+   "F": 238,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.001,
+    "Knick": 0.002,
+    "Ende": 0.003
+   },
+   "form_rest": 0.012,
+   "w3": 74.5,
+   "w5": 15.9,
+   "wmax": 74.5,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -1028
+  },
+  "-4": {
+   "clip": 0,
+   "F": 239,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.002,
+    "Knick": 0.003,
+    "Ende": 0.004
+   },
+   "form_rest": 0.014,
+   "w3": 73.9,
+   "w5": 15.9,
+   "wmax": 73.9,
+   "abfall_37_welt": 0.37,
+   "tiefster_meshpunkt": -1002
+  },
+  "-3": {
+   "clip": 0,
+   "F": 240,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.004,
+    "Knick": 0.005,
+    "Ende": 0.006
+   },
+   "form_rest": 0.018,
+   "w3": 72.7,
+   "w5": 16.0,
+   "wmax": 72.7,
+   "abfall_37_welt": 0.368,
+   "tiefster_meshpunkt": -959
+  },
+  "-2": {
+   "clip": 0,
+   "F": 241,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.004,
+    "Knick": 0.006,
+    "Ende": 0.007
+   },
+   "form_rest": 0.022,
+   "w3": 71.6,
+   "w5": 16.0,
+   "wmax": 71.6,
+   "abfall_37_welt": 0.367,
+   "tiefster_meshpunkt": -919
+  },
+  "-1": {
+   "clip": 0,
+   "F": 242,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.004,
+    "Knick": 0.006,
+    "Ende": 0.007
+   },
+   "form_rest": 0.026,
+   "w3": 70.7,
+   "w5": 15.9,
+   "wmax": 70.7,
+   "abfall_37_welt": 0.365,
+   "tiefster_meshpunkt": -889
+  },
+  "0": {
+   "clip": 0,
+   "F": 243,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.003,
+    "Knick": 0.005,
+    "Ende": 0.007
+   },
+   "form_rest": 0.026,
+   "w3": 70.6,
+   "w5": 15.9,
+   "wmax": 70.6,
+   "abfall_37_welt": 0.363,
+   "tiefster_meshpunkt": -867
+  },
+  "1": {
+   "clip": 0,
+   "F": 244,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.002,
+    "Knick": 0.005,
+    "Ende": 0.007
+   },
+   "form_rest": 0.022,
+   "w3": 71.0,
+   "w5": 16.0,
+   "wmax": 71.0,
+   "abfall_37_welt": 0.36,
+   "tiefster_meshpunkt": -860
+  },
+  "2": {
+   "clip": 0,
+   "F": 245,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.001,
+    "Knick": 0.005,
+    "Ende": 0.006
+   },
+   "form_rest": 0.017,
+   "w3": 71.9,
+   "w5": 16.0,
+   "wmax": 71.9,
+   "abfall_37_welt": 0.358,
+   "tiefster_meshpunkt": -866
+  },
+  "3": {
+   "clip": 0,
+   "F": 246,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.001,
+    "Knick": 0.004,
+    "Ende": 0.006
+   },
+   "form_rest": 0.011,
+   "w3": 73.2,
+   "w5": 15.6,
+   "wmax": 73.2,
+   "abfall_37_welt": 0.356,
+   "tiefster_meshpunkt": -887
+  },
+  "4": {
+   "clip": 0,
+   "F": 247,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.003,
+    "Knick": 0.004,
+    "Ende": 0.006
+   },
+   "form_rest": 0.012,
+   "w3": 74.6,
+   "w5": 15.2,
+   "wmax": 74.6,
+   "abfall_37_welt": 0.354,
+   "tiefster_meshpunkt": -917
+  },
+  "5": {
+   "clip": 0,
+   "F": 248,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.004,
+    "Knick": 0.004,
+    "Ende": 0.006
+   },
+   "form_rest": 0.012,
+   "w3": 75.5,
+   "w5": 14.9,
+   "wmax": 75.5,
+   "abfall_37_welt": 0.354,
+   "tiefster_meshpunkt": -954
+  },
+  "6": {
+   "clip": 0,
+   "F": 249,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.004,
+    "Knick": 0.004,
+    "Ende": 0.005
+   },
+   "form_rest": 0.018,
+   "w3": 75.6,
+   "w5": 14.7,
+   "wmax": 75.6,
+   "abfall_37_welt": 0.356,
+   "tiefster_meshpunkt": -987
+  },
+  "7": {
+   "clip": 11,
+   "F": 250,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.004,
+    "Knick": 0.005,
+    "Ende": 0.004
+   },
+   "form_rest": 0.022,
+   "w3": 76.0,
+   "w5": 14.8,
+   "wmax": 76.0,
+   "abfall_37_welt": 0.357,
+   "tiefster_meshpunkt": -1019
+  },
+  "8": {
+   "clip": 11,
+   "F": 251,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.004,
+    "Knick": 0.006,
+    "Ende": 0.005
+   },
+   "form_rest": 0.023,
+   "w3": 76.3,
+   "w5": 15.0,
+   "wmax": 76.3,
+   "abfall_37_welt": 0.356,
+   "tiefster_meshpunkt": -1000
+  },
+  "9": {
+   "clip": 11,
+   "F": 252,
+   "abw_ziel": {
+    "Beginn": 0.003,
+    "Biegung": 0.01,
+    "Knick": 0.013,
+    "Ende": 0.013
+   },
+   "form_rest": 0.021,
+   "w3": 76.9,
+   "w5": 15.3,
+   "wmax": 76.9,
+   "abfall_37_welt": 0.356,
+   "tiefster_meshpunkt": -961
+  },
+  "10": {
+   "clip": 11,
+   "F": 253,
+   "abw_ziel": {
+    "Beginn": 0.004,
+    "Biegung": 0.014,
+    "Knick": 0.019,
+    "Ende": 0.021
+   },
+   "form_rest": 0.019,
+   "w3": 77.2,
+   "w5": 15.9,
+   "wmax": 77.2,
+   "abfall_37_welt": 0.357,
+   "tiefster_meshpunkt": -929
+  },
+  "11": {
+   "clip": 11,
+   "F": 254,
+   "abw_ziel": {
+    "Beginn": 0.004,
+    "Biegung": 0.016,
+    "Knick": 0.023,
+    "Ende": 0.027
+   },
+   "form_rest": 0.017,
+   "w3": 76.9,
+   "w5": 15.9,
+   "wmax": 76.9,
+   "abfall_37_welt": 0.36,
+   "tiefster_meshpunkt": -913
+  },
+  "12": {
+   "clip": 11,
+   "F": 255,
+   "abw_ziel": {
+    "Beginn": 0.003,
+    "Biegung": 0.014,
+    "Knick": 0.023,
+    "Ende": 0.028
+   },
+   "form_rest": 0.016,
+   "w3": 76.4,
+   "w5": 16.3,
+   "wmax": 76.4,
+   "abfall_37_welt": 0.363,
+   "tiefster_meshpunkt": -911
+  },
+  "13": {
+   "clip": 11,
+   "F": 256,
+   "abw_ziel": {
+    "Beginn": 0.002,
+    "Biegung": 0.01,
+    "Knick": 0.019,
+    "Ende": 0.026
+   },
+   "form_rest": 0.018,
+   "w3": 76.0,
+   "w5": 16.0,
+   "wmax": 76.0,
+   "abfall_37_welt": 0.365,
+   "tiefster_meshpunkt": -919
+  },
+  "14": {
+   "clip": 11,
+   "F": 257,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.006,
+    "Knick": 0.015,
+    "Ende": 0.022
+   },
+   "form_rest": 0.019,
+   "w3": 75.3,
+   "w5": 16.0,
+   "wmax": 75.3,
+   "abfall_37_welt": 0.368,
+   "tiefster_meshpunkt": -937
+  },
+  "15": {
+   "clip": 11,
+   "F": 258,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.004,
+    "Knick": 0.011,
+    "Ende": 0.019
+   },
+   "form_rest": 0.019,
+   "w3": 74.7,
+   "w5": 15.9,
+   "wmax": 74.7,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -952
+  },
+  "16": {
+   "clip": 11,
+   "F": 259,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.002,
+    "Knick": 0.008,
+    "Ende": 0.015
+   },
+   "form_rest": 0.017,
+   "w3": 74.2,
+   "w5": 16.0,
+   "wmax": 74.2,
+   "abfall_37_welt": 0.374,
+   "tiefster_meshpunkt": -957
+  },
+  "17": {
+   "clip": 11,
+   "F": 260,
+   "abw_ziel": {
+    "Beginn": 0.055,
+    "Biegung": 0.097,
+    "Knick": 0.17,
+    "Ende": 0.209
+   },
+   "form_rest": 0.08,
+   "w3": 76.1,
+   "w5": 16.0,
+   "wmax": 76.1,
+   "abfall_37_welt": 0.337,
+   "tiefster_meshpunkt": -827
+  },
+  "18": {
+   "clip": 11,
+   "F": 261,
+   "abw_ziel": {
+    "Beginn": 0.162,
+    "Biegung": 0.42,
+    "Knick": 0.259,
+    "Ende": 0.292
+   },
+   "form_rest": 0.093,
+   "w3": 75.6,
+   "w5": 15.9,
+   "wmax": 75.6,
+   "abfall_37_welt": 0.207,
+   "tiefster_meshpunkt": -754
+  },
+  "19": {
+   "clip": 11,
+   "F": 262,
+   "abw_ziel": {
+    "Beginn": 0.229,
+    "Biegung": 0.643,
+    "Knick": 0.396,
+    "Ende": 0.32
+   },
+   "form_rest": 0.1,
+   "w3": 75.7,
+   "w5": 15.9,
+   "wmax": 75.7,
+   "abfall_37_welt": 0.193,
+   "tiefster_meshpunkt": -784
+  },
+  "20": {
+   "clip": 11,
+   "F": 263,
+   "abw_ziel": {
+    "Beginn": 0.26,
+    "Biegung": 0.74,
+    "Knick": 0.572,
+    "Ende": 0.521
+   },
+   "form_rest": 0.036,
+   "w3": 74.1,
+   "w5": 16.1,
+   "wmax": 74.1,
+   "abfall_37_welt": 0.29,
+   "tiefster_meshpunkt": -520
+  },
+  "21": {
+   "clip": 11,
+   "F": 264,
+   "abw_ziel": {
+    "Beginn": 0.258,
+    "Biegung": 0.732,
+    "Knick": 0.578,
+    "Ende": 0.548
+   },
+   "form_rest": 0.064,
+   "w3": 74.0,
+   "w5": 16.1,
+   "wmax": 74.0,
+   "abfall_37_welt": 0.296,
+   "tiefster_meshpunkt": -462
+  },
+  "22": {
+   "clip": 11,
+   "F": 265,
+   "abw_ziel": {
+    "Beginn": 0.265,
+    "Biegung": 0.691,
+    "Knick": 0.617,
+    "Ende": 0.654
+   },
+   "form_rest": 0.161,
+   "w3": 59.9,
+   "w5": 16.1,
+   "wmax": 59.9,
+   "abfall_37_welt": 0.326,
+   "tiefster_meshpunkt": -277
+  },
+  "23": {
+   "clip": 11,
+   "F": 266,
+   "abw_ziel": {
+    "Beginn": 0.256,
+    "Biegung": 0.703,
+    "Knick": 0.651,
+    "Ende": 0.699
+   },
+   "form_rest": 0.19,
+   "w3": 57.5,
+   "w5": 16.2,
+   "wmax": 57.5,
+   "abfall_37_welt": 0.318,
+   "tiefster_meshpunkt": -215
+  },
+  "24": {
+   "clip": 11,
+   "F": 267,
+   "abw_ziel": {
+    "Beginn": 0.246,
+    "Biegung": 0.652,
+    "Knick": 0.793,
+    "Ende": 0.84
+   },
+   "form_rest": 0.198,
+   "w3": 59.8,
+   "w5": 16.1,
+   "wmax": 59.8,
+   "abfall_37_welt": 0.24,
+   "tiefster_meshpunkt": -597
+  },
+  "25": {
+   "clip": 11,
+   "F": 268,
+   "abw_ziel": {
+    "Beginn": 0.241,
+    "Biegung": 0.757,
+    "Knick": 0.893,
+    "Ende": 0.988
+   },
+   "form_rest": 0.208,
+   "w3": 72.8,
+   "w5": 16.1,
+   "wmax": 72.8,
+   "abfall_37_welt": 0.06,
+   "tiefster_meshpunkt": -933
+  },
+  "26": {
+   "clip": 11,
+   "F": 269,
+   "abw_ziel": {
+    "Beginn": 0.236,
+    "Biegung": 0.635,
+    "Knick": 0.827,
+    "Ende": 0.907
+   },
+   "form_rest": 0.123,
+   "w3": 61.7,
+   "w5": 15.9,
+   "wmax": 61.7,
+   "abfall_37_welt": 0.026,
+   "tiefster_meshpunkt": -1129
+  },
+  "27": {
+   "clip": 11,
+   "F": 270,
+   "abw_ziel": {
+    "Beginn": 0.234,
+    "Biegung": 0.593,
+    "Knick": 0.717,
+    "Ende": 0.825
+   },
+   "form_rest": 0.117,
+   "w3": 74.7,
+   "w5": 9.1,
+   "wmax": 74.7,
+   "abfall_37_welt": -0.135,
+   "tiefster_meshpunkt": -1034
+  },
+  "28": {
+   "clip": 11,
+   "F": 271,
+   "abw_ziel": {
+    "Beginn": 0.239,
+    "Biegung": 0.614,
+    "Knick": 0.751,
+    "Ende": 0.857
+   },
+   "form_rest": 0.123,
+   "w3": 77.0,
+   "w5": 16.0,
+   "wmax": 77.0,
+   "abfall_37_welt": -0.138,
+   "tiefster_meshpunkt": -1157
+  },
+  "29": {
+   "clip": 11,
+   "F": 272,
+   "abw_ziel": {
+    "Beginn": 0.22,
+    "Biegung": 0.646,
+    "Knick": 0.834,
+    "Ende": 0.917
+   },
+   "form_rest": 0.071,
+   "w3": 64.1,
+   "w5": 16.0,
+   "wmax": 64.1,
+   "abfall_37_welt": -0.037,
+   "tiefster_meshpunkt": -1314
+  },
+  "30": {
+   "clip": 11,
+   "F": 273,
+   "abw_ziel": {
+    "Beginn": 0.157,
+    "Biegung": 0.584,
+    "Knick": 0.681,
+    "Ende": 0.747
+   },
+   "form_rest": 0.059,
+   "w3": 65.0,
+   "w5": 15.9,
+   "wmax": 65.0,
+   "abfall_37_welt": 0.098,
+   "tiefster_meshpunkt": -1058
+  },
+  "31": {
+   "clip": 11,
+   "F": 274,
+   "abw_ziel": {
+    "Beginn": 0.157,
+    "Biegung": 0.587,
+    "Knick": 0.564,
+    "Ende": 0.567
+   },
+   "form_rest": 0.241,
+   "w3": 78.0,
+   "w5": 15.9,
+   "wmax": 78.0,
+   "abfall_37_welt": 0.324,
+   "tiefster_meshpunkt": -154
+  },
+  "32": {
+   "clip": 11,
+   "F": 275,
+   "abw_ziel": {
+    "Beginn": 0.148,
+    "Biegung": 0.566,
+    "Knick": 0.518,
+    "Ende": 0.504
+   },
+   "form_rest": 0.232,
+   "w3": 77.3,
+   "w5": 15.9,
+   "wmax": 77.3,
+   "abfall_37_welt": 0.34,
+   "tiefster_meshpunkt": -60
+  },
+  "33": {
+   "clip": 11,
+   "F": 276,
+   "abw_ziel": {
+    "Beginn": 0.143,
+    "Biegung": 0.555,
+    "Knick": 0.485,
+    "Ende": 0.466
+   },
+   "form_rest": 0.223,
+   "w3": 77.4,
+   "w5": 15.9,
+   "wmax": 77.4,
+   "abfall_37_welt": 0.343,
+   "tiefster_meshpunkt": -25
+  },
+  "34": {
+   "clip": 11,
+   "F": 277,
+   "abw_ziel": {
+    "Beginn": 0.133,
+    "Biegung": 0.533,
+    "Knick": 0.458,
+    "Ende": 0.437
+   },
+   "form_rest": 0.218,
+   "w3": 75.1,
+   "w5": 16.0,
+   "wmax": 75.1,
+   "abfall_37_welt": 0.346,
+   "tiefster_meshpunkt": -29
+  },
+  "35": {
+   "clip": 11,
+   "F": 278,
+   "abw_ziel": {
+    "Beginn": 0.114,
+    "Biegung": 0.492,
+    "Knick": 0.353,
+    "Ende": 0.323
+   },
+   "form_rest": 0.201,
+   "w3": 75.2,
+   "w5": 16.3,
+   "wmax": 75.2,
+   "abfall_37_welt": 0.338,
+   "tiefster_meshpunkt": -19
+  },
+  "36": {
+   "clip": 11,
+   "F": 279,
+   "abw_ziel": {
+    "Beginn": 0.081,
+    "Biegung": 0.201,
+    "Knick": 0.188,
+    "Ende": 0.186
+   },
+   "form_rest": 0.162,
+   "w3": 72.9,
+   "w5": 16.1,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.057,
+   "tiefster_meshpunkt": -899
+  },
+  "37": {
+   "clip": 11,
+   "F": 280,
+   "abw_ziel": {
+    "Beginn": 0.075,
+    "Biegung": 0.149,
+    "Knick": 0.177,
+    "Ende": 0.299
+   },
+   "form_rest": 0.26,
+   "w3": 75.3,
+   "w5": 16.0,
+   "wmax": 75.3,
+   "abfall_37_welt": -0.0,
+   "tiefster_meshpunkt": -1166
+  },
+  "38": {
+   "clip": 11,
+   "F": 281,
+   "abw_ziel": {
+    "Beginn": 0.075,
+    "Biegung": 0.149,
+    "Knick": 0.177,
+    "Ende": 0.299
+   },
+   "form_rest": 0.26,
+   "w3": 75.3,
+   "w5": 16.0,
+   "wmax": 75.3,
+   "abfall_37_welt": -0.0,
+   "tiefster_meshpunkt": -1166
+  },
+  "39": {
+   "clip": 11,
+   "F": 282,
+   "abw_ziel": {
+    "Beginn": 0.056,
+    "Biegung": 0.13,
+    "Knick": 0.113,
+    "Ende": 0.201
+   },
+   "form_rest": 0.096,
+   "w3": 77.4,
+   "w5": 16.0,
+   "wmax": 77.4,
+   "abfall_37_welt": 0.277,
+   "tiefster_meshpunkt": -512
+  },
+  "40": {
+   "clip": 11,
+   "F": 283,
+   "abw_ziel": {
+    "Beginn": 0.056,
+    "Biegung": 0.13,
+    "Knick": 0.113,
+    "Ende": 0.201
+   },
+   "form_rest": 0.096,
+   "w3": 77.4,
+   "w5": 16.0,
+   "wmax": 77.4,
+   "abfall_37_welt": 0.277,
+   "tiefster_meshpunkt": -512
+  },
+  "41": {
+   "clip": 11,
+   "F": 284,
+   "abw_ziel": {
+    "Beginn": 0.041,
+    "Biegung": 0.116,
+    "Knick": 0.107,
+    "Ende": 0.186
+   },
+   "form_rest": 0.096,
+   "w3": 77.9,
+   "w5": 16.2,
+   "wmax": 77.9,
+   "abfall_37_welt": 0.305,
+   "tiefster_meshpunkt": -489
+  },
+  "42": {
+   "clip": 11,
+   "F": 285,
+   "abw_ziel": {
+    "Beginn": 0.041,
+    "Biegung": 0.116,
+    "Knick": 0.107,
+    "Ende": 0.186
+   },
+   "form_rest": 0.096,
+   "w3": 77.9,
+   "w5": 16.2,
+   "wmax": 77.9,
+   "abfall_37_welt": 0.305,
+   "tiefster_meshpunkt": -489
+  },
+  "43": {
+   "clip": 11,
+   "F": 286,
+   "abw_ziel": {
+    "Beginn": 0.031,
+    "Biegung": 0.106,
+    "Knick": 0.078,
+    "Ende": 0.159
+   },
+   "form_rest": 0.105,
+   "w3": 77.1,
+   "w5": 16.1,
+   "wmax": 77.1,
+   "abfall_37_welt": 0.314,
+   "tiefster_meshpunkt": -527
+  },
+  "44": {
+   "clip": 11,
+   "F": 287,
+   "abw_ziel": {
+    "Beginn": 0.031,
+    "Biegung": 0.106,
+    "Knick": 0.078,
+    "Ende": 0.159
+   },
+   "form_rest": 0.105,
+   "w3": 77.1,
+   "w5": 16.1,
+   "wmax": 77.1,
+   "abfall_37_welt": 0.314,
+   "tiefster_meshpunkt": -527
+  },
+  "45": {
+   "clip": 11,
+   "F": 288,
+   "abw_ziel": {
+    "Beginn": 0.027,
+    "Biegung": 0.097,
+    "Knick": 0.024,
+    "Ende": 0.122
+   },
+   "form_rest": 0.115,
+   "w3": 74.6,
+   "w5": 16.2,
+   "wmax": 74.6,
+   "abfall_37_welt": 0.32,
+   "tiefster_meshpunkt": -545
+  },
+  "46": {
+   "clip": 11,
+   "F": 289,
+   "abw_ziel": {
+    "Beginn": 0.027,
+    "Biegung": 0.097,
+    "Knick": 0.024,
+    "Ende": 0.122
+   },
+   "form_rest": 0.115,
+   "w3": 74.6,
+   "w5": 16.2,
+   "wmax": 74.6,
+   "abfall_37_welt": 0.32,
+   "tiefster_meshpunkt": -545
+  },
+  "47": {
+   "clip": 11,
+   "F": 290,
+   "abw_ziel": {
+    "Beginn": 0.028,
+    "Biegung": 0.101,
+    "Knick": 0.043,
+    "Ende": 0.093
+   },
+   "form_rest": 0.123,
+   "w3": 72.9,
+   "w5": 16.0,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -556
+  },
+  "48": {
+   "clip": 11,
+   "F": 291,
+   "abw_ziel": {
+    "Beginn": 0.028,
+    "Biegung": 0.101,
+    "Knick": 0.043,
+    "Ende": 0.093
+   },
+   "form_rest": 0.123,
+   "w3": 72.9,
+   "w5": 16.0,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -556
+  },
+  "49": {
+   "clip": 11,
+   "F": 292,
+   "abw_ziel": {
+    "Beginn": 0.034,
+    "Biegung": 0.125,
+    "Knick": 0.105,
+    "Ende": 0.084
+   },
+   "form_rest": 0.126,
+   "w3": 72.9,
+   "w5": 15.9,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -570
+  },
+  "50": {
+   "clip": 11,
+   "F": 293,
+   "abw_ziel": {
+    "Beginn": 0.034,
+    "Biegung": 0.125,
+    "Knick": 0.105,
+    "Ende": 0.084
+   },
+   "form_rest": 0.126,
+   "w3": 72.9,
+   "w5": 15.9,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -570
+  },
+  "51": {
+   "clip": 11,
+   "F": 294,
+   "abw_ziel": {
+    "Beginn": 0.044,
+    "Biegung": 0.155,
+    "Knick": 0.15,
+    "Ende": 0.1
+   },
+   "form_rest": 0.114,
+   "w3": 74.1,
+   "w5": 16.2,
+   "wmax": 74.1,
+   "abfall_37_welt": 0.331,
+   "tiefster_meshpunkt": -556
+  },
+  "52": {
+   "clip": 11,
+   "F": 295,
+   "abw_ziel": {
+    "Beginn": 0.044,
+    "Biegung": 0.155,
+    "Knick": 0.15,
+    "Ende": 0.1
+   },
+   "form_rest": 0.114,
+   "w3": 74.1,
+   "w5": 16.2,
+   "wmax": 74.1,
+   "abfall_37_welt": 0.331,
+   "tiefster_meshpunkt": -556
+  },
+  "53": {
+   "clip": 11,
+   "F": 296,
+   "abw_ziel": {
+    "Beginn": 0.044,
+    "Biegung": 0.155,
+    "Knick": 0.15,
+    "Ende": 0.1
+   },
+   "form_rest": 0.114,
+   "w3": 74.1,
+   "w5": 16.2,
+   "wmax": 74.1,
+   "abfall_37_welt": 0.331,
+   "tiefster_meshpunkt": -556
+  },
+  "54": {
+   "clip": 11,
+   "F": 297,
+   "abw_ziel": {
+    "Beginn": 0.034,
+    "Biegung": 0.125,
+    "Knick": 0.105,
+    "Ende": 0.084
+   },
+   "form_rest": 0.126,
+   "w3": 72.9,
+   "w5": 15.9,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -570
+  },
+  "55": {
+   "clip": 11,
+   "F": 298,
+   "abw_ziel": {
+    "Beginn": 0.034,
+    "Biegung": 0.125,
+    "Knick": 0.105,
+    "Ende": 0.084
+   },
+   "form_rest": 0.126,
+   "w3": 72.9,
+   "w5": 15.9,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -570
+  },
+  "56": {
+   "clip": 11,
+   "F": 299,
+   "abw_ziel": {
+    "Beginn": 0.028,
+    "Biegung": 0.101,
+    "Knick": 0.043,
+    "Ende": 0.093
+   },
+   "form_rest": 0.123,
+   "w3": 72.9,
+   "w5": 16.0,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -556
+  },
+  "57": {
+   "clip": 11,
+   "F": 300,
+   "abw_ziel": {
+    "Beginn": 0.028,
+    "Biegung": 0.101,
+    "Knick": 0.043,
+    "Ende": 0.093
+   },
+   "form_rest": 0.123,
+   "w3": 72.9,
+   "w5": 16.0,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -556
+  },
+  "58": {
+   "clip": 11,
+   "F": 301,
+   "abw_ziel": {
+    "Beginn": 0.019,
+    "Biegung": 0.057,
+    "Knick": 0.095,
+    "Ende": 0.153
+   },
+   "form_rest": 0.098,
+   "w3": 74.8,
+   "w5": 16.0,
+   "wmax": 74.8,
+   "abfall_37_welt": 0.306,
+   "tiefster_meshpunkt": -511
+  },
+  "59": {
+   "clip": 11,
+   "F": 302,
+   "abw_ziel": {
+    "Beginn": 0.035,
+    "Biegung": 0.114,
+    "Knick": 0.077,
+    "Ende": 0.139
+   },
+   "form_rest": 0.111,
+   "w3": 61.6,
+   "w5": 16.0,
+   "wmax": 61.6,
+   "abfall_37_welt": 0.338,
+   "tiefster_meshpunkt": -305
+  },
+  "60": {
+   "clip": 11,
+   "F": 303,
+   "abw_ziel": {
+    "Beginn": 0.045,
+    "Biegung": 0.276,
+    "Knick": 0.106,
+    "Ende": 0.182
+   },
+   "form_rest": 0.202,
+   "w3": 77.0,
+   "w5": 16.1,
+   "wmax": 77.0,
+   "abfall_37_welt": 0.32,
+   "tiefster_meshpunkt": -273
+  },
+  "61": {
+   "clip": 11,
+   "F": 304,
+   "abw_ziel": {
+    "Beginn": 0.037,
+    "Biegung": 0.214,
+    "Knick": 0.306,
+    "Ende": 0.343
+   },
+   "form_rest": 0.073,
+   "w3": 77.1,
+   "w5": 16.1,
+   "wmax": 77.1,
+   "abfall_37_welt": 0.215,
+   "tiefster_meshpunkt": -666
+  },
+  "62": {
+   "clip": 11,
+   "F": 305,
+   "abw_ziel": {
+    "Beginn": 0.028,
+    "Biegung": 0.214,
+    "Knick": 0.286,
+    "Ende": 0.298
+   },
+   "form_rest": 0.079,
+   "w3": 75.2,
+   "w5": 15.7,
+   "wmax": 75.2,
+   "abfall_37_welt": 0.198,
+   "tiefster_meshpunkt": -688
+  },
+  "63": {
+   "clip": 11,
+   "F": 306,
+   "abw_ziel": {
+    "Beginn": 0.032,
+    "Biegung": 0.223,
+    "Knick": 0.29,
+    "Ende": 0.303
+   },
+   "form_rest": 0.08,
+   "w3": 72.9,
+   "w5": 16.0,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.2,
+   "tiefster_meshpunkt": -666
+  },
+  "64": {
+   "clip": 11,
+   "F": 307,
+   "abw_ziel": {
+    "Beginn": 0.025,
+    "Biegung": 0.222,
+    "Knick": 0.284,
+    "Ende": 0.284
+   },
+   "form_rest": 0.091,
+   "w3": 67.5,
+   "w5": 16.1,
+   "wmax": 67.5,
+   "abfall_37_welt": 0.181,
+   "tiefster_meshpunkt": -687
+  },
+  "65": {
+   "clip": 11,
+   "F": 308,
+   "abw_ziel": {
+    "Beginn": 0.155,
+    "Biegung": 0.32,
+    "Knick": 0.309,
+    "Ende": 0.311
+   },
+   "form_rest": 0.223,
+   "w3": 64.3,
+   "w5": 16.1,
+   "wmax": 64.3,
+   "abfall_37_welt": 0.268,
+   "tiefster_meshpunkt": -325
+  },
+  "66": {
+   "clip": 11,
+   "F": 309,
+   "abw_ziel": {
+    "Beginn": 0.145,
+    "Biegung": 0.383,
+    "Knick": 0.309,
+    "Ende": 0.276
+   },
+   "form_rest": 0.2,
+   "w3": 62.1,
+   "w5": 15.9,
+   "wmax": 62.1,
+   "abfall_37_welt": 0.326,
+   "tiefster_meshpunkt": -292
+  },
+  "67": {
+   "clip": 11,
+   "F": 310,
+   "abw_ziel": {
+    "Beginn": 0.145,
+    "Biegung": 0.383,
+    "Knick": 0.31,
+    "Ende": 0.283
+   },
+   "form_rest": 0.203,
+   "w3": 62.2,
+   "w5": 15.9,
+   "wmax": 62.2,
+   "abfall_37_welt": 0.323,
+   "tiefster_meshpunkt": -303
+  },
+  "68": {
+   "clip": 11,
+   "F": 311,
+   "abw_ziel": {
+    "Beginn": 0.045,
+    "Biegung": 0.302,
+    "Knick": 0.132,
+    "Ende": 0.102
+   },
+   "form_rest": 0.182,
+   "w3": 59.9,
+   "w5": 16.0,
+   "wmax": 59.9,
+   "abfall_37_welt": 0.348,
+   "tiefster_meshpunkt": -27
+  },
+  "69": {
+   "clip": 11,
+   "F": 312,
+   "abw_ziel": {
+    "Beginn": 0.075,
+    "Biegung": 0.085,
+    "Knick": 0.27,
+    "Ende": 0.449
+   },
+   "form_rest": 0.131,
+   "w3": 68.9,
+   "w5": 16.1,
+   "wmax": 68.9,
+   "abfall_37_welt": 0.095,
+   "tiefster_meshpunkt": -557
+  },
+  "70": {
+   "clip": 11,
+   "F": 313,
+   "abw_ziel": {
+    "Beginn": 0.134,
+    "Biegung": 0.226,
+    "Knick": 0.366,
+    "Ende": 0.575
+   },
+   "form_rest": 0.145,
+   "w3": 74.9,
+   "w5": 16.1,
+   "wmax": 74.9,
+   "abfall_37_welt": 0.078,
+   "tiefster_meshpunkt": -501
+  },
+  "71": {
+   "clip": 11,
+   "F": 314,
+   "abw_ziel": {
+    "Beginn": 0.072,
+    "Biegung": 0.097,
+    "Knick": 0.55,
+    "Ende": 0.781
+   },
+   "form_rest": 0.132,
+   "w3": 67.1,
+   "w5": 4.4,
+   "wmax": 67.1,
+   "abfall_37_welt": 0.195,
+   "tiefster_meshpunkt": -390
+  },
+  "72": {
+   "clip": 11,
+   "F": 315,
+   "abw_ziel": {
+    "Beginn": 0.094,
+    "Biegung": 0.189,
+    "Knick": 0.196,
+    "Ende": 0.369
+   },
+   "form_rest": 0.15,
+   "w3": 66.2,
+   "w5": 16.0,
+   "wmax": 66.2,
+   "abfall_37_welt": 0.186,
+   "tiefster_meshpunkt": -804
+  },
+  "73": {
+   "clip": 11,
+   "F": 316,
+   "abw_ziel": {
+    "Beginn": 0.068,
+    "Biegung": 0.249,
+    "Knick": 0.206,
+    "Ende": 0.246
+   },
+   "form_rest": 0.111,
+   "w3": 79.3,
+   "w5": 15.8,
+   "wmax": 79.3,
+   "abfall_37_welt": 0.282,
+   "tiefster_meshpunkt": -1079
+  },
+  "74": {
+   "clip": 11,
+   "F": 317,
+   "abw_ziel": {
+    "Beginn": 0.048,
+    "Biegung": 0.249,
+    "Knick": 0.274,
+    "Ende": 0.249
+   },
+   "form_rest": 0.139,
+   "w3": 65.9,
+   "w5": 16.1,
+   "wmax": 65.9,
+   "abfall_37_welt": 0.075,
+   "tiefster_meshpunkt": -1797
+  },
+  "75": {
+   "clip": 11,
+   "F": 318,
+   "abw_ziel": {
+    "Beginn": 0.005,
+    "Biegung": 0.146,
+    "Knick": 0.252,
+    "Ende": 0.156
+   },
+   "form_rest": 0.133,
+   "w3": 43.7,
+   "w5": 16.0,
+   "wmax": 50.6,
+   "abfall_37_welt": -0.238,
+   "tiefster_meshpunkt": -1679
+  },
+  "76": {
+   "clip": 11,
+   "F": 319,
+   "abw_ziel": {
+    "Beginn": 0.015,
+    "Biegung": 0.026,
+    "Knick": 0.199,
+    "Ende": 0.156
+   },
+   "form_rest": 0.199,
+   "w3": 45.0,
+   "w5": 13.0,
+   "wmax": 50.8,
+   "abfall_37_welt": -0.204,
+   "tiefster_meshpunkt": -1681
+  },
+  "77": {
+   "clip": 11,
+   "F": 320,
+   "abw_ziel": {
+    "Beginn": 0.017,
+    "Biegung": 0.039,
+    "Knick": 0.088,
+    "Ende": 0.12
+   },
+   "form_rest": 0.142,
+   "w3": 60.4,
+   "w5": 15.9,
+   "wmax": 60.4,
+   "abfall_37_welt": -0.072,
+   "tiefster_meshpunkt": -1697
+  },
+  "78": {
+   "clip": 11,
+   "F": 321,
+   "abw_ziel": {
+    "Beginn": 0.009,
+    "Biegung": 0.048,
+    "Knick": 0.025,
+    "Ende": 0.042
+   },
+   "form_rest": 0.076,
+   "w3": 75.6,
+   "w5": 11.6,
+   "wmax": 75.6,
+   "abfall_37_welt": 0.162,
+   "tiefster_meshpunkt": -1711
+  },
+  "79": {
+   "clip": 11,
+   "F": 322,
+   "abw_ziel": {
+    "Beginn": 0.003,
+    "Biegung": 0.04,
+    "Knick": 0.022,
+    "Ende": 0.026
+   },
+   "form_rest": 0.084,
+   "w3": 78.4,
+   "w5": 11.9,
+   "wmax": 78.4,
+   "abfall_37_welt": 0.146,
+   "tiefster_meshpunkt": -1710
+  },
+  "80": {
+   "clip": 11,
+   "F": 323,
+   "abw_ziel": {
+    "Beginn": 0.003,
+    "Biegung": 0.022,
+    "Knick": 0.035,
+    "Ende": 0.022
+   },
+   "form_rest": 0.062,
+   "w3": 79.4,
+   "w5": 16.0,
+   "wmax": 79.4,
+   "abfall_37_welt": 0.299,
+   "tiefster_meshpunkt": -1427
+  },
+  "81": {
+   "clip": 11,
+   "F": 324,
+   "abw_ziel": {
+    "Beginn": 0.005,
+    "Biegung": 0.013,
+    "Knick": 0.032,
+    "Ende": 0.018
+   },
+   "form_rest": 0.064,
+   "w3": 78.3,
+   "w5": 16.1,
+   "wmax": 78.3,
+   "abfall_37_welt": 0.299,
+   "tiefster_meshpunkt": -1394
+  },
+  "82": {
+   "clip": 11,
+   "F": 325,
+   "abw_ziel": {
+    "Beginn": 0.006,
+    "Biegung": 0.018,
+    "Knick": 0.062,
+    "Ende": 0.051
+   },
+   "form_rest": 0.029,
+   "w3": 76.7,
+   "w5": 6.3,
+   "wmax": 76.7,
+   "abfall_37_welt": 0.323,
+   "tiefster_meshpunkt": -1637
+  },
+  "83": {
+   "clip": 11,
+   "F": 326,
+   "abw_ziel": {
+    "Beginn": 0.004,
+    "Biegung": 0.016,
+    "Knick": 0.054,
+    "Ende": 0.052
+   },
+   "form_rest": 0.03,
+   "w3": 75.3,
+   "w5": 1.8,
+   "wmax": 75.3,
+   "abfall_37_welt": 0.322,
+   "tiefster_meshpunkt": -1651
+  },
+  "84": {
+   "clip": 11,
+   "F": 327,
+   "abw_ziel": {
+    "Beginn": 0.005,
+    "Biegung": 0.024,
+    "Knick": 0.048,
+    "Ende": 0.064
+   },
+   "form_rest": 0.057,
+   "w3": 76.3,
+   "w5": 16.0,
+   "wmax": 76.3,
+   "abfall_37_welt": 0.259,
+   "tiefster_meshpunkt": -1786
+  },
+  "85": {
+   "clip": 11,
+   "F": 328,
+   "abw_ziel": {
+    "Beginn": 0.003,
+    "Biegung": 0.017,
+    "Knick": 0.036,
+    "Ende": 0.056
+   },
+   "form_rest": 0.061,
+   "w3": 75.3,
+   "w5": 16.1,
+   "wmax": 75.3,
+   "abfall_37_welt": 0.253,
+   "tiefster_meshpunkt": -1787
+  },
+  "86": {
+   "clip": 11,
+   "F": 329,
+   "abw_ziel": {
+    "Beginn": 0.004,
+    "Biegung": 0.013,
+    "Knick": 0.036,
+    "Ende": 0.047
+   },
+   "form_rest": 0.054,
+   "w3": 71.4,
+   "w5": 14.4,
+   "wmax": 71.4,
+   "abfall_37_welt": 0.142,
+   "tiefster_meshpunkt": -1817
+  },
+  "87": {
+   "clip": 11,
+   "F": 330,
+   "abw_ziel": {
+    "Beginn": 0.002,
+    "Biegung": 0.008,
+    "Knick": 0.022,
+    "Ende": 0.034
+   },
+   "form_rest": 0.056,
+   "w3": 70.7,
+   "w5": 15.4,
+   "wmax": 70.7,
+   "abfall_37_welt": 0.131,
+   "tiefster_meshpunkt": -1817
+  },
+  "88": {
+   "clip": 11,
+   "F": 331,
+   "abw_ziel": {
+    "Beginn": 0.003,
+    "Biegung": 0.007,
+    "Knick": 0.029,
+    "Ende": 0.04
+   },
+   "form_rest": 0.061,
+   "w3": 66.0,
+   "w5": 15.8,
+   "wmax": 66.0,
+   "abfall_37_welt": 0.038,
+   "tiefster_meshpunkt": -1849
+  },
+  "89": {
+   "clip": 11,
+   "F": 332,
+   "abw_ziel": {
+    "Beginn": 0.002,
+    "Biegung": 0.003,
+    "Knick": 0.016,
+    "Ende": 0.026
+   },
+   "form_rest": 0.063,
+   "w3": 65.9,
+   "w5": 15.9,
+   "wmax": 65.9,
+   "abfall_37_welt": 0.025,
+   "tiefster_meshpunkt": -1849
+  },
+  "90": {
+   "clip": 1,
+   "F": 333,
+   "abw_ziel": {
+    "Beginn": 0.003,
+    "Biegung": 0.01,
+    "Knick": 0.01,
+    "Ende": 0.012
+   },
+   "form_rest": 0.058,
+   "w3": 69.5,
+   "w5": 15.7,
+   "wmax": 69.5,
+   "abfall_37_welt": 0.016,
+   "tiefster_meshpunkt": -1886
+  },
+  "91": {
+   "clip": 1,
+   "F": 334,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.006,
+    "Knick": 0.008,
+    "Ende": 0.005
+   },
+   "form_rest": 0.06,
+   "w3": 69.9,
+   "w5": 15.9,
+   "wmax": 69.9,
+   "abfall_37_welt": 0.008,
+   "tiefster_meshpunkt": -1886
+  },
+  "92": {
+   "clip": 1,
+   "F": 335,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.002,
+    "Knick": 0.007,
+    "Ende": 0.001
+   },
+   "form_rest": 0.062,
+   "w3": 70.1,
+   "w5": 15.8,
+   "wmax": 70.1,
+   "abfall_37_welt": 0.002,
+   "tiefster_meshpunkt": -1886
+  },
+  "93": {
+   "clip": 1,
+   "F": 336,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.002,
+    "Knick": 0.006,
+    "Ende": 0.002
+   },
+   "form_rest": 0.063,
+   "w3": 70.3,
+   "w5": 15.6,
+   "wmax": 70.3,
+   "abfall_37_welt": -0.002,
+   "tiefster_meshpunkt": -1886
+  },
+  "94": {
+   "clip": 1,
+   "F": 337,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.002,
+    "Knick": 0.004,
+    "Ende": 0.003
+   },
+   "form_rest": 0.064,
+   "w3": 70.7,
+   "w5": 15.0,
+   "wmax": 70.7,
+   "abfall_37_welt": -0.004,
+   "tiefster_meshpunkt": -1886
+  },
+  "95": {
+   "clip": 1,
+   "F": 338,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.002,
+    "Knick": 0.003,
+    "Ende": 0.003
+   },
+   "form_rest": 0.065,
+   "w3": 70.8,
+   "w5": 15.2,
+   "wmax": 70.8,
+   "abfall_37_welt": -0.004,
+   "tiefster_meshpunkt": -1886
+  },
+  "96": {
+   "clip": 1,
+   "F": 339,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.002,
+    "Knick": 0.002,
+    "Ende": 0.003
+   },
+   "form_rest": 0.065,
+   "w3": 71.0,
+   "w5": 15.0,
+   "wmax": 71.0,
+   "abfall_37_welt": -0.004,
+   "tiefster_meshpunkt": -1886
+  },
+  "97": {
+   "clip": 1,
+   "F": 340,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.001,
+    "Knick": 0.002,
+    "Ende": 0.002
+   },
+   "form_rest": 0.065,
+   "w3": 71.3,
+   "w5": 15.1,
+   "wmax": 71.3,
+   "abfall_37_welt": -0.003,
+   "tiefster_meshpunkt": -1886
+  },
+  "98": {
+   "clip": 1,
+   "F": 341,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.001,
+    "Knick": 0.002,
+    "Ende": 0.002
+   },
+   "form_rest": 0.065,
+   "w3": 71.2,
+   "w5": 15.1,
+   "wmax": 71.2,
+   "abfall_37_welt": -0.003,
+   "tiefster_meshpunkt": -1886
+  },
+  "99": {
+   "clip": 1,
+   "F": 342,
+   "abw_ziel": {
+    "Beginn": 0.004,
+    "Biegung": 0.003,
+    "Knick": 0.008,
+    "Ende": 0.011
+   },
+   "form_rest": 0.059,
+   "w3": 71.8,
+   "w5": 16.1,
+   "wmax": 71.8,
+   "abfall_37_welt": 0.058,
+   "tiefster_meshpunkt": -2054
+  },
+  "100": {
+   "clip": 1,
+   "F": 343,
+   "abw_ziel": {
+    "Beginn": 0.008,
+    "Biegung": 0.011,
+    "Knick": 0.02,
+    "Ende": 0.026
+   },
+   "form_rest": 0.048,
+   "w3": 73.4,
+   "w5": 14.0,
+   "wmax": 73.4,
+   "abfall_37_welt": 0.174,
+   "tiefster_meshpunkt": -2279
+  },
+  "101": {
+   "clip": 1,
+   "F": 344,
+   "abw_ziel": {
+    "Beginn": 0.01,
+    "Biegung": 0.025,
+    "Knick": 0.026,
+    "Ende": 0.036
+   },
+   "form_rest": 0.029,
+   "w3": 74.1,
+   "w5": 11.2,
+   "wmax": 74.1,
+   "abfall_37_welt": 0.293,
+   "tiefster_meshpunkt": -1713
+  },
+  "102": {
+   "clip": 1,
+   "F": 345,
+   "abw_ziel": {
+    "Beginn": 0.008,
+    "Biegung": 0.028,
+    "Knick": 0.027,
+    "Ende": 0.041
+   },
+   "form_rest": 0.018,
+   "w3": 75.7,
+   "w5": 11.6,
+   "wmax": 75.7,
+   "abfall_37_welt": 0.351,
+   "tiefster_meshpunkt": -1261
+  },
+  "103": {
+   "clip": 1,
+   "F": 346,
+   "abw_ziel": {
+    "Beginn": 0.007,
+    "Biegung": 0.024,
+    "Knick": 0.026,
+    "Ende": 0.041
+   },
+   "form_rest": 0.017,
+   "w3": 76.8,
+   "w5": 12.6,
+   "wmax": 76.8,
+   "abfall_37_welt": 0.362,
+   "tiefster_meshpunkt": -1035
+  },
+  "104": {
+   "clip": 1,
+   "F": 347,
+   "abw_ziel": {
+    "Beginn": 0.006,
+    "Biegung": 0.018,
+    "Knick": 0.02,
+    "Ende": 0.037
+   },
+   "form_rest": 0.015,
+   "w3": 76.2,
+   "w5": 13.3,
+   "wmax": 76.2,
+   "abfall_37_welt": 0.362,
+   "tiefster_meshpunkt": -950
+  },
+  "105": {
+   "clip": 1,
+   "F": 348,
+   "abw_ziel": {
+    "Beginn": 0.005,
+    "Biegung": 0.009,
+    "Knick": 0.013,
+    "Ende": 0.03
+   },
+   "form_rest": 0.009,
+   "w3": 75.0,
+   "w5": 13.6,
+   "wmax": 75.0,
+   "abfall_37_welt": 0.364,
+   "tiefster_meshpunkt": -914
+  },
+  "106": {
+   "clip": 1,
+   "F": 349,
+   "abw_ziel": {
+    "Beginn": 0.004,
+    "Biegung": 0.003,
+    "Knick": 0.007,
+    "Ende": 0.021
+   },
+   "form_rest": 0.011,
+   "w3": 73.5,
+   "w5": 14.1,
+   "wmax": 73.5,
+   "abfall_37_welt": 0.368,
+   "tiefster_meshpunkt": -910
+  },
+  "107": {
+   "clip": 1,
+   "F": 350,
+   "abw_ziel": {
+    "Beginn": 0.003,
+    "Biegung": 0.003,
+    "Knick": 0.004,
+    "Ende": 0.014
+   },
+   "form_rest": 0.016,
+   "w3": 72.8,
+   "w5": 14.0,
+   "wmax": 72.8,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -907
+  },
+  "108": {
+   "clip": 1,
+   "F": 351,
+   "abw_ziel": {
+    "Beginn": 0.002,
+    "Biegung": 0.004,
+    "Knick": 0.004,
+    "Ende": 0.01
+   },
+   "form_rest": 0.021,
+   "w3": 72.4,
+   "w5": 14.5,
+   "wmax": 72.4,
+   "abfall_37_welt": 0.372,
+   "tiefster_meshpunkt": -909
+  },
+  "109": {
+   "clip": 1,
+   "F": 352,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.004,
+    "Knick": 0.004,
+    "Ende": 0.007
+   },
+   "form_rest": 0.024,
+   "w3": 71.9,
+   "w5": 14.7,
+   "wmax": 71.9,
+   "abfall_37_welt": 0.372,
+   "tiefster_meshpunkt": -917
+  },
+  "110": {
+   "clip": 1,
+   "F": 353,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.003,
+    "Knick": 0.003,
+    "Ende": 0.005
+   },
+   "form_rest": 0.026,
+   "w3": 71.7,
+   "w5": 14.9,
+   "wmax": 71.7,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -922
+  },
+  "111": {
+   "clip": 1,
+   "F": 354,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.002,
+    "Knick": 0.002,
+    "Ende": 0.004
+   },
+   "form_rest": 0.026,
+   "w3": 71.7,
+   "w5": 15.2,
+   "wmax": 71.7,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -927
+  },
+  "112": {
+   "clip": 1,
+   "F": 355,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.001,
+    "Knick": 0.002,
+    "Ende": 0.004
+   },
+   "form_rest": 0.025,
+   "w3": 71.8,
+   "w5": 15.4,
+   "wmax": 71.8,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -937
+  },
+  "113": {
+   "clip": 1,
+   "F": 356,
+   "abw_ziel": {
+    "Beginn": 0.002,
+    "Biegung": 0.002,
+    "Knick": 0.002,
+    "Ende": 0.004
+   },
+   "form_rest": 0.023,
+   "w3": 71.6,
+   "w5": 15.3,
+   "wmax": 71.6,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -942
+  },
+  "114": {
+   "clip": 1,
+   "F": 357,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.001,
+    "Knick": 0.003,
+    "Ende": 0.004
+   },
+   "form_rest": 0.019,
+   "w3": 71.6,
+   "w5": 15.3,
+   "wmax": 71.6,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -961
+  },
+  "115": {
+   "clip": 1,
+   "F": 358,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.001,
+    "Knick": 0.004,
+    "Ende": 0.005
+   },
+   "form_rest": 0.014,
+   "w3": 71.8,
+   "w5": 15.2,
+   "wmax": 71.8,
+   "abfall_37_welt": 0.371,
+   "tiefster_meshpunkt": -982
+  },
+  "116": {
+   "clip": 1,
+   "F": 359,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.002,
+    "Knick": 0.004,
+    "Ende": 0.006
+   },
+   "form_rest": 0.009,
+   "w3": 72.1,
+   "w5": 15.2,
+   "wmax": 72.1,
+   "abfall_37_welt": 0.372,
+   "tiefster_meshpunkt": -1010
+  },
+  "117": {
+   "clip": 1,
+   "F": 360,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.003,
+    "Knick": 0.005,
+    "Ende": 0.006
+   },
+   "form_rest": 0.005,
+   "w3": 72.6,
+   "w5": 15.2,
+   "wmax": 72.6,
+   "abfall_37_welt": 0.372,
+   "tiefster_meshpunkt": -1041
+  },
+  "118": {
+   "clip": 1,
+   "F": 361,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.003,
+    "Knick": 0.005,
+    "Ende": 0.006
+   },
+   "form_rest": 0.005,
+   "w3": 73.2,
+   "w5": 14.7,
+   "wmax": 73.2,
+   "abfall_37_welt": 0.372,
+   "tiefster_meshpunkt": -1076
+  },
+  "119": {
+   "clip": 1,
+   "F": 362,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.003,
+    "Knick": 0.005,
+    "Ende": 0.007
+   },
+   "form_rest": 0.007,
+   "w3": 73.6,
+   "w5": 14.9,
+   "wmax": 73.6,
+   "abfall_37_welt": 0.372,
+   "tiefster_meshpunkt": -1109
+  },
+  "120": {
+   "clip": 1,
+   "F": 363,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.002,
+    "Knick": 0.005,
+    "Ende": 0.007
+   },
+   "form_rest": 0.006,
+   "w3": 73.8,
+   "w5": 14.9,
+   "wmax": 73.8,
+   "abfall_37_welt": 0.37,
+   "tiefster_meshpunkt": -1136
+  },
+  "121": {
+   "clip": 1,
+   "F": 364,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.001,
+    "Knick": 0.005,
+    "Ende": 0.007
+   },
+   "form_rest": 0.006,
+   "w3": 73.9,
+   "w5": 15.2,
+   "wmax": 73.9,
+   "abfall_37_welt": 0.369,
+   "tiefster_meshpunkt": -1156
+  },
+  "122": {
+   "clip": 1,
+   "F": 365,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.001,
+    "Knick": 0.005,
+    "Ende": 0.008
+   },
+   "form_rest": 0.009,
+   "w3": 73.3,
+   "w5": 15.1,
+   "wmax": 73.3,
+   "abfall_37_welt": 0.367,
+   "tiefster_meshpunkt": -1162
+  },
+  "123": {
+   "clip": 1,
+   "F": 366,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.002,
+    "Knick": 0.004,
+    "Ende": 0.008
+   },
+   "form_rest": 0.015,
+   "w3": 72.8,
+   "w5": 15.8,
+   "wmax": 72.8,
+   "abfall_37_welt": 0.365,
+   "tiefster_meshpunkt": -1154
+  },
+  "124": {
+   "clip": 1,
+   "F": 367,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.003,
+    "Knick": 0.003,
+    "Ende": 0.007
+   },
+   "form_rest": 0.024,
+   "w3": 72.0,
+   "w5": 15.8,
+   "wmax": 72.0,
+   "abfall_37_welt": 0.362,
+   "tiefster_meshpunkt": -1131
+  },
+  "125": {
+   "clip": 1,
+   "F": 368,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.004,
+    "Knick": 0.003,
+    "Ende": 0.006
+   },
+   "form_rest": 0.033,
+   "w3": 71.2,
+   "w5": 15.9,
+   "wmax": 71.2,
+   "abfall_37_welt": 0.361,
+   "tiefster_meshpunkt": -1095
+  },
+  "126": {
+   "clip": 1,
+   "F": 369,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.005,
+    "Knick": 0.005,
+    "Ende": 0.006
+   },
+   "form_rest": 0.041,
+   "w3": 70.5,
+   "w5": 16.1,
+   "wmax": 70.5,
+   "abfall_37_welt": 0.36,
+   "tiefster_meshpunkt": -1045
+  },
+  "127": {
+   "clip": 1,
+   "F": 370,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.005,
+    "Knick": 0.007,
+    "Ende": 0.006
+   },
+   "form_rest": 0.046,
+   "w3": 70.3,
+   "w5": 16.2,
+   "wmax": 70.3,
+   "abfall_37_welt": 0.361,
+   "tiefster_meshpunkt": -991
+  },
+  "128": {
+   "clip": 1,
+   "F": 371,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.005,
+    "Knick": 0.009,
+    "Ende": 0.009
+   },
+   "form_rest": 0.05,
+   "w3": 70.2,
+   "w5": 15.9,
+   "wmax": 70.2,
+   "abfall_37_welt": 0.362,
+   "tiefster_meshpunkt": -928
+  },
+  "129": {
+   "clip": 1,
+   "F": 372,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.005,
+    "Knick": 0.011,
+    "Ende": 0.011
+   },
+   "form_rest": 0.051,
+   "w3": 70.5,
+   "w5": 15.9,
+   "wmax": 70.5,
+   "abfall_37_welt": 0.364,
+   "tiefster_meshpunkt": -867
+  },
+  "130": {
+   "clip": 1,
+   "F": 373,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.005,
+    "Knick": 0.013,
+    "Ende": 0.014
+   },
+   "form_rest": 0.05,
+   "w3": 71.1,
+   "w5": 15.9,
+   "wmax": 71.1,
+   "abfall_37_welt": 0.365,
+   "tiefster_meshpunkt": -812
+  },
+  "131": {
+   "clip": 1,
+   "F": 374,
+   "abw_ziel": {
+    "Beginn": 0.001,
+    "Biegung": 0.004,
+    "Knick": 0.014,
+    "Ende": 0.017
+   },
+   "form_rest": 0.045,
+   "w3": 72.0,
+   "w5": 15.6,
+   "wmax": 72.0,
+   "abfall_37_welt": 0.365,
+   "tiefster_meshpunkt": -770
+  },
+  "132": {
+   "clip": 1,
+   "F": 375,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.003,
+    "Knick": 0.014,
+    "Ende": 0.019
+   },
+   "form_rest": 0.037,
+   "w3": 72.9,
+   "w5": 15.5,
+   "wmax": 72.9,
+   "abfall_37_welt": 0.364,
+   "tiefster_meshpunkt": -745
+  },
+  "133": {
+   "clip": 1,
+   "F": 376,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.002,
+    "Knick": 0.013,
+    "Ende": 0.021
+   },
+   "form_rest": 0.026,
+   "w3": 73.9,
+   "w5": 15.0,
+   "wmax": 73.9,
+   "abfall_37_welt": 0.361,
+   "tiefster_meshpunkt": -745
+  },
+  "134": {
+   "clip": 1,
+   "F": 377,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.001,
+    "Knick": 0.012,
+    "Ende": 0.021
+   },
+   "form_rest": 0.015,
+   "w3": 74.6,
+   "w5": 14.6,
+   "wmax": 74.6,
+   "abfall_37_welt": 0.356,
+   "tiefster_meshpunkt": -760
+  },
+  "135": {
+   "clip": 1,
+   "F": 378,
+   "abw_ziel": {
+    "Beginn": 0.0,
+    "Biegung": 0.001,
+    "Knick": 0.009,
+    "Ende": 0.02
+   },
+   "form_rest": 0.011,
+   "w3": 75.2,
+   "w5": 14.3,
+   "wmax": 75.2,
+   "abfall_37_welt": 0.351,
+   "tiefster_meshpunkt": -784
+  }
+ }
+}

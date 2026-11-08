@@ -1,0 +1,58 @@
+{
+ "video_n1485": {
+  "punkt": [
+   377,
+   167
+  ],
+  "kern": 102.5,
+  "ring": 57.5,
+  "sprung": 45.0,
+  "blob_px": 52,
+  "blob_wh": [
+   8,
+   10
+  ]
+ },
+ "spiel_h135": {
+  "punkt": [
+   332,
+   178
+  ],
+  "kern": 154.6,
+  "ring": 74.4,
+  "sprung": 80.1,
+  "blob_px": 35,
+  "blob_wh": [
+   9,
+   7
+  ]
+ },
+ "spiel_h118": {
+  "punkt": [
+   320,
+   199
+  ],
+  "kern": 151.8,
+  "ring": 76.5,
+  "sprung": 75.3,
+  "blob_px": 22,
+  "blob_wh": [
+   5,
+   9
+  ]
+ },
+ "spiel_V3r2_h135": {
+  "punkt": [
+   332,
+   179
+  ],
+  "kern": 120.8,
+  "ring": 94.2,
+  "sprung": 26.6,
+  "blob_px": 92,
+  "blob_wh": [
+   10,
+   13
+  ]
+ }
+}

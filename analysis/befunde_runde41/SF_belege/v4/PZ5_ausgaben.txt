@@ -1,0 +1,135 @@
+### pz5_t5.py
+V4    ab Saat  f0,1/0,3/0,5/0,7 = [0.032, 0.062, 0.153, 0.144]  Abfall(0,05-0,75) 0.025 -> ROT
+      Profil f 0..1 je 0,05: [0.021, 0.03, 0.032, 0.036, 0.049, 0.047, 0.062, 0.1, 0.11, 0.125, 0.153, 0.161, 0.165, 0.14, 0.144, 0.142, 0.161, 0.152, 0.112, 0.064, 0.017]
+V4    ab T1    f0,1/0,3/0,5/0,7 = [0.03, 0.049, 0.11, 0.161]  Abfall(0,05-0,75) 0.002 -> OK
+      Profil f 0..1 je 0,05: [0.021, 0.025, 0.03, 0.032, 0.036, 0.049, 0.049, 0.047, 0.062, 0.1, 0.11, 0.121, 0.133, 0.153, 0.161, 0.163, 0.157, 0.14, 0.142, 0.142, 0.144]
+V4R4  ab Saat  f0,1/0,3/0,5/0,7 = [0.036, 0.081, 0.117, 0.146]  Abfall(0,05-0,75) 0.006 -> OK
+      Profil f 0..1 je 0,05: [0.025, 0.032, 0.036, 0.045, 0.055, 0.059, 0.081, 0.089, 0.098, 0.104, 0.117, 0.129, 0.146, 0.14, 0.146, 0.14, 0.161, 0.159, 0.114, 0.051, 0.017]
+V4R4  ab T1    f0,1/0,3/0,5/0,7 = [0.036, 0.055, 0.095, 0.129]  Abfall(0,05-0,75) 0.000 -> ROT
+      Profil f 0..1 je 0,05: [0.025, 0.032, 0.036, 0.04, 0.045, 0.047, 0.055, 0.059, 0.081, 0.089, 0.095, 0.1, 0.104, 0.117, 0.129, 0.14, 0.14, 0.146, 0.146, 0.14, 0.144]
+V3    ab Saat  f0,1/0,3/0,5/0,7 = [0.042, 0.074, 0.119, 0.174]  Abfall(0,05-0,75) 0.008 -> ROT
+      Profil f 0..1 je 0,05: [0.032, 0.036, 0.042, 0.051, 0.057, 0.066, 0.074, 0.087, 0.097, 0.11, 0.119, 0.136, 0.146, 0.169, 0.174, 0.167, 0.112, 0.066, 0.021, 0.042, 0.017]
+V3    ab T1    f0,1/0,3/0,5/0,7 = [0.036, 0.064, 0.095, 0.127]  Abfall(0,05-0,75) 0.002 -> ROT
+      Profil f 0..1 je 0,05: [0.032, 0.038, 0.036, 0.045, 0.047, 0.053, 0.064, 0.066, 0.074, 0.076, 0.095, 0.097, 0.11, 0.114, 0.127, 0.136, 0.146, 0.157, 0.169, 0.174, 0.178]
+### pz5_t5orig.py
+Original schwanz_maske.npz      f 0..1 je 0,1: [0.006, 0.04, 0.073, 0.069, 0.075, 0.121, 0.134, 0.152, 0.168, 0.172, 0.166]  Abfall 0.016
+Original schwanz_maske_hi.npz   f 0..1 je 0,1: [0.028, 0.069, 0.069, 0.069, 0.105, 0.119, 0.123, 0.158, 0.107, 0.123, 0.146]  Abfall 0.020
+Original schwanz_maske_lo.npz   f 0..1 je 0,1: [0.024, 0.038, 0.073, 0.073, 0.081, 0.117, 0.134, 0.154, 0.174, 0.176, 0.176]  Abfall 0.000
+V4    Knick [294.4 306. ] f 0..1 je 0,1: [0.021, 0.03, 0.036, 0.049, 0.062, 0.11, 0.133, 0.161, 0.157, 0.142, 0.144]  Abfall 0.002
+V4R4  Knick [296.2 301. ] f 0..1 je 0,1: [0.025, 0.036, 0.045, 0.055, 0.081, 0.095, 0.104, 0.129, 0.14, 0.146, 0.144]  Abfall 0.000
+### pz5_r3vgl.py
+V4r3 sha dfbc30bc
+T1 (358, 238) T3rel -0.248 0.261 T5 ab T1 [0.032, 0.08, 0.138, 0.127]
+### pz5_t8.py
+V4 Beginn [358, 238] Biegung [289.7, 251.0] Knick [294.4, 306.0] | F15 [ 9.2 10.   2.1] dE00 1.29 (316 px); F16 [13.4  8.   3.5] dE00 3.20 (225 px); F17 [22.3  3.1  1.3] dE00 5.70 (1716 px); F18 [16.   2.9  1.1] dE00 0.78 (331 px)
+V4R4 Beginn [358, 238] Biegung [291.6, 251.4] Knick [296.2, 301.0] | F15 [11.5  8.4  3. ] dE00 3.32 (165 px); F16 [7.1 6.8 3.1] dE00 2.03 (41 px); F17 [20.5  2.6  2.2] dE00 5.96 (1413 px); F18 [14.4  4.1  1.8] dE00 1.17 (324 px)
+### pz5_t9.py
+Original [((351, 203), [29.7, 4.2, 2.1]), ((340, 217), [22.6, 6.6, -0.6]), ((330, 236), [8.5, 12.1, 1.4]), ((314, 244), [9.8, 8.1, 1.7]), ((293, 253), [27.0, 5.7, 0.9]), ((287, 271), [16.6, 2.5, 2.5]), ((284, 287), [19.6, 0.8, 1.9])]
+V4 dE00 je Stelle [4.6, 10.0, 4.3, 9.7, 12.4, 5.9, 6.6] Mittel 7.66 L*/a* Mittel 13.6/5.5 (Original 19.1/5.7)
+V4R4 dE00 je Stelle [18.2, 6.2, 12.5, 3.0, 7.7, 6.8, 5.4] Mittel 8.52 L*/a* Mittel 16.1/8.4 (Original 19.1/5.7)
+### pz5_fs.py
+Unterarm (W)-rechts Id 14: Original [ 9.  -3.6  3.4] Rot 0.00 L*>30 0.000 p90 12.5 (2212 px)
+   V4    [11.4 -2.1  2.3] dE00 2.46 dL +2.3 Rot 0.00 L*>30 0.000 p90 15.4 (2041 px)
+   V4R4  [11.4 -2.   2.3] dE00 2.62 dL +2.3 Rot 0.00 L*>30 0.000 p90 15.5 (2041 px)
+   V3    [21.3  4.1  0. ] dE00 13.98 dL +12.3 Rot 0.12 L*>30 0.121 p90 30.8 (2041 px)
+Oberarm (B)-rechts unten Id 10: Original [20.6  3.1 -0.5] Rot 0.04 L*>30 0.057 p90 28.0 (1610 px)
+   V4    [22.4  3.8  0.7] dE00 1.85 dL +1.8 Rot 0.00 L*>30 0.068 p90 29.1 (1302 px)
+   V4R4  [22.6  4.6  0.6] dE00 2.48 dL +2.0 Rot 0.02 L*>30 0.065 p90 29.1 (1302 px)
+   V3    [32.2  6.9  3.4] dE00 10.09 dL +11.6 Rot 0.58 L*>30 0.647 p90 40.9 (1302 px)
+Oberarm (B)-links unten Id 13: Original [11.3  2.1  0.9] Rot 0.00 L*>30 0.000 p90 19.7 (1748 px)
+   V4    [14.6  2.4  0.9] dE00 2.15 dL +3.3 Rot 0.00 L*>30 0.000 p90 21.2 (1150 px)
+   V4R4  [14.9  4.1  1.9] dE00 3.44 dL +3.6 Rot 0.11 L*>30 0.000 p90 21.5 (1150 px)
+   V3    [27.2  6.8  3.3] dE00 12.28 dL +15.9 Rot 0.51 L*>30 0.427 p90 35.4 (1150 px)
+### pz5_farben_alt.py
+F7 Id13 ganz                         {'lab': [23.6, 3.3, 1.5], 'n': 2626, 'dE': 7.81, 'dL': -9.7}
+F7 Id13 ganz er2                     {'lab': [23.5, 3.5, 1.5], 'n': 2181, 'dE': 7.85, 'dL': -9.8}
+F7 Id13 obere 58% er2 (Bauer r2)     {'lab': [32.8, 4.7, 2.1], 'n': 1031, 'dE': 1.07, 'dL': -0.5}
+F8 Id10 ganz                         {'lab': [19.7, 4.6, 0.7], 'n': 3743, 'dE': 4.5, 'dL': 3.3}
+F8 Id10 ganz er2                     {'lab': [19.1, 4.9, 0.7], 'n': 3293, 'dE': 3.97, 'dL': 2.7}
+F8 Id10 obere 56% er2 (Bauer r2)     {'lab': [16.8, 5.7, 0.7], 'n': 1991, 'dE': 2.7, 'dL': 0.4}
+F7 Fensterlage er2 (Bauer r3 F7)     {'lab': [32.8, 4.7, 2.1], 'n': 1031, 'dE': 1.07, 'dL': -0.5}
+F6 Id8 RG>=15                        {'lab': [19.6, 12.0, 4.8], 'n': 4416, 'dE': 4.4, 'dL': 3.0}
+F6 Id8 RG>=15 er2                    {'lab': [19.4, 12.1, 4.9], 'n': 4170, 'dE': 4.22, 'dL': 2.8}
+F14 Id8 L>=P70 ohne Erosion          {'lab': [54.1, 9.2, 1.6], 'n': 1120, 'dE': 5.64, 'dL': -5.9}
+F14 Id8 L>=P70 er2                   {'lab': [57.4, 9.2, 1.6], 'n': 890, 'dE': 2.86, 'dL': -2.6}
+F-Mittel Messblatt-Lesart (F7/F8 Id ganz, F14 ohne Erosion): 4.15
+F-Mittel Lesart F7 Fensterlage, F8 Id ganz, F14 er2: 2.72
+### pz5_g1geo.py
+Geometrie-Abweichungen Koerper (O1 verlangt leer): keine
+CLUT-Feld geaendert (Mesh: Ref2-Zeilen -> V4-Zeilen, x-Teil): {2: ([480], [491], [0]), 3: ([480], [491], [0]), 5: ([480], [491], [0]), 6: ([480], [491], [0]), 10: ([480], [489], [0]), 13: ([480], [490], [0]), 14: ([482], [488], [0])}
+Bytegleich: [0, 1, 4, 7, 8, 11, 12, 15]
+EMR rel 0-15 gleich: True Tabelle gleich: True
+Keyframes (912, 116) (912, 116) Bytes 0-83 gleich: True
+Sektionen gleich (0,1,3,4,5,6): {0: True, 1: True, 3: True, 4: True, 5: True, 6: True}
+TIM CLUT Zeilen Ref2 6 ab 480, V4 12 ab 480
+  CLUT 480: geaendert
+  CLUT 481: geaendert
+  CLUT 482: geaendert
+  CLUT 483: gleich
+  CLUT 484: geaendert
+  CLUT 485: gleich
+  CLUT 486: neu
+  CLUT 487: neu
+  CLUT 488: neu
+  CLUT 489: neu
+  CLUT 490: neu
+  CLUT 491: neu
+geteilte Texel Mesh 10/13: 5797
+geteilte Texel Mesh 11/14: 1831
+geteilte Texel Mesh 10/11: 0
+geteilte Texel Mesh 13/14: 0
+Texel geaendert gesamt 57419, davon in Koerper-UVs 34486
+### pz5_m4.py
+V4 Kopf 9: 0.05699 Schwanz 16-22: [0.06033, 0.06963, 0.06522, 0.07229, 0.06989, 0.06863, 0.06533] Haut 0-15 ohne 9: min 0.046 max 0.130
+REF2 Kopf 9: 0.09075 Schwanz 16-22: [0.08618, 0.09311, 0.09515, 0.09809, 0.1025, 0.1098, 0.11501] Haut 0-15 ohne 9: min 0.046 max 0.130
+### pz5_af2.py
+V4 135 {2: {'n': 649, 'Q': 0.006, 'QR': 0.005, 'p99_Q': 6.8}, 3: {'n': 781, 'Q': 0.004, 'QR': 0.004, 'p99_Q': 9.7}, 5: {'n': 1129, 'Q': 0.001, 'QR': 0.001, 'p99_Q': 5.6}, 6: {'n': 165, 'Q': 0.0, 'QR': 0.0, 'p99_Q': 9.3}}
+V4 85 {2: {'n': 1044, 'Q': 0.002, 'QR': 0.002, 'p99_Q': 7.1}, 3: {'n': 679, 'Q': 0.003, 'QR': 0.003, 'p99_Q': 8.4}, 5: {'n': 536, 'Q': 0.002, 'QR': 0.002, 'p99_Q': 9.4}, 6: {'n': 416, 'Q': 0.012, 'QR': 0.012, 'p99_Q': 10.3}}
+V4R4 135 {2: {'n': 649, 'Q': 0.022, 'QR': 0.022, 'p99_Q': 15.1}, 3: {'n': 781, 'Q': 0.054, 'QR': 0.054, 'p99_Q': 56.2}, 5: {'n': 1129, 'Q': 0.025, 'QR': 0.025, 'p99_Q': 42.8}, 6: {'n': 165, 'Q': 0.079, 'QR': 0.079, 'p99_Q': 59.7}}
+V4R4 85 {2: {'n': 1044, 'Q': 0.013, 'QR': 0.013, 'p99_Q': 12.5}, 3: {'n': 679, 'Q': 0.082, 'QR': 0.082, 'p99_Q': 16.9}, 5: {'n': 536, 'Q': 0.006, 'QR': 0.006, 'p99_Q': 7.1}, 6: {'n': 416, 'Q': 0.108, 'QR': 0.108, 'p99_Q': 16.8}}
+V3 135 {2: {'n': 649, 'Q': 0.055, 'QR': 0.055, 'p99_Q': 18.6}, 3: {'n': 781, 'Q': 0.379, 'QR': 0.379, 'p99_Q': 42.2}, 5: {'n': 1129, 'Q': 0.062, 'QR': 0.062, 'p99_Q': 14.5}, 6: {'n': 165, 'Q': 0.358, 'QR': 0.358, 'p99_Q': 40.1}}
+V3 85 {2: {'n': 1044, 'Q': 0.084, 'QR': 0.082, 'p99_Q': 18.6}, 3: {'n': 679, 'Q': 0.489, 'QR': 0.489, 'p99_Q': 38.8}, 5: {'n': 536, 'Q': 0.155, 'QR': 0.155, 'p99_Q': 22.2}, 6: {'n': 416, 'Q': 0.582, 'QR': 0.582, 'p99_Q': 38.1}}
+### pz5_af3.py
+V4 135 Kopfbox allein 0.000 (p99 7.5), Kopfbox+Umkreis 0.000
+V4 85 Kopfbox allein 0.000 (p99 5.6), Kopfbox+Umkreis 0.000
+V4R4 135 Kopfbox allein 0.000 (p99 8.6), Kopfbox+Umkreis 0.000
+V4R4 85 Kopfbox allein 0.062 (p99 16.2), Kopfbox+Umkreis 0.062
+V3 135 Kopfbox allein 0.005 (p99 7.9), Kopfbox+Umkreis 0.005
+V3 85 Kopfbox allein 0.024 (p99 11.2), Kopfbox+Umkreis 0.024
+### pz5_tv2.py
+Original roh [{'Wurzel': [18.5, 7.6, 302], 'Mitte': [14.7, 6.2, 302], 'Biegung': [19.1, 6.5, 181], 'senkrecht': [13.0, 3.0, 116], 'Endstueck': [12.3, 4.1, 43]}, {'Wurzel': [19.1, 7.8, 289], 'Mitte': [10.9, 7.7, 217], 'Biegung': [19.1, 6.5, 181], 'senkrecht': [12.7, 3.1, 113], 'Endstueck': [nan, nan, 0]}, {'Wurzel': [18.5, 7.6, 302], 'Mitte': [15.8, 6.0, 317], 'Biegung': [19.1, 6.5, 181], 'senkrecht': [13.1, 2.9, 118], 'Endstueck': [12.4, 4.0, 45]}]
+Original weich [{'Wurzel': [18.5, 7.6, 302], 'Mitte': [14.8, 6.2, 302], 'Biegung': [19.1, 6.4, 181], 'senkrecht': [13.0, 3.0, 116], 'Endstueck': [12.4, 3.9, 43]}, {'Wurzel': [19.1, 7.8, 289], 'Mitte': [11.0, 7.7, 217], 'Biegung': [19.1, 6.4, 181], 'senkrecht': [12.7, 3.1, 113], 'Endstueck': [nan, nan, 0]}, {'Wurzel': [18.5, 7.6, 302], 'Mitte': [15.8, 5.9, 317], 'Biegung': [19.1, 6.4, 181], 'senkrecht': [13.0, 2.9, 118], 'Endstueck': [12.5, 3.8, 45]}]
+V4 {'Wurzel': ([17.0, 6.9, 223], 'OK'), 'Mitte': ([13.3, 4.8, 252], 'OK'), 'Biegung': ([22.2, 6.0, 193], 'OK'), 'senkrecht': ([12.9, 3.6, 54], 'OK'), 'Endstueck': ([12.2, 4.6, 53], 'ROT +nan/+nan')}
+V4R4 {'Wurzel': ([20.8, 5.4, 223], 'OK'), 'Mitte': ([22.4, 2.8, 219], 'ROT +8.6/-3.8'), 'Biegung': ([7.7, 5.3, 196], 'ROT -11.4/-1.2'), 'senkrecht': ([16.9, 5.5, 63], 'OK'), 'Endstueck': ([15.3, 4.7, 41], 'ROT +nan/+nan')}
+### pz5_nb_vgl.py
+gemeldet a762bd66 TN (10.7, 297) TR 0.02 TQ Plateau [0.4, 0.41, 0.38, 0.21] Schwanz Mittel Lab [16.5  5.4  1.7]
+Nachbau ad293f22 TN (11.4, 297) TR 0.033 TQ Plateau [0.33, 0.3, 0.33, 0.26] Schwanz Mittel Lab [16.7  5.4  1.9]
+### FR je Lauf
+# sfv4/r/V4r5
+h85 F328: Spiel 165, Video 2, Grenze 41 -> ROT
+h100 F343: Spiel 0, Video 107, Grenze 1070 -> OK
+h118 F361: Spiel 0, Video 0, Grenze 20 -> OK
+h135 F378: Spiel 0, Video 156, Grenze 1560 -> OK
+# sfv4/r/V4r4
+h85 F328: Spiel 1170, Video 2, Grenze 41 -> ROT
+h100 F343: Spiel 531, Video 107, Grenze 1070 -> OK
+h118 F361: Spiel 155, Video 0, Grenze 20 -> ROT
+h135 F378: Spiel 158, Video 156, Grenze 1560 -> OK
+# sfv3/r/V3r2
+h85 F328: Spiel 765, Video 2, Grenze 41 -> ROT
+h100 F343: Spiel 682, Video 107, Grenze 1070 -> OK
+h118 F361: Spiel 984, Video 0, Grenze 20 -> ROT
+h135 F378: Spiel 1094, Video 156, Grenze 1560 -> OK
+### pz5_lauf.py
+H_E 3775; Ruheform Pose 85: Biegung 73.5, Knick 16.0 Grad, Abfall Biegung->Ende 0.376 H
+Boden B y je Takt: [0]
+Gangtakte (h85 + clip 1): 47 85 .. 135
+(1) gegen Ziel: max 0.056 H (h85), Takte > 0,06: 0
+(2) Form gegen Ruheform Vorlage 2 (Kabsch): max 0.065 H (h95), Median 0.026, Takte > 0,06: 8
+(3) Welt-Abfall Biegung->Ende: min -0.004 H (h94), max 0.372; Ruhe 0.376
+    Biegung w3 69.5-76.8, Knick w5 11.2-16.2 (Ruhe 73.5 / 16.0), wmax ganzer Lauf 79.4
+(4) Boden alle Mesh-Ecken: tiefster Punkt -19 E. (h35), Takte > 0: 0 von 144; die 5 tiefsten: [(35, -19), (33, -25), (68, -27), (34, -29), (32, -60)]
+### pz5_licht.py
+h118 F361 clip 1 bild 28 gier 1515: Rumpf 7/8 22.4/22.4 dE 0.05 (10734); Kopf 9 22.2/22.0 dE 0.13 (1982); Oberarm 10 19.3/19.9 dE 0.44 (2159); Oberarm 13 26.2/26.6 dE 0.36 (1527); Unterarm 11 26.3/25.8 dE 0.74 (992); Unterarm 14 10.3/10.6 dE 0.21 (1451); Schwanz 16-22 -
+h125 F368 clip 1 bild 35 gier 1515: Rumpf 7/8 21.6/21.6 dE 0.03 (11272); Kopf 9 22.8/22.3 dE 0.43 (1989); Oberarm 10 19.3/19.9 dE 0.46 (2129); Oberarm 13 25.2/25.2 dE 0.21 (1612); Unterarm 11 24.9/25.1 dE 0.53 (818); Unterarm 14 10.5/10.7 dE 0.21 (1638); Schwanz 16-22 -
+h135 F378 clip 1 bild 45 gier 1513: Rumpf 7/8 20.9/20.8 dE 0.22 (11966); Kopf 9 23.3/22.4 dE 0.68 (2242); Oberarm 10 19.5/20.4 dE 0.66 (1996); Oberarm 13 23.3/23.6 dE 0.31 (2271); Unterarm 11 24.5/23.3 dE 0.93 (885); Unterarm 14 11.3/11.2 dE 0.22 (2124); Schwanz 16-22 -

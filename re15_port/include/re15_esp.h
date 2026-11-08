@@ -234,6 +234,9 @@ typedef struct {
      * (Spieler-y := -1800 * Band, `sll`/`subu`/`sw v0,-13684(at)` @0x8001d7b8-d4). Band 0
      * (Boden y 0) ergibt 0 = byte-gleich zum Original. memset beim Spawn -> 0. */
     int32_t  granate_boden;
+    /* Runde 41 SF NB5 (Abnahme 3 B4, PORT-WAHL, kein Original-Feld): Mischart-Vorgabe des Ports fuer einen einzelnen Platz,
+     * 0 = keine (Original-Weg), 1..4 = ABE an mit ABR 0..3. Gesetzt nur vom gruenen Blut der Hangar-Szene (birkin_formen.c). */
+    uint8_t  abr_port;
 } re15_esp_fx_t;
 
 /* ===== Runde 34 VERTRAG V1 (C0) — Latch und Plattform-Haken ================================

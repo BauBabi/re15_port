@@ -1,0 +1,165 @@
+{
+ "text": {
+  "beginn": [
+   357,
+   243
+  ],
+  "knick": [
+   290,
+   308
+  ],
+  "ende": [
+   294,
+   344
+  ],
+  "seg1": {
+   "laenge_px": 93.3,
+   "laenge_H": 0.366,
+   "richtung_grad_bild": 135.9
+  },
+  "seg2": {
+   "laenge_px": 36.2,
+   "laenge_H": 0.142,
+   "richtung_grad_bild": 83.7
+  },
+  "knickwinkel_richtungsaenderung_grad": 52.2,
+  "innenwinkel_grad": 127.8
+ },
+ "maske": {
+  "M1_px": 3241,
+  "M2_px": 544,
+  "anschluss_px": {
+   "beginn": 5.0,
+   "knick": 2.8,
+   "ende": 0.0
+  },
+  "achse1_laenge_px": 137.4,
+  "achse2_laenge_px": 40.4,
+  "achse1_max_abweichung_von_sehne_px": 31.2,
+  "achse1_abweichung_vorzeichen": "links-oben der Sehne (Bild)",
+  "stationen_knick_nach_ende": [
+   {
+    "f": 0.1,
+    "x": 285,
+    "y": 313,
+    "breite_px": 16.0,
+    "breite_H": 0.063,
+    "breite_2DT_px": 7.2,
+    "achse_richtung_bild": [
+     -0.5,
+     0.87
+    ]
+   },
+   {
+    "f": 0.3,
+    "x": 285,
+    "y": 320,
+    "breite_px": 10.0,
+    "breite_H": 0.039,
+    "breite_2DT_px": 8.5,
+    "achse_richtung_bild": [
+     0.45,
+     0.89
+    ]
+   },
+   {
+    "f": 0.5,
+    "x": 289,
+    "y": 326,
+    "breite_px": 3.5,
+    "breite_H": 0.014,
+    "breite_2DT_px": 2.8,
+    "achse_richtung_bild": [
+     0.45,
+     0.89
+    ]
+   },
+   {
+    "f": 0.7,
+    "x": 291,
+    "y": 334,
+    "breite_px": 4.0,
+    "breite_H": 0.016,
+    "breite_2DT_px": 2.8,
+    "achse_richtung_bild": [
+     0.0,
+     1.0
+    ]
+   },
+   {
+    "f": 0.9,
+    "x": 291,
+    "y": 342,
+    "breite_px": 6.5,
+    "breite_H": 0.025,
+    "breite_2DT_px": 5.7,
+    "achse_richtung_bild": [
+     0.45,
+     0.89
+    ]
+   }
+  ],
+  "stationen_knick_nach_beginn": [
+   {
+    "f": 0.1,
+    "x": 279,
+    "y": 304,
+    "breite_px": 8.0,
+    "breite_H": 0.031,
+    "breite_2DT_px": 6.3,
+    "achse_richtung_bild": [
+     -0.24,
+     -0.97
+    ]
+   },
+   {
+    "f": 0.3,
+    "x": 291,
+    "y": 283,
+    "breite_px": 15.0,
+    "breite_H": 0.059,
+    "breite_2DT_px": 11.7,
+    "achse_richtung_bild": [
+     0.6,
+     -0.8
+    ]
+   },
+   {
+    "f": 0.5,
+    "x": 297,
+    "y": 258,
+    "breite_px": 33.0,
+    "breite_H": 0.129,
+    "breite_2DT_px": 21.3,
+    "achse_richtung_bild": [
+     0.6,
+     -0.8
+    ]
+   },
+   {
+    "f": 0.7,
+    "x": 319,
+    "y": 243,
+    "breite_px": 32.5,
+    "breite_H": 0.127,
+    "breite_2DT_px": 30.0,
+    "achse_richtung_bild": [
+     0.94,
+     -0.35
+    ]
+   },
+   {
+    "f": 0.9,
+    "x": 342,
+    "y": 234,
+    "breite_px": 53.0,
+    "breite_H": 0.208,
+    "breite_2DT_px": 22.6,
+    "achse_richtung_bild": [
+     1.0,
+     0.0
+    ]
+   }
+  ]
+ }
+}

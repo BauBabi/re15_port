@@ -1,0 +1,2485 @@
+{
+ "farben": [
+  {
+   "bild": "bild1",
+   "region": "Kopf-Kuppe (Oberkopf B-links der roten Zone) box 372-388 x 147-157",
+   "fenster": "Maske 91 px, bbox x374-386 y149-155, 2 px erodiert",
+   "n": 91,
+   "rgb": [
+    64.0,
+    45.8,
+    47.4
+   ],
+   "rgb_std": [
+    5.6,
+    6.7,
+    6.4
+   ],
+   "lab": [
+    21.0,
+    8.6,
+    2.3
+   ],
+   "lab_std": [
+    2.7,
+    2.4,
+    1.0
+   ],
+   "rgb_sw": [
+    50.3,
+    30.9,
+    32.6
+   ],
+   "lab_sw": [
+    14.2,
+    9.8,
+    2.7
+   ],
+   "rgb_entblendet": [
+    78.4,
+    54.7,
+    56.6
+   ],
+   "lab_entblendet": [
+    25.7,
+    10.9,
+    3.0
+   ],
+   "rgb_entblendet_sw": [
+    65.8,
+    40.4,
+    42.4
+   ],
+   "lab_entblendet_sw": [
+    19.5,
+    12.2,
+    3.6
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Kopf rote Zone (oben) box 389-407 x 140-156, R-G>=15",
+   "fenster": "Maske 147 px, bbox x391-405 y142-154, 2 px erodiert",
+   "n": 147,
+   "rgb": [
+    70.8,
+    38.1,
+    42.2
+   ],
+   "rgb_std": [
+    16.7,
+    15.2,
+    13.8
+   ],
+   "lab": [
+    19.6,
+    16.0,
+    4.0
+   ],
+   "lab_std": [
+    6.8,
+    3.6,
+    1.1
+   ],
+   "rgb_sw": [
+    57.6,
+    22.6,
+    27.0
+   ],
+   "lab_sw": [
+    13.0,
+    17.8,
+    5.3
+   ],
+   "rgb_entblendet": [
+    87.3,
+    44.6,
+    49.8
+   ],
+   "lab_entblendet": [
+    24.1,
+    20.2,
+    5.5
+   ],
+   "rgb_entblendet_sw": [
+    75.3,
+    29.6,
+    35.1
+   ],
+   "lab_entblendet_sw": [
+    18.1,
+    22.3,
+    6.9
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Augenumfeld box 371-391 x 157-177",
+   "fenster": "Maske 289 px, bbox x373-389 y159-175, 2 px erodiert",
+   "n": 289,
+   "rgb": [
+    70.6,
+    59.5,
+    64.0
+   ],
+   "rgb_std": [
+    16.6,
+    16.1,
+    16.4
+   ],
+   "lab": [
+    26.4,
+    5.8,
+    -1.0
+   ],
+   "lab_std": [
+    7.1,
+    1.1,
+    0.3
+   ],
+   "rgb_sw": [
+    57.5,
+    45.6,
+    50.4
+   ],
+   "lab_sw": [
+    20.2,
+    6.4,
+    -1.0
+   ],
+   "rgb_entblendet": [
+    87.1,
+    72.6,
+    78.2
+   ],
+   "lab_entblendet": [
+    32.5,
+    7.2,
+    -1.0
+   ],
+   "rgb_entblendet_sw": [
+    75.1,
+    59.6,
+    65.6
+   ],
+   "lab_entblendet_sw": [
+    27.0,
+    7.9,
+    -1.1
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Auge (heller Fleck, Blob-Schwelle 72,1)",
+   "fenster": "Maske 80 px, bbox x374-383 y161-172",
+   "n": 80,
+   "rgb": [
+    93.1,
+    81.1,
+    86.1
+   ],
+   "rgb_std": [
+    10.4,
+    10.4,
+    10.4
+   ],
+   "lab": [
+    35.8,
+    5.9,
+    -1.1
+   ],
+   "lab_std": [
+    4.4,
+    0.1,
+    0.0
+   ],
+   "rgb_sw": [
+    81.5,
+    68.6,
+    74.0
+   ],
+   "lab_sw": [
+    30.6,
+    6.5,
+    -1.2
+   ],
+   "rgb_entblendet": [
+    116.3,
+    100.8,
+    106.9
+   ],
+   "lab_entblendet": [
+    44.3,
+    7.3,
+    -1.1
+   ],
+   "rgb_entblendet_sw": [
+    106.4,
+    89.8,
+    96.3
+   ],
+   "lab_entblendet_sw": [
+    39.9,
+    8.0,
+    -1.2
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Haare (dunkles Feld, Blob-Schwelle 31,2)",
+   "fenster": "Maske 187 px, bbox x394-408 y154-176",
+   "n": 187,
+   "rgb": [
+    31.8,
+    22.9,
+    24.3
+   ],
+   "rgb_std": [
+    3.8,
+    3.0,
+    3.7
+   ],
+   "lab": [
+    8.8,
+    4.8,
+    0.7
+   ],
+   "lab_std": [
+    1.5,
+    1.5,
+    0.9
+   ],
+   "rgb_sw": [
+    15.9,
+    6.4,
+    7.9
+   ],
+   "lab_sw": [
+    2.4,
+    3.0,
+    0.4
+   ],
+   "rgb_entblendet": [
+    36.3,
+    24.7,
+    26.6
+   ],
+   "lab_entblendet": [
+    10.1,
+    6.2,
+    1.0
+   ],
+   "rgb_entblendet_sw": [
+    20.7,
+    8.3,
+    10.2
+   ],
+   "lab_entblendet_sw": [
+    3.2,
+    4.4,
+    0.7
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Nase box 387-397 x 173-183",
+   "fenster": "Maske 49 px, bbox x389-395 y175-181, 2 px erodiert",
+   "n": 49,
+   "rgb": [
+    50.3,
+    38.6,
+    39.7
+   ],
+   "rgb_std": [
+    6.0,
+    5.8,
+    5.6
+   ],
+   "lab": [
+    16.8,
+    5.7,
+    1.3
+   ],
+   "lab_std": [
+    2.7,
+    0.2,
+    1.1
+   ],
+   "rgb_sw": [
+    35.7,
+    23.1,
+    24.4
+   ],
+   "lab_sw": [
+    9.4,
+    6.6,
+    1.6
+   ],
+   "rgb_entblendet": [
+    60.5,
+    45.2,
+    46.6
+   ],
+   "lab_entblendet": [
+    20.3,
+    7.2,
+    1.8
+   ],
+   "rgb_entblendet_sw": [
+    46.6,
+    30.3,
+    31.7
+   ],
+   "lab_entblendet_sw": [
+    13.5,
+    8.2,
+    2.2
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "unter dem Kopf/Kinn box 378-411 x 183-194",
+   "fenster": "Maske 240 px, bbox x380-409 y185-192, 2 px erodiert",
+   "n": 240,
+   "rgb": [
+    44.3,
+    29.4,
+    30.0
+   ],
+   "rgb_std": [
+    19.1,
+    18.3,
+    18.5
+   ],
+   "lab": [
+    12.8,
+    7.4,
+    2.5
+   ],
+   "lab_std": [
+    8.5,
+    0.9,
+    0.9
+   ],
+   "rgb_sw": [
+    29.3,
+    13.8,
+    14.3
+   ],
+   "lab_sw": [
+    5.5,
+    7.1,
+    2.2
+   ],
+   "rgb_entblendet": [
+    52.7,
+    33.3,
+    33.9
+   ],
+   "lab_entblendet": [
+    15.3,
+    9.5,
+    3.4
+   ],
+   "rgb_entblendet_sw": [
+    38.2,
+    18.0,
+    18.6
+   ],
+   "lab_entblendet_sw": [
+    8.1,
+    10.6,
+    3.8
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Brust rot box 372-424 x 195-234, R-G>=15",
+   "fenster": "Maske 1498 px, bbox x374-422 y197-232, 2 px erodiert",
+   "n": 1498,
+   "rgb": [
+    55.3,
+    28.1,
+    30.0
+   ],
+   "rgb_std": [
+    13.0,
+    12.2,
+    12.6
+   ],
+   "lab": [
+    14.1,
+    13.6,
+    4.5
+   ],
+   "lab_std": [
+    5.6,
+    2.4,
+    1.1
+   ],
+   "rgb_sw": [
+    41.0,
+    12.3,
+    14.2
+   ],
+   "lab_sw": [
+    7.0,
+    15.1,
+    4.8
+   ],
+   "rgb_entblendet": [
+    67.0,
+    31.6,
+    34.0
+   ],
+   "lab_entblendet": [
+    17.1,
+    17.3,
+    6.1
+   ],
+   "rgb_entblendet_sw": [
+    53.6,
+    16.1,
+    18.4
+   ],
+   "lab_entblendet_sw": [
+    10.5,
+    19.1,
+    7.7
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Brust hell box 372-424 x 195-234, R-G<15 und Lum>=45",
+   "fenster": "Maske 14 px, bbox x374-382 y231-232, 2 px erodiert",
+   "n": 14,
+   "rgb": [
+    66.0,
+    56.7,
+    57.5
+   ],
+   "rgb_std": [
+    1.4,
+    2.6,
+    2.1
+   ],
+   "lab": [
+    24.8,
+    4.2,
+    1.0
+   ],
+   "lab_std": [
+    1.0,
+    0.8,
+    0.1
+   ],
+   "rgb_sw": [
+    52.5,
+    42.6,
+    43.4
+   ],
+   "lab_sw": [
+    18.4,
+    4.7,
+    1.2
+   ],
+   "rgb_entblendet": [
+    81.0,
+    69.0,
+    69.7
+   ],
+   "lab_entblendet": [
+    30.5,
+    5.3,
+    1.4
+   ],
+   "rgb_entblendet_sw": [
+    68.6,
+    55.7,
+    56.5
+   ],
+   "lab_entblendet_sw": [
+    24.8,
+    5.9,
+    1.6
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Oberarm/Schulter B-links box 305-349 x 165-214",
+   "fenster": "Maske 1886 px, bbox x307-347 y167-212, 2 px erodiert",
+   "n": 1886,
+   "rgb": [
+    70.7,
+    60.6,
+    59.8
+   ],
+   "rgb_std": [
+    24.4,
+    24.1,
+    24.3
+   ],
+   "lab": [
+    26.6,
+    4.2,
+    2.1
+   ],
+   "lab_std": [
+    10.6,
+    1.4,
+    1.7
+   ],
+   "rgb_sw": [
+    57.6,
+    46.7,
+    45.8
+   ],
+   "lab_sw": [
+    20.4,
+    4.7,
+    2.4
+   ],
+   "rgb_entblendet": [
+    87.2,
+    74.1,
+    72.7
+   ],
+   "lab_entblendet": [
+    32.7,
+    5.2,
+    2.9
+   ],
+   "rgb_entblendet_sw": [
+    75.2,
+    61.1,
+    59.7
+   ],
+   "lab_entblendet_sw": [
+    27.2,
+    5.8,
+    3.2
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Oberarm B-rechts box 435-479 x 180-229",
+   "fenster": "Maske 1886 px, bbox x437-477 y182-227, 2 px erodiert",
+   "n": 1886,
+   "rgb": [
+    45.3,
+    33.3,
+    35.0
+   ],
+   "rgb_std": [
+    12.8,
+    13.8,
+    13.6
+   ],
+   "lab": [
+    14.3,
+    6.1,
+    1.1
+   ],
+   "lab_std": [
+    6.3,
+    2.9,
+    1.1
+   ],
+   "rgb_sw": [
+    30.3,
+    17.8,
+    19.4
+   ],
+   "lab_sw": [
+    6.8,
+    6.6,
+    1.3
+   ],
+   "rgb_entblendet": [
+    53.9,
+    38.3,
+    40.4
+   ],
+   "lab_entblendet": [
+    17.2,
+    7.7,
+    1.5
+   ],
+   "rgb_entblendet_sw": [
+    39.6,
+    23.3,
+    25.3
+   ],
+   "lab_entblendet_sw": [
+    10.1,
+    8.6,
+    2.0
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Unterarm B-rechts box 462-494 x 265-319",
+   "fenster": "Maske 1479 px, bbox x464-492 y267-317, 2 px erodiert",
+   "n": 1479,
+   "rgb": [
+    62.7,
+    63.2,
+    64.7
+   ],
+   "rgb_std": [
+    30.8,
+    31.4,
+    30.4
+   ],
+   "lab": [
+    26.7,
+    0.1,
+    -1.0
+   ],
+   "lab_std": [
+    13.7,
+    1.0,
+    1.2
+   ],
+   "rgb_sw": [
+    48.9,
+    49.5,
+    51.1
+   ],
+   "lab_sw": [
+    20.6,
+    0.1,
+    -1.1
+   ],
+   "rgb_entblendet": [
+    76.6,
+    77.4,
+    79.1
+   ],
+   "lab_entblendet": [
+    32.9,
+    0.0,
+    -1.1
+   ],
+   "rgb_entblendet_sw": [
+    63.9,
+    64.7,
+    66.5
+   ],
+   "lab_entblendet_sw": [
+    27.4,
+    0.0,
+    -1.2
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Klaue B-rechts box 482-507 x 330-356, R-G>=15",
+   "fenster": "Maske 128 px, bbox x488-503 y344-354, 2 px erodiert",
+   "n": 128,
+   "rgb": [
+    45.5,
+    23.1,
+    27.4
+   ],
+   "rgb_std": [
+    5.9,
+    5.1,
+    5.2
+   ],
+   "lab": [
+    11.0,
+    12.0,
+    1.9
+   ],
+   "lab_std": [
+    2.5,
+    1.1,
+    0.7
+   ],
+   "rgb_sw": [
+    30.5,
+    6.9,
+    11.2
+   ],
+   "lab_sw": [
+    4.1,
+    10.3,
+    1.8
+   ],
+   "rgb_entblendet": [
+    54.2,
+    25.0,
+    30.6
+   ],
+   "lab_entblendet": [
+    13.1,
+    15.3,
+    2.7
+   ],
+   "rgb_entblendet_sw": [
+    39.9,
+    9.0,
+    14.5
+   ],
+   "lab_entblendet_sw": [
+    6.1,
+    16.0,
+    3.2
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Hand/Klaue B-links box 375-409 x 320-354",
+   "fenster": "Maske 961 px, bbox x377-407 y322-352, 2 px erodiert",
+   "n": 961,
+   "rgb": [
+    46.4,
+    35.8,
+    38.1
+   ],
+   "rgb_std": [
+    17.4,
+    14.8,
+    14.0
+   ],
+   "lab": [
+    15.4,
+    5.5,
+    0.3
+   ],
+   "lab_std": [
+    7.1,
+    3.0,
+    1.7
+   ],
+   "rgb_sw": [
+    31.5,
+    20.1,
+    22.6
+   ],
+   "lab_sw": [
+    7.8,
+    6.3,
+    0.5
+   ],
+   "rgb_entblendet": [
+    55.4,
+    41.5,
+    44.5
+   ],
+   "lab_entblendet": [
+    18.5,
+    7.0,
+    0.5
+   ],
+   "rgb_entblendet_sw": [
+    41.1,
+    26.3,
+    29.5
+   ],
+   "lab_entblendet_sw": [
+    11.4,
+    8.0,
+    0.7
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Jeans box 372-439 x 262-299",
+   "fenster": "Maske 2176 px, bbox x374-437 y264-297, 2 px erodiert",
+   "n": 2176,
+   "rgb": [
+    25.8,
+    28.0,
+    29.4
+   ],
+   "rgb_std": [
+    9.0,
+    9.1,
+    9.5
+   ],
+   "lab": [
+    10.1,
+    -0.7,
+    -1.3
+   ],
+   "lab_std": [
+    4.4,
+    1.0,
+    1.2
+   ],
+   "rgb_sw": [
+    9.7,
+    11.8,
+    13.3
+   ],
+   "lab_sw": [
+    3.2,
+    -0.3,
+    -0.8
+   ],
+   "rgb_entblendet": [
+    28.5,
+    31.3,
+    33.1
+   ],
+   "lab_entblendet": [
+    11.7,
+    -0.9,
+    -1.6
+   ],
+   "rgb_entblendet_sw": [
+    12.7,
+    15.5,
+    17.3
+   ],
+   "lab_entblendet_sw": [
+    4.3,
+    -0.6,
+    -1.3
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Schwanz vorn (Band links, |I-bg*k|>=30, Lum<60)",
+   "fenster": "Maske 512 px, bbox x297-333 y343-376, 1 px erodiert",
+   "n": 512,
+   "rgb": [
+    17.7,
+    18.2,
+    18.1
+   ],
+   "rgb_std": [
+    3.2,
+    3.1,
+    3.6
+   ],
+   "lab": [
+    5.5,
+    -0.3,
+    0.0
+   ],
+   "lab_std": [
+    1.4,
+    0.7,
+    1.1
+   ],
+   "rgb_sw": [
+    1.5,
+    1.8,
+    2.1
+   ],
+   "lab_sw": [
+    0.5,
+    -0.0,
+    -0.1
+   ],
+   "rgb_entblendet": [
+    17.8,
+    18.6,
+    18.4
+   ],
+   "lab_entblendet": [
+    5.6,
+    -0.3,
+    0.0
+   ],
+   "rgb_entblendet_sw": [
+    2.0,
+    2.4,
+    2.7
+   ],
+   "lab_entblendet_sw": [
+    0.6,
+    -0.0,
+    -0.2
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Bezug Wand links box 40-119 x 150-299",
+   "fenster": "Maske 11096 px, bbox x42-117 y152-297, 2 px erodiert",
+   "n": 11096,
+   "rgb": [
+    123.3,
+    124.2,
+    127.3
+   ],
+   "rgb_std": [
+    30.5,
+    29.8,
+    30.9
+   ],
+   "lab": [
+    52.1,
+    0.3,
+    -1.8
+   ],
+   "lab_std": [
+    11.9,
+    0.8,
+    0.7
+   ],
+   "rgb_sw": [
+    113.9,
+    114.9,
+    118.2
+   ],
+   "lab_sw": [
+    48.4,
+    0.3,
+    -2.0
+   ],
+   "rgb_entblendet": [
+    155.8,
+    157.3,
+    160.6
+   ],
+   "lab_entblendet": [
+    64.8,
+    0.1,
+    -1.9
+   ],
+   "rgb_entblendet_sw": [
+    148.8,
+    150.3,
+    153.9
+   ],
+   "lab_entblendet_sw": [
+    62.2,
+    0.2,
+    -2.1
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Bezug Wand rechts box 560-629 x 230-329",
+   "fenster": "Maske 6336 px, bbox x562-627 y232-327, 2 px erodiert",
+   "n": 6336,
+   "rgb": [
+    85.4,
+    92.1,
+    105.4
+   ],
+   "rgb_std": [
+    18.4,
+    18.2,
+    19.5
+   ],
+   "lab": [
+    39.0,
+    0.5,
+    -8.4
+   ],
+   "lab_std": [
+    7.6,
+    0.7,
+    0.8
+   ],
+   "rgb_sw": [
+    73.3,
+    80.5,
+    94.7
+   ],
+   "lab_sw": [
+    34.1,
+    0.6,
+    -9.2
+   ],
+   "rgb_entblendet": [
+    106.3,
+    115.3,
+    132.0
+   ],
+   "lab_entblendet": [
+    48.4,
+    0.5,
+    -10.3
+   ],
+   "rgb_entblendet_sw": [
+    95.7,
+    105.3,
+    123.3
+   ],
+   "lab_entblendet_sw": [
+    44.3,
+    0.6,
+    -11.2
+   ]
+  },
+  {
+   "bild": "bild1",
+   "region": "Bezug Boden box 30-199 x 380-439",
+   "fenster": "Maske 9296 px, bbox x32-197 y382-437, 2 px erodiert",
+   "n": 9296,
+   "rgb": [
+    51.3,
+    52.8,
+    57.3
+   ],
+   "rgb_std": [
+    7.2,
+    7.2,
+    7.4
+   ],
+   "lab": [
+    22.1,
+    0.4,
+    -3.0
+   ],
+   "lab_std": [
+    3.3,
+    0.7,
+    0.5
+   ],
+   "rgb_sw": [
+    36.7,
+    38.4,
+    43.2
+   ],
+   "lab_sw": [
+    15.4,
+    0.5,
+    -3.4
+   ],
+   "rgb_entblendet": [
+    61.7,
+    63.9,
+    69.5
+   ],
+   "lab_entblendet": [
+    27.0,
+    0.4,
+    -3.7
+   ],
+   "rgb_entblendet_sw": [
+    47.9,
+    50.2,
+    56.2
+   ],
+   "lab_entblendet_sw": [
+    20.9,
+    0.5,
+    -4.1
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Kopf rote Zone (Kuppe oben) box 418-441 x 193-211, R-G>=25",
+   "fenster": "Maske 236 px, bbox x420-439 y196-209, 2 px erodiert",
+   "n": 236,
+   "rgb": [
+    96.0,
+    57.2,
+    60.9
+   ],
+   "rgb_std": [
+    17.4,
+    15.9,
+    17.8
+   ],
+   "lab": [
+    28.8,
+    17.8,
+    5.0
+   ],
+   "lab_std": [
+    6.8,
+    3.2,
+    3.4
+   ],
+   "rgb_sw": [
+    84.7,
+    43.1,
+    47.0
+   ],
+   "lab_sw": [
+    23.2,
+    19.7,
+    6.1
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Buckel/Ruecken hell box 372-414 x 195-227, Lum>=80",
+   "fenster": "Maske 342 px, bbox x374-412 y197-225, 2 px erodiert",
+   "n": 342,
+   "rgb": [
+    163.3,
+    136.4,
+    141.3
+   ],
+   "rgb_std": [
+    30.9,
+    30.6,
+    30.6
+   ],
+   "lab": [
+    59.4,
+    11.0,
+    1.2
+   ],
+   "lab_std": [
+    11.6,
+    1.6,
+    0.9
+   ],
+   "rgb_sw": [
+    156.8,
+    127.9,
+    133.2
+   ],
+   "lab_sw": [
+    56.3,
+    12.0,
+    1.3
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Augenumfeld box 440-461 x 224-249",
+   "fenster": "Maske 396 px, bbox x442-459 y226-247, 2 px erodiert",
+   "n": 396,
+   "rgb": [
+    77.7,
+    67.9,
+    69.5
+   ],
+   "rgb_std": [
+    27.3,
+    27.1,
+    27.2
+   ],
+   "lab": [
+    29.8,
+    4.5,
+    0.5
+   ],
+   "lab_std": [
+    11.6,
+    1.4,
+    1.0
+   ],
+   "rgb_sw": [
+    65.0,
+    54.5,
+    56.3
+   ],
+   "lab_sw": [
+    24.0,
+    5.0,
+    0.6
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Auge (heller Fleck, Blob-Schwelle 77,8)",
+   "fenster": "Maske 137 px, bbox x444-458 y229-244",
+   "n": 137,
+   "rgb": [
+    109.4,
+    99.7,
+    101.4
+   ],
+   "rgb_std": [
+    17.2,
+    17.7,
+    17.2
+   ],
+   "lab": [
+    43.2,
+    4.1,
+    0.5
+   ],
+   "lab_std": [
+    7.1,
+    1.1,
+    0.9
+   ],
+   "rgb_sw": [
+    99.0,
+    88.6,
+    90.4
+   ],
+   "lab_sw": [
+    38.7,
+    4.5,
+    0.5
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Haare (dunkle Vorderkante, Blob-Schwelle 56,8)",
+   "fenster": "Maske 334 px, bbox x450-470 y227-257",
+   "n": 334,
+   "rgb": [
+    47.3,
+    43.7,
+    40.6
+   ],
+   "rgb_std": [
+    9.0,
+    8.8,
+    7.4
+   ],
+   "lab": [
+    18.1,
+    1.0,
+    2.6
+   ],
+   "lab_std": [
+    4.0,
+    2.8,
+    4.5
+   ],
+   "rgb_sw": [
+    32.5,
+    28.6,
+    25.3
+   ],
+   "lab_sw": [
+    10.9,
+    1.2,
+    3.0
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Kopf unterhalb Auge box 436-461 x 250-262",
+   "fenster": "Maske 198 px, bbox x438-459 y252-260, 2 px erodiert",
+   "n": 198,
+   "rgb": [
+    44.3,
+    40.2,
+    40.8
+   ],
+   "rgb_std": [
+    6.9,
+    5.5,
+    5.3
+   ],
+   "lab": [
+    16.6,
+    2.0,
+    0.3
+   ],
+   "lab_std": [
+    2.7,
+    1.4,
+    1.3
+   ],
+   "rgb_sw": [
+    29.2,
+    24.8,
+    25.5
+   ],
+   "lab_sw": [
+    9.2,
+    2.3,
+    0.3
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Oberarm (nah) box 345-394 x 250-284",
+   "fenster": "Maske 1426 px, bbox x347-392 y252-282, 2 px erodiert",
+   "n": 1426,
+   "rgb": [
+    77.6,
+    60.3,
+    60.2
+   ],
+   "rgb_std": [
+    48.9,
+    36.7,
+    39.0
+   ],
+   "lab": [
+    27.3,
+    7.5,
+    3.0
+   ],
+   "lab_std": [
+    17.5,
+    6.0,
+    2.3
+   ],
+   "rgb_sw": [
+    65.0,
+    46.6,
+    46.9
+   ],
+   "lab_sw": [
+    21.3,
+    8.5,
+    3.1
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Unterarm/Klaue box 340-371 x 285-321",
+   "fenster": "Maske 924 px, bbox x342-369 y287-319, 2 px erodiert",
+   "n": 924,
+   "rgb": [
+    41.6,
+    33.1,
+    31.9
+   ],
+   "rgb_std": [
+    12.2,
+    9.3,
+    10.0
+   ],
+   "lab": [
+    13.7,
+    3.8,
+    2.3
+   ],
+   "lab_std": [
+    4.7,
+    2.6,
+    1.3
+   ],
+   "rgb_sw": [
+    26.4,
+    17.3,
+    16.2
+   ],
+   "lab_sw": [
+    6.1,
+    3.9,
+    2.1
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Jeans box 395-434 x 296-329",
+   "fenster": "Maske 1080 px, bbox x397-432 y298-327, 2 px erodiert",
+   "n": 1080,
+   "rgb": [
+    40.9,
+    42.4,
+    47.1
+   ],
+   "rgb_std": [
+    23.8,
+    21.0,
+    21.7
+   ],
+   "lab": [
+    17.3,
+    0.5,
+    -3.3
+   ],
+   "lab_std": [
+    9.8,
+    2.8,
+    2.8
+   ],
+   "rgb_sw": [
+    25.7,
+    27.3,
+    32.3
+   ],
+   "lab_sw": [
+    9.9,
+    0.7,
+    -3.7
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Bezug Wand links box 40-119 x 150-299",
+   "fenster": "Maske 11096 px, bbox x42-117 y152-297, 2 px erodiert",
+   "n": 11096,
+   "rgb": [
+    156.0,
+    156.9,
+    161.1
+   ],
+   "rgb_std": [
+    39.9,
+    38.5,
+    40.7
+   ],
+   "lab": [
+    64.7,
+    0.5,
+    -2.3
+   ],
+   "lab_std": [
+    14.8,
+    1.2,
+    1.1
+   ],
+   "rgb_sw": [
+    148.9,
+    149.9,
+    154.4
+   ],
+   "lab_sw": [
+    62.1,
+    0.5,
+    -2.5
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Bezug Boden box 30-199 x 380-439",
+   "fenster": "Maske 9296 px, bbox x32-197 y382-437, 2 px erodiert",
+   "n": 9296,
+   "rgb": [
+    64.6,
+    65.3,
+    71.0
+   ],
+   "rgb_std": [
+    9.3,
+    9.5,
+    9.5
+   ],
+   "lab": [
+    27.8,
+    1.0,
+    -3.5
+   ],
+   "lab_std": [
+    4.1,
+    1.1,
+    1.2
+   ],
+   "rgb_sw": [
+    51.0,
+    51.8,
+    57.8
+   ],
+   "lab_sw": [
+    21.7,
+    1.1,
+    -3.9
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Schwanz nahe Ruecken (s 0-15 % Beginn->Knick), Maske ero2",
+   "fenster": "Maske 374 px, bbox x342-356 y208-247",
+   "n": 374,
+   "rgb": [
+    44.1,
+    25.6,
+    29.7
+   ],
+   "rgb_std": [
+    8.7,
+    9.2,
+    8.4
+   ],
+   "lab": [
+    11.6,
+    10.0,
+    1.0
+   ],
+   "lab_std": [
+    4.0,
+    3.9,
+    0.8
+   ],
+   "rgb_sw": [
+    29.0,
+    9.3,
+    13.7
+   ],
+   "lab_sw": [
+    4.5,
+    8.8,
+    1.1
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Schwanz breiter Teil (s 35-65 % Beginn->Knick), Maske ero2",
+   "fenster": "Maske 1114 px, bbox x283-326 y220-260",
+   "n": 1114,
+   "rgb": [
+    53.4,
+    42.8,
+    43.6
+   ],
+   "rgb_std": [
+    16.4,
+    20.5,
+    20.2
+   ],
+   "lab": [
+    18.6,
+    5.0,
+    1.3
+   ],
+   "lab_std": [
+    9.0,
+    2.9,
+    1.0
+   ],
+   "rgb_sw": [
+    38.9,
+    27.7,
+    28.5
+   ],
+   "lab_sw": [
+    11.5,
+    5.7,
+    1.6
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Schwanz am Knick (|s-s_Knick|<=10 px), Maske ero1",
+   "fenster": "Maske 45 px, bbox x275-286 y303-312",
+   "n": 45,
+   "rgb": [
+    58.4,
+    54.3,
+    52.8
+   ],
+   "rgb_std": [
+    15.2,
+    16.5,
+    16.2
+   ],
+   "lab": [
+    23.1,
+    1.4,
+    1.6
+   ],
+   "lab_std": [
+    7.5,
+    1.1,
+    0.4
+   ],
+   "rgb_sw": [
+    44.3,
+    40.0,
+    38.3
+   ],
+   "lab_sw": [
+    16.5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "bild": "bild2",
+   "region": "Schwanz Spitze (letzte 20 % Knick->Ende), Maske ero1",
+   "fenster": "Maske 133 px, bbox x282-302 y337-352",
+   "n": 133,
+   "rgb": [
+    51.6,
+    44.0,
+    44.2
+   ],
+   "rgb_std": [
+    12.1,
+    11.2,
+    11.5
+   ],
+   "lab": [
+    18.8,
+    3.5,
+    1.2
+   ],
+   "lab_std": [
+    5.3,
+    1.0,
+    0.3
+   ],
+   "rgb_sw": [
+    37.0,
+    28.9,
+    29.1
+   ],
+   "lab_sw": [
+    11.7,
+    4.0,
+    1.4
+   ]
+  }
+ ],
+ "port": [
+  {
+   "quelle": "vorn_h118",
+   "region": "Kopf-Kuppe",
+   "box": [
+    370,
+    160,
+    396,
+    172
+   ],
+   "n": 176,
+   "rgb": [
+    90.69999694824219,
+    68.69999694824219,
+    69.19999694824219
+   ],
+   "rgb_std": [
+    20.899999618530273,
+    23.200000762939453,
+    21.399999618530273
+   ],
+   "lab": [
+    31.5,
+    9.6,
+    3.3
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Augenumfeld",
+   "box": [
+    370,
+    170,
+    390,
+    185
+   ],
+   "n": 176,
+   "rgb": [
+    85.19999694824219,
+    73.0999984741211,
+    76.5
+   ],
+   "rgb_std": [
+    20.0,
+    19.899999618530273,
+    20.799999237060547
+   ],
+   "lab": [
+    32.4,
+    5.7,
+    -0.1
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Kopf B-rechts neben Auge (Haare-Lage)",
+   "box": [
+    386,
+    168,
+    398,
+    184
+   ],
+   "n": 96,
+   "rgb": [
+    86.0,
+    71.0999984741211,
+    73.5
+   ],
+   "rgb_std": [
+    14.800000190734863,
+    14.100000381469727,
+    14.100000381469727
+   ],
+   "lab": [
+    31.8,
+    6.7,
+    0.9
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Maul",
+   "box": [
+    373,
+    188,
+    395,
+    203
+   ],
+   "n": 198,
+   "rgb": [
+    32.5,
+    15.399999618530273,
+    17.700000762939453
+   ],
+   "rgb_std": [
+    18.200000762939453,
+    11.399999618530273,
+    12.300000190734863
+   ],
+   "lab": [
+    6.4,
+    8.9,
+    1.8
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Brust rot (R-G>=30)",
+   "box": [
+    395,
+    208,
+    430,
+    240
+   ],
+   "n": 287,
+   "rgb": [
+    100.0,
+    39.0,
+    38.599998474121094
+   ],
+   "rgb_std": [
+    19.299999237060547,
+    18.799999237060547,
+    16.700000762939453
+   ],
+   "lab": [
+    24.7,
+    27.6,
+    14.1
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Brust hell",
+   "box": [
+    380,
+    250,
+    420,
+    280
+   ],
+   "n": 936,
+   "rgb": [
+    85.4000015258789,
+    70.9000015258789,
+    67.5999984741211
+   ],
+   "rgb_std": [
+    23.299999237060547,
+    23.899999618530273,
+    23.5
+   ],
+   "lab": [
+    31.5,
+    5.5,
+    4.3
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Oberarm/Schulter B-links",
+   "box": [
+    300,
+    195,
+    330,
+    235
+   ],
+   "n": 936,
+   "rgb": [
+    86.5999984741211,
+    48.70000076293945,
+    48.0
+   ],
+   "rgb_std": [
+    36.70000076293945,
+    24.100000381469727,
+    22.899999618530273
+   ],
+   "lab": [
+    24.9,
+    17.1,
+    7.9
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Unterarm B-links",
+   "box": [
+    300,
+    265,
+    326,
+    300
+   ],
+   "n": 682,
+   "rgb": [
+    43.79999923706055,
+    30.100000381469727,
+    30.600000381469727
+   ],
+   "rgb_std": [
+    19.600000381469727,
+    17.799999237060547,
+    18.799999237060547
+   ],
+   "lab": [
+    13.0,
+    6.7,
+    2.3
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Jeans",
+   "box": [
+    362,
+    300,
+    395,
+    330
+   ],
+   "n": 754,
+   "rgb": [
+    27.299999237060547,
+    39.400001525878906,
+    49.20000076293945
+   ],
+   "rgb_std": [
+    17.399999618530273,
+    21.0,
+    25.200000762939453
+   ],
+   "lab": [
+    15.2,
+    -2.1,
+    -8.1
+   ]
+  },
+  {
+   "quelle": "vorn_h118",
+   "region": "Schwanz vorn",
+   "box": [
+    322,
+    350,
+    341,
+    372
+   ],
+   "n": 270,
+   "rgb": [
+    36.099998474121094,
+    36.5,
+    33.70000076293945
+   ],
+   "rgb_std": [
+    10.5,
+    10.600000381469727,
+    11.5
+   ],
+   "lab": [
+    14.3,
+    -0.9,
+    1.8
+   ]
+  },
+  {
+   "quelle": "kopf_h85",
+   "region": "Kopf oben grau (seitlich)",
+   "box": [
+    442,
+    188,
+    463,
+    204
+   ],
+   "n": 204,
+   "rgb": [
+    102.80000305175781,
+    88.9000015258789,
+    92.69999694824219
+   ],
+   "rgb_std": [
+    31.399999618530273,
+    29.5,
+    30.299999237060547
+   ],
+   "lab": [
+    39.2,
+    6.4,
+    -0.1
+   ]
+  },
+  {
+   "quelle": "kopf_h85",
+   "region": "Maul seitlich",
+   "box": [
+    442,
+    206,
+    462,
+    216
+   ],
+   "n": 96,
+   "rgb": [
+    107.19999694824219,
+    66.69999694824219,
+    66.4000015258789
+   ],
+   "rgb_std": [
+    41.0,
+    32.20000076293945,
+    33.400001525878906
+   ],
+   "lab": [
+    32.9,
+    17.5,
+    7.5
+   ]
+  },
+  {
+   "quelle": "kopf_h85",
+   "region": "Schulterwunde rot",
+   "box": [
+    408,
+    215,
+    440,
+    250
+   ],
+   "n": 868,
+   "rgb": [
+    122.19999694824219,
+    44.0,
+    43.400001525878906
+   ],
+   "rgb_std": [
+    29.399999618530273,
+    25.700000762939453,
+    25.0
+   ],
+   "lab": [
+    29.7,
+    34.0,
+    18.4
+   ]
+  },
+  {
+   "quelle": "seite_h83",
+   "region": "Buckel/Ruecken hell",
+   "box": [
+    372,
+    190,
+    405,
+    212
+   ],
+   "n": 522,
+   "rgb": [
+    95.80000305175781,
+    67.0999984741211,
+    69.9000015258789
+   ],
+   "rgb_std": [
+    21.799999237060547,
+    22.5,
+    23.799999237060547
+   ],
+   "lab": [
+    31.7,
+    12.9,
+    3.2
+   ]
+  },
+  {
+   "quelle": "seite_h83",
+   "region": "Oberarm (nah)",
+   "box": [
+    355,
+    240,
+    385,
+    262
+   ],
+   "n": 468,
+   "rgb": [
+    59.70000076293945,
+    48.20000076293945,
+    46.099998474121094
+   ],
+   "rgb_std": [
+    25.299999237060547,
+    20.799999237060547,
+    19.899999618530273
+   ],
+   "lab": [
+    21.1,
+    4.8,
+    3.3
+   ]
+  },
+  {
+   "quelle": "seite_h83",
+   "region": "Jeans",
+   "box": [
+    350,
+    292,
+    372,
+    318
+   ],
+   "n": 396,
+   "rgb": [
+    23.299999237060547,
+    35.599998474121094,
+    45.20000076293945
+   ],
+   "rgb_std": [
+    15.399999618530273,
+    20.399999618530273,
+    23.299999237060547
+   ],
+   "lab": [
+    13.3,
+    -2.2,
+    -8.0
+   ]
+  },
+  {
+   "quelle": "seite_h83",
+   "region": "Schwanz nahe Ruecken",
+   "box": [
+    322,
+    200,
+    345,
+    214
+   ],
+   "n": 190,
+   "rgb": [
+    64.0,
+    43.79999923706055,
+    33.29999923706055
+   ],
+   "rgb_std": [
+    17.799999237060547,
+    21.5,
+    8.399999618530273
+   ],
+   "lab": [
+    20.0,
+    7.8,
+    10.5
+   ]
+  },
+  {
+   "quelle": "seite_h83",
+   "region": "Schwanz breiter Teil",
+   "box": [
+    282,
+    215,
+    302,
+    233
+   ],
+   "n": 224,
+   "rgb": [
+    58.70000076293945,
+    41.099998474121094,
+    37.0
+   ],
+   "rgb_std": [
+    17.600000381469727,
+    18.799999237060547,
+    10.800000190734863
+   ],
+   "lab": [
+    18.6,
+    7.5,
+    5.9
+   ]
+  },
+  {
+   "quelle": "seite_h83",
+   "region": "Schwanz Spitze",
+   "box": [
+    228,
+    282,
+    241,
+    296
+   ],
+   "n": 90,
+   "rgb": [
+    60.400001525878906,
+    43.79999923706055,
+    55.400001525878906
+   ],
+   "rgb_std": [
+    18.200000762939453,
+    12.399999618530273,
+    18.5
+   ],
+   "lab": [
+    20.2,
+    10.0,
+    -4.4
+   ]
+  }
+ ],
+ "deltaE": [
+  {
+   "original": "bild1: Kopf-Kuppe (Oberkopf B-links der roten Zone) box 372-388 x 147-157",
+   "port": "vorn_h118: Kopf-Kuppe",
+   "lab_original_bezug": [
+    19.5,
+    12.2,
+    3.6
+   ],
+   "lab_port": [
+    31.5,
+    9.6,
+    3.3
+   ],
+   "dE00_gegen_original_bereinigt": 9.1,
+   "dE00_gegen_original_roh": 7.9,
+   "L_port_minus_original": 12.0,
+   "C_original": 12.7,
+   "C_port": 10.2,
+   "h_original": 16.4,
+   "h_port": 19.0
+  },
+  {
+   "original": "bild1: Augenumfeld box 371-391 x 157-177",
+   "port": "vorn_h118: Augenumfeld",
+   "lab_original_bezug": [
+    27.0,
+    7.9,
+    -1.1
+   ],
+   "lab_port": [
+    32.4,
+    5.7,
+    -0.1
+   ],
+   "dE00_gegen_original_bereinigt": 4.8,
+   "dE00_gegen_original_roh": 4.7,
+   "L_port_minus_original": 5.4,
+   "C_original": 8.0,
+   "C_port": 5.7,
+   "h_original": 352.1,
+   "h_port": 359.0
+  },
+  {
+   "original": "bild1: Auge (heller Fleck, Blob-Schwelle 72,1)",
+   "port": "vorn_h118: Augenumfeld",
+   "lab_original_bezug": [
+    39.9,
+    8.0,
+    -1.2
+   ],
+   "lab_port": [
+    32.4,
+    5.7,
+    -0.1
+   ],
+   "dE00_gegen_original_bereinigt": 6.7,
+   "dE00_gegen_original_roh": 2.9,
+   "L_port_minus_original": -7.5,
+   "C_original": 8.1,
+   "C_port": 5.7,
+   "h_original": 351.5,
+   "h_port": 359.0
+  },
+  {
+   "original": "bild1: Haare (dunkles Feld, Blob-Schwelle 31,2)",
+   "port": "vorn_h118: Kopf B-rechts neben Auge (Haare-Lage)",
+   "lab_original_bezug": [
+    3.2,
+    4.4,
+    0.7
+   ],
+   "lab_port": [
+    31.8,
+    6.7,
+    0.9
+   ],
+   "dE00_gegen_original_bereinigt": 19.4,
+   "dE00_gegen_original_roh": 16.1,
+   "L_port_minus_original": 28.6,
+   "C_original": 4.5,
+   "C_port": 6.8,
+   "h_original": 9.0,
+   "h_port": 7.7
+  },
+  {
+   "original": "bild1: unter dem Kopf/Kinn box 378-411 x 183-194",
+   "port": "vorn_h118: Maul",
+   "lab_original_bezug": [
+    8.1,
+    10.6,
+    3.8
+   ],
+   "lab_port": [
+    6.4,
+    8.9,
+    1.8
+   ],
+   "dE00_gegen_original_bereinigt": 2.3,
+   "dE00_gegen_original_roh": 4.3,
+   "L_port_minus_original": -1.7,
+   "C_original": 11.3,
+   "C_port": 9.1,
+   "h_original": 19.7,
+   "h_port": 11.4
+  },
+  {
+   "original": "bild1: Brust rot box 372-424 x 195-234, R-G>=15",
+   "port": "vorn_h118: Brust rot (R-G>=30)",
+   "lab_original_bezug": [
+    10.5,
+    19.1,
+    7.7
+   ],
+   "lab_port": [
+    24.7,
+    27.6,
+    14.1
+   ],
+   "dE00_gegen_original_bereinigt": 10.9,
+   "dE00_gegen_original_roh": 11.6,
+   "L_port_minus_original": 14.2,
+   "C_original": 20.6,
+   "C_port": 31.0,
+   "h_original": 22.0,
+   "h_port": 27.1
+  },
+  {
+   "original": "bild1: Brust hell box 372-424 x 195-234, R-G<15 und Lum>=45",
+   "port": "vorn_h118: Brust hell",
+   "lab_original_bezug": [
+    24.8,
+    5.9,
+    1.6
+   ],
+   "lab_port": [
+    31.5,
+    5.5,
+    4.3
+   ],
+   "dE00_gegen_original_bereinigt": 5.6,
+   "dE00_gegen_original_roh": 5.9,
+   "L_port_minus_original": 6.7,
+   "C_original": 6.1,
+   "C_port": 7.0,
+   "h_original": 15.2,
+   "h_port": 38.0
+  },
+  {
+   "original": "bild1: Oberarm/Schulter B-links box 305-349 x 165-214",
+   "port": "vorn_h118: Oberarm/Schulter B-links",
+   "lab_original_bezug": [
+    27.2,
+    5.8,
+    3.2
+   ],
+   "lab_port": [
+    24.9,
+    17.1,
+    7.9
+   ],
+   "dE00_gegen_original_bereinigt": 9.7,
+   "dE00_gegen_original_roh": 11.4,
+   "L_port_minus_original": -2.3,
+   "C_original": 6.6,
+   "C_port": 18.8,
+   "h_original": 28.9,
+   "h_port": 24.8
+  },
+  {
+   "original": "bild1: Jeans box 372-439 x 262-299",
+   "port": "vorn_h118: Jeans",
+   "lab_original_bezug": [
+    4.3,
+    -0.6,
+    -1.3
+   ],
+   "lab_port": [
+    15.2,
+    -2.1,
+    -8.1
+   ],
+   "dE00_gegen_original_bereinigt": 9.0,
+   "dE00_gegen_original_roh": 6.7,
+   "L_port_minus_original": 10.9,
+   "C_original": 1.4,
+   "C_port": 8.4,
+   "h_original": 245.2,
+   "h_port": 255.5
+  },
+  {
+   "original": "bild1: Schwanz vorn (Band links, |I-bg*k|>=30, Lum<60)",
+   "port": "vorn_h118: Schwanz vorn",
+   "lab_original_bezug": [
+    0.6,
+    -0.0,
+    -0.2
+   ],
+   "lab_port": [
+    14.3,
+    -0.9,
+    1.8
+   ],
+   "dE00_gegen_original_bereinigt": 8.7,
+   "dE00_gegen_original_roh": 5.8,
+   "L_port_minus_original": 13.7,
+   "C_original": 0.2,
+   "C_port": 2.0,
+   "h_original": 270.0,
+   "h_port": 116.6
+  },
+  {
+   "original": "bild2: Kopf rote Zone (Kuppe oben) box 418-441 x 193-211, R-G>=25",
+   "port": "kopf_h85: Kopf oben grau (seitlich)",
+   "lab_original_bezug": [
+    23.2,
+    19.7,
+    6.1
+   ],
+   "lab_port": [
+    39.2,
+    6.4,
+    -0.1
+   ],
+   "dE00_gegen_original_bereinigt": 16.7,
+   "dE00_gegen_original_roh": 12.9,
+   "L_port_minus_original": 16.0,
+   "C_original": 20.6,
+   "C_port": 6.4,
+   "h_original": 17.2,
+   "h_port": 359.1
+  },
+  {
+   "original": "bild2: Auge (heller Fleck, Blob-Schwelle 77,8)",
+   "port": "kopf_h85: Kopf oben grau (seitlich)",
+   "lab_original_bezug": [
+    38.7,
+    4.5,
+    0.5
+   ],
+   "lab_port": [
+    39.2,
+    6.4,
+    -0.1
+   ],
+   "dE00_gegen_original_bereinigt": 2.2,
+   "dE00_gegen_original_roh": 4.4,
+   "L_port_minus_original": 0.5,
+   "C_original": 4.5,
+   "C_port": 6.4,
+   "h_original": 6.3,
+   "h_port": 359.1
+  },
+  {
+   "original": "bild2: Buckel/Ruecken hell box 372-414 x 195-227, Lum>=80",
+   "port": "seite_h83: Buckel/Ruecken hell",
+   "lab_original_bezug": [
+    56.3,
+    12.0,
+    1.3
+   ],
+   "lab_port": [
+    31.7,
+    12.9,
+    3.2
+   ],
+   "dE00_gegen_original_bereinigt": 23.0,
+   "dE00_gegen_original_roh": 26.5,
+   "L_port_minus_original": -24.6,
+   "C_original": 12.1,
+   "C_port": 13.3,
+   "h_original": 6.2,
+   "h_port": 13.9
+  },
+  {
+   "original": "bild2: Oberarm (nah) box 345-394 x 250-284",
+   "port": "seite_h83: Oberarm (nah)",
+   "lab_original_bezug": [
+    21.3,
+    8.5,
+    3.1
+   ],
+   "lab_port": [
+    21.1,
+    4.8,
+    3.3
+   ],
+   "dE00_gegen_original_bereinigt": 3.9,
+   "dE00_gegen_original_roh": 5.4,
+   "L_port_minus_original": -0.2,
+   "C_original": 9.0,
+   "C_port": 5.8,
+   "h_original": 20.0,
+   "h_port": 34.5
+  },
+  {
+   "original": "bild2: Jeans box 395-434 x 296-329",
+   "port": "seite_h83: Jeans",
+   "lab_original_bezug": [
+    9.9,
+    0.7,
+    -3.7
+   ],
+   "lab_port": [
+    13.3,
+    -2.2,
+    -8.0
+   ],
+   "dE00_gegen_original_bereinigt": 5.6,
+   "dE00_gegen_original_roh": 5.8,
+   "L_port_minus_original": 3.4,
+   "C_original": 3.8,
+   "C_port": 8.3,
+   "h_original": 280.7,
+   "h_port": 254.6
+  },
+  {
+   "original": "bild2: Schwanz nahe Ruecken (s 0-15 % Beginn->Knick), Maske ero2",
+   "port": "seite_h83: Schwanz nahe Ruecken",
+   "lab_original_bezug": [
+    4.5,
+    8.8,
+    1.1
+   ],
+   "lab_port": [
+    20.0,
+    7.8,
+    10.5
+   ],
+   "dE00_gegen_original_bereinigt": 12.6,
+   "dE00_gegen_original_roh": 10.0,
+   "L_port_minus_original": 15.5,
+   "C_original": 8.9,
+   "C_port": 13.1,
+   "h_original": 7.1,
+   "h_port": 53.4
+  },
+  {
+   "original": "bild2: Schwanz breiter Teil (s 35-65 % Beginn->Knick), Maske ero2",
+   "port": "seite_h83: Schwanz breiter Teil",
+   "lab_original_bezug": [
+    11.5,
+    5.7,
+    1.6
+   ],
+   "lab_port": [
+    18.6,
+    7.5,
+    5.9
+   ],
+   "dE00_gegen_original_bereinigt": 6.0,
+   "dE00_gegen_original_roh": 4.4,
+   "L_port_minus_original": 7.1,
+   "C_original": 5.9,
+   "C_port": 9.5,
+   "h_original": 15.7,
+   "h_port": 38.2
+  },
+  {
+   "original": "bild2: Schwanz Spitze (letzte 20 % Knick->Ende), Maske ero1",
+   "port": "seite_h83: Schwanz Spitze",
+   "lab_original_bezug": [
+    11.7,
+    4.0,
+    1.4
+   ],
+   "lab_port": [
+    20.2,
+    10.0,
+    -4.4
+   ],
+   "dE00_gegen_original_bereinigt": 9.4,
+   "dE00_gegen_original_roh": 8.0,
+   "L_port_minus_original": 8.5,
+   "C_original": 4.2,
+   "C_port": 10.9,
+   "h_original": 19.3,
+   "h_port": 336.3
+  }
+ ],
+ "bezug": "Bild 1 bereinigt = entblendet (k) + Schwarzwert 17 ab; Bild 2 bereinigt = Schwarzwert 17 ab"
+}

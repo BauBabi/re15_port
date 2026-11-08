@@ -1,0 +1,46 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel/re15_port/build
+      Start   44: unit_birkin_ai
+ 1/20 Test   #44: unit_birkin_ai ....................   Passed    0.01 sec
+      Start  292: probe_p2_birkin_g5
+ 2/20 Test  #292: probe_p2_birkin_g5 ................   Passed    0.65 sec
+      Start  303: probe_p3_birkin_rest
+ 3/20 Test  #303: probe_p3_birkin_rest ..............   Passed    0.75 sec
+      Start  308: unit_r17_birkin_1zu1_pin
+ 4/20 Test  #308: unit_r17_birkin_1zu1_pin ..........   Passed    0.19 sec
+      Start  314: unit_r18_birkin_restluecken_pin
+ 5/20 Test  #314: unit_r18_birkin_restluecken_pin ...   Passed    0.17 sec
+      Start  320: unit_r20_birkin_push_pin
+ 6/20 Test  #320: unit_r20_birkin_push_pin ..........   Passed    1.09 sec
+      Start  339: unit_r30_birkin_frost
+ 7/20 Test  #339: unit_r30_birkin_frost .............   Passed    0.76 sec
+      Start  363: unit_r30_n_room5080_birkin_wand
+ 8/20 Test  #363: unit_r30_n_room5080_birkin_wand ...   Passed    0.11 sec
+      Start  891: unit_r38_spiderman
+ 9/20 Test  #891: unit_r38_spiderman ................   Passed    0.15 sec
+      Start  900: unit_r38_griff_spiderman_vorn
+10/20 Test  #900: unit_r38_griff_spiderman_vorn .....   Passed    0.04 sec
+      Start  901: unit_r38_griff_spiderman_hinten
+11/20 Test  #901: unit_r38_griff_spiderman_hinten ...   Passed    0.02 sec
+      Start 1372: unit_birkin_formen
+12/20 Test #1372: unit_birkin_formen ................   Passed    0.01 sec
+      Start 1373: unit_birkin_bahnsteig
+13/20 Test #1373: unit_birkin_bahnsteig .............   Passed    0.12 sec
+      Start 1374: unit_r41_birkin_wand_rein
+14/20 Test #1374: unit_r41_birkin_wand_rein .........   Passed    0.01 sec
+      Start 1375: unit_r41_birkin_wand_g5
+15/20 Test #1375: unit_r41_birkin_wand_g5 ...........   Passed   28.97 sec
+      Start 1376: unit_r41_birkin_wand_griff
+16/20 Test #1376: unit_r41_birkin_wand_griff ........   Passed  133.12 sec
+      Start 1377: unit_birkin_szenen
+17/20 Test #1377: unit_birkin_szenen ................   Passed    0.16 sec
+      Start 1379: integration_r41_birkin_pistole
+18/20 Test #1379: integration_r41_birkin_pistole ....   Passed  275.72 sec
+      Start 1380: integration_r41_sichel_form
+19/20 Test #1380: integration_r41_sichel_form .......   Passed   73.34 sec
+      Start 1384: unit_birkin_opfer
+20/20 Test #1384: unit_birkin_opfer .................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 20
+
+Total Test time (real) = 515.52 sec
+EXIT=0
