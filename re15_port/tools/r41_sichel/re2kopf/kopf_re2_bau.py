@@ -31,6 +31,16 @@ Runde 3 (Nutzer 2026-11-08: Feuerflecken / helle Kratzer weg, Seite einfach grau
     + Palettenregel r3 (Zeilen 486/488: Adern auf Grau gleicher oder geringerer Helligkeit, Struktur in [M - d_tief, M + d_hoch], warmes bzw.
     braeunliches Grau; Glanzpunkt des Auges ausgenommen). Texel bleiben bytegleich G2/G3, UVs und Zonen unveraendert (Zonen an den Quell-Ecken).
   * python kopf_re2_bau.py [--json PROT]         -> EM30_V5r3.EMD (+ EM30_V4.EMD); --r2 baut die Runde-2-Variante (Gegenprobe).
+Runde 4 (Nutzer 2026-11-08 nach den Runde-3-Leisten: "er hat immer noch eine schnabelmaessige Form ueber den Mund."):
+  * PARAM_R4 = PARAM_R3 + form 'r4' (Farben/Texel/UV/Zonen bytegleich Runde 3): (a) Schnauzenachse verkuerzt = x-Skalierung sx um den
+    Hinterkopf (kleinstes x des G2-Kopfes, Ecke 19), Normalen affin mitgerechnet; (b) runde Kuppe: Kappe mit rundem Profil (Halbachse x = y,
+    Seitenverhaeltnis 1,0) aus drei Massen des verkuerzten Kopfes - Maullinie (Oberkante der Maulflaechen), Scheitel (kleinstes y), Maulvorderkante
+    (groesstes x der Maulecken); Mittelpunkt auf der Maullinie, Radius = Maullinie - Scheitel, vorn tangential an die Maulvorderkante, z-Halbachse =
+    groesste Kopfbreite. Ecken oberhalb der Maullinie vor dem Mittelpunkt, die ausserhalb liegen, radial auf die Kappe; (c) die Nabe des
+    Augenfaechers (Ecke 39) gleitet auf der Kopfseite nach hinten/unten (S2: das Auge bleibt hinter der zurueckgenommenen Vorderkante);
+    (d) Lage: Versatz im Knochen-9-Raum (80, 70, 0) statt (140, 10, 0) = 60 E. zurueck und 60 E. tiefer (Pose 85 ~6 px nach links).
+    Normalen der von (b)/(c) bewegten Ecken flaechengewichtet neu.
+  * python kopf_re2_bau.py [--json PROT]         -> EM30_V5r4.EMD (+ EM30_V4.EMD); --r3 baut Runde 3 bytegleich (dd546074), --r2 Runde 2.
 Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc; keine Zahl hier ist eine @0x-Konstante.
 """
 import os, sys, json, struct, argparse, hashlib
@@ -117,6 +127,25 @@ PARAM_R3.update(
              grau=dict(m_ziel=42.0, d_hoch=6.0, d_tief=12.0, c_ader=12.0, a_t=1.5, b_t=2.0),
              dunkel=dict(k=1.20, d_hoch=6.0, d_tief=12.0, c_ader=12.0, a_t=3.0, b_t=5.0),
              glanz=dict(l=70.0, lmax=100.0)),
+)
+
+
+# Runde 4 (Nutzer 2026-11-08: "er hat immer noch eine schnabelmaessige Form ueber den Mund."). PARAM_R4 = PARAM_R3 + Form 'r4' + Lage; Palette/Zonen
+# unveraendert (Texel, UV, CLUT-Zeilen 486-488 bytegleich Runde 3). Suche Scratchpad sfv5r4/exp1-11.py (je Variante Render Pose 85/135 + Fenster
+# K10/K4/K7/S2/KS2/K1k/K5/K6/K9e/T-R3 und Ueberstand gegen Beschreibung2_Vorlage):
+#   sx 1,0 (nur Kuppe): Ueberstand 15 px, S2 0,028 (rot); sx 0,9 / 0,85 / 0,8 / 0,75 / 0,7 mit Versatz 0: Ueberstand 11 / 9 / 9 / 7 / 5 px;
+#   ab sx 0,8 werden K5/K6/K1k (Zonen am Bild) rot (exp9). Versatz (-d, +d, 0) im Knochen-9-Raum verschiebt den Kopf in Pose 85 um ~0,096 px/E.
+#   waagerecht (Knochen-x (5,0 / 5,0) px, Knochen-y (-4,6 / 4,5) px je 100 E., achsen.py); d 60: Ueberstand 3 px, d 75/90: K5/K6/K1k rot (exp11).
+#   S2 faellt mit jeder zurueckgenommenen Vorderkante (das Auge liegt am Faecher-Nabenpunkt 39, x 60 = hinter der Front): Nabe 39 nach unten
+#   (+y, Pose 85 nach links, Pose 135 zur Kopfmitte - K4 bleibt) und etwas nach hinten (-x); dy 70 / dx 20 -> S2 0,038 / 0,817, K4 0,054 / 0,096.
+#   Untere Rundung (Kieferecken 4/20/34 nach innen, Varianten 'unten', exp6-10): K10-Hoehe 0,143-0,154 bzw. K6 rot - verworfen.
+PARAM_R4 = json.loads(json.dumps(PARAM_R3))
+PARAM_R4.update(
+    versatz=(80.0, 70.0, 0.0),            # Runde 1-3: (140, 10, 0); Lage: 60 E. zurueck (-Knochen-x), 60 E. tiefer (+Knochen-y)
+    form=dict(art='r4',
+              sx=0.85,                    # Schnauzenachse x 0,85 um den Hinterkopf (Ecke 19, x -248)
+              kappe_ratio=1.0,            # Kappe: Halbachse x / Halbachse y (Seitenverhaeltnis im Profil; Riegel T-V3 <= 1,05)
+              auge_e=[39], auge_d=[-20.0, 70.0, 0.0]),   # Nabe des Augenfaechers (T19/T20/T41): 20 E. zurueck, 70 E. tiefer (G2-Raum, unskaliert)
 )
 
 
@@ -304,10 +333,76 @@ def g2_geometrie(p):
     N = np.array([n[:3] for n in m.tn], float)
     if not p.get('form'):
         return V, V.copy(), N, None
+    if p['form'].get('art') == 'r4':
+        _Wa, V2, N2, info = form_r4(m, V, N, p['form'])
+        return V, V2, N2, info
     V2, info = runden(V, p['form'], feste_ecken(m, p['form'].get('fest', 'auge')))
     N2, nidx = normalen_neu(m, V2, info['bewegt'])
     info['normalen_neu'] = nidx
     return V, V2, N2, info
+
+
+# ---------------------------------------------------------------------------------------------------------------------------- Runde 4: Form
+def maul_ecken(m):
+    return sorted({int(m.tf[i][2 * k + 1]) for i in MAUL_T for k in range(3)} | {int(m.qf[i][2 * k + 1]) for i in MAUL_Q for k in range(4)})
+
+
+def maullinie(m, V):
+    """Maullinie = Oberkante der Maulflaechen: kleinstes y der Flaechenmittelpunkte von MAUL_T/MAUL_Q (G2-Raum, y nach unten)."""
+    V = np.asarray(V, float)
+    c = [V[[m.tf[i][2 * k + 1] for k in range(3)]].mean(0)[1] for i in MAUL_T]
+    c += [V[[m.qf[i][2 * k + 1] for k in range(4)]].mean(0)[1] for i in MAUL_Q]
+    return float(min(c))
+
+
+def kappe_rund(m, V, ratio=1.0):
+    """Runde Kappe aus drei Massen des Kopfes: Maullinie ym, Scheitel yt (kleinstes y), Maulvorderkante xf (groesstes x der Maulecken).
+    Mittelpunkt (xf - ratio R, ym, 0), Halbachsen (ratio R, R, rz) mit R = ym - yt (Scheitel tangential) und rz = groesste |z| (Kopfbreite).
+    -> (c, Halbachsen, Masse)."""
+    V = np.asarray(V, float)
+    ym, yt = maullinie(m, V), float(V[:, 1].min())
+    xf = float(V[maul_ecken(m), 0].max())
+    R = ym - yt
+    ax = np.array([ratio * R, R, float(np.abs(V[:, 2]).max())])
+    c = np.array([xf - ax[0], ym, 0.0])
+    return c, ax, dict(ym=ym, yt=yt, xf=xf, R=R, rz=float(ax[2]), ratio=float(ratio))
+
+
+def form_r4(m, V, N, f):
+    """Runde 4 (s. PARAM_R4): (a) x-Skalierung sx um den Hinterkopf, Normalen affin (n / (sx, 1, 1), Laenge wie das Original); (b) Ecken
+    oberhalb der Maullinie vor dem Kappen-Mittelpunkt mit r > 1 radial auf die runde Kappe; (c) Nabe(n) auge_e um auge_d verschoben.
+    Normalen der in (b)/(c) bewegten Ecken flaechengewichtet neu (normalen_flaechen), alle anderen = affin mitgerechnet.
+    -> (Wa = nur verkuerzt, V2 = Ergebnis, N2, Info)."""
+    V = np.asarray(V, float); N = np.asarray(N, float)
+    xp = float(V[:, 0].min()); s = float(f['sx'])
+    Wa = V.copy(); Wa[:, 0] = xp + s * (V[:, 0] - xp)
+    L = np.linalg.norm(N, axis=1, keepdims=True)
+    Na = N / np.array([s, 1.0, 1.0]); Na = Na / np.maximum(np.linalg.norm(Na, axis=1, keepdims=True), 1e-9) * L
+    c, ax, lm = kappe_rund(m, Wa, f.get('kappe_ratio', 1.0))
+    r = np.linalg.norm((Wa - c) / ax, axis=1)
+    raus = (Wa[:, 1] < lm['ym']) & (Wa[:, 0] > c[0]) & (r > 1.0)
+    V2 = Wa.copy()
+    V2[raus] = c + (Wa[raus] - c) / r[raus][:, None]
+    for i in f.get('auge_e', ()):
+        V2[i] = V2[i] + np.asarray(f.get('auge_d', (0, 0, 0)), float)
+    d = np.linalg.norm(V2 - Wa, axis=1)
+    bew = [int(i) for i in np.nonzero(d > 0.5)[0]]
+    N2 = Na.copy()
+    F = normalen_flaechen(m, V2)
+    nv = {}
+    for faces, n in ((m.tf, 3), (m.qf, 4)):
+        for fc in faces:
+            for k in range(n):
+                nv.setdefault(fc[2 * k], set()).add(fc[2 * k + 1])
+    nidx = sorted(j for j, vs in nv.items() if vs & set(bew))
+    for j in nidx:
+        N2[j] = F[j] * L[j]
+    info = dict(art='r4', sx=s, pivot_x=xp, kappe_c=c.tolist(), kappe_ax=ax.tolist(), kappe_masse=lm, gerundet=[int(i) for i in np.nonzero(raus)[0]],
+                r_gerundet={int(i): float(r[i]) for i in np.nonzero(raus)[0]}, auge_e=list(f.get('auge_e', ())), auge_d=list(f.get('auge_d', (0, 0, 0))),
+                bewegt=bew, normalen_neu=nidx, normalen_affin=len(N) - len(nidx),
+                je_ecke={int(i): dict(weg=float(d[i]), quelle=V[i].tolist(), verkuerzt=Wa[i].round(2).tolist(), neu=V2[i].round(2).tolist()) for i in bew},
+                profil_vorher=float(np.ptp(V[:, 0]) / np.ptp(V[:, 1])), profil_nachher=float(np.ptp(V2[:, 0]) / np.ptp(V2[:, 1])))
+    return Wa, V2, N2, info
 
 
 # ------------------------------------------------------------------------------------------------------------------------- Runde 3: Palette
@@ -560,10 +655,12 @@ def bauen(p=PARAM, basis=BASIS):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--aus', default=AUS); ap.add_argument('--basis', default=BASIS); ap.add_argument('--json')
-    ap.add_argument('--name', default='EM30_V5r3.EMD'); ap.add_argument('--param', help='JSON mit PARAM-Ueberschreibungen')
-    ap.add_argument('--r2', action='store_true', help='Runde-2-Parameter (PARAM: keine Kappe, Palette L* x k) statt PARAM_R3')
+    ap.add_argument('--name'); ap.add_argument('--param', help='JSON mit PARAM-Ueberschreibungen')
+    ap.add_argument('--r2', action='store_true', help='Runde-2-Parameter (PARAM: keine Kappe, Palette L* x k) statt PARAM_R4')
+    ap.add_argument('--r3', action='store_true', help='Runde-3-Parameter (PARAM_R3: Kappe nur Keilspitze, Versatz 140/10/0) statt PARAM_R4')
     a = ap.parse_args()
-    p = json.loads(json.dumps(PARAM if a.r2 else PARAM_R3))
+    p = json.loads(json.dumps(PARAM if a.r2 else (PARAM_R3 if a.r3 else PARAM_R4)))
+    a.name = a.name or ('EM30_V4re2.EMD' if a.r2 else ('EM30_V5r3.EMD' if a.r3 else 'EM30_V5r4.EMD'))
     if a.param:
         p.update(json.load(open(a.param)))
     neu, prot, _ = bauen(p, a.basis)
@@ -573,7 +670,12 @@ def main():
     open(os.path.join(a.aus, 'EM30_V4.EMD'), 'wb').write(neu)
     print('geschrieben %s (%d Byte, sha256 %s); EM30_V4.EMD darauf' % (ziel, len(neu), prot['emd']['sha256'][:16]))
     print('TIM', prot['tim']); print('Zonen', prot['zonen']); print('G2', prot['g2']['bbox_neu'])
-    if 'form' in prot:
+    if 'form' in prot and prot['form'].get('art') == 'r4':
+        f = prot['form']
+        print('Form r4: sx %.2f um x %.0f; Kappe c %s ax %s (Masse %s); gerundet %s; Auge %s %s; bewegt %d Ecken, Normalen neu %d, affin %d; Profil x/y %.3f -> %.3f' % (
+            f['sx'], f['pivot_x'], np.round(f['kappe_c'], 1).tolist(), np.round(f['kappe_ax'], 1).tolist(), {k: round(v, 1) for k, v in f['kappe_masse'].items()},
+            f['gerundet'], f['auge_e'], f['auge_d'], len(f['bewegt']), len(f['normalen_neu']), f['normalen_affin'], f['profil_vorher'], f['profil_nachher']))
+    elif 'form' in prot:
         f = prot['form']
         print('Form: Kappe c %s ax %s (%d Schritte, ausgeschlossen %s); bewegt %d Ecken %s (> 1 E.: %d), Normalen neu %s' % (
             np.round(f['kappe_c'], 1).tolist(), np.round(f['kappe_ax'], 1).tolist(), f['schritte'], f['ausgeschlossen'], len(f['bewegt']), f['bewegt'],

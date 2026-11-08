@@ -1,6 +1,10 @@
-"""SF V5 Kopf aus RE2 (Bauer, Runde 3): Bildleisten fuer die Abnahme (analysis/befunde_runde41/SF_belege/v4/).
+"""SF V5 Kopf aus RE2 (Bauer, Runde 4): Bildleisten fuer die Abnahme (analysis/befunde_runde41/SF_belege/v4/).
 
-    python leisten_re2kopf.py [alle|01|02|03|04|08|10|11]
+    python leisten_re2kopf.py [alle|01|02|03|04|08|10|11|12]
+
+Runde 4 (Nutzer 2026-11-08: "er hat immer noch eine schnabelmaessige Form ueber den Mund."): Spalten wie Runde 3, neu = sfv4/emd/EM30_V5r4.EMD
+(= EM30_V4.EMD); dazu 12 = Kopf-Profil x6 rein seitlich und rein von vorn (Mesh 9 in den G2-Raum zurueckgerechnet, orthogonal, neutrales
+kamerarelatives Licht emd_ansichtsblatt.render, roh): neu | Runde 3 (EM30_V5r3.EMD dd546074), damit man sieht, dass der Schnabel weg ist.
 
 Runde 3 (Nutzer 2026-11-08: "Es ist abgerundet so wie es auf dem Original Foto aussieht"): Spalten 01-04/11 NUR Originalfoto
 (Version_80%/Beschreibung1_Vorlage.png bzw. Beschreibung2_Vorlage.png, roh) | Nutzer-Beschriftung (Beschreibung1/2) | Referenz 2 (gelobt, Spiel-Asset
@@ -27,17 +31,20 @@ import kopf_re2_mess as KM
 
 AUS = LV.AUS
 RE2DIR = os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4', 're2')
-NAME = {'ref2': 'Referenz 2', 'neu': 'neu (V5 Runde 3: grau, abgerundet)'}
-EMD = {'ref2': G.REF2, 'neu': os.environ.get('RE15_LEISTE_NEU', os.path.join(G.SFV4, 'emd', 'EM30_V5r3.EMD'))}
+NAME = {'ref2': 'Referenz 2', 'neu': 'neu (V5 Runde 4: kein Schnabel)', 'r3': 'Runde 3 (dd546074)'}
+EMD = {'ref2': G.REF2, 'neu': os.environ.get('RE15_LEISTE_NEU', os.path.join(G.SFV4, 'emd', 'EM30_V5r4.EMD')),
+       'r3': os.path.join(G.SFV4, 'emd', 'EM30_V5r3.EMD')}
 LAUF = {'ref2': os.environ.get('RE15_LAUF_REF2', os.path.join(G.SFV4, 'r', 'R2ot')),
-        'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V5r3'))}
-RIEGEL_JSON = os.environ.get('RE15_LEISTE_RIEGEL', os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4', 're2r3', 'riegel_re2kopf_V5r3.json'))
+        'neu': os.environ.get('RE15_LAUF_NEU', os.path.join(G.SFV4, 'r', 'V5r4'))}
+RIEGEL_JSON = os.environ.get('RE15_LEISTE_RIEGEL', os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4', 're2r4', 'riegel_re2kopf_V5r4.json'))
+PROT = {'neu': os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4', 're2r4', 'kopf_re2_protokoll_r4.json'),
+        'r3': os.path.join(G.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v4', 're2r3', 'kopf_re2_protokoll_r3.json')}
 KI_BILD = G.V80 + 'image_1.png'
 KI_FIGUR = dict(FRONT=(60, 0, 470, 500), RIGHT=(520, 0, 1024, 500), BACK=(60, 512, 470, 1012), LEFT=(520, 512, 1024, 1012))
 KI_KOPF = dict(FRONT=(205, 5, 305, 115), RIGHT=(925, 80, 1010, 170))          # vorlagen_kopf.KI (Leser A, von Hand gesetzt)
 KI_KOEPFE = {'image_1.png': ((205, 5, 305, 115), (925, 80, 1010, 170)), 'image_2 (2).png': ((205, 15, 300, 110), (865, 85, 945, 160)),
              'image_3 (3).png': ((205, 10, 290, 110), (590, 45, 660, 125))}
-KOPFZEILE = 'Spalten: Originalfoto (Beschreibung1/2_Vorlage, roh) | Nutzer-Beschriftung | Referenz 2 (gelobt, Spiel-Asset) | neu (RE2-G2-Kopf, Palettenregel r3 grau, Schnauze auf Kappe gerundet; roh, kein Gamma)'
+KOPFZEILE = 'Spalten: Originalfoto (Beschreibung1/2_Vorlage, roh) | Nutzer-Beschriftung | Referenz 2 (gelobt, Spiel-Asset) | neu (Runde 4: Schnauze verkuerzt, runde Kuppe ueber dem Maul, Kopf zurueckgesetzt; Farbe wie Runde 3; roh, kein Gamma)'
 GELB, CYAN = LV.GELB, LV.CYAN
 _cache = {}
 
@@ -114,8 +121,8 @@ def l01():
          LV.kachel(bsch, box, 2, 'Beschreibung1 (Nutzer)', ['Auge links / Haare rechts / Nase'])]
     for k in ('ref2', 'neu'):
         t.append(kachel_mark(k, '135', box, 2, '%s Pose 135 (Kamera 50A0/12)' % NAME[k],
-                             zl(['T-K1a', 'T-R1d', 'T-V1', 'T-V2a', 'K10', 'K4', 'K5', 'T-K9e'], 70) if k == 'neu' else ['Spiel-Asset EM30_HANGAR.EMD cfd1ac42'], marken=False))
-    LV.speichern('01_vorn_kamera12', [t], ['SF V5 Kopf aus RE2 (Runde 3) - 01 vorn: Spielkamera 50A0 Cut 12 wie Originalfoto 1 (h135), Pose posen_v4 "135"', KOPFZEILE])
+                             zl(['T-K1a', 'T-V1', 'T-V3i', 'T-V3ii', 'K10', 'K4', 'K5', 'T-K9e'], 70) if k == 'neu' else ['Spiel-Asset EM30_HANGAR.EMD cfd1ac42'], marken=False))
+    LV.speichern('01_vorn_kamera12', [t], ['SF V5 Kopf aus RE2 (Runde 4) - 01 vorn: Spielkamera 50A0 Cut 12 wie Originalfoto 1 (h135), Pose posen_v4 "135"', KOPFZEILE])
 
 
 def l02():
@@ -125,8 +132,8 @@ def l02():
          LV.kachel(bsch, box, 2, 'Beschreibung2 (Nutzer)', ['Auge / Haare von der Seite'])]
     for k in ('ref2', 'neu'):
         t.append(kachel_mark(k, '85', box, 2, '%s Pose 85 (Kamera 50A0/12)' % NAME[k],
-                             zl(['S2', 'KS2', 'T-V2c', 'T-V2b', 'T-K3a', 'T2'], 70) if k == 'neu' else ['Spiel-Asset EM30_HANGAR.EMD cfd1ac42'], marken=False))
-    LV.speichern('02_seite_wie_bild2', [t], ['SF V5 Kopf aus RE2 (Runde 3) - 02 seitlich: Kamera/Pose wie Originalfoto 2 (h85), posen_v4 "85"', KOPFZEILE])
+                             zl(['S2', 'KS2', 'T-V3i', 'T-V3iii', 'T-V2b', 'T2'], 70) if k == 'neu' else ['Spiel-Asset EM30_HANGAR.EMD cfd1ac42'], marken=False))
+    LV.speichern('02_seite_wie_bild2', [t], ['SF V5 Kopf aus RE2 (Runde 4) - 02 seitlich: Kamera/Pose wie Originalfoto 2 (h85), posen_v4 "85"', KOPFZEILE])
 
 
 def l03():
@@ -137,9 +144,9 @@ def l03():
     for k in ('ref2', 'neu'):
         img, ids, _iv = render(k, '135'); kb = G.kopfbox(ids)
         z1.append(kachel_mark(k, '135', LV.kopfbox_rand(kb), 4, '%s Kopf x4' % NAME[k],
-                              zl(['T-V1', 'K10', 'K4', 'K1k', 'K5', 'T-R3'], 60) if k == 'neu' else ['Mesh 9 Referenz 2 (rosa Klumpen, Leser A)'], marken=False))
+                              zl(['T-V3ii', 'K10', 'K4', 'K7', 'K1k', 'T-R3'], 60) if k == 'neu' else ['Mesh 9 Referenz 2 (rosa Klumpen, Leser A)'], marken=False))
         z2.append(kachel_mark(k, '135', LV.kopfbox_rand(kb), 4, '%s mit Marken' % NAME[k], ['gelb Auge (Marker-Render), cyan Zaehne'] if k == 'neu' else ['']))
-    LV.speichern('03_kopf_nah_vorn_x4', [z1, z2], ['SF V5 Kopf aus RE2 (Runde 3) - 03 Kopf vorn x4 (Kopfbox +8 px; Port = Bbox Id 9); Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
+    LV.speichern('03_kopf_nah_vorn_x4', [z1, z2], ['SF V5 Kopf aus RE2 (Runde 4) - 03 Kopf vorn x4 (Kopfbox +8 px; Port = Bbox Id 9); Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
 
 
 def l04():
@@ -153,9 +160,9 @@ def l04():
         if k == 'neu':
             m = mess(k)['85']; b = m['KS2']['box']; cv2.rectangle(im2, (b[0], b[1]), (b[2], b[3]), CYAN, 1); im2[m['ma']] = GELB
         z1.append(LV.kachel(img, LV.kopfbox_rand(kb, 14), 4, '%s Kopf seitlich x4' % NAME[k],
-                            zl(['S2', 'KS2', 'T-V2a', 'T-V2c'], 62) if k == 'neu' else ['Spiel-Asset']))
+                            zl(['S2', 'KS2', 'T-V3i', 'T-V3iii'], 62) if k == 'neu' else ['Spiel-Asset']))
         z2.append(LV.kachel(im2, LV.kopfbox_rand(kb, 14), 4, '%s mit Marken' % NAME[k], ['gelb Auge, cyan Fenster KS2'] if k == 'neu' else ['']))
-    LV.speichern('04_kopf_nah_seite_x4', [z1, z2], ['SF V5 Kopf aus RE2 (Runde 3) - 04 Kopf seitlich x4; Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
+    LV.speichern('04_kopf_nah_seite_x4', [z1, z2], ['SF V5 Kopf aus RE2 (Runde 4) - 04 Kopf seitlich x4; Zeile 1 ohne, Zeile 2 mit Marken', KOPFZEILE])
 
 
 def l08():
@@ -240,14 +247,88 @@ def l11():
             im = cv2.cvtColor(p, cv2.COLOR_BGR2RGB) if p is not None else np.zeros((480, 640, 3), np.uint8)
             t.append(LV.kachel(im, boxen[h], fakt[h], '%s Spiel h%d (RE15_FRAMEDUMP) x%d' % (NAME[k], h, fakt[h]), ['Lauf %s' % os.path.basename(LAUF[k])]))
         zeilen.append(t)
-    LV.speichern('11_spiel_koepfe', zeilen, ['SF V5 Kopf aus RE2 (Runde 3) - 11 Spiel-Koepfe: RE15_FRAMEDUMP-Bilder h135 (Zeile 1) und h85 (Zeile 2), registriert wie Abnahme 3',
+    LV.speichern('11_spiel_koepfe', zeilen, ['SF V5 Kopf aus RE2 (Runde 4) - 11 Spiel-Koepfe: RE15_FRAMEDUMP-Bilder h135 (Zeile 1) und h85 (Zeile 2), registriert wie Abnahme 3',
                                             KOPFZEILE])
+
+
+def profil_kachel(k, ansicht, PX=6, rahmen=None):
+    """Mesh 9 des EMD k in den G2-Raum zurueckgerechnet (Protokoll-Parameter: Skala/Drehung/Versatz), orthogonal rein seitlich (Blick entlang -z auf die
+    (W)-rechte Flanke, vorn = +x nach rechts) bzw. rein von vorn (Blick entlang -x), neutrales kamerarelatives Licht (emd_ansichtsblatt.render), roh.
+    Gleicher Massstab fuer alle Kacheln: PX Bildpunkte je 1 Port-Pixel ~ 1/PX; rahmen = (xmin, xmax, ymin, ymax) im G2-Raum."""
+    import riegel_re2kopf as RG
+    m_ = mo(k)
+    p = json.load(open(PROT[k]))['param']
+    V = RG.g2_ecken(EMD[k], p)
+    m9 = m_.meshes[KB.KOPF]
+    sk = np.array(p['skal'], float); R = KB.rot(p)
+    Nq = np.array([n[:3] for n in m9.tn], float)
+    N = (Nq @ R) * sk; N /= np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-9)
+    F = []
+    for i, (n0, v0, n1, v1, n2, v2) in enumerate(m9.tf):
+        uv = m9.tuv[i]
+        F.append(dict(v=(v0, v1, v2), n=(n0, n1, n2), uv=((uv[0], uv[1]), (uv[3], uv[4]), (uv[6], uv[7])), clut=uv[2], page=uv[5], bone=9))
+    for i, (n0, v0, n1, v1, n2, v2, n3, v3) in enumerate(m9.qf):
+        uv = m9.quv[i]; a, bb, c, dd = (uv[0], uv[1]), (uv[3], uv[4]), (uv[6], uv[7]), (uv[9], uv[10])
+        F.append(dict(v=(v0, v1, v2), n=(n0, n1, n2), uv=(a, bb, c), clut=uv[2], page=uv[5], bone=9))
+        F.append(dict(v=(v1, v3, v2), n=(n1, n3, n2), uv=(bb, dd, c), clut=uv[2], page=uv[5], bone=9))
+    view = EA.V_RIGHT if ansicht == 'seite' else EA.V_FRONT
+    right, down, depth = (np.asarray(v, float) for v in view)
+    sc = 0.75                                     # Bildpunkte je G2-Einheit (Kopfhoehe ~450 E. -> ~340 px)
+    W = H = 420
+    xs, ys = V @ right, V @ down
+    if rahmen is None:
+        cx = W / 2 - (xs.min() + xs.max()) / 2 * sc; cy = H / 2 - (ys.min() + ys.max()) / 2 * sc
+    else:
+        cx, cy = rahmen
+    col, alp = EA.render(m_, V, N, F, right, down, depth, W, H, sc, cx, cy)
+    img = (np.clip(col, 0, 1) * 255).astype(np.uint8)
+    img[alp == 0] = (40, 40, 46)
+    a = alp > 0
+    ys_, xs_ = np.nonzero(a)
+    bw, bh = (xs_.ptp() + 1, ys_.ptp() + 1) if len(xs_) else (0, 0)
+    return img, (cx, cy), dict(breite=int(bw), hoehe=int(bh), verh=float(bw / bh) if bh else 0.0, x=(float(xs.min()), float(xs.max())), y=(float(ys.min()), float(ys.max())))
+
+
+def l12():
+    """12 Kopf-Profil x6: rein seitlich und rein von vorn, neutrales Licht, roh: neu | Runde 3 (gleicher Massstab, gleicher Ursprung)."""
+    import riegel_re2kopf as RG
+    zeilen = []
+    rj = {}
+    if os.path.exists(RIEGEL_JSON):
+        rj = json.load(open(RIEGEL_JSON)).get('info', {}).get('tv3', {})
+    for ansicht, titel in (('seite', 'rein seitlich (Blick auf die (W)-rechte Flanke, vorn = rechts)'), ('vorn', 'rein von vorn (Blick gegen die Schnauzenachse)')):
+        t = []
+        rahmen = None
+        for k in ('neu', 'r3'):
+            img, rahmen_k, mm = profil_kachel(k, ansicht, rahmen=rahmen)
+            rahmen = rahmen or rahmen_k
+            if ansicht == 'seite':
+                p = json.load(open(PROT[k]))['param']
+                V = RG.g2_ecken(EMD[k], p)
+                g = RL.modell(KB.G2).meshes[3]
+                c, ax, lm = KB.kappe_rund(g, V, 1.0)
+                # runde Kappe (T-V3ii) als Kreis im Profil (x/y), Maullinie gestrichelt
+                cx, cy = rahmen
+                ctr = (int(round(c[0] * 0.75 + cx)), int(round(c[1] * 0.75 + cy)))
+                cv2.ellipse(img, ctr, (int(round(ax[0] * 0.75)), int(round(ax[1] * 0.75))), 0, 180, 360, (90, 200, 90), 1)
+                ym = int(round(lm['ym'] * 0.75 + cy))
+                for x_ in range(0, img.shape[1], 8):
+                    cv2.line(img, (x_, ym), (x_ + 4, ym), (200, 200, 90), 1)
+                zl_ = ['Tiefe/Hoehe %.3f (Foto-Ziel 0,757, Grenze 0,857); Kappe gruen, Maullinie gelb' % (np.ptp(V[:, 0]) / np.ptp(V[:, 1]))]
+            else:
+                zl_ = ['Breite/Hoehe %.3f (nur Ausgabe)' % mm['verh']]
+            big = cv2.resize(img, None, fx=1, fy=1, interpolation=cv2.INTER_NEAREST)
+            t.append(b2.tafel(big, '%s %s' % (NAME[k], titel), zl_, f=1))
+        zeilen.append(t)
+    LV.speichern('12_kopf_profil_x6', zeilen, ['SF V5 Kopf aus RE2 (Runde 4) - 12 Kopf-Profil: Mesh 9 in den G2-Raum zurueckgerechnet, orthogonal, neutrales kamerarelatives '
+                                               'Licht (emd_ansichtsblatt.render), roh; gleicher Massstab (0,75 px/E. ~ x6 gegen das Spielbild) und Ursprung je Zeile',
+                                               'Spalten: neu (V5 Runde 4) | Runde 3 (dd546074); Zeile 1 rein seitlich mit runder Kappe (T-V3ii) und Maullinie, Zeile 2 rein von vorn'])
 
 
 def main():
     os.makedirs(AUS, exist_ok=True)
     w = sys.argv[1] if len(sys.argv) > 1 else 'alle'
-    for k, f in (('01', l01), ('02', l02), ('03', l03), ('04', l04), ('08', l08), ('10', l10), ('11', l11)):
+    for k, f in (('01', l01), ('02', l02), ('03', l03), ('04', l04), ('08', l08), ('10', l10), ('11', l11), ('12', l12)):
         if w in ('alle', k):
             f()
 

@@ -38,6 +38,22 @@ Runde 3 (Nutzer 2026-11-08: Feuerflecken/helle Kratzer weg, Seite einfach grau; 
         x in 450-482 mit |L*Foto - L*BSS (Videoraum)| > 9, im Render = rechtestes Figurpixel; IoU der Streifen 440..Vorderkante (Zahl) und
         groesster Ueberstand; Soll IoU >= IoU der Vorgaengervariante (--vorher, Standard EM30_V4re2 = V5 Runde 2).
   Gegenprobe V5 Runde 2 (EM30_V4re2.EMD mit --prot kopf_re2_protokoll.json): T-V1 und T-V2 ROT.
+
+Runde 4 (Nutzer 2026-11-08: "er hat immer noch eine schnabelmaessige Form ueber den Mund."):
+  T-R1a/T-V2 pruefen gegen kopf_re2_bau.PARAM_R4 (Form 'r4': verkuerzt, runde Kuppe, Augennabe, Versatz), wenn das Protokoll keine Parameter
+        bringt. Bei Form 'r4' gilt als Kappe die RUNDE Kappe von T-V3ii (Auftrag Runde 4: Seitenverhaeltnis <= 1,05) statt der Ellipsoid-Anpassung
+        der Runde 3 (Halbachsen ~ 1 : 1,9 : 0,8 = selbst eine Keilform): T-V2a wird dort zur INFO-Zeile (Zahl weiter ausgegeben; die Pruefung uebernimmt
+        T-V3ii), T-V2b misst den radialen Abstand zum Ring in der runden Kappe und vergleicht gegen den nur VERKUERZTEN Quellkopf (die x-Skalierung
+        ist eine affine Gesamtaenderung, keine Delle); die Werte im Rahmen der Runde-3-Kappe stehen in derselben Zeile als Ausgabe.
+  T-V3  kein Schnabel:
+        (i)  Kopf-Tiefe/Hoehe <= Foto-Ziel + 0,10. Foto-Ziel = Kopfbox seitlich im Originalfoto 2 (Messblatt V4 Abschnitt 3 / p_riegelfenster.py,
+             x 412-467 y 190-263 = 56 x 74 px) = 0,757 -> Grenze 0,857; gemessen a) Pose 85 im Spielkamera-Render (Bbox Id 9),
+             b) Profil rein seitlich (Mesh 9 in den G2-Raum zurueckgerechnet, orthogonal entlang z: Ausdehnung x / y).
+        (ii) runde Kappe (kopf_re2_bau.kappe_rund, Seitenverhaeltnis x:y 1,0 <= 1,05) aus Maullinie (Oberkante der Maulflaechen), Scheitel und
+             Maulvorderkante des GEPRUEFTEN Kopfes: kein Eckpunkt oberhalb der Maullinie und vor dem Kappen-Mittelpunkt mehr als 3 % der Kopfhoehe
+             radial vor der Kappe.
+        (iii) Vorderkante seitlich gegen Beschreibung2_Vorlage (wie T-V2c, Zeilen 186-217): groesster Ueberstand <= 8 px.
+  Gegenprobe V5 Runde 3 (EM30_V5r3.EMD dd546074 mit --prot re2r3/kopf_re2_protokoll_r3.json): T-V3 ROT.
 """
 import os, sys, json, argparse, hashlib, struct
 import numpy as np, cv2
@@ -133,7 +149,7 @@ def tr0(emd, basis):
 
 def tr1(emd, prot=None):
     """Kopf byte-true RE2 (bis auf die dokumentierte Transformation)."""
-    p = (prot or {}).get('param') or KB.PARAM_R3
+    p = (prot or {}).get('param') or KB.PARAM_R4
     zonen = (prot or {}).get('zonen')
     blob = open(emd, 'rb').read(); d = EA.emd_dir(blob)
     ms = EA.md1_parse(blob[d[7]:d[8]]); m9 = ms[KB.KOPF]
@@ -169,8 +185,12 @@ def tr1(emd, prot=None):
                 rows[ist] += 1
                 if soll != ist:
                     zone_ab += 1
-        form_txt = ('; Kappe: %d Ecken gerundet %s, %d Normalen neu' % (len(finfo['bewegt']), finfo['bewegt'], len(finfo['normalen_neu']))) if finfo else '; ohne Kappe (Runde 2)'
-        Z.append(zeile('T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)', 'Ecken = Rz Ry Rx S runden(v) + t (Abstand <= 1 E.), Normalen gedreht (<= 2 E.), Flaechen-Indizes gleich, '
+        if finfo and finfo.get('art') == 'r4':
+            form_txt = '; Form r4: sx %.2f, %d Ecken auf die runde Kappe %s, Augennabe %s %s, %d Normalen neu, %d affin' % (
+                finfo['sx'], len(finfo['gerundet']), finfo['gerundet'], finfo['auge_e'], finfo['auge_d'], len(finfo['normalen_neu']), finfo['normalen_affin'])
+        else:
+            form_txt = ('; Kappe: %d Ecken gerundet %s, %d Normalen neu' % (len(finfo['bewegt']), finfo['bewegt'], len(finfo['normalen_neu']))) if finfo else '; ohne Kappe (Runde 2)'
+        Z.append(zeile('T-R1a Kopf-Geometrie = G2 Mesh 3 (0x31)', 'Ecken = Rz Ry Rx S form(v) + t (form = Runde 3 runden bzw. Runde 4 form_r4; Abstand <= 1 E.), Normalen gedreht (<= 2 E.), Flaechen-Indizes gleich, '
                        'UV = Quelle + (%d, %d) ausser Maulflaechen (%d Dreiecke, G3-Kachel); CLUT-Zeile je Flaeche = Zonenregel (n . c > %.1f mit n = %s | u %d-%d | Spitze Q%s -> 488)' % (
                            du, dv_, len(KB.MAUL_T) + len(KB.MAUL_Q), zn['ebene_d'], tuple(zn['ebene_n']), zn['nase_u'][0], zn['nase_u'][1], list(zn.get('spitze_Q', ()))),
                        '%d Ecken / %d Normalen / %d Tri / %d Quad; Ecken max %.2f E., Normalen max %.2f, Flaechen %s, UV abweichend %d, Maul %d; Zeilen grau %d / dunkel %d, Zone abweichend %d%s' % (
@@ -363,19 +383,28 @@ def silhouette(mo, P, ff=None):
 
 def tv2(emd, mo, P, prot, vorher=None, prot_vorher=None):
     """T-V2 Form: Vorsprung gegen die Kappe, Delle/Vorsprung der bewegten Ecken, Silhouette seitlich gegen das Foto."""
-    p = (prot or {}).get('param') or KB.PARAM_R3
+    p = (prot or {}).get('param') or KB.PARAM_R4
     g = RL.modell(KB.G2).meshes[3]
     V0 = np.array([v[:3] for v in g.tv], float)
+    pf = p.get('form') or {}
+    if pf.get('art') == 'r4':
+        # Runde 4: Bezug fuer T-V2b = nur verkuerzter Quellkopf (affin), s. Kopf des Moduls
+        V0, _v2, _n2, _i = KB.form_r4(g, V0, np.array([n[:3] for n in g.tn], float), pf)
     V = g2_ecken(emd, p)
     Hk = float(V[:, 1].max() - V[:, 1].min())
-    c, ax, r, raus, it = KB.kappe(V, (p.get('form') or KB.PARAM_R3['form'])['trimm'])
+    c, ax, r, raus, it = KB.kappe(V, pf.get('trimm', KB.PARAM_R3['form']['trimm']))
     i0 = int(np.argmax(V[:, 0]))
     vor = float(np.linalg.norm(V[i0] - c) * (1 - 1 / r[i0])) / Hk
-    Z = [zeile('T-V2a Vorsprung vorderste Kopfecke', 'Ecke mit max x (G2-Raum, Mesh 9 zurueckgerechnet) gegen die Kappe (Ellipsoid-Anpassung an die Kopfecken, iterativ ohne r > 1,15): '
+    r4 = pf.get('art') == 'r4'
+    Z = [zeile('T-V2a Vorsprung vorderste Kopfecke' + (' (Runde 4: INFO, Pruefung T-V3ii)' if r4 else ''), 'Ecke mit max x (G2-Raum, Mesh 9 zurueckgerechnet) gegen die Kappe (Ellipsoid-Anpassung an die Kopfecken, iterativ ohne r > 1,15): '
                'radialer Ueberstand <= %.0f %% der Kopfhoehe' % (100 * TV2['VORSPRUNG']),
                'Ecke %d (x %.0f) r %.3f -> %.1f E. = %.1f %% von %.0f E.; Kappe c %s ax %s, %d Schritte, ausgeschlossen %s' % (
                    i0, V[i0, 0], r[i0], vor * Hk, 100 * vor, Hk, np.round(c, 1).tolist(), np.round(ax, 1).tolist(), it, raus),
-               vor <= TV2['VORSPRUNG'])]
+               vor <= TV2['VORSPRUNG'], info=r4)]
+    c3, ax3 = c, ax                      # Runde-3-Rahmen fuer die Ausgabe
+    if r4:
+        c, ax, _lm = KB.kappe_rund(g, V, TV3['RATIO'])
+        r = np.linalg.norm((V - c) / ax, axis=1)
     # b) Delle / neuer Vorsprung an den bewegten Ecken
     bew = [int(i) for i in np.nonzero(np.linalg.norm(V - V0, axis=1) > 1.0)[0]]
     nb = _nachbarn(g)
@@ -395,16 +424,30 @@ def tv2(emd, mo, P, prot, vorher=None, prot_vorher=None):
     grenze = max(TV2['DELLE'], rel)
     delle = {i: d_ for i, d_ in dev.items() if d_ < -grenze and d_ < dev0[i] - TV2['ZUWACHS']}
     neu_vor = {i: d_ for i, d_ in dev.items() if d_ > grenze and d_ > dev0[i] + TV2['ZUWACHS']}
+    r3txt = ''
+    if r4:
+        # dieselbe Rechnung im Rahmen der Runde-3-Kappe (nur Ausgabe)
+        rr3 = np.linalg.norm((V - c3) / ax3, axis=1); rr30 = np.linalg.norm((V0 - c3) / ax3, axis=1)
+
+        def abw3(W, rW, i):
+            ring = sorted(nb.get(i, ()))
+            q = np.linalg.norm((W[ring] - c3) / ax3, axis=1)
+            return float((rW[i] - q.mean()) * np.linalg.norm(W[i] - c3) / max(rW[i], 1e-9) / Hk)
+        rel3 = max(TV2['DELLE'], float(np.percentile(np.abs([abw3(V0, rr30, i) for i in range(len(V0))]), TV2['RELIEF_P'])))
+        d3 = {i: abw3(V, rr3, i) for i in pruef}; d30 = {i: abw3(V0, rr30, i) for i in pruef}
+        r3txt = ' | Rahmen Runde-3-Kappe (nur Ausgabe): Grenze %.1f %%, Dellen %s, neue Vorspruenge %s' % (
+            100 * rel3, {k: round(100 * v, 1) for k, v in d3.items() if v < -rel3 and v < d30[k] - TV2['ZUWACHS']} or 'keine',
+            {k: '%.1f (Quelle %.1f)' % (100 * v, 100 * d30[k]) for k, v in d3.items() if v > rel3 and v > d30[k] + TV2['ZUWACHS']} or 'keine')
     dmin = min(dev.values()) if dev else 0.0; dmax = max(dev.values()) if dev else 0.0
-    Z.append(zeile('T-V2b keine Delle / kein neuer Vorsprung', 'bewegte Ecken (> 1 E. gegen G2) und ihre Nachbarn: radialer Abstand zum Mittel der Nachbarecken '
+    Z.append(zeile('T-V2b keine Delle / kein neuer Vorsprung', 'bewegte Ecken (> 1 E. gegen G2%s) und ihre Nachbarn: radialer Abstand zum Mittel der Nachbarecken '
                    '(Kappenmass, Anteil der Kopfhoehe); Grenze = max(%.0f %%, Relief der G2-Quelle = P%d von |Abweichung| ueber alle 48 Ecken); Delle = unter -Grenze und um > %.0f %% '
                    'tiefer als an der Quelle; neuer Vorsprung = ueber +Grenze und um > %.0f %% hoeher als an der Quelle; beides 0' % (
-                       100 * TV2['DELLE'], TV2['RELIEF_P'], 100 * TV2['ZUWACHS'], 100 * TV2['ZUWACHS']),
+                       ', Runde 4: gegen den verkuerzten G2-Kopf' if pf.get('art') == 'r4' else '', 100 * TV2['DELLE'], TV2['RELIEF_P'], 100 * TV2['ZUWACHS'], 100 * TV2['ZUWACHS']),
                    'Grenze %.1f %% (Relief P%d %.1f %%); %d Ecken bewegt %s, %d geprueft; min %.1f %% (Ecke %s), max %.1f %% (Ecke %s, Quelle %.1f %%); Dellen %s; neue Vorspruenge %s' % (
                        100 * grenze, TV2['RELIEF_P'], 100 * rel,
                        len(bew), bew, len(pruef), 100 * dmin, min(dev, key=dev.get) if dev else '-', 100 * dmax, max(dev, key=dev.get) if dev else '-',
                        100 * dev0[max(dev, key=dev.get)] if dev else 0.0, {k: round(100 * v, 1) for k, v in delle.items()} or 'keine',
-                       {k: round(100 * v, 1) for k, v in neu_vor.items()} or 'keine'),
+                       {k: round(100 * v, 1) for k, v in neu_vor.items()} or 'keine') + (' (Rahmen runde Kappe T-V3ii)' if r4 else '') + r3txt,
                    not delle and not neu_vor))
     # c) Silhouette seitlich
     ff = foto_vorderkante()
@@ -420,6 +463,50 @@ def tv2(emd, mo, P, prot, vorher=None, prot_vorher=None):
                        s_['iou'], (' (vorher %s: %.3f, Ueberstand max %d, Kopf-Vorderkante %d)' % (os.path.basename(vorher), sv['iou'], sv['ueber_max'], sv['kopf_vorderkante'])) if sv else '',
                        s_['ueber_max'], s_['ueber_mittel'], min(ff), max(ff), int(np.median(ff)), s_['kopf_vorderkante']), ok))
     return Z, dict(silhouette=s_, vorher=sv, abweichung=dev, vorsprung=vor)
+
+
+# ------------------------------------------------------------------------------------------------------------------------------ Runde 4: T-V3
+TV3 = dict(FOTO_BOX=G.KB_ORIG[2], PLUS=0.10, VORSPRUNG=0.03, RATIO=1.0, RATIO_MAX=1.05, UEBER=8)
+
+
+def tv3(emd, mo, P, M, prot, s_=None):
+    """T-V3 kein Schnabel: (i) Tiefe/Hoehe Pose 85 und Profil rein seitlich <= Foto + 0,10; (ii) Ecken oberhalb der Maullinie gegen die runde Kappe
+    <= 3 % der Kopfhoehe; (iii) Ueberstand seitlich gegen das Foto <= 8 px."""
+    p = (prot or {}).get('param') or KB.PARAM_R4
+    g = RL.modell(KB.G2).meshes[3]
+    x0, y0, x1, y1 = TV3['FOTO_BOX']
+    ziel = (x1 - x0 + 1) / (y1 - y0 + 1); grenze = ziel + TV3['PLUS']
+    kb = M['85']['kopfbox']
+    r85 = (kb[2] - kb[0] + 1) / (kb[3] - kb[1] + 1)
+    V = g2_ecken(emd, p)
+    prof = float(np.ptp(V[:, 0]) / np.ptp(V[:, 1])); vorn = float(np.ptp(V[:, 2]) / np.ptp(V[:, 1]))
+    Z = [zeile('T-V3i Kopf-Tiefe/Hoehe (kein Schnabel)', 'Pose 85 (Bbox Id 9, Spielkamera 50A0/12) und Profil rein seitlich (Mesh 9 im G2-Raum, orthogonal entlang z: x-/y-Ausdehnung) '
+               '<= Foto-Ziel + %.2f; Foto-Ziel = Kopfbox seitlich Originalfoto 2 (Messblatt V4 Abschnitt 3, x %d-%d y %d-%d) = %d / %d = %.3f -> Grenze %.3f' % (
+                   TV3['PLUS'], x0, x1, y0, y1, x1 - x0 + 1, y1 - y0 + 1, ziel, grenze),
+               'Pose 85 %.3f (Box %s, %d x %d px); Profil seitlich %.3f (x %.0f / y %.0f E.); Profil vorn z/y %.3f (nur Ausgabe)' % (
+                   r85, kb, kb[2] - kb[0] + 1, kb[3] - kb[1] + 1, prof, np.ptp(V[:, 0]), np.ptp(V[:, 1]), vorn),
+               r85 <= grenze and prof <= grenze)]
+    c, ax, lm = KB.kappe_rund(g, V, TV3['RATIO'])
+    Hk = float(np.ptp(V[:, 1]))
+    r = np.linalg.norm((V - c) / ax, axis=1)
+    sel = (V[:, 1] < lm['ym']) & (V[:, 0] > c[0])
+    vor = {int(i): float(np.linalg.norm(V[i] - c) * (1 - 1 / r[i]) / Hk) for i in np.nonzero(sel & (r > 1))[0]}
+    vmax = max(vor.values()) if vor else 0.0
+    imax = max(vor, key=vor.get) if vor else -1
+    Z.append(zeile('T-V3ii Ecken oberhalb der Maullinie gegen die runde Kappe', 'Kappe kopf_re2_bau.kappe_rund am GEPRUEFTEN Kopf (Mittelpunkt auf der Maullinie, Halbachse x : y = %.2f <= %.2f, '
+                   'Scheitel tangential, vorn an der Maulvorderkante): jede Ecke oberhalb der Maullinie und vor dem Mittelpunkt hoechstens %.0f %% der Kopfhoehe radial vor der Kappe' % (
+                       TV3['RATIO'], TV3['RATIO_MAX'], 100 * TV3['VORSPRUNG']),
+                   'Maullinie y %.0f, Scheitel %.0f, Maulvorderkante x %.0f -> c %s, Halbachsen %s; %d Ecken geprueft, %d vor der Kappe; max %.1f %% (Ecke %d) von %.0f E.; ueber 3 %%: %s' % (
+                       lm['ym'], lm['yt'], lm['xf'], np.round(c, 1).tolist(), np.round(ax, 1).tolist(), int(sel.sum()), len(vor), 100 * vmax, imax, Hk,
+                       {k: round(100 * v, 1) for k, v in sorted(vor.items(), key=lambda t: -t[1]) if v > TV3['VORSPRUNG']} or 'keine'),
+                   vmax <= TV3['VORSPRUNG'] and TV3['RATIO'] <= TV3['RATIO_MAX']))
+    s_ = s_ or silhouette(mo, P)
+    Z.append(zeile('T-V3iii Vorderkante seitlich gegen Beschreibung2_Vorlage', 'Zeilen %d-%d wie T-V2c: groesster Ueberstand Render ueber Foto <= %d px' % (
+        TV2['ZEILEN'][0], TV2['ZEILEN'][1], TV3['UEBER']),
+        'Ueberstand max %d px / Mittel %.1f px; Kopf-Vorderkante Render (Id 9) x %d; Foto-Vorderkante P50 x %d' % (
+            s_['ueber_max'], s_['ueber_mittel'], s_['kopf_vorderkante'], int(np.median(s_['foto']))), s_['ueber_max'] <= TV3['UEBER']))
+    return Z, dict(ziel=ziel, grenze=grenze, pose85=r85, profil=prof, profil_vorn=vorn, kappe=dict(c=c.tolist(), ax=ax.tolist(), masse=lm),
+                   vorsprung={k: v for k, v in vor.items()}, ueber=s_['ueber_max'])
 
 
 _ref2 = {}
@@ -557,7 +644,7 @@ def hell_unten(mo, M):
 
 def pruefen(emd, basis=None, lauf=None, prot=None, vorher=None):
     P = G.posen()
-    p = (prot or {}).get('param') or KB.PARAM_R3
+    p = (prot or {}).get('param') or KB.PARAM_R4
     R = RT.atlas(G.REF2); A = RT.atlas(emd)
     mo = b2.modell(emd)
     Z = []
@@ -577,10 +664,12 @@ def pruefen(emd, basis=None, lauf=None, prot=None, vorher=None):
     Z += tv1(mo, P, prot)
     z2, i2 = tv2(emd, mo, P, prot, vorher)
     Z += z2
+    z3v, i3v = tv3(emd, mo, P, M, prot, i2['silhouette'])
+    Z += z3v
     Z += tr4(emd)
     zf, st = RR.form(emd, mo, P, lauf); Z += zf
     info = dict(tk3={k: v for k, v in i3.items() if k != 'bild'}, mess={h: {k: v for k, v in r.items() if k not in ('img', 'ids', 'ma', 'mz')} for h, r in M.items()},
-                schwanz={k: v for k, v in st.items() if k not in ('C', 'breite', 'maske')}, ref2=dict(_ref2), form=i2)
+                schwanz={k: v for k, v in st.items() if k not in ('C', 'breite', 'maske')}, ref2=dict(_ref2), form=i2, tv3=i3v)
     return Z, info, M
 
 
@@ -588,7 +677,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('emd'); ap.add_argument('--basis', default=KB.BASIS); ap.add_argument('--lauf')
     ap.add_argument('--prot', help='Protokoll-JSON des Baus (Parameter, Zonen)')
-    ap.add_argument('--vorher', default=os.path.join(G.SFV4, 'emd', 'EM30_V4re2.EMD'), help='Vorgaengervariante fuer T-V2c (Standard V5 Runde 2)')
+    ap.add_argument('--vorher', default=os.path.join(G.SFV4, 'emd', 'EM30_V5r3.EMD'), help='Vorgaengervariante fuer T-V2c (Standard V5 Runde 3)')
     ap.add_argument('--json'); ap.add_argument('--md'); ap.add_argument('--txt'); ap.add_argument('--kein-exit', action='store_true')
     a = ap.parse_args()
     prot = json.load(open(a.prot)) if a.prot and os.path.exists(a.prot) else None
