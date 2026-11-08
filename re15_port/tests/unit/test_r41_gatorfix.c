@@ -21,6 +21,7 @@
 #include "re15_md1.h"
 #include "re15_anim_select.h"
 #include "re15_gator_treffer_r41.h"   /* G2-RE2 NB4: RE2-Trefferreaktion (Riegel nb4, raum) */
+#include "re15_engine.h"           /* NB4 Runde 3: g_engine.frame_count (Biss-Lauf-Bilder, Riegel nb4 Intro-Lage) */
 #include "../../engine/src/gen/gatorszene_r41_schluessel.inc"   /* RE2-Modell bytegleich (Gegenprobe Punkt 6) */
 
 /* ---- Geometrie-Helfer ------------------------------------------------------------------------------------------------------- */
@@ -1973,8 +1974,8 @@ static void teil_fuzz(int elza)
 {
     /* G2-RE2 NB2 "Vorschlag 4": der Mechanismus dieses Riegels (Trag-Lenkung mit Kopf + Kanister: Kuerzung, Vorbei-Etappe, Kreis) gilt nur noch mit dem Pruefhaken v4_alt (Stand f942f56c0);
      * der Riegel prueft ihn dort weiter. Die Bewegung mit Vorschlag 4 pruefen unit_r41_gatorfix_v4 / _re2 (Dossier G2_gatorfix.md "G2-RE2 NB2 (Vorschlag 4)"). */
-    /* NB4 Runde 2 (Abnahme 7 M1): auch die Trefferreaktion dieses Stands - f942f56c0 hatte den RE1.5-Niederwurf und keine RE2-Bisssperre (Pruefhaken treffer_alt,
-     * gb_biss_frei = 1). Mit der Spiel-Reaktion (RE2 + Bisssperre) verschiebt das andere Treffer-Muster an der stehenden Figur die Lagen-Kette dieses Riegels
+    /* NB4 Runde 2 (Abnahme 7 M1): auch die Trefferreaktion dieses Stands - f942f56c0 hatte den RE1.5-Niederwurf und keinen Biss-Lauf-Riegel (Pruefhaken treffer_alt;
+     * NB4 Runde 3: +0x238 ist in RE2 nur die Spurt-Sperre, die Runde-2-"Bisssperre" ist entfernt). Mit der Spiel-Reaktion (RE2 + Sperre Runde 2) verschiebt das andere Treffer-Muster an der stehenden Figur die Lagen-Kette dieses Riegels
      * (der Gator laeuft von Lage zu Lage weiter) und damit, WO die alte Trag-Lenkung an einer Etappe pendelt (60 Bilder bis "Etappe ohne Annaeherung"):
      * gemessen 2-s-Fenster neu 12 (N4 3 + O4 9; ohne Sperre 5: W2 2 + SO 3; RE1.5-Reaktion 8: N2 3 + O4 5) - dieselbe O4-Etappe in jeder Fassung, das Spiel
      * benutzt diese Lenkung seit NB2 Vorschlag 4 nicht mehr (gr2_kan_zaehlt nur mit v4_alt). Die Spiel-Reaktion pruefen nb4/raum/nb3/re2/v4. */
@@ -3043,7 +3044,10 @@ typedef struct { int sub, art, schaden, ret, gpv, gg, n, voll, abbruch, fall_b, 
                  int schritt[NB4_BMAX], clip[NB4_BMAX], sperre[NB4_BMAX], y[NB4_BMAX], band[NB4_BMAX], fall[NB4_BMAX]; } nb4_r_t;
 typedef struct { int n, voll, abbruch, fehl, sub_fehl, art[6], s2, s3, fall, fall_fehl, kd, schaden60, schaden30, schaden_fehl, halt_fall, haken_fehl, luft_ueber;
                  int32_t luft_max, haken_max, schub_max; char erst_fehl[240];
-                 int zweit, abst_min, paare; char erst_zweit[160]; } nb4_sum_t;   /* NB4 Runde 2 (Abnahme 7 M1): Treffer < 70 Bilder nach dem vorigen (+0x238 > 0) */
+                 int zweit, abst_min, paare; char erst_zweit[160];
+                 int bl_laeufe, bl_leer, bl_treffer, bl_erst_fehl, abbruch_s2; char bl_erst[200], erst_abbruch[200]; } nb4_sum_t;
+/* NB4 Runde 3 (Abnahme 8 M1): zweit / bl_* aus re15_gator_boss_bisslauf_info je Lage - zweit = Biss-Clip-Laeufe mit mehr als einem Treffer, bl_leer = Laeufe mit
+ * Bissbedingung ohne Treffer, bl_erst_fehl = Lagen, deren erster Treffer nicht im ersten Lauf mit Bedingung lag; paare / abst_min (Abstand zweier Treffer) nur Ausgabe */
 /* Weg des Hakens je Bild (Lage nach dem Spieler-Takt, Station RE15_SCHRITT_TICK, minus Lage am Bildanfang); der Rest ist Koerper-Schub, Klemme und Boss-Schub */
 static int s_nb4_hook_ok = 0; static int32_t s_nb4_hook_dx = 0, s_nb4_hook_dz = 0;
 /* Sturz Bild fuer Bild (Substate 10 Ph2-Ph4): Kantenbild y = -1800 + 500 + 90, dann + 90 + 50 t bis Boden - 800 < y, im Bild danach y = Boden (0); Band 0 ab dem Kantenbild */
@@ -3119,18 +3123,18 @@ static void nb4_spur_bild(nb4_spur_t *sp, nb4_sum_t *S, const re15_actor_t *pl)
         else sp->r.n = sp->r.n + 1;              /* Ende und neuer Einstieg im selben Bild: das Ende-Bild ist da, seine Werte nicht mehr */
         nb4_ende(&sp->r, S, pl); sp->an = 0;
     } else if (sp->an && neu) {                  /* neuer Treffer waehrend der Reaktion (Sub 3 ab Clip 17 treffbar): abgebrochen */
+        if (!S->erst_abbruch[0]) snprintf(S->erst_abbruch, sizeof S->erst_abbruch, "F%ld: Reaktion art %d Sub %d nach %d Bildern, neuer Treffer art %d",
+                                          s_bild, sp->r.art, sp->r.sub, sp->r.n, I.art);   /* NB4 Runde 3: Ausgabe */
+        if (sp->r.sub != 3) S->abbruch_s2++;   /* NB4 Runde 3: RE2 haelt PL+0x1D3 in Sub 2 bis zum Ende (@0x801031d4), loescht sie in Sub 3 beim Liegen (@0x801032f0) */
         sp->r.abbruch = 1; nb4_ende(&sp->r, S, pl); sp->an = 0;
     }
     if (neu) {
-        /* NB4 Runde 2 (Abnahme 7 M1): RE2 laesst den naechsten Treffer erst zu, wenn die Bisssperre +0x238 (= 70 im Treffer @0x801016b0-b4, je Bild -1
-         * @0x801004a8-b8, Pruefstellen @0x80100b5c / @0x80100cb4-c4) wieder 0 ist - Abstand zweier Treffer-Einstiege >= RE15_GR2_BISS_CD_BISS Bilder */
+        /* NB4 Runde 3: Abstand zweier Treffer-Einstiege nur zur Ausgabe (RE2: ein neuer Kiefer-Lauf braucht PL+0x1D3 == 0 @0x80101328-34 und +0x224 == 0
+         * @0x8010133c-44, dann 8 Bilder bis Stufe 4; der Port beginnt einen neuen Biss erst bei hit_stun == 0) */
         const long f = s_bild;
         if (sp->letzt_f >= 0 && f >= sp->letzt_f) {
             const int a = (int)(f - sp->letzt_f); S->paare++;
             if (S->abst_min == 0 || a < S->abst_min) S->abst_min = a;
-            if (a < RE15_GR2_BISS_CD_BISS) { S->zweit++;
-                if (!S->erst_zweit[0]) snprintf(S->erst_zweit, sizeof S->erst_zweit, "F%ld art %d nach F%ld (Abstand %d, Bisssperre +0x238 noch %d)", f, I.art, sp->letzt_f, a,
-                                                RE15_GR2_BISS_CD_BISS - a); }
         }
         sp->letzt_f = f;
         memset(&sp->r, 0, sizeof sp->r); sp->an = 1; sp->r.fall_b = -1;
@@ -3247,6 +3251,19 @@ static void nb4_teil_a(int elza)
 /* ---- Teil B: echter Boss-Takt ---- */
 typedef struct { int n, oben_n, erst_tr, pause, deck, aus, block, sturz_bilder; } nb4_b_m_t;
 static int s_nb4_zurueck = 0;   /* 1 = nach einer Reaktion, die im Wasser endet, steht die Figur wieder auf ihrer Oben-Lage (sie "klettert wieder hinauf") */
+/* NB4 Runde 3: Biss-Clip-Laeufe der Lage in die Summe (Lauf-Mitschrift des Boss-Moduls, re15_gator_boss_bisslauf_info) */
+static void nb4_bisslauf_summe(nb4_sum_t *S, int32_t lx, int32_t lz)
+{
+    re15_gb_bisslauf_t B; re15_gator_boss_bisslauf_info(&B);
+    S->bl_laeufe += B.laeufe; S->zweit += B.zweit; S->bl_leer += B.leer; S->bl_treffer += B.treffer;
+    if (B.zweit && !S->erst_zweit[0]) snprintf(S->erst_zweit, sizeof S->erst_zweit, "Lage %d/%d: %d Laeufe mit Zweitbiss", (int)lx, (int)lz, B.zweit);
+    if (B.leer && !S->bl_erst[0]) snprintf(S->bl_erst, sizeof S->bl_erst, "Lage %d/%d: %d Laeufe mit Bedingung ohne Treffer, erster ab F%ld", (int)lx, (int)lz, B.leer, B.erst_leer_f);
+    if (B.erst_bed_lauf >= 0 && B.erst_treffer_lauf != B.erst_bed_lauf) {
+        S->bl_erst_fehl++;
+        if (!S->bl_erst[0]) snprintf(S->bl_erst, sizeof S->bl_erst, "Lage %d/%d: erster Lauf mit Bedingung Nr %ld (F%ld), erster Treffer im Lauf Nr %ld (F%ld)", (int)lx, (int)lz,
+                                     B.erst_bed_lauf, B.erst_bed_f, B.erst_treffer_lauf, B.erst_treffer_f);
+    }
+}
 static void nb4_b_lauf(re15_actor_t *g, re15_actor_t *pl, int32_t lx, int32_t ly, int32_t lz, int rot, int cam, int bilder, int stand, nb4_sum_t *S, nb4_b_m_t *m)
 {
     int bi = 0; int64_t bd = -1;
@@ -3257,6 +3274,7 @@ static void nb4_b_lauf(re15_actor_t *g, re15_actor_t *pl, int32_t lx, int32_t ly
     g_scd.cam_id = (uint8_t)cam;
     re15_collision_set_band(re15_collision_band_from_y(ly));
     nb4_spur_t sp; nb4_spur_start(&sp);
+    re15_gator_boss_bisslauf_reset();   /* NB4 Runde 3: Biss-Clip-Laeufe je Lage */
     int letzt_tr = -1, oben_ab = -1, oben_aus = 0;
     for (int t = 0; t < bilder && (stand == 3 || re15_gr2_traegt()); t++) {
         pl->hp = 100;
@@ -3285,6 +3303,38 @@ static void nb4_b_lauf(re15_actor_t *g, re15_actor_t *pl, int32_t lx, int32_t ly
         if (s_nb4_zurueck && ly < 0 && !I.aktiv && pl->y == 0) { pl->x = lx; pl->y = ly; pl->z = lz; pl->rot_y = (int16_t)rot; re15_collision_set_band(1); }
     }
     if (oben_ab >= 0 && !oben_aus) { const int rest = m->n - 1 - (letzt_tr < 0 ? oben_ab : letzt_tr); if (rest > m->pause) m->pause = rest; }
+    nb4_bisslauf_summe(S, lx, lz);
+}
+/* NB4 Runde 3 (Abnahme 8 M1, Riegel b): Lage direkt nach dem Intro-Ende. RE2 loescht dort die Biss-Bremse 0x800cfbd8 Bit 0x10 (`efff0324 addiu v1,zero,-0x11`
+ * @0x801008f8 .. `000082ac sw v0,0(a0)` @0x80100918, die T1 @0x80101310-20 fragt) und setzt im selben Schritt nur die Spurt-Sperre +0x238 = 110
+ * (`6e000224 / 380202a2` @0x8010091c-20): mit dem Maul an der Figur beisst RE2 im ersten Kiefer-Lauf, waehrend +0x238 noch > 0 ist. Die Figur steht im Wasser,
+ * der Gator 3000 hinter ihr mit Blick auf sie (Maulpunkt 2600 voraus = 400 vor der Figur), +0x238 = RE15_GR2_BISS_CD_INTRO wie nach dem Intro
+ * (gator_re2_r41.c :1830). Ergebnis: Startbild (relativ), erster Lauf mit Bedingung / mit Treffer, Leerlaeufe, +0x238 im Treffer-Bild. */
+typedef struct { int ok, laeufe, leer, zweit, bed_nr, tr_nr, bed_t, tr_t, cd_tr; } nb4_intro_t;
+static void nb4_intro_lage(int elza, int32_t lx, int32_t lz, int cam, nb4_intro_t *R)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    memset(R, 0, sizeof *R); R->tr_t = -1; R->cd_tr = -1;
+    re15_actor_t *g = szene_bis_kampf(elza);
+    if (!g || !g2_kanister_ins_maul(g, pl)) return;
+    re15_gr2_kanister_entfernen();
+    const int slot = (int)(g - g_actors);
+    pl->x = lx; pl->y = 0; pl->z = lz; pl->hp = 100; pl->hit_react = 0; pl->rot_y = 1024;
+    g->x = lx - 3000; g->z = lz; g->rot_y = 0; g->anchor_x = g->x; g->anchor_z = g->z; g->hit_stun = 0;
+    g_scd.cam_id = (uint8_t)cam;
+    re15_collision_set_band(0);
+    re15_gr2_biss_cd(slot, RE15_GR2_BISS_CD_INTRO);
+    const long f0 = (long)g_engine.frame_count;
+    re15_gator_boss_bisslauf_reset();
+    for (int t = 0; t < 400; t++) {
+        pl->hp = 100;
+        const int cd = re15_gr2_biss_cd_rest(slot);
+        frame(0, 0);
+        if (pl->hp < 100 && R->tr_t < 0) { R->tr_t = t; R->cd_tr = cd; }
+    }
+    re15_gb_bisslauf_t B; re15_gator_boss_bisslauf_info(&B);
+    R->ok = 1; R->laeufe = B.laeufe; R->leer = B.leer; R->zweit = B.zweit; R->bed_nr = (int)B.erst_bed_lauf; R->tr_nr = (int)B.erst_treffer_lauf;
+    R->bed_t = B.erst_bed_f >= 0 ? (int)(B.erst_bed_f - f0) : -1;
 }
 static void nb4_teil_b(int elza)
 {
@@ -3358,13 +3408,18 @@ static void nb4_teil_b(int elza)
     PRUEF(S.fall >= 9 && S.fall_fehl == 0 && S.halt_fall == 0, "W1: %d Stuerze ins Wasser, jeder Bild fuer Bild wie Substate 10 (falsch %d), 0 Raumhalt-Eingriffe in Sturzbildern (%d)", S.fall, S.fall_fehl, S.halt_fall);
     PRUEF(raum_fehl == 0, "W3: in allen Lagen nie aussen, nie im Block, oben nie neben dem Deck ausser im Sturz (%d Lagen verfehlt)", raum_fehl);
     PRUEF(erst_max <= NB3_PAUSE_MAX && pause_max <= NB3_PAUSE_MAX, "A1 (NB3 Vorgabe A, mit Sturz neu bewertet): oben erster Treffer <= %d und laengste Pause oben <= %d (t%d, %d)", NB3_PAUSE_MAX, NB3_PAUSE_MAX, erst_max, pause_max);
-    printf("    Bisssperre (Abnahme 7 M1): %d Treffer-Paare, kleinster Abstand %d Bilder, Treffer waehrend +0x238 > 0: %d, Reaktionen durch einen neuen Treffer abgebrochen %d%s%s\n",
-           S.paare, S.abst_min, S.zweit, S.abbruch, S.erst_zweit[0] ? " - erster: " : "", S.erst_zweit);
-    PRUEF(S.paare >= 50 && S.zweit == 0 && S.abst_min >= RE15_GR2_BISS_CD_BISS && S.abbruch == 0,
-          "T3 Unverwundbarkeit / Angriffstakt wie RE2 (Abnahme 7 M1): kein Treffer, solange die Bisssperre +0x238 > 0 ist - Abstand zweier Treffer >= %d "
-          "(70 @0x801016b0-b4, -1 je Bild @0x801004a8-b8, Pruefstellen @0x80100b5c / @0x80100cb4-c4): %d Paare, kleinster Abstand %d, Zweitbisse %d, abgebrochen %d",
-          RE15_GR2_BISS_CD_BISS, S.paare, S.abst_min, S.zweit, S.abbruch);
-    {   /* Gegenprobe M1: Pruefhaken 'Sperre alt' = Stand cfa775ae8 (LUNGE / Biss B2 / Rammen ohne +0x238) - Zweitbisse im selben Clip-4-Lauf kommen zurueck */
+    printf("    Biss-Clip-Laeufe (Abnahme 8 M1, RE2 ein Treffer je Kiefer-Lauf): %d Laeufe, %d Treffer; Zweitbiss im selben Lauf %d, Lauf mit Bissbedingung ohne Treffer %d, "
+           "Lagen mit erstem Treffer nach dem ersten Lauf mit Bedingung %d, Reaktionen durch einen neuen Treffer abgebrochen %d%s%s%s%s%s%s; Treffer-Paare %d, kleinster Abstand %d Bilder (Ausgabe)\n",
+           S.bl_laeufe, S.bl_treffer, S.zweit, S.bl_leer, S.bl_erst_fehl, S.abbruch, S.erst_zweit[0] ? " - " : "", S.erst_zweit, S.bl_erst[0] ? " - " : "", S.bl_erst,
+           S.erst_abbruch[0] ? " - erster Abbruch " : "", S.erst_abbruch, S.paare, S.abst_min);
+    PRUEF(S.bl_treffer >= 50 && S.zweit == 0 && S.abbruch_s2 == 0,
+          "(a) ein Treffer je Biss-Clip-Lauf wie RE2 je Kiefer-Lauf (Treffer-Einstieg verweigert bei PL+0x1D3 @0x801015a4-ac, Lauf-Ende +0x224 = 0 @0x80101558): "
+          "%d Treffer in %d Laeufen, Zweitbisse %d; neuer Treffer nur im Liegen der Sub-3-Reaktion (RE2 loescht PL+0x1D3 dort @0x801032f0, in Sub 2 erst am Ende "
+          "@0x801031d4): abgebrochen %d, davon nicht Sub 3: %d", S.bl_treffer, S.bl_laeufe, S.zweit, S.abbruch, S.abbruch_s2);
+    PRUEF(S.bl_leer == 0 && S.bl_erst_fehl == 0,
+          "(c) kein Biss-Lauf mit Bissbedingung (Fenster, Maul an der Figur, Reaktion zu Ende, keine Wand) ohne Treffer - RE2 trifft dort, T1 @0x801012fc fragt +0x238 nicht: "
+          "Leerlaeufe %d, Lagen mit spaeterem Erstbiss %d", S.bl_leer, S.bl_erst_fehl);
+    {   /* Gegenprobe (a): Pruefhaken 'Sperre alt' = Stand cfa775ae8 (kein Lauf-Riegel im Treffer) - Zweitbisse im selben Clip-4-Lauf kommen zurueck */
         nb4_sum_t G; memset(&G, 0, sizeof G);
         re15_gator_boss_sperre_alt_setzen(1);
         static const int32_t Ug[2][4] = { { 4200, -18700, 2, 3072 }, { 6732, -18598, 2, 1035 } };
@@ -3375,10 +3430,32 @@ static void nb4_teil_b(int elza)
             nb4_b_m_t m; nb4_b_lauf(g, pl, Ug[i][0], 0, Ug[i][1], (int)Ug[i][3], (int)Ug[i][2], bilder, 3, &G, &m);
         }
         re15_gator_boss_sperre_alt_setzen(0);
-        printf("    Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): %d Treffer-Paare, kleinster Abstand %d, Zweitbisse %d, abgebrochen %d%s%s\n",
-               G.paare, G.abst_min, G.zweit, G.abbruch, G.erst_zweit[0] ? " - erster: " : "", G.erst_zweit);
-        PRUEF(G.zweit > 0 && G.abst_min < RE15_GR2_BISS_CD_BISS, "Gegenprobe M1 Pruefhaken 'Sperre alt': Zweitbisse wieder da (%d, kleinster Abstand %d < %d) - rot ohne den Bau",
-              G.zweit, G.abst_min, RE15_GR2_BISS_CD_BISS);
+        printf("    Gegenprobe Stand cfa775ae8 (Pruefhaken 'Sperre alt', 2 Wasserlagen): %d Laeufe, %d Treffer, Zweitbisse im selben Lauf %d, kleinster Abstand %d%s%s\n",
+               G.bl_laeufe, G.bl_treffer, G.zweit, G.abst_min, G.erst_zweit[0] ? " - " : "", G.erst_zweit);
+        PRUEF(G.zweit > 0, "Gegenprobe (a) Pruefhaken 'Sperre alt': Zweitbisse im selben Lauf wieder da (%d) - rot ohne den Bau", G.zweit);
+    }
+    {   /* (b) Intro-Ende: erster Biss im ersten Lauf mit dem Maul an der Figur, waehrend die Spurt-Sperre +0x238 noch > 0 ist (RE2 @0x801008f8-920);
+         * Gegenprobe Pruefhaken 'Sperre 238' = Stand d8bf728b0 (Runde 2: +0x238 als Bissbedingung) - Laeufe ohne Biss, erster Biss erst nach +0x238 = 0 */
+        static const int32_t Li[2][3] = { { 4200, -18700, 2 }, { 6732, -18598, 2 } };
+        for (int gp = 0; gp < 2; gp++) {
+            int ok = 0, n = 0;
+            for (int i = 0; i < 2; i++) {
+                nb4_intro_t R;
+                if (gp) re15_gator_boss_sperre238_setzen(1);
+                nb4_intro_lage(elza, Li[i][0], Li[i][1], (int)Li[i][2], &R);
+                re15_gator_boss_sperre238_setzen(0);
+                if (!R.ok) continue;
+                n++;
+                const int gut = R.bed_nr == 0 && R.tr_nr == 0 && R.leer == 0 && R.zweit == 0 && R.cd_tr > 0;
+                ok += gut;
+                printf("    %s Intro-Lage W%d/%d (+0x238 = %d am Start): %d Laeufe, erster Lauf mit Bedingung Nr %d (t%d), erster Treffer im Lauf Nr %d bei t%d mit +0x238 = %d, "
+                       "Leerlaeufe %d, Zweitbisse %d -> %s\n", gp ? "Gegenprobe Stand d8bf728b0 ('Sperre 238'):" : "(b)", (int)Li[i][0], (int)Li[i][1], RE15_GR2_BISS_CD_INTRO,
+                       R.laeufe, R.bed_nr, R.bed_t, R.tr_nr, R.tr_t, R.cd_tr, R.leer, R.zweit, gut ? "wie RE2" : "nicht RE2");
+            }
+            if (!gp) PRUEF(n == 2 && ok == 2, "(b) nach dem Intro-Ende beisst der Gator im ersten Lauf mit dem Maul an der Figur, waehrend +0x238 > 0 (RE2: Biss-Bremse frei "
+                                                "@0x801008f8-918, nur Spurt-Sperre 110 @0x8010091c-20): %d von %d Lagen", ok, n);
+            else     PRUEF(n == 2 && ok == 0, "Gegenprobe (b) Pruefhaken 'Sperre 238' (Stand d8bf728b0): kein Biss im ersten Lauf bei +0x238 > 0 (%d von %d Lagen wie RE2) - rot ohne den Bau", ok, n);
+        }
     }
     {   /* T5 Gegenprobe: Stand 3d57083b1 */
         re15_gator_treffer_alt_setzen(1);
@@ -3785,19 +3862,24 @@ static int gtrlog(const char *dir)
     int n = 0, voll = 0, abbruch = 0, s2 = 0, s3 = 0, fehl = 0, sub_fehl = 0, dauer_fehl = 0, schr_fehl = 0, haken_fehl = 0, stuerze = 0, sturz_fehl = 0, ziel1 = 0, st1 = 0, st1_fehl = 0;
     int32_t haken_max = 0, luft_max = 0; int luft_ueber = 0; char erst[300] = "";
     gtrl_r_t r; memset(&r, 0, sizeof r); int an = 0;
-    int zweit = 0, paare = 0, abst_min = 0, letzt_f = -1; char erst_zweit[160] = "";   /* NB4 Runde 2 (Abnahme 7 M1): Treffer (START/TOT) < 70 Bilder nach dem vorigen */
+    int zweit = 0, leer = 0, laeufe = 0; char erst_zweit[160] = "";   /* NB4 Runde 3 (Abnahme 8 M1): Zeilen BISSLAUF (enemy_ai_boss_gator.c gb_lauf_ende) */
     while (fgets(z, sizeof z, f)) {
         if (strstr(z, "Zielmodus 1")) ziel1++;
         {   const char *p = strstr(z, "KANISTER Stufe 1 laengs="); int l, q;
             if (p && sscanf(p, "KANISTER Stufe 1 laengs=%d quer=%d", &l, &q) == 2) { st1++; if (!(l >= 0 && l < 6000 && abs(q) < 1733)) st1_fehl++; } }
+        {   /* NB4 Runde 3: ein Treffer je Biss-Clip-Lauf (RE2 je Kiefer-Lauf: PL+0x1D3 @0x801015a4-ac, Lauf-Ende @0x80101558); kein Lauf mit Bissbedingung ohne Treffer
+             * (RE2 trifft dort: T1 @0x801012fc fragt +0x238 nicht) */
+            int f0, f1, art, tr, bed;
+            if (sscanf(z, "BISSLAUF F%d-F%d art %d treffer %d bedingung %d", &f0, &f1, &art, &tr, &bed) == 5) {
+                laeufe++;
+                if (tr > 1) { zweit++; if (!erst_zweit[0]) snprintf(erst_zweit, sizeof erst_zweit, "Zweitbiss F%d-F%d art %d (%d Treffer)", f0, f1, art, tr); }
+                if (tr == 0 && bed > 0) { leer++; if (!erst_zweit[0]) snprintf(erst_zweit, sizeof erst_zweit, "Lauf ohne Biss F%d-F%d art %d (%d Bilder Bedingung)", f0, f1, art, bed); }
+                continue;
+            }
+        }
         if (strncmp(z, "GTR F", 5)) continue;
         int fr = 0; if (sscanf(z, "GTR F%d", &fr) != 1) continue;
         const char *p;
-        if (strstr(z, " START ") || strstr(z, " TOT ")) {   /* +0x238 = 70 @0x801016b0-b4, -1 je Bild @0x801004a8-b8: kein Treffer vor 70 Bildern (@0x80100b5c, @0x80100cb4-c4) */
-            if (letzt_f >= 0 && fr >= letzt_f) { const int a = fr - letzt_f; paare++; if (abst_min == 0 || a < abst_min) abst_min = a;
-                if (a < RE15_GR2_BISS_CD_BISS) { zweit++; if (!erst_zweit[0]) snprintf(erst_zweit, sizeof erst_zweit, "F%d nach F%d (Abstand %d)", fr, letzt_f, a); } }
-            letzt_f = fr;   /* ein kleineres F = neuer Besuch (Bildzaehler neu): kein Paar */
-        }
         if ((p = strstr(z, " START "))) {
             if (an) { abbruch++; n++; }
             memset(&r, 0, sizeof r); an = 1; r.fall_b = -1;
@@ -3871,14 +3953,47 @@ static int gtrlog(const char *dir)
     if ((f = fopen(pf, "r"))) { while (fgets(z, sizeof z, f)) { if (strstr(z, "RUNDE zum Kanister")) runde++; if (strstr(z, "ANSCHWIMMEN an")) anschw++; } fclose(f); }
     /* jeder Treffer im letzten Besuch (hp-Flanke, Messhaken RE15_R39_MESS_SPIELER_HP=100) ist eine RE2-Reaktion (START); ein Treffer im Ende-Bild einer Reaktion
      * kann zwei Starts in einem Bild nicht erzeugen - die Zahlen muessen gleich sein (Gegenprobe Stand 3d57083b1: 0 Starts) */
-    const int ok = fehl == 0 && sub_fehl == 0 && kd == 0 && ziel1 == 0 && runde == 0 && anschw == 0 && st1_fehl == 0 && n == treffer && zweit == 0;
+    const int ok = fehl == 0 && sub_fehl == 0 && kd == 0 && ziel1 == 0 && runde == 0 && anschw == 0 && st1_fehl == 0 && n == treffer && zweit == 0 && leer == 0;
     printf("gtrlog: %d RE2-Reaktionen (vollstaendig %d: Sub 2 %d, Sub 3 %d; abgebrochen %d); Abweichungen %d (Unterzustand %d, Dauer %d, Schritte %d, Haken-Weg %d, Sturz %d)%s%s; "
            "Haken-Weg max %d; Luftlinie gesamt max %d (%d ueber 3735/3080, mit Koerper-/Boss-Schub); Stuerze %d; RE1.5-Niederwurf-Bilder %d (von %d); "
-           "Kanister Stufe 1 %d (ausserhalb des Fensters %d), Zielmodus 1 %d, RUNDE %d, ANSCHWIMMEN an %d; Treffer (hp-Flanken) %d; Treffer waehrend +0x238 > 0 %d -> %s\n",
+           "Kanister Stufe 1 %d (ausserhalb des Fensters %d), Zielmodus 1 %d, RUNDE %d, ANSCHWIMMEN an %d; Treffer (hp-Flanken) %d; Biss-Laeufe mit Zweitbiss %d, ohne Biss %d -> %s\n",
            n, voll, s2, s3, abbruch, fehl + sub_fehl, sub_fehl, dauer_fehl, schr_fehl, haken_fehl, sturz_fehl, erst[0] ? " - erste: " : "", erst, (int)haken_max, (int)luft_max, luft_ueber,
-           stuerze, kd, rn, st1, st1_fehl, ziel1, runde, anschw, treffer, zweit, ok ? "ok" : "VERFEHLT");
-    printf("gtrlog Bisssperre: %d Treffer-Paare, kleinster Abstand %d, Treffer waehrend +0x238 > 0 (Abstand < %d): %d%s%s\n", paare, abst_min, RE15_GR2_BISS_CD_BISS, zweit,
+           stuerze, kd, rn, st1, st1_fehl, ziel1, runde, anschw, treffer, zweit, leer, ok ? "ok" : "VERFEHLT");
+    printf("gtrlog Bisslauf: %d Biss-Clip-Laeufe (BISSLAUF), Zweitbiss im selben Lauf %d, Lauf mit Bissbedingung ohne Biss %d%s%s\n", laeufe, zweit, leer,
            erst_zweit[0] ? " - erster: " : "", erst_zweit);
+    return ok ? 0 : 1;
+}
+
+/* ==== NB4 Runde 3 (Abnahme 8 M1) exe-Auswerter bisslog <lauf>: Zeilen BISSLAUF nach der ersten Zeile "INTRO ende" (gator_re2_r41.c) in gator_boss.log.
+ * RE2 gibt am Intro-Ende den Biss frei (Bremse 0x800cfbd8 Bit 0x10 @0x801008f8-918) und setzt nur die Spurt-Sperre +0x238 = 110 (@0x8010091c-20): der erste Lauf
+ * mit Bissbedingung muss treffen (Abnahme 8: Runde 2 traf erst F416 nach zwei Laeufen ohne Biss F284-F326 / F347-F389). Dazu je Lauf hoechstens ein Treffer.
+ * Rueckgabe 0 = erfuellt. Ohne Zeile "INTRO ende" zaehlen alle Laeufe. */
+static int bisslog(const char *dir)
+{
+    char pf[1024]; static char z[8192];
+    snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
+    FILE *f = fopen(pf, "r");
+    if (!f) { printf("bisslog: %s fehlt\n", pf); return 2; }
+    int intro = 0, intro_da = 0, laeufe = 0, zweit = 0, leer = 0, bed_nr = -1, tr_nr = -1, bed_f = -1, tr_f = -1, leer_f = -1;
+    while (fgets(z, sizeof z, f)) if (strstr(z, "INTRO ende")) { intro_da = 1; break; }
+    rewind(f);
+    while (fgets(z, sizeof z, f)) {
+        if (!intro && strstr(z, "INTRO ende")) { intro = 1; continue; }
+        if (intro_da && !intro) continue;
+        int f0, f1, art, tr, bed;
+        if (sscanf(z, "BISSLAUF F%d-F%d art %d treffer %d bedingung %d", &f0, &f1, &art, &tr, &bed) != 5) continue;
+        if (bed > 0 && bed_nr < 0) { bed_nr = laeufe; bed_f = f0; }
+        if (tr > 0 && tr_nr < 0) { tr_nr = laeufe; tr_f = f0; }
+        if (tr > 1) zweit++;
+        if (tr == 0 && bed > 0) { leer++; if (leer_f < 0) leer_f = f0; }
+        laeufe++;
+    }
+    fclose(f);
+    const int ok = laeufe > 0 && zweit == 0 && leer == 0 && bed_nr >= 0 && tr_nr == bed_nr;
+    printf("bisslog: %s; %d Biss-Clip-Laeufe, erster Lauf mit Bissbedingung Nr %d (ab F%d), erster Lauf mit Treffer Nr %d (ab F%d), Laeufe mit Bedingung ohne Biss %d%s, "
+           "Zweitbiss im selben Lauf %d -> %s\n", intro_da ? "nach INTRO ende" : "ohne INTRO-Zeile", laeufe, bed_nr, bed_f, tr_nr, tr_f, leer,
+           leer_f >= 0 ? " (erster ab F" : "", zweit, ok ? "ok" : "VERFEHLT");
+    if (leer_f >= 0) printf("bisslog: erster Lauf ohne Biss ab F%d)\n", leer_f);
     return ok ? 0 : 1;
 }
 
@@ -3888,12 +4003,14 @@ int main(int argc, char **argv)
     re15_door_seq_setze_laeufer(fang);
     if (getenv("G2_RE2_ALT")) re15_gr2_rw_alt_setzen(1);   /* G2-RE2: Werkzeug-Laeufe (fuzz/bahn) im Stand NB5 - Vergleich mit dem NB5-Bau */
     if (getenv("G2_NB3_ALT")) re15_gator_boss_nb3_alt_setzen(1);   /* G2-RE2 NB3: Werkzeug-Laeufe (nb3_oben/nb3_haengt) im Stand a661eb8aa */
-    if (getenv("G2_SPERRE_ALT")) re15_gator_boss_sperre_alt_setzen(1);   /* NB4 Runde 2: Werkzeug-Laeufe im Stand cfa775ae8 (LUNGE/B2/Rammen ohne +0x238) */
+    if (getenv("G2_SPERRE_ALT")) re15_gator_boss_sperre_alt_setzen(1);   /* NB4 Runde 3: Werkzeug-Laeufe ohne Lauf-Riegel im Treffer (Stand cfa775ae8) */
+    if (getenv("G2_SPERRE238")) re15_gator_boss_sperre238_setzen(1);     /* NB4 Runde 3: Werkzeug-Laeufe mit +0x238 als Bissbedingung (Stand d8bf728b0) */
     if (getenv("G2_TREFFER_ALT")) re15_gator_treffer_alt_setzen(1);   /* NB4 Runde 2: Werkzeug-Laeufe mit dem RE1.5-Niederwurf (Stand 3d57083b1) */
     if (!strcmp(teil, "obenlog") && argc >= 3)  return obenlog(argv[2], argc >= 4 && !strcmp(argv[3], "kampf") ? 1 : argc >= 4 && !strcmp(argv[3], "ab0") ? 2 : 0);                                            /* NB3 exe-Riegel rampe_oben */
     if (!strcmp(teil, "haenglog") && argc >= 3) return haenglog(argv[2], argc >= 4 && !strcmp(argv[3], "mit"));    /* NB3 exe-Riegel rampe/abn2_wand_elza */
     if (!strcmp(teil, "aussenlog") && argc >= 3) return aussenlog(argv[2]);   /* NB3 Runde 2: Figur nie ausserhalb (Abnahme 5 M1/M2) */
     if (!strcmp(teil, "gtrlog") && argc >= 3) return gtrlog(argv[2]);         /* G2-RE2 NB4: RE2-Trefferreaktion, Sturz, Kanister (exe-Riegel) */
+    if (!strcmp(teil, "bisslog") && argc >= 3) return bisslog(argv[2]);       /* NB4 Runde 3: erster Biss nach dem Intro, ein Treffer je Lauf (re2gator nische) */
     if (!strcmp(teil, "projektion") && argc >= 5) return projektion(argc, argv);
     if (!strcmp(teil, "kamerazone") && argc >= 3) return kamerazone(argc, argv);
     if (!strcmp(teil, "begehbar") && argc >= 5) return begehbar(argc, argv);
