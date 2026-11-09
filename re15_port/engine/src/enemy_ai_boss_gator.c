@@ -152,6 +152,13 @@ int  re15_gator_boss_nb3_alt(void) { return s_gb_nb3_alt; }
  * lief die direkte Anfahrt (Vorgabe B) an die Pier-Westkante in die Kopf-Klemme und endete rueckwaerts an der Westwand (Riegel fuzz, Lage P-mitte:
  * 92 2-s-Fenster ab t673 bei (-7416,-15904), Clip 10). Im Spiel ist kein Pruefhaken gesetzt. */
 static int gb_nb3_aus(void) { return s_gb_nb3_alt || re15_gr2_v4_alt(); }
+/* Nachtrag H3 (s. Kanister-Aufnahme im Dash): Messhaken RE15_G2_DASH_BLEND_ALT=1 = Dash-Abbruch ohne Blend (Stand b29263046), nur fuer Gegenproben */
+static int gb_dash_blend_alt(void)
+{
+    static int env = -1;
+    if (env < 0) { const char *v = getenv("RE15_G2_DASH_BLEND_ALT"); env = (v && *v && *v != '0'); }
+    return env;
+}
 /* Runde 41 Spur G2-RE2 NB4 Runde 3 (Abnahme 8 M1): EIN TREFFER JE BISS-CLIP-LAUF wie RE2 ein Treffer je Kiefer-Lauf +0x224 (EM23_OVL_0000.BIN, Dossier
  * G2_gatorfix.md "NB4 Runde 3 - RE2-Bissmechanismus"). T1 0x801012fc macht den Kiefer-Lauf scharf (`01000224 / 240282a0 sb v0,0x224(a0)` @0x80101378-7c) nur
  * bei Kontakt PL+0xE (`06fc4294 lhu v0,-0x3fa(v0)` @0x80101300), ohne Reaktionssperre PL+0x1D3 (`cbfd4290 lbu v0,-0x235(v0) / 12004014 bnez` @0x8010132c-34)
@@ -1903,8 +1910,19 @@ static void gb_takt(int slot)
                 if (fl) { fprintf(fl, "KANISTER-AUFNAHME aus Phase %d F%u pos=(%d,%d) gier %d%s\n", (int)g->phase, (unsigned)g_engine.frame_count, (int)e->x, (int)e->z,
                                   (int)e->rot_y & 0xfff, abbruch ? "" : " - Biss laeuft weiter"); fclose(fl); } }
             if (abbruch) {
+                const int war_dash = g->phase == GBP_RE2_DASH;
                 g->phase = GBP_CHASE; g->timer = 0;
                 e->motion = 0; e->anim_frame = 0;
+                /* Gator-Nutzerbefunde 2026-11-09 Nachtrag H3 (Abnahme 0/1 "Dash-Abbruch ohne yaw += 1024, Pose-Kante nicht per gdigrab geprueft"). RE2 Sub 3
+                 * (EM23_OVL_0000.BIN 0x80100d30-0x80100ee8, selbst disassembliert): yaw += 0x400 steht NUR am normalen Ende - nach dem Clip-3-Endflag
+                 * (@0x80100ea8 `0f000012 beqz s0`) @0x80100eb0 `76002296 lhu v0,0x76(s1)` / @0x80100ebc `00044224 addiu v0,v0,0x400` / @0x80100ec0
+                 * `760022a6 sh v0,0x76(s1)`; einen anderen Ausgang hat Sub 3 nicht (kein Fenster, kein Abbruch) - der Abbruch bleibt ohne Drehung. Gemessen
+                 * (gdigrab des eigenen Fensters, Lauf dash_alt_cut6: Abbruch in Clip 2 Bild 39 -> Clip 0 Bild 0): die Blickrichtung bleibt, aber die Pose
+                 * springt in EINEM Bild vom Anlauf (Kopf hoch, Maul offen) ins Schwimmen. RE2 betritt nach dem Dash-Ende (Routine 0x101 @0x80100ee4) Sub 1,
+                 * und Sub 1 setzt Clip 0 mit Blend 0x20: @0x80100c38 `20000624 addiu a2,zero,0x20`, @0x80100c3c `cc68000c jal 0x8001a330` - darum hier
+                 * Clip 0 mit Blend 32 wie Sub 1 (Form wie die Lauerpause oben, anim_frac / anim_blend_rate 4096/33). Messhaken RE15_G2_DASH_BLEND_ALT=1 =
+                 * Stand b29263046 (harter Wechsel). Das normale Dash-Ende (re15_gr2_dash_tick) bleibt unveraendert (gelobter Kampf). */
+                if (war_dash && !gb_dash_blend_alt()) { e->anim_frac = 32; e->anim_blend_rate = 4096 / 33; }
             }
         }
     }
