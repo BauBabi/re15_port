@@ -18,6 +18,8 @@
 12_wurzel_hinten.jpg  Runde 4 (--szene8r3): Spielbilder F322-F340 von hinten, V8 r3 | neu
 13_brust_vorn.png     Runde 5 (--v8r4, Sicht-Pruefer r4 (3) "graue Platte ... weisse Keile"): Foto 1 | V7 | V8 r4 | neu, nah an Brust und Gesicht:
                       P1 (x3), Szene Takt F354 offline (x3) und - mit --szene7/--szene8r3/--szene8 - die echten Framedumps F354 (x2)
+14_schwanz_unterseite.png Runde 5 P4 (--v8r4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig"): Vorlagen n1439 / Foto 2 /
+                      Foto 1 nah am Schwanz mit der gemessenen Grenze | V8 r4 | neu in denselben Posen | neu von unten und in der Szene
 Runde 5: --alt-name benennt den Vergleichsstand von --v8r2 / --szene8r3 (Tafeln 09, 10, 12; Standard wie Runde 3/4).
 Nutzerlinien = Pixel, in denen Darstellung.png von Darstellung_Vorlage.png um mehr als 40 (Kanal) abweicht (wie Messblatt m2_linien).
 """
@@ -240,6 +242,57 @@ def main():
         zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]
         speichern(kopf(np.vstack(zs), 'SF V8 13: Brust und Gesicht von vorn - Foto 1 | V7 | V8 r4 | neu; P1 und Takt F354 offline (x3), '
                        'echte Framedumps F354 (x2) (roh)'), os.path.join(a.aus, '13_brust_vorn.png'))
+
+    # 14 (Runde 5, P4)
+    if a.v8r4:
+        tafel14(v7, open(a.v8r4, 'rb').read(), v8, n8, a.aus)
+
+
+def grenze_maske(blob, pose):
+    """Gemessene Grenze grau/fleischig im Bild (unterseite_r5): Schwanz-Bildpunkte mit |theta| am Uebergang GRAU_AB (125, gelb) und an der
+    Fleischgrenze FLEISCH_AB (100, rot) - aus dem Modell in derselben Pose (Spielkamera)."""
+    import unterseite_r5 as U5
+    mo = V.modell(blob)
+    A = FR.zeichne(mo, pose, None, licht=False)
+    ys, xs, _bb, th = U5.theta_bild(mo, pose, A)
+    T = np.full((480, 640), np.nan); T[ys, xs] = th
+    g = np.zeros((480, 640), bool); f = np.zeros((480, 640), bool)
+    for dy, dx in ((0, 1), (1, 0)):
+        a_, b_ = T[:480 - dy, :640 - dx], T[dy:, dx:]
+        ok = ~np.isnan(a_) & ~np.isnan(b_)
+        g[:480 - dy, :640 - dx] |= ok & ((a_ - U5.GRAU_AB) * (b_ - U5.GRAU_AB) <= 0)
+        f[:480 - dy, :640 - dx] |= ok & ((a_ - U5.FLEISCH_AB) * (b_ - U5.FLEISCH_AB) <= 0)
+    return g, f
+
+
+def tafel14(v7, v8r4, v8, n8, aus):
+    """14_schwanz_unterseite.png (Runde 5, P4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist
+    durchweg grau"): Zeile 1 Vorlagen n1439 (Darstellung_Vorlage, PV) / Foto 2 n1435 (P2) / Foto 1 n1485 (P1) nah am Schwanz, mit der gemessenen
+    Grenze (gelb theta 125 = Ende grau, rot theta 100 = Fleisch voll; Linien aus dem Modell in derselben Pose); Zeile 2 V8 r4; Zeile 3 neu in
+    denselben Posen; Zeile 4 neu von unten (Pose PV, Modell 2600 E. ueber dem Boden, Kamera sieht von unten) und seitlich (Szene Takt F262 /
+    F328, offline Spielkamera). Alles roh, RDT-Licht."""
+    import r3_gemein as R3
+    roh = os.path.join(V.BAUM.replace('r41_sichel_v8', 'r41_sichel'), 'analysis', 'befunde_runde41', 'SF_belege', 'roh', 'alle')   # nur gelesen
+    ans = (('PV', V.PV, 1439, (250, 165, 400, 345)), ('P2', R3.P2, 1435, (250, 165, 400, 345)), ('P1', R3.P1, 1485, (290, 300, 440, 440)))
+    z1, z2, z3 = [], [], []
+    for nm, pose, n, bx in ans:
+        vb = bild(os.path.join(roh, 'f%04d.png' % (n + 1)))
+        g, f = grenze_maske(v8, pose)
+        vl = vb.copy(); vl[g] = (255, 255, 0); vl[f] = (255, 40, 40)
+        z1.append(np.hstack([kachel(vb, bx, 2, 'Vorlage n%d (%s)' % (n, nm)), kachel(vl, bx, 2, 'Grenze 125 gelb / 100 rot')]))
+        z2.append(kachel(render(v8r4, pose), bx, 2, 'V8 r4 %s' % nm))
+        z3.append(kachel(render(v8, pose), bx, 2, '%s %s' % (n8, nm)))
+    unten = dict(V.PV); unten['y'] = -2600
+    sp = R3.szene_posen()
+    z4 = [kachel(render(v8, unten), (200, 0, 500, 240), 1, '%s von unten (PV, +2600 E.)' % n8)]
+    for tk in (262, 328):
+        z4.append(kachel(render(v8, sp[tk]), (200, 120, 500, 360), 1, '%s Takt F%d' % (n8, tk)))
+        z4.append(kachel(render(v8r4, sp[tk]), (200, 120, 500, 360), 1, 'V8 r4 Takt F%d' % tk))
+    zs = [reihe(z1), reihe(z2 + [np.zeros((10, 10, 3), np.uint8)]), reihe(z3), reihe(z4)]
+    w = max(z.shape[1] for z in zs)
+    zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]
+    speichern(kopf(np.vstack(zs), 'SF V8 14: Schwanz-Unterseite - Vorlagen mit gemessener Grenze | V8 r4 | neu (PV/P2/P1, x2) | neu von unten '
+                   'und Szene (roh)'), os.path.join(aus, '14_schwanz_unterseite.png'))
 
 
 if __name__ == '__main__':

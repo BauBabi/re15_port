@@ -14,10 +14,12 @@
 #
 # Schritte:
 #   1-6 v7_kette.sh (Stufe 6 = V7, sha256 319bbd17; dessen Pin-Pruefung wird hier durch V7_SOLL ersetzt, weil der Pin jetzt V8 ist)
-#   7   v8/v8_bau.py --stufen srwa   + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, Original-EM30 (CDEMD0.EMS)
+#   7   v8/v8_bau.py --stufen srwau  + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, Original-EM30 (CDEMD0.EMS)
 #       (Runde 4: Stufe w = wurzel_r4.py statt e, Texturen adern_r4.py modus original_r4;
 #        Runde 5: Geometrie wie Runde 4, Texturen adern_r5.py modus original_r5 - Brust auf Original-Zeile 481, fast weisse Texel
-#        ersetzt, blass_r5)
+#        ersetzt, blass_r5; P4 Stufe u = unterseite_r5.py: Schwanz-Unterseite fleischig auf dem Haut/Fleisch-Verlauf des
+#        Original-Unterarms, Oberseite grau - Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist
+#        durchweg grau")
 #                                    -> EM30_V8.EMD = Pin (V8)
 set -u
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -40,8 +42,8 @@ grep -E "^   [1-5] " "$ZIEL/v7_kette.txt"
 
 T="$ZIEL/baum/re15_port/tools/r41_sichel/v8"
 [ -f "$T/v8_bau.py" ] || { echo "FEHLER: $T/v8_bau.py fehlt im Schattenbaum"; exit 2; }
-echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwa"
-( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwa \
+echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwau"
+( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwau \
       --json "$ZIEL/prot/7_v8.json" ) > "$ZIEL/prot/7_v8.txt" 2>&1 || { echo "FEHLER: Schritt 7_v8 (Protokoll $ZIEL/prot/7_v8.txt)"; tail -5 "$ZIEL/prot/7_v8.txt"; exit 1; }
 rc=0
 v8="$(sha256sum "$ZIEL/emd/EM30_V8.EMD" | awk '{print $1}')"

@@ -27,6 +27,9 @@ Stufe e) Runde 3 (O5): Wurzelrohr-Ende (Ring 0) und Kegelspitze von Mesh 16 unte
 Stufe w) Runde 4 (S10/O5, wurzel_r4.py): Ring 1 von Mesh 16 entlang der Gliedachse an die Haut (15 E. darunter), Ring 0 und Kegelspitze auf
    Ring 1 - das Wurzelrohr hat keine Flaeche mehr (der Port malt in Maler-Reihenfolge, das Rohr im Rumpf wurde ueber die Haut gemalt).
    Ersetzt Stufe e. Bau Runde 4: --stufen srwa.
+Stufe u) Runde 5 (P4, unterseite_r5.py + unterseite_v8.json): Flaechen der Schwanz-Unterseite (Ringecke |theta| < 125 Grad gegen die
+   Innenrichtung des Bogens) auf die Original-Zeile 482 (Spiel-Asset 495) mit UV auf den Haut/Fleisch-Verlauf des Original-Unterarms (Seite 2,
+   u 6-31, v 50-106); Oberseite bleibt Zeile 487. Bau Runde 5: --stufen srwau.
 Stufe a) Runde 4 (adern_r4.py, modus "original_r4"): wie Runde 3, dazu ganz Mesh 8 ausser der Brust auf den Original-Zeilen (Naht rosa/grau)
    und ganze UV-Gruppen mit einem Schub (Feld C von Mesh 13, Unterarmband von Mesh 14, Huegel und Wurzelstreifen von Mesh 8) auf Texel, die
    Original-Flaechen derselben Zeile benutzen.
@@ -441,7 +444,7 @@ def einbetten(blob, ms, prot):
 
 
 # ------------------------------------------------------------------ Bau
-def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None, blob=None):
+def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None, blob=None, unterseite=None):
     blob = open(basis, 'rb').read() if blob is None else blob
     prot = dict(basis=basis, basis_sha256=V.sha(blob), stufen=stufen)
     d, _do, ms, tim = KB.teile(blob)
@@ -460,6 +463,9 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
     if 'a' in stufen:
         import adern_v8 as AV
         AV.adern(ms, t, adern or _p('adern_v8.json'), prot)
+    if 'u' in stufen:                 # Runde 5 (P4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist
+        import unterseite_r5 as U5    # durchweg grau"): Unterseite auf den Haut/Fleisch-Verlauf des Original-Unterarms (unterseite_r5.py)
+        U5.anwenden(ms, t, unterseite or _p('unterseite_v8.json'), prot)
     tim_neu = KB.tim_packen(t)
     neu = KB.packen(blob, d, ms, tim_neu)
     prot['tim'] = dict(clut_zeilen=int(t['clut'].shape[0]), port_texturhoehe=int(t['ih'] * t['clut'].shape[0]))
@@ -473,7 +479,7 @@ def main():
     ap.add_argument('--aus', default=os.path.join(V.SFV8, 'emd'))
     ap.add_argument('--name', default='EM30_V8.EMD')
     ap.add_argument('--json')
-    ap.add_argument('--stufen', default='srwa')
+    ap.add_argument('--stufen', default='srwau')
     a = ap.parse_args()
     neu, prot = bauen(a.basis, a.stufen)
     os.makedirs(a.aus, exist_ok=True)

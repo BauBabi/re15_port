@@ -49,6 +49,13 @@ S12 Unterarmband (Sicht-Pruefer r3 (3): "Knochen 14 in P2 hat 384 rote px (y 299
                 (r - g > 35 und r - b > 25, RDT-Licht) auf Knochen 14 in P2 <= V7 + BAND_REST
 S13 Naht (Sicht-Pruefer r3 (3): "harte Farbnaht rosa/grau ... Das Original ist rundum einheitlich"): keine Flaeche von Mesh 8 ausser der Brust
                 (Zeile 488) auf einer V7-Zeile 480/481 - der Rumpf traegt rundum die Original-Zeilen
+Runde 5 P4 (Nutzer 2026-11-09 nach der V8-Vorschau: "Die Unterseite des großen Schwanzes ist fleischig wenn man in die Vorlagen Bilder schaut.
+                Nur die oberseite ist durchweg grau."; Messung und Regel unterseite_r5.py, Messblatt V8 Abschnitt 10; Gegenprobe V8 r4 muss rot sein):
+S15 Unterseite  (a) Herkunft: jede Schwanzflaeche ausserhalb Zeile 487 auf der Zeile = Original-Zeile 482, Seite 2, Texel = Original und von
+                Original-Flaechen der Zeile 482 benutzt (0 fremde Texel); (b) jede Unterseiten-Flaeche (Mittel |theta| < 130) auf dieser Zeile, die
+                Fleischflaechen (Mittel < 100) mit Fleisch-Texeln (a* >= 15), jede Oberseiten-Flaeche auf Zeile 487 mit der UV des Baus ohne Stufe u;
+                (c) PV und P2: Fleisch-Texel-Anteil an den Schwanz-Bildpunkten |theta| <= 100 >= S15_SOLL, |theta| >= 135 = 0; (d) groesster L*-Sprung
+                zwischen 15-Grad-Baendern theta 90-180 <= Vorlage
 Szene (Optionen --mk-a/--mk-b/--gr/--gr-v7, echte Framedumps mit Marker-Assets, szene_marker.py): S10s Wurzel F328-F346 = 0; S9s Schlitz
                 F344-F378 Ueberschuss gegen V7 <= SCHLITZ_SZENE_SOLL
 """
@@ -66,6 +73,7 @@ import v4_gemein as G                 # noqa: E402
 import r3_gemein as R3                # noqa: E402
 
 S7_ADER_A, S7_ADER_L = 15.0, 38.0     # Messblatt 6c: Ader-Eintrag a* >= 15, L* <= 38
+S15_SOLL = 30.0                       # = unterseite_r5.S15_UNTEN_SOLL (Vorlage PV a* >= 10 26-58 %, P2 22-38 %; V8 r4 0 %)
 
 
 # ------------------------------------------------------------------ Render
@@ -677,11 +685,22 @@ def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
     out['S12'] = s12(blob, ref_blob)
     out['S13'] = s13(blob)
     out['S14'] = s14(blob, ref_blob)
+    out['S15'] = s15(blob, ref_blob)
     if fd:
         out['S14s'] = s14s(*fd)
     if marker:
         out.update(szene_marker(*marker))
     return out
+
+
+def s15(blob, ref_blob):
+    """Runde 5 (P4, Nutzer 2026-11-09: "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist durchweg grau"):
+    unterseite_r5.s15_flaechen (a Herkunft, b Klassen), s15_bild (c), s15_ruhe (d)."""
+    import unterseite_r5 as U5
+    a = U5.s15_flaechen(blob, ref_blob)
+    c = U5.s15_bild(blob)
+    d = U5.s15_ruhe(blob)
+    return dict(flaechen=a, bild=c, ruhe=d, ok=bool(a['ok'] and c['ok'] and d['ok']))
 
 
 def zeilen(r):
@@ -741,6 +760,17 @@ def zeilen(r):
                     'ok' if s['b_ok'] else 'ROT', '; '.join('%s %d | %d' % (p, n, v) for p, (n, v) in s['c_rot'].items()),
                     'ok' if s['c_ok'] else 'ROT', 'GRUEN' if s['ok'] else 'ROT'))
         z.append('   S14 (a) streng (dL und da* je <= V7, ohne Rand): %s' % ('erfuellt' if s['a_streng'] else 'NICHT erfuellt (dL ueber V7, siehe Rand)'))
+    if 'S15' in r:
+        s = r['S15']; a, c, d = s['flaechen'], s['bild']['ansichten'], s['ruhe']['ansichten']
+        z.append('S15 Schwanz-Unterseite (P4): (a) Herkunft Zeile %s: fremde Texel %d, falsche Zeile/Seite %d; (b) Unterseite %d Flaechen, davon ohne '
+                 'Fleisch %d, Fleisch-Texel %d; Oberseite %d Flaechen, Fehler %d; (c) Fleisch-Texel-Anteil |theta| <= 100 / >= 135: %s (Soll >= %.0f %% / 0); '
+                 '(d) groesster L*-Sprung theta 90-180 Modell / Vorlage: %s -> %s'
+                 % (a['zeile'], a['fremde_texel'], a['falsche_zeile'], a['unten'], a['unten_ohne_fleisch'], a['fleisch_texel'], a['oben'],
+                    a['oben_fehler'], '; '.join('%s %.1f / %.1f %%' % (p, v['unten_fleisch'], v['oben_fleisch']) for p, v in c.items()),
+                    S15_SOLL, '; '.join('%s %s / %s' % (p, v['sprung_modell'], v['sprung_vorlage']) for p, v in d.items()),
+                    'GRUEN' if s['ok'] else 'ROT'))
+        z.append('   S15 (d) L*-Profil theta 90-180 (15-Grad-Baender) Modell | Vorlage: %s'
+                 % '; '.join('%s %s | %s' % (p, v['modell'], v['vorlage']) for p, v in d.items()))
     if 'S14s' in r:
         z.append('S14s fast weisse Bildpunkte in echten Framedumps F344-F372, Fenster x 560-690 / y 260-330 (960x720): neu %d, V7 %d (<= V7 + %d) -> %s'
                  % (r['S14s']['neu'], r['S14s']['v7'], S14S_RAND, 'GRUEN' if r['S14s']['ok'] else 'ROT'))
@@ -749,7 +779,8 @@ def zeilen(r):
     if 'S9s' in r:
         z.append('S9s Schlitz in echten Framedumps F344-F378 (gruene Silhouette, Ueberschuss gegen V7): %d (Soll <= %d) -> %s'
                  % (r['S9s']['ueberschuss'], SCHLITZ_SZENE_SOLL, 'GRUEN' if r['S9s']['ok'] else 'ROT'))
-    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S10s', 'S9s', 'S14s') if k in r and not r[k]['ok']]
+    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S10s', 'S9s', 'S14s')
+           if k in r and not r[k]['ok']]
     z.append('SUMME: %d von %d gruen%s' % (len([k for k in r if k.startswith('S')]) - len(rot), len([k for k in r if k.startswith('S')]),
                                            ('; ROT: ' + ', '.join(rot)) if rot else ''))
     return z, rot
