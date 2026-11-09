@@ -58,7 +58,7 @@ def modellteile_text(z):
         txt = 'Fleck texelgenau: %d Texel (%d Video-px) auf %s' % (t['zahl'], t['flaeche_video_px'], ', '.join('%s (Teil %d)' % (TEILNAME[b], b) for b in teile))
         g = z.get('geteilte_texel', {})
         if g.get('andere_flaechen'):
-            txt += '; dieselben Texel nutzen %d weitere Flächen (Tafel 23)' % g['andere_flaechen']
+            txt += '; dieselben Texel nutzen %d weitere Flächen (Tafel 24)' % g['andere_flaechen']
         return txt
     teile = []
     for b, nfl in zu['je_mesh'].items():
@@ -71,17 +71,37 @@ def modellteile_text(z):
     return t
 
 
+_FARBEN = None
+
+
+def globale_farben():
+    """Runde 4 (Pruefer r3 Nr. 12e): EINE Farbe je Zone fuer ALLE Tafeln (vorher je Tafel neu vergeben, daher z. B. Zone 30 in Tafel 00 lila,
+    in Tafel 09 orange). Flecken: Farbe ihres Materials (wie Tafel 20, Reihe B). Teil-Zonen: Palettenfarben mit Abstand >= 90 zu allen
+    Materialfarben DER FLECKEN DESSELBEN BILDES (Bild 1: >= 120, 24 Farben fuer 24 Zonen; Bild 2: >= 150, damit z. B. Zone 31 nicht wie das
+    Auge aussieht), in Nummernfolge vergeben, innerhalb desselben Bildes ohne Wiederholung."""
+    global _FARBEN
+    if _FARBEN is None:
+        ok = {}
+        for n, schwelle in ((1, 120), (2, 150)):
+            ms = [MATFARBE[z['material']] for z in ZONEN if z['bild'] == n and z['id'] in TX and z['material'] in MATFARBE]
+            ok[n] = [c for c in PALETTE if min(sum(abs(a - b) for a, b in zip(c, m)) for m in ms) >= schwelle]
+        belegt = {1: [], 2: []}; out = {}
+        for z in sorted(ZONEN, key=lambda z: [int(x) for x in z['nr'].split('.')]):
+            if z['id'] in TX and z['material'] in MATFARBE:
+                out[z['id']] = MATFARBE[z['material']]
+                continue
+            frei = [c for c in ok[z['bild']] if c not in belegt[z['bild']]]
+            assert frei, 'zu wenige Farben fuer Bild %d' % z['bild']
+            c = frei[0]
+            belegt[z['bild']].append(c); out[z['id']] = c
+        _FARBEN = out
+    return _FARBEN
+
+
 def farben_fuer(zs):
-    """Teil-Zonen: Falschfarben der Palette; Flecken: Farbe ihres Materials (wie Tafel 20, Reihe B), damit man das Material sofort sieht."""
-    out = {}; k = 0
-    for z in zs:
-        if z['id'] in TX and z['material'] in MATFARBE:
-            out[z['id']] = MATFARBE[z['material']]
-        else:
-            while min(sum(abs(a - b) for a, b in zip(farbe(k), m)) for m in MATFARBE.values()) < 90:
-                k += 1
-            out[z['id']] = farbe(k); k += 1
-    return out
+    """Farben der Zonen zs aus der globalen Zuordnung (gleiche Zone = gleiche Farbe in jeder Tafel)."""
+    g = globale_farben()
+    return {z['id']: g[z['id']] for z in zs}
 
 
 def wort(z):
@@ -107,8 +127,10 @@ def panel_modell(n, zs, dx, H, W, farben, mit_nummern=True, k=None):
     for z in teile:
         c = farben[z['id']]; mz = MS.get(z['id'] + '__modell'); mg = MS.get(z['id'])
         if mz is not None and mz.any():
-            einfaerben(ziel, mz, c, 0.22)
-            kontur(ziel, mz, c, 2)
+            # Runde 4 (Pruefer r3 Nr. 12a): Unter-Zonen innerhalb eines benannten Teils (z. B. Maul im Gesicht) kraeftiger getoent,
+            # sonst verschwinden sie unter der Toenung des ganzen Teils
+            einfaerben(ziel, mz, c, 0.22 if rang(z) <= 1 else 0.5)
+            kontur(ziel, mz, c, 2 if rang(z) <= 1 else 3)
         elif mg is not None and mg.any():
             schraffur(ziel, mg, c, 6)
     # 2) Flecken texelgenau, kraeftig
@@ -202,7 +224,7 @@ def nahansichten(z, farbe_rgb, ziel_h=380):
         reihen.append(reihe)
     t = z['texel']; g = z.get('geteilte_texel', {})
     unter = ('%s - %d Texel, auf dem Modell %d Video-px (Ihre Stelle %d Video-px); Rückprobe: Texel-Fleck deckt sich mit Ihrer Stelle zu IoU %.2f. '
-             'Gestrichelt = Ihre Stelle. Schwarz schraffiert = dort erschiene der Fleck AUCH, weil andere Flächen dieselben Texel benutzen (siehe Tafel 23).' % (
+             'Gestrichelt = Ihre Stelle. Schwarz schraffiert = dort erschiene der Fleck AUCH, weil andere Flächen dieselben Texel benutzen (siehe Tafel 24).' % (
                  wort(z), t['zahl'], t['flaeche_video_px'], t['stelle_video_px'], t['rueckprobe']['iou']))
     if t.get('verworfen_durch_teilfilter'):
         unter += ' Nicht übernommen (anderes Teil im Vordergrund): ' + ', '.join('%s %d px' % (v['teil'], v['px_vorlage']) for v in t['verworfen_durch_teilfilter'].values()) + '.'
@@ -393,7 +415,7 @@ def rundum():
                        'zu sehen und einer Ihrer Zonen zugeordnet ist; blasse Farbe = gehört zum benannten Teil, ist aber in keinem der zwei Bilder zu sehen '
                        '(bleibt "Haut (nicht belegt)"). Reihe B: nur die Zonen, für die Ihr Wort ein Material nennt; grau = Haut. Flecken sind texelgenau gefärbt '
                        '(nur dort, wo Ihre Stelle liegt). Schraffiert in derselben Farbe = dort erschiene der Fleck AUCH, weil die heutige Textur dieselben Texel '
-                       'an mehreren Stellen benutzt (Tafel 23). Krallen 28, 19, 20, 29 sind im heutigen Modell eingezogen (Tafel 21).')
+                       'an mehreren Stellen benutzt (Tafel 24). Krallen 28, 19, 20, 29 sind im heutigen Modell eingezogen (Tafel 21).')
     ka_t = titelzeile(W, 'Reihe A: Ihre Teilnamen', gr=26); kb_t = titelzeile(W, 'Reihe B: Material laut Ihrem Wort (Flecken texelgenau)', gr=26)
     stapeln([titel, ka_t, ra, la, kb_t, rb, lb]).save(os.path.join(ZIEL, '20_rundum.png'))
 

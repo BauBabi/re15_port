@@ -112,10 +112,10 @@ NB = 'nicht belegt (kein Wort von Ihnen)'
 MODELLZONEN_KOPF = [
     ('40', 'augenhoehle', 'Flächen rund um die Augen, die dieselbe rote Texturstelle wie die heutige Maul-Farbe benutzen (Modellgliederung)', NB, 'Augenhoehle', 'augen_vorn'),
     ('41', 'zaehne', 'Zähne (Modellgliederung, im "geöffneten Maul")', NB, 'Zahn', 'maul_vorn'),
-    ('42', 'lippe', 'Oberlippe (Modellgliederung, Rand des "geöffneten Mauls")', NB, 'Lippe_oben', 'maul_vorn'),
+    ('42', 'lippe', 'Oberlippe (Modellgliederung nach Lage: Rand der Maul-Öffnung am Kopf, auch bei geschlossenem Maul außen)', NB, 'Lippe_oben', 'maul_vorn'),
     ('44', 'hals_unterseite', 'Hals-Unterseite (Modellgliederung)', 'Haut (nicht belegt)', 'Hals_unten', None),
     # Runde 3 (Pruefer r2 Nr. 11): Flaechen von Kopf 22 aus der FARBliste "Maulinneres", die nach LAGE aussen liegen (g_maul.py);
-    # darunter die 8 grossen Aussenflaechen der Kopf-Unterseite, die die roten Hals-Streifen machen
+    # darunter die 6 Aussenflaechen der Kopf-Unterseite, die die roten Hals-Streifen machen (Runde 4: im ganzen Modell gemessen, g_kopfunterseite.py)
     ('45', 'kopf_unterseite_maulfarbe', 'Kopf-Unterseite hinter dem Unterkiefer: Außenflächen, die heute die rote Maul-Farbe tragen (Modellgliederung; die roten Hals-Streifen)',
      'Haut (nicht belegt)', 'Maulfarbe_aussen', None),
 ]

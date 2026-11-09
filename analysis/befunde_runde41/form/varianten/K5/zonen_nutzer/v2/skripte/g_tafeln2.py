@@ -108,18 +108,23 @@ def krallen_tafel():
     pa, _ = panel(ka, 2, box, f, me, us); pc, _ = panel(kc, 2, box, f, me, us); pv, _ = panel(kv, 2, box, f, me, us)
     sp = {k: v['naechste'] for k, v in ZJ['krallen']['spitzen']['vorn_links'].items()}
     ds = ZJ['krallen']['spitzen']['vorn_links']
-    tx = lambda st: ['14: %d px, 15: %d px, 28: %d px, 30: %d px sichtbar' % tuple(j2[st][str(b)]['sichtbar_px'] for b in (14, 15, 28, 30))]
+    # Runde 4 (Pruefer r3 Nr. 7/12b): sichtbar im fertigen Bild, Krallen verdecken sich gegenseitig
+    tx = lambda st: ['sichtbar (Video-px): 14: %d, 15: %d, 28: %d, 30: %d' % tuple(j2[st][str(b)]['sichtbar_px'] for b in (14, 15, 28, 30))]
+    v28 = KJ['kralle28_verdeckt_bild2']
     r1 = nebeneinander([beschriften(nb, ['Ihre 4 Schleifen ("Exakt 4 Krallen")']),
                         beschriften(pa, ['heute (Spiel-Asset): 28 eingezogen'] + tx('asset')),
                         beschriften(pc, ['K5c (vor dem Einziehen)'] + tx('k5c')),
-                        beschriften(pv, ['Vorschlag: 28 mit K5c-Form zurück (%d Ecken stecken in Hand 13, wie in K5c)' % KJ['durchdringung']['28']['ecken_in_der_hand']] + tx('vorschlag'))],
+                        beschriften(pv, ['Vorschlag: 28 mit K5c-Form zurück (%d Ecken stecken in Hand 13, wie in K5c)' % KJ['durchdringung']['28']['ecken_in_der_hand']] + tx('vorschlag')
+                                    + ['28 verdeckt %d px von Kralle 15 und %d px Hand 13' % (v28.get('15', 0), v28.get('13', 0))])],
                        ['Vorn links (Bild 2): Ihr Bild', 'heute', 'K5c', 'Vorschlag'], gr=24)
     zeilen = []
     for i in range(1, 5):
         d = ds['schleife%d' % i]['abstand_zu_modellspitze_k5c_px']
         zeilen.append(['Schleife %d (von links im Bild)' % i, ', '.join('%s: %.1f px' % (TEILNAME[int(b)], v) for b, v in sorted(d.items(), key=lambda t: t[1])[:2]),
                        {1: 'Kralle 30 (unsicher: im Modell nur 2 px sichtbar)', 2: 'Kralle 14 oder Handspitze 13 (Frage)', 3: 'Kralle 15',
-                        4: 'Kralle 28 (heute eingezogen; zurückgeholt liegt sie nur zu 2 % in Ihrer Schleife, Rest über dem Fußabschnitt - Frage)'}[i]])
+                        4: 'Kralle 28 (heute eingezogen; zurückgeholt liegen nur %d von %d px in Ihrer Schleife, %d px über dem Fußabschnitt, und sie verdeckt '
+                           'dort %d px von Kralle 15 = Ihre Schleife 3 - Frage)' % (j2['vorschlag']['28']['in_schleife_px']['4'], j2['vorschlag']['28']['sichtbar_px'],
+                                                                               j2['vorschlag']['28']['im_fussabschnitt_ohne_schleifen_px'], v28.get('15', 0))}[i]])
     l1 = tabelle(r1.size[0], [('Ihre Schleife', 0.25), ('nächste Modellspitzen (Abstand der Spitzen in Video-Pixeln)', 0.45), ('so erkannt', 0.3)], zeilen, gr=19)
     # ---------------- vorn rechts
     box = (130, 320, 300, 480); f = 5
@@ -178,7 +183,7 @@ def krallen_tafel():
     titel = titelzeile(W, '21  Krallen: heute | K5c | Vorschlag',
                        'Ausschnitte aus dem Video (Bild 2 bzw. Bild 1), vergrößert. Grau = Modell, Farben = einzelne Krallen, blau umrandet = Ihre gezeichneten '
                        'Krallen, lila umrandet = Ihr Hand-Umriss, gelb schraffiert = vom Schriftzug verdeckte Fläche. "K5c" ist die Form vor dem Einziehen der Krallen. Der Vorschlag liegt nur als '
-                       'Kandidat vor (nicht im Spiel). Pixelzahlen in Video-Pixeln (640 x 480). Vorn rechts haben Sie zwei Formen gezeichnet: "Form rechts im Bild" und "Form links im Bild".')
+                       'Kandidat vor (nicht im Spiel). Pixelzahlen in Video-Pixeln (640 x 480), gezählt im fertigen Bild: eine Kralle vor einer anderen verdeckt diese. Vorn rechts haben Sie zwei Formen gezeichnet: "Form rechts im Bild" und "Form links im Bild".')
     leg = tabelle(W, [('Farbe = Modellteil', 1.0)], [['%s (Teil %d)' % (TEILNAME[b], b)] for b in (14, 15, 28, 30, 19, 20, 29, 31)], gr=18,
                   farben=[KF[b] for b in (14, 15, 28, 30, 19, 20, 29, 31)])
     stapeln([titel, r1, l1, r2, l2, r3, leg]).save(os.path.join(ZIEL, '21_krallen.png'))
@@ -234,7 +239,7 @@ def kopf_tafel():
           'grau gestrichelt = heutige Augenflächen außerhalb Ihrer Punkte (wären dann Haut - Frage)']
     ao = aug['vorschlag']['anzeige_bild2_ohne_eigene_texel']
     t4 = ['dunkel-lila = dort erschiene das Auge AUCH, weil die heutige Textur',
-          'dieselben Texel an anderen Stellen benutzt (Tafel 23).',
+          'dieselben Texel an anderen Stellen benutzt (Tafel 24).',
           'Ganz Bild 2: %.0f Video-px statt %.0f px Ihrer Punkte (%.1f-fach);' % (ao['gesamt_px_vorlage'], ao['punkte_px_vorlage'], ao['faktor_gesamt_zu_punkten']),
           'außerhalb der Punkte %.0f px: Kopf %.0f, Brust %.0f, Hals %.0f.' % (ao['ausserhalb_px_vorlage'], ao['ausserhalb_je_teil'].get('Kopf (Oberkiefer)', 0),
                                                                           ao['ausserhalb_je_teil'].get('Brust/Buckel', 0), ao['ausserhalb_je_teil'].get('Hals', 0)),
@@ -280,7 +285,7 @@ def kopf_tafel():
 
 
 def geteilt_tafel():
-    """Tafel 23 (T2): wo erschiene jeder Fleck AUCH, weil die heutige Textur dieselben Texel an mehreren Stellen benutzt."""
+    """Tafel 24 (T2): wo erschiene jeder Fleck AUCH, weil die heutige Textur dieselben Texel an mehreren Stellen benutzt."""
     from g_tafeln import spot_masken, MATFARBE, TX, wort
     R = {n: dict(np.load(ARBEIT + '/render_asset_%d.npz' % n)) for n in (1, 2)}
     reihen = []
@@ -328,12 +333,12 @@ def geteilt_tafel():
         reihen.append(tabelle(W0, [('Zonen', 0.12), ('Material laut Ihrem Wort', 0.4), ('gemeinsame Texel', 0.14), ('Flächen, die diese Texel heute benutzen', 0.34)],
                               zeilen, gr=GR, kopf_gr=GR))
     W = max(r.size[0] for r in reihen)
-    titel = titelzeile(W, '23  Geteilte Texel: wo der Fleck heute AUCH erscheinen würde', gr=38, unter=
+    titel = titelzeile(W, '24  Geteilte Texel: wo der Fleck heute AUCH erscheinen würde', gr=38, unter=
                        'Die heutige Textur benutzt dieselben Texel (Bildpunkte der Textur) für viele Flächen. Würde man einen Fleck nur in die Texel unter Ihrer '
                        'Stelle malen, erschiene er überall dort mit, wo andere Flächen dieselben Texel benutzen. Farbe = der Fleck an Ihrer Stelle; '
                        'schwarz = dort erschiene er zusätzlich. Diese Flächen bräuchten in der späteren Textur eigene Texel (Liste je Zone in zonen_v2.json, '
                        '"brauchen_eigene_texel"). Hier wird nichts umgebaut, nur gezeigt und gezählt.', unter_gr=28)
-    stapeln([titel] + reihen).save(os.path.join(ZIEL, '23_geteilte_texel.png'))
+    stapeln([titel] + reihen).save(os.path.join(ZIEL, '24_geteilte_texel.png'))
 
 
 if __name__ == '__main__':

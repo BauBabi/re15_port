@@ -7,7 +7,9 @@ Runde 2: 20 und 29 bleiben eingezogen (Asset), weil keine Drehung die Annahme er
 Runde 3 (Pruefer r2 Nr. 12): 19 mit K5c-Lage und einem Faktor liegt ueber Ihrer Hand (g_kralle19.py: 710 Video-px sichtbare Hand verdeckt,
 8 Ecken in der Hand bei Wurzelradius 98); auch keine Drehung um die Wurzel mit Spitze an Ihrem Strichende vermeidet das. 19 bleibt deshalb im
 Kandidaten EINGEZOGEN wie im Asset (Frage an den Nutzer); die gekuerzte K5c-Lage wird nur als Variante fuer die Tafel geschrieben
-(OUT/variante_19_k5c_gekuerzt/, nicht der Kandidat)."""
+(OUT/variante_19_k5c_gekuerzt/, nicht der Kandidat).
+Runde 4 (Pruefer r3 Nr. 7): Sichtbarkeit in Bild 2 im fertigen Bild des Standes (Krallen verdecken sich gegenseitig und die Hand);
+dazu, was die zurueckgeholte 28 verdeckt (Kralle 15, Hand 13)."""
 import copy, json, os, struct, sys, math
 import numpy as np, cv2
 from scipy import ndimage as ndi
@@ -98,6 +100,29 @@ def tiefenbild(mo, kf, lage, gier, kam, ohne):
         (y0, y1, x0, x1), mm = m
         Z[y0:y1, x0:x1][mm] = tief
     return Z
+
+
+def besitzer(mo, kf, lage, gier, kam):
+    """Runde 4 (Pruefer r3 Nr. 7): Teil-Nummer je Pixel im fertigen Bild (Maler-Reihenfolge wie rastern, ALLE Teile des Standes,
+    Krallen verdecken sich also gegenseitig und die Hand). -1 = kein Modell."""
+    tris = v4f.dreiecke_id(mo, kf, lage, gier, kam, None)
+    B = np.full((480, 640), -1, np.int16)
+    for tief, p, uv, zeile, farbe, tag in sorted(tris, key=lambda t: -t[0]):
+        x, y = FB.abbilden(np.array([q[0] + FB.PHASE for q in p], float), np.array([q[1] + FB.PHASE for q in p], float), kam.abbildung)
+        m = dreieck_maske(np.stack([x, y], 1))
+        if m is None:
+            continue
+        (y0, y1, x0, x1), mm = m
+        B[y0:y1, x0:x1][mm] = tag[0]
+    return B
+
+
+def zone_v(name, n=2):
+    """Zonen-Maske (Grundlage) auf das Video-Raster (Vorlage) gezogen, wie figur_v."""
+    MS = np.load(ARBEIT + '/zonen_v2_masken.npz')
+    s, t = s_t(n); A = MS[name].astype(np.float32)
+    M = np.array([[s, 0, t[0]], [0, s, t[1]]], np.float32)
+    return cv2.warpAffine(A, M, (640, 480), flags=cv2.INTER_AREA) >= 0.5
 
 
 def dreieck_maske(pts):
@@ -313,15 +338,41 @@ def main():
             b1.setdefault(str(b), {})[name] = dict(sichtbar_px=int(sm.sum()), ueber_hintergrund_px=int((sm & BG1).sum()))
     ergebnis['bild1_kontrolle'] = b1
     # Bild 2 je Stand
+    # Runde 4 (Pruefer r3 Nr. 7): sichtbar = Pixel, die im FERTIGEN Bild des Standes der Kralle gehoeren (alle Teile, gegenseitige
+    # Verdeckung der Krallen). Zum Vergleich weiter: sichtbar gegen ein Tiefenbild OHNE alle Krallen (Runde 1-3, keine gegenseitige Verdeckung).
     Zb = tiefenbild(ka.mo, kf2, lage2, gier2, kam2, ohne=(14, 15, 28, 30, 19, 20, 29, 31))
-    b2 = {}; masken = {}
+    b2 = {}; masken = {}; BES = {}
+    SCHL = {i: zone_v('kralle_vorn_links_schleife%d' % i) for i in (1, 2, 3, 4)}
+    FA = zone_v('fussabschnitt_vorn_links')
     for name, mm in (('asset', ka.mo), ('k5c', mo_c), ('vorschlag', mo), ('variante_19', mo_var)):
+        # K5c hat andere Clip-Nummern (Asset Clip 12/0 = K5c Clip 1/0): Asset-Modell mit den K5c-Krallen 19, 20, 28, 29 (nur dort verschieden)
+        if mm is mo_c:
+            mk = copy.deepcopy(mo_a)
+            for x in (19, 20, 28, 29):
+                mk.meshes[x] = copy.deepcopy(mo_c.meshes[x])
+        else:
+            mk = mm
+        BES[name] = B = besitzer(mk, kf2, lage2, gier2, kam2)
         for b in (14, 15, 28, 30, 19, 20, 29, 31):
             tv, qv = ecken(mm.meshes[b])
-            sm = sichtbar(projiziere(mo_a, kf2, lage2, gier2, kam2, b, tv, qv, mm.meshes[b]), Zb)
-            b2.setdefault(name, {})[str(b)] = dict(sichtbar_px=int(sm.sum()), ueber_hintergrund_px=int((sm & BG2).sum()), im_schriftzug_px=int((sm & WZ).sum()))
+            frei = sichtbar(projiziere(mo_a, kf2, lage2, gier2, kam2, b, tv, qv, mm.meshes[b]), Zb)
+            sm = B == b
+            von = {}
+            for o, c in zip(*np.unique(B[frei & ~sm], return_counts=True)):
+                von[str(int(o))] = int(c)
+            b2.setdefault(name, {})[str(b)] = dict(sichtbar_px=int(sm.sum()), ueber_hintergrund_px=int((sm & BG2).sum()), im_schriftzug_px=int((sm & WZ).sum()),
+                                                   sichtbar_ohne_andere_krallen_px=int(frei.sum()), von_anderen_teilen_verdeckt=von,
+                                                   in_schleife_px={str(i): int((sm & SCHL[i]).sum()) for i in SCHL},
+                                                   im_fussabschnitt_ohne_schleifen_px=int((sm & FA & ~(SCHL[1] | SCHL[2] | SCHL[3] | SCHL[4])).sum()))
             masken['%s_%d' % (name, b)] = sm
     ergebnis['bild2_je_stand'] = b2
+    # Was 28 im Vorschlag gegenueber dem Asset verdeckt (Bild 2, fertiges Bild)
+    neu28 = (BES['vorschlag'] == 28)
+    ergebnis['kralle28_verdeckt_bild2'] = {str(int(o)): int(c) for o, c in zip(*np.unique(BES['asset'][neu28], return_counts=True)) if o >= 0}
+    ergebnis['kralle28_ueber_hintergrund_bild2'] = int((neu28 & BG2).sum())
+    ergebnis['kralle28_in_schleife4_anteil'] = round(float((neu28 & SCHL[4]).sum()) / max(int(neu28.sum()), 1), 4)
+    ergebnis['kralle15_fussabschnitt'] = {st: int(((BES[st] == 15) & FA).sum()) for st in ('asset', 'vorschlag')}
+    print('28 verdeckt', ergebnis['kralle28_verdeckt_bild2'], '15 Fussabschnitt', ergebnis['kralle15_fussabschnitt'])
     np.savez_compressed(OUT + '/krallen_masken_bild2.npz', wasserzeichen=WZ, hintergrund=BG2, figur=FIG2, **masken)
     json.dump(ergebnis, open(OUT + '/kandidat.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(json.dumps({k: v for k, v in ergebnis.items() if k not in ('ecken', 'regel')}, ensure_ascii=False, indent=1))

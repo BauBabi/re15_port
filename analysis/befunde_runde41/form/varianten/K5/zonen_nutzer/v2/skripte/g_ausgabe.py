@@ -132,7 +132,11 @@ def main(ziel):
     meta['maul_regel'] = ML_['regel']
     meta['texel_konflikte_regel'] = 'Texel, die zwei Flecken-Zonen mit verschiedenem Material zugleich beanspruchen (gleiche Texel in der G4-Textur); nur benannt'
     out = dict(meta=meta, zonen=zonen, augen=AK['augen'], kopf=AK['kopf'], krallen=dict(spitzen=KS), texel_konflikte=TX.get('konflikte', []),
-               maul_lage=dict(maulinneres_lage=ML_['maulinneres_lage'], farbliste_maulinneres=ML_['farbliste_maulinneres'], sichtbarkeit=ML_['sichtbarkeit']))
+               maul_lage=dict(maulinneres_lage=ML_['maulinneres_lage'], farbliste_maulinneres=ML_['farbliste_maulinneres'], sichtbarkeit=ML_['sichtbarkeit'],
+                              # Runde 4: Kieferwinkel der Vergleichs-Posen, Oberlippe nach Lage, Aenderung gegen Runde 3, Grenzfaelle
+                              **{k_: ML_[k_] for k_ in ('kieferwinkel_grad', 'offen', 'zu', 'oberlippe_lage', 'oberlippe_kandidaten_nicht_aussen',
+                                                        'grenzfaelle_zu_anteil_30_bis_45', 'aenderung_gegen_runde3', 'farbliste_lippensaum_22')}),
+               kopf_unterseite_ganzes_modell=json.load(open(ARBEIT + '/kopfunterseite.json', encoding='utf-8')))
     json.dump(out, open(ziel, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print('Zonen', len(zonen), zaehl)
 

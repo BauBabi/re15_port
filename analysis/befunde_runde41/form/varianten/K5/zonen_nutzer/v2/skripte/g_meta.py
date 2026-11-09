@@ -91,6 +91,32 @@ META.update({
                                'Vorschlag ist 19 eingezogen (Kralle 19 läge sonst über Ihrer Hand)',
                             'v1: eine Zone; v2: die zwei Formen und die Fläche dazwischen getrennt; R3: 19 eingezogen'),
 })
+# Runde 4 (Pruefer r3 Nr. 5, 6, 7): Maul mit wirklich geschlossenem Maul als Vergleich, Oberlippe nach Lage, 6 statt 8 Streifen-Flaechen,
+# Krallen mit gegenseitiger Verdeckung (Zahlen aus maul_lage.json, kopfunterseite.json, krallen_kandidat/kandidat.json)
+META.update({
+    'maul_vorn': (U, 'Ihr Maul-Umriss zeigt im Modell vor allem den Unterkiefer außen und Zähne, weil der Modellkopf anders sitzt. Das Maulinnere ist nach '
+                     'LAGE bestimmt: die 27 Flächen, die erst durch das Öffnen des Mauls sichtbar werden (verglichen mit wirklich geschlossenem Maul, '
+                     'Kieferwinkel 1,3-2,3 Grad). In Bild 2 sind 11 davon sichtbar (822 Video-px), 789 px davon in Ihrem Umriss; sie decken 34 % davon',
+                  'R3: nach Lage statt nach der Farbliste; R4: vorderer Mundboden 23|1|53, 54, 55 (375 Video-px) und Gaumen 22|1|26/40/49 dazu, '
+                  'weil Runde 3 ein halb offenes Maul (Clip 0, 5,7 Grad) als "zu" nahm'),
+    'unterkiefer_vorn': (U, 'Band am lila Strich; dort zeigt das Modell Unterkiefer (89 px) und Unterschenkel (48 px); nach Bedeutung: Unterkiefer außen '
+                            '(alle Flächen von Teil 23 außer Maulinnerem und Zähnen)',
+                         'Z4: nach Bedeutung; R3: Material wie die anderen Teilnamen; R4: 4 Mundboden-Flächen an das Maulinnere abgegeben (77 -> 73)'),
+    'lippe': (U, 'kein Wort von Ihnen; Oberlippe nach LAGE: die 20 Flächen des Kopfes 22, die den Rand der Maul-Öffnung bilden (Kante mit Maulinnerem oder '
+                 'Zahn) und auch bei geschlossenem Maul außen sichtbar sind; in Bild 2 nicht zu sehen (0 px)',
+              'R2: Material nicht mehr "Lippe"; R3: 8 Flächen an das Maulinnere; R4: nach Lage statt aus der Farbliste "Lippensaum" (70 -> 20 Flächen; '
+              'die Farbliste enthielt Gaumen, z. B. 22|1|40 und 49)'),
+    'kopf_unterseite_maulfarbe': (V, 'kein Wort von Ihnen. 10 Flächen an der Kopf-Unterseite hinter dem Unterkiefer, die heute die rote Maul-Farbe tragen. '
+                                     '6 davon (22|1|1, 8, 9, 194, 201, 209) sind im ganzen Modell von unten in 226-277 von 320 Ansichten zu sehen und machen '
+                                     'die roten Hals-Streifen; die übrigen 4 (22|0|0, 22|0|9, 22|1|210, 22|1|217) sind in keiner der 320 Ansichten zu sehen (vom Hals verdeckt). '
+                                     'In Bild 2 nicht sichtbar. Lage außen, nicht im Maul: bleibt Haut (nicht belegt)',
+                                  'neu (R3): war in Runde 2 Teil von "geöffnetes Maul"; R4: 6 statt 8 Streifen-Flächen'),
+    'kralle_vorn_links_schleife3': (S, 'Spitze 3,0 px neben Kralle 15. Achtung: die zurückgeholte Kralle 28 (Schleife 4) verdeckt in Bild 2 238 Video-px von '
+                                       'Kralle 15 (sichtbar 461 statt 699 px); Ihre Schleife 3 selbst bleibt frei (209 px wie heute)', 'neu (eigene Zone); R4: Verdeckung durch 28'),
+    'kralle_vorn_links_schleife4': (V, 'Spitze 8,3 px neben Kralle 28 in K5c-Form; im heutigen Asset ist 28 eingezogen (0 px). Zurückgeholt sind 292 Video-px '
+                                       'sichtbar, davon nur 8 (3 %) in Ihrer Schleife, 268 über dem Fußabschnitt; sie verdeckt dort 238 px von Kralle 15 '
+                                       'und 38 px Hand 13 (Frage)', 'neu (eigene Zone); R4: mit gegenseitiger Verdeckung gezählt'),
+})
 KRALLE_ZUORDNUNG = {
     'kralle_vorn_links_schleife1': [30], 'kralle_vorn_links_schleife2': [14], 'kralle_vorn_links_schleife3': [15],
     'kralle_vorn_links_schleife4': [28], 'krallen_vorn_rechts_form1': [31], 'krallen_vorn_rechts_form3': [19],

@@ -60,7 +60,9 @@ def modell_mengen():
     # Rest der Farbliste: Kopf 22 -> Zone 45 (aussen, Haut nicht belegt); Unterkiefer 23 -> Unterkiefer aussen (Zone 31)
     M['Maulfarbe_aussen'] = {f for f in M['Maulinneres'] if f.startswith('22|')} - au - M['Maulinneres_lage']
     M['Unterkiefer_aussen'] = alle23 - M['Maulinneres_lage'] - M['Zahn']  # mit Unterlippe und den 23-Flaechen der Farbliste
-    M['Lippe_oben'] = {f for f in M['Lippensaum'] if f.startswith('22|')} - M['Maulinneres_lage']
+    # Runde 4 (Pruefer r3 Nr. 5): Oberlippe nach LAGE (g_maul.py: Rand der Maul-Oeffnung am Kopf 22, auch bei geschlossenem Maul sichtbar),
+    # nicht mehr aus der Farbliste 'Lippensaum' (die enthielt Gaumenflaechen, z. B. 22|1|40 und 49)
+    M['Lippe_oben'] = set(ML_LAGE['oberlippe_lage']) - M['Maulinneres_lage'] - M['Zahn'] - au
     # Hals-Unterseite: Flaechennormale (Pose Bild 2, nach aussen orientiert) zeigt nach unten (PSX +y), n_y >= 0,5
     lage, gier, clip, bild = ka.stand(2)
     W = pose_welt(ka.mo, ka.kf(clip, bild))
