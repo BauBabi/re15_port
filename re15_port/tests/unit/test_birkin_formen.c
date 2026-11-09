@@ -18,7 +18,8 @@
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
  * Zweig r41/sichel_v8 (V8 Runde 5 nach Pruefung V8 r4: Brust auf Original-Zeile 481 mit eigener UV, fast weisse Texel durch Abbildungen
- * auf Original-Haut ersetzt, Spiel-Asset sha256 c44e73f8...; Gegenprobe V8 Runde 4 10d02173: rot, Brust 34 Flaechen auf 488).
+ * auf Original-Haut ersetzt; dazu P4 Schwanz-Unterseite fleischig auf Zeile 495 (72 Flaechen der Meshes 16-22, Oberseite 487); Gegenprobe
+ * V8 Runde 4 10d02173: rot, Brust 34 Flaechen auf 488, Schwanz 0 Flaechen auf 495).
  * Bis Runde 4 (V8 Koerperbau nach Nutzer-Skizze, Runde 4 nach Pruefung V8 r3): Spiel-Asset = V8 Runde 4 (sha256 10d02173...,
  * v8_kette.sh); dazu CLUT_ZEILEN 16, Zeilen 493 / 494 / 495 = Original-EM30-Zeilen 480 / 481 / 482 BYTEGLEICH (Orchestrator O1: "dessen
  * Texelstruktur UND dessen Original-Paletteneintraege der Zeilen 480-482"). Runde 4 (tools/r41_sichel/v8/adern_r4.py): Mesh 8 ausser der
@@ -357,13 +358,20 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                 geaendert += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
         } else {
             CHECK(b->quad_count > 0, "%s: Schwanzglied-Mesh %d leer", name, m);
+            /* V8 Runde 5 (P4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist durchweg grau";
+             * tools/r41_sichel/v8/unterseite_r5.py): die Flaechen der Unterseite (Mittel |theta| < 130 Grad gegen die Innenrichtung des Bogens,
+             * ohne Deckel und Wurzelflaechen) liegen auf Zeile 495 (= Original-EM30-Zeile 482) mit UV auf dem Haut/Fleisch-Verlauf des
+             * Original-Unterarms (Textur-Seite 2); alle uebrigen (Oberseite, V6-Deckel) bleiben auf der Schwanzzeile 487. Gemessen am Asset
+             * (v8_bau.py Protokoll "unterseite"): 16: 8, 17: 8, 18: 16, 19: 8, 20: 8, 21: 8, 22: 16 = 72 Flaechen. */
+            static const int UNTEN[7] = {8, 8, 16, 8, 8, 8, 16};
+            int auf487 = zeile_zahl(b, 487), auf495 = zeile_zahl(b, Z_X3);
+            CHECK(auf495 == UNTEN[m - 16] && auf487 + auf495 == b->quad_count + b->triangle_count,
+                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 487, %d gesamt (V8 Runde 5 Unterseite)", name, m, auf495,
+                  UNTEN[m - 16], auf487, b->quad_count + b->triangle_count);
             for (int q = 0; q < b->quad_count; q++)
-                CHECK(b->quad_uvs[q].clut == CLUT_SCHWANZ, "%s: Schwanzglied %d Quad %d CLUT %04x statt 487", name, m, q,
-                      b->quad_uvs[q].clut);
-            /* V6 drei Punkte 2. (Deckel je Rohrende auf Zeile 487): auch die Dreiecke der Glieder liegen auf der Schwanzzeile */
-            for (int t = 0; t < b->triangle_count; t++)
-                CHECK(b->triangle_uvs[t].clut == CLUT_SCHWANZ, "%s: Schwanzglied %d Dreieck %d CLUT %04x statt 487", name, m, t,
-                      b->triangle_uvs[t].clut);
+                if (b->quad_uvs[q].clut == (uint16_t)(Z_X3 << 6))
+                    CHECK((b->quad_uvs[q].page & 0xF) == 2, "%s: Schwanzglied %d Quad %d (Unterseite) Textur-Seite %d statt 2", name, m, q,
+                          b->quad_uvs[q].page & 0xF);
             for (int q = 0; q < b->quad_count; q++) {
                 const re15_md1_quad_t *f = &b->quads[q];
                 CHECK(f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count &&
