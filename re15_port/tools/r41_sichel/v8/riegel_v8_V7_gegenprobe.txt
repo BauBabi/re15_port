@@ -11,5 +11,3 @@ S6 Boden: 70 von 912 Keyframes unter der tiefsten Koerperecke [205, 206, 207, 20
 S7 Adern: (a) Herkunft ok; (b) Oberarm 13 22.8 % (35-59); (c) Rumpf 8 lok x<0 0.0 % (25-80) [lok z<0: 0.2 %]; (d) Flecken 15 (Original 27) -> ROT
 S8 Technik: 13 Zeilen, Hoehe 3328, Felder gueltig True, 23 Meshes, 23 Knochen, 21 Clips -> GRUEN
 SUMME: 2 von 8 gruen; ROT: S1, S2, S3, S4, S6, S7
-V5f S5 {'mesh9': True, 'zeile486': True, 'texel': False, 'n_texel': 6501, 'ok': False}
-V8 S5 {'mesh9': True, 'zeile486': True, 'texel': True, 'n_texel': 6501, 'ok': True}

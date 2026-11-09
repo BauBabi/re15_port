@@ -1,3 +1,5 @@
+V8 Runde 2 (Asset d0ef852c, Code 6dcbb3604), Baum r41_sichel_v8/re15_port/build, 2026-11-09
+build: === LOCAL-BUILD-OK (build)
 ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
 100% tests passed, 0 tests failed out of 8
 ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":

@@ -8,6 +8,7 @@
 04_rundum.jpg         V8 und V7 rundum (birkin_buehne.rundum, Clip 17 Bild 47, 8 Richtungen)
 05_adern_rechts.png   Vorlage | V7 | V8 | Original-EM30 (CDEMD0.EMS Typ 0x30, gleiche Pose PV), Ausschnitt (W)-rechte Flanke / Ruecken
 06_spiel.jpg          Spielbilder der Szene (lauf_v4.sh RE15_FRAMEDUMP) V7 | V8 an gleichen Bildnummern
+07_bogen_jedes7.jpg   Bogen: jedes 7. Spielbild F225-F450 der V8-Szene (320 x 240)
 08_ruecken_hinten.jpg Runde 2 (Sicht-Pruefer V8 r1: "keine Tafel vergroessert den Ruecken von hinten in der Szene"): Spielbilder
                       F322-F346 (Birkin von hinten), Ausschnitt um den Ruecken x3, V7 | V8
 Nutzerlinien = Pixel, in denen Darstellung.png von Darstellung_Vorlage.png um mehr als 40 (Kanal) abweicht (wie Messblatt m2_linien).
@@ -124,6 +125,20 @@ def main():
                for i in range(0, len(zeilen), 2)]
         speichern(kopf(np.vstack(par), 'SF V8 06: Spielbilder Hangar 50A0 (lauf_v4.sh FRAMEDUMP, je Paar V7 | V8, gleiche Bildnummer)'),
                   os.path.join(a.aus, '06_spiel.jpg'))
+        # 07 Bogen jedes 7. Bild (V8)
+        ks = []
+        for n in range(225, 451, 7):
+            pp = os.path.join(a.szene8, 'fd', 'f%06d.ppm' % n)
+            if os.path.exists(pp):
+                k = cv2.resize(bild(pp), (320, 240), interpolation=cv2.INTER_AREA)
+                k = np.ascontiguousarray(k); schrift(k, 'F%d' % n, 6, 20)
+                ks.append(k)
+        if ks:
+            while len(ks) % 6:
+                ks.append(np.zeros_like(ks[0]))
+            speichern(kopf(np.vstack([np.hstack(ks[i:i + 6]) for i in range(0, len(ks), 6)]),
+                           'SF V8 07: %s Szene Hangar 50A0, jedes 7. Bild F225-F450 (lauf_v4.sh FRAMEDUMP)' % n8),
+                      os.path.join(a.aus, '07_bogen_jedes7.jpg'))
         # 08 Ruecken von hinten (Spiel)
         zeilen = []
         for n in (322, 328, 334, 340, 346):
@@ -134,8 +149,8 @@ def main():
             for nm, pp in (('V7', p7), (n8, p8)):
                 b_ = bild(pp)
                 h_, w_ = b_.shape[:2]
-                x0, y0 = int(w_ * 0.05), int(h_ * 0.05)
-                ks.append(kachel(b_, (x0, y0, x0 + int(w_ * 0.45), y0 + int(h_ * 0.6)), 2, '%s F%d' % (nm, n)))
+                x0, y0 = int(w_ * 0.31), int(h_ * 0.25)        # Birkin von hinten in F322-F346 (960 x 720: x 300-720, y 180-560)
+                ks.append(kachel(b_, (x0, y0, x0 + int(w_ * 0.44), y0 + int(h_ * 0.53)), 2, '%s F%d' % (nm, n)))
             zeilen.append(np.hstack(ks))
         if zeilen:
             speichern(kopf(np.vstack(zeilen), 'SF V8 08: Ruecken von hinten im Spiel (FRAMEDUMP 960x720, Ausschnitt x2), V7 | V8'),

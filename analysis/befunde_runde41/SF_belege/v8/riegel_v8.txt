@@ -1,13 +1,13 @@
 Riegel V8 (Messblatt V8 Abschnitt 7) fuer C:\workspace\git\reAi_v2\.claude\worktrees\r41_sichel_v8\re15_port\shared_assets\PSX\EMD\EM30_HANGAR.EMD
-sha256 fa31156c3b17dd4fe0946f3fad334e597eac91bdc9aa5168280566fd4b33a8ff
+sha256 d0ef852c9070c7a970b53301c961c059f02f166befb525792ecbd19705e2911a
 Referenz V7 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6
-S1 Kontur T: Mittel 3.0 Max 7.0 px (Soll <= 4 / <= 8) -> GRUEN
-   d je Station (px, + = Modell weiter innen): [-5.0, -6.0, -6.0, -4.0, 2.0, -5.0, -1.0, -7.0, -4.0, -2.0, -2.0, -2.0, -1.0, 0.0, 3.0, -2.0, -4.0, -3.0, 4.0, -1.0, -2.0, -1.0]
-S2 Uebergang J: (a) Mittel 3.7 Max 7 (<= 4 / <= 6); (b) Sattel 3.7 bei x 358 (<= 2); (c) Huckel an J 5.0 bei x 406 (<= 3) -> ROT
-S3 Ruecken/H/K: (a) Kuppe 3.0 (<= 4); (b) H 3.0 bei x 423 (5-10, x 428-445); (c) weitere []; (d) Sattel Kopf 2.3 bei x 391 (<= 2); (e) K 3.0 (<= 3) -> ROT
-S4 Breite: Wurzel 59.0 (>= 55), s 90-130 [42.6, 40.0, 40.3] (>= 36), Ende 6.0 (<= 10), monoton True; Folge [59.0, 53.1, 53.0, 43.9, 44.5, 42.6, 40.0, 40.3, 21.1, 21.3, 8.8, 8.7, 6.4, 6.4, 6.0] -> GRUEN
+S1 Kontur T: Mittel 1.8 Max 5.0 px (Soll <= 4 / <= 8) -> GRUEN
+   d je Station (px, + = Modell weiter innen): [-3.0, -3.0, -1.0, 1.0, 5.0, -2.0, 0.0, -5.0, -1.0, 2.0, 1.0, 0.0, 1.0, 0.0, 2.0, -2.0, -3.0, -1.0, 5.0, 0.0, -1.0, -1.0]
+S2 Uebergang J: (a) Mittel 1.7 Max 5 (<= 4 / <= 6); (b) Sattel 1.7 bei x 382 (<= 2); (c) Huckel an J 3.0 bei x 397 (<= 3) -> GRUEN
+S3 Ruecken/H/K: (a) Kuppe 4.0 (<= 4); (b) H 6.8 bei x 437 (5-10, x 428-445); (c) weitere []; (d) Sattel Kopf 1.5 bei x 430 (<= 2); (e) K 3.0 (<= 3) -> GRUEN
+S4 Breite: Wurzel 56.9 (>= 55), s 90-130 [38.8, 37.9] (>= 36), Ende 5.9 (<= 10), monoton True; Folge [56.9, 51.1, 50.0, 42.5, 42.2, 41.2, 38.8, 37.9, 20.4, 20.3, 8.6, 8.5, 6.3, 6.2, 5.9] -> GRUEN
 S5 Gesicht: Mesh 9 True, Zeile 486 True, Texel True (6501) -> GRUEN
 S6 Boden: 0 von 912 Keyframes unter der tiefsten Koerperecke []; Szene {'takte': 144, 'tiefstes_y': -66, 'unter_boden': 0} -> GRUEN
-S7 Adern: (a) Herkunft ok; (b) Oberarm 13 43.3 % (35-59); (c) Rumpf 8 lok x<0 29.8 % (25-80) [lok z<0: 32.7 %]; (d) Flecken 19 (Original 27) -> GRUEN
-S8 Technik: 15 Zeilen, Hoehe 3840, Felder gueltig True, 23 Meshes, 23 Knochen, 21 Clips -> GRUEN
-SUMME: 6 von 8 gruen; ROT: S2, S3
+S7 Adern: (a) Herkunft ok; (b) Oberarm 13 42.7 % (35-59); (c) Rumpf 8 lok x<0 5.3 % (25-80) [lok z<0: 5.0 %]; (d) Flecken 26 (Original 27) -> ROT
+S8 Technik: 16 Zeilen, Hoehe 4096, Felder gueltig True, 23 Meshes, 23 Knochen, 21 Clips -> GRUEN
+SUMME: 7 von 8 gruen; ROT: S7
