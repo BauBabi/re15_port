@@ -2040,15 +2040,11 @@ static int key_begehbar(int32_t x, int32_t z)
     re15_collision_objects_actor(&nx, &nz, 0);
     return nx == x && nz == z;
 }
-/* Beste Lage fuer Kamera cut (s. Kopf); r_nah = hoechster Abstand zum naechsten Knochen; 0 = keine. */
-static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t r_nah, gsz_lage_t *out)
+/* Rasterbereich = Huelle der Wasserzonen (key_suche, kamera_gebiet); 0 = keine Wasserzone. */
+static int wasser_huelle(int32_t *px0, int32_t *px1, int32_t *pz0, int32_t *pz1)
 {
-    re15_camera_view_t v;
-    if (!kam_sicht(cut, &v)) return 0;
-    int32_t sp[GSZ_SPIELER_PUNKTE][3];
-    const int nsp = spieler_punkte(sp);
     int32_t x0 = 0x7fffffff, x1 = -0x7fffffff, z0 = 0x7fffffff, z1 = -0x7fffffff;
-    for (int i = 0; i < RE15_AOT_MAX; i++) {                  /* Rasterbereich = Huelle der Wasserzonen */
+    for (int i = 0; i < RE15_AOT_MAX; i++) {
         const re15_aot_t *a = &g_aot.slots[i];
         if (!a->active || a->type != RE15_AOT_TYPE_WATER) continue;
         if (a->has_quad) {
@@ -2066,7 +2062,100 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
         }
     }
     if (x0 > x1 || z0 > z1) return 0;
-    x0 = (x0 / GSZ_RASTER) * GSZ_RASTER; z0 = (z0 / GSZ_RASTER) * GSZ_RASTER;
+    *px0 = (x0 / GSZ_RASTER) * GSZ_RASTER; *pz0 = (z0 / GSZ_RASTER) * GSZ_RASTER; *px1 = x1; *pz1 = z1;
+    return 1;
+}
+/* ==== Runde 41 Integration - Nutzerbefund 2026-11-09 Punkt 3 (PORT-WAHL, Beleg Nutzer-Wortlaut): KAMERA-GEBIET =====================================
+ * Nutzer woertlich: "Ich bin ausversehen nach dem Tot des Aligators die Leiter hoch und wieder runter. Ich konnte den Schlüssel sehen, aber aufnehmen konnte ich
+ * ihn nicht mehr." Gemessen (Untersucher gator_nb/schluessel, Leiche des Nutzers (-5485,-23074) Clip 9 Gier 800): die Lagewahl nahm die Zonenkamera mit dem
+ * groessten Schluessel-Bild - Cut 7 bei (-6600,-23400). Cut 7 ist aber nur im Westkanal aktiv: dort zeigt er den Schluessel 17 Bildpunkte unter den Fuessen der
+ * Figur (4252 entfernt), am Schluessel selbst laeuft Cut 0 (5,7 Bildpunkte). Die Aufnahme-Zone selbst war in beiden Besuchen da (200/200 Drucke).
+ * Mechanik des angezeigten Cuts = FUN_80014230 (PSX.EXE, selbst disassembliert): @0x80014254 lbu v1,22(a0) / @0x8001425c bne v1,v0 - nur Saetze mit
+ * cam_from == laufender Cut; @0x80014260 addiu s1,a0,20 - der Anker-Satz 0 jeder Gruppe wird nie getestet; @0x80014298 jal 0x80014368 (Punkt im Viereck);
+ * @0x800142a8 lbu a0,1(s0) cam_to -> @0x800142ac jal 0x800142f4. Ein Cut wechselt also nur beim Betreten eines Austritts-Vierecks (cam_from == Cut) und wird
+ * beim Betreten eines Eintritts-Vierecks (cam_to == Cut) aktiv. Sein GEBIET ist darum: von seinen Eintritts-Vierecken aus erreichbar (Figur begehbar im
+ * Wasser, key_begehbar), ohne ein eigenes Austritts-Viereck zu betreten. Die Lagewahl sucht nur noch dort - Bild und Ort der Einstellung stimmen ueberein.
+ * Keine neue Zahl: Raster GSZ_RASTER, Zonen aus der RVD des Raums, Punkttest FUN_80014368, Begehbarkeit wie key_begehbar. Band: Saetze mit dem Boden-Byte
+ * 0xFF (jedes Band) oder 0 (Wasserboden) zaehlen (Port-Gate re15_rdt_zone_t.floor). Pruefhaken re15_gatorszene_r41_key_gebiet_alt_setzen(1) = 0b86e36c6. */
+#define GEB_PASS  1u    /* begehbarer Wasserpunkt (wie key_suche: Wasserzone + key_begehbar) */
+#define GEB_IN    2u    /* im Gebiet des gerechneten Cuts */
+#define GEB_AUS   4u    /* in einem Austritts-Viereck des gerechneten Cuts */
+static struct { uint8_t *m; int32_t x0, z0; int nx, nz, cut; } s_geb = { NULL, 0, 0, 0, 0, -1 };
+static int s_key_gebiet_alt = 0;
+void re15_gatorszene_r41_key_gebiet_alt_setzen(int an) { s_key_gebiet_alt = an; }
+static void gebiet_frei(void) { free(s_geb.m); s_geb.m = NULL; s_geb.cut = -1; s_geb.nx = s_geb.nz = 0; }
+static int zone_viereck(int i, int32_t x, int32_t z)
+{
+    const re15_rdt_zone_t *zn = &g_room_rdt.zones[i];
+    if (i == 0 || g_room_rdt.zones[i - 1].cam_from != zn->cam_from) return 0;   /* Anker-Satz 0 der Gruppe: nie getestet (@0x80014260) */
+    if (zn->floor != 0xFF && zn->floor != 0) return 0;                          /* Boden-Byte: jedes Band oder Wasserboden */
+    return re15_aot_point_in_quad_fun80014368(x, z, zn->xs, zn->zs);
+}
+/* Gebiet des Cuts cut auf dem Raster der Huelle (x0, z0) rechnen; 0 = kein Raster (dann filtert kamera_gebiet nicht) */
+static int gebiet_rechnen(int cut, int32_t x0, int32_t x1, int32_t z0, int32_t z1)
+{
+    const int nx = (int)((x1 - x0) / GSZ_RASTER) + 1, nz = (int)((z1 - z0) / GSZ_RASTER) + 1;
+    if (nx <= 0 || nz <= 0) return 0;
+    if (!s_geb.m || s_geb.x0 != x0 || s_geb.z0 != z0 || s_geb.nx != nx || s_geb.nz != nz) {
+        gebiet_frei();
+        s_geb.m = (uint8_t *)malloc((size_t)nx * (size_t)nz);
+        if (!s_geb.m) return 0;
+        s_geb.x0 = x0; s_geb.z0 = z0; s_geb.nx = nx; s_geb.nz = nz;
+        for (int iz = 0; iz < nz; iz++)
+            for (int ix = 0; ix < nx; ix++) {
+                const int32_t x = x0 + ix * GSZ_RASTER, z = z0 + iz * GSZ_RASTER;
+                s_geb.m[iz * nx + ix] = (re15_aot_water_at(x, z) && key_begehbar(x, z)) ? (uint8_t)GEB_PASS : 0;
+            }
+    }
+    if (s_geb.cut == cut) return 1;
+    s_geb.cut = cut;
+    for (int iz = 0; iz < nz; iz++)
+        for (int ix = 0; ix < nx; ix++) {
+            uint8_t *c = &s_geb.m[iz * nx + ix];
+            *c &= (uint8_t)GEB_PASS;
+            if (!(*c & GEB_PASS)) continue;
+            const int32_t x = x0 + ix * GSZ_RASTER, z = z0 + iz * GSZ_RASTER;
+            int ein = 0, aus = 0;
+            for (int i = 0; i < g_room_rdt.zone_count; i++) {
+                const re15_rdt_zone_t *zn = &g_room_rdt.zones[i];
+                if ((int)zn->cam_from == cut && !aus && zone_viereck(i, x, z)) aus = 1;
+                else if ((int)zn->cam_to == cut && (int)zn->cam_from != cut && !ein && zone_viereck(i, x, z)) ein = 1;
+            }
+            if (aus) *c |= GEB_AUS;
+            else if (ein) *c |= GEB_IN;
+        }
+    /* Fuellung (4er-Nachbarschaft) mit wechselnden Durchlaeufen vor/zurueck bis zum Stillstand */
+    for (int lauf = 0, neu = 1; neu; lauf++) {
+        neu = 0;
+        const int vor = !(lauf & 1);
+        for (int k = 0; k < nx * nz; k++) {
+            const int j = vor ? k : nx * nz - 1 - k, ix = j % nx, iz = j / nx;
+            uint8_t *c = &s_geb.m[j];
+            if ((*c & (GEB_PASS | GEB_IN | GEB_AUS)) != GEB_PASS) continue;
+            if ((ix > 0 && (s_geb.m[j - 1] & GEB_IN)) || (ix < nx - 1 && (s_geb.m[j + 1] & GEB_IN)) ||
+                (iz > 0 && (s_geb.m[j - nx] & GEB_IN)) || (iz < nz - 1 && (s_geb.m[j + nx] & GEB_IN))) { *c |= GEB_IN; neu = 1; }
+        }
+    }
+    return 1;
+}
+/* 1 = der Rasterpunkt (x, z) liegt im Gebiet von cut (oder es gibt kein Raster / Pruefhaken alt) */
+static int kamera_gebiet(int cut, int32_t x, int32_t z)
+{
+    if (s_key_gebiet_alt || !s_geb.m || s_geb.cut != cut) return 1;
+    const int ix = (int)((x - s_geb.x0) / GSZ_RASTER), iz = (int)((z - s_geb.z0) / GSZ_RASTER);
+    if (ix < 0 || iz < 0 || ix >= s_geb.nx || iz >= s_geb.nz) return 0;
+    return (s_geb.m[iz * s_geb.nx + ix] & GEB_IN) != 0;
+}
+/* Beste Lage fuer Kamera cut (s. Kopf); r_nah = hoechster Abstand zum naechsten Knochen; 0 = keine. */
+static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t r_nah, gsz_lage_t *out)
+{
+    re15_camera_view_t v;
+    if (!kam_sicht(cut, &v)) return 0;
+    int32_t sp[GSZ_SPIELER_PUNKTE][3];
+    const int nsp = spieler_punkte(sp);
+    int32_t x0, x1, z0, z1;
+    if (!wasser_huelle(&x0, &x1, &z0, &z1)) return 0;
+    if (!s_key_gebiet_alt) (void)gebiet_rechnen(cut, x0, x1, z0, z1);
     int gefunden = 0;
     for (int32_t z = z0; z <= z1; z += GSZ_RASTER)
         for (int32_t x = x0; x <= x1; x += GSZ_RASTER) {
@@ -2078,6 +2167,7 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
                 if (dx * dx + dz * dz < d2) d2 = dx * dx + dz * dz;
             }
             if (d2 > (int64_t)r_nah * r_nah) continue;                     /* nicht mehr "in der Naehe seiner Leiche" */
+            if (!kamera_gebiet(cut, x, z)) continue;                         /* Nutzerbefund 2026-11-09 Punkt 3: nur, wo diese Kamera die Figur zeigt */
             const int32_t wy0 = re15_aot_water_at(x, z);
             if (!wy0) continue;
             const int32_t p[3] = { x, wy0, z };
@@ -2162,6 +2252,7 @@ static void key_lage_bei_tod(void)
     leiche_mitte_konst(&s_key_x, &s_key_z);
     s_key_y = GSZ_WASSER_Y; s_key_rx = 0; s_key_rz = 0; s_key_cut = -1; s_key_stufe = -1;
     s_key_lage_ok = 1; s_key_neigung_offen = 0;
+    gebiet_frei();                                          /* Nutzerbefund 2026-11-09 Punkt 3: Gebiets-Raster je Tod neu (Raum, Huelle, Kollision) */
     re15_blink_r41_setzen((uint16_t)g_current_room_id, RE15_GSZ_KEY_OBJ, 1);   /* fuer die Spitzen-Rechnung (re15_blink_r41_lichtctx) */
     if (!g) return;
     static int32_t pk[GSZ_LEICHE_PUNKTE][3];

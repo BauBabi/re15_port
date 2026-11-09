@@ -684,6 +684,108 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
                hf > 0 ? "vor der Kamera" : "hinter der Kamera", (int)(hh / 10), (int)(hh % 10 < 0 ? -(hh % 10) : hh % 10));
     }
 }
+/* ---- Teil: tod_gebiet(_elza) (Runde 41 Integration, Nutzerbefund 2026-11-09 Punkt 3) ------------------------------------------------------
+ * Nutzer woertlich: "Ich bin ausversehen nach dem Tot des Aligators die Leiter hoch und wieder runter. Ich konnte den Schlüssel sehen, aber aufnehmen
+ * konnte ich ihn nicht mehr." Gemessen (Untersucher gator_nb/schluessel): mit der Leiche des Nutzers (gator_boss.log "RE2 R1 ende (Leiche)
+ * pos=(-5485,-23074)", Gier 800, Clip 9 letztes Bild) lag der Schluessel in Cut 7 - Cut 7 zeigt ihn nur im Westkanal (unter den Fuessen der Figur), am
+ * Schluessel laeuft Cut 0. Ablauf je Leiche wie im Spiel: Tod (Szenen-Takt legt Schluessel + Einstellung), Einstellung zu Ende, Leiter hoch (ROOM2080) und
+ * wieder runter (ROOM2090 Ankunft (-8200,0,-25550) Cut 0), die Figur geht in Bildern (echter RVD-Wechsel FUN_80014230 im Port) einen L-Weg ueber x -7000
+ * zum Schluessel. Riegel: angezeigter Cut am Schluessel == Schluessel-Kamera (re15_gatorszene_r41_key_kamera) und die Aktionstaste dort startet die Aufnahme
+ * (re15_item_modal_active). Gegenprobe Pruefhaken re15_gatorszene_r41_key_gebiet_alt_setzen(1) = Stand 0b86e36c6: Nutzer-Leiche Cut 7 gegen 0 = rot. */
+static int32_t s_tg_kx, s_tg_ky, s_tg_kz; static int s_tg_kc;
+static int tg_tod_legen(uint16_t raum, int32_t gx, int32_t gz, int16_t gier)
+{
+    re15_game_state_init(); re15_inv_load_briefing();
+    re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, 1);
+    if (room_boot(raum, -8200, 0, -25550, 0, 0) != 0) return -1;
+    if (!gator_bank()) return -1;
+    re15_enemy_ai_set_paused(1);
+    re15_actor_t *g = gator_setzen();
+    re15_enemy_bank_t *bk = re15_enemy_find(0x23u);
+    if (!g || !bk || !bk->ok || bk->anim.clip_count <= 9) return -1;
+    g->x = gx; g->z = gz; g->y = -1200; g->rot_y = gier; g->state = 7; g->render_scale_q12 = 2731;   /* GB_SCALE_Q12 = 2/3 */
+    g->motion = 9; g->anim_frame = (uint16_t)(bk->anim.clips[9].frame_count - 1); g->anim_frac = 0; g->anim_prev_valid = 0;   /* R1-Leiche = Clip-9-Endpose */
+    g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0; s_shown = 0;
+    frame(0, 0);
+    const int ks = prop_von(RE15_GSZ_KEY_OBJ);
+    if (ks < 0) return -1;
+    s_tg_kx = g_scd.props[ks].x; s_tg_ky = g_scd.props[ks].y; s_tg_kz = g_scd.props[ks].z; s_tg_kc = re15_gatorszene_r41_key_kamera();
+    for (int f = 0; f < 200; f++) frame(0, 0);   /* Einstellung zu Ende (Halt 90) */
+    return 0;
+}
+static void tg_gehen(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int32_t dx = x1 - x0, dz = z1 - z0;
+    const int n = (int)(re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz)) / 60) + 1;   /* ~ Gehtempo je Bild */
+    for (int i = 1; i <= n; i++) {
+        pl->x = x0 + (int32_t)(((int64_t)dx * i) / n); pl->z = z0 + (int32_t)(((int64_t)dz * i) / n); pl->y = 0;
+        const int vor = s_shown;
+        frame(0, 0);
+        if (getenv("G2_TG_SPUR") && (s_shown != vor || (i % 40) == 0))   /* Werkzeug: Kamerawechsel auf dem Weg */
+            printf("      Weg (%d,%d) -> (%d,%d): Cut %d -> %d (cam_id %d, auto %d, pause 0x%x, Soll (%d,%d))\n", (int)pl->x, (int)pl->z, (int)x1, (int)z1, vor, s_shown, (int)g_scd.cam_id,
+                   (int)g_scd.cut_auto_enabled, (unsigned)g_re15_pauseflags, (int)(x0 + (int32_t)(((int64_t)dx * i) / n)), (int)(z0 + (int32_t)(((int64_t)dz * i) / n)));
+    }
+}
+/* 1 = Gegenprobe-Fall rot (Cut am Schluessel != Schluessel-Kamera) */
+static int tg_fall(const char *name, int elza, int32_t gx, int32_t gz, int16_t gier, int pruef)
+{
+    const uint16_t r2090 = (uint16_t)(0x2090 + elza), r2080 = (uint16_t)(0x2080 + elza);
+    if (tg_tod_legen(r2090, gx, gz, gier) != 0) { printf("  FEHLER: %s: Tod/Schluessel nicht gelegt\n", name); g_fail++; return 0; }
+    const int32_t kx = s_tg_kx, kz = s_tg_kz; const int kc = s_tg_kc;
+    if (room_boot(r2080, -9950, -14400, -25700, 2048, 2) != 0) { g_fail++; return 0; }       /* Leiter hoch */
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    if (room_boot(r2090, -8200, 0, -25550, 0, 0) != 0) { g_fail++; return 0; }              /* und wieder runter: Ankunft Cut 0 */
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = -8200; pl->y = 0; pl->z = -25550; pl->rot_y = 0; pl->hp = 100;
+    /* Zonenkamera an wie im freien Spiel (Nutzer-Sitzung befund.log 07:02:45: nach der Rueckkehr C0 -> C7 im Westkanal); der Harness-Raumaufbau setzt
+     * das Bit 0x100 (DAT_800aca3c, Gate @0x8001cce0) nicht selbst zurueck - Form wie teil_tod_explosion */
+    g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0; g_scd.cut_auto_enabled = 1; s_shown = 0;
+    tg_gehen(-8200, -25550, -7000, -25550);
+    tg_gehen(-7000, -25550, -7000, kz);
+    tg_gehen(-7000, kz, kx, kz);
+    for (int f = 0; f < 3; f++) frame(0, 0);
+    const int am = s_shown;
+    int sx = -1, sy = -1; int32_t vz = 0; const int32_t kp[3] = { kx, s_tg_ky, kz };
+    const int fd = kam_tiefe(am, kp, &sx, &sy, &vz);
+    const int px10 = fd > 0 && vz > 0 ? (int)(1800 * fd / vz) : 0;
+    /* Aufnahme: Figur 300 vor dem Schluessel, Blick auf ihn, Aktionstaste (Vorwaerts-Punkt 620 im Item-Rechteck 1000 x 1000) */
+    pl->x = kx - 300; pl->z = kz; pl->y = 0; pl->rot_y = 0; pl->hp = 100;
+    frame(0, 0); frame(0, 0);
+    int auf = 0;
+    for (int f = 0; f < 20 && !auf; f++) {
+        frame(f < 3 ? RE15_PAD_BIT_SQUARE : 0, f == 0 ? RE15_PAD_BIT_SQUARE : 0);
+        if (re15_item_modal_active()) auf = 1;
+    }
+    {   /* Aufnahme-Modal zu Ende fuehren (Aktionstaste), sonst haelt es den naechsten Lauf an (re15_game_step kehrt bei aktivem Modal frueh zurueck) */
+        extern void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held);
+        for (int f = 0; f < 600 && re15_item_modal_active(); f++)
+            re15_item_modal_tick((f % 8) == 0 ? (uint16_t)(RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_CROSS) : 0, 0);
+        if (re15_item_modal_active()) printf("    %s: Aufnahme-Modal endet nicht\n", name);
+    }
+    printf("    %s: Leiche (%d,%d) Gier %d -> Schluessel (%d,%d) Kamera %d; nach Leiter + Weg am Schluessel angezeigt Cut %d (Schluessel dort %d.%d Bildpunkte), "
+           "Aufnahme %s\n", name, (int)gx, (int)gz, (int)gier, (int)kx, (int)kz, kc, am, px10 / 10, px10 % 10, auf ? "ja" : "NEIN");
+    if (pruef) {
+        PRUEF(am == kc, "%s: am Schluessel zeigt das Spiel die Kamera der Einstellung (angezeigt Cut %d, Schluessel-Kamera %d)", name, am, kc);
+        PRUEF(auf, "%s: die Aktionstaste am Schluessel startet die Aufnahme", name);
+    }
+    return am != kc;
+}
+static void teil_tod_gebiet(int elza)
+{
+    printf("== tod_gebiet%s (Nutzerbefund 2026-11-09 Punkt 3: Schluessel sichtbar, aber nicht aufzunehmen) ==\n", elza ? "_elza" : "");
+    /* Leichen: die des Nutzers (gator_boss.log 2026-11-09 "RE2 R1 ende (Leiche) pos=(-5485,-23074)", Start-Gier 800), die Lagen des Teils tod und des exe-Laufs A */
+    static const struct { const char *n; int32_t x, z; int16_t g; } L[4] = {
+        { "nutzer", -5485, -23074, 800 }, { "todesrolle", -5416, -22578, 1024 }, { "r1", 3413, -25001, 2048 }, { "lauf_a", -5500, -8900, 800 } };
+    re15_gatorszene_r41_key_gebiet_alt_setzen(0);
+    for (int i = 0; i < 4; i++) (void)tg_fall(L[i].n, elza, L[i].x, L[i].z, L[i].g, 1);
+    printf("  -- Gegenprobe Stand 0b86e36c6 (Pruefhaken key_gebiet_alt) --\n");
+    re15_gatorszene_r41_key_gebiet_alt_setzen(1);
+    const int rot = tg_fall("nutzer_alt", elza, L[0].x, L[0].z, L[0].g, 0);
+    re15_gatorszene_r41_key_gebiet_alt_setzen(0);
+    PRUEF(rot, "Gegenprobe 0b86e36c6: Nutzer-Leiche -> Schluessel-Kamera und angezeigter Cut am Schluessel verschieden (rot)");
+}
 static void teil_tod(void)
 {
     printf("== tod ==\n");
@@ -1329,6 +1431,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "schluessel")) teil_schluessel();
     if (alle || !strcmp(teil, "tod"))        teil_tod();
     if (alle || !strcmp(teil, "tod_explosion")) teil_tod_explosion();
+    if (alle || !strcmp(teil, "tod_gebiet"))      teil_tod_gebiet(0);   /* Runde 41 Integration, Nutzerbefund 2026-11-09 Punkt 3 */
+    if (alle || !strcmp(teil, "tod_gebiet_elza")) teil_tod_gebiet(1);
     if (alle || !strcmp(teil, "szene"))      teil_szene(0);
     if (alle || !strcmp(teil, "szene_elza")) teil_szene(1);
     if (alle || !strcmp(teil, "abstand"))    teil_abstand(0);

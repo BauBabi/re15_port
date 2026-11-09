@@ -46,7 +46,10 @@ target_compile_definitions(test_r41_gatorszene PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r41_gatorszene PRIVATE m)
 endif()
-foreach(_teil spinnen programme leiche texte tor schluessel tod tod_explosion szene szene_elza abstand abstand_elza)
+#   unit_r41_gatorszene_tod_gebiet(_elza)  Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 3 "Schlüssel sehen, aber aufnehmen konnte ich ihn nicht mehr"):
+#                                   Tod (Leiche des Nutzers + drei weitere), Leiter hoch und runter, zu Fuss zum Schluessel - dort zeigt das Spiel die Kamera der
+#                                   Einstellung und die Aktionstaste nimmt ihn auf; Gegenprobe Pruefhaken key_gebiet_alt (0b86e36c6): Cut 7 gegen 0 = rot
+foreach(_teil spinnen programme leiche texte tor schluessel tod tod_explosion tod_gebiet tod_gebiet_elza szene szene_elza abstand abstand_elza)
     add_test(NAME unit_r41_gatorszene_${_teil} COMMAND test_r41_gatorszene ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorszene_${_teil} PROPERTIES TIMEOUT 600)
