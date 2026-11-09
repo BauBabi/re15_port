@@ -1,5 +1,5 @@
 {
- "regel": "Auftrag 3: Krallen-Vorschlag als Geometrie-Kandidat (nicht im Asset).\nvorn links: 28 mit K5c-Geometrie zurueck. vorn rechts: 31 bleibt; 19 mit K5c-Lage zurueck und genau EIN Laengenfaktor entlang der eigenen\nAchse (Wurzel -> Spitze) aus der gemessenen Nutzer-Spitze; 20 und 29 nur um ihre Wurzel (Knochen-Ursprung an der Hand) gedreht, Laenge wie K5c,\nbis sie in Bild 2 ganz in der vom Schriftzug verdeckten Flaeche liegen und kein Pixel ueber sichtbarem Hintergrund (Annahme nach Nutzer-Wortlaut\n\"vorne rechts hat er wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift.\"). hinten unveraendert.\nRunde 2: 20 und 29 bleiben eingezogen (Asset), weil keine Drehung die Annahme erfuellt (Pruefer r1 Nr. 12); Frage an den Nutzer.",
+ "regel": "Auftrag 3: Krallen-Vorschlag als Geometrie-Kandidat (nicht im Asset).\nvorn links: 28 mit K5c-Geometrie zurueck. vorn rechts: 31 bleibt; 19 mit K5c-Lage zurueck und genau EIN Laengenfaktor entlang der eigenen\nAchse (Wurzel -> Spitze) aus der gemessenen Nutzer-Spitze; 20 und 29 nur um ihre Wurzel (Knochen-Ursprung an der Hand) gedreht, Laenge wie K5c,\nbis sie in Bild 2 ganz in der vom Schriftzug verdeckten Flaeche liegen und kein Pixel ueber sichtbarem Hintergrund (Annahme nach Nutzer-Wortlaut\n\"vorne rechts hat er wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift.\"). hinten unveraendert.\nRunde 2: 20 und 29 bleiben eingezogen (Asset), weil keine Drehung die Annahme erfuellt (Pruefer r1 Nr. 12); Frage an den Nutzer.\nRunde 3 (Pruefer r2 Nr. 12): 19 mit K5c-Lage und einem Faktor liegt ueber Ihrer Hand (g_kralle19.py: 710 Video-px sichtbare Hand verdeckt,\n8 Ecken in der Hand bei Wurzelradius 98); auch keine Drehung um die Wurzel mit Spitze an Ihrem Strichende vermeidet das. 19 bleibt deshalb im\nKandidaten EINGEZOGEN wie im Asset (Frage an den Nutzer); die gekuerzte K5c-Lage wird nur als Variante fuer die Tafel geschrieben\n(OUT/variante_19_k5c_gekuerzt/, nicht der Kandidat).",
  "wasserzeichen_px_vorlage": 9192,
  "kralle19": {
   "laengenfaktor": 0.4898,
@@ -12,306 +12,42 @@
    202.96,
    457.33
   ],
-  "spitze_vorschlag_vorlage": [
+  "spitze_variante_vorlage": [
    218.1,
    462.5
   ],
   "rest_abstand_px": 16.01,
   "laenge_k5c": 713.5,
-  "laenge_vorschlag": 349.5
+  "laenge_variante": 349.5,
+  "stand_im_kandidaten": "eingezogen wie im Spiel-Asset (Runde 3); Variante nur in variante_19_k5c_gekuerzt/"
  },
  "kralle20_29": {
   "stand": "eingezogen wie im Spiel-Asset (unveraendert)",
   "grund": "Drehen um die Wurzel erfuellt die Annahme nicht (Runde 1: bestes Ergebnis 135 / 12 px ueber Hintergrund, 2 / 1 Ecken in der Hand, in Bild 1 330 / 683 px ueber Hintergrund); Entscheidung beim Nutzer (Frage)"
  },
  "durchdringung": {
-  "19": {
-   "hand": 18,
-   "ecken_in_der_hand": 0,
-   "ecken_geprueft": 14
-  },
   "28": {
    "hand": 13,
    "ecken_in_der_hand": 2,
-   "ecken_geprueft": 17
+   "ecken_geprueft": 17,
+   "wurzelradius": 200.0
+  },
+  "19_variante": {
+   "hand": 18,
+   "ecken_in_der_hand": 8,
+   "ecken_geprueft": 25,
+   "wurzelradius": 98.0
   }
  },
  "emd": {
   "datei": "BAHNSTEIG_FORM.EMD",
   "meshes_mit_anderen_ecken": [
-   19,
    28
   ],
-  "bytes_verschieden": 385,
+  "bytes_verschieden": 125,
   "laenge_gleich": true
  },
  "ecken": {
-  "19": {
-   "tv": [
-    [
-     -55,
-     118,
-     -15
-    ],
-    [
-     -88,
-     63,
-     89
-    ],
-    [
-     -76,
-     -63,
-     92
-    ],
-    [
-     -32,
-     -122,
-     -9
-    ],
-    [
-     5,
-     -73,
-     -125
-    ],
-    [
-     -8,
-     66,
-     -127
-    ],
-    [
-     70,
-     130,
-     25
-    ],
-    [
-     28,
-     56,
-     158
-    ],
-    [
-     44,
-     -106,
-     165
-    ],
-    [
-     100,
-     -186,
-     34
-    ],
-    [
-     146,
-     -116,
-     -110
-    ],
-    [
-     129,
-     56,
-     -113
-    ],
-    [
-     168,
-     97,
-     41
-    ],
-    [
-     138,
-     41,
-     137
-    ],
-    [
-     149,
-     -76,
-     142
-    ],
-    [
-     190,
-     -137,
-     47
-    ],
-    [
-     222,
-     -82,
-     -55
-    ],
-    [
-     210,
-     41,
-     -58
-    ],
-    [
-     246,
-     75,
-     35
-    ],
-    [
-     231,
-     45,
-     86
-    ],
-    [
-     236,
-     -16,
-     89
-    ],
-    [
-     258,
-     -49,
-     38
-    ],
-    [
-     274,
-     -19,
-     -14
-    ],
-    [
-     268,
-     44,
-     -15
-    ],
-    [
-     -61,
-     2,
-     -24
-    ],
-    [
-     330,
-     69,
-     92
-    ]
-   ],
-   "qv": [
-    [
-     -55,
-     118,
-     -15
-    ],
-    [
-     -88,
-     63,
-     89
-    ],
-    [
-     -76,
-     -63,
-     92
-    ],
-    [
-     -32,
-     -122,
-     -9
-    ],
-    [
-     5,
-     -73,
-     -125
-    ],
-    [
-     -8,
-     66,
-     -127
-    ],
-    [
-     70,
-     130,
-     25
-    ],
-    [
-     28,
-     56,
-     158
-    ],
-    [
-     44,
-     -106,
-     165
-    ],
-    [
-     100,
-     -186,
-     34
-    ],
-    [
-     146,
-     -116,
-     -110
-    ],
-    [
-     129,
-     56,
-     -113
-    ],
-    [
-     168,
-     97,
-     41
-    ],
-    [
-     138,
-     41,
-     137
-    ],
-    [
-     149,
-     -76,
-     142
-    ],
-    [
-     190,
-     -137,
-     47
-    ],
-    [
-     222,
-     -82,
-     -55
-    ],
-    [
-     210,
-     41,
-     -58
-    ],
-    [
-     246,
-     75,
-     35
-    ],
-    [
-     231,
-     45,
-     86
-    ],
-    [
-     236,
-     -16,
-     89
-    ],
-    [
-     258,
-     -49,
-     38
-    ],
-    [
-     274,
-     -19,
-     -14
-    ],
-    [
-     268,
-     44,
-     -15
-    ],
-    [
-     -61,
-     2,
-     -24
-    ],
-    [
-     330,
-     69,
-     92
-    ]
-   ]
-  },
   "28": {
    "tv": [
     [
@@ -592,6 +328,10 @@
    "vorschlag": {
     "sichtbar_px": 0,
     "ueber_hintergrund_px": 0
+   },
+   "variante_19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
    }
   },
   "20": {
@@ -604,6 +344,10 @@
     "ueber_hintergrund_px": 0
    },
    "vorschlag": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "variante_19": {
     "sichtbar_px": 0,
     "ueber_hintergrund_px": 0
    }
@@ -620,6 +364,10 @@
    "vorschlag": {
     "sichtbar_px": 0,
     "ueber_hintergrund_px": 0
+   },
+   "variante_19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
    }
   },
   "29": {
@@ -632,6 +380,10 @@
     "ueber_hintergrund_px": 10
    },
    "vorschlag": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "variante_19": {
     "sichtbar_px": 0,
     "ueber_hintergrund_px": 0
    }
@@ -723,6 +475,48 @@
    }
   },
   "vorschlag": {
+   "14": {
+    "sichtbar_px": 326,
+    "ueber_hintergrund_px": 17,
+    "im_schriftzug_px": 0
+   },
+   "15": {
+    "sichtbar_px": 699,
+    "ueber_hintergrund_px": 25,
+    "im_schriftzug_px": 0
+   },
+   "28": {
+    "sichtbar_px": 312,
+    "ueber_hintergrund_px": 12,
+    "im_schriftzug_px": 0
+   },
+   "30": {
+    "sichtbar_px": 2,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0
+   },
+   "19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0
+   },
+   "20": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0
+   },
+   "29": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0
+   },
+   "31": {
+    "sichtbar_px": 419,
+    "ueber_hintergrund_px": 126,
+    "im_schriftzug_px": 0
+   }
+  },
+  "variante_19": {
    "14": {
     "sichtbar_px": 326,
     "ueber_hintergrund_px": 17,
