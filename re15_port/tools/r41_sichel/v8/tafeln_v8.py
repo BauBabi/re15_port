@@ -11,6 +11,9 @@
 07_bogen_jedes7.jpg   Bogen: jedes 7. Spielbild F225-F450 der V8-Szene (320 x 240)
 08_ruecken_hinten.jpg Runde 2 (Sicht-Pruefer V8 r1: "keine Tafel vergroessert den Ruecken von hinten in der Szene"): Spielbilder
                       F322-F346 (Birkin von hinten), Ausschnitt um den Ruecken x3, V7 | V8
+09_vorn_kopf.png      Runde 3 (O3, Sicht-Pruefer r2 Punkt 2 "Kamm hinter dem Kopf"): Foto 1 | V7 | V8 r2 | neu in P1, nah am Kopf (x3), dazu
+                      die Szene von vorn (Takt F354, offline, Spielkamera)
+10_adern_rechts_original.png Runde 3 (O1/O2): Vorlage | Original-EM30 gleiche Pose PV | V8 r2 | neu (x3)
 Nutzerlinien = Pixel, in denen Darstellung.png von Darstellung_Vorlage.png um mehr als 40 (Kanal) abweicht (wie Messblatt m2_linien).
 """
 import os, sys, argparse
@@ -71,7 +74,7 @@ def speichern(im, p):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--v7', required=True); ap.add_argument('--v8', default=V.ASSET)
-    ap.add_argument('--szene7'); ap.add_argument('--szene8')
+    ap.add_argument('--szene7'); ap.add_argument('--szene8'); ap.add_argument('--v8r2')
     ap.add_argument('--aus', default=os.path.join(V.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v8'))
     a = ap.parse_args()
     v7, v8 = open(a.v7, 'rb').read(), open(a.v8, 'rb').read()
@@ -109,6 +112,27 @@ def main():
                 kachel(ro, bx, 3, 'Original-EM30 (Quelle)')])
     speichern(kopf(im, 'SF V8 05: (W)-rechte Flanke/Ruecken in PV - Vorlage | V7 | V8 | Original-RE1.5-Birkin EM30 gleiche Pose (roh, x3)'),
               os.path.join(a.aus, '05_adern_rechts.png'))
+    # 09 / 10 (Runde 3)
+    if a.v8r2:
+        import r3_gemein as R3
+        v8r2 = open(a.v8r2, 'rb').read()
+        f1 = bild(V.V80 + 'Beschreibung1_Vorlage.png')
+        bx = (380, 130, 530, 260)
+        z1 = reihe([kachel(f1, bx, 3, 'Foto 1'), kachel(render(v7, P1), bx, 3, 'V7'), kachel(render(v8r2, P1), bx, 3, 'V8 r2 d0ef852c'),
+                    kachel(render(v8, P1), bx, 3, n8)])
+        sp = R3.szene_posen()[354]
+        rs = [render(b_, sp) for b_ in (v7, v8r2, v8)]
+        A_ = FR.mit_bg(V.modell(v8), sp); ys, xs = np.nonzero(A_['bone'][:480] >= 0)
+        bx2 = (max(int(xs.mean()) - 75, 0), max(int(ys.min()) - 10, 0), max(int(xs.mean()) - 75, 0) + 150, max(int(ys.min()) - 10, 0) + 130)
+        z2 = reihe([np.zeros((390, 450, 3), np.uint8)] + [kachel(r_, bx2, 3, t_ + ' Szene Takt F354') for r_, t_ in zip(rs, ('V7', 'V8 r2', n8))])
+        speichern(kopf(np.vstack([z1, z2[:, :z1.shape[1]] if z2.shape[1] >= z1.shape[1] else np.hstack([z2, np.zeros((z2.shape[0], z1.shape[1] - z2.shape[1], 3), np.uint8)])]),
+                       'SF V8 09: von vorn nah am Kopf - Foto 1 | V7 | V8 r2 | neu (P1), darunter Szene Takt F354 (roh, x3)'),
+                  os.path.join(a.aus, '09_vorn_kopf.png'))
+        bx = (320, 150, 480, 330)
+        im = reihe([kachel(vl, bx, 3, 'Vorlage n1439'), kachel(ro, bx, 3, 'Original-EM30 (gleiche Pose)'), kachel(render(v8r2, V.PV), bx, 3, 'V8 r2'),
+                    kachel(r8, bx, 3, n8)])
+        speichern(kopf(im, 'SF V8 10: (W)-rechte Flanke in PV - Vorlage | Original-RE1.5-Birkin EM30 | V8 r2 | neu (roh, x3)'),
+                  os.path.join(a.aus, '10_adern_rechts_original.png'))
     # 06 Spiel
     if a.szene7 and a.szene8:
         nrs = [235, 260, 290, 320, 345, 380, 420, 450]

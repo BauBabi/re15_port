@@ -293,10 +293,10 @@ def s7_r3(blob, A, ref_blob):
     n_o, px_o, a_o = flecken_auf(V.modell(BF.lade_em30()), filt)
     _n, _p, a_v0 = flecken_auf(V.modell(blob), filt)
     sk = float(np.sqrt(a_o / max(a_v0, 1)))                              # V7-Koerper x 1,2-1,25 groesser als das Original (sfv8/r3 e1.py)
-    n_v, px_v, a_v = flecken_auf(V.modell(blob), filt, skal=min(1.0, sk))
+    n_v, px_v, a_v = flecken_auf(V.modell(blob), filt, skal=min(1.0, sk)) if fl else (0, 0, 0)   # V7: keine Flaechen auf neuen Zeilen
     dv, do = 1000.0 * n_v / max(a_v, 1), 1000.0 * n_o / max(a_o, 1)     # je 1000 sichtbare Bildpunkte, gleiche Aufloesung
     d = dict(flaechen=len(fl), flecken_original=n_o, flecken_v8=n_v, rotpx_original=px_o, rotpx_v8=px_v, flaeche_original=a_o, flaeche_v8=a_v,
-             dichte_original=round(do, 2), dichte_v8=round(dv, 2), ok=dv <= do + 1e-9)
+             dichte_original=round(do, 2), dichte_v8=round(dv, 2), ok=bool(fl) and dv <= do + 1e-9)
     b_ok = V7_OBERARM <= n['o13'] <= o['o13']
     c_ok = 25 <= n['r8z'] <= 80 and n['u14'] <= o['u14']
     return dict(a=a, neu=n, original=o, b_oberarm13=n['o13'], c_rumpf8_lokz=n['r8z'], c_rumpf8_lokx_info=n['r8x'], unterarm14=n['u14'], d=d,
