@@ -375,6 +375,39 @@ static int nennbahn(int g, const uint8_t *r90, int32_t ende[3], int *sicht_out, 
     if (nb_out) *nb_out = nb;
     return innen && !plat && !ramp && ende[1] >= RE15_K2080_WASSER_2090 - 800;
 }
+/* ---- wurfscan (Messwerkzeug, kein ctest-Teil; Nachtrag K1 der Gator-Nutzerbefunde 2026-11-09) ------------------------------
+ * Kanalmitte aus der Kollision (ROOM2090 SCA @RDT 0x20: Westwand = Kasten mit x1 = Innenkante der Westwand, Plattform-Block = Kasten
+ * fl 3 mit dem kleinsten x0 > Westwand) und je Wurf-Gier g im Bereich argv die Nennlandung + Fall-Bilder in Cut 12. */
+static int sca_kanal(const uint8_t *r, int32_t *west, int32_t *plat_x0, int32_t *plat_z0, int32_t *plat_z1)
+{
+    const uint32_t o = rd32(r + 0x20);
+    const uint32_t n0 = rd32(r + o + 4);
+    *west = -0x7fffffff; *plat_x0 = 0x7fffffff;
+    for (uint32_t i = 0; i < n0; i++) {      /* erster Satz (10 Kaesten; die Saetze 2..5 sind Kopien, @0x76c..) */
+        const uint8_t *b = r + o + 24 + 12 * i;
+        const int32_t w = b[0] | (b[1] << 8), d = b[2] | (b[3] << 8), x = (int16_t)(b[4] | (b[5] << 8)), z = (int16_t)(b[6] | (b[7] << 8));
+        if (b[11] != 3) continue;
+        if (d >= 20000 && x + w < 0 && x + w > *west) *west = x + w;                      /* Westwand: langer Kasten ueber die ganze Raumtiefe */
+        if (d < 20000 && w < 20000 && x > -8900 && x < *plat_x0) { *plat_x0 = x; *plat_z0 = z; *plat_z1 = z + d; }   /* Plattform-Block */
+    }
+    return *west > -0x7fffffff && *plat_x0 < 0x7fffffff;
+}
+static int teil_wurfscan(int g0, int g1)
+{
+    long n90 = 0; uint8_t *r90 = slurp("STAGE2/ROOM2090.RDT", &n90);
+    PRUEFE(r90 != NULL, "ROOM2090.RDT fehlt");
+    if (!r90) return 1;
+    int32_t w, px0, pz0, pz1;
+    PRUEFE(sca_kanal(r90, &w, &px0, &pz0, &pz1), "SCA: Westwand/Plattform nicht gefunden");
+    printf("  SCA ROOM2090 @0x%X: Westwand-Innenkante x %d, Plattform-Westkante x %d (z %d..%d) -> Kanalmitte x %d\n", (unsigned)rd32(r90 + 0x20),
+           (int)w, (int)px0, (int)pz0, (int)pz1, (int)((w + px0) / 2));
+    for (int g = g0; g <= g1; g++) {
+        int32_t e[3]; int sicht = 0, nb = 0;
+        (void)nennbahn(g, r90, e, &sicht, &nb);
+    }
+    free(r90);
+    return fails != 0;
+}
 static int teil_landung(void)
 {
     long n90 = 0; uint8_t *r90 = slurp("STAGE2/ROOM2090.RDT", &n90);
@@ -386,6 +419,42 @@ static int teil_landung(void)
     PRUEFE(nennbahn(RE15_K2080_WURF_GIER_SUED, r90, lsued, &sicht, NULL), "Suedwurf: Aufschlag (%d,%d) nicht im Wasser",
            (int)lsued[0], (int)lsued[2]);
     PRUEFE(sicht >= 10, "Suedwurf: nur %d Fall-Bilder in 2090 Cut 12", sicht);
+    {   /* Nachtrag K1 (Gator-Nutzerbefunde 2026-11-09, Nutzer "lege den Behälter zentraler in die Mitte"): Kanalmitte aus der SCA gemessen; jede Richtung
+         * landet auf der Gitter-Landestelle mit dem kleinsten Abstand zur Mitte (Gier +-400 um die gewaehlte, vektor_drehen-Gitter); Nord IM Kanal
+         * (z zwischen den Plattform-Kanten); Gegenprobe Pruefhaken (Stand b29263046, 3072/1024): Nord >= 1500 von der Mitte -> rot ohne den Bau. */
+        int32_t w = 0, px0 = 0, pz0 = 0, pz1 = 0;
+        PRUEFE(sca_kanal(r90, &w, &px0, &pz0, &pz1), "SCA: Westwand/Plattform nicht gefunden");
+        const int32_t mitte = (w + px0) / 2;
+        int32_t d_nord = 0;
+        for (int r = 0; r < 2; r++) {
+            const int g = r ? RE15_K2080_WURF_GIER_SUED : RE15_K2080_WURF_GIER_NORD;
+            const int32_t *l = r ? lsued : lnord;
+            const int32_t d = l[0] > mitte ? l[0] - mitte : mitte - l[0];
+            int32_t dmin = 0x7fffffff; int gmin = -1;
+            for (int k = g - 400; k <= g + 400; k++) {
+                int32_t e[3]; int nb = 0;
+                re15_k2080_bahn_rechnen((const int32_t[3]){ RE15_K2080_NPC_WURF_X + (int32_t)(((int64_t)RE15_K2080_HAND_VOR * re15_cos_q12(re15_k2080_werfer_gier())) >> 12),
+                                                             RE15_K2080_Y + RE15_K2080_HAND_HOCH,
+                                                             RE15_K2080_NPC_STAND_Z + (int32_t)((-(int64_t)RE15_K2080_HAND_VOR * re15_sin_q12(re15_k2080_werfer_gier())) >> 12) },
+                                        (int16_t)(k & 0xfff), RE15_K2080_WASSER_2090, e, &nb);
+                const int32_t dk = e[0] > mitte ? e[0] - mitte : mitte - e[0];
+                if (dk < dmin) { dmin = dk; gmin = k; }
+            }
+            printf("  K1 %s: Kanalmitte (SCA) x %d, Landung (%d,%d) %d von der Mitte; naechste Gitter-Landestelle (Gier %d) %d von der Mitte\n",
+                   r ? "Sued" : "Nord", (int)mitte, (int)l[0], (int)l[2], (int)d, gmin, (int)dmin);
+            if (!r) d_nord = dmin;
+            PRUEFE(d == dmin, "K1 %s: Landung %d von der Kanalmitte, die Gitter-Landestelle bei Gier %d nur %d", r ? "Sued" : "Nord", (int)d, gmin, (int)dmin);
+        }
+        PRUEFE(lnord[2] > pz0 && lnord[2] < pz1 && lnord[0] > w && lnord[0] < px0, "K1 Nord: Landung (%d,%d) nicht im Westkanal (x %d..%d, z %d..%d)",
+               (int)lnord[0], (int)lnord[2], (int)w, (int)px0, (int)pz0, (int)pz1);
+        re15_k2080_wurf_alt_setzen(1);
+        int32_t la[3]; (void)nennbahn(re15_k2080_wurf_gier_nord(), r90, la, NULL, NULL);
+        re15_k2080_wurf_alt_setzen(0);
+        const int32_t da = la[0] > mitte ? la[0] - mitte : mitte - la[0];
+        printf("  K1 Gegenprobe Stand b29263046 (Gier %d): Landung (%d,%d), %d von der Kanalmitte\n", RE15_K2080_WURF_GIER_NORD_ALT, (int)la[0], (int)la[2], (int)da);
+        PRUEFE(da > d_nord, "K1 Gegenprobe: alte Nord-Landung %d von der Kanalmitte, nicht weiter als die mittigste Gitter-Landestelle (%d) - rot ohne den Bau erwartet",
+               (int)da, (int)d_nord);
+    }
     free(r90);
     /* Nachbesserung 2 (N3): Wahl nach der Lage des Alligators beim Ausloesen = der WEITERE Landepunkt; Lagen aus den Laeufen der
      * Abnahme 1 (Dossier 9.3) - der gewaehlte Punkt liegt mindestens 8880 x Zeichen-Skala 2731/4096 = 5920 entfernt (RE2-
@@ -710,6 +779,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "bahn")) rc = teil_bahn();
     else if (!strcmp(t, "texte")) rc = teil_texte();
     else if (!strcmp(t, "landung")) rc = teil_landung();
+    else if (!strcmp(t, "wurfscan")) rc = teil_wurfscan(argc > 2 ? atoi(argv[2]) : 2900, argc > 3 ? atoi(argv[3]) : 3200);   /* Messwerkzeug */
     else if (!strcmp(t, "kippen")) rc = teil_kippen();
     else if (!strcmp(t, "hals")) rc = teil_hals();
     else if (!strcmp(t, "ebene")) rc = teil_ebene();

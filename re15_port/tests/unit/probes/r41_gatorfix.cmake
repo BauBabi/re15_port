@@ -94,7 +94,7 @@ endforeach()
 # Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 2 "sobald die Position erreicht ist, wo der Behälter liegt"): exe-Riegel kanister_vorbei(_elza) -
 # Kanister-Fenster auch im Biss (RE2 @0x80100ab8-b1c) und im Zonen-Dash (PORT-WAHL); Auswerter test_r41_gatorfix kanpass (Aufnahme im ersten Fensterbild)
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix_kanister.cmake)
-    foreach(_teil kanister_vorbei kanister_vorbei_elza)
+    foreach(_teil kanister_vorbei kanister_vorbei_elza kanister_mitte kanister_mitte_elza)   # kanister_mitte(_elza): Nachtrag K1 (Kanister in der Kanalmitte)
         add_test(NAME integration_r41_gatorfix_${_teil}
                  COMMAND "${CMAKE_COMMAND}"
                          -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
