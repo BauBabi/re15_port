@@ -97,7 +97,9 @@ def main(ziel):
                                       ('dazwischen', 'Krallen (Fläche zwischen den Formen, mit Schriftzug)')), start=1):
         zid = 'krallen_vorn_rechts_' + name; b = KRALLE_ZUORDNUNG[zid]; mg = MS[zid]; e = KS['vorn_rechts'][name]
         si = {'form1': ('sicher', 'Form deckt Kralle 31 (im Asset sichtbar); unteres Formende %.1f px neben der Spitze von 31' % e.get('abstand_unteres_ende_zu_spitze_k5c_px', 0), 'neu (eigene Zone)'),
-              'form3': ('unsicher', 'Form liegt auf Kralle 19 in K5c-Lage; deren Spitze liegt 42 px tiefer als Ihr Strichende; im Asset ist 19 eingezogen', 'neu (eigene Zone); R2: Name ohne "Form 3"'),
+              'form3': ('unsicher', 'Ihre Form liegt auf Kralle 19 in K5c-Lage (53 von 59 px), aber diese Kralle läge über Ihrer Hand (verdeckt 836 Video-px Hand, die '
+                                    'Video und Asset zeigen); gekürzt (x0,49) noch 710 px, um die Wurzel gedreht mindestens 581 px. 19 bleibt deshalb eingezogen wie '
+                                    'im Asset, bis Sie entscheiden (Frage)', 'neu (eigene Zone); R2: Name ohne "Form 3"; R3: 19 nicht mehr gekürzt über der Hand, sondern eingezogen'),
               'dazwischen': ('verdeckt', 'Annahme nach Ihrem Wort "wahrscheinlich auch 4 ... wegen der Schrift": Krallen 20 und 29 lägen hier verdeckt; im Kandidaten bleiben sie eingezogen wie heute (Frage)', 'neu (eigene Zone); R2: 20/29 nicht mehr gedreht')}[name]
         MS[zid + '__modell'] = np.isin(R2['mesh'], b) & R2['maske']
         zonen.append(dict(nr='35.%d' % k, id=zid, bild=2, nutzerbild='vorne_rechte_Hand_und_Kralle.png', nutzerwort=wort, linienfarbe='hellblau', bau='krallenform',
@@ -113,7 +115,7 @@ def main(ziel):
     zaehl = {}
     for z in zonen:
         zaehl[z['sicherheit']] = zaehl.get(z['sicherheit'], 0) + 1
-    meta = dict(erstellt='2026-11-09', aufgabe='Grundlage v2 (Korrektor Runde 2): erkannte Zuordnung zur Abnahme durch den Nutzer; keine Textur, kein Asset, keine Farbwahl',
+    meta = dict(erstellt='2026-11-09', aufgabe='Grundlage v2 (Korrektor Runde 3): erkannte Zuordnung zur Abnahme durch den Nutzer; keine Textur, kein Asset, keine Farbwahl',
                 modell=dict(emd='re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD', emd_md5='6e00f105f6ea854b521e23fa1f4b9d5c',
                             stand='K5e_f1 (unveraendert)', vergleich_k5c='analysis/befunde_runde41/form/stufe3/basis_k5c (nur Krallen 19/20/28/29 anders)'),
                 posen={'1': 'Clip 0 Bild 11, Lage -18564/0/-18386, Gier 80', '2': 'Clip 12 Bild 0, Lage 941/0/-23776, Gier 3874'},
@@ -126,7 +128,11 @@ def main(ziel):
                 iou_regel='iou_gegen_nutzerstelle: Teil-Zonen = sichtbare zugeordnete Flaechen gegen Ihren Umriss; texelgenaue Stellen = Rueckprobe der Texel-Maske gegen die Stelle; Modellgliederung, Zehen, Krallen-Schleifen/Formen = keine (None), weil es keine eigene Nutzerstelle gibt',
                 material_regel='Material NUR aus dem Nutzerwort; Teilnamen ohne Farbwort = "Haut (Teil benannt, kein Farbwort)"; was im Video nicht sichtbar ist = "Haut (nicht belegt)"',
                 sicherheit_zaehlung=zaehl, zonen_zahl=len(zonen))
-    out = dict(meta=meta, zonen=zonen, augen=AK['augen'], kopf=AK['kopf'], krallen=dict(spitzen=KS))
+    ML_ = json.load(open(ARBEIT + '/maul_lage.json', encoding='utf-8'))
+    meta['maul_regel'] = ML_['regel']
+    meta['texel_konflikte_regel'] = 'Texel, die zwei Flecken-Zonen mit verschiedenem Material zugleich beanspruchen (gleiche Texel in der G4-Textur); nur benannt'
+    out = dict(meta=meta, zonen=zonen, augen=AK['augen'], kopf=AK['kopf'], krallen=dict(spitzen=KS), texel_konflikte=TX.get('konflikte', []),
+               maul_lage=dict(maulinneres_lage=ML_['maulinneres_lage'], farbliste_maulinneres=ML_['farbliste_maulinneres'], sichtbarkeit=ML_['sichtbarkeit']))
     json.dump(out, open(ziel, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print('Zonen', len(zonen), zaehl)
 

@@ -280,7 +280,7 @@ def nutzer_tafel(i, bild):
                        'Farbe und Nummer = erkannte Zone. Kräftig gefüllt = Fleck, texelgenau (nur die Texel unter Ihrer Stelle, Form wie im Video). '
                        'Dünner Umriss mit leichter Tönung = ganzes Teil oder Abschnitt, den Sie benannt haben. Gestrichelt = die Stelle, die ich in Ihrem Bild '
                        'gelesen habe (Ihr Umriss, oder der Fleck neben Ihrem Linienende). Schraffiert = im Modell an dieser Stelle nichts Passendes sichtbar. '
-                       'Darunter je Fleck eine Nahansicht. Seiten immer aus Sicht des Wesens. Rote Schrift in der letzten Spalte = geändert gegenüber v1 bzw. Runde 1.')
+                       'Darunter je Fleck eine Nahansicht. Seiten immer aus Sicht des Wesens. Rote Schrift in der letzten Spalte = geändert gegenüber einer früheren Fassung (v1, Runde 1, 2 oder 3).')
     leg = legende(zs, farben, breite)
     nah = [nahansichten(z, farben[z['id']]) for z in zs if z['id'] in TX]
     t = stapeln([titel] + teile + nah + [leg])

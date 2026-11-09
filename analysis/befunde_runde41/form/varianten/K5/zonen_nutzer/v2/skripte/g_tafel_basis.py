@@ -157,13 +157,14 @@ def stapeln(teile, grund=(255, 255, 255), abstand=16):
     return im
 
 
-def titelzeile(breite, t, unter=None, gr=34):
-    zeilen_u = umbruch(unter, 22, breite - 40) if unter else []
-    H = int(gr * 1.5) + len(zeilen_u) * 28 + 16
+def titelzeile(breite, t, unter=None, gr=34, unter_gr=22):
+    zeilen_u = umbruch(unter, unter_gr, breite - 40) if unter else []
+    zh = int(unter_gr * 1.28)
+    H = int(gr * 1.5) + len(zeilen_u) * zh + 16
     im = Image.new('RGB', (breite, H), (255, 255, 255)); d = ImageDraw.Draw(im)
     d.text((20, 10), t, fill=(0, 0, 0), font=schrift(gr, True))
     for k, l in enumerate(zeilen_u):
-        d.text((20, int(gr * 1.5) + 6 + k * 28), l, fill=(60, 60, 60), font=schrift(22))
+        d.text((20, int(gr * 1.5) + 6 + k * zh), l, fill=(60, 60, 60), font=schrift(unter_gr))
     return im
 
 

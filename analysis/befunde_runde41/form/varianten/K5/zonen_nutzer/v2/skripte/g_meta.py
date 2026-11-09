@@ -56,11 +56,40 @@ META = {
     'hals_unterseite': (V, 'kein Wort von Ihnen; Flächen von Hals 21 mit Normalen nach unten; bleibt Haut (nicht belegt)', 'neu (Z4, Modellgliederung)'),
 }
 META.update({
-    'augenhoehle': (U, 'kein Wort von Ihnen. 14 Flächen um die Augen benutzen dieselbe Texturstelle wie das Maulinnere (u 91-105, v 157-170); in Bild 2 sind 2 davon sichtbar (23 px), keine unter Ihren Augenpunkten', 'R2: war "Maulinneres" (Prüfer: lag an den Augen)'),
+    'augenhoehle': (U, 'kein Wort von Ihnen. 14 Flächen um die Augen benutzen dieselbe rote Texturstelle wie die heutige Maul-Farbe (u 91-105, v 157-170); in Bild 2 sind 2 davon sichtbar (23 px), keine unter Ihren Augenpunkten', 'R2: war "Maulinneres" (Prüfer: lag an den Augen)'),
     'zaehne': (U, 'kein Wort von Ihnen; Zähne des Modells, 391 von 453 px liegen in Ihrem Maul-Umriss (Frage: eigenes Material?)', 'R2: Material nicht mehr "Zahn", nicht belegt'),
     'lippe': (U, 'kein Wort von Ihnen; Oberlippe des Kopfes 22, nur 297 px in Ihrem Maul-Umriss', 'R2: Material nicht mehr "Lippe", nicht belegt'),
     'krallen_vorn_rechts': (U, '2 Krallenformen gezeichnet (rechts im Bild auf Kralle 31, links im Bild auf Kralle 19), dazwischen der Schriftzug; im Asset ist 19 eingezogen',
                             'v1: eine Zone; v2: die zwei Formen und die Fläche dazwischen getrennt'),
+})
+# Runde 3 (Pruefer r2 Nr. 3, 8, 11, 12, 15): neue Gruende/Aenderungen
+META.update({
+    'zipfel_musterung': (S, '2 orange Umrisse auf der Schwanzspitze; je Umriss eine eigene Fläche (Strich + Inneres). Der dunkelrote Spalt zwischen den Umrissen '
+                            '(227 Video-px, L* 33, a* 25) gehört NICHT dazu; Texel-Maske in Form der Umrisse',
+                         'R2: texelgenau; R3: je Umriss eine eigene Fläche, der Spalt ist heraus (vorher eine gemeinsame Hülle)'),
+    'rotes_fleisch_zipfel': (U, 'nicht umrandet: je Linienende das Farbgebiet in Linienrichtung (4 Stellen). Gemessen: 2 Stellen violett-rot (a* 51/46, b* -43/-40), '
+                                '1 rot (a* 44, b* -7), 1 nur schwach rötlich (a* 20, b* 0); die erste Stelle ist nur 1 Video-px groß. Die dritte Stelle liegt im dunkelroten '
+                                'Spalt zwischen Ihren orangen Umrissen; wo Ihr oranger Umriss liegt, gilt Ihr Umriss (Musterung)',
+                             'v1: Kreise; R2: je Ende ein Farbgebiet, texelgenau; R3: keine Überlappung mehr mit Zone 11'),
+    'augen_vorn': (S, 'zwei helle Punkte 5,1 bzw. 2,2 px neben den Linienenden (L* 30 gegen 5-7); Auge = nur die Texel unter den Punkten. Achtung: dieselben Texel '
+                      'benutzt die heutige Textur auch an anderen Stellen; ohne eigene Augen-Texel erschiene das Auge in Bild 2 auf 73 statt 19 Video-px (3,9-fach)',
+                   'Z2: gemessene Punkte statt Kreise; R2: nur die Texel; R3: Hinweis auf die Vergrößerung durch geteilte Texel'),
+    'maul_vorn': (U, 'Ihr Maul-Umriss zeigt im Modell vor allem den Unterkiefer außen (1445 px) und Zähne, weil der Modellkopf anders sitzt. Das Maulinnere ist nach '
+                     'LAGE bestimmt: die 21 Flächen, die erst durch das Öffnen des Mauls sichtbar werden (hinter den Zähnen). In Bild 2 sind 8 davon sichtbar '
+                     '(448 Video-px), alle in Ihrem Umriss; sie decken 19 % davon',
+                  'R3: nach Lage statt nach der Farbliste; die 10 Kopf-Unterseiten-Flächen mit heutiger Maul-Farbe (rote Hals-Streifen) sind heraus (Zone 45)'),
+    'unterkiefer_vorn': (U, 'Band am lila Strich; dort zeigt das Modell Unterkiefer (89 px) und Unterschenkel (48 px); nach Bedeutung: Unterkiefer außen '
+                            '(alle Flächen von Teil 23 außer Maulinnerem und Zähnen)',
+                         'Z4: nach Bedeutung; R3: Material wie die anderen Teilnamen, ohne die neuen Maul-Flächen'),
+    'lippe': (U, 'kein Wort von Ihnen; Oberlippe des Kopfes 22 (ohne die Flächen, die jetzt zum Maulinneren gehören), nur 297 px in Ihrem Maul-Umriss',
+              'R2: Material nicht mehr "Lippe"; R3: 8 Flächen an das Maulinnere abgegeben'),
+    'kopf_unterseite_maulfarbe': (V, 'kein Wort von Ihnen. 10 Flächen an der Kopf-Unterseite hinter dem Unterkiefer, die heute die rote Maul-Farbe tragen (darunter die '
+                                     '8 großen Außenflächen 22|1|1, 8, 9, 194, 201, 209, 210, 217, die die roten Hals-Streifen machen); in Bild 2 nicht sichtbar. '
+                                     'Lage außen, nicht im Maul: bleibt Haut (nicht belegt)',
+                                  'neu (R3): war in Runde 2 Teil von "geöffnetes Maul"'),
+    'krallen_vorn_rechts': (U, '2 Krallenformen gezeichnet (rechts im Bild auf Kralle 31, links im Bild auf Kralle 19), dazwischen der Schriftzug; im Asset und im '
+                               'Vorschlag ist 19 eingezogen (Kralle 19 läge sonst über Ihrer Hand)',
+                            'v1: eine Zone; v2: die zwei Formen und die Fläche dazwischen getrennt; R3: 19 eingezogen'),
 })
 KRALLE_ZUORDNUNG = {
     'kralle_vorn_links_schleife1': [30], 'kralle_vorn_links_schleife2': [14], 'kralle_vorn_links_schleife3': [15],

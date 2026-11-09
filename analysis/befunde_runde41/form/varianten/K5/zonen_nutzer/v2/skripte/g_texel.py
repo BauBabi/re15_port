@@ -252,9 +252,27 @@ def main():
             zid, e['texel_zahl'], e['texel_getroffen'], e['texel_lueckenschluss'], len(e['traegerflaechen']), e['stelle_px_vorlage'], e['stelle_auf_modell_px_vorlage'],
             {k: v['px_vorlage'] for k, v in e['verworfen_durch_teilfilter'].items()}, g['andere_flaechen'], g['bild1_px_vorlage'], g['bild2_px_vorlage'],
             {k: int(v) for k, v in g['rundum_px'].items()}))
+    # Runde 3 (Pruefer r2 Nr. 10): Texel, die ZWEI Zonen mit verschiedenem Material zugleich beanspruchen (Mehrfachnutzung der G4-Textur)
+    konf = []
+    ids = [z for z, _, _ in TEXEL_ZONEN]
+    for i, a in enumerate(ids):
+        for b in ids[i + 1:]:
+            ma, mb = ZR[a]['material'], ZR[b]['material']
+            if ma == mb:
+                continue
+            gem = bits[a] & bits[b]
+            c = int(gem.sum())
+            if c:
+                gi = np.nonzero(gem.reshape(-1))[0]
+                fa = sorted(fl_txt(f) for f in UVB if np.isin(UVB[f], gi).any())
+                konf.append(dict(zone_a=ZR[a]['nr'], id_a=a, material_a=ma, zone_b=ZR[b]['nr'], id_b=b, material_b=mb, texel=c,
+                                 flaechen_mit_diesen_texeln=len(fa), teile=sorted({int(f.split('|')[0]) for f in fa})))
+    konf.sort(key=lambda k: -k['texel'])
+    for k in konf:
+        print('Konflikt', k['zone_a'], k['zone_b'], k['texel'], k['material_a'], '/', k['material_b'])
     meta = dict(regel=__doc__.strip(), texel_format='[Seite, CLUT-Zeile, u, v]; u = Spalte in der TIM-Textur (512 x 256, 8 Bit) einschliesslich Seitenversatz 128 x Seite, '
                                                     'v = Zeile; CLUT-Zeile relativ zur ersten CLUT-Zeile der TIM')
-    json.dump(dict(meta=meta, zonen=out), open(ARBEIT + '/texel.json', 'w', encoding='utf-8'), ensure_ascii=False)
+    json.dump(dict(meta=meta, zonen=out, konflikte=konf), open(ARBEIT + '/texel.json', 'w', encoding='utf-8'), ensure_ascii=False)
     np.savez_compressed(ARBEIT + '/texel_masken.npz', **bits)
 
 

@@ -3,7 +3,11 @@ vorn links: 28 mit K5c-Geometrie zurueck. vorn rechts: 31 bleibt; 19 mit K5c-Lag
 Achse (Wurzel -> Spitze) aus der gemessenen Nutzer-Spitze; 20 und 29 nur um ihre Wurzel (Knochen-Ursprung an der Hand) gedreht, Laenge wie K5c,
 bis sie in Bild 2 ganz in der vom Schriftzug verdeckten Flaeche liegen und kein Pixel ueber sichtbarem Hintergrund (Annahme nach Nutzer-Wortlaut
 "vorne rechts hat er wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift."). hinten unveraendert.
-Runde 2: 20 und 29 bleiben eingezogen (Asset), weil keine Drehung die Annahme erfuellt (Pruefer r1 Nr. 12); Frage an den Nutzer."""
+Runde 2: 20 und 29 bleiben eingezogen (Asset), weil keine Drehung die Annahme erfuellt (Pruefer r1 Nr. 12); Frage an den Nutzer.
+Runde 3 (Pruefer r2 Nr. 12): 19 mit K5c-Lage und einem Faktor liegt ueber Ihrer Hand (g_kralle19.py: 710 Video-px sichtbare Hand verdeckt,
+8 Ecken in der Hand bei Wurzelradius 98); auch keine Drehung um die Wurzel mit Spitze an Ihrem Strichende vermeidet das. 19 bleibt deshalb im
+Kandidaten EINGEZOGEN wie im Asset (Frage an den Nutzer); die gekuerzte K5c-Lage wird nur als Variante fuer die Tafel geschrieben
+(OUT/variante_19_k5c_gekuerzt/, nicht der Kandidat)."""
 import copy, json, os, struct, sys, math
 import numpy as np, cv2
 from scipy import ndimage as ndi
@@ -240,13 +244,14 @@ def main():
         fs2 = np.linspace(f - 0.005, f + 0.005, 41)
         d2 = [np.hypot(*(np.array(proj_punkt(mo_a, 19, tip19 * g)) - nutzer_spitze)) for g in fs2]
         f = float(fs2[int(np.argmin(d2))])
-    mo.meshes[19] = strecke(mo_c.meshes[19], f)
-    tip_neu = proj_punkt(mo, 19, spitze(mo.meshes[19]))
+    m19_var = strecke(mo_c.meshes[19], f)  # Variante A (nur Tafel): K5c-Lage, ein Laengenfaktor
+    tip_neu = proj_punkt(mo, 19, spitze(m19_var))
     ergebnis['kralle19'] = dict(laengenfaktor=round(f, 4), achse='Knochen-Ursprung (Wurzel an der Hand) -> fernste Ecke (Spitze)',
                                 spitze_k5c_vorlage=[round(tip_k5c[0], 1), round(tip_k5c[1], 1)], nutzer_spitze_vorlage=list(nutzer_spitze),
-                                spitze_vorschlag_vorlage=[round(tip_neu[0], 1), round(tip_neu[1], 1)],
+                                spitze_variante_vorlage=[round(tip_neu[0], 1), round(tip_neu[1], 1)],
                                 rest_abstand_px=round(float(np.hypot(tip_neu[0] - nutzer_spitze[0], tip_neu[1] - nutzer_spitze[1])), 2),
-                                laenge_k5c=round(float(np.linalg.norm(tip19)), 1), laenge_vorschlag=round(float(np.linalg.norm(tip19) * f), 1))
+                                laenge_k5c=round(float(np.linalg.norm(tip19)), 1), laenge_variante=round(float(np.linalg.norm(tip19) * f), 1),
+                                stand_im_kandidaten='eingezogen wie im Spiel-Asset (Runde 3); Variante nur in variante_19_k5c_gekuerzt/')
     print('19', ergebnis['kralle19'])
     # 20 / 29: Runde 2 (Pruefer r1 Nr. 12): bleiben eingezogen wie im Spiel-Asset, bis der Nutzer Frage 4 beantwortet.
     # Runde 1 hatte 6000 Drehungen um die Wurzel geprueft: keine lag ganz im Schriftzug ohne Pixel ueber Hintergrund und ohne Handdurchdringung.
@@ -255,13 +260,30 @@ def main():
                                          'in Bild 1 330 / 683 px ueber Hintergrund); Entscheidung beim Nutzer (Frage)')
     # Durchdringung der eigenen Hand (Ecken ausserhalb r 200 um die Wurzel, verallgemeinerte Windungszahl > 0,5)
     ergebnis['durchdringung'] = {}
-    for b, hand in ((19, 18), (28, 13)):
-        pen, nv = durchdringung(mo_a, kf2, b, mo.meshes[b], hand_dreiecke(mo_a, kf2, hand))
-        ergebnis['durchdringung'][str(b)] = dict(hand=hand, ecken_in_der_hand=pen, ecken_geprueft=nv)
-    # EMD schreiben: Asset-EMD, nur Ecken/Normalen der Meshes 19, 20, 28, 29 ersetzt
+    for b, hand, mesh_, r_ in ((28, 13, mo.meshes[28], 200.0), ('19_variante', 18, m19_var, 200.0 * f)):
+        bb = 19 if b == '19_variante' else b
+        pen, nv = durchdringung(mo_a, kf2, bb, mesh_, hand_dreiecke(mo_a, kf2, hand), wurzel_r=r_)
+        ergebnis['durchdringung'][str(b)] = dict(hand=hand, ecken_in_der_hand=pen, ecken_geprueft=nv, wurzelradius=round(r_, 1))
+    # EMD schreiben: Asset-EMD, Runde 3 nur Ecken/Normalen von Mesh 28 ersetzt (19, 20, 29 eingezogen wie im Asset)
     emd = bytearray(open(ASSET + '/BAHNSTEIG_FORM.EMD', 'rb').read())
     dir_off, dd = FE.verzeichnis(bytes(emd)); md1 = dd[7]
-    for b in (19, 28):
+    def schreibe(emd, mo_, teile):
+        for b in teile:
+            (tvo, tvc, tno, tnc, tfo, tfc, tuo, qvo, qvc, qno, qnc, qfo, qfc, quo) = struct.unpack_from('<14I', emd, md1 + 12 + b * 56)
+            m = mo_.meshes[b]
+            assert len(m.tv) == tvc and len(m.qv) == qvc and len(m.tn) == tnc and len(m.qn) == qnc
+            for off, arr in ((tvo, m.tv), (tno, m.tn), (qvo, m.qv), (qno, m.qn)):
+                for k_, x in enumerate(arr):
+                    struct.pack_into('<4h', emd, md1 + 12 + off + k_ * 8, *[int(v) for v in x[:4]])
+    emd_var = bytearray(emd)
+    mo_var = copy.deepcopy(mo); mo_var.meshes[19] = m19_var
+    schreibe(emd_var, mo_var, (28, 19))
+    vo = OUT + '/variante_19_k5c_gekuerzt'; os.makedirs(vo, exist_ok=True)
+    open(vo + '/BAHNSTEIG_FORM.EMD', 'wb').write(bytes(emd_var))
+    open(vo + '/BAHNSTEIG_FORM.TIM', 'wb').write(open(ASSET + '/BAHNSTEIG_FORM.TIM', 'rb').read())
+    jv = json.load(open(ASSET + '/form.json', encoding='utf-8')); jv['name'] = 'Variante 19 K5c-Lage gekuerzt (nur Tafel, nicht der Kandidat)'
+    json.dump(jv, open(vo + '/form.json', 'w', encoding='utf-8'), ensure_ascii=False)
+    for b in (28,):
         (tvo, tvc, tno, tnc, tfo, tfc, tuo, qvo, qvc, qno, qnc, qfo, qfc, quo) = struct.unpack_from('<14I', emd, md1 + 12 + b * 56)
         m = mo.meshes[b]
         assert len(m.tv) == tvc and len(m.qv) == qvc and len(m.tn) == tnc and len(m.qn) == qnc
@@ -279,13 +301,13 @@ def main():
     roh_a = open(ASSET + '/BAHNSTEIG_FORM.EMD', 'rb').read()
     ergebnis['emd'] = dict(datei='BAHNSTEIG_FORM.EMD', meshes_mit_anderen_ecken=diff, bytes_verschieden=int(sum(1 for x, y in zip(roh_a, emd) if x != y)),
                            laenge_gleich=len(roh_a) == len(emd))
-    ergebnis['ecken'] = {str(b): dict(tv=[list(x[:3]) for x in mo.meshes[b].tv], qv=[list(x[:3]) for x in mo.meshes[b].qv]) for b in (19, 28)}
+    ergebnis['ecken'] = {str(b): dict(tv=[list(x[:3]) for x in mo.meshes[b].tv], qv=[list(x[:3]) for x in mo.meshes[b].qv]) for b in (28,)}
     # Bild 1: liegt der Vorschlag dort ueber Hintergrund?
     kf1 = ka.kf(*ka.stand(1)[2:]); l1, g1 = ka.stand(1)[:2]; kam1 = P.kamera(1)
     Z1 = tiefenbild(mo, kf1, l1, g1, kam1, ohne=(19, 20, 28, 29))
     b1 = {}
     for b in (19, 20, 28, 29):
-        for name, mm in (('asset', ka.mo), ('k5c', mo_c), ('vorschlag', mo)):
+        for name, mm in (('asset', ka.mo), ('k5c', mo_c), ('vorschlag', mo), ('variante_19', mo_var)):
             tv, qv = ecken(mm.meshes[b])
             sm = sichtbar(projiziere(mo_a, kf1, l1, g1, kam1, b, tv, qv, mm.meshes[b]), Z1)
             b1.setdefault(str(b), {})[name] = dict(sichtbar_px=int(sm.sum()), ueber_hintergrund_px=int((sm & BG1).sum()))
@@ -293,7 +315,7 @@ def main():
     # Bild 2 je Stand
     Zb = tiefenbild(ka.mo, kf2, lage2, gier2, kam2, ohne=(14, 15, 28, 30, 19, 20, 29, 31))
     b2 = {}; masken = {}
-    for name, mm in (('asset', ka.mo), ('k5c', mo_c), ('vorschlag', mo)):
+    for name, mm in (('asset', ka.mo), ('k5c', mo_c), ('vorschlag', mo), ('variante_19', mo_var)):
         for b in (14, 15, 28, 30, 19, 20, 29, 31):
             tv, qv = ecken(mm.meshes[b])
             sm = sichtbar(projiziere(mo_a, kf2, lage2, gier2, kam2, b, tv, qv, mm.meshes[b]), Zb)

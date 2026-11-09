@@ -44,18 +44,23 @@ def modell_mengen():
     """Flaechenmengen nach Modellbedeutung (Schluessel 'mesh|viereck|index')."""
     M = {k: set(v) for k, v in ML.items()}
     alle23 = {f for f in ALLE if f.startswith('23|')}
-    M['Unterkiefer_aussen'] = alle23 - M['Maulinneres'] - M['Zahn']  # mit Unterlippe (Lippensaum-Flaechen von 23)
-    # Runde 2 (Pruefer r1 Nr. 8): die material.json-Liste 'Maulinneres' enthaelt 14 Flaechen von Kopf 22 in AUGENHOEHE
-    # (Knochen-y der Flaechenmitte -307..-354; Augen -434..-468; Zaehne +262..+282), die dieselbe Texturstelle (u 91-105, v 157-170) benutzen.
-    # Trennung nach Lage: Flaechenmitte Knochen-y < -200 (oberhalb des Mauls) = 'Augenhoehle', Rest = 'Maulinneres_echt'.
-    au, echt = set(), set()
+    # Runde 3 (Pruefer r2 Nr. 11): die material.json-Liste 'Maulinneres' ist eine FARBliste (Texturzeile 0 rot), keine Lageliste.
+    # Maulinneres nach LAGE aus g_maul.py (Flaechen, die erst durch das Oeffnen des Mauls sichtbar werden; Zaehne ausgenommen).
+    ML_LAGE = json.load(open(ARBEIT + '/maul_lage.json', encoding='utf-8'))
+    M['Maulinneres_lage'] = set(ML_LAGE['maulinneres_lage'])
+    # Augenhoehle wie Runde 2: Flaechen der Farbliste in Augenhoehe (Flaechenmitte Knochen-y < -200, Kopf 22)
+    au = set()
     for f in M['Maulinneres']:
         b, vi, i = map(int, f.split('|')); m = ka.mo.meshes[b]
         verts, faces = (m.tv, m.tf) if vi == 0 else (m.qv, m.qf)
         y = np.mean([verts[k][1] for k in faces[i][1::2]])
-        (au if (b == 22 and y < -200) else echt).add(f)
-    M['Augenhoehle'] = au; M['Maulinneres_echt'] = echt
-    M['Lippe_oben'] = {f for f in M['Lippensaum'] if f.startswith('22|')}
+        if b == 22 and y < -200:
+            au.add(f)
+    M['Augenhoehle'] = au
+    # Rest der Farbliste: Kopf 22 -> Zone 45 (aussen, Haut nicht belegt); Unterkiefer 23 -> Unterkiefer aussen (Zone 31)
+    M['Maulfarbe_aussen'] = {f for f in M['Maulinneres'] if f.startswith('22|')} - au - M['Maulinneres_lage']
+    M['Unterkiefer_aussen'] = alle23 - M['Maulinneres_lage'] - M['Zahn']  # mit Unterlippe und den 23-Flaechen der Farbliste
+    M['Lippe_oben'] = {f for f in M['Lippensaum'] if f.startswith('22|')} - M['Maulinneres_lage']
     # Hals-Unterseite: Flaechennormale (Pose Bild 2, nach aussen orientiert) zeigt nach unten (PSX +y), n_y >= 0,5
     lage, gier, clip, bild = ka.stand(2)
     W = pose_welt(ka.mo, ka.kf(clip, bild))
@@ -110,6 +115,22 @@ def baue(z):
         m, info = g_bau.flut(lf, **kw)
     elif art == 'huelle':
         m, info = g_bau.huelle(lf, kw['farbe'], kw['box'])
+    elif art == 'huelle_komp':
+        # Runde 3 (Pruefer r2 Nr. 3): je zusammenhaengender Linienzug der Farbe (>= min_px) eine EIGENE konvexe Huelle (Strich + Inneres);
+        # Zeiger-Reste unter min_px fallen weg. Keine gemeinsame Huelle, damit der Spalt zwischen zwei Umrissen NICHT dazukommt.
+        M_, fig_, (H_, W_) = g_bau.lade(lf); x0, y0, x1, y1 = kw['box']
+        s_ = np.zeros((H_, W_), bool); s_[y0:y1 + 1, x0:x1 + 1] = M_[kw['farbe']][y0:y1 + 1, x0:x1 + 1]
+        lb, nl = ndi.label(s_, np.ones((3, 3)))
+        m = np.zeros((H_, W_), bool); info = dict(umrisse=[])
+        for i in range(1, nl + 1):
+            q = lb == i
+            if q.sum() < kw['min_px']:
+                info.setdefault('verworfen_px', []).append(int(q.sum())); continue
+            r = np.zeros((H_, W_), np.uint8); cv2.fillConvexPoly(r, cv2.convexHull(np.argwhere(q)[:, ::-1].astype(np.int32)), 1)
+            ys, xs = np.nonzero(q)
+            info['umrisse'].append(dict(strich_px=int(q.sum()), huelle_px=int(r.sum()), bbox=[int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())]))
+            m |= r > 0
+        info['vorher_gemeinsame_huellen_px'] = None
     elif art == 'huelle_n':
         m = None
         for bx in kw['teile']:
@@ -228,6 +249,11 @@ def main():
             menge = {f for f in ALLE if int(f.split('|')[0]) in (22, 23)}
         if z['id'] in ('auge_hinten', 'mund_hinten'):
             menge = set()
+        if z['id'] == 'rotes_fleisch_zipfel':
+            # Runde 3 (Pruefer r2 Nr. 3): Ihr oranger Umriss (Zone 11) hat Vorrang vor dem gemessenen Farbgebiet; Ueberlappung abziehen
+            ue = mg & masken['zipfel_musterung']
+            e['bau_info']['abgezogen_wegen_zone11_px_grundlage'] = int(ue.sum())
+            mg = mg & ~masken['zipfel_musterung']
         ana, mz = auswerten(n, mg, teile, menge=menge, stelle=z['bau'][0] in ('fleck', 'fleck_n', 'wachsen', 'wachsen_n'))
         if z['id'] in ('gesicht_vorn', 'maul_vorn', 'unterkiefer_vorn', 'kopf_hinten', 'auge_hinten', 'mund_hinten', 'fusskrallen_hinten_links',
                        'fusskrallen_hinten_rechts'):
@@ -288,7 +314,7 @@ def main():
               'in Nutzerzone', ana.get('in_nutzerzone_px_vorlage'), 'IoU', ana.get('iou_zur_nutzerzone'))
     np.savez_compressed(ARBEIT + '/zonen_v2_masken.npz', **masken)
     json.dump(out, open(ARBEIT + '/zonen_v2_roh.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    json.dump({k: sorted(v) for k, v in MM.items() if k in ('Unterkiefer_aussen', 'Hals_unten', 'Zehen25', 'Zehen27', 'Augenhoehle', 'Maulinneres_echt')},
+    json.dump({k: sorted(v) for k, v in MM.items() if k in ('Unterkiefer_aussen', 'Hals_unten', 'Zehen25', 'Zehen27', 'Augenhoehle', 'Maulinneres_lage', 'Maulfarbe_aussen', 'Lippe_oben')},
               open(ARBEIT + '/modellmengen_v2.json', 'w', encoding='utf-8'), indent=0)
 
 

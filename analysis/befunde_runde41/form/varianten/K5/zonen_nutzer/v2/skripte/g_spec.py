@@ -36,7 +36,7 @@ ZONEN = [
     Z('10', 'zipfel', SW, 'Zipfel - separater Schwanzabschnitt am Schluss', 'blau',
       ('flut', dict(waende=['blau', 'rot'], saaten=[(612, 540)], box=(480, 440, 660, 597))), HT, teile=[6], namensteile=[6]),
     Z('11', 'zipfel_musterung', SW, 'Schwanz Musterung', 'orange',
-      ('huelle_n', dict(farbe='orange', teile=[(586, 482, 641, 531), (546, 515, 634, 566)])), 'Musterung', eltern='zipfel'),
+      ('huelle_komp', dict(farbe='orange', box=(540, 470, 660, 575), min_px=100)), 'Musterung', eltern='zipfel'),
     Z('12', 'rotes_fleisch_zipfel', SW, 'verschieden farbiges rotes Fleisch wie oben am Becken', 'lila',
       ('wachsen_n', dict(enden=[(642, 458), (632, 496), (624, 530), (618, 575)], tol=14, r_max=22)), 'rotes Fleisch', eltern='zipfel'),
     Z('13', 'bein_hinten_links', LB, 'linkes Bein', 'rot', ('flut', dict(waende=['rot'], saaten=[(345, 290), (320, 380)],
@@ -79,9 +79,9 @@ ZONEN = [
     Z('29', 'augen_vorn', GE, 'Augen', 'gruen', ('fleck_n', dict(enden=[(441, 245), (568, 248)], klasse='auge')), 'Auge', teile=[22],
       eltern='gesicht_vorn', z='Z2'),
     Z('30', 'maul_vorn', GE, 'geöffnetes Maul', 'hellblau', ('flut', dict(waende=['hellblau'], saaten=[(600, 440)], box=(510, 325, 700, 520))),
-      'Maul', teile=[22, 23], modell=['Maulinneres_echt'], eltern='gesicht_vorn', z='Z4'),
+      'Maul', teile=[22, 23], modell=['Maulinneres_lage'], eltern='gesicht_vorn', z='Z4'),
     Z('31', 'unterkiefer_vorn', GE, 'Teil des Unterkiefers', 'lila', ('flut_band', dict(waende=['rot', 'hellblau'], saaten=[(650, 415)],
-      box=(595, 330, 705, 500), band_farbe='lila', band_box=(600, 350, 700, 480), band_r=9)), 'Unterkiefer (kein Farbwort)', teile=[23],
+      box=(595, 330, 705, 500), band_farbe='lila', band_box=(600, 350, 700, 480), band_r=9)), HT, teile=[23],
       modell=['Unterkiefer_aussen'], eltern='gesicht_vorn', z='Z4'),
     Z('32', 'arm_hand_krallen_vorn_rechts', HA, 'vorderer rechter Arm mit Krallen', 'rot', ('flut', dict(waende=['rot', 'hellblau', 'lila'],
       saaten=[(345, 440), (360, 520), (360, 600), (312, 592), (440, 545)], box=(290, 395, 470, 620))), HT,
@@ -110,8 +110,12 @@ ZONEN = [
 # (nr, id, Beschreibung (unser Text, KEIN Nutzerwort), Material, Modellmenge, Bezug-Nutzerzone)
 NB = 'nicht belegt (kein Wort von Ihnen)'
 MODELLZONEN_KOPF = [
-    ('40', 'augenhoehle', 'Flächen rund um die Augen, die dieselbe Texturstelle wie das Maulinnere benutzen (Modellgliederung)', NB, 'Augenhoehle', 'augen_vorn'),
+    ('40', 'augenhoehle', 'Flächen rund um die Augen, die dieselbe rote Texturstelle wie die heutige Maul-Farbe benutzen (Modellgliederung)', NB, 'Augenhoehle', 'augen_vorn'),
     ('41', 'zaehne', 'Zähne (Modellgliederung, im "geöffneten Maul")', NB, 'Zahn', 'maul_vorn'),
     ('42', 'lippe', 'Oberlippe (Modellgliederung, Rand des "geöffneten Mauls")', NB, 'Lippe_oben', 'maul_vorn'),
     ('44', 'hals_unterseite', 'Hals-Unterseite (Modellgliederung)', 'Haut (nicht belegt)', 'Hals_unten', None),
+    # Runde 3 (Pruefer r2 Nr. 11): Flaechen von Kopf 22 aus der FARBliste "Maulinneres", die nach LAGE aussen liegen (g_maul.py);
+    # darunter die 8 grossen Aussenflaechen der Kopf-Unterseite, die die roten Hals-Streifen machen
+    ('45', 'kopf_unterseite_maulfarbe', 'Kopf-Unterseite hinter dem Unterkiefer: Außenflächen, die heute die rote Maul-Farbe tragen (Modellgliederung; die roten Hals-Streifen)',
+     'Haut (nicht belegt)', 'Maulfarbe_aussen', None),
 ]

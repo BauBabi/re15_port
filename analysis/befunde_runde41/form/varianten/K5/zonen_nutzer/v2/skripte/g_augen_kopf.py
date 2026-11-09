@@ -65,7 +65,20 @@ erg['augen'] = dict(nutzerpunkte=augen,
                                          'sie werden NICHT ganz zum Auge. Heutige G4-Augenflaechen ausserhalb der Punkte waeren nach dieser Lesung Haut (Frage an den Nutzer).',
                                    auge_texel_zahl=int(T_alle.sum()),
                                    je_auge={a['name']: dict(texel=a['auge_texel']['zahl'], punkt_px_vorlage=a['punkt_px_vorlage']) for a in augen}))
-np.savez_compressed(ARBEIT + '/augen_punkte.npz', **punktmasken)
+# Runde 3 (Pruefer r2 Nr. 8): wie gross erschiene das Auge im Bild 2, wenn man NUR diese Texel faerbt (ohne eigene Texel fuer das Auge)?
+_ti = np.where(K['maske'], K['v'].astype(np.int64) * GT.TW + K['u'], 0)
+_hit = K['maske'] & T_alle[_ti]
+_pk = punktmasken['rechts'] | punktmasken['links']
+_draus = _hit & ~_pk
+_nah = _draus & (cv2.dilate(_pk.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (41, 41))) > 0)
+erg['augen']['vorschlag']['anzeige_bild2_ohne_eigene_texel'] = dict(
+    regel='Grundlage-Render Bild 2: alle Bildpunkte, deren Texel in der Augen-Texelmaske liegt (egal welche Flaeche); Video-px = Grundlage-px x s^2',
+    gesamt_px_vorlage=round(float(_hit.sum() * S2[2]), 1), in_den_punkten_px_vorlage=round(float((_hit & _pk).sum() * S2[2]), 1),
+    ausserhalb_px_vorlage=round(float(_draus.sum() * S2[2]), 1), ausserhalb_innerhalb_20px_px_vorlage=round(float(_nah.sum() * S2[2]), 1),
+    punkte_px_vorlage=round(float(_pk.sum() * S2[2]), 1),
+    ausserhalb_je_teil={TEILNAME[int(b)]: round(float(((K['mesh'] == b) & _draus).sum() * S2[2]), 1) for b in np.unique(K['mesh'][_draus])},
+    faktor_gesamt_zu_punkten=round(float(_hit.sum() / max(_pk.sum(), 1)), 2))
+np.savez_compressed(ARBEIT + '/augen_punkte.npz', augen_ohne_eigene_texel=_hit, **punktmasken)
 # ---------------------------------------------------------------- Kopfumriss
 lab = grund_lab(2); L = lab[..., 0]; fig = figur(2)
 modellkopf = np.isin(K['mesh'], [22, 23]) & K['maske']
