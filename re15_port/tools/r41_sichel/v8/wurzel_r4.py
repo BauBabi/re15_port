@@ -35,11 +35,11 @@ ZUG_MIN = 0.70                        # Ecken ohne Schnitt: hoechstens radial au
                                       # x 364-374 3-4 px ueber der Vorlage (Riegel S2b 2,8); mit Einzug folgt Ring 1 der Haut, nicht umgekehrt.
 KEGEL = -150.0                        # Kegelspitze 150 E. VOR der Mitte von Ring 1 (Gliedachse, in den Schwanz hinein; Probe sfv8/r4: 0 -> 18 px,
                                       # +100..+350 (in den Rumpf) 64-198 px, -150 -> 1 px sichtbare Wurzel in Takt F314-F345)
-KEGEL_UMKEHR = False                  # Runde 5 (Zahlen-Pruefer r4 S2c "8,0 px bei x 376 ... in allen 7 Halbpixel-Varianten 7-8 px"; gemessen sfv8/r5
-                                      # j2.py: mit Rueckseiten-Culling war das Wurzelende des Schwanzes OFFEN - die umgekehrt gewundene Kappe ist in PV eine
-                                      # Rueckseite, die verdeckte Schwanz-Oberkante fiel bei x 372-376 um 4 px ab; Runde 4 KEGEL_UMKEHR = True gegen einen
-                                      # 1-px-Splitter in Takt F323, den jetzt die Rueckenecken 38/41 (ruecken_v8.json Runde 5) zudecken). Geschlossen:
-                                      # S2c 8 -> 4 px (alle 7 Varianten 3-4), Riegel S10 0.
+KEGEL_UMKEHR = True                   # Runde 5 geprueft und VERWORFEN (Zahlen-Pruefer r4 S2c "8,0 px bei x 376"): mit Rueckseiten-Culling ist das
+                                      # Wurzelende offen (die umgekehrte Kappe ist in PV eine Rueckseite) - geschlossen (False) misst S2c 4 statt 8 px
+                                      # (sfv8/r5 j2.py, w4.py), aber die Kappe wird im ECHTEN Port-Renderer von hinten sichtbar: Marker MK_A/MK_B
+                                      # F341 127 Bildpunkte (dunkler Splitter an der Wurzelkante; sfv8/r5 riegel_v8r5.txt S10s, mk400 mit Spitze -400
+                                      # ebenso 127). Offline (f_rast) 0 - der Riegel S10s (echte Framedumps) entscheidet. Bleibt wie Runde 4.
 S_ = 11
 
 

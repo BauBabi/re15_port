@@ -454,8 +454,8 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
         RV.ruecken(ms, ruecken or _p('ruecken_v8.json'), prot)
     if 'e' in stufen:
         einbetten(KB.packen(blob, d, ms, tim), ms, prot)
-    if 'w' in stufen:                 # Runde 4 (S10/O5): Ring 1 an die Haut, Wurzelrohr und Kegel ohne Flaeche (wurzel_r4.py); Runde 5: Kappe
-        import wurzel_r4 as W4        # geschlossen (KEGEL_UMKEHR False), Ring-1-Ecke 17 mit Versatz (kette_v8.json "ring1_versatz", S2b/S2c)
+    if 'w' in stufen:                 # Runde 4 (S10/O5): Ring 1 an die Haut, Wurzelrohr und Kegel ohne Flaeche (wurzel_r4.py); Runde 5: optional
+        import wurzel_r4 as W4        # kette_v8.json "ring1_versatz" (im Spiel-Asset Runde 5 nicht gesetzt, Probe verworfen: wurzel_r4.KEGEL_UMKEHR)
         W4.stufe_w(KB.packen(blob, d, ms, tim), ms, prot, ring_versatz=(kette or _p('kette_v8.json')).get('ring1_versatz'))
     if 'a' in stufen:
         import adern_v8 as AV

@@ -16,8 +16,8 @@
 #   1-6 v7_kette.sh (Stufe 6 = V7, sha256 319bbd17; dessen Pin-Pruefung wird hier durch V7_SOLL ersetzt, weil der Pin jetzt V8 ist)
 #   7   v8/v8_bau.py --stufen srwa   + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, Original-EM30 (CDEMD0.EMS)
 #       (Runde 4: Stufe w = wurzel_r4.py statt e, Texturen adern_r4.py modus original_r4;
-#        Runde 5: Stufe w mit geschlossener Wurzelkappe und kette_v8.json "ring1_versatz", ruecken_v8.json Ecken 38/41,
-#        Texturen adern_r5.py modus original_r5 - Brust auf Original-Zeile 481, fast weisse Texel ersetzt, blass_r5)
+#        Runde 5: Geometrie wie Runde 4, Texturen adern_r5.py modus original_r5 - Brust auf Original-Zeile 481, fast weisse Texel
+#        ersetzt, blass_r5)
 #                                    -> EM30_V8.EMD = Pin (V8)
 set -u
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
