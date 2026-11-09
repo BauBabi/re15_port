@@ -167,11 +167,15 @@ endif()
 #                 x <= 3000 erreicht (Cut 11, BF_RS_TAUMEL_KAM_X); mit K4 dasselbe (637) - Lage, nicht Asset. Schnittwahl bf_schnitt_waehlen (PORT-WAHL Nachbesserung 4), nicht geaendert, offen gemeldet.
 #   elza          6c 523: dieselbe Stelle F1633-F1634.
 #   zurueck_leon  6d 629, zurueck_elza 6d 605: F1577-F1580 und F1712, nur mit K5c (die dunklere Form gross im Bild).
+# Lauf D (Merge r41/form, Spiel-Asset K5e_f1, Nutzerentscheid E32): leon 6a an derselben Stelle F1635 Cut 12 742 statt 751
+#   (je bildgleich in drei Einzellaeufen). Ursache ist das EMD: K5e-EMD + K5c-TIM ergibt 742, K5c-Paar 751 (RE15_RE2_ASSET_ROOT,
+#   Bericht analysis/befunde_runde41/INT_laufd_riesenform.md); die Geometrie ist K5d (Krallen ganz eingezogen), die Zaehlung
+#   render_pc.c re15_slotdeckung zaehlt nur deckende Dreiecke. Schranke 6a leon = gemessener Wert K5e 742; 6c leon 631 <= 639 bleibt.
 set(_p6_form_min 768)
 set(_p6_deck 500)
 set(_p6_dunkel 600)
 if(TEIL STREQUAL "leon")
-    set(_p6_form_min 751)
+    set(_p6_form_min 742)   # K5e_f1 (E32), Lauf D; vorher 751 mit K5c
     set(_p6_deck 639)
 elseif(TEIL STREQUAL "elza")
     set(_p6_deck 523)
