@@ -9,7 +9,7 @@ Ausgabe (vom PC-Port ueber RE15_BIRKIN_FORM geladen, platform/pc/main.c):
 
 ⛔ Seit v0.8.30 (Nutzerfreigabe 2026-11-08 "Naja, gehen wir so erst mal ins rennnen.") ist das Spiel-Asset EM30_HANGAR.EMD
 die Sichel-Form (Pin release/em30_hangar.sha256), NICHT mehr die Ausgabe dieses Skripts. Auf dem Zweig r41/sichel_v8 ist es V8
-(Koerperbau nach Nutzer-Skizze, sha256 fa31156c...); V8 baut re15_port/tools/r41_sichel/v8_kette.sh neu (V7-Kette Referenz 2 ->
+(Koerperbau nach Nutzer-Skizze, Runde 2 sha256 d0ef852c...); V8 baut re15_port/tools/r41_sichel/v8_kette.sh neu (V7-Kette Referenz 2 ->
 --variante v4 -> re2kopf -> v6kopf -> v5koerper -> v6drei -> v7hand, dann v8/v8_bau.py; Dossier SF_sichel.md "V8 Koerperbau nach
 Nutzer-Skizze (2026-11-08)"; V7 allein: v7_kette.sh, sha256 319bbd17). Dieses Skript OHNE --variante zu starten
 ueberschreibt EM30_HANGAR.EMD mit dem Grundstand Referenz 2 (sha256 cfd1ac42...) - also nicht ins Spiel-Asset laufen lassen;
