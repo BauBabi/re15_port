@@ -15,7 +15,7 @@ Nutzer-Wortlaut:
 | Grüne Keile auf dem Buckel (Tafel 00) / graue Keile in Zone 27 (Tafel 08) | Kopf 22 steckt im Raum in Brust/Buckel 10 und Hals 21 (Durchstoßen). Wo der Kopf dahinter liegt, malt die Zeichen-Reihenfolge (Mitteltiefe je Dreieck, fern zuerst) ihn trotzdem darüber. Kein Falschfarben- oder Zuordnungsfehler des Tafelzeichners, keine Textur. |
 | Im Spiel? | Ja, dieselben Flächen. Das Spiel sortiert gleich (Dreiecks-Mitteltiefe, kein Tiefenpuffer). Im Spielbild sind die Stellen wegen der dunklen Haut nur schwach zu sehen. |
 | Rote Streifen Hals-Unterseite (K5e im Spiel) | Kein Durchstoßen: 6 echte Außenflächen des Kopfes (22, Vierecke 1, 8, 9, 194, 201, 209) mit roter Maul-Farbe (Texturzeile 0, Material "Maulinneres"). Ursache: Farbzuordnung. |
-| Seit wann | Schon K4 hat den Kopf im Hals/Buckel. K5c, K5e_f1 und Krallen-Kandidat sind an Kopf/Kiefer/Hals/Brust gleich. Tritt in 799/799 Bildern auf, am stärksten in Clip 12 = Bild-2-Pose. |
+| Seit wann | Nur für das DURCHSTOSSEN gemessen: Schon K4 hat den Kopf im Hals/Buckel. K5c, K5e_f1 und Krallen-Kandidat sind an Kopf/Kiefer/Hals/Brust gleich. Kopf x Brust und Kopf x Hals schneiden sich in 799/799 Bildern; Keil-Bildpunkte in der Bild-2-Kamera gibt es in 782/799 Bildern, am stärksten in Clip 12 = Bild-2-Pose. Die ROTEN Hals-Streifen sind nur in drei Ständen gemessen (Griff 5090 Clip 27/20, von unten Clip 2 in 8 Richtungen, Bild-2-Pose), nicht über alle Bilder und nicht für K4/K5c (Korrektur Runde 3, Prüfer r2 Nr. 17). |
 
 ## 1. Welche Flächen bilden die Keile (Bild 2)
 
@@ -103,6 +103,8 @@ Antwort auf (3): **Textur/Farbzuordnung, kein Durchstoßen.** Das deckt sich mit
 hier zusätzlich mit Tiefenpuffer und gdigrab gemessen.
 
 ## 4. Seit wann und in welchen Posen
+
+Gilt für das Durchstoßen und die Keile (Abschnitt 1). Die roten Hals-Streifen (Abschnitt 3) sind hier NICHT über alle Bilder gemessen; belegt sind sie nur in den drei Ständen aus Abschnitt 3 (Korrektur Runde 3).
 
 `skripte/s_alle.py`, `messung/alle_K5e_f1.json`, `alle_Krallen-Kandidat.json`, `alle_K5c.json`. Je Bild:
 - Schnitt im Raum: Paare von Kopf/Kiefer gegen Brust/Hals;
