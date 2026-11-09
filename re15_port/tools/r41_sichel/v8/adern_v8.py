@@ -1,4 +1,4 @@
-"""SF V8 Stufe a) Adern (W)-rechts aus dem Original-RE1.5-Birkin (Messblatt V8 Abschnitt 6c).
+"""SF V8 Stufe a) Adern (W)-rechts aus dem Original-RE1.5-Birkin (Messblatt V8 Abschnitt 6c; Runde 2 nach Pruefung V8 r1).
 
 Nutzer 2026-11-08 (woertlich): "man sieht ebenfalls beim vorlage Bild, das die Rechte Seite auch mehr rottöne hat, also quasi mehr adern an
 verschiedenen Stellen, am Arm und Körper, nicht nur grau. Übernehme die die Textur Sachen die du dafür brauchst vom originalen Birkin von
@@ -6,15 +6,14 @@ Resident Evil 1.5". Regel (Memory "Texturen nie aus Videobildern eichen", Nachtr
 (CDEMD0.EMS Typ 0x30) mit der Original-Palette der Zeile; keine gemalten Inseln, keine Eichung je Fleck/Region am Video.
 
 Quelle: Original EM30 = birkin_formen.lade_em30() (CDEMD0.EMS Blob 16), TIM 384 x 256, 8 bpp, CLUT-Zeilen 480-482.
-Zeilen (Messblatt 6c):
-  X1 = V7-Zeile 480 (graue Haut V5) + jeder Eintrag der Original-Zeile 480 mit Paletten-a* >= 15 und L* <= 38, bytegleich (15 Bit + STP)
-  X2 = V7-Zeile 481 + die entsprechenden Eintraege der Original-Zeile 481
-  angehaengt als Zeilen 480 + n und 481 + n (n = Zeilen der Basis, V7: 13 -> 493 / 494; 15 Zeilen, Port-Texturhoehe 3840 <= 4096).
+Zeilen (Messblatt 6c; Runde 2 dazu X3 fuer den Unterarm-Wulst):
+  Xk = V7-Zeile 480 + k (k = 0, 1, 2) + jeder Eintrag der Original-Zeile 480 + k mit Paletten-a* >= 15 und L* <= 38, bytegleich
+  angehaengt als Zeilen 480 + n + k (n = Zeilen der Basis, V7: 13 -> 493 / 494 / 495; 16 Zeilen, Port-Texturhoehe 4096 <= 4096).
   Lab wie Messblatt (m15/m17): LUT = Kanal x 8 (b2.modell), v4_gemein.lab.
-Flaechen (adern_v8.json, aus adern_suche.py):
-  Mesh 13 (Oberarm (W)-rechts, Knochen 13 relpos z -1136): alle Flaechen auf Zeile 480 -> X1.
-  Mesh 8: die in adern_v8.json genannten Flaechen -> X1 (Zeile 480) bzw. X2 (481), UV formgleich verschoben (je UV-Insel ein Schub
-  (du, dv) auf ein aderreiches Fenster derselben Textur-Seite und Zeile; Ziel-Texel = Original-Texel, Riegel S7a).
+Flaechen (adern_v8.json, aus adern_suche.py; Runde 2): GANZE UV-Inseln von V7 (alle Flaechen einer Zeile und Textur-Seite, die eine
+  UV-Ecke teilen) wechseln die Zeile, UV unveraendert - keine neuen Naehte. Runde 1 hatte 9 Teil-Inseln mit eigenem UV-Schub; Sicht-
+  Pruefer V8 r1: "Flickenteppich: Die Streifen enden hart an den Dreieckskanten, gleiche V-Adern wiederholen sich, zwischen den 9
+  UV-Inseln laufen Naehte", "Der helle Oberarm-Wulst und die untere Flanke sind unveraendert grau".
 Texel und alle anderen Zeilen bleiben bytegleich. Kein RE-Wert; PORT-WAHL.
 """
 import os, sys
@@ -46,10 +45,10 @@ def ader_eintraege(zeile15):
     return (L[:, 1] >= ADER_A) & (L[:, 0] <= ADER_L) & (np.asarray(zeile15) != 0)
 
 
-def zeilen_neu(t_clut):
+def zeilen_neu(t_clut, k_liste=(0, 1)):
     _o, _ms, to = original()
     X = []
-    for k in (0, 1):
+    for k in k_liste:
         z = t_clut[k].copy()
         a = ader_eintraege(to['clut'][k])
         z[a] = to['clut'][k][a]
@@ -75,30 +74,30 @@ def flaeche(m, key):
 
 
 def adern(ms, t, par, prot):
+    """Runde 2: par = {'zeilen': [0, 1, 2], 'flaechen': {'<mesh>': ['d0', 'v3', ...]}} - jede genannte Flaeche wechselt von Zeile
+    480 + k auf Xk = 480 + n + Index von k in 'zeilen'; UV bleibt."""
     n = int(t['clut'].shape[0])
-    (x1, n1), (x2, n2) = zeilen_neu(t['clut'])
-    t['clut'] = np.vstack([t['clut'], x1[None], x2[None]])
-    z1, z2 = 480 + n, 481 + n
-    c13 = 0
-    for uv in ms[13]['tuv'] + ms[13]['quv']:
-        if (uv[2] >> 6) & 0x1FF == 480:
-            setze_zeile(uv, z1); c13 += 1
-    c8 = []
-    for e in par['mesh8']:
-        uv = flaeche(ms[8], e['f'])
-        alt = (uv[2] >> 6) & 0x1FF
-        setze_zeile(uv, z1 if alt == 480 else z2)
-        if e.get('du') or e.get('dv'):
-            schiebe(uv, int(e.get('du', 0)), int(e.get('dv', 0)))
-        c8.append(e['f'])
-    prot['adern'] = dict(zeile_x1=z1, zeile_x2=z2, ader_eintraege_480=n1, ader_eintraege_481=n2, mesh13_flaechen=c13,
-                         mesh8_flaechen=c8, quelle=par.get('quelle'))
+    ks = [int(k) for k in par.get('zeilen', (0, 1))]
+    X = zeilen_neu(t['clut'], ks)
+    t['clut'] = np.vstack([t['clut']] + [x[None] for x, _n in X])
+    ziel = {480 + k: 480 + n + i for i, k in enumerate(ks)}
+    zahl = {}
+    for b, keys in sorted(par['flaechen'].items(), key=lambda kv: int(kv[0])):
+        for key in keys:
+            uv = flaeche(ms[int(b)], key)
+            alt = (uv[2] >> 6) & 0x1FF
+            assert alt in ziel, (b, key, alt)
+            setze_zeile(uv, ziel[alt])
+            zahl[(int(b), ziel[alt])] = zahl.get((int(b), ziel[alt]), 0) + 1
+    prot['adern'] = dict(zeilen={str(480 + k): 480 + n + i for i, k in enumerate(ks)},
+                         ader_eintraege={str(480 + k): nn for k, (_x, nn) in zip(ks, X)},
+                         flaechen={'%d->%d' % kz: c for kz, c in sorted(zahl.items())}, quelle=par.get('quelle'))
 
 
 def herkunft(blob, ref_blob):
     """Riegel S7a: (1) jeder Eintrag der Zeilen ab Basis-Zeilenzahl = V7-Zeile 480/481 (gleicher Index) oder Original-Eintrag (a* >= 15,
     L* <= 38) derselben Original-Zeile, 15 Bit gleich; (2) alle uebrigen Zeilen und alle Texel bytegleich V7 ausser Mesh 9 (S5) und dem
-    Schwanz; (3) jeder Texel unter einer Flaeche, deren UV sich gegen V7 geaendert hat (Mesh 8/13), ist ein Original-Texel."""
+    Schwanz; (3) jeder Texel unter einer Flaeche, deren UV sich gegen V7 geaendert hat (Mesh 8/13/14), ist ein Original-Texel."""
     _d, _o, ms, tim = KB.teile(blob); _d2, _o2, mr, timr = KB.teile(ref_blob)
     t, tr = KB.tim_teile(tim), KB.tim_teile(timr)
     _oo, _om, to = original()
@@ -106,7 +105,7 @@ def herkunft(blob, ref_blob):
     zeilen_ok = bool(np.array_equal(t['clut'][:nr], tr['clut']))
     neu_ok, n_ader = True, 0
     for k, z in enumerate(t['clut'][nr:]):
-        if k > 1:
+        if k > 2:                                   # Runde 2: X1/X2/X3 (Zeilen 480/481/482)
             neu_ok = False
             break
         a = ader_eintraege(to['clut'][k])
@@ -119,7 +118,7 @@ def herkunft(blob, ref_blob):
             neu_ok = False
     pix_ok = bool(np.array_equal(t['pix'], tr['pix']))
     tex_ok, n_tex, geaendert = True, 0, 0
-    for b in (8, 13):
+    for b in (8, 13, 14):
         for key, uv in [('d%d' % i, u) for i, u in enumerate(ms[b]['tuv'])] + [('v%d' % i, u) for i, u in enumerate(ms[b]['quv'])]:
             ur = flaeche(mr[b], key)
             if [uv[0], uv[1], uv[3], uv[4], uv[6], uv[7]] + ([uv[9], uv[10]] if len(uv) > 9 else []) == \

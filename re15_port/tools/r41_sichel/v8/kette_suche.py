@@ -41,9 +41,13 @@ KNICK_MAX = 15.0          # Grad, Steigungsknick des Mantels (Regel V5f, Bauplan
 WURZEL_BILD = (366.0, 215.0)   # Messblatt 3.1: Wurzelmitte an J ~(366,215)
 WINKEL_MAX = np.radians(25.0)  # Bauplan 6a: je Gelenk hoechstens 25 Grad
 ENDE_BILD = (283.0, 334.0)     # Messblatt 3.1 / 6a: Ende ~(283,330), Linie T1 endet bei y 333 (Station s 210 liegt bei y 324)
-B_MAX = float(os.environ.get('V8_B_MAX', '1.5'))   # Wurzelrohr hoechstens 1,5 r0 (verjuengt, v8_bau.wurzel_mesh)
+B_MAX = float(os.environ.get('V8_B_MAX', '1.5'))
+B_MIN = float(os.environ.get('V8_B_MIN', '0.2'))    # Runde 2 (Riegel S2c, Sicht-Pruefer (5)): kurzes Rohr erlaubt (Runde 1: 0,45) - weniger verdeckte
+                                                    # Geometrie im Rumpf (Maler-Verfahren ohne Tiefenpuffer, render_pc.c) und kein Rohrrand unter dem Buckel   # Wurzelrohr hoechstens 1,5 r0 (verjuengt, v8_bau.wurzel_mesh)
 KREISE_JE_GLIED = 12
-SEITE_W = float(os.environ.get("V8_SEITE_W", "2.0"))   # Gewicht Rueckenmitte (Lauf ks5 mit 0,5: Gelenke bis z -1300 = Kette an der (W)-rechten Flanke)
+SEITE_W = float(os.environ.get("V8_SEITE_W", "2.0"))
+EBEN = os.environ.get('V8_EBEN', '1') == '1'           # Runde 2: ebener gleichsinniger Bogen (siehe kette); 0 = Runde-1-Modell
+S2_W = float(os.environ.get('V8_S2_W', '1.0'))         # Runde 2: Gewicht S2a (Runde 1: 0,5) und Sattel-Term S2b (Zahlen-Pruefer V8 r1: S2 rot)   # Gewicht Rueckenmitte (Lauf ks5 mit 0,5: Gelenke bis z -1300 = Kette an der (W)-rechten Flanke)
 
 
 def rotv(v, ax, a):
@@ -93,6 +97,19 @@ class Suche:
         d = np.array([np.cos(pit) * np.cos(yaw), np.sin(pit), np.cos(pit) * np.sin(yaw)])
         L = x[17]
         pts, dirs = [P0], [d]
+        if EBEN:
+            # Runde 2 (Zahlen-Pruefer V8 r1 "Bauplan 6a ohne Umkehr": Bild-Drehwinkel -22,2/-8,8/-25,9/+8,3/-20,4/-15,0, Biegeebene kehrt am
+            # Gelenk 20 um): ebener Bogen - EINE Biegeachse (senkrecht zur Ebene durch die erste Gliedrichtung, Rollwinkel x[6]), alle 6
+            # Biegungen gleichsinnig 0..25 Grad (WINKEL_MAX x (1 + tanh) / 2). Ein ebener, gleichsinnig gekruemmter Bogen projiziert sich
+            # ohne Wendepunkt.
+            e1 = np.cross(d, [0, 0, 1.0])
+            e1 /= np.linalg.norm(e1)
+            ax = rotv(e1, d, x[6])
+            for j in range(6):
+                a = WINKEL_MAX * 0.5 * (1.0 + np.tanh(x[5 + 2 * j]))
+                pts.append(pts[-1] + d * L); d = rotv(d, ax, a); dirs.append(d)
+            pts.append(pts[-1] + d * L)
+            return np.array(pts), np.array(dirs)
         for j in range(6):
             a = WINKEL_MAX * np.tanh(x[5 + 2 * j]); phi = x[6 + 2 * j]
             e1 = np.cross(d, [0, 0, 1.0])
@@ -126,6 +143,9 @@ class Suche:
         sj = self.s_auf_T(q_gelenke)
         sj[0] = min(sj[0], 0.0)
         ziel = np.interp(sj, PROFIL_S, PROFIL_R)
+        if len(x) > 22:                      # Runde 2: Wurzelradius frei im Bauplan-Band 420-480 E., Gelenk 17 frei bis zum Wurzelradius
+            ziel[0] = float(np.clip(x[21], 420.0, 480.0))
+            ziel[1] = float(np.clip(x[22], ziel[2], ziel[0]))
         return radien_glatt(ziel, float(x[17]))
 
     def kreise(self, x):
@@ -133,11 +153,19 @@ class Suche:
         rad = self.radien(x, V.proj(V.PV, pts @ self.R8.T + self.T8))
         C, Rr = [], []
         r0 = rad[0]
-        B = float(np.clip(x[18], 0.45, B_MAX))
+        B = float(np.clip(x[18], B_MIN, B_MAX))
         rb = VB.WURZEL_VERJUENGUNG * r0
+        d0 = dirs[0]
+        rg = float(x[19]) if len(x) > 19 else 0.0        # Runde 2: Rohrknick (v8_bau.rohr_drehung), Grad
+        if rg:
+            nb = np.cross(dirs[0], dirs[1])
+            if np.linalg.norm(nb) > 1e-9:
+                d0 = rotv(dirs[0], nb, np.radians(rg))
+        if len(x) > 20:
+            rb = float(np.clip(x[20], 0.3, 1.0)) * r0       # Runde 2: Verjuengung des Rohrs frei 0,3-1,0 (Runde 1 fest 0,6)
         for t in np.linspace(0, 1, 10):       # Wurzelrohr im Rumpf (v8_bau.wurzel_mesh): r0 -> rb ueber B r0, dann Kegel
-            C.append(pts[0] - dirs[0] * B * r0 * t); Rr.append(r0 + (rb - r0) * t)
-        C.append(pts[0] - dirs[0] * (B * r0 + 0.5 * VB.WURZEL_DECKEL * rb)); Rr.append(0.5 * rb)
+            C.append(pts[0] - d0 * B * r0 * t); Rr.append(r0 + (rb - r0) * t)
+        C.append(pts[0] - d0 * (B * r0 + 0.5 * VB.WURZEL_DECKEL * rb)); Rr.append(0.5 * rb)
         for g in range(7):
             for t in np.linspace(0, 1, KREISE_JE_GLIED, endpoint=False):
                 C.append(pts[g] + (pts[g + 1] - pts[g]) * t); Rr.append(rad[g] + (rad[g + 1] - rad[g]) * t)
@@ -180,6 +208,18 @@ class Suche:
                 h[i] = ts[k] - self.top_r[k]
         return xn, h
 
+    def sattel(self, tu):
+        """S2b wie riegel_v8.sattel: groesste Tiefe der Oberkontur (Schwanz u Rumpf) unter ihrer oberen Huelle, x 300-420 (stetig)."""
+        sel = (self.xs >= 300) & (self.xs <= 420) & (tu < 900)
+        xs, ys = self.xs[sel].astype(float), tu[sel]
+        pts = sorted(zip(xs, -ys)); H = []
+        for p in pts:
+            while len(H) >= 2 and (H[-1][0] - H[-2][0]) * (p[1] - H[-2][1]) - (H[-1][1] - H[-2][1]) * (p[0] - H[-2][0]) >= 0:
+                H.pop()
+            H.append(p)
+        hull = np.interp(xs, [h[0] for h in H], [-h[1] for h in H])
+        return float((ys - hull).max())
+
     def residuen(self, x, detail=False):
         q, rp, pts, Pm, rad = self.kreise(x)
         e = self.kanten(q, rp)
@@ -196,7 +236,8 @@ class Suche:
         dm = 2 * rp[m].min() if m.any() else 0.0
         r = np.concatenate([
             d,                                                           # S1
-            0.5 * da,                                                    # S2a (116 Spalten)
+            (S2_W if EBEN else 0.5) * da,                                # S2a (116 Spalten)
+            ([3.0 * max(0.0, self.sattel(tu) - 1.5), 2.0 * max(0.0, float(np.abs(da[:56]).max()) - 5.0)] if EBEN else []),  # S2b, S2a-Max
             np.maximum(0.0, hn - 2.0),                                  # S2c
             1.0 * (q[-1] - np.array(ENDE_BILD)),                        # Ende
             1.0 * (q[11] - np.array(WURZEL_BILD)),                      # Wurzel an J
@@ -235,10 +276,13 @@ def main():
         best = (S.kosten(x), x)
     for yw in (np.radians(np.arange(0, 360, 15)) if not a.start else []):
         for pt in np.radians(np.arange(-80, 81, 10)):
-            x = x0.copy(); x[3] = yw; x[4] = pt
-            c = S.kosten(x)
-            if best is None or c < best[0]:
-                best = (c, x)
+            for ro in (np.radians(np.arange(0, 360, 30)) if EBEN else [0.0]):
+                x = x0.copy(); x[3] = yw; x[4] = pt
+                if EBEN:
+                    x[6] = ro
+                c = S.kosten(x)
+                if best is None or c < best[0]:
+                    best = (c, x)
     x = best[1]
     print('Raster %.3f Gier %.0f Nick %.0f' % (best[0], np.degrees(x[3]), np.degrees(x[4])))
     skal = np.array([50, 50, 50, 0.05, 0.05] + [0.1, 0.1] * 6 + [20, 0.1])
@@ -256,8 +300,10 @@ def main():
                s1_d=[round(float(v), 2) for v in D['d']], s1_mittel=round(float(np.mean(np.abs(D['d']))), 2),
                s1_max=round(float(np.max(np.abs(D['d']))), 2), s2a=[round(float(v), 1) for v in D['s2a']], j_huckel=round(D['hj'], 1),
                wurzel_px=round(float(D['wurzel_px']), 1), bild=[[round(float(c), 1) for c in qq] for qq in D['q'][11::KREISE_JE_GLIED]],
-               hinten=round(float(np.clip(x[18], 0.45, B_MAX)), 3),
-               biegung_grad=[round(float(np.degrees(WINKEL_MAX * np.tanh(x[5 + 2 * j]))), 2) for j in range(6)])
+               hinten=round(float(np.clip(x[18], B_MIN, B_MAX)), 3),
+               eben=EBEN, s2b_sattel=round(S.sattel(np.minimum(S.top(D['q'], D['rp']), S.top_r)), 2),
+               biegung_grad=[round(float(np.degrees(WINKEL_MAX * (0.5 * (1.0 + np.tanh(x[5 + 2 * j])) if EBEN else np.tanh(x[5 + 2 * j])))), 2)
+                             for j in range(6)])
     json.dump(out, open(a.aus, 'w'), indent=1)
     print('S1 Mittel %.2f Max %.2f, Naht-Huckel %.1f, Wurzel %.1f px, L %d, Radien %s' % (out['s1_mittel'], out['s1_max'], out['j_huckel'],
                                                                                      out['wurzel_px'], out['L'], out['radien']))

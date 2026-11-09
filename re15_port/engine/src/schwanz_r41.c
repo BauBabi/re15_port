@@ -92,14 +92,25 @@ static const float k_feder[SW_J] = { 1.0f, 0.22f, 0.18f, 0.15f, 0.12f, 0.10f, 0.
  * (Gliedverhaeltnis > 2,0) greift dort nicht mehr; ohne eigenen Modus liefe die Kette wie Referenz 2 (haengen() mit 62/80 Grad, Feder
  * 0,80) und wuerde in der Szene durchhaengen. Erkennung V8 (gemessen an den gebauten Formen, Knochen 16-22 relpos):
  *   Gliedlaengen max/min <= SW_V8_VERH (V8 1,00; V4/V7 5,5), Gliedlaenge >= SW_V8_GLIED_MIN (V8 538; Referenz 2 466/467),
- *   Wurzel (Knochen 16 relpos) y < 0 (oben am Ruecken; V8 -342, Referenz 2 +120) und x >= SW_GLATT_WURZEL_X (V8 -667; V1-V3 hohe
- *   Wurzel x < -700).
+ *   Wurzel (Knochen 16 relpos) y < 0 (oben am Ruecken; V8 -342 / Runde 2 -214, Referenz 2 +120) und x >= SW_V8_WURZEL_X (V8 -667 /
+ *   Runde 2 -714; V2 -986).
  * Fuer die V8-Kette: Mitnahme/Feder/Erhalt wie V4 (SW_V4_*, Bauplan "Feder/Mitnahme wie V4"), haengen() aus, glaetten() mit Grenze
  * Keyframe-Gelenkwinkel + SW_GLATT_RAND (3 Grad), mindestens SW_GLATT_MIN, hoechstens SW_V8_GLATT_MAX (25 Grad, Bauplan "je hoechstens
  * 25 Grad"), ohne Knick-Ausnahme; Bodenregel mit Mesh-Radien und Dornspitze wie V4. GESTALTUNG (PORT-WAHL), keine Original-Konstante. */
 #define SW_V8_VERH         1.10f
 #define SW_V8_GLIED_MIN    500.0f
 #define SW_V8_GLATT_MAX    0.4363f    /* 25 Grad */
+/* V8 Runde 2: die Feinsuche am Mesh (tools/r41_sichel/v8/kette_fein.py) legte die Wurzel nach x -714 (Runde 1: -667); die Erkennung nimmt
+ * deshalb nicht mehr SW_GLATT_WURZEL_X (-700), sondern SW_V8_WURZEL_X: zwischen V8 Runde 2 (-714) und V2 (-986, Dossier "Schwanz V2") bzw.
+ * der Gegenprobe des Unit-Tests (-800). Gemessen, PORT-WAHL. */
+#define SW_V8_WURZEL_X     (-760)
+/* Runde 41 SF V8 Runde 2 (Pruefung V8 r1, Sicht-Pruefer Punkt 5: "In F334 und F340 ... stechen graue Dreiecke des Wurzelrohrs zackig
+ * durch die Rueckenhaut; V7 hatte das nicht"): das Wurzelrohr (Mesh 16) steckt 0,2-1,5 r0 tief im Rumpf; dreht Knochen 16 gegen Knochen 8,
+ * kommt es durch die Haut, und ohne Tiefenpuffer (Maler-Verfahren, render_pc.c) zeichnet es sich auch knapp unter der Haut ueber sie.
+ * Fuer die V8-Kette bleibt deshalb das erste Glied (Gelenk 0 -> 1) starr auf seinem Keyframe (die V8-Keyframes halten Knochen 16 in
+ * jedem Bild auf der Ruhedrehung gegen Knochen 8, tools/r41_sichel/v8/v8_bau.py): Feder, Seitenvorgabe, Szenenziel (FABRIK ab Gelenk 1)
+ * und Bodenregel (Drehung um Gelenk 1) bewegen nur die Glieder 17-22. GESTALTUNG (PORT-WAHL), keine Original-Konstante. */
+#define SW_V8_STARR        1          /* Gelenke 0..SW_V8_STARR liegen auf dem Keyframe */
 
 /* V4 Runde 3 (Pruefung V4 r2 Zahlen Abschnitt 3 "Boden", Entscheid O3 "Schwanz und Dornspitze nie unter dem Boden, glaetten() prueft
  * auch die Mesh-Spitze"): im Lauf sfv4/r/V4r2 lag kein Kettenpunkt unter dem Boden, wohl aber die Spitze von Mesh 22 (Knochenraum bis
@@ -196,7 +207,7 @@ int re15_schwanz_r41_v8_kette(const re15_emd_skeleton_t *s)
         if (l > lmax) lmax = l;
     }
     const int16_t *w = s->bone_relative_pos[SW_K0];
-    return lmin >= SW_V8_GLIED_MIN && lmax <= SW_V8_VERH * lmin && w[1] < 0 && w[0] >= SW_GLATT_WURZEL_X;
+    return lmin >= SW_V8_GLIED_MIN && lmax <= SW_V8_VERH * lmin && w[1] < 0 && w[0] >= SW_V8_WURZEL_X;
 }
 
 /* V4 Runde 3: die V4-Kette (ungleiche Glieder, SW_GLATT_V4_VERH) am Skelett erkennen - Gliedlaengen = |rel| der Knochen 17-22. */
@@ -338,6 +349,7 @@ static void haengen(float (*p)[3], const float *laenge, float boden, float (*zw)
 static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float boden, float (*zw)[3], int biegung,
                      const float *radius, float dorn, int v8)
 {
+    const int piv = v8 ? SW_V8_STARR : 0;               /* V8 Runde 2: Bodenregel dreht um Gelenk 1, das erste Glied bleibt starr */
     for (int j = 1; j < SW_J - 1; j++) {
         float a[3] = { p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1], p[j][2] - p[j - 1][2] };
         float d[3] = { p[j + 1][0] - p[j][0], p[j + 1][1] - p[j][1], p[j + 1][2] - p[j][2] };
@@ -403,38 +415,38 @@ static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float bo
     }
     int tief = -1;
     float ymax = boden;
-    for (int j = 1; j < np; j++)
+    for (int j = piv + 1; j < np; j++)
         if (rr[j][1] + rand_j[j] > ymax) { ymax = rr[j][1] + rand_j[j]; tief = j; }
-    if (tief > 0) {
-        float v[3] = { rr[tief][0] - p[0][0], 0.0f, rr[tief][2] - p[0][2] };
+    if (tief > piv) {
+        float v[3] = { rr[tief][0] - p[piv][0], 0.0f, rr[tief][2] - p[piv][2] };
         float ax[3] = { -v[2], 0.0f, v[0] };                /* waagerecht, quer zu v */
         if (norm(ax) < 1e-3f) { ax[0] = 1.0f; ax[1] = 0.0f; ax[2] = 0.0f; }
         float r0[SW_J + 1][3];
         for (int j = 0; j < np; j++)
-            for (int k = 0; k < 3; k++) r0[j][k] = rr[j][k] - p[0][k];
+            for (int k = 0; k < 3; k++) r0[j][k] = rr[j][k] - p[piv][k];
         const float schritt = 0.0174533f;                   /* 1 Grad */
         float best = 0.0f;
         for (int sg = -1; sg <= 1 && best == 0.0f; sg += 2) {
             for (int n = 1; n <= 90; n++) {
                 const float w = sg * n * schritt, c = cosf(w), sn = sinf(w);
                 int ok = 1;
-                for (int j = 1; j < np && ok; j++) {
+                for (int j = piv + 1; j < np && ok; j++) {
                     const float *r = r0[j];
                     const float kd = ax[0] * r[0] + ax[1] * r[1] + ax[2] * r[2];
                     const float y = r[1] * c + (ax[2] * r[0] - ax[0] * r[2]) * sn + ax[1] * kd * (1.0f - c);
-                    if (p[0][1] + y + rand_j[j] > boden) ok = 0;
+                    if (p[piv][1] + y + rand_j[j] > boden) ok = 0;
                 }
                 if (ok) { best = w; break; }
             }
         }
         if (best != 0.0f) {
             const float c = cosf(best), sn = sinf(best);
-            for (int j = 1; j < SW_J; j++) {
+            for (int j = piv + 1; j < SW_J; j++) {
                 const float *r = r0[j];
                 const float kd = ax[0] * r[0] + ax[1] * r[1] + ax[2] * r[2];
                 const float kr[3] = { ax[1] * r[2] - ax[2] * r[1], ax[2] * r[0] - ax[0] * r[2], ax[0] * r[1] - ax[1] * r[0] };
                 float neu[3];
-                for (int k = 0; k < 3; k++) neu[k] = p[0][k] + r[k] * c + kr[k] * sn + ax[k] * kd * (1.0f - c);
+                for (int k = 0; k < 3; k++) neu[k] = p[piv][k] + r[k] * c + kr[k] * sn + ax[k] * kd * (1.0f - c);
                 for (int k = 0; k < 3; k++) { q[j][k] += neu[k] - p[j][k]; p[j][k] = neu[k]; }
             }
         }
@@ -482,19 +494,20 @@ static void fabrik(float (*ik)[3], int a, int e, const float t[3], const float *
  * der Feder wird mitgeschoben (beim Freigeben laeuft sie ohne Sprung weiter).
  * NB4: optional ein Durchgangspunkt fuer Gelenk via_j (zwei FABRIK-Abschnitte Wurzel -> via, via -> Spitze) und eine
  * gebogene Startform (re15_schwanz_r41_fuehrung). */
-static void ziel_anwenden(int slot, const float *laenge, float boden)
+static void ziel_anwenden(int slot, const float *laenge, float boden, int v8)
 {
     float (*p)[3] = s_sw[slot].p, (*q)[3] = s_sw[slot].q;
     float ik[SW_J][3], t[3];
     const float *bg = s_sw[slot].beuge_an ? s_sw[slot].beuge : NULL;
+    const int a0 = v8 ? SW_V8_STARR : 0;                 /* V8 Runde 2: FABRIK ab Gelenk 1, das erste Glied bleibt starr */
     memcpy(ik, p, sizeof ik);
     for (int k = 0; k < 3; k++) t[k] = (float)s_sw[slot].ziel[k];
-    if (s_sw[slot].via_j > 0) {
+    if (s_sw[slot].via_j > a0) {
         float v[3];
         for (int k = 0; k < 3; k++) v[k] = (float)s_sw[slot].via[k];
-        fabrik(ik, 0, s_sw[slot].via_j, v, laenge, boden, bg);
+        fabrik(ik, a0, s_sw[slot].via_j, v, laenge, boden, bg);
         fabrik(ik, s_sw[slot].via_j, SW_J - 1, t, laenge, boden, bg);
-    } else fabrik(ik, 0, SW_J - 1, t, laenge, boden, bg);
+    } else fabrik(ik, a0, SW_J - 1, t, laenge, boden, bg);
     const float w = (float)s_sw[slot].ziel_w / 4096.0f;
     for (int j = 1; j < SW_J; j++)
         for (int k = 0; k < 3; k++) {
@@ -536,7 +549,8 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
     }
     /* Seitenvorgabe quadratisch zur Spitze (oberes Stueck haengt weiter, die Spitze schwingt aus): linear gewichtet
      * stand der Schwanz im Lauf n4 h22-h26 waagerecht in Hufthoehe ab, das Video zeigt ihn von der Huefte bis zum Boden. */
-    for (int j = 1; j < SW_J; j++)
+    const int kette_v8 = re15_schwanz_r41_v8_kette(skel);
+    for (int j = kette_v8 ? SW_V8_STARR + 1 : 1; j < SW_J; j++)                       /* V8 Runde 2: erstes Glied starr */
         zm[j][2] -= (float)s_sw[slot].seite * (float)(j * j) / (float)(SW_N * SW_N);   /* rechte Seite = Birkin-Raum -z */
     for (int j = 0; j < SW_J; j++) zu_welt(a, cs, sn, zm[j], zw[j]);
 
@@ -546,7 +560,6 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
         for (int j = 0; j < SW_J; j++) for (int k = 0; k < 3; k++) dz[j][k] = zw[j][k] - s_sw[slot].zw[j][k];
         memcpy(s_sw[slot].zw, zw, sizeof zw);                                 /* V4 Runde 3: Messzugang re15_schwanz_r41_ziel_gelenk */
         float sp[3] = { s_sw[slot].p[0][0] - zw[0][0], s_sw[slot].p[0][1] - zw[0][1], s_sw[slot].p[0][2] - zw[0][2] };
-        const int kette_v8 = re15_schwanz_r41_v8_kette(skel);
         const int kette_v4 = re15_schwanz_r41_v4_kette(skel) || kette_v8;   /* V8: Mitnahme/Feder/Erhalt und kein haengen() wie V4 */
         if (s_sw[slot].gueltig && norm(sp) <= SW_SPRUNG && kette_v4) {
             /* V4 Runde 3: die V4-Kette wird mit dem Anteil SW_V4_MITNAHME der Zielbewegung mitgenommen (Lage und Vorlage gleich
@@ -571,6 +584,9 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
                     q[j][k] = p[j][k];
                     p[j][k] += v + (zw[j][k] - p[j][k]) * k_feder[j] * fk;
                 }
+            if (kette_v8)                                                     /* V8 Runde 2: erstes Glied starr auf dem Keyframe */
+                for (int j = 1; j <= SW_V8_STARR; j++)
+                    for (int k = 0; k < 3; k++) { p[j][k] = zw[j][k]; q[j][k] = zw[j][k]; }
             for (int j = 1; j < SW_J; j++) {                                  /* feste Gliedlaengen, Boden */
                 float d[3] = { p[j][0] - p[j - 1][0], p[j][1] - p[j - 1][1], p[j][2] - p[j - 1][2] };
                 if (norm(d) < 1e-3f) { d[0] = zw[j][0] - zw[j - 1][0]; d[1] = zw[j][1] - zw[j - 1][1];
@@ -586,7 +602,7 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
              * Wortlaut "Ich will EXAKT diese Umsetzung" (Beschreibung2: Beginn, Knick, breiter nach oben, Spitze), Entscheid O3. */
             if (s_sw[slot].ziel_w <= 0 && !kette_v4) haengen(p, laenge, (float)a->y, zw);
         }
-        if (s_sw[slot].ziel_w > 0) ziel_anwenden(slot, laenge, (float)a->y);
+        if (s_sw[slot].ziel_w > 0) ziel_anwenden(slot, laenge, (float)a->y, kette_v8);
         {   /* Runde 41 SF V3: Knick-Grenze (hohe Wurzel V1/V2/V3); V4 Runde 2: auch fuer die V4-Kette (ungleiche Glieder) */
             float lmin = 1e9f, lmax = 0.0f;
             for (int j = 1; j < SW_J; j++) { if (laenge[j] < lmin) lmin = laenge[j]; if (laenge[j] > lmax) lmax = laenge[j]; }

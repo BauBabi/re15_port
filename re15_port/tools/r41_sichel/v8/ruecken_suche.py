@@ -24,7 +24,7 @@ import kopf_orig_bau as KB   # noqa: E402
 import ruecken_v8 as RV8     # noqa: E402
 
 X0, X1 = 372, 445
-A_MAX = 10.0
+A_MAX = float(os.environ.get('V8_A_MAX', '10'))   # Runde 2: per Umgebung weiter (Lauf sfv8/r2 rs2: 15)
 
 
 def main():
@@ -34,6 +34,8 @@ def main():
     ap.add_argument('--kette')
     ap.add_argument('--start', help='ruecken-JSON einer frueheren Runde: deren Verschiebungen sind die Basis (fest), gesucht wird darauf')
     ap.add_argument('--x-min', type=int, default=None, help='nur Kandidaten mit Bild-x >= x-min')
+    ap.add_argument('--x-max', type=int, default=450, help='nur Kandidaten mit Bild-x <= x-max')
+    ap.add_argument('--riegel', action='store_true', help='Runde 2: Kosten = Riegel S2/S3 (riegel_v8) auf der Silhouette mit Schwanz')
     a = ap.parse_args()
     blob = open(a.basis, 'rb').read()
     sha_basis = V.sha(blob)
@@ -56,7 +58,7 @@ def main():
     rumpf = V.b2.umriss_schnell(mo, V.PV, knochen=list(range(16)))
     top = {x: int(np.nonzero(rumpf[:, x])[0].min()) for x in range(300, 471) if rumpf[:, x].any()}
     xmin = a.x_min if a.x_min is not None else (330 if a.kette else 368)
-    kand = [i for i, (x, y) in enumerate(q) if xmin <= round(x) <= 450 and y <= top.get(int(round(x)), 999) + 14]
+    kand = [i for i, (x, y) in enumerate(q) if xmin <= round(x) <= a.x_max and y <= top.get(int(round(x)), 999) + 14]
     J = {}
     for i in kand:
         Jm = np.zeros((2, 3))
@@ -89,8 +91,40 @@ def main():
         kp = max([h['prom'] for h in hk], default=0.0)
         return H, RG.sattel(om, 330, 420)[0], RG.sattel(om, 380, 447)[0], kp
 
+    # Runde 2 (Lauf sfv8/r2 rs2: ohne Formziel entstand bei x 429/430 eine Stufe 187 -> 192 statt eines Huegels): Ziel der Oberkontur
+    # x KX0-KX1 = die Kuppel der Vorlage ohne Dellen = obere Huelle (konkave Majorante) der Vorlage-Oberkontur (m13b_oben.json) -
+    # Nutzer "Little red hill from the back", "smooth straight to head without further hills...."
+    KX0, KX1 = 400, 447
+    _xs = [x_ for x_ in range(KX0, KX1 + 1) if x_ in ov]
+    _H = []
+    for p_ in sorted((x_, -ov[x_]) for x_ in _xs):
+        while len(_H) >= 2 and (_H[-1][0] - _H[-2][0]) * (p_[1] - _H[-2][1]) - (_H[-1][1] - _H[-2][1]) * (p_[0] - _H[-2][0]) >= 0:
+            _H.pop()
+        _H.append(p_)
+    kuppel_ziel = {x_: float(np.interp(x_, [q[0] for q in _H], [-q[1] for q in _H])) for x_ in range(KX0, KX1 + 1)}
+
+    def riegel_kosten(av):
+        """Runde 2 (--riegel; Pruefung V8 r1: S2 rot (a) Max 7, (b) Sattel 3,7, (c) Naht 5,0; S3 rot (b) H 3,0 bei x 423, (d) Sattel 2,3):
+        Kosten = die Riegelgroessen S2/S3 selbst (riegel_v8.s2_s3 auf der Silhouette aller Knochen, j_huckel), als Huerden mit 0,5 px
+        Abstand zur Schwelle, dazu S2a gegen die Vorlage und 0,02 x Summe a_i^2 (kleine Verschiebungen)."""
+        mo2 = V.modell(KB.packen(blob, d, form(av), tim))
+        r = V.b2.umriss_schnell(mo2, V.PV, knochen=list(range(23)))
+        omk = {x_: int(np.nonzero(r[:, x_])[0].min()) for x_ in range(KX0, KX1 + 1) if r[:, x_].any()}
+        kuppel = float(np.mean([abs(omk[x_] - kuppel_ziel[x_]) for x_ in omk]))
+        bone = np.where(r, 0, -1)
+        r2, r3, om = RG.s2_s3(mo2, bone)
+        h = lambda v: max(0.0, v)
+        Hh, Hx = r3['b_huegel']
+        c = (2 * r2['a']['mittel'] + 2 * h(r2['a']['max'] - 5.5) + 4 * h(r2['b'][0] - 1.5) + 4 * h(r2['c']['huckel_px'] - 2.5)
+             + 4 * h(r3['a_kuppe'] - 3.5) + 4 * h(5.5 - Hh) + 4 * h(Hh - 9.5) + 2 * (h(430 - Hx) + h(Hx - 443))
+             + 4 * len(r3['c_weitere']) + 8 * h(r3['d_sattel_kopf'][0] - 1.5) + 4 * h(r3['e_K'] - 2.5) + 0.02 * float(np.sum(av ** 2))
+             + 2 * kuppel)
+        return c, dict(S2=r2, S3=r3, kuppel_mittel=round(kuppel, 2))
+
     def kosten(av):
         av = np.clip(av, -A_MAX, A_MAX)
+        if a.riegel:
+            return riegel_kosten(av)[0]
         k = kontur(av)
         dd = k - ziel
         c = float(np.mean(np.abs(dd)) + 0.5 * np.max(np.abs(dd)) + 0.02 * np.sum(av ** 2))
@@ -126,8 +160,10 @@ def main():
         ecken.setdefault(k_, v_)
     ecken = {k_: ecken[k_] for k_ in sorted(ecken, key=int)}
     dd = kontur(x) - ziel
-    out = dict(quelle='ruecken_suche.py (Basis %s sha256 %s, Kette %s), Ziel Vorlage-Oberkontur x %d-%d' % (
-                   os.path.basename(a.basis), sha_basis, a.kette and os.path.basename(a.kette), xs[0], X1),
+    out = dict(quelle='ruecken_suche.py (Basis %s sha256 %s, Kette %s, Start %s%s), Ziel Vorlage-Oberkontur x %d-%d' % (
+                   os.path.basename(a.basis), sha_basis, a.kette and os.path.basename(a.kette), a.start and os.path.basename(a.start),
+                   ', Riegel S2/S3' if a.riegel else '', xs[0], X1),
+               riegel=riegel_kosten(np.clip(x, -A_MAX, A_MAX))[1] if a.riegel else None,
                masse=dict(zip(('H', 'sattel_330_420', 'sattel_380_447', 'kuppe'), form_masse(kontur(x)))) if a.kette else None,
                kandidaten=kand, a_px={str(i): round(float(ai), 2) for i, ai in zip(kand, x)}, ecken=ecken,
                kosten_start=round(c0, 3), kosten=round(kosten(x), 3), d_mittel=round(float(np.mean(np.abs(dd))), 2),

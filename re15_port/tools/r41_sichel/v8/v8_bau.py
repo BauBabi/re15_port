@@ -17,10 +17,10 @@ Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc; keine Zahl hier ist ein
 Nutzer-Wortlaut oder Messung (Messblatt V8 bzw. kette_suche.py / ruecken_suche.py, Protokolle unter SF_belege/v8/bau).
 
 Stufe s) Schwanz (Messblatt 6a): Ruhekette aus kette_v8.json (kette_suche.py: Wurzel und Gelenke im Knochenraum 8, Gliedlaenge L fuer
-   alle 7 Glieder gleich, Radien je Gelenk). EMR Bank 0: relpos Knochen 16 = Wurzel, 17-22 = (0, L, 0); Keyframe-Drehungen der Knochen
-   16-22 = Ruhe-Lokaldrehung x (Bewegung des Keyframes gegen den Clip-Median, aus V7), so gesetzt, dass PV genau die Suchkette zeigt;
-   danach je Keyframe die Bodenregel (Knochen 16 um eine waagerechte Achse hochdrehen, bis Ringunterkanten, Spitze und Dornspitze
-   ueber der tiefsten Koerperecke liegen). Knochen 0-15 und alle anderen Bits bytegleich. Meshes 16-22 neu aus den Radien (Ringe auf der
+   alle 7 Glieder gleich, Radien je Gelenk). EMR Bank 0: relpos Knochen 16 = Wurzel, 17-22 = (0, L, 0); Keyframe-Drehungen (Runde 2):
+   Knochen 16 = Ruhedrehung in jedem Keyframe; Knochen 17-22 haengen im Modellraum wie in PV (mit dem Kurs von Knochen 8 um die
+   Hochachse gedreht), je Gelenk <= 25 Grad, Bodenregel durch gemeinsames Hochdrehen der Zielrichtungen (Knochen 16 fest).
+   Knochen 0-15 und alle anderen Bits bytegleich. Meshes 16-22 neu aus den Radien (Ringe auf der
    Gehrung der Ruhekette, Manschette 0,45 r, Deckel wie V6, Dorn 0,8 r); Flaechen, UV, CLUT-Zeile 487 und Eckenzahl bleiben.
 Stufe r) Ruecken (Messblatt 6b): Ecken von Mesh 8 aus ruecken_v8.json (ruecken_suche.py).
 Stufe a) Adern (Messblatt 6c): Zeilen X1/X2 = V7-Zeile 480/481 + die Original-EM30-Ader-Eintraege derselben Zeile (a* >= 15,
@@ -70,35 +70,6 @@ def ruhe_lokal(P):
     return lok
 
 
-def clip_je_kf(mo):
-    """Keyframe -> erster Clip, der ihn benutzt (EDD), sonst -1."""
-    c_von = {}
-    for c, (f0, n) in enumerate(mo.clips):
-        for i in range(n):
-            c_von.setdefault(mo.frames[f0 + i] & 0xFFF, c)
-    return c_von
-
-
-def bewegung_v7(mo):
-    """Je Keyframe und Glied: Drehvektor der V7-Lokaldrehung gegen den Clip-Median (komponentenweiser Median der Drehvektoren)."""
-    s = mo.skel
-    c_von = clip_je_kf(mo)
-    logs = np.array([[BF._log(lokal_aus_kf(s, k, b)) for b in V.SCHWANZ] for k in range(s.kf_count)])
-    med = {}
-    for c in set(c_von.values()):
-        ks = [k for k, cc in c_von.items() if cc == c]
-        med[c] = np.median(logs[ks], 0)
-    w = np.zeros((s.kf_count, 7, 3))
-    for k in range(s.kf_count):
-        c = c_von.get(k, -1)
-        if c < 0:
-            continue
-        for i, b in enumerate(V.SCHWANZ):
-            Lm = BF._exp(med[c][i])
-            w[k, i] = BF._log(Lm.T @ lokal_aus_kf(s, k, b))
-    return w, c_von
-
-
 def tiefste_koerperecke(mo, R, T):
     y = -1e9
     for b in range(16):
@@ -140,7 +111,16 @@ def kette_tief(R8, T8, loks, rel, L, rad, dorn_y):
 
 
 # ------------------------------------------------------------------ Meshes
-def glied_mesh(m_alt, g, L, ra, re, n_anf, n_end, hinten=UEBERLAPP):
+# Runde 2 Manschette (Messung sfv8/r2, Lauf k4 + r8 in PV): die Manschette des Glieds g+1 liegt auf dem Gehrungsring des Gelenks, entlang
+# des VORGLIEDS zurueckgesetzt. Ruecksetzung 0,45 ra (V5f) und Radius 0,97: Oberkante hinter dem Gelenk 17 3,2 px unter ihrer Huelle (Delle
+# bei x 329, Riegel S2b); 0,15-0,2 ra und Radius 0,99-1,0: Delle dort weg (Sattel wandert nach x 364, 3,0). Gewaehlt 0,2 ra / 0,99:
+# deckt beim Nachknicken bis etwa 0,2 rad (11 Grad) gegen die Ruhe ohne Spalt; 1 % enger als das Vorglied (gleich dicke Glieder s 90-130
+# wuerden sonst mit dem Vorglied zusammenfallen). PORT-WAHL.
+MANSCHETTE_R = 0.99
+MANSCHETTE_S = 0.2
+
+
+def glied_mesh(m_alt, g, L, ra, re, n_anf, n_end, hinten=UEBERLAPP, a_vor=None):
     """Mesh 16+g neu: Ringe (Winkel je Ecke wie V7), Ende auf der Gehrungsebene (Normale n_end, Gliedraum), Anfang (Manschette)
     auf der um UEBERLAPP x ra zurueckgesetzten Gehrungsebene n_anf; Deckel-/Kappenecken auf den Ringmitten; Normalen radial."""
     m = copy.deepcopy(m_alt)
@@ -159,7 +139,17 @@ def glied_mesh(m_alt, g, L, ra, re, n_anf, n_end, hinten=UEBERLAPP):
         return off + np.array([0.0, cy, 0.0]) + (t[:, None] * Y if n is not None else 0.0)
 
     ringe = []
-    ringe.append(ring(-(hinten if g == 0 else UEBERLAPP) * ra, ra, n_anf, phis[0]))
+    if a_vor is not None:
+        # Runde 2 (Riegel S2b, Messung sfv8/r2 vtx.py: die Manschette von Glied 17 lag zurueckgesetzt entlang der EIGENEN Achse und stand
+        # in PV 5-7 px ueber der Oberkante des Vorglieds - ein Huckel an jedem Gelenk auf der Aussenseite des Bogens): Manschette = der
+        # Gehrungsring des Gelenks, entlang der Achse des VORGLIEDS (a_vor, im eigenen Raum) um UEBERLAPP x ra zurueckgesetzt und um
+        # MANSCHETTE_R enger - in Ruhe liegt sie im Vorglied, beim Nachknicken fuellt sie den Spalt wie bisher.
+        q = ring(0.0, ra, n_anf, phis[0])
+        a = a_vor / np.linalg.norm(a_vor)
+        ax_ = (q @ a)[:, None] * a[None, :]
+        ringe.append(ax_ + MANSCHETTE_R * (q - ax_) - MANSCHETTE_S * ra * a[None, :])
+    else:
+        ringe.append(ring(-(hinten if g == 0 else UEBERLAPP) * ra, ra, n_anf, phis[0]))
     if nr == 3:
         rb = ra + BAUCH_T * (re - ra)
         ringe.append(ring(BAUCH_T * L, rb, None, phis[1]))
@@ -193,7 +183,21 @@ def glied_mesh(m_alt, g, L, ra, re, n_anf, n_end, hinten=UEBERLAPP):
     return m
 
 
-def wurzel_mesh(m18, L, ra, re, n_end, hinten):
+def rohr_drehung(lok1, grad):
+    """Runde 2 (Riegel S2b/S2c, Messung sfv8/r2 probe_b.py: das gerade Rohr lag in PV waagerecht unter dem Buckel, dessen Oberkante 6-9 px
+    darueber; kuerzer machen vergroesserte die Stufe auf 13-22 px): das Wurzelrohr darf in der Biegeebene des Gelenks 17 um `grad` gegen
+    die Gliedachse abknicken (+ = zur Aussenseite des Bogens, also zum Buckel hin). Rueckgabe: Drehung um Gelenk 16 (Gliedraum 16), die
+    Ring 0 und Deckel dorthin bringt. Der Winkel ist das Ergebnis der Feinsuche (kette_v8.json "rohr_grad"), PORT-WAHL.
+    Nutzer: "Tail directly smooth into the back - no hill or anything..."."""
+    d1 = lok1 @ Y
+    n = np.cross(Y, d1)
+    sn = np.linalg.norm(n)
+    if sn < 1e-9 or not grad:
+        return np.eye(3)
+    return BF._exp(n / sn * np.radians(float(grad)))
+
+
+def wurzel_mesh(m18, L, ra, re, n_end, hinten, M0=None, verj=WURZEL_VERJUENGUNG):
     """Mesh 16 (V8): Topologie von Mesh 18 (3 Ringe, Endkappe, Anfangskappe; Flaechen/UV/Zeile 487 wie Mesh 18) - Ring 0 = Ende des
     Wurzelrohrs im Rumpf (B x r0 hinter der Wurzel, Radius WURZEL_VERJUENGUNG x r0, senkrecht), Ring 1 = Wurzelring an der Wurzel (r0,
     senkrecht), Ring 2 = Ende auf der Gehrung; Anfangskappe = Kegel WURZEL_DECKEL x Radius hinter Ring 0. Kette_suche.py rechnet dieselbe
@@ -205,7 +209,7 @@ def wurzel_mesh(m18, L, ra, re, n_end, hinten):
         Q = P[r * S_:(r + 1) * S_]
         c = Q.mean(0)
         phis.append(np.arctan2(Q[:, 2] - c[2], Q[:, 0] - c[0]))
-    rb = WURZEL_VERJUENGUNG * ra
+    rb = verj * ra
     yb = -hinten * ra
     neig = [(rb - ra) / (hinten * ra), (ra - re) / L]
 
@@ -214,12 +218,14 @@ def wurzel_mesh(m18, L, ra, re, n_end, hinten):
         t = -(off @ n) / n[1] if n is not None else 0.0
         return off + np.array([0.0, cy, 0.0]) + (t[:, None] * Y if n is not None else 0.0)
 
-    ringe = [ring(yb, rb, None, phis[0]), ring(0.0, ra, None, phis[1]), ring(L, re, n_end, phis[2])]
+    M0 = np.eye(3) if M0 is None else M0
+    ringe = [ring(yb, rb, None, phis[0]) @ M0.T, ring(0.0, ra, None, phis[1]), ring(L, re, n_end, phis[2])]
     neu = np.vstack(ringe)
     nn = []
     for r, ng in zip(range(3), (neig[0], 0.5 * (neig[0] + neig[1]), neig[1])):
         v = np.stack([np.cos(phis[r]), np.full_like(phis[r], ng), np.sin(phis[r])], 1)
-        nn.append(v / np.linalg.norm(v, axis=1)[:, None])
+        v = v / np.linalg.norm(v, axis=1)[:, None]
+        nn.append(v @ M0.T if r == 0 else v)
     nn = np.vstack(nn)
     for k in range(3 * S_):
         m['v'][k][:3] = [int(round(x)) for x in neu[k]]
@@ -228,8 +234,8 @@ def wurzel_mesh(m18, L, ra, re, n_end, hinten):
         if m['v'][i][1] > 0:
             m['v'][i][:3] = [int(round(x)) for x in ringe[2].mean(0)]
         else:
-            m['v'][i][:3] = [0, int(round(yb - WURZEL_DECKEL * rb)), 0]
-            m['n'][i][:3] = [0, -4096, 0]
+            m['v'][i][:3] = [int(round(c)) for c in M0 @ np.array([0.0, yb - WURZEL_DECKEL * rb, 0.0])]
+            m['n'][i][:3] = [int(round(c * 4096)) for c in M0 @ np.array([0.0, -1.0, 0.0])]
     return m
 
 
@@ -246,66 +252,128 @@ def gehrungen(lok):
 
 
 # ------------------------------------------------------------------ Stufe s
-def schwanz(blob, d, ms, par, prot):
+# Runde 2 (Pruefung V8 r1): die Keyframes der Knochen 16-22 tragen NICHT mehr die V7-Bewegung (Keyframe gegen Clip-Median). Befunde:
+#  - Sicht-Pruefer (1b): in P2 (Clip 12 Bild 48) lief der Schwanz fast waagerecht nach links und endete in halber Hoehe mit einem Haken
+#    (Spitze ~(247,273) statt Beschreibung2 "Schwanzspitze Ende" ~(282,320));
+#  - Sicht-Pruefer (5): F322 Balken quer ueber dem Ruecken, F328-F340 senkrecht "wie ein Horn"; graue Dreiecke des Wurzelrohrs stechen
+#    durch die Rueckenhaut (Bodenregel drehte Knochen 16 in 151 Keyframes bis 90 Grad, die V7-Bewegung drehte ihn mit);
+#  - Zahlen-Pruefer: 714 von 912 Keyframes mit einem Gelenk > 25 Grad (bis 95,5).
+# Neu (PORT-WAHL; Messung: Messblatt V8 "Schwanzband steht n1435-n1440 still", Foto 2 = n1435 und die Vorlage n1439 im selben Schnitt):
+#  - Knochen 16 (Wurzelrohr) bleibt in JEDEM Keyframe auf seiner Ruhedrehung gegen Knochen 8 - das Rohr liegt immer so im Rumpf wie in PV.
+#  - Die Glieder 17-22 haengen in jedem Keyframe so im Modellraum wie in PV (Richtung je Glied aus PV), nur um die Hochachse mit dem
+#    Rumpf mitgedreht (Kurs der x-Achse von Knochen 8 gegen PV): der Schwanz faellt in jeder Pose nach hinten unten zum Boden.
+#  - Jedes Gelenk 17-22 knickt hoechstens WINKEL_MAX_GRAD (Bauplan 6a "je hoechstens 25 Grad"); reicht das nicht, nimmt das naechste
+#    Gelenk den Rest (der Bogen bleibt gleichsinnig).
+#  - Boden (Riegel S6): liegt Ring + Radius, Spitze oder Dornspitze unter der tiefsten Koerperecke, werden alle Zielrichtungen gemeinsam
+#    um eine waagerechte Achse hochgedreht (1 Grad je Schritt), bis der Schwanz frei ist - Knochen 16 bleibt dabei fest.
+WINKEL_MAX_GRAD = 25.0
+
+
+def kurs(R):
+    """Kurs der x-Achse (vorn/hinten) eines Knochens im Modellraum um die Hochachse (Winkel wie Rot_y(t) @ (1,0,0) = (cos t, 0, -sin t))."""
+    v = np.asarray(R, float)[:, 0]
+    return float(np.arctan2(-v[2], v[0]))
+
+
+def rot_y(t):
+    c, s_ = np.cos(t), np.sin(t)
+    return np.array([[c, 0.0, s_], [0.0, 1.0, 0.0], [-s_, 0.0, c]])
+
+
+def begrenze(d, wmax):
+    """Richtung d (Gliedraum) auf hoechstens wmax (Bogenmass) gegen die Gliedachse y begrenzen (in der Ebene y, d)."""
+    d = d / np.linalg.norm(d)
+    c = float(np.clip(d @ Y, -1, 1))
+    if np.arccos(c) <= wmax:
+        return d
+    q = d - c * Y
+    n = np.linalg.norm(q)
+    q = q / n if n > 1e-9 else np.array([1.0, 0.0, 0.0])
+    return Y * np.cos(wmax) + q * np.sin(wmax)
+
+
+def glieder_aus_richtungen(W16, D, wmax):
+    """Lokaldrehungen der Knochen 17-22: Glied g zeigt im Modellraum moeglichst auf D[g-1], jedes Gelenk <= wmax; quantisiert."""
+    W, lok = W16, []
+    for g in range(6):
+        d = begrenze(W.T @ D[g], wmax)
+        Lg = BF._quant(BF._min_rot(Y, d))
+        lok.append(Lg)
+        W = W @ Lg
+    return lok
+
+
+def schwanz(blob, d, ms, par, prot, nur_kf=None):
     mo = V.modell(blob)
     s = mo.skel
     assert s.bone_count == 23 and s.kf_size == 116, (s.bone_count, s.kf_size)
     P = np.array(par['gelenke_b8'], float)
     L = int(par['L'])
     rad = [float(r) for r in par['radien']]
-    lok_fit = ruhe_lokal(P)
-    w, c_von = bewegung_v7(mo)
+    lok_ruhe = ruhe_lokal(P)
     kpv = BB_kf(mo, V.PV)
-    lok_ruhe = [lok_fit[i] @ BF._exp(w[kpv, i]).T for i in range(7)]
+    wmax = np.radians(WINKEL_MAX_GRAD)
     emr = bytearray(blob[d[2]:d[3]])
     o16 = 8 + 16 * 6
     struct.pack_into('<3h', emr, o16, *[int(round(x)) for x in P[0]])
     for b in range(17, 23):
         struct.pack_into('<3h', emr, 8 + b * 6, 0, L, 0)
-    for k in range(s.kf_count):
-        for i, b in enumerate(V.SCHWANZ):
-            winkel_schreiben(emr, s, k, b, lok_ruhe[i] @ BF._exp(w[k, i]))
+    # Zielrichtungen aus PV (Modellraum; Knochen 0-15 sind die von V7, die Pose von Knochen 8 bleibt)
+    Rp, Tp = mo.pose(kpv)
+    R8p = Rp[8].astype(float) / 4096.0
+    W, Dpv = R8p @ lok_ruhe[0], []
+    for g in range(1, 7):
+        W = W @ lok_ruhe[g]
+        Dpv.append(W @ Y)
+    Dpv = np.array(Dpv)
+    k_pv = kurs(R8p)
     blob2 = bytes(blob[:d[2]]) + bytes(emr) + bytes(blob[d[3]:])
-    # Meshes
     n_end, n_anf = gehrungen(lok_ruhe)
     alt = copy.deepcopy(ms)
     for g in range(7):
         if g == 0:
-            ms[16] = wurzel_mesh(alt[18], L, rad[0], rad[1], n_end[0], float(par['hinten']))
+            ms[16] = wurzel_mesh(alt[18], L, rad[0], rad[1], n_end[0], float(par['hinten']),
+                                 M0=rohr_drehung(lok_ruhe[1], par.get('rohr_grad', 0.0)),
+                                 verj=float(par.get('verjuengung', WURZEL_VERJUENGUNG)))
         else:
-            ms[16 + g] = glied_mesh(alt[16 + g], g, L, rad[g], rad[g + 1], n_anf[g], n_end[g])
+            ms[16 + g] = glied_mesh(alt[16 + g], g, L, rad[g], rad[g + 1], n_anf[g], n_end[g], a_vor=lok_ruhe[g].T @ Y)
     dorn_y = float(L + DORN * rad[7])
-    # Bodenregel je Keyframe (S6): Knochen 16 um eine waagerechte Achse hochdrehen (1 Grad je Schritt, beide Richtungen, hoechstens
-    # 90 Grad), bis der Schwanz (Gelenke + Radius, Spitze + Radius, Dornspitze) nicht tiefer liegt als die tiefste Koerperecke
-    # (Knochen 0-15, alle Ecken) - Regel wie schwanz_r41.c glaetten (ganze Kette starr um die Wurzel), hier offline je Keyframe.
     mo2 = V.modell(blob2)
-    gehoben = {}
     rel = [np.array(mo2.skel.rel[b], float) for b in V.SCHWANZ]
-    for k in range(s.kf_count):
+    gehoben, kmax = {}, []
+    for k in (range(s.kf_count) if nur_kf is None else nur_kf):     # nur_kf: Suche (nur PV), nie im Bau
         R, T = mo2.pose(k)
-        boden = tiefste_koerperecke(mo2, R, T) - float(par.get('boden_rand', 0))
         R8, T8 = R[8].astype(float) / 4096.0, T[8].astype(float)
-        loks = [lokal_aus_kf(mo2.skel, k, b) for b in V.SCHWANZ]
-        if kette_tief(R8, T8, loks, rel, L, rad, dorn_y) <= boden:
-            continue
-        sp, _W = kette_punkte(R8, T8, loks, rel, L)
-        ax = np.cross(sp[-1] - sp[0], Y)
-        ax = ax / max(np.linalg.norm(ax), 1e-9)
-        ok = None
-        for n in range(1, 91):
-            for sg in (1, -1):
-                Ln = BF._quant(R8.T @ BF._exp(ax * np.radians(n) * sg) @ R8 @ loks[0])
-                if kette_tief(R8, T8, [Ln] + loks[1:], rel, L, rad, dorn_y) <= boden:
-                    ok = (n * sg, Ln)
+        boden = tiefste_koerperecke(mo2, R, T) - float(par.get('boden_rand', 0))
+        Ry = rot_y(kurs(R8) - k_pv)
+        D = Dpv @ Ry.T
+        W16 = R8 @ lok_ruhe[0]
+        loks = [lok_ruhe[0]] + glieder_aus_richtungen(W16, D, wmax)
+        if kette_tief(R8, T8, loks, rel, L, rad, dorn_y) > boden:
+            pts, _W = kette_punkte(R8, T8, loks, rel, L)
+            h = pts[-1] - pts[1]
+            ax = np.cross(np.array([h[0], 0.0, h[2]]), Y)
+            ax = ax / max(np.linalg.norm(ax), 1e-9)
+            ok = None
+            for n in range(1, 91):
+                for sg in (1, -1):
+                    Rh = BF._exp(ax * np.radians(n) * sg)
+                    l2 = [lok_ruhe[0]] + glieder_aus_richtungen(W16, D @ Rh.T, wmax)
+                    if kette_tief(R8, T8, l2, rel, L, rad, dorn_y) <= boden:
+                        ok = (n * sg, l2)
+                        break
+                if ok:
                     break
             if ok:
-                break
-        if ok:
-            winkel_schreiben(emr, s, k, 16, ok[1])
-        gehoben[k] = ok[0] if ok else None
+                loks = ok[1]
+            gehoben[k] = ok[0] if ok else None
+        for i, b in enumerate(V.SCHWANZ):
+            winkel_schreiben(emr, s, k, b, loks[i])
+        kmax.append(max(float(np.degrees(np.arccos(np.clip((Lg @ Y) @ Y, -1, 1)))) for Lg in loks[1:]))
     blob3 = bytes(blob2[:d[2]]) + bytes(emr) + bytes(blob2[d[3]:])
     prot['schwanz'] = dict(L=L, wurzel=[int(round(x)) for x in P[0]], radien=[round(r, 1) for r in rad], dorn_y=dorn_y,
                            kf_pv=kpv, bodenregel=dict(keyframes=len(gehoben), grad={str(k): v for k, v in sorted(gehoben.items())}),
+                           gelenk_max_grad=dict(max=round(max(kmax), 2), median=round(float(np.median(kmax)), 2)),
                            gelenkwinkel_ruhe=[round(float(np.degrees(np.arccos(np.clip((Lr @ Y) @ Y, -1, 1)))), 1) for Lr in lok_ruhe])
     return blob3
 
@@ -315,12 +383,12 @@ def BB_kf(mo, pose):
 
 
 # ------------------------------------------------------------------ Bau
-def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None):
-    blob = open(basis, 'rb').read()
+def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None, blob=None):
+    blob = open(basis, 'rb').read() if blob is None else blob
     prot = dict(basis=basis, basis_sha256=V.sha(blob), stufen=stufen)
     d, _do, ms, tim = KB.teile(blob)
     if 's' in stufen:
-        blob = schwanz(blob, d, ms, kette or _p('kette_v8.json'), prot)
+        blob = schwanz(blob, d, ms, kette or _p('kette_v8.json'), prot, nur_kf=nur_kf)
         d, _do, _ms, _tim = KB.teile(blob)
     t = KB.tim_teile(tim)
     if 'r' in stufen:

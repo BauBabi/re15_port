@@ -8,6 +8,8 @@
 04_rundum.jpg         V8 und V7 rundum (birkin_buehne.rundum, Clip 17 Bild 47, 8 Richtungen)
 05_adern_rechts.png   Vorlage | V7 | V8 | Original-EM30 (CDEMD0.EMS Typ 0x30, gleiche Pose PV), Ausschnitt (W)-rechte Flanke / Ruecken
 06_spiel.jpg          Spielbilder der Szene (lauf_v4.sh RE15_FRAMEDUMP) V7 | V8 an gleichen Bildnummern
+08_ruecken_hinten.jpg Runde 2 (Sicht-Pruefer V8 r1: "keine Tafel vergroessert den Ruecken von hinten in der Szene"): Spielbilder
+                      F322-F346 (Birkin von hinten), Ausschnitt um den Ruecken x3, V7 | V8
 Nutzerlinien = Pixel, in denen Darstellung.png von Darstellung_Vorlage.png um mehr als 40 (Kanal) abweicht (wie Messblatt m2_linien).
 """
 import os, sys, argparse
@@ -72,26 +74,27 @@ def main():
     ap.add_argument('--aus', default=os.path.join(V.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v8'))
     a = ap.parse_args()
     v7, v8 = open(a.v7, 'rb').read(), open(a.v8, 'rb').read()
+    n8 = 'V8 ' + V.sha(v8)[:8]
     vl = bild(V.V80 + 'Darstellung_Vorlage.png'); dar = bild(V.V80 + 'Darstellung.png')
     lin = np.abs(dar.astype(int) - vl.astype(int)).max(2) > 40
     r7, r8 = render(v7, V.PV), render(v8, V.PV)
     o7, o8 = r7.copy(), r8.copy(); o7[lin] = dar[lin]; o8[lin] = dar[lin]
     box = (230, 140, 500, 450)
     im = reihe([kachel(vl, box, 2, 'Darstellung_Vorlage (n1439)'), kachel(o7, box, 2, 'V7 319bbd17 + Nutzerlinien'),
-                kachel(o8, box, 2, 'V8 fa31156c + Nutzerlinien')])
+                kachel(o8, box, 2, n8 + ' + Nutzerlinien')])
     speichern(kopf(im, 'SF V8 01: Vorlage | V7 | V8, Pose PV Clip 17 Bild 47 Gier 587, Spielkamera 50A0/12, RDT-Licht (roh, x2)'),
               os.path.join(a.aus, '01_darstellung.png'))
     # 02 / 03
     for nr, foto, pose, name, bx in ((2, 'Beschreibung2_Vorlage.png', P2, '02_foto2_seite.jpg', (230, 130, 500, 450)),
                                      (1, 'Beschreibung1_Vorlage.png', P1, '03_foto1_vorn.jpg', (250, 110, 560, 450))):
         f = bild(V.V80 + foto)
-        im = reihe([kachel(f, bx, 2, 'Foto %d' % nr), kachel(render(v7, pose), bx, 2, 'V7'), kachel(render(v8, pose), bx, 2, 'V8')])
+        im = reihe([kachel(f, bx, 2, 'Foto %d' % nr), kachel(render(v7, pose), bx, 2, 'V7'), kachel(render(v8, pose), bx, 2, n8)])
         speichern(kopf(im, 'SF V8 %s: Foto %d | V7 | V8, Pose Clip %d Bild %d Gier %d (roh, x2)' % (name[:2], nr, pose['clip'], pose['bild'],
                                                                                               pose['gier'])), os.path.join(a.aus, name))
     # 04 rundum
     import birkin_buehne as BB
     tmp = os.path.join(V.SFV8, 'tafeln_tmp'); os.makedirs(tmp, exist_ok=True)
-    BB.rundum(v8, 17, 47, os.path.join(tmp, 'r8.png'), 'V8 fa31156c rundum (Clip 17 Bild 47)', schritte=8, groesse=300)
+    BB.rundum(v8, 17, 47, os.path.join(tmp, 'r8.png'), n8 + ' rundum (Clip 17 Bild 47)', schritte=8, groesse=300)
     BB.rundum(v7, 17, 47, os.path.join(tmp, 'r7.png'), 'V7 319bbd17 rundum (Clip 17 Bild 47)', schritte=8, groesse=300)
     i8, i7 = bild(os.path.join(tmp, 'r8.png')), bild(os.path.join(tmp, 'r7.png'))
     w = max(i8.shape[1], i7.shape[1])
@@ -101,7 +104,7 @@ def main():
     orig = BF.lade_em30()
     ro = render(orig, V.PV)
     bx = (320, 150, 480, 330)
-    im = reihe([kachel(vl, bx, 3, 'Vorlage n1439'), kachel(r7, bx, 3, 'V7'), kachel(r8, bx, 3, 'V8 (Adern X1/X2)'),
+    im = reihe([kachel(vl, bx, 3, 'Vorlage n1439'), kachel(r7, bx, 3, 'V7'), kachel(r8, bx, 3, n8 + ' (Adern X1-X3)'),
                 kachel(ro, bx, 3, 'Original-EM30 (Quelle)')])
     speichern(kopf(im, 'SF V8 05: (W)-rechte Flanke/Ruecken in PV - Vorlage | V7 | V8 | Original-RE1.5-Birkin EM30 gleiche Pose (roh, x3)'),
               os.path.join(a.aus, '05_adern_rechts.png'))
@@ -121,6 +124,22 @@ def main():
                for i in range(0, len(zeilen), 2)]
         speichern(kopf(np.vstack(par), 'SF V8 06: Spielbilder Hangar 50A0 (lauf_v4.sh FRAMEDUMP, je Paar V7 | V8, gleiche Bildnummer)'),
                   os.path.join(a.aus, '06_spiel.jpg'))
+        # 08 Ruecken von hinten (Spiel)
+        zeilen = []
+        for n in (322, 328, 334, 340, 346):
+            p7 = os.path.join(a.szene7, 'fd', 'f%06d.ppm' % n); p8 = os.path.join(a.szene8, 'fd', 'f%06d.ppm' % n)
+            if not (os.path.exists(p7) and os.path.exists(p8)):
+                continue
+            ks = []
+            for nm, pp in (('V7', p7), (n8, p8)):
+                b_ = bild(pp)
+                h_, w_ = b_.shape[:2]
+                x0, y0 = int(w_ * 0.05), int(h_ * 0.05)
+                ks.append(kachel(b_, (x0, y0, x0 + int(w_ * 0.45), y0 + int(h_ * 0.6)), 2, '%s F%d' % (nm, n)))
+            zeilen.append(np.hstack(ks))
+        if zeilen:
+            speichern(kopf(np.vstack(zeilen), 'SF V8 08: Ruecken von hinten im Spiel (FRAMEDUMP 960x720, Ausschnitt x2), V7 | V8'),
+                      os.path.join(a.aus, '08_ruecken_hinten.jpg'))
 
 
 if __name__ == '__main__':
