@@ -18,13 +18,14 @@ Boden), theta 180 = Aussenseite (Oberseite, Ruecken des Schwanzes). Der Bogen li
 
 Messung (messen(), Spiel-Asset V8 Runde 5 Geometrie = Runde 4, Pose PV / P2 / P1 wie Messblatt V8, Spielkamera 50A0 Cut 12; Vorlage-Lab je
 Bildpunkt gemittelt ueber n1438-n1440 bzw. n1434-n1436; Schwanzmaske des Modells (Knochen 16-22) 2 px erodiert):
-  - PV (n1439) Knochen 16-19: theta 70-110 a* Median 7,0-10,5, Anteil a* >= 10 28-58 % (rot/fleischig); theta 110-120 a* 4,6, 1 %;
-    theta >= 120 a* 1,4-4,2, 0 %, L* 23-38 (grau, hell) -> Grenze grau/fleischig bei theta ~115 (Uebergang 110-120).
-  - P2 (n1435) gleich: theta 70-110 a* 7,1-8,7, 20-38 %; 110-120 a* 4,6, 4 %; >= 120 a* <= 3,3, 0 %.
+  - PV (n1438-n1440, alle Knochen): theta 70-110 a* Median 6,6-9,7, Anteil a* >= 10 25,7-48,8 % (rot/fleischig); theta 110-120 a* 4,5,
+    1,1 %; theta >= 120 a* 1,4-4,2, 0 %, L* 22,9-38,4 (grau, hell) -> Grenze grau/fleischig bei theta ~115 (Uebergang 110-120).
+  - P2 (n1434-n1436) gleich: theta 70-110 a* 5,7-8,0, 15,6-31,5 %; 110-120 a* 4,3, 1,0 %; >= 120 a* <= 3,0, 0 %.
   - theta < 60 (Innenseite selbst) dunkel (L* 8-12, a* 0-4): im Schatten, Farbe nicht lesbar; die Regel nimmt sie als fleischig (Nutzer:
     "Unterseite ... fleischig").
-  - Laengs: rot sicher von der Wurzel bis Knochen 18/19 (Bild y <= 285); Knochen 20-22 dunkel (L* 10-20), a* innen 2-4 gegen aussen -1,6
-    (schwacher Hinweis, Offen) -> die Regel gilt von der Wurzel bis zur Spitze (keine neue Querkante mitten im Schwanz).
+  - Laengs (theta 60-115 je Knochen, PV): 16 a* 12,8 / 75,8 %, 17 10,3 / 56,6 %, 18 7,6 / 10,2 %, 19 4,9 / 2,9 %, 20-22 a* -0,0-1,6 / 0 %
+    bei L* 10-11 (dunkel; Bildzeilen y 250-285 an der Innenkante a* 4-11, darunter 0,5-2) -> sicher rot von der Wurzel bis Knochen 18;
+    die Regel gilt bis zur Spitze (keine neue Querkante mitten im Schwanz; Nutzer "Die Unterseite des großen Schwanzes"), Offen.
   - Foto 1 (P1, von vorn): vom Schwanz sind nur 215 Bildpunkte (Knochen 20-22, dunkel, a* -2,6) sichtbar - keine Aussage.
 
 Material (Original-EM30, birkin_formen.lade_em30): Seite 2, u 0-43 = Unterarm/Klaue des Original-Birkin (Original-Flaechen der Meshes 11, 12,
@@ -331,8 +332,8 @@ if __name__ == '__main__':
 
 # ------------------------------------------------------------------ Riegel S15 (riegel_v8.py)
 FLEISCH_A = 15.0                      # Fleisch-Texel: Paletteneintrag seiner Zeile mit a* >= 15 (Mass der Adern/Flecken-Riegel, adern_v8.ADER_A)
-S15_UNTEN_SOLL = 30.0                 # (c) Anteil Fleisch-Texel an den Schwanz-Bildpunkten |theta| <= 100 in PV und P2 >= 30 % (Vorlage dort: a* >= 10
-                                      # 26-58 % in PV, 22-38 % in P2; V8 r4 0 %)
+S15_UNTEN_SOLL = 30.0                 # (c) Anteil Fleisch-Texel an den Schwanz-Bildpunkten |theta| <= 100 in PV und P2 >= 30 % (Vorlage theta 70-110:
+                                      # a* >= 10 25,7-48,8 % in PV, 15,6-31,5 % in P2 - Groessenordnung; V8 r4 0 %)
 S15_UNTEN_TH, S15_OBEN_TH = 100.0, 135.0
 
 

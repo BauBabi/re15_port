@@ -272,3 +272,56 @@ Gegenprobe-Pflicht: V7 (319bbd17) muss bei S1, S2, S3, S4, S6 und S7 rot sein (o
 7. V5-Nutzersatz "roter Fleck oben auf der rechten Schulter, den gibt es in der Vorlage ganz offensichtlich nicht" (Foto 1 frontal) gegen
    heute "mehr rottoene ... mehr adern an verschiedenen Stellen, am Arm und Koerper": Lesung = Adern ja, Flaechen-Rot (Augapfel C) nein.
 8. Kein Bau und kein Spiellauf in diesem Schritt; die Szenen-Zahlen sind aus dem freigegebenen V7-Lauf (nur gelesen).
+
+## 10. Runde 5 P4: Unterseite des Schwanzes (Bauer, 2026-11-09)
+
+Nutzer 2026-11-09 nach der V8-Vorschau (woertlich): "Der 2 Beiner Birkin sieht in der Vorschau schon mal super aus. Nur eine Sache passt
+noch nicht so ganz. Die Unterseite des großen Schwanzes ist fleischig wenn man in die Vorlagen Bilder schaut. Nur die oberseite ist durchweg
+grau." Werkzeug re15_port/tools/r41_sichel/v8/unterseite_r5.py ("messen"), Protokoll SF_belege/v8/runde5/unterseite_messung.txt/.json.
+Kein RE-Befund; Messung am Videobild, keine Texel-Eichung.
+
+**Mass.** theta = Winkel zwischen der Flaechennormale (senkrecht zur Gliedachse) und der Richtung von der Gliedmitte zum Mittelpunkt des
+Schwanzbogens (Kreis durch die Gelenke 17-22 und die Spitze in der Pose). theta 0 = Innenseite des Bogens (zum Koerper und zum Boden),
+theta 180 = Aussenseite (Ruecken des Schwanzes). Modell = Spiel-Asset V8 Runde 5 (Geometrie wie Runde 4), Schwanz-Bildpunkte (Knochen 16-22)
+2 px erodiert; Vorlage-Lab je Bildpunkt gemittelt ueber n1438-n1440 (PV) bzw. n1434-n1436 (P2). Seiten: in PV und P2 sieht die Kamera die
+Seite des Bogens, die zur (W)-rechten Flanke gehoert; das Mass ist symmetrisch (|theta|).
+
+| theta (Grad) | PV a* Median | PV a* >= 10 | PV L* | P2 a* Median | P2 a* >= 10 | P2 L* |
+|---|---|---|---|---|---|---|
+| 30-60 | 0,8-3,5 | 0 % | 10-12 | 1,0-3,7 | 0 % | 9-11 |
+| 60-70 | 6,4 | 8,8 % | 9,1 | 5,3 | 1,5 % | 9,2 |
+| 70-110 | 6,6-9,7 | 25,7-48,8 % | 8,9-13,7 | 5,7-8,0 | 15,6-31,5 % | 10,2-14,4 |
+| 110-120 | 4,5 | 1,1 % | 17,9 | 4,3 | 1,0 % | 17,4 |
+| 120-180 | 1,4-4,2 | 0 % | 22,9-38,4 | 0,8-3,0 | 0 % | 24,0-37,6 |
+
+Laengs (theta 60-115, PV): Knochen 16 a* 12,8 (75,8 %), 17 10,3 (56,6 %), 18 7,6 (10,2 %), 19 4,9 (2,9 %), 20-22 0,0-1,6 (0 %) bei L* 10-11.
+Foto 1 (P1, n1485): vom Schwanz sind nur 215 erodierte Bildpunkte der Knochen 21/22 sichtbar (theta 0-50, a* -2,6, L* 8-11) - keine Aussage.
+
+**Regel (PORT-WAHL aus der Tabelle).** Grau = |theta| >= 125 (Vorlage ab 120 0 % rot, 5 Grad Abstand); Uebergang 100-125 (Vorlage 110-120
+a* 4,5 / 1 %); Fleisch <= 100 (Vorlage 70-110 rot). Die Innenseite theta < 60 ist in der Vorlage dunkel (Schatten, a* nicht lesbar) und gilt
+als Unterseite. Laengs von der Wurzel bis zur Spitze: rot sicher bis Knochen 18; Knochen 19-22 in der Vorlage dunkel und ohne Farbe - die
+Regel laeuft durch, damit mitten im Schwanz keine Querkante entsteht (Offen 1). Flaechenweise (11 Ringecken je Ring, alle 32,7 Grad bei
+|theta| ~ 59/92/125/157 bzw. 72/105/137/170): Mittel der Ringecken >= 130 grau (Zeile 487, UV wie gebaut), 100-130 Uebergang, < 100 Fleisch.
+
+**Material (Original-EM30, CDEMD0.EMS Typ 0x30).** Seite 2, u 0-43 = Unterarm/Klaue des Original-Birkin (Original-Flaechen der Meshes 11,
+12, 14, 15, alle Zeile 482); diese Texel sind im Spiel-Asset bytegleich (0 Abweichungen in den von Original-Flaechen benutzten Texeln), die
+Zeile 482 liegt bytegleich als Zeile 495 vor. Verlauf entlang v (Original-Zeile 482, benutzte Texel): v 0-40 helle Haut (L* 34-41), v 42-60
+dunkle Haut mit violetten Adern (L* 16-28, b* -3,4..-3,8), v 60-85 dunkelgraue Haut (L* 12-16, a* 3,8, b* 0-1,4), v 86-95 gewellte Kante, v
+96-120 Fleisch mit weichen Streifen (L* 17-26, a* 20-26). Uebergangsflaechen: v folgt theta (125 -> v 64, 100 -> v 90), u entlang der
+Gliedachse (6-31, je Glied gespiegelt). Fleischflaechen: Streifen laengs (v 90-100 entlang der Achse, je Glied gespiegelt; u 4-36 um den
+Umfang, theta -110..110). Nutzungsmaske der Original-Flaechen (Zeile 482, Seite 2): v 50 u 5-32, v 51-106 u <= 4 bis >= 32, Luecke v 110-117
+u 17-32 - alle neuen UV liegen darin (Bau prueft: 0 Texel ausserhalb).
+
+**Proben (Farbrichtung, keine Eichung; prof.py, L*/a* je theta-Band in PV, Videoraum).** U1 (v 50 an der Grenze): violettes Band ueber dem
+Fleisch. U4 (Fleisch quer): regelmaessige rote Querriefen alle ~8 px, in der Vorlage nicht vorhanden. U7 (laengs, v 94-104): hellrot (theta
+75-90 L* 22,9 a* 14,3). U8 (laengs, v 90-100): dunkelrot - gewaehlt. U9 (v 86-96): Fleisch kaum sichtbar. G38 (v 38 an der Grenze):
+L*-Sprung an der Zeilenkante kleiner, aber violettes Adernband, S15d PV 8,5 > Vorlage 7,0. Probe-Kacheln sfv8/r5p4/z1-z7.png.
+
+**Riegel S15** (riegel_v8.py, Abschnitt 7 ergaenzt): (a) Herkunft 0 fremde Texel; (b) 72 Unterseiten-Flaechen auf Zeile 495 mit Fleisch,
+38 Oberseiten-Flaechen auf 487 mit unveraenderter UV; (c) Fleisch-Texel-Anteil |theta| <= 100 in PV und P2 >= 30 %, |theta| >= 135 = 0;
+(d) groesster L*-Sprung zwischen 15-Grad-Baendern theta 90-180 <= Vorlage. Gegenprobe V8 r4 (Schwanz rundum grau): ROT.
+
+**Offen.** 1. Knochen 19-22 (unteres Drittel): die Vorlage zeigt dort keine Farbe (dunkel vor dunklem Tuerraum); Fleisch durchlaufend ist
+Wahl gegen eine Querkante. 2. Die Grenze liegt flaechenweise auf Ringecken (32,7 Grad Raster); die Uebergangsflaeche traegt den Verlauf.
+3. Das Fleisch des Modells ist im Spiellicht heller als die Vorlage (theta 75-90 L* 23 gegen 9,4) - Farbrichtung dunkelrot ist durch die Wahl
+v 90-100 angenaehert, nicht geeicht.

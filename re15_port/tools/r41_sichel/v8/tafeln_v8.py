@@ -269,11 +269,12 @@ def tafel14(v7, v8r4, v8, n8, aus):
     """14_schwanz_unterseite.png (Runde 5, P4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist
     durchweg grau"): Zeile 1 Vorlagen n1439 (Darstellung_Vorlage, PV) / Foto 2 n1435 (P2) / Foto 1 n1485 (P1) nah am Schwanz, mit der gemessenen
     Grenze (gelb theta 125 = Ende grau, rot theta 100 = Fleisch voll; Linien aus dem Modell in derselben Pose); Zeile 2 V8 r4; Zeile 3 neu in
-    denselben Posen; Zeile 4 neu von unten (Pose PV, Modell 2600 E. ueber dem Boden, Kamera sieht von unten) und seitlich (Szene Takt F262 /
+    denselben Posen; Zeile 4 neu von unten (Pose PV, Modell 1800 E. hoeher, Kamera sieht von unten) und seitlich (Szene Takt F262 /
     F328, offline Spielkamera). Alles roh, RDT-Licht."""
     import r3_gemein as R3
     roh = os.path.join(V.BAUM.replace('r41_sichel_v8', 'r41_sichel'), 'analysis', 'befunde_runde41', 'SF_belege', 'roh', 'alle')   # nur gelesen
-    ans = (('PV', V.PV, 1439, (250, 165, 400, 345)), ('P2', R3.P2, 1435, (250, 165, 400, 345)), ('P1', R3.P1, 1485, (290, 300, 440, 440)))
+    ans = (('PV', V.PV, 1439, (250, 165, 400, 345)), ('P2', R3.P2, 1435, (250, 165, 400, 345)),
+           ('P1', R3.P1, 1485, (385, 230, 520, 380)))      # P1: Schwanz (Knochen 16-22) im Bild x 443-461, y 278-332 (gemessen)
     z1, z2, z3 = [], [], []
     for nm, pose, n, bx in ans:
         vb = bild(os.path.join(roh, 'f%04d.png' % (n + 1)))
@@ -282,12 +283,21 @@ def tafel14(v7, v8r4, v8, n8, aus):
         z1.append(np.hstack([kachel(vb, bx, 2, 'Vorlage n%d (%s)' % (n, nm)), kachel(vl, bx, 2, 'Grenze 125 gelb / 100 rot')]))
         z2.append(kachel(render(v8r4, pose), bx, 2, 'V8 r4 %s' % nm))
         z3.append(kachel(render(v8, pose), bx, 2, '%s %s' % (n8, nm)))
-    unten = dict(V.PV); unten['y'] = -2600
+    unten = dict(V.PV); unten['y'] = -1800
     sp = R3.szene_posen()
-    z4 = [kachel(render(v8, unten), (200, 0, 500, 240), 1, '%s von unten (PV, +2600 E.)' % n8)]
+
+    def box(blob, pose, rand=12):
+        mo = V.modell(blob)
+        m = FR.zeichne(mo, pose, None, licht=False)['bone'][:480] >= 0
+        ys, xs = np.nonzero(m)
+        return (max(int(xs.min()) - rand, 0), max(int(ys.min()) - rand, 0), min(int(xs.max()) + rand, 640), min(int(ys.max()) + rand, 480))
+    bu = box(v8, unten)
+    z4 = [kachel(render(v8, unten), bu, 260.0 / max(bu[3] - bu[1], 1), '%s von unten (PV, 1800 E. hoeher)' % n8)]
     for tk in (262, 328):
-        z4.append(kachel(render(v8, sp[tk]), (200, 120, 500, 360), 1, '%s Takt F%d' % (n8, tk)))
-        z4.append(kachel(render(v8r4, sp[tk]), (200, 120, 500, 360), 1, 'V8 r4 Takt F%d' % tk))
+        bt = box(v8, sp[tk])
+        f = 260.0 / max(bt[3] - bt[1], 1)
+        z4.append(kachel(render(v8, sp[tk]), bt, f, '%s Takt F%d' % (n8, tk)))
+        z4.append(kachel(render(v8r4, sp[tk]), bt, f, 'V8 r4 Takt F%d' % tk))
     zs = [reihe(z1), reihe(z2 + [np.zeros((10, 10, 3), np.uint8)]), reihe(z3), reihe(z4)]
     w = max(z.shape[1] for z in zs)
     zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]

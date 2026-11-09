@@ -73,7 +73,7 @@ import v4_gemein as G                 # noqa: E402
 import r3_gemein as R3                # noqa: E402
 
 S7_ADER_A, S7_ADER_L = 15.0, 38.0     # Messblatt 6c: Ader-Eintrag a* >= 15, L* <= 38
-S15_SOLL = 30.0                       # = unterseite_r5.S15_UNTEN_SOLL (Vorlage PV a* >= 10 26-58 %, P2 22-38 %; V8 r4 0 %)
+S15_SOLL = 30.0                       # = unterseite_r5.S15_UNTEN_SOLL (Vorlage theta 70-110 a* >= 10: PV 25,7-48,8 %, P2 15,6-31,5 %; V8 r4 0 %)
 
 
 # ------------------------------------------------------------------ Render
