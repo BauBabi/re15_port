@@ -80,6 +80,7 @@ void re15_gator_boss_sperre238_setzen(int an);
 typedef struct { int laeufe, zweit, leer, treffer; long erst_bed_lauf, erst_treffer_lauf, erst_bed_f, erst_treffer_f, erst_leer_f; } re15_gb_bisslauf_t;
 void re15_gator_boss_bisslauf_reset(void);
 void re15_gator_boss_zustand_frisch(void);   /* Messhaken der Riegel: Boss-Zustand frisch wie beim Raumwechsel (kein Spielweg) */
+void re15_gator_kan_biss_abbruch_alt_setzen(int an);   /* Pruefhaken (Abnahme 0 B2): 1 = Kanister-Fenstertreffer im Biss bricht den Biss ab (Stand 80c7394ab) */
 void re15_gator_boss_bisslauf_info(re15_gb_bisslauf_t *out);
 int  re15_gator_boss_oben_ohne(const re15_actor_t *e);
 /* Runde 41 Spur G2-RE2 NB3, Runde 2 (Abnahme 5 M1/M2): RAUMHALT der Figur in der Spieler-Klemme waehrend ein Alligator-Boss im Raum ist (oben: Deck der

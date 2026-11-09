@@ -657,6 +657,10 @@ static int gb_lunge_b2(void)
     return s;
 }
 
+/* Runde 41 Integration, Nachbesserung zu Abnahme 0 B2: Pruefhaken der Riegel (kein Spielweg) - 1 = Stand 80c7394ab, ein Kanister-Fenstertreffer im Biss bricht
+ * den Biss ab (Phase CHASE, Clip 0 Bild 0). */
+static int s_kan_biss_abbruch_alt = 0;
+void re15_gator_kan_biss_abbruch_alt_setzen(int an) { s_kan_biss_abbruch_alt = an; }
 static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
 {
     int32_t fc = re15_cos_q12((int)e->rot_y);
@@ -1884,15 +1888,24 @@ static void gb_takt(int slot)
         if (kan_neu) kan_fenster = 1;
         re15_gr2_takt(slot, e, pl, kan_fenster);
         if (kan_neu && re15_gr2_aufnahme_lenksperre(slot)) {
-            /* Fenstertreffer im Biss/Dash: Uebergang in die Verfolgung wie das LUNGE-Ende (phase CHASE, Clip 0 Bild 0) bzw. das Dash-Ende (Routine 0x101
-             * @0x80100ee4); ab hier die RE2-Stufen 1-6 wie in CHASE (Clip 0 Blend 32 @0x80100c34-40, Lenksperre, Vorhalt). Der Biss endet - RE2 schaerft T1 bei
-             * Stufe 1..6 nicht (@0x80101360-70, re15_gr2_biss_erlaubt). */
+            /* Fenstertreffer im Dash (PORT-WAHL, s. oben): Uebergang in die Verfolgung wie das Dash-Ende (Routine 0x101 @0x80100ee4, Clip 0 Bild 0); ab hier die
+             * RE2-Stufen 1-6 wie in CHASE (Clip 0 Blend 32 @0x80100c34-40, Lenksperre, Vorhalt).
+             * Fenstertreffer im Biss (Abnahme 0 B2): der laufende Biss laeuft zu Ende und kann treffen - nur das Fenster geht auf. RE2 (EM23_OVL_0000.BIN, selbst
+             * disassembliert): die Wurzel ruft je Takt T2 (Kanister-Stufen) @0x80100320 `f105040c jal 0x801017c4` und danach unbedingt die Kiefer-Maschine
+             * @0x80100328 `e204040c jal 0x80101388`; diese liest nur +0x224 (@0x80101398 `24020382 lb v1,0x224(s0)`, Sprungtafel @0x80100004 = 0x80101564,
+             * 0x801013c4, 0x801013d4, 0x80101418, 0x80101488, 0x801014f8), nie +0x226, und ruft in Stufe 5 den Treffer (@0x80101558 `240200a2 sb zero,0x224(s0)`,
+             * @0x8010155c `5e05040c jal 0x80101578`). +0x226 sperrt nur den NEUEN Biss: T1 @0x8010133c `24028280 lb v0,0x224(a0)` / @0x80101344 bnez (laeuft schon
+             * einer: nichts), @0x80101360 `26028390 lbu v1,0x226(a0)` / @0x80101368 beqz / @0x80101370 bne v1,7 -> @0x8010137c `240282a0 sb v0,0x224(a0)`.
+             * Pruefhaken re15_gator_kan_biss_abbruch_alt_setzen(1) = Stand 80c7394ab (der Biss brach ab). */
+            const int abbruch = g->phase == GBP_RE2_DASH || s_kan_biss_abbruch_alt;
             if (g->phase == GBP_RE2_DASH) re15_gr2_dash_abbrechen(slot);
             if (!s_gb_stumm) { FILE *fl = fopen("gator_boss.log", "a");
-                if (fl) { fprintf(fl, "KANISTER-AUFNAHME aus Phase %d F%u pos=(%d,%d) gier %d\n", (int)g->phase, (unsigned)g_engine.frame_count, (int)e->x, (int)e->z,
-                                  (int)e->rot_y & 0xfff); fclose(fl); } }
-            g->phase = GBP_CHASE; g->timer = 0;
-            e->motion = 0; e->anim_frame = 0;
+                if (fl) { fprintf(fl, "KANISTER-AUFNAHME aus Phase %d F%u pos=(%d,%d) gier %d%s\n", (int)g->phase, (unsigned)g_engine.frame_count, (int)e->x, (int)e->z,
+                                  (int)e->rot_y & 0xfff, abbruch ? "" : " - Biss laeuft weiter"); fclose(fl); } }
+            if (abbruch) {
+                g->phase = GBP_CHASE; g->timer = 0;
+                e->motion = 0; e->anim_frame = 0;
+            }
         }
     }
     {   /* Runde 41 Spur F (Haken): die 2090-Ankunftsszene fuehrt den Gator (re15_gatorszene_r41.h) - 1 = untergetaucht halten,

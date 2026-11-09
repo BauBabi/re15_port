@@ -76,6 +76,15 @@ foreach(_teil kletterbiss kletterbiss_elza)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 1800)   # 1226 Kampf-Aufbauten; unter Fremdlast gemessen 16 min (allein 3 min)
 endforeach()
+#   unit_r41_gatorfix_kanbiss(_elza)  Runde 41 Integration, Nachbesserung zu Abnahme 0 B2: Kanister-Fenstertreffer im Biss - der Biss laeuft Bild fuer Bild wie ohne
+#                                     Kanister zu Ende und trifft im selben Bild (RE2 Kiefer-Maschine @0x80100328 liest +0x226 nicht); Gegenprobe Pruefhaken
+#                                     re15_gator_kan_biss_abbruch_alt_setzen = Stand 80c7394ab rot. Eigener Ordner (gator_boss.log, parallel-fest).
+foreach(_teil kanbiss kanbiss_elza)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
+    add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
+    set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 1200)
+endforeach()
 foreach(_teil nb4 nb4_elza)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}

@@ -4029,11 +4029,15 @@ static int kanpass(const char *dir)
     snprintf(pf, sizeof pf, "%s/gator_trag.log", dir);
     if (!(f = fopen(pf, "r"))) { printf("kanpass: %s fehlt\n", pf); return 1; }
     long erst = -1, letzt = -1, n = 0, erst_ist = -1; int erst_ph = -1;
+    int auf_ph = -1, auf_af = -1, nach_ph = -1, nach_af = -1;   /* Abnahme 0 B2: Phase/Bild in der TRAG-Zeile des Aufnahmebilds und des Bilds danach */
     while (fgets(z, sizeof z, f)) {
         unsigned fr; int ph, mo, af, gier, x, zz;
         if (sscanf(z, "TRAG F%u ph=%d mo=%d af=%d gier=%d pos=(%d,%d)", &fr, &ph, &mo, &af, &gier, &x, &zz) != 7) continue;
-        if ((long)fr < letzt) { erst = -1; erst_ist = -1; erst_ph = -1; n = 0; }   /* neuer Besuch: nur der letzte zaehlt */
+        if ((long)fr < letzt) { erst = -1; erst_ist = -1; erst_ph = -1; n = 0; auf_ph = auf_af = nach_ph = nach_af = -1; }   /* neuer Besuch: nur der letzte zaehlt */
         letzt = (long)fr; n++;
+        /* TRAG F<n> = Lage nach dem Takt des Bilds n (gemessen Lauf kanister_vorbei_elza a: "Stufe 1 ... F627", TRAG F626 af 9 an der Aufnahme-Lage, TRAG F627 danach) */
+        if (auf >= 0 && (long)fr == auf - 1) { auf_ph = ph; auf_af = af; }
+        if (auf >= 0 && (long)fr == auf) { nach_ph = ph; nach_af = af; }
         if (auf >= 0 && (long)fr > auf) continue;
         /* dieselbe Q12-Rechnung wie gr2_kan_vor (gator_re2_r41.c): Gleitkomma lag an der Quer-Grenze um bis zu 2 Einheiten daneben (Elza Lauf b F249: 1731 statt >= 1733) */
         const int64_t c = re15_cos_q12(gier), s = re15_sin_q12(gier), dx = (int64_t)kx - x, dz = (int64_t)kz - zz;
@@ -4043,10 +4047,14 @@ static int kanpass(const char *dir)
         if (erst_ist < 0 && (ph == 1 || ph == 2)) erst_ist = (long)fr;
     }
     fclose(f);
-    const int ok = auf >= 0 && erst >= 0 && auf <= erst + 1;
+    /* Abnahme 0 B2 (RE2 Kiefer-Maschine @0x80100328 liest +0x226 nicht): faellt die Aufnahme in einen laufenden Biss (Phase 3, Clip-4-Bild < 42), laeuft er im Bild danach
+     * weiter (Phase 3, Bild + 1) - Stand 80c7394ab brach ihn ab (Phase 2, Clip 0 Bild 0). */
+    const int biss_ab = auf_ph == 3 && auf_af >= 0 && auf_af < 42 && !(nach_ph == 3 && nach_af == auf_af + 1);
+    if (auf_ph == 3) printf("kanpass: Aufnahme im Biss (af %d) -> Bild danach Phase %d af %d: %s\n", auf_af, nach_ph, nach_af, biss_ab ? "BISS ABGEBROCHEN" : "Biss laeuft weiter");
+    const int ok = auf >= 0 && erst >= 0 && auf <= erst + 1 && !biss_ab;
     printf("kanpass: Kanister (%d,%d), Aufnahme %s%ld, erstes Fensterbild (LURK/CHASE/LUNGE/DASH) F%ld in Phase %d, nur LURK/CHASE F%ld, TRAG-Zeilen %ld -> %s\n",
            kx, kz, auf >= 0 ? "F" : "KEINE ", auf, erst, erst_ph, erst_ist, n,
-           ok ? "OK" : (auf < 0 ? "ROT (keine Aufnahme)" : erst < 0 ? "ROT (Kanister nie im Fenster)" : "ROT (Aufnahme zu spaet)"));
+           ok ? "OK" : (auf < 0 ? "ROT (keine Aufnahme)" : erst < 0 ? "ROT (Kanister nie im Fenster)" : biss_ab ? "ROT (Biss abgebrochen)" : "ROT (Aufnahme zu spaet)"));
     if (ok) return 0;
     if (auf >= 0 && erst >= 0) printf("kanpass: Aufnahme %ld Bilder nach dem ersten Fensterbild\n", auf - erst);
     return 1;
@@ -4168,6 +4176,95 @@ static void teil_kletterbiss(int elza)
     }
     re15_gator_treffer_kletter_alt_setzen(0);
 }
+/* ==== Runde 41 Integration, Nachbesserung zu Abnahme 0 B2 (Riegel kanbiss(_elza)) ===============================================================================
+ * Befund B2: ein Kanister-Fenstertreffer im Biss (Phase LUNGE) brach den Biss ab (Stand 80c7394ab: Phase CHASE, Clip 0 Bild 0) - der Biss konnte nicht mehr treffen.
+ * RE2 (EM23_OVL_0000.BIN): die Wurzel ruft je Takt T2 @0x80100320 (jal 0x801017c4) und danach unbedingt die Kiefer-Maschine @0x80100328 (jal 0x80101388); diese liest
+ * nur +0x224 (@0x80101398), nie +0x226, und ruft in Stufe 5 den Treffer (@0x8010155c jal 0x80101578). Riegel: echter Kampf (szene_bis_kampf), Leon an einer Lage im
+ * Wasser; Lauf A ohne Kanister bis zum ersten Biss (Phase LUNGE) und dessen Ende. Lauf B dieselbe Eingabe, im LUNGE-Bild k (1/3/5, vor dem Trefferbild) liegt der
+ * Szenen-Kanister 3000 x Skala vor der Wurzel (im Fenster [0, 9000 x Skala), gr2_kan_takt). Pflicht: Fenstertreffer im Biss (Stufe >= 1 im Bild danach), der Biss laeuft
+ * Bild fuer Bild wie in A (Lage, Gier, Clip, Bild, Phase) bis zu seinem Ende, der Treffer faellt im selben Bild wie in A, danach traegt er den Kanister (Stufe 7).
+ * Gegenprobe Pruefhaken re15_gator_kan_biss_abbruch_alt_setzen(1) = Stand 80c7394ab: der Biss weicht ab und trifft nicht - rot. */
+typedef struct { int32_t x, z; int16_t rot; uint8_t mo, af, ph; } kbz_t;
+#define KBZ_N 200
+static kbz_t s_kbz[3][KBZ_N];
+/* Rueckgabe: Zahl der aufgezeichneten Bilder ab LUNGE-Beginn (bis Phase != LUNGE + 1), -1 = kein Biss; *tr = Trefferbild (relativ), *st1 = erstes Bild mit Stufe >= 1,
+ * *st7 = erstes Bild mit Stufe 7 (relativ, bis 160 Bilder nach dem Biss-Ende) */
+static int kbz_lauf(int elza, int32_t lx, int32_t lz, int k, int alt, kbz_t *z, int *tr, int *st1, int *st7)
+{
+    *tr = -1; *st1 = -1; *st7 = -1;
+    re15_actor_t *g = szene_bis_kampf(elza);
+    if (!g) return -1;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->x = lx; pl->y = 0; pl->z = lz; pl->hp = 100; pl->hit_react = 0;
+    re15_collision_set_band(re15_collision_band_from_y(0));
+    re15_gator_kan_biss_abbruch_alt_setzen(alt);
+    int t0 = -1, n = 0, ende = -1, gelegt = 0;
+    for (int t = 0; t < 3000; t++) {
+        if (t0 >= 0 && k >= 0 && !gelegt && t - t0 == k) {   /* Szenen-Kanister 3000 x Skala vor die Wurzel (laengs der Gier, quer 0) */
+            const int32_t sk = g->render_scale_q12 ? g->render_scale_q12 : 4096;
+            const int gier = g->rot_y & 0xfff;
+            const int32_t vx = (int32_t)(((int64_t)re15_cos_q12(gier) * 3000 * sk) >> 24), vz = (int32_t)(((int64_t)-re15_sin_q12(gier) * 3000 * sk) >> 24);
+            if (!nb4_kanister_legen(elza, g->x + vx, g->z + vz)) break;
+            gelegt = 1;
+        }
+        pl->hp = 100; frame(0, 0);
+        const int ph = re15_gator_boss_phase(g);
+        if (t0 < 0) { if (ph != 3) continue; t0 = t; }
+        const int r = t - t0;
+        if (r < KBZ_N && ende < 0) { z[n].x = g->x; z[n].z = g->z; z[n].rot = g->rot_y; z[n].mo = g->motion; z[n].af = (uint8_t)g->anim_frame; z[n].ph = (uint8_t)ph; n++; }
+        if (*tr < 0 && pl->hp < 100) *tr = r;
+        const int st = re15_gr2_kanister_stufe();
+        if (gelegt && *st1 < 0 && st >= 1) *st1 = r;
+        if (gelegt && *st7 < 0 && st == 7) *st7 = r;
+        if (ende < 0 && ph != 3) ende = r;
+        if (ende >= 0 && (!gelegt || *st7 >= 0 || r > ende + 160)) break;
+    }
+    re15_gator_kan_biss_abbruch_alt_setzen(0);
+    if (gelegt) re15_game_flag_set(RE15_K2080_BANK, (uint8_t)RE15_K2080_BIT_KANISTER, 0);
+    return t0 < 0 ? -1 : n;
+}
+static void teil_kanbiss(int elza)
+{
+    printf("== kanbiss%s (Abnahme 0 B2: Kanister-Fenstertreffer im Biss - der Biss laeuft zu Ende wie RE2 @0x80100328 / @0x8010155c) ==\n", elza ? "_elza" : "");
+    static const int32_t L[3][2] = { { -5000, -21000 }, { -3000, -24500 }, { -6500, -11000 } };
+    static const int K[3] = { 1, 3, 5 };   /* gelegt vor dem Takt des LUNGE-Bilds k (k >= 1) */
+    int lagen = 0, faelle = 0, gleich = 0, treffer_gleich = 0, fenster = 0, getragen = 0, gegen_rot = 0, gegen_faelle = 0;
+    for (int i = 0; i < 3; i++) {
+        int trA, s1, s7;
+        const int nA = kbz_lauf(elza, L[i][0], L[i][1], -1, 0, s_kbz[0], &trA, &s1, &s7);
+        printf("  Figur (%d,0,%d): Lauf A ohne Kanister %d Biss-Bilder, Treffer r%d, Biss-Beginn Alligator (%d,%d) Gier %d\n", (int)L[i][0], (int)L[i][1], nA, trA,
+               nA > 0 ? (int)s_kbz[0][0].x : 0, nA > 0 ? (int)s_kbz[0][0].z : 0, nA > 0 ? (int)s_kbz[0][0].rot & 0xfff : 0);
+        if (nA <= 0 || trA < 0) continue;
+        lagen++;
+        for (int j = 0; j < 3; j++) {
+            if (K[j] >= trA) continue;
+            int trB, s1B, s7B, trC, s1C, s7C;
+            const int nB = kbz_lauf(elza, L[i][0], L[i][1], K[j], 0, s_kbz[1], &trB, &s1B, &s7B);
+            const int nC = kbz_lauf(elza, L[i][0], L[i][1], K[j], 1, s_kbz[2], &trC, &s1C, &s7C);
+            faelle++;
+            int diff = 0, erst = -1;
+            for (int r = 0; r < nA; r++) if (r >= nB || memcmp(&s_kbz[0][r], &s_kbz[1][r], sizeof(kbz_t))) { diff++; if (erst < 0) erst = r; }
+            int diffC = 0;
+            for (int r = 0; r < nA; r++) if (r >= nC || memcmp(&s_kbz[0][r], &s_kbz[2][r], sizeof(kbz_t))) diffC++;
+            const int im_biss = s1B >= 0 && s1B < nA - 1 && s_kbz[1][s1B].ph == 3;
+            if (im_biss) fenster++;
+            if (nB == nA && diff == 0) gleich++;
+            if (trB == trA) treffer_gleich++;
+            if (s7B >= 0) getragen++;
+            if (im_biss) { gegen_faelle++; if (diffC > 0 && trC != trA) gegen_rot++; }
+            printf("    Kanister im LUNGE-Bild %d: Fenstertreffer r%d (%s), Biss %d/%d Bilder gleich (erste Abweichung r%d), Treffer r%d (A r%d), getragen r%d | "
+                   "Gegenprobe 80c7394ab: %d Bilder abweichend, Treffer r%d\n", K[j], s1B, im_biss ? "im Biss" : "NICHT im Biss", nA - diff, nA, erst, trB, trA, s7B,
+                   diffC, trC);
+        }
+    }
+    PRUEF(lagen >= 2 && faelle >= 4, "Lagen mit treffendem Biss %d (>= 2), Faelle mit Kanister vor dem Trefferbild %d (>= 4)", lagen, faelle);
+    PRUEF(fenster == faelle, "Fenstertreffer im Biss in allen Faellen (%d von %d)", fenster, faelle);
+    PRUEF(gleich == faelle && treffer_gleich == faelle, "Biss mit Kanister-Fenster Bild fuer Bild wie ohne Kanister (%d von %d), Treffer im selben Bild (%d von %d)",
+          gleich, faelle, treffer_gleich, faelle);
+    PRUEF(getragen == faelle, "danach traegt er den Kanister (Stufe 7) in allen Faellen (%d von %d)", getragen, faelle);
+    PRUEF(gegen_faelle > 0 && gegen_rot == gegen_faelle, "Gegenprobe Stand 80c7394ab (Pruefhaken): Biss weicht ab und trifft nicht in %d von %d Faellen - rot ohne den Bau",
+          gegen_rot, gegen_faelle);
+}
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -4246,6 +4343,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "nb4_elza"))  teil_nb4(1);
     if (alle || !strcmp(teil, "kletterbiss"))      teil_kletterbiss(0);   /* Runde 41 Integration, Nutzerbefund 2026-11-09 Punkt 1 */
     if (alle || !strcmp(teil, "kletterbiss_elza")) teil_kletterbiss(1);
+    if (alle || !strcmp(teil, "kanbiss"))      teil_kanbiss(0);   /* Runde 41 Integration, Nachbesserung zu Abnahme 0 B2 */
+    if (alle || !strcmp(teil, "kanbiss_elza")) teil_kanbiss(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;
