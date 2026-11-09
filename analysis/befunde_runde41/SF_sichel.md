@@ -3151,3 +3151,110 @@ Sicht: V8 zeigt einen durchgehenden Bogen vom oberen Ruecken nach hinten unten (
 4. Letztes Ruhe-Gelenk 26,9 Grad (> 25); glaetten() begrenzt im Spiel auf 25.
 5. Adern: 9 Teil-Inseln erzeugen UV-Naehte zwischen den Inseln; Eindruck "ruhig" am Nutzerbild pruefen (Memory Texturen nie aus Video eichen).
 6. gdigrab-Aufnahme des echten Fensters fehlt noch (Bilder hier aus RE15_FRAMEDUMP wie der V7-Referenzlauf).
+
+## V8 Runde 2 nach Pruefung V8 r1 (Bauer, Runde 2 von 2, Zweig r41/sichel_v8, 2026-11-09)
+
+### Wortlaut (bindend, unveraendert)
+- (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Es ist doch
+  eigentlich KLAR erkennbar. Siehe Darstellung.png und Darstellung_Vorlage.png. Man sieht ganz klar den Körper Aufbau...."
+- (B) "... die Rechte Seite auch mehr rottöne hat, also quasi mehr adern an verschiedenen Stellen, am Arm und Körper, nicht nur grau.
+  Übernehme die die Textur Sachen die du dafür brauchst vom originalen Birkin von Resident Evil 1.5"
+Befunde der Pruefung V8 r1 (SF_PRUEFUNG_V8_r1_zahlen.md, SF_PRUEFUNG_V8_r1_sicht.md): S2 rot, S3 rot (b, d), Ruhekette mit Umkehr am
+Gelenk 20 (gelb), P2-Schwanz waagerecht mit Haken (Spitze ~(247,273)), Adern "Flickenteppich", Oberarm-Wulst und untere Flanke grau,
+Wurzelrohr sticht im Spiel (F334/F340) durch die Rueckenhaut, Balken- und Hornlagen F322-F340.
+Kein RE-Befund: jede Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine @0x-Adresse.
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8 Runde 2, sha256 d0ef852c9070c7a970b53301c961c059f02f166befb525792ecbd19705e2911a** (271 012 Byte),
+  Pin release/em30_hangar.sha256 (Commit baf91e8aa). v8_kette.sh -> "V8-KETTE-OK sha256 d0ef852c..." (Stufen 1-6 wie bisher, V7
+  319bbd17); zwei Bauten bytegleich.
+- Riegel (riegel_v8.py, SF_belege/v8/riegel_v8.txt, mit Szene): **7 von 8 gruen, rot S7 (nur c)** - siehe Offen 1.
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log **0 Unterschiede** zum freigegebenen V7-Lauf
+  (1131 Zeilen), "Szene Ende: Cut 4", Spieler am Ende pst=1. Labor 50E0: 23/23/21, Birkin st=1 ss1=9 an (-15000,12200), state.log
+  F1-F1010 gleich Runde 1.
+
+### Verfahren und PORT-WAHL-Werte (Befund -> Behebung)
+1. **Ruhekette ohne Umkehr** (Zahlen-Pruefer, gelb): kette_suche.py jetzt EBEN - eine Biegeachse, 6 Biegungen gleichsinnig 0..25 Grad
+   (Bauplan 6a "je hoechstens 25 Grad ... ohne Umkehr"). Gemessen am Asset in PV: Bild-Drehwinkel -25,4 / -9,5 / -17,0 / -9,4 / -9,1 /
+   -16,1 Grad (Runde 1 mit +8,3 am Gelenk 20), Spitze (283,335) (Ziel 283,334).
+2. **Feinsuche am Mesh statt Kreisen** (S2 rot): kette_fein.py (neu), (1+1)-Evolution mit fester Saat auf den riegel_v8-Massen der
+   gerenderten Silhouette (Kosten im Werkzeugkopf). Ergebnis kette_v8.json: Wurzel (-714,-214,130), Glied 526 E., Radien 442/413/366/350/
+   191/83/63/60 E., Rohr hinten 1,5 r0, Rohrknick rohr_grad (v8_bau.rohr_drehung, Ring 0 zur Bogenaussenseite = zum Buckel),
+   Verjuengung. Suchkette und Protokolle: SF_belege/v8/runde2/suche (k1 kette_suche eben -> k2/k3 Powell -> k4/k5 Evolution).
+3. **Manschette** (Messung sfv8/r2 vtx.py, fein.py): die Manschette von Glied 17 lag entlang der EIGENEN Achse 0,45 ra zurueck und stand
+   in PV 5-7 px ueber der Oberkante (Huckel am Gelenk), danach eine Delle (Sattel 3,2 bei x 329). Jetzt: Gehrungsring entlang des
+   VORGLIEDS um 0,2 ra zurueckgesetzt, Radius 0,99 (v8_bau MANSCHETTE_S/_R); deckt bis etwa 11 Grad Nachknicken ohne Spalt.
+4. **Keyframes** (Sicht (1b) P2-Haken, (5) Horn/Balken und Durchstossen; Zahlen 714/912 Keyframes > 25 Grad): keine V7-Bewegung mehr.
+   Knochen 16 in jedem Keyframe auf der Ruhe gegen Knochen 8 (das Rohr liegt immer wie in PV im Rumpf); Glieder 17-22 haengen im
+   Modellraum wie in PV, um die Hochachse mit dem Kurs von Knochen 8 gedreht (Messblatt V8: "Schwanzband steht n1435-n1440 still", Foto 2
+   und die Vorlage im selben Schnitt); je Gelenk <= 25 Grad; Bodenregel dreht die Zielrichtungen gemeinsam hoch (109 Keyframes),
+   Knochen 16 bleibt. Gemessen: 0 von 912 Keyframes mit einem Gelenk > 25,5 Grad (max 25,2 = 12-Bit-Rundung, Median 18,5; Runde 1:
+   683 / 95,5 / 28,3). P2 (Clip 12 Bild 48): Spitze (271,339), tiefster Schwanzpunkt (269,340) - faellt zum Boden (Runde 1 (253,294),
+   V7 (296,320); Beschreibung2 "Schwanzspitze Ende" etwa (282,320)).
+5. **Ruecken** (S3 b/d): die Koordinatensuche ruecken_suche.py --riegel (Kosten = Riegelgroessen S2/S3) blieb an einer Stufe 187 -> 192
+   bei x 429/430 haengen; ruecken_ecken.py (neu) setzt die Silhouetten-Ecken 46/51/30/53/50/49/47/48 auf Bildpunkte der Kuppel: obere
+   Huelle der Vorlage-Oberkontur x 400-447 (m13b_oben.json), Huegel mit groesster Hoehe ueber der Sehne x 405 -> 447 bei x ~435,
+   Ecke 53 an den Kopfrand (447,200); Mesh 9 bleibt bytegleich. Ziele und Verschiebungen in ruecken_v8.json "ecken_ziele".
+6. **Adern** (Sicht (3)): ganze V7-UV-Inseln wechseln die Zeile, UV unveraendert - keine neue Naht, die Original-Textur liegt
+   durchgehend wie beim RE1.5-Birkin. Mesh 8: Inseln d0 (23 Flaechen) und d26 (12) -> X1 493, d28 (6) -> X2 494; Mesh 13: 13 Flaechen
+   -> X1; Mesh 14 (Unterarm-Wulst unter dem Buckel, diag1.py 14/482): 37 Flaechen -> X3 495 = V7-Zeile 482 + 88 Original-Ader-Eintraege.
+   16 CLUT-Zeilen, Port-Texturhoehe 4096 (= Grenze). Proben (adp2/adp3/adp4.py): ein starrer Schub je ganzer Insel (19 gueltige Schuebe
+   der groessten Rumpfinsel) hob S7c nur auf 14,3 % und die Flecken auf 30 > 27 - verworfen. riegel_v8 S7a (adern_v8.herkunft) erlaubt
+   jetzt 3 neue Zeilen (Regel je Eintrag unveraendert) und prueft Mesh 14 mit.
+7. **Spiel** (schwanz_r41.c, nur V8-Kette): erstes Glied ohne Szenenfuehrung starr auf dem Keyframe im Raum von Knochen 8 (SW_V8_STARR);
+   unter der Szenenfuehrung (h19-h74) folgt es der FABRIK (mit starrem Glied blieb der Schwanz h19-h30 hinter dem Koerper, Zwischenlauf
+   szene_v8r2) und kehrt danach im n-ten Takt um hoechstens n x 5 Grad zurueck (SW_V8_RUECK; Unit-Test Freigabe-Sprung 1621 -> 630 E.,
+   Grenze 700). Bodenregel zuerst verteilt (1 Grad je Schritt um das Gelenk mit dem kleinsten Knick <= 25 Grad), Rest starr wie V4.
+   Erkennung SW_V8_WURZEL_X -760 (Wurzel jetzt x -714; V2 -986, Gegenprobe -800).
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenproben: V7 tools/r41_sichel/v8/riegel_v8_V7_gegenprobe.txt, V8 r1 SF_belege/v8/runde2/riegel_V8r1_gegenprobe.txt)
+| Riegel | Soll | V8 Runde 2 | V8 Runde 1 | V7 |
+|---|---|---|---|---|
+| S1 Kontur T | Mittel <= 4, Max <= 8 | **1,8 / 5,0 gruen** | 3,0 / 7,0 gruen | 16,8 / 50 rot |
+| S2 J | (a) <= 4/6, (b) <= 2, (c) <= 3 | **(a) 1,7/5, (b) 1,7 bei x 382, (c) 3,0 bei x 397 gruen** | 3,7/7; 3,7; 5,0 rot | 7,3/13; 6,6; 7,0 rot |
+| S3 Ruecken/H/K | (a) <= 4, (b) 5-10 bei x 428-445, (c) keine, (d) <= 2, (e) <= 3 | **4,0; 6,8 bei x 437; keine; 1,5; 3,0 gruen** | 3,0; 3,0 bei 423; keine; 2,3; 3,0 rot | 8,0; 4,6 bei 427; keine; 6,4; 3,0 rot |
+| S4 Breite | Wurzel >= 55, s 90-130 >= 36, monoton, Ende <= 10 | **56,9; 38,8/37,9; ja; 5,9 gruen** | 59,0; 42,6/40,0/40,3 gruen | 44,3; 24,1; nein rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | gruen | - |
+| S6 Boden | 0 Keyframes, Szene y <= 0 | **0 von 912; Szene tiefstes y -66 gruen** | 0; -66 gruen | 70; -108 rot |
+| S7 Adern | (a) Herkunft; (b) 35-59 %; (c) 25-80 %; (d) <= Original | (a) ok; (b) 42,7 %; **(c) 5,3 % (lok z<0 5,0 %) ROT**; (d) 26 <= 27 | ok; 43,3; 29,8; 19 gruen | ok; 22,8; 0,0; 15 rot |
+| S8 Technik | <= 16 Zeilen, <= 4096, 23/23/21 | **16, 4096, gruen** | 15, 3840 gruen | 13, 3328 gruen |
+
+### Ausserhalb der Riegel (Pruefer-Befunde, gemessen)
+- Szene (tools/r41_sichel/v8/szene_mass.py, SF_belege/v8/runde2/szene_mass.txt): 144 Takte, tiefstes Gelenk y -66, Gelenk max 39,3 Grad
+  (nur h69/h70: die Szene fuehrt die Spitze zum Boden, die verteilte Bodenregel stoesst an 25 Grad, der Rest dreht starr um Gelenk 1),
+  Median des Takt-Maximums 20,4 Grad, 2 Takte > 30 Grad (Runde 1: 0, Median 25,0 an der Grenze; V7: 144); die Biegeebene wechselt das
+  Vorzeichen in 40 von 144 Takten (Runde 1: 121, V7: 144) - diese 40 liegen in der FABRIK-Fuehrung.
+- Ruecken von hinten (Tafel 08, F322-F346): kein Durchstossen des Wurzelrohrs gesehen; der Schwanz steigt als Bogen aus dem Ruecken und
+  faellt links nach unten (F328/F334), kein senkrechtes Horn. Gegen V7 steht der Bogen hoeher ueber dem Ruecken.
+
+### Tests
+- build: "=== LOCAL-BUILD-OK (build)" (Baum aus Runde 1 konfiguriert).
+- Summenzeilen der Gruppe und der Unit-Suite: SF_belege/v8/tests_v8.txt.
+- Gegenprobe (SF_belege/v8/runde2/tests_gegenprobe.txt): Spiel-Asset V8 Runde 1 bzw. V7 -> unit_birkin_formen und unit_schwanz_r41 rot.
+- Neu unit_schwanz_r41 (11): erstes Glied ohne Szenenziel nach 180-Grad-Drehung und im Gang hoechstens 0,1 Grad am Keyframe (Soll <= 1);
+  ohne V8-Erkennung (Gegenprobe) 147,5 Grad.
+
+### Spiel
+- Szene: sfv8/szene_v8r2 (lauf_v4.sh, BAUM r41_sichel_v8, EMD "-"); Video sfv8/spiderman_szene_v8.mp4 (F225-F450, 226 Bilder, 30 fps);
+  Tafeln 06 (V7 | V8, gleiche Bildnummern), 07 (jedes 7. Bild), 08 (Ruecken von hinten). Ablauf und state.log wie V7; Schwanz nie im
+  Boden; in groben Zuegen kein Durchstossen von Leon, Spider-Man oder Wand gesehen. Bilder per RE15_FRAMEDUMP wie der Referenzlauf.
+- Labor 50E0: sfv8/labor_v8r2 (1010 Takte ohne Eingabe): Form geladen, Birkin wie Runde 1; der Kampf laeuft in
+  integration_r41_birkin_pistole.
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+01_darstellung.png, 02_foto2_seite.jpg, 03_foto1_vorn.jpg, 04_rundum.jpg, 05_adern_rechts.png, 06_spiel.jpg, 07_bogen_jedes7.jpg,
+08_ruecken_hinten.jpg; dazu runde2/szene_v7_v8r1_v8r2.jpg, runde2/ruecken_v7_v8r1_v8r2.jpg, runde2/adern_varianten_V7_V8r1_A_C.png
+(Zeilen V7 | V8 r1 | ganze Inseln ohne Schub | mit Schub), runde2/adern_V7_V8r2.png, runde2/posen_V7_V8r2.png.
+
+### Offen
+1. **S7c rot (5,3 % statt 25-80 %)** - Zielkonflikt im Messblatt: S7a erlaubt nur V7-Eintraege und Original-Ader-Eintraege (a* >= 15,
+   L* <= 38). Ruhig (ganze Inseln, keine neue Naht) erreichen die Adern in PV 5,3 %, mit starrem Schub je ganzer Insel hoechstens 14,3 %
+   (dann S7d 30 > 27); 25 % erreichte nur Runde 1 mit 9 Teil-Inseln - der vom Sicht-Pruefer abgelehnte Flickenteppich. Gemessen: das
+   Original-EM30 (volle Original-Zeile, Original-UV) hat dort 60,5 % (Mesh 13 57,7 %); die "Rottoene" der Vorlage sind die blassrosa
+   Original-Haut, nicht nur die Adern. Zu entscheiden (Nutzer/Orchestrator): (a) so lassen (ruhig, wenig Rot in PV), (b) fuer die
+   (W)-rechten Inseln die VOLLE Original-Zeile 480/481/482 (bytegleich EM30; S7a muesste dafuer erweitert werden), (c) Teil-Inseln
+   (S7c gruen, Flickenteppich).
+2. Unterarm (Mesh 14, X3): eine lange rote Ader laeuft sichtbar am Unterarm entlang (Tafel 01/02) - Original-Texel, aber kraeftig; am
+   Nutzerbild pruefen.
+3. Gelenk 1 in h69/h70 bis 39 Grad (Boden-Rest, siehe oben).
+4. gdigrab-Aufnahme des echten Fensters fuer Runde 2 nicht gemacht (Bilder per RE15_FRAMEDUMP wie der V7-Referenzlauf).
