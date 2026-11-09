@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.16)   # cmake -P: ohne diese Zeile gelten im Linux-Container (CMake 3.28) die alten Policies (IN_LIST, if(TRUE)) - Muster der aelteren Integrationsskripte, Memory reai-v2-linux-test-portabilitaet
 # =============================================================================
 # Runde 41 Spur AN, Nachbesserung 5 (Abnahme 3 A2): BEGLEITER IN DER SCHUSSLINIE, echter Raum mit der echten exe.
 #

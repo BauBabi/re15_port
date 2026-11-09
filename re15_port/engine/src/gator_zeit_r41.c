@@ -10,6 +10,11 @@
  * Die Funktionen liegen in einer eigenen Datei, damit windows.h nur hier eingebunden wird.
  * env RE15_G2_ZEIT_LOG=1: je Boss-Takt eine Zeile in gator_zeit.log (Laufordner): Bild, Phase, Entwurf-F-Modus, Biegung Wand/Faden, ganzer Takt Wand/Faden.
  */
+/* Linux (glibc, -std=c11 ohne Erweiterungen): clock_gettime, CLOCK_MONOTONIC, CLOCK_THREAD_CPUTIME_ID sind nur mit Feature-Makro deklariert - Muster
+ * platform/pc/src/asset_root_pc.c:8-9 (Release-Abbruch v0.8.30 Schritt linux). Bau-Umgebung, kein Spielverhalten. */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1
+#endif
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

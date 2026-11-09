@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.16)   # cmake -P: ohne diese Zeile gelten im Linux-Container (CMake 3.28) die alten Policies (IN_LIST, if(TRUE)) - Muster der aelteren Integrationsskripte, Memory reai-v2-linux-test-portabilitaet
 # =============================================================================
 # G5 FRISST DEN SPIELER, GAME OVER, TITEL. Runde 41 Spur R, Abnahme 2.
 #

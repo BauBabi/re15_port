@@ -51,6 +51,11 @@
  *   arm = Remington 8 von +z tief (Arm-Abriss, 4. Spawn a3 = 0 @0x80107704), burst = Remington 8 von +x (Ragdoll-Emitter
  *   Part 1 @0x80106D7C im Bodenanker), mg zusaetzlich Gliedabriss @0x80105368/@0x801053D0 + Aufschlag-Blut.
  */
+/* Linux (glibc, -std=c11 ohne Erweiterungen): setenv sind nur mit Feature-Makro deklariert - Muster
+ * platform/pc/src/asset_root_pc.c:8-9 (Release-Abbruch v0.8.30 Schritt linux). Bau-Umgebung, kein Spielverhalten. */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1
+#endif
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"

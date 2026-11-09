@@ -23,6 +23,11 @@
  *       @0x8011feac) then the corpse SETTLE clips 0x14/0x15 (audit #3).
  *   (6) FLOOR-DROP: girl row [0xa] = FUN_8010bbe8 — floor+=1, y-=0x708.
  * ==========================================================================*/
+/* Linux (glibc, -std=c11 ohne Erweiterungen): setenv sind nur mit Feature-Makro deklariert - Muster
+ * platform/pc/src/asset_root_pc.c:8-9 (Release-Abbruch v0.8.30 Schritt linux). Bau-Umgebung, kein Spielverhalten. */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

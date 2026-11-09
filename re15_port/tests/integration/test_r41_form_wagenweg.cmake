@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.16)   # cmake -P: ohne diese Zeile gelten im Linux-Container (CMake 3.28) die alten Policies (IN_LIST, if(TRUE)) - Muster der aelteren Integrationsskripte, Memory reai-v2-linux-test-portabilitaet
 # =============================================================================
 # RIESENFORM IM ECHTEN WAGENWEG, Runde 41 Spur Form, Nachbesserung 3 (AN-Abnahme 2 Mangel N1,
 # .claude/worktrees/r41_annette/analysis/befunde_runde41/AN_abnahme_2.md; Dossier analysis/befunde_runde41/form/STUFE3.md).
