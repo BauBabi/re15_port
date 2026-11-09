@@ -1,0 +1,68 @@
+{
+ "Rücken.png": {
+  "grund": "Rückseite.png",
+  "dx": 0,
+  "dy": 0,
+  "gleich": 0.9701917459991398
+ },
+ "Schwanz_hinten.png": {
+  "grund": "Rückseite.png",
+  "dx": 425,
+  "dy": 0,
+  "gleich": 0.9507732107665346
+ },
+ "Kopf_von_hinten.png": {
+  "grund": "Rückseite.png",
+  "dx": 0,
+  "dy": 0,
+  "gleich": 0.9859191546999274
+ },
+ "linkes_bein_hinten.png": {
+  "grund": "Rückseite.png",
+  "dx": 223,
+  "dy": 0,
+  "gleich": 0.9746243075125659
+ },
+ "rechtes_bein_hinten.png": {
+  "grund": "Rückseite.png",
+  "dx": 0,
+  "dy": 0,
+  "gleich": 0.9678069572920612
+ },
+ "linker_rechter_Fuß_hinten.png": {
+  "grund": "Rückseite.png",
+  "dx": 375,
+  "dy": 0,
+  "gleich": 0.9867665089646229
+ },
+ "Bein_Vorne_rechts.png": {
+  "grund": "Rückseite.png",
+  "dx": 0,
+  "dy": 0,
+  "gleich": 0.9777344828250277
+ },
+ "Gesicht vorne.png": {
+  "grund": "birkin_form3_02.png",
+  "dx": 401,
+  "dy": 0,
+  "gleich": 0.9747269657398107
+ },
+ "Vorne_Oberkörper.png": {
+  "grund": "birkin_form3_02.png",
+  "dx": 0,
+  "dy": 0,
+  "gleich": 0.9749193186432709
+ },
+ "vorne_rechte_Hand_und_Kralle.png": {
+  "grund": "birkin_form3_02.png",
+  "dx": 282,
+  "dy": 0,
+  "gleich": 0.982041719207506
+ },
+ "Vorderes_Linkes_Bein_mit_fuß.png": {
+  "grund": "birkin_form3_02.png",
+  "dx": 0,
+  "dy": 0,
+  "gleich": 0.9785152493107354
+ }
+}
