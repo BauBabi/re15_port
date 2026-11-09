@@ -82,6 +82,20 @@ foreach(_teil nb4 nb4_elza)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
+# Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 2 "sobald die Position erreicht ist, wo der Behälter liegt"): exe-Riegel kanister_vorbei(_elza) -
+# Kanister-Fenster auch im Biss (RE2 @0x80100ab8-b1c) und im Zonen-Dash (PORT-WAHL); Auswerter test_r41_gatorfix kanpass (Aufnahme im ersten Fensterbild)
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix_kanister.cmake)
+    foreach(_teil kanister_vorbei kanister_vorbei_elza)
+        add_test(NAME integration_r41_gatorfix_${_teil}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_TOOL=$<TARGET_FILE:test_r41_gatorfix>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_gatorfix_${_teil}_wd
+                         -DTEIL=${_teil}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix_kanister.cmake)
+        set_tests_properties(integration_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 2400)
+    endforeach()
+endif()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
     foreach(_teil gang_montage gang_montage_elza gang_szene gang_szene_elza frei frei_elza rampe rampe_elza
                   abn2_leiterecke abn2_wand_elza abn2_nordbecken abn2_rampe_west abn2_rampe_west_elza abn2_ecken abn2_wand   # NB1/NB2

@@ -4002,6 +4002,55 @@ static int bisslog(const char *dir)
     return ok ? 0 : 1;
 }
 
+/* ==== Runde 41 Integration - Nutzerbefund 2026-11-09 Punkt 2 (exe-Auswerter kanpass, Riegel integration_r41_gatorfix_kanister_vorbei(_elza)) =====================
+ * Nutzer woertlich: "Ich musste diverse runden mit dem Aligator drehen, bis er letzendlich den Behälter aufnahm. Eigentlich sollte er den Behälter aufnehmen, sobald die
+ * Position erreicht ist, wo der Behälter liegt." Rechnung wie das Werkzeug des Untersuchers (gator_nb/kanister/werkzeug/kontrafakt.py, geeicht: 14 von 14 Laeufen auf
+ * ein Bild genau; hier mit der Q12-Rechnung von gr2_kan_vor): je TRAG-Zeile des letzten 2090-Besuchs (RE15_G2_TRAG_LOG) liegt der Kanister im Aufnahmefenster, wenn er laengs der Gier in [0, 6000) und quer
+ * |q| < 1733 (Koerperradius 1466 + Kanisterradius 267, gr2_kan_takt) vor der Wurzel liegt. Erstes Fensterbild in einer Phase, in der das Fenster jetzt laeuft:
+ * LURK 1, CHASE 2, LUNGE 3 (RE2 @0x80100ab8-b1c fragt +0x224 nicht), RE2_DASH 12 (PORT-WAHL, Nutzer-Wortlaut). Riegel: Aufnahme ("KANISTER Stufe 1 ... F<n>")
+ * vorhanden und <= erstes Fensterbild + 1 (die TRAG-Zeile steht vor dem Takt). Vorher gemessen rot: pendel_innen Aufnahme F884 gegen Fensterbild F594,
+ * stehen_ost F1020 gegen F252. */
+static int kanpass(const char *dir)
+{
+    char pf[1024]; static char z[16384];
+    long auf = -1; int kx = 0, kz = 0, kan = 0;
+    snprintf(pf, sizeof pf, "%s/gator_boss.log", dir);
+    FILE *f = fopen(pf, "r");
+    if (!f) { printf("kanpass: %s fehlt\n", pf); return 1; }
+    while (fgets(z, sizeof z, f)) {
+        const char *k = strstr(z, "KANISTER gesetzt (");
+        int x, y, zz;
+        if (k && sscanf(k, "KANISTER gesetzt (%d,%d,%d)", &x, &y, &zz) == 3) { kx = x; kz = zz; kan = 1; auf = -1; }
+        k = strstr(z, "KANISTER Stufe 1 ");
+        if (k && auf < 0 && kan) { const char *q = strrchr(z, 'F'); if (q) auf = atol(q + 1); }
+    }
+    fclose(f);
+    if (!kan) { printf("kanpass: kein Kanister gesetzt (gator_boss.log)\n"); return 1; }
+    snprintf(pf, sizeof pf, "%s/gator_trag.log", dir);
+    if (!(f = fopen(pf, "r"))) { printf("kanpass: %s fehlt\n", pf); return 1; }
+    long erst = -1, letzt = -1, n = 0, erst_ist = -1; int erst_ph = -1;
+    while (fgets(z, sizeof z, f)) {
+        unsigned fr; int ph, mo, af, gier, x, zz;
+        if (sscanf(z, "TRAG F%u ph=%d mo=%d af=%d gier=%d pos=(%d,%d)", &fr, &ph, &mo, &af, &gier, &x, &zz) != 7) continue;
+        if ((long)fr < letzt) { erst = -1; erst_ist = -1; erst_ph = -1; n = 0; }   /* neuer Besuch: nur der letzte zaehlt */
+        letzt = (long)fr; n++;
+        if (auf >= 0 && (long)fr > auf) continue;
+        /* dieselbe Q12-Rechnung wie gr2_kan_vor (gator_re2_r41.c): Gleitkomma lag an der Quer-Grenze um bis zu 2 Einheiten daneben (Elza Lauf b F249: 1731 statt >= 1733) */
+        const int64_t c = re15_cos_q12(gier), s = re15_sin_q12(gier), dx = (int64_t)kx - x, dz = (int64_t)kz - zz;
+        const int32_t la = (int32_t)((c * dx - s * dz) >> 12), qu = (int32_t)((s * dx + c * dz) >> 12);
+        if (!(la >= 0 && la < 6000 && qu > -1733 && qu < 1733)) continue;
+        if (erst < 0 && (ph == 1 || ph == 2 || ph == 3 || ph == 12)) { erst = (long)fr; erst_ph = ph; }
+        if (erst_ist < 0 && (ph == 1 || ph == 2)) erst_ist = (long)fr;
+    }
+    fclose(f);
+    const int ok = auf >= 0 && erst >= 0 && auf <= erst + 1;
+    printf("kanpass: Kanister (%d,%d), Aufnahme %s%ld, erstes Fensterbild (LURK/CHASE/LUNGE/DASH) F%ld in Phase %d, nur LURK/CHASE F%ld, TRAG-Zeilen %ld -> %s\n",
+           kx, kz, auf >= 0 ? "F" : "KEINE ", auf, erst, erst_ph, erst_ist, n,
+           ok ? "OK" : (auf < 0 ? "ROT (keine Aufnahme)" : erst < 0 ? "ROT (Kanister nie im Fenster)" : "ROT (Aufnahme zu spaet)"));
+    if (ok) return 0;
+    if (auf >= 0 && erst >= 0) printf("kanpass: Aufnahme %ld Bilder nach dem ersten Fensterbild\n", auf - erst);
+    return 1;
+}
 /* ==== Runde 41 Integration - Nutzerbefund 2026-11-09 Punkt 1 (Riegel kletterbiss(_elza)) ======================================================================
  * Nutzer woertlich: "Wenn ich direkt an der Kante hochklettere auf die Platform und dann vom Aligator erwischt werden, ist es möglich das er mich in die Wand
  * schiebt." Gemessen (Nutzer-Sitzung gator_boss.log Z. 3895 "GTR F758 START ... figur (5506,0,-18568)", Ende (11948,-1800,-18568)): der Biss kommt WAEHREND des
@@ -4130,7 +4179,8 @@ int main(int argc, char **argv)
     if (getenv("G2_TREFFER_ALT")) re15_gator_treffer_alt_setzen(1);   /* NB4 Runde 2: Werkzeug-Laeufe mit dem RE1.5-Niederwurf (Stand 3d57083b1) */
     if (!strcmp(teil, "obenlog") && argc >= 3)  return obenlog(argv[2], argc >= 4 && !strcmp(argv[3], "kampf") ? 1 : argc >= 4 && !strcmp(argv[3], "ab0") ? 2 : 0);                                            /* NB3 exe-Riegel rampe_oben */
     if (!strcmp(teil, "haenglog") && argc >= 3) return haenglog(argv[2], argc >= 4 && !strcmp(argv[3], "mit"));    /* NB3 exe-Riegel rampe/abn2_wand_elza */
-    if (!strcmp(teil, "aussenlog") && argc >= 3) return aussenlog(argv[2]);   /* NB3 Runde 2: Figur nie ausserhalb (Abnahme 5 M1/M2) */
+    if (!strcmp(teil, "aussenlog") && argc >= 3) return aussenlog(argv[2]);
+    if (!strcmp(teil, "kanpass") && argc >= 3) return kanpass(argv[2]);      /* Runde 41 Integration, Nutzerbefund 2026-11-09 Punkt 2 (exe-Riegel kanister_vorbei) */   /* NB3 Runde 2: Figur nie ausserhalb (Abnahme 5 M1/M2) */
     if (!strcmp(teil, "gtrlog") && argc >= 3) return gtrlog(argv[2]);         /* G2-RE2 NB4: RE2-Trefferreaktion, Sturz, Kanister (exe-Riegel) */
     if (!strcmp(teil, "bisslog") && argc >= 3) return bisslog(argv[2]);       /* NB4 Runde 3: erster Biss nach dem Intro, ein Treffer je Lauf (re2gator nische) */
     if (!strcmp(teil, "projektion") && argc >= 5) return projektion(argc, argv);

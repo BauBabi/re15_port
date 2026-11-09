@@ -1866,7 +1866,31 @@ static void gb_takt(int slot)
     /* Runde 41 Spur B: Ereignis-Maschine, Schuetteln, Rumble, Putz, Zaehler, Kanister-Vorpass */
     /* Nachbesserung 3 (M1, B9): untergetaucht kein Kanister-Fenster - RE2 Sub-0-Pre = `jr ra` (Tafel @0x8010463c[0] =
      * 0x801007fc), das Fenster liegt nur im Sub-1/2-Pre @0x80100ab8-b18. */
-    re15_gr2_takt(slot, e, pl, g->phase == GBP_CHASE || (g->phase == GBP_LURK && !g->untergetaucht));
+    {   /* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 2, woertlich: "Ich musste diverse runden mit dem Aligator drehen, bis er letzendlich den Behälter
+         * aufnahm. Eigentlich sollte er den Behälter aufnehmen, sobald die Position erreicht ist, wo der Behälter liegt."). Gemessen (15 exe-Laeufe, Bericht
+         * gator_nb/kanister): das Fenster lief nur in CHASE/LURK; 4 Passagen mit dem Kanister im Fenster fielen in den Zonen-Dash (die Liegestelle (-6870,-12651)
+         * liegt 1849 hinter der Zonenlinie GB_RAMP_Z1), 1 in den Biss. Fuer den Szenen-Kanister jetzt auch:
+         *  - im Biss (LUNGE): RE2-belegt - das Fenster im Sub-1/2-Pre (@0x80100ab8-b1c: @0x80100ae4 67de4224 addiu -8601, @0x80100ae8 8f01422c sltiu 0x18f,
+         *    @0x80100af4 26020292 lbu +0x226) fragt den Kiefer-Lauf +0x224 nicht, der Biss T1 laeuft im selben Pre (@0x80100974 bf04040c jal 0x801012fc);
+         *  - im Zonen-Dash (RE2_DASH): PORT-WAHL, Beleg ist der Nutzer-Wortlaut oben (RE2 Sub 3 0x80100d30-0x80100ee0 hat kein Fenster).
+         * Fenster, Vorhalt und Stufen bleiben (8601/0x18f, 8100 @0x801018a4-c0). Pruefhaken re15_gr2_kan_phasen_alt_setzen(1) = Stand 0b86e36c6. */
+        int kan_fenster = g->phase == GBP_CHASE || (g->phase == GBP_LURK && !g->untergetaucht);
+        const int kan_neu = !re15_gr2_kan_phasen_alt() && re15_gr2_kan_szene_liegt()
+                         && ((g->phase == GBP_LUNGE && !gb_lunge_b2()) || g->phase == GBP_RE2_DASH);
+        if (kan_neu) kan_fenster = 1;
+        re15_gr2_takt(slot, e, pl, kan_fenster);
+        if (kan_neu && re15_gr2_aufnahme_lenksperre(slot)) {
+            /* Fenstertreffer im Biss/Dash: Uebergang in die Verfolgung wie das LUNGE-Ende (phase CHASE, Clip 0 Bild 0) bzw. das Dash-Ende (Routine 0x101
+             * @0x80100ee4); ab hier die RE2-Stufen 1-6 wie in CHASE (Clip 0 Blend 32 @0x80100c34-40, Lenksperre, Vorhalt). Der Biss endet - RE2 schaerft T1 bei
+             * Stufe 1..6 nicht (@0x80101360-70, re15_gr2_biss_erlaubt). */
+            if (g->phase == GBP_RE2_DASH) re15_gr2_dash_abbrechen(slot);
+            if (!s_gb_stumm) { FILE *fl = fopen("gator_boss.log", "a");
+                if (fl) { fprintf(fl, "KANISTER-AUFNAHME aus Phase %d F%u pos=(%d,%d) gier %d\n", (int)g->phase, (unsigned)g_engine.frame_count, (int)e->x, (int)e->z,
+                                  (int)e->rot_y & 0xfff); fclose(fl); } }
+            g->phase = GBP_CHASE; g->timer = 0;
+            e->motion = 0; e->anim_frame = 0;
+        }
+    }
     {   /* Runde 41 Spur F (Haken): die 2090-Ankunftsszene fuehrt den Gator (re15_gatorszene_r41.h) - 1 = untergetaucht halten,
          * 2 = Szene bewegt ihn (auftauchen), 3 = Szene vorbei -> Verfolgung wie nach dem RE2-Intro (Routine 0x101 @0x80100928-2c) */
         const int sz = re15_gatorszene_r41_boss(slot, e);
