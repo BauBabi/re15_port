@@ -11999,6 +11999,28 @@ static int re15_bk_arc(re15_actor_t *e, re15_actor_t *pl, int32_t range, int arc
  *   a2 <- Weltpunkt (@0x8001a694-6b0); der Wurf legt X/Z nach acc1c/acc1e (@0x80117eec-f4).
  * Versatz-/Reichweiten-Saetze (STAGE3, s16): Kralle @0x80100390 (800,337,0) / 900; Biss @0x801003bc (900,337,0) /
  * 500 (@0x801003c4); Wurf @0x801003cc (1000,337,0) / 700 (@0x801003d4); Tackle @0x801003bc / 900 (@0x80100398).
+ * STAGE5 (Labor 5080/50E0/50F1, Hangar 50A0) bytegleich +0x48: Kralle @0x801003d8 `20 03 51 01 00 00 00 00` / 900
+ * @0x801003e0 `84 03`; Biss @0x80100404 `84 03 51 01 00 00 00 00` / 500 @0x8010040c `f4 01`; Wurf @0x80100414
+ * `e8 03 51 01 00 00 00 00` / 700 @0x8010041c `bc 02`; Tackle @0x80100404 / 900 @0x801003e0. Box-Aufrufe STAGE5
+ * `78 69 00 0c` (jal 0x8001a5e0) @0x80117f24 / @0x80118400 / @0x801186b4 / @0x801192f0 (STAGE3 -0x814). Der Typ-0x30-Code
+ * ist in STAGE3 und STAGE5 bis auf Relokationen gleich (123 Diff-Woerter, nur j/jal +0x814, Zeiger +0x48 / +0xfc4).
+ *
+ * BILD DER PRUEFUNG = KF anim_frame - 2 (Integration Runde 41, Labor-Befund): FUN_8001a5e0 liest die GEZEICHNETE
+ * Welt-Matrix des Teils, nicht die frische lokale Pose: `40 00 04 26` addiu a0,s0,64 (Teil+0x40) @0x8001a5ec,
+ * `8a 9e 01 0c` jal ApplyMatrixSV @0x8001a604, `54 00 02 96` lhu v0,84(s0) @0x8001a610 .. `5c 00 04 96` lhu a0,92(s0)
+ * @0x8001a638. anim_set FUN_8001f314 posiert das Bild +0x95 VOR dem Hochzaehlen (`95 00 02 91` lbu v0,149(t0)
+ * @0x8001f35c, `68 01 06 ad` sw a2,360(t0) @0x8001f36c; erst `01 00 42 24` addiu v0,v0,1 / `95 00 62 a0` sb v0,149(v1)
+ * @0x8001f618-61c) in die lokalen Matrizen Teil+0x18; +0x40/+0x54..+0x5c entstehen erst in der naechsten Komposition.
+ * Beleg fuer das Nachhinken: der Fussvortrieb FUN_8011bdd8 (STAGE5) vergleicht die frische Kette aus +0x18 mit der ALTEN
+ * Welt-Lage `54 00 64 8e` lw a0,84(s3) @0x8011be88 / `5c 00 64 8e` lw a0,92(s3) @0x8011bea8 - waeren beide gleich, gaebe
+ * der Gang nie eine Schrittlaenge. Zwischen anim_set (`c5 7c 00 0c` @0x801183a8) und der Biss-Box (@0x80118400) liegt kein
+ * Aufruf (selbst gescannt). Im Tick mit +0x95 = N nach anim_set prueft die Box also KF N-2 - dieselbe Lage, die
+ * re15_birkin_fuss_schritt als "alt" nimmt. Gemessen (Leon steht, 50E0): die Klaue ist bei KF 0x21 am Spieler (d 221),
+ * bei KF 0x23..0x2a schon 1757..4400 weg (Schwelle 950); mit KF N trafen 0 von 35 Bissen. Die Ueberblendung +0x8f
+ * (FUN_8001f314 @0x8001f474 / @0x8001f4a8-4b0) bleibt wie bisher unberuecksichtigt (OFFEN), ebenso der Lageanteil der
+ * gezeichneten Matrix: sie traegt die Wurzel-Lage des Vorbilds. Kralle/Biss/Wurf bewegen die Port-Wurzel im Fenster nicht;
+ * der Tackle schiebt im Port 0x50 VOR der Box (re15_dog_advance), im STAGE5-ACT[7] liegt zwischen anim_set @0x80119230
+ * und der Box @0x801192f0 kein jal 0x800245d8 - welche Lage die gezeichnete Matrix dort traegt, ist nicht geprueft (OFFEN).
  * Ohne geladene Bank (Unit-Harness) bleibt der alte Abstand/Kegel-Proxy. */
 #define RE15_BK_SPIELER_RADIUS 450   /* 0x80073e94 + 6 (s.o.) */
 static int16_t s_bk_treffer_x = 0, s_bk_treffer_z = 0;   /* acc1c / acc1e */
@@ -12007,8 +12029,15 @@ static int re15_bk_kontakt(re15_actor_t *e, re15_actor_t *pl, int32_t ox, int32_
 {
     const int32_t ofs[3] = { ox, 337, 0 };
     int32_t w[3];
-    if (e->type != 0x30 || !re15_enemy_part_point(e, 15, ofs, w))
-        return re15_bk_arc(e, pl, 2500, 0x400);                 /* Proxy (keine Bank / 0x36-Masse-Pfad) */
+    if (e->type != 0x30)
+        return re15_bk_arc(e, pl, 2500, 0x400);                 /* Proxy (0x36-Masse-Pfad) */
+    /* gezeichnete Matrix = KF N-2 (s. Kopf: @0x8001a5ec-638, @0x8001f35c-36c / @0x8001f618-61c, @0x8011be88 / @0x8011bea8) */
+    const uint32_t fc = (uint32_t)re15_birkin_fc(e), bild = e->anim_frame;
+    e->anim_frame = (uint8_t)((bild + fc - 2u) % fc);
+    const int ok = re15_enemy_part_point(e, 15, ofs, w);
+    e->anim_frame = (uint8_t)bild;
+    if (!ok)
+        return re15_bk_arc(e, pl, 2500, 0x400);                 /* Proxy (keine Bank) */
     int32_t dx = (int32_t)(int16_t)w[0] - pl->x, dz = (int32_t)(int16_t)w[2] - pl->z;
     int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
     if (merken) { s_bk_treffer_x = (int16_t)w[0]; s_bk_treffer_z = (int16_t)w[2]; }
@@ -12204,7 +12233,7 @@ static void re15_birkin_ai_tick(int slot)
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         {
             uint8_t nib = (uint8_t)(e->grid_id & 0xf);
-            if (nib == 3) { e->anim_frame = 0x10; e->sub_state_1 = 9; }  /* grid&0xf==3: +0x95=0x10 @0x80116880 + sub 9 @0x80116890 (emerge) */
+            if (nib == 3) { e->anim_frame = 0x10; e->sub_state_1 = 9; }  /* grid&0xf==3: +0x95=0x10 + sub 9 (emerge); STAGE3 @0x80116880 / @0x80116890, STAGE5 `95 00 82 a0` @0x80117094 / `05 00 50 a0` @0x801170a4 */
             else if (nib == 1) { e->sub_state_1 = 10; }                  /* grid&0xf==1: sub 10 @0x801168b8 (+flags|=8 render, spawn entrance) */
             else e->sub_state_1 = 0;                                     /* else sub 0 (grid==4 = pose variant) -> DECIDE[0] promotes to 1 next tick */
         }
@@ -12228,7 +12257,7 @@ static void re15_birkin_ai_tick(int slot)
             uint8_t nsub = 0;                          /* 0 = keep sub 1 (walk) */
             /* sub-3 (0x301) @0x80116fe8: +0x1df==0 && dist<0xc80 && aca58!=5 && arc(0x338) */
             if (e->birkin_atk_cd == 0 && !grabbed && dist < 0xc80 && re15_bk_arc(e, pl, 0xc80, 0x338)) nsub = 3;
-            /* sub-4 (0x401) @0x80117038: dist<0x9c4 && aca58!=5 && arc(0x1f4) — overrides sub-3 at closer range */
+            /* sub-4 (0x401) STAGE3 @0x80117040 / STAGE5 `c4 09 42 2c` sltiu 0x9c4 @0x80117854, `01 04 02 34` @0x80117878: dist<0x9c4 && aca58!=5 && arc(0x1f4) — overrides sub-3 at closer range */
             if (!grabbed && dist < 0x9c4 && re15_bk_arc(e, pl, 0x9c4, 0x1f4)) nsub = 4;
             /* sub-7 (0x701) @0x8011706c: dist<0xed8 && arc(0x464) && !arc(0x10) && player+0x8c>=101 && +0x1df==0 && aca58!=5.
              * player+0x8c (0x800acae0) = the player's instantaneous speed; the tackle only targets a RUNNING player. */
@@ -15182,7 +15211,8 @@ static void re15_birkin_root(int s)
  *                                     ; Birkin-Records tragen 00 00 (Dossier 9.3), entfaellt
  *   80042604 or   v0,v0,s4 / 80042608 sb v0,9(s0)   ; Bit zuruecksetzen (25 10 54 00 09 00 02 a2)
  * Damit laeuft der INIT (Zustand 1 @0x801166f8; Nibble 3 -> +0x95=0x10 @0x80116880, Sub 9
- * @0x80116890) schon im Spawn-Bild, und der eingefrorene Birkin steht danach in Sub 9.
+ * @0x80116890 - STAGE3; im Labor laeuft STAGE5: `95 00 82 a0` @0x80117094, `05 00 50 a0` @0x801170a4) schon im
+ * Spawn-Bild, und der eingefrorene Birkin steht danach in Sub 9.
  * UMFANG: nur die Birkin-Wurzel. Der G5 in ROOM5090/5091 laeuft ueber das RE2-Modul
  * enemy_ai_boss_g5.c, das seinen eigenen Konstruktor hat (Ctor @0x8010076C) und scharf wird, sobald
  * grid == 0x13 ist — ein Aufruf mit geloeschtem Bit wuerde ihn beim Spawn schaerfen. Fuer die
