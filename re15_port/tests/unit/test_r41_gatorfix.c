@@ -4002,6 +4002,123 @@ static int bisslog(const char *dir)
     return ok ? 0 : 1;
 }
 
+/* ==== Runde 41 Integration - Nutzerbefund 2026-11-09 Punkt 1 (Riegel kletterbiss(_elza)) ======================================================================
+ * Nutzer woertlich: "Wenn ich direkt an der Kante hochklettere auf die Platform und dann vom Aligator erwischt werden, ist es möglich das er mich in die Wand
+ * schiebt." Gemessen (Nutzer-Sitzung gator_boss.log Z. 3895 "GTR F758 START ... figur (5506,0,-18568)", Ende (11948,-1800,-18568)): der Biss kommt WAEHREND des
+ * Kletterns (Substate 9); die Kletter-FSM lief mit der Treffer-Gier weiter und setzte die Figur in Kletterbild 0x1d (Schritt 0x47c @0x800381b0-bc, y -1800
+ * @0x800381e4-ec) in die Ostwand bzw. die Plattform. Original: der Treffer-Einstieg ersetzt die Routine (Wort-Store PL+4 @0x801015c4 / RE1.5 @0x80012ed4).
+ * Der Harness klettert nur MIT den Kletter-Baenken (PL00.EDD / PL00W01.EDD in s_ctx; ohne sie ist das Klettern in 3 Bildern fertig und 0x1d wird nie erreicht).
+ *  (a) nicht eingespeister Biss (Lage der Nutzer-Sitzung): Figur (5506,0,-18568) Blick 3072, Aktionstaste: kein Bild ausserhalb Deck/Raum (ausser Kletter- und Sturzbildern), nach dem
+ *      Biss-Bild kein Bild mehr mit Klettern;
+ *  (b) eingespeister Biss in Kletterbild k = 0..50 x Lagen x 2318/5506/6500 x Gator-Gier 3721/2048/1024/3072 (KI angehalten): 0 Laeufe in/hinter der Wand,
+ *      0 Laeufe mit Klettern nach dem Biss;
+ *  Gegenprobe Pruefhaken re15_gator_treffer_kletter_alt_setzen(1) = Stand 0b86e36c6: (a) rot und (b) >= 1 Lauf in/hinter der Wand. */
+#include "re15_climb.h"
+static re15_emd_animation_t s_kb_pl00, s_kb_w01;
+static int kb_baenke(void)
+{
+    static int ok = -1;
+    if (ok >= 0) return ok;
+    ok = 0;
+    size_t sz = 0; char p[600];
+    snprintf(p, sizeof p, "%s/PLD/PL00.EDD", RE15_ASSET_PSX_DIR); uint8_t *a = slurp(p, &sz);
+    if (!a || re15_emd_parse_animation(a, sz, &s_kb_pl00) != 0) return 0;
+    snprintf(p, sizeof p, "%s/PLD/PL00W01.EDD", RE15_ASSET_PSX_DIR); uint8_t *b = slurp(p, &sz);
+    if (!b || re15_emd_parse_animation(b, sz, &s_kb_w01) != 0) return 0;
+    ok = 1;
+    return 1;
+}
+/* Deck = Rampen-Grundriss SCA [5]; Wasser = innerhalb der Aussenwaende, nicht in Plattform [4] / Rampe [5] (Masse wie raum_lauf, ROOM2090.RDT SCA @0x6dc) */
+static int kb_lage_ok(const re15_actor_t *pl)
+{
+    if (pl->y < -900) return pl->x >= RM_RX0 && pl->x <= RM_RX1 && pl->z >= RM_RZ0 && pl->z <= RM_RZ1;
+    if (pl->x < -8900 || pl->x > 7200 || pl->z < -27000 || pl->z > -5400) return 0;
+    if (pl->x > RM_PX0 && pl->x < RM_PX1 && pl->z > RM_PZ0 && pl->z < RM_PZ1) return 0;
+    if (pl->x > RM_RX0 && pl->x < RM_RX1 && pl->z > RM_RZ0 && pl->z < RM_RZ1) return 0;
+    return 1;
+}
+typedef struct { int start_ok, schlecht, erst, biss, kletter_nach; int32_t ex, ey, ez, bx, by, bz; } kb_m_t;
+/* KI angehalten (re15_enemy_ai_set_paused(1), wie die Sonde des Untersuchers), Gator bei (772,-21656) mit gier_g. k < 0: kein eingespeister Treffer - der Biss
+ * kommt aus dem Szenen-/Boss-Weg selbst (gemessen: Kletterbild t8, Ende ohne Fix (11948,-1800,-18568) = bitgleich mit der Nutzer-Sitzung); k >= 0: Treffer-
+ * Einstieg im Kletterbild k. */
+static void kb_lauf(int elza, int32_t sx, int gier_g, int k, kb_m_t *m)
+{
+    memset(m, 0, sizeof *m); m->erst = -1; m->biss = -1;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *g = szene_bis_kampf(elza);
+    if (!g) return;
+    s_ctx.pl00_anim = &s_kb_pl00; s_ctx.w01_anim = &s_kb_w01;
+    re15_enemy_ai_set_paused(1);
+    g->x = 772; g->z = -21656; g->rot_y = (int16_t)gier_g; g->anchor_x = g->x; g->anchor_z = g->z;
+    pl->x = sx; pl->y = 0; pl->z = -18568; pl->rot_y = 3072; pl->hp = 100; pl->hit_react = 0; pl->state = 1;
+    re15_collision_set_band(0);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    if (!re15_climb_active()) { re15_enemy_ai_set_paused(0); return; }
+    m->start_ok = 1;
+    re15_gtr_info_t gi; re15_gator_treffer_r41_info(&gi);
+    int n0 = gi.n_start;
+    const int bmax = k >= 0 ? 200 : 600;
+    for (int b = 0; b < bmax; b++) {
+        if (b == k) { pl->hp = 100; (void)re15_gator_treffer_r41_einstieg(g, pl, 1, 4); }
+        const int kletterte = re15_climb_active();
+        frame(0, 0);
+        pl->hp = 100;
+        re15_gator_treffer_r41_info(&gi);
+        if (m->biss < 0 && gi.n_start != n0 && (kletterte || b == k)) m->biss = b;   /* erster Treffer, waehrend die Figur kletterte */
+        if (gi.n_start != n0 && m->biss < 0) n0 = gi.n_start;                         /* Treffer ausserhalb des Kletterns: weiter warten */
+        if (m->biss >= 0 && b > m->biss && re15_climb_active()) m->kletter_nach++;
+        const int sturz = gi.aktiv && (gi.fall == 1 || gi.fall == 3);
+        if (k < 0 && getenv("G2_KB_SPUR"))   /* Werkzeug: je Bild Klettern, Reaktion, Figur, Gator */
+            printf("    t%3d kl %d/%d gtr %d sub %d ph %d schritt %d fall %d pl=(%d,%d,%d) gier %d band %d mo %d | g=(%d,%d) gier %d ph %d clip %d/%d\n", b,
+                   re15_climb_dbg_sub(), re15_climb_dbg_phase(), gi.aktiv, gi.sub, gi.ph, gi.schritt, gi.fall, (int)pl->x, (int)pl->y, (int)pl->z, pl->rot_y & 0xfff,
+                   re15_collision_debug_band(), (int)pl->motion, (int)g->x, (int)g->z, g->rot_y & 0xfff, re15_gator_boss_phase(g), (int)g->motion, (int)g->anim_frame);
+        if (!kb_lage_ok(pl) && !sturz && !re15_climb_active()) {
+            m->schlecht++;
+            if (m->erst < 0) { m->erst = b; m->bx = pl->x; m->by = pl->y; m->bz = pl->z; }
+        }
+        if (k >= 0 && b > k + 80 && !re15_climb_active() && !re15_gator_treffer_r41_aktiv()) break;
+    }
+    m->ex = pl->x; m->ey = pl->y; m->ez = pl->z;
+    re15_enemy_ai_set_paused(0);
+}
+static void teil_kletterbiss(int elza)
+{
+    printf("== kletterbiss%s (Nutzerbefund 2026-11-09 Punkt 1: Biss beim Hochklettern an der Kante schiebt die Figur in die Wand) ==\n", elza ? "_elza" : "");
+    if (!kb_baenke()) { printf("  FEHLER: PL00.EDD / PL00W01.EDD nicht ladbar\n"); g_fail++; return; }
+    static const int32_t X[3] = { 2318, 5506, 6500 };
+    static const int G[4] = { 3721, 2048, 1024, 3072 };
+    for (int stand = 0; stand < 2; stand++) {   /* 0 = neu, 1 = Gegenprobe Stand 0b86e36c6 (Pruefhaken) */
+        re15_gator_treffer_kletter_alt_setzen(stand);
+        const char *w = stand ? "Gegenprobe 0b86e36c6" : "neu";
+        kb_m_t m;
+        kb_lauf(elza, 5506, 3721, -1, &m);
+        printf("  [%s] (a) natuerlich (5506,0,-18568) Blick 3072: Klettern %s, Biss beim Klettern t%d, Ende (%d,%d,%d), Bilder ausserhalb Deck/Raum %d (erstes t%d bei (%d,%d,%d)), "
+               "Kletterbilder nach dem Biss %d\n", w, m.start_ok ? "an" : "AUS", m.biss, (int)m.ex, (int)m.ey, (int)m.ez, m.schlecht, m.erst, (int)m.bx, (int)m.by, (int)m.bz,
+               m.kletter_nach);
+        const int a_rot = !m.start_ok || m.biss < 0 || m.schlecht > 0 || m.kletter_nach > 0;
+        const int a_biss = m.biss, a_schlecht = m.schlecht, a_kl = m.kletter_nach;
+        int laeufe = 0, wand = 0, kl = 0, ohne_start = 0; char erst[200] = "-";
+        for (int xi = 0; xi < 3; xi++)
+            for (int gj = 0; gj < 4; gj++)
+                for (int k = 0; k <= 50; k++) {
+                    kb_lauf(elza, X[xi], G[gj], k, &m);
+                    if (!m.start_ok) { ohne_start++; continue; }
+                    laeufe++;
+                    if (m.schlecht) { wand++; if (erst[0] == '-') snprintf(erst, sizeof erst, "x %d Gier %d k %d: t%d (%d,%d,%d)", (int)X[xi], G[gj], k, m.erst, (int)m.bx, (int)m.by, (int)m.bz); }
+                    if (m.kletter_nach) kl++;
+                }
+        printf("  [%s] (b) eingespeist: %d Laeufe (%d ohne Kletterstart), in/hinter der Wand %d (erster %s), Klettern nach dem Biss %d\n", w, laeufe, ohne_start, wand, erst, kl);
+        if (!stand) {
+            PRUEF(!a_rot, "(a) natuerlicher Biss beim Klettern: Klettern an, Biss beim Klettern, 0 Bilder ausserhalb Deck/Raum, 0 Kletterbilder nach dem Biss "
+                          "(Biss t%d, %d ausserhalb, %d Kletterbilder)", a_biss, a_schlecht, a_kl);
+            PRUEF(laeufe == 612 && wand == 0 && kl == 0, "(b) 612 Laeufe mit Kletterstart, 0 in/hinter der Wand, 0 mit Klettern nach dem Biss (%d / %d / %d)", laeufe, wand, kl);
+        } else {
+            PRUEF(a_rot, "Gegenprobe (a): Stand 0b86e36c6 rot (Figur ausserhalb Deck/Raum oder Klettern nach dem Biss)");
+            PRUEF(wand >= 1, "Gegenprobe (b): Stand 0b86e36c6 >= 1 Lauf in/hinter der Wand (%d)", wand);
+        }
+    }
+    re15_gator_treffer_kletter_alt_setzen(0);
+}
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
@@ -4077,6 +4194,8 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "raum_elza")) teil_raum(1);
     if (alle || !strcmp(teil, "nb4"))       teil_nb4(0);       /* G2-RE2 NB4 (T)+(W)+(K) */
     if (alle || !strcmp(teil, "nb4_elza"))  teil_nb4(1);
+    if (alle || !strcmp(teil, "kletterbiss"))      teil_kletterbiss(0);   /* Runde 41 Integration, Nutzerbefund 2026-11-09 Punkt 1 */
+    if (alle || !strcmp(teil, "kletterbiss_elza")) teil_kletterbiss(1);
     re15_door_seq_setze_laeufer(NULL);
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

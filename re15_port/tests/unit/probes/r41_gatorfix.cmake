@@ -68,6 +68,14 @@ endforeach()
 # K-Gegenprobe RUNDE des Zwillings (re15_k2080_runde_alt_setzen) "RE2 KANISTER Zielmodus 1 ... F0" in dieselbe Datei: unter
 # ctest -j 6 war nb4_elza einmal rot; nachgestellt (G2_NB4_TEIL=K, nb4 und 2-3 s spaeter nb4_elza im selben Ordner) 3 von 3 rot
 # mit K1 (0/0/1), in getrennten Ordnern 2 von 2 gruen. Darum je Teil ein eigener Ordner (VERTRAG.md §2 "parallel-fest").
+#   unit_r41_gatorfix_kletterbiss(_elza)  Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 1 "er mich in die Wand schiebt"): Biss beim Hochklettern an der
+#                                     Rampen-Suedkante (Harness MIT PL00/PL00W01-Baenken) - (a) natuerlicher Biss, (b) eingespeist in Kletterbild 0..50 x 3 Lagen x 4 Gieren:
+#                                     0 Bilder in/hinter der Wand, kein Klettern nach dem Biss; Gegenprobe Pruefhaken re15_gator_treffer_kletter_alt_setzen = 0b86e36c6 rot
+foreach(_teil kletterbiss kletterbiss_elza)
+    add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 900)
+endforeach()
 foreach(_teil nb4 nb4_elza)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}

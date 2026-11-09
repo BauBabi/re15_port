@@ -35,6 +35,8 @@ int  re15_gator_treffer_r41_bank(const re15_emd_skeleton_t *basis, const re15_em
 /* Pruefhaken der Gegenproben: 1 = Stand 3d57083b1 (RE1.5-Niederwurf + Schaden-Tafel [5] = 50). */
 void re15_gator_treffer_alt_setzen(int an);
 int  re15_gator_treffer_alt(void);
+/* Pruefhaken Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 1, Riegel kletterbiss): 1 = Stand 0b86e36c6, der Treffer beendet ein laufendes Klettern nicht. */
+void re15_gator_treffer_kletter_alt_setzen(int an);
 
 /* Messung (Riegel T1-T3/W1): Zustand nach dem letzten Takt. */
 typedef struct {
