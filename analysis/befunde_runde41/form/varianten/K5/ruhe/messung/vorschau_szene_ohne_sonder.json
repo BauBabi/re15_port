@@ -1,0 +1,98 @@
+{
+ "faktor_C4.8": {
+  "1": {
+   "S5": 4,
+   "F_fremd": 6.0,
+   "fremd_pct": 0.66,
+   "spanne90": 55.8,
+   "block_ton_streu": 13.8
+  },
+  "2": {
+   "S5": 2,
+   "F_fremd": 2.6,
+   "fremd_pct": 0.39,
+   "spanne90": 20.5,
+   "block_ton_streu": 7.6
+  }
+ },
+ "faktor_C2.0": {
+  "1": {
+   "S5": 3,
+   "F_fremd": 9.3,
+   "fremd_pct": 1.08,
+   "spanne90": 69.1,
+   "block_ton_streu": 15.2
+  },
+  "2": {
+   "S5": 2,
+   "F_fremd": 2.6,
+   "fremd_pct": 0.39,
+   "spanne90": 20.5,
+   "block_ton_streu": 8.8
+  }
+ },
+ "hebung_C4.8": {
+  "1": {
+   "S5": 3,
+   "F_fremd": 3.3,
+   "fremd_pct": 0.45,
+   "spanne90": 40.3,
+   "block_ton_streu": 10.0
+  },
+  "2": {
+   "S5": 2,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "spanne90": 18.2,
+   "block_ton_streu": 5.3
+  }
+ },
+ "hebung_C2.0": {
+  "1": {
+   "S5": 4,
+   "F_fremd": 11.7,
+   "fremd_pct": 2.2,
+   "spanne90": 64.3,
+   "block_ton_streu": 14.5
+  },
+  "2": {
+   "S5": 2,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "spanne90": 12.4,
+   "block_ton_streu": 5.1
+  }
+ },
+ "K5c": {
+  "1": {
+   "S5": 5,
+   "F_fremd": 1.0,
+   "fremd_pct": 0.1,
+   "spanne90": 55.2,
+   "block_ton_streu": 16.4
+  },
+  "2": {
+   "S5": 6,
+   "F_fremd": 4.7,
+   "fremd_pct": 0.69,
+   "spanne90": 82.1,
+   "block_ton_streu": 22.8
+  }
+ },
+ "K5d": {
+  "1": {
+   "S5": 6,
+   "F_fremd": 2.7,
+   "fremd_pct": 2.09,
+   "spanne90": 87.0,
+   "block_ton_streu": 20.1
+  },
+  "2": {
+   "S5": 3,
+   "F_fremd": 0.5,
+   "fremd_pct": 0.19,
+   "spanne90": 53.9,
+   "block_ton_streu": 16.7
+  }
+ }
+}

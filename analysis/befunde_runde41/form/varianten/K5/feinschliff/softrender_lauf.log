@@ -1,0 +1,7 @@
+exe re15_pc_form_5291_210141 PID 67972 Fenster 55052160
+Verfahren: gdigrab (Versuch 1)
+Bild: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/feinschliff/spiel/k5d_softrender_r5090_s11.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12
+t601 slot2 typ 0x30 st 1/9 pos (941,0,-23776) gier 3874 clip 10 bild 113 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/5291_210141

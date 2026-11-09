@@ -1,0 +1,223 @@
+{
+ "K4|r (W)": {
+  "handmitte": [
+   238.3,
+   404.5
+  ],
+  "klauen": {
+   "19": {
+    "spitze": [
+     204.9,
+     472.7
+    ],
+    "sichtbar_px": 1255,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 72.2
+   },
+   "20": {
+    "spitze": [
+     153.8,
+     424.4
+    ],
+    "sichtbar_px": 1311,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 69.9
+   },
+   "29": {
+    "spitze": [
+     141.1,
+     352.1
+    ],
+    "sichtbar_px": 947,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 70.1
+   },
+   "31": {
+    "spitze": [
+     270.8,
+     442.3
+    ],
+    "sichtbar_px": 358,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 45.9
+   }
+  }
+ },
+ "K4|l (W)": {
+  "handmitte": [
+   417.2,
+   371.3
+  ],
+  "klauen": {
+   "14": {
+    "spitze": [
+     445.7,
+     414.8
+    ],
+    "sichtbar_px": 336,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 58.0
+   },
+   "15": {
+    "spitze": [
+     467.9,
+     418.0
+    ],
+    "sichtbar_px": 461,
+    "spitze_im_nutzerumriss": true,
+    "sichtbare_bbox_diagonale_px": 62.4
+   },
+   "28": {
+    "spitze": [
+     466.0,
+     393.1
+    ],
+    "sichtbar_px": 293,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 38.3
+   },
+   "30": {
+    "spitze": [
+     395.2,
+     357.1
+    ],
+    "sichtbar_px": 2,
+    "spitze_im_nutzerumriss": true,
+    "sichtbare_bbox_diagonale_px": 1.0
+   }
+  }
+ },
+ "Asset K5c|r (W)": {
+  "handmitte": [
+   242.7,
+   401.9
+  ],
+  "klauen": {
+   "19": {
+    "spitze": [
+     203.8,
+     499.6
+    ],
+    "sichtbar_px": 1521,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 73.8
+   },
+   "20": {
+    "spitze": [
+     150.5,
+     438.9
+    ],
+    "sichtbar_px": 1734,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 74.6
+   },
+   "29": {
+    "spitze": [
+     136.4,
+     334.8
+    ],
+    "sichtbar_px": 1479,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 90.5
+   },
+   "31": {
+    "spitze": [
+     273.2,
+     457.3
+    ],
+    "sichtbar_px": 419,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 57.5
+   }
+  }
+ },
+ "Asset K5c|l (W)": {
+  "handmitte": [
+   417.4,
+   371.1
+  ],
+  "klauen": {
+   "14": {
+    "spitze": [
+     445.7,
+     414.8
+    ],
+    "sichtbar_px": 357,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 56.6
+   },
+   "15": {
+    "spitze": [
+     467.9,
+     418.0
+    ],
+    "sichtbar_px": 461,
+    "spitze_im_nutzerumriss": true,
+    "sichtbare_bbox_diagonale_px": 62.4
+   },
+   "28": {
+    "spitze": [
+     466.0,
+     393.1
+    ],
+    "sichtbar_px": 292,
+    "spitze_im_nutzerumriss": false,
+    "sichtbare_bbox_diagonale_px": 38.3
+   },
+   "30": {
+    "spitze": [
+     395.2,
+     357.1
+    ],
+    "sichtbar_px": 2,
+    "spitze_im_nutzerumriss": true,
+    "sichtbare_bbox_diagonale_px": 1.0
+   }
+  }
+ },
+ "Nutzerumriss|r (W)": {
+  "maske": "right_arm_front",
+  "spitzen": [
+   [
+    27.9,
+    [
+     274,
+     443
+    ]
+   ],
+   [
+    49.3,
+    [
+     229,
+     351
+    ]
+   ]
+  ]
+ },
+ "Nutzerumriss|l (W)": {
+  "maske": "left_arm_front",
+  "spitzen": [
+   [
+    26.6,
+    [
+     439,
+     418
+    ]
+   ],
+   [
+    41.6,
+    [
+     468,
+     416
+    ]
+   ],
+   [
+    50.2,
+    [
+     406,
+     260
+    ]
+   ]
+  ]
+ }
+}

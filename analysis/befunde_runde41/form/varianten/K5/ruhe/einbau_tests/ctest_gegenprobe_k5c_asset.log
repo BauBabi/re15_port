@@ -1,0 +1,214 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build
+    Start 1374: unit_birkin_bahnsteig
+1/1 Test #1374: unit_birkin_bahnsteig ............***Failed    0.78 sec
+FAIL: MD1 weicht von J ab (169500 Byte)
+FAIL: TIM weicht von J ab (139296 Byte)
+Form: Hoehe Clip 5 im Mittel 3123, Boden-Abweichung 22/111
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT: Gang 2446 Einheiten je Clip-5-Durchlauf
+STAGE5/ROOM5090.RDT: Rueckstoss + G5 nach 210 Ticks
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT: Gang 2666 Einheiten je Clip-5-Durchlauf
+STAGE5/ROOM5091.RDT: Rueckstoss + G5 nach 210 Ticks
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-25742,0,-13810) rot=(3040,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-27000,-3610,-11970) rot=(0,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-27000,10,-11970) rot=(2048,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-26650,-1150,-13810) rot=(3520,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-26650,-2250,-12000) rot=(1280,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-27000,-3610,-11970) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-27000,10,-11970) rot=(2048,0,0)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(-26650,-1150,-13810) rot=(3520,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(-26650,-2250,-12000) rot=(1280,0,0)
+[scd] Obj_model_set[2] id=0x02 type=0 pos=(-27000,-3610,-11970) rot=(0,0,0)
+[scd] Obj_model_set[3] id=0x03 type=0 pos=(-27000,10,-11970) rot=(2048,0,0)
+ROOM3071: Auftritt endet nach 500 Ticks bei (-24079,-10917)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT Wagenweg: A hp 300 st 1/9 (Bank fehlte beim Spawn)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT Wagenweg: B hp 150 st 1/0 grid 0x33
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT Wagenweg: C hp 150 st 1/0 grid 0x33
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT Wagenweg: C2 hp 150 st 1/0 grid 0x33
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT M6: Weichen 0 von 40 Ticks ohne Pose-Aenderung
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT M10: 3 Wechsel, groesster Schritt im Hieb 227
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT Nordspur: Leon 191 Einheiten nach dem Treffer, 2 Treffer, Lage (13195,-22303)
+STAGE5/ROOM5090.RDT Diagonale: Leon z min -25633, Lage (3079,-25633), 3 Treffer
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT Clip-Ende Biss: 0
+STAGE5/ROOM5090.RDT Clip-Ende Griff: 0
+STAGE5/ROOM5090.RDT Clip-Ende Hieb: 0
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT N4: Weichen -> Hieb 6 Austritte, Sprung 61; -> Gehen 6 Austritte, Sprung 105
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+STAGE5/ROOM5090.RDT D: Abstand 2600 Treffer 0 Kiefer-min 1678 Brustpunkt-min 54
+STAGE5/ROOM5090.RDT D: Abstand 2800 Treffer 0 Kiefer-min 1678 Brustpunkt-min 54
+STAGE5/ROOM5090.RDT D: Abstand 3000 Treffer 0 Kiefer-min 1673 Brustpunkt-min 60
+STAGE5/ROOM5090.RDT D: Abstand 3200 Treffer 0 Kiefer-min 1673 Brustpunkt-min 56
+STAGE5/ROOM5090.RDT D: Abstand 3400 Treffer 0 Kiefer-min 1536 Brustpunkt-min 195
+STAGE5/ROOM5090.RDT D: Abstand 3600 Treffer 1 Kiefer-min 1336 Brustpunkt-min 395
+STAGE5/ROOM5090.RDT D: Abstand 3800 Treffer 1 Kiefer-min 1137 Brustpunkt-min 593
+STAGE5/ROOM5090.RDT D: Abstand 4000 Treffer 1 Kiefer-min 936 Brustpunkt-min 794
+STAGE5/ROOM5090.RDT D: Abstand 4200 Treffer 1 Kiefer-min 735 Brustpunkt-min 995
+STAGE5/ROOM5090.RDT D: Abstand 4400 Treffer 1 Kiefer-min 535 Brustpunkt-min 1193
+STAGE5/ROOM5090.RDT D: Abstand 4600 Treffer 1 Kiefer-min 337 Brustpunkt-min 1390
+STAGE5/ROOM5090.RDT D: Abstand 4800 Treffer 1 Kiefer-min 137 Brustpunkt-min 1593
+STAGE5/ROOM5090.RDT D: Abstand 5000 Treffer 1 Kiefer-min 61 Brustpunkt-min 1792
+STAGE5/ROOM5090.RDT D: Abstand 5200 Treffer 1 Kiefer-min 261 Brustpunkt-min 1995
+STAGE5/ROOM5090.RDT D: Abstand 5400 Treffer 1 Kiefer-min 461 Brustpunkt-min 2187
+STAGE5/ROOM5090.RDT D: Abstand 5600 Treffer 1 Kiefer-min 658 Brustpunkt-min 2387
+STAGE5/ROOM5090.RDT D: Abstand 5800 Treffer 1 Kiefer-min 861 Brustpunkt-min 2585
+STAGE5/ROOM5090.RDT D: Abstand 6000 Treffer 1 Kiefer-min 1055 Brustpunkt-min 2792
+STAGE5/ROOM5090.RDT D: Abstand 6200 Treffer 1 Kiefer-min 1260 Brustpunkt-min 2985
+STAGE5/ROOM5090.RDT D: Abstand 6400 Treffer 1 Kiefer-min 1459 Brustpunkt-min 3187
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x44
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT Wagenweg: A hp 300 st 1/9 (Bank fehlte beim Spawn)
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT Wagenweg: B hp 150 st 1/0 grid 0x33
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT Wagenweg: C hp 150 st 1/0 grid 0x33
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT Wagenweg: C2 hp 150 st 1/0 grid 0x33
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT M6: Weichen 0 von 40 Ticks ohne Pose-Aenderung
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT M10: 3 Wechsel, groesster Schritt im Hieb 227
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT Nordspur: Leon 191 Einheiten nach dem Treffer, 2 Treffer, Lage (13195,-22303)
+STAGE5/ROOM5091.RDT Diagonale: Leon z min -25633, Lage (3079,-25633), 3 Treffer
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT Clip-Ende Biss: 0
+STAGE5/ROOM5091.RDT Clip-Ende Griff: 0
+STAGE5/ROOM5091.RDT Clip-Ende Hieb: 0
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT N4: Weichen -> Hieb 6 Austritte, Sprung 61; -> Gehen 6 Austritte, Sprung 105
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5091.RDT D: Abstand 2600 Treffer 0 Kiefer-min 1678 Brustpunkt-min 54
+STAGE5/ROOM5091.RDT D: Abstand 2800 Treffer 0 Kiefer-min 1678 Brustpunkt-min 54
+STAGE5/ROOM5091.RDT D: Abstand 3000 Treffer 0 Kiefer-min 1673 Brustpunkt-min 60
+STAGE5/ROOM5091.RDT D: Abstand 3200 Treffer 0 Kiefer-min 1673 Brustpunkt-min 56
+STAGE5/ROOM5091.RDT D: Abstand 3400 Treffer 0 Kiefer-min 1536 Brustpunkt-min 195
+STAGE5/ROOM5091.RDT D: Abstand 3600 Treffer 1 Kiefer-min 1336 Brustpunkt-min 395
+STAGE5/ROOM5091.RDT D: Abstand 3800 Treffer 1 Kiefer-min 1137 Brustpunkt-min 593
+STAGE5/ROOM5091.RDT D: Abstand 4000 Treffer 1 Kiefer-min 936 Brustpunkt-min 794
+STAGE5/ROOM5091.RDT D: Abstand 4200 Treffer 1 Kiefer-min 735 Brustpunkt-min 995
+STAGE5/ROOM5091.RDT D: Abstand 4400 Treffer 1 Kiefer-min 535 Brustpunkt-min 1193
+STAGE5/ROOM5091.RDT D: Abstand 4600 Treffer 1 Kiefer-min 337 Brustpunkt-min 1390
+STAGE5/ROOM5091.RDT D: Abstand 4800 Treffer 1 Kiefer-min 137 Brustpunkt-min 1593
+STAGE5/ROOM5091.RDT D: Abstand 5000 Treffer 1 Kiefer-min 61 Brustpunkt-min 1792
+STAGE5/ROOM5091.RDT D: Abstand 5200 Treffer 1 Kiefer-min 261 Brustpunkt-min 1995
+STAGE5/ROOM5091.RDT D: Abstand 5400 Treffer 1 Kiefer-min 461 Brustpunkt-min 2187
+STAGE5/ROOM5091.RDT D: Abstand 5600 Treffer 1 Kiefer-min 658 Brustpunkt-min 2387
+STAGE5/ROOM5091.RDT D: Abstand 5800 Treffer 1 Kiefer-min 861 Brustpunkt-min 2585
+STAGE5/ROOM5091.RDT D: Abstand 6000 Treffer 1 Kiefer-min 1055 Brustpunkt-min 2792
+STAGE5/ROOM5091.RDT D: Abstand 6200 Treffer 1 Kiefer-min 1260 Brustpunkt-min 2985
+STAGE5/ROOM5091.RDT D: Abstand 6400 Treffer 1 Kiefer-min 1459 Brustpunkt-min 3187
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5080.RDT: Flucht nach 150 Ticks fort, Treffer 2, Drehen 56 Bilder (max 32 je Bild), Clip 11 56 Bilder, Schwanz min 2721
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+STAGE5/ROOM5081.RDT: Flucht nach 150 Ticks fort, Treffer 2, Drehen 56 Bilder (max 32 je Bild), Clip 11 56 Bilder, Schwanz min 2721
+[scd] thread start slot=0 first_op=0x3B
+[scd] thread start slot=1 first_op=0x06
+test_birkin_bahnsteig: 2 Fehler
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.83 sec
+
+The following tests FAILED:
+	1374 - unit_birkin_bahnsteig (Failed)
+Errors while running CTest

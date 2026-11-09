@@ -1,0 +1,657 @@
+{
+ "zeilen": [
+  {
+   "kz": "R1",
+   "name": "R1 Sektoren gepoolt (weiss) <= 5",
+   "wert": "1 (je Winkel [2, 2, 1, 1])",
+   "ok": true
+  },
+  {
+   "kz": "R2",
+   "name": "R2 farbfremde Flecken (weiss) <= 7,4 je 10k und <= 0,64 %",
+   "wert": "0.0 / 0.00 %",
+   "ok": true
+  },
+  {
+   "kz": "R3",
+   "name": "R3 Farbtonspanne 90 % (weiss) <= 76,8 Grad",
+   "wert": "3.3",
+   "ok": true
+  },
+  {
+   "kz": "R4",
+   "name": "R4 Block-Farbton (weiss) <= 16,3 Grad",
+   "wert": "4.4",
+   "ok": true
+  },
+  {
+   "kz": "Info",
+   "name": "Info Flecken alle (<= 148,6) / C*-Std (<= 16,9) / L* Mittel (weiss)",
+   "wert": "38.8 / 3.14 / 24.7",
+   "ok": null
+  },
+  {
+   "kz": "S1",
+   "name": "S1 Bild 1 Sektoren (ohne Filter, ohne Sonder) <= 5",
+   "wert": "3",
+   "ok": true
+  },
+  {
+   "kz": "S2",
+   "name": "S2 Bild 1 Farbtonspanne <= 58,9",
+   "wert": "43.5",
+   "ok": true
+  },
+  {
+   "kz": "S3",
+   "name": "S3 Bild 1 Block-Farbton <= 12,25",
+   "wert": "9.9",
+   "ok": true
+  },
+  {
+   "kz": "S4",
+   "name": "S4 Bild 2 Block-Farbton <= 10,9",
+   "wert": "5.9",
+   "ok": true
+  },
+  {
+   "kz": "Info",
+   "name": "Info Szene F_fremd Bild 1 / Bild 2 (Originale 0-1,7; Messblatt 2.2 S7)",
+   "wert": "0.7 / 0.0",
+   "ok": null
+  },
+  {
+   "kz": "H1",
+   "name": "H1 TIM-Pixel bytegleich Spiel-Asset K5c (keine Insel)",
+   "wert": "0 Texel abweichend (Form [256, 512])",
+   "ok": true
+  },
+  {
+   "kz": "H2",
+   "name": "H2 UV/Seite/Eckreihenfolge je Flaeche = K5c (nur CLUT-Wort neu)",
+   "wert": "3828/3828 gleich, 0 neu",
+   "ok": true
+  },
+  {
+   "kz": "H3",
+   "name": "H3 Zeilen 1-7 = G4-Rampe + EIN Materialsatz (neu berechnet), 0/8/9 bytegleich G4-0/K5c-5/K5c-7 (Z8: Kern bytegleich, E32)",
+   "wert": "Abweichung je Zeile {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}; Z0=G4-0 True, Z8=K5c-5 True, Z9=K5c-7 True",
+   "ok": true
+  },
+  {
+   "kz": "H4",
+   "name": "H4 ein Farbton je Material: Spanne genutzter Eintraege (C* >= 3) <= 15 Grad",
+   "wert": "{'Haut (inkl. Kralle/Lippe/Band)': '12.0 Grad (389 von 389 Eintraegen C* >= 3)', 'Gelenk': '0.5 Grad (82 von 189 Eintraegen C* >= 3)', 'Fleisch': '6.9 Grad (95 von 95 Eintraegen C* >= 3)'}",
+   "ok": true
+  },
+  {
+   "kz": "H5",
+   "name": "H5 Rangfolge je Zeile/Klasse 0 Vertauschungen; Adern dunkler, nicht roeter (dL < 0, da* <= 0, RV6)",
+   "wert": "Vertauschungen {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0}; Ader-Haut (dL, da*) {1: (-9.02, -4.79), 2: (-8.99, -4.73), 3: (-11.06, -4.98), 5: (-11.24, -4.87), 6: (-14.05, -4.9), 7: (-11.24, -8.44)}",
+   "ok": true
+  },
+  {
+   "kz": "W1",
+   "name": "W1 Gelenk heller als Nachbarglied (weiss): dL* >= 5 je Winkel, Mittel >= 6",
+   "wert": "min 5.53 / Mittel 6.63 ([5.53, 6.94, 7.72, 6.32])",
+   "ok": true
+  },
+  {
+   "kz": "W1b",
+   "name": "W1b Gelenk weisslich: Albedo C* <= 8 und L* >= Nachbar + 6",
+   "wert": "C* 5.8, dL +9.2 (Gelenk [39.4, 4.8, -3.3], Nachbar [30.1, 10.3, -7.0])",
+   "ok": true
+  },
+  {
+   "kz": "W2",
+   "name": "W2 Schwanzspitze Mesh 6: Fleischanteil >= 50 %, dL >= +5 gegen Schwanz",
+   "wert": "85.4 %, +8.6 (Spitze [42.2, 16.3, -4.0])",
+   "ok": true
+  },
+  {
+   "kz": "W3",
+   "name": "W3 Buckel: 12 Flaechen, 1 Komponente, Ton -8 +- 15, Fleischanteil >= 40 %, dL >= +3",
+   "wert": "12 Flaechen, 1 Komponente(n), Ton -13.9, 57.1 %, +5.3 (Buckel [35.4, 16.3, -4.0])",
+   "ok": true
+  },
+  {
+   "kz": "W4",
+   "name": "W4 Lippe + Unterkiefer aussen (165 Fl.): Rotklasse 0 %, L*-p95 <= Haut-p95",
+   "wert": "0.0 %, 37.1 <= 43.9 (Median [25.3, 5.8, -4.0])",
+   "ok": true
+  },
+  {
+   "kz": "W5",
+   "name": "W5 Krallen = Hand: Albedo dE76 <= 6, Rotklasse 0 %",
+   "wert": "dE 0.00, Rot 0.0 % (Kralle [25.3, 5.6, -3.8], Hand [25.3, 5.6, -3.8])",
+   "ok": true
+  },
+  {
+   "kz": "W6",
+   "name": "W6 Helligkeit Bild 2 Figur: Video >= Vorlage und ohne Filter >= Vorlage (Pixelmenge V4F 3.1)",
+   "wert": "Video 15.48 (>= 15.37), ohne 8.65 (>= 7.33)",
+   "ok": true
+  },
+  {
+   "kz": "Info",
+   "name": "Info Helligkeit Bild 1 Video / ohne Filter (Vorlage; Messblatt Offen 1)",
+   "wert": "44.01 (18.29) / 16.92 (7.62)",
+   "ok": null
+  },
+  {
+   "kz": "Info",
+   "name": "Info riegel_k5d (b) Schwanzspitze Rot-Anteil Kette T (K5d-Fenster 25..50 %)",
+   "wert": "47.0 % (Vorlage 27.9) -> im Fenster",
+   "ok": null
+  },
+  {
+   "kz": "Info",
+   "name": "Info riegel_k5d (e) Buckel B2-F01 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)",
+   "wert": "[31.7, 15.9, -3.7] h -13 (Vorlage [41.4, 15.7, -4.3] h -15) -> nicht erfuellt",
+   "ok": null
+  },
+  {
+   "kz": "Info",
+   "name": "Info riegel_k5d (e) Buckel B2-F02 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)",
+   "wert": "[32.5, 17.3, -3.2] h -10 (Vorlage [33.2, 22.2, -6.4] h -16) -> erfuellt",
+   "ok": null
+  },
+  {
+   "kz": "W7",
+   "name": "W7 F1: Kern-Eintraege (56) bytegleich K5c-Zeile 5 (E32), 6 Flaechen, UV gleich",
+   "wert": "6 Flaechen, Zeile [8], bytegleich True, UV gleich True",
+   "ok": true
+  },
+  {
+   "kz": "T1",
+   "name": "T1 Zeilen <= 16, Port-Texturhoehe <= 4096 (riegel_einbau E-Z1)",
+   "wert": "Zeilen 10 (<= 16), Port-Texturhoehe 256 x 10 = 2560 (<= 4096)",
+   "ok": true
+  },
+  {
+   "kz": "T2",
+   "name": "T2 jede Flaeche liest gueltige Zeile (E-Z2), kein neues 0x0000",
+   "wert": "3828 Flaechen, Zeilen 0:99 1:324 2:1934 3:579 4:6 5:360 6:314 7:92 8:6 9:114; neue 0x0000: 0",
+   "ok": true
+  },
+  {
+   "kz": "T3",
+   "name": "T3 Ecken/Normalen = K5d (Krallen 19/20/28/29 eingezogen), Eckindizes = K5c",
+   "wert": "Meshes mit anderer Geometrie als K5d []; Eckindizes = K5c True",
+   "ok": true
+  },
+  {
+   "kz": "T4",
+   "name": "T4 Asset EDD/EMR/Morph byte-gleich Spiel-Asset, 32/32/28, MD1 = FORM.EMD, TIM = FORM.TIM",
+   "wert": "gleich ['morph', 'edd1', 'emr1', 'edd2', 'emr2', 'edd3', 'emr3']; Meshes 32 Knochen 32 Clips 28; MD1 True; TIM True",
+   "ok": true
+  },
+  {
+   "kz": "F1R",
+   "name": "F1R Texelring um den F1-Kern (weiss + Bild 1): Mittel-L* >= angrenzende Haut - 3",
+   "wert": "dL {'weiss Seite': 4.52, 'Bild 1': 3.06} (Ansichten mit >= 20 Ringpixeln)",
+   "ok": true
+  },
+  {
+   "kz": "F1H",
+   "name": "F1H Feldhaut der F1-Flaechen um Kern und Ring: Mittel-L* >= angrenzende Haut - 3",
+   "wert": "dL {'weiss Seite': -1.24, 'Bild 1': -1.39}",
+   "ok": true
+  },
+  {
+   "kz": "F1K",
+   "name": "F1K Kern = K5c: Lab-Mittel Kerntexel (Albedo) und Kernpixel Bild 1 dE76 <= 1",
+   "wert": "Albedo dE 0.00 ([48.5, 21.5, -3.1] gegen [48.5, 21.5, -3.1]), Bild 1 dE 0.00 ([21.29, 12.94, 4.77] gegen [21.29, 12.94, 4.77])",
+   "ok": true
+  }
+ ],
+ "gruen": 28,
+ "bindend": 28,
+ "weiss": {
+  "mittel": {
+   "px": 15780.75,
+   "bunt_pct": 73.75,
+   "S5": 1.5,
+   "F": 38.75,
+   "F_hell": 21.67,
+   "F_dunkel": 13.3,
+   "F_ton": 1.52,
+   "F_chroma": 2.3,
+   "hell_pct": 3.4,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.62,
+   "h0": 327.35,
+   "flecken": 61.5,
+   "fleck_pct": 7.3,
+   "komp_geprueft": 319.0,
+   "C_std": 3.14,
+   "C_mittel": 8.8,
+   "L_mittel": 24.71,
+   "spanne90": 3.32,
+   "block_ton_streu": 4.4,
+   "block_L_p10_p90": 10.47,
+   "bloecke": 61.25,
+   "bloecke_bunt": 60.25,
+   "je_saat": [
+    {
+     "S5": 2,
+     "F": 38.0,
+     "C_std": 3.36,
+     "spanne90": 11.2,
+     "block_ton_streu": 5.8
+    },
+    {
+     "S5": 2,
+     "F": 41.5,
+     "C_std": 3.31,
+     "spanne90": 0.8,
+     "block_ton_streu": 5.0
+    },
+    {
+     "S5": 1,
+     "F": 33.5,
+     "C_std": 2.91,
+     "spanne90": 0.6,
+     "block_ton_streu": 4.2
+    },
+    {
+     "S5": 1,
+     "F": 42.0,
+     "C_std": 2.99,
+     "spanne90": 0.7,
+     "block_ton_streu": 2.6
+    }
+   ]
+  },
+  "je_winkel": [
+   {
+    "px": 14199,
+    "bunt_pct": 69.4,
+    "S5": 2,
+    "sektoren": {
+     "315": 89.9,
+     "330": 1.7,
+     "345": 8.2
+    },
+    "F": 38.0,
+    "F_hell": 20.4,
+    "F_dunkel": 15.5,
+    "F_ton": 0.7,
+    "F_chroma": 1.4,
+    "hell_pct": 1.8,
+    "F_fremd": 0.0,
+    "fremd_pct": 0.0,
+    "F_grau_hell": 0.0,
+    "h0": 328.0,
+    "flecken": 54,
+    "fleck_pct": 6.4,
+    "komp_geprueft": 302,
+    "C_std": 3.36,
+    "C_mittel": 8.5,
+    "L_mittel": 25.21,
+    "spanne90": 11.2,
+    "block_ton_streu": 5.8,
+    "block_L_p10_p90": 8.7,
+    "bloecke": 53,
+    "bloecke_bunt": 51
+   },
+   {
+    "px": 16849,
+    "bunt_pct": 73.8,
+    "S5": 2,
+    "sektoren": {
+     "315": 92.6,
+     "330": 1.2,
+     "345": 5.9
+    },
+    "F": 41.5,
+    "F_hell": 22.6,
+    "F_dunkel": 14.2,
+    "F_ton": 2.4,
+    "F_chroma": 2.4,
+    "hell_pct": 4.42,
+    "F_fremd": 0.0,
+    "fremd_pct": 0.0,
+    "F_grau_hell": 0.6,
+    "h0": 327.9,
+    "flecken": 70,
+    "fleck_pct": 7.9,
+    "komp_geprueft": 336,
+    "C_std": 3.31,
+    "C_mittel": 8.82,
+    "L_mittel": 24.59,
+    "spanne90": 0.8,
+    "block_ton_streu": 5.0,
+    "block_L_p10_p90": 12.0,
+    "bloecke": 70,
+    "bloecke_bunt": 69
+   },
+   {
+    "px": 14915,
+    "bunt_pct": 77.0,
+    "S5": 1,
+    "sektoren": {
+     "315": 96.8,
+     "345": 2.8
+    },
+    "F": 33.5,
+    "F_hell": 22.1,
+    "F_dunkel": 10.1,
+    "F_ton": 0.7,
+    "F_chroma": 0.7,
+    "hell_pct": 4.0,
+    "F_fremd": 0.0,
+    "fremd_pct": 0.0,
+    "F_grau_hell": 0.7,
+    "h0": 326.5,
+    "flecken": 50,
+    "fleck_pct": 6.7,
+    "komp_geprueft": 314,
+    "C_std": 2.91,
+    "C_mittel": 9.1,
+    "L_mittel": 25.35,
+    "spanne90": 0.6,
+    "block_ton_streu": 4.2,
+    "block_L_p10_p90": 9.7,
+    "bloecke": 56,
+    "bloecke_bunt": 56
+   },
+   {
+    "px": 17160,
+    "bunt_pct": 74.8,
+    "S5": 1,
+    "sektoren": {
+     "315": 96.0,
+     "330": 0.8,
+     "345": 2.8
+    },
+    "F": 42.0,
+    "F_hell": 21.6,
+    "F_dunkel": 13.4,
+    "F_ton": 2.3,
+    "F_chroma": 4.7,
+    "hell_pct": 3.38,
+    "F_fremd": 0.0,
+    "fremd_pct": 0.0,
+    "F_grau_hell": 1.2,
+    "h0": 327.0,
+    "flecken": 72,
+    "fleck_pct": 8.2,
+    "komp_geprueft": 324,
+    "C_std": 2.99,
+    "C_mittel": 8.77,
+    "L_mittel": 23.67,
+    "spanne90": 0.7,
+    "block_ton_streu": 2.6,
+    "block_L_p10_p90": 11.5,
+    "bloecke": 66,
+    "bloecke_bunt": 65
+   }
+  ],
+  "S5_gepoolt": 1
+ },
+ "szene": {
+  "1": {
+   "px": 29995,
+   "bunt_pct": 58.7,
+   "S5": 3,
+   "sektoren": {
+    "0": 54.8,
+    "15": 29.7,
+    "30": 7.3,
+    "45": 4.9,
+    "345": 2.8
+   },
+   "F": 31.3,
+   "F_hell": 17.7,
+   "F_dunkel": 9.3,
+   "F_ton": 6.3,
+   "F_chroma": 0.3,
+   "hell_pct": 3.76,
+   "F_fremd": 0.7,
+   "fremd_pct": 0.04,
+   "F_grau_hell": 0.0,
+   "h0": 16.1,
+   "flecken": 94,
+   "fleck_pct": 6.9,
+   "komp_geprueft": 566,
+   "C_std": 3.32,
+   "C_mittel": 7.02,
+   "L_mittel": 18.31,
+   "spanne90": 43.5,
+   "block_ton_streu": 9.9,
+   "block_L_p10_p90": 20.7,
+   "bloecke": 121,
+   "bloecke_bunt": 104
+  },
+  "2": {
+   "px": 42423,
+   "bunt_pct": 4.2,
+   "S5": 2,
+   "sektoren": {
+    "0": 86.5,
+    "15": 13.5
+   },
+   "F": 2.6,
+   "F_hell": 2.6,
+   "F_dunkel": 0.0,
+   "F_ton": 0.0,
+   "F_chroma": 0.0,
+   "hell_pct": 0.47,
+   "F_fremd": 0.0,
+   "fremd_pct": 0.0,
+   "F_grau_hell": 0.0,
+   "h0": 12.4,
+   "flecken": 11,
+   "fleck_pct": 0.5,
+   "komp_geprueft": 187,
+   "C_std": 1.45,
+   "C_mittel": 4.15,
+   "L_mittel": 8.67,
+   "spanne90": 8.4,
+   "block_ton_streu": 5.9,
+   "block_L_p10_p90": 5.4,
+   "bloecke": 168,
+   "bloecke_bunt": 90
+  }
+ },
+ "wuensche": {
+  "gelenk_albedo": {
+   "gelenk": [
+    39.4,
+    4.8,
+    -3.3
+   ],
+   "nachbar": [
+    30.1,
+    10.3,
+    -7.0
+   ],
+   "dL_median": 9.23,
+   "C_gelenk": 5.85
+  },
+  "gelenk_weiss": {
+   "je_winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "dL": 5.53,
+     "px_gelenk": 2476,
+     "px_ring": 2238
+    },
+    {
+     "winkel": "Seite",
+     "dL": 6.94,
+     "px_gelenk": 2547,
+     "px_ring": 2164
+    },
+    {
+     "winkel": "3/4 hinten",
+     "dL": 7.72,
+     "px_gelenk": 2122,
+     "px_ring": 2512
+    },
+    {
+     "winkel": "Gegenseite",
+     "dL": 6.32,
+     "px_gelenk": 1862,
+     "px_ring": 2456
+    }
+   ],
+   "dL_mittel": 6.63,
+   "dL_min": 5.53
+  },
+  "schwanzspitze": {
+   "albedo_median": [
+    42.2,
+    16.3,
+    -4.0
+   ],
+   "fleisch_anteil": 85.4,
+   "schwanz_albedo_median": [
+    33.5,
+    10.3,
+    -7.0
+   ],
+   "dL": 8.64
+  },
+  "buckel": {
+   "albedo_median": [
+    35.4,
+    16.3,
+    -4.0
+   ],
+   "fleisch_anteil": 57.1,
+   "flaechen": 12,
+   "mesh10_haut_median": [
+    30.1,
+    10.3,
+    -7.0
+   ],
+   "dL": 5.29,
+   "ton": -13.9
+  },
+  "lippe_unterkiefer": {
+   "rot_pct": 0.0,
+   "L_p95": 37.1,
+   "haut_L_p95": 43.9,
+   "median": [
+    25.3,
+    5.8,
+    -4.0
+   ]
+  },
+  "krallen": {
+   "kralle": [
+    25.3,
+    5.6,
+    -3.8
+   ],
+   "hand": [
+    25.3,
+    5.6,
+    -3.8
+   ],
+   "dE": 0.0,
+   "a_gt10_pct": 21.84,
+   "rotklasse_pct": 0.0
+  }
+ },
+ "helligkeit": {
+  "bild1_LV": [
+   44.01,
+   18.29
+  ],
+  "bild1_LS": [
+   16.92,
+   7.62
+  ],
+  "bild1_LT": [
+   41.57,
+   20.32
+  ],
+  "bild2_LV": [
+   15.48,
+   15.37
+  ],
+  "bild2_LS": [
+   8.65,
+   7.33
+  ],
+  "bild2_LT": [
+   28.71,
+   24.88
+  ]
+ },
+ "f1": {
+  "ansichten": {
+   "weiss 3/4 vorn": {
+    "kern_px": 1,
+    "ring_px": 0,
+    "feldhaut_px": 13,
+    "haut_px": 284,
+    "haut_L": 23.45,
+    "feldhaut_dL": -1.57,
+    "kern_lab": [
+     35.36,
+     19.22,
+     -1.22
+    ]
+   },
+   "weiss Seite": {
+    "kern_px": 114,
+    "ring_px": 56,
+    "feldhaut_px": 285,
+    "haut_px": 533,
+    "haut_L": 25.11,
+    "ring_dL": 4.52,
+    "feldhaut_dL": -1.24,
+    "kern_lab": [
+     43.75,
+     19.45,
+     -2.89
+    ]
+   },
+   "weiss 3/4 hinten": {
+    "kern_px": 0,
+    "ring_px": 0,
+    "feldhaut_px": 0,
+    "haut_px": 0
+   },
+   "weiss Gegenseite": {
+    "kern_px": 0,
+    "ring_px": 0,
+    "feldhaut_px": 0,
+    "haut_px": 0
+   },
+   "Bild 1": {
+    "kern_px": 660,
+    "ring_px": 353,
+    "feldhaut_px": 1372,
+    "haut_px": 1033,
+    "haut_L": 11.23,
+    "ring_dL": 3.06,
+    "feldhaut_dL": -1.39,
+    "kern_lab": [
+     21.29,
+     12.94,
+     4.77
+    ]
+   }
+  },
+  "k5c_bild1": {
+   "kern_px": 660,
+   "ring_px": 353,
+   "feldhaut_px": 1372,
+   "haut_px": 1033,
+   "haut_L": 2.85,
+   "ring_dL": 5.88,
+   "feldhaut_dL": -0.74,
+   "kern_lab": [
+    21.29,
+    12.94,
+    4.77
+   ]
+  }
+ }
+}

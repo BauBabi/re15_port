@@ -245,3 +245,47 @@ Folgen:
   Test `test_birkin_bahnsteig.c` 28 Clips). Die Kette `stufe3/gen/s3_clips.py` baut sie auf der K5c-Basis (`stufe3/basis_k5c`), wie bei K4
   auf `stufe3/basis_n2`. K4 bleibt als Variante unter `varianten/K4/`.
 - Dossier: `varianten/K5/FARBE.md` Abschnitt "Einbau v0.8.30 (Nutzerentscheid E30)".
+
+## E31 (2026-11-08): K5d nicht eingebaut, ruhige Haut statt bunter Flecken (daraus K5e)
+
+Vorlage: `C:/workspace/git/reAi_v2_entscheidung_2026-11-06/18_riesenform_feinschliff_k5d` (Feinschliff K5d: Details, Schwanzspitze, Gelenke,
+Lippe, Buckel, Helligkeit, Krallen vorn; Dossier `varianten/K5/FARBE.md` Abschnitt "Feinschliff K5d").
+
+Wortlaut Nutzer (in dieser Reihenfolge):
+- "ja, besser, können wir erst einmal so nehmen."
+- "Nein, unterkiefer soll außen natürlich auch nicht leuchten sondern dunkel/grau sein."
+- "Das einzige was wahrlich furchtbar ist.... Die Flecken an der Textur sehen aus wie drauf gemalt.... nicht so sauber wie bei den rest des spieles"
+- "Alles wirkt unruhig und so frei verteilt."
+- "Wie als hätte das Modell Hautprobleme. Alles bunt."
+
+Lesung:
+- Die erste Zusage ("können wir erst einmal so nehmen") ist durch die folgenden Saetze zurueckgenommen: K5d wird **nicht** eingebaut.
+- Unterkiefer aussen dunkel/grau, ohne Leuchten (wie die Lippe).
+- Kernklage: aufgemalte, frei verteilte, bunte Flecken. Die Haut soll ruhig sein wie im Rest des Spiels.
+
+Folgen:
+- Messblatt `varianten/K5/ruhe/MESSBLATT_RUHE.md` (1378421e7), Variante **K5e ruhige Haut** (`varianten/K5/ruhe/K5e/`, Generator
+  `varianten/K5/generator/kf_k5e.py`, Riegel `riegel_k5e.py` 25/25): je Material EINE Transformation auf der G4-Originalrampe, Texel und UV
+  bytegleich K5c, keine Eichung je Fleck/Region am Video (Memory `reai-v2-texturen-nicht-aus-video-eichen`, Nachtrag 2026-11-08).
+- Spiel-Asset blieb K5c (E30). Dossier `varianten/K5/FARBE.md` Abschnitt "Ruhige Haut K5e".
+
+## E32 (2026-11-09): K5e wird das Spiel-Asset fuer v0.8.30, ohne schwarzen Ring um die Leuchtstelle am Becken
+
+Vorlage: `C:/workspace/git/reAi_v2_entscheidung_2026-11-06/19_riesenform_k5e_ruhige_haut` (K5e ruhige Haut; Hinweise: Bild 1 heller als die
+Vorlage, weisses Licht blasser, Leuchtstelle am Becken wirkt wie dunkle Oeffnung mit rosa Kern, Buckel im Feuerlicht schwach).
+
+Wortlaut Nutzer: "Warum hast du es jetzt beim 4 beiner um den Fleck herum hinten am hintern schwarz gemacht? also um den roten Fleck herum?
+ansonsten passt, baue das ruhig einfach mal alles so ein."
+
+Lesung:
+- "um den roten Fleck herum schwarz" = die Leuchtstelle F1 am Becken (Knochen 0, 6 Flaechen). Ursache (gemessen): Die F1-Zeile (K5e-Zeile 8 =
+  K5c-Zeile 5, bytegleich) traegt um den Fleischkern die G4-F11-Haut (L\* 0-28,7) und einen dunklen Fleischrand; in K5c lag die Haut ringsum
+  ebenso dunkel, in K5e ist die Haut um +21,4 L\* gehoben, Zeile 8 nicht (PRUEFUNG_K5E_r1_zahlen 5.2: -8,9 L\*; FARBE.md R.5 Offen 2).
+- "ansonsten passt, baue das ruhig einfach mal alles so ein" = K5e wird eingebaut, sonst keine Gestaltungsaenderung.
+
+Folgen:
+- Eine Korrektur: In der F1-Zeile folgen alle Eintraege ausser den Kern-Eintraegen der K5e-Hauttransformation (derselbe Parametersatz wie die
+  Hautzeilen); der rote Kern bleibt bytegleich K5c. Keine Texel-, UV- oder Flaechenaenderung. Variante `varianten/K5/ruhe/K5e_f1/`.
+- K5e_f1 wird `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM` fuer v0.8.30; K5c gesichert unter `varianten/K5/einbau_k5c/`.
+- Offen bleiben (aus K5e gemeldet, nicht beanstandet): Bild 1 heller als die Vorlage, Buckel im Feuer schwach, Krallen rundum asymmetrisch.
+- Dossier: `varianten/K5/FARBE.md` Abschnitt "Einbau K5e v0.8.30 (E32)".

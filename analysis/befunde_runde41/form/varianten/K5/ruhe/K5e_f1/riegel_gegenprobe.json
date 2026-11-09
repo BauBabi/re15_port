@@ -1,0 +1,458 @@
+{
+ "K5c": {
+  "zeilen": [
+   {
+    "kz": "R1",
+    "name": "R1 Sektoren gepoolt (weiss) <= 5",
+    "wert": "6 (je Winkel [6, 5, 6, 6])",
+    "ok": false
+   },
+   {
+    "kz": "R2",
+    "name": "R2 farbfremde Flecken (weiss) <= 7,4 je 10k und <= 0,64 %",
+    "wert": "16.0 / 3.74 %",
+    "ok": false
+   },
+   {
+    "kz": "R3",
+    "name": "R3 Farbtonspanne 90 % (weiss) <= 76,8 Grad",
+    "wert": "88.1",
+    "ok": false
+   },
+   {
+    "kz": "R4",
+    "name": "R4 Block-Farbton (weiss) <= 16,3 Grad",
+    "wert": "26.4",
+    "ok": false
+   },
+   {
+    "kz": "Info",
+    "name": "Info Flecken alle (<= 148,6) / C*-Std (<= 16,9) / L* Mittel (weiss)",
+    "wert": "87.5 / 8.92 / 8.8",
+    "ok": null
+   },
+   {
+    "kz": "S1",
+    "name": "S1 Bild 1 Sektoren (ohne Filter, ohne Sonder) <= 5",
+    "wert": "5",
+    "ok": true
+   },
+   {
+    "kz": "S2",
+    "name": "S2 Bild 1 Farbtonspanne <= 58,9",
+    "wert": "55.2",
+    "ok": true
+   },
+   {
+    "kz": "S3",
+    "name": "S3 Bild 1 Block-Farbton <= 12,25",
+    "wert": "16.4",
+    "ok": false
+   },
+   {
+    "kz": "S4",
+    "name": "S4 Bild 2 Block-Farbton <= 10,9",
+    "wert": "22.8",
+    "ok": false
+   },
+   {
+    "kz": "Info",
+    "name": "Info Szene F_fremd Bild 1 / Bild 2 (Originale 0-1,7; Messblatt 2.2 S7)",
+    "wert": "1.0 / 4.7",
+    "ok": null
+   },
+   {
+    "kz": "H1",
+    "name": "H1 TIM-Pixel bytegleich Spiel-Asset K5c (keine Insel)",
+    "wert": "0 Texel abweichend (Form [256, 512])",
+    "ok": true
+   },
+   {
+    "kz": "H2",
+    "name": "H2 UV/Seite/Eckreihenfolge je Flaeche = K5c (nur CLUT-Wort neu)",
+    "wert": "3828/3828 gleich, 0 neu",
+    "ok": true
+   },
+   {
+    "kz": "H3",
+    "name": "H3 Zeilen 1-7 = G4-Rampe + EIN Materialsatz (neu berechnet), 0/8/9 bytegleich G4-0/K5c-5/K5c-7",
+    "wert": "16 Zeilen, kein Materialsatz-Bau (Gruppen-/Inselzeilen)",
+    "ok": false
+   },
+   {
+    "kz": "H4",
+    "name": "H4 ein Farbton je Material: Spanne genutzter Eintraege (C* >= 3) <= 15 Grad",
+    "wert": "{'Haut (inkl. Kralle/Lippe/Band)': '166.6 Grad (822 von 1007 Eintraegen C* >= 3)', 'Gelenk': '157.2 Grad (357 von 471 Eintraegen C* >= 3)', 'Fleisch': '56.0 Grad (164 von 182 Eintraegen C* >= 3)'}",
+    "ok": false
+   },
+   {
+    "kz": "H5",
+    "name": "H5 Rangfolge (nur 10-Zeilen-Bau pruefbar)",
+    "wert": "n/a (Gruppenzeilen)",
+    "ok": null
+   },
+   {
+    "kz": "W1",
+    "name": "W1 Gelenk heller als Nachbarglied (weiss): dL* >= 5 je Winkel, Mittel >= 6",
+    "wert": "min -0.35 / Mittel 0.55 ([-0.35, 0.96, 1.74, -0.17])",
+    "ok": false
+   },
+   {
+    "kz": "W1b",
+    "name": "W1b Gelenk weisslich: Albedo C* <= 8 und L* >= Nachbar + 6",
+    "wert": "C* 13.6, dL +0.0 (Gelenk [11.3, 11.5, 0.0], Nachbar [11.3, 11.1, 0.0])",
+    "ok": false
+   },
+   {
+    "kz": "W2",
+    "name": "W2 Schwanzspitze Mesh 6: Fleischanteil >= 50 %, dL >= +5 gegen Schwanz",
+    "wert": "6.8 %, +0.0 (Spitze [10.9, 5.3, -2.0])",
+    "ok": false
+   },
+   {
+    "kz": "W3",
+    "name": "W3 Buckel: 12 Flaechen, 1 Komponente, Ton -8 +- 15, Fleischanteil >= 40 %, dL >= +3",
+    "wert": "12 Flaechen, 1 Komponente(n), Ton -33.2, 44.8 %, -1.4 (Buckel [11.3, 12.0, -7.8])",
+    "ok": false
+   },
+   {
+    "kz": "W4",
+    "name": "W4 Lippe + Unterkiefer aussen (165 Fl.): Rotklasse 0 %, L*-p95 <= Haut-p95",
+    "wert": "54.4 %, 58.1 <= 36.0 (Median [15.0, 15.5, -2.0])",
+    "ok": false
+   },
+   {
+    "kz": "W5",
+    "name": "W5 Krallen = Hand: Albedo dE76 <= 6, Rotklasse 0 %",
+    "wert": "dE 30.56, Rot 47.2 % (Kralle [36.2, 13.8, 11.0], Hand [8.1, 7.0, 1.2])",
+    "ok": false
+   },
+   {
+    "kz": "W6",
+    "name": "W6 Helligkeit Bild 2 Figur: Video >= Vorlage und ohne Filter >= Vorlage (Pixelmenge V4F 3.1)",
+    "wert": "Video 10.92 (>= 15.37), ohne 4.86 (>= 7.33)",
+    "ok": false
+   },
+   {
+    "kz": "Info",
+    "name": "Info Helligkeit Bild 1 Video / ohne Filter (Vorlage; Messblatt Offen 1)",
+    "wert": "16.41 (18.29) / 5.12 (7.62)",
+    "ok": null
+   },
+   {
+    "kz": "Info",
+    "name": "Info riegel_k5d (b) Schwanzspitze Rot-Anteil Kette T (K5d-Fenster 25..50 %)",
+    "wert": "1.4 % (Vorlage 27.9) -> ausserhalb",
+    "ok": null
+   },
+   {
+    "kz": "Info",
+    "name": "Info riegel_k5d (e) Buckel B2-F01 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)",
+    "wert": "[12.0, 19.6, -5.2] h -15 (Vorlage [41.4, 15.7, -4.3] h -15) -> nicht erfuellt",
+    "ok": null
+   },
+   {
+    "kz": "Info",
+    "name": "Info riegel_k5d (e) Buckel B2-F02 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)",
+    "wert": "[12.3, 20.2, -5.9] h -16 (Vorlage [33.2, 22.2, -6.4] h -16) -> nicht erfuellt",
+    "ok": null
+   },
+   {
+    "kz": "W7",
+    "name": "W7 F1: Zeile = K5c-Zeile 5 bytegleich, 6 Flaechen, UV gleich",
+    "wert": "6 Flaechen, Zeile [5], bytegleich True, UV gleich True",
+    "ok": true
+   },
+   {
+    "kz": "T1",
+    "name": "T1 Zeilen <= 16, Port-Texturhoehe <= 4096 (riegel_einbau E-Z1)",
+    "wert": "Zeilen 16 (<= 16), Port-Texturhoehe 256 x 16 = 4096 (<= 4096)",
+    "ok": true
+   },
+   {
+    "kz": "T2",
+    "name": "T2 jede Flaeche liest gueltige Zeile (E-Z2), kein neues 0x0000",
+    "wert": "3828 Flaechen, Zeilen 0:155 1:252 2:770 3:696 4:62 5:6 6:25 7:114 8:45 9:187 10:152 11:204 12:131 13:229 14:232 15:568; neue 0x0000: 0",
+    "ok": true
+   },
+   {
+    "kz": "T3",
+    "name": "T3 Ecken/Normalen = K5d (Krallen 19/20/28/29 eingezogen), Eckindizes = K5c",
+    "wert": "Meshes mit anderer Geometrie als K5d [19, 20, 28, 29]; Eckindizes = K5c True",
+    "ok": false
+   },
+   {
+    "kz": "T4",
+    "name": "T4 Asset EDD/EMR/Morph byte-gleich Spiel-Asset, 32/32/28, MD1 = FORM.EMD, TIM = FORM.TIM",
+    "wert": "gleich ['morph', 'edd1', 'emr1', 'edd2', 'emr2', 'edd3', 'emr3']; Meshes 32 Knochen 32 Clips 28; MD1 True; TIM True",
+    "ok": true
+   },
+   {
+    "kz": "F1R",
+    "name": "F1R Texelring um den F1-Kern (weiss + Bild 1): Mittel-L* >= angrenzende Haut - 3",
+    "wert": "dL {'weiss Seite': 11.68, 'Bild 1': 5.88} (Ansichten mit >= 20 Ringpixeln)",
+    "ok": true
+   },
+   {
+    "kz": "F1H",
+    "name": "F1H Feldhaut der F1-Flaechen um Kern und Ring: Mittel-L* >= angrenzende Haut - 3",
+    "wert": "dL {'weiss Seite': -1.31, 'Bild 1': -0.74}",
+    "ok": true
+   },
+   {
+    "kz": "F1K",
+    "name": "F1K Kern = K5c: Lab-Mittel Kerntexel (Albedo) und Kernpixel Bild 1 dE76 <= 1",
+    "wert": "Albedo dE 0.00 ([48.5, 21.5, -3.1] gegen [48.5, 21.5, -3.1]), Bild 1 dE 0.00 ([21.29, 12.94, 4.77] gegen [21.29, 12.94, 4.77])",
+    "ok": true
+   }
+  ],
+  "gruen": 11,
+  "bindend": 27,
+  "rot": [
+   "H3",
+   "H4",
+   "R1",
+   "R2",
+   "R3",
+   "R4",
+   "S3",
+   "S4",
+   "T3",
+   "W1",
+   "W1b",
+   "W2",
+   "W3",
+   "W4",
+   "W5",
+   "W6"
+  ]
+ },
+ "K5d": {
+  "zeilen": [
+   {
+    "kz": "R1",
+    "name": "R1 Sektoren gepoolt (weiss) <= 5",
+    "wert": "6 (je Winkel [5, 5, 6, 6])",
+    "ok": false
+   },
+   {
+    "kz": "R2",
+    "name": "R2 farbfremde Flecken (weiss) <= 7,4 je 10k und <= 0,64 %",
+    "wert": "16.9 / 3.82 %",
+    "ok": false
+   },
+   {
+    "kz": "R3",
+    "name": "R3 Farbtonspanne 90 % (weiss) <= 76,8 Grad",
+    "wert": "88.3",
+    "ok": false
+   },
+   {
+    "kz": "R4",
+    "name": "R4 Block-Farbton (weiss) <= 16,3 Grad",
+    "wert": "24.1",
+    "ok": false
+   },
+   {
+    "kz": "Info",
+    "name": "Info Flecken alle (<= 148,6) / C*-Std (<= 16,9) / L* Mittel (weiss)",
+    "wert": "117.5 / 8.18 / 14.4",
+    "ok": null
+   },
+   {
+    "kz": "S1",
+    "name": "S1 Bild 1 Sektoren (ohne Filter, ohne Sonder) <= 5",
+    "wert": "6",
+    "ok": false
+   },
+   {
+    "kz": "S2",
+    "name": "S2 Bild 1 Farbtonspanne <= 58,9",
+    "wert": "87.0",
+    "ok": false
+   },
+   {
+    "kz": "S3",
+    "name": "S3 Bild 1 Block-Farbton <= 12,25",
+    "wert": "20.1",
+    "ok": false
+   },
+   {
+    "kz": "S4",
+    "name": "S4 Bild 2 Block-Farbton <= 10,9",
+    "wert": "16.7",
+    "ok": false
+   },
+   {
+    "kz": "Info",
+    "name": "Info Szene F_fremd Bild 1 / Bild 2 (Originale 0-1,7; Messblatt 2.2 S7)",
+    "wert": "2.7 / 0.5",
+    "ok": null
+   },
+   {
+    "kz": "H1",
+    "name": "H1 TIM-Pixel bytegleich Spiel-Asset K5c (keine Insel)",
+    "wert": "41510 Texel abweichend (Form [256, 512])",
+    "ok": false
+   },
+   {
+    "kz": "H2",
+    "name": "H2 UV/Seite/Eckreihenfolge je Flaeche = K5c (nur CLUT-Wort neu)",
+    "wert": "2784/3828 gleich, 1044 neu",
+    "ok": false
+   },
+   {
+    "kz": "H3",
+    "name": "H3 Zeilen 1-7 = G4-Rampe + EIN Materialsatz (neu berechnet), 0/8/9 bytegleich G4-0/K5c-5/K5c-7",
+    "wert": "16 Zeilen, kein Materialsatz-Bau (Gruppen-/Inselzeilen)",
+    "ok": false
+   },
+   {
+    "kz": "H4",
+    "name": "H4 ein Farbton je Material: Spanne genutzter Eintraege (C* >= 3) <= 15 Grad",
+    "wert": "{'Haut (inkl. Kralle/Lippe/Band)': '270.2 Grad (913 von 1094 Eintraegen C* >= 3)', 'Gelenk': '235.8 Grad (222 von 244 Eintraegen C* >= 3)', 'Fleisch': '55.6 Grad (120 von 123 Eintraegen C* >= 3)'}",
+    "ok": false
+   },
+   {
+    "kz": "H5",
+    "name": "H5 Rangfolge (nur 10-Zeilen-Bau pruefbar)",
+    "wert": "n/a (Gruppenzeilen)",
+    "ok": null
+   },
+   {
+    "kz": "W1",
+    "name": "W1 Gelenk heller als Nachbarglied (weiss): dL* >= 5 je Winkel, Mittel >= 6",
+    "wert": "min 5.92 / Mittel 8.94 ([5.92, 9.77, 12.67, 7.39])",
+    "ok": true
+   },
+   {
+    "kz": "W1b",
+    "name": "W1b Gelenk weisslich: Albedo C* <= 8 und L* >= Nachbar + 6",
+    "wert": "C* 5.4, dL +10.3 (Gelenk [28.5, 0.0, -5.0], Nachbar [18.2, 10.5, 0.0])",
+    "ok": true
+   },
+   {
+    "kz": "W2",
+    "name": "W2 Schwanzspitze Mesh 6: Fleischanteil >= 50 %, dL >= +5 gegen Schwanz",
+    "wert": "21.2 %, +9.6 (Spitze [22.3, 7.5, 2.9])",
+    "ok": false
+   },
+   {
+    "kz": "W3",
+    "name": "W3 Buckel: 12 Flaechen, 1 Komponente, Ton -8 +- 15, Fleischanteil >= 40 %, dL >= +3",
+    "wert": "12 Flaechen, 1 Komponente(n), Ton -18.9, 92.5 %, +11.3 (Buckel [35.4, 20.6, -7.1])",
+    "ok": true
+   },
+   {
+    "kz": "W4",
+    "name": "W4 Lippe + Unterkiefer aussen (165 Fl.): Rotklasse 0 %, L*-p95 <= Haut-p95",
+    "wert": "3.7 %, 43.1 <= 39.1 (Median [15.0, 9.5, -2.1])",
+    "ok": false
+   },
+   {
+    "kz": "W5",
+    "name": "W5 Krallen = Hand: Albedo dE76 <= 6, Rotklasse 0 %",
+    "wert": "dE 3.28, Rot 0.0 % (Kralle [14.7, 7.7, 2.8], Hand [12.0, 6.4, 1.6])",
+    "ok": true
+   },
+   {
+    "kz": "W6",
+    "name": "W6 Helligkeit Bild 2 Figur: Video >= Vorlage und ohne Filter >= Vorlage (Pixelmenge V4F 3.1)",
+    "wert": "Video 15.46 (>= 15.37), ohne 7.74 (>= 7.33)",
+    "ok": true
+   },
+   {
+    "kz": "Info",
+    "name": "Info Helligkeit Bild 1 Video / ohne Filter (Vorlage; Messblatt Offen 1)",
+    "wert": "27.63 (18.29) / 9.67 (7.62)",
+    "ok": null
+   },
+   {
+    "kz": "Info",
+    "name": "Info riegel_k5d (b) Schwanzspitze Rot-Anteil Kette T (K5d-Fenster 25..50 %)",
+    "wert": "35.4 % (Vorlage 27.9) -> im Fenster",
+    "ok": null
+   },
+   {
+    "kz": "Info",
+    "name": "Info riegel_k5d (e) Buckel B2-F01 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)",
+    "wert": "[35.3, 20.6, -5.2] h -14 (Vorlage [41.4, 15.7, -4.3] h -15) -> erfuellt",
+    "ok": null
+   },
+   {
+    "kz": "Info",
+    "name": "Info riegel_k5d (e) Buckel B2-F02 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)",
+    "wert": "[37.1, 22.4, -5.7] h -14 (Vorlage [33.2, 22.2, -6.4] h -16) -> erfuellt",
+    "ok": null
+   },
+   {
+    "kz": "W7",
+    "name": "W7 F1: Zeile = K5c-Zeile 5 bytegleich, 6 Flaechen, UV gleich",
+    "wert": "6 Flaechen, Zeile [5], bytegleich False, UV gleich False",
+    "ok": false
+   },
+   {
+    "kz": "T1",
+    "name": "T1 Zeilen <= 16, Port-Texturhoehe <= 4096 (riegel_einbau E-Z1)",
+    "wert": "Zeilen 16 (<= 16), Port-Texturhoehe 256 x 16 = 4096 (<= 4096)",
+    "ok": true
+   },
+   {
+    "kz": "T2",
+    "name": "T2 jede Flaeche liest gueltige Zeile (E-Z2), kein neues 0x0000",
+    "wert": "3828 Flaechen, Zeilen 0:155 1:252 2:770 3:696 4:62 5:6 6:25 7:114 8:45 9:187 10:152 11:204 12:131 13:229 14:232 15:568; neue 0x0000: 0",
+    "ok": true
+   },
+   {
+    "kz": "T3",
+    "name": "T3 Ecken/Normalen = K5d (Krallen 19/20/28/29 eingezogen), Eckindizes = K5c",
+    "wert": "Meshes mit anderer Geometrie als K5d []; Eckindizes = K5c True",
+    "ok": true
+   },
+   {
+    "kz": "T4",
+    "name": "T4 Asset EDD/EMR/Morph byte-gleich Spiel-Asset, 32/32/28, MD1 = FORM.EMD, TIM = FORM.TIM",
+    "wert": "gleich ['morph', 'edd1', 'emr1', 'edd2', 'emr2', 'edd3', 'emr3']; Meshes 32 Knochen 32 Clips 28; MD1 True; TIM True",
+    "ok": true
+   },
+   {
+    "kz": "F1R",
+    "name": "F1R Texelring um den F1-Kern (weiss + Bild 1): Mittel-L* >= angrenzende Haut - 3",
+    "wert": "dL {'weiss Seite': 8.65, 'Bild 1': 6.26} (Ansichten mit >= 20 Ringpixeln)",
+    "ok": true
+   },
+   {
+    "kz": "F1H",
+    "name": "F1H Feldhaut der F1-Flaechen um Kern und Ring: Mittel-L* >= angrenzende Haut - 3",
+    "wert": "dL {'weiss Seite': 2.62, 'Bild 1': 3.88}",
+    "ok": true
+   },
+   {
+    "kz": "F1K",
+    "name": "F1K Kern = K5c: Lab-Mittel Kerntexel (Albedo) und Kernpixel Bild 1 dE76 <= 1",
+    "wert": "Albedo dE 0.00 ([48.5, 21.5, -3.1] gegen [48.5, 21.5, -3.1]), Bild 1 dE 1.64 ([22.07, 14.38, 4.88] gegen [21.29, 12.94, 4.77])",
+    "ok": false
+   }
+  ],
+  "gruen": 11,
+  "bindend": 27,
+  "rot": [
+   "F1K",
+   "H1",
+   "H2",
+   "H3",
+   "H4",
+   "R1",
+   "R2",
+   "R3",
+   "R4",
+   "S1",
+   "S2",
+   "S3",
+   "S4",
+   "W2",
+   "W4",
+   "W7"
+  ]
+ }
+}

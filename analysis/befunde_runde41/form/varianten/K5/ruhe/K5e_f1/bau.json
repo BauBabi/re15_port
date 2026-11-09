@@ -1,0 +1,254 @@
+{
+ "variante": "K5e_f1",
+ "par": {
+  "_doc": "K5e ruhige Haut (Nutzer 2026-11-08): je Material EIN Parametersatz auf der G4-Originalrampe seiner Seite (Messblatt RUHE 3.4). Jeder Wert mit Quelle. Verboten (Memory reai-v2-texturen-nicht-aus-video-eichen, Nachtrag 2026-11-08): Eichung je Region/Fleck/Texel am Video.",
+  "haut": {
+   "h": -26.3,
+   "h_quelle": "Messblatt RUHE 3.2 Hauptfamilie E30: 8 K5c-Zeilen mit Farbton < 0, texelgewichtet -26,3 Grad (material.json haut_anker_e30); Nutzer 11-08 'einheitlich grau/blau', E30 'Sieht doch gut aus'",
+   "C": 11.68,
+   "C_quelle": "Messblatt RUHE 3.2 Hauptfamilie E30, texelgewichtet C* 11,68",
+   "dL": 21.407,
+   "dL_quelle": "kf_k5e_global.py: kleinste Hebung (Bisektion 10 Schritte, 2 Runden) mit Bild 2 Video >= Vorlage 15.37 (Messblatt RUHE 3.5/W6, EIN globaler Helligkeitswert); Ergebnis 15.48. Messblatt-Vorschau +21,016 galt fuer Abschneiden r>>3 und K5c-Zeile 2 als G4-Seite 2. Nutzer 11-08 \"insgesamt ein wenig heller ... Helligkeit der Vergleichsbilder\"",
+   "modus": "hebung",
+   "modus_quelle": "Messblatt RUHE 0.4 / 6 Offen 3: Hebung haelt den G4-Kontrast 1:1, Faktor ROT in S3",
+   "hell_neigung": 0.1,
+   "hell_quelle": "Messblatt RUHE 3.4 Haut: helle G4-Eintraege (L* >= 52,4) -> Haut-Median' + 0,1 x (L* - 52,4), gleicher Ton/C*"
+  },
+  "ader": {
+   "q": 0.74,
+   "q_quelle": "Messblatt RUHE 3.4 Adern: Median der 9 E30-Gruppensaetze (v3_daten/r4_par.json), RV6",
+   "kappa": 0.61,
+   "kappa_quelle": "Messblatt RUHE 3.4 Adern: Median der 9 E30-Gruppensaetze; Farbton wie Haut"
+  },
+  "gelenk": {
+   "h": -26.3,
+   "h_quelle": "Messblatt RUHE 3.4 Gelenk: Farbton der Haut (Lauf mit -69 Grad farbfremd F_fremd 11,3)",
+   "C": 4.8,
+   "C_quelle": "Messblatt RUHE 3.4 Gelenk: K4-Albedo an den Gelenkflecken a* 1,7 b* -4,5 ('vorher da'); Nutzer 11-08 Verbindungsstuecke 'weisslich'",
+   "dL": 9.1,
+   "dL_quelle": "Messblatt RUHE 3.4 Gelenk: K5d Gelenk- gegen Nachbar-Albedo 28,5 - 19,4 (Nutzer zu K5d 'ja, besser')"
+  },
+  "fleisch": {
+   "h": -8.0,
+   "h_quelle": "Messblatt RUHE 3.4 Fleisch: Ton der F1-Leuchtstelle (E30 gelobt, Lab 48,6/21,6/-3,0); Nutzer 11-08 'fleisch roetlich', 'rote fleischige Stelle'",
+   "C": 18.0,
+   "C_quelle": "Messblatt RUHE 3.4 Fleisch: Mittel K4 Schwanzspitze / K4 Buckel F02 (11,6 / 24,9)",
+   "dL": 6.739,
+   "dL_quelle": "kf_k5e_global.py: kleinster Versatz (Bisektion), mit dem Spitze und Buckel im Albedo mindestens ihren K4-Abstand erreichen (K4_heute: Spitze gegen Schwanz +6.89, Buckel gegen Mesh-10-Haut +4.77; \"vorher da\"); Ergebnis Spitze +8.64, Buckel +5.29. Messblatt-Wert 6,9 = nur K4-Spitze; die G4-Buckeltexel liegen 3,7 L* unter der Mesh-10-Haut"
+  },
+  "zeilen": {
+   "g4_0": 0,
+   "haut": [
+    1,
+    2,
+    3
+   ],
+   "gelenk": [
+    4,
+    5,
+    6
+   ],
+   "fleisch": 7,
+   "f1": 8,
+   "zahn": 9,
+   "quelle": "Messblatt RUHE 3.3 Zeilenplan (10 Zeilen, Port-Hoehe 2560)"
+  },
+  "bytegleich": {
+   "g4_0": "K5c-Zeile 0 = G4-Zeile 0 (Auge, Maulinneres)",
+   "f1": "K5c-Zeile 5 (E30 gelobt)",
+   "zahn": "K5c-Zeile 7",
+   "quelle": "Messblatt RUHE 3.3/3.4"
+  },
+  "orte": {
+   "material_json": "ruhe/messung/material.json (Flaechenlisten je Material; Orte aus Messblatt RUHE 3.4, Buckel = Mesh 10 qf 54,55,65,66,67,77,78,79,80,89,90,91)"
+  },
+  "rundung": {
+   "verfahren": "naechste 15-Bit-Farbe (dE76, 4x4x4 Nachbarn), Adern von unten (L*, a* <= Ziel)",
+   "quelle": "keine Farbaenderung, nur Quantisierung: Lauf 1 mit Abschneiden r>>3 streute die Haut-Eintraege auf 21,5 Grad (Riegel H4 Soll <= 15); Adern von unten = RV6 'nie heller, nie roeter' (riegel_farbe_v3.rv6, wie kf_k5d.lab_wort richtung -1)"
+  },
+  "name": "K5e_f1",
+  "f1_rand": {
+   "an": true,
+   "quelle": "Nutzer E32 2026-11-09 (NUTZER_ENTSCHEIDE.md): \"Warum hast du es jetzt beim 4 beiner um den Fleck herum hinten am hintern schwarz gemacht? also um den roten Fleck herum? ansonsten passt, baue das ruhig einfach mal alles so ein.\" Ursache: F1-Zeile 8 = K5c-Zeile 5 bytegleich, ihre G4-F11-Haut (L* 0-28,7) und der dunkle Fleischrand wurden nicht wie die Haut um +21,407 gehoben (PRUEFUNG_K5E_r1_zahlen 5.2: -8,9 L*; FARBE.md R.5 Offen 2).",
+   "regel": "Kern-Eintraege (Indizes der 122 Kerntexel, kf_g4 F1-Mehrheitsregel) bytegleich K5c-Zeile 5; alle uebrigen von den 6 F1-Flaechen gelesenen Eintraege = Hauttransformation par.haut (h, C, dL) auf ihr K5c-Wort. Keine Texel-, UV-, Flaechenaenderung, kein neuer Parameter."
+  }
+ },
+ "g4_quelle": {
+  "ems": "re15_port/shared_assets/RE2/CDEMD0.EMS",
+  "kind": "0x34",
+  "emd_off": "0x677000",
+  "tim_off": "0x65e800"
+ },
+ "zeilen": 10,
+ "port_texturhoehe": 2560,
+ "flaechen": 3828,
+ "flaechen_je_zeile": {
+  "0": 99,
+  "1": 324,
+  "2": 1934,
+  "3": 579,
+  "4": 6,
+  "5": 360,
+  "6": 314,
+  "7": 92,
+  "8": 6,
+  "9": 114
+ },
+ "material_je_flaeche_zaehlung": {
+  "Auge": 64,
+  "F1": 6,
+  "Fleisch_Buckel": 12,
+  "Fleisch_Schwanzspitze": 80,
+  "Gelenk": 680,
+  "Haut": 2837,
+  "Maulinneres": 35,
+  "Zahn": 114
+ },
+ "texelzugriffe_je_material_seite": {
+  "fleisch1": 8867,
+  "gelenk0": 325,
+  "gelenk1": 41692,
+  "gelenk2": 13203,
+  "haut0": 28243,
+  "haut1": 233777,
+  "haut2": 34121
+ },
+ "rampen": {
+  "haut0": {
+   "haut_p10_p50_p90": [
+    23.671,
+    26.617,
+    30.096
+   ],
+   "ader_genutzt": 120,
+   "haut_genutzt": 15,
+   "hell_genutzt": 0
+  },
+  "gelenk0": {
+   "haut_p10_p50_p90": [
+    31.199,
+    33.362,
+    37.792
+   ],
+   "ader_genutzt": 0,
+   "haut_genutzt": 7,
+   "hell_genutzt": 0
+  },
+  "haut1": {
+   "haut_p10_p50_p90": [
+    27.578,
+    34.132,
+    40.857
+   ],
+   "ader_genutzt": 121,
+   "haut_genutzt": 45,
+   "hell_genutzt": 18
+  },
+  "gelenk1": {
+   "haut_p10_p50_p90": [
+    36.07,
+    43.227,
+    47.862
+   ],
+   "ader_genutzt": 91,
+   "haut_genutzt": 42,
+   "hell_genutzt": 0
+  },
+  "haut2": {
+   "haut_p10_p50_p90": [
+    25.958,
+    30.635,
+    42.604
+   ],
+   "ader_genutzt": 33,
+   "haut_genutzt": 37,
+   "hell_genutzt": 0
+  },
+  "gelenk2": {
+   "haut_p10_p50_p90": [
+    35.021,
+    40.404,
+    51.287
+   ],
+   "ader_genutzt": 16,
+   "haut_genutzt": 33,
+   "hell_genutzt": 0
+  },
+  "fleisch1": {
+   "haut_p10_p50_p90": [
+    34.258,
+    40.772,
+    49.088
+   ],
+   "ader_genutzt": 60,
+   "haut_genutzt": 35,
+   "hell_genutzt": 0
+  },
+  "f1_rand": {
+   "kern_texel": 122,
+   "rand_texel": 70,
+   "feld_xywh": [
+    386,
+    2,
+    37,
+    29
+   ],
+   "kern_eintraege": 56,
+   "umgefaerbt": 24,
+   "umgefaerbt_liste": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    15,
+    17,
+    19,
+    67,
+    75,
+    78,
+    84,
+    86,
+    190,
+    191,
+    194,
+    198,
+    199,
+    200,
+    232,
+    245,
+    246,
+    255
+   ],
+   "haut_eintraege_g4": 16,
+   "haut_eintraege_gleich_zeile3": 16,
+   "fleischrand_eintraege": 24,
+   "fleischrand_eintraege_auch_kern": 16,
+   "fleischrand_eintraege_nur_rand": 8,
+   "rand_texel_haut": 30,
+   "rand_texel_fleisch": 40,
+   "rand_texel_fleisch_folgen": 12,
+   "rand_texel_fleisch_kern_eintrag": 28,
+   "feld_haut_texel": 881,
+   "feld_haut_texel_folgen": 869,
+   "rang_vertauschungen": 0,
+   "nachbau_tim_sha256": "512828067ea7f0480763110b4820ae311bc5cd7423796d58274b07ef776e7e6d"
+  }
+ },
+ "texel_neu": 0,
+ "sha256": {
+  "FORM.EMD": "0a4894f23664a3eb643aa812267674d2b8f7a8c20df65e13a2b4a1bc55125932",
+  "FORM.TIM": "31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8",
+  "BAHNSTEIG_FORM.EMD": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
+  "BAHNSTEIG_FORM.TIM": "31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8"
+ },
+ "eingang_sha256": {
+  "basis_k5c_emd": "a2e87fb84e73c7d7bd173ea11d56482df731175c1e12af26cebd48063eb09adf",
+  "basis_k5c_tim": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3",
+  "k5d_emd": "d3a961deda58873882d17b910f1fd787079d49d7c219b339c9a95ac6645e761a",
+  "asset_emd": "1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041",
+  "asset_tim": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3",
+  "material_json": "3308ea639b0a3e6bb6b0e176b36b6173c0f1ee9eb650bce1c90f6564bd2860d9"
+ }
+}

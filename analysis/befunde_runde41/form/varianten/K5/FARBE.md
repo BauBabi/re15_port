@@ -1227,3 +1227,382 @@ Ruhe mit geschlossenem Kiefer (Ruhe von J, wie K4).
    pixelgenau messbar (Rauschboden 43 386 px). Entscheidung Pruefer/Integration: Schwelle fuer 07 als Rauschboden-Vergleich fassen oder die
    zwei Pixel als hinnehmbar werten.
 5. Spiellauf-Bilder liegen in `einbau/spiel/` (roh, 640 x 480); `einbau/riegel_einbau_spiel07.json` dokumentiert die Szene-07-Messung mit Exit 1.
+
+## Feinschliff K5d (Nutzer 2026-11-08)
+
+Nutzersaetze 2026-11-08: Details wieder da, Schwanzspitze fleischroetlich, Verbindungsstuecke der Beine/Arme weisslich, Lippe durchweg
+grau-blau, rote fleischige Stelle auf dem Buckel vorn, insgesamt heller (mindestens wie die Vergleichsbilder); dazu: "die krallen bei der
+Vorderseite stimmen nicht. Weder optisch - da sind es jetzt irgendwie zu viele - noch farblich". Messgrundlage: MESSBLATT_FARBE_V4_FEINSCHLIFF.md.
+Variante `feinschliff/K5d/` auf Basis des Spiel-Assets K5c; das Spiel-Asset `re15_port/shared_assets/RE2/BAHNSTEIG_FORM` ist unveraendert
+(sha256 1ab56076... / 7187ff09...).
+
+### F.1 Ergebnis
+
+| Datei | sha256 |
+|---|---|
+| `feinschliff/K5d/BAHNSTEIG_FORM.EMD` (28 Clips, Spielform) | 51917830bc843c1ba99bd0ce4a1ba1ba421ba10059d39a2bbb01dc857df8b099 (293 516 Byte) |
+| `feinschliff/K5d/BAHNSTEIG_FORM.TIM` = `FORM.TIM` | 8a39ab47b5b610c3872bb0aa981539bb03d960d27cabed7a114e34a7acddaa1f (512 x 256, 16 Zeilen, Port-Texturhoehe 4096) |
+| `feinschliff/K5d/FORM.EMD` (3 Posen-Clips, fuer die Kette) | d3a961deda58873882d17b910f1fd787079d49d7c219b339c9a95ac6645e761a |
+
+- Riegel `generator/riegel_k5d.py`: **48/48 bindende Zeilen GRUEN, Exit 0** (`feinschliff/K5d/riegel_k5d.txt`).
+- Gegenprobe Asset K5c (`--gegenprobe`, `riegel_gegenprobe_k5c.txt`): jeder Punkt (b)-(g) hat ROT-Zeilen (dazu alle (a)-Flecken ROT).
+- Spiel: 10 von 10 Laeufen rc 0, gdigrab Versuch 1, 0 Fehlerzeilen in debug.log/exe_stderr.log (`feinschliff/spiel_lauf.log`, `feinschliff/spiel/`).
+- Software-Renderer (RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Clip 10 abgespielt): rc 0, debug.log "SDL-Renderer software", Form geladen,
+  Bild `feinschliff/spiel/k5d_softrender_r5090_s11.png`, kein Absturz (`feinschliff/softrender_lauf.log`).
+- Tests: `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3` 11/11 am Spiel-Asset (`feinschliff/ctest_asset.log`) und 11/11 mit
+  RE15_RE2_ASSET_ROOT = `feinschliff/K5d` (`feinschliff/ctest_k5d.log`; die exe erbt die Umgebung). Die Pin-Tests (form_j_posen.h CRC)
+  lesen weiter das unveraenderte Spiel-Asset; ein Einbau braucht neue Pins wie in E.3.
+
+### F.2 Verfahren (`generator/kf_k5d.py`, Parameter `feinschliff/K5d/k5d_par.json`, Bericht `feinschliff/K5d/bau.json`)
+
+- **(g) Krallen.** Anzahl: die Krallen ohne Spitze im Nutzerumriss (Messblatt 2.1: rechts 29/20/19, links 28) werden in die Hand eingezogen:
+  alle 26 Ecken je Kralle auf Wurzel + 0,04 x (Ecke - Wurzel), Wurzel = Mittel der 6 Ecken mit kleinstem x (Krallenansatz). Flaechen und
+  Eckindizes bleiben (keine Loecher, keine Flaeche mit Inhalt 0: Ausdehnung 30-39 x 8-23 Einheiten), Knochen und Clips byte-gleich.
+  Bild 2 zeigt danach rechts nur Kralle 31 (419 px), links 14 und 15 (357 / 699 px), Kralle 30 2 px wie vorher. Farbe: Zeile 1 gehoert nur den
+  Krallen; alle 75 Eintraege auf das Albedo-Mittel der Haende (Meshes 13/18 nach (f), L* - 2) mit a* <= 9,5 (Binnenzeichnung s_L 0,7).
+  Albedo vorher (39,2/17,9/13,9), 72,6 % der Zugriffe a* > 10; nachher (17,7/6,9/3,3), 0 %.
+- **(f) Helligkeit.** Je CLUT-Zeile L* x c_z, a*/b* bleiben (chroma_anteil 0: volle Skalierung machte den Kopf magenta, Lauf v10). c = 1,82
+  fuer die Bild-2-Teile (Zeilen 0, 11-15), 1,0 fuer die Bild-1-Teile (Hinterbeine 3, Rumpf 4/8/9/10; Bild 1 erreicht die Vorlage ueber die
+  Details), Schwanz 2 Kappe 1,02, Zeilen 5/6/7 (F1, Band, Zaehne) unveraendert. 15-Bit-Rundung gerichtet: Ader-Eintraege (G4-Rotklasse wie RV6)
+  runden L*/a* ab, Haut-Eintraege auf.
+- **(a)-(e) neue Stellen.** Die Flaechen bekommen Texelinseln im freien TIM-Bereich (Kopie ihrer Texel je Zeile, Klasse und Zusammenhangskomponente,
+  1 Texel Saum, UV/Seite der Flaechen nachgezogen), die Indizes zeigen auf freie Eintraege ihrer Zeile (Stufen: alte Eintraege gleicher
+  Helligkeit teilen einen neuen). 72 Inseln, 1044 Flaechen mit neuer UV, 41 510 Texel neu, je Zeile bleiben 56-229 Eintraege frei.
+  - ganz: Gelenkkoerper Beine (Huefte l/r, Muffen, Knie, Fuss; Albedo L* 28, kuehl-grau), Arme (Ellbogen, Hand, Muffen; 30), Schultern (28),
+    Schwanzgelenke 3-4/4-5 (20, kuehl), Schwanzspitze Mesh 6 (zweitonig: 65 % (24/6/2), 35 % (27/30/0)), Lippensaum (Kopfhaut ohne Rotklasse,
+    a* <= 12).
+  - Fleck (Ort aus der Vorlagen-Fleckmaske ueber den Kennungs-Render von K5c, nur Ort): D3 Ruecken unter F1 (an F01 sichtbare Texel gesperrt),
+    D1 Huefte l/r, Knie l/r, Fuss l, D2 Ellbogen r, Hand r, Schultern Bild 2, D6 Schwanzglieder, D4 Schwanzspitze F15, D5 Buckel (40/20/-6).
+  - Helligkeit je Fleck an der Szenenkette auf das Vorlagen-Niveau gestellt (`generator/kf_k5d_eichen.py`: je Fleck nur das Ziel-L*, Quote
+    0,9..1,12; Ergebnis im par.json). Das ist kein Texel-Eichen: Farbe = Messblatt-Richtung, Binnenzeichnung bleibt.
+- **Lippe gegen E30-Leuchtstelle:** Das Maul-Band bleibt an den 13 Flaechen am Unterkiefer (Mesh 23), die in Bild 2 >= 20 px zeigen (1123 der
+  1494 Band-Pixel in Bild 2, Albedo dort 100 % gleich K5c). Die Band-Flaechen am Oberkiefer (Mesh 22; Vorlage Oberkiefer dunkel) und die in
+  Bild 2 unsichtbaren Band-Reste sind grau-blau, ebenso alle Zeile-0/14-Flaechen des Lippensaums (127 Flaechen, 0 % Rotklasse).
+
+### F.3 Riegel (`generator/riegel_k5d.py`, gleiche Kette und Pixelmengen fuer Asset und Variante; Auszug, alles GRUEN)
+
+| Punkt | K5d | Asset K5c (Gegenprobe) | Vorlage |
+|---|---|---|---|
+| (f) Figur L* Bild 1 T / Video / ohne | 27,8 / 27,6 / 9,7 | 18,0 / 16,4 / 5,1 ROT | 20,3 / 18,3 / 7,6 |
+| (f) Figur L* Bild 2 T / Video / ohne | 27,0 / 15,5 / 7,7 | 18,8 / 10,9 / 4,9 ROT | 24,9 / 15,4 / 7,3 |
+| (a) 12 Detailflecken, Kette T-L* 80..125 % der Vorlage | 12/12 (88-114 %) | 0/12 ROT | |
+| (a) Anteil T-L* > 40 Bild 1 / Bild 2 ohne Feuerschein F13/F14 | 21,7 % / 8,0 % | 4,8 / 2,8 % ROT | 9,9 / 5,7 % |
+| (b) Schwanzspitze Rot-Anteil / T-L* / F15 | 35,4 % / 47,0 / 58,6 | 1,4 % / 21,3 / 22,5 ROT | 27,9 % / 42,6 / 53,3 |
+| (c) Gelenkflecken T-L* und C* <= 15; Gelenkkoerper-Albedo | 7/7; (30,7/0,2/-4,6) gegen Glieder 23,6 | ROT; (13,3/11,1/1,3) | |
+| (d) Lippensaum Rotklasse | 0 % | 53,2 % (123/127 Flaechen) ROT | |
+| (e) Buckel F01 / F02 | (35,3/20,6/-5,2) / (37,1/22,4/-5,7) | (12,0/19,6/-5,2) ROT | (41,4/15,7/-4,3) / (33,2/22,2/-6,4) |
+| (g) Krallen sichtbar r / l | [31] / [14, 15] | [19,20,29,31] / [14,15,28] ROT | 1 / 2 Spitzen |
+| (g) Krallen-Albedo a* > 10; Disc-Licht Krallen-Hand dL r / l | 0 %; 4,5 / 1,2 | 72,6 %; 14,7 / 9,7 ROT | dE 4 / 3,8 |
+| G0 Geometrie | nur Krallen 19/20/28/29 (je 26 Ecken), Eckindizes gleich, EDD/EMR/Morph byte-gleich, 32/32/28 | | |
+| E-Z1 / E-Z2 | 16 Zeilen, 4096; 3828/3828 | | |
+| L Leuchtstellen | F1 100 % gleich, Band Unterkiefer 100 % gleich, Zeilen 5/6/7 gleich | | |
+| RV6 (Flaechen/Indizes K5c, Palette K5d) | 8/8 Regionen dL < 0, da* < 0 | | |
+
+Spielfenster (gdigrab, `feinschliff/spiel_helligkeit.txt`, Verfahren wie Messblatt 3.3): 5080 Bild 1 L* 3,15 -> 5,55 (p90 4,8 -> 12,6;
+K4 5,87); 5090 Bild 2 7,36 -> 8,99 (Feuer-Szene, Rauschboden hoch). Das Original-Standbild (19,3 / 15,6) ist nur relativ vergleichbar.
+
+### F.4 Tafeln (`generator/kf_k5d_tafeln.py`, roh, kein Gamma; selbst angesehen)
+
+- `feinschliff/f1_bild1.png`, `f2_bild2.png`: Vorlage | Asset K5c | K5d, Zeile 1 Disc-Licht ohne Filter, Zeile 2 mit Videofilter.
+- `feinschliff/f3_details_nah.png`: Schwanzspitze, Gelenke, Buckel, Schultern, Krallen vorn (mit und ohne Filter), Kopf nah (Clip 2 Ruhe,
+  Clip 1 Maul offen), rundum.
+- `feinschliff/f4_spiel.png`: echtes Spielfenster Original | Asset heute | K5d (Bild 1, Bild 2, beide Ruhen).
+- Gesehen: Bild 1 zeigt grau-kuehle Gelenkkappen an Huefte/Knie/Ellbogen wie die Vorlage und eine rosa Schwanzspitze mit hellem Fleck;
+  Bild 2 eine mauve-rote Stelle auf dem Buckel und helle Schultern; vorn rechts nur noch eine Kralle, die Krallen haben Handfarbe (kein Rot);
+  die Lippe ist ausser dem Unterkiefer-Band grau-blau; der Kopf ist heller, nicht bunter.
+
+### F.5 Offen
+
+1. **Lippe gegen E30:** Das Unterkiefer-Band (13 Flaechen) bleibt als Leuchtstelle Bild 2 und ist in Ruheansichten als lachsfarbene Flaechen
+   zwischen den Zaehnen sichtbar (f3, Kopf Clip 2 120/10). Soll es auch weg, ist das eine Aenderung an der E30-Leuchtstelle (Nutzerfrage).
+2. **Bild 1 heller als die Vorlage:** Figur T 27,8 gegen 20,3, Anteil T-L* > 40 21,7 % gegen 9,9 % (K4 15,3 %). Bild 2 bindet den Faktor; Bild 1
+   bekommt die Helligkeit ueber die Gelenke (Teilmittel Fuss r 52 gegen Vorlage 16 = Pose-Artefakt, Messblatt Offen 4) und den Schwanz (K5c
+   lag dort schon ueber der Vorlage). Die Detailflecken selbst liegen bei 88-114 % der Vorlage.
+3. **Krallen-Anzahl ist Geometrie:** Die rechte Hand hat nur noch die Daumenkralle 31, die linke 14/15 (+30). Rundum ist die Hand dadurch
+   asymmetrisch (der Nutzerumriss gibt nur Bild 2 vor). Die weissen Flecken (160-230, 325-385) in Bild 2 bleiben Feuer (Messblatt Offen 2).
+4. Kette T Krallen r (Info): 35,3 gegen Hand 16,7 - der Videofilter zieht den hellen Feuerboden in die duenne Kralle 31; ohne Filter dL 4,5.
+5. Bild 2 Anteil T-L* > 40 auf der ganzen Figur 11,7 % gegen Messblatt-Ziel 14,5 %: der Rest liegt im Feuerschein F13/F14 (Licht der Szene
+   auf den Haenden). Der Riegel misst deshalb ohne F13/F14 (K5d 8,0 % gegen Vorlage 5,7 %).
+6. Einbau (nicht Teil dieser Runde): Asset ersetzen, Pins form_j_posen.h (MD1/TIM CRC) neu erzeugen, Bau + Tests wie E.3/E.4.
+
+## Ruhige Haut K5e (Nutzer 2026-11-08)
+
+Nutzer 2026-11-08 zu K5d: "Die Flecken an der Textur sehen aus wie drauf gemalt.... nicht so sauber wie bei den rest des spieles" /
+"Alles wirkt unruhig und so frei verteilt." / "Wie als hätte das Modell Hautprobleme. Alles bunt." Dazu: "unterkiefer soll außen natürlich
+auch nicht leuchten sondern dunkel/grau sein." Messblatt `ruhe/MESSBLATT_RUHE.md` (1378421e7), Regel Memory
+`reai-v2-texturen-nicht-aus-video-eichen` (Nachtrag 2026-11-08). K5d wird nicht eingebaut. Das Spiel-Asset
+`re15_port/shared_assets/RE2/BAHNSTEIG_FORM` bleibt unveraendert (sha256 1ab56076... / 7187ff09..., nach dem Lauf nachgerechnet).
+
+### R.1 Ergebnis
+
+| Datei | sha256 |
+|---|---|
+| `ruhe/K5e/BAHNSTEIG_FORM.EMD` (28 Clips, Spielform, 293 516 Byte) | f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1 |
+| `ruhe/K5e/BAHNSTEIG_FORM.TIM` = `FORM.TIM` (512 x 256, 10 Zeilen, Port-Texturhoehe 2560) | 0a700ba59b72c983db8dc7d8248ef534557c6d43a08004d3d29bc42b2b1d12c0 |
+| `ruhe/K5e/FORM.EMD` (3 Posen-Clips, fuer die Kette) | 0a4894f23664a3eb643aa812267674d2b8f7a8c20df65e13a2b4a1bc55125932 |
+
+- Riegel `generator/riegel_k5e.py`: **25/25 bindende Zeilen GRUEN, Exit 0** (`ruhe/K5e/riegel_k5e.txt`).
+- Gegenprobe (`--gegenprobe`, `ruhe/K5e/riegel_gegenprobe.txt`): K5c und K5d sind in R1-R4 ROT und in mindestens einer Szenenzeile ROT.
+- Generator deterministisch: Zwei Laeufe ergeben gleiche sha256 fuer alle Ausgaben und fuer bau.json.
+- Spiel: 10 von 10 Laeufen rc 0, gdigrab Versuch 1 (`ruhe/spiel_lauf.log`, `ruhe/spiel/`).
+- Software-Renderer (RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Clip 10 abgespielt): rc 0. Im debug.log stehen "[render] SDL-Renderer software"
+  und "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12", dazu 0 Fehlerzeilen (`ruhe/softrender_lauf.log`).
+- Tests: `local_build.sh build` meldet LOCAL-BUILD-OK. `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3` mit RE15_RE2_ASSET_ROOT = `ruhe/K5e`:
+  "100% tests passed, 0 tests failed out of 11" (`ruhe/ctest_k5e.log`).
+
+### R.2 Verfahren (`generator/kf_k5e.py`, `generator/kf_k5e_global.py`, Parameter `ruhe/K5e/k5e_par.json`, Bericht `ruhe/K5e/bau.json`)
+
+- **Texel und UV bleiben:**
+  - Die TIM-Pixel sind bytegleich mit dem Spiel-Asset K5c (0 Texel neu).
+  - UV, Seite und Eckreihenfolge gleichen K5c bei 3828/3828 Flaechen.
+  - Die 72 K5d-Inseln sind damit weg.
+- **Geometrie:** wie K5d (Krallen 19/20/28/29 eingezogen), Eckindizes wie K5c. EDD/EMR/Morph und die 28 Clips sind byte-gleich mit dem
+  Spiel-Asset; nur MD1 ist neu.
+- **Materialien nur ueber CLUT-Zeilen** (Messblatt 3.3). Flaechen je Zeile:
+  - Zeile 0 Auge/Maulinneres: 99
+  - Zeilen 1/2/3 Haut der G4-Seiten 0/1/2: 324 / 1934 / 579
+  - Zeilen 4/5/6 Gelenk: 6 / 360 / 314
+  - Zeile 7 Fleisch: 92
+  - Zeile 8 F1: 6
+  - Zeile 9 Zaehne: 114
+- **Je Material EIN Satz auf der G4-Originalrampe** (CDEMD0.EMS Typ 0x34):
+  - Haut: L* + d, Farbton h, C* weich an den sRGB-Rand.
+  - Adern: rangtreu auf [Haut-p10, q x Haut-p50], C* = kappa x C.
+  - Helle Eintraege: in die Hautmitte.
+  - Gelenk und Fleisch: Hautabbildung + dL, eigenes h/C.
+  - Zeile 0 = G4-Zeile 0, Zeile 8 = K5c-Zeile 5 (F1), Zeile 9 = K5c-Zeile 7, jeweils bytegleich.
+- **Abweichungen gegen die Messblatt-Vorschau** (gemessen):
+  1. **G4-Zeile 2 kommt aus der EMS.**
+     - Die 16-Zeilen-K5c traegt sie nicht mehr: K5c-Zeile 2 ist die Schwanz-Gruppenzeile (`stufe3/basis_k5c/zeilen.json`).
+     - Die Vorschau hatte K5c-Zeile 2 als "G4-Seite 2" benutzt.
+     - Geprueft: K5c-Zeilen 0/1 = G4-Zeilen 0/1.
+  2. **15-Bit-Rundung auf die naechste Farbe** (dE76, 4x4x4 Nachbarn) statt Abschneiden r >> 3.
+     - Mit Abschneiden lag die Farbtonspanne der Eintraege bei Haut 21,5, Gelenk 55,3 und Fleisch 18,0 Grad (H4 ROT).
+     - Mit naechster Farbe: 12,0 / 0,5 / 6,9 Grad.
+     - Adern werden von unten gerundet (L* und a* <= Ziel), wegen RV6 "nie heller, nie roeter".
+  3. **Zwei globale Zahlen nach dem Bau neu bestimmt** (`kf_k5e_global.py`, Bisektion):
+     - Haut-Hebung **d = +21,407**: die kleinste Hebung, bei der Bild 2 mit Videofilter mindestens die Vorlage 15,37 erreicht (Ergebnis 15,48).
+       Das ist der eine Video-Mittelwert.
+     - Fleisch-Versatz **+6,739**: der kleinste Versatz, mit dem Spitze und Buckel im Albedo mindestens ihren K4-Abstand erreichen.
+       K4_heute: Spitze +6,89, Buckel +4,77. Ergebnis: +8,64 / +5,29.
+     - Mit 6,9 und der neuen Rundung lag der Buckel nur +1,95 ueber der Mesh-10-Haut (W3 ROT). Die G4-Buckeltexel liegen 3,7 L* unter der
+       Mesh-10-Haut.
+     - Die Kennlinie ist treppig (5-Bit-Stufen, Mediane).
+
+| Parameter | Wert | Quelle |
+|---|---|---|
+| Haut h / C* | -26,3 Grad / 11,68 | E30-Hauptfamilie (Messblatt 3.2, 8 K5c-Zeilen texelgewichtet); Nutzer "einheitlich grau/blau", E30 "Sieht doch gut aus" |
+| Haut d (Hebung) | +21,407 | W6: Bild 2 Video >= Vorlage (ein Figur-Mittel); Nutzer "insgesamt ein wenig heller" |
+| Adern q / kappa | 0,74 / 0,61 | Median der 9 E30-Gruppensaetze (RV6) |
+| helle Eintraege | Haut-p50 + 0,1 x (L* - 52,4) | Messblatt 3.4 |
+| Gelenk h / C* / dL | -26,3 / 4,8 / +9,1 | Hautton (ein Lauf mit -69 Grad war farbfremd); K4-Gelenkalbedo ("vorher da"); K5d-Gelenk gegen Nachbar ("ja, besser") |
+| Fleisch h / C* / dL | -8 / 18 / +6,739 | F1-Ton (E30); Mittel K4-Spitze/Buckel; K4-Abstaende Spitze/Buckel (Punkt 3 oben) |
+| Kralle, Lippe, Unterkiefer, Maul-Band | = Haut | Nutzer "wo kommt ... dieses rot her", Lippe "durchweg grau/blau", Unterkiefer "dunkel/grau" |
+
+### R.3 Riegel (Soll / Ist / Gegenprobe K5c, K5d)
+
+| Zeile | Soll | K5e | K5c | K5d |
+|---|---|---|---|---|
+| R1 Sektoren gepoolt (weiss) | <= 5 | 1 | 6 ROT | 6 ROT |
+| R2 farbfremde Flecken | <= 7,4 / 0,64 % | 0,0 / 0,00 % | 16,0 / 3,74 ROT | 16,9 / 3,82 ROT |
+| R3 Farbtonspanne 90 % | <= 76,8 | 3,4 | 88,1 ROT | 88,3 ROT |
+| R4 Block-Farbton | <= 16,3 | 4,5 | 26,4 ROT | 24,1 ROT |
+| S1/S2/S3 Bild 1 ohne Filter | <= 5 / 58,9 / 12,25 | 3 / 43,5 / 9,9 | 5 / 55,2 / 16,4 ROT | 6 / 87,0 / 20,1 ROT |
+| S4 Bild 2 Block | <= 10,9 | 5,9 | 22,8 ROT | 16,7 ROT |
+| H1 Texel = Asset | 0 neu | 0 | 0 | 41 510 ROT |
+| H2 UV = K5c | 3828/3828 | 3828/3828 | 3828 | 1044 neu ROT |
+| H3 Zeilen = G4 + Satz | 0 Abweichung | 0 in allen 10 Zeilen | 16 Gruppenzeilen ROT | ROT |
+| H4 ein Farbton je Material | <= 15 Grad | Haut 12,0, Gelenk 0,5, Fleisch 6,9 | 166,6 ROT | 270,2 ROT |
+| H5 Rang / RV6 | 0 Vertauschungen, dL < 0, da* <= 0 | 0; dL -9..-14, da* -4,7..-9,0 | n/a | n/a |
+| W1 Gelenk heller (weiss) | min >= 5, Mittel >= 6 | 5,53 / 6,63 | -0,35 / 0,55 ROT | 5,92 / 8,94 |
+| W1b Gelenk weisslich | C* <= 8, dL >= 6 | 5,8 / +9,2 | 13,6 / 0,0 ROT | 5,4 / +10,3 |
+| W2 Schwanzspitze | >= 50 %, dL >= 5 | 85,4 % / +8,6 | 6,8 % ROT | 21,2 % ROT |
+| W3 Buckel | 12 Fl., 1 Komp., Ton -8+-15, >= 40 %, dL >= 3 | 12, 1, -13,9, 57,1 %, +5,3 | -33,2 ROT | -18,9, 92,5 %, +11,3 |
+| W4 Lippe + Unterkiefer | Rot 0 %, p95 <= Haut-p95 | 0 %, 37,1 <= 43,9 | 54,4 % ROT | 3,7 % ROT |
+| W5 Krallen = Hand | dE <= 6, Rot 0 % | 0,00 / 0 % | 30,6 / 47,2 % ROT | 3,3 / 0 % |
+| W6 Helligkeit Bild 2 | Video >= 15,37, ohne >= 7,33 | 15,48 / 8,65 | 10,92 / 4,86 ROT | 15,46 / 7,74 |
+| W7 F1 | Zeile = K5c-5, UV gleich | ja | ja | ROT |
+| T1-T4 | Zeilen/Hoehe, gueltig, Geometrie K5d, Asset | 10/2560, 3828, ja, 7 Sektionen gleich | T3 ROT | gruen |
+
+**Info** (nicht bindend):
+- Flecken alle (weiss): 38,8; zum Vergleich G4 104,5 und EM30 118,9.
+- Szene F_fremd: 0,7 / 0,0.
+- riegel_k5d (b) Spitze: 47,0 %, liegt im Fenster 25-50.
+- riegel_k5d (e) Buckel: B2-F01 nicht erfuellt (T-L* 31,7 gegen 41,4), B2-F02 erfuellt.
+- Die Kettenzeilen (b) und (e) vergleichen Fleckwerte am Video und laufen darum nach dem Auftrag nur als Info.
+
+### R.4 Tafeln (roh, kein Gamma; selbst angesehen)
+
+Alle liegen unter `C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/ruhe/`:
+- `01_bild1.png`, `02_bild2.png`: Vorlage | K5c heute | K5e, mit und ohne Videofilter.
+- `03_details_nah.png`: Schwanzspitze, Gelenke, Buckel, Schultern, Krallen; Kopf in Clip 2 und Clip 1.
+- `04_spiel.png`: echtes Spielfenster per gdigrab.
+- `05_kopf_lippe.png`: K5c | K5d | K5e.
+- `06_rundum.png`: weisses Licht, K5c | K5d | K5e.
+- `07_familie.png`: G4 | EM30 | K5c | K5e unter gleichem Licht.
+
+**Befund beim Ansehen:**
+- K5e hat eine einheitliche mauve-graue Haut, ohne zweite Farbfamilie und ohne gemalte Inseln.
+- Die Capcom-Adern sind als dunklere Zeichnung im selben Ton erhalten.
+- Lippe und Unterkiefer sind aussen grau, die Krallen in Handfarbe.
+- Die Gelenke sind heller und grau, die Schwanzspitze fleischroetlich.
+- Unter weissem Licht wirkt K5e heller und blasser als G4 und EM30; die Familie ist tiefer im Kontrast.
+- Im Spielfenster ist K5e dunkler grau-mauve und ruhig, gegen K5c sichtbar heller.
+
+### R.5 Offen
+
+1. **Bild 1 deutlich heller als die Vorlage** (Messblatt Offen 1):
+   - Video 43,3 gegen 18,3, ohne Filter 16,5 gegen 7,6.
+   - Bild 2 bindet die eine Haut-Hebung.
+   - Entscheid fuer Orchestrator/Nutzer: so lassen, Mittelwert, oder Bild 2 ueber das Szenenlicht.
+2. **F1-Leuchtstelle** (nur melden, nicht entfernt):
+   - Sie bleibt bytegleich (W7).
+   - Im helleren, ruhigen Umfeld zeigt sie sich in 06/07 ("Seite", "Gegenseite") als kleiner dunkler Fleck mit lachsfarbenem Kern am Becken.
+     Sie kann wie aufgemalt wirken.
+   - Moeglicher Weg, falls freigegeben: Nur der Hautrand der F1-Zeile folgt der Hauttransformation (Messblatt Offen 2).
+3. **Buckel im Video schwach:**
+   - Im Albedo ist der Buckel fleischrot (W3 GRUEN).
+   - In der Kette Bild 2 bleibt B2-F01 dunkler als die Vorlage (T-L* 31,7 gegen 41,4, Info).
+   - Im Feuerlicht von 5090 ist die rote Stelle kaum sichtbar (03, 04).
+4. **Maulinneres** (G4-Zeile 0, E30):
+   - Im Ruhe-Clip zeigt der Maulspalt eine rote Linie (03/05, Kopf 0/8). Das ist keine Lippe.
+   - Falls der Nutzer sie als Lippe liest: Maulinneres in Hautzeile 1.
+5. **Vorschau des Messblatts gegen den Bau:**
+   - Die Vorschau rechnete mit Abschneiden r>>3 und mit der falschen "G4-Seite 2" (R.2).
+   - Darum wurden Haut-Hebung (21,016 -> 21,407) und Fleisch-Versatz (6,9 -> 6,739) neu bestimmt. Quelle des Fleisch-Versatzes sind jetzt
+     beide K4-Abstaende.
+6. **Einbau** (nicht Teil dieser Runde):
+   - Asset ersetzen.
+   - Pins form_j_posen.h (MD1/TIM-CRC) neu erzeugen.
+   - riegel_einbau E-Z1/E-Z2 am Asset laufen lassen (T1/T2 sind am Variantenpaar gruen).
+   - Bau und Tests wie E.3/E.4.
+
+## Einbau K5e v0.8.30 (E32)
+
+Nutzer 2026-11-09 zu Vorlage `C:/workspace/git/reAi_v2_entscheidung_2026-11-06/19_riesenform_k5e_ruhige_haut` (`form/NUTZER_ENTSCHEIDE.md` E32):
+"Warum hast du es jetzt beim 4 beiner um den Fleck herum hinten am hintern schwarz gemacht? also um den roten Fleck herum? ansonsten passt,
+baue das ruhig einfach mal alles so ein." Dazu E31 (2026-11-08, K5d nicht eingebaut, daraus K5e) im selben Commit nachgetragen.
+Folge: K5e wird Spiel-Asset fuer v0.8.30 mit EINER Korrektur, kein schwarzer Ring um die Leuchtstelle F1 am Becken. Sonst keine Gestaltungsaenderung.
+
+### EB.1 Ursache und Korrektur F1-Rand (`generator/kf_k5e.py`, Schalter `par.f1_rand.an`, Variante `ruhe/K5e_f1/`)
+
+- **Ursache:** Die F1-Zeile (K5e-Zeile 8 = K5c-Zeile 5, bytegleich) besteht um den Fleischkern aus G4-F11-Haut (G4-Zeile 2 bytegleich,
+  L\* 0,0-28,7) und einem 1-Texel-Rand aus der dunkleren Haelfte des Fleischs (kf_g4.py F1-Stelle, Messblatt V3 3.1). Die Haut ringsum ist in K5e
+  um +21,407 L\* gehoben (par.haut.dL), Zeile 8 nicht.
+- **Kern und Rand aus dem K5c-Bau selbst** (`kf_k5e.f1_masken`): `kf_g4.bau` wird in einen Wegwerf-Ordner nachgebaut (13 s), die Maske des einzigen
+  `binary_fill_holes`-Aufrufs mitgeschnitten. Pruefungen: Nachbau-TIM sha256 512828067ea7f048... = `farbe/K5c_farbe_v3/bau.json`, Pixel = `stufe3/basis_k5c`,
+  Kern 122 / Rand 70 Texel = bau.json sonder.F1 (kern_texel / rand_texel), Feld (386, 2, 37, 29).
+- **Regel:** Kern-Eintraege (Indizes der 122 Kerntexel, 56 Eintraege) bleiben bytegleich K5c-Zeile 5. Alle anderen Eintraege, die die 6 F1-Flaechen
+  lesen, bekommen die Hauttransformation der Hautzeilen (par.haut: h -26,3, C\* 11,68, dL +21,407; L\* + dL, C\* = Cmax tanh(C/Cmax), naechste
+  15-Bit-Farbe), Eingang = ihr K5c-Wort. Das sind 24 Eintraege: 16 F11-Haut (Ergebnis wortgleich K5e-Zeile 3 = G4-Seite 2, vom Bau geprueft) und
+  8 Eintraege, die nur Randtexel tragen. Rangvertauschungen 0. Kein neuer Parameter, keine Texel-, UV- oder Flaechenaenderung.
+- **Grenze der Regel (gemessen):** Der Rand hat 70 Texel: 30 F11-Haut, 40 Fleisch. 28 der 40 Fleischtexel lesen Eintraege, die auch Kerntexel lesen
+  (16 gemeinsame Eintraege); sie bleiben nach der Regel bytegleich K5c. Nur 12 Fleisch-Randtexel folgen der Haut.
+
+| Albedo (Texel ueber Zeile 8 bzw. K5c-Zeile 5, OpenCV-Lab) | K5c | K5e | K5e_f1 |
+|---|---|---|---|
+| Kern 122 Texel, L\* | 48,49 | 48,49 | 48,49 |
+| Rand 70 Texel, L\* | 19,91 | 19,91 | 32,85 |
+| Feldhaut 881 Texel (Feld ohne Kern/Rand), L\* | 6,65 | 6,65 | 27,69 |
+| Bezug: Becken-Haut Mesh 0 ohne F1 (K5e_f1), L\* | | | 29,90 |
+
+Umgefaerbte Eintraege K5c-L\* -> K5e_f1-L\* (Hebung je Eintrag +19,9 bis +22,9 durch die 15-Bit-Rundung): 1: 2,2->22,9; 2: 4,9->26,4; 3: 8,5->30,1;
+4: 12,7->33,5; 5: 16,5->37,1; 6: 20,5->40,4; 15: 21,3->43,9; 17: 13,6->33,5; 19: 9,5->30,1; 67: 25,0->47,1; 75: 29,6->50,5; 78: 38,9->59,9;
+84: 3,7->26,4; 86: 12,2->33,5; 190: 12,4->33,5; 191: 8,2->30,1; 194: 4,3->26,4; 198: 13,0->33,5; 199: 5,1->26,4; 200: 2,4->22,9; 232: 16,1->37,1;
+245: 42,2->63,9; 246: 25,0->47,1; 255: 0,0->22,9 (`ruhe/K5e_f1/bau.json` rampen.f1_rand).
+
+### EB.2 Riegel (`generator/riegel_k5e.py`, neu F1R/F1H/F1K; `ruhe/K5e_f1/riegel_k5e_f1.txt`, `riegel_gegenprobe_f1.txt`, `riegel_gegenprobe.txt`)
+
+Pixelklasse ueber den Texel (u, v) der F1-Flaechen im Kennungspuffer (v4f.rastern_id) und die Kern-/Randmaske; angrenzende Haut = Figurpixel im
+9x9-Umkreis der F1-Flaechen ohne F1. Ansichten mit >= 20 Ringpixeln: weisses Licht "Seite" (rl.weiss_id, Clip 2, wie Tafel 06/07) und Bild-1-Kette
+ohne Filter; "3/4 vorn" hat 0 Ringpixel, "3/4 hinten"/"Gegenseite" zeigen F1 nicht.
+
+| Zeile | Soll | K5e (vor der Korrektur) | K5e_f1 | K5c |
+|---|---|---|---|---|
+| F1R Texelring dL gegen angrenzende Haut | >= -3 | **-7,94** (Seite) / -2,49 (Bild 1) ROT | **+4,52 / +3,06** GRUEN | +11,68 / +5,88 |
+| F1H Feldhaut dL gegen angrenzende Haut | >= -3 | **-19,94 / -9,12** ROT | **-1,24 / -1,39** GRUEN | -1,31 / -0,74 |
+| F1K Kern = K5c, dE76 Lab-Mittel | <= 1 | Albedo 0,00, Bild 1 0,00 | Albedo 0,00, Bild 1 0,00 GRUEN | - |
+
+- K5e_f1 gesamt: **28/28 bindende Zeilen GRUEN, Exit 0** (25 K5e-Zeilen + F1R/F1H/F1K). H3 und W7 lesen bei `f1_rand` Zeile 8 als "Kern-Eintraege
+  bytegleich K5c-5, Rest neu aus par berechnet" (H3: Abweichung 0 in allen 10 Zeilen; W7: 56 Kern-Eintraege bytegleich, 6 Flaechen, UV gleich).
+- Gegenprobe F1 (`--gegenprobe-f1`, K5e): F1R und F1H ROT (erfuellt). Gegenprobe K5c/K5d (`--gegenprobe`): R1-R4 ROT und S-Zeilen ROT an beiden (erfuellt;
+  K5c 11/27, K5d 11/27 bindend gruen).
+- Die Kernpixel in "Seite" sind gegen K5c nicht vergleichbar (andere Bildgroesse durch die K5d-Krallen; K5c 93 / K5e 114 Kernpixel), darum vergleicht F1K
+  Albedo und Bild 1 (gleiche Kamera).
+
+### EB.3 Reproduktion
+
+- Bau: `python generator/kf_k5e.py ruhe/K5e_f1/k5e_f1_par.json ruhe/K5e_f1` (Parameter = k5e_par.json + name + f1_rand).
+- Zweiter Lauf in den Scratch-Ordner: FORM.EMD, FORM.TIM, form.json, BAHNSTEIG_FORM.EMD, BAHNSTEIG_FORM.TIM, bau.json **alle sha256 gleich**
+  (`ruhe/K5e_f1/sha256.txt`). Ohne Schalter baut der Generator weiter K5e bytegleich (alle 6 Ausgaben gleich `ruhe/K5e`).
+- Nach dem Asset-Tausch zeigt der Eingang "Spiel-Asset K5c" von kf_k5e.py/riegel_k5d.py auf `einbau_k5c/`; erneuter Lauf fuer K5e und K5e_f1: alle
+  6 Ausgaben samt bau.json byte-gleich.
+
+### EB.4 Asset (gleiche Dateinamen, kein Engine-Code)
+
+| Datei | vorher K5c (E30) | nachher K5e_f1 (E32) |
+|---|---|---|
+| `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` | 1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041 (293 516 Byte) | f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1 (293 516 Byte, 32/32/28; = K5e, die F1-Korrektur liegt nur im TIM) |
+| `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.TIM` | 7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3 (139 296 Byte, 16 Zeilen) | 31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8 (136 224 Byte, 10 Zeilen, 512 x 2560 im Port) |
+
+K5c gesichert: `varianten/K5/einbau_k5c/` (BAHNSTEIG_FORM.EMD/.TIM = Asset bis E32, FORM.EMD/.TIM = stufe3/basis_k5c, `K5C.md`).
+
+### EB.5 Pins und Tests
+
+- `re15_port/tests/unit/form_j_posen.h` neu (`stufe3/gen/s3_testkopf.py`, Referenz jetzt `ruhe/K5e_f1/BAHNSTEIG_FORM`, Posen weiter aus dem Rig basis_k5c,
+  weil EDD/EMR/Clips byte-gleich K5c sind):
+
+| Pin | K5c | K5e_f1 | Warum |
+|---|---|---|---|
+| FORM_J_MD1_LEN | 169500 | 169500 | K5d-Geometrie hat dieselben Ecken-/Flaechenzahlen |
+| FORM_J_MD1_CRC | 0x2456b5cc | 0x634cd4c3 | Krallen 19/20/28/29 eingezogen (K5d), CLUT-Wort je Flaeche (K5e-Zeilen) |
+| FORM_J_TIM_LEN | 139296 | 136224 | 10 statt 16 CLUT-Zeilen (6 x 512 Byte) |
+| FORM_J_TIM_CRC | 0x9234618d | 0x330ea1c5 | Zeilen K5e + F1-Hautrand |
+| Posen Bild 1/2/Ruhe, FORM_HOEHE_GEHEN 3126 | | unveraendert | Clips byte-gleich |
+
+- `test_birkin_bahnsteig.c`: nur Kommentar. Weitere Fundstellen (`git grep -n "BAHNSTEIG_FORM\|1ab56076\|7187ff09\|2456b5cc\|9234618d"` in release/,
+  re15_port/tests, re15_port/tools): nur Dateinamen (test_birkin_szenen.c, test_n2_griff_start.c, test_r41_birkin_pistole.cmake, form_spiel.sh,
+  form_emd.py, birkin_bahnsteig.py), kein Hash-Pin. Kein Test haelt Zeilenzahl, Palette oder Krallen-Geometrie ausser ueber form_j_posen.h.
+- `release/make_package.sh:294`: Tor fuehrt BAHNSTEIG_FORM.EMD/.TIM (vorhanden, nicht leer, `cmp` gegen den Quellbaum) - kein Hash, nichts zu aendern.
+- **Gegenprobe** (K5c-Asset kurz zurueck, nicht committet): `unit_birkin_bahnsteig` ROT mit "FAIL: MD1 weicht von J ab (169500 Byte)" und
+  "FAIL: TIM weicht von J ab (139296 Byte)", "0% tests passed, 1 tests failed out of 1"; danach K5e_f1 zurueck (sha256 f277916d / 31a35e66 nachgerechnet,
+  git status sauber). Log `ruhe/einbau_tests/ctest_gegenprobe_k5c_asset.log`.
+- Bau: `local_build.sh configure` -> "=== LOCAL-BUILD-OK (configure)", `build` -> "=== LOCAL-BUILD-OK (build)" (nur test_birkin_bahnsteig.exe neu gelinkt).
+- Summenzeilen (Logs `ruhe/einbau_tests/`):
+  - `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: "100% tests passed, 0 tests failed out of 11" (95,19 s)
+  - `ctest -R "n2_griff_start|birkin_szenen|r41_birkin_pistole|birkin_opfer" -j 2 --timeout 1800`: "100% tests passed, 0 tests failed out of 4"
+    (integration_r41_birkin_pistole 241,17 s)
+  - `ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)"`:
+    "100% tests passed, 0 tests failed out of 1014" (345,10 s). Kein roter Test, nichts nachzufahren.
+
+### EB.6 Spiellauf am echten Asset (`generator/kf_k5e_f1_spiel.sh`, `kf_k5e_f1_szenen.sh`, `ruhe/einbau_spiel/`)
+
+- **(a) Framedump** (RE15_FRAMEDUMP-Serie 360-440/20, eigene exe-Kopie, `form_spiel.sh`): 5080 Schnitt 1 Bild-1-Lage und 5090 Schnitt 11 Bild-2-Pose,
+  je Asset ohne Umleitung und RE15_RE2_ASSET_ROOT = `ruhe/K5e_f1`: **10 von 10 Bildern byte-gleich** (`framedump_vergleich.txt`; 5080 b381ae60...,
+  5090 Bild 440 6f9bf5a9...). Lauf 1 mit Einzelbild 700 schrieb nichts: der Zaehler stand beim Fensterbild erst bei F420 ("[walk] F420").
+- **(b) gdigrab, echtes Fenster** (`spiel_lauf_1.log`, alle rc 0, "Verfahren: gdigrab (Versuch 1)"): 5080 Bild-1-Lage und Ruhe, 5090 Bild-2-Pose und Ruhe,
+  5090 Seite mit F1 (Gier 2850, Clip 2; dazu K5c und K5e ueber RE15_RE2_ASSET_ROOT). Griff (Clip 27, Leon in der Klaue, birkin_dbg t=450 dist 7628 ->
+  10340) und Rueckstoss-Szene (RE15_BIRKIN_HP_AT=700) per s3_spielfolge.sh, je Asset und K5c (`szenen_lauf2.log`; der erste Szenenlauf mit HP_AT 1400
+  kam nach Leons Tod, `szenen_lauf.log`, verworfen; ein Zwischenlauf mit noch festen Parametern ist `szenen_lauf2_verworfen.log`).
+- **Log:** in allen 24 Laeufen (18 form_spiel.sh, davon 2 Framedumps "Seite" fuer den Kasten der Tafel 09, und 6 s3_spielfolge.sh) "[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 11/12", 0 Zeilen FAILED / not loaded / [tim]-Warnung.
+  RE15_TIM_LOG: "[tim] slot 12: 512x2560 8bpp cluts=10".
+- **Im Spielbild gemessen** (Pixel, die sich zwischen K5e und K5e_f1 unterscheiden, gegen 9x9-Umkreis; OpenCV-L\* der angezeigten Pixel):
+  5090 Seite Framedump 440 (1349 px): K5e -7,49 -> K5e_f1 -2,64; 5080 Bild-1-Lage gdigrab (1526 px): K5e -7,28 -> K5e_f1 -2,81.
+- **Software-Renderer** (RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Clip 10 abgespielt): rc 0, "[render] SDL-Renderer software", "Bahnsteig-Form: 32 Meshes,
+  32 Knochen, 28 Clips -> Slot 12", 0 Fehlerzeilen (`softrender_lauf.log`).
+- **Tafeln** (`generator/kf_k5e_f1_tafeln.py`, roh, Nearest x3; Aufruf mit `--griff einbau_spiel/griff_k5c_bild_040.png einbau_spiel/griff_asset_bild_041.png
+  --rueckstoss einbau_spiel/rs_k5c_bild_073.png einbau_spiel/rs_asset_bild_073.png`, zweiter Lauf byte-gleich):
+  - `ruhe/08_einbau_spiel.png`: Original | K5c vorher | K5e_f1 Asset, 7 Zeilen (5080 Bild 1, 5080 Ruhe, 5090 Bild 2, 5090 Ruhe, 5090 Seite, Griff, Rueckstoss).
+  - `ruhe/09_f1_rand.png`: F1 nah K5c | K5e | K5e_f1 unter weissem Licht, Bild-1-Kette, Spielfenster 5080 und 5090.
+  - Gesehen (Bauer): der schwarze Keil um den rosa Kern (K5e) ist in K5e_f1 weg, die Feldhaut geht in die Beckenhaut ueber; der rosa Kern ist
+    unveraendert. In 08 laedt die Form in allen Szenen texturiert, dunkel schiefergrau, wie in Tafel 04 der K5e-Runde.
+
+### EB.7 Offen
+
+1. **Bild 1 heller als die Vorlage** (aus K5e, R.5 Punkt 1): Kette Bild 1 Video 44,01 gegen 18,29, ohne Filter 16,92 gegen 7,62 (Riegel-Info K5e_f1).
+2. **Buckel im Feuer schwach** (R.5 Punkt 3): Info riegel_k5d (e) B2-F01 nicht erfuellt (T-L\* 31,7 gegen 41,4).
+3. **Krallen rundum asymmetrisch** (F.5 Punkt 3): rechte Hand nur Daumenkralle 31, linke 14/15 (+30); Geometrie K5d unveraendert uebernommen.
+4. **F1-Rand jetzt leicht heller als die Haut:** Ring +4,52 (Seite) / +3,06 (Bild 1) L\*; zwei Rand-Eintraege (78, 245) liegen bei L\* 59,9 / 63,9
+   (Hautton). Im Spielfenster ist das gesamte geaenderte Feld noch 2,6-2,8 L\* dunkler als der Umkreis. Der Riegel begrenzt nur nach unten (Auftrag).
+5. **28 Fleisch-Randtexel bleiben K5c**, weil ihre Eintraege auch Kerntexel tragen (Kern bytegleich hat Vorrang). Ein Teil des dunklen Fleischrands
+   bleibt damit, sichtbar in 09 als feiner dunkler Saum direkt am Kern.

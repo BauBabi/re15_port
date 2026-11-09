@@ -1,0 +1,34 @@
+== Riegel ruhige Haut K5e: ../ruhe/K5e
+  R1 Sektoren gepoolt (weiss) <= 5                                                             GRUEN  1 (je Winkel [2, 2, 1, 1])
+  R2 farbfremde Flecken (weiss) <= 7,4 je 10k und <= 0,64 %                                    GRUEN  0.0 / 0.00 %
+  R3 Farbtonspanne 90 % (weiss) <= 76,8 Grad                                                   GRUEN  3.4
+  R4 Block-Farbton (weiss) <= 16,3 Grad                                                        GRUEN  4.5
+  Info Flecken alle (<= 148,6) / C*-Std (<= 16,9) / L* Mittel (weiss)                          Info   38.8 / 3.18 / 24.6
+  S1 Bild 1 Sektoren (ohne Filter, ohne Sonder) <= 5                                           GRUEN  3
+  S2 Bild 1 Farbtonspanne <= 58,9                                                              GRUEN  43.5
+  S3 Bild 1 Block-Farbton <= 12,25                                                             GRUEN  9.9
+  S4 Bild 2 Block-Farbton <= 10,9                                                              GRUEN  5.9
+  Info Szene F_fremd Bild 1 / Bild 2 (Originale 0-1,7; Messblatt 2.2 S7)                       Info   0.7 / 0.0
+  H1 TIM-Pixel bytegleich Spiel-Asset K5c (keine Insel)                                        GRUEN  0 Texel abweichend (Form [256, 512])
+  H2 UV/Seite/Eckreihenfolge je Flaeche = K5c (nur CLUT-Wort neu)                              GRUEN  3828/3828 gleich, 0 neu
+  H3 Zeilen 1-7 = G4-Rampe + EIN Materialsatz (neu berechnet), 0/8/9 bytegleich G4-0/K5c-5/K5c-7 GRUEN  Abweichung je Zeile {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}; Z0=G4-0 True, Z8=K5c-5 True, Z9=K5c-7 True
+  H4 ein Farbton je Material: Spanne genutzter Eintraege (C* >= 3) <= 15 Grad                  GRUEN  {'Haut (inkl. Kralle/Lippe/Band)': '12.0 Grad (389 von 389 Eintraegen C* >= 3)', 'Gelenk': '0.5 Grad (82 von 189 Eintraegen C* >= 3)', 'Fleisch': '6.9 Grad (95 von 95 Eintraegen C* >= 3)'}
+  H5 Rangfolge je Zeile/Klasse 0 Vertauschungen; Adern dunkler, nicht roeter (dL < 0, da* <= 0, RV6) GRUEN  Vertauschungen {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0}; Ader-Haut (dL, da*) {1: (-9.02, -4.79), 2: (-8.99, -4.73), 3: (-11.06, -4.98), 5: (-11.24, -4.87), 6: (-14.05, -4.9), 7: (-11.24, -8.44)}
+  W1 Gelenk heller als Nachbarglied (weiss): dL* >= 5 je Winkel, Mittel >= 6                   GRUEN  min 5.53 / Mittel 6.63 ([5.53, 6.94, 7.72, 6.32])
+  W1b Gelenk weisslich: Albedo C* <= 8 und L* >= Nachbar + 6                                   GRUEN  C* 5.8, dL +9.2 (Gelenk [39.4, 4.8, -3.3], Nachbar [30.1, 10.3, -7.0])
+  W2 Schwanzspitze Mesh 6: Fleischanteil >= 50 %, dL >= +5 gegen Schwanz                       GRUEN  85.4 %, +8.6 (Spitze [42.2, 16.3, -4.0])
+  W3 Buckel: 12 Flaechen, 1 Komponente, Ton -8 +- 15, Fleischanteil >= 40 %, dL >= +3          GRUEN  12 Flaechen, 1 Komponente(n), Ton -13.9, 57.1 %, +5.3 (Buckel [35.4, 16.3, -4.0])
+  W4 Lippe + Unterkiefer aussen (165 Fl.): Rotklasse 0 %, L*-p95 <= Haut-p95                   GRUEN  0.0 %, 37.1 <= 43.9 (Median [25.3, 5.8, -4.0])
+  W5 Krallen = Hand: Albedo dE76 <= 6, Rotklasse 0 %                                           GRUEN  dE 0.00, Rot 0.0 % (Kralle [25.3, 5.6, -3.8], Hand [25.3, 5.6, -3.8])
+  W6 Helligkeit Bild 2 Figur: Video >= Vorlage und ohne Filter >= Vorlage (Pixelmenge V4F 3.1) GRUEN  Video 15.48 (>= 15.37), ohne 8.65 (>= 7.33)
+  Info Helligkeit Bild 1 Video / ohne Filter (Vorlage; Messblatt Offen 1)                      Info   43.31 (18.29) / 16.53 (7.62)
+  Info riegel_k5d (b) Schwanzspitze Rot-Anteil Kette T (K5d-Fenster 25..50 %)                  Info   47.0 % (Vorlage 27.9) -> im Fenster
+  Info riegel_k5d (e) Buckel B2-F01 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)                  Info   [31.7, 15.9, -3.7] h -13 (Vorlage [41.4, 15.7, -4.3] h -15) -> nicht erfuellt
+  Info riegel_k5d (e) Buckel B2-F02 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)                  Info   [32.5, 17.3, -3.2] h -10 (Vorlage [33.2, 22.2, -6.4] h -16) -> erfuellt
+  W7 F1: Zeile = K5c-Zeile 5 bytegleich, 6 Flaechen, UV gleich                                 GRUEN  6 Flaechen, Zeile [8], bytegleich True, UV gleich True
+  T1 Zeilen <= 16, Port-Texturhoehe <= 4096 (riegel_einbau E-Z1)                               GRUEN  Zeilen 10 (<= 16), Port-Texturhoehe 256 x 10 = 2560 (<= 4096)
+  T2 jede Flaeche liest gueltige Zeile (E-Z2), kein neues 0x0000                               GRUEN  3828 Flaechen, Zeilen 0:99 1:324 2:1934 3:579 4:6 5:360 6:314 7:92 8:6 9:114; neue 0x0000: 0
+  T3 Ecken/Normalen = K5d (Krallen 19/20/28/29 eingezogen), Eckindizes = K5c                   GRUEN  Meshes mit anderer Geometrie als K5d []; Eckindizes = K5c True
+  T4 Asset EDD/EMR/Morph byte-gleich Spiel-Asset, 32/32/28, MD1 = FORM.EMD, TIM = FORM.TIM     GRUEN  gleich ['morph', 'edd1', 'emr1', 'edd2', 'emr2', 'edd3', 'emr3']; Meshes 32 Knochen 32 Clips 28; MD1 True; TIM True
+  -> 25/25 bindende Zeilen GRUEN
+EXIT 0

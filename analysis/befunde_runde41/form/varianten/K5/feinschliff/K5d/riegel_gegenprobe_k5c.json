@@ -1,0 +1,257 @@
+{
+ "titel": "Gegenprobe Asset K5c (stufe3/basis_k5c)",
+ "zeilen": [
+  {
+   "name": "(f) Bild 1 Figur L* T >= Vorlage",
+   "wert": "17.96 (Vorlage 20.32)",
+   "ok": false
+  },
+  {
+   "name": "(f) Bild 1 Figur L* Video >= Vorlage",
+   "wert": "16.41 (Vorlage 18.29)",
+   "ok": false
+  },
+  {
+   "name": "(f) Bild 1 Figur L* ohne Filter >= Vorlage",
+   "wert": "5.12 (Vorlage 7.62)",
+   "ok": false
+  },
+  {
+   "name": "(f) Bild 2 Figur L* T >= Vorlage",
+   "wert": "18.76 (Vorlage 24.88)",
+   "ok": false
+  },
+  {
+   "name": "(f) Bild 2 Figur L* Video >= Vorlage",
+   "wert": "10.92 (Vorlage 15.37)",
+   "ok": false
+  },
+  {
+   "name": "(f) Bild 2 Figur L* ohne Filter >= Vorlage",
+   "wert": "4.86 (Vorlage 7.33)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F03 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "16.6 (Vorlage 51.0, Fenster 40.8..63.8)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F04 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "13.0 (Vorlage 50.4, Fenster 40.3..63.0)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F05 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "16.9 (Vorlage 51.7, Fenster 41.4..64.7)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F07 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "17.9 (Vorlage 54.6, Fenster 43.7..68.2)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F08 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "27.0 (Vorlage 44.5, Fenster 35.6..55.6)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F10 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "25.6 (Vorlage 49.3, Fenster 39.4..61.6)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F12 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "13.1 (Vorlage 44.4, Fenster 35.5..55.4)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F13 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "14.0 (Vorlage 41.4, Fenster 33.1..51.7)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F06 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "19.6 (Vorlage 43.5, Fenster 34.8..54.3)",
+   "ok": false
+  },
+  {
+   "name": "(a) B1-F11 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "13.2 (Vorlage 42.9, Fenster 34.3..53.6)",
+   "ok": false
+  },
+  {
+   "name": "(a) B2-F05 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "17.9 (Vorlage 44.2, Fenster 35.4..55.3)",
+   "ok": false
+  },
+  {
+   "name": "(a) B2-F06 Ketten-T-L* 80..125 % der Vorlage",
+   "wert": "13.6 (Vorlage 39.6, Fenster 31.6..49.4)",
+   "ok": false
+  },
+  {
+   "name": "(a) Bild 1 Anteil T-L* > 40 an der Figur >= Vorlage",
+   "wert": "4.8 % (Vorlage 9.9, 29706 px)",
+   "ok": false
+  },
+  {
+   "name": "(a) Bild 1 Anteil T-L* > 40 ganze Figur (Messblatt: Vorlage 9,9, K4 15.3 %)",
+   "wert": "4.8 %",
+   "ok": null
+  },
+  {
+   "name": "(a) Bild 2 Anteil T-L* > 40 an der Figur ohne Feuerschein F13/F14 >= Vorlage",
+   "wert": "2.8 % (Vorlage 5.7, 34730 px)",
+   "ok": false
+  },
+  {
+   "name": "(a) Bild 2 Anteil T-L* > 40 ganze Figur (Messblatt: Vorlage 14,5, K4 16.9 %)",
+   "wert": "9.0 %",
+   "ok": null
+  },
+  {
+   "name": "(b) Schwanzspitze Rot-Anteil 25..50 %",
+   "wert": "1.4 % (Vorlage 27.9, px 2744)",
+   "ok": false
+  },
+  {
+   "name": "(b) Schwanzspitze T-L* >= 80 % Vorlage",
+   "wert": "[21.3, 5.7, -3.9] (Vorlage [42.6, 7.6, 5.4])",
+   "ok": false
+  },
+  {
+   "name": "(b) Fleck B1-F15 T-L* >= 80 % Vorlage",
+   "wert": "[22.5, 5.2, -6.0] (Vorlage [53.3, 11.9, 3.1])",
+   "ok": false
+  },
+  {
+   "name": "(c) B1-F04 T-L* 80..125 % der Vorlage, T-C* <= 15",
+   "wert": "[13.0, 2.1, 0.1] C* 2.1 (Vorlage [50.4, -2.8, -3.2])",
+   "ok": false
+  },
+  {
+   "name": "(c) B1-F05 T-L* 80..125 % der Vorlage, T-C* <= 15",
+   "wert": "[16.9, 3.9, -0.8] C* 4.0 (Vorlage [51.7, -1.0, -4.1])",
+   "ok": false
+  },
+  {
+   "name": "(c) B1-F07 T-L* 80..125 % der Vorlage, T-C* <= 15",
+   "wert": "[17.9, 5.1, -2.4] C* 5.7 (Vorlage [54.6, -0.3, -6.4])",
+   "ok": false
+  },
+  {
+   "name": "(c) B1-F08 T-L* 80..125 % der Vorlage, T-C* <= 15",
+   "wert": "[27.0, 1.3, -0.5] C* 1.4 (Vorlage [44.5, -1.8, -11.6])",
+   "ok": false
+  },
+  {
+   "name": "(c) B1-F10 T-L* 80..125 % der Vorlage, T-C* <= 15",
+   "wert": "[25.6, 7.0, -3.3] C* 7.7 (Vorlage [49.3, -2.6, -3.9])",
+   "ok": false
+  },
+  {
+   "name": "(c) B2-F05 T-L* 80..125 % der Vorlage, T-C* <= 15",
+   "wert": "[17.9, 23.2, 11.1] C* 25.7 (Vorlage [44.2, 6.3, -1.9])",
+   "ok": false
+  },
+  {
+   "name": "(c) B2-F06 T-L* 80..125 % der Vorlage, T-C* <= 15",
+   "wert": "[13.6, 19.2, 12.9] C* 23.1 (Vorlage [39.6, -3.2, 0.2])",
+   "ok": false
+  },
+  {
+   "name": "(c) Albedo Bein-/Arm-Gelenkkoerper kuehl-grau und heller als die Glieder (L* >= Glied + 5, C* <= 12)",
+   "wert": "Gelenke [13.3, 11.1, 1.3] C* 11.1 (55220 Texel), Glieder [14.1, 9.7, 4.5]",
+   "ok": false
+  },
+  {
+   "name": "(d) Lippensaum ohne Unterkiefer-Band: Albedo-Rotklasse 0 %",
+   "wert": "53.23 % der Texel, 123 von 127 Flaechen mit Rot (Band bleibt: 13 Flaechen)",
+   "ok": false
+  },
+  {
+   "name": "(e) Buckel B2-F01 T-L* >= 80 %, a* >= 70 %, Farbton +-20 Grad",
+   "wert": "[12.0, 19.6, -5.2] h -15 (Vorlage [41.4, 15.7, -4.3] h -15)",
+   "ok": false
+  },
+  {
+   "name": "(e) Buckel B2-F02 T-L* >= 80 %, a* >= 70 %, Farbton +-20 Grad",
+   "wert": "[12.3, 20.2, -5.9] h -16 (Vorlage [33.2, 22.2, -6.4] h -16)",
+   "ok": false
+  },
+  {
+   "name": "(g) Krallen sichtbar (>= 30 px) rechts (W) = [31]",
+   "wert": "[19, 20, 29, 31] (px {19: 1521, 20: 1734, 29: 1479, 31: 419})",
+   "ok": false
+  },
+  {
+   "name": "(g) Krallen sichtbar (>= 30 px) links (W) = [14, 15]",
+   "wert": "[14, 15, 28] (px {14: 357, 15: 461, 28: 292, 30: 2})",
+   "ok": false
+  },
+  {
+   "name": "(g) Krallen-Albedo a* > 10: 0 %",
+   "wert": "72.55 % von 23636 Texelzugriffen, Mittel [39.2, 17.9, 13.9]",
+   "ok": false
+  },
+  {
+   "name": "(g) Disc-Licht ohne Filter: Krallen gegen Hand r (W) |dL*| <= 5, dE <= 8",
+   "wert": "Krallen [16.5, 7.0, 9.6] Hand [1.8, 1.4, -0.2] dL 14.7 dE 18.5",
+   "ok": false
+  },
+  {
+   "name": "(g) Kette T Krallen r (W) (Info)",
+   "wert": "Krallen [52.6, 16.5, 27.9] Hand [15.6, 23.1, 15.1] dL 37.0; Vorlage Krallen [45.9, 17.4, 21.4]",
+   "ok": null
+  },
+  {
+   "name": "(g) Disc-Licht ohne Filter: Krallen gegen Hand l (W) |dL*| <= 5, dE <= 8",
+   "wert": "Krallen [12.3, 8.6, 7.1] Hand [2.6, 2.4, 2.0] dL 9.7 dE 12.6",
+   "ok": false
+  },
+  {
+   "name": "(g) Kette T Krallen l (W) (Info)",
+   "wert": "Krallen [37.5, 34.6, 30.1] Hand [22.5, 30.2, 25.9] dL 15.0; Vorlage Krallen [43.2, 26.5, 21.3]",
+   "ok": null
+  },
+  {
+   "name": "G0 Ecken/Normalen gleich K5c ausser Krallen 19/20/28/29, Eckindizes gleich",
+   "wert": "geaendert: {}; Eckindizes gleich True; Flaechen mit neuer UV/Zeile/Seite 0",
+   "ok": true
+  },
+  {
+   "name": "E-Z1 CLUT-Zeilen <= 16, Port-Texturhoehe <= 4096",
+   "wert": "16 Zeilen, 256 x 16 = 4096",
+   "ok": true
+  },
+  {
+   "name": "E-Z2 jede Flaeche liest eine gueltige Zeile",
+   "wert": "3828/3828",
+   "ok": true
+  },
+  {
+   "name": "L F1 (Bild 1, F01) Albedo je Pixel gleich K5c >= 99 %",
+   "wert": "100.0 % gleich; Kette T [52.4, 18.5, -2.5] gegen K5c [52.4, 18.5, -2.5]",
+   "ok": true
+  },
+  {
+   "name": "L Maul-Band Unterkiefer (Bild 2, Zeile 6, Mesh 23, >= 20 px) Albedo je Pixel gleich K5c >= 99 %",
+   "wert": "100.0 % gleich (1123 px); Kette T [54.9, 29.8, 19.8] gegen K5c [54.9, 29.8, 19.8]",
+   "ok": true
+  },
+  {
+   "name": "L Zeilen 5/6/7 (F1, Band, Zaehne): alle von K5c benutzten Eintraege gleich",
+   "wert": "True",
+   "ok": true
+  },
+  {
+   "name": "RV6 Adern nie heller/roter als die Haut (Flaechen/Indizes K5c, Palette der Variante)",
+   "wert": "{'Ruecken': 'dL -4.6 da* -0.4 (n 721/1191)', 'Flanke': 'dL -4.1 da* -1.9 (n 844/1399)', 'Brust/Bauch': 'dL -5.1 da* -1.0 (n 796/1363)', 'Vorderbeine': 'dL -6.3 da* -0.4 (n 3991/6987)', 'Hinterbeine': 'dL -2.3 da* -2.6 (n 267/1365)', 'Hals': 'dL -6.3 da* -0.5 (n 777/1227)', 'Kopf': 'dL -4.4 da* -3.6 (n 865/1293)', 'Schwanz': 'dL -6.9 da* -0.4 (n 695/2373)'}",
+   "ok": true
+  }
+ ],
+ "gruen": 7,
+ "bindend": 46
+}

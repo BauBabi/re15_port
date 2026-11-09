@@ -1,0 +1,7 @@
+Spielfenster-Helligkeit (Verfahren wie messen.spielfenster: Figurmaske form_buehne.buehne + deckung, L* Mittel / p90)
+  5080 Nachstellung Bild 1   Asset heute K5c  px  35891 Versatz (0, 0) L* 3.15 / p90 4.75
+  5080 Nachstellung Bild 1   K5d neu          px  35853 Versatz (0, 0) L* 5.55 / p90 12.60
+  5080 Nachstellung Bild 1   Original-Standbild px  32327 L* 19.31 / p90 40.99
+  5090 Pose Bild 2           Asset heute K5c  px  43127 Versatz (0, 0) L* 7.36 / p90 19.73
+  5090 Pose Bild 2           K5d neu          px  39911 Versatz (0, 0) L* 8.99 / p90 17.54
+  5090 Pose Bild 2           Original-Standbild px  45038 L* 15.57 / p90 36.10

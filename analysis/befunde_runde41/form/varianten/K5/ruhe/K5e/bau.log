@@ -1,0 +1,95 @@
+{
+ "zeilen": 10,
+ "flaechen": 3828,
+ "flaechen_je_zeile": {
+  "0": 99,
+  "1": 324,
+  "2": 1934,
+  "3": 579,
+  "4": 6,
+  "5": 360,
+  "6": 314,
+  "7": 92,
+  "8": 6,
+  "9": 114
+ },
+ "texel_neu": 0,
+ "rampen": {
+  "haut0": {
+   "haut_p10_p50_p90": [
+    23.671,
+    26.617,
+    30.096
+   ],
+   "ader_genutzt": 120,
+   "haut_genutzt": 15,
+   "hell_genutzt": 0
+  },
+  "gelenk0": {
+   "haut_p10_p50_p90": [
+    31.199,
+    33.362,
+    37.792
+   ],
+   "ader_genutzt": 0,
+   "haut_genutzt": 7,
+   "hell_genutzt": 0
+  },
+  "haut1": {
+   "haut_p10_p50_p90": [
+    27.578,
+    34.132,
+    40.857
+   ],
+   "ader_genutzt": 121,
+   "haut_genutzt": 45,
+   "hell_genutzt": 18
+  },
+  "gelenk1": {
+   "haut_p10_p50_p90": [
+    36.07,
+    43.227,
+    47.862
+   ],
+   "ader_genutzt": 91,
+   "haut_genutzt": 42,
+   "hell_genutzt": 0
+  },
+  "haut2": {
+   "haut_p10_p50_p90": [
+    25.958,
+    30.635,
+    42.604
+   ],
+   "ader_genutzt": 33,
+   "haut_genutzt": 37,
+   "hell_genutzt": 0
+  },
+  "gelenk2": {
+   "haut_p10_p50_p90": [
+    35.021,
+    40.404,
+    51.287
+   ],
+   "ader_genutzt": 16,
+   "haut_genutzt": 33,
+   "hell_genutzt": 0
+  },
+  "fleisch1": {
+   "haut_p10_p50_p90": [
+    34.258,
+    40.772,
+    49.088
+   ],
+   "ader_genutzt": 60,
+   "haut_genutzt": 35,
+   "hell_genutzt": 0
+  }
+ },
+ "sha256": {
+  "FORM.EMD": "0a4894f23664a3eb643aa812267674d2b8f7a8c20df65e13a2b4a1bc55125932",
+  "FORM.TIM": "0a700ba59b72c983db8dc7d8248ef534557c6d43a08004d3d29bc42b2b1d12c0",
+  "BAHNSTEIG_FORM.EMD": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
+  "BAHNSTEIG_FORM.TIM": "0a700ba59b72c983db8dc7d8248ef534557c6d43a08004d3d29bc42b2b1d12c0"
+ }
+}
