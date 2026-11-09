@@ -1,15 +1,21 @@
 Riegel V8 (Messblatt V8 Abschnitt 7) fuer C:\workspace\git\reAi_v2\.claude\worktrees\r41_sichel_v8\re15_port\shared_assets\PSX\EMD\EM30_HANGAR.EMD
-sha256 66806bc4ae2537809ce2ebd827a661974ca560d024fccaca4ee79c559134fab3
+sha256 10d021738731e7be2bf6ac79de7da77637cc16f6c08f640073dd4d1242d1843f
 Referenz V7 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6
-S1 Kontur T: Mittel 3.0 Max 7.0 px (Soll <= 4 / <= 8) -> GRUEN
-   d je Station (px, + = Modell weiter innen): [-1.0, -2.0, 1.0, 3.0, 5.0, -1.0, 0.0, -5.0, -3.0, 1.0, 1.0, -1.0, -3.0, -6.0, -4.0, -7.0, -6.0, -2.0, 6.0, 2.0, 3.0, 4.0]
-S2 Uebergang J: (a) Mittel 2.0 Max 5 (<= 4 / <= 6); (b) Sattel 1.6 bei x 332 (<= 2); (c) Huckel an J 3.0 bei x 397 (<= 3) -> GRUEN
-S3 Ruecken/H/K: (a) Kuppe 4.0 (<= 4); (b) H 6.6 bei x 429 (5-10, x 428-445); (c) weitere []; (d) Sattel Kopf 1.5 bei x 431 (<= 2); (e) K 3.0 (<= 3); (f) Huegel rot 79.0 % (>= 40) -> GRUEN
-S4 Breite: Wurzel 60.6 (>= 55), s 90-130 [40.4, 38.2, 37.9] (>= 36), Ende 5.6 (<= 10), monoton True; (b) unten s 140-160 [31.6, 31.0] (>= 27), s 170-200 [18.7, 18.4, 10.7, 10.6] (>= 9); Folge [60.6, 48.2, 47.3, 41.8, 41.2, 40.4, 38.2, 37.9, 31.6, 31.0, 18.7, 18.4, 10.7, 10.6, 5.6] -> GRUEN
+S1 Kontur T: Mittel 2.2 Max 6.0 px (Soll <= 4 / <= 8) -> GRUEN
+   d je Station (px, + = Modell weiter innen): [-2.0, -3.0, 1.0, 3.0, 5.0, -1.0, 1.0, -4.0, -1.0, 2.0, 1.0, 0.0, -1.0, -3.0, -2.0, -5.0, -6.0, -2.0, 5.0, 0.0, 0.0, 1.0]
+S2 Uebergang J: (a) Mittel 2.2 Max 5 (<= 4 / <= 6); (b) Sattel 1.7 bei x 333 (<= 2); (c) Huckel an J 4.0 bei x 377 (<= 3) -> ROT
+S3 Ruecken/H/K: (a) Kuppe 4.0 (<= 4); (b) H 7.6 bei x 429 (5-10, x 428-445); (c) weitere []; (d) Sattel Kopf 2.0 bei x 445 (<= 2); (e) K 3.0 (<= 3); (f) Huegel rot 58.3 % (>= 40) -> GRUEN
+S4 Breite: Wurzel 58.9 (>= 55), s 90-130 [40.4, 38.2, 37.9] (>= 36), Ende 5.6 (<= 10), monoton True; (b) unten s 140-160 [31.3, 30.9] (>= 27), s 170-200 [18.8, 18.5, 11.1, 11.0] (>= 9); Folge [58.9, 58.9, 47.3, 46.2, 41.5, 41.1, 40.4, 38.2, 37.9, 31.3, 30.9, 18.8, 18.5, 11.1, 11.0, 5.6] -> GRUEN
 S5 Gesicht: Mesh 9 True, Zeile 486 True, Texel True (6501) -> GRUEN
-S6 Boden: 0 von 912 Keyframes unter der tiefsten Koerperecke []; Szene {'takte': 144, 'tiefstes_y': -118, 'unter_boden': 0, 'gelenk_max_grad': 25.1} -> GRUEN
-S7 Adern: (a) Herkunft ok {'alte_zeilen_gleich': True, 'neue_zeilen_original': True, 'neue_zeilen': 3, 'texel_bytegleich_v7': True, 'flaechen_neue_zeilen': 112, 'texel_unter_neuen': 31482, 'texel_original': True, 'uv_geaenderte_flaechen': 3, 'feld_c_fehler': 0}; (b) Oberarm 13 24.0 % (>= V7 22,8, <= Original 57.7; Vorlage-Band 35-59 nur Info); (c) Rumpf 8 (W)-rechts lok z<0 61.3 % (25-80; Original gleiche Pose 49.3 nur Info) [lok x<0 70.8]; Unterarm 14 20.2 % (<= Original 22.5); (d) Flecken auf den Flaechen der neuen Zeilen 20 je 5028 px = 3.98 je 1000 px (<= Original dieselben Flaechen 22 je 5035 px = 4.37) -> GRUEN
+S6 Boden: 0 von 912 Keyframes unter der tiefsten Koerperecke []; Szene {'takte': 144, 'tiefstes_y': -122, 'unter_boden': 0, 'gelenk_max_grad': 25.2} -> GRUEN
+S7 Adern (Runde 4): (a) Herkunft ok {'alte_zeilen_gleich': True, 'neue_zeilen_original': True, 'neue_zeilen': 3, 'texel_bytegleich_v7': True, 'flaechen_neue_zeilen': 163, 'texel_unter_neuen': 40697, 'texel_original': True, 'texel_ohne_original_flaeche': 0, 'uv_geaenderte_flaechen': 38, 'uv_fehler': 0, 'feld_c_fehler': 0}; (b) Oberarm 13 48.5 % (Vorlage-Band 35-59 UND <= Original 57.7) ok; (c) Rumpf 8 (W)-rechts lok z<0 42.9 % (25-80 UND <= Original gleiche Pose 49.3) [lok x<0 49.8, Original 60.5], Unterarm 14 1.0 % (<= Original 22.5) ok; (d) Flecken je 1000 px 8+13 5.79 (44 / 7595 px; Original 6.10 = 27 / 4423), 8+13+14 4.69 (47 / 10017 px; Original 4.96 = 31 / 6248) ok -> GRUEN
 S8 Technik: 16 Zeilen, Hoehe 4096, Felder gueltig True, 23 Meshes, 23 Knochen, 21 Clips -> GRUEN
-S9 Vorderansicht: P1 2 px, neue Ecken []; F344 0 px, neue Ecken []; F354 0 px, neue Ecken []; F364 0 px, neue Ecken [] (je <= 2 px ueber V7, keine neue Ecke) -> GRUEN
-S10 Wurzel von hinten: sichtbare Wurzelflaechen-Bildpunkte ['F320:749', 'F322:1055', 'F324:1159', 'F326:1328', 'F328:1509', 'F330:1496', 'F332:1433'], Summe 8729 (Soll 0) -> ROT
-SUMME: 9 von 10 gruen; ROT: S10
+S9 Vorderansicht: P1 1 px, neue Ecken []; F344 2 px, neue Ecken []; F354 0 px, neue Ecken []; F364 0 px, neue Ecken [] (je <= 2 px ueber V7, keine neue Ecke) -> GRUEN
+   S9 (b) Schlitz (Loch-Bildpunkte ohne V7-Gegenstueck, P1 + Szene Takt F336-F372): Summe 0 (Soll 0) []
+S10 Wurzel von hinten (Takt F314-F345): sichtbare Wurzelflaechen-Bildpunkte Summe 0 (Soll 0) [] -> GRUEN
+S11 Kappe/Kacheln: (a) a* >= 30 ueber dem Kopf P1 0, F354 0 (<= 0); (b) groesster Fleck von hinten (neu, Original) {'F328': (144, 234), 'F332': (241, 296)} -> GRUEN
+S12 Unterarmband P2: 0 rote px auf Knochen 14 (<= V7 0 + 20) -> GRUEN
+S13 Naht: Flaechen von Mesh 8 (ohne Brust) auf V7-Zeilen 480/481: 0 [] (Soll 0) -> GRUEN
+S10s Wurzel in echten Framedumps F328-F346 (Marker, 960x720): 0 (Soll 0) -> GRUEN
+S9s Schlitz in echten Framedumps F344-F378 (gruene Silhouette, Ueberschuss gegen V7): 9 (Soll <= 20) -> GRUEN
+SUMME: 14 von 15 gruen; ROT: S2

@@ -1,0 +1,2 @@
+C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/szene_v8r4/debug.log Takte 144 tiefstes y -122 Gelenk max 25.2 Median des Takt-Max 19.7, Takte >30 Grad 0, >60 0
+C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/szene_v8r4/debug.log Takte mit Vorzeichenwechsel der Biegeebene 41 von 144
