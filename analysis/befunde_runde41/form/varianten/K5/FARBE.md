@@ -1476,3 +1476,133 @@ Alle liegen unter `C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/
    - Pins form_j_posen.h (MD1/TIM-CRC) neu erzeugen.
    - riegel_einbau E-Z1/E-Z2 am Asset laufen lassen (T1/T2 sind am Variantenpaar gruen).
    - Bau und Tests wie E.3/E.4.
+
+## Einbau K5e v0.8.30 (E32)
+
+Nutzer 2026-11-09 zu Vorlage `C:/workspace/git/reAi_v2_entscheidung_2026-11-06/19_riesenform_k5e_ruhige_haut` (`form/NUTZER_ENTSCHEIDE.md` E32):
+"Warum hast du es jetzt beim 4 beiner um den Fleck herum hinten am hintern schwarz gemacht? also um den roten Fleck herum? ansonsten passt,
+baue das ruhig einfach mal alles so ein." Dazu E31 (2026-11-08, K5d nicht eingebaut, daraus K5e) im selben Commit nachgetragen.
+Folge: K5e wird Spiel-Asset fuer v0.8.30 mit EINER Korrektur, kein schwarzer Ring um die Leuchtstelle F1 am Becken. Sonst keine Gestaltungsaenderung.
+
+### EB.1 Ursache und Korrektur F1-Rand (`generator/kf_k5e.py`, Schalter `par.f1_rand.an`, Variante `ruhe/K5e_f1/`)
+
+- **Ursache:** Die F1-Zeile (K5e-Zeile 8 = K5c-Zeile 5, bytegleich) besteht um den Fleischkern aus G4-F11-Haut (G4-Zeile 2 bytegleich,
+  L\* 0,0-28,7) und einem 1-Texel-Rand aus der dunkleren Haelfte des Fleischs (kf_g4.py F1-Stelle, Messblatt V3 3.1). Die Haut ringsum ist in K5e
+  um +21,407 L\* gehoben (par.haut.dL), Zeile 8 nicht.
+- **Kern und Rand aus dem K5c-Bau selbst** (`kf_k5e.f1_masken`): `kf_g4.bau` wird in einen Wegwerf-Ordner nachgebaut (13 s), die Maske des einzigen
+  `binary_fill_holes`-Aufrufs mitgeschnitten. Pruefungen: Nachbau-TIM sha256 512828067ea7f048... = `farbe/K5c_farbe_v3/bau.json`, Pixel = `stufe3/basis_k5c`,
+  Kern 122 / Rand 70 Texel = bau.json sonder.F1 (kern_texel / rand_texel), Feld (386, 2, 37, 29).
+- **Regel:** Kern-Eintraege (Indizes der 122 Kerntexel, 56 Eintraege) bleiben bytegleich K5c-Zeile 5. Alle anderen Eintraege, die die 6 F1-Flaechen
+  lesen, bekommen die Hauttransformation der Hautzeilen (par.haut: h -26,3, C\* 11,68, dL +21,407; L\* + dL, C\* = Cmax tanh(C/Cmax), naechste
+  15-Bit-Farbe), Eingang = ihr K5c-Wort. Das sind 24 Eintraege: 16 F11-Haut (Ergebnis wortgleich K5e-Zeile 3 = G4-Seite 2, vom Bau geprueft) und
+  8 Eintraege, die nur Randtexel tragen. Rangvertauschungen 0. Kein neuer Parameter, keine Texel-, UV- oder Flaechenaenderung.
+- **Grenze der Regel (gemessen):** Der Rand hat 70 Texel: 30 F11-Haut, 40 Fleisch. 28 der 40 Fleischtexel lesen Eintraege, die auch Kerntexel lesen
+  (16 gemeinsame Eintraege); sie bleiben nach der Regel bytegleich K5c. Nur 12 Fleisch-Randtexel folgen der Haut.
+
+| Albedo (Texel ueber Zeile 8 bzw. K5c-Zeile 5, OpenCV-Lab) | K5c | K5e | K5e_f1 |
+|---|---|---|---|
+| Kern 122 Texel, L\* | 48,49 | 48,49 | 48,49 |
+| Rand 70 Texel, L\* | 19,91 | 19,91 | 32,85 |
+| Feldhaut 881 Texel (Feld ohne Kern/Rand), L\* | 6,65 | 6,65 | 27,69 |
+| Bezug: Becken-Haut Mesh 0 ohne F1 (K5e_f1), L\* | | | 29,90 |
+
+Umgefaerbte Eintraege K5c-L\* -> K5e_f1-L\* (Hebung je Eintrag +19,9 bis +22,9 durch die 15-Bit-Rundung): 1: 2,2->22,9; 2: 4,9->26,4; 3: 8,5->30,1;
+4: 12,7->33,5; 5: 16,5->37,1; 6: 20,5->40,4; 15: 21,3->43,9; 17: 13,6->33,5; 19: 9,5->30,1; 67: 25,0->47,1; 75: 29,6->50,5; 78: 38,9->59,9;
+84: 3,7->26,4; 86: 12,2->33,5; 190: 12,4->33,5; 191: 8,2->30,1; 194: 4,3->26,4; 198: 13,0->33,5; 199: 5,1->26,4; 200: 2,4->22,9; 232: 16,1->37,1;
+245: 42,2->63,9; 246: 25,0->47,1; 255: 0,0->22,9 (`ruhe/K5e_f1/bau.json` rampen.f1_rand).
+
+### EB.2 Riegel (`generator/riegel_k5e.py`, neu F1R/F1H/F1K; `ruhe/K5e_f1/riegel_k5e_f1.txt`, `riegel_gegenprobe_f1.txt`, `riegel_gegenprobe.txt`)
+
+Pixelklasse ueber den Texel (u, v) der F1-Flaechen im Kennungspuffer (v4f.rastern_id) und die Kern-/Randmaske; angrenzende Haut = Figurpixel im
+9x9-Umkreis der F1-Flaechen ohne F1. Ansichten mit >= 20 Ringpixeln: weisses Licht "Seite" (rl.weiss_id, Clip 2, wie Tafel 06/07) und Bild-1-Kette
+ohne Filter; "3/4 vorn" hat 0 Ringpixel, "3/4 hinten"/"Gegenseite" zeigen F1 nicht.
+
+| Zeile | Soll | K5e (vor der Korrektur) | K5e_f1 | K5c |
+|---|---|---|---|---|
+| F1R Texelring dL gegen angrenzende Haut | >= -3 | **-7,94** (Seite) / -2,49 (Bild 1) ROT | **+4,52 / +3,06** GRUEN | +11,68 / +5,88 |
+| F1H Feldhaut dL gegen angrenzende Haut | >= -3 | **-19,94 / -9,12** ROT | **-1,24 / -1,39** GRUEN | -1,31 / -0,74 |
+| F1K Kern = K5c, dE76 Lab-Mittel | <= 1 | Albedo 0,00, Bild 1 0,00 | Albedo 0,00, Bild 1 0,00 GRUEN | - |
+
+- K5e_f1 gesamt: **28/28 bindende Zeilen GRUEN, Exit 0** (25 K5e-Zeilen + F1R/F1H/F1K). H3 und W7 lesen bei `f1_rand` Zeile 8 als "Kern-Eintraege
+  bytegleich K5c-5, Rest neu aus par berechnet" (H3: Abweichung 0 in allen 10 Zeilen; W7: 56 Kern-Eintraege bytegleich, 6 Flaechen, UV gleich).
+- Gegenprobe F1 (`--gegenprobe-f1`, K5e): F1R und F1H ROT (erfuellt). Gegenprobe K5c/K5d (`--gegenprobe`): R1-R4 ROT und S-Zeilen ROT an beiden (erfuellt;
+  K5c 11/27, K5d 11/27 bindend gruen).
+- Die Kernpixel in "Seite" sind gegen K5c nicht vergleichbar (andere Bildgroesse durch die K5d-Krallen; K5c 93 / K5e 114 Kernpixel), darum vergleicht F1K
+  Albedo und Bild 1 (gleiche Kamera).
+
+### EB.3 Reproduktion
+
+- Bau: `python generator/kf_k5e.py ruhe/K5e_f1/k5e_f1_par.json ruhe/K5e_f1` (Parameter = k5e_par.json + name + f1_rand).
+- Zweiter Lauf in den Scratch-Ordner: FORM.EMD, FORM.TIM, form.json, BAHNSTEIG_FORM.EMD, BAHNSTEIG_FORM.TIM, bau.json **alle sha256 gleich**
+  (`ruhe/K5e_f1/sha256.txt`). Ohne Schalter baut der Generator weiter K5e bytegleich (alle 6 Ausgaben gleich `ruhe/K5e`).
+- Nach dem Asset-Tausch zeigt der Eingang "Spiel-Asset K5c" von kf_k5e.py/riegel_k5d.py auf `einbau_k5c/`; erneuter Lauf fuer K5e und K5e_f1: alle
+  6 Ausgaben samt bau.json byte-gleich.
+
+### EB.4 Asset (gleiche Dateinamen, kein Engine-Code)
+
+| Datei | vorher K5c (E30) | nachher K5e_f1 (E32) |
+|---|---|---|
+| `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` | 1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041 (293 516 Byte) | f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1 (293 516 Byte, 32/32/28; = K5e, die F1-Korrektur liegt nur im TIM) |
+| `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.TIM` | 7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3 (139 296 Byte, 16 Zeilen) | 31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8 (136 224 Byte, 10 Zeilen, 512 x 2560 im Port) |
+
+K5c gesichert: `varianten/K5/einbau_k5c/` (BAHNSTEIG_FORM.EMD/.TIM = Asset bis E32, FORM.EMD/.TIM = stufe3/basis_k5c, `K5C.md`).
+
+### EB.5 Pins und Tests
+
+- `re15_port/tests/unit/form_j_posen.h` neu (`stufe3/gen/s3_testkopf.py`, Referenz jetzt `ruhe/K5e_f1/BAHNSTEIG_FORM`, Posen weiter aus dem Rig basis_k5c,
+  weil EDD/EMR/Clips byte-gleich K5c sind):
+
+| Pin | K5c | K5e_f1 | Warum |
+|---|---|---|---|
+| FORM_J_MD1_LEN | 169500 | 169500 | K5d-Geometrie hat dieselben Ecken-/Flaechenzahlen |
+| FORM_J_MD1_CRC | 0x2456b5cc | 0x634cd4c3 | Krallen 19/20/28/29 eingezogen (K5d), CLUT-Wort je Flaeche (K5e-Zeilen) |
+| FORM_J_TIM_LEN | 139296 | 136224 | 10 statt 16 CLUT-Zeilen (6 x 512 Byte) |
+| FORM_J_TIM_CRC | 0x9234618d | 0x330ea1c5 | Zeilen K5e + F1-Hautrand |
+| Posen Bild 1/2/Ruhe, FORM_HOEHE_GEHEN 3126 | | unveraendert | Clips byte-gleich |
+
+- `test_birkin_bahnsteig.c`: nur Kommentar. Weitere Fundstellen (`git grep -n "BAHNSTEIG_FORM\|1ab56076\|7187ff09\|2456b5cc\|9234618d"` in release/,
+  re15_port/tests, re15_port/tools): nur Dateinamen (test_birkin_szenen.c, test_n2_griff_start.c, test_r41_birkin_pistole.cmake, form_spiel.sh,
+  form_emd.py, birkin_bahnsteig.py), kein Hash-Pin. Kein Test haelt Zeilenzahl, Palette oder Krallen-Geometrie ausser ueber form_j_posen.h.
+- `release/make_package.sh:294`: Tor fuehrt BAHNSTEIG_FORM.EMD/.TIM (vorhanden, nicht leer, `cmp` gegen den Quellbaum) - kein Hash, nichts zu aendern.
+- **Gegenprobe** (K5c-Asset kurz zurueck, nicht committet): `unit_birkin_bahnsteig` ROT mit "FAIL: MD1 weicht von J ab (169500 Byte)" und
+  "FAIL: TIM weicht von J ab (139296 Byte)", "0% tests passed, 1 tests failed out of 1"; danach K5e_f1 zurueck (sha256 f277916d / 31a35e66 nachgerechnet,
+  git status sauber). Log `ruhe/einbau_tests/ctest_gegenprobe_k5c_asset.log`.
+- Bau: `local_build.sh configure` -> "=== LOCAL-BUILD-OK (configure)", `build` -> "=== LOCAL-BUILD-OK (build)" (nur test_birkin_bahnsteig.exe neu gelinkt).
+- Summenzeilen (Logs `ruhe/einbau_tests/`):
+  - `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3`: "100% tests passed, 0 tests failed out of 11" (95,19 s)
+  - `ctest -R "n2_griff_start|birkin_szenen|r41_birkin_pistole|birkin_opfer" -j 2 --timeout 1800`: "100% tests passed, 0 tests failed out of 4"
+    (integration_r41_birkin_pistole 241,17 s)
+  - `ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)"`:
+    "100% tests passed, 0 tests failed out of 1014" (345,10 s). Kein roter Test, nichts nachzufahren.
+
+### EB.6 Spiellauf am echten Asset (`generator/kf_k5e_f1_spiel.sh`, `kf_k5e_f1_szenen.sh`, `ruhe/einbau_spiel/`)
+
+- **(a) Framedump** (RE15_FRAMEDUMP-Serie 360-440/20, eigene exe-Kopie, `form_spiel.sh`): 5080 Schnitt 1 Bild-1-Lage und 5090 Schnitt 11 Bild-2-Pose,
+  je Asset ohne Umleitung und RE15_RE2_ASSET_ROOT = `ruhe/K5e_f1`: **10 von 10 Bildern byte-gleich** (`framedump_vergleich.txt`; 5080 b381ae60...,
+  5090 Bild 440 6f9bf5a9...). Lauf 1 mit Einzelbild 700 schrieb nichts: der Zaehler stand beim Fensterbild erst bei F420 ("[walk] F420").
+- **(b) gdigrab, echtes Fenster** (`spiel_lauf_1.log`, alle rc 0, "Verfahren: gdigrab (Versuch 1)"): 5080 Bild-1-Lage und Ruhe, 5090 Bild-2-Pose und Ruhe,
+  5090 Seite mit F1 (Gier 2850, Clip 2; dazu K5c und K5e ueber RE15_RE2_ASSET_ROOT). Griff (Clip 27, Leon in der Klaue, birkin_dbg t=450 dist 7628 ->
+  10340) und Rueckstoss-Szene (RE15_BIRKIN_HP_AT=700) per s3_spielfolge.sh, je Asset und K5c (`szenen_lauf2.log`; der erste Szenenlauf mit HP_AT 1400
+  kam nach Leons Tod, `szenen_lauf.log`, verworfen; ein Zwischenlauf mit noch festen Parametern ist `szenen_lauf2_verworfen.log`).
+- **Log:** in allen 24 Laeufen (18 form_spiel.sh, davon 2 Framedumps "Seite" fuer den Kasten der Tafel 09, und 6 s3_spielfolge.sh) "[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 11/12", 0 Zeilen FAILED / not loaded / [tim]-Warnung.
+  RE15_TIM_LOG: "[tim] slot 12: 512x2560 8bpp cluts=10".
+- **Im Spielbild gemessen** (Pixel, die sich zwischen K5e und K5e_f1 unterscheiden, gegen 9x9-Umkreis; OpenCV-L\* der angezeigten Pixel):
+  5090 Seite Framedump 440 (1349 px): K5e -7,49 -> K5e_f1 -2,64; 5080 Bild-1-Lage gdigrab (1526 px): K5e -7,28 -> K5e_f1 -2,81.
+- **Software-Renderer** (RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Clip 10 abgespielt): rc 0, "[render] SDL-Renderer software", "Bahnsteig-Form: 32 Meshes,
+  32 Knochen, 28 Clips -> Slot 12", 0 Fehlerzeilen (`softrender_lauf.log`).
+- **Tafeln** (`generator/kf_k5e_f1_tafeln.py`, roh, Nearest x3; Aufruf mit `--griff einbau_spiel/griff_k5c_bild_040.png einbau_spiel/griff_asset_bild_041.png
+  --rueckstoss einbau_spiel/rs_k5c_bild_073.png einbau_spiel/rs_asset_bild_073.png`, zweiter Lauf byte-gleich):
+  - `ruhe/08_einbau_spiel.png`: Original | K5c vorher | K5e_f1 Asset, 7 Zeilen (5080 Bild 1, 5080 Ruhe, 5090 Bild 2, 5090 Ruhe, 5090 Seite, Griff, Rueckstoss).
+  - `ruhe/09_f1_rand.png`: F1 nah K5c | K5e | K5e_f1 unter weissem Licht, Bild-1-Kette, Spielfenster 5080 und 5090.
+  - Gesehen (Bauer): der schwarze Keil um den rosa Kern (K5e) ist in K5e_f1 weg, die Feldhaut geht in die Beckenhaut ueber; der rosa Kern ist
+    unveraendert. In 08 laedt die Form in allen Szenen texturiert, dunkel schiefergrau, wie in Tafel 04 der K5e-Runde.
+
+### EB.7 Offen
+
+1. **Bild 1 heller als die Vorlage** (aus K5e, R.5 Punkt 1): Kette Bild 1 Video 44,01 gegen 18,29, ohne Filter 16,92 gegen 7,62 (Riegel-Info K5e_f1).
+2. **Buckel im Feuer schwach** (R.5 Punkt 3): Info riegel_k5d (e) B2-F01 nicht erfuellt (T-L\* 31,7 gegen 41,4).
+3. **Krallen rundum asymmetrisch** (F.5 Punkt 3): rechte Hand nur Daumenkralle 31, linke 14/15 (+30); Geometrie K5d unveraendert uebernommen.
+4. **F1-Rand jetzt leicht heller als die Haut:** Ring +4,52 (Seite) / +3,06 (Bild 1) L\*; zwei Rand-Eintraege (78, 245) liegen bei L\* 59,9 / 63,9
+   (Hautton). Im Spielfenster ist das gesamte geaenderte Feld noch 2,6-2,8 L\* dunkler als der Umkreis. Der Riegel begrenzt nur nach unten (Auftrag).
+5. **28 Fleisch-Randtexel bleiben K5c**, weil ihre Eintraege auch Kerntexel tragen (Kern bytegleich hat Vorrang). Ein Teil des dunklen Fleischrands
+   bleibt damit, sichtbar in 09 als feiner dunkler Saum direkt am Kern.

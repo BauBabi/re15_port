@@ -1,0 +1,10 @@
+exe re15_pc_s3_f1_asset_33218 PID 67192 Fenster 10094106
+Bilder: 140 in /c/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/ruhe/einbau_spiel/szenen_asset
+debug.log:[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12
+Lauf: /c/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/s3_spiel/f1_asset
+rc=0
+exe re15_pc_s3_f1_k5c_33279 PID 81904 Fenster 55838516
+Bilder: 140 in /c/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/ruhe/einbau_spiel/szenen_k5c
+debug.log:[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12
+Lauf: /c/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/s3_spiel/f1_k5c
+rc=0

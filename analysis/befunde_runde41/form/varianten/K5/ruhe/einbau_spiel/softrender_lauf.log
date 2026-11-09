@@ -1,0 +1,8 @@
+exe re15_pc_form_34228_012715 PID 81336 Fenster 11338424
+Verfahren: gdigrab (Versuch 1)
+Bild: analysis/befunde_runde41/form/varianten/K5/ruhe/einbau_spiel/softrender_5090_s11.png
+exe beendet
+[enemy] Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips -> Slot 12
+t601 slot2 typ 0x30 st 1/9 pos (941,0,-23776) gier 3874 clip 10 bild 113 grid 0x33 kein_bild 0
+Laufverzeichnis: C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/re15_port/build/form_spiel/34228_012715
+rc=0
