@@ -167,3 +167,82 @@ Die Maschine lief unter Fremdlast (dieselbe alte Sonde sonde_wand.exe: 0,6 s -> 
 - **Befund 3, exe-Riegel** `integration_r41_restpunkte_gator_wiederkehr` (Plan des Untersuchers) nicht gebaut; der Harness-Riegel faehrt Tod, Leiter,
   Rueckkehr und den RVD-Wechsel des Ports, die Zonenkamera wird dabei explizit eingeschaltet (cut_auto_enabled = 1 wie im freien Spiel).
 - Kein Hauptbaum-/master-Merge, kein Paket (nicht Teil dieses Auftrags).
+
+## Nachbesserung (Abnahme 0, 6b221f0d6: B1 und B2)
+
+Nur die zwei blockierenden Befunde der Abnahme 0. Commits `16f7b402b` (B2) und `bf345ea49` (B1). Laufordner (nicht im Baum):
+`<SP>/nb1` = `C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gator_nb/nb1`
+(runs/s1_*, runs/s2_leon, runs/s2_elza, plan/, plan_elza/, scan/, ctest_unit.log, ctest_exe.log, mdis.py).
+
+### B2 - Kanister-Fenster im Biss: der Biss laeuft zu Ende (`16f7b402b`)
+
+RE2 EM23_OVL_0000.BIN, selbst disassembliert (mdis.py):
+- Wurzel je Takt: @0x80100320 `f105040c` jal 0x801017c4 (T2, Kanister-Stufen), danach unbedingt @0x80100328 `e204040c` jal 0x80101388 (Kiefer-Maschine).
+- Kiefer-Maschine: @0x80101398 `24020382` lb v1,0x224(s0), Sprungtafel @0x80100004 = 0x80101564, 0x801013c4, 0x801013d4, 0x80101418, 0x80101488,
+  0x801014f8. Im ganzen Bereich 0x80101388-0x80101578 kein Zugriff auf +0x226. Stufe 5: @0x80101558 `240200a2` sb zero,0x224(s0), @0x8010155c `5e05040c`
+  jal 0x80101578 (Treffer; dort @0x801015b4 `05020224` / @0x801015c4 `fcfb22ac`).
+- +0x226 sperrt nur den NEUEN Biss (T1): @0x8010133c `24028280` lb v0,0x224(a0) / @0x80101344 bnez, @0x80101360 `26028390` lbu v1,0x226(a0) / @0x80101368 beqz /
+  @0x80101370 bne v1,7 -> @0x8010137c `240282a0` sb v0,0x224(a0).
+
+Fix: der Fenstertreffer in LUNGE oeffnet nur das Fenster, die Phase LUNGE laeuft unveraendert weiter (Steuern, Vortrieb, Trefferfenster, Ende). Die Kanister-Stufen 2..7
+laufen in `gr2_kan_takt` ohnehin phasenunabhaengig. Der Dash-Abbruch (PORT-WAHL, Nutzer-Wortlaut) bleibt. Keine neue Konstante. Pruefhaken
+`re15_gator_kan_biss_abbruch_alt_setzen(1)` = Stand 80c7394ab.
+
+| Riegel | neu | Gegenprobe 80c7394ab |
+|---|---|---|
+| `unit_r41_gatorfix_kanbiss` / `_elza` (neu; Harness, echter Kampf, 3 Lagen, Kanister im LUNGE-Bild 1/3/5 vor die Wurzel) | 9/9 Fenstertreffer im Biss, Biss 44/44 Bilder gleich wie ohne Kanister, Treffer r7 = r7, danach Stufe 7 (r39-r43) | 9/9 abweichend (39-43 Bilder), kein Treffer - rot |
+| `kanpass` (exe-Riegel `integration_r41_gatorfix_kanister_vorbei(_elza)`), neu: faellt die Aufnahme in einen Biss, muss er im Bild danach weiterlaufen | Elza a: `Aufnahme im Biss (af 9) -> Bild danach Phase 3 af 10: Biss laeuft weiter`, `BISSLAUF F617-F661 art 4 treffer 1` | alter Lauf lauf_8e143b27/a: `Phase 2 af 1: BISS ABGEBROCHEN` -> ROT; dort `BISSLAUF F617-F628 treffer 0` |
+
+Die uebrigen Kanister-Laeufe des Riegels bleiben (Leon a F595/F594 Dash, b F253/F252 Dash; Elza b F251/F250 Dash).
+
+### B1 - Schluessel immer im Gebiet seiner Kamera (`bf345ea49`)
+
+Mechanik des angezeigten Cuts wie im Befund 3 belegt (FUN_80014230 @0x80014254 / @0x8001425c / @0x80014260 / @0x80014298 / @0x800142a8 / @0x800142ac).
+
+Gemessen (Werkzeug `test_r41_alligator2 schluessel_scan 3000`, 208 Lagen, `<SP>/nb1/scan`):
+
+| Variante | im Gebiet | Bild >= 10,4 | groesster Abstand zur Leiche | kleinstes Bild |
+|---|---|---|---|---|
+| Stand f8c71298a (Rueckfall ohne Gebiet) | 82 | 208 | 6036 | 10,5 |
+| (b) im Gebiet weiten bis zur Schwelle | 208 | 188 (20 erreichen sie in KEINEM Gebiet) | **18084** (andere Raumseite) | 6,3 |
+| **(a) im Gebiet, beste Lage bis zur doppelten Naehe (gewaehlt)** | **208** | 82 | **6036** | **6,3** (126 Lagen 6,3 bis 10,3) |
+
+Gewaehlt (a): beide Nutzer-Vorgaben gelten - Befund 3 (Bild und Ort stimmen ueberein) und "soll der Schlüssel in der Nähe seine Leiche sein" (AUFTRAG.md, Spur F).
+(b) verletzt die Naehe grob. (c) (Rueckfall-Lage, Einstellung auf den Cut am Schluessel) zeigt dort ein kleineres Bild als die beste Lage im Gebiet. Die Regel
+"reicht das nicht, gilt die beste gefundene Lage" ist die bestehende FG-E7-Regel, jetzt nur im Gebiet. Keine neue Zahl. Messhaken `key_durchgang`: 0 = Schwelle
+im Gebiet erreicht, 1 = im Gebiet darunter, 2 = ohne Gebiet (nur Pruefhaken). Pruefhaken `re15_gatorszene_r41_key_rueckfall_alt_setzen(1)` = Stand f8c71298a.
+
+**Natuerlicher Weg** (Rezept der Abnahme 0, `schl.sh`): Kampf bis zum R1-Tod, Leiter hoch, zurueck, zu Fuss zum Schluessel, Leiter hoch und zurueck.
+
+| Lauf | Leiche | Schluessel (Einstellung) | Cut auf dem Weg / am Schluessel | Aufnahme | nach 2. Leitergang |
+|---|---|---|---|---|---|
+| s1_leon / s1_elza | (-7328,-8628) | (-1100,-5900) Kamera 5, Durchgang 1, 4910 von der Leiche, Tiefe 3661 = 10,2 Bildpunkte | - | - | - |
+| s1_leon_west / s1_elza_west | (-7038,-8628) | (-1100,-5900) Kamera 5, Durchgang 1, 4579 von der Leiche | - | - | - |
+| s2_leon | (-7328,-8628) | (-1100,-5900) Kamera 5 | 0 -> 7 (F77) -> 6 (F95) -> 5 (F110); **cam=5** F110-F159 | F158 `ITEM slot 15 ... -> FREI`, `34:1` | keine Schluessel-Zeile, `34:1` |
+| s2_elza | (-7328,-8628) | (-1100,-5900) Kamera 5 | 0 -> 7 -> 6 -> 5; **cam=5** bis F170 | F162 `-> FREI`, `34:1` | keine Schluessel-Zeile, `34:1` |
+
+Vorher (Abnahme 0, Stand f8c71298a) bei denselben Leichen: Kamera 4 bzw. 6 in der Einstellung, am Schluessel cam=5. s2_elza brauchte einen eigenen Weg
+(`<SP>/nb1/plan_elza/skript_elza.txt`: Gerade 0,5 statt 0,367 s). Elza laeuft langsamer und blieb sonst am Maschinenblock haengen. Das betrifft den Messweg,
+nicht die Lage.
+
+| Riegel | neu | Gegenprobe |
+|---|---|---|
+| `unit_r41_alligator2_schluessel` | 208 Lagen, ohne Gebiet 0, ohne Kamera 0; Durchgang 0: 82, nie unter 10,4; Abstand hoechstens 6036 (doppelte Naehe); Westkanal-Fall jetzt Durchgang 1 (Bild 9,4) | f8c71298a: 126 Lagen ohne Gebiet - rot |
+| `unit_r41_gatorszene_tod_gebiet` / `_elza` | Kamera-Gleichheit jetzt in JEDER Lage Pflicht; neu die Leichen der Abnahme 0: abn0_s2 und abn0_s1_west -> Schluessel (-1100,-5900) Kamera 5, angezeigt Cut 5, Aufnahme ja; r1 und lauf_a ebenso gleich | f8c71298a: abn0_s2 und abn0_s1_west Kamera 4 / Cut 5 (2 von 2 rot); 0b86e36c6: Nutzer-Leiche Kamera 7 / Cut 0 rot |
+
+### Testlaeufe der Nachbesserung
+
+Bau `RE15_BUILD_DIR=.../r41_integration/re15_port/build bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`.
+1. `ctest -R "gator|kanister|alligator|2090|2080|re2gator" -E "^integration_" -j 4 --timeout 1800`: `100% tests passed, 0 tests failed out of 102` (367,84 s).
+2. `ctest -R "integration_r41_(gatorszene|alligator2|restpunkte_gator|gatorfix_kanister)" -j 3 --timeout 2400`: `100% tests passed, 0 tests failed out of 27`
+   (2113,03 s). Darin die exe-Schluessel-Riegel alligator2_schluessel(_elza, _west_elza): jetzt Schluessel (-1100,-5900) Kamera 5 Durchgang 1, Aufnahme
+   F597/F597/F598. k3(_elza) und gatorszene_tod(_r1, _explosion)(_elza): Cut 0, Durchgang 0 (>= 10,4), bestanden wie zuvor.
+3. Einzeln: kanbiss / kanbiss_elza je 0 Fehler; alligator2_schluessel 0 Fehler (139 s); tod_gebiet 0 Fehler.
+
+### Offen nach der Nachbesserung
+
+- **B1, Bildgroesse:** In 126 von 208 Raster-Lagen und in allen vier natuerlichen Laeufen dieses Rezepts liegt der Schluessel jetzt unter der Bildschwelle 10,4
+  (Orchestrator-Entscheid FG-E7). Er liegt aber am Ort und im Bild seiner Kamera (natuerlich 10,2 Bildpunkte, kleinstes 6,3), bis zur doppelten Naehe von der
+  Leiche (natuerlich 4579-4910, vorher 1021-1214). Will der Nutzer den Schluessel naeher an der Leiche, waere der naechste Weg die Lage der Stufe 0 im Gebiet
+  (kleineres Bild). Das ist ein Nutzerentscheid.
+- Restfall K1 (seitliche Kanister-Passagen) und H1/H3 der Abnahme 0 bleiben offen (nicht blockierend).
