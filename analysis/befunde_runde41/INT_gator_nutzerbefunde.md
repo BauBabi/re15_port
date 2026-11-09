@@ -23,6 +23,7 @@ greift, bitgleich (s. je Befund "Wirkt nur, wenn").
 | `8d165ee58` | 1 Wand-Schub | Alligator-Treffer beendet das Klettern (Wort-Store PL+4) |
 | `80c7394ab` | 2 Kanister | Fenster auch im Biss (RE2) und im Zonen-Dash (Port-Wahl) |
 | `6d7a9e121` | 3 Schluessel | Schluessel-Lage nur im Gebiet seiner Kamera (FUN_80014230) |
+| `f8c71298a` | 3 Nachtrag | Rueckfall auf die Bildschwelle 10,4 (FG-E7); Riegel weg ohne Boss-Leck; Timeout kletterbiss |
 
 ## Befund 1 - Wand-Schub beim Hochklettern (reproduziert)
 
@@ -107,7 +108,9 @@ nur im Westkanal aktiv und zeigt ihn dort unter den Fuessen der Figur, am Schlue
 `addiu s1,a0,20` (Anker-Satz 0 nie getestet), @0x80014298 `jal 0x80014368`, @0x800142a8 `lbu a0,1(s0)` -> @0x800142ac
 `jal 0x800142f4`.
 
-**Fix (PORT-WAHL, Beleg Nutzer-Wortlaut):** Gebiet eines Cuts = von seinen Eintritts-Vierecken (cam_to == Cut) aus begehbar im
+**Fix (PORT-WAHL, Beleg Nutzer-Wortlaut), zwei Durchgaenge (f8c71298a):** Durchgang 1 sucht nur im Gebiet; erreicht dort keine Kamera die
+Bildschwelle 10,4 (Nutzerentscheid FG-E7 Option (a)), sucht Durchgang 2 wie 0b86e36c6. Gemessen (unit_r41_alligator2_schluessel, Raster 3000):
+82 von 208 Todeslagen im Gebiet, 126 Rueckfall, 0 unter 10,4. Nur-Gebiet (6d7a9e121) haette 126 von 208 unter 10,4 gelegt. Gebiet eines Cuts = von seinen Eintritts-Vierecken (cam_to == Cut) aus begehbar im
 Wasser erreichbar, ohne ein eigenes Austritts-Viereck zu betreten (Raster GSZ_RASTER, key_begehbar, Punkttest FUN_80014368);
 key_suche sucht nur noch dort. Stufen, 10,4-Bildpunkte-Schwelle, Rueckfall unveraendert. Pruefhaken
 `re15_gatorszene_r41_key_gebiet_alt_setzen(1)`.
@@ -118,16 +121,49 @@ mit dem RVD-Wechsel des Ports zum Schluessel -> angezeigter Cut == Schluessel-Ka
 | Leiche | neu | Gegenprobe 0b86e36c6 |
 |---|---|---|
 | Nutzer (-5485,-23074) | Schluessel (-600,-26500) Cut 0, angezeigt Cut 0, 11,6 Bildpunkte, Aufnahme | Schluessel (-6600,-23400) Kamera 7, angezeigt Cut 0, 3,8 Bildpunkte - ROT |
-| todesrolle (-5416,-22578) | (-700,-26500) Cut 0 = 0 | - |
-| r1 (3413,-25001) | (-600,-21900) Cut 0 = 0 | - |
-| Lauf A (-5500,-8900) | (-1100,-5900) Cut 5 = 5 (Weg 0 -> 7 -> 6 -> 5) | - |
+| todesrolle (-5416,-22578) | (-700,-26500) Cut 0 = 0 (Durchgang 1) | - |
+| r1 (3413,-25001) | Rueckfall: (1900,-23300) Kamera 2, am Schluessel Cut 1 (nur dokumentiert) | - |
+| Lauf A (-5500,-8900) | Rueckfall: (-8400,-9200) Kamera 6, am Schluessel Cut 5 (nur dokumentiert) | - |
+
+Pflicht im Riegel: Nutzer-Leiche im Durchgang 1 und Kamera-Gleichheit dort; Aufnahme per Aktionstaste in allen Lagen.
 
 Bestehende unit_r41_gatorszene_tod / tod_explosion / schluessel / leiche gruen.
 
 ## Testlaeufe
 
-Stand des Zwischen-Commits: Riegel der drei Befunde einzeln gruen (s. o.); ctest-Gruppe `gator|kanister|alligator|2090|2080|re2gator` (-j 2, 150 Tests, davon 50 exe-Laeufe) laeuft, bisher 5/5 gruen. Endstand folgt.
+Bau: `RE15_BUILD_DIR=.../r41_integration/re15_port/build bash re15_port/tools/local_build.sh configure|build` -> `=== LOCAL-BUILD-OK`.
+Die Maschine lief unter Fremdlast (dieselbe alte Sonde sonde_wand.exe: 0,6 s -> 4,4 s).
+
+1. `ctest -R "gator|kanister|alligator|2090|2080|re2gator" -j 2 --timeout 1800` (Stand 4d68d2549, vor f8c71298a), Summenzeile woertlich:
+   `99% tests passed, 2 tests failed out of 150` - rot: `unit_r41_alligator2_schluessel` (126 von 208 unter 10,4) und `unit_r41_alligator2_weg`
+   (Lage 4/5 -1 Bilder). Ursachen und Fix in f8c71298a (s. Befund 3 und Commit-Text): Rueckfall auf die Schwelle; weg = Boss-Zustands-Leck des Riegels
+   (auch mit der Lagewahl 0b86e36c6 und Folge Lage 2 -> 4 rot), Messhaken re15_gator_boss_zustand_frisch. Danach einzeln: schluessel 0 Fehler, weg 5/5.
+2. Nach f8c71298a die betroffenen exe-Riegel `ctest -R "integration_r41_(gatorszene_tod|alligator2|restpunkte_gator)" -j 2 --timeout 1800`:
+   `100% tests passed, 0 tests failed out of 21`.
+3. `ctest -j 6 --timeout 600 -R "^(unit_|prop_|probe_)" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake|unit_r39_titelversion_ablauf$)"`
+   (Stand f8c71298a), Summenzeile woertlich: `99% tests passed, 5 tests failed out of 1104` - alle fuenf `(Timeout)` unter Last:
+   unit_gator_sweep, unit_r37_masken36_ausschluss, unit_r41_alligator2_erreichbar, unit_r41_birkin_wand_g5, unit_r41_birkin_wand_griff.
+   Einzeln nachgefahren (`-j 1`): `100% tests passed, 0 tests failed out of 5` (107 / 478 / 79 / 41 / 198 s).
+4. Neue Riegel einzeln: kletterbiss / kletterbiss_elza je 0 Fehler (allein 3 min 16 s, unter Last 16 min 22 s -> TIMEOUT 1800);
+   In der Gruppe (1.): kanister_vorbei 364 s / kanister_vorbei_elza 402 s Passed, kletterbiss 154 s / _elza 155 s Passed, tod_gebiet / _elza Passed;
+   in der Unit-Suite (3., Stand f8c71298a): kletterbiss 1088 s / _elza 1091 s Passed, tod_gebiet / _elza Passed.
+   Gegenproben: kletterbiss mit Pruefhaken rot (Ende (11948,-1800,-18568), 248/612); kanpass auf den 0b86e36c6-Laeufen rot (290 / 768 / 364 / 313 / 21 Bilder);
+   tod_gebiet mit Pruefhaken rot (Cut 7 gegen 0).
 
 ## Offen
 
-(folgt mit dem Endstand)
+- **Befund 3, Zielkonflikt (Nutzerentscheid noetig):** "Schluessel im Gebiet seiner Kamera" gegen "mindestens 10,4 Bildpunkte" (FG-E7 Option (a)).
+  Heute gewinnt die Schwelle: in 126 von 208 Raster-Todeslagen faellt die Wahl auf den Stand 0b86e36c6 zurueck, dort kann die Einstellung weiter eine
+  Kamera zeigen, die am Schluessel nicht laeuft (Riegel-Lagen r1 und Lauf A). Gebiet zuerst wuerde dort Schluessel unter 10,4 legen.
+- **Befund 3, Lage:** im Durchgang 1 liegt der Schluessel bis zur doppelten Naehe von der Leiche (Nutzer-Leiche: (-600,-26500), 5,9k entfernt an der
+  Suedwand, Cut 0 11,6 Bildpunkte; vorher (-6600,-23400), 1,1k entfernt). Das haelt die bestehende Regel (Stufen bis doppelte Naehe), ist aber sichtbar
+  weiter weg - im Spieltest abnehmen.
+- **Befund 1:** ein Biss am Kletteransatz wirft die Figur jetzt ins Wasser zurueck (Original-Regel), sichtbare Verhaltensaenderung. Nebenbefund ausserhalb
+  der Spur: auch der RE1.5-Schadenspfad re15_player_take_damage beendet ein Klettern im Port nicht (@0x80012ed4 wuerde es tun) - nicht angefasst.
+- **Befund 1, exe-Riegel** `test_r41_gatorfix_kletterbiss.cmake` (Plan des Untersuchers) nicht gebaut; der Harness-Riegel faehrt den echten Engine-Weg
+  mit den Kletter-Baenken und trifft die Nutzer-Sitzung bitgleich.
+- **Befund 2:** Dash-Abbruch ohne yaw += 1024 - moegliche kurze Gier-/Kopfkante im Bild nicht per gdigrab abgenommen (Cut 2/3). Restfall seitliche
+  Passagen (7 von 27) bleibt (Nutzerregel 2026-11-07).
+- **Befund 3, exe-Riegel** `integration_r41_restpunkte_gator_wiederkehr` (Plan des Untersuchers) nicht gebaut; der Harness-Riegel faehrt Tod, Leiter,
+  Rueckkehr und den RVD-Wechsel des Ports, die Zonenkamera wird dabei explizit eingeschaltet (cut_auto_enabled = 1 wie im freien Spiel).
+- Kein Hauptbaum-/master-Merge, kein Paket (nicht Teil dieses Auftrags).
