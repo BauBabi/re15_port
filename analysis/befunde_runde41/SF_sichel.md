@@ -3258,3 +3258,103 @@ Kein RE-Befund: jede Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine @0
    Nutzerbild pruefen.
 3. Gelenk 1 in h69/h70 bis 39 Grad (Boden-Rest, siehe oben).
 4. gdigrab-Aufnahme des echten Fensters fuer Runde 2 nicht gemacht (Bilder per RE15_FRAMEDUMP wie der V7-Referenzlauf).
+
+## V8 Runde 3 nach Pruefung V8 r2 (Bauer, Zweig r41/sichel_v8, 2026-11-09)
+
+### Wortlaut (bindend, unveraendert)
+- (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Es ist doch
+  eigentlich KLAR erkennbar. Siehe Darstellung.png und Darstellung_Vorlage.png. Man sieht ganz klar den Körper Aufbau...."
+- (B) "... die Rechte Seite auch mehr rottöne hat, also quasi mehr adern an verschiedenen Stellen, am Arm und Körper, nicht nur grau.
+  Übernehme die die Textur Sachen die du dafür brauchst vom originalen Birkin von Resident Evil 1.5"
+Pruefberichte V8 r2 (SF_PRUEFUNG_V8_r2_sicht.md, SF_PRUEFUNG_V8_r2_zahlen.md, beide NICHT BESTANDEN), Vorgaben O1-O8 des Orchestrators.
+Seite: "Die Rechte Seite" = (W)-rechts = Knochenraum 8 z < 0 (Oberarm Knochen 13 relpos z -1136); in der Vorlage/PV und in Foto 2 die
+zur Kamera gewandte Flanke (in PV sichtbar Knochen 13 3642 px, Knochen 10 235 px). Kein RE-Befund: jede Zahl ist PORT-WAHL (Nutzer-
+Wortlaut oder Messung), keine @0x-Adresse.
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8 Runde 3, sha256 66806bc4ae2537809ce2ebd827a661974ca560d024fccaca4ee79c559134fab3** (271 012 Byte),
+  Pin release/em30_hangar.sha256. v8_kette.sh (Stufe 7 jetzt --stufen srea) zweimal (sfv8/kette_r3a, kette_r3b): bytegleich, "V8-KETTE-OK".
+- Riegel (riegel_v8.py, SF_belege/v8/riegel_v8.txt, mit Szene): **9 von 10 gruen, ROT S10 (Wurzel von hinten)** - siehe Offen 1.
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log 1131 Zeilen, **0 Unterschiede** zum freigegebenen
+  V7-Lauf, "Szene Ende: Cut 4", Spieler am Ende pst=1. Schwanz: 144 Takte, tiefstes Gelenk y -118, **Gelenk max 25,1 Grad** (V8 r2 39,3).
+
+### Vorgaben -> Umsetzung (Werkzeuge re15_port/tools/r41_sichel/v8, Commit 13f57529b)
+- **O1 Adern rechts** (adern_r3.py, adern_v8.adern_original/herkunft_r3): Zeilen 493/494/495 = Original-EM30-Zeilen 480/481/482
+  **bytegleich** (alle Eintraege, nicht nur Adern). Flaechen (UV unveraendert = Original-UV, Texel unter ihnen = Original-Texel, gemessen
+  sfv8/r3 e2.py: 0 abweichende Texel unter allen Flaechen der Meshes 8/13/14): Mesh 8 alle Flaechen der V7-Zeilen 480/481 mit Schwerpunkt
+  z < 0 (Brust 488 bleibt V7) -> 493/494; Mesh 13 alle Flaechen ausserhalb Feld C (Seite 0, u 78-127, v 0-100) -> 493 (32), Feld C bleibt V7
+  (Schulterkuppe 13 Flaechen grau 480, 11 Flaechen 489); Mesh 14 alle 37 -> 495 (das V8-r2-Band entfaellt). Zaehlung am Asset: Mesh 8
+  480:20 481:7 488:34 493:36 494:7; Mesh 13 480:13 489:11 493:32; Mesh 14 495:37. Tafeln 05 und 10: die (W)-rechte Flanke traegt jetzt die
+  blassrosa Original-Haut mit roten Adern wie der RE1.5-Birkin.
+- **O2 Huegel** (adern_r3.huegel_wahl): Flaechen von Mesh 8 (nicht Brust), die in PV die obersten 8 px x 428-445 bilden: v8 (89 px),
+  v18 (10), v14 (8); je ein ganzer UV-Schub auf Seite 0 auf Original-Fleisch (Original-Zeile 480, a* >= 20, Oeffnung 5 x 5), nicht Feld C,
+  nicht Kopftexel, kein durchsichtiger Texel: v8 (-9,-15) 95,8 % Fleisch, v18 (-14,-21) 58,1 %, v14 (-29,-18) 93,5 %; Zeile 493. Gemessen
+  (Riegel S3f): oberste 8 px x 428-445 **79,0 %** a* >= 10 (Vorlage 58,3 %, V8 r2 0,0 %).
+- **O3 Kamm weg** (ruecken_r3.py, ruecken_v8.json = Lauf rs2): Koordinatensuche ueber 19 Ecken mit PV-Riegeln UND Vorderansicht (P1 und
+  Szene Takt F344/F354/F364: Oberkontur Knochen 0-15 x 395-515 gegen V7). Die Runde-2-Ecken 51/53/38/41 sind praktisch zurueck (|d| <= 2 E.),
+  der Huegel kommt aus 30 (45,-120,-1) und 46 (-117,-111,-1). Gemessen: P1 hoechstens **2 px** ueber V7 (V8 r2 17 px), Szene vorn 0 px,
+  keine neue konvexe Ecke (V8 r2: 10 Spalten). Tafel 09 (nah am Kopf, P1 und Szene Takt F354): runde Kuppe wie V7, keine Platte.
+  Nicht genommen: die "P1-neutrale" Loesung je Ecke (sfv8/r3 e5.py: bis 573 E. seitlich, Ecke 51) - eine andere Form von der Seite.
+- **O4 unten breiter** (kette_suche.PROFIL r3): s 140 320, s 150 290, s 170 175, s 200 95, Spitze 60 E. (Bildmassstab 0,050-0,053 px/E.
+  am Schwanz unten). Gemessen (S4b): s 140-160 **31,6 / 31,0 px** (Vorlage s 140 33, Zeile y 270 ~30; V8 r2 20,4), s 170-200 18,7 / 18,4 /
+  10,7 / 10,6 px (V8 r2 8,6-6,2), Ende 5,6, monoton.
+- **O5 Wurzel** (v8_bau Stufe e, kette_fein Wurzel-Term): Ring 0 und Kegelspitze von Mesh 16 liegen jetzt 20 E. unter der Haut (vorher bis
+  121 E. ausserhalb). **Nicht erreicht**: S10 von hinten weiter 8729 sichtbare Wurzel-Bildpunkte (V8 r2 9671) - siehe Offen 1.
+- **O6 Gelenk 0** (schwanz_r41.c glaetten, Commit 61cc6af85): starre Bodendrehung um Gelenk 1 nur, wenn der Knick dort <= 25 Grad bleibt,
+  sonst um die Wurzel. Szene h69/h70: 25,1/25,0 Grad (V8 r2 31,7/39,3); 0 Takte > 30 Grad; Median Takt-Max 18,2.
+- **O7 Schlauch** (kette_fein Term LOES): Gelenk 2 haengt mit 314 E. Luft frei (V8 r2 213), Gelenk 1 taucht noch 210 E. seines Radius in
+  den Ruecken (Ziel 150, V8 r2 265) - nur soweit S1/S2 in PV halten.
+- **O8** Kappe u1_n kommentiert, Kopfkommentar mit Runde-3-Werten (Glied 541, Ruhe-Gelenkwinkel 18,1/11,6/15,3/7,9/4,9/15,3 Grad,
+  Wurzel (-722,-145,108)), toter Parameter v8 aus ziel_anwenden() entfernt.
+- Kette (kette_fein.py, Lauf kf3, 2400 Schritte Saat 7, Start kette Runde 2): Wurzel (-722,-145,108), Glied 541, Radien 472/391/361/350/301/
+  187/112/60, Rohr hinten 1,5 r0, Rohrknick 35,6 Grad, Verjuengung 0,525.
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenproben SF_belege/v8/runde3/riegel_V8r2_gegenprobe.txt, riegel_V7_gegenprobe.txt)
+| Riegel | Soll | V8 Runde 3 | V8 r2 | V7 |
+|---|---|---|---|---|
+| S1 Kontur T | <= 4 / <= 8 | **3,0 / 7,0 gruen** | gruen | rot |
+| S2 J | (a) <= 4/6 (b) <= 2 (c) <= 3 | **2,0/5; 1,6; 3,0 gruen** | gruen | rot |
+| S3 Ruecken/H/K + (f) Huegel rot >= 40 % | wie bisher | **4,0; 6,6 bei x 429; keine; 1,5; 3,0; 79,0 % gruen** | rot (f 0,0) | rot |
+| S4 Breite + (b) unten | s 140-160 >= 27, s 170-200 >= 9 | **60,6; 40,4/38,2/37,9; 31,6/31,0; 18,7..10,6; 5,6 gruen** | rot (b) | rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | gruen | gruen |
+| S6 Boden + (c) Szene-Gelenk <= 25,5 | 0 / y <= 0 / 25,5 | **0 von 912; y -118; 25,1 gruen** | rot (39,3) | rot |
+| S7 Adern (Runde 3) | (a) Original; (b) Oberarm >= V7 22,8, <= Original; (c) Rumpf 25-80, Unterarm <= Original; (d) Flecken je 1000 px <= Original | **ok; 24,0 (Orig 57,7); 61,3 (Unterarm 20,2 <= 22,5); 3,98 <= 4,37 gruen** | rot | rot |
+| S8 Technik | <= 16, <= 4096 | **16, 4096 gruen** | gruen | gruen |
+| S9 Vorderansicht | <= 2 px ueber V7, keine neue Ecke | **P1 2, Szene 0/0/0, keine gruen** | rot (17) | gruen (= Referenz) |
+| S10 Wurzel von hinten | 0 px | **8729 ROT** | rot 9671 | rot |
+
+S7 nur ausgegeben: Oberarm im Vorlage-Band 35-59 % ist ohne Feld C nicht erreichbar (Original-Oberarm 57,7 % = der Augapfel); Rumpf
+(W)-rechts 61,3 % gegen Original gleiche Pose 49,3 % - Textur und Palette je Flaeche sind bytegleich Original, die Geometrie nicht (V7-Rumpf
+x 1,25, in PV 3826 statt 1963 Bildpunkte). Daher misst S7d je 1000 Bildpunkte bei gleicher Aufloesung (V8 auf die Flaeche des Originals
+verkleinert).
+
+### Tests
+- configure + build: "=== LOCAL-BUILD-OK (configure)", "=== LOCAL-BUILD-OK (build)".
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8" (310 s, SF_belege/v8/runde3/ctest_gruppe.txt).
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":
+  "100% tests passed, 0 tests failed out of 1013" (227 s, SF_belege/v8/runde3/ctest_unit.txt).
+- test_birkin_formen: Zeilen 493-495 = EM30-Zeilen bytegleich, Zaehlungen wie oben, 3 Huegel-Flaechen mit UV-Schub; test_schwanz_r41:
+  relpos Runde 3. Gegenprobe V8 r2 im Asset: rot nach Konstruktion (Zeilen V7 + Ader-Eintraege, 13 Kuppenflaechen auf X1, relpos -714/526).
+
+### Spiel
+- Szene sfv8/szene_v8r3; Video **sfv8/spiderman_szene_v8_r3.mp4** (F225-F450, 226 Bilder, 30 fps, 960 x 720); Tafeln 06/07/08.
+- **gdigrab des echten Fensters** (eigene exe-Kopie, Fenster per eigener PID, Client-Bereich 960 x 720 bei (480,180); sfv8/r3/gdi.sh,
+  Video sfv8/r3/gdi_szene_v8r3.mp4, 50 s): Tafel 11_gdigrab_echtes_fenster.jpg - von vorn (t 11 / 13-14 s), seitlich (t 12 s), hinten
+  (t 12,5 s). Kein AUTOSHOT/SOFTWARE_RENDER.
+- Szenen-Messung SF_belege/v8/runde3/szene_mass.txt.
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+01-08 wie Runde 2 (neu gerechnet), 09_vorn_kopf.png (Foto 1 | V7 | V8 r2 | neu in P1 nah am Kopf, darunter Szene Takt F354),
+10_adern_rechts_original.png (Vorlage | Original-EM30 gleiche Pose | V8 r2 | neu), 11_gdigrab_echtes_fenster.jpg, runde3/
+wurzel_hinten_offline.png (Szene Takt F322/F328/F332 offline, Wurzelflaechen blau, V8 r2 | neu).
+
+### Offen
+1. **S10 / O5 rot**: Von hinten bleibt das Wurzelrohr (Mesh 16 Band Ring 0 -> Ring 1) sichtbar. Gemessen: in PV bildet genau dieses Rohr
+   den glatten Uebergang an J. Ring 1 einbetten (kf2): S2b 4,1, S2c 5,0, S2a 3,4/7 rot; kurzes Rohr B <= 0,25 (kf4): S1 Max 9, S2a Max 9 rot.
+   Naechster Weg: die Rueckenhaut (Mesh 8) ueber dem Rohr anheben, damit Haut statt Rohr den Uebergang bildet (eigene Suche mit S2 + S10).
+2. Oberarm (W)-rechts 24,0 % rot: Vorlage-Band 35-59 % ohne Feld C nicht erreichbar; Feld C blieb ausgeschlossen (Nutzer V5).
+3. Grenze (W)-rechts rosa / (W)-links grau entlang der Rueckenmitte ist von hinten sichtbar (Tafel 08/11); am Nutzerbild pruefen.
+4. Die Huegel-Flaechen (UV auf Original-Fleisch) erscheinen von hinten als rote Flaechen auf dem oberen Ruecken (Tafel 08).
+5. Knappe Werte: S2c 3,0 (Schwelle 3), S3a 4,0 (Schwelle 4), Huegel bei x 429 (Fenster ab 428); keine Halbpixel-Probe gerechnet.
+6. Gelenk 1 taucht weiter 210 E. in den Ruecken (O7-Ziel 150 nicht ganz).
