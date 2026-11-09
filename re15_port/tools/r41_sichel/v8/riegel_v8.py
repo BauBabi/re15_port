@@ -17,6 +17,22 @@ S5 Gesicht      Mesh 9 (Ecken, Normalen, Flaechen, UV, CLUT-Feld), Zeile 486, al
 S6 Boden        Spitze + Dornspitze Mesh 22 in 0 von allen Keyframes unter der tiefsten Koerperecke; Szene (--szene) alle Gelenke y <= 0
 S7 Adern        (a) Herkunft der Eintraege und Texel; (b) Oberarm 13 35-59 % a* >= 10; (c) Rumpf 8 lok x < 0 25-80 %; (d) Ruhe
 S8 Technik      CLUT-Zeilen <= 16, 256 x Zeilen <= 4096, CLUT-Felder gueltig, 23 Meshes, 23 Knochen, 21 Clips
+Runde 3 (Vorgaben O1-O6 des Orchestrators nach Pruefung V8 r2; Gegenproben V7 und V8 r2 muessen rot sein):
+S3 (f) Huegel rot: oberste 8 px der Figur x 428-445 (PV, RDT-Licht, Videoraum) Anteil a* >= 10 >= 40 % (Vorlage 58,3 %, Zahlen-Pruefer r2)
+S4 (b) unten: Ringdurchmesser bei s 140-160 >= 27 px (Vorlage s 140 33 px, Zeile y 270 ~30 px), bei s 170-200 >= 9 px (Vorlage s 200 9 px)
+S6 (c) Szene (--szene): groesster Gelenkwinkel der Kette in allen Takten <= 25,5 Grad (Bauplan 6a 25 Grad + 12-Bit-Rundung; O6)
+S7 Runde 3: (a) adern_v8.herkunft_r3 (jeder neue Eintrag = Original-EM30-Zeile, jeder Texel unter den Flaechen der neuen Zeilen = Original-
+                Texel, kein Feld C); (b) Oberarm 13 >= V7 (22,8 %, freigegebener Stand) und <= Original-EM30 gleiche Pose; (c) Rumpf 8 (W)-rechts
+                (lok z < 0, Achsenkorrektur Dossier V8) 25-80 % (Vorlage 76,3 %) und Unterarm 14 <= Original; (d) rote 8er-Flecken unter weissem
+                Licht auf den Flaechen der neuen Zeilen (ohne Huegel), je 1000 sichtbare Bildpunkte, <= Original-EM30 auf DENSELBEN Flaechen; das
+                Bild des V8 vorher auf die Flaeche des Originals verkleinert (gleiche Aufloesung je Modelleinheit).
+                Gemessen und nur ausgegeben (Dossier V8 Runde 3, Offen): Oberarm im Vorlage-Band 35-59 % ist ohne Feld C nicht erreichbar (der
+                Rotanteil des Original-Oberarms 57,7 % ist der Augapfel); Rumpf "<= Original gleiche Pose" (49,3 %) misst bei gleicher Textur je
+                Flaeche die andere Geometrie mit (V7-Rumpf x 1,25, in PV 3826 statt 1963 Bildpunkte (W)-rechts).
+S9 Vorderansicht (O3): Oberkontur Knochen 0-15 x 395-515 in P1 (Foto 1) und Szene Takt F344/F354/F364 hoechstens 2 px ueber V7, keine neue
+                konvexe Ecke (r3_gemein.spitzen: >= 2,5 px ueber dem Mittel der Nachbarn bei +-4, nicht in V7 bei +-3 Spalten)
+S10 Wurzel von hinten (O5): Szene Takt F320-F332 (Clip 11, Birkin von hinten), Maler-Reihenfolge wie im Spiel (f_rast): 0 sichtbare Bildpunkte
+                der Wurzelflaechen von Mesh 16 (Kegel d11-d21 und Rohr v0-v10 = Flaechen ohne Ecke auf Ring 2)
 """
 import os, sys, json, argparse
 import numpy as np
@@ -29,6 +45,7 @@ import birkin_formen as BF            # noqa: E402
 import emd_ansichtsblatt as EA        # noqa: E402
 import f_rast as FR                   # noqa: E402
 import v4_gemein as G                 # noqa: E402
+import r3_gemein as R3                # noqa: E402
 
 S7_ADER_A, S7_ADER_L = 15.0, 38.0     # Messblatt 6c: Ader-Eintrag a* >= 15, L* <= 38
 
@@ -116,6 +133,21 @@ def s2_s3(mo, bone):
     return r2, r3, om
 
 
+S3F_MIN = 40.0                         # Runde 3 (O2): Vorlage 58,3 % (Zahlen-Pruefer r2 huegel_rot.txt); Groessenordnung der Vorlage
+
+
+def huegel_rot(A):
+    """S3 (f): Anteil a* >= 10 (Videoraum wie S7) in den obersten 8 px der Figur, x 428-445 (Zahlen-Pruefer r2 Befund 3)."""
+    img, bone = A['img'][:480], A['bone'][:480]
+    LM = G.lab(G.videoraum(img))
+    v = []
+    for x in range(428, 446):
+        ys = np.nonzero(bone[:, x] >= 0)[0]
+        if len(ys):
+            v += [LM[y, x, 1] >= 10 for y in range(ys.min(), ys.min() + 8) if bone[y, x] >= 0]
+    return round(float(np.mean(v) * 100), 1)
+
+
 def j_huckel(mo):
     """S2c (Messblatt 7 "Rumpf ueber der Schwanz-Oberkante an der Wurzel", Werkzeug m26: Rumpf (Knochen 0-15) und Schwanz (16-22) getrennt
     gerastert, PV). Praezisiert (V8-Bau): Naht = rechteste Spalte x 330-420, in der die Schwanz-Oberkante nicht unter der Rumpf-Oberkante
@@ -169,8 +201,11 @@ def s4(mo):
     mitte = [r['d'] for r in rg if 90 <= r['s'] <= 130 and r['glied'] <= 19]
     ende = rg[-1]['d']
     mono = all(b <= a + 2.0 for a, b in zip(folge, folge[1:]))
-    return dict(wurzel=wurzel, s90_130=mitte, ende=ende, folge=folge, monoton=mono,
-                ok=wurzel >= 55 and len(mitte) > 0 and min(mitte) >= 36 and mono and ende <= 10, ringe=rg)
+    u1 = [r['d'] for r in rg if 140 <= r['s'] <= 160]
+    u2 = [r['d'] for r in rg if 170 <= r['s'] <= 200]
+    unten = dict(s140_160=u1, s170_200=u2, ok=bool(u1) and min(u1) >= 27 and bool(u2) and min(u2) >= 9)     # Runde 3 (O4)
+    return dict(wurzel=wurzel, s90_130=mitte, ende=ende, folge=folge, monoton=mono, unten=unten,
+                ok=wurzel >= 55 and len(mitte) > 0 and min(mitte) >= 36 and mono and ende <= 10 and unten['ok'], ringe=rg)
 
 
 # ------------------------------------------------------------------ S5
@@ -217,12 +252,110 @@ def s6(blob, szene=None):
                         tief = max(tief, int(g.split(',')[1]))
                     except (IndexError, ValueError):
                         pass
-        sz = dict(takte=n, tiefstes_y=tief, unter_boden=int(tief > 0))
-    ok = not unter and (sz is None or sz['tiefstes_y'] <= 0)
+        import re as _re
+        wmax = 0.0
+        for z in open(szene, errors='replace'):
+            if 'Schwanz B y' in z:
+                pts = np.array([tuple(map(int, m.groups())) for m in _re.finditer(r'\d\((-?\d+),(-?\d+),(-?\d+)\)', z)], float)
+                if len(pts) == 8:
+                    dd = np.diff(pts, axis=0); dd /= np.linalg.norm(dd, axis=1)[:, None]
+                    wmax = max(wmax, max(float(np.degrees(np.arccos(np.clip((dd[j] * dd[j + 1]).sum(), -1, 1)))) for j in range(6)))
+        sz = dict(takte=n, tiefstes_y=tief, unter_boden=int(tief > 0), gelenk_max_grad=round(wmax, 1))
+    ok = not unter and (sz is None or (sz['tiefstes_y'] <= 0 and sz['gelenk_max_grad'] <= 25.5))
     return dict(keyframes=s.kf_count, unter=len(unter), beispiele=unter[:10], szene=sz, ok=ok)
 
 
 # ------------------------------------------------------------------ S7
+def rot_anteile(blob, A=None):
+    """Anteil a* >= 10 (Videoraum, RDT-Licht, PV) je Teil: Oberarm 13, Unterarm 14, Rumpf 8 lok z < 0 ((W)-rechts), Rumpf 8 lok x < 0."""
+    if A is None:
+        A = FR.mit_bg(V.modell(blob), V.PV)
+    img, bone, lok = A['img'][:480], A['bone'][:480], A['lok'][:480]
+    LM = G.lab(G.videoraum(img))
+    f = lambda m: round(float((LM[m][:, 1] >= 10).mean() * 100), 1) if m.any() else 0.0
+    return dict(o13=f(bone == 13), u14=f(bone == 14), r8z=f((bone == 8) & (lok[..., 2] < 0)), r8x=f((bone == 8) & (lok[..., 0] < 0)))
+
+
+def s7_r3(blob, A, ref_blob):
+    import adern_v8 as AV
+    a = AV.herkunft_r3(blob, ref_blob)
+    n = rot_anteile(blob, A)
+    o = rot_anteile(BF.lade_em30())
+    _d, _o, ms, tim = KB.teile(blob)
+    nr = KB.tim_teile(KB.teile(ref_blob)[3])['clut'].shape[0]
+    fl = set()
+    for b in (8, 13, 14):
+        for key, uv in [('d%d' % i, u) for i, u in enumerate(ms[b]['tuv'])] + [('v%d' % i, u) for i, u in enumerate(ms[b]['quv'])]:
+            ur = AV.flaeche(KB.teile(ref_blob)[2][b], key)
+            if (uv[2] >> 6) & 0x1FF >= 480 + nr and [uv[0], uv[1], uv[3], uv[4]] == [ur[0], ur[1], ur[3], ur[4]]:
+                fl.add((b, key))                                   # Flaechen der neuen Zeilen mit Original-UV (ohne Huegel-Schub)
+    filt = lambda b, key, zeile: (b, key) in fl
+    n_o, px_o, a_o = flecken_auf(V.modell(BF.lade_em30()), filt)
+    _n, _p, a_v0 = flecken_auf(V.modell(blob), filt)
+    sk = float(np.sqrt(a_o / max(a_v0, 1)))                              # V7-Koerper x 1,2-1,25 groesser als das Original (sfv8/r3 e1.py)
+    n_v, px_v, a_v = flecken_auf(V.modell(blob), filt, skal=min(1.0, sk))
+    dv, do = 1000.0 * n_v / max(a_v, 1), 1000.0 * n_o / max(a_o, 1)     # je 1000 sichtbare Bildpunkte, gleiche Aufloesung
+    d = dict(flaechen=len(fl), flecken_original=n_o, flecken_v8=n_v, rotpx_original=px_o, rotpx_v8=px_v, flaeche_original=a_o, flaeche_v8=a_v,
+             dichte_original=round(do, 2), dichte_v8=round(dv, 2), ok=dv <= do + 1e-9)
+    b_ok = V7_OBERARM <= n['o13'] <= o['o13']
+    c_ok = 25 <= n['r8z'] <= 80 and n['u14'] <= o['u14']
+    return dict(a=a, neu=n, original=o, b_oberarm13=n['o13'], c_rumpf8_lokz=n['r8z'], c_rumpf8_lokx_info=n['r8x'], unterarm14=n['u14'], d=d,
+                ok=bool(a['ok'] and b_ok and c_ok and d['ok']))
+
+
+V7_OBERARM = 22.8                     # Messblatt V8 0 / riegel_v8_V7_gegenprobe.txt: Oberarm 13 in PV beim freigegebenen V7
+
+
+def flecken_auf(mo, filt, skal=1.0):
+    """Rote 8er-Komponenten (>= 4 px, a* >= 15) unter weissem Licht in PV, nur Flaechen mit filt(b, key, zeile); skal < 1: Bild vorher
+    flaechentreu verkleinert (cv2.INTER_AREA), damit beide Modelle in derselben Aufloesung je Modelleinheit gezaehlt werden."""
+    import cv2
+    A = FR.zeichne(mo, V.PV, None, licht=False, filt=filt)
+    img, bone = A['img'][:480], A['bone'][:480]
+    if skal < 1.0:
+        sz = (int(round(640 * skal)), int(round(480 * skal)))
+        img = cv2.resize(img, sz, interpolation=cv2.INTER_AREA)
+        bone = cv2.resize((bone >= 0).astype(np.uint8), sz, interpolation=cv2.INTER_NEAREST).astype(np.int16) - 1
+    Lab = G.lab(img.astype(float))
+    rot = (bone >= 0) & (Lab[..., 1] >= 15)
+    lab_, n = ndimage.label(rot, structure=np.ones((3, 3)))
+    gr = ndimage.sum(rot, lab_, range(1, n + 1)) if n else []
+    return int(sum(1 for g in gr if g >= 4)), int(rot.sum()), int((bone >= 0).sum())
+
+
+def s9(blob, ref_blob):
+    """Runde 3 (O3) Vorderansicht: P1 und Szene von vorn, Oberkontur Knochen 0-15 x 395-515 gegen V7."""
+    mo, m7 = V.modell(blob), V.modell(ref_blob)
+    sp = R3.szene_posen()
+    out, ok = [], True
+    for nm, pose in [('P1', R3.P1)] + [('F%d' % f, sp[f]) for f in R3.VORN_TAKTE]:
+        o7 = R3.oben(V.b2.umriss_schnell(m7, pose, knochen=list(range(16))), 395, 515)
+        o = R3.oben(V.b2.umriss_schnell(mo, pose, knochen=list(range(16))), 395, 515)
+        ueber = max([o7[x] - o[x] for x in o if x in o7] + [0])
+        sp7 = R3.spitzen(o7)
+        neu = [x for x in R3.spitzen(o) if not any(abs(x - y) <= 3 for y in sp7)]
+        out.append(dict(ansicht=nm, ueber_v7_px=int(ueber), neue_ecken=neu))
+        ok = ok and ueber <= 2 and not neu
+    return dict(ansichten=out, ok=ok)
+
+
+def s10(blob):
+    """Runde 3 (O5) Wurzel von hinten: sichtbare Bildpunkte der Mesh-16-Flaechen ohne Ecke auf Ring 2 (Kegel + Rohr) in Takt F320-F332."""
+    mo = V.modell(blob)
+    m = mo.meshes[16]
+    ring2 = set(range(22, 33)) | {33}
+    wurzel = set(['d%d' % i for i, f in enumerate(m.tf) if not (set(f[1::2]) & ring2)] +
+                 ['v%d' % i for i, f in enumerate(m.qf) if not (set(f[1::2]) & ring2)])
+    sp = R3.szene_posen()
+    out, summe = [], 0
+    for f in R3.HINTEN_TAKTE:
+        A = FR.zeichne(mo, sp[f], None, licht=False)
+        b, fl = A['bone'][:480], A['flaeche'][:480]
+        n = int(sum(1 for k in fl[b == 16] if k in wurzel))
+        out.append(dict(takt=f, px=n)); summe += n
+    return dict(takte=out, summe=summe, flaechen=sorted(wurzel), ok=summe == 0)
+
+
 def s7(blob, A, ref_blob):
     import adern_v8 as AV
     mo = V.modell(blob)
@@ -284,12 +417,16 @@ def alles(blob, ref_blob, szene=None, mit_s7=True):
     out = dict(sha256=V.sha(blob))
     out['S1'] = s1(bone)
     out['S2'], out['S3'], _om = s2_s3(mo, bone)
+    out['S3']['f_huegel_rot'] = huegel_rot(A)
+    out['S3']['ok'] = out['S3']['ok'] and out['S3']['f_huegel_rot'] >= S3F_MIN
     out['S4'] = s4(mo)
     out['S5'] = s5(blob, ref_blob)
     out['S6'] = s6(blob, szene)
     if mit_s7:
-        out['S7'] = s7(blob, A, ref_blob)
+        out['S7'] = s7_r3(blob, A, ref_blob)
     out['S8'] = s8(blob)
+    out['S9'] = s9(blob, ref_blob)
+    out['S10'] = s10(blob)
     return out
 
 
@@ -299,20 +436,29 @@ def zeilen(r):
     z.append('   d je Station (px, + = Modell weiter innen): %s' % s['d'])
     s = r['S2']; z.append('S2 Uebergang J: (a) Mittel %.1f Max %d (<= 4 / <= 6); (b) Sattel %.1f bei x %d (<= 2); (c) Huckel an J %.1f bei x %d (<= 3) -> %s'
                           % (s['a']['mittel'], s['a']['max'], s['b'][0], s['b'][1], s['c']['huckel_px'], s['c']['bei_x'], 'GRUEN' if s['ok'] else 'ROT'))
-    s = r['S3']; z.append('S3 Ruecken/H/K: (a) Kuppe %.1f (<= 4); (b) H %.1f bei x %d (5-10, x 428-445); (c) weitere %s; (d) Sattel Kopf %.1f bei x %d (<= 2); (e) K %.1f (<= 3) -> %s'
-                          % (s['a_kuppe'], s['b_huegel'][0], s['b_huegel'][1], s['c_weitere'], s['d_sattel_kopf'][0], s['d_sattel_kopf'][1], s['e_K'], 'GRUEN' if s['ok'] else 'ROT'))
-    s = r['S4']; z.append('S4 Breite: Wurzel %.1f (>= 55), s 90-130 %s (>= 36), Ende %.1f (<= 10), monoton %s; Folge %s -> %s'
-                          % (s['wurzel'], s['s90_130'], s['ende'], s['monoton'], s['folge'], 'GRUEN' if s['ok'] else 'ROT'))
+    s = r['S3']; z.append('S3 Ruecken/H/K: (a) Kuppe %.1f (<= 4); (b) H %.1f bei x %d (5-10, x 428-445); (c) weitere %s; (d) Sattel Kopf %.1f bei x %d (<= 2); (e) K %.1f (<= 3); (f) Huegel rot %.1f %% (>= %.0f) -> %s'
+                          % (s['a_kuppe'], s['b_huegel'][0], s['b_huegel'][1], s['c_weitere'], s['d_sattel_kopf'][0], s['d_sattel_kopf'][1], s['e_K'],
+                             s.get('f_huegel_rot', -1), S3F_MIN, 'GRUEN' if s['ok'] else 'ROT'))
+    s = r['S4']; z.append('S4 Breite: Wurzel %.1f (>= 55), s 90-130 %s (>= 36), Ende %.1f (<= 10), monoton %s; (b) unten s 140-160 %s (>= 27), s 170-200 %s (>= 9); Folge %s -> %s'
+                          % (s['wurzel'], s['s90_130'], s['ende'], s['monoton'], s['unten']['s140_160'], s['unten']['s170_200'], s['folge'],
+                             'GRUEN' if s['ok'] else 'ROT'))
     s = r['S5']; z.append('S5 Gesicht: Mesh 9 %s, Zeile 486 %s, Texel %s (%d) -> %s' % (s['mesh9'], s['zeile486'], s['texel'], s['n_texel'], 'GRUEN' if s['ok'] else 'ROT'))
     s = r['S6']; z.append('S6 Boden: %d von %d Keyframes unter der tiefsten Koerperecke %s; Szene %s -> %s'
                           % (s['unter'], s['keyframes'], s['beispiele'], s['szene'], 'GRUEN' if s['ok'] else 'ROT'))
     if 'S7' in r:
-        s = r['S7']; z.append('S7 Adern: (a) %s; (b) Oberarm 13 %.1f %% (35-59); (c) Rumpf 8 lok x<0 %.1f %% (25-80) [lok z<0: %.1f %%]; (d) Flecken %d (Original %d) -> %s'
-                              % ('Herkunft ok' if s['a']['ok'] else 'Herkunft FALSCH %s' % s['a'], s['b_oberarm13'], s['c_rumpf8_lokx'], s['c_rumpf8_lokz_info'],
-                                 s['d']['flecken_v8'], s['d']['flecken_original'], 'GRUEN' if s['ok'] else 'ROT'))
+        s = r['S7']; z.append('S7 Adern: (a) %s; (b) Oberarm 13 %.1f %% (>= V7 22,8, <= Original %.1f; Vorlage-Band 35-59 nur Info); (c) Rumpf 8 (W)-rechts lok z<0 %.1f %% (25-80; Original gleiche Pose %.1f nur Info) [lok x<0 %.1f]; Unterarm 14 %.1f %% (<= Original %.1f); (d) Flecken auf den Flaechen der neuen Zeilen %d je %d px = %.2f je 1000 px (<= Original dieselben Flaechen %d je %d px = %.2f) -> %s'
+                              % (('Herkunft ok %s' % {k: v for k, v in s['a'].items() if k != 'ok'}) if s['a']['ok'] else 'Herkunft FALSCH %s' % s['a'],
+                                 s['b_oberarm13'], s['original']['o13'], s['c_rumpf8_lokz'], s['original']['r8z'], s['c_rumpf8_lokx_info'],
+                                 s['unterarm14'], s['original']['u14'], s['d']['flecken_v8'], s['d']['flaeche_v8'], s['d']['dichte_v8'], s['d']['flecken_original'],
+                                 s['d']['flaeche_original'], s['d']['dichte_original'], 'GRUEN' if s['ok'] else 'ROT'))
     s = r['S8']; z.append('S8 Technik: %d Zeilen, Hoehe %d, Felder gueltig %s, %d Meshes, %d Knochen, %d Clips -> %s'
                           % (s['zeilen'], s['hoehe'], s['gueltig'], s['meshes'], s['knochen'], s['clips'], 'GRUEN' if s['ok'] else 'ROT'))
-    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8') if k in r and not r[k]['ok']]
+    s = r['S9']; z.append('S9 Vorderansicht: %s (je <= 2 px ueber V7, keine neue Ecke) -> %s'
+                          % ('; '.join('%s %d px, neue Ecken %s' % (a['ansicht'], a['ueber_v7_px'], a['neue_ecken']) for a in s['ansichten']),
+                             'GRUEN' if s['ok'] else 'ROT'))
+    s = r['S10']; z.append('S10 Wurzel von hinten: sichtbare Wurzelflaechen-Bildpunkte %s, Summe %d (Soll 0) -> %s'
+                           % (['F%d:%d' % (t['takt'], t['px']) for t in s['takte']], s['summe'], 'GRUEN' if s['ok'] else 'ROT'))
+    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10') if k in r and not r[k]['ok']]
     z.append('SUMME: %d von %d gruen%s' % (len([k for k in r if k.startswith('S')]) - len(rot), len([k for k in r if k.startswith('S')]),
                                            ('; ROT: ' + ', '.join(rot)) if rot else ''))
     return z, rot

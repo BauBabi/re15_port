@@ -37,6 +37,14 @@ import v8_bau as VB          # noqa: E402
 PROFIL_S = [0.0, 90.0, 130.0, 140.0, 155.0, 160.0, 200.0]
 PROFIL_R = [450.0, 350.0, 350.0, 250.0, 90.0, 90.0, 60.0]   # s 90-130: 350 statt ~305 (Lauf ks10/t7: 305 E. ergaben in PV nur
                                                             # 34,7-37,5 px, die Glieder liegen tiefer im Bild als der Koerper; S4 >= 36)
+# Runde 3 (O4, Sicht-Pruefer V8 r2 Punkt 1: "der untere Teil (tail area 1) ist deutlich duenner als die dunkle Masse der Vorlage ... bei
+# y 270 dunkle Saeule etwa x 282-314 (gut 30 px), V8r2 dort etwa 18 px, bei y 300 nur etwa 5 px"; Messblatt V8 3.1 Stationen: s 130 33 px,
+# s 140 33 px, s 200 9 px): unteres Profil angehoben, verjuengend bis zur Spitze (Ende 60 E. wie bisher, Riegel S4 "Ende <= 10").
+# Bildmassstab am Schwanz unten (gemessen an V8 r2, riegel_v8.ringe_bild): 0,053 px/E. bei s 140-150, 0,050 bei s 200 -> 320 E. = 34 px
+# (s 140), 290 E. = 31 px (s 150, Pruefer-Zeile y 270), 175 E. = 18 px (s 170), 95 E. = 10 px (s 200). PORT-WAHL.
+if os.environ.get('V8_PROFIL', 'r3') == 'r3':
+    PROFIL_S = [0.0, 90.0, 130.0, 140.0, 150.0, 170.0, 200.0, 210.0]
+    PROFIL_R = [450.0, 350.0, 350.0, 320.0, 290.0, 175.0, 95.0, 60.0]
 KNICK_MAX = 15.0          # Grad, Steigungsknick des Mantels (Regel V5f, Bauplan 6a)
 WURZEL_BILD = (366.0, 215.0)   # Messblatt 3.1: Wurzelmitte an J ~(366,215)
 WINKEL_MAX = np.radians(25.0)  # Bauplan 6a: je Gelenk hoechstens 25 Grad

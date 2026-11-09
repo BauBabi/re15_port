@@ -1,6 +1,6 @@
 """SF V8 Koerperbau nach Nutzer-Skizze (Bauer, 2026-11-08): baut EM30_V8.EMD aus V7 (Spiel-Asset v0.8.30, sha256 319bbd17).
 
-    python v8_bau.py [--basis EMD] [--aus DIR] [--name NAME] [--json PROT] [--stufen sra]
+    python v8_bau.py [--basis EMD] [--aus DIR] [--name NAME] [--json PROT] [--stufen srea]
 
 Nutzer 2026-11-08 abends (woertlich, bindend):
   (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Ich verstehe
@@ -23,7 +23,9 @@ Stufe s) Schwanz (Messblatt 6a): Ruhekette aus kette_v8.json (kette_suche.py: Wu
    Knochen 0-15 und alle anderen Bits bytegleich. Meshes 16-22 neu aus den Radien (Ringe auf der
    Gehrung der Ruhekette, Manschette 0,45 r, Deckel wie V6, Dorn 0,8 r); Flaechen, UV, CLUT-Zeile 487 und Eckenzahl bleiben.
 Stufe r) Ruecken (Messblatt 6b): Ecken von Mesh 8 aus ruecken_v8.json (ruecken_suche.py).
-Stufe a) Adern (Messblatt 6c): Zeilen X1/X2 = V7-Zeile 480/481 + die Original-EM30-Ader-Eintraege derselben Zeile (a* >= 15,
+Stufe e) Runde 3 (O5): Wurzelrohr-Ende (Ring 0) und Kegelspitze von Mesh 16 unter die Rueckenhaut (einbetten).
+Stufe a) Runde 3 (O1/O2, adern_r3.py, modus "original"): Zeilen 493-495 = Original-EM30-Zeilen 480-482 bytegleich auf den (W)-rechten Flaechen
+   von Mesh 8/13/14 (ohne Feld C und Brust), Huegel-Flaechen mit UV-Schub auf Original-Fleisch. Runde 2 (modus fehlt): Zeilen X1/X2 = V7-Zeile 480/481 + die Original-EM30-Ader-Eintraege derselben Zeile (a* >= 15,
    L* <= 38, bytegleich); Flaechen nach adern_v8.json (adern_suche.py).
 """
 import os, sys, json, argparse, struct, copy
@@ -382,6 +384,56 @@ def BB_kf(mo, pose):
     return V.BB.kf_von_clip(mo, pose['clip'], pose['bild'])
 
 
+# ------------------------------------------------------------------ Stufe e (Runde 3, O5)
+# Sicht-Pruefer V8 r2 (5): "an der Wurzel sticht weiterhin ein grauer Keil mit harter Kante in die Rueckenhaut (F328-F346)"; Orchestrator O5
+# "Wurzelring/Manschette ganz in die Rueckenflaeche einbetten". Gemessen (sfv8/r3 gap.py, V8 r2): Ring 0 des Wurzelrohrs bis 121 E., der
+# Wurzelring (Ring 1) bis 175 E. ausserhalb von Mesh 8; offline von hinten (Takt F328) waren Kegel und Rohr (Mesh 16 d13-d17, v1-v7) sichtbar.
+# Regel: jede Ecke von Ring 0 (Ende des Wurzelrohrs) und der Kegelspitze (Mesh 16), die in der Ruhelage gegen Knochen 8 (Knochen 16 liegt in
+# jedem Keyframe auf seiner Ruhedrehung, Stufe s) weniger als WURZEL_TIEF unter der Haut von Mesh 8 liegt, wird auf der Geraden zur Mitte von
+# Ring 0 so weit nach innen gezogen, bis sie WURZEL_TIEF tief liegt (Halbierung, 24 Schritte): Rohr und Kegel (die Flaechen, die von hinten als
+# Keil durch die Haut stachen) liegen ganz im Rumpf. Der Wurzelring (Ring 1) bleibt - ihn einzuziehen riss in PV die Naht an J auf (Lauf
+# sfv8/r3 kf2: Sattel 4,1, Naht 5,0 statt <= 2 / <= 3); seine Lage legt die Feinsuche (kette_fein.py, Wurzel-Riegel S10 von hinten). Normalen, Flaechen, UV bleiben. PORT-WAHL (Nutzer: "Tail directly smooth into
+# the back - no hill or anything...").
+WURZEL_TIEF = 20.0
+
+
+def einbetten(blob, ms, prot):
+    import r3_gemein as R3
+    mo = V.modell(blob)
+    kf = BB_kf(mo, V.PV)
+    R, T = mo.pose(kf)
+    R8, T8 = R[8].astype(float) / 4096.0, T[8].astype(float)
+    R16, T16 = R[16].astype(float) / 4096.0, T[16].astype(float)
+    A = R8.T @ R16; t = R8.T @ (T16 - T8)                         # Knochenraum 16 -> 8
+    tri = R3.dreiecke(ms[8])
+    m = ms[16]
+    P = np.array([v[:3] for v in m['v']], float)
+    gruppen = [list(range(0, S_)), [len(P) - 1]]
+    mitten = [P[0:S_].mean(0), P[0:S_].mean(0)]
+    liste = []
+    for g, c in zip(gruppen, mitten):
+        for i in g:
+            q = P[i] @ A.T + t
+            dd, sg = R3.abstand_innen(q, tri)[0]
+            if dd * sg >= WURZEL_TIEF:
+                continue
+            cq = c @ A.T + t
+            lo, hi = 0.0, 1.0                                          # Anteil Richtung Mitte
+            if R3.abstand_innen(cq, tri)[0][0] * R3.abstand_innen(cq, tri)[0][1] < WURZEL_TIEF:
+                hi = 1.0
+            for _ in range(24):
+                mid = 0.5 * (lo + hi)
+                d2, s2 = R3.abstand_innen(q + (cq - q) * mid, tri)[0]
+                if d2 * s2 >= WURZEL_TIEF:
+                    hi = mid
+                else:
+                    lo = mid
+            neu = P[i] + (c - P[i]) * hi
+            m['v'][i][:3] = [int(round(x)) for x in neu]
+            liste.append(dict(ecke=i, tiefe_vorher=round(dd * sg, 1), anteil=round(hi, 3)))
+    prot['einbetten'] = dict(wurzel_tief=WURZEL_TIEF, ecken=liste)
+
+
 # ------------------------------------------------------------------ Bau
 def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None, blob=None):
     blob = open(basis, 'rb').read() if blob is None else blob
@@ -394,6 +446,8 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
     if 'r' in stufen:
         import ruecken_v8 as RV
         RV.ruecken(ms, ruecken or _p('ruecken_v8.json'), prot)
+    if 'e' in stufen:
+        einbetten(KB.packen(blob, d, ms, tim), ms, prot)
     if 'a' in stufen:
         import adern_v8 as AV
         AV.adern(ms, t, adern or _p('adern_v8.json'), prot)
@@ -410,7 +464,7 @@ def main():
     ap.add_argument('--aus', default=os.path.join(V.SFV8, 'emd'))
     ap.add_argument('--name', default='EM30_V8.EMD')
     ap.add_argument('--json')
-    ap.add_argument('--stufen', default='sra')
+    ap.add_argument('--stufen', default='srea')
     a = ap.parse_args()
     neu, prot = bauen(a.basis, a.stufen)
     os.makedirs(a.aus, exist_ok=True)

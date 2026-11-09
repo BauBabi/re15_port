@@ -1,5 +1,6 @@
 {
- "quelle": "adern_suche.py Runde 2 (Basis EM30_V7.EMD sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6, Kette kette_v8.json, Ruecken ruecken_v8.json): ganze V7-UV-Inseln, UV unveraendert",
+ "quelle": "adern_r3.py Runde 3 (Basis V7 319bbd17, Kette kette_v8.json, Ruecken rs2.json): volle Original-EM30-Zeilen 480-482 auf die (W)-rechten Flaechen, Huegel auf Original-Fleisch",
+ "modus": "original",
  "zeilen": [
   0,
   1,
@@ -7,66 +8,82 @@
  ],
  "flaechen": {
   "8": [
-   "d28",
-   "d67",
-   "d68",
-   "d71",
-   "d72",
-   "v26",
    "d0",
    "d5",
+   "d6",
    "d10",
    "d15",
    "d19",
    "d21",
+   "d26",
+   "d28",
    "d43",
    "d45",
    "d46",
+   "d50",
    "d51",
    "d54",
    "d55",
    "d56",
    "d57",
    "d62",
+   "d63",
    "d64",
+   "d66",
+   "d67",
+   "d68",
    "d70",
+   "d71",
+   "d72",
    "d73",
    "d76",
+   "v1",
+   "v4",
    "v5",
    "v6",
    "v13",
    "v16",
-   "d26",
-   "d50",
-   "d66",
-   "v1",
-   "v4",
-   "v8",
-   "v14",
-   "v18",
    "v19",
    "v21",
    "v24",
-   "v25"
+   "v25",
+   "v26"
   ],
   "13": [
-   "d3",
-   "v3",
-   "d18",
-   "d30",
-   "d32",
-   "d33",
-   "v10",
-   "v11",
-   "v12",
-   "v13",
-   "v14",
-   "v17",
-   "v18"
+   "d0",
+   "d1",
+   "d4",
+   "d5",
+   "d6",
+   "d9",
+   "d10",
+   "d11",
+   "d13",
+   "d14",
+   "d15",
+   "d20",
+   "d21",
+   "d22",
+   "d24",
+   "d26",
+   "d27",
+   "d28",
+   "d29",
+   "d31",
+   "v0",
+   "v1",
+   "v2",
+   "v4",
+   "v5",
+   "v8",
+   "v9",
+   "v15",
+   "v16",
+   "v19",
+   "v20",
+   "v21"
   ],
   "14": [
-   "d19",
-   "d20",
    "d0",
    "d1",
    "d2",
@@ -86,7 +103,11 @@
    "d16",
    "d17",
    "d18",
+   "d19",
+   "d20",
    "d21",
+   "d22",
+   "d23",
    "v0",
    "v1",
    "v2",
@@ -96,167 +117,39 @@
    "v6",
    "v7",
    "v8",
-   "d22",
-   "d23",
+   "v9",
    "v10",
    "v11",
-   "v9",
    "v12"
   ]
  },
- "inseln": [
+ "huegel": [
   {
-   "mesh": 8,
-   "zeile": 481,
-   "flaechen": 1,
-   "erste": "d6",
-   "z_schwer": -447.7,
-   "pv_px": 0,
-   "gewaehlt": false
+   "flaeche": "v8",
+   "pv_px": 89,
+   "schub": [
+    -9,
+    -15
+   ],
+   "fleisch_anteil": 0.958
   },
   {
-   "mesh": 8,
-   "zeile": 481,
-   "flaechen": 1,
-   "erste": "d35",
-   "z_schwer": 409.3,
-   "pv_px": 0,
-   "gewaehlt": false
+   "flaeche": "v18",
+   "pv_px": 10,
+   "schub": [
+    -14,
+    -21
+   ],
+   "fleisch_anteil": 0.5811
   },
   {
-   "mesh": 8,
-   "zeile": 481,
-   "flaechen": 3,
-   "erste": "d4",
-   "z_schwer": 721.7,
-   "pv_px": 0,
-   "gewaehlt": false
-  },
-  {
-   "mesh": 8,
-   "zeile": 480,
-   "flaechen": 1,
-   "erste": "d63",
-   "z_schwer": -14.7,
-   "pv_px": 0,
-   "gewaehlt": false
-  },
-  {
-   "mesh": 8,
-   "zeile": 481,
-   "flaechen": 6,
-   "erste": "d28",
-   "z_schwer": -591.2,
-   "pv_px": 336,
-   "gewaehlt": true
-  },
-  {
-   "mesh": 8,
-   "zeile": 480,
-   "flaechen": 23,
-   "erste": "d0",
-   "z_schwer": -564.6,
-   "pv_px": 1536,
-   "gewaehlt": true
-  },
-  {
-   "mesh": 8,
-   "zeile": 480,
-   "flaechen": 7,
-   "erste": "d8",
-   "z_schwer": 447.2,
-   "pv_px": 32,
-   "gewaehlt": false
-  },
-  {
-   "mesh": 8,
-   "zeile": 480,
-   "flaechen": 13,
-   "erste": "d7",
-   "z_schwer": 363.5,
-   "pv_px": 0,
-   "gewaehlt": false
-  },
-  {
-   "mesh": 8,
-   "zeile": 481,
-   "flaechen": 2,
-   "erste": "d17",
-   "z_schwer": 640.1,
-   "pv_px": 19,
-   "gewaehlt": false
-  },
-  {
-   "mesh": 8,
-   "zeile": 481,
-   "flaechen": 1,
-   "erste": "v23",
-   "z_schwer": 836.8,
-   "pv_px": 0,
-   "gewaehlt": false
-  },
-  {
-   "mesh": 8,
-   "zeile": 480,
-   "flaechen": 12,
-   "erste": "d26",
-   "z_schwer": -420.4,
-   "pv_px": 1858,
-   "gewaehlt": true
-  },
-  {
-   "mesh": 13,
-   "zeile": 480,
-   "flaechen": 2,
-   "erste": "d3",
-   "z_schwer": -166.0,
-   "pv_px": 215,
-   "gewaehlt": true
-  },
-  {
-   "mesh": 13,
-   "zeile": 480,
-   "flaechen": 11,
-   "erste": "d18",
-   "z_schwer": -185.4,
-   "pv_px": 1982,
-   "gewaehlt": true
-  },
-  {
-   "mesh": 14,
-   "zeile": 482,
-   "flaechen": 2,
-   "erste": "d19",
-   "z_schwer": -126.2,
-   "pv_px": 40,
-   "gewaehlt": true
-  },
-  {
-   "mesh": 14,
-   "zeile": 482,
-   "flaechen": 29,
-   "erste": "d0",
-   "z_schwer": -2.3,
-   "pv_px": 1765,
-   "gewaehlt": true
-  },
-  {
-   "mesh": 14,
-   "zeile": 482,
-   "flaechen": 4,
-   "erste": "d22",
-   "z_schwer": -198.6,
-   "pv_px": 180,
-   "gewaehlt": true
-  },
-  {
-   "mesh": 14,
-   "zeile": 482,
-   "flaechen": 2,
-   "erste": "v9",
-   "z_schwer": -249.2,
-   "pv_px": 437,
-   "gewaehlt": true
+   "flaeche": "v14",
+   "pv_px": 8,
+   "schub": [
+    -29,
+    -18
+   ],
+   "fleisch_anteil": 0.9352
   }
  ]
 }
