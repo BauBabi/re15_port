@@ -1,0 +1,152 @@
+{
+ "22|0|0": {
+  "mitte": [
+   -290.0,
+   123.0,
+   156.0
+  ],
+  "zeile": 0,
+  "rot": 0.968,
+  "spiegel": "22|0|9",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 0,
+  "spiegel_rot": 0.989,
+  "spiegel_material": "Maulinneres",
+  "spiegel_in_zone30": true
+ },
+ "22|0|9": {
+  "mitte": [
+   -290.0,
+   123.0,
+   -156.0
+  ],
+  "zeile": 0,
+  "rot": 0.989,
+  "spiegel": "22|0|0",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 0,
+  "spiegel_rot": 0.968,
+  "spiegel_material": "Maulinneres",
+  "spiegel_in_zone30": true
+ },
+ "22|1|1": {
+  "mitte": [
+   14.0,
+   210.0,
+   586.0
+  ],
+  "zeile": 0,
+  "rot": 0.946,
+  "spiegel": "22|1|8",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 0,
+  "spiegel_rot": 0.98,
+  "spiegel_material": "Maulinneres",
+  "spiegel_in_zone30": true
+ },
+ "22|1|194": {
+  "mitte": [
+   412.0,
+   303.0,
+   126.0
+  ],
+  "zeile": 0,
+  "rot": 0.933,
+  "spiegel": "22|1|201",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 0,
+  "spiegel_rot": 1.0,
+  "spiegel_material": "Maulinneres",
+  "spiegel_in_zone30": true
+ },
+ "22|1|201": {
+  "mitte": [
+   412.0,
+   303.0,
+   -126.0
+  ],
+  "zeile": 0,
+  "rot": 1.0,
+  "spiegel": "22|1|194",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 0,
+  "spiegel_rot": 0.933,
+  "spiegel_material": "Maulinneres",
+  "spiegel_in_zone30": true
+ },
+ "22|1|209": {
+  "mitte": [
+   0.0,
+   374.0,
+   -155.0
+  ],
+  "zeile": 0,
+  "rot": 0.994,
+  "spiegel": "22|1|202",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 1,
+  "spiegel_rot": 0.0,
+  "spiegel_material": "Haut",
+  "spiegel_in_zone30": false
+ },
+ "22|1|210": {
+  "mitte": [
+   -412.0,
+   303.0,
+   126.0
+  ],
+  "zeile": 0,
+  "rot": 1.0,
+  "spiegel": "22|1|217",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 0,
+  "spiegel_rot": 1.0,
+  "spiegel_material": "Maulinneres",
+  "spiegel_in_zone30": true
+ },
+ "22|1|217": {
+  "mitte": [
+   -412.0,
+   303.0,
+   -126.0
+  ],
+  "zeile": 0,
+  "rot": 1.0,
+  "spiegel": "22|1|210",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 0,
+  "spiegel_rot": 1.0,
+  "spiegel_material": "Maulinneres",
+  "spiegel_in_zone30": true
+ },
+ "22|1|8": {
+  "mitte": [
+   14.0,
+   210.0,
+   -586.0
+  ],
+  "zeile": 0,
+  "rot": 0.98,
+  "spiegel": "22|1|1",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 0,
+  "spiegel_rot": 0.946,
+  "spiegel_material": "Maulinneres",
+  "spiegel_in_zone30": true
+ },
+ "22|1|9": {
+  "mitte": [
+   14.0,
+   240.0,
+   -257.0
+  ],
+  "zeile": 0,
+  "rot": 0.945,
+  "spiegel": "22|1|0",
+  "spiegel_abstand": 0.0,
+  "spiegel_zeile": 1,
+  "spiegel_rot": 0.0,
+  "spiegel_material": "Haut",
+  "spiegel_in_zone30": false
+ }
+}

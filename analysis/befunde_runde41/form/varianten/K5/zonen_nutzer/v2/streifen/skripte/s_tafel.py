@@ -212,7 +212,7 @@ def main():
     hp[sechs_p] = (220, 0, 0)
     B1 = feld('5  Kopf-Unterseite: 6 Flächen', einpassen(hm[hy0:hy1, hx0:hx1], PW, PH - 70)[0],
               'Spiel 5090, Griff-Haltung (Clip 27 Bild 20). Rot = Kopf-Flächen 1, 8, 9, 194, 201, 209. Sie liegen außen an der '
-              'Kopf-Unterseite zum Hals hin.')
+              'Kopf-Unterseite zum Hals hin (194 und 201 direkt über dem hinteren Ende des Unterkiefers), nicht im Maul (Feld 9 und 10).')
     B2 = feld('6  Räumlich vorn: dieselben 6 Flächen', einpassen(hp[hy0:hy1, hx0:hx1], PW, PH - 70)[0],
               'Auch wenn je Bildpunkt nur das Vorderste zählt, bleiben sie sichtbar (%d gegen %d Bildpunkte). Hier steckt nichts durch: '
               'es sind echte Außenflächen.' % (hal['ansichten']['5090 Schnitt 11, Griff Clip 27 Bild 20']['rot_tiefenpuffer'],
@@ -237,10 +237,10 @@ def main():
         x = (i % 3) * 205; y = (i // 3) * 140
         tf.paste(kk, (x, y + 24)); dt.text((x, y), 'Kopf-Fläche %d' % (1, 8, 9, 194, 201, 209)[i], font=F(18), fill=(0, 0, 0))
     B4 = feld('8  Die Textur dieser 6 Flächen', tf,
-              'Alle 6 holen ihre Farbe aus Texturzeile 0 und sind als "Maulinneres" eingetragen; 93-100 % ihrer Bildpunkte sind '
-              'warm-rot. Die Streifen sind also Farbe, kein Durchstoßen.')
+              'Alle 6 holen ihre Farbe aus Texturzeile 0, der Zeile mit der roten Maul-Farbe (in der Farbliste heißt sie "Maulinneres"; '
+              'das sagt nichts über die Lage). 93-100 % ihrer Bildpunkte sind warm-rot. Die Streifen sind also Farbe, kein Durchstoßen.')
     # ---------- zusammen ----------
-    kopf = Image.new('RGB', (4 * PW + 3 * 26, 150), (255, 255, 255)); dk = ImageDraw.Draw(kopf)
+    kopf = Image.new('RGB', (4 * PW + 3 * 26, 180), (255, 255, 255)); dk = ImageDraw.Draw(kopf)
     dk.text((0, 0), '23  Woher kommen die Streifen?  (nur gemessen, nichts geändert)', font=F(36, True), fill=(0, 0, 0))
     dk.text((0, 52), 'Ihr Wort zur Tafel: "bei den Huckel oben auf der Vorderseite hast du teilweise wieder grün streifen drin". '
             'Ihr Wort zum Spiel (K5e): "auf der Unterseite am Hals hat er komische rote streifen".', font=F(21), fill=(30, 30, 30))
@@ -248,9 +248,14 @@ def main():
             'UND im Spiel.', font=F(21, True), fill=(150, 0, 0))
     dk.text((0, 114), 'Unten: die roten Streifen am Hals = 6 Kopf-Flächen außen mit roter Maul-Farbe – eine Farbzuordnung, kein Durchstoßen.',
             font=F(21, True), fill=(150, 0, 0))
+    ra = json.load(open(ZIEL + '/messung/r3_rot_alle_K5e_f1.json', encoding='utf-8'))['zusammenfassung']['von unten']
+    dk.text((0, 144), 'Neu (Feld 9-12): Die 6 Flächen liegen außen an der Kopf-Unterseite hinter dem Unterkiefer, nicht im Maul. Ihr Rot ist '
+            'von unten in %d von %d Bildern zu sehen.' % (ra['bilder_mit_rot_aus_streifen'], ra['bilder']), font=F(21, True), fill=(150, 0, 0))
     za = zeile_bauen([A1, A2, A3, A4]); zb = zeile_bauen([B1, B2, B3, B4])
+    import r3_tafel
+    zc = r3_tafel.zeile_c(sys.modules[__name__])
     trenn = Image.new('RGB', (za.width, 40), (255, 255, 255)); ImageDraw.Draw(trenn).line([(0, 20), (za.width, 20)], fill=(160, 160, 160), width=2)
-    ges = unter_einander(kopf, za, trenn, zb, abstand=10)
+    ges = unter_einander(kopf, za, trenn, zb, trenn, zc, abstand=10)
     rand = Image.new('RGB', (ges.width + 60, ges.height + 60), (255, 255, 255)); rand.paste(ges, (30, 30))
     os.makedirs(ZIEL, exist_ok=True)
     rand.save(ZIEL + '/23_streifen_herkunft.png')
