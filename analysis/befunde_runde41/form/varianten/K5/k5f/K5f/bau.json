@@ -1,0 +1,426 @@
+{
+ "variante": "K5f",
+ "par": {
+  "_doc": "K5f - nicht blass (Nutzer 2026-11-09: 'Komplett augeblasst ... Null wie die restlichen Gegner im Spiel'; Nachtrag 'auf der Unterseite am Hals ... komische rote streifen'). Je Material EINE Transformation auf der G4-Originalrampe seiner Seite (CDEMD0.EMS Typ 0x34, TIM @0x65e800), Helligkeit nur multiplikativ, ein Farbton je Material, Buntheit proportional zur Helligkeit (Messblatt k5f/MESSBLATT_K5F.md 3). Jeder Wert mit Quelle. Verboten (Memory reai-v2-texturen-nicht-aus-video-eichen mit Nachtraegen 2026-11-08/09): Eichung je Region/Fleck/Texel am Video, additive Hebung.",
+  "name": "K5f",
+  "haut": {
+   "f": 2.502,
+   "f_quelle": "kf_k5f.py --f: kleinster Faktor (Bisektion [2,3; 3,0], 10 Schritte, aufgerundet auf 0,001) mit Bild 2 Video (3 Saaten, Pixelmenge V4F 3.1) >= Vorlage 15.37 (Messblatt K5F 3.3 / W6, EIN globaler Helligkeitswert); Ergebnis 15.372. Messblatt-Vorschau v7: f 2,46 mit naechster 15-Bit-Farbe und rf 1,60 ergab 15,37; mit Farbtonfenster-Rundung und rf aus der Bisektion faellt Bild 2 darunter. Protokoll [f, Bild 2]: [[2.65, 16.661], [2.475, 15.303], [2.5625, 15.782], [2.51875, 15.45], [2.49688, 15.341], [2.50781, 15.384], [2.50235, 15.377], [2.49961, 15.354], [2.50098, 15.368], [2.50167, 15.37]]",
+   "knie": 75.0,
+   "knie_quelle": "Messblatt K5F 3.1: L > 75 -> 75 + 25 tanh((L - 75)/25); betrifft nur helle G4-Eintraege (Krallenspitzen L* 63-85); Riegel WK4 hell % / F_hell innerhalb der Originale",
+   "h": -22.9,
+   "h_quelle": "Messblatt K5F 3.1: G4-Hautton, C*-gewichtet ueber 253 964 Texelzugriffe der Haut-/Gelenkflaechen der Form (k5f/skripte/g4ton.py)",
+   "s": 0.536,
+   "s_quelle": "kf_k5f_spielmass.py --s: kleinste Buntheit (Bisektion im echten Spiel, 5080 Bild-1-Lage, Bilder 360-440, eigenes Normal-/Schluessel-Paar) mit Z4 P-C* >= 4,41 und Z8 Q-C* >= 12,09 (Messblatt K5F 3.1: \"kleinste Buntheit, mit der Z4 und Z8 im Spiel erreicht werden\"; Vorschau v7 mit naechster 15-Bit-Farbe: s 0,52). Protokoll [s, P C*, Q C*, P C-std, Q C-std]: [[0.5404, 4.56, 12.45, 3.48, 8.04], [0.5346, 4.37, 11.94, 3.31, 7.57], [0.5375, 4.45, 12.15, 3.41, 7.83], [0.536, 4.44, 12.13, 3.41, 7.83]]"
+  },
+  "ader": {
+   "q": 0.74,
+   "q_quelle": "Messblatt K5F 3.2 Adern (RV6): L' rangtreu auf [Haut-p10', q x Haut-p50']; q = K5e-Satz (Median der 9 E30-Gruppensaetze, v3_daten/r4_par.json)",
+   "kappa": 0.61,
+   "kappa_quelle": "Messblatt K5F 3.2 Adern: C* = kappa x s x L', Ton der Haut; kappa = K5e-Satz (Median der 9 E30-Gruppensaetze). Nie heller, nie roeter als die Haut"
+  },
+  "gelenk": {
+   "rg": 1.469,
+   "rg_quelle": "Messblatt K5F 3.2 Gelenk: Hautabbildung x rg (L), rg = K5d Gelenk/Nachbar-Albedo 28,5/19,4 (Nutzer zu K5d 'ja, besser'), multiplikativ statt +9,1",
+   "cg": 0.41,
+   "cg_quelle": "Messblatt K5F 3.2 Gelenk: Buntheit x cg, cg = K5e-Gelenk-C* 4,8 / Haut 11,68 (Nutzer 11-08 Verbindungsstuecke 'weisslich')"
+  },
+  "fleisch": {
+   "rf": 1.54,
+   "rf_quelle": "kf_k5f.py --rf: kleinster Faktor (Bisektion [1,0; 2,0], 12 Schritte, aufgerundet auf 0,001), mit dem Spitze und Buckel im Albedo (ruhe_wunsch.stand_albedo, Median) mindestens ihren K4-Abstand erreichen (K4_heute: Spitze gegen Schwanz +6.89, Buckel gegen Mesh-10-Haut +4.77; \"vorher da\", Messblatt K5F 3.2 Fleisch / W2 / W3); Ergebnis Spitze +18.65, Buckel +6.94. Messblatt: rf 1,51 ergab Buckel +3,57 (ROT), rf 1,60 ergab +18,65 / +11,11. Protokoll [rf, Spitze, Buckel, ok]: [[1.5, 15.45, 3.25, False], [1.75, 25.04, 6.94, True], [1.625, 21.91, 6.94, True], [1.5625, 18.65, 6.94, True], [1.53125, 18.65, 3.25, False], [1.54688, 18.65, 6.94, True], [1.53906, 18.65, 3.25, False], [1.54297, 18.65, 6.94, True], [1.54102, 18.65, 6.94, True], [1.54004, 18.65, 6.94, True], [1.53955, 18.65, 6.94, True], [1.53931, 18.65, 3.25, False]]",
+   "hf": -8.0,
+   "hf_quelle": "Messblatt K5F 3.2 Fleisch: Ton = K5e-Satz (Ton der F1-Leuchtstelle, E30 gelobt; E32 'ansonsten passt'); Nutzer 11-08 'fleisch roetlich', 'rote fleischige Stelle'",
+   "cf": 18.0,
+   "cf_quelle": "Messblatt K5F 3.2 Fleisch: C* konstant 18 (Adern 0,61 x 18) = K5e-Satz (Mittel K4 Schwanzspitze / K4 Buckel F02 11,6 / 24,9)"
+  },
+  "grau": {
+   "material_listen": [
+    "Lippensaum",
+    "Maul_Band",
+    "Kralle"
+   ],
+   "meshes_haut": [
+    23
+   ],
+   "listen_quelle": "Messblatt K5F 3.2 Grau: Lippensaum 140, Maul-Band 25, Krallen 252 (ruhe/messung/material.json) und die Mesh-23-Hautflaechen (Unterkiefer aussen); Nutzer 11-08 'Lippe ... durchweg grau/blau', K5d 'unterkiefer ... dunkel/grau', Krallen 'ohne Rot'",
+   "cgr": 0.41,
+   "cgr_max": 4.8,
+   "c_quelle": "Messblatt K5F 3.2 Grau: Haut-L', C* = min(0,41 x s x L', 4,8); 4,8 = K5e-Gelenk-C*; ohne Grau haetten Lippe und Krallen bei s 0,52 Rotklasse 6,9 % bzw. 14,8 %"
+  },
+  "hals": {
+   "aussen_maulinneres_zu_haut": [
+    "22|1|1",
+    "22|1|8",
+    "22|1|9",
+    "22|1|194",
+    "22|1|201",
+    "22|1|209"
+   ],
+   "quelle": "Messblatt K5F 0.2: die 6 Aussenflaechen von Mesh 22 an Kopfunterseite/Halsansatz lagen als 'Maulinneres' auf G4-Zeile 0 (Mundfleisch 196/37/208/244); weiss 2514 warm-rote Pixel, Spiel 846/963; Rundum-Lauf 705-2879 px gegen <= 38 px der 29 echten Maulinneres-Flaechen. Plan: Haut (G4-Seite 0, Zeile 1)"
+  },
+  "zeilen": {
+   "g4_0": 0,
+   "haut": [
+    1,
+    2,
+    3
+   ],
+   "gelenk": [
+    4,
+    5,
+    6
+   ],
+   "fleisch": 7,
+   "f1": 8,
+   "zahn": 9,
+   "grau": [
+    10,
+    11
+   ],
+   "quelle": "Messblatt K5F 3.4: 12 Zeilen (0-11), Port-Texturhoehe 3072; Grau nur G4-Seite 0/1 (Seite 2 hat keine Grau-Flaeche, die leere Vorschau-Zeile 12 entfaellt)"
+  },
+  "bytegleich": {
+   "g4_0": "G4-Zeile 0 (64 Augen- + 29 echte Maulinneres-Flaechen)",
+   "f1": "Kern-Eintraege bytegleich K5c-Zeile 5 (E30 gelobt); uebrige gelesene Eintraege: G4-F11-Haut = Hautzeile 3, Fleischrand = Hauttransformation (wie K5e_f1, E32)",
+   "zahn": "K5c-Zeile 7",
+   "quelle": "Messblatt K5F 3.2 Bytegleich"
+  },
+  "rundung": {
+   "modus": "fenster",
+   "fenster": 7.5,
+   "cmin": 3.0,
+   "verfahren": "kf_k5f.runde15_zeile: naechste 15-Bit-Farbe (dE76, 6x6x6 Nachbarn) unter den Bedingungen Farbtonfenster h +- 7,5 fuer C* >= 3 (unbunt immer erlaubt), Rangfolge je Klasse nach G4-L*, Adern von unten (L*, a* <= Ziel)",
+   "quelle": "Riegel K5f Lauf 1 mit kf_k5e.runde15 (= Vorschau v7): H4 Haut 88,4 / Grau 55,9 / Gelenk 88,9 / Fleisch 16,2 Grad (Soll <= 15, Messblatt K5F 4.3), H5 17 Rangvertauschungen; Ursache 15-Bit-Raster bei L* 5-20 und C* 3-8 (nahe Grau nur Farbtoene ca. -68/-34/+21 Grad). 7,5 = halbe H4-Spanne, 3 = H4-Schwelle C* >= 3. Keine neue Farbe, nur die Wahl des 5-Bit-Nachbarn",
+   "nie_bunter": [
+    "gelenk",
+    "grau"
+   ],
+   "nie_bunter_quelle": "Nutzer 11-08 Gelenke 'weisslich', Lippe 'durchweg grau/blau', Krallen 'ohne Rot', K5d 'unterkiefer ... dunkel/grau': bei diesen Materialien gibt die Rundung keine Buntheit dazu (C* <= Ziel oder unbunt). Riegel-Laeufe: ohne Bedingung Gelenk-Albedo C* 8,41 (W1b Soll <= 8); mit Bedingung fuer alle Materialien W2 49,9 % / W3 29,4 % ROT",
+   "fenster_mitte": {
+    "haut": -27.8,
+    "gelenk": -27.8,
+    "grau": -27.8
+   },
+   "fenster_mitte_quelle": "Farbtonfenster 15 Grad (H4) fuer Haut/Gelenk/Grau auf [-35,3; -20,3] statt -22,9 +- 7,5: gemessen (15-Bit-Raster nahe Grau, C* 3-9, L* 5-30) gibt es nur die Farbtoene -68,1 (0,0,1), -34,6 (1,0,1; Streuung -35,2..-34,2), -13,7 (2,0,1, erst ab L* 30) und +20,3 (1,0,0). Ein Fenster um -22,9 enthaelt keinen davon: Lauf mit Fenster -22,9 machte 41 % der Haut-Texelzugriffe unbunt (C* < 3), Q C-std 8,77 bei Q C* 11,35, s 0,56 ergab 12,03 / 9,18 (Z8 und Z9 nicht zugleich erreichbar). Das Fenster [-35,3; -20,3] enthaelt den Materialton -22,9 und die Rasterstufe -34,6; Ergebnis s 0,52: Q C* 11,89 / Q C-std 7,52, s 0,56: 12,94 / 8,11. Fleisch bleibt -8 +- 7,5"
+  },
+  "referenz": "Vorschau v7 (k5f/skripte/k5f_vorschau.py, messung/vorschau_v7.json) = dieselbe Rechnung mit 13 Zeilen und rf 1,60",
+  "verlauf": "Bisektionsfolge (je Schritt der kleinste Wert, der seine Zeile erreicht): Vorschau v7 f 2,46 / s 0,52 / rf 1,60 (naechste 15-Bit-Farbe). Lauf 1 (naechste Farbe, rf-Bisektion 1,373): Riegel ROT in H4 (88,4 Grad), H5, HU4-Clip-0, W6 (15,12). Rundung mit Farbtonfenster: s-Bisektion im Spiel [0,52; 0,56] -> 0,5288 (P/Q C* 4,43/12,11); f 2,534 / rf 1,521; f 2,506 / rf 1,538; f 2,500 / rf 1,541; Spielprobe f 2,5: P C* 4,37 (ROT) -> s-Bisektion [0,5288; 0,552] -> 0,536; f 2,502 / rf 1,540 (stabil). Endstand f 2,502, s 0,536, rf 1,540."
+ },
+ "g4_quelle": {
+  "ems": "re15_port/shared_assets/RE2/CDEMD0.EMS",
+  "kind": "0x34",
+  "emd_off": "0x677000",
+  "tim_off": "0x65e800"
+ },
+ "zeilen": 12,
+ "port_texturhoehe": 3072,
+ "flaechen": 3828,
+ "flaechen_je_zeile": {
+  "0": 93,
+  "1": 249,
+  "2": 1606,
+  "3": 579,
+  "4": 6,
+  "5": 360,
+  "6": 314,
+  "7": 92,
+  "8": 6,
+  "9": 114,
+  "10": 81,
+  "11": 328
+ },
+ "material_je_flaeche_zaehlung": {
+  "Auge": 64,
+  "F1": 6,
+  "Fleisch_Buckel": 12,
+  "Fleisch_Schwanzspitze": 80,
+  "Gelenk": 680,
+  "Haut": 2837,
+  "Maulinneres": 35,
+  "Zahn": 114
+ },
+ "texelzugriffe_je_material_seite": {
+  "fleisch1": 8867,
+  "gelenk0": 325,
+  "gelenk1": 41692,
+  "gelenk2": 13203,
+  "grau0": 2619,
+  "grau1": 33186,
+  "haut0": 26055,
+  "haut1": 200591,
+  "haut2": 34121
+ },
+ "rampen": {
+  "haut0": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    5.668,
+    13.039
+   ],
+   "haut_genutzt": 15,
+   "ader_genutzt": 76,
+   "hell_genutzt": 0
+  },
+  "gelenk0": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    1.733,
+    7.142
+   ],
+   "haut_genutzt": 7,
+   "ader_genutzt": 0,
+   "hell_genutzt": 0
+  },
+  "haut1": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    15.371,
+    31.797
+   ],
+   "haut_genutzt": 43,
+   "ader_genutzt": 107,
+   "hell_genutzt": 0
+  },
+  "gelenk1": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    13.918,
+    31.825
+   ],
+   "haut_genutzt": 42,
+   "ader_genutzt": 91,
+   "hell_genutzt": 0
+  },
+  "haut2": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    11.387,
+    23.088
+   ],
+   "haut_genutzt": 37,
+   "ader_genutzt": 33,
+   "hell_genutzt": 0
+  },
+  "gelenk2": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    11.293,
+    24.762
+   ],
+   "haut_genutzt": 33,
+   "ader_genutzt": 16,
+   "hell_genutzt": 0
+  },
+  "grau0": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    0.0,
+    4.038
+   ],
+   "haut_genutzt": 2,
+   "ader_genutzt": 120,
+   "hell_genutzt": 0
+  },
+  "grau1": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    16.542,
+    33.393
+   ],
+   "haut_genutzt": 34,
+   "ader_genutzt": 74,
+   "hell_genutzt": 18
+  },
+  "fleisch1": {
+   "rundung": {
+    "modus": "fenster",
+    "fenster": 7.5,
+    "cmin": 3.0,
+    "stufen_FBMA_FMA_FM_FA_F_alle": [
+     256,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "p10_p50": [
+    15.291,
+    31.59
+   ],
+   "haut_genutzt": 35,
+   "ader_genutzt": 60,
+   "hell_genutzt": 0
+  },
+  "f1": {
+   "kern_eintraege": 56,
+   "umgefaerbt": 24,
+   "davon_haut_zeile3": 16,
+   "fleischrand": 8
+  }
+ },
+ "texel_neu": 0,
+ "sha256": {
+  "FORM.EMD": "e85ab12c024d75ee2c92e41f71a419a0a267c5c3bcb01561eaaa3e28acf32fce",
+  "FORM.TIM": "64b8d8bd9539471db2f491031d20ab2884e8f618c88646bcbea319f06d64cb8d",
+  "BAHNSTEIG_FORM.EMD": "9045b6dcceebf7d5089daec5af1b982d5d9013f67039ed910c480b2e92c17648",
+  "BAHNSTEIG_FORM.TIM": "64b8d8bd9539471db2f491031d20ab2884e8f618c88646bcbea319f06d64cb8d"
+ },
+ "eingang_sha256": {
+  "basis_k5c_emd": "a2e87fb84e73c7d7bd173ea11d56482df731175c1e12af26cebd48063eb09adf",
+  "basis_k5c_tim": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3",
+  "k5d_emd": "d3a961deda58873882d17b910f1fd787079d49d7c219b339c9a95ac6645e761a",
+  "asset_emd": "1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041",
+  "asset_tim": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3",
+  "material_json": "3308ea639b0a3e6bb6b0e176b36b6173c0f1ee9eb650bce1c90f6564bd2860d9"
+ },
+ "material_k5f_zaehlung": {
+  "Auge": 64,
+  "F1": 6,
+  "Fleisch_Buckel": 12,
+  "Fleisch_Schwanzspitze": 80,
+  "Gelenk": 680,
+  "Grau": 409,
+  "Haut": 2434,
+  "Maulinneres": 29,
+  "Zahn": 114
+ },
+ "material_k5f_je_zeile": {
+  "0": {
+   "Maulinneres": 29,
+   "Auge": 64
+  },
+  "1": {
+   "Haut": 249
+  },
+  "2": {
+   "Haut": 1606
+  },
+  "3": {
+   "Haut": 579
+  },
+  "4": {
+   "Gelenk": 6
+  },
+  "5": {
+   "Gelenk": 360
+  },
+  "6": {
+   "Gelenk": 314
+  },
+  "7": {
+   "Fleisch_Schwanzspitze": 80,
+   "Fleisch_Buckel": 12
+  },
+  "8": {
+   "F1": 6
+  },
+  "9": {
+   "Zahn": 114
+  },
+  "10": {
+   "Grau": 81
+  },
+  "11": {
+   "Grau": 328
+  }
+ },
+ "generator": "generator/kf_k5f.py"
+}
