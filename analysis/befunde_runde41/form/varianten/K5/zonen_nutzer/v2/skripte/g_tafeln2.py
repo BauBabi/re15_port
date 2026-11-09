@@ -110,13 +110,14 @@ def krallen_tafel():
     r1 = nebeneinander([beschriften(nb, ['Ihre 4 Schleifen ("Exakt 4 Krallen")']),
                         beschriften(pa, ['heute (Spiel-Asset): 28 eingezogen'] + tx('asset')),
                         beschriften(pc, ['K5c (vor dem Einziehen)'] + tx('k5c')),
-                        beschriften(pv, ['Vorschlag: 28 mit K5c-Form zurück'] + tx('vorschlag'))],
+                        beschriften(pv, ['Vorschlag: 28 mit K5c-Form zurück (%d Ecken stecken in Hand 13, wie in K5c)' % KJ['durchdringung']['28']['ecken_in_der_hand']] + tx('vorschlag'))],
                        ['Vorn links (Bild 2): Ihr Bild', 'heute', 'K5c', 'Vorschlag'], gr=24)
     zeilen = []
     for i in range(1, 5):
         d = ds['schleife%d' % i]['abstand_zu_modellspitze_k5c_px']
         zeilen.append(['Schleife %d (von links im Bild)' % i, ', '.join('%s: %.1f px' % (TEILNAME[int(b)], v) for b, v in sorted(d.items(), key=lambda t: t[1])[:2]),
-                       {1: 'Kralle 30', 2: 'Kralle 14 (oder Handspitze 13 - Frage)', 3: 'Kralle 15', 4: 'Kralle 28 (heute eingezogen)'}[i]])
+                       {1: 'Kralle 30 (unsicher: im Modell nur 2 px sichtbar)', 2: 'Kralle 14 oder Handspitze 13 (Frage)', 3: 'Kralle 15',
+                        4: 'Kralle 28 (heute eingezogen; zurückgeholt liegt sie nur zu 2 % in Ihrer Schleife, Rest über dem Fußabschnitt - Frage)'}[i]])
     l1 = tabelle(r1.size[0], [('Ihre Schleife', 0.25), ('nächste Modellspitzen (Abstand der Spitzen in Video-Pixeln)', 0.45), ('so erkannt', 0.3)], zeilen, gr=19)
     # ---------------- vorn rechts
     box = (130, 320, 300, 480); f = 5
@@ -132,21 +133,20 @@ def krallen_tafel():
     pa, _ = panel(ka, 2, box, f, me, fo, wz); pc, _ = panel(kc, 2, box, f, me, fo, wz); pv, _ = panel(kv, 2, box, f, me, fo, wz)
     def tx2(st):
         return ['%s: %d px sichtbar, davon %d über Hintergrund' % (b, j2[st][b]['sichtbar_px'], j2[st][b]['ueber_hintergrund_px']) for b in ('19', '20', '29', '31')]
-    dr = KJ['drehungen']; k19 = KJ['kralle19']
-    r2 = nebeneinander([beschriften(nb, ['Ihre 2 Krallenformen (blau) und der Schriftzug']),
+    k19 = KJ['kralle19']
+    r2 = nebeneinander([beschriften(nb, ['Ihre 2 Krallenformen (blau, rechts und links im Bild) und der Schriftzug']),
                         beschriften(pa, ['heute: 19, 20, 29 eingezogen'] + tx2('asset')),
                         beschriften(pc, ['K5c: 20 und 29 stehen frei vor dem Hintergrund'] + tx2('k5c')),
-                        beschriften(pv, ['Vorschlag: 19 gekürzt (x%.2f), 20/29 gedreht' % k19['laengenfaktor']] + tx2('vorschlag'))],
-                       ['Vorn rechts (Bild 2): Ihr Bild', 'heute', 'K5c', 'Vorschlag (Annahme: verdeckt durch die Schrift)'], gr=24)
-    zeilen = [['Kralle 31 = Ihre Form 1', 'bleibt wie heute', 'unteres Formende %.1f px neben der Spitze von 31' % ZI['krallen_vorn_rechts_form1']['form']['abstand_unteres_ende_zu_spitze_k5c_px']],
-              ['Kralle 19 = Ihre Form 3', 'K5c-Lage, Länge x%.4f entlang der eigenen Achse' % k19['laengenfaktor'],
+                        beschriften(pv, ['Vorschlag: 19 gekürzt (x%.2f), 20 und 29 bleiben eingezogen' % k19['laengenfaktor']] + tx2('vorschlag'))],
+                       ['Vorn rechts (Bild 2): Ihr Bild', 'heute', 'K5c', 'Vorschlag'], gr=24)
+    zeilen = [['Kralle 31 = Ihre Form rechts im Bild', 'bleibt wie heute', 'unteres Formende %.1f px neben der Spitze von 31' % ZI['krallen_vorn_rechts_form1']['form']['abstand_unteres_ende_zu_spitze_k5c_px']],
+              ['Kralle 19 = Ihre Form links im Bild', 'K5c-Lage, Länge x%.4f entlang der eigenen Achse' % k19['laengenfaktor'],
                'Spitze K5c %s -> Vorschlag %s; Ihr Strichende %s; Rest %.1f px (ein Faktor allein trifft nicht genau)' % (
                    tuple(k19['spitze_k5c_vorlage']), tuple(k19['spitze_vorschlag_vorlage']), tuple(round(v, 1) for v in k19['nutzer_spitze_vorlage']), k19['rest_abstand_px'])]]
     for b in ('20', '29'):
-        d = dr[b]
-        zeilen.append(['Kralle %s (nicht sichtbar, Annahme)' % b, 'nur um die Wurzel gedreht (%.0f Grad), Länge wie K5c' % d['drehwinkel_grad'],
-                       'NICHT GELUNGEN: noch %d px über Hintergrund, %d Ecken stecken in der Hand; in 6000 Drehungen keine ganz im Schriftzug (Bild 1 danach: %d px über Hintergrund)' % (
-                           d['vorschlag']['ueber_hintergrund_px'], d['vorschlag']['durchdringung_ecken'], KJ['bild1_kontrolle'][b]['vorschlag']['ueber_hintergrund_px'])])
+        zeilen.append(['Kralle %s (nicht sichtbar, Annahme nach Ihrem Wort)' % b, 'bleibt eingezogen wie heute',
+                       'Drehen um die Wurzel reicht nicht: in Runde 1 lag keine von 6000 Drehungen ganz hinter der Schrift; die beste stand noch über dem Hintergrund, '
+                       'steckte in der Hand und stünde in Bild 1 sichtbar ab. Entscheidung bei Ihnen (Frage)'])
     l2 = tabelle(r2.size[0], [('Kralle', 0.22), ('Vorschlag', 0.3), ('Ergebnis', 0.48)], zeilen, gr=19)
     # ---------------- hinten
     box = (180, 355, 290, 435); f = 7
@@ -168,7 +168,7 @@ def krallen_tafel():
     titel = titelzeile(W, '21  Krallen: heute | K5c | Vorschlag',
                        'Ausschnitte aus dem Video (Bild 2 bzw. Bild 1), vergrößert. Grau = Modell, Farben = einzelne Krallen, blau umrandet = Ihre gezeichneten '
                        'Krallen, gelb schraffiert = vom Schriftzug verdeckte Fläche. "K5c" ist die Form vor dem Einziehen der Krallen. Der Vorschlag liegt nur als '
-                       'Kandidat vor (nicht im Spiel). Pixelzahlen in Video-Pixeln (640 x 480).')
+                       'Kandidat vor (nicht im Spiel). Pixelzahlen in Video-Pixeln (640 x 480). Vorn rechts haben Sie zwei Formen gezeichnet: "Form rechts im Bild" und "Form links im Bild".')
     leg = tabelle(W, [('Farbe = Modellteil', 1.0)], [['%s (Teil %d)' % (TEILNAME[b], b)] for b in (14, 15, 28, 30, 19, 20, 29, 31)], gr=18,
                   farben=[KF[b] for b in (14, 15, 28, 30, 19, 20, 29, 31)])
     stapeln([titel, r1, l1, r2, l2, r3, leg]).save(os.path.join(ZIEL, '21_krallen.png'))
@@ -179,37 +179,48 @@ def kopf_tafel():
     lf = 'Gesicht vorne.png'; dx = VS[lf]['dx']
     L = auf_weiss(lies(D + lf)); G = grund_auf_weiss(2)
     R2 = dict(np.load(ARBEIT + '/render_asset_2.npz'))
+    mod_g = modell_grau(R2['rgb'], R2['maske'])
     aug = AK['augen']; kopf = AK['kopf']
     # Ausschnitt Augen (Grundlage-Koordinaten)
     x0, y0, x1, y1 = 15, 205, 205, 285; f = 5
     def gz(img):
         return cv2.resize(img[y0:y1, x0:x1], None, fx=f, fy=f, interpolation=cv2.INTER_NEAREST)
     p1 = gz(L[:, dx:dx + G.shape[1]].copy())
-    heute = MS.get('augen_vorn__modell')
-    mod = modell_grau(R2['rgb'], R2['maske'])
-    hm = np.load(ARBEIT + '/kopf_augen_masken.npz')['augen_heute']
+    import g_texel as GT
+    from g_tafeln import spot_masken
+    Kb = GT.render_box(2, (x0, y0, x1, y1))
+    fb = f / GT.F
+    def gb(img):
+        return cv2.resize(img, None, fx=fb, fy=fb, interpolation=cv2.INTER_NEAREST)
+    mod = modell_grau(Kb['rgb'], Kb['maske'])
+    aset = set(json.load(open(MATERIAL_JSON, encoding='utf-8'))['material']['Auge']['liste'])
+    keyb = np.where(Kb['maske'], Kb['mesh'].astype(np.int64) * 1000000 + Kb['flaeche'], -1)
+    hm = np.isin(keyb, [int(q.split('|')[0]) * 1000000 + int(q.split('|')[1]) * 100000 + int(q.split('|')[2]) for q in aset])
+    auf, fremd = spot_masken(Kb, 'augen_vorn')
     p2 = mod.copy(); einfaerben(p2, hm, (255, 0, 255), 0.9)
-    p3 = mod.copy(); einfaerben(p3, MS['augen_vorn__modell'], (255, 0, 255), 0.9)
-    p2, p3 = gz(p2), gz(p3)
-    def zk(m):
-        return cv2.resize(m[y0:y1, x0:x1].astype(np.uint8), None, fx=f, fy=f, interpolation=cv2.INTER_NEAREST) > 0
-    kontur(p3, zk(MS['augen_vorn__modell']), (255, 255, 255), 3)
-    gestrichelt(p3, zk(hm & ~MS['augen_vorn__modell']), (60, 60, 60), 3, 7)
+    p3 = mod.copy(); einfaerben(p3, auf, (255, 0, 255), 0.95)
+    p2, p3 = gb(p2), gb(p3)
+    gestrichelt(p3, gb((hm & ~auf).astype(np.uint8)) > 0, (60, 60, 60), 2, 7)
     for p in (p1, p2, p3):
         for a in aug['nutzerpunkte']:
-            x, y = a['punkt_grundlage']; ex, ey = a['linienende_grundlage']
-            cv2.circle(p, (int((x - x0 + 0.5) * f), int((y - y0 + 0.5) * f)), 22, (255, 200, 0), 3, lineType=cv2.LINE_AA)
+            ex, ey = a['linienende_grundlage']
             cv2.drawMarker(p, (int((ex - x0 + 0.5) * f), int((ey - y0 + 0.5) * f)), (0, 160, 0), cv2.MARKER_TILTED_CROSS, 18, 3)
+    pk = np.load(ARBEIT + '/augen_punkte.npz')
+    for p in (p1, p2, p3):
+        for k_ in ('rechts', 'links'):
+            m_ = cv2.resize(pk[k_][y0:y1, x0:x1].astype(np.uint8), None, fx=f, fy=f, interpolation=cv2.INTER_NEAREST) > 0
+            kontur(p, m_, (255, 255, 255), 4); kontur(p, m_, (255, 200, 0), 2)
     np_ = aug['nutzerpunkte']
-    t1 = ['gelber Kreis = Augenpunkt (heller Fleck neben dem Linienende, grünes Kreuz)',
-          'rechts (Wesen): %.1f px neben dem Linienende, L* %.0f gegen %.0f daneben' % (np_[0]['abstand_punkt_zu_linienende_px_grundlage'], np_[0]['lab_punkt'][0], np_[0]['lab_umgebung'][0]),
-          'links (Wesen): %.1f px neben dem Linienende, L* %.0f gegen %.0f daneben' % (np_[1]['abstand_punkt_zu_linienende_px_grundlage'], np_[1]['lab_punkt'][0], np_[1]['lab_umgebung'][0])]
-    t2 = ['magenta = heutige G4-Augenflächen (%d Flächen, %d in Bild 2 sichtbar)' % (aug['heute_g4_augen']['flaechen'], aug['heute_g4_augen']['sichtbar_bild2']),
-          'rechtes Auge: Mitte %.1f Video-px vom Nutzerpunkt, überlappt' % np_[0]['heutige_augenflaeche_naechste']['abstand_mitte_px_vorlage'],
-          'linkes Auge: Mitte %.1f Video-px vom Nutzerpunkt (nach innen/oben), keine Überlappung' % np_[1]['heutige_augenflaeche_naechste']['abstand_mitte_px_vorlage']]
-    t3 = ['magenta = Vorschlag: Flächen unter Ihren Punkten = Auge (%s)' % ', '.join(ZI['augen_vorn']['modell_zuordnung']['liste']),
-          'grau gestrichelt = heutige Augenflächen, die nicht unter Ihren Punkten liegen (würden Haut)',
-          'rechtes Auge: Fläche 22|0|82 ist schon heute Auge; links neu: 22|1|112, 22|1|113']
+    t1 = ['gelb umrandet = Augenpunkt (heller Fleck neben dem Linienende, grünes Kreuz)',
+          'rechts (Wesen): %.1f px neben dem Linienende, %.1f Video-px groß' % (np_[0]['abstand_punkt_zu_linienende_px_grundlage'], np_[0]['punkt_px_vorlage']),
+          'links (Wesen): %.1f px neben dem Linienende, %.1f Video-px groß' % (np_[1]['abstand_punkt_zu_linienende_px_grundlage'], np_[1]['punkt_px_vorlage'])]
+    gr_ = aug['heute_g4_augen']['gruppen']
+    t2 = ['magenta = heutige Augen des Modells (ganze Flächen)',
+          'rechtes Auge heute %.0f Video-px, Mitte %.1f px neben Ihrem Punkt, Überlappung %.1f px' % (gr_[0]['px_vorlage'], np_[0]['heutige_augenflaeche_naechste']['abstand_mitte_px_vorlage'], np_[0]['heutige_augenflaeche_naechste']['ueberlappung_px_vorlage']),
+          'linkes Auge heute %.0f Video-px, Mitte %.1f px neben Ihrem Punkt, keine Überlappung' % (gr_[1]['px_vorlage'], np_[1]['heutige_augenflaeche_naechste']['abstand_mitte_px_vorlage'])]
+    t3 = ['magenta = Vorschlag: Auge NUR an Ihren Punkten (gelb umrandet), texelgenau',
+          'rechts %d Texel, links %d Texel; beide Augen nach derselben Regel' % (np_[0]['auge_texel']['zahl'], np_[1]['auge_texel']['zahl']),
+          'grau gestrichelt = heutige Augenflächen außerhalb Ihrer Punkte (wären dann Haut - Frage)']
     r1 = nebeneinander([beschriften(p1, t1, 18), beschriften(p2, t2, 18), beschriften(p3, t3, 18)],
                        ['Ihr Bild "Gesicht vorne" (Ausschnitt, x%d)' % f, 'Modellkopf heute (Bild-2-Pose)', 'Vorschlag nach Ihren Augenpunkten'], gr=24)
     # Kopfumriss
@@ -222,7 +233,7 @@ def kopf_tafel():
     for c in aug['heute_g4_augen']['gruppen']:
         x, y = c['mitte_grundlage']; cv2.drawMarker(b, (int(x), int(y)), (255, 0, 255), cv2.MARKER_CROSS, 12, 2)
     b = cv2.resize(b[gy0:gy1, gx0:gx1], None, fx=f2, fy=f2, interpolation=cv2.INTER_LINEAR)
-    mm = mod.copy(); einfaerben(mm, mk, (0, 170, 255), 0.45); kontur(mm, MS['gesicht_vorn'], (230, 0, 0), 3)
+    mm = mod_g.copy(); einfaerben(mm, mk, (0, 170, 255), 0.45); kontur(mm, MS['gesicht_vorn'], (230, 0, 0), 3)
     mm = cv2.resize(mm[gy0:gy1, gx0:gx1], None, fx=f2, fy=f2, interpolation=cv2.INTER_LINEAR)
     d = kopf['modell_minus_nutzer_vorlage_px']
     zeilen = [['oben', '%.1f' % kopf['nutzerumriss_bbox_vorlage'][1], '%.1f' % kopf['modellkopf_bbox_vorlage'][1], '%+.1f' % d['oben'],
@@ -248,6 +259,49 @@ def kopf_tafel():
     stapeln([titel, r1, r2, tb]).save(os.path.join(ZIEL, '22_kopf_augen.png'))
 
 
+def geteilt_tafel():
+    """Tafel 23 (T2): wo erschiene jeder Fleck AUCH, weil die heutige Textur dieselben Texel an mehreren Stellen benutzt."""
+    from g_tafeln import spot_masken, MATFARBE, TX, wort
+    R = {n: dict(np.load(ARBEIT + '/render_asset_%d.npz' % n)) for n in (1, 2)}
+    reihen = []
+    zs = [z for z in ZJ['zonen'] if z['id'] in TX]
+    for z in zs:
+        c = MATFARBE.get(z['material'], (255, 0, 0))
+        bilder = []
+        for n in (1, 2):
+            rr = R[n]
+            out = modell_grau(rr['rgb'], rr['maske'])
+            auf, fremd = spot_masken(rr, z['id'])
+            einfaerben(out, auf, c, 0.95)
+            rot = cv2.dilate(fremd.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+            einfaerben(out, rot, (0, 0, 0), 0.85)
+            out = cv2.resize(out, None, fx=0.85, fy=0.85, interpolation=cv2.INTER_AREA)
+            bilder.append(out)
+        g = z['geteilte_texel']
+        txt = ['Nr. %s %s (%s)' % (z['nr'], wort(z), z['material']),
+               'Fleck: %d Texel, %d Video-px.' % (z['texel']['zahl'], z['texel']['flaeche_video_px']),
+               'Dieselben Texel nutzen %d weitere Flächen.' % g['andere_flaechen'],
+               'Dort erschiene der Fleck auch: Bild 1 %.0f, Bild 2 %.0f Video-px;' % (g['bild1_px_video'], g['bild2_px_video']),
+               'rundum ' + ', '.join('%s %d' % (k, v) for k, v in g['rundum_px'].items()) + ' px (Tafel 20).',
+               'Teile mit Mitbenutzung: ' + ', '.join('%s (%d Fl.)' % (v['teil'], v['flaechen']) for v in sorted(g['je_mesh'].values(), key=lambda v: -v['flaechen'])[:6])
+               + (' ...' if len(g['je_mesh']) > 6 else '')]
+        tb = np.full((bilder[0].shape[0], 760, 3), 255, np.uint8)
+        im = Image.fromarray(tb)
+        y = 6
+        for i, t_ in enumerate(txt):
+            for l in umbruch(t_, 19 if i else 21, 740, i == 0):
+                text(im, (8, y), l, 19 if i else 21, i == 0); y += 25
+        reihen.append(nebeneinander([np.array(im), bilder[0], bilder[1]], ['', 'Bild 1 (Rückansicht)', 'Bild 2 (Vorderansicht)'], gr=20))
+    W = max(r.size[0] for r in reihen)
+    titel = titelzeile(W, '23  Geteilte Texel: wo der Fleck heute AUCH erscheinen würde',
+                       'Die heutige Textur benutzt dieselben Texel (Bildpunkte der Textur) für viele Flächen. Würde man einen Fleck nur in die Texel unter Ihrer '
+                       'Stelle malen, erschiene er überall dort mit, wo andere Flächen dieselben Texel benutzen. Farbe = der Fleck an Ihrer Stelle; '
+                       'schwarz = dort erschiene er zusätzlich. Diese Flächen bräuchten in der späteren Textur eigene Texel (Liste je Zone in zonen_v2.json, '
+                       '"brauchen_eigene_texel"). Hier wird nichts umgebaut, nur gezeigt und gezählt.')
+    stapeln([titel] + reihen).save(os.path.join(ZIEL, '23_geteilte_texel.png'))
+
+
 if __name__ == '__main__':
     krallen_tafel(); print('21')
     kopf_tafel(); print('22')
+    geteilt_tafel(); print('23')

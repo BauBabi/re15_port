@@ -2,7 +2,8 @@
 vorn links: 28 mit K5c-Geometrie zurueck. vorn rechts: 31 bleibt; 19 mit K5c-Lage zurueck und genau EIN Laengenfaktor entlang der eigenen
 Achse (Wurzel -> Spitze) aus der gemessenen Nutzer-Spitze; 20 und 29 nur um ihre Wurzel (Knochen-Ursprung an der Hand) gedreht, Laenge wie K5c,
 bis sie in Bild 2 ganz in der vom Schriftzug verdeckten Flaeche liegen und kein Pixel ueber sichtbarem Hintergrund (Annahme nach Nutzer-Wortlaut
-"vorne rechts hat er wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift."). hinten unveraendert."""
+"vorne rechts hat er wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift."). hinten unveraendert.
+Runde 2: 20 und 29 bleiben eingezogen (Asset), weil keine Drehung die Annahme erfuellt (Pruefer r1 Nr. 12); Frage an den Nutzer."""
 import copy, json, os, struct, sys, math
 import numpy as np, cv2
 from scipy import ndimage as ndi
@@ -225,7 +226,7 @@ def durchdringung(mo, kf, b, mesh, Hd, wurzel_r=200.0):
 def main():
     mo_a = ka.mo; mo_c = kc.mo
     mo = copy.deepcopy(mo_a)
-    ergebnis = dict(regel=__doc__.strip(), variante=VAR, variante_text='A: 20/29 ganz in der Schriftzug-Flaeche (Auftrag)' if VAR == 'A' else 'B: 20/29 nur ohne Pixel ueber sichtbarem Hintergrund (duerfen ueber der Figur liegen)', wasserzeichen_px_vorlage=int(WZ.sum()))
+    ergebnis = dict(regel=__doc__.strip(), wasserzeichen_px_vorlage=int(WZ.sum()))
     # vorn links: 28 zurueck
     mo.meshes[28] = copy.deepcopy(mo_c.meshes[28])
     # vorn rechts: 19 mit K5c-Lage, ein Laengenfaktor aus der Nutzer-Spitze
@@ -247,82 +248,20 @@ def main():
                                 rest_abstand_px=round(float(np.hypot(tip_neu[0] - nutzer_spitze[0], tip_neu[1] - nutzer_spitze[1])), 2),
                                 laenge_k5c=round(float(np.linalg.norm(tip19)), 1), laenge_vorschlag=round(float(np.linalg.norm(tip19) * f), 1))
     print('19', ergebnis['kralle19'])
-    # 20 / 29: Drehung um die Wurzel
-    Hd = hand_dreiecke(mo_a, kf2)
-    Z = tiefenbild(mo, kf2, lage2, gier2, kam2, ohne=(20, 29))
-    ergebnis['drehungen'] = {}
-    for b in (20, 29):
-        m0 = mo_c.meshes[b]
-        pen0, nv = durchdringung(mo_a, kf2, b, m0, Hd)
-
-        def bewerte(rv, full=False):
-            Rm = Rot.from_rotvec(rv).as_matrix()
-            m = drehe(m0, Rm)
-            tv, qv = ecken(m)
-            tr = projiziere(mo, kf2, lage2, gier2, kam2, b, tv, qv, m)
-            sm = sichtbar(tr, Z)
-            aus = int((sm & ~WZ).sum()); bg = int((sm & BG2).sum())
-            if full:
-                pen, _ = durchdringung(mo_a, kf2, b, m, Hd)
-                return dict(sichtbar_px=int(sm.sum()), ausserhalb_schriftzug_px=aus, ueber_hintergrund_px=bg, in_schriftzug_px=int((sm & WZ).sum()),
-                            durchdringung_ecken=pen, maske=sm, ganz=ganz(tr), mesh=m)
-            pen, _ = durchdringung(mo_a, kf2, b, m, Hd)
-            return aus + 5 * bg + 400 * pen + 0.5 * np.degrees(np.linalg.norm(rv))
-        start = bewerte(np.zeros(3), True)
-        # Suche: 6000 gleichverteilte Drehungen (SO(3)) + Schwenk-Gitter; Wertung lexikografisch genaehert:
-        # sichtbare px ausserhalb Schriftzug, dann Durchdringung, dann Drehwinkel
-        def kosten(rv):
-            Rm = Rot.from_rotvec(rv).as_matrix(); m = drehe(m0, Rm); tv, qv = ecken(m)
-            sm = sichtbar(projiziere(mo_a, kf2, lage2, gier2, kam2, b, tv, qv, m), Z)
-            aus = int((sm & (BG2 if VAR == 'B' else ~WZ)).sum()); pen, _ = durchdringung(mo_a, kf2, b, m, Hd)
-            return aus, pen, float(np.degrees(np.linalg.norm(rv)))
-        rvs = list(Rot.random(6000, random_state=11).as_rotvec())
-        werte = []
-        for rv in rvs:
-            aus, pen, gr = kosten(rv)
-            werte.append((aus, pen, gr, rv))
-        werte.sort(key=lambda t: (t[0] + 60 * t[1], t[2]))
-        ohne_pen = sorted([w for w in werte if w[1] == 0], key=lambda t: (t[0], t[2]))
-        kandid = [w[3] for w in werte[:8]] + [w[3] for w in ohne_pen[:8]]
-        f_ = lambda rv: (lambda a_, p_, g_: a_ + 60 * p_ + 0.05 * g_)(*kosten(rv))
-        best = (f_(np.zeros(3)), np.zeros(3))
-        for rv in kandid:
-            r = minimize(f_, rv, method='Nelder-Mead', options=dict(xatol=1e-3, fatol=0.2, maxiter=300))
-            if r.fun < best[0]:
-                best = (float(r.fun), r.x)
-        # kleinste Drehung mit 0 px ausserhalb und 0 Durchdringung, falls vorhanden
-        null = sorted([w for w in werte if w[0] == 0 and w[1] == 0], key=lambda t: t[2])
-        if null and kosten(best[1])[:2] != (0, 0):
-            best = (0.0, null[0][3])
-        if null:
-            r = minimize(lambda rv: (lambda a_, p_, g_: a_ * 1000 + p_ * 1000 + g_)(*kosten(rv)), best[1], method='Nelder-Mead',
-                         options=dict(xatol=1e-3, fatol=0.05, maxiter=300))
-            if kosten(r.x)[:2] == (0, 0):
-                best = (0.0, r.x)
-        such = dict(stichproben=len(werte), mit_0_ausserhalb_und_0_durchdringung=len(null),
-                    mit_0_ausserhalb=len([w for w in werte if w[0] == 0]), mit_0_durchdringung=len(ohne_pen),
-                    bestes_ohne_durchdringung_ausserhalb_px=ohne_pen[0][0] if ohne_pen else None)
-        e = bewerte(best[1], True)
-        rv = best[1]
-        ergebnis['drehungen'][str(b)] = dict(
-            drehvektor_rad=[round(float(x), 4) for x in rv], drehwinkel_grad=round(float(np.degrees(np.linalg.norm(rv))), 1),
-            drehachse_knochen=[round(float(x), 3) for x in (rv / (np.linalg.norm(rv) + 1e-12))],
-            k5c=dict(sichtbar_px=start['sichtbar_px'], ausserhalb_schriftzug_px=start['ausserhalb_schriftzug_px'],
-                     ueber_hintergrund_px=start['ueber_hintergrund_px'], durchdringung_ecken=pen0),
-            vorschlag=dict(sichtbar_px=e['sichtbar_px'], in_schriftzug_px=e['in_schriftzug_px'], ausserhalb_schriftzug_px=e['ausserhalb_schriftzug_px'],
-                           ueber_hintergrund_px=e['ueber_hintergrund_px'], durchdringung_ecken=e['durchdringung_ecken'], ecken_geprueft=nv),
-            gelungen=bool((e['ausserhalb_schriftzug_px'] == 0 or VAR == 'B') and e['ueber_hintergrund_px'] == 0 and e['durchdringung_ecken'] == 0), suche=such)
-        mo.meshes[b] = e['mesh']
-        Z = np.minimum(Z, Z)  # Szene bleibt (20/29 verdecken sich gegenseitig nicht in der Wertung)
-        print(b, ergebnis['drehungen'][str(b)])
-    # Laenge 20/29 bleibt
-    for b in (20, 29):
-        a0 = np.linalg.norm(spitze(mo_c.meshes[b])); a1 = np.linalg.norm(spitze(mo.meshes[b]))
-        ergebnis['drehungen'][str(b)]['laenge_k5c'] = round(float(a0), 1); ergebnis['drehungen'][str(b)]['laenge_vorschlag'] = round(float(a1), 1)
+    # 20 / 29: Runde 2 (Pruefer r1 Nr. 12): bleiben eingezogen wie im Spiel-Asset, bis der Nutzer Frage 4 beantwortet.
+    # Runde 1 hatte 6000 Drehungen um die Wurzel geprueft: keine lag ganz im Schriftzug ohne Pixel ueber Hintergrund und ohne Handdurchdringung.
+    ergebnis['kralle20_29'] = dict(stand='eingezogen wie im Spiel-Asset (unveraendert)',
+                                   grund='Drehen um die Wurzel erfuellt die Annahme nicht (Runde 1: bestes Ergebnis 135 / 12 px ueber Hintergrund, 2 / 1 Ecken in der Hand, '
+                                         'in Bild 1 330 / 683 px ueber Hintergrund); Entscheidung beim Nutzer (Frage)')
+    # Durchdringung der eigenen Hand (Ecken ausserhalb r 200 um die Wurzel, verallgemeinerte Windungszahl > 0,5)
+    ergebnis['durchdringung'] = {}
+    for b, hand in ((19, 18), (28, 13)):
+        pen, nv = durchdringung(mo_a, kf2, b, mo.meshes[b], hand_dreiecke(mo_a, kf2, hand))
+        ergebnis['durchdringung'][str(b)] = dict(hand=hand, ecken_in_der_hand=pen, ecken_geprueft=nv)
     # EMD schreiben: Asset-EMD, nur Ecken/Normalen der Meshes 19, 20, 28, 29 ersetzt
     emd = bytearray(open(ASSET + '/BAHNSTEIG_FORM.EMD', 'rb').read())
     dir_off, dd = FE.verzeichnis(bytes(emd)); md1 = dd[7]
-    for b in (19, 20, 28, 29):
+    for b in (19, 28):
         (tvo, tvc, tno, tnc, tfo, tfc, tuo, qvo, qvc, qno, qnc, qfo, qfc, quo) = struct.unpack_from('<14I', emd, md1 + 12 + b * 56)
         m = mo.meshes[b]
         assert len(m.tv) == tvc and len(m.qv) == qvc and len(m.tn) == tnc and len(m.qn) == qnc
@@ -340,7 +279,7 @@ def main():
     roh_a = open(ASSET + '/BAHNSTEIG_FORM.EMD', 'rb').read()
     ergebnis['emd'] = dict(datei='BAHNSTEIG_FORM.EMD', meshes_mit_anderen_ecken=diff, bytes_verschieden=int(sum(1 for x, y in zip(roh_a, emd) if x != y)),
                            laenge_gleich=len(roh_a) == len(emd))
-    ergebnis['ecken'] = {str(b): dict(tv=[list(x[:3]) for x in mo.meshes[b].tv], qv=[list(x[:3]) for x in mo.meshes[b].qv]) for b in (19, 20, 28, 29)}
+    ergebnis['ecken'] = {str(b): dict(tv=[list(x[:3]) for x in mo.meshes[b].tv], qv=[list(x[:3]) for x in mo.meshes[b].qv]) for b in (19, 28)}
     # Bild 1: liegt der Vorschlag dort ueber Hintergrund?
     kf1 = ka.kf(*ka.stand(1)[2:]); l1, g1 = ka.stand(1)[:2]; kam1 = P.kamera(1)
     Z1 = tiefenbild(mo, kf1, l1, g1, kam1, ohne=(19, 20, 28, 29))

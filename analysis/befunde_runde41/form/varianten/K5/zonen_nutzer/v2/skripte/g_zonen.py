@@ -45,6 +45,16 @@ def modell_mengen():
     M = {k: set(v) for k, v in ML.items()}
     alle23 = {f for f in ALLE if f.startswith('23|')}
     M['Unterkiefer_aussen'] = alle23 - M['Maulinneres'] - M['Zahn']  # mit Unterlippe (Lippensaum-Flaechen von 23)
+    # Runde 2 (Pruefer r1 Nr. 8): die material.json-Liste 'Maulinneres' enthaelt 14 Flaechen von Kopf 22 in AUGENHOEHE
+    # (Knochen-y der Flaechenmitte -307..-354; Augen -434..-468; Zaehne +262..+282), die dieselbe Texturstelle (u 91-105, v 157-170) benutzen.
+    # Trennung nach Lage: Flaechenmitte Knochen-y < -200 (oberhalb des Mauls) = 'Augenhoehle', Rest = 'Maulinneres_echt'.
+    au, echt = set(), set()
+    for f in M['Maulinneres']:
+        b, vi, i = map(int, f.split('|')); m = ka.mo.meshes[b]
+        verts, faces = (m.tv, m.tf) if vi == 0 else (m.qv, m.qf)
+        y = np.mean([verts[k][1] for k in faces[i][1::2]])
+        (au if (b == 22 and y < -200) else echt).add(f)
+    M['Augenhoehle'] = au; M['Maulinneres_echt'] = echt
     M['Lippe_oben'] = {f for f in M['Lippensaum'] if f.startswith('22|')}
     # Hals-Unterseite: Flaechennormale (Pose Bild 2, nach aussen orientiert) zeigt nach unten (PSX +y), n_y >= 0,5
     lage, gier, clip, bild = ka.stand(2)
@@ -271,14 +281,14 @@ def main():
         if eltern:
             ana['in_nutzerzone_px_vorlage'] = round(float((mz & masken[eltern]).sum() * S2[2]))
             ana['iou_zur_nutzerzone'] = round(float((mz & masken[eltern]).sum() / max((mz | masken[eltern]).sum(), 1)), 3)
-        out.append(dict(nr=nr, id=zid, bild=2, nutzerbild='Gesicht vorne.png' if eltern else None, nutzerwort=wort, linienfarbe=None, bau='modellbedeutung',
-                        material=mat, eltern=eltern, modell=ana, modell_quelle=key))
+        out.append(dict(nr=nr, id=zid, bild=2, nutzerbild='Gesicht vorne.png', nutzerwort=None, modell_beschreibung=wort, linienfarbe=None,
+                        bau='modellbedeutung', material=mat, eltern=eltern, modell=ana, modell_quelle=key))
         masken[zid] = mg; masken[zid + '__modell'] = mz
         print('%-3s %-46s flaechen %d sichtbar %d px %d' % (nr, zid, len(menge), ana['zugeordnet']['sichtbar'], ana['zugeordnet']['px_sichtbar_vorlage']),
               'in Nutzerzone', ana.get('in_nutzerzone_px_vorlage'), 'IoU', ana.get('iou_zur_nutzerzone'))
     np.savez_compressed(ARBEIT + '/zonen_v2_masken.npz', **masken)
     json.dump(out, open(ARBEIT + '/zonen_v2_roh.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    json.dump({k: sorted(v) for k, v in MM.items() if k in ('Unterkiefer_aussen', 'Hals_unten', 'Zehen25', 'Zehen27')},
+    json.dump({k: sorted(v) for k, v in MM.items() if k in ('Unterkiefer_aussen', 'Hals_unten', 'Zehen25', 'Zehen27', 'Augenhoehle', 'Maulinneres_echt')},
               open(ARBEIT + '/modellmengen_v2.json', 'w', encoding='utf-8'), indent=0)
 
 

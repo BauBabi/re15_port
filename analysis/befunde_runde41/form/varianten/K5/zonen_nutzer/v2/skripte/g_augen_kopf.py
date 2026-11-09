@@ -11,48 +11,61 @@ MS = dict(np.load(ARBEIT + '/zonen_v2_masken.npz'))
 K = REND[2]
 s, t = s_t(2)
 erg = {}
-# ---------------------------------------------------------------- Augen
+# ---------------------------------------------------------------- Augen (Runde 2: Auge = die TEXEL unter den Nutzerpunkten, eine Liste)
+import g_texel as GT
+from g_fleck import fleck
 augen = []
-auge_set = MM['Auge'] if 'Auge' in MM else set(material_listen()['Auge'])
+auge_set = set(material_listen()['Auge'])
 mA = maske_von_flaechen(K, auge_set)
+auge_texel_heute = np.zeros(GT.TH * GT.TW, bool)
+for f in auge_set:
+    b_, vi_, i_ = map(int, f.split('|')); auge_texel_heute[GT.UVB[(b_, vi_ * 100000 + i_)]] = True
 lbA, nA = ndi.label(cv2.dilate(mA.astype(np.uint8), np.ones((5, 5), np.uint8)) > 0)
 cl = []
 for i in range(1, nA + 1):
     q = (lbA == i) & mA
     if q.sum():
-        ys, xs = np.nonzero(q); cl.append(dict(px_grundlage=int(q.sum()), px_vorlage=round(float(q.sum() * S2[2])), mitte_grundlage=[round(float(xs.mean()), 1), round(float(ys.mean()), 1)],
+        ys, xs = np.nonzero(q); cl.append(dict(px_grundlage=int(q.sum()), px_vorlage=round(float(q.sum() * S2[2]), 1), mitte_grundlage=[round(float(xs.mean()), 1), round(float(ys.mean()), 1)],
                                               bbox_grundlage=[int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())],
                                               flaechen=sorted({fl_schluessel(int(m), int(f)) for m, f in zip(K['mesh'][q], K['flaeche'][q])})))
 cl.sort(key=lambda c: c['mitte_grundlage'][0])
-for st, name in zip(z['augen_vorn']['bau_info']['stellen'], ('Auge rechts (vom Wesen aus; links im Bild)', 'Auge links (vom Wesen aus; rechts im Bild)')):
-    inf = st['stelle']; x0, y0, x1, y1 = inf['bbox_grundlage']
-    from g_fleck import fleck
+MMx = json.load(open(ARBEIT + '/modellmengen_v2.json', encoding='utf-8'))
+hoehle = set(MMx['Augenhoehle'])
+T_alle = np.zeros(GT.TH * GT.TW, bool); punktmasken = {}
+for st, name, kurz in zip(z['augen_vorn']['bau_info']['stellen'], ('Auge rechts (vom Wesen aus; links im Bild)', 'Auge links (vom Wesen aus; rechts im Bild)'), ('rechts', 'links')):
+    inf = st['stelle']
     q, _ = fleck(2, tuple(st['linienende_grundlage']), 'auge')
+    punktmasken[kurz] = q
     fl = flaechen_px(K, q)
     mx, my = inf['schwerpunkt_grundlage']
-    # naechster heutiger Augen-Cluster
     best = min(cl, key=lambda c: np.hypot(c['mitte_grundlage'][0] - mx, c['mitte_grundlage'][1] - my)) if cl else None
     d = np.hypot(best['mitte_grundlage'][0] - mx, best['mitte_grundlage'][1] - my) if best else None
     vx, vy = v_aus_g(2, mx, my)
+    te, T, tr = GT.texel_zone('augen_vorn', (22,), (), mg=q)
+    T_alle |= T.reshape(-1)
+    Ti = T.reshape(-1)
     augen.append(dict(name=name, linienende_beschriftet=st['linienende_beschriftet'], linienende_grundlage=st['linienende_grundlage'],
                       punkt_grundlage=[mx, my], punkt_vorlage=[round(float(vx), 1), round(float(vy), 1)], punkt_bbox_grundlage=inf['bbox_grundlage'],
-                      abstand_punkt_zu_linienende_px_grundlage=inf['abstand_ende_px'], punkt_px_grundlage=inf['px_grundlage'],
+                      abstand_punkt_zu_linienende_px_grundlage=inf['abstand_ende_px'], punkt_px_grundlage=int(q.sum()), punkt_px_vorlage=round(float(q.sum() * S2[2]), 1),
                       lab_punkt=inf['lab_median_fleck'], lab_umgebung=inf['lab_median_umgebung'],
-                      flaechen_unter_dem_punkt={f: dict(px_grundlage=c, heute_auge=f in auge_set) for f, c in sorted(fl.items(), key=lambda t: -t[1])},
+                      auge_texel=dict(zahl=te['texel_zahl'], texel=te['texel'], traeger=te['traegerflaechen'],
+                                      traeger_art={f: ('heute G4-Auge' if f in auge_set else 'Augenhöhle (Maulinneres-Texturstelle)' if f in hoehle else 'Haut')
+                                                   for f in te['traegerflaechen']},
+                                      davon_im_heutigen_augen_texturbereich=int((Ti & auge_texel_heute).sum())),
+                      flaechen_unter_dem_punkt_px_grundlage={f: c for f, c in sorted(fl.items(), key=lambda t: -t[1])},
                       heutige_augenflaeche_naechste=dict(mitte_grundlage=best['mitte_grundlage'], px_vorlage=best['px_vorlage'],
                                                          abstand_mitte_px_grundlage=round(float(d), 1), abstand_mitte_px_vorlage=round(float(d * s), 1),
                                                          dx_dy_grundlage=[round(best['mitte_grundlage'][0] - mx, 1), round(best['mitte_grundlage'][1] - my, 1)],
-                                                         ueberlappung_px_grundlage=int((q & mA).sum())) if best else None))
-erg['augen'] = dict(nutzerpunkte=augen, heute_g4_augen=dict(flaechen=len(auge_set), sichtbar_bild2=len([f for f in auge_set if f in TOT[2]]),
-                                                         px_vorlage=round(float(mA.sum() * S2[2])), gruppen=cl),
+                                                         ueberlappung_px_grundlage=int((q & mA).sum()), ueberlappung_px_vorlage=round(float((q & mA).sum() * S2[2]), 1)) if best else None))
+erg['augen'] = dict(nutzerpunkte=augen,
+                    heute_g4_augen=dict(flaechen=len(auge_set), sichtbar_bild2=len([f for f in auge_set if f in TOT[2]]),
+                                        px_vorlage=round(float(mA.sum() * S2[2]), 1), gruppen=cl, texel_im_uv_bereich=int(auge_texel_heute.sum())),
                     regel_punkt='Zusammenhangskomponente L* >= Median(21 px) + 12 an jedem gruenen Linienende (Grundlage), gemessen statt Kreis',
-                    vorschlag='Flaechen unter den beiden Nutzerpunkten = Auge; die heutigen G4-Augenflaechen, die nicht darunter liegen, waeren Haut')
-vor = set()
-for a in augen:
-    vor |= set(a['flaechen_unter_dem_punkt'])
-erg['augen']['vorschlag_flaechen'] = sorted(vor)
-erg['augen']['vorschlag_davon_heute_auge'] = sorted(vor & auge_set)
-erg['augen']['vorschlag_neu_auge'] = sorted(vor - auge_set)
+                    vorschlag=dict(regel='Auge = NUR die Texel unter den beiden Nutzerpunkten (Texel-Maske, Mehrheitsregel). Die Traegerflaechen tragen das Auge, '
+                                         'sie werden NICHT ganz zum Auge. Heutige G4-Augenflaechen ausserhalb der Punkte waeren nach dieser Lesung Haut (Frage an den Nutzer).',
+                                   auge_texel_zahl=int(T_alle.sum()),
+                                   je_auge={a['name']: dict(texel=a['auge_texel']['zahl'], punkt_px_vorlage=a['punkt_px_vorlage']) for a in augen}))
+np.savez_compressed(ARBEIT + '/augen_punkte.npz', **punktmasken)
 # ---------------------------------------------------------------- Kopfumriss
 lab = grund_lab(2); L = lab[..., 0]; fig = figur(2)
 modellkopf = np.isin(K['mesh'], [22, 23]) & K['maske']

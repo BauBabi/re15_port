@@ -113,9 +113,11 @@ def render_g(k, n, meshes_ohne=(), mo=None, licht=True):
 def lade_render(name, n, erzeuge):
     p = ARBEIT + '/render_%s_%d.npz' % (name, n)
     if os.path.exists(p):
-        d = dict(np.load(p)); return d['rgb'], d
+        d = dict(np.load(p))
+        if 'u' in d:  # Runde 2: Texel-Kennung (u, v, CLUT-Zeile) muss mit gespeichert sein
+            return d['rgb'], d
     rgb, K = erzeuge()
-    np.savez_compressed(p, rgb=rgb, **{a: K[a] for a in ('mesh', 'flaeche', 'maske')})
+    np.savez_compressed(p, rgb=rgb, **{a: K[a] for a in ('mesh', 'flaeche', 'maske', 'u', 'v', 'zeile')})
     d = dict(np.load(p)); return d['rgb'], d
 
 

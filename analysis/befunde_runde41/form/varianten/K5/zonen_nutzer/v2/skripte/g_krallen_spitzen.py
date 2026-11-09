@@ -25,6 +25,17 @@ def spitze_von(maske_g, n=2):
     return [round(float(x), 1), round(float(y), 1)], round(float(best[0]), 1)
 
 
+def spitze_fern(maske_g, bezug_g, n=2):
+    """Runde 2 (Pruefer r1 Nr. 11): Spitze = Umrisspunkt der Schleife mit dem groessten Abstand zum Schwerpunkt des "Fußabschnitts"
+    (Krallen zeigen vom Fuss weg). Ersetzt die Regel "spitzeste Ecke", die bei Schleife 1 den oberen Ansatz traf."""
+    cnt, _ = cv2.findContours(maske_g.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    c = max(cnt, key=cv2.contourArea)[:, 0, :].astype(float)
+    ys, xs = np.nonzero(bezug_g); m = np.array([xs.mean(), ys.mean()])
+    q = c[np.argmax(np.hypot(*(c - m).T))]
+    x, y = v_aus_g(n, q[0], q[1])
+    return [round(float(x), 1), round(float(y), 1)]
+
+
 def modellspitzen():
     out = {}
     for b in (13, 14, 15, 28, 30, 18, 19, 20, 29, 31):
@@ -40,10 +51,11 @@ def main():
     links = {}
     for i in range(1, 5):
         m = MS['kralle_vorn_links_schleife%d' % i]
-        sp, w = spitze_von(m)
+        sp_alt, w = spitze_von(m)
+        sp = spitze_fern(m, MS['fussabschnitt_vorn_links'] & ~MS['krallen_vorn_links'])
         d = {b: round(float(np.hypot(MSp[b]['k5c'][0] - sp[0], MSp[b]['k5c'][1] - sp[1])), 1) for b in ('13', '14', '15', '28', '30')}
-        links['schleife%d' % i] = dict(nutzerspitze_vorlage=sp, winkel_grad=w, abstand_zu_modellspitze_k5c_px=d,
-                                       naechste=min(d, key=d.get))
+        links['schleife%d' % i] = dict(nutzerspitze_vorlage=sp, regel='fernster Umrisspunkt vom Schwerpunkt des Fußabschnitts',
+                                       spitze_runde1_vorlage=sp_alt, abstand_zu_modellspitze_k5c_px=d, naechste=min(d, key=d.get))
     erg['vorn_links'] = links
     # vorn rechts: drei Gebiete der Nutzer-Zeichnung einzeln (Saaten wie v1)
     lf = 'vorne_rechte_Hand_und_Kralle.png'; dx = VS[lf]['dx']

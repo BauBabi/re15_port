@@ -26,7 +26,7 @@ ZONEN = [
       namensteile=[22, 23]),
     Z('6', 'auge_hinten', KO, 'wahrscheinlich etwas Auge', 'gruen', ('huelle', dict(farbe='gruen', box=(505, 190, 520, 206))), 'Auge',
       teile=[22], eltern='kopf_hinten'),
-    Z('7', 'mund_hinten', KO, 'Mund?', 'lila', ('huelle', dict(farbe='lila', box=(494, 200, 513, 216))), 'Maul innen', teile=[22, 23],
+    Z('7', 'mund_hinten', KO, 'Mund?', 'lila', ('huelle', dict(farbe='lila', box=(494, 200, 513, 216))), 'Maul', teile=[22, 23],
       eltern='kopf_hinten'),
     Z('8', 'schwanz', SW, 'Schwanz der in den Rücken übergeht', 'rot', ('flut', dict(waende=['rot', 'blau'], saaten=[(620, 120), (612, 300)])),
       HT, teile=[0, 1, 2, 3, 4, 5], namensteile=[1, 2, 3, 4, 5]),
@@ -68,7 +68,7 @@ ZONEN = [
     Z('24', 'weisse_musterung_vorderbein_rechts', BV, 'weiße Musterung', 'gruen',
       ('flut', dict(waende=['rot', 'gruen'], saaten=[(440, 210)], box=(395, 185, 520, 240))), 'weiße Musterung', eltern='vorderbein_rechts'),
     Z('25', 'fuss_kralle_vorderbein_rechts', BV, 'Fuß und Kralle', 'hellblau', ('loecher', dict(farbe='hellblau', box=(470, 340, 512, 380))),
-      'Kralle', teile=[18, 19, 20, 29, 31], eltern='vorderbein_rechts'),
+      'Fuß: Haut (Teil benannt, kein Farbwort); Kralle: im Modell hier nicht sichtbar', teile=[18], eltern='vorderbein_rechts'),
     # ------------------------------------------------------------------ Bild 2 (Vorderansicht)
     Z('26', 'oberkoerper_vorn', VO, 'Oberkörper', 'rot', ('flut', dict(waende=['rot'], saaten=[(250, 150)])), HT, teile=[10, 21],
       namensteile=[10, 21], ohne_kopf=True, z='Z4'),
@@ -79,7 +79,7 @@ ZONEN = [
     Z('29', 'augen_vorn', GE, 'Augen', 'gruen', ('fleck_n', dict(enden=[(441, 245), (568, 248)], klasse='auge')), 'Auge', teile=[22],
       eltern='gesicht_vorn', z='Z2'),
     Z('30', 'maul_vorn', GE, 'geöffnetes Maul', 'hellblau', ('flut', dict(waende=['hellblau'], saaten=[(600, 440)], box=(510, 325, 700, 520))),
-      'Maul innen', teile=[22, 23], modell=['Maulinneres', 'Zahn'], eltern='gesicht_vorn', z='Z4'),
+      'Maul', teile=[22, 23], modell=['Maulinneres_echt'], eltern='gesicht_vorn', z='Z4'),
     Z('31', 'unterkiefer_vorn', GE, 'Teil des Unterkiefers', 'lila', ('flut_band', dict(waende=['rot', 'hellblau'], saaten=[(650, 415)],
       box=(595, 330, 705, 500), band_farbe='lila', band_box=(600, 350, 700, 480), band_r=9)), 'Unterkiefer (kein Farbwort)', teile=[23],
       modell=['Unterkiefer_aussen'], eltern='gesicht_vorn', z='Z4'),
@@ -106,11 +106,12 @@ ZONEN = [
     Z('39', 'krallen_vorn_links', VL, 'Exakt 4 Krallen', 'hellblau', ('loecher', dict(farbe='hellblau', box=(378, 438, 572, 546))), 'Kralle',
       teile=[13, 14, 15, 28, 30], eltern='fussabschnitt_vorn_links'),
 ]
-# Modellbedeutung im Kopf (Z4): Teile ohne eigene Nutzerlinie, aber innerhalb der Nutzerzonen Gesicht/Maul/Unterkiefer
+# Modellgliederung im Kopf (Z4): Modellteile OHNE eigenes Nutzerwort. Material daher "nicht belegt" (Pruefer r1 Nr. 9: nichts dazuerfinden).
+# (nr, id, Beschreibung (unser Text, KEIN Nutzerwort), Material, Modellmenge, Bezug-Nutzerzone)
+NB = 'nicht belegt (kein Wort von Ihnen)'
 MODELLZONEN_KOPF = [
-    ('40', 'maulinneres', 'Maulinneres (im "geöffneten Maul")', 'Maul innen', 'Maulinneres', 'maul_vorn'),
-    ('41', 'zaehne', 'Zähne (im "geöffneten Maul"; das Wort Zahn steht nicht im Bild)', 'Zahn', 'Zahn', 'maul_vorn'),
-    ('42', 'lippe', 'Oberlippe (Rand des "geöffneten Mauls", Kopf 22)', 'Lippe (kein Farbwort)', 'Lippe_oben', 'maul_vorn'),
-    ('43', 'unterkiefer_aussen', 'Unterkiefer außen mit Unterlippe ("Teil des Unterkiefers")', 'Unterkiefer (kein Farbwort)', 'Unterkiefer_aussen', 'unterkiefer_vorn'),
-    ('44', 'hals_unterseite', 'Hals-Unterseite (kein Nutzerwort)', 'Haut (nicht belegt)', 'Hals_unten', None),
+    ('40', 'augenhoehle', 'Flächen rund um die Augen, die dieselbe Texturstelle wie das Maulinnere benutzen (Modellgliederung)', NB, 'Augenhoehle', 'augen_vorn'),
+    ('41', 'zaehne', 'Zähne (Modellgliederung, im "geöffneten Maul")', NB, 'Zahn', 'maul_vorn'),
+    ('42', 'lippe', 'Oberlippe (Modellgliederung, Rand des "geöffneten Mauls")', NB, 'Lippe_oben', 'maul_vorn'),
+    ('44', 'hals_unterseite', 'Hals-Unterseite (Modellgliederung)', 'Haut (nicht belegt)', 'Hals_unten', None),
 ]

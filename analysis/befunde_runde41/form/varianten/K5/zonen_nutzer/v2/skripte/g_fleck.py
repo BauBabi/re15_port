@@ -94,8 +94,12 @@ def wachsen(n, ende_g, rv, tol=12.0, r_max=22, vorlauf=4, ohne_weiss=True):
     if ohne_weiss:
         erl &= ~weiss
     lb, _ = ndi.label(erl)
-    ids = np.unique(lb[saat & erl]); ids = ids[ids > 0]
-    q = np.isin(lb, ids)
+    # Runde 2 (Pruefer r1 Nr. 15): je Linienende genau EIN Farbgebiet = die Komponente am saatnaechsten Pixel
+    sy_, sx_ = np.nonzero(saat & erl)
+    if len(sx_) == 0:
+        return np.zeros((H, W), bool), None
+    j = np.argmin((sx_ - sx) ** 2 + (sy_ - sy) ** 2)
+    q = lb == lb[sy_[j], sx_[j]]
     q = ndi.binary_fill_holes(q)
     if not q.any():
         return q, None

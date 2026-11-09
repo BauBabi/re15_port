@@ -1,6 +1,7 @@
 """Vorlage-Tafeln fuer den Nutzer (Grundlage v2). Aufruf: python g_tafeln.py <zielordner>"""
 import json, os, sys
 import numpy as np, cv2
+from scipy import ndimage as ndi
 from PIL import Image, ImageDraw
 from g_basis import *
 from g_tafel_basis import *
@@ -13,6 +14,21 @@ ZONEN = ZJ['zonen']
 ZI = {z['id']: z for z in ZONEN}
 MS = dict(np.load(ARBEIT + '/zonen_v2_masken.npz'))
 R = {n: dict(np.load(ARBEIT + '/render_asset_%d.npz' % n)) for n in (1, 2)}
+R2OK = dict(np.load(ARBEIT + '/render_asset_ohnekopf_2.npz'))
+TX = json.load(open(ARBEIT + '/texel.json', encoding='utf-8'))['zonen']
+TB = dict(np.load(ARBEIT + '/texel_masken.npz'))
+TW = 512
+
+
+def spot_masken(K, zid):
+    """Texelgenauer Fleck in einem Kennungs-Render: (auf den Traegerflaechen, auf anderen Flaechen wegen geteilter Texel)."""
+    T = TB[zid].reshape(-1)
+    ti = np.where(K['maske'], K['v'].astype(np.int64) * TW + K['u'], 0)
+    hit = K['maske'] & T[ti]
+    key = K['mesh'].astype(np.int64) * 1000000 + K['flaeche']
+    tr = [int(f.split('|')[0]) * 1000000 + int(f.split('|')[1]) * 100000 + int(f.split('|')[2]) for f in TX[zid]['traegerflaechen']]
+    auf = hit & np.isin(key, tr)
+    return auf, hit & ~auf
 BILDER = ['Rücken.png', 'Kopf_von_hinten.png', 'Schwanz_hinten.png', 'linkes_bein_hinten.png', 'rechtes_bein_hinten.png',
           'linker_rechter_Fuß_hinten.png', 'Bein_Vorne_rechts.png', 'Vorne_Oberkörper.png', 'Gesicht vorne.png',
           'vorne_rechte_Hand_und_Kralle.png', 'Vorderes_Linkes_Bein_mit_fuß.png']
@@ -32,13 +48,18 @@ def rang(z):
 
 def zonen_von(bild):
     zs = [z for z in ZONEN if z.get('nutzerbild') == bild]
-    if bild == 'Gesicht vorne.png':
-        zs += [ZI['hals_unterseite']]
     return sorted(zs, key=lambda z: (rang(z), -z.get('zone_px_vorlage', 0)))
 
 
 def modellteile_text(z):
     zu = z['modell_zuordnung']
+    if z.get('texel'):
+        t = z['texel']; teile = sorted({int(f.split('|')[0]) for f in t['traegerflaechen']})
+        txt = 'Fleck texelgenau: %d Texel (%d Video-px) auf %s' % (t['zahl'], t['flaeche_video_px'], ', '.join('%s (Teil %d)' % (TEILNAME[b], b) for b in teile))
+        g = z.get('geteilte_texel', {})
+        if g.get('andere_flaechen'):
+            txt += '; dieselben Texel nutzen %d weitere Flächen (Tafel 23)' % g['andere_flaechen']
+        return txt
     teile = []
     for b, nfl in zu['je_mesh'].items():
         teile.append('%s (Teil %s): %d Fl.' % (TEILNAME[int(b)], b, nfl))
@@ -47,36 +68,69 @@ def modellteile_text(z):
         t += ' (davon %d in diesem Bild sichtbar)' % zu['sichtbar']
     if z.get('ganzes_teil'):
         t += '; ganzes Teil inkl. Rückseite: ' + ', '.join('%s' % TEILNAME[b] for b in z['ganzes_teil']['meshes'])
-    if z.get('teilflaeche'):
-        t += ' – Material nur an der Stelle, nicht auf der ganzen Fläche'
     return t
 
 
+def farben_fuer(zs):
+    """Teil-Zonen: Falschfarben der Palette; Flecken: Farbe ihres Materials (wie Tafel 20, Reihe B), damit man das Material sofort sieht."""
+    out = {}; k = 0
+    for z in zs:
+        if z['id'] in TX and z['material'] in MATFARBE:
+            out[z['id']] = MATFARBE[z['material']]
+        else:
+            while min(sum(abs(a - b) for a, b in zip(farbe(k), m)) for m in MATFARBE.values()) < 90:
+                k += 1
+            out[z['id']] = farbe(k); k += 1
+    return out
+
+
+def wort(z):
+    if z.get('nutzerwort') is None:
+        return '– kein Wort von Ihnen; Modellgliederung: ' + z.get('modell_beschreibung', '')
+    return '"%s"' % z['nutzerwort']
+
+
 def panel_modell(n, zs, dx, H, W, farben, mit_nummern=True, k=None):
-    """Modell (grau) im Rahmen des beschrifteten Bildes, Zonen eingefaerbt; Rueckgabe Bild + Markenpunkte."""
+    """Modell (grau) im Rahmen des beschrifteten Bildes. Runde 2 (Nutzer: "komplette quader ... viel zu ungenau"):
+    Teil-Zonen nur als duenner Umriss mit leichter Toenung; Flecken TEXELGENAU (nur die Texel unter Ihrer Stelle, Form wie im Video).
+    Nichts wird ausgeblendet oder umgefaerbt, um einen Darstellungsfehler zu verbergen (T4)."""
     rr = k or R[n]
     h, w = rr['maske'].shape
     out = np.full((H, W, 3), 255, np.uint8)
     out[:h, dx:dx + w] = modell_grau(rr['rgb'], rr['maske'])
+    ziel = out[:h, dx:dx + w]
     marken_ = []
+    flecken, teile = [], []
+    for z in zs:
+        (flecken if z['id'] in TX else teile).append(z)
+    # 1) Teil-Zonen: leichte Toenung + duenner Umriss
+    for z in teile:
+        c = farben[z['id']]; mz = MS.get(z['id'] + '__modell'); mg = MS.get(z['id'])
+        if mz is not None and mz.any():
+            einfaerben(ziel, mz, c, 0.22)
+            kontur(ziel, mz, c, 2)
+        elif mg is not None and mg.any():
+            schraffur(ziel, mg, c, 6)
+    # 2) Flecken texelgenau, kraeftig
+    for z in flecken:
+        c = farben[z['id']]
+        auf, _ = spot_masken(rr, z['id'])
+        einfaerben(ziel, auf, c, 0.92)
+    # 3) Ihre Stelle als Strichlinie (alle Zonen mit eigener Stelle)
+    for z in zs:
+        c = farben[z['id']]; mg = MS.get(z['id'])
+        if mg is not None and mg.any() and z['bau'] != 'modellbedeutung':
+            gestrichelt(ziel, mg, tuple(int(v * 0.6) for v in c), 1 if z['id'] not in TX else 2, 5)
     for z in zs:
         c = farben[z['id']]
-        mz = MS.get(z['id'] + '__modell'); mg = MS.get(z['id'])
-        ziel = out[:h, dx:dx + w]
-        if z.get('teilflaeche') and mg is not None and mg.any():
-            # Stelle: nur der Fleck selbst kraeftig; die tragenden Flaechen nur als feine Linie
-            kontur(ziel, mz, c, 1)
-            einfaerben(ziel, mg & rr['maske'], c, 0.9)
-        elif mz is not None and mz.any():
-            einfaerben(ziel, mz, c, 0.70)
-        elif mg is not None:
-            schraffur(ziel, mg, c, 6)
-        if mg is not None and mg.any() and z['bau'] != 'modellbedeutung':
-            gestrichelt(ziel, mg, tuple(int(v * 0.6) for v in c), 2)
-        q = (mg & rr['maske']) if (z.get('teilflaeche') and mg is not None and (mg & rr['maske']).any()) else (mz if (mz is not None and mz.any()) else mg)
+        if z['id'] in TX:
+            q, _ = spot_masken(rr, z['id'])
+            if not q.any():
+                q = MS.get(z['id'])
+        else:
+            mz = MS.get(z['id'] + '__modell'); q = mz if (mz is not None and mz.any()) else MS.get(z['id'])
         if q is not None and q.any():
             ys, xs = np.nonzero(q)
-            # Punkt im Inneren nahe dem Schwerpunkt
             dt = cv2.distanceTransform(np.pad(q, 1).astype(np.uint8), cv2.DIST_L2, 3)[1:-1, 1:-1]
             cx, cy = xs.mean(), ys.mean()
             sc = dt - 0.02 * np.hypot(np.arange(w)[None, :] - cx, np.arange(h)[:, None] - cy)
@@ -90,11 +144,72 @@ def legende(zs, farben, breite):
     zeilen, fb, mk = [], [], []
     for z in zs:
         si, grund, aend = z['sicherheit'], z['sicherheit_grund'], z['aenderung_v1']
-        zeilen.append([z['nr'], '"%s"' % z['nutzerwort'], modellteile_text(z), z['material'], '%s: %s' % (si, grund), aend or '–'])
+        zeilen.append([z['nr'], wort(z), modellteile_text(z), z['material'], '%s: %s' % (si, grund), aend or '–'])
         fb.append(farben[z['id']]); mk.append(bool(aend))
     sp = [('Nr', 0.045), ('Ihr Wort (wörtlich)', 0.19), ('Modellteil(e) und Flächenzahl', 0.22), ('Material laut Ihrem Wort', 0.12),
           ('Sicherheit und Grund', 0.26), ('Änderung gegenüber v1', 0.165)]
     return tabelle(breite, sp, zeilen, gr=20, kopf_gr=21, farben=fb, markierung=mk)
+
+
+_GT = None
+
+
+def gt():
+    global _GT
+    if _GT is None:
+        import g_texel
+        _GT = g_texel
+    return _GT
+
+
+def nahansichten(z, farbe_rgb, ziel_h=380):
+    """T3: je Fleck (je raeumlich getrennter Teil) eine Nahansicht: Video-Ausschnitt mit gemessenem Umriss | Modell mit Texel-Maske in
+    derselben Pose | Ueberlagerung. Render mit 5 Abtastpunkten je Grundlage-Pixel (wie die Texel-Bestimmung)."""
+    GT = gt(); zid = z['id']; n = z['bild']; mg = MS[zid]
+    H, W = mg.shape
+    lab, nl = ndi.label(cv2.dilate(mg.astype(np.uint8), np.ones((41, 41), np.uint8)) > 0)
+    reihen = []
+    teile = [lab == i for i in range(1, nl + 1)]
+    teile.sort(key=lambda q: (np.nonzero(q)[1].mean()))
+    for k, grp in enumerate(teile):
+        m = mg & grp
+        ys, xs = np.nonzero(m)
+        r = 8
+        box = (max(int(xs.min()) - r, 0), max(int(ys.min()) - r, 0), min(int(xs.max()) + r + 1, W), min(int(ys.max()) + r + 1, H))
+        x0, y0, x1, y1 = box
+        K = GT.render_box(n, box, tuple(TX[zid]['render_ohne_meshes']))
+        Fb = GT.F
+        vid = grund_auf_weiss(n)[y0:y1, x0:x1]
+        vid = np.repeat(np.repeat(vid, Fb, 0), Fb, 1)
+        mb = np.repeat(np.repeat(m[y0:y1, x0:x1], Fb, 0), Fb, 1)
+        mod = modell_grau(K['rgb'], K['maske'])
+        auf, fremd = spot_masken(K, zid)
+        einfaerben(mod, auf, farbe_rgb, 0.92)
+        schraffur(mod, fremd, (0, 0, 0), 9)
+        lay = (0.5 * mod + 0.5 * vid).astype(np.uint8)
+        zh = ziel_h if vid.shape[0] <= 1.3 * vid.shape[1] else 700  # hohe, schmale Stellen groesser zeigen
+        f = min(zh / vid.shape[0], 620.0 / vid.shape[1])
+        def gross(b, interp=cv2.INTER_NEAREST):
+            return cv2.resize(b, None, fx=f, fy=f, interpolation=interp)
+        vid_g, mod_g, lay_g = gross(vid, cv2.INTER_LINEAR), gross(mod), gross(lay)
+        mbg = gross(mb.astype(np.uint8)) > 0
+        kontur(vid_g, mbg, (255, 255, 255), 4); kontur(vid_g, mbg, (0, 0, 0), 2)
+        for b_ in (mod_g, lay_g):
+            gestrichelt(b_, mbg, (0, 0, 0), 2, 6)
+        sx = Fb * f  # Video-Pixel (Grundlage) je Tafelpixel
+        teil = '' if len(teile) == 1 else ' (Teil %d von %d)' % (k + 1, len(teile))
+        reihe = nebeneinander([vid_g, mod_g, lay_g], ['Nr. %s%s: Ihr Grundbild' % (z['nr'], teil), 'Modell: Fleck auf den Texeln', 'überlagert'], gr=21)
+        reihen.append(reihe)
+    t = z['texel']; g = z.get('geteilte_texel', {})
+    unter = ('%s - %d Texel, auf dem Modell %d Video-px (Ihre Stelle %d Video-px); Rückprobe: Texel-Fleck deckt sich mit Ihrer Stelle zu IoU %.2f. '
+             'Gestrichelt = Ihre Stelle. Schwarz schraffiert = dort erschiene der Fleck AUCH, weil andere Flächen dieselben Texel benutzen (siehe Tafel 23).' % (
+                 wort(z), t['zahl'], t['flaeche_video_px'], t['stelle_video_px'], t['rueckprobe']['iou']))
+    if t.get('verworfen_durch_teilfilter'):
+        unter += ' Nicht übernommen (anderes Teil im Vordergrund): ' + ', '.join('%s %d px' % (v['teil'], v['px_vorlage']) for v in t['verworfen_durch_teilfilter'].values()) + '.'
+    if t.get('render_ohne_meshes'):
+        unter += ' Modell hier OHNE Kopf/Unterkiefer gezeigt (der Modellkopf sitzt zu hoch und verdeckt sonst die Brust).'
+    kopf = titelzeile(max([1300] + [r.size[0] for r in reihen]), 'Nahansicht Nr. %s: %s' % (z['nr'], z['material']), unter, gr=24)
+    return stapeln([kopf] + reihen, abstand=6)
 
 
 def dateiname(bild):
@@ -110,7 +225,7 @@ def nutzer_tafel(i, bild):
     links = auf_weiss(L)
     zs = sorted(zonen_von(bild), key=lambda z: [int(x) for x in z['nr'].split('.')])
     zs_mal = sorted(zs, key=lambda z: (rang(z), -z.get('zone_px_vorlage', 0)))
-    farben = {z['id']: farbe(k) for k, z in enumerate(zs)}
+    farben = farben_fuer(zs)
     mitte, mk = panel_modell(n, zs_mal, dx, H, W, farben)
     grund = np.full((H, W, 3), 255, np.uint8); g = grund_auf_weiss(n); grund[:g.shape[0], dx:dx + g.shape[1]] = g
     rechts = (0.5 * mitte + 0.5 * grund).astype(np.uint8)
@@ -162,11 +277,13 @@ def nutzer_tafel(i, bild):
         teile = [nebeneinander([links, mitte, rechts], oben_titel, gr=24)]
     breite = max(t.size[0] for t in teile)
     titel = titelzeile(breite, '%02d  %s  (Bild %d, %s)' % (i, bild.replace('.png', ''), n, 'Rückansicht' if n == 1 else 'Vorderansicht'),
-                       'Farbe und Nummer = erkannte Zone. Gefüllt = Modellflächen, die ich der Zone zuordne. Gestrichelt = die Stelle, die ich in Ihrem Bild '
+                       'Farbe und Nummer = erkannte Zone. Kräftig gefüllt = Fleck, texelgenau (nur die Texel unter Ihrer Stelle, Form wie im Video). '
+                       'Dünner Umriss mit leichter Tönung = ganzes Teil oder Abschnitt, den Sie benannt haben. Gestrichelt = die Stelle, die ich in Ihrem Bild '
                        'gelesen habe (Ihr Umriss, oder der Fleck neben Ihrem Linienende). Schraffiert = im Modell an dieser Stelle nichts Passendes sichtbar. '
-                       'Seiten immer aus Sicht des Wesens. Rote Schrift in der letzten Spalte = geändert gegenüber der ersten Fassung (v1).')
+                       'Darunter je Fleck eine Nahansicht. Seiten immer aus Sicht des Wesens. Rote Schrift in der letzten Spalte = geändert gegenüber v1 bzw. Runde 1.')
     leg = legende(zs, farben, breite)
-    t = stapeln([titel] + teile + [leg])
+    nah = [nahansichten(z, farben[z['id']]) for z in zs if z['id'] in TX]
+    t = stapeln([titel] + teile + nah + [leg])
     name = '%02d_%s.png' % (i, dateiname(bild))
     t.save(os.path.join(ZIEL, name))
     return name
@@ -176,7 +293,7 @@ def uebersicht():
     reihen = []
     for n in (1, 2):
         zs = sorted([z for z in ZONEN if z['bild'] == n], key=lambda z: (rang(z), -z.get('zone_px_vorlage', 0)))
-        farben = {z['id']: farbe(k) for k, z in enumerate(zs)}
+        farben = farben_fuer(zs)
         g = grund_auf_weiss(n); h, w = g.shape[:2]
         mitte, mk = panel_modell(n, zs, 0, h, w, farben)
         F = 1.5
@@ -187,10 +304,11 @@ def uebersicht():
         reihen.append((nebeneinander([g, mitte], ['Bild %d: Video (Ihr Grundbild)' % n, 'Bild %d: Modell, gleiche Pose, alle erkannten Zonen' % n], gr=26),
                        zs, farben))
     teile = [titelzeile(1600, '00  Übersicht: alle erkannten Zonen',
-                         'Oben Bild 1 (Rückansicht), unten Bild 2 (Vorderansicht). Nummern wie in den Einzeltafeln 01-11. Gefüllt = zugeordnete Modellflächen, '
-                         'schraffiert = an dieser Stelle im Modell nicht sichtbar.')]
+                         'Oben Bild 1 (Rückansicht), unten Bild 2 (Vorderansicht). Nummern wie in den Einzeltafeln 01-11. Kräftig gefüllt = Fleck, texelgenau '
+                         '(Farbe = Material); dünner Umriss mit leichter Tönung = ganzes Teil oder Abschnitt; gestrichelt = Ihre Stelle; schraffiert = an dieser '
+                         'Stelle im Modell nicht sichtbar.')]
     for (b, zs, farben) in reihen:
-        zeilen = [[z['nr'], '"%s"' % z['nutzerwort'], z['material'], z['sicherheit']] for z in zs]
+        zeilen = [[z['nr'], wort(z), z['material'], z['sicherheit']] for z in zs]
         leg = tabelle(1500, [('Nr', 0.07), ('Ihr Wort', 0.48), ('Material laut Ihrem Wort', 0.28), ('Sicherheit', 0.17)], zeilen, gr=17, kopf_gr=18,
                       farben=[farben[z['id']] for z in zs])
         row = Image.new('RGB', (b.size[0] + leg.size[0] + 20, max(b.size[1], leg.size[1])), (255, 255, 255))
@@ -206,11 +324,11 @@ TEILGRUPPEN = [('Oberkörper (Hüfte, Rücken, Brust, Hals)', (0, 7, 10, 21)), (
                ('linkes Bein vorn (Arm, Hand)', (11, 12, 13)), ('Krallen vorn links', (14, 15, 28, 30))]
 MATFARBE = {'fleischfarben': (240, 150, 120), 'fleischige Wunde/Haut': (200, 60, 90), 'rotes Fleisch': (220, 20, 40), 'Musterung': (60, 170, 70),
             'Musterung/Maserung': (20, 110, 40), 'weiße Musterung': (120, 200, 255), 'bräunliche Musterung': (150, 90, 30), 'Kralle': (250, 200, 0),
-            'Auge': (255, 0, 255), 'Maul innen': (130, 0, 200), 'Zahn': (0, 200, 200), 'Lippe (kein Farbwort)': (0, 90, 200),
-            'Unterkiefer (kein Farbwort)': (110, 140, 255)}
+            'Auge': (255, 0, 255), 'Maul': (130, 0, 200), 'Unterkiefer (kein Farbwort)': (110, 140, 255)}
 
 
-def ansicht(fz, az, el, gross=760, ziel_h=430):
+def ansicht(fz, az, el, flecken=(), gross=760, ziel_h=430, schraffur_fremd=True):
+    """fz: Flaeche -> Farbe (Teil-Zonen); flecken: [(zid, Farbe)] texelgenau (Traegerflaechen kraeftig, fremde Flaechen mit denselben Texeln schraffiert)."""
     a, K = v4f.rundum_bild(ASSET, 2, 0, az, el, gross, grund=255)
     m = K['maske']; out = np.full(a.shape, 255, np.uint8)
     g = cv2.cvtColor(a, cv2.COLOR_RGB2GRAY).astype(np.float32)
@@ -223,6 +341,11 @@ def ansicht(fz, az, el, gross=760, ziel_h=430):
             q = key == kk
             sch[q] = sch[q] * 0.3 + np.array(fz[f]) * 0.7
     out = sch.astype(np.uint8)
+    for zid, c in flecken:
+        auf, fremd = spot_masken(K, zid)
+        einfaerben(out, auf, c, 0.95)
+        if schraffur_fremd:
+            schraffur(out, fremd & ~auf, c, 5)
     ys, xs = np.nonzero(m)
     c = out[max(ys.min() - 12, 0):ys.max() + 12, max(xs.min() - 12, 0):xs.max() + 12]
     f = ziel_h / c.shape[0]
@@ -233,10 +356,10 @@ def ansicht(fz, az, el, gross=760, ziel_h=430):
 
 def rundum():
     """Zwei Reihen: (A) Ihre Teilnamen, kraeftig = in einem Bild belegt, blass = nur benannt (nicht sichtbar, Haut nicht belegt);
-    (B) Material laut Ihrem Wort (nur Zonen mit eigenem Materialwort). Ruhepose Clip 2 Bild 0."""
+    (B) Material laut Ihrem Wort: Flecken texelgenau (schraffiert = gleiche Texel auf anderen Flaechen), Teile nach Flaechen. Ruhepose Clip 2 Bild 0."""
     belegt = set()
     for z in ZONEN:
-        if z['bau'] not in ('modellbedeutung',) and z.get('modell_zuordnung'):
+        if z['bau'] not in ('modellbedeutung',) and z.get('modell_zuordnung') and z['id'] not in TX:
             for f in z['modell_zuordnung']['liste']:
                 belegt.add(f)
     sicht = set()
@@ -251,13 +374,14 @@ def rundum():
             if int(f.split('|')[0]) in ms:
                 fa[f] = c if (f in belegt and f in sicht) else tuple(int(255 - (255 - v) * 0.30) for v in c)
     fb = {}
-    rang_mat = sorted([z for z in ZONEN if z['material'] in MATFARBE], key=lambda z: rang(z))
+    rang_mat = sorted([z for z in ZONEN if z['material'] in MATFARBE and z['id'] not in TX], key=lambda z: rang(z))
     for z in rang_mat:
         for f in z['modell_zuordnung']['liste']:
             fb[f] = MATFARBE[z['material']]
+    fl_b = [(z['id'], MATFARBE[z['material']]) for z in sorted(ZONEN, key=lambda z: -z.get('texel', {}).get('zahl', 0)) if z['id'] in TX]
     ans = [('von vorn', 90, 0), ('von hinten', -90, 0), ('von links (Wesen)', 180, 0), ('von rechts (Wesen)', 0, 0), ('schräg von oben', 45, 40)]
     ra = nebeneinander([ansicht(fa, az, el) for t, az, el in ans], [t for t, _, _ in ans], gr=24)
-    rb = nebeneinander([ansicht(fb, az, el) for t, az, el in ans], [t for t, _, _ in ans], gr=24)
+    rb = nebeneinander([ansicht(fb, az, el, fl_b) for t, az, el in ans], [t for t, _, _ in ans], gr=24)
     W = max(ra.size[0], rb.size[0])
     la = tabelle(W, [('Ihr Teilname (Reihe A)', 0.5), ('kräftig = in Bild 1/2 belegt; blass = nur benannt, im Video nicht sichtbar', 0.5)],
                  [[n, 'Teile ' + ', '.join(str(m) for m in ms)] for n, ms in TEILGRUPPEN], gr=19, kopf_gr=20, farben=[farbe(i) for i in range(len(TEILGRUPPEN))])
@@ -267,9 +391,10 @@ def rundum():
     titel = titelzeile(W, '20  Rundum: wie weit reicht jede Zone?',
                        'Heutiges Modell (Spiel-Asset) in Ruhepose aus fünf Richtungen. Reihe A: Ihre Teilnamen. Kräftige Farbe = Fläche, die in Bild 1 oder 2 '
                        'zu sehen und einer Ihrer Zonen zugeordnet ist; blasse Farbe = gehört zum benannten Teil, ist aber in keinem der zwei Bilder zu sehen '
-                       '(bleibt "Haut (nicht belegt)"). Reihe B: nur die Zonen, für die Ihr Wort ein Material nennt; grau = Haut. '
-                       'Krallen 28, 19, 20, 29 sind im heutigen Modell eingezogen und hier kaum zu sehen (siehe Tafel 21).')
-    ka_t = titelzeile(W, 'Reihe A: Ihre Teilnamen', gr=26); kb_t = titelzeile(W, 'Reihe B: Material laut Ihrem Wort', gr=26)
+                       '(bleibt "Haut (nicht belegt)"). Reihe B: nur die Zonen, für die Ihr Wort ein Material nennt; grau = Haut. Flecken sind texelgenau gefärbt '
+                       '(nur dort, wo Ihre Stelle liegt). Schraffiert in derselben Farbe = dort erschiene der Fleck AUCH, weil die heutige Textur dieselben Texel '
+                       'an mehreren Stellen benutzt (Tafel 23). Krallen 28, 19, 20, 29 sind im heutigen Modell eingezogen (Tafel 21).')
+    ka_t = titelzeile(W, 'Reihe A: Ihre Teilnamen', gr=26); kb_t = titelzeile(W, 'Reihe B: Material laut Ihrem Wort (Flecken texelgenau)', gr=26)
     stapeln([titel, ka_t, ra, la, kb_t, rb, lb]).save(os.path.join(ZIEL, '20_rundum.png'))
 
 
