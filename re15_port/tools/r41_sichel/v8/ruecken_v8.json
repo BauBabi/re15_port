@@ -1,30 +1,75 @@
 {
- "quelle": "ruecken_r3.py (Runde 3, O3; Basis V7 319bbd17, Kette kette_v8.json, Start rs1.json): Koordinatensuche PV-Huegel + Vorderansicht",
+ "quelle": "ruecken_r4 Lauf h (rs4h.json, Koordinatensuche Schritt <= 20 ab rs4h_start) + Ecke 41 z +10 aus dem Raster sfv8/r4 gj3/gj4 (S2b 1,7 statt 2,3)",
  "ecken": {
-  "7": [
-   25,
+  "3": [
+   5,
    0,
-   1
-  ],
-  "29": [
-   10,
-   -29,
    0
   ],
+  "5": [
+   -30,
+   50,
+   75
+  ],
+  "6": [
+   0,
+   0,
+   -20
+  ],
+  "7": [
+   5,
+   15,
+   21
+  ],
+  "9": [
+   5,
+   0,
+   0
+  ],
+  "20": [
+   10,
+   0,
+   0
+  ],
+  "29": [
+   5,
+   -4,
+   5
+  ],
   "30": [
-   45,
-   -120,
-   -1
+   40,
+   -130,
+   -6
+  ],
+  "31": [
+   0,
+   -15,
+   0
+  ],
+  "34": [
+   0,
+   20,
+   -5
+  ],
+  "35": [
+   0,
+   0,
+   30
   ],
   "38": [
-   -2,
-   0,
+   -112,
+   -50,
    0
   ],
   "41": [
-   -1,
-   0,
-   0
+   -81,
+   5,
+   -10
+  ],
+  "43": [
+   -160,
+   -100,
+   110
   ],
   "45": [
    20,
@@ -32,12 +77,12 @@
    1
   ],
   "46": [
-   -117,
-   -111,
+   -2,
+   -1,
    -1
   ],
   "47": [
-   2,
+   7,
    6,
    1
   ],
@@ -47,14 +92,14 @@
    -1
   ],
   "49": [
-   -19,
    1,
-   -40
+   -34,
+   40
   ],
   "50": [
-   0,
-   -1,
-   0
+   5,
+   24,
+   -10
   ],
   "51": [
    2,
@@ -67,40 +112,40 @@
    1
   ],
   "58": [
-   -60,
-   -4,
-   -10
+   0,
+   1,
+   0
   ]
  },
- "start_quelle": "ruecken_r3.py (Runde 3, O3; Basis V7 319bbd17, Kette kette_v8.json, Start ruecken_v8.json): Koordinatensuche PV-Huegel + Vorderansicht",
- "kosten_start": 14.5818,
- "kosten": 6.7021,
+ "start_quelle": "Start fuer ruecken_r4 Lauf h: rs4a + Ecke 49 (0,-35,+40) + Ecke 41 (+30,+45,-30) aus den Rastern sfv8/r4 (Huegel S3b 8,0; S2b 1,7, S2c 4,0)",
+ "kosten_start": 15.9478,
+ "kosten": 14.8418,
  "masse": {
   "S2": {
    "a": {
-    "mittel": 1.7,
+    "mittel": 2.3,
     "max": 5
    },
    "b": [
-    1.8,
-    337
+    2.3,
+    359
    ],
    "c": {
-    "naht_x": 392,
-    "huckel_px": 2.0,
-    "bei_x": 407
+    "naht_x": 360,
+    "huckel_px": 3.0,
+    "bei_x": 375
    },
-   "ok": true
+   "ok": false
   },
   "S3": {
    "a_kuppe": 3.0,
    "b_huegel": [
-    6.5,
-    428
+    8.0,
+    429
    ],
    "c_weitere": [],
    "d_sattel_kopf": [
-    1.5,
+    0.9,
     432
    ],
    "e_K": 2.8,
@@ -108,13 +153,13 @@
   },
   "vorn": [
    {
-    "ueber_max": 2,
-    "ueber_summe": 5.0,
+    "ueber_max": 1,
+    "ueber_summe": 0.0,
     "neue_ecken": []
    },
    {
-    "ueber_max": 0,
-    "ueber_summe": 0.0,
+    "ueber_max": 2,
+    "ueber_summe": 1.0,
     "neue_ecken": []
    },
    {
@@ -127,6 +172,103 @@
     "ueber_summe": 0.0,
     "neue_ecken": []
    }
-  ]
- }
+  ],
+  "schlitz": [
+   [
+    "P1",
+    0
+   ],
+   [
+    "F336",
+    0
+   ],
+   [
+    "F338",
+    0
+   ],
+   [
+    "F340",
+    0
+   ],
+   [
+    "F342",
+    0
+   ],
+   [
+    "F344",
+    0
+   ],
+   [
+    "F346",
+    0
+   ],
+   [
+    "F348",
+    0
+   ],
+   [
+    "F350",
+    0
+   ],
+   [
+    "F352",
+    0
+   ],
+   [
+    "F354",
+    0
+   ],
+   [
+    "F356",
+    0
+   ],
+   [
+    "F358",
+    0
+   ],
+   [
+    "F360",
+    0
+   ],
+   [
+    "F362",
+    0
+   ],
+   [
+    "F364",
+    0
+   ],
+   [
+    "F366",
+    0
+   ],
+   [
+    "F368",
+    0
+   ],
+   [
+    "F370",
+    0
+   ],
+   [
+    "F372",
+    0
+   ]
+  ],
+  "bedeckung": [
+   15.0,
+   15.2,
+   15.1,
+   15.4,
+   15.2,
+   15.2,
+   15.2,
+   15.1,
+   15.2,
+   15.0,
+   15.1
+  ],
+  "s4_wurzel": 58.8
+ },
+ "verfahren": "Koordinatensuche x0 330 Schritt <= 20"
 }

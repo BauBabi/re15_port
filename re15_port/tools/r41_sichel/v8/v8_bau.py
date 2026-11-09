@@ -24,6 +24,12 @@ Stufe s) Schwanz (Messblatt 6a): Ruhekette aus kette_v8.json (kette_suche.py: Wu
    Gehrung der Ruhekette, Manschette 0,45 r, Deckel wie V6, Dorn 0,8 r); Flaechen, UV, CLUT-Zeile 487 und Eckenzahl bleiben.
 Stufe r) Ruecken (Messblatt 6b): Ecken von Mesh 8 aus ruecken_v8.json (ruecken_suche.py).
 Stufe e) Runde 3 (O5): Wurzelrohr-Ende (Ring 0) und Kegelspitze von Mesh 16 unter die Rueckenhaut (einbetten).
+Stufe w) Runde 4 (S10/O5, wurzel_r4.py): Ring 1 von Mesh 16 entlang der Gliedachse an die Haut (15 E. darunter), Ring 0 und Kegelspitze auf
+   Ring 1 - das Wurzelrohr hat keine Flaeche mehr (der Port malt in Maler-Reihenfolge, das Rohr im Rumpf wurde ueber die Haut gemalt).
+   Ersetzt Stufe e. Bau Runde 4: --stufen srwa.
+Stufe a) Runde 4 (adern_r4.py, modus "original_r4"): wie Runde 3, dazu ganz Mesh 8 ausser der Brust auf den Original-Zeilen (Naht rosa/grau)
+   und ganze UV-Gruppen mit einem Schub (Feld C von Mesh 13, Unterarmband von Mesh 14, Huegel und Wurzelstreifen von Mesh 8) auf Texel, die
+   Original-Flaechen derselben Zeile benutzen.
 Stufe a) Runde 3 (O1/O2, adern_r3.py, modus "original"): Zeilen 493-495 = Original-EM30-Zeilen 480-482 bytegleich auf den (W)-rechten Flaechen
    von Mesh 8/13/14 (ohne Feld C und Brust), Huegel-Flaechen mit UV-Schub auf Original-Fleisch. Runde 2 (modus fehlt): Zeilen X1/X2 = V7-Zeile 480/481 + die Original-EM30-Ader-Eintraege derselben Zeile (a* >= 15,
    L* <= 38, bytegleich); Flaechen nach adern_v8.json (adern_suche.py).
@@ -448,6 +454,9 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
         RV.ruecken(ms, ruecken or _p('ruecken_v8.json'), prot)
     if 'e' in stufen:
         einbetten(KB.packen(blob, d, ms, tim), ms, prot)
+    if 'w' in stufen:                 # Runde 4 (S10/O5): Ring 1 an die Haut, Wurzelrohr und Kegel ohne Flaeche (wurzel_r4.py)
+        import wurzel_r4 as W4
+        W4.stufe_w(KB.packen(blob, d, ms, tim), ms, prot)
     if 'a' in stufen:
         import adern_v8 as AV
         AV.adern(ms, t, adern or _p('adern_v8.json'), prot)
@@ -464,7 +473,7 @@ def main():
     ap.add_argument('--aus', default=os.path.join(V.SFV8, 'emd'))
     ap.add_argument('--name', default='EM30_V8.EMD')
     ap.add_argument('--json')
-    ap.add_argument('--stufen', default='srea')
+    ap.add_argument('--stufen', default='srwa')
     a = ap.parse_args()
     neu, prot = bauen(a.basis, a.stufen)
     os.makedirs(a.aus, exist_ok=True)

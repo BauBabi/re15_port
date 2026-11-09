@@ -92,20 +92,36 @@ def adern_original(ms, t, par, prot):
             assert alt in ziel, (b, key, alt)
             setze_zeile(uv, ziel[alt])
             zahl[(int(b), ziel[alt])] = zahl.get((int(b), ziel[alt]), 0) + 1
+    gr = []
+    for g in par.get('gruppen', []):                 # Runde 4 (adern_r4.py): ganze UV-Gruppe, Skalierung um die kleinste Ecke, dann Schub
+        uvs = [flaeche(ms[int(g['mesh'])], k) for k in g['flaechen']]
+        u0 = min(uv[3 * i] for uv in uvs for i in range(3 if len(uv) == 9 else 4))
+        v0 = min(uv[3 * i + 1] for uv in uvs for i in range(3 if len(uv) == 9 else 4))
+        sk = float(g.get('skal', 1.0))
+        for uv in uvs:
+            alt = (uv[2] >> 6) & 0x1FF
+            assert alt in ziel, (g['name'], alt)
+            for i in range(3 if len(uv) == 9 else 4):
+                uv[3 * i] = int(round(u0 + (uv[3 * i] - u0) * sk)) + int(g['schub'][0])
+                uv[3 * i + 1] = int(round(v0 + (uv[3 * i + 1] - v0) * sk)) + int(g['schub'][1])
+                assert 0 <= uv[3 * i] <= 127 and 0 <= uv[3 * i + 1] <= 255, (g['name'], uv)
+            setze_zeile(uv, ziel[alt])
+            zahl[(int(g['mesh']), ziel[alt])] = zahl.get((int(g['mesh']), ziel[alt]), 0) + 1
+        gr.append('%s:%d' % (g['name'], len(uvs)))
     hg = []
     for h in par.get('huegel', []):
         uv = flaeche(ms[8], h['flaeche'])
         schiebe(uv, int(h['schub'][0]), int(h['schub'][1]))
         setze_zeile(uv, ziel[480])
         hg.append(h['flaeche'])
-    prot['adern'] = dict(modus='original', zeilen={str(480 + k): 480 + n + i for i, k in enumerate(ks)},
-                         flaechen={'%d->%d' % kz: c for kz, c in sorted(zahl.items())}, huegel=hg, quelle=par.get('quelle'))
+    prot['adern'] = dict(modus=par.get('modus', 'original'), zeilen={str(480 + k): 480 + n + i for i, k in enumerate(ks)},
+                         flaechen={'%d->%d' % kz: c for kz, c in sorted(zahl.items())}, huegel=hg, gruppen=gr, quelle=par.get('quelle'))
 
 
 def adern(ms, t, par, prot):
     """Runde 2: par = {'zeilen': [0, 1, 2], 'flaechen': {'<mesh>': ['d0', 'v3', ...]}} - jede genannte Flaeche wechselt von Zeile
     480 + k auf Xk = 480 + n + Index von k in 'zeilen'; UV bleibt."""
-    if par.get('modus') == 'original':
+    if par.get('modus') in ('original', 'original_r4'):
         return adern_original(ms, t, par, prot)
     n = int(t['clut'].shape[0])
     ks = [int(k) for k in par.get('zeilen', (0, 1))]
