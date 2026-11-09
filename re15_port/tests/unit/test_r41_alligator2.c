@@ -352,16 +352,18 @@ static int tod_lage(int32_t gx, int32_t gz, int16_t gier, int32_t px, int32_t pz
     if (!re15_gatorszene_r41_key_kasten(*cut, &kb, &kh, &tiefe) || tiefe <= 0) return 0;
     return (int)(1800 * 208 / tiefe);                          /* Quadrat 180 x H / Tiefe, x 10 (H = 208, RID @0x060) */
 }
-/* FG-E7 Option (a): ueber das ganze Becken (Raster schritt, vier Gieren, Leon an der Leiter und mitten im Suedbecken) zeigt die Lagewahl den Schluessel
- * mit mindestens 10,4 Bildpunkten; die Stufen zaehlen, wie oft sie weitersuchen musste. Voller Lauf (Raster 1000, Werkzeug schluessel_scan): 1688 Lagen,
- * Stufe 0: 1595, 1: 48, 2: 33, 3: 12, 4: 0, unter 10,4: 0. */
-int re15_gatorszene_r41_key_durchgang(void);   /* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 3): 0 = Lage im Gebiet ihrer Kamera, 1 = Rueckfall */
-static void schluessel_scan(int schritt, int zeigen, int *lagen, int *klein, int st[5], int32_t *d_max)
+/* FG-E7 Option (a): ueber das ganze Becken (Raster schritt, vier Gieren, Leon an der Leiter und mitten im Suedbecken) sucht die Lagewahl bis zur doppelten Naehe
+ * weiter, bis 10,4 Bildpunkte erreicht sind; die Stufen zaehlen, wie oft sie weitersuchen musste. Seit dem Nutzerbefund 2026-11-09 Punkt 3 (Nachbesserung
+ * Abnahme 0 B1) nur im Gebiet der jeweiligen Kamera: Durchgang 0 = Schwelle dort erreicht, 1 = beste Lage dort unter der Schwelle. Werkzeug schluessel_scan
+ * <raster> [alt] zaehlt je Durchgang (alt = Pruefhaken Stand f8c71298a). */
+int re15_gatorszene_r41_key_durchgang(void);   /* 0 = im Gebiet ihrer Kamera ueber der Schwelle, 1 = dort unter der Schwelle, 2 = ohne Gebiet (Pruefhaken) */
+void re15_gatorszene_r41_key_rueckfall_alt_setzen(int an);
+typedef struct { int lagen, klein, st[5], dg[4], dg_klein[4], ohne_kamera; int32_t d_max, dg_d_max[4]; int dg_px_min[4]; } schl_scan_t;
+static void schluessel_scan(int schritt, int zeigen, schl_scan_t *S)
 {
     static const int32_t sp[2][2] = { { -8200, -25550 }, { 1325, -25550 } };
-    int gebiet = 0;
-    *lagen = 0; *klein = 0; *d_max = 0;
-    for (int i = 0; i < 5; i++) st[i] = 0;
+    memset(S, 0, sizeof *S);
+    for (int i = 0; i < 4; i++) S->dg_px_min[i] = 99999;
     for (int p = 0; p < 2; p++)
         for (int32_t z = -26000; z <= -6500; z += schritt)
             for (int32_t x = -8000; x <= 6000; x += schritt) {
@@ -370,35 +372,61 @@ static void schluessel_scan(int schritt, int zeigen, int *lagen, int *klein, int
                 for (int gi = 0; gi < 4; gi++) {
                     int c, stf; int32_t dm;
                     const int px = tod_lage(x, z, (int16_t)(gi * 1024), sp[p][0], sp[p][1], 0, &c, &stf, &dm);
-                    if (c < 0) continue;
-                    (*lagen)++;
-                    if (re15_gatorszene_r41_key_durchgang() == 0) gebiet++;
-                    if (stf >= 0 && stf < 5) st[stf]++;
-                    if (px < 104) (*klein)++;
-                    if (dm > *d_max) *d_max = dm;
-                    if (zeigen && (stf > 0 || px < 104))
-                        printf("SCAN Leon (%d,%d) Leiche (%d,%d) Gier %d: Cut %d Stufe %d Bild %d.%d, %d von der Leiche\n", (int)sp[p][0], (int)sp[p][1],
-                               (int)x, (int)z, gi * 1024, c, stf, px / 10, px % 10, (int)dm);
+                    if (px < 0) continue;                                    /* Raum/Bank nicht geladen */
+                    if (c < 0) { S->ohne_kamera++; if (zeigen) printf("SCAN Leiche (%d,%d) Gier %d: OHNE Kamera\n", (int)x, (int)z, gi * 1024); continue; }
+                    S->lagen++;
+                    const int dg = re15_gatorszene_r41_key_durchgang();
+                    if (dg >= 0 && dg < 4) {
+                        S->dg[dg]++;
+                        if (dm > S->dg_d_max[dg]) S->dg_d_max[dg] = dm;
+                        if (px < S->dg_px_min[dg]) S->dg_px_min[dg] = px;
+                        if (px < 104) S->dg_klein[dg]++;
+                    }
+                    if (stf >= 0 && stf < 5) S->st[stf]++;
+                    if (px < 104) S->klein++;
+                    if (dm > S->d_max) S->d_max = dm;
+                    if (zeigen && (stf > 0 || px < 104 || dg != 0))
+                        printf("SCAN Leon (%d,%d) Leiche (%d,%d) Gier %d: Cut %d Durchgang %d Stufe %d Bild %d.%d, %d von der Leiche\n", (int)sp[p][0], (int)sp[p][1],
+                               (int)x, (int)z, gi * 1024, c, dg, stf, px / 10, px % 10, (int)dm);
                 }
             }
-    printf("    Scan Raster %d: davon im Gebiet ihrer Kamera (Nutzerbefund 2026-11-09 Punkt 3) %d, Rueckfall wie 0b86e36c6 %d\n", schritt, gebiet, *lagen - gebiet);
-    printf("    Scan Raster %d: %d Lagen, Stufe 0: %d, 1: %d, 2: %d, 3: %d, 4: %d, unter 10,4: %d, groesster Abstand zur Leiche %d\n", schritt, *lagen, st[0], st[1],
-           st[2], st[3], st[4], *klein, (int)*d_max);
+    printf("    Scan Raster %d: %d Lagen; im Gebiet ihrer Kamera ueber der Bildschwelle %d, im Gebiet unter der Bildschwelle %d, OHNE Gebiet %d, ohne Kamera %d\n",
+           schritt, S->lagen, S->dg[0], S->dg[1], S->dg[2], S->ohne_kamera);
+    for (int i = 0; i < 4; i++)
+        if (S->dg[i]) printf("      Durchgang %d: %d Lagen, groesster Abstand zur Leiche %d, kleinstes Bild %d.%d, unter 10,4: %d\n", i, S->dg[i], (int)S->dg_d_max[i],
+                             S->dg_px_min[i] / 10, S->dg_px_min[i] % 10, S->dg_klein[i]);
+    printf("    Scan Raster %d: Stufe 0: %d, 1: %d, 2: %d, 3: %d, 4: %d, unter 10,4: %d, groesster Abstand zur Leiche %d\n", schritt, S->st[0], S->st[1],
+           S->st[2], S->st[3], S->st[4], S->klein, (int)S->d_max);
 }
 static void teil_schluessel_p(void)
 {
-    printf("== schluessel (FG-E7 Option (a)) ==\n");
+    printf("== schluessel (FG-E7 Option (a); Nutzerbefund 2026-11-09 Punkt 3: Schluessel immer im Gebiet seiner Kamera) ==\n");
     int c, stf; int32_t dm;
     int px = tod_lage(-4000, -17000, 0, -8200, -25550, 0, &c, &stf, &dm);
-    PRUEF(px >= 104 && stf >= 1, "Westkanal (-4000,-17000): die Lagewahl sucht weiter (Stufe %d), Cut %d, Bild %d.%d >= 10,4, %d von der Leiche", stf, c, px / 10,
-          px % 10, (int)dm);
+    {   /* Nachbesserung Abnahme 0 B1: im Gebiet von Cut 0 erreicht diese Lage die Schwelle bis zur doppelten Naehe nicht mehr (gemessen Stufe 4, Bild 9,4; Stand
+         * f8c71298a ohne Gebiet 10,4 und mehr) - die Suche geht weiter (Stufe >= 1) und bleibt im Gebiet */
+        const int dg = re15_gatorszene_r41_key_durchgang();
+        PRUEF(stf >= 1 && (dg == 0 || dg == 1) && (dg == 1 || px >= 104), "Westkanal (-4000,-17000): die Lagewahl sucht weiter (Stufe %d), im Gebiet (Durchgang %d), Cut %d, "
+              "Bild %d.%d, %d von der Leiche", stf, dg, c, px / 10, px % 10, (int)dm);
+    }
     px = tod_lage(3413, -25001, 2048, -8200, -25550, 1, &c, &stf, &dm);
     PRUEF(px >= 104 && stf == 0, "Fall r1 (3413,-25001): Naehe wie bisher reicht (Stufe %d), Cut %d, Bild %d.%d", stf, c, px / 10, px % 10);
-    int n, kl, st[5]; int32_t d_max;
-    schluessel_scan(3000, 0, &n, &kl, st, &d_max);
-    PRUEF(n > 100 && kl == 0, "Becken-Scan: %d Lagen, keine unter 10,4 Bildpunkten (%d)", n, kl);
-    PRUEF(st[1] + st[2] + st[3] + st[4] > 0 && d_max <= 2 * 3100, "Scan: die Stufen 1..4 kommen vor (%d), Schluessel hoechstens %d von der Leiche (doppelte Naehe)",
-          st[1] + st[2] + st[3] + st[4], (int)d_max);
+    schl_scan_t S;
+    schluessel_scan(3000, 0, &S);
+    /* Nachbesserung Abnahme 0 B1 (Nutzerbefund 2026-11-09 Punkt 3): jede Lage im Gebiet ihrer Kamera; die Bildschwelle 10,4 gilt, wo sie im Gebiet bis zur doppelten
+     * Naehe erreichbar ist (Durchgang 0), sonst die beste Lage dort (Durchgang 1) - gemessen Raster 3000: 82 / 126 Lagen, kleinstes Bild 6,3 */
+    PRUEF(S.lagen > 100 && S.dg[2] == 0 && S.ohne_kamera == 0, "Becken-Scan: %d Lagen, jede im Gebiet ihrer Kamera (ohne Gebiet: %d, ohne Kamera: %d)", S.lagen,
+          S.dg[2], S.ohne_kamera);
+    PRUEF(S.dg[0] > 0 && S.dg_klein[0] == 0, "Becken-Scan Durchgang 0: %d Lagen, keine unter 10,4 Bildpunkten (%d)", S.dg[0], S.dg_klein[0]);
+    PRUEF(S.st[1] + S.st[2] + S.st[3] + S.st[4] > 0 && S.d_max <= 2 * 3100, "Scan: die Stufen 1..4 kommen vor (%d), Schluessel hoechstens %d von der Leiche "
+          "(doppelte Naehe)", S.st[1] + S.st[2] + S.st[3] + S.st[4], (int)S.d_max);
+    {   /* Gegenprobe Stand f8c71298a (Pruefhaken): der Rueckfall ohne Gebiet kommt vor */
+        re15_gatorszene_r41_key_rueckfall_alt_setzen(1);
+        schl_scan_t A;
+        schluessel_scan(3000, 0, &A);
+        re15_gatorszene_r41_key_rueckfall_alt_setzen(0);
+        PRUEF(A.dg[2] > 0, "Gegenprobe Stand f8c71298a: %d von %d Lagen ohne Gebiet (rot ohne den Bau)", A.dg[2], A.lagen);
+    }
 }
 
 /* ---- Teil: tragen (Lagespruenge mit dem Kanister im Maul, Abnahme G 4 O1) ----------------------------------------------------
@@ -1141,10 +1169,11 @@ int main(int argc, char **argv)
         return 0;
     }
     if (!strcmp(teil, "schluessel_scan")) {   /* Werkzeug: voller Scan */
-        int n, kl, st[5]; int32_t d_max;
+        schl_scan_t S;
         if (!gator_bank()) return 1;
         re15_door_seq_setze_laeufer(fang);
-        schluessel_scan(1000, 1, &n, &kl, st, &d_max);
+        if (argc > 3 && !strcmp(argv[3], "alt")) re15_gatorszene_r41_key_rueckfall_alt_setzen(1);
+        schluessel_scan(argc > 2 ? atoi(argv[2]) : 1000, 1, &S);
         return 0;
     }
     if (!strcmp(teil, "tragelog") && argc >= 5) return tragelog(argv[2], atoi(argv[3]), atoi(argv[4]));

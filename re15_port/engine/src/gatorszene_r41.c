@@ -2084,7 +2084,10 @@ static struct { uint8_t *m; int32_t x0, z0; int nx, nz, cut; } s_geb = { NULL, 0
 static int s_key_gebiet_alt = 0;
 void re15_gatorszene_r41_key_gebiet_alt_setzen(int an) { s_key_gebiet_alt = an; }
 static int s_gebiet_an = 0;      /* 1 = Durchgang 1 der Lagewahl (nur im Gebiet), 0 = Durchgang 2 (Rueckfall wie 0b86e36c6) */
-static int s_key_durchgang = -1; /* Messhaken: 0 = Lage im Gebiet seiner Kamera, 1 = Rueckfall, -1 = keine Wahl */
+static int s_key_durchgang = -1; /* Messhaken: 0 = im Gebiet seiner Kamera ueber der Bildschwelle, 1 = im Gebiet unter der Bildschwelle (Abnahme 0 B1),
+                                  * 2 = ohne Gebiet (nur Pruefhaken-Stand f8c71298a / 0b86e36c6), -1 = keine Wahl */
+static int s_key_rueckfall_alt = 0;  /* Pruefhaken (Abnahme 0 B1): 1 = Stand f8c71298a (Rueckfall ohne Gebiet statt Weiten im Gebiet) */
+void re15_gatorszene_r41_key_rueckfall_alt_setzen(int an) { s_key_rueckfall_alt = an; }
 int re15_gatorszene_r41_key_durchgang(void) { return s_key_durchgang; }
 static void gebiet_frei(void) { free(s_geb.m); s_geb.m = NULL; s_geb.cut = -1; s_geb.nx = s_geb.nz = 0; }
 static int zone_viereck(int i, int32_t x, int32_t z)
@@ -2279,12 +2282,18 @@ static void key_lage_bei_tod(void)
     /* Runde 41 Spur P (FG-E7 Option (a), s. GSZ_KEY_BILD_MIN10): ab Stufe 0 (Naehe wie bisher) weiter, bis die beste Zonenkamera mindestens
      * 10,4 Bildpunkte zeigt. Die Gleichheit der Stufe 0 mit dem bisherigen Ablauf haelt unit_r41_gatorszene_tod fest. */
     int stufe = 0;
-    /* Nutzerbefund 2026-11-09 Punkt 3 (s. kamera_gebiet): Durchgang 1 sucht nur im Gebiet der jeweiligen Kamera - Bild und Ort stimmen ueberein. Erreicht dort keine
-     * Kamera die Bildschwelle GSZ_KEY_BILD_MIN10 (Nutzerentscheid FG-E7 Option (a)), sucht Durchgang 2 wie bisher (Stand 0b86e36c6): die Gebiete der Zonenkameras
-     * liegen meist weit vor ihrer Kamera (Cut 6/7 im Westkanal), dort waeren die Schluessel sonst kleiner als die Schwelle (gemessen unit_r41_alligator2_schluessel
-     * nur mit Gebiet: 126 von 208 Lagen unter 10,4 Bildpunkten) - diesen Zielkonflikt entscheidet der Nutzer (Bericht INT_gator_nutzerbefunde.md "Offen"). */
+    /* Nutzerbefund 2026-11-09 Punkt 3 (s. kamera_gebiet), woertlich "Ich konnte den Schlüssel sehen, aber aufnehmen konnte ich ihn nicht mehr.": der Schluessel
+     * liegt IMMER im Gebiet der Kamera, die ihn in der Einstellung zeigt - Bild und Ort stimmen ueberein. Gesucht wird dort bis zur doppelten Naehe (Stufen
+     * 0..GSZ_SUCH_STUFEN, FG-E7 Option (a)); erreicht keine Kamera in ihrem Gebiet die Bildschwelle GSZ_KEY_BILD_MIN10, gilt die Lage mit dem groessten Bild im
+     * Gebiet bis zur doppelten Naehe (Durchgang 1, Bild unter der Schwelle, aber am Ort; Nutzer-Vorgabe "soll der Schlüssel in der Nähe seine Leiche sein").
+     * Abnahme 0 B1: Stand f8c71298a fiel hier auf die Lagewahl 0b86e36c6 OHNE Gebiet zurueck (4 von 4 natuerlichen Laeufen: Einstellung Kamera 4/6, am Schluessel
+     * Cut 5). Das Weiten im Gebiet ueber die doppelte Naehe hinaus bis zur Schwelle ist gemessen und verworfen (unit_r41_alligator2 schluessel_scan 3000: bis 18084
+     * von der Leiche, auf der anderen Raumseite, und 20 von 208 Lagen erreichen die Schwelle in keinem Gebiet). Pruefhaken re15_gatorszene_r41_key_rueckfall_alt_setzen(1)
+     * = Stand f8c71298a. */
     s_key_durchgang = -1;
-    for (int durchgang = s_key_gebiet_alt ? 1 : 0; durchgang < 2; durchgang++) {
+    const int rueckfall_alt = s_key_rueckfall_alt || s_key_gebiet_alt;
+    for (int durchgang = s_key_gebiet_alt ? 2 : 0; durchgang < 3; durchgang += 2) {
+    if (durchgang == 2 && !rueckfall_alt) break;             /* Durchgang 2 (ohne Gebiet) nur im Pruefhaken-Stand */
     s_gebiet_an = (durchgang == 0);
     memset(&l, 0, sizeof l); cut = -1;
     for (stufe = 0; stufe <= GSZ_SUCH_STUFEN; stufe++) {
@@ -2304,7 +2313,7 @@ static void key_lage_bei_tod(void)
         if (cut >= 0 && kam_sicht(cut, &kv) && l.vz > 0 && (20 * GSZ_KEY_HALB * (int64_t)kv.fov_screen_dist) / l.vz >= GSZ_KEY_BILD_MIN10) break;
     }
     if (stufe <= GSZ_SUCH_STUFEN) { s_key_durchgang = durchgang; break; }   /* Schwelle erreicht */
-    if (durchgang == 1) s_key_durchgang = 1;
+    s_key_durchgang = durchgang == 0 ? 1 : 2;                    /* unter der Schwelle: die beste Lage dieses Durchgangs */
     }
     s_gebiet_an = 0;
     if (cut < 0) {                                          /* keine Kamera: der naechste begehbare Wasserpunkt am Kopf (Spur P, Nachbesserung 1; vorher Kopf in eine Wasserzone gezogen) */
@@ -2329,7 +2338,8 @@ static void key_lage_bei_tod(void)
             cut, lauf, s_key_x, s_key_y, s_key_z, (int)l.vz,
             (unsigned)re15_squareroot0((uint32_t)(l.d2 > 0xffffffffLL ? 0xffffffffLL : l.d2)), npk, (int)r_nah,
             (int)s_key_rx, (int)s_key_rz, s_key_prim_ruhe, s_key_prim_spitze);
-    fprintf(stderr, "[gatorszene] Schluessel-Suche: Stufe %d (Naehe x %d/%d, FG-E7 Option (a))\n", s_key_stufe, GSZ_SUCH_STUFEN + s_key_stufe, GSZ_SUCH_STUFEN);
+    fprintf(stderr, "[gatorszene] Schluessel-Suche: Stufe %d (Naehe x %d/%d, FG-E7 Option (a)), Durchgang %d (0 = im Gebiet der Kamera, 1 = im Gebiet unter der "
+                    "Bildschwelle)\n", s_key_stufe, GSZ_SUCH_STUFEN + s_key_stufe, GSZ_SUCH_STUFEN, s_key_durchgang);
 #endif
 }
 /* Ersatzlage nach dem Laden: Neigung zur laufenden Kamera (oder zur Zonenkamera, in deren Bild sie liegt), im ersten Takt. */

@@ -768,11 +768,12 @@ static int tg_fall(const char *name, int elza, int32_t gx, int32_t gz, int16_t g
            "Aufnahme %s\n", name, (int)gx, (int)gz, (int)gier, (int)kx, (int)kz, kc, am, px10 / 10, px10 % 10, auf ? "ja" : "NEIN");
     const int durchgang = s_tg_durchgang;
     if (pruef) {
-        if (durchgang == 0)
-            PRUEF(am == kc, "%s: am Schluessel zeigt das Spiel die Kamera der Einstellung (angezeigt Cut %d, Schluessel-Kamera %d)", name, am, kc);
-        else
-            printf("    %s: Rueckfall wie 0b86e36c6 (keine Kamera erreicht in ihrem Gebiet die Bildschwelle 10,4) - Kamera-Gleichheit nur dokumentiert (%d / %d)\n",
-                   name, am, kc);
+        /* Nachbesserung Abnahme 0 B1: kein Rueckfall ohne Gebiet mehr - die Kamera-Gleichheit gilt in jeder Lage (Durchgang 0 = Bildschwelle erreicht,
+         * 1 = im Gebiet unter der Bildschwelle) */
+        printf("    %s: Durchgang %d (%s)\n", name, durchgang, durchgang == 0 ? "im Gebiet, Bildschwelle erreicht" : durchgang == 1 ? "im Gebiet, unter der Bildschwelle" :
+               "OHNE Gebiet");
+        PRUEF(durchgang == 0 || durchgang == 1, "%s: die Schluessel-Lage liegt im Gebiet ihrer Kamera (Durchgang %d)", name, durchgang);
+        PRUEF(am == kc, "%s: am Schluessel zeigt das Spiel die Kamera der Einstellung (angezeigt Cut %d, Schluessel-Kamera %d)", name, am, kc);
         PRUEF(auf, "%s: die Aktionstaste am Schluessel startet die Aufnahme", name);
     }
     return am != kc;
@@ -781,13 +782,24 @@ static void teil_tod_gebiet(int elza)
 {
     printf("== tod_gebiet%s (Nutzerbefund 2026-11-09 Punkt 3: Schluessel sichtbar, aber nicht aufzunehmen) ==\n", elza ? "_elza" : "");
     /* Leichen: die des Nutzers (gator_boss.log 2026-11-09 "RE2 R1 ende (Leiche) pos=(-5485,-23074)", Start-Gier 800), die Lagen des Teils tod und des exe-Laufs A */
-    static const struct { const char *n; int32_t x, z; int16_t g; } L[4] = {
-        { "nutzer", -5485, -23074, 800 }, { "todesrolle", -5416, -22578, 1024 }, { "r1", 3413, -25001, 2048 }, { "lauf_a", -5500, -8900, 800 } };
+    /* Nachbesserung Abnahme 0 B1: dazu die Leichen der natuerlichen Laeufe der Abnahme 0 (gator_nb/abn0/runs s2_leon/s2_elza "RE2 R1 ende (Leiche)
+     * pos=(-7328,-8628)", KOPF-KLEMME gier=3072; s1_leon_west/s1_elza_west pos=(-7038,-8628) gier=3088) - dort zeigte Stand f8c71298a Kamera 4 bzw. 6, am
+     * Schluessel lief Cut 5 */
+    static const struct { const char *n; int32_t x, z; int16_t g; } L[6] = {
+        { "nutzer", -5485, -23074, 800 }, { "todesrolle", -5416, -22578, 1024 }, { "r1", 3413, -25001, 2048 }, { "lauf_a", -5500, -8900, 800 },
+        { "abn0_s2", -7328, -8628, 3072 }, { "abn0_s1_west", -7038, -8628, 3088 } };
     re15_gatorszene_r41_key_gebiet_alt_setzen(0);
-    for (int i = 0; i < 4; i++) {
+    re15_gatorszene_r41_key_rueckfall_alt_setzen(0);
+    for (int i = 0; i < 6; i++) {
         (void)tg_fall(L[i].n, elza, L[i].x, L[i].z, L[i].g, 1);
-        if (i == 0) PRUEF(s_tg_durchgang == 0, "Nutzer-Leiche: die Lage liegt im Gebiet ihrer Kamera (Durchgang 1, kein Rueckfall: %d)", s_tg_durchgang);
+        if (i == 0) PRUEF(s_tg_durchgang == 0, "Nutzer-Leiche: die Lage liegt im Gebiet ihrer Kamera ueber der Bildschwelle (Durchgang 0: %d)", s_tg_durchgang);
     }
+    printf("  -- Gegenprobe Stand f8c71298a (Pruefhaken key_rueckfall_alt) --\n");
+    re15_gatorszene_r41_key_rueckfall_alt_setzen(1);
+    int rot_f8 = 0;
+    for (int i = 4; i < 6; i++) rot_f8 += tg_fall(i == 4 ? "abn0_s2_alt" : "abn0_s1_west_alt", elza, L[i].x, L[i].z, L[i].g, 0);
+    re15_gatorszene_r41_key_rueckfall_alt_setzen(0);
+    PRUEF(rot_f8 >= 1, "Gegenprobe f8c71298a: an den Leichen der Abnahme 0 Schluessel-Kamera und angezeigter Cut am Schluessel verschieden (%d von 2, rot)", rot_f8);
     printf("  -- Gegenprobe Stand 0b86e36c6 (Pruefhaken key_gebiet_alt) --\n");
     re15_gatorszene_r41_key_gebiet_alt_setzen(1);
     const int rot = tg_fall("nutzer_alt", elza, L[0].x, L[0].z, L[0].g, 0);
