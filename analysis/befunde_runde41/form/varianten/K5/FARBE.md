@@ -1606,3 +1606,96 @@ K5c gesichert: `varianten/K5/einbau_k5c/` (BAHNSTEIG_FORM.EMD/.TIM = Asset bis E
    (Hautton). Im Spielfenster ist das gesamte geaenderte Feld noch 2,6-2,8 L\* dunkler als der Umkreis. Der Riegel begrenzt nur nach unten (Auftrag).
 5. **28 Fleisch-Randtexel bleiben K5c**, weil ihre Eintraege auch Kerntexel tragen (Kern bytegleich hat Vorrang). Ein Teil des dunklen Fleischrands
    bleibt damit, sichtbar in 09 als feiner dunkler Saum direkt am Kern.
+
+## K5f - nicht blass (Nutzer 2026-11-09)
+
+Auftrag: Nutzer nach dem Spielen von K5e_f1 "Komplett augeblasst ... Null wie die restlichen Gegner im Spiel" und "auf der Unterseite am
+Hals ... komische rote streifen". Messblatt: `k5f/MESSBLATT_K5F.md` (Commit 45d1accc7). Runde 1 von 2. Das Spiel-Asset ist unveraendert
+(`re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` f277916d7d6518b5..., `.TIM` 31a35e66428bac1e..., nach dem Bau nachgerechnet).
+
+### K5f.1 Bau
+
+- Generator `generator/kf_k5f.py` (haengt sich an `kf_k5e.bauen`, nur Zeilenplan und Rampen neu; NZ 12), Parameter
+  `k5f/K5f/k5f_par.json` (Quelle je Wert, Feld `verlauf` mit der Bisektionsfolge), Ausgabe `k5f/K5f/` (FORM.EMD/.TIM, BAHNSTEIG_FORM.EMD/.TIM,
+  form.json, bau.json, sha256.txt). Zweiter Lauf in einen anderen Ordner: alle sechs Dateien byte-gleich.
+- sha256: BAHNSTEIG_FORM.TIM = FORM.TIM 64b8d8bd9539471d..., BAHNSTEIG_FORM.EMD 9045b6dcceebf7d5..., FORM.EMD e85ab12c024d75ee...
+- Gegenprobe gegen die Vorschau: mit den v7-Werten (f 2,46, s 0,52, rf 1,60) und der naechsten 15-Bit-Farbe sind alle 12 Zeilen und alle 3828
+  CLUT-Woerter je Flaeche byte-gleich der Vorschau v7 (nur die leere Zeile 12 entfaellt).
+- Zeilen 0-11, Port-Texturhoehe 3072. Flaechen je Zeile 93/249/1606/579/6/360/314/92/6/114/81/328 (= Messblatt 3.4). Material: Haut 2434
+  (mit den 6 Hals-Aussenflaechen), Grau 409, Gelenk 680, Fleisch 92, Auge 64, Maulinneres 29, Zahn 114, F1 6.
+
+### K5f.2 Abweichungen vom Messblatt-Plan (gemessen, mit Grund)
+
+1. **Rundung mit Farbtonfenster** (`kf_k5f.runde15_zeile`, par `rundung`). Lauf 1 mit der naechsten 15-Bit-Farbe (= v7): Riegel H4 ROT
+   (Haut 88,4 / Grau 55,9 / Gelenk 88,9 / Fleisch 16,2 Grad, Soll <= 15) und H5 ROT (17 Rangvertauschungen). Ursache gemessen: im 15-Bit-Raster
+   nahe Grau (C* 3-9, L* 5-30) gibt es nur die Farbtoene -68,1 / -34,6 / +20,3 (und -13,7 erst ab L* 30). Die Messblatt-Angabe "H4 v7 gruen"
+   war aus den Zielwerten, nicht aus den gerundeten Woertern.
+   - Neue Rundung: je Klasse (haut/hell/ader) aufsteigend nach G4-L*, Bedingungen Farbtonfenster (C* >= 3 nur im Fenster, unbunt immer),
+     Rangfolge, Ader von unten; bei Gelenk und Grau zusaetzlich "nie bunter als das Ziel". Alle 2304 Eintraege erfuellen alle Bedingungen.
+   - Fenster um -22,9 +- 7,5: 41 % der Haut-Texelzugriffe unbunt, Spiel Q C* 11,35 / Q C-std 8,77; s 0,56 ergab 12,03 / 9,18, also Z8 und Z9
+     nicht zugleich. Darum Fenster [-35,3; -20,3] (enthaelt -22,9 und die Rasterstufe -34,6): s 0,52 ergab 11,89 / 7,52, s 0,56 12,94 / 8,11.
+   - Folge: **der gerundete Hautton ist -29,5 Grad (Plan -22,9), Gelenk -32,2**, also violetter als geplant.
+   - "nie bunter" fuer alle Materialien wurde verworfen (W2 49,9 %, W3 29,4 %, Spiel Q C-std/C* 0,82, Z8/Z9 unvereinbar); fuer Gelenk
+     wegen W1b (ohne: Gelenk-Albedo C* 8,41 > 8).
+2. **Bisektionen neu** (par `verlauf`): s im Spiel (`kf_k5f_spielmass.py --s`, kleinste mit Z4/Z8) = **0,536**; f (`kf_k5f.py --f`, Bild 2
+   Video >= 15,37) = **2,502**; rf (`kf_k5f.py --rf`, K4-Abstaende +6,89 / +4,77) = **1,540**. Mehrere Runden, bis f/rf stabil (f 2,500 -> 2,502,
+   rf 1,541 -> 1,540). Die Messblatt-Angabe "rf 1,51 ergab Buckel +3,57" war nicht nachzustellen: mit der Haut von Lauf 1 ergab rf 1,50 Buckel +7,42
+   (Median-Sprung zwischen rf 1,37207 und 1,37231).
+3. **HU4 bindet am Ruhe-Clip 2.** Die Messblatt-Zahlen (705-2879, "max 38") sind die Clip-2-Spalte von `maulinneres_sicht.json`. In Clip 0
+   hat das echte Maulinnere 22|1|98 48 px (schon im Messblatt-Lauf, Spalte 3); als Info im Riegel.
+
+### K5f.3 Riegel (`generator/riegel_k5f.py`, `k5f/K5f/riegel_k5f.txt`/`.json`): 38/39 GRUEN, EXIT 1
+
+| Zeile | K5f | Band | K5e_f1 | K5c |
+|---|---|---|---|---|
+| Z1 P L* | 8,97 | 5,57..18,80 | 9,45 | ROT 2,77 |
+| Z2 P L-cv | 0,746 | 0,481..1,431 | ROT 0,409 | 0,816 |
+| Z3 P lokal_rel | 0,329 | 0,243..0,656 | ROT 0,168 | 0,297 |
+| Z4 P C* | 4,45 | 4,41..7,59 | ROT 4,33 | ROT 1,93 |
+| Z5 P C-std | 3,41 | 2,39..7,45 | ROT 1,76 | ROT 2,27 |
+| Z6 Q L-cv | 0,557 | 0,369..1,020 | ROT 0,238 | 0,757 |
+| Z7 Q lokal_rel | 0,273 | 0,210..0,528 | ROT 0,116 | 0,306 |
+| Z8 Q C* | 12,15 | 12,09..15,05 | ROT 11,51 | ROT 8,38 |
+| Z9 Q C-std | 7,83 | 6,53..8,88 | ROT 3,98 | ROT 9,02 |
+| WK1-WK4 weiss | 0,668 / 0,360 / 6,63 / 3,9 % und 55,1 | | ROT | |
+| R1-R4 | 3 / 0 / 15,3 / 4,5 | <= 5 / 7,4 / 76,8 / 16,3 | gruen | ROT |
+| H4 | Haut 14,8 / Grau 0 / Gelenk 12,4 / Fleisch 10,8 Grad | <= 15 | | |
+| HU1-HU4 | Zeile 1 / 0 px von 30393 / 0 von 963 / max 38 px | | ROT | ROT (HU1/HU2) |
+| W1 / W1b | min 6,77, Mittel 9,45 / C* 6,12, +13,08 | | | |
+| W2 / W3 | 76,6 %, +18,65 / Ton -8,5, 57,0 %, +6,94 | | | |
+| W4 | 0 %, 41,8 <= 54,4 | | | |
+| **W5 Krallen** | **ROT dE 7,04** (Kralle 20,5/0/0, Hand 17,8/5,4/-3,7) | <= 6 | | |
+| W6 / W8 | 15,37 >= 15,37 / -6,98 gegen -7,39 | | | |
+| T1-T4 | 12 Zeilen, 3072; neue 0x0000 0; Geometrie = K5d; EDD/EMR/Morph = Asset, 32/32/28 | | | |
+
+- Spielwerte aus eigenem Normal-/Schluessel-Paar (`kf_k5f_spiel.sh` + `kf_k5f_spielmass.py`, `k5f/K5f/spiel_k5f.json`; der Riegel nimmt sie nur
+  bei gleichem TIM/EMD-sha an). Die Gegenproben K5e_f1 und K5c reproduzieren die Messblatt-Werte exakt (`spiel_k5e_f1.json`, `spiel_k5c.json`).
+- Gegenprobe (`riegel_k5f.py --gegenprobe`, `k5f/K5f/riegel_gegenprobe.txt`): K5e_f1 ROT in Z2-Z9, WK1-WK3, HU1-HU4; K5c ROT in Z1/Z4/Z5/Z8/Z9,
+  R1-R4, HU1/HU2 -> erfuellt, EXIT 0.
+- **W5 ROT, Ursache gemessen:** Die Krallen sind Grau (meist Ader-Eintraege, C* = kappa x cgr x s x L' < 3, also unbunt), die Hand ist Haut. Mit der
+  Farbtonfenster-Rundung bekommt die Hand die Rasterstufe -34,6 (C* 6,5); in v7 hob sich der Ton im Median zufaellig auf (Hand 17,4/3,9/-2,5,
+  dE 5,54). "nie bunter" fuer die Haut machte die Hand unbunt (W5 3,96), brach aber Z8/Z9 (Q C-std/C* 0,82). Nicht geloest; Entscheid noetig
+  (Krallen-Buntheit oder W5-Schwelle), keine Zahl nach Gefuehl gesetzt.
+
+### K5f.4 Spiel und Tests
+
+- Tafeln (roh) in `k5f/`: 01_bild1, 02_bild2, 03_details_nah, 04_spiel (gdigrab, `kf_k5f_fenster.sh`, Bilder in `k5f/spiel/`), 05_kopf,
+  06_rundum, 07_familie, 08_gegner_spiellicht (`kf_k5f_tafeln.py`).
+- ctest `-R "form|bahnsteig|birkin_form|r41_form" -j 3` mit `RE15_RE2_ASSET_ROOT=k5f/K5f`: 11/11 bestanden (`k5f/ctest_k5f.log`).
+- `RE15_SOFTWARE_RENDER=1`, 5090 Schnitt 11, Clip 10 abgespielt: rc 0, Form geladen (32/32/28), t601 Clip 10 Bild 113, kein Absturz
+  (`k5f/softrender_lauf.log`).
+
+### K5f.5 Gesehen auf den Tafeln (eigene Sicht, nicht gemessen)
+
+- 04: im Spiel 5080 dunkler und kontrastreicher als K5e_f1, violett-dunkel; 5090 Griff-Pose ohne rote Stelle unter dem Hals.
+- 05/07 (weisses Licht): Haut deutlich rosa-violett mit hellen rosa Stellen (helle G4-Eintraege durch das Knie), Lippensaum und Maulraender fast
+  schwarz (Grau uebernimmt die dunkle Haut-L'). Das liegt nahe am Nutzersatz zu K5c ("wie ein Pokemon") und an "Hautprobleme"; vor jedem Einbau
+  braucht es das Spielbild fuer den Nutzer.
+
+### K5f.6 Offen
+
+1. W5 Krallen dE 7,04 (siehe K5f.3).
+2. Hautton nach der Rundung -29,5 Grad statt -22,9 (violetter); Fenster ist eine Folge des 15-Bit-Rasters, kein Farbwunsch.
+3. Knappe Raender: Z4 4,45 gegen 4,41, Z8 12,15 gegen 12,09, W6 15,37 gegen 15,37, W8 -6,98 gegen -7,39.
+4. Bild 1 Video 44,11 gegen Vorlage 18,29 (unveraendert Offen 1).
+5. Einbau in das Spiel-Asset erst nach Ja des Nutzers (T4).
