@@ -16,7 +16,8 @@ besser wird (Zwischenstand nach jedem Durchgang in --aus; --start nimmt ihn wied
   + W_GESICHT je Gesichts-Bildpunkt (Knochen 9, lok x >= GESICHT_X), der gegen den Start verloren geht (Mesh 8 darf das Gesicht nicht
     verdecken; "ohne Durchstossen")
   + W_S2C (S2c mit Culling, Variante 0 - 2,5)+ (Riegel S2c Runde 5 <= 3 robust)
-Aktive Menge (--zusatz): nach jeder Suche misst luecke_r5.py alle 177 Ansichten; Ansichten mit Luecke kommen fuer die naechste Suche dazu.
+Umgebung RUECKEN_SCHNELL=1: Luecke in allen 177 Ansichten mit luecke_r5.schnell (ganze Dreiecke, Knochen ausser 8/16-22 gemerkt),
+Gesicht ebenso je Dreieck (Schwerpunkt Mesh 9 x >= 150). Aktive Menge (--zusatz): nach jeder Suche misst luecke_r5.py alle 177 Ansichten; Ansichten mit Luecke kommen fuer die naechste Suche dazu.
 Kandidaten: ruecken_r4.kandidaten (x0 330) und jede Ecke von Mesh 8 mit Ort y < -800 im Umkreis 700 E. um das Kopfgelenk (111, -971, -133).
 Kein RE-Wert.
 """
@@ -28,6 +29,7 @@ import v8_gemein as V        # noqa: E402
 import kopf_orig_bau as KB   # noqa: E402
 import ruecken_r4 as RR4     # noqa: E402
 import luecke_r5 as L        # noqa: E402
+import riegel_v8 as RG       # noqa: E402
 
 SCHRITTE = (80.0, 40.0, 20.0, 10.0, 5.0)  # wie ruecken_r3/r4 (2,6 / 1,3 / 0,65 / 0,33 px in PV), dazu 80 E. (5,2 px): die Kerben in der Szene
                                     # sind bis 12 px breit (Takt F278, gemessen luecke_r5)
@@ -35,6 +37,13 @@ W_LUECKE = 1.0                      # je Luecken-Bildpunkt: 1 px Kerbe so teuer 
 W_GESICHT = 0.5                     # je verlorenem Gesichts-Bildpunkt (halb so teuer wie ein Luecken-Bildpunkt: hinter dem Kopf darf die Haut
                                     # den Hinterkopf decken, das Gesicht nicht; Riegel S16 (c) prueft das Gesicht danach streng)
 GESICHT_X = 150                     # Mesh 9 lok x >= 150 = vordere Haelfte des Kopfes (Mesh 9 x -156..353, Gesicht vorn; gemessen geo.py)
+W_RIEGEL = float(os.environ.get('RUECKEN_W_RIEGEL', '0'))   # Lauf g (Reparatur): Strafe je Ueberschreitung der Riegel S2a/S2b/S3 (mit Abstand
+                                    # zur Schwelle) am vollen Bau samt Texturen (S3f Huegel rot); 20 = 1 px Ueberschreitung so teuer wie 20 Luecken-px
+W_TIEF = float(os.environ.get('RUECKEN_W_TIEF', '0'))   # Zusatzgewicht je Luecken-Bildpunkt mit Abstand >= 1,5 px zum freien Hintergrund
+                                    # (luecke_r5.tief; Lauf e2: 3 - die verbliebenen Kerben F311/F332 sind bis 6 px tief, der Rest 1 px Sicheln)
+W_VORLAGE = float(os.environ.get('RUECKEN_W_VORLAGE', '1'))   # Gewicht der Vorlage-Ansichten PV/P1/P2 (Foto-Posen, die der Nutzer mit der
+                                    # Vorlage vergleicht); Lauf d2: 5
+GESICHT_MIN = 150                   # nur Ansichten, in denen der Bezug >= 150 Gesichts-Bildpunkte zeigt (wie Riegel S16 (b))
 W_S2C = 3.0                         # wie ruecken_r3 (3 x (S2c - 2,5))
 MERGE_MAX = 12                      # je Durchgang hoechstens 12 Ecken nacheinander zusammengefuehrt (Rechenzeit; PORT-WAHL)
 KOPF_GELENK = np.array([111.0, -971.0, -133.0])   # EMR relpos Knochen 9 im Knochenraum 8
@@ -53,28 +62,57 @@ class Ruecken5(RR4.Ruecken4):
         super().__init__(basis, kette)
         av = dict(L.ansichten('alle'))
         self.such = [(n, av[n]) for n in list(SUCH_ANSICHTEN) + [z for z in zusatz if z not in SUCH_ANSICHTEN]]
+        self.schnell = bool(int(os.environ.get('RUECKEN_SCHNELL', '0')))
+        if self.schnell:                      # alle 177 Ansichten mit dem schnellen Raster (luecke_r5.schnell); Gesicht weiter exakt in such
+            self.alle = L.ansichten('alle')
+            mo0 = V.modell(self.blob)
+            self.fest = [L.statisch(mo0, p) for _n, p in self.alle]
         self.gesicht0 = None
         if start_delta is not None:
             mo = V.modell(self.blob_mit(start_delta))
-            self.gesicht0 = [gesicht_px(L.zeichne(mo, p, L.VARIANTEN[0])) for _n, p in self.such]
+            if self.schnell:
+                self.gesicht0 = [L.schnell(mo, p, f, gesicht=True)[2] for (_n, p), f in zip(self.alle, self.fest)]
+            else:
+                self.gesicht0 = [gesicht_px(L.zeichne(mo, p, L.VARIANTEN[0])) for _n, p in self.such]
 
     def kosten(self, delta):
         c, m = super().kosten(delta)
         blob = KB.packen(self.blob, self.d, self._ms, self.tim)
         mo = V.modell(blob)
         lu, ge = [], []
-        for n, p in self.such:
-            A = L.zeichne(mo, p, L.VARIANTEN[0])
-            r, _G = L.luecke(A)
-            lu.append((n, r['kerbe'] + r['spalt']))
-            ge.append(gesicht_px(A))
-        verlust = sum(max(0, g0 - g) for g0, g in zip(self.gesicht0, ge)) if self.gesicht0 else 0
+        if self.schnell:
+            for (n, p), fest in zip(self.alle, self.fest):
+                b, R, g = L.schnell(mo, p, fest, gesicht=True)
+                r, G = L.luecke_aus(b, R)
+                lu.append((n, r['kerbe'] + r['spalt'] + W_TIEF * L.tief(b, G)))
+                ge.append(g)
+        else:
+            for n, p in self.such:
+                A = L.zeichne(mo, p, L.VARIANTEN[0])
+                r, _G = L.luecke(A)
+                lu.append((n, r['kerbe'] + r['spalt']))
+                ge.append(gesicht_px(A))
+        verlust = sum(max(0, g0 - g) for g0, g in zip(self.gesicht0, ge) if g0 >= GESICHT_MIN) if self.gesicht0 else 0
         import riegel_v8 as RG
         s2c = RG.s2c_r5_eine(mo)
         m['luecke'] = lu
+        strafe = 0.0
+        if W_RIEGEL:                          # Riegel S2a/S2b/S3 wie riegel_v8 am vollen Bau (Stufen r, w, a, u: Texturen fuer S3f)
+            import v8_bau as VB
+            voll, _p = VB.bauen(None, 'rwau', blob=self.blob, ruecken=dict(ecken=delta))
+            mv, A = RG.render(voll)
+            s2, s3, _om = RG.s2_s3(mv, A['bone'][:480])
+            s3f = RG.huegel_rot(A)
+            H, Hx = s3['b_huegel']
+            h = lambda v: max(0.0, v)
+            strafe = (h(s2['a']['mittel'] - 3.5) + h(s2['a']['max'] - 5.5) + 4 * h(s2['b'][0] - 1.8) + h(s3['a_kuppe'] - 3.8)
+                      + h(5.5 - H) + h(H - 9.5) + (0 if 429 <= Hx <= 444 else 1 + min(abs(Hx - 429), abs(Hx - 444)))
+                      + 3 * len(s3['c_weitere']) + 4 * h(s3['d_sattel_kopf'][0] - 1.8) + h(s3['e_K'] - 2.8) + 0.2 * h(45.0 - s3f)
+                      + sum(3 * len(v['neue_ecken']) + h(v['ueber_max'] - 1.8) for v in m['vorn']) + 2 * sum(v for _n, v in m['schlitz']))
+            m['riegel_s2s3'] = dict(S2a=s2['a'], S2b=s2['b'], S3=s3, S3f=s3f)
         m['gesicht_verlust'] = verlust
         m['s2c_r5'] = s2c
-        return (c + W_LUECKE * sum(v for _n, v in lu) + W_GESICHT * verlust + W_S2C * max(0.0, s2c - 2.5)), m
+        return (c + W_RIEGEL * strafe + W_LUECKE * sum(v * (W_VORLAGE if _n in ('PV', 'P1', 'P2') else 1.0) for _n, v in lu) + W_GESICHT * verlust + W_S2C * max(0.0, s2c - 2.5)), m
 
 
 _R = None
@@ -165,7 +203,7 @@ def main():
                 schreiben(a, delta, st, c0, cb, mb, kand)
                 print('Schritt %g Durchgang %d Kosten %.3f (%s)' % (s, rnd, cb, art), json.dumps(dict(S2=mb['S2'], S3=mb['S3'],
                       luecke=sum(v for _n, v in mb['luecke']), gesicht=mb['gesicht_verlust'], s2c=mb['s2c_r5'], vorn=mb['vorn'],
-                      schlitz=sum(v for _n, v in mb['schlitz']), s4w=mb['s4_wurzel']), default=str), flush=True)
+                      schlitz=sum(v for _n, v in mb['schlitz']), s4w=mb['s4_wurzel'], riegel=mb.get('riegel_s2s3')), default=str), flush=True)
     schreiben(a, delta, st, c0, cb, mb, kand)
 
 

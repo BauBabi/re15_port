@@ -86,12 +86,15 @@ def ruecken_maske(A):
 
 def luecke(A):
     """-> (dict(kerbe, spalt, stuecke), Maske der Luecken-Bildpunkte)."""
-    b = A['bone'][:480]
+    return luecke_aus(A['bone'][:480], ruecken_maske(A))
+
+
+def luecke_aus(b, R):
+    """Kern des Masses: b = Knochen je Bildpunkt (-1 = Hintergrund), R = Ruecken-Bildpunkte (Knochen 8, y < Y_RUECKEN)."""
     H = (b == 9).astype(np.uint8)
     S = b >= 0
     if not H.any():
         return dict(kerbe=0, spalt=0, stuecke=[]), np.zeros_like(S)
-    R = ruecken_maske(A)
     Hn = cv2.dilate(H, np.ones((2 * NAH + 1, 2 * NAH + 1), np.uint8)) > 0
     Hd = cv2.dilate(H, K3) > 0
     Bn = (b == 8) & Hn
@@ -121,6 +124,60 @@ def luecke(A):
             ys, xs = np.nonzero(c)
             stuecke.append(('spalt', int(c.sum()), int(xs.mean()), int(ys.mean())))
     return dict(kerbe=kerbe, spalt=spalt, stuecke=stuecke), G
+
+
+DYN = (8, 16)            # Knochen, deren Mesh die Suche aendert (Mesh 8 Stufe r, Mesh 16 Ring 1 Stufe w); der Rest wird je Ansicht gemerkt
+
+
+GESICHT_X = 150          # Mesh 9 lok x >= 150 = vordere Haelfte des Kopfes (Mesh 9 x -156..353; Gesicht vorn, sfv8/r5p5 gesicht.py)
+
+
+def _vorbereiten(tris):
+    """Dreiecke (f_rast.dreiecke) -> [(Tiefe, Ecken in 1/16 px, Knochen, Code)]; Code 1 = Ruecken (Knochen 8, Schwerpunkt y < Y_RUECKEN),
+    2 = Gesicht (Knochen 9, Schwerpunkt x >= GESICHT_X)."""
+    r, kam, M, li = V.b2.raum()
+    if not tris:
+        return []
+    P = np.array([[q[0] + BB.PHASE, q[1] + BB.PHASE] for t in tris for q in t[1]], float)
+    x, y = BB.abbilden(P[:, 0], P[:, 1], M)
+    pts = np.round(np.stack([x - 0.5, y - 0.5], 1) * 16).astype(np.int32).reshape(-1, 3, 2)
+    out = []
+    for i, t in enumerate(tris):
+        bb, PL = t[5], t[7]
+        code = 1 if (bb == 8 and float(np.mean(PL[:, 1])) < Y_RUECKEN) else (2 if (bb == 9 and float(np.mean(PL[:, 0])) >= GESICHT_X) else 0)
+        out.append((t[0], pts[i], int(bb), code))
+    return out
+
+
+def statisch(mo, pose):
+    return _vorbereiten(FR.dreiecke(mo, pose, False, knochen=[k for k in range(mo.skel.bone_count) if k not in DYN]))
+
+
+def tief(b, G, ab=1.5):
+    """Luecken-Bildpunkte mit Abstand >= ab px zum freien Hintergrund (ohne Silhouette und ohne Luecke): eine 1 px schmale Sichel an der
+    Huellkante zaehlt nicht, eine Kerbe/ein Spalt, in den man hineinsieht, schon (Suche ruecken_r5: Gewicht W_TIEF)."""
+    if not G.any():
+        return 0
+    frei = (b < 0) & ~G
+    d = ndimage.distance_transform_edt(~frei)
+    return int((d[G] >= ab).sum())
+
+
+def schnell(mo, pose, fest=None, gesicht=False):
+    """Nur fuer die Suche (ruecken_r5.py): Knochen-Bild mit Maler-Reihenfolge und Culling wie f_rast, aber ganze Dreiecke per
+    cv2.fillConvexPoly (1/16 px) und 'oberhalb des Kopfgelenks' / 'Gesicht' je Dreieck (Schwerpunkt) statt je Bildpunkt; ohne
+    Texel-Transparenz. fest = statisch(mo0, pose) eines Modells mit denselben Knochen und Meshes ausser DYN (spart die unveraenderten
+    Dreiecke). Der Riegel S16 misst mit luecke() auf dem vollen Raster (gemessen sfv8/r5p5 vgl_schnell.py: Korrelation 0,98 ueber 177
+    Ansichten). -> (Knochen-Bild, Ruecken-Maske[, Gesichts-Bildpunkte])"""
+    b = np.full((480, 640), -1, np.int16)
+    C = np.zeros((480, 640), np.uint8)
+    tris = (fest + _vorbereiten(FR.dreiecke(mo, pose, False, knochen=list(DYN)))) if fest is not None else         _vorbereiten(FR.dreiecke(mo, pose, False))
+    for _t, pts, bb, code in sorted(tris, key=lambda t: -t[0]):
+        cv2.fillConvexPoly(b, pts, bb, lineType=cv2.LINE_8, shift=4)
+        cv2.fillConvexPoly(C, pts, code, lineType=cv2.LINE_8, shift=4)
+    if gesicht:
+        return b, C == 1, int((C == 2).sum())
+    return b, C == 1
 
 
 def messen(mo, liste, varianten=VARIANTEN):
