@@ -1,7 +1,7 @@
 {
  "meta": {
   "erstellt": "2026-11-09",
-  "aufgabe": "Grundlage v2 (Korrektor Runde 2): erkannte Zuordnung zur Abnahme durch den Nutzer; keine Textur, kein Asset, keine Farbwahl",
+  "aufgabe": "Grundlage v2 (Korrektor Runde 3): erkannte Zuordnung zur Abnahme durch den Nutzer; keine Textur, kein Asset, keine Farbwahl",
   "modell": {
    "emd": "re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD",
    "emd_md5": "6e00f105f6ea854b521e23fa1f4b9d5c",
@@ -41,9 +41,11 @@
   "sicherheit_zaehlung": {
    "sicher": 27,
    "unsicher": 27,
-   "verdeckt": 7
+   "verdeckt": 8
   },
-  "zonen_zahl": 61
+  "zonen_zahl": 62,
+  "maul_regel": "Runde 3 (Pruefer r2 Nr. 11): \"geoeffnetes Maul\" nach LAGE, nicht nach der Farbliste.\nDie material.json-Liste \"Maulinneres\" ist eine FARBLISTE (Flaechen, deren heutige Texel auf Texturzeile 0 rot sind), keine Lageliste:\n8 ihrer Flaechen (22|1|1, 8, 9, 194, 201, 209, 210, 217) liegen aussen an der Kopf-Unterseite und sind in jeder Pose gross sichtbar\n(die roten Hals-Streifen), die uebrigen sind fast oder ganz verdeckt.\nRegel (Lage): Kopf 22 + Unterkiefer 23 allein, 84 Richtungen (Gier 0-330 in 30er-Schritten x Hoehe -75/-45/-20/0/20/45/75),\nv4f.rundum_bild 300 x 300, sichtbare Pixel je Flaeche. Posen: Clip 12 Bild 0 (= Bild 2, Maul offen), Clip 2 Bild 0 und Clip 0 Bild 0\n(Maul fast zu). \"Von vorn\" = Gier 60-120, Hoehe <= 20.\n  Maulinneres = Flaeche, die mit offenem Maul von vorn >= 30 px zeigt UND in Clip 2 und Clip 0 jeweils < 30 % ihrer Clip-12-Sichtbarkeit\n  (sie wird erst durch das Oeffnen sichtbar). Zaehne (material.json \"Zahn\") bleiben Zone 41.\nAusgabe: ARBEIT/maul_lage.json (Sichtbarkeit je Flaeche, Mengen).",
+  "texel_konflikte_regel": "Texel, die zwei Flecken-Zonen mit verschiedenem Material zugleich beanspruchen (gleiche Texel in der G4-Textur); nur benannt"
  },
  "zonen": [
   {
@@ -7897,14 +7899,14 @@
    "nutzerwort": "Schwanz Musterung",
    "modell_beschreibung": null,
    "linienfarbe": "orange",
-   "bau": "huelle_n",
+   "bau": "huelle_komp",
    "material": "Musterung",
    "eltern": "zipfel",
    "auftrag": null,
    "sicherheit": "sicher",
-   "sicherheit_grund": "2 orange Umrisse auf der Schwanzspitze; Texel-Maske in Form der Umrisse",
-   "aenderung_v1": "R2: texelgenau statt 4 ganzer Flächen",
-   "zone_px_vorlage": 1094,
+   "sicherheit_grund": "2 orange Umrisse auf der Schwanzspitze; je Umriss eine eigene Fläche (Strich + Inneres). Der dunkelrote Spalt zwischen den Umrissen (227 Video-px, L* 33, a* 25) gehört NICHT dazu; Texel-Maske in Form der Umrisse",
+   "aenderung_v1": "R2: texelgenau; R3: je Umriss eine eigene Fläche, der Spalt ist heraus (vorher eine gemeinsame Hülle)",
+   "zone_px_vorlage": 867,
    "modell_zuordnung": {
     "regel": "Texel-Maske (T1): nur die Texel unter Ihrer Stelle; die Flächen tragen sie nur",
     "flaechen": 12,
@@ -7930,24 +7932,24 @@
     ]
    },
    "messung": {
-    "modell_px_in_zone_vorlage": 1094,
+    "modell_px_in_zone_vorlage": 867,
     "deckung_modell": 1.0,
-    "iou_zu_umrandung": 0.678,
-    "anteil_zone_von_flaechen_gedeckt": 0.77,
-    "anteil_flaechenpixel_in_zone": 0.85
+    "iou_zu_umrandung": 0.548,
+    "anteil_zone_von_flaechen_gedeckt": 0.759,
+    "anteil_flaechenpixel_in_zone": 0.664
    },
    "meshes_in_der_stelle": {
-    "6": 1068,
-    "5": 26
+    "6": 842,
+    "5": 25
    },
    "fremd_im_umriss": {},
-   "iou_gegen_nutzerstelle": 0.852,
+   "iou_gegen_nutzerstelle": 0.834,
    "texelgenau": true,
    "texel": {
-    "zahl": 446,
-    "getroffen": 446,
+    "zahl": 339,
+    "getroffen": 339,
     "lueckenschluss": 0,
-    "angeschnitten_verworfen": 54,
+    "angeschnitten_verworfen": 79,
     "format": "[Seite, CLUT-Zeile, u, v]; u = Spalte in der TIM-Textur (512 x 256, 8 Bit) einschliesslich Seitenversatz 128 x Seite, v = Zeile; CLUT-Zeile relativ zur ersten CLUT-Zeile der TIM",
     "liste": [
      [
@@ -8012,12 +8014,6 @@
      ],
      [
       1,
-      7,
-      139,
-      185
-     ],
-     [
-      1,
       2,
       141,
       185
@@ -8033,12 +8029,6 @@
       2,
       143,
       185
-     ],
-     [
-      1,
-      7,
-      139,
-      186
      ],
      [
       1,
@@ -8049,12 +8039,6 @@
      [
       1,
       7,
-      139,
-      187
-     ],
-     [
-      1,
-      7,
       141,
       187
      ],
@@ -8067,12 +8051,6 @@
      [
       1,
       7,
-      139,
-      188
-     ],
-     [
-      1,
-      7,
       141,
       188
      ],
@@ -8135,12 +8113,6 @@
       7,
       151,
       188
-     ],
-     [
-      1,
-      7,
-      137,
-      189
      ],
      [
       1,
@@ -8249,12 +8221,6 @@
       7,
       155,
       189
-     ],
-     [
-      1,
-      7,
-      137,
-      190
      ],
      [
       1,
@@ -8469,18 +8435,6 @@
      [
       1,
       7,
-      155,
-      191
-     ],
-     [
-      1,
-      7,
-      138,
-      192
-     ],
-     [
-      1,
-      7,
       139,
       192
      ],
@@ -8571,30 +8525,6 @@
      [
       1,
       7,
-      154,
-      192
-     ],
-     [
-      1,
-      7,
-      155,
-      192
-     ],
-     [
-      1,
-      7,
-      138,
-      193
-     ],
-     [
-      1,
-      7,
-      139,
-      193
-     ],
-     [
-      1,
-      7,
       140,
       193
      ],
@@ -8679,30 +8609,6 @@
      [
       1,
       7,
-      154,
-      193
-     ],
-     [
-      1,
-      7,
-      138,
-      194
-     ],
-     [
-      1,
-      7,
-      139,
-      194
-     ],
-     [
-      1,
-      7,
-      140,
-      194
-     ],
-     [
-      1,
-      7,
       141,
       194
      ],
@@ -8775,42 +8681,6 @@
      [
       1,
       7,
-      153,
-      194
-     ],
-     [
-      1,
-      7,
-      154,
-      194
-     ],
-     [
-      1,
-      7,
-      139,
-      195
-     ],
-     [
-      1,
-      7,
-      140,
-      195
-     ],
-     [
-      1,
-      7,
-      141,
-      195
-     ],
-     [
-      1,
-      7,
-      142,
-      195
-     ],
-     [
-      1,
-      7,
       143,
       195
      ],
@@ -8859,66 +8729,6 @@
      [
       1,
       7,
-      151,
-      195
-     ],
-     [
-      1,
-      7,
-      152,
-      195
-     ],
-     [
-      1,
-      7,
-      153,
-      195
-     ],
-     [
-      1,
-      7,
-      154,
-      195
-     ],
-     [
-      1,
-      7,
-      138,
-      196
-     ],
-     [
-      1,
-      7,
-      139,
-      196
-     ],
-     [
-      1,
-      7,
-      140,
-      196
-     ],
-     [
-      1,
-      7,
-      141,
-      196
-     ],
-     [
-      1,
-      7,
-      142,
-      196
-     ],
-     [
-      1,
-      7,
-      143,
-      196
-     ],
-     [
-      1,
-      7,
       144,
       196
      ],
@@ -8955,127 +8765,7 @@
      [
       1,
       7,
-      150,
-      196
-     ],
-     [
-      1,
-      7,
-      151,
-      196
-     ],
-     [
-      1,
-      7,
-      152,
-      196
-     ],
-     [
-      1,
-      7,
-      153,
-      196
-     ],
-     [
-      1,
-      7,
-      154,
-      196
-     ],
-     [
-      1,
-      7,
       139,
-      197
-     ],
-     [
-      1,
-      7,
-      140,
-      197
-     ],
-     [
-      1,
-      7,
-      141,
-      197
-     ],
-     [
-      1,
-      7,
-      142,
-      197
-     ],
-     [
-      1,
-      7,
-      143,
-      197
-     ],
-     [
-      1,
-      7,
-      144,
-      197
-     ],
-     [
-      1,
-      7,
-      145,
-      197
-     ],
-     [
-      1,
-      7,
-      146,
-      197
-     ],
-     [
-      1,
-      7,
-      147,
-      197
-     ],
-     [
-      1,
-      7,
-      148,
-      197
-     ],
-     [
-      1,
-      7,
-      149,
-      197
-     ],
-     [
-      1,
-      7,
-      150,
-      197
-     ],
-     [
-      1,
-      7,
-      151,
-      197
-     ],
-     [
-      1,
-      7,
-      152,
-      197
-     ],
-     [
-      1,
-      7,
-      153,
-      197
-     ],
-     [
-      1,
-      7,
-      154,
       197
      ],
      [
@@ -9094,84 +8784,6 @@
       1,
       7,
       141,
-      198
-     ],
-     [
-      1,
-      7,
-      142,
-      198
-     ],
-     [
-      1,
-      7,
-      143,
-      198
-     ],
-     [
-      1,
-      7,
-      144,
-      198
-     ],
-     [
-      1,
-      7,
-      145,
-      198
-     ],
-     [
-      1,
-      7,
-      146,
-      198
-     ],
-     [
-      1,
-      7,
-      147,
-      198
-     ],
-     [
-      1,
-      7,
-      148,
-      198
-     ],
-     [
-      1,
-      7,
-      149,
-      198
-     ],
-     [
-      1,
-      7,
-      150,
-      198
-     ],
-     [
-      1,
-      7,
-      151,
-      198
-     ],
-     [
-      1,
-      7,
-      152,
-      198
-     ],
-     [
-      1,
-      7,
-      153,
-      198
-     ],
-     [
-      1,
-      7,
-      154,
       198
      ],
      [
@@ -9196,84 +8808,6 @@
       1,
       7,
       142,
-      199
-     ],
-     [
-      1,
-      7,
-      143,
-      199
-     ],
-     [
-      1,
-      7,
-      144,
-      199
-     ],
-     [
-      1,
-      7,
-      145,
-      199
-     ],
-     [
-      1,
-      7,
-      146,
-      199
-     ],
-     [
-      1,
-      7,
-      147,
-      199
-     ],
-     [
-      1,
-      7,
-      148,
-      199
-     ],
-     [
-      1,
-      7,
-      149,
-      199
-     ],
-     [
-      1,
-      7,
-      150,
-      199
-     ],
-     [
-      1,
-      7,
-      151,
-      199
-     ],
-     [
-      1,
-      7,
-      152,
-      199
-     ],
-     [
-      1,
-      7,
-      153,
-      199
-     ],
-     [
-      1,
-      7,
-      154,
-      199
-     ],
-     [
-      1,
-      7,
-      155,
       199
      ],
      [
@@ -9310,72 +8844,6 @@
       1,
       7,
       144,
-      200
-     ],
-     [
-      1,
-      7,
-      145,
-      200
-     ],
-     [
-      1,
-      7,
-      146,
-      200
-     ],
-     [
-      1,
-      7,
-      147,
-      200
-     ],
-     [
-      1,
-      7,
-      148,
-      200
-     ],
-     [
-      1,
-      7,
-      149,
-      200
-     ],
-     [
-      1,
-      7,
-      150,
-      200
-     ],
-     [
-      1,
-      7,
-      151,
-      200
-     ],
-     [
-      1,
-      7,
-      152,
-      200
-     ],
-     [
-      1,
-      7,
-      153,
-      200
-     ],
-     [
-      1,
-      7,
-      154,
-      200
-     ],
-     [
-      1,
-      7,
-      155,
       200
      ],
      [
@@ -9424,60 +8892,6 @@
       1,
       7,
       146,
-      201
-     ],
-     [
-      1,
-      7,
-      147,
-      201
-     ],
-     [
-      1,
-      7,
-      148,
-      201
-     ],
-     [
-      1,
-      7,
-      149,
-      201
-     ],
-     [
-      1,
-      7,
-      150,
-      201
-     ],
-     [
-      1,
-      7,
-      151,
-      201
-     ],
-     [
-      1,
-      7,
-      152,
-      201
-     ],
-     [
-      1,
-      7,
-      153,
-      201
-     ],
-     [
-      1,
-      7,
-      154,
-      201
-     ],
-     [
-      1,
-      7,
-      155,
       201
      ],
      [
@@ -9555,42 +8969,6 @@
      [
       1,
       7,
-      151,
-      202
-     ],
-     [
-      1,
-      7,
-      152,
-      202
-     ],
-     [
-      1,
-      7,
-      153,
-      202
-     ],
-     [
-      1,
-      7,
-      154,
-      202
-     ],
-     [
-      1,
-      7,
-      155,
-      202
-     ],
-     [
-      1,
-      7,
-      156,
-      202
-     ],
-     [
-      1,
-      7,
       141,
       203
      ],
@@ -9664,24 +9042,6 @@
       1,
       7,
       153,
-      203
-     ],
-     [
-      1,
-      7,
-      154,
-      203
-     ],
-     [
-      1,
-      7,
-      155,
-      203
-     ],
-     [
-      1,
-      7,
-      156,
       203
      ],
      [
@@ -10627,46 +9987,46 @@
       220
      ]
     ],
-    "flaeche_video_px": 1094,
-    "stelle_video_px": 1094,
+    "flaeche_video_px": 867,
+    "stelle_video_px": 867,
     "traegerflaechen": {
-     "6|1|33": 187,
-     "6|1|32": 104,
+     "6|1|33": 115,
      "6|1|43": 95,
+     "6|1|32": 71,
      "6|1|42": 48,
-     "6|1|34": 41,
      "6|1|44": 23,
+     "6|1|34": 18,
      "6|1|23": 8,
      "5|1|72": 7,
-     "6|1|22": 5,
      "5|1|73": 4,
      "5|1|74": 2,
-     "5|0|22": 2
+     "5|0|22": 2,
+     "6|1|22": 1
     },
     "verworfen_durch_teilfilter": {},
     "teilfilter": null,
     "render_ohne_meshes": [],
     "rueckprobe": {
      "regel": "Grundlage-Render: Pixel der Traegerflaechen, deren Texel in der Texel-Maske liegt, gegen Stelle auf dem Modell",
-     "iou": 0.852,
-     "rueck_px_vorlage": 1229,
-     "soll_px_vorlage": 1094,
-     "rueck_ausserhalb_stelle_px_vorlage": 124
+     "iou": 0.834,
+     "rueck_px_vorlage": 965,
+     "soll_px_vorlage": 867,
+     "rueck_ausserhalb_stelle_px_vorlage": 94
     }
    },
    "geteilte_texel": {
-    "andere_flaechen": 208,
+    "andere_flaechen": 202,
     "je_mesh": {
      "1": {
       "teil": "Schwanz 1",
       "flaechen": 21,
-      "geteilte_texel": 1157,
+      "geteilte_texel": 695,
       "gleiche_clut_zeile": 21
      },
      "2": {
       "teil": "Schwanz 2",
       "flaechen": 6,
-      "geteilte_texel": 24,
+      "geteilte_texel": 21,
       "gleiche_clut_zeile": 6
      },
      "3": {
@@ -10678,26 +10038,26 @@
      "4": {
       "teil": "Schwanz 4",
       "flaechen": 31,
-      "geteilte_texel": 726,
+      "geteilte_texel": 723,
       "gleiche_clut_zeile": 31
      },
      "5": {
       "teil": "Schwanz 5",
-      "flaechen": 33,
-      "geteilte_texel": 1233,
-      "gleiche_clut_zeile": 33
+      "flaechen": 30,
+      "geteilte_texel": 935,
+      "gleiche_clut_zeile": 30
      },
      "6": {
       "teil": "Schwanzspitze (Zipfel)",
       "flaechen": 16,
-      "geteilte_texel": 662,
+      "geteilte_texel": 515,
       "gleiche_clut_zeile": 16
      },
      "11": {
       "teil": "Oberarm vorn links",
-      "flaechen": 41,
-      "geteilte_texel": 3115,
-      "gleiche_clut_zeile": 32
+      "flaechen": 38,
+      "geteilte_texel": 2240,
+      "gleiche_clut_zeile": 29
      },
      "12": {
       "teil": "Unterarm vorn links",
@@ -10708,7 +10068,7 @@
      "16": {
       "teil": "Oberarm vorn rechts",
       "flaechen": 48,
-      "geteilte_texel": 6014,
+      "geteilte_texel": 4320,
       "gleiche_clut_zeile": 14
      },
      "17": {
@@ -10718,17 +10078,16 @@
       "gleiche_clut_zeile": 3
      }
     },
-    "bild1_px_video": 1180.5,
-    "bild2_px_video": 992.7,
+    "bild1_px_video": 921.5,
+    "bild2_px_video": 883.0,
     "rundum_px": {
-     "von vorn": 1456.0,
-     "von hinten": 2323.0,
-     "von links (Wesen)": 2051.0,
-     "von rechts (Wesen)": 1295.0,
-     "schräg von oben": 2064.0
+     "von vorn": 1098.0,
+     "von hinten": 1824.0,
+     "von links (Wesen)": 1581.0,
+     "von rechts (Wesen)": 909.0,
+     "schräg von oben": 1486.0
     },
     "brauchen_eigene_texel": [
-     "11|0|0",
      "11|0|1",
      "11|0|10",
      "11|0|12",
@@ -10742,8 +10101,6 @@
      "11|0|3",
      "11|0|30",
      "11|0|31",
-     "11|0|4",
-     "11|0|6",
      "11|0|8",
      "11|1|1",
      "11|1|10",
@@ -10897,15 +10254,12 @@
      "5|1|25",
      "5|1|26",
      "5|1|27",
-     "5|1|31",
      "5|1|32",
      "5|1|33",
      "5|1|34",
      "5|1|35",
      "5|1|36",
      "5|1|37",
-     "5|1|38",
-     "5|1|39",
      "5|1|42",
      "5|1|43",
      "5|1|44",
@@ -10952,9 +10306,9 @@
    "eltern": "zipfel",
    "auftrag": null,
    "sicherheit": "unsicher",
-   "sicherheit_grund": "nicht umrandet: je Linienende das Farbgebiet in Linienrichtung (4 Stellen). Gemessen: 2 Stellen violett-rot (a* 51/46, b* -43/-40), 1 rot (a* 44, b* -7), 1 nur schwach rötlich (a* 20, b* 0); die erste Stelle ist nur 1 Video-px groß",
-   "aenderung_v1": "v1: Kreise; R2: je Ende genau ein Farbgebiet, texelgenau",
-   "zone_px_vorlage": 219,
+   "sicherheit_grund": "nicht umrandet: je Linienende das Farbgebiet in Linienrichtung (4 Stellen). Gemessen: 2 Stellen violett-rot (a* 51/46, b* -43/-40), 1 rot (a* 44, b* -7), 1 nur schwach rötlich (a* 20, b* 0); die erste Stelle ist nur 1 Video-px groß. Die dritte Stelle liegt im dunkelroten Spalt zwischen Ihren orangen Umrissen; wo Ihr oranger Umriss liegt, gilt Ihr Umriss (Musterung)",
+   "aenderung_v1": "v1: Kreise; R2: je Ende ein Farbgebiet, texelgenau; R3: keine Überlappung mehr mit Zone 11",
+   "zone_px_vorlage": 207,
    "modell_zuordnung": {
     "regel": "Texel-Maske (T1): nur die Texel unter Ihrer Stelle; die Flächen tragen sie nur",
     "flaechen": 9,
@@ -10977,14 +10331,14 @@
     ]
    },
    "messung": {
-    "modell_px_in_zone_vorlage": 219,
+    "modell_px_in_zone_vorlage": 207,
     "deckung_modell": 1.0,
-    "iou_zu_umrandung": 0.142,
-    "anteil_zone_von_flaechen_gedeckt": 0.945,
-    "anteil_flaechenpixel_in_zone": 0.143
+    "iou_zu_umrandung": 0.133,
+    "anteil_zone_von_flaechen_gedeckt": 0.942,
+    "anteil_flaechenpixel_in_zone": 0.134
    },
    "meshes_in_der_stelle": {
-    "6": 209,
+    "6": 196,
     "5": 10
    },
    "fremd_im_umriss": {},
@@ -11186,13 +10540,13 @@
      }
     }
    ],
-   "iou_gegen_nutzerstelle": 0.671,
+   "iou_gegen_nutzerstelle": 0.656,
    "texelgenau": true,
    "texel": {
-    "zahl": 133,
-    "getroffen": 133,
+    "zahl": 125,
+    "getroffen": 125,
     "lueckenschluss": 0,
-    "angeschnitten_verworfen": 85,
+    "angeschnitten_verworfen": 83,
     "format": "[Seite, CLUT-Zeile, u, v]; u = Spalte in der TIM-Textur (512 x 256, 8 Bit) einschliesslich Seitenversatz 128 x Seite, v = Zeile; CLUT-Zeile relativ zur ersten CLUT-Zeile der TIM",
     "liste": [
      [
@@ -11282,12 +10636,6 @@
      [
       1,
       7,
-      148,
-      195
-     ],
-     [
-      1,
-      7,
       141,
       196
      ],
@@ -11307,24 +10655,6 @@
       1,
       7,
       144,
-      196
-     ],
-     [
-      1,
-      7,
-      146,
-      196
-     ],
-     [
-      1,
-      7,
-      147,
-      196
-     ],
-     [
-      1,
-      7,
-      148,
       196
      ],
      [
@@ -11558,12 +10888,6 @@
      [
       1,
       7,
-      150,
-      202
-     ],
-     [
-      1,
-      7,
       133,
       203
      ],
@@ -11726,12 +11050,6 @@
      [
       1,
       7,
-      142,
-      208
-     ],
-     [
-      1,
-      7,
       136,
       209
      ],
@@ -11774,12 +11092,6 @@
      [
       1,
       7,
-      143,
-      209
-     ],
-     [
-      1,
-      7,
       138,
       210
      ],
@@ -11811,12 +11123,6 @@
       1,
       7,
       143,
-      210
-     ],
-     [
-      1,
-      7,
-      144,
       210
      ],
      [
@@ -11994,12 +11300,12 @@
       216
      ]
     ],
-    "flaeche_video_px": 219,
-    "stelle_video_px": 219,
+    "flaeche_video_px": 207,
+    "stelle_video_px": 207,
     "traegerflaechen": {
-     "6|1|42": 43,
-     "6|1|33": 27,
+     "6|1|42": 40,
      "6|1|41": 23,
+     "6|1|33": 22,
      "6|1|32": 19,
      "6|1|31": 19,
      "6|1|23": 4,
@@ -12012,19 +11318,19 @@
     "render_ohne_meshes": [],
     "rueckprobe": {
      "regel": "Grundlage-Render: Pixel der Traegerflaechen, deren Texel in der Texel-Maske liegt, gegen Stelle auf dem Modell",
-     "iou": 0.671,
-     "rueck_px_vorlage": 253,
-     "soll_px_vorlage": 219,
-     "rueck_ausserhalb_stelle_px_vorlage": 37
+     "iou": 0.656,
+     "rueck_px_vorlage": 237,
+     "soll_px_vorlage": 207,
+     "rueck_ausserhalb_stelle_px_vorlage": 36
     }
    },
    "geteilte_texel": {
-    "andere_flaechen": 166,
+    "andere_flaechen": 164,
     "je_mesh": {
      "1": {
       "teil": "Schwanz 1",
       "flaechen": 18,
-      "geteilte_texel": 553,
+      "geteilte_texel": 525,
       "gleiche_clut_zeile": 18
      },
      "2": {
@@ -12036,42 +11342,42 @@
      "4": {
       "teil": "Schwanz 4",
       "flaechen": 22,
-      "geteilte_texel": 272,
+      "geteilte_texel": 259,
       "gleiche_clut_zeile": 22
      },
      "5": {
       "teil": "Schwanz 5",
       "flaechen": 35,
-      "geteilte_texel": 414,
+      "geteilte_texel": 398,
       "gleiche_clut_zeile": 35
      },
      "6": {
       "teil": "Schwanzspitze (Zipfel)",
       "flaechen": 13,
-      "geteilte_texel": 173,
+      "geteilte_texel": 161,
       "gleiche_clut_zeile": 13
      },
      "11": {
       "teil": "Oberarm vorn links",
       "flaechen": 29,
-      "geteilte_texel": 808,
+      "geteilte_texel": 750,
       "gleiche_clut_zeile": 25
      },
      "16": {
       "teil": "Oberarm vorn rechts",
-      "flaechen": 48,
-      "geteilte_texel": 1557,
+      "flaechen": 46,
+      "geteilte_texel": 1424,
       "gleiche_clut_zeile": 20
      }
     },
-    "bild1_px_video": 119.0,
-    "bild2_px_video": 249.5,
+    "bild1_px_video": 108.7,
+    "bild2_px_video": 243.7,
     "rundum_px": {
-     "von vorn": 612.0,
-     "von hinten": 432.0,
-     "von links (Wesen)": 540.0,
-     "von rechts (Wesen)": 359.0,
-     "schräg von oben": 480.0
+     "von vorn": 574.0,
+     "von hinten": 389.0,
+     "von links (Wesen)": 505.0,
+     "von rechts (Wesen)": 333.0,
+     "schräg von oben": 448.0
     },
     "brauchen_eigene_texel": [
      "11|0|24",
@@ -12114,7 +11420,6 @@
      "16|0|31",
      "16|0|4",
      "16|0|44",
-     "16|0|45",
      "16|0|6",
      "16|0|8",
      "16|1|100",
@@ -12148,7 +11453,6 @@
      "16|1|91",
      "16|1|95",
      "16|1|96",
-     "16|1|97",
      "16|1|98",
      "16|1|99",
      "1|0|10",
@@ -34500,8 +33804,8 @@
    "eltern": "gesicht_vorn",
    "auftrag": "Z2",
    "sicherheit": "sicher",
-   "sicherheit_grund": "zwei helle Punkte 5,1 bzw. 2,2 px neben den Linienenden (L* 30 gegen 5-7); Auge = nur die Texel unter den Punkten",
-   "aenderung_v1": "Z2: gemessene Punkte statt Kreise; R2: nur die Texel, nicht ganze Flächen",
+   "sicherheit_grund": "zwei helle Punkte 5,1 bzw. 2,2 px neben den Linienenden (L* 30 gegen 5-7); Auge = nur die Texel unter den Punkten. Achtung: dieselben Texel benutzt die heutige Textur auch an anderen Stellen; ohne eigene Augen-Texel erschiene das Auge in Bild 2 auf 73 statt 19 Video-px (3,9-fach)",
+   "aenderung_v1": "Z2: gemessene Punkte statt Kreise; R2: nur die Texel; R3: Hinweis auf die Vergrößerung durch geteilte Texel",
    "zone_px_vorlage": 19,
    "modell_zuordnung": {
     "regel": "Texel-Maske (T1): nur die Texel unter Ihrer Stelle; die Flächen tragen sie nur",
@@ -35013,48 +34317,48 @@
    "eltern": "gesicht_vorn",
    "auftrag": "Z4",
    "sicherheit": "unsicher",
-   "sicherheit_grund": "Ihr Maul-Umriss zeigt im Modell die Außenseite des Unterkiefers (1445 px) und Zähne, weil der Modellkopf anders sitzt; das Maulinnere ist in Bild 2 im Modell nicht zu sehen (0 px). Zuordnung nach Bedeutung: die 21 Flächen des Maulinneren",
-   "aenderung_v1": "Z4 + R2: ohne Zähne, ohne die 14 Augenhöhlen-Flächen",
+   "sicherheit_grund": "Ihr Maul-Umriss zeigt im Modell vor allem den Unterkiefer außen (1445 px) und Zähne, weil der Modellkopf anders sitzt. Das Maulinnere ist nach LAGE bestimmt: die 21 Flächen, die erst durch das Öffnen des Mauls sichtbar werden (hinter den Zähnen). In Bild 2 sind 8 davon sichtbar (448 Video-px), alle in Ihrem Umriss; sie decken 19 % davon",
+   "aenderung_v1": "R3: nach Lage statt nach der Farbliste; die 10 Kopf-Unterseiten-Flächen mit heutiger Maul-Farbe (rote Hals-Streifen) sind heraus (Zone 45)",
    "zone_px_vorlage": 2316,
    "modell_zuordnung": {
     "regel": "Modellbedeutung",
     "flaechen": 21,
-    "sichtbar": 0,
-    "px_sichtbar_vorlage": 0,
+    "sichtbar": 8,
+    "px_sichtbar_vorlage": 448,
     "je_mesh": {
-     "22": 10,
-     "23": 11
+     "22": 8,
+     "23": 13
     },
     "liste": [
-     "22|0|0",
-     "22|0|9",
-     "22|1|1",
-     "22|1|194",
-     "22|1|201",
-     "22|1|209",
-     "22|1|210",
-     "22|1|217",
-     "22|1|8",
-     "22|1|9",
-     "23|0|10",
-     "23|0|19",
-     "23|0|3",
-     "23|0|4",
-     "23|0|5",
-     "23|0|6",
-     "23|1|3",
-     "23|1|50",
-     "23|1|59",
-     "23|1|60",
-     "23|1|69"
+     "22|1|186",
+     "22|1|187",
+     "22|1|192",
+     "22|1|193",
+     "22|1|20",
+     "22|1|29",
+     "22|1|30",
+     "22|1|39",
+     "23|1|14",
+     "23|1|15",
+     "23|1|23",
+     "23|1|24",
+     "23|1|25",
+     "23|1|33",
+     "23|1|34",
+     "23|1|35",
+     "23|1|36",
+     "23|1|43",
+     "23|1|44",
+     "23|1|45",
+     "23|1|46"
     ]
    },
    "messung": {
     "modell_px_in_zone_vorlage": 2153,
     "deckung_modell": 0.93,
-    "iou_zu_umrandung": 0.0,
-    "anteil_zone_von_flaechen_gedeckt": 0.0,
-    "anteil_flaechenpixel_in_zone": 0.0
+    "iou_zu_umrandung": 0.194,
+    "anteil_zone_von_flaechen_gedeckt": 0.194,
+    "anteil_flaechenpixel_in_zone": 1.0
    },
    "meshes_in_der_stelle": {
     "23": 1445,
@@ -35079,7 +34383,7 @@
      "23": 36
     }
    },
-   "iou_gegen_nutzerstelle": 0.0
+   "iou_gegen_nutzerstelle": 0.194
   },
   {
    "nr": "31",
@@ -35090,24 +34394,25 @@
    "modell_beschreibung": null,
    "linienfarbe": "lila",
    "bau": "flut_band",
-   "material": "Unterkiefer (kein Farbwort)",
+   "material": "Haut (Teil benannt, kein Farbwort)",
    "eltern": "gesicht_vorn",
    "auftrag": "Z4",
    "sicherheit": "unsicher",
-   "sicherheit_grund": "Band am lila Strich; dort zeigt das Modell Unterkiefer (89 px) und Unterschenkel (48 px); nach Bedeutung: Unterkiefer außen",
-   "aenderung_v1": "Z4: nach Bedeutung",
+   "sicherheit_grund": "Band am lila Strich; dort zeigt das Modell Unterkiefer (89 px) und Unterschenkel (48 px); nach Bedeutung: Unterkiefer außen (alle Flächen von Teil 23 außer Maulinnerem und Zähnen)",
+   "aenderung_v1": "Z4: nach Bedeutung; R3: Material wie die anderen Teilnamen, ohne die neuen Maul-Flächen",
    "zone_px_vorlage": 304,
    "modell_zuordnung": {
     "regel": "Modellbedeutung",
-    "flaechen": 79,
-    "sichtbar": 29,
-    "px_sichtbar_vorlage": 1729,
+    "flaechen": 77,
+    "sichtbar": 21,
+    "px_sichtbar_vorlage": 1280,
     "je_mesh": {
-     "23": 79
+     "23": 77
     },
     "liste": [
      "23|0|0",
      "23|0|1",
+     "23|0|10",
      "23|0|11",
      "23|0|12",
      "23|0|13",
@@ -35116,7 +34421,12 @@
      "23|0|16",
      "23|0|17",
      "23|0|18",
+     "23|0|19",
      "23|0|2",
+     "23|0|3",
+     "23|0|4",
+     "23|0|5",
+     "23|0|6",
      "23|0|7",
      "23|0|8",
      "23|0|9",
@@ -35126,8 +34436,6 @@
      "23|1|11",
      "23|1|12",
      "23|1|13",
-     "23|1|14",
-     "23|1|15",
      "23|1|16",
      "23|1|17",
      "23|1|18",
@@ -35136,20 +34444,14 @@
      "23|1|20",
      "23|1|21",
      "23|1|22",
-     "23|1|23",
-     "23|1|24",
-     "23|1|25",
      "23|1|26",
      "23|1|27",
      "23|1|28",
      "23|1|29",
+     "23|1|3",
      "23|1|30",
      "23|1|31",
      "23|1|32",
-     "23|1|33",
-     "23|1|34",
-     "23|1|35",
-     "23|1|36",
      "23|1|37",
      "23|1|38",
      "23|1|39",
@@ -35157,14 +34459,11 @@
      "23|1|40",
      "23|1|41",
      "23|1|42",
-     "23|1|43",
-     "23|1|44",
-     "23|1|45",
-     "23|1|46",
      "23|1|47",
      "23|1|48",
      "23|1|49",
      "23|1|5",
+     "23|1|50",
      "23|1|51",
      "23|1|52",
      "23|1|53",
@@ -35173,7 +34472,9 @@
      "23|1|56",
      "23|1|57",
      "23|1|58",
+     "23|1|59",
      "23|1|6",
+     "23|1|60",
      "23|1|61",
      "23|1|62",
      "23|1|63",
@@ -35182,6 +34483,7 @@
      "23|1|66",
      "23|1|67",
      "23|1|68",
+     "23|1|69",
      "23|1|7",
      "23|1|8",
      "23|1|9"
@@ -35190,9 +34492,9 @@
    "messung": {
     "modell_px_in_zone_vorlage": 138,
     "deckung_modell": 0.453,
-    "iou_zu_umrandung": 0.046,
+    "iou_zu_umrandung": 0.06,
     "anteil_zone_von_flaechen_gedeckt": 0.295,
-    "anteil_flaechenpixel_in_zone": 0.052
+    "anteil_flaechenpixel_in_zone": 0.07
    },
    "meshes_in_der_stelle": {
     "23": 89,
@@ -35209,7 +34511,7 @@
      "23": 2
     }
    },
-   "iou_gegen_nutzerstelle": 0.046
+   "iou_gegen_nutzerstelle": 0.06
   },
   {
    "nr": "32",
@@ -35934,8 +35236,8 @@
    "eltern": "hand_vorn_rechts",
    "auftrag": null,
    "sicherheit": "unsicher",
-   "sicherheit_grund": "2 Krallenformen gezeichnet (rechts im Bild auf Kralle 31, links im Bild auf Kralle 19), dazwischen der Schriftzug; im Asset ist 19 eingezogen",
-   "aenderung_v1": "v1: eine Zone; v2: die zwei Formen und die Fläche dazwischen getrennt",
+   "sicherheit_grund": "2 Krallenformen gezeichnet (rechts im Bild auf Kralle 31, links im Bild auf Kralle 19), dazwischen der Schriftzug; im Asset und im Vorschlag ist 19 eingezogen (Kralle 19 läge sonst über Ihrer Hand)",
+   "aenderung_v1": "v1: eine Zone; v2: die zwei Formen und die Fläche dazwischen getrennt; R3: 19 eingezogen",
    "zone_px_vorlage": 1147,
    "modell_zuordnung": {
     "regel": "Teile des benannten Teils; Fläche >= 50 % in der Zone oder >= 15 % der Modellpixel der Zone",
@@ -36072,8 +35374,8 @@
    "material": "Kralle",
    "eltern": "krallen_vorn_rechts",
    "sicherheit": "unsicher",
-   "sicherheit_grund": "Form liegt auf Kralle 19 in K5c-Lage; deren Spitze liegt 42 px tiefer als Ihr Strichende; im Asset ist 19 eingezogen",
-   "aenderung_v1": "neu (eigene Zone); R2: Name ohne \"Form 3\"",
+   "sicherheit_grund": "Ihre Form liegt auf Kralle 19 in K5c-Lage (53 von 59 px), aber diese Kralle läge über Ihrer Hand (verdeckt 836 Video-px Hand, die Video und Asset zeigen); gekürzt (x0,49) noch 710 px, um die Wurzel gedreht mindestens 581 px. 19 bleibt deshalb eingezogen wie im Asset, bis Sie entscheiden (Frage)",
+   "aenderung_v1": "neu (eigene Zone); R2: Name ohne \"Form 3\"; R3: 19 nicht mehr gekürzt über der Hand, sondern eingezogen",
    "zone_px_vorlage": 61,
    "modell_zuordnung": {
     "regel": "Kralle nach Lage (K5c-Geometrie, Pose Bild 2)",
@@ -37501,14 +36803,14 @@
    "bild": 2,
    "nutzerbild": "Gesicht vorne.png",
    "nutzerwort": null,
-   "modell_beschreibung": "Flächen rund um die Augen, die dieselbe Texturstelle wie das Maulinnere benutzen (Modellgliederung)",
+   "modell_beschreibung": "Flächen rund um die Augen, die dieselbe rote Texturstelle wie die heutige Maul-Farbe benutzen (Modellgliederung)",
    "linienfarbe": null,
    "bau": "modellbedeutung",
    "material": "nicht belegt (kein Wort von Ihnen)",
    "eltern": "augen_vorn",
    "auftrag": null,
    "sicherheit": "unsicher",
-   "sicherheit_grund": "kein Wort von Ihnen. 14 Flächen um die Augen benutzen dieselbe Texturstelle wie das Maulinnere (u 91-105, v 157-170); in Bild 2 sind 2 davon sichtbar (23 px), keine unter Ihren Augenpunkten",
+   "sicherheit_grund": "kein Wort von Ihnen. 14 Flächen um die Augen benutzen dieselbe rote Texturstelle wie die heutige Maul-Farbe (u 91-105, v 157-170); in Bild 2 sind 2 davon sichtbar (23 px), keine unter Ihren Augenpunkten",
    "aenderung_v1": "R2: war \"Maulinneres\" (Prüfer: lag an den Augen)",
    "zone_px_vorlage": 23,
    "modell_zuordnung": {
@@ -37722,16 +37024,16 @@
    "eltern": "maul_vorn",
    "auftrag": null,
    "sicherheit": "unsicher",
-   "sicherheit_grund": "kein Wort von Ihnen; Oberlippe des Kopfes 22, nur 297 px in Ihrem Maul-Umriss",
-   "aenderung_v1": "R2: Material nicht mehr \"Lippe\", nicht belegt",
+   "sicherheit_grund": "kein Wort von Ihnen; Oberlippe des Kopfes 22 (ohne die Flächen, die jetzt zum Maulinneren gehören), nur 297 px in Ihrem Maul-Umriss",
+   "aenderung_v1": "R2: Material nicht mehr \"Lippe\"; R3: 8 Flächen an das Maulinnere abgegeben",
    "zone_px_vorlage": 2596,
    "modell_zuordnung": {
     "regel": "Modellbedeutung",
-    "flaechen": 78,
+    "flaechen": 70,
     "sichtbar": 25,
     "px_sichtbar_vorlage": 2596,
     "je_mesh": {
-     "22": 78
+     "22": 70
     },
     "liste": [
      "22|0|10",
@@ -37753,26 +37055,18 @@
      "22|1|183",
      "22|1|184",
      "22|1|185",
-     "22|1|186",
-     "22|1|187",
      "22|1|188",
      "22|1|19",
      "22|1|191",
-     "22|1|192",
-     "22|1|193",
-     "22|1|20",
      "22|1|202",
      "22|1|21",
      "22|1|22",
      "22|1|27",
      "22|1|28",
-     "22|1|29",
-     "22|1|30",
      "22|1|31",
      "22|1|32",
      "22|1|37",
      "22|1|38",
-     "22|1|39",
      "22|1|40",
      "22|1|41",
      "22|1|42",
@@ -37895,6 +37189,54 @@
    "meshes_in_der_stelle": {
     "21": 524
    },
+   "fremd_im_umriss": {},
+   "iou_gegen_nutzerstelle": null
+  },
+  {
+   "nr": "45",
+   "id": "kopf_unterseite_maulfarbe",
+   "bild": 2,
+   "nutzerbild": "Gesicht vorne.png",
+   "nutzerwort": null,
+   "modell_beschreibung": "Kopf-Unterseite hinter dem Unterkiefer: Außenflächen, die heute die rote Maul-Farbe tragen (Modellgliederung; die roten Hals-Streifen)",
+   "linienfarbe": null,
+   "bau": "modellbedeutung",
+   "material": "Haut (nicht belegt)",
+   "eltern": null,
+   "auftrag": null,
+   "sicherheit": "verdeckt",
+   "sicherheit_grund": "kein Wort von Ihnen. 10 Flächen an der Kopf-Unterseite hinter dem Unterkiefer, die heute die rote Maul-Farbe tragen (darunter die 8 großen Außenflächen 22|1|1, 8, 9, 194, 201, 209, 210, 217, die die roten Hals-Streifen machen); in Bild 2 nicht sichtbar. Lage außen, nicht im Maul: bleibt Haut (nicht belegt)",
+   "aenderung_v1": "neu (R3): war in Runde 2 Teil von \"geöffnetes Maul\"",
+   "zone_px_vorlage": 0,
+   "modell_zuordnung": {
+    "regel": "Modellbedeutung",
+    "flaechen": 10,
+    "sichtbar": 0,
+    "px_sichtbar_vorlage": 0,
+    "je_mesh": {
+     "22": 10
+    },
+    "liste": [
+     "22|0|0",
+     "22|0|9",
+     "22|1|1",
+     "22|1|194",
+     "22|1|201",
+     "22|1|209",
+     "22|1|210",
+     "22|1|217",
+     "22|1|8",
+     "22|1|9"
+    ]
+   },
+   "messung": {
+    "modell_px_in_zone_vorlage": 0,
+    "deckung_modell": 0.0,
+    "iou_zu_umrandung": 0.0,
+    "anteil_zone_von_flaechen_gedeckt": 0.0,
+    "anteil_flaechenpixel_in_zone": 0.0
+   },
+   "meshes_in_der_stelle": {},
    "fremd_im_umriss": {},
    "iou_gegen_nutzerstelle": null
   }
@@ -38247,6 +37589,20 @@
      "texel": 12,
      "punkt_px_vorlage": 12.3
     }
+   },
+   "anzeige_bild2_ohne_eigene_texel": {
+    "regel": "Grundlage-Render Bild 2: alle Bildpunkte, deren Texel in der Augen-Texelmaske liegt (egal welche Flaeche); Video-px = Grundlage-px x s^2",
+    "gesamt_px_vorlage": 73.1,
+    "in_den_punkten_px_vorlage": 16.5,
+    "ausserhalb_px_vorlage": 56.6,
+    "ausserhalb_innerhalb_20px_px_vorlage": 28.3,
+    "punkte_px_vorlage": 18.8,
+    "ausserhalb_je_teil": {
+     "Brust/Buckel": 11.8,
+     "Hals": 4.3,
+     "Kopf (Oberkiefer)": 40.6
+    },
+    "faktor_gesamt_zu_punkten": 3.89
    }
   }
  },
@@ -38770,6 +38126,998 @@
       613
      ]
     }
+   }
+  }
+ },
+ "texel_konflikte": [
+  {
+   "zone_a": "24",
+   "id_a": "weisse_musterung_vorderbein_rechts",
+   "material_a": "weiße Musterung",
+   "zone_b": "27",
+   "id_b": "fleisch_vorn",
+   "material_b": "fleischfarben",
+   "texel": 197,
+   "flaechen_mit_diesen_texeln": 231,
+   "teile": [
+    10,
+    16,
+    21,
+    22,
+    23
+   ]
+  },
+  {
+   "zone_a": "9",
+   "id_a": "schwanz_muster",
+   "material_a": "Musterung/Maserung",
+   "zone_b": "11",
+   "id_b": "zipfel_musterung",
+   "material_b": "Musterung",
+   "texel": 70,
+   "flaechen_mit_diesen_texeln": 109,
+   "teile": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    11,
+    16
+   ]
+  },
+  {
+   "zone_a": "27",
+   "id_a": "fleisch_vorn",
+   "material_a": "fleischfarben",
+   "zone_b": "29",
+   "id_b": "augen_vorn",
+   "material_b": "Auge",
+   "texel": 8,
+   "flaechen_mit_diesen_texeln": 108,
+   "teile": [
+    10,
+    16,
+    21,
+    22,
+    23
+   ]
+  },
+  {
+   "zone_a": "16",
+   "id_a": "braeunliche_musterung_bein_hinten_links",
+   "material_a": "bräunliche Musterung",
+   "zone_b": "18",
+   "id_b": "weisse_musterung_bein_hinten_rechts",
+   "material_b": "weiße Musterung",
+   "texel": 6,
+   "flaechen_mit_diesen_texeln": 19,
+   "teile": [
+    8,
+    9
+   ]
+  },
+  {
+   "zone_a": "14",
+   "id_a": "weisse_musterung_bein_hinten_links",
+   "material_a": "weiße Musterung",
+   "zone_b": "16",
+   "id_b": "braeunliche_musterung_bein_hinten_links",
+   "material_b": "bräunliche Musterung",
+   "texel": 5,
+   "flaechen_mit_diesen_texeln": 14,
+   "teile": [
+    8,
+    9
+   ]
+  },
+  {
+   "zone_a": "11",
+   "id_a": "zipfel_musterung",
+   "material_a": "Musterung",
+   "zone_b": "12",
+   "id_b": "rotes_fleisch_zipfel",
+   "material_b": "rotes Fleisch",
+   "texel": 4,
+   "flaechen_mit_diesen_texeln": 65,
+   "teile": [
+    1,
+    2,
+    5,
+    6,
+    11,
+    16
+   ]
+  },
+  {
+   "zone_a": "15",
+   "id_a": "weisse_musterung_bein_hinten_links_strich2",
+   "material_a": "weiße Musterung",
+   "zone_b": "16",
+   "id_b": "braeunliche_musterung_bein_hinten_links",
+   "material_b": "bräunliche Musterung",
+   "texel": 4,
+   "flaechen_mit_diesen_texeln": 14,
+   "teile": [
+    8,
+    9
+   ]
+  },
+  {
+   "zone_a": "24",
+   "id_a": "weisse_musterung_vorderbein_rechts",
+   "material_a": "weiße Musterung",
+   "zone_b": "29",
+   "id_b": "augen_vorn",
+   "material_b": "Auge",
+   "texel": 3,
+   "flaechen_mit_diesen_texeln": 53,
+   "teile": [
+    10,
+    16,
+    21,
+    22
+   ]
+  }
+ ],
+ "maul_lage": {
+  "maulinneres_lage": [
+   "22|1|186",
+   "22|1|187",
+   "22|1|192",
+   "22|1|193",
+   "22|1|20",
+   "22|1|29",
+   "22|1|30",
+   "22|1|39",
+   "23|1|14",
+   "23|1|15",
+   "23|1|23",
+   "23|1|24",
+   "23|1|25",
+   "23|1|33",
+   "23|1|34",
+   "23|1|35",
+   "23|1|36",
+   "23|1|43",
+   "23|1|44",
+   "23|1|45",
+   "23|1|46"
+  ],
+  "farbliste_maulinneres": {
+   "flaechen": [
+    "22|0|0",
+    "22|0|9",
+    "22|1|1",
+    "22|1|100",
+    "22|1|107",
+    "22|1|108",
+    "22|1|131",
+    "22|1|132",
+    "22|1|138",
+    "22|1|139",
+    "22|1|140",
+    "22|1|147",
+    "22|1|148",
+    "22|1|194",
+    "22|1|201",
+    "22|1|209",
+    "22|1|210",
+    "22|1|217",
+    "22|1|8",
+    "22|1|9",
+    "22|1|91",
+    "22|1|92",
+    "22|1|98",
+    "22|1|99",
+    "23|0|10",
+    "23|0|19",
+    "23|0|3",
+    "23|0|4",
+    "23|0|5",
+    "23|0|6",
+    "23|1|3",
+    "23|1|50",
+    "23|1|59",
+    "23|1|60",
+    "23|1|69"
+   ],
+   "aussen_gross_sichtbar": [
+    "22|1|1",
+    "22|1|194",
+    "22|1|201",
+    "22|1|209",
+    "22|1|210",
+    "22|1|217",
+    "22|1|8",
+    "22|1|9"
+   ],
+   "davon_im_maulinneren_nach_lage": []
+  },
+  "sichtbarkeit": {
+   "22|0|0": {
+    "12": [
+     529,
+     0
+    ],
+    "2": [
+     664,
+     81
+    ],
+    "0": [
+     549,
+     0
+    ]
+   },
+   "22|0|9": {
+    "12": [
+     434,
+     0
+    ],
+    "2": [
+     486,
+     14
+    ],
+    "0": [
+     406,
+     0
+    ]
+   },
+   "22|1|1": {
+    "12": [
+     20460,
+     5273
+    ],
+    "2": [
+     23776,
+     6019
+    ],
+    "0": [
+     19947,
+     1200
+    ]
+   },
+   "22|1|100": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "22|1|107": {
+    "12": [
+     8,
+     8
+    ],
+    "2": [
+     7,
+     0
+    ],
+    "0": [
+     7,
+     4
+    ]
+   },
+   "22|1|108": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "22|1|131": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "22|1|132": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "22|1|138": {
+    "12": [
+     103,
+     84
+    ],
+    "2": [
+     123,
+     11
+    ],
+    "0": [
+     127,
+     28
+    ]
+   },
+   "22|1|139": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "22|1|140": {
+    "12": [
+     2,
+     0
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "22|1|147": {
+    "12": [
+     14,
+     6
+    ],
+    "2": [
+     20,
+     20
+    ],
+    "0": [
+     24,
+     24
+    ]
+   },
+   "22|1|148": {
+    "12": [
+     28,
+     0
+    ],
+    "2": [
+     31,
+     23
+    ],
+    "0": [
+     37,
+     29
+    ]
+   },
+   "22|1|186": {
+    "12": [
+     1046,
+     480
+    ],
+    "2": [
+     260,
+     256
+    ],
+    "0": [
+     282,
+     279
+    ]
+   },
+   "22|1|187": {
+    "12": [
+     303,
+     48
+    ],
+    "2": [
+     38,
+     8
+    ],
+    "0": [
+     66,
+     44
+    ]
+   },
+   "22|1|192": {
+    "12": [
+     445,
+     306
+    ],
+    "2": [
+     38,
+     9
+    ],
+    "0": [
+     112,
+     83
+    ]
+   },
+   "22|1|193": {
+    "12": [
+     1162,
+     454
+    ],
+    "2": [
+     214,
+     211
+    ],
+    "0": [
+     333,
+     318
+    ]
+   },
+   "22|1|194": {
+    "12": [
+     6323,
+     1537
+    ],
+    "2": [
+     9364,
+     2319
+    ],
+    "0": [
+     6497,
+     36
+    ]
+   },
+   "22|1|20": {
+    "12": [
+     2838,
+     1292
+    ],
+    "2": [
+     276,
+     265
+    ],
+    "0": [
+     377,
+     259
+    ]
+   },
+   "22|1|201": {
+    "12": [
+     7826,
+     643
+    ],
+    "2": [
+     10370,
+     2503
+    ],
+    "0": [
+     8386,
+     290
+    ]
+   },
+   "22|1|209": {
+    "12": [
+     37872,
+     4679
+    ],
+    "2": [
+     40808,
+     11472
+    ],
+    "0": [
+     39827,
+     4704
+    ]
+   },
+   "22|1|210": {
+    "12": [
+     25076,
+     5057
+    ],
+    "2": [
+     30851,
+     6135
+    ],
+    "0": [
+     25043,
+     703
+    ]
+   },
+   "22|1|217": {
+    "12": [
+     25800,
+     1773
+    ],
+    "2": [
+     30971,
+     6079
+    ],
+    "0": [
+     28328,
+     1923
+    ]
+   },
+   "22|1|29": {
+    "12": [
+     2227,
+     769
+    ],
+    "2": [
+     204,
+     192
+    ],
+    "0": [
+     366,
+     211
+    ]
+   },
+   "22|1|30": {
+    "12": [
+     3086,
+     1376
+    ],
+    "2": [
+     217,
+     213
+    ],
+    "0": [
+     424,
+     333
+    ]
+   },
+   "22|1|39": {
+    "12": [
+     2171,
+     919
+    ],
+    "2": [
+     219,
+     211
+    ],
+    "0": [
+     481,
+     234
+    ]
+   },
+   "22|1|8": {
+    "12": [
+     21057,
+     2069
+    ],
+    "2": [
+     23808,
+     6034
+    ],
+    "0": [
+     23116,
+     2553
+    ]
+   },
+   "22|1|9": {
+    "12": [
+     24963,
+     3369
+    ],
+    "2": [
+     28159,
+     8022
+    ],
+    "0": [
+     26615,
+     2624
+    ]
+   },
+   "22|1|91": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     1,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "22|1|92": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "22|1|98": {
+    "12": [
+     301,
+     202
+    ],
+    "2": [
+     345,
+     50
+    ],
+    "0": [
+     349,
+     64
+    ]
+   },
+   "22|1|99": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     0,
+     0
+    ]
+   },
+   "23|0|10": {
+    "12": [
+     7,
+     0
+    ],
+    "2": [
+     7,
+     0
+    ],
+    "0": [
+     4,
+     0
+    ]
+   },
+   "23|0|19": {
+    "12": [
+     6,
+     1
+    ],
+    "2": [
+     4,
+     0
+    ],
+    "0": [
+     4,
+     2
+    ]
+   },
+   "23|0|3": {
+    "12": [
+     6,
+     0
+    ],
+    "2": [
+     314,
+     0
+    ],
+    "0": [
+     214,
+     0
+    ]
+   },
+   "23|0|4": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     309,
+     0
+    ],
+    "0": [
+     124,
+     0
+    ]
+   },
+   "23|0|5": {
+    "12": [
+     0,
+     0
+    ],
+    "2": [
+     372,
+     0
+    ],
+    "0": [
+     179,
+     0
+    ]
+   },
+   "23|0|6": {
+    "12": [
+     18,
+     0
+    ],
+    "2": [
+     313,
+     0
+    ],
+    "0": [
+     237,
+     0
+    ]
+   },
+   "23|1|14": {
+    "12": [
+     196,
+     99
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     1,
+     1
+    ]
+   },
+   "23|1|15": {
+    "12": [
+     188,
+     154
+    ],
+    "2": [
+     0,
+     0
+    ],
+    "0": [
+     35,
+     35
+    ]
+   },
+   "23|1|23": {
+    "12": [
+     733,
+     387
+    ],
+    "2": [
+     100,
+     4
+    ],
+    "0": [
+     169,
+     40
+    ]
+   },
+   "23|1|24": {
+    "12": [
+     1702,
+     503
+    ],
+    "2": [
+     43,
+     42
+    ],
+    "0": [
+     71,
+     69
+    ]
+   },
+   "23|1|25": {
+    "12": [
+     1811,
+     911
+    ],
+    "2": [
+     52,
+     51
+    ],
+    "0": [
+     263,
+     232
+    ]
+   },
+   "23|1|3": {
+    "12": [
+     9,
+     0
+    ],
+    "2": [
+     65,
+     7
+    ],
+    "0": [
+     36,
+     14
+    ]
+   },
+   "23|1|33": {
+    "12": [
+     938,
+     351
+    ],
+    "2": [
+     74,
+     14
+    ],
+    "0": [
+     212,
+     131
+    ]
+   },
+   "23|1|34": {
+    "12": [
+     2937,
+     620
+    ],
+    "2": [
+     55,
+     42
+    ],
+    "0": [
+     329,
+     272
+    ]
+   },
+   "23|1|35": {
+    "12": [
+     2939,
+     1553
+    ],
+    "2": [
+     55,
+     44
+    ],
+    "0": [
+     342,
+     282
+    ]
+   },
+   "23|1|36": {
+    "12": [
+     848,
+     121
+    ],
+    "2": [
+     67,
+     10
+    ],
+    "0": [
+     195,
+     110
+    ]
+   },
+   "23|1|43": {
+    "12": [
+     129,
+     38
+    ],
+    "2": [
+     1,
+     1
+    ],
+    "0": [
+     13,
+     12
+    ]
+   },
+   "23|1|44": {
+    "12": [
+     405,
+     40
+    ],
+    "2": [
+     9,
+     3
+    ],
+    "0": [
+     42,
+     22
+    ]
+   },
+   "23|1|45": {
+    "12": [
+     413,
+     204
+    ],
+    "2": [
+     6,
+     0
+    ],
+    "0": [
+     50,
+     33
+    ]
+   },
+   "23|1|46": {
+    "12": [
+     132,
+     45
+    ],
+    "2": [
+     1,
+     1
+    ],
+    "0": [
+     10,
+     2
+    ]
+   },
+   "23|1|50": {
+    "12": [
+     73,
+     16
+    ],
+    "2": [
+     84,
+     0
+    ],
+    "0": [
+     88,
+     81
+    ]
+   },
+   "23|1|59": {
+    "12": [
+     85,
+     54
+    ],
+    "2": [
+     82,
+     0
+    ],
+    "0": [
+     76,
+     63
+    ]
+   },
+   "23|1|60": {
+    "12": [
+     35,
+     0
+    ],
+    "2": [
+     57,
+     0
+    ],
+    "0": [
+     23,
+     0
+    ]
+   },
+   "23|1|69": {
+    "12": [
+     47,
+     2
+    ],
+    "2": [
+     59,
+     0
+    ],
+    "0": [
+     16,
+     0
+    ]
    }
   }
  }
