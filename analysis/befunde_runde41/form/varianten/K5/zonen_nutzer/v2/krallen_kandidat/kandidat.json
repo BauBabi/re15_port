@@ -1,5 +1,5 @@
 {
- "regel": "Auftrag 3: Krallen-Vorschlag als Geometrie-Kandidat (nicht im Asset).\nvorn links: 28 mit K5c-Geometrie zurueck. vorn rechts: 31 bleibt; 19 mit K5c-Lage zurueck und genau EIN Laengenfaktor entlang der eigenen\nAchse (Wurzel -> Spitze) aus der gemessenen Nutzer-Spitze; 20 und 29 nur um ihre Wurzel (Knochen-Ursprung an der Hand) gedreht, Laenge wie K5c,\nbis sie in Bild 2 ganz in der vom Schriftzug verdeckten Flaeche liegen und kein Pixel ueber sichtbarem Hintergrund (Annahme nach Nutzer-Wortlaut\n\"vorne rechts hat er wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift.\"). hinten unveraendert.",
+ "regel": "Auftrag 3: Krallen-Vorschlag als Geometrie-Kandidat (nicht im Asset).\nvorn links: 28 mit K5c-Geometrie zurueck. vorn rechts: 31 bleibt; 19 mit K5c-Lage zurueck und genau EIN Laengenfaktor entlang der eigenen\nAchse (Wurzel -> Spitze) aus der gemessenen Nutzer-Spitze; 20 und 29 nur um ihre Wurzel (Knochen-Ursprung an der Hand) gedreht, Laenge wie K5c,\nbis sie in Bild 2 ganz in der vom Schriftzug verdeckten Flaeche liegen und kein Pixel ueber sichtbarem Hintergrund (Annahme nach Nutzer-Wortlaut\n\"vorne rechts hat er wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift.\"). hinten unveraendert.\nRunde 2: 20 und 29 bleiben eingezogen (Asset), weil keine Drehung die Annahme erfuellt (Pruefer r1 Nr. 12); Frage an den Nutzer.",
  "wasserzeichen_px_vorlage": 9192,
  "kralle19": {
   "laengenfaktor": 0.4898,
@@ -20,91 +20,29 @@
   "laenge_k5c": 713.5,
   "laenge_vorschlag": 349.5
  },
- "drehungen": {
-  "20": {
-   "drehvektor_rad": [
-    -0.4344,
-    -0.0664,
-    1.8901
-   ],
-   "drehwinkel_grad": 111.2,
-   "drehachse_knochen": [
-    -0.224,
-    -0.034,
-    0.974
-   ],
-   "k5c": {
-    "sichtbar_px": 1734,
-    "ausserhalb_schriftzug_px": 1699,
-    "ueber_hintergrund_px": 1686,
-    "durchdringung_ecken": 5
-   },
-   "vorschlag": {
-    "sichtbar_px": 135,
-    "in_schriftzug_px": 0,
-    "ausserhalb_schriftzug_px": 135,
-    "ueber_hintergrund_px": 135,
-    "durchdringung_ecken": 2,
-    "ecken_geprueft": 21
-   },
-   "gelungen": false,
-   "suche": {
-    "stichproben": 6000,
-    "mit_0_ausserhalb_und_0_durchdringung": 0,
-    "mit_0_ausserhalb": 0,
-    "mit_0_durchdringung": 109,
-    "bestes_ohne_durchdringung_ausserhalb_px": 558
-   },
-   "laenge_k5c": 751.3,
-   "laenge_vorschlag": 751.2
+ "kralle20_29": {
+  "stand": "eingezogen wie im Spiel-Asset (unveraendert)",
+  "grund": "Drehen um die Wurzel erfuellt die Annahme nicht (Runde 1: bestes Ergebnis 135 / 12 px ueber Hintergrund, 2 / 1 Ecken in der Hand, in Bild 1 330 / 683 px ueber Hintergrund); Entscheidung beim Nutzer (Frage)"
+ },
+ "durchdringung": {
+  "19": {
+   "hand": 18,
+   "ecken_in_der_hand": 0,
+   "ecken_geprueft": 14
   },
-  "29": {
-   "drehvektor_rad": [
-    -0.6882,
-    -0.5054,
-    2.4184
-   ],
-   "drehwinkel_grad": 146.9,
-   "drehachse_knochen": [
-    -0.268,
-    -0.197,
-    0.943
-   ],
-   "k5c": {
-    "sichtbar_px": 1782,
-    "ausserhalb_schriftzug_px": 1782,
-    "ueber_hintergrund_px": 1782,
-    "durchdringung_ecken": 1
-   },
-   "vorschlag": {
-    "sichtbar_px": 12,
-    "in_schriftzug_px": 0,
-    "ausserhalb_schriftzug_px": 12,
-    "ueber_hintergrund_px": 12,
-    "durchdringung_ecken": 1,
-    "ecken_geprueft": 20
-   },
-   "gelungen": false,
-   "suche": {
-    "stichproben": 6000,
-    "mit_0_ausserhalb_und_0_durchdringung": 0,
-    "mit_0_ausserhalb": 0,
-    "mit_0_durchdringung": 2419,
-    "bestes_ohne_durchdringung_ausserhalb_px": 95
-   },
-   "laenge_k5c": 961.3,
-   "laenge_vorschlag": 961.3
+  "28": {
+   "hand": 13,
+   "ecken_in_der_hand": 2,
+   "ecken_geprueft": 17
   }
  },
  "emd": {
   "datei": "BAHNSTEIG_FORM.EMD",
   "meshes_mit_anderen_ecken": [
    19,
-   20,
-   28,
-   29
+   28
   ],
-  "bytes_verschieden": 954,
+  "bytes_verschieden": 385,
   "laenge_gleich": true
  },
  "ecken": {
@@ -374,272 +312,6 @@
     ]
    ]
   },
-  "20": {
-   "tv": [
-    [
-     -97,
-     -122,
-     23
-    ],
-    [
-     -97,
-     -80,
-     169
-    ],
-    [
-     50,
-     -22,
-     209
-    ],
-    [
-     139,
-     -28,
-     90
-    ],
-    [
-     113,
-     -69,
-     -26
-    ],
-    [
-     3,
-     -115,
-     -64
-    ],
-    [
-     -239,
-     103,
-     -78
-    ],
-    [
-     -223,
-     171,
-     141
-    ],
-    [
-     -7,
-     257,
-     199
-    ],
-    [
-     150,
-     259,
-     32
-    ],
-    [
-     107,
-     188,
-     -165
-    ],
-    [
-     -81,
-     111,
-     -222
-    ],
-    [
-     -286,
-     288,
-     -138
-    ],
-    [
-     -258,
-     348,
-     38
-    ],
-    [
-     -88,
-     416,
-     85
-    ],
-    [
-     54,
-     425,
-     -41
-    ],
-    [
-     29,
-     363,
-     -228
-    ],
-    [
-     -150,
-     293,
-     -270
-    ],
-    [
-     -303,
-     432,
-     -178
-    ],
-    [
-     -278,
-     469,
-     -78
-    ],
-    [
-     -185,
-     506,
-     -51
-    ],
-    [
-     -100,
-     514,
-     -120
-    ],
-    [
-     -109,
-     478,
-     -235
-    ],
-    [
-     -221,
-     435,
-     -259
-    ],
-    [
-     35,
-     -111,
-     67
-    ],
-    [
-     -335,
-     634,
-     -224
-    ]
-   ],
-   "qv": [
-    [
-     -97,
-     -122,
-     23
-    ],
-    [
-     -97,
-     -80,
-     169
-    ],
-    [
-     50,
-     -22,
-     209
-    ],
-    [
-     139,
-     -28,
-     90
-    ],
-    [
-     113,
-     -69,
-     -26
-    ],
-    [
-     3,
-     -115,
-     -64
-    ],
-    [
-     -239,
-     103,
-     -78
-    ],
-    [
-     -223,
-     171,
-     141
-    ],
-    [
-     -7,
-     257,
-     199
-    ],
-    [
-     150,
-     259,
-     32
-    ],
-    [
-     107,
-     188,
-     -165
-    ],
-    [
-     -81,
-     111,
-     -222
-    ],
-    [
-     -286,
-     288,
-     -138
-    ],
-    [
-     -258,
-     348,
-     38
-    ],
-    [
-     -88,
-     416,
-     85
-    ],
-    [
-     54,
-     425,
-     -41
-    ],
-    [
-     29,
-     363,
-     -228
-    ],
-    [
-     -150,
-     293,
-     -270
-    ],
-    [
-     -303,
-     432,
-     -178
-    ],
-    [
-     -278,
-     469,
-     -78
-    ],
-    [
-     -185,
-     506,
-     -51
-    ],
-    [
-     -100,
-     514,
-     -120
-    ],
-    [
-     -109,
-     478,
-     -235
-    ],
-    [
-     -221,
-     435,
-     -259
-    ],
-    [
-     35,
-     -111,
-     67
-    ],
-    [
-     -335,
-     634,
-     -224
-    ]
-   ]
-  },
   "28": {
    "tv": [
     [
@@ -903,272 +575,6 @@
      671,
      -21,
      288
-    ]
-   ]
-  },
-  "29": {
-   "tv": [
-    [
-     -63,
-     -138,
-     39
-    ],
-    [
-     -139,
-     -109,
-     111
-    ],
-    [
-     -84,
-     -18,
-     164
-    ],
-    [
-     6,
-     -12,
-     119
-    ],
-    [
-     33,
-     -52,
-     67
-    ],
-    [
-     7,
-     -101,
-     34
-    ],
-    [
-     -259,
-     56,
-     -157
-    ],
-    [
-     -368,
-     105,
-     -48
-    ],
-    [
-     -284,
-     236,
-     28
-    ],
-    [
-     -150,
-     257,
-     -30
-    ],
-    [
-     -103,
-     192,
-     -117
-    ],
-    [
-     -144,
-     107,
-     -174
-    ],
-    [
-     -374,
-     258,
-     -287
-    ],
-    [
-     -459,
-     306,
-     -193
-    ],
-    [
-     -394,
-     415,
-     -127
-    ],
-    [
-     -273,
-     444,
-     -169
-    ],
-    [
-     -224,
-     383,
-     -253
-    ],
-    [
-     -268,
-     299,
-     -309
-    ],
-    [
-     -427,
-     447,
-     -364
-    ],
-    [
-     -470,
-     480,
-     -308
-    ],
-    [
-     -437,
-     542,
-     -268
-    ],
-    [
-     -363,
-     565,
-     -288
-    ],
-    [
-     -329,
-     526,
-     -345
-    ],
-    [
-     -359,
-     471,
-     -379
-    ],
-    [
-     -11,
-     -96,
-     109
-    ],
-    [
-     -395,
-     635,
-     -604
-    ]
-   ],
-   "qv": [
-    [
-     -63,
-     -138,
-     39
-    ],
-    [
-     -139,
-     -109,
-     111
-    ],
-    [
-     -84,
-     -18,
-     164
-    ],
-    [
-     6,
-     -12,
-     119
-    ],
-    [
-     33,
-     -52,
-     67
-    ],
-    [
-     7,
-     -101,
-     34
-    ],
-    [
-     -259,
-     56,
-     -157
-    ],
-    [
-     -368,
-     105,
-     -48
-    ],
-    [
-     -284,
-     236,
-     28
-    ],
-    [
-     -150,
-     257,
-     -30
-    ],
-    [
-     -103,
-     192,
-     -117
-    ],
-    [
-     -144,
-     107,
-     -174
-    ],
-    [
-     -374,
-     258,
-     -287
-    ],
-    [
-     -459,
-     306,
-     -193
-    ],
-    [
-     -394,
-     415,
-     -127
-    ],
-    [
-     -273,
-     444,
-     -169
-    ],
-    [
-     -224,
-     383,
-     -253
-    ],
-    [
-     -268,
-     299,
-     -309
-    ],
-    [
-     -427,
-     447,
-     -364
-    ],
-    [
-     -470,
-     480,
-     -308
-    ],
-    [
-     -437,
-     542,
-     -268
-    ],
-    [
-     -363,
-     565,
-     -288
-    ],
-    [
-     -329,
-     526,
-     -345
-    ],
-    [
-     -359,
-     471,
-     -379
-    ],
-    [
-     -11,
-     -96,
-     109
-    ],
-    [
-     -395,
-     635,
-     -604
     ]
    ]
   }
@@ -1198,8 +604,8 @@
     "ueber_hintergrund_px": 0
    },
    "vorschlag": {
-    "sichtbar_px": 404,
-    "ueber_hintergrund_px": 330
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
    }
   },
   "28": {
@@ -1226,8 +632,8 @@
     "ueber_hintergrund_px": 10
    },
    "vorschlag": {
-    "sichtbar_px": 685,
-    "ueber_hintergrund_px": 683
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
    }
   }
  },
@@ -1343,13 +749,13 @@
     "im_schriftzug_px": 142
    },
    "20": {
-    "sichtbar_px": 135,
-    "ueber_hintergrund_px": 135,
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
     "im_schriftzug_px": 0
    },
    "29": {
-    "sichtbar_px": 12,
-    "ueber_hintergrund_px": 12,
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
     "im_schriftzug_px": 0
    },
    "31": {
