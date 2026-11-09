@@ -208,12 +208,13 @@ int main(void)
     if (!blob) return 1;
     CHECK(re15_emd_parse_container(blob, len, &s_md1, &s_skel, &s_anim, NULL) == 0, "EM30_HANGAR nicht lesbar");
     CHECK(s_skel.bone_count == 23, "Knochen %d statt 23", s_skel.bone_count);
-    /* Zweig r41/sichel_v8: das Spiel-Asset traegt die V8-Kette (Messblatt V8 6a; tools/r41_sichel/v8/kette_v8.json, Runde 2): Knochen 16
-     * relpos (-714,-214,130), 17-22 (0,526,0), gemessen am EMR von d0ef852c (Runde 1 fa31156c: (-667,-342,102) / 538 - Gegenprobe rot).
+    /* Zweig r41/sichel_v8: das Spiel-Asset traegt die V8-Kette (Messblatt V8 6a; tools/r41_sichel/v8/kette_v8.json, Runde 3): Knochen 16
+     * relpos (-722,-145,108), 17-22 (0,541,0), gemessen am EMR von 66806bc4 (Runde 2 d0ef852c: (-714,-214,130) / 526, Runde 1 fa31156c:
+     * (-667,-342,102) / 538 - Gegenprobe rot).
      * Gegenprobe V7 (319bbd17: 16 (-378,-602,-410), 17-22 y 624/440/887/1121/350/204): keine V8-Kette, V4-Kette (= hier rot fuer V7). */
     {
-        static const int16_t v8_rel[7][3] = { { -714, -214, 130 }, { 0, 526, 0 }, { 0, 526, 0 }, { 0, 526, 0 }, { 0, 526, 0 },
-                                              { 0, 526, 0 }, { 0, 526, 0 } };
+        static const int16_t v8_rel[7][3] = { { -722, -145, 108 }, { 0, 541, 0 }, { 0, 541, 0 }, { 0, 541, 0 }, { 0, 541, 0 },
+                                              { 0, 541, 0 }, { 0, 541, 0 } };
         static const int16_t v7_rel[7][3] = { { -378, -602, -410 }, { 0, 624, 0 }, { 0, 440, 0 }, { 0, 887, 0 }, { 0, 1121, 0 },
                                               { 0, 350, 0 }, { 0, 204, 0 } };
         int abw = 0;

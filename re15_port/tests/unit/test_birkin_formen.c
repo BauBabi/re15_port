@@ -17,10 +17,11 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
- * Zweig r41/sichel_v8 (V8 Koerperbau nach Nutzer-Skizze, Runde 2 nach Pruefung V8 r1): Spiel-Asset = V8 Runde 2 (sha256 d0ef852c...,
- * v8_kette.sh); dazu CLUT_ZEILEN 16, Ader-Zeilen X1 493 / X2 494 / X3 495 (Mesh 8: 35 + 6, Mesh 13: 13, Mesh 14: 37 Flaechen; ganze
- * V7-UV-Inseln, UV ausser dem CLUT-Feld unveraendert - Runde 1 hatte 26 Flaechen mit UV-Schub = "Flickenteppich"), gemessen am V8 Runde 2
- * (Protokoll v8_kette prot/7_v8.json). Gegenprobe V8 Runde 1 (fa31156c): rot (15 Zeilen, 26 Schuebe).
+ * Zweig r41/sichel_v8 (V8 Koerperbau nach Nutzer-Skizze, Runde 3 nach Pruefung V8 r2): Spiel-Asset = V8 Runde 3 (sha256 66806bc4...,
+ * v8_kette.sh); dazu CLUT_ZEILEN 16, Zeilen 493 / 494 / 495 = Original-EM30-Zeilen 480 / 481 / 482 BYTEGLEICH (Orchestrator O1: "dessen
+ * Texelstruktur UND dessen Original-Paletteneintraege der Zeilen 480-482"), Mesh 8: 36 + 7 Flaechen (davon 3 Huegel-Flaechen mit UV-Schub
+ * auf Original-Fleisch, O2), Mesh 13: 32 (ohne Feld C), Mesh 14: alle 37, gemessen am Asset 66806bc4 (sfv8/r3, prot/7_v8.json).
+ * Gegenprobe V8 Runde 2 (d0ef852c): rot (Zeilen = V7 + Ader-Eintraege, Mesh 13 13 Flaechen auf X1).
  * Seit v0.8.30 (Einbau V7, Nutzerfreigabe 2026-11-08 woertlich "Naja, gehen wir so erst mal ins rennnen.") ist das Spiel-Asset die
  * Sichel-Form V7 (sha256 319bbd17..., Pin release/em30_hangar.sha256, Bau re15_port/tools/r41_sichel/v7_kette.sh), nicht mehr die
  * Ausgabe von birkin_formen.py (Referenz 2, cfd1ac42). Die Erwartungen unten sind an V7 gemessen (eigener Leser in Python:
@@ -85,7 +86,7 @@ static int umtexturiert(int m)   /* birkin_formen.py FORMEN['hangar'] umtexturie
 static int nur_clut(int m)       /* V7: UV bis auf das CLUT-Feld = EM30 (V6 Kopf Schritt 1: Mesh 9 = Original-Mesh; V5 wie Foto b):
                                   * nur CLUT-Felder fuer 8/12/13; Sichel 15 wie Referenz 2). Gemessen: genau 8, 9, 12, 13, 15 */
 {
-    return m == 8 || m == 9 || m == 12 || m == 13 || m == 14 || m == 15;   /* V8 Runde 2: Mesh 8 wieder nur CLUT, dazu 14 */
+    return m == 9 || m == 12 || m == 13 || m == 14 || m == 15;   /* V8 Runde 3: Mesh 8 hat 3 Huegel-Flaechen mit UV-Schub (eigene Pruefung) */
 }
 static int uv_ohne_clut_anders(const re15_md1_mesh_t *a, const re15_md1_mesh_t *b)   /* V8: Zahl der Flaechen mit anderer UV */
 {
@@ -297,18 +298,22 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
             if (nur_clut(m))
                 CHECK(uv_ohne_clut_gleich(a, b) && uv_ohne_clut_anders(a, b) == 0,
                       "%s: Mesh %d UVs ausser dem CLUT-Feld weichen von EM30 ab (%d Flaechen)", name, m, uv_ohne_clut_anders(a, b));
-            if (m == 8) {                /* V5 wie Foto b): Brust 34 Flaechen -> Zeile 488; V8 Runde 2 Adern: die ganzen (W)-rechten Inseln
-                                          * 480 -> X1 (35 Flaechen), 481 -> X2 (6), UV unveraendert (gemessen 480:21, 481:8, 488:34, 493:35, 494:6) */
+            if (m == 8) {                /* V5 wie Foto b): Brust 34 Flaechen -> Zeile 488; V8 Runde 3 (O1/O2): (W)-rechte Flaechen 480 -> 493,
+                                          * 481 -> 494, dazu 3 Huegel-Flaechen (UV-Schub auf Original-Fleisch) -> 493 (gemessen 480:20, 481:7,
+                                          * 488:34, 493:36, 494:7; 3 Flaechen mit anderer UV) */
                 CHECK(zeile_zahl(b, 488) == 34, "%s: Brust (Mesh 8) %d Flaechen auf CLUT 488 statt 34", name, zeile_zahl(b, 488));
-                CHECK(zeile_zahl(b, Z_X1) == 35 && zeile_zahl(b, Z_X2) == 6, "%s: Mesh 8 Ader-Zeilen %d/%d Flaechen statt 35/6 (V8 Runde 2)",
+                CHECK(zeile_zahl(b, Z_X1) == 36 && zeile_zahl(b, Z_X2) == 7, "%s: Mesh 8 Zeilen 493/494 %d/%d Flaechen statt 36/7 (V8 Runde 3)",
                       name, zeile_zahl(b, Z_X1), zeile_zahl(b, Z_X2));
+                CHECK(uv_ohne_clut_anders(a, b) == 3, "%s: Mesh 8 %d Flaechen mit anderer UV (Soll 3 Huegel-Flaechen, V8 Runde 3 O2)", name,
+                      uv_ohne_clut_anders(a, b));
             }
-            if (m == 14)                 /* V8 Runde 2: Unterarm-Wulst (W)-rechts, alle 37 Flaechen der Zeile 482 -> X3 */
+            if (m == 14)                 /* V8 Runde 3: Unterarm (W)-rechts, alle 37 Flaechen der Zeile 482 -> 495 (= Original-Zeile 482) */
                 CHECK(zeile_zahl(b, Z_X3) == 37 && zeile_zahl(b, 482) == 0, "%s: Unterarm (Mesh 14) %d Flaechen auf X3 (Soll 37), %d auf 482 (Soll 0)",
                       name, zeile_zahl(b, Z_X3), zeile_zahl(b, 482));
-            if (m == 13) {               /* V5 wie Foto b): Oberarm ohne Schulterkuppe 43 Flaechen -> 489; V8 Adern: die 13 Flaechen 480 -> X1 */
-                CHECK(zeile_zahl(b, 489) == 43, "%s: Oberarm (Mesh 13) %d Flaechen auf CLUT 489 statt 43", name, zeile_zahl(b, 489));
-                CHECK(zeile_zahl(b, Z_X1) == 13 && zeile_zahl(b, 480) == 0, "%s: Oberarm (Mesh 13) %d Flaechen auf X1 (Soll 13), %d auf 480 (Soll 0)",
+            if (m == 13) {               /* V8 Runde 3 (O1): Flaechen ausserhalb Feld C (Schulter-Augapfel u 78-127 v 0-100) 480/489 -> 493;
+                                          * Feld C bleibt V7 (Schulterkuppe 13 Flaechen grau 480, 11 Flaechen 489); gemessen 480:13, 489:11, 493:32 */
+                CHECK(zeile_zahl(b, 489) == 11, "%s: Oberarm (Mesh 13) %d Flaechen auf CLUT 489 statt 11", name, zeile_zahl(b, 489));
+                CHECK(zeile_zahl(b, Z_X1) == 32 && zeile_zahl(b, 480) == 13, "%s: Oberarm (Mesh 13) %d Flaechen auf 493 (Soll 32), %d auf 480 (Soll 13)",
                       name, zeile_zahl(b, Z_X1), zeile_zahl(b, 480));
             }
             if (m == 12) {               /* V7 linke Hand 2.: Daumenkralle T 6 Flaechen -> 491 (grau), Fingerkrallen A/B/C 18 -> 492 (rot),
@@ -399,17 +404,11 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         CHECK(haut_anders > 200, "%s: nur %d Haut-Eintraege umgefaerbt", name, haut_anders);
         CHECK(!memcmp(s_form.tim.clut + 6 * 256, s_basis.tim.clut, 256 * sizeof(uint16_t)),
               "%s: CLUT-Zeile 486 ist nicht die EM30-Zeile 0 (Original-Kopf, V6 Kopf)", name);
-        /* V8 Adern (Messblatt V8 6c): X1/X2 = Zeile 480/481 dieses Assets (= V7) ausser den Ader-Eintraegen, die bytegleich die EM30-Zeile 0/1
-         * tragen (gemessen 62 / 50 Eintraege anders, alle = EM30) */
-        static const int soll_ader[3] = { 62, 50, 88 };   /* V8 Runde 2: X3 aus Zeile 482 (gemessen 88, prot/7_v8.json) */
+        /* V8 Runde 3 (O1): Zeilen 493/494/495 = EM30-Zeilen 480/481/482 (CDEMD0.EMS Typ 0x30) bytegleich - jeder Eintrag aus dem Original */
         for (int k = 0; k < 3; k++) {
-            int anders = 0, fremd = 0;
-            for (int i = 0; i < 256; i++) {
-                const uint16_t x = s_form.tim.clut[(13 + k) * 256 + i];
-                if (x != s_form.tim.clut[k * 256 + i]) { anders++; fremd += x != s_basis.tim.clut[k * 256 + i]; }
-            }
-            CHECK(anders == soll_ader[k] && fremd == 0, "%s: Ader-Zeile %d: %d Eintraege anders als Zeile %d (Soll %d), %d nicht aus EM30",
-                  name, 493 + k, anders, 480 + k, soll_ader[k], fremd);
+            int fremd = 0;
+            for (int i = 0; i < 256; i++) fremd += s_form.tim.clut[(13 + k) * 256 + i] != s_basis.tim.clut[k * 256 + i];
+            CHECK(fremd == 0, "%s: Zeile %d: %d Eintraege nicht = EM30-Zeile %d (V8 Runde 3: volle Original-Zeile)", name, 493 + k, fremd, 480 + k);
         }
         fprintf(stderr, "%s: %d Haut-CLUT-Eintraege umgefaerbt, %d blaue grau, %d Zusatzzeilen, Port-Texturhoehe %d\n", name,
                 haut_anders, blau_anders, zeilen - 3, s_form.tim.height * zeilen);
