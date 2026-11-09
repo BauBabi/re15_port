@@ -56,6 +56,12 @@ S15 Unterseite  (a) Herkunft: jede Schwanzflaeche ausserhalb Zeile 487 auf der Z
                 Fleischflaechen (Mittel < 100) mit Fleisch-Texeln (a* >= 15), jede Oberseiten-Flaeche auf Zeile 487 mit der UV des Baus ohne Stufe u;
                 (c) PV und P2: Fleisch-Texel-Anteil an den Schwanz-Bildpunkten |theta| <= 100 >= S15_SOLL, |theta| >= 135 = 0; (d) groesster L*-Sprung
                 zwischen 15-Grad-Baendern theta 90-180 <= Vorlage
+Runde 5 P5 (Nutzer 2026-11-09: "es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner Birkin. Das ist in der Vorlage so wie
+                es aussieht nicht so."; Mass luecke_r5.py; Gegenproben V8 r4 und 91885ed8c muessen rot sein):
+S16 Luecke      (a) Luecken-Bildpunkte zwischen Ruecken (Knochen 8 oberhalb des Kopfgelenks) und Kopf (Knochen 9): Kerbe (konvexe Huelle Kopf +
+                Knochen 8 im Umkreis 12 px ohne Silhouette, Stuecke an Kopf UND Ruecken) und Spalt (Schliessen 5 x 5, an Ruecken, <= 12 px vom Kopf)
+                in PV, P1, P2, allen 144 Szenen-Takten F235-F378 und rundum (PV/P2, Gier + k x 256), je 7 Halbpixel-Varianten: 0;
+                (b) Gesichts-Bildpunkte (Knochen 9, lok x >= 150) je Ansicht (Variante 0, wo V7 >= 150 zeigt) >= V7 - 2 % (Mesh 8 verdeckt das Gesicht nicht)
 Szene (Optionen --mk-a/--mk-b/--gr/--gr-v7, echte Framedumps mit Marker-Assets, szene_marker.py): S10s Wurzel F328-F346 = 0; S9s Schlitz
                 F344-F378 Ueberschuss gegen V7 <= SCHLITZ_SZENE_SOLL
 """
@@ -561,7 +567,7 @@ def s14s(fd_neu, fd_v7):
 S2C_VARIANTEN = ((0.375, 0, 0), (0.375, 0.5, 0), (0.375, -0.5, 0), (0.375, 0, 0.5), (0.375, 0, -0.5), (0.0, 0, 0), (0.75, 0, 0))
 
 
-def s2c_r5(mo, pose=V.PV):
+def s2c_r5(mo, pose=V.PV, varianten=S2C_VARIANTEN):
     """S2c Runde 5 (Zahlen-Pruefer r4: "8,0 px bei x 376 ... robust in 7 Halbpixel-Varianten"; sein Rasterer zeichnet mit Rueckseiten-Culling
     und Texel-Transparenz wie f_rast, j_huckel nimmt den Umriss ohne Culling): Rumpf (Knochen 0-15) und Schwanz (16-22) getrennt mit f_rast
     gezeichnet (Culling, Maler-Reihenfolge), Naht = rechteste Spalte x 330-420 mit Schwanz-Oberkante <= Rumpf-Oberkante, Hoehe = groesster
@@ -569,7 +575,7 @@ def s2c_r5(mo, pose=V.PV):
     import birkin_buehne as BB
     orig = BB.abbilden
     out = []
-    for off, dx, dy in S2C_VARIANTEN:
+    for off, dx, dy in varianten:
         def ab(x, y, M, off=off, dx=dx, dy=dy):
             X, Y_ = orig(np.asarray(x) - BB.PHASE + off, np.asarray(y) - BB.PHASE + off, M)
             return X + dx, Y_ + dy
@@ -589,6 +595,11 @@ def s2c_r5(mo, pose=V.PV):
         h = max((ts[x] - tr[x], x) for x in range(xn - 15, xn + 16) if ts.get(x) is not None and tr.get(x) is not None)
         out.append(dict(variante=(off, dx, dy), naht_x=xn, huckel_px=int(h[0]), bei_x=int(h[1])))
     return dict(varianten=out, max_px=max(v['huckel_px'] for v in out))
+
+
+def s2c_r5_eine(mo):
+    """S2c Runde 5 nur in der Variante 0 (Suche ruecken_r5.py; der Riegel nimmt alle 7)."""
+    return s2c_r5(mo, varianten=S2C_VARIANTEN[:1])['max_px']
 
 
 def szene_marker(mk_a, mk_b, gr, gr_v7):
@@ -658,6 +669,29 @@ def s8(blob):
     return r
 
 
+S16_GESICHT_RAND = 0.02     # (b): je Ansicht hoechstens 2 % weniger Gesichts-Bildpunkte als V7 (Kantenrauschen; PORT-WAHL)
+S16_GESICHT_MIN = 150       # (b) gilt in den Ansichten, in denen V7 >= 150 Gesichts-Bildpunkte zeigt (darunter sieht die Kamera das Gesicht
+                            # von der Kante oder von hinten - dort deckt der Buckel den Kopf wie im Original; PV gier+3584: V7 34 px)
+
+
+def s16(blob, ref_blob):
+    import luecke_r5 as L
+    import ruecken_r5 as RR5
+    pfad = os.path.join(V.SFV8, 'riegel_s16_%s.EMD' % V.sha(blob)[:12])
+    os.makedirs(V.SFV8, exist_ok=True)
+    open(pfad, 'wb').write(blob)
+    res = L.messen_parallel(pfad, 'alle', 7, 12)
+    z = L.zusammen(res)
+    mo, mo7 = V.modell(blob), V.modell(ref_blob)
+    ge = []
+    for nm, p in L.ansichten('alle'):
+        g, g7 = RR5.gesicht_px(L.zeichne(mo, p, L.VARIANTEN[0])), RR5.gesicht_px(L.zeichne(mo7, p, L.VARIANTEN[0]))
+        if g7 >= S16_GESICHT_MIN and g < g7 * (1.0 - S16_GESICHT_RAND):
+            ge.append((nm, g, g7))
+    return dict(luecke_summe=z['summe'], ansichten_mit=z['ansichten_mit'], ansichten=len(res), b_gesicht_weniger=ge,
+                ok=z['ok'] and not ge)
+
+
 def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
     mo, A = render(blob)
     bone = A['bone'][:480]
@@ -686,6 +720,7 @@ def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
     out['S13'] = s13(blob)
     out['S14'] = s14(blob, ref_blob)
     out['S15'] = s15(blob, ref_blob)
+    out['S16'] = s16(blob, ref_blob)
     if fd:
         out['S14s'] = s14s(*fd)
     if marker:
@@ -771,6 +806,11 @@ def zeilen(r):
                     'GRUEN' if s['ok'] else 'ROT'))
         z.append('   S15 (d) L*-Profil theta 90-180 (15-Grad-Baender) Modell | Vorlage: %s'
                  % '; '.join('%s %s | %s' % (p, v['modell'], v['vorlage']) for p, v in d.items()))
+    if 'S16' in r:
+        s_ = r['S16']
+        z.append('S16 Luecke Ruecken/Kopf (P5): (a) Summe %d px in %d von %d Ansichten (je max. ueber 7 Halbpixel-Varianten; Soll 0) %s; (b) Ansichten mit '
+                 'weniger Gesicht als V7 - %d %%: %s -> %s' % (s_['luecke_summe'], len(s_['ansichten_mit']), s_['ansichten'],
+                 s_['ansichten_mit'][:40], int(S16_GESICHT_RAND * 100), s_['b_gesicht_weniger'][:20], 'GRUEN' if s_['ok'] else 'ROT'))
     if 'S14s' in r:
         z.append('S14s fast weisse Bildpunkte in echten Framedumps F344-F372, Fenster x 560-690 / y 260-330 (960x720): neu %d, V7 %d (<= V7 + %d) -> %s'
                  % (r['S14s']['neu'], r['S14s']['v7'], S14S_RAND, 'GRUEN' if r['S14s']['ok'] else 'ROT'))
@@ -779,7 +819,7 @@ def zeilen(r):
     if 'S9s' in r:
         z.append('S9s Schlitz in echten Framedumps F344-F378 (gruene Silhouette, Ueberschuss gegen V7): %d (Soll <= %d) -> %s'
                  % (r['S9s']['ueberschuss'], SCHLITZ_SZENE_SOLL, 'GRUEN' if r['S9s']['ok'] else 'ROT'))
-    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S10s', 'S9s', 'S14s')
+    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S10s', 'S9s', 'S14s')
            if k in r and not r[k]['ok']]
     z.append('SUMME: %d von %d gruen%s' % (len([k for k in r if k.startswith('S')]) - len(rot), len([k for k in r if k.startswith('S')]),
                                            ('; ROT: ' + ', '.join(rot)) if rot else ''))

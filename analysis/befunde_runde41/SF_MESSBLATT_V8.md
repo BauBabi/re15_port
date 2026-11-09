@@ -325,3 +325,36 @@ L*-Sprung an der Zeilenkante kleiner, aber violettes Adernband, S15d PV 8,5 > Vo
 Wahl gegen eine Querkante. 2. Die Grenze liegt flaechenweise auf Ringecken (32,7 Grad Raster); die Uebergangsflaeche traegt den Verlauf.
 3. Das Fleisch des Modells ist im Spiellicht heller als die Vorlage (theta 75-90 L* 23 gegen 9,4) - Farbrichtung dunkelrot ist durch die Wahl
 v 90-100 angenaehert, nicht geeicht.
+
+## 11. Runde 5 P5: Luecke zwischen Ruecken und Kopf (Bauer, 2026-11-09)
+
+Nutzer 2026-11-09 (woertlich): "Das einzige was mir noch auffällt, es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner
+Birkin. Das ist in der Vorlage so wie es aussieht nicht so." Frueher: "Auch der obere Rücken geht im original screenshot direkt mehr oder
+weniger in den Kopf über." und Darstellung.png (weiss) "smooth straight to head without further hills....". Werkzeug
+re15_port/tools/r41_sichel/v8/luecke_r5.py (Mass, Riegel S16), Suche ruecken_r5.py. Kein RE-Befund.
+
+**Was die Luecke ist (gemessen, sfv8/r5p5 luecke2.py, lz2.py; Spiel-Asset 91885ed8c = 5fd35ff1).** In Knochenraum 8 ragt der Kopf (Mesh 9)
+ueber den Ruecken hinaus: Kopf-Oberkante y -1338..-1379, Ruecken-Oberkante direkt dahinter (x -150..-500) y -1200..-1265 (profil.py, PV und
+Takt F310). Daraus entstehen drei Arten Hintergrund zwischen Ruecken und Kopf:
+1. Kerbe ueber dem Kopf (Foto 2 / P2 39 px bei (447,197), PV 18 px bei (448,202)): die Buckel-Oberkante endet ueber der Kopfoberkante, dazwischen
+   ein Keil Hintergrund - das ist die Kerbe, die der Orchestrator in 02_foto2_seite.jpg rechts oben sah.
+2. Spalt links am Kopf (PV 7 px bei (430,205)): eine 1 px breite senkrechte Spalte, durch die der Hintergrund scheint (an derselben Stelle
+   in V7).
+3. Szene Clip 11 (Birkin greift nach oben, Takt F262-F323): der Kopf hebt sich ueber die Schultern, links und rechts davon je ein Keil
+   Hintergrund (Takt F278 187 px, F310 179 px).
+Der Schlitz-Riegel S9b/S9s fasste das nicht: er zaehlt nur Loecher DURCH die Silhouette (ohne Culling belegt, mit Culling nicht) und nur
+von vorn (P1, Takt F336-F372). Die Kerbe ist ein Einschnitt AM RAND zwischen zwei Teilen - ohne Culling ist dort ebenso nichts.
+
+**Mass (luecke_r5.py).** S = Silhouette (Maler-Reihenfolge und Rueckseiten-Culling wie im Port), H = Kopf (Knochen 9), R = Knochen 8 oberhalb
+des Kopfgelenks (Knochenraum 8 y < -971 = EMR relpos Knochen 9). (a) Kerbe = konvexe Huelle von H und Knochen 8 im Umkreis 12 px ohne S,
+Stuecke an H UND R; (b) Spalt = Schliessen von S mit 5 x 5, Stuecke an R und <= 12 px von H. Ansichten: PV, P1, P2, alle 144 Szenen-Takte
+F235-F378, rundum PV/P2 (Gier + k x 256, k 1..15); je 7 Halbpixel-Varianten (= S2C_VARIANTEN). Kehle/Brust (Knochenraum 8 y > -971; dort
+grenzt in PV/P2 die (W)-linke Schulter an das Gesicht) zaehlt nicht.
+
+**Vorlage (vorlage_kerbe.py, Figurmaske dE > 9 gegen den Konsens-Hintergrund m4_bgT wie m7_trimap, je Bild gemittelt ueber n-1..n+1;
+Kasten = Kopf des Modells + 22 px; obere Haelfte).** Die Vorlage ist unscharf (Gauss, Bewegung); ihre Maske hat an der Kopfgrenze kleine
+Einschnitte, die keine sichtbare Luecke sind: PV n1439 21 px bei (448,206) (Maske dE > 6: 1 px), P2 n1435 10 px bei (441,195); Modell V8 r4
+PV 16 px bei (447,201), P2 38 px bei (447,196). Foto 1 (n1485): Maske im Kasten nicht brauchbar (Kopf dunkel vor dunklem Tuerraum, dE < 9).
+Oberkontur PV (m13b oben_vorlage_maske) x 441-453: Vorlage 197 197 205 211 215, Modell 195 197 203 206 208 - im Umriss gleich; die
+Luecke des Modells ist der scharfe Keil Hintergrund zwischen Buckelende und Kopfkante, den die Vorlage nicht zeigt (Nutzer: "in der Vorlage so
+wie es aussieht nicht so"). Deshalb Soll S16 = 0 (Orchestrator P5 (d)), nicht "wie Vorlage".

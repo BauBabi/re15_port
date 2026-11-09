@@ -20,6 +20,9 @@
                       P1 (x3), Szene Takt F354 offline (x3) und - mit --szene7/--szene8r3/--szene8 - die echten Framedumps F354 (x2)
 14_schwanz_unterseite.png Runde 5 P4 (--v8r4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig"): Vorlagen n1439 / Foto 2 /
                       Foto 1 nah am Schwanz mit der gemessenen Grenze | V8 r4 | neu in denselben Posen | neu von unten und in der Szene
+15_ruecken_kopf.png   Runde 5 P5 (--v8r4, Nutzer 2026-11-09 "Lücke zwischen Rücken und Kopf"): Vorlagen n1439 / Foto 2 / Foto 1 | V8 r4 | neu, nah an
+                      Ruecken und Kopf (x4), Luecken-Bildpunkte (luecke_r5) tuerkis daneben; dazu die Szenen-Takte mit der staerksten Luecke
+                      von V8 r4 (offline Spielkamera), V8 r4 | neu
 Runde 5: --alt-name benennt den Vergleichsstand von --v8r2 / --szene8r3 (Tafeln 09, 10, 12; Standard wie Runde 3/4).
 Nutzerlinien = Pixel, in denen Darstellung.png von Darstellung_Vorlage.png um mehr als 40 (Kanal) abweicht (wie Messblatt m2_linien).
 """
@@ -246,6 +249,9 @@ def main():
     # 14 (Runde 5, P4)
     if a.v8r4:
         tafel14(v7, open(a.v8r4, 'rb').read(), v8, n8, a.aus)
+    # 15 (Runde 5, P5)
+    if a.v8r4:
+        tafel15(open(a.v8r4, 'rb').read(), v8, n8, a.aus)
 
 
 def grenze_maske(blob, pose):
@@ -303,6 +309,57 @@ def tafel14(v7, v8r4, v8, n8, aus):
     zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]
     speichern(kopf(np.vstack(zs), 'SF V8 14: Schwanz-Unterseite - Vorlagen mit gemessener Grenze | V8 r4 | neu (PV/P2/P1, x2) | neu von unten '
                    'und Szene (roh)'), os.path.join(aus, '14_schwanz_unterseite.png'))
+
+
+def tafel15(v8r4, v8, n8, aus, takte=None):
+    """15_ruecken_kopf.png (Runde 5, P5, Nutzer 2026-11-09 "es gibt immer noch eine Lücke zwischen Rücken und Kopf ... Das ist in der Vorlage so
+    wie es aussieht nicht so"): Zeile 1 Vorlagen n1439 (PV) / n1435 (Foto 2, P2) / n1485 (Foto 1, P1) nah an Ruecken und Kopf (x4); Zeile 2
+    V8 r4, Zeile 3 neu in denselben Posen, je Bild und daneben die Luecken-Bildpunkte (luecke_r5, tuerkis); Zeile 4/5 die Szenen-Takte mit
+    der staerksten Luecke von V8 r4 (offline Spielkamera, RDT-Licht) V8 r4 | neu. Alles roh."""
+    import r3_gemein as R3
+    import luecke_r5 as L
+    roh = os.path.join(V.BAUM.replace('r41_sichel_v8', 'r41_sichel'), 'analysis', 'befunde_runde41', 'SF_belege', 'roh', 'alle')   # nur gelesen
+    mo4, mo = V.modell(v8r4), V.modell(v8)
+
+    def bx_kopf(A, w=110, h=90):
+        ys, xs = np.nonzero(A['bone'][:480] == 9)
+        cx, cy = int(xs.mean()), int(ys.mean())
+        x0, y0 = min(max(cx - w // 2, 0), 640 - w), min(max(cy - h // 2 - 10, 0), 480 - h)
+        return (x0, y0, x0 + w, y0 + h)
+
+    def paar(m_, pose, titel, bx=None):
+        A = FR.mit_bg(m_, pose)
+        r, G = L.luecke(FR.zeichne(m_, pose, None, licht=False))
+        im = A['img'][:480]
+        bx = bx or bx_kopf(A)
+        g = im.copy(); g[G] = (0, 255, 255)
+        return np.hstack([kachel(im, bx, 4, titel), kachel(g, bx, 4, 'Luecke %d px' % (r['kerbe'] + r['spalt']))]), bx
+
+    ans = (('PV', V.PV, 1439), ('P2', R3.P2, 1435), ('P1', R3.P1, 1485))
+    z1, z2, z3 = [], [], []
+    for nm, pose, n in ans:
+        k4, bx = paar(mo4, pose, 'V8 r4 %s' % nm)
+        k8, _ = paar(mo, pose, '%s %s' % (n8, nm), bx)
+        vb = bild(os.path.join(roh, 'f%04d.png' % (n + 1)))
+        z1.append(np.hstack([kachel(vb, bx, 4, 'Vorlage n%d (%s)' % (n, nm)), np.zeros(((bx[3] - bx[1]) * 4, (bx[2] - bx[0]) * 4, 3), np.uint8)]))
+        z2.append(k4); z3.append(k8)
+    sp = R3.szene_posen()
+    if takte is None:
+        st = []
+        for k in sorted(sp):
+            r, _G = L.luecke(FR.zeichne(mo4, sp[k], None, licht=False))
+            st.append((r['kerbe'] + r['spalt'], k))
+        takte = sorted(k for _w, k in sorted(st, reverse=True)[:3])
+    z4, z5 = [], []
+    for k in takte:
+        k4, bx = paar(mo4, sp[k], 'V8 r4 Takt F%d' % k)
+        k8, _ = paar(mo, sp[k], '%s Takt F%d' % (n8, k), bx)
+        z4.append(k4); z5.append(k8)
+    zs = [reihe(z1), reihe(z2), reihe(z3), reihe(z4), reihe(z5)]
+    w = max(z.shape[1] for z in zs)
+    zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]
+    speichern(kopf(np.vstack(zs), 'SF V8 15: Ruecken/Kopf - Vorlagen | V8 r4 | neu (PV/P2/P1, x4, Luecke tuerkis); Szene-Takte %s V8 r4 | neu (roh)'
+                   % ', '.join('F%d' % k for k in takte)), os.path.join(aus, '15_ruecken_kopf.png'))
 
 
 if __name__ == '__main__':
