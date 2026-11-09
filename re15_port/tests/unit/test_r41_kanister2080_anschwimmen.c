@@ -13,6 +13,11 @@
  * Herleitung: include/re15_kanister2080_r41.h RE15_K2080_ANSCHWIMM_AB (RE2-Zielmodus @0x80100a34-5c / @0x80100a88-8c, Biss-Sperre
  * @0x8010134c-58, RE2-Bahn x -23078 @0x80101048-4c, Kanister auf der Bahn ROOM40A0 sub10/sub05 @0x0672/@0x06A2/@0x0484).
  */
+/* Linux (glibc, -std=c11 ohne Erweiterungen): setenv/unsetenv nur mit Feature-Makro deklariert - Muster
+ * platform/pc/src/asset_root_pc.c:8-9 (Linux-Warnung im Release-Lauf v0.8.30). Bau-Umgebung, kein Spielverhalten. */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1
+#endif
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"

@@ -13,6 +13,11 @@
  *   (Umgebung G2_SPUR=1 im Fuzz/kamera: Lage von Alligator und Figur alle 60 Bilder)
  */
 #define main gsz_haupt
+/* Linux (glibc, -std=c11 ohne Erweiterungen): setenv/unsetenv (ueber test_r41_gatorszene.c; dessen eigenes Makro kommt nach <math.h>/<time.h> zu spaet) nur mit Feature-Makro deklariert - Muster
+ * platform/pc/src/asset_root_pc.c:8-9 (Linux-Warnung im Release-Lauf v0.8.30). Bau-Umgebung, kein Spielverhalten. */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1
+#endif
 #include <math.h>
 #include <time.h>
 #include "test_r41_gatorszene.c"

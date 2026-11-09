@@ -35,6 +35,11 @@
  * Seit Nachbesserung 1 zuendet der RE2-Intro bei JEDEM Aggro (RE2 Sub 0; vorher nur bei freier Bahn, was am
  * Lauerplatz nie galt): Riegel, die das Verhalten DANACH messen, warten ihn mit intro_abwarten() ab.
  */
+/* Linux (glibc, -std=c11 ohne Erweiterungen): setenv/unsetenv nur mit Feature-Makro deklariert - Muster
+ * platform/pc/src/asset_root_pc.c:8-9 (Linux-Warnung im Release-Lauf v0.8.30). Bau-Umgebung, kein Spielverhalten. */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1
+#endif
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
