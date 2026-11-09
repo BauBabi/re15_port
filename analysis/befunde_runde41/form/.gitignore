@@ -80,3 +80,7 @@
 # K5c Farbe Versuch 2: Belegbilder des Messblatt-Nachtrags V2 (farbe_lesung/N2_skripte/n2_mass.py, n2_linienbild.py)
 !/varianten/K5/farbe_lesung/N2_*.png
 /varianten/K5/farbe_lesung/N2_skripte/__pycache__/
+
+# Zonen-Grundlage v2 (Runde 41): Nutzer-Tafeln und Krallen-Kandidat (nicht im Asset) versioniert
+!/varianten/K5/zonen_nutzer/v2/tafeln/*.png
+!/varianten/K5/zonen_nutzer/v2/krallen_kandidat/BAHNSTEIG_FORM.*
