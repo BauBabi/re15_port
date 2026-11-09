@@ -17,7 +17,9 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
- * Zweig r41/sichel_v8 (V8 Koerperbau nach Nutzer-Skizze, Runde 4 nach Pruefung V8 r3): Spiel-Asset = V8 Runde 4 (sha256 10d02173...,
+ * Zweig r41/sichel_v8 (V8 Runde 5 nach Pruefung V8 r4: Brust auf Original-Zeile 481 mit eigener UV, fast weisse Texel durch Abbildungen
+ * auf Original-Haut ersetzt, Spiel-Asset sha256 c44e73f8...; Gegenprobe V8 Runde 4 10d02173: rot, Brust 34 Flaechen auf 488).
+ * Bis Runde 4 (V8 Koerperbau nach Nutzer-Skizze, Runde 4 nach Pruefung V8 r3): Spiel-Asset = V8 Runde 4 (sha256 10d02173...,
  * v8_kette.sh); dazu CLUT_ZEILEN 16, Zeilen 493 / 494 / 495 = Original-EM30-Zeilen 480 / 481 / 482 BYTEGLEICH (Orchestrator O1: "dessen
  * Texelstruktur UND dessen Original-Paletteneintraege der Zeilen 480-482"). Runde 4 (tools/r41_sichel/v8/adern_r4.py): Mesh 8 ausser der
  * Brust ganz auf 493/494 (Sicht-Pruefer r3 "harte Farbnaht rosa/grau"; 56 + 14 Flaechen, davon 10 mit UV-Schub: Rueckenfleisch 4, Huegel 1,
@@ -300,15 +302,17 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
             if (nur_clut(m))
                 CHECK(uv_ohne_clut_gleich(a, b) && uv_ohne_clut_anders(a, b) == 0,
                       "%s: Mesh %d UVs ausser dem CLUT-Feld weichen von EM30 ab (%d Flaechen)", name, m, uv_ohne_clut_anders(a, b));
-            if (m == 8) {                /* V5 wie Foto b): Brust 34 Flaechen -> Zeile 488; V8 Runde 4 (adern_r4.py): alle uebrigen Flaechen
-                                          * 480 -> 493, 481 -> 494 (gemessen 488:34, 493:56, 494:14, 480/481: 0); 10 Flaechen mit UV-Schub
-                                          * (Gruppen rueckenfleisch 4, huegel 1, blass_rechts 5) */
-                CHECK(zeile_zahl(b, 488) == 34, "%s: Brust (Mesh 8) %d Flaechen auf CLUT 488 statt 34", name, zeile_zahl(b, 488));
-                CHECK(zeile_zahl(b, Z_X1) == 56 && zeile_zahl(b, Z_X2) == 14, "%s: Mesh 8 Zeilen 493/494 %d/%d Flaechen statt 56/14 (V8 Runde 4)",
+            if (m == 8) {                /* V8 Runde 5 (adern_r5.py, Sicht-Pruefer r4 (3) "graue Platte ... weisse Keile"): auch die Brust (34
+                                          * Flaechen, bis Runde 4 Zeile 488) auf ihrer Original-Zeile 481 -> 494 mit eigener UV; Mesh 8 ganz auf
+                                          * 493/494 (gemessen 493:56, 494:48, 488/480/481: 0); 28 Flaechen mit anderer UV als das Original-EM30
+                                          * (rueckenfleisch 2, huegel 1, blass_rechts 3, weiss 20, blass_r5 2) */
+                CHECK(zeile_zahl(b, 488) == 0, "%s: Brust (Mesh 8) %d Flaechen noch auf CLUT 488 (Soll 0, Runde 5: Original-Zeile 481)", name,
+                      zeile_zahl(b, 488));
+                CHECK(zeile_zahl(b, Z_X1) == 56 && zeile_zahl(b, Z_X2) == 48, "%s: Mesh 8 Zeilen 493/494 %d/%d Flaechen statt 56/48 (V8 Runde 5)",
                       name, zeile_zahl(b, Z_X1), zeile_zahl(b, Z_X2));
                 CHECK(zeile_zahl(b, 480) == 0 && zeile_zahl(b, 481) == 0, "%s: Mesh 8 %d/%d Flaechen noch auf V7-Zeile 480/481 (Naht, Runde 4)",
                       name, zeile_zahl(b, 480), zeile_zahl(b, 481));
-                CHECK(uv_ohne_clut_anders(a, b) == 10, "%s: Mesh 8 %d Flaechen mit anderer UV (Soll 10, V8 Runde 4)", name,
+                CHECK(uv_ohne_clut_anders(a, b) == 28, "%s: Mesh 8 %d Flaechen mit anderer UV (Soll 28, V8 Runde 5)", name,
                       uv_ohne_clut_anders(a, b));
             }
             if (m == 14) {               /* V8 Runde 4: alle 37 Flaechen auf 495 (= Original-Zeile 482); Band v9/v10/d19/d22 mit Schub */
