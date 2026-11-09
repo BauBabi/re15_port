@@ -358,23 +358,33 @@ static int tod_lage(int32_t gx, int32_t gz, int16_t gier, int32_t px, int32_t pz
  * <raster> [alt] zaehlt je Durchgang (alt = Pruefhaken Stand f8c71298a). */
 int re15_gatorszene_r41_key_durchgang(void);   /* 0 = im Gebiet ihrer Kamera ueber der Schwelle, 1 = dort unter der Schwelle, 2 = ohne Gebiet (Pruefhaken) */
 void re15_gatorszene_r41_key_rueckfall_alt_setzen(int an);
-typedef struct { int lagen, klein, st[5], dg[4], dg_klein[4], ohne_kamera; int32_t d_max, dg_d_max[4]; int dg_px_min[4]; } schl_scan_t;
-static void schluessel_scan(int schritt, int zeigen, schl_scan_t *S)
+typedef struct { int lagen, klein, st[5], dg[4], dg_klein[4], ohne_kamera; int32_t d_max, dg_d_max[4]; int dg_px_min[4]; int px_min, px_sum; int64_t d_sum; } schl_scan_t;
+/* Nachtrag K2 (Gator-Nutzerbefunde 2026-11-09): d_out/px_out (wenn nicht NULL) bekommen je Lage (Reihenfolge des Rasters, -1 = Lage ohne Raum/Kamera) den
+ * Abstand zum naechsten Knochen der Leiche und das Bild x 10. */
+#define SCHL_SCAN_MAX 4096
+void re15_gatorszene_r41_key_naehe_alt_setzen(int an);   /* Nachtrag K2: Pruefhaken 1 = Stand b29263046 (groesstes Bild bis zur Bildschwelle) */
+static void schluessel_scan(int schritt, int zeigen, schl_scan_t *S, int32_t *d_out, int *px_out)
 {
     static const int32_t sp[2][2] = { { -8200, -25550 }, { 1325, -25550 } };
     memset(S, 0, sizeof *S);
+    S->px_min = 99999;
     for (int i = 0; i < 4; i++) S->dg_px_min[i] = 99999;
+    int k = 0;
     for (int p = 0; p < 2; p++)
         for (int32_t z = -26000; z <= -6500; z += schritt)
             for (int32_t x = -8000; x <= 6000; x += schritt) {
                 if (x > -1700 - 1466 && x < 1850 + 1466 && z > -20000 - 1466 && z < -12450 + 1466) continue;   /* Plattform-Block: keine Leichenlage */
                 if (x > 1850 && z > -18100 && z < -14500) continue;                                            /* Rampe */
-                for (int gi = 0; gi < 4; gi++) {
+                for (int gi = 0; gi < 4; gi++, k++) {
                     int c, stf; int32_t dm;
+                    if (d_out && k < SCHL_SCAN_MAX) d_out[k] = -1;
+                    if (px_out && k < SCHL_SCAN_MAX) px_out[k] = -1;
                     const int px = tod_lage(x, z, (int16_t)(gi * 1024), sp[p][0], sp[p][1], 0, &c, &stf, &dm);
                     if (px < 0) continue;                                    /* Raum/Bank nicht geladen */
                     if (c < 0) { S->ohne_kamera++; if (zeigen) printf("SCAN Leiche (%d,%d) Gier %d: OHNE Kamera\n", (int)x, (int)z, gi * 1024); continue; }
                     S->lagen++;
+                    if (d_out && k < SCHL_SCAN_MAX) d_out[k] = dm;
+                    if (px_out && k < SCHL_SCAN_MAX) px_out[k] = px;
                     const int dg = re15_gatorszene_r41_key_durchgang();
                     if (dg >= 0 && dg < 4) {
                         S->dg[dg]++;
@@ -384,8 +394,10 @@ static void schluessel_scan(int schritt, int zeigen, schl_scan_t *S)
                     }
                     if (stf >= 0 && stf < 5) S->st[stf]++;
                     if (px < 104) S->klein++;
+                    if (px < S->px_min) S->px_min = px;
+                    S->px_sum += px; S->d_sum += dm;
                     if (dm > S->d_max) S->d_max = dm;
-                    if (zeigen && (stf > 0 || px < 104 || dg != 0))
+                    if (zeigen)
                         printf("SCAN Leon (%d,%d) Leiche (%d,%d) Gier %d: Cut %d Durchgang %d Stufe %d Bild %d.%d, %d von der Leiche\n", (int)sp[p][0], (int)sp[p][1],
                                (int)x, (int)z, gi * 1024, c, dg, stf, px / 10, px % 10, (int)dm);
                 }
@@ -395,38 +407,57 @@ static void schluessel_scan(int schritt, int zeigen, schl_scan_t *S)
     for (int i = 0; i < 4; i++)
         if (S->dg[i]) printf("      Durchgang %d: %d Lagen, groesster Abstand zur Leiche %d, kleinstes Bild %d.%d, unter 10,4: %d\n", i, S->dg[i], (int)S->dg_d_max[i],
                              S->dg_px_min[i] / 10, S->dg_px_min[i] % 10, S->dg_klein[i]);
-    printf("    Scan Raster %d: Stufe 0: %d, 1: %d, 2: %d, 3: %d, 4: %d, unter 10,4: %d, groesster Abstand zur Leiche %d\n", schritt, S->st[0], S->st[1],
-           S->st[2], S->st[3], S->st[4], S->klein, (int)S->d_max);
+    printf("    Scan Raster %d: Stufe 0: %d, 1: %d, 2: %d, 3: %d, 4: %d, unter 10,4: %d, groesster Abstand zur Leiche %d, mittlerer %d, Bild kleinstes %d.%d / mittleres %d.%d\n",
+           schritt, S->st[0], S->st[1], S->st[2], S->st[3], S->st[4], S->klein, (int)S->d_max, S->lagen ? (int)(S->d_sum / S->lagen) : 0,
+           S->px_min / 10, S->px_min % 10, S->lagen ? (S->px_sum / S->lagen) / 10 : 0, S->lagen ? (S->px_sum / S->lagen) % 10 : 0);
 }
 static void teil_schluessel_p(void)
 {
-    printf("== schluessel (FG-E7 Option (a); Nutzerbefund 2026-11-09 Punkt 3: Schluessel immer im Gebiet seiner Kamera) ==\n");
-    int c, stf; int32_t dm;
+    printf("== schluessel (Nutzer 2026-11-09, Nachtrag K2: Schluessel am der Leiche naechsten erreichbaren Punkt, im Gebiet seiner Kamera) ==\n");
+    /* Je Lage Stand b29263046 (Pruefhaken key_naehe_alt: groesstes Bild bis zur Bildschwelle) gegen jetzt (der Leiche naechster Punkt) */
+    int c, stf, ca, stfa; int32_t dm, dma;
+    re15_gatorszene_r41_key_naehe_alt_setzen(1);
+    int pxa = tod_lage(-4000, -17000, 0, -8200, -25550, 0, &ca, &stfa, &dma);
+    re15_gatorszene_r41_key_naehe_alt_setzen(0);
     int px = tod_lage(-4000, -17000, 0, -8200, -25550, 0, &c, &stf, &dm);
-    {   /* Nachbesserung Abnahme 0 B1: im Gebiet von Cut 0 erreicht diese Lage die Schwelle bis zur doppelten Naehe nicht mehr (gemessen Stufe 4, Bild 9,4; Stand
-         * f8c71298a ohne Gebiet 10,4 und mehr) - die Suche geht weiter (Stufe >= 1) und bleibt im Gebiet */
-        const int dg = re15_gatorszene_r41_key_durchgang();
-        PRUEF(stf >= 1 && (dg == 0 || dg == 1) && (dg == 1 || px >= 104), "Westkanal (-4000,-17000): die Lagewahl sucht weiter (Stufe %d), im Gebiet (Durchgang %d), Cut %d, "
-              "Bild %d.%d, %d von der Leiche", stf, dg, c, px / 10, px % 10, (int)dm);
-    }
+    int dg = re15_gatorszene_r41_key_durchgang();
+    printf("    Westkanal (-4000,-17000): jetzt Cut %d, %d von der Leiche, Bild %d.%d, Durchgang %d; Stand b29263046 Cut %d, %d von der Leiche, Bild %d.%d\n",
+           c, (int)dm, px / 10, px % 10, dg, ca, (int)dma, pxa / 10, pxa % 10);
+    PRUEF(c >= 0 && (dg == 0 || dg == 1) && dm >= 0 && dm <= dma, "Westkanal (-4000,-17000): im Gebiet seiner Kamera (Cut %d, Durchgang %d), %d von der Leiche (Stand b29263046 %d)",
+          c, dg, (int)dm, (int)dma);
+    re15_gatorszene_r41_key_naehe_alt_setzen(1);
+    pxa = tod_lage(3413, -25001, 2048, -8200, -25550, 1, &ca, &stfa, &dma);
+    re15_gatorszene_r41_key_naehe_alt_setzen(0);
     px = tod_lage(3413, -25001, 2048, -8200, -25550, 1, &c, &stf, &dm);
-    PRUEF(px >= 104 && stf == 0, "Fall r1 (3413,-25001): Naehe wie bisher reicht (Stufe %d), Cut %d, Bild %d.%d", stf, c, px / 10, px % 10);
-    schl_scan_t S;
-    schluessel_scan(3000, 0, &S);
-    /* Nachbesserung Abnahme 0 B1 (Nutzerbefund 2026-11-09 Punkt 3): jede Lage im Gebiet ihrer Kamera; die Bildschwelle 10,4 gilt, wo sie im Gebiet bis zur doppelten
-     * Naehe erreichbar ist (Durchgang 0), sonst die beste Lage dort (Durchgang 1) - gemessen Raster 3000: 82 / 126 Lagen, kleinstes Bild 6,3 */
+    dg = re15_gatorszene_r41_key_durchgang();
+    printf("    Fall r1 (3413,-25001): jetzt Cut %d, %d von der Leiche, Bild %d.%d; Stand b29263046 Cut %d, %d von der Leiche, Bild %d.%d\n",
+           c, (int)dm, px / 10, px % 10, ca, (int)dma, pxa / 10, pxa % 10);
+    PRUEF(c >= 0 && (dg == 0 || dg == 1) && dm >= 0 && dm <= dma, "Fall r1 (3413,-25001): im Gebiet (Cut %d, Durchgang %d), %d von der Leiche (Stand b29263046 %d)",
+          c, dg, (int)dm, (int)dma);
+    static int32_t dn[SCHL_SCAN_MAX], da[SCHL_SCAN_MAX]; static int pn[SCHL_SCAN_MAX];
+    schl_scan_t S, A;
+    for (int k = 0; k < SCHL_SCAN_MAX; k++) { dn[k] = -1; da[k] = -1; pn[k] = -1; }   /* Eintraege hinter dem Raster bleiben -1 */
+    schluessel_scan(3000, 0, &S, dn, pn);
+    re15_gatorszene_r41_key_naehe_alt_setzen(1);
+    schluessel_scan(3000, 0, &A, da, NULL);
+    re15_gatorszene_r41_key_naehe_alt_setzen(0);
+    int weiter = 0, naeher = 0, gleich = 0, n = 0; int32_t w_max = 0;
+    for (int k = 0; k < SCHL_SCAN_MAX; k++) {
+        if (dn[k] < 0 || da[k] < 0) continue;
+        n++;
+        if (dn[k] > da[k]) { weiter++; if (dn[k] - da[k] > w_max) w_max = dn[k] - da[k]; }
+        else if (dn[k] < da[k]) naeher++;
+        else gleich++;
+    }
+    printf("    Je Lage gegen Stand b29263046: %d Lagen, naeher %d, gleich %d, weiter %d; groesster Abstand jetzt %d (vorher %d), mittlerer %d (vorher %d)\n", n, naeher,
+           gleich, weiter, (int)S.d_max, (int)A.d_max, S.lagen ? (int)(S.d_sum / S.lagen) : 0, A.lagen ? (int)(A.d_sum / A.lagen) : 0);
     PRUEF(S.lagen > 100 && S.dg[2] == 0 && S.ohne_kamera == 0, "Becken-Scan: %d Lagen, jede im Gebiet ihrer Kamera (ohne Gebiet: %d, ohne Kamera: %d)", S.lagen,
           S.dg[2], S.ohne_kamera);
-    PRUEF(S.dg[0] > 0 && S.dg_klein[0] == 0, "Becken-Scan Durchgang 0: %d Lagen, keine unter 10,4 Bildpunkten (%d)", S.dg[0], S.dg_klein[0]);
-    PRUEF(S.st[1] + S.st[2] + S.st[3] + S.st[4] > 0 && S.d_max <= 2 * 3100, "Scan: die Stufen 1..4 kommen vor (%d), Schluessel hoechstens %d von der Leiche "
-          "(doppelte Naehe)", S.st[1] + S.st[2] + S.st[3] + S.st[4], (int)S.d_max);
-    {   /* Gegenprobe Stand f8c71298a (Pruefhaken): der Rueckfall ohne Gebiet kommt vor */
-        re15_gatorszene_r41_key_rueckfall_alt_setzen(1);
-        schl_scan_t A;
-        schluessel_scan(3000, 0, &A);
-        re15_gatorszene_r41_key_rueckfall_alt_setzen(0);
-        PRUEF(A.dg[2] > 0, "Gegenprobe Stand f8c71298a: %d von %d Lagen ohne Gebiet (rot ohne den Bau)", A.dg[2], A.lagen);
-    }
+    PRUEF(n == S.lagen && weiter == 0, "Becken-Scan: keine Lage weiter von der Leiche als Stand b29263046 (%d von %d weiter, bis %d)", weiter, n, (int)w_max);
+    PRUEF(S.d_max <= 2 * 3100, "Becken-Scan: Schluessel hoechstens %d von der Leiche (Naehe-Ring bis zur doppelten Naehe)", (int)S.d_max);
+    /* Gegenprobe Stand b29263046 (Pruefhaken): dort liegen Schluessel weiter weg - rot ohne den Bau */
+    PRUEF(naeher > 0 && A.d_max > S.d_max, "Gegenprobe Stand b29263046: %d Lagen dort weiter von der Leiche, groesster Abstand %d gegen jetzt %d (rot ohne den Bau)",
+          naeher, (int)A.d_max, (int)S.d_max);
 }
 
 /* ---- Teil: tragen (Lagespruenge mit dem Kanister im Maul, Abnahme G 4 O1) ----------------------------------------------------
@@ -832,7 +863,8 @@ static void weg_eine(int32_t x, int32_t z, int gier, int32_t lx, int32_t lz, int
     /* Integration Runde 41 (Nutzerbefunde 2026-11-09, gemessen): tod_lage bootet je Lage dieselbe ROOM2090, der Boss-Zustand des vorigen Laufs (s_gb, Reset nur beim
      * Raumwechsel) lief in den naechsten - die "Leiche" (state 7) biss im Lauf weiter. Lage 4 nach Lage 2 war damit rot, auch mit der Lagewahl von 0b86e36c6
      * (DBG-Lauf: Phase 3, Spieler 2/2 -> 3/0). Jede Lage startet jetzt mit frischem Boss-Zustand wie nach einem Raumwechsel. */
-    re15_gator_boss_zustand_frisch();
+    /* Nachtrag H3 (Abnahme 0 Abschnitt 6): Messhaken des Riegels R41_WEG_LECK=1 = ohne frischen Boss-Zustand (Stand vor f8c71298a), nur fuer die Gegenprobe */
+    { const char *lk = getenv("R41_WEG_LECK"); if (!(lk && *lk == '1')) re15_gator_boss_zustand_frisch(); }
     (void)tod_lage(x, z, (int16_t)gier, lx, lz, 0, &c, &stf, &dm);
     const int ks = prop_von(RE15_GSZ_KEY_OBJ);
     if (ks < 0 || c < 0) return;
@@ -852,12 +884,24 @@ static void teil_weg(void)
 {
     printf("== weg (M3) ==\n");
     int ok = 0, n = 0;
-    weg_eine(-5676, -19980, 2095, -8200, -25550, &ok, &n);   /* Westkanal, Abnahme 0 ken2: Figur im Suedbecken */
-    weg_eine(-5835, -19103, 2000, 2000, -8500, &ok, &n);     /* Westkanal, Figur im Nordbecken */
-    weg_eine(3413, -23942, 2048, -8200, -25550, &ok, &n);    /* K3-Wandlage */
-    weg_eine(-3000, -8000, 2048, -8200, -25550, &ok, &n);    /* Nordbecken am Maschinenblock */
-    weg_eine(6400, -7000, 3072, 1325, -25550, &ok, &n);      /* Nordostecke */
-    PRUEF(n == 5 && ok == n, "echter Lauf bis zum Aufheben in %d von %d Lagen", ok, n);
+    static const int32_t L[5][5] = { { -5676, -19980, 2095, -8200, -25550 },   /* Westkanal, Abnahme 0 ken2: Figur im Suedbecken */
+                                     { -5835, -19103, 2000, 2000, -8500 },     /* Westkanal, Figur im Nordbecken */
+                                     { 3413, -23942, 2048, -8200, -25550 },    /* K3-Wandlage */
+                                     { -3000, -8000, 2048, -8200, -25550 },    /* Nordbecken am Maschinenblock */
+                                     { 6400, -7000, 3072, 1325, -25550 } };    /* Nordostecke */
+    /* Nachtrag H3 (Abnahme 0 Abschnitt 6, Gegenprobe "auch mit 0b86e36c6 rot" nachfahren): Messhaken R41_WEG_FOLGE=<Lagen 1..5, z.B. 24> waehlt die Folge,
+     * R41_WEG_LAGEWAHL=0b86 setzt die Lagewahl von 0b86e36c6 (Pruefhaken key_gebiet_alt). Im ctest ohne beide: alle fuenf Lagen, Lagewahl des Baums. */
+    const char *fo = getenv("R41_WEG_FOLGE");
+    const char *lw = getenv("R41_WEG_LAGEWAHL");
+    if (lw && !strcmp(lw, "0b86")) re15_gatorszene_r41_key_gebiet_alt_setzen(1);
+    const char *f = (fo && *fo) ? fo : "12345";
+    int soll = 0;
+    for (const char *p = f; *p; p++)
+        if (*p >= '1' && *p <= '5') { const int i = *p - '1'; soll++; weg_eine(L[i][0], L[i][1], (int)L[i][2], L[i][3], L[i][4], &ok, &n); }
+    if (lw && !strcmp(lw, "0b86")) re15_gatorszene_r41_key_gebiet_alt_setzen(0);
+    printf("    weg: Folge %s, Lagewahl %s, Boss-Zustand %s: %d von %d Lagen aufgehoben\n", f, (lw && *lw) ? lw : "Baum",
+           (getenv("R41_WEG_LECK") && getenv("R41_WEG_LECK")[0] == '1') ? "leckt (Stand vor f8c71298a)" : "frisch", ok, n);
+    PRUEF(n == soll && ok == n, "echter Lauf bis zum Aufheben in %d von %d Lagen", ok, n);
 }
 
 /* ---- Teil koerper (M2, Nachtrag 35 Punkt 3): RE2 R1 P0 +0 |= 0x80a @0x801022f8-fc -> Gate FUN_80034d0c; P3 +0x10E |= 0x4000 @0x8010265c-64 nimmt die Leiche aus der Zielhilfe --------- */
@@ -1173,7 +1217,8 @@ int main(int argc, char **argv)
         if (!gator_bank()) return 1;
         re15_door_seq_setze_laeufer(fang);
         if (argc > 3 && !strcmp(argv[3], "alt")) re15_gatorszene_r41_key_rueckfall_alt_setzen(1);
-        schluessel_scan(argc > 2 ? atoi(argv[2]) : 1000, 1, &S);
+        if (argc > 3 && !strcmp(argv[3], "naehe_alt")) re15_gatorszene_r41_key_naehe_alt_setzen(1);   /* Nachtrag K2: Stand b29263046 */
+        schluessel_scan(argc > 2 ? atoi(argv[2]) : 1000, 1, &S, NULL, NULL);
         return 0;
     }
     if (!strcmp(teil, "tragelog") && argc >= 5) return tragelog(argv[2], atoi(argv[3]), atoi(argv[4]));

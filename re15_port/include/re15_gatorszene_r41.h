@@ -218,6 +218,12 @@ void re15_gatorszene_r41_key_gebiet_alt_setzen(int an);
  * (Nachbesserung Abnahme 0 B1, beste Lage bis zur doppelten Naehe); 2 = ohne Gebiet (nur Pruefhaken-Stand f8c71298a / 0b86e36c6); -1 = keine Wahl */
 int  re15_gatorszene_r41_key_durchgang(void);
 void re15_gatorszene_r41_key_rueckfall_alt_setzen(int an);   /* Pruefhaken (Abnahme 0 B1): 1 = Stand f8c71298a, Rueckfall ohne Gebiet statt Weiten im Gebiet */
+/* Gator-Nutzerbefunde 2026-11-09 Nachtrag K2 (Nutzer: "na er soll näher bei der Leiche liegen, immerhin hat der Aligator ja den Schlüssel samt Zombie
+ * gefressen."): die Lage ist der der Leiche NAECHSTE Punkt (statt des groessten Bildes), weiter nur im Gebiet der Kamera, die ihn zeigt. Pruefhaken der
+ * Gegenprobe: 1 = Stand b29263046 (groesstes Bild bis zur Bildschwelle). Messhaken: Bildgroesse x 10 der letzten Lage (0 = keine). */
+void re15_gatorszene_r41_key_naehe_alt_setzen(int an);
+int  re15_gatorszene_r41_key_bild10(void);
+int32_t re15_gatorszene_r41_key_abstand(void);   /* Messhaken: Abstand der letzten Lage zum naechsten Knochen der Leiche (-1 = keine Wahl) */
 /* Runde 41 Spur G2 (Punkte 3/4): Mesh-Gier von (x,z) zur Leiter-Ankunft in ROOM2080/2081 (Montage-Parkplatz, ROOM2090 Tuer 0 @0x00996). */
 int  re15_gatorszene_r41_gier_zur_leiter(int32_t x, int32_t z);
 

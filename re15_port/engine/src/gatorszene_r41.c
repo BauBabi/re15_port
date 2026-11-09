@@ -2088,6 +2088,20 @@ static int s_key_durchgang = -1; /* Messhaken: 0 = im Gebiet seiner Kamera ueber
                                   * 2 = ohne Gebiet (nur Pruefhaken-Stand f8c71298a / 0b86e36c6), -1 = keine Wahl */
 static int s_key_rueckfall_alt = 0;  /* Pruefhaken (Abnahme 0 B1): 1 = Stand f8c71298a (Rueckfall ohne Gebiet statt Weiten im Gebiet) */
 void re15_gatorszene_r41_key_rueckfall_alt_setzen(int an) { s_key_rueckfall_alt = an; }
+/* Gator-Nutzerbefunde 2026-11-09 Nachtrag K2 (PORT-WAHL, Beleg Nutzer-Wortlaut 2026-11-09 auf die Frage, ob der Schluessel weiter weg von der Leiche liegen
+ * darf: "na er soll näher bei der Leiche liegen, immerhin hat der Aligator ja den Schlüssel samt Zombie gefressen."). Gemessen vorher (Abnahme 1 H1, Stand
+ * b29263046): in allen natuerlichen Kampfenden (-1100,-5900) Kamera 5, 3528-4910 vom naechsten Knochen der Leiche; vor bf345ea49 1021-1214. Jetzt: unter allen
+ * Punkten, die die bestehenden Bedingungen erfuellen (Wasserquadrat, fuer die Figur begehbar = aufnehmbar, im Gebiet und im Bild der Zonenkamera, weder von
+ * der Leiche noch von der Figur verdeckt; Naehe-Ring wie bisher bis zur doppelten Naehe), der dem naechsten Knochen der Leiche NAECHSTE (gleich nah: groesseres
+ * Bild, dann die laufende Kamera). Die Bildschwelle FG-E7 (10,4 Bildpunkte) tritt hinter den Nutzer-Wortlaut zurueck: sie entscheidet nichts mehr, Bildgroesse
+ * und Durchgang (0 = ueber, 1 = unter der Schwelle) werden nur gemessen. Keine neue Zahl. Pruefhaken s_key_naehe_alt = Stand b29263046. */
+static int s_key_naehe_alt = 0;
+void re15_gatorszene_r41_key_naehe_alt_setzen(int an) { s_key_naehe_alt = an; }
+static int s_wahl_naehe = 0;     /* 1 = key_suche nimmt den der Leiche naechsten Punkt (Nachtrag K2), 0 = das groesste Bild */
+static int s_key_bild10 = 0;
+int re15_gatorszene_r41_key_bild10(void) { return s_key_bild10; }
+static int32_t s_key_abstand = -1;   /* Messhaken: Abstand der letzten Lage zum naechsten Knochen der Leiche (-1 = keine Wahl) */
+int32_t re15_gatorszene_r41_key_abstand(void) { return s_key_abstand; }
 int re15_gatorszene_r41_key_durchgang(void) { return s_key_durchgang; }
 static void gebiet_frei(void) { free(s_geb.m); s_geb.m = NULL; s_geb.cut = -1; s_geb.nx = s_geb.nz = 0; }
 static int zone_viereck(int i, int32_t x, int32_t z)
@@ -2186,7 +2200,8 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
             int32_t wy;
             if (!wasser_quadrat(x, z, &wy)) continue;
             if (!key_begehbar(x, z)) continue;                               /* Spur P (Nachbesserung 1): nur, wo die Figur hinkommt */
-            if (!gefunden || vz < out->vz || (vz == out->vz && d2 < out->d2)) {
+            if (!gefunden || (s_wahl_naehe ? (d2 < out->d2 || (d2 == out->d2 && vz < out->vz))      /* Nachtrag K2: der Leiche naechster Punkt */
+                                           : (vz < out->vz || (vz == out->vz && d2 < out->d2)))) {
                 out->x = x; out->y = wy; out->z = z; out->vz = vz; out->d2 = d2; gefunden = 1;
             }
         }
@@ -2290,7 +2305,9 @@ static void key_lage_bei_tod(void)
      * Cut 5). Das Weiten im Gebiet ueber die doppelte Naehe hinaus bis zur Schwelle ist gemessen und verworfen (unit_r41_alligator2 schluessel_scan 3000: bis 18084
      * von der Leiche, auf der anderen Raumseite, und 20 von 208 Lagen erreichen die Schwelle in keinem Gebiet). Pruefhaken re15_gatorszene_r41_key_rueckfall_alt_setzen(1)
      * = Stand f8c71298a. */
-    s_key_durchgang = -1;
+    s_key_durchgang = -1; s_key_bild10 = 0; s_key_abstand = -1;
+    const int naehe = !s_key_naehe_alt && !s_key_rueckfall_alt && !s_key_gebiet_alt;   /* Nachtrag K2 (s. s_key_naehe_alt) */
+    s_wahl_naehe = naehe;
     const int rueckfall_alt = s_key_rueckfall_alt || s_key_gebiet_alt;
     for (int durchgang = s_key_gebiet_alt ? 2 : 0; durchgang < 3; durchgang += 2) {
     if (durchgang == 2 && !rueckfall_alt) break;             /* Durchgang 2 (ohne Gebiet) nur im Pruefhaken-Stand */
@@ -2307,15 +2324,25 @@ static void key_lage_bei_tod(void)
                         c == lauf ? " (laufende)" : "", (int)b.x, (int)b.y, (int)b.z, (int)b.vz,
                         b.vz > 0 ? (int)((2 * GSZ_KEY_HALB * h) / b.vz) : 0, stufe, (int)r); }
 #endif
-            if (cut < 0 || b.vz < l.vz || (b.vz == l.vz && c == lauf)) { l = b; cut = c; }
+            if (cut < 0 || (naehe ? (b.d2 < l.d2 || (b.d2 == l.d2 && (b.vz < l.vz || (b.vz == l.vz && c == lauf))))
+                                  : (b.vz < l.vz || (b.vz == l.vz && c == lauf)))) { l = b; cut = c; }
         }
         re15_camera_view_t kv;
+        if (naehe && cut >= 0) break;                           /* Nachtrag K2: die erste Stufe mit einem Punkt enthaelt den der Leiche naechsten */
         if (cut >= 0 && kam_sicht(cut, &kv) && l.vz > 0 && (20 * GSZ_KEY_HALB * (int64_t)kv.fov_screen_dist) / l.vz >= GSZ_KEY_BILD_MIN10) break;
+    }
+    if (naehe) {                                                /* Nachtrag K2: Bildschwelle nur gemessen (0 = erreicht, 1 = darunter) */
+        re15_camera_view_t kv;
+        const int ueber = cut >= 0 && kam_sicht(cut, &kv) && l.vz > 0 &&
+                          (20 * GSZ_KEY_HALB * (int64_t)kv.fov_screen_dist) / l.vz >= GSZ_KEY_BILD_MIN10;
+        if (cut >= 0) s_key_durchgang = ueber ? 0 : 1;
+        if (stufe > GSZ_SUCH_STUFEN) stufe = GSZ_SUCH_STUFEN + 1;
+        break;
     }
     if (stufe <= GSZ_SUCH_STUFEN) { s_key_durchgang = durchgang; break; }   /* Schwelle erreicht */
     s_key_durchgang = durchgang == 0 ? 1 : 2;                    /* unter der Schwelle: die beste Lage dieses Durchgangs */
     }
-    s_gebiet_an = 0;
+    s_gebiet_an = 0; s_wahl_naehe = 0;
     if (cut < 0) {                                          /* keine Kamera: der naechste begehbare Wasserpunkt am Kopf (Spur P, Nachbesserung 1; vorher Kopf in eine Wasserzone gezogen) */
         int64_t best = INT64_MAX;
         for (int32_t z = (kopf[2] / GSZ_RASTER - 40) * GSZ_RASTER; z <= (kopf[2] / GSZ_RASTER + 40) * GSZ_RASTER; z += GSZ_RASTER)
@@ -2329,13 +2356,16 @@ static void key_lage_bei_tod(void)
     }
     s_key_x = l.x; s_key_z = l.z; s_key_y = l.y; s_key_cut = cut;
     s_key_stufe = stufe > GSZ_SUCH_STUFEN ? GSZ_SUCH_STUFEN : stufe;
+    {   re15_camera_view_t kv;
+        s_key_bild10 = (kam_sicht(cut, &kv) && l.vz > 0) ? (int)((20 * GSZ_KEY_HALB * (int64_t)kv.fov_screen_dist) / l.vz) : 0;
+        s_key_abstand = (int32_t)re15_squareroot0((uint32_t)(l.d2 > 0xffffffffLL ? 0xffffffffLL : l.d2)); }
     const int32_t p[3] = { l.x, l.y, l.z };
     int16_t rx = 0, rz = 0; int32_t y = l.y;
     if (key_neigung(cut, p, &rx, &rz, &y, &s_key_prim_ruhe, &s_key_prim_spitze)) { s_key_rx = rx; s_key_rz = rz; s_key_y = y; }
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[gatorszene] Schluessel-Lage: Kamera %d (groesstes Bild, laufende %d), Lage (%d,%d,%d) Tiefe %d, %u von der "
+    fprintf(stderr, "[gatorszene] Schluessel-Lage: Kamera %d (%s, laufende %d), Lage (%d,%d,%d) Tiefe %d, %u von der "
                     "Leiche (%d Punkte, Naehe <= %d), Neigung rx %d rz %d, Primitivfarbe Ruhe %d / Blink-Spitze %d (Kappe 0x80)\n",
-            cut, lauf, s_key_x, s_key_y, s_key_z, (int)l.vz,
+            cut, naehe ? "an der Leiche" : "groesstes Bild", lauf, s_key_x, s_key_y, s_key_z, (int)l.vz,
             (unsigned)re15_squareroot0((uint32_t)(l.d2 > 0xffffffffLL ? 0xffffffffLL : l.d2)), npk, (int)r_nah,
             (int)s_key_rx, (int)s_key_rz, s_key_prim_ruhe, s_key_prim_spitze);
     fprintf(stderr, "[gatorszene] Schluessel-Suche: Stufe %d (Naehe x %d/%d, FG-E7 Option (a)), Durchgang %d (0 = im Gebiet der Kamera, 1 = im Gebiet unter der "

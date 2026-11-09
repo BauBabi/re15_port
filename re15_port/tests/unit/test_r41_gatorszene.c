@@ -692,7 +692,7 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
  * wieder runter (ROOM2090 Ankunft (-8200,0,-25550) Cut 0), die Figur geht in Bildern (echter RVD-Wechsel FUN_80014230 im Port) einen L-Weg ueber x -7000
  * zum Schluessel. Riegel: angezeigter Cut am Schluessel == Schluessel-Kamera (re15_gatorszene_r41_key_kamera) und die Aktionstaste dort startet die Aufnahme
  * (re15_item_modal_active). Gegenprobe Pruefhaken re15_gatorszene_r41_key_gebiet_alt_setzen(1) = Stand 0b86e36c6: Nutzer-Leiche Cut 7 gegen 0 = rot. */
-static int32_t s_tg_kx, s_tg_ky, s_tg_kz; static int s_tg_kc, s_tg_durchgang;
+static int32_t s_tg_kx, s_tg_ky, s_tg_kz, s_tg_abstand; static int s_tg_kc, s_tg_durchgang;
 static int tg_tod_legen(uint16_t raum, int32_t gx, int32_t gz, int16_t gier)
 {
     re15_game_state_init(); re15_inv_load_briefing();
@@ -710,6 +710,7 @@ static int tg_tod_legen(uint16_t raum, int32_t gx, int32_t gz, int16_t gier)
     const int ks = prop_von(RE15_GSZ_KEY_OBJ);
     if (ks < 0) return -1;
     s_tg_kx = g_scd.props[ks].x; s_tg_ky = g_scd.props[ks].y; s_tg_kz = g_scd.props[ks].z; s_tg_kc = re15_gatorszene_r41_key_kamera(); s_tg_durchgang = re15_gatorszene_r41_key_durchgang();
+    s_tg_abstand = re15_gatorszene_r41_key_abstand();
     for (int f = 0; f < 200; f++) frame(0, 0);   /* Einstellung zu Ende (Halt 90) */
     return 0;
 }
@@ -764,8 +765,9 @@ static int tg_fall(const char *name, int elza, int32_t gx, int32_t gz, int16_t g
             re15_item_modal_tick((f % 8) == 0 ? (uint16_t)(RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_CROSS) : 0, 0);
         if (re15_item_modal_active()) printf("    %s: Aufnahme-Modal endet nicht\n", name);
     }
-    printf("    %s: Leiche (%d,%d) Gier %d -> Schluessel (%d,%d) Kamera %d; nach Leiter + Weg am Schluessel angezeigt Cut %d (Schluessel dort %d.%d Bildpunkte), "
-           "Aufnahme %s\n", name, (int)gx, (int)gz, (int)gier, (int)kx, (int)kz, kc, am, px10 / 10, px10 % 10, auf ? "ja" : "NEIN");
+    printf("    %s: Leiche (%d,%d) Gier %d -> Schluessel (%d,%d) Kamera %d, %d vom naechsten Knochen; nach Leiter + Weg am Schluessel angezeigt Cut %d "
+           "(Schluessel dort %d.%d Bildpunkte), Aufnahme %s\n", name, (int)gx, (int)gz, (int)gier, (int)kx, (int)kz, kc, (int)s_tg_abstand, am, px10 / 10, px10 % 10,
+           auf ? "ja" : "NEIN");
     const int durchgang = s_tg_durchgang;
     if (pruef) {
         /* Nachbesserung Abnahme 0 B1: kein Rueckfall ohne Gebiet mehr - die Kamera-Gleichheit gilt in jeder Lage (Durchgang 0 = Bildschwelle erreicht,
@@ -790,10 +792,24 @@ static void teil_tod_gebiet(int elza)
         { "abn0_s2", -7328, -8628, 3072 }, { "abn0_s1_west", -7038, -8628, 3088 } };
     re15_gatorszene_r41_key_gebiet_alt_setzen(0);
     re15_gatorszene_r41_key_rueckfall_alt_setzen(0);
+    /* Nachtrag K2 (Nutzer 2026-11-09 "na er soll näher bei der Leiche liegen, immerhin hat der Aligator ja den Schlüssel samt Zombie gefressen."): je Leiche
+     * zuerst die Lage von Stand b29263046 (Pruefhaken key_naehe_alt), dann der Lauf: der Schluessel liegt hoechstens so weit vom naechsten Knochen wie dort und
+     * hoechstens so weit wie vor bf345ea49 (natuerlich 1021-1214, Abnahme 1 H1); die Bildschwelle 10,4 entscheidet nichts mehr (Durchgang nur gemessen). */
+    int weiter = 0, naeher = 0; int32_t d_max = 0;
     for (int i = 0; i < 6; i++) {
+        re15_gatorszene_r41_key_naehe_alt_setzen(1);
+        int32_t d_alt = -1;
+        if (tg_tod_legen((uint16_t)(0x2090 + elza), L[i].x, L[i].z, L[i].g) == 0) d_alt = s_tg_abstand;
+        re15_gatorszene_r41_key_naehe_alt_setzen(0);
         (void)tg_fall(L[i].n, elza, L[i].x, L[i].z, L[i].g, 1);
-        if (i == 0) PRUEF(s_tg_durchgang == 0, "Nutzer-Leiche: die Lage liegt im Gebiet ihrer Kamera ueber der Bildschwelle (Durchgang 0: %d)", s_tg_durchgang);
+        printf("    %s: %d vom naechsten Knochen (Stand b29263046: %d)\n", L[i].n, (int)s_tg_abstand, (int)d_alt);
+        if (s_tg_abstand > d_alt) weiter++;
+        if (s_tg_abstand < d_alt) naeher++;
+        if (s_tg_abstand > d_max) d_max = s_tg_abstand;
     }
+    PRUEF(weiter == 0 && d_max >= 0 && d_max <= 1214, "Nachtrag K2: Schluessel nie weiter von der Leiche als Stand b29263046 (%d weiter) und hoechstens 1214 (vor bf345ea49), "
+          "groesster Abstand %d", weiter, (int)d_max);
+    PRUEF(naeher > 0, "Nachtrag K2 Gegenprobe Stand b29263046: %d Leichen dort weiter weg (rot ohne den Bau)", naeher);
     printf("  -- Gegenprobe Stand f8c71298a (Pruefhaken key_rueckfall_alt) --\n");
     re15_gatorszene_r41_key_rueckfall_alt_setzen(1);
     int rot_f8 = 0;
