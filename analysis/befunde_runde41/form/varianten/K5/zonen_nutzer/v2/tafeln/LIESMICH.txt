@@ -1,50 +1,63 @@
-GRUNDLAGE RIESENFORM - SO HABE ICH IHRE ZERLEGUNG ERKANNT (v2, 2026-11-09)
+GRUNDLAGE RIESENFORM - SO HABE ICH IHRE ZERLEGUNG ERKANNT (v2, Runde 2, 2026-11-09)
 
 Bitte prüfen, bevor ich weiterarbeite. Es wurde nichts gebaut und nichts am Spiel geändert.
 
+WAS IST NEU GEGENÜBER DER LETZTEN FASSUNG
+- Flecken (Musterungen, Wunde, rotes Fleisch, großer fleischfarbener Teil, Augen) sind jetzt texelgenau: nur die Bildpunkte der Textur unter Ihrer Stelle,
+  in der Form wie im Video - keine ganzen Flächen ("Quader") mehr. Je Fleck gibt es eine Nahansicht.
+- Die Augen sind nur noch die zwei hellen Punkte, beide nach derselben Regel.
+- Zähne und Oberlippe haben kein Wort von Ihnen; sie stehen jetzt als "nicht belegt" da, nicht mehr als Material.
+- Krallen 20 und 29 vorn rechts bleiben im Vorschlag eingezogen wie heute.
+- Die "grünen Streifen" auf dem Buckel vorn untersucht ein eigener Prüfer; in diesen Tafeln ist nichts ausgeblendet oder umgefärbt.
+
 WIE LESEN
 - Jede Tafel 01-11 gehört zu einem Ihrer Bilder: links Ihr Bild unverändert, in der Mitte das Modell in derselben Haltung und demselben Ausschnitt,
-  rechts beides übereinander. Darunter eine Vergrößerung und die Liste: Nummer, Ihr Wort, Modellteil, Material, Sicherheit.
-- Farbe + Nummer = eine erkannte Zone. Gefüllt = die Modellflächen, die ich zuordne. Gestrichelt = die Stelle, die ich in Ihrem Bild gelesen habe.
-  Schraffiert = an dieser Stelle zeigt das Modell nichts Passendes.
+  rechts beides übereinander. Darunter eine Vergrößerung, dann je Fleck eine Nahansicht, dann die Liste: Nummer, Ihr Wort, Modellteil, Material, Sicherheit.
+- Kräftig gefüllt = Fleck (texelgenau, Farbe = Material). Dünner Umriss mit leichter Tönung = ganzes Teil oder Abschnitt, das Sie benannt haben.
+  Gestrichelt = die Stelle, die ich in Ihrem Bild gelesen habe. Schraffiert = an dieser Stelle zeigt das Modell nichts Passendes.
+- Texel = ein Bildpunkt der Textur des Modells. Video-Pixel = Bildpunkt im 640 x 480-Video.
 - Seiten (links/rechts) immer aus Sicht des Wesens.
 - Sicherheit: "sicher" = gemessen und passt; "unsicher" = Sie selbst schreiben "wahrscheinlich", oder das Modell weicht ab; "verdeckt" = im Modell nicht sichtbar.
-- Rote Schrift in der letzten Spalte = anders als in der ersten Fassung.
+- Rote Schrift in der letzten Spalte = anders als in einer früheren Fassung.
 
 DIE TAFELN
-00_uebersicht.png   beide Bilder, alle Zonen auf einen Blick
-01-11               je eines Ihrer beschrifteten Bilder
-20_rundum.png       das Modell von vorn, hinten, links, rechts, schräg oben: wie weit jede Zone reicht; blass = nicht sichtbar, bleibt Haut
-21_krallen.png      Krallen vorn links, vorn rechts, hinten: heute | vor dem Einziehen (K5c) | Vorschlag
-22_kopf_augen.png   Ihre Augenpunkte, die heutigen Modellaugen, der Vorschlag, und der Kopfumriss
+00_uebersicht.png       beide Bilder, alle Zonen auf einen Blick
+01-11                   je eines Ihrer beschrifteten Bilder, mit Nahansicht jedes Flecks
+20_rundum.png           das Modell von vorn, hinten, links, rechts, schräg oben: wie weit jede Zone reicht; blass = nicht sichtbar, bleibt Haut
+21_krallen.png          Krallen vorn links, vorn rechts, hinten: heute | vor dem Einziehen (K5c) | Vorschlag
+22_kopf_augen.png       Ihre Augenpunkte, die heutigen Modellaugen, der Vorschlag, und der Kopfumriss
+23_geteilte_texel.png   wo ein Fleck heute zusätzlich erscheinen würde, weil die Textur dieselben Texel mehrfach benutzt (nur gezeigt, nichts geändert)
+
+HINWEIS ZUR TEXTUR (Tafel 23): Die heutige Textur benutzt dieselben Texel für viele Flächen. Ein Fleck nur an Ihrer Stelle braucht später für die dort
+genannten Flächen eigene Texel; sonst erschiene er an mehreren Stellen. Beim "großen fleischfarbenen Teil" betrifft das 556 weitere Flächen.
 
 IHR WORT -> SO ERKANNT
 1     "Oberkörper" -> Hüfte, Rücken/Wirbel, Brust/Buckel; Haut (Teil benannt, kein Farbwort) [sicher]
-2     "fleischige Wunde/Haut" -> Hüfte; fleischige Wunde/Haut [sicher]
-3     "Oberkörper Musterung rechts" -> Hüfte; Musterung [sicher]
-4     "Oberkörper Musterung links" -> Hüfte, Schwanz 2, Schwanz 3; Musterung [unsicher]
+2     "fleischige Wunde/Haut" -> Fleck texelgenau, 116 Texel auf Hüfte; fleischige Wunde/Haut [sicher]
+3     "Oberkörper Musterung rechts" -> Fleck texelgenau, 70 Texel auf Hüfte, Oberschenkel hinten rechts; Musterung [sicher]
+4     "Oberkörper Musterung links" -> Fleck texelgenau, 45 Texel auf Hüfte, Schwanz 2, Schwanz 3; Musterung [unsicher]
 5     "Kopf" -> Kopf (Oberkiefer), Unterkiefer; Haut (Teil benannt, kein Farbwort) [verdeckt]
 6     "wahrscheinlich etwas Auge" -> keine sichtbare Fläche; Auge [verdeckt]
-7     "Mund?" -> keine sichtbare Fläche; Maul innen [verdeckt]
+7     "Mund?" -> keine sichtbare Fläche; Maul [verdeckt]
 8     "Schwanz der in den Rücken übergeht" -> Hüfte, Schwanz 1, Schwanz 2, Schwanz 3, Schwanz 4, Schwanz 5; Haut (Teil benannt, kein Farbwort) [sicher]
-9     "Schwanz Muster / Maserung" -> Schwanz 3, Schwanz 4, Schwanz 5; Musterung/Maserung [sicher]
+9     "Schwanz Muster / Maserung" -> Fleck texelgenau, 408 Texel auf Schwanz 3, Schwanz 4, Schwanz 5, Schwanzspitze (Zipfel); Musterung/Maserung [sicher]
 10    "Zipfel - separater Schwanzabschnitt am Schluss" -> Schwanzspitze (Zipfel); Haut (Teil benannt, kein Farbwort) [sicher]
-11    "Schwanz Musterung" -> Schwanz 5, Schwanzspitze (Zipfel); Musterung [sicher]
-12    "verschieden farbiges rotes Fleisch wie oben am Becken" -> Schwanz 5, Schwanzspitze (Zipfel); rotes Fleisch [unsicher]
+11    "Schwanz Musterung" -> Fleck texelgenau, 446 Texel auf Schwanz 5, Schwanzspitze (Zipfel); Musterung [sicher]
+12    "verschieden farbiges rotes Fleisch wie oben am Becken" -> Fleck texelgenau, 133 Texel auf Schwanz 5, Schwanzspitze (Zipfel); rotes Fleisch [unsicher]
 13    "linkes Bein" -> Oberschenkel hinten links, Unterschenkel hinten links, Fuß hinten links; Haut (Teil benannt, kein Farbwort) [sicher]
 13.1  "linkes Bein, Bein Abschnitte. unten direkt verbunden mit den fuß (Abschnitt 1 von oben)" -> Oberschenkel hinten links; Gliederung (kein Material) [unsicher]
 13.2  "linkes Bein, Bein Abschnitte. unten direkt verbunden mit den fuß (Abschnitt 2 von oben)" -> Oberschenkel hinten links, Unterschenkel hinten links; Gliederung (kein Material) [sicher]
 13.3  "linkes Bein, Bein Abschnitte. unten direkt verbunden mit den fuß (Abschnitt 3 von oben)" -> Oberschenkel hinten links, Unterschenkel hinten links; Gliederung (kein Material) [sicher]
 13.4  "linkes Bein, Bein Abschnitte. unten direkt verbunden mit den fuß (Abschnitt 4 von oben)" -> Unterschenkel hinten links, Fuß hinten links; Gliederung (kein Material) [sicher]
-14    "weiße Musterung" -> Oberschenkel hinten links; weiße Musterung [sicher]
-15    "weiße Musterung (zweiter grüner Strich, ohne eigenen Text)" -> Oberschenkel hinten links; weiße Musterung [unsicher]
-16    "bräunliche Musterung" -> Oberschenkel hinten links; bräunliche Musterung [sicher]
+14    "weiße Musterung" -> Fleck texelgenau, 20 Texel auf Hüfte, Oberschenkel hinten links, Schwanz 3; weiße Musterung [sicher]
+15    "weiße Musterung (zweiter grüner Strich, ohne eigenen Text)" -> Fleck texelgenau, 19 Texel auf Hüfte, Oberschenkel hinten links, Schwanz 3; weiße Musterung [unsicher]
+16    "bräunliche Musterung" -> Fleck texelgenau, 94 Texel auf Oberschenkel hinten links; bräunliche Musterung [unsicher]
 17    "rechtes Bein hinten" -> Oberschenkel hinten rechts, Unterschenkel hinten rechts, Fuß hinten rechts; Haut (Teil benannt, kein Farbwort) [sicher]
 17.1  "rechtes Bein, Beinabschnitte. Unten direkt verbunden mit fuß. (Abschnitt 1 von oben)" -> Oberschenkel hinten rechts, Unterschenkel hinten rechts; Gliederung (kein Material) [unsicher]
 17.2  "rechtes Bein, Beinabschnitte. Unten direkt verbunden mit fuß. (Abschnitt 2 von oben)" -> Oberschenkel hinten rechts, Unterschenkel hinten rechts; Gliederung (kein Material) [sicher]
 17.3  "rechtes Bein, Beinabschnitte. Unten direkt verbunden mit fuß. (Abschnitt 3 von oben)" -> Unterschenkel hinten rechts, Fuß hinten rechts; Gliederung (kein Material) [sicher]
-18    "weiße Musterung" -> Hüfte, Oberschenkel hinten rechts; weiße Musterung [sicher]
-19    "bräunliche Musterung" -> Oberschenkel hinten rechts; bräunliche Musterung [unsicher]
+18    "weiße Musterung" -> Fleck texelgenau, 14 Texel auf Hüfte, Oberschenkel hinten rechts; weiße Musterung [sicher]
+19    "bräunliche Musterung" -> Fleck texelgenau, 13 Texel auf Oberschenkel hinten rechts; bräunliche Musterung [unsicher]
 20    "linker Fuß mit Teil der Fußkralle vorne. Kaum sichtbar, aber wahrscheinlich 3 Krallen. Rechts wäre es sicher genauso" -> Fuß hinten links; Haut (Teil benannt, kein Farbwort) [unsicher]
 21    "linker Fuß mit Teil der Fußkralle vorne. Kaum sichtbar, aber wahrscheinlich 3 Krallen. Rechts wäre es sicher genauso" -> Fuß hinten links; Kralle [unsicher]
 22    "Rechts wäre es sicher genauso (aus demselben Text)" -> Fuß hinten rechts; Kralle [verdeckt]
@@ -53,43 +66,46 @@ IHR WORT -> SO ERKANNT
 23.2  "wahrscheinliche Bein Abschnitte (Abschnitt 2 von oben)" -> Unterarm vorn rechts; Gliederung (kein Material) [unsicher]
 23.3  "wahrscheinliche Bein Abschnitte (Abschnitt 3 von oben)" -> Unterarm vorn rechts, Hand vorn rechts; Gliederung (kein Material) [unsicher]
 23.4  "wahrscheinliche Bein Abschnitte (Abschnitt 4 von oben)" -> Unterarm vorn rechts, Hand vorn rechts; Gliederung (kein Material) [unsicher]
-24    "weiße Musterung" -> Oberarm vorn rechts; weiße Musterung [sicher]
-25    "Fuß und Kralle" -> Hand vorn rechts; Kralle [unsicher]
+24    "weiße Musterung" -> Fleck texelgenau, 290 Texel auf Oberarm vorn rechts, Unterarm vorn rechts; weiße Musterung [sicher]
+25    "Fuß und Kralle" -> Hand vorn rechts; Fuß: Haut (Teil benannt, kein Farbwort); Kralle: im Modell hier nicht sichtbar [unsicher]
 26    "Oberkörper" -> Brust/Buckel, Hals; Haut (Teil benannt, kein Farbwort) [unsicher]
-27    "großer fleischfarbener Teil" -> Brust/Buckel, Hals; fleischfarben [unsicher]
+27    "großer fleischfarbener Teil" -> Fleck texelgenau, 2201 Texel auf Brust/Buckel, Hals; fleischfarben [unsicher]
 28    "Vorderseite Gesicht mit Maul nach unten rechts blickend" -> Kopf (Oberkiefer), Unterkiefer; Haut (Teil benannt, kein Farbwort) [unsicher]
-29    "Augen" -> Kopf (Oberkiefer); Auge [sicher]
-30    "geöffnetes Maul" -> Kopf (Oberkiefer), Unterkiefer; Maul innen [unsicher]
+29    "Augen" -> Fleck texelgenau, 21 Texel auf Kopf (Oberkiefer); Auge [sicher]
+30    "geöffnetes Maul" -> Kopf (Oberkiefer), Unterkiefer; Maul [unsicher]
 31    "Teil des Unterkiefers" -> Unterkiefer; Unterkiefer (kein Farbwort) [unsicher]
 32    "vorderer rechter Arm mit Krallen" -> Hand vorn rechts, Kralle vorn rechts 31; Haut (Teil benannt, kein Farbwort) [sicher]
-33    "vorderer rechter Arm" -> Hand vorn rechts; Haut (Teil benannt, kein Farbwort) [sicher]
+33    "vorderer rechter Arm" -> Hand vorn rechts; Haut (Teil benannt, kein Farbwort) [unsicher]
 34    "vordere rechte Hand mit Krallen" -> Hand vorn rechts; Haut (Teil benannt, kein Farbwort) [sicher]
 35    "Krallen" -> Kralle vorn rechts 31; Kralle [unsicher]
-35.1  "Krallen (Form 1, rechts im Bild)" -> Kralle vorn rechts 31; Kralle [sicher]
-35.2  "Krallen (Form 3, links im Bild)" -> Kralle vorn rechts 19; Kralle [unsicher]
+35.1  "Krallen (gezeichnete Form rechts im Bild)" -> Kralle vorn rechts 31; Kralle [sicher]
+35.2  "Krallen (gezeichnete Form links im Bild)" -> Kralle vorn rechts 19; Kralle [unsicher]
 35.3  "Krallen (Fläche zwischen den Formen, mit Schriftzug)" -> Kralle vorn rechts 20, Kralle vorn rechts 29; Kralle [verdeckt]
 36    "Vorderes linkes Bein mit Krallen" -> Oberarm vorn links, Unterarm vorn links, Hand vorn links, Kralle vorn links 14, Kralle vorn links 15; Haut (Teil benannt, kein Farbwort) [sicher]
 37    "Beinabschnitt" -> Oberarm vorn links, Unterarm vorn links; Haut (Teil benannt, kein Farbwort) [sicher]
 38    "Fußabschnitt" -> Hand vorn links, Kralle vorn links 14, Kralle vorn links 15; Haut (Teil benannt, kein Farbwort) [sicher]
 39    "Exakt 4 Krallen" -> Hand vorn links, Kralle vorn links 15, Kralle vorn links 30; Kralle [sicher]
-39.1  "Exakt 4 Krallen (Schleife 1 von links im Bild)" -> Kralle vorn links 30; Kralle [sicher]
+39.1  "Exakt 4 Krallen (Schleife 1 von links im Bild)" -> Kralle vorn links 30; Kralle [unsicher]
 39.2  "Exakt 4 Krallen (Schleife 2 von links im Bild)" -> Kralle vorn links 14; Kralle [unsicher]
 39.3  "Exakt 4 Krallen (Schleife 3 von links im Bild)" -> Kralle vorn links 15; Kralle [sicher]
 39.4  "Exakt 4 Krallen (Schleife 4 von links im Bild)" -> Kralle vorn links 28; Kralle [verdeckt]
-40    "Maulinneres (im "geöffneten Maul")" -> Kopf (Oberkiefer), Unterkiefer; Maul innen [unsicher]
-41    "Zähne (im "geöffneten Maul"; das Wort Zahn steht nicht im Bild)" -> Kopf (Oberkiefer), Unterkiefer; Zahn [unsicher]
-42    "Oberlippe (Rand des "geöffneten Mauls", Kopf 22)" -> Kopf (Oberkiefer); Lippe (kein Farbwort) [unsicher]
-43    "Unterkiefer außen mit Unterlippe ("Teil des Unterkiefers")" -> Unterkiefer; Unterkiefer (kein Farbwort) [unsicher]
-44    "Hals-Unterseite (kein Nutzerwort)" -> Hals; Haut (nicht belegt) [verdeckt]
+40    – (kein Wort von Ihnen; Modellgliederung: Flächen rund um die Augen, die dieselbe Texturstelle wie das Maulinnere benutzen (Modellgliederung)) -> Kopf (Oberkiefer); nicht belegt (kein Wort von Ihnen) [unsicher]
+41    – (kein Wort von Ihnen; Modellgliederung: Zähne (Modellgliederung, im "geöffneten Maul")) -> Kopf (Oberkiefer), Unterkiefer; nicht belegt (kein Wort von Ihnen) [unsicher]
+42    – (kein Wort von Ihnen; Modellgliederung: Oberlippe (Modellgliederung, Rand des "geöffneten Mauls")) -> Kopf (Oberkiefer); nicht belegt (kein Wort von Ihnen) [unsicher]
+44    – (kein Wort von Ihnen; Modellgliederung: Hals-Unterseite (Modellgliederung)) -> Hals; Haut (nicht belegt) [verdeckt]
 
 FRAGEN AN SIE
 1. Kopfhöhe (Bild 2): Der Modellkopf reicht 70 Video-Pixel höher als Ihr Gesichtsumriss (oben y 196 statt 265). Im Video ist die Kopfoberkante nicht als Kante zu sehen (alles gleich dunkel). Gilt Ihre rote Linie oben als Kopfoberkante, d. h. ist das, was das Modell darüber zeigt, Brust ("großer fleischfarbener Teil")?
 2. Kopf von hinten (Bild 1): An der Stelle Ihres Kopf-Umrisses zeigt das Modell den rechten Oberarm, der Kopf ist dahinter verdeckt. Soll der Kopf dort sichtbar sein?
-3. Maul (Bild 2): An der Stelle Ihres "geöffneten Mauls" zeigt das Modell vor allem die Außenseite des Unterkiefers; das Maulinnere ist in dieser Pose fast unsichtbar (23 px). Ich ordne "geöffnetes Maul" dem Maulinneren und den Zähnen zu. Richtig?
-4. Krallen vorn rechts: Ihre Annahme "wahrscheinlich auch 4" lässt sich mit bloßem Drehen von Kralle 20 und 29 nicht erfüllen: In 6000 geprüften Drehungen liegt keine ganz hinter dem Schriftzug; die beste lässt noch 135 bzw. 12 px über dem Hintergrund stehen und steckt mit 2 bzw. 1 Ecken in der Hand, und in Bild 1 stünden sie dann sichtbar ab (330 bzw. 683 px). Sollen 20 und 29 eingezogen bleiben (wie heute) oder kürzer zurückkommen?
-5. Kralle 19 (Ihre Form 3): Mit einem einzigen Längenfaktor (x0.49) liegt die Spitze noch 16 px neben Ihrem Strichende. Endet die Kralle an Ihrem Strichende, oder läuft sie hinter der Schrift weiter (dann bliebe die K5c-Länge)?
-6. Vierte linke Kralle (Schleife 2): Kralle 14 (mein Vorschlag, weil die linke Hand genau 4 Krallenteile hat) oder die Handspitze 13?
-7. Krallenmarken hinten links: Ihre zwei roten Marken liegen rechts neben dem Modellfuß über Hintergrund. Sind die Krallen die drei Zehenspitzen des Fußes (mein Vorschlag), oder ragen sie weiter heraus?
-8. Zweiter grüner Strich (linkes Hinterbein, ohne Text): Er zeigt auf denselben weißen Fleck wie "weiße Musterung". Richtig, oder meinten Sie eine weitere Stelle?
-9. Bräunliche Musterung am rechten Hinterbein: Im Bild ist dort nichts Braunes messbar (graublau). Meinten Sie die helle Fläche direkt unter dem weißen Fleck, entlang Ihres zweiten dunkelroten Strichs?
-10. Alles, was in keinem der zwei Bilder zu sehen ist (Rückseiten, Unterseiten, Hals-Unterseite, rechter Hinterfuß): bleibt das Haut ohne eigene Farbe?
+3. Augen, Größe (Bild 2): Ihre Augenpunkte sind klein: rechts 6,5, links 12,3 Video-Pixel. Die heutigen Modellaugen sind 68 bzw. 75 Video-Pixel groß und liegen 4,6 bzw. 7,7 Pixel daneben. Mein Vorschlag (beide Augen nach derselben Regel): Auge ist NUR der helle Punkt, das übrige heutige Augenfeld wird Haut. Richtig, oder ist das ganze dunkle Augenfeld um den Punkt das Auge? Sollen beide Augen gleich groß sein (heute ist das linke fast doppelt so groß wie das rechte)?
+4. Augenhöhle: 14 Modellflächen rund um die Augen benutzen dieselbe Texturstelle wie das Maulinnere (in Bild 2 sind 2 davon sichtbar, 23 Video-Pixel, direkt neben den Augen). In Runde 1 hatte ich sie fälschlich "Maulinneres" genannt. Sollen sie Haut sein (mein Vorschlag, Zone 40)?
+5. Maul (Bild 2): An der Stelle Ihres "geöffneten Mauls" zeigt das Modell die Außenseite des Unterkiefers und Zähne, weil der Modellkopf anders sitzt; das Maulinnere des Modells ist in Bild 2 gar nicht zu sehen. Ich ordne "geöffnetes Maul" den 21 Flächen des Maulinneren zu. Die Zähne (Zone 41) haben kein Wort von Ihnen: eigenes Material, wie das Maul, oder Haut?
+6. Krallen vorn rechts: Ihre Annahme "wahrscheinlich auch 4": Kralle 20 und 29 lassen sich durch bloßes Drehen nicht hinter der Schrift verstecken (6000 Drehungen geprüft; die beste stand noch über dem Hintergrund, steckte in der Hand und stünde in Bild 1 sichtbar ab). Im Vorschlag bleiben 20 und 29 eingezogen wie heute. Sollen sie so bleiben, oder kürzer zurückkommen?
+7. Kralle 19 (Ihre Form links im Bild): Mit einem einzigen Längenfaktor (x0,49) liegt die Spitze noch 16 Pixel neben Ihrem Strichende. Endet die Kralle an Ihrem Strichende, oder läuft sie hinter der Schrift weiter (dann bliebe die K5c-Länge)?
+8. Vorn links, Schleife 2: Kralle 14 (mein Vorschlag, weil die linke Hand genau 4 Krallenteile hat) oder die Handspitze 13? Und Schleife 1: Kralle 30 ist im Modell fast unsichtbar (2 Pixel); ist sie trotzdem die Kralle dieser Schleife?
+9. Kralle 28 (vorn links, Schleife 4): Zurückgeholt in ihrer früheren Form liegt Kralle 28 nur zu 2 Prozent in Ihrer Schleife, der größte Teil (312 Video-Pixel) läge über Ihrem "Fußabschnitt", und 2 Ecken stecken in der Hand. Soll 28 so zurückkommen, oder soll ich sie an Ihre Schleife 4 anpassen?
+10. Krallenmarken hinten links: Ihre zwei roten Marken liegen rechts neben dem Modellfuß über Hintergrund. Sind die Krallen die drei Zehenspitzen des Fußes (mein Vorschlag), oder ragen sie weiter heraus?
+11. Zweiter grüner Strich (linkes Hinterbein, ohne Text): Er zeigt auf denselben weißen Fleck wie "weiße Musterung". Richtig, oder meinten Sie eine weitere Stelle?
+12. Bräunliche Musterung: Am rechten Hinterbein ist im Bild nichts Braunes messbar (L* 63,5, a* 7,7, b* -20,7, also graublau); meinten Sie die helle Fläche direkt unter dem weißen Fleck, entlang Ihres zweiten dunkelroten Strichs? Am linken Hinterbein ist die Stelle dunkel rot-violett (L* 27, a* 26, b* -6): ist das die bräunliche Musterung?
+13. Rotes Fleisch am Zipfel: Von den 4 Stellen an Ihren Linienenden sind 2 violett-rot, 1 rot und 1 nur schwach rötlich; die erste ist nur 1 Pixel groß. Sind alle vier "rotes Fleisch"?
+14. Alles, was in keinem der zwei Bilder zu sehen ist (Rückseiten, Unterseiten, Hals-Unterseite, rechter Hinterfuß): bleibt das Haut ohne eigene Farbe?
