@@ -1,0 +1,107 @@
+{
+ "P": {
+  "cgr_max": 4.8,
+  "cgr": 0.41,
+  "grau": true,
+  "h": -22.9,
+  "s": 0.52,
+  "kappa": 0.61,
+  "hell": "mal",
+  "f": 2.46,
+  "knie": 75.0,
+  "q": 0.74,
+  "cg": 0.41,
+  "rg": 1.469,
+  "rf": 1.6,
+  "hf": -8.0,
+  "cf": 18.0,
+  "aussen_maul_haut": true,
+  "ader_c": "a_haut"
+ },
+ "stat": {
+  "haut0": {
+   "haut_p10_p50": [
+    5.57,
+    12.82
+   ]
+  },
+  "gelenk0": {
+   "haut_p10_p50": [
+    1.7,
+    7.02
+   ]
+  },
+  "haut1": {
+   "haut_p10_p50": [
+    15.11,
+    31.26
+   ]
+  },
+  "gelenk1": {
+   "haut_p10_p50": [
+    13.68,
+    31.29
+   ]
+  },
+  "haut2": {
+   "haut_p10_p50": [
+    11.2,
+    22.7
+   ]
+  },
+  "gelenk2": {
+   "haut_p10_p50": [
+    11.1,
+    24.35
+   ]
+  },
+  "grau0": {
+   "haut_p10_p50": [
+    0.0,
+    3.97
+   ]
+  },
+  "grau1": {
+   "haut_p10_p50": [
+    16.26,
+    32.83
+   ]
+  },
+  "grau2": {
+   "haut_p10_p50": [
+    12.19,
+    57.62
+   ]
+  },
+  "fleisch1": {
+   "haut_p10_p50": [
+    15.03,
+    31.06
+   ]
+  },
+  "f1": {
+   "umgefaerbt": 24,
+   "kern": 56
+  }
+ },
+ "sha": {
+  "FORM.EMD": "e85ab12c024d75ee2c92e41f71a419a0a267c5c3bcb01561eaaa3e28acf32fce",
+  "FORM.TIM": "c48e94d0fdded39dcd072c8867136ae5b4b3609f2dcb35633f242818a26e350c",
+  "BAHNSTEIG_FORM.EMD": "9045b6dcceebf7d5089daec5af1b982d5d9013f67039ed910c480b2e92c17648",
+  "BAHNSTEIG_FORM.TIM": "c48e94d0fdded39dcd072c8867136ae5b4b3609f2dcb35633f242818a26e350c"
+ },
+ "flaechen_je_zeile": {
+  "0": 93,
+  "1": 249,
+  "2": 1606,
+  "3": 579,
+  "4": 6,
+  "5": 360,
+  "6": 314,
+  "7": 92,
+  "8": 6,
+  "9": 114,
+  "10": 81,
+  "11": 328
+ }
+}

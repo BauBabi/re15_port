@@ -1,0 +1,204 @@
+{
+ "5f/vorschau/v4": {
+  "gelenk_albedo": {
+   "gelenk": [
+    36.0,
+    5.1,
+    -2.3
+   ],
+   "nachbar": [
+    22.6,
+    9.0,
+    -3.9
+   ],
+   "dL_median": 13.4,
+   "C_gelenk": 6.23
+  },
+  "gelenk_weiss": {
+   "je_winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "dL": 6.64,
+     "px_gelenk": 2476,
+     "px_ring": 2238
+    },
+    {
+     "winkel": "Seite",
+     "dL": 9.09,
+     "px_gelenk": 2547,
+     "px_ring": 2164
+    },
+    {
+     "winkel": "3/4 hinten",
+     "dL": 12.51,
+     "px_gelenk": 2122,
+     "px_ring": 2512
+    },
+    {
+     "winkel": "Gegenseite",
+     "dL": 9.03,
+     "px_gelenk": 1862,
+     "px_ring": 2456
+    }
+   ],
+   "dL_mittel": 9.32,
+   "dL_min": 6.64
+  },
+  "schwanzspitze": {
+   "albedo_median": [
+    46.5,
+    17.0,
+    -2.5
+   ],
+   "fleisch_anteil": 53.0,
+   "schwanz_albedo_median": [
+    31.0,
+    13.6,
+    -5.7
+   ],
+   "dL": 15.45
+  },
+  "buckel": {
+   "albedo_median": [
+    28.7,
+    9.3,
+    -2.6
+   ],
+   "fleisch_anteil": 29.5,
+   "flaechen": 12,
+   "mesh10_haut_median": [
+    22.6,
+    9.0,
+    -5.5
+   ],
+   "dL": 6.09,
+   "ton": -15.6
+  },
+  "lippe_unterkiefer": {
+   "rot_pct": 6.88,
+   "L_p95": 42.5,
+   "haut_L_p95": 53.5,
+   "median": [
+    16.8,
+    3.9,
+    -2.1
+   ]
+  },
+  "krallen": {
+   "kralle": [
+    17.4,
+    3.9,
+    0.0
+   ],
+   "hand": [
+    17.4,
+    3.9,
+    1.4
+   ],
+   "dE": 1.44,
+   "a_gt10_pct": 17.58,
+   "rotklasse_pct": 14.77
+  }
+ },
+ "K5/ruhe/K5e_f1": {
+  "gelenk_albedo": {
+   "gelenk": [
+    39.4,
+    4.8,
+    -3.3
+   ],
+   "nachbar": [
+    30.1,
+    10.3,
+    -7.0
+   ],
+   "dL_median": 9.23,
+   "C_gelenk": 5.85
+  },
+  "gelenk_weiss": {
+   "je_winkel": [
+    {
+     "winkel": "3/4 vorn",
+     "dL": 5.53,
+     "px_gelenk": 2476,
+     "px_ring": 2238
+    },
+    {
+     "winkel": "Seite",
+     "dL": 6.94,
+     "px_gelenk": 2547,
+     "px_ring": 2164
+    },
+    {
+     "winkel": "3/4 hinten",
+     "dL": 7.72,
+     "px_gelenk": 2122,
+     "px_ring": 2512
+    },
+    {
+     "winkel": "Gegenseite",
+     "dL": 6.32,
+     "px_gelenk": 1862,
+     "px_ring": 2456
+    }
+   ],
+   "dL_mittel": 6.63,
+   "dL_min": 5.53
+  },
+  "schwanzspitze": {
+   "albedo_median": [
+    42.2,
+    16.3,
+    -4.0
+   ],
+   "fleisch_anteil": 85.4,
+   "schwanz_albedo_median": [
+    33.5,
+    10.3,
+    -7.0
+   ],
+   "dL": 8.64
+  },
+  "buckel": {
+   "albedo_median": [
+    35.4,
+    16.3,
+    -4.0
+   ],
+   "fleisch_anteil": 57.1,
+   "flaechen": 12,
+   "mesh10_haut_median": [
+    30.1,
+    10.3,
+    -7.0
+   ],
+   "dL": 5.29,
+   "ton": -13.9
+  },
+  "lippe_unterkiefer": {
+   "rot_pct": 0.0,
+   "L_p95": 37.1,
+   "haut_L_p95": 43.9,
+   "median": [
+    25.3,
+    5.8,
+    -4.0
+   ]
+  },
+  "krallen": {
+   "kralle": [
+    25.3,
+    5.6,
+    -3.8
+   ],
+   "hand": [
+    25.3,
+    5.6,
+    -3.8
+   ],
+   "dE": 0.0,
+   "a_gt10_pct": 21.84,
+   "rotklasse_pct": 0.0
+  }
+ }
+}
