@@ -1,39 +1,48 @@
-GRUNDLAGE RIESENFORM - SO HABE ICH IHRE ZERLEGUNG ERKANNT (v2, Runde 3, 2026-11-09)
+GRUNDLAGE RIESENFORM - SO HABE ICH IHRE ZERLEGUNG ERKANNT (v2, Runde 4, 2026-11-09)
 
 Bitte prüfen, bevor ich weiterarbeite. Es wurde nichts gebaut und nichts am Spiel geändert.
 
 WAS IST NEU GEGENÜBER DER LETZTEN FASSUNG
 - Flecken (Musterungen, Wunde, rotes Fleisch, großer fleischfarbener Teil, Augen) sind texelgenau: nur die Bildpunkte der Textur unter Ihrer Stelle,
   in der Form wie im Video - keine ganzen Flächen ("Quader"). Je Fleck gibt es eine Nahansicht.
-- Schwanzspitze: Ihre zwei orangen Umrisse ("Schwanz Musterung") sind jetzt zwei getrennte Flächen. Der dunkelrote Spalt dazwischen gehört nicht mehr
-  zur Musterung (dort zeigt Ihr lila Strich auf "rotes Fleisch").
-- "geöffnetes Maul" sind jetzt die Flächen hinter den Zähnen, die erst beim Öffnen des Mauls sichtbar werden. Die Flächen an der Kopf-Unterseite,
-  die heute rot sind (die "komischen roten Streifen" am Hals), gehören NICHT zum Maul; sie bleiben Haut (Zone 45).
-- Kralle 19 vorn rechts bleibt eingezogen: zurückgeholt läge sie vor Ihrer Hand (Tafel 21, Frage).
-- Augen: Hinweis, dass die heutige Textur die Augen-Texel auch an anderen Stellen benutzt (Tafel 22 rechts).
-- Tafel 23 ist größer geschrieben und zeigt jetzt auch, wo zwei Ihrer Zonen dieselben Texel brauchen.
-- Die "grünen Streifen" auf dem Buckel vorn: eigener Bericht (streifen/STREIFEN_HERKUNFT.md); in diesen Tafeln ist nichts ausgeblendet oder umgefärbt.
+- "geöffnetes Maul" (Zone 30): die Flächen, die erst beim Öffnen des Mauls zu sehen sind, verglichen mit wirklich geschlossenem Maul.
+  Dazugekommen sind der vordere Mundboden und zwei Gaumenflächen; in Bild 2 zeigt das Maul jetzt 822 statt 448 Video-Pixel.
+- Oberlippe (Zone 42): jetzt der Rand der Maul-Öffnung (20 Flächen), in Bild 2 nicht zu sehen.
+- Kralle 28 vorn links: zurückgeholt verdeckt sie rund ein Drittel von Kralle 15 (Ihre Schleife 3); das steht jetzt in Tafel 21 und Frage 10.
+- Jede Zone hat in allen Tafeln dieselbe Farbe und Nummer.
+- Neu in der Reihe: Tafel 23 (Woher kommen die Streifen?). Die Tafel zu geteilten Texeln heißt jetzt 24.
+
+DIE STREIFEN (Tafel 23, nur gemessen, nichts geändert)
+- Grüne Streifen auf dem Buckel vorn: Das ist der Kopf des Modells. Er steckt mit dem Hinterkopf im Buckel und im Hals (schon seit Stand K4).
+  Das Modell wird ohne Tiefenspeicher gemalt: jedes Dreieck nach seiner mittleren Entfernung, das fernste zuerst. Deshalb erscheinen Stücke des Kopfes
+  über dem Buckel. Grün ist die Farbe des Kopfes in Tafel 23. Im Spiel passiert dasselbe, wegen der dunklen Haut aber nur schwach sichtbar.
+  Kein Fehler der Tafel und keine Textur. Ein tieferer oder kleinerer Kopf würde das ändern - siehe Frage 1.
+- Rote Streifen am Hals (im Spiel): 6 Außenflächen an der Kopf-Unterseite hinter dem Unterkiefer tragen seit Stand K5c die rote Maul-Farbe.
+  Sie liegen außen, nicht im Maul, und gehören nicht zu Ihrem "geöffneten Maul". In der Haltung von Bild 2 sind sie nicht zu sehen. Siehe Frage 6.
+- Hinweis: Tafel 23 wurde vor der letzten Maul-Korrektur gezeichnet; in Feld 10 steht deshalb "alle 21 Flächen" - jetzt sind es 27.
 
 WIE LESEN
 - Jede Tafel 01-11 gehört zu einem Ihrer Bilder: links Ihr Bild unverändert, in der Mitte das Modell in derselben Haltung und demselben Ausschnitt,
   rechts beides übereinander. Darunter eine Vergrößerung, dann je Fleck eine Nahansicht, dann die Liste: Nummer, Ihr Wort, Modellteil, Material, Sicherheit.
-- Kräftig gefüllt = Fleck (texelgenau, Farbe = Material). Dünner Umriss mit leichter Tönung = ganzes Teil oder Abschnitt, das Sie benannt haben.
-  Gestrichelt = die Stelle, die ich in Ihrem Bild gelesen habe. Schraffiert = an dieser Stelle zeigt das Modell nichts Passendes.
+- Kräftig gefüllt = Fleck (texelgenau, Farbe = Material). Umriss mit Tönung = ganzes Teil oder Abschnitt, das Sie benannt haben (Teile innerhalb
+  eines Teils, z. B. das Maul im Gesicht, kräftiger getönt). Gestrichelt = die Stelle, die ich in Ihrem Bild gelesen habe.
+  Schraffiert = an dieser Stelle zeigt das Modell nichts Passendes.
 - Texel = ein Bildpunkt der Textur des Modells. Video-Pixel = Bildpunkt im 640 x 480-Video.
 - Seiten (links/rechts) immer aus Sicht des Wesens.
 - Sicherheit: "sicher" = gemessen und passt; "unsicher" = Sie selbst schreiben "wahrscheinlich", oder das Modell weicht ab; "verdeckt" = im Modell nicht sichtbar.
 - Rote Schrift in der letzten Spalte = anders als in einer früheren Fassung.
 
 DIE TAFELN
-00_uebersicht.png       beide Bilder, alle Zonen auf einen Blick
-01-11                   je eines Ihrer beschrifteten Bilder, mit Nahansicht jedes Flecks
-20_rundum.png           das Modell von vorn, hinten, links, rechts, schräg oben: wie weit jede Zone reicht; blass = nicht sichtbar, bleibt Haut
-21_krallen.png          Krallen vorn links, vorn rechts, hinten: heute | vor dem Einziehen (K5c) | (vorn rechts: gekürzt, verworfen) | Vorschlag
-22_kopf_augen.png       Ihre Augenpunkte, die heutigen Modellaugen, der Vorschlag, der Vorschlag mit der heutigen Textur, und der Kopfumriss
-23_geteilte_texel.png   wo ein Fleck heute zusätzlich erscheinen würde, weil die Textur dieselben Texel mehrfach benutzt; unten: Texel, die zwei Ihrer
-                        Zonen mit verschiedenem Material zugleich brauchen (nur gezeigt, nichts geändert)
+00_uebersicht.png         beide Bilder, alle Zonen auf einen Blick
+01-11                     je eines Ihrer beschrifteten Bilder, mit Nahansicht jedes Flecks
+20_rundum.png             das Modell von vorn, hinten, links, rechts, schräg oben: wie weit jede Zone reicht; blass = nicht sichtbar, bleibt Haut
+21_krallen.png            Krallen vorn links, vorn rechts, hinten: heute | vor dem Einziehen (K5c) | (vorn rechts: gekürzt, verworfen) | Vorschlag
+22_kopf_augen.png         Ihre Augenpunkte, die heutigen Modellaugen, der Vorschlag, der Vorschlag mit der heutigen Textur, und der Kopfumriss
+23_streifen_herkunft.png  woher die grünen Streifen auf dem Buckel und die roten Streifen am Hals kommen
+24_geteilte_texel.png     wo ein Fleck heute zusätzlich erscheinen würde, weil die Textur dieselben Texel mehrfach benutzt; unten: Texel, die zwei Ihrer
+                          Zonen mit verschiedenem Material zugleich brauchen (nur gezeigt, nichts geändert)
 
-HINWEIS ZUR TEXTUR (Tafel 23): Die heutige Textur benutzt dieselben Texel für viele Flächen. Ein Fleck nur an Ihrer Stelle braucht später für die dort
+HINWEIS ZUR TEXTUR (Tafel 24): Die heutige Textur benutzt dieselben Texel für viele Flächen. Ein Fleck nur an Ihrer Stelle braucht später für die dort
 genannten Flächen eigene Texel; sonst erschiene er an mehreren Stellen. Beim "großen fleischfarbenen Teil" betrifft das 556 weitere Flächen.
 
 IHR WORT -> SO ERKANNT
@@ -101,19 +110,19 @@ IHR WORT -> SO ERKANNT
 45    – (kein Wort von Ihnen; Modellgliederung: Kopf-Unterseite hinter dem Unterkiefer: Außenflächen, die heute die rote Maul-Farbe tragen (Modellgliederung; die roten Hals-Streifen)) -> Kopf (Oberkiefer); Haut (nicht belegt) [verdeckt]
 
 FRAGEN AN SIE
-1. Kopfhöhe (Bild 2): Der Modellkopf reicht 70 Video-Pixel höher als Ihr Gesichtsumriss (oben y 196 statt 265). Im Video ist die Kopfoberkante nicht als Kante zu sehen (alles gleich dunkel). Gilt Ihre rote Linie oben als Kopfoberkante, d. h. ist das, was das Modell darüber zeigt, Brust ("großer fleischfarbener Teil")?
-2. Kopf von hinten (Bild 1): An der Stelle Ihres Kopf-Umrisses zeigt das Modell den rechten Oberarm, der Kopf ist dahinter verdeckt. Soll der Kopf dort sichtbar sein?
-3. Augen, Größe (Bild 2): Ihre Augenpunkte sind klein: rechts 6,5, links 12,3 Video-Pixel. Die heutigen Modellaugen sind 68 bzw. 75 Video-Pixel groß und liegen 4,6 bzw. 7,7 Pixel daneben. Mein Vorschlag (beide Augen nach derselben Regel): Auge ist NUR der helle Punkt, das übrige heutige Augenfeld wird Haut. Richtig, oder ist das ganze dunkle Augenfeld um den Punkt das Auge? Sollen beide Augen gleich groß sein (heute ist das linke fast doppelt so groß wie das rechte)? Wichtig dazu: Die heutige Textur benutzt die Texel unter Ihren Punkten auch an anderen Stellen. Färbt man nur diese Texel, erschiene das Auge in Bild 2 auf 73 statt 19 Video-Pixeln (3,9-fach, auch auf Kopf, Brust und Hals). "Nur der Punkt" geht also nur, wenn das Auge später eigene Texel bekommt (Tafel 22, rechts).
-4. Augenhöhle: 14 Modellflächen rund um die Augen benutzen dieselbe rote Texturstelle wie die heutige Maul-Farbe (in Bild 2 sind 2 davon sichtbar, 23 Video-Pixel, direkt neben den Augen). In Runde 1 hatte ich sie fälschlich "Maulinneres" genannt. Sollen sie Haut sein (mein Vorschlag, Zone 40)?
-5. Maul (Bild 2): An der Stelle Ihres "geöffneten Mauls" zeigt das Modell vor allem die Außenseite des Unterkiefers und Zähne, weil der Modellkopf anders sitzt. Als "geöffnetes Maul" nehme ich jetzt die 21 Flächen, die erst beim Öffnen des Mauls sichtbar werden (hinter den Zähnen; in Bild 2 sind 8 davon zu sehen, alle in Ihrem Umriss). Die Zähne (Zone 41) haben kein Wort von Ihnen: eigenes Material, wie das Maul, oder Haut?
-6. Rote Streifen an der Hals-Unterseite: 10 Flächen an der Kopf-Unterseite hinter dem Unterkiefer tragen heute die rote Maul-Farbe; 8 davon sind die großen Außenflächen, die im Spiel die "komischen roten Streifen" machen. Sie liegen außen, nicht im Maul. In Runde 2 hatte ich 6 davon dem "geöffneten Maul" zugeordnet. Jetzt: Haut ohne eigene Farbe (Zone 45). Richtig?
-7. Krallen vorn rechts: Ihre Annahme "wahrscheinlich auch 4": Kralle 20 und 29 lassen sich durch bloßes Drehen nicht hinter der Schrift verstecken (6000 Drehungen geprüft; die beste stand noch über dem Hintergrund, steckte in der Hand und stünde in Bild 1 sichtbar ab). Im Vorschlag bleiben 20 und 29 eingezogen wie heute. Sollen sie so bleiben, oder kürzer zurückkommen?
-8. Kralle 19 (Ihre Form links im Bild): In ihrer früheren Lage (K5c) liegt Kralle 19 zwar auf Ihrer Form (53 von 59 Pixeln), aber VOR Ihrer Hand und verdeckt 836 Video-Pixel Hand, die im Video zu sehen sind. Gekürzt (x0,49) verdeckt sie noch 710 Pixel Hand; auch um ihre Wurzel gedreht (Spitze an Ihrem Strichende, 90 Lagen geprüft) mindestens 581 Pixel. Deshalb bleibt 19 im Vorschlag eingezogen wie heute. Was ist richtig: (a) eingezogen lassen, (b) zurück, obwohl sie dann über der Hand liegt, oder (c) ist Ihre Form gar keine eigene Kralle, sondern ein Teil der Hand?
-9. Vorn links, Schleife 2: Kralle 14 (mein Vorschlag, weil die linke Hand genau 4 Krallenteile hat) oder die Handspitze 13? Und Schleife 1: Kralle 30 ist im Modell fast unsichtbar (2 Pixel); ist sie trotzdem die Kralle dieser Schleife?
-10. Kralle 28 (vorn links, Schleife 4): Zurückgeholt in ihrer früheren Form liegt Kralle 28 nur zu 2 Prozent in Ihrer Schleife, der größte Teil (312 Video-Pixel) läge über Ihrem "Fußabschnitt", und 2 Ecken stecken in der Hand. Soll 28 so zurückkommen, oder soll ich sie an Ihre Schleife 4 anpassen?
-11. Krallenmarken hinten links: Ihre zwei roten Marken liegen rechts neben dem Modellfuß über Hintergrund. Sind die Krallen die drei Zehenspitzen des Fußes (mein Vorschlag), oder ragen sie weiter heraus?
-12. Zweiter grüner Strich (linkes Hinterbein, ohne Text): Er zeigt auf denselben weißen Fleck wie "weiße Musterung". Richtig, oder meinten Sie eine weitere Stelle?
-13. Bräunliche Musterung: Am rechten Hinterbein ist im Bild nichts Braunes messbar (L* 63,5, a* 7,7, b* -20,7, also graublau); meinten Sie die helle Fläche direkt unter dem weißen Fleck, entlang Ihres zweiten dunkelroten Strichs? Am linken Hinterbein ist die Stelle dunkel rot-violett (L* 27, a* 26, b* -6): ist das die bräunliche Musterung?
-14. Rotes Fleisch am Zipfel: Von den 4 Stellen an Ihren Linienenden sind 2 violett-rot, 1 rot und 1 nur schwach rötlich; die erste ist nur 1 Pixel groß. Sind alle vier "rotes Fleisch"?
-15. Schwanzspitze (Zipfel): Zwischen Ihren zwei orangen Umrissen ("Schwanz Musterung") liegt ein dunkelroter Spalt. Dort endet einer Ihrer lila Striche ("verschieden farbiges rotes Fleisch"). Der Spalt gehört jetzt nicht mehr zur Musterung; die Musterung ist nur das Innere Ihrer zwei Umrisse. Als "rotes Fleisch" zähle ich nur die rote Stelle am Ende Ihres lila Strichs (gemessenes Farbgebiet), nicht den ganzen Spalt. Richtig, oder ist der ganze Spalt rotes Fleisch?
-16. Alles, was in keinem der zwei Bilder zu sehen ist (Rückseiten, Unterseiten, Hals-Unterseite, rechter Hinterfuß): bleibt das Haut ohne eigene Farbe?
+1. Kopfhöhe und grüne Streifen auf dem Buckel gehören zusammen (Tafel 22 unten, Tafel 23 oben): Der Modellkopf reicht in Bild 2 69,6 Video-Pixel höher als Ihr Gesichtsumriss (Oberkante y 196 statt 265); im Video ist dort keine Kante zu sehen, alles ist gleich dunkel. Derselbe Kopf steckt mit dem Hinterkopf im Buckel und im Hals (seit Stand K4) und wird wegen der Zeichen-Reihenfolge darübergemalt: das sind die grünen Streifen. Ein tieferer oder kleinerer Kopf würde beides ändern. Gilt Ihre rote Linie oben als Kopfoberkante, d. h. soll der Kopf tiefer oder kleiner werden, und darüber ist Brust ("großer fleischfarbener Teil")?
+2. Kopf von hinten (Tafel 02): An der Stelle Ihres Kopf-Umrisses zeigt das Modell den rechten Oberarm; der Kopf liegt dahinter. Soll der Kopf dort zu sehen sein?
+3. Augen (Tafel 22): Ihre Augenpunkte sind klein (rechts 6,5, links 12,3 Video-Pixel). Die heutigen Modellaugen sind 68 bzw. 75 Video-Pixel groß und liegen 4,6 bzw. 7,7 Pixel daneben. Mein Vorschlag für beide Augen gleich: Auge ist NUR der helle Punkt, der Rest des heutigen Augenfelds wird Haut. Richtig, oder ist das ganze dunkle Feld um den Punkt das Auge? Hinweis: Die heutige Textur benutzt die Texel unter Ihren Punkten auch an anderen Stellen; ohne eigene Texel erschiene das Auge in Bild 2 auf 73 statt 19 Video-Pixeln (Tafel 22 rechts).
+4. Augenhöhle (Tafel 09, Zone 40): 14 Flächen rund um die Augen benutzen heute dieselbe rote Texturstelle wie das Maul (in Bild 2 sind 2 davon zu sehen, 23 Video-Pixel, direkt neben den Augen). Sollen sie Haut sein (mein Vorschlag)?
+5. Maul und Zähne (Tafel 09, Zonen 30 und 41): Als "geöffnetes Maul" nehme ich die 27 Flächen, die erst beim Öffnen des Mauls zu sehen sind (Gaumen und Mundboden). In Bild 2 sind 11 davon zu sehen, 822 Video-Pixel, davon 789 in Ihrem Umriss. Die Zähne haben kein Wort von Ihnen: eigenes Material wie das Maul, oder Haut?
+6. Rote Streifen am Hals (Tafel 23 Mitte, Zone 45): 6 Außenflächen an der Kopf-Unterseite hinter dem Unterkiefer tragen seit Stand K5c die rote Maul-Farbe und machen im Spiel die "komischen roten Streifen". 4 weitere Flächen mit dieser Farbe sind im ganzen Modell nie zu sehen (vom Hals verdeckt). Alle liegen außen, nicht im Maul. Mein Vorschlag: Haut ohne eigene Farbe. Richtig?
+7. Krallen 20 und 29 vorn rechts (Tafel 21 Mitte): Zu Ihrer Annahme "wahrscheinlich auch 4": Durch bloßes Drehen lassen sie sich nicht hinter der Schrift verstecken (6000 Drehungen geprüft; die beste stand noch über dem Hintergrund, steckte in der Hand und stünde in Bild 1 sichtbar ab). Im Vorschlag bleiben sie eingezogen wie heute. So lassen, oder kürzer zurück?
+8. Kralle 19 (Tafel 21 Mitte, Ihre Form links im Bild): In ihrer früheren Lage (K5c) liegt sie auf Ihrer Form (53 von 59 Pixeln), aber VOR Ihrer Hand und verdeckt 836 Video-Pixel Hand, die im Video zu sehen sind; gekürzt (x0,49) noch 710, um die Wurzel gedreht (90 Lagen) mindestens 581. Deshalb bleibt sie im Vorschlag eingezogen. (a) eingezogen lassen, (b) zurück, obwohl sie dann über der Hand liegt, oder (c) ist Ihre Form ein Teil der Hand?
+9. Vorn links, Schleifen 1 und 2 (Tafel 21 oben, Tafel 11): Schleife 2 = Kralle 14 (mein Vorschlag, die linke Hand hat genau 4 Krallenteile) oder die Handspitze 13? Schleife 1 = Kralle 30, obwohl sie im Modell nur 2 Pixel zeigt?
+10. Kralle 28 (Tafel 21 oben, Ihre Schleife 4): Zurückgeholt in ihrer früheren Form sind in Bild 2 292 Video-Pixel von ihr zu sehen, davon nur 8 in Ihrer Schleife 4 und 268 über Ihrem "Fußabschnitt". Dort verdeckt sie 238 Pixel von Kralle 15 (Ihre Schleife 3), rund ein Drittel: Kralle 15 zeigt dann 461 statt 699 Pixel (Ihre Schleife 3 selbst bleibt frei). Dazu verdeckt sie 38 Pixel Hand 13, und 2 Ecken stecken in der Hand. So zurück, oder an Ihre Schleife 4 anpassen?
+11. Krallen hinten links (Tafel 21 unten, Tafel 06): Ihre zwei roten Marken liegen rechts neben dem Modellfuß über Hintergrund. Sind die Krallen die drei Zehenspitzen des Fußes (mein Vorschlag), oder ragen sie weiter heraus?
+12. Zweiter grüner Strich ohne Text (Tafel 04): Er zeigt auf denselben weißen Fleck wie "weiße Musterung". Richtig, oder meinten Sie eine weitere Stelle?
+13. Bräunliche Musterung (Tafeln 04 und 05): Am rechten Hinterbein ist im Bild nichts Braunes messbar (graublau: L* 63,5, a* 7,7, b* -20,7); meinten Sie die helle Fläche direkt unter dem weißen Fleck? Am linken Hinterbein ist die Stelle dunkel rot-violett (L* 27, a* 26, b* -6): ist das die bräunliche Musterung?
+14. Rotes Fleisch am Zipfel (Tafel 03): Von den 4 Stellen an Ihren Linienenden sind 2 violett-rot, 1 rot und 1 nur schwach rötlich; die erste ist nur 1 Pixel groß. Sind alle vier "rotes Fleisch"?
+15. Spalt an der Schwanzspitze (Tafel 03): Zwischen Ihren zwei orangen Umrissen ("Schwanz Musterung") liegt ein dunkelroter Spalt, an dem einer Ihrer lila Striche endet. Die Musterung ist nur das Innere Ihrer zwei Umrisse; als "rotes Fleisch" zähle ich nur die rote Stelle am Ende des lila Strichs. Oder ist der ganze Spalt rotes Fleisch?
+16. Nicht sichtbare Bereiche (Tafel 20, blasse Farben): Alles, was in keinem der zwei Bilder zu sehen ist (Rückseiten, Unterseiten, Hals-Unterseite, Kopf-Unterseite, Oberlippe, rechter Hinterfuß): bleibt das Haut ohne eigene Farbe?
