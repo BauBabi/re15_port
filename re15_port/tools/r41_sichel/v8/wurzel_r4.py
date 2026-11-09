@@ -35,7 +35,11 @@ ZUG_MIN = 0.70                        # Ecken ohne Schnitt: hoechstens radial au
                                       # x 364-374 3-4 px ueber der Vorlage (Riegel S2b 2,8); mit Einzug folgt Ring 1 der Haut, nicht umgekehrt.
 KEGEL = -150.0                        # Kegelspitze 150 E. VOR der Mitte von Ring 1 (Gliedachse, in den Schwanz hinein; Probe sfv8/r4: 0 -> 18 px,
                                       # +100..+350 (in den Rumpf) 64-198 px, -150 -> 1 px sichtbare Wurzel in Takt F314-F345)
-KEGEL_UMKEHR = True
+KEGEL_UMKEHR = False                  # Runde 5 (Zahlen-Pruefer r4 S2c "8,0 px bei x 376 ... in allen 7 Halbpixel-Varianten 7-8 px"; gemessen sfv8/r5
+                                      # j2.py: mit Rueckseiten-Culling war das Wurzelende des Schwanzes OFFEN - die umgekehrt gewundene Kappe ist in PV eine
+                                      # Rueckseite, die verdeckte Schwanz-Oberkante fiel bei x 372-376 um 4 px ab; Runde 4 KEGEL_UMKEHR = True gegen einen
+                                      # 1-px-Splitter in Takt F323, den jetzt die Rueckenecken 38/41 (ruecken_v8.json Runde 5) zudecken). Geschlossen:
+                                      # S2c 8 -> 4 px (alle 7 Varianten 3-4), Riegel S10 0.
 S_ = 11
 
 
@@ -104,7 +108,9 @@ def ring1_b8(mo, ms):
     return P[S_:2 * S_] @ A.T + t
 
 
-def stufe_w(blob, ms, prot, tief=WURZEL_TIEF):
+def stufe_w(blob, ms, prot, tief=WURZEL_TIEF, ring_versatz=None):
+    """ring_versatz (Runde 5, kette_v8.json "ring1_versatz"): {Ecke 11-21: (x, y, z) E. im Raum von Knochen 16} nach dem Gleiten/Einziehen,
+    vor Ring 0 = Ring 1 und der Kegelspitze."""
     A, t = b16_zu_b8(V.modell(blob))
     m8 = ms[8]; P8 = np.array([v[:3] for v in m8['v']], float); T8 = tris_von(m8)
     m = ms[16]
@@ -152,6 +158,9 @@ def stufe_w(blob, ms, prot, tief=WURZEL_TIEF):
                 b = c
         neu[i][1] = 0.5 * (a + b)
         liste.append(dict(ecke=i, y=int(round(neu[i][1])), schnitt=True))
+    for k, dv in sorted((ring_versatz or {}).items(), key=lambda kv: int(kv[0])):
+        neu[int(k)] = neu[int(k)] + np.asarray(dv, float)
+        liste.append(dict(ecke=int(k), versatz_r5=[float(x) for x in dv]))
     for i in range(S_):
         neu[i] = neu[i + S_]
     kegel = [i for i in range(3 * S_, len(P)) if P[i][1] < 0]

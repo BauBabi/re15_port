@@ -73,7 +73,8 @@ def flaeche(m, key):
     return m['tuv'][i] if key[0] == 'd' else m['quv'][i]
 
 
-ORIGINAL_ZEILE = {480: 0, 481: 1, 482: 2, 489: 0}   # Runde 3: V7-Zeile -> Original-Zeile 480 + k (489 = Kopie der Referenz-2-Zeile 480, V5)
+ORIGINAL_ZEILE = {480: 0, 481: 1, 482: 2, 489: 0,   # Runde 3: V7-Zeile -> Original-Zeile 480 + k (489 = Kopie der Referenz-2-Zeile 480, V5)
+                  488: 1}                         # Runde 5: Brust (Kopie Referenz-2-Zeile 481; Original-EM30: die 34 Flaechen auf 481, gleiche UV)
 
 
 def adern_original(ms, t, par, prot):
@@ -121,7 +122,7 @@ def adern_original(ms, t, par, prot):
 def adern(ms, t, par, prot):
     """Runde 2: par = {'zeilen': [0, 1, 2], 'flaechen': {'<mesh>': ['d0', 'v3', ...]}} - jede genannte Flaeche wechselt von Zeile
     480 + k auf Xk = 480 + n + Index von k in 'zeilen'; UV bleibt."""
-    if par.get('modus') in ('original', 'original_r4'):
+    if par.get('modus') in ('original', 'original_r4', 'original_r5'):
         return adern_original(ms, t, par, prot)
     n = int(t['clut'].shape[0])
     ks = [int(k) for k in par.get('zeilen', (0, 1))]

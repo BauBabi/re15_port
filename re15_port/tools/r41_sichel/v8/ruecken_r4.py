@@ -29,9 +29,13 @@ import r4_gemein as R4       # noqa: E402
 import wurzel_r4 as W4       # noqa: E402
 import ruecken_r3 as RR3     # noqa: E402
 
-SCHRITTE = (40.0, 20.0, 10.0, 5.0)
-W_SCHLITZ = 2.0
-W_BEDECKT = 0.2
+# Runde 5 (Zahlen-Pruefer r4 GELB "Suchgewichte ohne Beleg-Kommentar: ruecken_r4.py W_SCHLITZ 2.0, W_BEDECKT 0.2, SCHRITTE") - PORT-WAHL, Massstab
+# der Kosten ruecken_r3.Ruecken.kosten (Riegel-Ueberschreitung in px mal 2 .. 8, z. B. 2 x (S2a Max - 5), 4 x (S2b - 1,5), 3 x (S2c - 2,5)):
+SCHRITTE = (40.0, 20.0, 10.0, 5.0)  # E. im Knochenraum 8 = 2,6 / 1,3 / 0,65 / 0,33 px in PV (65,4 px je 1000 E., Messblatt V8 Kopf): grob bis unter
+                                    # 1 px, wie ruecken_r3.SCHRITTE (Runde 3, unveraendert)
+W_SCHLITZ = 2.0                     # je Schlitz-Bildpunkt (Soll 0): so teuer wie 1 px Ueberschreitung von S2a Max (Gewicht 2 in ruecken_r3)
+W_BEDECKT = 0.2                     # je E. fehlender Bedeckung einer Ring-1-Ecke: WURZEL_TIEF 15 E. (= 1 px in PV) kosten 3,0 = 1 px
+                                    # Ueberschreitung von S2c (Gewicht 3 in ruecken_r3)
 W_S4, S4_WURZEL = 3.0, 56.0        # Riegel S4 Wurzel >= 55 px mit 1 px Abstand (Ring 1 zieht in Stufe w radial ein)
 
 

@@ -16,6 +16,9 @@
 10_adern_rechts_original.png Runde 3 (O1/O2): Vorlage | Original-EM30 gleiche Pose PV | V8 r2 | neu (x3)
 11_gdigrab_echtes_fenster.jpg Runde 4 (--gdi): Standbilder aus dem gdigrab-Video des echten Fensters
 12_wurzel_hinten.jpg  Runde 4 (--szene8r3): Spielbilder F322-F340 von hinten, V8 r3 | neu
+13_brust_vorn.png     Runde 5 (--v8r4, Sicht-Pruefer r4 (3) "graue Platte ... weisse Keile"): Foto 1 | V7 | V8 r4 | neu, nah an Brust und Gesicht:
+                      P1 (x3), Szene Takt F354 offline (x3) und - mit --szene7/--szene8r3/--szene8 - die echten Framedumps F354 (x2)
+Runde 5: --alt-name benennt den Vergleichsstand von --v8r2 / --szene8r3 (Tafeln 09, 10, 12; Standard wie Runde 3/4).
 Nutzerlinien = Pixel, in denen Darstellung.png von Darstellung_Vorlage.png um mehr als 40 (Kanal) abweicht (wie Messblatt m2_linien).
 """
 import os, sys, argparse
@@ -79,6 +82,8 @@ def main():
     ap.add_argument('--szene7'); ap.add_argument('--szene8'); ap.add_argument('--v8r2')
     ap.add_argument('--szene8r3', help='Runde 4: Szenenordner V8 r3 (Tafel 12)'); ap.add_argument('--gdi', help='Runde 4: gdigrab-Video (Tafel 11)')
     ap.add_argument('--aus', default=os.path.join(V.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v8'))
+    ap.add_argument('--alt-name', default=None, help='Runde 5: Name des Vergleichsstands (--v8r2 / --szene8r3)')
+    ap.add_argument('--v8r4', help='Runde 5: EMD V8 r4 (Tafel 13)')
     a = ap.parse_args()
     v7, v8 = open(a.v7, 'rb').read(), open(a.v8, 'rb').read()
     n8 = 'V8 ' + V.sha(v8)[:8]
@@ -121,20 +126,20 @@ def main():
         v8r2 = open(a.v8r2, 'rb').read()
         f1 = bild(V.V80 + 'Beschreibung1_Vorlage.png')
         bx = (380, 130, 530, 260)
-        z1 = reihe([kachel(f1, bx, 3, 'Foto 1'), kachel(render(v7, P1), bx, 3, 'V7'), kachel(render(v8r2, P1), bx, 3, 'V8 r2 d0ef852c'),
+        z1 = reihe([kachel(f1, bx, 3, 'Foto 1'), kachel(render(v7, P1), bx, 3, 'V7'), kachel(render(v8r2, P1), bx, 3, a.alt_name or 'V8 r2 d0ef852c'),
                     kachel(render(v8, P1), bx, 3, n8)])
         sp = R3.szene_posen()[354]
         rs = [render(b_, sp) for b_ in (v7, v8r2, v8)]
         A_ = FR.mit_bg(V.modell(v8), sp); ys, xs = np.nonzero(A_['bone'][:480] >= 0)
         bx2 = (max(int(xs.mean()) - 75, 0), max(int(ys.min()) - 10, 0), max(int(xs.mean()) - 75, 0) + 150, max(int(ys.min()) - 10, 0) + 130)
-        z2 = reihe([np.zeros((390, 450, 3), np.uint8)] + [kachel(r_, bx2, 3, t_ + ' Szene Takt F354') for r_, t_ in zip(rs, ('V7', 'V8 r2', n8))])
+        z2 = reihe([np.zeros((390, 450, 3), np.uint8)] + [kachel(r_, bx2, 3, t_ + ' Szene Takt F354') for r_, t_ in zip(rs, ('V7', a.alt_name or 'V8 r2', n8))])
         speichern(kopf(np.vstack([z1, z2[:, :z1.shape[1]] if z2.shape[1] >= z1.shape[1] else np.hstack([z2, np.zeros((z2.shape[0], z1.shape[1] - z2.shape[1], 3), np.uint8)])]),
-                       'SF V8 09: von vorn nah am Kopf - Foto 1 | V7 | V8 r2 | neu (P1), darunter Szene Takt F354 (roh, x3)'),
+                       'SF V8 09: von vorn nah am Kopf - Foto 1 | V7 | %s | neu (P1), darunter Szene Takt F354 (roh, x3)' % (a.alt_name or 'V8 r2')),
                   os.path.join(a.aus, '09_vorn_kopf.png'))
         bx = (320, 150, 480, 330)
-        im = reihe([kachel(vl, bx, 3, 'Vorlage n1439'), kachel(ro, bx, 3, 'Original-EM30 (gleiche Pose)'), kachel(render(v8r2, V.PV), bx, 3, 'V8 r2'),
+        im = reihe([kachel(vl, bx, 3, 'Vorlage n1439'), kachel(ro, bx, 3, 'Original-EM30 (gleiche Pose)'), kachel(render(v8r2, V.PV), bx, 3, a.alt_name or 'V8 r2'),
                     kachel(r8, bx, 3, n8)])
-        speichern(kopf(im, 'SF V8 10: (W)-rechte Flanke in PV - Vorlage | Original-RE1.5-Birkin EM30 | V8 r2 | neu (roh, x3)'),
+        speichern(kopf(im, 'SF V8 10: (W)-rechte Flanke in PV - Vorlage | Original-RE1.5-Birkin EM30 | %s | neu (roh, x3)' % (a.alt_name or 'V8 r2')),
                   os.path.join(a.aus, '10_adern_rechts_original.png'))
     # 06 Spiel
     if a.szene7 and a.szene8:
@@ -199,7 +204,7 @@ def main():
         zeilen = []
         for n in (322, 328, 334, 340):
             ks = []
-            for nm, d in (('V8 r3 66806bc4', a.szene8r3), (n8, a.szene8)):
+            for nm, d in ((a.alt_name or 'V8 r3 66806bc4', a.szene8r3), (n8, a.szene8)):
                 pp = os.path.join(d, 'fd', 'f%06d.ppm' % n)
                 if os.path.exists(pp):
                     b_ = bild(pp)
@@ -207,8 +212,34 @@ def main():
             if len(ks) == 2:
                 zeilen.append(np.hstack(ks))
         if zeilen:
-            speichern(kopf(np.vstack(zeilen), 'SF V8 12: Schwanzwurzel von hinten im Spiel (FRAMEDUMP 960x720, x2) - V8 r3 | neu (Befund S10/O5 "Keil")'),
+            speichern(kopf(np.vstack(zeilen), 'SF V8 12: Schwanzwurzel von hinten im Spiel (FRAMEDUMP 960x720, x2) - %s | neu (Befund S10/O5 "Keil")' % (a.alt_name or 'V8 r3')),
                       os.path.join(a.aus, '12_wurzel_hinten.jpg'))
+
+    # 13 (Runde 5)
+    if a.v8r4:
+        import r3_gemein as R3
+        v8r4 = open(a.v8r4, 'rb').read()
+        f1 = bild(V.V80 + 'Beschreibung1_Vorlage.png')
+        bx = (360, 140, 520, 280)
+        z1 = reihe([kachel(f1, bx, 3, 'Foto 1 (n1485)'), kachel(render(v7, P1), bx, 3, 'V7 319bbd17'), kachel(render(v8r4, P1), bx, 3, 'V8 r4 10d02173'),
+                    kachel(render(v8, P1), bx, 3, n8)])
+        sp = R3.szene_posen()[354]
+        bx2 = (290, 140, 450, 280)
+        z2 = reihe([np.zeros((420, 480, 3), np.uint8)] + [kachel(render(b_, sp), bx2, 3, t_ + ' Takt F354 offline') for b_, t_ in
+                                                          ((v7, 'V7'), (v8r4, 'V8 r4'), (v8, n8))])
+        zs = [z1, z2]
+        if a.szene7 and a.szene8r3 and a.szene8:
+            ks = [np.zeros((280, 480, 3), np.uint8)]
+            for nm, d in (('V7', a.szene7), ('V8 r4', a.szene8r3), (n8, a.szene8)):
+                pp = os.path.join(d, 'fd', 'f%06d.ppm' % 354)
+                if os.path.exists(pp):
+                    ks.append(kachel(bild(pp), (520, 200, 760, 340), 2, '%s Framedump F354' % nm))
+            z3 = reihe(ks)
+            zs.append(np.hstack([z3, np.zeros((z3.shape[0], max(0, z1.shape[1] - z3.shape[1]), 3), np.uint8)])[:, :z1.shape[1]])
+        w = max(z.shape[1] for z in zs)
+        zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]
+        speichern(kopf(np.vstack(zs), 'SF V8 13: Brust und Gesicht von vorn - Foto 1 | V7 | V8 r4 | neu; P1 und Takt F354 offline (x3), '
+                       'echte Framedumps F354 (x2) (roh)'), os.path.join(a.aus, '13_brust_vorn.png'))
 
 
 if __name__ == '__main__':

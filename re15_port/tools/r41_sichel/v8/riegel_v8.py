@@ -432,6 +432,157 @@ def s13(blob):
     return dict(flaechen_v7_zeilen=len(v7), beispiele=v7[:8], ok=not v7)
 
 
+# ------------------------------------------------------------------ Runde 5 (Pruefung V8 r4)
+# S14 Brust von vorn (Sicht-Pruefer r4 (3): "Von vorn liegt rechts neben dem Gesicht ... eine graue Platte (Brust-Zeile 488, V7 nach O1). Sie
+#     grenzt jetzt mit gerader harter Kante an die neue rosa Haut ... Darin stehen helle weisse Keile"; gemessen F354 dL 19 / da* 9, V7 dL 4;
+#     fast weisse Pixel (L > 75, Chroma < 12) in den echten Framedumps F344-F372 V8 r4 2097 gegen V7 5). Vorgabe des Orchestrators: "Kanten-Sprung
+#     Brust/Flanke von vorn (dL, da* entlang der Grenze) hoechstens wie V7 an derselben Stelle; Zahl reinweisser Texel in der Brust 0".
+S14_POSEN = ('P1', 344, 354, 364)      # Foto-1-Pose und Szene von vorn (r3_gemein.VORN_TAKTE)
+S14_SEG_MIN = 8                        # Grenzstueck = Paar (Brustflaeche, Nachbarflaeche) mit >= 8 Grenz-Bildpunkten (kuerzere: Ecken, Rauschen)
+S14_FENSTER = 2                        # 5 x 5-Mittel je Seite (Mass des Sicht-Pruefers r4)
+S14_WEISS_TAKTE = tuple(range(336, 373, 2))   # Szene von vorn (adern_r5.VORN_TAKTE)
+S14_KANTE_RAND = 1.5                   # Vorgabe "hoechstens wie V7 an derselben Stelle". V7 ist grau an grau; die Original-EM30-Haut mit Adern hat an
+                                       # derselben Grenze OHNE Naht (sfv8/r5 vA: Brust und alle Nachbarn mit Original-UV und Original-Zeile) dL
+                                       # 3,60 / 3,50 / 2,87 / 3,04 gegen V7 2,18 / 2,30 / 2,20 / 2,11 (P1 / F344 / F354 / F364), also bis +1,42 -
+                                       # Adern-Kontrast, kein Sprung. Rand 1,5 = dieser gemessene Unterschied, aufgerundet; da* hat ihn nicht noetig
+                                       # (vA 1,8-2,3 < V7 2,9-3,2). Die strenge Lesart (Rand 0) gibt die Zeile "streng" mit aus.
+S14_WEISS_RAND = 0                     # fast weisse Bildpunkte auf Knochen 8 von vorn hoechstens wie V7
+
+
+def brust_flaechen():
+    """Die 34 Brustflaechen von Mesh 8 (V7-Zeile 488) - Schluessel aus V7 (Referenz)."""
+    import adern_r4 as A4
+    _d, _o, ms, _t = KB.teile(open(os.path.join(V.SFV8, 'emd', 'EM30_V7.EMD'), 'rb').read())
+    return set(k for k, uv in A4.keys(ms[8]) if (uv[2] >> 6) & 0x1FF == 488)
+
+
+def s14_pose(p):
+    return R3.P1 if p == 'P1' else R3.szene_posen()[p]
+
+
+def brust_kante(A, brust):
+    """Kanten-Sprung Brust/Flanke: je Grenzstueck (Brustflaeche, Nachbarflaeche von Mesh 8, >= S14_SEG_MIN Grenz-Bildpunkte) der mittlere
+    Unterschied der 5 x 5-Mittel (Lab, RDT-Licht) innen minus aussen; Rueckgabe laengengewichtetes Mittel |dL| und |da*|, groesstes |dL|.
+    Gerade harte Kante = ein ganzes Grenzstueck mit gleichsinnigem Sprung (Platte); Adern-Kontrast mittelt sich entlang des Stuecks heraus."""
+    b = A['bone'][:480]; fl = A['flaeche'][:480]
+    L = G.lab(A['img'][:480].astype(float))
+    br = (b == 8) & np.isin(fl, list(brust)); au = (b == 8) & ~br
+    k = np.ones((2 * S14_FENSTER + 1, 2 * S14_FENSTER + 1))
+
+    def mittel(m):
+        s_ = np.stack([ndimage.convolve(L[..., c] * m, k, mode='constant') for c in range(3)], -1)
+        n_ = ndimage.convolve(m.astype(float), k, mode='constant')
+        return s_ / np.maximum(n_, 1)[..., None], n_
+    mi, ni = mittel(br); ma, na = mittel(au)
+    seg = {}
+    H, W = b.shape
+    for y, x in zip(*np.nonzero(br)):
+        for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0)):
+            yy, xx = y + dy, x + dx
+            if 0 <= yy < H and 0 <= xx < W and au[yy, xx] and ni[y, x] >= 5 and na[y, x] >= 5:
+                seg.setdefault('%s|%s' % (fl[y, x], fl[yy, xx]), []).append(mi[y, x] - ma[y, x])
+                break
+    st = [(k_, len(v), float(np.mean([q[0] for q in v])), float(np.mean([q[1] for q in v]))) for k_, v in seg.items() if len(v) >= S14_SEG_MIN]
+    n = sum(t[1] for t in st)
+    mx = max(st, key=lambda t: abs(t[2]))
+    return dict(px=n, dL=round(sum(t[1] * abs(t[2]) for t in st) / max(n, 1), 2), da=round(sum(t[1] * abs(t[3]) for t in st) / max(n, 1), 2),
+                max_dL=round(abs(mx[2]), 1), max_bei=mx[0], stuecke=sorted([t[0] for t in st]))
+
+
+def weiss_px(A):
+    """Fast weisse Bildpunkte (L > 75, Chroma < 12, RDT-Licht; Mass des Sicht-Pruefers r4) auf Knochen 8."""
+    b = A['bone'][:480]; L = G.lab(A['img'][:480].astype(float))
+    return int(((b == 8) & (L[..., 0] > 75) & (np.hypot(L[..., 1], L[..., 2]) < 12)).sum())
+
+
+def brust_rot(A, brust):
+    """Rote Bildpunkte (a* >= 15, RDT-Licht) auf den Brustflaechen (Nutzer V5: "Die roten Stellen sind korrekt auf der brust")."""
+    b = A['bone'][:480]; fl = A['flaeche'][:480]; L = G.lab(A['img'][:480].astype(float))
+    return int(((b == 8) & np.isin(fl, list(brust)) & (L[..., 1] >= 15)).sum())
+
+
+def s14_kante(blob, posen=S14_POSEN, brust=None):
+    brust = brust or brust_flaechen()
+    mo = V.modell(blob)
+    return {str(p): brust_kante(FR.mit_bg(mo, s14_pose(p)), brust) for p in posen}
+
+
+def s14(blob, ref_blob):
+    import adern_r5 as A5
+    brust = brust_flaechen()
+    mo, m7 = V.modell(blob), V.modell(ref_blob)
+    a, c = {}, {}
+    for p in S14_POSEN:
+        An, A7 = FR.mit_bg(mo, s14_pose(p)), FR.mit_bg(m7, s14_pose(p))
+        a[str(p)] = (brust_kante(An, brust), brust_kante(A7, brust))
+        c[str(p)] = (brust_rot(An, brust), brust_rot(A7, brust))
+    a_ok = all(n['dL'] <= v['dL'] + S14_KANTE_RAND and n['da'] <= v['da'] for n, v in a.values())
+    a_streng = all(n['dL'] <= v['dL'] and n['da'] <= v['da'] for n, v in a.values())
+    wt = A5.weiss_rest(blob, nur=brust)
+    wp = {}
+    for p in ['P1'] + list(S14_WEISS_TAKTE):
+        pose = s14_pose(p)
+        wp[str(p)] = (weiss_px(FR.mit_bg(mo, pose)), weiss_px(FR.mit_bg(m7, pose)))
+    b_ok = not wt and sum(n for n, _v in wp.values()) <= sum(v for _n, v in wp.values()) + S14_WEISS_RAND
+    c_ok = all(n >= v for n, v in c.values())
+    return dict(a_kante=a, b_weiss_texel_brust=wt, b_weiss_px=wp, c_rot=c, a_ok=a_ok, a_streng=a_streng, b_ok=b_ok, c_ok=c_ok,
+                ok=bool(a_ok and b_ok and c_ok))
+
+
+S14S_BILDER = tuple(range(344, 373))   # echte Framedumps F344-F372 (Sicht-Pruefer r4: "in den echten Framedumps F344-F372 im Fenster x 560-690 / y 260-330")
+S14S_FENSTER = (560, 690, 260, 330)    # x0, x1, y0, y1 im 960 x 720-Framedump (Sicht-Pruefer r4)
+S14S_RAND = 29                         # 29 Bilder zu je hoechstens 1 Bildpunkt Kantenrauschen
+
+
+def s14s(fd_neu, fd_v7):
+    """Fast weisse Bildpunkte (L > 75, Chroma < 12) in den echten Framedumps F344-F372 im Fenster des Sicht-Pruefers r4, neu gegen V7."""
+    from PIL import Image
+    x0, x1, y0, y1 = S14S_FENSTER
+    zahl = []
+    for d in (fd_neu, fd_v7):
+        n = 0
+        for f in S14S_BILDER:
+            p = os.path.join(d, 'f%06d.ppm' % f)
+            im = np.array(Image.open(p).convert('RGB'))[y0:y1, x0:x1].astype(float)
+            L = G.lab(im)
+            n += int(((L[..., 0] > 75) & (np.hypot(L[..., 1], L[..., 2]) < 12)).sum())
+        zahl.append(n)
+    return dict(neu=zahl[0], v7=zahl[1], ok=zahl[0] <= zahl[1] + S14S_RAND)
+
+
+S2C_VARIANTEN = ((0.375, 0, 0), (0.375, 0.5, 0), (0.375, -0.5, 0), (0.375, 0, 0.5), (0.375, 0, -0.5), (0.0, 0, 0), (0.75, 0, 0))
+
+
+def s2c_r5(mo, pose=V.PV):
+    """S2c Runde 5 (Zahlen-Pruefer r4: "8,0 px bei x 376 ... robust in 7 Halbpixel-Varianten"; sein Rasterer zeichnet mit Rueckseiten-Culling
+    und Texel-Transparenz wie f_rast, j_huckel nimmt den Umriss ohne Culling): Rumpf (Knochen 0-15) und Schwanz (16-22) getrennt mit f_rast
+    gezeichnet (Culling, Maler-Reihenfolge), Naht = rechteste Spalte x 330-420 mit Schwanz-Oberkante <= Rumpf-Oberkante, Hoehe = groesster
+    Abstand Rumpf ueber Schwanz in Naht +- 15. In 7 Varianten: Bildphase 0 / 0,375 / 0,75 und Verschiebung +-0,5 px in x oder y."""
+    import birkin_buehne as BB
+    orig = BB.abbilden
+    out = []
+    for off, dx, dy in S2C_VARIANTEN:
+        def ab(x, y, M, off=off, dx=dx, dy=dy):
+            X, Y_ = orig(np.asarray(x) - BB.PHASE + off, np.asarray(y) - BB.PHASE + off, M)
+            return X + dx, Y_ + dy
+        BB.abbilden = ab
+        try:
+            mr = FR.zeichne(mo, pose, knochen=list(range(16)), licht=False)['bone'][:480] >= 0
+            ms_ = FR.zeichne(mo, pose, knochen=list(range(16, 23)), licht=False)['bone'][:480] >= 0
+        finally:
+            BB.abbilden = orig
+        top = lambda m, x: int(np.nonzero(m[:, x])[0].min()) if m[:, x].any() else None
+        tr = {x: top(mr, x) for x in range(300, 460)}; ts = {x: top(ms_, x) for x in range(300, 460)}
+        ob = [x for x in range(330, 421) if ts[x] is not None and tr[x] is not None and ts[x] <= tr[x]]
+        if not ob:
+            out.append(dict(variante=(off, dx, dy), naht_x=None, huckel_px=99, bei_x=None))
+            continue
+        xn = max(ob)
+        h = max((ts[x] - tr[x], x) for x in range(xn - 15, xn + 16) if ts.get(x) is not None and tr.get(x) is not None)
+        out.append(dict(variante=(off, dx, dy), naht_x=xn, huckel_px=int(h[0]), bei_x=int(h[1])))
+    return dict(varianten=out, max_px=max(v['huckel_px'] for v in out))
+
+
 def szene_marker(mk_a, mk_b, gr, gr_v7):
     import szene_marker as SM
     out = {}
@@ -499,12 +650,17 @@ def s8(blob):
     return r
 
 
-def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None):
+def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
     mo, A = render(blob)
     bone = A['bone'][:480]
     out = dict(sha256=V.sha(blob))
     out['S1'] = s1(bone)
     out['S2'], out['S3'], _om = s2_s3(mo, bone)
+    out['S2']['c_r4_info'] = out['S2']['c']                      # Runde 5: S2c mit Culling und 7 Halbpixel-Varianten (s2c_r5)
+    out['S2']['c'] = s2c_r5(mo)
+    out['S2']['c']['huckel_px'] = out['S2']['c']['max_px']
+    out['S2']['c']['bei_x'] = max(out['S2']['c']['varianten'], key=lambda v: v['huckel_px'])['bei_x'] or -1
+    out['S2']['ok'] = (out['S2']['a']['mittel'] <= 4 and out['S2']['a']['max'] <= 6 and out['S2']['b'][0] <= 2 and out['S2']['c']['max_px'] <= 3)
     out['S3']['f_huegel_rot'] = huegel_rot(A)
     out['S3']['ok'] = out['S3']['ok'] and out['S3']['f_huegel_rot'] >= S3F_MIN
     out['S4'] = s4(mo)
@@ -520,6 +676,9 @@ def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None):
     out['S11'] = s11(blob)
     out['S12'] = s12(blob, ref_blob)
     out['S13'] = s13(blob)
+    out['S14'] = s14(blob, ref_blob)
+    if fd:
+        out['S14s'] = s14s(*fd)
     if marker:
         out.update(szene_marker(*marker))
     return out
@@ -529,8 +688,12 @@ def zeilen(r):
     z = []
     s = r['S1']; z.append('S1 Kontur T: Mittel %.1f Max %.1f px (Soll <= 4 / <= 8) -> %s' % (s['mittel'], s['max'], 'GRUEN' if s['ok'] else 'ROT'))
     z.append('   d je Station (px, + = Modell weiter innen): %s' % s['d'])
-    s = r['S2']; z.append('S2 Uebergang J: (a) Mittel %.1f Max %d (<= 4 / <= 6); (b) Sattel %.1f bei x %d (<= 2); (c) Huckel an J %.1f bei x %d (<= 3) -> %s'
-                          % (s['a']['mittel'], s['a']['max'], s['b'][0], s['b'][1], s['c']['huckel_px'], s['c']['bei_x'], 'GRUEN' if s['ok'] else 'ROT'))
+    s = r['S2']; z.append('S2 Uebergang J: (a) Mittel %.1f Max %d (<= 4 / <= 6); (b) Sattel %.1f bei x %d (<= 2); (c) Naht Rumpf ueber Schwanz %d px bei x %d '
+                          '(<= 3, groesster Wert der 7 Halbpixel-Varianten %s, mit Culling) -> %s'
+                          % (s['a']['mittel'], s['a']['max'], s['b'][0], s['b'][1], s['c']['huckel_px'], s['c']['bei_x'],
+                             [v['huckel_px'] for v in s['c']['varianten']] if 'varianten' in s['c'] else '-', 'GRUEN' if s['ok'] else 'ROT'))
+    if 'c_r4_info' in s:
+        z.append('   S2c Runde 4 (Umriss ohne Culling, nur Info): %.1f bei x %s' % (s['c_r4_info']['huckel_px'], s['c_r4_info']['bei_x']))
     s = r['S3']; z.append('S3 Ruecken/H/K: (a) Kuppe %.1f (<= 4); (b) H %.1f bei x %d (5-10, x 428-445); (c) weitere %s; (d) Sattel Kopf %.1f bei x %d (<= 2); (e) K %.1f (<= 3); (f) Huegel rot %.1f %% (>= %.0f) -> %s'
                           % (s['a_kuppe'], s['b_huegel'][0], s['b_huegel'][1], s['c_weitere'], s['d_sattel_kopf'][0], s['d_sattel_kopf'][1], s['e_K'],
                              s.get('f_huegel_rot', -1), S3F_MIN, 'GRUEN' if s['ok'] else 'ROT'))
@@ -566,12 +729,27 @@ def zeilen(r):
     s = r['S12']; z.append('S12 Unterarmband P2: %d rote px auf Knochen 14 (<= V7 %d + %d) -> %s' % (s['px'], s['v7'], BAND_REST, 'GRUEN' if s['ok'] else 'ROT'))
     s = r['S13']; z.append('S13 Naht: Flaechen von Mesh 8 (ohne Brust) auf V7-Zeilen 480/481: %d %s (Soll 0) -> %s'
                            % (s['flaechen_v7_zeilen'], s['beispiele'], 'GRUEN' if s['ok'] else 'ROT'))
+    if 'S14' in r:
+        s = r['S14']
+        z.append('S14 Brust von vorn: (a) Kanten-Sprung Brust/Flanke dL / da* (neu | V7): %s (dL <= V7 + %.1f, da* <= V7) %s; (b) fast weisse Texel unter der Brust %s '
+                 '(Soll 0), fast weisse Bildpunkte Knochen 8 von vorn neu %d / V7 %d (<= V7 + %d) %s; (c) rote Bildpunkte auf der Brust (neu | V7) %s '
+                 '(>= V7) %s -> %s'
+                 % ('; '.join('%s %.2f / %.2f | %.2f / %.2f (max %.1f %s)' % (p, n['dL'], n['da'], v['dL'], v['da'], n['max_dL'], n['max_bei'])
+                              for p, (n, v) in s['a_kante'].items()), S14_KANTE_RAND, 'ok' if s['a_ok'] else 'ROT',
+                    sum(s['b_weiss_texel_brust'].values()) if s['b_weiss_texel_brust'] else 0,
+                    sum(n for n, _v in s['b_weiss_px'].values()), sum(v for _n, v in s['b_weiss_px'].values()), S14_WEISS_RAND,
+                    'ok' if s['b_ok'] else 'ROT', '; '.join('%s %d | %d' % (p, n, v) for p, (n, v) in s['c_rot'].items()),
+                    'ok' if s['c_ok'] else 'ROT', 'GRUEN' if s['ok'] else 'ROT'))
+        z.append('   S14 (a) streng (dL und da* je <= V7, ohne Rand): %s' % ('erfuellt' if s['a_streng'] else 'NICHT erfuellt (dL ueber V7, siehe Rand)'))
+    if 'S14s' in r:
+        z.append('S14s fast weisse Bildpunkte in echten Framedumps F344-F372, Fenster x 560-690 / y 260-330 (960x720): neu %d, V7 %d (<= V7 + %d) -> %s'
+                 % (r['S14s']['neu'], r['S14s']['v7'], S14S_RAND, 'GRUEN' if r['S14s']['ok'] else 'ROT'))
     if 'S10s' in r:
         z.append('S10s Wurzel in echten Framedumps F328-F346 (Marker, 960x720): %d (Soll 0) -> %s' % (r['S10s']['summe'], 'GRUEN' if r['S10s']['ok'] else 'ROT'))
     if 'S9s' in r:
         z.append('S9s Schlitz in echten Framedumps F344-F378 (gruene Silhouette, Ueberschuss gegen V7): %d (Soll <= %d) -> %s'
                  % (r['S9s']['ueberschuss'], SCHLITZ_SZENE_SOLL, 'GRUEN' if r['S9s']['ok'] else 'ROT'))
-    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S10s', 'S9s') if k in r and not r[k]['ok']]
+    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S10s', 'S9s', 'S14s') if k in r and not r[k]['ok']]
     z.append('SUMME: %d von %d gruen%s' % (len([k for k in r if k.startswith('S')]) - len(rot), len([k for k in r if k.startswith('S')]),
                                            ('; ROT: ' + ', '.join(rot)) if rot else ''))
     return z, rot
@@ -583,13 +761,14 @@ def main():
     ap.add_argument('--v7', default=None, help='Referenz V7 (Standard: git show 6a25db27b:EM30_HANGAR.EMD nach SFV8/emd/EM30_V7.EMD)')
     ap.add_argument('--szene'); ap.add_argument('--aus'); ap.add_argument('--json')
     ap.add_argument('--mk-a'); ap.add_argument('--mk-b'); ap.add_argument('--gr'); ap.add_argument('--gr-v7')
+    ap.add_argument('--fd', help='Runde 5: Framedump-Ordner der Szene (neu) fuer S14s'); ap.add_argument('--fd-v7', help='Framedump-Ordner der V7-Szene')
     a = ap.parse_args()
     v7 = a.v7 or os.path.join(V.SFV8, 'emd', 'EM30_V7.EMD')
     ref = open(v7, 'rb').read()
     assert V.sha(ref) == V.V7_SHA, 'Referenz V7 %s hat sha256 %s' % (v7, V.sha(ref))
     blob = open(a.emd, 'rb').read()
     mk = (a.mk_a, a.mk_b, a.gr, a.gr_v7) if (a.mk_a or a.gr) else None
-    r = alles(blob, ref, a.szene, marker=mk)
+    r = alles(blob, ref, a.szene, marker=mk, fd=(a.fd, a.fd_v7) if (a.fd and a.fd_v7) else None)
     z, rot = zeilen(r)
     kopf = ['Riegel V8 (Messblatt V8 Abschnitt 7) fuer %s' % a.emd, 'sha256 %s' % r['sha256'], 'Referenz V7 %s' % V.V7_SHA]
     txt = '\n'.join(kopf + z)
