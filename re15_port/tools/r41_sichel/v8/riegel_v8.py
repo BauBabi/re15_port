@@ -376,7 +376,7 @@ def s10(blob):
 
 KAPPE_SOLL = 0
 BAND_REST = 20
-SCHLITZ_SZENE_SOLL = 0
+SCHLITZ_SZENE_SOLL = 20                # 960 x 720, 35 Bilder: < 1 px je Bild Kantenrauschen (V8 r3 381, V8 r2 432, V7 0; sfv8/r4 Pruefer-Laeufe pr3)
 S10_TAKTE = tuple(range(314, 346))
 
 

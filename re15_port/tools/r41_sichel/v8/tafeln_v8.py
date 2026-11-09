@@ -14,6 +14,8 @@
 09_vorn_kopf.png      Runde 3 (O3, Sicht-Pruefer r2 Punkt 2 "Kamm hinter dem Kopf"): Foto 1 | V7 | V8 r2 | neu in P1, nah am Kopf (x3), dazu
                       die Szene von vorn (Takt F354, offline, Spielkamera)
 10_adern_rechts_original.png Runde 3 (O1/O2): Vorlage | Original-EM30 gleiche Pose PV | V8 r2 | neu (x3)
+11_gdigrab_echtes_fenster.jpg Runde 4 (--gdi): Standbilder aus dem gdigrab-Video des echten Fensters
+12_wurzel_hinten.jpg  Runde 4 (--szene8r3): Spielbilder F322-F340 von hinten, V8 r3 | neu
 Nutzerlinien = Pixel, in denen Darstellung.png von Darstellung_Vorlage.png um mehr als 40 (Kanal) abweicht (wie Messblatt m2_linien).
 """
 import os, sys, argparse
@@ -75,6 +77,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--v7', required=True); ap.add_argument('--v8', default=V.ASSET)
     ap.add_argument('--szene7'); ap.add_argument('--szene8'); ap.add_argument('--v8r2')
+    ap.add_argument('--szene8r3', help='Runde 4: Szenenordner V8 r3 (Tafel 12)'); ap.add_argument('--gdi', help='Runde 4: gdigrab-Video (Tafel 11)')
     ap.add_argument('--aus', default=os.path.join(V.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v8'))
     a = ap.parse_args()
     v7, v8 = open(a.v7, 'rb').read(), open(a.v8, 'rb').read()
@@ -179,6 +182,33 @@ def main():
         if zeilen:
             speichern(kopf(np.vstack(zeilen), 'SF V8 08: Ruecken von hinten im Spiel (FRAMEDUMP 960x720, Ausschnitt x2), V7 | V8'),
                       os.path.join(a.aus, '08_ruecken_hinten.jpg'))
+
+    # 11 / 12 (Runde 4)
+    if a.gdi:
+        tmp = os.path.join(V.SFV8, 'tafeln_tmp'); os.makedirs(tmp, exist_ok=True)
+        ks = []
+        for t in ('10.25', '11.75', '12.50', '12.75', '13.25', '14.00'):
+            p = os.path.join(tmp, 'gdi_%s.png' % t)
+            os.system('ffmpeg -y -loglevel error -ss %s -i "%s" -frames:v 1 "%s"' % (t, a.gdi, p))
+            if os.path.exists(p):
+                ks.append(kachel(bild(p), (280, 150, 760, 600), 1, 'gdigrab t %s s' % t))
+        if ks:
+            speichern(kopf(np.vstack([reihe(ks[:3]), reihe(ks[3:])]), 'SF V8 11: echtes Spielfenster (gdigrab, eigene exe-Kopie, kein AUTOSHOT/SOFTWARE_RENDER), '
+                           'seitlich t 10,25/11,75, hinten t 12,50/12,75, vorn t 13,25/14,00 (roh)'), os.path.join(a.aus, '11_gdigrab_echtes_fenster.jpg'))
+    if a.szene8r3 and a.szene8:
+        zeilen = []
+        for n in (322, 328, 334, 340):
+            ks = []
+            for nm, d in (('V8 r3 66806bc4', a.szene8r3), (n8, a.szene8)):
+                pp = os.path.join(d, 'fd', 'f%06d.ppm' % n)
+                if os.path.exists(pp):
+                    b_ = bild(pp)
+                    ks.append(kachel(b_, (400, 180, 720, 420), 2, '%s F%d' % (nm, n)))
+            if len(ks) == 2:
+                zeilen.append(np.hstack(ks))
+        if zeilen:
+            speichern(kopf(np.vstack(zeilen), 'SF V8 12: Schwanzwurzel von hinten im Spiel (FRAMEDUMP 960x720, x2) - V8 r3 | neu (Befund S10/O5 "Keil")'),
+                      os.path.join(a.aus, '12_wurzel_hinten.jpg'))
 
 
 if __name__ == '__main__':

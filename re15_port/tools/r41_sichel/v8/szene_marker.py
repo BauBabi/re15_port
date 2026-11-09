@@ -8,7 +8,8 @@ Zahlen-Pruefer r3 (woertlich): "MK_A: CLUT-Zeile 487 (nur Schwanz) magenta. MK_B
 Ring 0 -> Ring 1 und Kegel) auf Zeile 480 ... Wurzel sichtbar = magenta in A und nicht in B. Das ist eine echte z-Test-Zaehlung des
 Port-Renderers." und "GR_*: alle Zeilen gruen, fuer die Silhouette". Laeufe: v4/lauf_v4.sh mit EMD-Overlay (Spiel-Asset bleibt).
 Schlitz: nicht-gruene Bildpunkte mit Gruen links und rechts (je <= 4 px, gleiche Zeile) und darunter (<= 4 px) - eine schmale Kerbe in
-der Figur; V7 im selben Bild zum Vergleich.
+der Figur, nur in den obersten OBEN_PX Zeilen der Figur (Zahlen-Pruefer r3: "links neben dem Kopf"; darunter erzeugt der anders
+haengende Schwanz zwischen Bein und Hand schmale Luecken, Lauf sfv8/r4 F352-F358 y 442-477); V7 im selben Bild zum Vergleich.
 Kein RE-Wert.
 """
 import os, sys, glob
@@ -20,6 +21,7 @@ import kopf_orig_bau as KB            # noqa: E402
 import adern_v8 as AV                 # noqa: E402
 
 MAGENTA = 0x7C1F
+OBEN_PX = 120                         # Schlitz-Fenster: oberste 120 Bildzeilen der Figur (960 x 720; Kopf und Ruecken in F344-F378)
 GRUEN = 0x03E0
 
 
@@ -97,7 +99,10 @@ def schlitz(dn, d7, f0=344, f1=378):
         pn, p7 = os.path.join(dn, 'fd', 'f%06d.ppm' % f), os.path.join(d7, 'fd', 'f%06d.ppm' % f)
         if not (os.path.exists(pn) and os.path.exists(p7)):
             continue
-        h, h7 = schlitz_maske(gr(bild(pn))), schlitz_maske(gr(bild(p7)))
+        g, g7 = gr(bild(pn)), gr(bild(p7))
+        h, h7 = schlitz_maske(g), schlitz_maske(g7)
+        oben = min(int(np.nonzero(g.any(1))[0].min()), int(np.nonzero(g7.any(1))[0].min())) + OBEN_PX
+        h[oben:] = False; h7[oben:] = False                    # nur Ruecken/Kopf (Befund "links neben dem Kopf"), nicht Schwanz/Beine
         n, n7 = int(h.sum()), int(h7.sum())
         tot += max(0, n - n7); tot7 += n7; row.append((f, n, n7))
     print('Schlitz F%d-F%d (960x720): Ueberschuss gegen V7 (Summe je Bild max(0, neu - V7)) %d (V7 selbst %d)' % (f0, f1, tot, tot7), row)
